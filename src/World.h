@@ -13,7 +13,6 @@ struct AABB;
 /* Packs an x,y,z into a single index */
 #define World_Pack(x, y, z) (((y) * World.Length + (z)) * World.Width + (x))
 
-/* Contains general data about the world, primarily the blocks. */
 CC_VAR extern struct _WorldData {
 	/* The blocks in the world. */
 	BlockRaw* Blocks;
@@ -92,7 +91,6 @@ enum EnvVar {
 	ENV_VAR_SKYBOX_COL
 };
 
-/* Contains data about the current environment of the world. */
 CC_VAR extern struct _EnvData {
 	BlockID EdgeBlock, SidesBlock;
 	int EdgeHeight, SidesOffset;

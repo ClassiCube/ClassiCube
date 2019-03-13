@@ -88,20 +88,6 @@ void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms) {
 	}
 }
 
-void DateTime_HttpDate(TimeMS ms, String* str) {
-	static const char* days_of_week[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
-	static const char* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-	struct DateTime t;
-	int days;
-
-	DateTime_FromTotalMs(&t, ms);
-	days = DateTime_TotalDays(&t);
-
-	String_Format2(str, "%c, %p2 ", days_of_week[days % 7], &t.Day);
-	String_Format2(str, "%c %p4 ",    month_names[t.Month], &t.Year);
-	String_Format3(str, "%p2:%p2:%p2 GMT", &t.Hour, &t.Minute, &t.Second);
-}
-
 
 /*########################################################################################################################*
 *----------------------------------------------------------Misc-----------------------------------------------------------*

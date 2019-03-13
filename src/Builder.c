@@ -478,8 +478,8 @@ static void Builder_DrawSprite(int count) {
 #define s_u1 0.0f
 #define s_u2 UV2_Scale
 	loc = Block_Tex(Builder_Block, FACE_XMAX);
-	v1  = Atlas1D_RowId(loc) * Atlas1D_InvTileSize;
-	v2  = v1 + Atlas1D_InvTileSize * UV2_Scale;
+	v1  = Atlas1D_RowId(loc) * Atlas1D.InvTileSize;
+	v2  = v1 + Atlas1D.InvTileSize * UV2_Scale;
 
 	offsetType = Blocks.SpriteOffset[Builder_Block];
 	if (offsetType >= 6 && offsetType <= 7) {
@@ -926,11 +926,11 @@ static int Adv_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, Blo
 
 static void Adv_DrawXMin(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_XMIN);
-	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
 	float u1 = adv_minBB.Z, u2 = (count - 1) + adv_maxBB.Z * UV2_Scale;
-	float v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
-	float v2 = vOrigin + adv_minBB.Y * Atlas1D_InvTileSize * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.Y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.Y * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];
@@ -967,11 +967,11 @@ static void Adv_DrawXMin(int count) {
 
 static void Adv_DrawXMax(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_XMAX);
-	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
 	float u1 = (count - adv_minBB.Z), u2 = (1 - adv_maxBB.Z) * UV2_Scale;
-	float v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
-	float v2 = vOrigin + adv_minBB.Y * Atlas1D_InvTileSize * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.Y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.Y * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];
@@ -1008,11 +1008,11 @@ static void Adv_DrawXMax(int count) {
 
 static void Adv_DrawZMin(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_ZMIN);
-	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
 	float u1 = (count - adv_minBB.X), u2 = (1 - adv_maxBB.X) * UV2_Scale;
-	float v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
-	float v2 = vOrigin + adv_minBB.Y * Atlas1D_InvTileSize * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.Y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.Y * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];
@@ -1049,11 +1049,11 @@ static void Adv_DrawZMin(int count) {
 
 static void Adv_DrawZMax(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_ZMAX);
-	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
 	float u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
-	float v1 = vOrigin + adv_maxBB.Y * Atlas1D_InvTileSize;
-	float v2 = vOrigin + adv_minBB.Y * Atlas1D_InvTileSize * UV2_Scale;
+	float v1 = vOrigin + adv_maxBB.Y * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_minBB.Y * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];
@@ -1090,11 +1090,11 @@ static void Adv_DrawZMax(int count) {
 
 static void Adv_DrawYMin(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_YMIN);
-	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
 	float u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
-	float v1 = vOrigin + adv_minBB.Z * Atlas1D_InvTileSize;
-	float v2 = vOrigin + adv_maxBB.Z * Atlas1D_InvTileSize * UV2_Scale;
+	float v1 = vOrigin + adv_minBB.Z * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_maxBB.Z * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];
@@ -1131,11 +1131,11 @@ static void Adv_DrawYMin(int count) {
 
 static void Adv_DrawYMax(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_YMAX);
-	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
+	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
 	float u1 = adv_minBB.X, u2 = (count - 1) + adv_maxBB.X * UV2_Scale;
-	float v1 = vOrigin + adv_minBB.Z * Atlas1D_InvTileSize;
-	float v2 = vOrigin + adv_maxBB.Z * Atlas1D_InvTileSize * UV2_Scale;
+	float v1 = vOrigin + adv_minBB.Z * Atlas1D.InvTileSize;
+	float v2 = vOrigin + adv_maxBB.Z * Atlas1D.InvTileSize * UV2_Scale;
 	struct Builder1DPart* part = &Builder_Parts[adv_baseOffset + Atlas1D_Index(texLoc)];
 
 	int F = adv_bitFlags[Builder_ChunkIndex];

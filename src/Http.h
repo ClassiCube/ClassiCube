@@ -59,6 +59,9 @@ void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, Tim
 void Http_UrlEncode(String* dst, const uint8_t* data, int len);
 /* Converts characters to UTF8, then calls Http_URlEncode on them. */
 void Http_UrlEncodeUtf8(String* dst, const String* src);
+/* Formats a date for inclusion in HTTP headers. */
+/* NOTE: Time is always assumed as being UTC. */
+void Http_FormatDate(TimeMS ms, String* str);
 
 /* Attempts to retrieve a fully completed request. */
 /* NOTE: You MUST also check Result/StatusCode, and check Size is > 0. */

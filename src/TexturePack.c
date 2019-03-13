@@ -223,7 +223,7 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 #define ANIMS_FAST_SIZE 64
 static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int size) {
 	int dstX = Atlas1D_Index(texLoc), srcX;
-	int dstY = Atlas1D_RowId(texLoc) * Atlas_TileSize;
+	int dstY = Atlas1D_RowId(texLoc) * Atlas2D.TileSize;
 	GfxResourceID tex;
 
 	uint8_t buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
@@ -247,7 +247,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 		Bitmap_CopyBlock(srcX, data->FrameY, 0, 0, &anims_bmp, &frame, size);
 	}
 
-	tex = Atlas1D_TexIds[dstX];
+	tex = Atlas1D.TexIds[dstX];
 	if (tex) { Gfx_UpdateTexturePart(tex, 0, dstY, &frame, Gfx.Mipmaps); }
 	if (size > ANIMS_FAST_SIZE) Mem_Free(ptr);
 }
@@ -297,7 +297,7 @@ static void Animations_Validate(void) {
 		tileX = Atlas2D_TileX(data.TexLoc); 
 		tileY = Atlas2D_TileY(data.TexLoc);
 
-		if (data.FrameSize > Atlas_TileSize || tileY >= Atlas_RowsCount) {
+		if (data.FrameSize > Atlas2D.TileSize || tileY >= Atlas2D.RowsCount) {
 			Chat_Add2("&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
 		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {
 			Chat_Add2("&cSome of the animation frames for tile (%i, %i) are at coordinates outside animations.png", &tileX, &tileY);
@@ -317,11 +317,11 @@ static void Animations_Tick(struct ScheduledTask* task) {
 	int i, size;
 
 	if (anims_useLavaAnim) {
-		size = min(Atlas_TileSize, 64);
+		size = min(Atlas2D.TileSize, 64);
 		Animations_Draw(NULL, 30, size);
 	}
 	if (anims_useWaterAnim) {
-		size = min(Atlas_TileSize, 64);
+		size = min(Atlas2D.TileSize, 64);
 		Animations_Draw(NULL, 14, size);
 	}
 
@@ -388,12 +388,8 @@ struct IGameComponent Animations_Component = {
 /*########################################################################################################################*
 *------------------------------------------------------TerrainAtlas-------------------------------------------------------*
 *#########################################################################################################################*/
-Bitmap Atlas_Bitmap;
-int Atlas_TileSize, Atlas_RowsCount;
-int Atlas1D_Count, Atlas1D_TilesPerAtlas;
-int Atlas1D_Mask, Atlas1D_Shift;
-float Atlas1D_InvTileSize;
-GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES];
+struct _Atlas2DData Atlas2D;
+struct _Atlas1DData Atlas1D;
 
 TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index) {
 	TextureRec rec;
@@ -402,16 +398,16 @@ TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index) {
 
 	/* Adjust coords to be slightly inside - fixes issues with AMD/ATI cards */	
 	rec.U1 = 0.0f; 
-	rec.V1 = y * Atlas1D_InvTileSize;
+	rec.V1 = y * Atlas1D.InvTileSize;
 	rec.U2 = (uCount - 1) + UV2_Scale;
-	rec.V2 = rec.V1       + UV2_Scale * Atlas1D_InvTileSize;
+	rec.V2 = rec.V1       + UV2_Scale * Atlas1D.InvTileSize;
 	return rec;
 }
 
 static void Atlas_Convert2DTo1D(void) {
-	int tileSize      = Atlas_TileSize;
-	int tilesPerAtlas = Atlas1D_TilesPerAtlas;
-	int atlasesCount  = Atlas1D_Count;
+	int tileSize      = Atlas2D.TileSize;
+	int tilesPerAtlas = Atlas1D.TilesPerAtlas;
+	int atlasesCount  = Atlas1D.Count;
 	Bitmap atlas1D;
 	int atlasX, atlasY;
 	int tile = 0, i, y;
@@ -425,9 +421,9 @@ static void Atlas_Convert2DTo1D(void) {
 			atlasY = Atlas2D_TileY(tile) * tileSize;
 
 			Bitmap_CopyBlock(atlasX, atlasY, 0, y * tileSize,
-							&Atlas_Bitmap, &atlas1D, tileSize);
+							&Atlas2D.Bitmap, &atlas1D, tileSize);
 		}
-		Atlas1D_TexIds[i] = Gfx_CreateTexture(&atlas1D, true, Gfx.Mipmaps);
+		Atlas1D.TexIds[i] = Gfx_CreateTexture(&atlas1D, true, Gfx.Mipmaps);
 	}
 	Mem_Free(atlas1D.Scan0);
 }
@@ -436,38 +432,38 @@ static void Atlas_Update1D(void) {
 	int maxAtlasHeight, maxTilesPerAtlas, maxTiles;
 
 	maxAtlasHeight   = min(4096, Gfx.MaxTexHeight);
-	maxTilesPerAtlas = maxAtlasHeight / Atlas_TileSize;
-	maxTiles         = Atlas_RowsCount * ATLAS2D_TILES_PER_ROW;
+	maxTilesPerAtlas = maxAtlasHeight / Atlas2D.TileSize;
+	maxTiles         = Atlas2D.RowsCount * ATLAS2D_TILES_PER_ROW;
 
-	Atlas1D_TilesPerAtlas = min(maxTilesPerAtlas, maxTiles);
-	Atlas1D_Count = Math_CeilDiv(maxTiles, Atlas1D_TilesPerAtlas);
+	Atlas1D.TilesPerAtlas = min(maxTilesPerAtlas, maxTiles);
+	Atlas1D.Count = Math_CeilDiv(maxTiles, Atlas1D.TilesPerAtlas);
 
-	Atlas1D_InvTileSize = 1.0f / Atlas1D_TilesPerAtlas;
-	Atlas1D_Mask  = Atlas1D_TilesPerAtlas - 1;
-	Atlas1D_Shift = Math_Log2(Atlas1D_TilesPerAtlas);
+	Atlas1D.InvTileSize = 1.0f / Atlas1D.TilesPerAtlas;
+	Atlas1D.Mask  = Atlas1D.TilesPerAtlas - 1;
+	Atlas1D.Shift = Math_Log2(Atlas1D.TilesPerAtlas);
 }
 
 void Atlas_Update(Bitmap* bmp) {
-	Atlas_Bitmap    = *bmp;
-	Atlas_TileSize  = bmp->Width  / ATLAS2D_TILES_PER_ROW;
-	Atlas_RowsCount = bmp->Height / Atlas_TileSize;
-	Atlas_RowsCount = min(Atlas_RowsCount, ATLAS2D_MAX_ROWS_COUNT);
+	Atlas2D.Bitmap    = *bmp;
+	Atlas2D.TileSize  = bmp->Width  / ATLAS2D_TILES_PER_ROW;
+	Atlas2D.RowsCount = bmp->Height / Atlas2D.TileSize;
+	Atlas2D.RowsCount = min(Atlas2D.RowsCount, ATLAS2D_MAX_ROWS_COUNT);
 
 	Atlas_Update1D();
 	Atlas_Convert2DTo1D();
 }
 
 static GfxResourceID Atlas_LoadTile_Raw(TextureLoc texLoc, Bitmap* element) {
-	int size = Atlas_TileSize;
+	int size = Atlas2D.TileSize;
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
-	if (y >= Atlas_RowsCount) return GFX_NULL;
+	if (y >= Atlas2D.RowsCount) return GFX_NULL;
 
-	Bitmap_CopyBlock(x * size, y * size, 0, 0, &Atlas_Bitmap, element, size);
+	Bitmap_CopyBlock(x * size, y * size, 0, 0, &Atlas2D.Bitmap, element, size);
 	return Gfx_CreateTexture(element, false, Gfx.Mipmaps);
 }
 
-GfxResourceID Atlas_LoadTile(TextureLoc texLoc) {
-	int tileSize = Atlas_TileSize;
+GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
+	int tileSize = Atlas2D.TileSize;
 	Bitmap tile;
 	GfxResourceID texId;
 	uint8_t scan0[Bitmap_DataSize(64, 64)];
@@ -486,11 +482,11 @@ GfxResourceID Atlas_LoadTile(TextureLoc texLoc) {
 
 void Atlas_Free(void) {
 	int i;
-	Mem_Free(Atlas_Bitmap.Scan0);
-	Atlas_Bitmap.Scan0 = NULL;
+	Mem_Free(Atlas2D.Bitmap.Scan0);
+	Atlas2D.Bitmap.Scan0 = NULL;
 
-	for (i = 0; i < Atlas1D_Count; i++) {
-		Gfx_DeleteTexture(&Atlas1D_TexIds[i]);
+	for (i = 0; i < Atlas1D.Count; i++) {
+		Gfx_DeleteTexture(&Atlas1D.TexIds[i]);
 	}
 }
 

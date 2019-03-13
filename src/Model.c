@@ -1494,7 +1494,7 @@ static void BlockModel_GetBounds(struct Entity* e) {
 
 static void BlockModel_Flush(void) {
 	if (bModel_lastTexIndex != -1) {
-		Gfx_BindTexture(Atlas1D_TexIds[bModel_lastTexIndex]);
+		Gfx_BindTexture(Atlas1D.TexIds[bModel_lastTexIndex]);
 		Models.Active->index = bModel_index;
 		Model_UpdateVB();
 	}

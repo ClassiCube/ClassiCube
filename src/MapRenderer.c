@@ -185,7 +185,7 @@ void MapRenderer_RenderNormal(double delta) {
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (normPartsCount[batch] <= 0) continue;
 		if (hasNormParts[batch] || checkNormParts[batch]) {
-			Gfx_BindTexture(Atlas1D_TexIds[batch]);
+			Gfx_BindTexture(Atlas1D.TexIds[batch]);
 			MapRenderer_RenderNormalBatch(batch);
 			checkNormParts[batch] = false;
 		}
@@ -280,7 +280,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (tranPartsCount[batch] <= 0) continue;
 		if (!hasTranParts[batch]) continue;
-		Gfx_BindTexture(Atlas1D_TexIds[batch]);
+		Gfx_BindTexture(Atlas1D.TexIds[batch]);
 		MapRenderer_RenderTranslucentBatch(batch);
 	}
 	Gfx_DisableMipmaps();
@@ -700,12 +700,12 @@ static void MapRenderer_EnvVariableChanged(void* obj, int envVar) {
 
 static void MapRenderer_TerrainAtlasChanged(void* obj) {
 	if (MapRenderer_1DUsedCount) {
-		bool refreshRequired = elementsPerBitmap != Atlas1D_TilesPerAtlas;
+		bool refreshRequired = elementsPerBitmap != Atlas1D.TilesPerAtlas;
 		if (refreshRequired) MapRenderer_Refresh();
 	}
 
 	MapRenderer_1DUsedCount = MapRenderer_UsedAtlases();
-	elementsPerBitmap = Atlas1D_TilesPerAtlas;
+	elementsPerBitmap = Atlas1D.TilesPerAtlas;
 	MapRenderer_ResetPartFlags();
 }
 

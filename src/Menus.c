@@ -2955,7 +2955,7 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	s->DynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
 	TextAtlas_Make(&s->IdAtlas, &chars, &s->TextFont, &prefix);
 
-	s->XOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas_RowsCount,       Game.Width);
+	s->XOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D.RowsCount,     Game.Width);
 	s->YOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game.Height);
 	s->TileSize = size;
 	
@@ -2978,19 +2978,19 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
 	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW;) {
 		ptr = vertices;
 		idx = Atlas1D_Index(i + s->BaseTexLoc);
-		end = i + Atlas1D_TilesPerAtlas;
+		end = i + Atlas1D.TilesPerAtlas;
 
 		for (; i < end; i++) {
 			tex.X = s->XOffset + Atlas2D_TileX(i) * size;
 			tex.Y = s->YOffset + Atlas2D_TileY(i) * size;
 
-			tex.uv.V1 = Atlas1D_RowId(i + s->BaseTexLoc) * Atlas1D_InvTileSize;
-			tex.uv.V2 = tex.uv.V1            + UV2_Scale * Atlas1D_InvTileSize;
+			tex.uv.V1 = Atlas1D_RowId(i + s->BaseTexLoc) * Atlas1D.InvTileSize;
+			tex.uv.V2 = tex.uv.V1            + UV2_Scale * Atlas1D.InvTileSize;
 		
 			Gfx_Make2DQuad(&tex, col, &ptr);
 		}
 
-		Gfx_BindTexture(Atlas1D_TexIds[idx]);
+		Gfx_BindTexture(Atlas1D.TexIds[idx]);
 		count = (int)(ptr - vertices);
 		Gfx_UpdateDynamicVb_IndexedTris(s->DynamicVb, vertices, count);
 	}
@@ -3042,7 +3042,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 	origXOffset = s->XOffset;
 	s->BaseTexLoc = 0;
 
-	for (rows = Atlas_RowsCount; rows > 0; rows -= ATLAS2D_TILES_PER_ROW) {
+	for (rows = Atlas2D.RowsCount; rows > 0; rows -= ATLAS2D_TILES_PER_ROW) {
 		TexIdsOverlay_RenderTerrain(s);
 		TexIdsOverlay_RenderTextOverlay(s);
 

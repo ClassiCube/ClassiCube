@@ -521,7 +521,7 @@ static bool LoadingScreen_MouseScroll(void* screen, float delta) { return true; 
 static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int count, int atlasIndex, bool* bound) {
 	if (!(*bound)) {
 		*bound = true;
-		Gfx_BindTexture(Atlas1D_TexIds[atlasIndex]);
+		Gfx_BindTexture(Atlas1D.TexIds[atlasIndex]);
 	}
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);

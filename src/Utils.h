@@ -29,7 +29,6 @@ struct DateTime {
 int DateTime_TotalDays(const struct DateTime* time);
 TimeMS DateTime_TotalMs(const struct DateTime* time);
 void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms);
-void DateTime_HttpDate(TimeMS ms, String* str);
 
 CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount);
 bool Utils_IsUrlPrefix(const String* value, int index);

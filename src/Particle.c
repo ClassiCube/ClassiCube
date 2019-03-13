@@ -259,7 +259,7 @@ static void Terrain_Update1DCounts(void) {
 		index = Atlas1D_Index(terrain_particles[i].TexLoc);
 		terrain_1DCount[index] += 4;
 	}
-	for (i = 1; i < Atlas1D_Count; i++) {
+	for (i = 1; i < Atlas1D.Count; i++) {
 		terrain_1DIndices[i] = terrain_1DIndices[i - 1] + terrain_1DCount[i - 1];
 	}
 }
@@ -281,11 +281,11 @@ static void Terrain_Render(float t) {
 	}
 
 	Gfx_SetDynamicVbData(Particles_VB, vertices, terrain_count * 4);
-	for (i = 0; i < Atlas1D_Count; i++) {
+	for (i = 0; i < Atlas1D.Count; i++) {
 		int partCount = terrain_1DCount[i];
 		if (!partCount) continue;
 
-		Gfx_BindTexture(Atlas1D_TexIds[i]);
+		Gfx_BindTexture(Atlas1D.TexIds[i]);
 		Gfx_DrawVb_IndexedTris_Range(partCount, offset);
 		offset += partCount;
 	}
@@ -368,7 +368,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 	loc = Block_Tex(old, FACE_XMIN);
 	
 	baseRec = Atlas1D_TexRec(loc, 1, &texIndex);
-	uScale  = (1.0f/16.0f); vScale = (1.0f/16.0f) * Atlas1D_InvTileSize;
+	uScale  = (1.0f/16.0f); vScale = (1.0f/16.0f) * Atlas1D.InvTileSize;
 
 	minBB = Blocks.MinBB[old];    maxBB = Blocks.MaxBB[old];
 	minX  = (int)(minBB.X * 16); maxX  = (int)(maxBB.X * 16);

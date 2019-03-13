@@ -52,7 +52,7 @@ static void IsometricDrawer_InitCache(void) {
 static void IsometricDrawer_Flush(void) {
 	int count;
 	if (iso_lastTexIndex != -1) {
-		Gfx_BindTexture(Atlas1D_TexIds[iso_lastTexIndex]);
+		Gfx_BindTexture(Atlas1D.TexIds[iso_lastTexIndex]);
 		count = (int)(iso_vertices - iso_vertices_base);
 		Gfx_UpdateDynamicVb_IndexedTris(iso_vb, iso_vertices_base, count);
 	}
