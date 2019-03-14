@@ -84,7 +84,7 @@ static void Program_SetCurrentDirectory(void) {
 }
 
 /* Terminates the program due to an invalid command line argument */
-CC_NOINLINE static void Exit_InvalidArg(const char* name, const String* arg) {
+CC_NOINLINE static void ExitInvalidArg(const char* name, const String* arg) {
 	String tmp; char tmpBuffer[256];
 	String_InitArray(tmp, tmpBuffer);
 	String_Format2(&tmp, "%c '%s'", name, arg);
@@ -95,7 +95,7 @@ CC_NOINLINE static void Exit_InvalidArg(const char* name, const String* arg) {
 }
 
 /* Terminates the program due to insufficient command line arguments */
-CC_NOINLINE static void Exit_MissingArgs(int argsCount, const String* args) {
+CC_NOINLINE static void ExitMissingArgs(int argsCount, const String* args) {
 	String tmp; char tmpBuffer[256];
 	int i;
 	String_InitArray(tmp, tmpBuffer);
@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_Username, &args[0]);
 		Program_RunGame();
 	} else if (argsCount < 4) {
-		Exit_MissingArgs(argsCount, args);
+		ExitMissingArgs(argsCount, args);
 		return 1;
 	} else {
 		String_Copy(&Game_Username,  &args[0]);
@@ -157,11 +157,11 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_IPAddress, &args[2]);
 
 		if (!Utils_ParseIP(&args[2], ip)) {
-			Exit_InvalidArg("Invalid IP", &args[2]);
+			ExitInvalidArg("Invalid IP", &args[2]);
 			return 1;
 		}
 		if (!Convert_ParseUInt16(&args[3], &port)) {
-			Exit_InvalidArg("Invalid port", &args[3]);
+			ExitInvalidArg("Invalid port", &args[3]);
 			return 1;
 		}
 		Game_Port = port;

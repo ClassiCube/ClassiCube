@@ -467,16 +467,10 @@
     <ClCompile Include="_ftbase.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="_ftbbox.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
     <ClCompile Include="_ftbitmap.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
     <ClCompile Include="_ftcid.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
-    <ClCompile Include="_ftgasp.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
     <ClCompile Include="_ftglyph.c">

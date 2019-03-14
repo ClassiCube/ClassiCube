@@ -633,31 +633,6 @@
   /*************************************************************************
    *
    * @macro:
-   *   FT_INCREMENTAL_H
-   *
-   * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   FreeType~2 API which performs incremental glyph loading.
-   */
-#define FT_INCREMENTAL_H  "ftincrem.h"
-
-
-  /*************************************************************************
-   *
-   * @macro:
-   *   FT_GASP_H
-   *
-   * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   FreeType~2 API which returns entries from the TrueType GASP table.
-   */
-#define FT_GASP_H  "ftgasp.h"
-#define FT_GASP_H_FT "freetype/ftgasp.h"
-
-
-  /*************************************************************************
-   *
-   * @macro:
    *   FT_ADVANCES_H
    *
    * @description:
@@ -672,27 +647,6 @@
   /* These header files don't need to be included by the user. */
 #define FT_ERROR_DEFINITIONS_H  "fterrdef.h"
 #define FT_PARAMETER_TAGS_H     "ftparams.h"
-
-  /* Deprecated macros. */
-#define FT_UNPATENTED_HINTING_H   "ftparams.h"
-#define FT_TRUETYPE_UNPATENTED_H  "ftparams.h"
-
-  /* FT_CACHE_H is the only header file needed for the cache subsystem. */
-#define FT_CACHE_IMAGE_H          FT_CACHE_H
-#define FT_CACHE_SMALL_BITMAPS_H  FT_CACHE_H
-#define FT_CACHE_CHARMAP_H        FT_CACHE_H
-
-  /* The internals of the cache sub-system are no longer exposed.  We */
-  /* default to FT_CACHE_H at the moment just in case, but we know of */
-  /* no rogue client that uses them.                                  */
-  /*                                                                  */
-#define FT_CACHE_MANAGER_H           FT_CACHE_H
-#define FT_CACHE_INTERNAL_MRU_H      FT_CACHE_H
-#define FT_CACHE_INTERNAL_MANAGER_H  FT_CACHE_H
-#define FT_CACHE_INTERNAL_CACHE_H    FT_CACHE_H
-#define FT_CACHE_INTERNAL_GLYPH_H    FT_CACHE_H
-#define FT_CACHE_INTERNAL_IMAGE_H    FT_CACHE_H
-#define FT_CACHE_INTERNAL_SBITS_H    FT_CACHE_H
 
 
   /*

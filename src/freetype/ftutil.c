@@ -292,32 +292,6 @@
   /* documentation is in ftlist.h */
 
   FT_EXPORT_DEF( void )
-  FT_List_Insert( FT_List      list,
-                  FT_ListNode  node )
-  {
-    FT_ListNode  after;
-
-
-    if ( !list || !node )
-      return;
-
-    after = list->head;
-
-    node->next = after;
-    node->prev = NULL;
-
-    if ( !after )
-      list->tail = node;
-    else
-      after->prev = node;
-
-    list->head = node;
-  }
-
-
-  /* documentation is in ftlist.h */
-
-  FT_EXPORT_DEF( void )
   FT_List_Remove( FT_List      list,
                   FT_ListNode  node )
   {
@@ -339,71 +313,6 @@
       after->prev = before;
     else
       list->tail = before;
-  }
-
-
-  /* documentation is in ftlist.h */
-
-  FT_EXPORT_DEF( void )
-  FT_List_Up( FT_List      list,
-              FT_ListNode  node )
-  {
-    FT_ListNode  before, after;
-
-
-    if ( !list || !node )
-      return;
-
-    before = node->prev;
-    after  = node->next;
-
-    /* check whether we are already on top of the list */
-    if ( !before )
-      return;
-
-    before->next = after;
-
-    if ( after )
-      after->prev = before;
-    else
-      list->tail = before;
-
-    node->prev       = NULL;
-    node->next       = list->head;
-    list->head->prev = node;
-    list->head       = node;
-  }
-
-
-  /* documentation is in ftlist.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_List_Iterate( FT_List           list,
-                   FT_List_Iterator  iterator,
-                   void*             user )
-  {
-    FT_ListNode  cur;
-    FT_Error     error = FT_Err_Ok;
-
-
-    if ( !list || !iterator )
-      return FT_THROW( Invalid_Argument );
-
-    cur = list->head;
-
-    while ( cur )
-    {
-      FT_ListNode  next = cur->next;
-
-
-      error = iterator( cur, user );
-      if ( error )
-        break;
-
-      cur = next;
-    }
-
-    return error;
   }
 
 

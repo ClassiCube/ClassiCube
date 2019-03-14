@@ -778,11 +778,6 @@ void StringsBuffer_Clear(StringsBuffer* buffer) {
 	StringsBuffer_Init(buffer);
 }
 
-void StringsBuffer_Get(StringsBuffer* buffer, int i, String* str) {
-	String entry = StringsBuffer_UNSAFE_Get(buffer, i);
-	String_Copy(str, &entry);
-}
-
 String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
 	uint32_t flags, offset, len;
 	if (i < 0 || i >= buffer->Count) Logger_Abort("Tried to get String past StringsBuffer end");

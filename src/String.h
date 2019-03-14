@@ -212,9 +212,8 @@ typedef struct StringsBuffer_ {
 
 /* Resets counts to 0, and frees any allocated memory. */
 CC_API void StringsBuffer_Clear(StringsBuffer* buffer);
-/* Copies the characters from the i'th string in the given buffer into the given string. */
-CC_API void StringsBuffer_Get(StringsBuffer* buffer, int i, String* str);
 /* UNSAFE: Returns a direct pointer to the i'th string in the given buffer. */
+/* You MUST NOT change the characters of this string. Copy to another string if necessary.*/
 CC_API STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i);
 /* Adds a given string to the end of the given buffer. */
 CC_API void StringsBuffer_Add(StringsBuffer* buffer, const String* str);

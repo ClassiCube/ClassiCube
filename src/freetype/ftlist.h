@@ -57,11 +57,8 @@ FT_BEGIN_HEADER
   /*    FT_ListNodeRec                                                     */
   /*                                                                       */
   /*    FT_List_Add                                                        */
-  /*    FT_List_Insert                                                     */
   /*    FT_List_Find                                                       */
   /*    FT_List_Remove                                                     */
-  /*    FT_List_Up                                                         */
-  /*    FT_List_Iterate                                                    */
   /*    FT_List_Iterator                                                   */
   /*    FT_List_Finalize                                                   */
   /*    FT_List_Destructor                                                 */
@@ -109,23 +106,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    FT_List_Insert                                                     */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Insert an element at the head of a list.                           */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    list :: A pointer to parent list.                                  */
-  /*    node :: The node to insert.                                        */
-  /*                                                                       */
-  FT_EXPORT( void )
-  FT_List_Insert( FT_List      list,
-                  FT_ListNode  node );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
   /*    FT_List_Remove                                                     */
   /*                                                                       */
   /* <Description>                                                         */
@@ -141,69 +121,6 @@ FT_BEGIN_HEADER
   FT_EXPORT( void )
   FT_List_Remove( FT_List      list,
                   FT_ListNode  node );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_List_Up                                                         */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Move a node to the head/top of a list.  Used to maintain LRU       */
-  /*    lists.                                                             */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    list :: A pointer to the parent list.                              */
-  /*    node :: The node to move.                                          */
-  /*                                                                       */
-  FT_EXPORT( void )
-  FT_List_Up( FT_List      list,
-              FT_ListNode  node );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <FuncType>                                                            */
-  /*    FT_List_Iterator                                                   */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    An FT_List iterator function that is called during a list parse    */
-  /*    by @FT_List_Iterate.                                               */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    node :: The current iteration list node.                           */
-  /*                                                                       */
-  /*    user :: A typeless pointer passed to @FT_List_Iterate.             */
-  /*            Can be used to point to the iteration's state.             */
-  /*                                                                       */
-  typedef FT_Error
-  (*FT_List_Iterator)( FT_ListNode  node,
-                       void*        user );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_List_Iterate                                                    */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Parse a list and calls a given iterator function on each element.  */
-  /*    Note that parsing is stopped as soon as one of the iterator calls  */
-  /*    returns a non-zero value.                                          */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    list     :: A handle to the list.                                  */
-  /*    iterator :: An iterator function, called on each node of the list. */
-  /*    user     :: A user-supplied field that is passed as the second     */
-  /*                argument to the iterator.                              */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    The result (a FreeType error code) of the last iterator call.      */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FT_List_Iterate( FT_List           list,
-                   FT_List_Iterator  iterator,
-                   void*             user );
 
 
   /*************************************************************************/

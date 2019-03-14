@@ -67,7 +67,6 @@ struct HacksComp {
 
 void HacksComp_Init(struct HacksComp* hacks);
 bool HacksComp_CanJumpHigher(struct HacksComp* hacks);
-bool HacksComp_Floating(struct HacksComp* hacks);
 void HacksComp_SetUserType(struct HacksComp* hacks, uint8_t value, bool setBlockPerms);
 void HacksComp_CheckConsistency(struct HacksComp* hacks);
 void HacksComp_UpdateState(struct HacksComp* hacks);

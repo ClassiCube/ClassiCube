@@ -132,7 +132,7 @@ void Utils_UNSAFE_GetFilename(STRING_REF String* path) {
 
 int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
 	int steps;
-	/* Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2) */
+	/* Some mice may use deltas of say (0.2, 0.3, 0.4, 0.1) */
 	/* We must use rounding at final step, not at every intermediate step. */
 	*accumulator += delta;
 	steps = (int)(*accumulator);

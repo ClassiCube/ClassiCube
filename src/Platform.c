@@ -4,9 +4,9 @@
 #include "ExtMath.h"
 #include "Drawer2D.h"
 #include "Funcs.h"
-#include "Http.h"
 #include "Bitmap.h"
 #include "Window.h"
+#include "Utils.h"
 
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
@@ -39,9 +39,7 @@
 #include <shellapi.h>
 #include <wincrypt.h>
 
-#define HTTP_QUERY_ETAG 54 /* Missing from some old MingW32 headers */
 #define Socket__Error() WSAGetLastError()
-
 static HANDLE heap;
 const char* Platform_NewLine = "\r\n";
 

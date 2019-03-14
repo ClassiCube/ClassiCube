@@ -90,16 +90,6 @@
   }
 
 
-  FT_BASE_DEF( FT_Int )
-  ft_validator_run( FT_Validator  valid )
-  {
-    /* This function doesn't work!  None should call it. */
-    FT_UNUSED( valid );
-
-    return -1;
-  }
-
-
   FT_BASE_DEF( void )
   ft_validator_error( FT_Validator  valid,
                       FT_Error      error )
@@ -3512,77 +3502,6 @@
 
       ft_set_current_renderer( library );
     }
-  }
-
-
-  /* documentation is in ftrender.h */
-
-  FT_EXPORT_DEF( FT_Renderer )
-  FT_Get_Renderer( FT_Library       library,
-                   FT_Glyph_Format  format )
-  {
-    /* test for valid `library' delayed to `FT_Lookup_Renderer' */
-
-    return FT_Lookup_Renderer( library, format, 0 );
-  }
-
-
-  /* documentation is in ftrender.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_Set_Renderer( FT_Library     library,
-                   FT_Renderer    renderer,
-                   FT_UInt        num_params,
-                   FT_Parameter*  parameters )
-  {
-    FT_ListNode  node;
-    FT_Error     error = FT_Err_Ok;
-
-    FT_Renderer_SetModeFunc  set_mode;
-
-
-    if ( !library )
-    {
-      error = FT_THROW( Invalid_Library_Handle );
-      goto Exit;
-    }
-
-    if ( !renderer )
-    {
-      error = FT_THROW( Invalid_Argument );
-      goto Exit;
-    }
-
-    if ( num_params > 0 && !parameters )
-    {
-      error = FT_THROW( Invalid_Argument );
-      goto Exit;
-    }
-
-    node = FT_List_Find( &library->renderers, renderer );
-    if ( !node )
-    {
-      error = FT_THROW( Invalid_Argument );
-      goto Exit;
-    }
-
-    FT_List_Up( &library->renderers, node );
-
-    if ( renderer->glyph_format == FT_GLYPH_FORMAT_OUTLINE )
-      library->cur_renderer = renderer;
-
-    set_mode = renderer->clazz->set_mode;
-
-    for ( ; num_params > 0; num_params-- )
-    {
-      error = set_mode( renderer, parameters->tag, parameters->data );
-      if ( error )
-        break;
-      parameters++;
-    }
-
-  Exit:
-    return error;
   }
 
 

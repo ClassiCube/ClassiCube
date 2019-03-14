@@ -88,9 +88,6 @@ FT_BEGIN_HEADER
   /*    FT_Renderer                                                        */
   /*    FT_Renderer_Class                                                  */
   /*                                                                       */
-  /*    FT_Get_Renderer                                                    */
-  /*    FT_Set_Renderer                                                    */
-  /*                                                                       */
   /*    FT_Set_Debug_Hook                                                  */
   /*                                                                       */
   /*************************************************************************/

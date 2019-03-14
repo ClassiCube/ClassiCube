@@ -171,10 +171,6 @@ bool HacksComp_CanJumpHigher(struct HacksComp* hacks) {
 	return hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed;
 }
 
-bool HacksComp_Floating(struct HacksComp* hacks) {
-	return hacks->Noclip || hacks->Flying;
-}
-
 static String HacksComp_UNSAFE_FlagValue(const char* flagRaw, struct HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
 	String flag    = String_FromReadonly(flagRaw);
