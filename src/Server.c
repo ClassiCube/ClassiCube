@@ -159,7 +159,7 @@ static void SPConnection_BeginConnect(void) {
 		return;
 	}
 
-	Random_InitFromCurrentTime(&rnd);
+	Random_SeedFromCurrentTime(&rnd);
 	World_SetDimensions(128, 64, 128);
 	Gen_Vanilla = true;
 	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);

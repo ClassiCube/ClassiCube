@@ -150,14 +150,14 @@ CC_API bool String_CaselessEnds(const String* str, const String* sub);
 CC_API int  String_Compare(const String* a, const String* b);
 
 /* See String_Format4 */
-void String_Format1(String* str, const char* format, const void* a1);
+CC_API void String_Format1(String* str, const char* format, const void* a1);
 /* See String_Format4 */
-void String_Format2(String* str, const char* format, const void* a1, const void* a2);
+CC_API void String_Format2(String* str, const char* format, const void* a1, const void* a2);
 /* See String_Format4 */
-void String_Format3(String* str, const char* format, const void* a1, const void* a2, const void* a3);
+CC_API void String_Format3(String* str, const char* format, const void* a1, const void* a2, const void* a3);
 /* Formats the arguments in a string, similiar to printf or C# String.Format
 NOTE: This is a low level API. Argument count and types are not checked at all. */
-void String_Format4(String* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
+CC_API void String_Format4(String* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
 /* Converts a code page 437 character to its unicode equivalent. */
 Codepoint Convert_CP437ToUnicode(char c);

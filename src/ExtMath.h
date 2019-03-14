@@ -48,13 +48,17 @@ bool Math_IsPowOf2(int value);
 #define Math_Clamp(val, min, max) val = val < (min) ? (min) : val;  val = val > (max) ? (max) : val;
 
 typedef uint64_t RNGState;
-void Random_Init(RNGState* rnd, int seed);
-void Random_InitFromCurrentTime(RNGState* rnd);
-void Random_SetSeed(RNGState* rnd, int seed);
-/* Returns integer from min inclusive to max exclusive */
-int Random_Range(RNGState* rnd, int min, int max);
+/* Initialises RNG using seed from current UTC time. */
+void Random_SeedFromCurrentTime(RNGState* rnd);
+/* Initialised RNG using the given seed. */
+CC_API void Random_Seed(RNGState* rnd, int seed);
+
 /* Returns integer from 0 inclusive to n exclusive */
-int Random_Next(RNGState* rnd, int n);
+CC_API int Random_Next(RNGState* rnd, int n);
 /* Returns real from 0 inclusive to 1 exclusive */
-float Random_Float(RNGState* rnd);
+CC_API float Random_Float(RNGState* rnd);
+/* Returns integer from min inclusive to max exclusive */
+static CC_INLINE int Random_Range(RNGState* rnd, int min, int max) {
+	return min + Random_Next(rnd, max - min);
+}
 #endif

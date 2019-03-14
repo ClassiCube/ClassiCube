@@ -454,7 +454,7 @@ static void Music_RunLoop(void) {
 		musicFiles[count++] = i;
 	}
 
-	Random_InitFromCurrentTime(&rnd);
+	Random_SeedFromCurrentTime(&rnd);
 	Audio_Init(&music_out, AUDIO_MAX_BUFFERS);
 
 	while (!music_pendingStop && count) {

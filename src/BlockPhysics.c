@@ -105,7 +105,7 @@ static void Physics_OnNewMapLoaded(void* obj) {
 	physics_maxWaterZ = World.MaxZ - 2;
 
 	Tree_Blocks = World.Blocks;
-	Random_InitFromCurrentTime(&physics_rnd);
+	Random_SeedFromCurrentTime(&physics_rnd);
 	Tree_Rnd = &physics_rnd;
 }
 

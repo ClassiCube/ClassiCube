@@ -468,7 +468,7 @@ static void Particles_BreakBlockEffect_Handler(void* obj, Vector3I coords, Block
 
 static void Particles_Init(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Particles_Tick);
-	Random_InitFromCurrentTime(&rnd);
+	Random_SeedFromCurrentTime(&rnd);
 	Particles_ContextRecreated(NULL);	
 
 	Event_RegisterBlock(&UserEvents.BlockChanged,   NULL, Particles_BreakBlockEffect_Handler);

@@ -16,7 +16,7 @@ struct _WorldData World;
 static void World_NewUuid(void) {
 	RNGState rnd;
 	int i;
-	Random_InitFromCurrentTime(&rnd);
+	Random_SeedFromCurrentTime(&rnd);
 
 	/* seed a bit more randomness for uuid */
 	for (i = 0; i < Game_Username.length; i++) {

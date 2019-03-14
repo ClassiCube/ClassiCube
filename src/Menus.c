@@ -1012,7 +1012,7 @@ CC_NOINLINE static int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int i
 	RNGState rnd;
 
 	if (!input->Base.Text.length) {
-		Random_InitFromCurrentTime(&rnd);
+		Random_SeedFromCurrentTime(&rnd);
 		return Random_Next(&rnd, Int32_MaxValue);
 	}
 	return GenLevelScreen_GetInt(s, index);
@@ -1163,7 +1163,7 @@ struct Screen* GenLevelScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 static struct ClassicGenScreen ClassicGenScreen_Instance;
 static void ClassicGenScreen_Gen(int size) {
-	RNGState rnd; Random_InitFromCurrentTime(&rnd);
+	RNGState rnd; Random_SeedFromCurrentTime(&rnd);
 	Gen_Vanilla = true;
 	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
 

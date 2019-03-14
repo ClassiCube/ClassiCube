@@ -611,7 +611,7 @@ void NotchyGen_Generate(void) {
 	Gen_Init();
 	Heightmap = Mem_Alloc(World.Width * World.Length, 2, "gen heightmap");
 
-	Random_Init(&rnd, Gen_Seed);
+	Random_Seed(&rnd, Gen_Seed);
 	waterLevel = World.Height / 2;	
 	minHeight  = World.Height;
 

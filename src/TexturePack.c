@@ -39,7 +39,7 @@ static void LavaAnimation_Tick(BitmapCol* ptr, int size) {
 	int x, y, i = 0;
 
 	if (!L_rndInitalised) {
-		Random_InitFromCurrentTime(&L_rnd);
+		Random_SeedFromCurrentTime(&L_rnd);
 		L_rndInitalised = true;
 	}
 	
@@ -109,7 +109,7 @@ static void WaterAnimation_Tick(BitmapCol* ptr, int size) {
 	int x, y, i = 0;
 
 	if (!W_rndInitalised) {
-		Random_InitFromCurrentTime(&W_rnd);
+		Random_SeedFromCurrentTime(&W_rnd);
 		W_rndInitalised = true;
 	}
 	

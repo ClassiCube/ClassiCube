@@ -106,18 +106,13 @@ double Math_FastExp(double x) {
 #define RND_VALUE (0x5DEECE66DULL)
 #define RND_MASK ((1ULL << 48) - 1)
 
-void Random_Init(RNGState* seed, int seedInit) { Random_SetSeed(seed, seedInit); }
-void Random_InitFromCurrentTime(RNGState* rnd) {
+void Random_SeedFromCurrentTime(RNGState* rnd) {
 	TimeMS now = DateTime_CurrentUTC_MS();
-	Random_Init(rnd, (int)now);
+	Random_Seed(rnd, (int)now);
 }
 
-void Random_SetSeed(RNGState* seed, int seedInit) {
+void Random_Seed(RNGState* seed, int seedInit) {
 	*seed = (seedInit ^ RND_VALUE) & RND_MASK;
-}
-
-int Random_Range(RNGState* seed, int min, int max) {
-	return min + Random_Next(seed, max - min);
 }
 
 int Random_Next(RNGState* seed, int n) {

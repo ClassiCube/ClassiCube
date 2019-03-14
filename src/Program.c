@@ -19,7 +19,7 @@ int main_imdct() {
 	double delta[VORBIS_N];
 
 	RngState rng;
-	Random_Init(&rng, 2342334);
+	Random_Seed(&rng, 2342334);
 	struct imdct_state imdct;
 	imdct_init(&imdct, VORBIS_N);
 
