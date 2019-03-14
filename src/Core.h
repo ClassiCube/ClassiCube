@@ -126,7 +126,7 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 typedef void* GfxResourceID;
 #define GFX_NULL NULL
 #else
-typedef uint32_t GfxResourceID;
+typedef uintptr_t GfxResourceID;
 #define GFX_NULL 0
 #endif
 

@@ -988,7 +988,7 @@ void Gfx_OnWindowResize(void) {
 #endif
 
 #if defined CC_BUILD_GL11
-static GfxResourceID gfx_activeList;
+static GLuint gfx_activeList;
 #define gl_DYNAMICLISTID 1234567891
 static void* gfx_dynamicListData;
 static uint16_t gl_indices[GFX_MAX_INDICES];
@@ -1057,7 +1057,7 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void GL_DoMipmaps(GfxResourceID texId, int x, int y, Bitmap* bmp, bool partial) {
+static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, bool partial) {
 	uint8_t* prev = bmp->Scan0;
 	uint8_t* cur;
 
@@ -1106,23 +1106,24 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->Width, bmp->Height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, bmp->Scan0);
 
-	if (mipmaps) GL_DoMipmaps(texId, 0, 0, bmp, false);
+	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, false);
 	return texId;
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, bool mipmaps) {
-	glBindTexture(GL_TEXTURE_2D, texId);
+	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->Width, part->Height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, part->Scan0);
-	if (mipmaps) GL_DoMipmaps(texId, x, y, part, true);
+	if (mipmaps) Gfx_DoMipmaps(x, y, part, true);
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	glBindTexture(GL_TEXTURE_2D, texId);
+	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	if (!texId || *texId == GFX_NULL) return;
-	glDeleteTextures(1, texId);
+	GLuint id = (GLuint)(*texId);
+	glDeleteTextures(1, &id);
 	*texId = GFX_NULL;
 }
 
@@ -1205,18 +1206,20 @@ GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 	return id;
 }
 
-void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, vb); }
-void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib); }
+void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); }
+void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	if (!vb || *vb == GFX_NULL) return;
-	_glDeleteBuffers(1, vb);
+	GLuint id = (GLuint)(*vb);
+	_glDeleteBuffers(1, &id);
 	*vb = GFX_NULL;
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
 	if (!ib || *ib == GFX_NULL) return;
-	_glDeleteBuffers(1, ib);
+	GLuint id = (GLuint)(*ib);
+	_glDeleteBuffers(1, &id);
 	*ib = GFX_NULL;
 }
 
@@ -1882,13 +1885,13 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { return GFX_NULL; }
-void Gfx_BindVb(GfxResourceID vb) { gfx_activeList = vb; }
+void Gfx_BindVb(GfxResourceID vb) { gfx_activeList = (GLuint)vb; }
 void Gfx_BindIb(GfxResourceID ib) { }
 void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	if (!vb || *vb == GFX_NULL) return;
-	if (*vb != gl_DYNAMICLISTID) glDeleteLists(*vb, 1);
+	if (*vb != gl_DYNAMICLISTID) glDeleteLists((GLuint)(*vb), 1);
 	*vb = GFX_NULL;
 }
 
@@ -1897,7 +1900,7 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	gfx_dynamicListData = vertices;
 }
 
-static GfxResourceID gl_lastPartialList;
+static GLuint gl_lastPartialList;
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 	/* TODO: This renders the whole map, bad performance!! FIX FIX */
 	if (gfx_activeList == gl_lastPartialList) return;
