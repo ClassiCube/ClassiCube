@@ -576,6 +576,10 @@ static void Chat_Reset(void) {
 	Chat_CloseLog();
 	Chat_LogName.length = 0;
 
+	ChatLog_LastLogDate.Day   = 0;
+	ChatLog_LastLogDate.Month = 0;
+	ChatLog_LastLogDate.Year  = 0;
+
 	/* reset CPE messages */
 	Chat_AddOf(&String_Empty, MSG_TYPE_ANNOUNCEMENT);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_1);
