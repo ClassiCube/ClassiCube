@@ -220,17 +220,17 @@ void Logger_Warn2(ReturnCode res, const char* place, const String* path) {
 /* So this is the simplest way to avoid duplicating code on each platform */
 /* Also, Windows uses \r\n for newline while unix-ish systems uses \n. Need to account for that */
 #define Logger_Dump_X86() \
-String_Format3(&str, "eax=%x ebx=%x ecx=%x"##_NL, REG_GET(ax,AX), REG_GET(bx,BX), REG_GET(cx,CX));\
-String_Format3(&str, "edx=%x esi=%x edi=%x"##_NL, REG_GET(dx,DX), REG_GET(si,SI), REG_GET(di,DI));\
-String_Format3(&str, "eip=%x ebp=%x esp=%x"##_NL, REG_GET(ip,IP), REG_GET(bp,BP), REG_GET(sp,SP));
+String_Format3(&str, "eax=%x ebx=%x ecx=%x" _NL, REG_GET(ax,AX), REG_GET(bx,BX), REG_GET(cx,CX));\
+String_Format3(&str, "edx=%x esi=%x edi=%x" _NL, REG_GET(dx,DX), REG_GET(si,SI), REG_GET(di,DI));\
+String_Format3(&str, "eip=%x ebp=%x esp=%x" _NL, REG_GET(ip,IP), REG_GET(bp,BP), REG_GET(sp,SP));
 
 #define Logger_Dump_X64() \
-String_Format3(&str, "rax=%x rbx=%x rcx=%x"##_NL, REG_GET(ax,AX), REG_GET(bx,BX), REG_GET(cx,CX));\
-String_Format3(&str, "rdx=%x rsi=%x rdi=%x"##_NL, REG_GET(dx,DX), REG_GET(si,SI), REG_GET(di,DI));\
-String_Format3(&str, "rip=%x rbp=%x rsp=%x"##_NL, REG_GET(ip,IP), REG_GET(bp,BP), REG_GET(sp,SP));\
-String_Format3(&str, "r8 =%x r9 =%x r10=%x"##_NL, REG_GET(8,8),   REG_GET(9,9),   REG_GET(10,10));\
-String_Format3(&str, "r11=%x r12=%x r13=%x"##_NL, REG_GET(11,11), REG_GET(12,12), REG_GET(13,13));\
-String_Format2(&str, "r14=%x r15=%x"##_NL,        REG_GET(14,14), REG_GET(15,15));
+String_Format3(&str, "rax=%x rbx=%x rcx=%x" _NL, REG_GET(ax,AX), REG_GET(bx,BX), REG_GET(cx,CX));\
+String_Format3(&str, "rdx=%x rsi=%x rdi=%x" _NL, REG_GET(dx,DX), REG_GET(si,SI), REG_GET(di,DI));\
+String_Format3(&str, "rip=%x rbp=%x rsp=%x" _NL, REG_GET(ip,IP), REG_GET(bp,BP), REG_GET(sp,SP));\
+String_Format3(&str, "r8 =%x r9 =%x r10=%x" _NL, REG_GET(8,8),   REG_GET(9,9),   REG_GET(10,10));\
+String_Format3(&str, "r11=%x r12=%x r13=%x" _NL, REG_GET(11,11), REG_GET(12,12), REG_GET(13,13));\
+String_Format2(&str, "r14=%x r15=%x" _NL,        REG_GET(14,14), REG_GET(15,15));
 
 #if defined CC_BUILD_WIN
 struct StackPointers { uintptr_t Instruction, Frame, Stack; };
@@ -424,30 +424,30 @@ static void Logger_DumpRegisters(void* ctx) {
 
 #if defined __i386__
 #if defined CC_BUILD_LINUX
-	#define REG_GET(ign, reg) &r->greps[REG_E##reg]
+	#define REG_GET(ign, reg) &r.gregs[REG_E##reg]
 #elif defined CC_BUILD_OSX
 	#define REG_GET(reg, ign) &r->__ss.__e##reg
 #elif defined CC_BUILD_SOLARIS
-	#define REG_GET(ign, reg) &r->greps[reg]
+	#define REG_GET(ign, reg) &r.gregs[reg]
 #elif defined CC_BUILD_FREEBSD
-	#define REG_GET(reg, ign) &r->.mc_e##reg
+	#define REG_GET(reg, ign) &r.mc_e##reg
 #elif defined CC_BUILD_OPENBSD
-	#define REG_GET(reg, ign) &r->.sc_e##reg
+	#define REG_GET(reg, ign) &r.sc_e##reg
 #elif defined CC_BUILD_NETBSD
 	#define REG_GET(ign, reg) &r.__gregs[_REG_E##reg]
 #endif
 	Logger_Dump_X86()
 #elif defined __x86_64__
 #if defined CC_BUILD_LINUX
-	#define REG_GET(ign, reg) &r->greps[REG_R##reg]
+	#define REG_GET(ign, reg) &r.gregs[REG_R##reg]
 #elif defined CC_BUILD_OSX
 	#define REG_GET(reg, ign) &r->__ss.__r##reg
 #elif defined CC_BUILD_SOLARIS
-	#define REG_GET(ign, reg) &r->greps[REG_R##reg]
+	#define REG_GET(ign, reg) &r.gregs[REG_R##reg]
 #elif defined CC_BUILD_FREEBSD
-	#define REG_GET(reg, ign) &r->.mc_r##reg
+	#define REG_GET(reg, ign) &r.mc_r##reg
 #elif defined CC_BUILD_OPENBSD
-	#define REG_GET(reg, ign) &r->.sc_r##reg
+	#define REG_GET(reg, ign) &r.sc_r##reg
 #elif defined CC_BUILD_NETBSD
 	#define REG_GET(ign, reg) &r.__gregs[_REG_R##reg]
 #endif
