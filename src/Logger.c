@@ -14,19 +14,30 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
+
 #include <windows.h>
 #include <imagehlp.h>
+#define _NL "\r\n"
 #endif
-/* POSIX can be shared between Linux/BSD/OSX */
+/* POSIX can be shared between unix-ish systems */
 #ifdef CC_BUILD_POSIX
-#ifndef CC_BUILD_OPENBSD
+#if defined CC_BUILD_OPENBSD
+/* OpenBSD doesn't provide ucontext.h */
+#elif defined CC_BUILD_LINUX
+/* Need to define this to get REG_ constants */
+#define __USE_GNU
+#include <ucontext.h>
+#undef  __USE_GNU
+#else
 #include <ucontext.h>
 #endif
+
 #include <execinfo.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
+#define _NL "\n"
 #endif
 
 
@@ -205,6 +216,22 @@ void Logger_Warn2(ReturnCode res, const char* place, const String* path) {
 /*########################################################################################################################*
 *-------------------------------------------------------Info dumping------------------------------------------------------*
 *#########################################################################################################################*/
+/* Unfortunately, operating systems vary wildly in how they name and access registers for dumping */
+/* So this is the simplest way to avoid duplicating code on each platform */
+/* Also, Windows uses \r\n for newline while unix-ish systems uses \n. Need to account for that */
+#define Logger_Dump_X86() \
+String_Format3(&str, "eax=%x ebx=%x ecx=%x"##_NL, REG_GET(ax,AX), REG_GET(bx,BX), REG_GET(cx,CX));\
+String_Format3(&str, "edx=%x esi=%x edi=%x"##_NL, REG_GET(dx,DX), REG_GET(si,SI), REG_GET(di,DI));\
+String_Format3(&str, "eip=%x ebp=%x esp=%x"##_NL, REG_GET(ip,IP), REG_GET(bp,BP), REG_GET(sp,SP));
+
+#define Logger_Dump_X64() \
+String_Format3(&str, "rax=%x rbx=%x rcx=%x"##_NL, REG_GET(ax,AX), REG_GET(bx,BX), REG_GET(cx,CX));\
+String_Format3(&str, "rdx=%x rsi=%x rdi=%x"##_NL, REG_GET(dx,DX), REG_GET(si,SI), REG_GET(di,DI));\
+String_Format3(&str, "rip=%x rbp=%x rsp=%x"##_NL, REG_GET(ip,IP), REG_GET(bp,BP), REG_GET(sp,SP));\
+String_Format3(&str, "r8 =%x r9 =%x r10=%x"##_NL, REG_GET(8,8),   REG_GET(9,9),   REG_GET(10,10));\
+String_Format3(&str, "r11=%x r12=%x r13=%x"##_NL, REG_GET(11,11), REG_GET(12,12), REG_GET(13,13));\
+String_Format2(&str, "r14=%x r15=%x"##_NL,        REG_GET(14,14), REG_GET(15,15));
+
 #if defined CC_BUILD_WIN
 struct StackPointers { uintptr_t Instruction, Frame, Stack; };
 struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
@@ -226,13 +253,6 @@ static int Logger_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int ma
 	frame.AddrPC.Offset    = ctx->Rip;
 	frame.AddrFrame.Offset = ctx->Rsp;
 	frame.AddrStack.Offset = ctx->Rsp;
-#elif defined _M_IA64
-	type = IMAGE_FILE_MACHINE_IA64;
-	frame.AddrPC.Offset     = ctx->StIIP;
-	frame.AddrFrame.Offset  = ctx->IntSp;
-	frame.AddrBStore.Offset = ctx->RsBSP;
-	frame.AddrStack.Offset  = ctx->IntSp;
-	frame.AddrBStore.Mode   = AddrModeFlat;
 #else
 	#error "Unknown machine type"
 #endif
@@ -315,28 +335,11 @@ static void Logger_DumpRegisters(void* ctx) {
 	String_AppendConst(&str, "-- registers --\r\n");
 
 #if defined _M_IX86
-	String_Format3(&str, "eax=%x ebx=%x ecx=%x\r\n", &r->Eax, &r->Ebx, &r->Ecx);
-	String_Format3(&str, "edx=%x esi=%x edi=%x\r\n", &r->Edx, &r->Esi, &r->Edi);
-	String_Format3(&str, "eip=%x ebp=%x esp=%x\r\n", &r->Eip, &r->Ebp, &r->Esp);
+	#define REG_GET(reg, ign) &r->E ## reg
+	Logger_Dump_X86()
 #elif defined _M_X64
-	String_Format3(&str, "rax=%x rbx=%x rcx=%x\r\n", &r->Rax, &r->Rbx, &r->Rcx);
-	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\r\n", &r->Rdx, &r->Rsi, &r->Rdi);
-	String_Format3(&str, "rip=%x rbp=%x rsp=%x\r\n", &r->Rip, &r->Rbp, &r->Rsp);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\r\n", &r->R8,  &r->R9,  &r->R10);
-	String_Format3(&str, "r11=%x r12=%x r13=%x\r\n", &r->R11, &r->R12, &r->R13);
-	String_Format2(&str, "r14=%x r15=%x\r\n"       , &r->R14, &r->R15);
-#elif defined _M_IA64
-	String_Format3(&str, "r1 =%x r2 =%x r3 =%x\r\n", &r->IntGp,  &r->IntT0,  &r->IntT1);
-	String_Format3(&str, "r4 =%x r5 =%x r6 =%x\r\n", &r->IntS0,  &r->IntS1,  &r->IntS2);
-	String_Format3(&str, "r7 =%x r8 =%x r9 =%x\r\n", &r->IntS3,  &r->IntV0,  &r->IntT2);
-	String_Format3(&str, "r10=%x r11=%x r12=%x\r\n", &r->IntT3,  &r->IntT4,  &r->IntSp);
-	String_Format3(&str, "r13=%x r14=%x r15=%x\r\n", &r->IntTeb, &r->IntT5,  &r->IntT6);
-	String_Format3(&str, "r16=%x r17=%x r18=%x\r\n", &r->IntT7,  &r->IntT8,  &r->IntT9);
-	String_Format3(&str, "r19=%x r20=%x r21=%x\r\n", &r->IntT10, &r->IntT11, &r->IntT12);
-	String_Format3(&str, "r22=%x r23=%x r24=%x\r\n", &r->IntT13, &r->IntT14, &r->IntT15);
-	String_Format3(&str, "r25=%x r26=%x r27=%x\r\n", &r->IntT16, &r->IntT17, &r->IntT18);
-	String_Format3(&str, "r28=%x r29=%x r30=%x\r\n", &r->IntT19, &r->IntT20, &r->IntT21);
-	String_Format3(&str, "r31=%x nat=%x pre=%x\r\n", &r->IntT22, &r->IntNats,&r->Preds);
+	#define REG_GET(reg, ign) &r->R ## reg
+	Logger_Dump_X64()
 #else
 #error "Unknown machine type"
 #endif
@@ -414,92 +417,43 @@ static void Logger_DumpRegisters(void* ctx) {
 	String_InitArray(str, strBuffer);
 	String_AppendConst(&str, "-- registers --\n");
 
-#if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
-	/* TODO: There must be a better way of getting these.. */
-#if defined __i386__
-	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.gregs[11], &r.gregs[8], &r.gregs[10]);
-	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.gregs[9],  &r.gregs[5], &r.gregs[4]);
-	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r.gregs[14], &r.gregs[6], &r.gregs[7]);
-#elif defined __x86_64__
-	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.gregs[13], &r.gregs[11], &r.gregs[14]);
-	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.gregs[12], &r.gregs[9],  &r.gregs[8]);
-	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r.gregs[16], &r.gregs[10], &r.gregs[15]);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r.gregs[0],  &r.gregs[1],  &r.gregs[2]);
-	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r.gregs[3],  &r.gregs[4],  &r.gregs[5]);
-	String_Format2(&str, "r14=%x r15=%x\n",        &r.gregs[6],  &r.gregs[7]);
-#else
-#error "Unknown machine type"
-#endif
-#endif
+	/* Linux:   See /usr/include/sys/ucontext.h */
+	/* OSX:     See /usr/include/mach/i386/_structs.h */
+	/* Solaris: See /usr/include/sys/regset.h */
+	/* NetBSD:  See /usr/include/i386/mcontext.h */
 
-#if defined CC_BUILD_OSX
-	/* You can find these definitions at /usr/include/mach/i386/_structs.h */
 #if defined __i386__
-	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r->__ss.__eax, &r->__ss.__ebx, &r->__ss.__ecx);
-	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r->__ss.__edx, &r->__ss.__esi, &r->__ss.__edi);
-	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r->__ss.__eip, &r->__ss.__ebp, &r->__ss.__esp);
+#if defined CC_BUILD_LINUX
+	#define REG_GET(ign, reg) &r->greps[REG_E##reg]
+#elif defined CC_BUILD_OSX
+	#define REG_GET(reg, ign) &r->__ss.__e##reg
+#elif defined CC_BUILD_SOLARIS
+	#define REG_GET(ign, reg) &r->greps[reg]
+#elif defined CC_BUILD_FREEBSD
+	#define REG_GET(reg, ign) &r->.mc_e##reg
+#elif defined CC_BUILD_OPENBSD
+	#define REG_GET(reg, ign) &r->.sc_e##reg
+#elif defined CC_BUILD_NETBSD
+	#define REG_GET(ign, reg) &r.__gregs[_REG_E##reg]
+#endif
+	Logger_Dump_X86()
 #elif defined __x86_64__
-	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r->__ss.__rax, &r->__ss.__rbx, &r->__ss.__rcx);
-	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r->__ss.__rdx, &r->__ss.__rsi, &r->__ss.__rdi);
-	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r->__ss.__rip, &r->__ss.__rbp, &r->__ss.__rsp);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r->__ss.__r8,  &r->__ss.__r9,  &r->__ss.__r10);
-	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r->__ss.__r11, &r->__ss.__r12, &r->__ss.__r13);
-	String_Format2(&str, "r14=%x r15=%x\n", &r->__ss.__r14, &r->__ss.__r15);
+#if defined CC_BUILD_LINUX
+	#define REG_GET(ign, reg) &r->greps[REG_R##reg]
+#elif defined CC_BUILD_OSX
+	#define REG_GET(reg, ign) &r->__ss.__r##reg
+#elif defined CC_BUILD_SOLARIS
+	#define REG_GET(ign, reg) &r->greps[REG_R##reg]
+#elif defined CC_BUILD_FREEBSD
+	#define REG_GET(reg, ign) &r->.mc_r##reg
+#elif defined CC_BUILD_OPENBSD
+	#define REG_GET(reg, ign) &r->.sc_r##reg
+#elif defined CC_BUILD_NETBSD
+	#define REG_GET(ign, reg) &r.__gregs[_REG_R##reg]
+#endif
+	Logger_Dump_X64()
 #else
 #error "Unknown machine type"
-#endif
-#endif
-
-#if defined CC_BUILD_FREEBSD
-#if defined __i386__
-	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.mc_eax, &r.mc_ebx, &r.mc_ecx);
-	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.mc_edx, &r.mc_esi, &r.mc_edi);
-	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r.mc_eip, &r.mc_ebp, &r.mc_esp);
-#elif defined __x86_64__
-	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.mc_rax, &r.mc_rbx, &r.mc_rcx);
-	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.mc_rdx, &r.mc_rsi, &r.mc_rdi);
-	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r.mc_rip, &r.mc_rbp, &r.mc_rsp);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r.mc_r8,  &r.mc_r9,  &r.mc_r10);
-	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r.mc_r11, &r.mc_r12, &r.mc_r13);
-	String_Format2(&str, "r14=%x r15=%x\n",        &r.mc_r14, &r.mc_r15);
-#else
-#error "Unknown machine type"
-#endif
-#endif
-
-#if defined CC_BUILD_OPENBSD
-#if defined __i386__
-	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.sc_eax, &r.sc_ebx, &r.sc_ecx);
-	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.sc_edx, &r.sc_esi, &r.sc_edi);
-	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r.sc_eip, &r.sc_ebp, &r.sc_esp);
-#elif defined __x86_64__
-	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.sc_rax, &r.sc_rbx, &r.sc_rcx);
-	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.sc_rdx, &r.sc_rsi, &r.sc_rdi);
-	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r.sc_rip, &r.sc_rbp, &r.sc_rsp);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r.sc_r8,  &r.sc_r9,  &r.sc_r10);
-	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r.sc_r11, &r.sc_r12, &r.sc_r13);
-	String_Format2(&str, "r14=%x r15=%x\n",        &r.sc_r14, &r.sc_r15);
-#else
-#error "Unknown machine type"
-#endif
-#endif
-
-#if defined CC_BUILD_NETBSD
-	/* You can find these definitions at /usr/include/i386/mcontext.h */
-#if defined __i386__
-	String_Format3(&str, "eax=%x ebx=%x ecx=%x\n", &r.__gregs[_REG_EAX], &r.__gregs[_REG_EBX], &r.__gregs[_REG_ECX]);
-	String_Format3(&str, "edx=%x esi=%x edi=%x\n", &r.__gregs[_REG_EDX], &r.__gregs[_REG_ESI], &r.__gregs[_REG_EDI]);
-	String_Format3(&str, "eip=%x ebp=%x esp=%x\n", &r.__gregs[_REG_EIP], &r.__gregs[_REG_EBP], &r.__gregs[_REG_ESP]);
-#elif defined __x86_64__
-	String_Format3(&str, "rax=%x rbx=%x rcx=%x\n", &r.__gregs[_REG_RAX], &r.__gregs[_REG_RBX], &r.__gregs[_REG_RCX]);
-	String_Format3(&str, "rdx=%x rsi=%x rdi=%x\n", &r.__gregs[_REG_RDX], &r.__gregs[_REG_RSI], &r.__gregs[_REG_RDI]);
-	String_Format3(&str, "rip=%x rbp=%x rsp=%x\n", &r.__gregs[_REG_RIP], &r.__gregs[_REG_RBP], &r.__gregs[_REG_RSP]);
-	String_Format3(&str, "r8 =%x r9 =%x r10=%x\n", &r.__gregs[_REG_R8],  &r.__gregs[_REG_R9],  &r.__gregs[_REG_R10]);
-	String_Format3(&str, "r11=%x r12=%x r13=%x\n", &r.__gregs[_REG_R11], &r.__gregs[_REG_R12], &r.__gregs[_REG_R13]);
-	String_Format2(&str, "r14=%x r15=%x\n",        &r.__gregs[_REG_R14], &r.__gregs[_REG_R15]);
-#else
-#error "Unknown machine type"
-#endif
 #endif
 
 	Logger_Log(&str);

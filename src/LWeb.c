@@ -519,6 +519,9 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 #elif __x86_64__
 	const char* exe_d3d9 = "ClassiCube";
 	const char* exe_ogl  = "ClassiCube";
+#else
+	const char* exe_d3d9 = "ClassiCube.unknown";
+	const char* exe_ogl  = "ClassiCube.unknown";
 #endif
 #elif defined CC_BUILD_OSX
 	const char* exe_d3d9 = "ClassiCube.osx";
