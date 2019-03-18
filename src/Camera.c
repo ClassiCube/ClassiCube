@@ -151,7 +151,7 @@ static Vector3 FirstPersonCamera_GetPosition(float t) {
 }
 
 static bool FirstPersonCamera_Zoom(float amount) { return false; }
-struct Camera Camera_FirstPerson = {
+static struct Camera cam_FirstPerson = {
 	false,
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	FirstPersonCamera_GetOrientation, FirstPersonCamera_GetPosition,
@@ -203,7 +203,7 @@ static bool ThirdPersonCamera_Zoom(float amount) {
 	return true;
 }
 
-struct Camera Camera_ThirdPerson = {
+static struct Camera cam_ThirdPerson = {
 	true,
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	ThirdPersonCamera_GetOrientation, ThirdPersonCamera_GetPosition,
@@ -211,7 +211,7 @@ struct Camera Camera_ThirdPerson = {
 	Camera_AcquireFocus,              Camera_LoseFocus,
 	PerspectiveCamera_GetPickedBlock, ThirdPersonCamera_Zoom,
 };
-struct Camera Camera_ForwardThird = {
+static struct Camera cam_ForwardThird = {
 	true,
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	ThirdPersonCamera_GetOrientation, ThirdPersonCamera_GetPosition,
@@ -225,11 +225,11 @@ struct Camera Camera_ForwardThird = {
 *-----------------------------------------------------General camera------------------------------------------------------*
 *#########################################################################################################################*/
 void Camera_Init(void) {
-	Camera_Register(&Camera_FirstPerson);
-	Camera_Register(&Camera_ThirdPerson);
-	Camera_Register(&Camera_ForwardThird);
+	Camera_Register(&cam_FirstPerson);
+	Camera_Register(&cam_ThirdPerson);
+	Camera_Register(&cam_ForwardThird);
 
-	Camera.Active = &Camera_FirstPerson;
+	Camera.Active = &cam_FirstPerson;
 	Event_RegisterMouseMove(&MouseEvents.RawMoved, NULL, Camera_RawMouseMovedHandler);
 
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 100, 30);
@@ -242,9 +242,9 @@ void Camera_CycleActive(void) {
 	if (Game_ClassicMode) return;
 	Camera.Active = Camera.Active->Next;
 
-	cam_isForwardThird = Camera.Active == &Camera_ForwardThird;
+	cam_isForwardThird = Camera.Active == &cam_ForwardThird;
 	if (!p->Hacks.CanUseThirdPersonCamera || !p->Hacks.Enabled) {
-		Camera.Active = &Camera_FirstPerson;
+		Camera.Active = &cam_FirstPerson;
 	}
 
 	/* reset rotation offset when changing cameras */

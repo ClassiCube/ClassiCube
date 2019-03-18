@@ -14,11 +14,11 @@
 #define NOSERVICE
 #define NOMCX
 #define NOIME
-
 #include <windows.h>
 #include <imagehlp.h>
 #define _NL "\r\n"
 #endif
+
 /* POSIX can be shared between unix-ish systems */
 #ifdef CC_BUILD_POSIX
 #if defined CC_BUILD_OPENBSD
@@ -31,7 +31,6 @@
 #else
 #include <ucontext.h>
 #endif
-
 #include <execinfo.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -232,7 +231,40 @@ String_Format3(&str, "r8 =%x r9 =%x r10=%x" _NL, REG_GET(8,8),   REG_GET(9,9),  
 String_Format3(&str, "r11=%x r12=%x r13=%x" _NL, REG_GET(11,11), REG_GET(12,12), REG_GET(13,13));\
 String_Format2(&str, "r14=%x r15=%x" _NL,        REG_GET(14,14), REG_GET(15,15));
 
-#if defined CC_BUILD_WIN
+#define Logger_Dump_PPC() \
+String_Format4(&str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
+String_Format4(&str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
+String_Format4(&str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
+String_Format4(&str, "r12=%x r13=%x r14=%x r15=%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(15)); \
+String_Format4(&str, "r16=%x r17=%x r18=%x r19=%x" _NL, REG_GNUM(16), REG_GNUM(17), REG_GNUM(18), REG_GNUM(19)); \
+String_Format4(&str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21), REG_GNUM(22), REG_GNUM(23)); \
+String_Format4(&str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
+String_Format4(&str, "r28=%x r29=%x r30=%x r31=%x" _NL, REG_GNUM(28), REG_GNUM(29), REG_GNUM(30), REG_GNUM(31)); \
+String_Format3(&str, "pc =%x lr =%x ctr=%x" _NL,  REG_GET(srr0, SRR0), REG_GET(lr, LR), REG_GET(ctr,CTR));
+
+#define Logger_Dump_ARM32() \
+String_Format3(&str, "r0 =%x r1 =%x r2 =%x" _NL, REG_GNUM(0), REG_GNUM(1),  REG_GNUM(2));\
+String_Format3(&str, "r3 =%x r4 =%x r5 =%x" _NL, REG_GNUM(3), REG_GNUM(4),  REG_GNUM(5));\
+String_Format3(&str, "r6 =%x r7 =%x r8 =%x" _NL, REG_GNUM(6), REG_GNUM(7),  REG_GNUM(8));\
+String_Format3(&str, "r9 =%x r10=%x fp =%x" _NL, REG_GNUM(9), REG_GNUM(10), REG_GET(fp,FP));\
+String_Format3(&str, "sp =%x lr =%x pc =%x" _NL, REG_GET(sp,SP), REG_GET(lr,LR),  REG_GET(pc,PC));
+
+#define Logger_Dump_ARM64() \
+String_Format4(&str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
+String_Format4(&str, "r4 =%x r5 =%x r6 =%x r7 =%x" _NL, REG_GNUM(4),  REG_GNUM(5),  REG_GNUM(6),  REG_GNUM(7)); \
+String_Format4(&str, "r8 =%x r9 =%x r10=%x r11=%x" _NL, REG_GNUM(8),  REG_GNUM(9),  REG_GNUM(10), REG_GNUM(11)); \
+String_Format4(&str, "r12=%x r13=%x r14=%x r15=%x" _NL, REG_GNUM(12), REG_GNUM(13), REG_GNUM(14), REG_GNUM(15)); \
+String_Format4(&str, "r16=%x r17=%x r18=%x r19=%x" _NL, REG_GNUM(16), REG_GNUM(17), REG_GNUM(18), REG_GNUM(19)); \
+String_Format4(&str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21), REG_GNUM(22), REG_GNUM(23)); \
+String_Format4(&str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
+String_Format3(&str, "r28=%x r29=%x r30=%x" _NL,        REG_GNUM(28), REG_GNUM(29), REG_GNUM(30)); \
+String_Format2(&str, "sp =%x pc =%x" _NL,               REG_GET(sp,SP), REG_GET(pc,PC));
+
+#if defined CC_BUILD_WEB
+static void Logger_DumpBacktrace(String* str, void* ctx) { }
+static void Logger_DumpRegisters(void* ctx) { }
+static void Logger_DumpMisc(void* ctx) { }
+#elif defined CC_BUILD_WIN
 struct StackPointers { uintptr_t Instruction, Frame, Stack; };
 struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 
@@ -366,8 +398,7 @@ static void Logger_DumpMisc(void* ctx) {
 	EnumerateLoadedModules(process, Logger_DumpModule, NULL);
 }
 
-#endif
-#ifdef CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX
 static void Logger_Backtrace(String* backtrace_, void* ctx) {
 	String str; char strBuffer[384];
 	void* addrs[40];
@@ -423,37 +454,55 @@ static void Logger_DumpRegisters(void* ctx) {
 	/* NetBSD:  See /usr/include/i386/mcontext.h */
 
 #if defined __i386__
-#if defined CC_BUILD_LINUX
-	#define REG_GET(ign, reg) &r.gregs[REG_E##reg]
-#elif defined CC_BUILD_OSX
-	#define REG_GET(reg, ign) &r->__ss.__e##reg
-#elif defined CC_BUILD_SOLARIS
-	#define REG_GET(ign, reg) &r.gregs[reg]
-#elif defined CC_BUILD_FREEBSD
-	#define REG_GET(reg, ign) &r.mc_e##reg
-#elif defined CC_BUILD_OPENBSD
-	#define REG_GET(reg, ign) &r.sc_e##reg
-#elif defined CC_BUILD_NETBSD
-	#define REG_GET(ign, reg) &r.__gregs[_REG_E##reg]
-#endif
+	#if defined CC_BUILD_LINUX
+		#define REG_GET(ign, reg) &r.gregs[REG_E##reg]
+	#elif defined CC_BUILD_OSX
+		#define REG_GET(reg, ign) &r->__ss.__e##reg
+	#elif defined CC_BUILD_SOLARIS
+		#define REG_GET(ign, reg) &r.gregs[E##reg]
+	#elif defined CC_BUILD_FREEBSD
+		#define REG_GET(reg, ign) &r.mc_e##reg
+	#elif defined CC_BUILD_OPENBSD
+		#define REG_GET(reg, ign) &r.sc_e##reg
+	#elif defined CC_BUILD_NETBSD
+		#define REG_GET(ign, reg) &r.__gregs[_REG_E##reg]
+	#endif
 	Logger_Dump_X86()
 #elif defined __x86_64__
-#if defined CC_BUILD_LINUX
-	#define REG_GET(ign, reg) &r.gregs[REG_R##reg]
-#elif defined CC_BUILD_OSX
-	#define REG_GET(reg, ign) &r->__ss.__r##reg
-#elif defined CC_BUILD_SOLARIS
-	#define REG_GET(ign, reg) &r.gregs[REG_R##reg]
-#elif defined CC_BUILD_FREEBSD
-	#define REG_GET(reg, ign) &r.mc_r##reg
-#elif defined CC_BUILD_OPENBSD
-	#define REG_GET(reg, ign) &r.sc_r##reg
-#elif defined CC_BUILD_NETBSD
-	#define REG_GET(ign, reg) &r.__gregs[_REG_R##reg]
-#endif
+	#if defined CC_BUILD_LINUX
+		#define REG_GET(ign, reg) &r.gregs[REG_R##reg]
+	#elif defined CC_BUILD_OSX
+		#define REG_GET(reg, ign) &r->__ss.__r##reg
+	#elif defined CC_BUILD_SOLARIS
+		#define REG_GET(ign, reg) &r.gregs[REG_R##reg]
+	#elif defined CC_BUILD_FREEBSD
+		#define REG_GET(reg, ign) &r.mc_r##reg
+	#elif defined CC_BUILD_OPENBSD
+		#define REG_GET(reg, ign) &r.sc_r##reg
+	#elif defined CC_BUILD_NETBSD
+		#define REG_GET(ign, reg) &r.__gregs[_REG_R##reg]
+	#endif
 	Logger_Dump_X64()
+#elif defined __powerpc__
+	#if defined CC_BUILD_OSX
+		#define REG_GNUM(num)     &r->__ss.__r##num
+		#define REG_GET(reg, ign) &r->__ss.__##reg
+	#endif
+	Logger_Dump_PPC()
+#elif defined __aarch64__
+	#if defined CC_BUILD_LINUX
+		#define REG_GNUM(num)     &r.regs[num]
+		#define REG_GET(reg, ign) &r.##reg
+	#endif
+	Logger_Dump_ARM64()
+#elif defined __arm__
+	#if defined CC_BUILD_LINUX
+		#define REG_GNUM(num)     &r.arm_r##num
+		#define REG_GET(reg, ign) &r.arm_##reg
+	#endif
+	Logger_Dump_ARM32()
 #else
-#error "Unknown machine type"
+#error "Unknown ISA/architecture"
 #endif
 
 	Logger_Log(&str);
@@ -483,18 +532,18 @@ static void Logger_DumpMisc(void* ctx) {
 static void Logger_DumpMisc(void* ctx) { }
 #endif
 #endif
-#ifdef CC_BUILD_WEB
-static void Logger_DumpBacktrace(String* str, void* ctx) { }
-static void Logger_DumpRegisters(void* ctx) { }
-static void Logger_DumpMisc(void* ctx) { }
-#endif
 
 /*########################################################################################################################*
 *------------------------------------------------------Error handling-----------------------------------------------------*
 *#########################################################################################################################*/
 static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx);
 
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WEB
+void Logger_Hook(void) { }
+void Logger_Abort2(ReturnCode result, const char* raw_msg) {
+	Logger_AbortCommon(result, raw_msg, NULL);
+}
+#elif defined CC_BUILD_WIN
 static LONG WINAPI Logger_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
 	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
 	uint32_t code;
@@ -561,8 +610,7 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 #if _MSC_VER
 #pragma optimize ("", on)
 #endif
-#endif
-#ifdef CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX
 static void Logger_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
 	int type, code;
@@ -603,12 +651,6 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 	ucontext_t ctx;
 	getcontext(&ctx);
 	Logger_AbortCommon(result, raw_msg, &ctx);
-}
-#endif
-#ifdef CC_BUILD_WEB
-void Logger_Hook(void) { }
-void Logger_Abort2(ReturnCode result, const char* raw_msg) {
-	Logger_AbortCommon(result, raw_msg, NULL);
 }
 #endif
 
