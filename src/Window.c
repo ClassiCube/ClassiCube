@@ -663,6 +663,7 @@ void Window_DrawRaw(Rect2D r) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_X11
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 #define _NET_WM_STATE_REMOVE 0
 #define _NET_WM_STATE_ADD    1
@@ -2971,6 +2972,81 @@ void GLContext_SwapBuffers(void) {
 
 void GLContext_SetVSync(bool enabled) {
 	SDL_GL_SetSwapInterval(enabled);
+}
+#endif
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------EGL OpenGL--------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_EGL
+#include <EGL/egl.h>
+static EGLDisplay ctx_display;
+static EGLContext ctx_context;
+static EGLSurface ctx_surface;
+static EGLConfig ctx_config;
+static EGLint ctx_numConfig;
+
+static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
+	XVisualInfo info = { 0 };
+	info.depth = 24;
+	info.visual = CopyFromParent;
+	info.visualid = CopyFromParent;
+	return info;
+}
+
+void GLContext_Init(struct GraphicsMode* mode) {
+	static EGLint attribs[19] = {
+		EGL_RED_SIZE,  0, EGL_GREEN_SIZE,  0,
+		EGL_BLUE_SIZE, 0, EGL_ALPHA_SIZE,  0,
+		EGL_DEPTH_SIZE,0, EGL_STENCIL_SIZE,0,
+		EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+		EGL_RENDERABLE_TYPE,   EGL_OPENGL_ES2_BIT,
+		EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
+		EGL_NONE
+	};
+
+	attribs[1]  = mode->R; attribs[3] = mode->G;
+	attribs[5]  = mode->B; attribs[7] = mode->A;
+	attribs[9]  = mode->DepthBits;
+	attribs[11] = mode->StencilBits;
+
+	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	eglInitialize(ctx_display, NULL, NULL);
+	eglBindAPI(EGL_OPENGL_ES_API);
+	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
+
+	EGLint contextAttributes[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+
+	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, contextAttributes);
+	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
+	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);\
+}
+
+void GLContext_Update(void) {
+	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx_context);
+	eglDestroySurface(ctx_display, ctx_surface);
+	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
+	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
+}
+
+void GLContext_Free(void) {
+	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx_context);
+	eglDestroyContext(ctx_display, ctx_context);
+	eglDestroySurface(ctx_display, ctx_surface);
+	eglTerminate(ctx_display);
+}
+
+void* GLContext_GetAddress(const char* function) {
+	return eglGetProcAddress(function);
+}
+
+void GLContext_SwapBuffers(void) {
+	eglSwapBuffers(ctx_display, ctx_surface);
+}
+
+void GLContext_SetVSync(bool enabled) {
+	eglSwapInterval(ctx_display, enabled ? 1 : 0);
 }
 #endif
 #endif
