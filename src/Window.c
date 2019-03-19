@@ -95,7 +95,7 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 /*########################################################################################################################*
 *------------------------------------------------------Win32 window-------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WIN
+#ifdef CC_BUILD_WINGUI
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -655,90 +655,6 @@ void Window_DrawRaw(Rect2D r) {
 	BOOL success = BitBlt(win_DC, r.X, r.Y, r.Width, r.Height, draw_DC, r.X, r.Y, SRCCOPY);
 	SelectObject(draw_DC, oldSrc);
 }
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------OpenGL context------------------------------------------------------*
-*#########################################################################################################################*/
-#ifndef CC_BUILD_D3D9
-void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
-	PIXELFORMATDESCRIPTOR pfd = { 0 };
-	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-	pfd.nVersion = 1;
-	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
-	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
-	pfd.cColorBits = mode->R + mode->G + mode->B;
-
-	pfd.iPixelType = mode->IsIndexed ? PFD_TYPE_COLORINDEX : PFD_TYPE_RGBA;
-	pfd.cRedBits   = mode->R;
-	pfd.cGreenBits = mode->G;
-	pfd.cBlueBits  = mode->B;
-	pfd.cAlphaBits = mode->A;
-
-	pfd.cDepthBits   = mode->DepthBits;
-	pfd.cStencilBits = mode->StencilBits;
-
-	int modeIndex = ChoosePixelFormat(win_DC, &pfd);
-	if (modeIndex == 0) { Logger_Abort("Requested graphics mode not available"); }
-
-	Mem_Set(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
-	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-	pfd.nVersion = 1;
-
-	DescribePixelFormat(win_DC, modeIndex, pfd.nSize, &pfd);
-	if (!SetPixelFormat(win_DC, modeIndex, &pfd)) {
-		Logger_Abort2(GetLastError(), "SetPixelFormat failed");
-	}
-}
-
-static HGLRC ctx_Handle;
-static HDC ctx_DC;
-typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
-static FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
-static bool ctx_supports_vSync;
-
-void GLContext_Init(struct GraphicsMode* mode) {
-	GLContext_SelectGraphicsMode(mode);
-	ctx_Handle = wglCreateContext(win_DC);
-	if (!ctx_Handle) {
-		ctx_Handle = wglCreateContext(win_DC);
-	}
-	if (!ctx_Handle) {
-		Logger_Abort2(GetLastError(), "Failed to create OpenGL context");
-	}
-
-	if (!wglMakeCurrent(win_DC, ctx_Handle)) {
-		Logger_Abort2(GetLastError(), "Failed to make OpenGL context current");
-	}
-
-	ctx_DC = wglGetCurrentDC();
-	wglSwapIntervalEXT = (FN_WGLSWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
-	ctx_supports_vSync = wglSwapIntervalEXT != NULL;
-}
-
-void GLContext_Update(void) { }
-void GLContext_Free(void) {
-	if (!wglDeleteContext(ctx_Handle)) {
-		Logger_Abort2(GetLastError(), "Failed to destroy OpenGL context");
-	}
-	ctx_Handle = NULL;
-}
-
-void* GLContext_GetAddress(const char* function) {
-	void* address = wglGetProcAddress(function);
-	return GLContext_IsInvalidAddress(address) ? NULL : address;
-}
-
-void GLContext_SwapBuffers(void) {
-	if (!SwapBuffers(ctx_DC)) {
-		Logger_Abort2(GetLastError(), "Failed to swap buffers");
-	}
-}
-
-void GLContext_SetVSync(bool enabled) {
-	if (ctx_supports_vSync) wglSwapIntervalEXT(enabled);
-}
-#endif
 #endif
 
 
@@ -747,7 +663,6 @@ void GLContext_SetVSync(bool enabled) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_X11
 #include <X11/Xlib.h>
-#include <GL/glx.h>
 
 #define _NET_WM_STATE_REMOVE 0
 #define _NET_WM_STATE_ADD    1
@@ -1635,150 +1550,13 @@ void Window_DrawRaw(Rect2D r) {
 	XPutImage(win_display, win_handle, win_gc, win_image,
 		r.X, r.Y, r.X, r.Y, r.Width, r.Height);
 }
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------OpenGL context------------------------------------------------------*
-*#########################################################################################################################*/
-static GLXContext ctx_Handle;
-typedef int (*FN_GLXSWAPINTERVAL)(int interval);
-static FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
-static bool ctx_supports_vSync;
-
-void GLContext_Init(struct GraphicsMode* mode) {
-	const static String ext_mesa = String_FromConst("GLX_MESA_swap_control");
-	const static String ext_sgi  = String_FromConst("GLX_SGI_swap_control");
-
-	const char* raw_exts;
-	String exts;
-	ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, true);
-
-	if (!ctx_Handle) {
-		Platform_LogConst("Context create failed. Trying indirect...");
-		ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, false);
-	}
-	if (!ctx_Handle) Logger_Abort("Failed to create OpenGL context");
-
-	if (!glXIsDirect(win_display, ctx_Handle)) {
-		Platform_LogConst("== WARNING: Context is not direct ==");
-	}
-	if (!glXMakeCurrent(win_display, win_handle, ctx_Handle)) {
-		Logger_Abort("Failed to make OpenGL context current.");
-	}
-
-	/* GLX may return non-null function pointers that don't actually work */
-	/* So we need to manually check the extensions string for support */
-	raw_exts = glXQueryExtensionsString(win_display, win_screen);
-	exts = String_FromReadonly(raw_exts);
-
-	if (String_CaselessContains(&exts, &ext_mesa)) {
-		swapIntervalMESA = (FN_GLXSWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalMESA");
-	}
-	if (String_CaselessContains(&exts, &ext_sgi)) {
-		swapIntervalSGI  = (FN_GLXSWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalSGI");
-	}
-	ctx_supports_vSync = swapIntervalMESA || swapIntervalSGI;
-}
-
-void GLContext_Update(void) { }
-void GLContext_Free(void) {
-	if (!ctx_Handle) return;
-
-	if (glXGetCurrentContext() == ctx_Handle) {
-		glXMakeCurrent(win_display, None, NULL);
-	}
-	glXDestroyContext(win_display, ctx_Handle);
-	ctx_Handle = NULL;
-}
-
-void* GLContext_GetAddress(const char* function) {
-	void* address = glXGetProcAddress(function);
-	return GLContext_IsInvalidAddress(address) ? NULL : address;
-}
-
-void GLContext_SwapBuffers(void) {
-	glXSwapBuffers(win_display, win_handle);
-}
-
-void GLContext_SetVSync(bool enabled) {
-	int res;
-	if (!ctx_supports_vSync) return;
-
-	if (swapIntervalMESA) {
-		res = swapIntervalMESA(enabled);
-	} else {
-		res = swapIntervalSGI(enabled);
-	}
-	if (res) Platform_Log1("Set VSync failed, error: %i", &res);
-}
-
-static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs) {
-	int i = 0;
-	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig */
-	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree */
-	/* for the attribute declarations. Note that the attributes are different than those used in glxChooseVisual */
-
-	if (!mode->IsIndexed) { attribs[i++] = GLX_RGBA; }
-	attribs[i++] = GLX_RED_SIZE;   attribs[i++] = mode->R;
-	attribs[i++] = GLX_GREEN_SIZE; attribs[i++] = mode->G;
-	attribs[i++] = GLX_BLUE_SIZE;  attribs[i++] = mode->B;
-	attribs[i++] = GLX_ALPHA_SIZE; attribs[i++] = mode->A;
-
-	if (mode->DepthBits) {
-		attribs[i++] = GLX_DEPTH_SIZE;   attribs[i++] = mode->DepthBits;
-	}
-	if (mode->StencilBits) {
-		attribs[i++] = GLX_STENCIL_SIZE; attribs[i++] = mode->StencilBits;
-	}
-
-	attribs[i++] = GLX_DOUBLEBUFFER;
-	attribs[i++] = 0;
-}
-
-static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
-	int attribs[20];
-	int major, minor;
-	XVisualInfo* visual = NULL;
-
-	int fbcount;
-	GLXFBConfig* fbconfigs;
-	XVisualInfo info;
-
-	GLContext_GetAttribs(mode, attribs);	
-	if (!glXQueryVersion(win_display, &major, &minor)) {
-		Logger_Abort("glXQueryVersion failed");
-	}
-
-	if (major >= 1 && minor >= 3) {
-		/* ChooseFBConfig returns an array of GLXFBConfig opaque structures */
-		fbconfigs = glXChooseFBConfig(win_display, win_screen, attribs, &fbcount);
-		if (fbconfigs && fbcount) {
-			/* Use the first GLXFBConfig from the fbconfigs array (best match) */
-			visual = glXGetVisualFromFBConfig(win_display, *fbconfigs);
-			XFree(fbconfigs);
-		}
-	}
-
-	if (!visual) {
-		Platform_LogConst("Falling back to glXChooseVisual.");
-		visual = glXChooseVisual(win_display, win_screen, attribs);
-	}
-	if (!visual) {
-		Logger_Abort("Requested GraphicsMode not available.");
-	}
-
-	info = *visual;
-	XFree(visual);
-	return info;
-}
 #endif
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Carbon window------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_OSX
-#include <AGL/agl.h>
+#ifdef CC_BUILD_CARBON
 #include <ApplicationServices/ApplicationServices.h>
 
 static WindowRef win_handle;
@@ -2402,179 +2180,6 @@ void Window_DrawRaw(Rect2D r) {
 	CGImageRelease(win_image);
 	CGDataProviderRelease(provider);
 }
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------OpenGL context------------------------------------------------------*
-*#########################################################################################################################*/
-static AGLContext ctx_handle;
-static bool ctx_fullscreen, ctx_firstFullscreen;
-static Rect2D ctx_windowedBounds;
-
-static void GLContext_Check(int code, const char* place) {
-	ReturnCode res;
-	if (code) return;
-
-	res = aglGetError();
-	if (res) Logger_Abort2(res, place);
-}
-
-static void GLContext_MakeCurrent(void) {
-	int code = aglSetCurrentContext(ctx_handle);
-	GLContext_Check(code, "Setting GL context");
-}
-
-static void GLContext_SetDrawable(void) {
-	CGrafPtr windowPort = GetWindowPort(win_handle);
-	int code = aglSetDrawable(ctx_handle, windowPort);
-	GLContext_Check(code, "Attaching GL context");
-}
-
-static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs, bool fullscreen) {
-	int i = 0;
-
-	if (!mode->IsIndexed) { attribs[i++] = AGL_RGBA; }
-	attribs[i++] = AGL_RED_SIZE;   attribs[i++] = mode->R;
-	attribs[i++] = AGL_GREEN_SIZE; attribs[i++] = mode->G;
-	attribs[i++] = AGL_BLUE_SIZE;  attribs[i++] = mode->B;
-	attribs[i++] = AGL_ALPHA_SIZE; attribs[i++] = mode->A;
-
-	if (mode->DepthBits) {
-		attribs[i++] = AGL_DEPTH_SIZE;   attribs[i++] = mode->DepthBits;
-	}
-	if (mode->StencilBits) {
-		attribs[i++] = AGL_STENCIL_SIZE; attribs[i++] = mode->StencilBits;
-	}
-
-	attribs[i++] = AGL_DOUBLEBUFFER;
-	if (fullscreen) { attribs[i++] = AGL_FULLSCREEN; }
-	attribs[i++] = 0;
-}
-
-static void GLContext_UnsetFullscreen(void) {
-	int code;
-	Platform_LogConst("Unsetting AGL fullscreen.");
-
-	code = aglSetDrawable(ctx_handle, NULL);
-	GLContext_Check(code, "Unattaching GL context");
-	code = aglUpdateContext(ctx_handle);
-	GLContext_Check(code, "Updating GL context (from Fullscreen)");
-
-	CGDisplayRelease(CGMainDisplayID());
-	GLContext_SetDrawable();
-
-	ctx_fullscreen = false;
-	Window_UpdateWindowState();
-	Window_SetSize(ctx_windowedBounds.Width, ctx_windowedBounds.Height);
-}
-
-static void GLContext_SetFullscreen(void) {
-	int displayWidth  = Display_Bounds.Width;
-	int displayHeight = Display_Bounds.Height;
-	int code;
-
-	Platform_LogConst("Switching to AGL fullscreen");
-	CGDisplayCapture(CGMainDisplayID());
-
-	code = aglSetFullScreen(ctx_handle, displayWidth, displayHeight, 0, 0);
-	GLContext_Check(code, "aglSetFullScreen");
-	GLContext_MakeCurrent();
-
-	/* This is a weird hack to workaround a bug where the first time a context */
-	/* is made fullscreen, we just end up with a blank screen.  So we undo it as fullscreen */
-	/* and redo it as fullscreen. */
-	if (!ctx_firstFullscreen) {
-		ctx_firstFullscreen = true;
-		GLContext_UnsetFullscreen();
-		GLContext_SetFullscreen();
-		return;
-	}
-
-	ctx_fullscreen     = true;
-	ctx_windowedBounds = Window_ClientBounds;
-
-	Window_ClientBounds = Display_Bounds;
-	Window_Bounds = Display_Bounds;
-	win_state     = WINDOW_STATE_FULLSCREEN;
-}
-
-void GLContext_Init(struct GraphicsMode* mode) {
-	int attribs[20];
-	AGLPixelFormat fmt;
-	GDHandle gdevice;
-	OSStatus res;
-
-	/* Initially try creating fullscreen compatible context */	
-	res = DMGetGDeviceByDisplayID(CGMainDisplayID(), &gdevice, false);
-	if (res) Logger_Abort2(res, "Getting display device failed");
-
-	GLContext_GetAttribs(mode, attribs, true);
-	fmt = aglChoosePixelFormat(&gdevice, 1, attribs);
-	res = aglGetError();
-
-	/* Try again with non-compatible context if that fails */
-	if (!fmt || res == AGL_BAD_PIXELFMT) {
-		Platform_LogConst("Failed to create full screen pixel format.");
-		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
-
-		GLContext_GetAttribs(mode, attribs, false);
-		fmt = aglChoosePixelFormat(NULL, 0, attribs);
-		res = aglGetError();
-	}
-	if (res) Logger_Abort2(res, "Choosing pixel format");
-
-	ctx_handle = aglCreateContext(fmt, NULL);
-	GLContext_Check(0, "Creating GL context");
-
-	aglDestroyPixelFormat(fmt);
-	GLContext_Check(0, "Destroying pixel format");
-
-	GLContext_SetDrawable();
-	GLContext_Update();
-	GLContext_MakeCurrent();
-}
-
-void GLContext_Update(void) {
-	if (ctx_pendingFullscreen) {
-		ctx_pendingFullscreen = false;
-		GLContext_SetFullscreen();
-		return;
-	} else if (ctx_pendingWindowed) {
-		ctx_pendingWindowed = false;
-		GLContext_UnsetFullscreen();
-	}
-
-	if (ctx_fullscreen) return;
-	GLContext_SetDrawable();
-	aglUpdateContext(ctx_handle);
-}
-
-void GLContext_Free(void) {
-	int code;
-	if (!ctx_handle) return;
-
-	code = aglSetCurrentContext(NULL);
-	GLContext_Check(code, "Unsetting GL context");
-
-	code = aglDestroyContext(ctx_handle);
-	GLContext_Check(code, "Destroying GL context");
-	ctx_handle = NULL;
-}
-
-void* GLContext_GetAddress(const char* function) {
-	void* address = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
-	return GLContext_IsInvalidAddress(address) ? NULL : address;
-}
-
-void GLContext_SwapBuffers(void) {
-	aglSwapBuffers(ctx_handle);
-	GLContext_Check(0, "Swapping buffers");
-}
-
-void GLContext_SetVSync(bool enabled) {
-	int value = enabled ? 1 : 0;
-	aglSetInteger(ctx_handle, AGL_SWAP_INTERVAL, &value);
-}
 #endif
 
 
@@ -2910,8 +2515,432 @@ void Window_DrawRaw(Rect2D r) {
 	SDL_UpdateWindowSurfaceRects(win_handle, &rect, 1);
 }
 
+void Window_EnableRawMouse(void) {
+	Window_RegrabMouse();
+	SDL_SetRelativeMouseMode(true);
+	win_rawMouse = true;
+}
+
+void Window_UpdateRawMouse(void) {
+	Window_CentreMousePosition();
+}
+
+void Window_DisableRawMouse(void) {
+	Window_RegrabMouse();
+	SDL_SetRelativeMouseMode(false);
+	win_rawMouse = false;
+}
+#endif
+
+
 #ifndef CC_BUILD_D3D9
+/*########################################################################################################################*
+*-------------------------------------------------------WGL OpenGL--------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_WGL
+static HGLRC ctx_Handle;
+static HDC ctx_DC;
+typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
+static FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
+static bool ctx_supports_vSync;
+
+static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
+	PIXELFORMATDESCRIPTOR pfd = { 0 };
+	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+	pfd.nVersion = 1;
+	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
+	pfd.cColorBits = mode->R + mode->G + mode->B;
+
+	pfd.iPixelType = mode->IsIndexed ? PFD_TYPE_COLORINDEX : PFD_TYPE_RGBA;
+	pfd.cRedBits   = mode->R;
+	pfd.cGreenBits = mode->G;
+	pfd.cBlueBits  = mode->B;
+	pfd.cAlphaBits = mode->A;
+
+	pfd.cDepthBits   = mode->DepthBits;
+	pfd.cStencilBits = mode->StencilBits;
+
+	int modeIndex = ChoosePixelFormat(win_DC, &pfd);
+	if (modeIndex == 0) { Logger_Abort("Requested graphics mode not available"); }
+
+	Mem_Set(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+	pfd.nVersion = 1;
+
+	DescribePixelFormat(win_DC, modeIndex, pfd.nSize, &pfd);
+	if (!SetPixelFormat(win_DC, modeIndex, &pfd)) {
+		Logger_Abort2(GetLastError(), "SetPixelFormat failed");
+	}
+}
+
+void GLContext_Init(struct GraphicsMode* mode) {
+	GLContext_SelectGraphicsMode(mode);
+	ctx_Handle = wglCreateContext(win_DC);
+	if (!ctx_Handle) {
+		ctx_Handle = wglCreateContext(win_DC);
+	}
+	if (!ctx_Handle) {
+		Logger_Abort2(GetLastError(), "Failed to create OpenGL context");
+	}
+
+	if (!wglMakeCurrent(win_DC, ctx_Handle)) {
+		Logger_Abort2(GetLastError(), "Failed to make OpenGL context current");
+	}
+
+	ctx_DC = wglGetCurrentDC();
+	wglSwapIntervalEXT = (FN_WGLSWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
+	ctx_supports_vSync = wglSwapIntervalEXT != NULL;
+}
+
+void GLContext_Update(void) { }
+void GLContext_Free(void) {
+	if (!wglDeleteContext(ctx_Handle)) {
+		Logger_Abort2(GetLastError(), "Failed to destroy OpenGL context");
+	}
+	ctx_Handle = NULL;
+}
+
+void* GLContext_GetAddress(const char* function) {
+	void* address = wglGetProcAddress(function);
+	return GLContext_IsInvalidAddress(address) ? NULL : address;
+}
+
+void GLContext_SwapBuffers(void) {
+	if (!SwapBuffers(ctx_DC)) {
+		Logger_Abort2(GetLastError(), "Failed to swap buffers");
+	}
+}
+
+void GLContext_SetVSync(bool enabled) {
+	if (ctx_supports_vSync) wglSwapIntervalEXT(enabled);
+}
+#endif
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------glX OpenGL--------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_GLX
+#include <GL/glx.h>
+static GLXContext ctx_Handle;
+typedef int (*FN_GLXSWAPINTERVAL)(int interval);
+static FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
+static bool ctx_supports_vSync;
+
+void GLContext_Init(struct GraphicsMode* mode) {
+	const static String ext_mesa = String_FromConst("GLX_MESA_swap_control");
+	const static String ext_sgi  = String_FromConst("GLX_SGI_swap_control");
+
+	const char* raw_exts;
+	String exts;
+	ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, true);
+
+	if (!ctx_Handle) {
+		Platform_LogConst("Context create failed. Trying indirect...");
+		ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, false);
+	}
+	if (!ctx_Handle) Logger_Abort("Failed to create OpenGL context");
+
+	if (!glXIsDirect(win_display, ctx_Handle)) {
+		Platform_LogConst("== WARNING: Context is not direct ==");
+	}
+	if (!glXMakeCurrent(win_display, win_handle, ctx_Handle)) {
+		Logger_Abort("Failed to make OpenGL context current.");
+	}
+
+	/* GLX may return non-null function pointers that don't actually work */
+	/* So we need to manually check the extensions string for support */
+	raw_exts = glXQueryExtensionsString(win_display, win_screen);
+	exts = String_FromReadonly(raw_exts);
+
+	if (String_CaselessContains(&exts, &ext_mesa)) {
+		swapIntervalMESA = (FN_GLXSWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalMESA");
+	}
+	if (String_CaselessContains(&exts, &ext_sgi)) {
+		swapIntervalSGI  = (FN_GLXSWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalSGI");
+	}
+	ctx_supports_vSync = swapIntervalMESA || swapIntervalSGI;
+}
+
+void GLContext_Update(void) { }
+void GLContext_Free(void) {
+	if (!ctx_Handle) return;
+
+	if (glXGetCurrentContext() == ctx_Handle) {
+		glXMakeCurrent(win_display, None, NULL);
+	}
+	glXDestroyContext(win_display, ctx_Handle);
+	ctx_Handle = NULL;
+}
+
+void* GLContext_GetAddress(const char* function) {
+	void* address = glXGetProcAddress(function);
+	return GLContext_IsInvalidAddress(address) ? NULL : address;
+}
+
+void GLContext_SwapBuffers(void) {
+	glXSwapBuffers(win_display, win_handle);
+}
+
+void GLContext_SetVSync(bool enabled) {
+	int res;
+	if (!ctx_supports_vSync) return;
+
+	if (swapIntervalMESA) {
+		res = swapIntervalMESA(enabled);
+	} else {
+		res = swapIntervalSGI(enabled);
+	}
+	if (res) Platform_Log1("Set VSync failed, error: %i", &res);
+}
+
+static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs) {
+	int i = 0;
+	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig */
+	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree */
+	/* for the attribute declarations. Note that the attributes are different than those used in glxChooseVisual */
+
+	if (!mode->IsIndexed) { attribs[i++] = GLX_RGBA; }
+	attribs[i++] = GLX_RED_SIZE;   attribs[i++] = mode->R;
+	attribs[i++] = GLX_GREEN_SIZE; attribs[i++] = mode->G;
+	attribs[i++] = GLX_BLUE_SIZE;  attribs[i++] = mode->B;
+	attribs[i++] = GLX_ALPHA_SIZE; attribs[i++] = mode->A;
+
+	if (mode->DepthBits) {
+		attribs[i++] = GLX_DEPTH_SIZE;   attribs[i++] = mode->DepthBits;
+	}
+	if (mode->StencilBits) {
+		attribs[i++] = GLX_STENCIL_SIZE; attribs[i++] = mode->StencilBits;
+	}
+
+	attribs[i++] = GLX_DOUBLEBUFFER;
+	attribs[i++] = 0;
+}
+
+static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
+	int attribs[20];
+	int major, minor;
+	XVisualInfo* visual = NULL;
+
+	int fbcount;
+	GLXFBConfig* fbconfigs;
+	XVisualInfo info;
+
+	GLContext_GetAttribs(mode, attribs);	
+	if (!glXQueryVersion(win_display, &major, &minor)) {
+		Logger_Abort("glXQueryVersion failed");
+	}
+
+	if (major >= 1 && minor >= 3) {
+		/* ChooseFBConfig returns an array of GLXFBConfig opaque structures */
+		fbconfigs = glXChooseFBConfig(win_display, win_screen, attribs, &fbcount);
+		if (fbconfigs && fbcount) {
+			/* Use the first GLXFBConfig from the fbconfigs array (best match) */
+			visual = glXGetVisualFromFBConfig(win_display, *fbconfigs);
+			XFree(fbconfigs);
+		}
+	}
+
+	if (!visual) {
+		Platform_LogConst("Falling back to glXChooseVisual.");
+		visual = glXChooseVisual(win_display, win_screen, attribs);
+	}
+	if (!visual) {
+		Logger_Abort("Requested GraphicsMode not available.");
+	}
+
+	info = *visual;
+	XFree(visual);
+	return info;
+}
+#endif
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------AGL OpenGL--------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_AGL
+#include <AGL/agl.h>
+
+static AGLContext ctx_handle;
+static bool ctx_fullscreen, ctx_firstFullscreen;
+static Rect2D ctx_windowedBounds;
+
+static void GLContext_Check(int code, const char* place) {
+	ReturnCode res;
+	if (code) return;
+
+	res = aglGetError();
+	if (res) Logger_Abort2(res, place);
+}
+
+static void GLContext_MakeCurrent(void) {
+	int code = aglSetCurrentContext(ctx_handle);
+	GLContext_Check(code, "Setting GL context");
+}
+
+static void GLContext_SetDrawable(void) {
+	CGrafPtr windowPort = GetWindowPort(win_handle);
+	int code = aglSetDrawable(ctx_handle, windowPort);
+	GLContext_Check(code, "Attaching GL context");
+}
+
+static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs, bool fullscreen) {
+	int i = 0;
+
+	if (!mode->IsIndexed) { attribs[i++] = AGL_RGBA; }
+	attribs[i++] = AGL_RED_SIZE;   attribs[i++] = mode->R;
+	attribs[i++] = AGL_GREEN_SIZE; attribs[i++] = mode->G;
+	attribs[i++] = AGL_BLUE_SIZE;  attribs[i++] = mode->B;
+	attribs[i++] = AGL_ALPHA_SIZE; attribs[i++] = mode->A;
+
+	if (mode->DepthBits) {
+		attribs[i++] = AGL_DEPTH_SIZE;   attribs[i++] = mode->DepthBits;
+	}
+	if (mode->StencilBits) {
+		attribs[i++] = AGL_STENCIL_SIZE; attribs[i++] = mode->StencilBits;
+	}
+
+	attribs[i++] = AGL_DOUBLEBUFFER;
+	if (fullscreen) { attribs[i++] = AGL_FULLSCREEN; }
+	attribs[i++] = 0;
+}
+
+static void GLContext_UnsetFullscreen(void) {
+	int code;
+	Platform_LogConst("Unsetting AGL fullscreen.");
+
+	code = aglSetDrawable(ctx_handle, NULL);
+	GLContext_Check(code, "Unattaching GL context");
+	code = aglUpdateContext(ctx_handle);
+	GLContext_Check(code, "Updating GL context (from Fullscreen)");
+
+	CGDisplayRelease(CGMainDisplayID());
+	GLContext_SetDrawable();
+
+	ctx_fullscreen = false;
+	Window_UpdateWindowState();
+	Window_SetSize(ctx_windowedBounds.Width, ctx_windowedBounds.Height);
+}
+
+static void GLContext_SetFullscreen(void) {
+	int displayWidth  = Display_Bounds.Width;
+	int displayHeight = Display_Bounds.Height;
+	int code;
+
+	Platform_LogConst("Switching to AGL fullscreen");
+	CGDisplayCapture(CGMainDisplayID());
+
+	code = aglSetFullScreen(ctx_handle, displayWidth, displayHeight, 0, 0);
+	GLContext_Check(code, "aglSetFullScreen");
+	GLContext_MakeCurrent();
+
+	/* This is a weird hack to workaround a bug where the first time a context */
+	/* is made fullscreen, we just end up with a blank screen.  So we undo it as fullscreen */
+	/* and redo it as fullscreen. */
+	if (!ctx_firstFullscreen) {
+		ctx_firstFullscreen = true;
+		GLContext_UnsetFullscreen();
+		GLContext_SetFullscreen();
+		return;
+	}
+
+	ctx_fullscreen     = true;
+	ctx_windowedBounds = Window_ClientBounds;
+
+	Window_ClientBounds = Display_Bounds;
+	Window_Bounds = Display_Bounds;
+	win_state     = WINDOW_STATE_FULLSCREEN;
+}
+
+void GLContext_Init(struct GraphicsMode* mode) {
+	int attribs[20];
+	AGLPixelFormat fmt;
+	GDHandle gdevice;
+	OSStatus res;
+
+	/* Initially try creating fullscreen compatible context */	
+	res = DMGetGDeviceByDisplayID(CGMainDisplayID(), &gdevice, false);
+	if (res) Logger_Abort2(res, "Getting display device failed");
+
+	GLContext_GetAttribs(mode, attribs, true);
+	fmt = aglChoosePixelFormat(&gdevice, 1, attribs);
+	res = aglGetError();
+
+	/* Try again with non-compatible context if that fails */
+	if (!fmt || res == AGL_BAD_PIXELFMT) {
+		Platform_LogConst("Failed to create full screen pixel format.");
+		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
+
+		GLContext_GetAttribs(mode, attribs, false);
+		fmt = aglChoosePixelFormat(NULL, 0, attribs);
+		res = aglGetError();
+	}
+	if (res) Logger_Abort2(res, "Choosing pixel format");
+
+	ctx_handle = aglCreateContext(fmt, NULL);
+	GLContext_Check(0, "Creating GL context");
+
+	aglDestroyPixelFormat(fmt);
+	GLContext_Check(0, "Destroying pixel format");
+
+	GLContext_SetDrawable();
+	GLContext_Update();
+	GLContext_MakeCurrent();
+}
+
+void GLContext_Update(void) {
+	if (ctx_pendingFullscreen) {
+		ctx_pendingFullscreen = false;
+		GLContext_SetFullscreen();
+		return;
+	} else if (ctx_pendingWindowed) {
+		ctx_pendingWindowed = false;
+		GLContext_UnsetFullscreen();
+	}
+
+	if (ctx_fullscreen) return;
+	GLContext_SetDrawable();
+	aglUpdateContext(ctx_handle);
+}
+
+void GLContext_Free(void) {
+	int code;
+	if (!ctx_handle) return;
+
+	code = aglSetCurrentContext(NULL);
+	GLContext_Check(code, "Unsetting GL context");
+
+	code = aglDestroyContext(ctx_handle);
+	GLContext_Check(code, "Destroying GL context");
+	ctx_handle = NULL;
+}
+
+void* GLContext_GetAddress(const char* function) {
+	void* address = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
+	return GLContext_IsInvalidAddress(address) ? NULL : address;
+}
+
+void GLContext_SwapBuffers(void) {
+	aglSwapBuffers(ctx_handle);
+	GLContext_Check(0, "Swapping buffers");
+}
+
+void GLContext_SetVSync(bool enabled) {
+	int value = enabled ? 1 : 0;
+	aglSetInteger(ctx_handle, AGL_SWAP_INTERVAL, &value);
+}
+#endif
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------SDL OpenGL--------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_SDL
+#include <SDL2/SDL.h>
 static SDL_GLContext win_ctx;
+
 void GLContext_Init(struct GraphicsMode* mode) {
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   mode->R);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, mode->G);
@@ -2944,20 +2973,4 @@ void GLContext_SetVSync(bool enabled) {
 	SDL_GL_SetSwapInterval(enabled);
 }
 #endif
-
-void Window_EnableRawMouse(void) {
-	Window_RegrabMouse();
-	SDL_SetRelativeMouseMode(true);
-	win_rawMouse = true;
-}
-
-void Window_UpdateRawMouse(void) {
-	Window_CentreMousePosition();
-}
-
-void Window_DisableRawMouse(void) {
-	Window_RegrabMouse();
-	SDL_SetRelativeMouseMode(false);
-	win_rawMouse = false;
-}
 #endif

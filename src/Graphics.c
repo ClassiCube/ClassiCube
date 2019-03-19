@@ -1225,7 +1225,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	uint32_t size = vCount * gfx_batchStride;
-	_glBindBuffer(GL_ARRAY_BUFFER, vb);
+	_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
 #endif
