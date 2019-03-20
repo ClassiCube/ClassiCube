@@ -437,7 +437,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	ATOM atom = RegisterClassEx(&wc);
 	if (!atom) Logger_Abort2(GetLastError(), "Failed to register window class");
 
-	win_handle = CreateWindowEx(0, atom, NULL, CC_WIN_STYLE,
+	win_handle = CreateWindowEx(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
 		rect.left, rect.top, Rect_Width(rect), Rect_Height(rect),
 		NULL, NULL, win_instance, NULL);
 
@@ -3016,15 +3016,13 @@ void GLContext_Init(struct GraphicsMode* mode) {
 	eglBindAPI(EGL_OPENGL_ES_API);
 	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
 
-	EGLint contextAttributes[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-
-	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, contextAttributes);
+	static EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, contextAttribs);
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);\
 }
 
 void GLContext_Update(void) {
-	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx_context);
 	eglDestroySurface(ctx_display, ctx_surface);
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
