@@ -295,7 +295,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_MOUSEMOVE:
-		/* set before position change, in case mouse buttons changed when outside window */
+		/* Set before position change, in case mouse buttons changed when outside window */
 		Mouse_SetPressed(MOUSE_LEFT,   (wParam & 0x01) != 0);
 		Mouse_SetPressed(MOUSE_RIGHT,  (wParam & 0x02) != 0);
 		Mouse_SetPressed(MOUSE_MIDDLE, (wParam & 0x10) != 0);
@@ -3057,44 +3057,210 @@ void GLContext_SetVSync(bool enabled) {
 #ifdef CC_BUILD_WEBCANVAS
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
-#include <SDL2/SDL.h>
-static SDL_Window* win_handle;
 static bool win_rawMouse;
 
 static void Window_RefreshBounds(void) {
-	Rect2D r;
-	SDL_GetWindowPosition(win_handle, &r.X, &r.Y);
-	SDL_GetWindowSize(win_handle, &r.Width, &r.Height);
+	Rect2D r = { 0,0, 0,0 };
+	emscripten_get_canvas_element_size(NULL, &r.Width, &r.Height);
 
 	Window_ClientBounds = r;
 	/* TODO: get border size somehow */
 	Window_Bounds = r;
 }
 
-static void Window_SDLFail(const char* place) {
-	char strBuffer[256];
-	String str;
-	String_InitArray_NT(str, strBuffer);
+static EM_BOOL Window_MouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
+	Mouse_SetWheel(Mouse_Wheel - ev->deltaY);
+	return true;
+}
 
-	String_Format2(&str, "Error when %c: %c", place, SDL_GetError());
-	str.buffer[str.length] = '\0';
-	Logger_Abort(str.buffer);
+static EM_BOOL Window_MouseButton(int type, const EmscriptenMouseEvent* ev, void* data) {
+	MouseButton btn;
+
+	switch (ev->button) {
+		case 0: btn = MOUSE_LEFT;   break;
+		case 1: btn = MOUSE_MIDDLE; break;
+		case 2: btn = MOUSE_RIGHT;  break;
+		default: return false;
+	}
+	Mouse_SetPressed(btn, type == EMSCRIPTEN_EVENT_MOUSEDOWN);
+	return true;
+}
+
+static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
+	/* Set before position change, in case mouse buttons changed when outside window */
+	Mouse_SetPressed(MOUSE_LEFT,   (ev->buttons & 0x01) != 0);
+	Mouse_SetPressed(MOUSE_RIGHT,  (ev->buttons & 0x02) != 0);
+	Mouse_SetPressed(MOUSE_MIDDLE, (ev->buttons & 0x04) != 0);
+
+	Mouse_SetPosition(ev->canvasX, ev->canvasY);
+	if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, ev->movementX, ev->movementY);
+	return true;
+}
+
+static EM_BOOL Window_Focus(int type, const EmscriptenFocusEvent* ev, void* data) {
+	Window_Focused = type == EMSCRIPTEN_EVENT_FOCUS;
+	if (!Window_Focused) Key_Clear();
+
+	Event_RaiseVoid(&WindowEvents.FocusChanged);
+	return true;
+}
+
+static EM_BOOL Window_Resize(int type, const EmscriptenUiEvent* ev, void *data) {
+	Window_RefreshBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
+	return true;
+}
+
+/* This is only raised when going into fullscreen */
+static EM_BOOL Window_CanvasResize(int type, const void* reserved, void *data) {
+	Window_RefreshBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
+	return false;
+}
+
+static EM_BOOL Window_Visibility(int type, const EmscriptenVisibilityChangeEvent* ev, void* data) {
+	Event_RaiseVoid(&WindowEvents.VisibilityChanged);
+	return false;
+}
+
+static const char* Window_BeforeUnload(int type, const void* ev, void *data) {
+	Window_Close();
+	return NULL;
+}
+
+static Key Window_MapKey(int k) {
+	if (k >= '0' && k <= '9') return k;
+	if (k >= 'A' && k <= 'Z') return k;
+	if (k >= 112 && k <= 135) { return KEY_F1 + (k - 112); }
+	if (k >= 96 && k <= 105)  { return KEY_KP0 + (k - 96); }
+
+	switch (k) {
+	case 13:  return KEY_ENTER;
+	case 27:  return KEY_ESCAPE;
+	case 8:   return KEY_BACKSPACE;
+	case 10:  return KEY_TAB;
+	case 32:  return KEY_SPACE;
+	case 192: return KEY_QUOTE;
+	case 61:  case 187: return KEY_PLUS;
+	case 188: return KEY_COMMA;
+	case 173: case 189: return KEY_MINUS;
+	case 190: return KEY_PERIOD;
+	case 191: return KEY_SLASH;
+	case 59:  case 186: return KEY_SEMICOLON;
+	case 210: return KEY_LBRACKET;
+	case 222: return KEY_BACKSLASH;
+	case 221: return KEY_RBRACKET;
+	case 223: return KEY_TILDE;
+	case 20:  return KEY_CAPSLOCK;
+	case 44:  return KEY_PRINTSCREEN;
+	case 145: return KEY_SCROLLLOCK;
+	case 19:  return KEY_PAUSE;
+	case 45:  return KEY_INSERT;
+	case 36:  return KEY_HOME;
+	case 33:  return KEY_PAGEUP;
+	case 46:  return KEY_DELETE;
+	case 35:  return KEY_END;
+	case 34:  return KEY_PAGEDOWN;
+	case 39:  return KEY_RIGHT;
+	case 37:  return KEY_LEFT;
+	case 40:  return KEY_DOWN;
+	case 38:  return KEY_UP;
+
+	case 144: return KEY_NUMLOCK;
+	case 111: return KEY_KP_DIVIDE;
+	case 106: return KEY_KP_MULTIPLY;
+	case 109: return KEY_KP_MINUS;
+	case 107: return KEY_KP_PLUS;
+	case 110: return KEY_KP_DECIMAL;
+
+	case 17: return KEY_LCTRL;
+	case 16: return KEY_LSHIFT;
+	case 18: return KEY_LALT;
+	case 91: return KEY_LWIN;
+	}
+	return KEY_NONE;
+}
+
+static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* data) {
+	Key key = Window_MapKey(ev->keyCode);
+	int kc = ev->keyCode;
+	if (!key) return false;
+
+	if (ev->location == DOM_KEY_LOCATION_RIGHT) {
+		switch (key) {
+		case KEY_LALT:   key = KEY_RALT; break;
+		case KEY_LCTRL:  key = KEY_RCTRL; break;
+		case KEY_LSHIFT: key = KEY_RSHIFT; break;
+		case KEY_LWIN:   key = KEY_RWIN; break;
+		}
+	} else if (ev->location == DOM_KEY_LOCATION_NUMPAD) {
+		switch (key) {
+		case KEY_ENTER: key = KEY_KP_ENTER; break;
+		}
+	}
+	Key_SetPressed(key, type == EMSCRIPTEN_EVENT_KEYDOWN);
+
+	return type != EMSCRIPTEN_EVENT_KEYDOWN ||
+		/* we must not intercept keydown for regular keys, otherwise KeyPress doesn't get raised */
+		(key == KEY_BACKSPACE || key == KEY_TAB);
+}
+
+static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
+	char keyChar;
+	if (Convert_TryUnicodeToCP437(ev->charCode, &keyChar)) {
+		Event_RaiseInt(&KeyEvents.Press, keyChar);
+	}
+	return true;
+}
+
+static void Window_HookEvents(void) {
+	emscripten_set_wheel_callback("#canvas",     NULL, 0, Window_MouseWheel);
+	emscripten_set_mousedown_callback("#canvas", NULL, 0, Window_MouseButton);
+	emscripten_set_mouseup_callback("#canvas",   NULL, 0, Window_MouseButton);
+	emscripten_set_mousemove_callback("#canvas", NULL, 0, Window_MouseMove);
+
+	emscripten_set_focus_callback("#window",  NULL, 0, Window_Focus);
+	emscripten_set_blur_callback("#window",   NULL, 0, Window_Focus);
+	emscripten_set_resize_callback("#window", NULL, 0, Window_Resize);
+
+	emscripten_set_visibilitychange_callback(NULL, 0, Window_Visibility);
+	emscripten_set_beforeunload_callback(    NULL,    Window_BeforeUnload);
+
+	emscripten_set_keydown_callback("#window",  NULL, 0, Window_Key);
+	emscripten_set_keyup_callback("#window",    NULL, 0, Window_Key);
+	emscripten_set_keypress_callback("#window", NULL, 0, Window_KeyPress);
+}
+
+static void Window_UnhookEvents(void) {
+	emscripten_set_wheel_callback("#canvas",     NULL, 0, NULL);
+	emscripten_set_mousedown_callback("#canvas", NULL, 0, NULL);
+	emscripten_set_mouseup_callback("#canvas",   NULL, 0, NULL);
+	emscripten_set_mousemove_callback("#canvas", NULL, 0, NULL);
+
+	emscripten_set_focus_callback("#window",  NULL, 0, NULL);
+	emscripten_set_blur_callback("#window",   NULL, 0, NULL);
+	emscripten_set_resize_callback("#window", NULL, 0, NULL);
+
+	emscripten_set_visibilitychange_callback(NULL, 0, NULL);
+	emscripten_set_beforeunload_callback(    NULL,    NULL);
+
+	emscripten_set_keydown_callback("#window",  NULL, 0, NULL);
+	emscripten_set_keyup_callback("#window",    NULL, 0, NULL);
+	emscripten_set_keypress_callback("#window", NULL, 0, NULL);
 }
 
 void Window_Init(void) {
-	SDL_Init(SDL_INIT_VIDEO);
 	Display_Bounds.Width  = EM_ASM_INT_V({ return screen.width; });
 	Display_Bounds.Height = EM_ASM_INT_V({ return screen.height; });
 	Display_BitsPerPixel  = 24;
 }
 
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
-	/* TODO: Don't set this flag for launcher window */
-	win_handle = SDL_CreateWindow(NULL, x, y, width, height, SDL_WINDOW_OPENGL);
-	if (!win_handle) Window_SDLFail("creating window");
+	Window_Exists  = true;
+	Window_Focused = true;
 
-	Window_Exists = true;
-	Window_RefreshBounds();
+	Window_HookEvents();
+	Window_SetSize(width, height);
 }
 
 void Window_SetTitle(const String* title) {
@@ -3103,222 +3269,63 @@ void Window_SetTitle(const String* title) {
 	EM_ASM_({ document.title = UTF8ToString($0); }, str);
 }
 
+/* TODO: Use real system clipboard.. */
+static char clipboardBuffer[256];
+static String clipboardStr = String_FromArray(clipboardBuffer);
+
 void Window_GetClipboardText(String* value) {
-	char* ptr = SDL_GetClipboardText();
-	if (!ptr) return;
-
-	int len = String_CalcLen(ptr, UInt16_MaxValue);
-	Convert_DecodeUtf8(value, ptr, len);
-	SDL_free(ptr);
+	String_AppendString(value, &clipboardStr);
 }
-
 void Window_SetClipboardText(const String* value) {
-	char str[600];
-	Platform_ConvertString(str, value);
-	SDL_SetClipboardText(str);
+	String_Copy(&clipboardStr, value);
 }
 
 bool Window_GetVisible(void) { return true; }
 void Window_SetVisible(bool visible) { }
-void* Window_GetWindowHandle(void) { return win_handle; }
+void* Window_GetWindowHandle(void) { return NULL; }
 
 int Window_GetWindowState(void) {
-	Uint32 flags = SDL_GetWindowFlags(win_handle);
-	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) return WINDOW_STATE_FULLSCREEN;
-	return WINDOW_STATE_NORMAL;
+	EmscriptenFullscreenChangeEvent status;
+	emscripten_get_fullscreen_status(&status);
+	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
 
 void Window_SetWindowState(int state) {
+	EmscriptenFullscreenStrategy strategy;
+
 	switch (state) {
 	case WINDOW_STATE_NORMAL:
-		SDL_RestoreWindow(win_handle);
+		emscripten_exit_fullscreen();
 		break;
 	case WINDOW_STATE_FULLSCREEN:
-		SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
+		strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
+		strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
+		strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
+
+		strategy.canvasResizedCallback         = Window_CanvasResize;
+		strategy.canvasResizedCallbackUserData = NULL;
+		emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
 		break;
 	}
 }
 
-void Window_SetLocation(int x, int y) {
-	SDL_SetWindowPosition(win_handle, x, y);
-}
-
+/* No simple API for moving canvas */
+void Window_SetLocation(int x, int y) { }
 void Window_SetSize(int width, int height) {
-	SDL_SetWindowSize(win_handle, width, height);
+	emscripten_set_canvas_element_size(NULL, width, height);
+	Window_RefreshBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
 void Window_Close(void) {
-	SDL_Event e;
-	e.type = SDL_QUIT;
-	SDL_PushEvent(&e);
+	Window_Exists = false;
+	Event_RaiseVoid(&WindowEvents.Closing);
+
+	Window_SetSize(0, 0);
+	Event_RaiseVoid(&WindowEvents.Destroyed);
 }
 
-static Key Window_MapKey(SDL_Keycode k) {
-	if (k >= SDLK_0   && k <= SDLK_9) { return '0' + (k - SDLK_0); }
-	if (k >= SDLK_a   && k <= SDLK_z) { return 'A' + (k - SDLK_a); }
-	if (k >= SDLK_F1  && k <= SDLK_F12) { return KEY_F1 + (k - SDLK_F1); }
-	if (k >= SDLK_F13 && k <= SDLK_F24) { return KEY_F13 + (k - SDLK_F13); }
-	/* SDLK_KP_0 isn't before SDLK_KP_1 */
-	if (k >= SDLK_KP_1 && k <= SDLK_KP_9) { return KEY_KP1 + (k - SDLK_KP_1); }
-
-	switch (k) {
-	case SDLK_RETURN: return KEY_ENTER;
-	case SDLK_ESCAPE: return KEY_ESCAPE;
-	case SDLK_BACKSPACE: return KEY_BACKSPACE;
-	case SDLK_TAB:    return KEY_TAB;
-	case SDLK_SPACE:  return KEY_SPACE;
-	case SDLK_QUOTE:  return KEY_QUOTE;
-	case SDLK_PLUS:   return KEY_PLUS;
-	case SDLK_COMMA:  return KEY_COMMA;
-	case SDLK_MINUS:  return KEY_MINUS;
-	case SDLK_PERIOD: return KEY_PERIOD;
-	case SDLK_SLASH:  return KEY_SLASH;
-	case SDLK_SEMICOLON:    return KEY_SEMICOLON;
-	case SDLK_LEFTBRACKET:  return KEY_LBRACKET;
-	case SDLK_BACKSLASH:    return KEY_BACKSLASH;
-	case SDLK_RIGHTBRACKET: return KEY_RBRACKET;
-	case SDLK_BACKQUOTE:    return KEY_TILDE;
-	case SDLK_CAPSLOCK:     return KEY_CAPSLOCK;
-	case SDLK_PRINTSCREEN: return KEY_PRINTSCREEN;
-	case SDLK_SCROLLLOCK:  return KEY_SCROLLLOCK;
-	case SDLK_PAUSE:       return KEY_PAUSE;
-	case SDLK_INSERT:   return KEY_INSERT;
-	case SDLK_HOME:     return KEY_HOME;
-	case SDLK_PAGEUP:   return KEY_PAGEUP;
-	case SDLK_DELETE:   return KEY_DELETE;
-	case SDLK_END:      return KEY_END;
-	case SDLK_PAGEDOWN: return KEY_PAGEDOWN;
-	case SDLK_RIGHT: return KEY_RIGHT;
-	case SDLK_LEFT:  return KEY_LEFT;
-	case SDLK_DOWN:  return KEY_DOWN;
-	case SDLK_UP:    return KEY_UP;
-
-	case SDLK_NUMLOCKCLEAR: return KEY_NUMLOCK;
-	case SDLK_KP_DIVIDE: return KEY_KP_DIVIDE;
-	case SDLK_KP_MULTIPLY: return KEY_KP_MULTIPLY;
-	case SDLK_KP_MINUS: return KEY_KP_MINUS;
-	case SDLK_KP_PLUS: return KEY_KP_PLUS;
-	case SDLK_KP_ENTER: return KEY_KP_ENTER;
-	case SDLK_KP_0: return KEY_KP0;
-	case SDLK_KP_PERIOD: return KEY_KP_DECIMAL;
-
-	case SDLK_LCTRL: return KEY_LCTRL;
-	case SDLK_LSHIFT: return KEY_LSHIFT;
-	case SDLK_LALT: return KEY_LALT;
-	case SDLK_LGUI: return KEY_LWIN;
-	case SDLK_RCTRL: return KEY_RCTRL;
-	case SDLK_RSHIFT: return KEY_RSHIFT;
-	case SDLK_RALT: return KEY_RALT;
-	case SDLK_RGUI: return KEY_RWIN;
-	}
-	return KEY_NONE;
-}
-
-static void Window_HandleKeyEvent(const SDL_Event* e) {
-	bool pressed = e->key.state == SDL_PRESSED;
-	Key key = Window_MapKey(e->key.keysym.sym);
-	if (key) Key_SetPressed(key, pressed);
-}
-
-static void Window_HandleMouseEvent(const SDL_Event* e) {
-	bool pressed = e->button.state == SDL_PRESSED;
-	switch (e->button.button) {
-	case SDL_BUTTON_LEFT:
-		Mouse_SetPressed(MOUSE_LEFT, pressed); break;
-	case SDL_BUTTON_MIDDLE:
-		Mouse_SetPressed(MOUSE_MIDDLE, pressed); break;
-	case SDL_BUTTON_RIGHT:
-		Mouse_SetPressed(MOUSE_RIGHT, pressed); break;
-	case SDL_BUTTON_X1:
-		Key_SetPressed(KEY_XBUTTON1, pressed); break;
-	case SDL_BUTTON_X2:
-		Key_SetPressed(KEY_XBUTTON2, pressed); break;
-	}
-}
-
-static void Window_HandleTextEvent(const SDL_Event* e) {
-	char buffer[SDL_TEXTINPUTEVENT_TEXT_SIZE];
-	String str;
-	int i, len;
-
-	String_InitArray(str, buffer);
-	len = String_CalcLen(e->text.text, SDL_TEXTINPUTEVENT_TEXT_SIZE);
-	Convert_DecodeUtf8(&str, e->text.text, len);
-
-	for (i = 0; i < str.length; i++) {
-		Event_RaiseInt(&KeyEvents.Press, str.buffer[i]);
-	}
-}
-
-static void Window_HandleWindowEvent(const SDL_Event* e) {
-	switch (e->window.event) {
-	case SDL_WINDOWEVENT_SHOWN:
-	case SDL_WINDOWEVENT_HIDDEN:
-		Event_RaiseVoid(&WindowEvents.VisibilityChanged);
-		break;
-	case SDL_WINDOWEVENT_EXPOSED:
-		Event_RaiseVoid(&WindowEvents.Redraw);
-		break;
-	case SDL_WINDOWEVENT_MOVED:
-		Window_RefreshBounds();
-		Event_RaiseVoid(&WindowEvents.Moved);
-		break;
-	case SDL_WINDOWEVENT_SIZE_CHANGED:
-		Window_RefreshBounds();
-		Event_RaiseVoid(&WindowEvents.Resized);
-		break;
-	case SDL_WINDOWEVENT_MINIMIZED:
-	case SDL_WINDOWEVENT_MAXIMIZED:
-	case SDL_WINDOWEVENT_RESTORED:
-		Event_RaiseVoid(&WindowEvents.StateChanged);
-		break;
-	case SDL_WINDOWEVENT_FOCUS_GAINED:
-		Window_Focused = true;
-		Event_RaiseVoid(&WindowEvents.FocusChanged);
-		break;
-	case SDL_WINDOWEVENT_FOCUS_LOST:
-		Window_Focused = false;
-		Event_RaiseVoid(&WindowEvents.FocusChanged);
-		break;
-	case SDL_WINDOWEVENT_CLOSE:
-		Window_Close();
-		break;
-	}
-}
-
-void Window_ProcessEvents(void) {
-	SDL_Event e;
-	while (SDL_PollEvent(&e)) {
-		switch (e.type) {
-
-		case SDL_KEYDOWN:
-		case SDL_KEYUP:
-			Window_HandleKeyEvent(&e); break;
-		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP:
-			Window_HandleMouseEvent(&e); break;
-		case SDL_MOUSEWHEEL:
-			Mouse_SetWheel(Mouse_Wheel + e.wheel.y);
-			break;
-		case SDL_MOUSEMOTION:
-			Mouse_SetPosition(e.motion.x, e.motion.y);
-			if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, e.motion.xrel, e.motion.yrel);
-			break;
-		case SDL_TEXTINPUT:
-			Window_HandleTextEvent(&e); break;
-		case SDL_WINDOWEVENT:
-			Window_HandleWindowEvent(&e); break;
-
-		case SDL_QUIT:
-			Window_Exists = false;
-			Event_RaiseVoid(&WindowEvents.Closing);
-
-			SDL_DestroyWindow(win_handle);
-			Event_RaiseVoid(&WindowEvents.Destroyed);
-			break;
-		}
-	}
-}
+void Window_ProcessEvents(void) { }
 
 /* Not supported (or even used internally) */
 Point2D Cursor_GetScreenPos(void) { Point2D p = { 0,0 }; return p; }
@@ -3326,7 +3333,11 @@ Point2D Cursor_GetScreenPos(void) { Point2D p = { 0,0 }; return p; }
 void Cursor_SetScreenPos(int x, int y) { }
 
 void Cursor_SetVisible(bool visible) {
-	SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
+	if (visible) {
+		EM_ASM(Module['canvas'].style['cursor'] = 'default'; );
+	} else {
+		EM_ASM(Module['canvas'].style['cursor'] = 'none'; );
+	}
 }
 
 void Window_ShowDialog(const char* title, const char* msg) {
@@ -3338,14 +3349,14 @@ void Window_DrawRaw(Rect2D r)    { Logger_Abort("Unsupported"); }
 
 void Window_EnableRawMouse(void) {
 	Window_RegrabMouse();
-	SDL_SetRelativeMouseMode(true);
+	emscripten_request_pointerlock(NULL, true);
 	win_rawMouse = true;
 }
 void Window_UpdateRawMouse(void) { }
 
 void Window_DisableRawMouse(void) {
 	Window_RegrabMouse();
-	SDL_SetRelativeMouseMode(false);
+	emscripten_exit_pointerlock();
 	win_rawMouse = false;
 }
 #endif

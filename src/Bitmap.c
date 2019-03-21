@@ -396,8 +396,8 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 		} break;
 
 		case PNG_FourCC('P','L','T','E'): {
-			if (dataSize > PNG_PALETTE * 3) return PNG_ERR_PAL_ENTRIES;
-			if ((dataSize % 3) != 0) return PNG_ERR_PAL_SIZE;
+			if (dataSize > PNG_PALETTE * 3) return PNG_ERR_PAL_SIZE;
+			if ((dataSize % 3) != 0)        return PNG_ERR_PAL_SIZE;
 			res = Stream_Read(stream, tmp, dataSize);
 			if (res) return res;
 
@@ -422,7 +422,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 				res = Stream_Read(stream, tmp, dataSize);
 				if (res) return res;
 
-				/* set alpha component of palette*/
+				/* set alpha component of palette */
 				for (i = 0; i < dataSize; i++) {
 					palette[i].A = tmp[i];
 				}

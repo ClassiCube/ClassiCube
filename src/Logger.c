@@ -77,10 +77,11 @@ static const char* Logger_GetCCErrorDesc(ReturnCode res) {
 	case OGG_ERR_INVALID_SIG: return "Invalid OGG signature";
 	case OGG_ERR_VERSION:     return "Invalid OGG format version";
 
-		/*WAV_ERR_STREAM_HDR,
-			WAV_ERR_STREAM_TYPE, 
-			WAV_ERR_DATA_TYPE,
-			WAV_ERR_NO_DATA,
+	case WAV_ERR_STREAM_HDR:  return "Invalid WAV header";
+	case WAV_ERR_STREAM_TYPE: return "Invalid WAV type";
+	case WAV_ERR_DATA_TYPE:   return "Unsupported WAV audio format";
+	case WAV_ERR_NO_DATA:     return "No audio in WAV";
+
 			/* Vorbis audio decoding errors */ /*
 			VORBIS_ERR_HEADER,
 			VORBIS_ERR_WRONG_HEADER,
@@ -101,21 +102,22 @@ static const char* Logger_GetCCErrorDesc(ReturnCode res) {
 			VORBIS_ERR_MAPPING_CHANS, 
 			VORBIS_ERR_MAPPING_RESERVED,
 			VORBIS_ERR_FRAME_TYPE,
-			/* PNG image decoding errors */ /*
-			PNG_ERR_INVALID_SIG, 
-			PNG_ERR_INVALID_HDR_SIZE,
-			PNG_ERR_TOO_WIDE,
-			PNG_ERR_TOO_TALL,
-			PNG_ERR_INVALID_COL_BPP, 
-			PNG_ERR_COMP_METHOD,
-			PNG_ERR_FILTER, 
-			PNG_ERR_INTERLACED,
-			PNG_ERR_PAL_ENTRIES, 
-			PNG_ERR_PAL_SIZE,
-			PNG_ERR_TRANS_COUNT, 
-			PNG_ERR_TRANS_INVALID,
-			PNG_ERR_INVALID_END_SIZE, 
-			PNG_ERR_NO_DATA,
+
+			/* PNG image decoding errors */
+	case PNG_ERR_INVALID_SIG:      return "Invalid PNG signature";
+	case PNG_ERR_INVALID_HDR_SIZE: return "Invalid PNG header size";
+	case PNG_ERR_TOO_WIDE:         return "PNG image too wide";
+	case PNG_ERR_TOO_TALL:         return "PNG image too tall";
+	case PNG_ERR_INVALID_COL_BPP:  return "Invalid color type in PNG";
+	case PNG_ERR_COMP_METHOD:      return "Invalid compression in PNG";
+	case PNG_ERR_FILTER:           return "Invalid filter in PNG"; 
+	case PNG_ERR_INTERLACED:       return "Interlaced PNGs unsupported";
+	case PNG_ERR_PAL_SIZE:         return "Invalid size of palette data";
+	case PNG_ERR_TRANS_COUNT:      return "Invalid number of transparency entries";
+	case PNG_ERR_TRANS_INVALID:    return "Transparency invalid for color type";
+	case PNG_ERR_INVALID_END_SIZE: return "Non-empty IEND chunk";
+	case PNG_ERR_NO_DATA:          return "No image in PNG";
+
 			/* ZIP archive decoding errors */ /*
 			ZIP_ERR_TOO_MANY_ENTRIES, 
 			ZIP_ERR_SEEK_END_OF_CENTRAL_DIR, 
@@ -153,18 +155,12 @@ static const char* Logger_GetCCErrorDesc(ReturnCode res) {
 			DAT_ERR_JOBJECT_TYPE, 
 			DAT_ERR_JARRAY_TYPE,
 			DAT_ERR_JARRAY_CONTENT,
-			/* CW map decoding errors */ /*
-			NBT_ERR_INT32S, 
-			NBT_ERR_UNKNOWN,
-			CW_ERR_ROOT_TAG,
-			CW_ERR_STRING_LEN
 			*/
 
-	case PNG_ERR_INVALID_SIG:      return "Invalid PNG signature";
-	case PNG_ERR_INVALID_HDR_SIZE: return "Invalid PNG header size";
-	case PNG_ERR_TOO_WIDE:         return "PNG image too wide";
-	case PNG_ERR_TOO_TALL:         return "PNG image too tall";
-	case PNG_ERR_INTERLACED:       return "Interlaced PNGs unsupported";
+	case NBT_ERR_INT32S:    return "I32_Array NBT tag unsupported";
+	case NBT_ERR_UNKNOWN:   return "Unknown NBT tag type";
+	case CW_ERR_ROOT_TAG:   return "Invalid root NBT tag";
+	case CW_ERR_STRING_LEN: return "NBT string too long";
 	}
 	return NULL;
 }
