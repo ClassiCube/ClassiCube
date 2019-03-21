@@ -1507,11 +1507,11 @@ static void Gfx_ReloadUniforms(void) {
 	struct GLShader* s = gfx_activeShader;
 
 	if (s->Uniforms & UNI_MVP_MATRIX) {
-		glUniformMatrix4fv(s->Locations[0], 1, false, &_mvp);
+		glUniformMatrix4fv(s->Locations[0], 1, false, (float*)&_mvp);
 		s->Uniforms &= ~UNI_MVP_MATRIX;
 	}
 	if ((s->Uniforms & UNI_TEX_MATRIX) && (s->Features & FTR_TEX_MATRIX)) {
-		glUniformMatrix4fv(s->Locations[1], 1, false, &_tex);
+		glUniformMatrix4fv(s->Locations[1], 1, false, (float*)&_tex);
 		s->Uniforms &= ~UNI_TEX_MATRIX;
 	}
 	if ((s->Uniforms & UNI_FOG_COL) && (s->Features & FTR_HASANY_FOG)) {

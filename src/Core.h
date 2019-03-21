@@ -118,8 +118,9 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #elif defined __EMSCRIPTEN__
 #define CC_BUILD_WEB
 #define CC_BUILD_POSIX
-#define CC_BUILD_SDL
 #define CC_BUILD_GLMODERN
+#define CC_BUILD_WEBCANVAS
+#define CC_BUILD_WEBGL
 #error "Web backend is still a WIP. Please do not publicly mention it, thanks."
 #endif
 #endif

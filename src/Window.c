@@ -40,7 +40,7 @@ static void Window_RegrabMouse(void) {
 	Window_CentreMousePosition();
 }
 
-#ifndef CC_BUILD_SDL
+#if !defined(CC_BUILD_SDL) && !defined(CC_BUILD_WEBCANVAS)
 void Window_EnableRawMouse(void) {
 	Window_RegrabMouse();
 	Cursor_SetVisible(false);
@@ -3047,4 +3047,343 @@ void GLContext_SetVSync(bool enabled) {
 	eglSwapInterval(ctx_display, enabled ? 1 : 0);
 }
 #endif
+#endif
+
+
+/* EMSCRIPTEN STUFF... */
+/*########################################################################################################################*
+*-------------------------------------------------------SDL window--------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_WEBCANVAS
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+#include <SDL2/SDL.h>
+static SDL_Window* win_handle;
+static bool win_rawMouse;
+
+static void Window_RefreshBounds(void) {
+	Rect2D r;
+	SDL_GetWindowPosition(win_handle, &r.X, &r.Y);
+	SDL_GetWindowSize(win_handle, &r.Width, &r.Height);
+
+	Window_ClientBounds = r;
+	/* TODO: get border size somehow */
+	Window_Bounds = r;
+}
+
+static void Window_SDLFail(const char* place) {
+	char strBuffer[256];
+	String str;
+	String_InitArray_NT(str, strBuffer);
+
+	String_Format2(&str, "Error when %c: %c", place, SDL_GetError());
+	str.buffer[str.length] = '\0';
+	Logger_Abort(str.buffer);
+}
+
+void Window_Init(void) {
+	SDL_Init(SDL_INIT_VIDEO);
+	Display_Bounds.Width  = EM_ASM_INT_V({ return screen.width; });
+	Display_Bounds.Height = EM_ASM_INT_V({ return screen.height; });
+	Display_BitsPerPixel  = 24;
+}
+
+void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
+	/* TODO: Don't set this flag for launcher window */
+	win_handle = SDL_CreateWindow(NULL, x, y, width, height, SDL_WINDOW_OPENGL);
+	if (!win_handle) Window_SDLFail("creating window");
+
+	Window_Exists = true;
+	Window_RefreshBounds();
+}
+
+void Window_SetTitle(const String* title) {
+	char str[600];
+	Platform_ConvertString(str, title);
+	EM_ASM_({ document.title = UTF8ToString($0); }, str);
+}
+
+void Window_GetClipboardText(String* value) {
+	char* ptr = SDL_GetClipboardText();
+	if (!ptr) return;
+
+	int len = String_CalcLen(ptr, UInt16_MaxValue);
+	Convert_DecodeUtf8(value, ptr, len);
+	SDL_free(ptr);
+}
+
+void Window_SetClipboardText(const String* value) {
+	char str[600];
+	Platform_ConvertString(str, value);
+	SDL_SetClipboardText(str);
+}
+
+bool Window_GetVisible(void) { return true; }
+void Window_SetVisible(bool visible) { }
+void* Window_GetWindowHandle(void) { return win_handle; }
+
+int Window_GetWindowState(void) {
+	Uint32 flags = SDL_GetWindowFlags(win_handle);
+	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) return WINDOW_STATE_FULLSCREEN;
+	return WINDOW_STATE_NORMAL;
+}
+
+void Window_SetWindowState(int state) {
+	switch (state) {
+	case WINDOW_STATE_NORMAL:
+		SDL_RestoreWindow(win_handle);
+		break;
+	case WINDOW_STATE_FULLSCREEN:
+		SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
+		break;
+	}
+}
+
+void Window_SetLocation(int x, int y) {
+	SDL_SetWindowPosition(win_handle, x, y);
+}
+
+void Window_SetSize(int width, int height) {
+	SDL_SetWindowSize(win_handle, width, height);
+}
+
+void Window_Close(void) {
+	SDL_Event e;
+	e.type = SDL_QUIT;
+	SDL_PushEvent(&e);
+}
+
+static Key Window_MapKey(SDL_Keycode k) {
+	if (k >= SDLK_0   && k <= SDLK_9) { return '0' + (k - SDLK_0); }
+	if (k >= SDLK_a   && k <= SDLK_z) { return 'A' + (k - SDLK_a); }
+	if (k >= SDLK_F1  && k <= SDLK_F12) { return KEY_F1 + (k - SDLK_F1); }
+	if (k >= SDLK_F13 && k <= SDLK_F24) { return KEY_F13 + (k - SDLK_F13); }
+	/* SDLK_KP_0 isn't before SDLK_KP_1 */
+	if (k >= SDLK_KP_1 && k <= SDLK_KP_9) { return KEY_KP1 + (k - SDLK_KP_1); }
+
+	switch (k) {
+	case SDLK_RETURN: return KEY_ENTER;
+	case SDLK_ESCAPE: return KEY_ESCAPE;
+	case SDLK_BACKSPACE: return KEY_BACKSPACE;
+	case SDLK_TAB:    return KEY_TAB;
+	case SDLK_SPACE:  return KEY_SPACE;
+	case SDLK_QUOTE:  return KEY_QUOTE;
+	case SDLK_PLUS:   return KEY_PLUS;
+	case SDLK_COMMA:  return KEY_COMMA;
+	case SDLK_MINUS:  return KEY_MINUS;
+	case SDLK_PERIOD: return KEY_PERIOD;
+	case SDLK_SLASH:  return KEY_SLASH;
+	case SDLK_SEMICOLON:    return KEY_SEMICOLON;
+	case SDLK_LEFTBRACKET:  return KEY_LBRACKET;
+	case SDLK_BACKSLASH:    return KEY_BACKSLASH;
+	case SDLK_RIGHTBRACKET: return KEY_RBRACKET;
+	case SDLK_BACKQUOTE:    return KEY_TILDE;
+	case SDLK_CAPSLOCK:     return KEY_CAPSLOCK;
+	case SDLK_PRINTSCREEN: return KEY_PRINTSCREEN;
+	case SDLK_SCROLLLOCK:  return KEY_SCROLLLOCK;
+	case SDLK_PAUSE:       return KEY_PAUSE;
+	case SDLK_INSERT:   return KEY_INSERT;
+	case SDLK_HOME:     return KEY_HOME;
+	case SDLK_PAGEUP:   return KEY_PAGEUP;
+	case SDLK_DELETE:   return KEY_DELETE;
+	case SDLK_END:      return KEY_END;
+	case SDLK_PAGEDOWN: return KEY_PAGEDOWN;
+	case SDLK_RIGHT: return KEY_RIGHT;
+	case SDLK_LEFT:  return KEY_LEFT;
+	case SDLK_DOWN:  return KEY_DOWN;
+	case SDLK_UP:    return KEY_UP;
+
+	case SDLK_NUMLOCKCLEAR: return KEY_NUMLOCK;
+	case SDLK_KP_DIVIDE: return KEY_KP_DIVIDE;
+	case SDLK_KP_MULTIPLY: return KEY_KP_MULTIPLY;
+	case SDLK_KP_MINUS: return KEY_KP_MINUS;
+	case SDLK_KP_PLUS: return KEY_KP_PLUS;
+	case SDLK_KP_ENTER: return KEY_KP_ENTER;
+	case SDLK_KP_0: return KEY_KP0;
+	case SDLK_KP_PERIOD: return KEY_KP_DECIMAL;
+
+	case SDLK_LCTRL: return KEY_LCTRL;
+	case SDLK_LSHIFT: return KEY_LSHIFT;
+	case SDLK_LALT: return KEY_LALT;
+	case SDLK_LGUI: return KEY_LWIN;
+	case SDLK_RCTRL: return KEY_RCTRL;
+	case SDLK_RSHIFT: return KEY_RSHIFT;
+	case SDLK_RALT: return KEY_RALT;
+	case SDLK_RGUI: return KEY_RWIN;
+	}
+	return KEY_NONE;
+}
+
+static void Window_HandleKeyEvent(const SDL_Event* e) {
+	bool pressed = e->key.state == SDL_PRESSED;
+	Key key = Window_MapKey(e->key.keysym.sym);
+	if (key) Key_SetPressed(key, pressed);
+}
+
+static void Window_HandleMouseEvent(const SDL_Event* e) {
+	bool pressed = e->button.state == SDL_PRESSED;
+	switch (e->button.button) {
+	case SDL_BUTTON_LEFT:
+		Mouse_SetPressed(MOUSE_LEFT, pressed); break;
+	case SDL_BUTTON_MIDDLE:
+		Mouse_SetPressed(MOUSE_MIDDLE, pressed); break;
+	case SDL_BUTTON_RIGHT:
+		Mouse_SetPressed(MOUSE_RIGHT, pressed); break;
+	case SDL_BUTTON_X1:
+		Key_SetPressed(KEY_XBUTTON1, pressed); break;
+	case SDL_BUTTON_X2:
+		Key_SetPressed(KEY_XBUTTON2, pressed); break;
+	}
+}
+
+static void Window_HandleTextEvent(const SDL_Event* e) {
+	char buffer[SDL_TEXTINPUTEVENT_TEXT_SIZE];
+	String str;
+	int i, len;
+
+	String_InitArray(str, buffer);
+	len = String_CalcLen(e->text.text, SDL_TEXTINPUTEVENT_TEXT_SIZE);
+	Convert_DecodeUtf8(&str, e->text.text, len);
+
+	for (i = 0; i < str.length; i++) {
+		Event_RaiseInt(&KeyEvents.Press, str.buffer[i]);
+	}
+}
+
+static void Window_HandleWindowEvent(const SDL_Event* e) {
+	switch (e->window.event) {
+	case SDL_WINDOWEVENT_SHOWN:
+	case SDL_WINDOWEVENT_HIDDEN:
+		Event_RaiseVoid(&WindowEvents.VisibilityChanged);
+		break;
+	case SDL_WINDOWEVENT_EXPOSED:
+		Event_RaiseVoid(&WindowEvents.Redraw);
+		break;
+	case SDL_WINDOWEVENT_MOVED:
+		Window_RefreshBounds();
+		Event_RaiseVoid(&WindowEvents.Moved);
+		break;
+	case SDL_WINDOWEVENT_SIZE_CHANGED:
+		Window_RefreshBounds();
+		Event_RaiseVoid(&WindowEvents.Resized);
+		break;
+	case SDL_WINDOWEVENT_MINIMIZED:
+	case SDL_WINDOWEVENT_MAXIMIZED:
+	case SDL_WINDOWEVENT_RESTORED:
+		Event_RaiseVoid(&WindowEvents.StateChanged);
+		break;
+	case SDL_WINDOWEVENT_FOCUS_GAINED:
+		Window_Focused = true;
+		Event_RaiseVoid(&WindowEvents.FocusChanged);
+		break;
+	case SDL_WINDOWEVENT_FOCUS_LOST:
+		Window_Focused = false;
+		Event_RaiseVoid(&WindowEvents.FocusChanged);
+		break;
+	case SDL_WINDOWEVENT_CLOSE:
+		Window_Close();
+		break;
+	}
+}
+
+void Window_ProcessEvents(void) {
+	SDL_Event e;
+	while (SDL_PollEvent(&e)) {
+		switch (e.type) {
+
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			Window_HandleKeyEvent(&e); break;
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+			Window_HandleMouseEvent(&e); break;
+		case SDL_MOUSEWHEEL:
+			Mouse_SetWheel(Mouse_Wheel + e.wheel.y);
+			break;
+		case SDL_MOUSEMOTION:
+			Mouse_SetPosition(e.motion.x, e.motion.y);
+			if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, e.motion.xrel, e.motion.yrel);
+			break;
+		case SDL_TEXTINPUT:
+			Window_HandleTextEvent(&e); break;
+		case SDL_WINDOWEVENT:
+			Window_HandleWindowEvent(&e); break;
+
+		case SDL_QUIT:
+			Window_Exists = false;
+			Event_RaiseVoid(&WindowEvents.Closing);
+
+			SDL_DestroyWindow(win_handle);
+			Event_RaiseVoid(&WindowEvents.Destroyed);
+			break;
+		}
+	}
+}
+
+/* Not supported (or even used internally) */
+Point2D Cursor_GetScreenPos(void) { Point2D p = { 0,0 }; return p; }
+/* Not allowed to move cursor from javascript */
+void Cursor_SetScreenPos(int x, int y) { }
+
+void Cursor_SetVisible(bool visible) {
+	SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
+}
+
+void Window_ShowDialog(const char* title, const char* msg) {
+	EM_ASM_({ alert(UTF8ToString($0) + "\n\n" + UTF8ToString($1)); }, title, msg);
+}
+
+void Window_InitRaw(Bitmap* bmp) { Logger_Abort("Unsupported"); }
+void Window_DrawRaw(Rect2D r)    { Logger_Abort("Unsupported"); }
+
+void Window_EnableRawMouse(void) {
+	Window_RegrabMouse();
+	SDL_SetRelativeMouseMode(true);
+	win_rawMouse = true;
+}
+void Window_UpdateRawMouse(void) { }
+
+void Window_DisableRawMouse(void) {
+	Window_RegrabMouse();
+	SDL_SetRelativeMouseMode(false);
+	win_rawMouse = false;
+}
+#endif
+
+
+#ifdef CC_BUILD_WEBGL
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx_handle;
+
+void GLContext_Init(struct GraphicsMode* mode) {
+	EmscriptenWebGLContextAttributes attribs;
+	emscripten_webgl_init_context_attributes(&attribs);
+	attribs.alpha     = false;
+	attribs.depth     = true;
+	attribs.stencil   = false;
+	attribs.antialias = false;
+
+	ctx_handle = emscripten_webgl_create_context(NULL, &attribs);
+	emscripten_webgl_make_context_current(ctx_handle);
+}
+
+void GLContext_Update(void) {
+	/* TODO: do we need to do something here.... ? */
+}
+
+void GLContext_Free(void) {
+	emscripten_webgl_destroy_context(ctx_handle);
+}
+
+void* GLContext_GetAddress(const char* function) { return NULL; }
+void GLContext_SwapBuffers(void) { /* Browser implicitly does this */ }
+
+void GLContext_SetVSync(bool enabled) {
+	if (enabled) {
+		emscripten_set_main_loop_timing(EM_TIMING_RAF, 1);
+	} else {
+		emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, 0);
+	}
+}
 #endif
