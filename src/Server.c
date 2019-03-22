@@ -318,7 +318,10 @@ static void MPConnection_TickConnect(void) {
 }
 
 static void MPConnection_BeginConnect(void) {
+	String title; char titleBuffer[STRING_SIZE];
 	ReturnCode res;
+	String_InitArray(title, titleBuffer);
+	
 	Socket_Create(&net_socket);
 	Server.Disconnected = false;
 
@@ -329,6 +332,10 @@ static void MPConnection_BeginConnect(void) {
 	res = Socket_Connect(net_socket, &Game_IPAddress, Game_Port);
 	if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
 		MPConnection_FailConnect(res);
+	} else {
+		String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
+		Gui_FreeActive();
+		Gui_SetActive(LoadingScreen_MakeInstance(&title, &String_Empty));
 	}
 }
 

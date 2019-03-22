@@ -1495,19 +1495,11 @@ static bool DisconnectScreen_KeyPress(void* s, char keyChar) { return true; }
 static bool DisconnectScreen_KeyUp(void* s, Key key) { return true; }
 
 static bool DisconnectScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
-	String title; char titleBuffer[STRING_SIZE];
 	struct DisconnectScreen* s = screen;
 	struct ButtonWidget* w = &s->Reconnect;
 
 	if (btn != MOUSE_LEFT) return true;
-	if (!w->Disabled && Widget_Contains(w, x, y)) {
-		String_InitArray(title, titleBuffer);
-		String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
-
-		Gui_FreeActive();
-		Gui_SetActive(LoadingScreen_MakeInstance(&title, &String_Empty));
-		Server.BeginConnect();
-	}
+	if (!w->Disabled && Widget_Contains(w, x, y)) Server.BeginConnect();
 	return true;
 }
 

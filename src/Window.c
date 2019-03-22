@@ -3198,11 +3198,15 @@ static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* da
 		case KEY_ENTER: key = KEY_KP_ENTER; break;
 		}
 	}
+	
 	Key_SetPressed(key, type == EMSCRIPTEN_EVENT_KEYDOWN);
-
-	return type != EMSCRIPTEN_EVENT_KEYDOWN ||
-		/* we must not intercept keydown for regular keys, otherwise KeyPress doesn't get raised */
-		(key == KEY_BACKSPACE || key == KEY_TAB);
+	if (type != EMSCRIPTEN_EVENT_KEYDOWN) return true;
+	
+	/* Must not intercept keydown for regular keys, otherwise KeyPress doesn't get raised */
+	/* However, do want to prevent browser's behaviour on F11,F5, home etc */
+	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
+	return (key >= KEY_F1 && key <= KEY_F35) || (key >= KEY_UP && key <= KEY_RIGHT) ||
+			(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK);
 }
 
 static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {

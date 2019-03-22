@@ -417,7 +417,6 @@ static void Game_LoadPlugins(void) {
 
 void Game_Free(void* obj);
 static void Game_Load(void) {
-	String title;      char titleBuffer[STRING_SIZE];
 	struct IGameComponent* comp;
 	Logger_WarnFunc = Game_WarnFunc;
 
@@ -491,11 +490,6 @@ static void Game_Load(void) {
 	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
 
 	if (Gfx_WarnIfNecessary()) EnvRenderer_SetMode(EnvRenderer_Minimal | ENV_LEGACY);
-	String_InitArray(title, titleBuffer);
-	String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
-
-	Gui_FreeActive();
-	Gui_SetActive(LoadingScreen_MakeInstance(&title, &String_Empty));
 	Server.BeginConnect();
 }
 
