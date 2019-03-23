@@ -1440,7 +1440,8 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS 
 		String_AppendConst(&str, "&cCheck failed");
 	} else {
 		now   = DateTime_CurrentUTC_MS();
-		delta = (int)(now - time) / 1000;
+		/* must divide as uint64_t, int delta overflows after 26 days */
+		delta = (int)((now - time) / 1000);
 
 		if (delta < SECS_PER_MIN) {
 			UpdatesScreen_FormatTime(&str, "second", delta, 1);
