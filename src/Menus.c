@@ -2054,7 +2054,7 @@ static void MenuOptionsScreen_MakeButtons(struct MenuOptionsScreen* s, const str
 		String_AppendConst(&title, btns[i].Name);
 
 		if (btns[i].GetValue) {
-			String_AppendConst(&title, "%: ");
+			String_AppendConst(&title, ": ");
 			btns[i].GetValue(&title);
 		}
 
