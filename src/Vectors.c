@@ -25,7 +25,7 @@ void Vector3_Transform(Vector3* result, const Vector3* a, const struct Matrix* m
 	result->X = x; result->Y = y; result->Z = z;
 }
 
-void Vector3_TransformY(Vector3* result, float y, const struct Matrix*  mat) {
+void Vector3_TransformY(Vector3* result, float y, const struct Matrix* mat) {
 	result->X = y * mat->Row1.X + mat->Row3.X;
 	result->Y = y * mat->Row1.Y + mat->Row3.Y;
 	result->Z = y * mat->Row1.Z + mat->Row3.Z;

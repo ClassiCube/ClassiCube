@@ -137,7 +137,7 @@ const static uint8_t key_map[14 * 16] = {
 	KEY_F17, KEY_F18, KEY_F19, KEY_F20, KEY_F21, KEY_F22, KEY_F23, KEY_F24, 0, 0, 0, 0, 0, 0, 0, 0,
 	KEY_NUMLOCK, KEY_SCROLLLOCK, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	KEY_LSHIFT, KEY_RSHIFT, KEY_LCTRL, KEY_RCTRL, KEY_LALT, KEY_RALT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_SEMICOLON, KEY_PLUS, KEY_COMMA, KEY_MINUS, KEY_PERIOD, KEY_SLASH,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_SEMICOLON, KEY_EQUALS, KEY_COMMA, KEY_MINUS, KEY_PERIOD, KEY_SLASH,
 	KEY_TILDE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_LBRACKET, KEY_BACKSLASH, KEY_RBRACKET, KEY_QUOTE, 0,
 };
@@ -720,8 +720,8 @@ static Key Window_MapKey(KeySym key) {
 		case XK_Menu: return KEY_MENU;
 		case XK_Tab: return KEY_TAB;
 		case XK_minus: return KEY_MINUS;
-		case XK_plus: return KEY_PLUS;
-		case XK_equal: return KEY_PLUS;
+		case XK_plus: return KEY_EQUALS;
+		case XK_equal: return KEY_EQUALS;
 
 		case XK_Caps_Lock: return KEY_CAPSLOCK;
 		case XK_Num_Lock: return KEY_NUMLOCK;
@@ -1574,7 +1574,7 @@ static bool ctx_pendingWindowed, ctx_pendingFullscreen;
 /* Sourced from https://www.meandmark.com/keycodes.html */
 const static uint8_t key_map[8 * 16] = {
 	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
-	'Y', 'T', '1', '2', '3', '4', '6', '5', KEY_PLUS, '9', '7', KEY_MINUS, '8', '0', KEY_RBRACKET, 'O',
+	'Y', 'T', '1', '2', '3', '4', '6', '5', KEY_EQUALS, '9', '7', KEY_MINUS, '8', '0', KEY_RBRACKET, 'O',
 	'U', KEY_LBRACKET, 'I', 'P', KEY_ENTER, 'L', 'J', KEY_QUOTE, 'K', KEY_SEMICOLON, KEY_BACKSLASH, KEY_COMMA, KEY_SLASH, 'N', 'M', KEY_PERIOD,
 	KEY_TAB, KEY_SPACE, KEY_TILDE, KEY_BACKSPACE, 0, KEY_ESCAPE, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
 	0, KEY_KP_DECIMAL, 0, KEY_KP_MULTIPLY, 0, KEY_KP_PLUS, 0, 0, 0, 0, 0, KEY_KP_DIVIDE, KEY_KP_ENTER, 0, KEY_KP_MINUS, 0,
@@ -2321,7 +2321,7 @@ static Key Window_MapKey(SDL_Keycode k) {
 		case SDLK_TAB:    return KEY_TAB;
 		case SDLK_SPACE:  return KEY_SPACE;
 		case SDLK_QUOTE:  return KEY_QUOTE;
-		case SDLK_PLUS:   return KEY_PLUS;
+		case SDLK_EQUALS: return KEY_EQUALS;
 		case SDLK_COMMA:  return KEY_COMMA;
 		case SDLK_MINUS:  return KEY_MINUS;
 		case SDLK_PERIOD: return KEY_PERIOD;
@@ -3141,7 +3141,7 @@ static Key Window_MapKey(int k) {
 	case 10:  return KEY_TAB;
 	case 32:  return KEY_SPACE;
 	case 192: return KEY_QUOTE;
-	case 61:  case 187: return KEY_PLUS;
+	case 61:  case 187: return KEY_EQUALS;
 	case 188: return KEY_COMMA;
 	case 173: case 189: return KEY_MINUS;
 	case 190: return KEY_PERIOD;
