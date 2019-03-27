@@ -2126,7 +2126,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	String value; char valueBuffer[STRING_SIZE];
 
 	struct MenuOptionsScreen* s = screen;
-	struct ButtonWidget* btn = widget;
+	struct ButtonWidget* btn    = widget;
 	int i;
 
 	s->ActiveI = Menu_Index(s, btn);

@@ -37,7 +37,7 @@ CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const String* text, co
 
 struct ScrollbarWidget {
 	Widget_Layout
-	int TotalRows, ScrollY;
+	int TotalRows, TopRow;
 	float ScrollingAcc;
 	int MouseOffset;
 	bool DraggingMouse;

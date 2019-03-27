@@ -43,14 +43,14 @@ void Inventory_SetSelectedBlock(BlockID block) {
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 }
 
-const static uint8_t inv_classicTable[42] = {
+const static uint8_t classicInventory[42] = {
 	BLOCK_STONE, BLOCK_COBBLE, BLOCK_BRICK, BLOCK_DIRT, BLOCK_WOOD, BLOCK_LOG, BLOCK_LEAVES, BLOCK_GLASS, BLOCK_SLAB,
 	BLOCK_MOSSY_ROCKS, BLOCK_SAPLING, BLOCK_DANDELION, BLOCK_ROSE, BLOCK_BROWN_SHROOM, BLOCK_RED_SHROOM, BLOCK_SAND, BLOCK_GRAVEL, BLOCK_SPONGE,
 	BLOCK_RED, BLOCK_ORANGE, BLOCK_YELLOW, BLOCK_LIME, BLOCK_GREEN, BLOCK_TEAL, BLOCK_AQUA, BLOCK_CYAN, BLOCK_BLUE,
 	BLOCK_INDIGO, BLOCK_VIOLET, BLOCK_MAGENTA, BLOCK_PINK, BLOCK_BLACK, BLOCK_GRAY, BLOCK_WHITE, BLOCK_COAL_ORE, BLOCK_IRON_ORE,
 	BLOCK_GOLD_ORE, BLOCK_IRON, BLOCK_GOLD, BLOCK_BOOKSHELF, BLOCK_TNT, BLOCK_OBSIDIAN,
 };
-const static uint8_t inv_classicHacksTable[49] = {
+const static uint8_t classicHacksInventory[49] = {
 	BLOCK_STONE, BLOCK_GRASS, BLOCK_COBBLE, BLOCK_BRICK, BLOCK_DIRT, BLOCK_WOOD, BLOCK_BEDROCK, BLOCK_WATER, BLOCK_STILL_WATER, BLOCK_LAVA,
 	BLOCK_STILL_LAVA, BLOCK_LOG, BLOCK_LEAVES, BLOCK_GLASS, BLOCK_SLAB, BLOCK_MOSSY_ROCKS, BLOCK_SAPLING, BLOCK_DANDELION, BLOCK_ROSE, BLOCK_BROWN_SHROOM,
 	BLOCK_RED_SHROOM, BLOCK_SAND, BLOCK_GRAVEL, BLOCK_SPONGE, BLOCK_RED, BLOCK_ORANGE, BLOCK_YELLOW, BLOCK_LIME, BLOCK_GREEN, BLOCK_TEAL,
@@ -60,9 +60,9 @@ const static uint8_t inv_classicHacksTable[49] = {
 
 static BlockID Inventory_DefaultMapping(int slot) {
 	if (Game_PureClassic) {
-		if (slot < 9 * 4 + 6)  return inv_classicTable[slot];
+		if (slot < 9 * 4 + 6)  return classicInventory[slot];
 	} else if (Game_ClassicMode) {
-		if (slot < 10 * 4 + 9) return inv_classicHacksTable[slot];
+		if (slot < 10 * 4 + 9) return classicHacksInventory[slot];
 	} else if (slot < BLOCK_MAX_CPE) {
 		return (BlockID)(slot + 1);
 	}

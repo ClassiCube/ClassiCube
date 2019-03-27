@@ -81,7 +81,7 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 	(0) OUTER_MIN ==>#--#-------#--#
 
 	- these are used to fake thick lines, by making the lines appear slightly inset
-	- note: actual difference between inner and outer is much smaller then the diagram
+	- note: actual difference between inner and outer is much smaller than the diagram
 	*/
 	Vector3_Add1(&coords[0], &selected->Min, -offset);
 	Vector3_Add1(&coords[1], &coords[0],      size);

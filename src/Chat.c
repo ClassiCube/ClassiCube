@@ -414,7 +414,7 @@ static struct ChatCommand ModelCommand = {
 *#########################################################################################################################*/
 static int cuboid_block = -1;
 static Vector3I cuboid_mark1, cuboid_mark2;
-static bool cuboid_persist, cuboid_hooked;
+static bool cuboid_persist, cuboid_hooked, cuboid_hasMark1;
 const static String cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
 
 static bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
@@ -461,8 +461,9 @@ static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID old, 
 	String msg; char msgBuffer[STRING_SIZE];
 	String_InitArray(msg, msgBuffer);
 
-	if (cuboid_mark1.X == Int32_MaxValue) {
-		cuboid_mark1 = coords;
+	if (!cuboid_hasMark1) {
+		cuboid_mark1    = coords;
+		cuboid_hasMark1 = true;
 		Game_UpdateBlock(coords.X, coords.Y, coords.Z, old);	
 
 		String_Format3(&msg, "&eCuboid: &fMark 1 placed at (%i, %i, %i), place mark 2.", &coords.X, &coords.Y, &coords.Z);
@@ -476,7 +477,7 @@ static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID old, 
 			cuboid_hooked = false;
 			Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_1);
 		} else {
-			cuboid_mark1 = Vector3I_MaxValue();
+			cuboid_hasMark1 = false;
 			Chat_AddOf(&cuboid_msg, MSG_TYPE_CLIENTSTATUS_1);
 		}
 	}
@@ -488,10 +489,9 @@ static void CuboidCommand_Execute(const String* args, int argsCount) {
 		cuboid_hooked = false;
 	}
 
-	cuboid_block = -1;
-	cuboid_mark1 = Vector3I_MaxValue();
-	cuboid_mark2 = Vector3I_MaxValue();
-	cuboid_persist = false;
+	cuboid_block    = -1;
+	cuboid_hasMark1 = false;
+	cuboid_persist  = false;
 
 	if (!CuboidCommand_ParseBlock(args, argsCount)) return;
 	if (argsCount > 1 && String_CaselessEqualsConst(&args[0], "yes")) {

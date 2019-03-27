@@ -508,7 +508,7 @@ static void Logger_DumpRegisters(void* ctx) {
 #if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
 static void Logger_DumpMisc(void* ctx) {
 	const static String memMap = String_FromConst("-- memory map --\n");
-	String str; char strBuffer[STRING_SIZE * 5];
+	String str; char strBuffer[320];
 	int n, fd;
 
 	Logger_Log(&memMap);
@@ -541,7 +541,7 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 }
 #elif defined CC_BUILD_WIN
 static LONG WINAPI Logger_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
-	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
+	String msg; char msgBuffer[128 + 1];
 	uint32_t code;
 	uintptr_t addr;
 
@@ -582,8 +582,6 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 		mov [ctx.ContextFlags], CONTEXT_CONTROL
 	}
 #else
-	int32_t _ebp, _eip, _esp;
-	/* TODO: I think this is right, not sure.. */
 	__asm__(
 		"mov 0(%%ebp), %%eax \n\t"
 		"mov %%eax, %0       \n\t"
@@ -591,13 +589,10 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 		"mov %%eax, %1       \n\t"
 		"lea 8(%%ebp), %%eax \n\t"
 		"mov %%eax, %2"
-		: "=m" (_ebp), "=m" (_eip), "=m" (_esp)
+		: "=m" (ctx.Ebp), "=m" (ctx.Eip), "=m" (ctx.Esp)
 		:
-		: "eax", "memory");
-
-	ctx.Ebp = _ebp;
-	ctx.Eip = _eip;
-	ctx.Esp = _esp;
+		: "eax", "memory"
+	);
 	ctx.ContextFlags = CONTEXT_CONTROL;
 #endif
 
@@ -608,7 +603,7 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 #endif
 #elif defined CC_BUILD_POSIX
 static void Logger_SignalHandler(int sig, siginfo_t* info, void* ctx) {
-	String msg; char msgBuffer[STRING_SIZE * 2 + 1];
+	String msg; char msgBuffer[128 + 1];
 	int type, code;
 	uintptr_t addr;
 

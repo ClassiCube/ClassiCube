@@ -13,7 +13,7 @@
 #include "freetype/ftmodapi.h"
 #include "freetype/ftglyph.h"
 
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -49,9 +49,8 @@ const ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
 const ReturnCode ReturnCode_InvalidArg   = ERROR_INVALID_PARAMETER;
 const ReturnCode ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
-#endif
+#elif defined CC_BUILD_POSIX
 /* POSIX can be shared between Linux/BSD/OSX */
-#ifdef CC_BUILD_POSIX
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -129,7 +128,7 @@ CC_NOINLINE static void Platform_AllocFailed(const char* place) {
 	Logger_Abort(log.buffer);
 }
 
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place) {
 	uint32_t numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapAlloc(heap, 0, numBytes);
@@ -154,8 +153,7 @@ void* Mem_Realloc(void* mem, uint32_t numElems, uint32_t elemsSize, const char* 
 void Mem_Free(void* mem) {
 	if (mem) HeapFree(heap, 0, mem);
 }
-#endif
-#ifdef CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX
 void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place) {
 	void* ptr = malloc(numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
@@ -213,7 +211,7 @@ uint64_t Stopwatch_ElapsedMicroseconds(uint64_t beg, uint64_t end) {
 	return ((end - beg) * sw_freqMul) / sw_freqDiv;
 }
 
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 static HANDLE conHandle;
 static BOOL hasDebugger;
 
@@ -274,8 +272,7 @@ uint64_t Stopwatch_Measure(void) {
 		return (uint64_t)ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
 	}
 }
-#endif
-#ifdef CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX
 void Platform_Log(const String* message) {
 	write(STDOUT_FILENO, message->buffer, message->length);
 	write(STDOUT_FILENO, "\n",            1);
@@ -345,7 +342,7 @@ uint64_t Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 bool Directory_Exists(const String* path) {
 	TCHAR str[300];
 	DWORD attribs;
@@ -495,8 +492,7 @@ ReturnCode File_Length(FileHandle file, uint32_t* len) {
 	*len = GetFileSize(file, NULL);
 	return *len != INVALID_FILE_SIZE ? 0 : GetLastError();
 }
-#endif
-#ifdef CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX
 bool Directory_Exists(const String* path) {
 	char str[600]; 
 	struct stat sb;
@@ -636,7 +632,7 @@ ReturnCode File_Length(FileHandle file, uint32_t* len) {
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 void Thread_Sleep(uint32_t milliseconds) { Sleep(milliseconds); }
 DWORD WINAPI Thread_StartCallback(void* param) {
 	Thread_StartFunc* func = (Thread_StartFunc*)param;
@@ -701,8 +697,24 @@ void Waitable_Wait(void* handle) {
 void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 	WaitForSingleObject((HANDLE)handle, milliseconds);
 }
-#endif
-#ifdef CC_BUILD_POSIX
+#elif defined CC_BUILD_WEB
+/* No true multithreading support with emscripten backend */
+void Thread_Sleep(uint32_t milliseconds) { usleep(milliseconds * 1000); }
+void* Thread_Start(Thread_StartFunc* func, bool detach) { (*func)(); return NULL; }
+void Thread_Detach(void* handle) { }
+void Thread_Join(void* handle) { }
+
+void* Mutex_Create(void) { }
+void Mutex_Free(void* handle) { }
+void Mutex_Lock(void* handle) { }
+void Mutex_Unlock(void* handle) { }
+
+void* Waitable_Create(void) { }
+void Waitable_Free(void* handle) { }
+void Waitable_Signal(void* handle) { }
+void Waitable_Wait(void* handle) { }
+void Waitable_WaitFor(void* handle, uint32_t milliseconds) { }
+#elif defined CC_BUILD_POSIX
 void Thread_Sleep(uint32_t milliseconds) { usleep(milliseconds * 1000); }
 void* Thread_StartCallback(void* lpParam) {
 	Thread_StartFunc* func = (Thread_StartFunc*)lpParam;
@@ -1298,7 +1310,7 @@ void Socket_Create(SocketHandle* socketResult) {
 }
 
 static ReturnCode Socket_ioctl(SocketHandle socket, uint32_t cmd, int* data) {
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 	return ioctlsocket(socket, cmd, data);
 #else
 	return ioctl(socket, cmd, data);
@@ -1309,7 +1321,7 @@ ReturnCode Socket_Available(SocketHandle socket, uint32_t* available) {
 	return Socket_ioctl(socket, FIONREAD, available);
 }
 ReturnCode Socket_SetBlocking(SocketHandle socket, bool blocking) {
-#ifdef CC_BUILD_WEB
+#if defined CC_BUILD_WEB
 	return ReturnCode_NotSupported; /* sockets always async */
 #else
 	int blocking_raw = blocking ? 0 : -1;
@@ -1360,7 +1372,7 @@ ReturnCode Socket_Close(SocketHandle socket) {
 #endif
 	if (res1 == -1) res = Socket__Error();
 
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 	res2 = closesocket(socket);
 #else
 	res2 = close(socket);
@@ -1370,7 +1382,7 @@ ReturnCode Socket_Close(SocketHandle socket) {
 }
 
 /* Alas, a simple cross-platform select() is not good enough */
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
@@ -1389,8 +1401,7 @@ ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
 
 	*success = set.fd_count != 0; return 0;
 }
-#else
-#ifdef CC_BUILD_OSX
+#elif defined CC_BUILD_OSX
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
 ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
 	fd_set set;
@@ -1424,14 +1435,13 @@ ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
 	return 0;
 }
 #endif
-#endif
 
 
 /*########################################################################################################################*
 *----------------------------------------------------------Audio----------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished);
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 struct AudioContext {
 	HWAVEOUT Handle;
 	WAVEHDR Headers[AUDIO_MAX_BUFFERS];
@@ -1534,8 +1544,7 @@ ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) {
 }
 
 ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) { return Audio_AllCompleted(handle, finished); }
-#endif
-#ifdef CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX
 struct AudioContext {
 	ALuint Source;
 	ALuint Buffers[AUDIO_MAX_BUFFERS];
@@ -1767,7 +1776,7 @@ ReturnCode Audio_StopAndFree(AudioHandle handle) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 ReturnCode Process_GetExePath(String* path) {
 	TCHAR chars[FILENAME_SIZE + 1];
 	DWORD len = GetModuleFileName(NULL, chars, FILENAME_SIZE);
@@ -1825,8 +1834,7 @@ ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
 bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
 	return Platform_DescribeError(res, dst);
 }
-#endif
-#ifdef CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX
 ReturnCode Process_Start(const String* path, const String* args) {
 	char str[600], raw[600];
 	pid_t pid;
@@ -1881,14 +1889,34 @@ bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
 	return err && err[0];
 }
 #endif
-#ifdef CC_BUILD_UNIX
+/* Opening browser and retrieving exe path is not standardised at all */
+#if defined CC_BUILD_WEB
+ReturnCode Process_StartOpen(const String* args) {
+	char str[600];
+	Platform_ConvertString(str, args);
+	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
+}
+ReturnCode Process_GetExePath(String* path) { return ReturnCode_NotSupported; }
+#elif defined CC_BUILD_OSX
+ReturnCode Process_StartOpen(const String* args) {
+	const static String path = String_FromConst("/usr/bin/open");
+	return Process_Start(&path, args);
+}
+ReturnCode Process_GetExePath(String* path) {
+	char str[600];
+	int len = 600;
+
+	if (_NSGetExecutablePath(str, &len) != 0) return ReturnCode_InvalidArg;
+	Convert_DecodeUtf8(path, str, len);
+	return 0;
+}
+#elif defined CC_BUILD_UNIX
 ReturnCode Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
 	const static String path = String_FromConst("xdg-open");
 	return Process_Start(&path, args);
 }
-#endif
-#ifdef CC_BUILD_LINUX
+#if defined CC_BUILD_LINUX
 ReturnCode Process_GetExePath(String* path) {
 	char str[600];
 	int len = readlink("/proc/self/exe", str, 600);
@@ -1897,8 +1925,7 @@ ReturnCode Process_GetExePath(String* path) {
 	Convert_DecodeUtf8(path, str, len);
 	return 0;
 }
-#endif
-#ifdef CC_BUILD_FREEBSD
+#elif defined CC_BUILD_FREEBSD
 ReturnCode Process_GetExePath(String* path) {
 	static int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
 	char str[600];
@@ -1909,8 +1936,7 @@ ReturnCode Process_GetExePath(String* path) {
 	Convert_DecodeUtf8(path, str, size);
 	return 0;
 }
-#endif
-#ifdef CC_BUILD_OPENBSD
+#elif defined CC_BUILD_OPENBSD
 ReturnCode Process_GetExePath(String* path) {
 	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, 0, KERN_PROC_ARGV };
 	char tmp[600];	
@@ -1936,8 +1962,7 @@ ReturnCode Process_GetExePath(String* path) {
 	Convert_DecodeUtf8(path, str, size);
 	return 0;
 }
-#endif
-#ifdef CC_BUILD_NETBSD
+#elif defined CC_BUILD_NETBSD
 ReturnCode Process_GetExePath(String* path) {
 	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME };
 	char str[600];
@@ -1948,8 +1973,7 @@ ReturnCode Process_GetExePath(String* path) {
 	Convert_DecodeUtf8(path, str, size);
 	return 0;
 }
-#endif
-#ifdef CC_BUILD_SOLARIS
+#elif defined CC_BUILD_SOLARIS
 ReturnCode Process_GetExePath(String* path) {
 	char str[600];
 	int len = readlink("/proc/self/path/a.out", str, 600);
@@ -1959,27 +1983,6 @@ ReturnCode Process_GetExePath(String* path) {
 	return 0;
 }
 #endif
-#ifdef CC_BUILD_OSX
-ReturnCode Process_StartOpen(const String* args) {
-	const static String path = String_FromConst("/usr/bin/open");
-	return Process_Start(&path, args);
-}
-ReturnCode Process_GetExePath(String* path) {
-	char str[600];
-	int len = 600;
-
-	if (_NSGetExecutablePath(str, &len) != 0) return ReturnCode_InvalidArg;
-	Convert_DecodeUtf8(path, str, len);
-	return 0;
-}
-#endif
-#ifdef CC_BUILD_WEB
-ReturnCode Process_StartOpen(const String* args) {
-	char str[600];
-	Platform_ConvertString(str, args);
-	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
-}
-ReturnCode Process_GetExePath(String* path) { return ReturnCode_NotSupported; }
 #endif
 
 void* DynamicLib_GetFrom(const char* filename, const char* name) {
@@ -2000,7 +2003,7 @@ void* DynamicLib_GetFrom(const char* filename, const char* name) {
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN
 int Platform_ConvertString(void* data, const String* src) {
 	TCHAR* dst = data;
 	int i;
@@ -2133,8 +2136,7 @@ bool Platform_DescribeError(ReturnCode res, String* dst) {
 	Platform_DecodeString(dst, chars, res);
 	return true;
 }
-#endif
-#ifdef CC_BUILD_POSIX
+#elif defined CC_BUILD_POSIX
 int Platform_ConvertString(void* data, const String* src) {
 	uint8_t* dst = data;
 	uint8_t* cur;
@@ -2209,14 +2211,13 @@ bool Platform_DescribeError(ReturnCode res, String* dst) {
 	return true;
 }
 #endif
-#ifdef CC_BUILD_UNIX
+#if defined CC_BUILD_UNIX
 void Platform_Init(void) {
 	Platform_InitCommon();
 	/* stopwatch always in nanoseconds */
 	sw_freqDiv = 1000;
 }
-#endif
-#ifdef CC_BUILD_OSX
+#elif defined CC_BUILD_OSX
 static void Platform_InitStopwatch(void) {
 	mach_timebase_info_data_t tb = { 0 };
 	mach_timebase_info(&tb);
@@ -2235,7 +2236,6 @@ void Platform_Init(void) {
 	/* NOTE: TransformProcessType is OSX 10.3 or later */
 	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
 }
-#endif
-#ifdef CC_BUILD_WEB
+#elif defined CC_BUILD_WEB
 void Platform_Init(void) { }
 #endif

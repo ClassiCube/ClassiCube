@@ -200,10 +200,10 @@ static PackedCol Scroll_BackCol  = PACKEDCOL_CONST( 10,  10,  10, 220);
 static PackedCol Scroll_BarCol   = PACKEDCOL_CONST(100, 100, 100, 220);
 static PackedCol Scroll_HoverCol = PACKEDCOL_CONST(122, 122, 122, 220);
 
-static void ScrollbarWidget_ClampScrollY(struct ScrollbarWidget* w) {
-	int maxRows = w->TotalRows - TABLE_MAX_ROWS_DISPLAYED;
-	if (w->ScrollY >= maxRows) w->ScrollY = maxRows;
-	if (w->ScrollY < 0) w->ScrollY = 0;
+static void ScrollbarWidget_ClampTopRow(struct ScrollbarWidget* w) {
+	int maxTop = w->TotalRows - TABLE_MAX_ROWS_DISPLAYED;
+	if (w->TopRow >= maxTop) w->TopRow = maxTop;
+	if (w->TopRow < 0) w->TopRow = 0;
 }
 
 static float ScrollbarWidget_GetScale(struct ScrollbarWidget* w) {
@@ -213,7 +213,7 @@ static float ScrollbarWidget_GetScale(struct ScrollbarWidget* w) {
 
 static void ScrollbarWidget_GetScrollbarCoords(struct ScrollbarWidget* w, int* y, int* height) {
 	float scale = ScrollbarWidget_GetScale(w);
-	*y = Math_Ceil(w->ScrollY * scale) + SCROLL_BORDER;
+	*y = Math_Ceil(w->TopRow * scale) + SCROLL_BORDER;
 	*height = Math_Ceil(TABLE_MAX_ROWS_DISPLAYED * scale);
 	*height = min(*y + *height, w->Height - SCROLL_BORDER) - *y;
 }
@@ -256,14 +256,14 @@ static bool ScrollbarWidget_MouseDown(void* widget, int x, int y, MouseButton bt
 	ScrollbarWidget_GetScrollbarCoords(w, &posY, &height);
 
 	if (y < posY) {
-		w->ScrollY -= TABLE_MAX_ROWS_DISPLAYED;
+		w->TopRow -= TABLE_MAX_ROWS_DISPLAYED;
 	} else if (y >= posY + height) {
-		w->ScrollY += TABLE_MAX_ROWS_DISPLAYED;
+		w->TopRow += TABLE_MAX_ROWS_DISPLAYED;
 	} else {
 		w->DraggingMouse = true;
 		w->MouseOffset = y - posY;
 	}
-	ScrollbarWidget_ClampScrollY(w);
+	ScrollbarWidget_ClampTopRow(w);
 	return true;
 }
 
@@ -278,8 +278,8 @@ static bool ScrollbarWidget_MouseScroll(void* widget, float delta) {
 	struct ScrollbarWidget* w = widget;
 	int steps = Utils_AccumulateWheelDelta(&w->ScrollingAcc, delta);
 
-	w->ScrollY -= steps;
-	ScrollbarWidget_ClampScrollY(w);
+	w->TopRow -= steps;
+	ScrollbarWidget_ClampTopRow(w);
 	return true;
 }
 
@@ -290,8 +290,8 @@ static bool ScrollbarWidget_MouseMove(void* widget, int x, int y) {
 	if (w->DraggingMouse) {
 		y -= w->Y;
 		scale = ScrollbarWidget_GetScale(w);
-		w->ScrollY = (int)((y - w->MouseOffset) / scale);
-		ScrollbarWidget_ClampScrollY(w);
+		w->TopRow = (int)((y - w->MouseOffset) / scale);
+		ScrollbarWidget_ClampTopRow(w);
 		return true;
 	}
 	return false;
@@ -308,7 +308,7 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 	w->VTABLE = &ScrollbarWidget_VTABLE;
 	w->Width  = SCROLL_WIDTH;
 	w->TotalRows     = 0;
-	w->ScrollY       = 0;
+	w->TopRow       = 0;
 	w->ScrollingAcc  = 0.0f;
 	w->DraggingMouse = false;
 	w->MouseOffset   = 0;
@@ -520,7 +520,7 @@ static int Table_Height(struct TableWidget* w) {
 static bool TableWidget_GetCoords(struct TableWidget* w, int i, int* cellX, int* cellY) {
 	int x, y;
 	x = i % w->ElementsPerRow;
-	y = i / w->ElementsPerRow - w->Scroll.ScrollY;
+	y = i / w->ElementsPerRow - w->Scroll.TopRow;
 
 	*cellX = w->X + w->CellSize * x;
 	*cellY = w->Y + w->CellSize * y + 3;
@@ -729,8 +729,8 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
 	w->SelectedIndex = index;
 
 	/* adjust scrollbar by number of rows moved up/down */
-	w->Scroll.ScrollY += (index / w->ElementsPerRow) - (start / w->ElementsPerRow);
-	ScrollbarWidget_ClampScrollY(&w->Scroll);
+	w->Scroll.TopRow += (index / w->ElementsPerRow) - (start / w->ElementsPerRow);
+	ScrollbarWidget_ClampTopRow(&w->Scroll);
 
 	TableWidget_RecreateDescTex(w);
 	TableWidget_MoveCursorToSelected(w);
@@ -760,18 +760,18 @@ static bool TableWidget_MouseUp(void* widget, int x, int y, MouseButton btn) {
 
 static bool TableWidget_MouseScroll(void* widget, float delta) {
 	struct TableWidget* w = widget;
-	int startScrollY, index;
+	int origTopRow, index;
 
 	bool bounds = Gui_Contains(Table_X(w), Table_Y(w),
 		Table_Width(w) + w->Scroll.Width, Table_Height(w), Mouse_X, Mouse_Y);
 	if (!bounds) return false;
 
-	startScrollY = w->Scroll.ScrollY;
+	origTopRow = w->Scroll.TopRow;
 	Elem_HandlesMouseScroll(&w->Scroll, delta);
 	if (w->SelectedIndex == -1) return true;
 
 	index = w->SelectedIndex;
-	index += (w->Scroll.ScrollY - startScrollY) * w->ElementsPerRow;
+	index += (w->Scroll.TopRow - origTopRow) * w->ElementsPerRow;
 	if (index >= w->ElementsCount) index = -1;
 
 	w->SelectedIndex = index;
@@ -846,9 +846,9 @@ void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
 	/* When holding air, inventory should open at middle */
 	if (block == BLOCK_AIR) w->SelectedIndex = -1;
 
-	w->Scroll.ScrollY = w->SelectedIndex / w->ElementsPerRow;
-	w->Scroll.ScrollY -= (TABLE_MAX_ROWS_DISPLAYED - 1);
-	ScrollbarWidget_ClampScrollY(&w->Scroll);
+	w->Scroll.TopRow = w->SelectedIndex / w->ElementsPerRow;
+	w->Scroll.TopRow -= (TABLE_MAX_ROWS_DISPLAYED - 1);
+	ScrollbarWidget_ClampTopRow(&w->Scroll);
 	TableWidget_MoveCursorToSelected(w);
 	TableWidget_RecreateDescTex(w);
 }
@@ -860,8 +860,8 @@ void TableWidget_OnInventoryChanged(struct TableWidget* w) {
 	}
 	w->LastX = -1; w->LastY = -1;
 
-	w->Scroll.ScrollY = w->SelectedIndex / w->ElementsPerRow;
-	ScrollbarWidget_ClampScrollY(&w->Scroll);
+	w->Scroll.TopRow = w->SelectedIndex / w->ElementsPerRow;
+	ScrollbarWidget_ClampTopRow(&w->Scroll);
 	TableWidget_RecreateDescTex(w);
 }
 
