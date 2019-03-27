@@ -100,7 +100,7 @@ void Audio_Open(AudioHandle* handle, int buffers) {
 	Logger_Abort("No free audio contexts");
 }
 
-ReturnCode Audio_Free(AudioHandle handle) {
+ReturnCode Audio_Close(AudioHandle handle) {
 	struct AudioFormat fmt = { 0 };
 	struct AudioContext* ctx;
 	ReturnCode res;
@@ -274,7 +274,7 @@ void Audio_Open(AudioHandle* handle, int buffers) {
 	Logger_Abort("No free audio contexts");
 }
 
-ReturnCode Audio_Free(AudioHandle handle) {
+ReturnCode Audio_Close(AudioHandle handle) {
 	struct AudioFormat fmt = { 0 };
 	struct AudioContext* ctx;
 	ALenum err;
@@ -403,11 +403,11 @@ struct AudioFormat* Audio_GetFormat(AudioHandle handle) {
 	return &Audio_Contexts[handle].Format;
 }
 
-ReturnCode Audio_StopAndFree(AudioHandle handle) {
+ReturnCode Audio_StopAndClose(AudioHandle handle) {
 	bool finished;
 	Audio_Stop(handle);
 	Audio_IsFinished(handle, &finished); /* unqueue buffers */
-	return Audio_Free(handle);
+	return Audio_Close(handle);
 }
 
 
@@ -678,7 +678,7 @@ static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		if (outputs[i].Handle == HANDLE_INV) continue;
 
-		Audio_StopAndFree(outputs[i].Handle);
+		Audio_StopAndClose(outputs[i].Handle);
 		outputs[i].Handle = HANDLE_INV;
 
 		Mem_Free(outputs[i].Buffer);
@@ -855,7 +855,7 @@ static void Music_RunLoop(void) {
 		Chat_AddRaw("&cDisabling music");
 		Audio_MusicVolume = 0;
 	}
-	Audio_StopAndFree(music_out);
+	Audio_StopAndClose(music_out);
 
 	if (music_joining) return;
 	Thread_Detach(music_thread);

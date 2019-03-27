@@ -25,13 +25,13 @@ struct AudioFormat { uint16_t Channels, BitsPerSample; int SampleRate; };
 #define AudioFormat_Eq(a, b) ((a)->Channels == (b)->Channels && (a)->BitsPerSample == (b)->BitsPerSample && (a)->SampleRate == (b)->SampleRate)
 typedef int AudioHandle;
 
-/* Allocates an audio context. */
+/* Acquires an audio context. */
 void Audio_Open(AudioHandle* handle, int buffers);
 /* Frees an allocated audio context. */
-/* NOTE: Audio_StopAndFree should be used, because this method can fail if audio is playing. */
-ReturnCode Audio_Free(AudioHandle handle);
+/* NOTE: Audio_StopAndClose should be used, because this method can fail if audio is playing. */
+ReturnCode Audio_Close(AudioHandle handle);
 /* Stops playing audio, unqueues buffers, then frees the audio context. */
-ReturnCode Audio_StopAndFree(AudioHandle handle);
+ReturnCode Audio_StopAndClose(AudioHandle handle);
 /* Returns the format audio is played in. */
 struct AudioFormat* Audio_GetFormat(AudioHandle handle);
 /* Sets the format audio to play is in. */

@@ -692,12 +692,12 @@ void* Thread_Start(Thread_StartFunc* func, bool detach) { (*func)(); return NULL
 void Thread_Detach(void* handle) { }
 void Thread_Join(void* handle) { }
 
-void* Mutex_Create(void) { }
+void* Mutex_Create(void) { return NULL; }
 void Mutex_Free(void* handle) { }
 void Mutex_Lock(void* handle) { }
 void Mutex_Unlock(void* handle) { }
 
-void* Waitable_Create(void) { }
+void* Waitable_Create(void) { eeturn NULL; }
 void Waitable_Free(void* handle) { }
 void Waitable_Signal(void* handle) { }
 void Waitable_Wait(void* handle) { }
@@ -1486,6 +1486,20 @@ ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
 bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
 	return Platform_DescribeError(res, dst);
 }
+#elif defined CC_BUILD_WEB
+ReturnCode Process_GetExePath(String* path) { return ReturnCode_NotSupported; }
+ReturnCode Process_Start(const String* path, const String* args) { return ReturnCode_NotSupported; }
+
+ReturnCode Process_StartOpen(const String* args) {
+	char str[600];
+	Platform_ConvertString(str, args);
+	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
+}
+void Process_Exit(ReturnCode code) { exit(code); }
+
+ReturnCode DynamicLib_Load(const String* path, void** lib) { return ReturnCode_NotSupported; }
+ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) { return ReturnCode_NotSupported; }
+bool DynamicLib_DescribeError(ReturnCode res, String* dst) { return false; }
 #elif defined CC_BUILD_POSIX
 ReturnCode Process_Start(const String* path, const String* args) {
 	char str[600], raw[600];
@@ -1542,14 +1556,7 @@ bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
 }
 #endif
 /* Opening browser and retrieving exe path is not standardised at all */
-#if defined CC_BUILD_WEB
-ReturnCode Process_StartOpen(const String* args) {
-	char str[600];
-	Platform_ConvertString(str, args);
-	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
-}
-ReturnCode Process_GetExePath(String* path) { return ReturnCode_NotSupported; }
-#elif defined CC_BUILD_OSX
+#if defined CC_BUILD_OSX
 ReturnCode Process_StartOpen(const String* args) {
 	const static String path = String_FromConst("/usr/bin/open");
 	return Process_Start(&path, args);

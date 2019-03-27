@@ -370,6 +370,9 @@ static void Game_LoadOptions(void) {
 	}*/
 }
 
+#if defined CC_BUILD_WEB
+static void Game_LoadPlugins(void) { }
+#else
 static void Game_LoadPlugin(const String* path, void* obj) {
 #if defined CC_BUILD_WIN
 	const static String ext = String_FromConst(".dll");
@@ -414,6 +417,7 @@ static void Game_LoadPlugins(void) {
 	res = Directory_Enum(&dir, NULL, Game_LoadPlugin);
 	if (res) Logger_Warn(res, "enumerating plugins directory");
 }
+#endif
 
 void Game_Free(void* obj);
 static void Game_Load(void) {

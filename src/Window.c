@@ -714,70 +714,70 @@ static Key Window_MapKey(KeySym key) {
 		case XK_Meta_L: return KEY_LWIN;
 		case XK_Meta_R: return KEY_RWIN;
 
-		case XK_Menu: return KEY_MENU;
-		case XK_Tab: return KEY_TAB;
+		case XK_Menu:  return KEY_MENU;
+		case XK_Tab:   return KEY_TAB;
 		case XK_minus: return KEY_MINUS;
-		case XK_plus: return KEY_EQUALS;
+		case XK_plus:  return KEY_EQUALS;
 		case XK_equal: return KEY_EQUALS;
 
 		case XK_Caps_Lock: return KEY_CAPSLOCK;
-		case XK_Num_Lock: return KEY_NUMLOCK;
+		case XK_Num_Lock:  return KEY_NUMLOCK;
 
 		case XK_Pause: return KEY_PAUSE;
 		case XK_Break: return KEY_PAUSE;
 		case XK_Scroll_Lock: return KEY_SCROLLLOCK;
-		case XK_Insert: return KEY_INSERT;
-		case XK_Print: return KEY_PRINTSCREEN;
+		case XK_Insert:  return KEY_INSERT;
+		case XK_Print:   return KEY_PRINTSCREEN;
 		case XK_Sys_Req: return KEY_PRINTSCREEN;
 
 		case XK_backslash: return KEY_BACKSLASH;
-		case XK_bar: return KEY_BACKSLASH;
-		case XK_braceleft: return KEY_LBRACKET;
-		case XK_bracketleft: return KEY_LBRACKET;
-		case XK_braceright: return KEY_RBRACKET;
+		case XK_bar:       return KEY_BACKSLASH;
+		case XK_braceleft:    return KEY_LBRACKET;
+		case XK_bracketleft:  return KEY_LBRACKET;
+		case XK_braceright:   return KEY_RBRACKET;
 		case XK_bracketright: return KEY_RBRACKET;
-		case XK_colon: return KEY_SEMICOLON;
-		case XK_semicolon: return KEY_SEMICOLON;
+		case XK_colon:      return KEY_SEMICOLON;
+		case XK_semicolon:  return KEY_SEMICOLON;
 		case XK_quoteright: return KEY_QUOTE;
-		case XK_quotedbl: return KEY_QUOTE;
-		case XK_quoteleft: return KEY_TILDE;
+		case XK_quotedbl:   return KEY_QUOTE;
+		case XK_quoteleft:  return KEY_TILDE;
 		case XK_asciitilde: return KEY_TILDE;
 
 		case XK_comma: return KEY_COMMA;
-		case XK_less: return KEY_COMMA;
-		case XK_period: return KEY_PERIOD;
+		case XK_less:  return KEY_COMMA;
+		case XK_period:  return KEY_PERIOD;
 		case XK_greater: return KEY_PERIOD;
-		case XK_slash: return KEY_SLASH;
+		case XK_slash:    return KEY_SLASH;
 		case XK_question: return KEY_SLASH;
 
-		case XK_Left: return KEY_LEFT;
-		case XK_Down: return KEY_DOWN;
+		case XK_Left:  return KEY_LEFT;
+		case XK_Down:  return KEY_DOWN;
 		case XK_Right: return KEY_RIGHT;
-		case XK_Up: return KEY_UP;
+		case XK_Up:    return KEY_UP;
 
 		case XK_Delete: return KEY_DELETE;
-		case XK_Home: return KEY_HOME;
-		case XK_End: return KEY_END;
-		case XK_Page_Up: return KEY_PAGEUP;
+		case XK_Home:   return KEY_HOME;
+		case XK_End:    return KEY_END;
+		case XK_Page_Up:   return KEY_PAGEUP;
 		case XK_Page_Down: return KEY_PAGEDOWN;
 
 		case XK_KP_Add: return KEY_KP_PLUS;
 		case XK_KP_Subtract: return KEY_KP_MINUS;
 		case XK_KP_Multiply: return KEY_KP_MULTIPLY;
-		case XK_KP_Divide: return KEY_KP_DIVIDE;
+		case XK_KP_Divide:  return KEY_KP_DIVIDE;
 		case XK_KP_Decimal: return KEY_KP_DECIMAL;
 		case XK_KP_Insert: return KEY_KP0;
-		case XK_KP_End: return KEY_KP1;
+		case XK_KP_End:  return KEY_KP1;
 		case XK_KP_Down: return KEY_KP2;
 		case XK_KP_Page_Down: return KEY_KP3;
-		case XK_KP_Left: return KEY_KP4;
+		case XK_KP_Left:  return KEY_KP4;
 		case XK_KP_Begin: return KEY_KP5;
 		case XK_KP_Right: return KEY_KP6;
 		case XK_KP_Home: return KEY_KP7;
-		case XK_KP_Up: return KEY_KP8;
+		case XK_KP_Up:   return KEY_KP8;
 		case XK_KP_Page_Up: return KEY_KP9;
-		case XK_KP_Delete: return KEY_KP_DECIMAL;
-		case XK_KP_Enter: return KEY_KP_ENTER;
+		case XK_KP_Delete:  return KEY_KP_DECIMAL;
+		case XK_KP_Enter:   return KEY_KP_ENTER;
 	}
 	return KEY_NONE;
 }
