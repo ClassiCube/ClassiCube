@@ -120,8 +120,8 @@ struct MenuOptionsScreen {
 	char ExtHelp_Buffer[MENUOPTIONS_MAX_DESC * TEXTGROUPWIDGET_LEN];
 };
 
-/* Data for a menu option button */
-struct MenuOptionData {
+/* Describes a menu option button */
+struct MenuOptionDesc {
 	short Dir, Y;
 	const char* Name;
 	Widget_LeftClick OnClick;
@@ -2044,7 +2044,7 @@ static bool MenuOptionsScreen_MouseMove(void* screen, int x, int y) {
 	return true;
 }
 
-static void MenuOptionsScreen_MakeButtons(struct MenuOptionsScreen* s, const struct MenuOptionData* btns, int count) {
+static void MenuOptionsScreen_MakeButtons(struct MenuOptionsScreen* s, const struct MenuOptionDesc* btns, int count) {
 	String title; char titleBuffer[STRING_SIZE];
 	struct ButtonWidget* btn;
 	int i;
@@ -2234,7 +2234,7 @@ static void ClassicOptionsScreen_ContextRecreated(void* screen) {
 	const static String title = String_FromConst("Controls...");
 	struct MenuOptionsScreen* s = screen;
 
-	const static struct MenuOptionData buttons[9] = {
+	const static struct MenuOptionDesc buttons[9] = {
 		{ -1, -150, "Music",           MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetMusic,    ClassicOptionsScreen_SetMusic },
 		{ -1, -100, "Invert mouse",    MenuOptionsScreen_Bool,
@@ -2319,7 +2319,7 @@ static void EnvSettingsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = screen;
 	struct Widget** widgets = s->Widgets;
 
-	const static struct MenuOptionData buttons[10] = {
+	const static struct MenuOptionDesc buttons[10] = {
 		{ -1, -150, "Clouds col",    MenuOptionsScreen_Input,
 			EnvSettingsScreen_GetCloudsCol,    EnvSettingsScreen_SetCloudsCol },
 		{ -1, -100, "Sky col",       MenuOptionsScreen_Input,
@@ -2434,7 +2434,7 @@ static void GraphicsOptionsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = screen;
 	struct Widget** widgets = s->Widgets;
 
-	const static struct MenuOptionData buttons[6] = {
+	const static struct MenuOptionDesc buttons[6] = {
 		{ -1, -50, "FPS mode",          MenuOptionsScreen_Enum,
 			MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS },
 		{ -1,   0, "View distance",     MenuOptionsScreen_Input,
@@ -2541,7 +2541,7 @@ static void GuiOptionsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = screen;
 	struct Widget** widgets = s->Widgets;
 
-	const static struct MenuOptionData buttons[10] = {
+	const static struct MenuOptionDesc buttons[10] = {
 		{ -1, -150, "Black text shadows", MenuOptionsScreen_Bool,
 			GuiOptionsScreen_GetShadows,   GuiOptionsScreen_SetShadows },
 		{ -1, -100, "Show FPS",           MenuOptionsScreen_Bool,
@@ -2691,7 +2691,7 @@ static void HacksSettingsScreen_ContextRecreated(void* screen) {
 	struct Widget** widgets = s->Widgets;
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, HacksSettingsScreen_CheckHacksAllowed);
 
-	const static struct MenuOptionData buttons[10] = {
+	const static struct MenuOptionDesc buttons[10] = {
 		{ -1, -150, "Hacks enabled",    MenuOptionsScreen_Bool,
 			HacksSettingsScreen_GetHacks,    HacksSettingsScreen_SetHacks },
 		{ -1, -100, "Speed multiplier", MenuOptionsScreen_Input,
@@ -2793,7 +2793,7 @@ static void MiscOptionsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = screen;
 	struct Widget** widgets = s->Widgets;
 
-	const static struct MenuOptionData buttons[8] = {
+	const static struct MenuOptionDesc buttons[8] = {
 		{ -1, -100, "Reach distance", MenuOptionsScreen_Input,
 			MiscOptionsScreen_GetReach,       MiscOptionsScreen_SetReach },
 		{ -1,  -50, "Music volume",   MenuOptionsScreen_Input,
@@ -2881,7 +2881,7 @@ static void NostalgiaScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = screen;
 	static struct TextWidget desc;
 	
-	const static struct MenuOptionData buttons[8] = {
+	const static struct MenuOptionDesc buttons[8] = {
 		{ -1, -150, "Classic hand model",   MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand },
 		{ -1, -100, "Classic walk anim",    MenuOptionsScreen_Bool,

@@ -1,4 +1,4 @@
-ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, Linux and OSX.
+ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, OSX, Linux, BSD, and Solaris.
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
@@ -66,24 +66,19 @@ I am assuming you used the installer from http://www.mingw.org/
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
 3. Compile with the same flags as **MinGW-w64**, but also add ```-DUNICODE```
 
-
 #### Linux
 
-Install appropriate libs as required. For ubuntu this means: libx11-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
+Install appropriate libs as required. For ubuntu these are: libx11-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
 
-Compiling for linux: 
+```gcc *.c -o ClassiCube -lm -lpthread -lX11 -lGL -lcurl -lopenal -ldl```
 
-```gcc *.c -o ClassiCube -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl```
-
-Cross compiling for windows:
+##### Cross compiling for windows:
 
 ```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
 
-Explicitly:
+#### FreeBSD
 
-```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_WINGUI -DCC_BUILD_D3D9 -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
-
-```i586-mingw32msvc-gcc *.c -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_WINGUI -DCC_BUILD_WGL -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32```
+```gcc *.c -o ClassiCube -I /usr/local/include -L /usr/Xlocal/lib -lm -lpthread -lX11 -lGL -lcurl -lopenal -lexecinfo```
 
 #### OpenBSD
 
@@ -93,10 +88,20 @@ Install libexecinfo package if needed.
 
 #### NetBSD
 
-```gcc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib -lX11 -lGL -lcurl -lopenal -lpthread -lexecinfo```
+```gcc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lGL -lcurl -lopenal -lexecinfo```
+
+#### Solaris
+
+```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lGL -lcurl -lopenal```
+
+NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
+
+#### Other
+
+You'll have to write the necessary code. You should read portability.md in misc folder.
 
 ### Documentation
 
 Functions and variables in .h files are mostly documented.
 
-General information (e.g. portablity) for the game's source code can be found in the misc folder.
+Further information (e.g. portablity, style) for the game's source code can be found in the misc folder.

@@ -697,7 +697,7 @@ void Mutex_Free(void* handle) { }
 void Mutex_Lock(void* handle) { }
 void Mutex_Unlock(void* handle) { }
 
-void* Waitable_Create(void) { eeturn NULL; }
+void* Waitable_Create(void) { return NULL; }
 void Waitable_Free(void* handle) { }
 void Waitable_Signal(void* handle) { }
 void Waitable_Wait(void* handle) { }

@@ -1,17 +1,3 @@
-### Platform
-Although the majority of the code is designed to be platform-independent, some per-platform functionality is required.
-
-Some of the per-platform functionality you'll be required to implement is:
-- 3D graphics API (shader support is not required)
-- File I/O, Directory I/O, Socket I/O
-- Error handling (including unhandled errors/exceptions)
-- Application window, keyboard state, mouse state
-- Text drawing, fonts
-- Threading, signalable wait, mutex
-- Stopwatch timer, current system time
-- Http and https, getting command line args
-- Memory allocation, copying, setting
-
 ### Types
 * Integers generally use plain ```int```, floating point numbers use ```float``` or ```double```. 
 * Explicit integer types are also provided in ```Core.h```.
