@@ -7,11 +7,7 @@
 #include "Bitmap.h"
 #include "Window.h"
 #include "Utils.h"
-
-#include "freetype/ft2build.h"
-#include "freetype/freetype.h"
-#include "freetype/ftmodapi.h"
-#include "freetype/ftglyph.h"
+#define CC_BUILD_FREETYPE
 
 #if defined CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -98,6 +94,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <mach-o/dyld.h>
 #elif defined CC_BUILD_WEB
 #include <emscripten.h>
+#undef CC_BUILD_FREETYPE
 #endif
 
 
@@ -823,6 +820,12 @@ void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 /*########################################################################################################################*
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
+#if defined CC_BUILD_FREETYPE
+#include "freetype/ft2build.h"
+#include "freetype/freetype.h"
+#include "freetype/ftmodapi.h"
+#include "freetype/ftglyph.h"
+
 static FT_Library ft_lib;
 static struct FT_MemoryRec_ ft_mem;
 static struct EntryList font_list;
@@ -1285,6 +1288,29 @@ static void Font_Init(void) {
 	}
 	if (font_list_changed) EntryList_Save(&font_list);
 }
+#else
+void Font_GetNames(StringsBuffer* buffer) { }
+String Font_Lookup(const String* fontName, int style) {
+	String str = String_FromConst("-----"); return str;
+}
+
+void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
+	desc->Size   = size;
+	desc->Style  = style;
+	desc->Handle = NULL;
+}
+void Font_Free(FontDesc* desc) {
+	desc->Size   = 0;
+	desc->Style  = 0;
+	desc->Handle = NULL;
+}
+
+int Platform_TextWidth(struct DrawTextArgs* args) { return 0; }
+int Platform_FontHeight(const FontDesc* font)     { return 0; }
+int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) {
+	return 0;
+}
+#endif
 
 
 /*########################################################################################################################*
