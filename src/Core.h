@@ -85,43 +85,57 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_D3D9
 #define CC_BUILD_WINGUI
 #define CC_BUILD_WGL
+#define CC_BUILD_WININET
+#define CC_BUILD_WINMM
 #elif defined __linux__
 #define CC_BUILD_LINUX
 #define CC_BUILD_POSIX
 #define CC_BUILD_X11
 #define CC_BUILD_GLX
+#define CC_BUILD_CURL
+#define CC_BUILD_OPENAL
 #elif defined __APPLE__
 #define CC_BUILD_OSX
 #define CC_BUILD_POSIX
 #define CC_BUILD_CARBON
 #define CC_BUILD_AGL
+#define CC_BUILD_CURL
+#define CC_BUILD_OPENAL
 #elif defined __sun__
 #define CC_BUILD_SOLARIS
 #define CC_BUILD_POSIX
 #define CC_BUILD_X11
 #define CC_BUILD_GLX
+#define CC_BUILD_CURL
+#define CC_BUILD_OPENAL
 #elif defined __FreeBSD__
 #define CC_BUILD_FREEBSD
 #define CC_BUILD_POSIX
 #define CC_BUILD_X11
 #define CC_BUILD_GLX
+#define CC_BUILD_CURL
+#define CC_BUILD_OPENAL
 #elif defined __OpenBSD__
 #define CC_BUILD_OPENBSD
 #define CC_BUILD_POSIX
 #define CC_BUILD_X11
 #define CC_BUILD_GLX
+#define CC_BUILD_CURL
+#define CC_BUILD_OPENAL
 #elif defined __NetBSD__
 #define CC_BUILD_NETBSD
 #define CC_BUILD_POSIX
 #define CC_BUILD_X11
 #define CC_BUILD_GLX
+#define CC_BUILD_CURL
+#define CC_BUILD_OPENAL
 #elif defined __EMSCRIPTEN__
 #define CC_BUILD_WEB
 #define CC_BUILD_POSIX
 #define CC_BUILD_GLMODERN
 #define CC_BUILD_WEBCANVAS
 #define CC_BUILD_WEBGL
-#error "Web backend is still a WIP. Please do not publicly mention it, thanks."
+//#error "Web backend is still a WIP. Please do not publicly mention it, thanks."
 #endif
 #endif
 

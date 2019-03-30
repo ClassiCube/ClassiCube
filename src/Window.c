@@ -2531,6 +2531,324 @@ void Window_DisableRawMouse(void) {
 #endif
 
 
+
+/*########################################################################################################################*
+*------------------------------------------------Emscripten canvas window-------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_WEBCANVAS
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+static bool win_rawMouse;
+
+static void Window_RefreshBounds(void) {
+	Rect2D r = { 0,0, 0,0 };
+	emscripten_get_canvas_element_size(NULL, &r.Width, &r.Height);
+
+	Window_ClientBounds = r;
+	/* TODO: get border size somehow */
+	Window_Bounds = r;
+}
+
+static EM_BOOL Window_MouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
+	Mouse_SetWheel(Mouse_Wheel - ev->deltaY);
+	return true;
+}
+
+static EM_BOOL Window_MouseButton(int type, const EmscriptenMouseEvent* ev, void* data) {
+	MouseButton btn;
+
+	switch (ev->button) {
+		case 0: btn = MOUSE_LEFT;   break;
+		case 1: btn = MOUSE_MIDDLE; break;
+		case 2: btn = MOUSE_RIGHT;  break;
+		default: return false;
+	}
+	Mouse_SetPressed(btn, type == EMSCRIPTEN_EVENT_MOUSEDOWN);
+	return true;
+}
+
+static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
+	/* Set before position change, in case mouse buttons changed when outside window */
+	Mouse_SetPressed(MOUSE_LEFT,   (ev->buttons & 0x01) != 0);
+	Mouse_SetPressed(MOUSE_RIGHT,  (ev->buttons & 0x02) != 0);
+	Mouse_SetPressed(MOUSE_MIDDLE, (ev->buttons & 0x04) != 0);
+
+	Mouse_SetPosition(ev->canvasX, ev->canvasY);
+	if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, ev->movementX, ev->movementY);
+	return true;
+}
+
+static EM_BOOL Window_Focus(int type, const EmscriptenFocusEvent* ev, void* data) {
+	Window_Focused = type == EMSCRIPTEN_EVENT_FOCUS;
+	if (!Window_Focused) Key_Clear();
+
+	Event_RaiseVoid(&WindowEvents.FocusChanged);
+	return true;
+}
+
+static EM_BOOL Window_Resize(int type, const EmscriptenUiEvent* ev, void *data) {
+	Window_RefreshBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
+	return true;
+}
+
+/* This is only raised when going into fullscreen */
+static EM_BOOL Window_CanvasResize(int type, const void* reserved, void *data) {
+	Window_RefreshBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
+	return false;
+}
+
+static EM_BOOL Window_Visibility(int type, const EmscriptenVisibilityChangeEvent* ev, void* data) {
+	Event_RaiseVoid(&WindowEvents.VisibilityChanged);
+	return false;
+}
+
+static const char* Window_BeforeUnload(int type, const void* ev, void *data) {
+	Window_Close();
+	return NULL;
+}
+
+static Key Window_MapKey(int k) {
+	if (k >= '0' && k <= '9') return k;
+	if (k >= 'A' && k <= 'Z') return k;
+	if (k >= 112 && k <= 135) { return KEY_F1 + (k - 112); }
+	if (k >= 96 && k <= 105)  { return KEY_KP0 + (k - 96); }
+
+	switch (k) {
+	case 13:  return KEY_ENTER;
+	case 27:  return KEY_ESCAPE;
+	case 8:   return KEY_BACKSPACE;
+	case 10:  return KEY_TAB;
+	case 32:  return KEY_SPACE;
+	case 192: return KEY_QUOTE;
+	case 61:  case 187: return KEY_EQUALS;
+	case 188: return KEY_COMMA;
+	case 173: case 189: return KEY_MINUS;
+	case 190: return KEY_PERIOD;
+	case 191: return KEY_SLASH;
+	case 59:  case 186: return KEY_SEMICOLON;
+	case 210: return KEY_LBRACKET;
+	case 222: return KEY_BACKSLASH;
+	case 221: return KEY_RBRACKET;
+	case 223: return KEY_TILDE;
+	case 20:  return KEY_CAPSLOCK;
+	case 44:  return KEY_PRINTSCREEN;
+	case 145: return KEY_SCROLLLOCK;
+	case 19:  return KEY_PAUSE;
+	case 45:  return KEY_INSERT;
+	case 36:  return KEY_HOME;
+	case 33:  return KEY_PAGEUP;
+	case 46:  return KEY_DELETE;
+	case 35:  return KEY_END;
+	case 34:  return KEY_PAGEDOWN;
+	case 39:  return KEY_RIGHT;
+	case 37:  return KEY_LEFT;
+	case 40:  return KEY_DOWN;
+	case 38:  return KEY_UP;
+
+	case 144: return KEY_NUMLOCK;
+	case 111: return KEY_KP_DIVIDE;
+	case 106: return KEY_KP_MULTIPLY;
+	case 109: return KEY_KP_MINUS;
+	case 107: return KEY_KP_PLUS;
+	case 110: return KEY_KP_DECIMAL;
+
+	case 17: return KEY_LCTRL;
+	case 16: return KEY_LSHIFT;
+	case 18: return KEY_LALT;
+	case 91: return KEY_LWIN;
+	}
+	return KEY_NONE;
+}
+
+static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* data) {
+	Key key = Window_MapKey(ev->keyCode);
+	int kc = ev->keyCode;
+	if (!key) return false;
+
+	if (ev->location == DOM_KEY_LOCATION_RIGHT) {
+		switch (key) {
+		case KEY_LALT:   key = KEY_RALT; break;
+		case KEY_LCTRL:  key = KEY_RCTRL; break;
+		case KEY_LSHIFT: key = KEY_RSHIFT; break;
+		case KEY_LWIN:   key = KEY_RWIN; break;
+		}
+	} else if (ev->location == DOM_KEY_LOCATION_NUMPAD) {
+		switch (key) {
+		case KEY_ENTER: key = KEY_KP_ENTER; break;
+		}
+	}
+	
+	Key_SetPressed(key, type == EMSCRIPTEN_EVENT_KEYDOWN);
+	if (type != EMSCRIPTEN_EVENT_KEYDOWN) return true;
+	
+	/* Must not intercept keydown for regular keys, otherwise KeyPress doesn't get raised */
+	/* However, do want to prevent browser's behaviour on F11,F5, home etc */
+	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
+	return (key >= KEY_F1 && key <= KEY_F35) || (key >= KEY_UP && key <= KEY_RIGHT) ||
+			(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK);
+}
+
+static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
+	char keyChar;
+	if (Convert_TryUnicodeToCP437(ev->charCode, &keyChar)) {
+		Event_RaiseInt(&KeyEvents.Press, keyChar);
+	}
+	return true;
+}
+
+static void Window_HookEvents(void) {
+	emscripten_set_wheel_callback("#canvas",     NULL, 0, Window_MouseWheel);
+	emscripten_set_mousedown_callback("#canvas", NULL, 0, Window_MouseButton);
+	emscripten_set_mouseup_callback("#canvas",   NULL, 0, Window_MouseButton);
+	emscripten_set_mousemove_callback("#canvas", NULL, 0, Window_MouseMove);
+
+	emscripten_set_focus_callback("#window",  NULL, 0, Window_Focus);
+	emscripten_set_blur_callback("#window",   NULL, 0, Window_Focus);
+	emscripten_set_resize_callback("#window", NULL, 0, Window_Resize);
+
+	emscripten_set_visibilitychange_callback(NULL, 0, Window_Visibility);
+	emscripten_set_beforeunload_callback(    NULL,    Window_BeforeUnload);
+
+	emscripten_set_keydown_callback("#window",  NULL, 0, Window_Key);
+	emscripten_set_keyup_callback("#window",    NULL, 0, Window_Key);
+	emscripten_set_keypress_callback("#window", NULL, 0, Window_KeyPress);
+}
+
+static void Window_UnhookEvents(void) {
+	emscripten_set_wheel_callback("#canvas",     NULL, 0, NULL);
+	emscripten_set_mousedown_callback("#canvas", NULL, 0, NULL);
+	emscripten_set_mouseup_callback("#canvas",   NULL, 0, NULL);
+	emscripten_set_mousemove_callback("#canvas", NULL, 0, NULL);
+
+	emscripten_set_focus_callback("#window",  NULL, 0, NULL);
+	emscripten_set_blur_callback("#window",   NULL, 0, NULL);
+	emscripten_set_resize_callback("#window", NULL, 0, NULL);
+
+	emscripten_set_visibilitychange_callback(NULL, 0, NULL);
+	emscripten_set_beforeunload_callback(    NULL,    NULL);
+
+	emscripten_set_keydown_callback("#window",  NULL, 0, NULL);
+	emscripten_set_keyup_callback("#window",    NULL, 0, NULL);
+	emscripten_set_keypress_callback("#window", NULL, 0, NULL);
+}
+
+void Window_Init(void) {
+	Display_Bounds.Width  = EM_ASM_INT_V({ return screen.width; });
+	Display_Bounds.Height = EM_ASM_INT_V({ return screen.height; });
+	Display_BitsPerPixel  = 24;
+}
+
+void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
+	Window_Exists  = true;
+	Window_Focused = true;
+
+	Window_HookEvents();
+	Window_SetSize(width, height);
+}
+
+void Window_SetTitle(const String* title) {
+	char str[600];
+	Platform_ConvertString(str, title);
+	EM_ASM_({ document.title = UTF8ToString($0); }, str);
+}
+
+/* TODO: Use real system clipboard.. */
+static char clipboardBuffer[256];
+static String clipboardStr = String_FromArray(clipboardBuffer);
+
+void Window_GetClipboardText(String* value) {
+	String_AppendString(value, &clipboardStr);
+}
+void Window_SetClipboardText(const String* value) {
+	String_Copy(&clipboardStr, value);
+}
+
+bool Window_GetVisible(void) { return true; }
+void Window_SetVisible(bool visible) { }
+void* Window_GetWindowHandle(void) { return NULL; }
+
+int Window_GetWindowState(void) {
+	EmscriptenFullscreenChangeEvent status;
+	emscripten_get_fullscreen_status(&status);
+	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
+}
+
+void Window_SetWindowState(int state) {
+	EmscriptenFullscreenStrategy strategy;
+
+	switch (state) {
+	case WINDOW_STATE_NORMAL:
+		emscripten_exit_fullscreen();
+		break;
+	case WINDOW_STATE_FULLSCREEN:
+		strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
+		strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
+		strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
+
+		strategy.canvasResizedCallback         = Window_CanvasResize;
+		strategy.canvasResizedCallbackUserData = NULL;
+		emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
+		break;
+	}
+}
+
+/* No simple API for moving canvas */
+void Window_SetLocation(int x, int y) { }
+void Window_SetSize(int width, int height) {
+	emscripten_set_canvas_element_size(NULL, width, height);
+	Window_RefreshBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
+}
+
+void Window_Close(void) {
+	Window_Exists = false;
+	Event_RaiseVoid(&WindowEvents.Closing);
+	/* Don't want cursor stuck on the dead 0,0 canvas */
+	Window_DisableRawMouse();
+
+	Window_SetSize(0, 0);
+	Event_RaiseVoid(&WindowEvents.Destroyed);
+}
+
+void Window_ProcessEvents(void) { }
+
+/* Not supported (or even used internally) */
+Point2D Cursor_GetScreenPos(void) { Point2D p = { 0,0 }; return p; }
+/* Not allowed to move cursor from javascript */
+void Cursor_SetScreenPos(int x, int y) { }
+
+void Cursor_SetVisible(bool visible) {
+	if (visible) {
+		EM_ASM(Module['canvas'].style['cursor'] = 'default'; );
+	} else {
+		EM_ASM(Module['canvas'].style['cursor'] = 'none'; );
+	}
+}
+
+void Window_ShowDialog(const char* title, const char* msg) {
+	EM_ASM_({ alert(UTF8ToString($0) + "\n\n" + UTF8ToString($1)); }, title, msg);
+}
+
+void Window_InitRaw(Bitmap* bmp) { Logger_Abort("Unsupported"); }
+void Window_DrawRaw(Rect2D r)    { Logger_Abort("Unsupported"); }
+
+void Window_EnableRawMouse(void) {
+	Window_RegrabMouse();
+	emscripten_request_pointerlock(NULL, true);
+	win_rawMouse = true;
+}
+void Window_UpdateRawMouse(void) { }
+
+void Window_DisableRawMouse(void) {
+	Window_RegrabMouse();
+	emscripten_exit_pointerlock();
+	win_rawMouse = false;
+}
+#endif
+
+
 #ifndef CC_BUILD_D3D9
 /*########################################################################################################################*
 *-------------------------------------------------------WGL OpenGL--------------------------------------------------------*
@@ -3026,7 +3344,7 @@ void GLContext_Update(void) {
 }
 
 void GLContext_Free(void) {
-	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx_context);
+	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 	eglDestroyContext(ctx_display, ctx_context);
 	eglDestroySurface(ctx_display, ctx_surface);
 	eglTerminate(ctx_display);
@@ -3044,325 +3362,11 @@ void GLContext_SetVSync(bool enabled) {
 	eglSwapInterval(ctx_display, enabled ? 1 : 0);
 }
 #endif
-#endif
 
 
-/* EMSCRIPTEN STUFF... */
 /*########################################################################################################################*
-*-------------------------------------------------------SDL window--------------------------------------------------------*
+*------------------------------------------------Emscripten WebGL context-------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WEBCANVAS
-#include <emscripten/emscripten.h>
-#include <emscripten/html5.h>
-static bool win_rawMouse;
-
-static void Window_RefreshBounds(void) {
-	Rect2D r = { 0,0, 0,0 };
-	emscripten_get_canvas_element_size(NULL, &r.Width, &r.Height);
-
-	Window_ClientBounds = r;
-	/* TODO: get border size somehow */
-	Window_Bounds = r;
-}
-
-static EM_BOOL Window_MouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
-	Mouse_SetWheel(Mouse_Wheel - ev->deltaY);
-	return true;
-}
-
-static EM_BOOL Window_MouseButton(int type, const EmscriptenMouseEvent* ev, void* data) {
-	MouseButton btn;
-
-	switch (ev->button) {
-		case 0: btn = MOUSE_LEFT;   break;
-		case 1: btn = MOUSE_MIDDLE; break;
-		case 2: btn = MOUSE_RIGHT;  break;
-		default: return false;
-	}
-	Mouse_SetPressed(btn, type == EMSCRIPTEN_EVENT_MOUSEDOWN);
-	return true;
-}
-
-static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
-	/* Set before position change, in case mouse buttons changed when outside window */
-	Mouse_SetPressed(MOUSE_LEFT,   (ev->buttons & 0x01) != 0);
-	Mouse_SetPressed(MOUSE_RIGHT,  (ev->buttons & 0x02) != 0);
-	Mouse_SetPressed(MOUSE_MIDDLE, (ev->buttons & 0x04) != 0);
-
-	Mouse_SetPosition(ev->canvasX, ev->canvasY);
-	if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, ev->movementX, ev->movementY);
-	return true;
-}
-
-static EM_BOOL Window_Focus(int type, const EmscriptenFocusEvent* ev, void* data) {
-	Window_Focused = type == EMSCRIPTEN_EVENT_FOCUS;
-	if (!Window_Focused) Key_Clear();
-
-	Event_RaiseVoid(&WindowEvents.FocusChanged);
-	return true;
-}
-
-static EM_BOOL Window_Resize(int type, const EmscriptenUiEvent* ev, void *data) {
-	Window_RefreshBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
-	return true;
-}
-
-/* This is only raised when going into fullscreen */
-static EM_BOOL Window_CanvasResize(int type, const void* reserved, void *data) {
-	Window_RefreshBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
-	return false;
-}
-
-static EM_BOOL Window_Visibility(int type, const EmscriptenVisibilityChangeEvent* ev, void* data) {
-	Event_RaiseVoid(&WindowEvents.VisibilityChanged);
-	return false;
-}
-
-static const char* Window_BeforeUnload(int type, const void* ev, void *data) {
-	Window_Close();
-	return NULL;
-}
-
-static Key Window_MapKey(int k) {
-	if (k >= '0' && k <= '9') return k;
-	if (k >= 'A' && k <= 'Z') return k;
-	if (k >= 112 && k <= 135) { return KEY_F1 + (k - 112); }
-	if (k >= 96 && k <= 105)  { return KEY_KP0 + (k - 96); }
-
-	switch (k) {
-	case 13:  return KEY_ENTER;
-	case 27:  return KEY_ESCAPE;
-	case 8:   return KEY_BACKSPACE;
-	case 10:  return KEY_TAB;
-	case 32:  return KEY_SPACE;
-	case 192: return KEY_QUOTE;
-	case 61:  case 187: return KEY_EQUALS;
-	case 188: return KEY_COMMA;
-	case 173: case 189: return KEY_MINUS;
-	case 190: return KEY_PERIOD;
-	case 191: return KEY_SLASH;
-	case 59:  case 186: return KEY_SEMICOLON;
-	case 210: return KEY_LBRACKET;
-	case 222: return KEY_BACKSLASH;
-	case 221: return KEY_RBRACKET;
-	case 223: return KEY_TILDE;
-	case 20:  return KEY_CAPSLOCK;
-	case 44:  return KEY_PRINTSCREEN;
-	case 145: return KEY_SCROLLLOCK;
-	case 19:  return KEY_PAUSE;
-	case 45:  return KEY_INSERT;
-	case 36:  return KEY_HOME;
-	case 33:  return KEY_PAGEUP;
-	case 46:  return KEY_DELETE;
-	case 35:  return KEY_END;
-	case 34:  return KEY_PAGEDOWN;
-	case 39:  return KEY_RIGHT;
-	case 37:  return KEY_LEFT;
-	case 40:  return KEY_DOWN;
-	case 38:  return KEY_UP;
-
-	case 144: return KEY_NUMLOCK;
-	case 111: return KEY_KP_DIVIDE;
-	case 106: return KEY_KP_MULTIPLY;
-	case 109: return KEY_KP_MINUS;
-	case 107: return KEY_KP_PLUS;
-	case 110: return KEY_KP_DECIMAL;
-
-	case 17: return KEY_LCTRL;
-	case 16: return KEY_LSHIFT;
-	case 18: return KEY_LALT;
-	case 91: return KEY_LWIN;
-	}
-	return KEY_NONE;
-}
-
-static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* data) {
-	Key key = Window_MapKey(ev->keyCode);
-	int kc = ev->keyCode;
-	if (!key) return false;
-
-	if (ev->location == DOM_KEY_LOCATION_RIGHT) {
-		switch (key) {
-		case KEY_LALT:   key = KEY_RALT; break;
-		case KEY_LCTRL:  key = KEY_RCTRL; break;
-		case KEY_LSHIFT: key = KEY_RSHIFT; break;
-		case KEY_LWIN:   key = KEY_RWIN; break;
-		}
-	} else if (ev->location == DOM_KEY_LOCATION_NUMPAD) {
-		switch (key) {
-		case KEY_ENTER: key = KEY_KP_ENTER; break;
-		}
-	}
-	
-	Key_SetPressed(key, type == EMSCRIPTEN_EVENT_KEYDOWN);
-	if (type != EMSCRIPTEN_EVENT_KEYDOWN) return true;
-	
-	/* Must not intercept keydown for regular keys, otherwise KeyPress doesn't get raised */
-	/* However, do want to prevent browser's behaviour on F11,F5, home etc */
-	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
-	return (key >= KEY_F1 && key <= KEY_F35) || (key >= KEY_UP && key <= KEY_RIGHT) ||
-			(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK);
-}
-
-static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
-	char keyChar;
-	if (Convert_TryUnicodeToCP437(ev->charCode, &keyChar)) {
-		Event_RaiseInt(&KeyEvents.Press, keyChar);
-	}
-	return true;
-}
-
-static void Window_HookEvents(void) {
-	emscripten_set_wheel_callback("#canvas",     NULL, 0, Window_MouseWheel);
-	emscripten_set_mousedown_callback("#canvas", NULL, 0, Window_MouseButton);
-	emscripten_set_mouseup_callback("#canvas",   NULL, 0, Window_MouseButton);
-	emscripten_set_mousemove_callback("#canvas", NULL, 0, Window_MouseMove);
-
-	emscripten_set_focus_callback("#window",  NULL, 0, Window_Focus);
-	emscripten_set_blur_callback("#window",   NULL, 0, Window_Focus);
-	emscripten_set_resize_callback("#window", NULL, 0, Window_Resize);
-
-	emscripten_set_visibilitychange_callback(NULL, 0, Window_Visibility);
-	emscripten_set_beforeunload_callback(    NULL,    Window_BeforeUnload);
-
-	emscripten_set_keydown_callback("#window",  NULL, 0, Window_Key);
-	emscripten_set_keyup_callback("#window",    NULL, 0, Window_Key);
-	emscripten_set_keypress_callback("#window", NULL, 0, Window_KeyPress);
-}
-
-static void Window_UnhookEvents(void) {
-	emscripten_set_wheel_callback("#canvas",     NULL, 0, NULL);
-	emscripten_set_mousedown_callback("#canvas", NULL, 0, NULL);
-	emscripten_set_mouseup_callback("#canvas",   NULL, 0, NULL);
-	emscripten_set_mousemove_callback("#canvas", NULL, 0, NULL);
-
-	emscripten_set_focus_callback("#window",  NULL, 0, NULL);
-	emscripten_set_blur_callback("#window",   NULL, 0, NULL);
-	emscripten_set_resize_callback("#window", NULL, 0, NULL);
-
-	emscripten_set_visibilitychange_callback(NULL, 0, NULL);
-	emscripten_set_beforeunload_callback(    NULL,    NULL);
-
-	emscripten_set_keydown_callback("#window",  NULL, 0, NULL);
-	emscripten_set_keyup_callback("#window",    NULL, 0, NULL);
-	emscripten_set_keypress_callback("#window", NULL, 0, NULL);
-}
-
-void Window_Init(void) {
-	Display_Bounds.Width  = EM_ASM_INT_V({ return screen.width; });
-	Display_Bounds.Height = EM_ASM_INT_V({ return screen.height; });
-	Display_BitsPerPixel  = 24;
-}
-
-void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
-	Window_Exists  = true;
-	Window_Focused = true;
-
-	Window_HookEvents();
-	Window_SetSize(width, height);
-}
-
-void Window_SetTitle(const String* title) {
-	char str[600];
-	Platform_ConvertString(str, title);
-	EM_ASM_({ document.title = UTF8ToString($0); }, str);
-}
-
-/* TODO: Use real system clipboard.. */
-static char clipboardBuffer[256];
-static String clipboardStr = String_FromArray(clipboardBuffer);
-
-void Window_GetClipboardText(String* value) {
-	String_AppendString(value, &clipboardStr);
-}
-void Window_SetClipboardText(const String* value) {
-	String_Copy(&clipboardStr, value);
-}
-
-bool Window_GetVisible(void) { return true; }
-void Window_SetVisible(bool visible) { }
-void* Window_GetWindowHandle(void) { return NULL; }
-
-int Window_GetWindowState(void) {
-	EmscriptenFullscreenChangeEvent status;
-	emscripten_get_fullscreen_status(&status);
-	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
-}
-
-void Window_SetWindowState(int state) {
-	EmscriptenFullscreenStrategy strategy;
-
-	switch (state) {
-	case WINDOW_STATE_NORMAL:
-		emscripten_exit_fullscreen();
-		break;
-	case WINDOW_STATE_FULLSCREEN:
-		strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
-		strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
-		strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
-
-		strategy.canvasResizedCallback         = Window_CanvasResize;
-		strategy.canvasResizedCallbackUserData = NULL;
-		emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
-		break;
-	}
-}
-
-/* No simple API for moving canvas */
-void Window_SetLocation(int x, int y) { }
-void Window_SetSize(int width, int height) {
-	emscripten_set_canvas_element_size(NULL, width, height);
-	Window_RefreshBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
-}
-
-void Window_Close(void) {
-	Window_Exists = false;
-	Event_RaiseVoid(&WindowEvents.Closing);
-
-	Window_SetSize(0, 0);
-	Event_RaiseVoid(&WindowEvents.Destroyed);
-}
-
-void Window_ProcessEvents(void) { }
-
-/* Not supported (or even used internally) */
-Point2D Cursor_GetScreenPos(void) { Point2D p = { 0,0 }; return p; }
-/* Not allowed to move cursor from javascript */
-void Cursor_SetScreenPos(int x, int y) { }
-
-void Cursor_SetVisible(bool visible) {
-	if (visible) {
-		EM_ASM(Module['canvas'].style['cursor'] = 'default'; );
-	} else {
-		EM_ASM(Module['canvas'].style['cursor'] = 'none'; );
-	}
-}
-
-void Window_ShowDialog(const char* title, const char* msg) {
-	EM_ASM_({ alert(UTF8ToString($0) + "\n\n" + UTF8ToString($1)); }, title, msg);
-}
-
-void Window_InitRaw(Bitmap* bmp) { Logger_Abort("Unsupported"); }
-void Window_DrawRaw(Rect2D r)    { Logger_Abort("Unsupported"); }
-
-void Window_EnableRawMouse(void) {
-	Window_RegrabMouse();
-	emscripten_request_pointerlock(NULL, true);
-	win_rawMouse = true;
-}
-void Window_UpdateRawMouse(void) { }
-
-void Window_DisableRawMouse(void) {
-	Window_RegrabMouse();
-	emscripten_exit_pointerlock();
-	win_rawMouse = false;
-}
-#endif
-
-
 #ifdef CC_BUILD_WEBGL
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
@@ -3398,4 +3402,5 @@ void GLContext_SetVSync(bool enabled) {
 		emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, 0);
 	}
 }
+#endif
 #endif
