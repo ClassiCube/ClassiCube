@@ -2549,13 +2549,26 @@ static void Window_RefreshBounds(void) {
 	Window_Bounds = r;
 }
 
+static void Window_CorrectFocus(void) {
+	/* Sometimes emscripten_request_pointerlock doesn't always acquire focus */
+	/* Browser also only allows pointer locks requests in response to user input */
+	EmscriptenPointerlockChangeEvent status;
+	status.isActive = false;
+	return;
+
+	emscripten_get_pointerlock_status(&status);
+	if (win_rawMouse && !status.isActive) Window_EnableRawMouse();
+}
+
 static EM_BOOL Window_MouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
 	Mouse_SetWheel(Mouse_Wheel - ev->deltaY);
+	Window_CorrectFocus();
 	return true;
 }
 
 static EM_BOOL Window_MouseButton(int type, const EmscriptenMouseEvent* ev, void* data) {
 	MouseButton btn;
+	Window_CorrectFocus();
 
 	switch (ev->button) {
 		case 0: btn = MOUSE_LEFT;   break;
@@ -2664,7 +2677,9 @@ static Key Window_MapKey(int k) {
 
 static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* data) {
 	Key key = Window_MapKey(ev->keyCode);
-	int kc = ev->keyCode;
+	int kc  = ev->keyCode;
+
+	Window_CorrectFocus();
 	if (!key) return false;
 
 	if (ev->location == DOM_KEY_LOCATION_RIGHT) {
@@ -2686,12 +2701,14 @@ static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* da
 	/* Must not intercept keydown for regular keys, otherwise KeyPress doesn't get raised */
 	/* However, do want to prevent browser's behaviour on F11,F5, home etc */
 	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
-	return (key >= KEY_F1 && key <= KEY_F35) || (key >= KEY_UP && key <= KEY_RIGHT) ||
-			(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK);
+	return (key >= KEY_F1 && key <= KEY_F35)   || (key >= KEY_UP && key <= KEY_RIGHT) ||
+		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK && key != KEY_SPACE);
 }
 
 static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	char keyChar;
+	Window_CorrectFocus();
+
 	if (Convert_TryUnicodeToCP437(ev->charCode, &keyChar)) {
 		Event_RaiseInt(&KeyEvents.Press, keyChar);
 	}

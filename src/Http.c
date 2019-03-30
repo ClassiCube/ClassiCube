@@ -5,7 +5,7 @@
 #include "Stream.h"
 #include "GameStructs.h"
 
-#if defined CC_BUILD_WIN
+#if defined CC_BUILD_WININET
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -20,10 +20,8 @@
 #define HTTP_QUERY_ETAG 54 /* Missing from some old MingW32 headers */
 #elif defined CC_BUILD_WEB
 /* Use javascript web api for Emscripten */
-#undef CC_BUILD_POSIX
 #include <emscripten/fetch.h>
-#elif defined CC_BUILD_POSIX
-/* POSIX is mainly shared between Linux and OSX */
+#elif defined CC_BUILD_CURL
 #include <curl/curl.h>
 #include <time.h>
 #endif
@@ -229,7 +227,7 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 /*########################################################################################################################*
 *------------------------------------------------Emscripten implementation------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WEB
+#if defined CC_BUILD_WEB
 static void Http_SysInit(void) { }
 static void Http_SysFree(void) { }
 static void Http_DownloadAsync(struct HttpRequest* req);
@@ -298,7 +296,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 /*########################################################################################################################*
 *--------------------------------------------------Native implementation--------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WININET
 static HINTERNET hInternet;
 /* TODO: Test last modified and etag even work */
 #define FLAG_STATUS  HTTP_QUERY_STATUS_CODE    | HTTP_QUERY_FLAG_NUMBER
@@ -534,8 +532,7 @@ static void Http_SysFree(void) {
 	}
 	InternetCloseHandle(hInternet);
 }
-#endif
-#ifdef CC_BUILD_POSIX
+#elif defined CC_BUILD_CURL
 static CURL* curl;
 
 static void Http_SysInit(void) {

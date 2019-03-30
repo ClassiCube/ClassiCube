@@ -12,7 +12,7 @@
 #include "Chat.h"
 #include "Stream.h"
 
-#if defined CC_BUILD_WIN
+#if defined CC_BUILD_WINMM
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -24,7 +24,7 @@
 
 #include <windows.h>
 #include <mmsystem.h>
-#elif defined CC_BUILD_POSIX
+#elif defined CC_BUILD_OPENAL
 #include <pthread.h>
 #if defined CC_BUILD_OSX
 #include <OpenAL/al.h>
@@ -70,7 +70,7 @@ static void Volume_Mix8(uint8_t* samples, int count, int volume) {
 *------------------------------------------------Native implementation----------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished);
-#if defined CC_BUILD_WIN
+#if defined CC_BUILD_WINMM
 struct AudioContext {
 	HWAVEOUT Handle;
 	WAVEHDR Headers[AUDIO_MAX_BUFFERS];
@@ -175,7 +175,7 @@ ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) {
 }
 
 ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) { return Audio_AllCompleted(handle, finished); }
-#elif defined CC_BUILD_POSIX
+#elif defined CC_BUILD_OPENAL
 struct AudioContext {
 	ALuint Source;
 	ALuint Buffers[AUDIO_MAX_BUFFERS];
@@ -382,7 +382,22 @@ ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) {
 	alGetSourcei(ctx->Source, AL_SOURCE_STATE, &state);
 	*finished = state != AL_PLAYING; return 0;
 }
+#else
+struct AudioContext { int Count; struct AudioFormat Format; };
+static struct AudioContext Audio_Contexts[1];
+
+void Audio_Open(AudioHandle* handle, int buffers) { }
+ReturnCode Audio_Close(AudioHandle handle) { return 1; }
+ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) { return 1; }
+ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, uint32_t dataSize) { return 1; }
+ReturnCode Audio_Play(AudioHandle handle) { return 1; }
+ReturnCode Audio_Stop(AudioHandle handle) { return 1; }
+ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) { return 1; }
+ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) { return 1; }
+void Audio_SysInit(void) { }
+void Audio_SysFree(void) { }
 #endif
+
 static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ReturnCode res;

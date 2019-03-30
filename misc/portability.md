@@ -60,8 +60,8 @@ posix note: Register access is highly dependent on OS and architecture.
 Play multiple audio streams with varying sample rates
 
 Define:
-- ```CC_BUILD_WIN``` - Use WinMM for audio
-- ```CC_BUILD_POSIX``` - Use OpenAL for audio
+- ```CC_BUILD_WINMM``` - Use WinMM for audio (Windows)
+- ```CC_BUILD_OpenAL``` - Use OpenAL for audio
 
 ### 3D Graphics
 Texturing, depth buffer, alpha, etc (See Graphics.h for full list)
@@ -76,5 +76,5 @@ Define:
 HTTP, HTTPS, and cookies (ETag and Last-Modified recommended)
 
 Define:
-- ```CC_BUILD_WIN``` - use WinINet as http backend
-- ```CC_BUILD_POSIX``` - use libcurl as http backend
+- ```CC_BUILD_WININET``` - use WinINet for http (Windows)
+- ```CC_BUILD_CURL``` - use libcurl for http
