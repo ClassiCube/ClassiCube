@@ -76,6 +76,10 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libgl1-m
 
 ```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
 
+#### Mac OSX
+
+```gcc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenAL -framework OpenGL -lcurl```
+
 #### FreeBSD
 
 ```gcc *.c -o ClassiCube -I /usr/local/include -L /usr/Xlocal/lib -lm -lpthread -lX11 -lGL -lcurl -lopenal -lexecinfo```
