@@ -60,15 +60,15 @@ posix note: Register access is highly dependent on OS and architecture.
 Play multiple audio streams with varying sample rates
 
 Define:
-- ```CC_BUILD_WINMM``` - Use WinMM for audio (Windows)
-- ```CC_BUILD_OpenAL``` - Use OpenAL for audio
+- ```CC_BUILD_WINMM``` - Use WinMM (Windows)
+- ```CC_BUILD_OpenAL``` - Use OpenAL
 
 ### 3D Graphics
 Texturing, depth buffer, alpha, etc (See Graphics.h for full list)
 
 Define:
-- ```CC_BUILD_D3D9``` - Use Direct3D9 for 3D graphics
-- ```CC_BUILD_GL``` - Use OpenGL for 3D graphics (1.5/1.2 + ARB_VERTEX_BUFFER_OBJECT)
+- ```CC_BUILD_D3D9``` - Use Direct3D9
+- ```CC_BUILD_GL``` - Use OpenGL (1.5/1.2 + ARB_VERTEX_BUFFER_OBJECT)
 - ```CC_BUILD_GL11``` - Use OpenGL 1.1 features only
 - ```CC_BUILD_GLMODERN``` - Use OpenGL/OpenGLES 2.0 shaders
 
