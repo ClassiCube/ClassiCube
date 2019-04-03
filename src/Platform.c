@@ -1242,10 +1242,21 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 #define FONT_CACHE_FILE "fontscache.txt"
 static void Font_Init(void) {
 #if defined CC_BUILD_WIN
-	const static String dirs[2] = {
-		String_FromConst("C:/Windows/Fonts"),
-		String_FromConst("C:/WINNT/Fonts")
-	};
+	char winFolder[FILENAME_SIZE];
+	TCHAR winTmp[FILENAME_SIZE];
+
+	/* System folder path may not be C:/Windows */
+	String dirs[1];
+	String_InitArray(dirs[0], winFolder);
+
+	UINT winLen = GetSystemWindowsDirectory(winTmp, FILENAME_SIZE);
+	if (winLen) {
+		Platform_DecodeString(&dirs[0], winTmp, winLen);
+	} else {
+		String_AppendConst(&dirs[0], "C:/Windows");
+	}
+	String_AppendConst(&dirs[0], "/fonts");
+	
 #elif defined CC_BUILD_NETBSD
 	const static String dirs[3] = {
 		String_FromConst("/usr/X11R7/lib/X11/fonts"),
