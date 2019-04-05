@@ -6,12 +6,24 @@ PLAT=ns
 DEL=rm
 JOBS=1
 
-ifeq ($(OS),Windows_NT)
-DEL=del
+ifeq ($(PLAT),ns)
+	ifeq ($(OS),Windows_NT)
+		PLAT=mingw
+	else
+		UNAME=$(shell uname -s)
+		ifeq ($(UNAME),Linux)
+			PLAT=linux
+		endif
+		ifeq ($(UNAME),Darwin)
+			PLAT=osx
+		endif
+		ifeq ($(UNAME),SunOS)
+			PLAT=solaris
+		endif
+	endif
 endif
 
 CC_web=emcc
-LIBS_web=
 OEXT_web=.html
 CFLAGS_web=-w -g
 LDFLAGS_web=-s WASM=1 -s NO_EXIT_RUNTIME=1 -s FETCH=1 --preload-file texpacks/default.zip@texpacks/default.zip
@@ -25,6 +37,19 @@ CC_linux=gcc
 LIBS_linux=-lX11 -lpthread -lGL -lm -lopenal -ldl -lcurl
 CFLAGS_linux=-w -g -pipe
 
+CC_solaris=gcc
+LIBS_solaris=-lm -lsocket -lX11 -lGL -lcurl -lopenal
+CFLAGS_solaris=-w -g -pipe
+
+CC_osx=gcc
+LIBS_osx=-lcurl
+LDFLAGS_osx=-framework Carbon -framework AGL -framework OpenAL -framework OpenGL
+CFLAGS_osx=-w -g -pipe
+
+ifeq ($(OS),Windows_NT)
+DEL=del
+endif
+
 default: $(PLAT)
 
 web:
@@ -35,6 +60,12 @@ linux:
 
 mingw:
 	$(MAKE) $(ENAME) PLAT=mingw -j$(JOBS)
+
+solaris:
+	$(MAKE) $(ENAME) PLAT=solaris -j$(JOBS)
+
+osx:
+	$(MAKE) $(ENAME) PLAT=osx -j$(JOBS)
 
 clean:
 	$(DEL) $(OBJECTS)
