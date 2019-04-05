@@ -111,6 +111,12 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 #define Rect_Width(rect)  (rect.right  - rect.left)
 #define Rect_Height(rect) (rect.bottom - rect.top)
 
+#ifndef WM_XBUTTONDOWN
+/* Missing if _WIN32_WINNT isn't defined */
+#define WM_XBUTTONDOWN 0x020B
+#define WM_XBUTTONUP   0x020C
+#endif
+
 static HINSTANCE win_instance;
 static HWND win_handle;
 static HDC win_DC;
@@ -2538,6 +2544,7 @@ void Window_DisableRawMouse(void) {
 #ifdef CC_BUILD_WEBCANVAS
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
+#include <emscripten/key_codes.h>
 static bool win_rawMouse;
 
 static void Window_RefreshBounds(void) {
@@ -2625,60 +2632,64 @@ static const char* Window_BeforeUnload(int type, const void* ev, void *data) {
 static Key Window_MapKey(int k) {
 	if (k >= '0' && k <= '9') return k;
 	if (k >= 'A' && k <= 'Z') return k;
-	if (k >= 112 && k <= 135) { return KEY_F1 + (k - 112); }
-	if (k >= 96 && k <= 105)  { return KEY_KP0 + (k - 96); }
+	if (k >= DOM_VK_F1      && k <= DOM_VK_F24)      { return KEY_F1  + (k - DOM_VK_F1); }
+	if (k >= DOM_VK_NUMPAD0 && k <= DOM_VK_NUMPAD9)  { return KEY_KP0 + (k - DOM_VK_NUMPAD0); }
 
 	switch (k) {
-	case 13:  return KEY_ENTER;
-	case 27:  return KEY_ESCAPE;
-	case 8:   return KEY_BACKSPACE;
-	case 10:  return KEY_TAB;
-	case 32:  return KEY_SPACE;
-	case 192: return KEY_QUOTE;
-	case 61:  case 187: return KEY_EQUALS;
-	case 188: return KEY_COMMA;
-	case 173: case 189: return KEY_MINUS;
-	case 190: return KEY_PERIOD;
-	case 191: return KEY_SLASH;
-	case 59:  case 186: return KEY_SEMICOLON;
-	case 210: return KEY_LBRACKET;
-	case 222: return KEY_BACKSLASH;
-	case 221: return KEY_RBRACKET;
-	case 223: return KEY_TILDE;
-	case 20:  return KEY_CAPSLOCK;
-	case 44:  return KEY_PRINTSCREEN;
-	case 145: return KEY_SCROLLLOCK;
-	case 19:  return KEY_PAUSE;
-	case 45:  return KEY_INSERT;
-	case 36:  return KEY_HOME;
-	case 33:  return KEY_PAGEUP;
-	case 46:  return KEY_DELETE;
-	case 35:  return KEY_END;
-	case 34:  return KEY_PAGEDOWN;
-	case 39:  return KEY_RIGHT;
-	case 37:  return KEY_LEFT;
-	case 40:  return KEY_DOWN;
-	case 38:  return KEY_UP;
+	case DOM_VK_BACK_SPACE: return KEY_BACKSPACE;
+	case DOM_VK_TAB:        return KEY_TAB;
+	case DOM_VK_RETURN:     return KEY_ENTER;
+	case DOM_VK_SHIFT:      return KEY_LSHIFT;
+	case DOM_VK_CONTROL:    return KEY_LCTRL;
+	case DOM_VK_ALT:        return KEY_LALT;
+	case DOM_VK_PAUSE:      return KEY_PAUSE;
+	case DOM_VK_CAPS_LOCK:  return KEY_CAPSLOCK;
+	case DOM_VK_ESCAPE:     return KEY_ESCAPE;
+	case DOM_VK_SPACE:      return KEY_SPACE;
 
-	case 144: return KEY_NUMLOCK;
-	case 111: return KEY_KP_DIVIDE;
-	case 106: return KEY_KP_MULTIPLY;
-	case 109: return KEY_KP_MINUS;
-	case 107: return KEY_KP_PLUS;
-	case 110: return KEY_KP_DECIMAL;
+	case DOM_VK_PAGE_UP:     return KEY_PAGEUP;
+	case DOM_VK_PAGE_DOWN:   return KEY_PAGEDOWN;
+	case DOM_VK_END:         return KEY_END;
+	case DOM_VK_HOME:        return KEY_HOME;
+	case DOM_VK_LEFT:        return KEY_LEFT;
+	case DOM_VK_UP:          return KEY_UP;
+	case DOM_VK_RIGHT:       return KEY_RIGHT;
+	case DOM_VK_DOWN:        return KEY_DOWN;
+	case DOM_VK_PRINTSCREEN: return KEY_PRINTSCREEN;
+	case DOM_VK_INSERT:      return KEY_INSERT;
+	case DOM_VK_DELETE:      return KEY_DELETE;
 
-	case 17: return KEY_LCTRL;
-	case 16: return KEY_LSHIFT;
-	case 18: return KEY_LALT;
-	case 91: return KEY_LWIN;
+	case DOM_VK_SEMICOLON:   return KEY_SEMICOLON;
+	case DOM_VK_EQUALS:      return KEY_EQUALS;
+	case DOM_VK_WIN:         return KEY_LWIN;
+	case DOM_VK_MULTIPLY:    return KEY_KP_MULTIPLY;
+	case DOM_VK_ADD:         return KEY_KP_PLUS;
+	case DOM_VK_SUBTRACT:    return KEY_KP_MINUS;
+	case DOM_VK_DECIMAL:     return KEY_KP_DECIMAL;
+	case DOM_VK_DIVIDE:      return KEY_KP_DIVIDE;
+	case DOM_VK_NUM_LOCK:    return KEY_NUMLOCK;
+	case DOM_VK_SCROLL_LOCK: return KEY_SCROLLLOCK;
+		
+	case DOM_VK_HYPHEN_MINUS:  return KEY_MINUS;
+	case DOM_VK_COMMA:         return KEY_COMMA;
+	case DOM_VK_PERIOD:        return KEY_PERIOD;
+	case DOM_VK_SLASH:         return KEY_SLASH;
+	case DOM_VK_BACK_QUOTE:    return KEY_TILDE;
+	case DOM_VK_OPEN_BRACKET:  return KEY_LBRACKET;
+	case DOM_VK_BACK_SLASH:    return KEY_BACKSLASH;
+	case DOM_VK_CLOSE_BRACKET: return KEY_RBRACKET;
+	case DOM_VK_QUOTE:         return KEY_QUOTE;
+
+	/* chrome */
+	case 186: return KEY_SEMICOLON;
+	case 187: return KEY_EQUALS;
+	case 189: return KEY_MINUS;
 	}
 	return KEY_NONE;
 }
 
 static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* data) {
 	Key key = Window_MapKey(ev->keyCode);
-	int kc  = ev->keyCode;
-
 	Window_CorrectFocus();
 	if (!key) return false;
 
