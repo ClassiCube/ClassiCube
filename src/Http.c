@@ -740,7 +740,13 @@ static void Http_WorkerLoop(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Http public api------------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_WEB
+/* Access to XMLHttpRequest at 'http://static.classicube.net' from origin 'http://www.classicube.net' has been blocked by CORS policy: */
+/* No 'Access-Control-Allow-Origin' header is present on the requested resource. */
+const static String skinServer = String_FromConst("http://classicube.net/static/skins/");
+#else
 const static String skinServer = String_FromConst("http://static.classicube.net/skins/");
+#endif
 
 void Http_AsyncGetSkin(const String* id, const String* skinName) {
 	String url; char urlBuffer[STRING_SIZE];

@@ -1249,7 +1249,7 @@ static void Font_Init(void) {
 	String dirs[1];
 	String_InitArray(dirs[0], winFolder);
 
-	UINT winLen = GetSystemWindowsDirectory(winTmp, FILENAME_SIZE);
+	UINT winLen = GetWindowsDirectory(winTmp, FILENAME_SIZE);
 	if (winLen) {
 		Platform_DecodeString(&dirs[0], winTmp, winLen);
 	} else {

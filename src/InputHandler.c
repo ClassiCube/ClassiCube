@@ -199,9 +199,6 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		} else {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
-	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !active->HandlesAllInput) {
-		Gui_FreeActive();
-		Gui_SetActive(PauseScreen_MakeInstance());
 	} else if (key == KeyBinds[KEYBIND_INVENTORY] && active == Gui_HUD) {
 		Gui_FreeActive();
 		Gui_SetActive(InventoryScreen_MakeInstance());
@@ -464,7 +461,12 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		Window_Close(); return;
 	} else if (key == KeyBinds[KEYBIND_SCREENSHOT] && !was) {
 		Game_ScreenshotRequested = true; return;
-	} else if (Elem_HandlesKeyDown(active, key, was)) { return; }
+	} else if (Elem_HandlesKeyDown(active, key, was)) { 
+		return;
+	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !active->HandlesAllInput) {
+		Gui_FreeActive();
+		Gui_SetActive(PauseScreen_MakeInstance()); return;
+	}
 
 	/* These should not be triggered multiple times when holding down */
 	if (was) return;

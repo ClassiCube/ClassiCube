@@ -2561,8 +2561,6 @@ static void Window_CorrectFocus(void) {
 	/* Browser also only allows pointer locks requests in response to user input */
 	EmscriptenPointerlockChangeEvent status;
 	status.isActive = false;
-	return;
-
 	emscripten_get_pointerlock_status(&status);
 	if (win_rawMouse && !status.isActive) Window_EnableRawMouse();
 }
@@ -2837,6 +2835,7 @@ void Window_Close(void) {
 	Window_DisableRawMouse();
 
 	Window_SetSize(0, 0);
+	Window_UnhookEvents();
 	Event_RaiseVoid(&WindowEvents.Destroyed);
 }
 
