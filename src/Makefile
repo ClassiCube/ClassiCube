@@ -9,7 +9,7 @@ ifndef $(PLAT)
 	ifeq ($(OS),Windows_NT)
 		PLAT=mingw
 	else
-		PLAT=$(shell uname -s | tr -s '[:upper:]' '[:lower:]')
+		PLAT=$(shell uname -s | tr '[:upper:]' '[:lower:]')
 	endif
 endif
 
@@ -38,9 +38,10 @@ CFLAGS_darwin=-w -g -pipe
 
 BSDLIBS=-lcurl -lexecinfo -lopenal -lGL -lX11
 
-CC_freebsd=gcc
+CC_freebsd=clang
 LIBS_freebsd=$(BSDLIBS) -lm -lpthread
-INCDIRS_freebsd=-I /usr/local/include -L /usr/Xlocal/lib
+INCDIRS_freebsd=-I /usr/local/include
+LDFLAGS_freebsd=-L /usr/local/lib
 CFLAGS_freebsd=-w -g -pipe
 
 CC_openbsd=gcc
