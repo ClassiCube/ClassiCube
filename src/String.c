@@ -752,8 +752,6 @@ bool Convert_ParseBool(const String* str, bool* value) {
 /*########################################################################################################################*
 *------------------------------------------------------StringsBuffer------------------------------------------------------*
 *#########################################################################################################################*/
-#define STRINGSBUFFER_LEN_SHIFT 9
-#define STRINGSBUFFER_LEN_MASK  0x1FFUL
 #define STRINGSBUFFER_BUFFER_EXPAND_SIZE 8192
 
 CC_NOINLINE static void StringsBuffer_Init(StringsBuffer* buffer) {
@@ -791,7 +789,7 @@ String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
 void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 	int textOffset;
 	/* StringsBuffer hasn't been initalised yet, do it here */
-	if (!buffer->_FlagsBufferSize) { StringsBuffer_Init(buffer); }
+	if (!buffer->_FlagsBufferSize) StringsBuffer_Init(buffer);
 
 	if (buffer->Count == buffer->_FlagsBufferSize) {
 		buffer->FlagsBuffer = Utils_Resize(buffer->FlagsBuffer, &buffer->_FlagsBufferSize, 

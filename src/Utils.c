@@ -310,6 +310,14 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 		if (!entry.length) continue;
 		if (filter && !filter(&entry)) continue;
 
+		/* Sometimes file becomes corrupted and replaced with NULL */
+		/* If don't prevent this here, client aborts in StringsBuffer_Add */
+		if (entry.length > STRINGSBUFFER_LEN_MASK) {
+			entry.length = 0;
+			String_Format1(&entry, "Skipping extremely long line in %c, file may have been corrupted", list->Filename);
+			Logger_WarnFunc(&entry); continue;
+		}
+
 		String_UNSAFE_Separate(&entry, list->Separator, &key, &value);
 		EntryList_Set(list, &key, &value);
 	}

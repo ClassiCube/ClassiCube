@@ -200,6 +200,9 @@ CC_API bool Convert_ParseBool(const String*   str, bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256
+#define STRINGSBUFFER_LEN_SHIFT 9
+#define STRINGSBUFFER_LEN_MASK  0x1FFUL
+
 typedef struct StringsBuffer_ {
 	char*      TextBuffer;  /* Raw characters of all entries */
 	uint32_t*  FlagsBuffer; /* Private flags for each entry */
