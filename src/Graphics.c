@@ -855,15 +855,19 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar,
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
+ReturnCode Gfx_TakeScreenshot(struct Stream* output) {
 	IDirect3DSurface9* backbuffer = NULL;
 	IDirect3DSurface9* temp = NULL;
+	D3DSURFACE_DESC desc;
 	Bitmap bmp;
 	ReturnCode res;
 
 	res = IDirect3DDevice9_GetBackBuffer(device, 0, 0, D3DBACKBUFFER_TYPE_MONO, &backbuffer);
 	if (res) goto finished;
-	res = IDirect3DDevice9_CreateOffscreenPlainSurface(device, width, height, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &temp, NULL);
+	res = IDirect3DSurface9_GetDesc(backbuffer, &desc);
+	if (res) goto finished;
+
+	res = IDirect3DDevice9_CreateOffscreenPlainSurface(device, desc.Width, desc.Height, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &temp, NULL);
 	if (res) goto finished; /* TODO: For DX 8 use IDirect3DDevice8::CreateImageSurface */
 	res = IDirect3DDevice9_GetRenderTargetData(device, backbuffer, temp);
 	if (res) goto finished;
@@ -872,7 +876,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
 	res = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
 	if (res) goto finished;
 	{
-		Bitmap_Init(bmp, width, height, rect.pBits);
+		Bitmap_Init(bmp, desc.Width, desc.Height, rect.pBits);
 		res = Png_Encode(&bmp, output, NULL, false);
 		if (res) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
 	}
@@ -920,27 +924,23 @@ static const char* D3D9_StrFlags(void) {
 	return "(none)";
 }
 
-static const char* D3D9_StrFormat(D3DFORMAT format) {
+static const int D3D9_DepthBufferBts(D3DFORMAT format) {
 	switch (format) {
-	case D3DFMT_D32:     return "D32";
-	case D3DFMT_D24X8:   return "D24X8";
-	case D3DFMT_D24S8:   return "D24S8";
-	case D3DFMT_D24X4S4: return "D24X4S4";
-	case D3DFMT_D16:     return "D16";
-	case D3DFMT_D15S1:   return "D15S1";
-
-	case D3DFMT_X8R8G8B8: return "X8R8G8B8";
-	case D3DFMT_R8G8B8:   return "R8G8B8";
-	case D3DFMT_R5G6B5:   return "R5G6B5";
-	case D3DFMT_X1R5G5B5: return "X1R5G5B5";
+	case D3DFMT_D32:     return 32;
+	case D3DFMT_D24X8:   return 24;
+	case D3DFMT_D24S8:   return 24;
+	case D3DFMT_D24X4S4: return 24;
+	case D3DFMT_D16:     return 16;
+	case D3DFMT_D15S1:   return 15;
 	}
-	return "(unknown)";
+	return 0;
 }
 
 static float gfx_totalMem;
 void Gfx_MakeApiInfo(void) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
 	int pointerSize = sizeof(void*) * 8;
+	int depthBits   = D3D9_DepthBufferBts(gfx_depthFormat);
 
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
 	gfx_totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
@@ -950,8 +950,7 @@ void Gfx_MakeApiInfo(void) {
 	String_Format1(&Gfx_ApiInfo[2], "Processing mode: %c", D3D9_StrFlags());
 	Gfx_UpdateApiInfo();
 	String_Format2(&Gfx_ApiInfo[4], "Max texture size: (%i, %i)", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
-	String_Format1(&Gfx_ApiInfo[5], "Depth buffer format: %c",    D3D9_StrFormat(gfx_depthFormat));
-	String_Format1(&Gfx_ApiInfo[6], "Back buffer format: %c",     D3D9_StrFormat(gfx_viewFormat));
+	String_Format1(&Gfx_ApiInfo[5], "Depth buffer bits: %i", &depthBits);
 }
 
 void Gfx_UpdateApiInfo(void) {
@@ -1235,12 +1234,14 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
 static int GL_SelectRow(Bitmap* bmp, int y) { return (bmp->Height - 1) - y; }
-ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height) {
+ReturnCode Gfx_TakeScreenshot(struct Stream* output) {
 	Bitmap bmp;
 	ReturnCode res;
-
-	Bitmap_Allocate(&bmp, width, height);
-	glReadPixels(0, 0, width, height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, bmp.Scan0);
+	GLint vp[4];
+	
+	glGetIntegerv(GL_VIEWPORT, vp); /* { x, y, width, height } */
+	Bitmap_Allocate(&bmp, vp[2], vp[3]);
+	glReadPixels(0, 0, vp[2], vp[3], PIXEL_FORMAT, GL_UNSIGNED_BYTE, bmp.Scan0);
 
 	res = Png_Encode(&bmp, output, GL_SelectRow, false);
 	Mem_Free(bmp.Scan0);
