@@ -18,12 +18,12 @@ struct SelectionBox {
 #define SelectionBox_X(x) x,0,0, x,1,0, x,1,1, x,0,1,
 
 static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** faceVertices, VertexP3fC4b** edgeVertices) {
-	static uint8_t faceIndices[72] = {
+	const static uint8_t faceIndices[72] = {
 		SelectionBox_Y(0) SelectionBox_Y(1) /* YMin, YMax */
 		SelectionBox_Z(0) SelectionBox_Z(1) /* ZMin, ZMax */
 		SelectionBox_X(0) SelectionBox_X(1) /* XMin, XMax */
 	};
-	static uint8_t edgeIndices[72] = {
+	const static uint8_t edgeIndices[72] = {
 		0,0,0, 1,0,0,  1,0,0, 1,0,1,  1,0,1, 0,0,1,  0,0,1, 0,0,0, /* YMin */
 		0,1,0, 1,1,0,  1,1,0, 1,1,1,  1,1,1, 0,1,1,  0,1,1, 0,1,0, /* YMax */
 		0,0,0, 0,1,0,  1,0,0, 1,1,0,  1,0,1, 1,1,1,  0,0,1, 0,1,1, /* X/Z  */

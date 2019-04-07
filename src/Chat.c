@@ -48,6 +48,13 @@ static void Chat_AppendLogTime(void) {
 	Chat_LogTimes[Chat_LogTimesCount++] = now;
 }
 
+#ifdef CC_BUILD_WEB
+static void Chat_ResetLog(void) { }
+static void Chat_CloseLog(void) { }
+void Chat_SetLogName(const String* name) { }
+static void Chat_OpenLog(struct DateTime* now) { }
+static void Chat_AppendLog(const String* text) { }
+#else
 static char   Chat_LogNameBuffer[STRING_SIZE];
 static String Chat_LogName = String_FromArray(Chat_LogNameBuffer);
 static char   Chat_LogPathBuffer[FILENAME_SIZE];
@@ -55,6 +62,13 @@ static String Chat_LogPath = String_FromArray(Chat_LogPathBuffer);
 
 static struct Stream Chat_LogStream;
 static struct DateTime ChatLog_LastLogDate;
+
+static void Chat_ResetLog(void) {
+	Chat_LogName.length = 0;
+	ChatLog_LastLogDate.Day   = 0;
+	ChatLog_LastLogDate.Month = 0;
+	ChatLog_LastLogDate.Year  = 0;
+}
 
 static void Chat_CloseLog(void) {
 	ReturnCode res;
@@ -153,6 +167,7 @@ static void Chat_AppendLog(const String* text) {
 	Chat_DisableLogging();
 	Logger_Warn2(res, "writing to", &Chat_LogPath);
 }
+#endif
 
 void Chat_Add1(const char* format, const void* a1) {
 	Chat_Add4(format, a1, NULL, NULL, NULL);
@@ -574,11 +589,7 @@ static void Chat_Init(void) {
 
 static void Chat_Reset(void) {
 	Chat_CloseLog();
-	Chat_LogName.length = 0;
-
-	ChatLog_LastLogDate.Day   = 0;
-	ChatLog_LastLogDate.Month = 0;
-	ChatLog_LastLogDate.Year  = 0;
+	Chat_ResetLog();
 
 	/* reset CPE messages */
 	Chat_AddOf(&String_Empty, MSG_TYPE_ANNOUNCEMENT);

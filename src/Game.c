@@ -598,6 +598,7 @@ static void Game_DoScheduledTasks(double time) {
 }
 
 void Game_TakeScreenshot(void) {
+#ifndef CC_BUILD_WEB
 	String filename; char fileBuffer[STRING_SIZE];
 	String path;     char pathBuffer[FILENAME_SIZE];
 	struct DateTime now;
@@ -617,7 +618,7 @@ void Game_TakeScreenshot(void) {
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Logger_Warn2(res, "creating", &path); return; }
 
-	res = Gfx_TakeScreenshot(&stream, Game.Width, Game.Height);
+	res = Gfx_TakeScreenshot(&stream);
 	if (res) { 
 		Logger_Warn2(res, "saving to", &path); stream.Close(&stream); return;
 	}
@@ -626,6 +627,7 @@ void Game_TakeScreenshot(void) {
 	if (res) { Logger_Warn2(res, "closing", &path); return; }
 
 	Chat_Add1("&eTaken screenshot as: %s", &filename);
+#endif
 }
 
 static void Game_RenderFrame(double delta) {
