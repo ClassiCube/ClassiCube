@@ -654,10 +654,10 @@ struct LScreen* DirectConnectScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 static struct MainScreen {
 	LScreen_Layout
-	struct LButton BtnLogin, BtnResume, BtnDirect, BtnSPlayer, BtnOptions;
+	struct LButton BtnLogin, BtnResume, BtnDirect, BtnSPlayer, BtnOptions, BtnRegister;
 	struct LInput IptUsername, IptPassword;
 	struct LLabel LblStatus, LblUpdate;
-	struct LWidget* _widgets[9];
+	struct LWidget* _widgets[10];
 	bool SigningIn;
 } MainScreen_Instance;
 
@@ -732,6 +732,11 @@ static void MainScreen_Login(void* w, int x, int y) {
 	s->SigningIn = true;
 }
 
+static void MainScreen_Register(void* w, int x, int y) {
+	const static String ccUrl = String_FromConst("https://www.classicube.net/acc/register");
+	Process_StartOpen(&ccUrl);
+}
+
 static void MainScreen_Resume(void* w, int x, int y) {
 	struct ResumeInfo info;
 	MainScreen_GetResume(&info, true);
@@ -769,13 +774,15 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LScreen_Button(s_, &s->BtnSPlayer, 200, 35, "Singleplayer");
 
 	LScreen_Label(s_,  &s->LblUpdate, "");
-	LScreen_Button(s_, &s->BtnOptions, 100, 35, "Options");
+	LScreen_Button(s_, &s->BtnOptions,  100, 35, "Options");
+	LScreen_Button(s_, &s->BtnRegister, 100, 35, "Register");
 	
-	s->BtnLogin.OnClick   = MainScreen_Login;
-	s->BtnResume.OnClick  = MainScreen_Resume;
-	s->BtnDirect.OnClick  = SwitchToDirectConnect;
-	s->BtnSPlayer.OnClick = MainScreen_Singleplayer;
-	s->BtnOptions.OnClick = SwitchToSettings;
+	s->BtnLogin.OnClick    = MainScreen_Login;
+	s->BtnResume.OnClick   = MainScreen_Resume;
+	s->BtnDirect.OnClick   = SwitchToDirectConnect;
+	s->BtnSPlayer.OnClick  = MainScreen_Singleplayer;
+	s->BtnOptions.OnClick  = SwitchToSettings;
+	s->BtnRegister.OnClick = MainScreen_Register;
 
 	/* need to set text here for right size */
 	s->LblUpdate.Font = Launcher_HintFont;
@@ -803,6 +810,7 @@ static void MainScreen_Reposition(struct LScreen* s_) {
 
 	LWidget_SetLocation(&s->LblUpdate,  ANCHOR_MAX, ANCHOR_MAX,  10,  45);
 	LWidget_SetLocation(&s->BtnOptions, ANCHOR_MAX, ANCHOR_MAX,   6,   6);
+	LWidget_SetLocation(&s->BtnRegister, ANCHOR_MIN, ANCHOR_MAX,  6,   6);
 }
 
 static void MainScreen_HoverWidget(struct LScreen* s_, struct LWidget* w) {
@@ -1522,7 +1530,7 @@ static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
 		LWidget_Redraw(&s->LblStatus);
 	} else {
 		/* WebTask handles saving of ClassiCube.update for us */
-		Launcher_ShouldExit  = true;
+		Launcher_ShouldExit   = true;
 		Launcher_ShouldUpdate = true;
 	}
 }

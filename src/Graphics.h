@@ -154,7 +154,7 @@ void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix);
 void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix);
 
 /* Outputs a .png screenshot of the backbuffer. */
-ReturnCode Gfx_TakeScreenshot(struct Stream* output, int width, int height);
+ReturnCode Gfx_TakeScreenshot(struct Stream* output);
 /* Warns in chat if the backend has problems with the user's GPU. */
 /* Returns whether legacy rendering mode for borders/sky/clouds is needed. */
 bool Gfx_WarnIfNecessary(void);
