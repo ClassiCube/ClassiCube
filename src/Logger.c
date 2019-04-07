@@ -448,6 +448,7 @@ static void Logger_DumpRegisters(void* ctx) {
 	/* OSX:     See /usr/include/mach/i386/_structs.h */
 	/* Solaris: See /usr/include/sys/regset.h */
 	/* NetBSD:  See /usr/include/i386/mcontext.h */
+	/* OpenBSD: See /usr/include/machine/signal.h */
 
 #if defined __i386__
 	#if defined CC_BUILD_LINUX
@@ -639,9 +640,14 @@ void Logger_Hook(void) {
 }
 
 void Logger_Abort2(ReturnCode result, const char* raw_msg) {
+#ifdef CC_BUILD_OPENBSD
+	/* getcontext is absent on OpenBSD */
+	Logger_AbortCommon(result, raw_msg, NULL);
+#else
 	ucontext_t ctx;
 	getcontext(&ctx);
 	Logger_AbortCommon(result, raw_msg, &ctx);
+#endif
 }
 #endif
 

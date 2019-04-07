@@ -82,13 +82,13 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libgl1-m
 
 #### FreeBSD
 
-```gcc *.c -o ClassiCube -I /usr/local/include -L /usr/Xlocal/lib -lm -lpthread -lX11 -lGL -lcurl -lopenal -lexecinfo```
+```gcc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lGL -lcurl -lopenal -lexecinfo```
 
 #### OpenBSD
 
 Install libexecinfo package if needed.
 
-```gcc *.c -o ClassiCube -isystem /usr/X11R6/include -isystem /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lX11 -lGL -lcurl -lopenal -lexecinfo```
+```gcc *.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lX11 -lGL -lcurl -lopenal -lexecinfo```
 
 #### NetBSD
 
