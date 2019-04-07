@@ -25,16 +25,16 @@ CFLAGS_mingw=-w -g -pipe
 
 CC_linux=gcc
 LIBS_linux=-lX11 -lpthread -lGL -lm -lopenal -ldl -lcurl
-CFLAGS_linux=-w -g -pipe
+CFLAGS_linux=-w -g -pipe -rdynamic
 
 CC_sunos=gcc
 LIBS_sunos=-lm -lsocket -lX11 -lGL -lcurl -lopenal
-CFLAGS_sunos=-w -g -pipe
+CFLAGS_sunos=-w -g -pipe -rdynamic
 
 CC_darwin=gcc
 LIBS_darwin=-lcurl
 LDFLAGS_darwin=-framework Carbon -framework AGL -framework OpenAL -framework OpenGL
-CFLAGS_darwin=-w -g -pipe
+CFLAGS_darwin=-w -g -pipe -rdynamic
 
 BSDLIBS=-lcurl -lexecinfo -lopenal -lGL -lX11
 
@@ -42,17 +42,19 @@ CC_freebsd=clang
 LIBS_freebsd=$(BSDLIBS) -lm -lpthread
 INCDIRS_freebsd=-I /usr/local/include
 LDFLAGS_freebsd=-L /usr/local/lib
-CFLAGS_freebsd=-w -g -pipe
+CFLAGS_freebsd=-w -g -pipe -rdynamic
 
 CC_openbsd=gcc
 LIBS_openbsd=$(BSDLIBS)
 INCDIRS_openbsd=-isystem /usr/X11R6/include -isystem /usr/local/include
 LDFLAGS_openbsd=-L /usr/X11R6/lib -L /usr/local/lib
+CFLAGS_openbsd=-w -g -pipe -rdynamic
 
 CC_netbsd=gcc
 LIBS_netbsd=$(BSDLIBS)
 INCDIRS_netbsd=-I /usr/X11R7/include -I /usr/pkg/include
 LDFLAGS_netbsd=-L /usr/X11R7/lib -L /usr/pkg/lib
+CFLAGS_netbsd=-w -g -pipe -rdynamic
 
 ifeq ($(OS),Windows_NT)
 DEL=del
