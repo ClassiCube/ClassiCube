@@ -1399,7 +1399,9 @@ static void Gfx_GenFragmentShader(const struct GLShader* shader, String* dst) {
 	int fd = shader->Features & FTR_DENSIT_FOG;
 	int fm = shader->Features & FTR_HASANY_FOG;
 
+#ifdef CC_BUILD_GLES
 	String_AppendConst(dst,         "precision highp float;\n");
+#endif
 	String_AppendConst(dst,         "varying vec4 out_col;\n");
 	if (uv) String_AppendConst(dst, "varying vec2 out_uv;\n");
 	if (uv) String_AppendConst(dst, "uniform sampler2D texImage;\n");
@@ -1613,7 +1615,12 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 	}
 }
 
-static void GL_CheckSupport(void) { }
+static void GL_CheckSupport(void) {
+#ifndef CC_BUILD_GLES
+	Gfx.CustomMipmapsLevels = true;
+#endif
+}
+
 static void GL_InitState(void) {
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
