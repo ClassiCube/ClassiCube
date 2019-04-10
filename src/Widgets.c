@@ -1694,9 +1694,10 @@ static void ChatInputWidget_DownKey(struct InputWidget* w) {
 
 	if (InputWidget_ControlDown()) {
 		lines = w->GetMaxLines();
-		if (w->CaretPos == -1 || w->CaretPos >= (lines - 1) * INPUTWIDGET_LEN) return;
+		if (w->CaretPos == -1) return;
 
 		w->CaretPos += INPUTWIDGET_LEN;
+		if (w->CaretPos >= w->Text.length) { w->CaretPos = -1; }
 		InputWidget_UpdateCaret(w);
 		return;
 	}
