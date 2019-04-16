@@ -40,23 +40,21 @@ static void Window_RegrabMouse(void) {
 	Window_CentreMousePosition();
 }
 
-#if !defined(CC_BUILD_SDL) && !defined(CC_BUILD_WEBCANVAS)
-void Window_EnableRawMouse(void) {
+static void Window_DefaultEnableRawMouse(void) {
 	Window_RegrabMouse();
 	Cursor_SetVisible(false);
 }
 
-void Window_UpdateRawMouse(void) {
+static void Window_DefaultUpdateRawMouse(void) {
 	Point2D p = Cursor_GetScreenPos();
 	Event_RaiseMouseMove(&MouseEvents.RawMoved, p.X - cursorPrev.X, p.Y - cursorPrev.Y);
 	Window_CentreMousePosition();
 }
 
-void Window_DisableRawMouse(void) {
+static void Window_DefaultDisableRawMouse(void) {
 	Window_RegrabMouse();
 	Cursor_SetVisible(true);
 }
-#endif
 
 
 /*########################################################################################################################*
@@ -658,6 +656,10 @@ void Window_DrawRaw(Rect2D r) {
 	BOOL success = BitBlt(win_DC, r.X, r.Y, r.Width, r.Height, draw_DC, r.X, r.Y, SRCCOPY);
 	SelectObject(draw_DC, oldSrc);
 }
+
+void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
+void Window_UpdateRawMouse(void)  { Window_DefaultUpdateRawMouse();  }
+void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 #endif
 
 
@@ -1554,6 +1556,10 @@ void Window_DrawRaw(Rect2D r) {
 	XPutImage(win_display, win_handle, win_gc, win_image,
 		r.X, r.Y, r.X, r.Y, r.Width, r.Height);
 }
+
+void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
+void Window_UpdateRawMouse(void)  { Window_DefaultUpdateRawMouse();  }
+void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 #endif
 
 
@@ -2184,6 +2190,10 @@ void Window_DrawRaw(Rect2D r) {
 	CGImageRelease(win_image);
 	CGDataProviderRelease(provider);
 }
+
+void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
+void Window_UpdateRawMouse(void)  { Window_DefaultUpdateRawMouse();  }
+void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 #endif
 
 
@@ -2524,10 +2534,7 @@ void Window_EnableRawMouse(void) {
 	SDL_SetRelativeMouseMode(true);
 	win_rawMouse = true;
 }
-
-void Window_UpdateRawMouse(void) {
-	Window_CentreMousePosition();
-}
+void Window_UpdateRawMouse(void) { Window_CentreMousePosition(); }
 
 void Window_DisableRawMouse(void) {
 	Window_RegrabMouse();

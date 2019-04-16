@@ -404,8 +404,8 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 	if (!Convert_ParseUInt8(&s->IptColours[index + 1].Text, &g)) return;
 	if (!Convert_ParseUInt8(&s->IptColours[index + 2].Text, &b)) return;
 
-	Launcher_SaveSkin();
 	col->R = r; col->G = g; col->B = b;
+	Launcher_SaveSkin();
 	Launcher_Redraw();
 }
 

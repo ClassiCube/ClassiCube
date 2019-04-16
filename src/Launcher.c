@@ -308,6 +308,7 @@ void Launcher_LoadSkin(void) {
 CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
 	String value; char valueBuffer[8];
 	PackedCol tmp;
+	/* Component order might be different to BitmapCol */
 	tmp.R = col.R; tmp.G = col.G; tmp.B = col.B; tmp.A = 0;
 	
 	String_InitArray(value, valueBuffer);
