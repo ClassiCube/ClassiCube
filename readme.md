@@ -100,6 +100,10 @@ Install libexecinfo package if needed.
 
 NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
 
+#### Web
+
+```emcc *.c -s FETCH=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file texpacks/default.zip```
+
 #### Other
 
 You'll have to write the necessary code. You should read portability.md in misc folder.
