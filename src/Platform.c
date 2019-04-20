@@ -593,7 +593,13 @@ ReturnCode File_Write(FileHandle file, const uint8_t* buffer, uint32_t count, ui
 }
 
 ReturnCode File_Close(FileHandle file) {
+#ifndef CC_BUILD_WEB
 	return close(file) == -1 ? errno : 0;
+#else
+	int ret = close(file) == -1 ? errno : 0;
+	EM_ASM( FS.syncfs(false, function(err) { if (err) console.log(err); }); );
+	return ret;
+#endif
 }
 
 ReturnCode File_Seek(FileHandle file, int offset, int seekType) {
@@ -1373,9 +1379,24 @@ ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port) {
 }
 
 ReturnCode Socket_Read(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified) {
+#ifdef CC_BUILD_WEB
+	/* recv only reads one WebSocket frame at most, hence call it multiple times */
+	int recvCount = 0, pending;
+	*modified = 0;
+
+	while (count && !Socket_Available(socket, &pending) && pending) {
+		recvCount = recv(socket, buffer, count, 0);
+		if (recvCount == -1) return Socket__Error();
+
+		*modified += recvCount;
+		buffer    += recvCount; count -= recvCount;
+	}
+	return 0;
+#else
 	int recvCount = recv(socket, buffer, count, 0);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
 	*modified = 0; return Socket__Error();
+#endif
 }
 
 ReturnCode Socket_Write(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified) {
@@ -1929,5 +1950,11 @@ void Platform_Init(void) {
 	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
 }
 #elif defined CC_BUILD_WEB
-void Platform_Init(void) { }
+void Platform_Init(void) {
+	EM_ASM(
+		FS.mkdir('/classicube');
+		FS.mount(IDBFS, {}, '/classicube');
+		FS.syncfs(true, function(err) { if (err) console.log(err); });
+	);
+}
 #endif

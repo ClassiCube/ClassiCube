@@ -1149,7 +1149,9 @@ ReturnCode Cw_Save(struct Stream* stream) {
 	if ((res = Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + len))) return res;
 
 	if ((res = Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs)))) return res;
-	for (b = 1; b < BLOCK_COUNT; b++) {
+	/* Write block definitions in reverse order so that software that only reads byte 'ID' */
+	/* still loads correct first 256 block defs when saving a map with over 256 block defs */
+	for (b = BLOCK_MAX_DEFINED; b >= 1; b--) {
 		if (!Block_IsCustomDefined(b)) continue;
 		if ((res = Cw_WriteBockDef(stream, b))) return res;
 	}

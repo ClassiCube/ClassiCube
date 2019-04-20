@@ -44,10 +44,12 @@ static void Program_RunGame(void) {
 	String title; char titleBuffer[STRING_SIZE];
 	int width, height;
 
+#ifndef CC_BUILD_WEB
 	if (!File_Exists(&defPath)) {
 		Window_ShowDialog("Missing file",
 			"default.zip is missing, try downloading resources first.\n\nThe game will still run, but without any textures");
 	}
+#endif
 
 	width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, Display_Bounds.Width,  0);
 	height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, Display_Bounds.Height, 0);
@@ -65,12 +67,16 @@ static void Program_RunGame(void) {
 
 /* Attempts to set current/working directory to the directory exe file is in */
 static void Program_SetCurrentDirectory(void) {
-#ifndef CC_BUILD_WEB
 	String path; char pathBuffer[FILENAME_SIZE];
 	int i;
 	ReturnCode res;
 	String_InitArray(path, pathBuffer);
 
+#ifdef CC_BUILD_WEB
+	String_AppendConst(&path, "/classicube");
+	res = Platform_SetCurrentDirectory(&path);
+	if (res) { Logger_Warn(res, "setting current directory"); return; }
+#else
 	res = Process_GetExePath(&path);
 	if (res) { Logger_Warn(res, "getting exe path"); return; }
 
@@ -134,9 +140,9 @@ int main(int argc, char** argv) {
 
 	argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
+	String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565");
 	/* String rawArgs = String_FromConst("UnknownShadow200"); */
-	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
+	argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4);
 
 	if (argsCount == 0) {
 #ifdef CC_BUILD_WEB

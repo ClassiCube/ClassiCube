@@ -640,6 +640,15 @@ void TexturePack_ExtractZip_File(const String* filename) {
 	struct Stream stream;
 	ReturnCode res;
 
+	/* TODO: This is an ugly hack to load textures from memory. */
+	/* We need to mount /classicube to IndexedDB, but texpacks folder */
+	/* should be read from memory. I don't know how to do that, */
+	/* since mounting /classicube/texpacks to memory doesn't work.. */
+#ifdef CC_BUILD_WEB
+	String memPath = String_FromConst("/");
+	Platform_SetCurrentDirectory(&memPath);
+#endif
+
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "texpacks/%s", filename);
 
@@ -651,6 +660,11 @@ void TexturePack_ExtractZip_File(const String* filename) {
 
 	res = stream.Close(&stream);
 	if (res) { Logger_Warn2(res, "closing", &path); }
+
+#ifdef CC_BUILD_WEB
+	String idbPath = String_FromConst("/classicube");
+	Platform_SetCurrentDirectory(&idbPath);
+#endif
 }
 
 ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {

@@ -2573,7 +2573,9 @@ static void Window_CorrectFocus(void) {
 }
 
 static EM_BOOL Window_MouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
-	Mouse_SetWheel(Mouse_Wheel - ev->deltaY);
+	/* On my laptop, wheel movement of '1' is reported as '6.666666507' */
+	/* TODO: Verify this is the case on other platforms */
+	Mouse_SetWheel(Mouse_Wheel - ev->deltaY / 6.666666507f);
 	Window_CorrectFocus();
 	return true;
 }
