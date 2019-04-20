@@ -73,9 +73,11 @@ void Logger_OldWarn2(ReturnCode res, const char* place, const String* path) {
 /* Returns a description for ClassiCube specific error codes */
 static const char* Logger_GetCCErrorDesc(ReturnCode res) {
 	switch (res) {
-	case ERR_END_OF_STREAM:   return "End of stream";
-	case OGG_ERR_INVALID_SIG: return "Invalid OGG signature";
-	case OGG_ERR_VERSION:     return "Invalid OGG format version";
+	case ERR_END_OF_STREAM:    return "End of stream";
+	case ERR_NOT_SUPPORTED:    return "Operation not supported";
+	case ERR_INVALID_ARGUMENT: return "Invalid argument";
+	case OGG_ERR_INVALID_SIG:  return "Invalid OGG signature";
+	case OGG_ERR_VERSION:      return "Invalid OGG format version";
 
 	case WAV_ERR_STREAM_HDR:  return "Invalid WAV header";
 	case WAV_ERR_STREAM_TYPE: return "Invalid WAV type";

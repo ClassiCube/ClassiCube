@@ -27,10 +27,8 @@ enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_E
 extern const char* Platform_NewLine;
 extern const ReturnCode ReturnCode_FileShareViolation;
 extern const ReturnCode ReturnCode_FileNotFound;
-extern const ReturnCode ReturnCode_NotSupported;
 extern const ReturnCode ReturnCode_SocketInProgess;
 extern const ReturnCode ReturnCode_SocketWouldBlock;
-extern const ReturnCode ReturnCode_InvalidArg;
 
 /* Encodes a string in platform specific format. (e.g. unicode on windows, UTF8 on linux) */
 /* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. */

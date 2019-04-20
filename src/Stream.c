@@ -37,10 +37,10 @@ ReturnCode Stream_Write(struct Stream* s, const uint8_t* buffer, uint32_t count)
 }
 
 static ReturnCode Stream_DefaultRead(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
-	return ReturnCode_NotSupported;
+	return ERR_NOT_SUPPORTED;
 }
 static ReturnCode Stream_DefaultWrite(struct Stream* s, const uint8_t* data, uint32_t count, uint32_t* modified) {
-	return ReturnCode_NotSupported;
+	return ERR_NOT_SUPPORTED;
 }
 ReturnCode Stream_DefaultReadU8(struct Stream* s, uint8_t* data) {
 	uint32_t modified;
@@ -64,10 +64,10 @@ static ReturnCode Stream_DefaultSkip(struct Stream* s, uint32_t count) {
 }
 
 static ReturnCode Stream_DefaultSeek(struct Stream* s, uint32_t pos) {
-	return ReturnCode_NotSupported; 
+	return ERR_NOT_SUPPORTED;
 }
 static ReturnCode Stream_DefaultGet(struct Stream* s, uint32_t* value) { 
-	return ReturnCode_NotSupported; 
+	return ERR_NOT_SUPPORTED;
 }
 static ReturnCode Stream_DefaultClose(struct Stream* s) { return 0; }
 
@@ -179,7 +179,7 @@ static ReturnCode Stream_PortionSkip(struct Stream* s, uint32_t count) {
 	struct Stream* source;
 	ReturnCode res;
 
-	if (count > s->Meta.Portion.Left) return ReturnCode_InvalidArg;
+	if (count > s->Meta.Portion.Left) return ERR_INVALID_ARGUMENT;
 	source = s->Meta.Portion.Source;
 
 	res = source->Skip(source, count);
@@ -241,7 +241,7 @@ static ReturnCode Stream_MemoryWrite(struct Stream* s, const uint8_t* data, uint
 }
 
 static ReturnCode Stream_MemorySkip(struct Stream* s, uint32_t count) {
-	if (count > s->Meta.Mem.Left) return ReturnCode_InvalidArg;
+	if (count > s->Meta.Mem.Left) return ERR_INVALID_ARGUMENT;
 
 	s->Meta.Mem.Cur  += count; 
 	s->Meta.Mem.Left -= count;
@@ -249,7 +249,7 @@ static ReturnCode Stream_MemorySkip(struct Stream* s, uint32_t count) {
 }
 
 static ReturnCode Stream_MemorySeek(struct Stream* s, uint32_t position) {
-	if (position >= s->Meta.Mem.Length) return ReturnCode_InvalidArg;
+	if (position >= s->Meta.Mem.Length) return ERR_INVALID_ARGUMENT;
 
 	s->Meta.Mem.Cur  = s->Meta.Mem.Base   + position;
 	s->Meta.Mem.Left = s->Meta.Mem.Length - position;

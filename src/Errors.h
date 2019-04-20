@@ -7,7 +7,7 @@
 /* NOTE: When changing these, remember to keep Logger.C up to date! */
 enum ERRORS_ALL {
 	ERROR_BASE = 0xCCDED000UL,
-	ERR_END_OF_STREAM,
+	ERR_END_OF_STREAM, ERR_NOT_SUPPORTED, ERR_INVALID_ARGUMENT,
 
 	/* Ogg stream decoding errors */
 	OGG_ERR_INVALID_SIG, OGG_ERR_VERSION,

@@ -734,7 +734,7 @@ CC_NOINLINE static bool Fetcher_Get(const String* id, struct HttpRequest* req) {
 		Fetcher_Finish();
 		return false;
 	} else if (!req->Data) {
-		Fetcher_Error = ReturnCode_InvalidArg;
+		Fetcher_Error = ERR_INVALID_ARGUMENT;
 		Fetcher_Finish();
 		return false;
 	}

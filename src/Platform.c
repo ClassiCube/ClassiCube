@@ -7,6 +7,7 @@
 #include "Bitmap.h"
 #include "Window.h"
 #include "Utils.h"
+#include "Errors.h"
 #define CC_BUILD_FREETYPE
 
 #if defined CC_BUILD_WIN
@@ -37,9 +38,7 @@ static HANDLE heap;
 const char* Platform_NewLine = "\r\n";
 
 const ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
-const ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
-const ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
-const ReturnCode ReturnCode_InvalidArg   = ERROR_INVALID_PARAMETER;
+const ReturnCode ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
 const ReturnCode ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #elif defined CC_BUILD_POSIX
@@ -68,9 +67,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 const char* Platform_NewLine = "\n";
 
 const ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-const ReturnCode ReturnCode_FileNotFound = ENOENT;
-const ReturnCode ReturnCode_NotSupported = EPERM;
-const ReturnCode ReturnCode_InvalidArg   = EINVAL;
+const ReturnCode ReturnCode_FileNotFound     = ENOENT;
 const ReturnCode ReturnCode_SocketInProgess  = EINPROGRESS;
 const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
@@ -1353,7 +1350,7 @@ ReturnCode Socket_Available(SocketHandle socket, uint32_t* available) {
 }
 ReturnCode Socket_SetBlocking(SocketHandle socket, bool blocking) {
 #if defined CC_BUILD_WEB
-	return ReturnCode_NotSupported; /* sockets always async */
+	return ERR_NOT_SUPPORTED; /* sockets always async */
 #else
 	int blocking_raw = blocking ? 0 : -1;
 	return Socket_ioctl(socket, FIONBIO, &blocking_raw);
@@ -1545,8 +1542,8 @@ bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
 	return Platform_DescribeError(res, dst);
 }
 #elif defined CC_BUILD_WEB
-ReturnCode Process_GetExePath(String* path) { return ReturnCode_NotSupported; }
-ReturnCode Process_Start(const String* path, const String* args) { return ReturnCode_NotSupported; }
+ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
+ReturnCode Process_Start(const String* path, const String* args) { return ERR_NOT_SUPPORTED; }
 
 ReturnCode Process_StartOpen(const String* args) {
 	char str[600];
@@ -1555,8 +1552,8 @@ ReturnCode Process_StartOpen(const String* args) {
 }
 void Process_Exit(ReturnCode code) { exit(code); }
 
-ReturnCode DynamicLib_Load(const String* path, void** lib) { return ReturnCode_NotSupported; }
-ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) { return ReturnCode_NotSupported; }
+ReturnCode DynamicLib_Load(const String* path, void** lib) { return ERR_NOT_SUPPORTED; }
+ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) { return ERR_NOT_SUPPORTED; }
 bool DynamicLib_DescribeError(ReturnCode res, String* dst) { return false; }
 #elif defined CC_BUILD_POSIX
 ReturnCode Process_Start(const String* path, const String* args) {
@@ -1623,7 +1620,7 @@ ReturnCode Process_GetExePath(String* path) {
 	char str[600];
 	int len = 600;
 
-	if (_NSGetExecutablePath(str, &len) != 0) return ReturnCode_InvalidArg;
+	if (_NSGetExecutablePath(str, &len)) return ERR_INVALID_ARGUMENT;
 	Convert_DecodeUtf8(path, str, len);
 	return 0;
 }
@@ -1906,10 +1903,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 }
 
 ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* encLen) {
-	return ReturnCode_NotSupported;
+	return ERR_NOT_SUPPORTED;
 }
 ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen) {
-	return ReturnCode_NotSupported;
+	return ERR_NOT_SUPPORTED;
 }
 
 bool Platform_DescribeError(ReturnCode res, String* dst) {

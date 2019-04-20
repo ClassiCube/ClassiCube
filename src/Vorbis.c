@@ -1103,7 +1103,7 @@ static ReturnCode Vorbis_CheckHeader(struct VorbisState* ctx, uint8_t type) {
 	OK = 
 		header[1] == 'v' && header[2] == 'o' && header[3] == 'r' &&
 		header[4] == 'b' && header[5] == 'i' && header[6] == 's';
-	return OK ? 0 : ReturnCode_InvalidArg;
+	return OK ? 0 : ERR_INVALID_ARGUMENT;
 }
 
 static ReturnCode Vorbis_DecodeIdentifier(struct VorbisState* ctx) {
