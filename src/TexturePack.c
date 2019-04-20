@@ -18,6 +18,7 @@
 #include "Options.h"
 #include "Logger.h"
 
+#ifndef CC_BUILD_WEB
 #define LIQUID_ANIM_MAX 64
 /* Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
 	mirrored at https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-lava-animation-algorithm
@@ -143,6 +144,7 @@ static void WaterAnimation_Tick(BitmapCol* ptr, int size) {
 		}
 	}
 }
+#endif
 
 
 /*########################################################################################################################*
@@ -237,11 +239,13 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 	Bitmap_Init(frame, size, size, ptr);
 
 	if (!data) {
+#ifndef CC_BUILD_WEB
 		if (texLoc == 30) {
 			LavaAnimation_Tick((BitmapCol*)frame.Scan0, size);
 		} else if (texLoc == 14) {
 			WaterAnimation_Tick((BitmapCol*)frame.Scan0, size);
 		}
+#endif
 	} else {
 		srcX = data->FrameX + data->State * size;
 		Bitmap_CopyBlock(srcX, data->FrameY, 0, 0, &anims_bmp, &frame, size);
@@ -262,8 +266,10 @@ static void Animations_Apply(struct AnimationData* data) {
 	data->Tick   = data->TickDelay;
 
 	loc = data->TexLoc;
+#ifndef CC_BUILD_WEB
 	if (loc == 30 && anims_useLavaAnim) return;
 	if (loc == 14 && anims_useWaterAnim) return;
+#endif
 	Animations_Draw(data, loc, data->FrameSize);
 }
 
@@ -316,6 +322,7 @@ static void Animations_Validate(void) {
 static void Animations_Tick(struct ScheduledTask* task) {
 	int i, size;
 
+#ifndef CC_BUILD_WEB
 	if (anims_useLavaAnim) {
 		size = min(Atlas2D.TileSize, 64);
 		Animations_Draw(NULL, 30, size);
@@ -324,6 +331,7 @@ static void Animations_Tick(struct ScheduledTask* task) {
 		size = min(Atlas2D.TileSize, 64);
 		Animations_Draw(NULL, 14, size);
 	}
+#endif
 
 	if (!anims_count) return;
 	if (!anims_bmp.Scan0) {

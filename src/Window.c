@@ -4,6 +4,7 @@
 #include "Event.h"
 #include "Logger.h"
 #include "Funcs.h"
+#include "ExtMath.h"
 
 int Display_BitsPerPixel;
 Rect2D Display_Bounds;
@@ -2573,9 +2574,8 @@ static void Window_CorrectFocus(void) {
 }
 
 static EM_BOOL Window_MouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
-	/* On my laptop, wheel movement of '1' is reported as '6.666666507' */
-	/* TODO: Verify this is the case on other platforms */
-	Mouse_SetWheel(Mouse_Wheel - ev->deltaY / 6.666666507f);
+	/* TODO: The scale factor isn't standardised.. is there a better way though? */
+	Mouse_SetWheel(Mouse_Wheel - Math_Sign(ev->deltaY));
 	Window_CorrectFocus();
 	return true;
 }
@@ -2734,7 +2734,7 @@ static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void
 }
 
 static void Window_HookEvents(void) {
-	emscripten_set_wheel_callback("#canvas",     NULL, 0, Window_MouseWheel);
+	emscripten_set_wheel_callback("#window",     NULL, 0, Window_MouseWheel);
 	emscripten_set_mousedown_callback("#canvas", NULL, 0, Window_MouseButton);
 	emscripten_set_mouseup_callback("#canvas",   NULL, 0, Window_MouseButton);
 	emscripten_set_mousemove_callback("#canvas", NULL, 0, Window_MouseMove);
@@ -2752,7 +2752,7 @@ static void Window_HookEvents(void) {
 }
 
 static void Window_UnhookEvents(void) {
-	emscripten_set_wheel_callback("#canvas",     NULL, 0, NULL);
+	emscripten_set_wheel_callback("#window",     NULL, 0, NULL);
 	emscripten_set_mousedown_callback("#canvas", NULL, 0, NULL);
 	emscripten_set_mouseup_callback("#canvas",   NULL, 0, NULL);
 	emscripten_set_mousemove_callback("#canvas", NULL, 0, NULL);

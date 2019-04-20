@@ -743,7 +743,7 @@ static void Http_WorkerLoop(void) {
 #ifdef CC_BUILD_WEB
 /* Access to XMLHttpRequest at 'http://static.classicube.net' from origin 'http://www.classicube.net' has been blocked by CORS policy: */
 /* No 'Access-Control-Allow-Origin' header is present on the requested resource. */
-const static String skinServer = String_FromConst("http://www.classicube.net/static/skins/");
+const static String skinServer = String_FromConst("/static/skins/");
 #else
 const static String skinServer = String_FromConst("http://static.classicube.net/skins/");
 #endif

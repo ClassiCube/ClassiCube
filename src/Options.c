@@ -123,6 +123,10 @@ void Options_SetString(const String* key, const String* value) {
 		EntryList_Set(&Options, key, value);
 	}
 
+#ifdef CC_BUILD_WEB
+	Options_Save();
+#endif
+
 	if (Options_HasChanged(key)) return;
 	StringsBuffer_Add(&Options_Changed, key);
 }
