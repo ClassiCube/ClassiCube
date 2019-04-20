@@ -61,7 +61,7 @@ static void Program_RunGame(void) {
 	}
 
 	String_InitArray(title, titleBuffer);
-	String_Format2(&title, "%c (%s)", GAME_APP_NAME, &Game_Username);
+	String_Format2(&title, "%c (%s)", GAME_APP_TITLE, &Game_Username);
 	Game_Run(width, height, &title);
 }
 
@@ -140,9 +140,9 @@ int main(int argc, char** argv) {
 
 	argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565");
+	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
 	/* String rawArgs = String_FromConst("UnknownShadow200"); */
-	argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4);
+	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
 
 	if (argsCount == 0) {
 #ifdef CC_BUILD_WEB

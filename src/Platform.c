@@ -1951,10 +1951,25 @@ void Platform_Init(void) {
 }
 #elif defined CC_BUILD_WEB
 void Platform_Init(void) {
-	EM_ASM(
+	EM_ASM( Module['websocket']['subprotocol'] = 'ClassiCube'; );
+	/* NOTE: You must load IndexedDB before main() */
+	/* (because the callback to FS.synfc is asynchronous) */
+	/* If you don't, you'll get errors later trying to sync local to remote */
+
+	/*
+	function preloadIndexedDB() {
+		addRunDependency('load-idb');
 		FS.mkdir('/classicube');
 		FS.mount(IDBFS, {}, '/classicube');
-		FS.syncfs(true, function(err) { if (err) console.log(err); });
-	);
+		FS.syncfs(true, function(err) { 
+			assert(!err); 
+			removeRunDependency('load-idb');
+		})
+	}
+
+	var Module = {
+		preRun: [ preloadIndexedDB ],
+		......
+	*/
 }
 #endif

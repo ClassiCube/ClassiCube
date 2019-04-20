@@ -214,7 +214,7 @@ static void Launcher_Free(void) {
 }
 
 void Launcher_Run(void) {
-	const static String title = String_FromConst(GAME_APP_NAME);
+	const static String title = String_FromConst(GAME_APP_TITLE);
 	Window_CreateSimple(640, 400);
 	Window_SetTitle(&title);
 	Window_SetVisible(true);

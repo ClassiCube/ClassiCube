@@ -2,6 +2,8 @@
 #include "Platform.h"
 #include "Utils.h"
 #include <math.h>
+/* For abs(x) function */
+#include <stdlib.h>
 
 /* TODO: Replace with own functions that don't rely on <math> */
 
