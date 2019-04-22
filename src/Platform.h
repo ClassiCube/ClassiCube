@@ -40,9 +40,9 @@ void Platform_Init(void);
 void Platform_Free(void);
 /* Sets current/working directory to the given directory. */
 /* This is the 'base directory' relative paths are relative to. */
-ReturnCode Platform_SetCurrentDirectory(const String* path);
+CC_API ReturnCode Platform_SetCurrentDirectory(const String* path);
 /* Marks a file as being executable. */
-ReturnCode Platform_MarkExecutable(const String* path);
+CC_API ReturnCode Platform_MarkExecutable(const String* path);
 
 /* Gets the command line arguments passed to the program. */
 int  Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args);
@@ -58,14 +58,14 @@ describe exists (e.g. DynamicLib_DescribeError), that should be preferred. */
 bool Platform_DescribeError(ReturnCode res, String* dst);
 
 /* Returns the full path of the application's executable. */
-ReturnCode Process_GetExePath(String* path);
+CC_API ReturnCode Process_GetExePath(String* path);
 /* Starts the given program with the given arguments. */
-ReturnCode Process_Start(const String* path, const String* args);
+CC_API ReturnCode Process_Start(const String* path, const String* args);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
-ReturnCode Process_StartOpen(const String* args);
-/* Exits the process with the given return code .*/
-void Process_Exit(ReturnCode code);
+CC_API ReturnCode Process_StartOpen(const String* args);
+/* Terminates the process with the given return code. */
+CC_API void Process_Exit(ReturnCode code);
 
 /* Attempts to load a native dynamic library from the given path. */
 CC_API ReturnCode DynamicLib_Load(const String* path, void** lib);
@@ -104,32 +104,32 @@ void Platform_Log3(const char* format, const void* a1, const void* a2, const voi
 void Platform_Log4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
 /* Returns the current UTC time, as number of milliseconds since 1/1/0001 */
-TimeMS DateTime_CurrentUTC_MS(void);
+CC_API TimeMS DateTime_CurrentUTC_MS(void);
 /* Returns the current UTC Time. */
 /* NOTE: Generally DateTime_CurrentUTC_MS should be used instead. */
-void DateTime_CurrentUTC(struct DateTime* time);
+CC_API void DateTime_CurrentUTC(struct DateTime* time);
 /* Returns the current local Time. */
-void DateTime_CurrentLocal(struct DateTime* time);
+CC_API void DateTime_CurrentLocal(struct DateTime* time);
 /* Takes a platform-specific stopwatch measurement. */
 /* NOTE: The value returned is platform-specific - do NOT try to interpret the value. */
-uint64_t Stopwatch_Measure(void);
+CC_API uint64_t Stopwatch_Measure(void);
 /* Returns total elapsed microseconds between two stopwatch measurements. */
-uint64_t Stopwatch_ElapsedMicroseconds(uint64_t beg, uint64_t end);
+CC_API uint64_t Stopwatch_ElapsedMicroseconds(uint64_t beg, uint64_t end);
 
 /* Returns whether the given directory exists. */
-bool Directory_Exists(const String* path);
+CC_API bool Directory_Exists(const String* path);
 /* Attempts to create a new directory. */
-ReturnCode Directory_Create(const String* path);
+CC_API ReturnCode Directory_Create(const String* path);
 /* Callback function invoked for each file found. */
 typedef void Directory_EnumCallback(const String* filename, void* obj);
 /* Invokes a callback function on all filenames in the given directory (and its sub-directories) */
-ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback callback);
+CC_API ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback callback);
 /* Returns whether the given file exists. */
-bool File_Exists(const String* path);
+CC_API bool File_Exists(const String* path);
 /* Returns the last time the file was modified, as number of milliseconds since 1/1/0001 */
-ReturnCode File_GetModifiedTime(const String* path, TimeMS* ms);
+CC_API ReturnCode File_GetModifiedTime(const String* path, TimeMS* ms);
 /* Sets the last time the file was modified, as number of milliseconds since 1/1/0001 */
-ReturnCode File_SetModifiedTime(const String* path, TimeMS ms);
+CC_API ReturnCode File_SetModifiedTime(const String* path, TimeMS ms);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 /* NOTE: If the file already exists, its contents are discarded. */
@@ -199,25 +199,25 @@ int Platform_FontHeight(const FontDesc* font);
 int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow);
 
 /* Allocates a new socket. */
-void Socket_Create(SocketHandle* socket);
+CC_API void Socket_Create(SocketHandle* socket);
 /* Returns how much data is available to be read from the given socket. */
-ReturnCode Socket_Available(SocketHandle socket, uint32_t* available);
+CC_API ReturnCode Socket_Available(SocketHandle socket, uint32_t* available);
 /* Sets whether operations on the given socket block the calling thread. */
 /* e.g. if blocking is on, calling Connect() blocks until a response is received. */
-ReturnCode Socket_SetBlocking(SocketHandle socket, bool blocking);
+CC_API ReturnCode Socket_SetBlocking(SocketHandle socket, bool blocking);
 /* Returns (and resets) the last error generated by the given socket. */
-ReturnCode Socket_GetError(SocketHandle socket, ReturnCode* result);
+CC_API ReturnCode Socket_GetError(SocketHandle socket, ReturnCode* result);
 
 /* Attempts to initalise a connection to the given IP address:port. */
-ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port);
+CC_API ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port);
 /* Attempts to read data from the given socket. */
-ReturnCode Socket_Read(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified);
+CC_API ReturnCode Socket_Read(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified);
 /* Attempts to write data to the given socket. */
-ReturnCode Socket_Write(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified);
+CC_API ReturnCode Socket_Write(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified);
 /* Attempts to close the given socket. */
-ReturnCode Socket_Close(SocketHandle socket);
+CC_API ReturnCode Socket_Close(SocketHandle socket);
 /* Attempts to poll the given socket for readability or writability. */
 /* NOTE: A closed socket is still considered readable. */
 /* NOTE: A socket is considered writable once it has finished connecting. */
-ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success);
+CC_API ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success);
 #endif

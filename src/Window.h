@@ -53,13 +53,13 @@ void Window_CreateSimple(int width, int height);
 /* Creates the window as the given size at the given position on screen. */
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode);
 /* Sets the text of the titlebar above the window. */
-void Window_SetTitle(const String* title);
+CC_API void Window_SetTitle(const String* title);
 /* Gets the text currently on the clipboard. */
 /* NOTE: You MUST have created the window beforehand. (necessary for X11) */
-void Window_GetClipboardText(String* value);
+CC_API void Window_GetClipboardText(String* value);
 /* Sets the text currently on the clipboard. */
 /* NOTE: You MUST have created the window beforehand. (necessary for X11) */
-void Window_SetClipboardText(const String* value);
+CC_API void Window_SetClipboardText(const String* value);
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
 /* Whether the window is actually valid (i.e. not destroyed). */

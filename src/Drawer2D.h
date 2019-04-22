@@ -34,42 +34,42 @@ bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height);
 
 /* Fills the given area with a simple noisy pattern. */
 /* Variation determines how 'visible/obvious' the noise is. */
-void Gradient_Noise(Bitmap* bmp, BitmapCol col, int variation,
-					int x, int y, int width, int height);
+CC_API void Gradient_Noise(Bitmap* bmp, BitmapCol col, int variation,
+						   int x, int y, int width, int height);
 /* Fills the given area with a vertical gradient, linerarly interpolating from a to b. */
 /* First drawn row is filled with 'a', while last drawn is filled with 'b'. */
-void Gradient_Vertical(Bitmap* bmp, BitmapCol a, BitmapCol b,
-					   int x, int y, int width, int height);
+CC_API void Gradient_Vertical(Bitmap* bmp, BitmapCol a, BitmapCol b,
+							  int x, int y, int width, int height);
 /* Blends the given area with the given colour. */
 /* Note that this only blends RGB, A is not blended. */
-void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
-					int x, int y, int width, int height);
+CC_API void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
+						   int x, int y, int width, int height);
 /* Tints the given area, linearly interpolating from a to b. */
 /* Note that this only tints RGB, A is not tinted. */
-void Gradient_Tint(Bitmap* bmp, uint8_t tintA, uint8_t tintB,
-				   int x, int y, int width, int height);
+CC_API void Gradient_Tint(Bitmap* bmp, uint8_t tintA, uint8_t tintB,
+						  int x, int y, int width, int height);
 
 /* Fills the given area using pixels from an indexed bitmap. */
 /* TODO: Currently this only handles square areas. */
-void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
-						 uint8_t* indices, BitmapCol* palette);
+CC_API void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
+								uint8_t* indices, BitmapCol* palette);
 /* Fills the given area using pixels from a region in the source bitmap, by repeatedly tiling the region. */
 /* The pixels from the region are then scaled upwards or downwards depending on scale width and height. */
-void Drawer2D_BmpScaled(Bitmap* dst, int x, int y, int width, int height,
-						Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight,
-						int scaleWidth, int scaleHeight);
+CC_API void Drawer2D_BmpScaled(Bitmap* dst, int x, int y, int width, int height,
+							   Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight,
+							   int scaleWidth, int scaleHeight);
 /* Fills the given area using pixels from a region in the source bitmap, by repeatedly tiling the region. */
 /* For example, if area was 12x5 and region was 5x5, region gets drawn at (0,0), (5,0), (10,0) */
 /* NOTE: The tiling origin is at (0, 0) not at (x, y) */
-void Drawer2D_BmpTiled(Bitmap* dst, int x, int y, int width, int height,
-					   Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight);
+CC_API void Drawer2D_BmpTiled(Bitmap* dst, int x, int y, int width, int height,
+							  Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight);
 /* Fills the given area using pixels from the source bitmap. */
-void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src);
+CC_API void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src);
 
 /* Fills the given area with the given colour, then draws blended borders around it. */
-void Drawer2D_Rect(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
+CC_API void Drawer2D_Rect(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
 /* Fills the area with the given colour. */
-void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
+CC_API void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
 
 void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, BitmapCol col);
 /* Draws text using the given font at the given coordinates. */
