@@ -32,6 +32,8 @@ const static int gfx_strideSizes[2] = { 16, 24 };
 static int gfx_batchStride, gfx_batchFormat = -1;
 
 static bool gfx_vsync, gfx_fogEnabled;
+static float gfx_minFrameMs;
+static uint64_t frameStart;
 bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 
 /*########################################################################################################################*
@@ -50,6 +52,17 @@ CC_NOINLINE static void Gfx_FreeDefaultResources(void) {
 	Gfx_DeleteVb(&Gfx_quadVb);
 	Gfx_DeleteVb(&Gfx_texVb);
 	Gfx_DeleteIb(&Gfx_defaultIb);
+}
+
+static void Gfx_LimitFPS(void) {
+#ifndef CC_BUILD_WEBGL
+	uint64_t frameEnd = Stopwatch_Measure();
+	float elapsedMs = Stopwatch_ElapsedMicroseconds(frameStart, frameEnd) / 1000.0f;
+	float leftOver  = gfx_minFrameMs - elapsedMs;
+
+	/* going faster than FPS limit */
+	if (leftOver > 0.001f) { Thread_Sleep((int)(leftOver + 0.5f)); }
+#endif
 }
 
 void Gfx_LoseContext(const char* reason) {
@@ -889,15 +902,20 @@ finished:
 	return res;
 }
 
-void Gfx_SetVSync(bool value) {
-	if (gfx_vsync == value) return;
-	gfx_vsync = value;
+void Gfx_SetFpsLimit(bool vsync, float minFrameMs) {
+	gfx_minFrameMs = minFrameMs;
+	if (gfx_vsync == vsync) return;
+	gfx_vsync = vsync;
 
 	Gfx_LoseContext(" (toggling VSync)");
 	D3D9_RecreateDevice();
 }
 
-void Gfx_BeginFrame(void) { IDirect3DDevice9_BeginScene(device); }
+void Gfx_BeginFrame(void) { 
+	IDirect3DDevice9_BeginScene(device);
+	frameStart = Stopwatch_Measure();
+}
+
 void Gfx_Clear(void) {
 	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
 	ReturnCode res = IDirect3DDevice9_Clear(device, 0, NULL, flags, gfx_clearCol.Raw, 1.0f, 0);
@@ -907,13 +925,16 @@ void Gfx_Clear(void) {
 void Gfx_EndFrame(void) {
 	IDirect3DDevice9_EndScene(device);
 	ReturnCode res = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
-	if (!res) return;
-	if (res != D3DERR_DEVICELOST) Logger_Abort2(res, "D3D9_EndFrame");
 
-	/* TODO: Make sure this actually works on all graphics cards.*/
-	Gfx_LoseContext(" (Direct3D9 device lost)");
-	D3D9_LoopUntilRetrieved();
-	D3D9_RecreateDevice();
+	if (res) {
+		if (res != D3DERR_DEVICELOST) Logger_Abort2(res, "D3D9_EndFrame");
+
+		/* TODO: Make sure this actually works on all graphics cards.*/
+		Gfx_LoseContext(" (Direct3D9 device lost)");
+		D3D9_LoopUntilRetrieved();
+		D3D9_RecreateDevice();
+	}
+	if (gfx_minFrameMs) Gfx_LimitFPS();
 }
 
 bool Gfx_WarnIfNecessary(void) { return false; }
@@ -1297,19 +1318,17 @@ bool Gfx_WarnIfNecessary(void) {
 	return true;
 }
 
-void Gfx_SetVSync(bool value) {
-	if (gfx_vsync == value) return;
-	gfx_vsync = value;
-	GLContext_SetVSync(value);
+void Gfx_SetFpsLimit(bool vsync, float minFrameMs) {
+	gfx_minFrameMs = minFrameMs;
+	gfx_vsync = vsync;
+	GLContext_SetFpsLimit(vsync, minFrameMs);
 }
 
-void Gfx_BeginFrame(void) { }
-void Gfx_Clear(void) {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void Gfx_EndFrame(void) {
-	GLContext_SwapBuffers();
+void Gfx_BeginFrame(void) { frameStart = Stopwatch_Measure(); }
+void Gfx_Clear(void) { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+void Gfx_EndFrame(void) { 
+	GLContext_SwapBuffers(); 
+	if (gfx_minFrameMs) Gfx_LimitFPS();
 }
 
 void Gfx_OnWindowResize(void) {

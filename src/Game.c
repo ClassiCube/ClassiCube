@@ -41,7 +41,6 @@ struct PickedPos Game_SelectedPos;
 int Game_ViewDistance, Game_MaxViewDistance, Game_UserViewDistance;
 int Game_Fov, Game_DefaultFov, Game_ZoomFov;
 
-float game_limitMs;
 int  Game_FpsLimit, Game_Vertices;
 bool Game_ShowAxisLines, Game_SimpleArmsAnim;
 
@@ -430,7 +429,7 @@ static void Game_Load(void) {
 	Game_Fov = 70;
 
 	Gfx_Init();
-	Gfx_SetVSync(true);
+	Gfx_SetFpsLimit(true, 0);
 	Gfx_MakeApiInfo();
 	Gfx.Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
 
@@ -498,28 +497,16 @@ static void Game_Load(void) {
 }
 
 void Game_SetFpsLimit(enum FpsLimit method) {
+	float minFrameTime = 0;
 	Game_FpsLimit = method;
-	game_limitMs  = Game_CalcLimitMillis(method);
-	Gfx_SetVSync(method == FPS_LIMIT_VSYNC);
-}
 
-float Game_CalcLimitMillis(enum FpsLimit method) {
-	if (method == FPS_LIMIT_144) return 1000/144.0f;
-	if (method == FPS_LIMIT_120) return 1000/120.0f;
-	if (method == FPS_LIMIT_60)  return 1000/60.0f;
-	if (method == FPS_LIMIT_30)  return 1000/30.0f;
-	return 0;
-}
-
-static void Game_LimitFPS(uint64_t frameStart) {
-	uint64_t frameEnd = Stopwatch_Measure();
-	float elapsedMs = Stopwatch_ElapsedMicroseconds(frameStart, frameEnd) / 1000.0f;
-	float leftOver  = game_limitMs - elapsedMs;
-
-	/* going faster than limit */
-	if (leftOver > 0.001f) {
-		Thread_Sleep((int)(leftOver + 0.5f));
+	switch (method) {
+	case FPS_LIMIT_144: minFrameTime = 1000/144.0f; break;
+	case FPS_LIMIT_120: minFrameTime = 1000/120.0f; break;
+	case FPS_LIMIT_60:  minFrameTime = 1000/60.0f;  break;
+	case FPS_LIMIT_30:  minFrameTime = 1000/30.0f;  break;
 	}
+	Gfx_SetFpsLimit(method == FPS_LIMIT_VSYNC, minFrameTime);
 }
 
 static void Game_UpdateViewMatrix(void) {
@@ -632,11 +619,9 @@ void Game_TakeScreenshot(void) {
 
 static void Game_RenderFrame(double delta) {
 	struct ScheduledTask entTask;
-	uint64_t frameStart;
 	bool allowZoom, visible;
 	float t;
 
-	frameStart = Stopwatch_Measure();
 	Gfx_BeginFrame();
 	Gfx_BindIb(Gfx_defaultIb);
 	Game.Time += delta;
@@ -671,9 +656,7 @@ static void Game_RenderFrame(double delta) {
 
 	Gui_RenderGui(delta);
 	if (Game_ScreenshotRequested) Game_TakeScreenshot();
-
 	Gfx_EndFrame();
-	if (game_limitMs) Game_LimitFPS(frameStart);
 }
 
 void Game_Free(void* obj) {

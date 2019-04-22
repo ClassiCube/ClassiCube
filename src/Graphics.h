@@ -162,9 +162,9 @@ bool Gfx_WarnIfNecessary(void);
 void Gfx_BeginFrame(void);
 /* Finishes rendering a frame, and swaps it with the back buffer. */
 void Gfx_EndFrame(void);
-/* Sets whether to synchronise with monitor refresh to avoid tearing. */
-/* NOTE: This setting may be unsupported or just ignored. */
-void Gfx_SetVSync(bool value);
+/* Sets whether to synchronise with monitor refresh to avoid tearing, and maximum frame rate. */
+/* NOTE: VSync setting may be unsupported or just ignored. */
+void Gfx_SetFpsLimit(bool value, float minFrameMillis);
 /* Updates state when the window's dimensions have changed. */
 /* NOTE: This may require recreating the context depending on the backend. */
 void Gfx_OnWindowResize(void);

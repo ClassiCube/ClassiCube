@@ -2964,8 +2964,8 @@ void GLContext_SwapBuffers(void) {
 	}
 }
 
-void GLContext_SetVSync(bool enabled) {
-	if (ctx_supports_vSync) wglSwapIntervalEXT(enabled);
+void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+	if (ctx_supports_vSync) wglSwapIntervalEXT(vsync);
 }
 #endif
 
@@ -3035,14 +3035,14 @@ void GLContext_SwapBuffers(void) {
 	glXSwapBuffers(win_display, win_handle);
 }
 
-void GLContext_SetVSync(bool enabled) {
+void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 	int res;
 	if (!ctx_supports_vSync) return;
 
 	if (swapIntervalMESA) {
-		res = swapIntervalMESA(enabled);
+		res = swapIntervalMESA(vsync);
 	} else {
-		res = swapIntervalSGI(enabled);
+		res = swapIntervalSGI(vsync);
 	}
 	if (res) Platform_Log1("Set VSync failed, error: %i", &res);
 }
@@ -3279,8 +3279,8 @@ void GLContext_SwapBuffers(void) {
 	GLContext_Check(0, "Swapping buffers");
 }
 
-void GLContext_SetVSync(bool enabled) {
-	int value = enabled ? 1 : 0;
+void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+	int value = vsync ? 1 : 0;
 	aglSetInteger(ctx_handle, AGL_SWAP_INTERVAL, &value);
 }
 #endif
@@ -3321,8 +3321,8 @@ void GLContext_SwapBuffers(void) {
 	SDL_GL_SwapWindow(win_handle);
 }
 
-void GLContext_SetVSync(bool enabled) {
-	SDL_GL_SetSwapInterval(enabled);
+void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+	SDL_GL_SetSwapInterval(vsync);
 }
 #endif
 
@@ -3394,8 +3394,8 @@ void GLContext_SwapBuffers(void) {
 	eglSwapBuffers(ctx_display, ctx_surface);
 }
 
-void GLContext_SetVSync(bool enabled) {
-	eglSwapInterval(ctx_display, enabled ? 1 : 0);
+void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+	eglSwapInterval(ctx_display, vsync);
 }
 #endif
 
@@ -3431,11 +3431,11 @@ void GLContext_Free(void) {
 void* GLContext_GetAddress(const char* function) { return NULL; }
 void GLContext_SwapBuffers(void) { /* Browser implicitly does this */ }
 
-void GLContext_SetVSync(bool enabled) {
-	if (enabled) {
+void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+	if (vsync) {
 		emscripten_set_main_loop_timing(EM_TIMING_RAF, 1);
 	} else {
-		emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, 0);
+		emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, (int)minFrameMs);
 	}
 }
 #endif

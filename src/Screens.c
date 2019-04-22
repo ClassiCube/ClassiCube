@@ -1451,11 +1451,8 @@ static void DisconnectScreen_Init(void* screen) {
 	Drawer2D_MakeFont(&s->MessageFont, 16, FONT_STYLE_NORMAL);
 	Screen_CommonInit(s);
 
-#ifndef CC_BUILD_WEB
 	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */
-	/* NOTE: Don't do this in web client, because sleeping causes a spinloop */
-	game_limitMs = 1000 / 5.0f;
-#endif
+	Gfx_SetFpsLimit(Game_FpsLimit == FPS_LIMIT_VSYNC, 1000 / 5.0f);
 
 	s->InitTime     = DateTime_CurrentUTC_MS();
 	s->LastSecsLeft = DISCONNECT_DELAY_MS / MILLIS_PER_SEC;
@@ -1482,8 +1479,7 @@ static void DisconnectScreen_Free(void* screen) {
 	Font_Free(&s->TitleFont);
 	Font_Free(&s->MessageFont);
 	Screen_CommonFree(s);
-
-	game_limitMs = Game_CalcLimitMillis(Game_FpsLimit);
+	Game_SetFpsLimit(Game_FpsLimit);
 }
 
 static void DisconnectScreen_OnResize(void* screen) {

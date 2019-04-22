@@ -146,6 +146,6 @@ void* GLContext_GetAddress(const char* function);
 void GLContext_SwapBuffers(void);
 /* Sets whether synchronisation with the monitor is used. */
 /* NOTE: The underlying platform may choose to still ignore this. */
-void GLContext_SetVSync(bool enabled);
+void GLContext_SetFpsLimit(bool vsync, float minFrameMs);
 #endif
 #endif
