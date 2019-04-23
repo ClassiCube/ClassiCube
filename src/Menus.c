@@ -2961,7 +2961,11 @@ static bool WarningOverlay_IsAlways(void* screen, void* w) { return Menu_Index(s
 /*########################################################################################################################*
 *------------------------------------------------------TexIdsOverlay------------------------------------------------------*
 *#########################################################################################################################*/
-#define TEXID_OVERLAY_VERTICES_COUNT (ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW * 4)
+/*########################################################################################################################*
+*------------------------------------------------------TexIdsOverlay------------------------------------------------------*
+*#########################################################################################################################*/
+#define TEXID_OVERLAY_MAX_PER_PAGE (ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW)
+#define TEXID_OVERLAY_VERTICES_COUNT (TEXID_OVERLAY_MAX_PER_PAGE * 4)
 static struct TexIdsOverlay TexIdsOverlay_Instance;
 static void TexIdsOverlay_ContextLost(void* screen) {
 	struct TexIdsOverlay* s = screen;
@@ -3004,10 +3008,10 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
 	tex.uv.U1 = 0.0f; tex.uv.U2 = UV2_Scale;
 	tex.Width = size; tex.Height = size;
 
-	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW;) {
+	for (i = 0; i < TEXID_OVERLAY_MAX_PER_PAGE;) {
 		ptr = vertices;
 		idx = Atlas1D_Index(i + s->BaseTexLoc);
-		end = i + Atlas1D.TilesPerAtlas;
+		end = min(i + Atlas1D.TilesPerAtlas, TEXID_OVERLAY_MAX_PER_PAGE);
 
 		for (; i < end; i++) {
 			tex.X = s->XOffset + Atlas2D_TileX(i) * size;

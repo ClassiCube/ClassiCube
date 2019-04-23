@@ -134,6 +134,11 @@ bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 		Chat_AddRaw("&c Its height is less than its width.");
 		return false;
 	}
+	if (atlas->Width < ATLAS2D_TILES_PER_ROW) {
+		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
+		Chat_AddRaw("&c It must be 16 or more pixels wide.");
+		return false;
+	}
 	if (Gfx.LostContext) return false;
 
 	Atlas_Free();
