@@ -684,12 +684,13 @@ static void Drawer2D_TextureChanged(void* obj, struct Stream* src, const String*
 }
 
 static void Drawer2D_CheckFont(void) {
-	const static String default_fonts[6] = {
+	const static String default_fonts[7] = {
 		String_FromConst("Arial"),                      /* preferred font on all platforms */
 		String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
 		String_FromConst("Nimbus Sans"),                /* other common ones */
 		String_FromConst("Liberation Sans"),
 		String_FromConst("Bitstream Charter"),
+		String_FromConst("Cantarell"),
 		String_FromConst("DejaVu Sans Book")
 	};
 	String path;
