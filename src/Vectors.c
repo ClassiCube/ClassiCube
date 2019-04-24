@@ -220,7 +220,7 @@ frustum20, frustum21, frustum22, frustum23,
 frustum30, frustum31, frustum32, frustum33,
 frustum40, frustum41, frustum42, frustum43;
 
-void FrustumCulling_Normalise(float* plane0, float* plane1, float* plane2, float* plane3) {
+static void FrustumCulling_Normalise(float* plane0, float* plane1, float* plane2, float* plane3) {
 	float val1 = *plane0, val2 = *plane1, val3 = *plane2;
 	float t = Math_SqrtF(val1 * val1 + val2 * val2 + val3 * val3);
 	*plane0 /= t; *plane1 /= t; *plane2 /= t; *plane3 /= t;

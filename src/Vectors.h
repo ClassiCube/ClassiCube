@@ -100,7 +100,7 @@ static CC_INLINE bool Vector3_Equals(const Vector3* a, const Vector3* b) {
 	return a->X == b->X && a->Y == b->Y && a->Z == b->Z;
 }
 /* Whether any of the components of the two vectors differ. */
-static CC_INLINE bool Vector3_NotEquals(const Vector3*  a, const Vector3* b) {
+static CC_INLINE bool Vector3_NotEquals(const Vector3* a, const Vector3* b) {
 	return a->X != b->X || a->Y != b->Y || a->Z != b->Z;
 }
 /* Whether all of the components of the two vectors are equal. */

@@ -40,6 +40,14 @@ typedef signed __int64 int64_t;
 #define CC_VAR __attribute__((visibility("default")))
 #endif
 #endif
+#elif __MWERKS__
+/* TODO: Is there actual attribute support for these somewhere? */
+#include <stdint.h>
+#define CC_INLINE inline
+#define CC_NOINLINE
+#define CC_ALIGN_HINT(x)
+#define CC_API
+#define CC_VAR
 #else
 #error "Unknown compiler. You'll need to add required definitions in Core.h!"
 #endif

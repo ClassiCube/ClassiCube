@@ -146,7 +146,7 @@ const char* KeyBind_Names[KEYBIND_COUNT] = {
 
 bool KeyBind_IsPressed(KeyBind binding) { return Key_Pressed[KeyBinds[binding]]; }
 
-void KeyBind_Load(void) {
+static void KeyBind_Load(void) {
 	String name; char nameBuffer[STRING_SIZE + 1];
 	Key mapping;
 	int i;
@@ -162,7 +162,7 @@ void KeyBind_Load(void) {
 	}
 }
 
-void KeyBind_Save(void) {
+static void KeyBind_Save(void) {
 	String name; char nameBuffer[STRING_SIZE];
 	String value;
 	int i;	

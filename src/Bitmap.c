@@ -255,7 +255,7 @@ static void Png_Expand_RGB_A_16(int width, BitmapCol* palette, uint8_t* src, Bit
 	}
 }
 
-Png_RowExpander Png_GetExpander(uint8_t col, uint8_t bitsPerSample) {
+static Png_RowExpander Png_GetExpander(uint8_t col, uint8_t bitsPerSample) {
 	switch (col) {
 	case PNG_COL_GRAYSCALE:
 		switch (bitsPerSample) {

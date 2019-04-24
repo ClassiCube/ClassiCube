@@ -364,7 +364,7 @@ static void Menu_SwitchFont(void* a, void* b)            { Menu_ReplaceActive(Fo
 static struct ListScreen ListScreen_Instance;
 #define LIST_SCREEN_EMPTY "-----"
 
-STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
+static STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
 	const static String str = String_FromConst(LIST_SCREEN_EMPTY);
 
 	if (index >= 0 && index < s->Entries.Count) {

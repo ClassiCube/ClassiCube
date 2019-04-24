@@ -50,7 +50,7 @@ bool AABB_ContainsPoint(const struct AABB* parent, const Vector3* P) {
 /*########################################################################################################################*
 *------------------------------------------------------Intersection-------------------------------------------------------*
 *#########################################################################################################################*/
-Vector3 Intersection_InverseRotate(Vector3 pos, struct Entity* target) {
+static Vector3 Intersection_InverseRotate(Vector3 pos, struct Entity* target) {
 	pos = Vector3_RotateY(pos, -target->RotY * MATH_DEG2RAD);
 	pos = Vector3_RotateZ(pos, -target->RotZ * MATH_DEG2RAD);
 	pos = Vector3_RotateX(pos, -target->RotX * MATH_DEG2RAD);
