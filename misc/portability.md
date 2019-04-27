@@ -35,6 +35,7 @@ Define:
 - ```CC_BUILD_GARBON``` - Use Carbon (OSX)
 - ```CC_BUILD_X11``` - Use X11/XLib
 - ```CC_BUILD_SDL``` - Use SDL library
+- ```CC_BUILD_WEBCANVAS``` - Use emscripten canvas
 
 If using OpenGL, also OpenGL context creation
 
@@ -44,6 +45,7 @@ Define:
 - ```CC_BUILD_GLX``` - Use glX (X11/XLib)
 - ```CC_BUILD_EGL``` - Use EGL (mainly for GLES)
 - ```CC_BUILD_SDL``` - Use SDL library
+- ```CC_BUILD_WEBGL``` - Use emscripten WebGL
 
 ### Logger
 Dump registers and backtrace, log unhandled errors (e.g. invalid memory read)
@@ -70,7 +72,8 @@ Define:
 - ```CC_BUILD_D3D9``` - Use Direct3D9
 - ```CC_BUILD_GL``` - Use OpenGL (1.5/1.2 + ARB_VERTEX_BUFFER_OBJECT)
 - ```CC_BUILD_GL11``` - Use OpenGL 1.1 features only
-- ```CC_BUILD_GLMODERN``` - Use OpenGL/OpenGLES 2.0 shaders
+- ```CC_BUILD_GLMODERN``` - Use modern OpenGL shaders
+- ```CC_BUILD_GLES``` - Makes these shaders compatible with OpenGL ES
 
 ### Http
 HTTP, HTTPS, and cookies (ETag and Last-Modified recommended)
