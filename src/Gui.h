@@ -62,7 +62,8 @@ struct ScreenVTABLE {
 	bool HandlesAllInput; /* Whether this screen handles all input. Prevents user interacting with the world. */ \
 	bool BlocksWorld;     /* Whether this screen completely and opaquely covers the game world behind it. */ \
 	bool HidesHUD;        /* Whether this screen hides the normal in-game HUD. */ \
-	bool RenderHUDOver;   /* Whether the normal in-game HUD should be drawn over the top of this screen. */
+	bool RenderHUDOver;   /* Whether the normal in-game HUD should be drawn over the top of this screen. */ \
+	bool Closable;        /* Whether this screen is automatically closed when pressing Escape */
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Layout };

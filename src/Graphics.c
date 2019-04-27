@@ -802,26 +802,23 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
-	ReturnCode res = IDirect3DDevice9_DrawPrimitive(device, D3DPT_LINELIST, 0, verticesCount >> 1);
-	if (res) Logger_Abort2(res, "D3D9_DrawVb_Lines");
+	/* NOTE: Skip checking return result for Gfx_DrawXYZ for performance */
+	IDirect3DDevice9_DrawPrimitive(device, D3DPT_LINELIST, 0, verticesCount >> 1);
 }
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
-	ReturnCode res = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
+	IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		0, 0, verticesCount, 0, verticesCount >> 1);
-	if (res) Logger_Abort2(res, "D3D9_DrawVb_IndexedTris");
 }
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
-	ReturnCode res = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
+	IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
-	if (res) Logger_Abort2(res, "D3D9_DrawVb_IndexedTris");
 }
 
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
-	ReturnCode res = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
+	IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
-	if (res) Logger_Abort2(res, "D3D9_DrawIndexedVb_TrisT2fC4b");
 }
 
 

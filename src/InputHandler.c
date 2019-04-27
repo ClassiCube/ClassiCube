@@ -463,6 +463,8 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		Game_ScreenshotRequested = true; return;
 	} else if (Elem_HandlesKeyDown(active, key, was)) { 
 		return;
+	} else if (key == KEY_ESCAPE && active->Closable) {
+		Gui_CloseActive();
 	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !active->HandlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance()); return;

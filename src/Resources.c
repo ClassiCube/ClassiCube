@@ -111,8 +111,8 @@ void Resources_CheckExistence(void) {
 struct ResourceFile Resources_Files[4] = {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar",  291 },
 	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     4621 },
-	{ "gui.png patch",     "http://static.classicube.net/terrain-patch2.png",  7 },
-	{ "terrain.png patch", "http://static.classicube.net/gui.png",            21 }
+	{ "terrain.png patch", "http://static.classicube.net/terrain-patch2.png",  7 },
+	{ "gui.png patch",     "http://static.classicube.net/gui.png",            21 }
 };
 
 struct ResourceTexture Resources_Textures[20] = {

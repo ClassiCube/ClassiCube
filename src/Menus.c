@@ -3131,14 +3131,14 @@ struct Screen* TexIdsOverlay_MakeInstance(void) {
 static struct UrlWarningOverlay UrlWarningOverlay_Instance;
 static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = screen;
-	Gui_FreeOverlay(s);
 	Process_StartOpen(&s->Url);
+	Gui_FreeOverlay(s);
 }
 
 static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = screen;
-	Gui_FreeOverlay(s);
 	if (Gui_ClickableChat) { HUDScreen_AppendInput(Gui_HUD, &s->Url); }
+	Gui_FreeOverlay(s);
 }
 
 static void UrlWarningOverlay_ContextRecreated(void* screen) {
