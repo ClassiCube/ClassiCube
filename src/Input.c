@@ -40,8 +40,8 @@ const char* Key_Names[KEY_COUNT] = {
 	"Keypad5", "Keypad6", "Keypad7", "Keypad8", "Keypad9",
 	"KeypadDivide", "KeypadMultiply", "KeypadSubtract",
 	"KeypadAdd", "KeypadDecimal", "KeypadEnter",	
-	"Tilde", "Minus", "Plus", "BracketLeft", "BracketRight",
-	"Semicolon", "Quote", "Comma", "Period", "Slash", "BackSlash",
+	"Tilde", "Minus", "Plus", "BracketLeft", "BracketRight", "Slash",
+	"Semicolon", "Quote", "Comma", "Period", "BackSlash",
 	"XButton1", "XButton2",
 };
 

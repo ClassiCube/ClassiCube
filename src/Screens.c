@@ -177,13 +177,11 @@ static bool InventoryScreen_KeyDown(void* screen, Key key, bool was) {
 	struct InventoryScreen* s = screen;
 	struct TableWidget* table = &s->Table;
 
-	if (key == KEY_ESCAPE) {
-		Gui_CloseActive();
-	} else if (key == KeyBinds[KEYBIND_INVENTORY] && s->ReleasedInv) {
-		Gui_CloseActive();
+	if (key == KeyBinds[KEYBIND_INVENTORY] && s->ReleasedInv) {
+		Gui_Close(screen);
 	} else if (key == KEY_ENTER && table->SelectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->Elements[table->SelectedIndex]);
-		Gui_CloseActive();
+		Gui_Close(screen);
 	} else if (Elem_HandlesKeyDown(table, key, was)) {
 	} else {
 		struct HUDScreen* hud = (struct HUDScreen*)Gui_HUD;
@@ -216,7 +214,7 @@ static bool InventoryScreen_MouseDown(void* screen, int x, int y, MouseButton bt
 
 	if ((!handled || table->PendingClose) && btn == MOUSE_LEFT) {
 		hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
-		if (!hotbar) Gui_CloseActive();
+		if (!hotbar) Gui_Close(screen);
 	}
 	return true;
 }
@@ -251,6 +249,7 @@ static struct ScreenVTABLE InventoryScreen_VTABLE = {
 struct Screen* InventoryScreen_MakeInstance(void) {
 	struct InventoryScreen* s = &InventoryScreen_Instance;
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 
 	s->VTABLE = &InventoryScreen_VTABLE;
 	return (struct Screen*)s;
@@ -648,10 +647,7 @@ static void GeneratingScreen_EndGeneration(void) {
 	Gui_CloseActive();
 	Gen_Done = false;
 
-	if (!Gen_Blocks) {
-		Chat_AddRaw("&cFailed to generate the map."); return;
-	}
-
+	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
 	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
 	Gen_Blocks = NULL;
 

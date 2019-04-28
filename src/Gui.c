@@ -145,11 +145,10 @@ static void Gui_Reset(void) {
 static void Gui_Free(void) {
 	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, Gui_FontChanged);
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Gui_FileChanged);
-	Gui_CloseActive();
+	Elem_TryFree(Gui_Active);
 	Elem_TryFree(Gui_Status);
 	Elem_TryFree(Gui_HUD);
 
-	if (Gui_Active) { Elem_TryFree(Gui_Active); }
 	Gfx_DeleteTexture(&Gui_GuiTex);
 	Gfx_DeleteTexture(&Gui_GuiClassicTex);
 	Gfx_DeleteTexture(&Gui_IconsTex);
@@ -175,10 +174,13 @@ struct Screen* Gui_GetUnderlyingScreen(void) {
 void Gui_FreeActive(void) {
 	if (Gui_Active) { Elem_TryFree(Gui_Active); }
 }
-void Gui_CloseActive(void) {
-	Gui_FreeActive(); 
-	Gui_SetActive(NULL);
+void Gui_Close(void* screen) {
+	struct Screen* s = screen;
+	if (s) { Elem_TryFree(s); }
+	if (s == Gui_Active) Gui_SetActive(NULL);
 }
+
+void Gui_CloseActive(void) { Gui_Close(Gui_Active); }
 
 void Gui_SetActive(struct Screen* screen) {
 	InputHandler_ScreenChanged(Gui_Active, screen);
@@ -214,8 +216,8 @@ void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 	Camera_CheckFocus();
 }
 
-int Gui_IndexOverlay(const void* overlay) {
-	const struct Screen* s = overlay;
+int Gui_IndexOverlay(const void* screen) {
+	const struct Screen* s = screen;
 	int i;
 
 	for (i = 0; i < Gui_OverlaysCount; i++) {
@@ -224,12 +226,9 @@ int Gui_IndexOverlay(const void* overlay) {
 	return -1;
 }
 
-void Gui_FreeOverlay(void* overlay) {
-	struct Screen* s = overlay;
-	int i;
-
-	Elem_Free(s);
-	i = Gui_IndexOverlay(overlay);
+void Gui_RemoveOverlay(void* screen) {
+	struct Screen* s = screen;
+	int i = Gui_IndexOverlay(screen);
 	if (i == -1) return;
 
 	for (; i < Gui_OverlaysCount - 1; i++) {

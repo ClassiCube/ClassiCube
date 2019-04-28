@@ -50,6 +50,7 @@ CC_API void Commands_Register(struct ChatCommand* cmd);
 /* NOTE: This can only be set once. */
 void Chat_SetLogName(const String* name);
 /* Sends a chat message, raising ChatEvents.ChatSending event. */
+/* NOTE: If logUsage is true, can press 'up' in chat input menu later to retype this. */
 /* NOTE: /client is always interpreted as client-side commands. */
 /* In multiplayer this is sent to the server, in singleplayer just Chat_Add. */
 CC_API void Chat_Send(const String* text, bool logUsage);

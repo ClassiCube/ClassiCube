@@ -208,7 +208,7 @@ static void WoM_CheckMotd(void) {
 	String motd, host;
 	int index;	
 
-	motd = Server.ServerMOTD;
+	motd = Server.MOTD;
 	if (!motd.length) return;
 	index = String_IndexOfString(&motd, &cfg);
 	if (Game_PureClassic || index == -1) return;
@@ -367,19 +367,19 @@ void Classic_WriteLogin(const String* username, const String* verKey) {
 static void Classic_Handshake(uint8_t* data) {
 	struct HacksComp* hacks;
 
-	Server.ServerName.length = 0;
-	Server.ServerMOTD.length = 0;
+	Server.Name.length = 0;
+	Server.MOTD.length = 0;
 	data++; /* protocol version */
 
-	Handlers_ReadString(&data, &Server.ServerName);
-	Handlers_ReadString(&data, &Server.ServerMOTD);
-	Chat_SetLogName(&Server.ServerName);
+	Handlers_ReadString(&data, &Server.Name);
+	Handlers_ReadString(&data, &Server.MOTD);
+	Chat_SetLogName(&Server.Name);
 
 	hacks = &LocalPlayer_Instance.Hacks;
 	HacksComp_SetUserType(hacks, *data, !cpe_blockPerms);
 	
-	String_Copy(&hacks->HacksFlags,         &Server.ServerName);
-	String_AppendString(&hacks->HacksFlags, &Server.ServerMOTD);
+	String_Copy(&hacks->HacksFlags,         &Server.Name);
+	String_AppendString(&hacks->HacksFlags, &Server.MOTD);
 	HacksComp_UpdateState(hacks);
 }
 
@@ -397,7 +397,7 @@ static void Classic_StartLoading(void) {
 		classic_prevScreen = NULL;
 	}
 
-	Gui_SetActive(LoadingScreen_MakeInstance(&Server.ServerName, &Server.ServerMOTD));
+	Gui_SetActive(LoadingScreen_MakeInstance(&Server.Name, &Server.MOTD));
 	WoM_CheckMotd();
 	classic_receivedFirstPos = false;
 

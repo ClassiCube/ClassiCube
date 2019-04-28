@@ -524,9 +524,7 @@ static void ListScreen_Free(void* screen) {
 
 static bool ListScreen_KeyDown(void* screen, Key key, bool was) {
 	struct ListScreen* s = screen;
-	if (key == KEY_ESCAPE) {
-		Gui_CloseActive();
-	} else if (key == KEY_LEFT  || key == KEY_PAGEUP) {
+	if (key == KEY_LEFT  || key == KEY_PAGEUP) {
 		ListScreen_PageClick(s, false);
 	} else if (key == KEY_RIGHT || key == KEY_PAGEDOWN) {
 		ListScreen_PageClick(s, true);
@@ -554,6 +552,7 @@ struct ListScreen* ListScreen_MakeInstance(void) {
 	struct ListScreen* s = &ListScreen_Instance;
 	StringsBuffer_Clear(&s->Entries);
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->WidgetsCount    = 0;
 	s->CurrentIndex    = 0;
 
@@ -567,7 +566,7 @@ struct ListScreen* ListScreen_MakeInstance(void) {
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 static bool MenuScreen_KeyDown(void* screen, Key key, bool was) {
-	if (key == KEY_ESCAPE) { Gui_CloseActive(); }
+	if (key == KEY_ESCAPE) { Gui_Close(screen); }
 	return key < KEY_F1 || key > KEY_F35;
 }
 static bool MenuScreen_MouseScroll(void* screen, float delta) { return true; }
@@ -2919,6 +2918,11 @@ struct Screen* NostalgiaScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Overlay---------------------------------------------------------*
 *#########################################################################################################################*/
+static void Overlay_Free(void* screen) {
+	MenuScreen_Free(screen);
+	Gui_RemoveOverlay(screen);
+}
+
 static bool Overlay_KeyDown(void* screen, Key key, bool was) { return true; }
 
 static void Overlay_MakeLabels(void* menu, struct TextWidget* labels, const String* lines) {
@@ -2958,9 +2962,6 @@ static void WarningOverlay_MakeButtons(void* menu, struct ButtonWidget* btns, bo
 static bool WarningOverlay_IsAlways(void* screen, void* w) { return Menu_Index(screen, w) >= 6; }
 
 
-/*########################################################################################################################*
-*------------------------------------------------------TexIdsOverlay------------------------------------------------------*
-*#########################################################################################################################*/
 /*########################################################################################################################*
 *------------------------------------------------------TexIdsOverlay------------------------------------------------------*
 *#########################################################################################################################*/
@@ -3088,26 +3089,26 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 }
 
 static bool TexIdsOverlay_KeyDown(void* screen, Key key, bool was) {
-	struct Screen* active = Gui_GetUnderlyingScreen();
+	struct Screen* s = screen;
+	if (key == KeyBinds[KEYBIND_IDOVERLAY]) { Elem_Free(s); return true; }
 
-	if (key == KeyBinds[KEYBIND_IDOVERLAY] || key == KEY_ESCAPE) {
-		Gui_FreeOverlay(screen); return true;
-	}
-	return Elem_HandlesKeyDown(active, key, was);
+	/* allow user to chat when tex ids overlay is active */
+	s = Gui_GetUnderlyingScreen();
+	return Elem_HandlesKeyDown(s, key, was);
 }
 
 static bool TexIdsOverlay_KeyPress(void* screen, char keyChar) {
-	struct Screen* active = Gui_GetUnderlyingScreen();
-	return Elem_HandlesKeyPress(active, keyChar);
+	struct Screen* s = Gui_GetUnderlyingScreen();
+	return Elem_HandlesKeyPress(s, keyChar);
 }
 
 static bool TexIdsOverlay_KeyUp(void* screen, Key key) {
-	struct Screen* active = Gui_GetUnderlyingScreen();
-	return Elem_HandlesKeyUp(active, key);
+	struct Screen* s = Gui_GetUnderlyingScreen();
+	return Elem_HandlesKeyUp(s, key);
 }
 
 static struct ScreenVTABLE TexIdsOverlay_VTABLE = {
-	TexIdsOverlay_Init,    TexIdsOverlay_Render, MenuScreen_Free,        Gui_DefaultRecreate,
+	TexIdsOverlay_Init,    TexIdsOverlay_Render, Overlay_Free,           Gui_DefaultRecreate,
 	TexIdsOverlay_KeyDown, TexIdsOverlay_KeyUp,  TexIdsOverlay_KeyPress,
 	Menu_MouseDown,        Menu_MouseUp,         Menu_MouseMove,         MenuScreen_MouseScroll,
 	Menu_OnResize,         TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated,
@@ -3117,6 +3118,7 @@ struct Screen* TexIdsOverlay_MakeInstance(void) {
 	struct TexIdsOverlay* s = &TexIdsOverlay_Instance;
 	
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
@@ -3132,13 +3134,13 @@ static struct UrlWarningOverlay UrlWarningOverlay_Instance;
 static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = screen;
 	Process_StartOpen(&s->Url);
-	Gui_FreeOverlay(s);
+	Elem_Free(s);
 }
 
 static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = screen;
 	if (Gui_ClickableChat) { HUDScreen_AppendInput(Gui_HUD, &s->Url); }
-	Gui_FreeOverlay(s);
+	Elem_Free(s);
 }
 
 static void UrlWarningOverlay_ContextRecreated(void* screen) {
@@ -3158,7 +3160,7 @@ static void UrlWarningOverlay_ContextRecreated(void* screen) {
 }
 
 static struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
-	MenuScreen_Init, MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
+	MenuScreen_Init, MenuScreen_Render,  Overlay_Free,    Gui_DefaultRecreate,
 	Overlay_KeyDown, Menu_KeyUp,         Menu_KeyPress,
 	Menu_MouseDown,  Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
 	Menu_OnResize,   Menu_ContextLost,   UrlWarningOverlay_ContextRecreated,
@@ -3168,6 +3170,7 @@ struct Screen* UrlWarningOverlay_MakeInstance(const String* url) {
 	struct UrlWarningOverlay* s = &UrlWarningOverlay_Instance;
 
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
@@ -3185,21 +3188,15 @@ struct Screen* UrlWarningOverlay_MakeInstance(const String* url) {
 static struct ConfirmDenyOverlay ConfirmDenyOverlay_Instance;
 static void ConfirmDenyOverlay_ConfirmNoClick(void* screen, void* b) {
 	struct ConfirmDenyOverlay* s = screen;
-	String url;
-
-	Gui_FreeOverlay(s);
-	url = s->Url;
-
-	if (s->AlwaysDeny && !TextureCache_HasDenied(&url)) {
-		TextureCache_Deny(&url);
-	}
+	if (s->AlwaysDeny) TextureCache_Deny(&s->Url);
+	Elem_Free(s);
 }
 
 static void ConfirmDenyOverlay_GoBackClick(void* screen, void* b) {
 	struct ConfirmDenyOverlay* s = screen;
 	struct Screen* overlay;
 
-	Gui_FreeOverlay(s);
+	Elem_Free(s);
 	overlay = TexPackOverlay_MakeInstance(&s->Url);
 	Gui_ShowOverlay(overlay, true);
 }
@@ -3224,9 +3221,9 @@ static void ConfirmDenyOverlay_ContextRecreated(void* screen) {
 }
 
 static struct ScreenVTABLE ConfirmDenyOverlay_VTABLE = {
-	MenuScreen_Init, MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
+	MenuScreen_Init, MenuScreen_Render,  Overlay_Free,   Gui_DefaultRecreate,
 	Overlay_KeyDown, Menu_KeyUp,         Menu_KeyPress,
-	Menu_MouseDown,  Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
+	Menu_MouseDown,  Menu_MouseUp,       Menu_MouseMove, MenuScreen_MouseScroll,
 	Menu_OnResize,   Menu_ContextLost,   ConfirmDenyOverlay_ContextRecreated,
 };
 struct Screen* ConfirmDenyOverlay_MakeInstance(const String* url, bool alwaysDeny) {
@@ -3234,6 +3231,7 @@ struct Screen* ConfirmDenyOverlay_MakeInstance(const String* url, bool alwaysDen
 	struct ConfirmDenyOverlay* s = &ConfirmDenyOverlay_Instance;
 	
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
@@ -3252,30 +3250,22 @@ struct Screen* ConfirmDenyOverlay_MakeInstance(const String* url, bool alwaysDen
 static struct TexPackOverlay TexPackOverlay_Instance;
 static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = screen;
-	String url;
-	bool isAlways;
-
-	Gui_FreeOverlay(s);
-	url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
+	String url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
 
 	Server_DownloadTexturePack(&url);
-	isAlways = WarningOverlay_IsAlways(s, widget);
-	if (isAlways && !TextureCache_HasAccepted(&url)) {
-		TextureCache_Accept(&url);
-	}
+	if (WarningOverlay_IsAlways(s, widget)) TextureCache_Accept(&url);
+	Elem_Free(s);
 }
 
 static void TexPackOverlay_NoClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = screen;
 	struct Screen* overlay;
-	String url;
-	bool isAlways;
+	String url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
+	bool always;
 
-	Gui_FreeOverlay(s);
-	url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
-
-	isAlways = WarningOverlay_IsAlways(s, widget);
-	overlay  = ConfirmDenyOverlay_MakeInstance(&url, isAlways);
+	Elem_Free(s);
+	always  = WarningOverlay_IsAlways(s, widget);
+	overlay = ConfirmDenyOverlay_MakeInstance(&url, always);
 	Gui_ShowOverlay(overlay, true);
 }
 
@@ -3329,25 +3319,24 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 }
 
 static struct ScreenVTABLE TexPackOverlay_VTABLE = {
-	MenuScreen_Init, TexPackOverlay_Render, MenuScreen_Free, Gui_DefaultRecreate,
+	MenuScreen_Init, TexPackOverlay_Render, Overlay_Free,   Gui_DefaultRecreate,
 	Overlay_KeyDown, Menu_KeyUp,            Menu_KeyPress,
-	Menu_MouseDown,  Menu_MouseUp,          Menu_MouseMove,  MenuScreen_MouseScroll,
+	Menu_MouseDown,  Menu_MouseUp,          Menu_MouseMove, MenuScreen_MouseScroll,
 	Menu_OnResize,   Menu_ContextLost,      TexPackOverlay_ContextRecreated,
 };
 struct Screen* TexPackOverlay_MakeInstance(const String* url) {
 	static struct Widget* widgets[8];
 	struct TexPackOverlay* s = &TexPackOverlay_Instance;
-	void* overlay;
+	struct ConfirmDenyOverlay* deny = &ConfirmDenyOverlay_Instance;
 
 	/* If we are showing a texture pack overlay, completely free that overlay */
 	/* It doesn't matter anymore, because the new texture pack URL will always */
 	/* replace/override the old texture pack URL associated with that overlay */
-	overlay = &TexPackOverlay_Instance;
-	if (Gui_IndexOverlay(overlay) >= 0) { Gui_FreeOverlay(overlay); }
-	overlay = &ConfirmDenyOverlay_Instance;
-	if (Gui_IndexOverlay(overlay) >= 0) { Gui_FreeOverlay(overlay); }
+	if (Gui_IndexOverlay(s)    >= 0) { Elem_Free(s); }
+	if (Gui_IndexOverlay(deny) >= 0) { Elem_Free(deny); }
 
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 

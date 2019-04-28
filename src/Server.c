@@ -23,10 +23,10 @@
 #include "Platform.h"
 #include "GameStructs.h"
 
-static char server_nameBuffer[STRING_SIZE];
-static char server_motdBuffer[STRING_SIZE];
-static char server_appBuffer[STRING_SIZE];
-static int server_ticks;
+static char nameBuffer[STRING_SIZE];
+static char motdBuffer[STRING_SIZE];
+static char appBuffer[STRING_SIZE];
+static int ticks;
 struct _ServerConnectionData Server;
 
 /*########################################################################################################################*
@@ -217,11 +217,11 @@ static void SPConnection_SendPlayerClick(MouseButton button, bool pressed, Entit
 
 static void SPConnection_Tick(struct ScheduledTask* task) {
 	if (Server.Disconnected) return;
-	if ((server_ticks % 3) == 0) {
+	if ((ticks % 3) == 0) { /* 60 -> 20 ticks a second */
 		Physics_Tick();
 		Server_CheckAsyncResources();
 	}
-	server_ticks++;
+	ticks++;
 }
 
 static void SPConnection_Init(void) {
@@ -482,7 +482,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	net_readCurrent = net_readBuffer + remaining;
 
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */
-	if ((server_ticks % 3) == 0) {
+	if ((ticks % 3) == 0) {
 		Server_CheckAsyncResources();
 		Handlers_Tick();
 		/* Have any packets been written? */
@@ -490,7 +490,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 			Net_SendPacket();
 		}
 	}
-	server_ticks++;
+	ticks++;
 }
 
 void Net_SendPacket(void) {
@@ -553,9 +553,9 @@ static void MPConnection_Reset(void) {
 }
 
 static void Server_Init(void) {
-	String_InitArray(Server.ServerName, server_nameBuffer);
-	String_InitArray(Server.ServerMOTD, server_motdBuffer);
-	String_InitArray(Server.AppName,    server_appBuffer);
+	String_InitArray(Server.Name,    nameBuffer);
+	String_InitArray(Server.MOTD,    motdBuffer);
+	String_InitArray(Server.AppName, appBuffer);
 
 	if (!Game_IPAddress.length) {
 		SPConnection_Init();

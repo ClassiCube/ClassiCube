@@ -102,6 +102,8 @@ extern struct Screen* Gui_Active;
 extern struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
 extern int Gui_OverlaysCount;
 
+/* Calculates position of an element on a particular axis */
+/* For example, to calculate X position of a text widget on screen */
 int  Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen);
 /* Returns whether the given rectangle contains the given point. */
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
@@ -118,13 +120,17 @@ CC_NOINLINE void Gui_FreeActive(void);
 /* Sets the active screen/menu that the user interacts with. */
 /* NOTE: This doesn't free old active screen - must call Gui_FreeActive() first */
 CC_NOINLINE void Gui_SetActive(struct Screen* screen);
-/* NOTE: Same as Gui_FreeActive(); Gui_SetActive(NULL); */
+/* Shortcut for Gui_Close(Gui_Active) */
 CC_NOINLINE void Gui_CloseActive(void);
+/* Frees the given screen, and if == Gui_Active, calls Gui_SetActive(NULL) */
+CC_NOINLINE void Gui_Close(void* screen);
 
 void Gui_RefreshHud(void);
 void Gui_ShowOverlay(struct Screen* overlay, bool atFront);
-int  Gui_IndexOverlay(const void* overlay);
-void Gui_FreeOverlay(void* overlay);
+/* Returns index of the given screen in the overlays list, -1 if not */
+int  Gui_IndexOverlay(const void* screen);
+/* Removes given screen from the overlays list */
+void Gui_RemoveOverlay(const void* screen);
 void Gui_RenderGui(double delta);
 void Gui_OnResize(void);
 

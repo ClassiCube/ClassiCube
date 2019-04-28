@@ -63,11 +63,11 @@ CC_VAR extern struct _ServerConnectionData {
 	void (*SendPlayerClick)(MouseButton button, bool pressed, EntityID targetId, struct PickedPos* pos);
 
 	/* The current name of the server. (Shows as first line when loading) */
-	String ServerName;
+	String Name;
 	/* The current MOTD of the server. (Shows as second line when loading) */
-	String ServerMOTD;
+	String MOTD;
 	/* The software name the client identifies itself as being to the server. */
-	/* By default this is the same as PROGRAM_APP_NAME */
+	/* By default this is the same as GAME_APP_NAME */
 	String AppName;
 
 	/* Buffer to data to send to the server. */
