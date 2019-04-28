@@ -565,10 +565,7 @@ struct ListScreen* ListScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static bool MenuScreen_KeyDown(void* screen, Key key, bool was) {
-	if (key == KEY_ESCAPE) { Gui_Close(screen); }
-	return key < KEY_F1 || key > KEY_F35;
-}
+static bool MenuScreen_KeyDown(void* screen, Key key, bool was) { return key < KEY_F1 || key > KEY_F35; }
 static bool MenuScreen_MouseScroll(void* screen, float delta) { return true; }
 
 static void MenuScreen_Init(void* screen) {
@@ -684,6 +681,7 @@ struct Screen* PauseScreen_MakeInstance(void) {
 	struct PauseScreen* s = &PauseScreen_Instance;
 
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
@@ -775,6 +773,7 @@ struct Screen* OptionsGroupScreen_MakeInstance(void) {
 	struct OptionsGroupScreen* s = &OptionsGroupScreen_Instance;
 	
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
@@ -988,6 +987,7 @@ struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 	struct EditHotkeyScreen* s = &EditHotkeyScreen_Instance;
 
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
@@ -1027,9 +1027,7 @@ CC_NOINLINE static int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int i
 
 static void GenLevelScreen_Begin(int width, int height, int length) {
 	World_Reset();
-	Event_RaiseVoid(&WorldEvents.NewMap);
 	World_SetDimensions(width, height, length);
-
 	Gui_FreeActive();
 	Gui_SetActive(GeneratingScreen_MakeInstance());
 }
@@ -1157,6 +1155,7 @@ struct Screen* GenLevelScreen_MakeInstance(void) {
 	struct GenLevelScreen* s = &GenLevelScreen_Instance;
 
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
@@ -1207,6 +1206,7 @@ struct Screen* ClassicGenScreen_MakeInstance(void) {
 	struct ClassicGenScreen* s = &ClassicGenScreen_Instance;
 
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
@@ -1373,6 +1373,7 @@ struct Screen* SaveLevelScreen_MakeInstance(void) {
 	struct SaveLevelScreen* s = &SaveLevelScreen_Instance;
 	
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = Array_Elems(widgets);
 
@@ -1622,7 +1623,8 @@ static void KeyBindingsScreen_OnBindingClick(void* screen, void* widget) {
 		cur = (struct ButtonWidget*)s->Widgets[s->CurI];
 		ButtonWidget_Set(cur, &text, &s->TitleFont);
 	}
-	s->CurI = Menu_Index(s, btn);
+	s->CurI     = Menu_Index(s, btn);
+	s->Closable = false;
 
 	text.length = 0;
 	String_AppendConst(&text, "> ");
@@ -1691,7 +1693,8 @@ static bool KeyBindingsScreen_KeyDown(void* screen, Key key, bool was) {
 
 	cur = (struct ButtonWidget*)s->Widgets[s->CurI];
 	ButtonWidget_Set(cur, &text, &s->TitleFont);
-	s->CurI = -1;
+	s->CurI     = -1;
+	s->Closable = true;
 	return true;
 }
 
@@ -1703,7 +1706,7 @@ static bool KeyBindingsScreen_MouseDown(void* screen, int x, int y, MouseButton 
 	i = Menu_DoMouseDown(s, x, y, btn);
 	if (i == -1) return false;
 
-	/* Reset a key binding */
+	/* Reset a key binding by right clicking */
 	if ((s->CurI == -1 || s->CurI == i) && i < s->BindsCount) {
 		s->CurI = i;
 		Elem_HandlesKeyDown(s, KeyBind_Defaults[s->Binds[i]], false);
@@ -1720,6 +1723,7 @@ static struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
 static struct KeyBindingsScreen* KeyBindingsScreen_Make(int bindsCount, uint8_t* binds, const char** descs, struct ButtonWidget* buttons, struct Widget** widgets, Event_Void_Callback contextRecreated) {
 	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = bindsCount + 4;
 
@@ -2154,6 +2158,7 @@ struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, int count
 	struct MenuInputValidator* validators, const char** defaultValues, const char** descriptions, int descsCount) {
 	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
 	s->HandlesAllInput = true;
+	s->Closable        = true;
 	s->Widgets         = widgets;
 	s->WidgetsCount    = count;
 

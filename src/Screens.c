@@ -631,6 +631,7 @@ struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_
 static void GeneratingScreen_Init(void* screen) {
 	Gen_Done = false;
 	LoadingScreen_Init(screen);
+	Event_RaiseVoid(&WorldEvents.NewMap);
 
 	if (Gen_Vanilla) {
 		Thread_Start(&NotchyGen_Generate, true);
