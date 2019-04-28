@@ -145,7 +145,8 @@ static void Gui_Reset(void) {
 static void Gui_Free(void) {
 	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, Gui_FontChanged);
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Gui_FileChanged);
-	Elem_TryFree(Gui_Active);
+
+	if (Gui_Active) Elem_TryFree(Gui_Active);
 	Elem_TryFree(Gui_Status);
 	Elem_TryFree(Gui_HUD);
 
