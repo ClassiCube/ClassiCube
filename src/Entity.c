@@ -789,15 +789,7 @@ struct LocalPlayer LocalPlayer_Instance;
 static bool hackPermMsgs;
 float LocalPlayer_JumpHeight(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	return (float)PhysicsComp_GetMaxHeight(p->Physics.JumpVel);
-}
-
-void LocalPlayer_CheckHacksConsistency(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	HacksComp_CheckConsistency(&p->Hacks);
-	if (!HacksComp_CanJumpHigher(&p->Hacks)) {
-		p->Physics.JumpVel = p->Physics.ServerJumpVel;
-	}
+	return (float)PhysicsComp_CalcMaxHeight(p->Physics.JumpVel);
 }
 
 void LocalPlayer_SetInterpPosition(float t) {
@@ -847,7 +839,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	Vector3 headingVelocity;
 
 	if (!World.Blocks) return;
-	e->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed ? 1.0f : 0.5f;
+	e->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanSpeed ? 1.0f : 0.5f;
 	p->OldVelocity = e->Velocity;
 	wasOnGround    = e->OnGround;
 
@@ -890,7 +882,14 @@ static void LocalPlayer_RenderName(struct Entity* e) {
 	Player_DrawName((struct Player*)e);
 }
 
-struct EntityVTABLE localPlayer_VTABLE = {
+static void LocalPlayer_CheckJumpVelocity(void* obj) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	if (!HacksComp_CanJumpHigher(&p->Hacks)) {
+		p->Physics.JumpVel = p->Physics.ServerJumpVel;
+	}
+}
+
+static struct EntityVTABLE localPlayer_VTABLE = {
 	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetCol,
 	LocalPlayer_RenderModel, LocalPlayer_RenderName, Player_ContextLost,      Player_ContextRecreated,
 };
@@ -900,6 +899,7 @@ static void LocalPlayer_Init(void) {
 
 	Player_Init(&p->Base);
 	Player_SetName((struct Player*)p, &Game_Username, &Game_Username);
+	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, LocalPlayer_CheckJumpVelocity);
 
 	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(hacks);

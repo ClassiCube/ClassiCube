@@ -36,7 +36,7 @@ void TiltComp_GetCurrent(struct TiltComp* anim, float t);
 
 /* Entity component that performs management of hack states */
 struct HacksComp {
-	uint8_t UserType;
+	bool IsOp;
 	/* Speed player move at, relative to normal speed, when the 'speeding' key binding is held down */
 	float SpeedMultiplier;
 	/* Whether blocks that the player places that intersect themselves, should cause the player to
@@ -44,7 +44,7 @@ struct HacksComp {
 	bool PushbackPlacing;
 	/* Whether the player should be able to step up whole blocks, instead of just slabs */
 	bool FullBlockStep;
-	/* Whether the player has allowed hacks usage as an option. Note 'can use X' set by the server override this */
+	/* Whether user has allowed hacks as an option. Note 'can use X' set by the server override this */
 	bool Enabled;
 
 	bool CanAnyHacks, CanUseThirdPersonCamera, CanSpeed, CanFly;
@@ -68,8 +68,12 @@ struct HacksComp {
 void HacksComp_Init(struct HacksComp* hacks);
 bool HacksComp_CanJumpHigher(struct HacksComp* hacks);
 void HacksComp_SetUserType(struct HacksComp* hacks, uint8_t value, bool setBlockPerms);
-void HacksComp_CheckConsistency(struct HacksComp* hacks);
-void HacksComp_UpdateState(struct HacksComp* hacks);
+/* Determines hacks permissions based on flags, then calls HacksComp_Update */
+/* e.g. +ophax allows all hacks if op, -push disables entity pushing */
+void HacksComp_RecheckFlags(struct HacksComp* hacks);
+/* Updates state based on permissions (e.g. Flying set to false if CanFly is false) */
+/* Raises UserEvents.HackPermissionsChanged */
+void HacksComp_Update(struct HacksComp* hacks);
 
 /* Represents a position and orientation state */
 struct InterpState { Vector3 Pos; float HeadX, HeadY, RotX, RotZ; };
@@ -127,8 +131,8 @@ void PhysicsComp_Init(struct PhysicsComp* comp, struct Entity* entity);
 void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp);
 void PhysicsComp_DoNormalJump(struct PhysicsComp* comp);
 void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel);
-void PhysicsComp_CalculateJumpVelocity(struct PhysicsComp* comp, float jumpHeight);
-double PhysicsComp_GetMaxHeight(float u);
+float PhysicsComp_CalcJumpVelocity(float jumpHeight);
+double PhysicsComp_CalcMaxHeight(float u);
 void PhysicsComp_DoEntityPush(struct Entity* entity);
 
 /* Entity component that plays block step sounds */

@@ -15,7 +15,6 @@ extern const char* FpsLimit_Names[FPS_LIMIT_COUNT];
 #define OPT_MUSIC_VOLUME "musicvolume"
 #define OPT_SOUND_VOLUME "soundsvolume"
 #define OPT_FORCE_OPENAL "forceopenal"
-#define OPT_FORCE_OLD_OPENGL "force-oldgl"
 
 #define OPT_VIEW_DISTANCE "viewdist"
 #define OPT_BLOCK_PHYSICS "singleplayerphysics"

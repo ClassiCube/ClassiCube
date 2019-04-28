@@ -380,7 +380,7 @@ static void Classic_Handshake(uint8_t* data) {
 	
 	String_Copy(&hacks->HacksFlags,         &Server.Name);
 	String_AppendString(&hacks->HacksFlags, &Server.MOTD);
-	HacksComp_UpdateState(hacks);
+	HacksComp_RecheckFlags(hacks);
 }
 
 static void Classic_Ping(uint8_t* data) { }
@@ -647,7 +647,7 @@ static void Classic_Kick(uint8_t* data) {
 static void Classic_SetPermission(uint8_t* data) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	HacksComp_SetUserType(hacks, *data, !cpe_blockPerms);
-	HacksComp_UpdateState(hacks);
+	HacksComp_RecheckFlags(hacks);
 }
 
 static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interpolate) {
@@ -1130,18 +1130,17 @@ static void CPE_HackControl(uint8_t* data) {
 	p->Hacks.CanSpeed                = *data++ != 0;
 	p->Hacks.CanRespawn              = *data++ != 0;
 	p->Hacks.CanUseThirdPersonCamera = *data++ != 0;
-	LocalPlayer_CheckHacksConsistency();
+	HacksComp_Update(&p->Hacks);
 
 	jumpHeight = Stream_GetU16_BE(data);
 	physics    = &p->Physics;
+
 	if (jumpHeight == UInt16_MaxValue) { /* special value of -1 to reset default */
 		physics->JumpVel = HacksComp_CanJumpHigher(&p->Hacks) ? physics->UserJumpVel : 0.42f;
 	} else {
-		PhysicsComp_CalculateJumpVelocity(physics, jumpHeight / 32.0f);
+		physics->JumpVel = PhysicsComp_CalcJumpVelocity(jumpHeight / 32.0f);
 	}
-
 	physics->ServerJumpVel = physics->JumpVel;
-	Event_RaiseVoid(&UserEvents.HackPermissionsChanged);
 }
 
 static void CPE_ExtAddEntity2(uint8_t* data) {

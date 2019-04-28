@@ -2231,7 +2231,7 @@ static void ClassicOptionsScreen_SetViewBob(const String* v) { Game_ViewBobbing 
 static void ClassicOptionsScreen_GetHacks(String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.Enabled); }
 static void ClassicOptionsScreen_SetHacks(const String* v) {
 	LocalPlayer_Instance.Hacks.Enabled = Menu_SetBool(v, OPT_HACKS_ENABLED);
-	LocalPlayer_CheckHacksConsistency();
+	HacksComp_Update(&LocalPlayer_Instance.Hacks);
 }
 
 static void ClassicOptionsScreen_ContextRecreated(void* screen) {
@@ -2602,7 +2602,7 @@ struct Screen* GuiOptionsScreen_MakeInstance(void) {
 static void HacksSettingsScreen_GetHacks(String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.Enabled); }
 static void HacksSettingsScreen_SetHacks(const String* v) {
 	LocalPlayer_Instance.Hacks.Enabled = Menu_SetBool(v,OPT_HACKS_ENABLED);
-	LocalPlayer_CheckHacksConsistency();
+	HacksComp_Update(&LocalPlayer_Instance.Hacks);
 }
 
 static void HacksSettingsScreen_GetSpeed(String* v) { String_AppendFloat(v, LocalPlayer_Instance.Hacks.SpeedMultiplier, 2); }
@@ -2622,7 +2622,7 @@ static void HacksSettingsScreen_SetJump(const String* v) {
 	struct PhysicsComp* physics;
 
 	physics = &LocalPlayer_Instance.Physics;
-	PhysicsComp_CalculateJumpVelocity(physics, Menu_Float(v));
+	physics->JumpVel     = PhysicsComp_CalcJumpVelocity(Menu_Float(v));
 	physics->UserJumpVel = physics->JumpVel;
 	
 	String_InitArray(str, strBuffer);
@@ -2657,18 +2657,19 @@ static void HacksSettingsScreen_SetSlide(const String* v) {
 
 static void HacksSettingsScreen_GetFOV(String* v) { String_AppendInt(v, Game_Fov); }
 static void HacksSettingsScreen_SetFOV(const String* v) {
-	Game_Fov = Menu_Int(v);
-	if (Game_ZoomFov > Game_Fov) Game_ZoomFov = Game_Fov;
+	int fov = Menu_Int(v);
+	if (Game_ZoomFov > fov) Game_ZoomFov = fov;
+	Game_DefaultFov = fov;
 
 	Options_Set(OPT_FIELD_OF_VIEW, v);
-	Game_UpdateProjection();
+	Game_SetFov(fov);
 }
 
 static void HacksSettingsScreen_CheckHacksAllowed(void* screen) {
 	struct MenuOptionsScreen* s = screen;
 	struct Widget** widgets = s->Widgets;
 	struct LocalPlayer* p;
-	bool noGlobalHacks;
+	bool disabled;
 	int i;
 
 	for (i = 0; i < s->WidgetsCount; i++) {
@@ -2677,11 +2678,11 @@ static void HacksSettingsScreen_CheckHacksAllowed(void* screen) {
 	}
 	p = &LocalPlayer_Instance;
 
-	noGlobalHacks = !p->Hacks.CanAnyHacks || !p->Hacks.Enabled;
-	widgets[3]->Disabled = noGlobalHacks || !p->Hacks.CanSpeed;
-	widgets[4]->Disabled = noGlobalHacks || !p->Hacks.CanSpeed;
-	widgets[5]->Disabled = noGlobalHacks || !p->Hacks.CanSpeed;
-	widgets[7]->Disabled = noGlobalHacks || !p->Hacks.CanPushbackBlocks;
+	disabled = !p->Hacks.Enabled;
+	widgets[3]->Disabled = disabled || !p->Hacks.CanSpeed;
+	widgets[4]->Disabled = disabled || !p->Hacks.CanSpeed;
+	widgets[5]->Disabled = disabled || !p->Hacks.CanSpeed;
+	widgets[7]->Disabled = disabled || !p->Hacks.CanPushbackBlocks;
 }
 
 static void HacksSettingsScreen_ContextLost(void* screen) {

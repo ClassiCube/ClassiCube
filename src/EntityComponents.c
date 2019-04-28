@@ -157,6 +157,7 @@ void HacksComp_Init(struct HacksComp* hacks) {
 	HacksComp_SetAll(hacks, true);
 	hacks->SpeedMultiplier = 10.0f;
 	hacks->Enabled = true;
+	hacks->IsOp           = true;
 	hacks->CanSeeAllNames = true;
 	hacks->CanDoubleJump  = true;
 	hacks->BaseHorSpeed = 1.0f;
@@ -168,7 +169,7 @@ void HacksComp_Init(struct HacksComp* hacks) {
 }
 
 bool HacksComp_CanJumpHigher(struct HacksComp* hacks) {
-	return hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed;
+	return hacks->Enabled && hacks->CanSpeed;
 }
 
 static String HacksComp_UNSAFE_FlagValue(const char* flagRaw, struct HacksComp* hacks) {
@@ -230,8 +231,7 @@ static void HacksComp_ParseAllFlag(struct HacksComp* hacks, const char* incFlag,
 
 void HacksComp_SetUserType(struct HacksComp* hacks, uint8_t value, bool setBlockPerms) {
 	bool isOp = value >= 100 && value <= 127;
-	hacks->UserType = value;
-	hacks->CanSeeAllNames = isOp;
+	hacks->IsOp = isOp;
 	if (!setBlockPerms) return;
 
 	Blocks.CanPlace[BLOCK_BEDROCK]     = isOp;
@@ -242,7 +242,26 @@ void HacksComp_SetUserType(struct HacksComp* hacks, uint8_t value, bool setBlock
 	Blocks.CanPlace[BLOCK_STILL_LAVA]  = isOp;
 }
 
-void HacksComp_CheckConsistency(struct HacksComp* hacks) {
+void HacksComp_RecheckFlags(struct HacksComp* hacks) {
+	const static String noHaxFlag = String_FromConst("-hax");
+	/* Can use hacks by default (also case with WoM), no need to check +hax */
+	bool hax = !String_ContainsString(&hacks->HacksFlags, &noHaxFlag);
+	HacksComp_SetAll(hacks, hax);
+	hacks->CanBePushed = true;
+
+	HacksComp_ParseFlag(hacks, "+fly",     "-fly",     &hacks->CanFly);
+	HacksComp_ParseFlag(hacks, "+noclip",  "-noclip",  &hacks->CanNoclip);
+	HacksComp_ParseFlag(hacks, "+speed",   "-speed",   &hacks->CanSpeed);
+	HacksComp_ParseFlag(hacks, "+respawn", "-respawn", &hacks->CanRespawn);
+	HacksComp_ParseFlag(hacks, "+push",    "-push",    &hacks->CanBePushed);
+
+	if (hacks->IsOp) HacksComp_ParseAllFlag(hacks, "+ophax", "-ophax");
+	hacks->BaseHorSpeed = HacksComp_ParseFlagFloat("horspeed=", hacks);
+	hacks->MaxJumps     = HacksComp_ParseFlagInt("jumps=",      hacks);
+	HacksComp_Update(hacks);
+}
+
+void HacksComp_Update(struct HacksComp* hacks) {
 	if (!hacks->CanFly || !hacks->Enabled) {
 		hacks->Flying = false; hacks->FlyingDown = false; hacks->FlyingUp = false;
 	}
@@ -253,40 +272,8 @@ void HacksComp_CheckConsistency(struct HacksComp* hacks) {
 		hacks->Speeding = false; hacks->HalfSpeeding = false;
 	}
 
-	hacks->CanDoubleJump  = hacks->CanAnyHacks && hacks->Enabled && hacks->CanSpeed;
-	hacks->CanSeeAllNames = hacks->CanAnyHacks && hacks->CanSeeAllNames;
-
-	if (!hacks->CanUseThirdPersonCamera || !hacks->Enabled) {
-		Camera_CycleActive();
-	}
-}
-
-void HacksComp_UpdateState(struct HacksComp* hacks) {
-	const static String excHacks = String_FromConst("-hax");
-
-	HacksComp_SetAll(hacks, true);
-	hacks->CanBePushed = true;
-	if (!hacks->HacksFlags.length) return;
-
-	/* By default (this is also the case with WoM), we can use hacks */
-	if (String_ContainsString(&hacks->HacksFlags, &excHacks)) {
-		HacksComp_SetAll(hacks, false);
-	}
-
-	HacksComp_ParseFlag(hacks, "+fly",     "-fly",     &hacks->CanFly);
-	HacksComp_ParseFlag(hacks, "+noclip",  "-noclip",  &hacks->CanNoclip);
-	HacksComp_ParseFlag(hacks, "+speed",   "-speed",   &hacks->CanSpeed);
-	HacksComp_ParseFlag(hacks, "+respawn", "-respawn", &hacks->CanRespawn);
-	HacksComp_ParseFlag(hacks, "+push",    "-push",    &hacks->CanBePushed);
-
-	if (hacks->UserType == 0x64) {
-		HacksComp_ParseAllFlag(hacks, "+ophax", "-ophax");
-	}
-
-	hacks->BaseHorSpeed = HacksComp_ParseFlagFloat("horspeed=", hacks);
-	hacks->MaxJumps     = HacksComp_ParseFlagInt("jumps=",      hacks);
-
-	HacksComp_CheckConsistency(hacks);
+	hacks->CanDoubleJump  = hacks->Enabled     && hacks->CanSpeed;
+	hacks->CanSeeAllNames = hacks->CanAnyHacks && hacks->IsOp;
 	Event_RaiseVoid(&UserEvents.HackPermissionsChanged);
 }
 
@@ -1190,7 +1177,7 @@ static double PhysicsComp_YPosAt(int t, float u) {
 	return a * (-49 * u - 196) - 4 * t + 50 * u + 196;
 }
 
-double PhysicsComp_GetMaxHeight(float u) {
+double PhysicsComp_CalcMaxHeight(float u) {
 	/* equation below comes from solving diff(x(t, u))= 0 */
 	/* We only work in discrete timesteps, so test both rounded up and down */
 	double t = 49.49831645 * Math_Log(0.247483075 * u + 0.9899323);
@@ -1199,17 +1186,18 @@ double PhysicsComp_GetMaxHeight(float u) {
 	return max(value_floor, value_ceil);
 }
 
-/* Calculates the jump velocity required such that when a client presses
+/* Calculates the jump velocity required such that when user presses
 the jump binding they will be able to jump up to the given height. */
-void PhysicsComp_CalculateJumpVelocity(struct PhysicsComp* comp, float jumpHeight) {
-	comp->JumpVel = 0.0f;
-	if (jumpHeight == 0.0f) return;
+float PhysicsComp_CalcJumpVelocity(float jumpHeight) {
+	float jumpVel = 0.0f;
+	if (jumpHeight == 0.0f) return jumpVel;
 
-	if (jumpHeight >= 256.0f) comp->JumpVel = 10.0f;
-	if (jumpHeight >= 512.0f) comp->JumpVel = 16.5f;
-	if (jumpHeight >= 768.0f) comp->JumpVel = 22.5f;
+	if (jumpHeight >= 256.0f) jumpVel = 10.0f;
+	if (jumpHeight >= 512.0f) jumpVel = 16.5f;
+	if (jumpHeight >= 768.0f) jumpVel = 22.5f;
 
-	while (PhysicsComp_GetMaxHeight(comp->JumpVel) <= jumpHeight) { comp->JumpVel += 0.001f; }
+	while (PhysicsComp_CalcMaxHeight(jumpVel) <= jumpHeight) { jumpVel += 0.001f; }
+	return jumpVel;
 }
 
 void PhysicsComp_DoEntityPush(struct Entity* entity) {

@@ -115,16 +115,12 @@ static void InputHandler_CycleDistanceBackwards(const short* viewDists, int coun
 	Game_UserSetViewDistance(viewDists[count - 1]);
 }
 
-bool InputHandler_SetFOV(int fov, bool setZoom) {
-	struct HacksComp* h;
-	if (Game_Fov == fov) return true;
+bool InputHandler_SetFOV(int fov) {
+	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
+	if (!h->Enabled || !h->CanUseThirdPersonCamera) return false;
 
-	h = &LocalPlayer_Instance.Hacks;
-	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
-
-	Game_Fov = fov;
-	if (setZoom) Game_ZoomFov = fov;
-	Game_UpdateProjection();
+	Game_ZoomFov = fov;
+	Game_SetFov(fov);
 	return true;
 }
 
@@ -133,13 +129,18 @@ static bool InputHandler_DoFovZoom(float deltaPrecise) {
 	if (!KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) return false;
 
 	h = &LocalPlayer_Instance.Hacks;
-	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
+	if (!h->Enabled || !h->CanUseThirdPersonCamera) return false;
 
 	if (input_fovIndex == -1.0f) input_fovIndex = (float)Game_ZoomFov;
 	input_fovIndex -= deltaPrecise * 5.0f;
 
 	Math_Clamp(input_fovIndex, 1.0f, Game_DefaultFov);
-	return InputHandler_SetFOV((int)input_fovIndex, true);
+	return InputHandler_SetFOV((int)input_fovIndex);
+}
+
+static void InputHandler_CheckZoomFov(void* obj) {
+	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
+	if (!h->Enabled || !h->CanUseThirdPersonCamera) Game_SetFov(Game_DefaultFov);
 }
 
 static bool InputHandler_HandleNonClassicKey(Key key) {
@@ -494,7 +495,7 @@ static void InputHandler_KeyUp(void* obj, int key) {
 	if (InputHandler_SimulateMouse(key, false)) return;
 
 	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) {
-		InputHandler_SetFOV(Game_DefaultFov, false);
+		Game_SetFov(Game_DefaultFov);
 	}
 
 	active = Gui_GetActiveScreen();
@@ -515,6 +516,7 @@ void InputHandler_Init(void) {
 	Event_RegisterInt(&KeyEvents.Up,            NULL, InputHandler_KeyUp);
 	Event_RegisterInt(&KeyEvents.Press,         NULL, InputHandler_KeyPress);
 
+	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, InputHandler_CheckZoomFov);
 	KeyBind_Init();
 	Hotkeys_Init();
 }

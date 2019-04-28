@@ -198,9 +198,6 @@ struct LocalPlayer {
 extern struct LocalPlayer LocalPlayer_Instance;
 /* Returns how high (in blocks) the player can jump. */
 float LocalPlayer_JumpHeight(void);
-/* Checks consistency of user's enabled hacks. */
-/* (e.g. if Hacks.CanNoclip is false, Hacks.Noclip is set to false) */
-void LocalPlayer_CheckHacksConsistency(void);
 /* Interpolates current position and orientation between Interp.Prev and Interp.Next */
 void LocalPlayer_SetInterpPosition(float t);
 /* Returns whether local player handles a key being pressed. */

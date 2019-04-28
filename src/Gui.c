@@ -195,7 +195,7 @@ void Gui_SetActive(struct Screen* screen) {
 }
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
-void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
+void Gui_ShowOverlay(struct Screen* screen, bool atFront) {
 	int i;
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
 		Logger_Abort("Gui_ShowOverlay - hit max count");
@@ -206,13 +206,13 @@ void Gui_ShowOverlay(struct Screen* overlay, bool atFront) {
 		for (i = Gui_OverlaysCount - 1; i > 0; i--) {
 			Gui_Overlays[i] = Gui_Overlays[i - 1];
 		}
-		Gui_Overlays[0] = overlay;
+		Gui_Overlays[0] = screen;
 	} else {
-		Gui_Overlays[Gui_OverlaysCount] = overlay;
+		Gui_Overlays[Gui_OverlaysCount] = screen;
 	}
 	Gui_OverlaysCount++;
 
-	Elem_Init(overlay);
+	Elem_Init(screen);
 	Camera_CheckFocus();
 }
 
@@ -226,7 +226,7 @@ int Gui_IndexOverlay(const void* screen) {
 	return -1;
 }
 
-void Gui_RemoveOverlay(void* screen) {
+void Gui_RemoveOverlay(const void* screen) {
 	struct Screen* s = screen;
 	int i = Gui_IndexOverlay(screen);
 	if (i == -1) return;

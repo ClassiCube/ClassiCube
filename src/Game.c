@@ -163,10 +163,14 @@ void Game_UserSetViewDistance(int distance) {
 	Game_SetViewDistance(distance);
 }
 
-void Game_UpdateProjection(void) {
-	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 179, 70);
-	Camera.Active->GetProjection(&Gfx.Projection);
+void Game_SetFov(int fov) {
+	if (Game_Fov == fov) return;
+	Game_Fov = fov;
+	Game_UpdateProjection();
+}
 
+void Game_UpdateProjection(void) {
+	Camera.Active->GetProjection(&Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
 	Event_RaiseVoid(&GfxEvents.ProjectionChanged);
 }
@@ -640,7 +644,7 @@ static void Game_RenderFrame(double delta) {
 
 	allowZoom = !Gui_Active && !Gui_HUD->HandlesAllInput;
 	if (allowZoom && KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) {
-		InputHandler_SetFOV(Game_ZoomFov, false);
+		InputHandler_SetFOV(Game_ZoomFov);
 	}
 
 	Game_DoScheduledTasks(delta);

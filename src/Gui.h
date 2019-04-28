@@ -126,7 +126,7 @@ CC_NOINLINE void Gui_CloseActive(void);
 CC_NOINLINE void Gui_Close(void* screen);
 
 void Gui_RefreshHud(void);
-void Gui_ShowOverlay(struct Screen* overlay, bool atFront);
+void Gui_ShowOverlay(struct Screen* screen, bool atFront);
 /* Returns index of the given screen in the overlays list, -1 if not */
 int  Gui_IndexOverlay(const void* screen);
 /* Removes given screen from the overlays list */
