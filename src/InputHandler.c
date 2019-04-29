@@ -457,13 +457,19 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	if (!was && InputHandler_SimulateMouse(key, true)) return;
 	active = Gui_GetActiveScreen();
 
+#ifndef CC_BUILD_WEB
+	if (key == KEY_ESCAPE && active->Closable) {
+		/* Don't want holding escape to go in and out of pause menu */
+		if (!was) Gui_Close(active); 
+		return;
+	}
+#endif
+
 	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
 		Window_Close(); return;
 	} else if (key == KeyBinds[KEYBIND_SCREENSHOT] && !was) {
 		Game_ScreenshotRequested = true; return;
-	} else if (key == KEY_ESCAPE && active->Closable) {
-		Gui_Close(active);
 	} else if (Elem_HandlesKeyDown(active, key, was)) {
 		return;
 	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !active->HandlesAllInput) {
@@ -497,6 +503,15 @@ static void InputHandler_KeyUp(void* obj, int key) {
 	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) {
 		Game_SetFov(Game_DefaultFov);
 	}
+
+#ifdef CC_BUILD_WEB
+	/* When closing menus (which reacquires mouse focus) in key down, */
+	/* this still leaves the cursor visible. But if this is instead */
+	/* done in key up, the cursor disappears as expected. */
+	if (key == KEY_ESCAPE && active->Closable) {
+		Gui_Close(active); return;
+	}
+#endif
 
 	active = Gui_GetActiveScreen();
 	Elem_HandlesKeyUp(active, key);
