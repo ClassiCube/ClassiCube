@@ -826,14 +826,21 @@ static void Window_RefreshBorders(void) {
 }
 
 static void Window_RefreshBounds(const XConfigureEvent* e) {
+	Window child;
+	int x, y;
 	Window_RefreshBorders();
+	
+	/* e->x and e->y are relative to parent window, which might not be root window */
+	/* e.g. linux mint + cinnamon, if you use /client resolution, e->x = 10, e->y = 36 */
+	/* So just always translate topleft to root window coordinates to avoid this */
+	XTranslateCoordinates(win_display, win_handle, win_rootWin, 0, 0, &x, &y, &child);
 
-	if (e->x != Window_ClientBounds.X || e->y != Window_ClientBounds.Y) {
-		Window_ClientBounds.X = e->x; Window_ClientBounds.Y = e->y;
+	if (x != Window_ClientBounds.X || y != Window_ClientBounds.Y) {
+		Window_ClientBounds.X = x; Window_ClientBounds.Y = y;
 
 		/* To get the external (window) position, need to add the border */
-		Window_Bounds.X = e->x - borderLeft;
-		Window_Bounds.Y = e->y - borderTop;
+		Window_Bounds.X = x - borderLeft;
+		Window_Bounds.Y = y - borderTop;
 		Event_RaiseVoid(&WindowEvents.Moved);
 	}
 
