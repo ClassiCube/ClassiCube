@@ -213,7 +213,7 @@ static void SPConnection_SendChat(const String* text) {
 }
 
 static void SPConnection_SendPosition(Vector3 pos, float rotY, float headX) { }
-static void SPConnection_SendPlayerClick(MouseButton button, bool pressed, EntityID targetId, struct PickedPos* pos) { }
+static void SPConnection_SendData(const uint8_t* data, uint32_t len) { }
 
 static void SPConnection_Tick(struct ScheduledTask* task) {
 	if (Server.Disconnected) return;
@@ -228,12 +228,12 @@ static void SPConnection_Init(void) {
 	Server_ResetState();
 	Physics_Init();
 
-	Server.BeginConnect    = SPConnection_BeginConnect;
-	Server.Tick            = SPConnection_Tick;
-	Server.SendBlock       = SPConnection_SendBlock;
-	Server.SendChat        = SPConnection_SendChat;
-	Server.SendPosition    = SPConnection_SendPosition;
-	Server.SendPlayerClick = SPConnection_SendPlayerClick;
+	Server.BeginConnect = SPConnection_BeginConnect;
+	Server.Tick         = SPConnection_Tick;
+	Server.SendBlock    = SPConnection_SendBlock;
+	Server.SendChat     = SPConnection_SendChat;
+	Server.SendPosition = SPConnection_SendPosition;
+	Server.SendData     = SPConnection_SendData;
 	
 	Server.SupportsFullCP437       = !Game_ClassicMode;
 	Server.SupportsPartialMessages = true;
@@ -271,9 +271,8 @@ static void MPConnection_FinishConnect(void) {
 	net_readCurrent    = net_readBuffer;
 	Server.WriteBuffer = net_writeBuffer;
 
-	Handlers_Reset();
-	Classic_WriteLogin(&Game_Username, &Game_Mppass);
-	Net_SendPacket();
+	Protocol_Reset();
+	Classic_SendLogin(&Game_Username, &Game_Mppass);
 	net_lastPacket = DateTime_CurrentUTC_MS();
 }
 
@@ -350,13 +349,12 @@ static void MPConnection_SendBlock(int x, int y, int z, BlockID old, BlockID now
 }
 
 static void MPConnection_SendChat(const String* text) {
-	String left, part;
+	String left;
 	if (!text->length || net_connecting) return;
 	left = *text;
 
 	while (left.length > STRING_SIZE) {
-		part = String_UNSAFE_Substring(&left, 0, STRING_SIZE);
-		Classic_WriteChat(&part, true);
+		Classic_WriteChat(&left, true);
 		Net_SendPacket();
 		left = String_UNSAFE_SubstringAt(&left, STRING_SIZE);
 	}
@@ -367,11 +365,6 @@ static void MPConnection_SendChat(const String* text) {
 
 static void MPConnection_SendPosition(Vector3 pos, float rotY, float headX) {
 	Classic_WritePosition(pos, rotY, headX);
-	Net_SendPacket();
-}
-
-static void MPConnection_SendPlayerClick(MouseButton button, bool pressed, EntityID targetId, struct PickedPos* pos) {
-	CPE_WritePlayerClick(button, pressed, targetId, pos);
 	Net_SendPacket();
 }
 
@@ -484,7 +477,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */
 	if ((ticks % 3) == 0) {
 		Server_CheckAsyncResources();
-		Handlers_Tick();
+		Protocol_Tick();
 		/* Have any packets been written? */
 		if (Server.WriteBuffer != net_writeBuffer) {
 			Net_SendPacket();
@@ -493,34 +486,35 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	ticks++;
 }
 
-void Net_SendPacket(void) {
-	uint32_t left, wrote;
-	uint8_t* cur;
+static void MPConnection_SendData(const uint8_t* data, uint32_t len) {
+	uint32_t wrote;
 	ReturnCode res;
-
-	left = (uint32_t)(Server.WriteBuffer - net_writeBuffer);
-	Server.WriteBuffer = net_writeBuffer;
 	if (Server.Disconnected) return;
 
-	/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
-	cur = net_writeBuffer;
-	while (left) {
-		res = Socket_Write(net_socket, cur, left, &wrote);
-		if (res || !wrote) { net_writeFailed = true; break; }
-		cur += wrote; left -= wrote;
+	while (len) {
+		res = Socket_Write(net_socket, data, len, &wrote);
+		/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
+		if (res || !wrote) { net_writeFailed = true; return; }
+		data += wrote; len -= wrote;
 	}
+}
+
+void Net_SendPacket(void) {
+	uint32_t len = (uint32_t)(Server.WriteBuffer - net_writeBuffer);
+	Server.WriteBuffer = net_writeBuffer;
+	Server.SendData(net_writeBuffer, len);
 }
 
 static void MPConnection_Init(void) {
 	Server_ResetState();
 	Server.IsSinglePlayer = false;
 
-	Server.BeginConnect    = MPConnection_BeginConnect;
-	Server.Tick            = MPConnection_Tick;
-	Server.SendBlock       = MPConnection_SendBlock;
-	Server.SendChat        = MPConnection_SendChat;
-	Server.SendPosition    = MPConnection_SendPosition;
-	Server.SendPlayerClick = MPConnection_SendPlayerClick;
+	Server.BeginConnect = MPConnection_BeginConnect;
+	Server.Tick         = MPConnection_Tick;
+	Server.SendBlock    = MPConnection_SendBlock;
+	Server.SendChat     = MPConnection_SendChat;
+	Server.SendPosition = MPConnection_SendPosition;
+	Server.SendData     = MPConnection_SendData;
 
 	net_readCurrent    = net_readBuffer;
 	Server.WriteBuffer = net_writeBuffer;
@@ -533,7 +527,7 @@ static void MPConnection_OnNewMap(void) {
 
 	/* wipe all existing entities */
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		Handlers_RemoveEntity((EntityID)i);
+		Protocol_RemoveEntity((EntityID)i);
 	}
 }
 
@@ -548,7 +542,7 @@ static void MPConnection_Reset(void) {
 
 	net_writeFailed = false;
 	Block_SetUsedCount(256);
-	Handlers_Reset();
+	Protocol_Reset();
 	Server_Free();
 }
 

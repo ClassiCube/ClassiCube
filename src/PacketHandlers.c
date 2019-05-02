@@ -62,24 +62,24 @@ static bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
 #define Classic_TabList_Reset(id) (classic_tabList[id >> 3] &= (uint8_t)~(1 << (id & 0x7)))
 
 #ifndef EXTENDED_BLOCKS
-#define Handlers_ReadBlock(data, value) value = *data++;
+#define Protocol_ReadBlock(data, value) value = *data++;
 #else
-#define Handlers_ReadBlock(data, value)\
+#define Protocol_ReadBlock(data, value)\
 if (cpe_extBlocks) {\
 	value = Stream_GetU16_BE(data); data += 2;\
 } else { value = *data++; }
 #endif
 
 #ifndef EXTENDED_BLOCKS
-#define Handlers_WriteBlock(data, value) *data++ = value;
+#define Protocol_WriteBlock(data, value) *data++ = value;
 #else
-#define Handlers_WriteBlock(data, value)\
+#define Protocol_WriteBlock(data, value)\
 if (cpe_extBlocks) {\
 	Stream_SetU16_BE(data, value); data += 2;\
 } else { *data++ = (BlockRaw)value; }
 #endif
 
-static void Handlers_ReadString(uint8_t** ptr, String* str) {
+static void Protocol_ReadString(uint8_t** ptr, String* str) {
 	int i, length = 0;
 	uint8_t* data = *ptr;
 	for (i = STRING_SIZE - 1; i >= 0; i--) {
@@ -92,7 +92,7 @@ static void Handlers_ReadString(uint8_t** ptr, String* str) {
 	*ptr = data + STRING_SIZE;
 }
 
-static void Handlers_WriteString(uint8_t* data, const String* value) {
+static void Protocol_WriteString(uint8_t* data, const String* value) {
 	int i, count = min(value->length, STRING_SIZE);
 	for (i = 0; i < count; i++) {
 		char c = value->buffer[i];
@@ -103,14 +103,14 @@ static void Handlers_WriteString(uint8_t* data, const String* value) {
 	for (; i < STRING_SIZE; i++) { data[i] = ' '; }
 }
 
-static void Handlers_RemoveEndPlus(String* value) {
+static void Protocol_RemoveEndPlus(String* value) {
 	/* Workaround for MCDzienny (and others) use a '+' at the end to distinguish classicube.net accounts */
 	/* from minecraft.net accounts. Unfortunately they also send this ending + to the client. */
 	if (!value->length || value->buffer[value->length - 1] != '+') return;
 	value->length--;
 }
 
-static void Handlers_AddTablistEntry(EntityID id, const String* playerName, const String* listName, const String* groupName, uint8_t groupRank) {
+static void Protocol_AddTablistEntry(EntityID id, const String* playerName, const String* listName, const String* groupName, uint8_t groupRank) {
 	String rawName; char rawBuffer[STRING_SIZE];
 	String_InitArray(rawName, rawBuffer);
 
@@ -118,10 +118,10 @@ static void Handlers_AddTablistEntry(EntityID id, const String* playerName, cons
 	TabList_Set(id, &rawName, listName, groupName, groupRank);
 }
 
-static void Handlers_CheckName(EntityID id, String* name, String* skin) {
+static void Protocol_CheckName(EntityID id, String* name, String* skin) {
 	String colorlessName; char colorlessBuffer[STRING_SIZE];
 
-	Handlers_RemoveEndPlus(name);
+	Protocol_RemoveEndPlus(name);
 	/* Server is only allowed to change our own name colours. */
 	if (id == ENTITIES_SELF_ID) {
 		String_InitArray(colorlessName, colorlessBuffer);
@@ -130,12 +130,12 @@ static void Handlers_CheckName(EntityID id, String* name, String* skin) {
 	}
 
 	if (!skin->length) String_Copy(skin, name);
-	Handlers_RemoveEndPlus(skin);
+	Protocol_RemoveEndPlus(skin);
 	String_StripCols(skin);
 }
 
 static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interpolate);
-static void Handlers_AddEntity(uint8_t* data, EntityID id, const String* displayName, const String* skinName, bool readPosition) {
+static void Protocol_AddEntity(uint8_t* data, EntityID id, const String* displayName, const String* skinName, bool readPosition) {
 	struct LocalPlayer* p;
 	struct NetPlayer* pl;
 
@@ -167,7 +167,7 @@ static void Handlers_AddEntity(uint8_t* data, EntityID id, const String* display
 	p->SpawnHeadX = p->Base.HeadX;
 }
 
-void Handlers_RemoveEntity(EntityID id) {
+void Protocol_RemoveEntity(EntityID id) {
 	struct Entity* entity = Entities.List[id];
 	if (!entity) return;
 	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
@@ -178,7 +178,7 @@ void Handlers_RemoveEntity(EntityID id) {
 	Classic_TabList_Reset(id);
 }
 
-static void Handlers_UpdateLocation(EntityID playerId, struct LocationUpdate* update, bool interpolate) {
+static void Protocol_UpdateLocation(EntityID playerId, struct LocationUpdate* update, bool interpolate) {
 	struct Entity* entity = Entities.List[playerId];
 	if (entity) {
 		entity->VTABLE->SetLocation(entity, update, interpolate);
@@ -305,7 +305,7 @@ void Classic_WriteChat(const String* text, bool partial) {
 	*data++ = OPCODE_MESSAGE;
 	{
 		*data++ = Server.SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
-		Handlers_WriteString(data, text); data += STRING_SIZE;
+		Protocol_WriteString(data, text); data += STRING_SIZE;
 	}
 	Server.WriteBuffer = data;
 }
@@ -318,7 +318,7 @@ void Classic_WritePosition(Vector3 pos, float rotY, float headX) {
 	*data++ = OPCODE_ENTITY_TELEPORT;
 	{
 		payload = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
-		Handlers_WriteBlock(data, payload);
+		Protocol_WriteBlock(data, payload);
 		x = (int)(pos.X * 32);
 		y = (int)(pos.Y * 32) + 51;
 		z = (int)(pos.Z * 32);
@@ -347,21 +347,21 @@ void Classic_WriteSetBlock(int x, int y, int z, bool place, BlockID block) {
 		Stream_SetU16_BE(data, y); data += 2;
 		Stream_SetU16_BE(data, z); data += 2;
 		*data++ = place;
-		Handlers_WriteBlock(data, block);
+		Protocol_WriteBlock(data, block);
 	}
 	Server.WriteBuffer = data;
 }
 
-void Classic_WriteLogin(const String* username, const String* verKey) {
-	uint8_t* data = Server.WriteBuffer;
-	*data++ = OPCODE_HANDSHAKE;
+void Classic_SendLogin(const String* username, const String* verKey) {
+	uint8_t data[131];
+	data[0] = OPCODE_HANDSHAKE;
 	{
-		*data++ = 7; /* protocol version */
-		Handlers_WriteString(data, username); data += STRING_SIZE;
-		Handlers_WriteString(data, verKey);   data += STRING_SIZE;
-		*data++ = Game_UseCPE ? 0x42 : 0x00;
+		data[1] = 7; /* protocol version */
+		Protocol_WriteString(&data[2],  username);
+		Protocol_WriteString(&data[66], verKey);
+		data[130] = Game_UseCPE ? 0x42 : 0x00;
 	}
-	Server.WriteBuffer = data;
+	Server.SendData(data, 131);
 }
 
 static void Classic_Handshake(uint8_t* data) {
@@ -371,8 +371,8 @@ static void Classic_Handshake(uint8_t* data) {
 	Server.MOTD.length = 0;
 	data++; /* protocol version */
 
-	Handlers_ReadString(&data, &Server.Name);
-	Handlers_ReadString(&data, &Server.MOTD);
+	Protocol_ReadString(&data, &Server.Name);
+	Protocol_ReadString(&data, &Server.MOTD);
 	Chat_SetLogName(&Server.Name);
 
 	hacks = &LocalPlayer_Instance.Hacks;
@@ -536,7 +536,7 @@ static void Classic_SetBlock(uint8_t* data) {
 	z = Stream_GetU16_BE(&data[4]);
 	data += 6;
 
-	Handlers_ReadBlock(data, block);
+	Protocol_ReadBlock(data, block);
 	if (World_Contains(x, y, z)) {
 		Game_UpdateBlock(x, y, z, block);
 	}
@@ -551,12 +551,12 @@ static void Classic_AddEntity(uint8_t* data) {
 	String_InitArray(skin, skinBuffer);
 
 	id = *data++;
-	Handlers_ReadString(&data, &name);
-	Handlers_CheckName(id, &name, &skin);
-	Handlers_AddEntity(data, id, &name, &skin, true);
+	Protocol_ReadString(&data, &name);
+	Protocol_CheckName(id, &name, &skin);
+	Protocol_AddEntity(data, id, &name, &skin, true);
 
 	/* Workaround for some servers that declare support for ExtPlayerList but don't send ExtAddPlayerName */
-	Handlers_AddTablistEntry(id, &name, &name, &group, 0);
+	Protocol_AddTablistEntry(id, &name, &name, &group, 0);
 	Classic_TabList_Set(id);
 }
 
@@ -578,7 +578,7 @@ static void Classic_RelPosAndOrientationUpdate(uint8_t* data) {
 	headX = Math_Packed2Deg(*data++);
 
 	LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, true);
-	Handlers_UpdateLocation(id, &update, true);
+	Protocol_UpdateLocation(id, &update, true);
 }
 
 static void Classic_RelPositionUpdate(uint8_t* data) {
@@ -591,7 +591,7 @@ static void Classic_RelPositionUpdate(uint8_t* data) {
 	pos.Z = (int8_t)(*data++) / 32.0f;
 
 	LocationUpdate_MakePos(&update, pos, true);
-	Handlers_UpdateLocation(id, &update, true);
+	Protocol_UpdateLocation(id, &update, true);
 }
 
 static void Classic_OrientationUpdate(uint8_t* data) {
@@ -603,12 +603,12 @@ static void Classic_OrientationUpdate(uint8_t* data) {
 	headX = Math_Packed2Deg(*data++);
 
 	LocationUpdate_MakeOri(&update, rotY, headX);
-	Handlers_UpdateLocation(id, &update, true);
+	Protocol_UpdateLocation(id, &update, true);
 }
 
 static void Classic_RemoveEntity(uint8_t* data) {
 	EntityID id = *data;
-	Handlers_RemoveEntity(id);
+	Protocol_RemoveEntity(id);
 }
 
 static void Classic_Message(uint8_t* data) {
@@ -624,7 +624,7 @@ static void Classic_Message(uint8_t* data) {
 		if (type == 0xFF) String_AppendConst(&text, "&e");
 		type = MSG_TYPE_NORMAL;
 	}
-	Handlers_ReadString(&data, &text);
+	Protocol_ReadString(&data, &text);
 
 	/* WoM detail messages (used e.g. for fCraft server compass) */
 	if (String_CaselessStarts(&text, &detailMsg)) {
@@ -640,7 +640,7 @@ static void Classic_Kick(uint8_t* data) {
 	String reason; char reasonBuffer[STRING_SIZE];
 
 	String_InitArray(reason, reasonBuffer);
-	Handlers_ReadString(&data, &reason);
+	Protocol_ReadString(&data, &reason);
 	Game_Disconnect(&title, &reason);
 }
 
@@ -677,7 +677,7 @@ static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interp
 
 	if (id == ENTITIES_SELF_ID) classic_receivedFirstPos = true;
 	LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, false);
-	Handlers_UpdateLocation(id, &update, interpolate);
+	Protocol_UpdateLocation(id, &update, interpolate);
 }
 
 static void Classic_Reset(void) {
@@ -724,63 +724,54 @@ const char* cpe_clientExtensions[30] = {
 static void CPE_SetMapEnvUrl(uint8_t* data);
 
 #define Ext_Deg2Packed(x) ((int)((x) * 65536.0f / 360.0f))
-void CPE_WritePlayerClick(MouseButton button, bool pressed, uint8_t targetId, struct PickedPos* pos) {
+void CPE_SendPlayerClick(MouseButton button, bool pressed, uint8_t targetId, struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	uint8_t* data = Server.WriteBuffer;
-	*data++ = OPCODE_PLAYER_CLICK;
+	uint8_t data[15];
+
+	data[0] = OPCODE_PLAYER_CLICK;
 	{
-		*data++ = button;
-		*data++ = !pressed;
-		Stream_SetU16_BE(data, Ext_Deg2Packed(p->HeadY)); data += 2;
-		Stream_SetU16_BE(data, Ext_Deg2Packed(p->HeadX)); data += 2;
+		data[1] = button;
+		data[2] = !pressed;
+		Stream_SetU16_BE(&data[3], Ext_Deg2Packed(p->HeadY));
+		Stream_SetU16_BE(&data[5], Ext_Deg2Packed(p->HeadX));
 
-		*data++ = targetId;
-		Stream_SetU16_BE(data, pos->BlockPos.X); data += 2;
-		Stream_SetU16_BE(data, pos->BlockPos.Y); data += 2;
-		Stream_SetU16_BE(data, pos->BlockPos.Z); data += 2;
+		data[7] = targetId;
+		Stream_SetU16_BE(&data[8],  pos->BlockPos.X);
+		Stream_SetU16_BE(&data[10], pos->BlockPos.Y);
+		Stream_SetU16_BE(&data[12], pos->BlockPos.Z);
 
-		*data = 255;
+		data[14] = 255;
 		/* Our own face values differ from CPE block face */
 		switch (pos->Closest) {
-		case FACE_XMAX: *data = 0; break;
-		case FACE_XMIN: *data = 1; break;
-		case FACE_YMAX: *data = 2; break;
-		case FACE_YMIN: *data = 3; break;
-		case FACE_ZMAX: *data = 4; break;
-		case FACE_ZMIN: *data = 5; break;
+		case FACE_XMAX: data[14] = 0; break;
+		case FACE_XMIN: data[14] = 1; break;
+		case FACE_YMAX: data[14] = 2; break;
+		case FACE_YMIN: data[14] = 3; break;
+		case FACE_ZMAX: data[14] = 4; break;
+		case FACE_ZMIN: data[14] = 5; break;
 		}
-		data++;
 	}
-	Server.WriteBuffer += 15;
+	Server.SendData(data, 15);
 }
 
-static void CPE_WriteExtInfo(const String* appName, int extensionsCount) {
-	uint8_t* data = Server.WriteBuffer; 
-	*data++ = OPCODE_EXT_INFO;
+static void CPE_SendExtInfo(const String* appName, int extsCount) {
+	uint8_t data[67];
+	data[0] = OPCODE_EXT_INFO;
 	{
-		Handlers_WriteString(data, appName);     data += STRING_SIZE;
-		Stream_SetU16_BE(data, extensionsCount); data += 2;
+		Protocol_WriteString(&data[1], appName);
+		Stream_SetU16_BE(&data[65],    extsCount);
 	}
-	Server.WriteBuffer = data;
+	Server.SendData(data, 67);
 }
 
-static void CPE_WriteExtEntry(const String* extensionName, int extensionVersion) {
-	uint8_t* data = Server.WriteBuffer;
-	*data++ = OPCODE_EXT_ENTRY;
+static void CPE_SendExtEntry(const String* extName, int extVersion) {
+	uint8_t data[69];
+	data[0] = OPCODE_EXT_ENTRY;
 	{
-		Handlers_WriteString(data, extensionName); data += STRING_SIZE;
-		Stream_SetU32_BE(data, extensionVersion);  data += 4;
+		Handlers_WriteString(&data[1], extName);
+		Stream_SetU32_BE(&data[65],    extVersion);
 	}
-	Server.WriteBuffer = data;
-}
-
-static void CPE_WriteCustomBlockLevel(uint8_t version) {
-	uint8_t* data = Server.WriteBuffer;
-	*data++ = OPCODE_CUSTOM_BLOCK_LEVEL;
-	{
-		*data++ = version;
-	}
-	Server.WriteBuffer = data;
+	Server.SendData(data, 69);
 }
 
 static void CPE_WriteTwoWayPing(bool serverToClient, int payload) {
@@ -797,6 +788,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 	int count = Array_Elems(cpe_clientExtensions);
 	String name;
 	int i, ver;
+	uint8_t data[69];
 
 	if (cpe_serverExtensionsCount) return;
 	
@@ -812,9 +804,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 #else
 	if (!Game_AllowCustomBlocks) count -= 2;
 #endif
-
-	CPE_WriteExtInfo(&Server.AppName, count);
-	Net_SendPacket();
+	CPE_SendExtInfo(&Server.AppName, count);
 
 	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++) {
 		name = String_FromReadonly(cpe_clientExtensions[i]);
@@ -838,9 +828,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 #ifndef EXTENDED_BLOCKS
 		if (String_CaselessEqualsConst(&name, "ExtendedBlocks")) continue;
 #endif
-
-		CPE_WriteExtEntry(&name, ver);
-		Net_SendPacket();
+		CPE_SendExtEntry(&name, ver);
 	}
 }
 
@@ -849,7 +837,7 @@ static void CPE_ExtInfo(uint8_t* data) {
 	String appName; char appNameBuffer[STRING_SIZE];
 
 	String_InitArray(appName, appNameBuffer);
-	Handlers_ReadString(&data, &appName);
+	Protocol_ReadString(&data, &appName);
 	Chat_Add1("Server software: %s", &appName);
 	cpe_needD3Fix = String_CaselessStarts(&appName, &d3Server);
 
@@ -864,7 +852,7 @@ static void CPE_ExtEntry(uint8_t* data) {
 	int extVersion;
 
 	String_InitArray(ext, extNameBuffer);
-	Handlers_ReadString(&data, &ext);
+	Protocol_ReadString(&data, &ext);
 	extVersion = Stream_GetU32_BE(data);
 	Platform_Log2("cpe ext: %s, %i", &ext, &extVersion);
 
@@ -934,8 +922,10 @@ static void CPE_SetClickDistance(uint8_t* data) {
 }
 
 static void CPE_CustomBlockLevel(uint8_t* data) {
-	CPE_WriteCustomBlockLevel(1);
-	Net_SendPacket();
+	/* reply with version 1 level support */
+	uint8_t reply[2] = { OPCODE_CUSTOM_BLOCK_LEVEL, 1 };
+	Server.SendData(reply, 2);
+
 	Game_UseCPEBlocks = true;
 	Event_RaiseVoid(&BlockEvents.PermissionsChanged);
 }
@@ -944,7 +934,7 @@ static void CPE_HoldThis(uint8_t* data) {
 	BlockID block;
 	bool canChange;
 
-	Handlers_ReadBlock(data, block);
+	Protocol_ReadBlock(data, block);
 	canChange = *data == 0;
 
 	Inventory.CanChangeSelected = true;
@@ -960,7 +950,7 @@ static void CPE_SetTextHotkey(uint8_t* data) {
 	
 	data += STRING_SIZE; /* skip label */
 	String_InitArray(action, actionBuffer);
-	Handlers_ReadString(&data, &action);
+	Protocol_ReadString(&data, &action);
 
 	keyCode = Stream_GetU32_BE(data); data += 4;
 	keyMods = *data;
@@ -991,18 +981,18 @@ static void CPE_ExtAddPlayerName(uint8_t* data) {
 	String_InitArray(groupName,  groupNameBuffer);
 
 	id = data[1]; data += 2;
-	Handlers_ReadString(&data, &playerName);
-	Handlers_ReadString(&data, &listName);
-	Handlers_ReadString(&data, &groupName);
+	Protocol_ReadString(&data, &playerName);
+	Protocol_ReadString(&data, &listName);
+	Protocol_ReadString(&data, &groupName);
 	groupRank = *data;
 
 	String_StripCols(&playerName);
-	Handlers_RemoveEndPlus(&playerName);
-	Handlers_RemoveEndPlus(&listName);
+	Protocol_RemoveEndPlus(&playerName);
+	Protocol_RemoveEndPlus(&listName);
 
 	/* Workarond for server software that declares support for ExtPlayerList, but sends AddEntity then AddPlayerName */
 	Classic_TabList_Reset(id);
-	Handlers_AddTablistEntry(id, &playerName, &listName, &groupName, groupRank);
+	Protocol_AddTablistEntry(id, &playerName, &listName, &groupName, groupRank);
 }
 
 static void CPE_ExtAddEntity(uint8_t* data) {
@@ -1013,11 +1003,11 @@ static void CPE_ExtAddEntity(uint8_t* data) {
 	String_InitArray(skin, skinBuffer);
 
 	id = *data++;
-	Handlers_ReadString(&data, &name);
-	Handlers_ReadString(&data, &skin);
+	Protocol_ReadString(&data, &name);
+	Protocol_ReadString(&data, &skin);
 
-	Handlers_CheckName(id, &name, &skin);
-	Handlers_AddEntity(data, id, &name, &skin, false);
+	Protocol_CheckName(id, &name, &skin);
+	Protocol_AddEntity(data, id, &name, &skin, false);
 }
 
 static void CPE_ExtRemovePlayerName(uint8_t* data) {
@@ -1080,7 +1070,7 @@ static void CPE_SetEnvCol(uint8_t* data) {
 
 static void CPE_SetBlockPermission(uint8_t* data) {
 	BlockID block; 
-	Handlers_ReadBlock(data, block);
+	Protocol_ReadBlock(data, block);
 
 	Blocks.CanPlace[block]  = *data++ != 0;
 	Blocks.CanDelete[block] = *data++ != 0;
@@ -1094,7 +1084,7 @@ static void CPE_ChangeModel(uint8_t* data) {
 	String_InitArray(model, modelBuffer);
 
 	id = *data++;
-	Handlers_ReadString(&data, &model);
+	Protocol_ReadString(&data, &model);
 
 	entity = Entities.List[id];
 	if (entity) { Entity_SetModel(entity, &model); }
@@ -1151,11 +1141,11 @@ static void CPE_ExtAddEntity2(uint8_t* data) {
 	String_InitArray(skin, skinBuffer);
 
 	id = *data++;
-	Handlers_ReadString(&data, &name);
-	Handlers_ReadString(&data, &skin);
+	Protocol_ReadString(&data, &name);
+	Protocol_ReadString(&data, &skin);
 
-	Handlers_CheckName(id, &name, &skin);
-	Handlers_AddEntity(data, id, &name, &skin, true);
+	Protocol_CheckName(id, &name, &skin);
+	Protocol_AddEntity(data, id, &name, &skin, true);
 }
 
 #define BULK_MAX_BLOCKS 256
@@ -1217,7 +1207,7 @@ static void CPE_SetMapEnvUrl(uint8_t* data) {
 	String url; char urlBuffer[STRING_SIZE];
 
 	String_InitArray(url, urlBuffer);
-	Handlers_ReadString(&data, &url);
+	Protocol_ReadString(&data, &url);
 	if (!Game_AllowServerTextures) return;
 
 	if (!url.length) {
@@ -1318,8 +1308,8 @@ static void CPE_TwoWayPing(uint8_t* data) {
 
 static void CPE_SetInventoryOrder(uint8_t* data) {
 	BlockID block, order;
-	Handlers_ReadBlock(data, block);
-	Handlers_ReadBlock(data, order);
+	Protocol_ReadBlock(data, block);
+	Protocol_ReadBlock(data, order);
 
 	Inventory_Remove(block);
 	if (order) { Inventory.Map[order - 1] = block; }
@@ -1403,12 +1393,12 @@ static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTe
 	uint8_t sound;
 	uint8_t* data = *ptr;
 
-	Handlers_ReadBlock(data, block);
+	Protocol_ReadBlock(data, block);
 	didBlockLight = Blocks.BlocksLight[block];
 	Block_ResetProps(block);
 	
 	String_InitArray(name, nameBuffer);
-	Handlers_ReadString(&data, &name);
+	Protocol_ReadString(&data, &name);
 	Block_SetName(block, &name);
 	Block_SetCollide(block, *data++);
 
@@ -1479,7 +1469,7 @@ static void BlockDefs_UndefineBlock(uint8_t* data) {
 	BlockID block;
 	bool didBlockLight;
 
-	Handlers_ReadBlock(data, block);
+	Protocol_ReadBlock(data, block);
 	didBlockLight = Blocks.BlocksLight[block];
 
 	Block_ResetProps(block);
@@ -1551,14 +1541,14 @@ static void BlockDefs_Reset(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Public handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-void Handlers_Reset(void) {
+void Protocol_Reset(void) {
 	Classic_Reset();
 	CPE_Reset();
 	BlockDefs_Reset();
 	WoM_Reset();
 }
 
-void Handlers_Tick(void) {
+void Protocol_Tick(void) {
 	Classic_Tick();
 	CPE_Tick();
 	WoM_Tick();

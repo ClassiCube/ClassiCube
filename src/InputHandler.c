@@ -17,6 +17,7 @@
 #include "Block.h"
 #include "Menus.h"
 #include "Gui.h"
+#include "PacketHandlers.h"
 
 static bool input_buttonsDown[3];
 static int input_pickingId = -1;
@@ -44,8 +45,7 @@ static void InputHandler_ButtonStateUpdate(MouseButton button, bool pressed) {
 	}
 
 	input_buttonsDown[button] = pressed;
-	Server.SendPlayerClick(button, pressed, 
-									(EntityID)input_pickingId, &Game_SelectedPos);	
+	CPE_SendPlayerClick(button, pressed, (EntityID)input_pickingId, &Game_SelectedPos);	
 }
 
 static void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {

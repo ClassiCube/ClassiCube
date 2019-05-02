@@ -59,8 +59,9 @@ CC_VAR extern struct _ServerConnectionData {
 	void (*SendChat)(const String* text);
 	/* Sends a position update to the server. */
 	void (*SendPosition)(Vector3 pos, float rotY, float headX);
-	/* Sends a PlayerClick packet to the server. */
-	void (*SendPlayerClick)(MouseButton button, bool pressed, EntityID targetId, struct PickedPos* pos);
+	/* Sends raw data to the server. */
+	/* NOTE: Prefer SendBlock/Position/Chat instead, this does not work in singleplayer. */
+	void (*SendData)(const uint8_t* data, uint32_t len);
 
 	/* The current name of the server. (Shows as first line when loading) */
 	String Name;

@@ -445,13 +445,13 @@ ReturnCode File_Append(FileHandle* file, const String* path) {
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
-ReturnCode File_Read(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
-	BOOL success = ReadFile(file, buffer, count, bytesRead, NULL);
+ReturnCode File_Read(FileHandle file, uint8_t* data, uint32_t count, uint32_t* bytesRead) {
+	BOOL success = ReadFile(file, data, count, bytesRead, NULL);
 	return success ? 0 : GetLastError();
 }
 
-ReturnCode File_Write(FileHandle file, const uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
-	BOOL success = WriteFile(file, buffer, count, bytesWrote, NULL);
+ReturnCode File_Write(FileHandle file, const uint8_t* data, uint32_t count, uint32_t* bytesWrote) {
+	BOOL success = WriteFile(file, data, count, bytesWrote, NULL);
 	return success ? 0 : GetLastError();
 }
 
@@ -579,13 +579,13 @@ ReturnCode File_Append(FileHandle* file, const String* path) {
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
-ReturnCode File_Read(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead) {
-	*bytesRead = read(file, buffer, count);
+ReturnCode File_Read(FileHandle file, uint8_t* data, uint32_t count, uint32_t* bytesRead) {
+	*bytesRead = read(file, data, count);
 	return *bytesRead == -1 ? errno : 0;
 }
 
-ReturnCode File_Write(FileHandle file, const uint8_t* buffer, uint32_t count, uint32_t* bytesWrote) {
-	*bytesWrote = write(file, buffer, count);
+ReturnCode File_Write(FileHandle file, const uint8_t* data, uint32_t count, uint32_t* bytesWrote) {
+	*bytesWrote = write(file, data, count);
 	return *bytesWrote == -1 ? errno : 0;
 }
 
@@ -1375,29 +1375,29 @@ ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port) {
 	return res == -1 ? Socket__Error() : 0;
 }
 
-ReturnCode Socket_Read(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified) {
+ReturnCode Socket_Read(SocketHandle socket, uint8_t* data, uint32_t count, uint32_t* modified) {
 #ifdef CC_BUILD_WEB
 	/* recv only reads one WebSocket frame at most, hence call it multiple times */
 	int recvCount = 0, pending;
 	*modified = 0;
 
 	while (count && !Socket_Available(socket, &pending) && pending) {
-		recvCount = recv(socket, buffer, count, 0);
+		recvCount = recv(socket, data, count, 0);
 		if (recvCount == -1) return Socket__Error();
 
 		*modified += recvCount;
-		buffer    += recvCount; count -= recvCount;
+		data      += recvCount; count -= recvCount;
 	}
 	return 0;
 #else
-	int recvCount = recv(socket, buffer, count, 0);
+	int recvCount = recv(socket, data, count, 0);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
 	*modified = 0; return Socket__Error();
 #endif
 }
 
-ReturnCode Socket_Write(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified) {
-	int sentCount = send(socket, buffer, count, 0);
+ReturnCode Socket_Write(SocketHandle socket, const uint8_t* data, uint32_t count, uint32_t* modified) {
+	int sentCount = send(socket, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return Socket__Error();
 }

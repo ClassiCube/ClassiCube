@@ -139,9 +139,9 @@ ReturnCode File_Open(FileHandle* file, const String* path);
 /* Attempts to open (or create) a file, for appending data to the end of the file. */
 ReturnCode File_Append(FileHandle* file, const String* path);
 /* Attempts to read data from the file. */
-ReturnCode File_Read(FileHandle file, uint8_t* buffer, uint32_t count, uint32_t* bytesRead);
+ReturnCode File_Read(FileHandle file, uint8_t* data, uint32_t count, uint32_t* bytesRead);
 /* Attempts to write data to the file. */
-ReturnCode File_Write(FileHandle file, const uint8_t* buffer, uint32_t count, uint32_t* bytesWrote);
+ReturnCode File_Write(FileHandle file, const uint8_t* data, uint32_t count, uint32_t* bytesWrote);
 /* Attempts to close the given file. */
 ReturnCode File_Close(FileHandle file);
 /* Attempts to seek to a position in the given file. */
@@ -211,9 +211,9 @@ CC_API ReturnCode Socket_GetError(SocketHandle socket, ReturnCode* result);
 /* Attempts to initalise a connection to the given IP address:port. */
 CC_API ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port);
 /* Attempts to read data from the given socket. */
-CC_API ReturnCode Socket_Read(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified);
+CC_API ReturnCode Socket_Read(SocketHandle socket, uint8_t* data, uint32_t count, uint32_t* modified);
 /* Attempts to write data to the given socket. */
-CC_API ReturnCode Socket_Write(SocketHandle socket, uint8_t* buffer, uint32_t count, uint32_t* modified);
+CC_API ReturnCode Socket_Write(SocketHandle socket, const uint8_t* data, uint32_t count, uint32_t* modified);
 /* Attempts to close the given socket. */
 CC_API ReturnCode Socket_Close(SocketHandle socket);
 /* Attempts to poll the given socket for readability or writability. */
