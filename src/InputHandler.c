@@ -459,7 +459,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 
 #ifndef CC_BUILD_WEB
 	if (key == KEY_ESCAPE && active->Closable) {
-		/* Don't want holding escape to go in and out of pause menu */
+		/* Don't want holding down escape to go in and out of pause menu */
 		if (!was) Gui_Close(active); 
 		return;
 	}

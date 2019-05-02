@@ -1259,13 +1259,13 @@ void Window_ProcessEvents(void) {
 				int len = Platform_ConvertString(str, &clipboard_copy_text);
 
 				XChangeProperty(win_display, reply.xselection.requestor, reply.xselection.property, xa_utf8_string, 8,
-					PropModeReplace, str, len);
+					PropModeReplace, (unsigned char*)str, len);
 			} else if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_targets) {
 				reply.xselection.property = Window_GetSelectionProperty(&e);
 
 				Atom data[2] = { xa_utf8_string, xa_targets };
 				XChangeProperty(win_display, reply.xselection.requestor, reply.xselection.property, xa_atom, 32,
-					PropModeReplace, data, 2);
+					PropModeReplace, (unsigned char*)data, 2);
 			}
 			XSendEvent(win_display, e.xselectionrequest.requestor, true, 0, &reply);
 		} break;

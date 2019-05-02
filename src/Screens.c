@@ -901,31 +901,41 @@ static void ChatScreen_ScrollHistoryBy(struct ChatScreen* s, int delta) {
 	ChatScreen_ResetChat(s);
 }
 
-static bool ChatScreen_KeyDown(void* screen, Key key, bool was) {
-	const static String slash  = String_FromConst("/");
-	struct ChatScreen* s = screen;
+static void ChatScreen_EnterInput(struct ChatScreen* s, bool close) {
 	struct InputWidget* input;
 	int defaultIndex;
 
+	ChatScreen_SetHandlesAllInput(s, false);
+	if (close) InputWidget_Clear(&s->Input.Base);
+	ChatScreen_InputStr.length = 0;
+
+	input = &s->Input.Base;
+	input->OnPressedEnter(input);
+	SpecialInputWidget_SetActive(&s->AltText, false);
+
+	/* Reset chat when user has scrolled up in chat history */
+	defaultIndex = Chat_Log.Count - Gui_Chatlines;
+	if (s->ChatIndex != defaultIndex) {
+		s->ChatIndex = ChatScreen_ClampIndex(defaultIndex);
+		ChatScreen_ResetChat(s);
+	}
+}
+
+static bool ChatScreen_KeyDown(void* screen, Key key, bool was) {
+	const static String slash = String_FromConst("/");
+	struct ChatScreen* s = screen;
 	s->SuppressNextPress = false;
+
 	/* Handle text input bar */
 	if (s->HandlesAllInput) {
+#ifdef CC_BUILD_WEB
+		/* See reason for this in InputHandler_KeyUp */
+		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == KEY_KP_ENTER) {
+			ChatScreen_EnterInput(s, false); 
+#else
 		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == KEY_KP_ENTER || key == KEY_ESCAPE) {
-			ChatScreen_SetHandlesAllInput(s, false);
-
-			if (key == KEY_ESCAPE) InputWidget_Clear(&s->Input.Base);
-			ChatScreen_InputStr.length = 0;
-
-			input = &s->Input.Base;
-			input->OnPressedEnter(input);
-			SpecialInputWidget_SetActive(&s->AltText, false);
-
-			/* Reset chat when user has scrolled up in chat history */
-			defaultIndex = Chat_Log.Count - Gui_Chatlines;
-			if (s->ChatIndex != defaultIndex) {
-				s->ChatIndex = ChatScreen_ClampIndex(defaultIndex);
-				ChatScreen_ResetChat(s);
-			}
+			ChatScreen_EnterInput(s, key == KEY_ESCAPE);		
+#endif
 		} else if (key == KEY_PAGEUP) {
 			ChatScreen_ScrollHistoryBy(s, -Gui_Chatlines);
 		} else if (key == KEY_PAGEDOWN) {
@@ -950,6 +960,11 @@ static bool ChatScreen_KeyDown(void* screen, Key key, bool was) {
 static bool ChatScreen_KeyUp(void* screen, Key key) {
 	struct ChatScreen* s = screen;
 	if (!s->HandlesAllInput) return false;
+
+#ifdef CC_BUILD_WEB
+	/* See reason for this in InputHandler_KeyUp */
+	if (key == KEY_ESCAPE) ChatScreen_EnterInput(s, true);
+#endif
 
 	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
 		if (!Window_Focused) return true;
