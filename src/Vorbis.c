@@ -738,7 +738,7 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, uint3
 	struct Codebook* c;
 	float* v;
 	uint32_t offset;
-	uint8_t class;
+	uint8_t klass;
 	int16_t book;
 
 	/* per spec, ensure decoded bounds are actually in size */
@@ -779,8 +779,8 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, uint3
 				for (j = 0; j < ch; j++) {
 					if (doNotDecode[j]) continue;
 
-					class = classifications[j][partitionCount];
-					book  = r->Books[class][pass];
+					klass = classifications[j][partitionCount];
+					book  = r->Books[klass][pass];
 					if (book < 0) continue;
 
 					offset = residueBeg + partitionCount * r->PartitionSize;

@@ -300,14 +300,14 @@ static void WoM_Tick(void) {
 *----------------------------------------------------Classic protocol-----------------------------------------------------*
 *#########################################################################################################################*/
 
-void Classic_WriteChat(const String* text, bool partial) {
-	uint8_t* data = Server.WriteBuffer;
-	*data++ = OPCODE_MESSAGE;
+void Classic_SendChat(const String* text, bool partial) {
+	uint8_t data[66];
+	data[0] = OPCODE_MESSAGE;
 	{
-		*data++ = Server.SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
-		Protocol_WriteString(data, text); data += STRING_SIZE;
+		data[1] = Server.SupportsPartialMessages ? partial : ENTITIES_SELF_ID;
+		Protocol_WriteString(&data[2], text);
 	}
-	Server.WriteBuffer = data;
+	Server.SendData(data, 66);
 }
 
 void Classic_WritePosition(Vector3 pos, float rotY, float headX) {

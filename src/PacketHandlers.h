@@ -14,7 +14,7 @@ void Protocol_Reset(void);
 void Protocol_Tick(void);
 
 extern bool cpe_needD3Fix;
-void Classic_WriteChat(const String* text, bool partial);
+void Classic_SendChat(const String* text, bool partial);
 void Classic_WritePosition(Vector3 pos, float rotY, float headX);
 void Classic_WriteSetBlock(int x, int y, int z, bool place, BlockID block);
 void Classic_SendLogin(const String* username, const String* verKey);

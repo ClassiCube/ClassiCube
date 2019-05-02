@@ -670,6 +670,7 @@ void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 #ifdef CC_BUILD_X11
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/XKBlib.h>
 
 #define _NET_WM_STATE_REMOVE 0
 #define _NET_WM_STATE_ADD    1

@@ -352,13 +352,10 @@ static void MPConnection_SendChat(const String* text) {
 	left = *text;
 
 	while (left.length > STRING_SIZE) {
-		Classic_WriteChat(&left, true);
-		Net_SendPacket();
+		Classic_SendChat(&left, true);
 		left = String_UNSAFE_SubstringAt(&left, STRING_SIZE);
 	}
-
-	Classic_WriteChat(&left, false);
-	Net_SendPacket();
+	Classic_SendChat(&left, false);
 }
 
 static void MPConnection_SendPosition(Vector3 pos, float rotY, float headX) {
