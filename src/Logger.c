@@ -482,7 +482,7 @@ static void Logger_DumpRegisters(void* ctx) {
 		#define REG_GET(ign, reg) &r.__gregs[_REG_R##reg]
 	#endif
 	Logger_Dump_X64()
-#elif defined __powerpc__
+#elif defined __ppc__
 	#if defined CC_BUILD_OSX
 		#define REG_GNUM(num)     &r->__ss.__r##num
 		#define REG_GET(reg, ign) &r->__ss.__##reg

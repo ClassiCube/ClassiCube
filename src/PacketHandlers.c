@@ -768,7 +768,7 @@ static void CPE_SendExtEntry(const String* extName, int extVersion) {
 	uint8_t data[69];
 	data[0] = OPCODE_EXT_ENTRY;
 	{
-		Handlers_WriteString(&data[1], extName);
+		Protocol_WriteString(&data[1], extName);
 		Stream_SetU32_BE(&data[65],    extVersion);
 	}
 	Server.SendData(data, 69);
@@ -788,7 +788,6 @@ static void CPE_SendCpeExtInfoReply(void) {
 	int count = Array_Elems(cpe_clientExtensions);
 	String name;
 	int i, ver;
-	uint8_t data[69];
 
 	if (cpe_serverExtensionsCount) return;
 	

@@ -145,19 +145,11 @@ struct UrlWarningOverlay {
 	char __UrlBuffer[STRING_SIZE * 4];
 };
 
-struct ConfirmDenyOverlay {
-	MenuScreen_Layout
-	struct ButtonWidget Buttons[2];
-	struct TextWidget   Labels[4];
-	bool AlwaysDeny;
-	String Url;
-	char __UrlBuffer[STRING_SIZE];
-};
-
 struct TexPackOverlay {
 	MenuScreen_Layout
 	struct ButtonWidget Buttons[4];
 	struct TextWidget Labels[4];
+	bool ShowingDeny, AlwaysDeny;
 	uint32_t ContentLength;
 	String Identifier;
 	char __IdentifierBuffer[STRING_SIZE + 4];
@@ -3189,68 +3181,6 @@ struct Screen* UrlWarningOverlay_MakeInstance(const String* url) {
 
 
 /*########################################################################################################################*
-*----------------------------------------------------ConfirmDenyOverlay---------------------------------------------------*
-*#########################################################################################################################*/
-static struct ConfirmDenyOverlay ConfirmDenyOverlay_Instance;
-static void ConfirmDenyOverlay_ConfirmNoClick(void* screen, void* b) {
-	struct ConfirmDenyOverlay* s = screen;
-	if (s->AlwaysDeny) TextureCache_Deny(&s->Url);
-	Elem_Free(s);
-}
-
-static void ConfirmDenyOverlay_GoBackClick(void* screen, void* b) {
-	struct ConfirmDenyOverlay* s = screen;
-	struct Screen* overlay;
-
-	Elem_Free(s);
-	overlay = TexPackOverlay_MakeInstance(&s->Url);
-	Gui_ShowOverlay(overlay, true);
-}
-
-static void ConfirmDenyOverlay_ContextRecreated(void* screen) {
-	static String lines[4] = {
-		String_FromConst("&eYou might be missing out."),
-		String_FromConst("Texture packs can play a vital role in the look and feel of maps."),
-		String_FromConst(""),
-		String_FromConst("Sure you don't want to download the texture pack?")
-	};
-	const static String imSure = String_FromConst("I'm sure");
-	const static String goBack = String_FromConst("Go back");
-
-	struct ConfirmDenyOverlay* s = screen;
-	Overlay_MakeLabels(s, s->Labels, lines);
-
-	Menu_Button(s, 4, &s->Buttons[0], 160, &imSure, &s->TitleFont, ConfirmDenyOverlay_ConfirmNoClick,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 30);
-	Menu_Button(s, 5, &s->Buttons[1], 160, &goBack, &s->TitleFont, ConfirmDenyOverlay_GoBackClick,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 30);
-}
-
-static struct ScreenVTABLE ConfirmDenyOverlay_VTABLE = {
-	MenuScreen_Init, MenuScreen_Render,  Overlay_Free,   Gui_DefaultRecreate,
-	Overlay_KeyDown, Menu_KeyUp,         Menu_KeyPress,
-	Menu_MouseDown,  Menu_MouseUp,       Menu_MouseMove, MenuScreen_MouseScroll,
-	Menu_OnResize,   Menu_ContextLost,   ConfirmDenyOverlay_ContextRecreated,
-};
-struct Screen* ConfirmDenyOverlay_MakeInstance(const String* url, bool alwaysDeny) {
-	static struct Widget* widgets[6];
-	struct ConfirmDenyOverlay* s = &ConfirmDenyOverlay_Instance;
-	
-	s->HandlesAllInput = true;
-	s->Closable        = true;
-	s->Widgets         = widgets;
-	s->WidgetsCount    = Array_Elems(widgets);
-
-	String_InitArray(s->Url, s->__UrlBuffer);
-	String_Copy(&s->Url, url);
-	s->AlwaysDeny = alwaysDeny;
-
-	s->VTABLE = &ConfirmDenyOverlay_VTABLE;
-	return (struct Screen*)s;
-}
-
-
-/*########################################################################################################################*
 *-----------------------------------------------------TexPackOverlay------------------------------------------------------*
 *#########################################################################################################################*/
 static struct TexPackOverlay TexPackOverlay_Instance;
@@ -3265,14 +3195,28 @@ static void TexPackOverlay_YesClick(void* screen, void* widget) {
 
 static void TexPackOverlay_NoClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = screen;
-	struct Screen* overlay;
-	String url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
-	bool always;
+	s->AlwaysDeny  = WarningOverlay_IsAlways(s, widget);
+	s->ShowingDeny = true;
 
+	s->VTABLE->ContextLost(s);
+	s->VTABLE->ContextRecreated(s);
+}
+
+static void TexPackOverlay_ConfirmNoClick(void* screen, void* b) {
+	struct TexPackOverlay* s = screen;
+	String url;
+
+	url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
+	if (s->AlwaysDeny) TextureCache_Deny(&url);
 	Elem_Free(s);
-	always  = WarningOverlay_IsAlways(s, widget);
-	overlay = ConfirmDenyOverlay_MakeInstance(&url, always);
-	Gui_ShowOverlay(overlay, true);
+}
+
+static void TexPackOverlay_GoBackClick(void* screen, void* b) {
+	struct TexPackOverlay* s = screen;
+	s->ShowingDeny = false;
+
+	s->VTABLE->ContextLost(s);
+	s->VTABLE->ContextRecreated(s);
 }
 
 static void TexPackOverlay_Render(void* screen, double delta) {
@@ -3281,13 +3225,14 @@ static void TexPackOverlay_Render(void* screen, double delta) {
 
 	MenuScreen_Render(s, delta);
 	if (!Http_GetResult(&s->Identifier, &item)) return;
-
 	s->ContentLength = item.ContentLength;
-	if (!s->ContentLength) return;
-	Elem_Recreate(s);
+
+	if (!s->ContentLength || Gfx.LostContext) return;
+	s->VTABLE->ContextLost(s);
+	s->VTABLE->ContextRecreated(s);
 }
 
-static void TexPackOverlay_ContextRecreated(void* screen) {
+static void TexPackOverlay_MakeNormalElements(struct TexPackOverlay* s) {
 	static String lines[4] = {
 		String_FromConst("Do you want to download the server's texture pack?"),
 		String_FromConst("Texture pack url:"),
@@ -3298,9 +3243,7 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 	const static String https = String_FromConst("https://");
 	const static String http  = String_FromConst("http://");
 	String contents; char contentsBuffer[STRING_SIZE];
-
 	float contentLengthMB;
-	struct TexPackOverlay* s = screen;
 	String url;
 
 	url = String_UNSAFE_SubstringAt(&s->Identifier, 3);
@@ -3324,6 +3267,33 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 		TexPackOverlay_YesClick, TexPackOverlay_NoClick);
 }
 
+static void TexPackOverlay_MakeDenyElements(struct TexPackOverlay* s) {
+	static String lines[4] = {
+		String_FromConst("&eYou might be missing out."),
+		String_FromConst("Texture packs can play a vital role in the look and feel of maps."),
+		String_FromConst(""),
+		String_FromConst("Sure you don't want to download the texture pack?")
+	};
+	const static String imSure = String_FromConst("I'm sure");
+	const static String goBack = String_FromConst("Go back");
+	Overlay_MakeLabels(s, s->Labels, lines);
+
+	Menu_Button(s, 4, &s->Buttons[0], 160, &imSure, &s->TitleFont, TexPackOverlay_ConfirmNoClick,
+		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 30);
+	Menu_Button(s, 5, &s->Buttons[1], 160, &goBack, &s->TitleFont, TexPackOverlay_GoBackClick,
+		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 30);
+}
+
+static void TexPackOverlay_ContextRecreated(void* screen) {
+	struct TexPackOverlay* s = screen;
+	if (s->ShowingDeny) {
+		TexPackOverlay_MakeDenyElements(s);
+	} else {
+		TexPackOverlay_MakeNormalElements(s);
+	}
+	s->WidgetsCount = s->ShowingDeny ? 6 : 8;
+}
+
 static struct ScreenVTABLE TexPackOverlay_VTABLE = {
 	MenuScreen_Init, TexPackOverlay_Render, Overlay_Free,   Gui_DefaultRecreate,
 	Overlay_KeyDown, Menu_KeyUp,            Menu_KeyPress,
@@ -3333,14 +3303,13 @@ static struct ScreenVTABLE TexPackOverlay_VTABLE = {
 struct Screen* TexPackOverlay_MakeInstance(const String* url) {
 	static struct Widget* widgets[8];
 	struct TexPackOverlay* s = &TexPackOverlay_Instance;
-	struct ConfirmDenyOverlay* deny = &ConfirmDenyOverlay_Instance;
 
-	/* If we are showing a texture pack overlay, completely free that overlay */
+	/* If we are showing this texture pack overlay, completely free it first */
 	/* It doesn't matter anymore, because the new texture pack URL will always */
 	/* replace/override the old texture pack URL associated with that overlay */
-	if (Gui_IndexOverlay(s)    >= 0) { Elem_Free(s); }
-	if (Gui_IndexOverlay(deny) >= 0) { Elem_Free(deny); }
+	if (Gui_IndexOverlay(s) >= 0) { Elem_Free(s); }
 
+	s->ShowingDeny     = false;
 	s->HandlesAllInput = true;
 	s->Closable        = true;
 	s->Widgets         = widgets;

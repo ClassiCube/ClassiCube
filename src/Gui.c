@@ -196,21 +196,12 @@ void Gui_SetActive(struct Screen* screen) {
 }
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
-void Gui_ShowOverlay(struct Screen* screen, bool atFront) {
-	int i;
+void Gui_ShowOverlay(struct Screen* screen) {
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
 		Logger_Abort("Gui_ShowOverlay - hit max count");
 	}
 
-	if (atFront) {		
-		/* Insert overlay at start of list */
-		for (i = Gui_OverlaysCount - 1; i > 0; i--) {
-			Gui_Overlays[i] = Gui_Overlays[i - 1];
-		}
-		Gui_Overlays[0] = screen;
-	} else {
-		Gui_Overlays[Gui_OverlaysCount] = screen;
-	}
+	Gui_Overlays[Gui_OverlaysCount] = screen;
 	Gui_OverlaysCount++;
 
 	Elem_Init(screen);
@@ -228,7 +219,6 @@ int Gui_IndexOverlay(const void* screen) {
 }
 
 void Gui_RemoveOverlay(const void* screen) {
-	struct Screen* s = screen;
 	int i = Gui_IndexOverlay(screen);
 	if (i == -1) return;
 

@@ -41,10 +41,8 @@ static void Server_ResetState(void) {
 }
 
 void Server_RetrieveTexturePack(const String* url) {
-	struct Screen* warning;
 	if (!TextureCache_HasAccepted(url) && !TextureCache_HasDenied(url)) {
-		warning = TexPackOverlay_MakeInstance(url);
-		Gui_ShowOverlay(warning, false);
+		Gui_ShowOverlay(TexPackOverlay_MakeInstance(url));
 	} else {
 		Server_DownloadTexturePack(url);
 	}

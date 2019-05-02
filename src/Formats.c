@@ -42,9 +42,11 @@ IMapImporter Map_FindImporter(const String* path) {
 	const static String fcm = String_FromConst(".fcm"), dat = String_FromConst(".dat");
 
 	if (String_CaselessEnds(path, &cw))  return Cw_Load;
+#ifndef CC_BUILD_WEB
 	if (String_CaselessEnds(path, &lvl)) return Lvl_Load;
 	if (String_CaselessEnds(path, &fcm)) return Fcm_Load;
 	if (String_CaselessEnds(path, &dat)) return Dat_Load;
+#endif
 
 	return NULL;
 }

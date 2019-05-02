@@ -88,8 +88,6 @@ bool Game_ValidateBitmap(const String* file, Bitmap* bmp);
 void Game_UpdateDimensions(void);
 /* Sets the strategy/method used to limit frames per second. */
 void Game_SetFpsLimit(enum FpsLimit method);
-/* Returns max time process sleeps for when limiting frames using the given method. */
-float Game_CalcLimitMillis(enum FpsLimit method);
 
 /* Runs the main game loop until the window is closed. */
 void Game_Run(int width, int height, const String* title);

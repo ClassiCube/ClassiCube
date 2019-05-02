@@ -98,7 +98,7 @@ bool Widget_Contains(void* widget, int x, int y);
 extern GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 extern struct Screen* Gui_HUD;
 extern struct Screen* Gui_Active;
-#define GUI_MAX_OVERLAYS 6
+#define GUI_MAX_OVERLAYS 4
 extern struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
 extern int Gui_OverlaysCount;
 
@@ -126,7 +126,7 @@ CC_NOINLINE void Gui_CloseActive(void);
 CC_NOINLINE void Gui_Close(void* screen);
 
 void Gui_RefreshHud(void);
-void Gui_ShowOverlay(struct Screen* screen, bool atFront);
+void Gui_ShowOverlay(struct Screen* screen);
 /* Returns index of the given screen in the overlays list, -1 if not */
 int  Gui_IndexOverlay(const void* screen);
 /* Removes given screen from the overlays list */

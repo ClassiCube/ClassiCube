@@ -986,7 +986,6 @@ static bool ChatScreen_MouseScroll(void* screen, float delta) {
 static bool ChatScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	String text; char textBuffer[STRING_SIZE * 4];
 	struct ChatScreen* s = screen;
-	struct Screen* overlay;
 	int height, chatY;
 	if (!s->HandlesAllInput || Game_HideGui) return false;
 
@@ -1009,8 +1008,7 @@ static bool ChatScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	if (!text.length) return false;
 
 	if (Utils_IsUrlPrefix(&text, 0)) {
-		overlay = UrlWarningOverlay_MakeInstance(&text);
-		Gui_ShowOverlay(overlay, false);
+		Gui_ShowOverlay(UrlWarningOverlay_MakeInstance(&text));
 	} else if (Gui_ClickableChat) {
 		InputWidget_AppendString(&s->Input.Base, &text);
 	}
