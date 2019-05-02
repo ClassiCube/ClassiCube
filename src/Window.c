@@ -825,7 +825,7 @@ static void Window_RefreshBorders(void) {
 	XFree(borders);
 }
 
-static void Window_RefreshBounds(const XConfigureEvent* e) {
+static void Window_RefreshBounds(int width, int height) {
 	Window child;
 	int x, y;
 	Window_RefreshBorders();
@@ -844,13 +844,13 @@ static void Window_RefreshBounds(const XConfigureEvent* e) {
 		Event_RaiseVoid(&WindowEvents.Moved);
 	}
 
-	if (e->width != Window_ClientBounds.Width || e->height != Window_ClientBounds.Height) {
-		Window_ClientBounds.Width  = e->width;
-		Window_ClientBounds.Height = e->height;
+	if (width != Window_ClientBounds.Width || height != Window_ClientBounds.Height) {
+		Window_ClientBounds.Width  = width;
+		Window_ClientBounds.Height = height;
 
 		/* To get the external (window) size, need to add the border size */
-		Window_Bounds.Width  = e->width  + borderLeft + borderRight;
-		Window_Bounds.Height = e->height + borderTop  + borderBottom;
+		Window_Bounds.Width  = width  + borderLeft + borderRight;
+		Window_Bounds.Height = height + borderTop  + borderBottom;
 		Event_RaiseVoid(&WindowEvents.Resized);
 	}
 }
@@ -908,24 +908,15 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	XSetWMNormalHints(win_display, win_handle, &hints);
 
 	/* Register for window destroy notification */
-	Atom atoms[1] = { wm_destroy };
-	XSetWMProtocols(win_display, win_handle, atoms, 1);
-
-	/* Set the initial window size to ensure X, Y, Width, Height and the rest
-	   return the correct values inside the constructor and the Load event. */
-	XEvent e;
-	e.xconfigure.x = x;
-	e.xconfigure.y = y;
-	e.xconfigure.width = width;
-	e.xconfigure.height = height;
-	Window_RefreshBounds(&e.xconfigure);
+	XSetWMProtocols(win_display, win_handle, &wm_destroy, 1);
+	Window_Exists = true;
+	Window_RefreshBounds(width, height);
 
 	/* Request that auto-repeat is only set on devices that support it physically.
 	   This typically means that it's turned off for keyboards (which is what we want).
 	   We prefer this method over XAutoRepeatOff/On, because the latter needs to
 	   be reset before the program exits. */
 	XkbSetDetectableAutoRepeat(win_display, true, &supported);
-	Window_Exists = true;
 }
 
 void Window_SetTitle(const String* title) {
@@ -1148,13 +1139,11 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case ConfigureNotify:
-			Window_RefreshBounds(&e.xconfigure);
+			Window_RefreshBounds(e.xconfigure.width, e.xconfigure.height);
 			break;
 
 		case Expose:
-			if (e.xexpose.count == 0) {
-				Event_RaiseVoid(&WindowEvents.Redraw);
-			}
+			if (e.xexpose.count == 0) Event_RaiseVoid(&WindowEvents.Redraw);
 			break;
 
 		case KeyPress:

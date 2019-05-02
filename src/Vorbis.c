@@ -496,7 +496,7 @@ static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 static bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f, int ch) {
 	int32_t* yList;
 	int i, j, idx, rangeBits;
-	uint8_t class, cdim, cbits;
+	uint8_t klass, cdim, cbits;
 	int bookNum;
 	uint32_t csub, cval;
 
@@ -509,19 +509,19 @@ static bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f, int ch) 
 	yList[1]  = Vorbis_ReadBits(ctx, rangeBits);
 
 	for (i = 0, idx = 2; i < f->Partitions; i++) {
-		class = f->PartitionClasses[i];
-		cdim  = f->ClassDimensions[class];
-		cbits = f->ClassSubClasses[class];
+		klass = f->PartitionClasses[i];
+		cdim  = f->ClassDimensions[klass];
+		cbits = f->ClassSubClasses[klass];
 
 		csub = (1 << cbits) - 1;
 		cval = 0;
 		if (cbits) {
-			bookNum = f->ClassMasterbooks[class];
+			bookNum = f->ClassMasterbooks[klass];
 			cval = Codebook_DecodeScalar(ctx, &ctx->Codebooks[bookNum]);
 		}
 
 		for (j = 0; j < cdim; j++) {
-			bookNum = f->SubclassBooks[class][cval & csub];
+			bookNum = f->SubclassBooks[klass][cval & csub];
 			cval >>= cbits;
 
 			if (bookNum >= 0) {
