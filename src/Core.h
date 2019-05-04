@@ -59,7 +59,7 @@ typedef uint8_t bool;
 
 #ifndef NULL
 #ifdef __cplusplus
-#define NULL nullptr
+#define NULL 0
 #else
 #define NULL ((void*)0)
 #endif

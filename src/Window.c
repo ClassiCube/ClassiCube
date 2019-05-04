@@ -532,7 +532,7 @@ void Window_SetSize(int width, int height) {
 				Rect_Width(rect), Rect_Height(rect), SWP_NOMOVE);
 }
 
-void* Window_GetWindowHandle(void) { return win_handle; }
+void* Window_GetHandle(void) { return win_handle; }
 
 bool Window_GetVisible(void) { return IsWindowVisible(win_handle); }
 void Window_SetVisible(bool visible) {
@@ -970,7 +970,7 @@ void Window_SetVisible(bool visible) {
 	}
 }
 
-void* Window_GetWindowHandle(void) { return win_handle; }
+void* Window_GetHandle(void) { return win_handle; }
 
 int Window_GetWindowState(void) {
 	Atom prop_type;
@@ -1566,6 +1566,7 @@ void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 *#########################################################################################################################*/
 #ifdef CC_BUILD_CARBON
 #include <ApplicationServices/ApplicationServices.h>
+#include <Carbon/Carbon.h>
 
 static WindowRef win_handle;
 static int win_state;
@@ -1995,7 +1996,7 @@ void Window_SetVisible(bool visible) {
 	}
 }
 
-void* Window_GetWindowHandle(void) { return win_handle; }
+void* Window_GetHandle(void) { return win_handle; }
 
 int Window_GetWindowState(void) {
 	if (win_state == WINDOW_STATE_FULLSCREEN)
@@ -2275,7 +2276,7 @@ void Window_SetVisible(bool visible) {
 	}
 }
 
-void* Window_GetWindowHandle(void) { return win_handle; }
+void* Window_GetHandle(void) { return win_handle; }
 
 int Window_GetWindowState(void) {
 	Uint32 flags = SDL_GetWindowFlags(win_handle);
@@ -2799,7 +2800,7 @@ void Window_SetClipboardText(const String* value) {
 
 bool Window_GetVisible(void) { return true; }
 void Window_SetVisible(bool visible) { }
-void* Window_GetWindowHandle(void) { return NULL; }
+void* Window_GetHandle(void) { return NULL; }
 
 int Window_GetWindowState(void) {
 	EmscriptenFullscreenChangeEvent status;

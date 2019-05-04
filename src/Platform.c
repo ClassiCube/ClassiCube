@@ -89,6 +89,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #elif defined CC_BUILD_OSX
 #include <mach/mach_time.h>
 #include <mach-o/dyld.h>
+#include <ApplicationServices/ApplicationServices.h>
 #elif defined CC_BUILD_WEB
 #include <emscripten.h>
 #undef CC_BUILD_FREETYPE

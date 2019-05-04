@@ -72,7 +72,7 @@ bool Window_GetVisible(void);
 /* Sets whether the window is visible on screen at all. */
 void Window_SetVisible(bool visible);
 /* Returns the platform-specific handle to the window. */
-void* Window_GetWindowHandle(void);
+void* Window_GetHandle(void);
 /* Gets the current state of the window, see WindowState enum. */
 int Window_GetWindowState(void);
 /* Sets the current state of the window, see WindowState enum. */
@@ -118,7 +118,7 @@ void Window_InitRaw(Bitmap* bmp);
 void Window_DrawRaw(Rect2D r);
 
 /* Begins listening for raw input and starts raising MouseEvents.RawMoved. */
-/* NOTE: Some backends only raise it when Window_UpdateRawMouse is called.  */
+/* NOTE: Some backends only raise it when Window_UpdateRawMouse is called. */
 /* Cursor will also be hidden and moved to window centre. */
 void Window_EnableRawMouse(void);
 /* Updates mouse state. (such as centreing cursor) */
