@@ -56,8 +56,13 @@ typedef uint16_t Codepoint;
 typedef uint8_t bool;
 #define true 1
 #define false 0
+
 #ifndef NULL
+#ifdef __cplusplus
+#define NULL nullptr
+#else
 #define NULL ((void*)0)
+#endif
 #endif
 
 #define EXTENDED_BLOCKS

@@ -33,17 +33,17 @@ static bool Widget_MouseScroll(void* elem, float delta) { return false; }
 *-------------------------------------------------------TextWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 static void TextWidget_Render(void* widget, double delta) {
-	struct TextWidget* w = widget;
+	struct TextWidget* w = (struct TextWidget*)widget;
 	if (w->Texture.ID) { Texture_RenderShaded(&w->Texture, w->Col); }
 }
 
 static void TextWidget_Free(void* widget) {
-	struct TextWidget* w = widget;
+	struct TextWidget* w = (struct TextWidget*)widget;
 	Gfx_DeleteTexture(&w->Texture.ID);
 }
 
 static void TextWidget_Reposition(void* widget) {
-	struct TextWidget* w = widget;
+	struct TextWidget* w = (struct TextWidget*)widget;
 	int oldX = w->X, oldY = w->Y;
 
 	Widget_CalcPosition(w);
@@ -102,12 +102,12 @@ static struct Texture Button_SelectedTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widge
 static struct Texture Button_DisabledTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,46, 200,66)  };
 
 static void ButtonWidget_Free(void* widget) {
-	struct ButtonWidget* w = widget;
+	struct ButtonWidget* w = (struct ButtonWidget*)widget;
 	Gfx_DeleteTexture(&w->Texture.ID);
 }
 
 static void ButtonWidget_Reposition(void* widget) {
-	struct ButtonWidget* w = widget;
+	struct ButtonWidget* w = (struct ButtonWidget*)widget;
 	int oldX = w->X, oldY = w->Y;
 	Widget_CalcPosition(w);
 	
@@ -120,7 +120,8 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	PackedCol activeCol   = PACKEDCOL_CONST(255, 255, 160, 255);
 	PackedCol disabledCol = PACKEDCOL_CONST(160, 160, 160, 255);
 	PackedCol col, white  = PACKEDCOL_WHITE;
-	struct ButtonWidget* w = widget;
+
+	struct ButtonWidget* w = (struct ButtonWidget*)widget;
 	struct Texture back;	
 	float scale;
 		
@@ -219,7 +220,7 @@ static void ScrollbarWidget_GetScrollbarCoords(struct ScrollbarWidget* w, int* y
 }
 
 static void ScrollbarWidget_Render(void* widget, double delta) {
-	struct ScrollbarWidget* w = widget;
+	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int x, y, width, height;
 	PackedCol barCol;
 	bool hovered;
@@ -245,7 +246,7 @@ static void ScrollbarWidget_Render(void* widget, double delta) {
 }
 
 static bool ScrollbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
-	struct ScrollbarWidget* w = widget;
+	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int posY, height;
 
 	if (w->DraggingMouse) return true;
@@ -268,14 +269,14 @@ static bool ScrollbarWidget_MouseDown(void* widget, int x, int y, MouseButton bt
 }
 
 static bool ScrollbarWidget_MouseUp(void* widget, int x, int y, MouseButton btn) {
-	struct ScrollbarWidget* w = widget;
+	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	w->DraggingMouse = false;
 	w->MouseOffset   = 0;
 	return true;
 }
 
 static bool ScrollbarWidget_MouseScroll(void* widget, float delta) {
-	struct ScrollbarWidget* w = widget;
+	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int steps = Utils_AccumulateWheelDelta(&w->ScrollingAcc, delta);
 
 	w->TopRow -= steps;
@@ -284,7 +285,7 @@ static bool ScrollbarWidget_MouseScroll(void* widget, float delta) {
 }
 
 static bool ScrollbarWidget_MouseMove(void* widget, int x, int y) {
-	struct ScrollbarWidget* w = widget;
+	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	float scale;
 
 	if (w->DraggingMouse) {
@@ -384,8 +385,8 @@ static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int i
 }
 
 static void HotbarWidget_Reposition(void* widget) {
+	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	float scale = Game_GetHotbarScale();
-	struct HotbarWidget* w = widget;
 
 	w->BarHeight = (float)Math_Floor(22.0f * scale);
 	w->Width     = (int)(182 * scale);
@@ -402,18 +403,18 @@ static void HotbarWidget_Reposition(void* widget) {
 }
 
 static void HotbarWidget_Init(void* widget) {
-	struct HotbarWidget* w = widget;
+	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	Widget_Reposition(w);
 }
 
 static void HotbarWidget_Render(void* widget, double delta) {
-	struct HotbarWidget* w = widget;
+	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	HotbarWidget_RenderHotbarOutline(w);
 	HotbarWidget_RenderHotbarBlocks(w);
 }
 
 static bool HotbarWidget_KeyDown(void* widget, Key key, bool was) {
-	struct HotbarWidget* w = widget;
+	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 	if (key < '1' || key > '9') return false;
 
@@ -429,7 +430,7 @@ static bool HotbarWidget_KeyDown(void* widget, Key key, bool was) {
 }
 
 static bool HotbarWidget_KeyUp(void* widget, Key key) {
-	struct HotbarWidget* w = widget;
+	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 
 	/* Need to handle these cases:
@@ -449,7 +450,7 @@ static bool HotbarWidget_KeyUp(void* widget, Key key) {
 }
 
 static bool HotbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
-	struct HotbarWidget* w = widget;
+	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	struct Screen* screen;
 	int width, height;
 	int i, cellX, cellY;
@@ -474,7 +475,7 @@ static bool HotbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) 
 }
 
 static bool HotbarWidget_MouseScroll(void* widget, float delta) {
-	struct HotbarWidget* w = widget;
+	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 
 	if (KeyBind_IsPressed(KEYBIND_HOTBAR_SWITCH)) {
@@ -631,7 +632,7 @@ static void TableWidget_RecreateElements(struct TableWidget* w) {
 }
 
 static void TableWidget_Init(void* widget) {
-	struct TableWidget* w = widget;
+	struct TableWidget* w = (struct TableWidget*)widget;
 	w->LastX = Mouse_X; w->LastY = Mouse_Y;
 
 	ScrollbarWidget_Create(&w->Scroll);
@@ -640,7 +641,7 @@ static void TableWidget_Init(void* widget) {
 }
 
 static void TableWidget_Render(void* widget, double delta) {
-	struct TableWidget* w = widget;
+	struct TableWidget* w = (struct TableWidget*)widget;
 	VertexP3fT2fC4b vertices[TABLE_MAX_VERTICES];
 	int cellSize, size;
 	float off;
@@ -698,21 +699,21 @@ static void TableWidget_Render(void* widget, double delta) {
 }
 
 static void TableWidget_Free(void* widget) {
-	struct TableWidget* w = widget;
+	struct TableWidget* w = (struct TableWidget*)widget;
 	Gfx_DeleteVb(&w->VB);
 	Gfx_DeleteTexture(&w->DescTex.ID);
 	w->LastCreatedIndex = -1000;
 }
 
 static void TableWidget_Recreate(void* widget) {
-	struct TableWidget* w = widget;
+	struct TableWidget* w = (struct TableWidget*)widget;
 	Elem_TryFree(w);
 	w->VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TABLE_MAX_VERTICES);
 	TableWidget_RecreateDescTex(w);
 }
 
 static void TableWidget_Reposition(void* widget) {
-	struct TableWidget* w = widget;
+	struct TableWidget* w = (struct TableWidget*)widget;
 	float scale = Game_GetInventoryScale();
 	w->CellSize = (int)(50 * Math_SqrtF(scale));
 	w->SelBlockExpand = 25.0f * Math_SqrtF(scale);
@@ -737,7 +738,7 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
 }
 
 static bool TableWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
-	struct TableWidget* w = widget;
+	struct TableWidget* w = (struct TableWidget*)widget;
 	w->PendingClose = false;
 	if (btn != MOUSE_LEFT) return false;
 
@@ -754,12 +755,12 @@ static bool TableWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
 }
 
 static bool TableWidget_MouseUp(void* widget, int x, int y, MouseButton btn) {
-	struct TableWidget* w = widget;
+	struct TableWidget* w = (struct TableWidget*)widget;
 	return Elem_HandlesMouseUp(&w->Scroll, x, y, btn);
 }
 
 static bool TableWidget_MouseScroll(void* widget, float delta) {
-	struct TableWidget* w = widget;
+	struct TableWidget* w = (struct TableWidget*)widget;
 	int origTopRow, index;
 
 	bool bounds = Gui_Contains(Table_X(w), Table_Y(w),
@@ -780,7 +781,7 @@ static bool TableWidget_MouseScroll(void* widget, float delta) {
 }
 
 static bool TableWidget_MouseMove(void* widget, int x, int y) {
-	struct TableWidget* w = widget;
+	struct TableWidget* w = (struct TableWidget*)widget;
 	int cellSize, maxHeight;
 	int i, cellX, cellY;
 
@@ -807,7 +808,7 @@ static bool TableWidget_MouseMove(void* widget, int x, int y) {
 }
 
 static bool TableWidget_KeyDown(void* widget, Key key, bool was) {
-	struct TableWidget* w = widget;
+	struct TableWidget* w = (struct TableWidget*)widget;
 	if (w->SelectedIndex == -1) return false;
 
 	if (key == KEY_LEFT || key == KEY_KP4) {
@@ -989,7 +990,7 @@ static void InputWidget_RenderCaret(struct InputWidget* w, double delta) {
 }
 
 static void InputWidget_OnPressedEnter(void* widget) {
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	InputWidget_Clear(w);
 	w->Height = w->PrefixHeight;
 }
@@ -1173,7 +1174,7 @@ static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
 }
 
 static void InputWidget_Init(void* widget) {
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	int lines = w->GetMaxLines();
 
 	if (lines > 1) {
@@ -1188,19 +1189,19 @@ static void InputWidget_Init(void* widget) {
 }
 
 static void InputWidget_Free(void* widget) {
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_DeleteTexture(&w->InputTex.ID);
 	Gfx_DeleteTexture(&w->CaretTex.ID);
 }
 
 static void InputWidget_Recreate(void* widget) {
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_DeleteTexture(&w->InputTex.ID);
 	InputWidget_Init(w);
 }
 
 static void InputWidget_Reposition(void* widget) {
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	int oldX = w->X, oldY = w->Y;
 	Widget_CalcPosition(w);
 	
@@ -1209,7 +1210,7 @@ static void InputWidget_Reposition(void* widget) {
 }
 
 static bool InputWidget_KeyDown(void* widget, Key key, bool was) {
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	if (key == KEY_LEFT) {
 		InputWidget_LeftKey(w);
 	} else if (key == KEY_RIGHT) {
@@ -1231,14 +1232,14 @@ static bool InputWidget_KeyDown(void* widget, Key key, bool was) {
 static bool InputWidget_KeyUp(void* widget, Key key) { return true; }
 
 static bool InputWidget_KeyPress(void* widget, char keyChar) {
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	InputWidget_Append(w, keyChar);
 	return true;
 }
 
 static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button) {
 	String line; char lineBuffer[STRING_SIZE];
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	struct DrawTextArgs args;
 	int cx, cy, offset = 0;
 	int charX, charWidth, charHeight;
@@ -1457,7 +1458,7 @@ struct MenuInputValidator MenuInputValidator_String(void) {
 *-----------------------------------------------------MenuInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
 static void MenuInputWidget_Render(void* widget, double delta) {
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	PackedCol backCol = PACKEDCOL_CONST(30, 30, 30, 200);
 
 	Gfx_SetTexturing(false);
@@ -1516,7 +1517,7 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 }
 
 static bool MenuInputWidget_AllowedChar(void* widget, char c) {
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	struct MenuInputValidator* v;
 	int maxChars;
 	bool valid;
@@ -1643,7 +1644,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 }
 
 static void ChatInputWidget_OnPressedEnter(void* widget) {
-	struct ChatInputWidget* w = widget;
+	struct ChatInputWidget* w = (struct ChatInputWidget*)widget;
 	/* Don't want trailing spaces in output message */
 	String text = w->Base.Text;
 	String_UNSAFE_TrimEnd(&text);
@@ -1782,7 +1783,7 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 }
 
 static bool ChatInputWidget_KeyDown(void* widget, Key key, bool was) {
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	if (key == KEY_TAB)  { ChatInputWidget_TabKey(w);  return true; }
 	if (key == KEY_UP)   { ChatInputWidget_UpKey(w);   return true; }
 	if (key == KEY_DOWN) { ChatInputWidget_DownKey(w); return true; }
@@ -1940,7 +1941,7 @@ static void PlayerListWidget_RepositionColumns(struct PlayerListWidget* w) {
 }
 
 static void PlayerListWidget_Reposition(void* widget) {
-	struct PlayerListWidget* w = widget;
+	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	int i, y, oldX, oldY;
 
 	y = Game.Height / 4 - w->Height / 2;
@@ -2097,13 +2098,13 @@ static void PlayerListWidget_SortAndReposition(struct PlayerListWidget* w) {
 }
 
 static void PlayerListWidget_TabEntryAdded(void* widget, int id) {
-	struct PlayerListWidget* w = widget;
+	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	PlayerListWidget_AddName(w, id, -1);
 	PlayerListWidget_SortAndReposition(w);
 }
 
 static void PlayerListWidget_TabEntryChanged(void* widget, int id) {
-	struct PlayerListWidget* w = widget;
+	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	struct Texture tex;
 	int i;
 
@@ -2119,7 +2120,7 @@ static void PlayerListWidget_TabEntryChanged(void* widget, int id) {
 }
 
 static void PlayerListWidget_TabEntryRemoved(void* widget, int id) {
-	struct PlayerListWidget* w = widget;
+	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	int i;
 	for (i = 0; i < w->NamesCount; i++) {
 		if (w->IDs[i] != id) continue;
@@ -2132,7 +2133,7 @@ static void PlayerListWidget_TabEntryRemoved(void* widget, int id) {
 
 static void PlayerListWidget_Init(void* widget) {
 	const static String title = String_FromConst("Connected players:");
-	struct PlayerListWidget* w = widget;
+	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	int id;
 
 	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
@@ -2150,7 +2151,7 @@ static void PlayerListWidget_Init(void* widget) {
 }
 
 static void PlayerListWidget_Render(void* widget, double delta) {
-	struct PlayerListWidget* w = widget;
+	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	struct TextWidget* title = &w->Title;
 	struct Texture tex;
 	int offset, height;
@@ -2179,7 +2180,7 @@ static void PlayerListWidget_Render(void* widget, double delta) {
 }
 
 static void PlayerListWidget_Free(void* widget) {
-	struct PlayerListWidget* w = widget;
+	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	int i;
 	for (i = 0; i < w->NamesCount; i++) {
 		Gfx_DeleteTexture(&w->Textures[i].ID);
@@ -2300,8 +2301,8 @@ int TextGroupWidget_UsedHeight(struct TextGroupWidget* w) {
 }
 
 static void TextGroupWidget_Reposition(void* widget) {
-	struct TextGroupWidget* w = widget;
-	struct Texture* textures = w->Textures;
+	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
+	struct Texture* textures  = w->Textures;
 	int i, oldY = w->Y;
 
 	Widget_CalcPosition(w);
@@ -2597,7 +2598,7 @@ void TextGroupWidget_SetText(struct TextGroupWidget* w, int index, const String*
 
 
 static void TextGroupWidget_Init(void* widget) {
-	struct TextGroupWidget* w = widget;
+	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
 	int i, height;
 	
 	height = Drawer2D_FontHeight(&w->Font, true);
@@ -2612,7 +2613,7 @@ static void TextGroupWidget_Init(void* widget) {
 }
 
 static void TextGroupWidget_Render(void* widget, double delta) {
-	struct TextGroupWidget* w = widget;
+	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
 	struct Texture* textures  = w->Textures;
 	int i;
 
@@ -2623,7 +2624,7 @@ static void TextGroupWidget_Render(void* widget, double delta) {
 }
 
 static void TextGroupWidget_Free(void* widget) {
-	struct TextGroupWidget* w = widget;
+	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
 	int i;
 
 	for (i = 0; i < w->LinesCount; i++) {
@@ -2839,7 +2840,7 @@ static void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
 }
 
 static void SpecialInputWidget_Init(void* widget) {
-	struct SpecialInputWidget* w = widget;
+	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
 	w->X = 5; w->Y = 5;
 
 	SpecialInputWidget_InitTabs(w);
@@ -2848,17 +2849,17 @@ static void SpecialInputWidget_Init(void* widget) {
 }
 
 static void SpecialInputWidget_Render(void* widget, double delta) {
-	struct SpecialInputWidget* w = widget;
+	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
 	Texture_Render(&w->Tex);
 }
 
 static void SpecialInputWidget_Free(void* widget) {
-	struct SpecialInputWidget* w = widget;
+	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
 	Gfx_DeleteTexture(&w->Tex.ID);
 }
 
 static bool SpecialInputWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
-	struct SpecialInputWidget* w = widget;
+	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
 	x -= w->X; y -= w->Y;
 
 	if (SpecialInputWidget_IntersectsTitle(w, x, y)) {

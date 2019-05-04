@@ -16,27 +16,27 @@
 #define BORDER4 (4 * BORDER)
 
 void LWidget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
-	struct LWidget* w = widget;
+	struct LWidget* w = (struct LWidget*)widget;
 	w->HorAnchor = horAnchor; w->VerAnchor = verAnchor;
 	w->XOffset   = xOffset;   w->YOffset = yOffset;
 	LWidget_CalcPosition(widget);
 }
 
 void LWidget_CalcPosition(void* widget) {
-	struct LWidget* w = widget;
+	struct LWidget* w = (struct LWidget*)widget;
 	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width,  Game.Width);
 	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game.Height);
 }
 
 void LWidget_Draw(void* widget) {
-	struct LWidget* w = widget;
+	struct LWidget* w = (struct LWidget*)widget;
 	w->VTABLE->Draw(w);
 	w->Last.X = w->X; w->Last.Width  = w->Width;
 	w->Last.Y = w->Y; w->Last.Height = w->Height;
 }
 
 void LWidget_Redraw(void* widget) {
-	struct LWidget* w = widget;
+	struct LWidget* w = (struct LWidget*)widget;
 	Launcher_ResetArea(w->Last.X, w->Last.Y, w->Last.Width, w->Last.Height);
 	LWidget_Draw(w);
 }
