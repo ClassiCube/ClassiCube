@@ -266,7 +266,7 @@ static bool ReadChunkData(int x1, int y1, int z1, bool* outAllAir) {
 #ifndef EXTENDED_BLOCKS
 	ReadChunkBody(World.Blocks[index]);
 #else
-	if (Block_UsedCount <= 256) {
+	if (World.IDMask <= 0xFF) {
 		ReadChunkBody(World.Blocks[index]);
 	} else {
 		ReadChunkBody(World.Blocks[index] | (World.Blocks2[index] << 8));
@@ -312,7 +312,7 @@ static bool ReadBorderChunkData(int x1, int y1, int z1, bool* outAllAir) {
 #ifndef EXTENDED_BLOCKS
 	ReadBorderChunkBody(World.Blocks[index]);
 #else
-	if (Block_UsedCount <= 256) {
+	if (World.IDMask <= 0xFF) {
 		ReadBorderChunkBody(World.Blocks[index]);
 	} else {
 		ReadBorderChunkBody(World.Blocks[index] | (World.Blocks2[index] << 8));

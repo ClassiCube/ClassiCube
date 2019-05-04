@@ -33,6 +33,12 @@ CC_VAR extern struct _WorldData {
 	int OneY;
 	/* Unique identifier for this world. */
 	uint8_t Uuid[16];
+
+#ifdef EXTENDED_BLOCKS
+	/* Masks access to World.Blocks/World.Blocks2 */
+	/* e.g. this will be 255 if only 8 bit blocks are used */
+	int IDMask;
+#endif
 } World;
 extern String World_TextureUrl;
 
@@ -46,7 +52,6 @@ CC_API void World_SetNewMap(BlockRaw* blocks, int width, int height, int length)
 CC_NOINLINE void World_SetDimensions(int width, int height, int length);
 
 #ifdef EXTENDED_BLOCKS
-extern int Block_IDMask;
 /* Sets World.Blocks2 and updates internal state for more than 256 blocks. */
 void World_SetMapUpper(BlockRaw* blocks);
 
@@ -54,7 +59,7 @@ void World_SetMapUpper(BlockRaw* blocks);
 /* NOTE: Does NOT check that the coordinates are inside the map. */
 static CC_INLINE BlockID World_GetBlock(int x, int y, int z) {
 	int i = World_Pack(x, y, z);
-	return (BlockID)((World.Blocks[i] | (World.Blocks2[i] << 8)) & Block_IDMask);
+	return (BlockID)((World.Blocks[i] | (World.Blocks2[i] << 8)) & World.IDMask);
 }
 #else
 #define World_GetBlock(x, y, z) World_Blocks[World_Pack(x, y, z)]

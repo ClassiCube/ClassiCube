@@ -536,7 +536,6 @@ static void MPConnection_Reset(void) {
 	}
 
 	net_writeFailed = false;
-	Block_SetUsedCount(256);
 	Protocol_Reset();
 	Server_Free();
 }

@@ -392,7 +392,7 @@ static int EnvRenderer_CalcRainHeightAt(int x, int maxY, int z, int hIndex) {
 #ifndef EXTENDED_BLOCKS
 	EnvRenderer_RainCalcBody(World.Blocks[i]);
 #else
-	if (Block_UsedCount <= 256) {
+	if (World.IDMask <= 0xFF) {
 		EnvRenderer_RainCalcBody(World.Blocks[i]);
 	} else {
 		EnvRenderer_RainCalcBody(World.Blocks[i] | (World.Blocks2[i] << 8));

@@ -38,13 +38,13 @@ void World_Reset(void) {
 #ifdef EXTENDED_BLOCKS
 	if (World.Blocks != World.Blocks2) Mem_Free(World.Blocks2);
 	World.Blocks2 = NULL;
+	World.IDMask  = 0xFF;
 #endif
 	Mem_Free(World.Blocks);
 	World.Blocks = NULL;
 
 	World_SetDimensions(0, 0, 0);
 	Env_Reset();
-	World_NewUuid();
 }
 
 void World_SetNewMap(BlockRaw* blocks, int width, int height, int length) {
@@ -56,12 +56,13 @@ void World_SetNewMap(BlockRaw* blocks, int width, int height, int length) {
 	/* .cw maps may have set this to a non-NULL when importing */
 	if (!World.Blocks2) {
 		World.Blocks2 = World.Blocks;
-		Block_SetUsedCount(256);
+		World.IDMask  = 0xFF;
 	}
 #endif
 
 	if (Env.EdgeHeight == -1)   { Env.EdgeHeight   = height / 2; }
 	if (Env.CloudsHeight == -1) { Env.CloudsHeight = height + 2; }
+	World_NewUuid();
 }
 
 CC_NOINLINE void World_SetDimensions(int width, int height, int length) {
@@ -77,7 +78,7 @@ CC_NOINLINE void World_SetDimensions(int width, int height, int length) {
 #ifdef EXTENDED_BLOCKS
 void World_SetMapUpper(BlockRaw* blocks) {
 	World.Blocks2 = blocks;
-	Block_SetUsedCount(768);
+	World.IDMask  = 0x3FF;
 }
 #endif
 
@@ -90,8 +91,7 @@ void World_SetBlock(int x, int y, int z, BlockID block) {
 	/* defer allocation of second map array if possible */
 	if (World.Blocks == World.Blocks2) {
 		if (block < 256) return;
-		World.Blocks2 = Mem_AllocCleared(World.Volume, 1, "blocks array upper");
-		Block_SetUsedCount(768);
+		World_SetMapUpper(Mem_AllocCleared(World.Volume, 1, "blocks array upper"));
 	}
 	World.Blocks2[i] = (BlockRaw)(block >> 8);
 }

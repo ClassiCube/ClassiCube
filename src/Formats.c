@@ -57,9 +57,6 @@ void Map_LoadFrom(const String* path) {
 	IMapImporter importer;
 	struct Stream stream;
 	ReturnCode res;
-
-	World_Reset();
-	Event_RaiseVoid(&WorldEvents.NewMap);
 	Game_Reset();
 	
 	res = Stream_OpenFile(&stream, path);

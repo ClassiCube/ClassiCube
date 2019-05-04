@@ -30,7 +30,7 @@ static int Lighting_CalcHeightAt(int x, int maxY, int z, int hIndex) {
 #ifndef EXTENDED_BLOCKS
 	Lighting_CalcBody(World.Blocks[i]);
 #else
-	if (Block_UsedCount <= 256) {
+	if (World.IDMask <= 0xFF) {
 		Lighting_CalcBody(World.Blocks[i]);
 	} else {
 		Lighting_CalcBody(World.Blocks[i] | (World.Blocks2[i] << 8));
@@ -145,7 +145,7 @@ static bool Lighting_NeedsNeighour(BlockID block, int i, int minY, int y, int nY
 #ifndef EXTENDED_BLOCKS
 	Lighting_NeedsNeighourBody(World.Blocks[i]);
 #else
-	if (Block_UsedCount <= 256) {
+	if (World.IDMask <= 0xFF) {
 		Lighting_NeedsNeighourBody(World.Blocks[i]);
 	} else {
 		Lighting_NeedsNeighourBody(World.Blocks[i] | (World.Blocks2[i] << 8));
@@ -312,7 +312,7 @@ static bool Lighting_CalculateHeightmapCoverage(int x1, int z1, int xCount, int 
 #ifndef EXTENDED_BLOCKS
 	Lighting_CalculateBody(World.Blocks[mapIndex]);
 #else
-	if (Block_UsedCount <= 256) {
+	if (World.IDMask <= 0xFF) {
 		Lighting_CalculateBody(World.Blocks[mapIndex]);
 	} else {
 		Lighting_CalculateBody(World.Blocks[mapIndex] | (World.Blocks2[mapIndex] << 8));

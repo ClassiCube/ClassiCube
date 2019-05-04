@@ -10,7 +10,6 @@
 #include "GameStructs.h"
 
 struct _BlockLists Blocks;
-int Block_UsedCount, Block_IDMask;
 
 const char* Sound_Names[SOUND_COUNT] = {
 	"none", "wood", "gravel", "grass", "stone",
@@ -143,13 +142,6 @@ const static uint8_t bottomTex[BLOCK_CPE_COUNT]  = { 0,  1,  2,  2, 16,  4, 15,
 17, 14, 14, 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 
 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  
  4, 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
-
-#ifdef EXTENDED_BLOCKS
-void Block_SetUsedCount(int count) {
-	Block_UsedCount = count;
-	Block_IDMask    = Math_NextPowOf2(count) - 1;
-}
-#endif
 
 bool Block_IsCustomDefined(BlockID block) {
 	return (Block_DefinedCustomBlocks[block >> 5] & (1u << (block & 0x1F))) != 0;
@@ -694,10 +686,6 @@ static void Blocks_Reset(void) {
 		Block_ResetProps((BlockID)block);
 	}
 	Block_UpdateAllCulling();
-
-#ifdef EXTENDED_BLOCKS
-	Block_SetUsedCount(256);
-#endif
 	Block_RecalculateAllSpriteBB();
 }
 

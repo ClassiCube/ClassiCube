@@ -177,9 +177,6 @@ void Game_UpdateProjection(void) {
 
 void Game_Disconnect(const String* title, const String* reason) {
 	Event_RaiseVoid(&NetEvents.Disconnected);
-	World_Reset();
-	Event_RaiseVoid(&WorldEvents.NewMap);
-
 	Gui_FreeActive();
 	Gui_SetActive(DisconnectScreen_MakeInstance(title, reason));
 	Game_Reset();
@@ -187,6 +184,9 @@ void Game_Disconnect(const String* title, const String* reason) {
 
 void Game_Reset(void) {
 	struct IGameComponent* comp;
+	World_Reset();
+	Event_RaiseVoid(&WorldEvents.NewMap);
+
 	if (World_TextureUrl.length) {
 		TexturePack_ExtractDefault();
 		World_TextureUrl.length = 0;
@@ -471,7 +471,7 @@ static void Game_Load(void) {
 
 	Game_AddComponent(&Animations_Component);
 	Game_AddComponent(&Inventory_Component);
-	Env_Reset();
+	World_Reset();
 
 	Game_AddComponent(&MapRenderer_Component);
 	Game_AddComponent(&EnvRenderer_Component);

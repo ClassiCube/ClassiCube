@@ -111,7 +111,6 @@ if (Blocks.Tinted[block]) {\
 }
 
 #ifdef EXTENDED_BLOCKS
-extern int Block_UsedCount, Block_IDMask;
 extern void Block_SetUsedCount(int count);
 #endif
 
