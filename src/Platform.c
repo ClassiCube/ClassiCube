@@ -1359,7 +1359,7 @@ ReturnCode Socket_SetBlocking(SocketHandle socket, bool blocking) {
 
 
 ReturnCode Socket_GetError(SocketHandle socket, ReturnCode* result) {
-	int resultSize = sizeof(ReturnCode);
+	socklen_t resultSize = sizeof(ReturnCode);
 	return getsockopt(socket, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
