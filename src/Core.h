@@ -53,9 +53,14 @@ typedef signed __int64 int64_t;
 #endif
 
 typedef uint16_t Codepoint;
+#ifdef __APPLE__
+/* TODO: REMOVE THIS AWFUL AWFUL HACK */
+#include <stdbool.h>
+#else
 typedef uint8_t bool;
 #define true 1
 #define false 0
+#endif
 
 #ifndef NULL
 #ifdef __cplusplus

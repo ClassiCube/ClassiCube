@@ -1016,11 +1016,15 @@ static uint16_t gl_indices[GFX_MAX_INDICES];
 #define _glBufferData(t,s,d,u)    glBufferData(t,s,d,u)
 #define _glBufferSubData(t,o,s,d) glBufferSubData(t,o,s,d)
 #else
-/* Not present in some gl.h which only have up to OpenGL 1.1 */
+/* Not present in gl.h on Windows (only up to OpenGL 1.1) */
 #define GL_ARRAY_BUFFER         0x8892
 #define GL_ELEMENT_ARRAY_BUFFER 0x8893
 #define GL_STATIC_DRAW          0x88E4
 #define GL_DYNAMIC_DRAW         0x88E8
+/* OpenGL functions use stdcall instead of cdecl on Windows */
+#ifndef APIENTRY
+#define APIENTRY
+#endif
 
 typedef void (APIENTRY *FUNC_GLBINDBUFFER) (GLenum target, GLuint buffer);
 typedef void (APIENTRY *FUNC_GLDELETEBUFFERS) (GLsizei n, const GLuint *buffers);
