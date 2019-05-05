@@ -85,7 +85,7 @@ static int Builder_TotalVerticesCount(void) {
 *----------------------------------------------------Base mesh builder----------------------------------------------------*
 *#########################################################################################################################*/
 static void Builder_AddSpriteVertices(BlockID block) {
-	int i = Atlas1D_Index(Block_Tex(block, FACE_XMIN));
+	int i = Atlas1D_Index(Block_Tex(block, FACE_XMAX));
 	struct Builder1DPart* part = &Builder_Parts[i];
 	part->sCount += 4 * 4;
 }

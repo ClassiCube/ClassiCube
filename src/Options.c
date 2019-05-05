@@ -142,7 +142,8 @@ void Options_Load(void) {
 	int i;
 
 	if (!Options.Filename) {
-		EntryList_Init(&Options, NULL, "options.txt", '=');
+		EntryList_Init(&Options, NULL, "options-default.txt", '=');
+		EntryList_Init(&Options, NULL, "options.txt",         '=');
 	} else {
 		/* Reset all the unchanged options */
 		for (i = Options.Entries.Count - 1; i >= 0; i--) {
