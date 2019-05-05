@@ -21,7 +21,6 @@ struct ChunkPartInfo* MapRenderer_PartsNormal;
 struct ChunkPartInfo* MapRenderer_PartsTranslucent;
 
 static bool inTranslucent;
-static int elementsPerBitmap;
 static Vector3I chunkPos;
 
 /* The number of non-empty Normal/Translucent ChunkPartInfos (across entire world) for each 1D atlas batch. */
@@ -699,13 +698,14 @@ static void MapRenderer_EnvVariableChanged(void* obj, int envVar) {
 }
 
 static void MapRenderer_TerrainAtlasChanged(void* obj) {
-	if (MapRenderer_1DUsedCount) {
-		bool refreshRequired = elementsPerBitmap != Atlas1D.TilesPerAtlas;
-		if (refreshRequired) MapRenderer_Refresh();
+	static int tilesPerAtlas;
+	/* e.g. If old atlas was 256x256 and new is 256x256, don't need to refresh */
+	if (MapRenderer_1DUsedCount && tilesPerAtlas != Atlas1D.TilesPerAtlas) {
+		MapRenderer_Refresh();
 	}
 
 	MapRenderer_1DUsedCount = MapRenderer_UsedAtlases();
-	elementsPerBitmap = Atlas1D.TilesPerAtlas;
+	tilesPerAtlas = Atlas1D.TilesPerAtlas;
 	MapRenderer_ResetPartFlags();
 }
 

@@ -1471,7 +1471,7 @@ static void MenuInputWidget_Render(void* widget, double delta) {
 
 static void MenuInputWidget_RemakeTexture(void* widget) {
 	String range; char rangeBuffer[STRING_SIZE];
-	struct MenuInputWidget* w = widget;
+	struct MenuInputWidget* w = (struct MenuInputWidget*)widget;
 	struct MenuInputValidator* v;
 	struct DrawTextArgs args;
 	struct Texture* tex;
@@ -1569,7 +1569,7 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, co
 *#########################################################################################################################*/
 static void ChatInputWidget_RemakeTexture(void* widget) {
 	String line; char lineBuffer[STRING_SIZE + 2];
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	struct DrawTextArgs args;
 	Size2D size = { 0, 0 };
 	Bitmap bmp; 
@@ -1620,7 +1620,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 
 static void ChatInputWidget_Render(void* widget, double delta) {
 	PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
-	struct InputWidget* w = widget;
+	struct InputWidget* w = (struct InputWidget*)widget;
 	int x = w->X, y = w->Y;
 	bool caretAtEnd;
 	int i, width;

@@ -25,6 +25,9 @@ static short normViewDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4
 static short classicViewDists[4] = { 8, 32, 128, 512 };
 static TimeMS input_lastClick;
 static float input_fovIndex = -1.0f;
+#ifdef CC_BUILD_WEB
+static bool suppressEscape;
+#endif
 
 bool InputHandler_IsMousePressed(MouseButton button) {
 	if (Mouse_Pressed[button]) return true;
@@ -473,6 +476,14 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	} else if (Elem_HandlesKeyDown(active, key, was)) {
 		return;
 	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !active->HandlesAllInput) {
+#ifdef CC_BUILD_WEB
+		/* Can't do this in KeyUp, because pressing escape without having */
+		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
+		/* But switching to pause screen disables mouse lock, causing a KeyUp */
+		/* event to be sent, triggering the active->Closable case which immediately
+		/* closes the pause screen. Hence why the next KeyUp must be supressed. */
+		suppressEscape = true;
+#endif
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance()); return;
 	}
@@ -500,20 +511,18 @@ static void InputHandler_KeyUp(void* obj, int key) {
 	struct Screen* active;
 	if (InputHandler_SimulateMouse(key, false)) return;
 
-	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) {
-		Game_SetFov(Game_DefaultFov);
-	}
+	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) Game_SetFov(Game_DefaultFov);
+	active = Gui_GetActiveScreen();
 
 #ifdef CC_BUILD_WEB
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */
 	/* done in key up, the cursor disappears as expected. */
 	if (key == KEY_ESCAPE && active->Closable) {
+		if (suppressEscape) { suppressEscape = false; return; }
 		Gui_Close(active); return;
 	}
 #endif
-
-	active = Gui_GetActiveScreen();
 	Elem_HandlesKeyUp(active, key);
 }
 
