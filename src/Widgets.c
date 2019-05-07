@@ -870,14 +870,6 @@ void TableWidget_OnInventoryChanged(struct TableWidget* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------InputWidget-------------------------------------------------------*
 *#########################################################################################################################*/
-static bool InputWidget_ControlDown(void) {
-#ifdef CC_BUILD_OSX
-	return Key_IsWinPressed();
-#else
-	return Key_IsControlPressed();
-#endif
-}
-
 static void InputWidget_FormatLine(struct InputWidget* w, int i, String* line) {
 	String src = w->Lines[i];
 	if (!w->ConvertPercents) { String_AppendString(line, &src); return; }
@@ -1068,7 +1060,7 @@ static bool InputWidget_CheckCol(struct InputWidget* w, int index) {
 static void InputWidget_BackspaceKey(struct InputWidget* w) {
 	int i, len;
 
-	if (InputWidget_ControlDown()) {
+	if (Key_IsActionPressed()) {
 		if (w->CaretPos == -1) { w->CaretPos = w->Text.length - 1; }
 		len = WordWrap_GetBackLength(&w->Text, w->CaretPos);
 		if (!len) return;
@@ -1110,7 +1102,7 @@ static void InputWidget_DeleteKey(struct InputWidget* w) {
 }
 
 static void InputWidget_LeftKey(struct InputWidget* w) {
-	if (InputWidget_ControlDown()) {
+	if (Key_IsActionPressed()) {
 		if (w->CaretPos == -1) { w->CaretPos = w->Text.length - 1; }
 		w->CaretPos -= WordWrap_GetBackLength(&w->Text, w->CaretPos);
 		InputWidget_UpdateCaret(w);
@@ -1126,7 +1118,7 @@ static void InputWidget_LeftKey(struct InputWidget* w) {
 }
 
 static void InputWidget_RightKey(struct InputWidget* w) {
-	if (InputWidget_ControlDown()) {
+	if (Key_IsActionPressed()) {
 		w->CaretPos += WordWrap_GetForwardLength(&w->Text, w->CaretPos);
 		if (w->CaretPos >= w->Text.length) { w->CaretPos = -1; }
 		InputWidget_UpdateCaret(w);
@@ -1156,7 +1148,7 @@ static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
 	int maxChars;
 	
 	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
-	if (!InputWidget_ControlDown()) return false;
+	if (!Key_IsActionPressed()) return false;
 
 	if (key == 'V' && w->Text.length < maxChars) {
 		String_InitArray(text, textBuffer);
@@ -1663,7 +1655,7 @@ static void ChatInputWidget_UpKey(struct InputWidget* w) {
 	String prevInput;
 	int pos;
 
-	if (InputWidget_ControlDown()) {
+	if (Key_IsActionPressed()) {
 		pos = w->CaretPos == -1 ? w->Text.length : w->CaretPos;
 		if (pos < INPUTWIDGET_LEN) return;
 
@@ -1693,7 +1685,7 @@ static void ChatInputWidget_DownKey(struct InputWidget* w) {
 	String prevInput;
 	int lines;
 
-	if (InputWidget_ControlDown()) {
+	if (Key_IsActionPressed()) {
 		lines = w->GetMaxLines();
 		if (w->CaretPos == -1) return;
 

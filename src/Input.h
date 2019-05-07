@@ -51,6 +51,13 @@ extern const char* Key_Names[KEY_COUNT];
 #define Key_IsControlPressed() (Key_Pressed[KEY_LCTRL]  || Key_Pressed[KEY_RCTRL])
 #define Key_IsShiftPressed()   (Key_Pressed[KEY_LSHIFT] || Key_Pressed[KEY_RSHIFT])
 
+#ifdef CC_BUILD_OSX
+/* osx uses CMD instead of CTRL for clipboard and stuff */
+#define Key_IsActionPressed() Key_IsWinPressed()
+#else
+#define Key_IsActionPressed() Key_IsControlPressed()
+#endif
+
 /* Pressed state of each keyboard button. Use Key_SetPressed to change. */
 extern bool Key_Pressed[KEY_COUNT];
 /* Sets the pressed state of a keyboard button. */

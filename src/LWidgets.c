@@ -398,9 +398,9 @@ static void LInput_KeyDown(void* widget, Key key, bool was) {
 		LWidget_Redraw(w);
 	} else if (key == KEY_DELETE && LInput_Delete(w)) {
 		LWidget_Redraw(w);
-	} else if (key == 'C' && Key_IsControlPressed()) {
+	} else if (key == 'C' && Key_IsActionPressed()) {
 		if (w->Text.length) Window_SetClipboardText(&w->Text);
-	} else if (key == 'V' && Key_IsControlPressed()) {
+	} else if (key == 'V' && Key_IsActionPressed()) {
 		if (LInput_CopyFromClipboard(w)) LWidget_Redraw(w);
 	} else if (key == KEY_ESCAPE) {
 		if (LInput_Clear(w)) LWidget_Redraw(w);
