@@ -2732,7 +2732,7 @@ static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void
 }
 
 static void Window_HookEvents(void) {
-	emscripten_set_wheel_callback("#window",     NULL, 0, Window_MouseWheel);
+	emscripten_set_wheel_callback("#canvas",     NULL, 0, Window_MouseWheel);
 	emscripten_set_mousedown_callback("#canvas", NULL, 0, Window_MouseButton);
 	emscripten_set_mouseup_callback("#canvas",   NULL, 0, Window_MouseButton);
 	emscripten_set_mousemove_callback("#canvas", NULL, 0, Window_MouseMove);
@@ -2750,7 +2750,7 @@ static void Window_HookEvents(void) {
 }
 
 static void Window_UnhookEvents(void) {
-	emscripten_set_wheel_callback("#window",     NULL, 0, NULL);
+	emscripten_set_wheel_callback("#canvas",     NULL, 0, NULL);
 	emscripten_set_mousedown_callback("#canvas", NULL, 0, NULL);
 	emscripten_set_mouseup_callback("#canvas",   NULL, 0, NULL);
 	emscripten_set_mousemove_callback("#canvas", NULL, 0, NULL);
