@@ -67,6 +67,7 @@ void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->TranslucentParts = NULL;
 }
 
+/* Index of maximum used 1D atlas + 1 */
 CC_NOINLINE static int MapRenderer_UsedAtlases(void) {
 	TextureLoc maxLoc = 0;
 	int i;
@@ -434,16 +435,27 @@ void MapRenderer_RefreshBorders(int maxHeight) {
 static int chunksTarget = 12;
 static Vector3 lastCamPos;
 static float lastHeadY, lastHeadX;
+/* Max distance from camera that chunks are rendered within */
+/* This may differ from the view distance configured by the user */
+static int renderDistSquared;
+/* Max distance from camera that chunks are built within */
+/* Chunks past this distance are automatically unloaded */
+static int buildDistSquared;
 
-static int MapRenderer_AdjustViewDist(int dist) {
+static int MapRenderer_AdjustDist(int dist) {
 	if (dist < CHUNK_SIZE) dist = CHUNK_SIZE;
 	dist = Utils_AdjViewDist(dist);
 	return (dist + 24) * (dist + 24);
 }
 
+static void MapRenderer_CalcViewDists(void) {
+	buildDistSquared  = MapRenderer_AdjustDist(Game_UserViewDistance);
+	renderDistSquared = MapRenderer_AdjustDist(Game_ViewDistance);
+}
+
 static int MapRenderer_UpdateChunksAndVisibility(int* chunkUpdates) {
-	int viewDistSqr = MapRenderer_AdjustViewDist(Game_ViewDistance);
-	int userDistSqr = MapRenderer_AdjustViewDist(Game_UserViewDistance);
+	int renderDistSqr = renderDistSquared;
+	int buildDistSqr  = buildDistSquared;
 
 	struct ChunkInfo* info;
 	int i, j = 0, distSqr;
@@ -456,18 +468,18 @@ static int MapRenderer_UpdateChunksAndVisibility(int* chunkUpdates) {
 		distSqr = distances[i];
 		noData  = !info->NormalParts && !info->TranslucentParts;
 		
-		/* Unload chunks beyond visible range */
-		if (!noData && distSqr >= userDistSqr + 32 * 16) {
+		/* Auto unload chunks far away chunks */
+		if (!noData && distSqr >= buildDistSqr + 32 * 16) {
 			MapRenderer_DeleteChunk(info); continue;
 		}
 		noData |= info->PendingDelete;
 
-		if (noData && distSqr <= viewDistSqr && *chunkUpdates < chunksTarget) {
+		if (noData && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
 			MapRenderer_DeleteChunk(info);
 			MapRenderer_BuildChunk(info, chunkUpdates);
 		}
 
-		info->Visible = distSqr <= viewDistSqr &&
+		info->Visible = distSqr <= renderDistSqr &&
 			FrustumCulling_SphereInFrustum(info->CentreX, info->CentreY, info->CentreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
 		if (info->Visible && !info->Empty) { renderChunks[j] = info; j++; }
 	}
@@ -475,8 +487,8 @@ static int MapRenderer_UpdateChunksAndVisibility(int* chunkUpdates) {
 }
 
 static int MapRenderer_UpdateChunksStill(int* chunkUpdates) {
-	int viewDistSqr = MapRenderer_AdjustViewDist(Game_ViewDistance);
-	int userDistSqr = MapRenderer_AdjustViewDist(Game_UserViewDistance);
+	int renderDistSqr = renderDistSquared;
+	int buildDistSqr  = buildDistSquared;
 
 	struct ChunkInfo* info;
 	int i, j = 0, distSqr;
@@ -489,18 +501,18 @@ static int MapRenderer_UpdateChunksStill(int* chunkUpdates) {
 		distSqr = distances[i];
 		noData  = !info->NormalParts && !info->TranslucentParts;
 
-		/* Unload chunks beyond visible range */
-		if (!noData && distSqr >= userDistSqr + 32 * 16) {
+		/* Auto unload chunks far away chunks */
+		if (!noData && distSqr >= buildDistSqr + 32 * 16) {
 			MapRenderer_DeleteChunk(info); continue;
 		}
 		noData |= info->PendingDelete;
 
-		if (noData && distSqr <= userDistSqr && *chunkUpdates < chunksTarget) {
+		if (noData && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
 			MapRenderer_DeleteChunk(info);
 			MapRenderer_BuildChunk(info, chunkUpdates);
 
 			/* only need to update the visibility of chunks in range. */
-			info->Visible = distSqr <= viewDistSqr &&
+			info->Visible = distSqr <= renderDistSqr &&
 				FrustumCulling_SphereInFrustum(info->CentreX, info->CentreY, info->CentreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
 			if (info->Visible && !info->Empty) { renderChunks[j] = info; j++; }
 		} else if (info->Visible) {
@@ -715,9 +727,12 @@ static void MapRenderer_BlockDefinitionChanged(void* obj) {
 	MapRenderer_ResetPartFlags();
 }
 
-static void MapRenderer_RecalcVisibility_(void* obj) { lastCamPos = Vector3_BigPos(); }
-static void MapRenderer_DeleteChunks_(void* obj)     { MapRenderer_DeleteChunks(); }
-static void MapRenderer_Refresh_(void* obj)          { MapRenderer_Refresh(); }
+static void MapRenderer_RecalcVisibility(void* obj) {
+	lastCamPos = Vector3_BigPos();
+	MapRenderer_CalcViewDists();
+}
+static void MapRenderer_DeleteChunks_(void* obj) { MapRenderer_DeleteChunks(); }
+static void MapRenderer_Refresh_(void* obj)      { MapRenderer_Refresh(); }
 
 static void MapRenderer_OnNewMap(void) {
 	Game.ChunkUpdates = 0;
@@ -755,8 +770,8 @@ static void MapRenderer_Init(void) {
 	Event_RegisterInt(&WorldEvents.EnvVarChanged,    NULL, MapRenderer_EnvVariableChanged);
 	Event_RegisterVoid(&BlockEvents.BlockDefChanged, NULL, MapRenderer_BlockDefinitionChanged);
 
-	Event_RegisterVoid(&GfxEvents.ViewDistanceChanged, NULL, MapRenderer_RecalcVisibility_);
-	Event_RegisterVoid(&GfxEvents.ProjectionChanged,   NULL, MapRenderer_RecalcVisibility_);
+	Event_RegisterVoid(&GfxEvents.ViewDistanceChanged, NULL, MapRenderer_RecalcVisibility);
+	Event_RegisterVoid(&GfxEvents.ProjectionChanged,   NULL, MapRenderer_RecalcVisibility);
 	Event_RegisterVoid(&GfxEvents.ContextLost,         NULL, MapRenderer_DeleteChunks_);
 	Event_RegisterVoid(&GfxEvents.ContextRecreated,    NULL, MapRenderer_Refresh_);
 
@@ -767,6 +782,7 @@ static void MapRenderer_Init(void) {
 
 	Builder_Init();
 	Builder_ApplyActive();
+	MapRenderer_CalcViewDists();
 }
 
 static void MapRenderer_Free(void) {
@@ -774,8 +790,8 @@ static void MapRenderer_Free(void) {
 	Event_UnregisterInt(&WorldEvents.EnvVarChanged,    NULL, MapRenderer_EnvVariableChanged);
 	Event_UnregisterVoid(&BlockEvents.BlockDefChanged, NULL, MapRenderer_BlockDefinitionChanged);
 
-	Event_UnregisterVoid(&GfxEvents.ViewDistanceChanged, NULL, MapRenderer_RecalcVisibility_);
-	Event_UnregisterVoid(&GfxEvents.ProjectionChanged,   NULL, MapRenderer_RecalcVisibility_);
+	Event_UnregisterVoid(&GfxEvents.ViewDistanceChanged, NULL, MapRenderer_RecalcVisibility);
+	Event_UnregisterVoid(&GfxEvents.ProjectionChanged,   NULL, MapRenderer_RecalcVisibility);
 	Event_UnregisterVoid(&GfxEvents.ContextLost,         NULL, MapRenderer_DeleteChunks_);
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated,    NULL, MapRenderer_Refresh_);
 

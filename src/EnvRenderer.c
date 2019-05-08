@@ -66,7 +66,7 @@ static void EnvRenderer_CalcFog(float* density, PackedCol* col) {
 }
 
 static void EnvRenderer_UpdateFogMinimal(float fogDensity) {
-	double dist;
+	int dist;
 	/* TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often */
 
 	if (fogDensity != 0.0f) {
@@ -75,8 +75,8 @@ static void EnvRenderer_UpdateFogMinimal(float fogDensity) {
 		/*   i.e. log(0.05) = -density * coord */
 		#define LOG_005 -2.99573227355399
 
-		dist = LOG_005 / -fogDensity;
-		Game_SetViewDistance((int)dist);
+		dist = (int)(LOG_005 / -fogDensity);
+		Game_SetViewDistance(min(dist, Game_UserViewDistance));
 	} else {
 		Game_SetViewDistance(Game_UserViewDistance);
 	}
