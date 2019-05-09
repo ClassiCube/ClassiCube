@@ -2776,9 +2776,9 @@ void Window_Init(void) {
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
 	Window_Exists  = true;
 	Window_Focused = true;
-
 	Window_HookEvents();
-	Window_SetSize(width, height);
+	/* let the webpage decide on bounds */
+	Window_RefreshBounds();
 }
 
 void Window_SetTitle(const String* title) {

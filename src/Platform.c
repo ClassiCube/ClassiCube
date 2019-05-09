@@ -1618,10 +1618,11 @@ ReturnCode Process_StartOpen(const String* args) {
 	return Process_Start(&path, args);
 }
 ReturnCode Process_GetExePath(String* path) {
-	char str[600];
+	char str[600] = { 0 };
 	int len = 600;
-
 	if (_NSGetExecutablePath(str, &len)) return ERR_INVALID_ARGUMENT;
+
+	len = String_CalcLen(str, 600);
 	Convert_DecodeUtf8(path, str, len);
 	return 0;
 }
