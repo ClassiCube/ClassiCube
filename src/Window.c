@@ -2771,6 +2771,16 @@ void Window_Init(void) {
 	Display_Bounds.Width  = EM_ASM_INT_V({ return screen.width; });
 	Display_Bounds.Height = EM_ASM_INT_V({ return screen.height; });
 	Display_BitsPerPixel  = 24;
+
+	/* copy text, but only if user isn't selecting something else */
+	EM_ASM(window.addEventListener('copy', function(e) {
+		if (window.getSelection && window.getSelection().toString()) return;
+		if (window.cc_copyText) {
+			e.clipboardData.setData('text/plain', window.cc_copyText);
+			e.preventDefault();
+		}	
+	});
+	);
 }
 
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
@@ -2795,6 +2805,9 @@ void Window_GetClipboardText(String* value) {
 	String_AppendString(value, &clipboardStr);
 }
 void Window_SetClipboardText(const String* value) {
+	char str[600];
+	Platform_ConvertString(str, value);
+	EM_ASM_({ window.cc_copyText = UTF8ToString($0); }, str);
 	String_Copy(&clipboardStr, value);
 }
 
