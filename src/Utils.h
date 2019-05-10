@@ -40,7 +40,7 @@ void Utils_UNSAFE_GetFilename(STRING_REF String* path);
 int Utils_AccumulateWheelDelta(float* accumulator, float delta);
 #define Utils_AdjViewDist(value) ((int)(1.4142135f * (value)))
 
-uint8_t Utils_GetSkinType(const Bitmap* bmp);
+uint8_t Utils_CalcSkinType(const Bitmap* bmp);
 uint32_t Utils_CRC32(const uint8_t* data, uint32_t length);
 /* CRC32 lookup table, for faster CRC32 calculations. */
 /* NOTE: This cannot be just indexed by byte value - see Utils_CRC32 implementation. */

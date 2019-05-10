@@ -660,13 +660,13 @@ static void Player_ClearHat(Bitmap* bmp, uint8_t skinType) {
 	}
 
 	/* only perform filtering when the entire hat is opaque */
-	uint32_t fullWhite = PackedCol_ARGB(255, 255, 255, 255);
-	uint32_t fullBlack = PackedCol_ARGB(0,   0,   0,   255);
+	uint32_t white = PackedCol_ARGB(255, 255, 255, 255);
+	uint32_t black = PackedCol_ARGB(0,   0,   0,   255);
 	for (y = 0; y < sizeY; y++) {
 		uint32_t* row = Bitmap_RawRow(bmp, y) + sizeX;
 		for (x = 0; x < sizeX; x++) {
 			uint32_t pixel = row[x];
-			if (pixel == fullWhite || pixel == fullBlack) row[x] = 0;
+			if (pixel == white || pixel == black) row[x] = 0;
 		}
 	}
 }
@@ -730,7 +730,7 @@ static void Player_CheckSkin(struct Player* p) {
 	Gfx_DeleteTexture(&e->TextureId);
 	Player_SetSkinAll(p, true);
 	Player_EnsurePow2(p, &bmp);
-	e->SkinType = Utils_GetSkinType(&bmp);
+	e->SkinType = Utils_CalcSkinType(&bmp);
 
 	if (bmp.Width > Gfx.MaxTexWidth || bmp.Height > Gfx.MaxTexHeight) {
 		Chat_Add1("&cSkin %s is too large", &skin);

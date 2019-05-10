@@ -237,7 +237,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* 
 	success = !res && Game_ValidateBitmap(file, &bmp);
 	if (success) {
 		Gfx_DeleteTexture(texId);
-		if (skinType) { *skinType = Utils_GetSkinType(&bmp); }
+		if (skinType) { *skinType = Utils_CalcSkinType(&bmp); }
 		*texId = Gfx_CreateTexture(&bmp, true, false);
 	}
 
