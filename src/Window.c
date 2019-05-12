@@ -115,7 +115,12 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 #define WM_XBUTTONDOWN 0x020B
 #define WM_XBUTTONUP   0x020C
 #endif
-static bool rawMouseInited, rawMouseEnabled;
+
+static bool rawMouseInited, rawMouseEnabled, rawMouseSupported;
+typedef BOOL (WINAPI *FUNC_RegisterRawInput)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
+static FUNC_RegisterRawInput _registerRawInput;
+typedef UINT (WINAPI *FUNC_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
+static FUNC_GetRawInputData _getRawInputData;
 
 static HINSTANCE win_instance;
 static HWND win_handle;
@@ -334,11 +339,11 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_INPUT:
 	{
 		RAWINPUT raw;
-		UINT rawSize = sizeof(RAWINPUT);
+		UINT ret, rawSize = sizeof(RAWINPUT);
 		int dx, dy;
 
-		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, &raw, &rawSize, sizeof(RAWINPUTHEADER));
-		if (raw.header.dwType != RIM_TYPEMOUSE) break;		
+		ret = _getRawInputData((HRAWINPUT)lParam, RID_INPUT, &raw, &rawSize, sizeof(RAWINPUTHEADER));
+		if (ret == -1 || raw.header.dwType != RIM_TYPEMOUSE) break;		
 
 		if (raw.data.mouse.usFlags == MOUSE_MOVE_RELATIVE) {
 			dx = raw.data.mouse.lLastX;
@@ -683,19 +688,27 @@ void Window_DrawRaw(Rect2D r) {
 	SelectObject(draw_DC, oldSrc);
 }
 
-void Window_EnableRawMouse(void) {
+static void Window_InitRawMouse(void) {
 	RAWINPUTDEVICE rid;
-	rawMouseEnabled = true;
-	Window_DefaultEnableRawMouse();
+	_registerRawInput = (FUNC_RegisterRawInput)DynamicLib_GetFrom("USER32.DLL", "RegisterRawInputDevices");
+	_getRawInputData  = (FUNC_GetRawInputData)DynamicLib_GetFrom("USER32.DLL",  "GetRawInputData");
+	rawMouseSupported = _registerRawInput && _getRawInputData;
+	if (!rawMouseSupported) { Platform_LogConst("Raw input unsupported!"); return; }
 
-	if (rawMouseInited) return;
-	rawMouseInited = true;
-	
 	rid.usUsagePage = 1; /* HID_USAGE_PAGE_GENERIC; */
 	rid.usUsage     = 2; /* HID_USAGE_GENERIC_MOUSE; */
 	rid.dwFlags     = RIDEV_INPUTSINK;
 	rid.hwndTarget  = win_handle;
-	RegisterRawInputDevices(&rid, 1, sizeof(rid));
+
+	if (!_registerRawInput(&rid, 1, sizeof(rid))) Logger_Abort2(GetLastError(), "Failed to init raw mouse");
+}
+
+void Window_EnableRawMouse(void) {
+	rawMouseEnabled = true;
+	Window_DefaultEnableRawMouse();
+
+	if (!rawMouseInited) Window_InitRawMouse();
+	rawMouseInited = true;
 }
 
 void Window_UpdateRawMouse(void)  { Window_CentreMousePosition();  }
