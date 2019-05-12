@@ -711,7 +711,15 @@ void Window_EnableRawMouse(void) {
 	rawMouseInited = true;
 }
 
-void Window_UpdateRawMouse(void)  { Window_CentreMousePosition();  }
+void Window_UpdateRawMouse(void) {
+	if (rawMouseSupported) {
+		/* handled in WM_INPUT messages */
+		Window_CentreMousePosition();
+	} else {
+		Window_DefaultUpdateRawMouse();
+	}
+}
+
 void Window_DisableRawMouse(void) {
 	rawMouseEnabled = false;
 	Window_DefaultDisableRawMouse(); 

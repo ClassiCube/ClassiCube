@@ -1609,16 +1609,24 @@ static void UpdatesScreen_Tick(struct LScreen* s_) {
 	UpdatesScreen_CheckTick(s);
 }
 
+/* Aborts fetch if it is in progress */
+static void UpdatesScreen_Free(struct LScreen* s_) {
+	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
+	s->BuildName     = NULL;
+	s->BuildProgress = -1;
+
+	FetchUpdateTask.Base.Working = false;
+	s->LblStatus.Text.length     = 0;
+}
+
 struct LScreen* UpdatesScreen_MakeInstance(void) {
 	struct UpdatesScreen* s = &UpdatesScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init       = UpdatesScreen_Init;
 	s->Draw       = UpdatesScreen_Draw;
 	s->Tick       = UpdatesScreen_Tick;
+	s->Free       = UpdatesScreen_Free;
 	s->Reposition = UpdatesScreen_Reposition;
-
-	s->BuildName     = NULL;
-	s->BuildProgress = -1;
 	return (struct LScreen*)s;
 }
 #endif

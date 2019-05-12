@@ -531,9 +531,16 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 	const char* exe_ogl  = "ClassiCube.unknown";
 #endif
 
-	const static String id = String_FromConst("CC update fetch");
+	static char idBuffer[24];
+	static int idCounter;
 	String url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
+
+	String_InitArray(FetchUpdateTask.Base.Identifier, idBuffer);
+	String_Format1(&FetchUpdateTask.Base.Identifier, "CC update fetch%i", &idCounter);
+	/* User may click another update button in the updates menu before original update finished downloading */
+	/* Hence must use a different ID for each update fetch, otherwise old update gets downloaded and applied */
+	idCounter++;
 
 	String_Format2(&url, "http://cs.classicube.net/c_client/%c/%c",
 		release ? "release" : "latest",
@@ -543,8 +550,7 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 	LWebTask_Reset(&FetchUpdateTask.Base);
 	FetchUpdateTask.Timestamp = release ? CheckUpdateTask.RelTimestamp : CheckUpdateTask.DevTimestamp;
 
-	FetchUpdateTask.Base.Identifier = id;
-	Http_AsyncGetData(&url, false, &id);
+	Http_AsyncGetData(&url, false, &FetchUpdateTask.Base.Identifier);
 	FetchUpdateTask.Base.Handle = FetchUpdateTask_Handle;
 }
 
