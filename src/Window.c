@@ -115,6 +115,7 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 #define WM_XBUTTONDOWN 0x020B
 #define WM_XBUTTONUP   0x020C
 #endif
+static bool rawMouseInited, rawMouseEnabled;
 
 static HINSTANCE win_instance;
 static HWND win_handle;
@@ -329,6 +330,30 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_XBUTTONUP:
 		Key_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, false);
 		break;
+
+	case WM_INPUT:
+	{
+		RAWINPUT raw;
+		UINT rawSize = sizeof(RAWINPUT);
+		int dx, dy;
+
+		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, &raw, &rawSize, sizeof(RAWINPUTHEADER));
+		if (raw.header.dwType != RIM_TYPEMOUSE) break;		
+
+		if (raw.data.mouse.usFlags == MOUSE_MOVE_RELATIVE) {
+			dx = raw.data.mouse.lLastX;
+			dy = raw.data.mouse.lLastY;
+		} else if (raw.data.mouse.usFlags == MOUSE_MOVE_ABSOLUTE) {
+			static Point2D prevPos;
+			dx = raw.data.mouse.lLastX - prevPos.X;
+			dy = raw.data.mouse.lLastY - prevPos.Y;
+
+			prevPos.X = raw.data.mouse.lLastX;
+			prevPos.Y = raw.data.mouse.lLastY;
+		} else { break; }
+
+		if (rawMouseEnabled) Event_RaiseMouseMove(&MouseEvents.RawMoved, dx, dy);
+	} break;
 
 	case WM_KEYDOWN:
 	case WM_KEYUP:
@@ -658,9 +683,26 @@ void Window_DrawRaw(Rect2D r) {
 	SelectObject(draw_DC, oldSrc);
 }
 
-void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
-void Window_UpdateRawMouse(void)  { Window_DefaultUpdateRawMouse();  }
-void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
+void Window_EnableRawMouse(void) {
+	RAWINPUTDEVICE rid;
+	rawMouseEnabled = true;
+	Window_DefaultEnableRawMouse();
+
+	if (rawMouseInited) return;
+	rawMouseInited = true;
+	
+	rid.usUsagePage = 1; /* HID_USAGE_PAGE_GENERIC; */
+	rid.usUsage     = 2; /* HID_USAGE_GENERIC_MOUSE; */
+	rid.dwFlags     = RIDEV_INPUTSINK;
+	rid.hwndTarget  = win_handle;
+	RegisterRawInputDevices(&rid, 1, sizeof(rid));
+}
+
+void Window_UpdateRawMouse(void)  { Window_CentreMousePosition();  }
+void Window_DisableRawMouse(void) {
+	rawMouseEnabled = false;
+	Window_DefaultDisableRawMouse(); 
+}
 #endif
 
 
@@ -2778,6 +2820,7 @@ void Window_Init(void) {
 		if (window.cc_copyText) {
 			e.clipboardData.setData('text/plain', window.cc_copyText);
 			e.preventDefault();
+			window.cc_copyText = null;
 		}	
 	});
 	);
