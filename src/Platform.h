@@ -48,10 +48,10 @@ CC_API ReturnCode Platform_MarkExecutable(const String* path);
 int  Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args);
 /* Encrypts data in a platform-specific manner. (may not be supported) */
 /* NOTE: Should only be implemented when platform natively supports it. */
-ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* encLen);
+ReturnCode Platform_Encrypt(const void* data, int len, uint8_t** enc, int* encLen);
 /* Decrypts data in a platform-specific manner. (may not be supported) */
 /* NOTE: Should only be implemented when platform natively supports it. */
-ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen);
+ReturnCode Platform_Decrypt(const void* data, int len, uint8_t** dec, int* decLen);
 /* Outputs more detailed information about errors with operating system functions. */
 /* NOTE: This is for general functions like file I/O. If a more specific 
 describe exists (e.g. DynamicLib_DescribeError), that should be preferred. */

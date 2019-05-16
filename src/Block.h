@@ -11,25 +11,25 @@
 struct IGameComponent;
 extern struct IGameComponent Blocks_Component;
 
-typedef enum SoundType_ {
+enum SoundType {
 	SOUND_NONE,  SOUND_WOOD,  SOUND_GRAVEL, SOUND_GRASS, 
 	SOUND_STONE, SOUND_METAL, SOUND_GLASS,  SOUND_CLOTH, 
 	SOUND_SAND,  SOUND_SNOW,  SOUND_COUNT
-} SoundType;
+};
 extern const char* Sound_Names[SOUND_COUNT];
 
 /* Describes how a block is rendered in the world. */
-typedef enum DrawType_ {
+enum DrawType {
 	DRAW_OPAQUE,            /* Completely covers blocks behind (e.g. dirt). */
 	DRAW_TRANSPARENT,       /* Blocks behind show (e.g. glass). Pixels either fully visible or invisible. */
 	DRAW_TRANSPARENT_THICK, /* Same as Transparent, but all neighbour faces show. (e.g. leaves) */
 	DRAW_TRANSLUCENT,       /* Blocks behind show (e.g. water). Pixels blend with other blocks behind. */
 	DRAW_GAS,               /* Does not show (e.g. air). Can still be collided with. */
 	DRAW_SPRITE             /* Block renders as an X (e.g. sapling). Pixels either fully visible or invisible. */
-} DrawType;
+};
 
 /* Describes the interaction a block has with a player when they collide with it. */
-typedef enum CollideType_ {
+enum CollideType {
 	COLLIDE_GAS,          /* No interaction when player collides. */
 	COLLIDE_LIQUID,       /* 'swimming'/'bobbing' interaction when player collides. */
 	COLLIDE_SOLID,        /* Block completely stops the player when they are moving. */
@@ -38,7 +38,7 @@ typedef enum CollideType_ {
 	COLLIDE_LIQUID_WATER, /* Water style 'swimming'/'bobbing' interaction when player collides. */
 	COLLIDE_LIQUID_LAVA,  /* Lava style 'swimming'/'bobbing' interaction when player collides. */
 	COLLIDE_CLIMB_ROPE    /* Rope/Ladder style climbing interaction when player collides. */
-} CollideType;
+};
 
 CC_VAR extern struct _BlockLists {
 	/* Whether this block is a liquid. (Like water/lava) */
@@ -110,10 +110,6 @@ if (Blocks.Tinted[block]) {\
 	col.B = (uint8_t)(col.B * tintCol.B / 255);\
 }
 
-#ifdef EXTENDED_BLOCKS
-extern void Block_SetUsedCount(int count);
-#endif
-
 /* Returns whether the given block has been changed from default. */
 bool Block_IsCustomDefined(BlockID block);
 /* Sets whether the given block has been changed from default. */
@@ -121,8 +117,9 @@ void Block_SetCustomDefined(BlockID block, bool defined);
 void Block_DefineCustom(BlockID block);
 
 /* Sets the basic and extended collide types of the given block. */
-void Block_SetCollide(BlockID block, CollideType collide);
-void Block_SetDrawType(BlockID block, DrawType draw);
+void Block_SetCollide(BlockID block, uint8_t collide);
+/* Sets draw type and updates related state (e.g. FullOpaque) for the given block. */
+void Block_SetDrawType(BlockID block, uint8_t draw);
 /* Resets all the properties of the given block to default. */
 void Block_ResetProps(BlockID block);
 

@@ -270,10 +270,10 @@ static void Stream_CommonMemory(struct Stream* s, void* data, uint32_t len) {
 	s->Position = Stream_MemoryPosition;
 	s->Length   = Stream_MemoryLength;
 
-	s->Meta.Mem.Cur    = data;
+	s->Meta.Mem.Cur    = (uint8_t*)data;
 	s->Meta.Mem.Left   = len;
 	s->Meta.Mem.Length = len;
-	s->Meta.Mem.Base   = data;
+	s->Meta.Mem.Base   = (uint8_t*)data;
 }
 
 void Stream_ReadonlyMemory(struct Stream* s, void* data, uint32_t len) {
@@ -359,8 +359,8 @@ void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data
 
 	s->Meta.Buffered.Left   = 0;
 	s->Meta.Buffered.End    = 0;	
-	s->Meta.Buffered.Cur    = data;
-	s->Meta.Buffered.Base   = data;
+	s->Meta.Buffered.Cur    = (uint8_t*)data;
+	s->Meta.Buffered.Base   = (uint8_t*)data;
 	s->Meta.Buffered.Length = size;
 	s->Meta.Buffered.Source = source;
 }

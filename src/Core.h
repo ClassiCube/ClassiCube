@@ -56,6 +56,7 @@ typedef uint16_t Codepoint;
 #ifdef __APPLE__
 /* TODO: REMOVE THIS AWFUL AWFUL HACK */
 #include <stdbool.h>
+#elif __cplusplus
 #else
 typedef uint8_t bool;
 #define true 1
@@ -63,7 +64,7 @@ typedef uint8_t bool;
 #endif
 
 #ifndef NULL
-#ifdef __cplusplus
+#if __cplusplus
 #define NULL 0
 #else
 #define NULL ((void*)0)

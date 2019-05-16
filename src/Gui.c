@@ -24,12 +24,12 @@ struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
 int Gui_OverlaysCount;
 
 void Gui_DefaultRecreate(void* elem) {
-	struct GuiElem* e = elem;
+	struct GuiElem* e = (struct GuiElem*)elem;
 	Elem_Free(e); Elem_Init(e);
 }
 
 void Screen_CommonInit(void* screen) { 
-	struct Screen* s = screen;
+	struct Screen* s = (struct Screen*)screen;
 	Event_RegisterVoid(&GfxEvents.ContextLost,      s, s->VTABLE->ContextLost);
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, s, s->VTABLE->ContextRecreated);
 
@@ -37,27 +37,28 @@ void Screen_CommonInit(void* screen) {
 	s->VTABLE->ContextRecreated(s);
 }
 
-void Screen_CommonFree(void* screen) { struct Screen* s = screen;
+void Screen_CommonFree(void* screen) { 
+	struct Screen* s = (struct Screen*)screen;
 	Event_UnregisterVoid(&GfxEvents.ContextLost,      s, s->VTABLE->ContextLost);
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated, s, s->VTABLE->ContextRecreated);
 	s->VTABLE->ContextLost(s);
 }
 
 void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
-	struct Widget* w = widget;
+	struct Widget* w = (struct Widget*)widget;
 	w->HorAnchor = horAnchor; w->VerAnchor = verAnchor;
 	w->XOffset   = xOffset;   w->YOffset = yOffset;
 	Widget_Reposition(w);
 }
 
 void Widget_CalcPosition(void* widget) {
-	struct Widget* w = widget;
+	struct Widget* w = (struct Widget*)widget;
 	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game.Width );
 	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game.Height);
 }
 
 void Widget_Reset(void* widget) {
-	struct Widget* w = widget;
+	struct Widget* w = (struct Widget*)widget;
 	w->Active   = false;
 	w->Disabled = false;
 	w->X = 0; w->Y = 0;
@@ -69,7 +70,7 @@ void Widget_Reset(void* widget) {
 }
 
 bool Widget_Contains(void* widget, int x, int y) {
-	struct Widget* w = widget;
+	struct Widget* w = (struct Widget*)widget;
 	return Gui_Contains(w->X, w->Y, w->Width, w->Height, x, y);
 }
 
@@ -176,7 +177,7 @@ void Gui_FreeActive(void) {
 	if (Gui_Active) { Elem_TryFree(Gui_Active); }
 }
 void Gui_Close(void* screen) {
-	struct Screen* s = screen;
+	struct Screen* s = (struct Screen*)screen;
 	if (s) { Elem_TryFree(s); }
 	if (s == Gui_Active) Gui_SetActive(NULL);
 }

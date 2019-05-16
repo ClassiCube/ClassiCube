@@ -373,7 +373,7 @@ static void D3D9_RecreateDevice(void) {
 
 void Gfx_Init(void) {
 	Gfx.MinZNear = 0.05f;
-	void* winHandle = Window_GetHandle();
+	HWND winHandle = (HWND)Window_GetHandle();
 	d3d = Direct3DCreate9(D3D_SDK_VERSION);
 
 	D3D9_FindCompatibleFormat();
@@ -465,7 +465,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 		if (width > 1)   width /= 2;
 		if (height > 1) height /= 2;
 
-		cur = Mem_Alloc(width * height, 4, "mipmaps");
+		cur = (uint8_t*)Mem_Alloc(width * height, 4, "mipmaps");
 		Gfx_GenMipmaps(width, height, cur, prev);
 
 		Bitmap_Init(mipmap, width, height, cur);

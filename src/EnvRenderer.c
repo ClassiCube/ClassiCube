@@ -194,7 +194,7 @@ static void EnvRenderer_UpdateClouds(void) {
 
 	ptr = v;
 	if (clouds_vertices > ENV_SMALL_VERTICES) {
-		ptr = Mem_Alloc(clouds_vertices, sizeof(VertexP3fT2fC4b), "temp clouds vertices");
+		ptr = (VertexP3fT2fC4b*)Mem_Alloc(clouds_vertices, sizeof(VertexP3fT2fC4b), "clouds vertices");
 	}
 
 	EnvRenderer_DrawCloudsY(x1, z1, x2, z2, Env.CloudsHeight, ptr);
@@ -273,7 +273,7 @@ static void EnvRenderer_UpdateSky(void) {
 
 	ptr = v;
 	if (sky_vertices > ENV_SMALL_VERTICES) {
-		ptr = Mem_Alloc(sky_vertices, sizeof(VertexP3fC4b), "temp sky vertices");
+		ptr = (VertexP3fC4b*)Mem_Alloc(sky_vertices, sizeof(VertexP3fC4b), "sky vertices");
 	}
 
 	height = max((World.Height + 2), Env.CloudsHeight) + 6;
@@ -368,7 +368,7 @@ static Vector3I weather_lastPos;
 
 static void EnvRenderer_InitWeatherHeightmap(void) {
 	int i;
-	Weather_Heightmap = Mem_Alloc(World.Width * World.Length, 2, "weather heightmap");
+	Weather_Heightmap = (int16_t*)Mem_Alloc(World.Width * World.Length, 2, "weather heightmap");
 	
 	for (i = 0; i < World.Width * World.Length; i++) {
 		Weather_Heightmap[i] = Int16_MaxValue;
@@ -714,7 +714,7 @@ static void EnvRenderer_UpdateMapSides(void) {
 
 	ptr = v;
 	if (sides_vertices > ENV_SMALL_VERTICES) {
-		ptr = Mem_Alloc(sides_vertices, sizeof(VertexP3fT2fC4b), "temp sides vertices");
+		ptr = (VertexP3fT2fC4b*)Mem_Alloc(sides_vertices, sizeof(VertexP3fT2fC4b), "sides vertices");
 	}
 	cur = ptr;
 
@@ -768,7 +768,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 
 	ptr = v;
 	if (edges_vertices > ENV_SMALL_VERTICES) {
-		ptr = Mem_Alloc(edges_vertices, sizeof(VertexP3fT2fC4b), "temp edge vertices");
+		ptr = (VertexP3fT2fC4b*)Mem_Alloc(edges_vertices, sizeof(VertexP3fT2fC4b), "edge vertices");
 	}
 	cur = ptr;
 

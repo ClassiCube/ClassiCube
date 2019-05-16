@@ -47,7 +47,7 @@ static PackedCol DefaultSet_FogColour(BlockID b) {
 	return colZero;
 }
 
-static DrawType DefaultSet_Draw(BlockID b) {
+static uint8_t DefaultSet_Draw(BlockID b) {
 	if (b == BLOCK_AIR)    return DRAW_GAS;
 	if (b == BLOCK_LEAVES) return DRAW_TRANSPARENT_THICK;
 
@@ -68,7 +68,7 @@ static bool DefaultSet_BlocksLight(BlockID b) {
 		|| b == BLOCK_AIR || DefaultSet_Draw(b) == DRAW_SPRITE);
 }
 
-static CollideType DefaultSet_Collide(BlockID b) {
+static uint8_t DefaultSet_Collide(BlockID b) {
 	if (b == BLOCK_ICE) return COLLIDE_ICE;
 	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER) return COLLIDE_LIQUID_WATER;
 	if (b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA)  return COLLIDE_LIQUID_LAVA;
@@ -79,7 +79,7 @@ static CollideType DefaultSet_Collide(BlockID b) {
 }
 
 /* Returns a backwards compatible collide type of a block. */
-static CollideType DefaultSet_MapOldCollide(BlockID b, CollideType collide) {
+static uint8_t DefaultSet_MapOldCollide(BlockID b, uint8_t collide) {
 	if (b == BLOCK_ROPE && collide == COLLIDE_GAS)   return COLLIDE_CLIMB_ROPE;
 	if (b == BLOCK_ICE  && collide == COLLIDE_SOLID) return COLLIDE_ICE;
 
@@ -90,7 +90,7 @@ static CollideType DefaultSet_MapOldCollide(BlockID b, CollideType collide) {
 	return collide;
 }
 
-static SoundType DefaultSet_DigSound(BlockID b) {
+static uint8_t DefaultSet_DigSound(BlockID b) {
 	if (b >= BLOCK_RED && b <= BLOCK_WHITE)            return SOUND_CLOTH;
 	if (b >= BLOCK_LIGHT_PINK && b <= BLOCK_TURQUOISE) return SOUND_CLOTH;
 	if (b == BLOCK_IRON || b == BLOCK_GOLD)            return SOUND_METAL;
@@ -113,7 +113,7 @@ static SoundType DefaultSet_DigSound(BlockID b) {
 	return SOUND_NONE;
 }
 
-static SoundType DefaultSet_StepSound(BlockID b) {
+static uint8_t DefaultSet_StepSound(BlockID b) {
 	if (b == BLOCK_GLASS) return SOUND_STONE;
 	if (b == BLOCK_ROPE)  return SOUND_CLOTH;
 	if (DefaultSet_Draw(b) == DRAW_SPRITE) return SOUND_NONE;
@@ -177,7 +177,7 @@ static void Block_RecalcIsLiquid(BlockID b) {
 		(collide == COLLIDE_LIQUID_LAVA  && Blocks.Draw[b] == DRAW_TRANSPARENT);
 }
 
-void Block_SetCollide(BlockID block, CollideType collide) {
+void Block_SetCollide(BlockID block, uint8_t collide) {
 	/* necessary if servers redefined core blocks, before extended collide types were added */
 	collide = DefaultSet_MapOldCollide(block, collide);
 	Blocks.ExtendedCollide[block] = collide;
@@ -192,7 +192,7 @@ void Block_SetCollide(BlockID block, CollideType collide) {
 	Blocks.Collide[block] = collide;
 }
 
-void Block_SetDrawType(BlockID block, DrawType draw) {
+void Block_SetDrawType(BlockID block, uint8_t draw) {
 	Vector3 zero = Vector3_Zero();
 	Vector3 one  = Vector3_One();
 

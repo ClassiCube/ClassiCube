@@ -855,9 +855,9 @@ typedef struct FontData_ {
 static unsigned long FontData_Read(FT_Stream s, unsigned long offset, unsigned char* buffer, unsigned long count) {
 	FontData* data;
 	ReturnCode res;
-
 	if (!count && offset > s->size) return 1;
-	data = s->descriptor.pointer;
+
+	data = (FontData*)s->descriptor.pointer;
 	if (s->pos != offset) data->src.Seek(&data->src, offset);
 
 	res = Stream_Read(&data->src, buffer, count);
@@ -1535,7 +1535,7 @@ ReturnCode DynamicLib_Load(const String* path, void** lib) {
 }
 
 ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
-	*symbol = GetProcAddress(lib, name);
+	*symbol = GetProcAddress((HMODULE)lib, name);
 	return *symbol ? 0 : GetLastError();
 }
 
@@ -1818,25 +1818,25 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 	return i;
 }
 
-ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* encLen) {
+ReturnCode Platform_Encrypt(const void* data, int len, uint8_t** enc, int* encLen) {
 	DATA_BLOB dataIn, dataOut;
 	dataIn.cbData = len; dataIn.pbData = data;
 	if (!CryptProtectData(&dataIn, NULL, NULL, NULL, NULL, 0, &dataOut)) return GetLastError();
 
 	/* copy to memory we can free */
-	*enc    = Mem_Alloc(dataOut.cbData, 1, "encrypt data");
+	*enc    = (uint8_t*)Mem_Alloc(dataOut.cbData, 1, "encrypt data");
 	*encLen = dataOut.cbData;
 	Mem_Copy(*enc, dataOut.pbData, dataOut.cbData);
 	LocalFree(dataOut.pbData);
 	return 0;
 }
-ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen) {
+ReturnCode Platform_Decrypt(const void* data, int len, uint8_t** dec, int* decLen) {
 	DATA_BLOB dataIn, dataOut;
 	dataIn.cbData = len; dataIn.pbData = data;
 	if (!CryptUnprotectData(&dataIn, NULL, NULL, NULL, NULL, 0, &dataOut)) return GetLastError();
 
 	/* copy to memory we can free */
-	*dec    = Mem_Alloc(dataOut.cbData, 1, "decrypt data");
+	*dec    = (uint8_t*)Mem_Alloc(dataOut.cbData, 1, "decrypt data");
 	*decLen = dataOut.cbData;
 	Mem_Copy(*dec, dataOut.pbData, dataOut.cbData);
 	LocalFree(dataOut.pbData);
@@ -1904,10 +1904,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* 
 	return count;
 }
 
-ReturnCode Platform_Encrypt(const uint8_t* data, int len, uint8_t** enc, int* encLen) {
+ReturnCode Platform_Encrypt(const void* data, int len, uint8_t** enc, int* encLen) {
 	return ERR_NOT_SUPPORTED;
 }
-ReturnCode Platform_Decrypt(const uint8_t* data, int len, uint8_t** dec, int* decLen) {
+ReturnCode Platform_Decrypt(const void* data, int len, uint8_t** dec, int* decLen) {
 	return ERR_NOT_SUPPORTED;
 }
 

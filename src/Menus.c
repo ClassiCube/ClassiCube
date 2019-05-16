@@ -473,8 +473,8 @@ static void ListScreen_QuickSort(int left, int right) {
 	}
 }
 
-static String ListScreen_UNSAFE_GetCur(struct ListScreen* s, struct Widget* w) {
-	int i = Menu_Index(s, w);
+static String ListScreen_UNSAFE_GetCur(struct ListScreen* s, void* widget) {
+	int i = Menu_Index(s, widget);
 	return ListScreen_UNSAFE_Get(s, s->CurrentIndex + i);
 }
 
@@ -1046,7 +1046,7 @@ static void GenLevelScreen_InputClick(void* screen, void* input) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	if (s->Selected) s->Selected->Base.ShowCaret = false;
 
-	s->Selected = input;
+	s->Selected = (struct MenuInputWidget*)input;
 	Elem_HandlesMouseDown(&s->Selected->Base, Mouse_X, Mouse_Y, MOUSE_LEFT);
 	s->Selected->Base.ShowCaret = true;
 }
@@ -1263,7 +1263,7 @@ static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {
 	String path; char pathBuffer[FILENAME_SIZE];
 
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	struct ButtonWidget* btn  = widget;
+	struct ButtonWidget* btn  = (struct ButtonWidget*)widget;
 	String file = s->Input.Base.Text;
 
 	if (!file.length) {
@@ -2917,7 +2917,7 @@ static void WarningOverlay_MakeButtons(void* menu, struct ButtonWidget* btns, bo
 	const static String alwaysYes = String_FromConst("Always yes");
 	const static String alwaysNo  = String_FromConst("Always no");
 
-	struct MenuScreen* s = menu;
+	struct MenuScreen* s = (struct MenuScreen*)menu;
 	Menu_Button(s, 4, &btns[0], 160, &yes, &s->TitleFont, yesClick, 
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 30);
 	Menu_Button(s, 5, &btns[1], 160, &no,  &s->TitleFont, noClick, 
