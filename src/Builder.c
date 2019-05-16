@@ -443,7 +443,7 @@ static void Builder_DefaultPostStretchTiles(int x1, int y1, int z1) {
 	if (vertsCount > Builder_VerticesElems) {
 		Mem_Free(Builder_Vertices);
 		/* ensure buffer can be accessed with 64 bytes alignment by putting 2 extra vertices at end. */
-		Builder_Vertices = Mem_Alloc(vertsCount + 2, sizeof(VertexP3fT2fC4b), "chunk vertices");
+		Builder_Vertices = (VertexP3fT2fC4b*)Mem_Alloc(vertsCount + 2, sizeof(VertexP3fT2fC4b), "chunk vertices");
 		Builder_VerticesElems = vertsCount;
 	}
 

@@ -110,8 +110,8 @@ static void LButton_DrawHighlight(struct LButton* w) {
 }
 
 static void LButton_Draw(void* widget) {
+	struct LButton* w = (struct LButton*)widget;
 	struct DrawTextArgs args;
-	struct LButton* w = widget;
 	int xOffset, yOffset;
 	if (w->Hidden) return;
 
@@ -306,7 +306,7 @@ static Rect2D lastCaretRec;
 #define Rect2D_Equals(a, b) a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height
 
 static void LInput_TickCaret(void* widget) {
-	struct LInput* w = widget;
+	struct LInput* w = (struct LInput*)widget;
 	BitmapCol col = BITMAPCOL_CONST(0, 0, 0, 255);
 	int elapsed;
 	bool caretShow;
@@ -393,7 +393,7 @@ static void LInput_Unselect(void* widget) {
 }
 
 static void LInput_KeyDown(void* widget, Key key, bool was) {
-	struct LInput* w = widget;
+	struct LInput* w = (struct LInput*)widget;
 	if (key == KEY_BACKSPACE && LInput_Backspace(w)) {
 		LWidget_Redraw(w);
 	} else if (key == KEY_DELETE && LInput_Delete(w)) {
@@ -414,7 +414,7 @@ static void LInput_KeyDown(void* widget, Key key, bool was) {
 }
 
 static void LInput_KeyChar(void* widget, char c) {
-	struct LInput* w = widget;
+	struct LInput* w = (struct LInput*)widget;
 	if (LInput_Append(w, c)) LWidget_Redraw(w);
 }
 
@@ -529,8 +529,8 @@ bool LInput_CopyFromClipboard(struct LInput* w) {
 *------------------------------------------------------LabelWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 static void LLabel_Draw(void* widget) {
+	struct LLabel* w = (struct LLabel*)widget;
 	struct DrawTextArgs args;
-	struct LLabel* w = widget;
 	if (w->Hidden) return;
 
 	DrawTextArgs_Make(&args, &w->Text, &w->Font, true);
@@ -599,7 +599,7 @@ static void LSlider_DrawBox(struct LSlider* w) {
 }
 
 static void LSlider_Draw(void* widget) {
-	struct LSlider* w = widget;
+	struct LSlider* w = (struct LSlider*)widget;
 	int curWidth;
 	if (w->Hidden) return;
 
@@ -892,7 +892,7 @@ bool LTable_HandlesKey(Key key) {
 }
 
 static void LTable_KeyDown(void* widget, Key key, bool was) {
-	struct LTable* w = widget;
+	struct LTable* w = (struct LTable*)widget;
 	int index = LTable_GetSelectedIndex(w);
 
 	if (key == KEY_UP) {
@@ -910,7 +910,7 @@ static void LTable_KeyDown(void* widget, Key key, bool was) {
 }
 
 static void LTable_MouseMove(void* widget, int deltaX, int deltaY, bool wasOver) {
-	struct LTable* w = widget;
+	struct LTable* w = (struct LTable*)widget;
 	int x = Mouse_X - w->X, y = Mouse_Y - w->Y, col;
 
 	if (w->DraggingScrollbar) {
@@ -995,7 +995,7 @@ static void LTable_ScrollbarClick(struct LTable* w) {
 }
 
 static void LTable_MouseDown(void* widget, bool wasSelected) {
-	struct LTable* w = widget;
+	struct LTable* w = (struct LTable*)widget;
 
 	if (Mouse_X >= Game.Width - SCROLLBAR_WIDTH) {
 		LTable_ScrollbarClick(w);
@@ -1010,7 +1010,7 @@ static void LTable_MouseDown(void* widget, bool wasSelected) {
 }
 
 static void LTable_MouseWheel(void* widget, float delta) {
-	struct LTable* w = widget;
+	struct LTable* w = (struct LTable*)widget;
 	w->TopRow -= Utils_AccumulateWheelDelta(&w->_wheelAcc, delta);
 	LTable_ClampTopRow(w);
 	LWidget_Draw(w);
@@ -1038,7 +1038,7 @@ void LTable_Reposition(struct LTable* w) {
 }
 
 static void LTable_Draw(void* widget) {
-	struct LTable* w = widget;
+	struct LTable* w = (struct LTable*)widget;
 	LTable_DrawBackground(w);
 	LTable_DrawHeaders(w);
 	LTable_DrawRows(w);

@@ -853,18 +853,18 @@ static void EditHotkeyScreen_LeaveOpen(void* screen, void* b) {
 
 static void EditHotkeyScreen_SaveChanges(void* screen, void* b) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
-	struct HotkeyData hotkey = s->OrigHotkey;
+	struct HotkeyData hk = s->OrigHotkey;
 
-	if (hotkey.Trigger) {
-		Hotkeys_Remove(hotkey.Trigger, hotkey.Flags);
-		Hotkeys_UserRemovedHotkey(hotkey.Trigger, hotkey.Flags);
+	if (hk.Trigger) {
+		Hotkeys_Remove(hk.Trigger, hk.Flags);
+		Hotkeys_UserRemovedHotkey(hk.Trigger, hk.Flags);
 	}
 
-	hotkey = s->CurHotkey;
-	if (hotkey.Trigger) {
+	hk = s->CurHotkey;
+	if (hk.Trigger) {
 		String text = s->Input.Base.Text;
-		Hotkeys_Add(hotkey.Trigger, hotkey.Flags, &text, hotkey.StaysOpen);
-		Hotkeys_UserAddedHotkey(hotkey.Trigger, hotkey.Flags, hotkey.StaysOpen, &text);
+		Hotkeys_Add(hk.Trigger, hk.Flags, &text, hk.StaysOpen);
+		Hotkeys_UserAddedHotkey(hk.Trigger, hk.Flags, hk.StaysOpen, &text);
 	}
 
 	Gui_FreeActive();
@@ -873,11 +873,11 @@ static void EditHotkeyScreen_SaveChanges(void* screen, void* b) {
 
 static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
-	struct HotkeyData hotkey = s->OrigHotkey;
+	struct HotkeyData hk = s->OrigHotkey;
 
-	if (hotkey.Trigger) {
-		Hotkeys_Remove(hotkey.Trigger, hotkey.Flags);
-		Hotkeys_UserRemovedHotkey(hotkey.Trigger, hotkey.Flags);
+	if (hk.Trigger) {
+		Hotkeys_Remove(hk.Trigger, hk.Flags);
+		Hotkeys_UserRemovedHotkey(hk.Trigger, hk.Flags);
 	}
 
 	Gui_FreeActive();
@@ -916,9 +916,9 @@ static bool EditHotkeyScreen_KeyDown(void* screen, Key key, bool was) {
 			s->CurHotkey.Trigger = key;
 			EditHotkeyScreen_MakeBaseKey(s, EditHotkeyScreen_BaseKey);
 		} else if (s->SelectedI == 1) {
-			if      (key == KEY_LCTRL || key == KEY_RCTRL)     s->CurHotkey.Flags |= HOTKEY_FLAG_CTRL;
-			else if (key == KEY_LSHIFT   || key == KEY_RSHIFT) s->CurHotkey.Flags |= HOTKEY_FLAG_SHIFT;
-			else if (key == KEY_LALT     || key == KEY_RALT)   s->CurHotkey.Flags |= HOTKEY_FLAG_ALT;
+			if      (key == KEY_LCTRL  || key == KEY_RCTRL)  s->CurHotkey.Flags |= HOTKEY_MOD_CTRL;
+			else if (key == KEY_LSHIFT || key == KEY_RSHIFT) s->CurHotkey.Flags |= HOTKEY_MOD_SHIFT;
+			else if (key == KEY_LALT   || key == KEY_RALT)   s->CurHotkey.Flags |= HOTKEY_MOD_ALT;
 			else s->CurHotkey.Flags = 0;
 
 			EditHotkeyScreen_MakeModifiers(s, EditHotkeyScreen_Modifiers);
@@ -1477,9 +1477,9 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	}
 
 	String_UNSAFE_Separate(&text, '+', &key, &value);
-	if (String_ContainsString(&value, &ctrl))  flags |= HOTKEY_FLAG_CTRL;
-	if (String_ContainsString(&value, &shift)) flags |= HOTKEY_FLAG_SHIFT;
-	if (String_ContainsString(&value, &alt))   flags |= HOTKEY_FLAG_ALT;
+	if (String_ContainsString(&value, &ctrl))  flags |= HOTKEY_MOD_CTRL;
+	if (String_ContainsString(&value, &shift)) flags |= HOTKEY_MOD_SHIFT;
+	if (String_ContainsString(&value, &alt))   flags |= HOTKEY_MOD_ALT;
 
 	trigger = Utils_ParseEnum(&key, KEY_NONE, Key_Names, KEY_COUNT);
 	for (i = 0; i < HotkeysText.Count; i++) {
@@ -1492,9 +1492,9 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 }
 
 static void HotkeyListScreen_MakeFlags(int flags, String* str) {
-	if (flags & HOTKEY_FLAG_CTRL)  String_AppendConst(str, " Ctrl");
-	if (flags & HOTKEY_FLAG_SHIFT) String_AppendConst(str, " Shift");
-	if (flags & HOTKEY_FLAG_ALT)   String_AppendConst(str, " Alt");
+	if (flags & HOTKEY_MOD_CTRL)  String_AppendConst(str, " Ctrl");
+	if (flags & HOTKEY_MOD_SHIFT) String_AppendConst(str, " Shift");
+	if (flags & HOTKEY_MOD_ALT)   String_AppendConst(str, " Alt");
 }
 
 struct Screen* HotkeyListScreen_MakeInstance(void) {
@@ -1582,7 +1582,7 @@ static void KeyBindingsScreen_GetText(struct KeyBindingsScreen* s, int i, String
 static void KeyBindingsScreen_OnBindingClick(void* screen, void* widget) {
 	String text; char textBuffer[STRING_SIZE];
 	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
-	struct ButtonWidget* btn    = widget;
+	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
 	struct ButtonWidget* cur;
 
 	String_InitArray(text, textBuffer);
@@ -2050,7 +2050,7 @@ static void MenuOptionsScreen_Default(void* screen, void* widget) {
 static void MenuOptionsScreen_Bool(void* screen, void* widget) {
 	String value; char valueBuffer[STRING_SIZE];
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	struct ButtonWidget* btn    = widget;
+	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
 	int index;
 	bool isOn;
 
@@ -2067,7 +2067,7 @@ static void MenuOptionsScreen_Bool(void* screen, void* widget) {
 static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 	String value; char valueBuffer[STRING_SIZE];
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	struct ButtonWidget* btn    = widget;
+	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
 	int index;
 	struct MenuInputValidator* v;
 	const char** names;
@@ -2093,7 +2093,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	String value; char valueBuffer[STRING_SIZE];
 
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	struct ButtonWidget* btn    = widget;
+	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
 	int i;
 
 	s->ActiveI = Menu_Index(s, btn);
@@ -2896,7 +2896,7 @@ static void Overlay_Free(void* screen) {
 static bool Overlay_KeyDown(void* screen, Key key, bool was) { return true; }
 
 static void Overlay_MakeLabels(void* menu, struct TextWidget* labels, const String* lines) {
-	struct MenuScreen* s = menu;
+	struct MenuScreen* s = (struct MenuScreen*)menu;
 	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
 	int i;
 	Menu_Label(s, 0, &labels[0], &lines[0], &s->TitleFont,

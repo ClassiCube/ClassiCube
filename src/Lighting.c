@@ -358,7 +358,7 @@ static void Lighting_Reset(void) {
 }
 
 static void Lighting_OnNewMapLoaded(void) {
-	Lighting_Heightmap = Mem_Alloc(World.Width * World.Length, 2, "lighting heightmap");
+	Lighting_Heightmap = (int16_t*)Mem_Alloc(World.Width * World.Length, 2, "lighting heightmap");
 	Lighting_Refresh();
 }
 

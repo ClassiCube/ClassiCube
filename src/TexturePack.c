@@ -429,7 +429,7 @@ static void Atlas_Convert2DTo1D(void) {
 			atlasY = Atlas2D_TileY(tile) * tileSize;
 
 			Bitmap_CopyBlock(atlasX, atlasY, 0, y * tileSize,
-							&Atlas2D.Bitmap, &atlas1D, tileSize);
+							&Atlas2D.Bmp, &atlas1D, tileSize);
 		}
 		Atlas1D.TexIds[i] = Gfx_CreateTexture(&atlas1D, true, Gfx.Mipmaps);
 	}
@@ -452,7 +452,7 @@ static void Atlas_Update1D(void) {
 }
 
 void Atlas_Update(Bitmap* bmp) {
-	Atlas2D.Bitmap    = *bmp;
+	Atlas2D.Bmp       = *bmp;
 	Atlas2D.TileSize  = bmp->Width  / ATLAS2D_TILES_PER_ROW;
 	Atlas2D.RowsCount = bmp->Height / Atlas2D.TileSize;
 	Atlas2D.RowsCount = min(Atlas2D.RowsCount, ATLAS2D_MAX_ROWS_COUNT);
@@ -466,7 +466,7 @@ static GfxResourceID Atlas_LoadTile_Raw(TextureLoc texLoc, Bitmap* element) {
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 	if (y >= Atlas2D.RowsCount) return GFX_NULL;
 
-	Bitmap_CopyBlock(x * size, y * size, 0, 0, &Atlas2D.Bitmap, element, size);
+	Bitmap_CopyBlock(x * size, y * size, 0, 0, &Atlas2D.Bmp, element, size);
 	return Gfx_CreateTexture(element, false, Gfx.Mipmaps);
 }
 
@@ -490,8 +490,8 @@ GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 
 void Atlas_Free(void) {
 	int i;
-	Mem_Free(Atlas2D.Bitmap.Scan0);
-	Atlas2D.Bitmap.Scan0 = NULL;
+	Mem_Free(Atlas2D.Bmp.Scan0);
+	Atlas2D.Bmp.Scan0 = NULL;
 
 	for (i = 0; i < Atlas1D.Count; i++) {
 		Gfx_DeleteTexture(&Atlas1D.TexIds[i]);

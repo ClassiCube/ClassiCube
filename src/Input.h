@@ -119,30 +119,30 @@ void KeyBind_Init(void);
 
 extern const uint8_t Hotkeys_LWJGL[256];
 struct HotkeyData {
-	int TextIndex;   /* contents to copy directly into the input bar */
-	uint8_t Trigger; /* Member of Key enumeration */
-	uint8_t Flags;   /* ctrl 1, shift 2, alt 4 */
-	bool StaysOpen;  /* whether the user is able to enter further input */
+	int TextIndex;     /* contents to copy directly into the input bar */
+	uint8_t Trigger;   /* Member of Key enumeration */
+	uint8_t Flags;     /* HotkeyModifiers bitflags */
+	bool StaysOpen;    /* whether the user is able to enter further input */
 };
 
 #define HOTKEYS_MAX_COUNT 256
 extern struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
 extern StringsBuffer HotkeysText;
-typedef enum HotkeyFlags_ {
-	HOTKEY_FLAG_CTRL = 1, HOTKEY_FLAG_SHIFT = 2, HOTKEY_FLAG_ALT = 4
-} HotkeyFlags;
+enum HotkeyModifiers {
+	HOTKEY_MOD_CTRL = 1, HOTKEY_MOD_SHIFT = 2, HOTKEY_MOD_ALT = 4
+};
 
 /* Adds or updates a new hotkey. */
-void Hotkeys_Add(Key trigger, HotkeyFlags flags, const String* text, bool more);
+void Hotkeys_Add(Key trigger, uint8_t modifiers, const String* text, bool more);
 /* Removes the given hotkey. */
-bool Hotkeys_Remove(Key trigger, HotkeyFlags flags);
+bool Hotkeys_Remove(Key trigger, uint8_t modifiers);
 /* Returns the first hotkey which is bound to the given key and has its modifiers pressed. */
 /* NOTE: The hotkeys list is sorted, so hotkeys with most modifiers are checked first. */
 int Hotkeys_FindPartial(Key key);
 /* Initalises and loads hotkeys from options. */
 void Hotkeys_Init(void);
 /* Called when user has removed a hotkey. (removes it from options) */
-void Hotkeys_UserRemovedHotkey(Key trigger, HotkeyFlags flags);
+void Hotkeys_UserRemovedHotkey(Key trigger, uint8_t modifiers);
 /* Called when user has added a hotkey. (Adds it to options) */
-void Hotkeys_UserAddedHotkey(Key trigger, HotkeyFlags flags, bool moreInput, const String* text);
+void Hotkeys_UserAddedHotkey(Key trigger, uint8_t modifiers, bool moreInput, const String* text);
 #endif

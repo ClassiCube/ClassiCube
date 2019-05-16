@@ -30,7 +30,7 @@ extern struct IGameComponent Animations_Component;
 CC_VAR extern struct _Atlas2DData {
 	/* Bitmap that contains the textures of all tiles. */
 	/* Tiles are indexed left to right, top to bottom. */
-	Bitmap Bitmap;
+	Bitmap Bmp;
 	/* Size of each tile in pixels. (default 16x16) */
 	int TileSize;
 	/* Number of rows in the atlas. (default 16, can be 32) */

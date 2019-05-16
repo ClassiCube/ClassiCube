@@ -400,7 +400,7 @@ static float Block_GetSpriteBB_MaxY(int size, int tileX, int tileY, const Bitmap
 }
 
 void Block_RecalculateBB(BlockID block) {
-	Bitmap* bmp  = &Atlas2D.Bitmap;
+	Bitmap* bmp  = &Atlas2D.Bmp;
 	int tileSize = Atlas2D.TileSize;
 	TextureLoc texLoc = Block_Tex(block, FACE_XMAX);
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);

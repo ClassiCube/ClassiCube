@@ -431,7 +431,7 @@ ReturnCode Audio_StopAndClose(AudioHandle handle) {
 *#########################################################################################################################*/
 struct Sound {
 	struct AudioFormat Format;
-	uint8_t* Data; uint32_t DataSize;
+	uint8_t* Data; uint32_t Size;
 };
 
 #define AUDIO_MAX_SOUNDS 10
@@ -475,8 +475,8 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			snd->Format.BitsPerSample = Stream_GetU16_LE(&tmp[14]);
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
-			snd->Data = Mem_Alloc(size, 1, "WAV sound data");
-			snd->DataSize = size;
+			snd->Data = (uint8_t*)Mem_Alloc(size, 1, "WAV sound data");
+			snd->Size = size;
 			return Stream_Read(stream, snd->Data, size);
 		}
 
@@ -553,8 +553,8 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, S
 		if (res) {
 			Logger_Warn2(res, "decoding", &file);
 			Mem_Free(snd->Data);
-			snd->Data     = NULL;
-			snd->DataSize = 0;
+			snd->Data = NULL;
+			snd->Size = 0;
 		} else { group->Count++; }
 	}
 }
@@ -604,23 +604,23 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 	
 	/* copy to temp buffer to apply volume */
 	if (volume < 100) {		
-		if (output->BufferSize < snd->DataSize) {
-			expandBy       = snd->DataSize - output->BufferSize;
+		if (output->BufferSize < snd->Size) {
+			expandBy       = snd->Size - output->BufferSize;
 			output->Buffer = Utils_Resize(output->Buffer, &output->BufferSize, 
 											1, AUDIO_DEF_ELEMS, expandBy);
 		}
 		data = output->Buffer;
 
-		Mem_Copy(data, snd->Data, snd->DataSize);
+		Mem_Copy(data, snd->Data, snd->Size);
 		if (fmt->BitsPerSample == 8) {
-			Volume_Mix8(data,  snd->DataSize,     volume);
+			Volume_Mix8((uint8_t*)data,  snd->Size,     volume);
 		} else {
-			Volume_Mix16(data, snd->DataSize / 2, volume);
+			Volume_Mix16((int16_t*)data, snd->Size / 2, volume);
 		}
 	}
 
-	if ((res = Audio_BufferData(output->Handle, 0, data, snd->DataSize))) { Sounds_Fail(res); return; }
-	if ((res = Audio_Play(output->Handle)))                               { Sounds_Fail(res); return; }
+	if ((res = Audio_BufferData(output->Handle, 0, data, snd->Size))) { Sounds_Fail(res); return; }
+	if ((res = Audio_Play(output->Handle)))                           { Sounds_Fail(res); return; }
 }
 
 static void Sounds_Play(uint8_t type, struct Soundboard* board) {

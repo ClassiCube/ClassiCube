@@ -233,10 +233,10 @@ static void Hotkeys_QuickSort(int left, int right) {
 	}
 }
 
-static void Hotkeys_AddNewHotkey(Key trigger, uint8_t flags, const String* text, bool more) {
+static void Hotkeys_AddNewHotkey(Key trigger, uint8_t modifiers, const String* text, bool more) {
 	struct HotkeyData hKey;
 	hKey.Trigger = trigger;
-	hKey.Flags = flags;
+	hKey.Flags   = modifiers;
 	hKey.TextIndex = HotkeysText.Count;
 	hKey.StaysOpen = more;
 
@@ -262,29 +262,29 @@ static void Hotkeys_RemoveText(int index) {
 }
 
 
-void Hotkeys_Add(Key trigger, HotkeyFlags flags, const String* text, bool more) {
-	struct HotkeyData* hKey = HotkeysList;
+void Hotkeys_Add(Key trigger, uint8_t modifiers, const String* text, bool more) {
+	struct HotkeyData* hk = HotkeysList;
 	int i;
 
-	for (i = 0; i < HotkeysText.Count; i++, hKey++) {		
-		if (hKey->Trigger != trigger || hKey->Flags != flags) continue;
-		Hotkeys_RemoveText(hKey->TextIndex);
+	for (i = 0; i < HotkeysText.Count; i++, hk++) {		
+		if (hk->Trigger != trigger || hk->Flags != modifiers) continue;
+		Hotkeys_RemoveText(hk->TextIndex);
 
-		hKey->StaysOpen = more;
-		hKey->TextIndex = HotkeysText.Count;
+		hk->StaysOpen = more;
+		hk->TextIndex = HotkeysText.Count;
 		StringsBuffer_Add(&HotkeysText, text);
 		return;
 	}
-	Hotkeys_AddNewHotkey(trigger, flags, text, more);
+	Hotkeys_AddNewHotkey(trigger, modifiers, text, more);
 }
 
-bool Hotkeys_Remove(Key trigger, HotkeyFlags flags) {
-	struct HotkeyData* hKey = HotkeysList;
+bool Hotkeys_Remove(Key trigger, uint8_t modifiers) {
+	struct HotkeyData* hk = HotkeysList;
 	int i, j;
 
-	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
-		if (hKey->Trigger != trigger || hKey->Flags != flags) continue;
-		Hotkeys_RemoveText(hKey->TextIndex);
+	for (i = 0; i < HotkeysText.Count; i++, hk++) {
+		if (hk->Trigger != trigger || hk->Flags != modifiers) continue;
+		Hotkeys_RemoveText(hk->TextIndex);
 
 		for (j = i; j < HotkeysText.Count; j++) {
 			HotkeysList[j] = HotkeysList[j + 1];
@@ -295,17 +295,17 @@ bool Hotkeys_Remove(Key trigger, HotkeyFlags flags) {
 }
 
 int Hotkeys_FindPartial(Key key) {
-	struct HotkeyData hKey;
-	int i, flags = 0;
+	struct HotkeyData hk;
+	int i, modifiers = 0;
 
-	if (Key_IsControlPressed()) flags |= HOTKEY_FLAG_CTRL;
-	if (Key_IsShiftPressed())   flags |= HOTKEY_FLAG_SHIFT;
-	if (Key_IsAltPressed())     flags |= HOTKEY_FLAG_ALT;
+	if (Key_IsControlPressed()) modifiers |= HOTKEY_MOD_CTRL;
+	if (Key_IsShiftPressed())   modifiers |= HOTKEY_MOD_SHIFT;
+	if (Key_IsAltPressed())     modifiers |= HOTKEY_MOD_ALT;
 
 	for (i = 0; i < HotkeysText.Count; i++) {
-		hKey = HotkeysList[i];
-		/* e.g. if holding Ctrl and Shift, a hotkey with only Ctrl flags matches */
-		if ((hKey.Flags & flags) == hKey.Flags && hKey.Trigger == key) return i;
+		hk = HotkeysList[i];
+		/* e.g. if holding Ctrl and Shift, a hotkey with only Ctrl modifiers matches */
+		if ((hk.Flags & modifiers) == hk.Flags && hk.Trigger == key) return i;
 	}
 	return -1;
 }
@@ -340,21 +340,21 @@ void Hotkeys_Init(void) {
 	}
 }
 
-void Hotkeys_UserRemovedHotkey(Key trigger, HotkeyFlags flags) {
+void Hotkeys_UserRemovedHotkey(Key trigger, uint8_t modifiers) {
 	String key; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
-	String_Format2(&key, "hotkey-%c&%i", Key_Names[trigger], &flags);
+	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &modifiers);
 	Options_SetString(&key, NULL);
 }
 
-void Hotkeys_UserAddedHotkey(Key trigger, HotkeyFlags flags, bool moreInput, const String* text) {
+void Hotkeys_UserAddedHotkey(Key trigger, uint8_t modifiers, bool moreInput, const String* text) {
 	String key;   char keyBuffer[STRING_SIZE];
 	String value; char valueBuffer[STRING_SIZE * 2];
 	String_InitArray(key, keyBuffer);
 	String_InitArray(value, valueBuffer);
 
-	String_Format2(&key, "hotkey-%c&%i", Key_Names[trigger], &flags);
+	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &modifiers);
 	String_Format2(&value, "%t&%s", &moreInput, text);
 	Options_SetString(&key, &value);
 }

@@ -17,7 +17,7 @@ static void Gen_Init(void) {
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState    = "";
 
-	Gen_Blocks = Mem_Alloc(World.Volume, 1, "map blocks for gen");
+	Gen_Blocks = (BlockRaw*)Mem_Alloc(World.Volume, 1, "map blocks for gen");
 	Gen_Done   = false;
 }
 
@@ -609,7 +609,7 @@ static void NotchyGen_PlantTrees(void) {
 
 void NotchyGen_Generate(void) {
 	Gen_Init();
-	Heightmap = Mem_Alloc(World.Width * World.Length, 2, "gen heightmap");
+	Heightmap = (int16_t*)Mem_Alloc(World.Width * World.Length, 2, "gen heightmap");
 
 	Random_Seed(&rnd, Gen_Seed);
 	waterLevel = World.Height / 2;	

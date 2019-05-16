@@ -224,8 +224,8 @@ static bool Codebook_CalcCodewords(struct Codebook* c, uint8_t* len) {
 	int offset;
 	int len_offsets[33];
 
-	c->Codewords = Mem_Alloc(c->TotalCodewords, 4, "codewords");
-	c->Values    = Mem_Alloc(c->TotalCodewords, 4, "values");
+	c->Codewords = (uint32_t*)Mem_Alloc(c->TotalCodewords, 4, "codewords");
+	c->Values    = (uint32_t*)Mem_Alloc(c->TotalCodewords, 4, "values");
 
 	/* Codeword entries are ordered by length */
 	offset = 0;
@@ -290,7 +290,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 	c->Dimensions = Vorbis_ReadBits(ctx, 16);
 	c->Entries    = Vorbis_ReadBits(ctx, 24);
 
-	codewordLens = Mem_Alloc(c->Entries, 1, "raw codeword lens");
+	codewordLens = (uint8_t*)Mem_Alloc(c->Entries, 1, "raw codeword lens");
 	for (i = 0; i < Array_Elems(c->NumCodewords); i++) {
 		c->NumCodewords[i] = 0;
 	}

@@ -928,7 +928,7 @@ static ReturnCode Deflate_StreamWrite(struct Stream* stream, const uint8_t* data
 	struct DeflateState* state;
 	ReturnCode res;
 
-	state = stream->Meta.Inflate;
+	state = (struct DeflateState*)stream->Meta.Inflate;
 	*modified = 0;
 
 	while (total > 0) {
@@ -957,7 +957,7 @@ static ReturnCode Deflate_StreamClose(struct Stream* stream) {
 	struct DeflateState* state;
 	ReturnCode res;
 
-	state = stream->Meta.Inflate;
+	state = (struct DeflateState*)stream->Meta.Inflate;
 	res   = Deflate_FlushBlock(state, state->InputPosition - DEFLATE_BLOCK_SIZE);
 	if (res) return res;
 
@@ -1019,8 +1019,8 @@ void Deflate_MakeStream(struct Stream* stream, struct DeflateState* state, struc
 *-----------------------------------------------------GZip (compress)-----------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode GZip_StreamClose(struct Stream* stream) {
+	struct GZipState* state = (struct GZipState*)stream->Meta.Inflate;
 	uint8_t data[8];
-	struct GZipState* state = stream->Meta.Inflate;
 	ReturnCode res;
 
 	if ((res = Deflate_StreamClose(stream))) return res;
@@ -1030,7 +1030,7 @@ static ReturnCode GZip_StreamClose(struct Stream* stream) {
 }
 
 static ReturnCode GZip_StreamWrite(struct Stream* stream, const uint8_t* data, uint32_t count, uint32_t* modified) {
-	struct GZipState* state = stream->Meta.Inflate;
+	struct GZipState* state = (struct GZipState*)stream->Meta.Inflate;
 	uint32_t i, crc32 = state->Crc32;
 	state->Size += count;
 
@@ -1045,7 +1045,7 @@ static ReturnCode GZip_StreamWrite(struct Stream* stream, const uint8_t* data, u
 
 static ReturnCode GZip_StreamWriteFirst(struct Stream* stream, const uint8_t* data, uint32_t count, uint32_t* modified) {
 	static uint8_t header[10] = { 0x1F, 0x8B, 0x08 }; /* GZip header */
-	struct GZipState* state = stream->Meta.Inflate;
+	struct GZipState* state = (struct GZipState*)stream->Meta.Inflate;
 	ReturnCode res;
 
 	if ((res = Stream_Write(state->Base.Dest, header, sizeof(header)))) return res;
@@ -1066,8 +1066,8 @@ void GZip_MakeStream(struct Stream* stream, struct GZipState* state, struct Stre
 *-----------------------------------------------------ZLib (compress)-----------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode ZLib_StreamClose(struct Stream* stream) {
+	struct ZLibState* state = (struct ZLibState*)stream->Meta.Inflate;
 	uint8_t data[4];
-	struct ZLibState* state = stream->Meta.Inflate;
 	ReturnCode res;
 
 	if ((res = Deflate_StreamClose(stream))) return res;	
@@ -1076,7 +1076,7 @@ static ReturnCode ZLib_StreamClose(struct Stream* stream) {
 }
 
 static ReturnCode ZLib_StreamWrite(struct Stream* stream, const uint8_t* data, uint32_t count, uint32_t* modified) {
-	struct ZLibState* state = stream->Meta.Inflate;
+	struct ZLibState* state = (struct ZLibState*)stream->Meta.Inflate;
 	uint32_t i, adler32 = state->Adler32;
 	uint32_t s1 = adler32 & 0xFFFF, s2 = (adler32 >> 16) & 0xFFFF;
 
@@ -1093,7 +1093,7 @@ static ReturnCode ZLib_StreamWrite(struct Stream* stream, const uint8_t* data, u
 
 static ReturnCode ZLib_StreamWriteFirst(struct Stream* stream, const uint8_t* data, uint32_t count, uint32_t* modified) {
 	static uint8_t header[2] = { 0x78, 0x9C }; /* ZLib header */
-	struct ZLibState* state = stream->Meta.Inflate;
+	struct ZLibState* state = (struct ZLibState*)stream->Meta.Inflate;
 	ReturnCode res;
 
 	if ((res = Stream_Write(state->Base.Dest, header, sizeof(header)))) return res;
