@@ -282,12 +282,12 @@ static void MPConnection_FailConnect(ReturnCode result) {
 	String_InitArray(msg, msgBuffer);
 
 	if (result) {
-		String_Format3(&msg, "Error connecting to %s:%i: %i", &Game_IPAddress, &Game_Port, &result);
+		String_Format3(&msg, "Error connecting to %s:%i: %i", &Server.IP, &Server.Port, &result);
 		Logger_Log(&msg);
 		msg.length = 0;
 	}
 
-	String_Format2(&msg, "Failed to connect to %s:%i", &Game_IPAddress, &Game_Port);
+	String_Format2(&msg, "Failed to connect to %s:%i", &Server.IP, &Server.Port);
 	Game_Disconnect(&msg, &reason);
 	Server_Free();
 }
@@ -326,11 +326,11 @@ static void MPConnection_BeginConnect(void) {
 	net_connecting = true;
 	net_connectTimeout = DateTime_CurrentUTC_MS() + NET_TIMEOUT_MS;
 
-	res = Socket_Connect(net_socket, &Game_IPAddress, Game_Port);
+	res = Socket_Connect(net_socket, &Server.IP, Server.Port);
 	if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
 		MPConnection_FailConnect(res);
 	} else {
-		String_Format2(&title, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
+		String_Format2(&title, "Connecting to %s:%i..", &Server.IP, &Server.Port);
 		Gui_FreeActive();
 		Gui_SetActive(LoadingScreen_MakeInstance(&title, &String_Empty));
 	}
@@ -421,7 +421,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 	if (res) {
 		String_InitArray(msg, msgBuffer);
-		String_Format3(&msg, "Error reading from %s:%i: %i", &Game_IPAddress, &Game_Port, &res);
+		String_Format3(&msg, "Error reading from %s:%i: %i", &Server.IP, &Server.Port, &res);
 
 		Logger_Log(&msg);
 		Game_Disconnect(&title_lost, &reason_err);
@@ -545,7 +545,7 @@ static void Server_Init(void) {
 	String_InitArray(Server.MOTD,    motdBuffer);
 	String_InitArray(Server.AppName, appBuffer);
 
-	if (!Game_IPAddress.length) {
+	if (!Server.IP.length) {
 		SPConnection_Init();
 	} else {
 		MPConnection_Init();

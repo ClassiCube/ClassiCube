@@ -6,6 +6,7 @@
 #include "Funcs.h"
 #include "Utils.h"
 #include "Launcher.h"
+#include "Server.h"
 
 /*#define CC_TEST_VORBIS*/
 #ifdef CC_TEST_VORBIS
@@ -118,6 +119,7 @@ CC_NOINLINE static void ExitMissingArgs(int argsCount, const String* args) {
 }
 
 int main(int argc, char** argv) {
+	static char ipBuffer[STRING_SIZE];
 	String args[GAME_MAX_CMDARGS];
 	int argsCount;
 	uint8_t ip[4];
@@ -131,6 +133,7 @@ int main(int argc, char** argv) {
 	main_imdct();
 #endif
 	Platform_LogConst("Starting " GAME_APP_NAME " ..");
+	String_InitArray(Server.IP, ipBuffer);
 
 	Utils_EnsureDirectory("maps");
 	Utils_EnsureDirectory("texpacks");
@@ -167,9 +170,9 @@ int main(int argc, char** argv) {
 		ExitMissingArgs(argsCount, args);
 		return 1;
 	} else {
-		String_Copy(&Game_Username,  &args[0]);
-		String_Copy(&Game_Mppass,    &args[1]);
-		String_Copy(&Game_IPAddress, &args[2]);
+		String_Copy(&Game_Username, &args[0]);
+		String_Copy(&Game_Mppass,   &args[1]);
+		String_Copy(&Server.IP,     &args[2]);
 
 		if (!Utils_ParseIP(&args[2], ip)) {
 			ExitInvalidArg("Invalid IP", &args[2]);
@@ -179,7 +182,7 @@ int main(int argc, char** argv) {
 			ExitInvalidArg("Invalid port", &args[3]);
 			return 1;
 		}
-		Game_Port = port;
+		Server.Port = port;
 		Program_RunGame();
 	}
 

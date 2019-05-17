@@ -86,6 +86,11 @@ CC_VAR extern struct _ServerConnectionData {
 	bool SupportsPartialMessages;
 	/* Whether the server supports all of code page 437, not just ASCII. */
 	bool SupportsFullCP437;
+
+	/* IP address of the server if multiplayer, empty string if singleplayer. */
+	String IP;
+	/* Port of the server if multiplayer, 0 if singleplayer. */
+	int Port;
 } Server;
 
 /* If the user hasn't previously accepted url, displays a dialog asking to confirm downloading it. */

@@ -57,13 +57,11 @@ static int Game_TasksCount, entTaskI;
 
 static char Game_UsernameBuffer[FILENAME_SIZE];
 static char Game_MppassBuffer[STRING_SIZE];
-static char Game_IPAddressBuffer[STRING_SIZE];
 static char Game_HashBuffer[STRING_SIZE];
 
-String Game_Username  = String_FromArray(Game_UsernameBuffer);
-String Game_Mppass    = String_FromArray(Game_MppassBuffer);
-String Game_IPAddress = String_FromArray(Game_IPAddressBuffer);
-String Game_Hash      = String_FromArray(Game_HashBuffer);
+String Game_Username = String_FromArray(Game_UsernameBuffer);
+String Game_Mppass   = String_FromArray(Game_MppassBuffer);
+String Game_Hash     = String_FromArray(Game_HashBuffer);
 
 const char* FpsLimit_Names[FPS_LIMIT_COUNT] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "Limit144FPS", "LimitNone",
