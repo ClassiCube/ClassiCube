@@ -2805,7 +2805,7 @@ struct Screen* MiscOptionsScreen_MakeInstance(void) {
 	defaultValues[2] = "0";
 	validators[7]    = MenuInputValidator_Int(1, 200);
 #ifdef CC_BUILD_WIN
-	defaultValues[7] = "50";
+	defaultValues[7] = "40";
 #else
 	defaultValues[7] = "30";
 #endif
