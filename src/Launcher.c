@@ -413,7 +413,7 @@ void Launcher_TryLoadTexturePack(void) {
 
 	Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &texPack);
 	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "texpacks/", &texPack);
+	String_Format1(&path, "texpacks/%s", &texPack);
 
 	if (!texPack.length || !File_Exists(&path)) path = defZipPath;
 	if (!File_Exists(&path)) return;
