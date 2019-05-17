@@ -5,7 +5,7 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3 | Based on OpenTK code
 */
 
-typedef enum Key_ {	
+enum Key_ {
 	KEY_NONE, /* Unrecognised key */
 
 	KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10,
@@ -41,7 +41,8 @@ typedef enum Key_ {
 
 	KEY_XBUTTON1, KEY_XBUTTON2, /* so these can be used for hotkeys */
 	KEY_COUNT
-} Key;
+};
+typedef int Key;
 
 /* Simple names for each keyboard button. */
 extern const char* Key_Names[KEY_COUNT];
@@ -69,10 +70,11 @@ void Key_SetPressed(Key key, bool pressed);
 void Key_Clear(void);
 
 
-typedef enum MouseButton_ {
+enum MouseButton_ {
 	MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE,
 	MOUSE_COUNT
-} MouseButton;
+};
+typedef int MouseButton;
 
 /* Wheel position of the mouse. Use Mouse_SetWheel to change. */
 extern float Mouse_Wheel;

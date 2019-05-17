@@ -920,7 +920,11 @@ static void MainScreen_TickFetchServers(struct MainScreen* s) {
 
 	if (FetchServersTask.Base.Success) {
 		s->SigningIn = false;
-		Launcher_SetScreen(ServersScreen_MakeInstance());
+		if (Game_Hash.length) {
+			Launcher_ConnectToServer(&Game_Hash);
+		} else {
+			Launcher_SetScreen(ServersScreen_MakeInstance());
+		}
 	} else {
 		MainScreen_Error(&FetchServersTask.Base, "retrieving servers list");
 	}

@@ -147,11 +147,20 @@ int main(int argc, char** argv) {
 	if (argsCount == 0) {
 #ifdef CC_BUILD_WEB
 		String_AppendConst(&Game_Username, "WebTest!");
-		Program_RunGame();	
+		Program_RunGame();
 #else
 		Launcher_Run();
 #endif
 	} else if (argsCount == 1) {
+#ifndef CC_BUILD_WEB
+		/* :hash to auto join server with the given hash */
+		if (args[0].buffer[0] == ':') {
+			args[0] = String_UNSAFE_SubstringAt(&args[0], 1);
+			String_Copy(&Game_Hash, &args[0]);
+			Launcher_Run();
+			return 0;
+		}
+#endif
 		String_Copy(&Game_Username, &args[0]);
 		Program_RunGame();
 	} else if (argsCount < 4) {

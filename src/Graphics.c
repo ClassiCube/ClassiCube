@@ -1864,11 +1864,11 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 
 static void GL_CheckSupport(void) {
 	const static String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
-	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
-	String version    = String_FromReadonly(glGetString(GL_VERSION));
+	String extensions  = String_FromReadonly(glGetString(GL_EXTENSIONS));
+	const GLubyte* ver = glGetString(GL_VERSION);
 
-	int major = (int)(version.buffer[0] - '0'); /* x.y. (and so forth) */
-	int minor = (int)(version.buffer[2] - '0');
+	/* Version string is always: x.y. (and whatever afterwards) */
+	int major = ver[0] - '0', minor = ver[2] - '0';
 
 	/* Supported in core since 1.5 */
 	if (major > 1 || (major == 1 && minor >= 5)) {

@@ -293,7 +293,7 @@ static ReturnCode ZipPatcher_WriteData(struct Stream* dst, struct ResourceTextur
 static ReturnCode ZipPatcher_WriteZipEntry(struct Stream* src, struct ResourceTexture* tex, struct ZipState* state) {
 	uint8_t tmp[2048];
 	uint32_t read;
-	struct Stream* dst = state->Obj;
+	struct Stream* dst = (struct Stream*)state->Obj;
 	ReturnCode res;
 
 	tex->Size  = state->_curEntry->UncompressedSize;
@@ -464,7 +464,7 @@ static ReturnCode ModernPatcher_ProcessEntry(const String* path, struct Stream* 
 	}
 
 	if (String_CaselessEqualsConst(path, "assets/minecraft/textures/blocks/fire_layer_1.png")) {
-		struct Stream* dst = state->Obj;
+		struct Stream* dst = (struct Stream*)state->Obj;
 		return ModernPatcher_MakeAnimations(dst, data);
 	}
 
