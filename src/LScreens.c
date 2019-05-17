@@ -922,6 +922,7 @@ static void MainScreen_TickFetchServers(struct MainScreen* s) {
 		s->SigningIn = false;
 		if (Game_Hash.length) {
 			Launcher_ConnectToServer(&Game_Hash);
+			Game_Hash.length = 0;
 		} else {
 			Launcher_SetScreen(ServersScreen_MakeInstance());
 		}

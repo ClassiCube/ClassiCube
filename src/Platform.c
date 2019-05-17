@@ -728,7 +728,7 @@ void Thread_Detach(void* handle) {
 }
 
 void Thread_Join(void* handle) {
-	pthread_t* ptr = handle;
+	pthread_t* ptr = (pthread_t*)handle;
 	int res = pthread_join(*ptr, NULL);
 	if (res) Logger_Abort2(res, "Joining thread");
 	Mem_Free(ptr);

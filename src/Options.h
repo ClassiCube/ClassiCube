@@ -5,11 +5,6 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-enum FpsLimit {
-	FPS_LIMIT_VSYNC, FPS_LIMIT_30, FPS_LIMIT_60, FPS_LIMIT_120, FPS_LIMIT_144, FPS_LIMIT_NONE, FPS_LIMIT_COUNT
-};
-extern const char* FpsLimit_Names[FPS_LIMIT_COUNT];
-
 #define OPT_USE_MUSIC "usemusic"
 #define OPT_USE_SOUND "usesound"
 #define OPT_MUSIC_VOLUME "musicvolume"

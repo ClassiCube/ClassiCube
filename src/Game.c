@@ -65,6 +65,10 @@ String Game_Mppass    = String_FromArray(Game_MppassBuffer);
 String Game_IPAddress = String_FromArray(Game_IPAddressBuffer);
 String Game_Hash      = String_FromArray(Game_HashBuffer);
 
+const char* FpsLimit_Names[FPS_LIMIT_COUNT] = {
+	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "Limit144FPS", "LimitNone",
+};
+
 static struct IGameComponent* comps_head;
 static struct IGameComponent* comps_tail;
 void Game_AddComponent(struct IGameComponent* comp) {
@@ -507,7 +511,7 @@ static void Game_Load(void) {
 	Server.BeginConnect();
 }
 
-void Game_SetFpsLimit(enum FpsLimit method) {
+void Game_SetFpsLimit(int method) {
 	float minFrameTime = 0;
 	Game_FpsLimit = method;
 

@@ -51,6 +51,11 @@ extern bool Game_BreakableLiquids;
 extern bool Game_ScreenshotRequested;
 extern bool Game_HideGui;
 
+enum FpsLimitMethod {
+	FPS_LIMIT_VSYNC, FPS_LIMIT_30, FPS_LIMIT_60, FPS_LIMIT_120, FPS_LIMIT_144, FPS_LIMIT_NONE, FPS_LIMIT_COUNT
+};
+extern const char* FpsLimit_Names[FPS_LIMIT_COUNT];
+
 extern float Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
 float Game_Scale(float value);
 float Game_GetHotbarScale(void);
@@ -88,7 +93,8 @@ bool Game_ValidateBitmap(const String* file, Bitmap* bmp);
 /* Updates Game_Width and Game_Height. */
 void Game_UpdateDimensions(void);
 /* Sets the strategy/method used to limit frames per second. */
-void Game_SetFpsLimit(enum FpsLimit method);
+/* See FPS_LIMIT_ for valid strategies/methods */
+void Game_SetFpsLimit(int method);
 
 /* Runs the main game loop until the window is closed. */
 void Game_Run(int width, int height, const String* title);
