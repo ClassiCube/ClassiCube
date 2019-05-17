@@ -282,6 +282,25 @@ void String_AppendColorless(String* str, const String* src) {
 }
 
 
+void UniString_Append(UniString* str, Codepoint c) {
+	if (str->length == str->capacity) return;
+	str->buffer[str->length++] = c;
+}
+
+void UniString_AppendConst(UniString* str, const char* src) {
+	for (; *src; src++) {
+		UniString_Append(str, Convert_CP437ToUnicode(*src));
+	}
+}
+
+void UniString_AppendString(UniString* str, const String* src) {
+	int i;
+	for (i = 0; i < src->length; i++) {
+		UniString_Append(str, Convert_CP437ToUnicode(src->buffer[i]));
+	}
+}
+
+
 int String_IndexOfAt(const String* str, int offset, char c) {
 	int i;
 	for (i = offset; i < str->length; i++) {
@@ -572,7 +591,7 @@ int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data) {
 	}
 }
 
-void Convert_DecodeUtf16(String* value, const Codepoint* chars, int numBytes) {
+void String_AppendUtf16(String* value, const Codepoint* chars, int numBytes) {
 	int i; char c;
 	
 	for (i = 0; i < (numBytes >> 1); i++) {
@@ -580,7 +599,7 @@ void Convert_DecodeUtf16(String* value, const Codepoint* chars, int numBytes) {
 	}
 }
 
-void Convert_DecodeUtf8(String* value, const uint8_t* chars, int numBytes) {
+void String_AppendUtf8(String* value, const uint8_t* chars, int numBytes) {
 	int len; Codepoint cp; char c;
 
 	for (; numBytes > 0; numBytes -= len) {
@@ -592,6 +611,9 @@ void Convert_DecodeUtf8(String* value, const uint8_t* chars, int numBytes) {
 	}
 }
 
+// TODO: String_AppendUtf8
+// TODO: Remove DecodeAscii, it's a lie
+// TODO: Typedef uint8_t Key; typedef uint8_T MouseButton;
 void Convert_DecodeAscii(String* value, const uint8_t* chars, int numBytes) {
 	int i; char c;
 

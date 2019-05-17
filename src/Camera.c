@@ -239,7 +239,11 @@ void Camera_Init(void) {
 	Event_RegisterMouseMove(&MouseEvents.RawMoved,         NULL, Camera_RawMouseMovedHandler);
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, Camera_CheckThirdPerson);
 
+#ifdef CC_BUILD_WIN
+	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 100, 50);
+#else
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 100, 30);
+#endif
 	Camera.Clipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
 	Camera.Invert      = Options_GetBool(OPT_INVERT_MOUSE, false);
 }

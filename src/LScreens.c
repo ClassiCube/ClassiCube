@@ -1429,11 +1429,8 @@ CC_NOINLINE static void UpdatesScreen_FormatTime(String* str, char* type, int de
 	String_Append(str, ' ');
 	String_AppendConst(str, type);
 
-	if (delta > 1) {
-		String_AppendConst(str, "s ago");
-	} else {
-		String_AppendConst(str, " ago");
-	}
+	if (delta > 1) String_Append(str, 's');
+	String_AppendConst(str, " ago");
 }
 
 static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS time) {

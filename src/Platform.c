@@ -21,7 +21,7 @@
 #endif
 
 #ifdef UNICODE
-#define Platform_DecodeString(dst, src, len) Convert_DecodeUtf16(dst, src, (len) * 2)
+#define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, src, (len) * 2)
 #else
 #define Platform_DecodeString(dst, src, len) Convert_DecodeAscii(dst, src, len)
 #endif
@@ -525,7 +525,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
 		len = String_CalcLen(src, UInt16_MaxValue);
-		Convert_DecodeUtf8(&path, src, len);
+		String_AppendUtf8(&path, src, len);
 
 		/* TODO: fallback to stat when this fails */
 		if (entry->d_type == DT_DIR) {
@@ -1623,7 +1623,7 @@ ReturnCode Process_GetExePath(String* path) {
 	if (_NSGetExecutablePath(str, &len)) return ERR_INVALID_ARGUMENT;
 
 	len = String_CalcLen(str, 600);
-	Convert_DecodeUtf8(path, str, len);
+	String_AppendUtf8(path, str, len);
 	return 0;
 }
 #elif defined CC_BUILD_UNIX
@@ -1638,7 +1638,7 @@ ReturnCode Process_GetExePath(String* path) {
 	int len = readlink("/proc/self/exe", str, 600);
 	if (len == -1) return errno;
 
-	Convert_DecodeUtf8(path, str, len);
+	String_AppendUtf8(path, str, len);
 	return 0;
 }
 #elif defined CC_BUILD_FREEBSD
@@ -1649,7 +1649,7 @@ ReturnCode Process_GetExePath(String* path) {
 	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
 
 	size = String_CalcLen(str, 600);
-	Convert_DecodeUtf8(path, str, size);
+	String_AppendUtf8(path, str, size);
 	return 0;
 }
 #elif defined CC_BUILD_OPENBSD
@@ -1675,7 +1675,7 @@ ReturnCode Process_GetExePath(String* path) {
 	}
 
 	size = String_CalcLen(str, 600);
-	Convert_DecodeUtf8(path, str, size);
+	String_AppendUtf8(path, str, size);
 	return 0;
 }
 #elif defined CC_BUILD_NETBSD
@@ -1686,7 +1686,7 @@ ReturnCode Process_GetExePath(String* path) {
 	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
 
 	size = String_CalcLen(str, 600);
-	Convert_DecodeUtf8(path, str, size);
+	String_AppendUtf8(path, str, size);
 	return 0;
 }
 #elif defined CC_BUILD_SOLARIS
@@ -1695,7 +1695,7 @@ ReturnCode Process_GetExePath(String* path) {
 	int len = readlink("/proc/self/path/a.out", str, 600);
 	if (len == -1) return errno;
 
-	Convert_DecodeUtf8(path, str, len);
+	String_AppendUtf8(path, str, len);
 	return 0;
 }
 #endif
@@ -1726,8 +1726,18 @@ int Platform_ConvertString(void* data, const String* src) {
 	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
 
 	for (i = 0; i < src->length; i++) {
-		*dst = Convert_CP437ToUnicode(src->buffer[i]); dst++;
+		*dst++ = Convert_CP437ToUnicode(src->buffer[i]);
 	}
+	*dst = '\0';
+	return src->length * 2;
+}
+
+int Platform_ConvertUniString(void* data, const UniString* src) {
+	TCHAR* dst = data;
+	int i;
+	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
+
+	for (i = 0; i < src->length; i++) { *dst++ = src->buffer[i]; }
 	*dst = '\0';
 	return src->length * 2;
 }
@@ -1870,6 +1880,22 @@ int Platform_ConvertString(void* data, const String* src) {
 	return len;
 }
 
+int Platform_ConvertUniString(void* data, const UniString* src) {
+	uint8_t* dst = data;
+	uint8_t* cur;
+
+	int i, len = 0;
+	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
+
+	for (i = 0; i < src->length; i++) {
+		cur = dst + len;
+		len += Convert_UnicodeToUtf8(src->buffer[i], cur);
+	}
+	dst[len] = '\0';
+	return len;
+}
+
+
 static void Platform_InitCommon(void) {
 	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */
@@ -1919,7 +1945,7 @@ bool Platform_DescribeError(ReturnCode res, String* dst) {
 	if (len == -1) return false;
 
 	len = String_CalcLen(chars, 600);
-	Convert_DecodeUtf8(dst, chars, len);
+	String_AppendUtf8(dst, chars, len);
 	return true;
 }
 #endif

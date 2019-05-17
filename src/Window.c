@@ -511,7 +511,7 @@ void Window_GetClipboardText(String* value) {
 		/* ignore trailing NULL at end */
 		/* TODO: Verify it's always there */
 		if (isUnicode) {
-			Convert_DecodeUtf16(value, (Codepoint*)src, size - 2);
+			String_AppendUtf16(value, (Codepoint*)src, size - 2);
 		} else {
 			Convert_DecodeAscii(value, (uint8_t*)src,   size - 1);
 		}
@@ -1298,7 +1298,7 @@ void Window_ProcessEvents(void) {
 
 				if (data && items && prop_type == xa_utf8_string) {
 					clipboard_paste_text.length = 0;
-					Convert_DecodeUtf8(&clipboard_paste_text, data, items);
+					String_AppendUtf8(&clipboard_paste_text, data, items);
 				}
 				if (data) XFree(data);
 			}
@@ -2020,11 +2020,11 @@ void Window_GetClipboardText(String* value) {
 	if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF16, &outData))) {	
 		ptr = CFDataGetBytePtr(outData);
 		len = CFDataGetLength(outData);
-		if (ptr) Convert_DecodeUtf16(value, (Codepoint*)ptr, len);
+		if (ptr) String_AppendUtf16(value, (Codepoint*)ptr, len);
 	} else if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF8, &outData))) {
 		ptr = CFDataGetBytePtr(outData);
 		len = CFDataGetLength(outData);
-		if (ptr) Convert_DecodeUtf8(value, (uint8_t*)ptr, len);
+		if (ptr) String_AppendUtf8(value, (uint8_t*)ptr, len);
 	}
 }
 
@@ -2317,7 +2317,7 @@ void Window_GetClipboardText(String* value) {
 	if (!ptr) return;
 
 	int len = String_CalcLen(ptr, UInt16_MaxValue);
-	Convert_DecodeUtf8(value, ptr, len);
+	String_AppendUtf8(value, ptr, len);
 	SDL_free(ptr);
 }
 
@@ -2471,7 +2471,7 @@ static void Window_HandleTextEvent(const SDL_Event* e) {
 
 	String_InitArray(str, buffer);
 	len = String_CalcLen(e->text.text, SDL_TEXTINPUTEVENT_TEXT_SIZE);
-	Convert_DecodeUtf8(&str, e->text.text, len);
+	String_AppendUtf8(&str, e->text.text, len);
 
 	for (i = 0; i < str.length; i++) {
 		Event_RaiseInt(&KeyEvents.Press, str.buffer[i]);
