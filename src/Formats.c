@@ -670,9 +670,9 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 
 		if (IsTag(tag, "Coords")) {
 			arr = NbtTag_U8_Array(tag, 6);
-			Blocks.MinBB[id].X = arr[0] / 16.0f; Blocks.MaxBB[id].X = arr[3] / 16.0f;
-			Blocks.MinBB[id].Y = arr[1] / 16.0f; Blocks.MaxBB[id].Y = arr[4] / 16.0f;
-			Blocks.MinBB[id].Z = arr[2] / 16.0f; Blocks.MaxBB[id].Z = arr[5] / 16.0f;
+			Blocks.MinBB[id].X = (int8_t)arr[0] / 16.0f; Blocks.MaxBB[id].X = (int8_t)arr[3] / 16.0f;
+			Blocks.MinBB[id].Y = (int8_t)arr[1] / 16.0f; Blocks.MaxBB[id].Y = (int8_t)arr[4] / 16.0f;
+			Blocks.MinBB[id].Z = (int8_t)arr[2] / 16.0f; Blocks.MaxBB[id].Z = (int8_t)arr[5] / 16.0f;
 			return;
 		}
 	}
