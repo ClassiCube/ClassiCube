@@ -20,6 +20,9 @@
 
 #ifndef CC_BUILD_WEB
 #define LIQUID_ANIM_MAX 64
+#define WATER_TEX_LOC 14
+#define LAVA_TEX_LOC 30
+
 /* Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
 	mirrored at https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-lava-animation-algorithm
 	Water animation originally written by cybertoon, big thanks!
@@ -162,7 +165,7 @@ struct AnimationData {
 static Bitmap anims_bmp;
 static struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
 static int anims_count;
-static bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
+static bool anims_validated, useLavaAnim, useWaterAnim, alwaysLavaAnim, alwaysWaterAnim;
 #define ANIM_MIN_ARGS 7
 
 static void Animations_ReadDescription(struct Stream* stream, const String* path) {
@@ -240,9 +243,9 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 
 	if (!data) {
 #ifndef CC_BUILD_WEB
-		if (texLoc == 30) {
+		if (texLoc == LAVA_TEX_LOC) {
 			LavaAnimation_Tick((BitmapCol*)frame.Scan0, size);
-		} else if (texLoc == 14) {
+		} else if (texLoc == WATER_TEX_LOC) {
 			WaterAnimation_Tick((BitmapCol*)frame.Scan0, size);
 		}
 #endif
@@ -267,8 +270,8 @@ static void Animations_Apply(struct AnimationData* data) {
 
 	loc = data->TexLoc;
 #ifndef CC_BUILD_WEB
-	if (loc == 30 && anims_useLavaAnim) return;
-	if (loc == 14 && anims_useWaterAnim) return;
+	if (loc == LAVA_TEX_LOC  && useLavaAnim)  return;
+	if (loc == WATER_TEX_LOC && useWaterAnim) return;
 #endif
 	Animations_Draw(data, loc, data->FrameSize);
 }
@@ -308,6 +311,11 @@ static void Animations_Validate(void) {
 		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {
 			Chat_Add2("&cSome of the animation frames for tile (%i, %i) are at coordinates outside animations.png", &tileX, &tileY);
 		} else {
+			/* if user has water/lava animations in their default.zip, disable built-in */
+			/* However, 'usewateranim' and 'uselavaanim' files should always disable use */
+			/* of custom water/lava animations, even when they exist in animations.png */
+			if (data.TexLoc == LAVA_TEX_LOC  && !alwaysLavaAnim)  useLavaAnim  = false;
+			if (data.TexLoc == WATER_TEX_LOC && !alwaysWaterAnim) useWaterAnim = false;		
 			continue;
 		}
 
@@ -323,13 +331,13 @@ static void Animations_Tick(struct ScheduledTask* task) {
 	int i, size;
 
 #ifndef CC_BUILD_WEB
-	if (anims_useLavaAnim) {
+	if (useLavaAnim) {
 		size = min(Atlas2D.TileSize, 64);
-		Animations_Draw(NULL, 30, size);
+		Animations_Draw(NULL, LAVA_TEX_LOC, size);
 	}
-	if (anims_useWaterAnim) {
+	if (useWaterAnim) {
 		size = min(Atlas2D.TileSize, 64);
-		Animations_Draw(NULL, 14, size);
+		Animations_Draw(NULL, WATER_TEX_LOC, size);
 	}
 #endif
 
@@ -353,8 +361,10 @@ static void Animations_Tick(struct ScheduledTask* task) {
 *#########################################################################################################################*/
 static void Animations_PackChanged(void* obj) {
 	Animations_Clear();
-	anims_useLavaAnim = Animations_IsDefaultZip();
-	anims_useWaterAnim = anims_useLavaAnim;
+	useLavaAnim     = Animations_IsDefaultZip();
+	useWaterAnim    = useLavaAnim;
+	alwaysLavaAnim  = false;
+	alwaysWaterAnim = false;
 }
 
 static void Animations_FileChanged(void* obj, struct Stream* stream, const String* name) {
@@ -369,9 +379,11 @@ static void Animations_FileChanged(void* obj, struct Stream* stream, const Strin
 	} else if (String_CaselessEqualsConst(name, "animations.txt")) {
 		Animations_ReadDescription(stream, name);
 	} else if (String_CaselessEqualsConst(name, "uselavaanim")) {
-		anims_useLavaAnim = true;
+		useLavaAnim    = true;
+		alwaysLavaAnim = true;
 	} else if (String_CaselessEqualsConst(name, "usewateranim")) {
-		anims_useWaterAnim = true;
+		useWaterAnim    = true;
+		alwaysWaterAnim = true;
 	}
 }
 
