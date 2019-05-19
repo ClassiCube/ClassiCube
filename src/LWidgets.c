@@ -246,12 +246,12 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 }
 
 static void LInput_Draw(void* widget) {
+	struct LInput* w = (struct LInput*)widget;
 	String text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	Size2D size;
 
 	BitmapCol white = BITMAPCOL_CONST(255, 255, 255, 255);
-	struct LInput* w = widget;
 	if (w->Hidden) return;
 
 	String_InitArray(text, textBuffer);

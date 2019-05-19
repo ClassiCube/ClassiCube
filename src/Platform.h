@@ -50,7 +50,7 @@ CC_API ReturnCode Platform_SetCurrentDirectory(const String* path);
 CC_API ReturnCode Platform_MarkExecutable(const String* path);
 
 /* Gets the command line arguments passed to the program. */
-int  Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args);
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args);
 /* Encrypts data in a platform-specific manner. (may not be supported) */
 /* NOTE: Should only be implemented when platform natively supports it. */
 ReturnCode Platform_Encrypt(const void* data, int len, uint8_t** enc, int* encLen);

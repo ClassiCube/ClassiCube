@@ -774,7 +774,7 @@ void* Waitable_Create(void) {
 }
 
 void Waitable_Free(void* handle) {
-	struct WaitData* ptr = handle;
+	struct WaitData* ptr = (struct WaitData*)handle;
 	int res;
 	
 	res = pthread_cond_destroy(&ptr->cond);
@@ -785,13 +785,13 @@ void Waitable_Free(void* handle) {
 }
 
 void Waitable_Signal(void* handle) {
-	struct WaitData* ptr = handle;
+	struct WaitData* ptr = (struct WaitData*)handle;
 	int res = pthread_cond_signal(&ptr->cond);
 	if (res) Logger_Abort2(res, "Signalling event");
 }
 
 void Waitable_Wait(void* handle) {
-	struct WaitData* ptr = handle;
+	struct WaitData* ptr = (struct WaitData*)handle;
 	int res;
 
 	Mutex_Lock(&ptr->mutex);
@@ -801,7 +801,7 @@ void Waitable_Wait(void* handle) {
 }
 
 void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
-	struct WaitData* ptr = handle;
+	struct WaitData* ptr = (struct WaitData*)handle;
 	struct timeval tv;
 	struct timespec ts;
 	int res;
@@ -839,7 +839,7 @@ static void Font_Init(void);
 #define DPI_PIXEL  72
 #define DPI_DEVICE 96 /* TODO: GetDeviceCaps(hdc, LOGPIXELSY) in Window_Init ? */
 
-typedef struct FontData_ {
+struct FontData {
 	FT_Face face;
 	struct Stream src, file;
 	FT_StreamRec stream;
@@ -850,21 +850,21 @@ typedef struct FontData_ {
 #ifdef CC_BUILD_OSX
 	char filename[FILENAME_SIZE + 1];
 #endif
-} FontData;
+};
 
 static unsigned long FontData_Read(FT_Stream s, unsigned long offset, unsigned char* buffer, unsigned long count) {
-	FontData* data;
+	struct FontData* data;
 	ReturnCode res;
 	if (!count && offset > s->size) return 1;
 
-	data = (FontData*)s->descriptor.pointer;
+	data = (struct FontData*)s->descriptor.pointer;
 	if (s->pos != offset) data->src.Seek(&data->src, offset);
 
 	res = Stream_Read(&data->src, buffer, count);
 	return res ? 0 : count;
 }
 
-static void FontData_Free(FontData* font) {
+static void FontData_Free(struct FontData* font) {
 	int i;
 
 	/* Close the actual underlying file */
@@ -883,11 +883,11 @@ static void FontData_Free(FontData* font) {
 }
 
 static void FontData_Close(FT_Stream stream) {
-	FontData* data = (FontData*)stream->descriptor.pointer;
+	struct FontData* data = (struct FontData*)stream->descriptor.pointer;
 	FontData_Free(data);
 }
 
-static bool FontData_Init(const String* path, FontData* data, FT_Open_Args* args) {
+static bool FontData_Init(const String* path, struct FontData* data, FT_Open_Args* args) {
 	FileHandle file;
 	uint32_t size;
 
@@ -962,7 +962,7 @@ String Font_Lookup(const String* fontName, int style) {
 }
 
 void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
-	FontData* data;
+	struct FontData* data;
 	String value, path, index;
 	int faceIndex;
 	FT_Open_Args args;
@@ -976,7 +976,7 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	String_UNSAFE_Separate(&value, ',', &path, &index);
 	Convert_ParseInt(&index, &faceIndex);
 
-	data = (FontData*)Mem_Alloc(1, sizeof(FontData), "FontData");
+	data = (struct FontData*)Mem_Alloc(1, sizeof(struct FontData), "FontData");
 	if (!FontData_Init(&path, data, &args)) return;
 	desc->Handle = data;
 
@@ -987,7 +987,7 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 }
 
 void Font_Free(FontDesc* desc) {
-	FontData* data;
+	struct FontData* data;
 	FT_Error err;
 
 	desc->Size  = 0;
@@ -995,7 +995,7 @@ void Font_Free(FontDesc* desc) {
 	/* NULL for fonts created by Drawer2D_MakeFont and bitmapped text mode is on */
 	if (!desc->Handle) return;
 
-	data = (FontData*)desc->Handle;
+	data = (struct FontData*)desc->Handle;
 	err  = FT_Done_Face(data->face);
 	if (err) Logger_Abort2(err, "Deleting font failed");
 
@@ -1031,7 +1031,7 @@ static void Font_Add(const String* path, FT_Face face, int index, char type, con
 }
 
 static int Font_Register(const String* path, int faceIndex) {
-	FontData data;
+	struct FontData data;
 	FT_Open_Args args;
 	FT_Error err;
 	int flags, count;
@@ -1084,7 +1084,7 @@ static void Font_DirCallback(const String* path, void* obj) {
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
 int Platform_TextWidth(struct DrawTextArgs* args) {
-	FontData* data = (FontData*)args->Font.Handle;
+	struct FontData* data = (struct FontData*)args->Font.Handle;
 	FT_Face face = data->face;
 	String text  = args->Text;
 	int i, width = 0, charWidth;
@@ -1113,8 +1113,8 @@ int Platform_TextWidth(struct DrawTextArgs* args) {
 }
 
 int Platform_FontHeight(const FontDesc* font) {
-	FontData* data = (FontData*)font->Handle;
-	FT_Face face   = data->face;
+	struct FontData* data = (struct FontData*)font->Handle;
+	FT_Face face = data->face;
 	return TEXT_CEIL(face->size->metrics.height);
 }
 
@@ -1167,7 +1167,7 @@ static void Platform_BlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, 
 }
 
 int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) {
-	FontData* data   = (FontData*)args->Font.Handle;
+	struct FontData* data = (struct FontData*)args->Font.Handle;
 	FT_Face face     = data->face;
 	String text      = args->Text;
 	FT_Glyph* glyphs = data->glyphs;
@@ -1815,7 +1815,7 @@ static String Platform_NextArg(STRING_REF String* args) {
 	return arg;
 }
 
-int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
 	String cmdArgs = String_FromReadonly(GetCommandLineA());
 	int i;
 	Platform_NextArg(&cmdArgs); /* skip exe path */
@@ -1919,7 +1919,7 @@ ReturnCode Platform_MarkExecutable(const String* path) {
 	return chmod(str, st.st_mode) == -1 ? errno : 0;
 }
 
-int Platform_GetCommandLineArgs(int argc, STRING_REF const char** argv, String* args) {
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
 	int i, count;
 	argc--; /* skip executable path argument */
 	count = min(argc, GAME_MAX_CMDARGS);

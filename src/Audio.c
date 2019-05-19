@@ -777,7 +777,7 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	/* so we may end up decoding slightly over a second of audio */
 	chunkSize        = fmt.Channels * (fmt.SampleRate + vorbis.BlockSizes[1]);
 	samplesPerSecond = fmt.Channels * fmt.SampleRate;
-	data = Mem_Alloc(chunkSize * AUDIO_MAX_BUFFERS, 2, "Ogg - final PCM output");
+	data = (int16_t*)Mem_Alloc(chunkSize * AUDIO_MAX_BUFFERS, 2, "Ogg final output");
 
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) {

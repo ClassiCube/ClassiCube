@@ -484,8 +484,8 @@ COMPOUND "ClassicWorld" {
 		}
 	}
 }*/
-static void* Cw_GetBlocks(struct NbtTag* tag) {
-	void* ptr;
+static BlockRaw* Cw_GetBlocks(struct NbtTag* tag) {
+	BlockRaw* ptr;
 	if (NbtTag_IsSmall(tag)) {
 		ptr = Mem_Alloc(tag->DataSize, 1, ".cw map blocks");
 		Mem_Copy(ptr, tag->Value.Small, tag->DataSize);

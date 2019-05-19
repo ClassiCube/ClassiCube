@@ -19,7 +19,7 @@
 # You should now be able to compile both 32 and 64 bit variants of the client for linux
 # However! The default libcurl package will produce an executable that won't run on Arch (due to defining CURL_OPENSSL_3)
 # As such, you may want to uninstall libcurl package, manually compile curl's source code for both 32 and 64 bit, 
-# then add the .so files to /usr/lib/i386-linux-gnu and /usr/lib/i386-linux-gnu/
+# then add the .so files to /usr/lib/i386-linux-gnu and /usr/lib/x86_64-linux-gnu/
 cd ~/client/src/
 echo $PWD
 

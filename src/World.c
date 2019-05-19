@@ -91,7 +91,7 @@ void World_SetBlock(int x, int y, int z, BlockID block) {
 	/* defer allocation of second map array if possible */
 	if (World.Blocks == World.Blocks2) {
 		if (block < 256) return;
-		World_SetMapUpper(Mem_AllocCleared(World.Volume, 1, "blocks array upper"));
+		World_SetMapUpper((BlockRaw*)Mem_AllocCleared(World.Volume, 1, "map blocks upper"));
 	}
 	World.Blocks2[i] = (BlockRaw)(block >> 8);
 }
