@@ -192,22 +192,22 @@ void Chat_AddRaw(const char* raw) {
 }
 void Chat_Add(const String* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
 
-void Chat_AddOf(const String* text, MsgType type) {
-	Event_RaiseChat(&ChatEvents.ChatReceived, text, type);
+void Chat_AddOf(const String* text, int msgType) {
+	Event_RaiseChat(&ChatEvents.ChatReceived, text, msgType);
 
-	if (type == MSG_TYPE_NORMAL) {
+	if (msgType == MSG_TYPE_NORMAL) {
 		StringsBuffer_Add(&Chat_Log, text);
 		Chat_AppendLog(text);
 		Chat_AppendLogTime();
-	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
-		String_Copy(&Chat_Status[type - MSG_TYPE_STATUS_1], text);
-	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
-		String_Copy(&Chat_BottomRight[type - MSG_TYPE_BOTTOMRIGHT_1], text);
-	} else if (type == MSG_TYPE_ANNOUNCEMENT) {
+	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_3) {
+		String_Copy(&Chat_Status[msgType - MSG_TYPE_STATUS_1], text);
+	} else if (msgType >= MSG_TYPE_BOTTOMRIGHT_1 && msgType <= MSG_TYPE_BOTTOMRIGHT_3) {
+		String_Copy(&Chat_BottomRight[msgType - MSG_TYPE_BOTTOMRIGHT_1], text);
+	} else if (msgType == MSG_TYPE_ANNOUNCEMENT) {
 		String_Copy(&Chat_Announcement, text);
 		Chat_AnnouncementReceived = DateTime_CurrentUTC_MS();
-	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_3) {
-		String_Copy(&Chat_ClientStatus[type - MSG_TYPE_CLIENTSTATUS_1], text);
+	} else if (msgType >= MSG_TYPE_CLIENTSTATUS_1 && msgType <= MSG_TYPE_CLIENTSTATUS_3) {
+		String_Copy(&Chat_ClientStatus[msgType - MSG_TYPE_CLIENTSTATUS_1], text);
 	}
 }
 

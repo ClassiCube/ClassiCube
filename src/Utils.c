@@ -196,17 +196,17 @@ const uint32_t Utils_Crc32Table[256] = {
 	0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D,
 };
 
-void Utils_Resize(void** buffer, uint32_t* maxElems, uint32_t elemSize, uint32_t defElems, uint32_t expandElems) {
+void Utils_Resize(void** buffer, int* capacity, uint32_t elemSize, int defCapacity, int expandElems) {
 	/* We use a statically allocated buffer initally, so can't realloc first time */
-	uint32_t curElems = *maxElems, elems = curElems + expandElems;
-	*maxElems = elems;
+	int curCapacity = *capacity, newCapacity = curCapacity + expandElems;
+	*capacity = newCapacity;
 
-	if (curElems <= defElems) {
-		void* resized = Mem_Alloc(elems, elemSize, "initing array");
-		Mem_Copy(resized, *buffer, curElems * elemSize);
+	if (curCapacity <= defCapacity) {
+		void* resized = Mem_Alloc(newCapacity, elemSize, "initing array");
+		Mem_Copy(resized, *buffer, (uint32_t)curCapacity * elemSize);
 		*buffer = resized;
 	} else {
-		*buffer = Mem_Realloc(*buffer, elems, elemSize, "resizing array");
+		*buffer = Mem_Realloc(*buffer, newCapacity, elemSize, "resizing array");
 	}
 }
 

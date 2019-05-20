@@ -18,16 +18,15 @@
 #include "Options.h"
 #include "Logger.h"
 
-#ifndef CC_BUILD_WEB
 #define LIQUID_ANIM_MAX 64
 #define WATER_TEX_LOC 14
-#define LAVA_TEX_LOC 30
+#define LAVA_TEX_LOC  30
 
+#ifndef CC_BUILD_WEB
 /* Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
 	mirrored at https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-lava-animation-algorithm
 	Water animation originally written by cybertoon, big thanks!
 */
-
 /*########################################################################################################################*
 *-----------------------------------------------------Lava animation------------------------------------------------------*
 *#########################################################################################################################*/
@@ -516,25 +515,25 @@ void Atlas_Free(void) {
 *#########################################################################################################################*/
 /* Because I didn't store milliseconds in original C# client */
 #define TEXCACHE_TICKS_PER_MS 10000
-static struct EntryList cache_accepted, cache_denied, cache_eTags, cache_lastModified;
+static struct EntryList acceptedList, deniedList, etagCache, lastModifiedCache;
 
 void TextureCache_Init(void) {
-	EntryList_Init(&cache_accepted,     "texturecache", "acceptedurls.txt", ' ');
-	EntryList_Init(&cache_denied,       "texturecache", "deniedurls.txt",   ' ');
-	EntryList_Init(&cache_eTags,        "texturecache", "etags.txt",        ' ');
-	EntryList_Init(&cache_lastModified, "texturecache", "lastmodified.txt", ' ');
+	EntryList_Init(&acceptedList,      "texturecache", "acceptedurls.txt", ' ');
+	EntryList_Init(&deniedList,        "texturecache", "deniedurls.txt",   ' ');
+	EntryList_Init(&etagCache,         "texturecache", "etags.txt",        ' ');
+	EntryList_Init(&lastModifiedCache, "texturecache", "lastmodified.txt", ' ');
 }
 
-bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&cache_accepted, url) >= 0; }
-bool TextureCache_HasDenied(const String* url)   { return EntryList_Find(&cache_denied,   url) >= 0; }
+bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&acceptedList, url) >= 0; }
+bool TextureCache_HasDenied(const String* url)   { return EntryList_Find(&deniedList,   url) >= 0; }
 
 void TextureCache_Accept(const String* url)      { 
-	EntryList_Set(&cache_accepted, url, &String_Empty); 
-	EntryList_Save(&cache_accepted);
+	EntryList_Set(&acceptedList, url, &String_Empty); 
+	EntryList_Save(&acceptedList);
 }
 void TextureCache_Deny(const String* url)        { 
-	EntryList_Set(&cache_denied,   url, &String_Empty); 
-	EntryList_Save(&cache_denied);
+	EntryList_Set(&deniedList,   url, &String_Empty); 
+	EntryList_Save(&deniedList);
 }
 
 CC_NOINLINE static void TextureCache_MakePath(String* path, const String* url) {
@@ -581,7 +580,7 @@ void TextureCache_GetLastModified(const String* url, TimeMS* time) {
 	ReturnCode res;
 
 	String_InitArray(entry, entryBuffer);
-	TexturePack_GetFromTags(url, &entry, &cache_lastModified);
+	TexturePack_GetFromTags(url, &entry, &lastModifiedCache);
 
 	if (entry.length && Convert_ParseUInt64(&entry, time)) {
 		*time /= TEXCACHE_TICKS_PER_MS;
@@ -595,7 +594,7 @@ void TextureCache_GetLastModified(const String* url, TimeMS* time) {
 }
 
 void TextureCache_GetETag(const String* url, String* etag) {
-	TexturePack_GetFromTags(url, etag, &cache_eTags);
+	TexturePack_GetFromTags(url, etag, &etagCache);
 }
 
 void TextureCache_Set(const String* url, const void* data, uint32_t length) {
@@ -621,7 +620,7 @@ CC_NOINLINE static void TextureCache_SetEntry(const String* url, const String* d
 
 void TextureCache_SetETag(const String* url, const String* etag) {
 	if (!etag->length) return;
-	TextureCache_SetEntry(url, etag, &cache_eTags);
+	TextureCache_SetEntry(url, etag, &etagCache);
 }
 
 void TextureCache_SetLastModified(const String* url, const TimeMS* lastModified) {
@@ -631,7 +630,7 @@ void TextureCache_SetLastModified(const String* url, const TimeMS* lastModified)
 
 	String_InitArray(data, dataBuffer);
 	String_AppendUInt64(&data, ticks);
-	TextureCache_SetEntry(url, &data, &cache_lastModified);
+	TextureCache_SetEntry(url, &data, &lastModifiedCache);
 }
 
 

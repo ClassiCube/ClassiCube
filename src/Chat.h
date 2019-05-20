@@ -9,7 +9,7 @@
 struct IGameComponent;
 extern struct IGameComponent Chat_Component;
 
-typedef enum MsgType_ {
+enum MsgType {
 	MSG_TYPE_NORMAL = 0,
 	MSG_TYPE_STATUS_1 = 1,
 	MSG_TYPE_STATUS_2 = 2,
@@ -20,8 +20,8 @@ typedef enum MsgType_ {
 	MSG_TYPE_ANNOUNCEMENT = 100,
 	MSG_TYPE_CLIENTSTATUS_1 = 256, /* Cuboid messages */
 	MSG_TYPE_CLIENTSTATUS_2 = 257, /* Clipboard invalid character */
-	MSG_TYPE_CLIENTSTATUS_3 = 258  /* Tab list matching names*/
-} MsgType;
+	MSG_TYPE_CLIENTSTATUS_3 = 258  /* Tab list matching names */
+};
 
 extern String Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
 extern StringsBuffer Chat_Log, Chat_InputLog;
@@ -59,7 +59,7 @@ CC_API void Chat_Add(const String* text);
 /* Adds a chat message, raising ChatEvents.ChatReceived event. */
 /* MSG_TYPE_NORMAL is usually used for player chat and command messages. */
 /* Other message types are usually used for info/status messages. */
-CC_API void Chat_AddOf(const String* text, MsgType type);
+CC_API void Chat_AddOf(const String* text, int msgType);
 /* Shorthand for Chat_AddOf(String_FromReadonly(raw), MSG_TYPE_NORMAL) */
 void Chat_AddRaw(const char* raw);
 

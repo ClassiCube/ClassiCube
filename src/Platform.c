@@ -763,7 +763,7 @@ struct WaitData {
 };
 
 void* Waitable_Create(void) {
-	struct WaitData* ptr = Mem_Alloc(1, sizeof(struct WaitData), "waitable");
+	struct WaitData* ptr = (struct WaitData*)Mem_Alloc(1, sizeof(struct WaitData), "waitable");
 	int res;
 	
 	res = pthread_cond_init(&ptr->cond, NULL);
