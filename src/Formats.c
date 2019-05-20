@@ -523,8 +523,8 @@ static void Cw_Callback_2(struct NbtTag* tag) {
 	if (IsTag(tag, "X")) { p->Spawn.X = NbtTag_I16(tag); return; }
 	if (IsTag(tag, "Y")) { p->Spawn.Y = NbtTag_I16(tag); return; }
 	if (IsTag(tag, "Z")) { p->Spawn.Z = NbtTag_I16(tag); return; }
-	if (IsTag(tag, "H")) { p->SpawnRotY  = Math_Deg2Packed(NbtTag_U8(tag)); return; }
-	if (IsTag(tag, "P")) { p->SpawnHeadX = Math_Deg2Packed(NbtTag_U8(tag)); return; }
+	if (IsTag(tag, "H")) { p->SpawnRotY  = Math_Packed2Deg(NbtTag_U8(tag)); return; }
+	if (IsTag(tag, "P")) { p->SpawnHeadX = Math_Packed2Deg(NbtTag_U8(tag)); return; }
 }
 
 static BlockID cw_curID;
