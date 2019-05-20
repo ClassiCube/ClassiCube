@@ -45,7 +45,7 @@ uint32_t Utils_CRC32(const uint8_t* data, uint32_t length);
 /* CRC32 lookup table, for faster CRC32 calculations. */
 /* NOTE: This cannot be just indexed by byte value - see Utils_CRC32 implementation. */
 extern const uint32_t Utils_Crc32Table[256];
-CC_NOINLINE void* Utils_Resize(void* buffer, uint32_t* maxElems, uint32_t elemSize, uint32_t defElems, uint32_t expandElems);
+CC_NOINLINE void Utils_Resize(void** buffer, uint32_t* maxElems, uint32_t elemSize, uint32_t defElems, uint32_t expandElems);
 CC_NOINLINE bool Utils_ParseIP(const String* ip, uint8_t* data);
 
 /* Converts blocks of 3 bytes into 4 ASCII characters. (pads if needed) */

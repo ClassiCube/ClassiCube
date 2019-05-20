@@ -1018,10 +1018,11 @@ static void LTable_MouseWheel(void* widget, float delta) {
 }
 
 /* Stops an in-progress dragging of resizing column. */
-static void LTable_StopDragging(struct LTable* table) {
-	table->DraggingColumn    = -1;
-	table->DraggingScrollbar = false;
-	table->MouseOffset       = 0;
+static void LTable_StopDragging(void* widget) {
+	struct LTable* w = (struct LTable*)widget;
+	w->DraggingColumn    = -1;
+	w->DraggingScrollbar = false;
+	w->MouseOffset       = 0;
 }
 
 void LTable_Reposition(struct LTable* w) {
@@ -1047,10 +1048,10 @@ static void LTable_Draw(void* widget) {
 }
 
 static struct LWidgetVTABLE ltable_VTABLE = {
-	LTable_Draw, NULL,
+	LTable_Draw,      NULL,
 	LTable_KeyDown,   NULL, /* Key    */
 	LTable_MouseMove, NULL, /* Hover  */
-	LTable_MouseDown, LTable_StopDragging,  /* Select */
+	LTable_MouseDown, LTable_StopDragging, /* Select */
 	LTable_MouseWheel,      /* Wheel */
 };
 void LTable_Init(struct LTable* w, const FontDesc* hdrFont, const FontDesc* rowFont) {

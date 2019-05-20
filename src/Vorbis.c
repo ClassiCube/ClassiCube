@@ -347,7 +347,7 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 	}
 	c->LookupValues = lookupValues;
 
-	c->Multiplicands = Mem_Alloc(lookupValues, 2, "multiplicands");
+	c->Multiplicands = (uint16_t*)Mem_Alloc(lookupValues, 2, "multiplicands");
 	for (i = 0; i < lookupValues; i++) {
 		c->Multiplicands[i] = Vorbis_ReadBits(ctx, valueBits);
 	}
@@ -1192,7 +1192,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	ReturnCode res;
 
 	count = Vorbis_ReadBits(ctx, 8) + 1;
-	ctx->Codebooks = Mem_Alloc(count, sizeof(struct Codebook), "vorbis codebooks");
+	ctx->Codebooks = (struct Codebook*)Mem_Alloc(count, sizeof(struct Codebook), "vorbis codebooks");
 	for (i = 0; i < count; i++) {
 		res = Codebook_DecodeSetup(ctx, &ctx->Codebooks[i]);
 		if (res) return res;
@@ -1206,7 +1206,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	}
 
 	count = Vorbis_ReadBits(ctx, 6) + 1;
-	ctx->Floors = Mem_Alloc(count, sizeof(struct Floor), "vorbis floors");
+	ctx->Floors = (struct Floor*)Mem_Alloc(count, sizeof(struct Floor), "vorbis floors");
 	for (i = 0; i < count; i++) {
 		int floor = Vorbis_ReadBits(ctx, 16);
 		if (floor != 1) return VORBIS_ERR_FLOOR_TYPE;
@@ -1215,7 +1215,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	}
 
 	count = Vorbis_ReadBits(ctx, 6) + 1;
-	ctx->Residues = Mem_Alloc(count, sizeof(struct Residue), "vorbis residues");
+	ctx->Residues = (struct Residue*)Mem_Alloc(count, sizeof(struct Residue), "vorbis residues");
 	for (i = 0; i < count; i++) {
 		int residue = Vorbis_ReadBits(ctx, 16);
 		if (residue > 2) return VORBIS_ERR_FLOOR_TYPE;
@@ -1224,7 +1224,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	}
 
 	count = Vorbis_ReadBits(ctx, 6) + 1;
-	ctx->Mappings = Mem_Alloc(count, sizeof(struct Mapping), "vorbis mappings");
+	ctx->Mappings = (struct Mapping*)Mem_Alloc(count, sizeof(struct Mapping), "vorbis mappings");
 	for (i = 0; i < count; i++) {
 		int mapping = Vorbis_ReadBits(ctx, 16);
 		if (mapping != 0) return VORBIS_ERR_MAPPING_TYPE;
@@ -1233,7 +1233,7 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	}
 
 	count = Vorbis_ReadBits(ctx, 6) + 1;
-	ctx->Modes = Mem_Alloc(count, sizeof(struct Mode), "vorbis modes");
+	ctx->Modes = (struct Mode*)Mem_Alloc(count, sizeof(struct Mode), "vorbis modes");
 	for (i = 0; i < count; i++) {
 		res = Mode_DecodeSetup(ctx, &ctx->Modes[i]);
 		if (res) return res;
@@ -1259,15 +1259,15 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 
 	/* window calculations can be pre-computed here */
 	count = ctx->BlockSizes[0] + ctx->BlockSizes[1];
-	ctx->WindowRaw = Mem_Alloc(count, sizeof(float), "Vorbis windows");
+	ctx->WindowRaw = (float*)Mem_Alloc(count, sizeof(float), "Vorbis windows");
 	ctx->Windows[0].Prev = ctx->WindowRaw;
 	ctx->Windows[1].Prev = ctx->WindowRaw + ctx->BlockSizes[0];
 
 	Vorbis_CalcWindow(&ctx->Windows[0], ctx->BlockSizes[0]);
 	Vorbis_CalcWindow(&ctx->Windows[1], ctx->BlockSizes[1]);
 
-	count = ctx->Channels * ctx->BlockSizes[1];
-	ctx->Temp      = Mem_AllocCleared(count * 3, sizeof(float), "Vorbis values");
+	count     = ctx->Channels * ctx->BlockSizes[1];
+	ctx->Temp = (float*)Mem_AllocCleared(count * 3, sizeof(float), "Vorbis values");
 	ctx->Values[0] = ctx->Temp + count;
 	ctx->Values[1] = ctx->Temp + count * 2;
 

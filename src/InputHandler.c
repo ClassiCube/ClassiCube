@@ -18,6 +18,7 @@
 #include "Menus.h"
 #include "Gui.h"
 #include "PacketHandlers.h"
+#include "AxisLinesRenderer.h"
 
 static bool input_buttonsDown[3];
 static int input_pickingId = -1;
@@ -154,7 +155,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 			"  &eSmooth camera is &aenabled",
 			"  &eSmooth camera is &cdisabled");
 	} else if (key == KeyBinds[KEYBIND_AXIS_LINES]) {
-		InputHandler_Toggle(key, &Game_ShowAxisLines,
+		InputHandler_Toggle(key, &AxisLinesRenderer_Enabled,
 			"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 			"  &eAxis lines no longer show");
 	} else if (key == KeyBinds[KEYBIND_AUTOROTATE]) {

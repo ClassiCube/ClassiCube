@@ -814,8 +814,8 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 	if (!buffer->_FlagsBufferSize) StringsBuffer_Init(buffer);
 
 	if (buffer->Count == buffer->_FlagsBufferSize) {
-		buffer->FlagsBuffer = Utils_Resize(buffer->FlagsBuffer, &buffer->_FlagsBufferSize, 
-											4, STRINGSBUFFER_FLAGS_DEF_ELEMS, 512);
+		Utils_Resize((void**)&buffer->FlagsBuffer, &buffer->_FlagsBufferSize, 
+					4, STRINGSBUFFER_FLAGS_DEF_ELEMS, 512);
 	}
 
 	if (str->length > STRINGSBUFFER_LEN_MASK) {
@@ -824,8 +824,8 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 
 	textOffset = buffer->TotalLength;
 	if (textOffset + str->length >= buffer->_TextBufferSize) {
-		buffer->TextBuffer = Utils_Resize(buffer->TextBuffer, &buffer->_TextBufferSize,
-											1, STRINGSBUFFER_BUFFER_DEF_SIZE, 8192);
+		Utils_Resize((void**)&buffer->TextBuffer, &buffer->_TextBufferSize,
+					1, STRINGSBUFFER_BUFFER_DEF_SIZE, 8192);
 	}
 
 	Mem_Copy(&buffer->TextBuffer[textOffset], str->buffer, str->length);

@@ -33,7 +33,6 @@ extern int Game_Fov;
 extern int Game_DefaultFov, Game_ZoomFov;
 
 extern int  Game_FpsLimit;
-extern bool Game_ShowAxisLines;
 extern bool Game_SimpleArmsAnim;
 extern int  Game_Vertices;
 

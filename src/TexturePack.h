@@ -93,7 +93,7 @@ void TextureCache_GetLastModified(const String* url, TimeMS* time);
 /* Attempts to get the ETag header cached for the given URL. */
 void TextureCache_GetETag(const String* url, String* etag);
 /* Sets the cached data for the given url. */
-void TextureCache_Set(const String* url, uint8_t* data, uint32_t length);
+void TextureCache_Set(const String* url, const void* data, uint32_t length);
 /* Sets the cached ETag header for the given url. */
 void TextureCache_SetETag(const String* url, const String* etag);
 /* Sets the cached Last-Modified header for the given url. */

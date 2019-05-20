@@ -37,16 +37,16 @@ void HttpRequest_Free(struct HttpRequest* request) {
 *#########################################################################################################################*/
 #define HTTP_DEF_ELEMS 10
 struct RequestList {
-	int MaxElems, Count;
+	int Count, Capacity;
 	struct HttpRequest* Entries;
 	struct HttpRequest DefaultEntries[HTTP_DEF_ELEMS];
 };
 
 /* Expands request list buffer if there is no room for another request */
 static void RequestList_EnsureSpace(struct RequestList* list) {
-	if (list->Count < list->MaxElems) return;
-	list->Entries = Utils_Resize(list->Entries, &list->MaxElems,
-									sizeof(struct HttpRequest), HTTP_DEF_ELEMS, 10);
+	if (list->Count < list->Capacity) return;
+	Utils_Resize((void**)&list->Entries, &list->Capacity,
+				sizeof(struct HttpRequest), HTTP_DEF_ELEMS, 10);
 }
 
 /* Adds another request to end (for normal priority request) */
@@ -94,7 +94,7 @@ static int RequestList_Find(struct RequestList* list, const String* id, struct H
 
 /* Resets state to default */
 static void RequestList_Init(struct RequestList* list) {
-	list->MaxElems = HTTP_DEF_ELEMS;
+	list->Capacity = HTTP_DEF_ELEMS;
 	list->Count    = 0;
 	list->Entries = list->DefaultEntries;
 }
@@ -471,12 +471,12 @@ static ReturnCode Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle)
 static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 	uint8_t* buffer;
 	uint32_t size, totalRead;
-	uint32_t read, avail;
+	DWORD read, avail;
 	bool success;
 	
 	http_curProgress = 0;
 	size      = req->ContentLength ? req->ContentLength : 1;
-	buffer    = Mem_Alloc(size, 1, "http get data");
+	buffer    = (uint8_t*)Mem_Alloc(size, 1, "http get data");
 	totalRead = 0;
 
 	req->Data = buffer;
@@ -489,7 +489,7 @@ static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 		/* expand if buffer is too small (some servers don't give content length) */
 		if (totalRead + avail > size) {
 			size   = totalRead + avail;
-			buffer = Mem_Realloc(buffer, size, 1, "http inc data");
+			buffer = (uint8_t*)Mem_Realloc(buffer, size, 1, "http inc data");
 			req->Data = buffer;
 		}
 
@@ -577,7 +577,8 @@ static struct curl_slist* Http_MakeHeaders(struct HttpRequest* req) {
 }
 
 /* Processes a HTTP header downloaded from the server */
-static size_t Http_ProcessHeader(char *buffer, size_t size, size_t nitems, struct HttpRequest* req) {
+static size_t Http_ProcessHeader(char *buffer, size_t size, size_t nitems, void* userdata) {
+	struct HttpRequest* req = (struct HttpRequest*)userdata;
 	String tmp; char tmpBuffer[STRING_SIZE + 1];
 	String line, name, value;
 	time_t time;
@@ -610,19 +611,20 @@ static size_t Http_ProcessHeader(char *buffer, size_t size, size_t nitems, struc
 
 static int curlBufferSize;
 /* Processes a chunk of data downloaded from the web server */
-static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, struct HttpRequest* req) {
+static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, void* userdata) {
+	struct HttpRequest* req = (struct HttpRequest*)userdata;
 	uint8_t* dst;
 
 	if (!curlBufferSize) {
 		curlBufferSize = req->ContentLength ? req->ContentLength : 1;
-		req->Data = Mem_Alloc(curlBufferSize, 1, "http get data");
+		req->Data = (uint8_t*)Mem_Alloc(curlBufferSize, 1, "http get data");
 		req->Size = 0;
 	}
 
 	/* expand buffer if needed */
 	if (req->Size + nitems > curlBufferSize) {
 		curlBufferSize = req->Size + nitems;
-		req->Data      = Mem_Realloc(req->Data, curlBufferSize, 1, "http inc data");
+		req->Data      = (uint8_t*)Mem_Realloc(req->Data, curlBufferSize, 1, "http inc data");
 	}
 
 	dst = (uint8_t*)req->Data + req->Size;

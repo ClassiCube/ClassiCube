@@ -598,7 +598,7 @@ void TextureCache_GetETag(const String* url, String* etag) {
 	TexturePack_GetFromTags(url, etag, &cache_eTags);
 }
 
-void TextureCache_Set(const String* url, uint8_t* data, uint32_t length) {
+void TextureCache_Set(const String* url, const void* data, uint32_t length) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	ReturnCode res;
 

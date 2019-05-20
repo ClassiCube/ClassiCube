@@ -221,7 +221,7 @@ void LWebTask_Tick(struct LWebTask* task) {
 	task->Working   = false;
 	task->Completed = true;
 	task->Success   = req.Success;
-	if (task->Success) task->Handle(req.Data, req.Size);
+	if (task->Success) task->Handle((uint8_t*)req.Data, req.Size);
 	HttpRequest_Free(&req);
 }
 
@@ -559,13 +559,13 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 *-----------------------------------------------------FetchFlagsTask-----------------------------------------------------*
 *#########################################################################################################################*/
 struct FetchFlagsData FetchFlagsTask;
-static int flagsCount, flagsBufferCount;
-struct FlagData {
-	Bitmap  Bmp;
+static int flagsCount, flagsCapacity;
+struct Flag {
+	Bitmap Bmp;
 	String Name;
 	char _nameBuffer[8];
 };
-static struct FlagData* flags;
+static struct Flag* flags;
 
 static void FetchFlagsTask_DownloadNext(void);
 static void FetchFlagsTask_Handle(uint8_t* data, uint32_t len) {
@@ -597,13 +597,13 @@ static void FetchFlagsTask_DownloadNext(void) {
 }
 
 static void FetchFlagsTask_Ensure(void) {
-	if (flagsCount < flagsBufferCount) return;
-	flagsBufferCount = flagsCount + 10;
+	if (flagsCount < flagsCapacity) return;
+	flagsCapacity = flagsCount + 10;
 
 	if (flags) {
-		flags = Mem_Realloc(flags, flagsBufferCount, sizeof(struct FlagData), "flags");
+		flags = (struct Flag*)Mem_Realloc(flags, flagsCapacity, sizeof(struct Flag), "flags");
 	} else {
-		flags = Mem_Alloc(flagsBufferCount, sizeof(struct FlagData), "flags");
+		flags = (struct Flag*)Mem_Alloc(flagsCapacity,          sizeof(struct Flag), "flags");
 	}
 }
 

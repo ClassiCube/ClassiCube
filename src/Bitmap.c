@@ -57,14 +57,14 @@ enum PngFilter {
 };
 
 typedef void (*Png_RowExpander)(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst);
-static uint8_t png_sig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
+const static uint8_t pngSig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 bool Png_Detect(const uint8_t* data, uint32_t len) {
 	int i;
 	if (len < PNG_SIG_SIZE) return false;
 
 	for (i = 0; i < PNG_SIG_SIZE; i++) {
-		if (data[i] != png_sig[i]) return false;
+		if (data[i] != pngSig[i]) return false;
 	}
 	return true;
 }
@@ -615,7 +615,7 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 	if ((res = stream->Position(stream, &stream_beg))) return res;
 
 	if (!selectRow) selectRow = Png_SelectRow;
-	if ((res = Stream_Write(stream, png_sig, PNG_SIG_SIZE))) return res;
+	if ((res = Stream_Write(stream, pngSig, PNG_SIG_SIZE))) return res;
 	Stream_WriteonlyCrc32(&chunk, stream);
 
 	/* Write header chunk */

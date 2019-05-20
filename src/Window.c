@@ -679,7 +679,7 @@ void Window_InitRaw(Bitmap* bmp) {
 	hdr.bmiHeader.biBitCount = 32;
 	hdr.bmiHeader.biPlanes   = 1;
 
-	draw_DIB = CreateDIBSection(draw_DC, &hdr, 0, &bmp->Scan0, NULL, 0);
+	draw_DIB = CreateDIBSection(draw_DC, &hdr, 0, (void**)&bmp->Scan0, NULL, 0);
 }
 
 void Window_DrawRaw(Rect2D r) {

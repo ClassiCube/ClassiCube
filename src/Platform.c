@@ -652,7 +652,7 @@ void Thread_Join(void* handle) {
 }
 
 void* Mutex_Create(void) {
-	CRITICAL_SECTION* ptr = Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
+	CRITICAL_SECTION* ptr = (CRITICAL_SECTION*)Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
 	InitializeCriticalSection(ptr);
 	return ptr;
 }

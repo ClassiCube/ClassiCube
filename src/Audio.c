@@ -143,7 +143,7 @@ ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, uint32_t da
 	ReturnCode res;
 
 	Mem_Set(hdr, 0, sizeof(WAVEHDR));
-	hdr->lpData         = data;
+	hdr->lpData         = (LPSTR)data;
 	hdr->dwBufferLength = dataSize;
 	hdr->dwLoops        = 1;
 	
@@ -581,7 +581,6 @@ static struct Sound* Soundboard_PickRandom(struct Soundboard* board, uint8_t typ
 *#########################################################################################################################*/
 struct SoundOutput { AudioHandle Handle; void* Buffer; uint32_t BufferSize; };
 #define AUDIO_MAX_HANDLES 6
-#define AUDIO_DEF_ELEMS 0
 #define HANDLE_INV -1
 #define SOUND_INV { HANDLE_INV, NULL, 0 }
 
@@ -596,18 +595,19 @@ CC_NOINLINE static void Sounds_Fail(ReturnCode res) {
 }
 
 static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, int volume) {
-	uint32_t expandBy;
 	void* data = snd->Data;
 	ReturnCode res;
-
 	if ((res = Audio_SetFormat(output->Handle, fmt))) { Sounds_Fail(res); return; }
 	
 	/* copy to temp buffer to apply volume */
 	if (volume < 100) {		
 		if (output->BufferSize < snd->Size) {
-			expandBy       = snd->Size - output->BufferSize;
-			output->Buffer = Utils_Resize(output->Buffer, &output->BufferSize, 
-											1, AUDIO_DEF_ELEMS, expandBy);
+			/* TODO: check if we can realloc NULL without a problem */
+			if (output->Buffer) {
+				output->Buffer = Mem_Realloc(output->Buffer, snd->Size, 1, "sound temp buffer");
+			} else {
+				output->Buffer = Mem_Alloc(snd->Size, 1, "sound temp buffer");
+			}
 		}
 		data = output->Buffer;
 

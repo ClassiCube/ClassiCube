@@ -22,7 +22,7 @@
 *#########################################################################################################################*/
 static ReturnCode Map_ReadBlocks(struct Stream* stream) {
 	World.Volume = World.Width * World.Length * World.Height;
-	World.Blocks = Mem_Alloc(World.Volume, 1, "map blocks");
+	World.Blocks = (BlockRaw*)Mem_Alloc(World.Volume, 1, "map blocks");
 	return Stream_Read(stream, World.Blocks, World.Volume);
 }
 
@@ -398,7 +398,7 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 		if (NbtTag_IsSmall(&tag)) {
 			res = Stream_Read(stream, tag.Value.Small, tag.DataSize);
 		} else {
-			tag.Value.Big = Mem_Alloc(tag.DataSize, 1, "NBT data");
+			tag.Value.Big = (uint8_t*)Mem_Alloc(tag.DataSize, 1, "NBT data");
 			res = Stream_Read(stream, tag.Value.Big, tag.DataSize);
 			if (res) { Mem_Free(tag.Value.Big); }
 		}

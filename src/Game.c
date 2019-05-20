@@ -42,7 +42,7 @@ int Game_ViewDistance, Game_MaxViewDistance, Game_UserViewDistance;
 int Game_Fov, Game_DefaultFov, Game_ZoomFov;
 
 int  Game_FpsLimit, Game_Vertices;
-bool Game_ShowAxisLines, Game_SimpleArmsAnim;
+bool Game_SimpleArmsAnim;
 
 bool Game_ClassicMode, Game_ClassicHacks;
 bool Game_AllowCustomBlocks, Game_UseCPE;

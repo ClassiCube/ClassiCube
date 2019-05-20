@@ -51,7 +51,7 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 
 	capacity = queue->EntriesSize * 2;
 	if (capacity < 32) capacity = 32;
-	entries = Mem_Alloc(capacity, 4, "physics tick queue");
+	entries = (uint32_t*)Mem_Alloc(capacity, 4, "physics tick queue");
 
 	for (i = 0; i < queue->Size; i++) {
 		idx = (queue->Head + i) & queue->EntriesMask;

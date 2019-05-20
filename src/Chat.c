@@ -29,23 +29,23 @@ bool Chat_Logging;
 *-------------------------------------------------------Chat logging------------------------------------------------------*
 *#########################################################################################################################*/
 #define CHAT_LOGTIMES_DEF_ELEMS 256
-static TimeMS Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
-static TimeMS* Chat_LogTimes = Chat_DefaultLogTimes;
-static int Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
+static TimeMS defaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
+static TimeMS* logTimes = defaultLogTimes;
+static int logTimesCapacity = CHAT_LOGTIMES_DEF_ELEMS, logTimesCount;
 
 TimeMS Chat_GetLogTime(int i) {
-	if (i < 0 || i >= Chat_LogTimesCount) Logger_Abort("Tried to get time past LogTime end");
-	return Chat_LogTimes[i];
+	if (i < 0 || i >= logTimesCount) Logger_Abort("Tried to get time past LogTime end");
+	return logTimes[i];
 }
 
 static void Chat_AppendLogTime(void) {
 	TimeMS now = DateTime_CurrentUTC_MS();
 
-	if (Chat_LogTimesCount == Chat_LogTimesMax) {
-		Chat_LogTimes = Utils_Resize(Chat_LogTimes, &Chat_LogTimesMax,
-									sizeof(TimeMS), CHAT_LOGTIMES_DEF_ELEMS, 512);
+	if (logTimesCount == logTimesCapacity) {
+		Utils_Resize((void**)&logTimes, &logTimesCapacity,
+					sizeof(TimeMS), CHAT_LOGTIMES_DEF_ELEMS, 512);
 	}
-	Chat_LogTimes[Chat_LogTimesCount++] = now;
+	logTimes[logTimesCount++] = now;
 }
 
 #ifdef CC_BUILD_WEB
@@ -605,9 +605,9 @@ static void Chat_Free(void) {
 	Chat_CloseLog();
 	cmds_head = NULL;
 
-	if (Chat_LogTimes != Chat_DefaultLogTimes) Mem_Free(Chat_LogTimes);
-	Chat_LogTimes      = Chat_DefaultLogTimes;
-	Chat_LogTimesCount = 0;
+	if (logTimes != defaultLogTimes) Mem_Free(logTimes);
+	logTimes      = defaultLogTimes;
+	logTimesCount = 0;
 
 	StringsBuffer_Clear(&Chat_Log);
 	StringsBuffer_Clear(&Chat_InputLog);

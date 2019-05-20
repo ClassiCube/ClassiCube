@@ -206,7 +206,7 @@ static void NotchyGen_FloodFill(int index, BlockRaw block) {
 
 		/* need to increase stack */
 		if (count >= limit - FACE_COUNT) {
-			stack = Utils_Resize(stack, &limit, 4, STACK_FAST, STACK_FAST);
+			Utils_Resize((void**)&stack, &limit, 4, STACK_FAST, STACK_FAST);
 		}
 
 		if (x > 0)          { stack[count++] = index - 1; }

@@ -619,7 +619,7 @@ static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) 
 
 	res = Vorbis_DecodeHeaders(ctx);
 	if (res) { Logger_Warn(res, "decoding .ogg header"); return; }
-	samples = Mem_Alloc(ctx->BlockSizes[1] * ctx->Channels, 2, ".ogg samples");
+	samples = (int16_t*)Mem_Alloc(ctx->BlockSizes[1] * ctx->Channels, 2, ".ogg samples");
 
 	for (;;) {
 		res = Vorbis_DecodeFrame(ctx);

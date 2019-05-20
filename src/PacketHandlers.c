@@ -417,14 +417,13 @@ static void Classic_StartLoading(void) {
 
 static void Classic_LevelInit(uint8_t* data) {
 	if (!map_begunLoading) Classic_StartLoading();
+	if (!cpe_fastMap) return;
 
-	/* Fast map puts volume in header, doesn't bother with gzip */
-	if (cpe_fastMap) {
-		map_volume = Stream_GetU32_BE(data);
-		map_gzHeader.Done = true;
-		map_sizeIndex = sizeof(uint32_t);
-		map_blocks = Mem_Alloc(map_volume, 1, "map blocks");
-	}
+	/* Fast map puts volume in header, and uses raw DEFLATE without GZIP header/footer */
+	map_volume = Stream_GetU32_BE(data);
+	map_gzHeader.Done = true;
+	map_sizeIndex = sizeof(uint32_t);
+	map_blocks    = (BlockRaw*)Mem_Alloc(map_volume, 1, "map blocks");
 }
 
 static void Classic_LevelDataChunk(uint8_t* data) {
@@ -461,7 +460,7 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 		if (map_sizeIndex == 4) {
 			if (!map_blocks) {
 				map_volume = Stream_GetU32_BE(map_size);
-				map_blocks = Mem_Alloc(map_volume, 1, "map blocks");
+				map_blocks = (BlockRaw*)Mem_Alloc(map_volume, 1, "map blocks");
 			}
 
 #ifndef EXTENDED_BLOCKS
