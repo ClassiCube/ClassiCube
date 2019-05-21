@@ -127,9 +127,9 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 *----------------------------------------------------Collisions finder----------------------------------------------------*
 *#########################################################################################################################*/
 #define SEARCHER_STATES_MIN 64
-static struct SearcherState Searcher_DefaultStates[SEARCHER_STATES_MIN];
-static uint32_t Searcher_StatesMax = SEARCHER_STATES_MIN;
-struct SearcherState* Searcher_States = Searcher_DefaultStates;
+static struct SearcherState searcherDefaultStates[SEARCHER_STATES_MIN];
+static uint32_t searcherCapacity = SEARCHER_STATES_MIN;
+struct SearcherState* Searcher_States = searcherDefaultStates;
 
 static void Searcher_QuickSort(int left, int right) {
 	struct SearcherState* keys = Searcher_States; struct SearcherState key;
@@ -175,10 +175,10 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 	Vector3I_Floor(&max, &entityExtentBB->Max);
 	elements = (max.X - min.X + 1) * (max.Y - min.Y + 1) * (max.Z - min.Z + 1);
 
-	if (elements > Searcher_StatesMax) {
+	if (elements > searcherCapacity) {
 		Searcher_Free();
-		Searcher_StatesMax = elements;
-		Searcher_States    = Mem_Alloc(elements, sizeof(struct SearcherState), "collision search states");
+		searcherCapacity = elements;
+		Searcher_States  = (struct SearcherState*)Mem_Alloc(elements, sizeof(struct SearcherState), "collision search states");
 	}
 	curState = Searcher_States;
 
@@ -228,7 +228,7 @@ void Searcher_CalcTime(Vector3* vel, struct AABB *entityBB, struct AABB* blockBB
 }
 
 void Searcher_Free(void) {
-	if (Searcher_States != Searcher_DefaultStates) Mem_Free(Searcher_States);
-	Searcher_States    = Searcher_DefaultStates;
-	Searcher_StatesMax = SEARCHER_STATES_MIN;
+	if (Searcher_States != searcherDefaultStates) Mem_Free(Searcher_States);
+	Searcher_States  = searcherDefaultStates;
+	searcherCapacity = SEARCHER_STATES_MIN;
 }

@@ -21,9 +21,9 @@
 #endif
 
 #ifdef UNICODE
-#define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, src, (len) * 2)
+#define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, (Codepoint*)(src), (len) * 2)
 #else
-#define Platform_DecodeString(dst, src, len) Convert_DecodeAscii(dst, src, len)
+#define Platform_DecodeString(dst, src, len) String_DecodeCP1252(dst, (uint8_t*)(src), len)
 #endif
 
 #include <windows.h>
@@ -63,6 +63,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <poll.h>
 #include <signal.h>
 
+#define Platform_DecodeString(dst, src, len) String_AppendUtf8(dst, (uint8_t*)(src), len)
 #define Socket__Error() errno
 const char* Platform_NewLine = "\n";
 
@@ -525,7 +526,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
 		len = String_CalcLen(src, UInt16_MaxValue);
-		String_AppendUtf8(&path, src, len);
+		Platform_DecodeString(&path, src, len);
 
 		/* TODO: fallback to stat when this fails */
 		if (entry->d_type == DT_DIR) {
@@ -1623,7 +1624,7 @@ ReturnCode Process_GetExePath(String* path) {
 	if (_NSGetExecutablePath(str, &len)) return ERR_INVALID_ARGUMENT;
 
 	len = String_CalcLen(str, 600);
-	String_AppendUtf8(path, str, len);
+	Platform_DecodeString(path, str, len);
 	return 0;
 }
 #elif defined CC_BUILD_UNIX
@@ -1638,7 +1639,7 @@ ReturnCode Process_GetExePath(String* path) {
 	int len = readlink("/proc/self/exe", str, 600);
 	if (len == -1) return errno;
 
-	String_AppendUtf8(path, str, len);
+	Platform_DecodeString(path, str, len);
 	return 0;
 }
 #elif defined CC_BUILD_FREEBSD
@@ -1649,7 +1650,7 @@ ReturnCode Process_GetExePath(String* path) {
 	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
 
 	size = String_CalcLen(str, 600);
-	String_AppendUtf8(path, str, size);
+	Platform_DecodeString(path, str, size);
 	return 0;
 }
 #elif defined CC_BUILD_OPENBSD
@@ -1675,7 +1676,7 @@ ReturnCode Process_GetExePath(String* path) {
 	}
 
 	size = String_CalcLen(str, 600);
-	String_AppendUtf8(path, str, size);
+	Platform_DecodeString(path, str, size);
 	return 0;
 }
 #elif defined CC_BUILD_NETBSD
@@ -1686,7 +1687,7 @@ ReturnCode Process_GetExePath(String* path) {
 	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
 
 	size = String_CalcLen(str, 600);
-	String_AppendUtf8(path, str, size);
+	Platform_DecodeString(path, str, size);
 	return 0;
 }
 #elif defined CC_BUILD_SOLARIS
@@ -1695,7 +1696,7 @@ ReturnCode Process_GetExePath(String* path) {
 	int len = readlink("/proc/self/path/a.out", str, 600);
 	if (len == -1) return errno;
 
-	String_AppendUtf8(path, str, len);
+	Platform_DecodeString(path, str, len);
 	return 0;
 }
 #endif
@@ -1945,7 +1946,7 @@ bool Platform_DescribeError(ReturnCode res, String* dst) {
 	if (len == -1) return false;
 
 	len = String_CalcLen(chars, 600);
-	String_AppendUtf8(dst, chars, len);
+	Platform_DecodeString(dst, chars, len);
 	return true;
 }
 #endif

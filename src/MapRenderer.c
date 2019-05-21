@@ -327,10 +327,10 @@ static void MapRenderer_AllocateParts(void) {
 }
 
 static void MapRenderer_AllocateChunks(void) {
-	mapChunks    = Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo), "chunk info");
-	sortedChunks = Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "sorted chunk info");
-	renderChunks = Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "render chunk info");
-	distances    = Mem_Alloc(MapRenderer_ChunksCount, 4, "chunk distances");
+	mapChunks    = (struct ChunkInfo*) Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo),  "chunk info");
+	sortedChunks = (struct ChunkInfo**)Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "sorted chunk info");
+	renderChunks = (struct ChunkInfo**)Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "render chunk info");
+	distances    = (uint32_t*)Mem_Alloc(MapRenderer_ChunksCount, 4, "chunk distances");
 }
 
 static void MapRenderer_ResetPartFlags(void) {

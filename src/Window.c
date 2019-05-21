@@ -513,7 +513,7 @@ void Window_GetClipboardText(String* value) {
 		if (isUnicode) {
 			String_AppendUtf16(value, (Codepoint*)src, size - 2);
 		} else {
-			Convert_DecodeAscii(value, (uint8_t*)src,   size - 1);
+			String_DecodeCP1252(value, (uint8_t*)src,   size - 1);
 		}
 
 		GlobalUnlock(hGlobal);

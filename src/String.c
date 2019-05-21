@@ -611,10 +611,7 @@ void String_AppendUtf8(String* value, const uint8_t* chars, int numBytes) {
 	}
 }
 
-// TODO: String_AppendUtf8
-// TODO: Remove DecodeAscii, it's a lie
-// TODO: Typedef uint8_t Key; typedef uint8_T MouseButton;
-void Convert_DecodeAscii(String* value, const uint8_t* chars, int numBytes) {
+void String_DecodeCP1252(String* value, const uint8_t* chars, int numBytes) {
 	int i; char c;
 
 	for (i = 0; i < numBytes; i++) {
