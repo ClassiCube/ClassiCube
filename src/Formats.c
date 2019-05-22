@@ -487,7 +487,7 @@ COMPOUND "ClassicWorld" {
 static BlockRaw* Cw_GetBlocks(struct NbtTag* tag) {
 	BlockRaw* ptr;
 	if (NbtTag_IsSmall(tag)) {
-		ptr = Mem_Alloc(tag->DataSize, 1, ".cw map blocks");
+		ptr = (BlockRaw*)Mem_Alloc(tag->DataSize, 1, ".cw map blocks");
 		Mem_Copy(ptr, tag->Value.Small, tag->DataSize);
 	} else {
 		ptr = tag->Value.Big;
@@ -752,7 +752,7 @@ enum JFieldType {
 #define JNAME_SIZE 48
 struct JFieldDesc {
 	uint8_t Type;
-	char FieldName[JNAME_SIZE];
+	uint8_t FieldName[JNAME_SIZE];
 	union {
 		uint8_t  U8;
 		int32_t  I32;
@@ -763,12 +763,12 @@ struct JFieldDesc {
 };
 
 struct JClassDesc {
-	char ClassName[JNAME_SIZE];
+	uint8_t ClassName[JNAME_SIZE];
 	int FieldsCount;
 	struct JFieldDesc Fields[22];
 };
 
-static ReturnCode Dat_ReadString(struct Stream* stream, char* buffer) {
+static ReturnCode Dat_ReadString(struct Stream* stream, uint8_t* buffer) {
 	int len;
 	ReturnCode res;
 
@@ -782,7 +782,7 @@ static ReturnCode Dat_ReadString(struct Stream* stream, char* buffer) {
 
 static ReturnCode Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
 	uint8_t typeCode;
-	char className1[JNAME_SIZE];
+	uint8_t className1[JNAME_SIZE];
 	ReturnCode res;
 
 	if ((res = stream->ReadU8(stream, &desc->Type)))     return res;
@@ -879,7 +879,7 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 		if ((res = Stream_ReadU32_BE(stream, &count))) return res;
 		field->Value.Array.Size = count;
 
-		field->Value.Array.Ptr = Mem_Alloc(count, 1, ".dat map blocks");
+		field->Value.Array.Ptr = (uint8_t*)Mem_Alloc(count, 1, ".dat map blocks");
 		res = Stream_Read(stream, field->Value.Array.Ptr, count);
 		if (res) { Mem_Free(field->Value.Array.Ptr); return res; }
 	} break;

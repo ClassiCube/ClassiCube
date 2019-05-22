@@ -835,7 +835,7 @@ void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	}
 
 	if (Gfx.LostContext) return;
-	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], matrix);
+	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], (const D3DMATRIX*)matrix);
 	if (res) Logger_Abort2(res, "D3D9_LoadMatrix");
 }
 
@@ -846,7 +846,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 	}
 
 	if (Gfx.LostContext) return;
-	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], &Matrix_Identity);
+	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], (const D3DMATRIX*)&Matrix_Identity);
 	if (res) Logger_Abort2(res, "D3D9_LoadIdentityMatrix");
 }
 

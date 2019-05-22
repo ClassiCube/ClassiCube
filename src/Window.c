@@ -691,7 +691,7 @@ void Window_DrawRaw(Rect2D r) {
 static void Window_InitRawMouse(void) {
 	RAWINPUTDEVICE rid;
 	_registerRawInput = (FUNC_RegisterRawInput)DynamicLib_GetFrom("USER32.DLL", "RegisterRawInputDevices");
-	_getRawInputData  = (FUNC_GetRawInputData)DynamicLib_GetFrom("USER32.DLL",  "GetRawInputData");
+	_getRawInputData  = (FUNC_GetRawInputData) DynamicLib_GetFrom("USER32.DLL", "GetRawInputData");
 	rawMouseSupported = _registerRawInput && _getRawInputData;
 	if (!rawMouseSupported) { Platform_LogConst("Raw input unsupported!"); return; }
 

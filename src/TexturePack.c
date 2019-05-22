@@ -597,7 +597,7 @@ void TextureCache_GetETag(const String* url, String* etag) {
 	TexturePack_GetFromTags(url, etag, &etagCache);
 }
 
-void TextureCache_Set(const String* url, const void* data, uint32_t length) {
+void TextureCache_Set(const String* url, const uint8_t* data, uint32_t length) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	ReturnCode res;
 
@@ -737,7 +737,7 @@ void TexturePack_ExtractCurrent(const String* url) {
 
 void TexturePack_Extract_Req(struct HttpRequest* item) {
 	String url, etag;
-	void* data; uint32_t len;
+	uint8_t* data; uint32_t len;
 	struct Stream mem;
 	bool png;
 	ReturnCode res;

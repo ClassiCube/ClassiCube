@@ -579,6 +579,7 @@ static void TexPatcher_MakeDefaultZip(void) {
 *#########################################################################################################################*/
 #define WAV_FourCC(a, b, c, d) (((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)c << 8) | (uint32_t)d)
 
+/* Fixes up the .WAV header after having written all samples */
 static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx) {
 	uint8_t header[44];
 	uint32_t length;
@@ -608,13 +609,14 @@ static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx) 
 	if (res) Logger_Warn(res, "fixing .wav header");
 }
 
+/* Writes an empty .WAV header and then writes all samples */
 static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) {
 	int16_t* samples;
 	int count;
 	ReturnCode res;
 
 	/* ctx is all 0, so reuse it here for header */
-	res = Stream_Write(s, ctx, 44);
+	res = Stream_Write(s, (const uint8_t*)ctx, 44);
 	if (res) { Logger_Warn(res, "writing .wav header"); return; }
 
 	res = Vorbis_DecodeHeaders(ctx);

@@ -717,7 +717,7 @@ static ReturnCode Inflate_StreamRead(struct Stream* stream, uint8_t* data, uint3
 	ReturnCode res;
 
 	*modified = 0;
-	state = stream->Meta.Inflate;
+	state = (struct InflateState*)stream->Meta.Inflate;
 	state->Output   = data;
 	state->AvailOut = count;
 

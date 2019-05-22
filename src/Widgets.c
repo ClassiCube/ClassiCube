@@ -1683,10 +1683,8 @@ static void ChatInputWidget_UpKey(struct InputWidget* w) {
 static void ChatInputWidget_DownKey(struct InputWidget* w) {
 	struct ChatInputWidget* W = (struct ChatInputWidget*)w;
 	String prevInput;
-	int lines;
 
 	if (Key_IsActionPressed()) {
-		lines = w->GetMaxLines();
 		if (w->CaretPos == -1) return;
 
 		w->CaretPos += INPUTWIDGET_LEN;

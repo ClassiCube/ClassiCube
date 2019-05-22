@@ -145,7 +145,7 @@ static void Http_Add(const String* url, bool priority, const String* id, uint8_t
 	if (etag)         { String_Copy(&reqEtag, etag); }
 
 	if (data) {
-		req.Data = Mem_Alloc(size, 1, "Http_PostData");
+		req.Data = (uint8_t*)Mem_Alloc(size, 1, "Http_PostData");
 		Mem_Copy(req.Data, data, size);
 		req.Size = size;
 	}

@@ -1370,8 +1370,8 @@ ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port) {
 	ReturnCode res;
 
 	addr.sa_family = AF_INET;
-	Stream_SetU16_BE(&addr.sa_data[0], port);
-	Utils_ParseIP(ip, &addr.sa_data[2]);
+	Stream_SetU16_BE( (uint8_t*)&addr.sa_data[0], port);
+	Utils_ParseIP(ip, (uint8_t*)&addr.sa_data[2]);
 
 	res = connect(socket, &addr, sizeof(addr));
 	return res == -1 ? Socket__Error() : 0;
@@ -1722,7 +1722,7 @@ void* DynamicLib_GetFrom(const char* filename, const char* name) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
 int Platform_ConvertString(void* data, const String* src) {
-	TCHAR* dst = data;
+	TCHAR* dst = (TCHAR*)data;
 	int i;
 	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
 
@@ -1734,7 +1734,7 @@ int Platform_ConvertString(void* data, const String* src) {
 }
 
 int Platform_ConvertUniString(void* data, const UniString* src) {
-	TCHAR* dst = data;
+	TCHAR* dst = (TCHAR*)data;
 	int i;
 	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
 
@@ -1754,7 +1754,8 @@ static void Platform_InitStopwatch(void) {
 }
 
 typedef BOOL (WINAPI *AttachConsoleFunc)(DWORD dwProcessId);
-void Platform_Init(void) {	
+void Platform_Init(void) {
+	AttachConsoleFunc attach;
 	WSADATA wsaData;
 	ReturnCode res;
 
@@ -1767,9 +1768,8 @@ void Platform_Init(void) {
 	hasDebugger = IsDebuggerPresent();
 	/* For when user runs from command prompt */
 	/* NOTE: Need to dynamically load, not supported on Windows 2000 */
-	AttachConsoleFunc attach = DynamicLib_GetFrom("KERNEL32.DLL", "AttachConsole");
-	/* -1 is ATTACH_PARENT_PROCESS (define doesn't exist when compiling for win2000) */
-	if (attach) attach((DWORD)(-1));
+	attach = (AttachConsoleFunc)DynamicLib_GetFrom("KERNEL32.DLL", "AttachConsole");
+	if (attach) attach(ATTACH_PARENT_PROCESS);
 
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (conHandle == INVALID_HANDLE_VALUE) conHandle = NULL;

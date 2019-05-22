@@ -28,7 +28,7 @@ struct HttpRequest {
 	uint32_t ContentLength; /* HTTP content length returned in the response. */
 
 	ReturnCode Result; /* 0 on success, otherwise platform-specific error. */
-	void*      Data;   /* Contents of the response. (i.e. result data) */
+	uint8_t*   Data;   /* Contents of the response. (i.e. result data) */
 	uint32_t   Size;   /* Size of the contents. (may still be non-zero for non 200 status codes) */
 
 	TimeMS LastModified;    /* Time item cached at (if at all) */

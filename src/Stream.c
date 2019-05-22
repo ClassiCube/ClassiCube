@@ -125,7 +125,7 @@ ReturnCode Stream_CreateFile(struct Stream* s, const String* path) {
 	return res;
 }
 
-ReturnCode Stream_WriteAllTo(const String* path, const void* data, uint32_t length) {
+ReturnCode Stream_WriteAllTo(const String* path, const uint8_t* data, uint32_t length) {
 	struct Stream stream;
 	ReturnCode res, closeRes;
 

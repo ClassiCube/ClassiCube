@@ -210,11 +210,10 @@ void Gui_ShowOverlay(struct Screen* screen) {
 }
 
 int Gui_IndexOverlay(const void* screen) {
-	const struct Screen* s = screen;
 	int i;
 
 	for (i = 0; i < Gui_OverlaysCount; i++) {
-		if (Gui_Overlays[i] == s) return i;
+		if (Gui_Overlays[i] == screen) return i;
 	}
 	return -1;
 }
