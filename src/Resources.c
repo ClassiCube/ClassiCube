@@ -324,7 +324,7 @@ static ReturnCode ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* 
 *-------------------------------------------------------Texture patcher---------------------------------------------------*
 *#########################################################################################################################*/
 #define ANIMS_TXT_CONTENTS \
-"# This file defines the animations used in a texture pack for ClassicalSharp and other supporting applications.\r\n" \
+"# This file defines the animations used in a texture pack for ClassiCube.\r\n" \
 "# Each line is in the format : <TileX> <TileY> <FrameX> <FrameY> <Frame size> <Frames count> <Tick delay>\r\n" \
 "# - TileX and TileY are the coordinates of the tile in terrain.png that will be replaced by the animation frames.\r\n" \
 "#     Essentially, TileX and TileY are the remainder and quotient of an ID in F10 menu divided by 16\r\n" \
@@ -336,8 +336,8 @@ static ReturnCode ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* 
 "# - Tick delay is the number of ticks a frame doesn't change. For instance, delay of 0\r\n" \
 "#     means that the tile would be replaced every tick, while delay of 2 means\r\n" \
 "#     'replace with frame 1, don't change frame, don't change frame, replace with frame 2'.\r\n" \
-"# NOTE: If a file called 'uselavaanim' is in the texture pack, ClassicalSharp 0.99.2 onwards uses its built - in dynamic generation for the lava texture animation.\r\n" \
-"# NOTE : If a file called 'usewateranim' is in the texture pack, ClassicalSharp 0.99.5 onwards uses its built - in dynamic generation for the water texture animation.\r\n" \
+"# NOTE: If a file called 'uselavaanim' is in the texture pack, the game instead generates the lava texture animation.\r\n" \
+"# NOTE: If a file called 'usewateranim' is in the texture pack, the game instead generates the water texture animation.\r\n" \
 "\r\n" \
 "# fire\r\n" \
 "6 2 0 0 16 32 0"

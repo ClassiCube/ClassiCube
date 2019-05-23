@@ -850,7 +850,7 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 	case JFIELD_OBJECT: {
 		/* Luckily for us, we only have to account for blockMap object */
 		/* Other objects (e.g. player) are stored after the fields we actually care about, so ignore them */
-		fieldName = String_FromRawArray(field->FieldName);
+		fieldName = String_FromRaw((char*)field->FieldName, JNAME_SIZE);
 		if (!String_CaselessEqualsConst(&fieldName, "blockMap")) return 0;
 		if ((res = stream->ReadU8(stream, &typeCode))) return res;
 
@@ -920,7 +920,7 @@ ReturnCode Dat_Load(struct Stream* stream) {
 	for (i = 0; i < obj.FieldsCount; i++) {
 		field = &obj.Fields[i];
 		if ((res = Dat_ReadFieldData(&compStream, field))) return res;
-		fieldName = String_FromRawArray(field->FieldName);
+		fieldName = String_FromRaw((char*)field->FieldName, JNAME_SIZE);
 
 		if (String_CaselessEqualsConst(&fieldName, "width")) {
 			World.Width  = Dat_I32(field);

@@ -886,7 +886,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output) {
 	res = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
 	if (res) goto finished;
 	{
-		Bitmap_Init(bmp, desc.Width, desc.Height, rect.pBits);
+		Bitmap_Init(bmp, desc.Width, desc.Height, (uint8_t*)rect.pBits);
 		res = Png_Encode(&bmp, output, NULL, false);
 		if (res) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
 	}
@@ -1090,7 +1090,7 @@ static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, bool partial) {
 		if (width > 1)  width /= 2;
 		if (height > 1) height /= 2;
 
-		cur = Mem_Alloc(width * height, 4, "mipmaps");
+		cur = (uint8_t*)Mem_Alloc(width * height, 4, "mipmaps");
 		Gfx_GenMipmaps(width, height, cur, prev);
 
 		if (partial) {

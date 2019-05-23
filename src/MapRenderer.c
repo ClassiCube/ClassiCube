@@ -321,7 +321,8 @@ static void MapRenderer_FreeChunks(void) {
 
 static void MapRenderer_AllocateParts(void) {
 	uint32_t count  = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
-	partsBuffer_Raw = Mem_AllocCleared(count * 2, sizeof(struct ChunkPartInfo), "chunk parts");
+	partsBuffer_Raw = (struct ChunkPartInfo*)Mem_AllocCleared(count * 2, sizeof(struct ChunkPartInfo), "chunk parts");
+
 	MapRenderer_PartsNormal      = partsBuffer_Raw;
 	MapRenderer_PartsTranslucent = partsBuffer_Raw + count;
 }

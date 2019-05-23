@@ -470,7 +470,7 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 #else
 			if (cpe_extBlocks && value) {
 				/* Only allocate map2 when needed */
-				if (!map2_blocks) map2_blocks = Mem_Alloc(map_volume, 1, "map blocks upper");
+				if (!map2_blocks) map2_blocks = (BlockRaw*)Mem_Alloc(map_volume, 1, "map blocks upper");
 
 				left = map_volume - map2_index;
 				map2_stream.Read(&map2_stream, &map2_blocks[map2_index], left, &read); 
