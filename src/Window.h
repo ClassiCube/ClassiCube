@@ -41,7 +41,7 @@ struct GraphicsMode {
 	int DepthBits, StencilBits; /* Z buffer data */
 };
 
-/* Initalises state for window. Also sets DisplayDevice.Default members. */
+/* Initalises state for window. Also sets Display_ members. */
 void Window_Init(void);
 /* Creates a new GraphicsMode from the given data. */
 void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil);

@@ -669,7 +669,7 @@ void Logger_Log(const String* msg) {
 	}
 
 	if (!logStream.Meta.File) return;
-	Stream_Write(&logStream, msg->buffer, msg->length);
+	Stream_Write(&logStream, (const uint8_t*)msg->buffer, msg->length);
 }
 
 static void Logger_LogCrashHeader(void) {

@@ -26,7 +26,7 @@ String String_FromRaw(STRING_REF char* buffer, int capacity) {
 
 String String_FromReadonly(STRING_REF const char* buffer) {
 	int len = String_CalcLen(buffer, UInt16_MaxValue);
-	return String_Init(buffer, len, len);
+	return String_Init((char*)buffer, len, len);
 }
 
 

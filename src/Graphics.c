@@ -1273,7 +1273,8 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output) {
 static bool nv_mem;
 void Gfx_MakeApiInfo(void) {
 	const static String memExt = String_FromConst("GL_NVX_gpu_memory_info");
-	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
+	/* NOTE: glGetString actually returns UTF8, but I just treat it as code page 437 */
+	String extensions = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
 	int depthBits, pointerSize = sizeof(void*) * 8;
 
 	nv_mem = String_CaselessContains(&extensions, &memExt);
@@ -1304,7 +1305,7 @@ void Gfx_UpdateApiInfo(void) {
 
 bool Gfx_WarnIfNecessary(void) {
 	const static String intel = String_FromConst("Intel");
-	String renderer = String_FromReadonly(glGetString(GL_RENDERER));
+	String renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
 
 #ifdef CC_BUILD_GL11
 	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
@@ -1864,7 +1865,7 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 
 static void GL_CheckSupport(void) {
 	const static String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
-	String extensions  = String_FromReadonly(glGetString(GL_EXTENSIONS));
+	String extensions  = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
 	const GLubyte* ver = glGetString(GL_VERSION);
 
 	/* Version string is always: x.y. (and whatever afterwards) */

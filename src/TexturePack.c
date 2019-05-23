@@ -536,11 +536,15 @@ void TextureCache_Deny(const String* url)        {
 	EntryList_Save(&deniedList);
 }
 
+CC_INLINE static void TextureCache_HashUrl(String* key, const String* url) {
+	String_AppendUInt32(key, Utils_CRC32((const uint8_t*)url->buffer, url->length));
+}
+
 CC_NOINLINE static void TextureCache_MakePath(String* path, const String* url) {
 	String key; char keyBuffer[STRING_INT_CHARS];
 	String_InitArray(key, keyBuffer);
 
-	String_AppendUInt32(&key, Utils_CRC32(url->buffer, url->length));
+	TextureCache_HashUrl(&key, url);
 	String_Format1(path, "texturecache/%s", &key);
 }
 
@@ -569,7 +573,7 @@ void TexturePack_GetFromTags(const String* url, String* result, struct EntryList
 	String key, value; char keyBuffer[STRING_INT_CHARS];
 	String_InitArray(key, keyBuffer);
 
-	String_AppendUInt32(&key, Utils_CRC32(url->buffer, url->length));	
+	TextureCache_HashUrl(&key, url);
 	value = EntryList_UNSAFE_Get(list, &key);
 	if (value.length) String_AppendString(result, &value);
 }
@@ -613,7 +617,7 @@ CC_NOINLINE static void TextureCache_SetEntry(const String* url, const String* d
 	String key; char keyBuffer[STRING_INT_CHARS];
 	String_InitArray(key, keyBuffer);
 
-	String_AppendUInt32(&key, Utils_CRC32(url->buffer, url->length));
+	TextureCache_HashUrl(&key, url);
 	EntryList_Set(list, &key, data);
 	EntryList_Save(list);
 }
