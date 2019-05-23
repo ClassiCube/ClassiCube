@@ -674,7 +674,7 @@ static void GeneratingScreen_Render(void* screen, double delta) {
 	if (state == s->LastState) return;
 
 	s->MessageStr.length = 0;
-	String_AppendConst(&s->MessageStr, state);
+	String_AppendConst(&s->MessageStr, (const char*)state);
 	LoadingScreen_SetMessage(s);
 }
 

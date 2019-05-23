@@ -35,8 +35,6 @@
 
 #define Socket__Error() WSAGetLastError()
 static HANDLE heap;
-const char* Platform_NewLine = "\r\n";
-
 const ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const ReturnCode ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
 const ReturnCode ReturnCode_SocketInProgess  = WSAEINPROGRESS;
@@ -65,8 +63,6 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 
 #define Platform_DecodeString(dst, src, len) String_AppendUtf8(dst, (uint8_t*)(src), len)
 #define Socket__Error() errno
-const char* Platform_NewLine = "\n";
-
 const ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const ReturnCode ReturnCode_FileNotFound     = ENOENT;
 const ReturnCode ReturnCode_SocketInProgess  = EINPROGRESS;
@@ -1831,7 +1827,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 
 ReturnCode Platform_Encrypt(const void* data, int len, uint8_t** enc, int* encLen) {
 	DATA_BLOB dataIn, dataOut;
-	dataIn.cbData = len; dataIn.pbData = data;
+	dataIn.cbData = len; dataIn.pbData = (BYTE*)data;
 	if (!CryptProtectData(&dataIn, NULL, NULL, NULL, NULL, 0, &dataOut)) return GetLastError();
 
 	/* copy to memory we can free */
@@ -1843,7 +1839,7 @@ ReturnCode Platform_Encrypt(const void* data, int len, uint8_t** enc, int* encLe
 }
 ReturnCode Platform_Decrypt(const void* data, int len, uint8_t** dec, int* decLen) {
 	DATA_BLOB dataIn, dataOut;
-	dataIn.cbData = len; dataIn.pbData = data;
+	dataIn.cbData = len; dataIn.pbData = (BYTE*)data;
 	if (!CryptUnprotectData(&dataIn, NULL, NULL, NULL, NULL, 0, &dataOut)) return GetLastError();
 
 	/* copy to memory we can free */

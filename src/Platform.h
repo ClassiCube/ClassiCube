@@ -13,9 +13,11 @@ enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
 #ifdef CC_BUILD_WIN
 typedef uintptr_t SocketHandle;
 typedef void* FileHandle;
+#define _NL "\r\n"
 #else
 typedef int SocketHandle;
 typedef int FileHandle;
+#define _NL "\n"
 #endif
 
 /* Origin points for when seeking in a file. */

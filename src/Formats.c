@@ -1056,8 +1056,8 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 
 	Mem_Copy(tmp, cw_meta_def, sizeof(cw_meta_def));
 	{
-		/* Hacky unique tag name for each */
-		name = String_Init(&tmp[8], 0, 4);
+		/* Hacky unique tag name for each by using hex of block */
+		name = String_Init((char*)&tmp[8], 0, 4);
 		String_AppendHex(&name, b >> 8);
 		String_AppendHex(&name, b);
 

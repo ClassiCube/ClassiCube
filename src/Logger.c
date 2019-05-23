@@ -16,7 +16,6 @@
 #define NOIME
 #include <windows.h>
 #include <imagehlp.h>
-#define _NL "\r\n"
 #endif
 
 /* POSIX can be shared between unix-ish systems */
@@ -36,7 +35,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
-#define _NL "\n"
 #endif
 
 
@@ -215,7 +213,6 @@ void Logger_Warn2(ReturnCode res, const char* place, const String* path) {
 *#########################################################################################################################*/
 /* Unfortunately, operating systems vary wildly in how they name and access registers for dumping */
 /* So this is the simplest way to avoid duplicating code on each platform */
-/* Also, Windows uses \r\n for newline while unix-ish systems uses \n. Need to account for that */
 #define Logger_Dump_X86() \
 String_Format3(&str, "eax=%x ebx=%x ecx=%x" _NL, REG_GET(ax,AX), REG_GET(bx,BX), REG_GET(cx,CX));\
 String_Format3(&str, "edx=%x esi=%x edi=%x" _NL, REG_GET(dx,DX), REG_GET(si,SI), REG_GET(di,DI));\
@@ -680,14 +677,13 @@ static void Logger_LogCrashHeader(void) {
 	struct DateTime now;
 
 	String_InitArray(msg, msgBuffer);
-	String_Format2(&msg, "%c----------------------------------------%c",
-		Platform_NewLine, Platform_NewLine);
+	String_AppendConst(&msg, _NL "----------------------------------------" _NL);
 	Logger_Log(&msg);
 	msg.length = 0;
 
 	DateTime_CurrentLocal(&now);
-	String_Format3(&msg, "Crash time: %p2/%p2/%p4 ", &now.Day, &now.Month, &now.Year);
-	String_Format4(&msg, "%p2:%p2:%p2%c", &now.Hour, &now.Minute, &now.Second, Platform_NewLine);
+	String_Format3(&msg, "Crash time: %p2/%p2/%p4 ", &now.Day,  &now.Month,  &now.Year);
+	String_Format3(&msg, "%p2:%p2:%p2" _NL,          &now.Hour, &now.Minute, &now.Second);
 	Logger_Log(&msg);
 }
 
@@ -695,13 +691,13 @@ static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx
 	String msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
 
-	String_Format3(&msg, "ClassiCube crashed.%cMessage: %c%c", Platform_NewLine, raw_msg, Platform_NewLine);
+	String_Format1(&msg, "ClassiCube crashed." _NL "Message: %c" _NL, raw_msg);
 	#ifdef CC_COMMIT_SHA
-	String_Format2(&msg, "Commit SHA: %c%c", CC_COMMIT_SHA, Platform_NewLine);
+	String_Format1(&msg, "Commit SHA: %c" _NL, CC_COMMIT_SHA);
 	#endif
 
 	if (result) {
-		String_Format2(&msg, "%h%c", &result, Platform_NewLine);
+		String_Format1(&msg, "%h" _NL, &result);
 	} else { result = 1; }
 
 	Logger_LogCrashHeader();

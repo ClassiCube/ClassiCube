@@ -502,7 +502,7 @@ ReturnCode Stream_WriteLine(struct Stream* s, String* text) {
 		len += Convert_UnicodeToUtf8(cp, cur);
 	}
 	
-	cur = Platform_NewLine;
+	cur = _NL;
 	while (*cur) { buffer[len++] = *cur++; }
 	return Stream_Write(s, buffer, len);
 }

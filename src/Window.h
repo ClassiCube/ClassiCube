@@ -83,9 +83,8 @@ void Window_SetWindowState(int state);
 extern Rect2D Window_Bounds;
 /* Client bounds of the window in screen coordinates. */
 /* Essentially, this is the area that can draw to (i.e. content area) */
+/* This area does NOT include borders and titlebar surrounding the window */
 extern Rect2D Window_ClientBounds;
-/* Sets the position of the window on the screen. */
-void Window_SetLocation(int x, int y);
 /* Sets the size of the internal bounds of the window. */
 /* NOTE: This size excludes the bounds of borders + title */
 void Window_SetSize(int width, int height);

@@ -549,10 +549,6 @@ void Window_SetClipboardText(const String* value) {
 }
 
 
-void Window_SetLocation(int x, int y) {
-	SetWindowPos(win_handle, NULL, x, y, 0, 0, SWP_NOSIZE);
-}
-
 void Window_SetSize(int width, int height) {
 	DWORD style = GetWindowLong(win_handle, GWL_STYLE);
 	RECT rect   = { 0, 0, width, height };
@@ -1123,11 +1119,6 @@ void Window_SetWindowState(int state) {
 		XRaiseWindow(win_display, win_handle);
 		break;
 	}
-	Window_ProcessEvents();
-}
-
-void Window_SetLocation(int x, int y) {
-	XMoveWindow(win_display, win_handle, x, y);
 	Window_ProcessEvents();
 }
 
@@ -2089,10 +2080,6 @@ void Window_SetWindowState(int state) {
 	Window_UpdateWindowState();
 }
 
-void Window_SetLocation(int x, int y) {
-	MoveWindow(win_handle, x, y, false);
-}
-
 void Window_SetSize(int width, int height) {
 	SizeWindow(win_handle, width, height, true);
 }
@@ -2365,10 +2352,6 @@ void Window_SetWindowState(int state) {
 			SDL_MinimizeWindow(win_handle);
 			break;
 	}
-}
-
-void Window_SetLocation(int x, int y) {
-	SDL_SetWindowPosition(win_handle, x, y);
 }
 
 void Window_SetSize(int width, int height) {
@@ -2904,8 +2887,6 @@ void Window_SetWindowState(int state) {
 	}
 }
 
-/* No simple API for moving canvas */
-void Window_SetLocation(int x, int y) { }
 void Window_SetSize(int width, int height) {
 	emscripten_set_canvas_element_size(NULL, width, height);
 	Window_RefreshBounds();
