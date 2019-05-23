@@ -1865,7 +1865,7 @@ bool Platform_DescribeError(ReturnCode res, String* dst) {
 }
 #elif defined CC_BUILD_POSIX
 int Platform_ConvertString(void* data, const String* src) {
-	uint8_t* dst = data;
+	uint8_t* dst = (uint8_t*)data;
 	uint8_t* cur;
 
 	Codepoint cp;
@@ -1882,7 +1882,7 @@ int Platform_ConvertString(void* data, const String* src) {
 }
 
 int Platform_ConvertUniString(void* data, const UniString* src) {
-	uint8_t* dst = data;
+	uint8_t* dst = (uint8_t*)data;
 	uint8_t* cur;
 
 	int i, len = 0;

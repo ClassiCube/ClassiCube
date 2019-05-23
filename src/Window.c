@@ -1609,7 +1609,7 @@ void Window_InitRaw(Bitmap* bmp) {
 	bmp->Scan0 = (uint8_t*)Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
 
 	win_image = XCreateImage(win_display, win_visual.visual,
-		win_visual.depth, ZPixmap, 0, bmp->Scan0,
+		win_visual.depth, ZPixmap, 0, (char*)bmp->Scan0,
 		bmp->Width, bmp->Height, 32, 0);
 }
 

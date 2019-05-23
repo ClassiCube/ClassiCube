@@ -240,9 +240,9 @@ void Camera_Init(void) {
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, Camera_CheckThirdPerson);
 
 #ifdef CC_BUILD_WIN
-	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 100, 40);
+	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 40);
 #else
-	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 100, 30);
+	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 30);
 #endif
 	Camera.Clipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
 	Camera.Invert      = Options_GetBool(OPT_INVERT_MOUSE, false);
