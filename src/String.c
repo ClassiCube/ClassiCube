@@ -5,7 +5,11 @@
 #include "Stream.h"
 #include "Utils.h"
 
+#ifdef __cplusplus
+const String String_Empty = { NULL, 0, 0 };
+#else
 const String String_Empty;
+#endif
 
 String String_InitAndClear(STRING_REF char* buffer, int capacity) {
 	String str = String_Init(buffer, 0, capacity);	

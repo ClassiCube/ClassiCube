@@ -78,9 +78,6 @@ int Window_GetWindowState(void);
 /* Sets the current state of the window, see WindowState enum. */
 void Window_SetWindowState(int state);
 
-/* External bounds of the window in screen coordinates. */
-/* Essentially, this is client bounds + borders + titlebar */
-extern Rect2D Window_Bounds;
 /* Client bounds of the window in screen coordinates. */
 /* Essentially, this is the area that can draw to (i.e. content area) */
 /* This area does NOT include borders and titlebar surrounding the window */

@@ -10,7 +10,7 @@ int Display_BitsPerPixel;
 Rect2D Display_Bounds;
 
 bool Window_Exists, Window_Focused;
-Rect2D Window_Bounds, Window_ClientBounds;
+Rect2D Window_ClientBounds;
 
 static bool win_cursorVisible = true;
 bool Cursor_GetVisible(void) { return win_cursorVisible; }
@@ -128,6 +128,7 @@ static HDC win_DC;
 static int win_state;
 static int suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
 static Rect2D prev_bounds; /* Used to restore previous size when leaving fullscreen mode */
+static Rect2D win_bounds;  /* Rectangle of window including titlebar and borders */
 
 
 /*########################################################################################################################*
@@ -177,9 +178,9 @@ static void Window_DoSetHiddenBorder(bool value) {
 	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
 
 	/* Make sure client size doesn't change when changing the border style.*/
-	rect.left = Window_Bounds.X; rect.top = Window_Bounds.Y;
-	rect.right  = rect.left + Window_Bounds.Width;
-	rect.bottom = rect.top  + Window_Bounds.Height;
+	rect.left = win_bounds.X; rect.top = win_bounds.Y;
+	rect.right  = rect.left + win_bounds.Width;
+	rect.bottom = rect.top  + win_bounds.Height;
 	AdjustWindowRect(&rect, style, false);
 
 	/* This avoids leaving garbage on the background window. */
@@ -216,7 +217,7 @@ static void Window_RefreshBounds(void) {
 	POINT topLeft = { 0, 0 };
 
 	GetWindowRect(win_handle, &rect);
-	Window_SetRect(&Window_Bounds, &rect);
+	Window_SetRect(&win_bounds, &rect);
 	GetClientRect(win_handle, &rect);
 	Window_SetRect(&Window_ClientBounds, &rect);
 
@@ -250,8 +251,8 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		WINDOWPOS* pos = (WINDOWPOS*)lParam;
 		if (pos->hwnd != win_handle) break;
 
-		bool moved = pos->x  != Window_Bounds.X     || pos->y  != Window_Bounds.Y;
-		bool sized = pos->cx != Window_Bounds.Width || pos->cy != Window_Bounds.Height;
+		bool moved = pos->x  != win_bounds.X     || pos->y  != win_bounds.Y;
+		bool sized = pos->cx != win_bounds.Width || pos->cy != win_bounds.Height;
 
 		if (moved) {
 			Window_RefreshBounds();
@@ -261,7 +262,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		if (sized) {
 			Window_RefreshBounds();
 			SetWindowPos(win_handle, NULL,
-				Window_Bounds.X, Window_Bounds.Y, Window_Bounds.Width, Window_Bounds.Height,
+				win_bounds.X, win_bounds.Y, win_bounds.Width, win_bounds.Height,
 				SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
 			if (suppress_resize <= 0) {
@@ -609,7 +610,7 @@ void Window_SetWindowState(int state) {
 
 		/* Reset state to avoid strange side-effects from maximized/minimized windows. */
 		Window_ResetWindowState();
-		prev_bounds = Window_Bounds;
+		prev_bounds = win_bounds;
 		Window_SetHiddenBorder(true);
 
 		command = SW_MAXIMIZE;
@@ -868,27 +869,9 @@ static void Window_RegisterAtoms(void) {
 	xa_data_sel    = XInternAtom(display, "CC_SEL_DATA", false);
 }
 
-static void Window_RefreshBorders(void) {
-	Atom prop_type;
-	int prop_format;
-	unsigned long items, after;
-	long* borders = NULL;
-	
-	XGetWindowProperty(win_display, win_handle, net_frame_extents, 0, 16, false,
-		xa_cardinal, &prop_type, &prop_format, &items, &after, &borders);
-
-	if (!borders) return;
-	if (items == 4) {
-		borderLeft = borders[0]; borderRight = borders[1];
-		borderTop = borders[2]; borderBottom = borders[3];
-	}
-	XFree(borders);
-}
-
 static void Window_RefreshBounds(int width, int height) {
 	Window child;
 	int x, y;
-	Window_RefreshBorders();
 	
 	/* e->x and e->y are relative to parent window, which might not be root window */
 	/* e.g. linux mint + cinnamon, if you use /client resolution, e->x = 10, e->y = 36 */
@@ -897,20 +880,12 @@ static void Window_RefreshBounds(int width, int height) {
 
 	if (x != Window_ClientBounds.X || y != Window_ClientBounds.Y) {
 		Window_ClientBounds.X = x; Window_ClientBounds.Y = y;
-
-		/* To get the external (window) position, need to add the border */
-		Window_Bounds.X = x - borderLeft;
-		Window_Bounds.Y = y - borderTop;
 		Event_RaiseVoid(&WindowEvents.Moved);
 	}
 
 	if (width != Window_ClientBounds.Width || height != Window_ClientBounds.Height) {
 		Window_ClientBounds.Width  = width;
 		Window_ClientBounds.Height = height;
-
-		/* To get the external (window) size, need to add the border size */
-		Window_Bounds.Width  = width  + borderLeft + borderRight;
-		Window_Bounds.Height = height + borderTop  + borderBottom;
 		Event_RaiseVoid(&WindowEvents.Resized);
 	}
 }
@@ -1268,10 +1243,6 @@ void Window_ProcessEvents(void) {
 			if (e.xproperty.atom == net_wm_state) {
 				Event_RaiseVoid(&WindowEvents.StateChanged);
 			}
-
-			/*if (e.xproperty.atom == net_frame_extents) {
-			     RefreshWindowBorders();
-			}*/
 			break;
 
 		case SelectionNotify:
@@ -1666,10 +1637,6 @@ static void Window_RefreshBounds(void) {
 	Rect r;
 	OSStatus res;
 	if (win_state == WINDOW_STATE_FULLSCREEN) return;
-	
-	res = GetWindowBounds(win_handle, kWindowStructureRgn, &r);
-	if (res) Logger_Abort2(res, "Getting window bounds");
-	Window_SetRect(&Window_Bounds, &r);
 	
 	/* TODO: kWindowContentRgn ??? */
 	res = GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
@@ -2258,10 +2225,7 @@ static void Window_RefreshBounds(void) {
 	Rect2D r;
 	SDL_GetWindowPosition(win_handle, &r.X, &r.Y);
 	SDL_GetWindowSize(win_handle, &r.Width, &r.Height);
-
 	Window_ClientBounds = r;
-	/* TODO: get border size somehow */
-	Window_Bounds       = r;
 }
 
 static void Window_SDLFail(const char* place) {
@@ -2602,10 +2566,7 @@ static bool win_rawMouse;
 static void Window_RefreshBounds(void) {
 	Rect2D r = { 0,0, 0,0 };
 	emscripten_get_canvas_element_size(NULL, &r.Width, &r.Height);
-
 	Window_ClientBounds = r;
-	/* TODO: get border size somehow */
-	Window_Bounds = r;
 }
 
 static void Window_CorrectFocus(void) {
@@ -3083,7 +3044,7 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	void* address = glXGetProcAddress(function);
+	void* address = glXGetProcAddress((const GLubyte*)function);
 	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }
 
@@ -3258,8 +3219,7 @@ static void GLContext_SetFullscreen(void) {
 	ctx_windowedBounds = Window_ClientBounds;
 
 	Window_ClientBounds = Display_Bounds;
-	Window_Bounds = Display_Bounds;
-	win_state     = WINDOW_STATE_FULLSCREEN;
+	win_state = WINDOW_STATE_FULLSCREEN;
 }
 
 void GLContext_Init(struct GraphicsMode* mode) {
