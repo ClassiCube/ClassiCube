@@ -2552,8 +2552,6 @@ struct Screen* GuiOptionsScreen_MakeInstance(void) {
 	defaultValues[6] = "1";
 	validators[7]    = MenuInputValidator_Int(0, 30);
 	defaultValues[7] = "10";
-	validators[9]    = MenuInputValidator_String();
-	defaultValues[9] = "Arial";
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
 		GuiOptionsScreen_ContextRecreated, validators, defaultValues, NULL, 0);

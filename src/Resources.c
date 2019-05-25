@@ -323,7 +323,7 @@ static ReturnCode ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* 
 /*########################################################################################################################*
 *-------------------------------------------------------Texture patcher---------------------------------------------------*
 *#########################################################################################################################*/
-#define ANIMS_TXT_CONTENTS \
+#define ANIMS_TXT \
 "# This file defines the animations used in a texture pack for ClassiCube.\r\n" \
 "# Each line is in the format : <TileX> <TileY> <FrameX> <FrameY> <Frame size> <Frames count> <Tick delay>\r\n" \
 "# - TileX and TileY are the coordinates of the tile in terrain.png that will be replaced by the animation frames.\r\n" \
@@ -491,9 +491,9 @@ static ReturnCode TexPatcher_NewFiles(struct Stream* s) {
 	struct ResourceTexture* entry;
 	ReturnCode res;
 
-	/* make our own animations.txt */
+	/* make default animations.txt */
 	entry = Resources_FindTex(&animsTxt);
-	res   = ZipPatcher_WriteData(s, entry, ANIMS_TXT_CONTENTS, sizeof(ANIMS_TXT_CONTENTS) - 1);
+	res   = ZipPatcher_WriteData(s, entry, (const uint8_t*)ANIMS_TXT, sizeof(ANIMS_TXT) - 1);
 	if (res) return res;
 
 	/* make ClassiCube gui.png */

@@ -749,7 +749,6 @@ static Atom net_wm_state_minimized;
 static Atom net_wm_state_fullscreen;
 static Atom net_wm_state_maximized_horizontal;
 static Atom net_wm_state_maximized_vertical;
-static Atom net_wm_icon, net_frame_extents;
 
 static Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
 static Atom xa_atom = 4, xa_cardinal = 6;
@@ -860,8 +859,6 @@ static void Window_RegisterAtoms(void) {
 	net_wm_state_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", false);
 	net_wm_state_maximized_horizontal = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
 	net_wm_state_maximized_vertical   = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", false);
-	net_wm_icon = XInternAtom(display, "_NEW_WM_ICON", false);
-	net_frame_extents = XInternAtom(display, "_NET_FRAME_EXTENTS", false);
 
 	xa_clipboard   = XInternAtom(display, "CLIPBOARD",   false);
 	xa_targets     = XInternAtom(display, "TARGETS",     false);

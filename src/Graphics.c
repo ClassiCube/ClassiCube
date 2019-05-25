@@ -300,12 +300,20 @@ static void D3D9_SetDefaultRenderStates(void);
 static void D3D9_RestoreRenderStates(void);
 
 static void D3D9_FreeResource(GfxResourceID* resource) {
-	if (!resource || *resource == GFX_NULL) return;
-	IUnknown* unk  = (IUnknown*)(*resource);
-	ULONG refCount = unk->lpVtbl->Release(unk);
-	*resource = GFX_NULL;
-	if (refCount <= 0) return;
+	IUnknown* unk;
+	ULONG refCount;
 
+	if (!resource || *resource == GFX_NULL) return;
+	unk = (IUnknown*)(*resource);
+	*resource = GFX_NULL;
+
+#ifdef __cplusplus
+	refCount = unk->Release();
+#else
+	refCount = unk->lpVtbl->Release(unk);
+#endif
+
+	if (refCount <= 0) return;
 	uintptr_t addr = (uintptr_t)unk;
 	Platform_Log2("D3D9 resource has %i outstanding references! ID 0x%x", &refCount, &addr);
 }

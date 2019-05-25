@@ -1137,8 +1137,9 @@ static ReturnCode Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntr
 	extraLen = Stream_GetU16_LE(&header[24]);
 	if (pathLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
 
-	path = String_Init(pathBuffer, pathLen, pathLen);
-	if ((res = Stream_Read(stream, pathBuffer, pathLen))) return res;
+	/* NOTE: ZIP spec says path uses code page 437 for encoding */
+	path = String_Init(pathBuffer, pathLen, pathLen);	
+	if ((res = Stream_Read(stream, (uint8_t*)pathBuffer, pathLen))) return res;
 	state->_curEntry = entry;
 
 	if (!state->SelectEntry(&path)) return 0;
@@ -1170,9 +1171,11 @@ static ReturnCode Zip_ReadCentralDirectory(struct ZipState* state) {
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
 
 	pathLen = Stream_GetU16_LE(&header[24]);
-	path    = String_Init(pathBuffer, pathLen, pathLen);
 	if (pathLen > ZIP_MAXNAMELEN) return ZIP_ERR_FILENAME_LEN;
-	if ((res = Stream_Read(stream, pathBuffer, pathLen))) return res;
+
+	/* NOTE: ZIP spec says path uses code page 437 for encoding */
+	path = String_Init(pathBuffer, pathLen, pathLen);
+	if ((res = Stream_Read(stream, (uint8_t*)pathBuffer, pathLen))) return res;
 
 	/* skip data following central directory entry header */
 	extraLen   = Stream_GetU16_LE(&header[26]);
