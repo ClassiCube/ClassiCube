@@ -255,6 +255,13 @@ String_Format4(&str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(2
 String_Format3(&str, "r28=%x r29=%x r30=%x" _NL,        REG_GNUM(28), REG_GNUM(29), REG_GNUM(30)); \
 String_Format2(&str, "sp =%x pc =%x" _NL,               REG_GET(sp,SP), REG_GET(pc,PC));
 
+#define Logger_Dump_SPARC() \
+String_Format4(&str, "o0=%x o1=%x o2=%x o3=%x" _NL, REG_GET(o0,O0), REG_GET(o1,O1), REG_GET(o2,O2), REG_GET(o3,O3)); \
+String_Format4(&str, "o4=%x o5=%x o6=%x o7=%x" _NL, REG_GET(o4,O4), REG_GET(o5,O5), REG_GET(o6,O6), REG_GET(o7,O7)); \
+String_Format4(&str, "g1=%x g2=%x g3=%x g4=%x" _NL, REG_GET(g1,G1), REG_GET(g2,G2), REG_GET(g3,G3), REG_GET(g4,G4)); \
+String_Format4(&str, "g5=%x g6=%x g7=%x y =%x" _NL, REG_GET(g5,G5), REG_GET(g6,G6), REG_GET(g7,G7), REG_GET( y, Y)); \
+String_Format2(&str, "pc=%x nc=%x" _NL,             REG_GET(pc,PC), REG_GET(npc,nPC));
+
 #if defined CC_BUILD_WEB
 static void Logger_DumpBacktrace(String* str, void* ctx) { }
 static void Logger_DumpRegisters(void* ctx) { }
@@ -497,6 +504,11 @@ static void Logger_DumpRegisters(void* ctx) {
 		#define REG_GET(reg, ign) &r.arm_##reg
 	#endif
 	Logger_Dump_ARM32()
+#elif defined __sparc__
+	#if defined CC_BUILD_LINUX
+		#define REG_GET(ign, reg) &r.gregs[REG_##reg]
+	#endif
+	Logger_Dump_SPARC()
 #else
 #error "Unknown ISA/architecture"
 #endif

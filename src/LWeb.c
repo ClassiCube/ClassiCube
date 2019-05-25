@@ -184,7 +184,8 @@ void Json_Parse(struct JsonContext* ctx) {
 static void Json_Handle(uint8_t* data, uint32_t len, 
 						JsonOnValue onVal, JsonOnNew newArr, JsonOnNew newObj) {
 	struct JsonContext ctx;
-	String str = String_Init(data, len, len);
+	/* NOTE: classicube.net uses \u JSON for non ASCII, no need to UTF8 convert characters */
+	String str = String_Init((char*)data, len, len);
 	Json_Init(&ctx, &str);
 	
 	if (onVal)  ctx.OnValue     = onVal;
@@ -398,6 +399,7 @@ static void FetchServersTask_Next(struct JsonContext* ctx) {
 }
 
 static void FetchServersTask_Handle(uint8_t* data, uint32_t len) {
+	int count;
 	Mem_Free(FetchServersTask.Servers);
 	Mem_Free(FetchServersTask.Orders);
 
@@ -408,10 +410,11 @@ static void FetchServersTask_Handle(uint8_t* data, uint32_t len) {
 	/* -1 because servers is surrounded by a { */
 	FetchServersTask.NumServers = -1;
 	Json_Handle(data, len, NULL, NULL, FetchServersTask_Count);
+	count = FetchServersTask.NumServers;
 
-	if (FetchServersTask.NumServers <= 0) return;
-	FetchServersTask.Servers = Mem_Alloc(FetchServersTask.NumServers, sizeof(struct ServerInfo), "servers list");
-	FetchServersTask.Orders  = Mem_Alloc(FetchServersTask.NumServers, 2, "servers order");
+	if (count <= 0) return;
+	FetchServersTask.Servers = (struct ServerInfo*)Mem_Alloc(count, sizeof(struct ServerInfo), "servers list");
+	FetchServersTask.Orders  = (uint16_t*)Mem_Alloc(count, 2, "servers order");
 
 	/* -2 because servers is surrounded by a { */
 	curServer = FetchServersTask.Servers - 2;
