@@ -71,8 +71,6 @@ struct LInput {
 	void (*ClipboardFilter)(String* str);
 	/* Callback invoked when the text is changed. Can be NULL. */
 	void (*TextChanged)(struct LInput* w);
-	/* Filter that only lets certain characters be entered. Can be NULL. */
-	bool (*TextFilter)(char c);
 	/* Specifies the position that characters are inserted/deleted from. */
 	/* NOTE: -1 to insert/delete characters at end of the text. */
 	int CaretPos;

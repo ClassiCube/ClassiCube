@@ -842,8 +842,8 @@ struct FontData {
 	FT_StreamRec stream;
 	uint8_t buffer[8192]; /* small buffer to minimise disk I/O */
 	uint16_t widths[256]; /* cached width of each character glyph */
-	FT_Glyph glyphs[256]; /* cached glyphs */
-	FT_Glyph shadow_glyphs[256]; /* cached glyphs (for back layer shadow) */
+	FT_BitmapGlyph glyphs[256];        /* cached glyphs */
+	FT_BitmapGlyph shadow_glyphs[256]; /* cached glyphs (for back layer shadow) */
 #ifdef CC_BUILD_OSX
 	char filename[FILENAME_SIZE + 1];
 #endif
@@ -871,11 +871,11 @@ static void FontData_Free(struct FontData* font) {
 
 	for (i = 0; i < 256; i++) {
 		if (!font->glyphs[i]) continue;
-		FT_Done_Glyph(font->glyphs[i]);
+		FT_Done_Glyph((FT_Glyph)font->glyphs[i]);
 	}
 	for (i = 0; i < 256; i++) {
 		if (!font->shadow_glyphs[i]) continue;
-		FT_Done_Glyph(font->shadow_glyphs[i]);
+		FT_Done_Glyph((FT_Glyph)font->shadow_glyphs[i]);
 	}
 }
 
@@ -1164,10 +1164,11 @@ static void Platform_BlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, 
 }
 
 int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) {
-	struct FontData* data = (struct FontData*)args->Font.Handle;
-	FT_Face face     = data->face;
-	String text      = args->Text;
-	FT_Glyph* glyphs = data->glyphs;
+	struct FontData* data  = (struct FontData*)args->Font.Handle;
+	FT_BitmapGlyph* glyphs = data->glyphs;
+
+	FT_Face face = data->face;
+	String text  = args->Text;	
 	int descender, height, begX = x;
 	
 	/* glyph state */
@@ -1197,7 +1198,8 @@ int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, Bitm
 				continue;
 			}
 
-			FT_Get_Glyph(face->glyph, &glyph); /* TODO: Check error */
+			/* due to FT_LOAD_RENDER, glyph is always a bitmap one */
+			FT_Get_Glyph(face->glyph, (FT_Glyph)&glyph); /* TODO: Check error */
 			glyphs[(uint8_t)text.buffer[i]] = glyph;
 		}
 

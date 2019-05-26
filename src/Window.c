@@ -738,11 +738,8 @@ void Window_DisableRawMouse(void) {
 
 static Display* win_display;
 static int win_screen;
-static Window win_rootWin;
-
-static Window win_handle;
+static Window win_rootWin, win_handle;
 static XVisualInfo win_visual;
-static int borderLeft, borderRight, borderTop, borderBottom;
  
 static Atom wm_destroy, net_wm_state;
 static Atom net_wm_state_minimized;
@@ -751,7 +748,7 @@ static Atom net_wm_state_maximized_horizontal;
 static Atom net_wm_state_maximized_vertical;
 
 static Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
-static Atom xa_atom = 4, xa_cardinal = 6;
+static Atom xa_atom = 4;
 static long win_eventMask;
 
 

@@ -455,9 +455,7 @@ void LInput_SetText(struct LInput* w, const String* text_) {
 	w->_TextHeight = size.Height;
 }
 
-bool LInput_Append(struct LInput* w, char c) {
-	if (w->TextFilter && !w->TextFilter(c)) return false;
-
+static CC_NOINLINE bool LInput_AppendRaw(struct LInput* w, char c) {
 	if (c >= ' ' && c <= '~' && c != '&' && w->Text.length < w->Text.capacity) {
 		if (w->CaretPos == -1) {
 			String_Append(&w->Text, c);
@@ -465,10 +463,24 @@ bool LInput_Append(struct LInput* w, char c) {
 			String_InsertAt(&w->Text, w->CaretPos, c);
 			w->CaretPos++;
 		}
-		if (w->TextChanged) w->TextChanged(w);
 		return true;
 	}
 	return false;
+}
+
+bool LInput_Append(struct LInput* w, char c) {
+	bool appended = LInput_AppendRaw(w, c);
+	if (appended && w->TextChanged) w->TextChanged(w);
+	return appended;
+}
+
+static void LInput_AppendString(struct LInput* w, const String* str) {
+	int i, appended = 0;
+	for (i = 0; i < str->length; i++) {
+		if (LInput_AppendRaw(w, str->buffer[i])) appended++;
+	}
+
+	if (appended && w->TextChanged) w->TextChanged(w);
 }
 
 bool LInput_Backspace(struct LInput* w) {
@@ -519,8 +531,7 @@ bool LInput_CopyFromClipboard(struct LInput* w) {
 	if (!text.length) return false;
 	if (w->ClipboardFilter) w->ClipboardFilter(&text);
 
-	String_AppendString(&w->Text, &text);
-	if (w->TextChanged) w->TextChanged(w);
+	LInput_AppendString(w, &text);
 	return true;
 }
 
