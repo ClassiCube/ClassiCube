@@ -12,6 +12,18 @@
 #include "Chat.h"
 #include "Stream.h"
 
+int Audio_SoundsVolume, Audio_MusicVolume;
+
+#ifdef CC_BUILD_WEB
+/* Can't use mojang's sounds or music assets, so just stub everything out */
+static void Audio_Init(void) { }
+static void Audio_Free(void) { }
+
+void Audio_SetMusic(int volume) { }
+void Audio_SetSounds(int volume) { }
+void Audio_PlayDigSound(uint8_t type) { }
+void Audio_PlayStepSound(uint8_t type) { }
+#else
 #if defined CC_BUILD_WINMM
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -34,8 +46,6 @@
 #include <AL/alc.h>
 #endif
 #endif
-
-int Audio_SoundsVolume, Audio_MusicVolume;
 static StringsBuffer files;
 
 static void Volume_Mix16(int16_t* samples, int count, int volume) {
@@ -382,20 +392,6 @@ ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) {
 	alGetSourcei(ctx->Source, AL_SOURCE_STATE, &state);
 	*finished = state != AL_PLAYING; return 0;
 }
-#else
-struct AudioContext { int Count; struct AudioFormat Format; };
-static struct AudioContext Audio_Contexts[1];
-
-void Audio_Open(AudioHandle* handle, int buffers) { }
-ReturnCode Audio_Close(AudioHandle handle) { return 1; }
-ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) { return 1; }
-ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, uint32_t dataSize) { return 1; }
-ReturnCode Audio_Play(AudioHandle handle) { return 1; }
-ReturnCode Audio_Stop(AudioHandle handle) { return 1; }
-ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) { return 1; }
-ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) { return 1; }
-void Audio_SysInit(void) { }
-void Audio_SysFree(void) { }
 #endif
 
 static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished) {
@@ -940,6 +936,7 @@ static void Audio_Free(void) {
 	Audio_SysFree();
 	Event_UnregisterBlock(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
+#endif
 
 struct IGameComponent Audio_Component = {
 	Audio_Init, /* Init  */

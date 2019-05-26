@@ -566,7 +566,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 "echo Copying updated version\r\n" \
 "move ClassiCube.update \"%s\"\r\n" \
 "echo Starting launcher again\r\n" \
-"start %s\r\n" \
+"start \"%s\"\r\n" \
 "exit\r\n"
 #else
 #define UPDATE_SCRIPT \
@@ -586,7 +586,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 "echo Copying updated version\n" \
 "mv ./ClassiCube.update \"./%s\"\n" \
 "echo Starting launcher again\n" \
-"./%s\n"
+"\"./%s\"\n"
 #endif
 /* The weird 'cd' line changes current directory to the directory update.sh is in */
 /* Needed because bash's current directory isn't always client's directory (e.g. on OSX) */

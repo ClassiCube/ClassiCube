@@ -634,9 +634,9 @@ static void GeneratingScreen_Init(void* screen) {
 	Event_RaiseVoid(&WorldEvents.NewMap);
 
 	if (Gen_Vanilla) {
-		Thread_Start(&NotchyGen_Generate, true);
+		Thread_Start(NotchyGen_Generate, true);
 	} else {
-		Thread_Start(&FlatgrassGen_Generate, true);
+		Thread_Start(FlatgrassGen_Generate, true);
 	}
 }
 
