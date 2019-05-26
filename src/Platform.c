@@ -1357,6 +1357,16 @@ ReturnCode Socket_SetBlocking(SocketHandle socket, bool blocking) {
 #endif
 }
 
+ReturnCode Socket_GetIP(const String* hostname, uint8_t* data) {
+	struct hostent *he;
+
+	if((he = gethostbyname(hostname->buffer)) == NULL) {
+		return -1;
+	}
+
+	memcpy(data, he->h_addr_list[0], he->h_length);
+	return 0;
+}
 
 ReturnCode Socket_GetError(SocketHandle socket, ReturnCode* result) {
 	socklen_t resultSize = sizeof(ReturnCode);
@@ -1369,7 +1379,9 @@ ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port) {
 
 	addr.sa_family = AF_INET;
 	Stream_SetU16_BE( (uint8_t*)&addr.sa_data[0], port);
-	Utils_ParseIP(ip, (uint8_t*)&addr.sa_data[2]);
+	if(!Utils_ParseIP(ip, (uint8_t*)&addr.sa_data[2])) {
+		Socket_GetIP(ip, (uint8_t*)&addr.sa_data[2]);
+	}
 
 	res = connect(socket, &addr, sizeof(addr));
 	return res == -1 ? Socket__Error() : 0;

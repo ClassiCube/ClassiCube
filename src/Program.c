@@ -174,10 +174,6 @@ int main(int argc, char** argv) {
 		String_Copy(&Game_Mppass,   &args[1]);
 		String_Copy(&Server.IP,     &args[2]);
 
-		if (!Utils_ParseIP(&args[2], ip)) {
-			ExitInvalidArg("Invalid IP", &args[2]);
-			return 1;
-		}
 		if (!Convert_ParseUInt16(&args[3], &port)) {
 			ExitInvalidArg("Invalid port", &args[3]);
 			return 1;

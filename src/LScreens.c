@@ -581,7 +581,6 @@ static void DirectConnectScreen_StartClient(void* w, int x, int y) {
 	const String* mppass = &DirectConnectScreen_Instance.IptMppass.Text;
 
 	String ip, port;
-	uint8_t  raw_ip[4];
 	uint16_t raw_port;
 
 	int index = String_LastIndexOf(addr, ':');
@@ -595,9 +594,6 @@ static void DirectConnectScreen_StartClient(void* w, int x, int y) {
 
 	if (!user->length) {
 		DirectConnectScreen_SetStatus("&eUsername required"); return;
-	}
-	if (!Utils_ParseIP(&ip, raw_ip)) {
-		DirectConnectScreen_SetStatus("&eInvalid ip"); return;
 	}
 	if (!Convert_ParseUInt16(&port, &raw_port)) {
 		DirectConnectScreen_SetStatus("&eInvalid port"); return;
