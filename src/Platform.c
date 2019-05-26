@@ -1199,7 +1199,7 @@ int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, Bitm
 			}
 
 			/* due to FT_LOAD_RENDER, glyph is always a bitmap one */
-			FT_Get_Glyph(face->glyph, (FT_Glyph)&glyph); /* TODO: Check error */
+			FT_Get_Glyph(face->glyph, (FT_Glyph*)&glyph); /* TODO: Check error */
 			glyphs[(uint8_t)text.buffer[i]] = glyph;
 		}
 

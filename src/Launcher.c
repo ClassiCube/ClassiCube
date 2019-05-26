@@ -564,7 +564,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 "echo 1..\r\n" \
 "ping 127.0.0.1 -n 2 > nul\r\n" \
 "echo Copying updated version\r\n" \
-"move ClassiCube.update %s\r\n" \
+"move ClassiCube.update \"%s\"\r\n" \
 "echo Starting launcher again\r\n" \
 "start %s\r\n" \
 "exit\r\n"
@@ -584,7 +584,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 "sleep 1\n" \
 "cd $(cd -P -- \"$(dirname -- \"$0\")\" && pwd -P)\n" \
 "echo Copying updated version\n" \
-"mv ./ClassiCube.update ./%s\n" \
+"mv ./ClassiCube.update \"./%s\"\n" \
 "echo Starting launcher again\n" \
 "./%s\n"
 #endif
