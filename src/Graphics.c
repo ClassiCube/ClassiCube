@@ -1498,6 +1498,14 @@ static void Gfx_CompileProgram(struct GLShader* shader) {
 
     glAttachShader(program, vertex);
     glAttachShader(program, fragment);
+
+	/* Force in_pos/in_col/in_uv attributes to be bound to 0,1,2 locations */
+	/* Although most browsers assign the attributes in this order anyways, */
+	/* the specification does not require this. (e.g. Safari doesn't) */
+	glBindAttribLocation(program, 0, "in_pos");
+	glBindAttribLocation(program, 1, "in_col");
+	glBindAttribLocation(program, 2, "in_uv");
+
     glLinkProgram(program);
     glGetProgramiv(program, GL_LINK_STATUS, &temp);
 
