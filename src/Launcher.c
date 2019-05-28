@@ -566,7 +566,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 "echo Copying updated version\r\n" \
 "move ClassiCube.update \"%s\"\r\n" \
 "echo Starting launcher again\r\n" \
-"start \"%s\"\r\n" \
+"start \"ClassiCube\" \"%s\"\r\n" \
 "exit\r\n"
 #else
 #define UPDATE_SCRIPT \

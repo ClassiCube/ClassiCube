@@ -1549,6 +1549,7 @@ ReturnCode Process_StartOpen(const String* args) {
 	char str[600];
 	Platform_ConvertString(str, args);
 	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
+	return 0;
 }
 void Process_Exit(ReturnCode code) { exit(code); }
 
