@@ -1,4 +1,4 @@
-ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, OSX, Linux, BSD, and Solaris.
+ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, OSX, Linux, BSD, Solaris, and in a browser.
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
@@ -33,9 +33,6 @@ Run ClassiCube.exe. You can connect to LAN/locally hosted servers, ~~minecraft.n
 
 ###### *Windows specific*
 *If you are stuck using the built-in OpenGL 1.1 software renderer, you can use the MESA software renderer from either [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) or [here](https://wiki.qt.io/Cross_compiling_Mesa_for_Windows) for slightly better performance. Typically though, this occurs because you have not installed GPU drivers.*
-
-###### *Linux specific*
-*You will likely need to do `chmod +x ClassiCube` before running the game.
 
 #### Tips
 * Press escape (after joining a world) or pause to switch to the pause menu.
@@ -104,9 +101,31 @@ NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TOD
 
 ```emcc *.c -s FETCH=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file texpacks/default.zip```
 
-#### Other
+##### Other
 
 You'll have to write the necessary code. You should read portability.md in misc folder.
+
+### Known compilation errors
+
+#### Undefined reference to 'clock_gettime'
+Add ```-lrt``` when compiling. Occurs when using glibc versions before 2.17.
+
+#### fatal error: execinfo.h: No such file or directory
+Install ```libexecinfo``` package. Occurs when using musl.
+
+#### Undefined reference to 'backtrace'
+Add ```-lexecinfo``` when compiling. Occurs when using musl.
+  
+#### Undefined reference to 'getcontext'
+Occurs when using musl. Change
+```C
+getcontext(&ctx);
+Logger_AbortCommon(result, raw_msg, &ctx);
+```
+to
+```C
+Logger_AbortCommon(result, raw_msg, NULL);
+```
 
 ### Documentation
 
