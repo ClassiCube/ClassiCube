@@ -205,7 +205,7 @@ struct SpecialInputWidget {
 	Size2D ElementSize;
 	int SelectedIndex;
 	bool PendingRedraw;
-	struct InputWidget* AppendObj;
+	struct InputWidget* Target;
 	struct Texture Tex;
 	FontDesc Font;
 	struct SpecialInputTab Tabs[5];
@@ -213,7 +213,7 @@ struct SpecialInputWidget {
 	char __ColBuffer[DRAWER2D_MAX_COLS * 4];
 };
 
-CC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, const FontDesc* font, struct InputWidget* appendObj);
+CC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, const FontDesc* font, struct InputWidget* target);
 CC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active);
 #endif

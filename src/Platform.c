@@ -1296,7 +1296,7 @@ static void Font_Init(void) {
 		Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
 	}
 
-	EntryList_Init(&font_list, NULL, FONT_CACHE_FILE, '=');
+	EntryList_Init(&font_list, FONT_CACHE_FILE, '=');
 	for (i = 0; i < Array_Elems(dirs); i++) {
 		Directory_Enum(&dirs[i], NULL, Font_DirCallback);
 	}

@@ -302,11 +302,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 	ReturnCode res;
 
 	String_InitArray(path, pathBuffer);
-	if (list->Folder) {
-		String_Format2(&path, "%c/%c", list->Folder, list->Filename);
-	} else {
-		String_AppendConst(&path, list->Filename);
-	}
+	String_AppendConst(&path, list->Path);
 	
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
@@ -331,7 +327,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 		/* If don't prevent this here, client aborts in StringsBuffer_Add */
 		if (entry.length > STRINGSBUFFER_LEN_MASK) {
 			entry.length = 0;
-			String_Format1(&entry, "Skipping extremely long line in %c, file may have been corrupted", list->Filename);
+			String_Format1(&entry, "Skipping extremely long line in %c, file may have been corrupted", list->Path);
 			Logger_WarnFunc(&entry); continue;
 		}
 
@@ -350,12 +346,7 @@ void EntryList_Save(struct EntryList* list) {
 	ReturnCode res;
 
 	String_InitArray(path, pathBuffer);
-	if (list->Folder) {
-		String_Format2(&path, "%c/%c", list->Folder, list->Filename);
-		if (!Utils_EnsureDirectory(list->Folder)) return;
-	} else {
-		String_AppendConst(&path, list->Filename);
-	}
+	String_AppendConst(&path, list->Path);
 	
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Logger_Warn2(res, "creating", &path); return; }
@@ -416,9 +407,8 @@ int EntryList_Find(struct EntryList* list, const String* key) {
 	return -1;
 }
 
-void EntryList_Init(struct EntryList* list, const char* folder, const char* file, char separator) {
-	list->Folder    = folder;
-	list->Filename  = file;
+void EntryList_Init(struct EntryList* list, const char* path, char separator) {
+	list->Path      = path;
 	list->Separator = separator;
 	EntryList_Load(list, NULL);
 }

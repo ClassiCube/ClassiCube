@@ -58,8 +58,7 @@ int Convert_ToBase64(const uint8_t* src, int len, char* dst);
 int Convert_FromBase64(const char* src, int len, uint8_t* dst);
 
 struct EntryList {
-	const char* Folder;
-	const char* Filename;
+	const char* Path;
 	char Separator;
 	StringsBuffer Entries;
 };
@@ -78,5 +77,5 @@ CC_NOINLINE STRING_REF String EntryList_UNSAFE_Get(struct EntryList* list, const
 /* Finds the index of the entry whose key caselessly equals the given key. */
 CC_NOINLINE int EntryList_Find(struct EntryList* list, const String* key);
 /* Initialises the EntryList and loads the entries from disc. */
-void EntryList_Init(struct EntryList* list, const char* folder, const char* file, char separator);
+void EntryList_Init(struct EntryList* list, const char* path, char separator);
 #endif

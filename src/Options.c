@@ -138,9 +138,9 @@ void Options_Load(void) {
 	String entry, key, value;
 	int i;
 
-	if (!Options.Filename) {
-		EntryList_Init(&Options, NULL, "options-default.txt", '=');
-		EntryList_Init(&Options, NULL, "options.txt",         '=');
+	if (!Options.Path) {
+		EntryList_Init(&Options, "options-default.txt", '=');
+		EntryList_Init(&Options, "options.txt",         '=');
 	} else {
 		/* Reset all the unchanged options */
 		for (i = Options.Entries.Count - 1; i >= 0; i--) {

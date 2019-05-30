@@ -359,6 +359,7 @@ static void ServerInfo_Parse(struct JsonContext* ctx, const String* val) {
 	} else if (String_CaselessEqualsConst(&ctx->CurKey, "featured")) {
 		Convert_ParseBool(val, &info->Featured);
 	} else if (String_CaselessEqualsConst(&ctx->CurKey, "country_abbr")) {
+		/* Two letter country codes, see ISO 3166-1 alpha-2 */
 		String_Copy(&info->Country, val);
 	}
 }
@@ -566,7 +567,7 @@ static int flagsCount, flagsCapacity;
 struct Flag {
 	Bitmap Bmp;
 	String Name;
-	char _nameBuffer[8];
+	char _nameBuffer[2];
 };
 static struct Flag* flags;
 

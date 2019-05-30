@@ -518,10 +518,10 @@ void Atlas_Free(void) {
 static struct EntryList acceptedList, deniedList, etagCache, lastModifiedCache;
 
 void TextureCache_Init(void) {
-	EntryList_Init(&acceptedList,      "texturecache", "acceptedurls.txt", ' ');
-	EntryList_Init(&deniedList,        "texturecache", "deniedurls.txt",   ' ');
-	EntryList_Init(&etagCache,         "texturecache", "etags.txt",        ' ');
-	EntryList_Init(&lastModifiedCache, "texturecache", "lastmodified.txt", ' ');
+	EntryList_Init(&acceptedList,      "texturecache/acceptedurls.txt", ' ');
+	EntryList_Init(&deniedList,        "texturecache/deniedurls.txt",   ' ');
+	EntryList_Init(&etagCache,         "texturecache/etags.txt",        ' ');
+	EntryList_Init(&lastModifiedCache, "texturecache/lastmodified.txt", ' ');
 }
 
 bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&acceptedList, url) >= 0; }
@@ -607,7 +607,6 @@ void TextureCache_Set(const String* url, const uint8_t* data, uint32_t length) {
 
 	String_InitArray(path, pathBuffer);
 	TextureCache_MakePath(&path, url);
-	if (!Utils_EnsureDirectory("texturecache")) return;
 	
 	res = Stream_WriteAllTo(&path, data, length);
 	if (res) { Logger_Warn2(res, "caching", url); }

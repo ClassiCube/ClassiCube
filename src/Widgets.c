@@ -2687,7 +2687,7 @@ static void SpecialInputWidget_IntersectsBody(struct SpecialInputWidget* w, int 
 
 	/* TODO: Not be so hacky */
 	if (w->SelectedIndex == 0) str.length = 2;
-	InputWidget_AppendString(w->AppendObj, &str);
+	InputWidget_AppendString(w->Target, &str);
 }
 
 static void SpecialInputTab_Init(struct SpecialInputTab* tab, STRING_REF String* title, int itemsPerRow, int charsPerItem, STRING_REF String* contents) {
@@ -2882,10 +2882,10 @@ static struct WidgetVTABLE SpecialInputWidget_VTABLE = {
 	SpecialInputWidget_MouseDown, Widget_Mouse,              Widget_MouseMove,        Widget_MouseScroll,
 	Widget_CalcPosition,
 };
-void SpecialInputWidget_Create(struct SpecialInputWidget* w, const FontDesc* font, struct InputWidget* appendObj) {
+void SpecialInputWidget_Create(struct SpecialInputWidget* w, const FontDesc* font, struct InputWidget* target) {
 	Widget_Reset(w);
 	w->VTABLE    = &SpecialInputWidget_VTABLE;
 	w->VerAnchor = ANCHOR_MAX;
 	w->Font      = *font;
-	w->AppendObj = appendObj;
+	w->Target = target;
 }

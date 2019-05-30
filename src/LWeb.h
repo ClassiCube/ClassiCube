@@ -37,7 +37,7 @@ struct ServerInfo {
 	int _order; /* (internal) order in servers table after filtering */
 	char _hashBuffer[32],   _nameBuffer[STRING_SIZE];
 	char _ipBuffer[16],     _mppassBuffer[STRING_SIZE];
-	char _countryBuffer[8], _softBuffer[STRING_SIZE];
+	char _countryBuffer[2], _softBuffer[STRING_SIZE];
 };
 
 struct LWebTask;
