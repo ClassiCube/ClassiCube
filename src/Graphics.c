@@ -1434,7 +1434,7 @@ static void Gfx_GenFragmentShader(const struct GLShader* shader, String* dst) {
 	String_AppendConst(dst,         "varying vec4 out_col;\n");
 	if (uv) String_AppendConst(dst, "varying vec2 out_uv;\n");
 	if (uv) String_AppendConst(dst, "uniform sampler2D texImage;\n");
-	if (fm) String_AppendConst(dst, "uniform vec4 fogCol;\n");
+	if (fm) String_AppendConst(dst, "uniform vec3 fogCol;\n");
 	if (fl) String_AppendConst(dst, "uniform float fogEnd;\n");
 	if (fd) String_AppendConst(dst, "uniform float fogDensity;\n");
 
@@ -1445,7 +1445,7 @@ static void Gfx_GenFragmentShader(const struct GLShader* shader, String* dst) {
 	if (fm) String_AppendConst(dst, "  float depth = gl_FragCoord.z / gl_FragCoord.w;\n");
 	if (fl) String_AppendConst(dst, "  float f = clamp((fogEnd - depth) / fogEnd, 0.0, 1.0);\n");
 	if (fd) String_AppendConst(dst, "  float f = clamp(exp(fogDensity * depth), 0.0, 1.0);\n");
-	if (fm) String_AppendConst(dst, "  col = f * col + (1.0 - f) * fogCol;\n");
+	if (fm) String_AppendConst(dst, "  col.rgb = mix(fogCol, col.rgb, f);\n");
 	String_AppendConst(dst,         "  gl_FragColor = col;\n");
 	String_AppendConst(dst,         "}");
 }
@@ -1555,8 +1555,8 @@ static void Gfx_ReloadUniforms(void) {
 		s->Uniforms &= ~UNI_TEX_MATRIX;
 	}
 	if ((s->Uniforms & UNI_FOG_COL) && (s->Features & FTR_HASANY_FOG)) {
-		glUniform4f(s->Locations[2], gfx_fogCol.R / 255.0f, gfx_fogCol.G / 255.0f, 
-									 gfx_fogCol.B / 255.0f, gfx_fogCol.A / 255.0f);
+		glUniform3f(s->Locations[2], gfx_fogCol.R / 255.0f, gfx_fogCol.G / 255.0f, 
+									 gfx_fogCol.B / 255.0f);
 		s->Uniforms &= ~UNI_FOG_COL;
 	}
 	if ((s->Uniforms & UNI_FOG_END) && (s->Features & FTR_LINEAR_FOG)) {
