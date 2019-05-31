@@ -2604,6 +2604,76 @@ static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* 
 	return true;
 }
 
+static struct TouchData { long id, x, y; } touchesList[32];
+static int touchesCount;
+
+static void Window_AddTouch(const EmscriptenTouchPoint* t) {
+	touchesList[touchesCount].id = t->identifier;
+	touchesList[touchesCount].x  = t->canvasX;
+	touchesList[touchesCount].y  = t->canvasY;
+	touchesCount++;
+}
+
+static void Window_UpdateTouch(const EmscriptenTouchPoint* t) {
+	int i;
+	for (i = 0; i < touchesCount; i++) {
+		if (touchesList[i].id != t->identifier) continue;
+		Mouse_SetPosition(t->canvasX, t->canvasY);
+
+		if (win_rawMouse) {
+			Event_RaiseMouseMove(&MouseEvents.RawMoved,
+				t->canvasX - touchesList[i].x, t->canvasY - touchesList[i].y);
+		}
+
+		touchesList[i].x = t->canvasX;
+		touchesList[i].y = t->canvasY;
+		return;
+	}
+}
+
+static void Window_RemoveTouch(const EmscriptenTouchPoint* t) {
+	int i;
+	for (i = 0; i < touchesCount; i++) {
+		if (touchesList[i].id != t->identifier) continue;
+
+		/* found the touch, remove it*/
+		for (; i < touchesCount - 1; i++) {
+			touchesList[i] = touchesList[i + 1];
+		}
+		touchesCount--; return;
+	}
+}
+
+static EM_BOOL Window_TouchStart(int type, const EmscriptenTouchEvent* ev, void* data) {
+	const EmscriptenTouchPoint* t;
+	int i;
+	for (i = 0; i < ev->numTouches; ++i) {
+		t = &ev->touches[i];
+		if (t->isChanged) Window_AddTouch(t);
+	}
+	return false;
+}
+
+static EM_BOOL Window_TouchMove(int type, const EmscriptenTouchEvent* ev, void* data) {
+	const EmscriptenTouchPoint* t;
+	int i;
+	for (i = 0; i < ev->numTouches; ++i) {
+		t = &ev->touches[i];
+		if (t->isChanged) Window_UpdateTouch(t);
+	}
+	return true;
+}
+
+static EM_BOOL Window_TouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) {
+	const EmscriptenTouchPoint* t;
+	int i;
+	for (i = 0; i < ev->numTouches; ++i) {
+		t = &ev->touches[i];
+		if (t->isChanged) Window_RemoveTouch(t);
+	}
+	return false;
+}
+
 static EM_BOOL Window_Focus(int type, const EmscriptenFocusEvent* ev, void* data) {
 	Window_Focused = type == EMSCRIPTEN_EVENT_FOCUS;
 	if (!Window_Focused) Key_Clear();
@@ -2748,6 +2818,11 @@ static void Window_HookEvents(void) {
 	emscripten_set_keydown_callback("#window",  NULL, 0, Window_Key);
 	emscripten_set_keyup_callback("#window",    NULL, 0, Window_Key);
 	emscripten_set_keypress_callback("#window", NULL, 0, Window_KeyPress);
+
+	emscripten_set_touchstart_callback(0,  NULL, 0, Window_TouchStart);
+	emscripten_set_touchmove_callback(0,   NULL, 0, Window_TouchMove);
+	emscripten_set_touchend_callback(0,    NULL, 0, Window_TouchEnd);
+	emscripten_set_touchcancel_callback(0, NULL, 0, Window_TouchEnd);
 }
 
 static void Window_UnhookEvents(void) {
@@ -2766,6 +2841,11 @@ static void Window_UnhookEvents(void) {
 	emscripten_set_keydown_callback("#window",  NULL, 0, NULL);
 	emscripten_set_keyup_callback("#window",    NULL, 0, NULL);
 	emscripten_set_keypress_callback("#window", NULL, 0, NULL);
+
+	emscripten_set_touchstart_callback(0,  NULL, 0, NULL);
+	emscripten_set_touchmove_callback(0,   NULL, 0, NULL);
+	emscripten_set_touchend_callback(0,    NULL, 0, NULL);
+	emscripten_set_touchcancel_callback(0, NULL, 0, NULL);
 }
 
 void Window_Init(void) {
