@@ -414,7 +414,7 @@ static void InputHandler_MouseWheel(void* obj, float delta) {
 
 static void InputHandler_MouseMove(void* obj, int xDelta, int yDelta) {
 	struct Screen* active = Gui_GetActiveScreen();
-	Elem_HandlesMouseMove(active, Mouse_X, Mouse_Y);
+	if (active) Elem_HandlesMouseMove(active, Mouse_X, Mouse_Y);
 }
 
 static void InputHandler_MouseDown(void* obj, int button) {
