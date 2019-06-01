@@ -273,7 +273,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc
 	
 	width = atlas->offset;
 	for (i = 0; i < chars->length; i++) {
-		args.Text = String_UNSAFE_Substring(chars, i, 1);
+		args.text = String_UNSAFE_Substring(chars, i, 1);
 		size = Drawer2D_MeasureText(&args);
 
 		atlas->widths[i]  = size.Width;
@@ -284,11 +284,11 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc
 
 	Bitmap_AllocateClearedPow2(&bmp, width, size.Height);
 	{
-		args.Text = *prefix;
+		args.text = *prefix;
 		Drawer2D_DrawText(&bmp, &args, 0, 0);	
 
 		for (i = 0; i < chars->length; i++) {
-			args.Text = String_UNSAFE_Substring(chars, i, 1);
+			args.text = String_UNSAFE_Substring(chars, i, 1);
 			Drawer2D_DrawText(&bmp, &args, atlas->offsets[i], 0);
 		}
 		Drawer2D_Make2DTexture(&atlas->tex, &bmp, size, 0, 0);

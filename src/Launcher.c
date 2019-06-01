@@ -461,9 +461,9 @@ void Launcher_ResetPixels(void) {
 	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);
 	x = Game.Width / 2 - Drawer2D_TextWidth(&args) / 2;
 
-	args.Text = title_back;
+	args.text = title_back;
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x + 4, 4);
-	args.Text = title_fore;
+	args.text = title_fore;
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x, 0);
 
 	Drawer2D_BitmappedText = false;

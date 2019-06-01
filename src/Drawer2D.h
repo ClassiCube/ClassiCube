@@ -7,7 +7,7 @@
 	Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-struct DrawTextArgs { String Text; FontDesc Font; bool UseShadow; };
+struct DrawTextArgs { String text; FontDesc font; bool useShadow; };
 struct Texture;
 struct IGameComponent;
 extern struct IGameComponent Drawer2D_Component;

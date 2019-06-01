@@ -1081,9 +1081,9 @@ static void Font_DirCallback(const String* path, void* obj) {
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
 int Platform_TextWidth(struct DrawTextArgs* args) {
-	struct FontData* data = (struct FontData*)args->Font.Handle;
+	struct FontData* data = (struct FontData*)args->font.Handle;
 	FT_Face face = data->face;
-	String text  = args->Text;
+	String text  = args->text;
 	int i, width = 0, charWidth;
 	FT_Error res;
 	Codepoint cp;
@@ -1164,11 +1164,11 @@ static void Platform_BlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, 
 }
 
 int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) {
-	struct FontData* data  = (struct FontData*)args->Font.Handle;
+	struct FontData* data  = (struct FontData*)args->font.Handle;
 	FT_BitmapGlyph* glyphs = data->glyphs;
 
 	FT_Face face = data->face;
-	String text  = args->Text;	
+	String text  = args->text;	
 	int descender, height, begX = x;
 	
 	/* glyph state */
@@ -1217,7 +1217,7 @@ int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, Bitm
 		x -= glyph->left; y -= offset;
 	}
 
-	if (args->Font.Style & FONT_FLAG_UNDERLINE) {
+	if (args->font.Style & FONT_FLAG_UNDERLINE) {
 		int ul_pos   = FT_MulFix(face->underline_position,  face->size->metrics.y_scale);
 		int ul_thick = FT_MulFix(face->underline_thickness, face->size->metrics.y_scale);
 

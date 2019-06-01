@@ -485,8 +485,8 @@ static void Player_MakeNameTexture(struct Player* player) {
 	Drawer2D_BitmappedText = true;
 	name = String_FromRawArray(player->DisplayNameRaw);
 
-	Drawer2D_MakeFont(&args.Font, 24, FONT_STYLE_NORMAL);
-	DrawTextArgs_Make(&args, &name, &args.Font, false);
+	Drawer2D_MakeFont(&args.font, 24, FONT_STYLE_NORMAL);
+	DrawTextArgs_Make(&args, &name, &args.font, false);
 	size = Drawer2D_MeasureText(&args);
 
 	if (size.Width == 0) {
@@ -502,11 +502,11 @@ static void Player_MakeNameTexture(struct Player* player) {
 
 			Drawer2D_Cols['f'] = shadowCol;
 			String_AppendColorless(&colorlessName, &name);
-			args.Text = colorlessName;
+			args.text = colorlessName;
 			Drawer2D_DrawText(&bmp, &args, NAME_OFFSET, NAME_OFFSET);
 
 			Drawer2D_Cols['f'] = origWhiteCol;
-			args.Text = name;
+			args.text = name;
 			Drawer2D_DrawText(&bmp, &args, 0, 0);
 		}
 		Drawer2D_Make2DTexture(&player->NameTex, &bmp, size, 0, 0);

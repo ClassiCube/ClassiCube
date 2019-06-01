@@ -481,7 +481,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
 		/* But switching to pause screen disables mouse lock, causing a KeyUp */
-		/* event to be sent, triggering the active->Closable case which immediately
+		/* event to be sent, triggering the active->closable case which immediately
 		/* closes the pause screen. Hence why the next KeyUp must be supressed. */
 		suppressEscape = true;
 #endif
@@ -519,7 +519,7 @@ static void InputHandler_KeyUp(void* obj, int key) {
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */
 	/* done in key up, the cursor disappears as expected. */
-	if (key == KEY_ESCAPE && active->Closable) {
+	if (key == KEY_ESCAPE && active->closable) {
 		if (suppressEscape) { suppressEscape = false; return; }
 		Gui_Close(active); return;
 	}

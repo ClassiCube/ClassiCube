@@ -17,15 +17,15 @@ static char fontNameBuffer[STRING_SIZE];
 String Drawer2D_FontName = String_FromArray(fontNameBuffer);
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, const FontDesc* font, bool useShadow) {
-	args->Text = *text;
-	args->Font = *font;
-	args->UseShadow = useShadow;
+	args->text = *text;
+	args->font = *font;
+	args->useShadow = useShadow;
 }
 
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, const FontDesc* font, bool useShadow) {
-	args->Text = String_Empty;
-	args->Font = *font;
-	args->UseShadow = useShadow;
+	args->text = String_Empty;
+	args->font = *font;
+	args->useShadow = useShadow;
 }
 
 void Drawer2D_MakeFont(FontDesc* desc, int size, int style) {
@@ -408,8 +408,8 @@ void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, Bitmap
 static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, bool shadow) {
 	BitmapCol black = BITMAPCOL_CONST(0, 0, 0, 255);
 	BitmapColUnion col;
-	String text  = args->Text;
-	int i, point = args->Font.Size, count = 0;
+	String text  = args->text;
+	int i, point = args->font.Size, count = 0;
 
 	int xPadding, yPadding;
 	int srcX, srcY, dstX, dstY;
@@ -486,7 +486,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		x = begX;
 	}
 
-	if (!(args->Font.Style & FONT_FLAG_UNDERLINE)) return;
+	if (!(args->font.Style & FONT_FLAG_UNDERLINE)) return;
 	/* scale up bottom row of a cell to drawn text font */
 	cellY = (8 - 1) * dstHeight / 8;
 	underlineY      = y + (cellY + yPadding);
@@ -505,16 +505,16 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 }
 
 static void Drawer2D_DrawBitmapText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
-	int offset = Drawer2D_ShadowOffset(args->Font.Size);
+	int offset = Drawer2D_ShadowOffset(args->font.Size);
 
-	if (args->UseShadow) {
+	if (args->useShadow) {
 		Drawer2D_DrawCore(bmp, args, x + offset, y + offset, true);
 	}
 	Drawer2D_DrawCore(bmp, args, x, y, false);
 }
 
 static int Drawer2D_MeasureBitmapWidth(const struct DrawTextArgs* args) {
-	int i, point = args->Font.Size;
+	int i, point = args->font.Size;
 	int xPadding, width;
 	String text;
 
@@ -522,7 +522,7 @@ static int Drawer2D_MeasureBitmapWidth(const struct DrawTextArgs* args) {
 	xPadding = Drawer2D_XPadding(point);
 	width    = 0;
 
-	text = args->Text;
+	text = args->text;
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
@@ -535,26 +535,26 @@ static int Drawer2D_MeasureBitmapWidth(const struct DrawTextArgs* args) {
 	/* Remove padding at end */
 	/*if (width) width -= xPadding; */
 
-	if (args->UseShadow) { width += Drawer2D_ShadowOffset(point); }
+	if (args->useShadow) { width += Drawer2D_ShadowOffset(point); }
 	return width;
 }
 
 void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 	BitmapCol col, backCol, black = BITMAPCOL_CONST(0, 0, 0, 255);
-	String value = args->Text;
+	String value = args->text;
 	char colCode, nextCol = 'f';
 	int i, partWidth;
 
-	if (Drawer2D_IsEmptyText(&args->Text)) return;
+	if (Drawer2D_IsEmptyText(&args->text)) return;
 	if (Drawer2D_BitmappedText) { Drawer2D_DrawBitmapText(bmp, args, x, y); return; }
 
 	for (i = 0; i < value.length; ) {
 		colCode = nextCol;
-		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);	
-		if (!args->Text.length) continue;
+		i = Drawer2D_NextPart(i, &value, &args->text, &nextCol);	
+		if (!args->text.length) continue;
 
 		col = Drawer2D_GetCol(colCode);
-		if (args->UseShadow) {
+		if (args->useShadow) {
 			backCol = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col, 0.25f);
 			Platform_TextDraw(args, bmp, x, y, backCol, true);
 		}
@@ -562,27 +562,27 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 		partWidth = Platform_TextDraw(args, bmp, x, y, col, false);
 		x += partWidth;
 	}
-	args->Text = value;
+	args->text = value;
 }
 
 int Drawer2D_TextWidth(struct DrawTextArgs* args) {
-	String value = args->Text;
+	String value = args->text;
 	char nextCol = 'f';
 	int i, width;
 
-	if (Drawer2D_IsEmptyText(&args->Text)) return 0;
+	if (Drawer2D_IsEmptyText(&args->text)) return 0;
 	if (Drawer2D_BitmappedText) return Drawer2D_MeasureBitmapWidth(args);
 	width = 0;
 
 	for (i = 0; i < value.length; ) {
-		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
+		i = Drawer2D_NextPart(i, &value, &args->text, &nextCol);
 
-		if (!args->Text.length) continue;
+		if (!args->text.length) continue;
 		width += Platform_TextWidth(args);
 	}
 
-	if (args->UseShadow) width += 2;
-	args->Text = value;
+	if (args->useShadow) width += 2;
+	args->text = value;
 	return width;
 }
 
@@ -604,7 +604,7 @@ int Drawer2D_FontHeight(const FontDesc* font, bool useShadow) {
 Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
 	Size2D size;
 	size.Width  = Drawer2D_TextWidth(args);
-	size.Height = Drawer2D_FontHeight(&args->Font, args->UseShadow);
+	size.Height = Drawer2D_FontHeight(&args->font, args->useShadow);
 
 	if (!size.Width) size.Height = 0;
 	return size;
@@ -620,7 +620,7 @@ void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	if (width <= maxWidth) { Drawer2D_DrawText(bmp, args, x, y); return; }
 
 	String_InitArray(str, strBuffer);
-	String_Copy(&str, &args->Text);
+	String_Copy(&str, &args->text);
 	String_Append(&str, '.');
 
 	part = *args;
@@ -629,13 +629,13 @@ void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 
 		/* skip over trailing spaces */
 		if (str.buffer[i - 1] == ' ') continue;
-		part.Text = String_UNSAFE_Substring(&str, 0, i + 2);
+		part.text = String_UNSAFE_Substring(&str, 0, i + 2);
 		width = Drawer2D_TextWidth(&part);
 		if (width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
 
 		/* If down to <= 2 chars, try omit trailing .. */
 		if (i > 2) continue;
-		part.Text = String_UNSAFE_Substring(&str, 0, i);
+		part.text = String_UNSAFE_Substring(&str, 0, i);
 		width = Drawer2D_TextWidth(&part);
 		if (width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
 	}

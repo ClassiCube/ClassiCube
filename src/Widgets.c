@@ -898,7 +898,7 @@ static void InputWidget_CalculateLineSizes(struct InputWidget* w) {
 		line.length = 0;
 		InputWidget_FormatLine(w, y, &line);
 
-		args.Text = line;
+		args.text = line;
 		size = Drawer2D_MeasureText(&args);
 		w->lineSizes[y].Width += size.Width;
 		w->lineSizes[y].Height = size.Height;
@@ -947,13 +947,13 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 		String_InitArray(line, lineBuffer);
 		InputWidget_FormatLine(w, w->caretY, &line);
 
-		args.Text = String_UNSAFE_Substring(&line, 0, w->caretX);
+		args.text = String_UNSAFE_Substring(&line, 0, w->caretX);
 		lineWidth = Drawer2D_TextWidth(&args);
 		if (w->caretY == 0) lineWidth += w->prefixWidth;
 
 		if (w->caretX < line.length) {
-			args.Text = String_UNSAFE_Substring(&line, w->caretX, 1);
-			args.UseShadow = true;
+			args.text = String_UNSAFE_Substring(&line, w->caretX, 1);
+			args.useShadow = true;
 			w->caretTex.Width = Drawer2D_TextWidth(&args);
 		}
 	}
@@ -1249,11 +1249,11 @@ static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button
 		if (!line.length) continue;
 
 		for (cx = 0; cx < line.length; cx++) {
-			args.Text = String_UNSAFE_Substring(&line, 0, cx);
+			args.text = String_UNSAFE_Substring(&line, 0, cx);
 			charX     = Drawer2D_TextWidth(&args);
 			if (cy == 0) charX += w->prefixWidth;
 
-			args.Text = String_UNSAFE_Substring(&line, cx, 1);
+			args.text = String_UNSAFE_Substring(&line, cx, 1);
 			charWidth = Drawer2D_TextWidth(&args);
 
 			if (Gui_Contains(charX, cy * charHeight, charWidth, charHeight, x, y)) {
@@ -1489,7 +1489,7 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	{
 		Drawer2D_DrawText(&bmp, &args, w->base.padding, 0);
 
-		args.Text = range;
+		args.text = range;
 		hintWidth = Drawer2D_MeasureText(&args).Width;
 		hintX     = adjSize.Width - hintWidth;
 		if (size.Width + 3 < hintX) {
@@ -1576,7 +1576,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 
 	DrawTextArgs_MakeEmpty(&args, &w->font, true);
 	if (w->prefix.length) {
-		args.Text = w->prefix;
+		args.text = w->prefix;
 		Drawer2D_DrawText(&bmp, &args, 0, 0);
 	}
 
@@ -1592,7 +1592,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 		}
 		/* Convert % to & for colour codes */
 		InputWidget_FormatLine(w, i, &line);
-		args.Text = line;
+		args.text = line;
 
 		x = i == 0 ? w->prefixWidth : 0;
 		Drawer2D_DrawText(&bmp, &args, x, y);
@@ -2462,7 +2462,7 @@ static bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, String* text, int 
 	int i, x, width;
 
 	mouseX -= w->textures[index].X;
-	args.UseShadow = true;
+	args.useShadow = true;
 	line = TextGroupWidget_UNSAFE_Get(w, index);
 
 	if (Game_ClassicMode) return false;
@@ -2470,8 +2470,8 @@ static bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, String* text, int 
 
 	for (i = 0, x = 0; i < portionsCount; i++) {
 		bit = portions[i];
-		args.Text = String_UNSAFE_Substring(&line, bit.LineBeg, bit.LineLen);
-		args.Font = w->font;
+		args.text = String_UNSAFE_Substring(&line, bit.LineBeg, bit.LineLen);
+		args.font = w->font;
 
 		width = Drawer2D_TextWidth(&args);
 		if ((bit.Len & TEXTGROUPWIDGET_URL) && mouseX >= x && mouseX < x + width) {
@@ -2531,7 +2531,7 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 	portionsCount = TextGroupWidget_Reduce(w, chars, index, portions);
 	for (i = 0; i < portionsCount; i++) {
 		bit = portions[i];
-		args->Text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
+		args->text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
 
 		partSizes[i] = Drawer2D_MeasureText(args);
 		size.Height = max(partSizes[i].Height, size.Height);
@@ -2544,11 +2544,11 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 		for (i = 0; i < portionsCount; i++) {
 			bit = portions[i];
 			ul  = (bit.Len & TEXTGROUPWIDGET_URL);
-			args->Text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
+			args->text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
 
-			if (ul) args->Font.Style |= FONT_FLAG_UNDERLINE;
+			if (ul) args->font.Style |= FONT_FLAG_UNDERLINE;
 			Drawer2D_DrawText(&bmp, args, x, 0);
-			if (ul) args->Font.Style &= ~FONT_FLAG_UNDERLINE;
+			if (ul) args->font.Style &= ~FONT_FLAG_UNDERLINE;
 
 			x += partSizes[i].Width;
 		}
@@ -2726,7 +2726,7 @@ static Size2D SpecialInputWidget_MeasureTitles(struct SpecialInputWidget* w) {
 
 	DrawTextArgs_MakeEmpty(&args, &w->font, false);
 	for (i = 0; i < Array_Elems(w->tabs); i++) {
-		args.Text = w->tabs[i].title;
+		args.text = w->tabs[i].title;
 
 		w->tabs[i].titleSize = Drawer2D_MeasureText(&args);
 		w->tabs[i].titleSize.Width += SPECIAL_TITLE_SPACING;
@@ -2748,7 +2748,7 @@ static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, Bitmap* 
 
 	DrawTextArgs_MakeEmpty(&args, &w->font, false);
 	for (i = 0; i < Array_Elems(w->tabs); i++) {
-		args.Text = w->tabs[i].title;
+		args.text = w->tabs[i].title;
 		col  = i == w->selectedIndex ? col_selected : col_inactive;
 		size = w->tabs[i].titleSize;
 
@@ -2765,10 +2765,10 @@ static Size2D SpecialInputWidget_MeasureContent(struct SpecialInputWidget* w, st
 	
 	int maxWidth = 0;
 	DrawTextArgs_MakeEmpty(&args, &w->font, false);
-	args.Text.length = tab->charsPerItem;
+	args.text.length = tab->charsPerItem;
 
 	for (i = 0; i < tab->contents.length; i += tab->charsPerItem) {
-		args.Text.buffer = &tab->contents.buffer[i];
+		args.text.buffer = &tab->contents.buffer[i];
 		size     = Drawer2D_MeasureText(&args);
 		maxWidth = max(maxWidth, size.Width);
 	}
@@ -2788,10 +2788,10 @@ static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct 
 
 	int wrap = tab->itemsPerRow;
 	DrawTextArgs_MakeEmpty(&args, &w->font, false);
-	args.Text.length = tab->charsPerItem;
+	args.text.length = tab->charsPerItem;
 
 	for (i = 0; i < tab->contents.length; i += tab->charsPerItem) {
-		args.Text.buffer = &tab->contents.buffer[i];
+		args.text.buffer = &tab->contents.buffer[i];
 		item = i / tab->charsPerItem;
 
 		x = (item % wrap) * w->elementSize.Width;

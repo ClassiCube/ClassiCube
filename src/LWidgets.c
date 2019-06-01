@@ -236,8 +236,8 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 		y = w->Y + (w->Height - w->_TextHeight) / 2;
 		Drawer2D_DrawText(&Launcher_Framebuffer, args, w->X + 5, y + 2);
 	} else {
-		args->Text = String_FromReadonly(w->HintText);
-		args->Font = w->HintFont;
+		args->text = String_FromReadonly(w->HintText);
+		args->font = w->HintFont;
 
 		hintHeight = Drawer2D_MeasureText(args).Height;
 		y = w->Y + (w->Height - hintHeight) / 2;
@@ -291,10 +291,10 @@ static Rect2D LInput_MeasureCaret(struct LInput* w) {
 		r.X += Drawer2D_TextWidth(&args);
 		r.Width = 10;
 	} else {
-		args.Text = String_UNSAFE_Substring(&text, 0, w->CaretPos);
+		args.text = String_UNSAFE_Substring(&text, 0, w->CaretPos);
 		r.X += Drawer2D_TextWidth(&args);
 
-		args.Text = String_UNSAFE_Substring(&text, w->CaretPos, 1);
+		args.text = String_UNSAFE_Substring(&text, w->CaretPos, 1);
 		r.Width   = Drawer2D_TextWidth(&args);
 	}
 	return r;
@@ -367,10 +367,10 @@ static void LInput_MoveCaretToCursor(struct LInput* w) {
 	}
 
 	for (i = 0; i < text.length; i++) {
-		args.Text = String_UNSAFE_Substring(&text, 0, i);
+		args.text = String_UNSAFE_Substring(&text, 0, i);
 		charX     = Drawer2D_TextWidth(&args);
 
-		args.Text = String_UNSAFE_Substring(&text, i, 1);
+		args.text = String_UNSAFE_Substring(&text, i, 1);
 		charWidth = Drawer2D_TextWidth(&args);
 		if (x >= charX && x < charX + charWidth) {
 			w->CaretPos = i; return;
@@ -646,14 +646,14 @@ static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, i
 }
 
 static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	args->Text = row->Name;
+	args->text = row->Name;
 }
 static int NameColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return String_Compare(&b->Name, &a->Name);
 }
 
 static void PlayersColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	String_Format2(&args->Text, "%i/%i", &row->Players, &row->MaxPlayers);
+	String_Format2(&args->text, "%i/%i", &row->Players, &row->MaxPlayers);
 }
 static int PlayersColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return b->Players - a->Players;
@@ -670,14 +670,14 @@ static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args,
 	} else if (uptime >= SECS_PER_MIN) {
 		uptime /= SECS_PER_MIN;  unit = 'm';
 	}
-	String_Format2(&args->Text, "%i%r", &uptime, &unit);
+	String_Format2(&args->text, "%i%r", &uptime, &unit);
 }
 static int UptimeColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return b->Uptime - a->Uptime;
 }
 
 static void SoftwareColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	args->Text = row->Software;
+	args->text = row->Software;
 }
 static int SoftwareColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return String_Compare(&b->Software, &a->Software);
@@ -836,7 +836,7 @@ static void LTable_DrawHeaders(struct LTable* w) {
 	x = w->X; y = w->Y;
 
 	for (i = 0; i < w->NumColumns; i++) {
-		args.Text = String_FromReadonly(w->Columns[i].Name);
+		args.text = String_FromReadonly(w->Columns[i].Name);
 		Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
 								x + CELL_XOFFSET, y + HDR_YOFFSET, 
 								w->Columns[i].Width - CELL_XPADDING);
@@ -866,10 +866,10 @@ static void LTable_DrawRows(struct LTable* w) {
 		entry = LTable_Get(row);
 
 		for (i = 0; i < w->NumColumns; i++) {
-			args.Text = str;
+			args.text = str;
 			w->Columns[i].DrawRow(entry, &args, x, y);
 
-			if (args.Text.length) {
+			if (args.text.length) {
 				Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
 										x + CELL_XOFFSET, y + ROW_YOFFSET, 
 										w->Columns[i].Width - CELL_XPADDING);
