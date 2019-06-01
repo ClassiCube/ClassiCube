@@ -117,6 +117,7 @@ static const char* Logger_GetCCErrorDesc(ReturnCode res) {
 	case PNG_ERR_TRANS_INVALID:    return "Transparency invalid for color type";
 	case PNG_ERR_INVALID_END_SIZE: return "Non-empty IEND chunk";
 	case PNG_ERR_NO_DATA:          return "No image in PNG";
+	case PNG_ERR_INVALID_SCANLINE: return "Invalid PNG scanline type";
 
 			/* ZIP archive decoding errors */ /*
 			ZIP_ERR_TOO_MANY_ENTRIES, 

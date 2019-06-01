@@ -2803,7 +2803,7 @@ static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void
 }
 
 static void Window_HookEvents(void) {
-	emscripten_set_wheel_callback("#canvas",     NULL, 0, Window_MouseWheel);
+	emscripten_set_wheel_callback("#window",     NULL, 0, Window_MouseWheel);
 	emscripten_set_mousedown_callback("#canvas", NULL, 0, Window_MouseButton);
 	emscripten_set_mouseup_callback("#canvas",   NULL, 0, Window_MouseButton);
 	emscripten_set_mousemove_callback("#canvas", NULL, 0, Window_MouseMove);
@@ -2819,10 +2819,10 @@ static void Window_HookEvents(void) {
 	emscripten_set_keyup_callback("#window",    NULL, 0, Window_Key);
 	emscripten_set_keypress_callback("#window", NULL, 0, Window_KeyPress);
 
-	emscripten_set_touchstart_callback(0,  NULL, 0, Window_TouchStart);
-	emscripten_set_touchmove_callback(0,   NULL, 0, Window_TouchMove);
-	emscripten_set_touchend_callback(0,    NULL, 0, Window_TouchEnd);
-	emscripten_set_touchcancel_callback(0, NULL, 0, Window_TouchEnd);
+	emscripten_set_touchstart_callback("#window",  NULL, 0, Window_TouchStart);
+	emscripten_set_touchmove_callback("#window",   NULL, 0, Window_TouchMove);
+	emscripten_set_touchend_callback("#window",    NULL, 0, Window_TouchEnd);
+	emscripten_set_touchcancel_callback("#window", NULL, 0, Window_TouchEnd);
 }
 
 static void Window_UnhookEvents(void) {
@@ -2842,10 +2842,10 @@ static void Window_UnhookEvents(void) {
 	emscripten_set_keyup_callback("#window",    NULL, 0, NULL);
 	emscripten_set_keypress_callback("#window", NULL, 0, NULL);
 
-	emscripten_set_touchstart_callback(0,  NULL, 0, NULL);
-	emscripten_set_touchmove_callback(0,   NULL, 0, NULL);
-	emscripten_set_touchend_callback(0,    NULL, 0, NULL);
-	emscripten_set_touchcancel_callback(0, NULL, 0, NULL);
+	emscripten_set_touchstart_callback("#window",  NULL, 0, NULL);
+	emscripten_set_touchmove_callback("#window",   NULL, 0, NULL);
+	emscripten_set_touchend_callback("#window",    NULL, 0, NULL);
+	emscripten_set_touchcancel_callback("#window", NULL, 0, NULL);
 }
 
 void Window_Init(void) {

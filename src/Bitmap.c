@@ -113,10 +113,6 @@ static void Png_Reconstruct(uint8_t type, uint8_t bytesPerPixel, uint8_t* line, 
 			else {                      line[i] += c; }
 		}
 		return;
-
-	default:
-		Logger_Abort("PNG scanline has invalid filter type");
-		return;
 	}
 }
 
@@ -475,11 +471,13 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 				/* reached end of buffer, cycle back to start */
 				if (bufferIdx == bufferLen) bufferIdx = 0;
 
-				for (rowY = begY; rowY < endY; rowY++, curY++) {
+				/* NOTE: Need to check curY too, in case IDAT is corrupted and has extra data */
+				for (rowY = begY; rowY < endY && curY < bmp->Height; rowY++, curY++) {
 					uint32_t priorY = rowY == 0 ? bufferRows : rowY;
 					uint8_t* prior    = &buffer[(priorY - 1) * scanlineBytes];
 					uint8_t* scanline = &buffer[rowY         * scanlineBytes];
 
+					if (scanline[0] > PNG_FILTER_PAETH) return PNG_ERR_INVALID_SCANLINE;
 					Png_Reconstruct(scanline[0], bytesPerPixel, &scanline[1], &prior[1], scanlineSize);
 					rowExpander(bmp->Width, palette, &scanline[1], Bitmap_GetRow(bmp, curY));
 				}
