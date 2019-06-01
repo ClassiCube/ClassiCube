@@ -439,9 +439,9 @@ void TabList_Set(EntityID id, const String* player, const String* list, const St
 	}
 	TabList_Delete(id);
 
-	TabList.PlayerNames[id] = TabList.Buffer.Count; StringsBuffer_Add(&TabList.Buffer, player);
-	TabList.ListNames[id]   = TabList.Buffer.Count; StringsBuffer_Add(&TabList.Buffer, list);
-	TabList.GroupNames[id]  = TabList.Buffer.Count; StringsBuffer_Add(&TabList.Buffer, group);
+	TabList.PlayerNames[id] = TabList.Buffer.count; StringsBuffer_Add(&TabList.Buffer, player);
+	TabList.ListNames[id]   = TabList.Buffer.count; StringsBuffer_Add(&TabList.Buffer, list);
+	TabList.GroupNames[id]  = TabList.Buffer.count; StringsBuffer_Add(&TabList.Buffer, group);
 	TabList.GroupRanks[id]  = rank;
 
 	Event_RaiseInt(events, id);
@@ -804,7 +804,7 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
 
-	if (Gui_GetActiveScreen()->HandlesAllInput) {
+	if (Gui_GetActiveScreen()->handlesAllInput) {
 		p->Physics.Jumping = false; hacks->Speeding = false;
 		hacks->FlyingUp    = false; hacks->FlyingDown = false;
 	} else {

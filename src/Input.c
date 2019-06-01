@@ -237,25 +237,25 @@ static void Hotkeys_AddNewHotkey(Key trigger, uint8_t modifiers, const String* t
 	struct HotkeyData hKey;
 	hKey.Trigger = trigger;
 	hKey.Flags   = modifiers;
-	hKey.TextIndex = HotkeysText.Count;
+	hKey.TextIndex = HotkeysText.count;
 	hKey.StaysOpen = more;
 
-	if (HotkeysText.Count == HOTKEYS_MAX_COUNT) {
+	if (HotkeysText.count == HOTKEYS_MAX_COUNT) {
 		Chat_AddRaw("&cCannot define more than 256 hotkeys");
 		return;
 	}
 
-	HotkeysList[HotkeysText.Count] = hKey;
+	HotkeysList[HotkeysText.count] = hKey;
 	StringsBuffer_Add(&HotkeysText, text);
 	/* sort so that hotkeys with largest modifiers are first */
-	Hotkeys_QuickSort(0, HotkeysText.Count - 1);
+	Hotkeys_QuickSort(0, HotkeysText.count - 1);
 }
 
 static void Hotkeys_RemoveText(int index) {
 	 struct HotkeyData* hKey = HotkeysList;
 	 int i;
 
-	for (i = 0; i < HotkeysText.Count; i++, hKey++) {
+	for (i = 0; i < HotkeysText.count; i++, hKey++) {
 		if (hKey->TextIndex >= index) hKey->TextIndex--;
 	}
 	StringsBuffer_Remove(&HotkeysText, index);
@@ -266,12 +266,12 @@ void Hotkeys_Add(Key trigger, uint8_t modifiers, const String* text, bool more) 
 	struct HotkeyData* hk = HotkeysList;
 	int i;
 
-	for (i = 0; i < HotkeysText.Count; i++, hk++) {		
+	for (i = 0; i < HotkeysText.count; i++, hk++) {		
 		if (hk->Trigger != trigger || hk->Flags != modifiers) continue;
 		Hotkeys_RemoveText(hk->TextIndex);
 
 		hk->StaysOpen = more;
-		hk->TextIndex = HotkeysText.Count;
+		hk->TextIndex = HotkeysText.count;
 		StringsBuffer_Add(&HotkeysText, text);
 		return;
 	}
@@ -282,11 +282,11 @@ bool Hotkeys_Remove(Key trigger, uint8_t modifiers) {
 	struct HotkeyData* hk = HotkeysList;
 	int i, j;
 
-	for (i = 0; i < HotkeysText.Count; i++, hk++) {
+	for (i = 0; i < HotkeysText.count; i++, hk++) {
 		if (hk->Trigger != trigger || hk->Flags != modifiers) continue;
 		Hotkeys_RemoveText(hk->TextIndex);
 
-		for (j = i; j < HotkeysText.Count; j++) {
+		for (j = i; j < HotkeysText.count; j++) {
 			HotkeysList[j] = HotkeysList[j + 1];
 		}
 		return true;
@@ -302,7 +302,7 @@ int Hotkeys_FindPartial(Key key) {
 	if (Key_IsShiftPressed())   modifiers |= HOTKEY_MOD_SHIFT;
 	if (Key_IsAltPressed())     modifiers |= HOTKEY_MOD_ALT;
 
-	for (i = 0; i < HotkeysText.Count; i++) {
+	for (i = 0; i < HotkeysText.count; i++) {
 		hk = HotkeysList[i];
 		/* e.g. if holding Ctrl and Shift, a hotkey with only Ctrl modifiers matches */
 		if ((hk.Flags & modifiers) == hk.Flags && hk.Trigger == key) return i;
@@ -320,7 +320,7 @@ void Hotkeys_Init(void) {
 	uint8_t modifiers;
 	bool more;
 
-	for (i = 0; i < Options.Entries.Count; i++) {
+	for (i = 0; i < Options.Entries.count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(&Options.Entries, i);
 		String_UNSAFE_Separate(&entry, Options.Separator, &key, &value);
 

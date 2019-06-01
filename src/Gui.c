@@ -46,32 +46,32 @@ void Screen_CommonFree(void* screen) {
 
 void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
 	struct Widget* w = (struct Widget*)widget;
-	w->HorAnchor = horAnchor; w->VerAnchor = verAnchor;
-	w->XOffset   = xOffset;   w->YOffset = yOffset;
+	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
+	w->xOffset   = xOffset;   w->yOffset = yOffset;
 	Widget_Reposition(w);
 }
 
 void Widget_CalcPosition(void* widget) {
 	struct Widget* w = (struct Widget*)widget;
-	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game.Width );
-	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game.Height);
+	w->x = Gui_CalcPos(w->horAnchor, w->xOffset, w->width , Game.Width );
+	w->y = Gui_CalcPos(w->verAnchor, w->yOffset, w->height, Game.Height);
 }
 
 void Widget_Reset(void* widget) {
 	struct Widget* w = (struct Widget*)widget;
-	w->Active   = false;
-	w->Disabled = false;
-	w->X = 0; w->Y = 0;
-	w->Width = 0; w->Height = 0;
-	w->HorAnchor = ANCHOR_MIN;
-	w->VerAnchor = ANCHOR_MIN;
-	w->XOffset = 0; w->YOffset = 0;
+	w->active   = false;
+	w->disabled = false;
+	w->x = 0; w->y = 0;
+	w->width = 0; w->height = 0;
+	w->horAnchor = ANCHOR_MIN;
+	w->verAnchor = ANCHOR_MIN;
+	w->xOffset = 0; w->yOffset = 0;
 	w->MenuClick = NULL;
 }
 
 bool Widget_Contains(void* widget, int x, int y) {
 	struct Widget* w = (struct Widget*)widget;
-	return Gui_Contains(w->X, w->Y, w->Width, w->Height, x, y);
+	return Gui_Contains(w->x, w->y, w->width, w->height, x, y);
 }
 
 
@@ -235,8 +235,8 @@ void Gui_RenderGui(double delta) {
 	bool showHUD, hudBefore;
 	Gfx_Mode2D(Game.Width, Game.Height);
 
-	showHUD   = !Gui_Active || !Gui_Active->HidesHUD;
-	hudBefore = !Gui_Active || !Gui_Active->RenderHUDOver;
+	showHUD   = !Gui_Active || !Gui_Active->hidesHUD;
+	hudBefore = !Gui_Active || !Gui_Active->renderHUDOver;
 	if (showHUD) { Elem_Render(Gui_Status, delta); }
 
 	if (showHUD && hudBefore)  { Elem_Render(Gui_HUD, delta); }
@@ -269,15 +269,15 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc
 
 	DrawTextArgs_Make(&args, prefix, font, true);
 	size = Drawer2D_MeasureText(&args);
-	atlas->Offset = size.Width;
+	atlas->offset = size.Width;
 	
-	width = atlas->Offset;
+	width = atlas->offset;
 	for (i = 0; i < chars->length; i++) {
 		args.Text = String_UNSAFE_Substring(chars, i, 1);
 		size = Drawer2D_MeasureText(&args);
 
-		atlas->Widths[i]  = size.Width;
-		atlas->Offsets[i] = width;
+		atlas->widths[i]  = size.Width;
+		atlas->offsets[i] = width;
 		/* add 1 pixel of padding */
 		width += size.Width + 1;
 	}
@@ -289,30 +289,30 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc
 
 		for (i = 0; i < chars->length; i++) {
 			args.Text = String_UNSAFE_Substring(chars, i, 1);
-			Drawer2D_DrawText(&bmp, &args, atlas->Offsets[i], 0);
+			Drawer2D_DrawText(&bmp, &args, atlas->offsets[i], 0);
 		}
-		Drawer2D_Make2DTexture(&atlas->Tex, &bmp, size, 0, 0);
+		Drawer2D_Make2DTexture(&atlas->tex, &bmp, size, 0, 0);
 	}	
 	Mem_Free(bmp.Scan0);
 
-	Drawer2D_ReducePadding_Tex(&atlas->Tex, Math_Floor(font->Size), 4);
+	Drawer2D_ReducePadding_Tex(&atlas->tex, Math_Floor(font->Size), 4);
 	atlas->uScale = 1.0f / (float)bmp.Width;
-	atlas->Tex.uv.U2 = atlas->Offset * atlas->uScale;
-	atlas->Tex.Width = atlas->Offset;	
+	atlas->tex.uv.U2 = atlas->offset * atlas->uScale;
+	atlas->tex.Width = atlas->offset;	
 }
 
-void TextAtlas_Free(struct TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->Tex.ID); }
+void TextAtlas_Free(struct TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->tex.ID); }
 
 void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertices) {
-	struct Texture part = atlas->Tex;
-	int width       = atlas->Widths[charI];
+	struct Texture part = atlas->tex;
+	int width       = atlas->widths[charI];
 	PackedCol white = PACKEDCOL_WHITE;
 
-	part.X  = atlas->CurX; part.Width = width;
-	part.uv.U1 = atlas->Offsets[charI] * atlas->uScale;
+	part.X  = atlas->curX; part.Width = width;
+	part.uv.U1 = atlas->offsets[charI] * atlas->uScale;
 	part.uv.U2 = part.uv.U1 + width    * atlas->uScale;
 
-	atlas->CurX += width;	
+	atlas->curX += width;	
 	Gfx_Make2DQuad(&part, white, vertices);
 }
 

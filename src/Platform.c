@@ -926,9 +926,9 @@ static bool FontData_Init(const String* path, struct FontData* data, FT_Open_Arg
 void Font_GetNames(StringsBuffer* buffer) {
 	String entry, name, path;
 	int i;
-	if (!font_list.Entries.Count) Font_Init();
+	if (!font_list.Entries.count) Font_Init();
 
-	for (i = 0; i < font_list.Entries.Count; i++) {
+	for (i = 0; i < font_list.Entries.count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(&font_list.Entries, i);
 		String_UNSAFE_Separate(&entry, font_list.Separator, &name, &path);
 
@@ -949,7 +949,7 @@ static String Font_LookupOf(const String* fontName, const char type) {
 
 String Font_Lookup(const String* fontName, int style) {
 	String path;
-	if (!font_list.Entries.Count) Font_Init();
+	if (!font_list.Entries.count) Font_Init();
 	path = String_Empty;
 
 	if (style & FONT_STYLE_BOLD)   path = Font_LookupOf(fontName, 'B');
@@ -1064,7 +1064,7 @@ static void Font_DirCallback(const String* path, void* obj) {
 	if (String_CaselessEnds(path, &fonExt)) return;
 
 	/* If font is already known good, skip it */
-	for (i = 0; i < font_list.Entries.Count; i++) {
+	for (i = 0; i < font_list.Entries.count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(&font_list.Entries, i);
 		String_UNSAFE_Separate(&entry, font_list.Separator, &name, &value);
 

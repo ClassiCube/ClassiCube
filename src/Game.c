@@ -641,12 +641,12 @@ static void Game_RenderFrame(double delta) {
 	Game_Vertices = 0;
 
 	Camera.Active->UpdateMouse(delta);
-	if (!Window_Focused && !Gui_GetActiveScreen()->HandlesAllInput) {
+	if (!Window_Focused && !Gui_GetActiveScreen()->handlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());
 	}
 
-	allowZoom = !Gui_Active && !Gui_HUD->HandlesAllInput;
+	allowZoom = !Gui_Active && !Gui_HUD->handlesAllInput;
 	if (allowZoom && KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) {
 		InputHandler_SetFOV(Game_ZoomFov);
 	}
@@ -660,7 +660,7 @@ static void Game_RenderFrame(double delta) {
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	Game_UpdateViewMatrix();
 
-	visible = !Gui_Active || !Gui_Active->BlocksWorld;
+	visible = !Gui_Active || !Gui_Active->blocksWorld;
 	if (visible && World.Blocks) {
 		Game_Render3D(delta, t);
 	} else {

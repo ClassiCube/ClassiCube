@@ -515,7 +515,7 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, S
 	ReturnCode res;
 	int i, dotIndex;
 
-	for (i = 0; i < files->Count; i++) {
+	for (i = 0; i < files->count; i++) {
 		file = StringsBuffer_UNSAFE_Get(files, i); 
 		name = file;
 
@@ -828,7 +828,7 @@ static void Music_RunLoop(void) {
 	int i, count = 0, idx, delay;
 	ReturnCode res = 0;
 
-	for (i = 0; i < files.Count && count < MUSIC_MAX_FILES; i++) {
+	for (i = 0; i < files.count && count < MUSIC_MAX_FILES; i++) {
 		file = StringsBuffer_UNSAFE_Get(&files, i);
 		if (!String_CaselessEnds(&file, &ogg)) continue;
 		musicFiles[count++] = i;

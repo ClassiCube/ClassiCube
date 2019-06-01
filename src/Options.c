@@ -11,7 +11,7 @@
 struct EntryList Options;
 static StringsBuffer Options_Changed;
 
-int Options_ChangedCount(void) { return Options_Changed.Count;  }
+int Options_ChangedCount(void) { return Options_Changed.count;  }
 
 void Options_Free(void) {
 	StringsBuffer_Clear(&Options.Entries);
@@ -22,7 +22,7 @@ bool Options_HasChanged(const String* key) {
 	String entry;
 	int i;
 
-	for (i = 0; i < Options_Changed.Count; i++) {
+	for (i = 0; i < Options_Changed.count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(&Options_Changed, i);
 		if (String_CaselessEquals(&entry, key)) return true;
 	}
@@ -143,7 +143,7 @@ void Options_Load(void) {
 		EntryList_Init(&Options, "options.txt",         '=');
 	} else {
 		/* Reset all the unchanged options */
-		for (i = Options.Entries.Count - 1; i >= 0; i--) {
+		for (i = Options.Entries.count - 1; i >= 0; i--) {
 			entry = StringsBuffer_UNSAFE_Get(&Options.Entries, i);
 			String_UNSAFE_Separate(&entry, '=', &key, &value);
 

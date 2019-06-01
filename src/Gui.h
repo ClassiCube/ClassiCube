@@ -59,11 +59,11 @@ struct ScreenVTABLE {
 	Event_Void_Callback ContextRecreated;
 };
 #define Screen_Layout struct ScreenVTABLE* VTABLE; \
-	bool HandlesAllInput; /* Whether this screen handles all input. Prevents user interacting with the world. */ \
-	bool BlocksWorld;     /* Whether this screen completely and opaquely covers the game world behind it. */ \
-	bool HidesHUD;        /* Whether this screen hides the normal in-game HUD. */ \
-	bool RenderHUDOver;   /* Whether the normal in-game HUD should be drawn over the top of this screen. */ \
-	bool Closable;        /* Whether this screen is automatically closed when pressing Escape */
+	bool handlesAllInput; /* Whether this screen handles all input. Prevents user interacting with the world. */ \
+	bool blocksWorld;     /* Whether this screen completely and opaquely covers the game world behind it. */ \
+	bool hidesHUD;        /* Whether this screen hides the normal in-game HUD. */ \
+	bool renderHUDOver;   /* Whether the normal in-game HUD should be drawn over the top of this screen. */ \
+	bool closable;        /* Whether this screen is automatically closed when pressing Escape */
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Layout };
@@ -78,11 +78,11 @@ struct WidgetVTABLE {
 	void (*Reposition)(void* elem);
 };
 #define Widget_Layout struct WidgetVTABLE* VTABLE; \
-	int X, Y, Width, Height;      /* Top left corner, and dimensions, of this widget */ \
-	bool Active;                  /* Whether this widget is currently being moused over*/ \
-	bool Disabled;                /* Whether widget is prevented from being interacted with */ \
-	uint8_t HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
-	int XOffset, YOffset;         /* Offset from the reference point */ \
+	int x, y, width, height;      /* Top left corner, and dimensions, of this widget */ \
+	bool active;                  /* Whether this widget is currently being moused over*/ \
+	bool disabled;                /* Whether widget is prevented from being interacted with */ \
+	uint8_t horAnchor, verAnchor; /* Specifies the reference point for when this widget is resized */ \
+	int xOffset, yOffset;         /* Offset from the reference point */ \
 	Widget_LeftClick MenuClick;
 
 /* Represents an individual 2D gui component. */
@@ -136,11 +136,11 @@ void Gui_OnResize(void);
 
 #define TEXTATLAS_MAX_WIDTHS 16
 struct TextAtlas {
-	struct Texture Tex;
-	int Offset, CurX;
+	struct Texture tex;
+	int offset, curX;
 	float uScale;
-	int16_t Widths[TEXTATLAS_MAX_WIDTHS];
-	int16_t Offsets[TEXTATLAS_MAX_WIDTHS];
+	int16_t widths[TEXTATLAS_MAX_WIDTHS];
+	int16_t offsets[TEXTATLAS_MAX_WIDTHS];
 };
 void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc* font, const String* prefix);
 void TextAtlas_Free(struct TextAtlas* atlas);

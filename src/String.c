@@ -778,44 +778,44 @@ bool Convert_ParseBool(const String* str, bool* value) {
 #define STRINGSBUFFER_BUFFER_EXPAND_SIZE 8192
 
 CC_NOINLINE static void StringsBuffer_Init(StringsBuffer* buffer) {
-	buffer->Count       = 0;
-	buffer->TotalLength = 0;
-	buffer->TextBuffer  = buffer->_DefaultBuffer;
-	buffer->FlagsBuffer = buffer->_DefaultFlags;
-	buffer->_TextBufferSize  = STRINGSBUFFER_BUFFER_DEF_SIZE;
-	buffer->_FlagsBufferSize = STRINGSBUFFER_FLAGS_DEF_ELEMS;
+	buffer->count       = 0;
+	buffer->totalLength = 0;
+	buffer->textBuffer  = buffer->_defaultBuffer;
+	buffer->flagsBuffer = buffer->_defaultFlags;
+	buffer->_textBufferSize  = STRINGSBUFFER_BUFFER_DEF_SIZE;
+	buffer->_flagsBufferSize = STRINGSBUFFER_FLAGS_DEF_ELEMS;
 }
 
 void StringsBuffer_Clear(StringsBuffer* buffer) {
 	/* Never initialised to begin with */
-	if (!buffer->_FlagsBufferSize) return;
+	if (!buffer->_flagsBufferSize) return;
 
-	if (buffer->TextBuffer != buffer->_DefaultBuffer) {
-		Mem_Free(buffer->TextBuffer);
+	if (buffer->textBuffer != buffer->_defaultBuffer) {
+		Mem_Free(buffer->textBuffer);
 	}
-	if (buffer->FlagsBuffer != buffer->_DefaultFlags) {
-		Mem_Free(buffer->FlagsBuffer);
+	if (buffer->flagsBuffer != buffer->_defaultFlags) {
+		Mem_Free(buffer->flagsBuffer);
 	}
 	StringsBuffer_Init(buffer);
 }
 
 String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
 	uint32_t flags, offset, len;
-	if (i < 0 || i >= buffer->Count) Logger_Abort("Tried to get String past StringsBuffer end");
+	if (i < 0 || i >= buffer->count) Logger_Abort("Tried to get String past StringsBuffer end");
 
-	flags  = buffer->FlagsBuffer[i];
+	flags  = buffer->flagsBuffer[i];
 	offset = flags >> STRINGSBUFFER_LEN_SHIFT;
 	len    = flags  & STRINGSBUFFER_LEN_MASK;
-	return String_Init(&buffer->TextBuffer[offset], len, len);
+	return String_Init(&buffer->textBuffer[offset], len, len);
 }
 
 void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 	int textOffset;
 	/* StringsBuffer hasn't been initalised yet, do it here */
-	if (!buffer->_FlagsBufferSize) StringsBuffer_Init(buffer);
+	if (!buffer->_flagsBufferSize) StringsBuffer_Init(buffer);
 
-	if (buffer->Count == buffer->_FlagsBufferSize) {
-		Utils_Resize((void**)&buffer->FlagsBuffer, &buffer->_FlagsBufferSize, 
+	if (buffer->count == buffer->_flagsBufferSize) {
+		Utils_Resize((void**)&buffer->flagsBuffer, &buffer->_flagsBufferSize, 
 					4, STRINGSBUFFER_FLAGS_DEF_ELEMS, 512);
 	}
 
@@ -823,47 +823,47 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 		Logger_Abort("String too big to insert into StringsBuffer");
 	}
 
-	textOffset = buffer->TotalLength;
-	if (textOffset + str->length >= buffer->_TextBufferSize) {
-		Utils_Resize((void**)&buffer->TextBuffer, &buffer->_TextBufferSize,
+	textOffset = buffer->totalLength;
+	if (textOffset + str->length >= buffer->_textBufferSize) {
+		Utils_Resize((void**)&buffer->textBuffer, &buffer->_textBufferSize,
 					1, STRINGSBUFFER_BUFFER_DEF_SIZE, 8192);
 	}
 
-	Mem_Copy(&buffer->TextBuffer[textOffset], str->buffer, str->length);
-	buffer->FlagsBuffer[buffer->Count] = str->length | (textOffset << STRINGSBUFFER_LEN_SHIFT);
+	Mem_Copy(&buffer->textBuffer[textOffset], str->buffer, str->length);
+	buffer->flagsBuffer[buffer->count] = str->length | (textOffset << STRINGSBUFFER_LEN_SHIFT);
 
-	buffer->Count++;
-	buffer->TotalLength += str->length;
+	buffer->count++;
+	buffer->totalLength += str->length;
 }
 
 void StringsBuffer_Remove(StringsBuffer* buffer, int index) {
 	uint32_t flags, offset, len;
 	uint32_t i, offsetAdj;
-	if (index < 0 || index >= buffer->Count) Logger_Abort("Tried to remove String past StringsBuffer end");
+	if (index < 0 || index >= buffer->count) Logger_Abort("Tried to remove String past StringsBuffer end");
 
-	flags  = buffer->FlagsBuffer[index];
+	flags  = buffer->flagsBuffer[index];
 	offset = flags >> STRINGSBUFFER_LEN_SHIFT;
 	len    = flags  & STRINGSBUFFER_LEN_MASK;
 
 	/* Imagine buffer is this: AAXXYYZZ, and want to delete XX */
 	/* We iterate from first char of Y to last char of Z, */
 	/* shifting each character two to the left. */
-	for (i = offset + len; i < buffer->TotalLength; i++) {
-		buffer->TextBuffer[i - len] = buffer->TextBuffer[i]; 
+	for (i = offset + len; i < buffer->totalLength; i++) {
+		buffer->textBuffer[i - len] = buffer->textBuffer[i]; 
 	}
 
 	/* Adjust text offset of elements after this element */
 	/* Elements may not be in order so must account for that */
 	offsetAdj = len << STRINGSBUFFER_LEN_SHIFT;
-	for (i = index; i < buffer->Count - 1; i++) {
-		buffer->FlagsBuffer[i] = buffer->FlagsBuffer[i + 1];
-		if (buffer->FlagsBuffer[i] >= flags) {
-			buffer->FlagsBuffer[i] -= offsetAdj;
+	for (i = index; i < buffer->count - 1; i++) {
+		buffer->flagsBuffer[i] = buffer->flagsBuffer[i + 1];
+		if (buffer->flagsBuffer[i] >= flags) {
+			buffer->flagsBuffer[i] -= offsetAdj;
 		}
 	}
 	
-	buffer->Count--;
-	buffer->TotalLength -= len;
+	buffer->count--;
+	buffer->totalLength -= len;
 }
 
 

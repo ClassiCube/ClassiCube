@@ -351,7 +351,7 @@ void EntryList_Save(struct EntryList* list) {
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Logger_Warn2(res, "creating", &path); return; }
 
-	for (i = 0; i < list->Entries.Count; i++) {
+	for (i = 0; i < list->Entries.count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
 		res   = Stream_WriteLine(&stream, &entry);
 		if (res) { Logger_Warn2(res, "writing to", &path); break; }
@@ -385,7 +385,7 @@ String EntryList_UNSAFE_Get(struct EntryList* list, const String* key) {
 	String curEntry, curKey, curValue;
 	int i;
 
-	for (i = 0; i < list->Entries.Count; i++) {
+	for (i = 0; i < list->Entries.count; i++) {
 		curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
 		String_UNSAFE_Separate(&curEntry, list->Separator, &curKey, &curValue);
 
@@ -398,7 +398,7 @@ int EntryList_Find(struct EntryList* list, const String* key) {
 	String curEntry, curKey, curValue;
 	int i;
 
-	for (i = 0; i < list->Entries.Count; i++) {
+	for (i = 0; i < list->Entries.count; i++) {
 		curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
 		String_UNSAFE_Separate(&curEntry, list->Separator, &curKey, &curValue);
 

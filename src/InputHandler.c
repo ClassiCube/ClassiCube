@@ -63,7 +63,7 @@ static void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
 }
 
 void InputHandler_ScreenChanged(struct Screen* oldScreen, struct Screen* newScreen) {
-	if (oldScreen && oldScreen->HandlesAllInput) {
+	if (oldScreen && oldScreen->handlesAllInput) {
 		input_lastClick = DateTime_CurrentUTC_MS();
 	}
 
@@ -330,14 +330,14 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 	if (cooldown && delta < 250) return; /* 4 times per second */
 	input_lastClick = now;
 
-	if (Server.SupportsPlayerClick && !Gui_GetActiveScreen()->HandlesAllInput) {
+	if (Server.SupportsPlayerClick && !Gui_GetActiveScreen()->handlesAllInput) {
 		input_pickingId = -1;
 		InputHandler_ButtonStateChanged(MOUSE_LEFT,   left);
 		InputHandler_ButtonStateChanged(MOUSE_RIGHT,  right);
 		InputHandler_ButtonStateChanged(MOUSE_MIDDLE, middle);
 	}
 
-	if (Gui_GetActiveScreen()->HandlesAllInput) return;
+	if (Gui_GetActiveScreen()->handlesAllInput) return;
 
 	if (left) {
 		/* always play delete animations, even if we aren't picking a block */
@@ -462,7 +462,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	active = Gui_GetActiveScreen();
 
 #ifndef CC_BUILD_WEB
-	if (key == KEY_ESCAPE && active->Closable) {
+	if (key == KEY_ESCAPE && active->closable) {
 		/* Don't want holding down escape to go in and out of pause menu */
 		if (!was) Gui_Close(active); 
 		return;
@@ -476,7 +476,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		Game_ScreenshotRequested = true; return;
 	} else if (Elem_HandlesKeyDown(active, key, was)) {
 		return;
-	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !active->HandlesAllInput) {
+	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !active->handlesAllInput) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */

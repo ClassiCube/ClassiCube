@@ -217,13 +217,13 @@ CC_API bool Convert_ParseBool(const String*   str, bool* value);
 #define STRINGSBUFFER_LEN_MASK  0x1FFUL
 
 typedef struct StringsBuffer_ {
-	char*      TextBuffer;  /* Raw characters of all entries */
-	uint32_t*  FlagsBuffer; /* Private flags for each entry */
-	int Count, TotalLength;
+	char*      textBuffer;  /* Raw characters of all entries */
+	uint32_t*  flagsBuffer; /* Private flags for each entry */
+	int count, totalLength;
 	/* internal state */
-	int      _TextBufferSize, _FlagsBufferSize;
-	char     _DefaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
-	uint32_t _DefaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
+	int      _textBufferSize, _flagsBufferSize;
+	char     _defaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
+	uint32_t _defaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
 } StringsBuffer;
 
 /* Resets counts to 0, and frees any allocated memory. */
