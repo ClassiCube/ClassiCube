@@ -109,7 +109,7 @@ struct SaveLevelScreen {
 struct MenuOptionsScreen {
 	MenuScreen_Layout
 	struct ButtonWidget* buttons;
-	struct MenuInputValidator* validators;
+	struct InputValidator* validators;
 	const char** descriptions;
 	const char** defaultValues;
 	int activeI, selectedI, descriptionsCount;
@@ -175,7 +175,7 @@ static void Menu_Label(void* s, int i, struct TextWidget* label, const String* t
 	Widget_SetLocation(menu->widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, const FontDesc* font, struct MenuInputValidator* v, int horAnchor, int verAnchor, int x, int y) {
+static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, const FontDesc* font, struct InputValidator* v, int horAnchor, int verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
 	MenuInputWidget_Create(input, width, 30, text, font, v);
 
@@ -943,9 +943,10 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	const static String cancel = String_FromConst("Cancel");
 
 	struct EditHotkeyScreen* s  = (struct EditHotkeyScreen*)screen;
-	struct MenuInputValidator v = MenuInputValidator_String();
+	struct InputValidator v;
 	String text; bool existed;
 
+	InputValidator_String(v);
 	existed = s->origHotkey.Trigger != KEY_NONE;
 	if (existed) {
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->origHotkey.TextIndex);
@@ -994,7 +995,7 @@ struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 static struct GenLevelScreen GenLevelScreen_Instance;
 CC_NOINLINE static int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) {
 	struct MenuInputWidget* input = &s->inputs[index];
-	struct MenuInputValidator* v;
+	struct InputValidator* v;
 	String text = input->base.text;
 	int value;
 
@@ -1053,7 +1054,13 @@ static void GenLevelScreen_InputClick(void* screen, void* input) {
 
 static void GenLevelScreen_Input(struct GenLevelScreen* s, int i, int y, bool seed, String* value) {
 	struct MenuInputWidget* input = &s->inputs[i];
-	struct MenuInputValidator v = seed ? MenuInputValidator_Seed() : MenuInputValidator_Int(1, 8192);
+	struct InputValidator v;
+
+	if (seed) {
+		InputValidator_Seed(v);
+	} else {
+		InputValidator_Int(v, 1, 8192);
+	}
 
 	Menu_Input(s, i, input, 200, value, &s->textFont, &v,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
@@ -1316,7 +1323,8 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 	const static String mcEdit = String_FromConst("&eCan be imported into MCEdit");
 
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	struct MenuInputValidator validator = MenuInputValidator_Path();
+	struct InputValidator v;
+	InputValidator_Path(v);
 	
 	Menu_Button(s, 0, &s->buttons[0], 300, &save,  &s->titleFont, SaveLevelScreen_Classic,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 20);
@@ -1326,7 +1334,7 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 110, 120);
 
 	Menu_Back(s,   3, &s->buttons[2], "Cancel",      &s->titleFont, Menu_SwitchPause);
-	Menu_Input(s,  4, &s->input, 500, &String_Empty, &s->textFont,  &validator, 
+	Menu_Input(s,  4, &s->input, 500, &String_Empty, &s->textFont,  &v, 
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 	s->widgets[5] = NULL; /* description widget placeholder */
 }
@@ -1926,7 +1934,7 @@ static void MenuOptionsScreen_FreeInput(struct MenuOptionsScreen* s) {
 }
 
 static void MenuOptionsScreen_EnterInput(struct MenuOptionsScreen* s) {
-	struct MenuInputValidator* v = &s->input.validator;
+	struct InputValidator* v = &s->input.validator;
 	String text = s->input.base.text;
 
 	if (v->VTABLE->IsValidValue(v, &text)) {
@@ -2069,7 +2077,7 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
 	int index;
-	struct MenuInputValidator* v;
+	struct InputValidator* v;
 	const char** names;
 	int raw, count;
 	
@@ -2079,8 +2087,8 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 	btn->GetValue(&value);
 
 	v = &s->validators[index];
-	names = v->Meta._Enum.Names;
-	count = v->Meta._Enum.Count;	
+	names = v->Meta.e.Names;
+	count = v->Meta.e.Count;	
 
 	raw   = (Utils_ParseEnum(&value, 0, names, count) + 1) % count;
 	value = String_FromReadonly(names[raw]);
@@ -2119,7 +2127,7 @@ static struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	MenuOptionsScreen_OnResize, MenuOptionsScreen_ContextLost, NULL,
 };
 struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, int count, struct ButtonWidget* buttons, Event_Void_Callback contextRecreated,
-	struct MenuInputValidator* validators, const char** defaultValues, const char** descriptions, int descsCount) {
+	struct InputValidator* validators, const char** defaultValues, const char** descriptions, int descsCount) {
 	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
 	s->handlesAllInput = true;
 	s->closable        = true;
@@ -2236,11 +2244,11 @@ static void ClassicOptionsScreen_ContextRecreated(void* screen) {
 
 struct Screen* ClassicOptionsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[11];
-	static struct MenuInputValidator validators[Array_Elems(buttons)];
+	static struct InputValidator validators[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons)];	
 
-	validators[2] = MenuInputValidator_Enum(ViewDist_Names, VIEW_COUNT);
-	validators[7] = MenuInputValidator_Enum(FpsLimit_Names, FPS_LIMIT_COUNT);
+	InputValidator_Enum(validators[2], ViewDist_Names, VIEW_COUNT);
+	InputValidator_Enum(validators[7], FpsLimit_Names, FPS_LIMIT_COUNT);
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
 		ClassicOptionsScreen_ContextRecreated, validators, NULL, NULL, 0);
@@ -2318,7 +2326,7 @@ static void EnvSettingsScreen_ContextRecreated(void* screen) {
 
 struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[11];
-	static struct MenuInputValidator validators[Array_Elems(buttons)];
+	static struct InputValidator validators[Array_Elems(buttons)];
 	static const char* defaultValues[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
@@ -2331,25 +2339,25 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	edgeHeight  = String_ClearedArray(edgeHeightBuffer);
 	String_AppendInt(&edgeHeight,  World.Height / 2);
 
-	validators[0]    = MenuInputValidator_Hex();
+	InputValidator_Hex(validators[0]);
 	defaultValues[0] = ENV_DEFAULT_CLOUDSCOL_HEX;
-	validators[1]    = MenuInputValidator_Hex();
+	InputValidator_Hex(validators[1]);
 	defaultValues[1] = ENV_DEFAULT_SKYCOL_HEX;
-	validators[2]    = MenuInputValidator_Hex();
+	InputValidator_Hex(validators[2]);
 	defaultValues[2] = ENV_DEFAULT_FOGCOL_HEX;
-	validators[3]    = MenuInputValidator_Float(0.00f, 1000.00f);
+	InputValidator_Float(validators[3], 0.00f, 1000.00f);
 	defaultValues[3] = "1";
-	validators[4]    = MenuInputValidator_Int(-10000, 10000);
+	InputValidator_Int(validators[4], -10000, 10000);
 	defaultValues[4] = cloudHeightBuffer;
 
-	validators[5]    = MenuInputValidator_Hex();
+	InputValidator_Hex(validators[5]);
 	defaultValues[5] = ENV_DEFAULT_SUNCOL_HEX;
-	validators[6]    = MenuInputValidator_Hex();
+	InputValidator_Hex(validators[6]);
 	defaultValues[6] = ENV_DEFAULT_SHADOWCOL_HEX;
-	validators[7]    = MenuInputValidator_Enum(Weather_Names, Array_Elems(Weather_Names));
-	validators[8]    = MenuInputValidator_Float(-100.00f, 100.00f);
+	InputValidator_Enum(validators[7], Weather_Names, Array_Elems(Weather_Names));
+	InputValidator_Float(validators[8], -100.00f, 100.00f);
 	defaultValues[8] = "1";
-	validators[9]    = MenuInputValidator_Int(-2048, 2048);
+	InputValidator_Int(validators[9], -2048, 2048);
 	defaultValues[9] = edgeHeightBuffer;
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
@@ -2425,7 +2433,7 @@ static void GraphicsOptionsScreen_ContextRecreated(void* screen) {
 
 struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[7];
-	static struct MenuInputValidator validators[Array_Elems(buttons)];
+	static struct InputValidator validators[Array_Elems(buttons)];
 	static const char* defaultValues[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 	
@@ -2448,11 +2456,11 @@ struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 		"&eCircle: &fA circular shadow is shown across the blocks you are above.|" \
 		"&eCircleAll: &fA circular shadow is shown underneath all entities.";
 	
-	validators[0]    = MenuInputValidator_Enum(FpsLimit_Names, FPS_LIMIT_COUNT);
-	validators[1]    = MenuInputValidator_Int(8, 4096);
+	InputValidator_Enum(validators[0], FpsLimit_Names, FPS_LIMIT_COUNT);
+	InputValidator_Int(validators[1], 8, 4096);
 	defaultValues[1] = "512";
-	validators[3]    = MenuInputValidator_Enum(NameMode_Names,   NAME_MODE_COUNT);
-	validators[4]    = MenuInputValidator_Enum(ShadowMode_Names, SHADOW_MODE_COUNT);
+	InputValidator_Enum(validators[3], NameMode_Names,   NAME_MODE_COUNT);
+	InputValidator_Enum(validators[4], ShadowMode_Names, SHADOW_MODE_COUNT);
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
 		GraphicsOptionsScreen_ContextRecreated, validators, defaultValues, descs, Array_Elems(descs));
@@ -2540,17 +2548,17 @@ static void GuiOptionsScreen_ContextRecreated(void* screen) {
 
 struct Screen* GuiOptionsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[11];
-	static struct MenuInputValidator validators[Array_Elems(buttons)];
+	static struct InputValidator validators[Array_Elems(buttons)];
 	static const char* defaultValues[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
-	validators[2]    = MenuInputValidator_Float(0.25f, 4.00f);
+	InputValidator_Float(validators[2], 0.25f, 4.00f);
 	defaultValues[2] = "1";
-	validators[3]    = MenuInputValidator_Float(0.25f, 4.00f);
+	InputValidator_Float(validators[3], 0.25f, 4.00f);
 	defaultValues[3] = "1";
-	validators[6]    = MenuInputValidator_Float(0.25f, 4.00f);
+	InputValidator_Float(validators[6], 0.25f, 4.00f);
 	defaultValues[6] = "1";
-	validators[7]    = MenuInputValidator_Int(0, 30);
+	InputValidator_Int(validators[7], 0, 30);
 	defaultValues[7] = "10";
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
@@ -2690,7 +2698,7 @@ static void HacksSettingsScreen_ContextRecreated(void* screen) {
 
 struct Screen* HacksSettingsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[11];
-	static struct MenuInputValidator validators[Array_Elems(buttons)];
+	static struct InputValidator validators[Array_Elems(buttons)];
 	static const char* defaultValues[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
@@ -2703,12 +2711,12 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 		"&fThis is mainly useful for quick pillaring/towering.";
 	descs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip|&emode and no movement keys are held down.";
 
-	validators[1]    = MenuInputValidator_Float(0.10f, 50.00f);
+	InputValidator_Float(validators[1], 0.10f, 50.00f);
 	defaultValues[1] = "10";
-	validators[3]    = MenuInputValidator_Float(0.10f, 2048.00f);
+	InputValidator_Float(validators[3], 0.10f, 2048.00f);
 	/* TODO: User may not always use . for decimal point, need to account for that */
 	defaultValues[3] = "1.233";
-	validators[9]    = MenuInputValidator_Int(1, 179);
+	InputValidator_Int(validators[9], 1, 179);
 	defaultValues[9] = "70";
 
 	struct Screen* s = MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
@@ -2791,17 +2799,17 @@ static void MiscOptionsScreen_ContextRecreated(void* screen) {
 
 struct Screen* MiscOptionsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[9];
-	static struct MenuInputValidator validators[Array_Elems(buttons)];
+	static struct InputValidator validators[Array_Elems(buttons)];
 	static const char* defaultValues[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
-	validators[0]    = MenuInputValidator_Float(1.00f, 1024.00f);
+	InputValidator_Float(validators[0], 1.00f, 1024.00f);
 	defaultValues[0] = "5";
-	validators[1]    = MenuInputValidator_Int(0, 100);
+	InputValidator_Int(validators[1], 0, 100);
 	defaultValues[1] = "0";
-	validators[2]    = MenuInputValidator_Int(0, 100);
+	InputValidator_Int(validators[2], 0, 100);
 	defaultValues[2] = "0";
-	validators[7]    = MenuInputValidator_Int(1, 200);
+	InputValidator_Int(validators[7], 1, 200);
 #ifdef CC_BUILD_WIN
 	defaultValues[7] = "40";
 #else
