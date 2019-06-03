@@ -5,7 +5,7 @@
 #include "Constants.h"
 #include "Entity.h"
 /* Contains all 2D widget implementations.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 struct TextWidget {

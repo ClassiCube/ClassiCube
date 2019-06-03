@@ -2,7 +2,7 @@
 #define CC_ERRORHANDLER_H
 #include "String.h"
 /* Support methods for logging errors.
-   Copyright 2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 typedef bool (*Logger_DescribeError)(ReturnCode res, String* dst);

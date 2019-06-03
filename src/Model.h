@@ -6,7 +6,7 @@
 #include "VertexStructs.h"
 /* Contains various structs and methods for an entity model.
    Also contains a list of models and default textures for those models.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct Entity;
 struct AABB;

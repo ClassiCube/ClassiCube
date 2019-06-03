@@ -3,7 +3,7 @@
 #include "Vectors.h"
 
 /* Represents a camera, may be first or third person.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct PickedPos;
 struct Camera;

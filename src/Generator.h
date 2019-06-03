@@ -4,9 +4,9 @@
 #include "ExtMath.h"
 #include "Vectors.h"
 /* Implements flatgrass map generator, and original classic vanilla map generation (with perlin noise)
-   Based on: https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-map-generation-algorithm
+   Based on: https://github.com/UnknownShadow200/ClassiCube/wiki/Minecraft-Classic-map-generation-algorithm
    Thanks to Jerralish for originally reverse engineering classic's algorithm, then preparing a high level overview of the algorithm.
-   Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 extern volatile float Gen_CurrentProgress;

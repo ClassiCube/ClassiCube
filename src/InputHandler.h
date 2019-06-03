@@ -2,7 +2,7 @@
 #define CC_INPUTHANDLER_H
 #include "Input.h"
 /* Implements base handlers for mouse and keyboard input.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct Screen;
 

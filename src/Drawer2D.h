@@ -4,7 +4,7 @@
 #include "Constants.h"
 #include "Bitmap.h"
 /*  Responsible for performing drawing operations on bitmaps, and for converting bitmaps into textures.
-	Copyright 2017 ClassicalSharp | Licensed under BSD-3
+	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 struct DrawTextArgs { String text; FontDesc font; bool useShadow; };

@@ -4,7 +4,7 @@
 #include "Utils.h"
 #include "Core.h"
 /* Manages sending, adding, and logging chat.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent Chat_Component;

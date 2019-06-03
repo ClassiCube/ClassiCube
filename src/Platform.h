@@ -3,7 +3,7 @@
 #include "PackedCol.h"
 #include "Bitmap.h"
 /* Abstracts platform specific memory management, I/O, etc.
-   Copyright 2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct DrawTextArgs;
 struct HttpRequest;

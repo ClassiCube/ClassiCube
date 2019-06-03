@@ -2,7 +2,7 @@
 #define CC_PACKEDCOL_H
 #include "String.h"
 /* Manipulates an ARGB colour, in a format suitable for the native 3D graphics API.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 /* Represents an ARGB colour, suitable for native graphics API colours. */

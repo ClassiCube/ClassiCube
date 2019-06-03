@@ -3,7 +3,7 @@
 #include "VertexStructs.h"
 #include "Vectors.h"
 /* Describes a selection box, and contains methods related to the selection box.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent Selections_Component;

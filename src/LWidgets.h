@@ -4,7 +4,7 @@
 #include "Constants.h"
 #include "Input.h"
 /* Describes and manages individual 2D GUI elements in the launcher.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 struct LWidgetVTABLE {

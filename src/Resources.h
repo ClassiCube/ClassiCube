@@ -2,7 +2,7 @@
 #define CC_RESOURCES_H
 #include "LWeb.h"
 /* Implements checking, fetching, and patching the default game assets.
-	Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 #define FLAG_CLASSIC 0x01 /* file depends on classic.jar */

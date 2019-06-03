@@ -3,7 +3,7 @@
 #include "Vectors.h"
 #include "VertexStructs.h"
 /* Represents particle effects, and manages rendering and spawning particles.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 struct IGameComponent;

@@ -1,7 +1,7 @@
 #ifndef CC_ERRORS_H
 #define CC_ERRORS_H
 /* Represents list of internal errors.
-   Copyright 2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 /* NOTE: When changing these, remember to keep Logger.C up to date! */

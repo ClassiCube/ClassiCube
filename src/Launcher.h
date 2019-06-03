@@ -3,7 +3,7 @@
 #include "Bitmap.h"
 #include "String.h"
 /* Implements the launcher part of the game.
-	Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct LScreen;
 

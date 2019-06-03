@@ -2,7 +2,7 @@
 #define CC_VERTEXSTRUCTS_H
 #include "PackedCol.h"
 /* Represents simple vertex formats.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 /* 3 floats for position (XYZ), 4 bytes for colour. */

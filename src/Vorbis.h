@@ -2,7 +2,7 @@
 #define CC_VORBIS_H
 #include "Core.h"
 /* Decodes ogg vorbis audio
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 struct Stream;

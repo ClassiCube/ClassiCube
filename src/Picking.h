@@ -3,7 +3,7 @@
 #include "Constants.h"
 #include "Vectors.h"
 /* Data for picking/selecting block by the user, and clipping the camera.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 /* Describes the picked/selected block by the user and its position. */
