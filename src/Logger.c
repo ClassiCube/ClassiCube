@@ -704,7 +704,7 @@ static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx
 	String msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
 
-	String_Format1(&msg, "ClassiCube crashed." _NL "Message: %c" _NL, raw_msg);
+	String_Format1(&msg, "ClassiCube crashed." _NL "Reason: %c" _NL, raw_msg);
 	#ifdef CC_COMMIT_SHA
 	String_Format1(&msg, "Commit SHA: %c" _NL, CC_COMMIT_SHA);
 	#endif
@@ -716,13 +716,13 @@ static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx
 	Logger_LogCrashHeader();
 	Logger_Log(&msg);
 
+	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
+	String_AppendConst(&msg, "Please report this on the ClassiCube forums or to UnknownShadow200.\n\n");
+
 	if (ctx) Logger_DumpRegisters(ctx);
 	Logger_DumpBacktrace(&msg, ctx);
 	Logger_DumpMisc(ctx);
 	if (logStream.Meta.File) File_Close(logFile);
-
-	String_AppendConst(&msg, "Full details of the crash have been logged to 'client.log'.\n");
-	String_AppendConst(&msg, "Please report the crash on the ClassiCube forums so we can fix it.");
 
 	msg.buffer[msg.length] = '\0';
 	Window_ShowDialog("We're sorry", msg.buffer);
