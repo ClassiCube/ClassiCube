@@ -142,6 +142,7 @@ struct UrlWarningOverlay {
 	struct ButtonWidget buttons[2];
 	struct TextWidget   labels[4];
 	String url;
+	bool openingUrl;
 	char _urlBuffer[STRING_SIZE * 4];
 };
 
@@ -3113,7 +3114,16 @@ struct Screen* TexIdsOverlay_MakeInstance(void) {
 static struct UrlWarningOverlay UrlWarningOverlay_Instance;
 static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
+	if (s->openingUrl) return;
+	/* On windows, Process_StartOpen may end up calling our window procedure. */
+	/* If a mouse click message is delivered (e.g. user spam clicking), then */
+	/* UrlWarningOverlay_OpenUrl ends up getting called multiple times. */
+	/* This will cause a crash as Elem_Free gets called multiple times. */
+	/* (which attempts to unregister event handlers multiple times) */
+
+	s->openingUrl = true;
 	Process_StartOpen(&s->url);
+	s->openingUrl = false;
 	Elem_Free(s);
 }
 

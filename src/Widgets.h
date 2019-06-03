@@ -162,9 +162,9 @@ CC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, int width, in
 struct ChatInputWidget {
 	struct InputWidget base;
 	int typingLogPos;
-	char _textBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
-	char _origBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
 	String origStr;
+	char _textBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
+	char _origBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];	
 };
 
 CC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w, const FontDesc* font);
