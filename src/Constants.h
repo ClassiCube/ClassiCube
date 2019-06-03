@@ -5,15 +5,15 @@
 */
 
 #define GAME_MAX_CMDARGS 5
-#define GAME_APP_VER "1.0.3"
+#define GAME_APP_VER "1.0.4"
 #define GAME_API_VER 1
 
 #ifdef CC_BUILD_WEB
 #define GAME_APP_NAME  "ClassiCube web client"
 #define GAME_APP_TITLE "ClassiCube"
 #else
-#define GAME_APP_NAME  "ClassiCube 1.0.3 beta"
-#define GAME_APP_TITLE "ClassiCube 1.0.3 beta"
+#define GAME_APP_NAME  "ClassiCube 1.0.4 beta"
+#define GAME_APP_TITLE "ClassiCube 1.0.4 beta"
 #endif
 
 /* Max number of characters strings can have. */
