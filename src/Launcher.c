@@ -444,20 +444,20 @@ void Launcher_ResetPixels(void) {
 	int x;
 
 	if (Launcher_Screen && Launcher_Screen->HidesTitlebar) {
-		Launcher_ResetArea(0, 0, Game.Width, Game.Height);
+		Launcher_ResetArea(0, 0, Window.Width, Window.Height);
 		return;
 	}
 
 	if (Launcher_ClassicBackground && terrainBmp.Scan0) {
-		Launcher_ClearTile(0,        0, Game.Width,               TILESIZE, TILESIZE);
-		Launcher_ClearTile(0, TILESIZE, Game.Width, Game.Height - TILESIZE, 0);
+		Launcher_ClearTile(0,        0, Window.Width,                 TILESIZE, TILESIZE);
+		Launcher_ClearTile(0, TILESIZE, Window.Width, Window.Height - TILESIZE, 0);
 	} else {
-		Launcher_ResetArea(0, 0, Game.Width, Game.Height);
+		Launcher_ResetArea(0, 0, Window.Width, Window.Height);
 	}
 
 	Drawer2D_BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && fontBmp.Scan0;
 	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);
-	x = Game.Width / 2 - Drawer2D_TextWidth(&args) / 2;
+	x = Window.Width / 2 - Drawer2D_TextWidth(&args) / 2;
 
 	args.text = title_back;
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x + 4, 4);

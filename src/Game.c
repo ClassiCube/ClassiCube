@@ -88,7 +88,7 @@ int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 
 
 int Game_GetWindowScale(void) {
-	float windowScale = min(Game.Width / 640.0f, Game.Height / 480.0f);
+	float windowScale = min(Window.Width / 640.0f, Window.Height / 480.0f);
 	return 1 + (int)windowScale;
  }
 
