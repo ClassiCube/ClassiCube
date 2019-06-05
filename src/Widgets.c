@@ -441,7 +441,7 @@ static bool HotbarWidget_KeyUp(void* widget, Key key) {
 	if (w->altHandled) { w->altHandled = false; return true; } /* handled already */
 
 	/* Don't switch hotbar when alt+tab */
-	if (!Window_Focused) return true;
+	if (!Window.Focused) return true;
 
 	/* Alternate between first and second row */
 	index = Inventory.Offset == 0 ? 1 : 0;
@@ -544,8 +544,7 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	TableWidget_GetCoords(w, idx, &x, &y);
 	x += w->cellSize / 2; y += w->cellSize / 2;
 
-	x += Window_ClientBounds.X;
-	y += Window_ClientBounds.Y;
+	x += Window.X; y += Window.Y;
 	Cursor_SetScreenPos(x, y);
 }
 

@@ -275,8 +275,8 @@ bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
 }
 
 void Game_UpdateDimensions(void) {
-	Game.Width  = max(Window_ClientBounds.Width,  1);
-	Game.Height = max(Window_ClientBounds.Height, 1);
+	Game.Width  = max(Window.Width,  1);
+	Game.Height = max(Window.Height, 1);
 }
 
 static void Game_OnResize(void* obj) {
@@ -641,7 +641,7 @@ static void Game_RenderFrame(double delta) {
 	Game_Vertices = 0;
 
 	Camera.Active->UpdateMouse(delta);
-	if (!Window_Focused && !Gui_GetActiveScreen()->handlesAllInput) {
+	if (!Window.Focused && !Gui_GetActiveScreen()->handlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());
 	}
@@ -698,7 +698,7 @@ void Game_Free(void* obj) {
 
 #define Game_DoFrameBody() \
 	Window_ProcessEvents();\
-	if (!Window_Exists) return;\
+	if (!Window.Exists) return;\
 	\
 	render = Stopwatch_Measure();\
 	time   = Stopwatch_ElapsedMicroseconds(lastRender, render) / (1000.0 * 1000.0);\

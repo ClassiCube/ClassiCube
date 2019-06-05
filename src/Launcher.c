@@ -91,7 +91,7 @@ bool Launcher_ConnectToServer(const String* hash) {
 *#########################################################################################################################*/
 static void Launcher_MaybeRedraw(void* obj) {
 	/* Only redraw when launcher has been initialised */
-	if (Launcher_Screen && Window_Exists) Launcher_Redraw();
+	if (Launcher_Screen && Window.Exists) Launcher_Redraw();
 }
 
 static void Launcher_ReqeustRedraw(void* obj) {
@@ -244,7 +244,7 @@ void Launcher_Run(void) {
 
 	for (;;) {
 		Window_ProcessEvents();
-		if (!Window_Exists || Launcher_ShouldExit) break;
+		if (!Window.Exists || Launcher_ShouldExit) break;
 
 		Launcher_Screen->Tick(Launcher_Screen);
 		if (Launcher_Dirty.Width) Launcher_Display();
@@ -257,10 +257,8 @@ void Launcher_Run(void) {
 	}
 
 	Launcher_Free();
-	if (Launcher_ShouldUpdate)
-		Launcher_ApplyUpdate();
-	if (Window_Exists)
-		Window_Close();
+	if (Launcher_ShouldUpdate) Launcher_ApplyUpdate();
+	if (Window.Exists) Window_Close();
 }
 
 

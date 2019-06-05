@@ -967,7 +967,7 @@ static bool ChatScreen_KeyUp(void* screen, Key key) {
 #endif
 
 	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
-		if (!Window_Focused) return true;
+		if (!Window.Focused) return true;
 		SpecialInputWidget_SetActive(&s->altText, !s->altText.active);
 	}
 	return true;

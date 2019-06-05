@@ -41,6 +41,17 @@ struct GraphicsMode {
 	int DepthBits, StencilBits; /* Z buffer data */
 };
 
+CC_VAR extern struct _WindowData {
+	/* Client bounds of the window in screen coordinates. */
+	/* Essentially, this is the area that can draw to (i.e. content area) */
+	/* This area does NOT include borders and titlebar surrounding the window */
+	int X, Y, Width, Height;
+	/* Whether the window is actually valid (i.e. not destroyed). */
+	bool Exists;
+	/* Whether the user is interacting with the window. */
+	bool Focused;
+} Window;
+
 /* Initalises state for window. Also sets Display_ members. */
 void Window_Init(void);
 /* Creates a new GraphicsMode from the given data. */
@@ -62,10 +73,6 @@ CC_API void Window_GetClipboardText(String* value);
 CC_API void Window_SetClipboardText(const String* value);
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
-/* Whether the window is actually valid (i.e. not destroyed). */
-extern bool Window_Exists;
-/* Whether the user is interacting with the window. */
-extern bool Window_Focused;
 /* Whether the window is visible on screen at all. */
 /* NOTE: This does not count when just hidden behind other windows. */
 bool Window_GetVisible(void);
@@ -78,14 +85,9 @@ int Window_GetWindowState(void);
 /* Sets the current state of the window, see WindowState enum. */
 void Window_SetWindowState(int state);
 
-/* Client bounds of the window in screen coordinates. */
-/* Essentially, this is the area that can draw to (i.e. content area) */
-/* This area does NOT include borders and titlebar surrounding the window */
-extern Rect2D Window_ClientBounds;
 /* Sets the size of the internal bounds of the window. */
 /* NOTE: This size excludes the bounds of borders + title */
 void Window_SetSize(int width, int height);
-
 /* Closes then destroys the window. */
 /* Raises the WindowClosing and WindowClosed events. */
 void Window_Close(void);
