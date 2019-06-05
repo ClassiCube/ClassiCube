@@ -91,7 +91,7 @@ bool Launcher_ConnectToServer(const String* hash) {
 *#########################################################################################################################*/
 static void Launcher_MaybeRedraw(void* obj) {
 	/* Only redraw when launcher has been initialised */
-	if (Launcher_Screen && Window.Exists) Launcher_Redraw();
+	if (Launcher_Screen && Window_Exists) Launcher_Redraw();
 }
 
 static void Launcher_ReqeustRedraw(void* obj) {
@@ -244,7 +244,7 @@ void Launcher_Run(void) {
 
 	for (;;) {
 		Window_ProcessEvents();
-		if (!Window.Exists || Launcher_ShouldExit) break;
+		if (!Window_Exists || Launcher_ShouldExit) break;
 
 		Launcher_Screen->Tick(Launcher_Screen);
 		if (Launcher_Dirty.Width) Launcher_Display();
@@ -258,7 +258,7 @@ void Launcher_Run(void) {
 
 	Launcher_Free();
 	if (Launcher_ShouldUpdate) Launcher_ApplyUpdate();
-	if (Window.Exists) Window_Close();
+	if (Window_Exists) Window_Close();
 }
 
 
@@ -444,20 +444,20 @@ void Launcher_ResetPixels(void) {
 	int x;
 
 	if (Launcher_Screen && Launcher_Screen->HidesTitlebar) {
-		Launcher_ResetArea(0, 0, Window.Width, Window.Height);
+		Launcher_ResetArea(0, 0, Window_Width, Window_Height);
 		return;
 	}
 
 	if (Launcher_ClassicBackground && terrainBmp.Scan0) {
-		Launcher_ClearTile(0,        0, Window.Width,                 TILESIZE, TILESIZE);
-		Launcher_ClearTile(0, TILESIZE, Window.Width, Window.Height - TILESIZE, 0);
+		Launcher_ClearTile(0,        0, Window_Width,                 TILESIZE, TILESIZE);
+		Launcher_ClearTile(0, TILESIZE, Window_Width, Window_Height - TILESIZE, 0);
 	} else {
-		Launcher_ResetArea(0, 0, Window.Width, Window.Height);
+		Launcher_ResetArea(0, 0, Window_Width, Window_Height);
 	}
 
 	Drawer2D_BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && fontBmp.Scan0;
 	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);
-	x = Window.Width / 2 - Drawer2D_TextWidth(&args) / 2;
+	x = Window_Width / 2 - Drawer2D_TextWidth(&args) / 2;
 
 	args.text = title_back;
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x + 4, 4);

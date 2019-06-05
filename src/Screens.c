@@ -541,11 +541,11 @@ static void LoadingScreen_DrawBackground(void) {
 
 	loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 	tex.ID    = GFX_NULL;
-	Tex_SetRect(tex, 0,0, Window.Width,LOADING_TILE_SIZE);
+	Tex_SetRect(tex, 0,0, Window_Width,LOADING_TILE_SIZE);
 	tex.uv    = Atlas1D_TexRec(loc, 1, &atlasIndex);
-	tex.uv.U2 = (float)Window.Width / LOADING_TILE_SIZE;
+	tex.uv.U2 = (float)Window_Width / LOADING_TILE_SIZE;
 	
-	for (y = 0; y < Window.Height; y += LOADING_TILE_SIZE) {
+	for (y = 0; y < Window_Height; y += LOADING_TILE_SIZE) {
 		tex.Y = y;
 		Gfx_Make2DQuad(&tex, col, &ptr);
 		count += 4;
@@ -585,8 +585,8 @@ static void LoadingScreen_Render(void* screen, double delta) {
 	Elem_Render(&s->message, delta);
 	Gfx_SetTexturing(false);
 
-	x = Gui_CalcPos(ANCHOR_CENTRE,  0, PROG_BAR_WIDTH,  Window.Width);
-	y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, Window.Height);
+	x = Gui_CalcPos(ANCHOR_CENTRE,  0, PROG_BAR_WIDTH,  Window_Width);
+	y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, Window_Height);
 	progWidth = (int)(PROG_BAR_WIDTH * s->progress);
 
 	Gfx_Draw2DFlat(x, y, PROG_BAR_WIDTH, PROG_BAR_HEIGHT, backCol);
@@ -707,7 +707,7 @@ static int ChatScreen_InputUsedHeight(struct ChatScreen* s) {
 	if (s->altText.height == 0) {
 		return s->input.base.height + 20;
 	} else {
-		return (Window.Height - s->altText.y) + 5;
+		return (Window_Height - s->altText.y) + 5;
 	}
 }
 
@@ -716,7 +716,7 @@ static void ChatScreen_UpdateAltTextY(struct ChatScreen* s) {
 	int height = max(input->height + input->yOffset, ChatScreen_BottomOffset());
 	height += input->yOffset;
 
-	s->altText.tex.Y = Window.Height - (height + s->altText.tex.Height);
+	s->altText.tex.Y = Window_Height - (height + s->altText.tex.Height);
 	s->altText.y     = s->altText.tex.Y;
 }
 
@@ -777,7 +777,7 @@ static void ChatScreen_ConstructWidgets(struct ChatScreen* s) {
 	Elem_Init(&s->clientStatus);
 
 	TextWidget_Create(&s->announcement, &String_Empty, &s->announcementFont);
-	Widget_SetLocation(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Window.Height / 4);
+	Widget_SetLocation(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Window_Height / 4);
 }
 
 static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
@@ -967,7 +967,7 @@ static bool ChatScreen_KeyUp(void* screen, Key key) {
 #endif
 
 	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
-		if (!Window.Focused) return true;
+		if (!Window_Focused) return true;
 		SpecialInputWidget_SetActive(&s->altText, !s->altText.active);
 	}
 	return true;
@@ -1207,10 +1207,10 @@ static void HUDScreen_DrawCrosshairs(void) {
 	int extent;
 	if (!Gui_IconsTex) return;
 
-	extent = (int)(CH_EXTENT * Game_Scale(Window.Height / 480.0f));
+	extent = (int)(CH_EXTENT * Game_Scale(Window_Height / 480.0f));
 	tex.ID = Gui_IconsTex;
-	tex.X  = (Window.Width  / 2) - extent;
-	tex.Y  = (Window.Height / 2) - extent;
+	tex.X  = (Window_Width  / 2) - extent;
+	tex.Y  = (Window_Height / 2) - extent;
 
 	tex.Width  = extent * 2;
 	tex.Height = extent * 2;
@@ -1474,7 +1474,7 @@ static void DisconnectScreen_Render(void* screen, double delta) {
 	PackedCol bottom = PACKEDCOL_CONST(80, 16, 16, 255);
 
 	if (s->canReconnect) { DisconnectScreen_UpdateDelayLeft(s, delta); }
-	Gfx_Draw2DGradient(0, 0, Window.Width, Window.Height, top, bottom);
+	Gfx_Draw2DGradient(0, 0, Window_Width, Window_Height, top, bottom);
 
 	Gfx_SetTexturing(true);
 	Elem_Render(&s->title, delta);

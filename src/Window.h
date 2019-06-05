@@ -41,16 +41,14 @@ struct GraphicsMode {
 	int DepthBits, StencilBits; /* Z buffer data */
 };
 
-CC_VAR extern struct _WindowData {
-	/* Client bounds of the window in screen coordinates. */
-	/* Essentially, this is the area that can draw to (i.e. content area) */
-	/* This area does NOT include borders and titlebar surrounding the window */
-	int X, Y, Width, Height;
-	/* Whether the window is actually valid (i.e. not destroyed). */
-	bool Exists;
-	/* Whether the user is interacting with the window. */
-	bool Focused;
-} Window;
+/* Client bounds of the window in screen coordinates. */
+/* Essentially, this is the area that can draw to (i.e. content area) */
+/* This area does NOT include borders and titlebar surrounding the window */
+extern int Window_X, Window_Y, Window_Width, Window_Height;
+/* Whether the window is actually valid (i.e. not destroyed). */
+extern bool Window_Exists;
+/* Whether the user is interacting with the window. */
+extern bool Window_Focused;
 
 /* Initalises state for window. Also sets Display_ members. */
 void Window_Init(void);

@@ -98,7 +98,7 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 
 static void PerspectiveCamera_UpdateMouse(double delta) {
 	struct Screen* s = Gui_GetActiveScreen();
-	if (!s->handlesAllInput && Window.Focused) Window_UpdateRawMouse();
+	if (!s->handlesAllInput && Window_Focused) Window_UpdateRawMouse();
 
 	PerspectiveCamera_UpdateMouseRotation(delta);
 	cam_delta.X = 0; cam_delta.Y = 0;

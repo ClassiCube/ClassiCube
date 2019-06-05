@@ -330,7 +330,7 @@ static void ChooseModeScreen_Reposition(struct LScreen* s_) {
 }
 
 static void ChooseModeScreen_Draw(struct LScreen* s) {
-	int midX = Window.Width / 2, midY = Window.Height / 2;
+	int midX = Window_Width / 2, midY = Window_Height / 2;
 	LScreen_Draw(s);
 	
 	Drawer2D_Rect(&Launcher_Framebuffer, Launcher_ButtonBorderCol,
@@ -1056,9 +1056,9 @@ static void ResourcesScreen_Draw(struct LScreen* s) {
 	BitmapCol backCol = BITMAPCOL_CONST( 12, 12,  12, 255);
 
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
-					0, 0, Window.Width, Window.Height);
+					0, 0, Window_Width, Window_Height);
 	ResourcesScreen_ResetArea(
-		Window.Width / 2 - RESOURCES_XSIZE, Window.Height / 2 - RESOURCES_YSIZE,
+		Window_Width / 2 - RESOURCES_XSIZE, Window_Height / 2 - RESOURCES_YSIZE,
 		RESOURCES_XSIZE * 2,                RESOURCES_YSIZE * 2);
 	LScreen_Draw(s);
 }
@@ -1302,8 +1302,8 @@ static void ServersScreen_Reposition(struct LScreen* s_) {
 	LWidget_SetLocation(&s->BtnConnect, ANCHOR_MAX, ANCHOR_MAX,  10, 10);
 	LWidget_SetLocation(&s->BtnRefresh, ANCHOR_MAX, ANCHOR_MIN, 135, 10);
 
-	s->Table.Width  = Window.Width  - 10;
-	s->Table.Height = Window.Height - 100;
+	s->Table.Width  = Window_Width  - 10;
+	s->Table.Height = Window_Height - 100;
 	s->Table.Height = max(1, s->Table.Height);
 
 	LWidget_SetLocation(&s->Table, ANCHOR_MIN, ANCHOR_MIN, 10, 50);
@@ -1420,7 +1420,7 @@ static struct UpdatesScreen {
 } UpdatesScreen_Instance;
 
 static void UpdatesScreen_Draw(struct LScreen* s) {
-	int midX = Window.Width / 2, midY = Window.Height / 2;
+	int midX = Window_Width / 2, midY = Window_Height / 2;
 	LScreen_Draw(s);
 
 	Drawer2D_Rect(&Launcher_Framebuffer, Launcher_ButtonBorderCol,

@@ -8,7 +8,8 @@
 
 int Display_BitsPerPixel;
 Rect2D Display_Bounds;
-struct _WindowData Window;
+int Window_X, Window_Y, Window_Width, Window_Height;
+bool Window_Exists, Window_Focused;
 
 static bool win_cursorVisible = true;
 bool Cursor_GetVisible(void) { return win_cursorVisible; }
@@ -26,8 +27,8 @@ void Window_CreateSimple(int width, int height) {
 
 static Point2D cursorPrev;
 static void Window_CentreMousePosition(void) {
-	int cenX = Window.X + Window.Width  / 2;
-	int cenY = Window.Y + Window.Height / 2;
+	int cenX = Window_X + Window_Width  / 2;
+	int cenY = Window_Y + Window_Height / 2;
 
 	Cursor_SetScreenPos(cenX, cenY);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
@@ -35,7 +36,7 @@ static void Window_CentreMousePosition(void) {
 }
 
 static void Window_RegrabMouse(void) {
-	if (!Window.Focused || !Window.Exists) return;
+	if (!Window_Focused || !Window_Exists) return;
 	Window_CentreMousePosition();
 }
 
@@ -218,12 +219,12 @@ static void Window_RefreshBounds(void) {
 	Window_SetRect(&win_bounds, &rect);
 
 	GetClientRect(win_handle, &rect);
-	Window.Width  = rect.right  - rect.left;
-	Window.Height = rect.bottom - rect.top;
+	Window_Width  = rect.right  - rect.left;
+	Window_Height = rect.bottom - rect.top;
 
 	/* GetClientRect always returns 0,0 for left,top (see MSDN) */
 	ClientToScreen(win_handle, &topLeft);
-	Window.X = topLeft.x; Window.Y = topLeft.y;
+	Window_X = topLeft.x; Window_Y = topLeft.y;
 }
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -233,10 +234,10 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	switch (message) {
 	case WM_ACTIVATE:
-		wasFocused     = Window.Focused;
-		Window.Focused = LOWORD(wParam) != 0;
+		wasFocused     = Window_Focused;
+		Window_Focused = LOWORD(wParam) != 0;
 
-		if (Window.Focused != wasFocused) {
+		if (Window_Focused != wasFocused) {
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 		}
 		break;
@@ -414,12 +415,12 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_CLOSE:
 		Event_RaiseVoid(&WindowEvents.Closing);
-		if (Window.Exists) DestroyWindow(win_handle);
-		Window.Exists = false;
+		if (Window_Exists) DestroyWindow(win_handle);
+		Window_Exists = false;
 		break;
 
 	case WM_DESTROY:
-		Window.Exists = false;
+		Window_Exists = false;
 		UnregisterClass(CC_WIN_CLASSNAME, win_instance);
 
 		if (win_DC) ReleaseDC(win_handle, win_DC);
@@ -474,7 +475,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 
 	win_DC = GetDC(win_handle);
 	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
-	Window.Exists = true;
+	Window_Exists = true;
 }
 
 void Window_SetTitle(const String* title) {
@@ -637,7 +638,7 @@ void Window_ProcessEvents(void) {
 
 	HWND foreground = GetForegroundWindow();
 	if (foreground) {
-		Window.Focused = foreground == win_handle;
+		Window_Focused = foreground == win_handle;
 	}
 }
 
@@ -866,11 +867,11 @@ static void Window_RefreshBounds(int width, int height) {
 	/* e.g. linux mint + cinnamon, if you use /client resolution, e->x = 10, e->y = 36 */
 	/* So just always translate topleft to root window coordinates to avoid this */
 	XTranslateCoordinates(win_display, win_handle, win_rootWin, 0, 0, &x, &y, &child);
-	Window.X = x; Window.Y = y;
+	Window_X = x; Window_Y = y;
 
-	if (width != Window.Width || height != Window.Height) {
-		Window.Width  = width;
-		Window.Height = height;
+	if (width != Window_Width || height != Window_Height) {
+		Window_Width  = width;
+		Window_Height = height;
 		Event_RaiseVoid(&WindowEvents.Resized);
 	}
 }
@@ -929,7 +930,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 
 	/* Register for window destroy notification */
 	XSetWMProtocols(win_display, win_handle, &wm_destroy, 1);
-	Window.Exists = true;
+	Window_Exists = true;
 	Window_RefreshBounds(width, height);
 
 	/* Request that auto-repeat is only set on devices that support it physically.
@@ -1127,7 +1128,7 @@ void Window_ProcessEvents(void) {
 	XEvent e;
 	bool wasFocused;
 
-	while (Window.Exists) {
+	while (Window_Exists) {
 		if (!Window_GetPendingEvent(&e)) break;
 
 		switch (e.type) {
@@ -1139,12 +1140,12 @@ void Window_ProcessEvents(void) {
 			/* sync and discard all events queued */
 			XSync(win_display, true);
 			XDestroyWindow(win_display, win_handle);
-			Window.Exists = false;
+			Window_Exists = false;
 			break;
 
 		case DestroyNotify:
 			Platform_LogConst("Window destroyed");
-			Window.Exists = false;
+			Window_Exists = false;
 			Event_RaiseVoid(&WindowEvents.Destroyed);
 			break;
 
@@ -1202,14 +1203,14 @@ void Window_ProcessEvents(void) {
 		case FocusOut:
 			/* Don't lose focus when another app grabs key or mouse */
 			if (e.xfocus.mode == NotifyGrab || e.xfocus.mode == NotifyUngrab) break;
-			wasFocused     = Window.Focused;
-			Window.Focused = e.type == FocusIn;
+			wasFocused     = Window_Focused;
+			Window_Focused = e.type == FocusIn;
 
-			if (Window.Focused != wasFocused) {
+			if (Window_Focused != wasFocused) {
 				Event_RaiseVoid(&WindowEvents.FocusChanged);
 			}
 			/* TODO: Keep track of keyboard when focus is lost */
-			if (!Window.Focused) Key_Clear();
+			if (!Window_Focused) Key_Clear();
 			break;
 
 		case MappingNotify:
@@ -1615,8 +1616,8 @@ static void Window_RefreshBounds(void) {
 	res = GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
 	if (res) Logger_Abort2(res, "Getting window clientbounds");
 
-	Window.X = r.left; Window.Width  = r.right  - r.left;
-	Window.Y = r.top;  Window.Height = r.bottom - r.top;
+	Window_X = r.left; Window_Width  = r.right  - r.left;
+	Window_Y = r.top;  Window_Height = r.bottom - r.top;
 }
 
 static void Window_UpdateWindowState(void) {
@@ -1691,35 +1692,35 @@ static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
 }
 
 static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
-	int oldWidth, oldHeght;
+	int oldWidth, oldHeight;
 	
 	switch (GetEventKind(inEvent)) {
 		case kEventWindowClose:
-			Window.Exists = false;
+			Window_Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 			return eventNotHandledErr;
 			
 		case kEventWindowClosed:
-			Window.Exists = false;
+			Window_Exists = false;
 			Event_RaiseVoid(&WindowEvents.Destroyed);
 			return 0;
 			
 		case kEventWindowBoundsChanged:
-			oldWidth = Window.Width; oldHeight = Window.Height;
+			oldWidth = Window_Width; oldHeight = Window_Height;
 			Window_RefreshBounds();
 			
-			if (old.Width != Window.Width || old.Height != Window.Height) {
+			if (oldWidth != Window_Width || oldHeight != Window_Height) {
 				Event_RaiseVoid(&WindowEvents.Resized);
 			}
 			return eventNotHandledErr;
 			
 		case kEventWindowActivated:
-			Window.Focused = true;
+			Window_Focused = true;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			return eventNotHandledErr;
 			
 		case kEventWindowDeactivated:
-			Window.Focused = false;
+			Window_Focused = false;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			return eventNotHandledErr;
 	}
@@ -1745,8 +1746,8 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	mousePos.X = (int)pt.x; mousePos.Y = (int)pt.y;
 	/* kEventParamMouseLocation is in screen coordinates */
 	if (win_state != WINDOW_STATE_FULLSCREEN) {
-		mousePos.X -= Window.X;
-		mousePos.Y -= Window.Y;
+		mousePos.X -= Window_X;
+		mousePos.Y -= Window_Y;
 	}
 
 	/* mousePos.Y is < 0 if user clicks or moves when over titlebar */
@@ -1903,7 +1904,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	
 	/* TODO: Use BringWindowToFront instead.. (look in the file which has RepositionWindow in it) !!!! */
 	Window_ConnectEvents();
-	Window.Exists = true;
+	Window_Exists = true;
 }
 
 void Window_SetTitle(const String* title) {
@@ -2026,8 +2027,8 @@ void Window_SetSize(int width, int height) {
 void Window_Close(void) {
 	/* DisposeWindow only sends a kEventWindowClosed */
 	Event_RaiseVoid(&WindowEvents.Closing);
-	if (Window.Exists) DisposeWindow(win_handle);
-	Window.Exists = false;
+	if (Window_Exists) DisposeWindow(win_handle);
+	Window_Exists = false;
 }
 
 void Window_ProcessEvents(void) {
@@ -2124,8 +2125,8 @@ void Window_DrawRaw(Rect2D r) {
 	
 	// TODO: Only update changed bit.. 
 	rect.origin.x = 0; rect.origin.y = 0;
-	rect.size.width  = Window.Width;
-	rect.size.height = Window.Height;
+	rect.size.width  = Window_Width;
+	rect.size.height = Window_Height;
 	
 	CGContextDrawImage(context, rect, win_image);
 	CGContextSynchronize(context);
@@ -2162,8 +2163,8 @@ void Window_DrawRaw(Rect2D r) {
 
 	/* TODO: Only update changed bit.. */
 	rect.origin.x = 0; rect.origin.y = 0;
-	rect.size.width  = Window.Width;
-	rect.size.height = Window.Height;
+	rect.size.width  = Window_Width;
+	rect.size.height = Window_Height;
 
 	provider = CGDataProviderCreateWithData(NULL, bmp_->Scan0,
 		Bitmap_DataSize(bmp_->Width, bmp_->Height), NULL);
@@ -2194,8 +2195,8 @@ static SDL_Window* win_handle;
 static bool win_rawMouse;
 
 static void Window_RefreshBounds(void) {
-	SDL_GetWindowPosition(win_handle, &Window.X,     &Window.Y);
-	SDL_GetWindowSize(win_handle,     &Window.Width, &Window.Height);
+	SDL_GetWindowPosition(win_handle, &Window_X,     &Window_Y);
+	SDL_GetWindowSize(win_handle,     &Window_Width, &Window_Height);
 }
 
 static void Window_SDLFail(const char* place) {
@@ -2223,7 +2224,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	win_handle = SDL_CreateWindow(NULL, x, y, width, height, SDL_WINDOW_OPENGL);
 	if (!win_handle) Window_SDLFail("creating window");
 
-	Window.Exists = true;
+	Window_Exists = true;
 	Window_RefreshBounds();
 }
 
@@ -2413,11 +2414,11 @@ static void Window_HandleWindowEvent(const SDL_Event* e) {
             Event_RaiseVoid(&WindowEvents.StateChanged);
             break;
         case SDL_WINDOWEVENT_FOCUS_GAINED:
-            Window.Focused = true;
+            Window_Focused = true;
             Event_RaiseVoid(&WindowEvents.FocusChanged);
             break;
         case SDL_WINDOWEVENT_FOCUS_LOST:
-            Window.Focused = false;
+            Window_Focused = false;
             Event_RaiseVoid(&WindowEvents.FocusChanged);
             break;
         case SDL_WINDOWEVENT_CLOSE:
@@ -2450,7 +2451,7 @@ void Window_ProcessEvents(void) {
 			Window_HandleWindowEvent(&e); break;
 
 		case SDL_QUIT:
-			Window.Exists = false;
+			Window_Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 
 			SDL_DestroyWindow(win_handle);
@@ -2464,13 +2465,13 @@ Point2D Cursor_GetScreenPos(void) {
 	Point2D p;
 	SDL_GetGlobalMouseState(&p.X, &p.Y);
 	//SDL_GetMouseState(&p.X, &p.Y);
-	//p.X += Window.X; p.Y += Window.Y;
+	//p.X += Window_X; p.Y += Window_Y;
 	return p;
 }
 
 void Cursor_SetScreenPos(int x, int y) {
 	SDL_WarpMouseGlobal(x, y);
-	//x -= Window.X; y -= Window.Y;
+	//x -= Window_X; y -= Window_Y;
 	//SDL_WarpMouseInWindow(win_handle, x, y);
 }
 
@@ -2527,7 +2528,7 @@ void Window_DisableRawMouse(void) {
 static bool win_rawMouse;
 
 static void Window_RefreshBounds(void) {
-	emscripten_get_canvas_element_size(NULL, &Window.Width, &Window.Height);
+	emscripten_get_canvas_element_size(NULL, &Window_Width, &Window_Height);
 }
 
 static void Window_CorrectFocus(void) {
@@ -2642,8 +2643,8 @@ static EM_BOOL Window_TouchEnd(int type, const EmscriptenTouchEvent* ev, void* d
 }
 
 static EM_BOOL Window_Focus(int type, const EmscriptenFocusEvent* ev, void* data) {
-	Window.Focused = type == EMSCRIPTEN_EVENT_FOCUS;
-	if (!Window.Focused) Key_Clear();
+	Window_Focused = type == EMSCRIPTEN_EVENT_FOCUS;
+	if (!Window_Focused) Key_Clear();
 
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 	return true;
@@ -2824,8 +2825,8 @@ void Window_Init(void) {
 }
 
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
-	Window.Exists  = true;
-	Window.Focused = true;
+	Window_Exists  = true;
+	Window_Focused = true;
 	Window_HookEvents();
 	/* let the webpage decide on bounds */
 	Window_RefreshBounds();
@@ -2887,7 +2888,7 @@ void Window_SetSize(int width, int height) {
 }
 
 void Window_Close(void) {
-	Window.Exists = false;
+	Window_Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
 	/* Don't want cursor stuck on the dead 0,0 canvas */
 	Window_DisableRawMouse();
@@ -3222,7 +3223,7 @@ static void GLContext_UnsetFullscreen(void) {
 
 	ctx_fullscreen = false;
 	Window_UpdateWindowState();
-	Window_SetSize(ctx_windowedWidth, ctx_windowedHeight);
+	Window_SetSize(ctx_windowWidth, ctx_windowHeight);
 }
 
 static void GLContext_SetFullscreen(void) {
@@ -3248,11 +3249,11 @@ static void GLContext_SetFullscreen(void) {
 	}
 
 	ctx_fullscreen   = true;
-	ctx_windowWidth  = Window.Width;
-	ctx_windowHeight = Window.Height;
+	ctx_windowWidth  = Window_Width;
+	ctx_windowHeight = Window_Height;
 
-	Window.X = Display_Bounds.X; Window.Width  = Display_Bounds.Width;
-	Window.Y = Display_Bounds.Y; Window.Height = Display_Bounds.Height;
+	Window_X = Display_Bounds.X; Window_Width  = Display_Bounds.Width;
+	Window_Y = Display_Bounds.Y; Window_Height = Display_Bounds.Height;
 	win_state = WINDOW_STATE_FULLSCREEN;
 }
 

@@ -233,7 +233,7 @@ static void Menu_RenderBounds(void) {
 	Then using wolfram alpha to solve the glblendfunc equation */
 	PackedCol topCol    = PACKEDCOL_CONST(24, 24, 24, 105);
 	PackedCol bottomCol = PACKEDCOL_CONST(51, 51, 98, 162);
-	Gfx_Draw2DGradient(0, 0, Window.Width, Window.Height, topCol, bottomCol);
+	Gfx_Draw2DGradient(0, 0, Window_Width, Window_Height, topCol, bottomCol);
 }
 
 static int Menu_DoMouseDown(void* screen, int x, int y, MouseButton btn) {
@@ -890,7 +890,7 @@ static void EditHotkeyScreen_Render(void* screen, double delta) {
 	int x, y;
 	MenuScreen_Render(screen, delta);
 
-	x = Window.Width / 2; y = Window.Height / 2;
+	x = Window_Width / 2; y = Window_Height / 2;
 	Gfx_Draw2DFlat(x - 250, y - 65, 500, 2, grey);
 	Gfx_Draw2DFlat(x - 250, y + 45, 500, 2, grey);
 }
@@ -1296,7 +1296,7 @@ static void SaveLevelScreen_Render(void* screen, double delta) {
 	int x, y;
 	MenuScreen_Render(screen, delta);
 
-	x = Window.Width / 2; y = Window.Height / 2;
+	x = Window_Width / 2; y = Window_Height / 2;
 	Gfx_Draw2DFlat(x - 250, y + 90, 500, 2, grey);
 }
 
@@ -1895,8 +1895,8 @@ static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* s) {
 }
 
 static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* s) {
-	s->extHelp.xOffset = Window.Width  / 2 - s->extHelp.width / 2;
-	s->extHelp.yOffset = Window.Height / 2 + 100;
+	s->extHelp.xOffset = Window_Width  / 2 - s->extHelp.width / 2;
+	s->extHelp.yOffset = Window_Height / 2 + 100;
 	Widget_Reposition(&s->extHelp);
 }
 
@@ -2963,15 +2963,15 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	int size;
 
-	size = Window.Height / ATLAS2D_TILES_PER_ROW;
+	size = Window_Height / ATLAS2D_TILES_PER_ROW;
 	size = (size / 8) * 8;
 	Math_Clamp(size, 8, 40);
 
 	s->dynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
 	TextAtlas_Make(&s->idAtlas, &chars, &s->textFont, &prefix);
 
-	s->xOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D.RowsCount,     Window.Width);
-	s->yOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Window.Height);
+	s->xOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D.RowsCount,     Window_Width);
+	s->yOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Window_Height);
 	s->tileSize = size;
 	
 	Menu_Label(s, 0, &s->title, &title, &s->titleFont,

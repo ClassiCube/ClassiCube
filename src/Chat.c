@@ -384,7 +384,7 @@ static struct ChatCommand RenderTypeCommand = {
 static void ResolutionCommand_Execute(const String* args, int argsCount) {
 	int width, height;
 	if (argsCount < 2) {
-		Chat_Add2("&e/client: &fCurrent resolution is %i x %i", &Window.Width, &Window.Height);
+		Chat_Add2("&e/client: &fCurrent resolution is %i x %i", &Window_Width, &Window_Height);
 	} else if (!Convert_ParseInt(&args[0], &width) || !Convert_ParseInt(&args[1], &height)) {
 		Chat_AddRaw("&e/client: &cWidth and height must be integers.");
 	} else if (width <= 0 || height <= 0) {

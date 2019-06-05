@@ -441,7 +441,7 @@ static bool HotbarWidget_KeyUp(void* widget, Key key) {
 	if (w->altHandled) { w->altHandled = false; return true; } /* handled already */
 
 	/* Don't switch hotbar when alt+tab */
-	if (!Window.Focused) return true;
+	if (!Window_Focused) return true;
 
 	/* Alternate between first and second row */
 	index = Inventory.Offset == 0 ? 1 : 0;
@@ -544,7 +544,7 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	TableWidget_GetCoords(w, idx, &x, &y);
 	x += w->cellSize / 2; y += w->cellSize / 2;
 
-	x += Window.X; y += Window.Y;
+	x += Window_X; y += Window_Y;
 	Cursor_SetScreenPos(x, y);
 }
 
@@ -572,8 +572,8 @@ static void TableWidget_UpdatePos(struct TableWidget* w) {
 	int rowsDisplayed = min(TABLE_MAX_ROWS_DISPLAYED, w->rowsCount);
 	w->width  = w->cellSize * w->elementsPerRow;
 	w->height = w->cellSize * rowsDisplayed;
-	w->x = Window.Width  / 2 - w->width  / 2;
-	w->y = Window.Height / 2 - w->height / 2;
+	w->x = Window_Width  / 2 - w->width  / 2;
+	w->y = Window_Height / 2 - w->height / 2;
 	TableWidget_UpdateDescTexPos(w);
 }
 
@@ -1581,7 +1581,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		caretAtEnd = (w->caretY == i) && (w->caretX == INPUTWIDGET_LEN || w->caretPos == -1);
 		width      = w->lineSizes[i].Width + (caretAtEnd ? w->caretTex.Width : 0);
 		/* Cover whole window width to match original classic behaviour */
-		if (Game_PureClassic) { width = max(width, Window.Width - x * 4); }
+		if (Game_PureClassic) { width = max(width, Window_Width - x * 4); }
 	
 		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->prefixHeight, backCol);
 		y += w->lineSizes[i].Height;
@@ -1816,7 +1816,7 @@ void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, int x, int y, Str
 static void PlayerListWidget_UpdateTableDimensions(struct PlayerListWidget* w) {
 	int width = w->xMax - w->xMin, height = w->yHeight;
 	w->x = (w->xMin                       ) - LIST_BOUNDS_SIZE;
-	w->y = (Window.Height / 2 - height / 2) - LIST_BOUNDS_SIZE;
+	w->y = (Window_Height / 2 - height / 2) - LIST_BOUNDS_SIZE;
 	w->width  = width  + LIST_BOUNDS_SIZE * 2;
 	w->height = height + LIST_BOUNDS_SIZE * 2;
 }
@@ -1875,11 +1875,11 @@ static void PlayerListWidget_RepositionColumns(struct PlayerListWidget* w) {
 	}
 
 	if (width < 480) width = 480;
-	w->xMin = Window.Width / 2 - width / 2;
-	w->xMax = Window.Width / 2 + width / 2;
+	w->xMin = Window_Width / 2 - width / 2;
+	w->xMax = Window_Width / 2 + width / 2;
 
 	x = w->xMin;
-	y = Window.Height / 2 - w->yHeight / 2;
+	y = Window_Height / 2 - w->yHeight / 2;
 
 	for (col = 0; col < columns; col++) {
 		PlayerListWidget_SetColumnPos(w, col, x, y);
@@ -1891,7 +1891,7 @@ static void PlayerListWidget_Reposition(void* widget) {
 	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	int i, y, oldX, oldY;
 
-	y = Window.Height / 4 - w->height / 2;
+	y = Window_Height / 4 - w->height / 2;
 	w->yOffset = -max(0, y);
 
 	oldX = w->x; oldY = w->y;
@@ -2211,7 +2211,7 @@ static int TextGroupWidget_CalcY(struct TextGroupWidget* w, int index, int newHe
 			textures[i].Y += deltaY;
 		}
 	} else {
-		y = Window.Height - w->yOffset;
+		y = Window_Height - w->yOffset;
 		for (i = index + 1; i < w->linesCount; i++) {
 			y -= textures[i].Height;
 		}
@@ -2256,7 +2256,7 @@ static void TextGroupWidget_Reposition(void* widget) {
 	if (!w->linesCount) return;
 
 	for (i = 0; i < w->linesCount; i++) {
-		textures[i].X = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, Window.Width);
+		textures[i].X = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, Window_Width);
 		textures[i].Y += w->y - oldY;
 	}
 }
@@ -2537,7 +2537,7 @@ void TextGroupWidget_SetText(struct TextGroupWidget* w, int index, const String*
 		tex.Height = w->placeholderHeight[index] ? w->defaultHeight : 0;
 	}
 
-	tex.X = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, Window.Width);
+	tex.X = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, Window_Width);
 	tex.Y = TextGroupWidget_CalcY(w, index, tex.Height);
 	w->textures[index] = tex;
 	TextGroupWidget_UpdateDimensions(w);
