@@ -253,11 +253,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 		bool moved = pos->x  != win_bounds.X     || pos->y  != win_bounds.Y;
 		bool sized = pos->cx != win_bounds.Width || pos->cy != win_bounds.Height;
-
-		if (moved) {
-			Window_RefreshBounds();
-			Event_RaiseVoid(&WindowEvents.Moved);
-		}
+		if (moved) Window_RefreshBounds();
 
 		if (sized) {
 			Window_RefreshBounds();
@@ -871,11 +867,7 @@ static void Window_RefreshBounds(int width, int height) {
 	/* e.g. linux mint + cinnamon, if you use /client resolution, e->x = 10, e->y = 36 */
 	/* So just always translate topleft to root window coordinates to avoid this */
 	XTranslateCoordinates(win_display, win_handle, win_rootWin, 0, 0, &x, &y, &child);
-
-	if (x != Window_ClientBounds.X || y != Window_ClientBounds.Y) {
-		Window_ClientBounds.X = x; Window_ClientBounds.Y = y;
-		Event_RaiseVoid(&WindowEvents.Moved);
-	}
+	Window_ClientBounds.X = x; Window_ClientBounds.Y = y;
 
 	if (width != Window_ClientBounds.Width || height != Window_ClientBounds.Height) {
 		Window_ClientBounds.Width  = width;
@@ -1140,11 +1132,6 @@ void Window_ProcessEvents(void) {
 		if (!Window_GetPendingEvent(&e)) break;
 
 		switch (e.type) {
-		case MapNotify:
-		case UnmapNotify:
-			Event_RaiseVoid(&WindowEvents.VisibilityChanged);
-			break;
-
 		case ClientMessage:
 			if (e.xclient.data.l[0] != wm_destroy) break;
 			Platform_LogConst("Exit message received.");			
@@ -1727,9 +1714,6 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 			old = Window_ClientBounds;
 			Window_RefreshBounds();
 			
-			if (old.X != Window_ClientBounds.X || old.Y != Window_ClientBounds.Y) {
-				Event_RaiseVoid(&WindowEvents.Moved);
-			}
 			if (old.Width != Window_ClientBounds.Width || old.Height != Window_ClientBounds.Height) {
 				Event_RaiseVoid(&WindowEvents.Resized);
 			}
@@ -2421,16 +2405,11 @@ static void Window_HandleTextEvent(const SDL_Event* e) {
 
 static void Window_HandleWindowEvent(const SDL_Event* e) {
 	switch (e->window.event) {
-        case SDL_WINDOWEVENT_SHOWN:
-        case SDL_WINDOWEVENT_HIDDEN:
-            Event_RaiseVoid(&WindowEvents.VisibilityChanged);
-            break;
         case SDL_WINDOWEVENT_EXPOSED:
             Event_RaiseVoid(&WindowEvents.Redraw);
             break;
         case SDL_WINDOWEVENT_MOVED:
             Window_RefreshBounds();
-            Event_RaiseVoid(&WindowEvents.Moved);
             break;
         case SDL_WINDOWEVENT_SIZE_CHANGED:
             Window_RefreshBounds();
@@ -2695,11 +2674,6 @@ static EM_BOOL Window_CanvasResize(int type, const void* reserved, void *data) {
 	return false;
 }
 
-static EM_BOOL Window_Visibility(int type, const EmscriptenVisibilityChangeEvent* ev, void* data) {
-	Event_RaiseVoid(&WindowEvents.VisibilityChanged);
-	return false;
-}
-
 static const char* Window_BeforeUnload(int type, const void* ev, void *data) {
 	Window_Close();
 	return NULL;
@@ -2811,9 +2785,7 @@ static void Window_HookEvents(void) {
 	emscripten_set_focus_callback("#window",  NULL, 0, Window_Focus);
 	emscripten_set_blur_callback("#window",   NULL, 0, Window_Focus);
 	emscripten_set_resize_callback("#window", NULL, 0, Window_Resize);
-
-	emscripten_set_visibilitychange_callback(NULL, 0, Window_Visibility);
-	emscripten_set_beforeunload_callback(    NULL,    Window_BeforeUnload);
+	emscripten_set_beforeunload_callback(     NULL,    Window_BeforeUnload);
 
 	emscripten_set_keydown_callback("#window",  NULL, 0, Window_Key);
 	emscripten_set_keyup_callback("#window",    NULL, 0, Window_Key);
@@ -2834,9 +2806,7 @@ static void Window_UnhookEvents(void) {
 	emscripten_set_focus_callback("#window",  NULL, 0, NULL);
 	emscripten_set_blur_callback("#window",   NULL, 0, NULL);
 	emscripten_set_resize_callback("#window", NULL, 0, NULL);
-
-	emscripten_set_visibilitychange_callback(NULL, 0, NULL);
-	emscripten_set_beforeunload_callback(    NULL,    NULL);
+	emscripten_set_beforeunload_callback(     NULL,    NULL);
 
 	emscripten_set_keydown_callback("#window",  NULL, 0, NULL);
 	emscripten_set_keyup_callback("#window",    NULL, 0, NULL);
