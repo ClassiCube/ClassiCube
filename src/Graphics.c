@@ -1342,8 +1342,11 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
-	glViewport(0, 0, Game.Width, Game.Height);
 	GLContext_Update();
+	/* In case GLContext_Update changes window bounds */
+	/* TODO: Eliminate this nasty hack.. */
+	Game_UpdateDimensions();
+	glViewport(0, 0, Game.Width, Game.Height);
 }
 
 /*########################################################################################################################*
