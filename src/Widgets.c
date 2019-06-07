@@ -2161,72 +2161,54 @@ void PlayerListWidget_Create(struct PlayerListWidget* w, const FontDesc* font, b
 *-----------------------------------------------------TextGroupWidget-----------------------------------------------------*
 *#########################################################################################################################*/
 void TextGroupWidget_ShiftUp(struct TextGroupWidget* w) {
-	int last, i, y;
+	int last, i;
 	Gfx_DeleteTexture(&w->textures[0].ID);
 	last = w->lines - 1;
 
-	/* Move i'th line to i'th - 1 line */
-	for (i = 0, y = w->y; i < last; i++) {
-		w->textures[i]   = w->textures[i + 1];
-		w->textures[i].Y = y;
-		y += w->textures[i].Height;
+	for (i = 0; i < last; i++) {
+		w->textures[i] = w->textures[i + 1];
 	}
-
 	w->textures[last].ID = GFX_NULL; /* Delete() called by TextGroupWidget_Redraw otherwise */
 	TextGroupWidget_Redraw(w, last);
 }
 
 void TextGroupWidget_ShiftDown(struct TextGroupWidget* w) {
-	int last, i, y;
+	int last, i;
 	last = w->lines - 1;
 	Gfx_DeleteTexture(&w->textures[last].ID);
 
-	/* Move i'th line to i'th - 1 line */
-	for (i = last, y = w->textures[last].Y; i > 0; i--) {
-		w->textures[i]   = w->textures[i - 1];
-		w->textures[i].Y = y;
-		y -= w->textures[i].Height;
+	for (i = last; i > 0; i--) {
+		w->textures[i] = w->textures[i - 1];
 	}
-
 	w->textures[0].ID = GFX_NULL; /* Delete() called by TextGroupWidget_Redraw otherwise */
 	TextGroupWidget_Redraw(w, 0);
 }
 
-static int TextGroupWidget_CalcY(struct TextGroupWidget* w, int index, int newHeight) {	
+static void TextGroupWidget_UpdateY(struct TextGroupWidget* w) {	
 	struct Texture* textures = w->textures;
-	int deltaY = newHeight - textures[index].Height;
-	int i, y = 0;
+	int i, y;
 
 	if (w->verAnchor == ANCHOR_MIN) {
 		y = w->y;
-		for (i = 0; i < index; i++) {
+		for (i = 0; i < w->lines; i++) {
+			textures[i].Y = y;
 			y += textures[i].Height;
-		}
-		for (i = index + 1; i < w->lines; i++) {
-			textures[i].Y += deltaY;
 		}
 	} else {
 		y = Window_Height - w->yOffset;
-		for (i = index + 1; i < w->lines; i++) {
+		for (i = w->lines- 1; i >= 0; i--) {
 			y -= textures[i].Height;
-		}
-
-		y -= newHeight;
-		for (i = 0; i < index; i++) {
-			textures[i].Y -= deltaY;
+			textures[i].Y = y;
 		}
 	}
-	return y;
 }
 
 void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, int index, bool placeHolder) {
-	int height;
 	w->placeholderHeight[index] = placeHolder;
 	if (w->textures[index].ID) return;
 
-	height = placeHolder ? w->defaultHeight : 0;
-	w->textures[index].Y      = TextGroupWidget_CalcY(w, index, height);
-	w->textures[index].Height = height;
+	w->textures[index].Height = placeHolder ? w->defaultHeight : 0;
+	TextGroupWidget_UpdateY(w);
 }
 
 int TextGroupWidget_UsedHeight(struct TextGroupWidget* w) {
@@ -2530,8 +2512,8 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 	}
 
 	tex.X = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, Window_Width);
-	tex.Y = TextGroupWidget_CalcY(w, index, tex.Height);
 	w->textures[index] = tex;
+	TextGroupWidget_UpdateY(w);
 	TextGroupWidget_UpdateDimensions(w);
 }
 
