@@ -531,7 +531,7 @@ void Block_UpdateCulling(BlockID block) {
 *#########################################################################################################################*/
 bool AutoRotate_Enabled;
 
-/* replaces a portion of a string, appends otherwise*/
+/* replaces a portion of a string, appends otherwise */
 static void AutoRotate_Insert(String* str, int offset, const char* suffix) {
 	int i = str->length - offset;
 

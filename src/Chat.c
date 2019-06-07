@@ -16,9 +16,9 @@
 #include "GameStructs.h"
 
 static char msgs[10][STRING_SIZE];
-String Chat_Status[3]       = { String_FromArray(msgs[0]), String_FromArray(msgs[1]), String_FromArray(msgs[2]) };
-String Chat_BottomRight[3]  = { String_FromArray(msgs[3]), String_FromArray(msgs[4]), String_FromArray(msgs[5]) };
-String Chat_ClientStatus[3] = { String_FromArray(msgs[6]), String_FromArray(msgs[7]), String_FromArray(msgs[8]) };
+String Chat_Status[4]       = { String_FromArray(msgs[0]), String_FromArray(msgs[1]), String_FromArray(msgs[2]), String_FromArray(msgs[3]) };
+String Chat_BottomRight[3]  = { String_FromArray(msgs[4]), String_FromArray(msgs[5]), String_FromArray(msgs[6]) };
+String Chat_ClientStatus[2] = { String_FromArray(msgs[7]), String_FromArray(msgs[8]) };
 
 String Chat_Announcement = String_FromArray(msgs[9]);
 TimeMS Chat_AnnouncementReceived;
@@ -191,22 +191,23 @@ void Chat_AddRaw(const char* raw) {
 void Chat_Add(const String* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
 
 void Chat_AddOf(const String* text, int msgType) {
-	Event_RaiseChat(&ChatEvents.ChatReceived, text, msgType);
-
 	if (msgType == MSG_TYPE_NORMAL) {
 		StringsBuffer_Add(&Chat_Log, text);
 		Chat_AppendLog(text);
 		Chat_AppendLogTime();
 	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_3) {
-		String_Copy(&Chat_Status[msgType - MSG_TYPE_STATUS_1], text);
-	} else if (msgType >= MSG_TYPE_BOTTOMRIGHT_1 && msgType <= MSG_TYPE_BOTTOMRIGHT_3) {
+		/* Status[0] is for texture pack downloading message */
+		String_Copy(&Chat_Status[1 + (msgType - MSG_TYPE_STATUS_1)], text);
+	} else if (msgType >= MSG_TYPE_BOTTOMRIGHT_1 && msgType <= MSG_TYPE_BOTTOMRIGHT_3) {	
 		String_Copy(&Chat_BottomRight[msgType - MSG_TYPE_BOTTOMRIGHT_1], text);
 	} else if (msgType == MSG_TYPE_ANNOUNCEMENT) {
 		String_Copy(&Chat_Announcement, text);
 		Chat_AnnouncementReceived = DateTime_CurrentUTC_MS();
-	} else if (msgType >= MSG_TYPE_CLIENTSTATUS_1 && msgType <= MSG_TYPE_CLIENTSTATUS_3) {
+	} else if (msgType >= MSG_TYPE_CLIENTSTATUS_1 && msgType <= MSG_TYPE_CLIENTSTATUS_2) {
 		String_Copy(&Chat_ClientStatus[msgType - MSG_TYPE_CLIENTSTATUS_1], text);
 	}
+
+	Event_RaiseChat(&ChatEvents.ChatReceived, text, msgType);
 }
 
 

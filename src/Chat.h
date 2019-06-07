@@ -19,11 +19,10 @@ enum MsgType {
 	MSG_TYPE_BOTTOMRIGHT_3 = 13,
 	MSG_TYPE_ANNOUNCEMENT = 100,
 	MSG_TYPE_CLIENTSTATUS_1 = 256, /* Cuboid messages */
-	MSG_TYPE_CLIENTSTATUS_2 = 257, /* Clipboard invalid character */
-	MSG_TYPE_CLIENTSTATUS_3 = 258  /* Tab list matching names */
+	MSG_TYPE_CLIENTSTATUS_2 = 257  /* Tab list matching names */
 };
 
-extern String Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
+extern String Chat_Status[4], Chat_BottomRight[3], Chat_ClientStatus[2], Chat_Announcement;
 extern StringsBuffer Chat_Log, Chat_InputLog;
 /* Whether chat messages are logged to disc. */
 extern bool Chat_Logging;

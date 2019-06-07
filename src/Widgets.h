@@ -170,25 +170,35 @@ struct ChatInputWidget {
 CC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w, const FontDesc* font);
 
 
+/* Retrieves the text for the i'th line in the group */
+typedef String (*TextGroupWidget_Get)(void* obj, int i);
 #define TEXTGROUPWIDGET_MAX_LINES 30
 #define TEXTGROUPWIDGET_LEN (STRING_SIZE + (STRING_SIZE / 2))
+
 struct TextGroupWidget {
 	Widget_Layout
-	int linesCount, defaultHeight;
+	int lines, defaultHeight;
 	FontDesc font;
 	bool placeholderHeight[TEXTGROUPWIDGET_MAX_LINES];
-	uint8_t lineLengths[TEXTGROUPWIDGET_MAX_LINES];
+	bool underlineUrls;
 	struct Texture* textures;
-	char* buffer;
+	TextGroupWidget_Get GetLine;
+	void* getLineObj;
 };
 
-CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, const FontDesc* font, STRING_REF struct Texture* textures, STRING_REF char* buffer);
+CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, const FontDesc* font, STRING_REF struct Texture* textures, TextGroupWidget_Get getLine);
 CC_NOINLINE void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, int index, bool placeHolder);
-CC_NOINLINE void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* w, const String* text);
+/* Deletes first line, then moves all other lines upwards, then redraws last line. */
+/* NOTE: GetLine must also adjust the lines it returns for this to behave properly. */
+CC_NOINLINE void TextGroupWidget_ShiftUp(struct TextGroupWidget* w);
+/* Deletes last line, then moves all other lines downwards, then redraws first line. */
+/* NOTE: GetLine must also adjust the lines it returns for this to behave properly. */
+CC_NOINLINE void TextGroupWidget_ShiftDown(struct TextGroupWidget* w);
 CC_NOINLINE int  TextGroupWidget_UsedHeight(struct TextGroupWidget* w);
 CC_NOINLINE void TextGroupWidget_GetSelected(struct TextGroupWidget* w, String* text, int mouseX, int mouseY);
-CC_NOINLINE void TextGroupWidget_GetText(struct TextGroupWidget* w, int index, String* text);
-CC_NOINLINE void TextGroupWidget_SetText(struct TextGroupWidget* w, int index, const String* text);
+CC_NOINLINE void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index);
+CC_NOINLINE void TextGroupWidget_RedrawAll(struct TextGroupWidget* w);
+static String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { return w->GetLine(w->getLineObj, i); }
 
 
 struct PlayerListWidget {

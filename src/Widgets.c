@@ -1603,7 +1603,6 @@ static void ChatInputWidget_OnPressedEnter(void* widget) {
 	w->typingLogPos = Chat_InputLog.count; /* Index of newest entry + 1. */
 
 	Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_2);
-	Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_3);
 	InputWidget_OnPressedEnter(widget);
 }
 
@@ -1689,7 +1688,7 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	if (end < 0 || beg > end) return;
 
 	part = String_UNSAFE_Substring(&w->text, beg, (end + 1) - beg);
-	Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_3);
+	Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_2);
 	numMatches = 0;
 
 	for (i = 0; i < TABLIST_MAX_NAMES; i++) {
@@ -1725,7 +1724,7 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 			String_AppendString(&str, &name);
 			String_Append(&str, ' ');
 		}
-		Chat_AddOf(&str, MSG_TYPE_CLIENTSTATUS_3);
+		Chat_AddOf(&str, MSG_TYPE_CLIENTSTATUS_2);
 	}
 }
 
@@ -2161,40 +2160,36 @@ void PlayerListWidget_Create(struct PlayerListWidget* w, const FontDesc* font, b
 /*########################################################################################################################*
 *-----------------------------------------------------TextGroupWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-#define TextGroupWidget_LineBuffer(w, i) ((w)->buffer + (i) * TEXTGROUPWIDGET_LEN)
-String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) {
-	int len = w->lineLengths[i];
-	return String_Init(TextGroupWidget_LineBuffer(w, i), len, len);
-}
-
-void TextGroupWidget_GetText(struct TextGroupWidget* w, int index, String* text) {
-	String line = TextGroupWidget_UNSAFE_Get(w, index);
-	String_Copy(text, &line);
-}
-
-void TextGroupWidget_PushUpAndReplaceLast(struct TextGroupWidget* w, const String* text) {
-	int max_index;
-	int i, y = w->y;
-
+void TextGroupWidget_ShiftUp(struct TextGroupWidget* w) {
+	int last, i, y;
 	Gfx_DeleteTexture(&w->textures[0].ID);
-	max_index = w->linesCount - 1;
+	last = w->lines - 1;
 
-	/* Move contents of X line to X - 1 line */
-	for (i = 0; i < max_index; i++) {
-		char* dst = TextGroupWidget_LineBuffer(w, i);
-		char* src = TextGroupWidget_LineBuffer(w, i + 1);
-		uint8_t lineLen = w->lineLengths[i + 1];
-
-		Mem_Copy(dst, src, lineLen);
-		w->textures[i]    = w->textures[i + 1];
-		w->lineLengths[i] = lineLen;
-
+	/* Move i'th line to i'th - 1 line */
+	for (i = 0, y = w->y; i < last; i++) {
+		w->textures[i]   = w->textures[i + 1];
 		w->textures[i].Y = y;
 		y += w->textures[i].Height;
 	}
 
-	w->textures[max_index].ID = GFX_NULL; /* Delete() is called by TextGroupWidget_SetText otherwise */
-	TextGroupWidget_SetText(w, max_index, text);
+	w->textures[last].ID = GFX_NULL; /* Delete() called by TextGroupWidget_Redraw otherwise */
+	TextGroupWidget_Redraw(w, last);
+}
+
+void TextGroupWidget_ShiftDown(struct TextGroupWidget* w) {
+	int last, i, y;
+	last = w->lines - 1;
+	Gfx_DeleteTexture(&w->textures[last].ID);
+
+	/* Move i'th line to i'th - 1 line */
+	for (i = last, y = w->textures[last].Y; i > 0; i--) {
+		w->textures[i]   = w->textures[i - 1];
+		w->textures[i].Y = y;
+		y -= w->textures[i].Height;
+	}
+
+	w->textures[0].ID = GFX_NULL; /* Delete() called by TextGroupWidget_Redraw otherwise */
+	TextGroupWidget_Redraw(w, 0);
 }
 
 static int TextGroupWidget_CalcY(struct TextGroupWidget* w, int index, int newHeight) {	
@@ -2207,12 +2202,12 @@ static int TextGroupWidget_CalcY(struct TextGroupWidget* w, int index, int newHe
 		for (i = 0; i < index; i++) {
 			y += textures[i].Height;
 		}
-		for (i = index + 1; i < w->linesCount; i++) {
+		for (i = index + 1; i < w->lines; i++) {
 			textures[i].Y += deltaY;
 		}
 	} else {
 		y = Window_Height - w->yOffset;
-		for (i = index + 1; i < w->linesCount; i++) {
+		for (i = index + 1; i < w->lines; i++) {
 			y -= textures[i].Height;
 		}
 
@@ -2238,10 +2233,10 @@ int TextGroupWidget_UsedHeight(struct TextGroupWidget* w) {
 	struct Texture* textures = w->textures;
 	int i, height = 0;
 
-	for (i = 0; i < w->linesCount; i++) {
+	for (i = 0; i < w->lines; i++) {
 		if (textures[i].ID) break;
 	}
-	for (; i < w->linesCount; i++) {
+	for (; i < w->lines; i++) {
 		height += textures[i].Height;
 	}
 	return height;
@@ -2251,11 +2246,9 @@ static void TextGroupWidget_Reposition(void* widget) {
 	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
 	struct Texture* textures  = w->textures;
 	int i, oldY = w->y;
-
 	Widget_CalcPosition(w);
-	if (!w->linesCount) return;
 
-	for (i = 0; i < w->linesCount; i++) {
+	for (i = 0; i < w->lines; i++) {
 		textures[i].X = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, Window_Width);
 		textures[i].Y += w->y - oldY;
 	}
@@ -2265,7 +2258,7 @@ static void TextGroupWidget_UpdateDimensions(struct TextGroupWidget* w) {
 	struct Texture* textures = w->textures;
 	int i, width = 0, height = 0;
 
-	for (i = 0; i < w->linesCount; i++) {
+	for (i = 0; i < w->lines; i++) {
 		width = max(width, textures[i].Width);
 		height += textures[i].Height;
 	}
@@ -2361,17 +2354,17 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 	int32_t begs[TEXTGROUPWIDGET_MAX_LINES];
 	int32_t ends[TEXTGROUPWIDGET_MAX_LINES];
 	struct Portion bit;
-	int len, nextStart;
-	int i, total = 0, end;
+	String line;
+	int nextStart, i, total = 0, end;
 
-	for (i = 0; i < w->linesCount; i++) {
-		len = w->lineLengths[i];
+	for (i = 0; i < w->lines; i++) {
+		line = TextGroupWidget_UNSAFE_Get(w, i);
 		begs[i] = -1; ends[i] = -1;
-		if (!len) continue;
+		if (!line.length) continue;
 
 		begs[i] = total;
-		Mem_Copy(&chars[total], TextGroupWidget_LineBuffer(w, i), len);
-		total += len; ends[i] = total;
+		Mem_Copy(&chars[total], line.buffer, line.length);
+		total += line.length; ends[i] = total;
 	}
 
 	end = 0;
@@ -2384,7 +2377,7 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 		TextGroupWidget_Output(bit, begs[target], ends[target], &portions);
 
 		if (nextStart == total) break;
-		end = TextGroupWidget_UrlEnd(chars, total, begs, w->linesCount, nextStart);
+		end = TextGroupWidget_UrlEnd(chars, total, begs, w->lines, nextStart);
 
 		/* add this url portion */
 		bit.Beg = nextStart;
@@ -2448,7 +2441,7 @@ void TextGroupWidget_GetSelected(struct TextGroupWidget* w, String* text, int x,
 	String line;
 	int i;
 
-	for (i = 0; i < w->linesCount; i++) {
+	for (i = 0; i < w->lines; i++) {
 		if (!w->textures[i].ID) continue;
 		tex = w->textures[i];
 		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
@@ -2464,11 +2457,8 @@ void TextGroupWidget_GetSelected(struct TextGroupWidget* w, String* text, int x,
 static bool TextGroupWidget_MightHaveUrls(struct TextGroupWidget* w) {
 	String line;
 	int i;
-	if (Game_ClassicMode) return false;
 
-	for (i = 0; i < w->linesCount; i++) {
-		if (!w->lineLengths[i]) continue;
-
+	for (i = 0; i < w->lines; i++) {
 		line = TextGroupWidget_UNSAFE_Get(w, i);
 		if (String_IndexOf(&line, '/') >= 0) return true;
 	}
@@ -2514,23 +2504,25 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 	Mem_Free(bmp.Scan0);
 }
 
-void TextGroupWidget_SetText(struct TextGroupWidget* w, int index, const String* text_orig) {
-	String text = *text_orig;
+void TextGroupWidget_RedrawAll(struct TextGroupWidget* w) {
+	int i;
+	for (i = 0; i < w->lines; i++) { TextGroupWidget_Redraw(w, i); }
+}
+
+void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
+	String text;
 	struct DrawTextArgs args;
 	struct Texture tex = { 0 };
 	Gfx_DeleteTexture(&w->textures[index].ID);
 
-	text.length = min(text.length, TEXTGROUPWIDGET_LEN);
-	Mem_Copy(TextGroupWidget_LineBuffer(w, index), text.buffer, text.length);
-	w->lineLengths[index] = (uint8_t)text.length;
-	
+	text = TextGroupWidget_UNSAFE_Get(w, index);
 	if (!Drawer2D_IsEmptyText(&text)) {
 		DrawTextArgs_Make(&args, &text, &w->font, true);
 
-		if (!TextGroupWidget_MightHaveUrls(w)) {
-			Drawer2D_MakeTextTexture(&tex, &args, 0, 0);
-		} else {
+		if (w->underlineUrls && TextGroupWidget_MightHaveUrls(w)) {
 			TextGroupWidget_DrawAdvanced(w, &tex, &args, index, &text);
+		} else {
+			Drawer2D_MakeTextTexture(&tex, &args, 0, 0);
 		}
 		Drawer2D_ReducePadding_Tex(&tex, w->font.Size, 3);
 	} else {
@@ -2552,7 +2544,7 @@ static void TextGroupWidget_Init(void* widget) {
 	Drawer2D_ReducePadding_Height(&height, w->font.Size, 3);
 	w->defaultHeight = height;
 
-	for (i = 0; i < w->linesCount; i++) {
+	for (i = 0; i < w->lines; i++) {
 		w->textures[i].Height = height;
 		w->placeholderHeight[i] = true;
 	}
@@ -2564,7 +2556,7 @@ static void TextGroupWidget_Render(void* widget, double delta) {
 	struct Texture* textures  = w->textures;
 	int i;
 
-	for (i = 0; i < w->linesCount; i++) {
+	for (i = 0; i < w->lines; i++) {
 		if (!textures[i].ID) continue;
 		Texture_Render(&textures[i]);
 	}
@@ -2574,8 +2566,7 @@ static void TextGroupWidget_Free(void* widget) {
 	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
 	int i;
 
-	for (i = 0; i < w->linesCount; i++) {
-		w->lineLengths[i] = 0;
+	for (i = 0; i < w->lines; i++) {
 		Gfx_DeleteTexture(&w->textures[i].ID);
 	}
 }
@@ -2586,14 +2577,14 @@ static struct WidgetVTABLE TextGroupWidget_VTABLE = {
 	Widget_Mouse,         Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	TextGroupWidget_Reposition,
 };
-void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, const FontDesc* font, STRING_REF struct Texture* textures, STRING_REF char* buffer) {
+void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, const FontDesc* font, STRING_REF struct Texture* textures, TextGroupWidget_Get getLine) {
 	Widget_Reset(w);
 	w->VTABLE = &TextGroupWidget_VTABLE;
 
-	w->linesCount = lines;
-	w->font       = *font;
-	w->textures   = textures;
-	w->buffer     = buffer;
+	w->lines    = lines;
+	w->font     = *font;
+	w->textures = textures;
+	w->GetLine  = getLine;
 }
 
 

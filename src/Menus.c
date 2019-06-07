@@ -117,7 +117,6 @@ struct MenuOptionsScreen {
 	struct MenuInputWidget input;
 	struct TextGroupWidget extHelp;
 	struct Texture extHelpTextures[MENUOPTIONS_MAX_DESC];
-	char extHelpBuffer[MENUOPTIONS_MAX_DESC * TEXTGROUPWIDGET_LEN];
 };
 
 /* Describes a menu option button */
@@ -687,7 +686,7 @@ struct Screen* PauseScreen_MakeInstance(void) {
 *--------------------------------------------------OptionsGroupScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 static struct OptionsGroupScreen OptionsGroupScreen_Instance;
-const char* optsGroup_descs[7] = {
+static const char* optsGroup_descs[7] = {
 	"&eMusic/Sound, view bobbing, and more",
 	"&eChat options, gui scale, font settings, and more",
 	"&eFPS limit, view distance, entity names/shadows",
@@ -1889,9 +1888,9 @@ static void MenuOptionsScreen_Set(struct MenuOptionsScreen* s, int i, const Stri
 }
 
 static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* s) {
-	if (!s->extHelp.linesCount) return;
+	if (!s->extHelp.lines) return;
 	Elem_TryFree(&s->extHelp);
-	s->extHelp.linesCount = 0;
+	s->extHelp.lines = 0;
 }
 
 static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* s) {
@@ -1900,10 +1899,19 @@ static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* s) {
 	Widget_Reposition(&s->extHelp);
 }
 
+static String MenuOptionsScreen_GetDesc(void* obj, int i) {
+	const char* desc = (const char*)obj;
+	String descRaw, descLines[5];
+
+	descRaw = String_FromReadonly(desc);
+	String_UNSAFE_Split(&descRaw, '\n', descLines, Array_Elems(descLines));
+	return descLines[i];
+}
+
 static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx) {
 	const char* desc;
 	String descRaw, descLines[5];
-	int i, count;
+	int count;
 
 	MenuOptionsScreen_FreeExtHelp(s);
 	if (!s->descriptions || s->activeI >= 0) return;
@@ -1911,15 +1919,14 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 	if (!desc) return;
 
 	descRaw = String_FromReadonly(desc);
-	count   = String_UNSAFE_Split(&descRaw, '|', descLines, Array_Elems(descLines));
+	count   = String_UNSAFE_Split(&descRaw, '\n', descLines, Array_Elems(descLines));
 
-	TextGroupWidget_Create(&s->extHelp, count, &s->textFont, s->extHelpTextures, s->extHelpBuffer);
-	Widget_SetLocation((struct Widget*)(&s->extHelp), ANCHOR_MIN, ANCHOR_MIN, 0, 0);
+	TextGroupWidget_Create(&s->extHelp, count, &s->textFont, s->extHelpTextures, MenuOptionsScreen_GetDesc);
+	Widget_SetLocation((struct Widget*)&s->extHelp, ANCHOR_MIN, ANCHOR_MIN, 0, 0);
 	Elem_Init(&s->extHelp);
-
-	for (i = 0; i < count; i++) {
-		TextGroupWidget_SetText(&s->extHelp, i, &descLines[i]);
-	}
+	
+	s->extHelp.getLineObj = desc;
+	TextGroupWidget_RedrawAll(&s->extHelp);
 	MenuOptionsScreen_RepositionExtHelp(s);
 }
 
@@ -1960,7 +1967,7 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 	PackedCol tableCol = PACKEDCOL_CONST(20, 20, 20, 200);
 
 	MenuScreen_Render(s, delta);
-	if (!s->extHelp.linesCount) return;
+	if (!s->extHelp.lines) return;
 
 	w = &s->extHelp;
 	Gfx_Draw2DFlat(w->x - EXTHELP_PAD, w->y - EXTHELP_PAD, 
@@ -1974,7 +1981,7 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 static void MenuOptionsScreen_OnResize(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	Menu_OnResize(s);
-	if (!s->extHelp.linesCount) return;
+	if (!s->extHelp.lines) return;
 	MenuOptionsScreen_RepositionExtHelp(s);
 }
 
@@ -2135,7 +2142,7 @@ struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, int count
 	s->widgets         = widgets;
 	s->widgetsCount    = count;
 
-	s->extHelp.linesCount = 0;
+	s->extHelp.lines = 0;
 	s->VTABLE = &MenuOptionsScreen_VTABLE;
 	s->VTABLE->ContextLost      = MenuOptionsScreen_ContextLost;
 	s->VTABLE->ContextRecreated = contextRecreated;
@@ -2440,21 +2447,21 @@ struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 	
 	static const char* descs[Array_Elems(buttons)];
 	descs[0] = \
-		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.|" \
-		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.|" \
-		"&eNoLimit: &fRenders as many frames as possible each second.|" \
+		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
+		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
+		"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 		"&cUsing NoLimit mode is discouraged.";
 	descs[2] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
 	descs[3] = \
-		"&eNone: &fNo names of players are drawn.|" \
-		"&eHovered: &fName of the targeted player is drawn see-through.|" \
-		"&eAll: &fNames of all other players are drawn normally.|" \
-		"&eAllHovered: &fAll names of players are drawn see-through.|" \
+		"&eNone: &fNo names of players are drawn.\n" \
+		"&eHovered: &fName of the targeted player is drawn see-through.\n" \
+		"&eAll: &fNames of all other players are drawn normally.\n" \
+		"&eAllHovered: &fAll names of players are drawn see-through.\n" \
 		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
 	descs[4] = \
-		"&eNone: &fNo entity shadows are drawn.|" \
-		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.|" \
-		"&eCircle: &fA circular shadow is shown across the blocks you are above.|" \
+		"&eNone: &fNo entity shadows are drawn.\n" \
+		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
+		"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \
 		"&eCircleAll: &fA circular shadow is shown underneath all entities.";
 	
 	InputValidator_Enum(validators[0], FpsLimit_Names, FPS_LIMIT_COUNT);
@@ -2704,13 +2711,13 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
 	static const char* descs[Array_Elems(buttons)];
-	descs[2] = "&eIf &fON&e, then the third person cameras will limit|&etheir zoom distance if they hit a solid block.";
-	descs[3] = "&eSets how many blocks high you can jump up.|&eNote: You jump much higher when holding down the Speed key binding.";
+	descs[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
+	descs[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
 	descs[7] = \
-		"&eIf &fON&e, placing blocks that intersect your own position cause|" \
-		"&ethe block to be placed, and you to be moved out of the way.|" \
+		"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
+		"&ethe block to be placed, and you to be moved out of the way.\n" \
 		"&fThis is mainly useful for quick pillaring/towering.";
-	descs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip|&emode and no movement keys are held down.";
+	descs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip\n&emode and no movement keys are held down.";
 
 	InputValidator_Float(validators[1], 0.10f, 50.00f);
 	defaultValues[1] = "10";

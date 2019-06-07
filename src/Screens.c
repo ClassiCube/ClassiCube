@@ -60,8 +60,10 @@ struct LoadingScreen {
 	char _messageBuffer[STRING_SIZE];
 };
 
-#define CHATSCREEN_MAX_STATUS 5
-#define CHATSCREEN_MAX_GROUP 3
+#define CHAT_MAX_STATUS Array_Elems(Chat_Status)
+#define CHAT_MAX_BOTTOMRIGHT Array_Elems(Chat_BottomRight)
+#define CHAT_MAX_CLIENTSTATUS Array_Elems(Chat_ClientStatus)
+
 struct ChatScreen {
 	Screen_Layout
 	int inputOldHeight;
@@ -75,14 +77,10 @@ struct ChatScreen {
 	struct TextGroupWidget status, bottomRight, chat, clientStatus;
 	struct SpecialInputWidget altText;
 
-	struct Texture statusTextures[CHATSCREEN_MAX_STATUS];
-	struct Texture bottomRightTextures[CHATSCREEN_MAX_GROUP];
-	struct Texture clientStatusTextures[CHATSCREEN_MAX_GROUP];
+	struct Texture statusTextures[CHAT_MAX_STATUS];
+	struct Texture bottomRightTextures[CHAT_MAX_BOTTOMRIGHT];
+	struct Texture clientStatusTextures[CHAT_MAX_CLIENTSTATUS];
 	struct Texture chatTextures[TEXTGROUPWIDGET_MAX_LINES];
-	char statusBuffer[CHATSCREEN_MAX_STATUS * TEXTGROUPWIDGET_LEN];
-	char bottomRightBuffer[CHATSCREEN_MAX_GROUP * TEXTGROUPWIDGET_LEN];
-	char clientStatusBuffer[CHATSCREEN_MAX_GROUP * TEXTGROUPWIDGET_LEN];
-	char chatBuffer[TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN];
 };
 
 struct DisconnectScreen {
@@ -734,23 +732,21 @@ static void ChatScreen_OpenInput(struct ChatScreen* s, const String* initialText
 	Elem_Recreate(&s->input.base);
 }
 
-static void ChatScreen_ResetChat(struct ChatScreen* s) {
-	String msg;
-	int i;
-	Elem_TryFree(&s->chat);
+static String ChatScreen_GetChat(void* obj, int i) {
+	i += *((int*)obj); /* argument is offset into chat */
 
-	for (i = s->chatIndex; i < s->chatIndex + Gui_Chatlines; i++) {
-		if (i >= 0 && i < Chat_Log.count) {
-			msg = StringsBuffer_UNSAFE_Get(&Chat_Log, i);
-			TextGroupWidget_PushUpAndReplaceLast(&s->chat, &msg);
-		}
+	if (i >= 0 && i < Chat_Log.count) {
+		return StringsBuffer_UNSAFE_Get(&Chat_Log, i);
 	}
+	return String_Empty;
 }
 
-static void ChatScreen_ConstructWidgets(struct ChatScreen* s) {
-#define ChatScreen_MakeGroup(widget, lines, textures, buffer) TextGroupWidget_Create(widget, lines, &s->chatFont, textures, buffer);
-	int yOffset = ChatScreen_BottomOffset() + 15;
+static String ChatScreen_GetStatus(void* obj, int i)       { return Chat_Status[i]; }
+static String ChatScreen_GetBottomRight(void* obj, int i)  { return Chat_BottomRight[2 - i]; }
+static String ChatScreen_GetClientStatus(void* obj, int i) { return Chat_ClientStatus[i]; }
 
+static void ChatScreen_ConstructWidgets(struct ChatScreen* s) {
+	int yOffset = ChatScreen_BottomOffset() + 15;
 	ChatInputWidget_Create(&s->input, &s->chatFont);
 	Widget_SetLocation(&s->input.base, ANCHOR_MIN, ANCHOR_MAX, 5, 5);
 
@@ -758,21 +754,26 @@ static void ChatScreen_ConstructWidgets(struct ChatScreen* s) {
 	Elem_Init(&s->altText);
 	ChatScreen_UpdateAltTextY(s);
 
-	ChatScreen_MakeGroup(&s->status, CHATSCREEN_MAX_STATUS, s->statusTextures, s->statusBuffer);
+	TextGroupWidget_Create(&s->status, CHAT_MAX_STATUS, &s->chatFont, 
+							s->statusTextures, ChatScreen_GetStatus);
 	Widget_SetLocation(&s->status, ANCHOR_MAX, ANCHOR_MIN, 0, 0);
 	Elem_Init(&s->status);
 	TextGroupWidget_SetUsePlaceHolder(&s->status, 0, false);
-	TextGroupWidget_SetUsePlaceHolder(&s->status, 1, false);
 
-	ChatScreen_MakeGroup(&s->bottomRight, CHATSCREEN_MAX_GROUP, s->bottomRightTextures, s->bottomRightBuffer);
+	TextGroupWidget_Create(&s->bottomRight, CHAT_MAX_BOTTOMRIGHT, &s->chatFont, 
+							s->bottomRightTextures, ChatScreen_GetBottomRight);
 	Widget_SetLocation(&s->bottomRight, ANCHOR_MAX, ANCHOR_MAX, 0, yOffset);
 	Elem_Init(&s->bottomRight);
 
-	ChatScreen_MakeGroup(&s->chat, Gui_Chatlines, s->chatTextures, s->chatBuffer);
+	TextGroupWidget_Create(&s->chat, Gui_Chatlines, &s->chatFont, 
+							s->chatTextures, ChatScreen_GetChat);
+	s->chat.underlineUrls = !Game_ClassicMode;
+	s->chat.getLineObj    = &s->chatIndex;
 	Widget_SetLocation(&s->chat, ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
 	Elem_Init(&s->chat);
 
-	ChatScreen_MakeGroup(&s->clientStatus, CHATSCREEN_MAX_GROUP, s->clientStatusTextures, s->clientStatusBuffer);
+	TextGroupWidget_Create(&s->clientStatus, CHAT_MAX_CLIENTSTATUS, &s->chatFont,
+							s->clientStatusTextures, ChatScreen_GetClientStatus);
 	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
 	Elem_Init(&s->clientStatus);
 
@@ -781,24 +782,13 @@ static void ChatScreen_ConstructWidgets(struct ChatScreen* s) {
 }
 
 static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
-	int i;
-
 	s->chatIndex = Chat_Log.count - Gui_Chatlines;
-	ChatScreen_ResetChat(s);
-
-	TextGroupWidget_SetText(&s->status, 2, &Chat_Status[0]);
-	TextGroupWidget_SetText(&s->status, 3, &Chat_Status[1]);
-	TextGroupWidget_SetText(&s->status, 4, &Chat_Status[2]);
-
-	TextGroupWidget_SetText(&s->bottomRight, 2, &Chat_BottomRight[0]);
-	TextGroupWidget_SetText(&s->bottomRight, 1, &Chat_BottomRight[1]);
-	TextGroupWidget_SetText(&s->bottomRight, 0, &Chat_BottomRight[2]);
-
+	TextGroupWidget_RedrawAll(&s->chat);
 	TextWidget_Set(&s->announcement, &Chat_Announcement, &s->announcementFont);
-	
-	for (i = 0; i < s->clientStatus.linesCount; i++) {
-		TextGroupWidget_SetText(&s->clientStatus, i, &Chat_ClientStatus[i]);
-	}
+
+	TextGroupWidget_RedrawAll(&s->status);
+	TextGroupWidget_RedrawAll(&s->bottomRight);
+	TextGroupWidget_RedrawAll(&s->clientStatus);
 
 	if (s->handlesAllInput) {
 		ChatScreen_OpenInput(s, &ChatScreen_InputStr);
@@ -807,7 +797,6 @@ static void ChatScreen_SetInitialMessages(struct ChatScreen* s) {
 
 static void ChatScreen_CheckOtherStatuses(struct ChatScreen* s) {
 	const static String texPack = String_FromConst("texturePack");
-	String str; char strBuffer[STRING_SIZE];
 	struct HttpRequest request;
 	int progress;
 	bool hasRequest;
@@ -816,10 +805,11 @@ static void ChatScreen_CheckOtherStatuses(struct ChatScreen* s) {
 	hasRequest = Http_GetCurrent(&request, &progress);
 	identifier = String_FromRawArray(request.ID);	
 
-	/* Is terrain / texture pack currently being downloaded? */
+	/* Is terrain/texture pack currently being downloaded? */
 	if (!hasRequest || !String_Equals(&identifier, &texPack)) {
-		if (s->status.textures[1].ID) {
-			TextGroupWidget_SetText(&s->status, 1, &String_Empty);
+		if (s->status.textures[0].ID) {
+			Chat_Status[0].length = 0;
+			TextGroupWidget_Redraw(&s->status, 0);
 		}
 		s->lastDownloadStatus = Int32_MinValue;
 		return;
@@ -827,18 +817,16 @@ static void ChatScreen_CheckOtherStatuses(struct ChatScreen* s) {
 
 	if (progress == s->lastDownloadStatus) return;
 	s->lastDownloadStatus = progress;
-	String_InitArray(str, strBuffer);
+	Chat_Status[0].length = 0;
 
 	if (progress == ASYNC_PROGRESS_MAKING_REQUEST) {
-		String_AppendConst(&str, "&eRetrieving texture pack..");
+		String_AppendConst(&Chat_Status[0], "&eRetrieving texture pack..");
 	} else if (progress == ASYNC_PROGRESS_FETCHING_DATA) {
-		String_AppendConst(&str, "&eDownloading texture pack");
+		String_AppendConst(&Chat_Status[0], "&eDownloading texture pack");
 	} else if (progress >= 0 && progress <= 100) {
-		String_AppendConst(&str, "&eDownloading texture pack (&7");
-		String_AppendInt(&str, progress);
-		String_AppendConst(&str, "&e%)");
+		String_Format1(&Chat_Status[0], "&eDownloading texture pack (&7%i&e%%)", &progress);
 	}
-	TextGroupWidget_SetText(&s->status, 1, &str);
+	TextGroupWidget_Redraw(&s->status, 0);
 }
 
 static void ChatScreen_RenderBackground(struct ChatScreen* s) {
@@ -869,17 +857,16 @@ static void ChatScreen_UpdateChatYOffset(struct ChatScreen* s, bool force) {
 }
 
 static void ChatElem_Recreate(struct TextGroupWidget* group, char code) {
-	String line; char lineBuffer[TEXTGROUPWIDGET_LEN];
+	String line;
 	int i, j;
 
-	String_InitArray(line, lineBuffer);
-	for (i = 0; i < group->linesCount; i++) {
-		TextGroupWidget_GetText(group, i, &line);
+	for (i = 0; i < group->lines; i++) {
+		line = TextGroupWidget_UNSAFE_Get(group, i);
 		if (!line.length) continue;
 
 		for (j = 0; j < line.length - 1; j++) {
 			if (line.buffer[j] == '&' && line.buffer[j + 1] == code) {
-				TextGroupWidget_SetText(group, i, &line); 
+				TextGroupWidget_Redraw(group, i); 
 				break;
 			}
 		}
@@ -895,10 +882,19 @@ static int ChatScreen_ClampIndex(int index) {
 
 static void ChatScreen_ScrollHistoryBy(struct ChatScreen* s, int delta) {
 	int newIndex = ChatScreen_ClampIndex(s->chatIndex + delta);
-	if (newIndex == s->chatIndex) return;
+	delta = newIndex - s->chatIndex;
 
-	s->chatIndex = newIndex;
-	ChatScreen_ResetChat(s);
+	while (delta) {
+		if (delta < 0) {
+			/* scrolling up to oldest */
+			s->chatIndex--; delta++;
+			TextGroupWidget_ShiftDown(&s->chat);
+		} else {
+			/* scrolling down to newest */
+			s->chatIndex++; delta--;
+			TextGroupWidget_ShiftUp(&s->chat);
+		}
+	}
 }
 
 static void ChatScreen_EnterInput(struct ChatScreen* s, bool close) {
@@ -916,8 +912,8 @@ static void ChatScreen_EnterInput(struct ChatScreen* s, bool close) {
 	/* Reset chat when user has scrolled up in chat history */
 	defaultIndex = Chat_Log.count - Gui_Chatlines;
 	if (s->chatIndex != defaultIndex) {
-		s->chatIndex = ChatScreen_ClampIndex(defaultIndex);
-		ChatScreen_ResetChat(s);
+		s->chatIndex = defaultIndex;
+		TextGroupWidget_RedrawAll(&s->chat);
 	}
 }
 
@@ -1050,27 +1046,22 @@ static void ChatScreen_ColCodeChanged(void* screen, int code) {
 
 static void ChatScreen_ChatReceived(void* screen, const String* msg, int type) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	String chatMsg;
-	int i;
 	if (Gfx.LostContext) return;
 
 	if (type == MSG_TYPE_NORMAL) {
 		s->chatIndex++;
 		if (!Gui_Chatlines) return;
-
-		chatMsg = *msg;
-		i = s->chatIndex + (Gui_Chatlines - 1);
-
-		if (i < Chat_Log.count) { chatMsg = StringsBuffer_UNSAFE_Get(&Chat_Log, i); }
-		TextGroupWidget_PushUpAndReplaceLast(&s->chat, &chatMsg);
+		TextGroupWidget_ShiftUp(&s->chat);
 	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
-		TextGroupWidget_SetText(&s->status, 2 + (type - MSG_TYPE_STATUS_1), msg);
+		/* Status[0] is for texture pack downloading message */
+		TextGroupWidget_Redraw(&s->status, 1 + (type - MSG_TYPE_STATUS_1));
 	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
-		TextGroupWidget_SetText(&s->bottomRight, 2 - (type - MSG_TYPE_BOTTOMRIGHT_1), msg);
+		/* Bottom3 is top most line, so need to redraw index 0 */
+		TextGroupWidget_Redraw(&s->bottomRight, 2 - (type - MSG_TYPE_BOTTOMRIGHT_1));
 	} else if (type == MSG_TYPE_ANNOUNCEMENT) {
 		TextWidget_Set(&s->announcement, msg, &s->announcementFont);
-	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_3) {
-		TextGroupWidget_SetText(&s->clientStatus, type - MSG_TYPE_CLIENTSTATUS_1, msg);
+	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_2) {
+		TextGroupWidget_Redraw(&s->clientStatus, type - MSG_TYPE_CLIENTSTATUS_1);
 		ChatScreen_UpdateChatYOffset(s, true);
 	}
 }
@@ -1134,7 +1125,7 @@ static void ChatScreen_Render(void* screen, double delta) {
 
 	ChatScreen_UpdateChatYOffset(s, false);
 	y = s->clientStatus.y + s->clientStatus.height;
-	for (i = 0; i < s->clientStatus.linesCount; i++) {
+	for (i = 0; i < s->clientStatus.lines; i++) {
 		tex = s->clientStatus.textures[i];
 		if (!tex.ID) continue;
 
@@ -1147,7 +1138,7 @@ static void ChatScreen_Render(void* screen, double delta) {
 		Elem_Render(&s->chat, delta);
 	} else {
 		/* Only render recent chat */
-		for (i = 0; i < s->chat.linesCount; i++) {
+		for (i = 0; i < s->chat.lines; i++) {
 			tex    = s->chat.textures[i];
 			logIdx = s->chatIndex + i;
 			if (!tex.ID) continue;
