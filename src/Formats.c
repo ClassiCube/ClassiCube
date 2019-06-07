@@ -581,7 +581,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 		}
 	}
 
-	if (IsTag(tag->Parent, "BlockDefinitions")) {
+	if (IsTag(tag->Parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
 		const static String blockStr = String_FromConst("Block");
 		if (!String_CaselessStarts(&tag->Name, &blockStr)) return;	
 
