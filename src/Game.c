@@ -196,7 +196,7 @@ void Game_Reset(void) {
 		World_TextureUrl.length = 0;
 	}
 
-	for (comp = comps_head; comp; comp = comp->Next) {
+	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Reset) comp->Reset();
 	}
 }
@@ -288,14 +288,14 @@ static void Game_OnResize(void* obj) {
 
 static void Game_OnNewMapCore(void* obj) {
 	struct IGameComponent* comp;
-	for (comp = comps_head; comp; comp = comp->Next) {
+	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->OnNewMap) comp->OnNewMap();
 	}
 }
 
 static void Game_OnNewMapLoadedCore(void* obj) {
 	struct IGameComponent* comp;
-	for (comp = comps_head; comp; comp = comp->Next) {
+	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->OnNewMapLoaded) comp->OnNewMapLoaded();
 	}
 }
@@ -498,7 +498,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&AxisLinesRenderer_Component);
 
 	Game_LoadPlugins();
-	for (comp = comps_head; comp; comp = comp->Next) {
+	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Init) comp->Init();
 	}
 
@@ -684,7 +684,7 @@ void Game_Free(void* obj) {
 	Event_UnregisterVoid(&WindowEvents.Resized,       NULL, Game_OnResize);
 	Event_UnregisterVoid(&WindowEvents.Closing,       NULL, Game_Free);
 
-	for (comp = comps_head; comp; comp = comp->Next) {
+	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Free) comp->Free();
 	}
 

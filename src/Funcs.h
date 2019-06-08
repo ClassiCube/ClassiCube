@@ -34,8 +34,8 @@ if (j - left <= right - i) {\
 }
 
 #define LinkedList_Add(item, head, tail)\
-if (!head) { head = item; } else { tail->Next = item; }\
+if (!head) { head = item; } else { tail->next = item; }\
 tail       = item;\
-item->Next = NULL;
+item->next = NULL;
 
 #endif

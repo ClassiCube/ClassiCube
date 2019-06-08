@@ -34,7 +34,7 @@ static CC_INLINE void ModelPart_Init(struct ModelPart* part, int offset, int cou
 
 struct ModelTex;
 /* Contains information about a texture used for models. */
-struct ModelTex { const char* Name; uint8_t SkinType; GfxResourceID TexID; struct ModelTex* Next; };
+struct ModelTex { const char* Name; uint8_t SkinType; GfxResourceID TexID; struct ModelTex* next; };
 
 struct Model;
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
@@ -80,7 +80,7 @@ struct Model {
 	void (*DrawArm)(struct Entity* entity);
 
 	float MaxScale, ShadowScale, NameScale;
-	struct Model* Next;
+	struct Model* next;
 };
 #if 0
 public CustomModel[] CustomModels = new CustomModel[256];

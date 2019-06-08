@@ -761,17 +761,17 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	ReturnCode res;
 
 	Ogg_MakeStream(&stream, buffer, source);
-	vorbis.Source = &stream;
+	vorbis.source = &stream;
 	if ((res = Vorbis_DecodeHeaders(&vorbis))) goto cleanup;
 	
-	fmt.Channels      = vorbis.Channels;
-	fmt.SampleRate    = vorbis.SampleRate;
+	fmt.Channels      = vorbis.channels;
+	fmt.SampleRate    = vorbis.sampleRate;
 	fmt.BitsPerSample = 16;
 	if ((res = Audio_SetFormat(music_out, &fmt))) goto cleanup;
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples */
 	/* so we may end up decoding slightly over a second of audio */
-	chunkSize        = fmt.Channels * (fmt.SampleRate + vorbis.BlockSizes[1]);
+	chunkSize        = fmt.Channels * (fmt.SampleRate + vorbis.blockSizes[1]);
 	samplesPerSecond = fmt.Channels * fmt.SampleRate;
 	data = (int16_t*)Mem_Alloc(chunkSize * AUDIO_MAX_BUFFERS, 2, "Ogg final output");
 

@@ -11,10 +11,10 @@ struct ScheduledTask;
 extern struct IGameComponent Particles_Component;
 
 struct Particle {
-	Vector3 Velocity;
-	float Lifetime;
-	Vector3 LastPos, NextPos;
-	uint8_t Size;
+	Vector3 velocity;
+	float lifetime;
+	Vector3 lastPos, nextPos;
+	uint8_t size;
 };
 
 /* http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/ */

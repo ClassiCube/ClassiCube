@@ -49,9 +49,9 @@ void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol c
 }
 
 static void Particle_Reset(struct Particle* p, Vector3 pos, Vector3 velocity, float lifetime) {
-	p->LastPos = pos; p->NextPos = pos;
-	p->Velocity = velocity;
-	p->Lifetime = lifetime;
+	p->lastPos = pos; p->nextPos = pos;
+	p->velocity = velocity;
+	p->lifetime = lifetime;
 }
 
 static bool Particle_CanPass(BlockID block, bool throughLiquids) {
@@ -82,24 +82,24 @@ static bool Particle_TestY(struct Particle* p, int y, bool topFace, bool through
 	bool collideVer;
 
 	if (y < 0) {
-		p->NextPos.Y = ENTITY_ADJUSTMENT; p->LastPos.Y = ENTITY_ADJUSTMENT;
-		p->Velocity  = Vector3_Zero();
+		p->nextPos.Y = ENTITY_ADJUSTMENT; p->lastPos.Y = ENTITY_ADJUSTMENT;
+		p->velocity  = Vector3_Zero();
 		particle_hitTerrain = true;
 		return false;
 	}
 
-	block = Particle_GetBlock((int)p->NextPos.X, y, (int)p->NextPos.Z);
+	block = Particle_GetBlock((int)p->nextPos.X, y, (int)p->nextPos.Z);
 	if (Particle_CanPass(block, throughLiquids)) return true;
 	minBB = Blocks.MinBB[block]; maxBB = Blocks.MaxBB[block];
 
 	collideY   = y + (topFace ? maxBB.Y : minBB.Y);
-	collideVer = topFace ? (p->NextPos.Y < collideY) : (p->NextPos.Y > collideY);
+	collideVer = topFace ? (p->nextPos.Y < collideY) : (p->nextPos.Y > collideY);
 
-	if (collideVer && Particle_CollideHor(&p->NextPos, block)) {
+	if (collideVer && Particle_CollideHor(&p->nextPos, block)) {
 		float adjust = topFace ? ENTITY_ADJUSTMENT : -ENTITY_ADJUSTMENT;
-		p->LastPos.Y = collideY + adjust;
-		p->NextPos.Y = p->LastPos.Y;
-		p->Velocity  = Vector3_Zero();
+		p->lastPos.Y = collideY + adjust;
+		p->nextPos.Y = p->lastPos.Y;
+		p->velocity  = Vector3_Zero();
 		particle_hitTerrain = true;
 		return false;
 	}
@@ -112,39 +112,39 @@ static bool Particle_PhysicsTick(struct Particle* p, float gravity, bool through
 	Vector3 velocity;
 	int y, begY, endY;
 
-	p->LastPos = p->NextPos;
-	cur  = Particle_GetBlock((int)p->NextPos.X, (int)p->NextPos.Y, (int)p->NextPos.Z);
-	minY = Math_Floor(p->NextPos.Y) + Blocks.MinBB[cur].Y;
-	maxY = Math_Floor(p->NextPos.Y) + Blocks.MaxBB[cur].Y;
+	p->lastPos = p->nextPos;
+	cur  = Particle_GetBlock((int)p->nextPos.X, (int)p->nextPos.Y, (int)p->nextPos.Z);
+	minY = Math_Floor(p->nextPos.Y) + Blocks.MinBB[cur].Y;
+	maxY = Math_Floor(p->nextPos.Y) + Blocks.MaxBB[cur].Y;
 
-	if (!Particle_CanPass(cur, throughLiquids) && p->NextPos.Y >= minY
-		&& p->NextPos.Y < maxY && Particle_CollideHor(&p->NextPos, cur)) {
+	if (!Particle_CanPass(cur, throughLiquids) && p->nextPos.Y >= minY
+		&& p->nextPos.Y < maxY && Particle_CollideHor(&p->nextPos, cur)) {
 		return true;
 	}
 
-	p->Velocity.Y -= gravity * (float)delta;
-	begY = Math_Floor(p->NextPos.Y);
+	p->velocity.Y -= gravity * (float)delta;
+	begY = Math_Floor(p->nextPos.Y);
 	
-	Vector3_Mul1(&velocity, &p->Velocity, (float)delta * 3.0f);
-	Vector3_Add(&p->NextPos, &p->NextPos, &velocity);
-	endY = Math_Floor(p->NextPos.Y);
+	Vector3_Mul1(&velocity, &p->velocity, (float)delta * 3.0f);
+	Vector3_Add(&p->nextPos, &p->nextPos, &velocity);
+	endY = Math_Floor(p->nextPos.Y);
 
-	if (p->Velocity.Y > 0.0f) {
+	if (p->velocity.Y > 0.0f) {
 		/* don't test block we are already in */
 		for (y = begY + 1; y <= endY && Particle_TestY(p, y, false, throughLiquids); y++) {}
 	} else {
 		for (y = begY; y >= endY && Particle_TestY(p, y, true, throughLiquids); y--) {}
 	}
 
-	p->Lifetime -= (float)delta;
-	return p->Lifetime < 0.0f;
+	p->lifetime -= (float)delta;
+	return p->lifetime < 0.0f;
 }
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------Rain particle-----------------------------------------------------*
 *#########################################################################################################################*/
-struct RainParticle { struct Particle Base; };
+struct RainParticle { struct Particle base; };
 
 static struct RainParticle rain_Particles[PARTICLES_MAX];
 static int rain_count;
@@ -152,7 +152,7 @@ static TextureRec rain_rec = { 2.0f/128.0f, 14.0f/128.0f, 5.0f/128.0f, 16.0f/128
 
 static bool RainParticle_Tick(struct RainParticle* p, double delta) {
 	particle_hitTerrain = false;
-	return Particle_PhysicsTick(&p->Base, 3.5f, false, delta) || particle_hitTerrain;
+	return Particle_PhysicsTick(&p->base, 3.5f, false, delta) || particle_hitTerrain;
 }
 
 static void RainParticle_Render(struct RainParticle* p, float t, VertexP3fT2fC4b* vertices) {
@@ -161,8 +161,8 @@ static void RainParticle_Render(struct RainParticle* p, float t, VertexP3fT2fC4b
 	PackedCol col;
 	int x, y, z;
 
-	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
-	size.X = (float)p->Base.Size * 0.015625f; size.Y = size.X;
+	Vector3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
+	size.X = (float)p->base.size * 0.015625f; size.Y = size.X;
 
 	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
 	col = World_Contains(x, y, z) ? Lighting_Col(x, y, z) : Env.SunCol;
@@ -210,10 +210,10 @@ static void Rain_Tick(double delta) {
 *------------------------------------------------------Terrain particle---------------------------------------------------*
 *#########################################################################################################################*/
 struct TerrainParticle {
-	struct Particle Base;
-	TextureRec Rec;
-	TextureLoc TexLoc;
-	BlockID Block;
+	struct Particle base;
+	TextureRec rec;
+	TextureLoc texLoc;
+	BlockID block;
 };
 
 static struct TerrainParticle terrain_particles[PARTICLES_MAX];
@@ -222,7 +222,7 @@ static uint16_t terrain_1DCount[ATLAS1D_MAX_ATLASES];
 static uint16_t terrain_1DIndices[ATLAS1D_MAX_ATLASES];
 
 static bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
-	return Particle_PhysicsTick(&p->Base, 5.4f, true, delta);
+	return Particle_PhysicsTick(&p->base, 5.4f, true, delta);
 }
 
 static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3fT2fC4b* vertices) {
@@ -231,21 +231,21 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3f
 	Vector2 size;
 	int x, y, z;
 
-	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
-	size.X = (float)p->Base.Size * 0.015625f; size.Y = size.X;
+	Vector3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
+	size.X = (float)p->base.size * 0.015625f; size.Y = size.X;
 	
-	if (!Blocks.FullBright[p->Block]) {
+	if (!Blocks.FullBright[p->block]) {
 		x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
 		col = World_Contains(x, y, z) ? Lighting_Col_XSide(x, y, z) : Env.SunXSide;
 	}
 
-	if (Blocks.Tinted[p->Block]) {
-		PackedCol tintCol = Blocks.FogCol[p->Block];
+	if (Blocks.Tinted[p->block]) {
+		PackedCol tintCol = Blocks.FogCol[p->block];
 		col.R = (uint8_t)(col.R * tintCol.R / 255);
 		col.G = (uint8_t)(col.G * tintCol.G / 255);
 		col.B = (uint8_t)(col.B * tintCol.B / 255);
 	}
-	Particle_DoRender(&size, &pos, &p->Rec, col, vertices);
+	Particle_DoRender(&size, &pos, &p->rec, col, vertices);
 }
 
 static void Terrain_Update1DCounts(void) {
@@ -256,7 +256,7 @@ static void Terrain_Update1DCounts(void) {
 		terrain_1DIndices[i] = 0;
 	}
 	for (i = 0; i < terrain_count; i++) {
-		index = Atlas1D_Index(terrain_particles[i].TexLoc);
+		index = Atlas1D_Index(terrain_particles[i].texLoc);
 		terrain_1DCount[index] += 4;
 	}
 	for (i = 1; i < Atlas1D.Count; i++) {
@@ -273,7 +273,7 @@ static void Terrain_Render(float t) {
 
 	Terrain_Update1DCounts();
 	for (i = 0; i < terrain_count; i++) {
-		index = Atlas1D_Index(terrain_particles[i].TexLoc);
+		index = Atlas1D_Index(terrain_particles[i].texLoc);
 		ptr   = &vertices[terrain_1DIndices[index]];
 
 		TerrainParticle_Render(&terrain_particles[i], t, ptr);
@@ -414,13 +414,13 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 
 				life = 0.3f + Random_Float(&rnd) * 1.2f;
 				Vector3_Add(&pos, &origin, &cell);
-				Particle_Reset(&p->Base, pos, velocity, life);
+				Particle_Reset(&p->base, pos, velocity, life);
 
-				p->Rec    = rec;
-				p->TexLoc = loc;
-				p->Block  = old;
+				p->rec    = rec;
+				p->texLoc = loc;
+				p->block  = old;
 				type = Random_Range(&rnd, 0, 30);
-				p->Base.Size = (uint8_t)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
+				p->base.size = (uint8_t)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
 			}
 		}
 	}
@@ -445,10 +445,10 @@ void Particles_RainSnowEffect(Vector3 pos) {
 		p = &rain_Particles[rain_count++];
 
 		Vector3_Add(&pos, &origin, &offset);
-		Particle_Reset(&p->Base, pos, velocity, 40.0f);
+		Particle_Reset(&p->base, pos, velocity, 40.0f);
 
 		type = Random_Range(&rnd, 0, 30);
-		p->Base.Size = (uint8_t)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
+		p->base.size = (uint8_t)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
 	}
 }
 

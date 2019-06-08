@@ -15,34 +15,34 @@ struct Codebook; struct Floor; struct Residue; struct Mapping; struct Mode;
 
 struct imdct_state {
 	int n, log2_n;
-	float A[VORBIS_MAX_BLOCK_SIZE / 2];
-	float B[VORBIS_MAX_BLOCK_SIZE / 2];
-	float C[VORBIS_MAX_BLOCK_SIZE / 4];
-	uint32_t Reversed[VORBIS_MAX_BLOCK_SIZE / 8];
+	float a[VORBIS_MAX_BLOCK_SIZE / 2];
+	float b[VORBIS_MAX_BLOCK_SIZE / 2];
+	float c[VORBIS_MAX_BLOCK_SIZE / 4];
+	uint32_t reversed[VORBIS_MAX_BLOCK_SIZE / 8];
 };
 
 struct VorbisWindow { float* Prev; float* Cur; };
 struct VorbisState {
 	uint32_t Bits;    /* Holds bits across byte boundaries*/
 	uint32_t NumBits; /* Number of bits in Bits buffer*/
-	struct Stream* Source;  /* Source for filling Input buffer */
+	struct Stream* source;  /* Source for filling Input buffer */
 
-	uint8_t Channels, ModeNumBits;
-	uint16_t CurBlockSize, PrevBlockSize, DataSize, NumCodebooks;
-	int SampleRate; int BlockSizes[2];
-	float* Temp; /* temp array reused in places */
-	float* Values[2]; /* swapped each frame */
-	float* PrevOutput[VORBIS_MAX_CHANS];
-	float* CurOutput[VORBIS_MAX_CHANS];
+	uint8_t channels, modeNumBits;
+	uint16_t curBlockSize, prevBlockSize, dataSize, numCodebooks;
+	int sampleRate; int blockSizes[2];
+	float* temp; /* temp array reused in places */
+	float* values[2]; /* swapped each frame */
+	float* prevOutput[VORBIS_MAX_CHANS];
+	float* curOutput[VORBIS_MAX_CHANS];
 
-	struct Codebook* Codebooks;
-	struct Floor* Floors;
-	struct Residue* Residues;
-	struct Mapping* Mappings;
-	struct Mode* Modes;
+	struct Codebook* codebooks;
+	struct Floor* floors;
+	struct Residue* residues;
+	struct Mapping* mappings;
+	struct Mode* modes;
 
-	float* WindowRaw;
-	struct VorbisWindow Windows[2];
+	float* windowRaw;
+	struct VorbisWindow windows[2];
 	struct imdct_state imdct[2];
 };
 

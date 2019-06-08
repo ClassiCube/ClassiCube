@@ -223,7 +223,7 @@ void HeldBlockRenderer_Render(double delta) {
 	HeldBlockRenderer_ResetHeldState();
 	HeldBlockRenderer_DoAnimation(delta, lastSwingY);
 	HeldBlockRenderer_SetBaseOffset();
-	if (!Camera.Active->IsThirdPerson) HeldBlockRenderer_RenderModel();
+	if (!Camera.Active->isThirdPerson) HeldBlockRenderer_RenderModel();
 
 	Gfx.View = view;
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);

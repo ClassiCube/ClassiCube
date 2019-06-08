@@ -596,11 +596,11 @@ static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx) 
 	Stream_SetU32_BE(&header[12], WAV_FourCC('f','m','t',' '));
 	Stream_SetU32_LE(&header[16], 16); /* fmt chunk size */
 	Stream_SetU16_LE(&header[20], 1);  /* PCM audio format */
-	Stream_SetU16_LE(&header[22], ctx->Channels);
-	Stream_SetU32_LE(&header[24], ctx->SampleRate);
+	Stream_SetU16_LE(&header[22], ctx->channels);
+	Stream_SetU32_LE(&header[24], ctx->sampleRate);
 
-	Stream_SetU32_LE(&header[28], ctx->SampleRate * ctx->Channels * 2); /* byte rate */
-	Stream_SetU16_LE(&header[32], ctx->Channels * 2);                   /* block align */
+	Stream_SetU32_LE(&header[28], ctx->sampleRate * ctx->channels * 2); /* byte rate */
+	Stream_SetU16_LE(&header[32], ctx->channels * 2);                   /* block align */
 	Stream_SetU16_LE(&header[34], 16);                                  /* bits per sample */
 	Stream_SetU32_BE(&header[36], WAV_FourCC('d','a','t','a'));
 	Stream_SetU32_LE(&header[40], length - sizeof(header));
@@ -621,7 +621,7 @@ static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) 
 
 	res = Vorbis_DecodeHeaders(ctx);
 	if (res) { Logger_Warn(res, "decoding .ogg header"); return; }
-	samples = (int16_t*)Mem_Alloc(ctx->BlockSizes[1] * ctx->Channels, 2, ".ogg samples");
+	samples = (int16_t*)Mem_Alloc(ctx->blockSizes[1] * ctx->channels, 2, ".ogg samples");
 
 	for (;;) {
 		res = Vorbis_DecodeFrame(ctx);
@@ -651,7 +651,7 @@ static void SoundPatcher_Save(struct ResourceSound* sound, struct HttpRequest* r
 	if (res) { Logger_Warn(res, "creating .wav file"); return; }
 
 	Ogg_MakeStream(&ogg, buffer, &src);
-	ctx.Source = &ogg;
+	ctx.source = &ogg;
 
 	SoundPatcher_DecodeAudio(&dst, &ctx);
 	SoundPatcher_FixupHeader(&dst, &ctx);

@@ -392,7 +392,7 @@ static void Model_Make(struct Model* model) {
 struct Model* Model_Get(const String* name) {
 	struct Model* model;
 
-	for (model = models_head; model; model = model->Next) {
+	for (model = models_head; model; model = model->next) {
 		if (!String_CaselessEqualsConst(name, model->Name)) continue;
 
 		if (!model->initalised) Model_Make(model);
@@ -404,7 +404,7 @@ struct Model* Model_Get(const String* name) {
 struct ModelTex* Model_GetTexture(const String* name) {
 	struct ModelTex* tex;
 
-	for (tex = textures_head; tex; tex = tex->Next) {
+	for (tex = textures_head; tex; tex = tex->next) {
 		if (String_CaselessEqualsConst(name, tex->Name)) return tex;
 	}
 	return NULL;
@@ -421,7 +421,7 @@ void Model_RegisterTexture(struct ModelTex* tex) {
 static void Models_TextureChanged(void* obj, struct Stream* stream, const String* name) {
 	struct ModelTex* tex;
 
-	for (tex = textures_head; tex; tex = tex->Next) {
+	for (tex = textures_head; tex; tex = tex->next) {
 		if (!String_CaselessEqualsConst(name, tex->Name)) continue;
 
 		Game_UpdateTexture(&tex->TexID, stream, name, &tex->SkinType);
@@ -1703,7 +1703,7 @@ static void Models_Init(void) {
 static void Models_Free(void) {
 	struct ModelTex* tex;
 
-	for (tex = textures_head; tex; tex = tex->Next) {
+	for (tex = textures_head; tex; tex = tex->next) {
 		Gfx_DeleteTexture(&tex->TexID);
 	}
 	Models_ContextLost(NULL);

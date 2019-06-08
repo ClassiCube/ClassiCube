@@ -19,7 +19,7 @@ struct IGameComponent {
 	/* Called to update the component's state when the user has finished loading a new map. */
 	void (*OnNewMapLoaded)(void);
 	/* Next component in linked list of components. */
-	struct IGameComponent* Next;
+	struct IGameComponent* next;
 };
 /* Adds a component to linked list of components. (always at end) */
 CC_NOINLINE void Game_AddComponent(struct IGameComponent* comp);

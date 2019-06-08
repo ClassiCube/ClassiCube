@@ -239,7 +239,7 @@ static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
 	String name;
 	struct ChatCommand* match = NULL;
 
-	for (cmd = cmds_head; cmd; cmd = cmd->Next) {
+	for (cmd = cmds_head; cmd; cmd = cmd->next) {
 		name = String_FromReadonly(cmd->Name);
 		if (!String_CaselessStarts(&name, cmdName)) continue;
 
@@ -270,7 +270,7 @@ static void Commands_PrintDefault(void) {
 	Chat_AddRaw("&eList of client commands:");
 	String_InitArray(str, strBuffer);
 
-	for (cmd = cmds_head; cmd; cmd = cmd->Next) {
+	for (cmd = cmds_head; cmd; cmd = cmd->next) {
 		name = String_FromReadonly(cmd->Name);
 
 		if ((str.length + name.length + 2) > str.capacity) {

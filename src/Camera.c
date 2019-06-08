@@ -80,7 +80,7 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 	float headY, headX;
 	Vector2 rot = PerspectiveCamera_GetMouseDelta(delta);
 
-	if (Key_IsAltPressed() && Camera.Active->IsThirdPerson) {
+	if (Key_IsAltPressed() && Camera.Active->isThirdPerson) {
 		cam_rotOffset.X += rot.X; cam_rotOffset.Y += rot.Y;
 		return;
 	}
@@ -251,7 +251,7 @@ void Camera_Init(void) {
 void Camera_CycleActive(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (Game_ClassicMode) return;
-	Camera.Active = Camera.Active->Next;
+	Camera.Active = Camera.Active->next;
 
 	if (!p->Hacks.CanUseThirdPersonCamera || !p->Hacks.Enabled) {
 		Camera.Active = &cam_FirstPerson;
@@ -268,7 +268,7 @@ static struct Camera* cams_tail;
 void Camera_Register(struct Camera* cam) {
 	LinkedList_Add(cam, cams_head, cams_tail);
 	/* want a circular linked list */
-	cam->Next = cams_head;
+	cam->next = cams_head;
 }
 
 static bool cam_focussed;

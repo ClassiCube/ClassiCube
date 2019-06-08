@@ -40,7 +40,7 @@ struct ChatCommand {
 	void (*Execute)(const String* args, int argsCount);
 	bool SingleplayerOnly; /* Whether this command is only usable in singleplayer */
 	const char* Help[5];   /* Messages to show when a player uses /help on this command */
-	struct ChatCommand* Next; /* Next command in linked-list of client commands */
+	struct ChatCommand* next; /* Next command in linked-list of client commands */
 };
 /* Registers a client-side command, allowing it to be used with /client [cmd name] */
 CC_API void Commands_Register(struct ChatCommand* cmd);

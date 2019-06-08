@@ -32,7 +32,7 @@ extern struct _CameraData {
 
 struct Camera {
 	/* Whether this camera is third person. (i.e. not allowed when -thirdperson in MOTD) */
-	bool IsThirdPerson;
+	bool isThirdPerson;
 
 	/* Calculates the current projection matrix of this camera. */
 	void (*GetProjection)(struct Matrix* proj);
@@ -60,7 +60,7 @@ struct Camera {
 	bool (*Zoom)(float amount);
 
 	/* Next camera in linked list of cameras. */
-	struct Camera* Next;
+	struct Camera* next;
 };
 
 /* Initialises the default cameras. */
