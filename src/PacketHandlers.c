@@ -773,12 +773,12 @@ static void CPE_SendExtEntry(const String* extName, int extVersion) {
 	Server.SendData(data, 69);
 }
 
-static void CPE_WriteTwoWayPing(bool serverToClient, int payload) {
+static void CPE_WriteTwoWayPing(bool serverToClient, int id) {
 	uint8_t* data = Server.WriteBuffer; 
 	*data++ = OPCODE_TWO_WAY_PING;
 	{
 		*data++ = serverToClient;
-		Stream_SetU16_BE(data, payload); data += 2;
+		Stream_SetU16_BE(data, id); data += 2;
 	}
 	Server.WriteBuffer = data;
 }
@@ -1296,12 +1296,12 @@ static void CPE_SetEntityProperty(uint8_t* data) {
 
 static void CPE_TwoWayPing(uint8_t* data) {
 	uint8_t serverToClient = *data++;
-	int payload = Stream_GetU16_BE(data);
+	int id = Stream_GetU16_BE(data);
 
 	if (serverToClient) {
-		CPE_WriteTwoWayPing(true, payload); /* server to client reply */
+		CPE_WriteTwoWayPing(true, id); /* server to client reply */
 		Net_SendPacket();
-	} else { PingList_Update(payload); }
+	} else { Ping_Update(id); }
 }
 
 static void CPE_SetInventoryOrder(uint8_t* data) {
@@ -1355,7 +1355,7 @@ static void CPE_Reset(void) {
 static void CPE_Tick(void) {
 	cpe_pingTicks++;
 	if (cpe_pingTicks >= 20 && cpe_twoWayPing) {
-		CPE_WriteTwoWayPing(false, PingList_NextPingData());
+		CPE_WriteTwoWayPing(false, Ping_NextPingId());
 		cpe_pingTicks = 0;
 	}
 }

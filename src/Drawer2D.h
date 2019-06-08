@@ -3,7 +3,7 @@
 #include "PackedCol.h"
 #include "Constants.h"
 #include "Bitmap.h"
-/*  Responsible for performing drawing operations on bitmaps, and for converting bitmaps into textures.
+/*  Performs a variety of drawing operations on bitmaps, and converts bitmaps into textures.
 	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 

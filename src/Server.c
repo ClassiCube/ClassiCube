@@ -86,43 +86,43 @@ static void Server_CheckAsyncResources(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------PingList---------------------------------------------------------*
 *#########################################################################################################################*/
-struct PingEntry { int64_t Sent, Recv; uint16_t Data; };
-static struct PingEntry pingList_entries[10];
-static int pingList_head;
+struct PingEntry { int64_t sent, recv; uint16_t id; };
+static struct PingEntry ping_entries[10];
+static int ping_head;
 
-int PingList_NextPingData(void) {
-	int head = pingList_head;
-	int next = pingList_entries[head].Data + 1;
+int Ping_NextPingId(void) {
+	int head = ping_head;
+	int next = ping_entries[head].id + 1;
 
-	head = (head + 1) % Array_Elems(pingList_entries);
-	pingList_entries[head].Data = next;
-	pingList_entries[head].Sent = DateTime_CurrentUTC_MS();
-	pingList_entries[head].Recv = 0;
+	head = (head + 1) % Array_Elems(ping_entries);
+	ping_entries[head].id   = next;
+	ping_entries[head].sent = DateTime_CurrentUTC_MS();
+	ping_entries[head].recv = 0;
 	
-	pingList_head = head;
+	ping_head = head;
 	return next;
 }
 
-void PingList_Update(int data) {
+void Ping_Update(int id) {
 	int i;
-	for (i = 0; i < Array_Elems(pingList_entries); i++) {
-		if (pingList_entries[i].Data != data) continue;
+	for (i = 0; i < Array_Elems(ping_entries); i++) {
+		if (ping_entries[i].id != id) continue;
 
-		pingList_entries[i].Recv = DateTime_CurrentUTC_MS();
+		ping_entries[i].recv = DateTime_CurrentUTC_MS();
 		return;
 	}
 }
 
-int PingList_AveragePingMs(void) {
+int Ping_AveragePingMS(void) {
 	double totalMs = 0.0;
 	int i, measures = 0;
 
-	for (i = 0; i < Array_Elems(pingList_entries); i++) {
-		struct PingEntry entry = pingList_entries[i];
-		if (!entry.Sent || !entry.Recv) continue;
+	for (i = 0; i < Array_Elems(ping_entries); i++) {
+		struct PingEntry entry = ping_entries[i];
+		if (!entry.sent || !entry.recv) continue;
 
 		/* Half, because received->reply time is actually twice time it takes to send data */
-		totalMs += (entry.Recv - entry.Sent) * 0.5;
+		totalMs += (entry.recv - entry.sent) * 0.5;
 		measures++;
 	}
 	return measures == 0 ? 0 : (int)(totalMs / measures);

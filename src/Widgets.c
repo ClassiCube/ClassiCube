@@ -64,11 +64,6 @@ void TextWidget_Make(struct TextWidget* w) {
 	w->col    = col;
 }
 
-void TextWidget_Create(struct TextWidget* w, const String* text, const FontDesc* font) {
-	TextWidget_Make(w);
-	TextWidget_Set(w,  text, font);
-}
-
 void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* font) {
 	struct DrawTextArgs args;
 	Gfx_DeleteTexture(&w->texture.ID);
@@ -88,6 +83,11 @@ void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* fo
 	w->width = w->texture.Width; w->height = w->texture.Height;
 	Widget_Reposition(w);
 	w->texture.X = w->x; w->texture.Y = w->y;
+}
+
+void TextWidget_Create(struct TextWidget* w, const String* text, const FontDesc* font) {
+	TextWidget_Make(w);
+	TextWidget_Set(w, text, font);
 }
 
 
@@ -2196,7 +2196,7 @@ static void TextGroupWidget_UpdateY(struct TextGroupWidget* w) {
 		}
 	} else {
 		y = Window_Height - w->yOffset;
-		for (i = w->lines- 1; i >= 0; i--) {
+		for (i = w->lines - 1; i >= 0; i--) {
 			y -= textures[i].Height;
 			textures[i].Y = y;
 		}

@@ -42,9 +42,12 @@ struct IGameComponent;
 struct ScheduledTask;
 extern struct IGameComponent Server_Component;
 
-int PingList_NextPingData(void);
-void PingList_Update(int data);
-int PingList_AveragePingMs(void);
+/* Prepares a ping entry for sending to the server, then returns its ID. */
+int Ping_NextPingId(void);
+/* Updates received time for ping entry with matching ID. */
+void Ping_Update(int id);
+/* Calculates average ping time based on most recent ping entries. */
+int Ping_AveragePingMS(void);
 
 /* Data for currently active connection to a server. */
 CC_VAR extern struct _ServerConnectionData {

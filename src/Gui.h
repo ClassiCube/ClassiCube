@@ -79,9 +79,9 @@ struct WidgetVTABLE {
 };
 #define Widget_Layout struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;      /* Top left corner, and dimensions, of this widget */ \
-	bool active;                  /* Whether this widget is currently being moused over*/ \
+	bool active;                  /* Whether this widget is currently being moused over */ \
 	bool disabled;                /* Whether widget is prevented from being interacted with */ \
-	uint8_t horAnchor, verAnchor; /* Specifies the reference point for when this widget is resized */ \
+	uint8_t horAnchor, verAnchor; /* The reference point for when this widget is resized */ \
 	int xOffset, yOffset;         /* Offset from the reference point */ \
 	Widget_LeftClick MenuClick;
 

@@ -274,7 +274,7 @@ static void StatusScreen_MakeText(struct StatusScreen* s, String* status) {
 		indices = ICOUNT(Game_Vertices);
 		String_Format1(status, "%i vertices", &indices);
 
-		ping = PingList_AveragePingMs();
+		ping = Ping_AveragePingMS();
 		if (ping) String_Format1(status, ", ping %i ms", &ping);
 	}
 }
