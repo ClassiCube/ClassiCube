@@ -191,9 +191,11 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		Gui_ShowFPS = !Gui_ShowFPS;
 	} else if (key == KeyBinds[KEYBIND_FULLSCREEN]) {
 		int state = Window_GetWindowState();
-		if (state != WINDOW_STATE_MINIMISED) {
-			bool fullscreen = state == WINDOW_STATE_FULLSCREEN;
-			Window_SetWindowState(fullscreen ? WINDOW_STATE_NORMAL : WINDOW_STATE_FULLSCREEN);
+
+		if (state == WINDOW_STATE_FULLSCREEN) {
+			Window_ExitFullscreen();
+		} else if (state != WINDOW_STATE_MINIMISED) {
+			Window_EnterFullscreen();
 		}
 	} else if (key == KeyBinds[KEYBIND_FOG]) {
 		short* viewDists = Gui_ClassicMenu ? classicViewDists : normViewDists;

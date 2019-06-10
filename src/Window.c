@@ -124,9 +124,7 @@ static FUNC_GetRawInputData _getRawInputData;
 static HINSTANCE win_instance;
 static HWND win_handle;
 static HDC win_DC;
-static int win_state;
-static int suppress_resize; /* Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events */
-static Rect2D prev_bounds; /* Used to restore previous size when leaving fullscreen mode */
+static bool suppress_resize;
 static Rect2D win_bounds;  /* Rectangle of window including titlebar and borders */
 
 
@@ -151,72 +149,13 @@ const static uint8_t key_map[14 * 16] = {
 };
 static Key Window_MapKey(WPARAM key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 
-static void Window_ResetWindowState(void) {
-	suppress_resize++;
-	Window_SetWindowState(WINDOW_STATE_NORMAL);
-	Window_ProcessEvents();
-	suppress_resize--;
-}
-
-static bool win_hiddenBorder;
-static void Window_DoSetHiddenBorder(bool value) {
-	bool wasVisible;
-	RECT rect;
-	if (win_hiddenBorder == value) return;
-
-	/* We wish to avoid making an invisible window visible just to change the border.
-	However, it's a good idea to make a visible window invisible temporarily, to
-	avoid garbage caused by the border change. */
-	wasVisible = Window_GetVisible();
-
-	/* To ensure maximized/minimized windows work correctly, reset state to normal,
-	change the border, then go back to maximized/minimized. */
-	int state = win_state;
-	Window_ResetWindowState();
-	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
-
-	/* Make sure client size doesn't change when changing the border style.*/
-	rect.left = win_bounds.X; rect.top = win_bounds.Y;
-	rect.right  = rect.left + win_bounds.Width;
-	rect.bottom = rect.top  + win_bounds.Height;
-	AdjustWindowRect(&rect, style, false);
-
-	/* This avoids leaving garbage on the background window. */
-	if (wasVisible) Window_SetVisible(false);
-
-	SetWindowLong(win_handle, GWL_STYLE, style);
-	SetWindowPos(win_handle, NULL, 0, 0, Rect_Width(rect), Rect_Height(rect),
-		SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
-
-	/* Force window to redraw update its borders, but only if it's
-	already visible (invisible windows will change borders when
-	they become visible, so no need to make them visiable prematurely).*/
-	if (wasVisible) Window_SetVisible(true);
-
-	Window_SetWindowState(state);
-}
-
-static void Window_SetHiddenBorder(bool hidden) {
-	suppress_resize++;
-	Window_DoSetHiddenBorder(hidden);
-	Window_ProcessEvents();
-	suppress_resize--;
-}
-
-static CC_INLINE void Window_SetRect(Rect2D* dst, const RECT* src) {
-	dst->X = src->left;
-	dst->Y = src->top;
-	dst->Width  = src->right  - src->left;
-	dst->Height = src->bottom - src->top;
-}
-
 static void Window_RefreshBounds(void) {
 	RECT rect;
 	POINT topLeft = { 0, 0 };
 
 	GetWindowRect(win_handle, &rect);
-	Window_SetRect(&win_bounds, &rect);
+	win_bounds.X = rect.left; win_bounds.Width  = rect.right - rect.left;
+	win_bounds.Y = rect.top;  win_bounds.Height = rect.bottom - rect.top;
 
 	GetClientRect(win_handle, &rect);
 	Window_Width  = rect.right  - rect.left;
@@ -250,48 +189,15 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	{
 		WINDOWPOS* pos = (WINDOWPOS*)lParam;
 		if (pos->hwnd != win_handle) break;
-
-		bool moved = pos->x  != win_bounds.X     || pos->y  != win_bounds.Y;
 		bool sized = pos->cx != win_bounds.Width || pos->cy != win_bounds.Height;
-		if (moved) Window_RefreshBounds();
 
-		if (sized) {
-			Window_RefreshBounds();
-			SetWindowPos(win_handle, NULL,
-				win_bounds.X, win_bounds.Y, win_bounds.Width, win_bounds.Height,
-				SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
-
-			if (suppress_resize <= 0) {
-				Event_RaiseVoid(&WindowEvents.Resized);
-			}
-		}
+		Window_RefreshBounds();
+		if (sized && !suppress_resize) Event_RaiseVoid(&WindowEvents.Resized);
 	} break;
-
-	case WM_STYLECHANGED:
-		if (wParam == GWL_STYLE) {
-			DWORD style = ((STYLESTRUCT*)lParam)->styleNew;
-			if (style & WS_POPUP) {
-				win_hiddenBorder = true;
-			} else if (style & WS_THICKFRAME) {
-				win_hiddenBorder = false;
-			}
-		}
-		break;
 
 	case WM_SIZE:
-	{
-		int new_state = win_state;
-		switch (wParam) {
-		case SIZE_RESTORED:  new_state = WINDOW_STATE_NORMAL; break;
-		case SIZE_MINIMIZED: new_state = WINDOW_STATE_MINIMISED; break;
-		case SIZE_MAXIMIZED: new_state = win_hiddenBorder ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_MAXIMISED; break;
-		}
-
-		if (new_state != win_state) {
-			win_state = new_state;
-			Event_RaiseVoid(&WindowEvents.StateChanged);
-		}
-	} break;
+		Event_RaiseVoid(&WindowEvents.StateChanged);
+		break;
 
 	case WM_CHAR:
 		if (Convert_TryUnicodeToCP437((Codepoint)wParam, &keyChar)) {
@@ -556,8 +462,6 @@ void Window_SetSize(int width, int height) {
 }
 
 void* Window_GetHandle(void) { return win_handle; }
-
-bool Window_GetVisible(void) { return IsWindowVisible(win_handle); }
 void Window_SetVisible(bool visible) {
 	if (visible) {
 		ShowWindow(win_handle, SW_SHOW);
@@ -573,60 +477,47 @@ void Window_Close(void) {
 	PostMessage(win_handle, WM_CLOSE, 0, 0);
 }
 
-int Window_GetWindowState(void) { return win_state; }
-void Window_SetWindowState(int state) {
-	if (win_state == state) return;
+int Window_GetWindowState(void) {
+	DWORD style = GetWindowLong(win_handle, GWL_STYLE);
+	if (style & WS_MINIMIZE) return WINDOW_STATE_MINIMISED;
 
-	DWORD command = 0;
-	bool exiting_fullscreen = false;
-
-	switch (state) {
-	case WINDOW_STATE_NORMAL:
-		command = SW_RESTORE;
-
-		/* If we are leaving fullscreen mode we need to restore the border. */
-		if (win_state == WINDOW_STATE_FULLSCREEN)
-			exiting_fullscreen = true;
-		break;
-
-	case WINDOW_STATE_MAXIMISED:
-		/* Reset state to avoid strange interactions with fullscreen/minimized windows. */
-		Window_ResetWindowState();
-		command = SW_MAXIMIZE;
-		break;
-
-	case WINDOW_STATE_MINIMISED:
-		command = SW_MINIMIZE;
-		break;
-
-	case WINDOW_STATE_FULLSCREEN:
-		/* We achieve fullscreen by hiding the window border and sending the MAXIMIZE command.
-		We cannot use the WindowState.Maximized directly, as that will not send the MAXIMIZE
-		command for windows with hidden borders. */
-
-		/* Reset state to avoid strange side-effects from maximized/minimized windows. */
-		Window_ResetWindowState();
-		prev_bounds = win_bounds;
-		Window_SetHiddenBorder(true);
-
-		command = SW_MAXIMIZE;
-		SetForegroundWindow(win_handle);
-		break;
+	if (style & WS_MAXIMIZE) {
+		return (style & WS_POPUP) ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_MAXIMISED;
 	}
+	return WINDOW_STATE_NORMAL;
+}
 
-	if (command != 0) ShowWindow(win_handle, command);
+static void Window_ToggleFullscreen(bool fullscreen, UINT finalShow) {
+	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+	style |= (fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW);
 
-	/* Restore previous window border or apply pending border change when leaving fullscreen mode. */
-	if (exiting_fullscreen) Window_SetHiddenBorder(false);
-
-	/* Restore previous window size/location if necessary */
-	if (command == SW_RESTORE && (prev_bounds.Width || prev_bounds.Height)) {
-		Rect2D rect = prev_bounds;
-		/* NOTE: the bounds variable is updated when the resize/move message arrives. */
-		SetWindowPos(win_handle, NULL, rect.X, rect.Y, rect.Width, rect.Height, 0);
-
-		prev_bounds.Width = 0; prev_bounds.Height = 0;
+	suppress_resize = true;
+	{
+		ShowWindow(win_handle, SW_RESTORE); /* reset maximised state */
+		SetWindowLong(win_handle, GWL_STYLE, style);
+		SetWindowPos(win_handle, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+		ShowWindow(win_handle, finalShow); 
+		Window_ProcessEvents();
 	}
+	suppress_resize = false;
+
+	/* call Resized event only once */
+	Window_RefreshBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
+}
+
+static UINT win_show;
+void Window_EnterFullscreen(void) {
+	WINDOWPLACEMENT w = { 0 };
+	w.length = sizeof(WINDOWPLACEMENT);
+	GetWindowPlacement(win_handle, &w);
+
+	win_show = w.showCmd;
+	Window_ToggleFullscreen(true, SW_MAXIMIZE);
+}
+
+void Window_ExitFullscreen(void) {
+	Window_ToggleFullscreen(false, win_show);
 }
 
 void Window_ProcessEvents(void) {
@@ -976,12 +867,6 @@ void Window_SetClipboardText(const String* value) {
 	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
 }
 
-bool Window_GetVisible(void) {
-	XWindowAttributes attr;
-	XGetWindowAttributes(win_display, win_handle, &attr);
-	return attr.map_state == IsViewable;
-}
-
 void Window_SetVisible(bool visible) {
 	if (visible) {
 		XMapWindow(win_display, win_handle);
@@ -1043,44 +928,24 @@ static void Window_SendNetWMState(long op, Atom a1, Atom a2) {
 		SubstructureRedirectMask | SubstructureNotifyMask, &ev);
 }
 
-void Window_SetWindowState(int state) {
-	int current_state = Window_GetWindowState();
-	if (current_state == state) return;
+static void Window_ToggleFullscreen(long op) {
+	Window_SendNetWMState(op, net_wm_state_fullscreen, 0);
+	XSync(win_display, false);
+	XRaiseWindow(win_display, win_handle);
+	Window_ProcessEvents();
+}
 
-	/* Reset the current window state */
-	if (current_state == WINDOW_STATE_MINIMISED) {
-		XMapWindow(win_display, win_handle);
-	} else if (current_state == WINDOW_STATE_FULLSCREEN) {
-		Window_SendNetWMState(_NET_WM_STATE_REMOVE, net_wm_state_fullscreen, 0);
-	} else if (current_state == WINDOW_STATE_MAXIMISED) {
+void Window_EnterFullscreen(void) {
+	/* TODO: Do we actually need to remove maximised state? */
+	if (Window_GetWindowState() == WINDOW_STATE_MAXIMISED) {
 		Window_SendNetWMState(_NET_WM_STATE_TOGGLE, net_wm_state_maximized_horizontal, 
 			net_wm_state_maximized_vertical);
 	}
+	Window_ToggleFullscreen(_NET_WM_STATE_ADD);
+}
 
-	XSync(win_display, false);
-
-	switch (state) {
-	case WINDOW_STATE_NORMAL:
-		XRaiseWindow(win_display, win_handle);
-		break;
-
-	case WINDOW_STATE_MAXIMISED:
-		Window_SendNetWMState(_NET_WM_STATE_ADD, net_wm_state_maximized_horizontal,
-			net_wm_state_maximized_vertical);
-		XRaiseWindow(win_display, win_handle);
-		break;
-
-	case WINDOW_STATE_MINIMISED:
-		/* TODO: multiscreen support */
-		XIconifyWindow(win_display, win_handle, win_screen);
-		break;
-
-	case WINDOW_STATE_FULLSCREEN:
-		Window_SendNetWMState(_NET_WM_STATE_ADD, net_wm_state_fullscreen, 0);
-		XRaiseWindow(win_display, win_handle);
-		break;
-	}
-	Window_ProcessEvents();
+void Window_ExitFullscreen(void) {
+	Window_ToggleFullscreen(_NET_WM_STATE_REMOVE);
 }
 
 void Window_SetSize(int width, int height) {
@@ -1575,12 +1440,10 @@ void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 #include <Carbon/Carbon.h>
 
 static WindowRef win_handle;
-static int win_state;
-/* Hacks for fullscreen */
-static bool ctx_pendingWindowed, ctx_pendingFullscreen;
-
-#define Rect_Width(rect)  (rect.right  - rect.left)
-#define Rect_Height(rect) (rect.bottom - rect.top)
+static bool win_fullscreen;
+/* fullscreen is tied to OpenGL context unfortunately */
+static void GLContext_UnsetFullscreen(void);
+static void GLContext_SetFullscreen(void);
 
 /*########################################################################################################################*
 *-----------------------------------------------------Private details-----------------------------------------------------*
@@ -1610,7 +1473,7 @@ static Key Window_MapKey(UInt32 key) { return key < Array_Elems(key_map) ? key_m
 static void Window_RefreshBounds(void) {
 	Rect r;
 	OSStatus res;
-	if (win_state == WINDOW_STATE_FULLSCREEN) return;
+	if (win_fullscreen) return;
 	
 	/* TODO: kWindowContentRgn ??? */
 	res = GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
@@ -1618,42 +1481,6 @@ static void Window_RefreshBounds(void) {
 
 	Window_X = r.left; Window_Width  = r.right  - r.left;
 	Window_Y = r.top;  Window_Height = r.bottom - r.top;
-}
-
-static void Window_UpdateWindowState(void) {
-	Point idealSize;
-	OSStatus res;
-
-	switch (win_state) {
-	case WINDOW_STATE_FULLSCREEN:
-		ctx_pendingFullscreen = true;
-		break;
-
-	case WINDOW_STATE_MAXIMISED:
-		/* Hack because OSX has no concept of maximised. Instead windows are "zoomed", 
-		meaning they are maximised up to their reported ideal size. So report a large ideal size. */
-		idealSize.v = 9000; idealSize.h = 9000;
-		res = ZoomWindowIdeal(win_handle, inZoomOut, &idealSize);
-		if (res) Logger_Abort2(res, "Maximising window");
-		break;
-
-	case WINDOW_STATE_NORMAL:
-		if (Window_GetWindowState() == WINDOW_STATE_MAXIMISED) {
-			idealSize.v = 0; idealSize.h = 0;
-			res = ZoomWindowIdeal(win_handle, inZoomIn, &idealSize);
-			if (res) Logger_Abort2(res, "Un-maximising window");
-		}
-		break;
-
-	case WINDOW_STATE_MINIMISED:
-		res = CollapseWindow(win_handle, true);
-		if (res) Logger_Abort2(res, "Minimising window");
-		break;
-	}
-
-	Event_RaiseVoid(&WindowEvents.StateChanged);
-	Window_RefreshBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
 static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
@@ -1745,7 +1572,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	
 	mousePos.X = (int)pt.x; mousePos.Y = (int)pt.y;
 	/* kEventParamMouseLocation is in screen coordinates */
-	if (win_state != WINDOW_STATE_FULLSCREEN) {
+	if (!win_fullscreen) {
 		mousePos.X -= Window_X;
 		mousePos.Y -= Window_Y;
 	}
@@ -1979,7 +1806,6 @@ void Window_SetClipboardText(const String* value) {
 }
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
-bool Window_GetVisible(void) { return IsWindowVisible(win_handle); }
 void Window_SetVisible(bool visible) {
 	if (visible) {
 		ShowWindow(win_handle);
@@ -1993,30 +1819,27 @@ void Window_SetVisible(bool visible) {
 void* Window_GetHandle(void) { return win_handle; }
 
 int Window_GetWindowState(void) {
-	if (win_state == WINDOW_STATE_FULLSCREEN)
-		return WINDOW_STATE_FULLSCREEN;
+	if (win_fullscreen) return WINDOW_STATE_FULLSCREEN;
+
 	if (IsWindowCollapsed(win_handle))
 		return WINDOW_STATE_MINIMISED;
 	if (IsWindowInStandardState(win_handle, NULL, NULL))
 		return WINDOW_STATE_MAXIMISED;
 	return WINDOW_STATE_NORMAL;
 }
-void Window_SetWindowState(int state) {
-	int old_state = Window_GetWindowState();
-	OSStatus err;
 
-	if (state == old_state) return;
-	win_state = state;
+static void Window_UpdateWindowState(void) {
+	Event_RaiseVoid(&WindowEvents.StateChanged);
+	Window_RefreshBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
+}
 
-	if (old_state == WINDOW_STATE_FULLSCREEN) {
-		ctx_pendingWindowed = true;
-		/* When returning from full screen, wait until the context is updated to actually do the work. */
-		return;
-	}
-	if (old_state == WINDOW_STATE_MINIMISED) {
-		err = CollapseWindow(win_handle, false);
-		if (err) Logger_Abort2(err, "Un-minimising window");
-	}
+void Window_EnterFullscreen(void) {
+	GLContext_SetFullscreen();
+	Window_UpdateWindowState();
+}
+void Window_ExitFullscreen(void) {
+	GLContext_UnsetFullscreen();
 	Window_UpdateWindowState();
 }
 
@@ -2249,10 +2072,6 @@ void Window_SetClipboardText(const String* value) {
 	SDL_SetClipboardText(str);
 }
 
-bool Window_GetVisible(void) {
-	return (SDL_GetWindowFlags(win_handle) & SDL_WINDOW_SHOWN) != 0;
-}
-
 void Window_SetVisible(bool visible) {
 	if (visible) {
 		SDL_ShowWindow(win_handle);
@@ -2272,22 +2091,10 @@ int Window_GetWindowState(void) {
 	return WINDOW_STATE_NORMAL;
 }
 
-void Window_SetWindowState(int state) {
-	switch (state) {
-		case WINDOW_STATE_NORMAL:
-			SDL_RestoreWindow(win_handle);
-			break;
-		case WINDOW_STATE_FULLSCREEN:
-			SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
-			break;
-		case WINDOW_STATE_MAXIMISED:
-			SDL_MaximizeWindow(win_handle);
-			break;
-		case WINDOW_STATE_MINIMISED:
-			SDL_MinimizeWindow(win_handle);
-			break;
-	}
+void Window_EnterFullscreen(void) {
+	SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
 }
+void Window_ExitFullscreen(void) { SDL_RestoreWindow(win_handle); }
 
 void Window_SetSize(int width, int height) {
 	SDL_SetWindowSize(win_handle, width, height);
@@ -2852,7 +2659,6 @@ void Window_SetClipboardText(const String* value) {
 	String_Copy(&clipboardStr, value);
 }
 
-bool Window_GetVisible(void) { return true; }
 void Window_SetVisible(bool visible) { }
 void* Window_GetHandle(void) { return NULL; }
 
@@ -2862,24 +2668,17 @@ int Window_GetWindowState(void) {
 	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
 
-void Window_SetWindowState(int state) {
+void Window_EnterFullscreen(void) {
 	EmscriptenFullscreenStrategy strategy;
+	strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
+	strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
+	strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
 
-	switch (state) {
-	case WINDOW_STATE_NORMAL:
-		emscripten_exit_fullscreen();
-		break;
-	case WINDOW_STATE_FULLSCREEN:
-		strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
-		strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
-		strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
-
-		strategy.canvasResizedCallback         = Window_CanvasResize;
-		strategy.canvasResizedCallbackUserData = NULL;
-		emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
-		break;
-	}
+	strategy.canvasResizedCallback         = Window_CanvasResize;
+	strategy.canvasResizedCallbackUserData = NULL;
+	emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
 }
+void Window_ExitFullscreen(void) { emscripten_exit_fullscreen(); }
 
 void Window_SetSize(int width, int height) {
 	emscripten_set_canvas_element_size(NULL, width, height);
@@ -3166,7 +2965,7 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 #include <AGL/agl.h>
 
 static AGLContext ctx_handle;
-static bool ctx_fullscreen, ctx_firstFullscreen;
+static bool win_fullscreen, ctx_firstFullscreen;
 static int ctx_windowWidth, ctx_windowHeight;
 
 static void GLContext_Check(int code, const char* place) {
@@ -3221,8 +3020,7 @@ static void GLContext_UnsetFullscreen(void) {
 	CGDisplayRelease(CGMainDisplayID());
 	GLContext_SetDrawable();
 
-	ctx_fullscreen = false;
-	Window_UpdateWindowState();
+	win_fullscreen = false;
 	Window_SetSize(ctx_windowWidth, ctx_windowHeight);
 }
 
@@ -3248,13 +3046,12 @@ static void GLContext_SetFullscreen(void) {
 		return;
 	}
 
-	ctx_fullscreen   = true;
+	win_fullscreen   = true;
 	ctx_windowWidth  = Window_Width;
 	ctx_windowHeight = Window_Height;
 
 	Window_X = Display_Bounds.X; Window_Width  = Display_Bounds.Width;
 	Window_Y = Display_Bounds.Y; Window_Height = Display_Bounds.Height;
-	win_state = WINDOW_STATE_FULLSCREEN;
 }
 
 void GLContext_Init(struct GraphicsMode* mode) {
@@ -3294,16 +3091,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 }
 
 void GLContext_Update(void) {
-	if (ctx_pendingFullscreen) {
-		ctx_pendingFullscreen = false;
-		GLContext_SetFullscreen();
-		return;
-	} else if (ctx_pendingWindowed) {
-		ctx_pendingWindowed = false;
-		GLContext_UnsetFullscreen();
-	}
-
-	if (ctx_fullscreen) return;
+	if (win_fullscreen) return;
 	GLContext_SetDrawable();
 	aglUpdateContext(ctx_handle);
 }

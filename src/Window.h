@@ -71,17 +71,16 @@ CC_API void Window_GetClipboardText(String* value);
 CC_API void Window_SetClipboardText(const String* value);
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
-/* Whether the window is visible on screen at all. */
-/* NOTE: This does not count when just hidden behind other windows. */
-bool Window_GetVisible(void);
 /* Sets whether the window is visible on screen at all. */
 void Window_SetVisible(bool visible);
 /* Returns the platform-specific handle to the window. */
 void* Window_GetHandle(void);
 /* Gets the current state of the window, see WindowState enum. */
 int Window_GetWindowState(void);
-/* Sets the current state of the window, see WindowState enum. */
-void Window_SetWindowState(int state);
+/* Switches the window to occupy the entire screen. */
+void Window_EnterFullscreen(void);
+/* Restores the window to before it entered full screen. */
+void Window_ExitFullscreen(void);
 
 /* Sets the size of the internal bounds of the window. */
 /* NOTE: This size excludes the bounds of borders + title */
