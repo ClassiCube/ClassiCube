@@ -102,6 +102,12 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 #define UNICODE
 #define _UNICODE
 #endif
+
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501 /* Windows XP */
+/* NOTE: Functions that are not present on Windows 2000 are dynamically loaded. */
+/* Hence the actual minimum supported OS is Windows 2000. This just avoids redeclaring structs. */
+#endif
 #include <windows.h>
 
 #define CC_WIN_STYLE WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN

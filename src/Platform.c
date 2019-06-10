@@ -1768,7 +1768,7 @@ void Platform_Init(void) {
 	/* For when user runs from command prompt */
 	/* NOTE: Need to dynamically load, not supported on Windows 2000 */
 	attach = (AttachConsoleFunc)DynamicLib_GetFrom("KERNEL32.DLL", "AttachConsole");
-	if (attach) attach(ATTACH_PARENT_PROCESS);
+	if (attach) attach((DWORD)-1); /* ATTACH_PARENT_PROCESS */
 
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (conHandle == INVALID_HANDLE_VALUE) conHandle = NULL;
