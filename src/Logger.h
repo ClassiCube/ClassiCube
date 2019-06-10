@@ -15,9 +15,9 @@ extern const char* Logger_DialogTitle;
 void Logger_DialogWarn(const String* msg);
 
 /* Informs the user about a non-fatal error, with a message of form: "Error [result] when [place] */
-void Logger_OldWarn(ReturnCode res, const char* place);
+void Logger_SimpleWarn(ReturnCode res, const char* place);
 /* Informs the user about a non-fatal error, with a message of form: "Error [result] when [place] '[path]' */
-void Logger_OldWarn2(ReturnCode res, const char* place, const String* path);
+void Logger_SimpleWarn2(ReturnCode res, const char* place, const String* path);
 /* Informs the user about a non-fatal error, with a message of either: 
 "Error [error desc] ([result]) when [place] or "Error [result] when [place] */
 void Logger_SysWarn(ReturnCode res, const char* place, Logger_DescribeError describeErr);

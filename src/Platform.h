@@ -195,7 +195,7 @@ void Font_GetNames(StringsBuffer* buffer);
 /* Finds the path and face number of the given font, with closest matching style */
 String Font_Lookup(const String* fontName, int style);
 /* Allocates a new font from the given arguments. */
-void Font_Make(FontDesc* desc, const String* fontName, int size, int style);
+ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style);
 /* Frees an allocated font. */
 CC_API void Font_Free(FontDesc* desc);
 /* Measures width of the given text when drawn with the given font. */

@@ -29,12 +29,14 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, const FontDesc* font, boo
 }
 
 void Drawer2D_MakeFont(FontDesc* desc, int size, int style) {
+	ReturnCode res;
 	if (Drawer2D_BitmappedText) {
 		desc->Handle = NULL;
 		desc->Size   = size;
 		desc->Style  = style;
 	} else {
-		Font_Make(desc, &Drawer2D_FontName, size, style);
+		res = Font_Make(desc, &Drawer2D_FontName, size, style);
+		if (res) Logger_Abort2(res, "Making default font failed");
 	}
 }
 

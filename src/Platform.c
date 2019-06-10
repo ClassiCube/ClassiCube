@@ -884,12 +884,13 @@ static void FontData_Close(FT_Stream stream) {
 	FontData_Free(data);
 }
 
-static bool FontData_Init(const String* path, struct FontData* data, FT_Open_Args* args) {
+static ReturnCode FontData_Init(const String* path, struct FontData* data, FT_Open_Args* args) {
 	FileHandle file;
 	uint32_t size;
+	ReturnCode res;
 
-	if (File_Open(&file, path)) return false;
-	if (File_Length(file, &size)) { File_Close(file); return false; }
+	if ((res = File_Open(&file, path))) return res;
+	if ((res = File_Length(file, &size))) { File_Close(file); return res; }
 
 	data->stream.base = NULL;
 	data->stream.size = size;
@@ -920,7 +921,7 @@ static bool FontData_Init(const String* path, struct FontData* data, FT_Open_Arg
 	Mem_Set(data->widths,        0xFF, sizeof(data->widths));
 	Mem_Set(data->glyphs,        0x00, sizeof(data->glyphs));
 	Mem_Set(data->shadow_glyphs, 0x00, sizeof(data->shadow_glyphs));
-	return true;
+	return 0;
 }
 
 void Font_GetNames(StringsBuffer* buffer) {
@@ -958,15 +959,16 @@ String Font_Lookup(const String* fontName, int style) {
 	return path.length ? path : Font_LookupOf(fontName, 'R');
 }
 
-void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
+ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	struct FontData* data;
 	String value, path, index;
 	int faceIndex;
 	FT_Open_Args args;
 	FT_Error err;
 
-	desc->Size  = size;
-	desc->Style = style;
+	desc->Size   = size;
+	desc->Style  = style;
+	desc->Handle = NULL;
 
 	value = Font_Lookup(fontName, style);
 	if (!value.length) Logger_Abort("Unknown font");
@@ -974,13 +976,13 @@ void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	Convert_ParseInt(&index, &faceIndex);
 
 	data = (struct FontData*)Mem_Alloc(1, sizeof(struct FontData), "FontData");
-	if (!FontData_Init(&path, data, &args)) return;
+	if ((err = FontData_Init(&path, data, &args))) { Mem_Free(data); return err; }
 	desc->Handle = data;
 
-	err = FT_New_Face(ft_lib, &args, faceIndex, &data->face);
-	if (err) Logger_Abort2(err, "Creating font failed");
-	err = FT_Set_Char_Size(data->face, size * 64, 0, DPI_DEVICE, 0);
-	if (err) Logger_Abort2(err, "Resizing font failed");
+	if ((err = FT_New_Face(ft_lib, &args, faceIndex, &data->face)))        return err;
+	if ((err = FT_Set_Char_Size(data->face, size * 64, 0, DPI_DEVICE, 0))) return err;
+
+	return 0;
 }
 
 void Font_Free(FontDesc* desc) {
@@ -1033,7 +1035,7 @@ static int Font_Register(const String* path, int faceIndex) {
 	FT_Error err;
 	int flags, count;
 
-	if (!FontData_Init(path, &data, &args)) return 0;
+	if (FontData_Init(path, &data, &args)) return 0;
 	err = FT_New_Face(ft_lib, &args, faceIndex, &data.face);
 	if (err) { FontData_Free(&data); return 0; }
 
@@ -1308,15 +1310,14 @@ String Font_Lookup(const String* fontName, int style) {
 	String str = String_FromConst("-----"); return str;
 }
 
-void Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
+ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
 	desc->Size   = size;
 	desc->Style  = style;
-	desc->Handle = NULL;
+	return 0;
 }
 void Font_Free(FontDesc* desc) {
 	desc->Size   = 0;
 	desc->Style  = 0;
-	desc->Handle = NULL;
 }
 
 int Platform_TextWidth(struct DrawTextArgs* args) { return 0; }

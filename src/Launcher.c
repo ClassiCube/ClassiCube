@@ -75,10 +75,10 @@ bool Launcher_ConnectToServer(const String* hash) {
 		Launcher_StartFromInfo(&FetchServerTask.Server);
 		return true;
 	} else if (FetchServerTask.Base.Res) {
-		Logger_OldWarn(FetchServerTask.Base.Res, "fetching server info");
+		Logger_SimpleWarn(FetchServerTask.Base.Res, "fetching server info");
 	} else if (FetchServerTask.Base.Status != 200) {
 		/* TODO: Use a better dialog message.. */
-		Logger_OldWarn(FetchServerTask.Base.Status, "fetching server info");
+		Logger_SimpleWarn(FetchServerTask.Base.Status, "fetching server info");
 	} else {
 		Window_ShowDialog("Failed to connect", "No server has that hash");
 	}

@@ -52,7 +52,7 @@ void Logger_DialogWarn(const String* msg) {
 const char* Logger_DialogTitle = "Error";
 Logger_DoWarn Logger_WarnFunc  = Logger_DialogWarn;
 
-void Logger_OldWarn(ReturnCode res, const char* place) {
+void Logger_SimpleWarn(ReturnCode res, const char* place) {
 	String msg; char msgBuffer[128];
 	String_InitArray(msg, msgBuffer);
 
@@ -60,7 +60,7 @@ void Logger_OldWarn(ReturnCode res, const char* place) {
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_OldWarn2(ReturnCode res, const char* place, const String* path) {
+void Logger_SimpleWarn2(ReturnCode res, const char* place, const String* path) {
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 

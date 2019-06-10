@@ -1423,14 +1423,21 @@ static void FontListScreen_EntryClick(void* screen, void* widget) {
 }
 
 static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const String* text) {
-	FontDesc font = { 0 };
+	FontDesc font;
+	ReturnCode res;
+
 	if (String_CaselessEqualsConst(text, LIST_SCREEN_EMPTY)) {
-		ButtonWidget_Set(button, text, &s->font);
-	} else {
-		Font_Make(&font, text, 16, FONT_STYLE_NORMAL);
-		ButtonWidget_Set(button, text, &font);
-		Font_Free(&font);
+		ButtonWidget_Set(button, text, &s->font); return;
 	}
+
+	res = Font_Make(&font, text, 16, FONT_STYLE_NORMAL);
+	if (!res) {
+		ButtonWidget_Set(button, text, &font);
+	} else {
+		Logger_SimpleWarn2(res, "making font", text);
+		ButtonWidget_Set(button, text, &s->font);
+	}
+	Font_Free(&font);
 }
 
 static void FontListScreen_Init(void* screen) {
@@ -1446,7 +1453,7 @@ static struct ScreenVTABLE FontListScreen_VTABLE = {
 	Menu_OnResize,       Menu_ContextLost,  ListScreen_ContextRecreated,
 };
 struct Screen* FontListScreen_MakeInstance(void) {
-	const static String title  = String_FromConst("Select a font");
+	const static String title = String_FromConst("Select a font");
 	struct ListScreen* s = ListScreen_MakeInstance();
 
 	s->titleText   = title;

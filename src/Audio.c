@@ -585,7 +585,7 @@ static struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES]   = { SOUND_INV, SOUND_
 static struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES] = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
 
 CC_NOINLINE static void Sounds_Fail(ReturnCode res) {
-	Logger_OldWarn(res, "playing sounds");
+	Logger_SimpleWarn(res, "playing sounds");
 	Chat_AddRaw("&cDisabling sounds");
 	Audio_SetSounds(0);
 }
@@ -850,7 +850,7 @@ static void Music_RunLoop(void) {
 
 		res = Music_PlayOgg(&stream);
 		if (res) { 
-			Logger_OldWarn2(res, "playing", &path); 
+			Logger_SimpleWarn2(res, "playing", &path); 
 			stream.Close(&stream); break;
 		}
 
