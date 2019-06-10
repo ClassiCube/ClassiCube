@@ -29,7 +29,7 @@ c_build_win32() {
   rm cc-w32-d3d.exe cc-w32-ogl.exe
 
   i686-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w32-d3d.exe CCicon_32.res -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9 -w
-  i686-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w32-ogl.exe CCicon_32.res -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32 -w
+  i686-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w32-ogl.exe CCicon_32.res -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32 -w
 }
 
 c_build_win64() {
@@ -37,7 +37,7 @@ c_build_win64() {
   rm cc-w64-d3d.exe cc-w64-ogl.exe
   
   x86_64-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w64-d3d.exe CCicon_64.res -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9 -w
-  x86_64-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w64-ogl.exe CCicon_64.res -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32 -w
+  x86_64-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w64-ogl.exe CCicon_64.res -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32 -w
 }
 
 c_build_nix32() {

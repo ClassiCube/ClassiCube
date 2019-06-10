@@ -1000,7 +1000,7 @@ void Gfx_OnWindowResize(void) {
  * - OpenGL 1.5 or OpenGL 1.2 + GL_ARB_vertex_buffer_object (default desktop backend)
  * - OpenGL 2.0 (alternative modern-ish backend)
 */
-#ifndef CC_BUILD_D3D9
+#ifdef CC_BUILD_GL
 #if defined CC_BUILD_WIN
 #include <windows.h>
 #include <GL/gl.h>

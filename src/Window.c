@@ -2740,7 +2740,7 @@ void Window_DisableRawMouse(void) {
 #endif
 
 
-#ifndef CC_BUILD_D3D9
+#ifdef CC_BUILD_GL
 /*########################################################################################################################*
 *-------------------------------------------------------WGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -2971,7 +2971,7 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 #include <AGL/agl.h>
 
 static AGLContext ctx_handle;
-static bool win_fullscreen, ctx_firstFullscreen;
+static bool ctx_firstFullscreen;
 static int ctx_windowWidth, ctx_windowHeight;
 
 static void GLContext_Check(int code, const char* place) {

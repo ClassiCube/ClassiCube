@@ -122,7 +122,7 @@ void Window_UpdateRawMouse(void);
 /* Cursor will also be unhidden and moved back to window centre. */
 void Window_DisableRawMouse(void);
 
-#ifndef CC_BUILD_D3D9
+#ifdef CC_BUILD_GL
 /* Initialises an OpenGL context that most closely matches the input arguments. */
 /* NOTE: You must have created a window beforehand, as the GL context is attached to the window. */
 void GLContext_Init(struct GraphicsMode* mode);
