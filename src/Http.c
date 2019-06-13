@@ -19,7 +19,7 @@
 #include <wininet.h>
 #define HTTP_QUERY_ETAG 54 /* Missing from some old MingW32 headers */
 #elif defined CC_BUILD_WEB
-/* Use javascript web api for Emscripten */
+/* Use fetch/XMLHttpRequest api for Emscripten */
 #include <emscripten/fetch.h>
 #elif defined CC_BUILD_CURL
 #include <curl/curl.h>
@@ -250,9 +250,10 @@ static void Http_UpdateProgress(emscripten_fetch_t* fetch) {
 
 static void Http_FinishedAsync(emscripten_fetch_t* fetch) {
 	struct HttpRequest* req = &http_curRequest;
-	req->Data       = fetch->data;
-	req->Size       = fetch->numBytes;
-	req->StatusCode = fetch->status;
+	req->Data          = fetch->data;
+	req->Size          = fetch->numBytes;
+	req->StatusCode    = fetch->status;
+	req->ContentLength = fetch->totalBytes;
 
 	/* data needs to persist beyond closing of fetch data */
 	fetch->data = NULL;
