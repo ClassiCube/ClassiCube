@@ -313,17 +313,16 @@ static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook*
 		}
 	} else {
 		len = Vorbis_ReadBits(ctx, 5) + 1;
-		for (entry = 0; entry < c->Entries; entry += runLen) {
+		for (entry = 0; entry < c->Entries;) {
 			runBits = iLog(c->Entries - entry);
 			runLen  = Vorbis_ReadBits(ctx, runBits);
 
-			for (i = entry; i < entry + runLen; i++) {
-				codewordLens[i] = len;
-			}
+			/* handle corrupted ogg files */
+			if (entry + runLen > c->Entries) return VORBIS_ERR_CODEBOOK_ENTRY;
+
+			for (i = 0; i < runLen; i++) { codewordLens[entry++] = len; }
 			c->NumCodewords[len++] = runLen;
-			if (entry > c->Entries) return VORBIS_ERR_CODEBOOK_ENTRY;
 		}
-		entry = c->Entries;
 	}
 
 	c->TotalCodewords = entry;
