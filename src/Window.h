@@ -36,10 +36,7 @@ enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_MAX
 extern int Display_BitsPerPixel;
 extern Rect2D Display_Bounds;
 
-struct GraphicsMode {
-	int R, G, B, A, BitsPerPixel, IsIndexed; /* Colour buffer data */
-	int DepthBits, StencilBits; /* Z buffer data */
-};
+struct GraphicsMode { int R, G, B, A, IsIndexed; };
 
 /* Client bounds of the window in screen coordinates. */
 /* Essentially, this is the area that can draw to (i.e. content area) */
@@ -52,8 +49,6 @@ extern bool Window_Focused;
 
 /* Initalises state for window. Also sets Display_ members. */
 void Window_Init(void);
-/* Creates a new GraphicsMode from the given data. */
-void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil);
 /* Creates a GraphicsMode compatible with the default display device. */
 void GraphicsMode_MakeDefault(struct GraphicsMode* m);
 
@@ -132,6 +127,7 @@ void GLContext_Update(void);
 /* NOTE: This also unattaches the OpenGL context from the window. */
 void GLContext_Free(void);
 
+#define GLCONTEXT_DEFAULT_DEPTH 24
 #define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 /* Returns the address of a function pointer for the given OpenGL function. */
 /* NOTE: The platform may still return an address for unsupported functions. 

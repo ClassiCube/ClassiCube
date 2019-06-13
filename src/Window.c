@@ -56,15 +56,9 @@ static void Window_DefaultDisableRawMouse(void) {
 	Cursor_SetVisible(true);
 }
 
-
-/*########################################################################################################################*
-*------------------------------------------------------GraphicsMode-------------------------------------------------------*
-*#########################################################################################################################*/
-void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil) {
-	m->DepthBits    = depth;
-	m->StencilBits  = stencil;
-	m->IsIndexed    = bpp < 15;
-	m->BitsPerPixel = bpp;
+void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
+	int bpp = Display_BitsPerPixel;
+	m->IsIndexed = bpp < 15;
 
 	m->A = 0;
 	switch (bpp) {
@@ -84,9 +78,6 @@ void GraphicsMode_Make(struct GraphicsMode* m, int bpp, int depth, int stencil) 
 		/* mode->R = 0; mode->G = 0; mode->B = 0; */
 		Logger_Abort2(bpp, "Unsupported bits per pixel"); break;
 	}
-}
-void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
-	GraphicsMode_Make(m, Display_BitsPerPixel, 24, 0);
 }
 
 
@@ -2758,15 +2749,13 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
 	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
 	pfd.cColorBits = mode->R + mode->G + mode->B;
+	pfd.cDepthBits = GLCONTEXT_DEFAULT_DEPTH;
 
 	pfd.iPixelType = mode->IsIndexed ? PFD_TYPE_COLORINDEX : PFD_TYPE_RGBA;
 	pfd.cRedBits   = mode->R;
 	pfd.cGreenBits = mode->G;
 	pfd.cBlueBits  = mode->B;
 	pfd.cAlphaBits = mode->A;
-
-	pfd.cDepthBits   = mode->DepthBits;
-	pfd.cStencilBits = mode->StencilBits;
 
 	int modeIndex = ChoosePixelFormat(win_DC, &pfd);
 	if (modeIndex == 0) { Logger_Abort("Requested graphics mode not available"); }
@@ -2913,13 +2902,7 @@ static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs) {
 	attribs[i++] = GLX_GREEN_SIZE; attribs[i++] = mode->G;
 	attribs[i++] = GLX_BLUE_SIZE;  attribs[i++] = mode->B;
 	attribs[i++] = GLX_ALPHA_SIZE; attribs[i++] = mode->A;
-
-	if (mode->DepthBits) {
-		attribs[i++] = GLX_DEPTH_SIZE;   attribs[i++] = mode->DepthBits;
-	}
-	if (mode->StencilBits) {
-		attribs[i++] = GLX_STENCIL_SIZE; attribs[i++] = mode->StencilBits;
-	}
+	attribs[i++] = GLX_DEPTH_SIZE; attribs[i++] = GLCONTEXT_DEFAULT_DEPTH;
 
 	attribs[i++] = GLX_DOUBLEBUFFER;
 	attribs[i++] = 0;
@@ -3001,13 +2984,7 @@ static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs, bool f
 	attribs[i++] = AGL_GREEN_SIZE; attribs[i++] = mode->G;
 	attribs[i++] = AGL_BLUE_SIZE;  attribs[i++] = mode->B;
 	attribs[i++] = AGL_ALPHA_SIZE; attribs[i++] = mode->A;
-
-	if (mode->DepthBits) {
-		attribs[i++] = AGL_DEPTH_SIZE;   attribs[i++] = mode->DepthBits;
-	}
-	if (mode->StencilBits) {
-		attribs[i++] = AGL_STENCIL_SIZE; attribs[i++] = mode->StencilBits;
-	}
+	attribs[i++] = AGL_DEPTH_SIZE; attribs[i++] = GLCONTEXT_DEFAULT_DEPTH;
 
 	attribs[i++] = AGL_DOUBLEBUFFER;
 	if (fullscreen) { attribs[i++] = AGL_FULLSCREEN; }
@@ -3144,8 +3121,8 @@ void GLContext_Init(struct GraphicsMode* mode) {
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  mode->B);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, mode->A);
 
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   mode->DepthBits);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, mode->StencilBits);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   GLCONTEXT_DEFAULT_DEPTH);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, true);
 
 	win_ctx = SDL_GL_CreateContext(win_handle);
@@ -3195,7 +3172,8 @@ void GLContext_Init(struct GraphicsMode* mode) {
 	static EGLint attribs[19] = {
 		EGL_RED_SIZE,  0, EGL_GREEN_SIZE,  0,
 		EGL_BLUE_SIZE, 0, EGL_ALPHA_SIZE,  0,
-		EGL_DEPTH_SIZE,0, EGL_STENCIL_SIZE,0,
+		EGL_DEPTH_SIZE,        GLCONTEXT_DEFAULT_DEPTH,
+		EGL_STENCIL_SIZE,      0,
 		EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
 		EGL_RENDERABLE_TYPE,   EGL_OPENGL_ES2_BIT,
 		EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
@@ -3204,8 +3182,6 @@ void GLContext_Init(struct GraphicsMode* mode) {
 
 	attribs[1]  = mode->R; attribs[3] = mode->G;
 	attribs[5]  = mode->B; attribs[7] = mode->A;
-	attribs[9]  = mode->DepthBits;
-	attribs[11] = mode->StencilBits;
 
 	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 	eglInitialize(ctx_display, NULL, NULL);
