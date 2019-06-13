@@ -11,16 +11,16 @@ struct ScheduledTask;
 extern struct IGameComponent Particles_Component;
 
 struct Particle {
-	Vector3 velocity;
+	Vec3 velocity;
 	float lifetime;
-	Vector3 lastPos, nextPos;
+	Vec3 lastPos, nextPos;
 	uint8_t size;
 };
 
 /* http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/ */
-void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices);
+void Particle_DoRender(Vec2* size, Vec3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices);
 void Particles_Render(double delta, float t);
 void Particles_Tick(struct ScheduledTask* task);
-void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block);
-void Particles_RainSnowEffect(Vector3 pos);
+void Particles_BreakBlockEffect(IVec3 coords, BlockID oldBlock, BlockID block);
+void Particles_RainSnowEffect(Vec3 pos);
 #endif

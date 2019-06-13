@@ -21,7 +21,7 @@ struct ChunkPartInfo* MapRenderer_PartsNormal;
 struct ChunkPartInfo* MapRenderer_PartsTranslucent;
 
 static bool inTranslucent;
-static Vector3I chunkPos;
+static IVec3 chunkPos;
 
 /* The number of non-empty Normal/Translucent ChunkPartInfos (across entire world) for each 1D atlas batch. */
 /* 1D atlas batches that do not have any ChunkPartInfos can be entirely skipped. */
@@ -83,10 +83,10 @@ CC_NOINLINE static int MapRenderer_UsedAtlases(void) {
 *-------------------------------------------------------Map rendering-----------------------------------------------------*
 *#########################################################################################################################*/
 static void MapRenderer_CheckWeather(double delta) {
-	Vector3I pos;
+	IVec3 pos;
 	BlockID block;
 	bool outside;
-	Vector3I_Floor(&pos, &Camera.CurrentPos);
+	IVec3_Floor(&pos, &Camera.CurrentPos);
 
 	block   = World_SafeGetBlock_3I(pos);
 	outside = pos.Y < 0 || World_ContainsXZ(pos.X, pos.Z);
@@ -391,7 +391,7 @@ static void MapRenderer_DeleteChunks(void) {
 
 void MapRenderer_Refresh(void) {
 	int oldCount;
-	chunkPos = Vector3I_MaxValue();
+	chunkPos = IVec3_MaxValue();
 
 	if (mapChunks && World.Blocks) {
 		MapRenderer_DeleteChunks();
@@ -412,7 +412,7 @@ void MapRenderer_RefreshBorders(int maxHeight) {
 	int cx, cy, cz;
 	bool onBorder;
 
-	chunkPos = Vector3I_MaxValue();
+	chunkPos = IVec3_MaxValue();
 	if (!mapChunks || !World.Blocks) return;
 
 	for (cz = 0; cz < MapRenderer_ChunksZ; cz++) {
@@ -434,7 +434,7 @@ void MapRenderer_RefreshBorders(int maxHeight) {
 *#########################################################################################################################*/
 #define CHUNK_TARGET_TIME ((1.0/30) + 0.01)
 static int chunksTarget = 12;
-static Vector3 lastCamPos;
+static Vec3 lastCamPos;
 static float lastHeadY, lastHeadX;
 /* Max distance from camera that chunks are rendered within */
 /* This may differ from the view distance configured by the user */
@@ -533,7 +533,7 @@ static void MapRenderer_UpdateChunks(double delta) {
 	Math_Clamp(chunksTarget, 4, MapRenderer_MaxUpdates);
 
 	p = &LocalPlayer_Instance;
-	samePos = Vector3_Equals(&Camera.CurrentPos, &lastCamPos)
+	samePos = Vec3_Equals(&Camera.CurrentPos, &lastCamPos)
 		&& p->Base.HeadX == lastHeadX && p->Base.HeadY == lastHeadY;
 
 	renderChunksCount = samePos ?
@@ -570,18 +570,18 @@ static void MapRenderer_QuickSort(int left, int right) {
 
 static void MapRenderer_UpdateSortOrder(void) {
 	struct ChunkInfo* info;
-	Vector3I pos;
+	IVec3 pos;
 	int dXMin, dXMax, dYMin, dYMax, dZMin, dZMax;
 	int i, dx, dy, dz;
 
 	/* pos is centre coordinate of chunk camera is in */
-	Vector3I_Floor(&pos, &Camera.CurrentPos);
+	IVec3_Floor(&pos, &Camera.CurrentPos);
 	pos.X = (pos.X & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
 	pos.Y = (pos.Y & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
 	pos.Z = (pos.Z & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
 
 	/* If in same chunk, don't need to recalculate sort order */
-	if (Vector3I_Equals(&pos, &chunkPos)) return;
+	if (IVec3_Equals(&pos, &chunkPos)) return;
 	chunkPos = pos;
 	if (!MapRenderer_ChunksCount) return;
 
@@ -729,7 +729,7 @@ static void MapRenderer_BlockDefinitionChanged(void* obj) {
 }
 
 static void MapRenderer_RecalcVisibility(void* obj) {
-	lastCamPos = Vector3_BigPos();
+	lastCamPos = Vec3_BigPos();
 	MapRenderer_CalcViewDists();
 }
 static void MapRenderer_DeleteChunks_(void* obj) { MapRenderer_DeleteChunks(); }
@@ -740,7 +740,7 @@ static void MapRenderer_OnNewMap(void) {
 	MapRenderer_DeleteChunks();
 	MapRenderer_ResetPartCounts();
 
-	chunkPos = Vector3I_MaxValue();
+	chunkPos = IVec3_MaxValue();
 	MapRenderer_FreeChunks();
 	MapRenderer_FreeParts();
 }
@@ -763,7 +763,7 @@ static void MapRenderer_OnNewMapLoaded(void) {
 
 	MapRenderer_InitChunks();
 	Builder_OnNewMapLoaded();
-	lastCamPos = Vector3_BigPos();
+	lastCamPos = Vec3_BigPos();
 }
 
 static void MapRenderer_Init(void) {
@@ -778,7 +778,7 @@ static void MapRenderer_Init(void) {
 
 	/* This = 87 fixes map being invisible when no textures */
 	MapRenderer_1DUsedCount = 87; /* Atlas1D_UsedAtlasesCount(); */
-	chunkPos   = Vector3I_MaxValue();
+	chunkPos   = IVec3_MaxValue();
 	MapRenderer_MaxUpdates = Options_GetInt(OPT_MAX_CHUNK_UPDATES, 4, 1024, 30);
 
 	Builder_Init();

@@ -72,11 +72,11 @@ struct Model {
 	bool Bobbing;
 	bool UsesSkin, CalcHumanAnims, UsesHumanSkin, Pushes;
 
-	float Gravity; Vector3 Drag, GroundFriction;
+	float Gravity; Vec3 Drag, GroundFriction;
 
 	/* Returns the transformation matrix applied to the model when rendering. */
 	/* NOTE: Most models just use Entity_GetTransform (except SittingModel) */
-	void (*GetTransform)(struct Entity* entity, Vector3 pos, struct Matrix* m);
+	void (*GetTransform)(struct Entity* entity, Vec3 pos, struct Matrix* m);
 	void (*DrawArm)(struct Entity* entity);
 
 	float MaxScale, ShadowScale, NameScale;

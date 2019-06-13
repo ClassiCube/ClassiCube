@@ -40,14 +40,14 @@ void LocationUpdate_MakeOri(struct LocationUpdate* update, float rotY, float hea
 	update->HeadY = LocationUpdate_Clamp(rotY);
 }
 
-void LocationUpdate_MakePos(struct LocationUpdate* update, Vector3 pos, bool rel) {
+void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, bool rel) {
 	*update = loc_empty;
 	update->Flags = LOCATIONUPDATE_FLAG_POS;
 	update->Pos   = pos;
 	update->RelativePos = rel;
 }
 
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, float rotY, float headX, bool rel) {
+void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float rotY, float headX, bool rel) {
 	*update = loc_empty;
 	update->Flags = LOCATIONUPDATE_FLAG_POS | LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
 	update->HeadX = LocationUpdate_Clamp(headX);
@@ -61,27 +61,27 @@ void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, fl
 *---------------------------------------------------------Entity----------------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol Entity_GetCol(struct Entity* e) {
-	Vector3 eyePos = Entity_GetEyePosition(e);
-	Vector3I pos; Vector3I_Floor(&pos, &eyePos);
+	Vec3 eyePos = Entity_GetEyePosition(e);
+	IVec3 pos; IVec3_Floor(&pos, &eyePos);
 	return World_Contains(pos.X, pos.Y, pos.Z) ? Lighting_Col(pos.X, pos.Y, pos.Z) : Env.SunCol;
 }
 
 void Entity_Init(struct Entity* e) {
-	e->ModelScale = Vector3_Create1(1.0f);
+	e->ModelScale = Vec3_Create1(1.0f);
 	e->uScale = 1.0f;
 	e->vScale = 1.0f;
 	e->SkinNameRaw[0] = '\0';
 }
 
-Vector3 Entity_GetEyePosition(struct Entity* e) {
-	Vector3 pos = e->Position; pos.Y += Entity_GetEyeHeight(e); return pos;
+Vec3 Entity_GetEyePosition(struct Entity* e) {
+	Vec3 pos = e->Position; pos.Y += Entity_GetEyeHeight(e); return pos;
 }
 
 float Entity_GetEyeHeight(struct Entity* e) {
 	return e->Model->GetEyeY(e) * e->ModelScale.Y;
 }
 
-void Entity_GetTransform(struct Entity* e, Vector3 pos, Vector3 scale, struct Matrix* m) {
+void Entity_GetTransform(struct Entity* e, Vec3 pos, Vec3 scale, struct Matrix* m) {
 	struct Matrix tmp;
 	*m = Matrix_Identity;
 
@@ -114,7 +114,7 @@ static void Entity_ParseScale(struct Entity* e, const String* scale) {
 	/* local player doesn't allow giant model scales */
 	/* (can't climb stairs, extremely CPU intensive collisions) */
 	if (e->ModelRestrictedScale) { value = min(value, e->Model->MaxScale); }
-	e->ModelScale = Vector3_Create1(value);
+	e->ModelScale = Vec3_Create1(value);
 }
 
 static void Entity_SetBlockModel(struct Entity* e, const String* model) {
@@ -132,13 +132,13 @@ static void Entity_SetBlockModel(struct Entity* e, const String* model) {
 
 void Entity_SetModel(struct Entity* e, const String* model) {
 	String name, scale, skin;
-	e->ModelScale = Vector3_Create1(1.0f);
+	e->ModelScale = Vec3_Create1(1.0f);
 	String_UNSAFE_Separate(model, '|', &name, &scale);
 
 	/* 'giant' model kept for backwards compatibility */
 	if (String_CaselessEqualsConst(&name, "giant")) {
 		name = String_FromReadonly("humanoid");
-		e->ModelScale = Vector3_Create1(2.0f);
+		e->ModelScale = Vec3_Create1(2.0f);
 	}
 
 	e->ModelBlock   = BLOCK_AIR;
@@ -158,20 +158,20 @@ void Entity_UpdateModelBounds(struct Entity* e) {
 	model->GetCollisionSize(e);
 	model->GetPickingBounds(e);
 
-	Vector3_Mul3By(&e->Size,          &e->ModelScale);
-	Vector3_Mul3By(&e->ModelAABB.Min, &e->ModelScale);
-	Vector3_Mul3By(&e->ModelAABB.Max, &e->ModelScale);
+	Vec3_Mul3By(&e->Size,          &e->ModelScale);
+	Vec3_Mul3By(&e->ModelAABB.Min, &e->ModelScale);
+	Vec3_Mul3By(&e->ModelAABB.Max, &e->ModelScale);
 }
 
 bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition) {
-	Vector3I bbMin, bbMax;
+	IVec3 bbMin, bbMax;
 	BlockID block;
 	struct AABB blockBB;
-	Vector3 v;
+	Vec3 v;
 	int x, y, z;
 
-	Vector3I_Floor(&bbMin, &bounds->Min);
-	Vector3I_Floor(&bbMax, &bounds->Max);
+	IVec3_Floor(&bbMin, &bounds->Min);
+	IVec3_Floor(&bbMax, &bounds->Max);
 
 	bbMin.X = max(bbMin.X, 0); bbMax.X = min(bbMax.X, World.MaxX);
 	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World.MaxY);
@@ -182,8 +182,8 @@ bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition) {
 			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
 
 				block = World_GetBlock(x, y, z);
-				Vector3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
-				Vector3_Add(&blockBB.Max, &v, &Blocks.MaxBB[block]);
+				Vec3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
+				Vec3_Add(&blockBB.Max, &v, &Blocks.MaxBB[block]);
 
 				if (!AABB_Intersects(&blockBB, bounds)) continue;
 				if (condition(block)) return true;
@@ -200,7 +200,7 @@ bool Entity_TouchesAnyRope(struct Entity* e) {
 	return Entity_TouchesAny(&bounds, Entity_IsRope);
 }
 
-static Vector3 entity_liqExpand = { 0.25f/16.0f, 0.0f/16.0f, 0.25f/16.0f };
+static Vec3 entity_liqExpand = { 0.25f/16.0f, 0.0f/16.0f, 0.25f/16.0f };
 static bool Entity_IsLava(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
 bool Entity_TouchesAnyLava(struct Entity* e) {
 	struct AABB bounds; Entity_GetBounds(e, &bounds);
@@ -331,8 +331,8 @@ void Entities_Remove(EntityID id) {
 }
 
 EntityID Entities_GetCloset(struct Entity* src) {
-	Vector3 eyePos = Entity_GetEyePosition(src);
-	Vector3 dir = Vector3_GetDirVector(src->HeadY * MATH_DEG2RAD, src->HeadX * MATH_DEG2RAD);
+	Vec3 eyePos = Entity_GetEyePosition(src);
+	Vec3 dir = Vec3_GetDirVector(src->HeadY * MATH_DEG2RAD, src->HeadX * MATH_DEG2RAD);
 	float closestDist = MATH_POS_INF;
 	EntityID targetId = ENTITIES_SELF_ID;
 
@@ -530,16 +530,16 @@ static void Player_DrawName(struct Player* p) {
 	struct Entity* e = &p->Base;
 	struct Model* model;
 	struct Matrix mat;
-	Vector3 pos;
+	Vec3 pos;
 	float scale;
-	Vector2 size;	
+	Vec2 size;	
 
 	if (p->NameTex.X == PLAYER_NAME_EMPTY_TEX) return;
 	if (!p->NameTex.ID) Player_MakeNameTexture(p);
 	Gfx_BindTexture(p->NameTex.ID);
 
 	model = e->Model;
-	Vector3_TransformY(&pos, model->GetNameY(e), &e->Transform);
+	Vec3_TransformY(&pos, model->GetNameY(e), &e->Transform);
 
 	scale  = model->NameScale * e->ModelScale.Y;
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
@@ -795,7 +795,7 @@ float LocalPlayer_JumpHeight(void) {
 void LocalPlayer_SetInterpPosition(float t) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (!(p->Hacks.WOMStyleHacks && p->Hacks.Noclip)) {
-		Vector3_Lerp(&p->Base.Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
+		Vec3_Lerp(&p->Base.Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
 	}
 	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), &p->Base, t);
 }
@@ -820,7 +820,7 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 		hacks->FlyingDown   = KeyBind_IsPressed(KEYBIND_FLY_DOWN);
 
 		if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
-			if (hacks->Noclip) p->Base.Velocity = Vector3_Zero();
+			if (hacks->Noclip) p->Base.Velocity = Vec3_Zero();
 			hacks->Noclip = KeyBind_IsPressed(KEYBIND_NOCLIP);
 		}
 	}
@@ -836,7 +836,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	struct HacksComp* hacks = &p->Hacks;
 	float xMoving = 0, zMoving = 0;
 	bool wasOnGround;
-	Vector3 headingVelocity;
+	Vec3 headingVelocity;
 
 	if (!World.Blocks) return;
 	e->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanSpeed ? 1.0f : 0.5f;
@@ -850,11 +850,11 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 
 	/* Immediate stop in noclip mode */
 	if (!hacks->NoclipSlide && (hacks->Noclip && xMoving == 0 && zMoving == 0)) {
-		e->Velocity = Vector3_Zero();
+		e->Velocity = Vec3_Zero();
 	}
 
 	PhysicsComp_UpdateVelocityState(&p->Physics);
-	headingVelocity = Vector3_RotateY3(xMoving, 0, zMoving, e->HeadY * MATH_DEG2RAD);
+	headingVelocity = Vec3_RotateY3(xMoving, 0, zMoving, e->HeadY * MATH_DEG2RAD);
 	PhysicsComp_PhysicsTick(&p->Physics, headingVelocity);
 
 	/* Fixes high jump, when holding down a movement key, jump, fly, then let go of fly key */
@@ -929,7 +929,7 @@ static void LocalPlayer_Init(void) {
 static void LocalPlayer_Reset(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	p->ReachDistance = 5.0f;
-	p->Base.Velocity = Vector3_Zero();
+	p->Base.Velocity = Vec3_Zero();
 	p->Physics.JumpVel       = 0.42f;
 	p->Physics.ServerJumpVel = 0.42f;
 	/* p->Base.Health = 20; TODO: survival mode stuff */
@@ -937,8 +937,8 @@ static void LocalPlayer_Reset(void) {
 
 static void LocalPlayer_OnNewMap(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	p->Base.Velocity = Vector3_Zero();
-	p->OldVelocity   = Vector3_Zero();
+	p->Base.Velocity = Vec3_Zero();
+	p->OldVelocity   = Vec3_Zero();
 
 	p->_WarnedRespawn = false;
 	p->_WarnedFly     = false;
@@ -950,14 +950,14 @@ static void LocalPlayer_DoRespawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct LocationUpdate update;
 	struct AABB bb;
-	Vector3 spawn = p->Spawn;
-	Vector3I pos;
+	Vec3 spawn = p->Spawn;
+	IVec3 pos;
 	BlockID block;
 	float height, spawnY;
 	int y;
 
 	if (!World.Blocks) return;
-	Vector3I_Floor(&pos, &spawn);	
+	IVec3_Floor(&pos, &spawn);	
 
 	/* Spawn player at highest solid position to match vanilla Minecraft classic */
 	/* Only when player can noclip, since this can let you 'clip' to above solid blocks */
@@ -979,7 +979,7 @@ static void LocalPlayer_DoRespawn(void) {
 	spawn.Y += 2.0f/16.0f;
 	LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnRotY, p->SpawnHeadX, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-	p->Base.Velocity = Vector3_Zero();
+	p->Base.Velocity = Vec3_Zero();
 
 	/* Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before */
 	Entity_GetBounds(&p->Base, &bb);
@@ -1097,7 +1097,7 @@ static void NetPlayer_Tick(struct Entity* e, double delta) {
 
 static void NetPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
-	Vector3_Lerp(&e->Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
+	Vec3_Lerp(&e->Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
 	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), e, t);
 
 	AnimatedComp_GetCurrent(e, t);

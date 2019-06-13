@@ -38,7 +38,7 @@ enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 #define LOCATIONUPDATE_FLAG_ROTZ  0x10
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
 struct LocationUpdate {
-	Vector3 Pos;
+	Vec3 Pos;
 	float HeadX, HeadY, RotX, RotZ;
 	uint8_t Flags;
 	bool RelativePos;
@@ -49,9 +49,9 @@ float LocationUpdate_Clamp(float degrees);
 /* Makes a location update only containing yaw and pitch. */
 void LocationUpdate_MakeOri(struct LocationUpdate* update, float rotY, float headX);
 /* Makes a location update only containing position */
-void LocationUpdate_MakePos(struct LocationUpdate* update, Vector3 pos, bool rel);
+void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, bool rel);
 /* Makes a location update containing position, yaw and pitch. */
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vector3 pos, float rotY, float headX, bool rel);
+void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float rotY, float headX, bool rel);
 
 struct Entity;
 struct EntityVTABLE {
@@ -68,15 +68,15 @@ struct EntityVTABLE {
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
 struct Entity {
 	struct EntityVTABLE* VTABLE;
-	Vector3 Position;
+	Vec3 Position;
 	float HeadX, HeadY, RotX, RotY, RotZ;
-	Vector3 Velocity;
+	Vec3 Velocity;
 
 	struct Model* Model;
 	BlockID ModelBlock; /* BlockID, if model name was originally a valid block. */
 	bool ModelRestrictedScale; /* true to restrict model scale (needed for local player, otherwise collisions are too costly) */
 	struct AABB ModelAABB;
-	Vector3 ModelScale, Size;
+	Vec3 ModelScale, Size;
 	float StepSize;
 	
 	uint8_t SkinType, EntityType;
@@ -93,12 +93,12 @@ typedef bool (*Entity_TouchesCondition)(BlockID block);
 /* Initialises non-zero fields of the given entity. */
 void Entity_Init(struct Entity* e);
 /* Gets the position of the eye of the given entity's model. */
-Vector3 Entity_GetEyePosition(struct Entity* e);
+Vec3 Entity_GetEyePosition(struct Entity* e);
 /* Returns the height of the eye of the given entity's model. */
 /* (i.e. distance to eye from feet/base of the model) */
 float Entity_GetEyeHeight(struct Entity* e);
 /* Calculates the transformation matrix applied when rendering the given entity. */
-CC_API void Entity_GetTransform(struct Entity* e, Vector3 pos, Vector3 scale, struct Matrix* m);
+CC_API void Entity_GetTransform(struct Entity* e, Vec3 pos, Vec3 scale, struct Matrix* m);
 void Entity_GetPickingBounds(struct Entity* e, struct AABB* bb);
 /* Gets the current collision bounds of the given entity. */
 void Entity_GetBounds(struct Entity* e, struct AABB* bb);
@@ -185,7 +185,7 @@ extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 /* Represents the user/player's own entity. */
 struct LocalPlayer {
 	Player_Layout
-	Vector3 Spawn, OldVelocity;
+	Vec3 Spawn, OldVelocity;
 	float SpawnRotY, SpawnHeadX, ReachDistance;
 	struct HacksComp Hacks;
 	struct TiltComp Tilt;

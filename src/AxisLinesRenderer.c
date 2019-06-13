@@ -25,7 +25,7 @@ void AxisLinesRenderer_Render(double delta) {
 		PACKEDCOL_CONST(  0, 255,   0, 255), /* Green */
 	};
 
-	Vector3 coords[5], pos;
+	Vec3 coords[5], pos;
 	VertexP3fC4b vertices[AXISLINES_NUM_VERTICES];
 	VertexP3fC4b* ptr = vertices;
 	int i, count;
@@ -40,11 +40,11 @@ void AxisLinesRenderer_Render(double delta) {
 	pos   = LocalPlayer_Instance.Base.Position; pos.Y += 0.05f;
 	count = Camera.Active->isThirdPerson ? 12 : 8;
 	 
-	Vector3_Add1(&coords[0], &pos, -AXISLINES_LENGTH);
-	Vector3_Add1(&coords[1], &pos, -AXISLINES_THICKNESS);
+	Vec3_Add1(&coords[0], &pos, -AXISLINES_LENGTH);
+	Vec3_Add1(&coords[1], &pos, -AXISLINES_THICKNESS);
 	coords[2] = pos;
-	Vector3_Add1(&coords[3], &pos,  AXISLINES_THICKNESS);
-	Vector3_Add1(&coords[4], &pos,  AXISLINES_LENGTH);
+	Vec3_Add1(&coords[3], &pos,  AXISLINES_THICKNESS);
+	Vec3_Add1(&coords[4], &pos,  AXISLINES_LENGTH);
 
 	for (i = 0; i < count; i++, ptr++) {
 		ptr->X   = coords[indices[i*3 + 0]].X;

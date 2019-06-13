@@ -626,7 +626,7 @@ static void NormalBuilder_RenderBlock(int index) {
 
 	/* block state */
 	PackedCol white = PACKEDCOL_WHITE;
-	Vector3 min, max;
+	Vec3 min, max;
 	int baseOffset, lightFlags;
 	bool fullBright;
 
@@ -751,7 +751,7 @@ void NormalBuilder_SetActive(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Advanced mesh builder---------------------------------------------------*
 *#########################################################################################################################*/
-static Vector3 adv_minBB, adv_maxBB;
+static Vec3 adv_minBB, adv_maxBB;
 static int adv_initBitFlags, adv_lightFlags, adv_baseOffset;
 static int* adv_bitFlags;
 static float adv_x1, adv_y1, adv_z1, adv_x2, adv_y2, adv_z2;
@@ -1171,7 +1171,7 @@ static void Adv_DrawYMax(int count) {
 }
 
 static void Adv_RenderBlock(int index) {
-	Vector3 min, max;
+	Vec3 min, max;
 	int count_XMin, count_XMax, count_ZMin;
 	int count_ZMax, count_YMin, count_YMax;
 	int count;

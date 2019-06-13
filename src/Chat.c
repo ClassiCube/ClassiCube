@@ -427,7 +427,7 @@ static struct ChatCommand ModelCommand = {
 *-------------------------------------------------------CuboidCommand-----------------------------------------------------*
 *#########################################################################################################################*/
 static int cuboid_block = -1;
-static Vector3I cuboid_mark1, cuboid_mark2;
+static IVec3 cuboid_mark1, cuboid_mark2;
 static bool cuboid_persist, cuboid_hooked, cuboid_hasMark1;
 const static String cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
 
@@ -450,12 +450,12 @@ static bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
 }
 
 static void CuboidCommand_DoCuboid(void) {
-	Vector3I min, max;
+	IVec3 min, max;
 	BlockID toPlace;
 	int x, y, z;
 
-	Vector3I_Min(&min, &cuboid_mark1, &cuboid_mark2);
-	Vector3I_Max(&max, &cuboid_mark1, &cuboid_mark2);
+	IVec3_Min(&min, &cuboid_mark1, &cuboid_mark2);
+	IVec3_Max(&max, &cuboid_mark1, &cuboid_mark2);
 	if (!World_Contains(min.X, min.Y, min.Z)) return;
 	if (!World_Contains(max.X, max.Y, max.Z)) return;
 
@@ -471,7 +471,7 @@ static void CuboidCommand_DoCuboid(void) {
 	}
 }
 
-static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID old, BlockID now) {
+static void CuboidCommand_BlockChanged(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	String msg; char msgBuffer[STRING_SIZE];
 	String_InitArray(msg, msgBuffer);
 
@@ -535,7 +535,7 @@ static struct ChatCommand CuboidCommand = {
 static void TeleportCommand_Execute(const String* args, int argsCount) {
 	struct LocationUpdate update;
 	struct Entity* e = &LocalPlayer_Instance.Base;
-	Vector3 v;
+	Vec3 v;
 
 	if (argsCount != 3) {
 		Chat_AddRaw("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");

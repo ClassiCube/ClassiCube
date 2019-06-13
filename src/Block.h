@@ -79,15 +79,15 @@ CC_VAR extern struct _BlockLists {
 	uint8_t SpriteOffset[BLOCK_COUNT];
 
 	/* Coordinates of min corner of this block for collisions. */
-	Vector3 MinBB[BLOCK_COUNT];
+	Vec3 MinBB[BLOCK_COUNT];
 	/* Coordinates of max corner of this block for collisions. */
-	Vector3 MaxBB[BLOCK_COUNT];
+	Vec3 MaxBB[BLOCK_COUNT];
 	/* Coordinates of min corner of this block for rendering. */
 	/* e.g. ice is very slightly offset horizontally. */
-	Vector3 RenderMinBB[BLOCK_COUNT];
+	Vec3 RenderMinBB[BLOCK_COUNT];
 	/* Coordinates of max corner of this block for rendering. */
 	/* e.g. ice is very slightly offset horizontally. */
-	Vector3 RenderMaxBB[BLOCK_COUNT];
+	Vec3 RenderMaxBB[BLOCK_COUNT];
 
 	/* Texture ids of each face of blocks. */
 	TextureLoc Textures[BLOCK_COUNT * FACE_COUNT];

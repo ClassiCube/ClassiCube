@@ -41,18 +41,18 @@ static int EnvRenderer_Vertices(int axis1Len, int axis2Len) {
 *------------------------------------------------------------Fog----------------------------------------------------------*
 *#########################################################################################################################*/
 static void EnvRenderer_CalcFog(float* density, PackedCol* col) {
-	Vector3 pos;
-	Vector3I coords;
+	Vec3 pos;
+	IVec3 coords;
 	BlockID block;
 	struct AABB blockBB;
 	float blend;
 
-	Vector3I_Floor(&coords, &Camera.CurrentPos); /* coords = floor(camera_pos); */
-	Vector3I_ToVector3(&pos, &coords);           /* pos = coords; */
+	IVec3_Floor(&coords, &Camera.CurrentPos); /* coords = floor(camera_pos); */
+	IVec3_ToVec3(&pos, &coords);           /* pos = coords; */
 
 	block = World_SafeGetBlock_3I(coords);
-	Vector3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
-	Vector3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
+	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
+	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 
 	if (AABB_ContainsPoint(&blockBB, &pos) && Blocks.FogDensity[block] != 0.0f) {
 		*density = Blocks.FogDensity[block];
@@ -293,7 +293,7 @@ bool EnvRenderer_ShouldRenderSkybox(void) { return skybox_tex && !EnvRenderer_Mi
 void EnvRenderer_RenderSkybox(double deltaTime) {
 	struct Matrix m, rotX, rotY, view;
 	float rotTime;
-	Vector3 pos;
+	Vec3 pos;
 	if (!skybox_vb) return;
 
 	Gfx_SetDepthWrite(false);
@@ -309,7 +309,7 @@ void EnvRenderer_RenderSkybox(double deltaTime) {
 
 	/* Rotate around camera */
 	pos = Camera.CurrentPos;
-	Camera.CurrentPos = Vector3_Zero();
+	Camera.CurrentPos = Vec3_Zero();
 	Camera.Active->GetView(&view); Matrix_MulBy(&m, &view);
 	Camera.CurrentPos = pos;
 
@@ -360,7 +360,7 @@ static void EnvRenderer_UpdateSkybox(void) {
 int16_t* Weather_Heightmap;
 static GfxResourceID rain_tex, snow_tex, weather_vb;
 static double weather_accumulator;
-static Vector3I weather_lastPos;
+static IVec3 weather_lastPos;
 
 #define WEATHER_EXTENT 4
 #define WEATHER_VERTS_COUNT 8 * (WEATHER_EXTENT * 2 + 1) * (WEATHER_EXTENT * 2 + 1)
@@ -448,7 +448,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	VertexP3fT2fC4b vertices[WEATHER_VERTS_COUNT];
 	VertexP3fT2fC4b* ptr, v;
 	int weather, vCount;
-	Vector3I pos;
+	IVec3 pos;
 	bool moved, particles;
 	float speed, vOffset;
 
@@ -462,8 +462,8 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	if (!Weather_Heightmap) EnvRenderer_InitWeatherHeightmap();
 	Gfx_BindTexture(weather == WEATHER_RAINY ? rain_tex : snow_tex);
 
-	Vector3I_Floor(&pos, &Camera.CurrentPos);
-	moved = Vector3I_NotEquals(&pos, &weather_lastPos);
+	IVec3_Floor(&pos, &Camera.CurrentPos);
+	moved = IVec3_NotEquals(&pos, &weather_lastPos);
 	weather_lastPos = pos;
 
 	/* Rain should extend up by 64 blocks, or to the top of the world. */
@@ -487,7 +487,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 			if (height <= 0) continue;
 
 			if (particles && (weather_accumulator >= 0.25 || moved)) {
-				Vector3 particlePos = Vector3_Create3((float)x, y, (float)z);
+				Vec3 particlePos = Vec3_Create3((float)x, y, (float)z);
 				Particles_RainSnowEffect(particlePos);
 			}
 
@@ -947,7 +947,7 @@ static void EnvRenderer_Reset(void) {
 
 	Mem_Free(Weather_Heightmap);
 	Weather_Heightmap = NULL;
-	weather_lastPos   = Vector3I_MaxValue();
+	weather_lastPos   = IVec3_MaxValue();
 }
 
 static void EnvRenderer_OnNewMapLoaded(void) {

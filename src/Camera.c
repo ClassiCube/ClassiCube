@@ -10,7 +10,7 @@
 
 struct _CameraData Camera;
 static struct PickedPos cameraClipPos;
-static Vector2 cam_rotOffset;
+static Vec2 cam_rotOffset;
 static bool cam_isForwardThird;
 static Point2D cam_delta;
 
@@ -34,16 +34,16 @@ static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 }
 
 static void PerspectiveCamera_GetView(struct Matrix* mat) {
-	Vector3 pos = Camera.CurrentPos;
-	Vector2 rot = Camera.Active->GetOrientation();
+	Vec3 pos = Camera.CurrentPos;
+	Vec2 rot = Camera.Active->GetOrientation();
 	Matrix_LookRot(mat, pos, rot);
 	Matrix_MulBy(mat, &Camera.TiltM);
 }
 
 static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector3 dir    = Vector3_GetDirVector(p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD);
-	Vector3 eyePos = Entity_GetEyePosition(p);
+	Vec3 dir    = Vec3_GetDirVector(p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD);
+	Vec3 eyePos = Entity_GetEyePosition(p);
 	float reach    = LocalPlayer_Instance.ReachDistance;
 	Picking_CalculatePickedBlock(eyePos, dir, reach, pos);
 }
@@ -52,10 +52,10 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 #define CAMERA_SLIPPERY 0.97f
 #define CAMERA_ADJUST 0.025f
 
-static Vector2 PerspectiveCamera_GetMouseDelta(double delta) {
+static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
 	float sensitivity = CAMERA_SENSI_FACTOR * Camera.Sensitivity;
 	static float speedX, speedY;
-	Vector2 v;
+	Vec2 v;
 
 	if (Camera.Smooth) {
 		speedX += cam_delta.X * CAMERA_ADJUST;
@@ -78,7 +78,7 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 
 	struct LocationUpdate update;
 	float headY, headX;
-	Vector2 rot = PerspectiveCamera_GetMouseDelta(delta);
+	Vec2 rot = PerspectiveCamera_GetMouseDelta(delta);
 
 	if (Key_IsAltPressed() && Camera.Active->isThirdPerson) {
 		cam_rotOffset.X += rot.X; cam_rotOffset.Y += rot.Y;
@@ -128,16 +128,16 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 /*########################################################################################################################*
 *---------------------------------------------------First person camera---------------------------------------------------*
 *#########################################################################################################################*/
-static Vector2 FirstPersonCamera_GetOrientation(void) {
+static Vec2 FirstPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector2 v;	
+	Vec2 v;	
 	v.X = p->HeadY * MATH_DEG2RAD; v.Y = p->HeadX * MATH_DEG2RAD; 
 	return v;
 }
 
-static Vector3 FirstPersonCamera_GetPosition(float t) {
+static Vec3 FirstPersonCamera_GetPosition(float t) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector3 camPos   = Entity_GetEyePosition(p);
+	Vec3 camPos   = Entity_GetEyePosition(p);
 	float headY      = p->HeadY * MATH_DEG2RAD;
 	PerspectiveCamera_CalcViewBobbing(t, 1);
 	
@@ -163,9 +163,9 @@ static struct Camera cam_FirstPerson = {
 *#########################################################################################################################*/
 float dist_third = 3.0f, dist_forward = 3.0f;
 
-static Vector2 ThirdPersonCamera_GetOrientation(void) {
+static Vec2 ThirdPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector2 v;	
+	Vec2 v;	
 	v.X = p->HeadY * MATH_DEG2RAD; v.Y = p->HeadX * MATH_DEG2RAD;
 	if (cam_isForwardThird) { v.X += MATH_PI; v.Y = -v.Y; }
 
@@ -174,19 +174,19 @@ static Vector2 ThirdPersonCamera_GetOrientation(void) {
 	return v;
 }
 
-static Vector3 ThirdPersonCamera_GetPosition(float t) {
+static Vec3 ThirdPersonCamera_GetPosition(float t) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	float dist = cam_isForwardThird ? dist_forward : dist_third;
-	Vector3 target, dir;
-	Vector2 rot;
+	Vec3 target, dir;
+	Vec2 rot;
 
 	PerspectiveCamera_CalcViewBobbing(t, dist);
 	target = Entity_GetEyePosition(p);
 	target.Y += Camera.BobbingVer;
 
 	rot = Camera.Active->GetOrientation();
-	dir = Vector3_GetDirVector(rot.X, rot.Y);
-	Vector3_Negate(&dir, &dir);
+	dir = Vec3_GetDirVector(rot.X, rot.Y);
+	Vec3_Negate(&dir, &dir);
 
 	Picking_ClipCameraPos(target, dir, dist, &cameraClipPos);
 	return cameraClipPos.Intersect;

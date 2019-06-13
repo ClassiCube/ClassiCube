@@ -74,7 +74,7 @@ BlockID World_GetPhysicsBlock(int x, int y, int z);
 void World_SetBlock(int x, int y, int z, BlockID block);
 /* If coordinates are outside the map, returns BLOCK_AIR. */
 /* Otherwise returns the block at the given coordinates. */
-BlockID World_SafeGetBlock_3I(Vector3I p);
+BlockID World_SafeGetBlock_3I(IVec3 p);
 
 /* Whether the given coordinates lie inside the map. */
 static CC_INLINE bool World_Contains(int x, int y, int z) {
@@ -180,5 +180,5 @@ CC_API void Env_SetShadowCol(PackedCol col);
 float Respawn_HighestSolidY(struct AABB* bb);
 /* Finds a suitable initial spawn position for the entity. */
 /* Works by iterating downwards from top of world until solid ground is found. */
-Vector3 Respawn_FindSpawnPosition(float x, float z, Vector3 modelSize);
+Vec3 Respawn_FindSpawnPosition(float x, float z, Vec3 modelSize);
 #endif

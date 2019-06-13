@@ -310,7 +310,7 @@ void Classic_SendChat(const String* text, bool partial) {
 	Server.SendData(data, 66);
 }
 
-void Classic_WritePosition(Vector3 pos, float rotY, float headX) {
+void Classic_WritePosition(Vec3 pos, float rotY, float headX) {
 	BlockID payload;
 	int x, y, z;
 
@@ -567,7 +567,7 @@ static void Classic_EntityTeleport(uint8_t* data) {
 static void Classic_RelPosAndOrientationUpdate(uint8_t* data) {
 	struct LocationUpdate update;
 	EntityID id = *data++; 
-	Vector3 pos;
+	Vec3 pos;
 	float rotY, headX;
 
 	pos.X = (int8_t)(*data++) / 32.0f;
@@ -583,7 +583,7 @@ static void Classic_RelPosAndOrientationUpdate(uint8_t* data) {
 static void Classic_RelPositionUpdate(uint8_t* data) {
 	struct LocationUpdate update;
 	EntityID id = *data++; 
-	Vector3 pos;
+	Vec3 pos;
 
 	pos.X = (int8_t)(*data++) / 32.0f;
 	pos.Y = (int8_t)(*data++) / 32.0f;
@@ -652,7 +652,7 @@ static void Classic_SetPermission(uint8_t* data) {
 static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interpolate) {
 	struct LocationUpdate update;
 	int x, y, z;
-	Vector3 pos;
+	Vec3 pos;
 	float rotY, headX;
 
 	if (cpe_extEntityPos) {
@@ -1015,7 +1015,7 @@ static void CPE_ExtRemovePlayerName(uint8_t* data) {
 
 static void CPE_MakeSelection(uint8_t* data) {
 	uint8_t selectionId;
-	Vector3I p1, p2;
+	IVec3 p1, p2;
 	PackedCol c;
 
 	selectionId = *data++;
@@ -1482,7 +1482,7 @@ static void BlockDefs_UndefineBlock(uint8_t* data) {
 }
 
 static void BlockDefs_DefineBlockExt(uint8_t* data) {
-	Vector3 minBB, maxBB;
+	Vec3 minBB, maxBB;
 	BlockID block = BlockDefs_DefineBlockCommonStart(&data, cpe_blockDefsExtVer >= 2);
 
 	minBB.X = (int8_t)(*data++) / 16.0f;

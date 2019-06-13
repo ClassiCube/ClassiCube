@@ -697,7 +697,7 @@ ReturnCode Cw_Load(struct Stream* stream) {
 	uint8_t tag;
 	struct Stream compStream;
 	struct InflateState state;
-	Vector3* spawn; Vector3I pos;
+	Vec3* spawn; IVec3 pos;
 	ReturnCode res;
 
 	Inflate_MakeStream(&compStream, &state, stream);
@@ -710,7 +710,7 @@ ReturnCode Cw_Load(struct Stream* stream) {
 
 	/* Older versions incorrectly multiplied spawn coords by * 32, so we check for that */
 	spawn = &LocalPlayer_Instance.Spawn; 
-	Vector3I_Floor(&pos, spawn);
+	IVec3_Floor(&pos, spawn);
 
 	if (!World_Contains(pos.X, pos.Y, pos.Z)) { 
 		spawn->X /= 32.0f; spawn->Y /= 32.0f; spawn->Z /= 32.0f; 
@@ -1052,7 +1052,7 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 	TextureLoc tex;
 	uint8_t fog;
 	PackedCol col;
-	Vector3 minBB, maxBB;	
+	Vec3 minBB, maxBB;	
 
 	Mem_Copy(tmp, cw_meta_def, sizeof(cw_meta_def));
 	{

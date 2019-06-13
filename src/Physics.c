@@ -12,7 +12,7 @@
 /*########################################################################################################################*
 *----------------------------------------------------------AABB-----------------------------------------------------------*
 *#########################################################################################################################*/
-void AABB_Make(struct AABB* result, const Vector3* pos, const Vector3* size) {
+void AABB_Make(struct AABB* result, const Vec3* pos, const Vec3* size) {
 	result->Min.X = pos->X - size->X * 0.5f;
 	result->Min.Y = pos->Y;
 	result->Min.Z = pos->Z - size->Z * 0.5f;
@@ -22,9 +22,9 @@ void AABB_Make(struct AABB* result, const Vector3* pos, const Vector3* size) {
 	result->Max.Z = pos->Z + size->Z * 0.5f;
 }
 
-void AABB_Offset(struct AABB* result, const struct AABB* bb, const Vector3* amount) {
-	Vector3_Add(&result->Min, &bb->Min, amount);
-	Vector3_Add(&result->Max, &bb->Max, amount);
+void AABB_Offset(struct AABB* result, const struct AABB* bb, const Vec3* amount) {
+	Vec3_Add(&result->Min, &bb->Min, amount);
+	Vec3_Add(&result->Max, &bb->Max, amount);
 }
 
 bool AABB_Intersects(const struct AABB* bb, const struct AABB* other) {
@@ -40,7 +40,7 @@ bool AABB_Contains(const struct AABB* parent, const struct AABB* child) {
 		child->Max.X <= parent->Max.X && child->Max.Y <= parent->Max.Y && child->Max.Z <= parent->Max.Z;
 }
 
-bool AABB_ContainsPoint(const struct AABB* parent, const Vector3* P) {
+bool AABB_ContainsPoint(const struct AABB* parent, const Vec3* P) {
 	return
 		P->X >= parent->Min.X && P->Y >= parent->Min.Y && P->Z >= parent->Min.Z &&
 		P->X <= parent->Max.X && P->Y <= parent->Max.Y && P->Z <= parent->Max.Z;
@@ -50,15 +50,15 @@ bool AABB_ContainsPoint(const struct AABB* parent, const Vector3* P) {
 /*########################################################################################################################*
 *------------------------------------------------------Intersection-------------------------------------------------------*
 *#########################################################################################################################*/
-static Vector3 Intersection_InverseRotate(Vector3 pos, struct Entity* target) {
-	pos = Vector3_RotateY(pos, -target->RotY * MATH_DEG2RAD);
-	pos = Vector3_RotateZ(pos, -target->RotZ * MATH_DEG2RAD);
-	pos = Vector3_RotateX(pos, -target->RotX * MATH_DEG2RAD);
+static Vec3 Intersection_InverseRotate(Vec3 pos, struct Entity* target) {
+	pos = Vec3_RotateY(pos, -target->RotY * MATH_DEG2RAD);
+	pos = Vec3_RotateZ(pos, -target->RotZ * MATH_DEG2RAD);
+	pos = Vec3_RotateX(pos, -target->RotX * MATH_DEG2RAD);
 	return pos;
 }
 
-bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct Entity* target, float* tMin, float* tMax) {
-	Vector3 delta;
+bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entity* target, float* tMin, float* tMax) {
+	Vec3 delta;
 	struct AABB bb;
 
 	/* This is the rotated AABB of the model we want to test for intersection
@@ -69,16 +69,16 @@ bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, struct En
 			  *                                     /
 												   /                           
 	*/
-	Vector3_Sub(&delta, &origin, &target->Position);   /* delta  = origin - target.Position */
+	Vec3_Sub(&delta, &origin, &target->Position);   /* delta  = origin - target.Position */
 	delta = Intersection_InverseRotate(delta, target); /* delta  = UndoRotation(delta) */
-	Vector3_Add(&origin, &delta, &target->Position);   /* origin = delta + target.Position */
+	Vec3_Add(&origin, &delta, &target->Position);   /* origin = delta + target.Position */
 
 	dir = Intersection_InverseRotate(dir, target);
 	Entity_GetPickingBounds(target, &bb);
 	return Intersection_RayIntersectsBox(origin, dir, bb.Min, bb.Max, tMin, tMax);
 }
 
-bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vector3 max, float* t0, float* t1) {
+bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 dir, Vec3 min, Vec3 max, float* t0, float* t1) {
 	float tmin, tmax, tymin, tymax, tzmin, tzmax;
 	float invDirX, invDirY, invDirZ;
 	*t0 = 0; *t1 = 0;
@@ -150,8 +150,8 @@ static void Searcher_QuickSort(int left, int right) {
 }
 
 int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, struct AABB* entityExtentBB) {
-	Vector3 vel = entity->Velocity;
-	Vector3I min, max;
+	Vec3 vel = entity->Velocity;
+	IVec3 min, max;
 	uint32_t elements;
 	struct SearcherState* curState;
 	int count;
@@ -171,8 +171,8 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 	entityExtentBB->Max.Y = entityBB->Max.Y + (vel.Y > 0.0f ? vel.Y : 0.0f);
 	entityExtentBB->Max.Z = entityBB->Max.Z + (vel.Z > 0.0f ? vel.Z : 0.0f);
 
-	Vector3I_Floor(&min, &entityExtentBB->Min);
-	Vector3I_Floor(&max, &entityExtentBB->Max);
+	IVec3_Floor(&min, &entityExtentBB->Min);
+	IVec3_Floor(&max, &entityExtentBB->Max);
 	elements = (max.X - min.X + 1) * (max.Y - min.Y + 1) * (max.Z - min.Z + 1);
 
 	if (elements > searcherCapacity) {
@@ -213,7 +213,7 @@ int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, s
 	return count;
 }
 
-void Searcher_CalcTime(Vector3* vel, struct AABB *entityBB, struct AABB* blockBB, float* tx, float* ty, float* tz) {
+void Searcher_CalcTime(Vec3* vel, struct AABB *entityBB, struct AABB* blockBB, float* tx, float* ty, float* tz) {
 	float dx = vel->X > 0.0f ? blockBB->Min.X - entityBB->Max.X : entityBB->Min.X - blockBB->Max.X;
 	float dy = vel->Y > 0.0f ? blockBB->Min.Y - entityBB->Max.Y : entityBB->Min.Y - blockBB->Max.Y;
 	float dz = vel->Z > 0.0f ? blockBB->Min.Z - entityBB->Max.Z : entityBB->Min.Z - blockBB->Max.Z;

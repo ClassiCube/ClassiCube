@@ -78,7 +78,7 @@ void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const
 	}
 }
 
-void Event_RaiseBlock(struct Event_Block* handlers, Vector3I coords, BlockID oldBlock, BlockID block) {
+void Event_RaiseBlock(struct Event_Block* handlers, IVec3 coords, BlockID oldBlock, BlockID block) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], coords, oldBlock, block);

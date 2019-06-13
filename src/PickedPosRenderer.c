@@ -51,12 +51,12 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 	PackedCol col = PACKEDCOL_CONST(0, 0, 0, 102);
 	VertexP3fC4b* ptr;
 	int i;
-	Vector3 delta;
+	Vec3 delta;
 	float dist, offset, size;
-	Vector3 coords[4];
+	Vec3 coords[4];
 
-	Vector3_Sub(&delta, &Camera.CurrentPos, &selected->Min);
-	dist = Vector3_LengthSquared(&delta);
+	Vec3_Sub(&delta, &Camera.CurrentPos, &selected->Min);
+	dist = Vec3_LengthSquared(&delta);
 
 	offset = 0.01f;
 	if (dist < 4.0f * 4.0f) offset = 0.00625f;
@@ -83,10 +83,10 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 	- these are used to fake thick lines, by making the lines appear slightly inset
 	- note: actual difference between inner and outer is much smaller than the diagram
 	*/
-	Vector3_Add1(&coords[0], &selected->Min, -offset);
-	Vector3_Add1(&coords[1], &coords[0],      size);
-	Vector3_Add1(&coords[3], &selected->Max,  offset);
-	Vector3_Add1(&coords[2], &coords[3],     -size);
+	Vec3_Add1(&coords[0], &selected->Min, -offset);
+	Vec3_Add1(&coords[1], &coords[0],      size);
+	Vec3_Add1(&coords[3], &selected->Max,  offset);
+	Vec3_Add1(&coords[2], &coords[3],     -size);
 	
 	ptr = pickedPos_vertices;
 	for (i = 0; i < Array_Elems(indices); i += 3, ptr++) {

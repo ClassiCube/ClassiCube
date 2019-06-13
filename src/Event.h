@@ -34,7 +34,7 @@ struct Event_Entry {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_Block_Callback)(void* obj, Vector3I coords, BlockID oldBlock, BlockID block);
+typedef void (*Event_Block_Callback)(void* obj, IVec3 coords, BlockID oldBlock, BlockID block);
 struct Event_Block {
 	Event_Block_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
@@ -91,7 +91,7 @@ void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const
 
 /* Calls all registered callbacks for an event which takes block change arguments. */
 /* These are the coordinates/location of the change, block there before, block there now. */
-void Event_RaiseBlock(struct Event_Block* handlers, Vector3I coords, BlockID oldBlock, BlockID block);
+void Event_RaiseBlock(struct Event_Block* handlers, IVec3 coords, BlockID oldBlock, BlockID block);
 #define Event_RegisterBlock(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
 #define Event_UnregisterBlock(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 

@@ -25,7 +25,7 @@ extern struct _CameraData {
 	float BobbingVer, BobbingHor;
 
 	/* Cached position the camera is at. */
-	Vector3 CurrentPos;
+	Vec3 CurrentPos;
 	/* Camera user is currently using. */
 	struct Camera* Active;
 } Camera;
@@ -40,9 +40,9 @@ struct Camera {
 	void (*GetView)(struct Matrix* view);
 
 	/* Returns the current orientation of the camera. */
-	Vector2 (*GetOrientation)(void);
+	Vec2 (*GetOrientation)(void);
 	/* Returns the current interpolated position of the camera. */
-	Vector3 (*GetPosition)(float t);
+	Vec3 (*GetPosition)(float t);
 
 	/* Called to update the camera's state. */
 	/* Typically, this is used to adjust yaw/pitch based on accumulated mouse movement. */

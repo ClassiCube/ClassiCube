@@ -108,7 +108,7 @@ BlockID World_GetPhysicsBlock(int x, int y, int z) {
 	return World_GetBlock(x, y, z);
 }
 
-BlockID World_SafeGetBlock_3I(Vector3I p) {
+BlockID World_SafeGetBlock_3I(IVec3 p) {
 	return World_Contains(p.X, p.Y, p.Z) ? World_GetBlock(p.X, p.Y, p.Z) : BLOCK_AIR;
 }
 
@@ -243,7 +243,7 @@ float Respawn_HighestSolidY(struct AABB* bb) {
 
 	BlockID block;
 	struct AABB blockBB;
-	Vector3 v;
+	Vec3 v;
 	int x, y, z;	
 
 	for (y = minY; y <= maxY; y++) { v.Y = (float)y;
@@ -251,8 +251,8 @@ float Respawn_HighestSolidY(struct AABB* bb) {
 			for (x = minX; x <= maxX; x++) { v.X = (float)x;
 
 				block = World_GetPhysicsBlock(x, y, z);
-				Vector3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
-				Vector3_Add(&blockBB.Max, &v, &Blocks.MaxBB[block]);
+				Vec3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
+				Vec3_Add(&blockBB.Max, &v, &Blocks.MaxBB[block]);
 
 				if (Blocks.Collide[block] != COLLIDE_SOLID) continue;
 				if (!AABB_Intersects(bb, &blockBB)) continue;
@@ -263,8 +263,8 @@ float Respawn_HighestSolidY(struct AABB* bb) {
 	return highestY;
 }
 
-Vector3 Respawn_FindSpawnPosition(float x, float z, Vector3 modelSize) {
-	Vector3 spawn = Vector3_Create3(x, 0.0f, z);
+Vec3 Respawn_FindSpawnPosition(float x, float z, Vec3 modelSize) {
+	Vec3 spawn = Vec3_Create3(x, 0.0f, z);
 	struct AABB bb;
 	float highestY;
 	int y;

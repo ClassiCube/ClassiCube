@@ -8,7 +8,7 @@
 
 /* Data for a selection box. */
 struct SelectionBox {
-	Vector3 Min, Max;
+	Vec3 Min, Max;
 	PackedCol Col;
 	float MinDist, MaxDist;
 };
@@ -34,9 +34,9 @@ static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** faceVer
 	int i;
 
 	float offset = box->MinDist < 32.0f * 32.0f ? (1/32.0f) : (1/16.0f);
-	Vector3 coords[2];
-	Vector3_Add1(&coords[0], &box->Min, -offset);
-	Vector3_Add1(&coords[1], &box->Max,  offset);
+	Vec3 coords[2];
+	Vec3_Add1(&coords[0], &box->Min, -offset);
+	Vec3_Add1(&coords[1], &box->Max,  offset);
 
 	col = box->Col;
 	ptr = *faceVertices;
@@ -73,7 +73,7 @@ static int SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) 
 	return 0;
 }
 
-static void SelectionBox_UpdateDist(Vector3 p, float x2, float y2, float z2, float* closest, float* furthest) {
+static void SelectionBox_UpdateDist(Vec3 p, float x2, float y2, float z2, float* closest, float* furthest) {
 	float dx = x2 - p.X, dy = y2 - p.Y, dz = z2 - p.Z;
 	float dist = dx * dx + dy * dy + dz * dz;
 
@@ -81,8 +81,8 @@ static void SelectionBox_UpdateDist(Vector3 p, float x2, float y2, float z2, flo
 	if (dist > *furthest) *furthest = dist;
 }
 
-static void SelectionBox_Intersect(struct SelectionBox* box, Vector3 origin) {
-	Vector3 min = box->Min, max = box->Max;
+static void SelectionBox_Intersect(struct SelectionBox* box, Vec3 origin) {
+	Vec3 min = box->Min, max = box->Max;
 	float closest = MATH_POS_INF, furthest = -MATH_POS_INF;
 	/* Bottom corners */
 	SelectionBox_UpdateDist(origin, min.X, min.Y, min.Z, &closest, &furthest);
@@ -108,11 +108,11 @@ static uint8_t selections_ids[SELECTIONS_MAX];
 static GfxResourceID selections_VB, selections_LineVB;
 static bool selections_used;
 
-void Selections_Add(uint8_t id, Vector3I p1, Vector3I p2, PackedCol col) {
+void Selections_Add(uint8_t id, IVec3 p1, IVec3 p2, PackedCol col) {
 	struct SelectionBox sel;
-	Vector3I min, max;
-	Vector3I_Min(&min, &p1, &p2); Vector3I_ToVector3(&sel.Min, &min);
-	Vector3I_Max(&max, &p1, &p2); Vector3I_ToVector3(&sel.Max, &max);
+	IVec3 min, max;
+	IVec3_Min(&min, &p1, &p2); IVec3_ToVec3(&sel.Min, &min);
+	IVec3_Max(&max, &p1, &p2); IVec3_ToVec3(&sel.Max, &max);
 	sel.Col = col;
 
 	Selections_Remove(id);
@@ -169,7 +169,7 @@ static void Selections_QuickSort(int left, int right) {
 void Selections_Render(double delta) {
 	VertexP3fC4b faceVertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* facesPtr;
 	VertexP3fC4b edgeVertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* edgesPtr;
-	Vector3 cameraPos;
+	Vec3 cameraPos;
 	int i;
 	if (!selections_count || Gfx.LostContext) return;
 

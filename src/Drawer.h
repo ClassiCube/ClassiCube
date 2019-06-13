@@ -12,9 +12,9 @@ CC_VAR extern struct _DrawerData {
 	/* The colour to multiply colour of faces by (tinting effect). */
 	PackedCol TintCol;
 	/* Minimum corner of base block bounding box. (For texture UV) */
-	Vector3 MinBB;
+	Vec3 MinBB;
 	/* Maximum corner of base block bounding box. (For texture UV) */
-	Vector3 MaxBB;
+	Vec3 MaxBB;
 	/* Coordinate of minimum block bounding box corner in the world. */
 	float X1, Y1, Z1;
 	/* Coordinate of maximum block bounding box corner in the world. */

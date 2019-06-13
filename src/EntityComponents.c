@@ -58,7 +58,7 @@ void AnimatedComp_Init(struct AnimatedComp* anim) {
 	anim->BobStrength = 1.0f; anim->BobStrengthO = 1.0f; anim->BobStrengthN = 1.0f;
 }
 
-void AnimatedComp_Update(struct Entity* e, Vector3 oldPos, Vector3 newPos, double delta) {
+void AnimatedComp_Update(struct Entity* e, Vec3 oldPos, Vec3 newPos, double delta) {
 	struct AnimatedComp* anim = &e->Anim;
 	float dx = newPos.X - oldPos.X;
 	float dz = newPos.Z - oldPos.Z;
@@ -317,7 +317,7 @@ void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* e, float t)
 
 static void InterpComp_SetPos(struct InterpState* state, struct LocationUpdate* update) {
 	if (update->RelativePos) {
-		Vector3_AddBy(&state->Pos, &update->Pos);
+		Vec3_AddBy(&state->Pos, &update->Pos);
 	} else {
 		state->Pos = update->Pos;
 	}
@@ -360,7 +360,7 @@ void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpda
 	} else {
 		/* Smoother interpolation by also adding midpoint. */
 		struct InterpState mid;
-		Vector3_Lerp(&mid.Pos, &last.Pos, &cur->Pos, 0.5f);
+		Vec3_Lerp(&mid.Pos, &last.Pos, &cur->Pos, 0.5f);
 		mid.RotX  = Math_LerpAngle(last.RotX,  cur->RotX,  0.5f);
 		mid.RotZ  = Math_LerpAngle(last.RotZ,  cur->RotZ,  0.5f);
 		mid.HeadX = Math_LerpAngle(last.HeadX, cur->HeadX, 0.5f);
@@ -459,7 +459,7 @@ static bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f
 static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity* e, struct ShadowData* data, float x1, float z1, float x2, float z2) {
 	PackedCol col = PACKEDCOL_CONST(255, 255, 255, 0);
 	VertexP3fT2fC4b* ptr, v;
-	Vector3 cen;
+	Vec3 cen;
 	float u1, v1, u2, v2;
 
 	if (lequal(x2, x1) || lequal(z2, z1)) return;
@@ -504,7 +504,7 @@ static void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, float y
 /* Shadow may extend down multiple blocks vertically */
 /* If so, shadow on a block must be 'chopped up' to avoid a shadow underneath block above this one */
 static void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, struct Entity* e, struct ShadowData* data, float x, float z) {
-	Vector3 min, max, nMin, nMax;
+	Vec3 min, max, nMin, nMax;
 	int i;
 	x = (float)Math_Floor(x); z = (float)Math_Floor(z);
 	min = Blocks.MinBB[data[0].Block]; max = Blocks.MaxBB[data[0].Block];
@@ -611,7 +611,7 @@ void ShadowComponent_Draw(struct Entity* e) {
 	VertexP3fT2fC4b* ptr;
 	struct ShadowData data[4];
 	GfxResourceID vb;
-	Vector3 pos;
+	Vec3 pos;
 	float radius;
 	int y, count;
 	int x1, z1, x2, z2;
@@ -673,41 +673,41 @@ bool Collisions_HitHorizontal(struct CollisionsComp* comp) {
 }
 #define COLLISIONS_ADJ 0.001f
 
-static void Collisions_ClipX(struct Entity* e, Vector3* size, struct AABB* entityBB, struct AABB* extentBB) {
+static void Collisions_ClipX(struct Entity* e, Vec3* size, struct AABB* entityBB, struct AABB* extentBB) {
 	e->Velocity.X = 0.0f;
 	entityBB->Min.X = e->Position.X - size->X / 2; extentBB->Min.X = entityBB->Min.X;
 	entityBB->Max.X = e->Position.X + size->X / 2; extentBB->Max.X = entityBB->Max.X;
 }
 
-static void Collisions_ClipY(struct Entity* e, Vector3* size, struct AABB* entityBB, struct AABB* extentBB) {
+static void Collisions_ClipY(struct Entity* e, Vec3* size, struct AABB* entityBB, struct AABB* extentBB) {
 	e->Velocity.Y = 0.0f;
 	entityBB->Min.Y = e->Position.Y;               extentBB->Min.Y = entityBB->Min.Y;
 	entityBB->Max.Y = e->Position.Y + size->Y;     extentBB->Max.Y = entityBB->Max.Y;
 }
 
-static void Collisions_ClipZ(struct Entity* e, Vector3* size, struct AABB* entityBB, struct AABB* extentBB) {
+static void Collisions_ClipZ(struct Entity* e, Vec3* size, struct AABB* entityBB, struct AABB* extentBB) {
 	e->Velocity.Z = 0.0f;
 	entityBB->Min.Z = e->Position.Z - size->Z / 2; extentBB->Min.Z = entityBB->Min.Z;
 	entityBB->Max.Z = e->Position.Z + size->Z / 2; extentBB->Max.Z = entityBB->Max.Z;
 }
 
 static bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
-	Vector3I bbMin, bbMax; 
+	IVec3 bbMin, bbMax; 
 	struct AABB blockBB;
 	BlockID block;
-	Vector3 v;
+	Vec3 v;
 	int x, y, z;
 
-	Vector3I_Floor(&bbMin, &adjFinalBB->Min);
-	Vector3I_Floor(&bbMax, &adjFinalBB->Max);
+	IVec3_Floor(&bbMin, &adjFinalBB->Min);
+	IVec3_Floor(&bbMax, &adjFinalBB->Max);
 
 	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (float)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (float)z;
 			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (float)x;
 
 				block = World_GetPhysicsBlock(x, y, z);
-				Vector3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
-				Vector3_Add(&blockBB.Max, &v, &Blocks.MaxBB[block]);
+				Vec3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
+				Vec3_Add(&blockBB.Max, &v, &Blocks.MaxBB[block]);
 
 				if (!AABB_Intersects(&blockBB, adjFinalBB)) continue;
 				if (Blocks.Collide[block] == COLLIDE_SOLID) return false;
@@ -717,7 +717,7 @@ static bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
 	return true;
 }
 
-static bool Collisions_DidSlide(struct CollisionsComp* comp, struct AABB* blockBB, Vector3* size,
+static bool Collisions_DidSlide(struct CollisionsComp* comp, struct AABB* blockBB, Vec3* size,
 	struct AABB* finalBB, struct AABB* entityBB, struct AABB* extentBB) {
 	float yDist = blockBB->Max.Y - entityBB->Min.Y;
 	struct AABB adjBB;
@@ -745,7 +745,7 @@ static bool Collisions_DidSlide(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipXMin(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB,
-	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vector3* size) {
+	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.X = blockBB->Min.X - size->X / 2 - COLLISIONS_ADJ;
 		Collisions_ClipX(comp->Entity, size, entityBB, extentBB);
@@ -754,7 +754,7 @@ static void Collisions_ClipXMin(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipXMax(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB, 
-	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vector3* size) {
+	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.X = blockBB->Max.X + size->X / 2 + COLLISIONS_ADJ;
 		Collisions_ClipX(comp->Entity, size, entityBB, extentBB);
@@ -763,7 +763,7 @@ static void Collisions_ClipXMax(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipZMax(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB, 
-	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vector3* size) {
+	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.Z = blockBB->Max.Z + size->Z / 2 + COLLISIONS_ADJ;
 		Collisions_ClipZ(comp->Entity, size, entityBB, extentBB);
@@ -772,7 +772,7 @@ static void Collisions_ClipZMax(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipZMin(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB,
-	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vector3* size) {
+	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.Z = blockBB->Min.Z - size->Z / 2 - COLLISIONS_ADJ;
 		Collisions_ClipZ(comp->Entity, size, entityBB, extentBB);
@@ -781,14 +781,14 @@ static void Collisions_ClipZMin(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipYMin(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB, 
-	struct AABB* extentBB, Vector3* size) {
+	struct AABB* extentBB, Vec3* size) {
 	comp->Entity->Position.Y = blockBB->Min.Y - size->Y - COLLISIONS_ADJ;
 	Collisions_ClipY(comp->Entity, size, entityBB, extentBB);
 	comp->HitYMin = true;
 }
 
 static void Collisions_ClipYMax(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB, 
-	struct AABB* extentBB, Vector3* size) {
+	struct AABB* extentBB, Vec3* size) {
 	comp->Entity->Position.Y = blockBB->Max.Y + COLLISIONS_ADJ;
 	comp->Entity->OnGround = true;
 	Collisions_ClipY(comp->Entity, size, entityBB, extentBB);
@@ -800,10 +800,10 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 	struct Entity* entity = comp->Entity;
 	struct SearcherState state;
 	struct AABB blockBB, finalBB;
-	Vector3 size;
+	Vec3 size;
 	bool wasOn;
 
-	Vector3 bPos, v;
+	Vec3 bPos, v;
 	float tx, ty, tz;
 	int i, block;
 
@@ -820,8 +820,8 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 		bPos.X = state.X >> 3; bPos.Y = state.Y >> 4; bPos.Z = state.Z >> 3;
 		block  = (state.X & 0x7) | (state.Y & 0xF) << 3 | (state.Z & 0x7) << 7;
 
-		Vector3_Add(&blockBB.Min, &Blocks.MinBB[block], &bPos);
-		Vector3_Add(&blockBB.Max, &Blocks.MaxBB[block], &bPos);
+		Vec3_Add(&blockBB.Min, &Blocks.MinBB[block], &bPos);
+		Vec3_Add(&blockBB.Max, &Blocks.MaxBB[block], &bPos);
 		if (!AABB_Intersects(extentBB, &blockBB)) continue;
 
 		/* Recheck time to collide with block (as colliding with blocks modifies this) */
@@ -834,8 +834,8 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 		v = entity->Velocity; 
 		v.X *= tx; v.Y *= ty; v.Z *= tz;
 		/* Inlined ABBB_Offset */
-		Vector3_Add(&finalBB.Min, &entityBB->Min, &v);
-		Vector3_Add(&finalBB.Max, &entityBB->Max, &v);
+		Vec3_Add(&finalBB.Min, &entityBB->Min, &v);
+		Vec3_Add(&finalBB.Max, &entityBB->Max, &v);
 
 		/* if we have hit the bottom of a block, we need to change the axis we test first */
 		if (!comp->HitYMin) {
@@ -876,10 +876,10 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 void Collisions_MoveAndWallSlide(struct CollisionsComp* comp) {
 	struct Entity* e = comp->Entity;
 	struct AABB entityBB, entityExtentBB;
-	Vector3 zero = Vector3_Zero();
+	Vec3 zero = Vec3_Zero();
 	int count;
 
-	if (Vector3_Equals(&e->Velocity, &zero)) return;
+	if (Vec3_Equals(&e->Velocity, &zero)) return;
 	count = Searcher_FindReachableBlocks(e,            &entityBB, &entityExtentBB);
 	Collisions_CollideWithReachableBlocks(comp, count, &entityBB, &entityExtentBB);
 }
@@ -993,7 +993,7 @@ static bool PhysicsComp_OnIce(struct Entity* e) {
 	return Entity_TouchesAny(&bounds, PhysicsComp_TouchesSlipperyIce);
 }
 
-static void PhysicsComp_MoveHor(struct PhysicsComp* comp, Vector3 vel, float factor) {
+static void PhysicsComp_MoveHor(struct PhysicsComp* comp, Vec3 vel, float factor) {
 	struct Entity* entity;
 	float dist;
 
@@ -1003,25 +1003,25 @@ static void PhysicsComp_MoveHor(struct PhysicsComp* comp, Vector3 vel, float fac
 
 	/* entity.Velocity += vel * (factor / dist) */
 	entity = comp->Entity;
-	Vector3_Mul1By(&vel, factor / dist);
-	Vector3_AddBy(&entity->Velocity, &vel);
+	Vec3_Mul1By(&vel, factor / dist);
+	Vec3_AddBy(&entity->Velocity, &vel);
 }
 
-static void PhysicsComp_Move(struct PhysicsComp* comp, Vector3 drag, float gravity, float yMul) {
+static void PhysicsComp_Move(struct PhysicsComp* comp, Vec3 drag, float gravity, float yMul) {
 	struct Entity* entity = comp->Entity;
 	entity->Velocity.Y *= yMul;
 
 	if (!comp->Hacks->Noclip) {
 		Collisions_MoveAndWallSlide(comp->Collisions);
 	}
-	Vector3_AddBy(&entity->Position, &entity->Velocity);
+	Vec3_AddBy(&entity->Position, &entity->Velocity);
 
 	entity->Velocity.Y /= yMul;
-	Vector3_Mul3By(&entity->Velocity, &drag);
+	Vec3_Mul3By(&entity->Velocity, &drag);
 	entity->Velocity.Y -= gravity;
 }
 
-static void PhysicsComp_MoveFlying(struct PhysicsComp* comp, Vector3 vel, float factor, Vector3 drag, float gravity, float yMul) {
+static void PhysicsComp_MoveFlying(struct PhysicsComp* comp, Vec3 vel, float factor, Vec3 drag, float gravity, float yMul) {
 	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
 	float yVel;
@@ -1038,22 +1038,22 @@ static void PhysicsComp_MoveFlying(struct PhysicsComp* comp, Vector3 vel, float 
 	PhysicsComp_Move(comp, drag, gravity, yMul);
 }
 
-static void PhysicsComp_MoveNormal(struct PhysicsComp* comp, Vector3 vel, float factor, Vector3 drag, float gravity, float yMul) {
+static void PhysicsComp_MoveNormal(struct PhysicsComp* comp, Vec3 vel, float factor, Vec3 drag, float gravity, float yMul) {
 	PhysicsComp_MoveHor(comp, vel, factor);
 	PhysicsComp_Move(comp, drag, gravity, yMul);
 }
 
 static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* bounds, bool checkSolid) {
-	Vector3I bbMin, bbMax;
+	IVec3 bbMin, bbMax;
 	float modifier = MATH_POS_INF;
 	struct AABB blockBB;
 	BlockID block;
 	uint8_t collide;
-	Vector3 v;
+	Vec3 v;
 	int x, y, z;
 
-	Vector3I_Floor(&bbMin, &bounds->Min);
-	Vector3I_Floor(&bbMax, &bounds->Max);	
+	IVec3_Floor(&bbMin, &bounds->Min);
+	IVec3_Floor(&bbMax, &bounds->Max);	
 
 	bbMin.X = max(bbMin.X, 0); bbMax.X = min(bbMax.X, World.MaxX);
 	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World.MaxY);
@@ -1068,8 +1068,8 @@ static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* b
 				collide = Blocks.Collide[block];
 				if (collide == COLLIDE_SOLID && !checkSolid) continue;
 
-				Vector3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
-				Vector3_Add(&blockBB.Max, &v, &Blocks.MaxBB[block]);
+				Vec3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
+				Vec3_Add(&blockBB.Max, &v, &Blocks.MaxBB[block]);
 				if (!AABB_Intersects(&blockBB, bounds)) continue;
 
 				modifier = min(modifier, Blocks.SpeedMultiplier[block]);
@@ -1106,7 +1106,7 @@ static float PhysicsComp_GetBaseSpeed(struct PhysicsComp* comp) {
 
 #define LIQUID_GRAVITY 0.02f
 #define ROPE_GRAVITY   0.034f
-void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel) {
+void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
 	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
 	float baseSpeed, verSpeed, horSpeed;
@@ -1132,13 +1132,13 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel) {
 	}
 
 	if (Entity_TouchesAnyWater(entity) && !hacks->Floating) {
-		Vector3 waterDrag = { 0.8f, 0.8f, 0.8f };
+		Vec3 waterDrag = { 0.8f, 0.8f, 0.8f };
 		PhysicsComp_MoveNormal(comp, vel, 0.02f * horSpeed, waterDrag, LIQUID_GRAVITY, verSpeed);
 	} else if (Entity_TouchesAnyLava(entity) && !hacks->Floating) {
-		Vector3 lavaDrag = { 0.5f, 0.5f, 0.5f };
+		Vec3 lavaDrag = { 0.5f, 0.5f, 0.5f };
 		PhysicsComp_MoveNormal(comp, vel, 0.02f * horSpeed, lavaDrag, LIQUID_GRAVITY, verSpeed);
 	} else if (Entity_TouchesAnyRope(entity) && !hacks->Floating) {
-		Vector3 ropeDrag = { 0.5f, 0.85f, 0.5f };
+		Vec3 ropeDrag = { 0.5f, 0.85f, 0.5f };
 		PhysicsComp_MoveNormal(comp, vel, 0.02f * 1.7f, ropeDrag, ROPE_GRAVITY, verSpeed);
 	} else {
 		factor  = hacks->Floating || entity->OnGround ? 0.1f : 0.02f;
@@ -1161,7 +1161,7 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel) {
 				entity->Velocity.Z *= scale;
 			}
 		} else if (entity->OnGround || hacks->Flying) {
-			Vector3_Mul3By(&entity->Velocity, &entity->Model->GroundFriction); /* air drag or ground friction */
+			Vec3_Mul3By(&entity->Velocity, &entity->Model->GroundFriction); /* air drag or ground friction */
 		}
 	}
 
@@ -1203,7 +1203,7 @@ float PhysicsComp_CalcJumpVelocity(float jumpHeight) {
 void PhysicsComp_DoEntityPush(struct Entity* entity) {
 	struct Entity* other;
 	bool yIntersects;
-	Vector3 dir;
+	Vec3 dir;
 	float dist, pushStrength;
 	int id;
 	dir.Y = 0.0f;
@@ -1223,11 +1223,11 @@ void PhysicsComp_DoEntityPush(struct Entity* entity) {
 		dist = dir.X * dir.X + dir.Z * dir.Z;
 		if (dist < 0.002f || dist > 1.0f) continue; /* TODO: range needs to be lower? */
 
-		Vector3_Normalize(&dir, &dir);
+		Vec3_Normalize(&dir, &dir);
 		pushStrength = (1 - dist) / 32.0f; /* TODO: should be 24/25 */
 		/* entity.Velocity -= dir * pushStrength */
-		Vector3_Mul1By(&dir, pushStrength);
-		Vector3_SubBy(&entity->Velocity, &dir);
+		Vec3_Mul1By(&dir, pushStrength);
+		Vec3_SubBy(&entity->Velocity, &dir);
 	}
 }
 
@@ -1235,7 +1235,7 @@ void PhysicsComp_DoEntityPush(struct Entity* entity) {
 /*########################################################################################################################*
 *----------------------------------------------------SoundsComponent------------------------------------------------------*
 *#########################################################################################################################*/
-static Vector3 sounds_lastPos = { -1e25f, -1e25f, -1e25f };
+static Vec3 sounds_lastPos = { -1e25f, -1e25f, -1e25f };
 static bool sounds_anyNonAir;
 static uint8_t sounds_type;
 
@@ -1258,8 +1258,8 @@ static bool Sounds_CheckSolid(BlockID b) {
 
 static void SoundComp_GetSound(struct LocalPlayer* p) {
 	struct AABB bounds;
-	Vector3 pos;
-	Vector3I feetPos;
+	Vec3 pos;
+	IVec3 feetPos;
 	BlockID blockUnder;
 	float maxY;
 	uint8_t typeUnder, collideUnder;
@@ -1274,7 +1274,7 @@ static void SoundComp_GetSound(struct LocalPlayer* p) {
 
 	/* then check block standing on */
 	pos = p->Interp.Next.Pos; pos.Y -= 0.01f;
-	Vector3I_Floor(&feetPos, &pos);
+	IVec3_Floor(&feetPos, &pos);
 	blockUnder = World_SafeGetBlock_3I(feetPos);
 	maxY = feetPos.Y + Blocks.MaxBB[blockUnder].Y;
 
@@ -1289,13 +1289,13 @@ static void SoundComp_GetSound(struct LocalPlayer* p) {
 	Entity_TouchesAny(&bounds, Sounds_CheckSolid);
 }
 
-static bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vector3 soundPos) {
-	Vector3 delta;
+static bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vec3 soundPos) {
+	Vec3 delta;
 	float distSq;
 	float oldLegRot, newLegRot;
 
-	Vector3_Sub(&delta, &sounds_lastPos, &soundPos);
-	distSq = Vector3_LengthSquared(&delta);
+	Vec3_Sub(&delta, &sounds_lastPos, &soundPos);
+	distSq = Vec3_LengthSquared(&delta);
 	/* just play every certain block interval when not animating */
 	if (p->Base.Anim.Swing < 0.999f) return distSq > 1.75f * 1.75f;
 
@@ -1312,10 +1312,10 @@ static bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vector3 soundPos) {
 
 void SoundComp_Tick(bool wasOnGround) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	Vector3 soundPos      = p->Interp.Next.Pos;
+	Vec3 soundPos      = p->Interp.Next.Pos;
 
 	SoundComp_GetSound(p);
-	if (!sounds_anyNonAir) soundPos = Vector3_BigPos();
+	if (!sounds_anyNonAir) soundPos = Vec3_BigPos();
 
 	if (p->Base.OnGround && (SoundComp_ShouldPlay(p, soundPos) || !wasOnGround)) {
 		Audio_PlayStepSound(sounds_type);

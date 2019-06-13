@@ -20,11 +20,11 @@ static GfxResourceID Particles_TexId, Particles_VB;
 static RNGState rnd;
 static bool particle_hitTerrain;
 
-void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices) {
+void Particle_DoRender(Vec2* size, Vec3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices) {
 	struct Matrix* view;
 	VertexP3fT2fC4b v;
 	float sX, sY;
-	Vector3 centre;
+	Vec3 centre;
 	float aX, aY, aZ, bX, bY, bZ;
 
 	sX = size->X * 0.5f; sY = size->Y * 0.5f;
@@ -48,7 +48,7 @@ void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol c
 				   v.V = rec->V2; vertices[3] = v;
 }
 
-static void Particle_Reset(struct Particle* p, Vector3 pos, Vector3 velocity, float lifetime) {
+static void Particle_Reset(struct Particle* p, Vec3 pos, Vec3 velocity, float lifetime) {
 	p->lastPos = pos; p->nextPos = pos;
 	p->velocity = velocity;
 	p->lifetime = lifetime;
@@ -59,11 +59,11 @@ static bool Particle_CanPass(BlockID block, bool throughLiquids) {
 	return draw == DRAW_GAS || draw == DRAW_SPRITE || (throughLiquids && Blocks.IsLiquid[block]);
 }
 
-static bool Particle_CollideHor(Vector3* nextPos, BlockID block) {
-	Vector3 horPos = Vector3_Create3((float)Math_Floor(nextPos->X), 0.0f, (float)Math_Floor(nextPos->Z));
-	Vector3 min, max;
-	Vector3_Add(&min, &Blocks.MinBB[block], &horPos);
-	Vector3_Add(&max, &Blocks.MaxBB[block], &horPos);
+static bool Particle_CollideHor(Vec3* nextPos, BlockID block) {
+	Vec3 horPos = Vec3_Create3((float)Math_Floor(nextPos->X), 0.0f, (float)Math_Floor(nextPos->Z));
+	Vec3 min, max;
+	Vec3_Add(&min, &Blocks.MinBB[block], &horPos);
+	Vec3_Add(&max, &Blocks.MaxBB[block], &horPos);
 	return nextPos->X >= min.X && nextPos->Z >= min.Z && nextPos->X < max.X && nextPos->Z < max.Z;
 }
 
@@ -77,13 +77,13 @@ static BlockID Particle_GetBlock(int x, int y, int z) {
 
 static bool Particle_TestY(struct Particle* p, int y, bool topFace, bool throughLiquids) {
 	BlockID block;
-	Vector3 minBB, maxBB;
+	Vec3 minBB, maxBB;
 	float collideY;
 	bool collideVer;
 
 	if (y < 0) {
 		p->nextPos.Y = ENTITY_ADJUSTMENT; p->lastPos.Y = ENTITY_ADJUSTMENT;
-		p->velocity  = Vector3_Zero();
+		p->velocity  = Vec3_Zero();
 		particle_hitTerrain = true;
 		return false;
 	}
@@ -99,7 +99,7 @@ static bool Particle_TestY(struct Particle* p, int y, bool topFace, bool through
 		float adjust = topFace ? ENTITY_ADJUSTMENT : -ENTITY_ADJUSTMENT;
 		p->lastPos.Y = collideY + adjust;
 		p->nextPos.Y = p->lastPos.Y;
-		p->velocity  = Vector3_Zero();
+		p->velocity  = Vec3_Zero();
 		particle_hitTerrain = true;
 		return false;
 	}
@@ -109,7 +109,7 @@ static bool Particle_TestY(struct Particle* p, int y, bool topFace, bool through
 static bool Particle_PhysicsTick(struct Particle* p, float gravity, bool throughLiquids, double delta) {
 	BlockID cur;
 	float minY, maxY;
-	Vector3 velocity;
+	Vec3 velocity;
 	int y, begY, endY;
 
 	p->lastPos = p->nextPos;
@@ -125,8 +125,8 @@ static bool Particle_PhysicsTick(struct Particle* p, float gravity, bool through
 	p->velocity.Y -= gravity * (float)delta;
 	begY = Math_Floor(p->nextPos.Y);
 	
-	Vector3_Mul1(&velocity, &p->velocity, (float)delta * 3.0f);
-	Vector3_Add(&p->nextPos, &p->nextPos, &velocity);
+	Vec3_Mul1(&velocity, &p->velocity, (float)delta * 3.0f);
+	Vec3_Add(&p->nextPos, &p->nextPos, &velocity);
 	endY = Math_Floor(p->nextPos.Y);
 
 	if (p->velocity.Y > 0.0f) {
@@ -156,12 +156,12 @@ static bool RainParticle_Tick(struct RainParticle* p, double delta) {
 }
 
 static void RainParticle_Render(struct RainParticle* p, float t, VertexP3fT2fC4b* vertices) {
-	Vector3 pos;
-	Vector2 size;
+	Vec3 pos;
+	Vec2 size;
 	PackedCol col;
 	int x, y, z;
 
-	Vector3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
+	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
 	size.X = (float)p->base.size * 0.015625f; size.Y = size.X;
 
 	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
@@ -227,11 +227,11 @@ static bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
 
 static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3fT2fC4b* vertices) {
 	PackedCol col = PACKEDCOL_WHITE;
-	Vector3 pos;
-	Vector2 size;
+	Vec3 pos;
+	Vec2 size;
 	int x, y, z;
 
-	Vector3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
+	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
 	size.X = (float)p->base.size * 0.015625f; size.Y = size.X;
 	
 	if (!Blocks.FullBright[p->block]) {
@@ -341,12 +341,12 @@ void Particles_Tick(struct ScheduledTask* task) {
 	Rain_Tick(task->Interval);
 }
 
-void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
+void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 	struct TerrainParticle* p;
 	TextureLoc loc;
 	int texIndex;
 	TextureRec baseRec, rec;
-	Vector3 origin, minBB, maxBB;
+	Vec3 origin, minBB, maxBB;
 
 	/* texture UV variables */
 	float uScale, vScale, maxU2, maxV2;
@@ -356,15 +356,15 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 	
 	/* per-particle coords */
 	float cellX, cellY, cellZ;
-	Vector3 cell, pos;
+	Vec3 cell, pos;
 	
 	/* per-particle variables */
-	Vector3 velocity;
+	Vec3 velocity;
 	float life;
 	int x, y, z, type;
 
 	if (now != BLOCK_AIR || Blocks.Draw[old] == DRAW_GAS) return;
-	Vector3I_ToVector3(&origin, &coords);
+	IVec3_ToVec3(&origin, &coords);
 	loc = Block_Tex(old, FACE_XMIN);
 	
 	baseRec = Atlas1D_TexRec(loc, 1, &texIndex);
@@ -392,7 +392,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 			for (z = 0; z < GRID_SIZE; z++) {
 
 				cellX = (float)x / GRID_SIZE; cellY = (float)y / GRID_SIZE; cellZ = (float)z / GRID_SIZE;
-				cell  = Vector3_Create3(CELL_CENTRE + cellX, CELL_CENTRE / 2 + cellY, CELL_CENTRE + cellZ);
+				cell  = Vec3_Create3(CELL_CENTRE + cellX, CELL_CENTRE / 2 + cellY, CELL_CENTRE + cellZ);
 				if (cell.X < minBB.X || cell.X > maxBB.X || cell.Y < minBB.Y
 					|| cell.Y > maxBB.Y || cell.Z < minBB.Z || cell.Z > maxBB.Z) continue;
 
@@ -413,7 +413,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 				p = &terrain_particles[terrain_count++];
 
 				life = 0.3f + Random_Float(&rnd) * 1.2f;
-				Vector3_Add(&pos, &origin, &cell);
+				Vec3_Add(&pos, &origin, &cell);
 				Particle_Reset(&p->base, pos, velocity, life);
 
 				p->rec    = rec;
@@ -426,10 +426,10 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID old, BlockID now) {
 	}
 }
 
-void Particles_RainSnowEffect(Vector3 pos) {
+void Particles_RainSnowEffect(Vec3 pos) {
 	struct RainParticle* p;
-	Vector3 origin = pos;
-	Vector3 offset, velocity;
+	Vec3 origin = pos;
+	Vec3 offset, velocity;
 	int i, type;
 
 	for (i = 0; i < 2; i++) {
@@ -444,7 +444,7 @@ void Particles_RainSnowEffect(Vector3 pos) {
 		if (rain_count == PARTICLES_MAX) Rain_RemoveAt(0);
 		p = &rain_Particles[rain_count++];
 
-		Vector3_Add(&pos, &origin, &offset);
+		Vec3_Add(&pos, &origin, &offset);
 		Particle_Reset(&p->base, pos, velocity, 40.0f);
 
 		type = Random_Range(&rnd, 0, 30);
@@ -462,7 +462,7 @@ static void Particles_ContextLost(void* obj) {
 static void Particles_ContextRecreated(void* obj) {
 	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, PARTICLES_MAX * 4);
 }
-static void Particles_BreakBlockEffect_Handler(void* obj, Vector3I coords, BlockID old, BlockID now) {
+static void Particles_BreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	Particles_BreakBlockEffect(coords, old, now);
 }
 

@@ -193,16 +193,16 @@ void Block_SetCollide(BlockID block, uint8_t collide) {
 }
 
 void Block_SetDrawType(BlockID block, uint8_t draw) {
-	Vector3 zero = Vector3_Zero();
-	Vector3 one  = Vector3_One();
+	Vec3 zero = Vec3_Zero();
+	Vec3 one  = Vec3_One();
 
 	if (draw == DRAW_OPAQUE && Blocks.Collide[block] != COLLIDE_SOLID) draw = DRAW_TRANSPARENT;
 	Blocks.Draw[block] = draw;
 	Block_RecalcIsLiquid(block);
 
 	Blocks.FullOpaque[block] = draw == DRAW_OPAQUE
-		&& Vector3_Equals(&Blocks.MinBB[block], &zero)
-		&& Vector3_Equals(&Blocks.MaxBB[block], &one);
+		&& Vec3_Equals(&Blocks.MinBB[block], &zero)
+		&& Vec3_Equals(&Blocks.MaxBB[block], &one);
 }
 
 
@@ -245,11 +245,11 @@ void Block_ResetProps(BlockID block) {
 
 	Blocks.Draw[block] = DefaultSet_Draw(block);
 	if (Blocks.Draw[block] == DRAW_SPRITE) {
-		Blocks.MinBB[block] = Vector3_Create3(2.50f/16.0f, 0.0f, 2.50f/16.0f);
-		Blocks.MaxBB[block] = Vector3_Create3(13.5f/16.0f, 1.0f, 13.5f/16.0f);
+		Blocks.MinBB[block] = Vec3_Create3(2.50f/16.0f, 0.0f, 2.50f/16.0f);
+		Blocks.MaxBB[block] = Vec3_Create3(13.5f/16.0f, 1.0f, 13.5f/16.0f);
 	} else {		
-		Blocks.MinBB[block] = Vector3_Zero();
-		Blocks.MaxBB[block] = Vector3_One();
+		Blocks.MinBB[block] = Vec3_Zero();
+		Blocks.MaxBB[block] = Vec3_One();
 		Blocks.MaxBB[block].Y = DefaultSet_Height(block);
 	}
 
@@ -307,7 +307,7 @@ void Block_SetSide(TextureLoc texLoc, BlockID blockId) {
 *--------------------------------------------------Block bounds/culling---------------------------------------------------*
 *#########################################################################################################################*/
 void Block_CalcRenderBounds(BlockID block) {
-	Vector3 min = Blocks.MinBB[block], max = Blocks.MaxBB[block];
+	Vec3 min = Blocks.MinBB[block], max = Blocks.MaxBB[block];
 
 	if (Blocks.IsLiquid[block]) {
 		min.X -= 0.1f/16.0f; max.X -= 0.1f/16.0f;
@@ -324,7 +324,7 @@ void Block_CalcRenderBounds(BlockID block) {
 
 void Block_CalcLightOffset(BlockID block) {
 	int flags = 0xFF;
-	Vector3 min = Blocks.MinBB[block], max = Blocks.MaxBB[block];
+	Vec3 min = Blocks.MinBB[block], max = Blocks.MaxBB[block];
 
 	if (min.X != 0) flags &= ~(1 << FACE_XMIN);
 	if (max.X != 1) flags &= ~(1 << FACE_XMAX);
@@ -405,9 +405,9 @@ void Block_RecalculateBB(BlockID block) {
 	TextureLoc texLoc = Block_Tex(block, FACE_XMAX);
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 
-	Vector3 centre = { 0.5f, 0.0f, 0.5f };
+	Vec3 centre = { 0.5f, 0.0f, 0.5f };
 	float minX = 0, minY = 0, maxX = 1, maxY = 1;
-	Vector3 minRaw, maxRaw;
+	Vec3 minRaw, maxRaw;
 
 	if (y < Atlas2D.RowsCount) {
 		minX = Block_GetSpriteBB_MinX(tileSize, x, y, bmp);
@@ -416,10 +416,10 @@ void Block_RecalculateBB(BlockID block) {
 		maxY = Block_GetSpriteBB_MaxY(tileSize, x, y, bmp);
 	}
 
-	minRaw = Vector3_RotateY3(minX - 0.5f, minY, 0.0f, 45.0f * MATH_DEG2RAD);
-	maxRaw = Vector3_RotateY3(maxX - 0.5f, maxY, 0.0f, 45.0f * MATH_DEG2RAD);
-	Vector3_Add(&Blocks.MinBB[block], &minRaw, &centre);
-	Vector3_Add(&Blocks.MaxBB[block], &maxRaw, &centre);
+	minRaw = Vec3_RotateY3(minX - 0.5f, minY, 0.0f, 45.0f * MATH_DEG2RAD);
+	maxRaw = Vec3_RotateY3(maxX - 0.5f, maxY, 0.0f, 45.0f * MATH_DEG2RAD);
+	Vec3_Add(&Blocks.MinBB[block], &minRaw, &centre);
+	Vec3_Add(&Blocks.MaxBB[block], &maxRaw, &centre);
 	Block_CalcRenderBounds(block);
 }
 
@@ -465,7 +465,7 @@ static bool Block_MightCull(BlockID block, BlockID other) {
 }
 
 static void Block_CalcCulling(BlockID block, BlockID other) {
-	Vector3 bMin, bMax, oMin, oMax;
+	Vec3 bMin, bMax, oMin, oMax;
 	bool occludedX, occludedY, occludedZ, bothLiquid;
 	int f;
 

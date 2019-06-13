@@ -30,14 +30,14 @@ static void HeldBlockRenderer_RenderModel(void) {
 	
 	if (Blocks.Draw[held_block] == DRAW_GAS) {
 		model = LocalPlayer_Instance.Base.Model;
-		held_entity.ModelScale = Vector3_Create1(1.0f);
+		held_entity.ModelScale = Vec3_Create1(1.0f);
 
 		Gfx_SetAlphaTest(true);
 		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
 	} else {	
 		model = Model_Get(&block);
-		held_entity.ModelScale = Vector3_Create1(0.4f);
+		held_entity.ModelScale = Vec3_Create1(0.4f);
 
 		Gfx_SetupAlphaState(Blocks.Draw[held_block]);
 		Model_Render(model, &held_entity);
@@ -52,7 +52,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 static void HeldBlockRenderer_SetMatrix(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	struct Matrix m, lookAt;
-	Vector3 eye = { 0,0,0 }; eye.Y = Entity_GetEyeHeight(p);
+	Vec3 eye = { 0,0,0 }; eye.Y = Entity_GetEyeHeight(p);
 
 	Matrix_Translate(&lookAt, -eye.X, -eye.Y, -eye.Z);
 	Matrix_Mul(&m, &lookAt, &Camera.TiltM);
@@ -62,7 +62,7 @@ static void HeldBlockRenderer_SetMatrix(void) {
 static void HeldBlockRenderer_ResetHeldState(void) {
 	/* Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!) */
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vector3 eye = { 0,0,0 }; eye.Y = Entity_GetEyeHeight(p);
+	Vec3 eye = { 0,0,0 }; eye.Y = Entity_GetEyeHeight(p);
 	held_entity.Position = eye;
 
 	held_entity.Position.X -= Camera.BobbingHor;
@@ -82,11 +82,11 @@ static void HeldBlockRenderer_ResetHeldState(void) {
 
 static void HeldBlockRenderer_SetBaseOffset(void) {
 	bool sprite = Blocks.Draw[held_block] == DRAW_SPRITE;
-	Vector3 normalOffset = { 0.56f, -0.72f, -0.72f };
-	Vector3 spriteOffset = { 0.46f, -0.52f, -0.72f };
-	Vector3 offset = sprite ? spriteOffset : normalOffset;
+	Vec3 normalOffset = { 0.56f, -0.72f, -0.72f };
+	Vec3 spriteOffset = { 0.46f, -0.52f, -0.72f };
+	Vec3 offset = sprite ? spriteOffset : normalOffset;
 
-	Vector3_AddBy(&held_entity.Position, &offset);
+	Vec3_AddBy(&held_entity.Position, &offset);
 	if (!sprite && Blocks.Draw[held_block] != DRAW_GAS) {
 		float height = Blocks.MaxBB[held_block].Y - Blocks.MinBB[held_block].Y;
 		held_entity.Position.Y += 0.2f * (1.0f - height);
@@ -176,7 +176,7 @@ static void HeldBlockRenderer_DoSwitchBlockAnim(void* obj) {
 	}
 }
 
-static void HeldBlockRenderer_BlockChanged(void* obj, Vector3I coords, BlockID old, BlockID now) {
+static void HeldBlockRenderer_BlockChanged(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	if (now == BLOCK_AIR) return;
 	HeldBlockRenderer_ClickAnim(false);
 }

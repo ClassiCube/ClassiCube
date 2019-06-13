@@ -529,7 +529,7 @@ static void Game_UpdateViewMatrix(void) {
 }
 
 static void Game_Render3D(double delta, float t) {
-	Vector3 pos;
+	Vec3 pos;
 	bool left, middle, right;
 
 	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox(delta);

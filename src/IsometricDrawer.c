@@ -22,7 +22,7 @@ static PackedCol iso_colXSide, iso_colZSide, iso_colYBottom;
 #define iso_sinY (-0.70710678118654752f) /* sin(-45 * MATH_DEG2RAD) */
 
 static struct Matrix iso_transform;
-static Vector3 iso_pos;
+static Vec3 iso_pos;
 static int iso_lastTexIndex, iso_texIndex;
 
 static void IsometricDrawer_RotateX(float cosA, float sinA) {
@@ -139,7 +139,7 @@ void IsometricDrawer_BeginBatch(VertexP3fT2fC4b* vertices, GfxResourceID vb) {
 
 void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
 	bool bright = Blocks.FullBright[block];
-	Vector3 min, max;
+	Vec3 min, max;
 	if (Blocks.Draw[block] == DRAW_GAS) return;
 
 	/* isometric coords size: cosY * -scale - sinY * scale */

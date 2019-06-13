@@ -286,7 +286,7 @@ static void StatusScreen_DrawPosition(struct StatusScreen* s) {
 
 	struct TextAtlas* atlas = &s->posAtlas;
 	struct Texture tex;
-	Vector3I pos;
+	IVec3 pos;
 	int count;	
 
 	/* Make "Position: " prefix */
@@ -294,7 +294,7 @@ static void StatusScreen_DrawPosition(struct StatusScreen* s) {
 	tex.X = 2; tex.Width = atlas->offset;
 	Gfx_Make2DQuad(&tex, col, &ptr);
 
-	Vector3I_Floor(&pos, &LocalPlayer_Instance.Base.Position);
+	IVec3_Floor(&pos, &LocalPlayer_Instance.Base.Position);
 	atlas->curX = atlas->offset + 2;
 
 	/* Make (X, Y, Z) suffix */

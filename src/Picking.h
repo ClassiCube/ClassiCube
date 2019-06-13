@@ -8,11 +8,11 @@
 
 /* Describes the picked/selected block by the user and its position. */
 struct PickedPos {
-	Vector3 Min;            /* Minimum coords of the block's bounding box.*/
-	Vector3 Max;            /* Maximum coords of the block's bounding box. */
-	Vector3 Intersect;      /* Coords at which the ray intersected this block. */
-	Vector3I BlockPos;      /* Coords of the block */
-	Vector3I TranslatedPos; /* Coords of the neighbouring block that is closest to the player */	
+	Vec3 Min;            /* Minimum coords of the block's bounding box.*/
+	Vec3 Max;            /* Maximum coords of the block's bounding box. */
+	Vec3 Intersect;      /* Coords at which the ray intersected this block. */
+	IVec3 BlockPos;      /* Coords of the block */
+	IVec3 TranslatedPos; /* Coords of the neighbouring block that is closest to the player */	
 	bool Valid;             /* Whether this instance actually has a selected block currently */
 	Face Closest;           /* Face of the picked block that is closet to the player */
 	BlockID Block;          /* Block ID of the picked block */
@@ -29,21 +29,21 @@ http://www.devmaster.net/articles/raytracing_series/A%20faster%20voxel%20travers
 */
 struct RayTracer {
 	int X, Y, Z;
-	Vector3 Origin, Dir;
-	Vector3 Min, Max; /* Block data */
+	Vec3 Origin, Dir;
+	Vec3 Min, Max; /* Block data */
 	BlockID Block;    /* Block data */
-	Vector3I step;
-	Vector3 tMax, tDelta;
+	IVec3 step;
+	Vec3 tMax, tDelta;
 };
 
-void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, Vector3 intersect);
+void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, Vec3 intersect);
 void PickedPos_SetAsInvalid(struct PickedPos* pos);
-void RayTracer_SetVectors(struct RayTracer* t, Vector3 origin, Vector3 dir);
+void RayTracer_SetVectors(struct RayTracer* t, Vec3 origin, Vec3 dir);
 void RayTracer_Step(struct RayTracer* t);
 
 /* Determines the picked block based on the given origin and direction vector.
    Marks pickedPos as invalid if a block could not be found due to going outside map boundaries
    or not being able to find a suitable candiate within the given reach distance.*/
-void Picking_CalculatePickedBlock(Vector3 origin, Vector3 dir, float reach, struct PickedPos* pos);
-void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, float reach, struct PickedPos* pos);
+void Picking_CalculatePickedBlock(Vec3 origin, Vec3 dir, float reach, struct PickedPos* pos);
+void Picking_ClipCameraPos(Vec3 origin, Vec3 dir, float reach, struct PickedPos* pos);
 #endif

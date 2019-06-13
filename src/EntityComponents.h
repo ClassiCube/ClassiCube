@@ -21,7 +21,7 @@ struct AnimatedComp {
 };
 
 void AnimatedComp_Init(struct AnimatedComp* anim);
-void AnimatedComp_Update(struct Entity* entity, Vector3 oldPos, Vector3 newPos, double delta);
+void AnimatedComp_Update(struct Entity* entity, Vec3 oldPos, Vec3 newPos, double delta);
 void AnimatedComp_GetCurrent(struct Entity* entity, float t);
 
 /* Entity component that performs tilt animation depending on movement speed and time */
@@ -76,7 +76,7 @@ void HacksComp_RecheckFlags(struct HacksComp* hacks);
 void HacksComp_Update(struct HacksComp* hacks);
 
 /* Represents a position and orientation state */
-struct InterpState { Vector3 Pos; float HeadX, HeadY, RotX, RotZ; };
+struct InterpState { Vec3 Pos; float HeadX, HeadY, RotX, RotZ; };
 
 #define InterpComp_Layout \
 struct InterpState Prev, Next; float PrevRotY, NextRotY; int RotYCount; float RotYStates[15];
@@ -130,7 +130,7 @@ struct PhysicsComp {
 void PhysicsComp_Init(struct PhysicsComp* comp, struct Entity* entity);
 void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp);
 void PhysicsComp_DoNormalJump(struct PhysicsComp* comp);
-void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vector3 vel);
+void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel);
 float PhysicsComp_CalcJumpVelocity(float jumpHeight);
 double PhysicsComp_CalcMaxHeight(float u);
 void PhysicsComp_DoEntityPush(struct Entity* entity);

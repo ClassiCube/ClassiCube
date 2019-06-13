@@ -226,7 +226,7 @@ static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
 	Face closestFace;
 	bool insideMap;
 
-	Vector3 pos = p->Position;
+	Vec3 pos = p->Position;
 	struct AABB playerBB;
 	struct LocationUpdate update;
 
@@ -264,13 +264,13 @@ static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
 	return true;
 }
 
-static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
+static bool InputHandler_IntersectsOthers(Vec3 pos, BlockID block) {
 	struct AABB blockBB, entityBB;
 	struct Entity* entity;
 	int id;
 
-	Vector3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
-	Vector3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
+	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
+	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 	
 	for (id = 0; id < ENTITIES_SELF_ID; id++) {
 		entity = Entities.List[id];
@@ -287,19 +287,19 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 	struct Entity* p        = &LocalPlayer_Instance.Base;
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 
-	Vector3 pos, nextPos;
+	Vec3 pos, nextPos;
 	struct AABB blockBB, playerBB;
 	struct LocationUpdate update;
 
 	/* Non solid blocks (e.g. water/flowers) can always be placed on players */
 	if (Blocks.Collide[block] != COLLIDE_SOLID) return true;
 
-	Vector3I_ToVector3(&pos, &Game_SelectedPos.TranslatedPos);
+	IVec3_ToVec3(&pos, &Game_SelectedPos.TranslatedPos);
 	if (InputHandler_IntersectsOthers(pos, block)) return false;
 	
 	nextPos = LocalPlayer_Instance.Interp.Next.Pos;
-	Vector3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
-	Vector3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
+	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
+	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 
 	/* NOTE: Need to also test against next position here, otherwise player can 
 	fall through the block at feet as collision is performed against nextPos */
@@ -325,7 +325,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 	TimeMS now = DateTime_CurrentUTC_MS();
 	int delta  = (int)(now - input_lastClick);
 
-	Vector3I pos;
+	IVec3 pos;
 	BlockID old, cur, block;
 	int i;
 
