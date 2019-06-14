@@ -746,9 +746,10 @@ static void Http_WorkerLoop(void) {
 #ifdef CC_BUILD_WEB
 /* Access to XMLHttpRequest at 'http://static.classicube.net' from origin 'http://www.classicube.net' has been blocked by CORS policy: */
 /* No 'Access-Control-Allow-Origin' header is present on the requested resource. */
-const static String skinServer = String_FromConst("/static/skins/");
+#define SKIN_SERVER "/skins/"
 #else
-const static String skinServer = String_FromConst("http://static.classicube.net/skins/");
+/* Prefer static.classicube.net to avoid a pointless redirect */
+#define SKIN_SERVER "http://static.classicube.net/skins/"
 #endif
 
 void Http_AsyncGetSkin(const String* id, const String* skinName) {
@@ -758,7 +759,7 @@ void Http_AsyncGetSkin(const String* id, const String* skinName) {
 	if (Utils_IsUrlPrefix(skinName, 0)) {
 		String_Copy(&url, skinName);
 	} else {
-		String_AppendString(&url, &skinServer);
+		String_AppendConst(&url, SKIN_SERVER);
 		String_AppendColorless(&url, skinName);
 		String_AppendConst(&url, ".png");
 	}
