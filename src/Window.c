@@ -2550,10 +2550,15 @@ static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* da
 	}
 	
 	Key_SetPressed(key, type == EMSCRIPTEN_EVENT_KEYDOWN);
+	/* KeyUp always intercepted */
 	if (type != EMSCRIPTEN_EVENT_KEYDOWN) return true;
 	
-	/* Must not intercept keydown for regular keys, otherwise KeyPress doesn't get raised */
-	/* However, do want to prevent browser's behaviour on F11,F5, home etc */
+	/* If holding down Ctrl or Alt, keys aren't going to generate a KeyPress event anyways */
+	/* This intercepts Ctrl + S, Ctrl + T, etc */
+	if (Key_IsControlPressed() || Key_IsAltPressed() || Key_IsWinPressed()) return true;
+	
+	/* Must not intercept KeyDown for regular keys, otherwise KeyPress doesn't get raised */
+	/* However, do want to prevent browser's behaviour on F11, F5, home etc */
 	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
 	return (key >= KEY_F1 && key <= KEY_F35)   || (key >= KEY_UP && key <= KEY_RIGHT) ||
 		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK && key != KEY_SPACE);
