@@ -2554,8 +2554,9 @@ static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* da
 	if (type != EMSCRIPTEN_EVENT_KEYDOWN) return true;
 	
 	/* If holding down Ctrl or Alt, keys aren't going to generate a KeyPress event anyways */
-	/* This intercepts Ctrl + S, Ctrl + T, etc */
-	if (Key_IsControlPressed() || Key_IsAltPressed() || Key_IsWinPressed()) return true;
+	/* This intercepts Ctrl+S etc. Ctrl+C and Ctrl+V are not intercepted for clipboard. */
+	if (Key_IsAltPressed() || Key_IsWinPressed()) return true;
+	if (Key_IsControlPressed() && key != 'C' && key != 'V') return true;
 	
 	/* Must not intercept KeyDown for regular keys, otherwise KeyPress doesn't get raised */
 	/* However, do want to prevent browser's behaviour on F11, F5, home etc */

@@ -150,8 +150,7 @@ void String_Append(String* str, char c) {
 }
 
 void String_AppendBool(String* str, bool value) {
-	const char* text = value ? "True" : "False";
-	String_AppendConst(str, text);
+	String_AppendConst(str, value ? "True" : "False");
 }
 
 int String_MakeUInt32(uint32_t num, char* digits) {
