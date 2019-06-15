@@ -1151,11 +1151,11 @@ static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
 	if (!Key_IsActionPressed()) return false;
 
 	if (key == 'V' && w->text.length < maxChars) {
-		Window_RequestClipboardText(InputWidget_CopyFromClipboard, w);
+		Clipboard_RequestText(InputWidget_CopyFromClipboard, w);
 		return true;
 	} else if (key == 'C') {
 		if (!w->text.length) return true;
-		Window_SetClipboardText(&w->text);
+		Clipboard_SetText(&w->text);
 		return true;
 	}
 	return false;

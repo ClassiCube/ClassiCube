@@ -11,9 +11,6 @@ Rect2D Display_Bounds;
 int Window_X, Window_Y, Window_Width, Window_Height;
 bool Window_Exists, Window_Focused;
 
-static bool win_cursorVisible = true;
-bool Cursor_GetVisible(void) { return win_cursorVisible; }
-
 void Window_CreateSimple(int width, int height) {
 	struct GraphicsMode mode;
 	int x, y;
@@ -26,11 +23,11 @@ void Window_CreateSimple(int width, int height) {
 }
 
 #ifndef CC_BUILD_WEBCANVAS
-void Window_RequestClipboardText(RequestClipboardCallback callback, void* obj) {
+void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 	String text; char textBuffer[512];
 	String_InitArray(text, textBuffer);
 
-	Window_GetClipboardText(&text);
+	Clipboard_GetText(&text);
 	callback(&text, obj);
 }
 #endif
@@ -397,7 +394,7 @@ void Window_SetTitle(const String* title) {
 	SetWindowText(win_handle, str);
 }
 
-void Window_GetClipboardText(String* value) {
+void Clipboard_GetText(String* value) {
 	/* retry up to 50 times*/
 	int i;
 	value->length = 0;
@@ -432,7 +429,7 @@ void Window_GetClipboardText(String* value) {
 	}
 }
 
-void Window_SetClipboardText(const String* value) {
+void Clipboard_SetText(const String* value) {
 	/* retry up to 10 times */
 	int i;
 	for (i = 0; i < 10; i++) {
@@ -459,15 +456,6 @@ void Window_SetClipboardText(const String* value) {
 }
 
 
-void Window_SetSize(int width, int height) {
-	DWORD style = GetWindowLong(win_handle, GWL_STYLE);
-	RECT rect   = { 0, 0, width, height };
-	AdjustWindowRect(&rect, style, false);
-
-	SetWindowPos(win_handle, NULL, 0, 0, 
-				Rect_Width(rect), Rect_Height(rect), SWP_NOMOVE);
-}
-
 void* Window_GetHandle(void) { return win_handle; }
 void Window_SetVisible(bool visible) {
 	if (visible) {
@@ -477,11 +465,6 @@ void Window_SetVisible(bool visible) {
 	} else {
 		ShowWindow(win_handle, SW_HIDE);
 	}
-}
-
-
-void Window_Close(void) {
-	PostMessage(win_handle, WM_CLOSE, 0, 0);
 }
 
 int Window_GetWindowState(void) {
@@ -527,6 +510,20 @@ void Window_ExitFullscreen(void) {
 	Window_ToggleFullscreen(false, win_show);
 }
 
+
+void Window_SetSize(int width, int height) {
+	DWORD style = GetWindowLong(win_handle, GWL_STYLE);
+	RECT rect   = { 0, 0, width, height };
+	AdjustWindowRect(&rect, style, false);
+
+	SetWindowPos(win_handle, NULL, 0, 0, 
+				Rect_Width(rect), Rect_Height(rect), SWP_NOMOVE);
+}
+
+void Window_Close(void) {
+	PostMessage(win_handle, WM_CLOSE, 0, 0);
+}
+
 void Window_ProcessEvents(void) {
 	MSG msg;
 	while (PeekMessage(&msg, NULL, 0, 0, 1)) {
@@ -544,13 +541,8 @@ Point2D Cursor_GetScreenPos(void) {
 	POINT point; GetCursorPos(&point);
 	Point2D p = { point.x, point.y }; return p;
 }
-void Cursor_SetScreenPos(int x, int y) {
-	SetCursorPos(x, y);
-}
-void Cursor_SetVisible(bool visible) {
-	win_cursorVisible = visible;
-	ShowCursor(visible ? 1 : 0);
-}
+void Cursor_SetScreenPos(int x, int y) { SetCursorPos(x, y); }
+void Cursor_SetVisible(bool visible)   { ShowCursor(visible ? 1 : 0); }
 
 void Window_ShowDialog(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
@@ -849,7 +841,7 @@ static char clipboard_paste_buffer[256];
 static String clipboard_copy_text  = String_FromArray(clipboard_copy_buffer);
 static String clipboard_paste_text = String_FromArray(clipboard_paste_buffer);
 
-void Window_GetClipboardText(String* value) {
+void Clipboard_GetText(String* value) {
 	Window owner = XGetSelectionOwner(win_display, xa_clipboard);
 	int i;
 	if (!owner) return; /* no window owner */
@@ -869,7 +861,7 @@ void Window_GetClipboardText(String* value) {
 	}
 }
 
-void Window_SetClipboardText(const String* value) {
+void Clipboard_SetText(const String* value) {
 	String_Copy(&clipboard_copy_text, value);
 	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
 }
@@ -1167,7 +1159,6 @@ void Cursor_SetScreenPos(int x, int y) {
 
 void Cursor_SetVisible(bool visible) {
 	static Cursor blankCursor;
-	win_cursorVisible = visible;
 
 	if (visible) {
 		XUndefineCursor(win_display, win_handle);
@@ -1764,7 +1755,7 @@ static PasteboardRef Window_GetPasteboard(void) {
 #define FMT_UTF8  CFSTR("public.utf8-plain-text")
 #define FMT_UTF16 CFSTR("public.utf16-plain-text")
 
-void Window_GetClipboardText(String* value) {
+void Clipboard_GetText(String* value) {
 	PasteboardRef pbRef;
 	ItemCount itemCount;
 	PasteboardItemID itemID;
@@ -1793,7 +1784,7 @@ void Window_GetClipboardText(String* value) {
 	}
 }
 
-void Window_SetClipboardText(const String* value) {
+void Clipboard_SetText(const String* value) {
 	PasteboardRef pbRef;
 	CFDataRef cfData;
 	char str[800];
@@ -1901,7 +1892,6 @@ void Cursor_SetScreenPos(int x, int y) {
 }
 
 void Cursor_SetVisible(bool visible) {
-	win_cursorVisible = visible;
 	if (visible) {
 		CGDisplayShowCursor(CGMainDisplayID());
 	} else {
@@ -2064,7 +2054,7 @@ void Window_SetTitle(const String* title) {
 	SDL_SetWindowTitle(win_handle, str);
 }
 
-void Window_GetClipboardText(String* value) {
+void Clipboard_GetText(String* value) {
 	char* ptr = SDL_GetClipboardText();
 	if (!ptr) return;
 
@@ -2073,7 +2063,7 @@ void Window_GetClipboardText(String* value) {
 	SDL_free(ptr);
 }
 
-void Window_SetClipboardText(const String* value) {
+void Clipboard_SetText(const String* value) {
 	char str[600];
 	Platform_ConvertString(str, value);
 	SDL_SetClipboardText(str);
@@ -2678,14 +2668,14 @@ EMSCRIPTEN_KEEPALIVE static void Window_GotClipboardText(char* src) {
 	clipboard_func = NULL;
 }
 
-void Window_GetClipboardText(String* value) { }
-void Window_SetClipboardText(const String* value) {
+void Clipboard_GetText(String* value) { }
+void Clipboard_SetText(const String* value) {
 	char str[600];
 	Platform_ConvertString(str, value);
 	EM_ASM_({ window.cc_copyText = UTF8ToString($0); }, str);
 }
 
-void Window_RequestClipboardText(RequestClipboardCallback callback, void* obj) {
+void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 	clipboard_func = callback;
 	clipboard_obj  = obj;
 }

@@ -63,14 +63,14 @@ CC_API void Window_SetTitle(const String* title);
 typedef void (*RequestClipboardCallback)(String* value, void* obj);
 /* Gets the text currently on the clipboard. */
 /* NOTE: You MUST have created the window beforehand. (necessary for X11) */
-CC_API void Window_GetClipboardText(String* value);
+CC_API void Clipboard_GetText(String* value);
 /* Sets the text currently on the clipboard. */
 /* NOTE: You MUST have created the window beforehand. (necessary for X11) */
-CC_API void Window_SetClipboardText(const String* value);
+CC_API void Clipboard_SetText(const String* value);
 /* Calls a callback function when text is retrieved from the clipboard. */
-/* NOTE: On most platforms this just calls Window_GetClipboardText. */
+/* NOTE: On most platforms this just calls Clipboard_GetText. */
 /* With emscripten however, the callback is instead called when a 'paste' event arrives. */
-void Window_RequestClipboardText(RequestClipboardCallback callback, void* obj);
+void Clipboard_RequestText(RequestClipboardCallback callback, void* obj);
 
 /* Sets whether the window is visible on screen at all. */
 void Window_SetVisible(bool visible);
@@ -96,8 +96,6 @@ void Window_ProcessEvents(void);
 Point2D Cursor_GetScreenPos(void);
 /* Sets the position of the cursor in screen coordinates. */
 void Cursor_SetScreenPos(int x, int y);
-/* Whether the cursor is visible when over this window. */
-bool Cursor_GetVisible(void);
 /* Sets whether the cursor is visible when over this window. */
 /* NOTE: You MUST BE VERY CAREFUL with this! OS typically uses a counter for visibility,
 so setting invisible multiple times means you must then set visible multiple times. */

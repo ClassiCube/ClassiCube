@@ -396,11 +396,8 @@ static void LInput_CopyFromClipboard(String* text, void* widget) {
 	String_UNSAFE_TrimStart(text);
 	String_UNSAFE_TrimEnd(text);
 
-	if (w->Text.length >= w->Text.capacity || !text->length) return;
 	if (w->ClipboardFilter) w->ClipboardFilter(text);
-
-	LInput_AppendString(w, text);
-	LWidget_Redraw(w);
+	if (LInput_AppendString(w, text)) LWidget_Redraw(w);
 }
 
 static void LInput_KeyDown(void* widget, Key key, bool was) {
@@ -410,9 +407,9 @@ static void LInput_KeyDown(void* widget, Key key, bool was) {
 	} else if (key == KEY_DELETE && LInput_Delete(w)) {
 		LWidget_Redraw(w);
 	} else if (key == 'C' && Key_IsActionPressed()) {
-		if (w->Text.length) Window_SetClipboardText(&w->Text);
+		if (w->Text.length) Clipboard_SetText(&w->Text);
 	} else if (key == 'V' && Key_IsActionPressed()) {
-		Window_RequestClipboardText(LInput_CopyFromClipboard, w);
+		Clipboard_RequestText(LInput_CopyFromClipboard, w);
 	} else if (key == KEY_ESCAPE) {
 		if (LInput_Clear(w)) LWidget_Redraw(w);
 	} else if (key == KEY_LEFT) {

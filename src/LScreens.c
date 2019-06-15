@@ -1182,12 +1182,11 @@ static void ServersScreen_Refresh(void* w, int x, int y) {
 
 static void ServersScreen_HashFilter(String* str) {
 	int lastIndex;
+	if (!str->length) return;
+
 	/* Server url look like http://www.classicube.net/server/play/aaaaa/ */
 	/* Trim it to only be the aaaaa */
-
-	if (str->buffer[str->length - 1] == '/') {
-		String_DeleteAt(str, str->length - 1);
-	}
+	if (str->buffer[str->length - 1] == '/') str->length--;
 
 	/* Trim the URL parts before the hash */
 	lastIndex = String_LastIndexOf(str, '/');
