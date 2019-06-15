@@ -25,6 +25,16 @@ void Window_CreateSimple(int width, int height) {
 	Window_Create(x, y, width, height, &mode);
 }
 
+#ifndef CC_BUILD_WEBCANVAS
+void Window_RequestClipboardText(RequestClipboardCallback callback, void* obj) {
+	String text; char textBuffer[512];
+	String_InitArray(text, textBuffer);
+
+	Window_GetClipboardText(&text);
+	callback(&text, obj);
+}
+#endif
+
 static Point2D cursorPrev;
 static void Window_CentreMousePosition(void) {
 	int cenX = Window_X + Window_Width  / 2;
@@ -2621,15 +2631,24 @@ void Window_Init(void) {
 	Display_Bounds.Height = EM_ASM_INT_V({ return screen.height; });
 	Display_BitsPerPixel  = 24;
 
-	/* copy text, but only if user isn't selecting something else */
-	EM_ASM(window.addEventListener('copy', function(e) {
-		if (window.getSelection && window.getSelection().toString()) return;
-		if (window.cc_copyText) {
-			e.clipboardData.setData('text/plain', window.cc_copyText);
-			e.preventDefault();
-			window.cc_copyText = null;
-		}	
-	});
+	/* copy text, but only if user isn't selecting something else on the webpage */
+	EM_ASM(window.addEventListener('copy', 
+		function(e) {
+			if (window.getSelection && window.getSelection().toString()) return;
+			if (window.cc_copyText) {
+				e.clipboardData.setData('text/plain', window.cc_copyText);
+				e.preventDefault();
+				window.cc_copyText = null;
+			}	
+		});
+	);
+
+	/* paste text */
+	EM_ASM(window.addEventListener('paste',
+		function(e) {
+			contents = e.clipboardData.getData('text/plain');
+			ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
+		});
 	);
 }
 
@@ -2647,18 +2666,28 @@ void Window_SetTitle(const String* title) {
 	EM_ASM_({ document.title = UTF8ToString($0); }, str);
 }
 
-/* TODO: Use real system clipboard.. */
-static char clipboardBuffer[256];
-static String clipboardStr = String_FromArray(clipboardBuffer);
+static RequestClipboardCallback clipboard_func;
+static void* clipboard_obj;
 
-void Window_GetClipboardText(String* value) {
-	String_AppendString(value, &clipboardStr);
+EMSCRIPTEN_KEEPALIVE static void Window_GotClipboardText(char* src) {
+	String str = String_FromReadonly(src);
+	Platform_Log1("GOT TEXT: %c", src);
+	if (!clipboard_func) return;
+
+	clipboard_func(&str, clipboard_obj);
+	clipboard_func = NULL;
 }
+
+void Window_GetClipboardText(String* value) { }
 void Window_SetClipboardText(const String* value) {
 	char str[600];
 	Platform_ConvertString(str, value);
 	EM_ASM_({ window.cc_copyText = UTF8ToString($0); }, str);
-	String_Copy(&clipboardStr, value);
+}
+
+void Window_RequestClipboardText(RequestClipboardCallback callback, void* obj) {
+	clipboard_func = callback;
+	clipboard_obj  = obj;
 }
 
 void Window_SetVisible(bool visible) { }

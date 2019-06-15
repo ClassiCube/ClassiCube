@@ -391,6 +391,18 @@ static void LInput_Unselect(void* widget) {
 	LInput_Draw(widget);
 }
 
+static void LInput_CopyFromClipboard(String* text, void* widget) {
+	struct LInput* w = (struct LInput*)widget;
+	String_UNSAFE_TrimStart(text);
+	String_UNSAFE_TrimEnd(text);
+
+	if (w->Text.length >= w->Text.capacity || !text->length) return;
+	if (w->ClipboardFilter) w->ClipboardFilter(text);
+
+	LInput_AppendString(w, text);
+	LWidget_Redraw(w);
+}
+
 static void LInput_KeyDown(void* widget, Key key, bool was) {
 	struct LInput* w = (struct LInput*)widget;
 	if (key == KEY_BACKSPACE && LInput_Backspace(w)) {
@@ -400,7 +412,7 @@ static void LInput_KeyDown(void* widget, Key key, bool was) {
 	} else if (key == 'C' && Key_IsActionPressed()) {
 		if (w->Text.length) Window_SetClipboardText(&w->Text);
 	} else if (key == 'V' && Key_IsActionPressed()) {
-		if (LInput_CopyFromClipboard(w)) LWidget_Redraw(w);
+		Window_RequestClipboardText(LInput_CopyFromClipboard, w);
 	} else if (key == KEY_ESCAPE) {
 		if (LInput_Clear(w)) LWidget_Redraw(w);
 	} else if (key == KEY_LEFT) {
@@ -473,13 +485,14 @@ bool LInput_Append(struct LInput* w, char c) {
 	return appended;
 }
 
-static void LInput_AppendString(struct LInput* w, const String* str) {
+bool LInput_AppendString(struct LInput* w, const String* str) {
 	int i, appended = 0;
 	for (i = 0; i < str->length; i++) {
 		if (LInput_AppendRaw(w, str->buffer[i])) appended++;
 	}
 
 	if (appended && w->TextChanged) w->TextChanged(w);
+	return appended > 0;
 }
 
 bool LInput_Backspace(struct LInput* w) {
@@ -515,22 +528,6 @@ bool LInput_Clear(struct LInput* w) {
 
 	if (w->TextChanged) w->TextChanged(w);
 	w->CaretPos = -1;
-	return true;
-}
-
-bool LInput_CopyFromClipboard(struct LInput* w) {
-	String text; char textBuffer[256];
-	String_InitArray(text, textBuffer);
-
-	Window_GetClipboardText(&text);
-	String_UNSAFE_TrimStart(&text);
-	String_UNSAFE_TrimEnd(&text);
-
-	if (w->Text.length >= w->Text.capacity) return false;
-	if (!text.length) return false;
-	if (w->ClipboardFilter) w->ClipboardFilter(&text);
-
-	LInput_AppendString(w, &text);
 	return true;
 }
 

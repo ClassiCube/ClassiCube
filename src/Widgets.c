@@ -1142,19 +1142,16 @@ static void InputWidget_EndKey(struct InputWidget* w) {
 	InputWidget_UpdateCaret(w);
 }
 
+static void InputWidget_CopyFromClipboard(String* text, void* w) {
+	InputWidget_AppendString((struct InputWidget*)w, text);
+}
+
 static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
-	String text; char textBuffer[INPUTWIDGET_MAX_LINES * STRING_SIZE];
-	int maxChars;
-	
-	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
+	int maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (!Key_IsActionPressed()) return false;
 
 	if (key == 'V' && w->text.length < maxChars) {
-		String_InitArray(text, textBuffer);
-		Window_GetClipboardText(&text);
-
-		if (!text.length) return true;
-		InputWidget_AppendString(w, &text);
+		Window_RequestClipboardText(InputWidget_CopyFromClipboard, w);
 		return true;
 	} else if (key == 'C') {
 		if (!w->text.length) return true;

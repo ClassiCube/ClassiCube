@@ -58,13 +58,19 @@ void Window_CreateSimple(int width, int height);
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode);
 /* Sets the text of the titlebar above the window. */
 CC_API void Window_SetTitle(const String* title);
+/* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
+
+typedef void (*RequestClipboardCallback)(String* value, void* obj);
 /* Gets the text currently on the clipboard. */
 /* NOTE: You MUST have created the window beforehand. (necessary for X11) */
 CC_API void Window_GetClipboardText(String* value);
 /* Sets the text currently on the clipboard. */
 /* NOTE: You MUST have created the window beforehand. (necessary for X11) */
 CC_API void Window_SetClipboardText(const String* value);
-/* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
+/* Calls a callback function when text is retrieved from the clipboard. */
+/* NOTE: On most platforms this just calls Window_GetClipboardText. */
+/* With emscripten however, the callback is instead called when a 'paste' event arrives. */
+void Window_RequestClipboardText(RequestClipboardCallback callback, void* obj);
 
 /* Sets whether the window is visible on screen at all. */
 void Window_SetVisible(bool visible);

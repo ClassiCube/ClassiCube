@@ -82,16 +82,16 @@ struct LInput {
 CC_NOINLINE void LInput_Init(struct LInput* w, const FontDesc* font, int width, int height, const char* hintText, const FontDesc* hintFont);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text);
 
-/* Appends a character to the end of the currently entered text. */
+/* Appends a character to the currently entered text. */
 CC_NOINLINE bool LInput_Append(struct LInput* w, char c);
+/* Appends a string to the currently entered text. */
+CC_NOINLINE bool LInput_AppendString(struct LInput* w, const String* str);
 /* Removes the character preceding the caret in the currently entered text. */
 CC_NOINLINE bool LInput_Backspace(struct LInput* w);
 /* Removes the character at the caret in the currently entered text. */
 CC_NOINLINE bool LInput_Delete(struct LInput* w);
 /* Resets the currently entered text to an empty string. */
 CC_NOINLINE bool LInput_Clear(struct LInput* w);
-/* Appends the contents of the system clipboard to the currently entered text. */
-CC_NOINLINE bool LInput_CopyFromClipboard(struct LInput* w);
 
 struct LLabel {
 	LWidget_Layout
