@@ -28,7 +28,7 @@ String Gfx_ApiInfo[7] = {
 GfxResourceID Gfx_defaultIb;
 GfxResourceID Gfx_quadVb, Gfx_texVb;
 
-const static int gfx_strideSizes[2] = { 16, 24 };
+static const int gfx_strideSizes[2] = { 16, 24 };
 static int gfx_batchStride, gfx_batchFormat = -1;
 
 static bool gfx_vsync, gfx_fogEnabled;
@@ -1280,7 +1280,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output) {
 
 static bool nv_mem;
 void Gfx_MakeApiInfo(void) {
-	const static String memExt = String_FromConst("GL_NVX_gpu_memory_info");
+	static const String memExt = String_FromConst("GL_NVX_gpu_memory_info");
 	/* NOTE: glGetString actually returns UTF8, but I just treat it as code page 437 */
 	String extensions = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
 	int depthBits, pointerSize = sizeof(void*) * 8;
@@ -1312,7 +1312,7 @@ void Gfx_UpdateApiInfo(void) {
 }
 
 bool Gfx_WarnIfNecessary(void) {
-	const static String intel = String_FromConst("Intel");
+	static const String intel = String_FromConst("Intel");
 	String renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
 
 #ifdef CC_BUILD_GL11
@@ -1883,7 +1883,7 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 }
 
 static void GL_CheckSupport(void) {
-	const static String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
+	static const String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
 	String extensions  = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
 	const GLubyte* ver = glGetString(GL_VERSION);
 

@@ -311,7 +311,7 @@ int Hotkeys_FindPartial(Key key) {
 }
 
 void Hotkeys_Init(void) {
-	const static String prefix = String_FromConst("hotkey-");
+	static const String prefix = String_FromConst("hotkey-");
 	String strKey, strMods, strMore, strText;
 	String entry, key, value;
 	int i;

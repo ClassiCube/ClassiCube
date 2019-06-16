@@ -214,7 +214,7 @@ static void Launcher_Free(void) {
 }
 
 void Launcher_Run(void) {
-	const static String title = String_FromConst(GAME_APP_TITLE);
+	static const String title = String_FromConst(GAME_APP_TITLE);
 	Window_CreateSimple(640, 400);
 	Window_SetTitle(&title);
 	Window_SetVisible(true);
@@ -399,7 +399,7 @@ static void Launcher_ExtractTexturePack(const String* path) {
 }
 
 void Launcher_TryLoadTexturePack(void) {
-	const static String defZipPath = String_FromConst("texpacks/default.zip");
+	static const String defZipPath = String_FromConst("texpacks/default.zip");
 	String path; char pathBuffer[FILENAME_SIZE];
 	String texPack;
 
@@ -438,8 +438,8 @@ void Launcher_ResetArea(int x, int y, int width, int height) {
 }
 
 void Launcher_ResetPixels(void) {
-	const static String title_fore = String_FromConst("&eClassi&fCube");
-	const static String title_back = String_FromConst("&0Classi&0Cube");
+	static const String title_fore = String_FromConst("&eClassi&fCube");
+	static const String title_back = String_FromConst("&0Classi&0Cube");
 	struct DrawTextArgs args;
 	int x;
 
@@ -591,17 +591,17 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 
 static void Launcher_ApplyUpdate(void) {
 #if defined CC_BUILD_WIN
-	const static String scriptPath = String_FromConst("update.bat");
-	const static String scriptName = String_FromConst("C:/Windows/System32/cmd.exe");
-	const static String scriptArgs = String_FromConst("/C start cmd /C update.bat");
+	static const String scriptPath = String_FromConst("update.bat");
+	static const String scriptName = String_FromConst("C:/Windows/System32/cmd.exe");
+	static const String scriptArgs = String_FromConst("/C start cmd /C update.bat");
 #elif defined CC_BUILD_OSX
-	const static String scriptPath = String_FromConst("update.sh");
-	const static String scriptName = String_FromConst("/usr/bin/open");
-	const static String scriptArgs = String_FromConst("-a Terminal ./update.sh");
+	static const String scriptPath = String_FromConst("update.sh");
+	static const String scriptName = String_FromConst("/usr/bin/open");
+	static const String scriptArgs = String_FromConst("-a Terminal ./update.sh");
 #else
-	const static String scriptPath = String_FromConst("update.sh");
-	const static String scriptName = String_FromConst("xterm");
-	const static String scriptArgs = String_FromConst("-e ./update.sh");
+	static const String scriptPath = String_FromConst("update.sh");
+	static const String scriptName = String_FromConst("xterm");
+	static const String scriptArgs = String_FromConst("-e ./update.sh");
 #endif
 	char strBuffer[1024], exeBuffer[FILENAME_SIZE];
 	String str, exe;

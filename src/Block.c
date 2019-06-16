@@ -128,17 +128,17 @@ static uint32_t Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
 static char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
 
-const static uint8_t topTex[BLOCK_CPE_COUNT]     = { 0,  1,  0,  2, 16,  4, 15, 
+static const uint8_t topTex[BLOCK_CPE_COUNT]     = { 0,  1,  0,  2, 16,  4, 15, 
 17, 14, 14, 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 
 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 24, 23,  6,  6,  7,  9,  
  4, 36, 37, 16, 11, 25, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 26, 53, 52 };
 
-const static uint8_t sideTex[BLOCK_CPE_COUNT]    = { 0,  1,  3,  2, 16,  4, 15, 
+static const uint8_t sideTex[BLOCK_CPE_COUNT]    = { 0,  1,  3,  2, 16,  4, 15, 
 17, 14, 14, 30, 30, 18, 19, 32, 33, 34, 20, 22, 48, 49, 64, 65, 66, 67, 68, 69, 
 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 40, 39,  5,  5,  7,  8, 
 35, 36, 37, 16, 11, 41, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 42, 53, 52 };
 
-const static uint8_t bottomTex[BLOCK_CPE_COUNT]  = { 0,  1,  2,  2, 16,  4, 15, 
+static const uint8_t bottomTex[BLOCK_CPE_COUNT]  = { 0,  1,  2,  2, 16,  4, 15, 
 17, 14, 14, 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 
 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  
  4, 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
@@ -212,9 +212,9 @@ void Block_SetDrawType(BlockID block, uint8_t draw) {
 "_Iron_Double slab_Slab_Brick_TNT_Bookshelf_Mossy rocks_Obsidian_Cobblestone slab_Rope_Sandstone_Snow_Fire_Light pink"\
 "_Forest green_Brown_Deep blue_Turquoise_Ice_Ceramic tile_Magma_Pillar_Crate_Stone brick"
 
-const static String Block_DefaultName(BlockID block) {
-	const static String names   = String_FromConst(BLOCK_RAW_NAMES);
-	const static String invalid = String_FromConst("Invalid");
+static const String Block_DefaultName(BlockID block) {
+	static const String names   = String_FromConst(BLOCK_RAW_NAMES);
+	static const String invalid = String_FromConst("Invalid");
 	int i, beg = 0, end;
 
 	if (block >= BLOCK_CPE_COUNT) return invalid;

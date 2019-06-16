@@ -135,7 +135,7 @@ static Rect2D win_bounds;  /* Rectangle of window including titlebar and borders
 /*########################################################################################################################*
 *-----------------------------------------------------Private details-----------------------------------------------------*
 *#########################################################################################################################*/
-const static uint8_t key_map[14 * 16] = {
+static const uint8_t key_map[14 * 16] = {
 	0, 0, 0, 0, 0, 0, 0, 0, KEY_BACKSPACE, KEY_TAB, 0, 0, 0, KEY_ENTER, 0, 0,
 	0, 0, 0, KEY_PAUSE, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0, KEY_ESCAPE, 0, 0, 0, 0,
 	KEY_SPACE, KEY_PAGEUP, KEY_PAGEDOWN, KEY_END, KEY_HOME, KEY_LEFT, KEY_UP, KEY_RIGHT, KEY_DOWN, 0, KEY_PRINTSCREEN, 0, KEY_PRINTSCREEN, KEY_INSERT, KEY_DELETE, 0,
@@ -1447,7 +1447,7 @@ static void GLContext_SetFullscreen(void);
 *-----------------------------------------------------Private details-----------------------------------------------------*
 *#########################################################################################################################*/
 /* Sourced from https://www.meandmark.com/keycodes.html */
-const static uint8_t key_map[8 * 16] = {
+static const uint8_t key_map[8 * 16] = {
 	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
 	'Y', 'T', '1', '2', '3', '4', '6', '5', KEY_EQUALS, '9', '7', KEY_MINUS, '8', '0', KEY_RBRACKET, 'O',
 	'U', KEY_LBRACKET, 'I', 'P', KEY_ENTER, 'L', 'J', KEY_QUOTE, 'K', KEY_SEMICOLON, KEY_BACKSLASH, KEY_COMMA, KEY_SLASH, 'N', 'M', KEY_PERIOD,
@@ -2850,8 +2850,8 @@ static FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
 static bool ctx_supports_vSync;
 
 void GLContext_Init(struct GraphicsMode* mode) {
-	const static String ext_mesa = String_FromConst("GLX_MESA_swap_control");
-	const static String ext_sgi  = String_FromConst("GLX_SGI_swap_control");
+	static const String ext_mesa = String_FromConst("GLX_MESA_swap_control");
+	static const String ext_sgi  = String_FromConst("GLX_SGI_swap_control");
 
 	const char* raw_exts;
 	String exts;

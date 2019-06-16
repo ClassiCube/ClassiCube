@@ -420,7 +420,7 @@ struct Floor {
 	int32_t  YList[VORBIS_MAX_CHANS][FLOOR_MAX_VALUES];
 };
 
-const static float floor1_inverse_dB_table[256] = {
+static const float floor1_inverse_dB_table[256] = {
 	1.0649863e-07f, 1.1341951e-07f, 1.2079015e-07f, 1.2863978e-07f, 1.3699951e-07f, 1.4590251e-07f, 1.5538408e-07f, 1.6548181e-07f,
 	1.7623575e-07f, 1.8768855e-07f, 1.9988561e-07f, 2.1287530e-07f, 2.2670913e-07f, 2.4144197e-07f, 2.5713223e-07f, 2.7384213e-07f,
 	2.9163793e-07f, 3.1059021e-07f, 3.3077411e-07f, 3.5226968e-07f, 3.7516214e-07f, 3.9954229e-07f, 4.2550680e-07f, 4.5315863e-07f,

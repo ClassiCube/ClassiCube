@@ -1057,7 +1057,7 @@ static int Font_Register(const String* path, int faceIndex) {
 }
 
 static void Font_DirCallback(const String* path, void* obj) {
-	const static String fonExt = String_FromConst(".fon");
+	static const String fonExt = String_FromConst(".fon");
 	String entry, name, value;
 	String fontPath, index;
 	int i, count;
@@ -1263,26 +1263,26 @@ static void Font_Init(void) {
 	String_AppendConst(&dirs[0], "/fonts");
 	
 #elif defined CC_BUILD_NETBSD
-	const static String dirs[3] = {
+	static const String dirs[3] = {
 		String_FromConst("/usr/X11R7/lib/X11/fonts"),
 		String_FromConst("/usr/pkg/lib/X11/fonts"),
 		String_FromConst("/usr/pkg/share/fonts")
 	};
 #elif defined CC_BUILD_UNIX
-	const static String dirs[2] = {
+	static const String dirs[2] = {
 		String_FromConst("/usr/share/fonts"),
 		String_FromConst("/usr/local/share/fonts")
 	};
 #elif defined CC_BUILD_OSX
-	const static String dirs[2] = {
+	static const String dirs[2] = {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
 	};
 #elif defined CC_BUILD_WEB
 	/* TODO: Implement fonts */
-	const static String dirs[1] = { String_FromConst("Fonts") };
+	static const String dirs[1] = { String_FromConst("Fonts") };
 #endif
-	const static String cachePath = String_FromConst(FONT_CACHE_FILE);
+	static const String cachePath = String_FromConst(FONT_CACHE_FILE);
 	FT_Error err;
 	int i;
 
@@ -1615,7 +1615,7 @@ bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
 /* Opening browser and retrieving exe path is not standardised at all */
 #if defined CC_BUILD_OSX
 ReturnCode Process_StartOpen(const String* args) {
-	const static String path = String_FromConst("/usr/bin/open");
+	static const String path = String_FromConst("/usr/bin/open");
 	return Process_Start(&path, args);
 }
 ReturnCode Process_GetExePath(String* path) {
@@ -1630,7 +1630,7 @@ ReturnCode Process_GetExePath(String* path) {
 #elif defined CC_BUILD_UNIX
 ReturnCode Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
-	const static String path = String_FromConst("xdg-open");
+	static const String path = String_FromConst("xdg-open");
 	return Process_Start(&path, args);
 }
 #if defined CC_BUILD_LINUX

@@ -118,7 +118,7 @@ static void Entity_ParseScale(struct Entity* e, const String* scale) {
 }
 
 static void Entity_SetBlockModel(struct Entity* e, const String* model) {
-	const static String block = String_FromConst("block");
+	static const String block = String_FromConst("block");
 	int raw = Block_Parse(model);
 
 	if (raw == -1) {
@@ -773,7 +773,7 @@ void Player_SetName(struct Player* p, const String* name, const String* skin) {
 }
 
 static void Player_Init(struct Entity* e) {
-	const static String model = String_FromConst("humanoid");
+	static const String model = String_FromConst("humanoid");
 	Entity_Init(e);
 
 	e->StepSize   = 0.5f;

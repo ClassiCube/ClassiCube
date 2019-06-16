@@ -1267,7 +1267,7 @@ static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button
 }
 
 CC_NOINLINE static void InputWidget_Create(struct InputWidget* w, const FontDesc* font, STRING_REF const String* prefix) {
-	const static String caret = String_FromConst("_");
+	static const String caret = String_FromConst("_");
 	struct DrawTextArgs args;
 	Size2D size;
 	Widget_Reset(w);
@@ -1744,7 +1744,7 @@ static struct WidgetVTABLE ChatInputWidget_VTABLE = {
 	InputWidget_Reposition,
 };
 void ChatInputWidget_Create(struct ChatInputWidget* w, const FontDesc* font) {
-	const static String prefix = String_FromConst("> ");
+	static const String prefix = String_FromConst("> ");
 
 	InputWidget_Create(&w->base, font, &prefix);
 	w->typingLogPos = Chat_InputLog.count; /* Index of newest entry + 1. */
@@ -2075,7 +2075,7 @@ static void PlayerListWidget_TabEntryRemoved(void* widget, int id) {
 }
 
 static void PlayerListWidget_Init(void* widget) {
-	const static String title = String_FromConst("Connected players:");
+	static const String title = String_FromConst("Connected players:");
 	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	int id;
 

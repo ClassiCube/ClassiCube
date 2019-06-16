@@ -243,7 +243,7 @@ void HacksComp_SetUserType(struct HacksComp* hacks, uint8_t value, bool setBlock
 }
 
 void HacksComp_RecheckFlags(struct HacksComp* hacks) {
-	const static String noHaxFlag = String_FromConst("-hax");
+	static const String noHaxFlag = String_FromConst("-hax");
 	/* Can use hacks by default (also case with WoM), no need to check +hax */
 	bool hax = !String_ContainsString(&hacks->HacksFlags, &noHaxFlag);
 	HacksComp_SetAll(hacks, hax);

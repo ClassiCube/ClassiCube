@@ -357,7 +357,7 @@ static struct ListScreen ListScreen_Instance;
 #define LIST_SCREEN_EMPTY "-----"
 
 static STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
-	const static String str = String_FromConst(LIST_SCREEN_EMPTY);
+	static const String str = String_FromConst(LIST_SCREEN_EMPTY);
 
 	if (index >= 0 && index < s->entries.count) {
 		return StringsBuffer_UNSAFE_Get(&s->entries, index);
@@ -434,8 +434,8 @@ static void ListScreen_MoveForwards(void* screen, void* b) {
 }
 
 static void ListScreen_ContextRecreated(void* screen) {
-	const static String lArrow = String_FromConst("<");
-	const static String rArrow = String_FromConst(">");
+	static const String lArrow = String_FromConst("<");
+	static const String rArrow = String_FromConst(">");
 
 	struct ListScreen* s = (struct ListScreen*)screen;
 	int i;
@@ -614,7 +614,7 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 }
 
 static void PauseScreen_ContextRecreated(void* screen) {
-	const static String quitMsg = String_FromConst("Quit game");
+	static const String quitMsg = String_FromConst("Quit game");
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 
 	if (Gui_ClassicMenu) {
@@ -818,7 +818,7 @@ static void EditHotkeyScreen_MakeLeaveOpen(struct EditHotkeyScreen* s, Widget_Le
 }
 
 static void EditHotkeyScreen_BaseKey(void* screen, void* b) {
-	const static String msg = String_FromConst("Key: press a key..");
+	static const String msg = String_FromConst("Key: press a key..");
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 
 	s->selectedI = 0;
@@ -827,7 +827,7 @@ static void EditHotkeyScreen_BaseKey(void* screen, void* b) {
 }
 
 static void EditHotkeyScreen_Modifiers(void* screen, void* b) {
-	const static String msg = String_FromConst("Modifiers: press a key..");
+	static const String msg = String_FromConst("Modifiers: press a key..");
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 
 	s->selectedI = 1;
@@ -937,10 +937,10 @@ static bool EditHotkeyScreen_KeyUp(void* screen, Key key) {
 }
 
 static void EditHotkeyScreen_ContextRecreated(void* screen) {
-	const static String saveHK = String_FromConst("Save changes");
-	const static String addHK  = String_FromConst("Add hotkey");
-	const static String remHK  = String_FromConst("Remove hotkey");
-	const static String cancel = String_FromConst("Cancel");
+	static const String saveHK = String_FromConst("Save changes");
+	static const String addHK  = String_FromConst("Add hotkey");
+	static const String remHK  = String_FromConst("Remove hotkey");
+	static const String cancel = String_FromConst("Cancel");
 
 	struct EditHotkeyScreen* s  = (struct EditHotkeyScreen*)screen;
 	struct InputValidator v;
@@ -1100,9 +1100,9 @@ static bool GenLevelScreen_KeyPress(void* screen, char keyChar) {
 }
 
 static void GenLevelScreen_ContextRecreated(void* screen) {
-	const static String title = String_FromConst("Generate new level");
-	const static String flat  = String_FromConst("Flatgrass");
-	const static String norm  = String_FromConst("Vanilla");
+	static const String title = String_FromConst("Generate new level");
+	static const String flat  = String_FromConst("Flatgrass");
+	static const String norm  = String_FromConst("Vanilla");
 	String tmp; char tmpBuffer[STRING_SIZE];
 
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
@@ -1206,8 +1206,8 @@ struct Screen* ClassicGenScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 static struct SaveLevelScreen SaveLevelScreen_Instance;
 static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
-	const static String save  = String_FromConst("Save");
-	const static String schem = String_FromConst("Save schematic");
+	static const String save  = String_FromConst("Save");
+	static const String schem = String_FromConst("Save schematic");
 	struct ButtonWidget* btn;
 		
 	btn = &s->buttons[0];
@@ -1231,7 +1231,7 @@ static void SaveLevelScreen_MakeDesc(struct SaveLevelScreen* s, const String* te
 }
 
 static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const String* path) {
-	const static String cw = String_FromConst(".cw");
+	static const String cw = String_FromConst(".cw");
 	struct Stream stream, compStream;
 	struct GZipState state;
 	ReturnCode res;
@@ -1265,8 +1265,8 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const String* pat
 }
 
 static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {
-	const static String overMsg = String_FromConst("&cOverwrite existing?");
-	const static String fileMsg = String_FromConst("&ePlease enter a filename");
+	static const String overMsg = String_FromConst("&cOverwrite existing?");
+	static const String fileMsg = String_FromConst("&ePlease enter a filename");
 	String path; char pathBuffer[FILENAME_SIZE];
 
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
@@ -1318,9 +1318,9 @@ static bool SaveLevelScreen_KeyUp(void* screen, Key key) {
 }
 
 static void SaveLevelScreen_ContextRecreated(void* screen) {
-	const static String save   = String_FromConst("Save");
-	const static String schem  = String_FromConst("Save schematic");
-	const static String mcEdit = String_FromConst("&eCan be imported into MCEdit");
+	static const String save   = String_FromConst("Save");
+	static const String schem  = String_FromConst("Save schematic");
+	static const String mcEdit = String_FromConst("&eCan be imported into MCEdit");
 
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	struct InputValidator v;
@@ -1381,7 +1381,7 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 }
 
 static void TexturePackScreen_FilterFiles(const String* path, void* obj) {
-	const static String zip = String_FromConst(".zip");
+	static const String zip = String_FromConst(".zip");
 	String file = *path;
 	if (!String_CaselessEnds(path, &zip)) return;
 
@@ -1390,8 +1390,8 @@ static void TexturePackScreen_FilterFiles(const String* path, void* obj) {
 }
 
 struct Screen* TexturePackScreen_MakeInstance(void) {
-	const static String title  = String_FromConst("Select a texture pack zip");
-	const static String path   = String_FromConst("texpacks");
+	static const String title  = String_FromConst("Select a texture pack zip");
+	static const String path   = String_FromConst("texpacks");
 	struct ListScreen* s = ListScreen_MakeInstance();
 
 	s->titleText  = title;
@@ -1453,7 +1453,7 @@ static struct ScreenVTABLE FontListScreen_VTABLE = {
 	Menu_OnResize,       Menu_ContextLost,  ListScreen_ContextRecreated,
 };
 struct Screen* FontListScreen_MakeInstance(void) {
-	const static String title = String_FromConst("Select a font");
+	static const String title = String_FromConst("Select a font");
 	struct ListScreen* s = ListScreen_MakeInstance();
 
 	s->titleText   = title;
@@ -1474,9 +1474,9 @@ struct Screen* FontListScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 /* TODO: Hotkey added event for CPE */
 static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
-	const static String ctrl  = String_FromConst("Ctrl");
-	const static String shift = String_FromConst("Shift");
-	const static String alt   = String_FromConst("Alt");
+	static const String ctrl  = String_FromConst("Ctrl");
+	static const String shift = String_FromConst("Shift");
+	static const String alt   = String_FromConst("Alt");
 
 	struct ListScreen* s = (struct ListScreen*)screen;
 	struct HotkeyData h, original = { 0 };
@@ -1513,8 +1513,8 @@ static void HotkeyListScreen_MakeFlags(int flags, String* str) {
 }
 
 struct Screen* HotkeyListScreen_MakeInstance(void) {
-	const static String title  = String_FromConst("Modify hotkeys");
-	const static String empty  = String_FromConst(LIST_SCREEN_EMPTY);
+	static const String title  = String_FromConst("Modify hotkeys");
+	static const String empty  = String_FromConst(LIST_SCREEN_EMPTY);
 	String text; char textBuffer[STRING_SIZE];
 
 	struct ListScreen* s = ListScreen_MakeInstance();
@@ -1570,8 +1570,8 @@ static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 }
 
 struct Screen* LoadLevelScreen_MakeInstance(void) {
-	const static String title  = String_FromConst("Select a level");
-	const static String path   = String_FromConst("maps");
+	static const String title  = String_FromConst("Select a level");
+	static const String path   = String_FromConst("maps");
 	struct ListScreen* s = ListScreen_MakeInstance();
 
 	s->titleText  = title;
@@ -1618,8 +1618,8 @@ static void KeyBindingsScreen_OnBindingClick(void* screen, void* widget) {
 }
 
 static int KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* s, int y, int arrowsY, int leftLength, const char* title, int btnWidth) {
-	const static String lArrow = String_FromConst("<");
-	const static String rArrow = String_FromConst(">");
+	static const String lArrow = String_FromConst("<");
+	static const String rArrow = String_FromConst(">");
 	String text; char textBuffer[STRING_SIZE];
 	String titleText;
 	Widget_LeftClick backClick;
@@ -1836,7 +1836,7 @@ struct Screen* OtherKeyBindingsScreen_MakeInstance(void) {
 *------------------------------------------------MouseKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
 static void MouseKeyBindingsScreen_ContextRecreated(void* screen) {
-	const static String msg = String_FromConst("&eRight click to remove the key binding");
+	static const String msg = String_FromConst("&eRight click to remove the key binding");
 	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
 	static struct TextWidget text;
 
@@ -2111,8 +2111,8 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 }
 
 static void MenuOptionsScreen_Input(void* screen, void* widget) {
-	const static String okay = String_FromConst("OK");
-	const static String def  = String_FromConst("Default value");
+	static const String okay = String_FromConst("OK");
+	static const String def  = String_FromConst("Default value");
 	String value; char valueBuffer[STRING_SIZE];
 
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
@@ -2222,10 +2222,10 @@ static void ClassicOptionsScreen_SetHacks(const String* v) {
 }
 
 static void ClassicOptionsScreen_ContextRecreated(void* screen) {
-	const static String title = String_FromConst("Controls...");
+	static const String title = String_FromConst("Controls...");
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 
-	const static struct MenuOptionDesc buttons[9] = {
+	static const struct MenuOptionDesc buttons[9] = {
 		{ -1, -150, "Music",           MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetMusic,    ClassicOptionsScreen_SetMusic },
 		{ -1, -100, "Invert mouse",    MenuOptionsScreen_Bool,
@@ -2310,7 +2310,7 @@ static void EnvSettingsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct Widget** widgets = s->widgets;
 
-	const static struct MenuOptionDesc buttons[10] = {
+	static const struct MenuOptionDesc buttons[10] = {
 		{ -1, -150, "Clouds col",    MenuOptionsScreen_Input,
 			EnvSettingsScreen_GetCloudsCol,    EnvSettingsScreen_SetCloudsCol },
 		{ -1, -100, "Sky col",       MenuOptionsScreen_Input,
@@ -2425,7 +2425,7 @@ static void GraphicsOptionsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct Widget** widgets = s->widgets;
 
-	const static struct MenuOptionDesc buttons[6] = {
+	static const struct MenuOptionDesc buttons[6] = {
 		{ -1, -50, "FPS mode",          MenuOptionsScreen_Enum,
 			MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS },
 		{ -1,   0, "View distance",     MenuOptionsScreen_Input,
@@ -2532,7 +2532,7 @@ static void GuiOptionsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct Widget** widgets = s->widgets;
 
-	const static struct MenuOptionDesc buttons[10] = {
+	static const struct MenuOptionDesc buttons[10] = {
 		{ -1, -150, "Black text shadows", MenuOptionsScreen_Bool,
 			GuiOptionsScreen_GetShadows,   GuiOptionsScreen_SetShadows },
 		{ -1, -100, "Show FPS",           MenuOptionsScreen_Bool,
@@ -2681,7 +2681,7 @@ static void HacksSettingsScreen_ContextRecreated(void* screen) {
 	struct Widget** widgets = s->widgets;
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, HacksSettingsScreen_CheckHacksAllowed);
 
-	const static struct MenuOptionDesc buttons[10] = {
+	static const struct MenuOptionDesc buttons[10] = {
 		{ -1, -150, "Hacks enabled",    MenuOptionsScreen_Bool,
 			HacksSettingsScreen_GetHacks,    HacksSettingsScreen_SetHacks },
 		{ -1, -100, "Speed multiplier", MenuOptionsScreen_Input,
@@ -2783,7 +2783,7 @@ static void MiscOptionsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct Widget** widgets = s->widgets;
 
-	const static struct MenuOptionDesc buttons[8] = {
+	static const struct MenuOptionDesc buttons[8] = {
 		{ -1, -100, "Reach distance", MenuOptionsScreen_Input,
 			MiscOptionsScreen_GetReach,       MiscOptionsScreen_SetReach },
 		{ -1,  -50, "Music volume",   MenuOptionsScreen_Input,
@@ -2871,11 +2871,11 @@ static void NostalgiaScreen_SwitchBack(void* a, void* b) {
 }
 
 static void NostalgiaScreen_ContextRecreated(void* screen) {
-	const static String descText = String_FromConst("&eButtons on the right require restarting game");
+	static const String descText = String_FromConst("&eButtons on the right require restarting game");
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	static struct TextWidget desc;
 	
-	const static struct MenuOptionDesc buttons[8] = {
+	static const struct MenuOptionDesc buttons[8] = {
 		{ -1, -150, "Classic hand model",   MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand },
 		{ -1, -100, "Classic walk anim",    MenuOptionsScreen_Bool,
@@ -2937,10 +2937,10 @@ static void Overlay_MakeLabels(void* menu, struct TextWidget* labels, const Stri
 }
 
 static void WarningOverlay_MakeButtons(void* menu, struct ButtonWidget* btns, bool always, Widget_LeftClick yesClick, Widget_LeftClick noClick) {
-	const static String yes = String_FromConst("Yes");
-	const static String no  = String_FromConst("No");
-	const static String alwaysYes = String_FromConst("Always yes");
-	const static String alwaysNo  = String_FromConst("Always no");
+	static const String yes = String_FromConst("Yes");
+	static const String no  = String_FromConst("No");
+	static const String alwaysYes = String_FromConst("Always yes");
+	static const String alwaysNo  = String_FromConst("Always no");
 
 	struct MenuScreen* s = (struct MenuScreen*)menu;
 	Menu_Button(s, 4, &btns[0], 160, &yes, &s->titleFont, yesClick, 
@@ -2971,9 +2971,9 @@ static void TexIdsOverlay_ContextLost(void* screen) {
 }
 
 static void TexIdsOverlay_ContextRecreated(void* screen) {
-	const static String chars  = String_FromConst("0123456789");
-	const static String prefix = String_FromConst("f");
-	const static String title  = String_FromConst("Texture ID reference sheet");
+	static const String chars  = String_FromConst("0123456789");
+	static const String prefix = String_FromConst("f");
+	static const String title  = String_FromConst("Texture ID reference sheet");
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	int size;
 
@@ -3245,9 +3245,9 @@ static void TexPackOverlay_MakeNormalElements(struct TexPackOverlay* s) {
 		String_FromConst(""),
 		String_FromConst(""),
 	};
-	const static String defCL = String_FromConst("Download size: Determining...");
-	const static String https = String_FromConst("https://");
-	const static String http  = String_FromConst("http://");
+	static const String defCL = String_FromConst("Download size: Determining...");
+	static const String https = String_FromConst("https://");
+	static const String http  = String_FromConst("http://");
 	String contents; char contentsBuffer[STRING_SIZE];
 	float contentLengthMB;
 	String url;
@@ -3280,8 +3280,8 @@ static void TexPackOverlay_MakeDenyElements(struct TexPackOverlay* s) {
 		String_FromConst(""),
 		String_FromConst("Sure you don't want to download the texture pack?")
 	};
-	const static String imSure = String_FromConst("I'm sure");
-	const static String goBack = String_FromConst("Go back");
+	static const String imSure = String_FromConst("I'm sure");
+	static const String goBack = String_FromConst("Go back");
 	Overlay_MakeLabels(s, s->labels, lines);
 
 	Menu_Button(s, 4, &s->buttons[0], 160, &imSure, &s->titleFont, TexPackOverlay_ConfirmNoClick,

@@ -130,7 +130,7 @@ void Game_SetDefaultTexturePack(const String* texPack) {
 }
 
 bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
-	const static String terrain = String_FromConst("terrain.png");
+	static const String terrain = String_FromConst("terrain.png");
 	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
 
 	if (atlas->Height < atlas->Width) {
@@ -387,11 +387,11 @@ static void Game_LoadPlugins(void) { }
 #else
 static void Game_LoadPlugin(const String* path, void* obj) {
 #if defined CC_BUILD_WIN
-	const static String ext = String_FromConst(".dll");
+	static const String ext = String_FromConst(".dll");
 #elif defined CC_BUILD_OSX
-	const static String ext = String_FromConst(".dylib");
+	static const String ext = String_FromConst(".dylib");
 #else
-	const static String ext = String_FromConst(".so");
+	static const String ext = String_FromConst(".so");
 #endif
 
 	void* lib;
@@ -423,7 +423,7 @@ static void Game_LoadPlugin(const String* path, void* obj) {
 }
 
 static void Game_LoadPlugins(void) {
-	const static String dir = String_FromConst("plugins");
+	static const String dir = String_FromConst("plugins");
 	ReturnCode res;
 
 	res = Directory_Enum(&dir, NULL, Game_LoadPlugin);

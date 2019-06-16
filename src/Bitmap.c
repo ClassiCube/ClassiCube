@@ -57,7 +57,7 @@ enum PngFilter {
 };
 
 typedef void (*Png_RowExpander)(int width, BitmapCol* palette, uint8_t* src, BitmapCol* dst);
-const static uint8_t pngSig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
+static const uint8_t pngSig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 bool Png_Detect(const uint8_t* data, uint32_t len) {
 	int i;

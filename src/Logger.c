@@ -354,7 +354,7 @@ static void Logger_Backtrace(String* backtrace, void* ctx) {
 }
 
 static void Logger_DumpBacktrace(String* str, void* ctx) {
-	const static String backtrace = String_FromConst("-- backtrace --\r\n");
+	static const String backtrace = String_FromConst("-- backtrace --\r\n");
 	HANDLE process = GetCurrentProcess();
 
 	SymInitialize(process, NULL, TRUE);
@@ -394,7 +394,7 @@ static BOOL CALLBACK Logger_DumpModule(const char* name, ULONG_PTR base, ULONG s
 }
 
 static void Logger_DumpMisc(void* ctx) {
-	const static String modules = String_FromConst("-- modules --\r\n");
+	static const String modules = String_FromConst("-- modules --\r\n");
 	HANDLE process = GetCurrentProcess();
 
 	Logger_Log(&modules);
@@ -433,7 +433,7 @@ static void Logger_Backtrace(String* backtrace_, void* ctx) {
 }
 
 static void Logger_DumpBacktrace(String* str, void* ctx) {
-	const static String backtrace = String_FromConst("-- backtrace --\n");
+	static const String backtrace = String_FromConst("-- backtrace --\n");
 	Logger_Log(&backtrace);
 	Logger_Backtrace(str, ctx);
 }
@@ -520,7 +520,7 @@ static void Logger_DumpRegisters(void* ctx) {
 /* OS specific stuff */
 #if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
 static void Logger_DumpMisc(void* ctx) {
-	const static String memMap = String_FromConst("-- memory map --\n");
+	static const String memMap = String_FromConst("-- memory map --\n");
 	String str; char strBuffer[320];
 	int n, fd;
 
@@ -672,7 +672,7 @@ static struct Stream logStream;
 static bool logOpen;
 
 void Logger_Log(const String* msg) {
-	const static String path = String_FromConst("client.log");
+	static const String path = String_FromConst("client.log");
 	ReturnCode res;
 
 	if (!logOpen) {

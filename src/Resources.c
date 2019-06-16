@@ -75,7 +75,7 @@ static bool Resources_SelectZipEntry(const String* path) {
 }
 
 static void Resources_CheckTextures(void) {
-	const static String path = String_FromConst("texpacks/default.zip");
+	static const String path = String_FromConst("texpacks/default.zip");
 	struct Stream stream;
 	struct ZipState state;
 	ReturnCode res;
@@ -551,7 +551,7 @@ static ReturnCode TexPatcher_WriteEntries(struct Stream* s) {
 }
 
 static void TexPatcher_MakeDefaultZip(void) {
-	const static String path = String_FromConst("texpacks/default.zip");
+	static const String path = String_FromConst("texpacks/default.zip");
 	struct Stream s;
 	int i;
 	ReturnCode res;

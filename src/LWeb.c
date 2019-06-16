@@ -16,9 +16,9 @@
 /* Consumes n characters from the JSON stream */
 #define JsonContext_Consume(ctx, n) ctx->Cur += n; ctx->Left -= n;
 
-const static String strTrue  = String_FromConst("true");
-const static String strFalse = String_FromConst("false");
-const static String strNull  = String_FromConst("null");
+static const String strTrue  = String_FromConst("true");
+static const String strFalse = String_FromConst("false");
+static const String strNull  = String_FromConst("null");
 
 static bool Json_IsWhitespace(char c) {
 	return c == '\r' || c == '\n' || c == '\t' || c == ' ';
@@ -243,8 +243,8 @@ static void GetTokenTask_Handle(uint8_t* data, uint32_t len) {
 }
 
 void GetTokenTask_Run(void) {
-	const static String id  = String_FromConst("CC get token");
-	const static String url = String_FromConst("https://www.classicube.net/api/login");
+	static const String id  = String_FromConst("CC get token");
+	static const String url = String_FromConst("https://www.classicube.net/api/login");
 	if (GetTokenTask.Base.Working) return;
 
 	LWebTask_Reset(&GetTokenTask.Base);
@@ -263,9 +263,9 @@ struct SignInTaskData SignInTask;
 char userBuffer[STRING_SIZE];
 
 static void SignInTask_LogError(const String* str) {
-	const static String userErr = String_FromConst("&cWrong username or password");
-	const static String verErr  = String_FromConst("&cAccount verification required");
-	const static String unkErr  = String_FromConst("&cUnknown error occurred");
+	static const String userErr = String_FromConst("&cWrong username or password");
+	static const String verErr  = String_FromConst("&cAccount verification required");
+	static const String unkErr  = String_FromConst("&cUnknown error occurred");
 
 	if (String_CaselessEqualsConst(str, "username") || String_CaselessEqualsConst(str, "password")) {
 		SignInTask.Error = userErr;
@@ -294,8 +294,8 @@ static void SignInTask_Append(String* dst, const char* key, const String* value)
 }
 
 void SignInTask_Run(const String* user, const String* pass) {
-	const static String id  = String_FromConst("CC post login");
-	const static String url = String_FromConst("https://www.classicube.net/api/login");
+	static const String id  = String_FromConst("CC post login");
+	static const String url = String_FromConst("https://www.classicube.net/api/login");
 	String tmp; char tmpBuffer[384];
 	if (SignInTask.Base.Working) return;
 
@@ -370,7 +370,7 @@ static void FetchServerTask_Handle(uint8_t* data, uint32_t len) {
 }
 
 void FetchServerTask_Run(const String* hash) {
-	const static String id  = String_FromConst("CC fetch server");
+	static const String id  = String_FromConst("CC fetch server");
 	String url; char urlBuffer[URL_MAX_SIZE];
 	if (FetchServerTask.Base.Working) return;
 
@@ -423,8 +423,8 @@ static void FetchServersTask_Handle(uint8_t* data, uint32_t len) {
 }
 
 void FetchServersTask_Run(void) {
-	const static String id  = String_FromConst("CC fetch servers");
-	const static String url = String_FromConst("https://www.classicube.net/api/servers");
+	static const String id  = String_FromConst("CC fetch servers");
+	static const String url = String_FromConst("https://www.classicube.net/api/servers");
 	if (FetchServersTask.Base.Working) return;
 	LWebTask_Reset(&FetchServersTask.Base);
 
@@ -474,8 +474,8 @@ static void CheckUpdateTask_Handle(uint8_t* data, uint32_t len) {
 }
 
 void CheckUpdateTask_Run(void) {
-	const static String id  = String_FromConst("CC update check");
-	const static String url = String_FromConst("http://cs.classicube.net/c_client/builds.json");
+	static const String id  = String_FromConst("CC update check");
+	static const String url = String_FromConst("http://cs.classicube.net/c_client/builds.json");
 	if (CheckUpdateTask.Base.Working) return;
 
 	LWebTask_Reset(&CheckUpdateTask.Base);
@@ -494,7 +494,7 @@ void CheckUpdateTask_Run(void) {
 *#########################################################################################################################*/
 struct FetchUpdateData FetchUpdateTask;
 static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
-	const static String path = String_FromConst("ClassiCube.update");
+	static const String path = String_FromConst("ClassiCube.update");
 	ReturnCode res;
 
 	res = Stream_WriteAllTo(&path, data, len);
@@ -585,7 +585,7 @@ static void FetchFlagsTask_Handle(uint8_t* data, uint32_t len) {
 }
 
 static void FetchFlagsTask_DownloadNext(void) {
-	const static String id = String_FromConst("CC get flag");
+	static const String id = String_FromConst("CC get flag");
 	String url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 

@@ -317,7 +317,7 @@ static struct HttpCacheEntry http_cache[HTTP_CACHE_ENTRIES];
 
 /* Splits up the components of a URL */
 static void HttpCache_MakeEntry(const String* url, struct HttpCacheEntry* entry, String* resource) {
-	const static String schemeEnd = String_FromConst("://");
+	static const String schemeEnd = String_FromConst("://");
 	String scheme, path, addr, name, port;
 
 	/* URL is of form [scheme]://[server name]:[server port]/[resource] */
@@ -413,7 +413,7 @@ static void Http_MakeHeaders(String* headers, struct HttpRequest* req) {
 
 /* Creates and sends a HTTP requst */
 static ReturnCode Http_StartRequest(struct HttpRequest* req, HINTERNET* handle) {
-	const static char* verbs[3] = { "GET", "HEAD", "POST" };
+	static const char* verbs[3] = { "GET", "HEAD", "POST" };
 	struct HttpCacheEntry entry;
 	DWORD flags;
 

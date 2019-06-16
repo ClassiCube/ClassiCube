@@ -41,7 +41,7 @@ int main_imdct() {
 #endif
 
 static void Program_RunGame(void) {
-	const static String defPath = String_FromConst("texpacks/default.zip");
+	static const String defPath = String_FromConst("texpacks/default.zip");
 	String title; char titleBuffer[STRING_SIZE];
 	int width, height;
 

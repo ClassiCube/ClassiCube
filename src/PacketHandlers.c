@@ -203,7 +203,7 @@ static void WoM_UpdateIdentifier(void) {
 }
 
 static void WoM_CheckMotd(void) {
-	const static String cfg = String_FromConst("cfg=");
+	static const String cfg = String_FromConst("cfg=");
 	String url; char urlBuffer[STRING_SIZE];
 	String motd, host;
 	int index;	
@@ -228,7 +228,7 @@ static void WoM_CheckMotd(void) {
 }
 
 static void WoM_CheckSendWomID(void) {
-	const static String msg = String_FromConst("/womid WoMClient-2.0.7");
+	static const String msg = String_FromConst("/womid WoMClient-2.0.7");
 
 	if (wom_sendId && !wom_sentId) {
 		Chat_Send(&msg, false);
@@ -542,7 +542,7 @@ static void Classic_SetBlock(uint8_t* data) {
 }
 
 static void Classic_AddEntity(uint8_t* data) {
-	const static String group = String_FromConst("Players");
+	static const String group = String_FromConst("Players");
 	String name; char nameBuffer[STRING_SIZE];
 	String skin; char skinBuffer[STRING_SIZE];
 	EntityID id;
@@ -611,8 +611,8 @@ static void Classic_RemoveEntity(uint8_t* data) {
 }
 
 static void Classic_Message(uint8_t* data) {
-	const static String detailMsg  = String_FromConst("^detail.user=");
-	const static String detailUser = String_FromConst("^detail.user");
+	static const String detailMsg  = String_FromConst("^detail.user=");
+	static const String detailUser = String_FromConst("^detail.user");
 	String text; char textBuffer[STRING_SIZE + 2];
 
 	uint8_t type = *data++;
@@ -635,7 +635,7 @@ static void Classic_Message(uint8_t* data) {
 }
 
 static void Classic_Kick(uint8_t* data) {
-	const static String title = String_FromConst("&eLost connection to the server");
+	static const String title = String_FromConst("&eLost connection to the server");
 	String reason; char reasonBuffer[STRING_SIZE];
 
 	String_InitArray(reason, reasonBuffer);
@@ -831,7 +831,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 }
 
 static void CPE_ExtInfo(uint8_t* data) {
-	const static String d3Server = String_FromConst("D3 server");
+	static const String d3Server = String_FromConst("D3 server");
 	String appName; char appNameBuffer[STRING_SIZE];
 
 	String_InitArray(appName, appNameBuffer);

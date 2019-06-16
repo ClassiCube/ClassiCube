@@ -342,7 +342,7 @@ void Inflate_Init(struct InflateState* state, struct Stream* source) {
 	state->WindowIndex = 0;
 }
 
-const static uint8_t fixed_lits[INFLATE_MAX_LITS] = {
+static const uint8_t fixed_lits[INFLATE_MAX_LITS] = {
 	8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
 	8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
 	8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
@@ -353,31 +353,31 @@ const static uint8_t fixed_lits[INFLATE_MAX_LITS] = {
 	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
 	7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7, 7,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8
 };
-const static uint8_t fixed_dists[INFLATE_MAX_DISTS] = {
+static const uint8_t fixed_dists[INFLATE_MAX_DISTS] = {
 	5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5, 5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
 };
 
-const static uint16_t len_base[31] = { 
+static const uint16_t len_base[31] = { 
 	3,4,5,6,7,8,9,10,11,13,
 	15,17,19,23,27,31,35,43,51,59,
 	67,83,99,115,131,163,195,227,258,0,0 
 };
-const static uint8_t len_bits[31] = { 
+static const uint8_t len_bits[31] = { 
 	0,0,0,0,0,0,0,0,1,1,
 	1,1,2,2,2,2,3,3,3,3,
 	4,4,4,4,5,5,5,5,0,0,0 
 };
-const static uint16_t dist_base[32] = {
+static const uint16_t dist_base[32] = {
 	1,2,3,4,5,7,9,13,17,25,
 	33,49,65,97,129,193,257,385,513,769,
 	1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0 
 };
-const static uint8_t dist_bits[32] = {
+static const uint8_t dist_bits[32] = {
 	0,0,0,0,1,1,2,2,3,3,
 	4,4,5,5,6,6,7,7,8,8,
 	9,9,10,10,11,11,12,12,13,13,0,0 
 };
-const static uint8_t codelens_order[INFLATE_MAX_CODELENS] = {
+static const uint8_t codelens_order[INFLATE_MAX_CODELENS] = {
 	16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 
 };
 
@@ -760,12 +760,12 @@ void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struc
 *---------------------------------------------------Deflate (compress)----------------------------------------------------*
 *#########################################################################################################################*/
 /* these are copies of len_base and dist_base, with UINT16_MAX instead of 0 for sentinel cutoff */
-const static uint16_t deflate_len[30] = {
+static const uint16_t deflate_len[30] = {
 	3,4,5,6,7,8,9,10,11,13,
 	15,17,19,23,27,31,35,43,51,59,
 	67,83,99,115,131,163,195,227,258,UInt16_MaxValue
 };
-const static uint16_t deflate_dist[31] = {
+static const uint16_t deflate_dist[31] = {
 	1,2,3,4,5,7,9,13,17,25,
 	33,49,65,97,129,193,257,385,513,769,
 	1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,UInt16_MaxValue

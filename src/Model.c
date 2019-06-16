@@ -857,32 +857,32 @@ static void ChickenModel_MakeLeg(struct ModelPart* part, int x1, int x2, int leg
 }
 
 static void ChickenModel_MakeParts(void) {
-	const static struct BoxDesc head = {
+	static const struct BoxDesc head = {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-2,9,-6, 2,15,-3),
 		BoxDesc_Rot(0,9,-4),
 	};
-	const static struct BoxDesc wattle = {
+	static const struct BoxDesc wattle = {
 		BoxDesc_Tex(14,4),
 		BoxDesc_Box(-1,9,-7, 1,11,-5),
 		BoxDesc_Rot(0,9,-4),
 	};
-	const static struct BoxDesc beak = {
+	static const struct BoxDesc beak = {
 		BoxDesc_Tex(14,0),
 		BoxDesc_Box(-2,11,-8, 2,13,-6),
 		BoxDesc_Rot(0,9,-4),
 	};
-	const static struct BoxDesc torso = {
+	static const struct BoxDesc torso = {
 		BoxDesc_Tex(0,9),
 		BoxDesc_Box(-3,5,-4, 3,11,3),
 		BoxDesc_Rot(0,5,0),
 	};
-	const static struct BoxDesc lWing = {
+	static const struct BoxDesc lWing = {
 		BoxDesc_Tex(24,13),
 		BoxDesc_Box(-4,7,-3, -3,11,3),
 		BoxDesc_Rot(-3,11,0),
 	}; 
-	const static struct BoxDesc rWing = {
+	static const struct BoxDesc rWing = {
 		BoxDesc_Tex(24,13),
 		BoxDesc_Box(3,7,-3, 4,11,3),
 		BoxDesc_Rot(3,11,0),
@@ -947,32 +947,32 @@ static struct ModelPart creeper_head, creeper_torso, creeper_leftLegFront;
 static struct ModelPart creeper_rightLegFront, creeper_leftLegBack, creeper_rightLegBack;
 
 static void CreeperModel_MakeParts(void) {
-	const static struct BoxDesc head = {
+	static const struct BoxDesc head = {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-4,18,-4, 4,26,4),
 		BoxDesc_Rot(0,18,0),
 	};
-	const static struct BoxDesc torso = {
+	static const struct BoxDesc torso = {
 		BoxDesc_Tex(16,16),
 		BoxDesc_Box(-4,6,-2, 4,18,2),
 		BoxDesc_Rot(0,6,0),
 	}; 
-	const static struct BoxDesc lFront = {
+	static const struct BoxDesc lFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-4,0,-6, 0,6,-2),
 		BoxDesc_Rot(0,6,-2),
 	}; 
-	const static struct BoxDesc rFront = {
+	static const struct BoxDesc rFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(0,0,-6, 4,6,-2),
 		BoxDesc_Rot(0,6,-2),
 	}; 
-	const static struct BoxDesc lBack = {
+	static const struct BoxDesc lBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-4,0,2, 0,6,6),
 		BoxDesc_Rot(0,6,2),
 	}; 
-	const static struct BoxDesc rBack = {
+	static const struct BoxDesc rBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(0,0,2, 4,6,6),
 		BoxDesc_Rot(0,6,2),
@@ -1025,32 +1025,32 @@ static struct ModelPart pig_head, pig_torso, pig_leftLegFront, pig_rightLegFront
 static struct ModelPart pig_leftLegBack, pig_rightLegBack;
 
 static void PigModel_MakeParts(void) {
-	const static struct BoxDesc head = {
+	static const struct BoxDesc head = {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-4,8,-14, 4,16,-6),
 		BoxDesc_Rot(0,12,-6),
 	}; 
-	const static struct BoxDesc torso = {
+	static const struct BoxDesc torso = {
 		BoxDesc_Tex(28,8),
 		BoxDesc_Box(-5,6,-8, 5,14,8),
 		BoxDesc_Rot(0,6,0),
 	}; 
-	const static struct BoxDesc lFront = {
+	static const struct BoxDesc lFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-5,0,-7, -1,6,-3),
 		BoxDesc_Rot(0,6,-5),
 	}; 
-	const static struct BoxDesc rFront = {
+	static const struct BoxDesc rFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(1,0,-7, 5,6,-3),
 		BoxDesc_Rot(0,6,-5),
 	}; 
-	const static struct BoxDesc lBack = {
+	static const struct BoxDesc lBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-5,0,5, -1,6,9),
 		BoxDesc_Rot(0,6,7),
 	}; 
-	const static struct BoxDesc rBack = {
+	static const struct BoxDesc rBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(1,0,5, 5,6,9),
 		BoxDesc_Rot(0,6,7),
@@ -1105,68 +1105,68 @@ static struct ModelPart fur_leftLegBack, fur_rightLegBack;
 static struct ModelTex fur_tex = { "sheep_fur.png" };
 
 static void SheepModel_MakeParts(void) {
-	const static struct BoxDesc head = {
+	static const struct BoxDesc head = {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-3,16,-14, 3,22,-6),
 		BoxDesc_Rot(0,18,-8),
 	};
-	const static struct BoxDesc torso = {
+	static const struct BoxDesc torso = {
 		BoxDesc_Tex(28,8),
 		BoxDesc_Box(-4,12,-8, 4,18,8),
 		BoxDesc_Rot(0,12,0),
 	}; 	
-	const static struct BoxDesc lFront = {
+	static const struct BoxDesc lFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-5,0,-7, -1,12,-3),
 		BoxDesc_Rot(0,12,-5),
 	}; 
-	const static struct BoxDesc rFront = {
+	static const struct BoxDesc rFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(1,0,-7, 5,12,-3),
 		BoxDesc_Rot(0,12,-5),
 	}; 
-	const static struct BoxDesc lBack = {
+	static const struct BoxDesc lBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-5,0,5, -1,12,9),
 		BoxDesc_Rot(0,12,7),
 	}; 
-	const static struct BoxDesc rBack = {
+	static const struct BoxDesc rBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(1,0,5, 5,12,9),
 		BoxDesc_Rot(0,12,7),
 	};
 
-	const static struct BoxDesc fHead = {
+	static const struct BoxDesc fHead = {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Dims(-3,16,-12, 3,22,-6),
 		BoxDesc_Bounds(-3.5f,15.5f,-12.5f, 3.5f,22.5f,-5.5f),
 		BoxDesc_Rot(0,18,-8),
 	}; 
-	const static struct BoxDesc fTorso = {
+	static const struct BoxDesc fTorso = {
 		BoxDesc_Tex(28,8),
 		BoxDesc_Dims(-4,12,-8, 4,18,8),
 		BoxDesc_Bounds(-6.0f,10.5f,-10.0f, 6.0f,19.5f,10.0f),
 		BoxDesc_Rot(0,12,0),
 	};
-	const static struct BoxDesc flFront = {
+	static const struct BoxDesc flFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Dims(-5,6,-7, -1,12,-3),
 		BoxDesc_Bounds(-5.5f,5.5f,-7.5f, -0.5f,12.5f,-2.5f),
 		BoxDesc_Rot(0,12,-5),
 	};
-	const static struct BoxDesc frFront = {
+	static const struct BoxDesc frFront = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Dims(1,6,-7, 5,12,-3),
 		BoxDesc_Bounds(0.5f,5.5f,-7.5f, 5.5f,12.5f,-2.5f),
 		BoxDesc_Rot(0,12,-5),
 	};
-	const static struct BoxDesc flBack = {
+	static const struct BoxDesc flBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Dims(-5,6,5, -1,12,9),
 		BoxDesc_Bounds(-5.5f,5.5f,4.5f, -0.5f,12.5f,9.5f),
 		BoxDesc_Rot(0,12,7),
 	}; 
-	const static struct BoxDesc frBack = {
+	static const struct BoxDesc frBack = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Dims(1,6,5, 5,12,9),
 		BoxDesc_Bounds(0.5f,5.5f,4.5f, 5.5f,12.5f,9.5f),
@@ -1249,32 +1249,32 @@ static struct ModelPart skeleton_head, skeleton_torso, skeleton_leftLeg;
 static struct ModelPart skeleton_rightLeg, skeleton_leftArm, skeleton_rightArm;
 
 static void SkeletonModel_MakeParts(void) {
-	const static struct BoxDesc head = {
+	static const struct BoxDesc head = {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-4,24,-4, 4,32,4),
 		BoxDesc_Rot(0,24,0),
 	};
-	const static struct BoxDesc torso = {
+	static const struct BoxDesc torso = {
 		BoxDesc_Tex(16,16),
 		BoxDesc_Box(-4,12,-2, 4,24,2),
 		BoxDesc_Rot(0,12,0),
 	}; 
-	const static struct BoxDesc lLeg = {
+	static const struct BoxDesc lLeg = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(-1,0,-1, -3,12,1),
 		BoxDesc_Rot(0,12,0),
 	}; 
-	const static struct BoxDesc rLeg = {
+	static const struct BoxDesc rLeg = {
 		BoxDesc_Tex(0,16),
 		BoxDesc_Box(1,0,-1, 3,12,1),
 		BoxDesc_Rot(0,12,0),
 	}; 
-	const static struct BoxDesc lArm = {
+	static const struct BoxDesc lArm = {
 		BoxDesc_Tex(40,16),
 		BoxDesc_Box(-4,12,-1, -6,24,1),
 		BoxDesc_Rot(-5,23,0),
 	}; 
-	const static struct BoxDesc rArm = {
+	static const struct BoxDesc rArm = {
 		BoxDesc_Tex(40,16),
 		BoxDesc_Box(4,12,-1, 6,24,1),
 		BoxDesc_Rot(5,23,0),
@@ -1331,27 +1331,27 @@ static struct ModelPart spider_head, spider_link, spider_end;
 static struct ModelPart spider_leftLeg, spider_rightLeg;
 
 static void SpiderModel_MakeParts(void) {
-	const static struct BoxDesc head = {
+	static const struct BoxDesc head = {
 		BoxDesc_Tex(32,4),
 		BoxDesc_Box(-4,4,-11, 4,12,-3),
 		BoxDesc_Rot(0,8,-3),
 	};
-	const static struct BoxDesc link = {
+	static const struct BoxDesc link = {
 		BoxDesc_Tex(0,0),
 		BoxDesc_Box(-3,5,3, 3,11,-3),
 		BoxDesc_Rot(0,5,0),
 	}; 
-	const static struct BoxDesc end = {
+	static const struct BoxDesc end = {
 		BoxDesc_Tex(0,12),
 		BoxDesc_Box(-5,4,3, 5,12,15),
 		BoxDesc_Rot(0,4,9),
 	}; 
-	const static struct BoxDesc lLeg = {
+	static const struct BoxDesc lLeg = {
 		BoxDesc_Tex(18,0),
 		BoxDesc_Box(-19,7,-1, -3,9,1),
 		BoxDesc_Rot(-3,8,0),
 	}; 
-	const static struct BoxDesc rLeg = {
+	static const struct BoxDesc rLeg = {
 		BoxDesc_Tex(18,0),
 		BoxDesc_Box(3,7,-1, 19,9,1),
 		BoxDesc_Rot(3,8,0),

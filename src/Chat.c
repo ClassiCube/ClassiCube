@@ -220,8 +220,8 @@ static struct ChatCommand* cmds_head;
 static struct ChatCommand* cmds_tail;
 
 static bool Commands_IsCommandPrefix(const String* str) {
-	const static String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
-	const static String prefix      = String_FromConst(COMMANDS_PREFIX);
+	static const String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
+	static const String prefix      = String_FromConst(COMMANDS_PREFIX);
 
 	if (!str->length) return false;
 	if (Server.IsSinglePlayer && str->buffer[0] == '/') return true;
@@ -286,8 +286,8 @@ static void Commands_PrintDefault(void) {
 }
 
 static void Commands_Execute(const String* input) {	
-	const static String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
-	const static String prefix      = String_FromConst(COMMANDS_PREFIX);
+	static const String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
+	static const String prefix      = String_FromConst(COMMANDS_PREFIX);
 	String text = *input;
 
 	int offset, count;
@@ -429,7 +429,7 @@ static struct ChatCommand ModelCommand = {
 static int cuboid_block = -1;
 static IVec3 cuboid_mark1, cuboid_mark2;
 static bool cuboid_persist, cuboid_hooked, cuboid_hasMark1;
-const static String cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
+static const String cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
 
 static bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
 	int block;

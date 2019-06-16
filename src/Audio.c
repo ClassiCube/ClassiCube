@@ -699,8 +699,8 @@ static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
 }
 
 static void Sounds_Init(void) {
-	const static String dig  = String_FromConst("dig_");
-	const static String step = String_FromConst("step_");
+	static const String dig  = String_FromConst("dig_");
+	static const String step = String_FromConst("step_");
 
 	if (digBoard.Count || stepBoard.Count) return;
 	Soundboard_Init(&digBoard,  &dig,  &files);
@@ -816,7 +816,7 @@ cleanup:
 
 #define MUSIC_MAX_FILES 512
 static void Music_RunLoop(void) {
-	const static String ogg = String_FromConst(".ogg");
+	static const String ogg = String_FromConst(".ogg");
 	char pathBuffer[FILENAME_SIZE];
 	String path;
 
@@ -915,7 +915,7 @@ static void Audio_FilesCallback(const String* path, void* obj) {
 }
 
 static void Audio_Init(void) {
-	const static String path = String_FromConst("audio");
+	static const String path = String_FromConst("audio");
 	int volume;
 
 	Directory_Enum(&path, NULL, Audio_FilesCallback);

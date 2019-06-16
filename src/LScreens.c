@@ -275,7 +275,7 @@ static void UseModeClassicHax(void* w, int x, int y) { ChooseMode_Click(true,  t
 static void UseModeClassic(void* w, int x, int y)    { ChooseMode_Click(true,  false); }
 
 static void ChooseModeScreen_Init(struct LScreen* s_) {
-	const static String titleText = String_FromConst("Choose game mode");
+	static const String titleText = String_FromConst("Choose game mode");
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;	
 
 	s->LblHelp.Hidden = !s->FirstTime;
@@ -575,8 +575,8 @@ static void DirectConnectScreen_Save(const String* user, const String* mppass, c
 }
 
 static void DirectConnectScreen_StartClient(void* w, int x, int y) {
-	const static String loopbackIp = String_FromConst("127.0.0.1");
-	const static String defMppass  = String_FromConst("(none)");
+	static const String loopbackIp = String_FromConst("127.0.0.1");
+	static const String defMppass  = String_FromConst("(none)");
 	const String* user   = &DirectConnectScreen_Instance.IptUsername.Text;
 	const String* addr   = &DirectConnectScreen_Instance.IptAddress.Text;
 	const String* mppass = &DirectConnectScreen_Instance.IptMppass.Text;
@@ -706,9 +706,9 @@ CC_NOINLINE static void MainScreen_Error(struct LWebTask* task, const char* acti
 }
 
 static void MainScreen_Login(void* w, int x, int y) {
-	const static String needUser = String_FromConst("&eUsername required");
-	const static String needPass = String_FromConst("&ePassword required");
-	const static String signIn   = String_FromConst("&e&eSigning in..");
+	static const String needUser = String_FromConst("&eUsername required");
+	static const String needPass = String_FromConst("&ePassword required");
+	static const String signIn   = String_FromConst("&e&eSigning in..");
 
 	struct MainScreen* s = &MainScreen_Instance;
 	String* user = &s->IptUsername.Text;
@@ -734,7 +734,7 @@ static void MainScreen_Login(void* w, int x, int y) {
 }
 
 static void MainScreen_Register(void* w, int x, int y) {
-	const static String ccUrl = String_FromConst("https://www.classicube.net/acc/register");
+	static const String ccUrl = String_FromConst("https://www.classicube.net/acc/register");
 	Process_StartOpen(&ccUrl);
 }
 
@@ -747,7 +747,7 @@ static void MainScreen_Resume(void* w, int x, int y) {
 }
 
 static void MainScreen_Singleplayer(void* w, int x, int y) {
-	const static String defUser = String_FromConst("Singleplayer");
+	static const String defUser = String_FromConst("Singleplayer");
 	const String* user = &MainScreen_Instance.IptUsername.Text;
 
 	if (!user->length) user = &defUser;
@@ -756,7 +756,7 @@ static void MainScreen_Singleplayer(void* w, int x, int y) {
 
 static void MainScreen_Init(struct LScreen* s_) {
 	String user, pass; char passBuffer[STRING_SIZE];
-	const static String update = String_FromConst("&eChecking..");
+	static const String update = String_FromConst("&eChecking..");
 	struct MainScreen* s = (struct MainScreen*)s_;
 
 	/* status should reset after user has gone to another menu */
@@ -858,10 +858,10 @@ CC_NOINLINE static uint32_t MainScreen_GetVersion(const String* version) {
 }
 
 static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
-	const static String needUpdate = String_FromConst("&aNew release");
-	const static String upToDate   = String_FromConst("&eUp to date");
-	const static String failed     = String_FromConst("&cCheck failed");
-	const static String currentStr = String_FromConst(GAME_APP_VER);
+	static const String needUpdate = String_FromConst("&aNew release");
+	static const String upToDate   = String_FromConst("&eUp to date");
+	static const String failed     = String_FromConst("&cCheck failed");
+	static const String currentStr = String_FromConst(GAME_APP_VER);
 	uint32_t latest, current;
 
 	if (!CheckUpdateTask.Base.Working)   return;
@@ -891,7 +891,7 @@ static void MainScreen_TickGetToken(struct MainScreen* s) {
 }
 
 static void MainScreen_TickSignIn(struct MainScreen* s) {
-	const static String fetchMsg = String_FromConst("&eRetrieving servers list..");
+	static const String fetchMsg = String_FromConst("&eRetrieving servers list..");
 	if (!SignInTask.Base.Working)   return;
 	LWebTask_Tick(&SignInTask.Base);
 	if (!SignInTask.Base.Completed) return;
@@ -984,7 +984,7 @@ static void ResourcesScreen_Download(void* w, int x, int y) {
 }
 
 static void ResourcesScreen_Next(void* w, int x, int y) {
-	const static String optionsTxt = String_FromConst("options.txt");
+	static const String optionsTxt = String_FromConst("options.txt");
 	Http_ClearPending();
 
 	if (File_Exists(&optionsTxt)) {
@@ -1170,7 +1170,7 @@ static void ServersScreen_Connect(void* w, int x, int y) {
 }
 
 static void ServersScreen_Refresh(void* w, int x, int y) {
-	const static String working = String_FromConst("&eWorking..");
+	static const String working = String_FromConst("&eWorking..");
 	struct LButton* btn;
 	if (FetchServersTask.Base.Working) return;
 
@@ -1262,8 +1262,8 @@ static void ServersScreen_Init(struct LScreen* s_) {
 }
 
 static void ServersScreen_Tick(struct LScreen* s_) {
-	const static String refresh = String_FromConst("Refresh");
-	const static String failed  = String_FromConst("&cFailed");
+	static const String refresh = String_FromConst("Refresh");
+	static const String failed  = String_FromConst("&cFailed");
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	int count;
 	LScreen_Tick(s_);
@@ -1521,7 +1521,7 @@ static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTas
 }
 
 static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
-	const static String failedMsg = String_FromConst("&cFailed to fetch update");
+	static const String failedMsg = String_FromConst("&cFailed to fetch update");
 	if (!FetchUpdateTask.Base.Working) return;
 	LWebTask_Tick(&FetchUpdateTask.Base);
 	UpdatesScreen_UpdateProgress(s, &FetchUpdateTask.Base);

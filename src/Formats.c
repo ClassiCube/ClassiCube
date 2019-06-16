@@ -38,8 +38,8 @@ static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
 }
 
 IMapImporter Map_FindImporter(const String* path) {
-	const static String cw  = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
-	const static String fcm = String_FromConst(".fcm"), dat = String_FromConst(".dat");
+	static const String cw  = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
+	static const String fcm = String_FromConst(".fcm"), dat = String_FromConst(".dat");
 
 	if (String_CaselessEnds(path, &cw))  return Cw_Load;
 #ifndef CC_BUILD_WEB
@@ -97,7 +97,7 @@ void Map_LoadFrom(const String* path) {
 	U8* "Data"       (16x16x16 sparsely allocated chunks)
 }*/
 
-const static uint8_t Lvl_table[256] = {
+static const uint8_t Lvl_table[256] = {
 	 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
 	16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
 	32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
@@ -582,7 +582,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 	}
 
 	if (IsTag(tag->Parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
-		const static String blockStr = String_FromConst("Block");
+		static const String blockStr = String_FromConst("Block");
 		if (!String_CaselessStarts(&tag->Name, &blockStr)) return;	
 
 		/* hack for sprite draw (can't rely on order of tags when reading) */

@@ -13,8 +13,8 @@
 *#########################################################################################################################*/
 
 #define DAYS_IN_400_YEARS 146097   /* (400*365) + 97 */
-const static uint16_t daysTotal[13]     = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
-const static uint16_t daysTotalLeap[13] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
+static const uint16_t daysTotal[13]     = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
+static const uint16_t daysTotalLeap[13] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
 
 static bool DateTime_IsLeapYear(int year) {
 	if ((year % 4)   != 0) return false;
@@ -101,8 +101,8 @@ int Utils_ParseEnum(const String* text, int defValue, const char** names, int na
 }
 
 bool Utils_IsUrlPrefix(const String* value, int index) {
-	const static String http  = String_FromConst("http://");
-	const static String https = String_FromConst("https://");
+	static const String http  = String_FromConst("http://");
+	static const String https = String_FromConst("https://");
 
 	return String_IndexOfString(value, &http)  == index
 		|| String_IndexOfString(value, &https) == index;
@@ -220,7 +220,7 @@ bool Utils_ParseIP(const String* ip, uint8_t* data) {
 		Convert_ParseUInt8(&parts[2], &data[2]) && Convert_ParseUInt8(&parts[3], &data[3]);
 }
 
-const static char base64_table[64] = {
+static const char base64_table[64] = {
 	'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P',
 	'Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f',
 	'g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v',
