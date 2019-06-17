@@ -20,12 +20,14 @@
 # However! The default libcurl package will produce an executable that won't run on Arch (due to defining CURL_OPENSSL_3)
 # As such, you may want to uninstall libcurl package, manually compile curl's source code for both 32 and 64 bit, 
 # then add the .so files to /usr/lib/i386-linux-gnu and /usr/lib/x86_64-linux-gnu/
-cd ~/client/src/
-echo $PWD
+
+# change these as needed
+SOURCE_DIR=~/client
+EMSCRIPTEN_PATH=/usr/bin/emscripten/emcc
 
 # -----------------------------
 c_build_win32() {
-  cp ~/client/misc/CCicon_32.res ~/client/misc/src/CCicon_32.res
+  cp $SOURCE_DIR/misc/CCicon_32.res $SOURCE_DIR/src/CCicon_32.res
   rm cc-w32-d3d.exe cc-w32-ogl.exe
 
   i686-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w32-d3d.exe CCicon_32.res -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9 -w
@@ -33,7 +35,7 @@ c_build_win32() {
 }
 
 c_build_win64() {
-  cp ~/client/misc/CCicon_64.res ~/client/misc/src/CCicon_64.res
+  cp $SOURCE_DIR/misc/CCicon_64.res $SOURCE_DIR/src/CCicon_64.res
   rm cc-w64-d3d.exe cc-w64-ogl.exe
   
   x86_64-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w64-d3d.exe CCicon_64.res -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9 -w
@@ -50,7 +52,22 @@ c_build_nix64() {
   gcc *.c -O1 -fvisibility=hidden -s -rdynamic -fno-stack-protector -DCC_COMMIT_SHA=\"$LATEST\" -m64 -o cc-nix64 -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl -w
 }
 
+c_build_web()  {
+  echo "Building web.."
+  rm cc.js
+  $EMSCRIPTEN_PATH *.c -O1 -o cc.js -s FETCH=1 -s WASM=0 -s ALLOW_MEMORY_GROWTH=1 --preload-file texpacks/default.zip -w
+  # so game loads textures from classicube.net/static/default.zip
+  sed -i 's#cc.data#/static/default.zip#g' cc.js
+  # fix texture pack overlay always showing 'Download size: Determining..."
+  sed -i 's#xhr.onload = function(e) {#xhr.onload = function(e) { Fetch.setu64(fetch + 32, e.total);#g' cc.js
+  # fix mouse wheel scrolling page not being properly prevented
+  # "[Intervention] Unable to preventDefault inside passive event listener due to target being treated as passive."
+  sed -i 's#eventHandler.useCapture);#{ useCapture: eventHandler.useCapture, passive: false });#g' cc.js
+}
+
 # -----------------------------
+cd $SOURCE_DIR/src/
+echo $PWD
 git pull https://github.com/UnknownShadow200/ClassiCube.git
 git fetch --all
 git reset --hard origin/master
@@ -60,3 +77,4 @@ c_build_win32
 c_build_win64
 c_build_nix32
 c_build_nix64
+c_build_web
