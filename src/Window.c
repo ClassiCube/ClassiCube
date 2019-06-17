@@ -1436,6 +1436,7 @@ void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 #ifdef CC_BUILD_CARBON
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
+#include <dlfcn.h>
 
 static WindowRef win_handle;
 static bool win_fullscreen;
@@ -1659,6 +1660,8 @@ static OSStatus Window_EventHandler(EventHandlerCallRef inCaller, EventRef inEve
 	return eventNotHandledErr;
 }
 
+typedef EventTargetRef (*GetMenuBarEventTarget_Func)(void);
+
 static void Window_ConnectEvents(void) {
 	static EventTypeSpec eventTypes[] = {
 		{ kEventClassApplication, kEventAppActivated },
@@ -1685,13 +1688,30 @@ static void Window_ConnectEvents(void) {
 		{ kEventClassTextInput, kEventTextInputUnicodeForKeyEvent },
 		{ kEventClassAppleEvent, kEventAppleEvent }
 	};
+	GetMenuBarEventTarget_Func getMenuBarEventTarget;
 	EventTargetRef target;
-	OSStatus res;
 	
 	target = GetWindowEventTarget(win_handle);
-	res = InstallEventHandler(target, NewEventHandlerUPP(Window_EventHandler),
-							  Array_Elems(eventTypes), eventTypes, NULL, NULL);
-	if (res) Logger_Abort2(res, "Connecting events");
+	InstallEventHandler(target, NewEventHandlerUPP(Window_EventHandler),
+						Array_Elems(eventTypes), eventTypes, NULL, NULL);
+
+	/* The code below is to get the menubar working. */
+	/* The documentation for 'RunApplicationEventLoop' states that it installs */
+	/* the standard application event handler which lets the menubar work. */
+	/* However, we cannot use that since the event loop is managed by us instead. */
+	/* Unfortunately, there is no proper API to duplicate that behaviour, so reply */
+	/* on the undocumented GetMenuBarEventTarget to achieve similar behaviour. */
+	getMenuBarEventTarget = dlsym(RTLD_DEFAULT, "GetMenuBarEventTarget");
+	InstallStandardEventHandler(GetApplicationEventTarget());
+
+	/* TODO: Why does this not work properly? and why does it break with quit? */
+	if (getMenuBarEventTarget) {
+		InstallStandardEventHandler(getMenuBarEventTarget());
+	} else {
+		Platform_LogConst("MenuBar won't work!");
+	}
+	/* MenuRef menu = AcquireRootMenu(); */
+	/* InstallStandardEventHandler(GetMenuEventTarget(menu)); */
 }
 
 

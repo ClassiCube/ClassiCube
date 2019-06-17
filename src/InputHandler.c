@@ -416,6 +416,7 @@ static void InputHandler_MouseWheel(void* obj, float delta) {
 
 static void InputHandler_MouseMove(void* obj, int xDelta, int yDelta) {
 	struct Screen* active = Gui_GetActiveScreen();
+	/* In case MouseMove is called before game is fully initialised */
 	if (active) Elem_HandlesMouseMove(active, Mouse_X, Mouse_Y);
 }
 
