@@ -2573,13 +2573,13 @@ static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* da
 	/* KeyUp always intercepted */
 	if (type != EMSCRIPTEN_EVENT_KEYDOWN) return true;
 	
-	/* If holding down Ctrl or Alt, keys aren't going to generate a KeyPress event anyways */
+	/* If holding down Ctrl or Alt, keys aren't going to generate a KeyPress event anyways. */
 	/* This intercepts Ctrl+S etc. Ctrl+C and Ctrl+V are not intercepted for clipboard. */
 	if (Key_IsAltPressed() || Key_IsWinPressed()) return true;
 	if (Key_IsControlPressed() && key != 'C' && key != 'V') return true;
 	
-	/* Must not intercept KeyDown for regular keys, otherwise KeyPress doesn't get raised */
-	/* However, do want to prevent browser's behaviour on F11, F5, home etc */
+	/* Must not intercept KeyDown for regular keys, otherwise KeyPress doesn't get raised. */
+	/* However, do want to prevent browser's behaviour on F11, F5, home etc. */
 	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
 	return (key >= KEY_F1 && key <= KEY_F35)   || (key >= KEY_UP && key <= KEY_RIGHT) ||
 		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK && key != KEY_SPACE);
@@ -2682,7 +2682,6 @@ static void* clipboard_obj;
 
 EMSCRIPTEN_KEEPALIVE static void Window_GotClipboardText(char* src) {
 	String str = String_FromReadonly(src);
-	Platform_Log1("GOT TEXT: %c", src);
 	if (!clipboard_func) return;
 
 	clipboard_func(&str, clipboard_obj);

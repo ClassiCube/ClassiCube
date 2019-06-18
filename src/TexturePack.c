@@ -513,7 +513,7 @@ void Atlas_Free(void) {
 /*########################################################################################################################*
 *------------------------------------------------------TextureCache-------------------------------------------------------*
 *#########################################################################################################################*/
-/* Because I didn't store milliseconds in original C# client */
+/* Because I didn't originally store milliseconds in ClassicalSharp */
 #define TEXCACHE_TICKS_PER_MS 10000
 static struct EntryList acceptedList, deniedList, etagCache, lastModifiedCache;
 
@@ -578,22 +578,18 @@ void TexturePack_GetFromTags(const String* url, String* result, struct EntryList
 	if (value.length) String_AppendString(result, &value);
 }
 
-void TextureCache_GetLastModified(const String* url, TimeMS* time) {
-	String path;  char pathBuffer[FILENAME_SIZE];
+void TextureCache_GetLastModified(const String* url, String* time) {
 	String entry; char entryBuffer[STRING_SIZE];
-	ReturnCode res;
+	TimeMS raw;
 
 	String_InitArray(entry, entryBuffer);
 	TexturePack_GetFromTags(url, &entry, &lastModifiedCache);
 
-	if (entry.length && Convert_ParseUInt64(&entry, time)) {
-		*time /= TEXCACHE_TICKS_PER_MS;
+	/* Entry used to be a timestamp */
+	if (entry.length && Convert_ParseUInt64(&entry, &raw)) {
+		Http_FormatDate(raw / TEXCACHE_TICKS_PER_MS, time);
 	} else {
-		String_InitArray(path, pathBuffer);
-		TextureCache_MakePath(&path, url);
-
-		res = File_GetModifiedTime(&path, time);
-		if (res) { Logger_Warn2(res, "getting last modified time of", url); *time = 0; }
+		String_AppendString(time, &entry);
 	}
 }
 
@@ -626,14 +622,9 @@ void TextureCache_SetETag(const String* url, const String* etag) {
 	TextureCache_SetEntry(url, etag, &etagCache);
 }
 
-void TextureCache_SetLastModified(const String* url, const TimeMS* lastModified) {
-	String data; char dataBuffer[STRING_SIZE];
-	uint64_t ticks = (*lastModified) * TEXCACHE_TICKS_PER_MS;
-	if (!ticks) return;
-
-	String_InitArray(data, dataBuffer);
-	String_AppendUInt64(&data, ticks);
-	TextureCache_SetEntry(url, &data, &lastModifiedCache);
+void TextureCache_SetLastModified(const String* url, const String* time) {
+	if (!time->length) return;
+	TextureCache_SetEntry(url, time, &lastModifiedCache);
 }
 
 
@@ -739,7 +730,7 @@ void TexturePack_ExtractCurrent(const String* url) {
 }
 
 void TexturePack_Extract_Req(struct HttpRequest* item) {
-	String url, etag;
+	String url, str;
 	uint8_t* data; uint32_t len;
 	struct Stream mem;
 	bool png;
@@ -749,11 +740,12 @@ void TexturePack_Extract_Req(struct HttpRequest* item) {
 	String_Copy(&World_TextureUrl, &url);
 	data = item->Data;
 	len  = item->Size;
-
-	etag = String_FromRawArray(item->Etag);
 	TextureCache_Set(&url, data, len);
-	TextureCache_SetETag(&url, &etag);
-	TextureCache_SetLastModified(&url, &item->LastModified);
+
+	str = String_FromRawArray(item->Etag);
+	TextureCache_SetETag(&url, &str);
+	str = String_FromRawArray(item->LastModified);
+	TextureCache_SetLastModified(&url, &str);
 
 	Stream_ReadonlyMemory(&mem, data, len);
 	png = Png_Detect(data, len);

@@ -31,10 +31,10 @@ struct HttpRequest {
 	uint8_t*   Data;   /* Contents of the response. (i.e. result data) */
 	uint32_t   Size;   /* Size of the contents. (may still be non-zero for non 200 status codes) */
 
-	TimeMS LastModified;    /* Time item cached at (if at all) */
-	char Etag[STRING_SIZE]; /* ETag of cached item (if any) */
-	uint8_t RequestType;    /* See the various REQUEST_TYPE_ */
-	bool Success;           /* Whether Result is 0, status is 200, and data is not NULL */
+	char LastModified[STRING_SIZE]; /* Time item cached at (if at all) */
+	char Etag[STRING_SIZE];         /* ETag of cached item (if any) */
+	uint8_t RequestType;            /* See the various REQUEST_TYPE_ */
+	bool Success;                   /* Whether Result is 0, status is 200, and data is not NULL */
 };
 
 /* Frees data from a HTTP request. */
@@ -53,7 +53,7 @@ void Http_AsyncGetHeaders(const String* url, bool priority, const String* id);
 void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 /* Also sets the If-Modified-Since and If-None-Match headers. (if not NULL)  */
-void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, TimeMS* lastModified, const String* etag);
+void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, const String* lastModified, const String* etag);
 
 /* Encodes data using % or URL encoding. */
 void Http_UrlEncode(String* dst, const uint8_t* data, int len);

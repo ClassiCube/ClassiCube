@@ -51,19 +51,19 @@ void Server_RetrieveTexturePack(const String* url) {
 void Server_DownloadTexturePack(const String* url) {
 	static const String texPack = String_FromConst("texturePack");
 	String etag; char etagBuffer[STRING_SIZE];
-	TimeMS lastModified;
+	String time; char timeBuffer[STRING_SIZE];
 
 	if (TextureCache_HasDenied(url)) return;
 	String_InitArray(etag, etagBuffer);
-	lastModified = 0;
+	String_InitArray(time, timeBuffer);
 
 	if (TextureCache_Has(url)) {
-		TextureCache_GetLastModified(url, &lastModified);
+		TextureCache_GetLastModified(url, &time);
 		TextureCache_GetETag(url, &etag);
 	}
 
 	TexturePack_ExtractCurrent(url);
-	Http_AsyncGetDataEx(url, true, &texPack, &lastModified, &etag);
+	Http_AsyncGetDataEx(url, true, &texPack, &time, &etag);
 }
 
 static void Server_CheckAsyncResources(void) {

@@ -17,7 +17,6 @@
 
 #include <windows.h>
 #include <wininet.h>
-#define HTTP_QUERY_ETAG 54 /* Missing from some old MingW32 headers */
 #elif defined CC_BUILD_WEB
 /* Use fetch/XMLHttpRequest api for Emscripten */
 #include <emscripten/fetch.h>
@@ -128,21 +127,27 @@ static void Http_DownloadNextAsync(void);
 #endif
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
-static void Http_Add(const String* url, bool priority, const String* id, uint8_t type, TimeMS* lastModified, const String* etag, const void* data, uint32_t size) {
+static void Http_Add(const String* url, bool priority, const String* id, uint8_t type, const String* lastModified, const String* etag, const void* data, uint32_t size) {
 	struct HttpRequest req = { 0 };
-	String reqUrl, reqID, reqEtag;
+	String str;
 
-	String_InitArray(reqUrl, req.URL);
-	String_Copy(&reqUrl, url);
-	String_InitArray(reqID, req.ID);
-	String_Copy(&reqID, id);
+	String_InitArray(str, req.URL);
+	String_Copy(&str, url);
+	Platform_Log2("Adding %s (type %b)", url, &type);
 
+	String_InitArray(str, req.ID);
+	String_Copy(&str, id);
 	req.RequestType = type;
-	Platform_Log2("Adding %s (type %b)", &reqUrl, &type);
+	
+	if (lastModified) {
+		String_InitArray(str, req.LastModified);
+		String_Copy(&str, lastModified);
+	}
 
-	String_InitArray(reqEtag, req.Etag);
-	if (lastModified) { req.LastModified = *lastModified; }
-	if (etag)         { String_Copy(&reqEtag, etag); }
+	if (etag) { 
+		String_InitArray(str, req.Etag);
+		String_Copy(&str, etag); 
+	}
 
 	if (data) {
 		req.Data = (uint8_t*)Mem_Alloc(size, 1, "Http_PostData");
@@ -223,6 +228,22 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 	Mutex_Unlock(curRequestMutex);
 }
 
+/* Parses a HTTP header */
+static void Http_ParseHeader(struct HttpRequest* req, const String* line) {
+	String tmp, name, value;
+	if (!String_UNSAFE_Separate(line, ':', &name, &value)) return;
+
+	if (String_CaselessEqualsConst(&name, "ETag")) {
+		tmp = String_ClearedArray(req->Etag);
+		String_AppendString(&tmp, &value);
+	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
+		Convert_ParseInt(&value, &req->ContentLength);
+	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
+		tmp = String_ClearedArray(req->LastModified);
+		String_AppendString(&tmp, &value);
+	}
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------Emscripten implementation------------------------------------------------*
@@ -301,8 +322,6 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 static HINTERNET hInternet;
 /* TODO: Test last modified and etag even work */
 #define FLAG_STATUS  HTTP_QUERY_STATUS_CODE    | HTTP_QUERY_FLAG_NUMBER
-#define FLAG_LENGTH  HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER
-#define FLAG_LASTMOD HTTP_QUERY_LAST_MODIFIED  | HTTP_QUERY_FLAG_SYSTEMTIME
 
 /* caches connections to web servers */
 struct HttpCacheEntry {
@@ -386,21 +405,19 @@ static void Http_SysInit(void) {
 
 /* Adds custom HTTP headers for a req */
 static void Http_MakeHeaders(String* headers, struct HttpRequest* req) {
-	if (!req->Etag[0] && !req->LastModified && !req->Data) {
+	String str;
+	if (!req->Etag[0] && !req->LastModified[0] && !req->Data) {
 		headers->buffer = NULL; return;
 	}
 
-	if (req->LastModified) {
-		String_AppendConst(headers, "If-Modified-Since: ");
-		Http_FormatDate(req->LastModified, headers);
-		String_AppendConst(headers, "\r\n");
+	if (req->LastModified[0]) {
+		str = String_FromRawArray(req->LastModified);
+		String_Format1(headers, "If-Modified-Since: %s\r\n", &str);
 	}
 
 	if (req->Etag[0]) {
-		String etag = String_FromRawArray(req->Etag);
-		String_AppendConst(headers, "If-None-Match: ");
-		String_AppendString(headers, &etag);
-		String_AppendConst(headers, "\r\n");
+		str = String_FromRawArray(req->Etag);
+		String_Format1(headers, "If-None-Match: %s\r\n", &str);
 	}
 
 	if (req->Data) {
@@ -442,29 +459,21 @@ static ReturnCode Http_StartRequest(struct HttpRequest* req, HINTERNET* handle) 
 
 /* Gets headers from a HTTP response */
 static ReturnCode Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle) {
+	char buffer[8192];
+	String left, line;
 	DWORD len;
 
 	len = sizeof(DWORD);
 	if (!HttpQueryInfoA(handle, FLAG_STATUS, &req->StatusCode, &len, NULL)) return GetLastError();
 
-	len = sizeof(DWORD);
-	HttpQueryInfoA(handle, FLAG_LENGTH, &req->ContentLength, &len, NULL);
+	len = 8192;
+	if (!HttpQueryInfoA(handle, HTTP_QUERY_RAW_HEADERS, buffer, &len, NULL)) return GetLastError();
 
-	SYSTEMTIME sysTime;
-	len = sizeof(SYSTEMTIME);
-	if (HttpQueryInfoA(handle, FLAG_LASTMOD, &sysTime, &len, NULL)) {
-		struct DateTime time;
-		time.Year   = sysTime.wYear;   time.Month  = sysTime.wMonth;
-		time.Day    = sysTime.wDay;    time.Hour   = sysTime.wHour;
-		time.Minute = sysTime.wMinute; time.Second = sysTime.wSecond;
-		time.Milli  = sysTime.wMilliseconds;
-		req->LastModified = DateTime_TotalMs(&time);
+	left = String_Init(buffer, len, len);
+	while (left.length) {
+		String_UNSAFE_SplitBy(&left, '\0', &line);
+		Http_ParseHeader(req, &line);
 	}
-
-	String etag = String_ClearedArray(req->Etag);
-	len = etag.capacity;
-	HttpQueryInfoA(handle, HTTP_QUERY_ETAG, etag.buffer, &len, NULL);
-
 	return 0;
 }
 
@@ -552,25 +561,23 @@ static int Http_UpdateProgress(void* ptr, double total, double received, double 
 
 /* Makes custom request HTTP headers, usually none. */
 static struct curl_slist* Http_MakeHeaders(struct HttpRequest* req) {
-	String tmp; char buffer[STRING_SIZE + 1];
+	String str, tmp; char buffer[100];
 	struct curl_slist* list = NULL;
-	String etag;
 
-	if (req->Etag[0]) {
+	if (req->LastModified[0]) {
 		String_InitArray_NT(tmp, buffer);
-		String_AppendConst(&tmp, "If-None-Match: ");
+		str = String_FromRawArray(req->LastModified);
+		String_Format1(&tmp, "If-Modified-Since: ", &str);
 
-		etag = String_FromRawArray(req->Etag);
-		String_AppendString(&tmp, &etag);
 		tmp.buffer[tmp.length] = '\0';
 		list = curl_slist_append(list, tmp.buffer);
 	}
 
-	if (req->LastModified) {
+	if (req->Etag[0]) {
 		String_InitArray_NT(tmp, buffer);
-		String_AppendConst(&tmp, "Last-Modified: ");
+		str = String_FromRawArray(req->Etag);
+		String_Format1(&tmp, "If-None-Match: %s", &str);
 
-		Http_FormatDate(req->LastModified, &tmp);
 		tmp.buffer[tmp.length] = '\0';
 		list = curl_slist_append(list, tmp.buffer);
 	}
@@ -580,33 +587,16 @@ static struct curl_slist* Http_MakeHeaders(struct HttpRequest* req) {
 /* Processes a HTTP header downloaded from the server */
 static size_t Http_ProcessHeader(char *buffer, size_t size, size_t nitems, void* userdata) {
 	struct HttpRequest* req = (struct HttpRequest*)userdata;
-	String tmp; char tmpBuffer[STRING_SIZE + 1];
-	String line, name, value;
-	time_t time;
+	String line;
 
 	if (size != 1) return size * nitems; /* non byte header */
 	line = String_Init(buffer, nitems, nitems);
-	if (!String_UNSAFE_Separate(&line, ':', &name, &value)) return nitems;
 
-	/* value usually has \r\n at end */
-	if (value.length && value.buffer[value.length - 1] == '\n') value.length--;
-	if (value.length && value.buffer[value.length - 1] == '\r') value.length--;
-	if (!value.length) return nitems;
+	/* line usually has \r\n at end */
+	if (line.length && line.buffer[line.length - 1] == '\n') line.length--;
+	if (line.length && line.buffer[line.length - 1] == '\r') line.length--;
 
-	if (String_CaselessEqualsConst(&name, "ETag")) {
-		tmp = String_ClearedArray(req->Etag);
-		String_AppendString(&tmp, &value);
-	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
-		Convert_ParseInt(&value, &req->ContentLength);
-	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
-		String_InitArray_NT(tmp, tmpBuffer);
-		String_AppendString(&tmp, &value);
-		tmp.buffer[tmp.length] = '\0';
-
-		time = curl_getdate(tmp.buffer, NULL);
-		if (time == -1) return nitems;
-		req->LastModified = (uint64_t)time * 1000 + UNIX_EPOCH;
-	}
+	Http_ParseHeader(req, &line);
 	return nitems;
 }
 
@@ -775,7 +765,7 @@ void Http_AsyncGetHeaders(const String* url, bool priority, const String* id) {
 void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size) {
 	Http_Add(url, priority, id, REQUEST_TYPE_POST, NULL, NULL, data, size);
 }
-void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, TimeMS* lastModified, const String* etag) {
+void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, const String* lastModified, const String* etag) {
 	Http_Add(url, priority, id, REQUEST_TYPE_GET, lastModified, etag, NULL, 0);
 }
 
