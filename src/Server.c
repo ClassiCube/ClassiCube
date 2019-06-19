@@ -18,7 +18,7 @@
 #include "TexturePack.h"
 #include "Menus.h"
 #include "Logger.h"
-#include "PacketHandlers.h"
+#include "Protocol.h"
 #include "Inventory.h"
 #include "Platform.h"
 #include "GameStructs.h"
@@ -41,10 +41,15 @@ static void Server_ResetState(void) {
 }
 
 void Server_RetrieveTexturePack(const String* url) {
-	if (!TextureCache_HasAccepted(url) && !TextureCache_HasDenied(url)) {
-		Gui_ShowOverlay(TexPackOverlay_MakeInstance(url));
-	} else {
+	if (!Game_AllowServerTextures || TextureCache_HasDenied(url)) return;
+
+	if (!url->length) {
+		/* Only extract default texture pack when necessary */
+		if (World_TextureUrl.length) TexturePack_ExtractDefault();
+	} else if (TextureCache_HasAccepted(url)) {
 		Server_DownloadTexturePack(url);
+	} else {
+		Gui_ShowOverlay(TexPackOverlay_MakeInstance(url));
 	}
 }
 
@@ -57,6 +62,8 @@ void Server_DownloadTexturePack(const String* url) {
 	String_InitArray(etag, etagBuffer);
 	String_InitArray(time, timeBuffer);
 
+	/* Only retrieve etag/last-modified headers if the file exists */
+	/* This can occur if user decided to delete some cached files */
 	if (TextureCache_Has(url)) {
 		TextureCache_GetLastModified(url, &time);
 		TextureCache_GetETag(url, &etag);

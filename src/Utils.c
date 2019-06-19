@@ -317,6 +317,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 		if (res == ERR_END_OF_STREAM) break;
 		if (res) { Logger_Warn2(res, "reading from", &path); break; }
 		
+		/* whitespace lines are ignored (e.g. if user manually edits file) */
 		String_UNSAFE_TrimStart(&entry);
 		String_UNSAFE_TrimEnd(&entry);
 

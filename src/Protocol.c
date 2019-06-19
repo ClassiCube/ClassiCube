@@ -1,4 +1,4 @@
-#include "PacketHandlers.h"
+#include "Protocol.h"
 #include "Deflate.h"
 #include "Utils.h"
 #include "Server.h"
@@ -1206,15 +1206,11 @@ static void CPE_SetMapEnvUrl(uint8_t* data) {
 
 	String_InitArray(url, urlBuffer);
 	Protocol_ReadString(&data, &url);
-	if (!Game_AllowServerTextures) return;
 
-	if (!url.length) {
-		/* don't extract default texture pack if we can */
-		if (World_TextureUrl.length) TexturePack_ExtractDefault();
-	} else if (Utils_IsUrlPrefix(&url, 0)) {
+	if (!url.length || Utils_IsUrlPrefix(&url, 0)) {
 		Server_RetrieveTexturePack(&url);
 	}
-	Platform_Log1("Image url: %s", &url);
+	Platform_Log1("Tex url: %s", &url);
 }
 
 static void CPE_SetMapEnvProperty(uint8_t* data) {

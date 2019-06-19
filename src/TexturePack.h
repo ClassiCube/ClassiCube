@@ -95,6 +95,7 @@ void TextureCache_GetETag(const String* url, String* etag);
 void TextureCache_Set(const String* url, const uint8_t* data, uint32_t length);
 
 void TexturePack_ExtractZip_File(const String* filename);
+/* Extracts user's default texture pack, then resets World_TextureUrl. */
 void TexturePack_ExtractDefault(void);
 void TexturePack_ExtractCurrent(const String* url);
 void TexturePack_Extract_Req(struct HttpRequest* item);

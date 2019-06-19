@@ -559,9 +559,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 
 		if (IsTag(tag, "TextureURL")) {
 			String url = NbtTag_String(tag);
-			if (Game_AllowServerTextures && url.length) {
-				Server_RetrieveTexturePack(&url);
-			}
+			if (url.length) Server_RetrieveTexturePack(&url);
 			return;
 		}
 	}

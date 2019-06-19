@@ -17,7 +17,7 @@
 #include "Block.h"
 #include "Menus.h"
 #include "Gui.h"
-#include "PacketHandlers.h"
+#include "Protocol.h"
 #include "AxisLinesRenderer.h"
 
 static bool input_buttonsDown[3];

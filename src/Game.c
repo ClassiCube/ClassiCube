@@ -190,11 +190,7 @@ void Game_Reset(void) {
 	struct IGameComponent* comp;
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents.NewMap);
-
-	if (World_TextureUrl.length) {
-		TexturePack_ExtractDefault();
-		World_TextureUrl.length = 0;
-	}
+	if (World_TextureUrl.length) TexturePack_ExtractDefault();
 
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Reset) comp->Reset();
