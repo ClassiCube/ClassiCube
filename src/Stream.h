@@ -12,7 +12,7 @@ struct Stream;
 struct Stream {
 	/* Attempts to read some bytes from this stream. */
 	ReturnCode (*Read)(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified);
-	/* Attempts to efficiently read a single byte from this stream. (fallbacks to Read) */
+	/* Attempts to efficiently read a single byte from this stream. (falls back to Read) */
 	ReturnCode (*ReadU8)(struct Stream* s, uint8_t* data);
 	/* Attempts to write some bytes to this stream. */
 	ReturnCode (*Write)(struct Stream* s, const uint8_t* data, uint32_t count, uint32_t* modified);
@@ -31,7 +31,6 @@ struct Stream {
 	union {
 		FileHandle File;
 		void* Inflate;
-		/* NOTE: These structs rely on overlapping Meta_Mem fields being the same! Don't change them */
 		struct { uint8_t* Cur; uint32_t Left, Length; uint8_t* Base; } Mem;
 		struct { struct Stream* Source; uint32_t Left, Length; } Portion;
 		struct { uint8_t* Cur; uint32_t Left, Length; uint8_t* Base; struct Stream* Source; uint32_t End; } Buffered;
@@ -62,8 +61,6 @@ CC_API void Stream_FromFile(struct Stream* s, FileHandle file);
 CC_API void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, uint32_t len);
 /* Wraps a block of memory, allowing reading from and seeking in the block. */
 CC_API void Stream_ReadonlyMemory(struct Stream* s, void* data, uint32_t len);
-/* Wraps a block of memory, allowing writing to and seeking in the block. */
-CC_API void Stream_WriteonlyMemory(struct Stream* s, void* data, uint32_t len);
 /* Wraps another Stream, reading through an intermediary buffer. (Useful for files, since each read call is expensive) */
 CC_API void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data, uint32_t size);
 

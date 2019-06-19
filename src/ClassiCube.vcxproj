@@ -217,7 +217,7 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputHandler.h" />
     <ClInclude Include="Menus.h" />
-    <ClInclude Include="PacketHandlers.h" />
+    <ClInclude Include="Protocol.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Inventory.h" />
     <ClInclude Include="IsometricDrawer.h" />
@@ -282,7 +282,7 @@
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="Model.c" />
     <ClCompile Include="Menus.c" />
-    <ClCompile Include="PacketHandlers.c" />
+    <ClCompile Include="Protocol.c" />
     <ClCompile Include="Physics.c" />
     <ClCompile Include="IsometricDrawer.c" />
     <ClCompile Include="Input.c" />

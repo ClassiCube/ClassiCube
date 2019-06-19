@@ -230,16 +230,6 @@ static ReturnCode Stream_MemoryReadU8(struct Stream* s, uint8_t* data) {
 	return 0;
 }
 
-static ReturnCode Stream_MemoryWrite(struct Stream* s, const uint8_t* data, uint32_t count, uint32_t* modified) {
-	count = min(count, s->Meta.Mem.Left);
-	Mem_Copy(s->Meta.Mem.Cur, data, count);
-
-	s->Meta.Mem.Cur  += count; 
-	s->Meta.Mem.Left -= count;
-	*modified = count;
-	return 0;
-}
-
 static ReturnCode Stream_MemorySkip(struct Stream* s, uint32_t count) {
 	if (count > s->Meta.Mem.Left) return ERR_INVALID_ARGUMENT;
 
@@ -263,8 +253,10 @@ static ReturnCode Stream_MemoryLength(struct Stream* s, uint32_t* length) {
 	*length = s->Meta.Mem.Length; return 0;
 }
 
-static void Stream_CommonMemory(struct Stream* s, void* data, uint32_t len) {
+void Stream_ReadonlyMemory(struct Stream* s, void* data, uint32_t len) {
 	Stream_Init(s);
+	s->Read     = Stream_MemoryRead;
+	s->ReadU8   = Stream_MemoryReadU8;
 	s->Skip     = Stream_MemorySkip;
 	s->Seek     = Stream_MemorySeek;
 	s->Position = Stream_MemoryPosition;
@@ -276,17 +268,6 @@ static void Stream_CommonMemory(struct Stream* s, void* data, uint32_t len) {
 	s->Meta.Mem.Base   = (uint8_t*)data;
 }
 
-void Stream_ReadonlyMemory(struct Stream* s, void* data, uint32_t len) {
-	Stream_CommonMemory(s, data, len);
-	s->Read   = Stream_MemoryRead;
-	s->ReadU8 = Stream_MemoryReadU8;
-}
-
-void Stream_WriteonlyMemory(struct Stream* s, void* data, uint32_t len) {
-	Stream_CommonMemory(s, data, len);
-	s->Write = Stream_MemoryWrite;
-}
-
 
 /*########################################################################################################################*
 *----------------------------------------------------BufferedStream-------------------------------------------------------*
@@ -296,6 +277,7 @@ static ReturnCode Stream_BufferedRead(struct Stream* s, uint8_t* data, uint32_t 
 	uint32_t read;
 	ReturnCode res;
 
+	/* Refill buffer */
 	if (!s->Meta.Buffered.Left) {
 		source               = s->Meta.Buffered.Source; 
 		s->Meta.Buffered.Cur = s->Meta.Buffered.Base;
@@ -342,7 +324,6 @@ static ReturnCode Stream_BufferedSeek(struct Stream* s, uint32_t position) {
 
 	source = s->Meta.Buffered.Source;
 	res    = source->Seek(source, position);
-
 	if (res) return res;
 
 	s->Meta.Buffered.Cur  = s->Meta.Buffered.Base;

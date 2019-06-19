@@ -10,6 +10,8 @@ struct Stream;
 #define VORBIS_MAX_BLOCK_SIZE 8192
 #define OGG_BUFFER_SIZE (255 * 256)
 
+/* Wraps an OGG container stream around an existing stream. */
+/* NOTE: buffer must be of size OGG_BUFFER_SIZE at least. */
 void Ogg_MakeStream(struct Stream* stream, uint8_t* buffer, struct Stream* source);
 struct Codebook; struct Floor; struct Residue; struct Mapping; struct Mode;
 
@@ -46,8 +48,12 @@ struct VorbisState {
 	struct imdct_state imdct[2];
 };
 
+/* Frees all dynamic memory allocated to decode the given vorbis audio. */
 void Vorbis_Free(struct VorbisState* ctx);
+/* Reads and decodes the initial vorbis headers and setup data. */
 ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx);
+/* Reads and decodes the current frame's audio data. */
 ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx);
+/* Produces final interleaved audio samples for the current frame. */
 int Vorbis_OutputFrame(struct VorbisState* ctx, int16_t* data);
 #endif

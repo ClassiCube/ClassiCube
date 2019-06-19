@@ -252,9 +252,6 @@
     <ClInclude Include="TexturePack.h">
       <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
-    <ClInclude Include="PacketHandlers.h">
-      <Filter>Header Files\Network</Filter>
-    </ClInclude>
     <ClInclude Include="Window.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
@@ -317,6 +314,9 @@
     </ClInclude>
     <ClInclude Include="Generator.h">
       <Filter>Header Files\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol.h">
+      <Filter>Header Files\Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -434,9 +434,6 @@
     <ClCompile Include="TexturePack.c">
       <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
-    <ClCompile Include="PacketHandlers.c">
-      <Filter>Source Files\Network</Filter>
-    </ClCompile>
     <ClCompile Include="EnvRenderer.c">
       <Filter>Source Files\Rendering</Filter>
     </ClCompile>
@@ -547,6 +544,9 @@
     </ClCompile>
     <ClCompile Include="Generator.c">
       <Filter>Source Files\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol.c">
+      <Filter>Source Files\Network</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

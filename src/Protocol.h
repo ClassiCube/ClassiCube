@@ -1,5 +1,5 @@
-#ifndef CC_PACKETHANDLERS_H
-#define CC_PACKETHANDLERS_H
+#ifndef CC_PROTOCOL_H
+#define CC_PROTOCOL_H
 #include "Input.h"
 #include "String.h"
 #include "Vectors.h"
