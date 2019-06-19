@@ -303,6 +303,9 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 		attr.requestDataSize = req->Size;
 	}
 
+	/* TODO: Why does this break */
+	/*static const char* headers[3] = { "cache-control", "max-age=0", NULL }; */
+	/*attr.requestHeaders = headers; */
 	attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
 	attr.onsuccess  = Http_FinishedAsync;
 	attr.onerror    = Http_FinishedAsync;

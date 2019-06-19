@@ -191,23 +191,6 @@ void String_AppendPaddedInt(String* str, int num, int minDigits) {
 	}
 }
 
-int String_MakeUInt64(uint64_t num, char* digits) {
-	int len = 0;
-	do {
-		digits[len] = '0' + (num % 10); num /= 10; len++;
-	} while (num > 0);
-	return len;
-}
-
-void String_AppendUInt64(String* str, uint64_t num) {
-	char digits[STRING_INT_CHARS];
-	int i, count = String_MakeUInt64(num, digits);
-
-	for (i = count - 1; i >= 0; i--) {
-		String_Append(str, digits[i]);
-	}
-}
-
 void String_AppendFloat(String* str, float num, int fracDigits) {
 	int i, whole, digit;
 	double frac;

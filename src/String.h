@@ -99,8 +99,6 @@ CC_API void String_AppendInt(String* str, int num);
 CC_API void String_AppendUInt32(String* str, uint32_t num);
 /* Attempts to append the digits of an integer, padding left with 0. */
 CC_API void String_AppendPaddedInt(String* str, int num, int minDigits);
-/* Attempts to append the digits of an unsigned 64 bit integer. */
-CC_API void String_AppendUInt64(String* str, uint64_t num);
 
 /* Attempts to append the digits of a float as a decimal. */
 /* NOTE: If the number is an integer, no decimal point is added. */

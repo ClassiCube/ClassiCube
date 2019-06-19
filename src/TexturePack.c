@@ -617,12 +617,12 @@ CC_NOINLINE static void TextureCache_SetEntry(const String* url, const String* d
 	EntryList_Save(list);
 }
 
-void TextureCache_SetETag(const String* url, const String* etag) {
+static void TextureCache_SetETag(const String* url, const String* etag) {
 	if (!etag->length) return;
 	TextureCache_SetEntry(url, etag, &etagCache);
 }
 
-void TextureCache_SetLastModified(const String* url, const String* time) {
+static void TextureCache_SetLastModified(const String* url, const String* time) {
 	if (!time->length) return;
 	TextureCache_SetEntry(url, time, &lastModifiedCache);
 }
