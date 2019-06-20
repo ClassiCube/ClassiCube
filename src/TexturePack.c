@@ -569,7 +569,7 @@ bool TextureCache_Get(const String* url, struct Stream* stream) {
 	return true;
 }
 
-void TexturePack_GetFromTags(const String* url, String* result, struct EntryList* list) {
+CC_NOINLINE static void TexturePack_GetFromTags(const String* url, String* result, struct EntryList* list) {
 	String key, value; char keyBuffer[STRING_INT_CHARS];
 	String_InitArray(key, keyBuffer);
 
@@ -578,7 +578,7 @@ void TexturePack_GetFromTags(const String* url, String* result, struct EntryList
 	if (value.length) String_AppendString(result, &value);
 }
 
-void TextureCache_GetLastModified(const String* url, String* time) {
+static void TextureCache_GetLastModified(const String* url, String* time) {
 	String entry; char entryBuffer[STRING_SIZE];
 	TimeMS raw;
 
@@ -593,19 +593,8 @@ void TextureCache_GetLastModified(const String* url, String* time) {
 	}
 }
 
-void TextureCache_GetETag(const String* url, String* etag) {
+static void TextureCache_GetETag(const String* url, String* etag) {
 	TexturePack_GetFromTags(url, etag, &etagCache);
-}
-
-void TextureCache_Set(const String* url, const uint8_t* data, uint32_t length) {
-	String path; char pathBuffer[FILENAME_SIZE];
-	ReturnCode res;
-
-	String_InitArray(path, pathBuffer);
-	TextureCache_MakePath(&path, url);
-	
-	res = Stream_WriteAllTo(&path, data, length);
-	if (res) { Logger_Warn2(res, "caching", url); }
 }
 
 CC_NOINLINE static void TextureCache_SetEntry(const String* url, const String* data, struct EntryList* list) {
@@ -627,6 +616,22 @@ static void TextureCache_SetLastModified(const String* url, const String* time) 
 	TextureCache_SetEntry(url, time, &lastModifiedCache);
 }
 
+void TextureCache_Update(struct HttpRequest* req) {
+	String path, url; char pathBuffer[FILENAME_SIZE];
+	ReturnCode res;
+	url = String_FromRawArray(req->URL);
+
+	path = String_FromRawArray(req->Etag);
+	TextureCache_SetETag(&url, &path);
+	path = String_FromRawArray(req->LastModified);
+	TextureCache_SetLastModified(&url, &path);
+
+	String_InitArray(path, pathBuffer);
+	TextureCache_MakePath(&path, &url);
+	res = Stream_WriteAllTo(&path, req->Data, req->Size);
+	if (res) { Logger_Warn2(res, "caching", &url); }
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
@@ -638,6 +643,7 @@ static ReturnCode TexturePack_ProcessZipEntry(const String* path, struct Stream*
 	return 0;
 }
 
+/* Extracts all the files from a stream representing a .zip archive */
 static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
 	struct ZipState state;
 	Event_RaiseVoid(&TextureEvents.PackChanged);
@@ -646,6 +652,21 @@ static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
 	Zip_Init(&state, stream);
 	state.ProcessEntry = TexturePack_ProcessZipEntry;
 	return Zip_Extract(&state);
+}
+
+/* Changes the current terrain atlas from a stream representing a .png image */
+/* Raises TextureEvents.PackChanged, so behaves as a .zip with only terrain.png in it */
+static ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
+	Bitmap bmp; 
+	ReturnCode res = Png_Decode(&bmp, stream);
+
+	if (!res) {
+		Event_RaiseVoid(&TextureEvents.PackChanged);
+		if (Game_ChangeTerrainAtlas(&bmp)) return 0;
+	}
+
+	Mem_Free(bmp.Scan0);
+	return res;
 }
 
 void TexturePack_ExtractZip_File(const String* filename) {
@@ -680,19 +701,6 @@ void TexturePack_ExtractZip_File(const String* filename) {
 #endif
 }
 
-ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
-	Bitmap bmp; 
-	ReturnCode res = Png_Decode(&bmp, stream);
-
-	if (!res) {
-		Event_RaiseVoid(&TextureEvents.PackChanged);
-		if (Game_ChangeTerrainAtlas(&bmp)) return 0;
-	}
-
-	Mem_Free(bmp.Scan0);
-	return res;
-}
-
 void TexturePack_ExtractDefault(void) {
 	String texPack; char texPackBuffer[STRING_SIZE];
 
@@ -709,9 +717,9 @@ void TexturePack_ExtractCurrent(const String* url) {
 	bool zip;
 	ReturnCode res = 0;
 
-	if (!url->length) { TexturePack_ExtractDefault(); return; }
-	
-	if (!TextureCache_Get(url, &stream)) {
+	if (!url->length) {
+		TexturePack_ExtractDefault();
+	} else if (!TextureCache_Get(url, &stream)) {
 		/* e.g. 404 errors */
 		if (World_TextureUrl.length) TexturePack_ExtractDefault();
 	} else {
@@ -740,12 +748,6 @@ void TexturePack_Extract_Req(struct HttpRequest* item) {
 	String_Copy(&World_TextureUrl, &url);
 	data = item->Data;
 	len  = item->Size;
-	TextureCache_Set(&url, data, len);
-
-	str = String_FromRawArray(item->Etag);
-	TextureCache_SetETag(&url, &str);
-	str = String_FromRawArray(item->LastModified);
-	TextureCache_SetLastModified(&url, &str);
 
 	Stream_ReadonlyMemory(&mem, data, len);
 	png = Png_Detect(data, len);
@@ -753,5 +755,20 @@ void TexturePack_Extract_Req(struct HttpRequest* item) {
 			 : TexturePack_ExtractZip(&mem);
 
 	if (res) Logger_Warn2(res, png ? "decoding" : "extracting", &url);
-	HttpRequest_Free(item);
+}
+
+void TexturePack_DownloadAsync(const String* url, const String* id) {
+	String etag; char etagBuffer[STRING_SIZE];
+	String time; char timeBuffer[STRING_SIZE];
+
+	String_InitArray(etag, etagBuffer);
+	String_InitArray(time, timeBuffer);
+
+	/* Only retrieve etag/last-modified headers if the file exists */
+	/* This inconsistency can occur if user deleted some cached files */
+	if (TextureCache_Has(url)) {
+		TextureCache_GetLastModified(url, &time);
+		TextureCache_GetETag(url, &etag);
+	}
+	Http_AsyncGetDataEx(url, true, id, &time, &etag);
 }

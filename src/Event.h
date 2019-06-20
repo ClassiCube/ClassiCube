@@ -83,8 +83,8 @@ CC_API void Event_RaiseFloat(struct Event_Float* handlers, float arg);
 #define Event_RegisterFloat(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
 #define Event_UnregisterFloat(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
-/* Calls all registered callbacks for an event which has data stream and name argumenst. */
-/* This is (currently) only used for processing entries from default.zip */
+/* Calls all registered callbacks for an event which has data stream and name arguments. */
+/* This is (currently) only used for processing entries from texture pack zip */
 void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const String* name);
 #define Event_RegisterEntry(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
 #define Event_UnregisterEntry(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)

@@ -8,6 +8,7 @@
 #include "ExtMath.h"
 #include "Physics.h"
 #include "Game.h"
+#include "TexturePack.h"
 
 struct _WorldData World;
 /*########################################################################################################################*
@@ -134,6 +135,12 @@ const PackedCol Env_DefaultShadowCol = PACKEDCOL_CONST(0x9B, 0x9B, 0x9B, 0xFF);
 
 static char World_TextureUrlBuffer[STRING_SIZE];
 String World_TextureUrl = String_FromArray(World_TextureUrlBuffer);
+
+void World_ApplyTexturePack(const String* url) {
+	static const String texPack = String_FromConst("texturePack");
+	TexturePack_ExtractCurrent(url);
+	TexturePack_DownloadAsync(url, &texPack);
+}
 
 void Env_Reset(void) {
 	Env.EdgeHeight   = -1;

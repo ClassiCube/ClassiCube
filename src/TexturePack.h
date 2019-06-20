@@ -87,16 +87,22 @@ void TextureCache_Deny(const String* url);
 bool TextureCache_Has(const String* url);
 /* Attempts to get the cached data stream for the given url. */
 bool TextureCache_Get(const String* url, struct Stream* stream);
-/* Attempts to get the Last-Modified header cached for the given URL. */
-void TextureCache_GetLastModified(const String* url, String* time);
-/* Attempts to get the ETag header cached for the given URL. */
-void TextureCache_GetETag(const String* url, String* etag);
-/* Sets the cached data for the given url. */
-void TextureCache_Set(const String* url, const uint8_t* data, uint32_t length);
+/* Updates cached data, ETag, and Last-Modified for the given URL. */
+void TextureCache_Update(struct HttpRequest* req);
 
+/* Extracts a texture pack .zip from the given file. */
 void TexturePack_ExtractZip_File(const String* filename);
 /* Extracts user's default texture pack, then resets World_TextureUrl. */
 void TexturePack_ExtractDefault(void);
+/* Extracts the current texture pack or terrain.png. 3 cases: */
+/* - Server has not set a URL, so just extract default */
+/* - URL is in texture cache, so extract cached version */
+/* - URL is not cached, so extract default for now */
 void TexturePack_ExtractCurrent(const String* url);
+/* Asynchronously downloads a texture pack. */
+/* Sends ETag and Last-Modified to webserver to avoid redundant downloads. */
+/* NOTE: This does not load cached textures - use TexturePack_ExtractCurrent for that. */
+void TexturePack_DownloadAsync(const String* url, const String* id);
+/* Extracts a texture pack or terrain.png from given downloaded data. */
 void TexturePack_Extract_Req(struct HttpRequest* item);
 #endif

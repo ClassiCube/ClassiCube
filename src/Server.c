@@ -55,22 +55,9 @@ void Server_RetrieveTexturePack(const String* url) {
 
 void Server_DownloadTexturePack(const String* url) {
 	static const String texPack = String_FromConst("texturePack");
-	String etag; char etagBuffer[STRING_SIZE];
-	String time; char timeBuffer[STRING_SIZE];
-
-	if (TextureCache_HasDenied(url)) return;
-	String_InitArray(etag, etagBuffer);
-	String_InitArray(time, timeBuffer);
-
-	/* Only retrieve etag/last-modified headers if the file exists */
-	/* This can occur if user decided to delete some cached files */
-	if (TextureCache_Has(url)) {
-		TextureCache_GetLastModified(url, &time);
-		TextureCache_GetETag(url, &etag);
-	}
-
 	TexturePack_ExtractCurrent(url);
-	Http_AsyncGetDataEx(url, true, &texPack, &time, &etag);
+	TexturePack_DownloadAsync(url, &texPack);
+	String_Copy(&World_TextureUrl, url);
 }
 
 static void Server_CheckAsyncResources(void) {
@@ -79,7 +66,9 @@ static void Server_CheckAsyncResources(void) {
 	if (!Http_GetResult(&texPack, &item)) return;
 
 	if (item.Success) {
+		TextureCache_Update(&item);
 		TexturePack_Extract_Req(&item);
+		HttpRequest_Free(&item);
 	} else if (item.Result) {
 		Chat_Add1("&cError %i when trying to download texture pack", &item.Result);
 	} else {

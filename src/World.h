@@ -123,9 +123,13 @@ extern const PackedCol Env_DefaultSunCol, Env_DefaultShadowCol;
 #define ENV_DEFAULT_SUNCOL_HEX "FFFFFF"
 #define ENV_DEFAULT_SHADOWCOL_HEX "9B9B9B"
 
+/* Extracts texture pack cached for the given URL (or default.zip if not), */
+/* then asynchronously downloads the data for the given URL. */
+CC_API void World_ApplyTexturePack(const String* url);
 /* Resets all environment settings to default. */
 /* NOTE: Unlike Env_Set functions, DOES NOT raise EnvVarChanged event. */
 CC_API void Env_Reset(void);
+
 /* Sets the edge/horizon block. (default water) */
 CC_API void Env_SetEdgeBlock(BlockID block);
 /* Sets the sides/border block. (default bedrock) */
