@@ -734,8 +734,10 @@ void TexturePack_Extract_Req(struct HttpRequest* item) {
 	bool png;
 	ReturnCode res;
 
-	url  = String_FromRawArray(item->URL);
-	String_Copy(&World_TextureUrl, &url);
+	url = String_FromRawArray(item->URL);
+	/* Took too long to download and is no longer active texture pack */
+	if (!String_Equals(&World_TextureUrl, &url)) return;
+
 	data = item->Data;
 	len  = item->Size;
 	Stream_ReadonlyMemory(&mem, data, len);
