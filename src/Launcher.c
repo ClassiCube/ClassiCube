@@ -45,18 +45,19 @@ CC_NOINLINE static void Launcher_StartFromInfo(struct ServerInfo* info) {
 	String port; char portBuffer[STRING_INT_CHARS];
 	String_InitArray(port, portBuffer);
 
-	String_AppendInt(&port, info->Port);
-	Launcher_StartGame(&SignInTask.Username, &info->Mppass, &info->IP, &port, &info->Name);
+	String_AppendInt(&port, info->port);
+	Launcher_StartGame(&SignInTask.Username, &info->mppass, &info->ip, &port, &info->name);
 }
 
 bool Launcher_ConnectToServer(const String* hash) {
-	int i;
 	struct ServerInfo* info;
+	String logMsg;
+	int i;
 	if (!hash->length) return false;
 
 	for (i = 0; i < FetchServersTask.NumServers; i++) {
 		info = &FetchServersTask.Servers[i];
-		if (!String_Equals(hash, &info->Hash)) continue;
+		if (!String_Equals(hash, &info->hash)) continue;
 
 		Launcher_StartFromInfo(info);
 		return true;
@@ -71,18 +72,16 @@ bool Launcher_ConnectToServer(const String* hash) {
 		Thread_Sleep(10); 
 	}
 
-	if (FetchServerTask.Server.Hash.length) {
+	if (FetchServerTask.Server.hash.length) {
 		Launcher_StartFromInfo(&FetchServerTask.Server);
 		return true;
-	} else if (FetchServerTask.Base.Res) {
-		Logger_SimpleWarn(FetchServerTask.Base.Res, "fetching server info");
-	} else if (FetchServerTask.Base.Status != 200) {
-		/* TODO: Use a better dialog message.. */
-		Logger_SimpleWarn(FetchServerTask.Base.Status, "fetching server info");
-	} else {
+	} else if (FetchServerTask.Base.Success) {
 		Window_ShowDialog("Failed to connect", "No server has that hash");
+	} else {
+		logMsg = String_Init(NULL, 0, 0);
+		LWebTask_DisplayError(&FetchServerTask.Base, "fetching server info", &logMsg);
 	}
-	return true;
+	return false;
 }
 
 

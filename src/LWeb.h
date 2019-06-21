@@ -12,10 +12,10 @@ typedef void (*JsonOnNew)(struct JsonContext* ctx);
 
 /* State for parsing JSON text */
 struct JsonContext {
-	char* Cur;     /* Pointer to current character in JSON stream being inspected. */
-	int Left;      /* Number of characters left to be inspected. */
-	bool Failed;   /* Whether there was an error parsing the JSON. */
-	String CurKey; /* Key/Name of current member */
+	char* cur;     /* Pointer to current character in JSON stream being inspected. */
+	int left;      /* Number of characters left to be inspected. */
+	bool failed;   /* Whether there was an error parsing the JSON. */
+	String curKey; /* Key/Name of current member */
 	
 	JsonOnNew OnNewArray;  /* Invoked when start of an array is read. */
 	JsonOnNew OnNewObject; /* Invoked when start of an object is read. */
@@ -31,9 +31,9 @@ void Json_Parse(struct JsonContext* ctx);
 
 /* Represents all known details about a server. */
 struct ServerInfo {
-	String Hash, Name, IP, Mppass, Software, Country;
-	int Players, MaxPlayers, Port, Uptime;
-	bool Featured;
+	String hash, name, ip, mppass, software, country;
+	int players, maxPlayers, port, uptime;
+	bool featured;
 	int _order; /* (internal) order in servers table after filtering */
 	char _hashBuffer[32],   _nameBuffer[STRING_SIZE];
 	char _ipBuffer[16],     _mppassBuffer[STRING_SIZE];
@@ -55,6 +55,7 @@ struct LWebTask {
 	void (*Handle)(uint8_t* data, uint32_t len);
 };
 void LWebTask_Tick(struct LWebTask* task);
+void LWebTask_DisplayError(struct LWebTask* task, const char* action, String* dst);
 
 
 extern struct GetTokenTaskData {

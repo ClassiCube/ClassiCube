@@ -62,6 +62,8 @@ void Http_UrlEncodeUtf8(String* dst, const String* src);
 /* Formats a date for inclusion in HTTP headers. */
 /* NOTE: Time is always assumed as being UTC. */
 void Http_FormatDate(TimeMS ms, String* str);
+/* Outputs more detailed information about errors with http requests. */
+bool Http_DescribeError(ReturnCode res, String* dst);
 
 /* Attempts to retrieve a fully completed request. */
 /* NOTE: You MUST also check Result/StatusCode, and check Size is > 0. */

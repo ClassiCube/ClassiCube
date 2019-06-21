@@ -692,17 +692,12 @@ CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, bool full)
 CC_NOINLINE static void MainScreen_Error(struct LWebTask* task, const char* action) {
 	String str; char strBuffer[STRING_SIZE];
 	struct MainScreen* s = &MainScreen_Instance;
-
 	String_InitArray(str, strBuffer);
-	s->SigningIn = false;
 
-	if (task->Status) {
-		String_Format1(&str, "&cclassicube.net returned: %i error", &task->Status);
-	} else {
-		String_Format1(&str, "&cError %i when connecting to classicube.net", &task->Res);
-	}
+	LWebTask_DisplayError(task, action, &str);
 	LLabel_SetText(&s->LblStatus, &str);
 	LWidget_Redraw(&s->LblStatus);
+	s->SigningIn = false;
 }
 
 static void MainScreen_Login(void* w, int x, int y) {
@@ -886,7 +881,7 @@ static void MainScreen_TickGetToken(struct MainScreen* s) {
 	if (GetTokenTask.Base.Success) {
 		SignInTask_Run(&s->IptUsername.Text, &s->IptPassword.Text);
 	} else {
-		MainScreen_Error(&GetTokenTask.Base, "sign in");
+		MainScreen_Error(&GetTokenTask.Base, "signing in");
 	}
 }
 
@@ -910,7 +905,7 @@ static void MainScreen_TickSignIn(struct MainScreen* s) {
 		LLabel_SetText(&s->LblStatus, &fetchMsg);
 		LWidget_Redraw(&s->LblStatus);
 	} else {
-		MainScreen_Error(&SignInTask.Base, "sign in");
+		MainScreen_Error(&SignInTask.Base, "signing in");
 	}
 }
 
@@ -1164,7 +1159,7 @@ static void ServersScreen_Connect(void* w, int x, int y) {
 	String* hash         = &ServersScreen_Instance.IptHash.Text;
 
 	if (!hash->length && table->RowsCount) { 
-		hash = &LTable_Get(table->TopRow)->Hash; 
+		hash = &LTable_Get(table->TopRow)->hash; 
 	}
 	Launcher_ConnectToServer(hash);
 }
@@ -1217,7 +1212,7 @@ static void ServersScreen_ReloadServers(struct ServersScreen* s) {
 	LTable_Sort(&s->Table);
 
 	for (i = 0; i < FetchServersTask.NumServers; i++) {
-		FetchFlagsTask_Add(&FetchServersTask.Servers[i].Country);
+		FetchFlagsTask_Add(&FetchServersTask.Servers[i].country);
 	}
 }
 
@@ -1521,14 +1516,17 @@ static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTas
 }
 
 static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
-	static const String failedMsg = String_FromConst("&cFailed to fetch update");
+	String str; char strBuffer[STRING_SIZE];
 	if (!FetchUpdateTask.Base.Working) return;
+
 	LWebTask_Tick(&FetchUpdateTask.Base);
 	UpdatesScreen_UpdateProgress(s, &FetchUpdateTask.Base);
 	if (!FetchUpdateTask.Base.Completed) return;
 
 	if (!FetchUpdateTask.Base.Success) {
-		LLabel_SetText(&s->LblStatus, &failedMsg);
+		String_InitArray(str, strBuffer);
+		LWebTask_DisplayError(&FetchUpdateTask.Base, "fetching update", &str);
+		LLabel_SetText(&s->LblStatus, &str);
 		LWidget_Redraw(&s->LblStatus);
 	} else {
 		/* WebTask handles saving of ClassiCube.update for us */

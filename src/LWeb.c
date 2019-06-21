@@ -14,7 +14,7 @@
 #define TOKEN_FALSE 3
 #define TOKEN_NULL  4
 /* Consumes n characters from the JSON stream */
-#define JsonContext_Consume(ctx, n) ctx->Cur += n; ctx->Left -= n;
+#define JsonContext_Consume(ctx, n) ctx->cur += n; ctx->left -= n;
 
 static const String strTrue  = String_FromConst("true");
 static const String strFalse = String_FromConst("false");
@@ -30,10 +30,10 @@ static bool Json_IsNumber(char c) {
 
 static bool Json_ConsumeConstant(struct JsonContext* ctx, const String* value) {
 	int i;
-	if (value->length > ctx->Left) return false;
+	if (value->length > ctx->left) return false;
 
 	for (i = 0; i < value->length; i++) {
-		if (ctx->Cur[i] != value->buffer[i]) return false;
+		if (ctx->cur[i] != value->buffer[i]) return false;
 	}
 
 	JsonContext_Consume(ctx, value->length);
@@ -42,10 +42,10 @@ static bool Json_ConsumeConstant(struct JsonContext* ctx, const String* value) {
 
 static int Json_ConsumeToken(struct JsonContext* ctx) {
 	char c;
-	for (; ctx->Left && Json_IsWhitespace(*ctx->Cur); ) { JsonContext_Consume(ctx, 1); }
-	if (!ctx->Left) return TOKEN_NONE;
+	for (; ctx->left && Json_IsWhitespace(*ctx->cur); ) { JsonContext_Consume(ctx, 1); }
+	if (!ctx->left) return TOKEN_NONE;
 
-	c = *ctx->Cur;
+	c = *ctx->cur;
 	if (c == '{' || c == '}' || c == '[' || c == ']' || c == ',' || c == '"' || c == ':') {
 		JsonContext_Consume(ctx, 1); return c;
 	}
@@ -64,8 +64,8 @@ static int Json_ConsumeToken(struct JsonContext* ctx) {
 
 static String Json_ConsumeNumber(struct JsonContext* ctx) {
 	int len = 0;
-	for (; ctx->Left && Json_IsNumber(*ctx->Cur); len++) { JsonContext_Consume(ctx, 1); }
-	return String_Init(ctx->Cur - len, len, len);
+	for (; ctx->left && Json_IsNumber(*ctx->cur); len++) { JsonContext_Consume(ctx, 1); }
+	return String_Init(ctx->cur - len, len, len);
 }
 
 static void Json_ConsumeString(struct JsonContext* ctx, String* str) {
@@ -73,23 +73,23 @@ static void Json_ConsumeString(struct JsonContext* ctx, String* str) {
 	char c;
 	str->length = 0;
 
-	for (; ctx->Left;) {
-		c = *ctx->Cur; JsonContext_Consume(ctx, 1);
+	for (; ctx->left;) {
+		c = *ctx->cur; JsonContext_Consume(ctx, 1);
 		if (c == '"') return;
 		if (c != '\\') { String_Append(str, c); continue; }
 
 		/* form of \X */
-		if (!ctx->Left) break;
-		c = *ctx->Cur; JsonContext_Consume(ctx, 1);
+		if (!ctx->left) break;
+		c = *ctx->cur; JsonContext_Consume(ctx, 1);
 		if (c == '/' || c == '\\' || c == '"') { String_Append(str, c); continue; }
 
 		/* form of \uYYYY */
-		if (c != 'u' || ctx->Left < 4) break;
+		if (c != 'u' || ctx->left < 4) break;
 
-		if (!PackedCol_Unhex(ctx->Cur[0], &h[0])) break;
-		if (!PackedCol_Unhex(ctx->Cur[1], &h[1])) break;
-		if (!PackedCol_Unhex(ctx->Cur[2], &h[2])) break;
-		if (!PackedCol_Unhex(ctx->Cur[3], &h[3])) break;
+		if (!PackedCol_Unhex(ctx->cur[0], &h[0])) break;
+		if (!PackedCol_Unhex(ctx->cur[1], &h[1])) break;
+		if (!PackedCol_Unhex(ctx->cur[2], &h[2])) break;
+		if (!PackedCol_Unhex(ctx->cur[3], &h[3])) break;
 
 		codepoint = (h[0] << 12) | (h[1] << 8) | (h[2] << 4) | h[3];
 		/* don't want control characters in names/software */
@@ -98,13 +98,13 @@ static void Json_ConsumeString(struct JsonContext* ctx, String* str) {
 		JsonContext_Consume(ctx, 4);
 	}
 
-	ctx->Failed = true; str->length = 0;
+	ctx->failed = true; str->length = 0;
 }
 static String Json_ConsumeValue(int token, struct JsonContext* ctx);
 
 static void Json_ConsumeObject(struct JsonContext* ctx) {
 	char keyBuffer[STRING_SIZE];
-	String value, oldKey = ctx->CurKey;
+	String value, oldKey = ctx->curKey;
 	int token;
 	ctx->OnNewObject(ctx);
 
@@ -113,19 +113,19 @@ static void Json_ConsumeObject(struct JsonContext* ctx) {
 		if (token == ',') continue;
 		if (token == '}') return;
 
-		if (token != '"') { ctx->Failed = true; return; }
-		String_InitArray(ctx->CurKey, keyBuffer);
-		Json_ConsumeString(ctx, &ctx->CurKey);
+		if (token != '"') { ctx->failed = true; return; }
+		String_InitArray(ctx->curKey, keyBuffer);
+		Json_ConsumeString(ctx, &ctx->curKey);
 
 		token = Json_ConsumeToken(ctx);
-		if (token != ':') { ctx->Failed = true; return; }
+		if (token != ':') { ctx->failed = true; return; }
 
 		token = Json_ConsumeToken(ctx);
-		if (token == TOKEN_NONE) { ctx->Failed = true; return; }
+		if (token == TOKEN_NONE) { ctx->failed = true; return; }
 
 		value = Json_ConsumeValue(token, ctx);
 		ctx->OnValue(ctx, &value);
-		ctx->CurKey = oldKey;
+		ctx->curKey = oldKey;
 	}
 }
 
@@ -139,7 +139,7 @@ static void Json_ConsumeArray(struct JsonContext* ctx) {
 		if (token == ',') continue;
 		if (token == ']') return;
 
-		if (token == TOKEN_NONE) { ctx->Failed = true; return; }
+		if (token == TOKEN_NONE) { ctx->failed = true; return; }
 		value = Json_ConsumeValue(token, ctx);
 		ctx->OnValue(ctx, &value);
 	}
@@ -162,10 +162,10 @@ static String Json_ConsumeValue(int token, struct JsonContext* ctx) {
 static void Json_NullOnNew(struct JsonContext* ctx) { }
 static void Json_NullOnValue(struct JsonContext* ctx, const String* v) { }
 void Json_Init(struct JsonContext* ctx, String* str) {
-	ctx->Cur    = str->buffer;
-	ctx->Left   = str->length;
-	ctx->Failed = false;
-	ctx->CurKey = String_Empty;
+	ctx->cur    = str->buffer;
+	ctx->left   = str->length;
+	ctx->failed = false;
+	ctx->curKey = String_Empty;
 
 	ctx->OnNewArray  = Json_NullOnNew;
 	ctx->OnNewObject = Json_NullOnNew;
@@ -226,6 +226,18 @@ void LWebTask_Tick(struct LWebTask* task) {
 	HttpRequest_Free(&req);
 }
 
+void LWebTask_DisplayError(struct LWebTask* task, const char* action, String* dst) {
+	if (task->Res) {
+		/* Non HTTP error - this is not good */
+		Logger_SysWarn(task->Res, action, Http_DescribeError);
+		String_Format2(dst, "&cError %i when %c", &task->Res, action);
+	} else if (task->Status != 200) {
+		String_Format2(dst, "&c%i error when %c", &task->Status, action);
+	} else {
+		String_Format1(dst, "&cEmpty response when %c", action);
+	}
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------GetTokenTask------------------------------------------------------*
@@ -234,7 +246,7 @@ struct GetTokenTaskData GetTokenTask;
 char tokenBuffer[STRING_SIZE];
 
 static void GetTokenTask_OnValue(struct JsonContext* ctx, const String* str) {
-	if (!String_CaselessEqualsConst(&ctx->CurKey, "token")) return;
+	if (!String_CaselessEqualsConst(&ctx->curKey, "token")) return;
 	String_Copy(&GetTokenTask.Token, str);
 }
 
@@ -277,9 +289,9 @@ static void SignInTask_LogError(const String* str) {
 }
 
 static void SignInTask_OnValue(struct JsonContext* ctx, const String* str) {
-	if (String_CaselessEqualsConst(&ctx->CurKey, "username")) {
+	if (String_CaselessEqualsConst(&ctx->curKey, "username")) {
 		String_Copy(&SignInTask.Username, str);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "errors")) {
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "errors")) {
 		SignInTask_LogError(str);
 	}
 }
@@ -321,46 +333,46 @@ struct FetchServerData FetchServerTask;
 static struct ServerInfo* curServer;
 
 static void ServerInfo_Init(struct ServerInfo* info) {
-	String_InitArray(info->Hash, info->_hashBuffer);
-	String_InitArray(info->Name, info->_nameBuffer);
-	String_InitArray(info->IP,   info->_ipBuffer);
+	String_InitArray(info->hash, info->_hashBuffer);
+	String_InitArray(info->name, info->_nameBuffer);
+	String_InitArray(info->ip,   info->_ipBuffer);
 
-	String_InitArray(info->Mppass,   info->_mppassBuffer);
-	String_InitArray(info->Software, info->_softBuffer);
-	String_InitArray(info->Country,  info->_countryBuffer);
+	String_InitArray(info->mppass,   info->_mppassBuffer);
+	String_InitArray(info->software, info->_softBuffer);
+	String_InitArray(info->country,  info->_countryBuffer);
 
-	info->Players    = 0;
-	info->MaxPlayers = 0;
-	info->Uptime     = 0;
-	info->Featured   = false;
+	info->players    = 0;
+	info->maxPlayers = 0;
+	info->uptime     = 0;
+	info->featured   = false;
 	info->_order     = -100000;
 }
 
 static void ServerInfo_Parse(struct JsonContext* ctx, const String* val) {
 	struct ServerInfo* info = curServer;
-	if (String_CaselessEqualsConst(&ctx->CurKey, "hash")) {
-		String_Copy(&info->Hash, val);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "name")) {
-		String_Copy(&info->Name, val);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "players")) {
-		Convert_ParseInt(val, &info->Players);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "maxplayers")) {
-		Convert_ParseInt(val, &info->MaxPlayers);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "uptime")) {
-		Convert_ParseInt(val, &info->Uptime);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "mppass")) {
-		String_Copy(&info->Mppass, val);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "ip")) {
-		String_Copy(&info->IP, val);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "port")) {
-		Convert_ParseInt(val, &info->Port);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "software")) {
-		String_Copy(&info->Software, val);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "featured")) {
-		Convert_ParseBool(val, &info->Featured);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "country_abbr")) {
+	if (String_CaselessEqualsConst(&ctx->curKey, "hash")) {
+		String_Copy(&info->hash, val);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "name")) {
+		String_Copy(&info->name, val);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "players")) {
+		Convert_ParseInt(val, &info->players);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "maxplayers")) {
+		Convert_ParseInt(val, &info->maxPlayers);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "uptime")) {
+		Convert_ParseInt(val, &info->uptime);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "mppass")) {
+		String_Copy(&info->mppass, val);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "ip")) {
+		String_Copy(&info->ip, val);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "port")) {
+		Convert_ParseInt(val, &info->port);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "software")) {
+		String_Copy(&info->software, val);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "featured")) {
+		Convert_ParseBool(val, &info->featured);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "country_abbr")) {
 		/* Two letter country codes, see ISO 3166-1 alpha-2 */
-		String_Copy(&info->Country, val);
+		String_Copy(&info->country, val);
 	}
 }
 
@@ -460,11 +472,11 @@ CC_NOINLINE static TimeMS CheckUpdateTask_ParseTime(const String* str) {
 }
 
 static void CheckUpdateTask_OnValue(struct JsonContext* ctx, const String* str) {
-	if (String_CaselessEqualsConst(&ctx->CurKey, "release_version")) {
+	if (String_CaselessEqualsConst(&ctx->curKey, "release_version")) {
 		String_Copy(&CheckUpdateTask.LatestRelease, str);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "latest_ts")) {
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "latest_ts")) {
 		CheckUpdateTask.DevTimestamp = CheckUpdateTask_ParseTime(str);
-	} else if (String_CaselessEqualsConst(&ctx->CurKey, "release_ts")) {
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "release_ts")) {
 		CheckUpdateTask.RelTimestamp = CheckUpdateTask_ParseTime(str);
 	}
 }

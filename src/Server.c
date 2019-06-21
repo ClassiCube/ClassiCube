@@ -60,7 +60,7 @@ static void Server_CheckAsyncResources(void) {
 		TexturePack_Extract_Req(&item);
 		HttpRequest_Free(&item);
 	} else if (item.Result) {
-		Chat_Add1("&cError %i when trying to download texture pack", &item.Result);
+		Logger_SysWarn(item.Result, "trying to download texture pack", Http_DescribeError);
 	} else {
 		int status = item.StatusCode;
 		if (status == 200 || status == 304) return;

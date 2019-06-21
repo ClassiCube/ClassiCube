@@ -116,9 +116,9 @@ struct DrawTextArgs;
 
 struct LTableColumn {
 	/* Name of this column. */
-	const char* Name;
+	const char* name;
 	/* Width of this column in pixels. */
-	int Width;
+	int width;
 	/* Draws the value of this column for the given row. */
 	/* If args.Text is changed to something, that text gets drawn afterwards. */
 	/* Most of the time that's all you need to do. */
@@ -126,12 +126,12 @@ struct LTableColumn {
 	/* Returns sort order of two rows, based on value of this column in both rows. */
 	int (*SortOrder)(const struct ServerInfo* a, const struct ServerInfo* b);
 	/* Whether a vertical gridline (and padding) appears after this. */
-	bool ColumnGridline;
+	bool columnGridline;
 	/* Whether user can interact with this column. */
 	/* Non-interactable columns can't be sorted/resized. */
-	bool Interactable;
+	bool interactable;
 	/* Whether to invert the order of row sorting. */
-	bool InvertSort;
+	bool invertSort;
 };
 
 /* Represents a table of server entries. */

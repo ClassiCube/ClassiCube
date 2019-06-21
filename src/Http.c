@@ -15,6 +15,12 @@
 #define _UNICODE
 #endif
 
+#ifdef UNICODE
+#define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, (Codepoint*)(src), (len) * 2)
+#else
+#define Platform_DecodeString(dst, src, len) String_DecodeCP1252(dst, (uint8_t*)(src), len)
+#endif
+
 #include <windows.h>
 #include <wininet.h>
 #elif defined CC_BUILD_WEB
@@ -252,6 +258,7 @@ static void Http_ParseHeader(struct HttpRequest* req, const String* line) {
 static void Http_SysInit(void) { }
 static void Http_SysFree(void) { }
 static void Http_DownloadAsync(struct HttpRequest* req);
+bool Http_DescribeError(ReturnCode res, String* dst) { return false; }
 
 static void Http_DownloadNextAsync(void) {
 	struct HttpRequest req;
@@ -398,6 +405,16 @@ static ReturnCode HttpCache_Lookup(struct HttpCacheEntry* e) {
 	i = (uint8_t)Stopwatch_Measure() % HTTP_CACHE_ENTRIES;
 	InternetCloseHandle(http_cache[i].Handle);
 	return HttpCache_Insert(i, e);
+}
+
+bool Http_DescribeError(ReturnCode res, String* dst) {
+	TCHAR chars[600];
+	res = FormatMessage(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+					 GetModuleHandle(TEXT("wininet.dll")), res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, 600, NULL);
+	if (!res) return false;
+
+	Platform_DecodeString(dst, chars, res);
+	return true;
 }
 
 static void Http_SysInit(void) {
@@ -547,6 +564,14 @@ static void Http_SysFree(void) {
 }
 #elif defined CC_BUILD_CURL
 static CURL* curl;
+
+bool Http_DescribeError(ReturnCode res, String* dst) {
+	const char* err = curl_easy_strerror(res);
+	if (!err) return false;
+
+	String_AppendConst(dst, err);
+	return true;
+}
 
 static void Http_SysInit(void) {
 	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);

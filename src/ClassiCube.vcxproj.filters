@@ -401,9 +401,6 @@
     <ClCompile Include="Widgets.c">
       <Filter>Source Files\2D</Filter>
     </ClCompile>
-    <ClCompile Include="Input.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Utils.c">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
@@ -547,6 +544,9 @@
     </ClCompile>
     <ClCompile Include="Protocol.c">
       <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Input.c">
+      <Filter>Source Files\Game</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

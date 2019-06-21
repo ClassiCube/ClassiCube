@@ -634,26 +634,26 @@ void LSlider_Init(struct LSlider* w, int width, int height) {
 *------------------------------------------------------TableWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	Bitmap* bmp = Flags_Get(&row->Country);
+	Bitmap* bmp = Flags_Get(&row->country);
 	if (bmp) Drawer2D_BmpCopy(&Launcher_Framebuffer, x + 2, y + 6, bmp);
 }
 
 static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	args->text = row->Name;
+	args->text = row->name;
 }
 static int NameColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
-	return String_Compare(&b->Name, &a->Name);
+	return String_Compare(&b->name, &a->name);
 }
 
 static void PlayersColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	String_Format2(&args->text, "%i/%i", &row->Players, &row->MaxPlayers);
+	String_Format2(&args->text, "%i/%i", &row->players, &row->maxPlayers);
 }
 static int PlayersColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
-	return b->Players - a->Players;
+	return b->players - a->players;
 }
 
 static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	int uptime = row->Uptime;
+	int uptime = row->uptime;
 	char unit  = 's';
 
 	if (uptime >= SECS_PER_DAY * 7) {
@@ -666,14 +666,14 @@ static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args,
 	String_Format2(&args->text, "%i%r", &uptime, &unit);
 }
 static int UptimeColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
-	return b->Uptime - a->Uptime;
+	return b->uptime - a->uptime;
 }
 
 static void SoftwareColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	args->text = row->Software;
+	args->text = row->software;
 }
 static int SoftwareColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
-	return String_Compare(&b->Software, &a->Software);
+	return String_Compare(&b->software, &a->software);
 }
 
 static struct LTableColumn tableColumns[5] = {
@@ -712,7 +712,7 @@ static int LTable_GetSelectedIndex(struct LTable* w) {
 
 	for (row = 0; row < w->RowsCount; row++) {
 		entry = LTable_Get(row);
-		if (String_CaselessEquals(w->SelectedHash, &entry->Hash)) return row;
+		if (String_CaselessEquals(w->SelectedHash, &entry->hash)) return row;
 	}
 	return -1;
 }
@@ -723,7 +723,7 @@ static void LTable_SetSelectedTo(struct LTable* w, int index) {
 	if (index >= w->RowsCount) index = w->RowsCount - 1;
 	if (index < 0) index = 0;
 
-	String_Copy(w->SelectedHash, &LTable_Get(index)->Hash);
+	String_Copy(w->SelectedHash, &LTable_Get(index)->hash);
 	LTable_ShowSelected(w);
 	w->OnSelectedChanged();
 }
@@ -759,8 +759,8 @@ static BitmapCol LTable_RowCol(struct LTable* w, struct ServerInfo* row) {
 	bool selected;
 
 	if (row) {
-		selected = String_Equals(&row->Hash, w->SelectedHash);
-		if (row->Featured) {
+		selected = String_Equals(&row->hash, w->SelectedHash);
+		if (row->featured) {
 			return selected ? featSelCol : featuredCol;
 		} else if (selected) {
 			return selectedCol;
@@ -804,8 +804,8 @@ static void LTable_DrawGridlines(struct LTable* w) {
 				   x, w->Y + w->HdrHeight, w->Width, GRIDLINE_SIZE);
 
 	for (i = 0; i < w->NumColumns; i++) {
-		x += w->Columns[i].Width;
-		if (!w->Columns[i].ColumnGridline) continue;
+		x += w->Columns[i].width;
+		if (!w->Columns[i].columnGridline) continue;
 			
 		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
 					   x, w->Y, GRIDLINE_SIZE, w->Height);
@@ -829,13 +829,13 @@ static void LTable_DrawHeaders(struct LTable* w) {
 	x = w->X; y = w->Y;
 
 	for (i = 0; i < w->NumColumns; i++) {
-		args.text = String_FromReadonly(w->Columns[i].Name);
+		args.text = String_FromReadonly(w->Columns[i].name);
 		Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
 								x + CELL_XOFFSET, y + HDR_YOFFSET, 
-								w->Columns[i].Width - CELL_XPADDING);
+								w->Columns[i].width - CELL_XPADDING);
 
-		x += w->Columns[i].Width;
-		if (w->Columns[i].ColumnGridline) x += GRIDLINE_SIZE;
+		x += w->Columns[i].width;
+		if (w->Columns[i].columnGridline) x += GRIDLINE_SIZE;
 	}
 }
 
@@ -865,11 +865,11 @@ static void LTable_DrawRows(struct LTable* w) {
 			if (args.text.length) {
 				Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
 										x + CELL_XOFFSET, y + ROW_YOFFSET, 
-										w->Columns[i].Width - CELL_XPADDING);
+										w->Columns[i].width - CELL_XPADDING);
 			}
 
-			x += w->Columns[i].Width;
-			if (w->Columns[i].ColumnGridline) x += GRIDLINE_SIZE;
+			x += w->Columns[i].width;
+			if (w->Columns[i].columnGridline) x += GRIDLINE_SIZE;
 		}
 	}
 }
@@ -930,8 +930,8 @@ static void LTable_MouseMove(void* widget, int deltaX, int deltaY, bool wasOver)
 		if (!deltaX || x >= w->X + w->Width - 20) return;
 		col = w->DraggingColumn;
 
-		w->Columns[col].Width += deltaX;
-		Math_Clamp(w->Columns[col].Width, 20, w->Width - 20);
+		w->Columns[col].width += deltaX;
+		Math_Clamp(w->Columns[col].width, 20, w->Width - 20);
 		LWidget_Redraw(w);
 	}
 }
@@ -946,7 +946,7 @@ static void LTable_RowsClick(struct LTable* w) {
 
 	/* double click on row to join */
 	if (w->_lastClick + 1000 >= now && row == w->_lastRow) {
-		Launcher_ConnectToServer(&LTable_Get(row)->Hash);
+		Launcher_ConnectToServer(&LTable_Get(row)->hash);
 	}
 
 	w->_lastRow   = LTable_GetSelectedIndex(w);
@@ -959,25 +959,25 @@ static void LTable_HeadersClick(struct LTable* w) {
 
 	for (i = 0, x = w->X; i < w->NumColumns; i++) {
 		/* clicked on gridline, begin dragging */
-		if (mouseX >= (x - 8) && mouseX < (x + 8) && w->Columns[i].Interactable) {
+		if (mouseX >= (x - 8) && mouseX < (x + 8) && w->Columns[i].interactable) {
 			w->DraggingColumn = i - 1;
 			return;
 		}
 
-		x += w->Columns[i].Width;
-		if (w->Columns[i].ColumnGridline) x += GRIDLINE_SIZE;
+		x += w->Columns[i].width;
+		if (w->Columns[i].columnGridline) x += GRIDLINE_SIZE;
 	}
 
 	for (i = 0, x = w->X; i < w->NumColumns; i++) {
-		if (mouseX >= x && mouseX < (x + w->Columns[i].Width) && w->Columns[i].Interactable) {
+		if (mouseX >= x && mouseX < (x + w->Columns[i].width) && w->Columns[i].interactable) {
 			sortingCol = i;
-			w->Columns[i].InvertSort = !w->Columns[i].InvertSort;
+			w->Columns[i].invertSort = !w->Columns[i].invertSort;
 			LTable_Sort(w);
 			return;
 		}
 
-		x += w->Columns[i].Width;
-		if (w->Columns[i].ColumnGridline) x += GRIDLINE_SIZE;
+		x += w->Columns[i].width;
+		if (w->Columns[i].columnGridline) x += GRIDLINE_SIZE;
 	}
 }
 
@@ -1085,7 +1085,7 @@ void LTable_ApplyFilter(struct LTable* w) {
 
 	count = FetchServersTask.NumServers;
 	for (i = 0, j = 0; i < count; i++) {
-		if (String_CaselessContains(&Servers_Get(i)->Name, w->Filter)) {
+		if (String_CaselessContains(&Servers_Get(i)->name, w->Filter)) {
 			FetchServersTask.Servers[j++]._order = FetchServersTask.Orders[i];
 		}
 	}
@@ -1103,12 +1103,12 @@ static int LTable_SortOrder(const struct ServerInfo* a, const struct ServerInfo*
 	int order;
 	if (sortingCol >= 0) {
 		order = tableColumns[sortingCol].SortOrder(a, b);
-		return tableColumns[sortingCol].InvertSort ? -order : order;
+		return tableColumns[sortingCol].invertSort ? -order : order;
 	}
 
 	/* Default sort order. (most active server, then by highest uptime) */
-	if (a->Players != b->Players) return a->Players - b->Players;
-	return a->Uptime - b->Uptime;
+	if (a->players != b->players) return a->players - b->players;
+	return a->uptime - b->uptime;
 }
 
 static void LTable_QuickSort(int left, int right) {
