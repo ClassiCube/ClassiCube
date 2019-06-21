@@ -43,21 +43,11 @@ static void Server_ResetState(void) {
 void Server_RetrieveTexturePack(const String* url) {
 	if (!Game_AllowServerTextures || TextureCache_HasDenied(url)) return;
 
-	if (!url->length) {
-		/* Only extract default texture pack when necessary */
-		if (World_TextureUrl.length) TexturePack_ExtractDefault();
-	} else if (TextureCache_HasAccepted(url)) {
-		Server_DownloadTexturePack(url);
+	if (!url->length || TextureCache_HasAccepted(url)) {
+		World_ApplyTexturePack(url);
 	} else {
 		Gui_ShowOverlay(TexPackOverlay_MakeInstance(url));
 	}
-}
-
-void Server_DownloadTexturePack(const String* url) {
-	static const String texPack = String_FromConst("texturePack");
-	TexturePack_ExtractCurrent(url);
-	TexturePack_DownloadAsync(url, &texPack);
-	String_Copy(&World_TextureUrl, url);
 }
 
 static void Server_CheckAsyncResources(void) {

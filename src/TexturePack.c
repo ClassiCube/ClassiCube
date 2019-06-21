@@ -656,7 +656,7 @@ static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
 
 /* Changes the current terrain atlas from a stream representing a .png image */
 /* Raises TextureEvents.PackChanged, so behaves as a .zip with only terrain.png in it */
-static ReturnCode TexturePack_ExtractTerrainPng(struct Stream* stream) {
+static ReturnCode TexturePack_ExtractPng(struct Stream* stream) {
 	Bitmap bmp; 
 	ReturnCode res = Png_Decode(&bmp, stream);
 
@@ -701,39 +701,29 @@ void TexturePack_ExtractZip_File(const String* filename) {
 #endif
 }
 
-void TexturePack_ExtractDefault(void) {
-	String texPack; char texPackBuffer[STRING_SIZE];
-
-	String_InitArray(texPack, texPackBuffer);
-	Game_GetDefaultTexturePack(&texPack);
-
-	TexturePack_ExtractZip_File(&texPack);
-	World_TextureUrl.length = 0;
-}
-
-void TexturePack_ExtractCurrent(const String* url) {
+static bool texturePackDefault = true;
+void TexturePack_ExtractCurrent(bool forceReload) {
 	static const String zipExt = String_FromConst(".zip");
+	String url = World_TextureUrl, file;
 	struct Stream stream;
 	bool zip;
-	ReturnCode res = 0;
+	ReturnCode res;
 
-	if (!url->length) {
-		TexturePack_ExtractDefault();
-	} else if (!TextureCache_Get(url, &stream)) {
-		/* e.g. 404 errors */
-		if (World_TextureUrl.length) TexturePack_ExtractDefault();
+	if (!url.length || !TextureCache_Get(&url, &stream)) {
+		/* don't pointlessly load default texture pack */
+		if (texturePackDefault && !forceReload) return;
+		file = Game_UNSAFE_GetDefaultTexturePack();
+
+		TexturePack_ExtractZip_File(&file);
+		texturePackDefault = true;
 	} else {
-		if (!String_Equals(url, &World_TextureUrl)) {
-			zip = String_ContainsString(url, &zipExt);
-			String_Copy(&World_TextureUrl, url);
-
-			res = zip ? TexturePack_ExtractZip(&stream) :
-						TexturePack_ExtractTerrainPng(&stream);		
-			if (res) Logger_Warn2(res, zip ? "extracting" : "decoding", url);
-		}
+		zip = String_ContainsString(&url, &zipExt);
+		res = zip ? TexturePack_ExtractZip(&stream) : TexturePack_ExtractPng(&stream);
+		if (res) Logger_Warn2(res, zip ? "extracting" : "decoding", &url);
 
 		res = stream.Close(&stream);
-		if (res) Logger_Warn2(res, "closing cache for", url);
+		if (res) Logger_Warn2(res, "closing cache for", &url);
+		texturePackDefault = false;
 	}
 }
 
@@ -748,13 +738,13 @@ void TexturePack_Extract_Req(struct HttpRequest* item) {
 	String_Copy(&World_TextureUrl, &url);
 	data = item->Data;
 	len  = item->Size;
-
 	Stream_ReadonlyMemory(&mem, data, len);
+
 	png = Png_Detect(data, len);
-	res = png ? TexturePack_ExtractTerrainPng(&mem) 
-			 : TexturePack_ExtractZip(&mem);
+	res = png ? TexturePack_ExtractPng(&mem) : TexturePack_ExtractZip(&mem);
 
 	if (res) Logger_Warn2(res, png ? "decoding" : "extracting", &url);
+	texturePackDefault = false;
 }
 
 void TexturePack_DownloadAsync(const String* url, const String* id) {

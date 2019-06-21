@@ -138,8 +138,11 @@ String World_TextureUrl = String_FromArray(World_TextureUrlBuffer);
 
 void World_ApplyTexturePack(const String* url) {
 	static const String texPack = String_FromConst("texturePack");
-	TexturePack_ExtractCurrent(url);
-	TexturePack_DownloadAsync(url, &texPack);
+	if (url->length) TexturePack_DownloadAsync(url, &texPack);
+
+	if (String_Equals(url, &World_TextureUrl)) return;
+	String_Copy(&World_TextureUrl, url);
+	TexturePack_ExtractCurrent(false);
 }
 
 void Env_Reset(void) {

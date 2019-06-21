@@ -92,13 +92,9 @@ void TextureCache_Update(struct HttpRequest* req);
 
 /* Extracts a texture pack .zip from the given file. */
 void TexturePack_ExtractZip_File(const String* filename);
-/* Extracts user's default texture pack, then resets World_TextureUrl. */
-void TexturePack_ExtractDefault(void);
-/* Extracts the current texture pack or terrain.png. 3 cases: */
-/* - Server has not set a URL, so just extract default */
-/* - URL is in texture cache, so extract cached version */
-/* - URL is not cached, so extract default for now */
-void TexturePack_ExtractCurrent(const String* url);
+/* If World_TextureUrl is empty, extracts user's default texture pack. */
+/* Otherwise extracts the cached texture pack for that URL. */
+void TexturePack_ExtractCurrent(bool forceReload);
 /* Asynchronously downloads a texture pack. */
 /* Sends ETag and Last-Modified to webserver to avoid redundant downloads. */
 /* NOTE: This does not load cached textures - use TexturePack_ExtractCurrent for that. */

@@ -123,8 +123,9 @@ extern const PackedCol Env_DefaultSunCol, Env_DefaultShadowCol;
 #define ENV_DEFAULT_SUNCOL_HEX "FFFFFF"
 #define ENV_DEFAULT_SHADOWCOL_HEX "9B9B9B"
 
-/* Extracts texture pack cached for the given URL (or default.zip if not), */
-/* then asynchronously downloads the data for the given URL. */
+/* If url is empty, extracts default texture pack. */
+/* Else tries extracting cached texture pack for the given URL, */
+/* then asynchronously downloads the texture pack from the given URL. */
 CC_API void World_ApplyTexturePack(const String* url);
 /* Resets all environment settings to default. */
 /* NOTE: Unlike Env_Set functions, DOES NOT raise EnvVarChanged event. */

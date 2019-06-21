@@ -110,18 +110,14 @@ float Game_GetChatScale(void) {
 
 static char game_defTexPackBuffer[STRING_SIZE];
 static String game_defTexPack = String_FromArray(game_defTexPackBuffer);
+static const String defaultZip = String_FromConst("default.zip");
 
-void Game_GetDefaultTexturePack(String* texPack) {
+String Game_UNSAFE_GetDefaultTexturePack(void) {
 	String texPath; char texPathBuffer[STRING_SIZE];
-
 	String_InitArray(texPath, texPathBuffer);
-	String_Format1(&texPath, "texpacks/%s", &game_defTexPack);
 
-	if (File_Exists(&texPath) && !Game_ClassicMode) {
-		String_AppendString(texPack, &game_defTexPack);
-	} else {
-		String_AppendConst(texPack, "default.zip");
-	}
+	String_Format1(&texPath, "texpacks/%s", &game_defTexPack);
+	return File_Exists(&texPath) && !Game_ClassicMode ? game_defTexPack : defaultZip;
 }
 
 void Game_SetDefaultTexturePack(const String* texPack) {
@@ -190,7 +186,11 @@ void Game_Reset(void) {
 	struct IGameComponent* comp;
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents.NewMap);
-	if (World_TextureUrl.length) TexturePack_ExtractDefault();
+
+	if (World_TextureUrl.length) {
+		World_TextureUrl.length = 0;
+		TexturePack_ExtractCurrent(false);
+	}
 
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Reset) comp->Reset();
@@ -331,18 +331,13 @@ static void Game_WarnFunc(const String* msg) {
 }
 
 static void Game_ExtractInitialTexturePack(void) {
-	String texPack; char texPackBuffer[STRING_SIZE];
-
+	String texPack;
 	Options_Get(OPT_DEFAULT_TEX_PACK, &game_defTexPack, "default.zip");
-	String_InitArray(texPack, texPackBuffer);
-
-	String_AppendConst(&texPack, "default.zip");
-	TexturePack_ExtractZip_File(&texPack);
-	texPack.length = 0;
+	TexturePack_ExtractZip_File(&defaultZip);
 
 	/* in case the user's default texture pack doesn't have all required textures */
-	Game_GetDefaultTexturePack(&texPack);
-	if (!String_CaselessEqualsConst(&texPack, "default.zip")) {
+	texPack = Game_UNSAFE_GetDefaultTexturePack();
+	if (!String_CaselessEquals(&texPack, "default.zip")) {
 		TexturePack_ExtractZip_File(&texPack);
 	}
 }

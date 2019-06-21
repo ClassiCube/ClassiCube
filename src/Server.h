@@ -96,13 +96,9 @@ CC_VAR extern struct _ServerConnectionData {
 	int Port;
 } Server;
 
-/* If the user hasn't previously accepted url, displays a dialog asking to confirm downloading it. */
-/* Otherwise just calls Server_DownloadTexturePack. */
+/* If user hasn't previously accepted url, displays a dialog asking to confirm downloading it. */
+/* Otherwise just calls World_ApplyTexturePack. */
 void Server_RetrieveTexturePack(const String* url);
-/* Queues the given URL to be asynchronously downloaded. */
-/* The texture pack will later be loaded in Server.Tick, once it has finished downloading. */
-/* NOTE: If a cached texture pack exists for the given URL, that gets immediately loaded. */
-void Server_DownloadTexturePack(const String* url);
 
 typedef void (*Net_Handler)(uint8_t* data);
 extern uint16_t Net_PacketSizes[OPCODE_COUNT];

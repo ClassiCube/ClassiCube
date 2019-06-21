@@ -61,7 +61,7 @@ float Game_GetChatScale(void);
 
 /* Retrieves the filename of the default texture pack used. */
 /* NOTE: Returns default.zip if classic mode or selected pack does not exist. */
-void Game_GetDefaultTexturePack(String* texPack);
+String Game_UNSAFE_GetDefaultTexturePack(void);
 /* Sets the filename of the default texture pack used. */
 void Game_SetDefaultTexturePack(const String* texPack);
 

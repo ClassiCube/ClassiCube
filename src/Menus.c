@@ -1375,7 +1375,9 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	
 	idx = s->currentIndex;
 	Game_SetDefaultTexturePack(&filename);
-	TexturePack_ExtractDefault();
+	World_TextureUrl.length = 0;
+	TexturePack_ExtractCurrent(true);
+
 	Elem_Recreate(s);
 	ListScreen_SetCurrentIndex(s, idx);
 }
@@ -2407,18 +2409,8 @@ static void GraphicsOptionsScreen_SetShadows(const String* v) {
 
 static void GraphicsOptionsScreen_GetMipmaps(String* v) { Menu_GetBool(v, Gfx.Mipmaps); }
 static void GraphicsOptionsScreen_SetMipmaps(const String* v) {
-	String url; char urlBuffer[STRING_SIZE];
-
 	Gfx.Mipmaps = Menu_SetBool(v, OPT_MIPMAPS);
-	String_InitArray(url, urlBuffer);
-	String_Copy(&url, &World_TextureUrl);
-
-	/* always force a reload from cache */
-	World_TextureUrl.length = 0;
-	String_AppendConst(&World_TextureUrl, "~`#$_^*()@");
-	TexturePack_ExtractCurrent(&url);
-
-	String_Copy(&World_TextureUrl, &url);
+	TexturePack_ExtractCurrent(true);
 }
 
 static void GraphicsOptionsScreen_ContextRecreated(void* screen) {
@@ -3194,7 +3186,7 @@ static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
 	String url = String_UNSAFE_SubstringAt(&s->identifier, 3);
 
-	Server_DownloadTexturePack(&url);
+	World_ApplyTexturePack(&url);
 	if (WarningOverlay_IsAlways(s, widget)) TextureCache_Accept(&url);
 	Elem_Free(s);
 }
