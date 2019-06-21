@@ -337,7 +337,7 @@ static void Game_ExtractInitialTexturePack(void) {
 
 	/* in case the user's default texture pack doesn't have all required textures */
 	texPack = Game_UNSAFE_GetDefaultTexturePack();
-	if (!String_CaselessEquals(&texPack, "default.zip")) {
+	if (!String_CaselessEqualsConst(&texPack, "default.zip")) {
 		TexturePack_ExtractZip_File(&texPack);
 	}
 }

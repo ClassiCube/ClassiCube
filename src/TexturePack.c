@@ -728,7 +728,7 @@ void TexturePack_ExtractCurrent(bool forceReload) {
 }
 
 void TexturePack_Extract_Req(struct HttpRequest* item) {
-	String url, str;
+	String url;
 	uint8_t* data; uint32_t len;
 	struct Stream mem;
 	bool png;
@@ -750,7 +750,6 @@ void TexturePack_Extract_Req(struct HttpRequest* item) {
 void TexturePack_DownloadAsync(const String* url, const String* id) {
 	String etag; char etagBuffer[STRING_SIZE];
 	String time; char timeBuffer[STRING_SIZE];
-
 	String_InitArray(etag, etagBuffer);
 	String_InitArray(time, timeBuffer);
 
