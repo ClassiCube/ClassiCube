@@ -618,7 +618,7 @@ static void Launcher_ApplyUpdate(void) {
 	res = Stream_WriteAllTo(&scriptPath, (const uint8_t*)str.buffer, str.length);
 	if (res) { Logger_Warn(res, "saving update script"); return; }
 
-	res = Platform_MarkExecutable(&scriptPath);
+	res = File_MarkExecutable(&scriptPath);
 	if (res) Logger_Warn(res, "making update script executable");
 
 	res = Process_Start(&scriptName, &scriptArgs);

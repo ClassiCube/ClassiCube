@@ -679,8 +679,8 @@ void TexturePack_ExtractZip_File(const String* filename) {
 	/* should be read from memory. I don't know how to do that, */
 	/* since mounting /classicube/texpacks to memory doesn't work.. */
 #ifdef CC_BUILD_WEB
-	String memPath = String_FromConst("/");
-	Platform_SetCurrentDirectory(&memPath);
+	static const String memPath = String_FromConst("/");
+	Directory_SetCurrent(&memPath);
 #endif
 
 	String_InitArray(path, pathBuffer);
@@ -696,8 +696,8 @@ void TexturePack_ExtractZip_File(const String* filename) {
 	if (res) { Logger_Warn2(res, "closing", &path); }
 
 #ifdef CC_BUILD_WEB
-	String idbPath = String_FromConst("/classicube");
-	Platform_SetCurrentDirectory(&idbPath);
+	static const String idbPath = String_FromConst("/classicube");
+	Directory_SetCurrent(&idbPath);
 #endif
 }
 

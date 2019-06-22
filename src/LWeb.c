@@ -515,7 +515,7 @@ static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
 	res = File_SetModifiedTime(&path, FetchUpdateTask.Timestamp);
 	if (res) Logger_Warn(res, "setting update time");
 
-	res = Platform_MarkExecutable(&path);
+	res = File_MarkExecutable(&path);
 	if (res) Logger_Warn(res, "making update executable");
 }
 

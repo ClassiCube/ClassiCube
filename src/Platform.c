@@ -92,6 +92,24 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #undef CC_BUILD_FREETYPE
 #endif
 
+/* Attempts to set current/working directory to the directory exe file is in */
+static void Platform_DefaultSetCurrent(void) {
+	String path; char pathBuffer[FILENAME_SIZE];
+	int i;
+	ReturnCode res;
+	String_InitArray(path, pathBuffer);
+
+	res = Process_GetExePath(&path);
+	if (res) { Logger_Warn(res, "getting exe path"); return; }
+
+	/* get rid of filename at end of directory */
+	for (i = path.length - 1; i >= 0; i--, path.length--) {
+		if (path.buffer[i] == '/' || path.buffer[i] == '\\') break;
+	}
+	res = Directory_SetCurrent(&path);
+	if (res) { Logger_Warn(res, "setting current directory"); return; }
+}
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
@@ -392,6 +410,12 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	return res == ERROR_NO_MORE_FILES ? 0 : GetLastError();
 }
 
+ReturnCode Directory_SetCurrent(const String* path) {
+	TCHAR str[300];
+	Platform_ConvertString(str, path);
+	return SetCurrentDirectory(str) ? 0 : GetLastError();
+}
+
 ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 	FileHandle file; 
 	ReturnCode res = File_Open(&file, path);
@@ -423,6 +447,9 @@ ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
 	File_Close(file);
 	return res;
 }
+
+/* Don't need special execute permission on windows */
+ReturnCode File_MarkExecutable(const String* path) { return 0; }
 
 static ReturnCode File_Do(FileHandle* file, const String* path, DWORD access, DWORD createMode) {
 	TCHAR str[300]; 
@@ -539,6 +566,12 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	return res;
 }
 
+ReturnCode Directory_SetCurrent(const String* path) {
+	char str[600];
+	Platform_ConvertString(str, path);
+	return chdir(str) == -1 ? errno : 0;
+}
+
 ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 	char str[600]; 
 	struct stat sb;
@@ -556,6 +589,16 @@ ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
 	times.modtime = (time - UNIX_EPOCH) / 1000;
 	Platform_ConvertString(str, path);
 	return utime(str, &times) == -1 ? errno : 0;
+}
+
+ReturnCode File_MarkExecutable(const String* path) {
+	char str[600];
+	struct stat st;
+	Platform_ConvertString(str, path);
+
+	if (stat(str, &st) == -1) return errno;
+	st.st_mode |= S_IXUSR;
+	return chmod(str, st.st_mode) == -1 ? errno : 0;
 }
 
 static ReturnCode File_Do(FileHandle* file, const String* path, int mode) {
@@ -1779,15 +1822,7 @@ void Platform_Free(void) {
 	WSACleanup();
 	HeapDestroy(heap);
 }
-
-ReturnCode Platform_SetCurrentDirectory(const String* path) {
-	TCHAR str[300];
-	Platform_ConvertString(str, path);
-	return SetCurrentDirectory(str) ? 0 : GetLastError();
-}
-
-/* Don't need special execute permission on windows */
-ReturnCode Platform_MarkExecutable(const String* path) { return 0; }
+void Platform_SetDefaultCurrentDirectory(void) { Platform_DefaultSetCurrent(); }
 
 static String Platform_NextArg(STRING_REF String* args) {
 	String arg;
@@ -1904,22 +1939,6 @@ static void Platform_InitCommon(void) {
 }
 void Platform_Free(void) { }
 
-ReturnCode Platform_SetCurrentDirectory(const String* path) {
-	char str[600];
-	Platform_ConvertString(str, path);
-	return chdir(str) == -1 ? errno : 0;
-}
-
-ReturnCode Platform_MarkExecutable(const String* path) {
-	char str[600];
-	struct stat st;
-	Platform_ConvertString(str, path);
-
-	if (stat(str, &st) == -1) return errno;
-	st.st_mode |= S_IXUSR;
-	return chmod(str, st.st_mode) == -1 ? errno : 0;
-}
-
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
 	int i, count;
 	argc--; /* skip executable path argument */
@@ -1956,6 +1975,7 @@ void Platform_Init(void) {
 	/* stopwatch always in nanoseconds */
 	sw_freqDiv = 1000;
 }
+void Platform_SetDefaultCurrentDirectory(void) { Platform_DefaultSetCurrent(); }
 #elif defined CC_BUILD_OSX
 static void Platform_InitStopwatch(void) {
 	mach_timebase_info_data_t tb = { 0 };
@@ -1975,6 +1995,7 @@ void Platform_Init(void) {
 	/* NOTE: TransformProcessType is OSX 10.3 or later */
 	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
 }
+void Platform_SetDefaultCurrentDirectory(void) { Platform_DefaultSetCurrent(); }
 #elif defined CC_BUILD_WEB
 void Platform_Init(void) {
 	EM_ASM( Module['websocket']['subprotocol'] = 'ClassiCube'; );
@@ -1997,5 +2018,11 @@ void Platform_Init(void) {
 		preRun: [ preloadIndexedDB ],
 		......
 	*/
+}
+
+void Platform_SetDefaultCurrentDirectory(void) { 
+	static const String path = String_FromConst("/classicube");
+	ReturnCode res = Directory_SetCurrent(&path);
+	if (res) Logger_Warn(res, "setting current directory");
 }
 #endif

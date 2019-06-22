@@ -386,6 +386,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	win_DC = GetDC(win_handle);
 	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
 	Window_Exists = true;
+	Window_Handle = win_handle;
 }
 
 void Window_SetTitle(const String* title) {
@@ -455,8 +456,6 @@ void Clipboard_SetText(const String* value) {
 	}
 }
 
-
-void* Window_GetHandle(void) { return win_handle; }
 void Window_SetVisible(bool visible) {
 	if (visible) {
 		ShowWindow(win_handle, SW_SHOW);
@@ -820,14 +819,15 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 
 	/* Register for window destroy notification */
 	XSetWMProtocols(win_display, win_handle, &wm_destroy, 1);
-	Window_Exists = true;
-	Window_RefreshBounds(width, height);
-
 	/* Request that auto-repeat is only set on devices that support it physically.
 	   This typically means that it's turned off for keyboards (which is what we want).
 	   We prefer this method over XAutoRepeatOff/On, because the latter needs to
 	   be reset before the program exits. */
 	XkbSetDetectableAutoRepeat(win_display, true, &supported);
+
+	Window_RefreshBounds(width, height);
+	Window_Exists = true;
+	Window_Handle = (void*)win_handle;
 }
 
 void Window_SetTitle(const String* title) {
@@ -873,8 +873,6 @@ void Window_SetVisible(bool visible) {
 		XUnmapWindow(win_display, win_handle);
 	}
 }
-
-void* Window_GetHandle(void) { return (void*)win_handle; }
 
 int Window_GetWindowState(void) {
 	Atom prop_type;
@@ -1750,6 +1748,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	/* TODO: Use BringWindowToFront instead.. (look in the file which has RepositionWindow in it) !!!! */
 	Window_ConnectEvents();
 	Window_Exists = true;
+	Window_Handle = win_handle;
 }
 
 void Window_SetTitle(const String* title) {
@@ -1833,8 +1832,6 @@ void Window_SetVisible(bool visible) {
 		HideWindow(win_handle);
 	}
 }
-
-void* Window_GetHandle(void) { return win_handle; }
 
 int Window_GetWindowState(void) {
 	if (win_fullscreen) return WINDOW_STATE_FULLSCREEN;
@@ -2064,8 +2061,9 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	win_handle = SDL_CreateWindow(NULL, x, y, width, height, SDL_WINDOW_OPENGL);
 	if (!win_handle) Window_SDLFail("creating window");
 
-	Window_Exists = true;
 	Window_RefreshBounds();
+	Window_Exists = true;
+	Window_Handle = win_handle;
 }
 
 void Window_SetTitle(const String* title) {
@@ -2096,8 +2094,6 @@ void Window_SetVisible(bool visible) {
 		SDL_HideWindow(win_handle);
 	}
 }
-
-void* Window_GetHandle(void) { return win_handle; }
 
 int Window_GetWindowState(void) {
 	Uint32 flags = SDL_GetWindowFlags(win_handle);
@@ -2339,7 +2335,6 @@ void Window_DisableRawMouse(void) {
 	win_rawMouse = false;
 }
 #endif
-
 
 
 /*########################################################################################################################*
@@ -2701,7 +2696,6 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 }
 
 void Window_SetVisible(bool visible) { }
-void* Window_GetHandle(void) { return NULL; }
 
 int Window_GetWindowState(void) {
 	EmscriptenFullscreenChangeEvent status;

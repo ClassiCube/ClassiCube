@@ -381,7 +381,7 @@ static void D3D9_RecreateDevice(void) {
 
 void Gfx_Init(void) {
 	Gfx.MinZNear = 0.05f;
-	HWND winHandle = (HWND)Window_GetHandle();
+	HWND winHandle = (HWND)Window_Handle;
 	d3d = Direct3DCreate9(D3D_SDK_VERSION);
 
 	D3D9_FindCompatibleFormat();

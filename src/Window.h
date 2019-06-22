@@ -46,6 +46,8 @@ extern int Window_X, Window_Y, Window_Width, Window_Height;
 extern bool Window_Exists;
 /* Whether the user is interacting with the window. */
 extern bool Window_Focused;
+/* Readonly platform-specific handle to the window. */
+extern const void* Window_Handle;
 
 /* Initalises state for window. Also sets Display_ members. */
 void Window_Init(void);
@@ -62,10 +64,8 @@ CC_API void Window_SetTitle(const String* title);
 
 typedef void (*RequestClipboardCallback)(String* value, void* obj);
 /* Gets the text currently on the clipboard. */
-/* NOTE: You MUST have created the window beforehand. (necessary for X11) */
 CC_API void Clipboard_GetText(String* value);
 /* Sets the text currently on the clipboard. */
-/* NOTE: You MUST have created the window beforehand. (necessary for X11) */
 CC_API void Clipboard_SetText(const String* value);
 /* Calls a callback function when text is retrieved from the clipboard. */
 /* NOTE: On most platforms this just calls Clipboard_GetText. */
@@ -74,8 +74,6 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj);
 
 /* Sets whether the window is visible on screen at all. */
 void Window_SetVisible(bool visible);
-/* Returns the platform-specific handle to the window. */
-void* Window_GetHandle(void);
 /* Gets the current state of the window, see WindowState enum. */
 int Window_GetWindowState(void);
 /* Switches the window to occupy the entire screen. */

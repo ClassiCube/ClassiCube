@@ -66,30 +66,6 @@ static void Program_RunGame(void) {
 	Game_Run(width, height, &title);
 }
 
-/* Attempts to set current/working directory to the directory exe file is in */
-static void Program_SetCurrentDirectory(void) {
-	String path; char pathBuffer[FILENAME_SIZE];
-	int i;
-	ReturnCode res;
-	String_InitArray(path, pathBuffer);
-
-#ifdef CC_BUILD_WEB
-	String_AppendConst(&path, "/classicube");
-	res = Platform_SetCurrentDirectory(&path);
-	if (res) { Logger_Warn(res, "setting current directory"); return; }
-#else
-	res = Process_GetExePath(&path);
-	if (res) { Logger_Warn(res, "getting exe path"); return; }
-
-	/* get rid of filename at end of directory */
-	for (i = path.length - 1; i >= 0; i--, path.length--) {
-		if (path.buffer[i] == '/' || path.buffer[i] == '\\') break;
-	}
-	res = Platform_SetCurrentDirectory(&path);
-	if (res) { Logger_Warn(res, "setting current directory"); return; }
-#endif
-}
-
 /* Terminates the program due to an invalid command line argument */
 CC_NOINLINE static void ExitInvalidArg(const char* name, const String* arg) {
 	String tmp; char tmpBuffer[256];
@@ -128,7 +104,7 @@ int main(int argc, char** argv) {
 	Logger_Hook();
 	Platform_Init();
 	Window_Init();
-	Program_SetCurrentDirectory();
+	Platform_SetDefaultCurrentDirectory();
 #ifdef CC_TEST_VORBIS
 	main_imdct();
 #endif

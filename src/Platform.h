@@ -45,11 +45,8 @@ CC_API int Platform_ConvertUniString(void* data, const UniString* src);
 void Platform_Init(void);
 /* Frees the platform specific state. */
 void Platform_Free(void);
-/* Sets current/working directory to the given directory. */
-/* This is the 'base directory' relative paths are relative to. */
-CC_API ReturnCode Platform_SetCurrentDirectory(const String* path);
-/* Marks a file as being executable. */
-CC_API ReturnCode Platform_MarkExecutable(const String* path);
+/* Sets the appropriate default current/working directory. */
+void Platform_SetDefaultCurrentDirectory(void);
 
 /* Gets the command line arguments passed to the program. */
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args);
@@ -131,12 +128,18 @@ CC_API ReturnCode Directory_Create(const String* path);
 typedef void Directory_EnumCallback(const String* filename, void* obj);
 /* Invokes a callback function on all filenames in the given directory (and its sub-directories) */
 CC_API ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback callback);
+/* Sets current/working directory to the given directory. */
+/* This is the 'base directory' relative paths are relative to. */
+CC_API ReturnCode Directory_SetCurrent(const String* path);
+
 /* Returns whether the given file exists. */
 CC_API bool File_Exists(const String* path);
 /* Returns the last time the file was modified, as number of milliseconds since 1/1/0001 */
 CC_API ReturnCode File_GetModifiedTime(const String* path, TimeMS* ms);
 /* Sets the last time the file was modified, as number of milliseconds since 1/1/0001 */
 CC_API ReturnCode File_SetModifiedTime(const String* path, TimeMS ms);
+/* Marks a file as being executable. */
+CC_API ReturnCode File_MarkExecutable(const String* path);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 /* NOTE: If the file already exists, its contents are discarded. */
