@@ -10,6 +10,7 @@ int Display_BitsPerPixel;
 Rect2D Display_Bounds;
 int Window_X, Window_Y, Window_Width, Window_Height;
 bool Window_Exists, Window_Focused;
+const void* Window_Handle;
 
 void Window_CreateSimple(int width, int height) {
 	struct GraphicsMode mode;
@@ -3198,15 +3199,16 @@ static EGLSurface ctx_surface;
 static EGLConfig ctx_config;
 static EGLint ctx_numConfig;
 
-static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
+/*static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	XVisualInfo info = { 0 };
 	info.depth = 24;
 	info.visual = CopyFromParent;
 	info.visualid = CopyFromParent;
 	return info;
-}
+}*/
 
 void GLContext_Init(struct GraphicsMode* mode) {
+	static EGLint contextAttribs[3] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	static EGLint attribs[19] = {
 		EGL_RED_SIZE,  0, EGL_GREEN_SIZE,  0,
 		EGL_BLUE_SIZE, 0, EGL_ALPHA_SIZE,  0,
@@ -3226,7 +3228,6 @@ void GLContext_Init(struct GraphicsMode* mode) {
 	eglBindAPI(EGL_OPENGL_ES_API);
 	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
 
-	static EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, contextAttribs);
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);\

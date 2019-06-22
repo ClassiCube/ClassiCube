@@ -43,9 +43,6 @@
     <Filter Include="Header Files\Graphics">
       <UniqueIdentifier>{f54c6d3f-3a01-4c8d-8211-7a3ef5837674}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Graphics">
-      <UniqueIdentifier>{258fb897-a2f4-437c-9108-d0a5fd0cb8b9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Map">
       <UniqueIdentifier>{0ff1e440-e67d-4e09-913d-56417fbfe6b1}</UniqueIdentifier>
     </Filter>
@@ -123,6 +120,9 @@
     </Filter>
     <Filter Include="Source Files\Launcher">
       <UniqueIdentifier>{a46e060c-8a75-436f-ac18-f35d184735af}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Graphics">
+      <UniqueIdentifier>{e417a755-7f7f-4932-99d1-a1e9a1066e0a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -282,9 +282,6 @@
     <ClInclude Include="BlockPhysics.h">
       <Filter>Header Files\Blocks</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="Launcher.h">
       <Filter>Header Files\Launcher</Filter>
     </ClInclude>
@@ -317,6 +314,9 @@
     </ClInclude>
     <ClInclude Include="Protocol.h">
       <Filter>Header Files\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics.h">
+      <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -506,9 +506,6 @@
     <ClCompile Include="_truetype.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="Window.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
@@ -547,6 +544,9 @@
     </ClCompile>
     <ClCompile Include="Input.c">
       <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics.c">
+      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
