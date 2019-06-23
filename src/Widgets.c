@@ -1734,7 +1734,7 @@ static bool ChatInputWidget_KeyDown(void* widget, Key key, bool was) {
 }
 
 static int ChatInputWidget_GetMaxLines(void) {
-	return !Game_ClassicMode && Server.SupportsPartialMessages ? 3 : 1;
+	return !Game_ClassicMode && Server.SupportsPartialMessages ? INPUTWIDGET_MAX_LINES : 1;
 }
 
 static struct WidgetVTABLE ChatInputWidget_VTABLE = {

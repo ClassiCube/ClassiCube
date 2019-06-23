@@ -35,6 +35,8 @@ void Logger_Warn2(ReturnCode res, const char* place, const String* path);
 /* Hooks the operating system's unhandled error callback/signal. */
 /* This is used to attempt to log some information about a crash due to invalid memory read, etc. */
 void Logger_Hook(void);
+/* Generates a backtrace based on the platform-specific CPU context. */
+void Logger_Backtrace(String* trace, void* ctx);
 /* Logs a message to client.log on disc. */
 /* NOTE: The message is written raw, it is NOT converted to unicode (unlike Stream_WriteLine) */
 void Logger_Log(const String* msg);

@@ -568,7 +568,7 @@ bool TextureCache_Get(const String* url, struct Stream* stream) {
 }
 
 CC_NOINLINE static String TextureCache_GetFromTags(const String* url, struct EntryList* list) {
-	String key, value; char keyBuffer[STRING_INT_CHARS];
+	String key; char keyBuffer[STRING_INT_CHARS];
 	String_InitArray(key, keyBuffer);
 
 	TextureCache_HashUrl(&key, url);

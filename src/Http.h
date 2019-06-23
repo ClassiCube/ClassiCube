@@ -22,7 +22,7 @@ enum HttpProgress {
 struct HttpRequest {
 	char URL[URL_MAX_SIZE]; /* URL data is downloaded from/uploaded to. */
 	char ID[URL_MAX_SIZE];  /* Unique identifier for this request. */
-	TimeMS TimeAdded;       /* Time this request was added to queue of requests. */
+	TimeMS TimeAdded;       /* Time this request was added to request queue. */
 	TimeMS TimeDownloaded;  /* Time response contents were completely downloaded. */
 	int StatusCode;         /* HTTP status code returned in the response. */
 	uint32_t ContentLength; /* HTTP content length returned in the response. */

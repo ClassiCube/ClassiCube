@@ -264,6 +264,7 @@ String_Format4(&str, "g5=%x g6=%x g7=%x y =%x" _NL, REG_GET(g5,G5), REG_GET(g6,G
 String_Format2(&str, "pc=%x nc=%x" _NL,             REG_GET(pc,PC), REG_GET(npc,nPC));
 
 #if defined CC_BUILD_WEB
+void Logger_Backtrace(String* trace, void* ctx) { }
 static void Logger_DumpBacktrace(String* str, void* ctx) { }
 static void Logger_DumpRegisters(void* ctx) { }
 static void Logger_DumpMisc(void* ctx) { }
@@ -308,14 +309,18 @@ static int Logger_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int ma
 	return count;
 }
 
-static void Logger_Backtrace(String* backtrace, void* ctx) {
+void Logger_Backtrace(String* trace, void* ctx) {
 	struct SymbolAndName sym = { 0 };
-	sym.Symbol.MaxNameLength = 255;
-	sym.Symbol.SizeOfStruct = sizeof(IMAGEHLP_SYMBOL);
-
-	HANDLE process = GetCurrentProcess();
 	struct StackPointers pointers[40];
-	int i, frames = Logger_GetFrames((CONTEXT*)ctx, pointers, 40);
+	HANDLE process;
+	int i, frames;
+
+	sym.Symbol.MaxNameLength = 255;
+	sym.Symbol.SizeOfStruct  = sizeof(IMAGEHLP_SYMBOL);
+
+	process = GetCurrentProcess();
+	SymInitialize(process, NULL, TRUE);
+	frames  = Logger_GetFrames((CONTEXT*)ctx, pointers, 40);
 
 	for (i = 0; i < frames; i++) {
 		int number = i + 1;
@@ -332,7 +337,7 @@ static void Logger_Backtrace(String* backtrace, void* ctx) {
 		}
 
 		/* frame and stack address */
-		String_AppendString(backtrace, &str);
+		String_AppendString(trace, &str);
 		String_Format2(&str, "  fp: %x, sp: %x\r\n", &pointers[i].Frame, &pointers[i].Stack);
 
 		/* line number */
@@ -350,14 +355,11 @@ static void Logger_Backtrace(String* backtrace, void* ctx) {
 		}
 		Logger_Log(&str);
 	}
-	String_AppendConst(backtrace, "\r\n");
+	String_AppendConst(trace, "\r\n");
 }
 
 static void Logger_DumpBacktrace(String* str, void* ctx) {
 	static const String backtrace = String_FromConst("-- backtrace --\r\n");
-	HANDLE process = GetCurrentProcess();
-
-	SymInitialize(process, NULL, TRUE);
 	Logger_Log(&backtrace);
 	Logger_Backtrace(str, ctx);
 }
@@ -402,7 +404,7 @@ static void Logger_DumpMisc(void* ctx) {
 }
 
 #elif defined CC_BUILD_POSIX
-static void Logger_Backtrace(String* backtrace_, void* ctx) {
+void Logger_Backtrace(String* trace, void* ctx) {
 	String str; char strBuffer[384];
 	void* addrs[40];
 	int i, frames, num;
@@ -424,11 +426,11 @@ static void Logger_Backtrace(String* backtrace_, void* ctx) {
 			String_Format2(&str, "%i) 0x%x\n", &num, &addr);
 		}
 
-		String_AppendString(backtrace_, &str);
+		String_AppendString(trace, &str);
 		Logger_Log(&str);
 	}
 
-	String_AppendConst(backtrace_, "\n");
+	String_AppendConst(trace, "\n");
 	free(strings);
 }
 

@@ -28,6 +28,7 @@ typedef union PackedColUnion_ { PackedCol C; uint32_t Raw; } PackedColUnion;
 
 /* Whether components of two colours are all equal. */
 static CC_INLINE bool PackedCol_Equals(PackedCol a, PackedCol b) {
+	/* GCC/Clang inlines to a single int comparison thanks to PackedCol alignment */
 	return a.R == b.R && a.G == b.G && a.B == b.B && a.A == b.A;
 }
 
