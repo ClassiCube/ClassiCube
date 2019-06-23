@@ -513,8 +513,6 @@ void Atlas_Free(void) {
 /*########################################################################################################################*
 *------------------------------------------------------TextureCache-------------------------------------------------------*
 *#########################################################################################################################*/
-/* Because I didn't originally store milliseconds in ClassicalSharp */
-#define TEXCACHE_TICKS_PER_MS 10000
 static struct EntryList acceptedList, deniedList, etagCache, lastModifiedCache;
 
 void TextureCache_Init(void) {
@@ -569,32 +567,26 @@ bool TextureCache_Get(const String* url, struct Stream* stream) {
 	return true;
 }
 
-CC_NOINLINE static void TexturePack_GetFromTags(const String* url, String* result, struct EntryList* list) {
+CC_NOINLINE static String TextureCache_GetFromTags(const String* url, struct EntryList* list) {
 	String key, value; char keyBuffer[STRING_INT_CHARS];
 	String_InitArray(key, keyBuffer);
 
 	TextureCache_HashUrl(&key, url);
-	value = EntryList_UNSAFE_Get(list, &key);
-	if (value.length) String_AppendString(result, &value);
+	return EntryList_UNSAFE_Get(list, &key);
 }
 
-static void TextureCache_GetLastModified(const String* url, String* time) {
-	String entry; char entryBuffer[STRING_SIZE];
-	TimeMS raw;
+static String TextureCache_GetLastModified(const String* url) {
+	String entry = TextureCache_GetFromTags(url, &lastModifiedCache);
+	uint64_t raw;
 
-	String_InitArray(entry, entryBuffer);
-	TexturePack_GetFromTags(url, &entry, &lastModifiedCache);
-
-	/* Entry used to be a timestamp */
-	if (entry.length && Convert_ParseUInt64(&entry, &raw)) {
-		Http_FormatDate(raw / TEXCACHE_TICKS_PER_MS, time);
-	} else {
-		String_AppendString(time, &entry);
-	}
+	/* Entry used to be a timestamp of C# ticks since 01/01/0001 */
+	/* This old format is no longer supported. */
+	if (Convert_ParseUInt64(&entry, &raw)) entry.length = 0;
+	return entry;
 }
 
-static void TextureCache_GetETag(const String* url, String* etag) {
-	TexturePack_GetFromTags(url, etag, &etagCache);
+static String TextureCache_GetETag(const String* url) {
+	return TextureCache_GetFromTags(url, &etagCache);
 }
 
 CC_NOINLINE static void TextureCache_SetEntry(const String* url, const String* data, struct EntryList* list) {
@@ -750,16 +742,14 @@ void TexturePack_Extract_Req(struct HttpRequest* item) {
 }
 
 void TexturePack_DownloadAsync(const String* url, const String* id) {
-	String etag; char etagBuffer[STRING_SIZE];
-	String time; char timeBuffer[STRING_SIZE];
-	String_InitArray(etag, etagBuffer);
-	String_InitArray(time, timeBuffer);
+	String etag = String_Empty;
+	String time = String_Empty;
 
 	/* Only retrieve etag/last-modified headers if the file exists */
 	/* This inconsistency can occur if user deleted some cached files */
 	if (TextureCache_Has(url)) {
-		TextureCache_GetLastModified(url, &time);
-		TextureCache_GetETag(url, &etag);
+		time = TextureCache_GetLastModified(url);
+		etag = TextureCache_GetETag(url);
 	}
 	Http_AsyncGetDataEx(url, true, id, &time, &etag);
 }

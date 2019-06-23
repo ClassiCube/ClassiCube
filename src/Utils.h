@@ -7,7 +7,8 @@
 */
 
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */
-/* NOTE: This is not an efficiently sized struct. Store DateTime_TotalMs instead for that. */
+/* NOTE: It is far more efficient to use TimeMS and DateTime_CurrentUTC_MS(). */
+/* This should only be used when atually needed. (e.g. log mesage time) */
 struct DateTime {
 	int Year;   /* Year,   ranges from 0 to 65535 */
 	int Month;  /* Month,  ranges from 1 to 12 */
@@ -25,10 +26,6 @@ struct DateTime {
 #define MINS_PER_HOUR 60
 #define HOURS_PER_DAY 24
 #define MILLIS_PER_DAY (1000 * 60 * 60 * 24)
-
-int DateTime_TotalDays(const struct DateTime* time);
-TimeMS DateTime_TotalMs(const struct DateTime* time);
-void DateTime_FromTotalMs(struct DateTime* time, TimeMS ms);
 
 CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount);
 bool Utils_IsUrlPrefix(const String* value, int index);
