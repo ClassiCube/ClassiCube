@@ -24,6 +24,7 @@
 #include "Gui.h"
 #include "Errors.h"
 #include "Camera.h"
+#include "Window.h"
 
 /* Classic state */
 static uint8_t classic_tabList[ENTITIES_MAX_COUNT >> 3];
@@ -33,18 +34,21 @@ static bool classic_receivedFirstPos;
 /* Map state */
 static bool map_begunLoading;
 static TimeMS map_receiveStart;
-static struct InflateState map_inflateState;
-static struct Stream map_stream, map_part;
+static struct Stream map_part;
 static struct GZipHeader map_gzHeader;
-static int map_sizeIndex, map_index, map_volume;
+static int map_sizeIndex, map_volume;
 static uint8_t map_size[4];
-static BlockRaw* map_blocks;
 
+struct MapState {
+	struct InflateState inflateState;
+	struct Stream stream;
+	BlockRaw* blocks;
+	int index;
+	bool allocFailed;
+};
+static struct MapState map;
 #ifdef EXTENDED_BLOCKS
-static struct InflateState map2_inflateState;
-static struct Stream map2_stream;
-static int map2_index;
-static BlockRaw* map2_blocks;
+static struct MapState map2;
 #endif
 
 /* CPE state */
@@ -385,6 +389,32 @@ static void Classic_Handshake(uint8_t* data) {
 
 static void Classic_Ping(uint8_t* data) { }
 
+static void MapState_Init(struct MapState* m) {
+	Inflate_MakeStream(&m->stream, &m->inflateState, &map_part);
+	m->index  = 0;
+	m->blocks = NULL;
+	m->allocFailed = false;
+}
+
+static void MapState_Read(struct MapState* m) {
+	uint32_t left, read;
+	if (m->allocFailed) return;
+
+	if (!m->blocks) {
+		m->blocks = (BlockRaw*)Mem_TryAlloc(map_volume, 1);
+		/* unlikely but possible */
+		if (!m->blocks) {
+			Window_ShowDialog("Out of memory", "Not enough free memory to join that map.\nTry joining a different map.");
+			m->allocFailed = true;
+			return;
+		}
+	}
+
+	left = map_volume - m->index;
+	m->stream.Read(&m->stream, &m->blocks[m->index], left, &read);
+	m->index += read;
+}
+
 static void Classic_StartLoading(void) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents.NewMap);
@@ -402,16 +432,13 @@ static void Classic_StartLoading(void) {
 	classic_receivedFirstPos = false;
 
 	GZipHeader_Init(&map_gzHeader);
-	Inflate_MakeStream(&map_stream, &map_inflateState, &map_part);
 	map_begunLoading = true;
-
 	map_sizeIndex    = 0;
-	map_index        = 0;
 	map_receiveStart = DateTime_CurrentUTC_MS();
 
+	MapState_Init(&map);
 #ifdef EXTENDED_BLOCKS
-	Inflate_MakeStream(&map2_stream, &map2_inflateState, &map_part);
-	map2_index = 0;
+	MapState_Init(&map2);
 #endif
 }
 
@@ -420,10 +447,9 @@ static void Classic_LevelInit(uint8_t* data) {
 	if (!cpe_fastMap) return;
 
 	/* Fast map puts volume in header, and uses raw DEFLATE without GZIP header/footer */
-	map_volume = Stream_GetU32_BE(data);
+	map_volume    = Stream_GetU32_BE(data);
 	map_gzHeader.Done = true;
-	map_sizeIndex = sizeof(uint32_t);
-	map_blocks    = (BlockRaw*)Mem_Alloc(map_volume, 1, "map blocks");
+	map_sizeIndex = 4;
 }
 
 static void Classic_LevelDataChunk(uint8_t* data) {
@@ -453,38 +479,26 @@ static void Classic_LevelDataChunk(uint8_t* data) {
 	if (map_gzHeader.Done) {
 		if (map_sizeIndex < 4) {
 			left = 4 - map_sizeIndex;
-			map_stream.Read(&map_stream, &map_size[map_sizeIndex], left, &read); 
+			map.stream.Read(&map.stream, &map_size[map_sizeIndex], left, &read); 
 			map_sizeIndex += read;
 		}
 
 		if (map_sizeIndex == 4) {
-			if (!map_blocks) {
-				map_volume = Stream_GetU32_BE(map_size);
-				map_blocks = (BlockRaw*)Mem_Alloc(map_volume, 1, "map blocks");
-			}
+			if (!map_volume) map_volume = Stream_GetU32_BE(map_size);
 
 #ifndef EXTENDED_BLOCKS
-			left = map_volume - map_index;
-			map_stream.Read(&map_stream, &map_blocks[map_index], left, &read);
-			map_index += read;
+			MapState_Read(&map);
 #else
 			if (cpe_extBlocks && value) {
-				/* Only allocate map2 when needed */
-				if (!map2_blocks) map2_blocks = (BlockRaw*)Mem_Alloc(map_volume, 1, "map blocks upper");
-
-				left = map_volume - map2_index;
-				map2_stream.Read(&map2_stream, &map2_blocks[map2_index], left, &read); 
-				map2_index += read;
+				MapState_Read(&map2);
 			} else {
-				left = map_volume - map_index;
-				map_stream.Read(&map_stream, &map_blocks[map_index], left, &read); 
-				map_index += read;
+				MapState_Read(&map);
 			}
 #endif
 		}
 	}
 
-	progress = !map_blocks ? 0.0f : (float)map_index / map_volume;
+	progress = !map.blocks ? 0.0f : (float)map.index / map_volume;
 	Event_RaiseFloat(&WorldEvents.Loading, progress);
 }
 
@@ -497,33 +511,32 @@ static void Classic_LevelFinalise(uint8_t* data) {
 	classic_prevScreen = NULL;
 	Camera_CheckFocus();
 
+	loadingMs = (int)(DateTime_CurrentUTC_MS() - map_receiveStart);
+	Platform_Log1("map loading took: %i", &loadingMs);
+	map_begunLoading = false;
+	WoM_CheckSendWomID();
+
+	if (map.allocFailed) return;
+#ifdef EXTENDED_BLOCKS
+	if (map2.allocFailed) { Mem_Free(map.blocks); map.blocks = NULL; return; }
+#endif
+
 	width  = Stream_GetU16_BE(&data[0]);
 	height = Stream_GetU16_BE(&data[2]);
 	length = Stream_GetU16_BE(&data[4]);
-
-	loadingMs = (int)(DateTime_CurrentUTC_MS() - map_receiveStart);
-	Platform_Log1("map loading took: %i", &loadingMs);
 
 	if (map_volume != (width * height * length)) {
 		Logger_Abort("Blocks array size does not match volume of map");
 	}
 
-	World_SetNewMap(map_blocks, width, height, length);
+	World_SetNewMap(map.blocks, width, height, length);
 #ifdef EXTENDED_BLOCKS
 	/* defer allocation of second map array if possible */
-	if (cpe_extBlocks && map2_blocks) {
-		World_SetMapUpper(map2_blocks);
+	if (cpe_extBlocks && map2.blocks) {
+		World_SetMapUpper(map2.blocks);
 	}
 #endif
-
 	Event_RaiseVoid(&WorldEvents.MapLoaded);
-	WoM_CheckSendWomID();
-
-	map_blocks       = NULL;
-	map_begunLoading = false;
-#ifdef EXTENDED_BLOCKS
-	map2_blocks      = NULL;
-#endif
 }
 
 static void Classic_SetBlock(uint8_t* data) {
