@@ -31,13 +31,14 @@ void Json_Parse(struct JsonContext* ctx);
 
 /* Represents all known details about a server. */
 struct ServerInfo {
-	String hash, name, ip, mppass, software, country;
+	String hash, name, ip, mppass, software;
 	int players, maxPlayers, port, uptime;
 	bool featured;
+	char country[2];
 	int _order; /* (internal) order in servers table after filtering */
 	char _hashBuffer[32],   _nameBuffer[STRING_SIZE];
 	char _ipBuffer[16],     _mppassBuffer[STRING_SIZE];
-	char _countryBuffer[2], _softBuffer[STRING_SIZE];
+	char _softBuffer[STRING_SIZE];
 };
 
 struct LWebTask;
@@ -113,9 +114,10 @@ extern struct FetchFlagsData {
 	/* Number of flags downloaded. */
 	int Count;
 } FetchFlagsTask;
-void FetchFlagsTask_Add(const String* name);
-/* Gets the downloaded bitmap for the given flag. */
-Bitmap* Flags_Get(const String* name);
+/* Asynchronously downloads the flag associated with the given server's country. */
+void FetchFlagsTask_Add(const struct ServerInfo* server);
+/* Gets the bitmap for the flag associated with the given server's country. */
+Bitmap* Flags_Get(const struct ServerInfo* server);
 /* Frees all flag bitmaps. */
 void Flags_Free(void);
 #endif

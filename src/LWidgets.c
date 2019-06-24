@@ -634,7 +634,7 @@ void LSlider_Init(struct LSlider* w, int width, int height) {
 *------------------------------------------------------TableWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	Bitmap* bmp = Flags_Get(&row->country);
+	Bitmap* bmp = Flags_Get(row);
 	if (bmp) Drawer2D_BmpCopy(&Launcher_Framebuffer, x + 2, y + 6, bmp);
 }
 

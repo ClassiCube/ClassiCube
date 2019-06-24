@@ -336,15 +336,15 @@ static void ServerInfo_Init(struct ServerInfo* info) {
 	String_InitArray(info->hash, info->_hashBuffer);
 	String_InitArray(info->name, info->_nameBuffer);
 	String_InitArray(info->ip,   info->_ipBuffer);
-
 	String_InitArray(info->mppass,   info->_mppassBuffer);
 	String_InitArray(info->software, info->_softBuffer);
-	String_InitArray(info->country,  info->_countryBuffer);
 
 	info->players    = 0;
 	info->maxPlayers = 0;
 	info->uptime     = 0;
 	info->featured   = false;
+	info->country[0] = 't';
+	info->country[1] = '1'; /* 'T1' for unrecognised country */
 	info->_order     = -100000;
 }
 
@@ -372,7 +372,11 @@ static void ServerInfo_Parse(struct JsonContext* ctx, const String* val) {
 		Convert_ParseBool(val, &info->featured);
 	} else if (String_CaselessEqualsConst(&ctx->curKey, "country_abbr")) {
 		/* Two letter country codes, see ISO 3166-1 alpha-2 */
-		String_Copy(&info->country, val);
+		if (val->length < 2) return;
+
+		/* classicube.net only works with lowercase flag urls */
+		info->country[0] = val->buffer[0]; Char_MakeLower(info->country[0]);
+		info->country[1] = val->buffer[1]; Char_MakeLower(info->country[1]);
 	}
 }
 
@@ -576,10 +580,10 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 *#########################################################################################################################*/
 struct FetchFlagsData FetchFlagsTask;
 static int flagsCount, flagsCapacity;
+
 struct Flag {
-	Bitmap Bmp;
-	String Name;
-	char _nameBuffer[2];
+	Bitmap bmp;
+	char country[2];
 };
 static struct Flag* flags;
 
@@ -589,7 +593,7 @@ static void FetchFlagsTask_Handle(uint8_t* data, uint32_t len) {
 	ReturnCode res;
 
 	Stream_ReadonlyMemory(&s, data, len);
-	res = Png_Decode(&flags[FetchFlagsTask.Count].Bmp, &s);
+	res = Png_Decode(&flags[FetchFlagsTask.Count].bmp, &s);
 	if (res) Logger_Warn(res, "decoding flag");
 
 	FetchFlagsTask.Count++;
@@ -605,7 +609,8 @@ static void FetchFlagsTask_DownloadNext(void) {
 	if (FetchFlagsTask.Count == flagsCount) return;
 
 	LWebTask_Reset(&FetchFlagsTask.Base);
-	String_Format1(&url, "http://static.classicube.net/img/flags/%s.png", &flags[FetchFlagsTask.Count].Name);
+	String_Format2(&url, "http://static.classicube.net/img/flags/%r%r.png",
+			&flags[FetchFlagsTask.Count].country[0], &flags[FetchFlagsTask.Count].country[1]);
 
 	FetchFlagsTask.Base.Identifier = id;
 	Http_AsyncGetData(&url, false, &id);
@@ -623,34 +628,32 @@ static void FetchFlagsTask_Ensure(void) {
 	}
 }
 
-void FetchFlagsTask_Add(const String* name) {
+void FetchFlagsTask_Add(const struct ServerInfo* server) {
 	char c;
 	int i;
 
 	for (i = 0; i < flagsCount; i++) {
-		if (String_CaselessEquals(name, &flags[i].Name)) return;
+		if (flags[i].country[0] != server->country[0]) continue;
+		if (flags[i].country[1] != server->country[1]) continue;
+		/* flag is already or will be downloaded */
+		return;
 	}
 	FetchFlagsTask_Ensure();
-	
-	Bitmap_Init(flags[flagsCount].Bmp, 0, 0, NULL);
-	String_InitArray(flags[flagsCount].Name, flags[flagsCount]._nameBuffer);
 
-	/* classicube.net only works with lowercase flag urls */
-	for (i = 0; i < name->length; i++) {
-		c = name->buffer[i];
-		Char_MakeLower(c);
-		String_Append(&flags[flagsCount].Name, c);
-	}
+	Bitmap_Init(flags[flagsCount].bmp, 0, 0, NULL);
+	flags[flagsCount].country[0] = server->country[0];
+	flags[flagsCount].country[1] = server->country[1];
 
 	flagsCount++;
 	FetchFlagsTask_DownloadNext();
 }
 
-Bitmap* Flags_Get(const String* name) {
+Bitmap* Flags_Get(const struct ServerInfo* server) {
 	int i;
 	for (i = 0; i < FetchFlagsTask.Count; i++) {
-		if (!String_CaselessEquals(name, &flags[i].Name)) continue;
-		return &flags[i].Bmp;
+		if (flags[i].country[0] != server->country[0]) continue;
+		if (flags[i].country[1] != server->country[1]) continue;
+		return &flags[i].bmp;
 	}
 	return NULL;
 }
@@ -658,7 +661,7 @@ Bitmap* Flags_Get(const String* name) {
 void Flags_Free(void) {
 	int i;
 	for (i = 0; i < FetchFlagsTask.Count; i++) {
-		Mem_Free(flags[i].Bmp.Scan0);
+		Mem_Free(flags[i].bmp.Scan0);
 	}
 }
 #endif

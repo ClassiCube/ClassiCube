@@ -1212,7 +1212,7 @@ static void ServersScreen_ReloadServers(struct ServersScreen* s) {
 	LTable_Sort(&s->Table);
 
 	for (i = 0; i < FetchServersTask.NumServers; i++) {
-		FetchFlagsTask_Add(&FetchServersTask.Servers[i].country);
+		FetchFlagsTask_Add(&FetchServersTask.Servers[i]);
 	}
 }
 
