@@ -631,7 +631,11 @@ static void GeneratingScreen_Init(void* screen) {
 	LoadingScreen_Init(screen);
 	Event_RaiseVoid(&WorldEvents.NewMap);
 
-	if (Gen_Vanilla) {
+	Gen_Blocks = (BlockRaw*)Mem_TryAlloc(World.Volume, 1);
+	if (!Gen_Blocks) {
+		Window_ShowDialog("Out of memory", "Not enough free memory to generate a map that large.\nTry a smaller size.");
+		Gui_CloseActive();
+	} else if (Gen_Vanilla) {
 		Thread_Start(NotchyGen_Generate, true);
 	} else {
 		Thread_Start(FlatgrassGen_Generate, true);

@@ -186,13 +186,13 @@ void Gui_CloseActive(void) { Gui_Close(Gui_Active); }
 
 void Gui_SetActive(struct Screen* screen) {
 	InputHandler_ScreenChanged(Gui_Active, screen);
+	Gui_Active = screen;
+
 	if (screen) { 
 		Elem_Init(screen);
 		/* for selecting active button etc */
 		Elem_HandlesMouseMove(screen, Mouse_X, Mouse_Y);
 	}
-
-	Gui_Active = screen;
 	Camera_CheckFocus();
 }
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }

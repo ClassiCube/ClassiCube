@@ -16,8 +16,6 @@ BlockRaw* Gen_Blocks;
 static void Gen_Init(void) {
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState    = "";
-
-	Gen_Blocks = (BlockRaw*)Mem_Alloc(World.Volume, 1, "map blocks for gen");
 	Gen_Done   = false;
 }
 

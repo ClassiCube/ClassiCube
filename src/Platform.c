@@ -127,6 +127,11 @@ CC_NOINLINE static void Platform_AllocFailed(const char* place) {
 }
 
 #if defined CC_BUILD_WIN
+void* Mem_TryAlloc(uint32_t numElems, uint32_t elemsSize) {
+	uint32_t numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+	return HeapAlloc(heap, 0, numBytes);
+}
+
 void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place) {
 	uint32_t numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapAlloc(heap, 0, numBytes);
@@ -152,6 +157,10 @@ void Mem_Free(void* mem) {
 	if (mem) HeapFree(heap, 0, mem);
 }
 #elif defined CC_BUILD_POSIX
+void* Mem_TryAlloc(uint32_t numElems, uint32_t elemsSize) {
+	return malloc(numElems * elemsSize); /* TODO: avoid overflow here */
+}
+
 void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place) {
 	void* ptr = malloc(numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);

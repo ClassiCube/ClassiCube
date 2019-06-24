@@ -85,6 +85,8 @@ void* DynamicLib_GetFrom(const char* filename, const char* name);
  because on some platforms, the error is a static string instead of from error code. */
 bool DynamicLib_DescribeError(ReturnCode res, String* dst);
 
+/* Allocates a block of memory, with undetermined contents. Returns NULL on allocation failure. */
+CC_API void* Mem_TryAlloc(uint32_t numElems, uint32_t elemsSize);
 /* Allocates a block of memory, with undetermined contents. Exits process on allocation failure. */
 CC_API void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place);
 /* Allocates a block of memory, with contents of all 0. Exits process on allocation failure. */
