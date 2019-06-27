@@ -4,9 +4,7 @@ ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
 
 
-You can grab the latest stable binaries [here](https://cs.classicube.net/c_client/release).
-
-You can grab the very latest builds [here](http://cs.classicube.net/c_client/latest)
+You can grab the latest stable binaries [from here](https://cs.classicube.net/c_client/release) and the very latest builds [from here](https://cs.classicube.net/c_client/latest).
 
 #### What ClassiCube is
 * Works with both ~~minecraft.net~~(classic has been removed by Mojang) and classicube.net accounts.
