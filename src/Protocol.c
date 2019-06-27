@@ -435,6 +435,7 @@ static void Classic_StartLoading(void) {
 	map_begunLoading = true;
 	map_sizeIndex    = 0;
 	map_receiveStart = DateTime_CurrentUTC_MS();
+	map_volume       = 0;
 
 	MapState_Init(&map);
 #ifdef EXTENDED_BLOCKS
