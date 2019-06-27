@@ -17,7 +17,7 @@ You can grab the very latest builds [here](http://cs.classicube.net/c_client/lat
 It **does not** work with 'modern/premium' Minecraft servers.
 
 #### Requirements
-* Windows: XP or later.
+* Windows: 2000 or later.
 * OSX: Only tested on OSX 10.5, may or may not work on later versions.
 * Linux: libcurl and libopenal.
 
@@ -50,6 +50,8 @@ Run ClassiCube.exe. You can connect to LAN/locally hosted servers, ~~minecraft.n
 
 ##### Compiling with Visual Studio:
 Open ClassiCube.sln and compile it.
+
+If you get a ```The Windows SDK version 5.1 was not found``` compilation error, [see here for how to fix](misc/compile-fixes.md#visual-studio-unsupported-platform-toolset)
 
 ##### Compiling with MinGW-w64
 I am assuming you used the installer from https://sourceforge.net/projects/mingw-w64/
@@ -101,31 +103,15 @@ NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TOD
 
 ```emcc *.c -s FETCH=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file texpacks/default.zip```
 
+The generated javascript file has some issues. [See here for how to fix](misc/compile-fixes.md#webclient-patches)
+
 ##### Other
 
 You'll have to write the necessary code. You should read portability.md in misc folder.
 
 ### Known compilation errors
 
-#### Undefined reference to 'clock_gettime'
-Add ```-lrt``` when compiling. Occurs when using glibc versions before 2.17.
-
-#### fatal error: execinfo.h: No such file or directory
-Install ```libexecinfo``` package. Occurs when using musl.
-
-#### Undefined reference to 'backtrace'
-Add ```-lexecinfo``` when compiling. Occurs when using musl.
-  
-#### Undefined reference to 'getcontext'
-Occurs when using musl. Change
-```C
-getcontext(&ctx);
-Logger_AbortCommon(result, raw_msg, &ctx);
-```
-to
-```C
-Logger_AbortCommon(result, raw_msg, NULL);
-```
+[Fixes for compilation errors when using musl or old glibc for C standard library](misc/compile-fixes.md#common-compilation-errors)
 
 ### Documentation
 
