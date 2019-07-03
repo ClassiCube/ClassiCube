@@ -442,9 +442,13 @@ static void Logger_DumpBacktrace(String* str, void* ctx) {
 
 static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[512];
-#ifdef CC_BUILD_OPENBSD
+#if defined CC_BUILD_OPENBSD
 	struct sigcontext r;
 	r = *((ucontext_t*)ctx);
+#elif defined CC_BUILD_LINUX && __PPC__ && __WORDSIZE == 32
+	/* see sysdeps/unix/sysv/linux/powerpc/sys/ucontext.h in glibc */
+	mcontext_t r;
+	r = *((ucontext_t*)ctx)->uc_mcontext.uc_regs;
 #else
 	mcontext_t r;
 	r = ((ucontext_t*)ctx)->uc_mcontext;
@@ -489,10 +493,12 @@ static void Logger_DumpRegisters(void* ctx) {
 		#define REG_GET(ign, reg) &r.__gregs[_REG_R##reg]
 	#endif
 	Logger_Dump_X64()
-#elif defined __ppc__
+#elif defined __ppc__ || defined __PPC__
 	#if defined CC_BUILD_OSX
 		#define REG_GNUM(num)     &r->__ss.__r##num
 		#define REG_GET(reg, ign) &r->__ss.__##reg
+	#elif defined CC_BUILD_LINUX
+		#define REG_GNUM(num)     &r.gregs[num]
 	#endif
 	Logger_Dump_PPC()
 #elif defined __aarch64__
@@ -674,6 +680,7 @@ static struct Stream logStream;
 static bool logOpen;
 
 void Logger_Log(const String* msg) {
+#ifndef CC_BUILD_WEB
 	static const String path = String_FromConst("client.log");
 	ReturnCode res;
 
@@ -685,6 +692,7 @@ void Logger_Log(const String* msg) {
 
 	if (!logStream.Meta.File) return;
 	Stream_Write(&logStream, (const uint8_t*)msg->buffer, msg->length);
+#endif
 }
 
 static void Logger_LogCrashHeader(void) {
