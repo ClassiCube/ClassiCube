@@ -613,7 +613,7 @@ ReturnCode File_MarkExecutable(const String* path) {
 static ReturnCode File_Do(FileHandle* file, const String* path, int mode) {
 	char str[600]; 
 	Platform_ConvertString(str, path);
-	*file = open(str, mode, (6 << 6) | (4 << 3) | 4); /* rw|r|r */
+	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
 }
 
