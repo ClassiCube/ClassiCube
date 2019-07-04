@@ -729,7 +729,7 @@ static ReturnCode Http_SysDo(struct HttpRequest* req) {
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 	req->StatusCode = status;
 
-	curl_slist_free_all(headersList);
+	curl_slist_free_all(headers_list);
 	/* can free now that request has finished */
 	Mem_Free(post_data);
 	return res;

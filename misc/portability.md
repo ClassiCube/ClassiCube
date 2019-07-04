@@ -32,7 +32,7 @@ Also monitor size, clipboard, cursor, raw relative mouse movement (optional)
 
 Define:
 - ```CC_BUILD_WINGUI``` - Use Win32 API (Windows)
-- ```CC_BUILD_GARBON``` - Use Carbon (OSX)
+- ```CC_BUILD_CARBON``` - Use Carbon (OSX)
 - ```CC_BUILD_X11``` - Use X11/XLib
 - ```CC_BUILD_SDL``` - Use SDL library
 - ```CC_BUILD_WEBCANVAS``` - Use emscripten canvas
@@ -41,7 +41,7 @@ If using OpenGL, also OpenGL context creation
 
 Define:
 - ```CC_BUILD_WGL``` - Use WGL (Windows OpenGL)
-- ```CC_BUILD_GARBON``` - Use AGL (Apple OpenGL)
+- ```CC_BUILD_AGL``` - Use AGL (Apple OpenGL)
 - ```CC_BUILD_GLX``` - Use glX (X11/XLib)
 - ```CC_BUILD_EGL``` - Use EGL (mainly for GLES)
 - ```CC_BUILD_SDL``` - Use SDL library
@@ -76,8 +76,10 @@ Define:
 - ```CC_BUILD_GLES``` - Makes these shaders compatible with OpenGL ES
 
 ### Http
-HTTP, HTTPS, and cookies (ETag and Last-Modified recommended)
+HTTP, HTTPS, and setting request/getting response headers
 
 Define:
 - ```CC_BUILD_WININET``` - use WinINet for http (Windows)
 - ```CC_BUILD_CURL``` - use libcurl for http
+
+Supporting connection reuse is highly recommended. (but not required)
