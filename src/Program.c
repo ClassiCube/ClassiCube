@@ -40,7 +40,7 @@ int main_imdct() {
 }
 #endif
 
-static void Program_RunGame(void) {
+static void RunGame(void) {
 	static const String defPath = String_FromConst("texpacks/default.zip");
 	String title; char titleBuffer[STRING_SIZE];
 	int width, height;
@@ -94,7 +94,14 @@ CC_NOINLINE static void ExitMissingArgs(int argsCount, const String* args) {
 	Process_Exit(1);
 }
 
+/* This is used when compiling with MingW without linking to startup files. */
+/* The final code produced for "main" is our "main" combined with crt's main. (mingw-w64-crt/crt/gccmain.c) */
+/* This immediately crashes the game on startup. Using a different name fixes. */
+#ifdef CC_NOMAIN
+int main_real(int argc, char** argv) {
+#else
 int main(int argc, char** argv) {
+#endif
 	static char ipBuffer[STRING_SIZE];
 	String args[GAME_MAX_CMDARGS];
 	int argsCount;
@@ -126,7 +133,7 @@ int main(int argc, char** argv) {
 	if (argsCount == 0) {
 #ifdef CC_BUILD_WEB
 		String_AppendConst(&Game_Username, "WebTest!");
-		Program_RunGame();
+		RunGame();
 #else
 		Launcher_Run();
 #endif
@@ -141,7 +148,7 @@ int main(int argc, char** argv) {
 		}
 #endif
 		String_Copy(&Game_Username, &args[0]);
-		Program_RunGame();
+		RunGame();
 	} else if (argsCount < 4) {
 		ExitMissingArgs(argsCount, args);
 		return 1;
@@ -159,7 +166,7 @@ int main(int argc, char** argv) {
 			return 1;
 		}
 		Server.Port = port;
-		Program_RunGame();
+		RunGame();
 	}
 
 	Process_Exit(0);

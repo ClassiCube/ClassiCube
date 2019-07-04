@@ -24,35 +24,49 @@
 # change these as needed
 SOURCE_DIR=~/client
 EMSCRIPTEN_PATH=/usr/bin/emscripten/emcc
+CLANGOSX_PATH=/usr/bin/clang/osx
+# to simplify stuff
+ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -w"
+WIN_FLAGS="-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN"
 
 # -----------------------------
-c_build_win32() {
+build_win32() {
+  echo "Building win32.."
   cp $SOURCE_DIR/misc/CCicon_32.res $SOURCE_DIR/src/CCicon_32.res
   rm cc-w32-d3d.exe cc-w32-ogl.exe
 
-  i686-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -fno-math-errno -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w32-d3d.exe CCicon_32.res -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9 -w
-  i686-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -fno-math-errno -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w32-ogl.exe CCicon_32.res -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32 -w
+  i686-w64-mingw32-gcc *.c $ALL_FLAGS $WIN_FLAGS -o cc-w32-d3d.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9
+  i686-w64-mingw32-gcc *.c $ALL_FLAGS $WIN_FLAGS -o cc-w32-ogl.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32
 }
 
-c_build_win64() {
+build_win64() {
+  echo "Building win64.."
   cp $SOURCE_DIR/misc/CCicon_64.res $SOURCE_DIR/src/CCicon_64.res
   rm cc-w64-d3d.exe cc-w64-ogl.exe
   
-  x86_64-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -fno-math-errno -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w64-d3d.exe CCicon_64.res -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9 -w
-  x86_64-w64-mingw32-gcc *.c -O1 -s -fno-stack-protector -fno-math-errno -DCC_COMMIT_SHA=\"$LATEST\" -o cc-w64-ogl.exe CCicon_64.res -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32 -w
+  x86_64-w64-mingw32-gcc *.c $ALL_FLAGS $WIN_FLAGS -o cc-w64-d3d.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9
+  x86_64-w64-mingw32-gcc *.c $ALL_FLAGS $WIN_FLAGS -o cc-w64-ogl.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32
 }
 
-c_build_nix32() {
+build_nix32() {
+  echo "Building linux32.."
   rm cc-nix32
-  gcc *.c -O1 -fvisibility=hidden -s -rdynamic -fno-stack-protector -fno-math-errno -DCC_COMMIT_SHA=\"$LATEST\" -m32 -o cc-nix32 -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl -w
+  gcc *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -m32 -o cc-nix32 -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl
 }
 
-c_build_nix64() {
+build_nix64() {
+  echo "Building linux64.."
   rm cc-nix64
-  gcc *.c -O1 -fvisibility=hidden -s -rdynamic -fno-stack-protector -fno-math-errno -DCC_COMMIT_SHA=\"$LATEST\" -m64 -o cc-nix64 -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl -w
+  gcc *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -m64 -o cc-nix64 -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl
 }
 
-c_build_web()  {
+build_osx32() {
+  echo "Building mac32.."
+  rm cc-osx32
+  $CLANGOSX_PATH *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenAL -framework OpenGL -lcurl
+}
+
+build_web()  {
   echo "Building web.."
   rm cc.js
   $EMSCRIPTEN_PATH *.c -O1 -o cc.js -s FETCH=1 -s WASM=0 -s ALLOW_MEMORY_GROWTH=1 --preload-file texpacks/default.zip -w
@@ -73,8 +87,9 @@ git fetch --all
 git reset --hard origin/master
 LATEST=`git rev-parse --short HEAD`
 
-c_build_win32
-c_build_win64
-c_build_nix32
-c_build_nix64
-c_build_web
+build_win32
+build_win64
+build_nix32
+build_nix64
+build_osx32
+build_web
