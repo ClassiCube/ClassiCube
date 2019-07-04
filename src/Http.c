@@ -629,14 +629,14 @@ static int Http_UpdateProgress(void* ptr, double total, double received, double 
 	return 0;
 }
 
-static struct curl_slist* headersList;
+static struct curl_slist* headers_list;
 static void Http_AddHeader(const char* key, const String* value) {
 	String tmp; char tmpBuffer[1024];
 	String_InitArray_NT(tmp, tmpBuffer);
 	String_Format2(&tmp, "%c: %s", key, value);
 
 	tmp.buffer[tmp.length] = '\0';
-	headersList = curl_slist_append(headersList, tmp.buffer);
+	headers_list = curl_slist_append(headers_list, tmp.buffer);
 }
 
 /* Processes a HTTP header downloaded from the server */
