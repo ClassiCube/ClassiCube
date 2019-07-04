@@ -589,19 +589,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 /* Needed because bash's current directory isn't always client's directory (e.g. on OSX) */
 
 static void Launcher_ApplyUpdate(void) {
-#if defined CC_BUILD_WIN
-	static const String scriptPath = String_FromConst("update.bat");
-	static const String scriptName = String_FromConst("C:/Windows/System32/cmd.exe");
-	static const String scriptArgs = String_FromConst("/C start cmd /C update.bat");
-#elif defined CC_BUILD_OSX
-	static const String scriptPath = String_FromConst("update.sh");
-	static const String scriptName = String_FromConst("/usr/bin/open");
-	static const String scriptArgs = String_FromConst("-a Terminal ./update.sh");
-#else
-	static const String scriptPath = String_FromConst("update.sh");
-	static const String scriptName = String_FromConst("xterm");
-	static const String scriptArgs = String_FromConst("-e ./update.sh");
-#endif
+	static const String scriptPath = String_FromConst(UPDATE_FILENAME);
 	char strBuffer[1024], exeBuffer[FILENAME_SIZE];
 	String str, exe;
 	ReturnCode res;
@@ -621,7 +609,7 @@ static void Launcher_ApplyUpdate(void) {
 	res = File_MarkExecutable(&scriptPath);
 	if (res) Logger_Warn(res, "making update script executable");
 
-	res = Process_Start(&scriptName, &scriptArgs);
+	res = Process_StartShell();
 	if (res) { Logger_Warn(res, "starting update script"); return; }
 }
 #endif

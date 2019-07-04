@@ -14,10 +14,12 @@ enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
 typedef uintptr_t SocketHandle;
 typedef void* FileHandle;
 #define _NL "\r\n"
+#define UPDATE_FILENAME "update.bat"
 #else
 typedef int SocketHandle;
 typedef int FileHandle;
 #define _NL "\n"
+#define UPDATE_FILENAME "update.sh"
 #endif
 
 /* Origin points for when seeking in a file. */
@@ -68,6 +70,8 @@ CC_API ReturnCode Process_Start(const String* path, const String* args);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
 CC_API ReturnCode Process_StartOpen(const String* args);
+/* Starts the platform-specific shell to execute the script in UPDATE_FILENAME. */
+CC_API ReturnCode Process_StartShell(void);
 /* Terminates the process with the given return code. */
 CC_API void Process_Exit(ReturnCode code);
 

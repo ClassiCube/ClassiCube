@@ -1577,6 +1577,12 @@ ReturnCode Process_StartOpen(const String* args) {
 	return instance > 32 ? 0 : (ReturnCode)instance;
 }
 
+ReturnCode Process_StartShell(void) {
+	static const String path = String_FromConst("C:/Windows/System32/cmd.exe");
+	static const String args = String_FromConst("/C start cmd /C update.bat");
+	return Process_Start(&path, &args);
+}
+
 void Process_Exit(ReturnCode code) { ExitProcess(code); }
 
 ReturnCode DynamicLib_Load(const String* path, void** lib) {
@@ -1597,6 +1603,7 @@ bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
 #elif defined CC_BUILD_WEB
 ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 ReturnCode Process_Start(const String* path, const String* args) { return ERR_NOT_SUPPORTED; }
+ReturnCode Process_StartShell(void) { return ERR_NOT_SUPPORTED; }
 
 ReturnCode Process_StartOpen(const String* args) {
 	char str[600];
@@ -1670,6 +1677,12 @@ ReturnCode Process_StartOpen(const String* args) {
 	static const String path = String_FromConst("/usr/bin/open");
 	return Process_Start(&path, args);
 }
+ReturnCode Process_StartShell(void) {
+	static const String path = String_FromConst("/usr/bin/open");
+	static const String args = String_FromConst("-a Terminal ./update.sh");
+	return Process_Start(&path, &args);
+}
+
 ReturnCode Process_GetExePath(String* path) {
 	char str[600] = { 0 };
 	int len = 600;
@@ -1684,6 +1697,11 @@ ReturnCode Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
 	static const String path = String_FromConst("xdg-open");
 	return Process_Start(&path, args);
+}
+ReturnCode Process_StartShell(void) {
+	static const String path = String_FromConst("xterm");
+	static const String args = String_FromConst("-e ./update.sh");
+	return Process_Start(&path, &args);
 }
 #if defined CC_BUILD_LINUX
 ReturnCode Process_GetExePath(String* path) {
