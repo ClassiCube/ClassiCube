@@ -286,12 +286,16 @@ void Logger_Backtrace(String* trace, void* ctx) {
 		String_AppendString(trace, &str);
 		String_Format2(&str, "  fp: %x, sp: %x\r\n", &pointers[i].FP, &pointers[i].SP);
 
+/* This function only works for .pdb debug info */
+/* This function is also missing on Windows98 + KernelEX */
+#if _MSC_VER
 		/* line number */
 		IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
 		line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
 		if (SymGetLineFromAddr(process, addr, &lineOffset, &line)) {
 			String_Format2(&str, "  line %i in %c\r\n", &line.LineNumber, line.FileName);
 		}
+#endif
 
 		/* module address is in */
 		IMAGEHLP_MODULE module = { 0 };

@@ -583,7 +583,9 @@ static void Window_InitRawMouse(void) {
 	rid.dwFlags     = RIDEV_INPUTSINK;
 	rid.hwndTarget  = win_handle;
 
-	if (!_registerRawInput(&rid, 1, sizeof(rid))) Logger_Abort2(GetLastError(), "Failed to init raw mouse");
+	if (_registerRawInput(&rid, 1, sizeof(rid))) return;
+	Logger_Warn(GetLastError(), "initing raw mouse");
+	rawMouseSupported = false;
 }
 
 void Window_EnableRawMouse(void) {
