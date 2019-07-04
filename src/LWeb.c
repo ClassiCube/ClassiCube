@@ -242,8 +242,8 @@ void LWebTask_DisplayError(struct LWebTask* task, const char* action, String* ds
 /*########################################################################################################################*
 *-------------------------------------------------------GetTokenTask------------------------------------------------------*
 *#########################################################################################################################*/
+static struct EntryList ccCookies;
 struct GetTokenTaskData GetTokenTask;
-char tokenBuffer[STRING_SIZE];
 
 static void GetTokenTask_OnValue(struct JsonContext* ctx, const String* str) {
 	if (!String_CaselessEqualsConst(&ctx->curKey, "token")) return;
@@ -257,13 +257,14 @@ static void GetTokenTask_Handle(uint8_t* data, uint32_t len) {
 void GetTokenTask_Run(void) {
 	static const String id  = String_FromConst("CC get token");
 	static const String url = String_FromConst("https://www.classicube.net/api/login");
+	static char tokenBuffer[STRING_SIZE];
 	if (GetTokenTask.Base.Working) return;
 
 	LWebTask_Reset(&GetTokenTask.Base);
 	String_InitArray(GetTokenTask.Token, tokenBuffer);
 
 	GetTokenTask.Base.Identifier = id;
-	Http_AsyncGetData(&url, false, &id);
+	Http_AsyncGetDataEx(&url, false, &id, NULL, NULL, &ccCookies);
 	GetTokenTask.Base.Handle     = GetTokenTask_Handle;
 }
 
@@ -321,7 +322,7 @@ void SignInTask_Run(const String* user, const String* pass) {
 	SignInTask_Append(&tmp, "&token=",    &GetTokenTask.Token);
 
 	SignInTask.Base.Identifier = id;
-	Http_AsyncPostData(&url, false, &id, tmp.buffer, tmp.length);
+	Http_AsyncPostData(&url, false, &id, tmp.buffer, tmp.length, &ccCookies);
 	SignInTask.Base.Handle     = SignInTask_Handle;
 }
 
@@ -396,7 +397,7 @@ void FetchServerTask_Run(const String* hash) {
 	String_Format1(&url, "https://www.classicube.net/api/server/%s", hash);
 
 	FetchServerTask.Base.Identifier = id;
-	Http_AsyncGetData(&url, false, &id);
+	Http_AsyncGetDataEx(&url, false, &id, NULL, NULL, &ccCookies);
 	FetchServerTask.Base.Handle  = FetchServerTask_Handle;
 }
 
@@ -445,7 +446,7 @@ void FetchServersTask_Run(void) {
 	LWebTask_Reset(&FetchServersTask.Base);
 
 	FetchServersTask.Base.Identifier = id;
-	Http_AsyncGetData(&url, false, &id);
+	Http_AsyncGetDataEx(&url, false, &id, NULL, NULL, &ccCookies);
 	FetchServersTask.Base.Handle = FetchServersTask_Handle;
 }
 
@@ -629,9 +630,7 @@ static void FetchFlagsTask_Ensure(void) {
 }
 
 void FetchFlagsTask_Add(const struct ServerInfo* server) {
-	char c;
 	int i;
-
 	for (i = 0; i < flagsCount; i++) {
 		if (flags[i].country[0] != server->country[0]) continue;
 		if (flags[i].country[1] != server->country[1]) continue;

@@ -751,5 +751,5 @@ void TexturePack_DownloadAsync(const String* url, const String* id) {
 		time = TextureCache_GetLastModified(url);
 		etag = TextureCache_GetETag(url);
 	}
-	Http_AsyncGetDataEx(url, true, id, &time, &etag);
+	Http_AsyncGetDataEx(url, true, id, &time, &etag, NULL);
 }

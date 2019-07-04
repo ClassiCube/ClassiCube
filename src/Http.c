@@ -133,7 +133,7 @@ static void Http_DownloadNextAsync(void);
 #endif
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
-static void Http_Add(const String* url, bool priority, const String* id, uint8_t type, const String* lastModified, const String* etag, const void* data, uint32_t size) {
+static void Http_Add(const String* url, bool priority, const String* id, uint8_t type, const String* lastModified, const String* etag, const void* data, uint32_t size, struct EntryList* cookies) {
 	struct HttpRequest req = { 0 };
 	String str;
 
@@ -160,6 +160,7 @@ static void Http_Add(const String* url, bool priority, const String* id, uint8_t
 		Mem_Copy(req.Data, data, size);
 		req.Size = size;
 	}
+	req.Cookies = cookies;
 
 	Mutex_Lock(pendingMutex);
 	{	
@@ -234,8 +235,28 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 	Mutex_Unlock(curRequestMutex);
 }
 
+/* Deletes cached responses that are over 10 seconds old */
+static void Http_CleanCacheTask(struct ScheduledTask* task) {
+	struct HttpRequest* item;
+	int i;
+
+	Mutex_Lock(processedMutex);
+	{
+		TimeMS now = DateTime_CurrentUTC_MS();
+		for (i = processedReqs.Count - 1; i >= 0; i--) {
+			item = &processedReqs.Entries[i];
+			if (item->TimeDownloaded + (10 * 1000) >= now) continue;
+
+			HttpRequest_Free(item);
+			RequestList_RemoveAt(&processedReqs, i);
+		}
+	}
+	Mutex_Unlock(processedMutex);
+}
+
 /* Parses a HTTP header */
 static void Http_ParseHeader(struct HttpRequest* req, const String* line) {
+	int valueEnd;
 	String tmp, name, value;
 	if (!String_UNSAFE_Separate(line, ':', &name, &value)) return;
 
@@ -247,7 +268,46 @@ static void Http_ParseHeader(struct HttpRequest* req, const String* line) {
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
 		tmp = String_ClearedArray(req->LastModified);
 		String_AppendString(&tmp, &value);
+	} else if (req->Cookies && String_CaselessEqualsConst(&name, "Set-Cookie")) {
+		String_UNSAFE_Separate(&value, '=', &name, &tmp);		
+		/* Cookie is: __cfduid=xyz; expires=abc; path=/; domain=.classicube.net; HttpOnly */
+		/* However only the __cfduid=xyz part of the cookie should be stored */
+		valueEnd = String_IndexOf(&tmp, ';');
+		if (valueEnd >= 0) tmp.length = valueEnd;
+
+		req->Cookies->Separator = '=';
+		EntryList_Set(req->Cookies, &name, &tmp);
 	}
+}
+
+/* Adds a http header to the request headers. */
+static void Http_AddHeader(const char* key, const String* value);
+
+/* Adds all the appropriate headers for a request. */
+static void Http_SetRequestHeaders(struct HttpRequest* req) {
+	static const String contentType = String_FromConst("application/x-www-form-urlencoded");
+	String str, cookies; char cookiesBuffer[1024];
+	int i;
+
+	if (req->LastModified[0]) {
+		str = String_FromRawArray(req->LastModified);
+		Http_AddHeader("If-Modified-Since", &str);
+	}
+	if (req->Etag[0]) {
+		str = String_FromRawArray(req->Etag);
+		Http_AddHeader("If-None-Match", &str);
+	}
+
+	if (req->Data) Http_AddHeader("Content-Type", &contentType);
+	if (!req->Cookies || !req->Cookies->Entries.count) return;
+
+	String_InitArray(cookies, cookiesBuffer);
+	for (i = 0; i < req->Cookies->Entries.count; i++) {
+		if (i) String_AppendConst(&cookies, "; ");
+		str = StringsBuffer_UNSAFE_Get(&req->Cookies->Entries, i);
+		String_AppendString(&cookies, &str);
+	}
+	Http_AddHeader("Cookie", &cookies);
 }
 
 
@@ -259,6 +319,7 @@ static void Http_SysInit(void) { }
 static void Http_SysFree(void) { }
 static void Http_DownloadAsync(struct HttpRequest* req);
 bool Http_DescribeError(ReturnCode res, String* dst) { return false; }
+static void Http_AddHeader(const char* key, const String* value);
 
 static void Http_DownloadNextAsync(void) {
 	struct HttpRequest req;
@@ -423,29 +484,13 @@ static void Http_SysInit(void) {
 	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
 }
 
-/* Adds custom HTTP headers for a req */
-static void Http_MakeHeaders(String* headers, struct HttpRequest* req) {
-	String str;
-	if (!req->Etag[0] && !req->LastModified[0] && !req->Data) {
-		headers->buffer = NULL; return;
-	}
+static HINTERNET curReq;
+static void Http_AddHeader(const char* key, const String* value) {
+	String tmp; char tmpBuffer[1024];
+	String_InitArray(tmp, tmpBuffer);
 
-	if (req->LastModified[0]) {
-		str = String_FromRawArray(req->LastModified);
-		String_Format1(headers, "If-Modified-Since: %s\r\n", &str);
-	}
-
-	if (req->Etag[0]) {
-		str = String_FromRawArray(req->Etag);
-		String_Format1(headers, "If-None-Match: %s\r\n", &str);
-	}
-
-	if (req->Data) {
-		String_AppendConst(headers, "Content-Type: application/x-www-form-urlencoded\r\n");
-	}
-
-	String_AppendConst(headers, "\r\n\r\n");
-	headers->buffer[headers->length] = '\0';
+	String_Format2(&tmp, "%c: %s\r\n", key, value);
+	HttpAddRequestHeadersA(curReq, tmp.buffer, tmp.length, HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
 }
 
 /* Creates and sends a HTTP requst */
@@ -454,27 +499,24 @@ static ReturnCode Http_StartRequest(struct HttpRequest* req, HINTERNET* handle) 
 	struct HttpCacheEntry entry;
 	DWORD flags;
 
-	String headers; char headersBuffer[STRING_SIZE * 4];
-	String path;    char pathBuffer[URL_MAX_SIZE + 1];
+	String path; char pathBuffer[URL_MAX_SIZE + 1];
 	String url = String_FromRawArray(req->URL);
 
 	HttpCache_MakeEntry(&url, &entry, &path);
 	Mem_Copy(pathBuffer, path.buffer, path.length);
 	pathBuffer[path.length] = '\0';
-
 	HttpCache_Lookup(&entry);
-	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
-	String_InitArray(headers, headersBuffer);
-	Http_MakeHeaders(&headers, req);
 
-	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD;
+	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_COOKIES;
 	if (entry.Https) flags |= INTERNET_FLAG_SECURE;
 
 	*handle = HttpOpenRequestA(entry.Handle, verbs[req->RequestType], 
 								pathBuffer, NULL, NULL, NULL, flags, 0);
+	curReq  = *handle;
+	if (!curReq) return GetLastError();
 
-	return *handle && HttpSendRequestA(*handle, headers.buffer, headers.length, 
-										req->Data, req->Size) ? 0 : GetLastError();
+	Http_SetRequestHeaders(req);
+	return HttpSendRequestA(*handle, NULL, 0, req->Data, req->Size) ? 0 : GetLastError();
 }
 
 /* Gets headers from a HTTP response */
@@ -587,29 +629,14 @@ static int Http_UpdateProgress(void* ptr, double total, double received, double 
 	return 0;
 }
 
-/* Makes custom request HTTP headers, usually none. */
-static struct curl_slist* Http_MakeHeaders(struct HttpRequest* req) {
-	String str, tmp; char buffer[100];
-	struct curl_slist* list = NULL;
+static struct curl_slist* headersList;
+static void Http_AddHeader(const char* key, const String* value) {
+	String tmp; char tmpBuffer[1024];
+	String_InitArray_NT(tmp, tmpBuffer);
+	String_Format2(&tmp, "%c: %s", key, value);
 
-	if (req->LastModified[0]) {
-		String_InitArray_NT(tmp, buffer);
-		str = String_FromRawArray(req->LastModified);
-		String_Format1(&tmp, "If-Modified-Since: ", &str);
-
-		tmp.buffer[tmp.length] = '\0';
-		list = curl_slist_append(list, tmp.buffer);
-	}
-
-	if (req->Etag[0]) {
-		String_InitArray_NT(tmp, buffer);
-		str = String_FromRawArray(req->Etag);
-		String_Format1(&tmp, "If-None-Match: %s", &str);
-
-		tmp.buffer[tmp.length] = '\0';
-		list = curl_slist_append(list, tmp.buffer);
-	}
-	return list;
+	tmp.buffer[tmp.length] = '\0';
+	headersList = curl_slist_append(headersList, tmp.buffer);
 }
 
 /* Processes a HTTP header downloaded from the server */
@@ -654,7 +681,6 @@ static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, void* u
 
 /* Sets general curl options for a request */
 static void Http_SetCurlOpts(struct HttpRequest* req) {
-	curl_easy_setopt(curl, CURLOPT_COOKIEJAR,      "");
 	curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
@@ -671,13 +697,13 @@ static ReturnCode Http_SysDo(struct HttpRequest* req) {
 	String url = String_FromRawArray(req->URL);
 	char urlStr[600];
 	void* post_data = req->Data;
-	struct curl_slist* list;
 	long status = 0;
 	CURLcode res;
 
 	curl_easy_reset(curl);
-	list = Http_MakeHeaders(req);
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+	headers_list = NULL;
+	Http_SetRequestHeaders(req);
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers_list);
 
 	Http_SetCurlOpts(req);
 	Platform_ConvertString(urlStr, &url);
@@ -703,7 +729,7 @@ static ReturnCode Http_SysDo(struct HttpRequest* req) {
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 	req->StatusCode = status;
 
-	curl_slist_free_all(list);
+	curl_slist_free_all(headersList);
 	/* can free now that request has finished */
 	Mem_Free(post_data);
 	return res;
@@ -785,34 +811,16 @@ void Http_AsyncGetSkin(const String* id, const String* skinName) {
 }
 
 void Http_AsyncGetData(const String* url, bool priority, const String* id) {
-	Http_Add(url, priority, id, REQUEST_TYPE_GET, NULL, NULL, NULL, 0);
+	Http_Add(url, priority, id, REQUEST_TYPE_GET, NULL, NULL, NULL, 0, NULL);
 }
 void Http_AsyncGetHeaders(const String* url, bool priority, const String* id) {
-	Http_Add(url, priority, id, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0);
+	Http_Add(url, priority, id, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0, NULL);
 }
-void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size) {
-	Http_Add(url, priority, id, REQUEST_TYPE_POST, NULL, NULL, data, size);
+void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size, struct EntryList* cookies) {
+	Http_Add(url, priority, id, REQUEST_TYPE_POST, NULL, NULL, data, size, cookies);
 }
-void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, const String* lastModified, const String* etag) {
-	Http_Add(url, priority, id, REQUEST_TYPE_GET, lastModified, etag, NULL, 0);
-}
-
-void Http_PurgeOldEntriesTask(struct ScheduledTask* task) {
-	struct HttpRequest* item;
-	int i;
-
-	Mutex_Lock(processedMutex);
-	{
-		TimeMS now = DateTime_CurrentUTC_MS();
-		for (i = processedReqs.Count - 1; i >= 0; i--) {
-			item = &processedReqs.Entries[i];
-			if (item->TimeDownloaded + (10 * 1000) >= now) continue;
-
-			HttpRequest_Free(item);
-			RequestList_RemoveAt(&processedReqs, i);
-		}
-	}
-	Mutex_Unlock(processedMutex);
+void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, const String* lastModified, const String* etag, struct EntryList* cookies) {
+	Http_Add(url, priority, id, REQUEST_TYPE_GET, lastModified, etag, NULL, 0, cookies);
 }
 
 bool Http_GetResult(const String* id, struct HttpRequest* item) {
@@ -881,7 +889,7 @@ void Http_UrlEncodeUtf8(String* dst, const String* src) {
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
 static void Http_Init(void) {
-	ScheduledTask_Add(30, Http_PurgeOldEntriesTask);
+	ScheduledTask_Add(30, Http_CleanCacheTask);
 	RequestList_Init(&pendingReqs);
 	RequestList_Init(&processedReqs);
 	Http_SysInit();

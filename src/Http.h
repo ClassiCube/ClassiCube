@@ -22,7 +22,7 @@ enum HttpProgress {
 struct HttpRequest {
 	char URL[URL_MAX_SIZE]; /* URL data is downloaded from/uploaded to. */
 	char ID[URL_MAX_SIZE];  /* Unique identifier for this request. */
-	TimeMS TimeAdded;       /* Time this request was added to request queue. */
+	TimeMS TimeAdded;       /* Time this request was added to queue of requests. */
 	TimeMS TimeDownloaded;  /* Time response contents were completely downloaded. */
 	int StatusCode;         /* HTTP status code returned in the response. */
 	uint32_t ContentLength; /* HTTP content length returned in the response. */
@@ -35,6 +35,7 @@ struct HttpRequest {
 	char Etag[STRING_SIZE];         /* ETag of cached item (if any) */
 	uint8_t RequestType;            /* See the various REQUEST_TYPE_ */
 	bool Success;                   /* Whether Result is 0, status is 200, and data is not NULL */
+	struct EntryList* Cookies;      /* Cookie list sent in requests. May be modified by the response. */
 };
 
 /* Frees data from a HTTP request. */
@@ -50,10 +51,10 @@ void Http_AsyncGetData(const String* url, bool priority, const String* id);
 void Http_AsyncGetHeaders(const String* url, bool priority, const String* id);
 /* Asynchronously performs a http POST request. (e.g. to submit data) */
 /* NOTE: You don't have to persist data, a copy is made of it. */
-void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size);
+void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size, struct EntryList* cookies);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 /* Also sets the If-Modified-Since and If-None-Match headers. (if not NULL)  */
-void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, const String* lastModified, const String* etag);
+void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, const String* lastModified, const String* etag, struct EntryList* cookies);
 
 /* Encodes data using % or URL encoding. */
 void Http_UrlEncode(String* dst, const uint8_t* data, int len);
@@ -70,5 +71,4 @@ bool Http_GetResult(const String* id, struct HttpRequest* item);
 bool Http_GetCurrent(struct HttpRequest* request, int* progress);
 /* Clears the list of pending requests. */
 void Http_ClearPending(void);
-void Http_PurgeOldEntriesTask(struct ScheduledTask* task);
 #endif

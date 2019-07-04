@@ -80,8 +80,8 @@ static void Resources_CheckTextures(void) {
 	struct ZipState state;
 	ReturnCode res;
 
-	if (!File_Exists(&path)) return;
 	res = Stream_OpenFile(&stream, &path);
+	if (res == ReturnCode_FileNotFound) return;
 
 	if (res) { Logger_Warn(res, "checking default.zip"); return; }
 	Zip_Init(&state, &stream);
