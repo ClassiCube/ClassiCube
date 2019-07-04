@@ -1546,12 +1546,24 @@ ReturnCode Process_GetExePath(String* path) {
 	return 0;
 }
 
-ReturnCode Process_Start(const String* path, const String* args) {
-	String file, argv; char argvBuffer[300];
-	TCHAR str[300], raw[300];
+static ReturnCode Process_RawStart(const TCHAR* path, TCHAR* args) {
 	STARTUPINFO si = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 	BOOL ok;
+
+	si.cb = sizeof(STARTUPINFO);
+	ok = CreateProcess(path, args, NULL, NULL, false, 0, NULL, NULL, &si, &pi);
+	if (!ok) return GetLastError();
+
+	/* Don't leak memory for proess return code */
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+	return 0;
+}
+
+ReturnCode Process_Start(const String* path, const String* args) {
+	String file, argv; char argvBuffer[300];
+	TCHAR str[300], raw[300];
 
 	file = *path; Utils_UNSAFE_GetFilename(&file);
 	String_InitArray(argv, argvBuffer);
@@ -1559,14 +1571,7 @@ ReturnCode Process_Start(const String* path, const String* args) {
 	Platform_ConvertString(str, path);
 	Platform_ConvertString(raw, &argv);
 
-	si.cb = sizeof(STARTUPINFO);
-	ok    = CreateProcess(str, raw, NULL, NULL, false, 0, NULL, NULL, &si, &pi);
-	if (!ok) return GetLastError();
-
-	/* Don't leak memory for proess return code */
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
-	return 0;
+	return Process_RawStart(str, raw);
 }
 
 ReturnCode Process_StartOpen(const String* args) {
@@ -1578,9 +1583,11 @@ ReturnCode Process_StartOpen(const String* args) {
 }
 
 ReturnCode Process_StartShell(void) {
-	static const String path = String_FromConst("C:/Windows/System32/cmd.exe");
-	static const String args = String_FromConst("/C start cmd /C update.bat");
-	return Process_Start(&path, &args);
+	static const String args = String_FromConst("cmd.exe /C start cmd /C update.bat");
+	TCHAR str[300];
+	/* args must be modifiable, otherwise access violation */
+	Platform_ConvertString(str, &args);
+	return Process_RawStart(NULL, str);
 }
 
 void Process_Exit(ReturnCode code) { ExitProcess(code); }
