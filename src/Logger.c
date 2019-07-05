@@ -33,7 +33,6 @@
 #include <signal.h>
 #include <ucontext.h>
 #endif
-#include <stdlib.h>
 #endif
 
 
@@ -211,10 +210,27 @@ void Logger_Warn2(ReturnCode res, const char* place, const String* path) {
 /*########################################################################################################################*
 *-------------------------------------------------------Backtracing-------------------------------------------------------*
 *#########################################################################################################################*/
+static void Logger_PrintFrame(String* str, uintptr_t addr, uintptr_t symAddr, const char* symName, const char* modName) {
+	String module;
+	int offset;
+	if (!modName) modName = "???";
+
+	module = String_FromReadonly(modName);
+	Utils_UNSAFE_GetFilename(&module);
+	String_Format2(str, "0x%x - %s", &addr, &module);
+
+	if (symName) {
+		offset = (int)(addr - symAddr);
+		String_Format2(str, "(%c+%i)" _NL, symName, &offset);
+	} else {
+		String_AppendConst(str, _NL);
+	}
+}
+
 #if defined CC_BUILD_WEB
 void Logger_Backtrace(String* trace, void* ctx) { }
 #elif defined CC_BUILD_WIN
-struct StackPointers { uintptr_t IP, FP, SP; };
+struct StackPointers { uintptr_t ip, fp, sp; };
 struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 
 static int Logger_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int max) {
@@ -247,123 +263,116 @@ static int Logger_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int ma
 		if (!StackWalk(type, process, thread, &frame, &copy, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL)) break;
 		if (!frame.AddrFrame.Offset) break;
 
-		pointers[count].IP = frame.AddrPC.Offset;
-		pointers[count].FP = frame.AddrFrame.Offset;
-		pointers[count].SP = frame.AddrStack.Offset;
+		pointers[count].ip = frame.AddrPC.Offset;
+		pointers[count].fp = frame.AddrFrame.Offset;
+		pointers[count].sp = frame.AddrStack.Offset;
 	}
 	return count;
 }
 
 void Logger_Backtrace(String* trace, void* ctx) {
-	struct SymbolAndName sym = { 0 };
+	char strBuffer[512]; String str;
 	struct StackPointers pointers[40];
-	int i, offset, frames;
+	int i, frames;
 	HANDLE process;
 	uintptr_t addr;
-
-	sym.Symbol.MaxNameLength = 255;
-	sym.Symbol.SizeOfStruct  = sizeof(IMAGEHLP_SYMBOL);
 
 	process = GetCurrentProcess();
 	SymInitialize(process, NULL, TRUE);
 	frames  = Logger_GetFrames((CONTEXT*)ctx, pointers, 40);
 
 	for (i = 0; i < frames; i++) {
-		addr = pointers[i].IP;
-		char strBuffer[512];
-		String str = String_FromArray(strBuffer);
+		addr = pointers[i].ip;
+		String_InitArray(str, strBuffer);
 
-		/* instruction pointer */
-		if (SymGetSymFromAddr(process, addr, NULL, &sym.Symbol)) {
-			offset = (int)(addr - sym.Symbol.Address);
-			String_Format3(&str, "0x%x - %c+%i\r\n", &addr, sym.Symbol.Name, &offset);
-		} else {
-			String_Format1(&str, "0x%x\r\n", &addr);
-		}
+		struct SymbolAndName s = { 0 };
+		s.Symbol.MaxNameLength = 255;
+		s.Symbol.SizeOfStruct  = sizeof(IMAGEHLP_SYMBOL);
+		SymGetSymFromAddr(process, addr, NULL, &s.Symbol);
+
+		IMAGEHLP_MODULE m = { 0 };
+		m.SizeOfStruct = sizeof(IMAGEHLP_MODULE);
+		SymGetModuleInfo(process, addr, &m);
+
+		Logger_PrintFrame(&str, addr, s.Symbol.Address, s.Symbol.Name, m.ModuleName);
+		String_AppendString(trace, &str);
 
 		/* frame and stack address */
-		String_AppendString(trace, &str);
-		String_Format2(&str, "  fp: %x, sp: %x\r\n", &pointers[i].FP, &pointers[i].SP);
+		String_Format2(&str, "  fp: %x, sp: %x\r\n", &pointers[i].fp, &pointers[i].sp);
 
 /* This function only works for .pdb debug info */
 /* This function is also missing on Windows98 + KernelEX */
 #if _MSC_VER
-		/* line number */
 		IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
 		line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
 		if (SymGetLineFromAddr(process, addr, &lineOffset, &line)) {
 			String_Format2(&str, "  line %i in %c\r\n", &line.LineNumber, line.FileName);
 		}
 #endif
-
-		/* module address is in */
-		IMAGEHLP_MODULE module = { 0 };
-		module.SizeOfStruct = sizeof(IMAGEHLP_MODULE);
-		if (SymGetModuleInfo(process, addr, &module)) {
-			String_Format2(&str, "  in module %c (%c)\r\n", module.ModuleName, module.ImageName);
-		}
 		Logger_Log(&str);
 	}
 	String_AppendConst(trace, "\r\n");
 }
-#elif defined CC_BUILD_LIBUNWIND
-#define UNW_LOCAL_ONLY
+#elif defined CC_BUILD_UNWIND
 #include <unwind.h>
+#define __USE_GNU
+#include <dlfcn.h>
+#undef __USE_GNU
+
+static _Unwind_Reason_Code Logger_DumpFrame(struct _Unwind_Context* ctx, void* arg) {
+	String str; char strBuffer[384];
+	String* trace;
+	uintptr_t addr;
+	Dl_info info;
+
+	trace = (String*)arg;
+	addr  = _Unwind_GetIP(ctx);
+	String_InitArray(str, strBuffer);
+
+	if (!addr) return _URC_END_OF_STACK;
+	info.dli_sname = NULL;
+	info.dli_fname = NULL;
+	dladdr(addr, &info);
+
+	Logger_PrintFrame(&str, addr, (uintptr_t)info.dli_saddr, info.dli_sname, info.dli_fname);
+	String_AppendString(trace, &str);
+	Logger_Log(&str);
+    return _URC_NO_REASON;
+}
 
 void Logger_Backtrace(String* trace, void* ctx) {
-	String str; char strBuffer[384];
-	char sym[256];
-	unw_context_t uc;
-	unw_cursor_t cursor; 
-	unw_word_t ip, sp, offset;
-	int i;
-
-	unw_getcontext(&uc);
-	unw_init_local(&cursor, &uc);
-	for (i = 0; unw_step(&cursor) > 0; i++) {
-		unw_get_reg(&cursor, UNW_REG_IP, &ip);
-		unw_get_reg(&cursor, UNW_REG_SP, &sp); /* TODO: log sp */
-		String_InitArray(str, strBuffer);
-
-		if (unw_get_proc_name(&cursor, sym, sizeof(sym), &offset) == 0) {
-			String_Format2(&str, "0x%x - %c+%i\n", &ip, sym, &offset);
-		} else {
-			String_Format1(&str, "0x%x\n", &ip);
-		}
-
-		String_AppendString(trace, &str);
-		Logger_Log(&str);
-	}
+    _Unwind_Backtrace(Logger_DumpFrame, trace);
+	String_AppendConst(trace, "\n");
 }
 #elif defined CC_BUILD_POSIX
 #include <execinfo.h>
+#define __USE_GNU
+#include <dlfcn.h>
+#undef __USE_GNU
+
 void Logger_Backtrace(String* trace, void* ctx) {
 	String str; char strBuffer[384];
 	void* addrs[40];
 	int i, frames;
 	char** strings;
 	uintptr_t addr;
+	Dl_info info;
 
-	frames  = backtrace(addrs, 40);
-	strings = backtrace_symbols(addrs, frames);
-
+	frames = backtrace(addrs, 40);
 	for (i = 0; i < frames; i++) {
 		addr = (uintptr_t)addrs[i];
 		String_InitArray(str, strBuffer);
 
-		/* instruction pointer */
-		if (strings && strings[i]) {
-			String_Format2(&str, "0x%x - %c\n", &addr, strings[i]);
-		} else {
-			String_Format1(&str, "0x%x\n", &addr);
-		}
+		info.dli_sname = NULL;
+		info.dli_fname = NULL;
+		dladdr(addr, &info);
 
+		Logger_PrintFrame(&str, addr, (uintptr_t)info.dli_saddr, info.dli_sname, info.dli_fname);
 		String_AppendString(trace, &str);
 		Logger_Log(&str);
 	}
 
 	String_AppendConst(trace, "\n");
-	free(strings);
 }
 #endif
 
@@ -555,6 +564,7 @@ static void Logger_DumpRegisters(void* ctx) {
 #if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 static void Logger_DumpMisc(void* ctx) {
 	static const String memMap = String_FromConst("-- memory map --\n");
