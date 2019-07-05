@@ -308,9 +308,10 @@ void Logger_Backtrace(String* trace, void* ctx) {
 }
 #elif defined CC_BUILD_LIBUNWIND
 #define UNW_LOCAL_ONLY
-#include <libunwind.h>
+#include <unwind.h>
 
 void Logger_Backtrace(String* trace, void* ctx) {
+	String str; char strBuffer[384];
 	char sym[256];
 	unw_context_t uc;
 	unw_cursor_t cursor; 

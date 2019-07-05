@@ -106,9 +106,7 @@ static void RequestList_Init(struct RequestList* list) {
 
 /* Frees any dynamically allocated memory, then resets state to default */
 static void RequestList_Free(struct RequestList* list) {
-	if (list->Entries != list->DefaultEntries) {
-		Mem_Free(list->Entries);
-	}
+	if (list->Entries != list->DefaultEntries) Mem_Free(list->Entries);
 	RequestList_Init(list);
 }
 
@@ -220,6 +218,7 @@ static void Http_CompleteRequest(struct HttpRequest* req) {
 static void Http_FinishRequest(struct HttpRequest* req) {
 	if (req->Data) Platform_Log1("HTTP returned data: %i bytes", &req->Size);
 	req->Success = !req->Result && req->StatusCode == 200 && req->Data && req->Size;
+	if (!req->Success) HttpRequest_Free(req);
 
 	Mutex_Lock(processedMutex);
 	{
@@ -566,7 +565,7 @@ static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 		}
 
 		success = InternetReadFile(handle, &buffer[totalRead], avail, &read);
-		if (!success) { Mem_Free(buffer); return GetLastError(); }
+		if (!success) return GetLastError();
 		if (!read) break;
 
 		totalRead += read;
