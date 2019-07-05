@@ -20,6 +20,8 @@
 
 /* POSIX can be shared between unix-ish systems */
 #ifdef CC_BUILD_POSIX
+#include <execinfo.h>
+#include <signal.h>
 #if defined CC_BUILD_OPENBSD
 /* OpenBSD doesn't provide ucontext.h */
 #elif defined CC_BUILD_LINUX
@@ -30,11 +32,6 @@
 #else
 #include <ucontext.h>
 #endif
-#include <execinfo.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <signal.h>
 #endif
 
 
@@ -552,6 +549,10 @@ static void Logger_DumpRegisters(void* ctx) {
 
 /* OS specific stuff */
 #if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
+#include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 static void Logger_DumpMisc(void* ctx) {
 	static const String memMap = String_FromConst("-- memory map --\n");
 	String str; char strBuffer[320];

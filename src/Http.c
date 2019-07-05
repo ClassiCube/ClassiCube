@@ -544,7 +544,7 @@ static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 	uint8_t* buffer;
 	uint32_t size, totalRead;
 	DWORD read, avail;
-	bool success;
+	BOOL success;
 	
 	http_curProgress = 0;
 	size      = req->ContentLength ? req->ContentLength : 1;
@@ -726,7 +726,8 @@ static ReturnCode Http_SysDo(struct HttpRequest* req) {
 	res = curl_easy_perform(curl);
 	http_curProgress = 100;
 
-	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+	/* non-obsolete is CURLINFO_RESPONSE_CODE */
+	curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &status);
 	req->StatusCode = status;
 
 	curl_slist_free_all(headers_list);
