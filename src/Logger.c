@@ -20,18 +20,20 @@
 
 /* POSIX can be shared between unix-ish systems */
 #ifdef CC_BUILD_POSIX
-#include <execinfo.h>
-#include <signal.h>
 #if defined CC_BUILD_OPENBSD
+#include <signal.h>
 /* OpenBSD doesn't provide ucontext.h */
 #elif defined CC_BUILD_LINUX
 /* Need to define this to get REG_ constants */
 #define __USE_GNU
 #include <ucontext.h>
 #undef  __USE_GNU
+#include <signal.h>
 #else
+#include <signal.h>
 #include <ucontext.h>
 #endif
+#include <stdlib.h>
 #endif
 
 
@@ -333,6 +335,7 @@ void Logger_Backtrace(String* trace, void* ctx) {
 	}
 }
 #elif defined CC_BUILD_POSIX
+#include <execinfo.h>
 void Logger_Backtrace(String* trace, void* ctx) {
 	String str; char strBuffer[384];
 	void* addrs[40];
@@ -549,7 +552,6 @@ static void Logger_DumpRegisters(void* ctx) {
 
 /* OS specific stuff */
 #if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
-#include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
 

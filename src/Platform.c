@@ -58,7 +58,6 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <utime.h>
-#include <poll.h>
 #include <signal.h>
 
 #define Platform_DecodeString(dst, src, len) String_AppendUtf8(dst, (uint8_t*)(src), len)
@@ -1517,6 +1516,7 @@ ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
 	*success = FD_ISSET(socket, &set); return 0;
 }
 #else
+#include <poll.h>
 ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
 	struct pollfd pfd;
 	int flags;
