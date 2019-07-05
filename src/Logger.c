@@ -452,27 +452,6 @@ static void Logger_DumpRegisters(void* ctx) {
 #endif
 	Logger_Log(&str);
 }
-
-static BOOL CALLBACK Logger_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
-	String str; char strBuffer[256];
-	uintptr_t beg, end;
-
-	beg = base; end = base + (size - 1);
-	String_InitArray(str, strBuffer);
-
-	String_Format3(&str, "%c = %x-%x\r\n", name, &beg, &end);
-	Logger_Log(&str);
-	return true;
-}
-
-static void Logger_DumpMisc(void* ctx) {
-	static const String modules = String_FromConst("-- modules --\r\n");
-	HANDLE process = GetCurrentProcess();
-
-	Logger_Log(&modules);
-	EnumerateLoadedModules(process, Logger_DumpModule, NULL);
-}
-
 #elif defined CC_BUILD_POSIX
 static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[512];
@@ -558,57 +537,6 @@ static void Logger_DumpRegisters(void* ctx) {
 
 	Logger_Log(&str);
 }
-
-/* OS specific stuff */
-#if defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdlib.h>
-
-static void Logger_DumpMisc(void* ctx) {
-	static const String memMap = String_FromConst("-- memory map --\n");
-	String str; char strBuffer[320];
-	int n, fd;
-
-	Logger_Log(&memMap);
-	/* dumps all known ranges of memory */
-	fd = open("/proc/self/maps", O_RDONLY);
-	if (fd < 0) return;
-	String_InitArray(str, strBuffer);
-
-	while ((n = read(fd, str.buffer, str.capacity)) > 0) {
-		str.length = n;
-		Logger_Log(&str);
-	}
-
-	close(fd);
-}
-#elif defined CC_BUILD_OSX
-#include <mach-o/dyld.h>
-
-static void Logger_DumpMisc(void* ctx) {
-	static const String modules = String_FromConst("-- modules --\n");
-	static const String newLine = String_FromConst(_NL);
-	uint32_t i, count;
-	const char* path;
-	String str;
-	
-	Logger_Log(&modules);
-	count = _dyld_image_count();
-	/* dumps absolute path of each module */
-
-	for (i = 0; i < count; i++) {
-		path = _dyld_get_image_name(i);
-		if (!path) continue;
-
-		str = String_FromReadonly(path);
-		Logger_Log(&str);
-		Logger_Log(&newLine);
-	}
-}
-#else
-static void Logger_DumpMisc(void* ctx) { }
-#endif
 #endif
 
 
