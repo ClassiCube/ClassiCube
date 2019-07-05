@@ -34,6 +34,10 @@
 #include <ucontext.h>
 #endif
 #endif
+/* android's bionic libc doesn't provide backtrace */
+#ifdef CC_BUILD_ANDROID
+#define CC_BUILD_UNWIND
+#endif
 
 
 /*########################################################################################################################*
@@ -321,21 +325,19 @@ void Logger_Backtrace(String* trace, void* ctx) {
 
 static _Unwind_Reason_Code Logger_DumpFrame(struct _Unwind_Context* ctx, void* arg) {
 	String str; char strBuffer[384];
-	String* trace;
 	uintptr_t addr;
-	Dl_info info;
+	Dl_info s;
 
-	trace = (String*)arg;
-	addr  = _Unwind_GetIP(ctx);
+	addr = _Unwind_GetIP(ctx);
 	String_InitArray(str, strBuffer);
-
 	if (!addr) return _URC_END_OF_STACK;
-	info.dli_sname = NULL;
-	info.dli_fname = NULL;
-	dladdr(addr, &info);
 
-	Logger_PrintFrame(&str, addr, (uintptr_t)info.dli_saddr, info.dli_sname, info.dli_fname);
-	String_AppendString(trace, &str);
+	s.dli_sname = NULL;
+	s.dli_fname = NULL;
+	dladdr((void*)addr, &s);
+
+	Logger_PrintFrame(&str, addr, (uintptr_t)s.dli_saddr, s.dli_sname, s.dli_fname);
+	String_AppendString((String*)arg, &str);
 	Logger_Log(&str);
     return _URC_NO_REASON;
 }
@@ -354,20 +356,17 @@ void Logger_Backtrace(String* trace, void* ctx) {
 	String str; char strBuffer[384];
 	void* addrs[40];
 	int i, frames;
-	char** strings;
-	uintptr_t addr;
-	Dl_info info;
+	Dl_info s;
 
 	frames = backtrace(addrs, 40);
 	for (i = 0; i < frames; i++) {
-		addr = (uintptr_t)addrs[i];
 		String_InitArray(str, strBuffer);
 
-		info.dli_sname = NULL;
-		info.dli_fname = NULL;
-		dladdr(addr, &info);
+		s.dli_sname = NULL;
+		s.dli_fname = NULL;
+		dladdr(addrs[i], &s);
 
-		Logger_PrintFrame(&str, addr, (uintptr_t)info.dli_saddr, info.dli_sname, info.dli_fname);
+		Logger_PrintFrame(&str, (uintptr_t)addrs[i], (uintptr_t)s.dli_saddr, s.dli_sname, s.dli_fname);
 		String_AppendString(trace, &str);
 		Logger_Log(&str);
 	}
@@ -584,10 +583,110 @@ static void Logger_DumpMisc(void* ctx) {
 
 	close(fd);
 }
+#elif defined CC_BUILD_OSX
+#include <mach-o/dyld.h>
+
+static void Logger_DumpMisc(void* ctx) {
+	static const String modules = String_FromConst("-- modules --\n");
+	static const String newLine = String_FromConst(_NL);
+	uint32_t i, count;
+	const char* path;
+	String str;
+	
+	Logger_Log(&modules);
+	count = _dyld_image_count();
+	/* dumps absolute path of each module */
+
+	for (i = 0; i < count; i++) {
+		path = _dyld_get_image_name(i);
+		if (!path) continue;
+
+		str = String_FromReadonly(path);
+		Logger_Log(&str);
+		Logger_Log(&newLine);
+	}
+}
 #else
 static void Logger_DumpMisc(void* ctx) { }
 #endif
 #endif
+
+
+/*########################################################################################################################*
+*------------------------------------------------Module/Memory map handling-----------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_WIN
+static BOOL CALLBACK Logger_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
+	String str; char strBuffer[256];
+	uintptr_t beg, end;
+
+	beg = base; end = base + (size - 1);
+	String_InitArray(str, strBuffer);
+
+	String_Format3(&str, "%c = %x-%x\r\n", name, &beg, &end);
+	Logger_Log(&str);
+	return true;
+}
+
+static void Logger_DumpMisc(void* ctx) {
+	static const String modules = String_FromConst("-- modules --\r\n");
+	HANDLE process = GetCurrentProcess();
+
+	Logger_Log(&modules);
+	EnumerateLoadedModules(process, Logger_DumpModule, NULL);
+}
+
+#elif defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+static void Logger_DumpMisc(void* ctx) {
+	static const String memMap = String_FromConst("-- memory map --\n");
+	String str; char strBuffer[320];
+	int n, fd;
+
+	Logger_Log(&memMap);
+	/* dumps all known ranges of memory */
+	fd = open("/proc/self/maps", O_RDONLY);
+	if (fd < 0) return;
+	String_InitArray(str, strBuffer);
+
+	while ((n = read(fd, str.buffer, str.capacity)) > 0) {
+		str.length = n;
+		Logger_Log(&str);
+	}
+
+	close(fd);
+}
+#elif defined CC_BUILD_OSX
+#include <mach-o/dyld.h>
+
+static void Logger_DumpMisc(void* ctx) {
+	static const String modules = String_FromConst("-- modules --\n");
+	static const String newLine = String_FromConst(_NL);
+	uint32_t i, count;
+	const char* path;
+	String str;
+	
+	/* TODO: Add Logger_LogRaw / Logger_LogConst too */
+	Logger_Log(&modules);
+	count = _dyld_image_count();
+	/* dumps absolute path of each module */
+
+	for (i = 0; i < count; i++) {
+		path = _dyld_get_image_name(i);
+		if (!path) continue;
+
+		str = String_FromReadonly(path);
+		Logger_Log(&str);
+		Logger_Log(&newLine);
+	}
+}
+#else
+static void Logger_DumpMisc(void* ctx) { }
+#endif
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Error handling-----------------------------------------------------*
@@ -699,8 +798,8 @@ void Logger_Hook(void) {
 }
 
 void Logger_Abort2(ReturnCode result, const char* raw_msg) {
-#ifdef CC_BUILD_OPENBSD
-	/* getcontext is absent on OpenBSD */
+#if defined CC_BUILD_OPENBSD || defined CC_BUILD_ANDROID
+	/* getcontext is absent on OpenBSD and Android */
 	Logger_AbortCommon(result, raw_msg, NULL);
 #else
 	ucontext_t ctx;
