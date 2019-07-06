@@ -28,7 +28,7 @@ CLANGOSX_PATH=/usr/bin/clang/osx
 # to simplify stuff
 ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -w"
 WIN32_FLAGS="-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN"
-WIN64_FLAGS="-mwindows"
+WIN64_FLAGS="-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN"
 
 # -----------------------------
 build_win32() {
