@@ -388,6 +388,31 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 /*########################################################################################################################*
 *--------------------------------------------------Native implementation--------------------------------------------------*
 *#########################################################################################################################*/
+static uint32_t bufferSize;
+
+/* Allocates initial data buffer to store response contents */
+static void Http_BufferInit(struct HttpRequest* req) {
+	http_curProgress = 0;
+	bufferSize = req->ContentLength ? req->ContentLength : 1;
+	req->Data  = (uint8_t*)Mem_Alloc(bufferSize, 1, "http get data");
+	req->Size  = 0;
+}
+
+/* Ensures data buffer has enough space left to append amount bytes, reallocates if not */
+static void Http_BufferEnsure(struct HttpRequest* req, uint32_t amount) {
+	uint32_t newSize = req->Size + amount;
+	if (newSize <= bufferSize) return;
+
+	bufferSize = newSize;
+	req->Data  = (uint8_t*)Mem_Realloc(req->Data, newSize, 1, "http inc data");
+}
+
+/* Increases size and updates current progress */
+static void Http_BufferExpanded(struct HttpRequest* req, uint32_t read) {
+	req->Size += read;
+	if (req->ContentLength) http_curProgress = (int)(100.0f * req->Size / req->ContentLength);
+}
+
 #if defined CC_BUILD_WININET
 static HINTERNET hInternet;
 /* TODO: Test last modified and etag even work */
@@ -540,37 +565,17 @@ static ReturnCode Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle)
 
 /* Downloads the data/contents of a HTTP response */
 static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
-	uint8_t* buffer;
-	uint32_t size, totalRead;
 	DWORD read, avail;
-	BOOL success;
-	
-	http_curProgress = 0;
-	size      = req->ContentLength ? req->ContentLength : 1;
-	buffer    = (uint8_t*)Mem_Alloc(size, 1, "http get data");
-	totalRead = 0;
-
-	req->Data = buffer;
-	req->Size = 0;
+	Http_BufferInit(req);
 
 	for (;;) {
 		if (!InternetQueryDataAvailable(handle, &avail, 0, 0)) break;
 		if (!avail) break;
+		Http_BufferEnsure(req, avail);
 
-		/* expand if buffer is too small (some servers don't give content length) */
-		if (totalRead + avail > size) {
-			size   = totalRead + avail;
-			buffer = (uint8_t*)Mem_Realloc(buffer, size, 1, "http inc data");
-			req->Data = buffer;
-		}
-
-		success = InternetReadFile(handle, &buffer[totalRead], avail, &read);
-		if (!success) return GetLastError();
+		if (!InternetReadFile(handle, &req->Data[req->Size], avail, &read)) return GetLastError();
 		if (!read) break;
-
-		totalRead += read;
-		if (req->ContentLength) http_curProgress = (int)(100.0f * totalRead / size);
-		req->Size += read;
+		Http_BufferExpanded(req, read);
 	}
 
  	http_curProgress = 100;
@@ -622,12 +627,6 @@ static void Http_SysInit(void) {
 	if (!curl) Logger_Abort("Failed to init easy curl");
 }
 
-/* Updates progress of current download */
-static int Http_UpdateProgress(void* ptr, double total, double received, double a, double b) {
-	if (total) http_curProgress = (int)(100 * received / total);
-	return 0;
-}
-
 static struct curl_slist* headers_list;
 static void Http_AddHeader(const char* key, const String* value) {
 	String tmp; char tmpBuffer[1024];
@@ -641,10 +640,7 @@ static void Http_AddHeader(const char* key, const String* value) {
 /* Processes a HTTP header downloaded from the server */
 static size_t Http_ProcessHeader(char *buffer, size_t size, size_t nitems, void* userdata) {
 	struct HttpRequest* req = (struct HttpRequest*)userdata;
-	String line;
-
-	if (size != 1) return size * nitems; /* non byte header */
-	line = String_Init(buffer, nitems, nitems);
+	String line = String_Init(buffer, nitems, nitems);
 
 	/* line usually has \r\n at end */
 	if (line.length && line.buffer[line.length - 1] == '\n') line.length--;
@@ -654,27 +650,15 @@ static size_t Http_ProcessHeader(char *buffer, size_t size, size_t nitems, void*
 	return nitems;
 }
 
-static int curlBufferSize;
 /* Processes a chunk of data downloaded from the web server */
 static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, void* userdata) {
 	struct HttpRequest* req = (struct HttpRequest*)userdata;
-	uint8_t* dst;
 
-	if (!curlBufferSize) {
-		curlBufferSize = req->ContentLength ? req->ContentLength : 1;
-		req->Data = (uint8_t*)Mem_Alloc(curlBufferSize, 1, "http get data");
-		req->Size = 0;
-	}
+	if (!bufferSize) Http_BufferInit(req);
+	Http_BufferEnsure(req, nitems);
 
-	/* expand buffer if needed */
-	if (req->Size + nitems > curlBufferSize) {
-		curlBufferSize = req->Size + nitems;
-		req->Data      = (uint8_t*)Mem_Realloc(req->Data, curlBufferSize, 1, "http inc data");
-	}
-
-	dst = (uint8_t*)req->Data + req->Size;
-	Mem_Copy(dst, buffer, nitems);
-	req->Size  += nitems;
+	Mem_Copy(&req->Data[req->Size], buffer, nitems);
+	Http_BufferExpanded(req, nitems);
 	return nitems;
 }
 
@@ -682,9 +666,6 @@ static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, void* u
 static void Http_SetCurlOpts(struct HttpRequest* req) {
 	curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-
-	curl_easy_setopt(curl, CURLOPT_NOPROGRESS,       0L);
-	curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, Http_UpdateProgress);
 
 	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_ProcessHeader);
 	curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
@@ -720,7 +701,7 @@ static ReturnCode Http_SysDo(struct HttpRequest* req) {
 		HttpRequest_Free(req);
 	}
 
-	curlBufferSize = 0;
+	bufferSize = 0;
 	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
 	res = curl_easy_perform(curl);
 	http_curProgress = 100;

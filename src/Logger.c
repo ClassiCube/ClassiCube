@@ -377,7 +377,7 @@ void Logger_Backtrace(String* trace, void* ctx) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------Info dumping------------------------------------------------------*
+*-----------------------------------------------------CPU registers-------------------------------------------------------*
 *#########################################################################################################################*/
 /* Unfortunately, operating systems vary wildly in how they name and access registers for dumping */
 /* So this is the simplest way to avoid duplicating code on each platform */
@@ -432,7 +432,6 @@ String_Format2(&str, "pc=%x nc=%x" _NL,             REG_GET(pc,PC), REG_GET(npc,
 
 #if defined CC_BUILD_WEB
 static void Logger_DumpRegisters(void* ctx) { }
-static void Logger_DumpMisc(void* ctx) { }
 #elif defined CC_BUILD_WIN
 static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[512];
