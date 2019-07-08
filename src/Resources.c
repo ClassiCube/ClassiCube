@@ -25,7 +25,7 @@ CC_NOINLINE static struct ResourceTexture* Resources_FindTex(const String* name)
 
 	for (i = 0; i < Array_Elems(Resources_Textures); i++) {
 		tex = &Resources_Textures[i];
-		if (String_CaselessEqualsConst(name, tex->Filename)) return tex;
+		if (String_CaselessEqualsConst(name, tex->filename)) return tex;
 	}
 	return NULL;
 }
@@ -37,12 +37,12 @@ static void Resources_CheckMusic(void) {
 
 	for (i = 0; i < Array_Elems(Resources_Music); i++) {
 		path.length = 0;
-		String_Format1(&path, "audio/%c", Resources_Music[i].Name);
+		String_Format1(&path, "audio/%c", Resources_Music[i].name);
 
-		Resources_Music[i].Downloaded = File_Exists(&path);
-		if (Resources_Music[i].Downloaded) continue;
+		Resources_Music[i].downloaded = File_Exists(&path);
+		if (Resources_Music[i].downloaded) continue;
 
-		Resources_Size += Resources_Music[i].Size;
+		Resources_Size += Resources_Music[i].size;
 		Resources_Count++;
 	}
 }
@@ -54,7 +54,7 @@ static void Resources_CheckSounds(void) {
 
 	for (i = 0; i < Array_Elems(Resources_Sounds); i++) {
 		path.length = 0;
-		String_Format1(&path, "audio/%c.wav", Resources_Sounds[i].Name);
+		String_Format1(&path, "audio/%c.wav", Resources_Sounds[i].name);
 
 		if (File_Exists(&path)) continue;
 		Sounds_AllExist = false;
@@ -104,7 +104,7 @@ void Resources_CheckExistence(void) {
 	if (Textures_AllExist) return;
 	for (i = 0; i < Array_Elems(Resources_Files); i++) {
 		Resources_Count++;
-		Resources_Size += Resources_Files[i].Size;
+		Resources_Size += Resources_Files[i].size;
 	}
 }
 
@@ -175,10 +175,10 @@ struct ResourceMusic Resources_Music[7] = {
 *---------------------------------------------------------Zip writer------------------------------------------------------*
 *#########################################################################################################################*/
 static ReturnCode ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture* e) {
-	String name = String_FromReadonly(e->Filename);
+	String name = String_FromReadonly(e->filename);
 	uint8_t header[30 + STRING_SIZE];
 	ReturnCode res;
-	if ((res = s->Position(s, &e->Offset))) return res;
+	if ((res = s->Position(s, &e->offset))) return res;
 
 	Stream_SetU32_LE(&header[0], 0x04034b50);   /* signature */
 	Stream_SetU16_LE(&header[4],  20);          /* version needed */
@@ -187,9 +187,9 @@ static ReturnCode ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture*
 	Stream_SetU16_LE(&header[10], 0);           /* last modified */
 	Stream_SetU16_LE(&header[12], 0);           /* last modified */
 	
-	Stream_SetU32_LE(&header[14], e->Crc32);    /* CRC32 */
-	Stream_SetU32_LE(&header[18], e->Size);     /* Compressed size */
-	Stream_SetU32_LE(&header[22], e->Size);     /* Uncompressed size */
+	Stream_SetU32_LE(&header[14], e->crc32);    /* CRC32 */
+	Stream_SetU32_LE(&header[18], e->size);     /* Compressed size */
+	Stream_SetU32_LE(&header[22], e->size);     /* Uncompressed size */
 	 
 	Stream_SetU16_LE(&header[26], name.length); /* name length */
 	Stream_SetU16_LE(&header[28], 0);           /* extra field length */
@@ -199,7 +199,7 @@ static ReturnCode ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture*
 }
 
 static ReturnCode ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture* e) {
-	String name = String_FromReadonly(e->Filename);
+	String name = String_FromReadonly(e->filename);
 	uint8_t header[46 + STRING_SIZE];
 	struct DateTime now;
 	int modTime, modDate;
@@ -216,9 +216,9 @@ static ReturnCode ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture
 	Stream_SetU16_LE(&header[12], modTime);     /* last modified */
 	Stream_SetU16_LE(&header[14], modDate);     /* last modified */
 
-	Stream_SetU32_LE(&header[16], e->Crc32);    /* CRC32 */
-	Stream_SetU32_LE(&header[20], e->Size);     /* compressed size */
-	Stream_SetU32_LE(&header[24], e->Size);     /* uncompressed size */
+	Stream_SetU32_LE(&header[16], e->crc32);    /* CRC32 */
+	Stream_SetU32_LE(&header[20], e->size);     /* compressed size */
+	Stream_SetU32_LE(&header[24], e->size);     /* uncompressed size */
 
 	Stream_SetU16_LE(&header[28], name.length); /* name length */
 	Stream_SetU16_LE(&header[30], 0);           /* extra field length */
@@ -226,7 +226,7 @@ static ReturnCode ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture
 	Stream_SetU16_LE(&header[34], 0);           /* disk number */
 	Stream_SetU16_LE(&header[36], 0);           /* internal attributes */
 	Stream_SetU32_LE(&header[38], 0);           /* external attributes */
-	Stream_SetU32_LE(&header[42], e->Offset);   /* local header offset */
+	Stream_SetU32_LE(&header[42], e->offset);   /* local header offset */
 
 	Mem_Copy(&header[46], name.buffer, name.length);
 	return Stream_Write(s, header, 46 + name.length);
@@ -247,15 +247,15 @@ static ReturnCode ZipPatcher_EndOfCentralDir(struct Stream* s, uint32_t centralD
 }
 
 static ReturnCode ZipPatcher_FixupLocalFile(struct Stream* s, struct ResourceTexture* e) {
-	String name = String_FromReadonly(e->Filename);
+	String name = String_FromReadonly(e->filename);
 	uint8_t tmp[2048];
 	uint32_t dataBeg, dataEnd;
 	uint32_t i, crc, toRead, read;
 	ReturnCode res;
 
-	dataBeg = e->Offset + 30 + name.length;
+	dataBeg = e->offset + 30 + name.length;
 	if ((res = s->Position(s, &dataEnd))) return res;
-	e->Size = dataEnd - dataBeg;
+	e->size = dataEnd - dataBeg;
 
 	/* work out the CRC 32 */
 	crc = 0xffffffffUL;
@@ -272,18 +272,18 @@ static ReturnCode ZipPatcher_FixupLocalFile(struct Stream* s, struct ResourceTex
 			crc = Utils_Crc32Table[(crc ^ tmp[i]) & 0xFF] ^ (crc >> 8);
 		}
 	}
-	e->Crc32 = crc ^ 0xffffffffUL;
+	e->crc32 = crc ^ 0xffffffffUL;
 
 	/* then fixup the header */
-	if ((res = s->Seek(s, e->Offset)))      return res;
+	if ((res = s->Seek(s, e->offset)))      return res;
 	if ((res = ZipPatcher_LocalFile(s, e))) return res;
 	return s->Seek(s, dataEnd);
 }
 
 static ReturnCode ZipPatcher_WriteData(struct Stream* dst, struct ResourceTexture* tex, const uint8_t* data, uint32_t len) {
 	ReturnCode res;
-	tex->Size  = len;
-	tex->Crc32 = Utils_CRC32(data, len);
+	tex->size  = len;
+	tex->crc32 = Utils_CRC32(data, len);
 
 	res = ZipPatcher_LocalFile(dst, tex);
 	if (res) return res;
@@ -296,8 +296,8 @@ static ReturnCode ZipPatcher_WriteZipEntry(struct Stream* src, struct ResourceTe
 	struct Stream* dst = (struct Stream*)state->Obj;
 	ReturnCode res;
 
-	tex->Size  = state->_curEntry->UncompressedSize;
-	tex->Crc32 = state->_curEntry->CRC32;
+	tex->size  = state->_curEntry->UncompressedSize;
+	tex->crc32 = state->_curEntry->CRC32;
 	res = ZipPatcher_LocalFile(dst, tex);
 	if (res) return res;
 
@@ -371,7 +371,7 @@ static ReturnCode ClassicPatcher_ExtractFiles(struct Stream* s) {
 	struct ZipState zip;
 	struct Stream src;
 
-	Stream_ReadonlyMemory(&src, Resources_Files[0].Data, Resources_Files[0].Len);
+	Stream_ReadonlyMemory(&src, Resources_Files[0].data, Resources_Files[0].len);
 	Zip_Init(&zip, &src);
 
 	zip.Obj = s;
@@ -381,7 +381,7 @@ static ReturnCode ClassicPatcher_ExtractFiles(struct Stream* s) {
 }
 
 /* the x,y of tiles in terrain.png which get patched */
-static struct TilePatch { const char* Name; uint8_t X1,Y1, X2,Y2; } modern_tiles[12] = {
+static struct TilePatch { const char* name; uint8_t x1,y1, x2,y2; } modern_tiles[12] = {
 	{ "assets/minecraft/textures/blocks/sandstone_bottom.png", 9,3 },
 	{ "assets/minecraft/textures/blocks/sandstone_normal.png", 9,2 },
 	{ "assets/minecraft/textures/blocks/sandstone_top.png", 9,1, },
@@ -399,7 +399,7 @@ static struct TilePatch { const char* Name; uint8_t X1,Y1, X2,Y2; } modern_tiles
 CC_NOINLINE static struct TilePatch* ModernPatcher_GetTile(const String* path) {
 	int i;
 	for (i = 0; i < Array_Elems(modern_tiles); i++) {
-		if (String_CaselessEqualsConst(path, modern_tiles[i].Name)) return &modern_tiles[i];
+		if (String_CaselessEqualsConst(path, modern_tiles[i].name)) return &modern_tiles[i];
 	}
 	return NULL;
 }
@@ -409,11 +409,11 @@ static ReturnCode ModernPatcher_PatchTile(struct Stream* data, struct TilePatch*
 	ReturnCode res;
 
 	if ((res = Png_Decode(&bmp, data))) return res;
-	Bitmap_CopyBlock(0, 0, tile->X1 * 16, tile->Y1 * 16, &bmp, &terrainBmp, 16);
+	Bitmap_CopyBlock(0, 0, tile->x1 * 16, tile->y1 * 16, &bmp, &terrainBmp, 16);
 
 	/* only quartz needs copying to two tiles */
-	if (tile->Y2) {
-		Bitmap_CopyBlock(0, 0, tile->X2 * 16, tile->Y2 * 16, &bmp, &terrainBmp, 16);
+	if (tile->y2) {
+		Bitmap_CopyBlock(0, 0, tile->x2 * 16, tile->y2 * 16, &bmp, &terrainBmp, 16);
 	}
 
 	Mem_Free(bmp.Scan0);
@@ -476,7 +476,7 @@ static ReturnCode ModernPatcher_ExtractFiles(struct Stream* s) {
 	struct ZipState zip;
 	struct Stream src;
 
-	Stream_ReadonlyMemory(&src, Resources_Files[1].Data, Resources_Files[1].Len);
+	Stream_ReadonlyMemory(&src, Resources_Files[1].data, Resources_Files[1].len);
 	Zip_Init(&zip, &src);
 
 	zip.Obj = s;
@@ -498,7 +498,7 @@ static ReturnCode TexPatcher_NewFiles(struct Stream* s) {
 
 	/* make ClassiCube gui.png */
 	entry = Resources_FindTex(&guiPng);
-	res   = ZipPatcher_WriteData(s, entry, Resources_Files[3].Data, Resources_Files[3].Len);
+	res   = ZipPatcher_WriteData(s, entry, Resources_Files[3].data, Resources_Files[3].len);
 
 	return res;
 }
@@ -514,7 +514,7 @@ static ReturnCode TexPatcher_Terrain(struct Stream* s) {
 	struct Stream src;
 	ReturnCode res;
 
-	Stream_ReadonlyMemory(&src, Resources_Files[2].Data, Resources_Files[2].Len);
+	Stream_ReadonlyMemory(&src, Resources_Files[2].data, Resources_Files[2].len);
 	if ((res = Png_Decode(&bmp, &src))) return res;
 
 	TexPatcher_PatchTile(&bmp,  0,0, 3,3);
@@ -568,8 +568,8 @@ static void TexPatcher_MakeDefaultZip(void) {
 	}
 
 	for (i = 0; i < Array_Elems(Resources_Files); i++) {
-		Mem_Free(Resources_Files[i].Data);
-		Resources_Files[i].Data = NULL;
+		Mem_Free(Resources_Files[i].data);
+		Resources_Files[i].data = NULL;
 	}
 }
 
@@ -645,7 +645,7 @@ static void SoundPatcher_Save(struct ResourceSound* sound, struct HttpRequest* r
 
 	Stream_ReadonlyMemory(&src, req->Data, req->Size);
 	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "audio/%c.wav", sound->Name);
+	String_Format1(&path, "audio/%c.wav", sound->name);
 
 	res = Stream_CreateFile(&dst, &path);
 	if (res) { Logger_Warn(res, "creating .wav file"); return; }
@@ -665,7 +665,7 @@ static void MusicPatcher_Save(struct ResourceMusic* music, struct HttpRequest* r
 	ReturnCode res;
 
 	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "audio/%c", music->Name);
+	String_Format1(&path, "audio/%c", music->name);
 
 	res = Stream_WriteAllTo(&path, req->Data, req->Size);
 	if (res) Logger_Warn(res, "saving music file");
@@ -704,18 +704,18 @@ void Fetcher_Run(void) {
 	for (i = 0; i < Array_Elems(Resources_Files); i++) {
 		if (Textures_AllExist) continue;
 
-		id  = String_FromReadonly(Resources_Files[i].Name);
-		url = String_FromReadonly(Resources_Files[i].Url);
+		id  = String_FromReadonly(Resources_Files[i].name);
+		url = String_FromReadonly(Resources_Files[i].url);
 		Http_AsyncGetData(&url, false, &id);
 	}
 
 	for (i = 0; i < Array_Elems(Resources_Music); i++) {
-		if (Resources_Music[i].Downloaded) continue;
-		Fetcher_DownloadAudio(Resources_Music[i].Name,  Resources_Music[i].Hash);
+		if (Resources_Music[i].downloaded) continue;
+		Fetcher_DownloadAudio(Resources_Music[i].name,  Resources_Music[i].hash);
 	}
 	for (i = 0; i < Array_Elems(Resources_Sounds); i++) {
 		if (Sounds_AllExist) continue;
-		Fetcher_DownloadAudio(Resources_Sounds[i].Name, Resources_Sounds[i].Hash);
+		Fetcher_DownloadAudio(Resources_Sounds[i].name, Resources_Sounds[i].hash);
 	}
 }
 
@@ -746,28 +746,28 @@ CC_NOINLINE static bool Fetcher_Get(const String* id, struct HttpRequest* req) {
 }
 
 static void Fetcher_CheckFile(struct ResourceFile* file) {
-	String id = String_FromReadonly(file->Name);
+	String id = String_FromReadonly(file->name);
 	struct HttpRequest req;
 	if (!Fetcher_Get(&id, &req)) return;
 	
-	file->Downloaded = true;
-	file->Data       = req.Data;
-	file->Len        = req.Size;
+	file->downloaded = true;
+	file->data       = req.Data;
+	file->len        = req.Size;
 	/* don't free request */
 }
 
 static void Fetcher_CheckMusic(struct ResourceMusic* music) {
-	String id = String_FromReadonly(music->Name);
+	String id = String_FromReadonly(music->name);
 	struct HttpRequest req;
 	if (!Fetcher_Get(&id, &req)) return;
 
-	music->Downloaded = true;
+	music->downloaded = true;
 	MusicPatcher_Save(music, &req);
 	HttpRequest_Free(&req);
 }
 
 static void Fetcher_CheckSound(struct ResourceSound* sound) {
-	String id = String_FromReadonly(sound->Name);
+	String id = String_FromReadonly(sound->name);
 	struct HttpRequest req;
 	if (!Fetcher_Get(&id, &req)) return;
 
@@ -781,13 +781,13 @@ void Fetcher_Update(void) {
 	int i;
 
 	for (i = 0; i < Array_Elems(Resources_Files); i++) {
-		if (Resources_Files[i].Downloaded) continue;
+		if (Resources_Files[i].downloaded) continue;
 		Fetcher_CheckFile(&Resources_Files[i]);
 	}
-	if (Resources_Files[3].Data) TexPatcher_MakeDefaultZip();
+	if (Resources_Files[3].data) TexPatcher_MakeDefaultZip();
 
 	for (i = 0; i < Array_Elems(Resources_Music); i++) {
-		if (Resources_Music[i].Downloaded) continue;
+		if (Resources_Music[i].downloaded) continue;
 		Fetcher_CheckMusic(&Resources_Music[i]);
 	}
 

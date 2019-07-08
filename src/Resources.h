@@ -11,30 +11,30 @@
 #define FLAG_TERRAIN 0x08 /* file depends on patched terrain.png */
 
 extern struct ResourceFile {
-	const char* Name;
-	const char* Url;
-	uint16_t Size;
-	bool Downloaded;
+	const char* name;
+	const char* url;
+	uint16_t size;
+	bool downloaded;
 	/* downloaded archive */
-	uint8_t* Data; uint32_t Len;
+	uint8_t* data; uint32_t len;
 } Resources_Files[4];
 
 extern struct ResourceTexture {
-	const char* Filename;
+	const char* filename;
 	/* zip data */
-	uint32_t Size, Offset, Crc32;
+	uint32_t size, offset, crc32;
 } Resources_Textures[20];
 
 extern struct ResourceSound {
-	const char* Name;
-	const char* Hash;
+	const char* name;
+	const char* hash;
 } Resources_Sounds[59];
 
 extern struct ResourceMusic {
-	const char* Name;
-	const char* Hash;
-	uint16_t Size;
-	bool Downloaded;
+	const char* name;
+	const char* hash;
+	uint16_t size;
+	bool downloaded;
 } Resources_Music[7];
 
 /* Whether all textures exist. */

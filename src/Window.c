@@ -2771,6 +2771,33 @@ void Window_DisableRawMouse(void) {
 }
 #endif
 
+/*########################################################################################################################*
+*------------------------------------------------Android activity window-------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_ANDROID
+#include <android_native_app_glue.h>
+#include <android/native_activity.h>
+static ANativeWindow* win_handle;
+static bool win_rawMouse;
+
+void Window_SetVisible(bool visible) { }
+int Window_GetWindowState(void) { return WINDOW_STATE_FULLSCREEN; }
+void Window_EnterFullscreen(void) { }
+void Window_ExitFullscreen(void) { }
+
+void Window_SetSize(int width, int height) { }
+
+void Window_EnableRawMouse(void) {
+	Window_DefaultEnableRawMouse();
+	win_rawMouse = true; 
+}
+void Window_UpdateRawMouse(void) { }
+void Window_DisableRawMouse(void) {
+	Window_DefaultDisableRawMouse();
+	win_rawMouse = false; 
+}
+#endif
+
 
 #ifdef CC_BUILD_GL
 /*########################################################################################################################*

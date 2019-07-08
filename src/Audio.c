@@ -14,7 +14,8 @@
 
 int Audio_SoundsVolume, Audio_MusicVolume;
 
-#ifdef CC_BUILD_WEB
+/* TODO: Fix for android */
+#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
 /* Can't use mojang's sounds or music assets, so just stub everything out */
 static void Audio_Init(void) { }
 static void Audio_Free(void) { }

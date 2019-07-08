@@ -2224,9 +2224,6 @@ static void ClassicOptionsScreen_SetHacks(const String* v) {
 }
 
 static void ClassicOptionsScreen_ContextRecreated(void* screen) {
-	static const String title = String_FromConst("Controls...");
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-
 	static const struct MenuOptionDesc buttons[9] = {
 		{ -1, -150, "Music",           MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetMusic,    ClassicOptionsScreen_SetMusic },
@@ -2248,6 +2245,8 @@ static void ClassicOptionsScreen_ContextRecreated(void* screen) {
 		{ 0,   60, "Hacks enabled", MenuOptionsScreen_Bool,
 			ClassicOptionsScreen_GetHacks,   ClassicOptionsScreen_SetHacks }
 	};
+	static const String title   = String_FromConst("Controls...");
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 
 	MenuOptionsScreen_MakeButtons(s, buttons, Array_Elems(buttons));
 	Menu_Button(s, 9, &s->buttons[9], 400, &title, &s->titleFont, Menu_SwitchKeysClassic,
@@ -2309,9 +2308,6 @@ static void EnvSettingsScreen_GetEdgeHeight(String* v) { String_AppendInt(v, Env
 static void EnvSettingsScreen_SetEdgeHeight(const String* v) { Env_SetEdgeHeight(Menu_Int(v)); }
 
 static void EnvSettingsScreen_ContextRecreated(void* screen) {
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	struct Widget** widgets = s->widgets;
-
 	static const struct MenuOptionDesc buttons[10] = {
 		{ -1, -150, "Clouds col",    MenuOptionsScreen_Input,
 			EnvSettingsScreen_GetCloudsCol,    EnvSettingsScreen_SetCloudsCol },
@@ -2335,6 +2331,8 @@ static void EnvSettingsScreen_ContextRecreated(void* screen) {
 		{ 1,   50, "Water level",     MenuOptionsScreen_Input,
 			EnvSettingsScreen_GetEdgeHeight,   EnvSettingsScreen_SetEdgeHeight }
 	};
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	struct Widget** widgets     = s->widgets;
 
 	MenuOptionsScreen_MakeButtons(s, buttons, Array_Elems(buttons));
 	Menu_Back(s, 10, &s->buttons[10], "Done", &s->titleFont, Menu_SwitchOptions);
@@ -2414,9 +2412,6 @@ static void GraphicsOptionsScreen_SetMipmaps(const String* v) {
 }
 
 static void GraphicsOptionsScreen_ContextRecreated(void* screen) {
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	struct Widget** widgets = s->widgets;
-
 	static const struct MenuOptionDesc buttons[6] = {
 		{ -1, -50, "FPS mode",          MenuOptionsScreen_Enum,
 			MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS },
@@ -2432,6 +2427,8 @@ static void GraphicsOptionsScreen_ContextRecreated(void* screen) {
 		{ 1,  50, "Mipmaps", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps }
 	};
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	struct Widget** widgets     = s->widgets;
 
 	MenuOptionsScreen_MakeButtons(s, buttons, Array_Elems(buttons));
 	Menu_Back(s, 6, &s->buttons[6], "Done", &s->titleFont, Menu_SwitchOptions);
@@ -2521,9 +2518,6 @@ static void GuiOptionsScreen_SetUseFont(const String* v) {
 }
 
 static void GuiOptionsScreen_ContextRecreated(void* screen) {
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	struct Widget** widgets = s->widgets;
-
 	static const struct MenuOptionDesc buttons[10] = {
 		{ -1, -150, "Black text shadows", MenuOptionsScreen_Bool,
 			GuiOptionsScreen_GetShadows,   GuiOptionsScreen_SetShadows },
@@ -2547,6 +2541,8 @@ static void GuiOptionsScreen_ContextRecreated(void* screen) {
 		{ 1,   50, "Select system font", Menu_SwitchFont,
 			NULL,                          NULL }
 	};
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	struct Widget** widgets     = s->widgets;
 
 	MenuOptionsScreen_MakeButtons(s, buttons, Array_Elems(buttons));
 	Menu_Back(s, 10, &s->buttons[10], "Done", &s->titleFont, Menu_SwitchOptions);
@@ -2669,10 +2665,6 @@ static void HacksSettingsScreen_ContextLost(void* screen) {
 }
 
 static void HacksSettingsScreen_ContextRecreated(void* screen) {
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	struct Widget** widgets = s->widgets;
-	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, HacksSettingsScreen_CheckHacksAllowed);
-
 	static const struct MenuOptionDesc buttons[10] = {
 		{ -1, -150, "Hacks enabled",    MenuOptionsScreen_Bool,
 			HacksSettingsScreen_GetHacks,    HacksSettingsScreen_SetHacks },
@@ -2696,6 +2688,9 @@ static void HacksSettingsScreen_ContextRecreated(void* screen) {
 		{ 1,   50, "Field of view",       MenuOptionsScreen_Input,
 			HacksSettingsScreen_GetFOV,      HacksSettingsScreen_SetFOV },
 	};
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	struct Widget** widgets     = s->widgets;
+	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, HacksSettingsScreen_CheckHacksAllowed);
 
 	MenuOptionsScreen_MakeButtons(s, buttons, Array_Elems(buttons));
 	Menu_Back(s, 10, &s->buttons[10], "Done", &s->titleFont, Menu_SwitchOptions);
@@ -2772,9 +2767,6 @@ static void MiscOptionsScreen_SetSensitivity(const String* v) {
 }
 
 static void MiscOptionsScreen_ContextRecreated(void* screen) {
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	struct Widget** widgets = s->widgets;
-
 	static const struct MenuOptionDesc buttons[8] = {
 		{ -1, -100, "Reach distance", MenuOptionsScreen_Input,
 			MiscOptionsScreen_GetReach,       MiscOptionsScreen_SetReach },
@@ -2794,6 +2786,8 @@ static void MiscOptionsScreen_ContextRecreated(void* screen) {
 		{ 1,   50, "Mouse sensitivity",   MenuOptionsScreen_Input,
 			MiscOptionsScreen_GetSensitivity, MiscOptionsScreen_SetSensitivity }
 	};
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	struct Widget** widgets     = s->widgets;
 
 	MenuOptionsScreen_MakeButtons(s, buttons, Array_Elems(buttons));
 	Menu_Back(s, 8, &s->buttons[8], "Done", &s->titleFont, Menu_SwitchOptions);
@@ -2863,10 +2857,6 @@ static void NostalgiaScreen_SwitchBack(void* a, void* b) {
 }
 
 static void NostalgiaScreen_ContextRecreated(void* screen) {
-	static const String descText = String_FromConst("&eButtons on the right require restarting game");
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	static struct TextWidget desc;
-	
 	static const struct MenuOptionDesc buttons[8] = {
 		{ -1, -150, "Classic hand model",   MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand },
@@ -2886,6 +2876,9 @@ static void NostalgiaScreen_ContextRecreated(void* screen) {
 		{ 1,  -50, "Use server textures", MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetTexs,   NostalgiaScreen_SetTexs },
 	};
+	static const String descText = String_FromConst("&eButtons on the right require restarting game");
+	struct MenuOptionsScreen* s  = (struct MenuOptionsScreen*)screen;
+	static struct TextWidget desc;
 
 	MenuOptionsScreen_MakeButtons(s, buttons, Array_Elems(buttons));
 	Menu_Back(s,  8, &s->buttons[8], "Done", &s->titleFont, NostalgiaScreen_SwitchBack);

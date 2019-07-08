@@ -720,6 +720,97 @@ static void Http_SysFree(void) {
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
 }
+#elif defined CC_BUILD_ANDROID
+#include <android_native_app_glue.h>
+#include "<jni.h>"
+
+static void CallVoidJavaMethod(const char* name, const char* sig, ..) {
+	jmethodID method = env->GetStaticMethodID(clazz_algo, "init", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+}
+
+bool Http_DescribeError(ReturnCode res, String* dst) {
+	jni
+}
+
+static void Http_SysInit(void) { }
+
+static void Http_AddHeader(const char* key, const String* value) {
+	jni
+}
+
+/* Processes a HTTP header downloaded from the server */
+static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpParseHeader(JNIEnv* env, jlcass, jstring header) {
+	String line;
+	const char* src = (*env)->GetStringUTFChars(env, header, NULL);
+	jsize length    = (*env)->GetStringLength(env, header);
+
+	line = String_Init(src, length, length);
+	Http_ParseHeader(req, &line);
+	(*env)->ReleaseStringUTFChars(env, src);
+}
+
+/* Processes a chunk of data downloaded from the web server */
+static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpAppendData(JNIEnv* env, jlcass, jbytearray arr, jint len) {
+	jbyte* src = (*env)->->GetByteArrayElements(env, NULL, 0);
+
+	if (!bufferSize) Http_BufferInit(req);
+	Http_BufferEnsure(req, len);
+
+	Mem_Copy(&req->Data[req->Size], src, len);
+	Http_BufferExpanded(req, len);
+	(*env)->ReleaseByteArrayElements(env, src, JNI_ABORT);
+}
+
+/* Sets general curl options for a request */
+static void Http_SetCurlOpts(struct HttpRequest* req) {
+	curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
+	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+}
+
+static ReturnCode Http_SysDo(struct HttpRequest* req) {
+	String url = String_FromRawArray(req->URL);
+	char urlStr[600];
+	void* post_data = req->Data;
+	long status = 0;
+	CURLcode res;
+
+	curl_easy_reset(curl);
+	headers_list = NULL;
+	Http_SetRequestHeaders(req);
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers_list);
+
+	Http_SetCurlOpts(req);
+	Platform_ConvertString(urlStr, &url);
+	curl_easy_setopt(curl, CURLOPT_URL, urlStr);
+
+	if (req->RequestType == REQUEST_TYPE_HEAD) {
+		curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+	} else if (req->RequestType == REQUEST_TYPE_POST) {
+		curl_easy_setopt(curl, CURLOPT_POST,   1L);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,  req->Size);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS,     req->Data);
+
+		/* per curl docs, we must persist POST data until request finishes */
+		req->Data = NULL;
+		HttpRequest_Free(req);
+	}
+
+	bufferSize = 0;
+	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
+	res = curl_easy_perform(curl);
+	http_curProgress = 100;
+
+	/* non-obsolete is CURLINFO_RESPONSE_CODE */
+	curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &status);
+	req->StatusCode = status;
+
+	curl_slist_free_all(headers_list);
+	/* can free now that request has finished */
+	Mem_Free(post_data);
+	return res;
+}
+
+static void Http_SysFree(void) { }
 #endif
 
 #ifndef CC_BUILD_WEB

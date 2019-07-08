@@ -92,7 +92,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
 
 /* Attempts to set current/working directory to the directory exe file is in */
-static void Platform_DefaultSetCurrent(void) {
+static void SetCurrentToExeDirectory(void) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	int i;
 	ReturnCode res;
@@ -382,6 +382,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	WIN32_FIND_DATA entry;
 	HANDLE find;
 	ReturnCode res;	
+	int i;
 
 	/* Need to append \* to search for files in directory */
 	String_InitArray(path, pathBuffer);
@@ -399,8 +400,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 		TCHAR* src = entry.cFileName;
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
-
-		int i;
+		
 		for (i = 0; i < MAX_PATH && src[i]; i++) {
 			String_Append(&path, Convert_UnicodeToCP437(src[i]));
 		}
@@ -425,13 +425,14 @@ ReturnCode Directory_SetCurrent(const String* path) {
 }
 
 ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
-	FileHandle file; 
+	FileHandle file;
+	FILETIME ft;
+	uint64_t raw;
 	ReturnCode res = File_Open(&file, path);
 	if (res) return res;
 
-	FILETIME ft;
 	if (GetFileTime(file, NULL, NULL, &ft)) {
-		uint64_t raw = ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
+		raw   = ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
 		*time = FileTime_TotalMS(raw);
 	} else {
 		res = GetLastError();
@@ -443,11 +444,12 @@ ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 
 ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
 	FileHandle file;
+	FILETIME ft;
+	uint64_t raw;
 	ReturnCode res = File_Append(&file, path);
 	if (res) return res;
 
-	FILETIME ft;
-	uint64_t raw = 10000 * (time - FILETIME_EPOCH);
+	raw = 10000 * (time - FILETIME_EPOCH);
 	ft.dwLowDateTime  = (uint32_t)raw;
 	ft.dwHighDateTime = (uint32_t)(raw >> 32);
 
@@ -1300,12 +1302,12 @@ static void Font_Init(void) {
 #if defined CC_BUILD_WIN
 	char winFolder[FILENAME_SIZE];
 	TCHAR winTmp[FILENAME_SIZE];
-
+	UINT winLen;
 	/* System folder path may not be C:/Windows */
 	String dirs[1];
 	String_InitArray(dirs[0], winFolder);
 
-	UINT winLen = GetWindowsDirectory(winTmp, FILENAME_SIZE);
+	winLen = GetWindowsDirectory(winTmp, FILENAME_SIZE);
 	if (winLen) {
 		Platform_DecodeString(&dirs[0], winTmp, winLen);
 	} else {
@@ -1856,7 +1858,7 @@ void Platform_Free(void) {
 	WSACleanup();
 	HeapDestroy(heap);
 }
-void Platform_SetDefaultCurrentDirectory(void) { Platform_DefaultSetCurrent(); }
+void Platform_SetDefaultCurrentDirectory(void) { SetCurrentToExeDirectory(); }
 
 static String Platform_NextArg(STRING_REF String* args) {
 	String arg;
@@ -2009,7 +2011,7 @@ void Platform_Init(void) {
 	/* stopwatch always in nanoseconds */
 	sw_freqDiv = 1000;
 }
-void Platform_SetDefaultCurrentDirectory(void) { Platform_DefaultSetCurrent(); }
+void Platform_SetDefaultCurrentDirectory(void) { SetCurrentToExeDirectory(); }
 #elif defined CC_BUILD_OSX
 static void Platform_InitStopwatch(void) {
 	mach_timebase_info_data_t tb = { 0 };
@@ -2029,7 +2031,7 @@ void Platform_Init(void) {
 	/* NOTE: TransformProcessType is OSX 10.3 or later */
 	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
 }
-void Platform_SetDefaultCurrentDirectory(void) { Platform_DefaultSetCurrent(); }
+void Platform_SetDefaultCurrentDirectory(void) { SetCurrentToExeDirectory(); }
 #elif defined CC_BUILD_WEB
 void Platform_Init(void) {
 	EM_ASM( Module['websocket']['subprotocol'] = 'ClassiCube'; );

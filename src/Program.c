@@ -94,9 +94,10 @@ CC_NOINLINE static void ExitMissingArgs(int argsCount, const String* args) {
 	Process_Exit(1);
 }
 
-/* This is used when compiling with MingW without linking to startup files. */
+/* NOTE: This is used when compiling with MingW without linking to startup files. */
 /* The final code produced for "main" is our "main" combined with crt's main. (mingw-w64-crt/crt/gccmain.c) */
-/* This immediately crashes the game on startup. Using a different name fixes. */
+/* This immediately crashes the game on startup. */
+/* Using main_real instead and setting main_real as the entrypoint fixes the crash. */
 #ifdef CC_NOMAIN
 int main_real(int argc, char** argv) {
 #else
@@ -172,3 +173,11 @@ int main(int argc, char** argv) {
 	Process_Exit(0);
 	return 0;
 }
+/* android NDK doesn't let us use regular main */
+#ifdef CC_BUILD_ANDROID
+#include <android_native_app_glue.h>
+void android_main(struct android_app* app) {
+	Window_Handle = app;
+	main(0, NULL);
+}
+#endif
