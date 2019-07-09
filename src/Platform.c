@@ -1694,7 +1694,7 @@ ReturnCode Process_StartShell(void) {
 
 ReturnCode Process_GetExePath(String* path) {
 	char str[600] = { 0 };
-	int len = 600;
+	uint32_t len  = 600;
 	if (_NSGetExecutablePath(str, &len)) return ERR_INVALID_ARGUMENT;
 
 	len = String_CalcLen(str, 600);

@@ -723,11 +723,18 @@ static void Http_SysFree(void) {
 #elif defined CC_BUILD_ANDROID
 #include <android_native_app_glue.h>
 #include <jni.h>
+struct HttpRequest* java_req;
 
 static void CallJavaVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
 	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
 	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
 	(*env)->CallStaticVoidMethodA(env, clazz, method, args);
+}
+
+static int CallJavaInt(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
+	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
+	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
+	return (*env)->CallStaticIntMethodA(env, clazz, method, args);
 }
 
 bool Http_DescribeError(ReturnCode res, String* dst) {
@@ -737,15 +744,22 @@ bool Http_DescribeError(ReturnCode res, String* dst) {
 static void Http_SysInit(void) { }
 
 static void Http_AddHeader(const char* key, const String* value) {
+    String tmp; char tmpBuffer[1024];
 	JavaVM* vm = (JavaVM*)VM_Handle;
 	JNIEnv* env;
 	jvalue args[2];
 
+	String_InitArray_NT(tmp, tmpBuffer);
+	String_Copy(&tmp, value);
+	tmp.buffer[tmp.length] = '\0';
+
 	(*vm)->AttachCurrentThread(vm, &env, NULL);
 	args[0].l = (*env)->NewStringUTF(env, key);
-	jni value
+	args[1].l = (*env)->NewStringUTF(env, tmp.buffer);
 
 	CallJavaVoid(env, "httpSetHeader", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", args);
+	(*env)->DeleteLocalRef(env, args[0].l);
+	(*env)->DeleteLocalRef(env, args[1].l);
 }
 
 /* Processes a HTTP header downloaded from the server */
@@ -755,13 +769,14 @@ static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpParseHeader(JNIEn
 	jsize length    = (*env)->GetStringLength(env, header);
 
 	line = String_Init(src, length, length);
-	Http_ParseHeader(req, &line);
+	Http_ParseHeader(java_req, &line);
 	(*env)->ReleaseStringUTFChars(env, header, src);
 }
 
 /* Processes a chunk of data downloaded from the web server */
 static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpAppendData(JNIEnv* env, jclass c, jbyteArray arr, jint len) {
 	jbyte* src = (*env)->GetByteArrayElements(env, NULL, 0);
+	struct HttpRequest* req = java_req;
 
 	if (!bufferSize) Http_BufferInit(req);
 	Http_BufferEnsure(req, len);
@@ -778,6 +793,8 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 }
 
 static ReturnCode Http_SysDo(struct HttpRequest* req) {
+	static const String userAgent = String_FromConst(GAME_APP_NAME);
+	java_req = req;
 	String url = String_FromRawArray(req->URL);
 	char urlStr[600];
 	void* post_data = req->Data;

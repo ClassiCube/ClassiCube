@@ -450,8 +450,8 @@ static void Logger_PrintRegisters(String* str, void* ctx) {
 	#error "Unknown CPU architecture"
 #endif
 }
-#elif defined CC_BUILD_OSX
-/* See /usr/include/mach/i386/_structs.h */
+#elif defined CC_BUILD_OSX && __DARWIN_UNIX03
+/* See /usr/include/mach/i386/_structs.h (OSX 10.5+) */
 static void Logger_PrintRegisters(String* str, void* ctx) {
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
 #if defined __i386__
@@ -463,6 +463,24 @@ static void Logger_PrintRegisters(String* str, void* ctx) {
 #elif defined __ppc__
 	#define REG_GNUM(num)     &r->__ss.__r##num
 	#define REG_GET(reg, ign) &r->__ss.__##reg
+	Logger_Dump_PPC()
+#else
+	#error "Unknown CPU architecture"
+#endif
+}
+#elif defined CC_BUILD_OSX
+/* See /usr/include/mach/i386/thread_status.h (OSX 10.4) */
+static void Logger_PrintRegisters(String* str, void* ctx) {
+	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+#if defined __i386__
+	#define REG_GET(reg, ign) &r->ss.e##reg
+	Logger_Dump_X86()
+#elif defined __x86_64__
+	#define REG_GET(reg, ign) &r->ss.r##reg
+	Logger_Dump_X64()
+#elif defined __ppc__
+	#define REG_GNUM(num)     &r->ss.r##num
+	#define REG_GET(reg, ign) &r->ss.##reg
 	Logger_Dump_PPC()
 #else
 	#error "Unknown CPU architecture"

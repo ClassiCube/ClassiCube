@@ -1755,7 +1755,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 }
 
 void Window_SetTitle(const String* title) {
-	char str[600];
+	UInt8 str[600];
 	CFStringRef titleCF;
 	int len;
 	
@@ -1809,7 +1809,7 @@ void Clipboard_GetText(String* value) {
 void Clipboard_SetText(const String* value) {
 	PasteboardRef pbRef;
 	CFDataRef cfData;
-	char str[800];
+	UInt8 str[800];
 	int len;
 	OSStatus err;
 
@@ -3044,7 +3044,7 @@ static void GLContext_SetDrawable(void) {
 	GLContext_Check(code, "Attaching GL context");
 }
 
-static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs, bool fullscreen) {
+static void GLContext_GetAttribs(struct GraphicsMode* mode, GLint* attribs, bool fullscreen) {
 	int i = 0;
 
 	if (!mode->IsIndexed) { attribs[i++] = AGL_RGBA; }
@@ -3106,7 +3106,7 @@ static void GLContext_SetFullscreen(void) {
 }
 
 void GLContext_Init(struct GraphicsMode* mode) {
-	int attribs[20];
+	GLint attribs[20];
 	AGLPixelFormat fmt;
 	GDHandle gdevice;
 	OSStatus res;
