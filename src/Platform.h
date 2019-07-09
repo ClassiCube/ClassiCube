@@ -22,13 +22,17 @@ typedef int FileHandle;
 #define UPDATE_FILENAME "update.sh"
 #endif
 
+/* android app and VM handle */
+#ifdef CC_BUILD_ANDROID
+void* App_Handle;
+void* VM_Handle;
+#endif
+
 /* Origin points for when seeking in a file. */
 enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
 /* Number of milliseconds since 01/01/0001 to start of unix time. */
 #define UNIX_EPOCH 62135596800000ULL
 
-/* Newline for console and text files. */
-extern const char* Platform_NewLine;
 extern const ReturnCode ReturnCode_FileShareViolation;
 extern const ReturnCode ReturnCode_FileNotFound;
 extern const ReturnCode ReturnCode_SocketInProgess;

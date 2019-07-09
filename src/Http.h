@@ -42,9 +42,9 @@ struct HttpRequest {
 void HttpRequest_Free(struct HttpRequest* request);
 
 /* Aschronously performs a http GET request to download a skin. */
-/* If url is a skin, this is the same as Http_AsyncGetData. */
-/* If not, instead downloads from http://static.classicube.net/skins/[skinName].png */
-void Http_AsyncGetSkin(const String* id, const String* skinName);
+/* If url is a skin, downloads from there. (if not, http://static.classicube.net/skins/[skinName].png) */
+/* ID of the request is set to skinName. */
+void Http_AsyncGetSkin(const String* skinName);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 void Http_AsyncGetData(const String* url, bool priority, const String* id);
 /* Asynchronously performs a http HEAD request. (e.g. to get Content-Length header) */

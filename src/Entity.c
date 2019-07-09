@@ -710,7 +710,7 @@ static void Player_CheckSkin(struct Player* p) {
 	if (!p->FetchedSkin && e->Model->UsesSkin) {
 		first = Player_FirstOtherWithSameSkinAndFetchedSkin(p);
 		if (!first) {
-			Http_AsyncGetSkin(&skin, &skin);
+			Http_AsyncGetSkin(&skin);
 		} else {
 			Player_CopySkin(p, first);
 		}

@@ -11,6 +11,7 @@
 *.VC.VC.opendb
 
 # Build results
+[Aa]ndroid/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/

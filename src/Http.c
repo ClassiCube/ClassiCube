@@ -722,10 +722,12 @@ static void Http_SysFree(void) {
 }
 #elif defined CC_BUILD_ANDROID
 #include <android_native_app_glue.h>
-#include "<jni.h>"
+#include <jni.h>
 
-static void CallVoidJavaMethod(const char* name, const char* sig, ..) {
-	jmethodID method = env->GetStaticMethodID(clazz_algo, "init", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+static void CallJavaVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
+	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
+	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
+	(*env)->CallStaticVoidMethodA(env, clazz, method, args);
 }
 
 bool Http_DescribeError(ReturnCode res, String* dst) {
@@ -735,30 +737,38 @@ bool Http_DescribeError(ReturnCode res, String* dst) {
 static void Http_SysInit(void) { }
 
 static void Http_AddHeader(const char* key, const String* value) {
-	jni
+	JavaVM* vm = (JavaVM*)VM_Handle;
+	JNIEnv* env;
+	jvalue args[2];
+
+	(*vm)->AttachCurrentThread(vm, &env, NULL);
+	args[0].l = (*env)->NewStringUTF(env, key);
+	jni value
+
+	CallJavaVoid(env, "httpSetHeader", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", args);
 }
 
 /* Processes a HTTP header downloaded from the server */
-static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpParseHeader(JNIEnv* env, jlcass, jstring header) {
+static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpParseHeader(JNIEnv* env, jclass c, jstring header) {
 	String line;
 	const char* src = (*env)->GetStringUTFChars(env, header, NULL);
 	jsize length    = (*env)->GetStringLength(env, header);
 
 	line = String_Init(src, length, length);
 	Http_ParseHeader(req, &line);
-	(*env)->ReleaseStringUTFChars(env, src);
+	(*env)->ReleaseStringUTFChars(env, header, src);
 }
 
 /* Processes a chunk of data downloaded from the web server */
-static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpAppendData(JNIEnv* env, jlcass, jbytearray arr, jint len) {
-	jbyte* src = (*env)->->GetByteArrayElements(env, NULL, 0);
+static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpAppendData(JNIEnv* env, jclass c, jbyteArray arr, jint len) {
+	jbyte* src = (*env)->GetByteArrayElements(env, NULL, 0);
 
 	if (!bufferSize) Http_BufferInit(req);
 	Http_BufferEnsure(req, len);
 
 	Mem_Copy(&req->Data[req->Size], src, len);
 	Http_BufferExpanded(req, len);
-	(*env)->ReleaseByteArrayElements(env, src, JNI_ABORT);
+	(*env)->ReleaseByteArrayElements(env, arr, src, JNI_ABORT);
 }
 
 /* Sets general curl options for a request */
@@ -868,7 +878,7 @@ static void Http_WorkerLoop(void) {
 #define SKIN_SERVER "http://static.classicube.net/skins/"
 #endif
 
-void Http_AsyncGetSkin(const String* id, const String* skinName) {
+void Http_AsyncGetSkin(const String* skinName) {
 	String url; char urlBuffer[STRING_SIZE];
 	String_InitArray(url, urlBuffer);
 
@@ -879,7 +889,7 @@ void Http_AsyncGetSkin(const String* id, const String* skinName) {
 		String_AppendColorless(&url, skinName);
 		String_AppendConst(&url, ".png");
 	}
-	Http_AsyncGetData(&url, false, id);
+	Http_AsyncGetData(&url, false, skinName);
 }
 
 void Http_AsyncGetData(const String* url, bool priority, const String* id) {
