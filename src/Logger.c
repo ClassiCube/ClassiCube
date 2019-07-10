@@ -407,7 +407,7 @@ String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, REG_GNUM(16), REG_GNUM(17
 String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21), REG_GNUM(22), REG_GNUM(23)); \
 String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
 String_Format4(str, "r28=%x r29=%x r30=%x r31=%x" _NL, REG_GNUM(28), REG_GNUM(29), REG_GNUM(30), REG_GNUM(31)); \
-String_Format3(str, "pc =%x lr =%x ctr=%x" _NL,  REG_GET(srr0, SRR0), REG_GET(lr, LR), REG_GET(ctr,CTR));
+String_Format3(str, "pc =%x lr =%x ctr=%x" _NL,  REG_GET_PC(), REG_GET_LR(), REG_GET_CTR());
 
 #define Logger_Dump_ARM32() \
 String_Format3(str, "r0 =%x r1 =%x r2 =%x" _NL, REG_GNUM(0), REG_GNUM(1),  REG_GNUM(2));\
@@ -462,7 +462,9 @@ static void Logger_PrintRegisters(String* str, void* ctx) {
 	Logger_Dump_X64()
 #elif defined __ppc__
 	#define REG_GNUM(num)     &r->__ss.__r##num
-	#define REG_GET(reg, ign) &r->__ss.__##reg
+	#define REG_GET_PC()      &r->__ss.__srr0
+	#define REG_GET_LR()      &r->__ss.__lr
+	#define REG_GET_CTR()     &r->__ss.__ctr
 	Logger_Dump_PPC()
 #else
 	#error "Unknown CPU architecture"
@@ -480,7 +482,9 @@ static void Logger_PrintRegisters(String* str, void* ctx) {
 	Logger_Dump_X64()
 #elif defined __ppc__
 	#define REG_GNUM(num)     &r->ss.r##num
-	#define REG_GET(reg, ign) &r->ss.##reg
+	#define REG_GET_PC()      &r->ss.srr0
+	#define REG_GET_LR()      &r->ss.lr
+	#define REG_GET_CTR()     &r->ss.ctr
 	Logger_Dump_PPC()
 #else
 	#error "Unknown CPU architecture"
@@ -502,9 +506,6 @@ static void Logger_PrintRegisters(String* str, void* ctx) {
 #elif defined __x86_64__
 	#define REG_GET(ign, reg) &r.gregs[REG_R##reg]
 	Logger_Dump_X64()
-#elif defined __PPC__
-	#define REG_GNUM(num)     &r.gregs[num]
-	Logger_Dump_PPC()
 #elif defined __aarch64__
 	#define REG_GNUM(num)     &r.regs[num]
 	#define REG_GET(reg, ign) &r.##reg
@@ -516,6 +517,12 @@ static void Logger_PrintRegisters(String* str, void* ctx) {
 #elif defined __sparc__
 	#define REG_GET(ign, reg) &r.gregs[REG_##reg]
 	Logger_Dump_SPARC()
+#elif defined __PPC__
+	#define REG_GNUM(num)     &r.gregs[num]
+	#define REG_GET_PC()      &r.gregs[32]
+	#define REG_GET_LR()      &r.gregs[35]
+	#define REG_GET_CTR()     &r.gregs[34]
+	Logger_Dump_PPC()
 #else
 	#error "Unknown CPU architecture"
 #endif

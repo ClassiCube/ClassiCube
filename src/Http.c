@@ -725,6 +725,22 @@ static void Http_SysFree(void) {
 #include <jni.h>
 struct HttpRequest* java_req;
 
+static jobject MakeJavaString(JNIEnv* env, const String* str) {
+    String tmp; char tmpBuffer[1024];
+	String_InitArray_NT(tmp, tmpBuffer);
+
+	String_Copy(&tmp, str);
+	tmp.buffer[tmp.length] = '\0';
+	return (*env)->NewStringUTF(env, tmp.buffer);
+}
+
+static jbyteArray MakeJavaBytes(JNIEnv* env, const uint8_t* src, uint32_t len) {
+    if (!len) return NULL;
+    jbyteArray arr = (*env)->NewByteArray(env, len);
+    (*env)->SetByteArrayRegion(env, arr, 0, len, src);
+    return arr;
+}
+
 static void CallJavaVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
 	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
 	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
@@ -738,24 +754,19 @@ static int CallJavaInt(JNIEnv* env, const char* name, const char* sig, jvalue* a
 }
 
 bool Http_DescribeError(ReturnCode res, String* dst) {
+	/* TODO: Retrieve from jni */
 	jni
 }
 
 static void Http_SysInit(void) { }
 
 static void Http_AddHeader(const char* key, const String* value) {
-    String tmp; char tmpBuffer[1024];
-	JavaVM* vm = (JavaVM*)VM_Handle;
-	JNIEnv* env;
+	JavaVM* vm = (JavaVM*)VM_Handle; JNIEnv* env;
 	jvalue args[2];
-
-	String_InitArray_NT(tmp, tmpBuffer);
-	String_Copy(&tmp, value);
-	tmp.buffer[tmp.length] = '\0';
 
 	(*vm)->AttachCurrentThread(vm, &env, NULL);
 	args[0].l = (*env)->NewStringUTF(env, key);
-	args[1].l = (*env)->NewStringUTF(env, tmp.buffer);
+	args[1].l = MakeJavaString(env, value);
 
 	CallJavaVoid(env, "httpSetHeader", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
@@ -786,54 +797,35 @@ static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpAppendData(JNIEnv
 	(*env)->ReleaseByteArrayElements(env, arr, src, JNI_ABORT);
 }
 
-/* Sets general curl options for a request */
-static void Http_SetCurlOpts(struct HttpRequest* req) {
-	curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
-	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-}
-
 static ReturnCode Http_SysDo(struct HttpRequest* req) {
 	static const String userAgent = String_FromConst(GAME_APP_NAME);
+	static const char* verbs[3]   = { "GET", "HEAD", "POST" };
+
+	JavaVM* vm = (JavaVM*)VM_Handle; JNIEnv* env;
+	jvalue args[3];
+	String url;
+	jint res;
+
+	(*vm)->AttachCurrentThread(vm, &env, NULL);
+	url = String_FromRawArray(req->URL);
+
+	args[0].l = MakeJavaString(env, &url);
+	args[1].l = (*env)->NewStringUTF(env, verbs[req->RequestType]);
+	args[2].l = MakeJavaBytes(env, req->Data, req->Size);
+
+	res = CallJavaInt(env, "httpInit", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[B)I", args);
+	(*env)->DeleteLocalRef(env, args[0].l);
+	(*env)->DeleteLocalRef(env, args[1].l);
+	(*env)->DeleteLocalRef(env, args[2].l);
+
+	if (res) return res;
 	java_req = req;
-	String url = String_FromRawArray(req->URL);
-	char urlStr[600];
-	void* post_data = req->Data;
-	long status = 0;
-	CURLcode res;
-
-	curl_easy_reset(curl);
-	headers_list = NULL;
-	Http_SetRequestHeaders(req);
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers_list);
-
-	Http_SetCurlOpts(req);
-	Platform_ConvertString(urlStr, &url);
-	curl_easy_setopt(curl, CURLOPT_URL, urlStr);
-
-	if (req->RequestType == REQUEST_TYPE_HEAD) {
-		curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
-	} else if (req->RequestType == REQUEST_TYPE_POST) {
-		curl_easy_setopt(curl, CURLOPT_POST,   1L);
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,  req->Size);
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS,     req->Data);
-
-		/* per curl docs, we must persist POST data until request finishes */
-		req->Data = NULL;
-		HttpRequest_Free(req);
-	}
+	Http_AddHeader("User-Agent", &userAgent);
 
 	bufferSize = 0;
 	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
-	res = curl_easy_perform(curl);
+	res = CallJavaInt(env, "httpPerform", "()I", args);
 	http_curProgress = 100;
-
-	/* non-obsolete is CURLINFO_RESPONSE_CODE */
-	curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &status);
-	req->StatusCode = status;
-
-	curl_slist_free_all(headers_list);
-	/* can free now that request has finished */
-	Mem_Free(post_data);
 	return res;
 }
 
