@@ -722,66 +722,46 @@ static void Http_SysFree(void) {
 }
 #elif defined CC_BUILD_ANDROID
 #include <android_native_app_glue.h>
-#include <jni.h>
 struct HttpRequest* java_req;
 
-static jobject MakeJavaString(JNIEnv* env, const String* str) {
-    String tmp; char tmpBuffer[1024];
-	String_InitArray_NT(tmp, tmpBuffer);
-
-	String_Copy(&tmp, str);
-	tmp.buffer[tmp.length] = '\0';
-	return (*env)->NewStringUTF(env, tmp.buffer);
-}
-
-static jbyteArray MakeJavaBytes(JNIEnv* env, const uint8_t* src, uint32_t len) {
-    if (!len) return NULL;
-    jbyteArray arr = (*env)->NewByteArray(env, len);
-    (*env)->SetByteArrayRegion(env, arr, 0, len, src);
-    return arr;
-}
-
-static void CallJavaVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
-	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
-	(*env)->CallStaticVoidMethodA(env, clazz, method, args);
-}
-
-static int CallJavaInt(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
-	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
-	return (*env)->CallStaticIntMethodA(env, clazz, method, args);
-}
-
 bool Http_DescribeError(ReturnCode res, String* dst) {
-	/* TODO: Retrieve from jni */
-	jni
+	String err;
+	JNIEnv* env;
+	jvalue args[1];
+	jobject obj;
+	
+	JavaGetCurrentEnv(env);
+	args[0].i = res;
+	obj       = JavaCallObject(env, "httpDescribeError", "(I)Ljava/lang/String;", args);
+	if (!obj) return false;
+
+	err = JavaGetString(env, obj);
+	String_AppendString(dst, &err);
+	(*env)->ReleaseStringUTFChars(env, obj, err.buffer);
+	(*env)->DeleteLocalRef(env, obj);
+	return true;
 }
 
 static void Http_SysInit(void) { }
 
 static void Http_AddHeader(const char* key, const String* value) {
-	JavaVM* vm = (JavaVM*)VM_Handle; JNIEnv* env;
+	JNIEnv* env;
 	jvalue args[2];
 
-	(*vm)->AttachCurrentThread(vm, &env, NULL);
-	args[0].l = (*env)->NewStringUTF(env, key);
-	args[1].l = MakeJavaString(env, value);
+	JavaGetCurrentEnv(env);
+	args[0].l = JavaMakeConst(env,  key);
+	args[1].l = JavaMakeString(env, value);
 
-	CallJavaVoid(env, "httpSetHeader", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", args);
+	JavaCallVoid(env, "httpSetHeader", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 	(*env)->DeleteLocalRef(env, args[1].l);
 }
 
 /* Processes a HTTP header downloaded from the server */
 static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpParseHeader(JNIEnv* env, jclass c, jstring header) {
-	String line;
-	const char* src = (*env)->GetStringUTFChars(env, header, NULL);
-	jsize length    = (*env)->GetStringLength(env, header);
-
-	line = String_Init(src, length, length);
+	String line = JavaGetString(env, header);
 	Http_ParseHeader(java_req, &line);
-	(*env)->ReleaseStringUTFChars(env, header, src);
+	(*env)->ReleaseStringUTFChars(env, header, line.buffer);
 }
 
 /* Processes a chunk of data downloaded from the web server */
@@ -800,20 +780,19 @@ static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpAppendData(JNIEnv
 static ReturnCode Http_SysDo(struct HttpRequest* req) {
 	static const String userAgent = String_FromConst(GAME_APP_NAME);
 	static const char* verbs[3]   = { "GET", "HEAD", "POST" };
-
-	JavaVM* vm = (JavaVM*)VM_Handle; JNIEnv* env;
+	JNIEnv* env;
 	jvalue args[3];
 	String url;
 	jint res;
 
-	(*vm)->AttachCurrentThread(vm, &env, NULL);
+	JavaGetCurrentEnv(env);
 	url = String_FromRawArray(req->URL);
 
-	args[0].l = MakeJavaString(env, &url);
-	args[1].l = (*env)->NewStringUTF(env, verbs[req->RequestType]);
-	args[2].l = MakeJavaBytes(env, req->Data, req->Size);
+	args[0].l = JavaMakeString(env, &url);
+	args[1].l = JavaMakeConst(env,  verbs[req->RequestType]);
+	args[2].l = JavaMakeBytes(env,  req->Data, req->Size);
 
-	res = CallJavaInt(env, "httpInit", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[B)I", args);
+	res = JavaCallInt(env, "httpInit", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[B)I", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 	(*env)->DeleteLocalRef(env, args[1].l);
 	(*env)->DeleteLocalRef(env, args[2].l);
@@ -824,7 +803,7 @@ static ReturnCode Http_SysDo(struct HttpRequest* req) {
 
 	bufferSize = 0;
 	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
-	res = CallJavaInt(env, "httpPerform", "()I", args);
+	res = JavaCallInt(env, "httpPerform", "()I", args);
 	http_curProgress = 100;
 	return res;
 }
@@ -854,7 +833,7 @@ static void Http_WorkerLoop(void) {
 		Mutex_Unlock(pendingMutex);
 
 		if (stop) return;
-		/* Block until another thread submits a req to do */
+		/* Block until another thread submits a request to do */
 		if (!hasRequest) {
 			Platform_LogConst("Going back to sleep...");
 			Waitable_Wait(workerWaitable);
@@ -965,12 +944,10 @@ void Http_UrlEncode(String* dst, const uint8_t* data, int len) {
 
 void Http_UrlEncodeUtf8(String* dst, const String* src) {
 	uint8_t data[4];
-	Codepoint cp;
 	int i, len;
 
 	for (i = 0; i < src->length; i++) {
-		cp  = Convert_CP437ToUnicode(src->buffer[i]);
-		len = Convert_UnicodeToUtf8(cp, data);
+		len = Convert_CP437ToUtf8(src->buffer[i], data);
 		Http_UrlEncode(dst, data, len);
 	}
 }

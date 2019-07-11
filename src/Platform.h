@@ -22,12 +22,6 @@ typedef int FileHandle;
 #define UPDATE_FILENAME "update.sh"
 #endif
 
-/* android app and VM handle */
-#ifdef CC_BUILD_ANDROID
-void* App_Handle;
-void* VM_Handle;
-#endif
-
 /* Origin points for when seeking in a file. */
 enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
 /* Number of milliseconds since 01/01/0001 to start of unix time. */
@@ -240,4 +234,29 @@ CC_API ReturnCode Socket_Close(SocketHandle socket);
 /* NOTE: A closed socket is still considered readable. */
 /* NOTE: A socket is considered writable once it has finished connecting. */
 CC_API ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success);
+
+#ifdef CC_BUILD_ANDROID
+#include <jni.h>
+extern void*   App_Ptr;
+extern JavaVM* VM_Ptr;
+#define JavaGetCurrentEnv(env) (*VM_Ptr)->AttachCurrentThread(VM_Ptr, &env, NULL);
+#define JavaMakeConst(env, str) (*env)->NewStringUTF(env, str);
+
+/* Allocates a unicode string from the given java string. */
+/* NOTE: Don't forget to call env->ReleaseStringChars. */
+UniString JavaGetUniString(JNIEnv* env, jstring str);
+/* Allocates a string from the given java string. */
+/* NOTE: Don't forget to call env->ReleaseStringUTFChars. Only works with ASCII strings. */
+String JavaGetString(JNIEnv* env, jstring str);
+/* Allocates a java string from the given string. */
+jobject JavaMakeString(JNIEnv* env, const String* str);
+/* Allocates a java byte array from the given block of memory. */
+jbyteArray JavaMakeBytes(JNIEnv* env, const uint8_t* src, uint32_t len);
+/* Calls a method in the Wrappers class that returns nothing. */
+void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args);
+/* Calls a method in the Wrappers class that returns a jint. */
+jint JavaCallInt(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
+/* Calls a method in the Wrappers class that returns a jobject. */
+jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args);
+#endif
 #endif

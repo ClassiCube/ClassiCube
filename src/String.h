@@ -182,6 +182,9 @@ int Convert_Utf8ToUnicode(Codepoint* cp, const uint8_t* data, uint32_t len);
 /* Encodes a unicode character in UTF8, returning number of bytes written. */
 /* The number of bytes written is always either 1,2 or 3. */
 int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data);
+/* Encodes a code page 437 character in UTF8, returning number of bytes written. */
+/* The number of bytes written is always either 1,2 or 3. */
+int Convert_CP437ToUtf8(char c, uint8_t* data);
 
 /* Attempts to append all characters from UTF16 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */

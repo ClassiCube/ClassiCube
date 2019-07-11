@@ -177,8 +177,8 @@ int main(int argc, char** argv) {
 #ifdef CC_BUILD_ANDROID
 #include <android_native_app_glue.h>
 void android_main(struct android_app* app) {
-	App_Handle = app;
-	VM_Handle  = app->activity->vm;
+	App_Ptr = app;
+	VM_Ptr  = app->activity->vm;
 	main(0, NULL);
 }
 #endif

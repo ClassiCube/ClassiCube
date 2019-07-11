@@ -468,7 +468,6 @@ ReturnCode Stream_WriteLine(struct Stream* s, String* text) {
 	uint8_t buffer[2048 + 10]; /* some space for newline */
 	const char* nl;
 	uint8_t* cur;
-	Codepoint cp;
 	ReturnCode res;
 	int i, len = 0;
 
@@ -480,8 +479,7 @@ ReturnCode Stream_WriteLine(struct Stream* s, String* text) {
 		}
 
 		cur = buffer + len;
-		cp  = Convert_CP437ToUnicode(text->buffer[i]);
-		len += Convert_UnicodeToUtf8(cp, cur);
+		len += Convert_CP437ToUtf8(text->buffer[i], cur);
 	}
 	
 	nl = _NL;

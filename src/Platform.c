@@ -1938,15 +1938,12 @@ bool Platform_DescribeError(ReturnCode res, String* dst) {
 int Platform_ConvertString(void* data, const String* src) {
 	uint8_t* dst = (uint8_t*)data;
 	uint8_t* cur;
-
-	Codepoint cp;
 	int i, len = 0;
 	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
 
 	for (i = 0; i < src->length; i++) {
 		cur = dst + len;
-		cp  = Convert_CP437ToUnicode(src->buffer[i]);	
-		len += Convert_UnicodeToUtf8(cp, cur);
+		len += Convert_CP437ToUtf8(src->buffer[i], cur);
 	}
 	dst[len] = '\0';
 	return len;
@@ -2060,5 +2057,64 @@ void Platform_SetDefaultCurrentDirectory(void) {
 	static const String path = String_FromConst("/classicube");
 	ReturnCode res = Directory_SetCurrent(&path);
 	if (res) Logger_Warn(res, "setting current directory");
+}
+#endif
+/* JNI helpers */
+#ifdef CC_BUILD_ANDROID
+void* App_Ptr;
+JavaVM* VM_Ptr;
+
+UniString JavaGetUniString(JNIEnv* env, jstring str) {
+	UniString dst;
+	dst.buffer   = (*env)->GetStringChars(env,  str, NULL);
+	dst.length   = (*env)->GetStringLength(env, str);
+	dst.capacity = dst.length;
+	return dst;
+}
+
+String JavaGetString(JNIEnv* env, jstring str) {
+	String dst;
+	dst.buffer   = (*env)->GetStringUTFChars(env,  str, NULL);
+	dst.length   = (*env)->GetStringUTFLength(env, str);
+	dst.capacity = dst.length;
+	return dst;
+}
+
+jobject JavaMakeString(JNIEnv* env, const String* str) {
+	uint8_t tmp[2048 + 4];
+	uint8_t* cur;
+	int i, len = 0;
+
+	for (i = 0; i < str->length && len < 2048; i++) {
+		cur = tmp + len;
+		len += Convert_CP437ToUtf8(str->buffer[i], cur);
+	}
+	tmp[len] = '\0';
+	return (*env)->NewStringUTF(env, (const char*)tmp);
+}
+
+jbyteArray JavaMakeBytes(JNIEnv* env, const uint8_t* src, uint32_t len) {
+    if (!len) return NULL;
+    jbyteArray arr = (*env)->NewByteArray(env, len);
+    (*env)->SetByteArrayRegion(env, arr, 0, len, src);
+    return arr;
+}
+
+void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
+	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
+	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
+	(*env)->CallStaticVoidMethodA(env, clazz, method, args);
+}
+
+jint JavaCallInt(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
+	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
+	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
+	return (*env)->CallStaticIntMethodA(env, clazz, method, args);
+}
+
+jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
+	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
+	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
+	return (*env)->CallStaticObjectMethodA(env, clazz, method, args);
 }
 #endif

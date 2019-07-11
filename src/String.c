@@ -577,6 +577,15 @@ int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data) {
 	}
 }
 
+int Convert_CP437ToUtf8(char c, uint8_t* data) {
+	/* Common ASCII case */
+	if (c >= 0x20 && c < 0x7F) {
+		data[0] = (uint8_t)c;
+		return 1;
+	}
+	return Convert_UnicodeToUtf8(Convert_CP437ToUnicode(c), data);
+}
+
 void String_AppendUtf16(String* value, const Codepoint* chars, int numBytes) {
 	int i; char c;
 	

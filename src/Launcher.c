@@ -535,11 +535,6 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 	if (mppass->length) String_Format3(&args, " %s %s %s", mppass, ip, port);
 
 	res = Process_Start(&path, &args);
-#ifdef CC_BUILD_WINDOWS
-	/* TODO: Check this*/
-	/* HRESULT when user clicks 'cancel' to 'are you sure you want to run ClassiCube.exe' */
-	if (res == 0x80004005) return;
-#endif
 	if (res) { Logger_Warn(res, "starting game"); return false; }
 
 	Launcher_ShouldExit = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);

@@ -948,13 +948,11 @@ ReturnCode Dat_Load(struct Stream* stream) {
 #define CW_META_RGB NBT_I16,0,1,'R',0,0,  NBT_I16,0,1,'G',0,0,  NBT_I16,0,1,'B',0,0,
 
 static int Cw_WriteEndString(uint8_t* data, const String* text) {
-	Codepoint cp;
 	uint8_t* cur = data + 2;
 	int i, wrote, len = 0;
 
 	for (i = 0; i < text->length; i++) {
-		cp    = Convert_CP437ToUnicode(text->buffer[i]);
-		wrote = Convert_UnicodeToUtf8(cp, cur);
+		wrote = Convert_CP437ToUtf8(text->buffer[i], cur);
 		len += wrote; cur += wrote;
 	}
 

@@ -425,7 +425,7 @@ String_Format4(str, "r16=%x r17=%x r18=%x r19=%x" _NL, REG_GNUM(16), REG_GNUM(17
 String_Format4(str, "r20=%x r21=%x r22=%x r23=%x" _NL, REG_GNUM(20), REG_GNUM(21), REG_GNUM(22), REG_GNUM(23)); \
 String_Format4(str, "r24=%x r25=%x r26=%x r27=%x" _NL, REG_GNUM(24), REG_GNUM(25), REG_GNUM(26), REG_GNUM(27)); \
 String_Format3(str, "r28=%x r29=%x r30=%x" _NL,        REG_GNUM(28), REG_GNUM(29), REG_GNUM(30)); \
-String_Format2(str, "sp =%x pc =%x" _NL,               REG_GET(sp,SP), REG_GET(pc,PC));
+String_Format2(str, "sp =%x pc =%x" _NL,               REG_GET_SP(), REG_GET_PC());
 
 #define Logger_Dump_SPARC() \
 String_Format4(str, "o0=%x o1=%x o2=%x o3=%x" _NL, REG_GET(o0,O0), REG_GET(o1,O1), REG_GET(o2,O2), REG_GET(o3,O3)); \
@@ -508,7 +508,8 @@ static void Logger_PrintRegisters(String* str, void* ctx) {
 	Logger_Dump_X64()
 #elif defined __aarch64__
 	#define REG_GNUM(num)     &r.regs[num]
-	#define REG_GET(reg, ign) &r.##reg
+	#define REG_GET_SP()      &r.sp
+	#define REG_GET_PC()      &r.pc
 	Logger_Dump_ARM64()
 #elif defined __arm__
 	#define REG_GNUM(num)     &r.arm_r##num

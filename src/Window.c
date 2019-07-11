@@ -2777,15 +2777,183 @@ void Window_DisableRawMouse(void) {
 #ifdef CC_BUILD_ANDROID
 #include <android_native_app_glue.h>
 #include <android/native_activity.h>
+#include <android/window.h>
 static ANativeWindow* win_handle;
 static bool win_rawMouse;
 
+static void Window_RefreshBounds(void) {
+	Window_Width  = ANativeWindow_getWidth(win_handle);
+	Window_Height = ANativeWindow_getHeight(win_handle);
+	Event_RaiseVoid(&WindowEvents.Resized);
+}
+
+static int32_t Window_HandleInputEvent(struct android_app* app, AInputEvent* event) {
+	/* TODO: Do something with input here.. */
+	return 0;
+}
+
+static void Window_HandleAppEvent(struct android_app* app, int32_t cmd) {
+	switch (cmd) {
+	case APP_CMD_INIT_WINDOW:
+		win_handle = app->window;
+		Window_RefreshBounds();
+		/* TODO: Restore context */
+		break;
+	case APP_CMD_TERM_WINDOW:
+		win_handle     = NULL;
+		Window_Focused = false;
+		Event_RaiseVoid(&WindowEvents.FocusChanged);
+		/* TODO: Do we Window_Close() here */
+		/* TODO: Gfx Lose context */
+		break;
+
+	case APP_CMD_GAINED_FOCUS:
+		Window_Focused = true;
+		Event_RaiseVoid(&WindowEvents.FocusChanged);
+		break;
+	case APP_CMD_LOST_FOCUS:
+		Window_Focused = false;
+		Event_RaiseVoid(&WindowEvents.FocusChanged);
+		/* TODO: Disable rendering? */
+		break;
+
+	case APP_CMD_WINDOW_RESIZED:
+		Window_RefreshBounds();
+		break;
+	case APP_CMD_WINDOW_REDRAW_NEEDED:
+		Event_RaiseVoid(&WindowEvents.Redraw);
+		break;
+	case APP_CMD_CONFIG_CHANGED:
+		Window_RefreshBounds();
+		break;
+		/* TODO: Low memory */
+	}
+}
+
+void Window_Init(void) {
+	struct android_app* app = (struct android_app*)App_Ptr;
+	/* TODO: or WINDOW_FORMAT_RGBX_8888 ?? */
+	ANativeActivity_setWindowFormat(app->activity, WINDOW_FORMAT_RGBA_8888);
+	ANativeActivity_setWindowFlags(app->activity, AWINDOW_FLAG_FULLSCREEN, 0);
+
+	app->onAppCmd     = Window_HandleAppEvent;
+	app->onInputEvent = Window_HandleInputEvent;
+}
+
+void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
+	Window_Exists = true;
+	/* actual window creation is done when APP_CMD_INIT_WINDOW is received */
+}
+
+void Window_SetTitle(const String* title) {
+	/* TODO: Implement this somehow */
+}
+
+void Clipboard_GetText(String* value) {
+	UniString str;
+	JNIEnv* env;
+	jobject obj;
+	JavaGetCurrentEnv(env);
+
+	obj = JavaCallObject(env, "getClipboardText", "()Ljava/lang/String;", NULL);
+	if (!obj) return;
+
+	str = JavaGetUniString(env, obj);
+	String_AppendUtf16(value, str.buffer, str.length * 2);
+	(*env)->ReleaseStringChars(env, obj, str.buffer);
+	(*env)->DeleteLocalRef(env, obj);
+}
+
+void Clipboard_SetText(const String* value) {
+	JNIEnv* env;
+	jvalue args[1];	
+	JavaGetCurrentEnv(env);
+
+	args[0].l = JavaMakeString(env, value);
+	JavaCallVoid(env, "setClipboardText", "(Ljava/lang/String;)V", args);
+	(*env)->DeleteLocalRef(env, args[0].l);
+}
+
+/* Always a fullscreen window */
 void Window_SetVisible(bool visible) { }
 int Window_GetWindowState(void) { return WINDOW_STATE_FULLSCREEN; }
 void Window_EnterFullscreen(void) { }
 void Window_ExitFullscreen(void) { }
-
 void Window_SetSize(int width, int height) { }
+
+void Window_Close(void) {
+	struct android_app* app = (struct android_app*)App_Ptr;
+	Window_Exists = false;
+
+	Event_RaiseVoid(&WindowEvents.Closing);
+	Event_RaiseVoid(&WindowEvents.Destroyed);
+	/* TODO: Do we need to call finish here */
+	ANativeActivity_finish(app->activity);
+}
+
+void Window_ProcessEvents(void) {
+	struct android_app* app = (struct android_app*)App_Ptr;
+	struct android_poll_source* source;
+	int events;
+
+	while (ALooper_pollAll(0, NULL, &events, (void**)&source) >= 0) {
+		if (source) source->process(app, source);
+	}
+
+	if (app->destroyRequested && Window_Exists) Window_Close();
+}
+
+/* No actual cursor, so just fake one */
+Point2D Cursor_GetScreenPos(void) { 
+	Point2D p; p.X = Mouse_X; p.Y = Mouse_Y; return p; 
+}
+void Cursor_SetScreenPos(int x, int y) { Mouse_X = x; Mouse_Y = y; }
+void Cursor_SetVisible(bool visible) { }
+
+void Window_ShowDialog(const char* title, const char* msg) {
+	JNIEnv* env;
+	jvalue args[2];
+	JavaGetCurrentEnv(env);
+
+	args[0].l = JavaMakeConst(env, title);
+	args[1].l = JavaMakeConst(env, msg);
+	JavaCallVoid(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V", args);
+	(*env)->DeleteLocalRef(env, args[0].l);
+	(*env)->DeleteLocalRef(env, args[1].l);
+}
+
+static Bitmap srcBmp;
+void Window_InitRaw(Bitmap* bmp) {
+	Mem_Free(bmp->Scan0);
+	bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
+	srcBmp     = *bmp;
+}
+
+void Window_DrawRaw(Rect2D r) {
+	ANativeWindow_Buffer buffer;
+	uint32_t* src;
+	uint8_t*  dst;
+	ARect b;
+	int32_t y, res, size;
+	/* window not created yet */
+	if (!win_handle) return;
+
+	b.left = r.X; b.right  = r.X + r.Width;
+	b.top  = r.Y; b.bottom = r.Y + r.Height;
+
+	res  = ANativeWindow_lock(win_handle, &buffer, &b);
+	if (res) Logger_Abort2(res, "Locking window pixels");
+
+	src  = (uint32_t*)srcBmp.Scan0 + b.left;
+	dst  = (uint8_t*)buffer.bits   + b.left * 4;
+	size = (b.right - b.left) * 4;
+
+	for (y = b.top; y < b.bottom; y++) {
+		Mem_Copy(dst + y * buffer.stride, src + y * srcBmp.Width, size);
+	}
+	res = ANativeWindow_unlockAndPost(win_handle);
+	if (res) Logger_Abort2(res, "Unlocking window pixels");
+}
 
 void Window_EnableRawMouse(void) {
 	Window_DefaultEnableRawMouse();
