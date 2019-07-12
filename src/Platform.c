@@ -993,11 +993,11 @@ static ReturnCode FontData_Init(const String* path, struct FontData* data, FT_Op
 void Font_GetNames(StringsBuffer* buffer) {
 	String entry, name, path;
 	int i;
-	if (!font_list.Entries.count) Font_Init();
+	if (!font_list.entries.count) Font_Init();
 
-	for (i = 0; i < font_list.Entries.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&font_list.Entries, i);
-		String_UNSAFE_Separate(&entry, font_list.Separator, &name, &path);
+	for (i = 0; i < font_list.entries.count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&font_list.entries, i);
+		String_UNSAFE_Separate(&entry, font_list.separator, &name, &path);
 
 		/* Only want Regular fonts here */
 		if (name.length < 2 || name.buffer[name.length - 1] != 'R') continue;
@@ -1016,7 +1016,7 @@ static String Font_LookupOf(const String* fontName, const char type) {
 
 String Font_Lookup(const String* fontName, int style) {
 	String path;
-	if (!font_list.Entries.count) Font_Init();
+	if (!font_list.entries.count) Font_Init();
 	path = String_Empty;
 
 	if (style & FONT_STYLE_BOLD)   path = Font_LookupOf(fontName, 'B');
@@ -1132,9 +1132,9 @@ static void Font_DirCallback(const String* path, void* obj) {
 	if (String_CaselessEnds(path, &fonExt)) return;
 
 	/* If font is already known good, skip it */
-	for (i = 0; i < font_list.Entries.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&font_list.Entries, i);
-		String_UNSAFE_Separate(&entry, font_list.Separator, &name, &value);
+	for (i = 0; i < font_list.entries.count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&font_list.entries, i);
+		String_UNSAFE_Separate(&entry, font_list.separator, &name, &value);
 
 		String_UNSAFE_Separate(&value, ',', &fontPath, &index);
 		if (String_CaselessEquals(path, &fontPath)) return;
@@ -1604,7 +1604,7 @@ ReturnCode Process_StartOpen(const String* args) {
 }
 
 ReturnCode Process_StartShell(void) {
-	static const String args = String_FromConst("cmd.exe /C start cmd /C update.bat");
+	static const String args = String_FromConst("cmd.exe /C start cmd /C " UPDATE_FILENAME);
 	TCHAR str[300];
 	/* args must be modifiable, otherwise access violation */
 	Platform_ConvertString(str, &args);

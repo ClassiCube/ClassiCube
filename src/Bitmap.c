@@ -15,7 +15,7 @@ BitmapCol BitmapCol_Scale(BitmapCol value, float t) {
 	return value;
 }
 
-void Bitmap_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size) {
+void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size) {
 	int x, y;
 	for (y = 0; y < size; y++) {
 		BitmapCol* srcRow = Bitmap_GetRow(src, srcY + y) + srcX;

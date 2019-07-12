@@ -409,11 +409,11 @@ static ReturnCode ModernPatcher_PatchTile(struct Stream* data, struct TilePatch*
 	ReturnCode res;
 
 	if ((res = Png_Decode(&bmp, data))) return res;
-	Bitmap_CopyBlock(0, 0, tile->x1 * 16, tile->y1 * 16, &bmp, &terrainBmp, 16);
+	Bitmap_UNSAFE_CopyBlock(0, 0, tile->x1 * 16, tile->y1 * 16, &bmp, &terrainBmp, 16);
 
 	/* only quartz needs copying to two tiles */
 	if (tile->y2) {
-		Bitmap_CopyBlock(0, 0, tile->x2 * 16, tile->y2 * 16, &bmp, &terrainBmp, 16);
+		Bitmap_UNSAFE_CopyBlock(0, 0, tile->x2 * 16, tile->y2 * 16, &bmp, &terrainBmp, 16);
 	}
 
 	Mem_Free(bmp.Scan0);
@@ -441,7 +441,7 @@ static ReturnCode ModernPatcher_MakeAnimations(struct Stream* s, struct Stream* 
 	Bitmap_Init(anim, 512, 16, anim_data);
 
 	for (i = 0; i < 512; i += 16) {
-		Bitmap_CopyBlock(0, i, i, 0, &bmp, &anim, 16);
+		Bitmap_UNSAFE_CopyBlock(0, i, i, 0, &bmp, &anim, 16);
 	}
 
 	Mem_Free(bmp.Scan0);
@@ -504,7 +504,7 @@ static ReturnCode TexPatcher_NewFiles(struct Stream* s) {
 }
 
 static void TexPatcher_PatchTile(Bitmap* src, int srcX, int srcY, int dstX, int dstY) {
-	Bitmap_CopyBlock(srcX, srcY, dstX * 16, dstY * 16, src, &terrainBmp, 16);
+	Bitmap_UNSAFE_CopyBlock(srcX, srcY, dstX * 16, dstY * 16, src, &terrainBmp, 16);
 }
 
 static ReturnCode TexPatcher_Terrain(struct Stream* s) {

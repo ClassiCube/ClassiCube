@@ -250,7 +250,7 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 #endif
 	} else {
 		srcX = data->FrameX + data->State * size;
-		Bitmap_CopyBlock(srcX, data->FrameY, 0, 0, &anims_bmp, &frame, size);
+		Bitmap_UNSAFE_CopyBlock(srcX, data->FrameY, 0, 0, &anims_bmp, &frame, size);
 	}
 
 	tex = Atlas1D.TexIds[dstX];
@@ -439,7 +439,7 @@ static void Atlas_Convert2DTo1D(void) {
 			atlasX = Atlas2D_TileX(tile) * tileSize;
 			atlasY = Atlas2D_TileY(tile) * tileSize;
 
-			Bitmap_CopyBlock(atlasX, atlasY, 0, y * tileSize,
+			Bitmap_UNSAFE_CopyBlock(atlasX, atlasY, 0, y * tileSize,
 							&Atlas2D.Bmp, &atlas1D, tileSize);
 		}
 		Atlas1D.TexIds[i] = Gfx_CreateTexture(&atlas1D, true, Gfx.Mipmaps);
@@ -477,7 +477,7 @@ static GfxResourceID Atlas_LoadTile_Raw(TextureLoc texLoc, Bitmap* element) {
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 	if (y >= Atlas2D.RowsCount) return GFX_NULL;
 
-	Bitmap_CopyBlock(x * size, y * size, 0, 0, &Atlas2D.Bmp, element, size);
+	Bitmap_UNSAFE_CopyBlock(x * size, y * size, 0, 0, &Atlas2D.Bmp, element, size);
 	return Gfx_CreateTexture(element, false, Gfx.Mipmaps);
 }
 

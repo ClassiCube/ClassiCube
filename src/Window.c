@@ -2792,7 +2792,23 @@ static int32_t Window_HandleInputEvent(struct android_app* app, AInputEvent* ev)
 	/* TODO: Do something with input here.. */
 	int32_t type = AInputEvent_getType(ev);
 	Platform_Log1("INP MSG: %i", &type);
-	return 0;
+	switch (type) {
+	case AINPUT_EVENT_TYPE_MOTION:
+	{
+		/* TODO Fix this */
+		int x = (int)AMotionEvent_getX(ev, 0);
+		int y = (int)AMotionEvent_getY(ev, 0);
+
+		Platform_Log2("TOUCH: %i,%i", &x, &y);
+		Mouse_SetPosition(x, y);
+
+		int action = AMotionEvent_getAction(ev) & AMOTION_EVENT_ACTION_MASK;
+		if (action == AMOTION_EVENT_ACTION_DOWN) Mouse_SetPressed(MOUSE_LEFT, true);
+		if (action == AMOTION_EVENT_ACTION_UP)   Mouse_SetPressed(MOUSE_LEFT, false);
+		return 0;
+	}
+	}
+	return 1;
 }
 
 static void Window_HandleAppEvent(struct android_app* app, int32_t cmd) {

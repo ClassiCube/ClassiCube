@@ -221,7 +221,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 	ReturnCode res;
 
 	String_InitArray(path, pathBuffer);
-	String_AppendConst(&path, list->Path);
+	String_AppendConst(&path, list->path);
 	
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
@@ -247,11 +247,11 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 		/* If don't prevent this here, client aborts in StringsBuffer_Add */
 		if (entry.length > STRINGSBUFFER_LEN_MASK) {
 			entry.length = 0;
-			String_Format1(&entry, "Skipping extremely long line in %c, file may have been corrupted", list->Path);
+			String_Format1(&entry, "Skipping extremely long line in %c, file may have been corrupted", list->path);
 			Logger_WarnFunc(&entry); continue;
 		}
 
-		String_UNSAFE_Separate(&entry, list->Separator, &key, &value);
+		String_UNSAFE_Separate(&entry, list->separator, &key, &value);
 		EntryList_Set(list, &key, &value);
 	}
 
@@ -266,13 +266,13 @@ void EntryList_Save(struct EntryList* list) {
 	ReturnCode res;
 
 	String_InitArray(path, pathBuffer);
-	String_AppendConst(&path, list->Path);
+	String_AppendConst(&path, list->path);
 	
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Logger_Warn2(res, "creating", &path); return; }
 
-	for (i = 0; i < list->Entries.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
+	for (i = 0; i < list->entries.count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&list->entries, i);
 		res   = Stream_WriteLine(&stream, &entry);
 		if (res) { Logger_Warn2(res, "writing to", &path); break; }
 	}
@@ -283,7 +283,7 @@ void EntryList_Save(struct EntryList* list) {
 
 int EntryList_Remove(struct EntryList* list, const String* key) {
 	int i = EntryList_Find(list, key);
-	if (i >= 0) StringsBuffer_Remove(&list->Entries, i);
+	if (i >= 0) StringsBuffer_Remove(&list->entries, i);
 	return i;
 }
 
@@ -292,22 +292,22 @@ void EntryList_Set(struct EntryList* list, const String* key, const String* valu
 	String_InitArray(entry, entryBuffer);
 
 	if (value->length) {
-		String_Format3(&entry, "%s%r%s", key, &list->Separator, value);
+		String_Format3(&entry, "%s%r%s", key, &list->separator, value);
 	} else {
 		String_Copy(&entry, key);
 	}
 
 	EntryList_Remove(list, key);
-	StringsBuffer_Add(&list->Entries, &entry);
+	StringsBuffer_Add(&list->entries, &entry);
 }
 
 String EntryList_UNSAFE_Get(struct EntryList* list, const String* key) {
 	String curEntry, curKey, curValue;
 	int i;
 
-	for (i = 0; i < list->Entries.count; i++) {
-		curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-		String_UNSAFE_Separate(&curEntry, list->Separator, &curKey, &curValue);
+	for (i = 0; i < list->entries.count; i++) {
+		curEntry = StringsBuffer_UNSAFE_Get(&list->entries, i);
+		String_UNSAFE_Separate(&curEntry, list->separator, &curKey, &curValue);
 
 		if (String_CaselessEquals(key, &curKey)) return curValue;
 	}
@@ -318,9 +318,9 @@ int EntryList_Find(struct EntryList* list, const String* key) {
 	String curEntry, curKey, curValue;
 	int i;
 
-	for (i = 0; i < list->Entries.count; i++) {
-		curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-		String_UNSAFE_Separate(&curEntry, list->Separator, &curKey, &curValue);
+	for (i = 0; i < list->entries.count; i++) {
+		curEntry = StringsBuffer_UNSAFE_Get(&list->entries, i);
+		String_UNSAFE_Separate(&curEntry, list->separator, &curKey, &curValue);
 
 		if (String_CaselessEquals(key, &curKey)) return i;
 	}
@@ -328,7 +328,7 @@ int EntryList_Find(struct EntryList* list, const String* key) {
 }
 
 void EntryList_Init(struct EntryList* list, const char* path, char separator) {
-	list->Path      = path;
-	list->Separator = separator;
+	list->path      = path;
+	list->separator = separator;
 	EntryList_Load(list, NULL);
 }

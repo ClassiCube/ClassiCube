@@ -320,9 +320,9 @@ void Hotkeys_Init(void) {
 	uint8_t modifiers;
 	bool more;
 
-	for (i = 0; i < Options.Entries.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&Options.Entries, i);
-		String_UNSAFE_Separate(&entry, Options.Separator, &key, &value);
+	for (i = 0; i < Options.entries.count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&Options.entries, i);
+		String_UNSAFE_Separate(&entry, Options.separator, &key, &value);
 
 		if (!String_CaselessStarts(&key, &prefix)) continue;
 		/* Format is: key&modifiers = more-input&text */

@@ -14,7 +14,7 @@ static StringsBuffer Options_Changed;
 int Options_ChangedCount(void) { return Options_Changed.count;  }
 
 void Options_Free(void) {
-	StringsBuffer_Clear(&Options.Entries);
+	StringsBuffer_Clear(&Options.entries);
 	StringsBuffer_Clear(&Options_Changed);
 }
 
@@ -138,17 +138,17 @@ void Options_Load(void) {
 	String entry, key, value;
 	int i;
 
-	if (!Options.Path) {
+	if (!Options.path) {
 		EntryList_Init(&Options, "options-default.txt", '=');
 		EntryList_Init(&Options, "options.txt",         '=');
 	} else {
 		/* Reset all the unchanged options */
-		for (i = Options.Entries.count - 1; i >= 0; i--) {
-			entry = StringsBuffer_UNSAFE_Get(&Options.Entries, i);
+		for (i = Options.entries.count - 1; i >= 0; i--) {
+			entry = StringsBuffer_UNSAFE_Get(&Options.entries, i);
 			String_UNSAFE_Separate(&entry, '=', &key, &value);
 
 			if (Options_HasChanged(&key)) continue;
-			StringsBuffer_Remove(&Options.Entries, i);
+			StringsBuffer_Remove(&Options.entries, i);
 		}
 
 		/* Load only options which have not changed */

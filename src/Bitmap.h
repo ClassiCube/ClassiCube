@@ -48,7 +48,7 @@ typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 /* Copies a rectangle of pixels from one bitmap to another. */
 /* NOTE: If src and dst are the same, src and dst rectangles MUST NOT overlap. */
 /* NOTE: Rectangles are NOT checked for whether they lie inside the bitmaps. */
-void Bitmap_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size);
+void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size);
 /* Allocates a new bitmap of the given dimensions. */
 /* NOTE: You are responsible for freeing its memory! */
 void Bitmap_Allocate(Bitmap* bmp, int width, int height);

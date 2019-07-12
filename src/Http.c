@@ -274,7 +274,7 @@ static void Http_ParseHeader(struct HttpRequest* req, const String* line) {
 		valueEnd = String_IndexOf(&tmp, ';');
 		if (valueEnd >= 0) tmp.length = valueEnd;
 
-		req->Cookies->Separator = '=';
+		req->Cookies->separator = '=';
 		EntryList_Set(req->Cookies, &name, &tmp);
 	}
 }
@@ -298,12 +298,12 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 	}
 
 	if (req->Data) Http_AddHeader("Content-Type", &contentType);
-	if (!req->Cookies || !req->Cookies->Entries.count) return;
+	if (!req->Cookies || !req->Cookies->entries.count) return;
 
 	String_InitArray(cookies, cookiesBuffer);
-	for (i = 0; i < req->Cookies->Entries.count; i++) {
+	for (i = 0; i < req->Cookies->entries.count; i++) {
 		if (i) String_AppendConst(&cookies, "; ");
-		str = StringsBuffer_UNSAFE_Get(&req->Cookies->Entries, i);
+		str = StringsBuffer_UNSAFE_Get(&req->Cookies->entries, i);
 		String_AppendString(&cookies, &str);
 	}
 	Http_AddHeader("Cookie", &cookies);
