@@ -11,13 +11,6 @@ const String String_Empty = { NULL, 0, 0 };
 const String String_Empty;
 #endif
 
-String String_InitAndClear(STRING_REF char* buffer, int capacity) {
-	String str = String_Init(buffer, 0, capacity);	
-	int i;
-	for (i = 0; i < capacity; i++) { buffer[i] = '\0'; }
-	return str;
-}
-
 int String_CalcLen(const char* raw, int capacity) {
 	int length = 0;
 	while (length < capacity && *raw) { raw++; length++; }
@@ -46,6 +39,13 @@ void String_StripCols(String* str) {
 void String_Copy(String* dst, const String* src) {
 	dst->length = 0;
 	String_AppendString(dst, src);
+}
+
+void String_CopyToRaw(char* dst, int capacity, const String* src) {
+	int i, len = min(capacity, src->length);
+	for (i = 0; i < len; i++) { dst[i] = src->buffer[i]; }
+	/* add \0 to mark end of used portion of buffer */
+	if (len < capacity) dst[len] = '\0';
 }
 
 String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int length) {

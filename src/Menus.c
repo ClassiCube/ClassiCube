@@ -2339,6 +2339,13 @@ static void EnvSettingsScreen_ContextRecreated(void* screen) {
 	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
 }
 
+static String String_InitAndClear(STRING_REF char* buffer, int capacity) {
+	String str = String_Init(buffer, 0, capacity);
+	int i;
+	for (i = 0; i < capacity; i++) { buffer[i] = '\0'; }
+	return str;
+}
+
 struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[11];
 	static struct InputValidator validators[Array_Elems(buttons)];
@@ -2349,9 +2356,9 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	static char edgeHeightBuffer[STRING_INT_CHARS];
 	String cloudHeight, edgeHeight;
 
-	cloudHeight = String_ClearedArray(cloudHeightBuffer);
+	cloudHeight = String_InitAndClear(cloudHeightBuffer, STRING_INT_CHARS);
 	String_AppendInt(&cloudHeight, World.Height + 2);
-	edgeHeight  = String_ClearedArray(edgeHeightBuffer);
+	edgeHeight  = String_InitAndClear(edgeHeightBuffer, STRING_INT_CHARS);
 	String_AppendInt(&edgeHeight,  World.Height / 2);
 
 	InputValidator_Hex(validators[0]);

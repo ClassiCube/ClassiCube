@@ -253,29 +253,41 @@ static void Http_CleanCacheTask(struct ScheduledTask* task) {
 	Mutex_Unlock(processedMutex);
 }
 
+static void Http_ParseCookie(struct HttpRequest* req, const String* value) {
+	String name, data;
+	int dataEnd;
+	String_UNSAFE_Separate(value, '=', &name, &data);
+	/* Cookie is: __cfduid=xyz; expires=abc; path=/; domain=.classicube.net; HttpOnly */
+	/* However only the __cfduid=xyz part of the cookie should be stored */
+	dataEnd = String_IndexOf(&data, ';');
+	if (dataEnd >= 0) data.length = dataEnd;
+
+	req->Cookies->separator = '=';
+	EntryList_Set(req->Cookies, &name, &data);
+}
+
 /* Parses a HTTP header */
 static void Http_ParseHeader(struct HttpRequest* req, const String* line) {
-	int valueEnd;
-	String tmp, name, value;
+	static const String httpVersion = String_FromConst("HTTP");
+	String name, value, parts[3];
+	int numParts;
+
+	/* HTTP[version] [status code] [status reason] */
+	if (String_CaselessStarts(line, &httpVersion)) {
+		numParts = String_UNSAFE_Split(line, ' ', parts, 3);
+		if (numParts >= 2) Convert_ParseInt(&parts[1], &req->StatusCode);
+	}
+	/* For all other headers:  name: value */
 	if (!String_UNSAFE_Separate(line, ':', &name, &value)) return;
 
 	if (String_CaselessEqualsConst(&name, "ETag")) {
-		tmp = String_ClearedArray(req->Etag);
-		String_AppendString(&tmp, &value);
+		String_CopyToRawArray(req->Etag, &value);
 	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
 		Convert_ParseInt(&value, &req->ContentLength);
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
-		tmp = String_ClearedArray(req->LastModified);
-		String_AppendString(&tmp, &value);
+		String_CopyToRawArray(req->LastModified, &value);
 	} else if (req->Cookies && String_CaselessEqualsConst(&name, "Set-Cookie")) {
-		String_UNSAFE_Separate(&value, '=', &name, &tmp);		
-		/* Cookie is: __cfduid=xyz; expires=abc; path=/; domain=.classicube.net; HttpOnly */
-		/* However only the __cfduid=xyz part of the cookie should be stored */
-		valueEnd = String_IndexOf(&tmp, ';');
-		if (valueEnd >= 0) tmp.length = valueEnd;
-
-		req->Cookies->separator = '=';
-		EntryList_Set(req->Cookies, &name, &tmp);
+		Http_ParseCookie(req, &value);
 	}
 }
 
@@ -415,8 +427,6 @@ static void Http_BufferExpanded(struct HttpRequest* req, uint32_t read) {
 
 #if defined CC_BUILD_WININET
 static HINTERNET hInternet;
-/* TODO: Test last modified and etag even work */
-#define FLAG_STATUS  HTTP_QUERY_STATUS_CODE    | HTTP_QUERY_FLAG_NUMBER
 
 /* caches connections to web servers */
 struct HttpCacheEntry {
@@ -547,12 +557,7 @@ static ReturnCode Http_StartRequest(struct HttpRequest* req, HINTERNET* handle) 
 static ReturnCode Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle) {
 	char buffer[8192];
 	String left, line;
-	DWORD len;
-
-	len = sizeof(DWORD);
-	if (!HttpQueryInfoA(handle, FLAG_STATUS, &req->StatusCode, &len, NULL)) return GetLastError();
-
-	len = 8192;
+	DWORD len = 8192;
 	if (!HttpQueryInfoA(handle, HTTP_QUERY_RAW_HEADERS, buffer, &len, NULL)) return GetLastError();
 
 	left = String_Init(buffer, len, len);
@@ -677,7 +682,6 @@ static ReturnCode Http_SysDo(struct HttpRequest* req) {
 	String url = String_FromRawArray(req->URL);
 	char urlStr[600];
 	void* post_data = req->Data;
-	long status = 0;
 	CURLcode res;
 
 	curl_easy_reset(curl);
@@ -705,10 +709,6 @@ static ReturnCode Http_SysDo(struct HttpRequest* req) {
 	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
 	res = curl_easy_perform(curl);
 	http_curProgress = 100;
-
-	/* non-obsolete is CURLINFO_RESPONSE_CODE */
-	curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &status);
-	req->StatusCode = status;
 
 	curl_slist_free_all(headers_list);
 	/* can free now that request has finished */

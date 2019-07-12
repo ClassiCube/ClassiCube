@@ -36,15 +36,11 @@ static CC_INLINE String String_Init(STRING_REF char* buffer, int length, int cap
 
 /* Counts number of characters until a '\0' is found. */
 CC_API int String_CalcLen(const char* raw, int capacity);
-/* Constructs a string from the given arguments, then sets all characters to '\0'. */
-String String_InitAndClear(STRING_REF char* buffer, int capacity);
 /* Constructs a string from a (maybe null terminated) buffer. */
 CC_NOINLINE String String_FromRaw(STRING_REF char* buffer, int capacity);
 /* Constructs a string from a null-terminated constant readonly buffer. */
 CC_NOINLINE String String_FromReadonly(STRING_REF const char* buffer);
 
-/* Constructs a string from a compile time array, then sets all characters to '\0'. */
-#define String_ClearedArray(buffer) String_InitAndClear(buffer, sizeof(buffer))
 /* Constructs a string from a compile time string constant */
 #define String_FromConst(text) { text, (sizeof(text) - 1), (sizeof(text) - 1)}
 /* Constructs a string from a compile time array */
@@ -62,6 +58,12 @@ CC_NOINLINE String String_FromReadonly(STRING_REF const char* buffer);
 CC_API void String_StripCols(String* str);
 /* Sets length of dst to 0, then appends all characters in src. */
 CC_API void String_Copy(String* dst, const String* src);
+/* Copies up to capacity characters from src into dst. Appends \0 after if src->length is < capacity. */
+/* NOTE: This means the buffer MAY NOT be null-terminated. Only use with String_FromRawArray. */
+CC_API void String_CopyToRaw(char* dst, int capacity, const String* src);
+/* Calls String_CopyToRaw on a compile time array. */
+#define String_CopyToRawArray(buffer, src) String_CopyToRaw(buffer, sizeof(buffer), src)
+
 /* UNSAFE: Returns a substring of the given string. (sub.buffer is within str.buffer + str.length) */
 CC_API String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int length);
 /* UNSAFE: Returns a substring of the given string. (sub.buffer is within str.buffer + str.length) */

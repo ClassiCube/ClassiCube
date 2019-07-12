@@ -273,8 +273,7 @@ STRING_REF String Block_UNSAFE_GetName(BlockID block) {
 }
 
 void Block_SetName(BlockID block, const String* name) {
-	String dst = String_InitAndClear(Block_NamePtr(block), STRING_SIZE);
-	String_AppendString(&dst, name);
+	String_CopyToRaw(Block_NamePtr(block), STRING_SIZE, name);
 }
 
 int Block_FindID(const String* name) {

@@ -765,11 +765,8 @@ static void Player_ContextRecreated(struct Entity* e) {
 }
 
 void Player_SetName(struct Player* p, const String* name, const String* skin) {
-	String p_name = String_ClearedArray(p->DisplayNameRaw);
-	String p_skin = String_ClearedArray(p->Base.SkinNameRaw);
-
-	String_AppendString(&p_name, name);
-	String_AppendString(&p_skin, skin);
+	String_CopyToRawArray(p->DisplayNameRaw,   name);
+	String_CopyToRawArray(p->Base.SkinNameRaw, skin);
 }
 
 static void Player_Init(struct Entity* e) {
