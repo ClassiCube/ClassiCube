@@ -2784,16 +2784,19 @@ static bool win_rawMouse;
 static void Window_RefreshBounds(void) {
 	Window_Width  = ANativeWindow_getWidth(win_handle);
 	Window_Height = ANativeWindow_getHeight(win_handle);
+	Platform_Log2("SCREEN BOUNDS: %i,%i", &Window_Width, &Window_Height);
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
 static int32_t Window_HandleInputEvent(struct android_app* app, AInputEvent* ev) {
 	/* TODO: Do something with input here.. */
 	int32_t type = AInputEvent_getType(ev);
+	Platform_Log1("INP MSG: %i", &type);
 	return 0;
 }
 
 static void Window_HandleAppEvent(struct android_app* app, int32_t cmd) {
+	Platform_Log1("APP MSG: %i", &cmd);
 	switch (cmd) {
 	case APP_CMD_INIT_WINDOW:
 		win_handle = app->window;
@@ -2820,12 +2823,14 @@ static void Window_HandleAppEvent(struct android_app* app, int32_t cmd) {
 
 	case APP_CMD_WINDOW_RESIZED:
 		Window_RefreshBounds();
+		Window_RefreshBounds(); /* TODO: Why does it only work on second try? */
 		break;
 	case APP_CMD_WINDOW_REDRAW_NEEDED:
 		Event_RaiseVoid(&WindowEvents.Redraw);
 		break;
 	case APP_CMD_CONFIG_CHANGED:
 		Window_RefreshBounds();
+		Window_RefreshBounds(); /* TODO: Why does it only work on second try? */
 		break;
 		/* TODO: Low memory */
 	}
@@ -2901,7 +2906,6 @@ void Window_ProcessEvents(void) {
 	while (ALooper_pollAll(0, NULL, &events, (void**)&source) >= 0) {
 		if (source) source->process(app, source);
 	}
-
 	if (app->destroyRequested && Window_Exists) Window_Close();
 }
 
@@ -2917,6 +2921,9 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	jvalue args[2];
 	JavaGetCurrentEnv(env);
 
+	Platform_LogConst(title);
+	Platform_LogConst(msg);
+	return;
 	args[0].l = JavaMakeConst(env, title);
 	args[1].l = JavaMakeConst(env, msg);
 	JavaCallVoid(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V", args);
@@ -2934,20 +2941,31 @@ void Window_InitRaw(Bitmap* bmp) {
 void Window_DrawRaw(Rect2D r) {
 	ANativeWindow_Buffer buffer;
 	uint32_t* src;
-	uint8_t*  dst;
+	uint32_t* dst;
 	ARect b;
 	int32_t y, res, size;
+
+	Platform_LogConst("DRAW_RAW");
 	/* window not created yet */
 	if (!win_handle) return;
 
 	b.left = r.X; b.right  = r.X + r.Width;
 	b.top  = r.Y; b.bottom = r.Y + r.Height;
 
+	Platform_Log4("DIRTY: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom);
 	res  = ANativeWindow_lock(win_handle, &buffer, &b);
 	if (res) Logger_Abort2(res, "Locking window pixels");
+	Platform_Log4("ADJUS: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom);
+
+	int32_t width  = ANativeWindow_getWidth(win_handle);
+	int32_t height = ANativeWindow_getHeight(win_handle);
+	int32_t format = ANativeWindow_getFormat(win_handle);
+
+	Platform_Log3("WIN SIZE: %i,%i  %i", &width, &height, &format);
+	Platform_Log4("BUF SIZE: %i,%i  %i/%i", &buffer.width, &buffer.height, &buffer.format, &buffer.stride);
 
 	src  = (uint32_t*)srcBmp.Scan0 + b.left;
-	dst  = (uint8_t*)buffer.bits   + b.left * 4;
+	dst  = (uint32_t*)buffer.bits  + b.left;
 	size = (b.right - b.left) * 4;
 
 	for (y = b.top; y < b.bottom; y++) {

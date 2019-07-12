@@ -8,10 +8,10 @@ struct Stream;
 
 /* Represents an ARGB colour, suitable for native graphics API texture pixels. */
 typedef CC_ALIGN_HINT(4) struct BitmapCol_ {
-#ifndef CC_BUILD_WEB
-	uint8_t B, G, R, A;
-#else
+#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
 	uint8_t R, G, B, A;
+#else
+	uint8_t B, G, R, A;
 #endif
 } BitmapCol;
 /* Represents an ARGB colour, suitable for native graphics API texture pixels. */
@@ -25,7 +25,11 @@ CC_API BitmapCol BitmapCol_Scale(BitmapCol value, float t);
 typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 
 #define PNG_MAX_DIMS 0x8000
+#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
+#define BITMAPCOL_CONST(r, g, b, a) { r, g, b, a }
+#else
 #define BITMAPCOL_CONST(r, g, b, a) { b, g, r, a }
+#endif
 
 /* Returns number of bytes a bitmap consumes. */
 #define Bitmap_DataSize(width, height) ((uint32_t)(width) * (uint32_t)(height) * 4)
