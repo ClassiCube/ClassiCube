@@ -279,10 +279,23 @@ uint64_t Stopwatch_Measure(void) {
 	}
 }
 #elif defined CC_BUILD_POSIX
+/* log to android logcat */
+#ifdef CC_BUILD_ANDROID
+#include <android/log.h>
+void Platform_Log(const String* message) {
+	String tmp; char tmpBuffer[4001];
+	String_InitArray_NT(tmp, tmpBuffer);
+
+	String_Copy(&tmp, message);
+	tmp.buffer[tmp.length] = '\0';
+	__android_log_write(ANDROID_LOG_DEBUG, "ClassiCube", tmp.buffer);
+}
+#else
 void Platform_Log(const String* message) {
 	write(STDOUT_FILENO, message->buffer, message->length);
 	write(STDOUT_FILENO, "\n",            1);
 }
+#endif
 
 #define UnixTime_TotalMS(time) ((uint64_t)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
 TimeMS DateTime_CurrentUTC_MS(void) {
@@ -1315,6 +1328,12 @@ static void Font_Init(void) {
 	}
 	String_AppendConst(&dirs[0], "/fonts");
 	
+#elif defined CC_BUILD_ANDROID
+	static const String dirs[3] = {
+		String_FromConst("/system/fonts"),
+		String_FromConst("/system/font"),
+		String_FromConst("/data/fonts"),
+	};
 #elif defined CC_BUILD_NETBSD
 	static const String dirs[3] = {
 		String_FromConst("/usr/X11R7/lib/X11/fonts"),
@@ -2061,6 +2080,8 @@ void Platform_SetDefaultCurrentDirectory(void) {
 #endif
 /* JNI helpers */
 #ifdef CC_BUILD_ANDROID
+#include <android_native_app_glue.h>
+#include <android/native_activity.h>
 void* App_Ptr;
 JavaVM* VM_Ptr;
 
@@ -2101,20 +2122,29 @@ jbyteArray JavaMakeBytes(JNIEnv* env, const uint8_t* src, uint32_t len) {
 }
 
 void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
-	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
-	(*env)->CallStaticVoidMethodA(env, clazz, method, args);
+	struct android_app* app = (struct android_app*)App_Ptr;
+	jobject instance = app->activity->clazz;
+
+	jclass clazz     = (*env)->GetObjectClass(env, instance);
+	jmethodID method = (*env)->GetMethodID(env, clazz, name, sig);
+	(*env)->CallVoidMethodA(env, instance, method, args);
 }
 
 jint JavaCallInt(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
-	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
-	return (*env)->CallStaticIntMethodA(env, clazz, method, args);
+	struct android_app* app = (struct android_app*)App_Ptr;
+	jobject instance = app->activity->clazz;
+
+	jclass clazz     = (*env)->GetObjectClass(env, instance);
+	jmethodID method = (*env)->GetMethodID(env, clazz, name, sig);
+	return (*env)->CallIntMethodA(env, instance, method, args);
 }
 
 jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jclass clazz     = (*env)->FindClass(env, "com/classicube/Wrappers");
-	jmethodID method = (*env)->GetStaticMethodID(env, clazz, name, sig);
-	return (*env)->CallStaticObjectMethodA(env, clazz, method, args);
+	struct android_app* app = (struct android_app*)App_Ptr;
+	jobject instance = app->activity->clazz;
+
+	jclass clazz     = (*env)->GetObjectClass(env, instance);
+	jmethodID method = (*env)->GetMethodID(env, clazz, name, sig);
+	return (*env)->CallObjectMethodA(env, instance, method, args);
 }
 #endif

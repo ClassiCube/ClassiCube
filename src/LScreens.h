@@ -10,7 +10,7 @@ struct LWidget;
 struct LScreen;
 
 typedef void (*LScreen_Func)(struct LScreen* s);
-typedef void(*LWidget_Func)(struct LScreen* s, struct LWidget* w);
+typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 
 #define LScreen_Layout \
 	LScreen_Func Init; /* Initialises widgets and other data. */ \
@@ -27,12 +27,12 @@ typedef void(*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	void (*MouseWheel)(struct LScreen* s, float delta); \
 	LWidget_Func HoverWidget;    /* Called when mouse is moved over a given widget. */ \
 	LWidget_Func UnhoverWidget;  /* Called when the mouse is moved away from a previously hovered widget. */ \
-	struct LWidget* OnEnterWidget;  /* Default widget to auto-click when Enter is pressed. Can be NULL. */ \
-	struct LWidget* HoveredWidget;  /* Widget the mouse is currently hovering over. */ \
-	struct LWidget* SelectedWidget; /* Widget mouse last clicked on. */ \
-	int NumWidgets;           /* Number of widgets actually used. */ \
-	struct LWidget** Widgets; /* Array of pointers to all widgets in the screen. */ \
-	bool HidesTitlebar;       /* Whether titlebar in window is hidden. */
+	struct LWidget* onEnterWidget;  /* Default widget to auto-click when Enter is pressed. Can be NULL. */ \
+	struct LWidget* hoveredWidget;  /* Widget the mouse is currently hovering over. */ \
+	struct LWidget* selectedWidget; /* Widget mouse last clicked on. */ \
+	int numWidgets;           /* Number of widgets actually used. */ \
+	struct LWidget** widgets; /* Array of pointers to all widgets in the screen. */ \
+	bool hidesTitlebar;       /* Whether titlebar in window is hidden. */
 
 struct LScreen { LScreen_Layout };
 	

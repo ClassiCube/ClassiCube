@@ -179,6 +179,9 @@ int main(int argc, char** argv) {
 void android_main(struct android_app* app) {
 	App_Ptr = app;
 	VM_Ptr  = app->activity->vm;
-	main(0, NULL);
+
+	Platform_Log1("internal dir: %c", app->activity->internalDataPath);
+	Platform_Log1("external dir: %c", app->activity->externalDataPath);
+	main(1, NULL);
 }
 #endif

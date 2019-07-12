@@ -752,20 +752,20 @@ static void Http_AddHeader(const char* key, const String* value) {
 	args[0].l = JavaMakeConst(env,  key);
 	args[1].l = JavaMakeString(env, value);
 
-	JavaCallVoid(env, "httpSetHeader", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", args);
+	JavaCallVoid(env, "httpSetHeader", "(Ljava/lang/String;Ljava/lang/String;)V", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 	(*env)->DeleteLocalRef(env, args[1].l);
 }
 
 /* Processes a HTTP header downloaded from the server */
-static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpParseHeader(JNIEnv* env, jclass c, jstring header) {
+static JNIEXPORT void JNICALL Java_com_classicube_MainActivity_httpParseHeader(JNIEnv* env, jclass c, jstring header) {
 	String line = JavaGetString(env, header);
 	Http_ParseHeader(java_req, &line);
 	(*env)->ReleaseStringUTFChars(env, header, line.buffer);
 }
 
 /* Processes a chunk of data downloaded from the web server */
-static JNIEXPORT void JNICALL Java_com_classicube_Wrappers_httpAppendData(JNIEnv* env, jclass c, jbyteArray arr, jint len) {
+static JNIEXPORT void JNICALL Java_com_classicube_MainActivity_httpAppendData(JNIEnv* env, jclass c, jbyteArray arr, jint len) {
 	jbyte* src = (*env)->GetByteArrayElements(env, NULL, 0);
 	struct HttpRequest* req = java_req;
 
@@ -792,7 +792,7 @@ static ReturnCode Http_SysDo(struct HttpRequest* req) {
 	args[1].l = JavaMakeConst(env,  verbs[req->RequestType]);
 	args[2].l = JavaMakeBytes(env,  req->Data, req->Size);
 
-	res = JavaCallInt(env, "httpInit", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[B)I", args);
+	res = JavaCallInt(env, "httpInit", "(Ljava/lang/String;Ljava/lang/String;[B)I", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 	(*env)->DeleteLocalRef(env, args[1].l);
 	(*env)->DeleteLocalRef(env, args[2].l);

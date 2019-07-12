@@ -442,7 +442,7 @@ void Launcher_ResetPixels(void) {
 	struct DrawTextArgs args;
 	int x;
 
-	if (Launcher_Screen && Launcher_Screen->HidesTitlebar) {
+	if (Launcher_Screen && Launcher_Screen->hidesTitlebar) {
 		Launcher_ResetArea(0, 0, Window_Width, Window_Height);
 		return;
 	}

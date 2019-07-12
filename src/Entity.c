@@ -940,9 +940,9 @@ static void LocalPlayer_OnNewMap(void) {
 	p->Base.Velocity = Vec3_Zero();
 	p->OldVelocity   = Vec3_Zero();
 
-	p->_WarnedRespawn = false;
-	p->_WarnedFly     = false;
-	p->_WarnedNoclip  = false;
+	p->_warnedRespawn = false;
+	p->_warnedFly     = false;
+	p->_warnedNoclip  = false;
 }
 
 static bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
@@ -992,8 +992,8 @@ static bool LocalPlayer_HandleRespawn(void) {
 	if (p->Hacks.CanRespawn) {
 		LocalPlayer_DoRespawn();
 		return true;
-	} else if (!p->_WarnedRespawn) {
-		p->_WarnedRespawn = true;
+	} else if (!p->_warnedRespawn) {
+		p->_warnedRespawn = true;
 		if (hackPermMsgs) Chat_AddRaw("&cRespawning is currently disabled");
 	}
 	return false;
@@ -1028,8 +1028,8 @@ static bool LocalPlayer_HandleFly(void) {
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		p->Hacks.Flying = !p->Hacks.Flying;
 		return true;
-	} else if (!p->_WarnedFly) {
-		p->_WarnedFly = true;
+	} else if (!p->_warnedFly) {
+		p->_warnedFly = true;
 		if (hackPermMsgs) Chat_AddRaw("&cFlying is currently disabled");
 	}
 	return false;
@@ -1043,8 +1043,8 @@ static bool LocalPlayer_HandleNoClip(void) {
 
 		p->Hacks.Noclip = !p->Hacks.Noclip;
 		return true;
-	} else if (!p->_WarnedNoclip) {
-		p->_WarnedNoclip = true;
+	} else if (!p->_warnedNoclip) {
+		p->_warnedNoclip = true;
 		if (hackPermMsgs) Chat_AddRaw("&cNoclip is currently disabled");
 	}
 	return false;

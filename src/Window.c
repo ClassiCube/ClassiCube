@@ -2787,8 +2787,9 @@ static void Window_RefreshBounds(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
-static int32_t Window_HandleInputEvent(struct android_app* app, AInputEvent* event) {
+static int32_t Window_HandleInputEvent(struct android_app* app, AInputEvent* ev) {
 	/* TODO: Do something with input here.. */
+	int32_t type = AInputEvent_getType(ev);
 	return 0;
 }
 
@@ -2834,10 +2835,11 @@ void Window_Init(void) {
 	struct android_app* app = (struct android_app*)App_Ptr;
 	/* TODO: or WINDOW_FORMAT_RGBX_8888 ?? */
 	ANativeActivity_setWindowFormat(app->activity, WINDOW_FORMAT_RGBA_8888);
-	ANativeActivity_setWindowFlags(app->activity, AWINDOW_FLAG_FULLSCREEN, 0);
+	ANativeActivity_setWindowFlags(app->activity,  AWINDOW_FLAG_FULLSCREEN, 0);
 
-	app->onAppCmd     = Window_HandleAppEvent;
-	app->onInputEvent = Window_HandleInputEvent;
+	app->onAppCmd        = Window_HandleAppEvent;
+	app->onInputEvent    = Window_HandleInputEvent;
+	Display_BitsPerPixel = 32;
 }
 
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {

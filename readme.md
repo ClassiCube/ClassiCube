@@ -15,8 +15,8 @@ You can grab the latest stable binaries [from here](https://cs.classicube.net/c_
 It **does not** work with 'modern/premium' Minecraft servers.
 
 #### Requirements
-* Windows: 2000 or later.
-* OSX: Only tested on OSX 10.5, may or may not work on later versions.
+* Windows: 2000 or later. (Windows 98 with KernelEx also *technically* works)
+* OSX: OSX 10.5 or later. 
 * Linux: libcurl and libopenal.
 
 #### Instructions
