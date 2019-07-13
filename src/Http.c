@@ -742,8 +742,6 @@ bool Http_DescribeError(ReturnCode res, String* dst) {
 	return true;
 }
 
-static void Http_SysInit(void) { }
-
 static void Http_AddHeader(const char* key, const String* value) {
 	JNIEnv* env;
 	jvalue args[2];
@@ -758,23 +756,35 @@ static void Http_AddHeader(const char* key, const String* value) {
 }
 
 /* Processes a HTTP header downloaded from the server */
-JNIEXPORT void JNICALL Java_com_classicube_MainActivity_httpParseHeader(JNIEnv* env, jclass c, jstring header) {
+static void JNICALL java_HttpParseHeader(JNIEnv* env, jclass c, jstring header) {
 	String line = JavaGetString(env, header);
+	Platform_Log(&line);
 	Http_ParseHeader(java_req, &line);
 	(*env)->ReleaseStringUTFChars(env, header, line.buffer);
 }
 
 /* Processes a chunk of data downloaded from the web server */
-JNIEXPORT void JNICALL Java_com_classicube_MainActivity_httpAppendData(JNIEnv* env, jclass c, jbyteArray arr, jint len) {
-	jbyte* src = (*env)->GetByteArrayElements(env, NULL, 0);
+static void JNICALL java_HttpAppendData(JNIEnv* env, jclass c, jbyteArray arr, jint len) {
 	struct HttpRequest* req = java_req;
-
 	if (!bufferSize) Http_BufferInit(req);
-	Http_BufferEnsure(req, len);
 
-	Mem_Copy(&req->Data[req->Size], src, len);
+	Http_BufferEnsure(req, len);
+	(*env)->GetByteArrayRegion(env, arr, 0, len, &req->Data[req->Size]);
 	Http_BufferExpanded(req, len);
-	(*env)->ReleaseByteArrayElements(env, arr, src, JNI_ABORT);
+}
+
+static JNINativeMethod methods[2] = {
+	{ "httpParseHeader", "(Ljava/lang/String;)V", java_HttpParseHeader },
+	{ "httpAppendData",  "([BI)V",                java_HttpAppendData }
+};
+static void Http_SysInit(void) {
+	struct android_app* app = (struct android_app*)App_Ptr;
+	JNIEnv* env;
+	JavaGetCurrentEnv(env);
+
+	jobject instance = app->activity->clazz;
+	jclass clazz     = (*env)->GetObjectClass(env, instance);
+	(*env)->RegisterNatives(env, clazz, methods, 2);
 }
 
 static ReturnCode Http_SysDo(struct HttpRequest* req) {

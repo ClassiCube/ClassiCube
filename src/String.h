@@ -224,7 +224,7 @@ typedef struct StringsBuffer_ {
 	uint32_t*  flagsBuffer; /* Private flags for each entry */
 	int count, totalLength;
 	/* internal state */
-	int      _textBufferSize, _flagsBufferSize;
+	int      _textCapacity, _flagsCapacity;
 	char     _defaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
 	uint32_t _defaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
 } StringsBuffer;

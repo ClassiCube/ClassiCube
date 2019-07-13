@@ -2807,6 +2807,16 @@ static int32_t Window_HandleInputEvent(struct android_app* app, AInputEvent* ev)
 		if (action == AMOTION_EVENT_ACTION_UP)   Mouse_SetPressed(MOUSE_LEFT, false);
 		return 0;
 	}
+	case AINPUT_EVENT_TYPE_KEY:
+	{
+		/* TODO: Do this right */
+		int code   = AKeyEvent_getKeyCode(ev);
+		int action = AKeyEvent_getAction(ev);
+		if (code >= 29 && code <= 54 && action == AKEY_EVENT_ACTION_DOWN) {
+			Event_RaiseInt(&KeyEvents.Press, code - 29 + 'a');
+		}
+		return 0;
+	}
 	}
 	return 1;
 }

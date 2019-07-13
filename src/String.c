@@ -771,15 +771,15 @@ bool Convert_ParseBool(const String* str, bool* value) {
 CC_NOINLINE static void StringsBuffer_Init(StringsBuffer* buffer) {
 	buffer->count       = 0;
 	buffer->totalLength = 0;
-	buffer->textBuffer  = buffer->_defaultBuffer;
-	buffer->flagsBuffer = buffer->_defaultFlags;
-	buffer->_textBufferSize  = STRINGSBUFFER_BUFFER_DEF_SIZE;
-	buffer->_flagsBufferSize = STRINGSBUFFER_FLAGS_DEF_ELEMS;
+	buffer->textBuffer     = buffer->_defaultBuffer;
+	buffer->flagsBuffer    = buffer->_defaultFlags;
+	buffer->_textCapacity  = STRINGSBUFFER_BUFFER_DEF_SIZE;
+	buffer->_flagsCapacity = STRINGSBUFFER_FLAGS_DEF_ELEMS;
 }
 
 void StringsBuffer_Clear(StringsBuffer* buffer) {
 	/* Never initialised to begin with */
-	if (!buffer->_flagsBufferSize) return;
+	if (!buffer->_flagsCapacity) return;
 
 	if (buffer->textBuffer != buffer->_defaultBuffer) {
 		Mem_Free(buffer->textBuffer);
@@ -803,10 +803,10 @@ String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
 void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 	int textOffset;
 	/* StringsBuffer hasn't been initalised yet, do it here */
-	if (!buffer->_flagsBufferSize) StringsBuffer_Init(buffer);
+	if (!buffer->_flagsCapacity) StringsBuffer_Init(buffer);
 
-	if (buffer->count == buffer->_flagsBufferSize) {
-		Utils_Resize((void**)&buffer->flagsBuffer, &buffer->_flagsBufferSize, 
+	if (buffer->count == buffer->_flagsCapacity) {
+		Utils_Resize((void**)&buffer->flagsBuffer, &buffer->_flagsCapacity,
 					4, STRINGSBUFFER_FLAGS_DEF_ELEMS, 512);
 	}
 
@@ -815,8 +815,8 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 	}
 
 	textOffset = buffer->totalLength;
-	if (textOffset + str->length >= buffer->_textBufferSize) {
-		Utils_Resize((void**)&buffer->textBuffer, &buffer->_textBufferSize,
+	if (textOffset + str->length >= buffer->_textCapacity) {
+		Utils_Resize((void**)&buffer->textBuffer, &buffer->_textCapacity,
 					1, STRINGSBUFFER_BUFFER_DEF_SIZE, 8192);
 	}
 
