@@ -83,6 +83,16 @@ if (cpe_extBlocks) {\
 } else { *data++ = (BlockRaw)value; }
 #endif
 
+static String Protocol_UNSAFE_GetString(uint8_t* data) {
+	int i, length = 0;
+	for (i = STRING_SIZE - 1; i >= 0; i--) {
+		char code = data[i];
+		if (code == '\0' || code == ' ') continue;
+		length = i + 1; break;
+	}
+	return String_Init((char*)data, length, STRING_SIZE);
+}
+
 static void Protocol_ReadString(uint8_t** ptr, String* str) {
 	int i, length = 0;
 	uint8_t* data = *ptr;
@@ -651,10 +661,7 @@ static void Classic_Message(uint8_t* data) {
 
 static void Classic_Kick(uint8_t* data) {
 	static const String title = String_FromConst("&eLost connection to the server");
-	String reason; char reasonBuffer[STRING_SIZE];
-
-	String_InitArray(reason, reasonBuffer);
-	Protocol_ReadString(&data, &reason);
+	String reason = Protocol_UNSAFE_GetString(data);
 	Game_Disconnect(&title, &reason);
 }
 
@@ -847,27 +854,20 @@ static void CPE_SendCpeExtInfoReply(void) {
 
 static void CPE_ExtInfo(uint8_t* data) {
 	static const String d3Server = String_FromConst("D3 server");
-	String appName; char appNameBuffer[STRING_SIZE];
-
-	String_InitArray(appName, appNameBuffer);
-	Protocol_ReadString(&data, &appName);
+	String appName = Protocol_UNSAFE_GetString(&data[0]);
+	cpe_needD3Fix  = String_CaselessStarts(&appName, &d3Server);
 	Chat_Add1("Server software: %s", &appName);
-	cpe_needD3Fix = String_CaselessStarts(&appName, &d3Server);
 
-	/* Workaround for old MCGalaxy that send ExtEntry sync but ExtInfo async. This means
-	   ExtEntry may sometimes arrive before ExtInfo, thus have to use += instead of = */
-	cpe_serverExtensionsCount += Stream_GetU16_BE(data);
+	/* Workaround for old MCGalaxy that send ExtEntry sync but ExtInfo async. */
+	/* Means ExtEntry may sometimes arrive before ExtInfo, so use += instead of = */
+	cpe_serverExtensionsCount += Stream_GetU16_BE(&data[64]);
 	CPE_SendCpeExtInfoReply();
 }
 
 static void CPE_ExtEntry(uint8_t* data) {
-	String ext; char extNameBuffer[STRING_SIZE];
-	int extVersion;
-
-	String_InitArray(ext, extNameBuffer);
-	Protocol_ReadString(&data, &ext);
-	extVersion = Stream_GetU32_BE(data);
-	Platform_Log2("cpe ext: %s, %i", &ext, &extVersion);
+	String ext  = Protocol_UNSAFE_GetString(&data[0]);
+	int version = data[67];
+	Platform_Log2("cpe ext: %s, %i", &ext, &version);
 
 	cpe_serverExtensionsCount--;
 	CPE_SendCpeExtInfoReply();	
@@ -884,16 +884,16 @@ static void CPE_ExtEntry(uint8_t* data) {
 	} else if (String_CaselessEqualsConst(&ext, "PlayerClick")) {
 		Server.SupportsPlayerClick = true;
 	} else if (String_CaselessEqualsConst(&ext, "EnvMapAppearance")) {
-		cpe_envMapVer = extVersion;
-		if (extVersion == 1) return;
+		cpe_envMapVer = version;
+		if (version == 1) return;
 		Net_PacketSizes[OPCODE_ENV_SET_MAP_APPEARANCE] += 4;
 	} else if (String_CaselessEqualsConst(&ext, "LongerMessages")) {
 		Server.SupportsPartialMessages = true;
 	} else if (String_CaselessEqualsConst(&ext, "FullCP437")) {
 		Server.SupportsFullCP437 = true;
 	} else if (String_CaselessEqualsConst(&ext, "BlockDefinitionsExt")) {
-		cpe_blockDefsExtVer = extVersion;
-		if (extVersion == 1) return;
+		cpe_blockDefsExtVer = version;
+		if (version == 1) return;
 		Net_PacketSizes[OPCODE_DEFINE_BLOCK_EXT] += 3;
 	} else if (String_CaselessEqualsConst(&ext, "ExtEntityPositions")) {
 		Net_PacketSizes[OPCODE_ENTITY_TELEPORT] += 6;
@@ -956,19 +956,13 @@ static void CPE_HoldThis(uint8_t* data) {
 }
 
 static void CPE_SetTextHotkey(uint8_t* data) {
-	String action; char actionBuffer[STRING_SIZE];
-	uint32_t keyCode;
-	uint8_t keyMods;
+	/* First 64 bytes are label string */
+	String action    = Protocol_UNSAFE_GetString(&data[64]);
+	uint32_t keyCode = Stream_GetU32_BE(&data[128]);
+	uint8_t keyMods  = data[132];
 	Key key;
 	
-	data += STRING_SIZE; /* skip label */
-	String_InitArray(action, actionBuffer);
-	Protocol_ReadString(&data, &action);
-
-	keyCode = Stream_GetU32_BE(data); data += 4;
-	keyMods = *data;
 	if (keyCode > 255) return;
-
 	key = Hotkeys_LWJGL[keyCode];
 	if (!key) return;
 	Platform_Log3("CPE hotkey added: %c, %b: %s", Key_Names[key], &keyMods, &action);
@@ -984,22 +978,12 @@ static void CPE_SetTextHotkey(uint8_t* data) {
 }
 
 static void CPE_ExtAddPlayerName(uint8_t* data) {
-	String playerName; char playerNameBuffer[STRING_SIZE];
-	String listName;   char listNameBuffer[STRING_SIZE];
-	String groupName;  char groupNameBuffer[STRING_SIZE];
-	uint8_t groupRank;
-	EntityID id;
-	String_InitArray(playerName, playerNameBuffer);
-	String_InitArray(listName,   listNameBuffer);
-	String_InitArray(groupName,  groupNameBuffer);
+	EntityID id = data[1]; /* 16 bit id */
+	String playerName = Protocol_UNSAFE_GetString(&data[2]);
+	String listName   = Protocol_UNSAFE_GetString(&data[66]);
+	String groupName  = Protocol_UNSAFE_GetString(&data[130]);
+	uint8_t groupRank = data[194];
 
-	id = data[1]; data += 2;
-	Protocol_ReadString(&data, &playerName);
-	Protocol_ReadString(&data, &listName);
-	Protocol_ReadString(&data, &groupName);
-	groupRank = *data;
-
-	String_StripCols(&playerName);
 	Protocol_RemoveEndPlus(&playerName);
 	Protocol_RemoveEndPlus(&listName);
 
@@ -1091,16 +1075,12 @@ static void CPE_SetBlockPermission(uint8_t* data) {
 }
 
 static void CPE_ChangeModel(uint8_t* data) {
-	String model; char modelBuffer[STRING_SIZE];
 	struct Entity* entity;
-	EntityID id;
-	String_InitArray(model, modelBuffer);
-
-	id = *data++;
-	Protocol_ReadString(&data, &model);
+	EntityID id  = data[0];
+	String model = Protocol_UNSAFE_GetString(&data[1]);
 
 	entity = Entities.List[id];
-	if (entity) { Entity_SetModel(entity, &model); }
+	if (entity) Entity_SetModel(entity, &model);
 }
 
 static void CPE_EnvSetMapAppearance(uint8_t* data) {
@@ -1217,10 +1197,7 @@ static void CPE_SetTextColor(uint8_t* data) {
 }
 
 static void CPE_SetMapEnvUrl(uint8_t* data) {
-	String url; char urlBuffer[STRING_SIZE];
-
-	String_InitArray(url, urlBuffer);
-	Protocol_ReadString(&data, &url);
+	String url = Protocol_UNSAFE_GetString(data);
 
 	if (!url.length || Utils_IsUrlPrefix(&url, 0)) {
 		Server_RetrieveTexturePack(&url);
@@ -1378,7 +1355,7 @@ static void CPE_Tick(void) {
 static void BlockDefs_OnBlockUpdated(BlockID block, bool didBlockLight) {
 	if (!World.Blocks) return;
 	/* Need to refresh lighting when a block's light blocking state changes */
-	if (Blocks.BlocksLight[block] != didBlockLight) { Lighting_Refresh(); }
+	if (Blocks.BlocksLight[block] != didBlockLight) Lighting_Refresh();
 }
 
 static TextureLoc BlockDefs_Tex(uint8_t** ptr) {
@@ -1395,7 +1372,7 @@ static TextureLoc BlockDefs_Tex(uint8_t** ptr) {
 }
 
 static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTexs) {
-	String name; char nameBuffer[STRING_SIZE];
+	String name;
 	BlockID block;
 	bool didBlockLight;
 	float speedLog2;
@@ -1406,8 +1383,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(uint8_t** ptr, bool uniqueSideTe
 	didBlockLight = Blocks.BlocksLight[block];
 	Block_ResetProps(block);
 	
-	String_InitArray(name, nameBuffer);
-	Protocol_ReadString(&data, &name);
+	name = Protocol_UNSAFE_GetString(data); data += STRING_SIZE;
 	Block_SetName(block, &name);
 	Block_SetCollide(block, *data++);
 

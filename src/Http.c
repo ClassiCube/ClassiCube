@@ -758,14 +758,14 @@ static void Http_AddHeader(const char* key, const String* value) {
 }
 
 /* Processes a HTTP header downloaded from the server */
-static JNIEXPORT void JNICALL Java_com_classicube_MainActivity_httpParseHeader(JNIEnv* env, jclass c, jstring header) {
+JNIEXPORT void JNICALL Java_com_classicube_MainActivity_httpParseHeader(JNIEnv* env, jclass c, jstring header) {
 	String line = JavaGetString(env, header);
 	Http_ParseHeader(java_req, &line);
 	(*env)->ReleaseStringUTFChars(env, header, line.buffer);
 }
 
 /* Processes a chunk of data downloaded from the web server */
-static JNIEXPORT void JNICALL Java_com_classicube_MainActivity_httpAppendData(JNIEnv* env, jclass c, jbyteArray arr, jint len) {
+JNIEXPORT void JNICALL Java_com_classicube_MainActivity_httpAppendData(JNIEnv* env, jclass c, jbyteArray arr, jint len) {
 	jbyte* src = (*env)->GetByteArrayElements(env, NULL, 0);
 	struct HttpRequest* req = java_req;
 
