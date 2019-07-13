@@ -5,6 +5,7 @@
 #include "Funcs.h"
 #include "Stream.h"
 #include "Errors.h"
+#include "Utils.h"
 
 #ifdef CC_BUILD_WEB
 #undef CC_BUILD_POSIX /* Can't see native CPU state with javascript */

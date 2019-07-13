@@ -1,8 +1,6 @@
 #ifndef CC_CHAT_H
 #define CC_CHAT_H
-#include "Constants.h"
-#include "Utils.h"
-#include "Core.h"
+#include "String.h"
 /* Manages sending, adding, and logging chat.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */

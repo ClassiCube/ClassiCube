@@ -16,26 +16,26 @@
 
 /* Data for a resizable queue, used for liquid physic tick entries. */
 struct TickQueue {
-	uint32_t* Entries;     /* Buffer holding the items in the tick queue */
-	int EntriesSize; /* Max number of elements in the buffer */
-	int EntriesMask; /* EntriesSize - 1, as EntriesSize is always a power of two */
-	int Size;        /* Number of used elements */
-	int Head;        /* Head index into the buffer */
-	int Tail;        /* Tail index into the buffer */
+	uint32_t* entries;     /* Buffer holding the items in the tick queue */
+	int capacity; /* Max number of elements in the buffer */
+	int mask;     /* capacity - 1, as capacity is always a power of two */
+	int count;    /* Number of used elements */
+	int head;     /* Head index into the buffer */
+	int tail;     /* Tail index into the buffer */
 };
 
 static void TickQueue_Init(struct TickQueue* queue) {
-	queue->Entries     = NULL;
-	queue->EntriesSize = 0;
-	queue->EntriesMask = 0;
-	queue->Head = 0;
-	queue->Tail = 0;
-	queue->Size = 0;
+	queue->entries  = NULL;
+	queue->capacity = 0;
+	queue->mask  = 0;
+	queue->count = 0;
+	queue->head  = 0;
+	queue->tail  = 0;
 }
 
 static void TickQueue_Clear(struct TickQueue* queue) {
-	if (!queue->Entries) return;
-	Mem_Free(queue->Entries);
+	if (!queue->entries) return;
+	Mem_Free(queue->entries);
 	TickQueue_Init(queue);
 }
 
@@ -43,42 +43,44 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 	uint32_t* entries;
 	int i, idx, capacity;
 
-	if (queue->EntriesSize >= (Int32_MaxValue / 4)) {
+	if (queue->capacity >= (Int32_MaxValue / 4)) {
 		Chat_AddRaw("&cToo many physics entries, clearing");
 		TickQueue_Clear(queue);
 		return;
 	}
 
-	capacity = queue->EntriesSize * 2;
+	capacity = queue->capacity * 2;
 	if (capacity < 32) capacity = 32;
 	entries = (uint32_t*)Mem_Alloc(capacity, 4, "physics tick queue");
 
-	for (i = 0; i < queue->Size; i++) {
-		idx = (queue->Head + i) & queue->EntriesMask;
-		entries[i] = queue->Entries[idx];
+	for (i = 0; i < queue->count; i++) {
+		idx = (queue->head + i) & queue->mask;
+		entries[i] = queue->entries[idx];
 	}
-	Mem_Free(queue->Entries);
+	Mem_Free(queue->entries);
 
-	queue->Entries     = entries;
-	queue->EntriesSize = capacity;
-	queue->EntriesMask = capacity - 1; /* capacity is power of two */
-	queue->Head = 0;
-	queue->Tail = queue->Size;
+	queue->entries  = entries;
+	queue->capacity = capacity;
+	queue->mask     = capacity - 1; /* capacity is power of two */
+	queue->head = 0;
+	queue->tail = queue->count;
 }
 
+/* Appends an entry to the end of the queue, resizing if necessary. */
 static void TickQueue_Enqueue(struct TickQueue* queue, uint32_t item) {
-	if (queue->Size == queue->EntriesSize)
+	if (queue->count == queue->capacity)
 		TickQueue_Resize(queue);
 
-	queue->Entries[queue->Tail] = item;
-	queue->Tail = (queue->Tail + 1) & queue->EntriesMask;
-	queue->Size++;
+	queue->entries[queue->tail] = item;
+	queue->tail = (queue->tail + 1) & queue->mask;
+	queue->count++;
 }
 
+/* Retrieves the entry from the front of the queue. */
 static uint32_t TickQueue_Dequeue(struct TickQueue* queue) {
-	uint32_t result = queue->Entries[queue->Head];
-	queue->Head = (queue->Head + 1) & queue->EntriesMask;
-	queue->Size--;
+	uint32_t result = queue->entries[queue->head];
+	queue->head = (queue->head + 1) & queue->mask;
+	queue->count--;
 	return result;
 }
 
@@ -343,7 +345,7 @@ static void Physics_ActivateLava(int index, BlockID block) {
 }
 
 static void Physics_TickLava(void) {
-	int i, count = lavaQ.Size;
+	int i, count = lavaQ.count;
 	for (i = 0; i < count; i++) {
 		int index;
 		if (Physics_CheckItem(&lavaQ, &index)) {
@@ -393,7 +395,7 @@ static void Physics_ActivateWater(int index, BlockID block) {
 }
 
 static void Physics_TickWater(void) {
-	int i, count = waterQ.Size;
+	int i, count = waterQ.count;
 	for (i = 0; i < count; i++) {
 		int index;
 		if (Physics_CheckItem(&waterQ, &index)) {

@@ -787,33 +787,48 @@ static void Http_SysInit(void) {
 	(*env)->RegisterNatives(env, clazz, methods, 2);
 }
 
-static ReturnCode Http_SysDo(struct HttpRequest* req) {
-	static const String userAgent = String_FromConst(GAME_APP_NAME);
-	static const char* verbs[3]   = { "GET", "HEAD", "POST" };
-	JNIEnv* env;
-	jvalue args[3];
+static ReturnCode Http_InitReq(JNIEnv* env, struct HttpRequest* req) {
+	static const char* verbs[3] = { "GET", "HEAD", "POST" };
+	jvalue args[2];
 	String url;
 	jint res;
 
-	JavaGetCurrentEnv(env);
 	url = String_FromRawArray(req->URL);
-
 	args[0].l = JavaMakeString(env, &url);
 	args[1].l = JavaMakeConst(env,  verbs[req->RequestType]);
-	args[2].l = JavaMakeBytes(env,  req->Data, req->Size);
 
-	res = JavaCallInt(env, "httpInit", "(Ljava/lang/String;Ljava/lang/String;[B)I", args);
+	res = JavaCallInt(env, "httpInit", "(Ljava/lang/String;Ljava/lang/String;)I", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 	(*env)->DeleteLocalRef(env, args[1].l);
-	(*env)->DeleteLocalRef(env, args[2].l);
+	return res;
+}
 
-	if (res) return res;
+static ReturnCode Http_SetData(JNIEnv* env, struct HttpRequest* req) {
+	jvalue args[1];
+	jint res;
+
+	args[0].l = JavaMakeBytes(env, req->Data, req->Size);
+	res = JavaCallInt(env, "httpSetData", "([B)I", args);
+	(*env)->DeleteLocalRef(env, args[0].l);
+	return res;
+}
+
+static ReturnCode Http_SysDo(struct HttpRequest* req) {
+	static const String userAgent = String_FromConst(GAME_APP_NAME);
+	JNIEnv* env;
+	jint res;
+
+	JavaGetCurrentEnv(env);
+	if ((res = Http_InitReq(env, req))) return res;
 	java_req = req;
+
+	Http_SetRequestHeaders(req);
 	Http_AddHeader("User-Agent", &userAgent);
+	if (req->Data && (res = Http_SetData(env, req))) return res;
 
 	bufferSize = 0;
 	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
-	res = JavaCallInt(env, "httpPerform", "()I", args);
+	res = JavaCallInt(env, "httpPerform", "()I", NULL);
 	http_curProgress = 100;
 	return res;
 }
