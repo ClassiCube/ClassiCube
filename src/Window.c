@@ -550,25 +550,27 @@ void Window_ShowDialog(const char* title, const char* msg) {
 
 static HDC draw_DC;
 static HBITMAP draw_DIB;
-void Window_InitRaw(Bitmap* bmp) {
+void Window_AllocFramebuffer(Bitmap* bmp) {
 	BITMAPINFO hdr = { 0 };
-
 	if (!draw_DC) draw_DC = CreateCompatibleDC(win_DC);
-	if (draw_DIB) DeleteObject(draw_DIB);
 	
 	hdr.bmiHeader.biSize = sizeof(BITMAPINFO);
 	hdr.bmiHeader.biWidth    =  bmp->Width;
 	hdr.bmiHeader.biHeight   = -bmp->Height;
 	hdr.bmiHeader.biBitCount = 32;
-	hdr.bmiHeader.biPlanes   = 1;
+	hdr.bmiHeader.biPlanes   = 1; 
 
-	draw_DIB = CreateDIBSection(draw_DC, &hdr, 0, (void**)&bmp->Scan0, NULL, 0);
+	draw_DIB = CreateDIBSection(draw_DC, &hdr, DIB_RGB_COLORS, (void**)&bmp->Scan0, NULL, 0);
 }
 
-void Window_DrawRaw(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r) {
 	HGDIOBJ oldSrc = SelectObject(draw_DC, draw_DIB);
-	BOOL success = BitBlt(win_DC, r.X, r.Y, r.Width, r.Height, draw_DC, r.X, r.Y, SRCCOPY);
+	BitBlt(win_DC, r.X, r.Y, r.Width, r.Height, draw_DC, r.X, r.Y, SRCCOPY);
 	SelectObject(draw_DC, oldSrc);
+}
+
+void Window_FreeFramebuffer(Bitmap* bmp) {
+	DeleteObject(draw_DIB);
 }
 
 static void Window_InitRawMouse(void) {
@@ -1406,23 +1408,25 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	X11Window_Free(&w);
 }
 
-static GC win_gc;
-static XImage* win_image;
-void Window_InitRaw(Bitmap* bmp) {
-	if (!win_gc) win_gc = XCreateGC(win_display, win_handle, 0, NULL);
-	if (win_image) XFree(win_image);
+static GC fb_gc;
+static XImage* fb_image;\
+void Window_AllocFramebuffer(Bitmap* bmp) {
+	if (!fb_gc) fb_gc = XCreateGC(win_display, win_handle, 0, NULL);
 
-	Mem_Free(bmp->Scan0);
 	bmp->Scan0 = (uint8_t*)Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
-
-	win_image = XCreateImage(win_display, win_visual.visual,
+	fb_image   = XCreateImage(win_display, win_visual.visual,
 		win_visual.depth, ZPixmap, 0, (char*)bmp->Scan0,
 		bmp->Width, bmp->Height, 32, 0);
 }
 
-void Window_DrawRaw(Rect2D r) {
-	XPutImage(win_display, win_handle, win_gc, win_image,
+void Window_DrawFramebuffer(Rect2D r) {
+	XPutImage(win_display, win_handle, fb_gc, fb_image,
 		r.X, r.Y, r.X, r.Y, r.Width, r.Height);
+}
+
+void Window_FreeFramebuffer(Bitmap* bmp) {
+	XFree(fb_image);
+	Mem_Free(bmp->Scan0);
 }
 
 void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
@@ -1931,93 +1935,55 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	RunStandardAlert(dialog, NULL, &itemHit);
 }
 
-
-/* TODO: WORK OUT WHY THIS IS BROKEN!!!!
-static CGrafPtr win_winPort;
-static CGImageRef win_image;
-
-void Window_InitRaw(Bitmap* bmp) {
-	CGColorSpaceRef colorSpace;
-	CGDataProviderRef provider;
-	
-	if (!win_winPort) win_winPort = GetWindowPort(win_handle);
-	Mem_Free(bmp->Scan0);
-	bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
-	
-	colorSpace = CGColorSpaceCreateDeviceRGB();
-	provider   = CGDataProviderCreateWithData(NULL, bmp->Scan0, 
-					Bitmap_DataSize(bmp->Width, bmp->Height), NULL);
-	
-	win_image = CGImageCreate(bmp->Width, bmp->Height, 8, 32, bmp->Width * 4, colorSpace, 
-					kCGBitmapByteOrder32Little | kCGImageAlphaFirst, provider, NULL, 0, 0);
-	
-	CGColorSpaceRelease(colorSpace);
-	CGDataProviderRelease(provider);
-}
-
-void Window_DrawRaw(Rect2D r) {
-	CGContextRef context = NULL;
-	CGRect rect;
-	OSStatus err;
-	
-	err = QDBeginCGContext(win_winPort, &context);
-	if (err) Logger_Abort2(err, "Begin draw");
-	
-	// TODO: Only update changed bit.. 
-	rect.origin.x = 0; rect.origin.y = 0;
-	rect.size.width  = Window_Width;
-	rect.size.height = Window_Height;
-	
-	CGContextDrawImage(context, rect, win_image);
-	CGContextSynchronize(context);
-	err = QDEndCGContext(win_winPort, &context);
-	if (err) Logger_Abort2(err, "End draw");
-}
-*/
-
-static CGrafPtr win_winPort;
-static CGImageRef win_image;
-static Bitmap* bmp_;
+static CGrafPtr fb_port;
+static Bitmap fb_bmp;
 static CGColorSpaceRef colorSpace;
-static CGDataProviderRef provider;
 
-void Window_InitRaw(Bitmap* bmp) {
-	if (!win_winPort) win_winPort = GetWindowPort(win_handle);
-	Mem_Free(bmp->Scan0);
+void Window_AllocFramebuffer(Bitmap* bmp) {
+	if (!fb_port) fb_port = GetWindowPort(win_handle);
+
 	bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
-
 	colorSpace = CGColorSpaceCreateDeviceRGB();
-
-	bmp_ = bmp;
-	//CGColorSpaceRelease(colorSpace);
+	fb_bmp     = *bmp;
 }
 
-void Window_DrawRaw(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r) {
 	CGContextRef context = NULL;
+	CGDataProviderRef provider;
+	GImageRef image;
 	CGRect rect;
 	OSStatus err;
 
-	err = QDBeginCGContext(win_winPort, &context);
-	if (err) Logger_Abort2(err, "Begin draw");
-	/* TODO: REPLACE THIS AWFUL HACK */
+	/* Unfortunately CGImageRef is immutable, so changing the */
+	/* underlying data doesn't change what shows when drawing. */
+	/* TODO: Use QuickDraw alternative instead */
 
 	/* TODO: Only update changed bit.. */
 	rect.origin.x = 0; rect.origin.y = 0;
 	rect.size.width  = Window_Width;
 	rect.size.height = Window_Height;
 
-	provider = CGDataProviderCreateWithData(NULL, bmp_->Scan0,
-		Bitmap_DataSize(bmp_->Width, bmp_->Height), NULL);
-	win_image = CGImageCreate(bmp_->Width, bmp_->Height, 8, 32, bmp_->Width * 4, colorSpace,
+	err = QDBeginCGContext(fb_port, &context);
+	if (err) Logger_Abort2(err, "Begin draw");
+	/* TODO: REPLACE THIS AWFUL HACK */
+
+	provider = CGDataProviderCreateWithData(NULL, fb_bmp.Scan0,
+		Bitmap_DataSize(fb_bmp.Width, fb_bmp.Height), NULL);
+	image    = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
 		kCGBitmapByteOrder32Little | kCGImageAlphaFirst, provider, NULL, 0, 0);
 
-	CGContextDrawImage(context, rect, win_image);
+	CGContextDrawImage(context, rect, image);
 	CGContextSynchronize(context);
-	err = QDEndCGContext(win_winPort, &context);
+	err = QDEndCGContext(fb_port, &context);
 	if (err) Logger_Abort2(err, "End draw");
 
-	CGImageRelease(win_image);
+	CGImageRelease(image);
 	CGDataProviderRelease(provider);
+}
+
+void Window_FreeFramebuffer(Bitmap* bmp) {
+	Mem_Free(bmp->Scan0);
+	CGColorSpaceRelease(colorSpace);
 }
 
 void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
@@ -2307,7 +2273,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 }
 
 static SDL_Surface* surface;
-void Window_InitRaw(Bitmap* bmp) {
+void Window_AllocFramebuffer(Bitmap* bmp) {
 	surface = SDL_GetWindowSurface(win_handle);
 	if (!surface) Window_SDLFail("getting window surface");
 
@@ -2318,11 +2284,17 @@ void Window_InitRaw(Bitmap* bmp) {
 	bmp->Scan0 = surface->pixels;
 }
 
-void Window_DrawRaw(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r) {
 	SDL_Rect rect;
 	rect.x = r.X; rect.w = r.Width;
 	rect.y = r.Y; rect.h = r.Height;
 	SDL_UpdateWindowSurfaceRects(win_handle, &rect, 1);
+}
+
+void Window_FreeFramebuffer(Bitmap* bmp) {
+	/* SDL docs explicitly say to NOT free the surface */
+	/* https://wiki.libsdl.org/SDL_GetWindowSurface */
+	/* TODO: Do we still need to unlock it though? */
 }
 
 void Window_EnableRawMouse(void) {
@@ -2754,8 +2726,9 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	EM_ASM_({ alert(UTF8ToString($0) + "\n\n" + UTF8ToString($1)); }, title, msg);
 }
 
-void Window_InitRaw(Bitmap* bmp) { Logger_Abort("Unsupported"); }
-void Window_DrawRaw(Rect2D r)    { Logger_Abort("Unsupported"); }
+void Window_AllocFramebuffer(Bitmap* bmp) { }
+void Window_DrawFramebuffer(Rect2D r)     { }
+void Window_FreeFramebuffer(Bitmap* bmp)  { }
 
 void Window_EnableRawMouse(void) {
 	Window_RegrabMouse();
@@ -2957,14 +2930,14 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	(*env)->DeleteLocalRef(env, args[1].l);
 }
 
-static Bitmap srcBmp;
-void Window_InitRaw(Bitmap* bmp) {
+static Bitmap fb_bmp;
+void Window_AllocFramebuffer(Bitmap* bmp) {
 	Mem_Free(bmp->Scan0);
 	bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
-	srcBmp     = *bmp;
+	fb_bmp     = *bmp;
 }
 
-void Window_DrawRaw(Rect2D r) {
+void Window_DrawFramebuffer(Rect2D r) {
 	ANativeWindow_Buffer buffer;
 	uint32_t* src;
 	uint32_t* dst;
@@ -2990,15 +2963,19 @@ void Window_DrawRaw(Rect2D r) {
 	Platform_Log3("WIN SIZE: %i,%i  %i", &width, &height, &format);
 	Platform_Log4("BUF SIZE: %i,%i  %i/%i", &buffer.width, &buffer.height, &buffer.format, &buffer.stride);
 
-	src  = (uint32_t*)srcBmp.Scan0 + b.left;
+	src  = (uint32_t*)fb_bmp.Scan0 + b.left;
 	dst  = (uint32_t*)buffer.bits  + b.left;
 	size = (b.right - b.left) * 4;
 
 	for (y = b.top; y < b.bottom; y++) {
-		Mem_Copy(dst + y * buffer.stride, src + y * srcBmp.Width, size);
+		Mem_Copy(dst + y * buffer.stride, src + y * fb_bmp.Width, size);
 	}
 	res = ANativeWindow_unlockAndPost(win_handle);
 	if (res) Logger_Abort2(res, "Unlocking window pixels");
+}
+
+void Window_FreeFramebuffer(Bitmap* bmp) {
+	Mem_Free(bmp->Scan0);
 }
 
 void Window_EnableRawMouse(void) {

@@ -101,13 +101,15 @@ void Cursor_SetVisible(bool visible);
 
 /* Shows a dialog box window. */
 CC_API void Window_ShowDialog(const char* title, const char* msg);
-/* Initialises the internal state for being able to set window's pixels. */
-/* NOTE: Do not manually free bmp->Scan0 - it may be allocated by system. */
-/* NOTE: This function must also be called whenever the window is resized. */
-void Window_InitRaw(Bitmap* bmp);
-/* Updates the window's pixels using the bitmap from Window_InitRaw. */
+/* Allocates a framebuffer that can be drawn/transferred to the window. */
+/* NOTE: Do NOT free bmp->Scan0, use Window_FreeFramebuffer. */
+/* NOTE: This MUST be called whenever the window is resized. */
+void Window_AllocFramebuffer(Bitmap* bmp);
+/* Transfers pixels from the allocated framebuffer to the on-screen window. */
 /* r can be used to only update a small region of pixels (may be ignored) */
-void Window_DrawRaw(Rect2D r);
+void Window_DrawFramebuffer(Rect2D r);
+/* Frees the previously allocated framebuffer. */
+void Window_FreeFramebuffer(Bitmap* bmp);
 
 /* Begins listening for raw input and starts raising MouseEvents.RawMoved. */
 /* NOTE: Some backends only raise it when Window_UpdateRawMouse is called. */

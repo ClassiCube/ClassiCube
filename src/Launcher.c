@@ -105,7 +105,8 @@ static void Launcher_OnResize(void* obj) {
 	Launcher_Framebuffer.Width  = Game.Width;
 	Launcher_Framebuffer.Height = Game.Height;
 
-	Window_InitRaw(&Launcher_Framebuffer);
+	Window_FreeFramebuffer(&Launcher_Framebuffer);
+	Window_AllocFramebuffer(&Launcher_Framebuffer);
 	if (Launcher_Screen) Launcher_Screen->Reposition(Launcher_Screen);
 	Launcher_Redraw();
 }
@@ -158,7 +159,7 @@ static void Launcher_Display(void) {
 	}
 
 	Launcher_Screen->OnDisplay(Launcher_Screen);
-	Window_DrawRaw(Launcher_Dirty);
+	Window_DrawFramebuffer(Launcher_Dirty);
 
 	Launcher_Dirty.X = 0; Launcher_Dirty.Width   = 0;
 	Launcher_Dirty.Y = 0; Launcher_Dirty.Height  = 0;
@@ -210,6 +211,7 @@ static void Launcher_Free(void) {
 
 	Launcher_Screen->Free(Launcher_Screen);
 	Launcher_Screen = NULL;
+	Window_FreeFramebuffer(&Launcher_Framebuffer);
 }
 
 void Launcher_Run(void) {
@@ -229,7 +231,7 @@ void Launcher_Run(void) {
 
 	Launcher_Framebuffer.Width  = Game.Width;
 	Launcher_Framebuffer.Height = Game.Height;
-	Window_InitRaw(&Launcher_Framebuffer);
+	Window_AllocFramebuffer(&Launcher_Framebuffer);
 
 	Http_Component.Init();
 	Resources_CheckExistence();
