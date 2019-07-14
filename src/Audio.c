@@ -11,6 +11,7 @@
 #include "Vorbis.h"
 #include "Chat.h"
 #include "Stream.h"
+#include "Utils.h"
 
 int Audio_SoundsVolume, Audio_MusicVolume;
 

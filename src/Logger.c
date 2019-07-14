@@ -24,7 +24,7 @@
 #if defined CC_BUILD_OPENBSD
 #include <signal.h>
 /* OpenBSD doesn't provide ucontext.h */
-#elif defined CC_BUILD_LINUX
+#elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
 /* Need to define this to get REG_ constants */
 #define __USE_GNU
 #include <ucontext.h>
@@ -491,7 +491,7 @@ static void Logger_PrintRegisters(String* str, void* ctx) {
 	#error "Unknown CPU architecture"
 #endif
 }
-#elif defined CC_BUILD_LINUX
+#elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
 /* See /usr/include/sys/ucontext.h */
 static void Logger_PrintRegisters(String* str, void* ctx) {
 #if __PPC__ && __WORDSIZE == 32
@@ -620,7 +620,7 @@ static void Logger_DumpMisc(void* ctx) {
 	EnumerateLoadedModules(process, Logger_DumpModule, NULL);
 }
 
-#elif defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS
+#elif defined CC_BUILD_LINUX || defined CC_BUILD_SOLARIS || defined CC_BUILD_ANDROID
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>

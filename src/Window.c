@@ -2871,14 +2871,9 @@ void Clipboard_GetText(String* value) {
 }
 
 void Clipboard_SetText(const String* value) {
-	JNIEnv* env;
-	jvalue args[1];	
-	JavaGetCurrentEnv(env);
-
-	args[0].l = JavaMakeString(env, value);
-	JavaCallVoid(env, "setClipboardText", "(Ljava/lang/String;)V", args);
-	(*env)->DeleteLocalRef(env, args[0].l);
+	JavaCall_String_Void("setClipboardText", value);
 }
+
 
 /* Always a fullscreen window */
 void Window_SetVisible(bool visible) { }
@@ -2932,7 +2927,6 @@ void Window_ShowDialog(const char* title, const char* msg) {
 
 static Bitmap fb_bmp;
 void Window_AllocFramebuffer(Bitmap* bmp) {
-	Mem_Free(bmp->Scan0);
 	bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
 	fb_bmp     = *bmp;
 }

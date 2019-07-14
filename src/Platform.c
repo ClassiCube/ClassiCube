@@ -348,7 +348,7 @@ uint64_t Stopwatch_Measure(void) {
 uint64_t Stopwatch_Measure(void) { return mach_absolute_time(); }
 #elif defined CC_BUILD_SOLARIS
 uint64_t Stopwatch_Measure(void) { return gethrtime(); }
-#elif defined CC_BUILD_UNIX
+#elif defined CC_BUILD_POSIX
 uint64_t Stopwatch_Measure(void) {
 	struct timespec t;
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
@@ -1720,6 +1720,14 @@ ReturnCode Process_GetExePath(String* path) {
 	Platform_DecodeString(path, str, len);
 	return 0;
 }
+#elif defined CC_BUILD_ANDROID
+ReturnCode Process_StartOpen(const String* args) {
+	JavaCall_String_Void("startOpen", args);
+	return 0; /* TODO: Is there a clean way of handling an error */
+}
+
+ReturnCode Process_StartShell(void) { return ERR_NOT_SUPPORTED; }
+ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_UNIX
 ReturnCode Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
@@ -1988,6 +1996,9 @@ static void Platform_InitCommon(void) {
 	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
+	/* Assume stopwatch is in nanoseconds */
+	/* Some platforms (e.g. OSX) override this */
+	sw_freqDiv = 1000;
 }
 void Platform_Free(void) { }
 
@@ -2022,11 +2033,7 @@ bool Platform_DescribeError(ReturnCode res, String* dst) {
 }
 #endif
 #if defined CC_BUILD_UNIX
-void Platform_Init(void) {
-	Platform_InitCommon();
-	/* stopwatch always in nanoseconds */
-	sw_freqDiv = 1000;
-}
+void Platform_Init(void) { Platform_InitCommon(); }
 void Platform_SetDefaultCurrentDirectory(void) { SetCurrentToExeDirectory(); }
 #elif defined CC_BUILD_OSX
 static void Platform_InitStopwatch(void) {
@@ -2077,13 +2084,21 @@ void Platform_SetDefaultCurrentDirectory(void) {
 	ReturnCode res = Directory_SetCurrent(&path);
 	if (res) Logger_Warn(res, "setting current directory");
 }
-#endif
-/* JNI helpers */
-#ifdef CC_BUILD_ANDROID
+#elif defined CC_BUILD_ANDROID
 #include <android_native_app_glue.h>
 #include <android/native_activity.h>
 void* App_Ptr;
 JavaVM* VM_Ptr;
+void Platform_Init(void) { Platform_InitCommon(); }
+
+void Platform_SetDefaultCurrentDirectory(void) {
+	struct android_app* app = (struct android_app*)App_Ptr;
+	const char* storageDir = app->activity->externalDataPath;
+
+	ReturnCode res = chdir(storageDir) == -1 ? errno : 0;
+	if (res) Logger_Warn(res, "setting current directory");
+}
+/* JNI helpers */
 
 UniString JavaGetUniString(JNIEnv* env, jstring str) {
 	UniString dst;
@@ -2146,5 +2161,15 @@ jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* a
 	jclass clazz     = (*env)->GetObjectClass(env, instance);
 	jmethodID method = (*env)->GetMethodID(env, clazz, name, sig);
 	return (*env)->CallObjectMethodA(env, instance, method, args);
+}
+
+void JavaCall_String_Void(const char* name, const String* value) {
+	JNIEnv* env;
+	jvalue args[1];
+	JavaGetCurrentEnv(env);
+
+	args[0].l = JavaMakeString(env, value);
+	JavaCallVoid(env, name, "(Ljava/lang/String;)V", args);
+	(*env)->DeleteLocalRef(env, args[0].l);
 }
 #endif

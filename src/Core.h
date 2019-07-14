@@ -108,7 +108,6 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_WINMM
 #elif defined __ANDROID__
 #define CC_BUILD_ANDROID
-#define CC_BUILD_LINUX
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #define CC_BUILD_GLMODERN

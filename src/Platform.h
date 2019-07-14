@@ -252,11 +252,13 @@ String JavaGetString(JNIEnv* env, jstring str);
 jobject JavaMakeString(JNIEnv* env, const String* str);
 /* Allocates a java byte array from the given block of memory. */
 jbyteArray JavaMakeBytes(JNIEnv* env, const uint8_t* src, uint32_t len);
-/* Calls a method in the Wrappers class that returns nothing. */
+/* Calls a method in the activity class that returns nothing. */
 void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args);
-/* Calls a method in the Wrappers class that returns a jint. */
+/* Calls a method in the activity class that returns a jint. */
 jint JavaCallInt(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
-/* Calls a method in the Wrappers class that returns a jobject. */
+/* Calls a method in the activity class that returns a jobject. */
 jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args);
+/* Calls a method in the activity class that takes a string and returns nothig. */
+void JavaCall_String_Void(const char* name, const String* value);
 #endif
 #endif
