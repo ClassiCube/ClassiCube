@@ -1409,7 +1409,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 }
 
 static GC fb_gc;
-static XImage* fb_image;\
+static XImage* fb_image;
 void Window_AllocFramebuffer(Bitmap* bmp) {
 	if (!fb_gc) fb_gc = XCreateGC(win_display, win_handle, 0, NULL);
 
@@ -1950,7 +1950,7 @@ void Window_AllocFramebuffer(Bitmap* bmp) {
 void Window_DrawFramebuffer(Rect2D r) {
 	CGContextRef context = NULL;
 	CGDataProviderRef provider;
-	GImageRef image;
+	CGImageRef image;
 	CGRect rect;
 	OSStatus err;
 
