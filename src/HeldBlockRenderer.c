@@ -231,7 +231,7 @@ void HeldBlockRenderer_Render(double delta) {
 
 static struct EntityVTABLE heldEntity_VTABLE = {
 	NULL, NULL, NULL, HeldBlockRenderer_GetCol,
-	NULL, NULL, NULL, NULL,
+	NULL, NULL
 };
 static void HeldBlockRenderer_Init(void) {
 	Entity_Init(&held_entity);

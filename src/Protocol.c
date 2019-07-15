@@ -150,27 +150,27 @@ static void Protocol_CheckName(EntityID id, String* name, String* skin) {
 
 static void Classic_ReadAbsoluteLocation(uint8_t* data, EntityID id, bool interpolate);
 static void Protocol_AddEntity(uint8_t* data, EntityID id, const String* displayName, const String* skinName, bool readPosition) {
-	struct LocalPlayer* p;
-	struct NetPlayer* pl;
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct Entity* e;
 
 	if (id != ENTITIES_SELF_ID) {
 		if (Entities.List[id]) Entities_Remove(id);
-		pl = &NetPlayers_List[id];
+		e = &NetPlayers_List[id].Base;
 
-		NetPlayer_Init(pl, displayName, skinName);
-		Entities.List[id] = &pl->Base;
+		NetPlayer_Init((struct NetPlayer*)e, skinName);
+		Entities.List[id] = e;
 		Event_RaiseInt(&EntityEvents.Added, id);
 	} else {
-		p = &LocalPlayer_Instance;
-		p->Base.VTABLE->Despawn(&p->Base);
+		e = &LocalPlayer_Instance.Base;
+		e->VTABLE->Despawn(e);
 		/* Always reset the texture here, in case other network players are using the same skin as us */
 		/* In that case, we don't want the fetching of new skin for us to delete the texture used by them */
 		Player_ResetSkin((struct Player*)p);
 		p->FetchedSkin = false;
 
-		Player_SetName((struct Player*)p, displayName, skinName);
-		Player_UpdateNameTex((struct Player*)p);
+		Player_SetSkin((struct Player*)p, skinName);
 	}
+	Entity_SetName(e, displayName);
 
 	if (!readPosition) return;
 	Classic_ReadAbsoluteLocation(data, id, false);

@@ -61,8 +61,6 @@ struct EntityVTABLE {
 	PackedCol (*GetCol)(struct Entity* e);
 	void (*RenderModel)(struct Entity* e, double deltaTime, float t);
 	void (*RenderName)(struct Entity* e);
-	void (*ContextLost)(struct Entity* e);
-	void (*ContextRecreated)(struct Entity* e);
 };
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
@@ -87,6 +85,8 @@ struct Entity {
 
 	struct AnimatedComp Anim;
 	char SkinNameRaw[STRING_SIZE];
+	char DisplayNameRaw[STRING_SIZE];
+	struct Texture NameTex;
 };
 typedef bool (*Entity_TouchesCondition)(BlockID block);
 
@@ -114,6 +114,9 @@ CC_API bool Entity_TouchesAny(struct AABB* bb, Entity_TouchesCondition cond);
 bool Entity_TouchesAnyRope(struct Entity* e);	
 bool Entity_TouchesAnyLava(struct Entity* e);
 bool Entity_TouchesAnyWater(struct Entity* e);
+
+/* Sets the nametag above the given entity's head */
+void Entity_SetName(struct Entity* e, const String* name);
 
 /* Global data for all entities */
 /* (Actual entities may point to NetPlayers_List or elsewhere) */
@@ -162,14 +165,12 @@ CC_API void TabList_Set(EntityID id, const String* player, const String* list, c
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList.Buffer, TabList.PlayerNames[id]);
 #define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList.Buffer, TabList.ListNames[id]);
 #define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList.Buffer, TabList.GroupNames[id]);
-#define Player_Layout struct Entity Base; char DisplayNameRaw[STRING_SIZE]; bool FetchedSkin; struct Texture NameTex;
+#define Player_Layout struct Entity Base; bool FetchedSkin;
 
 /* Represents a player entity. */
 struct Player { Player_Layout };
 /* Sets the display name (name tag above entity) and skin name of the given player. */
-void Player_SetName(struct Player* player, const String* name, const String* skin);
-/* Remakes the texture for the name tag of the entity. */
-void Player_UpdateNameTex(struct Player* player);
+void Player_SetSkin(struct Player* player, const String* skin);
 /* Resets the skin of the entity to default. */
 void Player_ResetSkin(struct Player* player);
 
@@ -179,7 +180,7 @@ struct NetPlayer {
 	struct NetInterpComp Interp;
 	bool ShouldRender;
 };
-void NetPlayer_Init(struct NetPlayer* player, const String* displayName, const String* skinName);
+void NetPlayer_Init(struct NetPlayer* player, const String* skinName);
 extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
 /* Represents the user/player's own entity. */

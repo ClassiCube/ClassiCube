@@ -70,7 +70,8 @@ void Entity_Init(struct Entity* e) {
 	e->ModelScale = Vec3_Create1(1.0f);
 	e->uScale = 1.0f;
 	e->vScale = 1.0f;
-	e->SkinNameRaw[0] = '\0';
+	e->SkinNameRaw[0]    = '\0';
+	e->DisplayNameRaw[0] = '\0';
 }
 
 Vec3 Entity_GetEyePosition(struct Entity* e) {
@@ -216,6 +217,105 @@ bool Entity_TouchesAnyWater(struct Entity* e) {
 }
 
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Entity nametag------------------------------------------------------*
+*#########################################################################################################################*/
+#define NAME_IS_EMPTY -30000
+#define NAME_OFFSET 3 /* offset of back layer of name above an entity */
+
+static void Entity_MakeNameTexture(struct Entity* e) {
+	String colorlessName; char colorlessBuffer[STRING_SIZE];
+	BitmapCol shadowCol = BITMAPCOL_CONST(80, 80, 80, 255);
+	BitmapCol origWhiteCol;
+
+	struct DrawTextArgs args;
+	bool bitmapped;
+	String name;
+	Size2D size;
+	Bitmap bmp;
+
+	/* Names are always drawn not using the system font */
+	bitmapped = Drawer2D_BitmappedText;
+	Drawer2D_BitmappedText = true;
+	name = String_FromRawArray(e->DisplayNameRaw);
+
+	Drawer2D_MakeFont(&args.font, 24, FONT_STYLE_NORMAL);
+	DrawTextArgs_Make(&args, &name, &args.font, false);
+	size = Drawer2D_MeasureText(&args);
+
+	if (size.Width == 0) {
+		e->NameTex.ID = GFX_NULL;
+		e->NameTex.X  = NAME_IS_EMPTY;
+	} else {
+		String_InitArray(colorlessName, colorlessBuffer);
+		size.Width += NAME_OFFSET; size.Height += NAME_OFFSET;
+
+		Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+		{
+			origWhiteCol = Drawer2D_Cols['f'];
+
+			Drawer2D_Cols['f'] = shadowCol;
+			String_AppendColorless(&colorlessName, &name);
+			args.text = colorlessName;
+			Drawer2D_DrawText(&bmp, &args, NAME_OFFSET, NAME_OFFSET);
+
+			Drawer2D_Cols['f'] = origWhiteCol;
+			args.text = name;
+			Drawer2D_DrawText(&bmp, &args, 0, 0);
+		}
+		Drawer2D_Make2DTexture(&e->NameTex, &bmp, size, 0, 0);
+		Mem_Free(bmp.Scan0);
+	}
+	Drawer2D_BitmappedText = bitmapped;
+}
+
+static void Entity_DrawName(struct Entity* e) {
+	VertexP3fT2fC4b vertices[4];
+	PackedCol col = PACKEDCOL_WHITE;
+
+	struct Model* model;
+	struct Matrix mat;
+	Vec3 pos;
+	float scale;
+	Vec2 size;
+
+	if (e->NameTex.X == NAME_IS_EMPTY) return;
+	if (!e->NameTex.ID) Entity_MakeNameTexture(e);
+	Gfx_BindTexture(e->NameTex.ID);
+
+	model = e->Model;
+	Vec3_TransformY(&pos, model->GetNameY(e), &e->Transform);
+
+	scale  = model->NameScale * e->ModelScale.Y;
+	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
+	size.X = e->NameTex.Width * scale; size.Y = e->NameTex.Height * scale;
+
+	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
+		Matrix_Mul(&mat, &Gfx.View, &Gfx.Projection); /* TODO: This mul is slow, avoid it */
+		/* Get W component of transformed position */
+		scale = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
+		size.X *= scale * 0.2f; size.Y *= scale * 0.2f;
+	}
+
+	Particle_DoRender(&size, &pos, &e->NameTex.uv, col, vertices);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, vertices, 4);
+}
+
+/* Deletes the texture containing the entity's nametag */
+CC_NOINLINE static void Entity_DeleteNameTex(struct Entity* e) {
+	Gfx_DeleteTexture(&e->NameTex.ID);
+	e->NameTex.X = 0; /* X is used as an 'empty name' flag */
+}
+
+void Entity_SetName(struct Entity* e, const String* name) {
+	Entity_DeleteNameTex(e);
+	String_CopyToRawArray(e->DisplayNameRaw, name);
+	/* name texture redraw deferred until necessary */
+}
+
+
 /*########################################################################################################################*
 *--------------------------------------------------------Entities---------------------------------------------------------*
 *#########################################################################################################################*/
@@ -298,11 +398,15 @@ void Entities_RenderHoveredNames(double delta) {
 	if (hadFog) Gfx_SetFog(true);
 }
 
+static void Entity_ContextLost(struct Entity* e) {
+	Entity_DeleteNameTex(e);
+}
+
 static void Entities_ContextLost(void* obj) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i]) continue;
-		Entities.List[i]->VTABLE->ContextLost(Entities.List[i]);
+		Entity_ContextLost(Entities.List[i]);
 	}
 	Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
 }
@@ -311,7 +415,7 @@ static void Entities_ContextRecreated(void* obj) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i]) continue;
-		Entities.List[i]->VTABLE->ContextRecreated(Entities.List[i]);
+		/* name redraw is deferred until rendered */
 	}
 }
 
@@ -319,8 +423,8 @@ static void Entities_ChatFontChanged(void* obj) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i]) continue;
-		if (Entities.List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
-		Player_UpdateNameTex((struct Player*)Entities.List[i]);
+		Entity_DeleteNameTex(Entities.List[i]);
+		/* name redraw is deferred until rendered */
 	}
 }
 
@@ -466,97 +570,6 @@ struct IGameComponent TabList_Component = {
 /*########################################################################################################################*
 *---------------------------------------------------------Player----------------------------------------------------------*
 *#########################################################################################################################*/
-#define PLAYER_NAME_EMPTY_TEX -30000
-#define NAME_OFFSET 3 /* offset of back layer of name above an entity */
-
-static void Player_MakeNameTexture(struct Player* player) {
-	String colorlessName; char colorlessBuffer[STRING_SIZE];
-	BitmapCol shadowCol = BITMAPCOL_CONST(80, 80, 80, 255);
-	BitmapCol origWhiteCol;
-
-	struct DrawTextArgs args;
-	bool bitmapped;
-	String name;
-	Size2D size;
-	Bitmap bmp;
-
-	/* we want names to always be drawn not using the system font */
-	bitmapped = Drawer2D_BitmappedText;
-	Drawer2D_BitmappedText = true;
-	name = String_FromRawArray(player->DisplayNameRaw);
-
-	Drawer2D_MakeFont(&args.font, 24, FONT_STYLE_NORMAL);
-	DrawTextArgs_Make(&args, &name, &args.font, false);
-	size = Drawer2D_MeasureText(&args);
-
-	if (size.Width == 0) {
-		player->NameTex.ID = GFX_NULL;
-		player->NameTex.X  = PLAYER_NAME_EMPTY_TEX;
-	} else {
-		String_InitArray(colorlessName, colorlessBuffer);
-		size.Width += NAME_OFFSET; size.Height += NAME_OFFSET;
-
-		Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
-		{
-			origWhiteCol = Drawer2D_Cols['f'];
-
-			Drawer2D_Cols['f'] = shadowCol;
-			String_AppendColorless(&colorlessName, &name);
-			args.text = colorlessName;
-			Drawer2D_DrawText(&bmp, &args, NAME_OFFSET, NAME_OFFSET);
-
-			Drawer2D_Cols['f'] = origWhiteCol;
-			args.text = name;
-			Drawer2D_DrawText(&bmp, &args, 0, 0);
-		}
-		Drawer2D_Make2DTexture(&player->NameTex, &bmp, size, 0, 0);
-		Mem_Free(bmp.Scan0);
-	}
-	Drawer2D_BitmappedText = bitmapped;
-}
-
-void Player_UpdateNameTex(struct Player* player) {
-	struct Entity* e = &player->Base;
-	e->VTABLE->ContextLost(e);
-
-	if (Gfx.LostContext) return;
-	Player_MakeNameTexture(player);
-}
-
-static void Player_DrawName(struct Player* p) {
-	VertexP3fT2fC4b vertices[4];
-	PackedCol col = PACKEDCOL_WHITE;
-
-	struct Entity* e = &p->Base;
-	struct Model* model;
-	struct Matrix mat;
-	Vec3 pos;
-	float scale;
-	Vec2 size;	
-
-	if (p->NameTex.X == PLAYER_NAME_EMPTY_TEX) return;
-	if (!p->NameTex.ID) Player_MakeNameTexture(p);
-	Gfx_BindTexture(p->NameTex.ID);
-
-	model = e->Model;
-	Vec3_TransformY(&pos, model->GetNameY(e), &e->Transform);
-
-	scale  = model->NameScale * e->ModelScale.Y;
-	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
-	size.X = p->NameTex.Width * scale; size.Y = p->NameTex.Height * scale;
-
-	if (Entities.NamesMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {			
-		Matrix_Mul(&mat, &Gfx.View, &Gfx.Projection); /* TODO: This mul is slow, avoid it */
-		/* Get W component of transformed position */
-		scale = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
-		size.X *= scale * 0.2f; size.Y *= scale * 0.2f;
-	}
-
-	Particle_DoRender(&size, &pos, &p->NameTex.uv, col, vertices);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
-	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, vertices, 4);
-}
-
 static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
 	struct Entity* entity = &player->Base;
 	struct Player* p;
@@ -750,22 +763,10 @@ static void Player_Despawn(struct Entity* e) {
 		Gfx_DeleteTexture(&e->TextureId);
 		Player_ResetSkin(player);
 	}
-	e->VTABLE->ContextLost(e);
+	Entity_ContextLost(e);
 }
 
-static void Player_ContextLost(struct Entity* e) {
-	struct Player* player = (struct Player*)e;
-	Gfx_DeleteTexture(&player->NameTex.ID);
-	player->NameTex.X = 0; /* X is used as an 'empty name' flag */
-}
-
-static void Player_ContextRecreated(struct Entity* e) {
-	struct Player* player = (struct Player*)e;
-	Player_UpdateNameTex(player);
-}
-
-void Player_SetName(struct Player* p, const String* name, const String* skin) {
-	String_CopyToRawArray(p->DisplayNameRaw,   name);
+void Player_SetSkin(struct Player* p, const String* skin) {
 	String_CopyToRawArray(p->Base.SkinNameRaw, skin);
 }
 
@@ -876,7 +877,7 @@ static void LocalPlayer_RenderModel(struct Entity* e, double deltaTime, float t)
 
 static void LocalPlayer_RenderName(struct Entity* e) {
 	if (!Camera.Active->isThirdPerson) return;
-	Player_DrawName((struct Player*)e);
+	Entity_DrawName(e);
 }
 
 static void LocalPlayer_CheckJumpVelocity(void* obj) {
@@ -888,14 +889,15 @@ static void LocalPlayer_CheckJumpVelocity(void* obj) {
 
 static struct EntityVTABLE localPlayer_VTABLE = {
 	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetCol,
-	LocalPlayer_RenderModel, LocalPlayer_RenderName, Player_ContextLost,      Player_ContextRecreated,
+	LocalPlayer_RenderModel, LocalPlayer_RenderName
 };
 static void LocalPlayer_Init(void) {
 	struct LocalPlayer* p   = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
 
 	Player_Init(&p->Base);
-	Player_SetName((struct Player*)p, &Game_Username, &Game_Username);
+	Entity_SetName(&p->Base, &Game_Username);
+	Player_SetSkin((struct Player*)p, &Game_Username);
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, LocalPlayer_CheckJumpVelocity);
 
 	p->Collisions.Entity = &p->Base;
@@ -1110,17 +1112,17 @@ static void NetPlayer_RenderName(struct Entity* e) {
 
 	distance  = Model_RenderDistance(e);
 	threshold = Entities.NamesMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
-	if (distance <= (float)threshold) Player_DrawName((struct Player*)p);
+	if (distance <= (float)threshold) Entity_DrawName(e);
 }
 
 struct EntityVTABLE netPlayer_VTABLE = {
 	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetCol,
-	NetPlayer_RenderModel, NetPlayer_RenderName, Player_ContextLost,    Player_ContextRecreated,
+	NetPlayer_RenderModel, NetPlayer_RenderName
 };
-void NetPlayer_Init(struct NetPlayer* p, const String* displayName, const String* skinName) {
+void NetPlayer_Init(struct NetPlayer* p, const String* skinName) {
 	Mem_Set(p, 0, sizeof(struct NetPlayer));
 	Player_Init(&p->Base);
-	Player_SetName((struct Player*)p, displayName, skinName);
+	Player_SetSkin((struct Player*)p, skinName);
 	p->Base.VTABLE = &netPlayer_VTABLE;
 }
 
