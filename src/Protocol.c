@@ -157,19 +157,13 @@ static void Protocol_AddEntity(uint8_t* data, EntityID id, const String* display
 		if (Entities.List[id]) Entities_Remove(id);
 		e = &NetPlayers_List[id].Base;
 
-		NetPlayer_Init((struct NetPlayer*)e, skinName);
+		NetPlayer_Init((struct NetPlayer*)e);
 		Entities.List[id] = e;
 		Event_RaiseInt(&EntityEvents.Added, id);
 	} else {
 		e = &LocalPlayer_Instance.Base;
-		e->VTABLE->Despawn(e);
-		/* Always reset the texture here, in case other network players are using the same skin as us */
-		/* In that case, we don't want the fetching of new skin for us to delete the texture used by them */
-		Player_ResetSkin((struct Player*)p);
-		p->FetchedSkin = false;
-
-		Player_SetSkin((struct Player*)p, skinName);
 	}
+	Entity_SetSkin(e, skinName);
 	Entity_SetName(e, displayName);
 
 	if (!readPosition) return;

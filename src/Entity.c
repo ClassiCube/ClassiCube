@@ -67,11 +67,14 @@ static PackedCol Entity_GetCol(struct Entity* e) {
 }
 
 void Entity_Init(struct Entity* e) {
+	static const String model = String_FromConst("humanoid");
 	e->ModelScale = Vec3_Create1(1.0f);
-	e->uScale = 1.0f;
-	e->vScale = 1.0f;
+	e->uScale   = 1.0f;
+	e->vScale   = 1.0f;
+	e->StepSize = 0.5f;
 	e->SkinNameRaw[0]    = '\0';
 	e->DisplayNameRaw[0] = '\0';
+	Entity_SetModel(e, &model);
 }
 
 Vec3 Entity_GetEyePosition(struct Entity* e) {
@@ -317,6 +320,194 @@ void Entity_SetName(struct Entity* e, const String* name) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------------Entity skins-------------------------------------------------------*
+*#########################################################################################################################*/
+static struct Entity* Entity_FirstOtherWithSameSkinAndFetchedSkin(struct Entity* except) {
+	struct Entity* e;
+	String skin, eSkin;
+	int i;
+
+	skin = String_FromRawArray(except->SkinNameRaw);
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+		if (!Entities.List[i] || Entities.List[i] == except) continue;
+
+		e     = Entities.List[i];
+		eSkin = String_FromRawArray(e->SkinNameRaw);
+		if (e->FetchedSkin && String_Equals(&skin, &eSkin)) return e;
+	}
+	return NULL;
+}
+
+/* Copies skin data from another entity */
+static void Entity_CopySkin(struct Entity* dst, struct Entity* src) {
+	String skin;
+	dst->TextureId = src->TextureId;	
+	dst->SkinType  = src->SkinType;
+	dst->uScale    = src->uScale;
+	dst->vScale    = src->vScale;
+
+	/* Custom mob textures */
+	dst->MobTextureId = GFX_NULL;
+	skin = String_FromRawArray(dst->SkinNameRaw);
+	if (Utils_IsUrlPrefix(&skin, 0)) dst->MobTextureId = dst->TextureId;
+}
+
+/* Resets skin data for the given entity */
+static void Entity_ResetSkin(struct Entity* e) {
+	e->uScale = 1.0f; e->vScale = 1.0f;
+	e->MobTextureId = GFX_NULL;
+	e->TextureId    = GFX_NULL;
+	e->SkinType     = SKIN_64x32;
+}
+
+/* Copies or resets skin data for all entity with same skin */
+static void Entity_SetSkinAll(struct Entity* source, bool reset) {
+	struct Entity* e;
+	String skin, eSkin;
+	int i;
+
+	skin = String_FromRawArray(source->SkinNameRaw);
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+		if (!Entities.List[i]) continue;
+
+		e     = Entities.List[i];
+		eSkin = String_FromRawArray(e->SkinNameRaw);
+		if (!String_Equals(&skin, &eSkin)) continue;
+
+		if (reset) {
+			Entity_ResetSkin(e);
+		} else {
+			Entity_CopySkin(e, source);
+		}
+	}
+}
+
+/* Clears hat area from a skin bitmap if it's completely white or black,
+   so skins edited with Microsoft Paint or similiar don't have a solid hat */
+static void Entity_ClearHat(Bitmap* bmp, uint8_t skinType) {
+	int sizeX  = (bmp->Width / 64) * 32;
+	int yScale = skinType == SKIN_64x32 ? 32 : 64;
+	int sizeY  = (bmp->Height / yScale) * 16;
+	int x, y;
+
+	/* determine if we actually need filtering */
+	for (y = 0; y < sizeY; y++) {
+		BitmapCol* row = Bitmap_GetRow(bmp, y) + sizeX;
+		for (x = 0; x < sizeX; x++) {
+			if (row[x].A != 255) return;
+		}
+	}
+
+	/* only perform filtering when the entire hat is opaque */
+	uint32_t white = PackedCol_ARGB(255, 255, 255, 255);
+	uint32_t black = PackedCol_ARGB(0,   0,   0,   255);
+	for (y = 0; y < sizeY; y++) {
+		uint32_t* row = Bitmap_RawRow(bmp, y) + sizeX;
+		for (x = 0; x < sizeX; x++) {
+			uint32_t pixel = row[x];
+			if (pixel == white || pixel == black) row[x] = 0;
+		}
+	}
+}
+
+/* Ensures skin is a power of two size, resizing if needed. */
+static void Entity_EnsurePow2(struct Entity* e, Bitmap* bmp) {
+	uint32_t stride;
+	int width, height;
+	Bitmap scaled;
+	int y;
+
+	width  = Math_NextPowOf2(bmp->Width);
+	height = Math_NextPowOf2(bmp->Height);
+	if (width == bmp->Width && height == bmp->Height) return;
+
+	Bitmap_Allocate(&scaled, width, height);
+	e->uScale = (float)bmp->Width  / width;
+	e->vScale = (float)bmp->Height / height;
+	stride = bmp->Width * 4;
+
+	for (y = 0; y < bmp->Height; y++) {
+		BitmapCol* src = Bitmap_GetRow(bmp, y);
+		BitmapCol* dst = Bitmap_GetRow(&scaled, y);
+		Mem_Copy(dst, src, stride);
+	}
+
+	Mem_Free(bmp->Scan0);
+	*bmp = scaled;
+}
+
+static void Entity_CheckSkin(struct Entity* e) {
+	struct Entity* first;
+	String url, skin = String_FromRawArray(e->SkinNameRaw);
+
+	struct HttpRequest item;
+	struct Stream mem;
+	Bitmap bmp;
+	ReturnCode res;
+
+	if (!e->FetchedSkin && e->Model->UsesSkin) {
+		first = Entity_FirstOtherWithSameSkinAndFetchedSkin(e);
+		if (!first) {
+			Http_AsyncGetSkin(&skin);
+		} else {
+			Entity_CopySkin(e, first);
+		}
+		e->FetchedSkin = true;
+	}
+
+	if (!Http_GetResult(&skin, &item)) return;
+	if (!item.Success) { Entity_SetSkinAll(e, true); return; }
+	Stream_ReadonlyMemory(&mem, item.Data, item.Size);
+
+	if ((res = Png_Decode(&bmp, &mem))) {
+		url = String_FromRawArray(item.URL);
+		Logger_Warn2(res, "decoding", &url);
+		Mem_Free(bmp.Scan0); return;
+	}
+
+	Gfx_DeleteTexture(&e->TextureId);
+	Entity_SetSkinAll(e, true);
+	Entity_EnsurePow2(e, &bmp);
+	e->SkinType = Utils_CalcSkinType(&bmp);
+
+	if (bmp.Width > Gfx.MaxTexWidth || bmp.Height > Gfx.MaxTexHeight) {
+		Chat_Add1("&cSkin %s is too large", &skin);
+	} else if (e->SkinType != SKIN_INVALID) {
+		if (e->Model->UsesHumanSkin) Entity_ClearHat(&bmp, e->SkinType);
+		e->TextureId = Gfx_CreateTexture(&bmp, true, false);
+		Entity_SetSkinAll(e, false);
+	}
+	Mem_Free(bmp.Scan0);
+}
+
+/* Returns true if no other entities are sharing this skin texture */
+static bool Entity_CanDeleteTexture(struct Entity* except) {
+	int i;
+	if (!except->TextureId) return false;
+
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+		if (!Entities.List[i] || Entities.List[i] == except)  continue;
+		if (Entities.List[i]->TextureId == except->TextureId) return false;
+	}
+	return true;
+}
+
+CC_NOINLINE static void Entity_DeleteSkin(struct Entity* e) {
+	if (Entity_CanDeleteTexture(e)) {
+		Gfx_DeleteTexture(&e->TextureId);
+	}
+
+	Entity_ResetSkin(e);
+	e->FetchedSkin = false;
+}
+
+void Entity_SetSkin(struct Entity* e, const String* skin) {
+	Entity_DeleteSkin(e);
+	String_CopyToRawArray(e->SkinNameRaw, skin);
+}
+
+
+/*########################################################################################################################*
 *--------------------------------------------------------Entities---------------------------------------------------------*
 *#########################################################################################################################*/
 struct _EntitiesData Entities;
@@ -471,7 +662,6 @@ void Entities_DrawShadows(void) {
 	if (Entities.ShadowsMode == SHADOW_MODE_CIRCLE_ALL) {	
 		for (i = 0; i < ENTITIES_SELF_ID; i++) {
 			if (!Entities.List[i]) continue;
-			if (Entities.List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 			ShadowComponent_Draw(Entities.List[i]);
 		}
 	}
@@ -567,216 +757,9 @@ struct IGameComponent TabList_Component = {
 };
 
 
-/*########################################################################################################################*
-*---------------------------------------------------------Player----------------------------------------------------------*
-*#########################################################################################################################*/
-static struct Player* Player_FirstOtherWithSameSkin(struct Player* player) {
-	struct Entity* entity = &player->Base;
-	struct Player* p;
-	String skin, pSkin;
-	int i;
-
-	skin = String_FromRawArray(entity->SkinNameRaw);
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities.List[i] || Entities.List[i] == entity) continue;
-		if (Entities.List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
-
-		p     = (struct Player*)Entities.List[i];
-		pSkin = String_FromRawArray(p->Base.SkinNameRaw);
-		if (String_Equals(&skin, &pSkin)) return p;
-	}
-	return NULL;
-}
-
-static struct Player* Player_FirstOtherWithSameSkinAndFetchedSkin(struct Player* player) {
-	struct Entity* entity = &player->Base;
-	struct Player* p;
-	String skin, pSkin;
-	int i;
-
-	skin = String_FromRawArray(entity->SkinNameRaw);
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities.List[i] || Entities.List[i] == entity) continue;
-		if (Entities.List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
-
-		p     = (struct Player*)Entities.List[i];
-		pSkin = String_FromRawArray(p->Base.SkinNameRaw);
-		if (p->FetchedSkin && String_Equals(&skin, &pSkin)) return p;
-	}
-	return NULL;
-}
-
-/* Copies skin data from another player */
-static void Player_CopySkin(struct Player* player, struct Player* from) {
-	struct Entity* dst = &player->Base;
-	struct Entity* src = &from->Base;
-	String skin;
-
-	dst->TextureId = src->TextureId;	
-	dst->SkinType  = src->SkinType;
-	dst->uScale    = src->uScale;
-	dst->vScale    = src->vScale;
-
-	/* Custom mob textures */
-	dst->MobTextureId = GFX_NULL;
-	skin = String_FromRawArray(dst->SkinNameRaw);
-	if (Utils_IsUrlPrefix(&skin, 0)) dst->MobTextureId = dst->TextureId;
-}
-
-/* Resets skin data for the given player */
-void Player_ResetSkin(struct Player* player) {
-	struct Entity* e = &player->Base;
-	e->uScale = 1.0f; e->vScale = 1.0f;
-	e->MobTextureId = GFX_NULL;
-	e->TextureId    = GFX_NULL;
-	e->SkinType     = SKIN_64x32;
-}
-
-/* Copies or resets skin data for all players with same skin */
-static void Player_SetSkinAll(struct Player* player, bool reset) {
-	struct Entity* entity = &player->Base;
-	struct Player* p;
-	String skin, pSkin;
-	int i;
-
-	skin = String_FromRawArray(entity->SkinNameRaw);
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (!Entities.List[i]) continue;
-		if (Entities.List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
-
-		p     = (struct Player*)Entities.List[i];
-		pSkin = String_FromRawArray(p->Base.SkinNameRaw);
-		if (!String_Equals(&skin, &pSkin)) continue;
-
-		if (reset) {
-			Player_ResetSkin(p);
-		} else {
-			Player_CopySkin(p, player);
-		}
-	}
-}
-
-/* Clears hat area from a skin bitmap if it's completely white or black,
-   so skins edited with Microsoft Paint or similiar don't have a solid hat */
-static void Player_ClearHat(Bitmap* bmp, uint8_t skinType) {
-	int sizeX  = (bmp->Width / 64) * 32;
-	int yScale = skinType == SKIN_64x32 ? 32 : 64;
-	int sizeY  = (bmp->Height / yScale) * 16;
-	int x, y;
-
-	/* determine if we actually need filtering */
-	for (y = 0; y < sizeY; y++) {
-		BitmapCol* row = Bitmap_GetRow(bmp, y) + sizeX;
-		for (x = 0; x < sizeX; x++) {
-			if (row[x].A != 255) return;
-		}
-	}
-
-	/* only perform filtering when the entire hat is opaque */
-	uint32_t white = PackedCol_ARGB(255, 255, 255, 255);
-	uint32_t black = PackedCol_ARGB(0,   0,   0,   255);
-	for (y = 0; y < sizeY; y++) {
-		uint32_t* row = Bitmap_RawRow(bmp, y) + sizeX;
-		for (x = 0; x < sizeX; x++) {
-			uint32_t pixel = row[x];
-			if (pixel == white || pixel == black) row[x] = 0;
-		}
-	}
-}
-
-/* Ensures skin is a power of two size, resizing if needed. */
-static void Player_EnsurePow2(struct Player* p, Bitmap* bmp) {
-	uint32_t stride;
-	int width, height;
-	Bitmap scaled;
-	int y;
-
-	width  = Math_NextPowOf2(bmp->Width);
-	height = Math_NextPowOf2(bmp->Height);
-	if (width == bmp->Width && height == bmp->Height) return;
-
-	Bitmap_Allocate(&scaled, width, height);
-	p->Base.uScale = (float)bmp->Width  / width;
-	p->Base.vScale = (float)bmp->Height / height;
-	stride = bmp->Width * 4;
-
-	for (y = 0; y < bmp->Height; y++) {
-		BitmapCol* src = Bitmap_GetRow(bmp, y);
-		BitmapCol* dst = Bitmap_GetRow(&scaled, y);
-		Mem_Copy(dst, src, stride);
-	}
-
-	Mem_Free(bmp->Scan0);
-	*bmp = scaled;
-}
-
-static void Player_CheckSkin(struct Player* p) {
-	struct Entity* e = &p->Base;
-	struct Player* first;
-	String url, skin = String_FromRawArray(e->SkinNameRaw);
-
-	struct HttpRequest item;
-	struct Stream mem;
-	Bitmap bmp;
-	ReturnCode res;
-
-	if (!p->FetchedSkin && e->Model->UsesSkin) {
-		first = Player_FirstOtherWithSameSkinAndFetchedSkin(p);
-		if (!first) {
-			Http_AsyncGetSkin(&skin);
-		} else {
-			Player_CopySkin(p, first);
-		}
-		p->FetchedSkin = true;
-	}
-
-	if (!Http_GetResult(&skin, &item)) return;
-	if (!item.Success) { Player_SetSkinAll(p, true); return; }
-	Stream_ReadonlyMemory(&mem, item.Data, item.Size);
-
-	if ((res = Png_Decode(&bmp, &mem))) {
-		url = String_FromRawArray(item.URL);
-		Logger_Warn2(res, "decoding", &url);
-		Mem_Free(bmp.Scan0); return;
-	}
-
-	Gfx_DeleteTexture(&e->TextureId);
-	Player_SetSkinAll(p, true);
-	Player_EnsurePow2(p, &bmp);
-	e->SkinType = Utils_CalcSkinType(&bmp);
-
-	if (bmp.Width > Gfx.MaxTexWidth || bmp.Height > Gfx.MaxTexHeight) {
-		Chat_Add1("&cSkin %s is too large", &skin);
-	} else if (e->SkinType != SKIN_INVALID) {
-		if (e->Model->UsesHumanSkin) Player_ClearHat(&bmp, e->SkinType);
-		e->TextureId = Gfx_CreateTexture(&bmp, true, false);
-		Player_SetSkinAll(p, false);
-	}
-	Mem_Free(bmp.Scan0);
-}
-
 static void Player_Despawn(struct Entity* e) {
-	struct Player* player = (struct Player*)e;
-	struct Player* first  = Player_FirstOtherWithSameSkin(player);
-
-	if (!first) {
-		Gfx_DeleteTexture(&e->TextureId);
-		Player_ResetSkin(player);
-	}
+	Entity_DeleteSkin(e);
 	Entity_ContextLost(e);
-}
-
-void Player_SetSkin(struct Player* p, const String* skin) {
-	String_CopyToRawArray(p->Base.SkinNameRaw, skin);
-}
-
-static void Player_Init(struct Entity* e) {
-	static const String model = String_FromConst("humanoid");
-	Entity_Init(e);
-
-	e->StepSize   = 0.5f;
-	e->EntityType = ENTITY_TYPE_PLAYER;
-	Entity_SetModel(e, &model);
 }
 
 
@@ -862,7 +845,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 	TiltComp_Update(&p->Tilt, delta);
 
-	Player_CheckSkin((struct Player*)p);
+	Entity_CheckSkin(&p->Base);
 	SoundComp_Tick(wasOnGround);
 }
 
@@ -895,9 +878,9 @@ static void LocalPlayer_Init(void) {
 	struct LocalPlayer* p   = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
 
-	Player_Init(&p->Base);
+	Entity_Init(&p->Base);
 	Entity_SetName(&p->Base, &Game_Username);
-	Player_SetSkin((struct Player*)p, &Game_Username);
+	Entity_SetSkin(&p->Base, &Game_Username);
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, LocalPlayer_CheckJumpVelocity);
 
 	p->Collisions.Entity = &p->Base;
@@ -1089,7 +1072,7 @@ static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* updat
 
 static void NetPlayer_Tick(struct Entity* e, double delta) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
-	Player_CheckSkin((struct Player*)p);
+	Entity_CheckSkin(e);
 	NetInterpComp_AdvanceState(&p->Interp);
 	AnimatedComp_Update(e, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 }
@@ -1119,10 +1102,9 @@ struct EntityVTABLE netPlayer_VTABLE = {
 	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetCol,
 	NetPlayer_RenderModel, NetPlayer_RenderName
 };
-void NetPlayer_Init(struct NetPlayer* p, const String* skinName) {
+void NetPlayer_Init(struct NetPlayer* p) {
 	Mem_Set(p, 0, sizeof(struct NetPlayer));
-	Player_Init(&p->Base);
-	Player_SetSkin((struct Player*)p, skinName);
+	Entity_Init(&p->Base);
 	p->Base.VTABLE = &netPlayer_VTABLE;
 }
 

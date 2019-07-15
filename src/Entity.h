@@ -77,7 +77,8 @@ struct Entity {
 	Vec3 ModelScale, Size;
 	float StepSize;
 	
-	uint8_t SkinType, EntityType;
+	uint8_t SkinType;
+	bool FetchedSkin;
 	bool NoShade, OnGround;
 	GfxResourceID TextureId, MobTextureId;
 	float uScale, vScale;
@@ -117,6 +118,8 @@ bool Entity_TouchesAnyWater(struct Entity* e);
 
 /* Sets the nametag above the given entity's head */
 void Entity_SetName(struct Entity* e, const String* name);
+/* Sets the skin name of the given entity. */
+void Entity_SetSkin(struct Entity* e, const String* skin);
 
 /* Global data for all entities */
 /* (Actual entities may point to NetPlayers_List or elsewhere) */
@@ -165,27 +168,19 @@ CC_API void TabList_Set(EntityID id, const String* player, const String* list, c
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList.Buffer, TabList.PlayerNames[id]);
 #define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList.Buffer, TabList.ListNames[id]);
 #define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList.Buffer, TabList.GroupNames[id]);
-#define Player_Layout struct Entity Base; bool FetchedSkin;
-
-/* Represents a player entity. */
-struct Player { Player_Layout };
-/* Sets the display name (name tag above entity) and skin name of the given player. */
-void Player_SetSkin(struct Player* player, const String* skin);
-/* Resets the skin of the entity to default. */
-void Player_ResetSkin(struct Player* player);
 
 /* Represents another entity in multiplayer */
 struct NetPlayer {
-	Player_Layout
+	struct Entity Base;
 	struct NetInterpComp Interp;
 	bool ShouldRender;
 };
-void NetPlayer_Init(struct NetPlayer* player, const String* skinName);
+void NetPlayer_Init(struct NetPlayer* player);
 extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
 /* Represents the user/player's own entity. */
 struct LocalPlayer {
-	Player_Layout
+	struct Entity Base;
 	Vec3 Spawn, OldVelocity;
 	float SpawnRotY, SpawnHeadX, ReachDistance;
 	struct HacksComp Hacks;
