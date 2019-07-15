@@ -568,8 +568,6 @@ static float gfx_fogDensity = -1.0f, gfx_fogEnd = -1.0f;
 static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
 
 static bool gfx_alphaTesting, gfx_alphaBlending;
-static int gfx_alphaTestRef;
-static D3DCMPFUNC gfx_alphaTestFunc = D3DCMP_ALWAYS;
 static D3DBLEND gfx_srcBlendFunc = D3DBLEND_ONE, gfx_dstBlendFunc = D3DBLEND_ZERO;
 
 static PackedColUnion gfx_clearCol;
@@ -633,13 +631,6 @@ void Gfx_SetAlphaTest(bool enabled) {
 	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE, enabled, "D3D9_SetAlphaTest");
 }
 
-void Gfx_SetAlphaTestFunc(CompareFunc func, float refValue) {
-	gfx_alphaTestFunc = d3d9_compareFuncs[func];
-	D3D9_SetRenderState(D3DRS_ALPHAFUNC, gfx_alphaTestFunc, "D3D9_SetAlphaTest_Func");
-	gfx_alphaTestRef = (int)(refValue * 255);
-	D3D9_SetRenderState2(D3DRS_ALPHAREF, gfx_alphaTestRef,  "D3D9_SetAlphaTest_Ref");
-}
-
 void Gfx_SetAlphaBlending(bool enabled) {
 	if (gfx_alphaBlending == enabled) return;
 	gfx_alphaBlending = enabled;
@@ -674,7 +665,7 @@ void Gfx_SetDepthTest(bool enabled) {
 
 void Gfx_SetDepthTestFunc(CompareFunc func) {
 	gfx_depthTestFunc = d3d9_compareFuncs[func];
-	D3D9_SetRenderState(D3DRS_ZFUNC, gfx_alphaTestFunc, "D3D9_SetDepthTestFunc");
+	D3D9_SetRenderState(D3DRS_ZFUNC, gfx_depthTestFunc, "D3D9_SetDepthTestFunc");
 }
 
 void Gfx_SetDepthWrite(bool enabled) {
@@ -690,14 +681,16 @@ static void D3D9_SetDefaultRenderStates(void) {
 	D3D9_SetRenderState2(D3DRS_SPECULARENABLE,    false, "D3D9_SpecularEnable");
 	D3D9_SetRenderState2(D3DRS_LOCALVIEWER,       false, "D3D9_LocalViewer");
 	D3D9_SetRenderState2(D3DRS_DEBUGMONITORTOKEN, false, "D3D9_DebugMonitor");
+
+	/* States relevant to the game */
+	D3D9_SetRenderState2(D3DRS_ALPHAFUNC, D3DCMP_GREATER, "D3D9_AlphaTestFunc");
+	D3D9_SetRenderState2(D3DRS_ALPHAREF,  127,            "D3D9_AlphaRefFunc");
 }
 
 static void D3D9_RestoreRenderStates(void) {
 	union IntAndFloat raw;
 	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE,   gfx_alphaTesting,  "D3D9_AlphaTest");
 	D3D9_SetRenderState2(D3DRS_ALPHABLENDENABLE, gfx_alphaBlending, "D3D9_AlphaBlend");
-	D3D9_SetRenderState2(D3DRS_ALPHAFUNC,        gfx_alphaTestFunc, "D3D9_AlphaTestFunc");
-	D3D9_SetRenderState2(D3DRS_ALPHAREF,         gfx_alphaTestRef,  "D3D9_AlphaRefFunc");
 	D3D9_SetRenderState2(D3DRS_SRCBLEND,         gfx_srcBlendFunc,  "D3D9_AlphaSrcBlend");
 	D3D9_SetRenderState2(D3DRS_DESTBLEND,        gfx_dstBlendFunc,  "D3D9_AlphaDstBlend");
 
@@ -1629,7 +1622,6 @@ void Gfx_SetFogMode(FogFunc func) {
 
 void Gfx_SetTexturing(bool enabled) { }
 void Gfx_SetAlphaTest(bool enabled) { gfx_alphaTest = enabled; Gfx_SwitchProgram(); }
-void Gfx_SetAlphaTestFunc(CompareFunc func, float refValue) { }
 
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	if (type == MATRIX_VIEW || type == MATRIX_PROJECTION) {
@@ -1775,9 +1767,6 @@ void Gfx_SetFogMode(FogFunc func) {
 
 void Gfx_SetTexturing(bool enabled) { gl_Toggle(GL_TEXTURE_2D); }
 void Gfx_SetAlphaTest(bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
-void Gfx_SetAlphaTestFunc(CompareFunc func, float value) {
-	glAlphaFunc(gl_compare[func], value);
-}
 
 static GLenum matrix_modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 static int lastMatrix;
@@ -1796,6 +1785,7 @@ static void GL_InitState(void) {
 	glHint(GL_FOG_HINT, GL_NICEST);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
+	glAlphaFunc(GL_GREATER, 0.5f);
 }
 
 

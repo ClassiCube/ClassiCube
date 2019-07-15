@@ -91,10 +91,8 @@ CC_API void Gfx_SetFogMode(FogFunc func);
 
 /* Sets whether backface culling is performed. */
 CC_API void Gfx_SetFaceCulling(bool enabled);
-/* Sets whether new pixels may be discarded based on their alpha. */
+/* Sets whether pixels with an alpha of less than 128 are discarded. */
 CC_API void Gfx_SetAlphaTest(bool enabled);
-/* Sets in what way pixels may be discarded based on their alpha. */
-CC_API void Gfx_SetAlphaTestFunc(CompareFunc func, float refValue);
 /* Sets whether existing and new pixels are blended together. */
 CC_API void Gfx_SetAlphaBlending(bool enabled);
 /* Sets in what way existing and new pixels are blended. */

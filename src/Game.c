@@ -482,7 +482,6 @@ static void Game_Load(void) {
 	Gfx_SetDepthTestFunc(COMPARE_FUNC_LESSEQUAL);
 	/* Gfx_SetDepthWrite(true) */
 	Gfx_SetAlphaBlendFunc(BLEND_FUNC_SRC_ALPHA, BLEND_FUNC_INV_SRC_ALPHA);
-	Gfx_SetAlphaTestFunc(COMPARE_FUNC_GREATER, 0.5f);
 
 	Game_AddComponent(&PickedPosRenderer_Component);
 	Game_AddComponent(&Audio_Component);

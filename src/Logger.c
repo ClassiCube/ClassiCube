@@ -20,6 +20,7 @@
 #endif
 
 /* POSIX can be shared between unix-ish systems */
+/* NOTE: Android's bionic libc doesn't provide backtrace (execinfo.h) */
 #ifdef CC_BUILD_POSIX
 #if defined CC_BUILD_OPENBSD
 #include <signal.h>
@@ -34,10 +35,6 @@
 #include <signal.h>
 #include <ucontext.h>
 #endif
-#endif
-/* android's bionic libc doesn't provide backtrace */
-#ifdef CC_BUILD_ANDROID
-#define CC_BUILD_UNWIND
 #endif
 
 
