@@ -28,7 +28,8 @@ struct DateTime {
 #define MILLIS_PER_DAY (1000 * 60 * 60 * 24)
 
 CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount);
-bool Utils_IsUrlPrefix(const String* value, int index);
+/* Returns whether value starts with http:// or https:// */
+bool Utils_IsUrlPrefix(const String* value);
 
 /* Creates the directory if it doesn't exist. (logs failure using Logger_Warn2) */
 bool Utils_EnsureDirectory(const char* dirName);

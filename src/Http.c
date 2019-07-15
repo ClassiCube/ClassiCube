@@ -895,7 +895,7 @@ void Http_AsyncGetSkin(const String* skinName) {
 	String url; char urlBuffer[STRING_SIZE];
 	String_InitArray(url, urlBuffer);
 
-	if (Utils_IsUrlPrefix(skinName, 0)) {
+	if (Utils_IsUrlPrefix(skinName)) {
 		String_Copy(&url, skinName);
 	} else {
 		String_AppendConst(&url, SKIN_SERVER);

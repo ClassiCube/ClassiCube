@@ -1193,7 +1193,7 @@ static void CPE_SetTextColor(uint8_t* data) {
 static void CPE_SetMapEnvUrl(uint8_t* data) {
 	String url = Protocol_UNSAFE_GetString(data);
 
-	if (!url.length || Utils_IsUrlPrefix(&url, 0)) {
+	if (!url.length || Utils_IsUrlPrefix(&url)) {
 		Server_RetrieveTexturePack(&url);
 	}
 	Platform_Log1("Tex url: %s", &url);

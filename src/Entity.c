@@ -154,7 +154,7 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 	Entity_UpdateModelBounds(e);
 	
 	skin = String_FromRawArray(e->SkinNameRaw);
-	if (Utils_IsUrlPrefix(&skin, 0)) { e->MobTextureId = e->TextureId; }
+	if (Utils_IsUrlPrefix(&skin)) e->MobTextureId = e->TextureId;
 }
 
 void Entity_UpdateModelBounds(struct Entity* e) {
@@ -349,7 +349,7 @@ static void Entity_CopySkin(struct Entity* dst, struct Entity* src) {
 	/* Custom mob textures */
 	dst->MobTextureId = GFX_NULL;
 	skin = String_FromRawArray(dst->SkinNameRaw);
-	if (Utils_IsUrlPrefix(&skin, 0)) dst->MobTextureId = dst->TextureId;
+	if (Utils_IsUrlPrefix(&skin)) dst->MobTextureId = dst->TextureId;
 }
 
 /* Resets skin data for the given entity */

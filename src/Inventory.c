@@ -31,8 +31,8 @@ void Inventory_SetHotbarIndex(int index) {
 void Inventory_SetSelectedBlock(BlockID block) {
 	int i;
 	if (!Inventory_CheckChangeSelected()) return;
-	/* Swap with the current, if the new block is already in the hotbar */
-	
+
+	/* Swap with currently selected block if given block is already in the hotbar */
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		if (Inventory_Get(i) != block) continue;
 		Inventory_Set(i, Inventory_SelectedBlock);

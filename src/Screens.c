@@ -1022,7 +1022,7 @@ static bool ChatScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	TextGroupWidget_GetSelected(&s->chat, &text, x, y);
 	if (!text.length) return false;
 
-	if (Utils_IsUrlPrefix(&text, 0)) {
+	if (Utils_IsUrlPrefix(&text)) {
 		Gui_ShowOverlay(UrlWarningOverlay_MakeInstance(&text));
 	} else if (Gui_ClickableChat) {
 		InputWidget_AppendString(&s->input.base, &text);
