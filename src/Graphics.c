@@ -563,14 +563,14 @@ void Gfx_DisableMipmaps(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedColUnion gfx_fogCol;
+static PackedCol gfx_fogCol;
 static float gfx_fogDensity = -1.0f, gfx_fogEnd = -1.0f;
 static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
 
 static bool gfx_alphaTesting, gfx_alphaBlending;
 static D3DBLEND gfx_srcBlendFunc = D3DBLEND_ONE, gfx_dstBlendFunc = D3DBLEND_ZERO;
 
-static PackedColUnion gfx_clearCol;
+static PackedCol gfx_clearCol;
 static bool gfx_depthTesting, gfx_depthWriting;
 static D3DCMPFUNC gfx_depthTestFunc = D3DCMP_LESSEQUAL;
 
@@ -588,11 +588,11 @@ void Gfx_SetFog(bool enabled) {
 }
 
 void Gfx_SetFogCol(PackedCol col) {
-	if (PackedCol_Equals(col, gfx_fogCol.C)) return;
-	gfx_fogCol.C = col;
+	if (PackedCol_Equals(col, gfx_fogCol)) return;
+	gfx_fogCol = col;
 
 	if (Gfx.LostContext) return;
-	D3D9_SetRenderState(D3DRS_FOGCOLOR, gfx_fogCol.Raw, "D3D9_SetFogColour");
+	D3D9_SetRenderState(D3DRS_FOGCOLOR, gfx_fogCol._raw, "D3D9_SetFogColour");
 }
 
 void Gfx_SetFogDensity(float value) {
@@ -652,7 +652,7 @@ void Gfx_SetAlphaArgBlend(bool enabled) {
 	if (res) Logger_Abort2(res, "D3D9_SetAlphaArgBlend");
 }
 
-void Gfx_ClearCol(PackedCol col) { gfx_clearCol.C = col; }
+void Gfx_ClearCol(PackedCol col) { gfx_clearCol = col; }
 void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a) {
 	DWORD channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
 	D3D9_SetRenderState(D3DRS_COLORWRITEENABLE, channels, "D3D9_SetColourWrite");
@@ -695,12 +695,12 @@ static void D3D9_RestoreRenderStates(void) {
 	D3D9_SetRenderState2(D3DRS_DESTBLEND,        gfx_dstBlendFunc,  "D3D9_AlphaDstBlend");
 
 	D3D9_SetRenderState2(D3DRS_FOGENABLE, gfx_fogEnabled,  "D3D9_Fog");
-	D3D9_SetRenderState2(D3DRS_FOGCOLOR,  gfx_fogCol.Raw, "gfx_fogColor");
+	D3D9_SetRenderState2(D3DRS_FOGCOLOR,  gfx_fogCol._raw, "gfx_fogColor");
 	raw.f = gfx_fogDensity;
 	D3D9_SetRenderState2(D3DRS_FOGDENSITY, raw.u,          "gfx_fogDensity");
 	raw.f = gfx_fogEnd;
 	D3D9_SetRenderState2(D3DRS_FOGEND, raw.u,              "gfx_fogEnd");
-	D3D9_SetRenderState2(D3DRS_FOGTABLEMODE, gfx_fogMode, "D3D9_FogMode");
+	D3D9_SetRenderState2(D3DRS_FOGTABLEMODE, gfx_fogMode,  "D3D9_FogMode");
 
 	D3D9_SetRenderState2(D3DRS_ZFUNC,        gfx_depthTestFunc, "D3D9_DepthTestFunc");
 	D3D9_SetRenderState2(D3DRS_ZENABLE,      gfx_depthTesting,  "D3D9_DepthTest");
@@ -916,7 +916,7 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_Clear(void) {
 	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
-	ReturnCode res = IDirect3DDevice9_Clear(device, 0, NULL, flags, gfx_clearCol.Raw, 1.0f, 0);
+	ReturnCode res = IDirect3DDevice9_Clear(device, 0, NULL, flags, gfx_clearCol._raw, 1.0f, 0);
 	if (res) Logger_Abort2(res, "D3D9_Clear");
 }
 

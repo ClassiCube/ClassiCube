@@ -200,7 +200,7 @@ void Gradient_Tint(Bitmap* bmp, uint8_t tintA, uint8_t tintB,
 void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size, 
 						uint8_t* indices, BitmapCol* palette) {
 	BitmapCol* row;
-	BitmapColUnion col;
+	BitmapCol col;
 	int xx, yy;
 
 	for (yy = 0; yy < size; yy++) {
@@ -209,11 +209,11 @@ void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
 
 		row = Bitmap_GetRow(bmp, y + yy) + x;
 		for (xx = 0; xx < size; xx++) {
-			col.C = palette[*indices++];
+			col = palette[*indices++];
 
-			if (col.Raw == 0) continue; /* transparent pixel */
+			if (col._raw == 0) continue; /* transparent pixel */
 			if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
-			row[xx] = col.C;
+			row[xx] = col;
 		}
 	}
 }
@@ -409,7 +409,7 @@ void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, Bitmap
 
 static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, bool shadow) {
 	BitmapCol black = BITMAPCOL_CONST(0, 0, 0, 255);
-	BitmapColUnion col;
+	BitmapCol col;
 	String text  = args->text;
 	int i, point = args->font.Size, count = 0;
 
@@ -424,20 +424,20 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	BitmapCol* dstRow, dst;
 
 	uint8_t coords[256];
-	BitmapColUnion cols[256];
+	BitmapCol cols[256];
 	uint16_t dstWidths[256];
 
-	col.C = Drawer2D_Cols['f'];
+	col = Drawer2D_Cols['f'];
 	if (shadow) {
-		col.C = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col.C, 0.25f);
+		col = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col, 0.25f);
 	}
 
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
-			col.C = Drawer2D_GetCol(text.buffer[i + 1]);
+			col = Drawer2D_GetCol(text.buffer[i + 1]);
 			if (shadow) {
-				col.C = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col.C, 0.25f);
+				col = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col, 0.25f);
 			}
 			i++; continue; /* skip over the colour code */
 		}
@@ -477,9 +477,9 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 				dstX = x + xx;
 				if ((unsigned)dstX >= (unsigned)bmp->Width) continue;
 
-				dst.B = src.B * col.C.B / 255;
-				dst.G = src.G * col.C.G / 255;
-				dst.R = src.R * col.C.R / 255;
+				dst.B = src.B * col.B / 255;
+				dst.G = src.G * col.G / 255;
+				dst.R = src.R * col.R / 255;
 				dst.A = src.A;
 				dstRow[dstX] = dst;
 			}
@@ -498,10 +498,10 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		dstWidth = 0;
 		col = cols[i];
 
-		for (; i < count && (col.Raw == cols[i].Raw); i++) {
+		for (; i < count && BitmapCol_Equals(col, cols[i]); i++) {
 			dstWidth += dstWidths[i] + xPadding;
 		}
-		Drawer2D_Underline(bmp, x, underlineY, dstWidth, underlineHeight, col.C);
+		Drawer2D_Underline(bmp, x, underlineY, dstWidth, underlineHeight, col);
 		x += dstWidth;
 	}
 }

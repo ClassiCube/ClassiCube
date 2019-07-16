@@ -6,17 +6,14 @@
 */
 
 /* Represents an ARGB colour, suitable for native graphics API colours. */
- typedef CC_ALIGN_HINT(4) struct PackedCol_ {
+typedef union PackedCol_ {
 #ifdef CC_BUILD_D3D9
-	uint8_t B, G, R, A;
+	 struct { uint8_t B, G, R, A; };
 #else
-	uint8_t R, G, B, A;
+	 struct { uint8_t R, G, B, A; };
 #endif
+	 uint32_t _raw;
 } PackedCol;
-
-/* Represents an ARGB colour, suitable for native graphics API colours. */
-/* Unioned with Packed member for efficient equality comparison */
-typedef union PackedColUnion_ { PackedCol C; uint32_t Raw; } PackedColUnion;
 
 #ifdef CC_BUILD_D3D9
 #define PACKEDCOL_CONST(r, g, b, a) { b, g, r, a }
@@ -27,11 +24,7 @@ typedef union PackedColUnion_ { PackedCol C; uint32_t Raw; } PackedColUnion;
 #define PackedCol_ARGB(r, g, b, a) (((uint32_t)(r) << 16) | ((uint32_t)(g) << 8) | ((uint32_t)(b)) | ((uint32_t)(a) << 24))
 
 /* Whether components of two colours are all equal. */
-static CC_INLINE bool PackedCol_Equals(PackedCol a, PackedCol b) {
-	/* GCC/Clang inlines to a single int comparison thanks to PackedCol alignment */
-	return a.R == b.R && a.G == b.G && a.B == b.B && a.A == b.A;
-}
-
+#define PackedCol_Equals(a,b) ((a)._raw == (b)._raw)
 /* Scales RGB components of the given colour. */
 CC_API PackedCol PackedCol_Scale(PackedCol value, float t);
 /* Linearly interpolates RGB components of the two given colours. */

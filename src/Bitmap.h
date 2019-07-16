@@ -7,17 +7,17 @@
 struct Stream;
 
 /* Represents an ARGB colour, suitable for native graphics API texture pixels. */
-typedef CC_ALIGN_HINT(4) struct BitmapCol_ {
+typedef union BitmapCol_ {
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-	uint8_t R, G, B, A;
+	struct { uint8_t R, G, B, A; };
 #else
-	uint8_t B, G, R, A;
+	struct { uint8_t B, G, R, A; };
 #endif
+	uint32_t _raw;
 } BitmapCol;
-/* Represents an ARGB colour, suitable for native graphics API texture pixels. */
-/* Unioned with Packed member for efficient equality comparison */
-typedef union BitmapColUnion_ { BitmapCol C; uint32_t Raw; } BitmapColUnion;
 
+/* Whether components of two colours are all equal. */
+#define BitmapCol_Equals(a,b) ((a)._raw == (b)._raw)
 /* Scales RGB components of the given colour. */
 CC_API BitmapCol BitmapCol_Scale(BitmapCol value, float t);
 

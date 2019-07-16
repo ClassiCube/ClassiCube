@@ -555,14 +555,12 @@ static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) 
 
 static bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
 	BlockID cur = Builder_Chunk[chunkIndex];
-	PackedColUnion initCol, curCol;
 
 	if (cur != initial || Block_IsFaceHidden(cur, Builder_Chunk[chunkIndex + Builder_Offsets[face]], face)) return false;
 	if (Builder_FullBright) return true;
 
-	initCol.C = Normal_LightCol(Builder_X, Builder_Y, Builder_Z, face, initial);
-	curCol.C  = Normal_LightCol(x, y, z, face, cur);
-	return initCol.Raw == curCol.Raw;
+	return PackedCol_Equals(Normal_LightCol(Builder_X, Builder_Y, Builder_Z, face, initial), 
+							Normal_LightCol(x, y, z, face, cur));
 }
 
 static int NormalBuilder_StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {

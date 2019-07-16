@@ -445,7 +445,11 @@ static void Entity_CheckSkin(struct Entity* e) {
 	Bitmap bmp;
 	ReturnCode res;
 
-	if (!e->FetchedSkin && e->Model->UsesSkin) {
+	/* Don't check skin if don't have to */
+	if (!e->Model->UsesSkin) return;
+	// TODO: fetchingSkin state, fetchedSkin state
+	// TODO: redo weatherrenderer making vertices, prob clouds too..
+	if (!e->FetchedSkin) {
 		first = Entity_FirstOtherWithSameSkinAndFetchedSkin(e);
 		if (!first) {
 			Http_AsyncGetSkin(&skin);

@@ -42,12 +42,11 @@ void PackedCol_ToHex(String* str, PackedCol value) {
 }
 
 bool PackedCol_TryParseHex(const String* str, PackedCol* value) {
-	PackedCol colZero = PACKEDCOL_CONST(0, 0, 0, 0);
 	int rH, rL, gH, gL, bH, bL;
 	char* buffer;
 		
-	buffer = str->buffer;
-	*value = colZero;
+	buffer      = str->buffer;
+	value->_raw = 0;
 
 	/* accept XXYYZZ or #XXYYZZ forms */
 	if (str->length < 6) return false;

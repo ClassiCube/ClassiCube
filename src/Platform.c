@@ -750,8 +750,8 @@ void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 	WaitForSingleObject((HANDLE)handle, milliseconds);
 }
 #elif defined CC_BUILD_WEB
-/* No true multithreading support with emscripten backend */
-void Thread_Sleep(uint32_t milliseconds) { usleep(milliseconds * 1000); }
+/* No real threading support with emscripten backend */
+void Thread_Sleep(uint32_t milliseconds) { }
 void* Thread_Start(Thread_StartFunc* func, bool detach) { (*func)(); return NULL; }
 void Thread_Detach(void* handle) { }
 void Thread_Join(void* handle) { }
