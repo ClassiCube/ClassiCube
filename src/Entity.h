@@ -63,6 +63,11 @@ struct EntityVTABLE {
 	void (*RenderName)(struct Entity* e);
 };
 
+/* Skin is still being downloaded asynchronously */
+#define SKIN_FETCH_DOWNLOADING 1
+/* Skin was downloaded or copied from another entity with the same skin. */
+#define SKIN_FETCH_COMPLETED   2
+
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
 struct Entity {
 	struct EntityVTABLE* VTABLE;
@@ -78,7 +83,7 @@ struct Entity {
 	float StepSize;
 	
 	uint8_t SkinType;
-	bool FetchedSkin;
+	uint8_t SkinFetchState;
 	bool NoShade, OnGround;
 	GfxResourceID TextureId, MobTextureId;
 	float uScale, vScale;

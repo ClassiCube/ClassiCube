@@ -333,7 +333,7 @@ static struct Entity* Entity_FirstOtherWithSameSkinAndFetchedSkin(struct Entity*
 
 		e     = Entities.List[i];
 		eSkin = String_FromRawArray(e->SkinNameRaw);
-		if (e->FetchedSkin && String_Equals(&skin, &eSkin)) return e;
+		if (e->SkinFetchState && String_Equals(&skin, &eSkin)) return e;
 	}
 	return NULL;
 }
@@ -379,6 +379,7 @@ static void Entity_SetSkinAll(struct Entity* source, bool reset) {
 		} else {
 			Entity_CopySkin(e, source);
 		}
+		e->SkinFetchState = SKIN_FETCH_COMPLETED;
 	}
 }
 
@@ -438,7 +439,7 @@ static void Entity_EnsurePow2(struct Entity* e, Bitmap* bmp) {
 
 static void Entity_CheckSkin(struct Entity* e) {
 	struct Entity* first;
-	String url, skin = String_FromRawArray(e->SkinNameRaw);
+	String url, skin;
 
 	struct HttpRequest item;
 	struct Stream mem;
@@ -447,16 +448,19 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	/* Don't check skin if don't have to */
 	if (!e->Model->UsesSkin) return;
-	// TODO: fetchingSkin state, fetchedSkin state
-	// TODO: redo weatherrenderer making vertices, prob clouds too..
-	if (!e->FetchedSkin) {
+	if (e->SkinFetchState == SKIN_FETCH_COMPLETED) return;
+	skin = String_FromRawArray(e->SkinNameRaw);
+
+	if (!e->SkinFetchState) {
 		first = Entity_FirstOtherWithSameSkinAndFetchedSkin(e);
 		if (!first) {
 			Http_AsyncGetSkin(&skin);
+			e->SkinFetchState = SKIN_FETCH_DOWNLOADING;
 		} else {
 			Entity_CopySkin(e, first);
+			e->SkinFetchState = SKIN_FETCH_COMPLETED;
+			return;
 		}
-		e->FetchedSkin = true;
 	}
 
 	if (!Http_GetResult(&skin, &item)) return;
@@ -502,7 +506,7 @@ CC_NOINLINE static void Entity_DeleteSkin(struct Entity* e) {
 	}
 
 	Entity_ResetSkin(e);
-	e->FetchedSkin = false;
+	e->SkinFetchState = 0;
 }
 
 void Entity_SetSkin(struct Entity* e, const String* skin) {
