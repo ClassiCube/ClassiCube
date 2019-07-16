@@ -302,10 +302,10 @@ void EnvRenderer_RenderSkybox(double deltaTime) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	/* Base skybox rotation */
-	m       = Matrix_Identity;
 	rotTime = (float)(Game.Time * 2 * MATH_PI); /* So speed of 1 rotates whole skybox every second */
-	Matrix_RotateY(&rotY, Env.SkyboxHorSpeed * rotTime); Matrix_MulBy(&m, &rotY);
-	Matrix_RotateX(&rotX, Env.SkyboxVerSpeed * rotTime); Matrix_MulBy(&m, &rotX);
+	Matrix_RotateY(&rotY, Env.SkyboxHorSpeed * rotTime);
+	Matrix_RotateX(&rotX, Env.SkyboxVerSpeed * rotTime);
+	Matrix_Mul(&m, &rotY, &rotX);
 
 	/* Rotate around camera */
 	pos = Camera.CurrentPos;
