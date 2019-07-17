@@ -7,6 +7,7 @@
 #include "ExtMath.h"
 
 int Display_BitsPerPixel;
+int Display_DpiX = 96, Display_DpiY = 96;
 Rect2D Display_Bounds;
 int Window_X, Window_Y, Window_Width, Window_Height;
 bool Window_Exists, Window_Focused;
@@ -350,7 +351,10 @@ void Window_Init(void) {
 	Display_Bounds.Width  = GetSystemMetrics(SM_CXSCREEN);
 	Display_Bounds.Height = GetSystemMetrics(SM_CYSCREEN);
 	Display_BitsPerPixel  = GetDeviceCaps(hdc, BITSPIXEL);
+	Display_DpiX          = GetDeviceCaps(hdc, LOGPIXELSX);
+	Display_DpiY          = GetDeviceCaps(hdc, LOGPIXELSY);
 	ReleaseDC(NULL, hdc);
+	Platform_Log2("DPI: %i, %i", &Display_DpiX, &Display_DpiY);
 }
 
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {

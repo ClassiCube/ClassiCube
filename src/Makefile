@@ -25,7 +25,7 @@ endif
 
 ifeq ($(PLAT),mingw)
 OEXT=.exe
-CFLAGS=-w -g -pipe
+CFLAGS=-w -g -pipe -DUNICODE
 LDFLAGS=-g
 LIBS=-mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9
 endif

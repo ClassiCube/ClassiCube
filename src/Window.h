@@ -33,7 +33,16 @@
 
 /* The states the window can be in. */
 enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_MAXIMISED, WINDOW_STATE_FULLSCREEN };
+/* Number of bits per pixel. (red bits + green bits + blue bits + alpha bits) */
+/* NOTE: Only 24 or 32 bits per pixel are officially supported. */
+/* Support for other values of bits per pixel is platform dependent. */
 extern int Display_BitsPerPixel;
+/* Number of physical dots per inch of the display both horizontally and vertically. */
+/* NOTE: Usually 96 for compatibility, even if the display's DPI is higher. */
+/* GUI elements must be scaled by this to look correct. */
+extern int Display_DpiX, Display_DpiY;
+/* Position and size of this display. */
+/* NOTE: Position may be non-zero in a multi-monitor setup. Platform dependent. */
 extern Rect2D Display_Bounds;
 
 struct GraphicsMode { int R, G, B, A, IsIndexed; };
