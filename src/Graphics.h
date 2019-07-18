@@ -45,8 +45,6 @@ CC_VAR extern struct _GfxData {
 	/* Whether mipmaps must be created for all dimensions down to 1x1 or not. */
 	bool CustomMipmapsLevels;
 	struct Matrix View, Projection;
-	/* Callback invoked when the context is lost. Repeatedly invoked until a context can be retrieved. */
-	ScheduledTaskCallback LostContextFunction;
 } Gfx;
 
 extern String Gfx_ApiInfo[7];
@@ -169,13 +167,13 @@ void Gfx_OnWindowResize(void);
 /* Fills Gfx_ApiInfo with information about the backend state and the user's GPU. */
 void Gfx_MakeApiInfo(void);
 /* Updates Gfx_ApiInfo with current backend state information. */
-/* NOTE: This is information such as current free memory, etc. */
+/* NOTE: This updates information such as current free memory, etc. */
 void Gfx_UpdateApiInfo(void);
 
 /* Raises ContextLost event and updates state for lost contexts. */
 void Gfx_LoseContext(const char* reason);
-/* Raises ContextRecreated event and restores state from lost contexts. */
-void Gfx_RecreateContext(void);
+/* Attempts to restore a lost context. Raises ContextRecreated event is successful. */
+bool Gfx_TryRestoreContext(void);
 
 /* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer. */
 /* NOTE: This replaces the dynamic vertex buffer's data first with the given vertices before drawing. */

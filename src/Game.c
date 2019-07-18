@@ -343,7 +343,6 @@ static void Game_ExtractInitialTexturePack(void) {
 }
 
 static void Game_LoadOptions(void) {
-	int method;
 	Game_ClassicMode       = Options_GetBool(OPT_CLASSIC_MODE, false);
 	Game_ClassicHacks      = Options_GetBool(OPT_CLASSIC_HACKS, false);
 	Game_AllowCustomBlocks = Options_GetBool(OPT_CUSTOM_BLOCKS, true);
@@ -351,8 +350,6 @@ static void Game_LoadOptions(void) {
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
 	Game_ViewBobbing       = Options_GetBool(OPT_VIEW_BOBBING, true);
 
-	method = Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT);
-	Game_SetFpsLimit(method);
 	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 16, 4096, 512);
 	Game_UserViewDistance = Game_ViewDistance;
 
@@ -433,7 +430,6 @@ static void Game_Load(void) {
 	Game_Fov = 70;
 
 	Gfx_Init();
-	Gfx_SetFpsLimit(true, 0);
 	Gfx_MakeApiInfo();
 	Gfx.Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
 
@@ -494,6 +490,10 @@ static void Game_Load(void) {
 
 	Game_ExtractInitialTexturePack();
 	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
+
+	/* set vsync after because it causes a context loss depending on backend */
+	Gfx_SetFpsLimit(true, 0);
+	Game_SetFpsLimit(Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT));
 
 	if (Gfx_WarnIfNecessary()) EnvRenderer_SetMode(EnvRenderer_Minimal | ENV_LEGACY);
 	Server.BeginConnect();
@@ -624,6 +624,15 @@ static void Game_RenderFrame(double delta) {
 	struct ScheduledTask entTask;
 	bool allowZoom, visible;
 	float t;
+
+	/* TODO: Should other tasks get called back too? */
+	/* Might not be such a good idea for the http_clearcache, */
+	/* don't really want all skins getting lost */
+	if (Gfx.LostContext && !Gfx_TryRestoreContext()) {
+		Server.Tick(NULL);
+		Thread_Sleep(16);
+		return;
+	}
 
 	Gfx_BeginFrame();
 	Gfx_BindIb(Gfx_defaultIb);

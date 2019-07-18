@@ -33,6 +33,8 @@
 
 /* The states the window can be in. */
 enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_MAXIMISED, WINDOW_STATE_FULLSCREEN };
+#define DISPLAY_DEFAULT_DPI 96
+
 /* Number of bits per pixel. (red bits + green bits + blue bits + alpha bits) */
 /* NOTE: Only 24 or 32 bits per pixel are officially supported. */
 /* Support for other values of bits per pixel is platform dependent. */
@@ -136,6 +138,8 @@ void Window_DisableRawMouse(void);
 void GLContext_Init(struct GraphicsMode* mode);
 /* Updates the OpenGL context after the window is resized. */
 void GLContext_Update(void);
+/* Attempts to restore a lost OpenGL context. */
+bool GLContext_TryRestore(void);
 /* Destroys the OpenGL context. */
 /* NOTE: This also unattaches the OpenGL context from the window. */
 void GLContext_Free(void);

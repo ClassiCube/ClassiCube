@@ -36,10 +36,15 @@ static float gfx_minFrameMs;
 static uint64_t frameStart;
 bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 
+/* Initialises/Restores render state. */
+CC_NOINLINE static void Gfx_RestoreState(void);
+/* Destroys render state, but can be restored later. */
+CC_NOINLINE static void Gfx_FreeState(void);
+
 /*########################################################################################################################*
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
 *#########################################################################################################################*/
-CC_NOINLINE static void Gfx_InitDefaultResources(void) {
+static void Gfx_InitDefaultResources(void) {
 	uint16_t indices[GFX_MAX_INDICES];
 	Gfx_MakeIndices(indices, GFX_MAX_INDICES);
 	Gfx_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
@@ -48,7 +53,7 @@ CC_NOINLINE static void Gfx_InitDefaultResources(void) {
 	Gfx_texVb  = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
 }
 
-CC_NOINLINE static void Gfx_FreeDefaultResources(void) {
+static void Gfx_FreeDefaultResources(void) {
 	Gfx_DeleteVb(&Gfx_quadVb);
 	Gfx_DeleteVb(&Gfx_texVb);
 	Gfx_DeleteIb(&Gfx_defaultIb);
@@ -69,16 +74,16 @@ void Gfx_LoseContext(const char* reason) {
 	Gfx.LostContext = true;
 	Platform_Log1("Lost graphics context: %c", reason);
 
+	Gfx_FreeState();
 	Event_RaiseVoid(&GfxEvents.ContextLost);
-	Gfx_FreeDefaultResources();
 }
 
-void Gfx_RecreateContext(void) {
+static void Gfx_RecreateContext(void) {
 	Gfx.LostContext = false;
 	Platform_LogConst("Recreating graphics context");
 
+	Gfx_RestoreState();
 	Event_RaiseVoid(&GfxEvents.ContextRecreated);
-	Gfx_InitDefaultResources();
 }
 
 
@@ -296,14 +301,13 @@ ReturnCode res = IDirect3DDevice9_SetRenderState(device, state, value); if (res)
 #define D3D9_SetRenderState2(state, value, name) \
 res = IDirect3DDevice9_SetRenderState(device, state, value);            if (res) Logger_Abort2(res, name);
 
-static void D3D9_SetDefaultRenderStates(void);
 static void D3D9_RestoreRenderStates(void);
 
 static void D3D9_FreeResource(GfxResourceID* resource) {
 	IUnknown* unk;
 	ULONG refCount;
 
-	if (!resource || *resource == GFX_NULL) return;
+	if (*resource == GFX_NULL) return;
 	unk = (IUnknown*)(*resource);
 	*resource = GFX_NULL;
 
@@ -316,20 +320,6 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 	if (refCount <= 0) return;
 	uintptr_t addr = (uintptr_t)unk;
 	Platform_Log2("D3D9 resource has %i outstanding references! ID 0x%x", &refCount, &addr);
-}
-
-static void D3D9_LoopUntilRetrieved(void) {
-	struct ScheduledTask task;
-	task.Interval = 1.0f / 60.0f;
-	task.Callback = Gfx.LostContextFunction;
-
-	while (true) {
-		Thread_Sleep(16);
-		ReturnCode code = IDirect3DDevice9_TestCooperativeLevel(device);
-		if (code == D3DERR_DEVICENOTRESET) return;
-
-		task.Callback(&task);
-	}
 }
 
 static void D3D9_FindCompatibleFormat(void) {
@@ -366,19 +356,6 @@ static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* a
 	args->Windowed   = true;
 }
 
-static void D3D9_RecreateDevice(void) {
-	D3DPRESENT_PARAMETERS args = { 0 };
-	D3D9_FillPresentArgs(Game.Width, Game.Height, &args);
-
-	while (IDirect3DDevice9_Reset(device, &args) == D3DERR_DEVICELOST) {
-		D3D9_LoopUntilRetrieved();
-	}
-
-	D3D9_SetDefaultRenderStates();
-	D3D9_RestoreRenderStates();
-	Gfx_RecreateContext();
-}
-
 void Gfx_Init(void) {
 	Gfx.MinZNear = 0.05f;
 	HWND winHandle = (HWND)Window_Handle;
@@ -407,16 +384,50 @@ void Gfx_Init(void) {
 
 	Gfx.MaxTexWidth  = caps.MaxTextureWidth;
 	Gfx.MaxTexHeight = caps.MaxTextureHeight;
-
 	Gfx.CustomMipmapsLevels = true;
-	D3D9_SetDefaultRenderStates();
-	Gfx_InitDefaultResources();
+	Gfx_RestoreState();
+}
+
+bool Gfx_TryRestoreContext(void) {
+	D3DPRESENT_PARAMETERS args = { 0 };
+	ReturnCode res;
+
+	res = IDirect3DDevice9_TestCooperativeLevel(device);
+	if (res && res != D3DERR_DEVICENOTRESET) return false;
+
+	D3D9_FillPresentArgs(Game.Width, Game.Height, &args);
+	res = IDirect3DDevice9_Reset(device, &args);
+	if (res == D3DERR_DEVICELOST) return false;
+
+	Gfx_RecreateContext();
+	return true;
 }
 
 void Gfx_Free(void) {
-	Gfx_FreeDefaultResources();
+	Gfx_FreeState();
 	D3D9_FreeResource(&device);
 	D3D9_FreeResource(&d3d);
+}
+
+static void Gfx_FreeState(void) {
+	Gfx_FreeDefaultResources();
+}
+
+static void Gfx_RestoreState(void) {
+	Gfx_InitDefaultResources();
+	Gfx_SetFaceCulling(false);
+	gfx_batchFormat = -1;
+
+	D3D9_SetRenderState(D3DRS_COLORVERTEX,        false, "D3D9_ColorVertex");
+	D3D9_SetRenderState2(D3DRS_LIGHTING,          false, "D3D9_Lighting");
+	D3D9_SetRenderState2(D3DRS_SPECULARENABLE,    false, "D3D9_SpecularEnable");
+	D3D9_SetRenderState2(D3DRS_LOCALVIEWER,       false, "D3D9_LocalViewer");
+	D3D9_SetRenderState2(D3DRS_DEBUGMONITORTOKEN, false, "D3D9_DebugMonitor");
+
+	/* States relevant to the game */
+	D3D9_SetRenderState2(D3DRS_ALPHAFUNC, D3DCMP_GREATER, "D3D9_AlphaTestFunc");
+	D3D9_SetRenderState2(D3DRS_ALPHAREF,  127,            "D3D9_AlphaRefFunc");
+	D3D9_RestoreRenderStates();
 }
 
 
@@ -673,20 +684,6 @@ void Gfx_SetDepthWrite(bool enabled) {
 	D3D9_SetRenderState(D3DRS_ZWRITEENABLE, enabled, "D3D9_SetDepthWrite");
 }
 
-static void D3D9_SetDefaultRenderStates(void) {
-	Gfx_SetFaceCulling(false);
-	gfx_batchFormat = -1;
-	D3D9_SetRenderState(D3DRS_COLORVERTEX,        false, "D3D9_ColorVertex");
-	D3D9_SetRenderState2(D3DRS_LIGHTING,          false, "D3D9_Lighting");
-	D3D9_SetRenderState2(D3DRS_SPECULARENABLE,    false, "D3D9_SpecularEnable");
-	D3D9_SetRenderState2(D3DRS_LOCALVIEWER,       false, "D3D9_LocalViewer");
-	D3D9_SetRenderState2(D3DRS_DEBUGMONITORTOKEN, false, "D3D9_DebugMonitor");
-
-	/* States relevant to the game */
-	D3D9_SetRenderState2(D3DRS_ALPHAFUNC, D3DCMP_GREATER, "D3D9_AlphaTestFunc");
-	D3D9_SetRenderState2(D3DRS_ALPHAREF,  127,            "D3D9_AlphaRefFunc");
-}
-
 static void D3D9_RestoreRenderStates(void) {
 	union IntAndFloat raw;
 	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE,   gfx_alphaTesting,  "D3D9_AlphaTest");
@@ -903,10 +900,9 @@ finished:
 void Gfx_SetFpsLimit(bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
 	if (gfx_vsync == vsync) return;
-	gfx_vsync = vsync;
 
+	gfx_vsync = vsync;
 	Gfx_LoseContext(" (toggling VSync)");
-	D3D9_RecreateDevice();
 }
 
 void Gfx_BeginFrame(void) { 
@@ -926,11 +922,8 @@ void Gfx_EndFrame(void) {
 
 	if (res) {
 		if (res != D3DERR_DEVICELOST) Logger_Abort2(res, "D3D9_EndFrame");
-
-		/* TODO: Make sure this actually works on all graphics cards.*/
+		/* TODO: Make sure this actually works on all graphics cards. */
 		Gfx_LoseContext(" (Direct3D9 device lost)");
-		D3D9_LoopUntilRetrieved();
-		D3D9_RecreateDevice();
 	}
 	if (gfx_minFrameMs) Gfx_LimitFPS();
 }
@@ -979,8 +972,11 @@ void Gfx_UpdateApiInfo(void) {
 }
 
 void Gfx_OnWindowResize(void) {
+	if (Gfx.LostContext) return;
 	Gfx_LoseContext(" (resizing window)");
-	D3D9_RecreateDevice();
+	/* NOTE: Windows enters a size/move modal loop. (WM_ENTERSIZELOOP) */
+	/* This blocks the normal game loop from running, which means */
+	/* Gfx_OnWindowResize can end up getting called multiple times. */
 }
 #endif
 
@@ -1053,7 +1049,6 @@ static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 
 static void GL_CheckSupport(void);
-static void GL_InitState(void);
 void Gfx_Init(void) {
 	struct GraphicsMode mode;
 	GraphicsMode_MakeDefault(&mode);
@@ -1064,8 +1059,13 @@ void Gfx_Init(void) {
 	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
 
 	GL_CheckSupport();
-	GL_InitState();
-	Gfx_InitDefaultResources();
+	Gfx_RestoreState();
+}
+
+bool Gfx_TryRestoreContext(void) {
+	if (!GLContext_TryRestore()) return false;
+	Gfx_RecreateContext();
+	return true;
 }
 
 void Gfx_Free(void) {
@@ -1143,7 +1143,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	if (!texId || *texId == GFX_NULL) return;
+	if (*texId == GFX_NULL) return;
 	GLuint id = (GLuint)(*texId);
 	glDeleteTextures(1, &id);
 	*texId = GFX_NULL;
@@ -1232,7 +1232,7 @@ void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); 
 void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	if (!vb || *vb == GFX_NULL) return;
+	if (*vb == GFX_NULL) return;
 	GLuint id = (GLuint)(*vb);
 	_glDeleteBuffers(1, &id);
 	*vb = GFX_NULL;
@@ -1653,7 +1653,18 @@ static void GL_CheckSupport(void) {
 #endif
 }
 
-static void GL_InitState(void) {
+static void Gfx_FreeState(void) {
+	int i;
+	Gfx_FreeDefaultResources();
+
+	for (i = 0; i < Array_Elems(shaders); i++) {
+		glDeleteProgram(shaders[i].Program);
+		shaders[i].Program = 0;
+	}
+}
+
+static void Gfx_RestoreState(void) {
+	Gfx_InitDefaultResources();
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	Gfx_SwitchProgram();
@@ -1781,7 +1792,9 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 	glLoadIdentity();
 }
 
-static void GL_InitState(void) {
+static void Gfx_FreeState(void) { Gfx_FreeDefaultResources(); }
+static void Gfx_RestoreState(void) {
+	Gfx_InitDefaultResources();
 	glHint(GL_FOG_HINT, GL_NICEST);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -1928,7 +1941,7 @@ void Gfx_BindIb(GfxResourceID ib) { }
 void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	if (!vb || *vb == GFX_NULL) return;
+	if (*vb == GFX_NULL) return;
 	if (*vb != gl_DYNAMICLISTID) glDeleteLists((GLuint)(*vb), 1);
 	*vb = GFX_NULL;
 }

@@ -476,14 +476,16 @@ static void LoadingScreen_MapLoading(void* screen, float progress) {
 
 static void LoadingScreen_OnResize(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	if (!s->title.VTABLE) return;
 	Widget_Reposition(&s->title);
 	Widget_Reposition(&s->message);
 }
 
 static void LoadingScreen_ContextLost(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	Elem_TryFree(&s->title);
-	Elem_TryFree(&s->message);
+	if (!s->title.VTABLE) return;
+	Elem_Free(&s->title);
+	Elem_Free(&s->message);
 }
 
 static void LoadingScreen_ContextRecreated(void* screen) {
@@ -1427,9 +1429,10 @@ static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* s, double 
 
 static void DisconnectScreen_ContextLost(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	Elem_TryFree(&s->title);
-	Elem_TryFree(&s->message);
-	Elem_TryFree(&s->reconnect);
+	if (!s->title.VTABLE) return;
+	Elem_Free(&s->title);
+	Elem_Free(&s->message);
+	Elem_Free(&s->reconnect);
 }
 
 static void DisconnectScreen_ContextRecreated(void* screen) {
@@ -1489,6 +1492,7 @@ static void DisconnectScreen_Free(void* screen) {
 
 static void DisconnectScreen_OnResize(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
+	if (!s->title.VTABLE) return;
 	Widget_Reposition(&s->title);
 	Widget_Reposition(&s->message);
 	Widget_Reposition(&s->reconnect);

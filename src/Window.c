@@ -7,8 +7,10 @@
 #include "ExtMath.h"
 
 int Display_BitsPerPixel;
-int Display_DpiX = 96, Display_DpiY = 96;
+int Display_DpiX = DISPLAY_DEFAULT_DPI;
+int Display_DpiY = DISPLAY_DEFAULT_DPI;
 Rect2D Display_Bounds;
+
 int Window_X, Window_Y, Window_Width, Window_Height;
 bool Window_Exists, Window_Focused;
 const void* Window_Handle;
@@ -354,7 +356,6 @@ void Window_Init(void) {
 	Display_DpiX          = GetDeviceCaps(hdc, LOGPIXELSX);
 	Display_DpiY          = GetDeviceCaps(hdc, LOGPIXELSY);
 	ReleaseDC(NULL, hdc);
-	Platform_Log2("DPI: %i, %i", &Display_DpiX, &Display_DpiY);
 }
 
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
@@ -3047,6 +3048,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 }
 
 void GLContext_Update(void) { }
+bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) {
 	if (!wglDeleteContext(ctx_Handle)) {
 		Logger_Abort2(GetLastError(), "Failed to destroy OpenGL context");
@@ -3117,6 +3119,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 }
 
 void GLContext_Update(void) { }
+bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) {
 	if (!ctx_Handle) return;
 
@@ -3335,6 +3338,7 @@ void GLContext_Update(void) {
 	GLContext_SetDrawable();
 	aglUpdateContext(ctx_handle);
 }
+bool GLContext_TryRestore(void) { return true; }
 
 void GLContext_Free(void) {
 	int code;
@@ -3346,7 +3350,7 @@ void GLContext_Free(void) {
 	code = aglDestroyContext(ctx_handle);
 	GLContext_Check(code, "Destroying GL context");
 	ctx_handle = NULL;
-}
+}10.
 
 void* GLContext_GetAddress(const char* function) {
 	void* address = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
@@ -3387,6 +3391,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 }
 
 void GLContext_Update(void) { }
+bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) {
 	SDL_GL_DeleteContext(win_ctx);
 	win_ctx = NULL;
@@ -3456,6 +3461,7 @@ void GLContext_Update(void) {
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
 }
+bool GLContext_TryRestore(void) { return true; }
 
 void GLContext_Free(void) {
 	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -3482,9 +3488,15 @@ void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 *------------------------------------------------Emscripten WebGL context-------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEBGL
+#include "Graphics.h"
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx_handle;
+
+static EM_BOOL GLContext_OnLost(int eventType, const void *reserved, void *userData) {
+	Gfx_LoseContext("WebGL context lost");
+	return 1;
+}
 
 void GLContext_Init(struct GraphicsMode* mode) {
 	EmscriptenWebGLContextAttributes attribs;
@@ -3496,14 +3508,19 @@ void GLContext_Init(struct GraphicsMode* mode) {
 
 	ctx_handle = emscripten_webgl_create_context(NULL, &attribs);
 	emscripten_webgl_make_context_current(ctx_handle);
+	emscripten_set_webglcontextlost_callback("#canvas", NULL, 0, GLContext_OnLost);
 }
 
 void GLContext_Update(void) {
 	/* TODO: do we need to do something here.... ? */
 }
+bool GLContext_TryRestore(void) {
+	return !emscripten_is_webgl_context_lost(ctx_handle);
+}
 
 void GLContext_Free(void) {
 	emscripten_webgl_destroy_context(ctx_handle);
+	emscripten_set_webglcontextlost_callback("#canvas", NULL, 0, NULL);
 }
 
 void* GLContext_GetAddress(const char* function) { return NULL; }

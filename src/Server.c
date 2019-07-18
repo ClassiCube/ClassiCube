@@ -240,7 +240,6 @@ static uint8_t* net_readCurrent;
 static bool net_writeFailed;
 static TimeMS net_lastPacket;
 static uint8_t net_lastOpcode;
-static double net_discAccumulator;
 
 static bool net_connecting;
 static TimeMS net_connectTimeout;
@@ -352,14 +351,9 @@ static void MPConnection_SendPosition(Vec3 pos, float rotY, float headX) {
 static void MPConnection_CheckDisconnection(double delta) {
 	static const String title  = String_FromConst("Disconnected!");
 	static const String reason = String_FromConst("You've lost connection to the server");
-
 	ReturnCode availRes, selectRes;
 	uint32_t pending = 0;
 	bool poll_read;
-
-	net_discAccumulator += delta;
-	if (net_discAccumulator < 1.0) return;
-	net_discAccumulator = 0.0;
 
 	availRes  = Socket_Available(net_socket, &pending);
 	/* poll read returns true when socket is closed */
@@ -537,7 +531,6 @@ static void Server_Init(void) {
 		MPConnection_Init();
 	}
 
-	Gfx.LostContextFunction = Server.Tick;
 	ScheduledTask_Add(GAME_NET_TICKS, Server.Tick);
 	String_AppendConst(&Server.AppName, GAME_APP_NAME);
 }

@@ -40,14 +40,14 @@ void Drawer2D_MakeFont(FontDesc* desc, int size, int style) {
 	}
 }
 
-static Bitmap Drawer2D_FontBitmap;
+static Bitmap fontBitmap;
 static int Drawer2D_TileSize = 8; /* avoid divide by 0 if default.png missing */
 /* So really 16 characters per row */
 #define DRAWER2D_LOG2_CHARS_PER_ROW 4
 static int Drawer2D_Widths[256];
 
 static void Drawer2D_CalculateTextWidths(void) {
-	int width = Drawer2D_FontBitmap.Width, height = Drawer2D_FontBitmap.Height;
+	int width = fontBitmap.Width, height = fontBitmap.Height;
 	BitmapCol* row;
 	int i, x, y, xx, tileX, tileY;
 
@@ -57,7 +57,7 @@ static void Drawer2D_CalculateTextWidths(void) {
 
 	for (y = 0; y < height; y++) {
 		tileY = y / Drawer2D_TileSize;
-		row   = Bitmap_GetRow(&Drawer2D_FontBitmap, y);
+		row   = Bitmap_GetRow(&fontBitmap, y);
 
 		for (x = 0; x < width; x += Drawer2D_TileSize) {
 			tileX = x / Drawer2D_TileSize;
@@ -77,13 +77,13 @@ static void Drawer2D_CalculateTextWidths(void) {
 }
 
 static void Drawer2D_FreeFontBitmap(void) {
-	Mem_Free(Drawer2D_FontBitmap.Scan0);
-	Drawer2D_FontBitmap.Scan0 = NULL;
+	Mem_Free(fontBitmap.Scan0);
+	fontBitmap.Scan0 = NULL;
 }
 
 void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 	Drawer2D_FreeFontBitmap();
-	Drawer2D_FontBitmap = *bmp;
+	fontBitmap = *bmp;
 	Drawer2D_TileSize = bmp->Width >> DRAWER2D_LOG2_CHARS_PER_ROW;
 	Drawer2D_CalculateTextWidths();
 }
@@ -463,7 +463,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		for (i = 0; i < count; i++) {
 			srcX   = (coords[i] & 0x0F) * Drawer2D_TileSize;
 			srcY   = (coords[i] >> 4)   * Drawer2D_TileSize;
-			srcRow = Bitmap_GetRow(&Drawer2D_FontBitmap, fontY + srcY);
+			srcRow = Bitmap_GetRow(&fontBitmap, fontY + srcY);
 
 			srcWidth = Drawer2D_Widths[coords[i]];
 			dstWidth = dstWidths[i];
