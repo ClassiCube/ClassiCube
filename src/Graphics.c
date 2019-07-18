@@ -288,8 +288,9 @@ void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeCol) {
 #include <d3d9caps.h>
 #include <d3d9types.h>
 
+/* https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dfvf-texcoordsizen */
 static D3DCMPFUNC d3d9_compareFuncs[8] = { D3DCMP_ALWAYS, D3DCMP_NOTEQUAL, D3DCMP_NEVER, D3DCMP_LESS, D3DCMP_LESSEQUAL, D3DCMP_EQUAL, D3DCMP_GREATEREQUAL, D3DCMP_GREATER };
-static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 };
+static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
 
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
@@ -437,13 +438,13 @@ static void Gfx_RestoreState(void) {
 static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, int lvl) {
 	D3DLOCKED_RECT rect;
 	ReturnCode res = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
-	if (res) Logger_Abort2(res, "D3D9_SetTextureData - Lock");
+	if (res) Logger_Abort2(res, "D3D9_LockTextureData");
 
 	uint32_t size = Bitmap_DataSize(bmp->Width, bmp->Height);
 	Mem_Copy(rect.pBits, bmp->Scan0, size);
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
-	if (res) Logger_Abort2(res, "D3D9_SetTextureData - Unlock");
+	if (res) Logger_Abort2(res, "D3D9_UnlockTextureData");
 }
 
 static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, int lvl) {
@@ -453,7 +454,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 
 	D3DLOCKED_RECT rect;
 	ReturnCode res = IDirect3DTexture9_LockRect(texture, lvl, &rect, &part, 0);
-	if (res) Logger_Abort2(res, "D3D9_SetTexturePartData - Lock");
+	if (res) Logger_Abort2(res, "D3D9_LockTexturePartData");
 
 	/* We need to copy scanline by scanline, as generally rect.stride != data.stride */
 	uint8_t* src = (uint8_t*)bmp->Scan0;
@@ -468,7 +469,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 	}
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
-	if (res) Logger_Abort2(res, "D3D9_SetTexturePartData - Unlock");
+	if (res) Logger_Abort2(res, "D3D9_UnlockTexturePartData");
 }
 
 static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, bool partial) {
@@ -742,18 +743,18 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 		Event_RaiseVoid(&GfxEvents.LowVRAMDetected);
 	}
 
-	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_CreateVb - Lock", "D3D9_CreateVb - Unlock", 0);
+	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_LockVb", "D3D9_UnlockVb", 0);
 	return vbuffer;
 }
 
 static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, int size) {
 	void* dst = NULL;
 	ReturnCode res = IDirect3DIndexBuffer9_Lock(buffer, 0, size, &dst, 0);
-	if (res) Logger_Abort2(res, "D3D9_CreateIb - Lock");
+	if (res) Logger_Abort2(res, "D3D9_LockIb");
 
 	Mem_Copy(dst, data, size);
 	res = IDirect3DIndexBuffer9_Unlock(buffer);
-	if (res) Logger_Abort2(res, "D3D9_CreateIb - Unlock");
+	if (res) Logger_Abort2(res, "D3D9_UnlockIb");
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
@@ -793,7 +794,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	int size = vCount * gfx_batchStride;
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
-	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_SetDynamicVbData - Lock", "D3D9_SetDynamicVbData - Unlock", D3DLOCK_DISCARD);
+	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_LockDynamicVbData", "D3D9_UnlockDynamicVbData", D3DLOCK_DISCARD);
 
 	ReturnCode res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_batchStride);
 	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
