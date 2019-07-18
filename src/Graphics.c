@@ -1359,6 +1359,7 @@ void Gfx_OnWindowResize(void) {
 #define UNI_FOG_COL    (1 << 2)
 #define UNI_FOG_END    (1 << 3)
 #define UNI_FOG_DENS   (1 << 4)
+#define UNI_MASK_ALL   0x1F
 
 /* cached uniforms (cached for multiple programs */
 static struct Matrix _view, _proj, _tex, _mvp;
@@ -1366,10 +1367,10 @@ static bool gfx_alphaTest, gfx_texTransform;
 
 /* shader programs (emulate fixed function) */
 static struct GLShader {
-	int Features;     /* what features are enabled for this shader */
-	int Uniforms;     /* which associated uniforms need to be resent to GPU */
-	GLuint Program;   /* OpenGL program ID (0 if not yet compiled) */
-	int Locations[5]; /* location of uniforms (not constant) */
+	int features;     /* what features are enabled for this shader */
+	int uniforms;     /* which associated uniforms need to be resent to GPU */
+	GLuint program;   /* OpenGL program ID (0 if not yet compiled) */
+	int locations[5]; /* location of uniforms (not constant) */
 } shaders[6 * 3] = {
 	/* no fog */
 	{ 0              },
@@ -1397,8 +1398,8 @@ static struct GLShader* gfx_activeShader;
 
 /* Generates source code for a GLSL vertex shader, based on shader's flags */
 static void Gfx_GenVertexShader(const struct GLShader* shader, String* dst) {
-	int uv = shader->Features & FTR_TEXTURE_UV;
-	int tm = shader->Features & FTR_TEX_MATRIX;
+	int uv = shader->features & FTR_TEXTURE_UV;
+	int tm = shader->features & FTR_TEX_MATRIX;
 
 	String_AppendConst(dst,         "attribute vec3 in_pos;\n");
 	String_AppendConst(dst,         "attribute vec4 in_col;\n");
@@ -1419,11 +1420,11 @@ static void Gfx_GenVertexShader(const struct GLShader* shader, String* dst) {
 
 /* Generates source code for a GLSL fragment shader, based on shader's flags */
 static void Gfx_GenFragmentShader(const struct GLShader* shader, String* dst) {
-	int uv = shader->Features & FTR_TEXTURE_UV;
-	int al = shader->Features & FTR_ALPHA_TEST;
-	int fl = shader->Features & FTR_LINEAR_FOG;
-	int fd = shader->Features & FTR_DENSIT_FOG;
-	int fm = shader->Features & FTR_HASANY_FOG;
+	int uv = shader->features & FTR_TEXTURE_UV;
+	int al = shader->features & FTR_ALPHA_TEST;
+	int fl = shader->features & FTR_LINEAR_FOG;
+	int fd = shader->features & FTR_DENSIT_FOG;
+	int fm = shader->features & FTR_HASANY_FOG;
 
 #ifdef CC_BUILD_GLES
 	String_AppendConst(dst,         "precision highp float;\n");
@@ -1491,7 +1492,7 @@ static void Gfx_CompileProgram(struct GLShader* shader) {
 
     program  = glCreateProgram();
     if (!program) Logger_Abort("Failed to create program");
-    shader->Program = program;
+    shader->program = program;
 
     glAttachShader(program, vertex);
     glAttachShader(program, fragment);
@@ -1513,11 +1514,11 @@ static void Gfx_CompileProgram(struct GLShader* shader) {
 		glDeleteShader(vertex);
 		glDeleteShader(fragment);
 
-		shader->Locations[0] = glGetUniformLocation(program, "mvp");
-		shader->Locations[1] = glGetUniformLocation(program, "texMatrix");
-		shader->Locations[2] = glGetUniformLocation(program, "fogCol");
-		shader->Locations[3] = glGetUniformLocation(program, "fogEnd");
-		shader->Locations[4] = glGetUniformLocation(program, "fogDensity");
+		shader->locations[0] = glGetUniformLocation(program, "mvp");
+		shader->locations[1] = glGetUniformLocation(program, "texMatrix");
+		shader->locations[2] = glGetUniformLocation(program, "fogCol");
+		shader->locations[3] = glGetUniformLocation(program, "fogEnd");
+		shader->locations[4] = glGetUniformLocation(program, "fogDensity");
 		return;
     }
 	temp = 0;
@@ -1535,7 +1536,7 @@ static void Gfx_CompileProgram(struct GLShader* shader) {
 static void Gfx_DirtyUniform(int uniform) {
 	int i;
 	for (i = 0; i < Array_Elems(shaders); i++) {
-		shaders[i].Uniforms |= uniform;
+		shaders[i].uniforms |= uniform;
 	}
 }
 
@@ -1543,28 +1544,28 @@ static void Gfx_DirtyUniform(int uniform) {
 static void Gfx_ReloadUniforms(void) {
 	struct GLShader* s = gfx_activeShader;
 
-	if (s->Uniforms & UNI_MVP_MATRIX) {
-		glUniformMatrix4fv(s->Locations[0], 1, false, (float*)&_mvp);
-		s->Uniforms &= ~UNI_MVP_MATRIX;
+	if (s->uniforms & UNI_MVP_MATRIX) {
+		glUniformMatrix4fv(s->locations[0], 1, false, (float*)&_mvp);
+		s->uniforms &= ~UNI_MVP_MATRIX;
 	}
-	if ((s->Uniforms & UNI_TEX_MATRIX) && (s->Features & FTR_TEX_MATRIX)) {
-		glUniformMatrix4fv(s->Locations[1], 1, false, (float*)&_tex);
-		s->Uniforms &= ~UNI_TEX_MATRIX;
+	if ((s->uniforms & UNI_TEX_MATRIX) && (s->features & FTR_TEX_MATRIX)) {
+		glUniformMatrix4fv(s->locations[1], 1, false, (float*)&_tex);
+		s->uniforms &= ~UNI_TEX_MATRIX;
 	}
-	if ((s->Uniforms & UNI_FOG_COL) && (s->Features & FTR_HASANY_FOG)) {
-		glUniform3f(s->Locations[2], gfx_fogCol.R / 255.0f, gfx_fogCol.G / 255.0f, 
+	if ((s->uniforms & UNI_FOG_COL) && (s->features & FTR_HASANY_FOG)) {
+		glUniform3f(s->locations[2], gfx_fogCol.R / 255.0f, gfx_fogCol.G / 255.0f, 
 									 gfx_fogCol.B / 255.0f);
-		s->Uniforms &= ~UNI_FOG_COL;
+		s->uniforms &= ~UNI_FOG_COL;
 	}
-	if ((s->Uniforms & UNI_FOG_END) && (s->Features & FTR_LINEAR_FOG)) {
-		glUniform1f(s->Locations[3], gfx_fogEnd);
-		s->Uniforms &= ~UNI_FOG_END;
+	if ((s->uniforms & UNI_FOG_END) && (s->features & FTR_LINEAR_FOG)) {
+		glUniform1f(s->locations[3], gfx_fogEnd);
+		s->uniforms &= ~UNI_FOG_END;
 	}
-	if ((s->Uniforms & UNI_FOG_DENS) && (s->Features & FTR_DENSIT_FOG)) {
+	if ((s->uniforms & UNI_FOG_DENS) && (s->features & FTR_DENSIT_FOG)) {
 		/* See https://docs.microsoft.com/en-us/previous-versions/ms537113(v%3Dvs.85) */
 		/* The equation for EXP mode is exp(-density * z), so just negate density here */
-		glUniform1f(s->Locations[4], -gfx_fogDensity);
-		s->Uniforms &= ~UNI_FOG_DENS;
+		glUniform1f(s->locations[4], -gfx_fogDensity);
+		s->uniforms &= ~UNI_FOG_DENS;
 	}
 }
 
@@ -1586,10 +1587,10 @@ static void Gfx_SwitchProgram(void) {
 
 	shader = &shaders[index];
 	if (shader == gfx_activeShader) { Gfx_ReloadUniforms(); return; }
-	if (!shader->Program) Gfx_CompileProgram(shader);
+	if (!shader->program) Gfx_CompileProgram(shader);
 
 	gfx_activeShader = shader;
-	glUseProgram(shader->Program);
+	glUseProgram(shader->program);
 	Gfx_ReloadUniforms();
 }
 
@@ -1659,8 +1660,8 @@ static void Gfx_FreeState(void) {
 	Gfx_FreeDefaultResources();
 
 	for (i = 0; i < Array_Elems(shaders); i++) {
-		glDeleteProgram(shaders[i].Program);
-		shaders[i].Program = 0;
+		glDeleteProgram(shaders[i].program);
+		shaders[i].program = 0;
 	}
 }
 
@@ -1669,6 +1670,7 @@ static void Gfx_RestoreState(void) {
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	Gfx_SwitchProgram();
+	Gfx_DirtyUniform(UNI_MASK_ALL);
 }
 
 static void GL_SetupVbPos3fCol4b(void) {
