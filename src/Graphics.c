@@ -414,8 +414,8 @@ static void Gfx_FreeState(void) {
 }
 
 static void Gfx_RestoreState(void) {
-	Gfx_InitDefaultResources();
 	Gfx_SetFaceCulling(false);
+	Gfx_InitDefaultResources();
 	gfx_batchFormat = -1;
 
 	D3D9_SetRenderState(D3DRS_COLORVERTEX,        false, "D3D9_ColorVertex");
@@ -974,7 +974,7 @@ void Gfx_UpdateApiInfo(void) {
 void Gfx_OnWindowResize(void) {
 	if (Gfx.LostContext) return;
 	Gfx_LoseContext(" (resizing window)");
-	/* NOTE: Windows enters a size/move modal loop. (WM_ENTERSIZELOOP) */
+	/* NOTE: Windows enters a size/move modal loop. (WM_ENTERSIZEMOVE) */
 	/* This blocks the normal game loop from running, which means */
 	/* Gfx_OnWindowResize can end up getting called multiple times. */
 }

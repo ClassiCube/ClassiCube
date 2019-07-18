@@ -348,7 +348,7 @@ static void MPConnection_SendPosition(Vec3 pos, float rotY, float headX) {
 	Net_SendPacket();
 }
 
-static void MPConnection_CheckDisconnection(double delta) {
+static void MPConnection_CheckDisconnection(void) {
 	static const String title  = String_FromConst("Disconnected!");
 	static const String reason = String_FromConst("You've lost connection to the server");
 	ReturnCode availRes, selectRes;
@@ -382,11 +382,9 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (Server.Disconnected) return;
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 
-	/* over 30 seconds since last packet */
+	/* Over 30 seconds since last packet, connection likely dropped */
 	now = DateTime_CurrentUTC_MS();
-	if (net_lastPacket + (30 * 1000) < now) {
-		MPConnection_CheckDisconnection(task->Interval);
-	}
+	if (net_lastPacket + (30 * 1000) < now) MPConnection_CheckDisconnection();
 	if (Server.Disconnected) return;
 
 	pending = 0;
