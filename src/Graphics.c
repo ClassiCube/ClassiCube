@@ -433,7 +433,7 @@ static void Gfx_RestoreState(void) {
 	D3D9_SetRenderState2(D3DRS_ALPHAREF,  127,            "D3D9_AlphaRefFunc");
 	D3D9_SetRenderState2(D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA,    "D3D9_AlphaSrcBlend");
 	D3D9_SetRenderState2(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA, "D3D9_AlphaDstBlend");
-	D3D9_SetRenderState(D3DRS_ZFUNC,      D3DCMP_LESSEQUAL,     "D3D9_SetDepthTestFunc");
+	D3D9_SetRenderState2(D3DRS_ZFUNC,     D3DCMP_LESSEQUAL,     "D3D9_SetDepthTestFunc");
 	D3D9_RestoreRenderStates();
 }
 

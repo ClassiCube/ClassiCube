@@ -3350,7 +3350,7 @@ void GLContext_Free(void) {
 	code = aglDestroyContext(ctx_handle);
 	GLContext_Check(code, "Destroying GL context");
 	ctx_handle = NULL;
-}10.
+}
 
 void* GLContext_GetAddress(const char* function) {
 	void* address = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
