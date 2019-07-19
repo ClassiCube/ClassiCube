@@ -98,8 +98,6 @@ CC_API void Gfx_Clear(void);
 CC_API void Gfx_ClearCol(PackedCol col);
 /* Sets whether pixels may be discard based on z/depth. */
 CC_API void Gfx_SetDepthTest(bool enabled);
-/* Sets in what may pixels may be discarded based on z/depth. */
-CC_API void Gfx_SetDepthTestFunc(CompareFunc func);
 /* Sets whether R/G/B/A of pixels are actually written to the colour buffer channels. */
 CC_API void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a);
 /* Sets whether z/depth of pixels is actually written to the depth buffer. */

@@ -475,7 +475,6 @@ static void Game_Load(void) {
 	Game_AddComponent(&HeldBlockRenderer_Component);
 
 	Gfx_SetDepthTest(true);
-	Gfx_SetDepthTestFunc(COMPARE_FUNC_LESSEQUAL);
 	/* Gfx_SetDepthWrite(true) */
 
 	Game_AddComponent(&PickedPosRenderer_Component);

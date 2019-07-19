@@ -433,6 +433,7 @@ static void Gfx_RestoreState(void) {
 	D3D9_SetRenderState2(D3DRS_ALPHAREF,  127,            "D3D9_AlphaRefFunc");
 	D3D9_SetRenderState2(D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA,    "D3D9_AlphaSrcBlend");
 	D3D9_SetRenderState2(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA, "D3D9_AlphaDstBlend");
+	D3D9_SetRenderState(D3DRS_ZFUNC,      D3DCMP_LESSEQUAL,     "D3D9_SetDepthTestFunc");
 	D3D9_RestoreRenderStates();
 }
 
@@ -583,7 +584,6 @@ void Gfx_DisableMipmaps(void) {
 static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
 static bool gfx_alphaTesting, gfx_alphaBlending;
 static bool gfx_depthTesting, gfx_depthWriting;
-static D3DCMPFUNC gfx_depthTestFunc = D3DCMP_LESSEQUAL;
 
 void Gfx_SetFaceCulling(bool enabled) {
 	D3DCULL mode = enabled ? D3DCULL_CW : D3DCULL_NONE;
@@ -665,11 +665,6 @@ void Gfx_SetDepthTest(bool enabled) {
 	D3D9_SetRenderState(D3DRS_ZENABLE, enabled, "D3D9_SetDepthTest");
 }
 
-void Gfx_SetDepthTestFunc(CompareFunc func) {
-	gfx_depthTestFunc = d3d9_compareFuncs[func];
-	D3D9_SetRenderState(D3DRS_ZFUNC, gfx_depthTestFunc, "D3D9_SetDepthTestFunc");
-}
-
 void Gfx_SetDepthWrite(bool enabled) {
 	gfx_depthWriting = enabled;
 	D3D9_SetRenderState(D3DRS_ZWRITEENABLE, enabled, "D3D9_SetDepthWrite");
@@ -688,7 +683,6 @@ static void D3D9_RestoreRenderStates(void) {
 	D3D9_SetRenderState2(D3DRS_FOGEND, raw.u,              "gfx_fogEnd");
 	D3D9_SetRenderState2(D3DRS_FOGTABLEMODE, gfx_fogMode,  "D3D9_FogMode");
 
-	D3D9_SetRenderState2(D3DRS_ZFUNC,        gfx_depthTestFunc, "D3D9_DepthTestFunc");
 	D3D9_SetRenderState2(D3DRS_ZENABLE,      gfx_depthTesting,  "D3D9_DepthTest");
 	D3D9_SetRenderState2(D3DRS_ZWRITEENABLE, gfx_depthWriting,  "D3D9_DepthWrite");
 }
@@ -1146,14 +1140,16 @@ void Gfx_DisableMipmaps(void) { }
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static int gfx_fogMode  = -1;
-void Gfx_SetFaceCulling(bool enabled) { gl_Toggle(GL_CULL_FACE); }
-
+void Gfx_SetFaceCulling(bool enabled)   { gl_Toggle(GL_CULL_FACE); }
 void Gfx_SetAlphaBlending(bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(bool enabled) { }
 
+static void GL_ClearCol(PackedCol col) {
+	glClearColor(col.R / 255.0f, col.G / 255.0f, col.B / 255.0f, col.A / 255.0f);
+}
 void Gfx_ClearCol(PackedCol col) {
 	if (PackedCol_Equals(col, gfx_clearCol)) return;
-	glClearColor(col.R / 255.0f, col.G / 255.0f, col.B / 255.0f, col.A / 255.0f);
+	GL_ClearCol(col);
 	gfx_clearCol = col;
 }
 
@@ -1161,14 +1157,8 @@ void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a) {
 	glColorMask(r, g, b, a);
 }
 
-void Gfx_SetDepthWrite(bool enabled) {
-	glDepthMask(enabled);
-}
-
+void Gfx_SetDepthWrite(bool enabled) { glDepthMask(enabled); }
 void Gfx_SetDepthTest(bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
-void Gfx_SetDepthTestFunc(CompareFunc func) {
-	glDepthFunc(gl_compare[func]);
-}
 
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, -10000.0f, 10000.0f);
@@ -1639,6 +1629,7 @@ static void GL_CheckSupport(void) {
 static void Gfx_FreeState(void) {
 	int i;
 	Gfx_FreeDefaultResources();
+	gfx_activeShader = NULL;
 
 	for (i = 0; i < Array_Elems(shaders); i++) {
 		glDeleteProgram(shaders[i].program);
@@ -1653,7 +1644,9 @@ static void Gfx_RestoreState(void) {
 
 	Gfx_SwitchProgram();
 	Gfx_DirtyUniform(UNI_MASK_ALL);
+	GL_ClearCol(gfx_clearCol);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDepthFunc(GL_LEQUAL);
 }
 
 static void GL_SetupVbPos3fCol4b(void) {
@@ -1787,6 +1780,7 @@ static void Gfx_RestoreState(void) {
 	glHint(GL_FOG_HINT, GL_NICEST);
 	glAlphaFunc(GL_GREATER, 0.5f);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDepthFunc(GL_LEQUAL);
 }
 
 
