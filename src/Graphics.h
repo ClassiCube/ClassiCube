@@ -16,10 +16,6 @@ typedef enum CompareFunc_ {
 	COMPARE_FUNC_LESS,   COMPARE_FUNC_LESSEQUAL, COMPARE_FUNC_EQUAL,
 	COMPARE_FUNC_GREATEREQUAL, COMPARE_FUNC_GREATER
 } CompareFunc;
-typedef enum BlendFunc_ {
-	BLEND_FUNC_ZERO,          BLEND_FUNC_ONE,       BLEND_FUNC_SRC_ALPHA,
-	BLEND_FUNC_INV_SRC_ALPHA, BLEND_FUNC_DST_ALPHA, BLEND_FUNC_INV_DST_ALPHA
-} BlendFunc;
 
 typedef enum VertexFormat_ {
 	VERTEX_FORMAT_P3FC4B, VERTEX_FORMAT_P3FT2FC4B
@@ -93,8 +89,6 @@ CC_API void Gfx_SetFaceCulling(bool enabled);
 CC_API void Gfx_SetAlphaTest(bool enabled);
 /* Sets whether existing and new pixels are blended together. */
 CC_API void Gfx_SetAlphaBlending(bool enabled);
-/* Sets in what way existing and new pixels are blended. */
-CC_API void Gfx_SetAlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc);
 /* Sets whether blending between the alpha components of texture and vertex colour is performed. */
 CC_API void Gfx_SetAlphaArgBlend(bool enabled);
 

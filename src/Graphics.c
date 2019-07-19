@@ -41,6 +41,9 @@ CC_NOINLINE static void Gfx_RestoreState(void);
 /* Destroys render state, but can be restored later. */
 CC_NOINLINE static void Gfx_FreeState(void);
 
+static PackedCol gfx_clearCol, gfx_fogCol;
+static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
+
 /*########################################################################################################################*
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -428,6 +431,8 @@ static void Gfx_RestoreState(void) {
 	/* States relevant to the game */
 	D3D9_SetRenderState2(D3DRS_ALPHAFUNC, D3DCMP_GREATER, "D3D9_AlphaTestFunc");
 	D3D9_SetRenderState2(D3DRS_ALPHAREF,  127,            "D3D9_AlphaRefFunc");
+	D3D9_SetRenderState2(D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA,    "D3D9_AlphaSrcBlend");
+	D3D9_SetRenderState2(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA, "D3D9_AlphaDstBlend");
 	D3D9_RestoreRenderStates();
 }
 
@@ -575,14 +580,8 @@ void Gfx_DisableMipmaps(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_fogCol;
-static float gfx_fogDensity = -1.0f, gfx_fogEnd = -1.0f;
 static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
-
 static bool gfx_alphaTesting, gfx_alphaBlending;
-static D3DBLEND gfx_srcBlendFunc = D3DBLEND_ONE, gfx_dstBlendFunc = D3DBLEND_ZERO;
-
-static PackedCol gfx_clearCol;
 static bool gfx_depthTesting, gfx_depthWriting;
 static D3DCMPFUNC gfx_depthTestFunc = D3DCMP_LESSEQUAL;
 
@@ -649,15 +648,6 @@ void Gfx_SetAlphaBlending(bool enabled) {
 	D3D9_SetRenderState(D3DRS_ALPHABLENDENABLE, enabled, "D3D9_SetAlphaBlending");
 }
 
-void Gfx_SetAlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc) {
-	static D3DBLEND funcs[6] = { D3DBLEND_ZERO, D3DBLEND_ONE, D3DBLEND_SRCALPHA, D3DBLEND_INVSRCALPHA, D3DBLEND_DESTALPHA, D3DBLEND_INVDESTALPHA };
-
-	gfx_srcBlendFunc = funcs[srcFunc];
-	D3D9_SetRenderState(D3DRS_SRCBLEND,   gfx_srcBlendFunc, "D3D9_SetAlphaBlendFunc_Src");
-	gfx_dstBlendFunc = funcs[dstFunc];
-	D3D9_SetRenderState2(D3DRS_DESTBLEND, gfx_dstBlendFunc, "D3D9_SetAlphaBlendFunc_Dst");
-}
-
 void Gfx_SetAlphaArgBlend(bool enabled) {
 	D3DTEXTUREOP op = enabled ? D3DTOP_MODULATE : D3DTOP_SELECTARG1;
 	ReturnCode res  = IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, op);
@@ -689,8 +679,6 @@ static void D3D9_RestoreRenderStates(void) {
 	union IntAndFloat raw;
 	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE,   gfx_alphaTesting,  "D3D9_AlphaTest");
 	D3D9_SetRenderState2(D3DRS_ALPHABLENDENABLE, gfx_alphaBlending, "D3D9_AlphaBlend");
-	D3D9_SetRenderState2(D3DRS_SRCBLEND,         gfx_srcBlendFunc,  "D3D9_AlphaSrcBlend");
-	D3D9_SetRenderState2(D3DRS_DESTBLEND,        gfx_dstBlendFunc,  "D3D9_AlphaDstBlend");
 
 	D3D9_SetRenderState2(D3DRS_FOGENABLE, gfx_fogEnabled,  "D3D9_Fog");
 	D3D9_SetRenderState2(D3DRS_FOGCOLOR,  gfx_fogCol._raw, "gfx_fogColor");
@@ -1157,17 +1145,10 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_clearCol, gfx_fogCol;
-static float gfx_fogEnd = -1, gfx_fogDensity = -1;
 static int gfx_fogMode  = -1;
-
 void Gfx_SetFaceCulling(bool enabled) { gl_Toggle(GL_CULL_FACE); }
 
 void Gfx_SetAlphaBlending(bool enabled) { gl_Toggle(GL_BLEND); }
-void Gfx_SetAlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc) {
-	static GLenum funcs[6] = { GL_ZERO, GL_ONE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA };
-	glBlendFunc(funcs[srcFunc], funcs[dstFunc]);
-}
 void Gfx_SetAlphaArgBlend(bool enabled) { }
 
 void Gfx_ClearCol(PackedCol col) {
@@ -1669,8 +1650,10 @@ static void Gfx_RestoreState(void) {
 	Gfx_InitDefaultResources();
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+
 	Gfx_SwitchProgram();
 	Gfx_DirtyUniform(UNI_MASK_ALL);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 static void GL_SetupVbPos3fCol4b(void) {
@@ -1798,10 +1781,12 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 static void Gfx_FreeState(void) { Gfx_FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
 	Gfx_InitDefaultResources();
-	glHint(GL_FOG_HINT, GL_NICEST);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
+
+	glHint(GL_FOG_HINT, GL_NICEST);
 	glAlphaFunc(GL_GREATER, 0.5f);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 
