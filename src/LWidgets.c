@@ -384,12 +384,14 @@ static void LInput_Select(void* widget, bool wasSelected) {
 	/* TODO: Only draw outer border */
 	if (wasSelected) return;
 	LInput_Draw(widget);
+	Window_OpenKeyboard();
 }
 
 static void LInput_Unselect(void* widget) {
 	caretStart = 0;
 	/* TODO: Only draw outer border */
 	LInput_Draw(widget);
+	Window_CloseKeyboard();
 }
 
 static void LInput_CopyFromClipboard(String* text, void* widget) {
@@ -565,6 +567,27 @@ void LLabel_SetText(struct LLabel* w, const String* text) {
 	size = Drawer2D_MeasureText(&args);
 	w->Width = size.Width; w->Height = size.Height;
 	LWidget_CalcPosition(w);
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------BoxWidget---------------------------------------------------------*
+*#########################################################################################################################*/
+static void LBox_Draw(void* widget) {
+	struct LBox* w = (struct LBox*)widget;
+	Drawer2D_Rect(&Launcher_Framebuffer, w->Col, w->X, w->Y, w->Width, w->Height);
+}
+
+static struct LWidgetVTABLE lbox_VTABLE = {
+	LBox_Draw, NULL,
+	NULL, NULL, /* Key    */
+	NULL, NULL, /* Hover  */
+	NULL, NULL  /* Select */
+};
+void LBox_Init(struct LBox* w, int width, int height) {
+	w->VTABLE = &lbox_VTABLE;
+	w->Width  = Gui_ScaleX(width);
+	w->Height = Gui_ScaleY(height);
 }
 
 

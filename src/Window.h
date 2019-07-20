@@ -122,6 +122,12 @@ void Window_DrawFramebuffer(Rect2D r);
 /* Frees the previously allocated framebuffer. */
 void Window_FreeFramebuffer(Bitmap* bmp);
 
+/* Displays on-screen keyboard for platforms that lack physical keyboard input. */
+/* NOTE: On desktop platforms, this won't do anything. */
+void Window_OpenKeyboard(void);
+/* Hides/Removes the previously displayed on-screen keyboard. */
+void Window_CloseKeyboard(void);
+
 /* Begins listening for raw input and starts raising MouseEvents.RawMoved. */
 /* NOTE: Some backends only raise it when Window_UpdateRawMouse is called. */
 /* Cursor will also be hidden and moved to window centre. */

@@ -214,6 +214,11 @@ CC_NOINLINE static void LScreen_Input(struct LScreen* s, struct LInput* w, int w
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
+CC_NOINLINE static void LScreen_Box(struct LScreen* s, struct LBox* w, int width, int height) {
+	LBox_Init(w, width, height);
+	s->widgets[s->numWidgets++] = (struct LWidget*)w;
+}
+
 CC_NOINLINE static void LScreen_Slider(struct LScreen* s, struct LSlider* w, int width, int height,
 									  int initValue, int maxValue, BitmapCol progressCol) {
 	LSlider_Init(w, width, height);
@@ -247,10 +252,11 @@ static void SwitchToUpdates(void* w, int x, int y) {
 *#########################################################################################################################*/
 static struct ChooseModeScreen {
 	LScreen_Layout
+	struct LBox seps[2];
 	struct LButton btnEnhanced, btnClassicHax, btnClassic, btnBack;
 	struct LLabel  lblTitle, lblHelp, lblEnhanced[2], lblClassicHax[2], lblClassic[2];
 	bool firstTime;
-	struct LWidget* _widgets[12];
+	struct LWidget* _widgets[14];
 } ChooseModeScreen_Instance;
 
 CC_NOINLINE static void ChooseMode_Click(bool classic, bool classicHacks) {
@@ -280,10 +286,14 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 
 	s->lblHelp.Hidden = !s->firstTime;
 	s->btnBack.Hidden = s->firstTime;
+	s->seps[0].Col    = Launcher_ButtonBorderCol;
+	s->seps[1].Col    = Launcher_ButtonBorderCol;
 
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
-	LScreen_Label(s_,  &s->lblTitle, "");
+	LScreen_Label(s_, &s->lblTitle, "");
+	LScreen_Box(s_,   &s->seps[0], 490, 1);
+	LScreen_Box(s_,   &s->seps[1], 490, 1);
 
 	LScreen_Button(s_, &s->btnEnhanced, 145, 35, "Enhanced");
 	LScreen_Label(s_,  &s->lblEnhanced[0], "&eEnables custom blocks, changing env");
@@ -312,6 +322,8 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 static void ChooseModeScreen_Reposition(struct LScreen* s_) {
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
 	LWidget_SetLocation(&s->lblTitle, ANCHOR_CENTRE, ANCHOR_CENTRE, 10, -135);
+	LWidget_SetLocation(&s->seps[0],  ANCHOR_CENTRE, ANCHOR_CENTRE, -5,  -35);
+	LWidget_SetLocation(&s->seps[1],  ANCHOR_CENTRE, ANCHOR_CENTRE, -5,   35);
 
 	LWidget_SetLocation(&s->btnEnhanced,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, -72);
 	LWidget_SetLocation(&s->lblEnhanced[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -72 - 12);
@@ -329,22 +341,11 @@ static void ChooseModeScreen_Reposition(struct LScreen* s_) {
 	LWidget_SetLocation(&s->btnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }
 
-static void ChooseModeScreen_Draw(struct LScreen* s) {
-	int midX = Window_Width / 2, midY = Window_Height / 2;
-	LScreen_Draw(s);
-	
-	Drawer2D_Rect(&Launcher_Framebuffer, Launcher_ButtonBorderCol,
-					midX - 250, midY - 35, 490, 1);
-	Drawer2D_Rect(&Launcher_Framebuffer, Launcher_ButtonBorderCol, 
-					midX - 250, midY + 35, 490, 1);
-}
-
 struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime) {
 	struct ChooseModeScreen* s = &ChooseModeScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init       = ChooseModeScreen_Init;
 	s->Reposition = ChooseModeScreen_Reposition;
-	s->Draw       = ChooseModeScreen_Draw;
 	s->firstTime  = firstTime;
 	s->onEnterWidget = (struct LWidget*)&s->btnEnhanced;
 	return (struct LScreen*)s;
@@ -1410,22 +1411,13 @@ struct LScreen* SettingsScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 static struct UpdatesScreen {
 	LScreen_Layout
+	struct LBox seps[2];
 	struct LButton btnRel[2], btnDev[2], btnBack;
 	struct LLabel  lblYour, lblRel, lblDev, lblInfo, lblStatus;
-	struct LWidget* _widgets[10];
+	struct LWidget* _widgets[12];
 	const char* buildName;
 	int buildProgress;
 } UpdatesScreen_Instance;
-
-static void UpdatesScreen_Draw(struct LScreen* s) {
-	int midX = Window_Width / 2, midY = Window_Height / 2;
-	LScreen_Draw(s);
-
-	Drawer2D_Rect(&Launcher_Framebuffer, Launcher_ButtonBorderCol,
-				midX - 160, midY - 100, 320, 1);
-	Drawer2D_Rect(&Launcher_Framebuffer, Launcher_ButtonBorderCol, 
-				midX - 160, midY -   5, 320, 1);
-}
 
 CC_NOINLINE static void UpdatesScreen_FormatTime(String* str, char* type, int delta, int unit) {
 	delta /= unit;
@@ -1550,9 +1542,14 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	TimeMS buildTime;
 	ReturnCode res;
 
+	s->seps[0].Col = Launcher_ButtonBorderCol;
+	s->seps[1].Col = Launcher_ButtonBorderCol;
 	if (s->numWidgets) { CheckUpdateTask_Run(); return; }
+
 	s->widgets = s->_widgets;
-	LScreen_Label(s_, &s->lblYour, "Your build: (unknown)");
+	LScreen_Label(s_,  &s->lblYour, "Your build: (unknown)");
+	LScreen_Box(s_,    &s->seps[0],   320, 1);
+	LScreen_Box(s_,    &s->seps[1],   320, 1);
 
 	LScreen_Label(s_,  &s->lblRel, "Latest release: Checking..");
 	LScreen_Button(s_, &s->btnRel[0], 130, 35, "Direct3D 9");
@@ -1591,6 +1588,8 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 static void UpdatesScreen_Reposition(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
 	LWidget_SetLocation(&s->lblYour, ANCHOR_CENTRE, ANCHOR_CENTRE, -5, -120);
+	LWidget_SetLocation(&s->seps[0], ANCHOR_CENTRE, ANCHOR_CENTRE,  0, -100);
+	LWidget_SetLocation(&s->seps[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  0,   -5);
 
 	LWidget_SetLocation(&s->lblRel,    ANCHOR_CENTRE, ANCHOR_CENTRE, -20, -75);
 	LWidget_SetLocation(&s->btnRel[0], ANCHOR_CENTRE, ANCHOR_CENTRE, -80, -40);
@@ -1627,7 +1626,6 @@ struct LScreen* UpdatesScreen_MakeInstance(void) {
 	struct UpdatesScreen* s = &UpdatesScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init       = UpdatesScreen_Init;
-	s->Draw       = UpdatesScreen_Draw;
 	s->Tick       = UpdatesScreen_Tick;
 	s->Free       = UpdatesScreen_Free;
 	s->Reposition = UpdatesScreen_Reposition;

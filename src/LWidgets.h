@@ -93,6 +93,7 @@ CC_NOINLINE bool LInput_Delete(struct LInput* w);
 /* Resets the currently entered text to an empty string. */
 CC_NOINLINE bool LInput_Clear(struct LInput* w);
 
+/* Represents non-interactable text. */
 struct LLabel {
 	LWidget_Layout
 	FontDesc Font;
@@ -102,6 +103,13 @@ struct LLabel {
 };
 CC_NOINLINE void LLabel_Init(struct LLabel* w, const FontDesc* font);
 CC_NOINLINE void LLabel_SetText(struct LLabel* w, const String* text);
+
+/* Represents a coloured rectangle. Usually used as a line separator. */
+struct LBox {
+	LWidget_Layout
+	BitmapCol Col;
+};
+CC_NOINLINE void LBox_Init(struct LBox* w, int width, int height);
 
 /* Represents a slider bar that may or may not be modifiable by the user. */
 struct LSlider {

@@ -595,6 +595,9 @@ static void Window_InitRawMouse(void) {
 	rawMouseSupported = false;
 }
 
+void Window_OpenKeyboard(void)  { }
+void Window_CloseKeyboard(void) { }
+
 void Window_EnableRawMouse(void) {
 	rawMouseEnabled = true;
 	Window_DefaultEnableRawMouse();
@@ -1434,6 +1437,8 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 	Mem_Free(bmp->Scan0);
 }
 
+void Window_OpenKeyboard(void)  { }
+void Window_CloseKeyboard(void) { }
 void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
 void Window_UpdateRawMouse(void)  { Window_DefaultUpdateRawMouse();  }
 void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
@@ -1991,6 +1996,8 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 	CGColorSpaceRelease(colorSpace);
 }
 
+void Window_OpenKeyboard(void)  { }
+void Window_CloseKeyboard(void) { }
 void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
 void Window_UpdateRawMouse(void)  { Window_DefaultUpdateRawMouse();  }
 void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
@@ -2300,6 +2307,13 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 	/* SDL docs explicitly say to NOT free the surface */
 	/* https://wiki.libsdl.org/SDL_GetWindowSurface */
 	/* TODO: Do we still need to unlock it though? */
+}
+
+void Window_OpenKeyboard(void) { 
+	SDL_StartTextInput();
+}
+void Window_CloseKeyboard(void) {
+	SDL_StopTextInput();
 }
 
 void Window_EnableRawMouse(void) {
@@ -2735,6 +2749,9 @@ void Window_AllocFramebuffer(Bitmap* bmp) { }
 void Window_DrawFramebuffer(Rect2D r)     { }
 void Window_FreeFramebuffer(Bitmap* bmp)  { }
 
+void Window_OpenKeyboard(void)  { }
+void Window_CloseKeyboard(void) { }
+
 void Window_EnableRawMouse(void) {
 	Window_RegrabMouse();
 	emscripten_request_pointerlock(NULL, true);
@@ -2981,6 +2998,18 @@ void Window_DrawFramebuffer(Rect2D r) {
 
 void Window_FreeFramebuffer(Bitmap* bmp) {
 	Mem_Free(bmp->Scan0);
+}
+
+void Window_OpenKeyboard(void) {
+	JNIEnv* env;
+	JavaGetCurrentEnv(env);
+	JavaCallVoid(env, "openKeyboard", "()V", NULL);
+}
+
+void Window_CloseKeyboard(void) {
+	JNIEnv* env;
+	JavaGetCurrentEnv(env);
+	JavaCallVoid(env, "closeKeyboard", "()V", NULL);
 }
 
 void Window_EnableRawMouse(void) {
