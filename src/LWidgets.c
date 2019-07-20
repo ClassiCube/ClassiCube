@@ -17,14 +17,14 @@
 void LWidget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
 	struct LWidget* w = (struct LWidget*)widget;
 	w->HorAnchor = horAnchor; w->VerAnchor = verAnchor;
-	w->XOffset   = xOffset;   w->YOffset = yOffset;
+	w->XOffset   = xOffset;   w->YOffset   = yOffset;
 	LWidget_CalcPosition(widget);
 }
 
 void LWidget_CalcPosition(void* widget) {
 	struct LWidget* w = (struct LWidget*)widget;
-	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width,  Window_Width);
-	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Window_Height);
+	w->X = Gui_CalcPos(w->HorAnchor, Gui_ScaleX(w->XOffset), w->Width,  Window_Width);
+	w->Y = Gui_CalcPos(w->VerAnchor, Gui_ScaleY(w->YOffset), w->Height, Window_Height);
 }
 
 void LWidget_Draw(void* widget) {
@@ -145,7 +145,8 @@ void LButton_Init(struct LButton* w, const FontDesc* font, int width, int height
 	w->VTABLE = &lbutton_VTABLE;
 	w->TabSelectable = true;
 	w->Font   = *font;
-	w->Width  = width; w->Height = height;
+	w->Width  = Gui_ScaleX(width);
+	w->Height = Gui_ScaleY(height);
 	String_InitArray(w->Text, w->_TextBuffer);
 }
 
@@ -438,9 +439,10 @@ void LInput_Init(struct LInput* w, const FontDesc* font, int width, int height, 
 	w->TabSelectable = true;
 	String_InitArray(w->Text, w->_TextBuffer);
 	w->Font  = *font;
-
-	w->MinWidth = width;
-	w->Width    = width; w->Height = height;
+	
+	w->Width    = Gui_ScaleX(width);
+	w->Height   = Gui_ScaleY(height);
+	w->MinWidth = w->Width;
 	LWidget_CalcPosition(w);
 
 	w->HintFont = *hintFont;
@@ -625,7 +627,8 @@ static struct LWidgetVTABLE lslider_VTABLE = {
 };
 void LSlider_Init(struct LSlider* w, int width, int height) {
 	w->VTABLE = &lslider_VTABLE;
-	w->Width  = width; w->Height = height;
+	w->Width  = Gui_ScaleX(width); 
+	w->Height = Gui_ScaleY(height);
 	w->MaxValue = 100;
 }
 

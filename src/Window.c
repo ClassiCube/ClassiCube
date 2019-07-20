@@ -2842,13 +2842,18 @@ static void Window_HandleAppEvent(struct android_app* app, int32_t cmd) {
 
 void Window_Init(void) {
 	struct android_app* app = (struct android_app*)App_Ptr;
+	JNIEnv* env;
+
 	/* TODO: or WINDOW_FORMAT_RGBX_8888 ?? */
 	ANativeActivity_setWindowFormat(app->activity, WINDOW_FORMAT_RGBA_8888);
 	ANativeActivity_setWindowFlags(app->activity,  AWINDOW_FLAG_FULLSCREEN, 0);
-
 	app->onAppCmd        = Window_HandleAppEvent;
 	app->onInputEvent    = Window_HandleInputEvent;
+
+	JavaGetCurrentEnv(env);
 	Display_BitsPerPixel = 32;
+	Display_DpiX         = JavaCallInt(env, "getDpiX", "()I", NULL);
+	Display_DpiY         = JavaCallInt(env, "getDpiY", "()I", NULL);
 }
 
 void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {

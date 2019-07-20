@@ -899,9 +899,6 @@ static struct EntryList font_list;
 static bool font_list_changed;
 static void Font_Init(void);
 
-#define DPI_PIXEL  72
-#define DPI_DEVICE 96 /* TODO: GetDeviceCaps(hdc, LOGPIXELSY) in Window_Init ? */
-
 struct FontData {
 	FT_Face face;
 	struct Stream src, file;
@@ -1045,10 +1042,8 @@ ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style
 	if ((err = FontData_Init(&path, data, &args))) { Mem_Free(data); return err; }
 	desc->Handle = data;
 
-	if ((err = FT_New_Face(ft_lib, &args, faceIndex, &data->face)))        return err;
-	if ((err = FT_Set_Char_Size(data->face, size * 64, 0, DPI_DEVICE, 0))) return err;
-
-	return 0;
+	if ((err = FT_New_Face(ft_lib, &args, faceIndex, &data->face))) return err;
+	return FT_Set_Char_Size(data->face, size * 64, 0, Display_DpiX, Display_DpiY);
 }
 
 void Font_Free(FontDesc* desc) {

@@ -105,6 +105,11 @@ extern int Gui_OverlaysCount;
 /* Calculates position of an element on a particular axis */
 /* For example, to calculate X position of a text widget on screen */
 int  Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen);
+/* Scales the given X coordinate from 96 dpi to current display dpi. */
+int Gui_ScaleX(int x);
+/* Scales the given Y coordinate from 96 dpi to current display dpi. */
+int Gui_ScaleY(int y);
+
 /* Returns whether the given rectangle contains the given point. */
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
 /* Gets the screen that the user is currently interacting with. */
