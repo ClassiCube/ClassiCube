@@ -2858,6 +2858,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 
 void Window_SetTitle(const String* title) {
 	/* TODO: Implement this somehow */
+	/* Maybe https://stackoverflow.com/questions/2198410/how-to-change-title-of-activity-in-android */
 }
 
 void Clipboard_GetText(String* value) {
