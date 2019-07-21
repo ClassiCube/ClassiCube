@@ -1267,23 +1267,6 @@ void Gfx_GetApiInfo(String* lines) {
 	String_Format2(&lines[4], "Video memory: %f2 MB total, %f2 free", &total, &cur);
 }
 
-bool Gfx_WarnIfNecessary(void) {
-	static const String intel = String_FromConst("Intel");
-	String renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
-
-#ifdef CC_BUILD_GL11
-	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
-	Chat_AddRaw("&cAs such you may experience poor performance.");
-	Chat_AddRaw("&cIt is likely you need to install video card drivers.");
-#endif
-	if (!String_ContainsString(&renderer, &intel)) return false;
-
-	Chat_AddRaw("&cIntel graphics cards are known to have issues with the OpenGL build.");
-	Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
-	Chat_AddRaw("&cFor Windows, try downloading the Direct3D 9 build instead.");
-	return true;
-}
-
 void Gfx_SetFpsLimit(bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
 	gfx_vsync = vsync;
@@ -1505,6 +1488,7 @@ static void Gfx_DirtyUniform(int uniform) {
 /* Sends changes uniforms to the GPU for current program */
 static void Gfx_ReloadUniforms(void) {
 	struct GLShader* s = gfx_activeShader;
+	if (!s) return; /* NULL if context is lost */
 
 	if (s->uniforms & UNI_MVP_MATRIX) {
 		glUniformMatrix4fv(s->locations[0], 1, false, (float*)&_mvp);
@@ -1638,6 +1622,7 @@ static void Gfx_RestoreState(void) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LEQUAL);
 }
+bool Gfx_WarnIfNecessary(void) { return false; }
 
 static void GL_SetupVbPos3fCol4b(void) {
 	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fC4b), (void*)0);
@@ -1701,7 +1686,7 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
 	glVertexAttribPointer(2, 2, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
- }
+}
 #endif
 
 
@@ -1772,6 +1757,23 @@ static void Gfx_RestoreState(void) {
 	glAlphaFunc(GL_GREATER, 0.5f);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LEQUAL);
+}
+
+bool Gfx_WarnIfNecessary(void) {
+	static const String intel = String_FromConst("Intel");
+	String renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
+
+#ifdef CC_BUILD_GL11
+	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
+	Chat_AddRaw("&cAs such you may experience poor performance.");
+	Chat_AddRaw("&cIt is likely you need to install video card drivers.");
+#endif
+	if (!String_ContainsString(&renderer, &intel)) return false;
+
+	Chat_AddRaw("&cIntel graphics cards are known to have issues with the OpenGL build.");
+	Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
+	Chat_AddRaw("&cFor Windows, try downloading the Direct3D 9 build instead.");
+	return true;
 }
 
 
