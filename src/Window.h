@@ -157,7 +157,7 @@ void GLContext_Free(void);
 You must check the OpenGL version and/or GL_EXTENSIONS string for actual support! */
 void* GLContext_GetAddress(const char* function);
 /* Swaps the front and back buffer, displaying the back buffer on screen. */
-void GLContext_SwapBuffers(void);
+bool GLContext_SwapBuffers(void);
 /* Sets whether synchronisation with the monitor is used. */
 /* NOTE: The underlying platform may choose to still ignore this. */
 void GLContext_SetFpsLimit(bool vsync, float minFrameMs);

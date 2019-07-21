@@ -3158,10 +3158,9 @@ void* GLContext_GetAddress(const char* function) {
 	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }
 
-void GLContext_SwapBuffers(void) {
-	if (!SwapBuffers(ctx_DC)) {
-		Logger_Abort2(GetLastError(), "Failed to swap buffers");
-	}
+bool GLContext_SwapBuffers(void) {
+	if (!SwapBuffers(ctx_DC)) Logger_Abort2(GetLastError(), "Failed to swap buffers");
+	return true;
 }
 
 void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
@@ -3232,8 +3231,9 @@ void* GLContext_GetAddress(const char* function) {
 	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }
 
-void GLContext_SwapBuffers(void) {
+bool GLContext_SwapBuffers(void) {
 	glXSwapBuffers(win_display, win_handle);
+	return true;
 }
 
 void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
@@ -3454,9 +3454,10 @@ void* GLContext_GetAddress(const char* function) {
 	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }
 
-void GLContext_SwapBuffers(void) {
+bool GLContext_SwapBuffers(void) {
 	aglSwapBuffers(ctx_handle);
 	GLContext_Check(0, "Swapping buffers");
+	return true;
 }
 
 void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
@@ -3498,8 +3499,9 @@ void* GLContext_GetAddress(const char* function) {
 	return SDL_GL_GetProcAddress(function);
 }
 
-void GLContext_SwapBuffers(void) {
+bool GLContext_SwapBuffers(void) {
 	SDL_GL_SwapWindow(win_handle);
+	return true;
 }
 
 void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
@@ -3527,6 +3529,12 @@ static EGLint ctx_numConfig;
 	return info;
 }*/
 
+static void GLContext_InitSurface(void) {
+	if (!win_handle) return; /* window not created or lost */
+	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
+	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
+}
+
 void GLContext_Init(struct GraphicsMode* mode) {
 	static EGLint contextAttribs[3] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	static EGLint attribs[19] = {
@@ -3549,16 +3557,20 @@ void GLContext_Init(struct GraphicsMode* mode) {
 	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
 
 	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, contextAttribs);
-	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
-	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);\
+	GLContext_InitSurface();
 }
 
 void GLContext_Update(void) {
+	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx_context);
 	eglDestroySurface(ctx_display, ctx_surface);
-	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
-	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
+	ctx_surface = NULL;
+	GLContext_InitSurface();
 }
-bool GLContext_TryRestore(void) { return true; }
+
+bool GLContext_TryRestore(void) {
+	GLContext_InitSurface();
+	return ctx_surface != NULL;
+}
 
 void GLContext_Free(void) {
 	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -3571,8 +3583,10 @@ void* GLContext_GetAddress(const char* function) {
 	return eglGetProcAddress(function);
 }
 
-void GLContext_SwapBuffers(void) {
+bool GLContext_SwapBuffers(void) {
+	if (!ctx_surface) return false;
 	eglSwapBuffers(ctx_display, ctx_surface);
+	return true;
 }
 
 void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
@@ -3621,7 +3635,7 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) { return NULL; }
-void GLContext_SwapBuffers(void) { /* Browser implicitly does this */ }
+bool  GLContext_SwapBuffers(void) { return true; /* Browser implicitly does this */ }
 
 void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 	if (vsync) {

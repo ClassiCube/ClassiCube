@@ -1691,6 +1691,7 @@ ReturnCode Process_StartShell(void) {
 	static const String path = String_FromConst("xterm");
 	static const String args = String_FromConst("-e ./update.sh");
 	return Process_Start(&path, &args);
+}
 #endif
 /* Retrieving exe path is completely OS dependant */
 #if defined CC_BUILD_OSX
@@ -1997,7 +1998,6 @@ int Platform_ConvertUniString(void* data, const UniString* src) {
 	dst[len] = '\0';
 	return len;
 }
-
 
 static void Platform_InitCommon(void) {
 	signal(SIGCHLD, SIG_IGN);

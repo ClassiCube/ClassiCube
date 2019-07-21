@@ -258,7 +258,9 @@ void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args);
 jint JavaCallInt(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that returns a jobject. */
 jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args);
-/* Calls a method in the activity class that takes a string and returns nothig. */
+/* Calls a method in the activity class that takes a string and returns nothing. */
 void JavaCall_String_Void(const char* name, const String* value);
+/* Calls a method in the activity class that takes an int argument and returns a string. */
+void JavaCall_Int_String(const char* name, int arg, String* dst);
 #endif
 #endif

@@ -1302,7 +1302,7 @@ void Gfx_SetFpsLimit(bool vsync, float minFrameMs) {
 void Gfx_BeginFrame(void) { frameStart = Stopwatch_Measure(); }
 void Gfx_Clear(void) { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 void Gfx_EndFrame(void) { 
-	GLContext_SwapBuffers(); 
+	if (!GLContext_SwapBuffers()) Gfx_LoseContext("GLContext lost");
 	if (gfx_minFrameMs) Gfx_LimitFPS();
 }
 
@@ -1641,8 +1641,8 @@ static void Gfx_RestoreState(void) {
 	Gfx_InitDefaultResources();
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+	gfx_batchFormat = -1;
 
-	Gfx_SwitchProgram();
 	Gfx_DirtyUniform(UNI_MASK_ALL);
 	GL_ClearCol(gfx_clearCol);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1776,6 +1776,7 @@ static void Gfx_RestoreState(void) {
 	Gfx_InitDefaultResources();
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
+	gfx_batchFormat = -1;
 
 	glHint(GL_FOG_HINT, GL_NICEST);
 	glAlphaFunc(GL_GREATER, 0.5f);
