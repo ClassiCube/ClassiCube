@@ -1553,15 +1553,6 @@ ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-ReturnCode Process_GetExePath(String* path) {
-	TCHAR chars[FILENAME_SIZE + 1];
-	DWORD len = GetModuleFileName(NULL, chars, FILENAME_SIZE);
-	if (!len) return GetLastError();
-
-	Platform_DecodeString(path, chars, len);
-	return 0;
-}
-
 static ReturnCode Process_RawStart(const TCHAR* path, TCHAR* args) {
 	STARTUPINFO si = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
@@ -1589,6 +1580,7 @@ ReturnCode Process_Start(const String* path, const String* args) {
 
 	return Process_RawStart(str, raw);
 }
+void Process_Exit(ReturnCode code) { ExitProcess(code); }
 
 ReturnCode Process_StartOpen(const String* args) {
 	TCHAR str[300];
@@ -1606,27 +1598,17 @@ ReturnCode Process_StartShell(void) {
 	return Process_RawStart(NULL, str);
 }
 
-void Process_Exit(ReturnCode code) { ExitProcess(code); }
+ReturnCode Process_GetExePath(String* path) {
+	TCHAR chars[FILENAME_SIZE + 1];
+	DWORD len = GetModuleFileName(NULL, chars, FILENAME_SIZE);
+	if (!len) return GetLastError();
 
-ReturnCode DynamicLib_Load(const String* path, void** lib) {
-	TCHAR str[300];
-	Platform_ConvertString(str, path);
-	*lib = LoadLibrary(str);
-	return *lib ? 0 : GetLastError();
-}
-
-ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
-	*symbol = GetProcAddress((HMODULE)lib, name);
-	return *symbol ? 0 : GetLastError();
-}
-
-bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
-	return Platform_DescribeError(res, dst);
+	Platform_DecodeString(path, chars, len);
+	return 0;
 }
 #elif defined CC_BUILD_WEB
-ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 ReturnCode Process_Start(const String* path, const String* args) { return ERR_NOT_SUPPORTED; }
-ReturnCode Process_StartShell(void) { return ERR_NOT_SUPPORTED; }
+void Process_Exit(ReturnCode code) { exit(code); }
 
 ReturnCode Process_StartOpen(const String* args) {
 	char str[600];
@@ -1634,11 +1616,23 @@ ReturnCode Process_StartOpen(const String* args) {
 	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
 	return 0;
 }
+
+ReturnCode Process_StartShell(void)         { return ERR_NOT_SUPPORTED; }
+ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
+#elif defined CC_BUILD_ANDROID
+ReturnCode Process_Start(const String* path, const String* args) {
+	JavaCall_String_Void("startGame", args);
+	return 0; /* TODO: Is there a clean way of handling an error */
+}
 void Process_Exit(ReturnCode code) { exit(code); }
 
-ReturnCode DynamicLib_Load(const String* path, void** lib) { return ERR_NOT_SUPPORTED; }
-ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) { return ERR_NOT_SUPPORTED; }
-bool DynamicLib_DescribeError(ReturnCode res, String* dst) { return false; }
+ReturnCode Process_StartOpen(const String* args) {
+	JavaCall_String_Void("startOpen", args);
+	return 0; /* TODO: Is there a clean way of handling an error */
+}
+
+ReturnCode Process_StartShell(void)         { return ERR_NOT_SUPPORTED; }
+ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
 ReturnCode Process_Start(const String* path, const String* args) {
 	char str[600], raw[600];
@@ -1675,26 +1669,8 @@ ReturnCode Process_Start(const String* path, const String* args) {
 }
 
 void Process_Exit(ReturnCode code) { exit(code); }
-
-ReturnCode DynamicLib_Load(const String* path, void** lib) {
-	char str[600];
-	Platform_ConvertString(str, path);
-	*lib = dlopen(str, RTLD_NOW);
-	return *lib == NULL;
-}
-
-ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
-	*symbol = dlsym(lib, name);
-	return *symbol == NULL; /* dlerror would be proper, but eh */
-}
-
-bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
-	char* err = dlerror();
-	if (err) String_AppendConst(dst, err);
-	return err && err[0];
-}
 #endif
-/* Opening browser and retrieving exe path is not standardised at all */
+/* Opening browser and starting shell is not really standardised */
 #if defined CC_BUILD_OSX
 ReturnCode Process_StartOpen(const String* args) {
 	static const String path = String_FromConst("/usr/bin/open");
@@ -1705,24 +1681,6 @@ ReturnCode Process_StartShell(void) {
 	static const String args = String_FromConst("-a Terminal ./update.sh");
 	return Process_Start(&path, &args);
 }
-
-ReturnCode Process_GetExePath(String* path) {
-	char str[600] = { 0 };
-	uint32_t len  = 600;
-	if (_NSGetExecutablePath(str, &len)) return ERR_INVALID_ARGUMENT;
-
-	len = String_CalcLen(str, 600);
-	Platform_DecodeString(path, str, len);
-	return 0;
-}
-#elif defined CC_BUILD_ANDROID
-ReturnCode Process_StartOpen(const String* args) {
-	JavaCall_String_Void("startOpen", args);
-	return 0; /* TODO: Is there a clean way of handling an error */
-}
-
-ReturnCode Process_StartShell(void) { return ERR_NOT_SUPPORTED; }
-ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_UNIX
 ReturnCode Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
@@ -1733,8 +1691,19 @@ ReturnCode Process_StartShell(void) {
 	static const String path = String_FromConst("xterm");
 	static const String args = String_FromConst("-e ./update.sh");
 	return Process_Start(&path, &args);
+#endif
+/* Retrieving exe path is completely OS dependant */
+#if defined CC_BUILD_OSX
+ReturnCode Process_GetExePath(String* path) {
+	char str[600] = { 0 };
+	uint32_t len  = 600;
+	if (_NSGetExecutablePath(str, &len)) return ERR_INVALID_ARGUMENT;
+
+	len = String_CalcLen(str, 600);
+	Platform_DecodeString(path, str, len);
+	return 0;
 }
-#if defined CC_BUILD_LINUX
+#elif defined CC_BUILD_LINUX
 ReturnCode Process_GetExePath(String* path) {
 	char str[600];
 	int len = readlink("/proc/self/exe", str, 600);
@@ -1801,6 +1770,49 @@ ReturnCode Process_GetExePath(String* path) {
 	return 0;
 }
 #endif
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Dynamic lib-------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_WIN
+ReturnCode DynamicLib_Load(const String* path, void** lib) {
+	TCHAR str[300];
+	Platform_ConvertString(str, path);
+	*lib = LoadLibrary(str);
+	return *lib ? 0 : GetLastError();
+}
+
+ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
+	*symbol = GetProcAddress((HMODULE)lib, name);
+	return *symbol ? 0 : GetLastError();
+}
+
+bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
+	return Platform_DescribeError(res, dst);
+}
+#elif defined CC_BUILD_WEB
+ReturnCode DynamicLib_Load(const String* path, void** lib) { return ERR_NOT_SUPPORTED; }
+ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) { return ERR_NOT_SUPPORTED; }
+bool DynamicLib_DescribeError(ReturnCode res, String* dst) { return false; }
+#elif defined CC_BUILD_POSIX
+ReturnCode DynamicLib_Load(const String* path, void** lib) {
+	char str[600];
+	Platform_ConvertString(str, path);
+	*lib = dlopen(str, RTLD_NOW);
+	return *lib == NULL;
+}
+
+ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
+	*symbol = dlsym(lib, name);
+	return *symbol == NULL; /* dlerror would be proper, but eh */
+}
+
+bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
+	char* err = dlerror();
+	if (err) String_AppendConst(dst, err);
+	return err && err[0];
+}
 #endif
 
 void* DynamicLib_GetFrom(const char* filename, const char* name) {
@@ -1997,6 +2009,7 @@ static void Platform_InitCommon(void) {
 }
 void Platform_Free(void) { }
 
+#ifndef CC_BUILD_ANDROID
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
 	int i, count;
 	argc--; /* skip executable path argument */
@@ -2007,6 +2020,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	}
 	return count;
 }
+#endif
 
 ReturnCode Platform_Encrypt(const void* data, int len, uint8_t** enc, int* encLen) {
 	return ERR_NOT_SUPPORTED;
@@ -2040,7 +2054,7 @@ static void Platform_InitStopwatch(void) {
 }
 
 void Platform_Init(void) {
-	ProcessSerialNumber psn;
+	ProcessSerialNumber psn; /* TODO: kCurrentProcess */
 	Platform_InitCommon();
 	Platform_InitStopwatch();
 	
@@ -2085,6 +2099,39 @@ void Platform_SetDefaultCurrentDirectory(void) {
 void* App_Ptr;
 JavaVM* VM_Ptr;
 void Platform_Init(void) { Platform_InitCommon(); }
+
+static String Platform_GetCmdLineArg(int i) {
+	String arg, copy;
+	JNIEnv* env;
+	jvalue args[1];
+	jobject obj;
+	
+	JavaGetCurrentEnv(env);
+	args[0].i = i;
+	obj       = JavaCallObject(env, "getCmdLineArg", "(I)Ljava/lang/String;", args);
+	if (!obj) return String_Empty;
+
+	Platform_LogConst("ARGg..");
+	arg = JavaGetString(env, obj);
+	
+	copy.buffer   = Mem_Alloc(arg.length, 1, "cmdline arg");
+	copy.length   = arg.length;
+	copy.capacity = arg.length;
+	Mem_Copy(arg.buffer, copy.buffer, arg.length);
+
+	(*env)->ReleaseStringUTFChars(env, obj, arg.buffer);
+	(*env)->DeleteLocalRef(env, obj);
+	return copy;
+}
+
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
+	int i;
+	for (i = 0; i < GAME_MAX_CMDARGS; i++) {
+		args[i] = Platform_GetCmdLineArg(i);
+		if (!args[i].buffer) break;
+	}
+	return i;
+}
 
 void Platform_SetDefaultCurrentDirectory(void) {
 	struct android_app* app = (struct android_app*)App_Ptr;

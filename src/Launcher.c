@@ -528,9 +528,11 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 		Options_Save();
 	}
 
+#ifndef CC_BUILD_ANDROID
 	String_InitArray(path, pathBuffer);
 	res = Process_GetExePath(&path);
 	if (res) { Logger_Warn(res, "getting .exe path"); return false; }
+#endif
 
 	String_InitArray(args, argsBuffer);
 	String_AppendString(&args, user);
