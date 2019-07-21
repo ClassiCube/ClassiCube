@@ -427,7 +427,7 @@ void Clipboard_GetText(String* value) {
 		if (isUnicode) {
 			String_AppendUtf16(value, (Codepoint*)src, size - 2);
 		} else {
-			String_DecodeCP1252(value, (uint8_t*)src,   size - 1);
+			String_DecodeCP1252(value, (uint8_t*)src,  size - 1);
 		}
 
 		GlobalUnlock(hGlobal);
@@ -2783,6 +2783,62 @@ static void Window_RefreshBounds(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
+static Key Window_MapKey(int32_t code) {
+	if (code >= AKEYCODE_0  && code <= AKEYCODE_9)   return (code - AKEYCODE_0)  + '0';
+	if (code >= AKEYCODE_A  && code <= AKEYCODE_Z)   return (code - AKEYCODE_A)  + 'A';
+	if (code >= AKEYCODE_F1 && code <= AKEYCODE_F12) return (code - AKEYCODE_F1) + KEY_F1;
+	if (code >= AKEYCODE_NUMPAD_0 && code <= AKEYCODE_NUMPAD_9) return (code - AKEYCODE_NUMPAD_0) + KEY_KP0;
+
+	switch (code) {
+		/* TODO: AKEYCODE_STAR */
+		/* TODO: AKEYCODE_POUND */
+	case AKEYCODE_BACK:   return KEY_ESCAPE;
+	case AKEYCODE_COMMA:  return KEY_COMMA;
+	case AKEYCODE_PERIOD: return KEY_PERIOD;
+	case AKEYCODE_ALT_LEFT:    return KEY_LALT;
+	case AKEYCODE_ALT_RIGHT:   return KEY_RALT;
+	case AKEYCODE_SHIFT_LEFT:  return KEY_LSHIFT;
+	case AKEYCODE_SHIFT_RIGHT: return KEY_RSHIFT;
+	case AKEYCODE_TAB:    return KEY_TAB;
+	case AKEYCODE_SPACE:  return KEY_SPACE;
+	case AKEYCODE_ENTER:  return KEY_ENTER;
+	case AKEYCODE_DEL:    return KEY_BACKSPACE;
+	case AKEYCODE_GRAVE:  return KEY_TILDE;
+	case AKEYCODE_MINUS:  return KEY_MINUS;
+	case AKEYCODE_EQUALS: return KEY_EQUALS;
+	case AKEYCODE_LEFT_BRACKET:  return KEY_LBRACKET;
+	case AKEYCODE_RIGHT_BRACKET: return KEY_RBRACKET;
+	case AKEYCODE_BACKSLASH:  return KEY_BACKSLASH;
+	case AKEYCODE_SEMICOLON:  return KEY_SEMICOLON;
+	case AKEYCODE_APOSTROPHE: return KEY_QUOTE;
+	case AKEYCODE_SLASH:      return KEY_SLASH;
+		/* TODO: AKEYCODE_AT */
+		/* TODO: AKEYCODE_PLUS */
+		/* TODO: AKEYCODE_MENU */
+	case AKEYCODE_PAGE_UP:     return KEY_PAGEUP;
+	case AKEYCODE_PAGE_DOWN:   return KEY_PAGEDOWN;
+	case AKEYCODE_ESCAPE:      return KEY_ESCAPE;
+	case AKEYCODE_FORWARD_DEL: return KEY_DELETE;
+	case AKEYCODE_CTRL_LEFT:   return KEY_LCTRL;
+	case AKEYCODE_CTRL_RIGHT:  return KEY_RCTRL;
+	case AKEYCODE_CAPS_LOCK:   return KEY_CAPSLOCK;
+	case AKEYCODE_SCROLL_LOCK: return KEY_SCROLLLOCK;
+	case AKEYCODE_META_LEFT:   return KEY_LWIN;
+	case AKEYCODE_META_RIGHT:  return KEY_RWIN;
+	case AKEYCODE_SYSRQ:    return KEY_PRINTSCREEN;
+	case AKEYCODE_BREAK:    return KEY_PAUSE;
+	case AKEYCODE_INSERT:   return KEY_INSERT;
+	case AKEYCODE_NUM_LOCK: return KEY_NUMLOCK;
+	case AKEYCODE_NUMPAD_DIVIDE:   return KEY_KP_DIVIDE;
+	case AKEYCODE_NUMPAD_MULTIPLY: return KEY_KP_MULTIPLY;
+	case AKEYCODE_NUMPAD_SUBTRACT: return KEY_KP_MINUS;
+	case AKEYCODE_NUMPAD_ADD:      return KEY_KP_PLUS;
+	case AKEYCODE_NUMPAD_DOT:      return KEY_KP_DECIMAL;
+	case AKEYCODE_NUMPAD_ENTER:    return KEY_KP_ENTER;
+	}
+	return KEY_NONE;
+}
+
 static int32_t Window_HandleInputEvent(struct android_app* app, AInputEvent* ev) {
 	/* TODO: Do something with input here.. */
 	int32_t type = AInputEvent_getType(ev);
@@ -2793,11 +2849,11 @@ static int32_t Window_HandleInputEvent(struct android_app* app, AInputEvent* ev)
 		/* TODO Fix this */
 		int x = (int)AMotionEvent_getX(ev, 0);
 		int y = (int)AMotionEvent_getY(ev, 0);
-
-		Platform_Log2("TOUCH: %i,%i", &x, &y);
-		Mouse_SetPosition(x, y);
-
+		
 		int action = AMotionEvent_getAction(ev) & AMOTION_EVENT_ACTION_MASK;
+		Platform_Log3("TOUCH (%i): %i,%i", &action, &x, &y);
+
+		Mouse_SetPosition(x, y);
 		if (action == AMOTION_EVENT_ACTION_DOWN) Mouse_SetPressed(MOUSE_LEFT, true);
 		if (action == AMOTION_EVENT_ACTION_UP)   Mouse_SetPressed(MOUSE_LEFT, false);
 		return 0;
@@ -2807,8 +2863,14 @@ static int32_t Window_HandleInputEvent(struct android_app* app, AInputEvent* ev)
 		/* TODO: Do this right */
 		int code   = AKeyEvent_getKeyCode(ev);
 		int action = AKeyEvent_getAction(ev);
-		if (code >= 29 && code <= 54 && action == AKEY_EVENT_ACTION_DOWN) {
-			Event_RaiseInt(&KeyEvents.Press, code - 29 + 'a');
+		int key = Window_MapKey(code);
+		Platform_Log3("KEY (%i): %i --> %i", &action, &code, &key);
+
+		if (key && action == AKEY_EVENT_ACTION_DOWN) Key_SetPressed(key, true);
+		if (key && action == AKEY_EVENT_ACTION_UP)   Key_SetPressed(key, false);
+
+		if (key >= 'A' && key <= 'Z' && action == AKEY_EVENT_ACTION_DOWN) {
+			Event_RaiseInt(&KeyEvents.Press, key + ' '); // lowercase
 		}
 		return 0;
 	}

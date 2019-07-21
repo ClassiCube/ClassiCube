@@ -730,7 +730,7 @@ static void MainScreen_Login(void* w, int x, int y) {
 }
 
 static void MainScreen_Register(void* w, int x, int y) {
-	static const String ccUrl = String_FromConst("https://www.classicube.net/acc/register");
+	static const String ccUrl = String_FromConst("https://www.classicube.net/acc/register/");
 	Process_StartOpen(&ccUrl);
 }
 
