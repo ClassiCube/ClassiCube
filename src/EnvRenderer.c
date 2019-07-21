@@ -48,13 +48,13 @@ static void EnvRenderer_CalcFog(float* density, PackedCol* col) {
 	float blend;
 
 	IVec3_Floor(&coords, &Camera.CurrentPos); /* coords = floor(camera_pos); */
-	IVec3_ToVec3(&pos, &coords);           /* pos = coords; */
+	IVec3_ToVec3(&pos, &coords);              /* pos = coords; */
 
 	block = World_SafeGetBlock_3I(coords);
 	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
 	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 
-	if (AABB_ContainsPoint(&blockBB, &pos) && Blocks.FogDensity[block] != 0.0f) {
+	if (AABB_ContainsPoint(&blockBB, &Camera.CurrentPos) && Blocks.FogDensity[block]) {
 		*density = Blocks.FogDensity[block];
 		*col     = Blocks.FogCol[block];
 	} else {
