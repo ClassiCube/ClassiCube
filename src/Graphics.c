@@ -299,6 +299,7 @@ static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
 static DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 static D3DFORMAT gfx_viewFormat, gfx_depthFormat;
+static float totalMem;
 
 #define D3D9_SetRenderState(state, value, name) \
 ReturnCode res = IDirect3DDevice9_SetRenderState(device, state, value); if (res) Logger_Abort2(res, name);
@@ -390,6 +391,7 @@ void Gfx_Init(void) {
 	Gfx.MaxTexHeight = caps.MaxTextureHeight;
 	Gfx.CustomMipmapsLevels = true;
 	Gfx_RestoreState();
+	totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 }
 
 bool Gfx_TryRestoreContext(void) {
@@ -931,27 +933,21 @@ static const int D3D9_DepthBufferBts(D3DFORMAT format) {
 	return 0;
 }
 
-static float gfx_totalMem;
-void Gfx_MakeApiInfo(void) {
+void Gfx_GetApiInfo(String* lines) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
 	int pointerSize = sizeof(void*) * 8;
 	int depthBits   = D3D9_DepthBufferBts(gfx_depthFormat);
+	float curMem;
 
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
-	gfx_totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
+	curMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 
-	String_Format1(&Gfx_ApiInfo[0], "-- Using Direct3D9 (%i bit) --", &pointerSize);
-	String_Format1(&Gfx_ApiInfo[1], "Adapter: %c",         adapter.Description);
-	String_Format1(&Gfx_ApiInfo[2], "Processing mode: %c", D3D9_StrFlags());
-	Gfx_UpdateApiInfo();
-	String_Format2(&Gfx_ApiInfo[4], "Max texture size: (%i, %i)", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
-	String_Format1(&Gfx_ApiInfo[5], "Depth buffer bits: %i", &depthBits);
-}
-
-void Gfx_UpdateApiInfo(void) {
-	float mem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
-	Gfx_ApiInfo[3].length = 0;
-	String_Format2(&Gfx_ApiInfo[3], "Video memory: %f2 MB total, %f2 free", &gfx_totalMem, &mem);
+	String_Format1(&lines[0], "-- Using Direct3D9 (%i bit) --", &pointerSize);
+	String_Format1(&lines[1], "Adapter: %c",         adapter.Description);
+	String_Format1(&lines[2], "Processing mode: %c", D3D9_StrFlags());
+	String_Format2(&lines[3], "Video memory: %f2 MB total, %f2 free", &totalMem, &curMem);
+	String_Format2(&lines[4], "Max texture size: (%i, %i)", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	String_Format1(&lines[5], "Depth buffer bits: %i", &depthBits);
 }
 
 void Gfx_OnWindowResize(void) {
@@ -1243,37 +1239,32 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output) {
 	return res;
 }
 
-static bool nv_mem;
-void Gfx_MakeApiInfo(void) {
+void Gfx_GetApiInfo(String* lines) {
 	static const String memExt = String_FromConst("GL_NVX_gpu_memory_info");
-	/* NOTE: glGetString actually returns UTF8, but I just treat it as code page 437 */
-	String extensions = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
+	int totalKb, curKb; 
+	float total, cur;
+	String extensions;
 	int depthBits, pointerSize = sizeof(void*) * 8;
 
-	nv_mem = String_CaselessContains(&extensions, &memExt);
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
-
-	String_Format1(&Gfx_ApiInfo[0], "-- Using OpenGL (%i bit) --", &pointerSize);
-	String_Format1(&Gfx_ApiInfo[1], "Vendor: %c",     glGetString(GL_VENDOR));
-	String_Format1(&Gfx_ApiInfo[2], "Renderer: %c",   glGetString(GL_RENDERER));
-	String_Format1(&Gfx_ApiInfo[3], "GL version: %c", glGetString(GL_VERSION));
+	String_Format1(&lines[0], "-- Using OpenGL (%i bit) --", &pointerSize);
+	String_Format1(&lines[1], "Vendor: %c",     glGetString(GL_VENDOR));
+	String_Format1(&lines[2], "Renderer: %c",   glGetString(GL_RENDERER));
+	String_Format1(&lines[3], "GL version: %c", glGetString(GL_VERSION));
 	/* Memory usage line goes here */
-	String_Format2(&Gfx_ApiInfo[5], "Max texture size: (%i, %i)", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
-	String_Format1(&Gfx_ApiInfo[6], "Depth buffer bits: %i", &depthBits);
-}
+	String_Format2(&lines[5], "Max texture size: (%i, %i)", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	String_Format1(&lines[6], "Depth buffer bits: %i",      &depthBits);
 
-void Gfx_UpdateApiInfo(void) {
-	int totalKb = 0, curKb = 0;
-	float total, cur;
+	/* NOTE: glGetString returns UTF8, but I just treat it as code page 437 */
+	extensions = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
+	if (!String_CaselessContains(&extensions, &memExt)) return;
 
-	if (!nv_mem) return;
 	glGetIntegerv(0x9048, &totalKb);
 	glGetIntegerv(0x9049, &curKb);
 	if (totalKb <= 0 || curKb <= 0) return;
 
 	total = totalKb / 1024.0f; cur = curKb / 1024.0f;
-	Gfx_ApiInfo[4].length = 0;
-	String_Format2(&Gfx_ApiInfo[4], "Video memory: %f2 MB total, %f2 free", &total, &cur);
+	String_Format2(&lines[4], "Video memory: %f2 MB total, %f2 free", &total, &cur);
 }
 
 bool Gfx_WarnIfNecessary(void) {
@@ -1554,7 +1545,6 @@ static void Gfx_SwitchProgram(void) {
 	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) index += 2;
 	if (gfx_texTransform) index += 2;
 	if (gfx_alphaTest)    index += 1;
-
 
 	shader = &shaders[index];
 	if (shader == gfx_activeShader) { Gfx_ReloadUniforms(); return; }
