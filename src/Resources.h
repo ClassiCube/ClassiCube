@@ -54,10 +54,12 @@ extern bool Fetcher_Working;
 extern bool Fetcher_Completed;
 /* Number of resources that have been downloaded so far. */
 extern int Fetcher_Downloaded;
-/* HTTP error (if any) that occurs when downloaded resources. */
+/* HTTP status code of last failed resource download */
 extern int Fetcher_StatusCode;
-/* Error (if any) that occurs when downloaded resources. */
-extern ReturnCode Fetcher_Error;
+/* Error code of last failed resource download. */
+extern ReturnCode Fetcher_Result;
+/* Whether a resource failed to download. */
+extern bool Fetcher_Failed;
 
 /* Starts asynchronous download of missing resources. */
 void Fetcher_Run(void);

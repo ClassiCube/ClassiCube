@@ -69,4 +69,7 @@ bool Launcher_ConnectToServer(const String* hash);
 void Launcher_Run(void);
 /* Starts the game from the given arguments. */
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server);
+/* Prints information about a http error to dst. (for status widget) */
+/* If res is non-zero, also displays a dialog box on-screen. */
+void Launcher_DisplayHttpError(ReturnCode res, int status, const char* action, String* dst);
 #endif

@@ -227,15 +227,7 @@ void LWebTask_Tick(struct LWebTask* task) {
 }
 
 void LWebTask_DisplayError(struct LWebTask* task, const char* action, String* dst) {
-	if (task->Res) {
-		/* Non HTTP error - this is not good */
-		Logger_SysWarn(task->Res, action, Http_DescribeError);
-		String_Format2(dst, "&cError %i when %c", &task->Res, action);
-	} else if (task->Status != 200) {
-		String_Format2(dst, "&c%i error when %c", &task->Status, action);
-	} else {
-		String_Format1(dst, "&cEmpty response when %c", action);
-	}
+	Launcher_DisplayHttpError(task->Res, task->Status, action, dst);
 }
 
 

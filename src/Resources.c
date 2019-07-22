@@ -675,9 +675,9 @@ static void MusicPatcher_Save(struct ResourceMusic* music, struct HttpRequest* r
 /*########################################################################################################################*
 *-----------------------------------------------------------Fetcher-------------------------------------------------------*
 *#########################################################################################################################*/
-bool Fetcher_Working, Fetcher_Completed;
+bool Fetcher_Working, Fetcher_Completed, Fetcher_Failed;
 int  Fetcher_StatusCode, Fetcher_Downloaded;
-ReturnCode Fetcher_Error;
+ReturnCode Fetcher_Result;
 
 CC_NOINLINE static void Fetcher_DownloadAudio(const char* name, const char* hash) {
 	String url; char urlBuffer[URL_MAX_SIZE];
@@ -692,12 +692,10 @@ CC_NOINLINE static void Fetcher_DownloadAudio(const char* name, const char* hash
 void Fetcher_Run(void) {
 	String id, url;
 	int i;
-
 	if (Fetcher_Working) return;
-	Fetcher_Error      = 0;
-	Fetcher_StatusCode = 0;
-	Fetcher_Downloaded = 0;
 
+	Fetcher_Failed     = false;
+	Fetcher_Downloaded = 0;
 	Fetcher_Working    = true;
 	Fetcher_Completed  = false;
 
@@ -727,22 +725,17 @@ static void Fetcher_Finish(void) {
 CC_NOINLINE static bool Fetcher_Get(const String* id, struct HttpRequest* req) {
 	if (!Http_GetResult(id, req)) return false;
 
-	if (req->Result) {
-		Fetcher_Error = req->Result;
-		Fetcher_Finish();
-		return false;
-	} else if (req->StatusCode != 200) {
-		Fetcher_StatusCode = req->StatusCode;
-		Fetcher_Finish();
-		return false;
-	} else if (!req->Data) {
-		Fetcher_Error = ERR_INVALID_ARGUMENT;
-		Fetcher_Finish();
-		return false;
+	if (req->Success) {
+		Fetcher_Downloaded++;
+		return true;
 	}
 
-	Fetcher_Downloaded++;
-	return true;
+	Fetcher_Failed     = true;
+	Fetcher_Result     = req->Result;
+	Fetcher_StatusCode = req->StatusCode;
+
+	Fetcher_Finish();
+	return false;
 }
 
 static void Fetcher_CheckFile(struct ResourceFile* file) {

@@ -3007,7 +3007,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 
 	Platform_LogConst(title);
 	Platform_LogConst(msg);
-	return;
+
 	args[0].l = JavaMakeConst(env, title);
 	args[1].l = JavaMakeConst(env, msg);
 	JavaCallVoid(env, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V", args);

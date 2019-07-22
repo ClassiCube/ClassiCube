@@ -611,4 +611,16 @@ static void Launcher_ApplyUpdate(void) {
 	res = Process_StartShell();
 	if (res) { Logger_Warn(res, "starting update script"); return; }
 }
+
+void Launcher_DisplayHttpError(ReturnCode res, int status, const char* action, String* dst) {
+	if (res) {
+		/* Non HTTP error - this is not good */
+		Logger_SysWarn(res, action, Http_DescribeError);
+		String_Format2(dst, "&cError %i when %c", &res, action);
+	} else if (status != 200) {
+		String_Format2(dst, "&c%i error when %c", &status, action);
+	} else {
+		String_Format1(dst, "&cEmpty response when %c", action);
+	}
+}
 #endif

@@ -1109,11 +1109,7 @@ static void ResourcesScreen_Error(struct ResourcesScreen* s) {
 	String str; char buffer[STRING_SIZE];
 	String_InitArray(str, buffer);
 
-	if (Fetcher_Error) {
-		String_Format1(&str, "&cError %h when downloading resources", &Fetcher_Error);
-	} else {
-		String_Format1(&str, "&c%i error when downloading resources", &Fetcher_StatusCode);
-	}
+	Launcher_DisplayHttpError(Fetcher_Result, Fetcher_StatusCode, "downloading resources", &str);
 	ResourcesScreen_SetStatus(&str);
 }
 
@@ -1123,11 +1119,9 @@ static void ResourcesScreen_Tick(struct LScreen* s_) {
 
 	ResourcesScreen_UpdateProgress(s);
 	Fetcher_Update();
-	if (!Fetcher_Completed) return;
 
-	if (Fetcher_Error || Fetcher_StatusCode) { 
-		ResourcesScreen_Error(s); return; 
-	}
+	if (!Fetcher_Completed) return;
+	if (Fetcher_Failed) { ResourcesScreen_Error(s); return; }
 
 	Launcher_TryLoadTexturePack();
 	ResourcesScreen_Next(NULL, 0, 0);
