@@ -16,15 +16,6 @@
 #define NOIME
 
 struct _GfxData Gfx;
-
-static char Gfx_ApiBuffer[7][STRING_SIZE];
-String Gfx_ApiInfo[7] = {
-	String_FromArray(Gfx_ApiBuffer[0]), String_FromArray(Gfx_ApiBuffer[1]),
-	String_FromArray(Gfx_ApiBuffer[2]), String_FromArray(Gfx_ApiBuffer[3]),
-	String_FromArray(Gfx_ApiBuffer[4]), String_FromArray(Gfx_ApiBuffer[5]),
-	String_FromArray(Gfx_ApiBuffer[6]),
-};
-
 GfxResourceID Gfx_defaultIb;
 GfxResourceID Gfx_quadVb, Gfx_texVb;
 
@@ -303,9 +294,6 @@ static float totalMem;
 
 #define D3D9_SetRenderState(state, value, name) \
 ReturnCode res = IDirect3DDevice9_SetRenderState(device, state, value); if (res) Logger_Abort2(res, name);
-#define D3D9_SetRenderState2(state, value, name) \
-res = IDirect3DDevice9_SetRenderState(device, state, value);            if (res) Logger_Abort2(res, name);
-
 static void D3D9_RestoreRenderStates(void);
 
 static void D3D9_FreeResource(GfxResourceID* resource) {
@@ -424,18 +412,18 @@ static void Gfx_RestoreState(void) {
 	Gfx_InitDefaultResources();
 	gfx_batchFormat = -1;
 
-	D3D9_SetRenderState(D3DRS_COLORVERTEX,        false, "D3D9_ColorVertex");
-	D3D9_SetRenderState2(D3DRS_LIGHTING,          false, "D3D9_Lighting");
-	D3D9_SetRenderState2(D3DRS_SPECULARENABLE,    false, "D3D9_SpecularEnable");
-	D3D9_SetRenderState2(D3DRS_LOCALVIEWER,       false, "D3D9_LocalViewer");
-	D3D9_SetRenderState2(D3DRS_DEBUGMONITORTOKEN, false, "D3D9_DebugMonitor");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_COLORVERTEX,       false);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_LIGHTING,          false);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_SPECULARENABLE,    false);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_LOCALVIEWER,       false);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_DEBUGMONITORTOKEN, false);
 
 	/* States relevant to the game */
-	D3D9_SetRenderState2(D3DRS_ALPHAFUNC, D3DCMP_GREATER, "D3D9_AlphaTestFunc");
-	D3D9_SetRenderState2(D3DRS_ALPHAREF,  127,            "D3D9_AlphaRefFunc");
-	D3D9_SetRenderState2(D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA,    "D3D9_AlphaSrcBlend");
-	D3D9_SetRenderState2(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA, "D3D9_AlphaDstBlend");
-	D3D9_SetRenderState2(D3DRS_ZFUNC,     D3DCMP_LESSEQUAL,     "D3D9_SetDepthTestFunc");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHAFUNC, D3DCMP_GREATER);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHAREF,  127);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ZFUNC,     D3DCMP_LESSEQUAL);
 	D3D9_RestoreRenderStates();
 }
 
@@ -566,17 +554,13 @@ void Gfx_SetTexturing(bool enabled) {
 }
 
 void Gfx_EnableMipmaps(void) {
-	if (Gfx.Mipmaps) {
-		ReturnCode res = IDirect3DDevice9_SetSamplerState(device, 0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-		if (res) Logger_Abort2(res, "D3D9_EnableMipmaps");
-	}
+	if (!Gfx.Mipmaps) return;
+	IDirect3DDevice9_SetSamplerState(device, 0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
 }
 
 void Gfx_DisableMipmaps(void) {
-	if (Gfx.Mipmaps) {
-		ReturnCode res = IDirect3DDevice9_SetSamplerState(device, 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
-		if (res) Logger_Abort2(res, "D3D9_DisableMipmaps");
-	}
+	if (!Gfx.Mipmaps) return;
+	IDirect3DDevice9_SetSamplerState(device, 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
 }
 
 
@@ -597,7 +581,7 @@ void Gfx_SetFog(bool enabled) {
 	gfx_fogEnabled = enabled;
 
 	if (Gfx.LostContext) return;
-	D3D9_SetRenderState(D3DRS_FOGENABLE, enabled, "D3D9_SetFog");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, enabled);
 }
 
 void Gfx_SetFogCol(PackedCol col) {
@@ -605,7 +589,7 @@ void Gfx_SetFogCol(PackedCol col) {
 	gfx_fogCol = col;
 
 	if (Gfx.LostContext) return;
-	D3D9_SetRenderState(D3DRS_FOGCOLOR, gfx_fogCol._raw, "D3D9_SetFogColour");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR, gfx_fogCol._raw);
 }
 
 void Gfx_SetFogDensity(float value) {
@@ -615,7 +599,7 @@ void Gfx_SetFogDensity(float value) {
 
 	if (Gfx.LostContext) return;
 	raw.f = value;
-	D3D9_SetRenderState(D3DRS_FOGDENSITY, raw.u, "D3D9_SetFogDensity");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGDENSITY, raw.u);
 }
 
 void Gfx_SetFogEnd(float value) {
@@ -625,7 +609,7 @@ void Gfx_SetFogEnd(float value) {
 
 	if (Gfx.LostContext) return;
 	raw.f = value;
-	D3D9_SetRenderState(D3DRS_FOGEND, raw.u, "D3D9_SetFogEnd");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGEND, raw.u);
 }
 
 void Gfx_SetFogMode(FogFunc func) {
@@ -635,25 +619,24 @@ void Gfx_SetFogMode(FogFunc func) {
 
 	gfx_fogMode = mode;
 	if (Gfx.LostContext) return;
-	D3D9_SetRenderState(D3DRS_FOGTABLEMODE, mode, "D3D9_SetFogMode");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, mode);
 }
 
 void Gfx_SetAlphaTest(bool enabled) {
 	if (gfx_alphaTesting == enabled) return;
 	gfx_alphaTesting = enabled;
-	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE, enabled, "D3D9_SetAlphaTest");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE, enabled);
 }
 
 void Gfx_SetAlphaBlending(bool enabled) {
 	if (gfx_alphaBlending == enabled) return;
 	gfx_alphaBlending = enabled;
-	D3D9_SetRenderState(D3DRS_ALPHABLENDENABLE, enabled, "D3D9_SetAlphaBlending");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, enabled);
 }
 
 void Gfx_SetAlphaArgBlend(bool enabled) {
 	D3DTEXTUREOP op = enabled ? D3DTOP_MODULATE : D3DTOP_SELECTARG1;
-	ReturnCode res  = IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, op);
-	if (res) Logger_Abort2(res, "D3D9_SetAlphaArgBlend");
+	IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, op);
 }
 
 void Gfx_ClearCol(PackedCol col) { gfx_clearCol = col; }
@@ -664,29 +647,29 @@ void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a) {
 
 void Gfx_SetDepthTest(bool enabled) {
 	gfx_depthTesting = enabled;
-	D3D9_SetRenderState(D3DRS_ZENABLE, enabled, "D3D9_SetDepthTest");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ZENABLE, enabled);
 }
 
 void Gfx_SetDepthWrite(bool enabled) {
 	gfx_depthWriting = enabled;
-	D3D9_SetRenderState(D3DRS_ZWRITEENABLE, enabled, "D3D9_SetDepthWrite");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, enabled);
 }
 
 static void D3D9_RestoreRenderStates(void) {
 	union IntAndFloat raw;
-	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE,   gfx_alphaTesting,  "D3D9_AlphaTest");
-	D3D9_SetRenderState2(D3DRS_ALPHABLENDENABLE, gfx_alphaBlending, "D3D9_AlphaBlend");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE,   gfx_alphaTesting);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, gfx_alphaBlending);
 
-	D3D9_SetRenderState2(D3DRS_FOGENABLE, gfx_fogEnabled,  "D3D9_Fog");
-	D3D9_SetRenderState2(D3DRS_FOGCOLOR,  gfx_fogCol._raw, "gfx_fogColor");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, gfx_fogEnabled);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR,  gfx_fogCol._raw);
 	raw.f = gfx_fogDensity;
-	D3D9_SetRenderState2(D3DRS_FOGDENSITY, raw.u,          "gfx_fogDensity");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGDENSITY, raw.u);
 	raw.f = gfx_fogEnd;
-	D3D9_SetRenderState2(D3DRS_FOGEND, raw.u,              "gfx_fogEnd");
-	D3D9_SetRenderState2(D3DRS_FOGTABLEMODE, gfx_fogMode,  "D3D9_FogMode");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGEND, raw.u);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, gfx_fogMode);
 
-	D3D9_SetRenderState2(D3DRS_ZENABLE,      gfx_depthTesting,  "D3D9_DepthTest");
-	D3D9_SetRenderState2(D3DRS_ZWRITEENABLE, gfx_depthWriting,  "D3D9_DepthWrite");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ZENABLE,      gfx_depthTesting);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, gfx_depthWriting);
 }
 
 
@@ -818,8 +801,7 @@ void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	}
 
 	if (Gfx.LostContext) return;
-	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], (const D3DMATRIX*)matrix);
-	if (res) Logger_Abort2(res, "D3D9_LoadMatrix");
+	IDirect3DDevice9_SetTransform(device, matrix_modes[type], (const D3DMATRIX*)matrix);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
@@ -829,8 +811,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 	}
 
 	if (Gfx.LostContext) return;
-	res = IDirect3DDevice9_SetTransform(device, matrix_modes[type], (const D3DMATRIX*)&Matrix_Identity);
-	if (res) Logger_Abort2(res, "D3D9_LoadIdentityMatrix");
+	IDirect3DDevice9_SetTransform(device, matrix_modes[type], (const D3DMATRIX*)&Matrix_Identity);
 }
 
 #define d3d9_zN -10000.0f
