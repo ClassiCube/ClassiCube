@@ -2135,7 +2135,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 
 void Platform_SetDefaultCurrentDirectory(void) {
 	struct android_app* app = (struct android_app*)App_Ptr;
-	const char* storageDir = app->activity->externalDataPath;
+	const char* storageDir  = app->activity->externalDataPath;
 
 	ReturnCode res = chdir(storageDir) == -1 ? errno : 0;
 	if (res) Logger_Warn(res, "setting current directory");

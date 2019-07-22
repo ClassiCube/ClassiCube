@@ -30,7 +30,7 @@ CC_API PackedCol PackedCol_Scale(PackedCol value, float t);
 /* Linearly interpolates RGB components of the two given colours. */
 CC_API PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
 
-CC_NOINLINE bool PackedCol_Unhex(char hex, int* value);
+CC_NOINLINE bool PackedCol_Unhex(const char* src, int* dst, int count);
 CC_NOINLINE void PackedCol_ToHex(String* str, PackedCol value);
 CC_NOINLINE bool PackedCol_TryParseHex(const String* str, PackedCol* value);
 

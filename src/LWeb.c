@@ -85,11 +85,7 @@ static void Json_ConsumeString(struct JsonContext* ctx, String* str) {
 
 		/* form of \uYYYY */
 		if (c != 'u' || ctx->left < 4) break;
-
-		if (!PackedCol_Unhex(ctx->cur[0], &h[0])) break;
-		if (!PackedCol_Unhex(ctx->cur[1], &h[1])) break;
-		if (!PackedCol_Unhex(ctx->cur[2], &h[2])) break;
-		if (!PackedCol_Unhex(ctx->cur[3], &h[3])) break;
+		if (!PackedCol_Unhex(ctx->cur, h, 4)) break;
 
 		codepoint = (h[0] << 12) | (h[1] << 8) | (h[2] << 4) | h[3];
 		/* don't want control characters in names/software */
