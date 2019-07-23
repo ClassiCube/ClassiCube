@@ -791,10 +791,6 @@ static void MainScreen_Init(struct LScreen* s_) {
 
 	LInput_SetText(&s->iptUsername, &user);
 	LInput_SetText(&s->iptPassword, &pass);
-
-	char xyz[64]; String aaa = String_FromArray(xyz);
-	String_Format2(&aaa, "&aDPI: %i,%i", &Display_DpiX, &Display_DpiY);
-	LLabel_SetText(&s->lblStatus, &aaa);
 }
 
 static void MainScreen_Reposition(struct LScreen* s_) {
