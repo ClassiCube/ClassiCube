@@ -2770,8 +2770,7 @@ void Window_DisableRawMouse(void) {
 *------------------------------------------------Android activity window-------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_ANDROID
-#include <android_native_app_glue.h>
-#include <android/native_activity.h>
+#include <android/native_window.h>
 #include <android/window.h>
 static ANativeWindow* win_handle;
 static bool win_rawMouse;
@@ -2839,97 +2838,155 @@ static Key Window_MapKey(int32_t code) {
 	return KEY_NONE;
 }
 
-static int32_t Window_HandleInputEvent(struct android_app* app, AInputEvent* ev) {
-	/* TODO: Do something with input here.. */
-	int32_t type = AInputEvent_getType(ev);
-	Platform_Log1("INP MSG: %i", &type);
-	switch (type) {
-	case AINPUT_EVENT_TYPE_MOTION:
-	{
-		/* TODO Fix this */
-		int x = (int)AMotionEvent_getX(ev, 0);
-		int y = (int)AMotionEvent_getY(ev, 0);
-		
-		int action = AMotionEvent_getAction(ev) & AMOTION_EVENT_ACTION_MASK;
-		Platform_Log3("TOUCH (%i): %i,%i", &action, &x, &y);
-
-		Mouse_SetPosition(x, y);
-		if (action == AMOTION_EVENT_ACTION_DOWN) Mouse_SetPressed(MOUSE_LEFT, true);
-		if (action == AMOTION_EVENT_ACTION_UP)   Mouse_SetPressed(MOUSE_LEFT, false);
-		return 0;
-	}
-	case AINPUT_EVENT_TYPE_KEY:
-	{
-		/* TODO: Do this right */
-		int code   = AKeyEvent_getKeyCode(ev);
-		int action = AKeyEvent_getAction(ev);
-		int key = Window_MapKey(code);
-		Platform_Log3("KEY (%i): %i --> %i", &action, &code, &key);
-
-		if (key && action == AKEY_EVENT_ACTION_DOWN) Key_SetPressed(key, true);
-		if (key && action == AKEY_EVENT_ACTION_UP)   Key_SetPressed(key, false);
-
-		if (key >= 'A' && key <= 'Z' && action == AKEY_EVENT_ACTION_DOWN) {
-			Event_RaiseInt(&KeyEvents.Press, key + ' '); // lowercase
-		}
-		return 0;
-	}
-	}
-	return 1;
+static void JNICALL java_processKeyDown(JNIEnv* env, jobject o, jint code) {
+	int key = Window_MapKey(code);
+	Platform_Log2("KEY - DOWN %i,%i", &code, &key);
+	if (key) Key_SetPressed(key, true);
 }
 
-static void Window_HandleAppEvent(struct android_app* app, int32_t cmd) {
-	Platform_Log1("APP MSG: %i", &cmd);
-	switch (cmd) {
-	case APP_CMD_INIT_WINDOW:
-		win_handle = app->window;
-		Window_RefreshBounds();
-		/* TODO: Restore context */
-		break;
-	case APP_CMD_TERM_WINDOW:
-		win_handle     = NULL;
-		Window_Focused = false;
-		Event_RaiseVoid(&WindowEvents.FocusChanged);
-		/* TODO: Do we Window_Close() here */
-		/* TODO: Gfx Lose context */
-		break;
+static void JNICALL java_processKeyUp(JNIEnv* env, jobject o, jint code) {
+	int key = Window_MapKey(code);
+	Platform_Log2("KEY - UP %i,%i", &code, &key);
+	if (key) Key_SetPressed(key, false);
+}
 
-	case APP_CMD_GAINED_FOCUS:
-		Window_Focused = true;
-		Event_RaiseVoid(&WindowEvents.FocusChanged);
-		break;
-	case APP_CMD_LOST_FOCUS:
-		Window_Focused = false;
-		Event_RaiseVoid(&WindowEvents.FocusChanged);
-		/* TODO: Disable rendering? */
-		break;
+static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {
+	char keyChar;
+	int key = Window_MapKey(code);
+	Platform_Log2("KEY - PRESS %i,%i", &code, &key);
 
-	case APP_CMD_WINDOW_RESIZED:
-		Window_RefreshBounds();
-		Window_RefreshBounds(); /* TODO: Why does it only work on second try? */
-		break;
-	case APP_CMD_WINDOW_REDRAW_NEEDED:
-		Event_RaiseVoid(&WindowEvents.Redraw);
-		break;
-	case APP_CMD_CONFIG_CHANGED:
-		Window_RefreshBounds();
-		Window_RefreshBounds(); /* TODO: Why does it only work on second try? */
-		break;
-		/* TODO: Low memory */
+	if (Convert_TryUnicodeToCP437((Codepoint)code, &keyChar)) {
+		Event_RaiseInt(&KeyEvents.Press, keyChar);
 	}
 }
+
+static void JNICALL java_processMouseDown(JNIEnv* env, jobject o, jint x, jint y) {
+	Platform_Log2("MOUSE - DOWN %i,%i", &x, &y);
+	Mouse_SetPosition(x, y);
+	Mouse_SetPressed(MOUSE_LEFT, true);
+}
+
+static void JNICALL java_processMouseUp(JNIEnv* env, jobject o, jint x, jint y) {
+	Platform_Log2("MOUSE - UP   %i,%i", &x, &y);
+	Mouse_SetPosition(x, y);
+	Mouse_SetPressed(MOUSE_LEFT, false);
+}
+
+static void JNICALL java_processMouseMove(JNIEnv* env, jobject o, jint x, jint y) {
+	Platform_Log2("MOUSE - MOVE %i,%i", &x, &y);
+	Mouse_SetPosition(x, y);
+}
+
+static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface) {
+	Platform_LogConst("WIN - CREATED");
+	win_handle = ANativeWindow_fromSurface(surface);
+	Window_RefreshBounds();
+	/* TODO: Restore context */
+}
+
+static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
+	Platform_LogConst("WIN - DESTROYED");
+	if (win_handle) ANativeWindow_release(win_handle);
+
+	win_handle     = NULL;
+	Window_Focused = false;
+	Event_RaiseVoid(&WindowEvents.FocusChanged);
+	/* TODO: Do we Window_Close() here */
+	/* TODO: Gfx Lose context */
+}
+
+static void JNICALL java_processSurfaceResized(JNIEnv* env, jobject o, jobject surface) {
+	Platform_LogConst("WIN - RESIZED");
+	Window_RefreshBounds();
+	Window_RefreshBounds(); /* TODO: Why does it only work on second try? */
+}
+
+static void JNICALL java_processSurfaceRedrawNeeded(JNIEnv* env, jobject o) {
+	Platform_LogConst("WIN - REDRAW");
+	Event_RaiseVoid(&WindowEvents.Redraw);
+}
+
+static void JNICALL java_onStart(JNIEnv* env, jobject o) {
+	Platform_LogConst("APP - ON START");
+}
+
+static void JNICALL java_onStop(JNIEnv* env, jobject o) {
+	Platform_LogConst("APP - ON STOP");
+}
+
+static void JNICALL java_onResume(JNIEnv* env, jobject o) {
+	Platform_LogConst("APP - ON RESUME");
+	/* TODO: Resume rendering */
+}
+
+static void JNICALL java_onPause(JNIEnv* env, jobject o) {
+	Platform_LogConst("APP - ON PAUSE");
+	/* TODO: Disable rendering */
+}
+
+static void JNICALL java_onDestroy(JNIEnv* env, jobject o) {
+	Platform_LogConst("APP - ON DESTROY");
+	if (Window_Exists) Window_Close();
+	/* TODO: signal to java code we're done */
+}
+
+static void JNICALL java_onGotFocus(JNIEnv* env, jobject o) {
+	Platform_LogConst("APP - GOT FOCUS");
+	Window_Focused = true;
+	Event_RaiseVoid(&WindowEvents.FocusChanged);
+}
+
+static void JNICALL java_onLostFocus(JNIEnv* env, jobject o) {
+	Platform_LogConst("APP - LOST FOCUS");
+	Window_Focused = false;
+	Event_RaiseVoid(&WindowEvents.FocusChanged);
+	/* TODO: Disable rendering? */
+}
+
+static void JNICALL java_onConfigChanged(JNIEnv* env, jobject o) {
+	Platform_LogConst("APP - CONFIG CHANGED");
+	/* TODO: this one might not even be needed */
+}
+
+static void JNICALL java_onLowMemory(JNIEnv* env, jobject o) {
+	Platform_LogConst("APP - LOW MEM");
+	Window_RefreshBounds();
+	Window_RefreshBounds(); /* TODO: Why does it only work on second try? */
+	/* TODO: Low memory */
+}
+
+static const JNINativeMethod methods[19] = {
+	{ "processKeyDown",   "(I)V", java_processKeyDown },
+	{ "processKeyUp",     "(I)V", java_processKeyUp },
+	{ "processKeyChar",   "(I)V", java_processKeyChar },
+
+	{ "processMouseDown", "(I)V", java_processMouseDown },
+	{ "processMouseUp",   "(I)V", java_processMouseUp },
+	{ "processMouseMove", "(I)V", java_processMouseMove },
+
+	{ "processSurfaceCreated",      "(JLandroid/view/Surface;)V", java_processSurfaceCreated },
+	{ "processSurfaceDestroyed",    "()V",                        java_processSurfaceDestroyed },
+	{ "processSurfaceResized",      "(JLandroid/view/Surface;)V", java_processSurfaceResized },
+	{ "processSurfaceRedrawNeeded", "()V",                        java_processSurfaceRedrawNeeded },
+
+	{ "processOnStart",   "()V", java_onStart },
+	{ "processOnStop",    "()V", java_onStop },
+	{ "processOnResume",  "()V", java_onResume },
+	{ "processOnPause",   "()V", java_onPause },
+	{ "processOnDestroy", "()V", java_onDestroy },
+
+	{ "processOnGotFocus",      "()V", java_onGotFocus },
+	{ "processOnLostFocus",     "()V", java_onLostFocus },
+	{ "processOnConfigChanged", "()V", java_onConfigChanged },
+	{ "processOnLowMemory",     "()V", java_onLowMemory }
+};
 
 void Window_Init(void) {
-	struct android_app* app = (struct android_app*)App_Ptr;
 	JNIEnv* env;
-
-	/* TODO: or WINDOW_FORMAT_RGBX_8888 ?? */
-	ANativeActivity_setWindowFormat(app->activity, WINDOW_FORMAT_RGBA_8888);
-	ANativeActivity_setWindowFlags(app->activity,  AWINDOW_FLAG_FULLSCREEN, 0);
-	app->onAppCmd        = Window_HandleAppEvent;
-	app->onInputEvent    = Window_HandleInputEvent;
-
+	/* TODO: ANativeActivity_setWindowFlags(app->activity,  AWINDOW_FLAG_FULLSCREEN, 0); */
 	JavaGetCurrentEnv(env);
+	JavaRegisterNatives(env, methods);
+
 	Display_BitsPerPixel = 32;
 	Display_DpiX         = JavaCallInt(env, "getDpiX", "()I", NULL);
 	Display_DpiY         = JavaCallInt(env, "getDpiY", "()I", NULL);
@@ -2946,20 +3003,8 @@ void Window_SetTitle(const String* title) {
 }
 
 void Clipboard_GetText(String* value) {
-	UniString str;
-	JNIEnv* env;
-	jobject obj;
-	JavaGetCurrentEnv(env);
-
-	obj = JavaCallObject(env, "getClipboardText", "()Ljava/lang/String;", NULL);
-	if (!obj) return;
-
-	str = JavaGetUniString(env, obj);
-	String_AppendUtf16(value, str.buffer, str.length * 2);
-	(*env)->ReleaseStringChars(env, obj, str.buffer);
-	(*env)->DeleteLocalRef(env, obj);
+	JavaCall_Void_String("getClipboardText", value);
 }
-
 void Clipboard_SetText(const String* value) {
 	JavaCall_String_Void("setClipboardText", value);
 }
@@ -2973,24 +3018,18 @@ void Window_ExitFullscreen(void) { }
 void Window_SetSize(int width, int height) { }
 
 void Window_Close(void) {
-	struct android_app* app = (struct android_app*)App_Ptr;
 	Window_Exists = false;
-
 	Event_RaiseVoid(&WindowEvents.Closing);
 	Event_RaiseVoid(&WindowEvents.Destroyed);
 	/* TODO: Do we need to call finish here */
-	ANativeActivity_finish(app->activity);
+	/* ANativeActivity_finish(app->activity); */
 }
 
 void Window_ProcessEvents(void) {
-	struct android_app* app = (struct android_app*)App_Ptr;
-	struct android_poll_source* source;
-	int events;
-
-	while (ALooper_pollAll(0, NULL, &events, (void**)&source) >= 0) {
-		if (source) source->process(app, source);
-	}
-	if (app->destroyRequested && Window_Exists) Window_Close();
+	JNIEnv* env;
+	JavaGetCurrentEnv(env);
+	/* TODO: Cache the java env and cache the method ID!!!!! */
+	JavaCallVoid(env, "processEvents", "()V", NULL);
 }
 
 /* No actual cursor, so just fake one */

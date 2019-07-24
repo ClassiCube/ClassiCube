@@ -721,7 +721,6 @@ static void Http_SysFree(void) {
 	curl_global_cleanup();
 }
 #elif defined CC_BUILD_ANDROID
-#include <android_native_app_glue.h>
 struct HttpRequest* java_req;
 
 bool Http_DescribeError(ReturnCode res, String* dst) {
@@ -756,7 +755,7 @@ static void Http_AddHeader(const char* key, const String* value) {
 }
 
 /* Processes a HTTP header downloaded from the server */
-static void JNICALL java_HttpParseHeader(JNIEnv* env, jclass c, jstring header) {
+static void JNICALL java_HttpParseHeader(JNIEnv* env, jobject o, jstring header) {
 	String line = JavaGetString(env, header);
 	Platform_Log(&line);
 	Http_ParseHeader(java_req, &line);
@@ -764,7 +763,7 @@ static void JNICALL java_HttpParseHeader(JNIEnv* env, jclass c, jstring header) 
 }
 
 /* Processes a chunk of data downloaded from the web server */
-static void JNICALL java_HttpAppendData(JNIEnv* env, jclass c, jbyteArray arr, jint len) {
+static void JNICALL java_HttpAppendData(JNIEnv* env, jobject o, jbyteArray arr, jint len) {
 	struct HttpRequest* req = java_req;
 	if (!bufferSize) Http_BufferInit(req);
 
@@ -773,18 +772,14 @@ static void JNICALL java_HttpAppendData(JNIEnv* env, jclass c, jbyteArray arr, j
 	Http_BufferExpanded(req, len);
 }
 
-static JNINativeMethod methods[2] = {
+static const JNINativeMethod methods[2] = {
 	{ "httpParseHeader", "(Ljava/lang/String;)V", java_HttpParseHeader },
 	{ "httpAppendData",  "([BI)V",                java_HttpAppendData }
 };
 static void Http_SysInit(void) {
-	struct android_app* app = (struct android_app*)App_Ptr;
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
-
-	jobject instance = app->activity->clazz;
-	jclass clazz     = (*env)->GetObjectClass(env, instance);
-	(*env)->RegisterNatives(env, clazz, methods, 2);
+	JavaRegisterNatives(env, methods);
 }
 
 static ReturnCode Http_InitReq(JNIEnv* env, struct HttpRequest* req) {

@@ -173,15 +173,36 @@ int main(int argc, char** argv) {
 	Process_Exit(0);
 	return 0;
 }
-/* android NDK doesn't let us use regular main */
-#ifdef CC_BUILD_ANDROID
-#include <android_native_app_glue.h>
-void android_main(struct android_app* app) {
-	App_Ptr = app;
-	VM_Ptr  = app->activity->vm;
 
-	Platform_Log1("internal dir: %c", app->activity->internalDataPath);
-	Platform_Log1("external dir: %c", app->activity->externalDataPath);
-	main(1, NULL);
+/* ClassiCube is just a native library on android, */
+/* unlike other platforms where it is the executable. */
+/* As such, we have to hook into the java-side activity, */
+/* which in its onCreate() calls runGameAsync to */
+/* actually run the game on a separate thread. */
+#ifdef CC_BUILD_ANDROID
+static void android_main(void) {
+	Platform_LogConst("Main loop started!");
+	main(1, NULL); 
+}
+
+static void JNICALL java_runGameAsync(JNIEnv* env, jobject instance) {
+	App_Instance = instance;
+	(*env)->NewGlobalRef(env, instance);
+	/* TODO: Do we actually need to remove that global ref? */
+	Platform_LogConst("Running game async!");
+	Thread_Start(android_main, true);
+}
+
+static const JNINativeMethod methods[1] = {
+	{ "runGameAsync", "()V", java_runGameAsync }
+};
+
+CC_API jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+	JNIEnv* env;
+	VM_Ptr = vm;
+
+	JavaGetCurrentEnv(env);
+	App_Class = (*env)->FindClass(env, "com/classicube/MainActivity");
+	JavaRegisterNatives(env, methods);
 }
 #endif

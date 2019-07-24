@@ -270,7 +270,7 @@ uint64_t Stopwatch_Measure(void) {
 	LARGE_INTEGER t;
 	FILETIME ft;
 
-	if (sw_highRes) {		
+	if (sw_highRes) {
 		QueryPerformanceCounter(&t);
 		return (uint64_t)t.QuadPart;
 	} else {		
@@ -2050,7 +2050,9 @@ static void Platform_InitStopwatch(void) {
 	mach_timebase_info(&tb);
 
 	sw_freqMul = tb.numer;
-	sw_freqDiv = tb.denom * 1000;
+	/* tb.denom may be large, so multiplying by 1000 overflows 32 bits */
+	/* (one powerpc system had tb.denom of 33329426) */
+	sw_freqDiv = (int64_t)tb.denom * 1000;
 }
 
 void Platform_Init(void) {
@@ -2094,9 +2096,8 @@ void Platform_SetDefaultCurrentDirectory(void) {
 	if (res) Logger_Warn(res, "setting current directory");
 }
 #elif defined CC_BUILD_ANDROID
-#include <android_native_app_glue.h>
-#include <android/native_activity.h>
-void* App_Ptr;
+jclass  App_Class;
+jobject App_Instance;
 JavaVM* VM_Ptr;
 void Platform_Init(void) { Platform_InitCommon(); }
 
@@ -2134,22 +2135,18 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 }
 
 void Platform_SetDefaultCurrentDirectory(void) {
-	struct android_app* app = (struct android_app*)App_Ptr;
-	const char* storageDir  = app->activity->externalDataPath;
+	String dir; char dirBuffer[FILENAME_SIZE + 1];
+	String_InitArray_NT(dir, dirBuffer);
 
-	ReturnCode res = chdir(storageDir) == -1 ? errno : 0;
+	JavaCall_Void_String("getExternalAppDir", &dir);
+	dir.buffer[dir.length] = '\0';
+	Platform_Log1("EXTERNAL DIR: %s|", &dir);
+
+	ReturnCode res = chdir(dir.buffer) == -1 ? errno : 0;
 	if (res) Logger_Warn(res, "setting current directory");
 }
+
 /* JNI helpers */
-
-UniString JavaGetUniString(JNIEnv* env, jstring str) {
-	UniString dst;
-	dst.buffer   = (*env)->GetStringChars(env,  str, NULL);
-	dst.length   = (*env)->GetStringLength(env, str);
-	dst.capacity = dst.length;
-	return dst;
-}
-
 String JavaGetString(JNIEnv* env, jstring str) {
 	String dst;
 	dst.buffer   = (*env)->GetStringUTFChars(env,  str, NULL);
@@ -2179,30 +2176,18 @@ jbyteArray JavaMakeBytes(JNIEnv* env, const uint8_t* src, uint32_t len) {
 }
 
 void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	struct android_app* app = (struct android_app*)App_Ptr;
-	jobject instance = app->activity->clazz;
-
-	jclass clazz     = (*env)->GetObjectClass(env, instance);
-	jmethodID method = (*env)->GetMethodID(env, clazz, name, sig);
-	(*env)->CallVoidMethodA(env, instance, method, args);
+	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
+	(*env)->CallVoidMethodA(env, App_Instance, method, args);
 }
 
 jint JavaCallInt(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	struct android_app* app = (struct android_app*)App_Ptr;
-	jobject instance = app->activity->clazz;
-
-	jclass clazz     = (*env)->GetObjectClass(env, instance);
-	jmethodID method = (*env)->GetMethodID(env, clazz, name, sig);
-	return (*env)->CallIntMethodA(env, instance, method, args);
+	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
+	return (*env)->CallIntMethodA(env, App_Instance, method, args);
 }
 
 jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	struct android_app* app = (struct android_app*)App_Ptr;
-	jobject instance = app->activity->clazz;
-
-	jclass clazz     = (*env)->GetObjectClass(env, instance);
-	jmethodID method = (*env)->GetMethodID(env, clazz, name, sig);
-	return (*env)->CallObjectMethodA(env, instance, method, args);
+	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
+	return (*env)->CallObjectMethodA(env, App_Instance, method, args);
 }
 
 void JavaCall_String_Void(const char* name, const String* value) {
@@ -2213,5 +2198,23 @@ void JavaCall_String_Void(const char* name, const String* value) {
 	args[0].l = JavaMakeString(env, value);
 	JavaCallVoid(env, name, "(Ljava/lang/String;)V", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
+}
+
+void JavaCall_Void_String(const char* name, String* dst) {
+	const jchar* src;
+	jsize len;
+	JNIEnv* env;
+	jobject obj;
+	JavaGetCurrentEnv(env);
+
+	obj = JavaCallObject(env, name, "()Ljava/lang/String;", NULL);
+	if (!obj) return;
+
+	src = (*env)->GetStringChars(env, obj, NULL);
+	len = (*env)->GetStringLength(env, obj);
+	String_AppendUtf16(dst, src, len * 2);
+
+	(*env)->ReleaseStringChars(env, obj, src);
+	(*env)->DeleteLocalRef(env, obj);
 }
 #endif

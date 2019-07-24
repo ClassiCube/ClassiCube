@@ -237,14 +237,14 @@ CC_API ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success);
 
 #ifdef CC_BUILD_ANDROID
 #include <jni.h>
-extern void*   App_Ptr;
+extern jclass  App_Class;
+extern jobject App_Instance;
 extern JavaVM* VM_Ptr;
+
 #define JavaGetCurrentEnv(env) (*VM_Ptr)->AttachCurrentThread(VM_Ptr, &env, NULL);
 #define JavaMakeConst(env, str) (*env)->NewStringUTF(env, str);
+#define JavaRegisterNatives(env, methods) (*env)->RegisterNatives(env, App_Class, methods, Array_Elems(methods));
 
-/* Allocates a unicode string from the given java string. */
-/* NOTE: Don't forget to call env->ReleaseStringChars. */
-UniString JavaGetUniString(JNIEnv* env, jstring str);
 /* Allocates a string from the given java string. */
 /* NOTE: Don't forget to call env->ReleaseStringUTFChars. Only works with ASCII strings. */
 String JavaGetString(JNIEnv* env, jstring str);
@@ -260,7 +260,7 @@ jint JavaCallInt(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
 jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that takes a string and returns nothing. */
 void JavaCall_String_Void(const char* name, const String* value);
-/* Calls a method in the activity class that takes an int argument and returns a string. */
-void JavaCall_Int_String(const char* name, int arg, String* dst);
+/* Calls a method in the activity class that takes no arguments and returns a string. */
+void JavaCall_Void_String(const char* name, String* dst);
 #endif
 #endif
