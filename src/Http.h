@@ -64,8 +64,8 @@ void Http_UrlEncodeUtf8(String* dst, const String* src);
 bool Http_DescribeError(ReturnCode res, String* dst);
 
 /* Attempts to retrieve a fully completed request. */
-/* NOTE: You MUST also check Result/StatusCode, and check Size is > 0. */
-/* (because a completed request may not have completed successfully) */
+/* NOTE: You MUST check Success for whether it completed successfully. */
+/* (Data may still be non NULL even on error, e.g. on a http 404 error) */
 bool Http_GetResult(const String* id, struct HttpRequest* item);
 /* Retrieves information about the request currently being processed. */
 bool Http_GetCurrent(struct HttpRequest* request, int* progress);

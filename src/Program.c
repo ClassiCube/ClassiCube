@@ -204,5 +204,6 @@ CC_API jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 	JavaGetCurrentEnv(env);
 	App_Class = (*env)->FindClass(env, "com/classicube/MainActivity");
 	JavaRegisterNatives(env, methods);
+	return JNI_VERSION_1_4;
 }
 #endif

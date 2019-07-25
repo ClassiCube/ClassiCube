@@ -2771,7 +2771,8 @@ void Window_DisableRawMouse(void) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_ANDROID
 #include <android/native_window.h>
-#include <android/window.h>
+#include <android/native_window_jni.h>
+#include <android/keycodes.h>
 static ANativeWindow* win_handle;
 static bool win_rawMouse;
 
@@ -2879,7 +2880,7 @@ static void JNICALL java_processMouseMove(JNIEnv* env, jobject o, jint x, jint y
 
 static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface) {
 	Platform_LogConst("WIN - CREATED");
-	win_handle = ANativeWindow_fromSurface(surface);
+	win_handle = ANativeWindow_fromSurface(env, surface);
 	Window_RefreshBounds();
 	/* TODO: Restore context */
 }
@@ -2893,6 +2894,7 @@ static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 	/* TODO: Do we Window_Close() here */
 	/* TODO: Gfx Lose context */
+	JavaCallVoid(env, "processedSurfaceDestroyed", "()V", NULL);
 }
 
 static void JNICALL java_processSurfaceResized(JNIEnv* env, jobject o, jobject surface) {
@@ -2926,8 +2928,10 @@ static void JNICALL java_onPause(JNIEnv* env, jobject o) {
 
 static void JNICALL java_onDestroy(JNIEnv* env, jobject o) {
 	Platform_LogConst("APP - ON DESTROY");
+
 	if (Window_Exists) Window_Close();
 	/* TODO: signal to java code we're done */
+	JavaCallVoid(env, "processedDestroyed", "()V", NULL);
 }
 
 static void JNICALL java_onGotFocus(JNIEnv* env, jobject o) {
@@ -2945,13 +2949,13 @@ static void JNICALL java_onLostFocus(JNIEnv* env, jobject o) {
 
 static void JNICALL java_onConfigChanged(JNIEnv* env, jobject o) {
 	Platform_LogConst("APP - CONFIG CHANGED");
+	Window_RefreshBounds();
+	Window_RefreshBounds(); /* TODO: Why does it only work on second try? */
 	/* TODO: this one might not even be needed */
 }
 
 static void JNICALL java_onLowMemory(JNIEnv* env, jobject o) {
 	Platform_LogConst("APP - LOW MEM");
-	Window_RefreshBounds();
-	Window_RefreshBounds(); /* TODO: Why does it only work on second try? */
 	/* TODO: Low memory */
 }
 
