@@ -2964,13 +2964,13 @@ static const JNINativeMethod methods[19] = {
 	{ "processKeyUp",     "(I)V", java_processKeyUp },
 	{ "processKeyChar",   "(I)V", java_processKeyChar },
 
-	{ "processMouseDown", "(I)V", java_processMouseDown },
-	{ "processMouseUp",   "(I)V", java_processMouseUp },
-	{ "processMouseMove", "(I)V", java_processMouseMove },
+	{ "processMouseDown", "(II)V", java_processMouseDown },
+	{ "processMouseUp",   "(II)V", java_processMouseUp },
+	{ "processMouseMove", "(II)V", java_processMouseMove },
 
-	{ "processSurfaceCreated",      "(JLandroid/view/Surface;)V", java_processSurfaceCreated },
+	{ "processSurfaceCreated",      "(Landroid/view/Surface;)V",  java_processSurfaceCreated },
 	{ "processSurfaceDestroyed",    "()V",                        java_processSurfaceDestroyed },
-	{ "processSurfaceResized",      "(JLandroid/view/Surface;)V", java_processSurfaceResized },
+	{ "processSurfaceResized",      "(Landroid/view/Surface;)V",  java_processSurfaceResized },
 	{ "processSurfaceRedrawNeeded", "()V",                        java_processSurfaceRedrawNeeded },
 
 	{ "processOnStart",   "()V", java_onStart },

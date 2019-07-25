@@ -186,9 +186,8 @@ static void android_main(void) {
 }
 
 static void JNICALL java_runGameAsync(JNIEnv* env, jobject instance) {
-	App_Instance = instance;
-	(*env)->NewGlobalRef(env, instance);
-	/* TODO: Do we actually need to remove that global ref? */
+	App_Instance = (*env)->NewGlobalRef(env, instance);
+	/* TODO: Do we actually need to remove that global ref later? */
 	Platform_LogConst("Running game async!");
 	Thread_Start(android_main, true);
 }
@@ -198,11 +197,13 @@ static const JNINativeMethod methods[1] = {
 };
 
 CC_API jint JNI_OnLoad(JavaVM* vm, void* reserved) {
+	jclass klass;
 	JNIEnv* env;
 	VM_Ptr = vm;
-
 	JavaGetCurrentEnv(env);
-	App_Class = (*env)->FindClass(env, "com/classicube/MainActivity");
+
+	klass     = (*env)->FindClass(env, "com/classicube/MainActivity");
+	App_Class = (*env)->NewGlobalRef(env, klass);
 	JavaRegisterNatives(env, methods);
 	return JNI_VERSION_1_4;
 }
