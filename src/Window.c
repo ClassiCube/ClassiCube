@@ -355,6 +355,8 @@ void Window_Init(void) {
 	Display_BitsPerPixel  = GetDeviceCaps(hdc, BITSPIXEL);
 	Display_DpiX          = GetDeviceCaps(hdc, LOGPIXELSX);
 	Display_DpiY          = GetDeviceCaps(hdc, LOGPIXELSY);
+
+	Platform_Log2("DPI: %i, %i", &Display_DpiX, &Display_DpiY);
 	ReleaseDC(NULL, hdc);
 }
 

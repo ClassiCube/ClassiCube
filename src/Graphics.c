@@ -794,7 +794,6 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 static D3DTRANSFORMSTATETYPE matrix_modes[3] = { D3DTS_PROJECTION, D3DTS_VIEW, D3DTS_TEXTURE0 };
 
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
-	ReturnCode res;
 	if (type == MATRIX_TEXTURE) {
 		matrix->Row2.X = matrix->Row3.X; /* NOTE: this hack fixes the texture movements. */
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
@@ -805,7 +804,6 @@ void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
-	ReturnCode res;
 	if (type == MATRIX_TEXTURE) {
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
 	}
