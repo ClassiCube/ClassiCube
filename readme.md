@@ -79,7 +79,7 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libgl1-m
 
 #### FreeBSD
 
-```gcc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lGL -lcurl -lopenal -lexecinfo```
+```clang *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lGL -lcurl -lopenal -lexecinfo```
 
 #### OpenBSD
 
