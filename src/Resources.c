@@ -10,112 +10,36 @@
 #include "Vorbis.h"
 #include "Errors.h"
 #include "Logger.h"
+#include "LWeb.h"
 
 #ifndef CC_BUILD_WEB
 /*########################################################################################################################*
-*---------------------------------------------------------List/Checker----------------------------------------------------*
+*--------------------------------------------------------Resources list---------------------------------------------------*
 *#########################################################################################################################*/
-bool Textures_AllExist, Sounds_AllExist;
-int Resources_Count, Resources_Size;
-static int texturesFound;
+#define FLAG_CLASSIC 0x01 /* file depends on classic.jar */
+#define FLAG_MODERN  0x02 /* file depends on modern jar */
+#define FLAG_GUI     0x04 /* file depends on patched gui.png */
+#define FLAG_TERRAIN 0x08 /* file depends on patched terrain.png */
 
-CC_NOINLINE static struct ResourceTexture* Resources_FindTex(const String* name) {
-	struct ResourceTexture* tex;
-	int i;
-
-	for (i = 0; i < Array_Elems(Resources_Textures); i++) {
-		tex = &Resources_Textures[i];
-		if (String_CaselessEqualsConst(name, tex->filename)) return tex;
-	}
-	return NULL;
-}
-
-static void Resources_CheckMusic(void) {
-	String path; char pathBuffer[FILENAME_SIZE];
-	int i;
-	String_InitArray(path, pathBuffer);
-
-	for (i = 0; i < Array_Elems(Resources_Music); i++) {
-		path.length = 0;
-		String_Format1(&path, "audio/%c", Resources_Music[i].name);
-
-		Resources_Music[i].downloaded = File_Exists(&path);
-		if (Resources_Music[i].downloaded) continue;
-
-		Resources_Size += Resources_Music[i].size;
-		Resources_Count++;
-	}
-}
-
-static void Resources_CheckSounds(void) {
-	String path; char pathBuffer[FILENAME_SIZE];
-	int i;
-	String_InitArray(path, pathBuffer);
-
-	for (i = 0; i < Array_Elems(Resources_Sounds); i++) {
-		path.length = 0;
-		String_Format1(&path, "audio/%c.wav", Resources_Sounds[i].name);
-
-		if (File_Exists(&path)) continue;
-		Sounds_AllExist = false;
-
-		Resources_Count += Array_Elems(Resources_Sounds);
-		Resources_Size  += 417;
-		return;
-	}
-	Sounds_AllExist = true;
-}
-
-static bool Resources_SelectZipEntry(const String* path) {
-	String name = *path;
-	Utils_UNSAFE_GetFilename(&name);
-
-	if (Resources_FindTex(&name)) texturesFound++;
-	return false;
-}
-
-static void Resources_CheckTextures(void) {
-	static const String path = String_FromConst("texpacks/default.zip");
-	struct Stream stream;
-	struct ZipState state;
-	ReturnCode res;
-
-	res = Stream_OpenFile(&stream, &path);
-	if (res == ReturnCode_FileNotFound) return;
-
-	if (res) { Logger_Warn(res, "checking default.zip"); return; }
-	Zip_Init(&state, &stream);
-	state.SelectEntry = Resources_SelectZipEntry;
-
-	res = Zip_Extract(&state);
-	stream.Close(&stream);
-	if (res) Logger_Warn(res, "inspecting default.zip");
-
-	/* if somehow have say "gui.png", "GUI.png" */
-	Textures_AllExist = texturesFound >= Array_Elems(Resources_Textures);
-}
-
-void Resources_CheckExistence(void) {
-	int i;
-	Resources_CheckTextures();
-	Resources_CheckMusic();
-	Resources_CheckSounds();
-
-	if (Textures_AllExist) return;
-	for (i = 0; i < Array_Elems(Resources_Files); i++) {
-		Resources_Count++;
-		Resources_Size += Resources_Files[i].size;
-	}
-}
-
-struct ResourceFile Resources_Files[4] = {
+static struct ResourceFile {
+	const char* name;
+	const char* url;
+	uint16_t size;
+	bool downloaded;
+	/* downloaded archive */
+	uint8_t* data; uint32_t len;
+} fileResources[4] = {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar",  291 },
 	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     4621 },
 	{ "terrain.png patch", "http://static.classicube.net/terrain-patch2.png",  7 },
 	{ "gui.png patch",     "http://static.classicube.net/gui.png",            21 }
 };
 
-struct ResourceTexture Resources_Textures[20] = {
+static struct ResourceTexture {
+	const char* filename;
+	/* zip data */
+	uint32_t size, offset, crc32;
+} textureResources[20] = {
 	/* classic jar files */
 	{ "char.png"     }, { "clouds.png"      }, { "default.png" }, { "particles.png" },
 	{ "rain.png"     }, { "gui_classic.png" }, { "icons.png"   }, { "terrain.png"   },
@@ -126,7 +50,10 @@ struct ResourceTexture Resources_Textures[20] = {
 	{ "animations.png" }, { "animations.txt" }
 };
 
-struct ResourceSound Resources_Sounds[59] = {
+static struct ResourceSound {
+	const char* name;
+	const char* hash;
+} soundResources[59] = {
 	{ "dig_cloth1",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "dig_cloth2",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
 	{ "dig_cloth3",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "dig_cloth4",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
 	{ "dig_grass1",  "41cbf5dd08e951ad65883854e74d2e034929f572" }, { "dig_grass2",  "86cb1bb0c45625b18e00a64098cd425a38f6d3f2" },
@@ -160,7 +87,12 @@ struct ResourceSound Resources_Sounds[59] = {
 	{ "step_wood3",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "step_wood4",   "dc66978374a46ab2b87db6472804185824868095" }
 };
 
-struct ResourceMusic Resources_Music[7] = {
+static struct ResourceMusic {
+	const char* name;
+	const char* hash;
+	uint16_t size;
+	bool downloaded;
+} musicResources[7] = {
 	{ "calm1.ogg", "50a59a4f56e4046701b758ddbb1c1587efa4cadf", 2472 },
 	{ "calm2.ogg", "74da65c99aa578486efa7b69983d3533e14c0d6e", 1931 },
 	{ "calm3.ogg", "14ae57a6bce3d4254daa8be2b098c2d99743cc3f", 2181 },
@@ -169,6 +101,103 @@ struct ResourceMusic Resources_Music[7] = {
 	{ "hal3.ogg",  "dd85fb564e96ee2dbd4754f711ae9deb08a169f9", 1879 },
 	{ "hal4.ogg",  "5e7d63e75c6e042f452bc5e151276911ef92fed8", 2499 }
 };
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------List/Checker----------------------------------------------------*
+*#########################################################################################################################*/
+int Resources_Count, Resources_Size;
+static bool allSoundsExist, allTexturesExist;
+static int texturesFound;
+
+CC_NOINLINE static struct ResourceTexture* Resources_FindTex(const String* name) {
+	struct ResourceTexture* tex;
+	int i;
+
+	for (i = 0; i < Array_Elems(textureResources); i++) {
+		tex = &textureResources[i];
+		if (String_CaselessEqualsConst(name, tex->filename)) return tex;
+	}
+	return NULL;
+}
+
+static void Resources_CheckMusic(void) {
+	String path; char pathBuffer[FILENAME_SIZE];
+	int i;
+	String_InitArray(path, pathBuffer);
+
+	for (i = 0; i < Array_Elems(musicResources); i++) {
+		path.length = 0;
+		String_Format1(&path, "audio/%c", musicResources[i].name);
+
+		musicResources[i].downloaded = File_Exists(&path);
+		if (musicResources[i].downloaded) continue;
+
+		Resources_Size += musicResources[i].size;
+		Resources_Count++;
+	}
+}
+
+static void Resources_CheckSounds(void) {
+	String path; char pathBuffer[FILENAME_SIZE];
+	int i;
+	String_InitArray(path, pathBuffer);
+
+	for (i = 0; i < Array_Elems(soundResources); i++) {
+		path.length = 0;
+		String_Format1(&path, "audio/%c.wav", soundResources[i].name);
+
+		if (File_Exists(&path)) continue;
+		allSoundsExist = false;
+
+		Resources_Count += Array_Elems(soundResources);
+		Resources_Size  += 417;
+		return;
+	}
+	allSoundsExist = true;
+}
+
+static bool Resources_SelectZipEntry(const String* path) {
+	String name = *path;
+	Utils_UNSAFE_GetFilename(&name);
+
+	if (Resources_FindTex(&name)) texturesFound++;
+	return false;
+}
+
+static void Resources_CheckTextures(void) {
+	static const String path = String_FromConst("texpacks/default.zip");
+	struct Stream stream;
+	struct ZipState state;
+	ReturnCode res;
+
+	res = Stream_OpenFile(&stream, &path);
+	if (res == ReturnCode_FileNotFound) return;
+
+	if (res) { Logger_Warn(res, "checking default.zip"); return; }
+	Zip_Init(&state, &stream);
+	state.SelectEntry = Resources_SelectZipEntry;
+
+	res = Zip_Extract(&state);
+	stream.Close(&stream);
+	if (res) Logger_Warn(res, "inspecting default.zip");
+
+	/* if somehow have say "gui.png", "GUI.png" */
+	allTexturesExist = texturesFound >= Array_Elems(textureResources);
+}
+
+void Resources_CheckExistence(void) {
+	int i;
+	Resources_CheckTextures();
+	Resources_CheckMusic();
+	Resources_CheckSounds();
+
+	if (allTexturesExist) return;
+	for (i = 0; i < Array_Elems(fileResources); i++) {
+		Resources_Count++;
+		Resources_Size += fileResources[i].size;
+	}
+}
 
 
 /*########################################################################################################################*
@@ -238,10 +267,10 @@ static ReturnCode ZipPatcher_EndOfCentralDir(struct Stream* s, uint32_t centralD
 	Stream_SetU32_LE(&header[0], 0x06054b50); /* signature */
 	Stream_SetU16_LE(&header[4], 0);          /* disk number */
 	Stream_SetU16_LE(&header[6], 0);          /* disk number of start */
-	Stream_SetU16_LE(&header[8],  Array_Elems(Resources_Textures)); /* disk entries */
-	Stream_SetU16_LE(&header[10], Array_Elems(Resources_Textures)); /* total entries */
-	Stream_SetU32_LE(&header[12], centralDirEnd - centralDirBeg);   /* central dir size */
-	Stream_SetU32_LE(&header[16], centralDirBeg);                   /* central dir start */
+	Stream_SetU16_LE(&header[8],  Array_Elems(textureResources));  /* disk entries */
+	Stream_SetU16_LE(&header[10], Array_Elems(textureResources));  /* total entries */
+	Stream_SetU32_LE(&header[12], centralDirEnd - centralDirBeg);  /* central dir size */
+	Stream_SetU32_LE(&header[16], centralDirBeg);                  /* central dir start */
 	Stream_SetU16_LE(&header[20], 0);         /* comment length */
 	return Stream_Write(s, header, 22);
 }
@@ -371,7 +400,7 @@ static ReturnCode ClassicPatcher_ExtractFiles(struct Stream* s) {
 	struct ZipState zip;
 	struct Stream src;
 
-	Stream_ReadonlyMemory(&src, Resources_Files[0].data, Resources_Files[0].len);
+	Stream_ReadonlyMemory(&src, fileResources[0].data, fileResources[0].len);
 	Zip_Init(&zip, &src);
 
 	zip.Obj = s;
@@ -476,7 +505,7 @@ static ReturnCode ModernPatcher_ExtractFiles(struct Stream* s) {
 	struct ZipState zip;
 	struct Stream src;
 
-	Stream_ReadonlyMemory(&src, Resources_Files[1].data, Resources_Files[1].len);
+	Stream_ReadonlyMemory(&src, fileResources[1].data, fileResources[1].len);
 	Zip_Init(&zip, &src);
 
 	zip.Obj = s;
@@ -498,7 +527,7 @@ static ReturnCode TexPatcher_NewFiles(struct Stream* s) {
 
 	/* make ClassiCube gui.png */
 	entry = Resources_FindTex(&guiPng);
-	res   = ZipPatcher_WriteData(s, entry, Resources_Files[3].data, Resources_Files[3].len);
+	res   = ZipPatcher_WriteData(s, entry, fileResources[3].data, fileResources[3].len);
 
 	return res;
 }
@@ -514,7 +543,7 @@ static ReturnCode TexPatcher_Terrain(struct Stream* s) {
 	struct Stream src;
 	ReturnCode res;
 
-	Stream_ReadonlyMemory(&src, Resources_Files[2].data, Resources_Files[2].len);
+	Stream_ReadonlyMemory(&src, fileResources[2].data, fileResources[2].len);
 	if ((res = Png_Decode(&bmp, &src))) return res;
 
 	TexPatcher_PatchTile(&bmp,  0,0, 3,3);
@@ -542,8 +571,8 @@ static ReturnCode TexPatcher_WriteEntries(struct Stream* s) {
 	if ((res = TexPatcher_Terrain(s)))          return res;
 	
 	if ((res = s->Position(s, &beg))) return res;
-	for (i = 0; i < Array_Elems(Resources_Textures); i++) {
-		if ((res = ZipPatcher_CentralDir(s, &Resources_Textures[i]))) return res;
+	for (i = 0; i < Array_Elems(textureResources); i++) {
+		if ((res = ZipPatcher_CentralDir(s, &textureResources[i]))) return res;
 	}
 
 	if ((res = s->Position(s, &end))) return res;
@@ -567,9 +596,9 @@ static void TexPatcher_MakeDefaultZip(void) {
 		if (res) Logger_Warn(res, "closing default.zip");
 	}
 
-	for (i = 0; i < Array_Elems(Resources_Files); i++) {
-		Mem_Free(Resources_Files[i].data);
-		Resources_Files[i].data = NULL;
+	for (i = 0; i < Array_Elems(fileResources); i++) {
+		Mem_Free(fileResources[i].data);
+		fileResources[i].data = NULL;
 	}
 }
 
@@ -699,21 +728,21 @@ void Fetcher_Run(void) {
 	Fetcher_Working    = true;
 	Fetcher_Completed  = false;
 
-	for (i = 0; i < Array_Elems(Resources_Files); i++) {
-		if (Textures_AllExist) continue;
+	for (i = 0; i < Array_Elems(fileResources); i++) {
+		if (allTexturesExist) continue;
 
-		id  = String_FromReadonly(Resources_Files[i].name);
-		url = String_FromReadonly(Resources_Files[i].url);
+		id  = String_FromReadonly(fileResources[i].name);
+		url = String_FromReadonly(fileResources[i].url);
 		Http_AsyncGetData(&url, false, &id);
 	}
 
-	for (i = 0; i < Array_Elems(Resources_Music); i++) {
-		if (Resources_Music[i].downloaded) continue;
-		Fetcher_DownloadAudio(Resources_Music[i].name,  Resources_Music[i].hash);
+	for (i = 0; i < Array_Elems(musicResources); i++) {
+		if (musicResources[i].downloaded) continue;
+		Fetcher_DownloadAudio(musicResources[i].name,  musicResources[i].hash);
 	}
-	for (i = 0; i < Array_Elems(Resources_Sounds); i++) {
-		if (Sounds_AllExist) continue;
-		Fetcher_DownloadAudio(Resources_Sounds[i].name, Resources_Sounds[i].hash);
+	for (i = 0; i < Array_Elems(soundResources); i++) {
+		if (allSoundsExist) continue;
+		Fetcher_DownloadAudio(soundResources[i].name, soundResources[i].hash);
 	}
 }
 
@@ -773,19 +802,19 @@ static void Fetcher_CheckSound(struct ResourceSound* sound) {
 void Fetcher_Update(void) {
 	int i;
 
-	for (i = 0; i < Array_Elems(Resources_Files); i++) {
-		if (Resources_Files[i].downloaded) continue;
-		Fetcher_CheckFile(&Resources_Files[i]);
+	for (i = 0; i < Array_Elems(fileResources); i++) {
+		if (fileResources[i].downloaded) continue;
+		Fetcher_CheckFile(&fileResources[i]);
 	}
-	if (Resources_Files[3].data) TexPatcher_MakeDefaultZip();
+	if (fileResources[3].data) TexPatcher_MakeDefaultZip();
 
-	for (i = 0; i < Array_Elems(Resources_Music); i++) {
-		if (Resources_Music[i].downloaded) continue;
-		Fetcher_CheckMusic(&Resources_Music[i]);
+	for (i = 0; i < Array_Elems(musicResources); i++) {
+		if (musicResources[i].downloaded) continue;
+		Fetcher_CheckMusic(&musicResources[i]);
 	}
 
-	for (i = 0; i < Array_Elems(Resources_Sounds); i++) {
-		Fetcher_CheckSound(&Resources_Sounds[i]);
+	for (i = 0; i < Array_Elems(soundResources); i++) {
+		Fetcher_CheckSound(&soundResources[i]);
 	}
 
 	if (Fetcher_Downloaded != Resources_Count) return; 
