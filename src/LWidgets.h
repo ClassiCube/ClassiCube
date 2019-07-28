@@ -169,12 +169,14 @@ struct LTable {
 	/* Callback when selected has has changed. */
 	void (*OnSelectedChanged)(void);
 
-	/* Index of column currently being dragged. */
+	/* Index of table column currently being dragged. */
 	int DraggingColumn;
-	/* Whether scrollbar is currently being dragged up or down. */
-	bool DraggingScrollbar;
-	/* Offset of mouse for scrollbar dragging. */
-	int MouseOffset;
+	int GridlineWidth, GridlineHeight;
+
+	bool DraggingScrollbar;	/* Is scrollbar is currently being dragged */
+	int MouseOffset;        /* Offset of mouse for scrollbar dragging */
+	int ScrollbarWidth;     /* How wide scrollbar is in pixels */
+
 	float _wheelAcc; /* mouse wheel accumulator */
 	int _lastRow; /* last clicked row (for doubleclick join) */
 	TimeMS _lastClick;   /* time of last mouse click on a row */

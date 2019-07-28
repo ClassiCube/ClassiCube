@@ -754,8 +754,6 @@ static void LTable_SetSelectedTo(struct LTable* w, int index) {
 	w->OnSelectedChanged();
 }
 
-#define GRIDLINE_SIZE   2
-#define SCROLLBAR_WIDTH 10
 #define HDR_YOFFSET 3
 #define HDR_YPADDING 5
 #define ROW_YOFFSET 3
@@ -827,15 +825,15 @@ static void LTable_DrawGridlines(struct LTable* w) {
 
 	x = w->X;
 	Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
-				   x, w->Y + w->HdrHeight, w->Width, GRIDLINE_SIZE);
+				   x, w->Y + w->HdrHeight, w->Width, w->GridlineHeight);
 
 	for (i = 0; i < w->NumColumns; i++) {
 		x += w->Columns[i].width;
 		if (!w->Columns[i].columnGridline) continue;
 			
 		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
-					   x, w->Y, GRIDLINE_SIZE, w->Height);
-		x += GRIDLINE_SIZE;
+					   x, w->Y, w->GridlineWidth, w->Height);
+		x += w->GridlineWidth;
 	}
 }
 
@@ -861,7 +859,7 @@ static void LTable_DrawHeaders(struct LTable* w) {
 								w->Columns[i].width - CELL_XPADDING);
 
 		x += w->Columns[i].width;
-		if (w->Columns[i].columnGridline) x += GRIDLINE_SIZE;
+		if (w->Columns[i].columnGridline) x += w->GridlineWidth;
 	}
 }
 
@@ -895,7 +893,7 @@ static void LTable_DrawRows(struct LTable* w) {
 			}
 
 			x += w->Columns[i].width;
-			if (w->Columns[i].columnGridline) x += GRIDLINE_SIZE;
+			if (w->Columns[i].columnGridline) x += w->GridlineWidth;
 		}
 	}
 }
@@ -908,13 +906,13 @@ static void LTable_DrawScrollbar(struct LTable* w) {
 	BitmapCol scrollCol = Launcher_ClassicBackground ? classicScroll : Launcher_ButtonForeActiveCol;
 
 	int x, y, height;
-	x = w->X + w->Width - SCROLLBAR_WIDTH;
+	x = w->X + w->Width - w->ScrollbarWidth;
 	LTable_GetScrollbarCoords(w, &y, &height);
 
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol,
-					x, w->Y,     SCROLLBAR_WIDTH, w->Height);		
+					x, w->Y,     w->ScrollbarWidth, w->Height);		
 	Drawer2D_Clear(&Launcher_Framebuffer, scrollCol, 
-					x, w->Y + y, SCROLLBAR_WIDTH, height);
+					x, w->Y + y, w->ScrollbarWidth, height);
 }
 
 bool LTable_HandlesKey(Key key) {
@@ -991,7 +989,7 @@ static void LTable_HeadersClick(struct LTable* w) {
 		}
 
 		x += w->Columns[i].width;
-		if (w->Columns[i].columnGridline) x += GRIDLINE_SIZE;
+		if (w->Columns[i].columnGridline) x += w->GridlineWidth;
 	}
 
 	for (i = 0, x = w->X; i < w->NumColumns; i++) {
@@ -1003,7 +1001,7 @@ static void LTable_HeadersClick(struct LTable* w) {
 		}
 
 		x += w->Columns[i].width;
-		if (w->Columns[i].columnGridline) x += GRIDLINE_SIZE;
+		if (w->Columns[i].columnGridline) x += w->GridlineWidth;
 	}
 }
 
@@ -1027,7 +1025,7 @@ static void LTable_ScrollbarClick(struct LTable* w) {
 static void LTable_MouseDown(void* widget, bool wasSelected) {
 	struct LTable* w = (struct LTable*)widget;
 
-	if (Mouse_X >= Window_Width - SCROLLBAR_WIDTH) {
+	if (Mouse_X >= Window_Width - w->ScrollbarWidth) {
 		LTable_ScrollbarClick(w);
 		w->_lastRow = -1;
 	} else if (Mouse_Y < w->RowsBegY) {
@@ -1060,7 +1058,7 @@ void LTable_Reposition(struct LTable* w) {
 	w->HdrHeight = Drawer2D_FontHeight(&w->HdrFont, true) + HDR_YPADDING;
 	w->RowHeight = Drawer2D_FontHeight(&w->RowFont, true) + ROW_YPADDING;
 
-	w->RowsBegY = w->Y + w->HdrHeight + GRIDLINE_SIZE;
+	w->RowsBegY = w->Y + w->HdrHeight + w->GridlineHeight;
 	w->RowsEndY = w->Y + w->Height;
 	rowsHeight  = w->Height - (w->RowsBegY - w->Y);
 
@@ -1091,6 +1089,10 @@ void LTable_Init(struct LTable* w, const FontDesc* hdrFont, const FontDesc* rowF
 
 	w->HdrFont = *hdrFont;
 	w->RowFont = *rowFont;
+
+	w->ScrollbarWidth = Display_ScaleX(10);
+	w->GridlineWidth  = Display_ScaleX(2);
+	w->GridlineHeight = Display_ScaleY(2);
 }
 
 void LTable_Reset(struct LTable* w) {
