@@ -14,8 +14,12 @@ Rect2D Display_Bounds;
 int Window_X, Window_Y, Window_Width, Window_Height;
 bool Window_Exists, Window_Focused;
 const void* Window_Handle;
+
 #define Window_CentreX(width)  (Display_Bounds.X + (Display_Bounds.Width  - width)  / 2)
 #define Window_CentreY(height) (Display_Bounds.Y + (Display_Bounds.Height - height) / 2)
+
+int Display_ScaleX(int x) { return x * Display_DpiX / DISPLAY_DEFAULT_DPI; }
+int Display_ScaleY(int y) { return y * Display_DpiY / DISPLAY_DEFAULT_DPI; }
 
 #ifndef CC_BUILD_WEBCANVAS
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
@@ -355,6 +359,8 @@ void Window_Create(int width, int height) {
 	RECT r;
 	win_instance = GetModuleHandle(NULL);
 	/* TODO: UngroupFromTaskbar(); */
+	width  = Display_ScaleX(width);
+	height = Display_ScaleY(height);
 
 	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
 	r.left = Window_CentreX(width);  r.right  = r.left + width;

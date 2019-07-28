@@ -47,6 +47,10 @@ extern int Display_DpiX, Display_DpiY;
 /* NOTE: Position may be non-zero in a multi-monitor setup. Platform dependent. */
 extern Rect2D Display_Bounds;
 
+/* Scales the given X coordinate from 96 dpi to current display dpi. */
+int Display_ScaleX(int x);
+/* Scales the given Y coordinate from 96 dpi to current display dpi. */
+int Display_ScaleY(int y);
 struct GraphicsMode { int R, G, B, A, IsIndexed; };
 
 /* Client bounds of the window in screen coordinates. */
@@ -64,6 +68,7 @@ extern const void* Window_Handle;
 void Window_Init(void);
 /* Creates a GraphicsMode compatible with the default display device. */
 void GraphicsMode_MakeDefault(struct GraphicsMode* m);
+
 /* Creates the window as the given size at centre of the screen. */
 void Window_Create(int width, int height);
 /* Sets the text of the titlebar above the window. */

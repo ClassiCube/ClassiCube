@@ -87,9 +87,6 @@ int Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen) {
 	return (axisLen - size) / 2 + offset;
 }
 
-int Gui_ScaleX(int x) { return x * Display_DpiX / DISPLAY_DEFAULT_DPI; }
-int Gui_ScaleY(int y) { return y * Display_DpiY / DISPLAY_DEFAULT_DPI; }
-
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y) {
 	return x >= recX && y >= recY && x < (recX + width) && y < (recY + height);
 }
