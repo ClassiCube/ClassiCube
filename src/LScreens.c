@@ -1290,12 +1290,12 @@ static void ServersScreen_Reposition(struct LScreen* s_) {
 	LWidget_SetLocation(&s->btnBack,    ANCHOR_MAX, ANCHOR_MIN,  10, 10);
 	LWidget_SetLocation(&s->btnConnect, ANCHOR_MAX, ANCHOR_MAX,  10, 10);
 	LWidget_SetLocation(&s->btnRefresh, ANCHOR_MAX, ANCHOR_MIN, 135, 10);
-
-	s->table.Width  = Window_Width  - 10;
-	s->table.Height = Window_Height - 100;
+	
+	LWidget_SetLocation(&s->table, ANCHOR_MIN, ANCHOR_MIN, 10, 50);
+	s->table.Width  = Window_Width  - s->table.X;
+	s->table.Height = Window_Height - s->table.Y * 2;
 	s->table.Height = max(1, s->table.Height);
 
-	LWidget_SetLocation(&s->table, ANCHOR_MIN, ANCHOR_MIN, 10, 50);
 	LTable_Reposition(&s->table);
 }
 

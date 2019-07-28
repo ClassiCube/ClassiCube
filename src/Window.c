@@ -20,8 +20,6 @@ int Window_Width, Window_Height;
 static int windowX, windowY;
 bool Window_Exists, Window_Focused;
 const void* Window_Handle;
-/* Refreshes size (and optionally position) of the window. */
-static void Window_RefreshBounds(void);
 
 #ifndef CC_BUILD_WEBCANVAS
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
@@ -34,7 +32,7 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 #endif
 
 static int cursorPrevX, cursorPrevY;
-/* Gets the position of the cursor in screen coordinates. */
+/* Gets the position of the cursor in screen or window coordinates. */
 static void Cursor_GetRawPos(int* x, int* y);
 
 static void Window_CentreMousePosition(void) {
