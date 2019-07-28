@@ -31,14 +31,14 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 }
 #endif
 
-static Point2D cursorPrev;
+static int cursorPrevX, cursorPrevY;
 /* Gets the position of the cursor in screen coordinates. */
-static Point2D Cursor_GetScreenPos(void);
+static void Cursor_GetRawPos(int* x, int* y);
 
 static void Window_CentreMousePosition(void) {
 	Cursor_SetPosition(Window_Width / 2, Window_Height / 2);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
-	cursorPrev = Cursor_GetScreenPos();
+	Cursor_GetRawPos(&cursorPrevX, &cursorPrevY);
 }
 
 static void Window_RegrabMouse(void) {
@@ -52,8 +52,9 @@ static void Window_DefaultEnableRawMouse(void) {
 }
 
 static void Window_DefaultUpdateRawMouse(void) {
-	Point2D p = Cursor_GetScreenPos();
-	Event_RaiseMouseMove(&MouseEvents.RawMoved, p.X - cursorPrev.X, p.Y - cursorPrev.Y);
+	int x, y;
+	Cursor_GetRawPos(&x, &y);
+	Event_RaiseMouseMove(&MouseEvents.RawMoved, x - cursorPrevX, y - cursorPrevY);
 	Window_CentreMousePosition();
 }
 
@@ -255,12 +256,12 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			dx = raw.data.mouse.lLastX;
 			dy = raw.data.mouse.lLastY;
 		} else if (raw.data.mouse.usFlags == MOUSE_MOVE_ABSOLUTE) {
-			static Point2D prevPos;
-			dx = raw.data.mouse.lLastX - prevPos.X;
-			dy = raw.data.mouse.lLastY - prevPos.Y;
+			static int prevPosX, prevPosY;
+			dx = raw.data.mouse.lLastX - prevPosX;
+			dy = raw.data.mouse.lLastY - prevPosY;
 
-			prevPos.X = raw.data.mouse.lLastX;
-			prevPos.Y = raw.data.mouse.lLastY;
+			prevPosX = raw.data.mouse.lLastX;
+			prevPosY = raw.data.mouse.lLastY;
 		} else { break; }
 
 		if (rawMouseEnabled) Event_RaiseMouseMove(&MouseEvents.RawMoved, dx, dy);
@@ -542,10 +543,12 @@ void Window_ProcessEvents(void) {
 	}
 }
 
-Point2D Cursor_GetScreenPos(void) {
-	POINT point; GetCursorPos(&point);
-	Point2D p = { point.x, point.y }; return p;
+static void Cursor_GetRawPos(int* x, int* y) {
+	POINT point; 
+	GetCursorPos(&point);
+	*x = point.x; *y = point.y;
 }
+
 void Cursor_SetPosition(int x, int y) { 
 	SetCursorPos(x + Window_X, y + Window_Y); 
 }
@@ -1161,17 +1164,15 @@ void Window_ProcessEvents(void) {
 	}
 }
 
-Point2D Cursor_GetScreenPos(void) {
+static void Cursor_GetRawPos(int* x, int* y) {
 	Window rootW, childW;
-	Point2D root, child;
+	int childX, childY;
 	unsigned int mask;
-
-	XQueryPointer(win_display, win_rootWin, &rootW, &childW, &root.X, &root.Y, &child.X, &child.Y, &mask);
-	return root;
+	XQueryPointer(win_display, win_rootWin, &rootW, &childW, x, y, &childX, &childY, &mask);
 }
 
 void Cursor_SetPosition(int x, int y) {
-	XWarpPointer(win_display, None, win_rootWin, 0,0, 0,0, x + Window_X, y + Window_Y);
+	XWarpPointer(win_display, None, win_handle, 0,0, 0,0, x, y);
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
@@ -1576,8 +1577,8 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 }
 
 static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
+	int mouseX, mouseY;
 	HIPoint pt;
-	Point2D mousePos;
 	UInt32 kind;
 	bool down;
 	EventMouseButton button;
@@ -1591,16 +1592,13 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 		Logger_Abort2(res, "Getting mouse position");
 	}
 	
-	mousePos.X = (int)pt.x; mousePos.Y = (int)pt.y;
+	mouseX = (int)pt.x; mouseY = (int)pt.y;
 	/* kEventParamMouseLocation is in screen coordinates */
-	if (!win_fullscreen) {
-		mousePos.X -= Window_X;
-		mousePos.Y -= Window_Y;
-	}
+	if (!win_fullscreen) { mouseX -= Window_X; mouseY -= Window_Y; }
 
-	/* mousePos.Y is < 0 if user clicks or moves when over titlebar */
+	/* mouseY is < 0 if user clicks or moves when over titlebar */
 	/* Don't intercept this, prevents clicking close/minimise/maximise from working */
-	if (mousePos.Y < 0) return eventNotHandledErr;
+	if (mouseY < 0) return eventNotHandledErr;
 	
 	kind = GetEventKind(inEvent);
 	switch (kind) {
@@ -1630,7 +1628,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 			
 		case kEventMouseMoved:
 		case kEventMouseDragged:
-			Mouse_SetPosition(mousePos.X, mousePos.Y);
+			Mouse_SetPosition(mouseX, mouseY);
 			return eventNotHandledErr;
 	}
 	return eventNotHandledErr;
@@ -1912,15 +1910,12 @@ void Window_ProcessEvents(void) {
 	}
 }
 
-Point2D Cursor_GetScreenPos(void) {
+static void Cursor_GetRawPos(int* x, int* y) {
 	HIPoint point;
-	Point2D p;
 	/* NOTE: HIGetMousePosition is OSX 10.5 or later */
 	/* TODO: Use GetGlobalMouse instead!!!! */
 	HIGetMousePosition(kHICoordSpaceScreenPixel, NULL, &point);
-	
-	p.X = (int)point.x; p.Y = (int)point.y;
-	return p;
+	*x = (int)point.x; *y = (int)point.y;
 }
 
 void Cursor_SetPosition(int x, int y) {
@@ -2273,14 +2268,9 @@ void Window_ProcessEvents(void) {
 	}
 }
 
-Point2D Cursor_GetScreenPos(void) {
-	Point2D p;
-	SDL_GetGlobalMouseState(&p.X, &p.Y);
-	//SDL_GetMouseState(&p.X, &p.Y);
-	//p.X += Window_X; p.Y += Window_Y;
-	return p;
+static void Cursor_GetRawPos(int* x, int* y) {
+	SDL_GetMouseState(x, y);
 }
-
 void Cursor_SetPosition(int x, int y) {
 	SDL_WarpMouseInWindow(win_handle, x, y);
 }
@@ -2737,8 +2727,8 @@ void Window_Close(void) {
 
 void Window_ProcessEvents(void) { }
 
-/* Not supported (or even used internally) */
-Point2D Cursor_GetScreenPos(void) { Point2D p = { 0,0 }; return p; }
+/* Not needed because browser provides relative mouse and touch events */
+static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 /* Not allowed to move cursor from javascript */
 void Cursor_SetPosition(int x, int y) { Mouse_X = x; Mouse_Y = y; }
 
@@ -3046,9 +3036,7 @@ void Window_ProcessEvents(void) {
 }
 
 /* No actual cursor, so just fake one */
-Point2D Cursor_GetScreenPos(void) { 
-	Point2D p; p.X = Mouse_X; p.Y = Mouse_Y; return p; 
-}
+static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 void Cursor_SetPosition(int x, int y) { Mouse_X = x; Mouse_Y = y; }
 void Cursor_SetVisible(bool visible) { }
 

@@ -12,7 +12,7 @@ struct _CameraData Camera;
 static struct PickedPos cameraClipPos;
 static Vec2 cam_rotOffset;
 static bool cam_isForwardThird;
-static Point2D cam_delta;
+static int cam_deltaX, cam_deltaY;
 
 static void Camera_AcquireFocus(void) {
 	Window_EnableRawMouse();
@@ -21,7 +21,7 @@ static void Camera_LoseFocus(void) {
 	Window_DisableRawMouse();
 }
 static void Camera_OnRawMouseMoved(int deltaX, int deltaY) {
-	cam_delta.X += deltaX; cam_delta.Y += deltaY;
+	cam_deltaX += deltaX; cam_deltaY += deltaY;
 }
 
 /*########################################################################################################################*
@@ -58,13 +58,13 @@ static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
 	Vec2 v;
 
 	if (Camera.Smooth) {
-		speedX += cam_delta.X * CAMERA_ADJUST;
+		speedX += cam_deltaX * CAMERA_ADJUST;
 		speedX *= CAMERA_SLIPPERY;
-		speedY += cam_delta.Y * CAMERA_ADJUST;
+		speedY += cam_deltaY * CAMERA_ADJUST;
 		speedY *= CAMERA_SLIPPERY;
 	} else {
-		speedX = (float)cam_delta.X;
-		speedY = (float)cam_delta.Y;
+		speedX = (float)cam_deltaX;
+		speedY = (float)cam_deltaY;
 	}
 
 	v.X = speedX * sensitivity; v.Y = speedY * sensitivity;
@@ -101,7 +101,7 @@ static void PerspectiveCamera_UpdateMouse(double delta) {
 	if (!s->handlesAllInput && Window_Focused) Window_UpdateRawMouse();
 
 	PerspectiveCamera_UpdateMouseRotation(delta);
-	cam_delta.X = 0; cam_delta.Y = 0;
+	cam_deltaX = 0; cam_deltaY = 0;
 }
 
 static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {

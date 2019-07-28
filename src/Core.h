@@ -89,7 +89,6 @@ typedef uint32_t ReturnCode;
 typedef uint64_t TimeMS;
 
 typedef struct Rect2D_  { int X, Y, Width, Height; } Rect2D;
-typedef struct Point2D_ { int X, Y; } Point2D;
 typedef struct Size2D_  { int Width, Height; } Size2D;
 typedef struct FontDesc_ { void* Handle; uint16_t Size, Style; } FontDesc;
 typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
