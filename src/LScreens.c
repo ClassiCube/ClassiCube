@@ -292,8 +292,8 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 	LScreen_Label(s_, &s->lblTitle, "");
-	LScreen_Box(s_,   &s->seps[0], 490, 1);
-	LScreen_Box(s_,   &s->seps[1], 490, 1);
+	LScreen_Box(s_,   &s->seps[0], 490, 2);
+	LScreen_Box(s_,   &s->seps[1], 490, 2);
 
 	LScreen_Button(s_, &s->btnEnhanced, 145, 35, "Enhanced");
 	LScreen_Label(s_,  &s->lblEnhanced[0], "&eEnables custom blocks, changing env");
@@ -1538,8 +1538,8 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 
 	s->widgets = s->_widgets;
 	LScreen_Label(s_,  &s->lblYour, "Your build: (unknown)");
-	LScreen_Box(s_,    &s->seps[0],   320, 1);
-	LScreen_Box(s_,    &s->seps[1],   320, 1);
+	LScreen_Box(s_,    &s->seps[0],   320, 2);
+	LScreen_Box(s_,    &s->seps[1],   320, 2);
 
 	LScreen_Label(s_,  &s->lblRel, "Latest release: Checking..");
 	LScreen_Button(s_, &s->btnRel[0], 130, 35, "Direct3D 9");

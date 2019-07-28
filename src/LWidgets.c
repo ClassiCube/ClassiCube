@@ -575,8 +575,7 @@ void LLabel_SetText(struct LLabel* w, const String* text) {
 *#########################################################################################################################*/
 static void LBox_Draw(void* widget) {
 	struct LBox* w = (struct LBox*)widget;
-	Drawer2D_Rect(&Launcher_Framebuffer, w->Col, w->X, w->Y, w->Width, w->Height);
-	//Gradient_Blend(&Launcher_Framebuffer, w->Col, 128, w->X, w->Y, w->Width, w->Height);
+	Gradient_Blend(&Launcher_Framebuffer, w->Col, 128, w->X, w->Y, w->Width, w->Height);
 }
 
 static struct LWidgetVTABLE lbox_VTABLE = {

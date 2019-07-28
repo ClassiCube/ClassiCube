@@ -60,9 +60,6 @@ CC_API void Drawer2D_BmpScaled(Bitmap* dst, int x, int y, int width, int height,
 							   int scaleWidth, int scaleHeight);
 /* Fills the given area using pixels from the source bitmap. */
 CC_API void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src);
-
-/* Fills the given area with the given colour, then draws blended borders around it. */
-CC_API void Drawer2D_Rect(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
 /* Fills the area with the given colour. */
 CC_API void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
 

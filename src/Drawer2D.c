@@ -253,18 +253,6 @@ void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src) {
 	}
 }
 
-void Drawer2D_Rect(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height) {
-	/* Box contents are (x+1,y+1,width-1,height-1)   */
-	/* Then the box is surrounded by blended borders */
-	/* TODO: The pixels of corners is wrong.. */
-	Drawer2D_Clear(bmp, col, x + 1, y + 1, width - 1, height - 1);
-
-	Gradient_Blend(bmp, col, 128, x, y,          width + 1,  1);
-	Gradient_Blend(bmp, col, 128, x, y + height, width + 1,  1);
-	Gradient_Blend(bmp, col, 128, x,          y, 1, height + 1);
-	Gradient_Blend(bmp, col, 128, x + width,  y, 1, height + 1);
-}
-
 void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height) {
 	BitmapCol* row;
 	int xx, yy;
