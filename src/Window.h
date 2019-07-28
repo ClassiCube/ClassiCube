@@ -64,11 +64,8 @@ extern const void* Window_Handle;
 void Window_Init(void);
 /* Creates a GraphicsMode compatible with the default display device. */
 void GraphicsMode_MakeDefault(struct GraphicsMode* m);
-
-/* Creates the window as the given size at centre of the screen, with default graphics mode. */
-void Window_CreateSimple(int width, int height);
-/* Creates the window as the given size at the given position on screen. */
-void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode);
+/* Creates the window as the given size at centre of the screen. */
+void Window_Create(int width, int height);
 /* Sets the text of the titlebar above the window. */
 CC_API void Window_SetTitle(const String* title);
 /* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */

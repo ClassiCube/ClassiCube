@@ -726,7 +726,7 @@ static void Game_RunLoop(void) {
 #endif
 
 void Game_Run(int width, int height, const String* title) {
-	Window_CreateSimple(width, height);
+	Window_Create(width, height);
 	Window_SetTitle(title);
 	Window_SetVisible(true);
 

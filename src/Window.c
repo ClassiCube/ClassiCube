@@ -14,17 +14,8 @@ Rect2D Display_Bounds;
 int Window_X, Window_Y, Window_Width, Window_Height;
 bool Window_Exists, Window_Focused;
 const void* Window_Handle;
-
-void Window_CreateSimple(int width, int height) {
-	struct GraphicsMode mode;
-	int x, y;
-
-	x = Display_Bounds.X + (Display_Bounds.Width  - width)  / 2;
-	y = Display_Bounds.Y + (Display_Bounds.Height - height) / 2;
-	GraphicsMode_MakeDefault(&mode);
-
-	Window_Create(x, y, width, height, &mode);
-}
+#define Window_CentreX(width)  (Display_Bounds.X + (Display_Bounds.Width  - width)  / 2)
+#define Window_CentreY(height) (Display_Bounds.Y + (Display_Bounds.Height - height) / 2)
 
 #ifndef CC_BUILD_WEBCANVAS
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
@@ -360,13 +351,15 @@ void Window_Init(void) {
 	ReleaseDC(NULL, hdc);
 }
 
-void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
+void Window_Create(int width, int height) {
+	RECT r;
 	win_instance = GetModuleHandle(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 
 	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
-	RECT rect = { x, y, x + width, y + height };
-	AdjustWindowRect(&rect, CC_WIN_STYLE, false);
+	r.left = Window_CentreX(width);  r.right  = r.left + width;
+	r.top  = Window_CentreY(height); r.bottom = r.top  + height;
+	AdjustWindowRect(&r, CC_WIN_STYLE, false);
 
 	WNDCLASSEX wc = { 0 };
 	wc.cbSize    = sizeof(WNDCLASSEX);
@@ -385,8 +378,7 @@ void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mod
 	if (!atom) Logger_Abort2(GetLastError(), "Failed to register window class");
 
 	win_handle = CreateWindowEx(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
-		rect.left, rect.top, Rect_Width(rect), Rect_Height(rect),
-		NULL, NULL, win_instance, NULL);
+		r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL);
 
 	if (!win_handle) Logger_Abort2(GetLastError(), "Failed to create window");
 	Window_RefreshBounds();
@@ -801,11 +793,16 @@ void Window_Init(void) {
 	Display_BitsPerPixel  = DefaultDepth(display,  screen);
 }
 
-void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
+void Window_Create(int width, int height) {
 	XSetWindowAttributes attributes = { 0 };
 	XSizeHints hints = { 0 };
+	struct GraphicsMode mode;
 	uintptr_t addr;
-	int supported;
+	int supported, x, y;
+
+	x = Window_CentreX(width);
+	y = Window_CentreY(height);
+	GraphicsMode_MakeDefault(&mode);
 
 	/* Open a display connection to the X server, and obtain the screen and root window */
 	addr = (uintptr_t)win_display;
@@ -1746,13 +1743,13 @@ void Window_Init(void) {
 	Display_BitsPerPixel  = CGDisplayBitsPerPixel(display);
 }
 
-void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
+void Window_Create(int width, int height) {
 	Rect r;
 	OSStatus res;
 	ProcessSerialNumber psn;
 	
-	r.left = x; r.right  = x + width; 
-	r.top  = y; r.bottom = y + height;
+	r.left = Window_CentreX(width);  r.right  = r.left + width; 
+	r.top  = Window_CentreY(height); r.bottom = r.top  + height;
 	res = CreateNewWindow(kDocumentWindowClass,
 						  kWindowStandardDocumentAttributes | kWindowStandardHandlerAttribute |
 						  kWindowInWindowMenuAttribute | kWindowLiveResizeAttribute, &r, &win_handle);
@@ -2039,7 +2036,10 @@ void Window_Init(void) {
 	Display_BitsPerPixel  = SDL_BITSPERPIXEL(mode.format);
 }
 
-void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
+void Window_Create(int width, int height) {
+	int x = Window_CentreX(width);
+	int y = Window_CentreY(height);
+
 	/* TODO: Don't set this flag for launcher window */
 	win_handle = SDL_CreateWindow(NULL, x, y, width, height, SDL_WINDOW_OPENGL);
 	if (!win_handle) Window_SDLFail("creating window");
@@ -2654,7 +2654,7 @@ void Window_Init(void) {
 	);
 }
 
-void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
+void Window_Create(int width, int height) {
 	Window_Exists  = true;
 	Window_Focused = true;
 	Window_HookEvents();
@@ -2998,7 +2998,7 @@ void Window_Init(void) {
 	Display_DpiY         = JavaCallInt(env, "getDpiY", "()I", NULL);
 }
 
-void Window_Create(int x, int y, int width, int height, struct GraphicsMode* mode) {
+void Window_Create(int width, int height) {
 	Window_Exists = true;
 	/* actual window creation is done when APP_CMD_INIT_WINDOW is received */
 }
