@@ -542,10 +542,9 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 
 	idx = w->selectedIndex;
 	TableWidget_GetCoords(w, idx, &x, &y);
-	x += w->cellSize / 2; y += w->cellSize / 2;
 
-	x += Window_X; y += Window_Y;
-	Cursor_SetScreenPos(x, y);
+	x += w->cellSize / 2; y += w->cellSize / 2;
+	Cursor_SetPosition(x, y);
 }
 
 static void TableWidget_MakeBlockDesc(String* desc, BlockID block) {

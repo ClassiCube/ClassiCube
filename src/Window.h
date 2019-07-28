@@ -103,10 +103,8 @@ void Window_Close(void);
 /* Processes all pending window messages/events. */
 void Window_ProcessEvents(void);
 
-/* Gets the position of the cursor in screen coordinates. */
-Point2D Cursor_GetScreenPos(void);
-/* Sets the position of the cursor in screen coordinates. */
-void Cursor_SetScreenPos(int x, int y);
+/* Sets the position of the cursor. */
+void Cursor_SetPosition(int x, int y);
 /* Sets whether the cursor is visible when over this window. */
 /* NOTE: You MUST BE VERY CAREFUL with this! OS typically uses a counter for visibility,
 so setting invisible multiple times means you must then set visible multiple times. */

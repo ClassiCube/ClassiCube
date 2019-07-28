@@ -32,11 +32,11 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 #endif
 
 static Point2D cursorPrev;
-static void Window_CentreMousePosition(void) {
-	int cenX = Window_X + Window_Width  / 2;
-	int cenY = Window_Y + Window_Height / 2;
+/* Gets the position of the cursor in screen coordinates. */
+static Point2D Cursor_GetScreenPos(void);
 
-	Cursor_SetScreenPos(cenX, cenY);
+static void Window_CentreMousePosition(void) {
+	Cursor_SetPosition(Window_Width / 2, Window_Height / 2);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
 	cursorPrev = Cursor_GetScreenPos();
 }
@@ -402,7 +402,7 @@ void Window_SetTitle(const String* title) {
 }
 
 void Clipboard_GetText(String* value) {
-	/* retry up to 50 times*/
+	/* retry up to 50 times */
 	int i;
 	value->length = 0;
 
@@ -546,8 +546,10 @@ Point2D Cursor_GetScreenPos(void) {
 	POINT point; GetCursorPos(&point);
 	Point2D p = { point.x, point.y }; return p;
 }
-void Cursor_SetScreenPos(int x, int y) { SetCursorPos(x, y); }
-void Cursor_SetVisible(bool visible)   { ShowCursor(visible ? 1 : 0); }
+void Cursor_SetPosition(int x, int y) { 
+	SetCursorPos(x + Window_X, y + Window_Y); 
+}
+void Cursor_SetVisible(bool visible) { ShowCursor(visible); }
 
 void Window_ShowDialog(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
@@ -819,7 +821,7 @@ void Window_Create(int width, int height) {
 		KeyReleaseMask  | KeyPressMask    | KeymapStateMask   | PointerMotionMask |
 		FocusChangeMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask |
 		LeaveWindowMask | PropertyChangeMask;
-	win_visual = GLContext_SelectVisual(mode);
+	win_visual = GLContext_SelectVisual(&mode);
 
 	Platform_LogConst("Opening render window... ");
 	attributes.colormap   = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
@@ -1168,8 +1170,8 @@ Point2D Cursor_GetScreenPos(void) {
 	return root;
 }
 
-void Cursor_SetScreenPos(int x, int y) {
-	XWarpPointer(win_display, None, win_rootWin, 0, 0, 0, 0, x, y);
+void Cursor_SetPosition(int x, int y) {
+	XWarpPointer(win_display, None, win_rootWin, 0,0, 0,0, x + Window_X, y + Window_Y);
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
@@ -1921,9 +1923,10 @@ Point2D Cursor_GetScreenPos(void) {
 	return p;
 }
 
-void Cursor_SetScreenPos(int x, int y) {
+void Cursor_SetPosition(int x, int y) {
 	CGPoint point;
-	point.x = x; point.y = y;
+	point.x = x + Window_X;
+	point.y = y + Window_Y;
 	
 	CGAssociateMouseAndMouseCursorPosition(0);
 	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
@@ -2278,10 +2281,8 @@ Point2D Cursor_GetScreenPos(void) {
 	return p;
 }
 
-void Cursor_SetScreenPos(int x, int y) {
-	SDL_WarpMouseGlobal(x, y);
-	//x -= Window_X; y -= Window_Y;
-	//SDL_WarpMouseInWindow(win_handle, x, y);
+void Cursor_SetPosition(int x, int y) {
+	SDL_WarpMouseInWindow(win_handle, x, y);
 }
 
 void Cursor_SetVisible(bool visible) {
@@ -2739,7 +2740,7 @@ void Window_ProcessEvents(void) { }
 /* Not supported (or even used internally) */
 Point2D Cursor_GetScreenPos(void) { Point2D p = { 0,0 }; return p; }
 /* Not allowed to move cursor from javascript */
-void Cursor_SetScreenPos(int x, int y) { }
+void Cursor_SetPosition(int x, int y) { Mouse_X = x; Mouse_Y = y; }
 
 void Cursor_SetVisible(bool visible) {
 	if (visible) {
@@ -3048,7 +3049,7 @@ void Window_ProcessEvents(void) {
 Point2D Cursor_GetScreenPos(void) { 
 	Point2D p; p.X = Mouse_X; p.Y = Mouse_Y; return p; 
 }
-void Cursor_SetScreenPos(int x, int y) { Mouse_X = x; Mouse_Y = y; }
+void Cursor_SetPosition(int x, int y) { Mouse_X = x; Mouse_Y = y; }
 void Cursor_SetVisible(bool visible) { }
 
 void Window_ShowDialog(const char* title, const char* msg) {
