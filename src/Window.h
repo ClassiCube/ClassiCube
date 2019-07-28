@@ -53,10 +53,9 @@ int Display_ScaleX(int x);
 int Display_ScaleY(int y);
 struct GraphicsMode { int R, G, B, A, IsIndexed; };
 
-/* Client bounds of the window in screen coordinates. */
-/* Essentially, this is the area that can draw to (i.e. content area) */
-/* This area does NOT include borders and titlebar surrounding the window */
-extern int Window_X, Window_Y, Window_Width, Window_Height;
+/* Size of the content area of the window. (i.e. area that can draw to) */
+/* This area does NOT include borders and titlebar surrounding the window. */
+extern int Window_Width, Window_Height;
 /* Whether the window is actually valid (i.e. not destroyed). */
 extern bool Window_Exists;
 /* Whether the user is interacting with the window. */
@@ -104,6 +103,7 @@ void Window_Close(void);
 void Window_ProcessEvents(void);
 
 /* Sets the position of the cursor. */
+/* NOTE: This should be avoided because it is unsupported on some platforms. */
 void Cursor_SetPosition(int x, int y);
 /* Sets whether the cursor is visible when over this window. */
 /* NOTE: You MUST BE VERY CAREFUL with this! OS typically uses a counter for visibility,

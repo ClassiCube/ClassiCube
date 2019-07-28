@@ -11,15 +11,17 @@ int Display_DpiX = DISPLAY_DEFAULT_DPI;
 int Display_DpiY = DISPLAY_DEFAULT_DPI;
 Rect2D Display_Bounds;
 
-int Window_X, Window_Y, Window_Width, Window_Height;
-bool Window_Exists, Window_Focused;
-const void* Window_Handle;
-
-#define Window_CentreX(width)  (Display_Bounds.X + (Display_Bounds.Width  - width)  / 2)
-#define Window_CentreY(height) (Display_Bounds.Y + (Display_Bounds.Height - height) / 2)
-
 int Display_ScaleX(int x) { return x * Display_DpiX / DISPLAY_DEFAULT_DPI; }
 int Display_ScaleY(int y) { return y * Display_DpiY / DISPLAY_DEFAULT_DPI; }
+#define Display_CentreX(width)  (Display_Bounds.X + (Display_Bounds.Width  - width)  / 2)
+#define Display_CentreY(height) (Display_Bounds.Y + (Display_Bounds.Height - height) / 2)
+
+int Window_Width, Window_Height;
+static int windowX, windowY;
+bool Window_Exists, Window_Focused;
+const void* Window_Handle;
+/* Refreshes size (and optionally position) of the window. */
+static void Window_RefreshBounds(void);
 
 #ifndef CC_BUILD_WEBCANVAS
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
@@ -167,7 +169,7 @@ static void Window_RefreshBounds(void) {
 
 	/* GetClientRect always returns 0,0 for left,top (see MSDN) */
 	ClientToScreen(win_handle, &topLeft);
-	Window_X = topLeft.x; Window_Y = topLeft.y;
+	windowX = topLeft.x; windowY = topLeft.y;
 }
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -364,8 +366,8 @@ void Window_Create(int width, int height) {
 	height = Display_ScaleY(height);
 
 	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
-	r.left = Window_CentreX(width);  r.right  = r.left + width;
-	r.top  = Window_CentreY(height); r.bottom = r.top  + height;
+	r.left = Display_CentreX(width);  r.right  = r.left + width;
+	r.top  = Display_CentreY(height); r.bottom = r.top  + height;
 	AdjustWindowRect(&r, CC_WIN_STYLE, false);
 
 	WNDCLASSEX wc = { 0 };
@@ -550,7 +552,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 }
 
 void Cursor_SetPosition(int x, int y) { 
-	SetCursorPos(x + Window_X, y + Window_Y); 
+	SetCursorPos(x + windowX, y + windowY);
 }
 void Cursor_SetVisible(bool visible) { ShowCursor(visible); }
 
@@ -768,13 +770,10 @@ static void Window_RegisterAtoms(void) {
 
 static void Window_RefreshBounds(int width, int height) {
 	Window child;
-	int x, y;
-	
 	/* e->x and e->y are relative to parent window, which might not be root window */
 	/* e.g. linux mint + cinnamon, if you use /client resolution, e->x = 10, e->y = 36 */
 	/* So just always translate topleft to root window coordinates to avoid this */
-	XTranslateCoordinates(win_display, win_handle, win_rootWin, 0, 0, &x, &y, &child);
-	Window_X = x; Window_Y = y;
+	XTranslateCoordinates(win_display, win_handle, win_rootWin, 0,0, &windowX, &windowY, &child);
 
 	if (width != Window_Width || height != Window_Height) {
 		Window_Width  = width;
@@ -811,8 +810,8 @@ void Window_Create(int width, int height) {
 	uintptr_t addr;
 	int supported, x, y;
 
-	x = Window_CentreX(width);
-	y = Window_CentreY(height);
+	x = Display_CentreX(width);
+	y = Display_CentreY(height);
 	GraphicsMode_MakeDefault(&mode);
 
 	/* Open a display connection to the X server, and obtain the screen and root window */
@@ -1172,7 +1171,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 }
 
 void Cursor_SetPosition(int x, int y) {
-	XWarpPointer(win_display, None, win_handle, 0,0, 0,0, x, y);
+	XWarpPointer(win_display, None, win_rootWin, 0,0, 0,0, x + windowX, y + windowY);
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
@@ -1501,8 +1500,8 @@ static void Window_RefreshBounds(void) {
 	res = GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
 	if (res) Logger_Abort2(res, "Getting window clientbounds");
 
-	Window_X = r.left; Window_Width  = r.right  - r.left;
-	Window_Y = r.top;  Window_Height = r.bottom - r.top;
+	windowX = r.left; Window_Width  = r.right  - r.left;
+	windowY = r.top;  Window_Height = r.bottom - r.top;
 }
 
 static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
@@ -1594,7 +1593,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	
 	mouseX = (int)pt.x; mouseY = (int)pt.y;
 	/* kEventParamMouseLocation is in screen coordinates */
-	if (!win_fullscreen) { mouseX -= Window_X; mouseY -= Window_Y; }
+	if (!win_fullscreen) { mouseX -= windowX; mouseY -= windowY; }
 
 	/* mouseY is < 0 if user clicks or moves when over titlebar */
 	/* Don't intercept this, prevents clicking close/minimise/maximise from working */
@@ -1754,8 +1753,8 @@ void Window_Create(int width, int height) {
 	OSStatus res;
 	ProcessSerialNumber psn;
 	
-	r.left = Window_CentreX(width);  r.right  = r.left + width; 
-	r.top  = Window_CentreY(height); r.bottom = r.top  + height;
+	r.left = Display_CentreX(width);  r.right  = r.left + width; 
+	r.top  = Display_CentreY(height); r.bottom = r.top  + height;
 	res = CreateNewWindow(kDocumentWindowClass,
 						  kWindowStandardDocumentAttributes | kWindowStandardHandlerAttribute |
 						  kWindowInWindowMenuAttribute | kWindowLiveResizeAttribute, &r, &win_handle);
@@ -1920,8 +1919,8 @@ static void Cursor_GetRawPos(int* x, int* y) {
 
 void Cursor_SetPosition(int x, int y) {
 	CGPoint point;
-	point.x = x + Window_X;
-	point.y = y + Window_Y;
+	point.x = x + windowX;
+	point.y = y + windowY;
 	
 	CGAssociateMouseAndMouseCursorPosition(0);
 	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
@@ -2016,8 +2015,7 @@ static SDL_Window* win_handle;
 static bool win_rawMouse;
 
 static void Window_RefreshBounds(void) {
-	SDL_GetWindowPosition(win_handle, &Window_X,     &Window_Y);
-	SDL_GetWindowSize(win_handle,     &Window_Width, &Window_Height);
+	SDL_GetWindowSize(win_handle, &Window_Width, &Window_Height);
 }
 
 static void Window_SDLFail(const char* place) {
@@ -2041,8 +2039,8 @@ void Window_Init(void) {
 }
 
 void Window_Create(int width, int height) {
-	int x = Window_CentreX(width);
-	int y = Window_CentreY(height);
+	int x = Display_CentreX(width);
+	int y = Display_CentreY(height);
 
 	/* TODO: Don't set this flag for launcher window */
 	win_handle = SDL_CreateWindow(NULL, x, y, width, height, SDL_WINDOW_OPENGL);
@@ -2207,9 +2205,6 @@ static void Window_HandleWindowEvent(const SDL_Event* e) {
 	switch (e->window.event) {
         case SDL_WINDOWEVENT_EXPOSED:
             Event_RaiseVoid(&WindowEvents.Redraw);
-            break;
-        case SDL_WINDOWEVENT_MOVED:
-            Window_RefreshBounds();
             break;
         case SDL_WINDOWEVENT_SIZE_CHANGED:
             Window_RefreshBounds();
@@ -3430,8 +3425,8 @@ static void GLContext_SetFullscreen(void) {
 	ctx_windowWidth  = Window_Width;
 	ctx_windowHeight = Window_Height;
 
-	Window_X = Display_Bounds.X; Window_Width  = Display_Bounds.Width;
-	Window_Y = Display_Bounds.Y; Window_Height = Display_Bounds.Height;
+	windowX = Display_Bounds.X; Window_Width  = Display_Bounds.Width;
+	windowY = Display_Bounds.Y; Window_Height = Display_Bounds.Height;
 }
 
 void GLContext_Init(struct GraphicsMode* mode) {
