@@ -328,7 +328,7 @@ void Launcher_SaveSkin(void) {
 *----------------------------------------------------------Background-----------------------------------------------------*
 *#########################################################################################################################*/
 static bool useBitmappedFont;
-static Bitmap terrainBmp, fontBmp;
+static Bitmap dirtBmp, stoneBmp, fontBmp;
 #define TILESIZE 48
 
 static bool Launcher_SelectZipEntry(const String* path) {
@@ -339,20 +339,21 @@ static bool Launcher_SelectZipEntry(const String* path) {
 
 static void Launcher_LoadTextures(Bitmap* bmp) {
 	int tileSize = bmp->Width / 16;
-	Bitmap_Allocate(&terrainBmp, TILESIZE * 2, TILESIZE);
+	Bitmap_Allocate(&dirtBmp,  TILESIZE, TILESIZE);
+	Bitmap_Allocate(&stoneBmp, TILESIZE, TILESIZE);
 
 	/* Precompute the scaled background */
-	Drawer2D_BmpScaled(&terrainBmp, TILESIZE, 0, TILESIZE, TILESIZE,
+	Drawer2D_BmpScaled(&dirtBmp,  0, 0, TILESIZE, TILESIZE,
 						bmp, 2 * tileSize, 0, tileSize, tileSize,
 						TILESIZE, TILESIZE);
-	Drawer2D_BmpScaled(&terrainBmp, 0, 0, TILESIZE, TILESIZE,
+	Drawer2D_BmpScaled(&stoneBmp, 0, 0, TILESIZE, TILESIZE,
 						bmp, 1 * tileSize, 0, tileSize, tileSize,
 						TILESIZE, TILESIZE);
 
-	Gradient_Tint(&terrainBmp, 128, 64,
-				  TILESIZE, 0, TILESIZE, TILESIZE);
-	Gradient_Tint(&terrainBmp, 96, 96,
-				  0,        0, TILESIZE, TILESIZE);
+	Gradient_Tint(&dirtBmp, 128, 64,
+				  0, 0, TILESIZE, TILESIZE);
+	Gradient_Tint(&stoneBmp, 96, 96,
+				  0, 0, TILESIZE, TILESIZE);
 }
 
 static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* data, struct ZipState* s) {
@@ -370,7 +371,7 @@ static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* da
 			useBitmappedFont = !Options_GetBool(OPT_USE_CHAT_FONT, false);
 		}
 	} else if (String_CaselessEqualsConst(path, "terrain.png")) {
-		if (terrainBmp.Scan0) return 0;
+		if (dirtBmp.Scan0) return 0;
 		res = Png_Decode(&bmp, data);
 
 		if (res) {
@@ -419,19 +420,32 @@ void Launcher_TryLoadTexturePack(void) {
 
 	Launcher_ExtractTexturePack(&path);
 	/* user selected texture pack is missing some required .png files */
-	if (!fontBmp.Scan0 || !terrainBmp.Scan0) {
+	if (!fontBmp.Scan0 || !dirtBmp.Scan0) {
 		Launcher_ExtractTexturePack(&defZipPath);
 	}
 }
 
-static void Launcher_ClearTile(int x, int y, int width, int height, int srcX) {
-	Drawer2D_BmpTiled(&Launcher_Framebuffer, x, y, width, height,
-		&terrainBmp, srcX, 0, TILESIZE, TILESIZE);
+/* Fills the given area using pixels from the source bitmap, by repeatedly tiling the bitmap. */
+CC_NOINLINE static void Launcher_ClearTile(int x, int y, int width, int height, Bitmap* src) {
+	Bitmap* dst = &Launcher_Framebuffer;
+	BitmapCol* dstRow;
+	BitmapCol* srcRow;
+	int xx, yy;
+	if (!Drawer2D_Clamp(dst, &x, &y, &width, &height)) return;
+
+	for (yy = 0; yy < height; yy++) {
+		srcRow = Bitmap_GetRow(src, (y + yy) % TILESIZE);
+		dstRow = Bitmap_GetRow(dst, y + yy) + x;
+
+		for (xx = 0; xx < width; xx++) {
+			dstRow[xx] = srcRow[(x + xx) % TILESIZE];
+		}
+	}
 }
 
 void Launcher_ResetArea(int x, int y, int width, int height) {
-	if (Launcher_ClassicBackground && terrainBmp.Scan0) {
-		Launcher_ClearTile(x, y, width, height, 0);
+	if (Launcher_ClassicBackground && dirtBmp.Scan0) {
+		Launcher_ClearTile(x, y, width, height, &stoneBmp);
 	} else {
 		Gradient_Noise(&Launcher_Framebuffer, Launcher_BackgroundCol, 6, x, y, width, height);
 	}
@@ -449,9 +463,9 @@ void Launcher_ResetPixels(void) {
 		return;
 	}
 
-	if (Launcher_ClassicBackground && terrainBmp.Scan0) {
-		Launcher_ClearTile(0,        0, Window_Width,                 TILESIZE, TILESIZE);
-		Launcher_ClearTile(0, TILESIZE, Window_Width, Window_Height - TILESIZE, 0);
+	if (Launcher_ClassicBackground && dirtBmp.Scan0) {
+		Launcher_ClearTile(0,        0, Window_Width,                 TILESIZE, &dirtBmp);
+		Launcher_ClearTile(0, TILESIZE, Window_Width, Window_Height - TILESIZE, &stoneBmp);
 	} else {
 		Launcher_ResetArea(0, 0, Window_Width, Window_Height);
 	}

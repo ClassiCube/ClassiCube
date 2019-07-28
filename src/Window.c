@@ -17,7 +17,6 @@ int Display_ScaleY(int y) { return y * Display_DpiY / DISPLAY_DEFAULT_DPI; }
 #define Display_CentreY(height) (Display_Bounds.Y + (Display_Bounds.Height - height) / 2)
 
 int Window_Width, Window_Height;
-static int windowX, windowY;
 bool Window_Exists, Window_Focused;
 const void* Window_Handle;
 
@@ -129,7 +128,8 @@ static HINSTANCE win_instance;
 static HWND win_handle;
 static HDC win_DC;
 static bool suppress_resize;
-static Rect2D win_bounds;  /* Rectangle of window including titlebar and borders */
+static int win_totalWidth, win_totalHeight; /* Size of window including titlebar and borders */
+static int windowX, windowY;
 
 
 /*########################################################################################################################*
@@ -158,12 +158,12 @@ static void Window_RefreshBounds(void) {
 	POINT topLeft = { 0, 0 };
 
 	GetWindowRect(win_handle, &rect);
-	win_bounds.X = rect.left; win_bounds.Width  = rect.right - rect.left;
-	win_bounds.Y = rect.top;  win_bounds.Height = rect.bottom - rect.top;
+	win_totalWidth  = Rect_Width(rect);
+	win_totalHeight = Rect_Height(rect);
 
 	GetClientRect(win_handle, &rect);
-	Window_Width  = rect.right  - rect.left;
-	Window_Height = rect.bottom - rect.top;
+	Window_Width  = Rect_Width(rect);
+	Window_Height = Rect_Height(rect);
 
 	/* GetClientRect always returns 0,0 for left,top (see MSDN) */
 	ClientToScreen(win_handle, &topLeft);
@@ -193,7 +193,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	{
 		WINDOWPOS* pos = (WINDOWPOS*)lParam;
 		if (pos->hwnd != win_handle) break;
-		bool sized = pos->cx != win_bounds.Width || pos->cy != win_bounds.Height;
+		bool sized = pos->cx != win_totalWidth || pos->cy != win_totalHeight;
 
 		Window_RefreshBounds();
 		if (sized && !suppress_resize) Event_RaiseVoid(&WindowEvents.Resized);
@@ -767,12 +767,6 @@ static void Window_RegisterAtoms(void) {
 }
 
 static void Window_RefreshBounds(int width, int height) {
-	Window child;
-	/* e->x and e->y are relative to parent window, which might not be root window */
-	/* e.g. linux mint + cinnamon, if you use /client resolution, e->x = 10, e->y = 36 */
-	/* So just always translate topleft to root window coordinates to avoid this */
-	XTranslateCoordinates(win_display, win_handle, win_rootWin, 0,0, &windowX, &windowY, &child);
-
 	if (width != Window_Width || height != Window_Height) {
 		Window_Width  = width;
 		Window_Height = height;
@@ -1169,7 +1163,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 }
 
 void Cursor_SetPosition(int x, int y) {
-	XWarpPointer(win_display, None, win_rootWin, 0,0, 0,0, x + windowX, y + windowY);
+	XWarpPointer(win_display, None, win_handle, 0, 0, 0, 0, x, y);
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
@@ -1459,7 +1453,9 @@ void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 #include <dlfcn.h>
 
 static WindowRef win_handle;
+static int windowX, windowY;
 static bool win_fullscreen;
+
 /* fullscreen is tied to OpenGL context unfortunately */
 static void GLContext_UnsetFullscreen(void);
 static void GLContext_SetFullscreen(void);

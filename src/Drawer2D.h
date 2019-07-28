@@ -58,11 +58,6 @@ CC_API void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
 CC_API void Drawer2D_BmpScaled(Bitmap* dst, int x, int y, int width, int height,
 							   Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight,
 							   int scaleWidth, int scaleHeight);
-/* Fills the given area using pixels from a region in the source bitmap, by repeatedly tiling the region. */
-/* For example, if area was 12x5 and region was 5x5, region gets drawn at (0,0), (5,0), (10,0) */
-/* NOTE: The tiling origin is at (0, 0) not at (x, y) */
-CC_API void Drawer2D_BmpTiled(Bitmap* dst, int x, int y, int width, int height,
-							  Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight);
 /* Fills the given area using pixels from the source bitmap. */
 CC_API void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src);
 
