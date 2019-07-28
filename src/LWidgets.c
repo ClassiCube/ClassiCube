@@ -576,6 +576,7 @@ void LLabel_SetText(struct LLabel* w, const String* text) {
 static void LBox_Draw(void* widget) {
 	struct LBox* w = (struct LBox*)widget;
 	Drawer2D_Rect(&Launcher_Framebuffer, w->Col, w->X, w->Y, w->Width, w->Height);
+	//Gradient_Blend(&Launcher_Framebuffer, w->Col, 128, w->X, w->Y, w->Width, w->Height);
 }
 
 static struct LWidgetVTABLE lbox_VTABLE = {
@@ -951,14 +952,14 @@ static void LTable_MouseMove(void* widget, int deltaX, int deltaY, bool wasOver)
 
 		w->TopRow = row;
 		LTable_ClampTopRow(w);
-		LWidget_Redraw(w);
+		LWidget_Draw(w);
 	} else if (w->DraggingColumn >= 0) {
 		if (!deltaX || x >= w->X + w->Width - 20) return;
 		col = w->DraggingColumn;
 
 		w->Columns[col].width += deltaX;
 		Math_Clamp(w->Columns[col].width, 20, w->Width - 20);
-		LWidget_Redraw(w);
+		LWidget_Draw(w);
 	}
 }
 
