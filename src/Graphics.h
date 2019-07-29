@@ -151,7 +151,7 @@ void Gfx_SetFpsLimit(bool value, float minFrameMillis);
 /* NOTE: This may require recreating the context depending on the backend. */
 void Gfx_OnWindowResize(void);
 /* Gets information about the user's GPU and current backend state. */
-/* Backend state may be depth buffer bits, current free memory, etc. */
+/* Backend state may include depth buffer bits, free memory, etc. */
 /* NOTE: lines must be an array of at least GFX_APIINFO_LINES */
 void Gfx_GetApiInfo(String* lines);
 

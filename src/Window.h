@@ -140,7 +140,7 @@ void Window_DisableRawMouse(void);
 
 #ifdef CC_BUILD_GL
 /* Initialises an OpenGL context that most closely matches the input arguments. */
-/* NOTE: You must have created a window beforehand, as the GL context is attached to the window. */
+/* NOTE: You must have created the window beforehand, as the GL context is attached to the window. */
 void GLContext_Init(struct GraphicsMode* mode);
 /* Updates the OpenGL context after the window is resized. */
 void GLContext_Update(void);
@@ -153,13 +153,13 @@ void GLContext_Free(void);
 #define GLCONTEXT_DEFAULT_DEPTH 24
 #define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 /* Returns the address of a function pointer for the given OpenGL function. */
-/* NOTE: The platform may still return an address for unsupported functions. 
-You must check the OpenGL version and/or GL_EXTENSIONS string for actual support! */
+/* NOTE: The implementation may still return an address for unsupported functions. */
+/* You MUST check the OpenGL version and/or GL_EXTENSIONS string for actual support! */
 void* GLContext_GetAddress(const char* function);
 /* Swaps the front and back buffer, displaying the back buffer on screen. */
 bool GLContext_SwapBuffers(void);
-/* Sets whether synchronisation with the monitor is used. */
-/* NOTE: The underlying platform may choose to still ignore this. */
+/* Sets whether synchronisation with the monitor is enabled. */
+/* NOTE: The implementation may choose to still ignore this. */
 void GLContext_SetFpsLimit(bool vsync, float minFrameMs);
 #endif
 #endif
