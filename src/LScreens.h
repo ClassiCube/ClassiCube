@@ -1,7 +1,5 @@
 #ifndef CC_LSCREENS_H
 #define CC_LSCREENS_H
-#include "Http.h"
-#include "String.h"
 #include "Input.h"
 /* Implements screens/menus for the launcher.
 	Copyright 2014-2019 ClassiCube | Licensed under BSD-3

@@ -190,39 +190,6 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 }
 
 
-/*########################################################################################################################*
-*--------------------------------------------------------Widget helpers---------------------------------------------------*
-*#########################################################################################################################*/
-CC_NOINLINE static void LScreen_Button(struct LScreen* s, struct LButton* w, int width, int height, const char* text) {
-	LButton_Init(w, width, height);
-	LButton_SetConst(w, text);
-	s->widgets[s->numWidgets++] = (struct LWidget*)w;
-}
-
-CC_NOINLINE static void LScreen_Label(struct LScreen* s, struct LLabel* w, const char* text) {
-	LLabel_Init(w);
-	LLabel_SetConst(w, text);
-	s->widgets[s->numWidgets++] = (struct LWidget*)w;
-}
-
-CC_NOINLINE static void LScreen_Input(struct LScreen* s, struct LInput* w, int width, const char* hintText) {
-	LInput_Init(w, width, 30, hintText);
-	s->widgets[s->numWidgets++] = (struct LWidget*)w;
-}
-
-CC_NOINLINE static void LScreen_Box(struct LScreen* s, struct LBox* w, int width, int height) {
-	LBox_Init(w, width, height);
-	s->widgets[s->numWidgets++] = (struct LWidget*)w;
-}
-
-CC_NOINLINE static void LScreen_Slider(struct LScreen* s, struct LSlider* w, int width, int height,
-									  int initValue, int maxValue, BitmapCol progressCol) {
-	LSlider_Init(w, width, height);
-	w->Value = initValue; w->MaxValue = maxValue;
-	w->ProgressCol = progressCol;
-	s->widgets[s->numWidgets++] = (struct LWidget*)w;
-}
-
 static void SwitchToChooseMode(void* w, int x, int y) {
 	Launcher_SetScreen(ChooseModeScreen_MakeInstance(false));
 }
@@ -286,24 +253,24 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
-	LScreen_Label(s_, &s->lblTitle, "");
-	LScreen_Box(s_,   &s->seps[0], 490, 2);
-	LScreen_Box(s_,   &s->seps[1], 490, 2);
+	LLabel_Init(s_, &s->lblTitle, "");
+	LBox_Init(s_,   &s->seps[0], 490, 2);
+	LBox_Init(s_,   &s->seps[1], 490, 2);
 
-	LScreen_Button(s_, &s->btnEnhanced, 145, 35, "Enhanced");
-	LScreen_Label(s_,  &s->lblEnhanced[0], "&eEnables custom blocks, changing env");
-	LScreen_Label(s_,  &s->lblEnhanced[1], "&esettings, longer messages, and more");
+	LButton_Init(s_, &s->btnEnhanced, 145, 35, "Enhanced");
+	LLabel_Init(s_,  &s->lblEnhanced[0], "&eEnables custom blocks, changing env");
+	LLabel_Init(s_,  &s->lblEnhanced[1], "&esettings, longer messages, and more");
 
-	LScreen_Button(s_, &s->btnClassicHax, 145, 35, "Classic +hax");
-	LScreen_Label(s_,  &s->lblClassicHax[0], "&eSame as Classic mode, except that");
-	LScreen_Label(s_,  &s->lblClassicHax[1], "&ehacks (noclip/fly/speed) are enabled");
+	LButton_Init(s_, &s->btnClassicHax, 145, 35, "Classic +hax");
+	LLabel_Init(s_,  &s->lblClassicHax[0], "&eSame as Classic mode, except that");
+	LLabel_Init(s_,  &s->lblClassicHax[1], "&ehacks (noclip/fly/speed) are enabled");
 
-	LScreen_Button(s_, &s->btnClassic, 145, 35, "Classic");
-	LScreen_Label(s_,  &s->lblClassic[0], "&eOnly uses blocks and features from");
-	LScreen_Label(s_,  &s->lblClassic[1], "&ethe original minecraft classic");
+	LButton_Init(s_, &s->btnClassic, 145, 35, "Classic");
+	LLabel_Init(s_,  &s->lblClassic[0], "&eOnly uses blocks and features from");
+	LLabel_Init(s_,  &s->lblClassic[1], "&ethe original minecraft classic");
 
-	LScreen_Label(s_,  &s->lblHelp, "&eClick &fEnhanced &eif you're not sure which mode to choose.");
-	LScreen_Button(s_, &s->btnBack, 80, 35, "Back");
+	LLabel_Init(s_,  &s->lblHelp, "&eClick &fEnhanced &eif you're not sure which mode to choose.");
+	LButton_Init(s_, &s->btnBack, 80, 35, "Back");
 
 	s->btnEnhanced.OnClick   = UseModeEnhanced;
 	s->btnClassicHax.OnClick = UseModeClassicHax;
@@ -463,22 +430,22 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	s->widgets = s->_widgets;
 	
 	for (i = 0; i < 5 * 3; i++) {
-		LScreen_Input(s_, &s->iptColours[i], 55, NULL);
+		LInput_Init(s_, &s->iptColours[i], 55, NULL);
 		s->iptColours[i].TextChanged = ColoursScreen_TextChanged;
 	}
 
-	LScreen_Label(s_, &s->lblNames[0], "Background");
-	LScreen_Label(s_, &s->lblNames[1], "Button border");
-	LScreen_Label(s_, &s->lblNames[2], "Button highlight");
-	LScreen_Label(s_, &s->lblNames[3], "Button");
-	LScreen_Label(s_, &s->lblNames[4], "Active button");
+	LLabel_Init(s_, &s->lblNames[0], "Background");
+	LLabel_Init(s_, &s->lblNames[1], "Button border");
+	LLabel_Init(s_, &s->lblNames[2], "Button highlight");
+	LLabel_Init(s_, &s->lblNames[3], "Button");
+	LLabel_Init(s_, &s->lblNames[4], "Active button");
 
-	LScreen_Label(s_, &s->lblRGB[0], "Red");
-	LScreen_Label(s_, &s->lblRGB[1], "Green");
-	LScreen_Label(s_, &s->lblRGB[2], "Blue");
+	LLabel_Init(s_, &s->lblRGB[0], "Red");
+	LLabel_Init(s_, &s->lblRGB[1], "Green");
+	LLabel_Init(s_, &s->lblRGB[2], "Blue");
 
-	LScreen_Button(s_, &s->btnDefault, 160, 35, "Default colours");
-	LScreen_Button(s_, &s->btnBack,    80,  35, "Back");
+	LButton_Init(s_, &s->btnDefault, 160, 35, "Default colours");
+	LButton_Init(s_, &s->btnBack,    80,  35, "Back");
 
 	s->btnDefault.OnClick = ColoursScreen_ResetAll;
 	s->btnBack.OnClick    = SwitchToSettings;
@@ -609,13 +576,13 @@ static void DirectConnectScreen_Init(struct LScreen* s_) {
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 
-	LScreen_Input(s_, &s->iptUsername, 330, "&gUsername..");
-	LScreen_Input(s_, &s->iptAddress,  330, "&gIP address:Port number..");
-	LScreen_Input(s_, &s->iptMppass,   330, "&gMppass..");
+	LInput_Init(s_, &s->iptUsername, 330, "&gUsername..");
+	LInput_Init(s_, &s->iptAddress,  330, "&gIP address:Port number..");
+	LInput_Init(s_, &s->iptMppass,   330, "&gMppass..");
 
-	LScreen_Button(s_, &s->btnConnect, 110, 35, "Connect");
-	LScreen_Button(s_, &s->btnBack,     80, 35, "Back");
-	LScreen_Label(s_,  &s->lblStatus, "");
+	LButton_Init(s_, &s->btnConnect, 110, 35, "Connect");
+	LButton_Init(s_, &s->btnBack,     80, 35, "Back");
+	LLabel_Init(s_,  &s->lblStatus, "");
 
 	s->btnConnect.OnClick = DirectConnectScreen_StartClient;
 	s->btnBack.OnClick    = SwitchToMain;
@@ -748,19 +715,19 @@ static void MainScreen_Init(struct LScreen* s_) {
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 
-	LScreen_Input(s_, &s->iptUsername, 280, "&gUsername..");
-	LScreen_Input(s_, &s->iptPassword, 280, "&gPassword..");
+	LInput_Init(s_, &s->iptUsername, 280, "&gUsername..");
+	LInput_Init(s_, &s->iptPassword, 280, "&gPassword..");
 
-	LScreen_Button(s_, &s->btnLogin, 100, 35, "Sign in");
-	LScreen_Label(s_,  &s->lblStatus, "");
+	LButton_Init(s_, &s->btnLogin, 100, 35, "Sign in");
+	LLabel_Init(s_,  &s->lblStatus, "");
 
-	LScreen_Button(s_, &s->btnResume,  100, 35, "Resume");
-	LScreen_Button(s_, &s->btnDirect,  200, 35, "Direct connect");
-	LScreen_Button(s_, &s->btnSPlayer, 200, 35, "Singleplayer");
+	LButton_Init(s_, &s->btnResume,  100, 35, "Resume");
+	LButton_Init(s_, &s->btnDirect,  200, 35, "Direct connect");
+	LButton_Init(s_, &s->btnSPlayer, 200, 35, "Singleplayer");
 
-	LScreen_Label(s_,  &s->lblUpdate, "");
-	LScreen_Button(s_, &s->btnOptions,  100, 35, "Options");
-	LScreen_Button(s_, &s->btnRegister, 100, 35, "Register");
+	LLabel_Init(s_,  &s->lblUpdate, "");
+	LButton_Init(s_, &s->btnOptions,  100, 35, "Options");
+	LButton_Init(s_, &s->btnRegister, 100, 35, "Register");
 	
 	s->btnLogin.OnClick    = MainScreen_Login;
 	s->btnResume.OnClick   = MainScreen_Resume;
@@ -985,15 +952,15 @@ static void ResourcesScreen_Init(struct LScreen* s_) {
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 
-	LScreen_Label(s_, &s->lblLine1, "Some required resources weren't found");
-	LScreen_Label(s_, &s->lblLine2, "Okay to download?");
-	LScreen_Label(s_, &s->lblStatus, "");
+	LLabel_Init(s_, &s->lblLine1, "Some required resources weren't found");
+	LLabel_Init(s_, &s->lblLine2, "Okay to download?");
+	LLabel_Init(s_, &s->lblStatus, "");
 	
-	LScreen_Button(s_, &s->btnYes, 70, 35, "Yes");
-	LScreen_Button(s_, &s->btnNo,  70, 35, "No");
+	LButton_Init(s_, &s->btnYes, 70, 35, "Yes");
+	LButton_Init(s_, &s->btnNo,  70, 35, "No");
 
-	LScreen_Button(s_, &s->btnCancel, 120, 35, "Cancel");
-	LScreen_Slider(s_, &s->sdrProgress, 200, 12, 0, 100, progressCol);
+	LButton_Init(s_, &s->btnCancel, 120, 35, "Cancel");
+	LSlider_Init(s_, &s->sdrProgress, 200, 12, progressCol);
 
 	s->btnCancel.Hidden   = true;
 	s->sdrProgress.Hidden = true;
@@ -1199,12 +1166,12 @@ static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->widgets = s->_widgets;
 
-	LScreen_Input(s_, &s->iptSearch, 370, "&gSearch servers..");
-	LScreen_Input(s_, &s->iptHash,   475, "&gclassicube.net/server/play/...");
+	LInput_Init(s_, &s->iptSearch, 370, "&gSearch servers..");
+	LInput_Init(s_, &s->iptHash,   475, "&gclassicube.net/server/play/...");
 
-	LScreen_Button(s_, &s->btnBack,    110, 30, "Back");
-	LScreen_Button(s_, &s->btnConnect, 130, 30, "Connect");
-	LScreen_Button(s_, &s->btnRefresh, 110, 30, "Refresh");
+	LButton_Init(s_, &s->btnBack,    110, 30, "Back");
+	LButton_Init(s_, &s->btnConnect, 130, 30, "Connect");
+	LButton_Init(s_, &s->btnRefresh, 110, 30, "Refresh");
 
 	s->btnBack.OnClick    = SwitchToMain;
 	s->btnConnect.OnClick = ServersScreen_Connect;
@@ -1338,16 +1305,16 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 
-	LScreen_Button(s_, &s->btnUpdates, 110, 35, "Updates");
-	LScreen_Label(s_,  &s->lblUpdates, "&eGet the latest stuff");
+	LButton_Init(s_, &s->btnUpdates, 110, 35, "Updates");
+	LLabel_Init(s_,  &s->lblUpdates, "&eGet the latest stuff");
 
-	LScreen_Button(s_, &s->btnMode, 110, 35, "Mode");
-	LScreen_Label(s_,  &s->lblMode, "&eChange the enabled features");
+	LButton_Init(s_, &s->btnMode, 110, 35, "Mode");
+	LLabel_Init(s_,  &s->lblMode, "&eChange the enabled features");
 
-	LScreen_Button(s_, &s->btnColours, 110, 35, "Colours");
-	LScreen_Label(s_,  &s->lblColours, "&eChange how the launcher looks");
+	LButton_Init(s_, &s->btnColours, 110, 35, "Colours");
+	LLabel_Init(s_,  &s->lblColours, "&eChange how the launcher looks");
 
-	LScreen_Button(s_, &s->btnBack, 80, 35, "Back");
+	LButton_Init(s_, &s->btnBack, 80, 35, "Back");
 
 	s->btnMode.OnClick    = SwitchToChooseMode;
 	s->btnUpdates.OnClick = SwitchToUpdates;
@@ -1519,21 +1486,21 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	if (s->numWidgets) { CheckUpdateTask_Run(); return; }
 
 	s->widgets = s->_widgets;
-	LScreen_Label(s_,  &s->lblYour, "Your build: (unknown)");
-	LScreen_Box(s_,    &s->seps[0],   320, 2);
-	LScreen_Box(s_,    &s->seps[1],   320, 2);
+	LLabel_Init(s_,  &s->lblYour, "Your build: (unknown)");
+	LBox_Init(s_,    &s->seps[0],   320, 2);
+	LBox_Init(s_,    &s->seps[1],   320, 2);
 
-	LScreen_Label(s_,  &s->lblRel, "Latest release: Checking..");
-	LScreen_Button(s_, &s->btnRel[0], 130, 35, "Direct3D 9");
-	LScreen_Button(s_, &s->btnRel[1], 130, 35, "OpenGL");
+	LLabel_Init(s_,  &s->lblRel, "Latest release: Checking..");
+	LButton_Init(s_, &s->btnRel[0], 130, 35, "Direct3D 9");
+	LButton_Init(s_, &s->btnRel[1], 130, 35, "OpenGL");
 
-	LScreen_Label(s_,  &s->lblDev, "Latest dev build: Checking..");
-	LScreen_Button(s_, &s->btnDev[0], 130, 35, "Direct3D 9");
-	LScreen_Button(s_, &s->btnDev[1], 130, 35, "OpenGL");
+	LLabel_Init(s_,  &s->lblDev, "Latest dev build: Checking..");
+	LButton_Init(s_, &s->btnDev[0], 130, 35, "Direct3D 9");
+	LButton_Init(s_, &s->btnDev[1], 130, 35, "OpenGL");
 
-	LScreen_Label(s_,  &s->lblInfo, "&eDirect3D 9 is recommended for Windows");
-	LScreen_Label(s_,  &s->lblStatus, "");
-	LScreen_Button(s_, &s->btnBack, 80, 35, "Back");
+	LLabel_Init(s_,  &s->lblInfo, "&eDirect3D 9 is recommended for Windows");
+	LLabel_Init(s_,  &s->lblStatus, "");
+	LButton_Init(s_, &s->btnBack, 80, 35, "Back");
 
 	s->btnRel[0].OnClick = UpdatesScreen_RelD3D9;
 	s->btnRel[1].OnClick = UpdatesScreen_RelOpenGL;

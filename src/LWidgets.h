@@ -6,6 +6,7 @@
 /* Describes and manages individual 2D GUI elements in the launcher.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
+struct LScreen;
 
 struct LWidgetVTABLE {
 	/* Called to draw contents of this widget */
@@ -54,7 +55,7 @@ struct LButton {
 	String Text;
 	Size2D _TextSize;
 };
-CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height);
+CC_NOINLINE void LButton_Init(struct LScreen* s, struct LButton* w, int width, int height, const char* text);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
 
 struct LInput;
@@ -76,19 +77,19 @@ struct LInput {
 	int _TextHeight;
 	char _TextBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LInput_Init(struct LInput* w, int width, int height, const char* hintText);
+CC_NOINLINE void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hintText);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text);
 
 /* Appends a character to the currently entered text. */
-CC_NOINLINE bool LInput_Append(struct LInput* w, char c);
+CC_NOINLINE void LInput_Append(struct LInput* w, char c);
 /* Appends a string to the currently entered text. */
-CC_NOINLINE bool LInput_AppendString(struct LInput* w, const String* str);
+CC_NOINLINE void LInput_AppendString(struct LInput* w, const String* str);
 /* Removes the character preceding the caret in the currently entered text. */
-CC_NOINLINE bool LInput_Backspace(struct LInput* w);
+CC_NOINLINE void LInput_Backspace(struct LInput* w);
 /* Removes the character at the caret in the currently entered text. */
-CC_NOINLINE bool LInput_Delete(struct LInput* w);
+CC_NOINLINE void LInput_Delete(struct LInput* w);
 /* Resets the currently entered text to an empty string. */
-CC_NOINLINE bool LInput_Clear(struct LInput* w);
+CC_NOINLINE void LInput_Clear(struct LInput* w);
 
 /* Represents non-interactable text. */
 struct LLabel {
@@ -98,7 +99,7 @@ struct LLabel {
 	Size2D _TextSize;
 	char _TextBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LLabel_Init(struct LLabel* w);
+CC_NOINLINE void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* text);
 CC_NOINLINE void LLabel_SetText(struct LLabel* w, const String* text);
 CC_NOINLINE void LLabel_SetConst(struct LLabel* w, const char* text);
 
@@ -107,15 +108,15 @@ struct LBox {
 	LWidget_Layout
 	BitmapCol Col;
 };
-CC_NOINLINE void LBox_Init(struct LBox* w, int width, int height);
+CC_NOINLINE void LBox_Init(struct LScreen* s, struct LBox* w, int width, int height);
 
 /* Represents a slider bar that may or may not be modifiable by the user. */
 struct LSlider {
 	LWidget_Layout
 	int Value, MaxValue;
-	BitmapCol ProgressCol;
+	BitmapCol Col;
 };
-CC_NOINLINE void LSlider_Init(struct LSlider* w, int width, int height);
+CC_NOINLINE void LSlider_Init(struct LScreen* s, struct LSlider* w, int width, int height, BitmapCol col);
 
 struct ServerInfo;
 struct DrawTextArgs;

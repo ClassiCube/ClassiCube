@@ -7,6 +7,7 @@
 #include "Funcs.h"
 #include "LWeb.h"
 #include "Platform.h"
+#include "LScreens.h"
 
 #ifndef CC_BUILD_WEB
 #define BORDER 1
@@ -141,11 +142,14 @@ static struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Hover, LButton_Draw, /* Hover  */
 	NULL, NULL                   /* Select */
 };
-void LButton_Init(struct LButton* w, int width, int height) {
+void LButton_Init(struct LScreen* s, struct LButton* w, int width, int height, const char* text) {
 	w->VTABLE = &lbutton_VTABLE;
 	w->TabSelectable = true;
 	w->Width  = Display_ScaleX(width);
 	w->Height = Display_ScaleY(height);
+
+	LButton_SetConst(w, text);
+	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
 void LButton_SetConst(struct LButton* w, const char* text) {
@@ -342,6 +346,7 @@ static void LInput_AdvanceCaretPos(struct LInput* w, bool forwards) {
 
 	w->CaretPos += (forwards ? 1 : -1);
 	if (w->CaretPos < 0 || w->CaretPos >= w->Text.length) w->CaretPos = -1;
+	LWidget_Redraw(w);
 }
 
 static void LInput_MoveCaretToCursor(struct LInput* w) {
@@ -398,33 +403,31 @@ static void LInput_CopyFromClipboard(String* text, void* widget) {
 	String_UNSAFE_TrimEnd(text);
 
 	if (w->ClipboardFilter) w->ClipboardFilter(text);
-	if (LInput_AppendString(w, text)) LWidget_Redraw(w);
+	LInput_AppendString(w, text);
 }
 
 static void LInput_KeyDown(void* widget, Key key, bool was) {
 	struct LInput* w = (struct LInput*)widget;
-	if (key == KEY_BACKSPACE && LInput_Backspace(w)) {
-		LWidget_Redraw(w);
-	} else if (key == KEY_DELETE && LInput_Delete(w)) {
-		LWidget_Redraw(w);
+	if (key == KEY_BACKSPACE) {
+		LInput_Backspace(w);
+	} else if (key == KEY_DELETE) {
+		LInput_Delete(w);
 	} else if (key == 'C' && Key_IsActionPressed()) {
 		if (w->Text.length) Clipboard_SetText(&w->Text);
 	} else if (key == 'V' && Key_IsActionPressed()) {
 		Clipboard_RequestText(LInput_CopyFromClipboard, w);
 	} else if (key == KEY_ESCAPE) {
-		if (LInput_Clear(w)) LWidget_Redraw(w);
+		LInput_Clear(w);
 	} else if (key == KEY_LEFT) {
 		LInput_AdvanceCaretPos(w, false);
-		LWidget_Redraw(w);
 	} else if (key == KEY_RIGHT) {
 		LInput_AdvanceCaretPos(w, true);
-		LWidget_Redraw(w);
 	}
 }
 
 static void LInput_KeyChar(void* widget, char c) {
 	struct LInput* w = (struct LInput*)widget;
-	if (LInput_Append(w, c)) LWidget_Redraw(w);
+	LInput_Append(w, c);
 }
 
 static struct LWidgetVTABLE linput_VTABLE = {
@@ -434,18 +437,19 @@ static struct LWidgetVTABLE linput_VTABLE = {
 	/* TODO: Don't redraw whole thing, just the outer border */
 	LInput_Select, LInput_Unselect  /* Select */
 };
-void LInput_Init(struct LInput* w, int width, int height, const char* hintText) {
+void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hintText) {
 	w->VTABLE = &linput_VTABLE;
 	w->TabSelectable = true;
 	String_InitArray(w->Text, w->_TextBuffer);
 	
 	w->Width    = Display_ScaleX(width);
-	w->Height   = Display_ScaleY(height);
+	w->Height   = Display_ScaleY(30);
 	w->MinWidth = w->Width;
 	LWidget_CalcPosition(w);
 
 	w->HintText = hintText;
 	w->CaretPos = -1;
+	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
 void LInput_SetText(struct LInput* w, const String* text_) {
@@ -476,24 +480,24 @@ static CC_NOINLINE bool LInput_AppendRaw(struct LInput* w, char c) {
 	return false;
 }
 
-bool LInput_Append(struct LInput* w, char c) {
+void LInput_Append(struct LInput* w, char c) {
 	bool appended = LInput_AppendRaw(w, c);
 	if (appended && w->TextChanged) w->TextChanged(w);
-	return appended;
+	if (appended) LWidget_Redraw(w);
 }
 
-bool LInput_AppendString(struct LInput* w, const String* str) {
+void LInput_AppendString(struct LInput* w, const String* str) {
 	int i, appended = 0;
 	for (i = 0; i < str->length; i++) {
 		if (LInput_AppendRaw(w, str->buffer[i])) appended++;
 	}
 
 	if (appended && w->TextChanged) w->TextChanged(w);
-	return appended > 0;
+	if (appended) LWidget_Redraw(w);
 }
 
-bool LInput_Backspace(struct LInput* w) {
-	if (w->Text.length == 0 || w->CaretPos == 0) return false;
+void LInput_Backspace(struct LInput* w) {
+	if (!w->Text.length || w->CaretPos == 0) return;
 
 	if (w->CaretPos == -1) {
 		String_DeleteAt(&w->Text, w->Text.length - 1);
@@ -505,27 +509,27 @@ bool LInput_Backspace(struct LInput* w) {
 
 	if (w->TextChanged) w->TextChanged(w);
 	if (w->CaretPos >= w->Text.length) w->CaretPos = -1;
-	return true;
+	LWidget_Redraw(w);
 }
 
-bool LInput_Delete(struct LInput* w) {
-	if (w->Text.length == 0 || w->CaretPos == -1) return false;
+void LInput_Delete(struct LInput* w) {
+	if (!w->Text.length || w->CaretPos == -1) return;
 
 	String_DeleteAt(&w->Text, w->CaretPos);
 	if (w->CaretPos == -1) w->CaretPos = 0;
 
 	if (w->TextChanged) w->TextChanged(w);
 	if (w->CaretPos >= w->Text.length) w->CaretPos = -1;
-	return true;
+	LWidget_Redraw(w);
 }
 
-bool LInput_Clear(struct LInput* w) {
-	if (w->Text.length == 0) return false;
+void LInput_Clear(struct LInput* w) {
+	if (!w->Text.length) return;
 	w->Text.length = 0;
 
 	if (w->TextChanged) w->TextChanged(w);
 	w->CaretPos = -1;
-	return true;
+	LWidget_Redraw(w);
 }
 
 
@@ -548,10 +552,13 @@ static struct LWidgetVTABLE llabel_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LLabel_Init(struct LLabel* w) {
+void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* text) {
 	w->VTABLE = &llabel_VTABLE;
+	w->Font   = &Launcher_TextFont;
+
 	String_InitArray(w->Text, w->_TextBuffer);
-	w->Font  = &Launcher_TextFont;
+	LLabel_SetConst(w, text);
+	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
 void LLabel_SetText(struct LLabel* w, const String* text) {
@@ -585,10 +592,11 @@ static struct LWidgetVTABLE lbox_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LBox_Init(struct LBox* w, int width, int height) {
+void LBox_Init(struct LScreen* s, struct LBox* w, int width, int height) {
 	w->VTABLE = &lbox_VTABLE;
 	w->Width  = Display_ScaleX(width);
 	w->Height = Display_ScaleY(height);
+	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
 
@@ -637,7 +645,7 @@ static void LSlider_Draw(void* widget) {
 	LSlider_DrawBox(w);
 
 	curWidth = (int)((w->Width - BORDER2) * w->Value / w->MaxValue);
-	Drawer2D_Clear(&Launcher_Framebuffer, w->ProgressCol,
+	Drawer2D_Clear(&Launcher_Framebuffer, w->Col,
 				   w->X + BORDER, w->Y + BORDER, 
 				   curWidth,      w->Height - BORDER2);
 	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
@@ -649,11 +657,13 @@ static struct LWidgetVTABLE lslider_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LSlider_Init(struct LSlider* w, int width, int height) {
-	w->VTABLE = &lslider_VTABLE;
-	w->Width  = Display_ScaleX(width); 
-	w->Height = Display_ScaleY(height);
+void LSlider_Init(struct LScreen* s, struct LSlider* w, int width, int height, BitmapCol col) {
+	w->VTABLE   = &lslider_VTABLE;
+	w->Width    = Display_ScaleX(width); 
+	w->Height   = Display_ScaleY(height);
 	w->MaxValue = 100;
+	w->Col      = col;
+	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
 
