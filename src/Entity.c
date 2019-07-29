@@ -686,33 +686,21 @@ void Entities_DrawShadows(void) {
 *#########################################################################################################################*/
 struct _TabListData TabList;
 
-bool TabList_Valid(EntityID id) {
-	return TabList.PlayerNames[id] || TabList.ListNames[id] || TabList.GroupNames[id];
-}
+static void TabList_Delete(EntityID id) {
+	int i, index;
+	index = TabList.NameOffsets[id];
+	if (!index) return;
 
-static void TabList_RemoveAt(int index) {
-	int i;
-	StringsBuffer_Remove(&TabList.Buffer, index);
+	StringsBuffer_Remove(&TabList._buffer, index - 1);
+	StringsBuffer_Remove(&TabList._buffer, index - 2);
+	StringsBuffer_Remove(&TabList._buffer, index - 3);
 
 	for (i = 0; i < TABLIST_MAX_NAMES; i++) {
-		if (TabList.PlayerNames[i] == index) { TabList.PlayerNames[i] = 0; }
-		if (TabList.PlayerNames[i] > index)  { TabList.PlayerNames[i]--; }
-
-		if (TabList.ListNames[i] == index) { TabList.ListNames[i] = 0; }
-		if (TabList.ListNames[i] > index)  { TabList.ListNames[i]--; }
-
-		if (TabList.GroupNames[i] == index) { TabList.GroupNames[i] = 0; }
-		if (TabList.GroupNames[i] > index)  { TabList.GroupNames[i]--; }
+		if (TabList.NameOffsets[i] > index) TabList.NameOffsets[i] -= 3;
 	}
-}
 
-static void TabList_Delete(EntityID id) {
-	if (!TabList_Valid(id)) return;
-
-	TabList_RemoveAt(TabList.PlayerNames[id]);
-	TabList_RemoveAt(TabList.ListNames[id]);
-	TabList_RemoveAt(TabList.GroupNames[id]);
-	TabList.GroupRanks[id] = 0;
+	TabList.NameOffsets[id] = 0;
+	TabList.GroupRanks[id]  = 0;
 }
 
 void TabList_Remove(EntityID id) {
@@ -725,7 +713,7 @@ void TabList_Set(EntityID id, const String* player, const String* list, const St
 	uint8_t oldRank;
 	struct Event_Int* events;
 	
-	if (TabList_Valid(id)) {
+	if (TabList.NameOffsets[id]) {
 		oldPlayer = TabList_UNSAFE_GetPlayer(id);
 		oldList   = TabList_UNSAFE_GetList(id);
 		oldGroup  = TabList_UNSAFE_GetGroup(id);
@@ -741,21 +729,20 @@ void TabList_Set(EntityID id, const String* player, const String* list, const St
 	}
 	TabList_Delete(id);
 
-	TabList.PlayerNames[id] = TabList.Buffer.count; StringsBuffer_Add(&TabList.Buffer, player);
-	TabList.ListNames[id]   = TabList.Buffer.count; StringsBuffer_Add(&TabList.Buffer, list);
-	TabList.GroupNames[id]  = TabList.Buffer.count; StringsBuffer_Add(&TabList.Buffer, group);
-	TabList.GroupRanks[id]  = rank;
+	StringsBuffer_Add(&TabList._buffer, player);
+	StringsBuffer_Add(&TabList._buffer, list);
+	StringsBuffer_Add(&TabList._buffer, group);
 
+	TabList.NameOffsets[id] = TabList._buffer.count;
+	TabList.GroupRanks[id]  = rank;
 	Event_RaiseInt(events, id);
 }
 
-static void TabList_Free(void) { StringsBuffer_Clear(&TabList.Buffer); }
+static void TabList_Free(void) { StringsBuffer_Clear(&TabList._buffer); }
 static void TabList_Reset(void) {
-	Mem_Set(TabList.PlayerNames, 0, sizeof(TabList.PlayerNames));
-	Mem_Set(TabList.ListNames,   0, sizeof(TabList.ListNames));
-	Mem_Set(TabList.GroupNames,  0, sizeof(TabList.GroupNames));
+	Mem_Set(TabList.NameOffsets, 0, sizeof(TabList.NameOffsets));
 	Mem_Set(TabList.GroupRanks,  0, sizeof(TabList.GroupRanks));
-	StringsBuffer_Clear(&TabList.Buffer);
+	StringsBuffer_Clear(&TabList._buffer);
 }
 
 struct IGameComponent TabList_Component = {

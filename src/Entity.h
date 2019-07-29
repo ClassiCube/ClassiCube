@@ -151,28 +151,27 @@ void Entities_DrawShadows(void);
 #define TABLIST_MAX_NAMES 256
 /* Data for all entries in tab list */
 CC_VAR extern struct _TabListData {
-	/* Raw unformatted name (for Tab name auto complete) */
-	uint16_t PlayerNames[TABLIST_MAX_NAMES];
-	/* Formatted name for display in tab list. */
-	uint16_t ListNames[TABLIST_MAX_NAMES];
-	/* Name of the group this entry is in (e.g. rank name, map name) */
-	uint16_t GroupNames[TABLIST_MAX_NAMES];
+	/* Buffer indices for player/list/group names. */
+	/* Use TabList_UNSAFE_GetPlayer/List/Group to get these names. */
+	/* NOTE: An Offset of 0 means the entry is unused. */
+	uint16_t NameOffsets[TABLIST_MAX_NAMES];
 	/* Position/Order of this entry within the group. */
 	uint8_t  GroupRanks[TABLIST_MAX_NAMES];
-	StringsBuffer Buffer;
+	StringsBuffer _buffer;
 } TabList;
 
-/* Returns whether the tab list entry with the given ID is used at all. */
-CC_API bool TabList_Valid(EntityID id);
 /* Removes the tab list entry with the given ID, raising TabListEvents.Removed event. */
 CC_API void TabList_Remove(EntityID id);
 /* Sets the data for the tab list entry with the given id. */
 /* Raises TabListEvents.Changed if replacing, TabListEvents.Added if a new entry. */
 CC_API void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank);
 
-#define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList.Buffer, TabList.PlayerNames[id]);
-#define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList.Buffer, TabList.ListNames[id]);
-#define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList.Buffer, TabList.GroupNames[id]);
+/* Raw unformatted name (for Tab name auto complete) */
+#define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 3);
+/* Formatted name for display in tab list. */
+#define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 2);
+/* Name of the group this entry is in (e.g. rank name, map name) */
+#define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 1);
 
 /* Represents another entity in multiplayer */
 struct NetPlayer {

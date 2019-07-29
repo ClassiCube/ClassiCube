@@ -1688,12 +1688,11 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	numMatches = 0;
 
 	for (i = 0; i < TABLIST_MAX_NAMES; i++) {
-		EntityID id = (EntityID)i;
-		if (!TabList_Valid(id)) continue;
+		if (!TabList.NameOffsets[i]) continue;
 
 		name = TabList_UNSAFE_GetPlayer(i);
 		if (!String_CaselessContains(&name, &part)) continue;
-		matches[numMatches++] = id;
+		matches[numMatches++] = (EntityID)i;
 	}
 
 	if (numMatches == 1) {
@@ -2079,7 +2078,7 @@ static void PlayerListWidget_Init(void* widget) {
 	int id;
 
 	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
-		if (!TabList_Valid((EntityID)id)) continue;
+		if (!TabList.NameOffsets[id]) continue;
 		PlayerListWidget_AddName(w, (EntityID)id, -1);
 	}
 
