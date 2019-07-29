@@ -686,6 +686,7 @@ void Entities_DrawShadows(void) {
 *#########################################################################################################################*/
 struct _TabListData TabList;
 
+/* Removes the names from the names buffer for the given id. */
 static void TabList_Delete(EntityID id) {
 	int i, index;
 	index = TabList.NameOffsets[id];
@@ -695,16 +696,16 @@ static void TabList_Delete(EntityID id) {
 	StringsBuffer_Remove(&TabList._buffer, index - 2);
 	StringsBuffer_Remove(&TabList._buffer, index - 3);
 
+	/* Indices after this entry need to be shifted down */
 	for (i = 0; i < TABLIST_MAX_NAMES; i++) {
 		if (TabList.NameOffsets[i] > index) TabList.NameOffsets[i] -= 3;
 	}
-
-	TabList.NameOffsets[id] = 0;
-	TabList.GroupRanks[id]  = 0;
 }
 
 void TabList_Remove(EntityID id) {
 	TabList_Delete(id);
+	TabList.NameOffsets[id] = 0;
+	TabList.GroupRanks[id]  = 0;
 	Event_RaiseInt(&TabListEvents.Removed, id);
 }
 

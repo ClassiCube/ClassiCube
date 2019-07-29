@@ -116,7 +116,7 @@ static void LButton_Draw(void* widget) {
 
 	xOffset = w->Width  - w->_TextSize.Width;
 	yOffset = w->Height - w->_TextSize.Height;
-	DrawTextArgs_Make(&args, &w->Text, &w->Font, true);
+	DrawTextArgs_Make(&args, &w->Text, &Launcher_TitleFont, true);
 
 	LButton_DrawBackground(w);
 	LButton_DrawBorder(w);
@@ -141,19 +141,17 @@ static struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Hover, LButton_Draw, /* Hover  */
 	NULL, NULL                   /* Select */
 };
-void LButton_Init(struct LButton* w, const FontDesc* font, int width, int height) {
+void LButton_Init(struct LButton* w, int width, int height) {
 	w->VTABLE = &lbutton_VTABLE;
 	w->TabSelectable = true;
-	w->Font   = *font;
 	w->Width  = Display_ScaleX(width);
 	w->Height = Display_ScaleY(height);
-	String_InitArray(w->Text, w->_TextBuffer);
 }
 
-void LButton_SetText(struct LButton* w, const String* text) {
+void LButton_SetConst(struct LButton* w, const char* text) {
 	struct DrawTextArgs args;
-	String_Copy(&w->Text, text);
-	DrawTextArgs_Make(&args, text, &w->Font, true);
+	w->Text = String_FromReadonly(text);
+	DrawTextArgs_Make(&args, &w->Text, &Launcher_TitleFont, true);
 	w->_TextSize = Drawer2D_MeasureText(&args);
 }
 
@@ -237,7 +235,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 		Drawer2D_DrawText(&Launcher_Framebuffer, args, w->X + 5, y + 2);
 	} else {
 		args->text = String_FromReadonly(w->HintText);
-		args->font = w->HintFont;
+		args->font = Launcher_HintFont;
 
 		hintHeight = Drawer2D_MeasureText(args).Height;
 		y = w->Y + (w->Height - hintHeight) / 2;
@@ -256,7 +254,7 @@ static void LInput_Draw(void* widget) {
 
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
-	DrawTextArgs_Make(&args, &text, &w->Font, false);
+	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, false);
 
 	size = Drawer2D_MeasureText(&args);
 	w->Width       = max(w->MinWidth, size.Width + 20);
@@ -282,7 +280,7 @@ static Rect2D LInput_MeasureCaret(struct LInput* w) {
 
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
-	DrawTextArgs_Make(&args, &text, &w->Font, true);
+	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
 
 	r.X = w->X + 5;
 	r.Y = w->Y + w->Height - 5; r.Height = 2;
@@ -361,7 +359,7 @@ static void LInput_MoveCaretToCursor(struct LInput* w) {
 	LInput_GetText(w, &text);
 	x -= w->X; y -= w->Y;
 
-	DrawTextArgs_Make(&args, &text, &w->Font, true);
+	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
 	if (x >= Drawer2D_TextWidth(&args)) {
 		w->CaretPos = -1; return; 
 	}
@@ -436,18 +434,16 @@ static struct LWidgetVTABLE linput_VTABLE = {
 	/* TODO: Don't redraw whole thing, just the outer border */
 	LInput_Select, LInput_Unselect  /* Select */
 };
-void LInput_Init(struct LInput* w, const FontDesc* font, int width, int height, const char* hintText, const FontDesc* hintFont) {
+void LInput_Init(struct LInput* w, int width, int height, const char* hintText) {
 	w->VTABLE = &linput_VTABLE;
 	w->TabSelectable = true;
 	String_InitArray(w->Text, w->_TextBuffer);
-	w->Font  = *font;
 	
 	w->Width    = Display_ScaleX(width);
 	w->Height   = Display_ScaleY(height);
 	w->MinWidth = w->Width;
 	LWidget_CalcPosition(w);
 
-	w->HintFont = *hintFont;
 	w->HintText = hintText;
 	w->CaretPos = -1;
 }
@@ -460,7 +456,7 @@ void LInput_SetText(struct LInput* w, const String* text_) {
 	String_Copy(&w->Text, text_);
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
-	DrawTextArgs_Make(&args, &text, &w->Font, true);
+	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
 
 	size = Drawer2D_MeasureText(&args);
 	w->Width       = max(w->MinWidth, size.Width + 20);
@@ -541,7 +537,7 @@ static void LLabel_Draw(void* widget) {
 	struct DrawTextArgs args;
 	if (w->Hidden) return;
 
-	DrawTextArgs_Make(&args, &w->Text, &w->Font, true);
+	DrawTextArgs_Make(&args, &w->Text, w->Font, true);
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, w->X, w->Y);
 	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
@@ -552,10 +548,10 @@ static struct LWidgetVTABLE llabel_VTABLE = {
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LLabel_Init(struct LLabel* w, const FontDesc* font) {
+void LLabel_Init(struct LLabel* w) {
 	w->VTABLE = &llabel_VTABLE;
 	String_InitArray(w->Text, w->_TextBuffer);
-	w->Font  = *font;
+	w->Font  = &Launcher_TextFont;
 }
 
 void LLabel_SetText(struct LLabel* w, const String* text) {
@@ -563,10 +559,15 @@ void LLabel_SetText(struct LLabel* w, const String* text) {
 	Size2D size;
 	String_Copy(&w->Text, text);
 
-	DrawTextArgs_Make(&args, &w->Text, &w->Font, true);
+	DrawTextArgs_Make(&args, &w->Text, w->Font, true);
 	size = Drawer2D_MeasureText(&args);
 	w->Width = size.Width; w->Height = size.Height;
 	LWidget_CalcPosition(w);
+}
+
+void LLabel_SetConst(struct LLabel* w, const char* text) {
+	String str = String_FromReadonly(text);
+	LLabel_SetText(w, &str);
 }
 
 
@@ -849,7 +850,7 @@ static void LTable_DrawHeaders(struct LTable* w) {
 	struct DrawTextArgs args;
 	int i, x, y;
 
-	DrawTextArgs_MakeEmpty(&args, &w->HdrFont, true);
+	DrawTextArgs_MakeEmpty(&args, &Launcher_TextFont, true);
 	x = w->X; y = w->Y;
 
 	for (i = 0; i < w->NumColumns; i++) {
@@ -871,7 +872,7 @@ static void LTable_DrawRows(struct LTable* w) {
 	int i, x, y, row, end;
 
 	String_InitArray(str, strBuffer);
-	DrawTextArgs_Make(&args, &str, &w->RowFont, true);
+	DrawTextArgs_Make(&args, &str, w->RowFont, true);
 	y   = w->RowsBegY;
 	end = w->TopRow + w->VisibleRows;
 
@@ -1055,8 +1056,8 @@ static void LTable_StopDragging(void* widget) {
 
 void LTable_Reposition(struct LTable* w) {
 	int rowsHeight;
-	w->HdrHeight = Drawer2D_FontHeight(&w->HdrFont, true) + HDR_YPADDING;
-	w->RowHeight = Drawer2D_FontHeight(&w->RowFont, true) + ROW_YPADDING;
+	w->HdrHeight = Drawer2D_FontHeight(&Launcher_TextFont, true) + HDR_YPADDING;
+	w->RowHeight = Drawer2D_FontHeight(w->RowFont,         true) + ROW_YPADDING;
 
 	w->RowsBegY = w->Y + w->HdrHeight + w->GridlineHeight;
 	w->RowsEndY = w->Y + w->Height;
@@ -1082,13 +1083,11 @@ static struct LWidgetVTABLE ltable_VTABLE = {
 	LTable_MouseDown, LTable_StopDragging, /* Select */
 	LTable_MouseWheel,      /* Wheel */
 };
-void LTable_Init(struct LTable* w, const FontDesc* hdrFont, const FontDesc* rowFont) {
+void LTable_Init(struct LTable* w, FontDesc* rowFont) {
 	w->VTABLE     = &ltable_VTABLE;
 	w->Columns    = tableColumns;
 	w->NumColumns = Array_Elems(tableColumns);
-
-	w->HdrFont = *hdrFont;
-	w->RowFont = *rowFont;
+	w->RowFont    = rowFont;
 
 	w->ScrollbarWidth = Display_ScaleX(10);
 	w->GridlineWidth  = Display_ScaleX(2);

@@ -194,23 +194,19 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 *--------------------------------------------------------Widget helpers---------------------------------------------------*
 *#########################################################################################################################*/
 CC_NOINLINE static void LScreen_Button(struct LScreen* s, struct LButton* w, int width, int height, const char* text) {
-	String str = String_FromReadonly(text);
-	LButton_Init(w, &Launcher_TitleFont, width, height);
-	LButton_SetText(w, &str);
+	LButton_Init(w, width, height);
+	LButton_SetConst(w, text);
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
 CC_NOINLINE static void LScreen_Label(struct LScreen* s, struct LLabel* w, const char* text) {
-	String str = String_FromReadonly(text);
-	LLabel_Init(w, &Launcher_TextFont);
-	LLabel_SetText(w, &str);
+	LLabel_Init(w);
+	LLabel_SetConst(w, text);
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
-CC_NOINLINE static void LScreen_Input(struct LScreen* s, struct LInput* w, int width, bool password, const char* hintText) {
-	LInput_Init(w, &Launcher_TextFont, width, 30, 
-				hintText, &Launcher_HintFont);
-	w->Password = password;
+CC_NOINLINE static void LScreen_Input(struct LScreen* s, struct LInput* w, int width, const char* hintText) {
+	LInput_Init(w, width, 30, hintText);
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
@@ -281,7 +277,6 @@ static void UseModeClassicHax(void* w, int x, int y) { ChooseMode_Click(true,  t
 static void UseModeClassic(void* w, int x, int y)    { ChooseMode_Click(true,  false); }
 
 static void ChooseModeScreen_Init(struct LScreen* s_) {
-	static const String titleText = String_FromConst("Choose game mode");
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;	
 
 	s->lblHelp.Hidden = !s->firstTime;
@@ -315,8 +310,8 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 	s->btnClassic.OnClick    = UseModeClassic;
 	s->btnBack.OnClick       = SwitchToSettings;
 
-	s->lblTitle.Font = Launcher_TitleFont;
-	LLabel_SetText(&s->lblTitle, &titleText);
+	s->lblTitle.Font = &Launcher_TitleFont;
+	LLabel_SetConst(&s->lblTitle, "Choose game mode");
 }
 
 static void ChooseModeScreen_Reposition(struct LScreen* s_) {
@@ -468,7 +463,7 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	s->widgets = s->_widgets;
 	
 	for (i = 0; i < 5 * 3; i++) {
-		LScreen_Input(s_, &s->iptColours[i], 55, false, NULL);
+		LScreen_Input(s_, &s->iptColours[i], 55, NULL);
 		s->iptColours[i].TextChanged = ColoursScreen_TextChanged;
 	}
 
@@ -536,11 +531,9 @@ static struct DirectConnectScreen {
 	struct LWidget* _widgets[6];
 } DirectConnectScreen_Instance;
 
-CC_NOINLINE static void DirectConnectScreen_SetStatus(const char* msg) {
-	String str = String_FromReadonly(msg);
+CC_NOINLINE static void DirectConnectScreen_SetStatus(const char* text) {
 	struct LLabel* w = &DirectConnectScreen_Instance.lblStatus;
-
-	LLabel_SetText(w, &str);
+	LLabel_SetConst(w, text);
 	LWidget_Redraw(w);
 }
 
@@ -616,9 +609,9 @@ static void DirectConnectScreen_Init(struct LScreen* s_) {
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 
-	LScreen_Input(s_, &s->iptUsername, 330, false, "&gUsername..");
-	LScreen_Input(s_, &s->iptAddress,  330, false, "&gIP address:Port number..");
-	LScreen_Input(s_, &s->iptMppass,   330, false, "&gMppass..");
+	LScreen_Input(s_, &s->iptUsername, 330, "&gUsername..");
+	LScreen_Input(s_, &s->iptAddress,  330, "&gIP address:Port number..");
+	LScreen_Input(s_, &s->iptMppass,   330, "&gMppass..");
 
 	LScreen_Button(s_, &s->btnConnect, 110, 35, "Connect");
 	LScreen_Button(s_, &s->btnBack,     80, 35, "Back");
@@ -702,20 +695,16 @@ CC_NOINLINE static void MainScreen_Error(struct LWebTask* task, const char* acti
 }
 
 static void MainScreen_Login(void* w, int x, int y) {
-	static const String needUser = String_FromConst("&eUsername required");
-	static const String needPass = String_FromConst("&ePassword required");
-	static const String signIn   = String_FromConst("&e&eSigning in..");
-
 	struct MainScreen* s = &MainScreen_Instance;
 	String* user = &s->iptUsername.Text;
 	String* pass = &s->iptPassword.Text;
 
 	if (!user->length) {
-		LLabel_SetText(&s->lblStatus, &needUser);
+		LLabel_SetConst(&s->lblStatus, "&eUsername required");
 		LWidget_Redraw(&s->lblStatus); return;
 	}
 	if (!pass->length) {
-		LLabel_SetText(&s->lblStatus, &needPass);
+		LLabel_SetConst(&s->lblStatus, "&ePassword required");
 		LWidget_Redraw(&s->lblStatus); return;
 	}
 
@@ -724,7 +713,7 @@ static void MainScreen_Login(void* w, int x, int y) {
 	Options_SetSecure("launcher-cc-password", pass, user);
 
 	GetTokenTask_Run();
-	LLabel_SetText(&s->lblStatus, &signIn);
+	LLabel_SetConst(&s->lblStatus, "&eSigning in..");
 	LWidget_Redraw(&s->lblStatus);
 	s->signingIn = true;
 }
@@ -752,7 +741,6 @@ static void MainScreen_Singleplayer(void* w, int x, int y) {
 
 static void MainScreen_Init(struct LScreen* s_) {
 	String user, pass; char passBuffer[STRING_SIZE];
-	static const String update = String_FromConst("&eChecking..");
 	struct MainScreen* s = (struct MainScreen*)s_;
 
 	/* status should reset after user has gone to another menu */
@@ -760,8 +748,8 @@ static void MainScreen_Init(struct LScreen* s_) {
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 
-	LScreen_Input(s_, &s->iptUsername, 280, false, "&gUsername..");
-	LScreen_Input(s_, &s->iptPassword, 280, true,  "&gPassword..");
+	LScreen_Input(s_, &s->iptUsername, 280, "&gUsername..");
+	LScreen_Input(s_, &s->iptPassword, 280, "&gPassword..");
 
 	LScreen_Button(s_, &s->btnLogin, 100, 35, "Sign in");
 	LScreen_Label(s_,  &s->lblStatus, "");
@@ -782,8 +770,9 @@ static void MainScreen_Init(struct LScreen* s_) {
 	s->btnRegister.OnClick = MainScreen_Register;
 
 	/* need to set text here for right size */
-	s->lblUpdate.Font = Launcher_HintFont;
-	LLabel_SetText(&s->lblUpdate, &update);
+	s->lblUpdate.Font = &Launcher_HintFont;
+	LLabel_SetConst(&s->lblUpdate, "&eChecking..");
+	s->iptPassword.Password = true;
 	
 	String_InitArray(pass, passBuffer);
 	Options_UNSAFE_Get("launcher-cc-username", &user);
@@ -836,7 +825,7 @@ static void MainScreen_UnhoverWidget(struct LScreen* s_, struct LWidget* w) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 	if (s->signingIn || w != (struct LWidget*)&s->btnResume) return;
 
-	LLabel_SetText(&s->lblStatus, &String_Empty);
+	LLabel_SetConst(&s->lblStatus, "");
 	LWidget_Redraw(&s->lblStatus);
 }
 
@@ -854,9 +843,6 @@ CC_NOINLINE static uint32_t MainScreen_GetVersion(const String* version) {
 }
 
 static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
-	static const String needUpdate = String_FromConst("&aNew release");
-	static const String upToDate   = String_FromConst("&eUp to date");
-	static const String failed     = String_FromConst("&cCheck failed");
 	static const String currentStr = String_FromConst(GAME_APP_VER);
 	uint32_t latest, current;
 
@@ -867,9 +853,9 @@ static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
 	if (CheckUpdateTask.Base.Success) {
 		latest  = MainScreen_GetVersion(&CheckUpdateTask.LatestRelease);
 		current = MainScreen_GetVersion(&currentStr);
-		LLabel_SetText(&s->lblUpdate, latest > current ? &needUpdate : &upToDate);
+		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aNew release" : "&eUp to date");
 	} else {
-		LLabel_SetText(&s->lblUpdate, &failed);
+		LLabel_SetConst(&s->lblUpdate, "&cCheck failed");
 	}
 	LWidget_Redraw(&s->lblUpdate);
 }
@@ -887,7 +873,6 @@ static void MainScreen_TickGetToken(struct MainScreen* s) {
 }
 
 static void MainScreen_TickSignIn(struct MainScreen* s) {
-	static const String fetchMsg = String_FromConst("&eRetrieving servers list..");
 	if (!SignInTask.Base.Working)   return;
 	LWebTask_Tick(&SignInTask.Base);
 	if (!SignInTask.Base.Completed) return;
@@ -903,7 +888,7 @@ static void MainScreen_TickSignIn(struct MainScreen* s) {
 		}
 
 		FetchServersTask_Run();
-		LLabel_SetText(&s->lblStatus, &fetchMsg);
+		LLabel_SetConst(&s->lblStatus, "&eRetrieving servers list..");
 		LWidget_Redraw(&s->lblStatus);
 	} else {
 		MainScreen_Error(&SignInTask.Base, "signing in");
@@ -1017,7 +1002,7 @@ static void ResourcesScreen_Init(struct LScreen* s_) {
 	String_InitArray(str, buffer);
 	size = Resources_Size / 1024.0f;
 
-	s->lblStatus.Font = Launcher_HintFont;
+	s->lblStatus.Font = &Launcher_HintFont;
 	String_Format1(&str, "&eDownload size: %f2 megabytes", &size);
 	LLabel_SetText(&s->lblStatus, &str);
 
@@ -1160,13 +1145,12 @@ static void ServersScreen_Connect(void* w, int x, int y) {
 }
 
 static void ServersScreen_Refresh(void* w, int x, int y) {
-	static const String working = String_FromConst("&eWorking..");
 	struct LButton* btn;
 	if (FetchServersTask.Base.Working) return;
 
 	FetchServersTask_Run();
 	btn = &ServersScreen_Instance.btnRefresh;
-	LButton_SetText(btn, &working);
+	LButton_SetConst(btn, "&eWorking..");
 	LWidget_Redraw(btn);
 }
 
@@ -1215,8 +1199,8 @@ static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->widgets = s->_widgets;
 
-	LScreen_Input(s_, &s->iptSearch, 370, false, "&gSearch servers..");
-	LScreen_Input(s_, &s->iptHash,   475, false, "&gclassicube.net/server/play/...");
+	LScreen_Input(s_, &s->iptSearch, 370, "&gSearch servers..");
+	LScreen_Input(s_, &s->iptHash,   475, "&gclassicube.net/server/play/...");
 
 	LScreen_Button(s_, &s->btnBack,    110, 30, "Back");
 	LScreen_Button(s_, &s->btnConnect, 130, 30, "Connect");
@@ -1230,7 +1214,7 @@ static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	s->iptHash.TextChanged     = ServersScreen_HashChanged;
 	s->iptHash.ClipboardFilter = ServersScreen_HashFilter;
 
-	LTable_Init(&s->table, &Launcher_TextFont, &s->rowFont);
+	LTable_Init(&s->table,  &s->rowFont);
 	s->table.Filter       = &s->iptSearch.Text;
 	s->table.SelectedHash = &s->iptHash.Text;
 	s->table.OnSelectedChanged = ServersScreen_OnSelectedChanged;
@@ -1243,7 +1227,7 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	Drawer2D_MakeFont(&s->rowFont, 11, FONT_STYLE_NORMAL);
 
 	if (!s->numWidgets) ServersScreen_InitWidgets(s_);
-	s->table.RowFont = s->rowFont;
+	s->table.RowFont = &s->rowFont;
 	/* also resets hash and filter */
 	LTable_Reset(&s->table);
 
@@ -1252,8 +1236,6 @@ static void ServersScreen_Init(struct LScreen* s_) {
 }
 
 static void ServersScreen_Tick(struct LScreen* s_) {
-	static const String refresh = String_FromConst("Refresh");
-	static const String failed  = String_FromConst("&cFailed");
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	int count;
 	LScreen_Tick(s_);
@@ -1272,8 +1254,8 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 		LWidget_Draw(&s->table);
 	}
 
-	LButton_SetText(&s->btnRefresh, 
-				FetchServersTask.Base.Success ? &refresh : &failed);
+	LButton_SetConst(&s->btnRefresh, 
+				FetchServersTask.Base.Success ? "Refresh" : "&cFailed");
 	LWidget_Redraw(&s->btnRefresh);
 }
 

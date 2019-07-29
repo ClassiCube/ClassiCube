@@ -52,12 +52,10 @@ void LWidget_Redraw(void* widget);
 struct LButton {
 	LWidget_Layout
 	String Text;
-	FontDesc Font;
 	Size2D _TextSize;
-	char _TextBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LButton_Init(struct LButton* w, const FontDesc* font, int width, int height);
-CC_NOINLINE void LButton_SetText(struct LButton* w, const String* text);
+CC_NOINLINE void LButton_Init(struct LButton* w, int width, int height);
+CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
 
 struct LInput;
 struct LInput {
@@ -74,12 +72,11 @@ struct LInput {
 	/* Specifies the position that characters are inserted/deleted from. */
 	/* NOTE: -1 to insert/delete characters at end of the text. */
 	int CaretPos;
-	FontDesc Font, HintFont;
 	String Text;
 	int _TextHeight;
 	char _TextBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LInput_Init(struct LInput* w, const FontDesc* font, int width, int height, const char* hintText, const FontDesc* hintFont);
+CC_NOINLINE void LInput_Init(struct LInput* w, int width, int height, const char* hintText);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text);
 
 /* Appends a character to the currently entered text. */
@@ -96,13 +93,14 @@ CC_NOINLINE bool LInput_Clear(struct LInput* w);
 /* Represents non-interactable text. */
 struct LLabel {
 	LWidget_Layout
-	FontDesc Font;
+	FontDesc* Font;
 	String Text;
 	Size2D _TextSize;
 	char _TextBuffer[STRING_SIZE];
 };
-CC_NOINLINE void LLabel_Init(struct LLabel* w, const FontDesc* font);
+CC_NOINLINE void LLabel_Init(struct LLabel* w);
 CC_NOINLINE void LLabel_SetText(struct LLabel* w, const String* text);
+CC_NOINLINE void LLabel_SetConst(struct LLabel* w, const char* text);
 
 /* Represents a coloured rectangle. Usually used as a line separator. */
 struct LBox {
@@ -149,8 +147,8 @@ struct LTable {
 	struct LTableColumn* Columns;
 	/* Number of columns in the table. */
 	int NumColumns;
-	/* Fonts for text in header and rows. */
-	FontDesc RowFont, HdrFont;
+	/* Fonts for text in rows. */
+	FontDesc* RowFont;
 	/* Y start and end of rows and height of each row. */
 	int RowsBegY, RowsEndY, RowHeight;
 	/* Y height of headers. */
@@ -186,7 +184,7 @@ struct LTable {
 
 /* Initialises a table. */
 /* NOTE: Must also call LTable_Reset to make a table actually useful. */
-void LTable_Init(struct LTable* table, const FontDesc* hdrFont, const FontDesc* rowFont);
+void LTable_Init(struct LTable* table, FontDesc* rowFont);
 /* Resets state of a table (reset sorter, filter, etc) */
 void LTable_Reset(struct LTable* table);
 /* Adjusts Y position of rows and number of visible rows. */
