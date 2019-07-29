@@ -67,8 +67,8 @@ void GetTokenTask_Run(void);
 
 extern struct SignInTaskData {
 	struct LWebTask Base;
-	String Username; /* Username to sign in as. Changed to case correct username. */
-	String Error;    /* If sign in fails, the reason as to why. */
+	String Username;   /* Username to sign in as. Changed to case correct username. */
+	const char* Error; /* If sign in fails, the reason as to why. */
 } SignInTask;
 void SignInTask_Run(const String* user, const String* pass);
 

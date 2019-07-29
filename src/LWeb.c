@@ -264,16 +264,12 @@ struct SignInTaskData SignInTask;
 char userBuffer[STRING_SIZE];
 
 static void SignInTask_LogError(const String* str) {
-	static const String userErr = String_FromConst("&cWrong username or password");
-	static const String verErr  = String_FromConst("&cAccount verification required");
-	static const String unkErr  = String_FromConst("&cUnknown error occurred");
-
 	if (String_CaselessEqualsConst(str, "username") || String_CaselessEqualsConst(str, "password")) {
-		SignInTask.Error = userErr;
+		SignInTask.Error = "&cWrong username or password";
 	} else if (String_CaselessEqualsConst(str, "verification")) {
-		SignInTask.Error = verErr;
+		SignInTask.Error = "&cAccount verification required";
 	} else if (str->length) {
-		SignInTask.Error = unkErr;
+		SignInTask.Error = "&cUnknown error occurred";
 	}
 }
 
@@ -302,7 +298,7 @@ void SignInTask_Run(const String* user, const String* pass) {
 
 	LWebTask_Reset(&SignInTask.Base);
 	String_InitArray(SignInTask.Username, userBuffer);
-	SignInTask.Error.length = 0;
+	SignInTask.Error = NULL;
 
 	String_InitArray(tmp, tmpBuffer);
 	SignInTask_Append(&tmp, "username=",  user);

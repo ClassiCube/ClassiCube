@@ -844,8 +844,8 @@ static void MainScreen_TickSignIn(struct MainScreen* s) {
 	LWebTask_Tick(&SignInTask.Base);
 	if (!SignInTask.Base.Completed) return;
 
-	if (SignInTask.Error.length) {
-		LLabel_SetText(&s->lblStatus, &SignInTask.Error);
+	if (SignInTask.Error) {
+		LLabel_SetConst(&s->lblStatus, SignInTask.Error);
 		LWidget_Redraw(&s->lblStatus);
 	} else if (SignInTask.Base.Success) {
 		/* website returns case correct username */

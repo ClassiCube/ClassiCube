@@ -763,6 +763,7 @@ CC_NOINLINE static bool Fetcher_Get(const String* id, struct HttpRequest* req) {
 	Fetcher_Result     = req->Result;
 	Fetcher_StatusCode = req->StatusCode;
 
+	HttpRequest_Free(req);
 	Fetcher_Finish();
 	return false;
 }
