@@ -998,16 +998,19 @@ CC_NOINLINE static void ResourcesScreen_ResetArea(int x, int y, int width, int h
 	Launcher_MarkDirty(x, y, width, height);
 }
 
-#define RESOURCES_XSIZE 190
-#define RESOURCES_YSIZE 70
 static void ResourcesScreen_Draw(struct LScreen* s) {
-	BitmapCol backCol = BITMAPCOL_CONST( 12, 12,  12, 255);
+	BitmapCol backCol = BITMAPCOL_CONST(12, 12, 12, 255);
+	int x, y, width, height;
 
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
 					0, 0, Window_Width, Window_Height);
-	ResourcesScreen_ResetArea(
-		Window_Width / 2 - RESOURCES_XSIZE, Window_Height / 2 - RESOURCES_YSIZE,
-		RESOURCES_XSIZE * 2,                RESOURCES_YSIZE * 2);
+	width  = Display_ScaleX(380);
+	height = Display_ScaleY(140);
+
+	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  Window_Width);
+	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, Window_Height);
+
+	ResourcesScreen_ResetArea(x, y, width, height);
 	LScreen_Draw(s);
 }
 

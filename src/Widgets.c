@@ -1052,7 +1052,7 @@ static bool InputWidget_CheckCol(struct InputWidget* w, int index) {
 
 	code = w->text.buffer[index];
 	col  = w->text.buffer[index + 1];
-	return (code == '%' || code == '&') && Drawer2D_ValidColCode(col);
+	return (code == '%' || code == '&') && Drawer2D_GetCol(col).A;
 }
 
 static void InputWidget_BackspaceKey(struct InputWidget* w) {

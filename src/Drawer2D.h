@@ -85,13 +85,8 @@ CC_API void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* a
 CC_API void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used, int X, int Y);
 
 /* Returns whether the given colour code is used/valid. */
-bool Drawer2D_ValidColCodeAt(const String* text, int i);
-/* Returns whether the given colour code is used/valid. */
 /* NOTE: This can change if the server defines custom colour codes. */
-static CC_INLINE bool Drawer2D_ValidColCode(char c) {
-	return Drawer2D_GetCol(c).A > 0;
-}
-
+bool Drawer2D_ValidColCodeAt(const String* text, int i);
 /* Whether text is empty or consists purely of valid colour codes. */
 bool Drawer2D_IsEmptyText(const String* text);
 /* Returns the last valid colour code in the given input, or \0 if not found. */
