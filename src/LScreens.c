@@ -215,7 +215,7 @@ static void SwitchToUpdates(void* w, int x, int y) {
 *#########################################################################################################################*/
 static struct ChooseModeScreen {
 	LScreen_Layout
-	struct LBox seps[2];
+	struct LLine seps[2];
 	struct LButton btnEnhanced, btnClassicHax, btnClassic, btnBack;
 	struct LLabel  lblTitle, lblHelp, lblEnhanced[2], lblClassicHax[2], lblClassic[2];
 	bool firstTime;
@@ -253,9 +253,9 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
-	LLabel_Init(s_, &s->lblTitle, "");
-	LBox_Init(s_,   &s->seps[0], 490, 2);
-	LBox_Init(s_,   &s->seps[1], 490, 2);
+	LLabel_Init(s_,  &s->lblTitle, "");
+	LLine_Init(s_,   &s->seps[0], 490);
+	LLine_Init(s_,   &s->seps[1], 490);
 
 	LButton_Init(s_, &s->btnEnhanced, 145, 35, "Enhanced");
 	LLabel_Init(s_,  &s->lblEnhanced[0], "&eEnables custom blocks, changing env");
@@ -1049,8 +1049,7 @@ static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
 
 	if (progress == s->sdrProgress.Value) return;
 	s->sdrProgress.Value = progress;
-	s->sdrProgress.Hidden = false;
-	s->sdrProgress.VTABLE->Draw(&s->sdrProgress);
+	LWidget_Draw(&s->sdrProgress);
 }
 
 static void ResourcesScreen_Error(struct ResourcesScreen* s) {
@@ -1353,7 +1352,7 @@ struct LScreen* SettingsScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 static struct UpdatesScreen {
 	LScreen_Layout
-	struct LBox seps[2];
+	struct LLine seps[2];
 	struct LButton btnRel[2], btnDev[2], btnBack;
 	struct LLabel  lblYour, lblRel, lblDev, lblInfo, lblStatus;
 	struct LWidget* _widgets[12];
@@ -1490,8 +1489,8 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 
 	s->widgets = s->_widgets;
 	LLabel_Init(s_,  &s->lblYour, "Your build: (unknown)");
-	LBox_Init(s_,    &s->seps[0],   320, 2);
-	LBox_Init(s_,    &s->seps[1],   320, 2);
+	LLine_Init(s_,   &s->seps[0],   320);
+	LLine_Init(s_,   &s->seps[1],   320);
 
 	LLabel_Init(s_,  &s->lblRel, "Latest release: Checking..");
 	LButton_Init(s_, &s->btnRel[0], 130, 35, "Direct3D 9");

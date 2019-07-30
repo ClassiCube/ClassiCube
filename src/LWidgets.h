@@ -103,12 +103,12 @@ CC_NOINLINE void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* te
 CC_NOINLINE void LLabel_SetText(struct LLabel* w, const String* text);
 CC_NOINLINE void LLabel_SetConst(struct LLabel* w, const char* text);
 
-/* Represents a coloured rectangle. Usually used as a line separator. */
-struct LBox {
+/* Represents a coloured translucent line separator. */
+struct LLine {
 	LWidget_Layout
 	BitmapCol Col;
 };
-CC_NOINLINE void LBox_Init(struct LScreen* s, struct LBox* w, int width, int height);
+CC_NOINLINE void LLine_Init(struct LScreen* s, struct LLine* w, int width);
 
 /* Represents a slider bar that may or may not be modifiable by the user. */
 struct LSlider {

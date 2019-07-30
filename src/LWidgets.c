@@ -30,9 +30,12 @@ void LWidget_CalcPosition(void* widget) {
 
 void LWidget_Draw(void* widget) {
 	struct LWidget* w = (struct LWidget*)widget;
-	w->VTABLE->Draw(w);
 	w->Last.X = w->X; w->Last.Width  = w->Width;
 	w->Last.Y = w->Y; w->Last.Height = w->Height;
+
+	if (w->Hidden) return;
+	w->VTABLE->Draw(w);
+	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
 
 void LWidget_Redraw(void* widget) {
@@ -133,13 +136,13 @@ static void LButton_Draw(void* widget) {
 
 static void LButton_Hover(void* w, int x, int y, bool wasOver) { 
 	/* only need to redraw when changing from unhovered to hovered */	
-	if (!wasOver) LButton_Draw(w); 
+	if (!wasOver) LWidget_Draw(w); 
 }
 
 static struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Draw, NULL,
 	NULL, NULL,                  /* Key    */
-	LButton_Hover, LButton_Draw, /* Hover  */
+	LButton_Hover, LWidget_Draw, /* Hover  */
 	NULL, NULL                   /* Select */
 };
 void LButton_Init(struct LScreen* s, struct LButton* w, int width, int height, const char* text) {
@@ -252,9 +255,7 @@ static void LInput_Draw(void* widget) {
 	String text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	Size2D size;
-
 	BitmapCol white = BITMAPCOL_CONST(255, 255, 255, 255);
-	if (w->Hidden) return;
 
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
@@ -274,7 +275,6 @@ static void LInput_Draw(void* widget) {
 	Drawer2D_Cols['f'] = Drawer2D_Cols['0'];
 	LInput_DrawText(w, &args);
 	Drawer2D_Cols['f'] = Drawer2D_Cols['F'];
-	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
 
 static Rect2D LInput_MeasureCaret(struct LInput* w) {
@@ -386,14 +386,14 @@ static void LInput_Select(void* widget, bool wasSelected) {
 	LInput_MoveCaretToCursor((struct LInput*)widget);
 	/* TODO: Only draw outer border */
 	if (wasSelected) return;
-	LInput_Draw(widget);
+	LWidget_Draw(widget);
 	Window_OpenKeyboard();
 }
 
 static void LInput_Unselect(void* widget) {
 	caretStart = 0;
 	/* TODO: Only draw outer border */
-	LInput_Draw(widget);
+	LWidget_Draw(widget);
 	Window_CloseKeyboard();
 }
 
@@ -539,11 +539,9 @@ void LInput_Clear(struct LInput* w) {
 static void LLabel_Draw(void* widget) {
 	struct LLabel* w = (struct LLabel*)widget;
 	struct DrawTextArgs args;
-	if (w->Hidden) return;
 
 	DrawTextArgs_Make(&args, &w->Text, w->Font, true);
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, w->X, w->Y);
-	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
 
 static struct LWidgetVTABLE llabel_VTABLE = {
@@ -581,21 +579,21 @@ void LLabel_SetConst(struct LLabel* w, const char* text) {
 /*########################################################################################################################*
 *-------------------------------------------------------BoxWidget---------------------------------------------------------*
 *#########################################################################################################################*/
-static void LBox_Draw(void* widget) {
-	struct LBox* w = (struct LBox*)widget;
+static void LLine_Draw(void* widget) {
+	struct LLine* w = (struct LLine*)widget;
 	Gradient_Blend(&Launcher_Framebuffer, w->Col, 128, w->X, w->Y, w->Width, w->Height);
 }
 
-static struct LWidgetVTABLE lbox_VTABLE = {
-	LBox_Draw, NULL,
+static struct LWidgetVTABLE lline_VTABLE = {
+	LLine_Draw, NULL,
 	NULL, NULL, /* Key    */
 	NULL, NULL, /* Hover  */
 	NULL, NULL  /* Select */
 };
-void LBox_Init(struct LScreen* s, struct LBox* w, int width, int height) {
-	w->VTABLE = &lbox_VTABLE;
+void LLine_Init(struct LScreen* s, struct LLine* w, int width) {
+	w->VTABLE = &lline_VTABLE;
 	w->Width  = Display_ScaleX(width);
-	w->Height = Display_ScaleY(height);
+	w->Height = Display_ScaleY(2);
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
@@ -639,7 +637,6 @@ static void LSlider_DrawBox(struct LSlider* w) {
 static void LSlider_Draw(void* widget) {
 	struct LSlider* w = (struct LSlider*)widget;
 	int curWidth;
-	if (w->Hidden) return;
 
 	LSlider_DrawBoxBounds(w);
 	LSlider_DrawBox(w);
@@ -648,7 +645,6 @@ static void LSlider_Draw(void* widget) {
 	Drawer2D_Clear(&Launcher_Framebuffer, w->Col,
 				   w->X + BORDER, w->Y + BORDER, 
 				   curWidth,      w->Height - BORDER2);
-	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
 
 static struct LWidgetVTABLE lslider_VTABLE = {
