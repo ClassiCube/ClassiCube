@@ -325,6 +325,12 @@ char Drawer2D_LastCol(const String* text, int start) {
 }
 bool Drawer2D_IsWhiteCol(char c) { return c == '\0' || c == 'f' || c == 'F'; }
 
+/* Divides R/G/B by 4 */
+CC_NOINLINE static BitmapCol Drawer2D_ShadowCol(BitmapCol c) {
+	c.R >>= 2; c.G >>= 2; c.B >>= 2; 
+	return c;
+}
+
 #define Drawer2D_ShadowOffset(point) (point / 8)
 #define Drawer2D_XPadding(point) (Math_CeilDiv(point, 8))
 static int Drawer2D_Width(int point, char c) {
@@ -402,7 +408,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 
 	col = Drawer2D_Cols['f'];
 	if (shadow) {
-		col = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col, 0.25f);
+		col = Drawer2D_BlackTextShadows ? black : Drawer2D_ShadowCol(col);
 	}
 
 	for (i = 0; i < text.length; i++) {
@@ -410,7 +416,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
 			col = Drawer2D_GetCol(text.buffer[i + 1]);
 			if (shadow) {
-				col = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col, 0.25f);
+				col = Drawer2D_BlackTextShadows ? black : Drawer2D_ShadowCol(col);
 			}
 			i++; continue; /* skip over the colour code */
 		}
@@ -530,7 +536,7 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 
 		col = Drawer2D_GetCol(colCode);
 		if (args->useShadow) {
-			backCol = Drawer2D_BlackTextShadows ? black : BitmapCol_Scale(col, 0.25f);
+			backCol = Drawer2D_BlackTextShadows ? black : Drawer2D_ShadowCol(col);
 			Platform_TextDraw(args, bmp, x, y, backCol, true);
 		}
 

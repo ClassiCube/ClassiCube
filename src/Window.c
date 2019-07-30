@@ -19,6 +19,7 @@ int Display_ScaleY(int y) { return y * Display_DpiY / DISPLAY_DEFAULT_DPI; }
 int Window_Width, Window_Height;
 bool Window_Exists, Window_Focused;
 const void* Window_Handle;
+bool Window_SoftKeyboard;
 
 #ifndef CC_BUILD_WEBCANVAS
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
@@ -2979,6 +2980,7 @@ void Window_Init(void) {
 	JavaGetCurrentEnv(env);
 	JavaRegisterNatives(env, methods);
 
+	Window_SoftKeyboard  = true;
 	Display_BitsPerPixel = 32;
 	Display_DpiX         = JavaCallInt(env, "getDpiX", "()I", NULL);
 	Display_DpiY         = JavaCallInt(env, "getDpiY", "()I", NULL);

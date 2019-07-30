@@ -1199,6 +1199,9 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	LTable_Reset(&s->table);
 
 	ServersScreen_ReloadServers(s);
+	/* This is so typing on keyboard by default searchs server list */
+	/* But don't do that when it would cause on-screen keyboard to show */
+	if (Window_SoftKeyboard) return;
 	LScreen_SelectWidget(s_, (struct LWidget*)&s->iptSearch, false);
 }
 

@@ -62,6 +62,8 @@ extern bool Window_Exists;
 extern bool Window_Focused;
 /* Readonly platform-specific handle to the window. */
 extern const void* Window_Handle;
+/* Whether the platform only supports on-screen keyboard. */
+extern bool Window_SoftKeyboard;
 
 /* Initalises state for window. Also sets Display_ members. */
 void Window_Init(void);
@@ -140,7 +142,7 @@ void Window_DisableRawMouse(void);
 
 #ifdef CC_BUILD_GL
 /* Initialises an OpenGL context that most closely matches the input arguments. */
-/* NOTE: You must have created the window beforehand, as the GL context is attached to the window. */
+/* NOTE: You MUST have created the window beforehand, as the GL context is attached to the window. */
 void GLContext_Init(struct GraphicsMode* mode);
 /* Updates the OpenGL context after the window is resized. */
 void GLContext_Update(void);

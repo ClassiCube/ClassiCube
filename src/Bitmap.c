@@ -8,13 +8,6 @@
 #include "Errors.h"
 #include "Utils.h"
 
-BitmapCol BitmapCol_Scale(BitmapCol value, float t) {
-	value.R = (uint8_t)(value.R * t);
-	value.G = (uint8_t)(value.G * t);
-	value.B = (uint8_t)(value.B * t);
-	return value;
-}
-
 void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size) {
 	int x, y;
 	for (y = 0; y < size; y++) {

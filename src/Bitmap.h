@@ -18,8 +18,6 @@ typedef union BitmapCol_ {
 
 /* Whether components of two colours are all equal. */
 #define BitmapCol_Equals(a,b) ((a)._raw == (b)._raw)
-/* Scales RGB components of the given colour. */
-CC_API BitmapCol BitmapCol_Scale(BitmapCol value, float t);
 
 /* A 2D array of BitmapCol pixels */
 typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
