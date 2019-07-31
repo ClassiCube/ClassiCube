@@ -2328,8 +2328,8 @@ static void TextGroupWidget_Output(struct Portion bit, int lineBeg, int lineEnd,
 
 static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int target, struct Portion* portions) {
 	struct Portion* start = portions;	
-	int32_t begs[TEXTGROUPWIDGET_MAX_LINES];
-	int32_t ends[TEXTGROUPWIDGET_MAX_LINES];
+	int begs[TEXTGROUPWIDGET_MAX_LINES];
+	int ends[TEXTGROUPWIDGET_MAX_LINES];
 	struct Portion bit;
 	String line;
 	int nextStart, i, total = 0, end;

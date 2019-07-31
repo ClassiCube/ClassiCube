@@ -99,18 +99,6 @@ Vec3 Vec3_RotateZ(Vec3 v, float angle);
 static CC_INLINE bool Vec3_Equals(const Vec3* a, const Vec3* b) {
 	return a->X == b->X && a->Y == b->Y && a->Z == b->Z;
 }
-/* Whether any of the components of the two vectors differ. */
-static CC_INLINE bool Vec3_NotEquals(const Vec3* a, const Vec3* b) {
-	return a->X != b->X || a->Y != b->Y || a->Z != b->Z;
-}
-/* Whether all of the components of the two vectors are equal. */
-static CC_INLINE bool IVec3_Equals(const IVec3* a, const IVec3* b) {
-	return a->X == b->X && a->Y == b->Y && a->Z == b->Z;
-}
-/* Whether any of the components of the two vectors differ. */
-static CC_INLINE bool IVec3_NotEquals(const IVec3* a, const IVec3* b) {
-	return a->X != b->X || a->Y != b->Y || a->Z != b->Z;
-}
 
 void IVec3_Floor(IVec3* result, const Vec3* a);
 void IVec3_ToVec3(Vec3* result, const IVec3* a);

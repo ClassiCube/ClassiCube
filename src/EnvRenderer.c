@@ -360,7 +360,7 @@ static void EnvRenderer_UpdateSkybox(void) {
 int16_t* Weather_Heightmap;
 static GfxResourceID rain_tex, snow_tex, weather_vb;
 static double weather_accumulator;
-static IVec3 weather_lastPos;
+static IVec3 lastPos;
 
 #define WEATHER_EXTENT 4
 #define WEATHER_VERTS_COUNT 8 * (WEATHER_EXTENT * 2 + 1) * (WEATHER_EXTENT * 2 + 1)
@@ -463,8 +463,8 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	Gfx_BindTexture(weather == WEATHER_RAINY ? rain_tex : snow_tex);
 
 	IVec3_Floor(&pos, &Camera.CurrentPos);
-	moved = IVec3_NotEquals(&pos, &weather_lastPos);
-	weather_lastPos = pos;
+	moved   = pos.X != lastPos.X || pos.Y != lastPos.Y || pos.Z != lastPos.Z;
+	lastPos = pos;
 
 	/* Rain should extend up by 64 blocks, or to the top of the world. */
 	pos.Y += 64;
@@ -947,7 +947,7 @@ static void EnvRenderer_Reset(void) {
 
 	Mem_Free(Weather_Heightmap);
 	Weather_Heightmap = NULL;
-	weather_lastPos   = IVec3_MaxValue();
+	lastPos   = IVec3_MaxValue();
 }
 
 static void EnvRenderer_OnNewMapLoaded(void) {

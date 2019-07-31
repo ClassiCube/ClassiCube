@@ -581,7 +581,7 @@ static void MapRenderer_UpdateSortOrder(void) {
 	pos.Z = (pos.Z & ~CHUNK_MASK) + HALF_CHUNK_SIZE;
 
 	/* If in same chunk, don't need to recalculate sort order */
-	if (IVec3_Equals(&pos, &chunkPos)) return;
+	if (pos.X == chunkPos.X && pos.Y == chunkPos.Y && pos.Z == chunkPos.Z) return;
 	chunkPos = pos;
 	if (!MapRenderer_ChunksCount) return;
 
