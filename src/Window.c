@@ -2880,8 +2880,6 @@ static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 	if (win_handle) ANativeWindow_release(win_handle);
 
 	win_handle     = NULL;
-	Window_Focused = false;
-	Event_RaiseVoid(&WindowEvents.FocusChanged);
 	/* TODO: Do we Window_Close() here */
 	/* TODO: Gfx Lose context */
 	JavaCallVoid(env, "processedSurfaceDestroyed", "()V", NULL);
@@ -3567,6 +3565,12 @@ static void GLContext_InitSurface(void) {
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
 }
 
+static void GLContext_FreeSurface(void) {
+	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	eglDestroySurface(ctx_display, ctx_surface);
+	ctx_surface = NULL;
+}
+
 void GLContext_Init(struct GraphicsMode* mode) {
 	static EGLint contextAttribs[3] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	static EGLint attribs[19] = {
@@ -3593,9 +3597,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 }
 
 void GLContext_Update(void) {
-	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx_context);
-	eglDestroySurface(ctx_display, ctx_surface);
-	ctx_surface = NULL;
+	GLContext_FreeSurface();
 	GLContext_InitSurface();
 }
 
@@ -3605,9 +3607,8 @@ bool GLContext_TryRestore(void) {
 }
 
 void GLContext_Free(void) {
-	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	GLContext_FreeSurface();
 	eglDestroyContext(ctx_display, ctx_context);
-	eglDestroySurface(ctx_display, ctx_surface);
 	eglTerminate(ctx_display);
 }
 

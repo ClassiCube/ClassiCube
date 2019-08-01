@@ -994,13 +994,12 @@ static FUNC_GLBUFFERDATA    _glBufferData;
 static FUNC_GLBUFFERSUBDATA _glBufferSubData;
 #endif
 
-#define GL_TEXTURE_MAX_LEVEL 0x813D
-#ifndef CC_BUILD_WEB
-#define PIXEL_FORMAT 0x80E1 /* GL_BGRA_EXT */
-#else
+#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
 #define PIXEL_FORMAT GL_RGBA
+#else
+#define PIXEL_FORMAT 0x80E1 /* GL_BGRA_EXT */
 #endif
-static int gl_compare[8] = { GL_ALWAYS, GL_NOTEQUAL, GL_NEVER, GL_LESS, GL_LEQUAL, GL_EQUAL, GL_GEQUAL, GL_GREATER };
+#define GL_TEXTURE_MAX_LEVEL 0x813D
 
 typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
