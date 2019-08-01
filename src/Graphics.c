@@ -393,6 +393,7 @@ bool Gfx_TryRestoreContext(void) {
 	res = IDirect3DDevice9_Reset(device, &args);
 	if (res == D3DERR_DEVICELOST) return false;
 
+	if (res) Logger_Abort2(res, "Error recreating D3D9 context");
 	Gfx_RecreateContext();
 	return true;
 }
@@ -573,7 +574,7 @@ static bool gfx_depthTesting, gfx_depthWriting;
 
 void Gfx_SetFaceCulling(bool enabled) {
 	D3DCULL mode = enabled ? D3DCULL_CW : D3DCULL_NONE;
-	D3D9_SetRenderState(D3DRS_CULLMODE, mode, "D3D9_SetFaceCulling");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_CULLMODE, mode);
 }
 
 void Gfx_SetFog(bool enabled) {

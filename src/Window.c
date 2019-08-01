@@ -2872,6 +2872,7 @@ static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject s
 	win_handle = ANativeWindow_fromSurface(env, surface);
 	Window_RefreshBounds();
 	/* TODO: Restore context */
+	Event_RaiseVoid(&WindowEvents.Created);
 }
 
 static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {

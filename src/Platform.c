@@ -1620,8 +1620,11 @@ ReturnCode Process_StartOpen(const String* args) {
 ReturnCode Process_StartShell(void)         { return ERR_NOT_SUPPORTED; }
 ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_ANDROID
+static char gameArgsBuffer[512];
+static String gameArgs = String_FromArray(gameArgsBuffer);
+
 ReturnCode Process_Start(const String* path, const String* args) {
-	JavaCall_String_Void("startGame", args);
+	String_Copy(&gameArgs, args);
 	return 0; /* TODO: Is there a clean way of handling an error */
 }
 void Process_Exit(ReturnCode code) { exit(code); }
@@ -1688,6 +1691,8 @@ ReturnCode Process_StartOpen(const String* args) {
 	return Process_Start(&path, args);
 }
 ReturnCode Process_StartShell(void) {
+	/* There isn't a standardised way to "run command in user's preferred terminal" */
+	/* xterm is pretty much universally available though */
 	static const String path = String_FromConst("xterm");
 	static const String args = String_FromConst("-e ./update.sh");
 	return Process_Start(&path, &args);
@@ -2101,37 +2106,9 @@ jobject App_Instance;
 JavaVM* VM_Ptr;
 void Platform_Init(void) { Platform_InitCommon(); }
 
-static String Platform_GetCmdLineArg(int i) {
-	String arg, copy;
-	JNIEnv* env;
-	jvalue args[1];
-	jobject obj;
-	
-	JavaGetCurrentEnv(env);
-	args[0].i = i;
-	obj       = JavaCallObject(env, "getCmdLineArg", "(I)Ljava/lang/String;", args);
-	if (!obj) return String_Empty;
-
-	Platform_LogConst("ARGg..");
-	arg = JavaGetString(env, obj);
-	
-	copy.buffer   = Mem_Alloc(arg.length, 1, "cmdline arg");
-	copy.length   = arg.length;
-	copy.capacity = arg.length;
-	Mem_Copy(arg.buffer, copy.buffer, arg.length);
-
-	(*env)->ReleaseStringUTFChars(env, obj, arg.buffer);
-	(*env)->DeleteLocalRef(env, obj);
-	return copy;
-}
-
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
-	int i;
-	for (i = 0; i < GAME_MAX_CMDARGS; i++) {
-		args[i] = Platform_GetCmdLineArg(i);
-		if (!args[i].buffer) break;
-	}
-	return i;
+	if (!gameArgs.length) return 0;
+	return String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
 }
 
 void Platform_SetDefaultCurrentDirectory(void) {

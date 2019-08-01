@@ -94,38 +94,16 @@ CC_NOINLINE static void ExitMissingArgs(int argsCount, const String* args) {
 	Process_Exit(1);
 }
 
-/* NOTE: This is used when compiling with MingW without linking to startup files. */
-/* The final code produced for "main" is our "main" combined with crt's main. (mingw-w64-crt/crt/gccmain.c) */
-/* This immediately crashes the game on startup. */
-/* Using main_real instead and setting main_real as the entrypoint fixes the crash. */
-#ifdef CC_NOMAIN
-int main_real(int argc, char** argv) {
+#ifdef CC_BUILD_ANDROID
+int Program_Run(int argc, char** argv) {
 #else
-int main(int argc, char** argv) {
+static int Program_Run(int argc, char** argv) {
 #endif
-	static char ipBuffer[STRING_SIZE];
 	String args[GAME_MAX_CMDARGS];
-	int argsCount;
 	uint8_t ip[4];
 	uint16_t port;
 
-	Logger_Hook();
-	Platform_Init();
-	Window_Init();
-	Platform_SetDefaultCurrentDirectory();
-#ifdef CC_TEST_VORBIS
-	main_imdct();
-#endif
-	Platform_LogConst("Starting " GAME_APP_NAME " ..");
-	String_InitArray(Server.IP, ipBuffer);
-
-	Utils_EnsureDirectory("maps");
-	Utils_EnsureDirectory("texpacks");
-	Utils_EnsureDirectory("texturecache");
-	Utils_EnsureDirectory("plugins");
-	Options_Load();
-
-	argsCount = Platform_GetCommandLineArgs(argc, argv, args);
+	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 	/* NOTE: Make sure to comment this out before pushing a commit */
 	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
 	/* String rawArgs = String_FromConst("UnknownShadow200"); */
@@ -174,6 +152,35 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+/* NOTE: This is used when compiling with MingW without linking to startup files. */
+/* The final code produced for "main" is our "main" combined with crt's main. (mingw-w64-crt/crt/gccmain.c) */
+/* This immediately crashes the game on startup. */
+/* Using main_real instead and setting main_real as the entrypoint fixes the crash. */
+#ifdef CC_NOMAIN
+int main_real(int argc, char** argv) {
+#else
+int main(int argc, char** argv) {
+#endif
+	static char ipBuffer[STRING_SIZE];
+	Logger_Hook();
+	Platform_Init();
+	Window_Init();
+	Platform_SetDefaultCurrentDirectory();
+#ifdef CC_TEST_VORBIS
+	main_imdct();
+#endif
+	Platform_LogConst("Starting " GAME_APP_NAME " ..");
+	String_InitArray(Server.IP, ipBuffer);
+
+	Utils_EnsureDirectory("maps");
+	Utils_EnsureDirectory("texpacks");
+	Utils_EnsureDirectory("texturecache");
+	Utils_EnsureDirectory("plugins");
+	Options_Load();
+
+	return Program_Run(argc, argv);
+}
+
 /* ClassiCube is just a native library on android, */
 /* unlike other platforms where it is the executable. */
 /* As such, we have to hook into the java-side activity, */
@@ -182,7 +189,7 @@ int main(int argc, char** argv) {
 #ifdef CC_BUILD_ANDROID
 static void android_main(void) {
 	Platform_LogConst("Main loop started!");
-	main(1, NULL); 
+	main(0, NULL); 
 }
 
 static void JNICALL java_runGameAsync(JNIEnv* env, jobject instance) {
