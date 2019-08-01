@@ -41,50 +41,47 @@ void Drawer2D_MakeFont(FontDesc* desc, int size, int style) {
 }
 
 static Bitmap fontBitmap;
-static int Drawer2D_TileSize = 8; /* avoid divide by 0 if default.png missing */
+static int tileSize = 8; /* avoid divide by 0 if default.png missing */
 /* So really 16 characters per row */
-#define DRAWER2D_LOG2_CHARS_PER_ROW 4
-static int Drawer2D_Widths[256];
+#define LOG2_CHARS_PER_ROW 4
+static int tileWidths[256];
 
 static void Drawer2D_CalculateTextWidths(void) {
 	int width = fontBitmap.Width, height = fontBitmap.Height;
 	BitmapCol* row;
 	int i, x, y, xx, tileX, tileY;
 
-	for (i = 0; i < Array_Elems(Drawer2D_Widths); i++) {
-		Drawer2D_Widths[i] = 0;
-	}
-
 	for (y = 0; y < height; y++) {
-		tileY = y / Drawer2D_TileSize;
+		tileY = y / tileSize;
 		row   = Bitmap_GetRow(&fontBitmap, y);
 
-		for (x = 0; x < width; x += Drawer2D_TileSize) {
-			tileX = x / Drawer2D_TileSize;
-			i = tileX | (tileY << DRAWER2D_LOG2_CHARS_PER_ROW);
+		for (x = 0; x < width; x += tileSize) {
+			tileX = x / tileSize;
+			i = tileX | (tileY << LOG2_CHARS_PER_ROW);
 
 			/* Iterate through each pixel of the given character, on the current scanline */
-			for (xx = Drawer2D_TileSize - 1; xx >= 0; xx--) {
+			for (xx = tileSize - 1; xx >= 0; xx--) {
 				if (!row[x + xx].A) continue;
 
 				/* Check if this is the pixel furthest to the right, for the current character */			
-				Drawer2D_Widths[i] = max(Drawer2D_Widths[i], xx + 1);
+				tileWidths[i] = max(tileWidths[i], xx + 1);
 				break;
 			}
 		}
 	}
-	Drawer2D_Widths[' '] = Drawer2D_TileSize / 4;
+	tileWidths[' '] = tileSize / 4;
 }
 
 static void Drawer2D_FreeFontBitmap(void) {
+	int i;
+	for (i = 0; i < Array_Elems(tileWidths); i++) tileWidths[i] = 0;
 	Mem_Free(fontBitmap.Scan0);
-	fontBitmap.Scan0 = NULL;
 }
 
 void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 	Drawer2D_FreeFontBitmap();
 	fontBitmap = *bmp;
-	Drawer2D_TileSize = bmp->Width >> DRAWER2D_LOG2_CHARS_PER_ROW;
+	tileSize   = bmp->Width >> LOG2_CHARS_PER_ROW;
 	Drawer2D_CalculateTextWidths();
 }
 
@@ -334,7 +331,7 @@ CC_NOINLINE static BitmapCol Drawer2D_ShadowCol(BitmapCol c) {
 #define Drawer2D_ShadowOffset(point) (point / 8)
 #define Drawer2D_XPadding(point) (Math_CeilDiv(point, 8))
 static int Drawer2D_Width(int point, char c) {
-	return Math_CeilDiv(Drawer2D_Widths[(uint8_t)c] * point, Drawer2D_TileSize);
+	return Math_CeilDiv(tileWidths[(uint8_t)c] * point, tileSize);
 }
 static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
 
@@ -436,15 +433,15 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		dstY = y + (yy + yPadding);
 		if ((unsigned)dstY >= (unsigned)bmp->Height) continue;
 
-		fontY  = 0 + yy * Drawer2D_TileSize / dstHeight;
+		fontY  = 0 + yy * tileSize / dstHeight;
 		dstRow = Bitmap_GetRow(bmp, dstY);
 
 		for (i = 0; i < count; i++) {
-			srcX   = (coords[i] & 0x0F) * Drawer2D_TileSize;
-			srcY   = (coords[i] >> 4)   * Drawer2D_TileSize;
+			srcX   = (coords[i] & 0x0F) * tileSize;
+			srcY   = (coords[i] >> 4)   * tileSize;
 			srcRow = Bitmap_GetRow(&fontBitmap, fontY + srcY);
 
-			srcWidth = Drawer2D_Widths[coords[i]];
+			srcWidth = tileWidths[coords[i]];
 			dstWidth = dstWidths[i];
 			col      = cols[i];
 
@@ -708,6 +705,7 @@ static void Drawer2D_Init(void) {
 
 static void Drawer2D_Free(void) { 
 	Drawer2D_FreeFontBitmap();
+	fontBitmap.Scan0 = NULL;
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Drawer2D_TextureChanged);
 }
 
