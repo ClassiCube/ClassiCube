@@ -101,6 +101,9 @@ static void Window_AddTouch(long id, int x, int y) {
 	touches[touchesCount].x  = x;
 	touches[touchesCount].y  = y;
 	touchesCount++;
+
+	Mouse_SetPosition(x, y);
+	Mouse_SetPressed(MOUSE_LEFT, true);
 }
 
 static void Window_UpdateTouch(long id, int x, int y) {
@@ -119,7 +122,7 @@ static void Window_UpdateTouch(long id, int x, int y) {
 	}
 }
 
-static void Window_RemoveTouch(long id) {
+static void Window_RemoveTouch(long id, int x, int y) {
 	int i;
 	for (i = 0; i < touchesCount; i++) {
 		if (touches[i].id != id) continue;
@@ -128,7 +131,11 @@ static void Window_RemoveTouch(long id) {
 		for (; i < touchesCount - 1; i++) {
 			touches[i] = touches[i + 1];
 		}
-		touchesCount--; return;
+
+		touchesCount--;
+		Mouse_SetPosition(x, y);
+		Mouse_SetPressed(MOUSE_LEFT, false);
+		return;
 	}
 }
 #endif
@@ -2425,7 +2432,7 @@ static EM_BOOL Window_TouchStart(int type, const EmscriptenTouchEvent* ev, void*
 		t = &ev->touches[i];
 		if (t->isChanged) Window_AddTouch(t->identifier, t->canvasX, t->canvasY);
 	}
-	return false;
+	return true;
 }
 
 static EM_BOOL Window_TouchMove(int type, const EmscriptenTouchEvent* ev, void* data) {
@@ -2443,9 +2450,9 @@ static EM_BOOL Window_TouchEnd(int type, const EmscriptenTouchEvent* ev, void* d
 	int i;
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
-		if (t->isChanged) Window_RemoveTouch(t->identifier);
+		if (t->isChanged) Window_RemoveTouch(t->identifier, t->canvasX, t->canvasY);
 	}
-	return false;
+	return true;
 }
 
 static EM_BOOL Window_Focus(int type, const EmscriptenFocusEvent* ev, void* data) {
@@ -2853,21 +2860,19 @@ static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {
 	}
 }
 
-static void JNICALL java_processMouseDown(JNIEnv* env, jobject o, jint x, jint y) {
-	Platform_Log2("MOUSE - DOWN %i,%i", &x, &y);
-	Mouse_SetPosition(x, y);
-	Mouse_SetPressed(MOUSE_LEFT, true);
+static void JNICALL java_processMouseDown(JNIEnv* env, jobject o, jint id, jint x, jint y) {
+	Platform_Log3("MOUSE %i - DOWN %i,%i", &id, &x, &y);
+	Window_AddTouch(id, x, y);
 }
 
-static void JNICALL java_processMouseUp(JNIEnv* env, jobject o, jint x, jint y) {
-	Platform_Log2("MOUSE - UP   %i,%i", &x, &y);
-	Mouse_SetPosition(x, y);
-	Mouse_SetPressed(MOUSE_LEFT, false);
+static void JNICALL java_processMouseUp(JNIEnv* env, jobject o, jint id, jint x, jint y) {
+	Platform_Log3("MOUSE %i - UP   %i,%i", &id, &x, &y);
+	Window_RemoveTouch(id, x, y);
 }
 
-static void JNICALL java_processMouseMove(JNIEnv* env, jobject o, jint x, jint y) {
-	Platform_Log2("MOUSE - MOVE %i,%i", &x, &y);
-	Mouse_SetPosition(x, y);
+static void JNICALL java_processMouseMove(JNIEnv* env, jobject o, jint id, jint x, jint y) {
+	Platform_Log3("MOUSE %i - MOVE %i,%i", &id, &x, &y);
+	Window_UpdateTouch(id, x, y);
 }
 
 static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface) {
@@ -2955,9 +2960,9 @@ static const JNINativeMethod methods[19] = {
 	{ "processKeyUp",     "(I)V", java_processKeyUp },
 	{ "processKeyChar",   "(I)V", java_processKeyChar },
 
-	{ "processMouseDown", "(II)V", java_processMouseDown },
-	{ "processMouseUp",   "(II)V", java_processMouseUp },
-	{ "processMouseMove", "(II)V", java_processMouseMove },
+	{ "processMouseDown", "(III)V", java_processMouseDown },
+	{ "processMouseUp",   "(III)V", java_processMouseUp },
+	{ "processMouseMove", "(III)V", java_processMouseMove },
 
 	{ "processSurfaceCreated",      "(Landroid/view/Surface;)V",  java_processSurfaceCreated },
 	{ "processSurfaceDestroyed",    "()V",                        java_processSurfaceDestroyed },
