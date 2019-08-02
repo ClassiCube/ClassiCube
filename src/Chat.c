@@ -303,7 +303,7 @@ static void Commands_Execute(const String* input) {
 		offset = 1;
 	}
 
-	text = String_UNSAFE_Substring(&text, offset, text.length - offset);
+	text = String_UNSAFE_SubstringAt(&text, offset);
 	/* Check for only / or /client */
 	if (!text.length) { Commands_PrintDefault(); return; }
 

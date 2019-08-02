@@ -61,6 +61,16 @@ String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int len
 	return String_Init(str->buffer + offset, length, length);
 }
 
+String String_UNSAFE_SubstringAt(STRING_REF const String* str, int offset) {
+	String sub;
+	if (offset < 0 || offset > str->length) Logger_Abort("Sub offset out of range");
+
+	sub.buffer   = str->buffer + offset;
+	sub.length   = str->length - offset;
+	sub.capacity = str->length - offset; /* str->length to match String_UNSAFE_Substring */
+	return sub;
+}
+
 int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int maxSubs) {
 	int beg = 0, end, count, i;
 

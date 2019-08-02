@@ -67,7 +67,8 @@ CC_API void String_CopyToRaw(char* dst, int capacity, const String* src);
 /* UNSAFE: Returns a substring of the given string. (sub.buffer is within str.buffer + str.length) */
 CC_API String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int length);
 /* UNSAFE: Returns a substring of the given string. (sub.buffer is within str.buffer + str.length) */
-#define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
+/* The substring returned is { str.buffer + offset, str.length - offset } */
+CC_API String String_UNSAFE_SubstringAt(STRING_REF const String* str, int offset);
 /* UNSAFE: Splits a string of the form [str1][c][str2][c][str3].. into substrings. */
 /* e.g., "abc:id:xyz" becomes "abc","id","xyz" */
 CC_API int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int maxSubs);
