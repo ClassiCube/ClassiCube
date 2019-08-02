@@ -419,7 +419,7 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 				p->rec    = rec;
 				p->texLoc = loc;
 				p->block  = old;
-				type = Random_Range(&rnd, 0, 30);
+				type = Random_Next(&rnd, 30);
 				p->base.size = (uint8_t)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
 			}
 		}
@@ -447,7 +447,7 @@ void Particles_RainSnowEffect(Vec3 pos) {
 		Vec3_Add(&pos, &origin, &offset);
 		Particle_Reset(&p->base, pos, velocity, 40.0f);
 
-		type = Random_Range(&rnd, 0, 30);
+		type = Random_Next(&rnd, 30);
 		p->base.size = (uint8_t)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
 	}
 }

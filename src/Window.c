@@ -2772,7 +2772,7 @@ static void Window_RefreshBounds(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
-static Key Window_MapKey(int32_t code) {
+static Key Window_MapKey(int code) {
 	if (code >= AKEYCODE_0  && code <= AKEYCODE_9)   return (code - AKEYCODE_0)  + '0';
 	if (code >= AKEYCODE_A  && code <= AKEYCODE_Z)   return (code - AKEYCODE_A)  + 'A';
 	if (code >= AKEYCODE_F1 && code <= AKEYCODE_F12) return (code - AKEYCODE_F1) + KEY_F1;
@@ -3056,7 +3056,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	uint32_t* src;
 	uint32_t* dst;
 	ARect b;
-	int32_t y, res, size;
+	int y, res, size;
 
 	Platform_LogConst("DRAW_RAW");
 	/* window not created yet */
@@ -3070,9 +3070,9 @@ void Window_DrawFramebuffer(Rect2D r) {
 	if (res) Logger_Abort2(res, "Locking window pixels");
 	Platform_Log4("ADJUS: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom);
 
-	int32_t width  = ANativeWindow_getWidth(win_handle);
-	int32_t height = ANativeWindow_getHeight(win_handle);
-	int32_t format = ANativeWindow_getFormat(win_handle);
+	int width  = ANativeWindow_getWidth(win_handle);
+	int height = ANativeWindow_getHeight(win_handle);
+	int format = ANativeWindow_getFormat(win_handle);
 
 	Platform_Log3("WIN SIZE: %i,%i  %i", &width, &height, &format);
 	Platform_Log4("BUF SIZE: %i,%i  %i/%i", &buffer.width, &buffer.height, &buffer.format, &buffer.stride);
@@ -3562,10 +3562,13 @@ static EGLint ctx_numConfig;
 static void GLContext_InitSurface(void) {
 	if (!win_handle) return; /* window not created or lost */
 	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
+
+	if (!ctx_surface) return;
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
 }
 
 static void GLContext_FreeSurface(void) {
+	if (!ctx_surface) return;
 	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 	eglDestroySurface(ctx_display, ctx_surface);
 	ctx_surface = NULL;
@@ -3602,6 +3605,7 @@ void GLContext_Update(void) {
 }
 
 bool GLContext_TryRestore(void) {
+	GLContext_FreeSurface();
 	GLContext_InitSurface();
 	return ctx_surface != NULL;
 }
@@ -3617,8 +3621,19 @@ void* GLContext_GetAddress(const char* function) {
 }
 
 bool GLContext_SwapBuffers(void) {
+	EGLint err;
 	if (!ctx_surface) return false;
-	eglSwapBuffers(ctx_display, ctx_surface);
+	if (eglSwapBuffers(ctx_display, ctx_surface)) return true;
+
+	err = eglGetError();
+	/* We get EGL_BAD_SURFACE if the window surface is destroyed on android */
+	/* TODO: Maybe detect from the SurfaceDestroyed event handler instead */
+	if (err == EGL_BAD_SURFACE) {
+		GLContext_FreeSurface(); return false;
+	}
+
+	/* TODO: figure out how to handle other errors */
+	Logger_Abort2(err, "Failed to swap buffers");
 	return true;
 }
 

@@ -569,7 +569,7 @@ static struct Sound* Soundboard_PickRandom(struct Soundboard* board, uint8_t typ
 	group = Soundboard_Find(board, &name);
 	if (!group) return NULL;
 
-	idx = Random_Range(&board->Rnd, 0, group->Count);
+	idx = Random_Next(&board->Rnd, group->Count);
 	return &group->Sounds[idx];
 }
 
@@ -840,7 +840,7 @@ static void Music_RunLoop(void) {
 	Audio_Open(&music_out, AUDIO_MAX_BUFFERS);
 
 	while (!music_pendingStop && count) {
-		idx  = Random_Range(&rnd, 0, count);
+		idx  = Random_Next(&rnd, count);
 		file = StringsBuffer_UNSAFE_Get(&files, musicFiles[idx]);
 		
 		String_InitArray(path, pathBuffer);
@@ -860,7 +860,7 @@ static void Music_RunLoop(void) {
 		if (res) { Logger_Warn2(res, "closing", &path); break; }
 
 		if (music_pendingStop) break;
-		delay = 1000 * 120 + Random_Range(&rnd, 0, 1000 * 300);
+		delay = 120 * 1000 + Random_Next(&rnd, 300 * 1000);
 		Waitable_WaitFor(music_waitable, delay);
 	}
 

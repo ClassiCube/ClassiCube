@@ -2274,7 +2274,7 @@ static int TextGroupWidget_NextUrl(char* chars, int charsLen, int i) {
 	return charsLen;
 }
 
-static int TextGroupWidget_UrlEnd(char* chars, int charsLen, int32_t* begs, int begsLen, int i) {
+static int TextGroupWidget_UrlEnd(char* chars, int charsLen, int* begs, int begsLen, int i) {
 	int start = i, j;
 	int next, left;
 	bool isBeg;

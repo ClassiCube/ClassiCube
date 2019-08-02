@@ -977,6 +977,9 @@ void Http_UrlEncodeUtf8(String* dst, const String* src) {
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
 static void Http_Init(void) {
+#ifdef CC_BUILD_ANDROID
+	if (workerThread) return;
+#endif
 	ScheduledTask_Add(30, Http_CleanCacheTask);
 	RequestList_Init(&pendingReqs);
 	RequestList_Init(&processedReqs);

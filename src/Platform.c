@@ -1126,7 +1126,7 @@ static void Font_DirCallback(const String* path, void* obj) {
 	/* Completely skip windows .FON files */
 	if (String_CaselessEnds(path, &fonExt)) return;
 
-	/* If font is already known good, skip it */
+	/* If font is already known, skip it */
 	for (i = 0; i < font_list.entries.count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(&font_list.entries, i);
 		String_UNSAFE_Separate(&entry, font_list.separator, &name, &value);
