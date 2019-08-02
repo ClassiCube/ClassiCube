@@ -110,6 +110,7 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_GLES
 #define CC_BUILD_EGL
 #define CC_BUILD_UNWIND
+#define CC_BUILD_TOUCH
 #elif defined __linux__
 #define CC_BUILD_LINUX
 #define CC_BUILD_POSIX
@@ -166,6 +167,7 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_GLES
 #define CC_BUILD_WEBCANVAS
 #define CC_BUILD_WEBGL
+#define CC_BUILD_TOUCH
 #endif
 #endif
 

@@ -34,6 +34,7 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 static int cursorPrevX, cursorPrevY;
 /* Gets the position of the cursor in screen or window coordinates. */
 static void Cursor_GetRawPos(int* x, int* y);
+static bool win_rawMouse;
 
 static void Window_CentreMousePosition(void) {
 	Cursor_SetPosition(Window_Width / 2, Window_Height / 2);
@@ -89,6 +90,51 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 
 
 /*########################################################################################################################*
+*------------------------------------------------------Touch support------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_TOUCH
+static struct TouchData { long id; int x, y; } touches[32];
+static int touchesCount;
+
+static void Window_AddTouch(long id, int x, int y) {
+	touches[touchesCount].id = id;
+	touches[touchesCount].x  = x;
+	touches[touchesCount].y  = y;
+	touchesCount++;
+}
+
+static void Window_UpdateTouch(long id, int x, int y) {
+	int i;
+	for (i = 0; i < touchesCount; i++) {
+		if (touches[i].id != id) continue;
+		Mouse_SetPosition(x, y);
+
+		if (win_rawMouse) {
+			Event_RaiseMouseMove(&MouseEvents.RawMoved, x - touches[i].x, y - touches[i].y);
+		}
+
+		touches[i].x = x;
+		touches[i].y = y;
+		return;
+	}
+}
+
+static void Window_RemoveTouch(long id) {
+	int i;
+	for (i = 0; i < touchesCount; i++) {
+		if (touches[i].id != id) continue;
+
+		/* found the touch, remove it*/
+		for (; i < touchesCount - 1; i++) {
+			touches[i] = touches[i + 1];
+		}
+		touchesCount--; return;
+	}
+}
+#endif
+
+
+/*########################################################################################################################*
 *------------------------------------------------------Win32 window-------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WINGUI
@@ -119,7 +165,7 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 #define WM_XBUTTONUP   0x020C
 #endif
 
-static bool rawMouseInited, rawMouseEnabled, rawMouseSupported;
+static bool rawMouseInited, rawMouseSupported;
 typedef BOOL (WINAPI *FUNC_RegisterRawInput)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
 static FUNC_RegisterRawInput _registerRawInput;
 typedef UINT (WINAPI *FUNC_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
@@ -265,7 +311,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			prevPosY = raw.data.mouse.lLastY;
 		} else { break; }
 
-		if (rawMouseEnabled) Event_RaiseMouseMove(&MouseEvents.RawMoved, dx, dy);
+		if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, dx, dy);
 	} break;
 
 	case WM_KEYDOWN:
@@ -605,7 +651,7 @@ void Window_OpenKeyboard(void)  { }
 void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void) {
-	rawMouseEnabled = true;
+	win_rawMouse = true;
 	Window_DefaultEnableRawMouse();
 
 	if (!rawMouseInited) Window_InitRawMouse();
@@ -622,7 +668,7 @@ void Window_UpdateRawMouse(void) {
 }
 
 void Window_DisableRawMouse(void) {
-	rawMouseEnabled = false;
+	win_rawMouse = false;
 	Window_DefaultDisableRawMouse(); 
 }
 #endif
@@ -2007,7 +2053,6 @@ void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 #ifdef CC_BUILD_SDL
 #include <SDL2/SDL.h>
 static SDL_Window* win_handle;
-static bool win_rawMouse;
 
 static void Window_RefreshBounds(void) {
 	SDL_GetWindowSize(win_handle, &Window_Width, &Window_Height);
@@ -2327,7 +2372,6 @@ void Window_DisableRawMouse(void) {
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
-static bool win_rawMouse;
 
 static void Window_RefreshBounds(void) {
 	emscripten_get_canvas_element_size(NULL, &Window_Width, &Window_Height);
@@ -2374,52 +2418,12 @@ static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* 
 	return true;
 }
 
-static struct TouchData { long id, x, y; } touchesList[32];
-static int touchesCount;
-
-static void Window_AddTouch(const EmscriptenTouchPoint* t) {
-	touchesList[touchesCount].id = t->identifier;
-	touchesList[touchesCount].x  = t->canvasX;
-	touchesList[touchesCount].y  = t->canvasY;
-	touchesCount++;
-}
-
-static void Window_UpdateTouch(const EmscriptenTouchPoint* t) {
-	int i;
-	for (i = 0; i < touchesCount; i++) {
-		if (touchesList[i].id != t->identifier) continue;
-		Mouse_SetPosition(t->canvasX, t->canvasY);
-
-		if (win_rawMouse) {
-			Event_RaiseMouseMove(&MouseEvents.RawMoved,
-				t->canvasX - touchesList[i].x, t->canvasY - touchesList[i].y);
-		}
-
-		touchesList[i].x = t->canvasX;
-		touchesList[i].y = t->canvasY;
-		return;
-	}
-}
-
-static void Window_RemoveTouch(const EmscriptenTouchPoint* t) {
-	int i;
-	for (i = 0; i < touchesCount; i++) {
-		if (touchesList[i].id != t->identifier) continue;
-
-		/* found the touch, remove it*/
-		for (; i < touchesCount - 1; i++) {
-			touchesList[i] = touchesList[i + 1];
-		}
-		touchesCount--; return;
-	}
-}
-
 static EM_BOOL Window_TouchStart(int type, const EmscriptenTouchEvent* ev, void* data) {
 	const EmscriptenTouchPoint* t;
 	int i;
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
-		if (t->isChanged) Window_AddTouch(t);
+		if (t->isChanged) Window_AddTouch(t->identifier, t->canvasX, t->canvasY);
 	}
 	return false;
 }
@@ -2429,7 +2433,7 @@ static EM_BOOL Window_TouchMove(int type, const EmscriptenTouchEvent* ev, void* 
 	int i;
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
-		if (t->isChanged) Window_UpdateTouch(t);
+		if (t->isChanged) Window_UpdateTouch(t->identifier, t->canvasX, t->canvasY);
 	}
 	return true;
 }
@@ -2439,7 +2443,7 @@ static EM_BOOL Window_TouchEnd(int type, const EmscriptenTouchEvent* ev, void* d
 	int i;
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
-		if (t->isChanged) Window_RemoveTouch(t);
+		if (t->isChanged) Window_RemoveTouch(t->identifier);
 	}
 	return false;
 }
@@ -2763,7 +2767,6 @@ void Window_DisableRawMouse(void) {
 #include <android/native_window_jni.h>
 #include <android/keycodes.h>
 static ANativeWindow* win_handle;
-static bool win_rawMouse;
 
 static void Window_RefreshBounds(void) {
 	Window_Width  = ANativeWindow_getWidth(win_handle);
