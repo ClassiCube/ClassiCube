@@ -584,7 +584,7 @@ static void Logger_PrintRegisters(String* str, void* ctx) {
 }
 #endif
 static void Logger_DumpRegisters(void* ctx) {
-	String str; char strBuffer[512];
+	String str; char strBuffer[768];
 	String_InitArray(str, strBuffer);
 
 	String_AppendConst(&str, "-- registers --" _NL);
