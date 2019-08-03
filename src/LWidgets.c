@@ -1090,6 +1090,7 @@ static struct LWidgetVTABLE ltable_VTABLE = {
 	LTable_MouseWheel,      /* Wheel */
 };
 void LTable_Init(struct LTable* w, FontDesc* rowFont) {
+	int i;
 	w->VTABLE     = &ltable_VTABLE;
 	w->Columns    = tableColumns;
 	w->NumColumns = Array_Elems(tableColumns);
@@ -1098,6 +1099,10 @@ void LTable_Init(struct LTable* w, FontDesc* rowFont) {
 	w->ScrollbarWidth = Display_ScaleX(10);
 	w->GridlineWidth  = Display_ScaleX(2);
 	w->GridlineHeight = Display_ScaleY(2);
+	
+	for (i = 0; i < w->NumColumns; i++) {
+		w->Columns[i].width = Display_ScaleX(w->Columns[i].width);
+	}
 }
 
 void LTable_Reset(struct LTable* w) {
