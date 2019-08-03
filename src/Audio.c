@@ -822,7 +822,7 @@ static void Music_RunLoop(void) {
 	char pathBuffer[FILENAME_SIZE];
 	String path;
 
-	uint16_t musicFiles[MUSIC_MAX_FILES];
+	unsigned short musicFiles[MUSIC_MAX_FILES];
 	String file;
 
 	RNGState rnd;

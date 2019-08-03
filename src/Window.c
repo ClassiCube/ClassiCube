@@ -2896,7 +2896,6 @@ static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 static void JNICALL java_processSurfaceResized(JNIEnv* env, jobject o, jobject surface) {
 	Platform_LogConst("WIN - RESIZED");
 	Window_RefreshBounds();
-	Window_RefreshBounds(); /* TODO: Why does it only work on second try? */
 }
 
 static void JNICALL java_processSurfaceRedrawNeeded(JNIEnv* env, jobject o) {
@@ -2943,13 +2942,6 @@ static void JNICALL java_onLostFocus(JNIEnv* env, jobject o) {
 	/* TODO: Disable rendering? */
 }
 
-static void JNICALL java_onConfigChanged(JNIEnv* env, jobject o) {
-	Platform_LogConst("APP - CONFIG CHANGED");
-	Window_RefreshBounds();
-	Window_RefreshBounds(); /* TODO: Why does it only work on second try? */
-	/* TODO: this one might not even be needed */
-}
-
 static void JNICALL java_onLowMemory(JNIEnv* env, jobject o) {
 	Platform_LogConst("APP - LOW MEM");
 	/* TODO: Low memory */
@@ -2977,7 +2969,6 @@ static const JNINativeMethod methods[19] = {
 
 	{ "processOnGotFocus",      "()V", java_onGotFocus },
 	{ "processOnLostFocus",     "()V", java_onLostFocus },
-	{ "processOnConfigChanged", "()V", java_onConfigChanged },
 	{ "processOnLowMemory",     "()V", java_onLowMemory }
 };
 
@@ -2995,7 +2986,7 @@ void Window_Init(void) {
 
 void Window_Create(int width, int height) {
 	Window_Exists = true;
-	/* actual window creation is done when APP_CMD_INIT_WINDOW is received */
+	/* actual window creation is done when processSurfaceCreated is called */
 }
 
 void Window_SetTitle(const String* title) {

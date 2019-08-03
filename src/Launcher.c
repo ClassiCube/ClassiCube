@@ -34,7 +34,7 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	Launcher_Screen = screen;
 
 	screen->Init(screen);
-	screen->Reposition(screen);
+	screen->Layout(screen);
 	/* for hovering over active button etc */
 	screen->MouseMove(screen, 0, 0);
 
@@ -107,7 +107,7 @@ static void Launcher_OnResize(void* obj) {
 
 	Window_FreeFramebuffer(&Launcher_Framebuffer);
 	Window_AllocFramebuffer(&Launcher_Framebuffer);
-	if (Launcher_Screen) Launcher_Screen->Reposition(Launcher_Screen);
+	if (Launcher_Screen) Launcher_Screen->Layout(Launcher_Screen);
 	Launcher_Redraw();
 }
 

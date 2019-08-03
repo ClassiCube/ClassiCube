@@ -281,7 +281,7 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 	LLabel_SetConst(&s->lblTitle, "Choose game mode");
 }
 
-static void ChooseModeScreen_Reposition(struct LScreen* s_) {
+static void ChooseModeScreen_Layout(struct LScreen* s_) {
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
 	LWidget_SetLocation(&s->lblTitle, ANCHOR_CENTRE, ANCHOR_CENTRE, 10, -135);
 	LWidget_SetLocation(&s->seps[0],  ANCHOR_CENTRE, ANCHOR_CENTRE, -5,  -35);
@@ -306,9 +306,9 @@ static void ChooseModeScreen_Reposition(struct LScreen* s_) {
 struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime) {
 	struct ChooseModeScreen* s = &ChooseModeScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init       = ChooseModeScreen_Init;
-	s->Reposition = ChooseModeScreen_Reposition;
-	s->firstTime  = firstTime;
+	s->Init      = ChooseModeScreen_Init;
+	s->Layout    = ChooseModeScreen_Layout;
+	s->firstTime = firstTime;
 	s->onEnterWidget = (struct LWidget*)&s->btnEnhanced;
 	return (struct LScreen*)s;
 }
@@ -452,7 +452,7 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	ColoursScreen_UpdateAll(s);
 }
 
-static void ColoursScreen_Reposition(struct LScreen* s_) {
+static void ColoursScreen_Layout(struct LScreen* s_) {
 	struct ColoursScreen* s = (struct ColoursScreen*)s_;
 	int i, y;
 	for (i = 0; i < 5; i++) {
@@ -480,7 +480,7 @@ struct LScreen* ColoursScreen_MakeInstance(void) {
 	struct ColoursScreen* s = &ColoursScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init       = ColoursScreen_Init;
-	s->Reposition = ColoursScreen_Reposition;
+	s->Layout     = ColoursScreen_Layout;
 	s->KeyDown    = ColoursScreen_KeyDown;
 	s->MouseWheel = ColoursScreen_MouseWheel;
 	return (struct LScreen*)s;
@@ -590,7 +590,7 @@ static void DirectConnectScreen_Init(struct LScreen* s_) {
 	DirectConnectScreen_Load(s);
 }
 
-static void DirectConnectScreen_Reposition(struct LScreen* s_) {
+static void DirectConnectScreen_Layout(struct LScreen* s_) {
 	struct DirectConnectScreen* s = (struct DirectConnectScreen*)s_;
 	LWidget_SetLocation(&s->iptUsername, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -165, -120);
 	LWidget_SetLocation(&s->iptAddress,  ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -165,  -75);
@@ -605,7 +605,7 @@ struct LScreen* DirectConnectScreen_MakeInstance(void) {
 	struct DirectConnectScreen* s = &DirectConnectScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init          = DirectConnectScreen_Init;
-	s->Reposition    = DirectConnectScreen_Reposition;
+	s->Layout        = DirectConnectScreen_Layout;
 	s->onEnterWidget = (struct LWidget*)&s->btnConnect;
 	return (struct LScreen*)s;
 }
@@ -749,7 +749,7 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LInput_SetText(&s->iptPassword, &pass);
 }
 
-static void MainScreen_Reposition(struct LScreen* s_) {
+static void MainScreen_Layout(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 	LWidget_SetLocation(&s->iptUsername, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -140, -120);
 	LWidget_SetLocation(&s->iptPassword, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -140,  -75);
@@ -893,9 +893,9 @@ static void MainScreen_Tick(struct LScreen* s_) {
 struct LScreen* MainScreen_MakeInstance(void) {
 	struct MainScreen* s = &MainScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init       = MainScreen_Init;
-	s->Tick       = MainScreen_Tick;
-	s->Reposition = MainScreen_Reposition;
+	s->Init   = MainScreen_Init;
+	s->Tick   = MainScreen_Tick;
+	s->Layout = MainScreen_Layout;
 	s->HoverWidget   = MainScreen_HoverWidget;
 	s->UnhoverWidget = MainScreen_UnhoverWidget;
 	s->onEnterWidget = (struct LWidget*)&s->btnLogin;
@@ -978,7 +978,7 @@ static void ResourcesScreen_Init(struct LScreen* s_) {
 	s->btnCancel.OnClick = ResourcesScreen_Next;
 }
 
-static void ResourcesScreen_Reposition(struct LScreen* s_) {
+static void ResourcesScreen_Layout(struct LScreen* s_) {
 	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
 	
 	LWidget_SetLocation(&s->lblLine1,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -50);
@@ -1080,10 +1080,10 @@ static void ResourcesScreen_Tick(struct LScreen* s_) {
 struct LScreen* ResourcesScreen_MakeInstance(void) {
 	struct ResourcesScreen* s = &ResourcesScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init       = ResourcesScreen_Init;
-	s->Draw       = ResourcesScreen_Draw;
-	s->Tick       = ResourcesScreen_Tick;
-	s->Reposition = ResourcesScreen_Reposition;
+	s->Init   = ResourcesScreen_Init;
+	s->Draw   = ResourcesScreen_Draw;
+	s->Tick   = ResourcesScreen_Tick;
+	s->Layout = ResourcesScreen_Layout;
 	s->onEnterWidget = (struct LWidget*)&s->btnYes;
 	return (struct LScreen*)s;
 }
@@ -1236,7 +1236,7 @@ static void ServersScreen_Free(struct LScreen* s_) {
 	Font_Free(&s->rowFont);
 }
 
-static void ServersScreen_Reposition(struct LScreen* s_) {
+static void ServersScreen_Layout(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	LWidget_SetLocation(&s->iptSearch, ANCHOR_MIN, ANCHOR_MIN, 10, 10);
 	LWidget_SetLocation(&s->iptHash,   ANCHOR_MIN, ANCHOR_MAX, 10, 10);
@@ -1282,7 +1282,7 @@ struct LScreen* ServersScreen_MakeInstance(void) {
 	s->Init       = ServersScreen_Init;
 	s->Tick       = ServersScreen_Tick;
 	s->Free       = ServersScreen_Free;
-	s->Reposition = ServersScreen_Reposition;
+	s->Layout     = ServersScreen_Layout;
 	s->MouseWheel = ServersScreen_MouseWheel;
 	s->KeyDown    = ServersScreen_KeyDown;
 	s->MouseUp    = ServersScreen_MouseUp;
@@ -1327,7 +1327,7 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	s->btnBack.OnClick    = SwitchToMain;
 }
 
-static void SettingsScreen_Reposition(struct LScreen* s_) {
+static void SettingsScreen_Layout(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
 	LWidget_SetLocation(&s->btnUpdates, ANCHOR_CENTRE,     ANCHOR_CENTRE, -135, -120);
 	LWidget_SetLocation(&s->lblUpdates, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -70, -120);
@@ -1344,8 +1344,8 @@ static void SettingsScreen_Reposition(struct LScreen* s_) {
 struct LScreen* SettingsScreen_MakeInstance(void) {
 	struct SettingsScreen* s = &SettingsScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init       = SettingsScreen_Init;
-	s->Reposition = SettingsScreen_Reposition;
+	s->Init   = SettingsScreen_Init;
+	s->Layout = SettingsScreen_Layout;
 	return (struct LScreen*)s;
 }
 
@@ -1529,7 +1529,7 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	UpdatesScreen_Format(&s->lblYour, "Your build: ", buildTime);
 }
 
-static void UpdatesScreen_Reposition(struct LScreen* s_) {
+static void UpdatesScreen_Layout(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
 	LWidget_SetLocation(&s->lblYour, ANCHOR_CENTRE, ANCHOR_CENTRE, -5, -120);
 	LWidget_SetLocation(&s->seps[0], ANCHOR_CENTRE, ANCHOR_CENTRE,  0, -100);
@@ -1569,10 +1569,10 @@ static void UpdatesScreen_Free(struct LScreen* s_) {
 struct LScreen* UpdatesScreen_MakeInstance(void) {
 	struct UpdatesScreen* s = &UpdatesScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init       = UpdatesScreen_Init;
-	s->Tick       = UpdatesScreen_Tick;
-	s->Free       = UpdatesScreen_Free;
-	s->Reposition = UpdatesScreen_Reposition;
+	s->Init   = UpdatesScreen_Init;
+	s->Tick   = UpdatesScreen_Tick;
+	s->Free   = UpdatesScreen_Free;
+	s->Layout = UpdatesScreen_Layout;
 	return (struct LScreen*)s;
 }
 #endif

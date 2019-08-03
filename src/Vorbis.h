@@ -4,7 +4,6 @@
 /* Decodes ogg vorbis audio
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
-struct IGameComponent;
 struct Stream;
 #define VORBIS_MAX_CHANS 8
 #define VORBIS_MAX_BLOCK_SIZE 8192
