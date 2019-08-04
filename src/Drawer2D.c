@@ -589,32 +589,32 @@ Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
 }
 
 void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, int maxWidth) {
-	String str; char strBuffer[512];
+	char strBuffer[512];
 	struct DrawTextArgs part;
 	int i, width;
 
 	width = Drawer2D_TextWidth(args);
 	/* No clipping needed */
 	if (width <= maxWidth) { Drawer2D_DrawText(bmp, args, x, y); return; }
-
-	String_InitArray(str, strBuffer);
-	String_Copy(&str, &args->text);
-	String_Append(&str, '.');
-
 	part = *args;
-	for (i = str.length - 2; i > 0; i--) {
-		str.buffer[i] = '.';
 
+	String_InitArray(part.text, strBuffer);
+	String_Copy(&part.text, &args->text);
+	String_Append(&part.text, '.');
+	
+	for (i = part.text.length - 2; i > 0; i--) {
+		part.text.buffer[i] = '.';
 		/* skip over trailing spaces */
-		if (str.buffer[i - 1] == ' ') continue;
-		part.text = String_UNSAFE_Substring(&str, 0, i + 2);
-		width = Drawer2D_TextWidth(&part);
+		if (part.text.buffer[i - 1] == ' ') continue;
+
+		part.text.length = i + 2;
+		width            = Drawer2D_TextWidth(&part);
 		if (width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
 
-		/* If down to <= 2 chars, try omit trailing .. */
+		/* If down to <= 2 chars, try omitting the .. */
 		if (i > 2) continue;
-		part.text = String_UNSAFE_Substring(&str, 0, i);
-		width = Drawer2D_TextWidth(&part);
+		part.text.length = i;
+		width            = Drawer2D_TextWidth(&part);
 		if (width <= maxWidth) { Drawer2D_DrawText(bmp, &part, x, y); return; }
 	}
 }

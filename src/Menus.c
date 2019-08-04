@@ -175,7 +175,7 @@ static void Menu_Label(void* s, int i, struct TextWidget* label, const String* t
 	Widget_SetLocation(menu->widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, const FontDesc* font, struct InputValidator* v, int horAnchor, int verAnchor, int x, int y) {
+static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, FontDesc* font, struct InputValidator* v, int horAnchor, int verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
 	MenuInputWidget_Create(input, width, 30, text, font, v);
 

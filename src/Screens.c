@@ -137,7 +137,7 @@ static void InventoryScreen_Init(void* screen) {
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
 
 	TableWidget_Create(&s->table);
-	s->table.font = s->font;
+	s->table.font = &s->font;
 	s->table.elementsPerRow = Game_PureClassic ? 9 : 10;
 	Elem_Init(&s->table);
 

@@ -386,10 +386,8 @@ static void Launcher_LoadTextures(Bitmap* bmp) {
 						bmp, 1 * tileSize, 0, tileSize, tileSize,
 						TILESIZE, TILESIZE);
 
-	Gradient_Tint(&dirtBmp, 128, 64,
-				  0, 0, TILESIZE, TILESIZE);
-	Gradient_Tint(&stoneBmp, 96, 96,
-				  0, 0, TILESIZE, TILESIZE);
+	Gradient_Tint(&dirtBmp, 128, 64, 0, 0, TILESIZE, TILESIZE);
+	Gradient_Tint(&stoneBmp, 96, 96, 0, 0, TILESIZE, TILESIZE);
 }
 
 static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* data, struct ZipState* s) {
