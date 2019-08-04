@@ -53,7 +53,7 @@ static struct MapState map2;
 /* CPE state */
 bool cpe_needD3Fix;
 static int cpe_serverExtensionsCount, cpe_pingTicks;
-static int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
+static int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2, cpe_heldBlockVer = 2;
 static bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
 static bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
 
@@ -824,6 +824,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 		ver = 1;
 
 		if (String_CaselessEqualsConst(&name, "ExtPlayerList"))       ver = 2;
+		if (String_CaselessEqualsConst(&name, "HeldBlock"))           ver = cpe_heldBlockVer;
 		if (String_CaselessEqualsConst(&name, "EnvMapAppearance"))    ver = cpe_envMapVer;
 		if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) ver = cpe_blockDefsExtVer;
 
@@ -868,6 +869,9 @@ static void CPE_ExtEntry(uint8_t* data) {
 	/* update support state */
 	if (String_CaselessEqualsConst(&ext, "HeldBlock")) {
 		cpe_sendHeldBlock = true;
+		cpe_heldBlockVer = version;
+		if (version == 1) return;
+		Net_PacketSizes[OPCODE_HOLD_THIS] += 1;
 	} else if (String_CaselessEqualsConst(&ext, "MessageTypes")) {
 		cpe_useMessageTypes = true;
 	} else if (String_CaselessEqualsConst(&ext, "ExtPlayerList")) {
@@ -939,12 +943,22 @@ static void CPE_CustomBlockLevel(uint8_t* data) {
 static void CPE_HoldThis(uint8_t* data) {
 	BlockID block;
 	bool canChange;
+	uint8_t index;
 
 	Protocol_ReadBlock(data, block);
-	canChange = *data == 0;
-
+	canChange = *data++ == 0;
 	Inventory.CanChangeSelected = true;
-	Inventory_SetSelectedBlock(block);
+
+	if (cpe_heldBlockVer == 1) {
+		Inventory_SetSelectedBlock(block);
+	} else {
+		index = *data;
+		if (index == 255) {
+			Inventory_SetSelectedBlock(block);
+		} else {
+			Inventory_SetBlockAtIndex(block, index);
+		}
+	}
 	Inventory.CanChangeSelected = canChange;
 }
 
@@ -1297,7 +1311,7 @@ static void CPE_SetInventoryOrder(uint8_t* data) {
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
-	cpe_envMapVer = 2; cpe_blockDefsExtVer = 2;
+	cpe_envMapVer = 2; cpe_blockDefsExtVer = 2; cpe_heldBlockVer = 2;
 	cpe_needD3Fix = false; cpe_extEntityPos = false; cpe_twoWayPing = false; 
 	cpe_extTextures = false; cpe_fastMap = false; cpe_extBlocks = false;
 	Game_UseCPEBlocks = false;

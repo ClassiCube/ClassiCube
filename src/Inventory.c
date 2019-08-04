@@ -43,6 +43,23 @@ void Inventory_SetSelectedBlock(BlockID block) {
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 }
 
+void Inventory_SetBlockAtIndex(BlockID block, int index) {
+	int i;
+	if (!Inventory_CheckChangeSelected()) return;
+
+	/* Swap with currently selected block if given block is already in the hotbar */
+	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
+		if (Inventory_Get(i) != block) continue;
+		Inventory_Set(i, Inventory_Get(index));
+		break;
+	}
+
+	Inventory_Set(index, block);
+	if (Inventory.SelectedIndex == index) {
+		Event_RaiseVoid(&UserEvents.HeldBlockChanged);
+	}
+}
+
 static const uint8_t classicInventory[42] = {
 	BLOCK_STONE, BLOCK_COBBLE, BLOCK_BRICK, BLOCK_DIRT, BLOCK_WOOD, BLOCK_LOG, BLOCK_LEAVES, BLOCK_GLASS, BLOCK_SLAB,
 	BLOCK_MOSSY_ROCKS, BLOCK_SAPLING, BLOCK_DANDELION, BLOCK_ROSE, BLOCK_BROWN_SHROOM, BLOCK_RED_SHROOM, BLOCK_SAND, BLOCK_GRAVEL, BLOCK_SPONGE,
