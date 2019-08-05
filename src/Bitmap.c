@@ -365,7 +365,9 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
-			bmp->Scan0 = (uint8_t*)Mem_Alloc(bmp->Width * bmp->Height, 4, "PNG bitmap data");
+			bmp->Scan0 = (uint8_t*)Mem_TryAlloc(bmp->Width * bmp->Height, 4);
+			if (!bmp->Scan0) return ERR_OUT_OF_MEMORY;
+
 			bitsPerSample = tmp[8]; col = tmp[9];
 			rowExpander = Png_GetExpander(col, bitsPerSample);
 			if (rowExpander == NULL) return PNG_ERR_INVALID_COL_BPP;

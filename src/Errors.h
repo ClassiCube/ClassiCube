@@ -4,10 +4,10 @@
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
-/* NOTE: When changing these, remember to keep Logger.C up to date! */
+/* NOTE: When changing these, remember to keep Logger.c up to date! */
 enum ERRORS_ALL {
 	ERROR_BASE = 0xCCDED000UL,
-	ERR_END_OF_STREAM, ERR_NOT_SUPPORTED, ERR_INVALID_ARGUMENT,
+	ERR_END_OF_STREAM, ERR_NOT_SUPPORTED, ERR_INVALID_ARGUMENT, ERR_OUT_OF_MEMORY,
 
 	/* Ogg stream decoding errors */
 	OGG_ERR_INVALID_SIG, OGG_ERR_VERSION,

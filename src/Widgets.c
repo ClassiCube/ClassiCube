@@ -1421,7 +1421,7 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	struct DrawTextArgs args;
 	struct Texture* tex;
 	Size2D size, adjSize;
-	int hintX, hintWidth;
+	int hintX;
 	Bitmap bmp;
 
 	DrawTextArgs_Make(&args, &w->base.lines[0], w->base.font, false);
@@ -1443,8 +1443,8 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 		Drawer2D_DrawText(&bmp, &args, w->base.padding, 0);
 
 		args.text = range;
-		hintWidth = Drawer2D_MeasureText(&args).Width;
-		hintX     = adjSize.Width - hintWidth;
+		hintX     = adjSize.Width - Drawer2D_TextWidth(&args);
+		/* Draw hint text right-aligned if it won't overlap input text */
 		if (size.Width + 3 < hintX) {
 			Drawer2D_DrawText(&bmp, &args, hintX, 0);
 		}

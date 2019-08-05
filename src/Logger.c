@@ -74,6 +74,8 @@ static const char* Logger_GetCCErrorDesc(ReturnCode res) {
 	case ERR_END_OF_STREAM:    return "End of stream";
 	case ERR_NOT_SUPPORTED:    return "Operation not supported";
 	case ERR_INVALID_ARGUMENT: return "Invalid argument";
+	case ERR_OUT_OF_MEMORY:    return "Out of memory";
+
 	case OGG_ERR_INVALID_SIG:  return "Invalid OGG signature";
 	case OGG_ERR_VERSION:      return "Invalid OGG format version";
 
