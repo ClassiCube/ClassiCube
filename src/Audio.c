@@ -473,8 +473,10 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			snd->Format.BitsPerSample = Stream_GetU16_LE(&tmp[14]);
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
-			snd->Data = (uint8_t*)Mem_Alloc(size, 1, "WAV sound data");
+			snd->Data = (uint8_t*)Mem_TryAlloc(size, 1);
 			snd->Size = size;
+
+			if (!snd->Data) return ERR_OUT_OF_MEMORY;
 			return Stream_Read(stream, snd->Data, size);
 		}
 

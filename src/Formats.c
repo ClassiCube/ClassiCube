@@ -22,7 +22,9 @@
 *#########################################################################################################################*/
 static ReturnCode Map_ReadBlocks(struct Stream* stream) {
 	World.Volume = World.Width * World.Length * World.Height;
-	World.Blocks = (BlockRaw*)Mem_Alloc(World.Volume, 1, "map blocks");
+	World.Blocks = (BlockRaw*)Mem_TryAlloc(World.Volume, 1);
+
+	if (!World.Blocks) return ERR_OUT_OF_MEMORY;
 	return Stream_Read(stream, World.Blocks, World.Volume);
 }
 
@@ -398,9 +400,11 @@ static ReturnCode Nbt_ReadTag(uint8_t typeId, bool readTagName, struct Stream* s
 		if (NbtTag_IsSmall(&tag)) {
 			res = Stream_Read(stream, tag.Value.Small, tag.DataSize);
 		} else {
-			tag.Value.Big = (uint8_t*)Mem_Alloc(tag.DataSize, 1, "NBT data");
+			tag.Value.Big = (uint8_t*)Mem_TryAlloc(tag.DataSize, 1);
+			if (!tag.Value.Big) return ERR_OUT_OF_MEMORY;
+
 			res = Stream_Read(stream, tag.Value.Big, tag.DataSize);
-			if (res) { Mem_Free(tag.Value.Big); }
+			if (res) Mem_Free(tag.Value.Big);
 		}
 		break;
 	case NBT_STR:
@@ -877,7 +881,9 @@ static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fi
 		if ((res = Stream_ReadU32_BE(stream, &count))) return res;
 		field->Value.Array.Size = count;
 
-		field->Value.Array.Ptr = (uint8_t*)Mem_Alloc(count, 1, ".dat map blocks");
+		field->Value.Array.Ptr  = (uint8_t*)Mem_TryAlloc(count, 1);
+		if (!field->Value.Array.Ptr) return ERR_OUT_OF_MEMORY;
+
 		res = Stream_Read(stream, field->Value.Array.Ptr, count);
 		if (res) { Mem_Free(field->Value.Array.Ptr); return res; }
 	} break;
