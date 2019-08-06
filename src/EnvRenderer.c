@@ -150,14 +150,13 @@ void EnvRenderer_RenderClouds(double deltaTime) {
 	Gfx_LoadIdentityMatrix(MATRIX_TEXTURE);
 }
 
-static void EnvRenderer_DrawCloudsY(int x1, int z1, int x2, int z2, int y, VertexP3fT2fC4b* vertices) {
+static void EnvRenderer_DrawCloudsY(int x1, int z1, int x2, int z2, int y, VertexP3fT2fC4b* v) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
 	float u1, u2, v1, v2;
+	float yy = (float)y + 0.1f; 
+	PackedCol col = Env.CloudsCol;
 	/* adjust range so that largest negative uv coordinate is shifted to 0 or above. */
 	float offset = (float)Math_CeilDiv(-x1, 2048);
-
-	VertexP3fT2fC4b v;
-	v.Y = (float)y + 0.1f; v.Col = Env.CloudsCol;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -167,12 +166,13 @@ static void EnvRenderer_DrawCloudsY(int x1, int z1, int x2, int z2, int y, Verte
 			z2 = z1 + axisSize;
 			if (z2 > endZ) z2 = endZ;
 
-			u1  = (float)x1 / 2048.0f + offset; u2 = (float)x2 / 2048.0f + offset;
-			v1  = (float)z1 / 2048.0f + offset; v2 = (float)z2 / 2048.0f + offset;
-			v.X = (float)x1; v.Z = (float)z1; v.U = u1; v.V = v1; *vertices++ = v;
-			                 v.Z = (float)z2;           v.V = v2; *vertices++ = v;
-			v.X = (float)x2;                  v.U = u2;           *vertices++ = v;
-			                 v.Z = (float)z1;           v.V = v1; *vertices++ = v;
+			u1 = (float)x1 / 2048.0f + offset; u2 = (float)x2 / 2048.0f + offset;
+			v1 = (float)z1 / 2048.0f + offset; v2 = (float)z2 / 2048.0f + offset;
+
+			v->X = (float)x1; v->Y = yy; v->Z = (float)z1; v->Col = col; v->U = u1; v->V = v1; v++;
+			v->X = (float)x1; v->Y = yy; v->Z = (float)z2; v->Col = col; v->U = u1; v->V = v2; v++;
+			v->X = (float)x2; v->Y = yy; v->Z = (float)z2; v->Col = col; v->U = u2; v->V = v2; v++;
+			v->X = (float)x2; v->Y = yy; v->Z = (float)z1; v->Col = col; v->U = u2; v->V = v1; v++;
 		}
 	}
 }
@@ -235,10 +235,9 @@ void EnvRenderer_RenderSky(double deltaTime) {
 	}
 }
 
-static void EnvRenderer_DrawSkyY(int x1, int z1, int x2, int z2, int y, VertexP3fC4b* vertices) {
+static void EnvRenderer_DrawSkyY(int x1, int z1, int x2, int z2, int y, VertexP3fC4b* v) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
-	VertexP3fC4b v;
-	v.Y = (float)y; v.Col = Env.SkyCol;
+	PackedCol col = Env.SkyCol;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -248,10 +247,10 @@ static void EnvRenderer_DrawSkyY(int x1, int z1, int x2, int z2, int y, VertexP3
 			z2 = z1 + axisSize;
 			if (z2 > endZ) z2 = endZ;
 
-			v.X = (float)x1; v.Z = (float)z1; *vertices++ = v;
-			                 v.Z = (float)z2; *vertices++ = v;
-			v.X = (float)x2;                  *vertices++ = v;
-			                 v.Z = (float)z1; *vertices++ = v;
+			v->X = (float)x1; v->Y = (float)y; v->Z = (float)z1; v->Col = col; v++;
+			v->X = (float)x1; v->Y = (float)y; v->Z = (float)z2; v->Col = col; v++;
+			v->X = (float)x2; v->Y = (float)y; v->Z = (float)z2; v->Col = col; v++;
+			v->X = (float)x2; v->Y = (float)y; v->Z = (float)z1; v->Col = col; v++;
 		}
 	}
 }
@@ -446,12 +445,13 @@ static float EnvRenderer_RainAlphaAt(float x) {
 
 void EnvRenderer_RenderWeather(double deltaTime) {
 	VertexP3fT2fC4b vertices[WEATHER_VERTS_COUNT];
-	VertexP3fT2fC4b* ptr, v;
+	VertexP3fT2fC4b* v;
 	int weather, vCount;
 	IVec3 pos;
 	bool moved, particles;
 	float speed, vOffset;
 
+	PackedCol col;
 	int dist, dx, dz, x, z;
 	float alpha, y, height;
 	float worldV, v1, v2;
@@ -475,8 +475,8 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	particles = weather == WEATHER_RAINY;
 	weather_accumulator += deltaTime;
 
-	ptr   = vertices;
-	v.Col = Env.SunCol;
+	v   = vertices;
+	col = Env.SunCol;
 
 	for (dx = -WEATHER_EXTENT; dx <= WEATHER_EXTENT; dx++) {
 		for (dz = -WEATHER_EXTENT; dz <= WEATHER_EXTENT; dz++) {
@@ -494,38 +494,37 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 			dist  = dx * dx + dz * dz;
 			alpha = EnvRenderer_RainAlphaAt((float)dist);
 			Math_Clamp(alpha, 0.0f, 255.0f);
-			v.Col.A = (uint8_t)alpha;
+			col.A = (uint8_t)alpha;
 
-			/* NOTE: Making vertex is inlined since this is called millions of times. */
 			worldV = vOffset + (z & 1) / 2.0f - (x & 0x0F) / 16.0f;
 			v1 = y            / 6.0f + worldV; 
 			v2 = (y + height) / 6.0f + worldV;
 			x1 = (float)x;       y1 = (float)y;            z1 = (float)z;
 			x2 = (float)(x + 1); y2 = (float)(y + height); z2 = (float)(z + 1);
 
-			v.X = x1; v.Y = y1; v.Z = z1; v.U = 0.0f; v.V = v1; *ptr++ = v;
-			          v.Y = y2;                       v.V = v2; *ptr++ = v;
-			v.X = x2;           v.Z = z2; v.U = 1.0f; 	        *ptr++ = v;
-			          v.Y = y1;                       v.V = v1; *ptr++ = v;
+			v->X = x1; v->Y = y1; v->Z = z1; v->Col = col; v->U = 0.0f; v->V = v1; v++;
+			v->X = x1; v->Y = y2; v->Z = z1; v->Col = col; v->U = 0.0f; v->V = v2; v++;
+			v->X = x2; v->Y = y2; v->Z = z2; v->Col = col; v->U = 1.0f; v->V = v2; v++;
+			v->X = x2; v->Y = y1; v->Z = z2; v->Col = col; v->U = 1.0f; v->V = v1; v++;
 
-			                    v.Z = z1;					    *ptr++ = v;
-			          v.Y = y2;                       v.V = v2; *ptr++ = v;
-			v.X = x1;           v.Z = z2; v.U = 0.0f;		    *ptr++ = v;
-			          v.Y = y1;                       v.V = v1; *ptr++ = v;
+			v->X = x2; v->Y = y1; v->Z = z1; v->Col = col; v->U = 1.0f; v->V = v1; v++;
+			v->X = x2; v->Y = y2; v->Z = z1; v->Col = col; v->U = 1.0f; v->V = v2; v++;
+			v->X = x1; v->Y = y2; v->Z = z2; v->Col = col; v->U = 0.0f; v->V = v2; v++;
+			v->X = x1; v->Y = y1; v->Z = z2; v->Col = col; v->U = 0.0f; v->V = v1; v++;
 		}
 	}
 
 	if (particles && (weather_accumulator >= 0.25f || moved)) {
 		weather_accumulator = 0;
 	}
-	if (ptr == vertices) return;
+	if (v == vertices) return;
 
 	Gfx_SetAlphaTest(false);
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaArgBlend(true);
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
-	vCount = (int)(ptr - vertices);
+	vCount = (int)(v - vertices);
 	Gfx_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
 
 	Gfx_SetAlphaArgBlend(false);
@@ -608,10 +607,7 @@ static void EnvRenderer_UpdateBorderTextures(void) {
 static void EnvRenderer_DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol col, VertexP3fT2fC4b** vertices) {
 	int endZ = z2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
-
-	VertexP3fT2fC4b* ptr = *vertices;
-	VertexP3fT2fC4b v;
-	v.X = (float)x; v.Col = col;
+	VertexP3fT2fC4b* v = *vertices;
 
 	for (; z1 < endZ; z1 += axisSize) {
 		z2 = z1 + axisSize;
@@ -621,23 +617,20 @@ static void EnvRenderer_DrawBorderX(int x, int z1, int z2, int y1, int y2, Packe
 			y2 = y1 + axisSize;
 			if (y2 > endY) y2 = endY;
 
-			u2  = (float)z2 - (float)z1; v2 = (float)y2 - (float)y1;
-			v.Y = (float)y1; v.Z = (float)z1; v.U = 0.0f; v.V = v2;   *ptr++ = v;
-			v.Y = (float)y2;                              v.V = 0.0f; *ptr++ = v;
-			                 v.Z = (float)z2; v.U = u2;               *ptr++ = v;
-			v.Y = (float)y1;                              v.V = v2;   *ptr++ = v;
+			u2   = (float)z2 - (float)z1;      v2   = (float)y2 - (float)y1;
+			v->X = (float)x; v->Y = (float)y1; v->Z = (float)z1; v->Col = col; v->U = 0;  v->V = v2; v++;
+			v->X = (float)x; v->Y = (float)y2; v->Z = (float)z1; v->Col = col; v->U = 0;  v->V = 0;  v++;
+			v->X = (float)x; v->Y = (float)y2; v->Z = (float)z2; v->Col = col; v->U = u2; v->V = 0;  v++;
+			v->X = (float)x; v->Y = (float)y1; v->Z = (float)z2; v->Col = col; v->U = u2; v->V = v2; v++;
 		}
 	}
-	*vertices = ptr;
+	*vertices = v;
 }
 
 static void EnvRenderer_DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol col, VertexP3fT2fC4b** vertices) {
 	int endX = x2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
-
-	VertexP3fT2fC4b* ptr = *vertices;
-	VertexP3fT2fC4b v;
-	v.Z = (float)z; v.Col = col;
+	VertexP3fT2fC4b* v = *vertices;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -647,23 +640,21 @@ static void EnvRenderer_DrawBorderZ(int z, int x1, int x2, int y1, int y2, Packe
 			y2 = y1 + axisSize;
 			if (y2 > endY) y2 = endY;
 
-			u2  = (float)x2 - (float)x1; v2 = (float)y2 - (float)y1;
-			v.X = (float)x1; v.Y = (float)y1; v.U = 0.0f; v.V = v2;   *ptr++ = v;
-			                 v.Y = (float)y2;             v.V = 0.0f; *ptr++ = v;
-			v.X = (float)x2;                  v.U = u2;               *ptr++ = v;
-			                 v.Y = (float)y1;             v.V = v2;   *ptr++ = v;
+			u2   = (float)x2 - (float)x1;       v2   = (float)y2 - (float)y1;
+			v->X = (float)x1; v->Y = (float)y1; v->Z = (float)z; v->Col = col; v->U = 0;  v->V = v2; v++;
+			v->X = (float)x1; v->Y = (float)y2; v->Z = (float)z; v->Col = col; v->U = 0;  v->V = 0;  v++;
+			v->X = (float)x2; v->Y = (float)y2; v->Z = (float)z; v->Col = col; v->U = u2; v->V = 0;  v++;
+			v->X = (float)x2; v->Y = (float)y1; v->Z = (float)z; v->Col = col; v->U = u2; v->V = v2; v++;
 		}
 	}
-	*vertices = ptr;
+	*vertices = v;
 }
 
 static void EnvRenderer_DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol col, float offset, float yOffset, VertexP3fT2fC4b** vertices) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
-
-	VertexP3fT2fC4b* ptr = *vertices;
-	VertexP3fT2fC4b v;
-	v.Y = y + yOffset; v.Col = col;
+	VertexP3fT2fC4b* v = *vertices;
+	float yy = y + yOffset;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -673,14 +664,14 @@ static void EnvRenderer_DrawBorderY(int x1, int z1, int x2, int z2, float y, Pac
 			z2 = z1 + axisSize;
 			if (z2 > endZ) z2 = endZ;
 
-			u2  = (float)x2 - (float)x1; v2 = (float)z2 - (float)z1;
-			v.X = (float)x1 + offset; v.Z = (float)z1 + offset; v.U = 0.0f; v.V = 0.0f; *ptr++ = v;
-			                          v.Z = (float)z2 + offset;             v.V = v2;   *ptr++ = v;
-			v.X = (float)x2 + offset;                           v.U = u2;               *ptr++ = v;
-			                          v.Z = (float)z1 + offset;             v.V = 0.0f; *ptr++ = v;
+			u2   = (float)x2 - (float)x1; v2 = (float)z2 - (float)z1;
+			v->X = (float)x1 + offset; v->Y = yy; v->Z = (float)z1 + offset; v->Col = col; v->U = 0;  v->V = 0;  v++;
+			v->X = (float)x1 + offset; v->Y = yy; v->Z = (float)z2 + offset; v->Col = col; v->U = 0;  v->V = v2; v++;
+			v->X = (float)x2 + offset; v->Y = yy; v->Z = (float)z2 + offset; v->Col = col; v->U = u2; v->V = v2; v++;
+			v->X = (float)x2 + offset; v->Y = yy; v->Z = (float)z1 + offset; v->Col = col; v->U = u2; v->V = 0;  v++;
 		}
 	}
-	*vertices = ptr;
+	*vertices = v;
 }
 
 static void EnvRenderer_UpdateMapSides(void) {
