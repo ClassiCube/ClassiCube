@@ -283,7 +283,6 @@ void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeCol) {
 #include <d3d9types.h>
 
 /* https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dfvf-texcoordsizen */
-static D3DCMPFUNC d3d9_compareFuncs[8] = { D3DCMP_ALWAYS, D3DCMP_NOTEQUAL, D3DCMP_NEVER, D3DCMP_LESS, D3DCMP_LESSEQUAL, D3DCMP_EQUAL, D3DCMP_GREATEREQUAL, D3DCMP_GREATER };
 static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
 
 static IDirect3D9* d3d;
@@ -292,10 +291,7 @@ static DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 static D3DFORMAT gfx_viewFormat, gfx_depthFormat;
 static float totalMem;
 
-#define D3D9_SetRenderState(state, value, name) \
-ReturnCode res = IDirect3DDevice9_SetRenderState(device, state, value); if (res) Logger_Abort2(res, name);
 static void D3D9_RestoreRenderStates(void);
-
 static void D3D9_FreeResource(GfxResourceID* resource) {
 	IUnknown* unk;
 	ULONG refCount;
@@ -378,6 +374,8 @@ void Gfx_Init(void) {
 	Gfx.MaxTexWidth  = caps.MaxTextureWidth;
 	Gfx.MaxTexHeight = caps.MaxTextureHeight;
 	Gfx.CustomMipmapsLevels = true;
+	Gfx.Initialised         = true;
+
 	Gfx_RestoreState();
 	totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 }
@@ -643,7 +641,7 @@ void Gfx_SetAlphaArgBlend(bool enabled) {
 void Gfx_ClearCol(PackedCol col) { gfx_clearCol = col; }
 void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a) {
 	DWORD channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
-	D3D9_SetRenderState(D3DRS_COLORWRITEENABLE, channels, "D3D9_SetColourWrite");
+	IDirect3DDevice9_SetRenderState(device, D3DRS_COLORWRITEENABLE, channels);
 }
 
 void Gfx_SetDepthTest(bool enabled) {
@@ -1016,6 +1014,7 @@ void Gfx_Init(void) {
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
 	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
 
+	Gfx.Initialised = true;
 	GL_CheckSupport();
 	Gfx_RestoreState();
 }

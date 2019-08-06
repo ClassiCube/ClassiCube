@@ -158,7 +158,8 @@ struct AnimationData {
 	uint16_t FrameSize;      /* Size of each frame in pixel coordinates */
 	uint16_t State;          /* Current animation frame index */
 	uint16_t StatesCount;    /* Total number of animation frames */
-	int16_t  Tick, TickDelay;
+	uint16_t Delay;          /* Delay in ticks until next frame is drawn */
+	uint16_t FrameDelay;     /* Delay between each frame */
 };
 
 static Bitmap anims_bmp;
@@ -211,8 +212,8 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 		if (!Convert_ParseUInt16(&parts[5], &data.StatesCount)) {
 			Chat_Add1("&cInvalid anim states count: %s", &line); continue;
 		}
-		if (!Convert_ParseInt16(&parts[6], &data.TickDelay)) {
-			Chat_Add1("&cInvalid anim tick delay: %s", &line); continue;
+		if (!Convert_ParseUInt16(&parts[6], &data.FrameDelay)) {
+			Chat_Add1("&cInvalid anim frame delay: %s", &line); continue;
 		}
 
 		if (anims_count == Array_Elems(anims_list)) {
@@ -260,12 +261,11 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 
 static void Animations_Apply(struct AnimationData* data) {
 	TextureLoc loc;
-	data->Tick--;
-	if (data->Tick >= 0) return;
+	if (data->Delay) { data->Delay--; return; }
 
 	data->State++;
 	data->State %= data->StatesCount;
-	data->Tick   = data->TickDelay;
+	data->Delay  = data->FrameDelay;
 
 	loc = data->TexLoc;
 #ifndef CC_BUILD_WEB

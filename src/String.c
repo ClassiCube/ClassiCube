@@ -635,13 +635,6 @@ bool Convert_ParseUInt8(const String* str, uint8_t* value) {
 	*value = (uint8_t)tmp; return true;
 }
 
-bool Convert_ParseInt16(const String* str, int16_t* value) {
-	int tmp; 
-	*value = 0;
-	if (!Convert_ParseInt(str, &tmp) || tmp < Int16_MinValue || tmp > Int16_MaxValue) return false;
-	*value = (int16_t)tmp; return true;
-}
-
 bool Convert_ParseUInt16(const String* str, uint16_t* value) {
 	int tmp; 
 	*value = 0;

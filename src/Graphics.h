@@ -34,6 +34,8 @@ CC_VAR extern struct _GfxData {
 	bool Mipmaps;
 	/* Whether mipmaps must be created for all dimensions down to 1x1 or not. */
 	bool CustomMipmapsLevels;
+	/* Whether Gfx_Init has been called to initialise state. */
+	bool Initialised;
 	struct Matrix View, Projection;
 } Gfx;
 

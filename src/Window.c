@@ -2883,13 +2883,15 @@ static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject s
 	Event_RaiseVoid(&WindowEvents.Created);
 }
 
+#include "Graphics.h"
 static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 	Platform_LogConst("WIN - DESTROYED");
 	if (win_handle) ANativeWindow_release(win_handle);
 
-	win_handle     = NULL;
-	/* TODO: Do we Window_Close() here */
-	/* TODO: Gfx Lose context */
+	win_handle = NULL;
+	/* eglSwapBuffers might return EGL_BAD_SURFACE, EGL_BAD_ALLOC, or some other error */
+	/* Instead the context is lost here in a consistent manner */
+	if (Gfx.Initialised) Gfx_LoseContext("surface lost");
 	JavaCallVoid(env, "processedSurfaceDestroyed", "()V", NULL);
 }
 
@@ -3625,15 +3627,9 @@ bool GLContext_SwapBuffers(void) {
 	if (eglSwapBuffers(ctx_display, ctx_surface)) return true;
 
 	err = eglGetError();
-	/* We get EGL_BAD_SURFACE if the window surface is destroyed on android */
-	/* TODO: Maybe detect from the SurfaceDestroyed event handler instead */
-	if (err == EGL_BAD_SURFACE) {
-		GLContext_FreeSurface(); return false;
-	}
-
-	/* TODO: figure out how to handle other errors */
+	/* TODO: figure out what errors need to be handled here */
 	Logger_Abort2(err, "Failed to swap buffers");
-	return true;
+	return false;
 }
 
 void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {

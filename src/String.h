@@ -201,8 +201,6 @@ void String_DecodeCP1252(String* str, const uint8_t* chars, int numBytes);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
 CC_API bool Convert_ParseUInt8(const String*  str, uint8_t* value);
-/* Attempts to convert the given string into an signed 16 bit integer. */
-CC_API bool Convert_ParseInt16(const String*  str, int16_t* value);
 /* Attempts to convert the given string into an unsigned 16 bit integer. */
 CC_API bool Convert_ParseUInt16(const String* str, uint16_t* value);
 /* Attempts to convert the given string into an integer. */
