@@ -27,7 +27,7 @@ void AxisLinesRenderer_Render(double delta) {
 
 	Vec3 coords[5], pos;
 	VertexP3fC4b vertices[AXISLINES_NUM_VERTICES];
-	VertexP3fC4b* ptr = vertices;
+	VertexP3fC4b* v = vertices;
 	int i, count;
 
 	if (!AxisLinesRenderer_Enabled || Gfx.LostContext) return;
@@ -46,11 +46,11 @@ void AxisLinesRenderer_Render(double delta) {
 	Vec3_Add1(&coords[3], &pos,  AXISLINES_THICKNESS);
 	Vec3_Add1(&coords[4], &pos,  AXISLINES_LENGTH);
 
-	for (i = 0; i < count; i++, ptr++) {
-		ptr->X   = coords[indices[i*3 + 0]].X;
-		ptr->Y   = coords[indices[i*3 + 1]].Y;
-		ptr->Z   = coords[indices[i*3 + 2]].Z;
-		ptr->Col = cols[i >> 2];
+	for (i = 0; i < count; i++, v++) {
+		v->X   = coords[indices[i*3 + 0]].X;
+		v->Y   = coords[indices[i*3 + 1]].Y;
+		v->Z   = coords[indices[i*3 + 2]].Z;
+		v->Col = cols[i >> 2];
 	}
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);

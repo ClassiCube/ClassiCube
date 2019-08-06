@@ -458,7 +458,7 @@ struct ShadowData { float Y; BlockID Block; uint8_t A; };
 static bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f; }
 static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity* e, struct ShadowData* data, float x1, float z1, float x2, float z2) {
 	PackedCol col = PACKEDCOL_CONST(255, 255, 255, 0);
-	VertexP3fT2fC4b* ptr, v;
+	VertexP3fT2fC4b* v;
 	Vec3 cen;
 	float u1, v1, u2, v2;
 
@@ -476,29 +476,28 @@ static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity
 	x2 = min(x2, cen.X + shadow_radius); u2 = u2 <= 1.0f ? u2 : 1.0f;
 	z2 = min(z2, cen.Z + shadow_radius); v2 = v2 <= 1.0f ? v2 : 1.0f;
 
-	ptr = *vertices;
-	v.Y = data->Y; v.Col = col; v.Col.A = data->A;
+	v     = *vertices;
+	col.A = data->A;
 
-	v.X = x1; v.Z = z1; v.U = u1; v.V = v1; *ptr++ = v;
-	v.X = x2;           v.U = u2;           *ptr++ = v;
-	          v.Z = z2;           v.V = v2; *ptr++ = v;
-	v.X = x1;           v.U = u1;           *ptr++ = v;
+	v->X = x1; v->Y = data->Y; v->Z = z1; v->Col = col; v->U = u1; v->V = v1; v++;
+	v->X = x2; v->Y = data->Y; v->Z = z1; v->Col = col; v->U = u2; v->V = v1; v++;
+	v->X = x2; v->Y = data->Y; v->Z = z2; v->Col = col; v->U = u2; v->V = v2; v++;
+	v->X = x1; v->Y = data->Y; v->Z = z2; v->Col = col; v->U = u1; v->V = v2; v++;
 
-	*vertices = ptr;
+	*vertices = v;
 }
 
 static void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, float y, float x, float z) {
 	PackedCol col = PACKEDCOL_CONST(255, 255, 255, 220);
 	float     uv1 = 63/128.0f, uv2 = 64/128.0f;
-	VertexP3fT2fC4b* ptr = *vertices;
-	VertexP3fT2fC4b v; v.Y = y; v.Col = col;
+	VertexP3fT2fC4b* v = *vertices;
 
-	v.X = x;        v.Z = z;        v.U = uv1; v.V = uv1; *ptr = v; ptr++;
-	v.X = x + 1.0f;                 v.U = uv2;            *ptr = v; ptr++;
-	                v.Z = z + 1.0f;            v.V = uv2; *ptr = v; ptr++;
-	v.X = x;                        v.U = uv1;            *ptr = v; ptr++;
+	v->X = x;     v->Y = y; v->Z = z;     v->Col = col; v->U = uv1; v->V = uv1; v++;
+	v->X = x + 1; v->Y = y; v->Z = z;     v->Col = col; v->U = uv2; v->V = uv1; v++;
+	v->X = x + 1; v->Y = y; v->Z = z + 1; v->Col = col; v->U = uv2; v->V = uv2; v++;
+	v->X = x;     v->Y = y; v->Z = z + 1; v->Col = col; v->U = uv1; v->V = uv2; v++;
 
-	*vertices = ptr;
+	*vertices = v;
 }
 
 /* Shadow may extend down multiple blocks vertically */

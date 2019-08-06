@@ -664,7 +664,7 @@ static void EnvRenderer_DrawBorderY(int x1, int z1, int x2, int z2, float y, Pac
 			z2 = z1 + axisSize;
 			if (z2 > endZ) z2 = endZ;
 
-			u2   = (float)x2 - (float)x1; v2 = (float)z2 - (float)z1;
+			u2   = (float)x2 - (float)x1;         v2   = (float)z2 - (float)z1;
 			v->X = (float)x1 + offset; v->Y = yy; v->Z = (float)z1 + offset; v->Col = col; v->U = 0;  v->V = 0;  v++;
 			v->X = (float)x1 + offset; v->Y = yy; v->Z = (float)z2 + offset; v->Col = col; v->U = 0;  v->V = v2; v++;
 			v->X = (float)x2 + offset; v->Y = yy; v->Z = (float)z2 + offset; v->Col = col; v->U = u2; v->V = v2; v++;

@@ -29,7 +29,7 @@ static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** faceVer
 		0,0,0, 0,1,0,  1,0,0, 1,1,0,  1,0,1, 1,1,1,  0,0,1, 0,1,1, /* X/Z  */
 	};
 
-	VertexP3fC4b* ptr;
+	VertexP3fC4b* v;
 	PackedCol col;
 	int i;
 
@@ -39,24 +39,24 @@ static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** faceVer
 	Vec3_Add1(&coords[1], &box->Max,  offset);
 
 	col = box->Col;
-	ptr = *faceVertices;
-	for (i = 0; i < Array_Elems(faceIndices); i += 3, ptr++) {
-		ptr->X   = coords[faceIndices[i + 0]].X;
-		ptr->Y   = coords[faceIndices[i + 1]].Y;
-		ptr->Z   = coords[faceIndices[i + 2]].Z;
-		ptr->Col = col;
+	v   = *faceVertices;
+	for (i = 0; i < Array_Elems(faceIndices); i += 3, v++) {
+		v->X   = coords[faceIndices[i + 0]].X;
+		v->Y   = coords[faceIndices[i + 1]].Y;
+		v->Z   = coords[faceIndices[i + 2]].Z;
+		v->Col = col;
 	}
-	*faceVertices = ptr;
+	*faceVertices = v;
 
 	col.R = ~col.R; col.G = ~col.G; col.B = ~col.B;
-	ptr = *edgeVertices;
-	for (i = 0; i < Array_Elems(edgeIndices); i += 3, ptr++) {
-		ptr->X   = coords[edgeIndices[i + 0]].X;
-		ptr->Y   = coords[edgeIndices[i + 1]].Y;
-		ptr->Z   = coords[edgeIndices[i + 2]].Z;
-		ptr->Col = col;
+	v     = *edgeVertices;
+	for (i = 0; i < Array_Elems(edgeIndices); i += 3, v++) {
+		v->X   = coords[edgeIndices[i + 0]].X;
+		v->Y   = coords[edgeIndices[i + 1]].Y;
+		v->Z   = coords[edgeIndices[i + 2]].Z;
+		v->Col = col;
 	}
-	*edgeVertices = ptr;
+	*edgeVertices = v;
 }
 
 static int SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) {

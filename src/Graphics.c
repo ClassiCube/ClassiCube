@@ -93,12 +93,12 @@ void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCoun
 
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol col) {
 	VertexP3fC4b verts[4];
-	VertexP3fC4b v; v.Z = 0.0f; v.Col = col;
+	VertexP3fC4b* v = verts;
 
-	v.X = (float)x;           v.Y = (float)y;            verts[0] = v;
-	v.X = (float)(x + width);                            verts[1] = v;
-	                          v.Y = (float)(y + height); verts[2] = v;
-	v.X = (float)x;                                      verts[3] = v;
+	v->X = (float)x;           v->Y = (float)y;            v->Z = 0; v->Col = col; v++;
+	v->X = (float)(x + width); v->Y = (float)y;            v->Z = 0; v->Col = col; v++;
+	v->X = (float)(x + width); v->Y = (float)(y + height); v->Z = 0; v->Col = col; v++;
+	v->X = (float)x;           v->Y = (float)(y + height); v->Z = 0; v->Col = col; v++;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
 	Gfx_UpdateDynamicVb_IndexedTris(Gfx_quadVb, verts, 4);
@@ -106,12 +106,12 @@ void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol col) {
 
 void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
 	VertexP3fC4b verts[4];
-	VertexP3fC4b v; v.Z = 0.0f;
+	VertexP3fC4b* v = verts;
 
-	v.X = (float)x;           v.Y = (float)y;            v.Col = top;    verts[0] = v;
-	v.X = (float)(x + width);                                            verts[1] = v;
-	                          v.Y = (float)(y + height); v.Col = bottom; verts[2] = v;
-	v.X = (float)x;                                                      verts[3] = v;
+	v->X = (float)x;           v->Y = (float)y;            v->Z = 0; v->Col = top; v++;
+	v->X = (float)(x + width); v->Y = (float)y;            v->Z = 0; v->Col = top; v++;
+	v->X = (float)(x + width); v->Y = (float)(y + height); v->Z = 0; v->Col = bottom; v++;
+	v->X = (float)x;           v->Y = (float)(y + height); v->Z = 0; v->Col = bottom; v++;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
 	Gfx_UpdateDynamicVb_IndexedTris(Gfx_quadVb, verts, 4);
@@ -128,6 +128,8 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol col) {
 void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
 	float x1 = (float)tex->X, x2 = (float)(tex->X + tex->Width);
 	float y1 = (float)tex->Y, y2 = (float)(tex->Y + tex->Height);
+	VertexP3fT2fC4b* v = *vertices;
+
 #ifdef CC_BUILD_D3D9
 	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
 	/* i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this. */
@@ -135,13 +137,11 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2fC4b** 
 	y1 -= 0.5f; y2 -= 0.5f;
 #endif
 
-	VertexP3fT2fC4b* ptr = *vertices;
-	VertexP3fT2fC4b v; v.Z = 0.0f; v.Col = col;
-	v.X = x1; v.Y = y1; v.U = tex->uv.U1; v.V = tex->uv.V1; ptr[0] = v;
-	v.X = x2;           v.U = tex->uv.U2;                   ptr[1] = v;
-	v.Y = y2;                             v.V = tex->uv.V2; ptr[2] = v;
-	v.X = x1;           v.U = tex->uv.U1;                   ptr[3] = v;
-	*vertices += 4;
+	v->X = x1; v->Y = y1; v->Z = 0; v->Col = col; v->U = tex->uv.U1; v->V = tex->uv.V1; v++;
+	v->X = x2; v->Y = y1; v->Z = 0; v->Col = col; v->U = tex->uv.U2; v->V = tex->uv.V1; v++;
+	v->X = x2; v->Y = y2; v->Z = 0; v->Col = col; v->U = tex->uv.U2; v->V = tex->uv.V2; v++;
+	v->X = x1; v->Y = y2; v->Z = 0; v->Col = col; v->U = tex->uv.U1; v->V = tex->uv.V2; v++;
+	*vertices = v;
 }
 
 static bool gfx_hadFog;
