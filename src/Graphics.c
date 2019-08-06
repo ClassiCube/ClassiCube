@@ -9,6 +9,7 @@
 #include "Event.h"
 #include "Block.h"
 #include "ExtMath.h"
+#include "Errors.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
@@ -1209,8 +1210,12 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output) {
 	GLint vp[4];
 	
 	glGetIntegerv(GL_VIEWPORT, vp); /* { x, y, width, height } */
-	Bitmap_Allocate(&bmp, vp[2], vp[3]);
-	glReadPixels(0, 0, vp[2], vp[3], PIXEL_FORMAT, GL_UNSIGNED_BYTE, bmp.Scan0);
+	bmp.Width  = vp[2]; 
+	bmp.Height = vp[3];
+
+	bmp.Scan0  = Mem_TryAlloc(bmp.Width * bmp.Height, 4);
+	if (!bmp.Scan0) return ERR_OUT_OF_MEMORY;
+	glReadPixels(0, 0, bmp.Width, bmp.Height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, bmp.Scan0);
 
 	res = Png_Encode(&bmp, output, GL_SelectRow, false);
 	Mem_Free(bmp.Scan0);
