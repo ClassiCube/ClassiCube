@@ -379,12 +379,8 @@ static void Launcher_LoadTextures(Bitmap* bmp) {
 	Bitmap_Allocate(&stoneBmp, TILESIZE, TILESIZE);
 
 	/* Precompute the scaled background */
-	Drawer2D_BmpScaled(&dirtBmp,  0, 0, TILESIZE, TILESIZE,
-						bmp, 2 * tileSize, 0, tileSize, tileSize,
-						TILESIZE, TILESIZE);
-	Drawer2D_BmpScaled(&stoneBmp, 0, 0, TILESIZE, TILESIZE,
-						bmp, 1 * tileSize, 0, tileSize, tileSize,
-						TILESIZE, TILESIZE);
+	Bitmap_Scale(&dirtBmp,  bmp, 2 * tileSize, 0, tileSize, tileSize);
+	Bitmap_Scale(&stoneBmp, bmp, 1 * tileSize, 0, tileSize, tileSize);
 
 	Gradient_Tint(&dirtBmp, 128, 64, 0, 0, TILESIZE, TILESIZE);
 	Gradient_Tint(&stoneBmp, 96, 96, 0, 0, TILESIZE, TILESIZE);

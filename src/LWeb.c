@@ -3,6 +3,7 @@
 #include "Platform.h"
 #include "Stream.h"
 #include "Logger.h"
+#include "Window.h"
 
 #ifndef CC_BUILD_WEB
 /*########################################################################################################################*
@@ -572,6 +573,21 @@ struct Flag {
 };
 static struct Flag* flags;
 
+/* Scales up flag bitmap if necessary */
+static void FetchFlagsTask_Scale(Bitmap* bmp) {
+	Bitmap scaled;
+	int width  = Display_ScaleX(bmp->Width);
+	int height = Display_ScaleY(bmp->Height);
+	/* at default DPI don't need to rescale it */
+	if (width == bmp->Width && height == bmp->Height) return;
+
+	Bitmap_Allocate(&scaled, width, height);
+	Bitmap_Scale(&scaled, bmp, 0, 0, bmp->Width, bmp->Height);
+
+	Mem_Free(bmp->Scan0);
+	*bmp = scaled;
+}
+
 static void FetchFlagsTask_DownloadNext(void);
 static void FetchFlagsTask_Handle(uint8_t* data, uint32_t len) {
 	struct Stream s;
@@ -581,6 +597,7 @@ static void FetchFlagsTask_Handle(uint8_t* data, uint32_t len) {
 	res = Png_Decode(&flags[FetchFlagsTask.Count].bmp, &s);
 	if (res) Logger_Warn(res, "decoding flag");
 
+	FetchFlagsTask_Scale(&flags[FetchFlagsTask.Count].bmp);
 	FetchFlagsTask.Count++;
 	FetchFlagsTask_DownloadNext();
 }

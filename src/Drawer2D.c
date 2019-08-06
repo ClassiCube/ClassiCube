@@ -215,26 +215,6 @@ void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
 	}
 }
 
-void Drawer2D_BmpScaled(Bitmap* dst, int x, int y, int width, int height,
-						Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight,
-						int scaleWidth, int scaleHeight) {
-	BitmapCol* dstRow;
-	BitmapCol* srcRow;
-	int xx, yy;
-	int scaledX, scaledY;
-
-	for (yy = 0; yy < height; yy++) {
-		scaledY = (y + yy) * srcHeight / scaleHeight;
-		srcRow  = Bitmap_GetRow(src, srcY + (scaledY % srcHeight));
-		dstRow  = Bitmap_GetRow(dst, y + yy) + x;
-
-		for (xx = 0; xx < width; xx++) {
-			scaledX    = (x + xx) * srcWidth / scaleWidth;
-			dstRow[xx] = srcRow[srcX + (scaledX % srcWidth)];
-		}
-	}
-}
-
 void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src) {
 	int width = src->Width, height = src->Height;
 	BitmapCol* dstRow;

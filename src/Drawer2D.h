@@ -53,11 +53,6 @@ CC_API void Gradient_Tint(Bitmap* bmp, uint8_t tintA, uint8_t tintB,
 /* TODO: Currently this only handles square areas. */
 CC_API void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
 								uint8_t* indices, BitmapCol* palette);
-/* Fills the given area using pixels from a region in the source bitmap, by repeatedly tiling the region. */
-/* The pixels from the region are then scaled upwards or downwards depending on scale width and height. */
-CC_API void Drawer2D_BmpScaled(Bitmap* dst, int x, int y, int width, int height,
-							   Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight,
-							   int scaleWidth, int scaleHeight);
 /* Fills the given area using pixels from the source bitmap. */
 CC_API void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src);
 /* Fills the area with the given colour. */

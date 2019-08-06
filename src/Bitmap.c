@@ -30,6 +30,24 @@ void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height) {
 	bmp->Scan0 = (uint8_t*)Mem_AllocCleared(width * height, 4, "bitmap data");
 }
 
+void Bitmap_Scale(Bitmap* dst, Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight) {
+	BitmapCol* dstRow;
+	BitmapCol* srcRow;
+	int x, y, width, height;
+
+	width = dst->Width;
+	height = dst->Height;
+
+	for (y = 0; y < height; y++) {
+		srcRow = Bitmap_GetRow(src, srcY + (y * srcHeight / height));
+		dstRow = Bitmap_GetRow(dst, y);
+
+		for (x = 0; x < width; x++) {
+			dstRow[x] = srcRow[srcX + (x * srcWidth / width)];
+		}
+	}
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------PNG decoder--------------------------------------------------------*
