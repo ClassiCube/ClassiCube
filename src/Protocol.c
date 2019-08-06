@@ -727,13 +727,14 @@ static void Classic_Tick(void) {
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-const char* cpe_clientExtensions[30] = {
+const char* cpe_clientExtensions[31] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
-	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap",
-	"ExtendedTextures", "ExtendedBlocks",
+	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
+	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
+	"ExtendedTextures", "ExtendedBlocks"
 };
 static void CPE_SetMapEnvUrl(uint8_t* data);
 
@@ -919,6 +920,7 @@ static void CPE_ExtEntry(uint8_t* data) {
 		Net_PacketSizes[OPCODE_DEFINE_BLOCK_EXT] += 1;
 		Net_PacketSizes[OPCODE_SET_INVENTORY_ORDER] += 2;
 		Net_PacketSizes[OPCODE_BULK_BLOCK_UPDATE]   += 256 / 4;
+		Net_PacketSizes[OPCODE_SET_HOTBAR]       += 1;
 	}
 #endif
 }
@@ -1294,6 +1296,16 @@ static void CPE_SetInventoryOrder(uint8_t* data) {
 	if (order) { Inventory.Map[order - 1] = block; }
 }
 
+static void CPE_SetHotbar(uint8_t* data) {
+	BlockID block;
+	uint8_t index;
+	Protocol_ReadBlock(data, block);
+	index = *data;
+
+	if (index >= INVENTORY_BLOCKS_PER_HOTBAR) return;
+	Inventory_Set(index, block);
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1331,6 +1343,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_SET_ENTITY_PROPERTY, CPE_SetEntityProperty, 7);
 	Net_Set(OPCODE_TWO_WAY_PING, CPE_TwoWayPing, 4);
 	Net_Set(OPCODE_SET_INVENTORY_ORDER, CPE_SetInventoryOrder, 3);
+	Net_Set(OPCODE_SET_HOTBAR, CPE_SetHotbar, 3);
 }
 
 static void CPE_Tick(void) {
