@@ -671,6 +671,7 @@ static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, void* u
 static void Http_SetCurlOpts(struct HttpRequest* req) {
 	curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+	curl_easy_setopt(curl, CURLOPT_MAXREDIRS,      20L);
 
 	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_ProcessHeader);
 	curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
