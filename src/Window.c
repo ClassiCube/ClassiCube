@@ -48,6 +48,7 @@ static void Window_RegrabMouse(void) {
 }
 
 static void Window_DefaultEnableRawMouse(void) {
+	win_rawMouse = true;
 	Window_RegrabMouse();
 	Cursor_SetVisible(false);
 }
@@ -60,6 +61,7 @@ static void Window_DefaultUpdateRawMouse(void) {
 }
 
 static void Window_DefaultDisableRawMouse(void) {
+	win_rawMouse = false;
 	Window_RegrabMouse();
 	Cursor_SetVisible(true);
 }
@@ -658,9 +660,7 @@ void Window_OpenKeyboard(void)  { }
 void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void) {
-	win_rawMouse = true;
 	Window_DefaultEnableRawMouse();
-
 	if (!rawMouseInited) Window_InitRawMouse();
 	rawMouseInited = true;
 }
@@ -674,10 +674,7 @@ void Window_UpdateRawMouse(void) {
 	}
 }
 
-void Window_DisableRawMouse(void) {
-	win_rawMouse = false;
-	Window_DefaultDisableRawMouse(); 
-}
+void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 #endif
 
 
@@ -1625,7 +1622,7 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 
 static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	int mouseX, mouseY;
-	HIPoint pt;
+	HIPoint pt, raw;
 	UInt32 kind;
 	bool down;
 	EventMouseButton button;
@@ -1637,6 +1634,12 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	/* this error comes up from the application event handler */
 	if (res && res != eventParameterNotFoundErr) {
 		Logger_Abort2(res, "Getting mouse position");
+	}
+
+	if (win_rawMouse) {
+		raw.x = 0; raw.y = 0;
+		GetEventParameter(inEvent, kEventParamMouseDelta, typeHIPoint, NULL, sizeof(HIPoint), NULL, &raw);
+		Event_RaiseMouseMove(&MouseEvents.RawMoved, (int)raw.x, (int)raw.y);
 	}
 	
 	mouseX = (int)pt.x; mouseY = (int)pt.y;
@@ -1969,10 +1972,7 @@ void Cursor_SetPosition(int x, int y) {
 	CGPoint point;
 	point.x = x + windowX;
 	point.y = y + windowY;
-	
-	CGAssociateMouseAndMouseCursorPosition(0);
 	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
-	CGAssociateMouseAndMouseCursorPosition(1);
 }
 
 void Cursor_SetVisible(bool visible) {
@@ -2048,9 +2048,17 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 
 void Window_OpenKeyboard(void)  { }
 void Window_CloseKeyboard(void) { }
-void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
-void Window_UpdateRawMouse(void)  { Window_DefaultUpdateRawMouse();  }
-void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
+
+void Window_EnableRawMouse(void)  {
+	Window_DefaultEnableRawMouse();
+	CGAssociateMouseAndMouseCursorPosition(0);
+}
+
+void Window_UpdateRawMouse(void)  { Window_CentreMousePosition(); }
+void Window_DisableRawMouse(void) {
+	CGAssociateMouseAndMouseCursorPosition(1);
+	Window_DefaultDisableRawMouse();
+ }
 #endif
 
 
@@ -3105,15 +3113,9 @@ void Window_CloseKeyboard(void) {
 	JavaCallVoid(env, "closeKeyboard", "()V", NULL);
 }
 
-void Window_EnableRawMouse(void) {
-	Window_DefaultEnableRawMouse();
-	win_rawMouse = true; 
-}
-void Window_UpdateRawMouse(void) { }
-void Window_DisableRawMouse(void) {
-	Window_DefaultDisableRawMouse();
-	win_rawMouse = false; 
-}
+void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse(); }
+void Window_UpdateRawMouse(void)  { }
+void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 #endif
 
 
