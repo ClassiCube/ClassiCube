@@ -117,12 +117,6 @@ extern const char* Weather_Names[3];
 extern const PackedCol Env_DefaultSkyCol, Env_DefaultFogCol, Env_DefaultCloudsCol, Env_DefaultSkyboxCol;
 extern const PackedCol Env_DefaultSunCol, Env_DefaultShadowCol;
 
-#define ENV_DEFAULT_SKYCOL_HEX "99CCFF"
-#define ENV_DEFAULT_FOGCOL_HEX "FFFFFF"
-#define ENV_DEFAULT_CLOUDSCOL_HEX "FFFFFF"
-#define ENV_DEFAULT_SUNCOL_HEX "FFFFFF"
-#define ENV_DEFAULT_SHADOWCOL_HEX "9B9B9B"
-
 /* If url is empty, extracts default texture pack. */
 /* Else tries extracting cached texture pack for the given URL, */
 /* then asynchronously downloads the texture pack from the given URL. */

@@ -128,50 +128,53 @@ CC_NOINLINE void InputWidget_AppendString(struct InputWidget* w, const String* t
 CC_NOINLINE void InputWidget_Append(struct InputWidget* w, char c);
 
 
-struct InputValidator;
-struct InputValidatorVTABLE {
+struct MenuInputDesc;
+struct MenuInputVTABLE {
 	/* Returns a description of the range of valid values (e.g. "0 - 100") */
-	void (*GetRange)(struct InputValidator*      v, String* range);
+	void (*GetRange)(struct MenuInputDesc*      d, String* range);
 	/* Whether the given character is acceptable for this input */
-	bool (*IsValidChar)(struct InputValidator*   v, char c);
+	bool (*IsValidChar)(struct MenuInputDesc*   d, char c);
 	/* Whether the characters of the given string are acceptable for this input */
 	/* e.g. for an integer, '-' is only valid for the first character */
-	bool (*IsValidString)(struct InputValidator* v, const String* s);
+	bool (*IsValidString)(struct MenuInputDesc* d, const String* s);
 	/* Whether the characters of the given string produce a valid value */
-	bool (*IsValidValue)(struct InputValidator*  v, const String* s);
+	bool (*IsValidValue)(struct MenuInputDesc*  d, const String* s);
+	/* Gets the default value for this input. */
+	void (*GetDefault)(struct MenuInputDesc*    d, String* value);
 };
 
-struct InputValidator {
-	struct InputValidatorVTABLE* VTABLE;
+struct MenuInputDesc {
+	struct MenuInputVTABLE* VTABLE;
 	union {
 		struct { const char** Names; int Count; } e;
-		struct { int Min, Max; } i;
-		struct { float Min, Max; } f;
-	} Meta;
+		struct { int Min, Max, Default; } i;
+		struct { float Min, Max, Default; } f;
+		struct { PackedCol Default; } h;
+	} meta;
 };
 
-extern struct InputValidatorVTABLE HexValidator_VTABLE;
-extern struct InputValidatorVTABLE IntValidator_VTABLE;
-extern struct InputValidatorVTABLE SeedValidator_VTABLE;
-extern struct InputValidatorVTABLE FloatValidator_VTABLE;
-extern struct InputValidatorVTABLE PathValidator_VTABLE;
-extern struct InputValidatorVTABLE StringValidator_VTABLE;
+extern struct MenuInputVTABLE HexValidator_VTABLE;
+extern struct MenuInputVTABLE IntValidator_VTABLE;
+extern struct MenuInputVTABLE SeedValidator_VTABLE;
+extern struct MenuInputVTABLE FloatValidator_VTABLE;
+extern struct MenuInputVTABLE PathValidator_VTABLE;
+extern struct MenuInputVTABLE StringValidator_VTABLE;
 
-#define InputValidator_Hex(v) v.VTABLE = &HexValidator_VTABLE;
-#define InputValidator_Int(v, lo, hi) v.VTABLE = &IntValidator_VTABLE; v.Meta.i.Min = lo; v.Meta.i.Max = hi;
-#define InputValidator_Seed(v) v.VTABLE = &SeedValidator_VTABLE; v.Meta.i.Min = Int32_MinValue; v.Meta.i.Max = Int32_MaxValue;
-#define InputValidator_Float(v, lo, hi) v.VTABLE = &FloatValidator_VTABLE; v.Meta.f.Min = lo; v.Meta.f.Max = hi;
-#define InputValidator_Path(v) v.VTABLE = &PathValidator_VTABLE;
-#define InputValidator_Enum(v, names, count) v.VTABLE = NULL; v.Meta.e.Names = names; v.Meta.e.Count = count;
-#define InputValidator_String(v) v.VTABLE = &StringValidator_VTABLE;
+#define MenuInput_Hex(v, def) v.VTABLE = &HexValidator_VTABLE; v.meta.h.Default = def;
+#define MenuInput_Int(v, lo, hi, def) v.VTABLE = &IntValidator_VTABLE; v.meta.i.Min = lo; v.meta.i.Max = hi; v.meta.i.Default = def;
+#define MenuInput_Seed(v) v.VTABLE = &SeedValidator_VTABLE; v.meta.i.Min = Int32_MinValue; v.meta.i.Max = Int32_MaxValue;
+#define MenuInput_Float(v, lo, hi, def) v.VTABLE = &FloatValidator_VTABLE; v.meta.f.Min = lo; v.meta.f.Max = hi; v.meta.f.Default = def;
+#define MenuInput_Path(v) v.VTABLE = &PathValidator_VTABLE;
+#define MenuInput_Enum(v, names, count) v.VTABLE = NULL; v.meta.e.Names = names; v.meta.e.Count = count;
+#define MenuInput_String(v) v.VTABLE = &StringValidator_VTABLE;
 
 struct MenuInputWidget {
 	struct InputWidget base;
 	int minWidth, minHeight;
-	struct InputValidator validator;
+	struct MenuInputDesc desc;
 	char _textBuffer[INPUTWIDGET_LEN];
 };
-CC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, FontDesc* font, struct InputValidator* v);
+CC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, FontDesc* font, struct MenuInputDesc* d);
 
 
 struct ChatInputWidget {

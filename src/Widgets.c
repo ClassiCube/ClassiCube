@@ -1295,111 +1295,124 @@ CC_NOINLINE static void InputWidget_Create(struct InputWidget* w, FontDesc* font
 
 
 /*########################################################################################################################*
-*---------------------------------------------------InputValidator----------------------------------------------------*
+*-----------------------------------------------------MenuInputDesc-------------------------------------------------------*
 *#########################################################################################################################*/
-static void Hex_Range(struct InputValidator* v, String* range) {
+static void Hex_Range(struct MenuInputDesc* d, String* range) {
 	String_AppendConst(range, "&7(#000000 - #FFFFFF)");
 }
 
-static bool Hex_ValidChar(struct InputValidator* v, char c) {
+static bool Hex_ValidChar(struct MenuInputDesc* d, char c) {
 	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 }
 
-static bool Hex_ValidString(struct InputValidator* v, const String* s) {
+static bool Hex_ValidString(struct MenuInputDesc* d, const String* s) {
 	return s->length <= 6;
 }
 
-static bool Hex_ValidValue(struct InputValidator* v, const String* s) {
+static bool Hex_ValidValue(struct MenuInputDesc* d, const String* s) {
 	PackedCol col;
 	return PackedCol_TryParseHex(s, &col);
 }
 
-struct InputValidatorVTABLE HexValidator_VTABLE = {
-	Hex_Range, Hex_ValidChar, Hex_ValidString, Hex_ValidValue,
-};
-
-static void Int_Range(struct InputValidator* v, String* range) {
-	String_Format2(range, "&7(%i - %i)", &v->Meta.i.Min, &v->Meta.i.Max);
+static void Hex_Default(struct MenuInputDesc* d, String* value) {
+	PackedCol_ToHex(value, d->meta.h.Default);
 }
 
-static bool Int_ValidChar(struct InputValidator* v, char c) {
+struct MenuInputVTABLE HexValidator_VTABLE = {
+	Hex_Range, Hex_ValidChar, Hex_ValidString, Hex_ValidValue, Hex_Default
+};
+
+static void Int_Range(struct MenuInputDesc* d, String* range) {
+	String_Format2(range, "&7(%i - %i)", &d->meta.i.Min, &d->meta.i.Max);
+}
+
+static bool Int_ValidChar(struct MenuInputDesc* d, char c) {
 	return (c >= '0' && c <= '9') || c == '-';
 }
 
-static bool Int_ValidString(struct InputValidator* v, const String* s) {
+static bool Int_ValidString(struct MenuInputDesc* d, const String* s) {
 	int value;
 	if (s->length == 1 && s->buffer[0] == '-') return true; /* input is just a minus sign */
 	return Convert_ParseInt(s, &value);
 }
 
-static bool Int_ValidValue(struct InputValidator* v, const String* s) {
-	int value, min = v->Meta.i.Min, max = v->Meta.i.Max;
+static bool Int_ValidValue(struct MenuInputDesc* d, const String* s) {
+	int value, min = d->meta.i.Min, max = d->meta.i.Max;
 	return Convert_ParseInt(s, &value) && min <= value && value <= max;
 }
 
-struct InputValidatorVTABLE IntValidator_VTABLE = {
-	Int_Range, Int_ValidChar, Int_ValidString, Int_ValidValue,
+static void Int_Default(struct MenuInputDesc* d, String* value) {
+	String_AppendInt(value, d->meta.i.Default);
+}
+
+struct MenuInputVTABLE IntValidator_VTABLE = {
+	Int_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, Int_Default
 };
 
-static void Seed_Range(struct InputValidator* v, String* range) {
+static void Seed_Range(struct MenuInputDesc* d, String* range) {
 	String_AppendConst(range, "&7(an integer)");
 }
+static void Seed_NoDefault(struct MenuInputDesc* d, String* value) { }
 
-struct InputValidatorVTABLE SeedValidator_VTABLE = {
-	Seed_Range, Int_ValidChar, Int_ValidString, Int_ValidValue,
+struct MenuInputVTABLE SeedValidator_VTABLE = {
+	Seed_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, Seed_NoDefault
 };
 
-static void Float_Range(struct InputValidator* v, String* range) {
-	String_Format2(range, "&7(%f2 - %f2)", &v->Meta.f.Min, &v->Meta.f.Max);
+static void Float_Range(struct MenuInputDesc* d, String* range) {
+	String_Format2(range, "&7(%f2 - %f2)", &d->meta.f.Min, &d->meta.f.Max);
 }
 
-static bool Float_ValidChar(struct InputValidator* v, char c) {
+static bool Float_ValidChar(struct MenuInputDesc* d, char c) {
 	return (c >= '0' && c <= '9') || c == '-' || c == '.' || c == ',';
 }
 
-static bool Float_ValidString(struct InputValidator* v, const String* s) {
+static bool Float_ValidString(struct MenuInputDesc* d, const String* s) {
 	float value;
-	if (s->length == 1 && Float_ValidChar(v, s->buffer[0])) return true;
+	if (s->length == 1 && Float_ValidChar(d, s->buffer[0])) return true;
 	return Convert_ParseFloat(s, &value);
 }
 
-static bool Float_ValidValue(struct InputValidator* v, const String* s) {
-	float value, min = v->Meta.f.Min, max = v->Meta.f.Max;
+static bool Float_ValidValue(struct MenuInputDesc* d, const String* s) {
+	float value, min = d->meta.f.Min, max = d->meta.f.Max;
 	return Convert_ParseFloat(s, &value) && min <= value && value <= max;
 }
 
-struct InputValidatorVTABLE FloatValidator_VTABLE = {
-	Float_Range, Float_ValidChar, Float_ValidString, Float_ValidValue,
+static void Float_Default(struct MenuInputDesc* d, String* value) {
+	String_AppendFloat(value, d->meta.f.Default, 3);
+}
+
+struct MenuInputVTABLE FloatValidator_VTABLE = {
+	Float_Range, Float_ValidChar, Float_ValidString, Float_ValidValue, Float_Default
 };
 
-static void Path_Range(struct InputValidator* v, String* range) {
+static void Path_Range(struct MenuInputDesc* d, String* range) {
 	String_AppendConst(range, "&7(Enter name)");
 }
 
-static bool Path_ValidChar(struct InputValidator* v, char c) {
+static bool Path_ValidChar(struct MenuInputDesc* d, char c) {
 	return !(c == '/' || c == '\\' || c == '?' || c == '*' || c == ':'
 		|| c == '<' || c == '>' || c == '|' || c == '"' || c == '.');
 }
-static bool Path_ValidString(struct InputValidator* v, const String* s) { return true; }
+static bool Path_ValidString(struct MenuInputDesc* d, const String* s) { return true; }
 
-struct InputValidatorVTABLE PathValidator_VTABLE = {
-	Path_Range, Path_ValidChar, Path_ValidString, Path_ValidString,
+struct MenuInputVTABLE PathValidator_VTABLE = {
+	Path_Range, Path_ValidChar, Path_ValidString, Path_ValidString, Seed_NoDefault
 };
 
-static void String_Range(struct InputValidator* v, String* range) {
+static void String_Range(struct MenuInputDesc* d, String* range) {
 	String_AppendConst(range, "&7(Enter text)");
 }
 
-static bool String_ValidChar(struct InputValidator* v, char c) {
+static bool String_ValidChar(struct MenuInputDesc* d, char c) {
 	return c != '&';
 }
 
-static bool String_ValidString(struct InputValidator* v, const String* s) {
+static bool String_ValidString(struct MenuInputDesc* d, const String* s) {
 	return s->length <= STRING_SIZE;
 }
 
-struct InputValidatorVTABLE StringValidator_VTABLE = {
-	String_Range, String_ValidChar, String_ValidString, String_ValidString,
+struct MenuInputVTABLE StringValidator_VTABLE = {
+	String_Range, String_ValidChar, String_ValidString, String_ValidString, Seed_NoDefault
 };
 
 
@@ -1421,7 +1434,7 @@ static void MenuInputWidget_Render(void* widget, double delta) {
 static void MenuInputWidget_RemakeTexture(void* widget) {
 	String range; char rangeBuffer[STRING_SIZE];
 	struct MenuInputWidget* w = (struct MenuInputWidget*)widget;
-	struct InputValidator* v;
+	struct MenuInputDesc* desc;
 	struct DrawTextArgs args;
 	struct Texture* tex;
 	Size2D size, adjSize;
@@ -1435,8 +1448,8 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	w->base.caretAccumulator = 0.0;
 
 	String_InitArray(range, rangeBuffer);
-	v = &w->validator;
-	v->VTABLE->GetRange(v, &range);
+	desc = &w->desc;
+	desc->VTABLE->GetRange(desc, &range);
 
 	w->base.width  = max(size.Width,  w->minWidth);
 	w->base.height = max(size.Height, w->minHeight);
@@ -1467,20 +1480,20 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 
 static bool MenuInputWidget_AllowedChar(void* widget, char c) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	struct InputValidator* v;
+	struct MenuInputDesc* desc;
 	int maxChars;
 	bool valid;
 
 	if (c == '&') return false;
-	v = &((struct MenuInputWidget*)w)->validator;
+	desc = &((struct MenuInputWidget*)w)->desc;
 
-	if (!v->VTABLE->IsValidChar(v, c)) return false;
+	if (!desc->VTABLE->IsValidChar(desc, c)) return false;
 	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (w->text.length == maxChars) return false;
 
 	/* See if the new string is in valid format */
 	InputWidget_AppendChar(w, c);
-	valid = v->VTABLE->IsValidString(v, &w->text);
+	valid = desc->VTABLE->IsValidString(desc, &w->text);
 	InputWidget_DeleteChar(w);
 	return valid;
 }
@@ -1492,13 +1505,13 @@ static struct WidgetVTABLE MenuInputWidget_VTABLE = {
 	InputWidget_MouseDown, Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	InputWidget_Reposition,
 };
-void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, FontDesc* font, struct InputValidator* validator) {
+void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, FontDesc* font, struct MenuInputDesc* desc) {
 	InputWidget_Create(&w->base, font, &String_Empty);
 	w->base.VTABLE = &MenuInputWidget_VTABLE;
 
 	w->minWidth  = width;
 	w->minHeight = height;
-	w->validator = *validator;
+	w->desc      = *desc;
 
 	w->base.convertPercents = false;
 	w->base.padding = 3;

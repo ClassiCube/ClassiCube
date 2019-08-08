@@ -109,9 +109,8 @@ struct SaveLevelScreen {
 struct MenuOptionsScreen {
 	MenuScreen_Layout
 	struct ButtonWidget* buttons;
-	struct InputValidator* validators;
+	struct MenuInputDesc* descs;
 	const char** descriptions;
-	const char** defaultValues;
 	int activeI, selectedI, descriptionsCount;
 	struct ButtonWidget ok, Default;
 	struct MenuInputWidget input;
@@ -176,9 +175,9 @@ static void Menu_Label(void* s, int i, struct TextWidget* label, const String* t
 	Widget_SetLocation(menu->widgets[i], horAnchor, verAnchor, x, y);
 }
 
-static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, FontDesc* font, struct InputValidator* v, int horAnchor, int verAnchor, int x, int y) {
+static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, FontDesc* font, struct MenuInputDesc* desc, int horAnchor, int verAnchor, int x, int y) {
 	struct Menu* menu = (struct Menu*)s;
-	MenuInputWidget_Create(input, width, 30, text, font, v);
+	MenuInputWidget_Create(input, width, 30, text, font, desc);
 
 	menu->widgets[i] = (struct Widget*)input;
 	Widget_SetLocation(menu->widgets[i], horAnchor, verAnchor, x, y);
@@ -954,10 +953,10 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	static const String cancel = String_FromConst("Cancel");
 
 	struct EditHotkeyScreen* s  = (struct EditHotkeyScreen*)screen;
-	struct InputValidator v;
+	struct MenuInputDesc desc;
 	String text; bool existed;
 
-	InputValidator_String(v);
+	MenuInput_String(desc);
 	existed = s->origHotkey.Trigger != KEY_NONE;
 	if (existed) {
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->origHotkey.TextIndex);
@@ -973,7 +972,7 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 		EditHotkeyScreen_RemoveHotkey);
 
 	Menu_Back(s,  5, &s->buttons[5], "Cancel", &s->titleFont, Menu_SwitchHotkeys);
-	Menu_Input(s, 6, &s->input, 500, &text,    &s->textFont, &v,
+	Menu_Input(s, 6, &s->input, 500, &text,    &s->textFont, &desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
 }
 
@@ -1006,12 +1005,12 @@ struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 static struct GenLevelScreen GenLevelScreen_Instance;
 CC_NOINLINE static int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) {
 	struct MenuInputWidget* input = &s->inputs[index];
-	struct InputValidator* v;
+	struct MenuInputDesc* desc;
 	String text = input->base.text;
 	int value;
 
-	v = &input->validator;
-	if (!v->VTABLE->IsValidValue(v, &text)) return 0;
+	desc = &input->desc;
+	if (!desc->VTABLE->IsValidValue(desc, &text)) return 0;
 	Convert_ParseInt(&text, &value); return value;
 }
 
@@ -1063,22 +1062,25 @@ static void GenLevelScreen_InputClick(void* screen, void* input) {
 	s->selected->base.showCaret = true;
 }
 
-static void GenLevelScreen_Input(struct GenLevelScreen* s, int i, int y, bool seed, String* value) {
+static void GenLevelScreen_Input(struct GenLevelScreen* s, int i, int y, bool seed, int def) {
+	String tmp; char tmpBuffer[STRING_SIZE];
 	struct MenuInputWidget* input = &s->inputs[i];
-	struct InputValidator v;
+	struct MenuInputDesc desc;
 
 	if (seed) {
-		InputValidator_Seed(v);
+		MenuInput_Seed(desc);
 	} else {
-		InputValidator_Int(v, 1, 8192);
+		MenuInput_Int(desc, 1, 8192, def);
 	}
 
-	Menu_Input(s, i, input, 200, value, &s->textFont, &v,
+	String_InitArray(tmp, tmpBuffer);
+	desc.VTABLE->GetDefault(&desc, &tmp);
+
+	Menu_Input(s, i, input, 200, &tmp, &s->textFont, &desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 
 	input->base.showCaret = false;
 	input->base.MenuClick = GenLevelScreen_InputClick;
-	value->length = 0;
 }
 
 static void GenLevelScreen_Label(struct GenLevelScreen* s, int i, int x, int y, const char* title) {
@@ -1114,18 +1116,12 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	static const String title = String_FromConst("Generate new level");
 	static const String flat  = String_FromConst("Flatgrass");
 	static const String norm  = String_FromConst("Vanilla");
-	String tmp; char tmpBuffer[STRING_SIZE];
+	struct GenLevelScreen* s  = (struct GenLevelScreen*)screen;
 
-	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	String_InitArray(tmp, tmpBuffer);
-
-	String_AppendInt(&tmp, World.Width);
-	GenLevelScreen_Input(s, 0, -80, false, &tmp);
-	String_AppendInt(&tmp, World.Height);
-	GenLevelScreen_Input(s, 1, -40, false, &tmp);
-	String_AppendInt(&tmp, World.Length);
-	GenLevelScreen_Input(s, 2,   0, false, &tmp);
-	GenLevelScreen_Input(s, 3,  40, true,  &tmp);
+	GenLevelScreen_Input(s, 0, -80, false, World.Width);
+	GenLevelScreen_Input(s, 1, -40, false, World.Height);
+	GenLevelScreen_Input(s, 2,   0, false, World.Length);
+	GenLevelScreen_Input(s, 3,  40, true,  0);
 
 	GenLevelScreen_Label(s, 0, -150, -80, "Width:");
 	GenLevelScreen_Label(s, 1, -150, -40, "Height:");
@@ -1334,8 +1330,8 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 	static const String mcEdit = String_FromConst("&eCan be imported into MCEdit");
 
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	struct InputValidator v;
-	InputValidator_Path(v);
+	struct MenuInputDesc desc;
+	MenuInput_Path(desc);
 	
 	Menu_Button(s, 0, &s->buttons[0], 300, &save,  &s->titleFont, SaveLevelScreen_Classic,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 20);
@@ -1345,7 +1341,7 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 110, 120);
 
 	Menu_Back(s,   3, &s->buttons[2], "Cancel",      &s->titleFont, Menu_SwitchPause);
-	Menu_Input(s,  4, &s->input, 500, &String_Empty, &s->textFont,  &v, 
+	Menu_Input(s,  4, &s->input, 500, &String_Empty, &s->textFont,  &desc, 
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 	s->widgets[5] = NULL; /* description widget placeholder */
 }
@@ -1962,10 +1958,10 @@ static void MenuOptionsScreen_FreeInput(struct MenuOptionsScreen* s) {
 }
 
 static void MenuOptionsScreen_EnterInput(struct MenuOptionsScreen* s) {
-	struct InputValidator* v = &s->input.validator;
+	struct MenuInputDesc* desc = &s->input.desc;
 	String text = s->input.base.text;
 
-	if (v->VTABLE->IsValidValue(v, &text)) {
+	if (desc->VTABLE->IsValidValue(desc, &text)) {
 		MenuOptionsScreen_Set(s, s->activeI, &text);
 	}
 
@@ -2077,10 +2073,16 @@ static void MenuOptionsScreen_OK(void* screen, void* widget) {
 }
 
 static void MenuOptionsScreen_Default(void* screen, void* widget) {
+	String value; char valueBuffer[STRING_SIZE];
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	String text = String_FromReadonly(s->defaultValues[s->activeI]);
+	struct MenuInputDesc* desc;
+
+	desc = &s->descs[s->activeI];
+	String_InitArray(value, valueBuffer);
+	desc->VTABLE->GetDefault(desc, &value);
+
 	InputWidget_Clear(&s->input.base);
-	InputWidget_AppendString(&s->input.base, &text);
+	InputWidget_AppendString(&s->input.base, &value);
 }
 
 static void MenuOptionsScreen_Bool(void* screen, void* widget) {
@@ -2105,7 +2107,7 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
 	int index;
-	struct InputValidator* v;
+	struct MenuInputDesc* desc;
 	const char** names;
 	int raw, count;
 	
@@ -2114,9 +2116,9 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 	String_InitArray(value, valueBuffer);
 	btn->GetValue(&value);
 
-	v = &s->validators[index];
-	names = v->Meta.e.Names;
-	count = v->Meta.e.Count;	
+	desc  = &s->descs[index];
+	names = desc->meta.e.Names;
+	count = desc->meta.e.Count;	
 
 	raw   = (Utils_ParseEnum(&value, 0, names, count) + 1) % count;
 	value = String_FromReadonly(names[raw]);
@@ -2140,7 +2142,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	btn->GetValue(&value);
 	i = s->widgetsCount;
 
-	Menu_Input(s,  i - 1, &s->input,   400, &value, &s->textFont,  &s->validators[s->activeI],
+	Menu_Input(s,  i - 1, &s->input,   400, &value, &s->textFont,  &s->descs[s->activeI],
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 110);
 	Menu_Button(s, i - 2, &s->ok,       40, &okay,  &s->titleFont, MenuOptionsScreen_OK,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 240, 110);
@@ -2155,7 +2157,7 @@ static struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	MenuOptionsScreen_OnResize, MenuOptionsScreen_ContextLost, NULL,
 };
 struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, int count, struct ButtonWidget* buttons, Event_Void_Callback contextRecreated,
-	struct InputValidator* validators, const char** defaultValues, const char** descriptions, int descsCount) {
+	struct MenuInputDesc* descs, const char** descriptions, int descsCount) {
 	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
 	s->handlesAllInput = true;
 	s->closable        = true;
@@ -2168,8 +2170,7 @@ struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, int count
 	s->VTABLE->ContextRecreated = contextRecreated;
 
 	s->buttons           = buttons;
-	s->validators        = validators;
-	s->defaultValues     = defaultValues;
+	s->descs             = descs;
 	s->descriptions      = descriptions;
 	s->descriptionsCount = descsCount;
 
@@ -2271,14 +2272,14 @@ static void ClassicOptionsScreen_ContextRecreated(void* screen) {
 
 struct Screen* ClassicOptionsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[11];
-	static struct InputValidator validators[Array_Elems(buttons)];
+	static struct MenuInputDesc descs[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons)];	
 
-	InputValidator_Enum(validators[2], ViewDist_Names, VIEW_COUNT);
-	InputValidator_Enum(validators[7], FpsLimit_Names, FPS_LIMIT_COUNT);
+	MenuInput_Enum(descs[2], ViewDist_Names, VIEW_COUNT);
+	MenuInput_Enum(descs[7], FpsLimit_Names, FPS_LIMIT_COUNT);
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
-		ClassicOptionsScreen_ContextRecreated, validators, NULL, NULL, 0);
+		ClassicOptionsScreen_ContextRecreated, descs, NULL, 0);
 }
 
 
@@ -2359,42 +2360,23 @@ static String String_InitAndClear(STRING_REF char* buffer, int capacity) {
 
 struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[11];
-	static struct InputValidator validators[Array_Elems(buttons)];
-	static const char* defaultValues[Array_Elems(buttons)];
+	static struct MenuInputDesc descs[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
-	static char cloudHeightBuffer[STRING_INT_CHARS];
-	static char edgeHeightBuffer[STRING_INT_CHARS];
-	String cloudHeight, edgeHeight;
+	MenuInput_Hex(descs[0],   Env_DefaultCloudsCol);
+	MenuInput_Hex(descs[1],   Env_DefaultSkyCol);
+	MenuInput_Hex(descs[2],   Env_DefaultFogCol);
+	MenuInput_Float(descs[3],      0,  1000, 1);
+	MenuInput_Int(descs[4],   -10000, 10000, World.Height + 2);
 
-	cloudHeight = String_InitAndClear(cloudHeightBuffer, STRING_INT_CHARS);
-	String_AppendInt(&cloudHeight, World.Height + 2);
-	edgeHeight  = String_InitAndClear(edgeHeightBuffer, STRING_INT_CHARS);
-	String_AppendInt(&edgeHeight,  World.Height / 2);
-
-	InputValidator_Hex(validators[0]);
-	defaultValues[0] = ENV_DEFAULT_CLOUDSCOL_HEX;
-	InputValidator_Hex(validators[1]);
-	defaultValues[1] = ENV_DEFAULT_SKYCOL_HEX;
-	InputValidator_Hex(validators[2]);
-	defaultValues[2] = ENV_DEFAULT_FOGCOL_HEX;
-	InputValidator_Float(validators[3], 0.00f, 1000.00f);
-	defaultValues[3] = "1";
-	InputValidator_Int(validators[4], -10000, 10000);
-	defaultValues[4] = cloudHeightBuffer;
-
-	InputValidator_Hex(validators[5]);
-	defaultValues[5] = ENV_DEFAULT_SUNCOL_HEX;
-	InputValidator_Hex(validators[6]);
-	defaultValues[6] = ENV_DEFAULT_SHADOWCOL_HEX;
-	InputValidator_Enum(validators[7], Weather_Names, Array_Elems(Weather_Names));
-	InputValidator_Float(validators[8], -100.00f, 100.00f);
-	defaultValues[8] = "1";
-	InputValidator_Int(validators[9], -2048, 2048);
-	defaultValues[9] = edgeHeightBuffer;
+	MenuInput_Hex(descs[5],   Env_DefaultSunCol);
+	MenuInput_Hex(descs[6],   Env_DefaultShadowCol);
+	MenuInput_Enum(descs[7],  Weather_Names, Array_Elems(Weather_Names));
+	MenuInput_Float(descs[8],  -100,  100, 1);
+	MenuInput_Int(descs[9],   -2048, 2048, World.Height / 2);
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
-		EnvSettingsScreen_ContextRecreated, validators, defaultValues, NULL, 0);
+		EnvSettingsScreen_ContextRecreated, descs, NULL, 0);
 }
 
 
@@ -2455,37 +2437,35 @@ static void GraphicsOptionsScreen_ContextRecreated(void* screen) {
 
 struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[7];
-	static struct InputValidator validators[Array_Elems(buttons)];
-	static const char* defaultValues[Array_Elems(buttons)];
+	static struct MenuInputDesc descs[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 	
-	static const char* descs[Array_Elems(buttons)];
-	descs[0] = \
+	static const char* extDescs[Array_Elems(buttons)];
+	extDescs[0] = \
 		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
 		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 		"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 		"&cUsing NoLimit mode is discouraged.";
-	descs[2] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
-	descs[3] = \
+	extDescs[2] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
+	extDescs[3] = \
 		"&eNone: &fNo names of players are drawn.\n" \
 		"&eHovered: &fName of the targeted player is drawn see-through.\n" \
 		"&eAll: &fNames of all other players are drawn normally.\n" \
 		"&eAllHovered: &fAll names of players are drawn see-through.\n" \
 		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
-	descs[4] = \
+	extDescs[4] = \
 		"&eNone: &fNo entity shadows are drawn.\n" \
 		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
 		"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \
 		"&eCircleAll: &fA circular shadow is shown underneath all entities.";
 	
-	InputValidator_Enum(validators[0], FpsLimit_Names, FPS_LIMIT_COUNT);
-	InputValidator_Int(validators[1], 8, 4096);
-	defaultValues[1] = "512";
-	InputValidator_Enum(validators[3], NameMode_Names,   NAME_MODE_COUNT);
-	InputValidator_Enum(validators[4], ShadowMode_Names, SHADOW_MODE_COUNT);
+	MenuInput_Enum(descs[0], FpsLimit_Names, FPS_LIMIT_COUNT);
+	MenuInput_Int(descs[1],  8, 4096, 512);
+	MenuInput_Enum(descs[3], NameMode_Names,   NAME_MODE_COUNT);
+	MenuInput_Enum(descs[4], ShadowMode_Names, SHADOW_MODE_COUNT);
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
-		GraphicsOptionsScreen_ContextRecreated, validators, defaultValues, descs, Array_Elems(descs));
+		GraphicsOptionsScreen_ContextRecreated, descs, extDescs, Array_Elems(extDescs));
 }
 
 
@@ -2569,21 +2549,16 @@ static void GuiOptionsScreen_ContextRecreated(void* screen) {
 
 struct Screen* GuiOptionsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[11];
-	static struct InputValidator validators[Array_Elems(buttons)];
-	static const char* defaultValues[Array_Elems(buttons)];
+	static struct MenuInputDesc descs[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
-	InputValidator_Float(validators[2], 0.25f, 4.00f);
-	defaultValues[2] = "1";
-	InputValidator_Float(validators[3], 0.25f, 4.00f);
-	defaultValues[3] = "1";
-	InputValidator_Float(validators[6], 0.25f, 4.00f);
-	defaultValues[6] = "1";
-	InputValidator_Int(validators[7], 0, 30);
-	defaultValues[7] = "10";
+	MenuInput_Float(descs[2], 0.25f, 4.00f,  1);
+	MenuInput_Float(descs[3], 0.25f, 4.00f,  1);
+	MenuInput_Float(descs[6], 0.25f, 4.00f,  1);
+	MenuInput_Int(descs[7],       0,    30, 10);
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
-		GuiOptionsScreen_ContextRecreated, validators, defaultValues, NULL, 0);
+		GuiOptionsScreen_ContextRecreated, descs,  NULL, 0);
 }
 
 
@@ -2718,29 +2693,24 @@ static void HacksSettingsScreen_ContextRecreated(void* screen) {
 
 struct Screen* HacksSettingsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[11];
-	static struct InputValidator validators[Array_Elems(buttons)];
-	static const char* defaultValues[Array_Elems(buttons)];
+	static struct MenuInputDesc descs[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
-	static const char* descs[Array_Elems(buttons)];
-	descs[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
-	descs[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
-	descs[7] = \
+	static const char* extDescs[Array_Elems(buttons)];
+	extDescs[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
+	extDescs[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
+	extDescs[7] = \
 		"&eIf &fON&e, placing blocks that intersect your own position cause\n" \
 		"&ethe block to be placed, and you to be moved out of the way.\n" \
 		"&fThis is mainly useful for quick pillaring/towering.";
-	descs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip\n&emode and no movement keys are held down.";
+	extDescs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip\n&emode and no movement keys are held down.";
 
-	InputValidator_Float(validators[1], 0.10f, 50.00f);
-	defaultValues[1] = "10";
-	InputValidator_Float(validators[3], 0.10f, 2048.00f);
-	/* TODO: User may not always use . for decimal point, need to account for that */
-	defaultValues[3] = "1.233";
-	InputValidator_Int(validators[9], 1, 179);
-	defaultValues[9] = "70";
+	MenuInput_Float(descs[1], 0.1f,   50, 10);
+	MenuInput_Float(descs[3], 0.1f, 2048, 1.233f);
+	MenuInput_Int(descs[9],      1,  179, 70);
 
 	struct Screen* s = MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
-		HacksSettingsScreen_ContextRecreated, validators, defaultValues, descs, Array_Elems(buttons));
+		HacksSettingsScreen_ContextRecreated, descs, extDescs, Array_Elems(extDescs));
 	s->VTABLE->ContextLost = HacksSettingsScreen_ContextLost;
 	return s;
 }
@@ -2818,25 +2788,20 @@ static void MiscOptionsScreen_ContextRecreated(void* screen) {
 
 struct Screen* MiscOptionsScreen_MakeInstance(void) {
 	static struct ButtonWidget buttons[9];
-	static struct InputValidator validators[Array_Elems(buttons)];
-	static const char* defaultValues[Array_Elems(buttons)];
+	static struct MenuInputDesc descs[Array_Elems(buttons)];
 	static struct Widget* widgets[Array_Elems(buttons) + 3];
 
-	InputValidator_Float(validators[0], 1.00f, 1024.00f);
-	defaultValues[0] = "5";
-	InputValidator_Int(validators[1], 0, 100);
-	defaultValues[1] = "0";
-	InputValidator_Int(validators[2], 0, 100);
-	defaultValues[2] = "0";
-	InputValidator_Int(validators[7], 1, 200);
+	MenuInput_Float(descs[0], 1, 1024, 5);
+	MenuInput_Int(descs[1],   0, 100,  0);
+	MenuInput_Int(descs[2],   0, 100,  0);
 #ifdef CC_BUILD_WIN
-	defaultValues[7] = "40";
+	MenuInput_Int(descs[7],   1, 200, 40);
 #else
-	defaultValues[7] = "30";
+	MenuInput_Int(descs[7],   1, 200, 30);
 #endif
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
-		MiscOptionsScreen_ContextRecreated, validators, defaultValues, NULL, 0);
+		MiscOptionsScreen_ContextRecreated, descs, NULL, 0);
 }
 
 
@@ -2909,7 +2874,7 @@ struct Screen* NostalgiaScreen_MakeInstance(void) {
 	static struct Widget* widgets[Array_Elems(buttons) + 1];
 
 	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
-		NostalgiaScreen_ContextRecreated, NULL, NULL, NULL, 0);
+		NostalgiaScreen_ContextRecreated, NULL, NULL, 0);
 }
 
 
