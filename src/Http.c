@@ -574,7 +574,7 @@ static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 	Http_BufferInit(req);
 
 	for (;;) {
-		if (!InternetQueryDataAvailable(handle, &avail, 0, 0)) break;
+		if (!InternetQueryDataAvailable(handle, &avail, 0, 0)) return GetLastError();
 		if (!avail) break;
 		Http_BufferEnsure(req, avail);
 

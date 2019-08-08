@@ -1714,7 +1714,7 @@ static struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
 	Menu_OnResize,               Menu_ContextLost,   NULL,
 };
 static struct KeyBindingsScreen* KeyBindingsScreen_Make(int bindsCount, uint8_t* binds, const char** descs, Event_Void_Callback contextRecreated) {
-	/* NOTE: 12 is the most controls on one screen (OtherKeyBindingsScreen_MakeInstance) */
+	/* NOTE: 12 is the most buttons on one screen (OtherKeyBindingsScreen_MakeInstance) */
 	static struct ButtonWidget buttons[12];
 	static struct Widget* widgets[12 + 4];
 	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
