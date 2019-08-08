@@ -178,7 +178,7 @@ void Game_UpdateProjection(void) {
 void Game_Disconnect(const String* title, const String* reason) {
 	Event_RaiseVoid(&NetEvents.Disconnected);
 	Gui_FreeActive();
-	Gui_SetActive(DisconnectScreen_MakeInstance(title, reason));
+	DisconnectScreen_Show(title, reason);
 	Game_Reset();
 }
 

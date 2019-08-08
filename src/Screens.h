@@ -7,12 +7,12 @@
 struct Screen;
 struct Widget;
 
-struct Screen* InventoryScreen_MakeInstance(void);
-struct Screen* StatusScreen_MakeInstance(void);
+void InventoryScreen_Show(void);
+void StatusScreen_Show(void);
 struct Screen* LoadingScreen_MakeInstance(const String* title, const String* message);
 struct Screen* GeneratingScreen_MakeInstance(void);
-struct Screen* HUDScreen_MakeInstance(void);
-struct Screen* DisconnectScreen_MakeInstance(const String* title, const String* message);
+void HUDScreen_Show(void);
+void DisconnectScreen_Show(const String* title, const String* message);
 
 /* Raw pointer to inventory screen. DO NOT USE THIS. Use InventoryScreen_MakeInstance() */
 extern struct Screen* InventoryScreen_UNSAFE_RawPointer;

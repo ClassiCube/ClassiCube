@@ -109,6 +109,7 @@ enum GuiPriority {
 	GUI_PRIORITY_LOADING    = 17,
 };
 
+extern struct Screen* Gui_Status;
 extern struct Screen* Gui_HUD;
 extern struct Screen* Gui_Active;
 #define GUI_MAX_OVERLAYS 4

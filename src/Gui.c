@@ -129,8 +129,8 @@ static void Gui_Init(void) {
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Gui_FileChanged);
 	Gui_LoadOptions();
 
-	Gui_Status = StatusScreen_MakeInstance();
-	Gui_HUD    = HUDScreen_MakeInstance();
+	StatusScreen_Show();
+	HUDScreen_Show();
 	Elem_Init(Gui_Status);
 	Elem_Init(Gui_HUD);
 }

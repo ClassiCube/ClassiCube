@@ -20,37 +20,6 @@
 #include "Menus.h"
 #include "World.h"
 
-struct InventoryScreen {
-	Screen_Layout
-	FontDesc font;
-	struct TableWidget table;
-	bool releasedInv, deferredSelect;
-};
-
-struct StatusScreen {
-	Screen_Layout
-	FontDesc font;
-	struct TextWidget line1, line2;
-	struct TextAtlas posAtlas;
-	double accumulator;
-	int frames, fps;
-	bool speed, halfSpeed, noclip, fly, canSpeed;
-	int lastFov;
-};
-
-struct LoadingScreen {
-	Screen_Layout
-	FontDesc font;
-	float progress;
-	
-	struct TextWidget title, message;
-	String titleStr, messageStr;
-	const char* lastState;
-
-	char _titleBuffer[STRING_SIZE];
-	char _messageBuffer[STRING_SIZE];
-};
-
 #define CHAT_MAX_STATUS Array_Elems(Chat_Status)
 #define CHAT_MAX_BOTTOMRIGHT Array_Elems(Chat_BottomRight)
 #define CHAT_MAX_CLIENTSTATUS Array_Elems(Chat_ClientStatus)
@@ -80,19 +49,6 @@ struct HUDScreen {
 	struct Texture chatTextures[TEXTGROUPWIDGET_MAX_LINES];
 };
 
-struct DisconnectScreen {
-	Screen_Layout
-	TimeMS initTime;
-	bool canReconnect, lastActive;
-	int lastSecsLeft;
-	struct ButtonWidget reconnect;
-
-	FontDesc titleFont, messageFont;
-	struct TextWidget title, message;
-	char _titleBuffer[STRING_SIZE];
-	char _messageBuffer[STRING_SIZE];
-	String titleStr, messageStr;
-};
 
 static bool Screen_Mouse(void* elem, int x, int y, MouseButton btn) { return false; }
 static bool Screen_MouseMove(void* elem, int x, int y) { return false; }
@@ -101,7 +57,13 @@ static bool Screen_MouseMove(void* elem, int x, int y) { return false; }
 /*########################################################################################################################*
 *-----------------------------------------------------InventoryScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-static struct InventoryScreen InventoryScreen_Instance;
+static struct InventoryScreen {
+	Screen_Layout
+	FontDesc font;
+	struct TableWidget table;
+	bool releasedInv, deferredSelect;
+} InventoryScreen_Instance;
+
 static void InventoryScreen_OnBlockChanged(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	TableWidget_OnInventoryChanged(&s->table);
@@ -241,13 +203,13 @@ static struct ScreenVTABLE InventoryScreen_VTABLE = {
 	InventoryScreen_MouseDown, InventoryScreen_MouseUp, InventoryScreen_MouseMove, InventoryScreen_MouseScroll,
 	InventoryScreen_OnResize,  InventoryScreen_ContextLost, InventoryScreen_ContextRecreated,
 };
-struct Screen* InventoryScreen_MakeInstance(void) {
+void InventoryScreen_Show(void) {
 	struct InventoryScreen* s = &InventoryScreen_Instance;
 	s->handlesAllInput = true;
 	s->closable        = true;
 
 	s->VTABLE = &InventoryScreen_VTABLE;
-	return (struct Screen*)s;
+	Gui_SetActive((struct Screen*)s);
 }
 struct Screen* InventoryScreen_UNSAFE_RawPointer = (struct Screen*)&InventoryScreen_Instance;
 
@@ -255,7 +217,17 @@ struct Screen* InventoryScreen_UNSAFE_RawPointer = (struct Screen*)&InventoryScr
 /*########################################################################################################################*
 *-------------------------------------------------------StatusScreen------------------------------------------------------*
 *#########################################################################################################################*/
-static struct StatusScreen StatusScreen_Instance;
+static struct StatusScreen {
+	Screen_Layout
+	FontDesc font;
+	struct TextWidget line1, line2;
+	struct TextAtlas posAtlas;
+	double accumulator;
+	int frames, fps;
+	bool speed, halfSpeed, noclip, fly, canSpeed;
+	int lastFov;
+} StatusScreen_Instance;
+
 static void StatusScreen_MakeText(struct StatusScreen* s, String* status) {
 	int indices, ping;
 	s->fps = (int)(s->frames / s->accumulator);
@@ -441,19 +413,31 @@ static struct ScreenVTABLE StatusScreen_VTABLE = {
 	Screen_Mouse,         Screen_Mouse,        Screen_MouseMove,      StatusScreen_MouseScroll,
 	StatusScreen_OnResize, StatusScreen_ContextLost, StatusScreen_ContextRecreated,
 };
-struct Screen* StatusScreen_MakeInstance(void) {
+void StatusScreen_Show(void) {
 	struct StatusScreen* s = &StatusScreen_Instance;
 	s->handlesAllInput = false;
 
-	s->VTABLE = &StatusScreen_VTABLE;
-	return (struct Screen*)s;
+	s->VTABLE  = &StatusScreen_VTABLE;
+	Gui_Status = (struct Screen*)s;
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------LoadingScreen------------------------------------------------------*
 *#########################################################################################################################*/
-static struct LoadingScreen LoadingScreen_Instance;
+static struct LoadingScreen {
+	Screen_Layout
+	FontDesc font;
+	float progress;
+	
+	struct TextWidget title, message;
+	String titleStr, messageStr;
+	const char* lastState;
+
+	char _titleBuffer[STRING_SIZE];
+	char _messageBuffer[STRING_SIZE];
+} LoadingScreen_Instance;
+
 static void LoadingScreen_SetTitle(struct LoadingScreen* s) {
 	Elem_TryFree(&s->title);
 	TextWidget_Create(&s->title, &s->titleStr, &s->font);
@@ -724,7 +708,7 @@ static void HUDScreen_UpdateAltTextY(struct HUDScreen* s) {
 }
 
 static String HUDScreen_GetChat(void* obj, int i) {
-	i += *((int*)obj); /* argument is offset into chat */
+	i += HUDScreen_Instance.chatIndex;
 
 	if (i >= 0 && i < Chat_Log.count) {
 		return StringsBuffer_UNSAFE_Get(&Chat_Log, i);
@@ -776,7 +760,6 @@ static void HUDScreen_ConstructWidgets(struct HUDScreen* s) {
 	TextGroupWidget_Create(&s->chat, Gui_Chatlines, &s->chatFont, 
 							s->chatTextures, HUDScreen_GetChat);
 	s->chat.underlineUrls = !Game_ClassicMode;
-	s->chat.getLineObj    = &s->chatIndex;
 	Widget_SetLocation(&s->chat, ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
 	Elem_Init(&s->chat);
 
@@ -1215,7 +1198,9 @@ static void HUDScreen_Init(void* screen) {
 	Drawer2D_MakeFont(&s->playerFont, size, FONT_STYLE_NORMAL);
 	s->wasShowingList = false;
 
+	HUDScreen_InitChatFonts(s);
 	HotbarWidget_Create(&s->hotbar);
+
 	Screen_CommonInit(s);
 	Event_RegisterChat(&ChatEvents.ChatReceived,  s, HUDScreen_ChatReceived);
 	Event_RegisterInt(&ChatEvents.ColCodeChanged, s, HUDScreen_ColCodeChanged);
@@ -1274,14 +1259,14 @@ static struct ScreenVTABLE HUDScreen_VTABLE = {
 	HUDScreen_MouseDown, Screen_Mouse,     Screen_MouseMove,   HUDScreen_MouseScroll,
 	HUDScreen_OnResize,  HUDScreen_ContextLost, HUDScreen_ContextRecreated,
 };
-struct Screen* HUDScreen_MakeInstance(void) {
+void HUDScreen_Show(void) {
 	struct HUDScreen* s = &HUDScreen_Instance;
 	s->wasShowingList     = false;
 	s->inputOldHeight     = -1;
 	s->lastDownloadStatus = Int32_MinValue;
 
 	s->VTABLE = &HUDScreen_VTABLE;
-	return (struct Screen*)s;
+	Gui_HUD   = (struct Screen*)s;
 }
 
 void HUDScreen_OpenInput(const String* text) {
@@ -1307,7 +1292,20 @@ struct Widget* HUDScreen_GetHotbar(void) {
 /*########################################################################################################################*
 *----------------------------------------------------DisconnectScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-static struct DisconnectScreen DisconnectScreen_Instance;
+static struct DisconnectScreen {
+	Screen_Layout
+	TimeMS initTime;
+	bool canReconnect, lastActive;
+	int lastSecsLeft;
+	struct ButtonWidget reconnect;
+
+	FontDesc titleFont, messageFont;
+	struct TextWidget title, message;
+	char _titleBuffer[STRING_SIZE];
+	char _messageBuffer[STRING_SIZE];
+	String titleStr, messageStr;
+} DisconnectScreen_Instance;
+
 #define DISCONNECT_DELAY_MS 5000
 static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, String* msg) {
 	if (s->canReconnect) {
@@ -1440,7 +1438,7 @@ static struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_MouseDown, DisconnectScreen_MouseUp, DisconnectScreen_MouseMove, DisconnectScreen_MouseScroll,
 	DisconnectScreen_OnResize,  DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
-struct Screen* DisconnectScreen_MakeInstance(const String* title, const String* message) {
+void DisconnectScreen_Show(const String* title, const String* message) {
 	static const String kick = String_FromConst("Kicked ");
 	static const String ban  = String_FromConst("Banned ");
 	String why; char whyBuffer[STRING_SIZE];
@@ -1459,6 +1457,6 @@ struct Screen* DisconnectScreen_MakeInstance(const String* title, const String* 
 	String_AppendColorless(&why, message);
 	
 	s->canReconnect = !(String_CaselessStarts(&why, &kick) || String_CaselessStarts(&why, &ban));
-	s->VTABLE = &DisconnectScreen_VTABLE;
-	return (struct Screen*)s;
+	s->VTABLE       = &DisconnectScreen_VTABLE;
+	Gui_SetActive((struct Screen*)s);
 }

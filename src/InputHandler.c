@@ -208,7 +208,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		}
 	} else if (key == KeyBinds[KEYBIND_INVENTORY] && active == Gui_HUD) {
 		Gui_FreeActive();
-		Gui_SetActive(InventoryScreen_MakeInstance());
+		InventoryScreen_Show();
 	} else if (key == KEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
