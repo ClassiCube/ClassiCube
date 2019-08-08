@@ -96,6 +96,19 @@ bool Widget_Contains(void* widget, int x, int y);
 
 
 extern GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
+
+enum GuiPriority {
+	GUI_PRIORITY_STATUS     = 1,
+	GUI_PRIORITY_DISCONNECT = 3,
+	GUI_PRIORITY_URLWARNING = 5,
+	GUI_PRIORITY_TEXPACK    = 7,
+	GUI_PRIORITY_TEXIDS     = 9,
+	GUI_PRIORITY_MENU       = 11,
+	GUI_PRIORITY_INVENTORY  = 13,
+	GUI_PRIORITY_HUD        = 15,
+	GUI_PRIORITY_LOADING    = 17,
+};
+
 extern struct Screen* Gui_HUD;
 extern struct Screen* Gui_Active;
 #define GUI_MAX_OVERLAYS 4

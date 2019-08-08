@@ -2512,6 +2512,23 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 	TextGroupWidget_UpdateDimensions(w);
 }
 
+void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* group, char col) {
+	String line;
+	int i, j;
+
+	for (i = 0; i < group->lines; i++) {
+		line = TextGroupWidget_UNSAFE_Get(group, i);
+		if (!line.length) continue;
+
+		for (j = 0; j < line.length - 1; j++) {
+			if (line.buffer[j] == '&' && line.buffer[j + 1] == col) {
+				TextGroupWidget_Redraw(group, i);
+				break;
+			}
+		}
+	}
+}
+
 
 static void TextGroupWidget_Init(void* widget) {
 	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;

@@ -218,6 +218,9 @@ CC_NOINLINE void TextGroupWidget_GetSelected(struct TextGroupWidget* w, String* 
 CC_NOINLINE void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index);
 /* Calls TextGroupWidget_Redraw for all lines */
 CC_NOINLINE void TextGroupWidget_RedrawAll(struct TextGroupWidget* w);
+/* Calls TextGroupWidget_Redraw for all lines which have the given colour code. */
+/* Typically only called in response to the ChatEvents.ColCodeChanged event. */
+CC_NOINLINE void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* w, char col);
 /* Gets the text for the i'th line. */
 static String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { return w->GetLine(w->getLineObj, i); }
 

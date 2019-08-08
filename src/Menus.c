@@ -3135,7 +3135,7 @@ static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 
 static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
-	if (Gui_ClickableChat) { HUDScreen_AppendInput(Gui_HUD, &s->url); }
+	if (Gui_ClickableChat) HUDScreen_AppendInput(&s->url);
 	Elem_Free(s);
 }
 

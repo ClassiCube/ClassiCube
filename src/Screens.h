@@ -18,7 +18,9 @@ struct Screen* DisconnectScreen_MakeInstance(const String* title, const String* 
 extern struct Screen* InventoryScreen_UNSAFE_RawPointer;
 /* Raw pointer to loading screen. DO NOT USE THIS. Use LoadingScreen_MakeInstance() */
 extern struct Screen* LoadingScreen_UNSAFE_RawPointer;
-void HUDScreen_OpenInput(struct Screen* hud, const String* text);
-void HUDScreen_AppendInput(struct Screen* hud, const String* text);
-struct Widget* HUDScreen_GetHotbar(struct Screen* hud);
+/* Opens chat input for the HUD with the given initial text. */
+void HUDScreen_OpenInput(const String* text);
+/* Appends text to the chat input in the HUD. */
+void HUDScreen_AppendInput(const String* text);
+struct Widget* HUDScreen_GetHotbar(void);
 #endif

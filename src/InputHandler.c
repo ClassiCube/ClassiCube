@@ -410,7 +410,7 @@ static void InputHandler_MouseWheel(void* obj, float delta) {
 	if (!hotbar && Camera.Active->Zoom(delta)) return;
 	if (InputHandler_DoFovZoom(delta) || !Inventory.CanChangeSelected) return;
 
-	widget = HUDScreen_GetHotbar(Gui_HUD);
+	widget = HUDScreen_GetHotbar();
 	Elem_HandlesMouseScroll(widget, delta);
 }
 
@@ -506,7 +506,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		if (!hkey->StaysOpen) {
 			Chat_Send(&text, false);
 		} else if (!Gui_Active) {
-			HUDScreen_OpenInput(Gui_HUD, &text);
+			HUDScreen_OpenInput(&text);
 		}
 	}
 }
