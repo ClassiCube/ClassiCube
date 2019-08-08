@@ -1282,6 +1282,7 @@ CC_NOINLINE static void InputWidget_Create(struct InputWidget* w, FontDesc* font
 	w->AllowedChar    = InputWidget_AllowedChar;
 	
 	DrawTextArgs_Make(&args, &caret, font, true);
+	Gfx_DeleteTexture(&w->caretTex.ID); /* TODO: AWFUL HACK */
 	Drawer2D_MakeTextTexture(&w->caretTex, &args, 0, 0);
 	w->caretTex.Width = (uint16_t)((w->caretTex.Width * 3) / 4);
 	w->caretWidth     = w->caretTex.Width;
