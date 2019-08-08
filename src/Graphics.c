@@ -506,6 +506,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
 		Logger_Abort("Textures must have power of two dimensions");
 	}
+	if (Gfx.LostContext) return GFX_NULL;
 
 	if (managedPool) {
 		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels,
@@ -1073,6 +1074,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
 		Logger_Abort("Textures must have power of two dimensions");
 	}
+	if (Gfx.LostContext) return GFX_NULL;
 
 	if (mipmaps) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);

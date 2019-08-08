@@ -160,13 +160,12 @@ static struct WidgetVTABLE ButtonWidget_VTABLE = {
 	Widget_Mouse,    Widget_Mouse,        Widget_MouseMove,  Widget_MouseScroll,
 	ButtonWidget_Reposition,
 };
-void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, const FontDesc* font, Widget_LeftClick onClick) {
+void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick) {
 	Widget_Reset(w);
 	w->VTABLE    = &ButtonWidget_VTABLE;
 	w->optName   = NULL;
 	w->minWidth  = minWidth;
 	w->MenuClick = onClick;
-	ButtonWidget_Set(w, text, font);
 }
 
 void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc* font) {
@@ -187,6 +186,11 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc
 	Widget_Reposition(w);
 	w->texture.X = w->x + (w->width  / 2 - w->texture.Width  / 2);
 	w->texture.Y = w->y + (w->height / 2 - w->texture.Height / 2);
+}
+
+void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, const FontDesc* font, Widget_LeftClick onClick) {
+	ButtonWidget_Make(w, minWidth, onClick);
+	ButtonWidget_Set(w, text, font);
 }
 
 

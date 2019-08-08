@@ -47,7 +47,7 @@ void Screen_CommonFree(void* screen) {
 void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
 	struct Widget* w = (struct Widget*)widget;
 	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
-	w->xOffset   = xOffset;   w->yOffset = yOffset;
+	w->xOffset   = xOffset;   w->yOffset   = yOffset;
 	Widget_Reposition(w);
 }
 

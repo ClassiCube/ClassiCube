@@ -36,10 +36,12 @@ struct ButtonWidget {
 	Button_Get GetValue;
 	Button_Set SetValue;
 };
-/* Resets state of the given button widget, then calls ButtonWidget_Set */
-CC_NOINLINE void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, const FontDesc* font, Widget_LeftClick onClick);
+/* Resets state of the given button widget to default. */
+CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc* font);
+/* Resets state of the given button widget, then calls ButtonWidget_Set */
+CC_NOINLINE void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, const FontDesc* font, Widget_LeftClick onClick);
 
 /* Clickable and draggable scrollbar. */
 struct ScrollbarWidget {

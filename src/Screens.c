@@ -1340,6 +1340,7 @@ static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* s, double 
 static void DisconnectScreen_ContextLost(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	if (!s->title.VTABLE) return;
+
 	Elem_Free(&s->title);
 	Elem_Free(&s->message);
 	Elem_Free(&s->reconnect);
@@ -1349,26 +1350,29 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 	String msg; char msgBuffer[STRING_SIZE];
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 
-	TextWidget_Create(&s->title, &s->titleStr, &s->titleFont);
-	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
-
-	TextWidget_Create(&s->message, &s->messageStr, &s->messageFont);
-	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 10);
+	TextWidget_Set(&s->title,   &s->titleStr,   &s->titleFont);
+	TextWidget_Set(&s->message, &s->messageStr, &s->messageFont);
 
 	String_InitArray(msg, msgBuffer);
 	DisconnectScreen_ReconnectMessage(s, &msg);
-
-	ButtonWidget_Create(&s->reconnect, 300, &msg, &s->titleFont, NULL);
-	Widget_SetLocation(&s->reconnect, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 80);
-	s->reconnect.disabled = !s->canReconnect;
+	ButtonWidget_Set(&s->reconnect, &msg, &s->titleFont);
 }
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	Drawer2D_MakeFont(&s->titleFont,   16, FONT_STYLE_BOLD);
 	Drawer2D_MakeFont(&s->messageFont, 16, FONT_STYLE_NORMAL);
-	Screen_CommonInit(s);
 
+	TextWidget_Make(&s->title);
+	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	TextWidget_Make(&s->message);
+	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
+
+	ButtonWidget_Make(&s->reconnect, 300, NULL);
+	Widget_SetLocation(&s->reconnect, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  80);
+	s->reconnect.disabled = !s->canReconnect;
+
+	Screen_CommonInit(s);
 	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */
 	Gfx_SetFpsLimit(Game_FpsLimit == FPS_LIMIT_VSYNC, 1000 / 5.0f);
 
@@ -1448,8 +1452,8 @@ void DisconnectScreen_Show(const String* title, const String* message) {
 	s->blocksWorld     = true;
 	s->hidesHUD        = true;
 
-	String_InitArray(s->titleStr, s->_titleBuffer);
-	String_AppendString(&s->titleStr, title);
+	String_InitArray(s->titleStr,   s->_titleBuffer);
+	String_AppendString(&s->titleStr,   title);
 	String_InitArray(s->messageStr, s->_messageBuffer);
 	String_AppendString(&s->messageStr, message);
 
