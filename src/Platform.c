@@ -888,10 +888,19 @@ void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_FREETYPE
-#include "freetype/ft2build.h"
-#include "freetype/freetype.h"
-#include "freetype/ftmodapi.h"
-#include "freetype/ftglyph.h"
+
+#if defined CC_BUILD_CUSTOM_FREETYPE /* use the custom version */
+#  include "freetype/ft2build.h"
+#  include "freetype/freetype.h"
+#  include "freetype/ftmodapi.h"
+#  include "freetype/ftglyph.h"
+#else
+#  include <ft2build.h>
+#  include FT_FREETYPE_H
+#  include FT_MODULE_H
+#  include FT_GLYPH_H
+#endif
+
 
 static FT_Library ft_lib;
 static struct FT_MemoryRec_ ft_mem;
@@ -907,9 +916,6 @@ struct FontData {
 	uint16_t widths[256]; /* cached width of each character glyph */
 	FT_BitmapGlyph glyphs[256];        /* cached glyphs */
 	FT_BitmapGlyph shadow_glyphs[256]; /* cached glyphs (for back layer shadow) */
-#ifdef CC_BUILD_OSX
-	char filename[FILENAME_SIZE + 1];
-#endif
 };
 
 static unsigned long FontData_Read(FT_Stream s, unsigned long offset, unsigned char* buffer, unsigned long count) {
@@ -974,13 +980,6 @@ static ReturnCode FontData_Init(const String* path, struct FontData* data, FT_Op
 	Stream_FromFile(&data->file, file);
 	Stream_ReadonlyBuffered(&data->src, &data->file, data->buffer, sizeof(data->buffer));
 
-	/* For OSX font suitcase files */
-#ifdef CC_BUILD_OSX
-	String filename = String_NT_Array(data->filename);
-	String_Copy(&filename, path);
-	data->filename[filename.length] = '\0';
-	args->pathname = data->filename;
-#endif
 	Mem_Set(data->widths,        0xFF, sizeof(data->widths));
 	Mem_Set(data->glyphs,        0x00, sizeof(data->glyphs));
 	Mem_Set(data->shadow_glyphs, 0x00, sizeof(data->shadow_glyphs));
@@ -1042,7 +1041,7 @@ ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style
 	if ((err = FontData_Init(&path, data, &args))) { Mem_Free(data); return err; }
 	desc->Handle = data;
 
-	if ((err = FT_New_Face(ft_lib, &args, faceIndex, &data->face))) return err;
+	if ((err = FT_Open_Face(ft_lib, &args, faceIndex, &data->face))) return err;
 	return FT_Set_Char_Size(data->face, size * 64, 0, Display_DpiX, Display_DpiY);
 }
 
@@ -1097,7 +1096,7 @@ static int Font_Register(const String* path, int faceIndex) {
 	int flags, count;
 
 	if (FontData_Init(path, &data, &args)) return 0;
-	err = FT_New_Face(ft_lib, &args, faceIndex, &data.face);
+	err = FT_Open_Face(ft_lib, &args, faceIndex, &data.face);
 	if (err) { FontData_Free(&data); return 0; }
 
 	flags = data.face->style_flags;

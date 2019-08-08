@@ -123,8 +123,7 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_OSX
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
-#define CC_BUILD_CARBON
-#define CC_BUILD_AGL
+#define CC_BUILD_SDL
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #elif defined __sun__
