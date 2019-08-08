@@ -2060,14 +2060,17 @@ static void Platform_InitStopwatch(void) {
 }
 
 void Platform_Init(void) {
+#if 0
 	ProcessSerialNumber psn; /* TODO: kCurrentProcess */
+#endif
 	Platform_InitCommon();
 	Platform_InitStopwatch();
-	
+#if 0
 	/* NOTE: Call as soon as possible, otherwise can't click on dialog boxes. */
 	GetCurrentProcess(&psn);
 	/* NOTE: TransformProcessType is OSX 10.3 or later */
 	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
+#endif
 }
 void Platform_SetDefaultCurrentDirectory(void) { SetCurrentToExeDirectory(); }
 #elif defined CC_BUILD_WEB

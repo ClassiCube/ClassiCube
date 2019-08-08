@@ -54,10 +54,10 @@ LIBS=-lcurl
 ifeq ($(SYSTEM_FREETYPE),)
 
 CFLAGS := -g -O2 $(shell pkg-config --cflags sdl2) -D_XOPEN_SOURCE $(EXTRA_FLAGS) -DGL_SILENCE_DEPRECATION -std=c99 -Wall -Wno-missing-braces
-LDFLAGS:= -framework OpenAL -framework OpenGL -framework  ApplicationServices $(shell pkg-config --libs sdl2)
+LDFLAGS:= -framework OpenAL -framework OpenGL  $(shell pkg-config --libs sdl2)
 else
 CFLAGS := -g -O2 $(shell pkg-config --cflags sdl2 freetype2) -D_XOPEN_SOURCE -DGL_SILENCE_DEPRECATION -std=c99 -Wall -Wno-missing-braces
-LDFLAGS:= -framework OpenAL -framework OpenGL -framework  ApplicationServices $(shell pkg-config --libs sdl2 freetype2)
+LDFLAGS:= -framework OpenAL -framework OpenGL $(shell pkg-config --libs sdl2 freetype2)
 endif
 
 endif
