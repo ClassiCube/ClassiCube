@@ -96,13 +96,13 @@ static void InventoryScreen_Init(void* screen) {
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
 
 	TableWidget_Create(&s->table);
-	s->table.font = &s->font;
+	s->table.font           = &s->font;
 	s->table.elementsPerRow = Game_PureClassic ? 9 : 10;
 	Elem_Init(&s->table);
 
-	/* Can't immediately move to selected here, because cursor visibility 
-	   might be toggled after Init() is called. This causes the cursor to 
-	   be moved back to the middle of the window. */
+	/* Can't immediately move to selected here, because cursor grabbed  */
+	/* status might be toggled after InventoryScreen_Init() is called. */
+	/* That causes the cursor to be moved back to the middle of the window. */
 	s->deferredSelect = true;
 	Screen_CommonInit(s);
 
@@ -439,15 +439,10 @@ static struct LoadingScreen {
 } LoadingScreen_Instance;
 
 static void LoadingScreen_SetTitle(struct LoadingScreen* s) {
-	Elem_TryFree(&s->title);
-	TextWidget_Create(&s->title, &s->titleStr, &s->font);
-	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
+	TextWidget_Set(&s->title, &s->titleStr, &s->font);
 }
-
 static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
-	Elem_TryFree(&s->message);
-	TextWidget_Create(&s->message, &s->messageStr, &s->font);
-	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 17);
+	TextWidget_Set(&s->message, &s->messageStr, &s->font);
 }
 
 static void LoadingScreen_MapLoading(void* screen, float progress) {
@@ -544,8 +539,13 @@ static void LoadingScreen_DrawBackground(void) {
 static void LoadingScreen_Init(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
-	Screen_CommonInit(s);
 
+	TextWidget_Make(&s->title);
+	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
+	TextWidget_Make(&s->message);
+	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
+
+	Screen_CommonInit(s);
 	Gfx_SetFog(false);
 	Event_RegisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
 }
@@ -562,7 +562,7 @@ static void LoadingScreen_Render(void* screen, double delta) {
 	Gfx_SetTexturing(true);
 	LoadingScreen_DrawBackground();
 
-	Elem_Render(&s->title, delta);
+	Elem_Render(&s->title,   delta);
 	Elem_Render(&s->message, delta);
 	Gfx_SetTexturing(false);
 
@@ -581,27 +581,31 @@ static void LoadingScreen_Free(void* screen) {
 	Event_UnregisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
 }
 
-static struct ScreenVTABLE LoadingScreen_VTABLE = {
-	LoadingScreen_Init,      LoadingScreen_Render,  LoadingScreen_Free,      Gui_DefaultRecreate,
-	LoadingScreen_KeyDown,   LoadingScreen_KeyUp,   LoadingScreen_KeyPress,
-	LoadingScreen_MouseDown, LoadingScreen_MouseUp, LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
-	LoadingScreen_OnResize,  LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
-};
-struct Screen* LoadingScreen_MakeInstance(const String* title, const String* message) {
+CC_NOINLINE static void LoadingScreen_Reset(const String* title, const String* message) {
 	struct LoadingScreen* s = &LoadingScreen_Instance;
 	s->lastState = NULL;
-	s->VTABLE    = &LoadingScreen_VTABLE;
 	s->progress  = 0.0f;
 
-	String_InitArray(s->titleStr, s->_titleBuffer);
-	String_AppendString(&s->titleStr, title);
+	String_InitArray(s->titleStr,   s->_titleBuffer);
+	String_AppendString(&s->titleStr,   title);
 	String_InitArray(s->messageStr, s->_messageBuffer);
 	String_AppendString(&s->messageStr, message);
 	
 	s->handlesAllInput = true;
 	s->blocksWorld     = true;
 	s->renderHUDOver   = true;
-	return (struct Screen*)s;
+}
+
+static struct ScreenVTABLE LoadingScreen_VTABLE = {
+	LoadingScreen_Init,      LoadingScreen_Render,  LoadingScreen_Free,      Gui_DefaultRecreate,
+	LoadingScreen_KeyDown,   LoadingScreen_KeyUp,   LoadingScreen_KeyPress,
+	LoadingScreen_MouseDown, LoadingScreen_MouseUp, LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
+	LoadingScreen_OnResize,  LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
+};
+void LoadingScreen_Show(const String* title, const String* message) {
+	LoadingScreen_Reset(title, message);
+	LoadingScreen_Instance.VTABLE = &LoadingScreen_VTABLE;
+	Gui_SetActive((struct Screen*)&LoadingScreen_Instance);
 }
 struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_Instance;
 
@@ -617,7 +621,7 @@ static void GeneratingScreen_Init(void* screen) {
 	Gen_Blocks = (BlockRaw*)Mem_TryAlloc(World.Volume, 1);
 	if (!Gen_Blocks) {
 		Window_ShowDialog("Out of memory", "Not enough free memory to generate a map that large.\nTry a smaller size.");
-		Gui_CloseActive();
+		Gen_Done = true;
 	} else if (Gen_Vanilla) {
 		Thread_Start(NotchyGen_Generate, true);
 	} else {
@@ -669,13 +673,13 @@ static struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	LoadingScreen_MouseDown, LoadingScreen_MouseUp,   LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
 	LoadingScreen_OnResize,  LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
 };
-struct Screen* GeneratingScreen_MakeInstance(void) {
+void GeneratingScreen_Show(void) {
 	static const String title   = String_FromConst("Generating level");
 	static const String message = String_FromConst("Generating..");
 
-	struct Screen* s = LoadingScreen_MakeInstance(&title, &message);
-	s->VTABLE = &GeneratingScreen_VTABLE;
-	return s;
+	LoadingScreen_Reset(&title, &message);
+	LoadingScreen_Instance.VTABLE = &GeneratingScreen_VTABLE;
+	Gui_SetActive((struct Screen*)&LoadingScreen_Instance);
 }
 
 

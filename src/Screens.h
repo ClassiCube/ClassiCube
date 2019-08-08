@@ -9,8 +9,8 @@ struct Widget;
 
 void InventoryScreen_Show(void);
 void StatusScreen_Show(void);
-struct Screen* LoadingScreen_MakeInstance(const String* title, const String* message);
-struct Screen* GeneratingScreen_MakeInstance(void);
+void LoadingScreen_Show(const String* title, const String* message);
+void GeneratingScreen_Show(void);
 void HUDScreen_Show(void);
 void DisconnectScreen_Show(const String* title, const String* message);
 

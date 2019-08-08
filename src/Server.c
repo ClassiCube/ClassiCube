@@ -149,7 +149,7 @@ static void SPConnection_BeginConnect(void) {
 	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
 
 	Gui_FreeActive();
-	Gui_SetActive(GeneratingScreen_MakeInstance());
+	GeneratingScreen_Show();
 }
 
 static char SPConnection_LastCol = '\0';
@@ -317,7 +317,7 @@ static void MPConnection_BeginConnect(void) {
 	} else {
 		String_Format2(&title, "Connecting to %s:%i..", &Server.IP, &Server.Port);
 		Gui_FreeActive();
-		Gui_SetActive(LoadingScreen_MakeInstance(&title, &String_Empty));
+		LoadingScreen_Show(&title, &String_Empty);
 	}
 }
 

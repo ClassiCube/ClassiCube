@@ -431,7 +431,7 @@ static void Classic_StartLoading(void) {
 		classic_prevScreen = NULL;
 	}
 
-	Gui_SetActive(LoadingScreen_MakeInstance(&Server.Name, &Server.MOTD));
+	LoadingScreen_Show(&Server.Name, &Server.MOTD);
 	WoM_CheckMotd();
 	classic_receivedFirstPos = false;
 

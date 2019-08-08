@@ -126,6 +126,7 @@ struct MenuOptionDesc {
 	Widget_LeftClick OnClick;
 	Button_Get GetValue; Button_Set SetValue;
 };
+struct SimpleButtonDesc { int x, y; const char* title; Widget_LeftClick onClick; };
 
 struct TexIdsOverlay {
 	MenuScreen_Layout
@@ -592,17 +593,6 @@ static void MenuScreen_Free(void* screen) {
 *-------------------------------------------------------PauseScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 static struct PauseScreen PauseScreen_Instance;
-static void PauseScreen_Make(struct PauseScreen* s, int i, int dir, int y, const char* title, Widget_LeftClick onClick) {
-	String text = String_FromReadonly(title);
-	Menu_Button(s, i, &s->buttons[i], 300, &text, &s->titleFont, onClick,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
-}
-
-static void PauseScreen_MakeClassic(struct PauseScreen* s, int i, int y, const char* title, Widget_LeftClick onClick) {
-	String text = String_FromReadonly(title);
-	Menu_Button(s, i, &s->buttons[i], 400, &text, &s->titleFont, onClick,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
-}
 
 static void PauseScreen_Quit(void* a, void* b) { Window_Close(); }
 static void PauseScreen_Game(void* a, void* b) { Gui_CloseActive(); }
@@ -613,17 +603,37 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 	s->buttons[4].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
 }
 
+static void PauseScreen_MakeButtons(struct PauseScreen* s, int width, const struct SimpleButtonDesc* descs, int count) {
+	int i;
+	for (i = 0; i < count; i++) {
+		String text = String_FromReadonly(descs[i].title);
+		Menu_Button(s, i, &s->buttons[i], width, &text, &s->titleFont, descs[i].onClick,
+			ANCHOR_CENTRE, ANCHOR_CENTRE, descs[i].x, descs[i].y);
+	}
+}
+
 static void PauseScreen_ContextRecreated(void* screen) {
 	static const String quitMsg = String_FromConst("Quit game");
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 
-	if (Gui_ClassicMenu) {
-		PauseScreen_MakeClassic(s, 0, -100, "Options...",            Menu_SwitchClassicOptions);
-		PauseScreen_MakeClassic(s, 1,  -50, "Generate new level...", Menu_SwitchClassicGenLevel);
-		PauseScreen_MakeClassic(s, 2,    0, "Load level...",         Menu_SwitchLoadLevel);
-		PauseScreen_MakeClassic(s, 3,   50, "Save level...",         Menu_SwitchSaveLevel);
-		PauseScreen_MakeClassic(s, 4,  150, "Nostalgia options...",  Menu_SwitchNostalgia);
+	static const struct SimpleButtonDesc classicDescs[5] = {
+		{    0, -100, "Options...",             Menu_SwitchClassicOptions },
+		{    0,  -50, "Generate new level...",  Menu_SwitchClassicGenLevel },
+		{    0,    0, "Load level...",          Menu_SwitchLoadLevel },
+		{    0,   50, "Save level...",          Menu_SwitchSaveLevel },
+		{    0,  150, "Nostalgia options...",   Menu_SwitchNostalgia }
+	};
+	static const struct SimpleButtonDesc modernDescs[6] = {
+		{ -160,  -50, "Options...",             Menu_SwitchOptions   },
+		{  160,  -50, "Generate new level...",  Menu_SwitchGenLevel  },
+		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
+		{  160,   50, "Save level...",          Menu_SwitchSaveLevel },
+		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
+		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
+	};
 
+	if (Gui_ClassicMenu) {
+		PauseScreen_MakeButtons(s, 400, classicDescs, 5);
 		Menu_Back(s, 5, &s->buttons[5], "Back to game", &s->titleFont, PauseScreen_Game);
 
 		/* Disable nostalgia options in classic mode */
@@ -631,13 +641,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 		s->widgets[6] = NULL;
 		s->widgets[7] = NULL;
 	} else {
-		PauseScreen_Make(s, 0, -1, -50, "Options...",             Menu_SwitchOptions);
-		PauseScreen_Make(s, 1,  1, -50, "Generate new level...",  Menu_SwitchGenLevel);
-		PauseScreen_Make(s, 2,  1,   0, "Load level...",          Menu_SwitchLoadLevel);
-		PauseScreen_Make(s, 3,  1,  50, "Save level...",          Menu_SwitchSaveLevel);
-		PauseScreen_Make(s, 4, -1,   0, "Change texture pack...", Menu_SwitchTexPacks);
-		PauseScreen_Make(s, 5, -1,  50, "Hotkeys...",             Menu_SwitchHotkeys);
-		
+		PauseScreen_MakeButtons(s, 300, modernDescs, 6);
 		Menu_Button(s, 6, &s->buttons[6], 120, &quitMsg, &s->titleFont, PauseScreen_Quit,
 			ANCHOR_MAX, ANCHOR_MAX, 5, 5);
 		Menu_Back(s,   7, &s->buttons[7], "Back to game",&s->titleFont, PauseScreen_Game);
@@ -701,10 +705,23 @@ static void OptionsGroupScreen_CheckHacksAllowed(void* screen) {
 	s->buttons[5].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
 }
 
-static void OptionsGroupScreen_Make(struct OptionsGroupScreen* s, int i, int dir, int y, const char* title, Widget_LeftClick onClick) {
-	String text = String_FromReadonly(title);
-	Menu_Button(s, i, &s->buttons[i], 300, &text, &s->titleFont, onClick,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
+static void OptionsGroupScreen_MakeButtons(struct OptionsGroupScreen* s) {
+	static const struct SimpleButtonDesc descs[7] = {
+		{ -160, -100, "Misc options...",      Menu_SwitchMisc       },
+		{ -160,  -50, "Gui options...",       Menu_SwitchGui        },
+		{ -160,    0, "Graphics options...",  Menu_SwitchGfx        },
+		{ -160,   50, "Controls...",          Menu_SwitchKeysNormal },
+		{  160,  -50, "Hacks settings...",    Menu_SwitchHacks      },
+		{  160,    0, "Env settings...",      Menu_SwitchEnv        },
+		{  160,   50, "Nostalgia options...", Menu_SwitchNostalgia  }
+	};
+	int i;
+
+	for (i = 0; i < Array_Elems(descs); i++) {
+		String text = String_FromReadonly(descs[i].title);
+		Menu_Button(s, i, &s->buttons[i], 300, &text, &s->titleFont, descs[i].onClick,
+			ANCHOR_CENTRE, ANCHOR_CENTRE, descs[i].x, descs[i].y);
+	}
 }
 
 static void OptionsGroupScreen_MakeDesc(struct OptionsGroupScreen* s) {
@@ -715,18 +732,12 @@ static void OptionsGroupScreen_MakeDesc(struct OptionsGroupScreen* s) {
 
 static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
-	OptionsGroupScreen_Make(s, 0, -1, -100, "Misc options...",      Menu_SwitchMisc);
-	OptionsGroupScreen_Make(s, 1, -1,  -50, "Gui options...",       Menu_SwitchGui);
-	OptionsGroupScreen_Make(s, 2, -1,    0, "Graphics options...",  Menu_SwitchGfx);
-	OptionsGroupScreen_Make(s, 3, -1,   50, "Controls...",          Menu_SwitchKeysNormal);
-	OptionsGroupScreen_Make(s, 4,  1,  -50, "Hacks settings...",    Menu_SwitchHacks);
-	OptionsGroupScreen_Make(s, 5,  1,    0, "Env settings...",      Menu_SwitchEnv);
-	OptionsGroupScreen_Make(s, 6,  1,   50, "Nostalgia options...", Menu_SwitchNostalgia);
+	OptionsGroupScreen_MakeButtons(s);
 
 	Menu_Back(s, 7, &s->buttons[7], "Done", &s->titleFont, Menu_SwitchPause);	
 	s->widgets[8] = NULL; /* Description text widget placeholder */
 
-	if (s->selectedI >= 0) { OptionsGroupScreen_MakeDesc(s); }
+	if (s->selectedI >= 0) OptionsGroupScreen_MakeDesc(s);
 	OptionsGroupScreen_CheckHacksAllowed(s);
 }
 
@@ -1019,7 +1030,7 @@ static void GenLevelScreen_Begin(int width, int height, int length) {
 	World_Reset();
 	World_SetDimensions(width, height, length);
 	Gui_FreeActive();
-	Gui_SetActive(GeneratingScreen_MakeInstance());
+	GeneratingScreen_Show();
 }
 
 static void GenLevelScreen_Gen(void* screen, bool vanilla) {

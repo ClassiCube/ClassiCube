@@ -313,7 +313,7 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 	w->VTABLE = &ScrollbarWidget_VTABLE;
 	w->width  = SCROLL_WIDTH;
 	w->totalRows     = 0;
-	w->topRow       = 0;
+	w->topRow        = 0;
 	w->scrollingAcc  = 0.0f;
 	w->draggingMouse = false;
 	w->mouseOffset   = 0;
