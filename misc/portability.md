@@ -32,7 +32,6 @@ Also monitor size, clipboard, cursor, raw relative mouse movement (optional)
 
 Define:
 - ```CC_BUILD_WINGUI``` - Use Win32 API (Windows)
-- ```CC_BUILD_CARBON``` - Use Carbon (OSX)
 - ```CC_BUILD_X11``` - Use X11/XLib
 - ```CC_BUILD_SDL``` - Use SDL library
 - ```CC_BUILD_WEBCANVAS``` - Use emscripten canvas
@@ -41,7 +40,6 @@ If using OpenGL, also OpenGL context creation
 
 Define:
 - ```CC_BUILD_WGL``` - Use WGL (Windows OpenGL)
-- ```CC_BUILD_AGL``` - Use AGL (Apple OpenGL)
 - ```CC_BUILD_GLX``` - Use glX (X11/XLib)
 - ```CC_BUILD_EGL``` - Use EGL (mainly for GLES)
 - ```CC_BUILD_SDL``` - Use SDL library
