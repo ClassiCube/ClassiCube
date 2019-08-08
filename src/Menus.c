@@ -1713,8 +1713,12 @@ static struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
 	KeyBindingsScreen_MouseDown, Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
 	Menu_OnResize,               Menu_ContextLost,   NULL,
 };
-static struct KeyBindingsScreen* KeyBindingsScreen_Make(int bindsCount, uint8_t* binds, const char** descs, struct ButtonWidget* buttons, struct Widget** widgets, Event_Void_Callback contextRecreated) {
+static struct KeyBindingsScreen* KeyBindingsScreen_Make(int bindsCount, uint8_t* binds, const char** descs, Event_Void_Callback contextRecreated) {
+	/* NOTE: 12 is the most controls on one screen (OtherKeyBindingsScreen_MakeInstance) */
+	static struct ButtonWidget buttons[12];
+	static struct Widget* widgets[12 + 4];
 	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
+
 	s->handlesAllInput = true;
 	s->closable        = true;
 	s->widgets         = widgets;
@@ -1750,10 +1754,8 @@ static void ClassicKeyBindingsScreen_ContextRecreated(void* screen) {
 struct Screen* ClassicKeyBindingsScreen_MakeInstance(void) {
 	static uint8_t binds[10] = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN };
 	static const char* descs[10] = { "Forward", "Back", "Jump", "Chat", "Save loc", "Left", "Right", "Build", "Toggle fog", "Load loc" };
-	static struct ButtonWidget buttons[10];
-	static struct Widget* widgets[10 + 4];
 
-	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, ClassicKeyBindingsScreen_ContextRecreated);
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, ClassicKeyBindingsScreen_ContextRecreated);
 	if (Game_ClassicHacks) s->rightPage = Menu_SwitchKeysClassicHacks;
 	return (struct Screen*)s;
 }
@@ -1770,10 +1772,8 @@ static void ClassicHacksKeyBindingsScreen_ContextRecreated(void* screen) {
 struct Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void) {
 	static uint8_t binds[6] = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN };
 	static const char* descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
-	static struct ButtonWidget buttons[6];
-	static struct Widget* widgets[6 + 4];
 
-	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, ClassicHacksKeyBindingsScreen_ContextRecreated);
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, ClassicHacksKeyBindingsScreen_ContextRecreated);
 	s->leftPage = Menu_SwitchKeysClassic;
 	return (struct Screen*)s;
 }
@@ -1790,10 +1790,8 @@ static void NormalKeyBindingsScreen_ContextRecreated(void* screen) {
 struct Screen* NormalKeyBindingsScreen_MakeInstance(void) {
 	static uint8_t binds[12] = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_PLAYER_LIST, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN, KEYBIND_SEND_CHAT };
 	static const char* descs[12] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
-	static struct ButtonWidget buttons[12];
-	static struct Widget* widgets[12 + 4];
 
-	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, NormalKeyBindingsScreen_ContextRecreated);
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, NormalKeyBindingsScreen_ContextRecreated);
 	s->rightPage = Menu_SwitchKeysHacks;
 	return (struct Screen*)s;
 }
@@ -1810,10 +1808,8 @@ static void HacksKeyBindingsScreen_ContextRecreated(void* screen) {
 struct Screen* HacksKeyBindingsScreen_MakeInstance(void) {
 	static uint8_t binds[8] = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_ZOOM_SCROLL, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN, KEYBIND_THIRD_PERSON };
 	static const char* descs[8] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
-	static struct ButtonWidget buttons[8];
-	static struct Widget* widgets[8 + 4];
 
-	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, HacksKeyBindingsScreen_ContextRecreated);
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, HacksKeyBindingsScreen_ContextRecreated);
 	s->leftPage  = Menu_SwitchKeysNormal;
 	s->rightPage = Menu_SwitchKeysOther;
 	return (struct Screen*)s;
@@ -1831,10 +1827,8 @@ static void OtherKeyBindingsScreen_ContextRecreated(void* screen) {
 struct Screen* OtherKeyBindingsScreen_MakeInstance(void) {
 	static uint8_t binds[12] = { KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_HIDE_GUI, KEYBIND_HOTBAR_SWITCH, KEYBIND_DROP_BLOCK,KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN, KEYBIND_AXIS_LINES, KEYBIND_AUTOROTATE, KEYBIND_SMOOTH_CAMERA, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS };
 	static const char* descs[12] = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
-	static struct ButtonWidget buttons[12];
-	static struct Widget* widgets[12 + 4];
 
-	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, OtherKeyBindingsScreen_ContextRecreated);
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, OtherKeyBindingsScreen_ContextRecreated);
 	s->leftPage  = Menu_SwitchKeysHacks;
 	s->rightPage = Menu_SwitchKeysMouse;
 	return (struct Screen*)s;
@@ -1857,10 +1851,8 @@ static void MouseKeyBindingsScreen_ContextRecreated(void* screen) {
 struct Screen* MouseKeyBindingsScreen_MakeInstance(void) {
 	static uint8_t binds[3] = { KEYBIND_MOUSE_LEFT, KEYBIND_MOUSE_MIDDLE, KEYBIND_MOUSE_RIGHT };
 	static const char* descs[3] = { "Left", "Middle", "Right" };
-	static struct ButtonWidget buttons[3];
-	static struct Widget* widgets[3 + 4 + 1];
 
-	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, MouseKeyBindingsScreen_ContextRecreated);
+	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, MouseKeyBindingsScreen_ContextRecreated);
 	s->leftPage = Menu_SwitchKeysOther;
 	s->widgetsCount++; /* Extra text widget for 'right click' message */
 	return (struct Screen*)s;
