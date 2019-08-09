@@ -347,31 +347,50 @@ void Logger_Backtrace(String* trace, void* ctx) {
 	String_AppendConst(trace, _NL);
 }
 #elif defined CC_BUILD_POSIX
-#include <execinfo.h>
 #define __USE_GNU
 #include <dlfcn.h>
 #undef __USE_GNU
 
-void Logger_Backtrace(String* trace, void* ctx) {
+static void Logger_DumpFrame(String* trace, void* addr) {
 	String str; char strBuffer[384];
-	void* addrs[40];
-	int i, frames;
 	Dl_info s;
 
-	frames = backtrace(addrs, 40);
-	for (i = 0; i < frames; i++) {
-		String_InitArray(str, strBuffer);
+	String_InitArray(str, strBuffer);
+	s.dli_sname = NULL;
+	s.dli_fname = NULL;
+	dladdr(addr, &s);
 
-		s.dli_sname = NULL;
-		s.dli_fname = NULL;
-		dladdr(addrs[i], &s);
+	Logger_PrintFrame(&str, (uintptr_t)addr, (uintptr_t)s.dli_saddr, s.dli_sname, s.dli_fname);
+	String_AppendString(trace, &str);
+	Logger_Log(&str);
+}
 
-		Logger_PrintFrame(&str, (uintptr_t)addrs[i], (uintptr_t)s.dli_saddr, s.dli_sname, s.dli_fname);
-		String_AppendString(trace, &str);
-		Logger_Log(&str);
+#ifdef CC_BUILD_OSX
+void Logger_Backtrace(String* trace, void* ctx) {
+	void* addrs[40];
+	unsigned i, frames;
+	/* See lldb/tools/debugserver/source/MacOSX/stack_logging.h */
+	/* backtrace uses this internally too, and exists since OSX 10.1 */
+	extern void thread_stack_pcs(void** buffer, unsigned max, unsigned* nb);
+
+	thread_stack_pcs(addrs, 40, &frames);
+	for (i = 1; i < frames; i++) { /* 1 to skip thread_stack_pcs frame */
+		Logger_DumpFrame(trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
 }
+#else
+#include <execinfo.h>
+void Logger_Backtrace(String* trace, void* ctx) {
+	void* addrs[40];
+	int i, frames = backtrace(addrs, 40);
+
+	for (i = 0; i < frames; i++) {
+		Logger_DumpFrame(trace, addrs[i]);
+	}
+	String_AppendConst(trace, _NL);
+}
+#endif
 #endif
 static void Logger_DumpBacktrace(String* str, void* ctx) {
 	static const String backtrace = String_FromConst("-- backtrace --" _NL);

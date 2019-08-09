@@ -1961,11 +1961,9 @@ void Window_ProcessEvents(void) {
 }
 
 static void Cursor_GetRawPos(int* x, int* y) {
-	HIPoint point;
-	/* NOTE: HIGetMousePosition is OSX 10.5 or later */
-	/* TODO: Use GetGlobalMouse instead!!!! */
-	HIGetMousePosition(kHICoordSpaceScreenPixel, NULL, &point);
-	*x = (int)point.x; *y = (int)point.y;
+	Point point;
+	GetGlobalMouse(&point);
+	*x = (int)point.h; *y = (int)point.v;
 }
 
 void Cursor_SetPosition(int x, int y) {
