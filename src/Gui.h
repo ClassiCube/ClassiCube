@@ -59,11 +59,10 @@ struct ScreenVTABLE {
 	Event_Void_Callback ContextRecreated;
 };
 #define Screen_Layout struct ScreenVTABLE* VTABLE; \
-	bool handlesAllInput; /* Whether this screen handles all input. Prevents user interacting with the world. */ \
-	bool blocksWorld;     /* Whether this screen completely and opaquely covers the game world behind it. */ \
-	bool hidesHUD;        /* Whether this screen hides the normal in-game HUD. */ \
-	bool renderHUDOver;   /* Whether the normal in-game HUD should be drawn over the top of this screen. */ \
-	bool closable;        /* Whether this screen is automatically closed when pressing Escape */
+	bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
+	bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
+	bool inactive;    /* Whether this screen is prevented from rendering and receiving input. */ \
+	bool closable;    /* Whether this screen is automatically closed when pressing Escape */
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Layout };
@@ -97,23 +96,27 @@ bool Widget_Contains(void* widget, int x, int y);
 
 extern GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 
+/* Higher priority handles input first and draws on top */
 enum GuiPriority {
-	GUI_PRIORITY_STATUS     = 1,
-	GUI_PRIORITY_DISCONNECT = 3,
-	GUI_PRIORITY_URLWARNING = 5,
-	GUI_PRIORITY_TEXPACK    = 7,
-	GUI_PRIORITY_TEXIDS     = 9,
-	GUI_PRIORITY_MENU       = 11,
-	GUI_PRIORITY_INVENTORY  = 13,
-	GUI_PRIORITY_HUD        = 15,
-	GUI_PRIORITY_LOADING    = 17,
+	GUI_PRIORITY_DISCONNECT = 45,
+	GUI_PRIORITY_STATUS     = 40,
+	GUI_PRIORITY_URLWARNING = 35,
+	GUI_PRIORITY_TEXPACK    = 30,
+	GUI_PRIORITY_TEXIDS     = 25,
+	GUI_PRIORITY_MENU       = 20,
+	GUI_PRIORITY_INVENTORY  = 15,
+	GUI_PRIORITY_HUD        = 10,
+	GUI_PRIORITY_LOADING    =  5,
 };
 
 extern struct Screen* Gui_Status;
 extern struct Screen* Gui_HUD;
 extern struct Screen* Gui_Active;
+#define GUI_MAX_SCREENS 10
 #define GUI_MAX_OVERLAYS 4
 extern struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
+extern struct Screen* Gui_Screens[GUI_MAX_SCREENS];
+extern int Gui_ScreensCount;
 extern int Gui_OverlaysCount;
 
 /* Calculates position of an element on a particular axis */
@@ -139,7 +142,19 @@ CC_NOINLINE void Gui_CloseActive(void);
 /* Frees the given screen, and if == Gui_Active, calls Gui_SetActive(NULL) */
 CC_NOINLINE void Gui_Close(void* screen);
 
-void Gui_RefreshHud(void);
+/* Returns index of the given screen in the screens list, -1 if not */
+int Gui_Index(struct Screen* screen);
+/* Inserts a screen into the screen lists with the given priority. */
+/* NOTE: You MUST ensure a screen isn't added twice. Or use Gui_Replace. */
+void Gui_Add(struct Screen* screen, int priority);
+/* Removes the screen from the screens list. */
+void Gui_Remove(struct Screen* screen);
+/* Shorthand for Gui_Remove then Gui_Add. */
+void Gui_Replace(struct Screen* screen, int priority);
+/* Returns the screen that has grabbed input, else NULL. */
+struct Screen* Gui_GetInputGrab(void);
+
+void Gui_RefreshHud(void); 
 void Gui_ShowOverlay(struct Screen* screen);
 /* Returns index of the given screen in the overlays list, -1 if not */
 int  Gui_IndexOverlay(const void* screen);

@@ -177,7 +177,6 @@ void Game_UpdateProjection(void) {
 
 void Game_Disconnect(const String* title, const String* reason) {
 	Event_RaiseVoid(&NetEvents.Disconnected);
-	Gui_FreeActive();
 	DisconnectScreen_Show(title, reason);
 	Game_Reset();
 }
@@ -637,12 +636,12 @@ static void Game_RenderFrame(double delta) {
 	Game_Vertices = 0;
 
 	Camera.Active->UpdateMouse(delta);
-	if (!Window_Focused && !Gui_GetActiveScreen()->handlesAllInput) {
+	if (!Window_Focused && !Gui_GetInputGrab()) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());
 	}
 
-	allowZoom = !Gui_Active && !Gui_HUD->handlesAllInput;
+	allowZoom = !Gui_Active && !Gui_HUD->grabsInput;
 	if (allowZoom && KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) {
 		InputHandler_SetFOV(Game_ZoomFov);
 	}

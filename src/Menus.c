@@ -543,10 +543,10 @@ static struct ScreenVTABLE ListScreen_VTABLE = {
 struct ListScreen* ListScreen_MakeInstance(void) {
 	struct ListScreen* s = &ListScreen_Instance;
 	StringsBuffer_Clear(&s->entries);
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgetsCount    = 0;
-	s->currentIndex    = 0;
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgetsCount = 0;
+	s->currentIndex = 0;
 
 	s->UpdateEntry = ListScreen_UpdateEntry;
 	s->VTABLE      = &ListScreen_VTABLE;
@@ -675,10 +675,10 @@ struct Screen* PauseScreen_MakeInstance(void) {
 	static struct Widget* widgets[8];
 	struct PauseScreen* s = &PauseScreen_Instance;
 
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgets         = widgets;
-	s->widgetsCount    = Array_Elems(widgets);
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgets      = widgets;
+	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE = &PauseScreen_VTABLE;
 	return (struct Screen*)s;
@@ -774,10 +774,10 @@ struct Screen* OptionsGroupScreen_MakeInstance(void) {
 	static struct Widget* widgets[9];
 	struct OptionsGroupScreen* s = &OptionsGroupScreen_Instance;
 	
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgets         = widgets;
-	s->widgetsCount    = Array_Elems(widgets);
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgets      = widgets;
+	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE = &OptionsGroupScreen_VTABLE;
 	s->selectedI = -1;
@@ -986,10 +986,10 @@ struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 	static struct Widget* widgets[7];
 	struct EditHotkeyScreen* s = &EditHotkeyScreen_Instance;
 
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgets         = widgets;
-	s->widgetsCount    = Array_Elems(widgets);
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgets      = widgets;
+	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE    = &EditHotkeyScreen_VTABLE;
 	s->selectedI = -1;
@@ -1147,10 +1147,10 @@ struct Screen* GenLevelScreen_MakeInstance(void) {
 	static struct Widget* widgets[12];
 	struct GenLevelScreen* s = &GenLevelScreen_Instance;
 
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgets         = widgets;
-	s->widgetsCount    = Array_Elems(widgets);
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgets      = widgets;
+	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE = &GenLevelScreen_VTABLE;
 	return (struct Screen*)s;
@@ -1198,10 +1198,10 @@ struct Screen* ClassicGenScreen_MakeInstance(void) {
 	static struct Widget* widgets[4];
 	struct ClassicGenScreen* s = &ClassicGenScreen_Instance;
 
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgets         = widgets;
-	s->widgetsCount    = Array_Elems(widgets);
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgets      = widgets;
+	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE = &ClassicGenScreen_VTABLE;
 	return (struct Screen*)s;
@@ -1356,10 +1356,10 @@ struct Screen* SaveLevelScreen_MakeInstance(void) {
 	static struct Widget* widgets[6];
 	struct SaveLevelScreen* s = &SaveLevelScreen_Instance;
 	
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgets         = widgets;
-	s->widgetsCount    = Array_Elems(widgets);
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgets      = widgets;
+	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE = &SaveLevelScreen_VTABLE;
 	return (struct Screen*)s;
@@ -1719,10 +1719,10 @@ static struct KeyBindingsScreen* KeyBindingsScreen_Make(int bindsCount, uint8_t*
 	static struct Widget* widgets[12 + 4];
 	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
 
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgets         = widgets;
-	s->widgetsCount    = bindsCount + 4;
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgets      = widgets;
+	s->widgetsCount = bindsCount + 4;
 
 	s->VTABLE = &KeyBindingsScreen_VTABLE;
 	s->VTABLE->ContextRecreated = contextRecreated;
@@ -2151,10 +2151,10 @@ static struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, int count, struct ButtonWidget* buttons, Event_Void_Callback contextRecreated,
 	struct MenuInputDesc* descs, const char** descriptions, int descsCount) {
 	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgets         = widgets;
-	s->widgetsCount    = count;
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgets      = widgets;
+	s->widgetsCount = count;
 
 	s->extHelp.lines = 0;
 	s->VTABLE = &MenuOptionsScreen_VTABLE;
@@ -3072,10 +3072,10 @@ struct Screen* TexIdsOverlay_MakeInstance(void) {
 	static struct Widget* widgets[1];
 	struct TexIdsOverlay* s = &TexIdsOverlay_Instance;
 	
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgets         = widgets;
-	s->widgetsCount    = Array_Elems(widgets);
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgets      = widgets;
+	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE = &TexIdsOverlay_VTABLE;
 	return (struct Screen*)s;
@@ -3133,10 +3133,10 @@ struct Screen* UrlWarningOverlay_MakeInstance(const String* url) {
 	static struct Widget* widgets[6];
 	struct UrlWarningOverlay* s = &UrlWarningOverlay_Instance;
 
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgets         = widgets;
-	s->widgetsCount    = Array_Elems(widgets);
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgets      = widgets;
+	s->widgetsCount = Array_Elems(widgets);
 
 	String_InitArray(s->url, s->_urlBuffer);
 	String_Copy(&s->url, url);
@@ -3275,11 +3275,11 @@ struct Screen* TexPackOverlay_MakeInstance(const String* url) {
 	/* replace/override the old texture pack URL associated with that overlay */
 	if (Gui_IndexOverlay(s) >= 0) { Elem_Free(s); }
 
-	s->showingDeny     = false;
-	s->handlesAllInput = true;
-	s->closable        = true;
-	s->widgets         = widgets;
-	s->widgetsCount    = Array_Elems(widgets);
+	s->showingDeny  = false;
+	s->grabsInput   = true;
+	s->closable     = true;
+	s->widgets      = widgets;
+	s->widgetsCount = Array_Elems(widgets);
 
 	String_InitArray(s->identifier, s->_identifierBuffer);
 	String_Format1(&s->identifier, "CL_%s", url);

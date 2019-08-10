@@ -781,7 +781,7 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
 
-	if (Gui_GetActiveScreen()->handlesAllInput) {
+	if (Gui_GetInputGrab()) {
 		p->Physics.Jumping = false; hacks->Speeding = false;
 		hacks->FlyingUp    = false; hacks->FlyingDown = false;
 	} else {

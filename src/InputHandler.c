@@ -63,7 +63,7 @@ static void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
 }
 
 void InputHandler_ScreenChanged(struct Screen* oldScreen, struct Screen* newScreen) {
-	if (oldScreen && oldScreen->handlesAllInput) {
+	if (oldScreen && oldScreen->grabsInput) {
 		input_lastClick = DateTime_CurrentUTC_MS();
 	}
 
@@ -331,15 +331,14 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 
 	if (cooldown && delta < 250) return; /* 4 times per second */
 	input_lastClick = now;
+	if (Gui_GetInputGrab()) return;
 
-	if (Server.SupportsPlayerClick && !Gui_GetActiveScreen()->handlesAllInput) {
+	if (Server.SupportsPlayerClick) {
 		input_pickingId = -1;
 		InputHandler_ButtonStateChanged(MOUSE_LEFT,   left);
 		InputHandler_ButtonStateChanged(MOUSE_RIGHT,  right);
 		InputHandler_ButtonStateChanged(MOUSE_MIDDLE, middle);
 	}
-
-	if (Gui_GetActiveScreen()->handlesAllInput) return;
 
 	if (left) {
 		/* always play delete animations, even if we aren't picking a block */

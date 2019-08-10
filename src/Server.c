@@ -147,8 +147,6 @@ static void SPConnection_BeginConnect(void) {
 	World_SetDimensions(128, 64, 128);
 	Gen_Vanilla = true;
 	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
-
-	Gui_FreeActive();
 	GeneratingScreen_Show();
 }
 
@@ -316,7 +314,6 @@ static void MPConnection_BeginConnect(void) {
 		MPConnection_FailConnect(res);
 	} else {
 		String_Format2(&title, "Connecting to %s:%i..", &Server.IP, &Server.Port);
-		Gui_FreeActive();
 		LoadingScreen_Show(&title, &String_Empty);
 	}
 }

@@ -205,11 +205,11 @@ static struct ScreenVTABLE InventoryScreen_VTABLE = {
 };
 void InventoryScreen_Show(void) {
 	struct InventoryScreen* s = &InventoryScreen_Instance;
-	s->handlesAllInput = true;
-	s->closable        = true;
+	s->grabsInput = true;
+	s->closable   = true;
 
 	s->VTABLE = &InventoryScreen_VTABLE;
-	Gui_SetActive((struct Screen*)s);
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_INVENTORY);
 }
 struct Screen* InventoryScreen_UNSAFE_RawPointer = (struct Screen*)&InventoryScreen_Instance;
 
@@ -415,10 +415,9 @@ static struct ScreenVTABLE StatusScreen_VTABLE = {
 };
 void StatusScreen_Show(void) {
 	struct StatusScreen* s = &StatusScreen_Instance;
-	s->handlesAllInput = false;
-
 	s->VTABLE  = &StatusScreen_VTABLE;
-	Gui_Status = (struct Screen*)s;
+	Gui_Status =(struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_STATUS);
 }
 
 
@@ -485,7 +484,7 @@ static bool LoadingScreen_KeyUp(void* screen, Key key) {
 }
 
 static bool LoadingScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
-	if (Gui_HUD->handlesAllInput) { Elem_HandlesMouseDown(Gui_HUD, x, y, btn); }
+	if (Gui_HUD->grabsInput) { Elem_HandlesMouseDown(Gui_HUD, x, y, btn); }
 	return true;
 }
 
@@ -591,9 +590,8 @@ CC_NOINLINE static void LoadingScreen_Reset(const String* title, const String* m
 	String_InitArray(s->messageStr, s->_messageBuffer);
 	String_AppendString(&s->messageStr, message);
 	
-	s->handlesAllInput = true;
-	s->blocksWorld     = true;
-	s->renderHUDOver   = true;
+	s->grabsInput  = true;
+	s->blocksWorld = true;
 }
 
 static struct ScreenVTABLE LoadingScreen_VTABLE = {
@@ -605,7 +603,7 @@ static struct ScreenVTABLE LoadingScreen_VTABLE = {
 void LoadingScreen_Show(const String* title, const String* message) {
 	LoadingScreen_Reset(title, message);
 	LoadingScreen_Instance.VTABLE = &LoadingScreen_VTABLE;
-	Gui_SetActive((struct Screen*)&LoadingScreen_Instance);
+	Gui_Replace((struct Screen*)&LoadingScreen_Instance, GUI_PRIORITY_LOADING);
 }
 struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_Instance;
 
@@ -679,7 +677,7 @@ void GeneratingScreen_Show(void) {
 
 	LoadingScreen_Reset(&title, &message);
 	LoadingScreen_Instance.VTABLE = &GeneratingScreen_VTABLE;
-	Gui_SetActive((struct Screen*)&LoadingScreen_Instance);
+	Gui_Replace((struct Screen*)&LoadingScreen_Instance, GUI_PRIORITY_LOADING);
 }
 
 
@@ -785,7 +783,7 @@ static void HUDScreen_SetInitialMessages(struct HUDScreen* s) {
 	TextGroupWidget_RedrawAll(&s->bottomRight);
 	TextGroupWidget_RedrawAll(&s->clientStatus);
 
-	if (s->handlesAllInput) HUDScreen_OpenInput(&chatInputStr);
+	if (s->grabsInput) HUDScreen_OpenInput(&chatInputStr);
 }
 
 static void HUDScreen_UpdateChatYOffset(struct HUDScreen* s, bool force) {
@@ -829,7 +827,7 @@ static void HUDScreen_EnterChatInput(struct HUDScreen* s, bool close) {
 	struct InputWidget* input;
 	int defaultIndex;
 
-	s->handlesAllInput = false;
+	s->grabsInput = false;
 	Camera_CheckFocus();
 
 	if (close) InputWidget_Clear(&s->input.base);
@@ -970,7 +968,7 @@ static void HUDScreen_DrawChat(struct HUDScreen* s, double delta) {
 	}
 
 	now = DateTime_CurrentUTC_MS();
-	if (s->handlesAllInput) {
+	if (s->grabsInput) {
 		Elem_Render(&s->chat, delta);
 	} else {
 		/* Only render recent chat */
@@ -985,7 +983,7 @@ static void HUDScreen_DrawChat(struct HUDScreen* s, double delta) {
 	}
 
 	Elem_Render(&s->announcement, delta);
-	if (s->handlesAllInput) {
+	if (s->grabsInput) {
 		Elem_Render(&s->input.base, delta);
 		if (s->altText.active) {
 			Elem_Render(&s->altText, delta);
@@ -1001,7 +999,7 @@ static void HUDScreen_ContextLost(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	Elem_TryFree(&s->hotbar);
 
-	if (s->handlesAllInput) {
+	if (s->grabsInput) {
 		String_Copy(&chatInputStr, &s->input.base.text);
 		/* TODO: Why are we checking camera here */
 		Camera_CheckFocus();
@@ -1056,7 +1054,7 @@ static void HUDScreen_OnResize(void* screen) {
 
 static bool HUDScreen_KeyPress(void* screen, char keyChar) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	if (!s->handlesAllInput) return false;
+	if (!s->grabsInput) return false;
 
 	if (s->suppressNextPress) {
 		s->suppressNextPress = false;
@@ -1072,7 +1070,7 @@ static bool HUDScreen_KeyDown(void* screen, Key key, bool was) {
 	static const String slash = String_FromConst("/");
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	Key playerListKey = KeyBinds[KEYBIND_PLAYER_LIST];
-	bool handlesList  = playerListKey != KEY_TAB || !Gui_TabAutocomplete || !s->handlesAllInput;
+	bool handlesList  = playerListKey != KEY_TAB || !Gui_TabAutocomplete || !s->grabsInput;
 
 	if (key == playerListKey && handlesList) {
 		if (!s->showingList && !Server.IsSinglePlayer) {
@@ -1084,7 +1082,7 @@ static bool HUDScreen_KeyDown(void* screen, Key key, bool was) {
 
 	s->suppressNextPress = false;
 	/* Handle chat text input */
-	if (s->handlesAllInput) {
+	if (s->grabsInput) {
 #ifdef CC_BUILD_WEB
 		/* See reason for this in InputHandler_KeyUp */
 		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == KEY_KP_ENTER) {
@@ -1123,7 +1121,7 @@ static bool HUDScreen_KeyUp(void* screen, Key key) {
 		return true;
 	}
 
-	if (!s->handlesAllInput) return Elem_HandlesKeyUp(&s->hotbar, key);
+	if (!s->grabsInput) return Elem_HandlesKeyUp(&s->hotbar, key);
 #ifdef CC_BUILD_WEB
 	/* See reason for this in InputHandler_KeyUp */
 	if (key == KEY_ESCAPE) HUDScreen_EnterChatInput(s, true);
@@ -1139,7 +1137,7 @@ static bool HUDScreen_KeyUp(void* screen, Key key) {
 static bool HUDScreen_MouseScroll(void* screen, float delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	int steps;
-	if (!s->handlesAllInput) return false;
+	if (!s->grabsInput) return false;
 
 	steps = Utils_AccumulateWheelDelta(&s->chatAcc, delta);
 	HUDScreen_ScrollChatBy(s, -steps);
@@ -1151,7 +1149,7 @@ static bool HUDScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	int height, chatY;
 
-	if (btn != MOUSE_LEFT || !s->handlesAllInput) return false;
+	if (btn != MOUSE_LEFT || !s->grabsInput) return false;
 
 	/* player clicks on name in tab list */
 	/* TODO: Move to PlayerListWidget */
@@ -1214,7 +1212,7 @@ static void HUDScreen_Render(void* screen, double delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	bool showMinimal;
 
-	if (Game_HideGui && s->handlesAllInput) {
+	if (Game_HideGui && s->grabsInput) {
 		Gfx_SetTexturing(true);
 		Elem_Render(&s->input.base, delta);
 		Gfx_SetTexturing(false);
@@ -1227,7 +1225,7 @@ static void HUDScreen_Render(void* screen, double delta) {
 		HUDScreen_DrawCrosshairs();
 		Gfx_SetTexturing(false);
 	}
-	if (s->handlesAllInput && !Game_PureClassic) {
+	if (s->grabsInput && !Game_PureClassic) {
 		HUDScreen_DrawChatBackground(s);
 	}
 
@@ -1271,12 +1269,13 @@ void HUDScreen_Show(void) {
 
 	s->VTABLE = &HUDScreen_VTABLE;
 	Gui_HUD   = (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_HUD);
 }
 
 void HUDScreen_OpenInput(const String* text) {
 	struct HUDScreen* s  = &HUDScreen_Instance;
 	s->suppressNextPress = true;
-	s->handlesAllInput   = true;
+	s->grabsInput        = true;
 	Camera_CheckFocus();
 
 	String_Copy(&s->input.base.text, text);
@@ -1452,9 +1451,8 @@ void DisconnectScreen_Show(const String* title, const String* message) {
 	String why; char whyBuffer[STRING_SIZE];
 	struct DisconnectScreen* s = &DisconnectScreen_Instance;
 
-	s->handlesAllInput = true;
-	s->blocksWorld     = true;
-	s->hidesHUD        = true;
+	s->grabsInput  = true;
+	s->blocksWorld = true;
 
 	String_InitArray(s->titleStr,   s->_titleBuffer);
 	String_AppendString(&s->titleStr,   title);
@@ -1466,5 +1464,8 @@ void DisconnectScreen_Show(const String* title, const String* message) {
 	
 	s->canReconnect = !(String_CaselessStarts(&why, &kick) || String_CaselessStarts(&why, &ban));
 	s->VTABLE       = &DisconnectScreen_VTABLE;
-	Gui_SetActive((struct Screen*)s);
+
+	/* Get rid of all other menus instead of just hiding to reduce GPU usage */
+	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_DISCONNECT);
 }

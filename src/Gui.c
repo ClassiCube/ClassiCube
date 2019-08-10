@@ -21,7 +21,9 @@ struct Screen* Gui_Status;
 struct Screen* Gui_HUD;
 struct Screen* Gui_Active;
 struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
-int Gui_OverlaysCount;
+struct Screen* Gui_Screens[GUI_MAX_SCREENS];
+int Gui_ScreensCount, Gui_OverlaysCount;
+static uint8_t priorities[GUI_MAX_SCREENS];
 
 void Gui_DefaultRecreate(void* elem) {
 	struct GuiElem* e = (struct GuiElem*)elem;
@@ -147,9 +149,7 @@ static void Gui_Free(void) {
 	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, Gui_FontChanged);
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Gui_FileChanged);
 
-	if (Gui_Active) Elem_TryFree(Gui_Active);
-	Elem_TryFree(Gui_Status);
-	Elem_TryFree(Gui_HUD);
+	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
 
 	Gfx_DeleteTexture(&Gui_GuiTex);
 	Gfx_DeleteTexture(&Gui_GuiClassicTex);
@@ -197,6 +197,64 @@ void Gui_SetActive(struct Screen* screen) {
 }
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
+int Gui_Index(struct Screen* screen) {
+	int i;
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		if (Gui_Screens[i] == screen) return i;
+	}
+	return -1;
+}
+
+void Gui_Add(struct Screen* screen, int priority) {
+	int i, j;
+	if (Gui_ScreensCount >= GUI_MAX_SCREENS) Logger_Abort("Hit max screens");
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		if (priority <= priorities[i]) continue;
+
+		/* Shift lower priority screens right */
+		for (j = i + 1; j <= Gui_ScreensCount; i++) {
+			Gui_Screens[j] = Gui_Screens[j - 1];
+			priorities[j]  = priorities[j - 1];
+		}
+		break;
+	}
+
+	Gui_Screens[i] = screen;
+	priorities[i]  = priority;
+	Gui_ScreensCount++;
+
+	Elem_Init(screen);
+	/* for selecting active button etc */
+	Elem_HandlesMouseMove(screen, Mouse_X, Mouse_Y);
+}
+
+void Gui_Remove(struct Screen* screen) {
+	int i = Gui_Index(screen);
+	if (i == -1) return;
+
+	for (; i < Gui_ScreensCount - 1; i++) {
+		Gui_Screens[i] = Gui_Screens[i + 1];
+		priorities[i]  = priorities[i  + 1];
+	}
+	Gui_ScreensCount--;
+
+	Elem_Free(screen);
+}
+
+void Gui_Replace(struct Screen* screen, int priority) {
+	Gui_Remove(screen);
+	Gui_Add(screen, priority);
+}
+
+struct Screen* Gui_GetInputGrab(void) {
+	int i;
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		if (Gui_Screens[i]->grabsInput) return Gui_Screens[i];
+	}
+	return NULL;
+}
+
 void Gui_ShowOverlay(struct Screen* screen) {
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
 		Logger_Abort("Gui_ShowOverlay - hit max count");
@@ -232,28 +290,20 @@ void Gui_RemoveOverlay(const void* screen) {
 }
 
 void Gui_RenderGui(double delta) {
-	bool showHUD, hudBefore;
+	int i;
 	Gfx_Mode2D(Game.Width, Game.Height);
 
-	showHUD   = !Gui_Active || !Gui_Active->hidesHUD;
-	hudBefore = !Gui_Active || !Gui_Active->renderHUDOver;
-	if (showHUD) { Elem_Render(Gui_Status, delta); }
-
-	if (showHUD && hudBefore)  { Elem_Render(Gui_HUD, delta); }
-	if (Gui_Active)            { Elem_Render(Gui_Active, delta); }
-	if (showHUD && !hudBefore) { Elem_Render(Gui_HUD, delta); }
-
-	if (Gui_OverlaysCount) { Elem_Render(Gui_Overlays[0], delta); }
+	/* Draw back to front so highest priority screen is on top */
+	for (i = Gui_ScreensCount - 1; i >= 0; i--) {
+		Elem_Render(Gui_Screens[i], delta);
+	}
 	Gfx_Mode3D();
 }
 
 void Gui_OnResize(void) {
 	int i;
-	if (Gui_Active) { Screen_OnResize(Gui_Active); }
-	Screen_OnResize(Gui_HUD);
-
-	for (i = 0; i < Gui_OverlaysCount; i++) {
-		Screen_OnResize(Gui_Overlays[i]);
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		Screen_OnResize(Gui_Screens[i]);
 	}
 }
 
