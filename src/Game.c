@@ -618,7 +618,7 @@ void Game_TakeScreenshot(void) {
 
 static void Game_RenderFrame(double delta) {
 	struct ScheduledTask entTask;
-	bool allowZoom, visible;
+	bool visible;
 	float t;
 
 	/* TODO: Should other tasks get called back too? */
@@ -641,8 +641,7 @@ static void Game_RenderFrame(double delta) {
 		Gui_SetActive(PauseScreen_MakeInstance());
 	}
 
-	allowZoom = !Gui_Active && !Gui_HUD->grabsInput;
-	if (allowZoom && KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) {
+	if (KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL) && !Gui_GetInputGrab()) {
 		InputHandler_SetFOV(Game_ZoomFov);
 	}
 

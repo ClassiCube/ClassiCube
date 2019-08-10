@@ -207,7 +207,6 @@ static bool InputHandler_HandleCoreKey(Key key) {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
 	} else if (key == KeyBinds[KEYBIND_INVENTORY] && active == Gui_HUD) {
-		Gui_FreeActive();
 		InventoryScreen_Show();
 	} else if (key == KEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
@@ -414,9 +413,13 @@ static void InputHandler_MouseWheel(void* obj, float delta) {
 }
 
 static void InputHandler_MouseMove(void* obj, int xDelta, int yDelta) {
-	struct Screen* active = Gui_GetActiveScreen();
-	/* In case MouseMove is called before game is fully initialised */
-	if (active) Elem_HandlesMouseMove(active, Mouse_X, Mouse_Y);
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (!s->inactive && Elem_HandlesMouseMove(s, Mouse_X, Mouse_Y)) return;
+	}
 }
 
 static void InputHandler_MouseDown(void* obj, int button) {
@@ -504,7 +507,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 
 		if (!hkey->StaysOpen) {
 			Chat_Send(&text, false);
-		} else if (!Gui_Active) {
+		} else if (!Gui_GetInputGrab()) {
 			HUDScreen_OpenInput(&text);
 		}
 	}
@@ -530,8 +533,13 @@ static void InputHandler_KeyUp(void* obj, int key) {
 }
 
 static void InputHandler_KeyPress(void* obj, int keyChar) {
-	struct Screen* active = Gui_GetActiveScreen();
-	Elem_HandlesKeyPress(active, keyChar);
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (!s->inactive && Elem_HandlesKeyPress(s, keyChar)) return;
+	}
 }
 
 void InputHandler_Init(void) {

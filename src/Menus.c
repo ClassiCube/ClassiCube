@@ -3046,21 +3046,11 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 static bool TexIdsOverlay_KeyDown(void* screen, Key key, bool was) {
 	struct Screen* s = (struct Screen*)screen;
 	if (key == KeyBinds[KEYBIND_IDOVERLAY]) { Elem_Free(s); return true; }
-
-	/* allow user to chat when tex ids overlay is active */
-	s = Gui_GetUnderlyingScreen();
-	return Elem_HandlesKeyDown(s, key, was);
+	return false;
 }
 
-static bool TexIdsOverlay_KeyPress(void* screen, char keyChar) {
-	struct Screen* s = Gui_GetUnderlyingScreen();
-	return Elem_HandlesKeyPress(s, keyChar);
-}
-
-static bool TexIdsOverlay_KeyUp(void* screen, Key key) {
-	struct Screen* s = Gui_GetUnderlyingScreen();
-	return Elem_HandlesKeyUp(s, key);
-}
+static bool TexIdsOverlay_KeyPress(void* screen, char keyChar) { return false; }
+static bool TexIdsOverlay_KeyUp(void* screen, Key key) { return false; }
 
 static struct ScreenVTABLE TexIdsOverlay_VTABLE = {
 	TexIdsOverlay_Init,    TexIdsOverlay_Render, Overlay_Free,           Gui_DefaultRecreate,

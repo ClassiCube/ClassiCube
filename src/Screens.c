@@ -469,28 +469,12 @@ static void LoadingScreen_ContextRecreated(void* screen) {
 	LoadingScreen_SetMessage(s);
 }
 
-static bool LoadingScreen_KeyDown(void* sceen, Key key, bool was) {
-	if (key == KEY_TAB) return true;
-	return Elem_HandlesKeyDown(Gui_HUD, key, was);
-}
-
-static bool LoadingScreen_KeyPress(void* scren, char keyChar) {
-	return Elem_HandlesKeyPress(Gui_HUD, keyChar);
-}
-
-static bool LoadingScreen_KeyUp(void* screen, Key key) {
-	if (key == KEY_TAB) return true;
-	return Elem_HandlesKeyUp(Gui_HUD, key);
-}
-
-static bool LoadingScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
-	if (Gui_HUD->grabsInput) { Elem_HandlesMouseDown(Gui_HUD, x, y, btn); }
-	return true;
-}
-
-static bool LoadingScreen_MouseUp(void* screen, int x, int y, MouseButton btn) { return true; }
-static bool LoadingScreen_MouseMove(void* screen, int x, int y) { return true; }
-static bool LoadingScreen_MouseScroll(void* screen, float delta) { return true; }
+static bool LoadingScreen_KeyDown(void* sceen, Key key, bool was) { return false; }
+static bool LoadingScreen_KeyPress(void* scren, char keyChar) { return false; }
+static bool LoadingScreen_KeyUp(void* screen, Key key) { return false; }
+static bool LoadingScreen_Mouse(void* screen, int x, int y, MouseButton btn) { return false; }
+static bool LoadingScreen_MouseMove(void* screen, int x, int y) { return false; }
+static bool LoadingScreen_MouseScroll(void* screen, float delta) { return false; }
 
 static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int count, int atlasIndex, bool* bound) {
 	if (!(*bound)) {
@@ -595,10 +579,10 @@ CC_NOINLINE static void LoadingScreen_Reset(const String* title, const String* m
 }
 
 static struct ScreenVTABLE LoadingScreen_VTABLE = {
-	LoadingScreen_Init,      LoadingScreen_Render,  LoadingScreen_Free,      Gui_DefaultRecreate,
-	LoadingScreen_KeyDown,   LoadingScreen_KeyUp,   LoadingScreen_KeyPress,
-	LoadingScreen_MouseDown, LoadingScreen_MouseUp, LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
-	LoadingScreen_OnResize,  LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
+	LoadingScreen_Init,     LoadingScreen_Render, LoadingScreen_Free,      Gui_DefaultRecreate,
+	LoadingScreen_KeyDown,  LoadingScreen_KeyUp,  LoadingScreen_KeyPress,
+	LoadingScreen_Mouse,    LoadingScreen_Mouse,  LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
+	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
 };
 void LoadingScreen_Show(const String* title, const String* message) {
 	LoadingScreen_Reset(title, message);
@@ -666,10 +650,10 @@ static void GeneratingScreen_Render(void* screen, double delta) {
 }
 
 static struct ScreenVTABLE GeneratingScreen_VTABLE = {
-	GeneratingScreen_Init,   GeneratingScreen_Render, LoadingScreen_Free,      Gui_DefaultRecreate,
-	LoadingScreen_KeyDown,   LoadingScreen_KeyUp,     LoadingScreen_KeyPress,
-	LoadingScreen_MouseDown, LoadingScreen_MouseUp,   LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
-	LoadingScreen_OnResize,  LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
+	GeneratingScreen_Init,  GeneratingScreen_Render, LoadingScreen_Free,      Gui_DefaultRecreate,
+	LoadingScreen_KeyDown,  LoadingScreen_KeyUp,     LoadingScreen_KeyPress,
+	LoadingScreen_Mouse,    LoadingScreen_Mouse,     LoadingScreen_MouseMove, LoadingScreen_MouseScroll,
+	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
 };
 void GeneratingScreen_Show(void) {
 	static const String title   = String_FromConst("Generating level");
