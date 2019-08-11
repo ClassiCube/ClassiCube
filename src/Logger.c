@@ -7,34 +7,28 @@
 #include "Errors.h"
 #include "Utils.h"
 
-#ifdef CC_BUILD_WEB
-#undef CC_BUILD_POSIX /* Can't see native CPU state with javascript */
-#endif
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WEB
+/* Can't see native CPU state with javascript */
+#undef CC_BUILD_POSIX
+#elif defined CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
 #define NOIME
 #include <windows.h>
 #include <imagehlp.h>
-#endif
-
-/* POSIX can be shared between unix-ish systems */
-/* NOTE: Android's bionic libc doesn't provide backtrace (execinfo.h) */
-#ifdef CC_BUILD_POSIX
-#if defined CC_BUILD_OPENBSD
+#elif defined CC_BUILD_OPENBSD
 #include <signal.h>
-/* OpenBSD doesn't provide ucontext.h */
+/* OpenBSD doesn't provide sys/ucontext.h */
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
 /* Need to define this to get REG_ constants */
 #define __USE_GNU
-#include <ucontext.h>
+#include <sys/ucontext.h>
 #undef  __USE_GNU
 #include <signal.h>
-#else
+#elif defined CC_BUILD_POSIX
 #include <signal.h>
-#include <ucontext.h>
-#endif
+#include <sys/ucontext.h>
 #endif
 
 
@@ -317,35 +311,6 @@ void Logger_Backtrace(String* trace, void* ctx) {
 	}
 	String_AppendConst(trace, _NL);
 }
-#elif defined CC_BUILD_UNWIND
-#include <unwind.h>
-#define __USE_GNU
-#include <dlfcn.h>
-#undef __USE_GNU
-
-static _Unwind_Reason_Code Logger_DumpFrame(struct _Unwind_Context* ctx, void* arg) {
-	String str; char strBuffer[384];
-	uintptr_t addr;
-	Dl_info s;
-
-	addr = _Unwind_GetIP(ctx);
-	String_InitArray(str, strBuffer);
-	if (!addr) return _URC_END_OF_STACK;
-
-	s.dli_sname = NULL;
-	s.dli_fname = NULL;
-	dladdr((void*)addr, &s);
-
-	Logger_PrintFrame(&str, addr, (uintptr_t)s.dli_saddr, s.dli_sname, s.dli_fname);
-	String_AppendString((String*)arg, &str);
-	Logger_Log(&str);
-    return _URC_NO_REASON;
-}
-
-void Logger_Backtrace(String* trace, void* ctx) {
-    _Unwind_Backtrace(Logger_DumpFrame, trace);
-	String_AppendConst(trace, _NL);
-}
 #elif defined CC_BUILD_POSIX
 #define __USE_GNU
 #include <dlfcn.h>
@@ -365,7 +330,24 @@ static void Logger_DumpFrame(String* trace, void* addr) {
 	Logger_Log(&str);
 }
 
-#ifdef CC_BUILD_OSX
+#if defined CC_BUILD_ANDROID
+/* android's bionic libc doesn't provide backtrace (execinfo.h) */
+#include <unwind.h>
+
+static _Unwind_Reason_Code Logger_DumpFrame(struct _Unwind_Context* ctx, void* arg) {
+	uintptr_t addr = _Unwind_GetIP(ctx);
+	if (!addr) return _URC_END_OF_STACK;
+
+	Logger_DumpFrame((String*)arg, (void*)addr);
+    return _URC_NO_REASON;
+}
+
+void Logger_Backtrace(String* trace, void* ctx) {
+    _Unwind_Backtrace(Logger_DumpFrame, trace);
+	String_AppendConst(trace, _NL);
+}
+#elif defined CC_BUILD_OSX
+/* backtrace is only available on OSX since 10.5 */
 void Logger_Backtrace(String* trace, void* ctx) {
 	void* addrs[40];
 	unsigned i, frames;
