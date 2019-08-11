@@ -20,17 +20,6 @@ Install ```libexecinfo``` package. Occurs when using musl.
 
 #### Undefined reference to 'backtrace'
 Add ```-lexecinfo``` when compiling. Occurs when using musl.
-  
-#### Undefined reference to 'getcontext'
-Occurs when using musl. Change
-```C
-getcontext(&ctx);
-Logger_AbortCommon(result, raw_msg, &ctx);
-```
-to
-```C
-Logger_AbortCommon(result, raw_msg, NULL);
-```
 
 Webclient patches
 ---------------------

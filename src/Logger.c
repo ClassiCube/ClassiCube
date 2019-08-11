@@ -800,14 +800,7 @@ void Logger_Hook(void) {
 }
 
 void Logger_Abort2(ReturnCode result, const char* raw_msg) {
-#if defined CC_BUILD_OPENBSD || defined CC_BUILD_ANDROID
-	/* getcontext is absent on OpenBSD and Android */
 	Logger_AbortCommon(result, raw_msg, NULL);
-#else
-	ucontext_t ctx;
-	getcontext(&ctx);
-	Logger_AbortCommon(result, raw_msg, &ctx);
-#endif
 }
 #endif
 
