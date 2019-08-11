@@ -463,7 +463,6 @@ void Window_SetTitle(const String* title) {
 void Clipboard_GetText(String* value) {
 	/* retry up to 50 times */
 	int i;
-	value->length = 0;
 
 	for (i = 0; i < 50; i++) {
 		if (!OpenClipboard(win_handle)) {
@@ -496,18 +495,21 @@ void Clipboard_GetText(String* value) {
 }
 
 void Clipboard_SetText(const String* value) {
-	/* retry up to 10 times */
+	Codepoint* text;
+	HANDLE hGlobal;
 	int i;
+
+	/* retry up to 10 times */
 	for (i = 0; i < 10; i++) {
 		if (!OpenClipboard(win_handle)) {
 			Thread_Sleep(100);
 			continue;
 		}
 
-		HANDLE hGlobal = GlobalAlloc(GMEM_MOVEABLE, (value->length + 1) * 2);
+		hGlobal = GlobalAlloc(GMEM_MOVEABLE, (value->length + 1) * 2);
 		if (!hGlobal) { CloseClipboard(); return; }
 
-		Codepoint* text = (Codepoint*)GlobalLock(hGlobal);
+		text = (Codepoint*)GlobalLock(hGlobal);
 		for (i = 0; i < value->length; i++, text++) {
 			*text = Convert_CP437ToUnicode(value->buffer[i]);
 		}
@@ -920,7 +922,7 @@ void Clipboard_GetText(String* value) {
 	for (i = 0; i < 100; i++) {
 		Window_ProcessEvents();
 		if (clipboard_paste_text.length) {
-			String_Copy(value, &clipboard_paste_text);
+			String_AppendString(value, &clipboard_paste_text);
 			return;
 		} else {
 			Thread_Sleep(10);

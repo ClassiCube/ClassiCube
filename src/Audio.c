@@ -267,8 +267,6 @@ void Audio_Open(AudioHandle* handle, int buffers) {
 	Mutex_Unlock(&audio_lock);
 
 	alDistanceModel(AL_NONE);
-	err = alGetError();
-	if (err) { Logger_Abort2(err, "DistanceModel"); }
 
 	for (i = 0; i < Array_Elems(Audio_Contexts); i++) {
 		struct AudioContext* ctx = &Audio_Contexts[i];
