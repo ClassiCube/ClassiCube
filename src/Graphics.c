@@ -832,6 +832,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output) {
 	IDirect3DSurface9* backbuffer = NULL;
 	IDirect3DSurface9* temp = NULL;
 	D3DSURFACE_DESC desc;
+	D3DLOCKED_RECT rect;
 	Bitmap bmp;
 	ReturnCode res;
 
@@ -844,8 +845,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output) {
 	if (res) goto finished; /* TODO: For DX 8 use IDirect3DDevice8::CreateImageSurface */
 	res = IDirect3DDevice9_GetRenderTargetData(device, backbuffer, temp);
 	if (res) goto finished;
-
-	D3DLOCKED_RECT rect;
+	
 	res = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
 	if (res) goto finished;
 	{

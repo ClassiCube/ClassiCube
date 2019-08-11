@@ -413,7 +413,9 @@ void Window_Init(void) {
 }
 
 void Window_Create(int width, int height) {
+	ATOM atom;
 	RECT r;
+
 	win_instance = GetModuleHandle(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 	width  = Display_ScaleX(width);
@@ -437,7 +439,7 @@ void Window_Create(int width, int height) {
 			GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
-	ATOM atom = RegisterClassEx(&wc);
+	atom = RegisterClassEx(&wc);
 	if (!atom) Logger_Abort2(GetLastError(), "Failed to register window class");
 
 	win_handle = CreateWindowEx(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,

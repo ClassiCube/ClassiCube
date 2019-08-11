@@ -31,22 +31,17 @@ bool Chat_Logging;
 *#########################################################################################################################*/
 #define CHAT_LOGTIMES_DEF_ELEMS 256
 static TimeMS defaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
-static TimeMS* logTimes = defaultLogTimes;
 static int logTimesCapacity = CHAT_LOGTIMES_DEF_ELEMS, logTimesCount;
-
-TimeMS Chat_GetLogTime(int i) {
-	if (i < 0 || i >= logTimesCount) Logger_Abort("Tried to get time past LogTime end");
-	return logTimes[i];
-}
+TimeMS* Chat_LogTime = defaultLogTimes;
 
 static void Chat_AppendLogTime(void) {
 	TimeMS now = DateTime_CurrentUTC_MS();
 
 	if (logTimesCount == logTimesCapacity) {
-		Utils_Resize((void**)&logTimes, &logTimesCapacity,
+		Utils_Resize((void**)&Chat_LogTime, &logTimesCapacity,
 					sizeof(TimeMS), CHAT_LOGTIMES_DEF_ELEMS, 512);
 	}
-	logTimes[logTimesCount++] = now;
+	Chat_LogTime[logTimesCount++] = now;
 }
 
 #ifdef CC_BUILD_WEB
@@ -64,6 +59,7 @@ static String logPath = String_FromArray(logPathBuffer);
 static struct Stream logStream;
 static struct DateTime lastLogDate;
 
+/* Resets log name to empty and last log date to 0 */
 static void Chat_ResetLog(void) {
 	logName.length = 0;
 	lastLogDate.Day   = 0;
@@ -71,6 +67,7 @@ static void Chat_ResetLog(void) {
 	lastLogDate.Year  = 0;
 }
 
+/* Closes handle to the chat log file */
 static void Chat_CloseLog(void) {
 	ReturnCode res;
 	if (!logStream.Meta.File) return;
@@ -79,6 +76,7 @@ static void Chat_CloseLog(void) {
 	if (res) { Logger_Warn2(res, "closing", &logPath); }
 }
 
+/* Whether the given character is an allowed in a log filename */
 static bool Chat_AllowedLogChar(char c) {
 	return
 		c == '{' || c == '}' || c == '[' || c == ']' || c == '(' || c == ')' ||
@@ -194,8 +192,8 @@ void Chat_Add(const String* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
 void Chat_AddOf(const String* text, int msgType) {
 	if (msgType == MSG_TYPE_NORMAL) {
 		StringsBuffer_Add(&Chat_Log, text);
-		Chat_AppendLog(text);
 		Chat_AppendLogTime();
+		Chat_AppendLog(text);
 	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_3) {
 		/* Status[0] is for texture pack downloading message */
 		String_Copy(&Chat_Status[1 + (msgType - MSG_TYPE_STATUS_1)], text);
@@ -611,8 +609,8 @@ static void Chat_Free(void) {
 	Chat_CloseLog();
 	cmds_head = NULL;
 
-	if (logTimes != defaultLogTimes) Mem_Free(logTimes);
-	logTimes      = defaultLogTimes;
+	if (Chat_LogTime != defaultLogTimes) Mem_Free(Chat_LogTime);
+	Chat_LogTime  = defaultLogTimes;
 	logTimesCount = 0;
 
 	StringsBuffer_Clear(&Chat_Log);

@@ -980,7 +980,7 @@ static void HUDScreen_DrawChat(struct HUDScreen* s, double delta) {
 			if (!tex.ID) continue;
 
 			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
-			if (Chat_GetLogTime(logIdx) + (10 * 1000) >= now) Texture_Render(&tex);
+			if (Chat_LogTime[logIdx] + (10 * 1000) >= now) Texture_Render(&tex);
 		}
 	}
 
