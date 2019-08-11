@@ -324,7 +324,7 @@ static PackedCol Menu_HexCol(const String* str) { PackedCol v; PackedCol_TryPars
 #define Menu_ReplaceActive(screen) Gui_FreeActive(); Gui_SetActive(screen);
 
 static void Menu_SwitchOptions(void* a, void* b)        { Menu_ReplaceActive(OptionsGroupScreen_MakeInstance()); }
-static void Menu_SwitchPause(void* a, void* b)          { Menu_ReplaceActive(PauseScreen_MakeInstance()); }
+static void Menu_SwitchPause(void* a, void* b)          { PauseScreen_Show(); }
 static void Menu_SwitchClassicOptions(void* a, void* b) { Menu_ReplaceActive(ClassicOptionsScreen_MakeInstance()); }
 
 static void Menu_SwitchKeysClassic(void* a, void* b)      { Menu_ReplaceActive(ClassicKeyBindingsScreen_MakeInstance()); }
@@ -671,7 +671,7 @@ static struct ScreenVTABLE PauseScreen_VTABLE = {
 	Menu_MouseDown,     Menu_MouseUp,       Menu_MouseMove,   MenuScreen_MouseScroll,
 	Menu_OnResize,      Menu_ContextLost,   PauseScreen_ContextRecreated,
 };
-struct Screen* PauseScreen_MakeInstance(void) {
+void PauseScreen_Show(void) {
 	static struct Widget* widgets[8];
 	struct PauseScreen* s = &PauseScreen_Instance;
 
@@ -681,7 +681,7 @@ struct Screen* PauseScreen_MakeInstance(void) {
 	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE = &PauseScreen_VTABLE;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1267,8 +1267,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const String* pat
 	if (res) { Logger_Warn2(res, "closing", path); return; }
 
 	Chat_Add1("&eSaved map to: %s", path);
-	Gui_FreeActive();
-	Gui_SetActive(PauseScreen_MakeInstance());
+	PauseScreen_Show();
 }
 
 static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {

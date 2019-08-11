@@ -481,7 +481,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		Game_ScreenshotRequested = true; return;
 	} else if (Elem_HandlesKeyDown(active, key, was)) {
 		return;
-	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !active->handlesAllInput) {
+	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !Gui_GetInputGrab()) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
@@ -490,8 +490,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		/* closes the pause screen. Hence why the next KeyUp must be supressed. */
 		suppressEscape = true;
 #endif
-		Gui_FreeActive();
-		Gui_SetActive(PauseScreen_MakeInstance()); return;
+		PauseScreen_Show(); return;
 	}
 
 	/* These should not be triggered multiple times when holding down */

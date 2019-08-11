@@ -636,10 +636,7 @@ static void Game_RenderFrame(double delta) {
 	Game_Vertices = 0;
 
 	Camera.Active->UpdateMouse(delta);
-	if (!Window_Focused && !Gui_GetInputGrab()) {
-		Gui_FreeActive();
-		Gui_SetActive(PauseScreen_MakeInstance());
-	}
+	if (!Window_Focused && !Gui_GetInputGrab()) PauseScreen_Show();
 
 	if (KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL) && !Gui_GetInputGrab()) {
 		InputHandler_SetFOV(Game_ZoomFov);

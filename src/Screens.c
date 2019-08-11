@@ -564,7 +564,7 @@ static void LoadingScreen_Free(void* screen) {
 	Event_UnregisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
 }
 
-CC_NOINLINE static void LoadingScreen_Reset(const String* title, const String* message) {
+CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const String* message) {
 	struct LoadingScreen* s = &LoadingScreen_Instance;
 	s->lastState = NULL;
 	s->progress  = 0.0f;
@@ -576,6 +576,7 @@ CC_NOINLINE static void LoadingScreen_Reset(const String* title, const String* m
 	
 	s->grabsInput  = true;
 	s->blocksWorld = true;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_LOADING);
 }
 
 static struct ScreenVTABLE LoadingScreen_VTABLE = {
@@ -585,9 +586,8 @@ static struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
 };
 void LoadingScreen_Show(const String* title, const String* message) {
-	LoadingScreen_Reset(title, message);
 	LoadingScreen_Instance.VTABLE = &LoadingScreen_VTABLE;
-	Gui_Replace((struct Screen*)&LoadingScreen_Instance, GUI_PRIORITY_LOADING);
+	LoadingScreen_ShowCommon(title, message);
 }
 struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_Instance;
 
@@ -659,9 +659,8 @@ void GeneratingScreen_Show(void) {
 	static const String title   = String_FromConst("Generating level");
 	static const String message = String_FromConst("Generating..");
 
-	LoadingScreen_Reset(&title, &message);
 	LoadingScreen_Instance.VTABLE = &GeneratingScreen_VTABLE;
-	Gui_Replace((struct Screen*)&LoadingScreen_Instance, GUI_PRIORITY_LOADING);
+	LoadingScreen_ShowCommon(&title, &message);
 }
 
 
@@ -1218,7 +1217,7 @@ static void HUDScreen_Render(void* screen, double delta) {
 	HUDScreen_DrawChat(s, delta);
 
 	if (s->showingList && Gui_GetActiveScreen() == (struct Screen*)s) {
-		s->playerList.active = s->handlesAllInput;
+		s->playerList.active = s->grabsInput;
 		Elem_Render(&s->playerList, delta);
 		/* NOTE: Should usually be caught by KeyUp, but just in case. */
 		if (!KeyBind_IsPressed(KEYBIND_PLAYER_LIST)) {

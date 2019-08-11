@@ -7,7 +7,7 @@
 */
 struct Screen;
 
-struct Screen* PauseScreen_MakeInstance(void);
+void PauseScreen_Show(void);
 struct Screen* OptionsGroupScreen_MakeInstance(void);
 struct Screen* ClassicOptionsScreen_MakeInstance(void);
 
