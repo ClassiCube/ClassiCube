@@ -23,8 +23,7 @@ static void Widget_NullFunc(void* widget) { }
 static Size2D Size2D_Empty;
 
 static bool Widget_Mouse(void* elem, int x, int y, MouseButton btn) { return false; }
-static bool Widget_KeyDown(void* elem, Key key, bool was) { return false; }
-static bool Widget_KeyUp(void* elem, Key key) { return false; }
+static bool Widget_Key(void* elem, Key key) { return false; }
 static bool Widget_KeyPress(void* elem, char keyChar) { return false; }
 static bool Widget_MouseMove(void* elem, int x, int y) { return false; }
 static bool Widget_MouseScroll(void* elem, float delta) { return false; }
@@ -44,16 +43,14 @@ static void TextWidget_Free(void* widget) {
 
 static void TextWidget_Reposition(void* widget) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	int oldX = w->x, oldY = w->y;
-
 	Widget_CalcPosition(w);
-	w->texture.X += w->x - oldX;
-	w->texture.Y += w->y - oldY;
+	w->texture.X = w->x;
+	w->texture.Y = w->y;
 }
 
 static struct WidgetVTABLE TextWidget_VTABLE = {
 	Widget_NullFunc, TextWidget_Render, TextWidget_Free,  Gui_DefaultRecreate,
-	Widget_KeyDown,	 Widget_KeyUp,      Widget_KeyPress,
+	Widget_Key,      Widget_Key,        Widget_KeyPress,
 	Widget_Mouse,    Widget_Mouse,      Widget_MouseMove, Widget_MouseScroll,
 	TextWidget_Reposition,
 };
@@ -108,11 +105,10 @@ static void ButtonWidget_Free(void* widget) {
 
 static void ButtonWidget_Reposition(void* widget) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
-	int oldX = w->x, oldY = w->y;
 	Widget_CalcPosition(w);
 	
-	w->texture.X += w->x - oldX;
-	w->texture.Y += w->y - oldY;
+	w->texture.X = w->x + (w->width  / 2 - w->texture.Width  / 2);
+	w->texture.Y = w->y + (w->height / 2 - w->texture.Height / 2);
 }
 
 static void ButtonWidget_Render(void* widget, double delta) {
@@ -156,7 +152,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 
 static struct WidgetVTABLE ButtonWidget_VTABLE = {
 	Widget_NullFunc, ButtonWidget_Render, ButtonWidget_Free, Gui_DefaultRecreate,
-	Widget_KeyDown,	 Widget_KeyUp,        Widget_KeyPress,
+	Widget_Key,	     Widget_Key,          Widget_KeyPress,
 	Widget_Mouse,    Widget_Mouse,        Widget_MouseMove,  Widget_MouseScroll,
 	ButtonWidget_Reposition,
 };
@@ -182,10 +178,7 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc
 
 	w->width  = max(w->texture.Width,  w->minWidth);
 	w->height = max(w->texture.Height, BUTTON_MIN_WIDTH);
-
 	Widget_Reposition(w);
-	w->texture.X = w->x + (w->width  / 2 - w->texture.Width  / 2);
-	w->texture.Y = w->y + (w->height / 2 - w->texture.Height / 2);
 }
 
 void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, const FontDesc* font, Widget_LeftClick onClick) {
@@ -304,7 +297,7 @@ static bool ScrollbarWidget_MouseMove(void* widget, int x, int y) {
 
 static struct WidgetVTABLE ScrollbarWidget_VTABLE = {
 	Widget_NullFunc,           ScrollbarWidget_Render,  Widget_NullFunc,           Gui_DefaultRecreate,
-	Widget_KeyDown,	           Widget_KeyUp,            Widget_KeyPress,
+	Widget_Key,                Widget_Key,              Widget_KeyPress,
 	ScrollbarWidget_MouseDown, ScrollbarWidget_MouseUp, ScrollbarWidget_MouseMove, ScrollbarWidget_MouseScroll,
 	Widget_CalcPosition,
 };
@@ -417,7 +410,7 @@ static void HotbarWidget_Render(void* widget, double delta) {
 	HotbarWidget_RenderHotbarBlocks(w);
 }
 
-static bool HotbarWidget_KeyDown(void* widget, Key key, bool was) {
+static bool HotbarWidget_KeyDown(void* widget, Key key) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 	if (key < '1' || key > '9') return false;
@@ -809,7 +802,7 @@ static bool TableWidget_MouseMove(void* widget, int x, int y) {
 	return true;
 }
 
-static bool TableWidget_KeyDown(void* widget, Key key, bool was) {
+static bool TableWidget_KeyDown(void* widget, Key key) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	if (w->selectedIndex == -1) return false;
 
@@ -829,7 +822,7 @@ static bool TableWidget_KeyDown(void* widget, Key key, bool was) {
 
 static struct WidgetVTABLE TableWidget_VTABLE = {
 	TableWidget_Init,      TableWidget_Render,  TableWidget_Free,      TableWidget_Recreate,
-	TableWidget_KeyDown,   Widget_KeyUp,        Widget_KeyPress,
+	TableWidget_KeyDown,   Widget_Key,          Widget_KeyPress,
 	TableWidget_MouseDown, TableWidget_MouseUp, TableWidget_MouseMove, TableWidget_MouseScroll,
 	TableWidget_Reposition,
 };
@@ -1200,7 +1193,7 @@ static void InputWidget_Reposition(void* widget) {
 	w->inputTex.X += w->x - oldX; w->inputTex.Y += w->y - oldY;
 }
 
-static bool InputWidget_KeyDown(void* widget, Key key, bool was) {
+static bool InputWidget_KeyDown(void* widget, Key key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	if (key == KEY_LEFT) {
 		InputWidget_LeftKey(w);
@@ -1741,12 +1734,12 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	}
 }
 
-static bool ChatInputWidget_KeyDown(void* widget, Key key, bool was) {
+static bool ChatInputWidget_KeyDown(void* widget, Key key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	if (key == KEY_TAB)  { ChatInputWidget_TabKey(w);  return true; }
 	if (key == KEY_UP)   { ChatInputWidget_UpKey(w);   return true; }
 	if (key == KEY_DOWN) { ChatInputWidget_DownKey(w); return true; }
-	return InputWidget_KeyDown(w, key, was);
+	return InputWidget_KeyDown(w, key);
 }
 
 static int ChatInputWidget_GetMaxLines(void) {
@@ -2153,7 +2146,7 @@ static void PlayerListWidget_Free(void* widget) {
 
 static struct WidgetVTABLE PlayerListWidget_VTABLE = {
 	PlayerListWidget_Init, PlayerListWidget_Render, PlayerListWidget_Free, Gui_DefaultRecreate,
-	Widget_KeyDown,	       Widget_KeyUp,            Widget_KeyPress,
+	Widget_Key,            Widget_Key,              Widget_KeyPress,
 	Widget_Mouse,          Widget_Mouse,            Widget_MouseMove,      Widget_MouseScroll,
 	PlayerListWidget_Reposition,
 };
@@ -2585,7 +2578,7 @@ static void TextGroupWidget_Free(void* widget) {
 
 static struct WidgetVTABLE TextGroupWidget_VTABLE = {
 	TextGroupWidget_Init, TextGroupWidget_Render, TextGroupWidget_Free, Gui_DefaultRecreate,
-	Widget_KeyDown,	      Widget_KeyUp,           Widget_KeyPress,
+	Widget_Key,           Widget_Key,             Widget_KeyPress,
 	Widget_Mouse,         Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	TextGroupWidget_Reposition,
 };
@@ -2838,7 +2831,7 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
 
 static struct WidgetVTABLE SpecialInputWidget_VTABLE = {
 	SpecialInputWidget_Init,      SpecialInputWidget_Render, SpecialInputWidget_Free, Gui_DefaultRecreate,
-	Widget_KeyDown,               Widget_KeyUp,              Widget_KeyPress,
+	Widget_Key,                   Widget_Key,                Widget_KeyPress,
 	SpecialInputWidget_MouseDown, Widget_Mouse,              Widget_MouseMove,        Widget_MouseScroll,
 	Widget_CalcPosition,
 };

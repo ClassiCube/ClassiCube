@@ -418,7 +418,7 @@ static void InputHandler_MouseMove(void* obj, int xDelta, int yDelta) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (Elem_HandlesMouseMove(s, Mouse_X, Mouse_Y)) return;
+		if (s->VTABLE->HandlesMouseMove(s, Mouse_X, Mouse_Y)) return;
 	}
 }
 
@@ -428,7 +428,7 @@ static void InputHandler_MouseDown(void* obj, int btn) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (Elem_HandlesMouseDown(s, Mouse_X, Mouse_Y, btn)) {
+		if (s->VTABLE->HandlesMouseDown(s, Mouse_X, Mouse_Y, btn)) {
 			input_lastClick = DateTime_CurrentUTC_MS(); return;
 		}
 	}
@@ -443,7 +443,7 @@ static void InputHandler_MouseUp(void* obj, int btn) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (Elem_HandlesMouseUp(s, Mouse_X, Mouse_Y, btn)) return;
+		if (s->VTABLE->HandlesMouseUp(s, Mouse_X, Mouse_Y, btn)) return;
 	}
 
 	if (Server.SupportsPlayerClick && btn <= MOUSE_MIDDLE) {
@@ -487,7 +487,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		Window_Close(); return;
 	} else if (key == KeyBinds[KEYBIND_SCREENSHOT] && !was) {
 		Game_ScreenshotRequested = true; return;
-	} else if (Elem_HandlesKeyDown(active, key, was)) {
+	} else if (Elem_HandlesKeyDown(active, key)) {
 		return;
 	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !Gui_GetInputGrab()) {
 #ifdef CC_BUILD_WEB

@@ -50,15 +50,14 @@ struct HUDScreen {
 };
 
 
-static bool Screen_FKeyDown(void* elem, Key key, bool was) { return false; }
-static bool Screen_FKeyUp(void* elem, Key key)             { return false; }
+static bool Screen_FKey(void* elem, Key key)               { return false; }
 static bool Screen_FKeyPress(void* elem, char keyChar)     { return false; }
 static bool Screen_FMouseScroll(void* elem, float delta)   { return false; }
 static bool Screen_FMouse(void* elem, int x, int y, int btn) { return false; }
 static bool Screen_FMouseMove(void* elem, int x, int y)    { return false; }
 
 static bool Screen_TKeyPress(void* elem, char keyChar)     { return true; }
-static bool Screen_TKeyUp(void* s, Key key)                { return true; }
+static bool Screen_TKey(void* s, Key key)                  { return true; }
 static bool Screen_TMouseScroll(void* screen, float delta) { return true; }
 static bool Screen_TMouse(void* screen, int x, int y, int btn) { return true; }
 static void Screen_NullFunc(void* screen) { }
@@ -137,7 +136,7 @@ static void InventoryScreen_Free(void* screen) {
 	Event_UnregisterVoid(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 }
 
-static bool InventoryScreen_KeyDown(void* screen, Key key, bool was) {
+static bool InventoryScreen_KeyDown(void* screen, Key key) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	struct TableWidget* table = &s->table;
 
@@ -146,10 +145,10 @@ static bool InventoryScreen_KeyDown(void* screen, Key key, bool was) {
 	} else if (key == KEY_ENTER && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->elements[table->selectedIndex]);
 		Gui_Remove(screen);
-	} else if (Elem_HandlesKeyDown(table, key, was)) {
+	} else if (Elem_HandlesKeyDown(table, key)) {
 	} else {
 		struct HUDScreen* hud = (struct HUDScreen*)Gui_HUD;
-		return Elem_HandlesKeyDown(&hud->hotbar, key, was);
+		return Elem_HandlesKeyDown(&hud->hotbar, key);
 	}
 	return true;
 }
@@ -399,7 +398,7 @@ static void StatusScreen_Render(void* screen, double delta) {
 
 static struct ScreenVTABLE StatusScreen_VTABLE = {
 	Screen_NullFunc, StatusScreen_Render, Screen_NullFunc, Gui_DefaultRecreate,
-	Screen_FKeyDown, Screen_FKeyUp,       Screen_FKeyPress,
+	Screen_FKey,     Screen_FKey,         Screen_FKeyPress,
 	Screen_FMouse,   Screen_FMouse,       Screen_FMouseMove, Screen_FMouseScroll,
 	Screen_NullFunc, StatusScreen_ContextLost, StatusScreen_ContextRecreated,
 };
@@ -563,7 +562,7 @@ CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const Stri
 
 static struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_Init, LoadingScreen_Render, LoadingScreen_Free, Gui_DefaultRecreate,
-	Screen_FKeyDown,    Screen_FKeyUp,        Screen_FKeyPress,
+	Screen_FKey,        Screen_FKey,          Screen_FKeyPress,
 	Screen_FMouse,      Screen_FMouse,        Screen_FMouseMove,  Screen_FMouseScroll,
 	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
 };
@@ -633,7 +632,7 @@ static void GeneratingScreen_Render(void* screen, double delta) {
 
 static struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	GeneratingScreen_Init, GeneratingScreen_Render, LoadingScreen_Free, Gui_DefaultRecreate,
-	Screen_FKeyDown,       Screen_FKeyUp,           Screen_FKeyPress,
+	Screen_FKey,           Screen_FKey,             Screen_FKeyPress,
 	Screen_FMouse,         Screen_FMouse,           Screen_FMouseMove,  Screen_FMouseScroll,
 	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated,
 };
@@ -1036,7 +1035,7 @@ static bool HUDScreen_KeyPress(void* screen, char keyChar) {
 	return true;
 }
 
-static bool HUDScreen_KeyDown(void* screen, Key key, bool was) {
+static bool HUDScreen_KeyDown(void* screen, Key key) {
 	static const String slash = String_FromConst("/");
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	Key playerListKey = KeyBinds[KEYBIND_PLAYER_LIST];
@@ -1066,7 +1065,7 @@ static bool HUDScreen_KeyDown(void* screen, Key key, bool was) {
 		} else if (key == KEY_PAGEDOWN) {
 			HUDScreen_ScrollChatBy(s, +Gui_Chatlines);
 		} else {
-			Elem_HandlesKeyDown(&s->input.base, key, was);
+			Elem_HandlesKeyDown(&s->input.base, key);
 			HUDScreen_UpdateAltTextY(s);
 		}
 		return key < KEY_F1 || key > KEY_F35;
@@ -1077,7 +1076,7 @@ static bool HUDScreen_KeyDown(void* screen, Key key, bool was) {
 	} else if (key == KEY_SLASH) {
 		HUDScreen_OpenInput(&slash);
 	} else {
-		return Elem_HandlesKeyDown(&s->hotbar, key, was);
+		return Elem_HandlesKeyDown(&s->hotbar, key);
 	}
 	return true;
 }
@@ -1368,7 +1367,7 @@ static void DisconnectScreen_OnResize(void* screen) {
 	Widget_Reposition(&s->reconnect);
 }
 
-static bool DisconnectScreen_KeyDown(void* s, Key key, bool was) { return key < KEY_F1 || key > KEY_F35; }
+static bool DisconnectScreen_KeyDown(void* s, Key key) { return key < KEY_F1 || key > KEY_F35; }
 
 static bool DisconnectScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
@@ -1389,7 +1388,7 @@ static bool DisconnectScreen_MouseMove(void* screen, int x, int y) {
 
 static struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,      DisconnectScreen_Render, DisconnectScreen_Free,      Gui_DefaultRecreate,
-	DisconnectScreen_KeyDown,   Screen_TKeyUp,           Screen_TKeyPress,
+	DisconnectScreen_KeyDown,   Screen_TKey,             Screen_TKeyPress,
 	DisconnectScreen_MouseDown, Screen_TMouse,           DisconnectScreen_MouseMove, Screen_TMouseScroll,
 	DisconnectScreen_OnResize,  DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };

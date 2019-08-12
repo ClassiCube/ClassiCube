@@ -508,7 +508,7 @@ static void ListScreen_Free(void* screen) {
 	StringsBuffer_Clear(&s->entries);
 }
 
-static bool ListScreen_KeyDown(void* screen, Key key, bool was) {
+static bool ListScreen_KeyDown(void* screen, Key key) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	if (key == KEY_LEFT  || key == KEY_PAGEUP) {
 		ListScreen_PageClick(s, false);
@@ -546,7 +546,7 @@ void ListScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static bool MenuScreen_KeyDown(void* screen, Key key, bool was) { return key < KEY_F1 || key > KEY_F35; }
+static bool MenuScreen_KeyDown(void* screen, Key key) { return key < KEY_F1 || key > KEY_F35; }
 static bool MenuScreen_MouseScroll(void* screen, float delta) { return true; }
 
 static void MenuScreen_Init(void* screen) {
@@ -911,7 +911,7 @@ static bool EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
 	return Elem_HandlesKeyPress(&s->input.base, keyChar);
 }
 
-static bool EditHotkeyScreen_KeyDown(void* screen, Key key, bool was) {
+static bool EditHotkeyScreen_KeyDown(void* screen, Key key) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	if (s->selectedI >= 0) {
 		if (s->selectedI == 0) {
@@ -930,7 +930,7 @@ static bool EditHotkeyScreen_KeyDown(void* screen, Key key, bool was) {
 		s->selectedI = -1;
 		return true;
 	}
-	return Elem_HandlesKeyDown(&s->input.base, key, was) || MenuScreen_KeyDown(s, key, was);
+	return Elem_HandlesKeyDown(&s->input.base, key) || MenuScreen_KeyDown(s, key);
 }
 
 static bool EditHotkeyScreen_KeyUp(void* screen, Key key) {
@@ -1088,10 +1088,10 @@ static void GenLevelScreen_Label(struct GenLevelScreen* s, int i, int x, int y, 
 	Widget_Reposition(label);	 
 }
 
-static bool GenLevelScreen_KeyDown(void* screen, Key key, bool was) {
+static bool GenLevelScreen_KeyDown(void* screen, Key key) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	if (s->selected && Elem_HandlesKeyDown(&s->selected->base, key, was)) return true;
-	return MenuScreen_KeyDown(s, key, was);
+	if (s->selected && Elem_HandlesKeyDown(&s->selected->base, key)) return true;
+	return MenuScreen_KeyDown(s, key);
 }
 
 static bool GenLevelScreen_KeyUp(void* screen, Key key) {
@@ -1303,11 +1303,11 @@ static bool SaveLevelScreen_KeyPress(void* screen, char keyChar) {
 	return Elem_HandlesKeyPress(&s->input.base, keyChar);
 }
 
-static bool SaveLevelScreen_KeyDown(void* screen, Key key, bool was) {
+static bool SaveLevelScreen_KeyDown(void* screen, Key key) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	SaveLevelScreen_RemoveOverwrites(s);
-	if (Elem_HandlesKeyDown(&s->input.base, key, was)) return true;
-	return MenuScreen_KeyDown(s, key, was);
+	if (Elem_HandlesKeyDown(&s->input.base, key)) return true;
+	return MenuScreen_KeyDown(s, key);
 }
 
 static bool SaveLevelScreen_KeyUp(void* screen, Key key) {
@@ -1666,13 +1666,13 @@ static int KeyBindingsScreen_MakeWidgets(struct KeyBindingsScreen* s, int y, int
 	return i;
 }
 
-static bool KeyBindingsScreen_KeyDown(void* screen, Key key, bool was) {
+static bool KeyBindingsScreen_KeyDown(void* screen, Key key) {
 	String text; char textBuffer[STRING_SIZE];
 	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
 	struct ButtonWidget* cur;
 	KeyBind bind;
 
-	if (s->curI == -1) return MenuScreen_KeyDown(s, key, was);
+	if (s->curI == -1) return MenuScreen_KeyDown(s, key);
 	bind = s->binds[s->curI];
 	if (key == KEY_ESCAPE) key = KeyBind_Defaults[bind];
 
@@ -1698,7 +1698,7 @@ static bool KeyBindingsScreen_MouseDown(void* screen, int x, int y, MouseButton 
 	/* Reset a key binding by right clicking */
 	if ((s->curI == -1 || s->curI == i) && i < s->bindsCount) {
 		s->curI = i;
-		Elem_HandlesKeyDown(s, KeyBind_Defaults[s->binds[i]], false);
+		Elem_HandlesKeyDown(s, KeyBind_Defaults[s->binds[i]]);
 	}
 	return true;
 }
@@ -2002,16 +2002,16 @@ static bool MenuOptionsScreen_KeyPress(void* screen, char keyChar) {
 	return Elem_HandlesKeyPress(&s->input.base, keyChar);
 }
 
-static bool MenuOptionsScreen_KeyDown(void* screen, Key key, bool was) {
+static bool MenuOptionsScreen_KeyDown(void* screen, Key key) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	if (s->activeI >= 0) {
-		if (Elem_HandlesKeyDown(&s->input.base, key, was)) return true;
+		if (Elem_HandlesKeyDown(&s->input.base, key)) return true;
 
 		if (key == KEY_ENTER || key == KEY_KP_ENTER) {
 			MenuOptionsScreen_EnterInput(s); return true;
 		}
 	}
-	return MenuScreen_KeyDown(s, key, was);
+	return MenuScreen_KeyDown(s, key);
 }
 
 static bool MenuOptionsScreen_KeyUp(void* screen, Key key) {
@@ -2874,7 +2874,7 @@ static void Overlay_Free(void* screen) {
 	Gui_RemoveOverlay(screen);
 }
 
-static bool Overlay_KeyDown(void* screen, Key key, bool was) { return true; }
+static bool Overlay_KeyDown(void* screen, Key key) { return true; }
 
 static void Overlay_MakeLabels(void* menu, struct TextWidget* labels, const String* lines) {
 	struct MenuScreen* s = (struct MenuScreen*)menu;
@@ -3039,7 +3039,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 	Gfx_SetTexturing(false);
 }
 
-static bool TexIdsOverlay_KeyDown(void* screen, Key key, bool was) {
+static bool TexIdsOverlay_KeyDown(void* screen, Key key) {
 	struct Screen* s = (struct Screen*)screen;
 	if (key == KeyBinds[KEYBIND_IDOVERLAY]) { Gui_Remove(s); return true; }
 	return false;
