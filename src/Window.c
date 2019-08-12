@@ -242,8 +242,12 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_ERASEBKGND:
+		return 1; /* Avoid flickering */
+
+	case WM_PAINT:
+		ValidateRect(win_handle, NULL);
 		Event_RaiseVoid(&WindowEvents.Redraw);
-		return 1;
+		return 0;
 
 	case WM_WINDOWPOSCHANGED:
 	{
