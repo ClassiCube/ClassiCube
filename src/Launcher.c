@@ -88,11 +88,6 @@ bool Launcher_ConnectToServer(const String* hash) {
 /*########################################################################################################################*
 *---------------------------------------------------------Event handler---------------------------------------------------*
 *#########################################################################################################################*/
-static void Launcher_MaybeRedraw(void* obj) {
-	/* Only redraw when launcher has been initialised */
-	if (Launcher_Screen && Window_Exists) Launcher_Redraw();
-}
-
 static void Launcher_ReqeustRedraw(void* obj) {
 	/* We may get multiple Redraw events in short timespan */
 	/* So we just request a redraw at next launcher tick */
@@ -170,7 +165,6 @@ static void Launcher_Init(void) {
 
 	Event_RegisterVoid(&WindowEvents.Resized,      NULL, Launcher_OnResize);
 	Event_RegisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
-	Event_RegisterVoid(&WindowEvents.FocusChanged, NULL, Launcher_MaybeRedraw);
 	Event_RegisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
 
 	Event_RegisterInput(&KeyEvents.Down,        NULL, Launcher_KeyDown);
@@ -193,7 +187,6 @@ static void Launcher_Init(void) {
 static void Launcher_Free(void) {
 	Event_UnregisterVoid(&WindowEvents.Resized,      NULL, Launcher_OnResize);
 	Event_UnregisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
-	Event_UnregisterVoid(&WindowEvents.FocusChanged, NULL, Launcher_MaybeRedraw);
 	Event_UnregisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
 	
 	Event_UnregisterInput(&KeyEvents.Down,        NULL, Launcher_KeyDown);

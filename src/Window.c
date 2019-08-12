@@ -228,17 +228,12 @@ static void Window_RefreshBounds(void) {
 
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
 	char keyChar;
-	bool wasFocused;
 	float wheelDelta;
 
 	switch (message) {
 	case WM_ACTIVATE:
-		wasFocused     = Window_Focused;
 		Window_Focused = LOWORD(wParam) != 0;
-
-		if (Window_Focused != wasFocused) {
-			Event_RaiseVoid(&WindowEvents.FocusChanged);
-		}
+		Event_RaiseVoid(&WindowEvents.FocusChanged);
 		break;
 
 	case WM_ERASEBKGND:
@@ -1138,12 +1133,9 @@ void Window_ProcessEvents(void) {
 		case FocusOut:
 			/* Don't lose focus when another app grabs key or mouse */
 			if (e.xfocus.mode == NotifyGrab || e.xfocus.mode == NotifyUngrab) break;
-			wasFocused     = Window_Focused;
-			Window_Focused = e.type == FocusIn;
 
-			if (Window_Focused != wasFocused) {
-				Event_RaiseVoid(&WindowEvents.FocusChanged);
-			}
+			Window_Focused = e.type == FocusIn;
+			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			/* TODO: Keep track of keyboard when focus is lost */
 			if (!Window_Focused) Key_Clear();
 			break;
