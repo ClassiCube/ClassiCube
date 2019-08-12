@@ -20,11 +20,11 @@ struct Screen* MouseKeyBindingsScreen_MakeInstance(void);
 
 struct Screen* GenLevelScreen_MakeInstance(void);
 struct Screen* ClassicGenScreen_MakeInstance(void);
-struct Screen* LoadLevelScreen_MakeInstance(void);
+void LoadLevelScreen_Show(void);
 struct Screen* SaveLevelScreen_MakeInstance(void);
-struct Screen* TexturePackScreen_MakeInstance(void);
-struct Screen* FontListScreen_MakeInstance(void);
-struct Screen* HotkeyListScreen_MakeInstance(void);
+void TexturePackScreen_Show(void);
+void FontListScreen_Show(void);
+void HotkeyListScreen_Show(void);
 
 struct Screen* MiscOptionsScreen_MakeInstance(void);
 struct Screen* GuiOptionsScreen_MakeInstance(void);

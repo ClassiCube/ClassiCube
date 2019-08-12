@@ -32,24 +32,6 @@
 #define MenuBase_Layout Screen_Layout struct Widget** widgets; int widgetsCount;
 struct Menu { MenuBase_Layout };
 
-#define LIST_SCREEN_ITEMS 5
-#define LIST_SCREEN_BUTTONS (LIST_SCREEN_ITEMS + 3)
-
-struct ListScreen;
-struct ListScreen {
-	MenuBase_Layout
-	struct ButtonWidget buttons[LIST_SCREEN_BUTTONS];
-	FontDesc font;
-	float wheelAcc;
-	int currentIndex;
-	Widget_LeftClick EntryClick;
-	void (*UpdateEntry)(struct ListScreen* s, struct ButtonWidget* btn, const String* text);
-	String titleText;
-	struct TextWidget title, page;
-	struct Widget* listWidgets[LIST_SCREEN_BUTTONS + 2];
-	StringsBuffer entries;
-};
-
 #define MenuScreen_Layout MenuBase_Layout FontDesc titleFont, textFont;
 struct MenuScreen { MenuScreen_Layout };
 
@@ -336,18 +318,34 @@ static void Menu_SwitchNostalgia(void* a, void* b) { Menu_ReplaceActive(Nostalgi
 
 static void Menu_SwitchGenLevel(void* a, void* b)        { Menu_ReplaceActive(GenLevelScreen_MakeInstance()); }
 static void Menu_SwitchClassicGenLevel(void* a, void* b) { Menu_ReplaceActive(ClassicGenScreen_MakeInstance()); }
-static void Menu_SwitchLoadLevel(void* a, void* b)       { Menu_ReplaceActive(LoadLevelScreen_MakeInstance()); }
+static void Menu_SwitchLoadLevel(void* a, void* b)       { LoadLevelScreen_Show(); }
 static void Menu_SwitchSaveLevel(void* a, void* b)       { Menu_ReplaceActive(SaveLevelScreen_MakeInstance()); }
-static void Menu_SwitchTexPacks(void* a, void* b)        { Menu_ReplaceActive(TexturePackScreen_MakeInstance()); }
-static void Menu_SwitchHotkeys(void* a, void* b)         { Menu_ReplaceActive(HotkeyListScreen_MakeInstance()); }
-static void Menu_SwitchFont(void* a, void* b)            { Menu_ReplaceActive(FontListScreen_MakeInstance()); }
+static void Menu_SwitchTexPacks(void* a, void* b)        { TexturePackScreen_Show(); }
+static void Menu_SwitchHotkeys(void* a, void* b)         { HotkeyListScreen_Show(); }
+static void Menu_SwitchFont(void* a, void* b)            { FontListScreen_Show(); }
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------ListScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static struct ListScreen ListScreen_Instance;
+struct ListScreen;
+#define LIST_SCREEN_ITEMS 5
+#define LIST_SCREEN_BUTTONS (LIST_SCREEN_ITEMS + 3)
 #define LIST_SCREEN_EMPTY "-----"
+
+static struct ListScreen {
+	MenuBase_Layout
+	struct ButtonWidget buttons[LIST_SCREEN_BUTTONS];
+	FontDesc font;
+	float wheelAcc;
+	int currentIndex;
+	Widget_LeftClick EntryClick;
+	void (*LoadEntries)(struct ListScreen* s);
+	void (*UpdateEntry)(struct ListScreen* s, struct ButtonWidget* btn, const String* text);
+	String titleText;
+	struct TextWidget title, page;
+	StringsBuffer entries;
+} ListScreen_Instance;
 
 static STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
 	static const String str = String_FromConst(LIST_SCREEN_EMPTY);
@@ -485,13 +483,16 @@ static void ListScreen_Select(struct ListScreen* s, const String* str) {
 }
 
 static void ListScreen_Init(void* screen) {
+	static struct Widget* widgets[LIST_SCREEN_BUTTONS + 2];
 	struct ListScreen* s = (struct ListScreen*)screen;
-	s->widgets      = s->listWidgets;
-	s->widgetsCount = Array_Elems(s->listWidgets);
-	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_BOLD);
 
-	s->wheelAcc = 0.0f;
-	Screen_CommonInit(s);
+	s->widgets      = widgets;
+	s->widgetsCount = Array_Elems(widgets);
+	s->wheelAcc     = 0.0f;
+	s->currentIndex = 0;
+
+	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_BOLD);
+	s->LoadEntries(s);
 }
 
 static void ListScreen_Render(void* screen, double delta) {
@@ -504,7 +505,7 @@ static void ListScreen_Render(void* screen, double delta) {
 static void ListScreen_Free(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	Font_Free(&s->font);
-	Screen_CommonFree(s);
+	StringsBuffer_Clear(&s->entries);
 }
 
 static bool ListScreen_KeyDown(void* screen, Key key, bool was) {
@@ -533,17 +534,12 @@ static struct ScreenVTABLE ListScreen_VTABLE = {
 	Menu_MouseDown,     Menu_MouseUp,      Menu_MouseMove,  ListScreen_MouseScroll,
 	Menu_OnResize,      Menu_ContextLost,  ListScreen_ContextRecreated,
 };
-struct ListScreen* ListScreen_MakeInstance(void) {
+void ListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen_Instance;
-	StringsBuffer_Clear(&s->entries);
 	s->grabsInput   = true;
 	s->closable     = true;
-	s->widgetsCount = 0;
-	s->currentIndex = 0;
-
-	s->UpdateEntry = ListScreen_UpdateEntry;
-	s->VTABLE      = &ListScreen_VTABLE;
-	return s;
+	s->VTABLE       = &ListScreen_VTABLE;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -873,8 +869,8 @@ static void EditHotkeyScreen_SaveChanges(void* screen, void* b) {
 		Hotkeys_UserAddedHotkey(hk.Trigger, hk.Flags, hk.StaysOpen, &text);
 	}
 
-	Gui_FreeActive();
-	Gui_SetActive(HotkeyListScreen_MakeInstance());
+	Gui_Remove((struct Screen*)screen);
+	HotkeyListScreen_Show();
 }
 
 static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
@@ -886,8 +882,8 @@ static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 		Hotkeys_UserRemovedHotkey(hk.Trigger, hk.Flags);
 	}
 
-	Gui_FreeActive();
-	Gui_SetActive(HotkeyListScreen_MakeInstance());
+	Gui_Remove((struct Screen*)screen);
+	HotkeyListScreen_Show();
 }
 
 static void EditHotkeyScreen_Render(void* screen, double delta) {
@@ -1393,19 +1389,24 @@ static void TexturePackScreen_FilterFiles(const String* path, void* obj) {
 	StringsBuffer_Add((StringsBuffer*)obj, &file);
 }
 
-struct Screen* TexturePackScreen_MakeInstance(void) {
-	static const String title  = String_FromConst("Select a texture pack zip");
-	static const String path   = String_FromConst("texpacks");
-	struct ListScreen* s = ListScreen_MakeInstance();
-
-	s->titleText  = title;
-	s->EntryClick = TexturePackScreen_EntryClick;
-	
+static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
+	static const String path = String_FromConst("texpacks");
 	Directory_Enum(&path, &s->entries, TexturePackScreen_FilterFiles);
+
 	if (s->entries.count) {
 		ListScreen_QuickSort(0, s->entries.count - 1);
 	}
-	return (struct Screen*)s;
+}
+
+void TexturePackScreen_Show(void) {
+	static const String title = String_FromConst("Select a texture pack zip");
+	struct ListScreen* s      = &ListScreen_Instance;
+
+	s->titleText   = title;
+	s->LoadEntries = TexturePackScreen_LoadEntries;
+	s->EntryClick  = TexturePackScreen_EntryClick;
+	s->UpdateEntry = ListScreen_UpdateEntry;
+	ListScreen_Show();
 }
 
 
@@ -1444,32 +1445,23 @@ static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget
 	Font_Free(&font);
 }
 
-static void FontListScreen_Init(void* screen) {
-	struct ListScreen* s = (struct ListScreen*)screen;
-	ListScreen_Init(s);
-	ListScreen_Select(s, &Drawer2D_FontName);
-}
-
-static struct ScreenVTABLE FontListScreen_VTABLE = {
-	FontListScreen_Init, ListScreen_Render, ListScreen_Free,     Gui_DefaultRecreate,
-	ListScreen_KeyDown,  Menu_KeyUp,        Menu_KeyPress,
-	Menu_MouseDown,      Menu_MouseUp,      Menu_MouseMove,      ListScreen_MouseScroll,
-	Menu_OnResize,       Menu_ContextLost,  ListScreen_ContextRecreated,
-};
-struct Screen* FontListScreen_MakeInstance(void) {
-	static const String title = String_FromConst("Select a font");
-	struct ListScreen* s = ListScreen_MakeInstance();
-
-	s->titleText   = title;
-	s->EntryClick  = FontListScreen_EntryClick;
-	s->UpdateEntry = FontListScreen_UpdateEntry;
-	s->VTABLE      = &FontListScreen_VTABLE;
-
+static void FontListScreen_LoadEntries(struct ListScreen* s) {
 	Font_GetNames(&s->entries);
 	if (s->entries.count) {
 		ListScreen_QuickSort(0, s->entries.count - 1);
 	}
-	return (struct Screen*)s;
+	ListScreen_Select(s, &Drawer2D_FontName);
+}
+
+void FontListScreen_Show(void) {
+	static const String title = String_FromConst("Select a font");
+	struct ListScreen* s      = &ListScreen_Instance;
+
+	s->titleText   = title;
+	s->LoadEntries = FontListScreen_LoadEntries;
+	s->EntryClick  = FontListScreen_EntryClick;
+	s->UpdateEntry = FontListScreen_UpdateEntry;
+	ListScreen_Show();
 }
 
 
@@ -1516,18 +1508,12 @@ static void HotkeyListScreen_MakeFlags(int flags, String* str) {
 	if (flags & HOTKEY_MOD_ALT)   String_AppendConst(str, " Alt");
 }
 
-struct Screen* HotkeyListScreen_MakeInstance(void) {
-	static const String title  = String_FromConst("Modify hotkeys");
-	static const String empty  = String_FromConst(LIST_SCREEN_EMPTY);
+static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
+	static const String empty = String_FromConst(LIST_SCREEN_EMPTY);
 	String text; char textBuffer[STRING_SIZE];
-
-	struct ListScreen* s = ListScreen_MakeInstance();
 	struct HotkeyData hKey;
 	int i;
-
 	String_InitArray(text, textBuffer);
-	s->titleText  = title;
-	s->EntryClick = HotkeyListScreen_EntryClick;
 
 	for (i = 0; i < HotkeysText.count; i++) {
 		hKey = HotkeysList[i];
@@ -1540,26 +1526,27 @@ struct Screen* HotkeyListScreen_MakeInstance(void) {
 		}
 		StringsBuffer_Add(&s->entries, &text);
 	}
-	
+
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
 		StringsBuffer_Add(&s->entries, &empty);
 	}
-	return (struct Screen*)s;
+}
+
+void HotkeyListScreen_Show(void) {
+	static const String title  = String_FromConst("Modify hotkeys");
+	struct ListScreen* s = &ListScreen_Instance;
+
+	s->titleText   = title;
+	s->LoadEntries = HotkeyListScreen_LoadEntries;
+	s->EntryClick  = HotkeyListScreen_EntryClick;
+	s->UpdateEntry = ListScreen_UpdateEntry;
+	ListScreen_Show();
 }
 
 
 /*########################################################################################################################*
 *----------------------------------------------------LoadLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
-static void LoadLevelScreen_FilterFiles(const String* path, void* obj) {
-	IMapImporter importer = Map_FindImporter(path);
-	String file = *path;
-	if (!importer) return;
-
-	Utils_UNSAFE_GetFilename(&file);
-	StringsBuffer_Add((StringsBuffer*)obj, &file);
-}
-
 static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	struct ListScreen* s = (struct ListScreen*)screen;
@@ -1573,19 +1560,33 @@ static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	Map_LoadFrom(&path);
 }
 
-struct Screen* LoadLevelScreen_MakeInstance(void) {
-	static const String title  = String_FromConst("Select a level");
-	static const String path   = String_FromConst("maps");
-	struct ListScreen* s = ListScreen_MakeInstance();
+static void LoadLevelScreen_FilterFiles(const String* path, void* obj) {
+	IMapImporter importer = Map_FindImporter(path);
+	String file = *path;
+	if (!importer) return;
 
-	s->titleText  = title;
-	s->EntryClick = LoadLevelScreen_EntryClick;
-	
+	Utils_UNSAFE_GetFilename(&file);
+	StringsBuffer_Add((StringsBuffer*)obj, &file);
+}
+
+static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {
+	static const String path = String_FromConst("maps");
 	Directory_Enum(&path, &s->entries, LoadLevelScreen_FilterFiles);
+
 	if (s->entries.count) {
 		ListScreen_QuickSort(0, s->entries.count - 1);
 	}
-	return (struct Screen*)s;
+}
+
+void LoadLevelScreen_Show(void) {
+	static const String title = String_FromConst("Select a level");
+	struct ListScreen* s      = &ListScreen_Instance;
+
+	s->titleText   = title;
+	s->LoadEntries = LoadLevelScreen_LoadEntries;
+	s->EntryClick  = LoadLevelScreen_EntryClick;
+	s->UpdateEntry = ListScreen_UpdateEntry;
+	ListScreen_Show();
 }
 
 
