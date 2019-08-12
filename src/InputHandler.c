@@ -418,29 +418,37 @@ static void InputHandler_MouseMove(void* obj, int xDelta, int yDelta) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (!s->inactive && Elem_HandlesMouseMove(s, Mouse_X, Mouse_Y)) return;
+		if (Elem_HandlesMouseMove(s, Mouse_X, Mouse_Y)) return;
 	}
 }
 
-static void InputHandler_MouseDown(void* obj, int button) {
-	struct Screen* active = Gui_GetActiveScreen();
-	if (!Elem_HandlesMouseDown(active, Mouse_X, Mouse_Y, button)) {
-		bool left   = button == MOUSE_LEFT;
-		bool middle = button == MOUSE_MIDDLE;
-		bool right  = button == MOUSE_RIGHT;
-		InputHandler_PickBlocks(false, left, middle, right);
-	} else {
-		input_lastClick = DateTime_CurrentUTC_MS();
-	}
-}
+static void InputHandler_MouseDown(void* obj, int btn) {
+	struct Screen* s;
+	int i;
 
-static void InputHandler_MouseUp(void* obj, int button) {
-	struct Screen* active = Gui_GetActiveScreen();
-	if (!Elem_HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
-		if (Server.SupportsPlayerClick && button <= MOUSE_MIDDLE) {
-			input_pickingId = -1;
-			InputHandler_ButtonStateChanged(button, false);
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (Elem_HandlesMouseDown(s, Mouse_X, Mouse_Y, btn)) {
+			input_lastClick = DateTime_CurrentUTC_MS(); return;
 		}
+	}
+
+	InputHandler_PickBlocks(false, btn == MOUSE_LEFT, 
+			  btn == MOUSE_MIDDLE, btn == MOUSE_RIGHT);
+}
+
+static void InputHandler_MouseUp(void* obj, int btn) {
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (Elem_HandlesMouseUp(s, Mouse_X, Mouse_Y, btn)) return;
+	}
+
+	if (Server.SupportsPlayerClick && btn <= MOUSE_MIDDLE) {
+		input_pickingId = -1;
+		InputHandler_ButtonStateChanged(btn, false);
 	}
 }
 
@@ -537,7 +545,7 @@ static void InputHandler_KeyPress(void* obj, int keyChar) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (!s->inactive && Elem_HandlesKeyPress(s, keyChar)) return;
+		if (s->VTABLE->HandlesKeyPress(s, keyChar)) return;
 	}
 }
 

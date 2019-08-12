@@ -177,8 +177,8 @@ void Game_UpdateProjection(void) {
 
 void Game_Disconnect(const String* title, const String* reason) {
 	Event_RaiseVoid(&NetEvents.Disconnected);
-	DisconnectScreen_Show(title, reason);
 	Game_Reset();
+	DisconnectScreen_Show(title, reason);
 }
 
 void Game_Reset(void) {
@@ -618,7 +618,6 @@ void Game_TakeScreenshot(void) {
 
 static void Game_RenderFrame(double delta) {
 	struct ScheduledTask entTask;
-	bool visible;
 	float t;
 
 	/* TODO: Should other tasks get called back too? */
@@ -651,8 +650,7 @@ static void Game_RenderFrame(double delta) {
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	Game_UpdateViewMatrix();
 
-	visible = !Gui_Active || !Gui_Active->blocksWorld;
-	if (visible && World.Blocks) {
+	if (!Gui_GetBlocksWorld() && World.Blocks) {
 		Game_Render3D(delta, t);
 	} else {
 		PickedPos_SetAsInvalid(&Game_SelectedPos);

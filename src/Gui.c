@@ -93,9 +93,24 @@ bool Gui_Contains(int recX, int recY, int width, int height, int x, int y) {
 	return x >= recX && y >= recY && x < (recX + width) && y < (recY + height);
 }
 
-CC_NOINLINE static void Gui_RecreateScreen(struct Screen* screen) {
-	if (Gfx.LostContext || !screen) return;
-	Elem_Recreate(screen);
+static void Gui_ContextLost(void* obj) {
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		s->VTABLE->ContextLost(s);
+	}
+}
+
+static void Gui_ContextRecreated(void* obj) {
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		s->VTABLE->ContextRecreated(s);
+	}
 }
 
 static void Gui_LoadOptions(void) {
@@ -110,11 +125,7 @@ static void Gui_LoadOptions(void) {
 	Gui_ShowFPS = Options_GetBool(OPT_SHOW_FPS, true);
 }
 
-static void Gui_FontChanged(void* obj) {
-	Gui_RecreateScreen(Gui_Active);
-	Gui_RecreateScreen(Gui_Status);
-	Gui_RecreateScreen(Gui_HUD);
-}
+static void Gui_FontChanged(void* obj) { Gui_Refresh(); }
 
 static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name) {
 	if (String_CaselessEqualsConst(name, "gui.png")) {
@@ -129,12 +140,12 @@ static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name
 static void Gui_Init(void) {
 	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, Gui_FontChanged);
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Gui_FileChanged);
+	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Gui_ContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Gui_ContextRecreated);
 	Gui_LoadOptions();
 
 	StatusScreen_Show();
 	HUDScreen_Show();
-	Elem_Init(Gui_Status);
-	Elem_Init(Gui_HUD);
 }
 
 static void Gui_Reset(void) {
@@ -148,6 +159,8 @@ static void Gui_Reset(void) {
 static void Gui_Free(void) {
 	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, Gui_FontChanged);
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Gui_FileChanged);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Gui_ContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Gui_ContextRecreated);
 
 	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
 
@@ -195,17 +208,26 @@ void Gui_SetActive(struct Screen* screen) {
 	}
 	Camera_CheckFocus();
 }
-void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
-int Gui_Index(struct Screen* screen) {
+void Gui_Refresh(void) { 
+	Gui_ContextLost(NULL);
+	Gui_ContextRecreated(NULL);
+}
+
+void Gui_RefreshHud(void) {
+	Gui_HUD->VTABLE->ContextLost(Gui_HUD);
+	Gui_HUD->VTABLE->ContextRecreated(Gui_HUD);
+}
+
+int Gui_Index(struct Screen* s) {
 	int i;
 	for (i = 0; i < Gui_ScreensCount; i++) {
-		if (Gui_Screens[i] == screen) return i;
+		if (Gui_Screens[i] == s) return i;
 	}
 	return -1;
 }
 
-void Gui_Add(struct Screen* screen, int priority) {
+void Gui_Add(struct Screen* s, int priority) {
 	int i, j;
 	if (Gui_ScreensCount >= GUI_MAX_SCREENS) Logger_Abort("Hit max screens");
 
@@ -213,24 +235,25 @@ void Gui_Add(struct Screen* screen, int priority) {
 		if (priority <= priorities[i]) continue;
 
 		/* Shift lower priority screens right */
-		for (j = i + 1; j <= Gui_ScreensCount; i++) {
+		for (j = Gui_ScreensCount; j > i; j--) {
 			Gui_Screens[j] = Gui_Screens[j - 1];
 			priorities[j]  = priorities[j - 1];
 		}
 		break;
 	}
 
-	Gui_Screens[i] = screen;
+	Gui_Screens[i] = s;
 	priorities[i]  = priority;
 	Gui_ScreensCount++;
 
-	Elem_Init(screen);
+	s->VTABLE->Init(s);
+	s->VTABLE->ContextRecreated(s);
 	/* for selecting active button etc */
-	Elem_HandlesMouseMove(screen, Mouse_X, Mouse_Y);
+	s->VTABLE->HandlesMouseMove(s, Mouse_X, Mouse_Y);
 }
 
-void Gui_Remove(struct Screen* screen) {
-	int i = Gui_Index(screen);
+void Gui_Remove(struct Screen* s) {
+	int i = Gui_Index(s);
 	if (i == -1) return;
 
 	for (; i < Gui_ScreensCount - 1; i++) {
@@ -239,18 +262,35 @@ void Gui_Remove(struct Screen* screen) {
 	}
 	Gui_ScreensCount--;
 
-	Elem_Free(screen);
+	s->VTABLE->ContextLost(s);
+	s->VTABLE->Free(s);
 }
 
-void Gui_Replace(struct Screen* screen, int priority) {
-	Gui_Remove(screen);
-	Gui_Add(screen, priority);
+void Gui_Replace(struct Screen* s, int priority) {
+	Gui_Remove(s);
+	Gui_Add(s, priority);
 }
 
 struct Screen* Gui_GetInputGrab(void) {
 	int i;
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		if (Gui_Screens[i]->grabsInput) return Gui_Screens[i];
+	}
+	return NULL;
+}
+
+struct Screen* Gui_GetBlocksWorld(void) {
+	int i;
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		if (Gui_Screens[i]->blocksWorld) return Gui_Screens[i];
+	}
+	return NULL;
+}
+
+struct Screen* Gui_GetClosable(void) {
+	int i;
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		if (Gui_Screens[i]->closable) return Gui_Screens[i];
 	}
 	return NULL;
 }
@@ -290,12 +330,14 @@ void Gui_RemoveOverlay(const void* screen) {
 }
 
 void Gui_RenderGui(double delta) {
+	struct Screen* s;
 	int i;
 	Gfx_Mode2D(Game.Width, Game.Height);
 
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui_ScreensCount - 1; i >= 0; i--) {
-		Elem_Render(Gui_Screens[i], delta);
+		s = Gui_Screens[i];
+		if (!s->hidden) Elem_Render(s, delta);
 	}
 	Gfx_Mode3D();
 }

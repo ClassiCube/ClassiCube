@@ -53,11 +53,6 @@ struct ListScreen {
 #define MenuScreen_Layout MenuBase_Layout FontDesc titleFont, textFont;
 struct MenuScreen { MenuScreen_Layout };
 
-struct PauseScreen {
-	MenuScreen_Layout
-	struct ButtonWidget buttons[8];
-};
-
 struct OptionsGroupScreen {
 	MenuScreen_Layout
 	struct ButtonWidget buttons[8];
@@ -313,8 +308,6 @@ static void Menu_Remove(void* screen, int i) {
 
 static void Menu_HandleFontChange(struct Screen* s) {
 	Event_RaiseVoid(&ChatEvents.FontChanged);
-	Elem_Recreate(s);
-	Gui_RefreshHud();
 	Elem_HandlesMouseMove(s, Mouse_X, Mouse_Y);
 }
 
@@ -591,10 +584,13 @@ static void MenuScreen_Free(void* screen) {
 /*########################################################################################################################*
 *-------------------------------------------------------PauseScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static struct PauseScreen PauseScreen_Instance;
+static struct PauseScreen {
+	MenuScreen_Layout
+	struct ButtonWidget buttons[8];
+} PauseScreen_Instance;
 
 static void PauseScreen_Quit(void* a, void* b) { Window_Close(); }
-static void PauseScreen_Game(void* a, void* b) { Gui_CloseActive(); }
+static void PauseScreen_Game(void* a, void* b) { Gui_Remove((struct Screen*)&PauseScreen_Instance); }
 
 static void PauseScreen_CheckHacksAllowed(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
@@ -3044,7 +3040,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 
 static bool TexIdsOverlay_KeyDown(void* screen, Key key, bool was) {
 	struct Screen* s = (struct Screen*)screen;
-	if (key == KeyBinds[KEYBIND_IDOVERLAY]) { Elem_Free(s); return true; }
+	if (key == KeyBinds[KEYBIND_IDOVERLAY]) { Gui_Remove(s); return true; }
 	return false;
 }
 

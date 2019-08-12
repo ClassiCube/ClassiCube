@@ -61,7 +61,7 @@ struct ScreenVTABLE {
 #define Screen_Layout struct ScreenVTABLE* VTABLE; \
 	bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
 	bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
-	bool inactive;    /* Whether this screen is prevented from rendering and receiving input. */ \
+	bool hidden;      /* Whether this screen is prevented from rendering. */ \
 	bool closable;    /* Whether this screen is automatically closed when pressing Escape */
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
@@ -151,10 +151,16 @@ void Gui_Add(struct Screen* screen, int priority);
 void Gui_Remove(struct Screen* screen);
 /* Shorthand for Gui_Remove then Gui_Add. */
 void Gui_Replace(struct Screen* screen, int priority);
-/* Returns the screen that has grabbed input, else NULL. */
-struct Screen* Gui_GetInputGrab(void);
 
-void Gui_RefreshHud(void); 
+/* Returns highest priority screen that has grabbed input. */
+struct Screen* Gui_GetInputGrab(void);
+/* Returns highest priority screen that blocks world rendering. */
+struct Screen* Gui_GetBlocksWorld(void);
+/* Returns highest priority screen that is closable. */
+struct Screen* Gui_GetClosable(void);
+
+void Gui_Refresh(void);
+void Gui_RefreshHud(void);
 void Gui_ShowOverlay(struct Screen* screen);
 /* Returns index of the given screen in the overlays list, -1 if not */
 int  Gui_IndexOverlay(const void* screen);
