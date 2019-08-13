@@ -18,10 +18,10 @@ struct Screen* HacksKeyBindingsScreen_MakeInstance(void);
 struct Screen* OtherKeyBindingsScreen_MakeInstance(void);
 struct Screen* MouseKeyBindingsScreen_MakeInstance(void);
 
-struct Screen* GenLevelScreen_MakeInstance(void);
-struct Screen* ClassicGenScreen_MakeInstance(void);
+void GenLevelScreen_Show(void);
+void ClassicGenScreen_Show(void);
 void LoadLevelScreen_Show(void);
-struct Screen* SaveLevelScreen_MakeInstance(void);
+void SaveLevelScreen_Show(void);
 void TexturePackScreen_Show(void);
 void FontListScreen_Show(void);
 void HotkeyListScreen_Show(void);

@@ -227,7 +227,7 @@ int Gui_Index(struct Screen* s) {
 	return -1;
 }
 
-void Gui_Add(struct Screen* s, int priority) {
+static void Gui_AddCore(struct Screen* s, int priority) {
 	int i, j;
 	if (Gui_ScreensCount >= GUI_MAX_SCREENS) Logger_Abort("Hit max screens");
 
@@ -252,7 +252,7 @@ void Gui_Add(struct Screen* s, int priority) {
 	s->VTABLE->HandlesMouseMove(s, Mouse_X, Mouse_Y);
 }
 
-void Gui_Remove(struct Screen* s) {
+static void Gui_RemoveCore(struct Screen* s) {
 	int i = Gui_Index(s);
 	if (i == -1) return;
 
@@ -266,9 +266,26 @@ void Gui_Remove(struct Screen* s) {
 	s->VTABLE->Free(s);
 }
 
+void Gui_Add(struct Screen* s, int priority) {
+	Gui_AddCore(s, priority);
+	Camera_CheckFocus();
+}
+
+void Gui_Remove(struct Screen* s) {
+	Gui_RemoveCore(s);
+	Camera_CheckFocus();
+}
+
 void Gui_Replace(struct Screen* s, int priority) {
-	Gui_Remove(s);
-	Gui_Add(s, priority);
+	int i;
+	Gui_RemoveCore(s);
+	/* Backwards loop since removing changes count and gui_screens */
+	for (i = Gui_ScreensCount - 1; i >= 0; i--) {
+		if (priorities[i] == priority) Gui_RemoveCore(Gui_Screens[i]);
+	}
+
+	Gui_AddCore(s, priority);
+	Camera_CheckFocus();
 }
 
 struct Screen* Gui_GetInputGrab(void) {

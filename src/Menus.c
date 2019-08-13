@@ -316,10 +316,10 @@ static void Menu_SwitchHacks(void* a, void* b)     { Menu_ReplaceActive(HacksSet
 static void Menu_SwitchEnv(void* a, void* b)       { Menu_ReplaceActive(EnvSettingsScreen_MakeInstance()); }
 static void Menu_SwitchNostalgia(void* a, void* b) { Menu_ReplaceActive(NostalgiaScreen_MakeInstance()); }
 
-static void Menu_SwitchGenLevel(void* a, void* b)        { Menu_ReplaceActive(GenLevelScreen_MakeInstance()); }
-static void Menu_SwitchClassicGenLevel(void* a, void* b) { Menu_ReplaceActive(ClassicGenScreen_MakeInstance()); }
+static void Menu_SwitchGenLevel(void* a, void* b)        { GenLevelScreen_Show(); }
+static void Menu_SwitchClassicGenLevel(void* a, void* b) { ClassicGenScreen_Show(); }
 static void Menu_SwitchLoadLevel(void* a, void* b)       { LoadLevelScreen_Show(); }
-static void Menu_SwitchSaveLevel(void* a, void* b)       { Menu_ReplaceActive(SaveLevelScreen_MakeInstance()); }
+static void Menu_SwitchSaveLevel(void* a, void* b)       { SaveLevelScreen_Show(); }
 static void Menu_SwitchTexPacks(void* a, void* b)        { TexturePackScreen_Show(); }
 static void Menu_SwitchHotkeys(void* a, void* b)         { HotkeyListScreen_Show(); }
 static void Menu_SwitchFont(void* a, void* b)            { FontListScreen_Show(); }
@@ -1135,7 +1135,7 @@ static struct ScreenVTABLE GenLevelScreen_VTABLE = {
 	Menu_MouseDown,         Menu_MouseUp,         Menu_MouseMove,          MenuScreen_MouseScroll,
 	Menu_OnResize,          Menu_ContextLost,     GenLevelScreen_ContextRecreated,
 };
-struct Screen* GenLevelScreen_MakeInstance(void) {
+void GenLevelScreen_Show(void) {
 	static struct Widget* widgets[12];
 	struct GenLevelScreen* s = &GenLevelScreen_Instance;
 
@@ -1145,7 +1145,7 @@ struct Screen* GenLevelScreen_MakeInstance(void) {
 	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE = &GenLevelScreen_VTABLE;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1186,7 +1186,7 @@ static struct ScreenVTABLE ClassicGenScreen_VTABLE = {
 	Menu_MouseDown,     Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
 	Menu_OnResize,      Menu_ContextLost,   ClassicGenScreen_ContextRecreated,
 };
-struct Screen* ClassicGenScreen_MakeInstance(void) {
+void ClassicGenScreen_Show(void) {
 	static struct Widget* widgets[4];
 	struct ClassicGenScreen* s = &ClassicGenScreen_Instance;
 
@@ -1196,7 +1196,7 @@ struct Screen* ClassicGenScreen_MakeInstance(void) {
 	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE = &ClassicGenScreen_VTABLE;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1343,7 +1343,7 @@ static struct ScreenVTABLE SaveLevelScreen_VTABLE = {
 	Menu_MouseDown,          Menu_MouseUp,           Menu_MouseMove,           MenuScreen_MouseScroll,
 	Menu_OnResize,           Menu_ContextLost,       SaveLevelScreen_ContextRecreated,
 };
-struct Screen* SaveLevelScreen_MakeInstance(void) {
+void SaveLevelScreen_Show(void) {
 	static struct Widget* widgets[6];
 	struct SaveLevelScreen* s = &SaveLevelScreen_Instance;
 	
@@ -1353,7 +1353,7 @@ struct Screen* SaveLevelScreen_MakeInstance(void) {
 	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE = &SaveLevelScreen_VTABLE;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
