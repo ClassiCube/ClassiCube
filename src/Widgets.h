@@ -20,6 +20,8 @@ struct TextWidget {
 CC_NOINLINE void TextWidget_Make(struct TextWidget* w);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* font);
+/* Shorthand for TextWidget_Set using String_FromReadonly */
+CC_NOINLINE void TextWidget_SetConst(struct TextWidget* w, const char* text, const FontDesc* font);
 /* Shorthand for TextWidget_Make then TextWidget_Set */
 CC_NOINLINE void TextWidget_Create(struct TextWidget* w, const String* text, const FontDesc* font);
 
@@ -40,6 +42,8 @@ struct ButtonWidget {
 CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc* font);
+/* Shorthand for ButtonWidget_Set using String_FromReadonly */
+CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, const FontDesc* font);
 /* Resets state of the given button widget, then calls ButtonWidget_Set */
 CC_NOINLINE void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, const FontDesc* font, Widget_LeftClick onClick);
 

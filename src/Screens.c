@@ -1075,6 +1075,8 @@ static bool HUDScreen_KeyDown(void* screen, Key key) {
 		HUDScreen_OpenInput(&String_Empty);
 	} else if (key == KEY_SLASH) {
 		HUDScreen_OpenInput(&slash);
+	} else if (key == KeyBinds[KEYBIND_INVENTORY]) {
+		InventoryScreen_Show();
 	} else {
 		return Elem_HandlesKeyDown(&s->hotbar, key);
 	}

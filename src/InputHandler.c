@@ -185,8 +185,6 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 }
 
 static bool InputHandler_HandleCoreKey(Key key) {
-	struct Screen* active = Gui_GetActiveScreen();
-
 	if (key == KeyBinds[KEYBIND_HIDE_FPS]) {
 		Gui_ShowFPS = !Gui_ShowFPS;
 	} else if (key == KeyBinds[KEYBIND_FULLSCREEN]) {
@@ -206,8 +204,6 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		} else {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
-	} else if (key == KeyBinds[KEYBIND_INVENTORY] && active == Gui_HUD) {
-		InventoryScreen_Show();
 	} else if (key == KEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
@@ -521,22 +517,26 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 }
 
 static void InputHandler_KeyUp(void* obj, int key) {
-	struct Screen* active;
-	if (InputHandler_SimulateMouse(key, false)) return;
+	struct Screen* s;
+	int i;
 
+	if (InputHandler_SimulateMouse(key, false)) return;
 	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) Game_SetFov(Game_DefaultFov);
-	active = Gui_GetActiveScreen();
 
 #ifdef CC_BUILD_WEB
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */
 	/* done in key up, the cursor disappears as expected. */
-	if (key == KEY_ESCAPE && active->closable) {
+	if (key == KEY_ESCAPE && (s = Gui_GetClosable())) {
 		if (suppressEscape) { suppressEscape = false; return; }
-		Gui_Close(active); return;
+		Gui_Remove(s); return;
 	}
 #endif
-	Elem_HandlesKeyUp(active, key);
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesKeyUp(s, key)) return;
+	}
 }
 
 static void InputHandler_KeyPress(void* obj, int keyChar) {

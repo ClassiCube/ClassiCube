@@ -33,7 +33,7 @@ static bool Widget_MouseScroll(void* elem, float delta) { return false; }
 *#########################################################################################################################*/
 static void TextWidget_Render(void* widget, double delta) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	if (w->texture.ID) { Texture_RenderShaded(&w->texture, w->col); }
+	if (w->texture.ID) Texture_RenderShaded(&w->texture, w->col);
 }
 
 static void TextWidget_Free(void* widget) {
@@ -80,6 +80,11 @@ void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* fo
 	w->width = w->texture.Width; w->height = w->texture.Height;
 	Widget_Reposition(w);
 	w->texture.X = w->x; w->texture.Y = w->y;
+}
+
+void TextWidget_SetConst(struct TextWidget* w, const char* text, const FontDesc* font) {
+	String str = String_FromReadonly(text);
+	TextWidget_Set(w, &str, font);
 }
 
 void TextWidget_Create(struct TextWidget* w, const String* text, const FontDesc* font) {
@@ -179,6 +184,11 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc
 	w->width  = max(w->texture.Width,  w->minWidth);
 	w->height = max(w->texture.Height, BUTTON_MIN_WIDTH);
 	Widget_Reposition(w);
+}
+
+void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, const FontDesc* font) {
+	String str = String_FromReadonly(text);
+	ButtonWidget_Set(w, &str, font);
 }
 
 void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, const FontDesc* font, Widget_LeftClick onClick) {
