@@ -139,7 +139,6 @@ static void SPConnection_BeginConnect(void) {
 	path = Game_Username;
 	if (SP_HasDir(path) && File_Exists(&path)) {
 		Map_LoadFrom(&path);
-		Gui_CloseActive();
 		return;
 	}
 

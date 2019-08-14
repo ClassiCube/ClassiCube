@@ -1020,7 +1020,7 @@ CC_NOINLINE static int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int i
 static void GenLevelScreen_Begin(int width, int height, int length) {
 	World_Reset();
 	World_SetDimensions(width, height, length);
-	Gui_FreeActive();
+	Gui_FreeActive(); // TODO: fix for classicgen
 	GeneratingScreen_Show();
 }
 
@@ -2144,8 +2144,10 @@ static struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	Menu_MouseDown,             Menu_MouseUp,             MenuOptionsScreen_MouseMove, MenuScreen_MouseScroll,
 	MenuOptionsScreen_OnResize, MenuOptionsScreen_ContextLost, NULL,
 };
-struct Screen* MenuOptionsScreen_MakeInstance(struct Widget** widgets, int count, struct ButtonWidget* buttons, Event_Void_Callback contextRecreated,
-	struct MenuInputDesc* descs, const char** descriptions, int descsCount) {
+struct Screen* MenuOptionsScreen_MakeInstance(int count, Event_Void_Callback contextRecreated, struct MenuInputDesc* descs, const char** descriptions, int descsCount) {
+	static struct ButtonWidget buttons[11]; /* max buttons used is 11 */
+	static struct Widget* widgets[11 + 3];  /* max buttons + 3 widgets for input */
+
 	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
 	s->grabsInput   = true;
 	s->closable     = true;
@@ -2259,14 +2261,11 @@ static void ClassicOptionsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* ClassicOptionsScreen_MakeInstance(void) {
-	static struct ButtonWidget buttons[11];
-	static struct MenuInputDesc descs[Array_Elems(buttons)];
-	static struct Widget* widgets[Array_Elems(buttons)];	
-
+	static struct MenuInputDesc descs[11];
 	MenuInput_Enum(descs[2], ViewDist_Names, VIEW_COUNT);
 	MenuInput_Enum(descs[7], FpsLimit_Names, FPS_LIMIT_COUNT);
 
-	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+	return MenuOptionsScreen_MakeInstance(11, 
 		ClassicOptionsScreen_ContextRecreated, descs, NULL, 0);
 }
 
@@ -2347,10 +2346,7 @@ static String String_InitAndClear(STRING_REF char* buffer, int capacity) {
 }
 
 struct Screen* EnvSettingsScreen_MakeInstance(void) {
-	static struct ButtonWidget buttons[11];
-	static struct MenuInputDesc descs[Array_Elems(buttons)];
-	static struct Widget* widgets[Array_Elems(buttons) + 3];
-
+	static struct MenuInputDesc descs[1];
 	MenuInput_Hex(descs[0],   Env_DefaultCloudsCol);
 	MenuInput_Hex(descs[1],   Env_DefaultSkyCol);
 	MenuInput_Hex(descs[2],   Env_DefaultFogCol);
@@ -2363,7 +2359,7 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	MenuInput_Float(descs[8],  -100,  100, 1);
 	MenuInput_Int(descs[9],   -2048, 2048, World.Height / 2);
 
-	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+	return MenuOptionsScreen_MakeInstance(4,
 		EnvSettingsScreen_ContextRecreated, descs, NULL, 0);
 }
 
@@ -2424,11 +2420,9 @@ static void GraphicsOptionsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
-	static struct ButtonWidget buttons[7];
-	static struct MenuInputDesc descs[Array_Elems(buttons)];
-	static struct Widget* widgets[Array_Elems(buttons) + 3];
-	
-	static const char* extDescs[Array_Elems(buttons)];
+	static struct MenuInputDesc descs[7];
+	static const char* extDescs[Array_Elems(descs)];
+
 	extDescs[0] = \
 		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
 		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
@@ -2452,7 +2446,7 @@ struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 	MenuInput_Enum(descs[3], NameMode_Names,   NAME_MODE_COUNT);
 	MenuInput_Enum(descs[4], ShadowMode_Names, SHADOW_MODE_COUNT);
 
-	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+	return MenuOptionsScreen_MakeInstance(10,
 		GraphicsOptionsScreen_ContextRecreated, descs, extDescs, Array_Elems(extDescs));
 }
 
@@ -2536,16 +2530,13 @@ static void GuiOptionsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* GuiOptionsScreen_MakeInstance(void) {
-	static struct ButtonWidget buttons[11];
-	static struct MenuInputDesc descs[Array_Elems(buttons)];
-	static struct Widget* widgets[Array_Elems(buttons) + 3];
-
+	static struct MenuInputDesc descs[11];
 	MenuInput_Float(descs[2], 0.25f, 4.00f,  1);
 	MenuInput_Float(descs[3], 0.25f, 4.00f,  1);
 	MenuInput_Float(descs[6], 0.25f, 4.00f,  1);
 	MenuInput_Int(descs[7],       0,    30, 10);
 
-	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+	return MenuOptionsScreen_MakeInstance(14,
 		GuiOptionsScreen_ContextRecreated, descs,  NULL, 0);
 }
 
@@ -2680,11 +2671,9 @@ static void HacksSettingsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* HacksSettingsScreen_MakeInstance(void) {
-	static struct ButtonWidget buttons[11];
-	static struct MenuInputDesc descs[Array_Elems(buttons)];
-	static struct Widget* widgets[Array_Elems(buttons) + 3];
+	static struct MenuInputDesc descs[11];
+	static const char* extDescs[Array_Elems(descs)];
 
-	static const char* extDescs[Array_Elems(buttons)];
 	extDescs[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
 	extDescs[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
 	extDescs[7] = \
@@ -2697,7 +2686,7 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 	MenuInput_Float(descs[3], 0.1f, 2048, 1.233f);
 	MenuInput_Int(descs[9],      1,  179, 70);
 
-	struct Screen* s = MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+	struct Screen* s = MenuOptionsScreen_MakeInstance(14,
 		HacksSettingsScreen_ContextRecreated, descs, extDescs, Array_Elems(extDescs));
 	s->VTABLE->ContextLost = HacksSettingsScreen_ContextLost;
 	return s;
@@ -2775,10 +2764,7 @@ static void MiscOptionsScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* MiscOptionsScreen_MakeInstance(void) {
-	static struct ButtonWidget buttons[9];
-	static struct MenuInputDesc descs[Array_Elems(buttons)];
-	static struct Widget* widgets[Array_Elems(buttons) + 3];
-
+	static struct MenuInputDesc descs[9];
 	MenuInput_Float(descs[0], 1, 1024, 5);
 	MenuInput_Int(descs[1],   0, 100,  0);
 	MenuInput_Int(descs[2],   0, 100,  0);
@@ -2788,7 +2774,7 @@ struct Screen* MiscOptionsScreen_MakeInstance(void) {
 	MenuInput_Int(descs[7],   1, 200, 30);
 #endif
 
-	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+	return MenuOptionsScreen_MakeInstance(12,
 		MiscOptionsScreen_ContextRecreated, descs, NULL, 0);
 }
 
@@ -2858,10 +2844,7 @@ static void NostalgiaScreen_ContextRecreated(void* screen) {
 }
 
 struct Screen* NostalgiaScreen_MakeInstance(void) {
-	static struct ButtonWidget buttons[9];
-	static struct Widget* widgets[Array_Elems(buttons) + 1];
-
-	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+	return MenuOptionsScreen_MakeInstance(10,
 		NostalgiaScreen_ContextRecreated, NULL, NULL, 0);
 }
 
