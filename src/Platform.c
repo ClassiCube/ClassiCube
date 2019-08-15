@@ -2047,7 +2047,7 @@ ReturnCode Platform_SetDefaultCurrentDirectory(void) {
 
 	/* get rid of filename at end of directory */
 	for (i = len - 1; i >= 0; i--, len--) {
-		if (path[i] == '\\') break;
+		if (path[i] == '/') break;
 	}
 
 	path[len] = '\0';
