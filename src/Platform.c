@@ -349,7 +349,7 @@ uint64_t Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
 bool Directory_Exists(const String* path) {
-	TCHAR str[300];
+	TCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
 	Platform_ConvertString(str, path);
@@ -358,7 +358,7 @@ bool Directory_Exists(const String* path) {
 }
 
 ReturnCode Directory_Create(const String* path) {
-	TCHAR str[300];
+	TCHAR str[NATIVE_STR_LEN];
 	BOOL success;
 
 	Platform_ConvertString(str, path);
@@ -367,7 +367,7 @@ ReturnCode Directory_Create(const String* path) {
 }
 
 bool File_Exists(const String* path) {
-	TCHAR str[300];
+	TCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
 	Platform_ConvertString(str, path);
@@ -377,7 +377,7 @@ bool File_Exists(const String* path) {
 
 ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
 	String path; char pathBuffer[MAX_PATH + 10];
-	TCHAR str[300];
+	TCHAR str[NATIVE_STR_LEN];
 	WIN32_FIND_DATA entry;
 	HANDLE find;
 	ReturnCode res;	
@@ -455,7 +455,7 @@ ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
 ReturnCode File_MarkExecutable(const String* path) { return 0; }
 
 static ReturnCode File_Do(FileHandle* file, const String* path, DWORD access, DWORD createMode) {
-	TCHAR str[300]; 
+	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*file = CreateFile(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
@@ -504,14 +504,14 @@ ReturnCode File_Length(FileHandle file, uint32_t* len) {
 }
 #elif defined CC_BUILD_POSIX
 bool Directory_Exists(const String* path) {
-	char str[600]; 
+	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	Platform_ConvertString(str, path);
 	return stat(str, &sb) == 0 && S_ISDIR(sb.st_mode);
 }
 
 ReturnCode Directory_Create(const String* path) {
-	char str[600]; 
+	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
@@ -519,7 +519,7 @@ ReturnCode Directory_Create(const String* path) {
 }
 
 bool File_Exists(const String* path) {
-	char str[600]; 
+	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	Platform_ConvertString(str, path);
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
@@ -527,7 +527,7 @@ bool File_Exists(const String* path) {
 
 ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
 	String path; char pathBuffer[FILENAME_SIZE];
-	char str[600];
+	char str[NATIVE_STR_LEN];
 	DIR* dirPtr;
 	struct dirent* entry;
 	char* src;
@@ -570,7 +570,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 }
 
 ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
-	char str[600]; 
+	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	Platform_ConvertString(str, path);
 	if (stat(str, &sb) == -1) return errno;
@@ -580,7 +580,7 @@ ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 }
 
 ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
-	char str[600];
+	char str[NATIVE_STR_LEN];
 	struct utimbuf times = { 0 };
 
 	times.modtime = (time - UNIX_EPOCH) / 1000;
@@ -589,7 +589,7 @@ ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
 }
 
 ReturnCode File_MarkExecutable(const String* path) {
-	char str[600];
+	char str[NATIVE_STR_LEN];
 	struct stat st;
 	Platform_ConvertString(str, path);
 
@@ -599,7 +599,7 @@ ReturnCode File_MarkExecutable(const String* path) {
 }
 
 static ReturnCode File_Do(FileHandle* file, const String* path, int mode) {
-	char str[600]; 
+	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
@@ -1542,22 +1542,29 @@ static ReturnCode Process_RawStart(const TCHAR* path, TCHAR* args) {
 	return 0;
 }
 
-ReturnCode Process_Start(const String* path, const String* args) {
-	String file, argv; char argvBuffer[300];
-	TCHAR str[300], raw[300];
+static ReturnCode Process_RawGetExePath(TCHAR* path, int* len) {
+	*len = GetModuleFileName(NULL, path, NATIVE_STR_LEN);
+	return *len ? 0 : GetLastError();
+}
 
-	file = *path; Utils_UNSAFE_GetFilename(&file);
+ReturnCode Process_StartGame(const String* args) {
+	String argv; char argvBuffer[NATIVE_STR_LEN];
+	TCHAR raw[NATIVE_STR_LEN], path[NATIVE_STR_LEN + 1];
+	int len;
+
+	ReturnCode res = Process_RawGetExePath(path, &len);
+	if (res) return res;
+	path[len] = '\0';
+
 	String_InitArray(argv, argvBuffer);
-	String_Format2(&argv, "\"%s\" %s", &file, args);
-	Platform_ConvertString(str, path);
+	String_Format1(&argv, "ClassiCube.exe %s", args);
 	Platform_ConvertString(raw, &argv);
-
-	return Process_RawStart(str, raw);
+	return Process_RawStart(path, raw);
 }
 void Process_Exit(ReturnCode code) { ExitProcess(code); }
 
 ReturnCode Process_StartOpen(const String* args) {
-	TCHAR str[300];
+	TCHAR str[NATIVE_STR_LEN];
 	HINSTANCE instance;
 	Platform_ConvertString(str, args);
 	instance = ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
@@ -1566,32 +1573,27 @@ ReturnCode Process_StartOpen(const String* args) {
 
 ReturnCode Process_StartShell(void) {
 	static const String args = String_FromConst("cmd.exe /C start cmd /C " UPDATE_FILENAME);
-	TCHAR str[300];
+	TCHAR str[NATIVE_STR_LEN];
 	/* args must be modifiable, otherwise access violation */
 	Platform_ConvertString(str, &args);
 	return Process_RawStart(NULL, str);
 }
 
-static ReturnCode Process_GetRawExePath(TCHAR* path, int* len) {
-	*len = GetModuleFileName(NULL, path, NATIVE_STR_LEN);
-	return *len ? 0 : GetLastError();
-}
-
 ReturnCode Process_GetExePath(String* path) {
 	TCHAR raw[NATIVE_STR_LEN];
 	int len;
-	ReturnCode res = Process_GetRawExePath(raw, &len);
+	ReturnCode res = Process_RawGetExePath(raw, &len);
 
 	if (res) return res;
 	Platform_DecodeString(path, raw, len);
 	return 0;
 }
 #elif defined CC_BUILD_WEB
-ReturnCode Process_Start(const String* path, const String* args) { return ERR_NOT_SUPPORTED; }
+ReturnCode Process_StartGame(const String* args) { return ERR_NOT_SUPPORTED; }
 void Process_Exit(ReturnCode code) { exit(code); }
 
 ReturnCode Process_StartOpen(const String* args) {
-	char str[600];
+	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, args);
 	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
 	return 0;
@@ -1603,7 +1605,7 @@ ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 static char gameArgsBuffer[512];
 static String gameArgs = String_FromArray(gameArgsBuffer);
 
-ReturnCode Process_Start(const String* path, const String* args) {
+ReturnCode Process_StartGame(const String* args) {
 	String_Copy(&gameArgs, args);
 	return 0; /* TODO: Is there a clean way of handling an error */
 }
@@ -1617,32 +1619,13 @@ ReturnCode Process_StartOpen(const String* args) {
 ReturnCode Process_StartShell(void)         { return ERR_NOT_SUPPORTED; }
 ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
-ReturnCode Process_Start(const String* path, const String* args) {
-	char str[600], raw[600];
-	pid_t pid;
-	int i, j;
-	Platform_ConvertString(str, path);
-	Platform_ConvertString(raw, args);
-
-	pid = fork();
+static ReturnCode Process_RawStart(const char* path, const char** argv) {
+	pid_t pid = fork();
 	if (pid == -1) return errno;
 
 	if (pid == 0) {
 		/* Executed in child process */
-		char* argv[15];
-		argv[0] = str; argv[1] = raw;
-
-		/* need to null-terminate multiple arguments */
-		for (i = 0, j = 2; raw[i] && i < Array_Elems(raw); i++) {
-			if (raw[i] != ' ') continue;
-
-			/* null terminate previous argument */
-			raw[i]    = '\0';
-			argv[j++] = &raw[i + 1];
-		}
-		argv[j] = NULL;
-
-		execvp(str, argv);
+		execvp(path, argv);
 		_exit(127); /* "command not found" */
 	} else {
 		/* Executed in parent process */
@@ -1651,13 +1634,46 @@ ReturnCode Process_Start(const String* path, const String* args) {
 	}
 }
 
+static ReturnCode Process_RawStartOpen(const char* path, const String* url) {
+	char raw[NATIVE_STR_LEN];
+	const char* args[3];
+	Platform_ConvertString(raw, url);
+
+	args[0] = path; args[1] = raw; args[2] = NULL;
+	return Process_RawStart(path, args);
+}
+static ReturnCode Process_RawGetExePath(char* path, int* len);
+
+ReturnCode Process_StartGame(const String* args) {
+	char path[NATIVE_STR_LEN], raw[NATIVE_STR_LEN];
+	int i, j, len = 0;
+	char* argv[15];
+
+	ReturnCode res = Process_RawGetExePath(path, &len);
+	if (res) return res;
+	path[len] = '\0';
+
+	Platform_ConvertString(raw, args);
+	argv[0] = path; argv[1] = raw;
+
+	/* need to null-terminate multiple arguments */
+	for (i = 0, j = 2; raw[i] && i < Array_Elems(raw); i++) {
+		if (raw[i] != ' ') continue;
+
+		/* null terminate previous argument */
+		raw[i] = '\0';
+		argv[j++] = &raw[i + 1];
+	}
+	argv[j] = NULL;
+	return Process_RawStart(path, argv);
+}
+
 void Process_Exit(ReturnCode code) { exit(code); }
 
-static ReturnCode Process_GetRawExePath(char* path, int* len);
 ReturnCode Process_GetExePath(String* path) {
 	char str[NATIVE_STR_LEN];
 	int len = 0;
-	ReturnCode res = Process_GetRawExePath(str, &len);
+	ReturnCode res = Process_RawGetExePath(str, &len);
 
 	if (res) return res;
 	Platform_DecodeString(path, str, len);
@@ -1667,45 +1683,41 @@ ReturnCode Process_GetExePath(String* path) {
 /* Opening browser and starting shell is not really standardised */
 #if defined CC_BUILD_OSX
 ReturnCode Process_StartOpen(const String* args) {
-	static const String path = String_FromConst("/usr/bin/open");
-	return Process_Start(&path, args);
+	return Process_RawStartOpen("/usr/bin/open", args);
 }
 ReturnCode Process_StartShell(void) {
-	static const String path = String_FromConst("/usr/bin/open");
-	static const String args = String_FromConst("-a Terminal ./update.sh");
-	return Process_Start(&path, &args);
+	static const char* args[5] = { "/usr/bin/open", "-a", "Terminal", "./update.sh", NULL };
+	return Process_RawStart("/usr/bin/open", args);
 }
 #elif defined CC_BUILD_UNIX
 ReturnCode Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
-	static const String path = String_FromConst("xdg-open");
-	return Process_Start(&path, args);
+	return Process_RawStartOpen("xdg-open", args);
 }
 ReturnCode Process_StartShell(void) {
 	/* There isn't a standardised way to "run command in user's preferred terminal" */
 	/* xterm is pretty much universally available though */
-	static const String path = String_FromConst("xterm");
-	static const String args = String_FromConst("-e ./update.sh");
-	return Process_Start(&path, &args);
+	static const char* args[4] = { "xterm", "-e", "./update.sh", NULL };
+	return Process_RawStart("xterm", args);
 }
 #endif
 /* Retrieving exe path is completely OS dependant */
 #if defined CC_BUILD_OSX
-static ReturnCode Process_GetRawExePath(char* path, int* len) {
+static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	Mem_Set(path, '\0', NATIVE_STR_LEN);
 	uint32_t size = 600;
-	if (_NSGetExecutablePath(str, &size)) return ERR_INVALID_ARGUMENT;
+	if (_NSGetExecutablePath(path, &size)) return ERR_INVALID_ARGUMENT;
 
 	*len = String_CalcLen(path, NATIVE_STR_LEN);
 	return 0;
 }
 #elif defined CC_BUILD_LINUX
-static ReturnCode Process_GetRawExePath(char* path, int* len) {
+static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	*len = readlink("/proc/self/exe", path, NATIVE_STR_LEN);
 	return *len == -1 ? errno : 0;
 }
 #elif defined CC_BUILD_FREEBSD
-static ReturnCode Process_GetRawExePath(char* path, int* len) {
+static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	static int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
 	size_t size       = NATIVE_STR_LEN;
 
@@ -1714,9 +1726,9 @@ static ReturnCode Process_GetRawExePath(char* path, int* len) {
 	return 0;
 }
 #elif defined CC_BUILD_OPENBSD
-static ReturnCode Process_GetRawExePath(char* path, int* len) {
+static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, 0, KERN_PROC_ARGV };
-	char tmp[600];	
+	char tmp[NATIVE_STR_LEN];
 	size_t size;
 	char* argv[100];
 	char* str;
@@ -1740,7 +1752,7 @@ static ReturnCode Process_GetRawExePath(char* path, int* len) {
 	return 0;
 }
 #elif defined CC_BUILD_NETBSD
-static ReturnCode Process_GetRawExePath(char* path, int* len) {
+static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME };
 	size_t size       = NATIVE_STR_LEN;
 
@@ -1749,7 +1761,7 @@ static ReturnCode Process_GetRawExePath(char* path, int* len) {
 	return 0;
 }
 #elif defined CC_BUILD_SOLARIS
-static ReturnCode Process_GetRawExePath(char* path, int* len) {
+static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	*len = readlink("/proc/self/path/a.out", path, NATIVE_STR_LEN);
 	return *len == -1 ? errno : 0;
 }
@@ -1761,7 +1773,7 @@ static ReturnCode Process_GetRawExePath(char* path, int* len) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
 ReturnCode DynamicLib_Load(const String* path, void** lib) {
-	TCHAR str[300];
+	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*lib = LoadLibrary(str);
 	return *lib ? 0 : GetLastError();
@@ -1781,7 +1793,7 @@ ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) { return E
 bool DynamicLib_DescribeError(ReturnCode res, String* dst) { return false; }
 #elif defined CC_BUILD_POSIX
 ReturnCode DynamicLib_Load(const String* path, void** lib) {
-	char str[600];
+	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*lib = dlopen(str, RTLD_NOW);
 	return *lib == NULL;
@@ -1880,7 +1892,7 @@ void Platform_Free(void) {
 ReturnCode Platform_SetDefaultCurrentDirectory(void) {
 	TCHAR path[NATIVE_STR_LEN + 1];
 	int i, len;
-	ReturnCode res = Process_GetRawExePath(path, &len);
+	ReturnCode res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 
 	/* Get rid of filename at end of directory */
@@ -1958,7 +1970,7 @@ ReturnCode Platform_Decrypt(const void* data, int len, uint8_t** dec, int* decLe
 }
 
 bool Platform_DescribeError(ReturnCode res, String* dst) {
-	TCHAR chars[600];
+	TCHAR chars[NATIVE_STR_LEN];
 	res = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 					NULL, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, 600, NULL);
 	if (!res) return false;
@@ -2030,7 +2042,7 @@ ReturnCode Platform_Decrypt(const void* data, int len, uint8_t** dec, int* decLe
 ReturnCode Platform_SetDefaultCurrentDirectory(void) {
 	char path[NATIVE_STR_LEN];
 	int i, len = 0;
-	ReturnCode res = Process_GetRawExePath(path, &len);
+	ReturnCode res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 
 	/* get rid of filename at end of directory */
@@ -2044,7 +2056,7 @@ ReturnCode Platform_SetDefaultCurrentDirectory(void) {
 #endif
 
 bool Platform_DescribeError(ReturnCode res, String* dst) {
-	char chars[600];
+	char chars[NATIVE_STR_LEN];
 	int len;
 
 	len = strerror_r(res, chars, 600);

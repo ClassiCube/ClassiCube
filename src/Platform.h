@@ -61,8 +61,8 @@ ReturnCode Platform_Decrypt(const void* data, int len, uint8_t** dec, int* decLe
 describe exists (e.g. DynamicLib_DescribeError), that should be preferred. */
 bool Platform_DescribeError(ReturnCode res, String* dst);
 
-/* Starts the given program with the given arguments. */
-CC_API ReturnCode Process_Start(const String* path, const String* args);
+/* Starts the game with the given arguments. */
+CC_API ReturnCode Process_StartGame(const String* args);
 /* Terminates the process with the given return code. */
 CC_API void Process_Exit(ReturnCode code);
 /* Starts the platform-specific program to open the given url or filename. */

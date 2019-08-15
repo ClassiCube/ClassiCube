@@ -565,17 +565,11 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 		Options_Save();
 	}
 
-#ifndef CC_BUILD_ANDROID
-	String_InitArray(path, pathBuffer);
-	res = Process_GetExePath(&path);
-	if (res) { Logger_Warn(res, "getting .exe path"); return false; }
-#endif
-
 	String_InitArray(args, argsBuffer);
 	String_AppendString(&args, user);
 	if (mppass->length) String_Format3(&args, " %s %s %s", mppass, ip, port);
 
-	res = Process_Start(&path, &args);
+	res = Process_StartGame(&args);
 	if (res) { Logger_Warn(res, "starting game"); return false; }
 
 #ifdef CC_BUILD_ANDROID
