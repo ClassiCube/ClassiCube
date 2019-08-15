@@ -30,22 +30,6 @@ void Gui_DefaultRecreate(void* elem) {
 	Elem_Free(e); Elem_Init(e);
 }
 
-void Screen_CommonInit(void* screen) { 
-	struct Screen* s = (struct Screen*)screen;
-	Event_RegisterVoid(&GfxEvents.ContextLost,      s, s->VTABLE->ContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, s, s->VTABLE->ContextRecreated);
-
-	if (Gfx.LostContext) return;
-	s->VTABLE->ContextRecreated(s);
-}
-
-void Screen_CommonFree(void* screen) { 
-	struct Screen* s = (struct Screen*)screen;
-	Event_UnregisterVoid(&GfxEvents.ContextLost,      s, s->VTABLE->ContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated, s, s->VTABLE->ContextRecreated);
-	s->VTABLE->ContextLost(s);
-}
-
 void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
 	struct Widget* w = (struct Widget*)widget;
 	w->horAnchor = horAnchor; w->verAnchor = verAnchor;

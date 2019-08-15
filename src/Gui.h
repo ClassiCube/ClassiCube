@@ -66,9 +66,6 @@ struct ScreenVTABLE {
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Layout };
-void Screen_CommonInit(void* screen);
-void Screen_CommonFree(void* screen);
-
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct Widget;
