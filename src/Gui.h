@@ -159,9 +159,8 @@ struct Screen* Gui_GetBlocksWorld(void);
 /* Returns highest priority screen that is closable. */
 struct Screen* Gui_GetClosable(void);
 
-void Gui_Refresh(void);
+void Gui_RefreshAll(void);
 void Gui_RefreshHud(void);
-void Gui_ShowOverlay(struct Screen* screen);
 /* Returns index of the given screen in the overlays list, -1 if not */
 int  Gui_IndexOverlay(const void* screen);
 /* Removes given screen from the overlays list */

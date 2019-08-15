@@ -44,25 +44,6 @@ struct MenuOptionDesc {
 };
 struct SimpleButtonDesc { int x, y; const char* title; Widget_LeftClick onClick; };
 
-struct UrlWarningOverlay {
-	MenuScreen_Layout
-	bool openingUrl;
-	String url;
-	struct ButtonWidget buttons[2];
-	struct TextWidget   labels[4];
-	char _urlBuffer[STRING_SIZE * 4];
-};
-
-struct TexPackOverlay {
-	MenuScreen_Layout
-	bool showingDeny, alwaysDeny;
-	uint32_t contentLength;
-	String identifier;
-	struct ButtonWidget buttons[4];
-	struct TextWidget   labels[4];
-	char _identifierBuffer[STRING_SIZE + 4];
-};
-
 
 /*########################################################################################################################*
 *--------------------------------------------------------Menu base--------------------------------------------------------*
@@ -98,6 +79,21 @@ static void Menu_Back(void* s, int i, struct ButtonWidget* btn, const char* labe
 	Menu_Button(s, i, btn, width, &msg, font, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
+CC_NOINLINE static void Menu_MakeBack(struct ButtonWidget* btn, Widget_LeftClick onClick) {
+	int width = Gui_ClassicMenu ? 400 : 200;
+	ButtonWidget_Make(btn, width, onClick);
+	Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
+}
+
+CC_NOINLINE static void Menu_MakeTitleFont(FontDesc* font) {
+	Drawer2D_MakeFont(font, 16, FONT_STYLE_BOLD);
+}
+
+CC_NOINLINE static void Menu_MakeBodyFont(FontDesc* font) {
+	Drawer2D_MakeFont(font, 16, FONT_STYLE_NORMAL);
+}
+
+
 static void Menu_ContextLost(void* screen) {
 	struct Menu* s = (struct Menu*)screen;
 	struct Widget** widgets = s->widgets;
@@ -122,7 +118,7 @@ static void Menu_OnResize(void* screen) {
 	}
 }
 
-static void Menu_Render(void* screen, double delta) {
+static void Menu_RenderWidgets(void* screen, double delta) {
 	struct Menu* s = (struct Menu*)screen;
 	struct Widget** widgets = s->widgets;
 	int i;
@@ -229,7 +225,7 @@ static float Menu_Float(const String* str)      { float v; Convert_ParseFloat(st
 static PackedCol Menu_HexCol(const String* str) { PackedCol v; PackedCol_TryParseHex(str, &v); return v; }
 #define Menu_ReplaceActive(screen) Gui_FreeActive(); Gui_SetActive(screen);
 
-static void Menu_SwitchOptions(void* a, void* b)        { Menu_ReplaceActive(OptionsGroupScreen_MakeInstance()); }
+static void Menu_SwitchOptions(void* a, void* b)        { OptionsGroupScreen_Show(); }
 static void Menu_SwitchPause(void* a, void* b)          { PauseScreen_Show(); }
 static void Menu_SwitchClassicOptions(void* a, void* b) { Menu_ReplaceActive(ClassicOptionsScreen_MakeInstance()); }
 
@@ -349,11 +345,10 @@ static void ListScreen_ContextRecreated(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	ListScreen_RedrawEntries(s);
 
-	ButtonWidget_SetConst(&s->left,  "<", &s->font);
-	ButtonWidget_SetConst(&s->right, ">", &s->font);
+	ButtonWidget_SetConst(&s->left,  "<",          &s->font);
+	ButtonWidget_SetConst(&s->right, ">",          &s->font);
 	TextWidget_SetConst(&s->title,   s->titleText, &s->font);
-
-	Menu_Back(s,  7, &s->buttons[7], "Done", &s->font, Menu_SwitchPause);
+	ButtonWidget_SetConst(&s->done, "Done",        &s->font);
 	ListScreen_UpdatePage(s);
 }
 
@@ -420,20 +415,21 @@ static void ListScreen_Init(void* screen) {
 	ButtonWidget_Make(&s->right, 40, ListScreen_MoveForwards);
 	TextWidget_Make(&s->title);
 	TextWidget_Make(&s->page);
+	Menu_MakeBack(&s->done, Menu_SwitchPause);
 
 	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -220, 0);
 	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  220, 0);
 	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
 	Widget_SetLocation(&s->page,  ANCHOR_CENTRE, ANCHOR_MAX,    0,   75);
 
-	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_BOLD);
+	Menu_MakeTitleFont(&s->font);
 	s->LoadEntries(s);
 }
 
 static void ListScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
-	Menu_Render(screen, delta);
+	Menu_RenderWidgets(screen, delta);
 	Gfx_SetTexturing(false);
 }
 
@@ -499,7 +495,7 @@ static void MenuScreen_Init(void* screen) {
 static void MenuScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
-	Menu_Render(screen, delta);
+	Menu_RenderWidgets(screen, delta);
 	Gfx_SetTexturing(false);
 }
 
@@ -703,7 +699,7 @@ static struct ScreenVTABLE OptionsGroupScreen_VTABLE = {
 	Menu_MouseDown,          Menu_MouseUp,       OptionsGroupScreen_MouseMove, MenuScreen_MouseScroll,
 	Menu_OnResize,           Menu_ContextLost,   OptionsGroupScreen_ContextRecreated,
 };
-struct Screen* OptionsGroupScreen_MakeInstance(void) {
+void OptionsGroupScreen_Show(void) {
 	static struct Widget* widgets[9];
 	struct OptionsGroupScreen* s = &OptionsGroupScreen_Instance;
 	
@@ -714,7 +710,7 @@ struct Screen* OptionsGroupScreen_MakeInstance(void) {
 
 	s->VTABLE = &OptionsGroupScreen_VTABLE;
 	s->selectedI = -1;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -2876,6 +2872,7 @@ static bool WarningOverlay_IsAlways(void* screen, void* w) { return Menu_Index(s
 *#########################################################################################################################*/
 #define TEXID_OVERLAY_MAX_PER_PAGE (ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW)
 #define TEXID_OVERLAY_VERTICES_COUNT (TEXID_OVERLAY_MAX_PER_PAGE * 4)
+
 static struct TexIdsOverlay {
 	MenuScreen_Layout	
 	GfxResourceID dynamicVb;
@@ -2987,7 +2984,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
-	Menu_Render(s, delta);
+	Menu_RenderWidgets(s, delta);
 
 	origXOffset = s->xOffset;
 	s->baseTexLoc = 0;
@@ -3019,7 +3016,7 @@ static struct ScreenVTABLE TexIdsOverlay_VTABLE = {
 	Menu_MouseDown,        Menu_MouseUp,         Menu_MouseMove,         MenuScreen_MouseScroll,
 	Menu_OnResize,         TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated,
 };
-struct Screen* TexIdsOverlay_MakeInstance(void) {
+void TexIdsOverlay_Show(void) {
 	static struct Widget* widgets[1];
 	struct TexIdsOverlay* s = &TexIdsOverlay_Instance;
 	
@@ -3029,14 +3026,22 @@ struct Screen* TexIdsOverlay_MakeInstance(void) {
 	s->widgetsCount = Array_Elems(widgets);
 
 	s->VTABLE = &TexIdsOverlay_VTABLE;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TEXIDS);
 }
 
 
 /*########################################################################################################################*
 *----------------------------------------------------UrlWarningOverlay----------------------------------------------------*
 *#########################################################################################################################*/
-static struct UrlWarningOverlay UrlWarningOverlay_Instance;
+static struct UrlWarningOverlay {
+	MenuScreen_Layout
+	bool openingUrl;
+	String url;
+	struct ButtonWidget buttons[2];
+	struct TextWidget   labels[4];
+	char _urlBuffer[STRING_SIZE * 4];
+} UrlWarningOverlay_Instance;
+
 static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
 	if (s->openingUrl) return;
@@ -3080,7 +3085,7 @@ static struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
 	Menu_MouseDown,  Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
 	Menu_OnResize,   Menu_ContextLost,   UrlWarningOverlay_ContextRecreated,
 };
-struct Screen* UrlWarningOverlay_MakeInstance(const String* url) {
+void UrlWarningOverlay_Show(const String* url) {
 	static struct Widget* widgets[6];
 	struct UrlWarningOverlay* s = &UrlWarningOverlay_Instance;
 
@@ -3093,14 +3098,23 @@ struct Screen* UrlWarningOverlay_MakeInstance(const String* url) {
 	String_Copy(&s->url, url);
 
 	s->VTABLE = &UrlWarningOverlay_VTABLE;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_URLWARNING);
 }
 
 
 /*########################################################################################################################*
 *-----------------------------------------------------TexPackOverlay------------------------------------------------------*
 *#########################################################################################################################*/
-static struct TexPackOverlay TexPackOverlay_Instance;
+static struct TexPackOverlay {
+	MenuScreen_Layout
+	bool showingDeny, alwaysDeny;
+	uint32_t contentLength;
+	String identifier;
+	struct ButtonWidget buttons[4];
+	struct TextWidget   labels[4];
+	char _identifierBuffer[STRING_SIZE + 4];
+} TexPackOverlay_Instance;
+
 static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
 	String url = String_UNSAFE_SubstringAt(&s->identifier, 3);
@@ -3217,14 +3231,9 @@ static struct ScreenVTABLE TexPackOverlay_VTABLE = {
 	Menu_MouseDown,  Menu_MouseUp,          Menu_MouseMove, MenuScreen_MouseScroll,
 	Menu_OnResize,   Menu_ContextLost,      TexPackOverlay_ContextRecreated,
 };
-struct Screen* TexPackOverlay_MakeInstance(const String* url) {
+void TexPackOverlay_Show(const String* url) {
 	static struct Widget* widgets[8];
 	struct TexPackOverlay* s = &TexPackOverlay_Instance;
-
-	/* If we are showing this texture pack overlay, completely free it first */
-	/* It doesn't matter anymore, because the new texture pack URL will always */
-	/* replace/override the old texture pack URL associated with that overlay */
-	if (Gui_IndexOverlay(s) >= 0) { Elem_Free(s); }
 
 	s->showingDeny  = false;
 	s->grabsInput   = true;
@@ -3238,5 +3247,5 @@ struct Screen* TexPackOverlay_MakeInstance(const String* url) {
 
 	Http_AsyncGetHeaders(url, true, &s->identifier);
 	s->VTABLE = &TexPackOverlay_VTABLE;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TEXPACK);
 }

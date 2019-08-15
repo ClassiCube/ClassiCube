@@ -1156,7 +1156,7 @@ static bool HUDScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	if (!text.length) return false;
 
 	if (Utils_IsUrlPrefix(&text)) {
-		Gui_ShowOverlay(UrlWarningOverlay_MakeInstance(&text));
+		UrlWarningOverlay_Show(&text);
 	} else if (Gui_ClickableChat) {
 		InputWidget_AppendString(&s->input.base, &text);
 	}

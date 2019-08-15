@@ -46,7 +46,7 @@ void Server_RetrieveTexturePack(const String* url) {
 	if (!url->length || TextureCache_HasAccepted(url)) {
 		World_ApplyTexturePack(url);
 	} else {
-		Gui_ShowOverlay(TexPackOverlay_MakeInstance(url));
+		TexPackOverlay_Show(url);
 	}
 }
 

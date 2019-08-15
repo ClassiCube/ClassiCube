@@ -125,7 +125,7 @@ static void Gui_LoadOptions(void) {
 	Gui_ShowFPS = Options_GetBool(OPT_SHOW_FPS, true);
 }
 
-static void Gui_FontChanged(void* obj) { Gui_Refresh(); }
+static void Gui_FontChanged(void* obj) { Gui_RefreshAll(); }
 
 static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name) {
 	if (String_CaselessEqualsConst(name, "gui.png")) {
@@ -209,7 +209,7 @@ void Gui_SetActive(struct Screen* screen) {
 	Camera_CheckFocus();
 }
 
-void Gui_Refresh(void) { 
+void Gui_RefreshAll(void) { 
 	Gui_ContextLost(NULL);
 	Gui_ContextRecreated(NULL);
 }
@@ -310,18 +310,6 @@ struct Screen* Gui_GetClosable(void) {
 		if (Gui_Screens[i]->closable) return Gui_Screens[i];
 	}
 	return NULL;
-}
-
-void Gui_ShowOverlay(struct Screen* screen) {
-	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
-		Logger_Abort("Gui_ShowOverlay - hit max count");
-	}
-
-	Gui_Overlays[Gui_OverlaysCount] = screen;
-	Gui_OverlaysCount++;
-
-	Elem_Init(screen);
-	Camera_CheckFocus();
 }
 
 int Gui_IndexOverlay(const void* screen) {

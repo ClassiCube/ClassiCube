@@ -8,7 +8,7 @@
 struct Screen;
 
 void PauseScreen_Show(void);
-struct Screen* OptionsGroupScreen_MakeInstance(void);
+void OptionsGroupScreen_Show(void);
 struct Screen* ClassicOptionsScreen_MakeInstance(void);
 
 struct Screen* ClassicKeyBindingsScreen_MakeInstance(void);
@@ -33,7 +33,7 @@ struct Screen* HacksSettingsScreen_MakeInstance(void);
 struct Screen* EnvSettingsScreen_MakeInstance(void);
 struct Screen* NostalgiaScreen_MakeInstance(void);
 
-struct Screen* UrlWarningOverlay_MakeInstance(const String* url);
-struct Screen* TexIdsOverlay_MakeInstance(void);
-struct Screen* TexPackOverlay_MakeInstance(const String* url);
+void UrlWarningOverlay_Show(const String* url);
+void TexIdsOverlay_Show(void);
+void TexPackOverlay_Show(const String* url);
 #endif

@@ -173,7 +173,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 		}
 	} else if (key == KeyBinds[KEYBIND_IDOVERLAY]) {
 		if (Gui_OverlaysCount) return true;
-		Gui_ShowOverlay(TexIdsOverlay_MakeInstance());
+		TexIdsOverlay_Show();
 	} else if (key == KeyBinds[KEYBIND_BREAK_LIQUIDS]) {
 		InputHandler_Toggle(key, &Game_BreakableLiquids,
 			"  &eBreakable liquids is &aenabled",
