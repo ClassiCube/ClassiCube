@@ -74,7 +74,7 @@ linux:
 	$(MAKE) $(ENAME) PLAT=linux -j$(JOBS)
 mingw:
 	$(MAKE) $(ENAME) PLAT=mingw -j$(JOBS)
-solaris:
+sunos:
 	$(MAKE) $(ENAME) PLAT=sunos -j$(JOBS)
 darwin:
 	$(MAKE) $(ENAME) PLAT=darwin -j$(JOBS)

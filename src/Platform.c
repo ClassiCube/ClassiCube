@@ -1705,9 +1705,10 @@ ReturnCode Process_StartShell(void) {
 #if defined CC_BUILD_OSX
 static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	Mem_Set(path, '\0', NATIVE_STR_LEN);
-	uint32_t size = 600;
+	uint32_t size = NATIVE_STR_LEN;
 	if (_NSGetExecutablePath(path, &size)) return ERR_INVALID_ARGUMENT;
 
+	/* despite what you'd assume, size is NOT changed to length of path */
 	*len = String_CalcLen(path, NATIVE_STR_LEN);
 	return 0;
 }
@@ -1721,7 +1722,7 @@ static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	static int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
 	size_t size       = NATIVE_STR_LEN;
 
-	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
+	if (sysctl(mib, 4, path, &size, NULL, 0) == -1) return errno;
 	*len = String_CalcLen(path, NATIVE_STR_LEN);
 	return 0;
 }
@@ -1747,7 +1748,7 @@ static ReturnCode Process_RawGetExePath(char* path, int* len) {
 		str = tmp;
 	}
 
-	*len = String_CalcLen(str, 600);
+	*len = String_CalcLen(str, NATIVE_STR_LEN);
 	Mem_Copy(path, str, *len);
 	return 0;
 }
@@ -2059,10 +2060,10 @@ bool Platform_DescribeError(ReturnCode res, String* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
 
-	len = strerror_r(res, chars, 600);
+	len = strerror_r(res, chars, NATIVE_STR_LEN);
 	if (len == -1) return false;
 
-	len = String_CalcLen(chars, 600);
+	len = String_CalcLen(chars, NATIVE_STR_LEN);
 	Platform_DecodeString(dst, chars, len);
 	return true;
 }
