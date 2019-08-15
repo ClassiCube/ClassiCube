@@ -46,7 +46,7 @@ void Platform_Init(void);
 /* Frees the platform specific state. */
 void Platform_Free(void);
 /* Sets the appropriate default current/working directory. */
-void Platform_SetDefaultCurrentDirectory(void);
+ReturnCode Platform_SetDefaultCurrentDirectory(void);
 
 /* Gets the command line arguments passed to the program. */
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args);
@@ -132,9 +132,6 @@ CC_API ReturnCode Directory_Create(const String* path);
 typedef void Directory_EnumCallback(const String* filename, void* obj);
 /* Invokes a callback function on all filenames in the given directory (and its sub-directories) */
 CC_API ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCallback callback);
-/* Sets current/working directory to the given directory. */
-/* This is the 'base directory' relative paths are relative to. */
-CC_API ReturnCode Directory_SetCurrent(const String* path);
 
 /* Returns whether the given file exists. */
 CC_API bool File_Exists(const String* path);

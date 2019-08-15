@@ -162,10 +162,13 @@ int main_real(int argc, char** argv) {
 int main(int argc, char** argv) {
 #endif
 	static char ipBuffer[STRING_SIZE];
+	ReturnCode res;
 	Logger_Hook();
 	Platform_Init();
 	Window_Init();
-	Platform_SetDefaultCurrentDirectory();
+	
+	res = Platform_SetDefaultCurrentDirectory();
+	if (res) Logger_Warn(res, "setting current directory");
 #ifdef CC_TEST_VORBIS
 	main_imdct();
 #endif

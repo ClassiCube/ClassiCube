@@ -34,7 +34,9 @@
 #include <wincrypt.h>
 
 #define Socket__Error() WSAGetLastError()
+#define NATIVE_STR_LEN 300
 static HANDLE heap;
+
 const ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const ReturnCode ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
 const ReturnCode ReturnCode_SocketInProgess  = WSAEINPROGRESS;
@@ -62,6 +64,8 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 
 #define Platform_DecodeString(dst, src, len) String_AppendUtf8(dst, (uint8_t*)(src), len)
 #define Socket__Error() errno
+#define NATIVE_STR_LEN 600
+
 const ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const ReturnCode ReturnCode_FileNotFound     = ENOENT;
 const ReturnCode ReturnCode_SocketInProgess  = EINPROGRESS;
@@ -90,24 +94,6 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <emscripten.h>
 #undef CC_BUILD_FREETYPE
 #endif
-
-/* Attempts to set current/working directory to the directory exe file is in */
-static void SetCurrentToExeDirectory(void) {
-	String path; char pathBuffer[FILENAME_SIZE];
-	int i;
-	ReturnCode res;
-	String_InitArray(path, pathBuffer);
-
-	res = Process_GetExePath(&path);
-	if (res) { Logger_Warn(res, "getting exe path"); return; }
-
-	/* get rid of filename at end of directory */
-	for (i = path.length - 1; i >= 0; i--, path.length--) {
-		if (path.buffer[i] == '/' || path.buffer[i] == '\\') break;
-	}
-	res = Directory_SetCurrent(&path);
-	if (res) { Logger_Warn(res, "setting current directory"); return; }
-}
 
 
 /*########################################################################################################################*
@@ -431,12 +417,6 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	return res == ERROR_NO_MORE_FILES ? 0 : GetLastError();
 }
 
-ReturnCode Directory_SetCurrent(const String* path) {
-	TCHAR str[300];
-	Platform_ConvertString(str, path);
-	return SetCurrentDirectory(str) ? 0 : GetLastError();
-}
-
 ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 	FileHandle file;
 	FILETIME ft;
@@ -587,12 +567,6 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	res = errno; /* return code from readdir */
 	closedir(dirPtr);
 	return res;
-}
-
-ReturnCode Directory_SetCurrent(const String* path) {
-	char str[600];
-	Platform_ConvertString(str, path);
-	return chdir(str) == -1 ? errno : 0;
 }
 
 ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
@@ -1598,12 +1572,18 @@ ReturnCode Process_StartShell(void) {
 	return Process_RawStart(NULL, str);
 }
 
-ReturnCode Process_GetExePath(String* path) {
-	TCHAR chars[FILENAME_SIZE + 1];
-	DWORD len = GetModuleFileName(NULL, chars, FILENAME_SIZE);
-	if (!len) return GetLastError();
+static ReturnCode Process_GetRawExePath(TCHAR* path, int* len) {
+	*len = GetModuleFileName(NULL, path, NATIVE_STR_LEN);
+	return *len ? 0 : GetLastError();
+}
 
-	Platform_DecodeString(path, chars, len);
+ReturnCode Process_GetExePath(String* path) {
+	TCHAR raw[NATIVE_STR_LEN];
+	int len;
+	ReturnCode res = Process_GetRawExePath(raw, &len);
+
+	if (res) return res;
+	Platform_DecodeString(path, raw, len);
 	return 0;
 }
 #elif defined CC_BUILD_WEB
@@ -1672,6 +1652,17 @@ ReturnCode Process_Start(const String* path, const String* args) {
 }
 
 void Process_Exit(ReturnCode code) { exit(code); }
+
+static ReturnCode Process_GetRawExePath(char* path, int* len);
+ReturnCode Process_GetExePath(String* path) {
+	char str[NATIVE_STR_LEN];
+	int len = 0;
+	ReturnCode res = Process_GetRawExePath(str, &len);
+
+	if (res) return res;
+	Platform_DecodeString(path, str, len);
+	return 0;
+}
 #endif
 /* Opening browser and starting shell is not really standardised */
 #if defined CC_BUILD_OSX
@@ -1700,37 +1691,30 @@ ReturnCode Process_StartShell(void) {
 #endif
 /* Retrieving exe path is completely OS dependant */
 #if defined CC_BUILD_OSX
-ReturnCode Process_GetExePath(String* path) {
-	char str[600] = { 0 };
-	uint32_t len  = 600;
-	if (_NSGetExecutablePath(str, &len)) return ERR_INVALID_ARGUMENT;
+static ReturnCode Process_GetRawExePath(char* path, int* len) {
+	Mem_Set(path, '\0', NATIVE_STR_LEN);
+	uint32_t size = 600;
+	if (_NSGetExecutablePath(str, &size)) return ERR_INVALID_ARGUMENT;
 
-	len = String_CalcLen(str, 600);
-	Platform_DecodeString(path, str, len);
+	*len = String_CalcLen(path, NATIVE_STR_LEN);
 	return 0;
 }
 #elif defined CC_BUILD_LINUX
-ReturnCode Process_GetExePath(String* path) {
-	char str[600];
-	int len = readlink("/proc/self/exe", str, 600);
-	if (len == -1) return errno;
-
-	Platform_DecodeString(path, str, len);
-	return 0;
+static ReturnCode Process_GetRawExePath(char* path, int* len) {
+	*len = readlink("/proc/self/exe", path, NATIVE_STR_LEN);
+	return *len == -1 ? errno : 0;
 }
 #elif defined CC_BUILD_FREEBSD
-ReturnCode Process_GetExePath(String* path) {
+static ReturnCode Process_GetRawExePath(char* path, int* len) {
 	static int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
-	char str[600];
-	size_t size = 600;
-	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
+	size_t size       = NATIVE_STR_LEN;
 
-	size = String_CalcLen(str, 600);
-	Platform_DecodeString(path, str, size);
+	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
+	*len = String_CalcLen(path, NATIVE_STR_LEN);
 	return 0;
 }
 #elif defined CC_BUILD_OPENBSD
-ReturnCode Process_GetExePath(String* path) {
+static ReturnCode Process_GetRawExePath(char* path, int* len) {
 	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, 0, KERN_PROC_ARGV };
 	char tmp[600];	
 	size_t size;
@@ -1751,29 +1735,23 @@ ReturnCode Process_GetExePath(String* path) {
 		str = tmp;
 	}
 
-	size = String_CalcLen(str, 600);
-	Platform_DecodeString(path, str, size);
+	*len = String_CalcLen(str, 600);
+	Mem_Copy(path, str, *len);
 	return 0;
 }
 #elif defined CC_BUILD_NETBSD
-ReturnCode Process_GetExePath(String* path) {
+static ReturnCode Process_GetRawExePath(char* path, int* len) {
 	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME };
-	char str[600];
-	size_t size = 600;	
-	if (sysctl(mib, 4, str, &size, NULL, 0) == -1) return errno;
+	size_t size       = NATIVE_STR_LEN;
 
-	size = String_CalcLen(str, 600);
-	Platform_DecodeString(path, str, size);
+	if (sysctl(mib, 4, path, &size, NULL, 0) == -1) return errno;
+	*len = String_CalcLen(path, NATIVE_STR_LEN);
 	return 0;
 }
 #elif defined CC_BUILD_SOLARIS
-ReturnCode Process_GetExePath(String* path) {
-	char str[600];
-	int len = readlink("/proc/self/path/a.out", str, 600);
-	if (len == -1) return errno;
-
-	Platform_DecodeString(path, str, len);
-	return 0;
+static ReturnCode Process_GetRawExePath(char* path, int* len) {
+	*len = readlink("/proc/self/path/a.out", path, NATIVE_STR_LEN);
+	return *len == -1 ? errno : 0;
 }
 #endif
 
@@ -1898,7 +1876,21 @@ void Platform_Free(void) {
 	WSACleanup();
 	HeapDestroy(heap);
 }
-void Platform_SetDefaultCurrentDirectory(void) { SetCurrentToExeDirectory(); }
+
+ReturnCode Platform_SetDefaultCurrentDirectory(void) {
+	TCHAR path[NATIVE_STR_LEN + 1];
+	int i, len;
+	ReturnCode res = Process_GetRawExePath(path, &len);
+	if (res) return res;
+
+	/* Get rid of filename at end of directory */
+	for (i = len - 1; i >= 0; i--, len--) {
+		if (path[i] == '/' || path[i] == '\\') break;
+	}
+
+	path[len] = '\0';
+	return SetCurrentDirectory(path) ? 0 : GetLastError();
+}
 
 static String Platform_NextArg(STRING_REF String* args) {
 	String arg;
@@ -2004,7 +1996,7 @@ int Platform_ConvertUniString(void* data, const UniString* src) {
 	return len;
 }
 
-static void Platform_InitCommon(void) {
+static void Platform_InitPosix(void) {
 	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
@@ -2034,6 +2026,23 @@ ReturnCode Platform_Decrypt(const void* data, int len, uint8_t** dec, int* decLe
 	return ERR_NOT_SUPPORTED;
 }
 
+#if !defined CC_BUILD_WEB && !defined CC_BUILD_ANDROID
+ReturnCode Platform_SetDefaultCurrentDirectory(void) {
+	char path[NATIVE_STR_LEN];
+	int i, len = 0;
+	ReturnCode res = Process_GetRawExePath(path, &len);
+	if (res) return res;
+
+	/* get rid of filename at end of directory */
+	for (i = len - 1; i >= 0; i--, len--) {
+		if (path[i] == '\\') break;
+	}
+
+	path[len] = '\0';
+	return chdir(path) == -1 ? errno : 0;
+}
+#endif
+
 bool Platform_DescribeError(ReturnCode res, String* dst) {
 	char chars[600];
 	int len;
@@ -2045,10 +2054,10 @@ bool Platform_DescribeError(ReturnCode res, String* dst) {
 	Platform_DecodeString(dst, chars, len);
 	return true;
 }
+
 #endif
 #if defined CC_BUILD_UNIX
-void Platform_Init(void) { Platform_InitCommon(); }
-void Platform_SetDefaultCurrentDirectory(void) { SetCurrentToExeDirectory(); }
+void Platform_Init(void) { Platform_InitPosix(); }
 #elif defined CC_BUILD_OSX
 static void Platform_InitStopwatch(void) {
 	mach_timebase_info_data_t tb = { 0 };
@@ -2062,7 +2071,7 @@ static void Platform_InitStopwatch(void) {
 
 void Platform_Init(void) {
 	ProcessSerialNumber psn; /* TODO: kCurrentProcess */
-	Platform_InitCommon();
+	Platform_InitPosix();
 	Platform_InitStopwatch();
 	
 	/* NOTE: Call as soon as possible, otherwise can't click on dialog boxes. */
@@ -2070,7 +2079,6 @@ void Platform_Init(void) {
 	/* NOTE: TransformProcessType is OSX 10.3 or later */
 	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
 }
-void Platform_SetDefaultCurrentDirectory(void) { SetCurrentToExeDirectory(); }
 #elif defined CC_BUILD_WEB
 void Platform_Init(void) {
 	EM_ASM( Module['websocket']['subprotocol'] = 'ClassiCube'; );
@@ -2095,32 +2103,28 @@ void Platform_Init(void) {
 	*/
 }
 
-void Platform_SetDefaultCurrentDirectory(void) { 
-	static const String path = String_FromConst("/classicube");
-	ReturnCode res = Directory_SetCurrent(&path);
-	if (res) Logger_Warn(res, "setting current directory");
+ReturnCode Platform_SetDefaultCurrentDirectory(void) { 
+	return chdir("/classicube") == -1 ? errno : 0;
 }
 #elif defined CC_BUILD_ANDROID
 jclass  App_Class;
 jobject App_Instance;
 JavaVM* VM_Ptr;
-void Platform_Init(void) { Platform_InitCommon(); }
+void Platform_Init(void) { Platform_InitPosix(); }
 
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
 	if (!gameArgs.length) return 0;
 	return String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
 }
 
-void Platform_SetDefaultCurrentDirectory(void) {
+ReturnCode Platform_SetDefaultCurrentDirectory(void) {
 	String dir; char dirBuffer[FILENAME_SIZE + 1];
 	String_InitArray_NT(dir, dirBuffer);
 
 	JavaCall_Void_String("getExternalAppDir", &dir);
 	dir.buffer[dir.length] = '\0';
 	Platform_Log1("EXTERNAL DIR: %s|", &dir);
-
-	ReturnCode res = chdir(dir.buffer) == -1 ? errno : 0;
-	if (res) Logger_Warn(res, "setting current directory");
+	return chdir(dir.buffer) == -1 ? errno : 0;
 }
 
 /* JNI helpers */
