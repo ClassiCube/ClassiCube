@@ -216,7 +216,6 @@ void InventoryScreen_Show(void) {
 	s->VTABLE = &InventoryScreen_VTABLE;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_INVENTORY);
 }
-struct Screen* InventoryScreen_UNSAFE_RawPointer = (struct Screen*)&InventoryScreen_Instance;
 
 
 /*########################################################################################################################*

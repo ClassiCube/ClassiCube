@@ -14,8 +14,6 @@ void GeneratingScreen_Show(void);
 void HUDScreen_Show(void);
 void DisconnectScreen_Show(const String* title, const String* message);
 
-/* Raw pointer to inventory screen. DO NOT USE THIS. Use InventoryScreen_MakeInstance() */
-extern struct Screen* InventoryScreen_UNSAFE_RawPointer;
 /* Raw pointer to loading screen. DO NOT USE THIS. Use LoadingScreen_MakeInstance() */
 extern struct Screen* LoadingScreen_UNSAFE_RawPointer;
 /* Opens chat input for the HUD with the given initial text. */

@@ -450,13 +450,10 @@ static bool HotbarWidget_KeyUp(void* widget, Key key) {
 
 static bool HotbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
-	struct Screen* screen;
 	int width, height;
 	int i, cellX, cellY;
 
 	if (btn != MOUSE_LEFT || !Widget_Contains(w, x, y)) return false;
-	screen = Gui_GetActiveScreen();
-	if (screen != InventoryScreen_UNSAFE_RawPointer) return false;
 
 	width  = (int)(w->elemSize + w->borderSize);
 	height = Math_Ceil(w->barHeight);

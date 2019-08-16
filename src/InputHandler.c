@@ -395,10 +395,15 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 }
 
 static void InputHandler_MouseWheel(void* obj, float delta) {
-	struct Screen* active = Gui_GetActiveScreen();
+	struct Screen* s;
+	int i;
 	struct Widget* widget;
 	bool hotbar;
-	if (Elem_HandlesMouseScroll(active, delta)) return;
+	
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesMouseScroll(s, delta)) return;
+	}
 
 	hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
 	if (!hotbar && Camera.Active->Zoom(delta)) return;
@@ -462,18 +467,18 @@ static bool InputHandler_SimulateMouse(Key key, bool pressed) {
 }
 
 static void InputHandler_KeyDown(void* obj, int key, bool was) {
-	struct Screen* active;
-	int idx;
+	struct Screen* s;
+	int i;
 	struct HotkeyData* hkey;
 	String text;
 
 	if (!was && InputHandler_SimulateMouse(key, true)) return;
-	active = Gui_GetActiveScreen();
+	s = Gui_GetActiveScreen();
 
 #ifndef CC_BUILD_WEB
-	if (key == KEY_ESCAPE && active->closable) {
+	if (key == KEY_ESCAPE && (s = Gui_GetClosable())) {
 		/* Don't want holding down escape to go in and out of pause menu */
-		if (!was) Gui_Close(active); 
+		if (!was) Gui_Remove(s);
 		return;
 	}
 #endif
@@ -483,9 +488,14 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		Window_Close(); return;
 	} else if (key == KeyBinds[KEYBIND_SCREENSHOT] && !was) {
 		Game_ScreenshotRequested = true; return;
-	} else if (Elem_HandlesKeyDown(active, key)) {
-		return;
-	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !Gui_GetInputGrab()) {
+	}
+	
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesKeyDown(s, key)) return;
+	}
+
+	if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !Gui_GetInputGrab()) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
@@ -502,10 +512,10 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	if (InputHandler_HandleCoreKey(key)) {
 	} else if (LocalPlayer_HandlesKey(key)) {
 	} else {
-		idx = Hotkeys_FindPartial(key);
-		if (idx == -1) return;
+		i = Hotkeys_FindPartial(key);
+		if (i == -1) return;
 
-		hkey = &HotkeysList[idx];
+		hkey = &HotkeysList[i];
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, hkey->TextIndex);
 
 		if (!hkey->StaysOpen) {
