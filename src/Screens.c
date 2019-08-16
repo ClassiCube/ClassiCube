@@ -87,13 +87,13 @@ static void InventoryScreen_ContextLost(void* screen) {
 static void InventoryScreen_ContextRecreated(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
-	Elem_Recreate(&s->table);
+	TableWidget_Recreate(&s->table);
 }
 
 static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
 	struct TableWidget* table = &s->table;
 	TableWidget_SetBlockTo(table, Inventory_SelectedBlock);
-	Elem_Recreate(table);
+	TableWidget_Recreate(table);
 
 	s->deferredSelect = false;
 	/* User is holding invalid block */
@@ -851,7 +851,7 @@ static void HUDScreen_ColCodeChanged(void* screen, int code) {
 	/* Some servers have plugins that redefine colours constantly */
 	/* Preserve caret accumulator so caret blinking stays consistent */
 	caretAcc = s->input.base.caretAccumulator;
-	Elem_Recreate(&s->input.base);
+	InputWidget_UpdateText(&s->input.base);
 	s->input.base.caretAccumulator = caretAcc;
 }
 
@@ -1008,7 +1008,7 @@ static void HUDScreen_OnResize(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	/* TODO: Kill this awful hack with fire */
 	bool active = s->altText.active;
-	Elem_Recreate(s);
+	Gui_DefaultRecreate(s);
 	SpecialInputWidget_SetActive(&s->altText, active);
 
 	Widget_Reposition(&s->hotbar);
@@ -1233,7 +1233,7 @@ void HUDScreen_OpenInput(const String* text) {
 	Camera_CheckFocus();
 
 	String_Copy(&s->input.base.text, text);
-	Elem_Recreate(&s->input.base);
+	InputWidget_UpdateText(&s->input.base);
 }
 
 void HUDScreen_AppendInput(const String* text) {

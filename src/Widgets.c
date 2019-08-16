@@ -699,8 +699,7 @@ static void TableWidget_Free(void* widget) {
 	w->lastCreatedIndex = -1000;
 }
 
-static void TableWidget_Recreate(void* widget) {
-	struct TableWidget* w = (struct TableWidget*)widget;
+void TableWidget_Recreate(struct TableWidget* w) {
 	Elem_TryFree(w);
 	w->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TABLE_MAX_VERTICES);
 	TableWidget_RecreateDescTex(w);
@@ -820,7 +819,7 @@ static bool TableWidget_KeyDown(void* widget, Key key) {
 }
 
 static struct WidgetVTABLE TableWidget_VTABLE = {
-	TableWidget_Init,      TableWidget_Render,  TableWidget_Free,      TableWidget_Recreate,
+	TableWidget_Init,      TableWidget_Render,  TableWidget_Free,      Gui_DefaultRecreate,
 	TableWidget_KeyDown,   Widget_Key,          Widget_KeyPress,
 	TableWidget_MouseDown, TableWidget_MouseUp, TableWidget_MouseMove, TableWidget_MouseScroll,
 	TableWidget_Reposition,
@@ -1023,12 +1022,12 @@ void InputWidget_AppendString(struct InputWidget* w, const String* text) {
 	}
 
 	if (!appended) return;
-	Elem_Recreate(w);
+	InputWidget_UpdateText(w);
 }
 
 void InputWidget_Append(struct InputWidget* w, char c) {
 	if (!InputWidget_TryAppendChar(w, c)) return;
-	Elem_Recreate(w);
+	InputWidget_UpdateText(w);
 }
 
 static void InputWidget_DeleteChar(struct InputWidget* w) {
@@ -1072,7 +1071,7 @@ static void InputWidget_BackspaceKey(struct InputWidget* w) {
 		} else if (w->caretPos >= 0 && w->text.buffer[w->caretPos] != ' ') {
 			String_InsertAt(&w->text, w->caretPos, ' ');
 		}
-		Elem_Recreate(w);
+		InputWidget_UpdateText(w);
 	} else if (w->text.length > 0 && w->caretPos != 0) {
 		int index = w->caretPos == -1 ? w->text.length - 1 : w->caretPos;
 		if (InputWidget_CheckCol(w, index - 1)) {
@@ -1083,7 +1082,7 @@ static void InputWidget_BackspaceKey(struct InputWidget* w) {
 		}
 
 		InputWidget_DeleteChar(w);
-		Elem_Recreate(w);
+		InputWidget_UpdateText(w);
 	}
 }
 
@@ -1091,7 +1090,7 @@ static void InputWidget_DeleteKey(struct InputWidget* w) {
 	if (w->text.length > 0 && w->caretPos != -1) {
 		String_DeleteAt(&w->text, w->caretPos);
 		if (w->caretPos >= w->text.length) { w->caretPos = -1; }
-		Elem_Recreate(w);
+		InputWidget_UpdateText(w);
 	}
 }
 
@@ -1177,8 +1176,7 @@ static void InputWidget_Free(void* widget) {
 	Gfx_DeleteTexture(&w->caretTex.ID);
 }
 
-static void InputWidget_Recreate(void* widget) {
-	struct InputWidget* w = (struct InputWidget*)widget;
+void InputWidget_UpdateText(struct InputWidget* w) {
 	Gfx_DeleteTexture(&w->inputTex.ID);
 	InputWidget_Init(w);
 }
@@ -1493,7 +1491,7 @@ static bool MenuInputWidget_AllowedChar(void* widget, char c) {
 
 static int MenuInputWidget_GetMaxLines(void) { return 1; }
 static struct WidgetVTABLE MenuInputWidget_VTABLE = {
-	InputWidget_Init,      MenuInputWidget_Render, InputWidget_Free,     InputWidget_Recreate,
+	InputWidget_Init,      MenuInputWidget_Render, InputWidget_Free,     Gui_DefaultRecreate,
 	InputWidget_KeyDown,   InputWidget_KeyUp,      InputWidget_KeyPress,
 	InputWidget_MouseDown, Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	InputWidget_Reposition,
@@ -1639,7 +1637,7 @@ static void ChatInputWidget_UpKey(struct InputWidget* w) {
 	String_AppendString(&w->text, &prevInput);
 
 	w->caretPos = -1;
-	Elem_Recreate(w);
+	InputWidget_UpdateText(w);
 }
 
 static void ChatInputWidget_DownKey(struct InputWidget* w) {
@@ -1668,7 +1666,7 @@ static void ChatInputWidget_DownKey(struct InputWidget* w) {
 	}
 
 	w->caretPos = -1;
-	Elem_Recreate(w);
+	InputWidget_UpdateText(w);
 }
 
 static bool ChatInputWidget_IsNameChar(char c) {
@@ -1746,7 +1744,7 @@ static int ChatInputWidget_GetMaxLines(void) {
 }
 
 static struct WidgetVTABLE ChatInputWidget_VTABLE = {
-	InputWidget_Init,        ChatInputWidget_Render, InputWidget_Free,     InputWidget_Recreate,
+	InputWidget_Init,        ChatInputWidget_Render, InputWidget_Free,     Gui_DefaultRecreate,
 	ChatInputWidget_KeyDown, InputWidget_KeyUp,      InputWidget_KeyPress,
 	InputWidget_MouseDown,   Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	InputWidget_Reposition,

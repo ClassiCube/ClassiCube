@@ -17,6 +17,7 @@ enum GuiAnchor {
 
 struct IGameComponent;
 struct GuiElem;
+struct Widget;
 extern struct IGameComponent Gui_Component;
 
 /* Whether vanilla Minecraft Classic gui texture is used. */
@@ -51,7 +52,6 @@ struct GuiElemVTABLE { GuiElemVTABLE_Layout() };
 struct GuiElem { struct GuiElemVTABLE* VTABLE; };
 void Gui_DefaultRecreate(void* elem);
 
-
 struct ScreenVTABLE {
 	GuiElemVTABLE_Layout()
 	void (*OnResize)(void* elem);
@@ -62,13 +62,13 @@ struct ScreenVTABLE {
 	bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
 	bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
 	bool hidden;      /* Whether this screen is prevented from rendering. */ \
-	bool closable;    /* Whether this screen is automatically closed when pressing Escape */
+	bool closable;    /* Whether this screen is automatically closed when pressing Escape */ \
+	struct Widget** widgets; int numWidgets;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Layout };
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
-struct Widget;
 struct WidgetVTABLE {
 	GuiElemVTABLE_Layout()
 	void (*Reposition)(void* elem);

@@ -92,6 +92,7 @@ CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
 CC_NOINLINE void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
 CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
 CC_NOINLINE void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block);
+CC_NOINLINE void TableWidget_Recreate(struct TableWidget* w);
 
 
 #define INPUTWIDGET_MAX_LINES 3
@@ -128,6 +129,8 @@ CC_NOINLINE void InputWidget_Clear(struct InputWidget* w);
 CC_NOINLINE void InputWidget_AppendString(struct InputWidget* w, const String* text);
 /* Tries appending the given character, then updates the input texture. */
 CC_NOINLINE void InputWidget_Append(struct InputWidget* w, char c);
+/* Redraws text and recalculates associated state. */
+CC_NOINLINE void InputWidget_UpdateText(struct InputWidget* w);
 
 
 struct MenuInputDesc;
