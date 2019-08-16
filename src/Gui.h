@@ -39,7 +39,6 @@ extern bool Gui_ShowFPS;
 	void (*Init)(void* elem); \
 	void (*Render)(void* elem, double delta); \
 	void (*Free)(void* elem); \
-	void (*Recreate)(void* elem); \
 	bool (*HandlesKeyDown)(void* elem, Key key); \
 	bool (*HandlesKeyUp)(void* elem, Key key); \
 	bool (*HandlesKeyPress)(void* elem, char keyChar); \
@@ -47,10 +46,6 @@ extern bool Gui_ShowFPS;
 	bool (*HandlesMouseUp)(void* elem, int x, int y, MouseButton btn); \
 	bool (*HandlesMouseMove)(void* elem, int x, int y); \
 	bool (*HandlesMouseScroll)(void* elem, float delta);
-
-struct GuiElemVTABLE { GuiElemVTABLE_Layout() };
-struct GuiElem { struct GuiElemVTABLE* VTABLE; };
-void Gui_DefaultRecreate(void* elem);
 
 struct ScreenVTABLE {
 	GuiElemVTABLE_Layout()
@@ -179,10 +174,9 @@ void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertice
 void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vertices);
 
 
-#define Elem_Init(elem)           (elem)->VTABLE->Init(elem)
-#define Elem_Render(elem, delta)  (elem)->VTABLE->Render(elem, delta)
-#define Elem_Free(elem)           (elem)->VTABLE->Free(elem)
-#define Elem_Recreate(elem)       (elem)->VTABLE->Recreate(elem)
+#define Elem_Init(elem)          (elem)->VTABLE->Init(elem)
+#define Elem_Render(elem, delta) (elem)->VTABLE->Render(elem, delta)
+#define Elem_Free(elem)          (elem)->VTABLE->Free(elem)
 #define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress(elem, key)
 #define Elem_HandlesKeyDown(elem, key)  (elem)->VTABLE->HandlesKeyDown(elem, key)
 #define Elem_HandlesKeyUp(elem, key)    (elem)->VTABLE->HandlesKeyUp(elem, key)

@@ -348,6 +348,12 @@ static void ListScreen_QuickSort(int left, int right) {
 	}
 }
 
+CC_NOINLINE static void ListScreen_Sort(struct ListScreen* s) {
+	if (s->entries.count) {
+		ListScreen_QuickSort(0, s->entries.count - 1);
+	}
+}
+
 static String ListScreen_UNSAFE_GetCur(struct ListScreen* s, void* widget) {
 	int i = Menu_Index(s, widget);
 	return ListScreen_UNSAFE_Get(s, s->currentIndex + i);
@@ -446,10 +452,10 @@ static void ListScreen_ContextRecreated(void* screen) {
 }
 
 static struct ScreenVTABLE ListScreen_VTABLE = {
-	ListScreen_Init,    ListScreen_Render, ListScreen_Free, Gui_DefaultRecreate,
+	ListScreen_Init,    ListScreen_Render, ListScreen_Free,
 	ListScreen_KeyDown, Menu_KeyUp,        Menu_KeyPress,
 	Menu_MouseDown,     Menu_MouseUp,      Menu_MouseMove,  ListScreen_MouseScroll,
-	Menu_OnResize,      Menu_ContextLost,  ListScreen_ContextRecreated,
+	Menu_OnResize,      Menu_ContextLost,  ListScreen_ContextRecreated
 };
 void ListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
@@ -567,10 +573,10 @@ static void PauseScreen_Free(void* screen) {
 }
 
 static struct ScreenVTABLE PauseScreen_VTABLE = {
-	PauseScreen_Init,   MenuScreen_Render,  PauseScreen_Free, Gui_DefaultRecreate,
+	PauseScreen_Init,   MenuScreen_Render,  PauseScreen_Free,
 	MenuScreen_KeyDown, Menu_KeyUp,         Menu_KeyPress,
 	Menu_MouseDown,     Menu_MouseUp,       Menu_MouseMove,   MenuScreen_MouseScroll,
-	Menu_OnResize,      Menu_ContextLost,   PauseScreen_ContextRecreated,
+	Menu_OnResize,      Menu_ContextLost,   PauseScreen_ContextRecreated
 };
 void PauseScreen_Show(void) {
 	static struct Widget* widgets[8];
@@ -682,10 +688,10 @@ static bool OptionsGroupScreen_MouseMove(void* screen, int x, int y) {
 }
 
 static struct ScreenVTABLE OptionsGroupScreen_VTABLE = {
-	OptionsGroupScreen_Init, MenuScreen_Render,  OptionsGroupScreen_Free,      Gui_DefaultRecreate,
+	OptionsGroupScreen_Init, MenuScreen_Render,  OptionsGroupScreen_Free,
 	MenuScreen_KeyDown,      Menu_KeyUp,         Menu_KeyPress,
 	Menu_MouseDown,          Menu_MouseUp,       OptionsGroupScreen_MouseMove, MenuScreen_MouseScroll,
-	Menu_OnResize,           Menu_ContextLost,   OptionsGroupScreen_ContextRecreated,
+	Menu_OnResize,           Menu_ContextLost,   OptionsGroupScreen_ContextRecreated
 };
 void OptionsGroupScreen_Show(void) {
 	struct OptionsGroupScreen* s = &OptionsGroupScreen;
@@ -896,10 +902,10 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 }
 
 static struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
-	MenuScreen_Init,          EditHotkeyScreen_Render, EditHotkeyScreen_Free,     Gui_DefaultRecreate,
+	MenuScreen_Init,          EditHotkeyScreen_Render, EditHotkeyScreen_Free,
 	EditHotkeyScreen_KeyDown, EditHotkeyScreen_KeyUp,  EditHotkeyScreen_KeyPress,
 	Menu_MouseDown,           Menu_MouseUp,            Menu_MouseMove,            MenuScreen_MouseScroll,
-	Menu_OnResize,            Menu_ContextLost,        EditHotkeyScreen_ContextRecreated,
+	Menu_OnResize,            Menu_ContextLost,        EditHotkeyScreen_ContextRecreated
 };
 struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 	static struct Widget* widgets[7];
@@ -1062,10 +1068,10 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 }
 
 static struct ScreenVTABLE GenLevelScreen_VTABLE = {
-	MenuScreen_Init,        MenuScreen_Render,    MenuScreen_Free,     Gui_DefaultRecreate,
+	MenuScreen_Init,        MenuScreen_Render,    MenuScreen_Free,
 	GenLevelScreen_KeyDown, GenLevelScreen_KeyUp, GenLevelScreen_KeyPress,
 	Menu_MouseDown,         Menu_MouseUp,         Menu_MouseMove,          MenuScreen_MouseScroll,
-	Menu_OnResize,          Menu_ContextLost,     GenLevelScreen_ContextRecreated,
+	Menu_OnResize,          Menu_ContextLost,     GenLevelScreen_ContextRecreated
 };
 void GenLevelScreen_Show(void) {
 	static struct Widget* widgets[12];
@@ -1117,10 +1123,10 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 }
 
 static struct ScreenVTABLE ClassicGenScreen_VTABLE = {
-	MenuScreen_Init,    MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
+	MenuScreen_Init,    MenuScreen_Render,  MenuScreen_Free,
 	MenuScreen_KeyDown, Menu_KeyUp,         Menu_KeyPress,
 	Menu_MouseDown,     Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
-	Menu_OnResize,      Menu_ContextLost,   ClassicGenScreen_ContextRecreated,
+	Menu_OnResize,      Menu_ContextLost,   ClassicGenScreen_ContextRecreated
 };
 void ClassicGenScreen_Show(void) {
 	static struct Widget* widgets[4];
@@ -1276,10 +1282,10 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 }
 
 static struct ScreenVTABLE SaveLevelScreen_VTABLE = {
-	MenuScreen_Init,         SaveLevelScreen_Render, MenuScreen_Free,          Gui_DefaultRecreate,
+	MenuScreen_Init,         SaveLevelScreen_Render, MenuScreen_Free,
 	SaveLevelScreen_KeyDown, SaveLevelScreen_KeyUp,  SaveLevelScreen_KeyPress,
 	Menu_MouseDown,          Menu_MouseUp,           Menu_MouseMove,           MenuScreen_MouseScroll,
-	Menu_OnResize,           Menu_ContextLost,       SaveLevelScreen_ContextRecreated,
+	Menu_OnResize,           Menu_ContextLost,       SaveLevelScreen_ContextRecreated
 };
 void SaveLevelScreen_Show(void) {
 	static struct Widget* widgets[6];
@@ -1325,10 +1331,7 @@ static void TexturePackScreen_FilterFiles(const String* path, void* obj) {
 static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
 	static const String path = String_FromConst("texpacks");
 	Directory_Enum(&path, &s->entries, TexturePackScreen_FilterFiles);
-
-	if (s->entries.count) {
-		ListScreen_QuickSort(0, s->entries.count - 1);
-	}
+	ListScreen_Sort(s);
 }
 
 void TexturePackScreen_Show(void) {
@@ -1378,9 +1381,7 @@ static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget
 
 static void FontListScreen_LoadEntries(struct ListScreen* s) {
 	Font_GetNames(&s->entries);
-	if (s->entries.count) {
-		ListScreen_QuickSort(0, s->entries.count - 1);
-	}
+	ListScreen_Sort(s);
 	ListScreen_Select(s, &Drawer2D_FontName);
 }
 
@@ -1499,10 +1500,7 @@ static void LoadLevelScreen_FilterFiles(const String* path, void* obj) {
 static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {
 	static const String path = String_FromConst("maps");
 	Directory_Enum(&path, &s->entries, LoadLevelScreen_FilterFiles);
-
-	if (s->entries.count) {
-		ListScreen_QuickSort(0, s->entries.count - 1);
-	}
+	ListScreen_Sort(s);
 }
 
 void LoadLevelScreen_Show(void) {
@@ -1639,10 +1637,10 @@ static bool KeyBindingsScreen_MouseDown(void* screen, int x, int y, MouseButton 
 }
 
 static struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
-	MenuScreen_Init,             MenuScreen_Render,  MenuScreen_Free, Gui_DefaultRecreate,
+	MenuScreen_Init,             MenuScreen_Render,  MenuScreen_Free,
 	KeyBindingsScreen_KeyDown,   Menu_KeyUp,         Menu_KeyPress,
 	KeyBindingsScreen_MouseDown, Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
-	Menu_OnResize,               Menu_ContextLost,   NULL,
+	Menu_OnResize,               Menu_ContextLost,   NULL
 };
 static struct KeyBindingsScreen* KeyBindingsScreen_Make(int bindsCount, uint8_t* binds, const char** descs, Event_Void_Callback contextRecreated) {
 	static struct Widget* widgets[12 + 4]; /* 12 buttons + </> buttons + 2 widgets used by MouseKeyBindings */
@@ -2083,10 +2081,10 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 }
 
 static struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
-	MenuOptionsScreen_Init,     MenuOptionsScreen_Render, MenuScreen_Free,             Gui_DefaultRecreate,
+	MenuOptionsScreen_Init,     MenuOptionsScreen_Render, MenuScreen_Free,
 	MenuOptionsScreen_KeyDown,  MenuOptionsScreen_KeyUp,  MenuOptionsScreen_KeyPress,
 	Menu_MouseDown,             Menu_MouseUp,             MenuOptionsScreen_MouseMove, MenuScreen_MouseScroll,
-	MenuOptionsScreen_OnResize, MenuOptionsScreen_ContextLost, NULL,
+	MenuOptionsScreen_OnResize, MenuOptionsScreen_ContextLost, NULL
 };
 struct Screen* MenuOptionsScreen_MakeInstance(int count, Event_Void_Callback contextRecreated, struct MenuInputDesc* descs, const char** descriptions, int descsCount) {
 	static struct Widget* widgets[11 + 3];  /* max buttons + 3 widgets for input */
@@ -2982,10 +2980,10 @@ static bool TexIdsOverlay_KeyPress(void* screen, char keyChar) { return false; }
 static bool TexIdsOverlay_KeyUp(void* screen, Key key) { return false; }
 
 static struct ScreenVTABLE TexIdsOverlay_VTABLE = {
-	TexIdsOverlay_Init,    TexIdsOverlay_Render, Overlay_Free,           Gui_DefaultRecreate,
+	TexIdsOverlay_Init,    TexIdsOverlay_Render, Overlay_Free,
 	TexIdsOverlay_KeyDown, TexIdsOverlay_KeyUp,  TexIdsOverlay_KeyPress,
 	Menu_MouseDown,        Menu_MouseUp,         Menu_MouseMove,         MenuScreen_MouseScroll,
-	Menu_OnResize,         TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated,
+	Menu_OnResize,         TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated
 };
 void TexIdsOverlay_Show(void) {
 	static struct Widget* widgets[1];
@@ -3051,10 +3049,10 @@ static void UrlWarningOverlay_ContextRecreated(void* screen) {
 }
 
 static struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
-	MenuScreen_Init, MenuScreen_Render,  Overlay_Free,    Gui_DefaultRecreate,
+	MenuScreen_Init, MenuScreen_Render,  Overlay_Free,
 	Overlay_KeyDown, Menu_KeyUp,         Menu_KeyPress,
 	Menu_MouseDown,  Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
-	Menu_OnResize,   Menu_ContextLost,   UrlWarningOverlay_ContextRecreated,
+	Menu_OnResize,   Menu_ContextLost,   UrlWarningOverlay_ContextRecreated
 };
 void UrlWarningOverlay_Show(const String* url) {
 	static struct Widget* widgets[6];
@@ -3197,10 +3195,10 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 }
 
 static struct ScreenVTABLE TexPackOverlay_VTABLE = {
-	MenuScreen_Init, TexPackOverlay_Render, Overlay_Free,   Gui_DefaultRecreate,
+	MenuScreen_Init, TexPackOverlay_Render, Overlay_Free,
 	Overlay_KeyDown, Menu_KeyUp,            Menu_KeyPress,
 	Menu_MouseDown,  Menu_MouseUp,          Menu_MouseMove, MenuScreen_MouseScroll,
-	Menu_OnResize,   Menu_ContextLost,      TexPackOverlay_ContextRecreated,
+	Menu_OnResize,   Menu_ContextLost,      TexPackOverlay_ContextRecreated
 };
 void TexPackOverlay_Show(const String* url) {
 	static struct Widget* widgets[8];

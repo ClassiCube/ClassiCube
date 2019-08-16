@@ -25,11 +25,6 @@ struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 int Gui_ScreensCount, Gui_OverlaysCount;
 static uint8_t priorities[GUI_MAX_SCREENS];
 
-void Gui_DefaultRecreate(void* elem) {
-	struct GuiElem* e = (struct GuiElem*)elem;
-	Elem_Free(e); Elem_Init(e);
-}
-
 void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
 	struct Widget* w = (struct Widget*)widget;
 	w->horAnchor = horAnchor; w->verAnchor = verAnchor;

@@ -49,10 +49,10 @@ static void TextWidget_Reposition(void* widget) {
 }
 
 static struct WidgetVTABLE TextWidget_VTABLE = {
-	Widget_NullFunc, TextWidget_Render, TextWidget_Free,  Gui_DefaultRecreate,
+	Widget_NullFunc, TextWidget_Render, TextWidget_Free,
 	Widget_Key,      Widget_Key,        Widget_KeyPress,
 	Widget_Mouse,    Widget_Mouse,      Widget_MouseMove, Widget_MouseScroll,
-	TextWidget_Reposition,
+	TextWidget_Reposition
 };
 void TextWidget_Make(struct TextWidget* w, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
 	PackedCol col = PACKEDCOL_WHITE;
@@ -152,10 +152,10 @@ static void ButtonWidget_Render(void* widget, double delta) {
 }
 
 static struct WidgetVTABLE ButtonWidget_VTABLE = {
-	Widget_NullFunc, ButtonWidget_Render, ButtonWidget_Free, Gui_DefaultRecreate,
+	Widget_NullFunc, ButtonWidget_Render, ButtonWidget_Free,
 	Widget_Key,	     Widget_Key,          Widget_KeyPress,
 	Widget_Mouse,    Widget_Mouse,        Widget_MouseMove,  Widget_MouseScroll,
-	ButtonWidget_Reposition,
+	ButtonWidget_Reposition
 };
 void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
 	Widget_Reset(w);
@@ -298,10 +298,10 @@ static bool ScrollbarWidget_MouseMove(void* widget, int x, int y) {
 }
 
 static struct WidgetVTABLE ScrollbarWidget_VTABLE = {
-	Widget_NullFunc,           ScrollbarWidget_Render,  Widget_NullFunc,           Gui_DefaultRecreate,
+	Widget_NullFunc,           ScrollbarWidget_Render,  Widget_NullFunc,
 	Widget_Key,                Widget_Key,              Widget_KeyPress,
 	ScrollbarWidget_MouseDown, ScrollbarWidget_MouseUp, ScrollbarWidget_MouseMove, ScrollbarWidget_MouseScroll,
-	Widget_CalcPosition,
+	Widget_CalcPosition
 };
 void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 	Widget_Reset(w);
@@ -487,10 +487,10 @@ static bool HotbarWidget_MouseScroll(void* widget, float delta) {
 }
 
 static struct WidgetVTABLE HotbarWidget_VTABLE = {
-	HotbarWidget_Init,      HotbarWidget_Render, Widget_NullFunc,  Gui_DefaultRecreate,
+	HotbarWidget_Init,      HotbarWidget_Render, Widget_NullFunc,
 	HotbarWidget_KeyDown,	HotbarWidget_KeyUp,  Widget_KeyPress,
 	HotbarWidget_MouseDown, Widget_Mouse,        Widget_MouseMove, HotbarWidget_MouseScroll,
-	HotbarWidget_Reposition,
+	HotbarWidget_Reposition
 };
 void HotbarWidget_Create(struct HotbarWidget* w) {
 	Widget_Reset(w);
@@ -819,10 +819,10 @@ static bool TableWidget_KeyDown(void* widget, Key key) {
 }
 
 static struct WidgetVTABLE TableWidget_VTABLE = {
-	TableWidget_Init,      TableWidget_Render,  TableWidget_Free,      Gui_DefaultRecreate,
+	TableWidget_Init,      TableWidget_Render,  TableWidget_Free,
 	TableWidget_KeyDown,   Widget_Key,          Widget_KeyPress,
 	TableWidget_MouseDown, TableWidget_MouseUp, TableWidget_MouseMove, TableWidget_MouseScroll,
-	TableWidget_Reposition,
+	TableWidget_Reposition
 };
 void TableWidget_Create(struct TableWidget* w) {	
 	Widget_Reset(w);
@@ -1491,10 +1491,10 @@ static bool MenuInputWidget_AllowedChar(void* widget, char c) {
 
 static int MenuInputWidget_GetMaxLines(void) { return 1; }
 static struct WidgetVTABLE MenuInputWidget_VTABLE = {
-	InputWidget_Init,      MenuInputWidget_Render, InputWidget_Free,     Gui_DefaultRecreate,
+	InputWidget_Init,      MenuInputWidget_Render, InputWidget_Free,
 	InputWidget_KeyDown,   InputWidget_KeyUp,      InputWidget_KeyPress,
 	InputWidget_MouseDown, Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
-	InputWidget_Reposition,
+	InputWidget_Reposition
 };
 void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, FontDesc* font, struct MenuInputDesc* desc) {
 	InputWidget_Create(&w->base, font, &String_Empty);
@@ -1744,10 +1744,10 @@ static int ChatInputWidget_GetMaxLines(void) {
 }
 
 static struct WidgetVTABLE ChatInputWidget_VTABLE = {
-	InputWidget_Init,        ChatInputWidget_Render, InputWidget_Free,     Gui_DefaultRecreate,
+	InputWidget_Init,        ChatInputWidget_Render, InputWidget_Free,
 	ChatInputWidget_KeyDown, InputWidget_KeyUp,      InputWidget_KeyPress,
 	InputWidget_MouseDown,   Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
-	InputWidget_Reposition,
+	InputWidget_Reposition
 };
 void ChatInputWidget_Create(struct ChatInputWidget* w, FontDesc* font) {
 	static const String prefix = String_FromConst("> ");
@@ -2141,10 +2141,10 @@ static void PlayerListWidget_Free(void* widget) {
 }
 
 static struct WidgetVTABLE PlayerListWidget_VTABLE = {
-	PlayerListWidget_Init, PlayerListWidget_Render, PlayerListWidget_Free, Gui_DefaultRecreate,
+	PlayerListWidget_Init, PlayerListWidget_Render, PlayerListWidget_Free,
 	Widget_Key,            Widget_Key,              Widget_KeyPress,
 	Widget_Mouse,          Widget_Mouse,            Widget_MouseMove,      Widget_MouseScroll,
-	PlayerListWidget_Reposition,
+	PlayerListWidget_Reposition
 };
 void PlayerListWidget_Create(struct PlayerListWidget* w, FontDesc* font, bool classic) {
 	Widget_Reset(w);
@@ -2573,10 +2573,10 @@ static void TextGroupWidget_Free(void* widget) {
 }
 
 static struct WidgetVTABLE TextGroupWidget_VTABLE = {
-	TextGroupWidget_Init, TextGroupWidget_Render, TextGroupWidget_Free, Gui_DefaultRecreate,
+	TextGroupWidget_Init, TextGroupWidget_Render, TextGroupWidget_Free,
 	Widget_Key,           Widget_Key,             Widget_KeyPress,
 	Widget_Mouse,         Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
-	TextGroupWidget_Reposition,
+	TextGroupWidget_Reposition
 };
 void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, FontDesc* font, struct Texture* textures, TextGroupWidget_Get getLine) {
 	Widget_Reset(w);
@@ -2826,10 +2826,10 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
 }
 
 static struct WidgetVTABLE SpecialInputWidget_VTABLE = {
-	SpecialInputWidget_Init,      SpecialInputWidget_Render, SpecialInputWidget_Free, Gui_DefaultRecreate,
+	SpecialInputWidget_Init,      SpecialInputWidget_Render, SpecialInputWidget_Free,
 	Widget_Key,                   Widget_Key,                Widget_KeyPress,
 	SpecialInputWidget_MouseDown, Widget_Mouse,              Widget_MouseMove,        Widget_MouseScroll,
-	Widget_CalcPosition,
+	Widget_CalcPosition
 };
 void SpecialInputWidget_Create(struct SpecialInputWidget* w, FontDesc* font, struct InputWidget* target) {
 	Widget_Reset(w);
