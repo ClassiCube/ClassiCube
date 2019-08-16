@@ -49,19 +49,15 @@ struct SimpleButtonDesc { int x, y; const char* title; Widget_LeftClick onClick;
 *--------------------------------------------------------Menu base--------------------------------------------------------*
 *#########################################################################################################################*/
 static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, const String* text, const FontDesc* font, Widget_LeftClick onClick, int horAnchor, int verAnchor, int x, int y) {
-	struct Menu* menu = (struct Menu*)s;
-	ButtonWidget_Create(btn, width, text, font, onClick);
-
-	menu->widgets[i] = (struct Widget*)btn;
-	Widget_SetLocation(menu->widgets[i], horAnchor, verAnchor, x, y);
+	ButtonWidget_Make(btn, width, onClick, horAnchor, verAnchor, x, y);
+	ButtonWidget_Set(btn, text, font);
+	((struct Menu*)s)->widgets[i] = (struct Widget*)btn;
 }
 
 static void Menu_Label(void* s, int i, struct TextWidget* label, const String* text, const FontDesc* font, int horAnchor, int verAnchor, int x, int y) {
-	struct Menu* menu = (struct Menu*)s;
-	TextWidget_Create(label, text, font);
-
-	menu->widgets[i] = (struct Widget*)label;
-	Widget_SetLocation(menu->widgets[i], horAnchor, verAnchor, x, y);
+	TextWidget_Make(label, horAnchor, verAnchor, x, y);
+	TextWidget_Set(label,  text, font);
+	((struct Menu*)s)->widgets[i] = (struct Widget*)label;
 }
 
 static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, FontDesc* font, struct MenuInputDesc* desc, int horAnchor, int verAnchor, int x, int y) {
@@ -81,8 +77,7 @@ static void Menu_Back(void* s, int i, struct ButtonWidget* btn, const char* labe
 
 CC_NOINLINE static void Menu_MakeBack(struct ButtonWidget* btn, Widget_LeftClick onClick) {
 	int width = Gui_ClassicMenu ? 400 : 200;
-	ButtonWidget_Make(btn, width, onClick);
-	Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
+	ButtonWidget_Make(btn, width, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
 CC_NOINLINE static void Menu_MakeTitleFont(FontDesc* font) {
@@ -416,21 +411,20 @@ static void ListScreen_Init(void* screen) {
 	s->currentIndex = 0;
 
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
-		ButtonWidget_Make(&s->buttons[i],  300, s->EntryClick);
-		Widget_SetLocation(&s->buttons[i], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
+		ButtonWidget_Make(&s->buttons[i],  300, s->EntryClick,
+					ANCHOR_CENTRE, ANCHOR_CENTRE,    0, (i - 2) * 50);
 	}
 
-	ButtonWidget_Make(&s->left,  40, ListScreen_MoveBackwards);
-	ButtonWidget_Make(&s->right, 40, ListScreen_MoveForwards);
-	TextWidget_Make(&s->title);
-	TextWidget_Make(&s->page);
+	ButtonWidget_Make(&s->left,  40, ListScreen_MoveBackwards,
+					ANCHOR_CENTRE, ANCHOR_CENTRE, -220,    0);
+	ButtonWidget_Make(&s->right, 40, ListScreen_MoveForwards,
+					ANCHOR_CENTRE, ANCHOR_CENTRE,  220,    0);
+	TextWidget_Make(&s->title, 
+					ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -155);
+	TextWidget_Make(&s->page,  
+					ANCHOR_CENTRE,    ANCHOR_MAX,    0,   75);
+
 	Menu_MakeBack(&s->done, Menu_SwitchPause);
-
-	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -220, 0);
-	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  220, 0);
-	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
-	Widget_SetLocation(&s->page,  ANCHOR_CENTRE, ANCHOR_MAX,    0,   75);
-
 	Menu_MakeTitleFont(&s->font);
 	s->LoadEntries(s);
 }
@@ -670,13 +664,12 @@ static void OptionsGroupScreen_Init(void* screen) {
 	s->selectedI    = -1;
 
 	for (i = 0; i < Array_Elems(optsGroup_btns); i++) {
-		ButtonWidget_Make(&s->buttons[i], 300, optsGroup_btns[i].onClick);
-		Widget_SetLocation(&s->buttons[i], ANCHOR_CENTRE, ANCHOR_CENTRE, optsGroup_btns[i].x, optsGroup_btns[i].y);
+		ButtonWidget_Make(&s->buttons[i], 300, optsGroup_btns[i].onClick,
+						ANCHOR_CENTRE, ANCHOR_CENTRE, optsGroup_btns[i].x, optsGroup_btns[i].y);
 	}
 
 	Menu_MakeBack(&s->done, Menu_SwitchPause);
-	TextWidget_Make(&s->desc);
-	Widget_SetLocation(&s->desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
+	TextWidget_Make(&s->desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 }
 
 static void OptionsGroupScreen_Free(void* screen) {
@@ -1024,17 +1017,15 @@ static void GenLevelScreen_Input(struct GenLevelScreen* s, int i, int y, bool se
 	input->base.MenuClick = GenLevelScreen_InputClick;
 }
 
-static void GenLevelScreen_Label(struct GenLevelScreen* s, int i, int x, int y, const char* title) {
+static void GenLevelScreen_Label(struct GenLevelScreen* s, int i, int y, const char* title) {
 	struct TextWidget* label = &s->labels[i];
 	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
 
 	String text = String_FromReadonly(title);
 	Menu_Label(s, i + 4, label, &text, &s->textFont,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
+		ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 110, y);
 
-	label->col     = col;
-	label->xOffset = -110 - label->width / 2;
-	Widget_Reposition(label);	 
+	label->col = col; 
 }
 
 static bool GenLevelScreen_KeyDown(void* screen, Key key) {
@@ -1064,10 +1055,10 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	GenLevelScreen_Input(s, 2,   0, false, World.Length);
 	GenLevelScreen_Input(s, 3,  40, true,  0);
 
-	GenLevelScreen_Label(s, 0, -150, -80, "Width:");
-	GenLevelScreen_Label(s, 1, -150, -40, "Height:");
-	GenLevelScreen_Label(s, 2, -150,   0, "Length:");
-	GenLevelScreen_Label(s, 3, -140,  40, "Seed:");
+	GenLevelScreen_Label(s, 0, -80, "Width:");
+	GenLevelScreen_Label(s, 1, -40, "Height:");
+	GenLevelScreen_Label(s, 2,   0, "Length:");
+	GenLevelScreen_Label(s, 3,  40, "Seed:");
 	
 	Menu_Label(s,   8, &s->labels[4], &title,      &s->textFont,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -130);

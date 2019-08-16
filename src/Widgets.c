@@ -54,11 +54,12 @@ static struct WidgetVTABLE TextWidget_VTABLE = {
 	Widget_Mouse,    Widget_Mouse,      Widget_MouseMove, Widget_MouseScroll,
 	TextWidget_Reposition,
 };
-void TextWidget_Make(struct TextWidget* w) {
+void TextWidget_Make(struct TextWidget* w, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
 	PackedCol col = PACKEDCOL_WHITE;
 	Widget_Reset(w);
 	w->VTABLE = &TextWidget_VTABLE;
 	w->col    = col;
+	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
 }
 
 void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* font) {
@@ -85,11 +86,6 @@ void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* fo
 void TextWidget_SetConst(struct TextWidget* w, const char* text, const FontDesc* font) {
 	String str = String_FromReadonly(text);
 	TextWidget_Set(w, &str, font);
-}
-
-void TextWidget_Create(struct TextWidget* w, const String* text, const FontDesc* font) {
-	TextWidget_Make(w);
-	TextWidget_Set(w, text, font);
 }
 
 
@@ -161,12 +157,13 @@ static struct WidgetVTABLE ButtonWidget_VTABLE = {
 	Widget_Mouse,    Widget_Mouse,        Widget_MouseMove,  Widget_MouseScroll,
 	ButtonWidget_Reposition,
 };
-void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick) {
+void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
 	Widget_Reset(w);
 	w->VTABLE    = &ButtonWidget_VTABLE;
 	w->optName   = NULL;
 	w->minWidth  = minWidth;
 	w->MenuClick = onClick;
+	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
 }
 
 void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc* font) {
@@ -189,11 +186,6 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc
 void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, const FontDesc* font) {
 	String str = String_FromReadonly(text);
 	ButtonWidget_Set(w, &str, font);
-}
-
-void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, const FontDesc* font, Widget_LeftClick onClick) {
-	ButtonWidget_Make(w, minWidth, onClick);
-	ButtonWidget_Set(w, text, font);
 }
 
 
@@ -256,7 +248,7 @@ static bool ScrollbarWidget_MouseDown(void* widget, int x, int y, MouseButton bt
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int posY, height;
 
-	if (w->draggingMouse) return true;
+	if (w->draggingMouse)  return true;
 	if (btn != MOUSE_LEFT) return false;
 	if (x < w->x || x >= w->x + w->width) return false;
 
@@ -2094,7 +2086,6 @@ static void PlayerListWidget_TabEntryRemoved(void* widget, int id) {
 }
 
 static void PlayerListWidget_Init(void* widget) {
-	static const String title = String_FromConst("Connected players:");
 	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	int id;
 
@@ -2103,9 +2094,9 @@ static void PlayerListWidget_Init(void* widget) {
 		PlayerListWidget_AddName(w, (EntityID)id, -1);
 	}
 
-	PlayerListWidget_SortAndReposition(w); 
-	TextWidget_Create(&w->title, &title, w->font);
-	Widget_SetLocation(&w->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
+	PlayerListWidget_SortAndReposition(w);
+	TextWidget_Make(&w->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
+	TextWidget_SetConst(&w->title, "Connected players:", w->font);
 
 	Event_RegisterInt(&TabListEvents.Added,   w, PlayerListWidget_TabEntryAdded);
 	Event_RegisterInt(&TabListEvents.Changed, w, PlayerListWidget_TabEntryChanged);

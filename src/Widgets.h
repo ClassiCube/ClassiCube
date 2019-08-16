@@ -16,14 +16,13 @@ struct TextWidget {
 	bool reducePadding;
 	PackedCol col;
 };
-/* Resets state of the given text widget to default. */
-CC_NOINLINE void TextWidget_Make(struct TextWidget* w);
+/* Initialises a text widget. */
+CC_NOINLINE void TextWidget_Make(struct TextWidget* w, 
+								uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* font);
 /* Shorthand for TextWidget_Set using String_FromReadonly */
 CC_NOINLINE void TextWidget_SetConst(struct TextWidget* w, const char* text, const FontDesc* font);
-/* Shorthand for TextWidget_Make then TextWidget_Set */
-CC_NOINLINE void TextWidget_Create(struct TextWidget* w, const String* text, const FontDesc* font);
 
 
 typedef void (*Button_Get)(String* raw);
@@ -38,14 +37,13 @@ struct ButtonWidget {
 	Button_Get GetValue;
 	Button_Set SetValue;
 };
-/* Resets state of the given button widget to default. */
-CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
+/* Initialises a button widget. */
+CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, 
+								uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc* font);
 /* Shorthand for ButtonWidget_Set using String_FromReadonly */
 CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, const FontDesc* font);
-/* Resets state of the given button widget, then calls ButtonWidget_Set */
-CC_NOINLINE void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, const FontDesc* font, Widget_LeftClick onClick);
 
 /* Clickable and draggable scrollbar. */
 struct ScrollbarWidget {

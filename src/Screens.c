@@ -350,8 +350,7 @@ static void StatusScreen_ContextRecreated(void* screen) {
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
 	
 	y = 2;
-	TextWidget_Make(line1);
-	Widget_SetLocation(line1, ANCHOR_MIN, ANCHOR_MIN, 2, y);
+	TextWidget_Make(line1, ANCHOR_MIN, ANCHOR_MIN, 2, y);
 	line1->reducePadding = true;
 	StatusScreen_Update(s, 1.0);
 
@@ -360,8 +359,7 @@ static void StatusScreen_ContextRecreated(void* screen) {
 	s->posAtlas.tex.Y = y;
 
 	y += s->posAtlas.tex.Height;
-	TextWidget_Make(line2);
-	Widget_SetLocation(line2, ANCHOR_MIN, ANCHOR_MIN, 2, y);
+	TextWidget_Make(line2, ANCHOR_MIN, ANCHOR_MIN, 2, y);
 	line2->reducePadding = true;
 
 	if (Game_ClassicMode) {
@@ -507,10 +505,8 @@ static void LoadingScreen_DrawBackground(void) {
 static void LoadingScreen_Init(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 
-	TextWidget_Make(&s->title);
-	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
-	TextWidget_Make(&s->message);
-	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
+	TextWidget_Make(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
+	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
 
 	Gfx_SetFog(false);
 	Event_RegisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
@@ -734,8 +730,7 @@ static void HUDScreen_ConstructWidgets(struct HUDScreen* s) {
 	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
 	Elem_Init(&s->clientStatus);
 
-	TextWidget_Create(&s->announcement, &String_Empty, &s->announcementFont);
-	Widget_SetLocation(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Window_Height / 4);
+	TextWidget_Make(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Window_Height / 4);
 }
 
 static void HUDScreen_SetInitialMessages(struct HUDScreen* s) {
@@ -1327,13 +1322,11 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	TextWidget_Make(&s->title);
-	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
-	TextWidget_Make(&s->message);
-	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
+	TextWidget_Make(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
 
-	ButtonWidget_Make(&s->reconnect, 300, NULL);
-	Widget_SetLocation(&s->reconnect, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  80);
+	ButtonWidget_Make(&s->reconnect, 300, NULL, 
+					ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 80);
 	s->reconnect.disabled = !s->canReconnect;
 
 	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */
