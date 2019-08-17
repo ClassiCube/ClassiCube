@@ -1024,7 +1024,7 @@ static bool HUDScreen_KeyPress(void* screen, char keyChar) {
 		return false;
 	}
 
-	Elem_HandlesKeyPress(&s->input.base, keyChar);
+	InputWidget_Append(&s->input.base, keyChar);
 	HUDScreen_UpdateAltTextY(s);
 	return true;
 }

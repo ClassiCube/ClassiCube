@@ -66,7 +66,6 @@ struct WidgetVTABLE {
 	void (*Free)(void* elem);
 	bool (*HandlesKeyDown)(void* elem, Key key);
 	bool (*HandlesKeyUp)(void* elem, Key key);
-	bool (*HandlesKeyPress)(void* elem, char keyChar);
 	bool (*HandlesMouseDown)(void* elem, int x, int y, MouseButton btn);
 	bool (*HandlesMouseUp)(void* elem, int x, int y, MouseButton btn);
 	bool (*HandlesMouseMove)(void* elem, int x, int y);

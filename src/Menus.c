@@ -374,7 +374,7 @@ static void ListScreen_Select(struct ListScreen* s, const String* str) {
 
 static bool ListScreen_KeyDown(void* screen, Key key) {
 	struct ListScreen* s = (struct ListScreen*)screen;
-	if (key == KEY_LEFT  || key == KEY_PAGEUP) {
+	if (key == KEY_LEFT || key == KEY_PAGEUP) {
 		ListScreen_PageClick(s, false);
 	} else if (key == KEY_RIGHT || key == KEY_PAGEDOWN) {
 		ListScreen_PageClick(s, true);
@@ -753,21 +753,17 @@ static void EditHotkeyScreen_MakeLeaveOpen(struct EditHotkeyScreen* s, Widget_Le
 }
 
 static void EditHotkeyScreen_BaseKey(void* screen, void* b) {
-	static const String msg = String_FromConst("Key: press a key..");
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
-
 	s->selectedI = 0;
 	s->supressNextPress = true;
-	ButtonWidget_Set(&s->buttons[0], &msg, &s->titleFont);
+	ButtonWidget_SetConst(&s->buttons[0], "Key: press a key..", &s->titleFont);
 }
 
 static void EditHotkeyScreen_Modifiers(void* screen, void* b) {
-	static const String msg = String_FromConst("Modifiers: press a key..");
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
-
 	s->selectedI = 1;
 	s->supressNextPress = true;
-	ButtonWidget_Set(&s->buttons[1], &msg, &s->titleFont);
+	ButtonWidget_SetConst(&s->buttons[1], "Modifiers: press a key..", &s->titleFont);
 }
 
 static void EditHotkeyScreen_LeaveOpen(void* screen, void* b) {
@@ -839,9 +835,10 @@ static bool EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	if (s->supressNextPress) {
 		s->supressNextPress = false;
-		return true;
+	} else {
+		InputWidget_Append(&s->input.base, keyChar);
 	}
-	return Elem_HandlesKeyPress(&s->input.base, keyChar);
+	return true;
 }
 
 static bool EditHotkeyScreen_KeyDown(void* screen, Key key) {
@@ -907,7 +904,7 @@ static struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
 	Menu_MouseDown,           Menu_MouseUp,            Menu_MouseMove,            MenuScreen_MouseScroll,
 	Menu_OnResize,            Menu_ContextLost,        EditHotkeyScreen_ContextRecreated
 };
-struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
+void EditHotkeyScreen_Show(struct HotkeyData original) {
 	static struct Widget* widgets[7];
 	struct EditHotkeyScreen* s = &EditHotkeyScreen_Instance;
 
@@ -920,7 +917,7 @@ struct Screen* EditHotkeyScreen_MakeInstance(struct HotkeyData original) {
 	s->selectedI  = -1;
 	s->origHotkey = original;
 	s->curHotkey  = original;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1039,7 +1036,8 @@ static bool GenLevelScreen_KeyUp(void* screen, Key key) {
 
 static bool GenLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	return !s->selected || Elem_HandlesKeyPress(&s->selected->base, keyChar);
+	if (s->selected) InputWidget_Append(&s->selected->base, keyChar);
+	return true;
 }
 
 static void GenLevelScreen_ContextRecreated(void* screen) {
@@ -1244,7 +1242,8 @@ static void SaveLevelScreen_Render(void* screen, double delta) {
 static bool SaveLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	SaveLevelScreen_RemoveOverwrites(s);
-	return Elem_HandlesKeyPress(&s->input.base, keyChar);
+	InputWidget_Append(&s->input.base, keyChar);
+	return true;
 }
 
 static bool SaveLevelScreen_KeyDown(void* screen, Key key) {
@@ -1412,8 +1411,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 
 	text = ListScreen_UNSAFE_GetCur(s, widget);
 	if (String_CaselessEqualsConst(&text, LIST_SCREEN_EMPTY)) {
-		Gui_FreeActive();
-		Gui_SetActive(EditHotkeyScreen_MakeInstance(original)); 
+		EditHotkeyScreen_Show(original); 
 		return;
 	}
 
@@ -1428,8 +1426,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 		if (h.Trigger == trigger && h.Flags == flags) { original = h; break; }
 	}
 
-	Gui_FreeActive();
-	Gui_SetActive(EditHotkeyScreen_MakeInstance(original));
+	EditHotkeyScreen_Show(original);
 }
 
 static void HotkeyListScreen_MakeFlags(int flags, String* str) {
@@ -1940,8 +1937,8 @@ static void MenuOptionsScreen_ContextLost(void* screen) {
 
 static bool MenuOptionsScreen_KeyPress(void* screen, char keyChar) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	if (s->activeI == -1) return true;
-	return Elem_HandlesKeyPress(&s->input.base, keyChar);
+	if (s->activeI >= 0) InputWidget_Append(&s->input.base, keyChar);
+	return true;
 }
 
 static bool MenuOptionsScreen_KeyDown(void* screen, Key key) {
