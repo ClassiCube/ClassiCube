@@ -92,11 +92,6 @@ static void Menu_Back(void* s, int i, struct ButtonWidget* btn, Widget_LeftClick
 	Menu_Button(s, i, btn, width, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
-CC_NOINLINE static void Menu_MakeBack(struct ButtonWidget* btn, Widget_LeftClick onClick) {
-	int width = Gui_ClassicMenu ? 400 : 200;
-	ButtonWidget_Make(btn, width, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
-}
-
 CC_NOINLINE static void Menu_MakeTitleFont(FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_STYLE_BOLD); }
 CC_NOINLINE static void Menu_MakeBodyFont(FontDesc* font)  { Drawer2D_MakeFont(font, 16, FONT_STYLE_NORMAL); }
 
@@ -715,12 +710,11 @@ static struct EditHotkeyScreen {
 	int selectedI;
 	bool supressNextPress;
 	struct MenuInputWidget input;
-	struct ButtonWidget buttons[6];
+	struct ButtonWidget buttons[5], cancel;
 } EditHotkeyScreen_Instance;
 
-static void EditHotkeyScreen_Make(struct EditHotkeyScreen* s, int i, int x, int y, const String* text, Widget_LeftClick onClick) {
-	Menu_OldButton(s, i, &s->buttons[i], 300, text, &s->titleFont, onClick,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
+static void EditHotkeyScreen_Make(struct EditHotkeyScreen* s, int i, int x, int y, Widget_LeftClick onClick) {
+	Menu_Button(s, i, &s->buttons[i], 300, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
 static void HotkeyListScreen_MakeFlags(int flags, String* str);
@@ -729,61 +723,67 @@ static void EditHotkeyScreen_MakeFlags(int flags, String* str) {
 	HotkeyListScreen_MakeFlags(flags, str);
 }
 
-static void EditHotkeyScreen_MakeBaseKey(struct EditHotkeyScreen* s, Widget_LeftClick onClick) {
+static void EditHotkeyScreen_UpdateBaseKey(struct EditHotkeyScreen* s) {
 	String text; char textBuffer[STRING_SIZE];
 	String_InitArray(text, textBuffer);
 
-	String_AppendConst(&text, "Key: ");
-	String_AppendConst(&text, Key_Names[s->curHotkey.Trigger]);
-	EditHotkeyScreen_Make(s, 0, 0, -150, &text, onClick);
+	if (s->selectedI == 0) {
+		String_AppendConst(&text, "Key: press a key..");
+	} else {
+		String_AppendConst(&text, "Key: ");
+		String_AppendConst(&text, Key_Names[s->curHotkey.Trigger]);
+	}
+	ButtonWidget_Set(&s->buttons[0], &text, &s->titleFont);
 }
 
-static void EditHotkeyScreen_MakeModifiers(struct EditHotkeyScreen* s, Widget_LeftClick onClick) {
+static void EditHotkeyScreen_UpdateModifiers(struct EditHotkeyScreen* s) {
 	String text; char textBuffer[STRING_SIZE];
 	String_InitArray(text, textBuffer);
 
-	String_AppendConst(&text, "Modifiers:");
-	EditHotkeyScreen_MakeFlags(s->curHotkey.Flags, &text);
-	EditHotkeyScreen_Make(s, 1, 0, -100, &text, onClick);
+	if (s->selectedI == 1) {
+		String_AppendConst(&text, "Modifiers: press a key..");
+	} else {
+		String_AppendConst(&text, "Modifiers:");
+		EditHotkeyScreen_MakeFlags(s->curHotkey.Flags, &text);
+	}
+	ButtonWidget_Set(&s->buttons[1], &text, &s->titleFont);
 }
 
-static void EditHotkeyScreen_MakeLeaveOpen(struct EditHotkeyScreen* s, Widget_LeftClick onClick) {
+static void EditHotkeyScreen_UpdateLeaveOpen(struct EditHotkeyScreen* s) {
 	String text; char textBuffer[STRING_SIZE];
 	String_InitArray(text, textBuffer);
 
 	String_AppendConst(&text, "Input stays open: ");
 	String_AppendConst(&text, s->curHotkey.StaysOpen ? "ON" : "OFF");
-	EditHotkeyScreen_Make(s, 2, -100, 10, &text, onClick);
+	ButtonWidget_Set(&s->buttons[2], &text, &s->titleFont);
 }
 
 static void EditHotkeyScreen_BaseKey(void* screen, void* b) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
-	s->selectedI = 0;
+	s->selectedI        = 0;
 	s->supressNextPress = true;
-	ButtonWidget_SetConst(&s->buttons[0], "Key: press a key..", &s->titleFont);
+	EditHotkeyScreen_UpdateBaseKey(s);
 }
 
 static void EditHotkeyScreen_Modifiers(void* screen, void* b) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
-	s->selectedI = 1;
+	s->selectedI        = 1;
 	s->supressNextPress = true;
-	ButtonWidget_SetConst(&s->buttons[1], "Modifiers: press a key..", &s->titleFont);
+	EditHotkeyScreen_UpdateModifiers(s);
 }
 
 static void EditHotkeyScreen_LeaveOpen(void* screen, void* b) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	/* Reset 'waiting for key..' state of two other buttons */
-	if (s->selectedI == 0) {
-		EditHotkeyScreen_MakeBaseKey(s, EditHotkeyScreen_BaseKey);
+	if (s->selectedI >= 0) {
+		s->selectedI        = -1;
 		s->supressNextPress = false;
-	} else if (s->selectedI == 1) {
-		EditHotkeyScreen_MakeModifiers(s, EditHotkeyScreen_Modifiers);
-		s->supressNextPress = false;
+		EditHotkeyScreen_UpdateBaseKey(s);
+		EditHotkeyScreen_UpdateModifiers(s);
 	}
-
-	s->selectedI = -1;
+	
 	s->curHotkey.StaysOpen = !s->curHotkey.StaysOpen;
-	EditHotkeyScreen_MakeLeaveOpen(s, EditHotkeyScreen_LeaveOpen);
+	EditHotkeyScreen_UpdateLeaveOpen(s);
 }
 
 static void EditHotkeyScreen_SaveChanges(void* screen, void* b) {
@@ -801,8 +801,6 @@ static void EditHotkeyScreen_SaveChanges(void* screen, void* b) {
 		Hotkeys_Add(hk.Trigger, hk.Flags, &text, hk.StaysOpen);
 		Hotkeys_UserAddedHotkey(hk.Trigger, hk.Flags, hk.StaysOpen, &text);
 	}
-
-	Gui_Remove((struct Screen*)screen);
 	HotkeyListScreen_Show();
 }
 
@@ -814,8 +812,6 @@ static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 		Hotkeys_Remove(hk.Trigger, hk.Flags);
 		Hotkeys_UserRemovedHotkey(hk.Trigger, hk.Flags);
 	}
-
-	Gui_Remove((struct Screen*)screen);
 	HotkeyListScreen_Show();
 }
 
@@ -850,34 +846,24 @@ static bool EditHotkeyScreen_KeyDown(void* screen, Key key) {
 	if (s->selectedI >= 0) {
 		if (s->selectedI == 0) {
 			s->curHotkey.Trigger = key;
-			EditHotkeyScreen_MakeBaseKey(s, EditHotkeyScreen_BaseKey);
 		} else if (s->selectedI == 1) {
 			if      (key == KEY_LCTRL  || key == KEY_RCTRL)  s->curHotkey.Flags |= HOTKEY_MOD_CTRL;
 			else if (key == KEY_LSHIFT || key == KEY_RSHIFT) s->curHotkey.Flags |= HOTKEY_MOD_SHIFT;
 			else if (key == KEY_LALT   || key == KEY_RALT)   s->curHotkey.Flags |= HOTKEY_MOD_ALT;
 			else s->curHotkey.Flags = 0;
-
-			EditHotkeyScreen_MakeModifiers(s, EditHotkeyScreen_Modifiers);
 		}
 
 		s->supressNextPress = true;
-		s->selectedI = -1;
+		s->selectedI        = -1;
+
+		EditHotkeyScreen_UpdateBaseKey(s);
+		EditHotkeyScreen_UpdateModifiers(s);
 		return true;
 	}
 	return Elem_HandlesKeyDown(&s->input.base, key) || MenuScreen_KeyDown(s, key);
 }
 
-static bool EditHotkeyScreen_KeyUp(void* screen, Key key) {
-	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
-	return Elem_HandlesKeyUp(&s->input.base, key);
-}
-
 static void EditHotkeyScreen_ContextRecreated(void* screen) {
-	static const String saveHK = String_FromConst("Save changes");
-	static const String addHK  = String_FromConst("Add hotkey");
-	static const String remHK  = String_FromConst("Remove hotkey");
-	static const String cancel = String_FromConst("Cancel");
-
 	struct EditHotkeyScreen* s  = (struct EditHotkeyScreen*)screen;
 	struct MenuInputDesc desc;
 	String text; bool existed;
@@ -888,37 +874,46 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->origHotkey.TextIndex);
 	} else { text = String_Empty; }
 
-	EditHotkeyScreen_MakeBaseKey(s,   EditHotkeyScreen_BaseKey);
-	EditHotkeyScreen_MakeModifiers(s, EditHotkeyScreen_Modifiers);
-	EditHotkeyScreen_MakeLeaveOpen(s, EditHotkeyScreen_LeaveOpen);
+	EditHotkeyScreen_UpdateBaseKey(s);
+	EditHotkeyScreen_UpdateModifiers(s);
+	EditHotkeyScreen_UpdateLeaveOpen(s);
+	ButtonWidget_SetConst(&s->buttons[3], existed ? "Save changes" : "Add hotkey", &s->titleFont);
+	ButtonWidget_SetConst(&s->buttons[4],  existed ? "Remove hotkey" : "Cancel",   &s->titleFont);
 
-	EditHotkeyScreen_Make(s, 3, 0,  80, existed ? &saveHK : &addHK, 
-		EditHotkeyScreen_SaveChanges);
-	EditHotkeyScreen_Make(s, 4, 0, 130, existed ? &remHK : &cancel, 
-		EditHotkeyScreen_RemoveHotkey);
-
-	Menu_OldBack(s,  5, &s->buttons[5], "Cancel", &s->titleFont, Menu_SwitchHotkeys);
+	ButtonWidget_SetConst(&s->cancel, "Cancel", &s->titleFont);
 	Menu_OldInput(s, 6, &s->input, 500, &text,    &s->textFont, &desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
 }
 
+static void EditHotkeyScreen_Init(void* screen) {
+	static struct Widget* widgets[7];
+	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
+
+	s->widgets    = widgets;
+	s->numWidgets = Array_Elems(widgets);
+	s->selectedI  = -1;
+	MenuScreen_Init(screen);
+
+	EditHotkeyScreen_Make(s, 0,    0, -150, EditHotkeyScreen_BaseKey);
+	EditHotkeyScreen_Make(s, 1,    0, -100, EditHotkeyScreen_Modifiers);
+	EditHotkeyScreen_Make(s, 2, -100,   10, EditHotkeyScreen_LeaveOpen);
+	EditHotkeyScreen_Make(s, 3,    0,   80, EditHotkeyScreen_SaveChanges);
+	EditHotkeyScreen_Make(s, 4,    0,  130, EditHotkeyScreen_RemoveHotkey);
+
+	Menu_Back(s, 5, &s->cancel, Menu_SwitchHotkeys);
+}
+
 static struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
-	MenuScreen_Init,          EditHotkeyScreen_Render, EditHotkeyScreen_Free,
-	EditHotkeyScreen_KeyDown, EditHotkeyScreen_KeyUp,  EditHotkeyScreen_KeyPress,
+	EditHotkeyScreen_Init,    EditHotkeyScreen_Render, EditHotkeyScreen_Free,
+	EditHotkeyScreen_KeyDown, Menu_KeyUp,              EditHotkeyScreen_KeyPress,
 	Menu_MouseDown,           Menu_MouseUp,            Menu_MouseMove,            MenuScreen_MouseScroll,
 	Menu_OnResize,            Menu_ContextLost,        EditHotkeyScreen_ContextRecreated
 };
-void EditHotkeyScreen_Show(struct HotkeyData original) {
-	static struct Widget* widgets[7];
+void EditHotkeyScreen_Show(struct HotkeyData original) {	
 	struct EditHotkeyScreen* s = &EditHotkeyScreen_Instance;
-
 	s->grabsInput = true;
 	s->closable   = true;
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
-
 	s->VTABLE     = &EditHotkeyScreen_VTABLE;
-	s->selectedI  = -1;
 	s->origHotkey = original;
 	s->curHotkey  = original;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
@@ -930,10 +925,10 @@ void EditHotkeyScreen_Show(struct HotkeyData original) {
 *#########################################################################################################################*/
 static struct GenLevelScreen {
 	MenuScreen_Layout
-	struct ButtonWidget buttons[3];
+	struct ButtonWidget flatgrass, vanilla, cancel;
 	struct MenuInputWidget* selected;
 	struct MenuInputWidget inputs[4];
-	struct TextWidget labels[5];
+	struct TextWidget labels[4], title;
 } GenLevelScreen_Instance;
 
 CC_NOINLINE static int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) {
@@ -1016,26 +1011,16 @@ static void GenLevelScreen_Input(struct GenLevelScreen* s, int i, int y, bool se
 	input->base.MenuClick = GenLevelScreen_InputClick;
 }
 
-static void GenLevelScreen_Label(struct GenLevelScreen* s, int i, int y, const char* title) {
-	struct TextWidget* label = &s->labels[i];
+static void GenLevelScreen_Label(struct GenLevelScreen* s, int i, int y) {
 	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
-
-	String text = String_FromReadonly(title);
-	Menu_OldLabel(s, i + 4, label, &text, &s->textFont,
-		ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 110, y);
-
-	label->col = col; 
+	Menu_Label(s, i + 4, &s->labels[i], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 110, y);
+	s->labels[i].col = col;
 }
 
 static bool GenLevelScreen_KeyDown(void* screen, Key key) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	if (s->selected && Elem_HandlesKeyDown(&s->selected->base, key)) return true;
 	return MenuScreen_KeyDown(s, key);
-}
-
-static bool GenLevelScreen_KeyUp(void* screen, Key key) {
-	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	return !s->selected || Elem_HandlesKeyUp(&s->selected->base, key);
 }
 
 static bool GenLevelScreen_KeyPress(void* screen, char keyChar) {
@@ -1045,9 +1030,6 @@ static bool GenLevelScreen_KeyPress(void* screen, char keyChar) {
 }
 
 static void GenLevelScreen_ContextRecreated(void* screen) {
-	static const String title = String_FromConst("Generate new level");
-	static const String flat  = String_FromConst("Flatgrass");
-	static const String norm  = String_FromConst("Vanilla");
 	struct GenLevelScreen* s  = (struct GenLevelScreen*)screen;
 
 	GenLevelScreen_Input(s, 0, -80, false, World.Width);
@@ -1055,35 +1037,49 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	GenLevelScreen_Input(s, 2,   0, false, World.Length);
 	GenLevelScreen_Input(s, 3,  40, true,  0);
 
-	GenLevelScreen_Label(s, 0, -80, "Width:");
-	GenLevelScreen_Label(s, 1, -40, "Height:");
-	GenLevelScreen_Label(s, 2,   0, "Length:");
-	GenLevelScreen_Label(s, 3,  40, "Seed:");
+	TextWidget_SetConst(&s->labels[0], "Width:",  &s->textFont);
+	TextWidget_SetConst(&s->labels[1], "Height:", &s->textFont);
+	TextWidget_SetConst(&s->labels[2], "Length:", &s->textFont);;
+	TextWidget_SetConst(&s->labels[3], "Seed:",   &s->textFont);
 	
-	Menu_OldLabel(s,   8, &s->labels[4], &title,      &s->textFont,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -130);
-	Menu_OldButton(s,  9, &s->buttons[0], 200, &flat, &s->titleFont, GenLevelScreen_Flatgrass,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -120,  100);
-	Menu_OldButton(s, 10, &s->buttons[1], 200, &norm, &s->titleFont, GenLevelScreen_Notchy,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,  120,  100);
-	Menu_OldBack(s,   11, &s->buttons[2], "Cancel",   &s->titleFont, Menu_SwitchPause);
+	TextWidget_SetConst(&s->title,       "Generate new level", &s->textFont);
+	ButtonWidget_SetConst(&s->flatgrass, "Flatgrass",          &s->titleFont);
+	ButtonWidget_SetConst(&s->vanilla,   "Vanilla",            &s->titleFont);
+	ButtonWidget_SetConst(&s->cancel,    "Cancel",             &s->titleFont);
 }
 
-static struct ScreenVTABLE GenLevelScreen_VTABLE = {
-	MenuScreen_Init,        MenuScreen_Render,    MenuScreen_Free,
-	GenLevelScreen_KeyDown, GenLevelScreen_KeyUp, GenLevelScreen_KeyPress,
-	Menu_MouseDown,         Menu_MouseUp,         Menu_MouseMove,          MenuScreen_MouseScroll,
-	Menu_OnResize,          Menu_ContextLost,     GenLevelScreen_ContextRecreated
-};
-void GenLevelScreen_Show(void) {
+static void GenLevelScreen_Init(void* screen) {
 	static struct Widget* widgets[12];
-	struct GenLevelScreen* s = &GenLevelScreen_Instance;
-
-	s->grabsInput = true;
-	s->closable   = true;
+	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
+	
+	MenuScreen_Init(s);
 	s->widgets    = widgets;
 	s->numWidgets = Array_Elems(widgets);
 
+	GenLevelScreen_Label(s, 0, -80);
+	GenLevelScreen_Label(s, 1, -40);
+	GenLevelScreen_Label(s, 2,   0);
+	GenLevelScreen_Label(s, 3,  40);
+
+	Menu_Label(s,   8, &s->title,
+		ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -130);
+	Menu_Button(s,  9, &s->flatgrass, 200, GenLevelScreen_Flatgrass,
+		ANCHOR_CENTRE, ANCHOR_CENTRE, -120,  100);
+	Menu_Button(s, 10, &s->vanilla,   200, GenLevelScreen_Notchy,
+		ANCHOR_CENTRE, ANCHOR_CENTRE,  120,  100);
+	Menu_Back(s,   11, &s->cancel, Menu_SwitchPause);
+}
+
+static struct ScreenVTABLE GenLevelScreen_VTABLE = {
+	GenLevelScreen_Init,    MenuScreen_Render,    MenuScreen_Free,
+	GenLevelScreen_KeyDown, Menu_KeyUp,           GenLevelScreen_KeyPress,
+	Menu_MouseDown,         Menu_MouseUp,         Menu_MouseMove,          MenuScreen_MouseScroll,
+	Menu_OnResize,          Menu_ContextLost,     GenLevelScreen_ContextRecreated
+};
+void GenLevelScreen_Show(void) {	
+	struct GenLevelScreen* s = &GenLevelScreen_Instance;
+	s->grabsInput = true;
+	s->closable   = true;
 	s->VTABLE = &GenLevelScreen_VTABLE;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
@@ -1094,7 +1090,7 @@ void GenLevelScreen_Show(void) {
 *#########################################################################################################################*/
 static struct ClassicGenScreen {
 	MenuScreen_Layout
-	struct ButtonWidget buttons[4];
+	struct ButtonWidget buttons[3], cancel;
 } ClassicGenScreen_Instance;
 
 static void ClassicGenScreen_Gen(int size) {
@@ -1109,36 +1105,43 @@ static void ClassicGenScreen_Small(void* a, void* b)  { ClassicGenScreen_Gen(128
 static void ClassicGenScreen_Medium(void* a, void* b) { ClassicGenScreen_Gen(256); }
 static void ClassicGenScreen_Huge(void* a, void* b)   { ClassicGenScreen_Gen(512); }
 
-static void ClassicGenScreen_Make(struct ClassicGenScreen* s, int i, int y, const char* title, Widget_LeftClick onClick) {
-	String text = String_FromReadonly(title);
-	Menu_OldButton(s, i, &s->buttons[i], 400, &text, &s->titleFont, onClick,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
+static void ClassicGenScreen_Make(struct ClassicGenScreen* s, int i, int y, Widget_LeftClick onClick) {
+	Menu_Button(s, i, &s->buttons[i], 400, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 }
 
 static void ClassicGenScreen_ContextRecreated(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
-	ClassicGenScreen_Make(s, 0, -100, "Small",  ClassicGenScreen_Small);
-	ClassicGenScreen_Make(s, 1,  -50, "Normal", ClassicGenScreen_Medium);
-	ClassicGenScreen_Make(s, 2,    0, "Huge",   ClassicGenScreen_Huge);
+	ButtonWidget_SetConst(&s->buttons[0], "Small",  &s->titleFont);
+	ButtonWidget_SetConst(&s->buttons[1], "Normal", &s->titleFont);
+	ButtonWidget_SetConst(&s->buttons[2], "Huge",   &s->titleFont);
+	ButtonWidget_SetConst(&s->cancel,     "Cancel", &s->titleFont);
+}
 
-	Menu_OldBack(s, 3, &s->buttons[3], "Cancel", &s->titleFont, Menu_SwitchPause);
+static void ClassicGenScreen_Init(void* screen) {
+	static struct Widget* widgets[4];
+	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
+	
+	s->widgets    = widgets;
+	s->numWidgets = Array_Elems(widgets);
+	MenuScreen_Init(s);
+
+	ClassicGenScreen_Make(s, 0, -100, ClassicGenScreen_Small);
+	ClassicGenScreen_Make(s, 1,  -50, ClassicGenScreen_Medium);
+	ClassicGenScreen_Make(s, 2,    0, ClassicGenScreen_Huge);
+
+	Menu_Back(s, 3, &s->cancel, Menu_SwitchPause);
 }
 
 static struct ScreenVTABLE ClassicGenScreen_VTABLE = {
-	MenuScreen_Init,    MenuScreen_Render,  MenuScreen_Free,
-	MenuScreen_KeyDown, Menu_KeyUp,         Menu_KeyPress,
-	Menu_MouseDown,     Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
-	Menu_OnResize,      Menu_ContextLost,   ClassicGenScreen_ContextRecreated
+	ClassicGenScreen_Init, MenuScreen_Render,  MenuScreen_Free,
+	MenuScreen_KeyDown,    Menu_KeyUp,         Menu_KeyPress,
+	Menu_MouseDown,        Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
+	Menu_OnResize,         Menu_ContextLost,   ClassicGenScreen_ContextRecreated
 };
 void ClassicGenScreen_Show(void) {
-	static struct Widget* widgets[4];
 	struct ClassicGenScreen* s = &ClassicGenScreen_Instance;
-
 	s->grabsInput = true;
 	s->closable   = true;
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
-
 	s->VTABLE = &ClassicGenScreen_VTABLE;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
@@ -1257,11 +1260,6 @@ static bool SaveLevelScreen_KeyDown(void* screen, Key key) {
 	return MenuScreen_KeyDown(s, key);
 }
 
-static bool SaveLevelScreen_KeyUp(void* screen, Key key) {
-	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	return Elem_HandlesKeyUp(&s->input.base, key);
-}
-
 static void SaveLevelScreen_ContextRecreated(void* screen) {
 	static const String save   = String_FromConst("Save");
 	static const String schem  = String_FromConst("Save schematic");
@@ -1286,7 +1284,7 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 
 static struct ScreenVTABLE SaveLevelScreen_VTABLE = {
 	MenuScreen_Init,         SaveLevelScreen_Render, MenuScreen_Free,
-	SaveLevelScreen_KeyDown, SaveLevelScreen_KeyUp,  SaveLevelScreen_KeyPress,
+	SaveLevelScreen_KeyDown, Menu_KeyUp,             SaveLevelScreen_KeyPress,
 	Menu_MouseDown,          Menu_MouseUp,           Menu_MouseMove,           MenuScreen_MouseScroll,
 	Menu_OnResize,           Menu_ContextLost,       SaveLevelScreen_ContextRecreated
 };
@@ -1957,12 +1955,6 @@ static bool MenuOptionsScreen_KeyDown(void* screen, Key key) {
 	return MenuScreen_KeyDown(s, key);
 }
 
-static bool MenuOptionsScreen_KeyUp(void* screen, Key key) {
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	if (s->activeI == -1) return true;
-	return Elem_HandlesKeyUp(&s->input.base, key);
-}
-
 static bool MenuOptionsScreen_MouseMove(void* screen, int x, int y) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	int i = Menu_DoMouseMove(s, x, y);
@@ -2083,7 +2075,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 
 static struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	MenuOptionsScreen_Init,     MenuOptionsScreen_Render, MenuScreen_Free,
-	MenuOptionsScreen_KeyDown,  MenuOptionsScreen_KeyUp,  MenuOptionsScreen_KeyPress,
+	MenuOptionsScreen_KeyDown,  Menu_KeyUp,               MenuOptionsScreen_KeyPress,
 	Menu_MouseDown,             Menu_MouseUp,             MenuOptionsScreen_MouseMove, MenuScreen_MouseScroll,
 	MenuOptionsScreen_OnResize, MenuOptionsScreen_ContextLost, NULL
 };
