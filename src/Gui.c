@@ -327,9 +327,12 @@ void Gui_RenderGui(double delta) {
 }
 
 void Gui_OnResize(void) {
+	struct Screen* s;
 	int i;
+
 	for (i = 0; i < Gui_ScreensCount; i++) {
-		Screen_OnResize(Gui_Screens[i]);
+		s = Gui_Screens[i];
+		s->VTABLE->OnResize(s);
 	}
 }
 

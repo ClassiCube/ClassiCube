@@ -106,8 +106,8 @@ static void InventoryScreen_Init(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	
 	TableWidget_Create(&s->table);
-	s->table.font           = &s->font;
-	s->table.elementsPerRow = Game_PureClassic ? 9 : 10;
+	s->table.font         = &s->font;
+	s->table.blocksPerRow = Game_PureClassic ? 9 : 10;
 	Elem_Init(&s->table);
 
 	/* Can't immediately move to selected here, because cursor grabbed  */
@@ -143,7 +143,7 @@ static bool InventoryScreen_KeyDown(void* screen, Key key) {
 	if (key == KeyBinds[KEYBIND_INVENTORY] && s->releasedInv) {
 		Gui_Remove(screen);
 	} else if (key == KEY_ENTER && table->selectedIndex != -1) {
-		Inventory_SetSelectedBlock(table->elements[table->selectedIndex]);
+		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
 		Gui_Remove(screen);
 	} else if (Elem_HandlesKeyDown(table, key)) {
 	} else {

@@ -16,7 +16,6 @@ enum GuiAnchor {
 };
 
 struct IGameComponent;
-struct GuiElem;
 struct Widget;
 extern struct IGameComponent Gui_Component;
 
@@ -35,20 +34,17 @@ extern bool Gui_TabAutocomplete;
 /* Whether FPS counter (and other info) is shown in top left. */
 extern bool Gui_ShowFPS;
 
-#define GuiElemVTABLE_Layout() \
-	void (*Init)(void* elem); \
-	void (*Render)(void* elem, double delta); \
-	void (*Free)(void* elem); \
-	bool (*HandlesKeyDown)(void* elem, Key key); \
-	bool (*HandlesKeyUp)(void* elem, Key key); \
-	bool (*HandlesKeyPress)(void* elem, char keyChar); \
-	bool (*HandlesMouseDown)(void* elem, int x, int y, MouseButton btn); \
-	bool (*HandlesMouseUp)(void* elem, int x, int y, MouseButton btn); \
-	bool (*HandlesMouseMove)(void* elem, int x, int y); \
-	bool (*HandlesMouseScroll)(void* elem, float delta);
-
 struct ScreenVTABLE {
-	GuiElemVTABLE_Layout()
+	void (*Init)(void* elem);
+	void (*Render)(void* elem, double delta);
+	void (*Free)(void* elem);
+	bool (*HandlesKeyDown)(void* elem, Key key);
+	bool (*HandlesKeyUp)(void* elem, Key key);
+	bool (*HandlesKeyPress)(void* elem, char keyChar);
+	bool (*HandlesMouseDown)(void* elem, int x, int y, MouseButton btn);
+	bool (*HandlesMouseUp)(void* elem, int x, int y, MouseButton btn);
+	bool (*HandlesMouseMove)(void* elem, int x, int y);
+	bool (*HandlesMouseScroll)(void* elem, float delta);
 	void (*OnResize)(void* elem);
 	Event_Void_Callback ContextLost;
 	Event_Void_Callback ContextRecreated;
@@ -65,7 +61,16 @@ struct Screen { Screen_Layout };
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {
-	GuiElemVTABLE_Layout()
+	void (*Init)(void* elem);
+	void (*Render)(void* elem, double delta);
+	void (*Free)(void* elem);
+	bool (*HandlesKeyDown)(void* elem, Key key);
+	bool (*HandlesKeyUp)(void* elem, Key key);
+	bool (*HandlesKeyPress)(void* elem, char keyChar);
+	bool (*HandlesMouseDown)(void* elem, int x, int y, MouseButton btn);
+	bool (*HandlesMouseUp)(void* elem, int x, int y, MouseButton btn);
+	bool (*HandlesMouseMove)(void* elem, int x, int y);
+	bool (*HandlesMouseScroll)(void* elem, float delta);
 	void (*Reposition)(void* elem);
 };
 #define Widget_Layout struct WidgetVTABLE* VTABLE; \
@@ -185,7 +190,6 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vert
 #define Elem_HandlesMouseMove(elem, x, y)      (elem)->VTABLE->HandlesMouseMove(elem, x, y)
 #define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll(elem, delta)
 
-#define Screen_OnResize(screen)   (screen)->VTABLE->OnResize(screen);
 #define Widget_Reposition(widget) (widget)->VTABLE->Reposition(widget);
 #define Elem_TryFree(elem)        if ((elem)->VTABLE) { Elem_Free(elem); }
 #endif

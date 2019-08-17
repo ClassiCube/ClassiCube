@@ -72,7 +72,7 @@ CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
 /* A table of blocks. */
 struct TableWidget {
 	Widget_Layout
-	int elementsCount, elementsPerRow, rowsCount;
+	int blocksCount, blocksPerRow, rowsCount;
 	int lastCreatedIndex;
 	FontDesc* font;
 	int selectedIndex, cellSize;
@@ -80,7 +80,7 @@ struct TableWidget {
 	GfxResourceID vb;
 	bool pendingClose;
 
-	BlockID elements[BLOCK_COUNT];
+	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;
 	struct Texture descTex;
 	int lastX, lastY;

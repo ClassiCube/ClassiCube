@@ -506,7 +506,7 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 static int Table_X(struct TableWidget* w) { return w->x - 5 - 10; }
 static int Table_Y(struct TableWidget* w) { return w->y - 5 - 30; }
 static int Table_Width(struct TableWidget* w) {
-	return w->elementsPerRow * w->cellSize + 10 + 20; 
+	return w->blocksPerRow * w->cellSize + 10 + 20; 
 }
 static int Table_Height(struct TableWidget* w) {
 	return min(w->rowsCount, TABLE_MAX_ROWS_DISPLAYED) * w->cellSize + 10 + 40;
@@ -516,8 +516,8 @@ static int Table_Height(struct TableWidget* w) {
 
 static bool TableWidget_GetCoords(struct TableWidget* w, int i, int* cellX, int* cellY) {
 	int x, y;
-	x = i % w->elementsPerRow;
-	y = i / w->elementsPerRow - w->scroll.topRow;
+	x = i % w->blocksPerRow;
+	y = i / w->blocksPerRow - w->scroll.topRow;
 
 	*cellX = w->x + w->cellSize * x;
 	*cellY = w->y + w->cellSize * y + 3;
@@ -565,7 +565,7 @@ static void TableWidget_UpdateDescTexPos(struct TableWidget* w) {
 
 static void TableWidget_UpdatePos(struct TableWidget* w) {
 	int rowsDisplayed = min(TABLE_MAX_ROWS_DISPLAYED, w->rowsCount);
-	w->width  = w->cellSize * w->elementsPerRow;
+	w->width  = w->cellSize * w->blocksPerRow;
 	w->height = w->cellSize * rowsDisplayed;
 	w->x = Window_Width  / 2 - w->width  / 2;
 	w->y = Window_Height / 2 - w->height / 2;
@@ -574,12 +574,12 @@ static void TableWidget_UpdatePos(struct TableWidget* w) {
 
 static void TableWidget_RecreateDescTex(struct TableWidget* w) {
 	if (w->selectedIndex == w->lastCreatedIndex) return;
-	if (w->elementsCount == 0) return;
+	if (w->blocksCount == 0) return;
 	w->lastCreatedIndex = w->selectedIndex;
 
 	Gfx_DeleteTexture(&w->descTex.ID);
 	if (w->selectedIndex == -1) return;
-	TableWidget_MakeDescTex(w, w->elements[w->selectedIndex]);
+	TableWidget_MakeDescTex(w, w->blocks[w->selectedIndex]);
 }
 
 void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
@@ -597,7 +597,7 @@ void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
 }
 
 static bool TableWidget_RowEmpty(struct TableWidget* w, int start) {
-	int i, end = min(start + w->elementsPerRow, Array_Elems(Inventory.Map));
+	int i, end = min(start + w->blocksPerRow, Array_Elems(Inventory.Map));
 
 	for (i = start; i < end; i++) {
 		if (Inventory.Map[i] != BLOCK_AIR) return false;
@@ -608,19 +608,19 @@ static bool TableWidget_RowEmpty(struct TableWidget* w, int start) {
 static void TableWidget_RecreateElements(struct TableWidget* w) {
 	int i, max = Game_UseCPEBlocks ? BLOCK_COUNT : BLOCK_ORIGINAL_COUNT;
 	BlockID block;
-	w->elementsCount = 0;
+	w->blocksCount = 0;
 
 	for (i = 0; i < Array_Elems(Inventory.Map); ) {
-		if ((i % w->elementsPerRow) == 0 && TableWidget_RowEmpty(w, i)) {
-			i += w->elementsPerRow; continue;
+		if ((i % w->blocksPerRow) == 0 && TableWidget_RowEmpty(w, i)) {
+			i += w->blocksPerRow; continue;
 		}
 
 		block = Inventory.Map[i];
-		if (block < max) { w->elements[w->elementsCount++] = block; }
+		if (block < max) { w->blocks[w->blocksCount++] = block; }
 		i++;
 	}
 
-	w->rowsCount = Math_CeilDiv(w->elementsCount, w->elementsPerRow);
+	w->rowsCount = Math_CeilDiv(w->blocksCount, w->blocksPerRow);
 	TableWidget_UpdateScrollbarPos(w);
 	TableWidget_UpdatePos(w);
 }
@@ -669,12 +669,12 @@ static void TableWidget_Render(void* widget, double delta) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	IsometricDrawer_BeginBatch(vertices, w->vb);
-	for (i = 0; i < w->elementsCount; i++) {
+	for (i = 0; i < w->blocksCount; i++) {
 		if (!TableWidget_GetCoords(w, i, &x, &y)) continue;
 
 		/* We want to always draw the selected block on top of others */
 		if (i == w->selectedIndex) continue;
-		IsometricDrawer_DrawBatch(w->elements[i], cellSize * 0.7f / 2.0f,
+		IsometricDrawer_DrawBatch(w->blocks[i], cellSize * 0.7f / 2.0f,
 			x + cellSize / 2, y + cellSize / 2);
 	}
 
@@ -682,7 +682,7 @@ static void TableWidget_Render(void* widget, double delta) {
 	if (i != -1) {
 		TableWidget_GetCoords(w, i, &x, &y);
 
-		IsometricDrawer_DrawBatch(w->elements[i],
+		IsometricDrawer_DrawBatch(w->blocks[i],
 			(cellSize + w->selBlockExpand) * 0.7f / 2.0f,
 			x + cellSize / 2, y + cellSize / 2);
 	}
@@ -719,11 +719,11 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
 	int start = w->selectedIndex, index = start;
 	index += delta;
 	if (index < 0) index -= delta;
-	if (index >= w->elementsCount) index -= delta;
+	if (index >= w->blocksCount) index -= delta;
 	w->selectedIndex = index;
 
 	/* adjust scrollbar by number of rows moved up/down */
-	w->scroll.topRow += (index / w->elementsPerRow) - (start / w->elementsPerRow);
+	w->scroll.topRow += (index / w->blocksPerRow) - (start / w->blocksPerRow);
 	ScrollbarWidget_ClampTopRow(&w->scroll);
 
 	TableWidget_RecreateDescTex(w);
@@ -737,8 +737,8 @@ static bool TableWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
 
 	if (Elem_HandlesMouseDown(&w->scroll, x, y, btn)) {
 		return true;
-	} else if (w->selectedIndex != -1 && w->elements[w->selectedIndex] != BLOCK_AIR) {
-		Inventory_SetSelectedBlock(w->elements[w->selectedIndex]);
+	} else if (w->selectedIndex != -1 && w->blocks[w->selectedIndex] != BLOCK_AIR) {
+		Inventory_SetSelectedBlock(w->blocks[w->selectedIndex]);
 		w->pendingClose = true;
 		return true;
 	} else if (Gui_Contains(Table_X(w), Table_Y(w), Table_Width(w), Table_Height(w), x, y)) {
@@ -765,8 +765,8 @@ static bool TableWidget_MouseScroll(void* widget, float delta) {
 	if (w->selectedIndex == -1) return true;
 
 	index = w->selectedIndex;
-	index += (w->scroll.topRow - origTopRow) * w->elementsPerRow;
-	if (index >= w->elementsCount) index = -1;
+	index += (w->scroll.topRow - origTopRow) * w->blocksPerRow;
+	if (index >= w->blocksCount) index = -1;
 
 	w->selectedIndex = index;
 	TableWidget_RecreateDescTex(w);
@@ -787,7 +787,7 @@ static bool TableWidget_MouseMove(void* widget, int x, int y) {
 	maxHeight = cellSize * TABLE_MAX_ROWS_DISPLAYED;
 
 	if (Gui_Contains(w->x, w->y + 3, w->width, maxHeight - 3 * 2, x, y)) {
-		for (i = 0; i < w->elementsCount; i++) {
+		for (i = 0; i < w->blocksCount; i++) {
 			TableWidget_GetCoords(w, i, &cellX, &cellY);
 
 			if (Gui_Contains(cellX, cellY, cellSize, cellSize, x, y)) {
@@ -809,9 +809,9 @@ static bool TableWidget_KeyDown(void* widget, Key key) {
 	} else if (key == KEY_RIGHT || key == KEY_KP6) {
 		TableWidget_ScrollRelative(w, 1);
 	} else if (key == KEY_UP || key == KEY_KP8) {
-		TableWidget_ScrollRelative(w, -w->elementsPerRow);
+		TableWidget_ScrollRelative(w, -w->blocksPerRow);
 	} else if (key == KEY_DOWN || key == KEY_KP2) {
-		TableWidget_ScrollRelative(w, w->elementsPerRow);
+		TableWidget_ScrollRelative(w, w->blocksPerRow);
 	} else {
 		return false;
 	}
@@ -834,13 +834,13 @@ void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
 	int i;
 	w->selectedIndex = -1;
 	
-	for (i = 0; i < w->elementsCount; i++) {
-		if (w->elements[i] == block) w->selectedIndex = i;
+	for (i = 0; i < w->blocksCount; i++) {
+		if (w->blocks[i] == block) w->selectedIndex = i;
 	}
 	/* When holding air, inventory should open at middle */
 	if (block == BLOCK_AIR) w->selectedIndex = -1;
 
-	w->scroll.topRow = w->selectedIndex / w->elementsPerRow;
+	w->scroll.topRow = w->selectedIndex / w->blocksPerRow;
 	w->scroll.topRow -= (TABLE_MAX_ROWS_DISPLAYED - 1);
 	ScrollbarWidget_ClampTopRow(&w->scroll);
 	TableWidget_MoveCursorToSelected(w);
@@ -849,12 +849,12 @@ void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
 
 void TableWidget_OnInventoryChanged(struct TableWidget* w) {
 	TableWidget_RecreateElements(w);
-	if (w->selectedIndex >= w->elementsCount) {
-		w->selectedIndex = w->elementsCount - 1;
+	if (w->selectedIndex >= w->blocksCount) {
+		w->selectedIndex = w->blocksCount - 1;
 	}
 	w->lastX = -1; w->lastY = -1;
 
-	w->scroll.topRow = w->selectedIndex / w->elementsPerRow;
+	w->scroll.topRow = w->selectedIndex / w->blocksPerRow;
 	ScrollbarWidget_ClampTopRow(&w->scroll);
 	TableWidget_RecreateDescTex(w);
 }
