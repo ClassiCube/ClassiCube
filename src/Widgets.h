@@ -110,7 +110,6 @@ struct InputWidget {
 	int lineWidths[INPUTWIDGET_MAX_LINES];  /* Width of each line in pixels */
 	int lineHeight;
 	struct Texture inputTex;
-	String prefix;
 	int prefixWidth;
 	bool convertPercents;
 

@@ -61,6 +61,7 @@ static void Menu_OldInput(void* s, int i, struct MenuInputWidget* input, int wid
 	MenuInputWidget_Create(input, width, 30, text, font, desc);
 	Widget_SetLocation(input, horAnchor, verAnchor, x, y);
 	input->base.showCaret = true;
+	InputWidget_UpdateText(&input->base);
 	((struct Screen*)s)->widgets[i] = (struct Widget*)input;
 }
 
@@ -864,35 +865,29 @@ static bool EditHotkeyScreen_KeyDown(void* screen, Key key) {
 }
 
 static void EditHotkeyScreen_ContextRecreated(void* screen) {
-	struct EditHotkeyScreen* s  = (struct EditHotkeyScreen*)screen;
-	struct MenuInputDesc desc;
-	String text; bool existed;
-
-	MenuInput_String(desc);
-	existed = s->origHotkey.Trigger != KEY_NONE;
-	if (existed) {
-		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->origHotkey.TextIndex);
-	} else { text = String_Empty; }
+	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
+	bool existed = s->origHotkey.Trigger != KEY_NONE;
 
 	EditHotkeyScreen_UpdateBaseKey(s);
 	EditHotkeyScreen_UpdateModifiers(s);
 	EditHotkeyScreen_UpdateLeaveOpen(s);
 	ButtonWidget_SetConst(&s->buttons[3], existed ? "Save changes" : "Add hotkey", &s->titleFont);
-	ButtonWidget_SetConst(&s->buttons[4],  existed ? "Remove hotkey" : "Cancel",   &s->titleFont);
-
+	ButtonWidget_SetConst(&s->buttons[4], existed ? "Remove hotkey" : "Cancel",    &s->titleFont);
+	InputWidget_UpdateText(&s->input.base);
 	ButtonWidget_SetConst(&s->cancel, "Cancel", &s->titleFont);
-	Menu_OldInput(s, 6, &s->input, 500, &text,  &s->textFont, &desc,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
 }
 
 static void EditHotkeyScreen_Init(void* screen) {
 	static struct Widget* widgets[7];
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
+	struct MenuInputDesc desc;
+	String text;
 
 	s->widgets    = widgets;
 	s->numWidgets = Array_Elems(widgets);
 	s->selectedI  = -1;
 	MenuScreen_Init(screen);
+	MenuInput_String(desc);
 
 	EditHotkeyScreen_Make(s, 0,    0, -150, EditHotkeyScreen_BaseKey);
 	EditHotkeyScreen_Make(s, 1,    0, -100, EditHotkeyScreen_Modifiers);
@@ -900,7 +895,13 @@ static void EditHotkeyScreen_Init(void* screen) {
 	EditHotkeyScreen_Make(s, 3,    0,   80, EditHotkeyScreen_SaveChanges);
 	EditHotkeyScreen_Make(s, 4,    0,  130, EditHotkeyScreen_RemoveHotkey);
 
-	Menu_Back(s, 5, &s->cancel, Menu_SwitchHotkeys);
+	if (s->origHotkey.Trigger) {
+		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->origHotkey.TextIndex);
+	} else { text = String_Empty; }
+
+	Menu_Input(s, 6, &s->input, 500, &text, &s->textFont, &desc,
+		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
+	Menu_Back(s,  5, &s->cancel, Menu_SwitchHotkeys);
 }
 
 static struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
@@ -990,12 +991,12 @@ static void GenLevelScreen_InputClick(void* screen, void* input) {
 	s->selected->base.showCaret = true;
 }
 
-static void GenLevelScreen_Input(struct GenLevelScreen* s, int i, int y, bool seed, int def) {
+static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int y, int def) {
 	String tmp; char tmpBuffer[STRING_SIZE];
-	struct MenuInputWidget* input = &s->inputs[i];
 	struct MenuInputDesc desc;
+	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
 
-	if (seed) {
+	if (i == 3) {
 		MenuInput_Seed(desc);
 	} else {
 		MenuInput_Int(desc, 1, 8192, def);
@@ -1004,16 +1005,13 @@ static void GenLevelScreen_Input(struct GenLevelScreen* s, int i, int y, bool se
 	String_InitArray(tmp, tmpBuffer);
 	desc.VTABLE->GetDefault(&desc, &tmp);
 
-	Menu_OldInput(s, i, input, 200, &tmp, &s->textFont, &desc,
+	Menu_Input(s, i, &s->inputs[i], 200, &tmp, &s->textFont, &desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
+	s->inputs[i].base.showCaret = false;
+	s->inputs[i].base.MenuClick = GenLevelScreen_InputClick;
 
-	input->base.showCaret = false;
-	input->base.MenuClick = GenLevelScreen_InputClick;
-}
-
-static void GenLevelScreen_Label(struct GenLevelScreen* s, int i, int y) {
-	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
-	Menu_Label(s, i + 4, &s->labels[i], ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 110, y);
+	Menu_Label(s, i + 4, &s->labels[i], 
+		ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 110, y);
 	s->labels[i].col = col;
 }
 
@@ -1032,14 +1030,14 @@ static bool GenLevelScreen_KeyPress(void* screen, char keyChar) {
 static void GenLevelScreen_ContextRecreated(void* screen) {
 	struct GenLevelScreen* s  = (struct GenLevelScreen*)screen;
 
-	GenLevelScreen_Input(s, 0, -80, false, World.Width);
-	GenLevelScreen_Input(s, 1, -40, false, World.Height);
-	GenLevelScreen_Input(s, 2,   0, false, World.Length);
-	GenLevelScreen_Input(s, 3,  40, true,  0);
+	InputWidget_UpdateText(&s->inputs[0].base);
+	InputWidget_UpdateText(&s->inputs[1].base);
+	InputWidget_UpdateText(&s->inputs[2].base);
+	InputWidget_UpdateText(&s->inputs[3].base);
 
 	TextWidget_SetConst(&s->labels[0], "Width:",  &s->textFont);
 	TextWidget_SetConst(&s->labels[1], "Height:", &s->textFont);
-	TextWidget_SetConst(&s->labels[2], "Length:", &s->textFont);;
+	TextWidget_SetConst(&s->labels[2], "Length:", &s->textFont);
 	TextWidget_SetConst(&s->labels[3], "Seed:",   &s->textFont);
 	
 	TextWidget_SetConst(&s->title,       "Generate new level", &s->textFont);
@@ -1056,10 +1054,10 @@ static void GenLevelScreen_Init(void* screen) {
 	s->widgets    = widgets;
 	s->numWidgets = Array_Elems(widgets);
 
-	GenLevelScreen_Label(s, 0, -80);
-	GenLevelScreen_Label(s, 1, -40);
-	GenLevelScreen_Label(s, 2,   0);
-	GenLevelScreen_Label(s, 3,  40);
+	GenLevelScreen_Make(s, 0, -80, World.Width);
+	GenLevelScreen_Make(s, 1, -40, World.Height);
+	GenLevelScreen_Make(s, 2,   0, World.Length);
+	GenLevelScreen_Make(s, 3,  40, 0);
 
 	Menu_Label(s,   8, &s->title,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -130);
@@ -1262,25 +1260,22 @@ static bool SaveLevelScreen_KeyDown(void* screen, Key key) {
 
 static void SaveLevelScreen_ContextRecreated(void* screen) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	struct MenuInputDesc desc;
-	MenuInput_Path(desc);
-	
 	SaveLevelScreen_UpdateSave(s);
 	SaveLevelScreen_UpdateSchem(s);
 	TextWidget_SetConst(&s->mcEdit,   "&eCan be imported into MCEdit", &s->textFont);
+	InputWidget_UpdateText(&s->input.base);
 	ButtonWidget_SetConst(&s->cancel, "Cancel",                        &s->titleFont);
-
-	Menu_OldInput(s,  4, &s->input, 500, &String_Empty, &s->textFont,  &desc, 
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 }
 
 static void SaveLevelScreen_Init(void* screen) {
 	static struct Widget* widgets[6];
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
+	struct MenuInputDesc desc;
 	
 	s->widgets    = widgets;
 	s->numWidgets = Array_Elems(widgets);
 	MenuScreen_Init(s);
+	MenuInput_Path(desc);
 	
 	Menu_Button(s, 0, &s->save, 300,  SaveLevelScreen_Classic,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  20);
@@ -1289,6 +1284,8 @@ static void SaveLevelScreen_Init(void* screen) {
 	Menu_Label(s,  2, &s->mcEdit,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 120);
 	Menu_Back(s,   3, &s->cancel, Menu_SwitchPause);
+	Menu_Input(s,  4, &s->input, 500, &String_Empty, &s->textFont, &desc,
+		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 	Menu_Label(s,  5, &s->desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  65);
 }

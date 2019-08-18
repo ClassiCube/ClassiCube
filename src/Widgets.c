@@ -906,11 +906,18 @@ static char InputWidget_GetLastCol(struct InputWidget* w, int x, int y) {
 }
 
 static void InputWidget_UpdateCaret(struct InputWidget* w) {
+	static const String caret = String_FromConst("_");
 	BitmapCol col;
 	String line; char lineBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	int maxChars, lineWidth;
 	char colCode;
+
+	if (!w->caretTex.ID) {
+		DrawTextArgs_Make(&args, &caret, w->font, true);
+		Drawer2D_MakeTextTexture(&w->caretTex, &args, 0, 0);
+		w->caretWidth = (uint16_t)((w->caretTex.Width * 3) / 4);
+	}
 	
 	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (w->caretPos >= maxChars) w->caretPos = -1;
@@ -1142,16 +1149,15 @@ static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
 	return false;
 }
 
-static void InputWidget_Init(void* widget) {
-	struct InputWidget* w = (struct InputWidget*)widget;
+void InputWidget_UpdateText(struct InputWidget* w) {
 	int lines = w->GetMaxLines();
-
 	if (lines > 1) {
 		WordWrap_Do(&w->text, w->lines, lines, INPUTWIDGET_LEN);
 	} else {
 		w->lines[0] = w->text;
 	}
 
+	Gfx_DeleteTexture(&w->inputTex.ID);
 	InputWidget_CalculateLineSizes(w);
 	w->RemakeTexture(w);
 	InputWidget_UpdateCaret(w);
@@ -1161,11 +1167,6 @@ static void InputWidget_Free(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_DeleteTexture(&w->inputTex.ID);
 	Gfx_DeleteTexture(&w->caretTex.ID);
-}
-
-void InputWidget_UpdateText(struct InputWidget* w) {
-	Gfx_DeleteTexture(&w->inputTex.ID);
-	InputWidget_Init(w);
 }
 
 static void InputWidget_Reposition(void* widget) {
@@ -1238,31 +1239,6 @@ static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button
 	w->caretPos = -1;
 	InputWidget_UpdateCaret(w);
 	return true;
-}
-
-CC_NOINLINE static void InputWidget_Create(struct InputWidget* w, FontDesc* font, STRING_REF const String* prefix) {
-	static const String caret = String_FromConst("_");
-	struct DrawTextArgs args;
-	Size2D size;
-	Widget_Reset(w);
-
-	w->font           = font;
-	w->prefix         = *prefix;
-	w->caretPos       = -1;
-	w->OnPressedEnter = InputWidget_OnPressedEnter;
-	w->AllowedChar    = InputWidget_AllowedChar;
-	
-	DrawTextArgs_Make(&args, &caret, font, true);
-	Gfx_DeleteTexture(&w->caretTex.ID); /* TODO: AWFUL HACK */
-	Drawer2D_MakeTextTexture(&w->caretTex, &args, 0, 0);
-	w->caretTex.Width = (uint16_t)((w->caretTex.Width * 3) / 4);
-	w->caretWidth     = w->caretTex.Width;
-
-	if (!prefix->length) return;
-	DrawTextArgs_Make(&args, prefix, font, true);
-	size = Drawer2D_MeasureText(&args);
-	w->prefixWidth  = size.Width;  w->width  = size.Width;
-	w->height = w->lineHeight;
 }
 
 
@@ -1471,14 +1447,16 @@ static bool MenuInputWidget_AllowedChar(void* widget, char c) {
 
 static int MenuInputWidget_GetMaxLines(void) { return 1; }
 static struct WidgetVTABLE MenuInputWidget_VTABLE = {
-	InputWidget_Init,      MenuInputWidget_Render, InputWidget_Free,
+	Widget_NullFunc,       MenuInputWidget_Render, InputWidget_Free,
 	InputWidget_KeyDown,   InputWidget_KeyUp,
 	InputWidget_MouseDown, Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	InputWidget_Reposition
 };
 void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, FontDesc* font, struct MenuInputDesc* desc) {
-	InputWidget_Create(&w->base, font, &String_Empty);
-	w->base.VTABLE = &MenuInputWidget_VTABLE;
+	Widget_Reset(w);
+	w->base.VTABLE  = &MenuInputWidget_VTABLE;
+	w->base.font     = font;
+	w->base.caretPos = -1;
 
 	w->minWidth  = width;
 	w->minHeight = height;
@@ -1487,20 +1465,22 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, co
 	w->base.convertPercents = false;
 	w->base.padding         = 3;
 	w->base.lineHeight      = Drawer2D_FontHeight(font, false);
+
+	w->base.GetMaxLines    = MenuInputWidget_GetMaxLines;
+	w->base.RemakeTexture  = MenuInputWidget_RemakeTexture;
+	w->base.OnPressedEnter = InputWidget_OnPressedEnter;
+	w->base.AllowedChar    = MenuInputWidget_AllowedChar;
+
 	String_InitArray(w->base.text, w->_textBuffer);
-
-	w->base.GetMaxLines   = MenuInputWidget_GetMaxLines;
-	w->base.RemakeTexture = MenuInputWidget_RemakeTexture;
-	w->base.AllowedChar   = MenuInputWidget_AllowedChar;
-
-	Elem_Init(&w->base);
-	InputWidget_AppendString(&w->base, text);
+	String_Copy(&w->base.text, text);
 }
 
 
 /*########################################################################################################################*
 *-----------------------------------------------------ChatInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
+static const String chatInputPrefix = String_FromConst("> ");
+
 static void ChatInputWidget_RemakeTexture(void* widget) {
 	String line; char lineBuffer[STRING_SIZE + 2];
 	struct InputWidget* w = (struct InputWidget*)widget;
@@ -1520,11 +1500,8 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	if (!size.Height) size.Height = w->lineHeight;
 	Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 
-	DrawTextArgs_MakeEmpty(&args, w->font, true);
-	if (w->prefix.length) {
-		args.text = w->prefix;
-		Drawer2D_DrawText(&bmp, &args, 0, 0);
-	}
+	DrawTextArgs_Make(&args, &chatInputPrefix, w->font, true);
+	Drawer2D_DrawText(&bmp, &args, 0, 0);
 
 	String_InitArray(line, lineBuffer);
 	for (i = 0, y = 0; i < Array_Elems(w->lines); i++) {
@@ -1729,28 +1706,34 @@ static int ChatInputWidget_GetMaxLines(void) {
 }
 
 static struct WidgetVTABLE ChatInputWidget_VTABLE = {
-	InputWidget_Init,        ChatInputWidget_Render, InputWidget_Free,
+	Widget_NullFunc,         ChatInputWidget_Render, InputWidget_Free,
 	ChatInputWidget_KeyDown, InputWidget_KeyUp,
 	InputWidget_MouseDown,   Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	InputWidget_Reposition
 };
 void ChatInputWidget_Create(struct ChatInputWidget* w, FontDesc* font) {
-	static const String prefix = String_FromConst("> ");
-
-	InputWidget_Create(&w->base, font, &prefix);
+	struct DrawTextArgs args;
+	Widget_Reset(w);
 	w->typingLogPos = Chat_InputLog.count; /* Index of newest entry + 1. */
 	w->base.VTABLE  = &ChatInputWidget_VTABLE;
+	w->base.font     = font;
+	w->base.caretPos = -1;
 
 	w->base.convertPercents = !Game_ClassicMode;
 	w->base.showCaret       = true;
 	w->base.padding         = 5;
 	w->base.lineHeight      = Drawer2D_FontHeight(font, true);
+
 	w->base.GetMaxLines    = ChatInputWidget_GetMaxLines;
 	w->base.RemakeTexture  = ChatInputWidget_RemakeTexture;
 	w->base.OnPressedEnter = ChatInputWidget_OnPressedEnter;
+	w->base.AllowedChar    = InputWidget_AllowedChar;
 
 	String_InitArray(w->base.text, w->_textBuffer);
 	String_InitArray(w->origStr,   w->_origBuffer);
+
+	DrawTextArgs_Make(&args, &chatInputPrefix, font, true);
+	w->base.prefixWidth = Drawer2D_TextWidth(&args);
 }	
 
 
