@@ -193,9 +193,10 @@ void Gui_RefreshAll(void) {
 	Gui_ContextRecreated(NULL);
 }
 
-void Gui_RefreshHud(void) {
-	Gui_HUD->VTABLE->ContextLost(Gui_HUD);
-	Gui_HUD->VTABLE->ContextRecreated(Gui_HUD);
+void Gui_RefreshHud(void) { Gui_Refresh(Gui_HUD); }
+void Gui_Refresh(struct Screen* s) {
+	s->VTABLE->ContextLost(s);
+	s->VTABLE->ContextRecreated(s);
 }
 
 int Gui_Index(struct Screen* s) {

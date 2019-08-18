@@ -11,12 +11,12 @@ void PauseScreen_Show(void);
 void OptionsGroupScreen_Show(void);
 struct Screen* ClassicOptionsScreen_MakeInstance(void);
 
-struct Screen* ClassicKeyBindingsScreen_MakeInstance(void);
-struct Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void);
-struct Screen* NormalKeyBindingsScreen_MakeInstance(void);
-struct Screen* HacksKeyBindingsScreen_MakeInstance(void);
-struct Screen* OtherKeyBindingsScreen_MakeInstance(void);
-struct Screen* MouseKeyBindingsScreen_MakeInstance(void);
+void ClassicKeyBindingsScreen_Show(void);
+void ClassicHacksKeyBindingsScreen_Show(void);
+void NormalKeyBindingsScreen_Show(void);
+void HacksKeyBindingsScreen_Show(void);
+void OtherKeyBindingsScreen_Show(void);
+void MouseKeyBindingsScreen_Show(void);
 
 void GenLevelScreen_Show(void);
 void ClassicGenScreen_Show(void);

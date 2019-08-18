@@ -157,6 +157,8 @@ struct Screen* Gui_GetClosable(void);
 
 void Gui_RefreshAll(void);
 void Gui_RefreshHud(void);
+void Gui_Refresh(struct Screen* s);
+
 /* Returns index of the given screen in the overlays list, -1 if not */
 int  Gui_IndexOverlay(const void* screen);
 /* Removes given screen from the overlays list */

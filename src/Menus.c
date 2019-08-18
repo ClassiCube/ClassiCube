@@ -229,12 +229,12 @@ static void Menu_SwitchOptions(void* a, void* b)        { OptionsGroupScreen_Sho
 static void Menu_SwitchPause(void* a, void* b)          { PauseScreen_Show(); }
 static void Menu_SwitchClassicOptions(void* a, void* b) { Menu_ReplaceActive(ClassicOptionsScreen_MakeInstance()); }
 
-static void Menu_SwitchKeysClassic(void* a, void* b)      { Menu_ReplaceActive(ClassicKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysClassicHacks(void* a, void* b) { Menu_ReplaceActive(ClassicHacksKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysNormal(void* a, void* b)       { Menu_ReplaceActive(NormalKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysHacks(void* a, void* b)        { Menu_ReplaceActive(HacksKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysOther(void* a, void* b)        { Menu_ReplaceActive(OtherKeyBindingsScreen_MakeInstance()); }
-static void Menu_SwitchKeysMouse(void* a, void* b)        { Menu_ReplaceActive(MouseKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysClassic(void* a, void* b)      { ClassicKeyBindingsScreen_Show(); }
+static void Menu_SwitchKeysClassicHacks(void* a, void* b) { ClassicHacksKeyBindingsScreen_Show(); }
+static void Menu_SwitchKeysNormal(void* a, void* b)       { NormalKeyBindingsScreen_Show(); }
+static void Menu_SwitchKeysHacks(void* a, void* b)        { HacksKeyBindingsScreen_Show(); }
+static void Menu_SwitchKeysOther(void* a, void* b)        { OtherKeyBindingsScreen_Show(); }
+static void Menu_SwitchKeysMouse(void* a, void* b)        { MouseKeyBindingsScreen_Show(); }
 
 static void Menu_SwitchMisc(void* a, void* b)      { Menu_ReplaceActive(MiscOptionsScreen_MakeInstance()); }
 static void Menu_SwitchGui(void* a, void* b)       { Menu_ReplaceActive(GuiOptionsScreen_MakeInstance()); }
@@ -1679,13 +1679,13 @@ static void ClassicKeyBindingsScreen_ContextRecreated(void* screen) {
 	}
 }
 
-struct Screen* ClassicKeyBindingsScreen_MakeInstance(void) {
+void ClassicKeyBindingsScreen_Show(void) {
 	static uint8_t binds[10] = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN };
 	static const char* descs[10] = { "Forward", "Back", "Jump", "Chat", "Save loc", "Left", "Right", "Build", "Toggle fog", "Load loc" };
 
 	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, ClassicKeyBindingsScreen_ContextRecreated);
 	if (Game_ClassicHacks) s->rightPage = Menu_SwitchKeysClassicHacks;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1697,13 +1697,13 @@ static void ClassicHacksKeyBindingsScreen_ContextRecreated(void* screen) {
 	KeyBindingsScreen_MakeWidgets(s, -90, -40, 3, "Hacks controls", 260);
 }
 
-struct Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void) {
+void ClassicHacksKeyBindingsScreen_Show(void) {
 	static uint8_t binds[6] = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN };
 	static const char* descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
 
 	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, ClassicHacksKeyBindingsScreen_ContextRecreated);
 	s->leftPage = Menu_SwitchKeysClassic;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1715,13 +1715,13 @@ static void NormalKeyBindingsScreen_ContextRecreated(void* screen) {
 	KeyBindingsScreen_MakeWidgets(s, -140, 10, 6, "Normal controls", 260);
 }
 
-struct Screen* NormalKeyBindingsScreen_MakeInstance(void) {
+void NormalKeyBindingsScreen_Show(void) {
 	static uint8_t binds[12] = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_PLAYER_LIST, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN, KEYBIND_SEND_CHAT };
 	static const char* descs[12] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 
 	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, NormalKeyBindingsScreen_ContextRecreated);
 	s->rightPage = Menu_SwitchKeysHacks;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1733,14 +1733,14 @@ static void HacksKeyBindingsScreen_ContextRecreated(void* screen) {
 	KeyBindingsScreen_MakeWidgets(s, -40, 10, 4, "Hacks controls", 260);
 }
 
-struct Screen* HacksKeyBindingsScreen_MakeInstance(void) {
+void HacksKeyBindingsScreen_Show(void) {
 	static uint8_t binds[8] = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_ZOOM_SCROLL, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN, KEYBIND_THIRD_PERSON };
 	static const char* descs[8] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
 
 	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, HacksKeyBindingsScreen_ContextRecreated);
 	s->leftPage  = Menu_SwitchKeysNormal;
 	s->rightPage = Menu_SwitchKeysOther;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1752,14 +1752,14 @@ static void OtherKeyBindingsScreen_ContextRecreated(void* screen) {
 	KeyBindingsScreen_MakeWidgets(s, -140, 10, 6, "Other controls", 260);
 }
 
-struct Screen* OtherKeyBindingsScreen_MakeInstance(void) {
+void OtherKeyBindingsScreen_Show(void) {
 	static uint8_t binds[12] = { KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_HIDE_GUI, KEYBIND_HOTBAR_SWITCH, KEYBIND_DROP_BLOCK,KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN, KEYBIND_AXIS_LINES, KEYBIND_AUTOROTATE, KEYBIND_SMOOTH_CAMERA, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS };
 	static const char* descs[12] = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
 
 	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, OtherKeyBindingsScreen_ContextRecreated);
 	s->leftPage  = Menu_SwitchKeysHacks;
 	s->rightPage = Menu_SwitchKeysMouse;
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1776,14 +1776,14 @@ static void MouseKeyBindingsScreen_ContextRecreated(void* screen) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 }
 
-struct Screen* MouseKeyBindingsScreen_MakeInstance(void) {
+void MouseKeyBindingsScreen_Show(void) {
 	static uint8_t binds[3] = { KEYBIND_MOUSE_LEFT, KEYBIND_MOUSE_MIDDLE, KEYBIND_MOUSE_RIGHT };
 	static const char* descs[3] = { "Left", "Middle", "Right" };
 
 	struct KeyBindingsScreen* s = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, MouseKeyBindingsScreen_ContextRecreated);
 	s->leftPage = Menu_SwitchKeysOther;
 	s->numWidgets++; /* Extra text widget for 'right click' message */
-	return (struct Screen*)s;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -2788,47 +2788,33 @@ struct Screen* NostalgiaScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Overlay---------------------------------------------------------*
 *#########################################################################################################################*/
-static void Overlay_Free(void* screen) {
-	MenuScreen_Free(screen);
-	Gui_RemoveOverlay(screen);
-}
-
 static bool Overlay_KeyDown(void* screen, Key key) { return true; }
 
-static void Overlay_MakeLabels(void* menu, struct TextWidget* labels, const String* lines) {
+static void Overlay_MakeLabels(void* menu, struct TextWidget* labels) {
 	struct MenuScreen* s = (struct MenuScreen*)menu;
 	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
 	int i;
-	Menu_OldLabel(s, 0, &labels[0], &lines[0], &s->titleFont,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
+	Menu_Label(s,     0, &labels[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
 	
 	for (i = 1; i < 4; i++) {
-		if (!lines[i].length) continue;
-
-		Menu_OldLabel(s, i, &labels[i], &lines[i], &s->textFont,
-			ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -70 + 20 * i);
+		Menu_Label(s, i, &labels[i], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -70 + 20 * i);
 		labels[i].col = col;
 	}
 }
 
-static void WarningOverlay_MakeButtons(void* menu, struct ButtonWidget* btns, bool always, Widget_LeftClick yesClick, Widget_LeftClick noClick) {
-	static const String yes = String_FromConst("Yes");
-	static const String no  = String_FromConst("No");
-	static const String alwaysYes = String_FromConst("Always yes");
-	static const String alwaysNo  = String_FromConst("Always no");
-
-	struct MenuScreen* s = (struct MenuScreen*)menu;
-	Menu_OldButton(s, 4, &btns[0], 160, &yes, &s->titleFont, yesClick, 
+static void Overlay_MakeMainButtons(void* s, struct ButtonWidget* btns) {
+	Menu_Button(s, 4, &btns[0], 160, NULL, 
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 30);
-	Menu_OldButton(s, 5, &btns[1], 160, &no,  &s->titleFont, noClick, 
+	Menu_Button(s, 5, &btns[1], 160, NULL, 
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 30);
-
-	if (!always) return;
-	Menu_OldButton(s, 6, &btns[2], 160, &alwaysYes, &s->titleFont, yesClick, 
+}
+static void Overlay_MakeExtraButtons(void* s, struct ButtonWidget* btns) {
+	Menu_Button(s, 6, &btns[2], 160, NULL,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 85);
-	Menu_OldButton(s, 7, &btns[3], 160, &alwaysNo,  &s->titleFont, noClick, 
+	Menu_Button(s, 7, &btns[3], 160, NULL,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 85);
 }
+
 static bool WarningOverlay_IsAlways(void* screen, void* w) { return Menu_Index(screen, w) >= 6; }
 
 
@@ -2976,7 +2962,7 @@ static bool TexIdsOverlay_KeyPress(void* screen, char keyChar) { return false; }
 static bool TexIdsOverlay_KeyUp(void* screen, Key key) { return false; }
 
 static struct ScreenVTABLE TexIdsOverlay_VTABLE = {
-	TexIdsOverlay_Init,    TexIdsOverlay_Render, Overlay_Free,
+	TexIdsOverlay_Init,    TexIdsOverlay_Render, MenuScreen_Free,
 	TexIdsOverlay_KeyDown, TexIdsOverlay_KeyUp,  TexIdsOverlay_KeyPress,
 	Menu_MouseDown,        Menu_MouseUp,         Menu_MouseMove,         MenuScreen_MouseScroll,
 	Menu_OnResize,         TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated
@@ -3000,7 +2986,6 @@ void TexIdsOverlay_Show(void) {
 *#########################################################################################################################*/
 static struct UrlWarningOverlay {
 	MenuScreen_Layout
-	bool openingUrl;
 	String url;
 	struct ButtonWidget buttons[2];
 	struct TextWidget   labels[4];
@@ -3009,60 +2994,55 @@ static struct UrlWarningOverlay {
 
 static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
-	if (s->openingUrl) return;
-	/* On windows, Process_StartOpen may end up calling our window procedure. */
-	/* If a mouse click message is delivered (e.g. user spam clicking), then */
-	/* UrlWarningOverlay_OpenUrl ends up getting called multiple times. */
-	/* This will cause a crash as Elem_Free gets called multiple times. */
-	/* (which attempts to unregister event handlers multiple times) */
-
-	s->openingUrl = true;
 	Process_StartOpen(&s->url);
-	s->openingUrl = false;
-	Elem_Free(s);
+	Gui_Remove((struct Screen*)s);
 }
 
 static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
 	if (Gui_ClickableChat) HUDScreen_AppendInput(&s->url);
-	Elem_Free(s);
+	Gui_Remove((struct Screen*)s);
 }
 
 static void UrlWarningOverlay_ContextRecreated(void* screen) {
-	static String lines[4] = {
-		String_FromConst("&eAre you sure you want to open this link?"),
-		String_FromConst(""),
-		String_FromConst("Be careful - links from strangers may be websites that"),
-		String_FromConst(" have viruses, or things you may not want to open/see."),
-	};
-
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
-	lines[1] = s->url;
-	Overlay_MakeLabels(s, s->labels, lines);
+	TextWidget_SetConst(&s->labels[0], "&eAre you sure you want to open this link?", &s->titleFont);
+	TextWidget_Set(&s->labels[1],      &s->url,                                      &s->textFont);
+	TextWidget_SetConst(&s->labels[2], "Be careful - links from strangers may be websites that", &s->textFont);
+	TextWidget_SetConst(&s->labels[3], " have viruses, or things you may not want to open/see.", &s->textFont);
 
-	WarningOverlay_MakeButtons((struct MenuScreen*)s, s->buttons, false,
-		UrlWarningOverlay_OpenUrl, UrlWarningOverlay_AppendUrl);
+	ButtonWidget_SetConst(&s->buttons[0], "Yes", &s->titleFont);
+	ButtonWidget_SetConst(&s->buttons[1], "No",  &s->titleFont);
+}
+
+static void UrlWarningOverlay_Init(void* screen) {
+	static struct Widget* widgets[6];
+	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
+
+	s->widgets    = widgets;
+	s->numWidgets = Array_Elems(widgets);
+	MenuScreen_Init(screen);
+
+	Overlay_MakeLabels(s, s->labels);
+	Overlay_MakeMainButtons(s, s->buttons);
+	s->buttons[0].MenuClick = UrlWarningOverlay_OpenUrl;
+	s->buttons[1].MenuClick = UrlWarningOverlay_AppendUrl;
 }
 
 static struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
-	MenuScreen_Init, MenuScreen_Render,  Overlay_Free,
-	Overlay_KeyDown, Menu_KeyUp,         Menu_KeyPress,
-	Menu_MouseDown,  Menu_MouseUp,       Menu_MouseMove,  MenuScreen_MouseScroll,
-	Menu_OnResize,   Menu_ContextLost,   UrlWarningOverlay_ContextRecreated
+	UrlWarningOverlay_Init, MenuScreen_Render, MenuScreen_Free,
+	Overlay_KeyDown,        Menu_KeyUp,        Menu_KeyPress,
+	Menu_MouseDown,         Menu_MouseUp,      Menu_MouseMove,  MenuScreen_MouseScroll,
+	Menu_OnResize,          Menu_ContextLost,  UrlWarningOverlay_ContextRecreated
 };
 void UrlWarningOverlay_Show(const String* url) {
-	static struct Widget* widgets[6];
 	struct UrlWarningOverlay* s = &UrlWarningOverlay_Instance;
-
 	s->grabsInput = true;
 	s->closable   = true;
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
+	s->VTABLE     = &UrlWarningOverlay_VTABLE;
 
 	String_InitArray(s->url, s->_urlBuffer);
 	String_Copy(&s->url, url);
-
-	s->VTABLE = &UrlWarningOverlay_VTABLE;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_URLWARNING);
 }
 
@@ -3072,9 +3052,9 @@ void UrlWarningOverlay_Show(const String* url) {
 *#########################################################################################################################*/
 static struct TexPackOverlay {
 	MenuScreen_Layout
-	bool showingDeny, alwaysDeny;
+	bool deny, alwaysDeny;
 	uint32_t contentLength;
-	String identifier;
+	String url, identifier;
 	struct ButtonWidget buttons[4];
 	struct TextWidget   labels[4];
 	char _identifierBuffer[STRING_SIZE + 4];
@@ -3082,37 +3062,61 @@ static struct TexPackOverlay {
 
 static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	String url = String_UNSAFE_SubstringAt(&s->identifier, 3);
-
-	World_ApplyTexturePack(&url);
-	if (WarningOverlay_IsAlways(s, widget)) TextureCache_Accept(&url);
-	Elem_Free(s);
+	World_ApplyTexturePack(&s->url);
+	if (WarningOverlay_IsAlways(s, widget)) TextureCache_Accept(&s->url);
+	Gui_Remove((struct Screen*)s);
 }
 
 static void TexPackOverlay_NoClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	s->alwaysDeny  = WarningOverlay_IsAlways(s, widget);
-	s->showingDeny = true;
-
-	s->VTABLE->ContextLost(s);
-	s->VTABLE->ContextRecreated(s);
+	s->alwaysDeny = WarningOverlay_IsAlways(s, widget);
+	s->deny       = true;
+	Gui_Refresh((struct Screen*)s);
 }
 
 static void TexPackOverlay_ConfirmNoClick(void* screen, void* b) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	String url;
-
-	url = String_UNSAFE_SubstringAt(&s->identifier, 3);
-	if (s->alwaysDeny) TextureCache_Deny(&url);
-	Elem_Free(s);
+	if (s->alwaysDeny) TextureCache_Deny(&s->url);
+	Gui_Remove((struct Screen*)s);
 }
 
 static void TexPackOverlay_GoBackClick(void* screen, void* b) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	s->showingDeny = false;
+	s->deny = false;
+	Gui_Refresh((struct Screen*)s);
+}
 
-	s->VTABLE->ContextLost(s);
-	s->VTABLE->ContextRecreated(s);
+static void TexPackOverlay_UpdateLine2(struct TexPackOverlay* s) {
+	static const String https = String_FromConst("https://");
+	static const String http  = String_FromConst("http://");
+	String url = String_Empty;
+
+	if (!s->deny) {
+		url = s->url;
+		if (String_CaselessStarts(&url, &https)) {
+			url = String_UNSAFE_SubstringAt(&url, https.length);
+		}
+		if (String_CaselessStarts(&url, &http)) {
+			url = String_UNSAFE_SubstringAt(&url, http.length);
+		}
+	}
+	TextWidget_Set(&s->labels[2], &url, &s->textFont);
+}
+
+static void TexPackOverlay_UpdateLine3(struct TexPackOverlay* s) {
+	String contents; char contentsBuffer[STRING_SIZE];
+	float contentLengthMB;
+
+	if (s->deny) {
+		TextWidget_SetConst(&s->labels[3], "Sure you don't want to download the texture pack?", &s->textFont);
+	} else if (s->contentLength) {
+		String_InitArray(contents, contentsBuffer);
+		contentLengthMB = s->contentLength / (1024.0f * 1024.0f);
+		String_Format1(&contents, "Download size: %f3 MB", &contentLengthMB);
+		TextWidget_Set(&s->labels[3], &contents, &s->textFont);
+	} else {
+		TextWidget_SetConst(&s->labels[3], "Download size: Determining...", &s->textFont);
+	}
 }
 
 static void TexPackOverlay_Render(void* screen, double delta) {
@@ -3122,95 +3126,63 @@ static void TexPackOverlay_Render(void* screen, double delta) {
 	MenuScreen_Render(s, delta);
 	if (!Http_GetResult(&s->identifier, &item)) return;
 	s->contentLength = item.ContentLength;
-
-	if (!s->contentLength || Gfx.LostContext) return;
-	s->VTABLE->ContextLost(s);
-	s->VTABLE->ContextRecreated(s);
-}
-
-static void TexPackOverlay_MakeNormalElements(struct TexPackOverlay* s) {
-	static String lines[4] = {
-		String_FromConst("Do you want to download the server's texture pack?"),
-		String_FromConst("Texture pack url:"),
-		String_FromConst(""),
-		String_FromConst(""),
-	};
-	static const String defCL = String_FromConst("Download size: Determining...");
-	static const String https = String_FromConst("https://");
-	static const String http  = String_FromConst("http://");
-	String contents; char contentsBuffer[STRING_SIZE];
-	float contentLengthMB;
-	String url;
-
-	url = String_UNSAFE_SubstringAt(&s->identifier, 3);
-	if (String_CaselessStarts(&url, &https)) {
-		url = String_UNSAFE_SubstringAt(&url, https.length);
-	}
-	if (String_CaselessStarts(&url, &http)) {
-		url = String_UNSAFE_SubstringAt(&url, http.length);
-	}
-
-	lines[2] = url;
-	if (s->contentLength) {
-		String_InitArray(contents, contentsBuffer);
-		contentLengthMB = s->contentLength / (1024.0f * 1024.0f);
-		String_Format1(&contents, "Download size: %f3 MB", &contentLengthMB);
-		lines[3] = contents;
-	} else { lines[3] = defCL; }
-
-	Overlay_MakeLabels(s, s->labels, lines);
-	WarningOverlay_MakeButtons((struct MenuScreen*)s, s->buttons, true,
-		TexPackOverlay_YesClick, TexPackOverlay_NoClick);
-}
-
-static void TexPackOverlay_MakeDenyElements(struct TexPackOverlay* s) {
-	static String lines[4] = {
-		String_FromConst("&eYou might be missing out."),
-		String_FromConst("Texture packs can play a vital role in the look and feel of maps."),
-		String_FromConst(""),
-		String_FromConst("Sure you don't want to download the texture pack?")
-	};
-	static const String imSure = String_FromConst("I'm sure");
-	static const String goBack = String_FromConst("Go back");
-	Overlay_MakeLabels(s, s->labels, lines);
-
-	Menu_OldButton(s, 4, &s->buttons[0], 160, &imSure, &s->titleFont, TexPackOverlay_ConfirmNoClick,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 30);
-	Menu_OldButton(s, 5, &s->buttons[1], 160, &goBack, &s->titleFont, TexPackOverlay_GoBackClick,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 30);
+	TexPackOverlay_UpdateLine3(s);
 }
 
 static void TexPackOverlay_ContextRecreated(void* screen) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	if (s->showingDeny) {
-		TexPackOverlay_MakeDenyElements(s);
-	} else {
-		TexPackOverlay_MakeNormalElements(s);
+	TextWidget_SetConst(&s->labels[0], s->deny  ? "&eYou might be missing out." 
+		: "Do you want to download the server's texture pack?", &s->titleFont);
+	TextWidget_SetConst(&s->labels[1], !s->deny ? "Texture pack url:"
+		: "Texture packs can play a vital role in the look and feel of maps.", &s->textFont);
+	TexPackOverlay_UpdateLine2(s);
+	TexPackOverlay_UpdateLine3(s);
+
+	ButtonWidget_SetConst(&s->buttons[0], s->deny ? "I'm sure" : "Yes", &s->titleFont);
+	ButtonWidget_SetConst(&s->buttons[1], s->deny ? "Go back"  : "No",  &s->titleFont);
+	s->buttons[0].MenuClick = s->deny ? TexPackOverlay_ConfirmNoClick : TexPackOverlay_YesClick;
+	s->buttons[1].MenuClick = s->deny ? TexPackOverlay_GoBackClick    : TexPackOverlay_NoClick;
+
+	if (!s->deny) {
+		ButtonWidget_SetConst(&s->buttons[2], "Always yes", &s->titleFont);
+		ButtonWidget_SetConst(&s->buttons[3], "Always no",  &s->titleFont);
+		s->buttons[2].MenuClick = TexPackOverlay_YesClick;
+		s->buttons[3].MenuClick = TexPackOverlay_NoClick;
 	}
-	s->numWidgets = s->showingDeny ? 6 : 8;
+	s->numWidgets = s->deny ? 6 : 8;
+}
+
+static void TexPackOverlay_Init(void* screen) {
+	static struct Widget* widgets[8];
+	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
+
+	s->widgets    = widgets;
+	s->numWidgets = Array_Elems(widgets);
+	MenuScreen_Init(screen);
+
+	s->contentLength = 0;
+	s->deny          = false;	
+	Overlay_MakeLabels(s, s->labels);
+	Overlay_MakeMainButtons(s,  s->buttons);
+	Overlay_MakeExtraButtons(s, s->buttons);
 }
 
 static struct ScreenVTABLE TexPackOverlay_VTABLE = {
-	MenuScreen_Init, TexPackOverlay_Render, Overlay_Free,
-	Overlay_KeyDown, Menu_KeyUp,            Menu_KeyPress,
-	Menu_MouseDown,  Menu_MouseUp,          Menu_MouseMove, MenuScreen_MouseScroll,
-	Menu_OnResize,   Menu_ContextLost,      TexPackOverlay_ContextRecreated
+	TexPackOverlay_Init, TexPackOverlay_Render, MenuScreen_Free,
+	Overlay_KeyDown,     Menu_KeyUp,            Menu_KeyPress,
+	Menu_MouseDown,      Menu_MouseUp,          Menu_MouseMove, MenuScreen_MouseScroll,
+	Menu_OnResize,       Menu_ContextLost,      TexPackOverlay_ContextRecreated
 };
 void TexPackOverlay_Show(const String* url) {
-	static struct Widget* widgets[8];
 	struct TexPackOverlay* s = &TexPackOverlay_Instance;
-
-	s->showingDeny = false;
-	s->grabsInput  = true;
-	s->closable    = true;
-	s->widgets     = widgets;
-	s->numWidgets  = Array_Elems(widgets);
-
+	s->grabsInput = true;
+	s->closable   = true;
+	s->VTABLE     = &TexPackOverlay_VTABLE;
+	
 	String_InitArray(s->identifier, s->_identifierBuffer);
 	String_Format1(&s->identifier, "CL_%s", url);
-	s->contentLength = 0;
+	s->url = String_UNSAFE_SubstringAt(&s->identifier, 3);
 
 	Http_AsyncGetHeaders(url, true, &s->identifier);
-	s->VTABLE = &TexPackOverlay_VTABLE;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TEXPACK);
 }
