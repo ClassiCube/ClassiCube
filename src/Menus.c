@@ -501,7 +501,7 @@ static void MenuScreen_Free(void* screen) {
 *#########################################################################################################################*/
 static struct PauseScreen {
 	MenuScreen_Layout
-	struct ButtonWidget buttons[8];
+	struct ButtonWidget buttons[6], quit, back;
 } PauseScreen_Instance;
 
 static void PauseScreen_Quit(void* a, void* b) { Window_Close(); }
@@ -544,7 +544,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 
 	if (Gui_ClassicMenu) {
 		PauseScreen_MakeButtons(s, 400, classicDescs, 5);
-		Menu_OldBack(s, 5, &s->buttons[5], "Back to game", &s->titleFont, PauseScreen_Game);
+		Menu_OldBack(s, 5, &s->back, "Back to game", &s->titleFont, PauseScreen_Game);
 
 		/* Disable nostalgia options in classic mode */
 		if (Game_ClassicMode) Menu_Remove(s, 4);
@@ -552,9 +552,9 @@ static void PauseScreen_ContextRecreated(void* screen) {
 		s->widgets[7] = NULL;
 	} else {
 		PauseScreen_MakeButtons(s, 300, modernDescs, 6);
-		Menu_OldButton(s, 6, &s->buttons[6], 120, &quitMsg, &s->titleFont, PauseScreen_Quit,
+		Menu_OldButton(s, 6, &s->quit, 120, &quitMsg, &s->titleFont, PauseScreen_Quit,
 			ANCHOR_MAX, ANCHOR_MAX, 5, 5);
-		Menu_OldBack(s,   7, &s->buttons[7], "Back to game",&s->titleFont, PauseScreen_Game);
+		Menu_OldBack(s,   7, &s->back, "Back to game",&s->titleFont, PauseScreen_Game);
 	}
 
 	if (!Server.IsSinglePlayer) {

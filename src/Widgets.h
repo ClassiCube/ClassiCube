@@ -106,11 +106,12 @@ struct InputWidget {
 	bool (*AllowedChar)(void* elem, char c);
 
 	String text;
-	String lines[INPUTWIDGET_MAX_LINES];     /* raw text of each line */
-	Size2D lineSizes[INPUTWIDGET_MAX_LINES]; /* size of each line in pixels */
+	String lines[INPUTWIDGET_MAX_LINES];    /* raw text of each line */
+	int lineWidths[INPUTWIDGET_MAX_LINES];  /* Width of each line in pixels */
+	int lineHeight;
 	struct Texture inputTex;
 	String prefix;
-	int prefixWidth, prefixHeight;
+	int prefixWidth;
 	bool convertPercents;
 
 	uint8_t padding;

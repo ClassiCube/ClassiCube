@@ -871,13 +871,12 @@ static void InputWidget_FormatLine(struct InputWidget* w, int i, String* line) {
 static void InputWidget_CalculateLineSizes(struct InputWidget* w) {
 	String line; char lineBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
-	Size2D size;
 	int y;
 
 	for (y = 0; y < INPUTWIDGET_MAX_LINES; y++) {
-		w->lineSizes[y] = Size2D_Empty;
+		w->lineWidths[y] = 0;
 	}
-	w->lineSizes[0].Width = w->prefixWidth;
+	w->lineWidths[0] = w->prefixWidth;
 	DrawTextArgs_MakeEmpty(&args, w->font, true);
 
 	String_InitArray(line, lineBuffer);
@@ -886,13 +885,7 @@ static void InputWidget_CalculateLineSizes(struct InputWidget* w) {
 		InputWidget_FormatLine(w, y, &line);
 
 		args.text = line;
-		size = Drawer2D_MeasureText(&args);
-		w->lineSizes[y].Width += size.Width;
-		w->lineSizes[y].Height = size.Height;
-	}
-
-	if (w->lineSizes[0].Height == 0) {
-		w->lineSizes[0].Height = w->prefixHeight;
+		w->lineWidths[y] += Drawer2D_TextWidth(&args);
 	}
 }
 
@@ -929,7 +922,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 
 	/* Caret is at last character on line */
 	if (w->caretX == INPUTWIDGET_LEN) {
-		lineWidth = w->lineSizes[w->caretY].Width;	
+		lineWidth = w->lineWidths[w->caretY];	
 	} else {
 		String_InitArray(line, lineBuffer);
 		InputWidget_FormatLine(w, w->caretY, &line);
@@ -946,7 +939,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	}
 
 	w->caretTex.X = w->x + w->padding + lineWidth;
-	w->caretTex.Y = w->inputTex.Y + w->caretY * w->lineSizes[0].Height + 2;
+	w->caretTex.Y = w->inputTex.Y + w->caretY * w->lineHeight + 2;
 	colCode = InputWidget_GetLastCol(w, w->caretX, w->caretY);
 
 	if (colCode) {
@@ -971,7 +964,7 @@ static void InputWidget_RenderCaret(struct InputWidget* w, double delta) {
 static void InputWidget_OnPressedEnter(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	InputWidget_Clear(w);
-	w->height = w->prefixHeight;
+	w->height = w->lineHeight;
 }
 
 void InputWidget_Clear(struct InputWidget* w) {
@@ -1269,7 +1262,7 @@ CC_NOINLINE static void InputWidget_Create(struct InputWidget* w, FontDesc* font
 	DrawTextArgs_Make(&args, prefix, font, true);
 	size = Drawer2D_MeasureText(&args);
 	w->prefixWidth  = size.Width;  w->width  = size.Width;
-	w->prefixHeight = size.Height; w->height = size.Height;
+	w->height = w->lineHeight;
 }
 
 
@@ -1420,10 +1413,9 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	int hintX;
 	Bitmap bmp;
 
-	DrawTextArgs_Make(&args, &w->base.lines[0], w->base.font, false);
+	DrawTextArgs_Make(&args, &w->base.text, w->base.font, false);
 	size.Width   = Drawer2D_TextWidth(&args);
-	/* Text may be empty, but don't want 0 height if so */
-	size.Height  = Drawer2D_FontHeight(w->base.font, false);
+	size.Height  = w->base.lineHeight;
 	w->base.caretAccumulator = 0.0;
 
 	String_InitArray(range, rangeBuffer);
@@ -1493,7 +1485,8 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, co
 	w->desc      = *desc;
 
 	w->base.convertPercents = false;
-	w->base.padding = 3;
+	w->base.padding         = 3;
+	w->base.lineHeight      = Drawer2D_FontHeight(font, false);
 	String_InitArray(w->base.text, w->_textBuffer);
 
 	w->base.GetMaxLines   = MenuInputWidget_GetMaxLines;
@@ -1515,12 +1508,16 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	Size2D size = { 0, 0 };
 	Bitmap bmp; 
 	char lastCol;
-	int i, x, y = 0;
+	int i, x, y;
 
 	for (i = 0; i < w->GetMaxLines(); i++) {
-		size.Height += w->lineSizes[i].Height;
-		size.Width   = max(size.Width, w->lineSizes[i].Width);
+		if (!w->lines[i].length) break;
+		size.Height += w->lineHeight;
+		size.Width   = max(size.Width, w->lineWidths[i]);
 	}
+
+	if (!size.Width)  size.Width  = w->prefixWidth;
+	if (!size.Height) size.Height = w->lineHeight;
 	Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 
 	DrawTextArgs_MakeEmpty(&args, w->font, true);
@@ -1530,7 +1527,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	}
 
 	String_InitArray(line, lineBuffer);
-	for (i = 0; i < Array_Elems(w->lines); i++) {
+	for (i = 0, y = 0; i < Array_Elems(w->lines); i++) {
 		if (!w->lines[i].length) break;
 		line.length = 0;
 
@@ -1545,7 +1542,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 
 		x = i == 0 ? w->prefixWidth : 0;
 		Drawer2D_DrawText(&bmp, &args, x, y);
-		y += w->lineSizes[i].Height;
+		y += w->lineHeight;
 	}
 
 	Drawer2D_Make2DTexture(&w->inputTex, &bmp, size, 0, 0);
@@ -1553,7 +1550,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	w->caretAccumulator = 0;
 
 	w->width  = size.Width;
-	w->height = y == 0 ? w->prefixHeight : y;
+	w->height = size.Height;
 	Widget_Reposition(w);
 	w->inputTex.X = w->x + w->padding;
 	w->inputTex.Y = w->y;
@@ -1568,15 +1565,15 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 
 	Gfx_SetTexturing(false);
 	for (i = 0; i < INPUTWIDGET_MAX_LINES; i++) {
-		if (i > 0 && !w->lineSizes[i].Height) break;
+		if (i > 0 && !w->lines[i].length) break;
 
 		caretAtEnd = (w->caretY == i) && (w->caretX == INPUTWIDGET_LEN || w->caretPos == -1);
-		width      = w->lineSizes[i].Width + (caretAtEnd ? w->caretTex.Width : 0);
+		width      = w->lineWidths[i] + (caretAtEnd ? w->caretTex.Width : 0);
 		/* Cover whole window width to match original classic behaviour */
 		if (Game_PureClassic) { width = max(width, Window_Width - x * 4); }
 	
-		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->prefixHeight, backCol);
-		y += w->lineSizes[i].Height;
+		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->lineHeight, backCol);
+		y += w->lineHeight;
 	}
 
 	Gfx_SetTexturing(true);
@@ -1747,6 +1744,7 @@ void ChatInputWidget_Create(struct ChatInputWidget* w, FontDesc* font) {
 	w->base.convertPercents = !Game_ClassicMode;
 	w->base.showCaret       = true;
 	w->base.padding         = 5;
+	w->base.lineHeight      = Drawer2D_FontHeight(font, true);
 	w->base.GetMaxLines    = ChatInputWidget_GetMaxLines;
 	w->base.RemakeTexture  = ChatInputWidget_RemakeTexture;
 	w->base.OnPressedEnter = ChatInputWidget_OnPressedEnter;
