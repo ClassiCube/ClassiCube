@@ -400,11 +400,6 @@ static void HotbarWidget_Reposition(void* widget) {
 	HotbarWidget_RepositionSelectionTexture(w);
 }
 
-static void HotbarWidget_Init(void* widget) {
-	struct HotbarWidget* w = (struct HotbarWidget*)widget;
-	Widget_Reposition(w);
-}
-
 static void HotbarWidget_Render(void* widget, double delta) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	HotbarWidget_RenderHotbarOutline(w);
@@ -486,7 +481,7 @@ static bool HotbarWidget_MouseScroll(void* widget, float delta) {
 }
 
 static struct WidgetVTABLE HotbarWidget_VTABLE = {
-	HotbarWidget_Init,      HotbarWidget_Render, Widget_NullFunc,
+	Widget_NullFunc,        HotbarWidget_Render, Widget_NullFunc,
 	HotbarWidget_KeyDown,	HotbarWidget_KeyUp,
 	HotbarWidget_MouseDown, Widget_Mouse,        Widget_MouseMove, HotbarWidget_MouseScroll,
 	HotbarWidget_Reposition

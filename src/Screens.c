@@ -984,9 +984,6 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	int size;
 	bool extended;
 
-	Elem_TryFree(&s->hotbar);
-	Elem_Init(&s->hotbar);
-
 	size = Drawer2D_BitmappedText ? 16 : 11;
 	Drawer2D_MakeFont(&s->playerFont, size, FONT_STYLE_NORMAL);
 	HUDScreen_InitChatFonts(s);
@@ -1000,6 +997,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	PlayerListWidget_Create(&s->playerList, &s->playerFont, !extended);
 	s->showingList = true;
 
+	Widget_Reposition(&s->hotbar);
 	Elem_Init(&s->playerList);
 	Widget_Reposition(&s->playerList);
 }
