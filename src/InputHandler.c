@@ -172,7 +172,6 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 			Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 		}
 	} else if (key == KeyBinds[KEYBIND_IDOVERLAY]) {
-		if (Gui_OverlaysCount) return true;
 		TexIdsOverlay_Show();
 	} else if (key == KeyBinds[KEYBIND_BREAK_LIQUIDS]) {
 		InputHandler_Toggle(key, &Game_BreakableLiquids,

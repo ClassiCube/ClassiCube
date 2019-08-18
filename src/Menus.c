@@ -223,11 +223,10 @@ static void Menu_HandleFontChange(struct Screen* s) {
 static int Menu_Int(const String* str)          { int v; Convert_ParseInt(str, &v); return v; }
 static float Menu_Float(const String* str)      { float v; Convert_ParseFloat(str, &v); return v; }
 static PackedCol Menu_HexCol(const String* str) { PackedCol v; PackedCol_TryParseHex(str, &v); return v; }
-#define Menu_ReplaceActive(screen) Gui_FreeActive(); Gui_SetActive(screen);
 
 static void Menu_SwitchOptions(void* a, void* b)        { OptionsGroupScreen_Show(); }
 static void Menu_SwitchPause(void* a, void* b)          { PauseScreen_Show(); }
-static void Menu_SwitchClassicOptions(void* a, void* b) { Menu_ReplaceActive(ClassicOptionsScreen_MakeInstance()); }
+static void Menu_SwitchClassicOptions(void* a, void* b) { ClassicOptionsScreen_Show(); }
 
 static void Menu_SwitchKeysClassic(void* a, void* b)      { ClassicKeyBindingsScreen_Show(); }
 static void Menu_SwitchKeysClassicHacks(void* a, void* b) { ClassicHacksKeyBindingsScreen_Show(); }
@@ -236,12 +235,12 @@ static void Menu_SwitchKeysHacks(void* a, void* b)        { HacksKeyBindingsScre
 static void Menu_SwitchKeysOther(void* a, void* b)        { OtherKeyBindingsScreen_Show(); }
 static void Menu_SwitchKeysMouse(void* a, void* b)        { MouseKeyBindingsScreen_Show(); }
 
-static void Menu_SwitchMisc(void* a, void* b)      { Menu_ReplaceActive(MiscOptionsScreen_MakeInstance()); }
-static void Menu_SwitchGui(void* a, void* b)       { Menu_ReplaceActive(GuiOptionsScreen_MakeInstance()); }
-static void Menu_SwitchGfx(void* a, void* b)       { Menu_ReplaceActive(GraphicsOptionsScreen_MakeInstance()); }
-static void Menu_SwitchHacks(void* a, void* b)     { Menu_ReplaceActive(HacksSettingsScreen_MakeInstance()); }
-static void Menu_SwitchEnv(void* a, void* b)       { Menu_ReplaceActive(EnvSettingsScreen_MakeInstance()); }
-static void Menu_SwitchNostalgia(void* a, void* b) { Menu_ReplaceActive(NostalgiaScreen_MakeInstance()); }
+static void Menu_SwitchMisc(void* a, void* b)      { MiscOptionsScreen_Show(); }
+static void Menu_SwitchGui(void* a, void* b)       { GuiOptionsScreen_Show(); }
+static void Menu_SwitchGfx(void* a, void* b)       { GraphicsOptionsScreen_Show(); }
+static void Menu_SwitchHacks(void* a, void* b)     { HacksSettingsScreen_Show(); }
+static void Menu_SwitchEnv(void* a, void* b)       { EnvSettingsScreen_Show(); }
+static void Menu_SwitchNostalgia(void* a, void* b) { NostalgiaScreen_Show(); }
 
 static void Menu_SwitchGenLevel(void* a, void* b)        { GenLevelScreen_Show(); }
 static void Menu_SwitchClassicGenLevel(void* a, void* b) { ClassicGenScreen_Show(); }
@@ -502,6 +501,7 @@ static void MenuScreen_Free(void* screen) {
 *#########################################################################################################################*/
 static struct PauseScreen {
 	MenuScreen_Layout
+	const struct SimpleButtonDesc* descs;
 	struct ButtonWidget buttons[6], quit, back;
 } PauseScreen_Instance;
 
@@ -514,18 +514,27 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 	s->buttons[4].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
 }
 
-static void PauseScreen_MakeButtons(struct PauseScreen* s, int width, const struct SimpleButtonDesc* descs, int count) {
+static void PauseScreen_ContextRecreated(void* screen) {
+	struct PauseScreen* s = (struct PauseScreen*)screen;
 	int i;
-	for (i = 0; i < count; i++) {
-		String text = String_FromReadonly(descs[i].title);
-		Menu_OldButton(s, i, &s->buttons[i], width, &text, &s->titleFont, descs[i].onClick,
-			ANCHOR_CENTRE, ANCHOR_CENTRE, descs[i].x, descs[i].y);
+	for (i = 0; i < s->numWidgets - 2; i++) {
+		ButtonWidget_SetConst(&s->buttons[i], s->descs[i].title, &s->titleFont);
 	}
+
+	if (!Gui_ClassicMenu) ButtonWidget_SetConst(&s->quit, "Quit game", &s->titleFont);
+	ButtonWidget_SetConst(&s->back, "Back to game", &s->titleFont);
+
+	if (!Server.IsSinglePlayer) {
+		s->buttons[1].disabled = true;
+		s->buttons[2].disabled = true;
+	}
+	PauseScreen_CheckHacksAllowed(s);
 }
 
-static void PauseScreen_ContextRecreated(void* screen) {
-	static const String quitMsg = String_FromConst("Quit game");
+static void PauseScreen_Init(void* screen) {
+	static struct Widget* widgets[8];
 	struct PauseScreen* s = (struct PauseScreen*)screen;
+	int i, count, width;
 
 	static const struct SimpleButtonDesc classicDescs[5] = {
 		{    0, -100, "Options...",             Menu_SwitchClassicOptions },
@@ -543,32 +552,30 @@ static void PauseScreen_ContextRecreated(void* screen) {
 		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
 	};
 
-	if (Gui_ClassicMenu) {
-		PauseScreen_MakeButtons(s, 400, classicDescs, 5);
-		Menu_OldBack(s, 5, &s->back, "Back to game", &s->titleFont, PauseScreen_Game);
-
-		/* Disable nostalgia options in classic mode */
-		if (Game_ClassicMode) Menu_Remove(s, 4);
-		s->widgets[6] = NULL;
-		s->widgets[7] = NULL;
-	} else {
-		PauseScreen_MakeButtons(s, 300, modernDescs, 6);
-		Menu_OldButton(s, 6, &s->quit, 120, &quitMsg, &s->titleFont, PauseScreen_Quit,
-			ANCHOR_MAX, ANCHOR_MAX, 5, 5);
-		Menu_OldBack(s,   7, &s->back, "Back to game",&s->titleFont, PauseScreen_Game);
-	}
-
-	if (!Server.IsSinglePlayer) {
-		s->buttons[1].disabled = true;
-		s->buttons[2].disabled = true;
-	}
-	PauseScreen_CheckHacksAllowed(s);
-}
-
-static void PauseScreen_Init(void* screen) {
-	struct PauseScreen* s = (struct PauseScreen*)screen;
+	s->widgets = widgets;
 	MenuScreen_Init(s);
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
+
+	if (Gui_ClassicMenu) {
+		s->descs = classicDescs; /*400*/
+		/* Don't show nostalgia options in classic mode */
+		count    = Game_ClassicMode ? 4 : 5;
+	} else {
+		s->descs = modernDescs; /*300*/
+		count    = 6;
+	}
+
+	s->numWidgets = count + 2;
+	width = Gui_ClassicMenu ? 400 : 300;
+
+	for (i = 0; i < count; i++) {
+		Menu_Button(s, i, &s->buttons[i], width, s->descs[i].onClick,
+			ANCHOR_CENTRE, ANCHOR_CENTRE, s->descs[i].x, s->descs[i].y);
+	}
+
+	Menu_Button(s, count,     &s->quit, 120, PauseScreen_Quit,
+			ANCHOR_MAX, ANCHOR_MAX, 5, 5);
+	Menu_Back(s,   count + 1, &s->back, PauseScreen_Game);
 }
 
 static void PauseScreen_Free(void* screen) {
@@ -584,15 +591,10 @@ static struct ScreenVTABLE PauseScreen_VTABLE = {
 	Menu_OnResize,      Menu_ContextLost,   PauseScreen_ContextRecreated
 };
 void PauseScreen_Show(void) {
-	static struct Widget* widgets[8];
 	struct PauseScreen* s = &PauseScreen_Instance;
-
 	s->grabsInput = true;
 	s->closable   = true;
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
-
-	s->VTABLE = &PauseScreen_VTABLE;
+	s->VTABLE     = &PauseScreen_VTABLE;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
@@ -2175,13 +2177,14 @@ static void ClassicOptionsScreen_ContextRecreated(void* screen) {
 	if (!Game_ClassicHacks)     Menu_Remove(s, 8);
 }
 
-struct Screen* ClassicOptionsScreen_MakeInstance(void) {
+void ClassicOptionsScreen_Show(void) {
 	static struct MenuInputDesc descs[11];
 	MenuInput_Enum(descs[2], ViewDist_Names, VIEW_COUNT);
 	MenuInput_Enum(descs[7], FpsLimit_Names, FPS_LIMIT_COUNT);
 
-	return MenuOptionsScreen_MakeInstance(11, 
+	struct Screen* s = MenuOptionsScreen_MakeInstance(11, 
 		ClassicOptionsScreen_ContextRecreated, descs, NULL, 0);
+	Gui_Replace(s, GUI_PRIORITY_MENU);
 }
 
 
@@ -2260,8 +2263,8 @@ static String String_InitAndClear(STRING_REF char* buffer, int capacity) {
 	return str;
 }
 
-struct Screen* EnvSettingsScreen_MakeInstance(void) {
-	static struct MenuInputDesc descs[1];
+void EnvSettingsScreen_Show(void) {
+	static struct MenuInputDesc descs[11];
 	MenuInput_Hex(descs[0],   Env_DefaultCloudsCol);
 	MenuInput_Hex(descs[1],   Env_DefaultSkyCol);
 	MenuInput_Hex(descs[2],   Env_DefaultFogCol);
@@ -2274,8 +2277,9 @@ struct Screen* EnvSettingsScreen_MakeInstance(void) {
 	MenuInput_Float(descs[8],  -100,  100, 1);
 	MenuInput_Int(descs[9],   -2048, 2048, World.Height / 2);
 
-	return MenuOptionsScreen_MakeInstance(4,
+	struct Screen* s = MenuOptionsScreen_MakeInstance(14,
 		EnvSettingsScreen_ContextRecreated, descs, NULL, 0);
+	Gui_Replace(s, GUI_PRIORITY_MENU);
 }
 
 
@@ -2334,7 +2338,7 @@ static void GraphicsOptionsScreen_ContextRecreated(void* screen) {
 	widgets[7] = NULL; widgets[8] = NULL; widgets[9] = NULL;
 }
 
-struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
+void GraphicsOptionsScreen_Show(void) {
 	static struct MenuInputDesc descs[7];
 	static const char* extDescs[Array_Elems(descs)];
 
@@ -2361,8 +2365,9 @@ struct Screen* GraphicsOptionsScreen_MakeInstance(void) {
 	MenuInput_Enum(descs[3], NameMode_Names,   NAME_MODE_COUNT);
 	MenuInput_Enum(descs[4], ShadowMode_Names, SHADOW_MODE_COUNT);
 
-	return MenuOptionsScreen_MakeInstance(10,
+	struct Screen* s = MenuOptionsScreen_MakeInstance(10,
 		GraphicsOptionsScreen_ContextRecreated, descs, extDescs, Array_Elems(extDescs));
+	Gui_Replace(s, GUI_PRIORITY_MENU);
 }
 
 
@@ -2444,15 +2449,16 @@ static void GuiOptionsScreen_ContextRecreated(void* screen) {
 	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
 }
 
-struct Screen* GuiOptionsScreen_MakeInstance(void) {
+void GuiOptionsScreen_Show(void) {
 	static struct MenuInputDesc descs[11];
 	MenuInput_Float(descs[2], 0.25f, 4.00f,  1);
 	MenuInput_Float(descs[3], 0.25f, 4.00f,  1);
 	MenuInput_Float(descs[6], 0.25f, 4.00f,  1);
 	MenuInput_Int(descs[7],       0,    30, 10);
 
-	return MenuOptionsScreen_MakeInstance(14,
+	struct Screen* s = MenuOptionsScreen_MakeInstance(14,
 		GuiOptionsScreen_ContextRecreated, descs,  NULL, 0);
+	Gui_Replace(s, GUI_PRIORITY_MENU);
 }
 
 
@@ -2585,7 +2591,7 @@ static void HacksSettingsScreen_ContextRecreated(void* screen) {
 	HacksSettingsScreen_CheckHacksAllowed(screen);
 }
 
-struct Screen* HacksSettingsScreen_MakeInstance(void) {
+void HacksSettingsScreen_Show(void) {
 	static struct MenuInputDesc descs[11];
 	static const char* extDescs[Array_Elems(descs)];
 
@@ -2604,7 +2610,7 @@ struct Screen* HacksSettingsScreen_MakeInstance(void) {
 	struct Screen* s = MenuOptionsScreen_MakeInstance(14,
 		HacksSettingsScreen_ContextRecreated, descs, extDescs, Array_Elems(extDescs));
 	s->VTABLE->ContextLost = HacksSettingsScreen_ContextLost;
-	return s;
+	Gui_Replace(s, GUI_PRIORITY_MENU);
 }
 
 
@@ -2678,7 +2684,7 @@ static void MiscOptionsScreen_ContextRecreated(void* screen) {
 	if (!Server.IsSinglePlayer) Menu_Remove(s, 4);
 }
 
-struct Screen* MiscOptionsScreen_MakeInstance(void) {
+void MiscOptionsScreen_Show(void) {
 	static struct MenuInputDesc descs[9];
 	MenuInput_Float(descs[0], 1, 1024, 5);
 	MenuInput_Int(descs[1],   0, 100,  0);
@@ -2689,8 +2695,9 @@ struct Screen* MiscOptionsScreen_MakeInstance(void) {
 	MenuInput_Int(descs[7],   1, 200, 30);
 #endif
 
-	return MenuOptionsScreen_MakeInstance(12,
+	struct Screen* s = MenuOptionsScreen_MakeInstance(12,
 		MiscOptionsScreen_ContextRecreated, descs, NULL, 0);
+	Gui_Replace(s, GUI_PRIORITY_MENU);
 }
 
 
@@ -2758,9 +2765,10 @@ static void NostalgiaScreen_ContextRecreated(void* screen) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 }
 
-struct Screen* NostalgiaScreen_MakeInstance(void) {
-	return MenuOptionsScreen_MakeInstance(10,
+void NostalgiaScreen_Show(void) {
+	struct Screen* s = MenuOptionsScreen_MakeInstance(10,
 		NostalgiaScreen_ContextRecreated, NULL, NULL, 0);
+	Gui_Replace(s, GUI_PRIORITY_MENU);
 }
 
 

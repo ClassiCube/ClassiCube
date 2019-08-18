@@ -9,7 +9,7 @@ struct Screen;
 
 void PauseScreen_Show(void);
 void OptionsGroupScreen_Show(void);
-struct Screen* ClassicOptionsScreen_MakeInstance(void);
+void ClassicOptionsScreen_Show(void);
 
 void ClassicKeyBindingsScreen_Show(void);
 void ClassicHacksKeyBindingsScreen_Show(void);
@@ -26,12 +26,12 @@ void TexturePackScreen_Show(void);
 void FontListScreen_Show(void);
 void HotkeyListScreen_Show(void);
 
-struct Screen* MiscOptionsScreen_MakeInstance(void);
-struct Screen* GuiOptionsScreen_MakeInstance(void);
-struct Screen* GraphicsOptionsScreen_MakeInstance(void);
-struct Screen* HacksSettingsScreen_MakeInstance(void);
-struct Screen* EnvSettingsScreen_MakeInstance(void);
-struct Screen* NostalgiaScreen_MakeInstance(void);
+void MiscOptionsScreen_Show(void);
+void GuiOptionsScreen_Show(void);
+void GraphicsOptionsScreen_Show(void);
+void HacksSettingsScreen_Show(void);
+void EnvSettingsScreen_Show(void);
+void NostalgiaScreen_Show(void);
 
 void UrlWarningOverlay_Show(const String* url);
 void TexIdsOverlay_Show(void);

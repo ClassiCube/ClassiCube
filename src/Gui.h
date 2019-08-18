@@ -109,11 +109,8 @@ extern struct Screen* Gui_Status;
 extern struct Screen* Gui_HUD;
 extern struct Screen* Gui_Active;
 #define GUI_MAX_SCREENS 10
-#define GUI_MAX_OVERLAYS 4
-extern struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
 extern struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 extern int Gui_ScreensCount;
-extern int Gui_OverlaysCount;
 
 /* Calculates position of an element on a particular axis */
 /* For example, to calculate X position of a text widget on screen */
@@ -123,9 +120,6 @@ bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
 /* Gets the screen that the user is currently interacting with. */
 /* This means if an overlay is active, it will be over the top of other screens. */
 struct Screen* Gui_GetActiveScreen(void);
-/* Gets the non-overlay screen that the user is currently interacting with. */
-/* This means if an overlay is active, the screen under it is returned. */
-struct Screen* Gui_GetUnderlyingScreen(void);
 
 /* Frees the active screen if it is not NULL. */
 /* NOTE: You should usually use Gui_CloseActive instead. */
@@ -133,10 +127,6 @@ CC_NOINLINE void Gui_FreeActive(void);
 /* Sets the active screen/menu that the user interacts with. */
 /* NOTE: This doesn't free old active screen - must call Gui_FreeActive() first */
 CC_NOINLINE void Gui_SetActive(struct Screen* screen);
-/* Shortcut for Gui_Close(Gui_Active) */
-CC_NOINLINE void Gui_CloseActive(void);
-/* Frees the given screen, and if == Gui_Active, calls Gui_SetActive(NULL) */
-CC_NOINLINE void Gui_Close(void* screen);
 
 /* Returns index of the given screen in the screens list, -1 if not */
 int Gui_Index(struct Screen* screen);
@@ -159,10 +149,6 @@ void Gui_RefreshAll(void);
 void Gui_RefreshHud(void);
 void Gui_Refresh(struct Screen* s);
 
-/* Returns index of the given screen in the overlays list, -1 if not */
-int  Gui_IndexOverlay(const void* screen);
-/* Removes given screen from the overlays list */
-void Gui_RemoveOverlay(const void* screen);
 void Gui_RenderGui(double delta);
 void Gui_OnResize(void);
 

@@ -20,9 +20,8 @@ GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 struct Screen* Gui_Status;
 struct Screen* Gui_HUD;
 struct Screen* Gui_Active;
-struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
-int Gui_ScreensCount, Gui_OverlaysCount;
+int Gui_ScreensCount;
 static uint8_t priorities[GUI_MAX_SCREENS];
 
 void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
@@ -128,11 +127,7 @@ static void Gui_Init(void) {
 }
 
 static void Gui_Reset(void) {
-	int i;
-	for (i = 0; i < Gui_OverlaysCount; i++) {
-		Elem_TryFree(Gui_Overlays[i]);
-	}
-	Gui_OverlaysCount = 0;
+	/* TODO:Should we reset all screens here.. ? */
 }
 
 static void Gui_Free(void) {
@@ -158,23 +153,12 @@ struct IGameComponent Gui_Component = {
 };
 
 struct Screen* Gui_GetActiveScreen(void) {
-	return Gui_OverlaysCount ? Gui_Overlays[0] : Gui_GetUnderlyingScreen();
-}
-
-struct Screen* Gui_GetUnderlyingScreen(void) {
 	return Gui_Active ? Gui_Active : Gui_HUD;
 }
 
 void Gui_FreeActive(void) {
 	if (Gui_Active) { Elem_TryFree(Gui_Active); }
 }
-void Gui_Close(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	if (s) { Elem_TryFree(s); }
-	if (s == Gui_Active) Gui_SetActive(NULL);
-}
-
-void Gui_CloseActive(void) { Gui_Close(Gui_Active); }
 
 void Gui_SetActive(struct Screen* screen) {
 	InputHandler_ScreenChanged(Gui_Active, screen);
@@ -290,28 +274,6 @@ struct Screen* Gui_GetClosable(void) {
 		if (Gui_Screens[i]->closable) return Gui_Screens[i];
 	}
 	return NULL;
-}
-
-int Gui_IndexOverlay(const void* screen) {
-	int i;
-
-	for (i = 0; i < Gui_OverlaysCount; i++) {
-		if (Gui_Overlays[i] == screen) return i;
-	}
-	return -1;
-}
-
-void Gui_RemoveOverlay(const void* screen) {
-	int i = Gui_IndexOverlay(screen);
-	if (i == -1) return;
-
-	for (; i < Gui_OverlaysCount - 1; i++) {
-		Gui_Overlays[i] = Gui_Overlays[i + 1];
-	}
-
-	Gui_OverlaysCount--;
-	Gui_Overlays[Gui_OverlaysCount] = NULL;
-	Camera_CheckFocus();
 }
 
 void Gui_RenderGui(double delta) {
