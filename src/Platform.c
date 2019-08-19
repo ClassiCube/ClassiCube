@@ -1008,7 +1008,7 @@ ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style
 	desc->Handle = NULL;
 
 	value = Font_Lookup(fontName, style);
-	if (!value.length) Logger_Abort("Unknown font");
+	if (!value.length) return ERR_INVALID_ARGUMENT;
 	String_UNSAFE_Separate(&value, ',', &path, &index);
 	Convert_ParseInt(&index, &faceIndex);
 

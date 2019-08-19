@@ -28,16 +28,63 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, const FontDesc* font, boo
 	args->useShadow = useShadow;
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------Font functions------------------------------------------------------*
+*#########################################################################################################################*/
+static String font_candidates[9] = {
+	String_FromConst(""), /* Filled in with Drawer2D_FontName */
+	String_FromConst("Arial"),                      /* preferred font on all platforms */
+	String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
+	String_FromConst("Nimbus Sans"),                /* other common ones */
+	String_FromConst("Liberation Sans"),
+	String_FromConst("Bitstream Charter"),
+	String_FromConst("Cantarell"),
+	String_FromConst("DejaVu Sans Book"),
+	String_FromConst("Roboto") /* android */
+};
+
 void Drawer2D_MakeFont(FontDesc* desc, int size, int style) {
+	int i;
 	ReturnCode res;
+
 	if (Drawer2D_BitmappedText) {
 		desc->Handle = NULL;
 		desc->Size   = size;
 		desc->Style  = style;
 	} else {
-		res = Font_Make(desc, &Drawer2D_FontName, size, style);
-		if (res) Logger_Abort2(res, "Making default font failed");
+		font_candidates[0] = Drawer2D_FontName;
+
+		/* In case user's default font(s) are broken somehow */
+		/* (e.g. user deletes the file for the default font) */
+		for (i = 0; i < Array_Elems(font_candidates); i++) {
+			res = Font_Make(desc, &font_candidates[i], size, style);
+
+			if (res) {
+				Font_Free(desc);
+				Logger_Warn2(res, "creating font", &font_candidates[i]);
+			} else {
+				if (i) String_Copy(&Drawer2D_FontName, &font_candidates[i]);
+				return;
+			}
+		}
 	}
+}
+
+static void Drawer2D_CheckFont(void) {
+	String path;
+	int i;
+	/* Try user's default font if set, otherwise try Arial */
+	i = font_candidates[0].length ? 0 : 1;
+
+	for (; i < Array_Elems(font_candidates); i++) {
+		path = Font_Lookup(&font_candidates[i], FONT_STYLE_NORMAL);
+		if (!path.length) continue;
+
+		String_Copy(&Drawer2D_FontName, &font_candidates[i]);
+		return;
+	}
+	Logger_Abort("Unable to init default font");
 }
 
 static Bitmap fontBitmap;
@@ -86,6 +133,9 @@ void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------Drawing functions-----------------------------------------------------*
+*#########################################################################################################################*/
 bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height) {
 	if (*x >= bmp->Width || *y >= bmp->Height) return false;
 
@@ -302,8 +352,7 @@ bool Drawer2D_IsWhiteCol(char c) { return c == '\0' || c == 'f' || c == 'F'; }
 
 /* Divides R/G/B by 4 */
 CC_NOINLINE static BitmapCol Drawer2D_ShadowCol(BitmapCol c) {
-	c.R >>= 2; c.G >>= 2; c.B >>= 2; 
-	return c;
+	c.R >>= 2; c.G >>= 2; c.B >>= 2; return c;
 }
 
 #define Drawer2D_ShadowOffset(point) (point / 8)
@@ -639,43 +688,13 @@ static void Drawer2D_TextureChanged(void* obj, struct Stream* src, const String*
 	}
 }
 
-static void Drawer2D_CheckFont(void) {
-	static const String default_fonts[8] = {
-		String_FromConst("Arial"),                      /* preferred font on all platforms */
-		String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
-		String_FromConst("Nimbus Sans"),                /* other common ones */
-		String_FromConst("Liberation Sans"),
-		String_FromConst("Bitstream Charter"),
-		String_FromConst("Cantarell"),
-		String_FromConst("DejaVu Sans Book"),
-		String_FromConst("Roboto") /* android */
-	};
-	String path;
-	int i;
-
-	path = Font_Lookup(&Drawer2D_FontName, FONT_STYLE_NORMAL);
-	if (path.length) return;
-
-	for (i = 0; i < Array_Elems(default_fonts); i++) {
-		path = Font_Lookup(&default_fonts[i], FONT_STYLE_NORMAL);
-		if (!path.length) continue;
-
-		String_Copy(&Drawer2D_FontName, &default_fonts[i]);
-		return;
-	}
-	Logger_Abort("Unable to init default font");
-}
-
 static void Drawer2D_Init(void) {
 	Drawer2D_Reset();
 	Drawer2D_BitmappedText    = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
 	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
 
-	Options_Get(OPT_FONT_NAME, &Drawer2D_FontName, "Arial");
-	if (Game_ClassicMode) {
-		Drawer2D_FontName.length = 0;
-		String_AppendConst(&Drawer2D_FontName, "Arial");
-	}
+	Options_UNSAFE_Get(OPT_FONT_NAME, &font_candidates[0]);
+	if (Game_ClassicMode) font_candidates[0].length = 0;
 
 	Drawer2D_CheckFont();
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Drawer2D_TextureChanged);
