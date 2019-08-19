@@ -710,8 +710,8 @@ static void HUDScreen_ConstructWidgets(struct HUDScreen* s) {
 	TextGroupWidget_Create(&s->status, CHAT_MAX_STATUS, &s->chatFont, 
 							s->statusTextures, HUDScreen_GetStatus);
 	Widget_SetLocation(&s->status, ANCHOR_MAX, ANCHOR_MIN, 0, 0);
+	s->status.placeholderHeight[0] = false; /* Texture pack download status */
 	Elem_Init(&s->status);
-	TextGroupWidget_SetUsePlaceHolder(&s->status, 0, false);
 
 	TextGroupWidget_Create(&s->bottomRight, CHAT_MAX_BOTTOMRIGHT, &s->chatFont, 
 							s->bottomRightTextures, HUDScreen_GetBottomRight);

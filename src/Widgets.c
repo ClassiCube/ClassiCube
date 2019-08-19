@@ -2174,14 +2174,6 @@ static void TextGroupWidget_UpdateY(struct TextGroupWidget* w) {
 	}
 }
 
-void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, int index, bool placeHolder) {
-	w->placeholderHeight[index] = placeHolder;
-	if (w->textures[index].ID) return;
-
-	w->textures[index].Height = placeHolder ? w->defaultHeight : 0;
-	TextGroupWidget_UpdateY(w);
-}
-
 int TextGroupWidget_UsedHeight(struct TextGroupWidget* w) {
 	struct Texture* textures = w->textures;
 	int i, height = 0;
@@ -2221,7 +2213,7 @@ static void TextGroupWidget_UpdateDimensions(struct TextGroupWidget* w) {
 	Widget_Reposition(w);
 }
 
-struct Portion { int16_t Beg, Len, LineBeg, LineLen; };
+struct Portion { short Beg, Len, LineBeg, LineLen; };
 #define TEXTGROUPWIDGET_HTTP_LEN 7 /* length of http:// */
 #define TEXTGROUPWIDGET_URL 0x8000
 #define TEXTGROUPWIDGET_PACKED_LEN 0x7FFF
@@ -2515,8 +2507,7 @@ static void TextGroupWidget_Init(void* widget) {
 	w->defaultHeight = height;
 
 	for (i = 0; i < w->lines; i++) {
-		w->textures[i].Height = height;
-		w->placeholderHeight[i] = true;
+		w->textures[i].Height = w->placeholderHeight[i] ? height : 0;
 	}
 	TextGroupWidget_UpdateDimensions(w);
 }
@@ -2548,8 +2539,12 @@ static struct WidgetVTABLE TextGroupWidget_VTABLE = {
 	TextGroupWidget_Reposition
 };
 void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, FontDesc* font, struct Texture* textures, TextGroupWidget_Get getLine) {
+	int i;
 	Widget_Reset(w);
 	w->VTABLE = &TextGroupWidget_VTABLE;
+	for (i = 0; i < lines; i++) {
+		w->placeholderHeight[i] = true;
+	}
 
 	w->lines    = lines;
 	w->font     = font;

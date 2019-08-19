@@ -203,6 +203,7 @@ struct TextGroupWidget {
 	Widget_Layout
 	int lines, defaultHeight;
 	FontDesc* font;
+	/* Whether a line has non-zero height when that line has no text in it. */
 	bool placeholderHeight[TEXTGROUPWIDGET_MAX_LINES];
 	bool underlineUrls;
 	struct Texture* textures;
@@ -211,9 +212,6 @@ struct TextGroupWidget {
 };
 
 CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, FontDesc* font, struct Texture* textures, TextGroupWidget_Get getLine);
-/* Sets whether the given line has non-zero height when that line has no text in it. */
-/* By default, all lines are placeholder lines. */
-CC_NOINLINE void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, int index, bool placeHolder);
 /* Deletes first line, then moves all other lines upwards, then redraws last line. */
 /* NOTE: GetLine must also adjust the lines it returns for this to behave properly. */
 CC_NOINLINE void TextGroupWidget_ShiftUp(struct TextGroupWidget* w);
