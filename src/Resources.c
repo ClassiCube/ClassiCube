@@ -50,7 +50,7 @@ static struct ResourceTexture {
 	{ "animations.png" }, { "animations.txt" }
 };
 
-static struct ResourceSound {
+static const struct ResourceSound {
 	const char* name;
 	const char* hash;
 } soundResources[59] = {
@@ -665,7 +665,7 @@ static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) 
 	Mem_Free(samples);
 }
 
-static void SoundPatcher_Save(struct ResourceSound* sound, struct HttpRequest* req) {
+static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 	String path; char pathBuffer[STRING_SIZE];
 	uint8_t buffer[OGG_BUFFER_SIZE];
 	struct Stream src, ogg, dst;
@@ -674,7 +674,7 @@ static void SoundPatcher_Save(struct ResourceSound* sound, struct HttpRequest* r
 
 	Stream_ReadonlyMemory(&src, req->Data, req->Size);
 	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "audio/%c.wav", sound->name);
+	String_Format1(&path, "audio/%c.wav", name);
 
 	res = Stream_CreateFile(&dst, &path);
 	if (res) { Logger_Warn(res, "creating .wav file"); return; }
@@ -689,12 +689,12 @@ static void SoundPatcher_Save(struct ResourceSound* sound, struct HttpRequest* r
 	if (res) Logger_Warn(res, "closing .wav file");
 }
 
-static void MusicPatcher_Save(struct ResourceMusic* music, struct HttpRequest* req) {
+static void MusicPatcher_Save(const char* name, struct HttpRequest* req) {
 	String path; char pathBuffer[STRING_SIZE];
 	ReturnCode res;
 
 	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "audio/%c", music->name);
+	String_Format1(&path, "audio/%c", name);
 
 	res = Stream_WriteAllTo(&path, req->Data, req->Size);
 	if (res) Logger_Warn(res, "saving music file");
@@ -785,16 +785,16 @@ static void Fetcher_CheckMusic(struct ResourceMusic* music) {
 	if (!Fetcher_Get(&id, &req)) return;
 
 	music->downloaded = true;
-	MusicPatcher_Save(music, &req);
+	MusicPatcher_Save(music->name, &req);
 	HttpRequest_Free(&req);
 }
 
-static void Fetcher_CheckSound(struct ResourceSound* sound) {
+static void Fetcher_CheckSound(const struct ResourceSound* sound) {
 	String id = String_FromReadonly(sound->name);
 	struct HttpRequest req;
 	if (!Fetcher_Get(&id, &req)) return;
 
-	SoundPatcher_Save(sound, &req);
+	SoundPatcher_Save(sound->name, &req);
 	HttpRequest_Free(&req);
 }
 
