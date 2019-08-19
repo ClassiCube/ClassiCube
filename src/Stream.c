@@ -95,7 +95,7 @@ static ReturnCode Stream_FileWrite(struct Stream* s, const uint8_t* data, uint32
 }
 static ReturnCode Stream_FileClose(struct Stream* s) {
 	ReturnCode res = File_Close(s->Meta.File);
-	s->Meta.File = NULL;
+	s->Meta.File = 0;
 	return res;
 }
 static ReturnCode Stream_FileSkip(struct Stream* s, uint32_t count) {

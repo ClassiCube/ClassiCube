@@ -133,7 +133,7 @@ static void Chat_OpenLog(struct DateTime* now) {
 		return;
 	}
 
-	logStream.Meta.File = NULL;
+	logStream.Meta.File = 0;
 	Chat_DisableLogging();
 	Chat_Add1("&cFailed to open a chat log file after %i tries, giving up", &i);	
 }
