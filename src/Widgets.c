@@ -2155,25 +2155,6 @@ void TextGroupWidget_ShiftDown(struct TextGroupWidget* w) {
 	TextGroupWidget_Redraw(w, 0);
 }
 
-static void TextGroupWidget_UpdateY(struct TextGroupWidget* w) {	
-	struct Texture* textures = w->textures;
-	int i, y;
-
-	if (w->verAnchor == ANCHOR_MIN) {
-		y = w->y;
-		for (i = 0; i < w->lines; i++) {
-			textures[i].Y = y;
-			y += textures[i].Height;
-		}
-	} else {
-		y = Window_Height - w->yOffset;
-		for (i = w->lines - 1; i >= 0; i--) {
-			y -= textures[i].Height;
-			textures[i].Y = y;
-		}
-	}
-}
-
 int TextGroupWidget_UsedHeight(struct TextGroupWidget* w) {
 	struct Texture* textures = w->textures;
 	int i, height = 0;
@@ -2190,27 +2171,22 @@ int TextGroupWidget_UsedHeight(struct TextGroupWidget* w) {
 static void TextGroupWidget_Reposition(void* widget) {
 	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
 	struct Texture* textures  = w->textures;
-	int i, oldY = w->y;
-	Widget_CalcPosition(w);
-
-	for (i = 0; i < w->lines; i++) {
-		textures[i].X = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, Window_Width);
-		textures[i].Y += w->y - oldY;
-	}
-}
-
-static void TextGroupWidget_UpdateDimensions(struct TextGroupWidget* w) {	
-	struct Texture* textures = w->textures;
-	int i, width = 0, height = 0;
-
+	int i, y, width = 0, height = 0;
+	
+	/* Work out how big the text group is now */
 	for (i = 0; i < w->lines; i++) {
 		width = max(width, textures[i].Width);
 		height += textures[i].Height;
 	}
 
-	w->width  = width;
-	w->height = height;
-	Widget_Reposition(w);
+	w->width = width; w->height = height;
+	Widget_CalcPosition(w);
+
+	for (i = 0, y = w->y; i < w->lines; i++) {
+		textures[i].X = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, Window_Width);
+		textures[i].Y = y;
+		y += textures[i].Height;
+	}
 }
 
 struct Portion { short Beg, Len, LineBeg, LineLen; };
@@ -2476,8 +2452,7 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 
 	tex.X = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, Window_Width);
 	w->textures[index] = tex;
-	TextGroupWidget_UpdateY(w);
-	TextGroupWidget_UpdateDimensions(w);
+	Widget_Reposition(w);
 }
 
 void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* group, char col) {
@@ -2498,18 +2473,18 @@ void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* group, char col) {
 }
 
 
-static void TextGroupWidget_Init(void* widget) {
-	struct TextGroupWidget* w = (struct TextGroupWidget*)widget;
+void TextGroupWidget_SetFont(struct TextGroupWidget* w, FontDesc* font) {
 	int i, height;
 	
-	height = Drawer2D_FontHeight(w->font, true);
-	Drawer2D_ReducePadding_Height(&height, w->font->Size, 3);
+	height = Drawer2D_FontHeight(font, true);
+	Drawer2D_ReducePadding_Height(&height, font->Size, 3);
 	w->defaultHeight = height;
 
 	for (i = 0; i < w->lines; i++) {
 		w->textures[i].Height = w->placeholderHeight[i] ? height : 0;
 	}
-	TextGroupWidget_UpdateDimensions(w);
+	w->font = font;
+	Widget_Reposition(w);
 }
 
 static void TextGroupWidget_Render(void* widget, double delta) {
@@ -2533,21 +2508,18 @@ static void TextGroupWidget_Free(void* widget) {
 }
 
 static struct WidgetVTABLE TextGroupWidget_VTABLE = {
-	TextGroupWidget_Init, TextGroupWidget_Render, TextGroupWidget_Free,
-	Widget_Key,           Widget_Key,
-	Widget_Mouse,         Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
+	Widget_NullFunc, TextGroupWidget_Render, TextGroupWidget_Free,
+	Widget_Key,      Widget_Key,
+	Widget_Mouse,    Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	TextGroupWidget_Reposition
 };
-void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, FontDesc* font, struct Texture* textures, TextGroupWidget_Get getLine) {
+void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine) {
 	int i;
 	Widget_Reset(w);
 	w->VTABLE = &TextGroupWidget_VTABLE;
-	for (i = 0; i < lines; i++) {
-		w->placeholderHeight[i] = true;
-	}
+	for (i = 0; i < lines; i++) { w->placeholderHeight[i] = true; }
 
 	w->lines    = lines;
-	w->font     = font;
 	w->textures = textures;
 	w->GetLine  = getLine;
 }

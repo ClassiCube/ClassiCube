@@ -1824,7 +1824,6 @@ static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* s) {
 
 static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* s) {
 	s->extHelp.xOffset = Window_Width  / 2 - s->extHelp.width / 2;
-	s->extHelp.yOffset = Window_Height / 2 + 100;
 	Widget_Reposition(&s->extHelp);
 }
 
@@ -1850,9 +1849,9 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 	descRaw = String_FromReadonly(desc);
 	count   = String_UNSAFE_Split(&descRaw, '\n', descLines, Array_Elems(descLines));
 
-	TextGroupWidget_Create(&s->extHelp, count, &s->textFont, s->extHelpTextures, MenuOptionsScreen_GetDesc);
-	Widget_SetLocation(&s->extHelp, ANCHOR_MIN, ANCHOR_MIN, 0, 0);
-	Elem_Init(&s->extHelp);
+	TextGroupWidget_Create(&s->extHelp, count, s->extHelpTextures, MenuOptionsScreen_GetDesc);
+	Widget_SetLocation(&s->extHelp, ANCHOR_MIN, ANCHOR_CENTRE_MIN, 0, 100);
+	TextGroupWidget_SetFont(&s->extHelp, &s->textFont);
 	
 	s->extHelp.getLineObj = desc;
 	TextGroupWidget_RedrawAll(&s->extHelp);

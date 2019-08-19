@@ -557,8 +557,8 @@ CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const Stri
 
 static struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_Init, LoadingScreen_Render, LoadingScreen_Free,
-	Screen_FKey,        Screen_FKey,          Screen_FKeyPress,
-	Screen_FMouse,      Screen_FMouse,        Screen_FMouseMove,  Screen_FMouseScroll,
+	Screen_TKey,        Screen_TKey,          Screen_TKeyPress,
+	Screen_TMouse,      Screen_TMouse,        Screen_FMouseMove,  Screen_TMouseScroll,
 	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void LoadingScreen_Show(const String* title, const String* message) {
@@ -627,8 +627,8 @@ static void GeneratingScreen_Render(void* screen, double delta) {
 
 static struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	GeneratingScreen_Init, GeneratingScreen_Render, LoadingScreen_Free,
-	Screen_FKey,           Screen_FKey,             Screen_FKeyPress,
-	Screen_FMouse,         Screen_FMouse,           Screen_FMouseMove,  Screen_FMouseScroll,
+	Screen_TKey,           Screen_TKey,             Screen_TKeyPress,
+	Screen_TMouse,         Screen_TMouse,           Screen_FMouseMove,  Screen_TMouseScroll,
 	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void GeneratingScreen_Show(void) {
@@ -707,27 +707,27 @@ static void HUDScreen_ConstructWidgets(struct HUDScreen* s) {
 	Elem_Init(&s->altText);
 	HUDScreen_UpdateAltTextY(s);
 
-	TextGroupWidget_Create(&s->status, CHAT_MAX_STATUS, &s->chatFont, 
+	TextGroupWidget_Create(&s->status, CHAT_MAX_STATUS,
 							s->statusTextures, HUDScreen_GetStatus);
 	Widget_SetLocation(&s->status, ANCHOR_MAX, ANCHOR_MIN, 0, 0);
 	s->status.placeholderHeight[0] = false; /* Texture pack download status */
-	Elem_Init(&s->status);
+	TextGroupWidget_SetFont(&s->status, &s->chatFont);
 
-	TextGroupWidget_Create(&s->bottomRight, CHAT_MAX_BOTTOMRIGHT, &s->chatFont, 
+	TextGroupWidget_Create(&s->bottomRight, CHAT_MAX_BOTTOMRIGHT, 
 							s->bottomRightTextures, HUDScreen_GetBottomRight);
 	Widget_SetLocation(&s->bottomRight, ANCHOR_MAX, ANCHOR_MAX, 0, yOffset);
-	Elem_Init(&s->bottomRight);
+	TextGroupWidget_SetFont(&s->bottomRight, &s->chatFont);
 
-	TextGroupWidget_Create(&s->chat, Gui_Chatlines, &s->chatFont, 
+	TextGroupWidget_Create(&s->chat, Gui_Chatlines,
 							s->chatTextures, HUDScreen_GetChat);
 	s->chat.underlineUrls = !Game_ClassicMode;
 	Widget_SetLocation(&s->chat, ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
-	Elem_Init(&s->chat);
+	TextGroupWidget_SetFont(&s->chat, &s->chatFont);
 
-	TextGroupWidget_Create(&s->clientStatus, CHAT_MAX_CLIENTSTATUS, &s->chatFont,
+	TextGroupWidget_Create(&s->clientStatus, CHAT_MAX_CLIENTSTATUS,
 							s->clientStatusTextures, HUDScreen_GetClientStatus);
 	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
-	Elem_Init(&s->clientStatus);
+	TextGroupWidget_SetFont(&s->clientStatus, &s->chatFont);
 
 	TextWidget_Make(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Window_Height / 4);
 }
@@ -955,8 +955,6 @@ static void HUDScreen_DrawChat(struct HUDScreen* s, double delta) {
 
 static void HUDScreen_ContextLost(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	Elem_TryFree(&s->hotbar);
-
 	Font_Free(&s->playerFont);
 	HUDScreen_FreeChatFonts(s);
 
@@ -983,6 +981,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	int size;
 	bool extended;
+	Widget_Reposition(&s->hotbar);
 
 	size = Drawer2D_BitmappedText ? 16 : 11;
 	Drawer2D_MakeFont(&s->playerFont, size, FONT_STYLE_NORMAL);
@@ -997,7 +996,6 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	PlayerListWidget_Create(&s->playerList, &s->playerFont, !extended);
 	s->showingList = true;
 
-	Widget_Reposition(&s->hotbar);
 	Elem_Init(&s->playerList);
 	Widget_Reposition(&s->playerList);
 }
