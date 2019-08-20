@@ -45,12 +45,6 @@ struct SimpleButtonDesc { int x, y; const char* title; Widget_LeftClick onClick;
 /*########################################################################################################################*
 *--------------------------------------------------------Menu base--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Menu_OldLabel(void* s, int i, struct TextWidget* label, const String* text, const FontDesc* font, int horAnchor, int verAnchor, int x, int y) {
-	TextWidget_Make(label, horAnchor, verAnchor, x, y);
-	TextWidget_Set(label,  text, font);
-	((struct Screen*)s)->widgets[i] = (struct Widget*)label;
-}
-
 static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, Widget_LeftClick onClick, int horAnchor, int verAnchor, int x, int y) {
 	ButtonWidget_Make(btn, width, onClick, horAnchor, verAnchor, x, y);
 	((struct Screen*)s)->widgets[i] = (struct Widget*)btn;
@@ -193,11 +187,6 @@ static void Menu_Remove(void* screen, int i) {
 
 	if (widgets[i]) { Elem_TryFree(widgets[i]); }
 	widgets[i] = NULL;
-}
-
-static void Menu_HandleFontChange(struct Screen* s) {
-	Event_RaiseVoid(&ChatEvents.FontChanged);
-	Elem_HandlesMouseMove(s, Mouse_X, Mouse_Y);
 }
 
 static int Menu_Int(const String* str)          { int v; Convert_ParseInt(str, &v); return v; }
@@ -1336,15 +1325,11 @@ void TexturePackScreen_Show(void) {
 static void FontListScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	String fontName = ListScreen_UNSAFE_GetCur(s, widget);
-	int cur = s->currentIndex;
 
 	if (String_CaselessEqualsConst(&fontName, LIST_SCREEN_EMPTY)) return;
 	String_Copy(&Drawer2D_FontName, &fontName);
 	Options_Set(OPT_FONT_NAME,      &fontName);
-
-	/* changing font recreates list menu */
-	Menu_HandleFontChange((struct Screen*)s);
-	ListScreen_SetCurrentIndex(s, cur);
+	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
 static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const String* text) {
@@ -2365,7 +2350,7 @@ void GraphicsOptionsScreen_Show(void) {
 static void GuiOptionsScreen_GetShadows(String* v) { Menu_GetBool(v, Drawer2D_BlackTextShadows); }
 static void GuiOptionsScreen_SetShadows(const String* v) {
 	Drawer2D_BlackTextShadows = Menu_SetBool(v, OPT_BLACK_TEXT);
-	Menu_HandleFontChange((struct Screen*)&MenuOptionsScreen_Instance);
+	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
 static void GuiOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Gui_ShowFPS); }
@@ -2402,7 +2387,7 @@ static void GuiOptionsScreen_SetChatlines(const String* v) {
 static void GuiOptionsScreen_GetUseFont(String* v) { Menu_GetBool(v, !Drawer2D_BitmappedText); }
 static void GuiOptionsScreen_SetUseFont(const String* v) {
 	Drawer2D_BitmappedText = !Menu_SetBool(v, OPT_USE_CHAT_FONT);
-	Menu_HandleFontChange((struct Screen*)&MenuOptionsScreen_Instance);
+	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
 static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
@@ -2785,7 +2770,6 @@ static void TexIdsOverlay_ContextLost(void* screen) {
 static void TexIdsOverlay_ContextRecreated(void* screen) {
 	static const String chars  = String_FromConst("0123456789");
 	static const String prefix = String_FromConst("f");
-	static const String title  = String_FromConst("Texture ID reference sheet");
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	int size;
 
@@ -2800,8 +2784,8 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	s->yOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Window_Height);
 	s->tileSize = size;
 	
-	Menu_OldLabel(s, 0, &s->title, &title, &s->titleFont,
-		ANCHOR_CENTRE, ANCHOR_MIN, 0, s->yOffset - 30);
+	s->title.yOffset = s->yOffset - 30;
+	TextWidget_SetConst(&s->title, "Texture ID reference sheet", &s->titleFont);
 }
 
 static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
@@ -2866,9 +2850,14 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* s) {
 }
 
 static void TexIdsOverlay_Init(void* screen) {
+	static struct Widget* widgets[1];
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	Drawer2D_MakeFont(&s->textFont, 8, FONT_STYLE_NORMAL);
 	MenuScreen_Init(s);
+
+	s->widgets    = widgets;
+	s->numWidgets = Array_Elems(widgets);
+	Menu_Label(s, 0, &s->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
 }
 
 static void TexIdsOverlay_Render(void* screen, double delta) {
@@ -2911,15 +2900,10 @@ static const struct ScreenVTABLE TexIdsOverlay_VTABLE = {
 	Menu_OnResize,         TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated
 };
 void TexIdsOverlay_Show(void) {
-	static struct Widget* widgets[1];
 	struct TexIdsOverlay* s = &TexIdsOverlay_Instance;
-	
 	s->grabsInput = true;
 	s->closable   = true;
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
-
-	s->VTABLE = &TexIdsOverlay_VTABLE;
+	s->VTABLE     = &TexIdsOverlay_VTABLE;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TEXIDS);
 }
 
