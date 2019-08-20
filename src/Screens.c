@@ -202,7 +202,7 @@ static bool InventoryScreen_MouseScroll(void* screen, float delta) {
 	return Elem_HandlesMouseScroll(table, delta);
 }
 
-static struct ScreenVTABLE InventoryScreen_VTABLE = {
+static const struct ScreenVTABLE InventoryScreen_VTABLE = {
 	InventoryScreen_Init,      InventoryScreen_Render,  InventoryScreen_Free,
 	InventoryScreen_KeyDown,   InventoryScreen_KeyUp,   Screen_TKeyPress,
 	InventoryScreen_MouseDown, InventoryScreen_MouseUp, InventoryScreen_MouseMove, InventoryScreen_MouseScroll,
@@ -393,7 +393,7 @@ static void StatusScreen_Render(void* screen, double delta) {
 	Gfx_SetTexturing(false);
 }
 
-static struct ScreenVTABLE StatusScreen_VTABLE = {
+static const struct ScreenVTABLE StatusScreen_VTABLE = {
 	Screen_NullFunc, StatusScreen_Render, Screen_NullFunc,
 	Screen_FKey,     Screen_FKey,         Screen_FKeyPress,
 	Screen_FMouse,   Screen_FMouse,       Screen_FMouseMove, Screen_FMouseScroll,
@@ -555,7 +555,7 @@ CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const Stri
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_LOADING);
 }
 
-static struct ScreenVTABLE LoadingScreen_VTABLE = {
+static const struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_Init, LoadingScreen_Render, LoadingScreen_Free,
 	Screen_TKey,        Screen_TKey,          Screen_TKeyPress,
 	Screen_TMouse,      Screen_TMouse,        Screen_FMouseMove,  Screen_TMouseScroll,
@@ -625,7 +625,7 @@ static void GeneratingScreen_Render(void* screen, double delta) {
 	LoadingScreen_SetMessage(s);
 }
 
-static struct ScreenVTABLE GeneratingScreen_VTABLE = {
+static const struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	GeneratingScreen_Init, GeneratingScreen_Render, LoadingScreen_Free,
 	Screen_TKey,           Screen_TKey,             Screen_TKeyPress,
 	Screen_TMouse,         Screen_TMouse,           Screen_FMouseMove,  Screen_TMouseScroll,
@@ -1205,7 +1205,7 @@ static void HUDScreen_Free(void* screen) {
 	Event_UnregisterInt(&ChatEvents.ColCodeChanged, s, HUDScreen_ColCodeChanged);
 }
 
-static struct ScreenVTABLE HUDScreen_VTABLE = {
+static const struct ScreenVTABLE HUDScreen_VTABLE = {
 	HUDScreen_Init,      HUDScreen_Render, HUDScreen_Free,
 	HUDScreen_KeyDown,   HUDScreen_KeyUp,  HUDScreen_KeyPress,
 	HUDScreen_MouseDown, Screen_FMouse,    Screen_FMouseMove,  HUDScreen_MouseScroll,
@@ -1376,7 +1376,7 @@ static bool DisconnectScreen_MouseMove(void* screen, int x, int y) {
 	return true;
 }
 
-static struct ScreenVTABLE DisconnectScreen_VTABLE = {
+static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,      DisconnectScreen_Render, DisconnectScreen_Free,
 	DisconnectScreen_KeyDown,   Screen_TKey,             Screen_TKeyPress,
 	DisconnectScreen_MouseDown, Screen_TMouse,           DisconnectScreen_MouseMove, Screen_TMouseScroll,

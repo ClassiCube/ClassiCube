@@ -47,7 +47,7 @@ static void TextWidget_Reposition(void* widget) {
 	w->texture.Y = w->y;
 }
 
-static struct WidgetVTABLE TextWidget_VTABLE = {
+static const struct WidgetVTABLE TextWidget_VTABLE = {
 	Widget_NullFunc, TextWidget_Render, TextWidget_Free,
 	Widget_Key,      Widget_Key,
 	Widget_Mouse,    Widget_Mouse,      Widget_MouseMove, Widget_MouseScroll,
@@ -150,7 +150,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	Texture_RenderShaded(&w->texture, col);
 }
 
-static struct WidgetVTABLE ButtonWidget_VTABLE = {
+static const struct WidgetVTABLE ButtonWidget_VTABLE = {
 	Widget_NullFunc, ButtonWidget_Render, ButtonWidget_Free,
 	Widget_Key,	     Widget_Key,
 	Widget_Mouse,    Widget_Mouse,        Widget_MouseMove,  Widget_MouseScroll,
@@ -296,7 +296,7 @@ static bool ScrollbarWidget_MouseMove(void* widget, int x, int y) {
 	return false;
 }
 
-static struct WidgetVTABLE ScrollbarWidget_VTABLE = {
+static const struct WidgetVTABLE ScrollbarWidget_VTABLE = {
 	Widget_NullFunc,           ScrollbarWidget_Render,  Widget_NullFunc,
 	Widget_Key,                Widget_Key,
 	ScrollbarWidget_MouseDown, ScrollbarWidget_MouseUp, ScrollbarWidget_MouseMove, ScrollbarWidget_MouseScroll,
@@ -480,7 +480,7 @@ static bool HotbarWidget_MouseScroll(void* widget, float delta) {
 	return true;
 }
 
-static struct WidgetVTABLE HotbarWidget_VTABLE = {
+static const struct WidgetVTABLE HotbarWidget_VTABLE = {
 	Widget_NullFunc,        HotbarWidget_Render, Widget_NullFunc,
 	HotbarWidget_KeyDown,	HotbarWidget_KeyUp,
 	HotbarWidget_MouseDown, Widget_Mouse,        Widget_MouseMove, HotbarWidget_MouseScroll,
@@ -812,7 +812,7 @@ static bool TableWidget_KeyDown(void* widget, Key key) {
 	return true;
 }
 
-static struct WidgetVTABLE TableWidget_VTABLE = {
+static const struct WidgetVTABLE TableWidget_VTABLE = {
 	TableWidget_Init,      TableWidget_Render,  TableWidget_Free,
 	TableWidget_KeyDown,   Widget_Key,
 	TableWidget_MouseDown, TableWidget_MouseUp, TableWidget_MouseMove, TableWidget_MouseScroll,
@@ -1446,7 +1446,7 @@ static bool MenuInputWidget_AllowedChar(void* widget, char c) {
 }
 
 static int MenuInputWidget_GetMaxLines(void) { return 1; }
-static struct WidgetVTABLE MenuInputWidget_VTABLE = {
+static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
 	Widget_NullFunc,       MenuInputWidget_Render, InputWidget_Free,
 	InputWidget_KeyDown,   InputWidget_KeyUp,
 	InputWidget_MouseDown, Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
@@ -1705,7 +1705,7 @@ static int ChatInputWidget_GetMaxLines(void) {
 	return !Game_ClassicMode && Server.SupportsPartialMessages ? INPUTWIDGET_MAX_LINES : 1;
 }
 
-static struct WidgetVTABLE ChatInputWidget_VTABLE = {
+static const struct WidgetVTABLE ChatInputWidget_VTABLE = {
 	Widget_NullFunc,         ChatInputWidget_Render, InputWidget_Free,
 	ChatInputWidget_KeyDown, InputWidget_KeyUp,
 	InputWidget_MouseDown,   Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
@@ -2109,7 +2109,7 @@ static void PlayerListWidget_Free(void* widget) {
 	Event_UnregisterInt(&TabListEvents.Removed, w, PlayerListWidget_TabEntryRemoved);
 }
 
-static struct WidgetVTABLE PlayerListWidget_VTABLE = {
+static const struct WidgetVTABLE PlayerListWidget_VTABLE = {
 	PlayerListWidget_Init, PlayerListWidget_Render, PlayerListWidget_Free,
 	Widget_Key,            Widget_Key,
 	Widget_Mouse,          Widget_Mouse,            Widget_MouseMove,      Widget_MouseScroll,
@@ -2507,7 +2507,7 @@ static void TextGroupWidget_Free(void* widget) {
 	}
 }
 
-static struct WidgetVTABLE TextGroupWidget_VTABLE = {
+static const struct WidgetVTABLE TextGroupWidget_VTABLE = {
 	Widget_NullFunc, TextGroupWidget_Render, TextGroupWidget_Free,
 	Widget_Key,      Widget_Key,
 	Widget_Mouse,    Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
@@ -2761,7 +2761,7 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
 	if (active && w->pendingRedraw) SpecialInputWidget_Redraw(w);
 }
 
-static struct WidgetVTABLE SpecialInputWidget_VTABLE = {
+static const struct WidgetVTABLE SpecialInputWidget_VTABLE = {
 	SpecialInputWidget_Init,      SpecialInputWidget_Render, SpecialInputWidget_Free,
 	Widget_Key,                   Widget_Key,
 	SpecialInputWidget_MouseDown, Widget_Mouse,              Widget_MouseMove,        Widget_MouseScroll,

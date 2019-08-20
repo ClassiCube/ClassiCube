@@ -49,7 +49,7 @@ struct ScreenVTABLE {
 	Event_Void_Callback ContextLost;
 	Event_Void_Callback ContextRecreated;
 };
-#define Screen_Layout struct ScreenVTABLE* VTABLE; \
+#define Screen_Layout const struct ScreenVTABLE* VTABLE; \
 	bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
 	bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
 	bool hidden;      /* Whether this screen is prevented from rendering. */ \
@@ -72,7 +72,7 @@ struct WidgetVTABLE {
 	bool (*HandlesMouseScroll)(void* elem, float delta);
 	void (*Reposition)(void* elem);
 };
-#define Widget_Layout struct WidgetVTABLE* VTABLE; \
+#define Widget_Layout const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;      /* Top left corner, and dimensions, of this widget */ \
 	bool active;                  /* Whether this widget is currently being moused over */ \
 	bool disabled;                /* Whether widget is prevented from being interacted with */ \
