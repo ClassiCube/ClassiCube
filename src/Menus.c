@@ -1767,7 +1767,7 @@ void MouseKeyBindingsScreen_Show(void) {
 *#########################################################################################################################*/
 struct MenuOptionsScreen;
 typedef void (*InitMenuOptions)(struct MenuOptionsScreen* s);
-#define MENUOPTIONS_CORE_WIDGETS 5 /* back + ext help + 3 input */
+#define MENUOPTIONS_CORE_WIDGETS 4 /* back + 3 input */
 
 static struct MenuOptionsScreen {
 	MenuScreen_Layout
@@ -1819,13 +1819,12 @@ CC_NOINLINE static void MenuOptionsScreen_Set(struct MenuOptionsScreen* s, int i
 }
 
 static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* s) {
-	if (!s->extHelp.lines) return;
 	Elem_TryFree(&s->extHelp);
 	s->extHelp.lines = 0;
 }
 
 static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* s) {
-	s->extHelp.xOffset = Window_Width  / 2 - s->extHelp.width / 2;
+	s->extHelp.xOffset = Window_Width / 2 - s->extHelp.width / 2;
 	Widget_Reposition(&s->extHelp);
 }
 
@@ -1841,19 +1840,14 @@ static String MenuOptionsScreen_GetDesc(void* obj, int i) {
 static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx) {
 	const char* desc;
 	String descRaw, descLines[5];
-	int count;
 
 	MenuOptionsScreen_FreeExtHelp(s);
 	if (!s->descriptions || s->activeI >= 0) return;
 	desc = s->descriptions[idx];
 	if (!desc) return;
 
-	descRaw = String_FromReadonly(desc);
-	count   = String_UNSAFE_Split(&descRaw, '\n', descLines, Array_Elems(descLines));
-
-	TextGroupWidget_Create(&s->extHelp, count, s->extHelpTextures, MenuOptionsScreen_GetDesc);
-	Widget_SetLocation(&s->extHelp, ANCHOR_MIN, ANCHOR_CENTRE_MIN, 0, 100);
-	TextGroupWidget_SetFont(&s->extHelp, &s->textFont);
+	descRaw          = String_FromReadonly(desc);
+	s->extHelp.lines = String_UNSAFE_Split(&descRaw, '\n', descLines, Array_Elems(descLines));
 	
 	s->extHelp.getLineObj = desc;
 	TextGroupWidget_RedrawAll(&s->extHelp);
@@ -1913,30 +1907,6 @@ static bool MenuOptionsScreen_MouseMove(void* screen, int x, int y) {
 	return true;
 }
 
-static void MenuOptionsScreen_MakeButtons(struct MenuOptionsScreen* s, const struct MenuOptionDesc* btns, int count) {
-	String title; char titleBuffer[STRING_SIZE];
-	struct ButtonWidget* btn;
-	int i;
-	
-	for (i = 0; i < count; i++) {
-		String_InitArray(title, titleBuffer);
-		String_AppendConst(&title, btns[i].name);
-
-		if (btns[i].GetValue) {
-			String_AppendConst(&title, ": ");
-			btns[i].GetValue(&title);
-		}
-
-		btn = &s->buttons[i];
-		Menu_OldButton(s, i, btn, 300, &title, &s->titleFont, btns[i].OnClick,
-			ANCHOR_CENTRE, ANCHOR_CENTRE, btns[i].dir * 160, btns[i].y);
-
-		btn->optName  = btns[i].name;
-		btn->GetValue = btns[i].GetValue;
-		btn->SetValue = btns[i].SetValue;
-	}
-}
-
 static void MenuOptionsScreen_InitButtons(struct MenuOptionsScreen* s, const struct MenuOptionDesc* btns, int count, Widget_LeftClick backClick) {
 	struct ButtonWidget* btn;
 	int i;
@@ -1951,7 +1921,12 @@ static void MenuOptionsScreen_InitButtons(struct MenuOptionsScreen* s, const str
 		btn->SetValue = btns[i].SetValue;
 	}
 	s->numButtons = count;
-	Menu_Back(s, s->numWidgets - 5, &s->done, backClick);
+	Menu_Back(s, s->numWidgets - 4, &s->done, backClick);
+
+	TextGroupWidget_Create(&s->extHelp, 5, s->extHelpTextures, MenuOptionsScreen_GetDesc);
+	TextGroupWidget_SetFont(&s->extHelp, &s->textFont);
+	s->extHelp.lines = 0;
+	Widget_SetLocation(&s->extHelp, ANCHOR_MIN, ANCHOR_CENTRE_MIN, 0, 100);
 }
 
 static void MenuOptionsScreen_OK(void* screen, void* widget) {
@@ -1976,17 +1951,14 @@ static void MenuOptionsScreen_Bool(void* screen, void* widget) {
 	String value; char valueBuffer[STRING_SIZE];
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
-	int index;
 	bool isOn;
 
-	index = Menu_Index(s, btn);
-	MenuOptionsScreen_SelectExtHelp(s, index);
 	String_InitArray(value, valueBuffer);
 	btn->GetValue(&value);
 
 	isOn  = String_CaselessEqualsConst(&value, "ON");
 	value = String_FromReadonly(isOn ? "OFF" : "ON");
-	MenuOptionsScreen_Set(s, index, &value);
+	MenuOptionsScreen_Set(s, Menu_Index(s, btn), &value);
 }
 
 static void MenuOptionsScreen_Enum(void* screen, void* widget) {
@@ -1999,7 +1971,6 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 	int raw, count;
 	
 	index = Menu_Index(s, btn);
-	MenuOptionsScreen_SelectExtHelp(s, index);
 	String_InitArray(value, valueBuffer);
 	btn->GetValue(&value);
 
@@ -2084,14 +2055,13 @@ static void MenuOptionsScreen_Free(void* screen) {
 static void MenuOptionsScreen_OnResize(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	Menu_OnResize(s);
-	if (!s->extHelp.lines) return;
 	MenuOptionsScreen_RepositionExtHelp(s);
 }
 
 static void MenuOptionsScreen_ContextLost(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	Menu_ContextLost(s);
-	MenuOptionsScreen_FreeExtHelp(s);
+	Elem_Free(&s->extHelp);
 }
 
 static void MenuOptionsScreen_ContextRecreated(void* screen) {
@@ -2104,6 +2074,7 @@ static void MenuOptionsScreen_ContextRecreated(void* screen) {
 
 	ButtonWidget_SetConst(&s->done, "Done", &s->titleFont);
 	if (s->DoRecreateExtra) s->DoRecreateExtra(s);
+	TextGroupWidget_RedrawAll(&s->extHelp);
 }
 
 static struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
@@ -2116,9 +2087,7 @@ void MenuOptionsScreen_Show(struct MenuInputDesc* descs, const char** descriptio
 	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
 	s->grabsInput = true;
 	s->closable   = true;
-
-	s->extHelp.lines = 0;
-	s->VTABLE = &MenuOptionsScreen_VTABLE;
+	s->VTABLE     = &MenuOptionsScreen_VTABLE;
 
 	s->descs             = descs;
 	s->descriptions      = descriptions;
