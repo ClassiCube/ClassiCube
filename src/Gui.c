@@ -156,22 +156,6 @@ struct Screen* Gui_GetActiveScreen(void) {
 	return Gui_Active ? Gui_Active : Gui_HUD;
 }
 
-void Gui_FreeActive(void) {
-	if (Gui_Active) { Elem_TryFree(Gui_Active); }
-}
-
-void Gui_SetActive(struct Screen* screen) {
-	InputHandler_ScreenChanged(Gui_Active, screen);
-	Gui_Active = screen;
-
-	if (screen) { 
-		Elem_Init(screen);
-		/* for selecting active button etc */
-		Elem_HandlesMouseMove(screen, Mouse_X, Mouse_Y);
-	}
-	Camera_CheckFocus();
-}
-
 void Gui_RefreshAll(void) { 
 	Gui_ContextLost(NULL);
 	Gui_ContextRecreated(NULL);
@@ -230,14 +214,19 @@ static void Gui_RemoveCore(struct Screen* s) {
 	s->VTABLE->Free(s);
 }
 
+CC_NOINLINE static void Gui_OnScreensChanged(void) {
+	Camera_CheckFocus();
+	InputHandler_OnScreensChanged();
+}
+
 void Gui_Add(struct Screen* s, int priority) {
 	Gui_AddCore(s, priority);
-	Camera_CheckFocus();
+	Gui_OnScreensChanged();
 }
 
 void Gui_Remove(struct Screen* s) {
 	Gui_RemoveCore(s);
-	Camera_CheckFocus();
+	Gui_OnScreensChanged();
 }
 
 void Gui_Replace(struct Screen* s, int priority) {
@@ -247,9 +236,7 @@ void Gui_Replace(struct Screen* s, int priority) {
 	for (i = Gui_ScreensCount - 1; i >= 0; i--) {
 		if (priorities[i] == priority) Gui_RemoveCore(Gui_Screens[i]);
 	}
-
-	Gui_AddCore(s, priority);
-	Camera_CheckFocus();
+	Gui_OnScreensChanged();
 }
 
 struct Screen* Gui_GetInputGrab(void) {

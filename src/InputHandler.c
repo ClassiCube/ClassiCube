@@ -62,10 +62,8 @@ static void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
 	}
 }
 
-void InputHandler_ScreenChanged(struct Screen* oldScreen, struct Screen* newScreen) {
-	if (oldScreen && oldScreen->grabsInput) {
-		input_lastClick = DateTime_CurrentUTC_MS();
-	}
+void InputHandler_OnScreensChanged(void) {
+	input_lastClick = DateTime_CurrentUTC_MS();
 
 	if (Server.SupportsPlayerClick) {
 		input_pickingId = -1;
@@ -472,8 +470,6 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	String text;
 
 	if (!was && InputHandler_SimulateMouse(key, true)) return;
-	s = Gui_GetActiveScreen();
-
 #ifndef CC_BUILD_WEB
 	if (key == KEY_ESCAPE && (s = Gui_GetClosable())) {
 		/* Don't want holding down escape to go in and out of pause menu */

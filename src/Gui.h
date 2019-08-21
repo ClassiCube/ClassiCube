@@ -121,13 +121,6 @@ bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
 /* This means if an overlay is active, it will be over the top of other screens. */
 struct Screen* Gui_GetActiveScreen(void);
 
-/* Frees the active screen if it is not NULL. */
-/* NOTE: You should usually use Gui_CloseActive instead. */
-CC_NOINLINE void Gui_FreeActive(void);
-/* Sets the active screen/menu that the user interacts with. */
-/* NOTE: This doesn't free old active screen - must call Gui_FreeActive() first */
-CC_NOINLINE void Gui_SetActive(struct Screen* screen);
-
 /* Returns index of the given screen in the screens list, -1 if not */
 int Gui_Index(struct Screen* screen);
 /* Inserts a screen into the screen lists with the given priority. */

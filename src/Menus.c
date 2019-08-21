@@ -189,6 +189,12 @@ static void Menu_Remove(void* screen, int i) {
 	widgets[i] = NULL;
 }
 
+static void Menu_BeginGen(int width, int height, int length) {
+	World_Reset();
+	World_SetDimensions(width, height, length);
+	GeneratingScreen_Show();
+}
+
 static int Menu_Int(const String* str)          { int v; Convert_ParseInt(str, &v); return v; }
 static float Menu_Float(const String* str)      { float v; Convert_ParseFloat(str, &v); return v; }
 static PackedCol Menu_HexCol(const String* str) { PackedCol v; PackedCol_TryParseHex(str, &v); return v; }
@@ -925,13 +931,6 @@ CC_NOINLINE static int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int i
 	return GenLevelScreen_GetInt(s, index);
 }
 
-static void GenLevelScreen_Begin(int width, int height, int length) {
-	World_Reset();
-	World_SetDimensions(width, height, length);
-	Gui_FreeActive(); // TODO: fix for classicgen
-	GeneratingScreen_Show();
-}
-
 static void GenLevelScreen_Gen(void* screen, bool vanilla) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	int width  = GenLevelScreen_GetInt(s, 0);
@@ -946,7 +945,8 @@ static void GenLevelScreen_Gen(void* screen, bool vanilla) {
 		Chat_AddRaw("&cOne of the map dimensions is invalid.");
 	} else {
 		Gen_Vanilla = vanilla; Gen_Seed = seed;
-		GenLevelScreen_Begin(width, height, length);
+		Gui_Remove((struct Screen*)s);
+		Menu_BeginGen(width, height, length);
 	}
 }
 
@@ -1067,7 +1067,8 @@ static void ClassicGenScreen_Gen(int size) {
 	Gen_Vanilla = true;
 	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
 
-	GenLevelScreen_Begin(size, 64, size);
+	Gui_Remove((struct Screen*)&ClassicGenScreen_Instance);
+	Menu_BeginGen(size, 64, size);
 }
 
 static void ClassicGenScreen_Small(void* a, void* b)  { ClassicGenScreen_Gen(128); }
