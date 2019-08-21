@@ -1363,7 +1363,12 @@ static bool DisconnectScreen_MouseDown(void* screen, int x, int y, MouseButton b
 	struct ButtonWidget* w = &s->reconnect;
 
 	if (btn != MOUSE_LEFT) return true;
-	if (!w->disabled && Widget_Contains(w, x, y)) Server.BeginConnect();
+
+	if (!w->disabled && Widget_Contains(w, x, y)) {
+		Gui_Remove((struct Screen*)s);
+		Gui_ShowDefault();
+		Server.BeginConnect();
+	}
 	return true;
 }
 

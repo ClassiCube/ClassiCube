@@ -2885,12 +2885,9 @@ static bool TexIdsOverlay_KeyDown(void* screen, Key key) {
 	return false;
 }
 
-static bool TexIdsOverlay_KeyPress(void* screen, char keyChar) { return false; }
-static bool TexIdsOverlay_KeyUp(void* screen, Key key) { return false; }
-
 static const struct ScreenVTABLE TexIdsOverlay_VTABLE = {
 	TexIdsOverlay_Init,    TexIdsOverlay_Render, MenuScreen_Free,
-	TexIdsOverlay_KeyDown, TexIdsOverlay_KeyUp,  TexIdsOverlay_KeyPress,
+	TexIdsOverlay_KeyDown, Screen_FKey,          Screen_FKeyPress,
 	Menu_MouseDown,        Screen_TMouse,        Menu_MouseMove,         MenuScreen_MouseScroll,
 	Menu_OnResize,         TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated
 };

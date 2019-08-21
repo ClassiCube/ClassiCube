@@ -115,6 +115,8 @@ extern int Gui_ScreensCount;
 int  Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen);
 /* Returns whether the given rectangle contains the given point. */
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
+/* Shows HUD and Status screens. */
+void Gui_ShowDefault(void);
 
 /* Returns index of the given screen in the screens list, -1 if not */
 int Gui_Index(struct Screen* screen);

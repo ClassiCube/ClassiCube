@@ -70,6 +70,11 @@ bool Gui_Contains(int recX, int recY, int width, int height, int x, int y) {
 	return x >= recX && y >= recY && x < (recX + width) && y < (recY + height);
 }
 
+void Gui_ShowDefault(void) {
+	StatusScreen_Show();
+	HUDScreen_Show();
+}
+
 static void Gui_ContextLost(void* obj) {
 	struct Screen* s;
 	int i;
@@ -120,9 +125,7 @@ static void Gui_Init(void) {
 	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Gui_ContextLost);
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Gui_ContextRecreated);
 	Gui_LoadOptions();
-
-	StatusScreen_Show();
-	HUDScreen_Show();
+	Gui_ShowDefault();
 }
 
 static void Gui_Reset(void) {
