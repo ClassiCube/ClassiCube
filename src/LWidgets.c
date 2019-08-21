@@ -235,7 +235,7 @@ static void LInput_BlendBoxTop(struct LInput* w) {
 }
 
 static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
-	int hintHeight, y;
+	int y, hintHeight;
 
 	if (w->Text.length || !w->HintText) {
 		y = w->Y + (w->Height - w->_TextHeight) / 2;
@@ -244,7 +244,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 		args->text = String_FromReadonly(w->HintText);
 		args->font = Launcher_HintFont;
 
-		hintHeight = Drawer2D_MeasureText(args).Height;
+		hintHeight = Drawer2D_TextHeight(args);
 		y = w->Y + (w->Height - hintHeight) / 2;
 		Drawer2D_DrawText(&Launcher_Framebuffer, args, w->X + 5, y);
 	}

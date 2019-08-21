@@ -1728,11 +1728,12 @@ void ChatInputWidget_Create(struct ChatInputWidget* w) {
 }	
 
 void ChatInputWidget_SetFont(struct ChatInputWidget* w, FontDesc* font) {
-	struct DrawTextArgs args;
-	w->base.font        = font;
-	w->base.lineHeight  = Drawer2D_FontHeight(font, true);
+	struct DrawTextArgs args;	
 	DrawTextArgs_Make(&args, &chatInputPrefix, font, true);
+
+	w->base.font        = font;
 	w->base.prefixWidth = Drawer2D_TextWidth(&args);
+	w->base.lineHeight  = Drawer2D_TextHeight(&args);
 }	
 
 
@@ -2541,16 +2542,15 @@ static void SpecialInputWidget_UpdateColString(struct SpecialInputWidget* w) {
 }
 
 static bool SpecialInputWidget_IntersectsTitle(struct SpecialInputWidget* w, int x, int y) {
-	Size2D size;
-	int i, titleX = 0;
+	int i, width, titleX = 0;
 
 	for (i = 0; i < Array_Elems(w->tabs); i++) {
-		size = w->tabs[i].titleSize;
-		if (Gui_Contains(titleX, 0, size.Width, size.Height, x, y)) {
+		width = w->tabs[i].titleWidth;
+		if (Gui_Contains(titleX, 0, width, w->titleHeight, x, y)) {
 			w->selectedIndex = i;
 			return true;
 		}
-		titleX += size.Width;
+		titleX += width;
 	}
 	return false;
 }
@@ -2560,7 +2560,7 @@ static void SpecialInputWidget_IntersectsBody(struct SpecialInputWidget* w, int 
 	String str;
 	int i;
 
-	y -= w->tabs[0].titleSize.Height;
+	y -= w->titleHeight;
 	x /= w->elementSize.Width; y /= w->elementSize.Height;
 	
 	i = (x + y * e.itemsPerRow) * e.charsPerItem;
@@ -2575,10 +2575,9 @@ static void SpecialInputWidget_IntersectsBody(struct SpecialInputWidget* w, int 
 }
 
 static void SpecialInputTab_Init(struct SpecialInputTab* tab, STRING_REF String* title, int itemsPerRow, int charsPerItem, STRING_REF String* contents) {
-	tab->title     = *title;
-	tab->titleSize.Width  = 0;
-	tab->titleSize.Height = 0;
-	tab->contents  = *contents;
+	tab->title      = *title;
+	tab->titleWidth = 0;
+	tab->contents   = *contents;
 	tab->itemsPerRow  = itemsPerRow;
 	tab->charsPerItem = charsPerItem;
 }
@@ -2613,12 +2612,12 @@ static Size2D SpecialInputWidget_MeasureTitles(struct SpecialInputWidget* w) {
 	for (i = 0; i < Array_Elems(w->tabs); i++) {
 		args.text = w->tabs[i].title;
 
-		w->tabs[i].titleSize = Drawer2D_MeasureText(&args);
-		w->tabs[i].titleSize.Width += SPECIAL_TITLE_SPACING;
-		size.Width += w->tabs[i].titleSize.Width;
+		w->tabs[i].titleWidth = Drawer2D_TextWidth(&args) + SPECIAL_TITLE_SPACING;
+		size.Width += w->tabs[i].titleWidth;
 	}
 
-	size.Height = w->tabs[0].titleSize.Height;
+	w->titleHeight = Drawer2D_TextHeight(&args);
+	size.Height    = w->titleHeight;
 	return size;
 }
 
@@ -2626,20 +2625,18 @@ static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, Bitmap* 
 	BitmapCol col_selected = BITMAPCOL_CONST(30, 30, 30, 200);
 	BitmapCol col_inactive = BITMAPCOL_CONST( 0,  0,  0, 127);
 	BitmapCol col;
-
 	struct DrawTextArgs args;
-	Size2D size;
-	int i, x = 0;
+	int i, width, x = 0;
 
 	DrawTextArgs_MakeEmpty(&args, w->font, false);
 	for (i = 0; i < Array_Elems(w->tabs); i++) {
 		args.text = w->tabs[i].title;
-		col  = i == w->selectedIndex ? col_selected : col_inactive;
-		size = w->tabs[i].titleSize;
+		col   = i == w->selectedIndex ? col_selected : col_inactive;
+		width = w->tabs[i].titleWidth;
 
-		Drawer2D_Clear(bmp, col, x, 0, size.Width, size.Height);
+		Drawer2D_Clear(bmp, col, x, 0, width, w->titleHeight);
 		Drawer2D_DrawText(bmp, &args, x + SPECIAL_TITLE_SPACING / 2, 0);
-		x += size.Width;
+		x += width;
 	}
 }
 

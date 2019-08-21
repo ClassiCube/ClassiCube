@@ -251,8 +251,7 @@ CC_NOINLINE void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, int m
 
 typedef void (*SpecialInputAppendFunc)(void* userData, char c);
 struct SpecialInputTab {
-	int itemsPerRow, charsPerItem;
-	Size2D titleSize;
+	int itemsPerRow, charsPerItem, titleWidth;
 	String title, contents;	
 };
 
@@ -264,6 +263,7 @@ struct SpecialInputWidget {
 	struct InputWidget* target;
 	struct Texture tex;
 	FontDesc* font;
+	int titleHeight;
 	struct SpecialInputTab tabs[5];
 	String colString;
 	char _colBuffer[DRAWER2D_MAX_COLS * 4];
