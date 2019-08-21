@@ -20,8 +20,6 @@
 
 #define Widget_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f)
 static void Widget_NullFunc(void* widget) { }
-static Size2D Size2D_Empty;
-
 static bool Widget_Mouse(void* elem, int x, int y, MouseButton btn) { return false; }
 static bool Widget_Key(void* elem, Key key) { return false; }
 static bool Widget_MouseMove(void* elem, int x, int y) { return false; }
@@ -1711,27 +1709,28 @@ static const struct WidgetVTABLE ChatInputWidget_VTABLE = {
 	InputWidget_MouseDown,   Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	InputWidget_Reposition
 };
-void ChatInputWidget_Create(struct ChatInputWidget* w, FontDesc* font) {
-	struct DrawTextArgs args;
+void ChatInputWidget_Create(struct ChatInputWidget* w) {
 	Widget_Reset(w);
-	w->typingLogPos = Chat_InputLog.count; /* Index of newest entry + 1. */
-	w->base.VTABLE  = &ChatInputWidget_VTABLE;
-	w->base.font     = font;
+	w->typingLogPos  = Chat_InputLog.count; /* Index of newest entry + 1. */
+	w->base.VTABLE   = &ChatInputWidget_VTABLE;
 	w->base.caretPos = -1;
 
 	w->base.convertPercents = !Game_ClassicMode;
 	w->base.showCaret       = true;
 	w->base.padding         = 5;
-	w->base.lineHeight      = Drawer2D_FontHeight(font, true);
-
-	w->base.GetMaxLines    = ChatInputWidget_GetMaxLines;
-	w->base.RemakeTexture  = ChatInputWidget_RemakeTexture;
-	w->base.OnPressedEnter = ChatInputWidget_OnPressedEnter;
-	w->base.AllowedChar    = InputWidget_AllowedChar;
+	w->base.GetMaxLines     = ChatInputWidget_GetMaxLines;
+	w->base.RemakeTexture   = ChatInputWidget_RemakeTexture;
+	w->base.OnPressedEnter  = ChatInputWidget_OnPressedEnter;
+	w->base.AllowedChar     = InputWidget_AllowedChar;
 
 	String_InitArray(w->base.text, w->_textBuffer);
 	String_InitArray(w->origStr,   w->_origBuffer);
+}	
 
+void ChatInputWidget_SetFont(struct ChatInputWidget* w, FontDesc* font) {
+	struct DrawTextArgs args;
+	w->base.font        = font;
+	w->base.lineHeight  = Drawer2D_FontHeight(font, true);
 	DrawTextArgs_Make(&args, &chatInputPrefix, font, true);
 	w->base.prefixWidth = Drawer2D_TextWidth(&args);
 }	
@@ -2577,7 +2576,8 @@ static void SpecialInputWidget_IntersectsBody(struct SpecialInputWidget* w, int 
 
 static void SpecialInputTab_Init(struct SpecialInputTab* tab, STRING_REF String* title, int itemsPerRow, int charsPerItem, STRING_REF String* contents) {
 	tab->title     = *title;
-	tab->titleSize = Size2D_Empty;
+	tab->titleSize.Width  = 0;
+	tab->titleSize.Height = 0;
 	tab->contents  = *contents;
 	tab->itemsPerRow  = itemsPerRow;
 	tab->charsPerItem = charsPerItem;
@@ -2707,20 +2707,11 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct Special
 	Mem_Free(bmp.Scan0);
 }
 
-static void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
+void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
 	SpecialInputWidget_Make(w, &w->tabs[w->selectedIndex]);
 	w->width  = w->tex.Width;
-	w->height = w->tex.Height;
+	w->height = w->active ? w->tex.Height : 0;
 	w->pendingRedraw = false;
-}
-
-static void SpecialInputWidget_Init(void* widget) {
-	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
-	w->x = 5; w->y = 5;
-
-	SpecialInputWidget_InitTabs(w);
-	SpecialInputWidget_Redraw(w);
-	SpecialInputWidget_SetActive(w, w->active);
 }
 
 static void SpecialInputWidget_Render(void* widget, double delta) {
@@ -2762,7 +2753,7 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
 }
 
 static const struct WidgetVTABLE SpecialInputWidget_VTABLE = {
-	SpecialInputWidget_Init,      SpecialInputWidget_Render, SpecialInputWidget_Free,
+	Widget_NullFunc,              SpecialInputWidget_Render, SpecialInputWidget_Free,
 	Widget_Key,                   Widget_Key,
 	SpecialInputWidget_MouseDown, Widget_Mouse,              Widget_MouseMove,        Widget_MouseScroll,
 	Widget_CalcPosition
@@ -2772,5 +2763,7 @@ void SpecialInputWidget_Create(struct SpecialInputWidget* w, FontDesc* font, str
 	w->VTABLE    = &SpecialInputWidget_VTABLE;
 	w->verAnchor = ANCHOR_MAX;
 	w->font      = font;
-	w->target = target;
+	w->target    = target;
+	SpecialInputWidget_InitTabs(w);
+	w->x = 5; w->y = 5;
 }

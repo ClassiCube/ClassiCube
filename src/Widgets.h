@@ -190,7 +190,8 @@ struct ChatInputWidget {
 	char _origBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];	
 };
 
-CC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w, FontDesc* font);
+CC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w);
+CC_NOINLINE void ChatInputWidget_SetFont(struct ChatInputWidget* w, FontDesc* font);
 
 
 /* Retrieves the text for the i'th line in the group */
@@ -269,6 +270,7 @@ struct SpecialInputWidget {
 };
 
 CC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, FontDesc* font, struct InputWidget* target);
+CC_NOINLINE void SpecialInputWidget_Redraw(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active);
 #endif
