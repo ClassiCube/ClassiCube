@@ -619,9 +619,6 @@ static void TableWidget_RecreateElements(struct TableWidget* w) {
 
 static void TableWidget_Init(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	w->lastX = Mouse_X; w->lastY = Mouse_Y;
-
-	ScrollbarWidget_Create(&w->scroll);
 	TableWidget_RecreateElements(w);
 	Widget_Reposition(w);
 }
@@ -820,6 +817,8 @@ void TableWidget_Create(struct TableWidget* w) {
 	Widget_Reset(w);
 	w->VTABLE = &TableWidget_VTABLE;
 	w->lastCreatedIndex = -1000;
+	ScrollbarWidget_Create(&w->scroll);
+	w->lastX = Mouse_X; w->lastY = Mouse_Y;
 }
 
 void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
@@ -2390,20 +2389,22 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 	char chars[TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN];
 	struct Portion portions[2 * (TEXTGROUPWIDGET_LEN / TEXTGROUPWIDGET_HTTP_LEN)];
 	struct Portion bit;
-	Size2D size = { 0, 0 };
-	Size2D partSizes[Array_Elems(portions)];
+	Size2D size;
+	int partWidths[Array_Elems(portions)];
 	Bitmap bmp;
 	int portionsCount;
 	int i, x, ul;
 
+	size.Width    = 0;
+	size.Height   = Drawer2D_TextHeight(args);
 	portionsCount = TextGroupWidget_Reduce(w, chars, index, portions);
+	
 	for (i = 0; i < portionsCount; i++) {
 		bit = portions[i];
 		args->text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
 
-		partSizes[i] = Drawer2D_MeasureText(args);
-		size.Height = max(partSizes[i].Height, size.Height);
-		size.Width += partSizes[i].Width;
+		partWidths[i] = Drawer2D_TextWidth(args);
+		size.Width += partWidths[i];
 	}
 	
 	Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
@@ -2418,7 +2419,7 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 			Drawer2D_DrawText(&bmp, args, x, 0);
 			if (ul) args->font.Style &= ~FONT_FLAG_UNDERLINE;
 
-			x += partSizes[i].Width;
+			x += partWidths[i];
 		}
 		Drawer2D_Make2DTexture(tex, &bmp, size, 0, 0);
 	}

@@ -8,3 +8,7 @@
 * Sometimes you randomly crash reading leveldatachunk packet on OSX
 * Models with size of over 2 are not supported at all
 * Direct3D9 backend uses an ill-formed vertex format that works by accident
+* Alt text doesn't update its Y position if you click on chat 
+* Menu inputs (save, edit hotkey, water level, etc) are reset on window resize
+* Chat input caret is reset on window resize
+* Position in chat (if you scrolled up into history) is reset on window resize
