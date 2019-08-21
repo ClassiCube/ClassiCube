@@ -563,13 +563,14 @@ CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const Stri
 	
 	s->grabsInput  = true;
 	s->blocksWorld = true;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_LOADING);
+	Gui_Replace((struct Screen*)s, 
+		Game_ClassicMode ? GUI_PRIORITY_OLDLOADING : GUI_PRIORITY_LOADING);
 }
 
 static const struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_Init, LoadingScreen_Render, LoadingScreen_Free,
 	Screen_TKey,        Screen_TKey,          Screen_TKeyPress,
-	Screen_TMouse,      Screen_TMouse,        Screen_FMouseMove,  Screen_TMouseScroll,
+	Screen_TMouse,      Screen_TMouse,        Screen_TMouseMove,  Screen_TMouseScroll,
 	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void LoadingScreen_Show(const String* title, const String* message) {

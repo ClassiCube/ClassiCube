@@ -93,7 +93,8 @@ extern GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 
 /* Higher priority handles input first and draws on top */
 enum GuiPriority {
-	GUI_PRIORITY_DISCONNECT = 45,
+	GUI_PRIORITY_DISCONNECT = 50,
+	GUI_PRIORITY_OLDLOADING = 45,
 	GUI_PRIORITY_STATUS     = 40,
 	GUI_PRIORITY_URLWARNING = 35,
 	GUI_PRIORITY_TEXPACK    = 30,
