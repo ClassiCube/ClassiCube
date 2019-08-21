@@ -49,16 +49,17 @@ struct HUDScreen {
 	struct Texture chatTextures[TEXTGROUPWIDGET_MAX_LINES];
 };
 
-static bool Screen_FKey(void* elem, Key key)               { return false; }
-static bool Screen_FKeyPress(void* elem, char keyChar)     { return false; }
-static bool Screen_FMouseScroll(void* elem, float delta)   { return false; }
-static bool Screen_FMouse(void* elem, int x, int y, int btn) { return false; }
-static bool Screen_FMouseMove(void* elem, int x, int y)    { return false; }
+bool Screen_FKey(void* elem, int key)               { return false; }
+bool Screen_FKeyPress(void* elem, char keyChar)     { return false; }
+bool Screen_FMouseScroll(void* elem, float delta)   { return false; }
+bool Screen_FMouse(void* elem, int x, int y, int btn) { return false; }
+bool Screen_FMouseMove(void* elem, int x, int y)    { return false; }
 
-static bool Screen_TKeyPress(void* elem, char keyChar)     { return true; }
-static bool Screen_TKey(void* s, Key key)                  { return true; }
-static bool Screen_TMouseScroll(void* screen, float delta) { return true; }
-static bool Screen_TMouse(void* screen, int x, int y, int btn) { return true; }
+bool Screen_TKeyPress(void* elem, char keyChar)     { return true; }
+bool Screen_TKey(void* s, int key)                  { return true; }
+bool Screen_TMouseScroll(void* screen, float delta) { return true; }
+bool Screen_TMouse(void* screen, int x, int y, int btn) { return true; }
+bool Screen_TMouseMove(void* elem, int x, int y)    { return true; }
 static void Screen_NullFunc(void* screen) { }
 
 CC_NOINLINE static bool IsOnlyHudActive(void) {

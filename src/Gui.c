@@ -268,7 +268,7 @@ void Gui_RenderGui(double delta) {
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui_ScreensCount - 1; i >= 0; i--) {
 		s = Gui_Screens[i];
-		if (!s->hidden) Elem_Render(s, delta);
+		s->VTABLE->Render(s, delta);
 	}
 	Gfx_Mode3D();
 }
