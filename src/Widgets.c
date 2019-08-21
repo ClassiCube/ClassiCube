@@ -2762,5 +2762,4 @@ void SpecialInputWidget_Create(struct SpecialInputWidget* w, FontDesc* font, str
 	w->font      = font;
 	w->target    = target;
 	SpecialInputWidget_InitTabs(w);
-	w->x = 5; w->y = 5;
 }

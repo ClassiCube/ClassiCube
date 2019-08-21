@@ -717,6 +717,7 @@ static void HUDScreen_ChatUpdateFont(struct HUDScreen* s) {
 static void HUDScreen_ChatUpdateLayout(struct HUDScreen* s) {
 	int yOffset = HUDScreen_BottomOffset() + 15;
 	Widget_SetLocation(&s->input.base, ANCHOR_MIN, ANCHOR_MAX, 5, 5);
+	Widget_SetLocation(&s->altText,    ANCHOR_MIN, ANCHOR_MAX, 5, 5);
 	HUDScreen_UpdateAltTextY(s);
 
 	Widget_SetLocation(&s->status, ANCHOR_MAX, ANCHOR_MIN, 0, 0);
@@ -996,6 +997,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	Drawer2D_MakeFont(&s->playerFont, size, FONT_STYLE_NORMAL);
 	HUDScreen_InitChatFonts(s);
 	HUDScreen_ChatUpdateFont(s);
+	HUDScreen_ChatUpdateLayout(s);
 
 	HUDScreen_Redraw(s);
 	HUDScreen_UpdateChatYOffset(s, true);
@@ -1148,6 +1150,7 @@ static bool HUDScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 		UrlWarningOverlay_Show(&text);
 	} else if (Gui_ClickableChat) {
 		InputWidget_AppendString(&s->input.base, &text);
+		HUDScreen_UpdateAltTextY(s);
 	}
 	return true;
 }
