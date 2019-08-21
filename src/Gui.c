@@ -19,7 +19,6 @@ bool Gui_ClickableChat, Gui_TabAutocomplete, Gui_ShowFPS;
 GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 struct Screen* Gui_Status;
 struct Screen* Gui_HUD;
-struct Screen* Gui_Active;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 int Gui_ScreensCount;
 static uint8_t priorities[GUI_MAX_SCREENS];
@@ -152,10 +151,6 @@ struct IGameComponent Gui_Component = {
 	NULL, /* OnNewMapLoaded */
 };
 
-struct Screen* Gui_GetActiveScreen(void) {
-	return Gui_Active ? Gui_Active : Gui_HUD;
-}
-
 void Gui_RefreshAll(void) { 
 	Gui_ContextLost(NULL);
 	Gui_ContextRecreated(NULL);
@@ -236,6 +231,8 @@ void Gui_Replace(struct Screen* s, int priority) {
 	for (i = Gui_ScreensCount - 1; i >= 0; i--) {
 		if (priorities[i] == priority) Gui_RemoveCore(Gui_Screens[i]);
 	}
+
+	Gui_AddCore(s, priority);
 	Gui_OnScreensChanged();
 }
 

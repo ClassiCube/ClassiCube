@@ -49,7 +49,6 @@ struct HUDScreen {
 	struct Texture chatTextures[TEXTGROUPWIDGET_MAX_LINES];
 };
 
-
 static bool Screen_FKey(void* elem, Key key)               { return false; }
 static bool Screen_FKeyPress(void* elem, char keyChar)     { return false; }
 static bool Screen_FMouseScroll(void* elem, float delta)   { return false; }
@@ -61,6 +60,17 @@ static bool Screen_TKey(void* s, Key key)                  { return true; }
 static bool Screen_TMouseScroll(void* screen, float delta) { return true; }
 static bool Screen_TMouse(void* screen, int x, int y, int btn) { return true; }
 static void Screen_NullFunc(void* screen) { }
+
+CC_NOINLINE static bool IsOnlyHudActive(void) {
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->grabsInput && s != Gui_HUD) return false;
+	}
+	return true;
+}
 
 
 /*########################################################################################################################*
@@ -385,7 +395,7 @@ static void StatusScreen_Render(void* screen, double delta) {
 
 	if (Game_ClassicMode) {
 		Elem_Render(&s->line2, delta);
-	} else if (!Gui_Active && Gui_ShowFPS) {
+	} else if (IsOnlyHudActive() && Gui_ShowFPS) {
 		if (StatusScreen_HacksChanged(s)) { StatusScreen_UpdateHackState(s); }
 		StatusScreen_DrawPosition(s);
 		Elem_Render(&s->line2, delta);
@@ -1175,7 +1185,7 @@ static void HUDScreen_Render(void* screen, double delta) {
 	if (!showMinimal) { Elem_Render(&s->hotbar, delta); }
 	HUDScreen_DrawChat(s, delta);
 
-	if (s->showingList && Gui_GetActiveScreen() == (struct Screen*)s) {
+	if (s->showingList && IsOnlyHudActive()) {
 		s->playerList.active = s->grabsInput;
 		Elem_Render(&s->playerList, delta);
 		/* NOTE: Should usually be caught by KeyUp, but just in case. */

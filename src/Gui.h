@@ -107,7 +107,6 @@ enum GuiPriority {
 
 extern struct Screen* Gui_Status;
 extern struct Screen* Gui_HUD;
-extern struct Screen* Gui_Active;
 #define GUI_MAX_SCREENS 10
 extern struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 extern int Gui_ScreensCount;
@@ -117,9 +116,6 @@ extern int Gui_ScreensCount;
 int  Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen);
 /* Returns whether the given rectangle contains the given point. */
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
-/* Gets the screen that the user is currently interacting with. */
-/* This means if an overlay is active, it will be over the top of other screens. */
-struct Screen* Gui_GetActiveScreen(void);
 
 /* Returns index of the given screen in the screens list, -1 if not */
 int Gui_Index(struct Screen* screen);
