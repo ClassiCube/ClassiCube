@@ -720,9 +720,9 @@ static void HUDScreen_ChatUpdateLayout(struct HUDScreen* s) {
 	Widget_SetLocation(&s->altText,    ANCHOR_MIN, ANCHOR_MAX, 5, 5);
 	HUDScreen_UpdateAltTextY(s);
 
-	Widget_SetLocation(&s->status, ANCHOR_MAX, ANCHOR_MIN, 0, 0);
-	Widget_SetLocation(&s->bottomRight, ANCHOR_MAX, ANCHOR_MAX, 0, yOffset);
-	Widget_SetLocation(&s->chat, ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
+	Widget_SetLocation(&s->status,       ANCHOR_MAX, ANCHOR_MIN,  0,       0);
+	Widget_SetLocation(&s->bottomRight,  ANCHOR_MAX, ANCHOR_MAX,  0, yOffset);
+	Widget_SetLocation(&s->chat,         ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
 	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
 }
 
@@ -740,7 +740,10 @@ static void HUDScreen_ChatInit(struct HUDScreen* s) {
 							s->clientStatusTextures, HUDScreen_GetClientStatus);
 	TextWidget_Make(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Window_Height / 4);
 
-	s->status.placeholderHeight[0] = false; /* Texture pack download status */
+	s->status.placeholderHeight[0]       = false; /* Texture pack download status */
+	s->clientStatus.placeholderHeight[0] = false;
+	s->clientStatus.placeholderHeight[1] = false;
+
 	s->chat.underlineUrls = !Game_ClassicMode;
 	s->chatIndex = Chat_Log.count - Gui_Chatlines;
 }
@@ -762,8 +765,8 @@ static void HUDScreen_UpdateChatYOffset(struct HUDScreen* s, bool force) {
 		int bottomOffset = HUDScreen_BottomOffset() + 15;
 		s->clientStatus.yOffset = max(bottomOffset, height);
 		Widget_Reposition(&s->clientStatus);
-
-		s->chat.yOffset = s->clientStatus.yOffset + TextGroupWidget_UsedHeight(&s->clientStatus);
+		
+		s->chat.yOffset = s->clientStatus.yOffset + s->clientStatus.height;
 		Widget_Reposition(&s->chat);
 		s->inputOldHeight = height;
 	}
@@ -908,7 +911,7 @@ static void HUDScreen_DrawChatBackground(struct HUDScreen* s) {
 	int y = s->chat.y + s->chat.height - usedHeight;
 
 	int width  = max(s->clientStatus.width, s->chat.width);
-	int height = usedHeight + TextGroupWidget_UsedHeight(&s->clientStatus);
+	int height = usedHeight + s->clientStatus.height;
 
 	if (height > 0) {
 		PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
@@ -919,21 +922,14 @@ static void HUDScreen_DrawChatBackground(struct HUDScreen* s) {
 static void HUDScreen_DrawChat(struct HUDScreen* s, double delta) {
 	struct Texture tex;
 	TimeMS now;
-	int i, y, logIdx;
+	int i, logIdx;
 
 	HUDScreen_UpdateTexpackStatus(s);
 	if (!Game_PureClassic) { Elem_Render(&s->status, delta); }
 	Elem_Render(&s->bottomRight, delta);
 
 	HUDScreen_UpdateChatYOffset(s, false);
-	y = s->clientStatus.y + s->clientStatus.height;
-	for (i = 0; i < s->clientStatus.lines; i++) {
-		tex = s->clientStatus.textures[i];
-		if (!tex.ID) continue;
-
-		y -= tex.Height; tex.Y = y;
-		Texture_Render(&tex);
-	}
+	Elem_Render(&s->clientStatus, delta);
 
 	now = DateTime_CurrentUTC_MS();
 	if (s->grabsInput) {

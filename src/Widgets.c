@@ -1208,7 +1208,7 @@ static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button
 	x -= w->inputTex.X; y -= w->inputTex.Y;
 
 	DrawTextArgs_MakeEmpty(&args, w->font, true);
-	charHeight = w->caretTex.Height;
+	charHeight = w->lineHeight;
 	String_InitArray(line, lineBuffer);
 
 	for (cy = 0; cy < w->GetMaxLines(); cy++) {

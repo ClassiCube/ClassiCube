@@ -12,3 +12,4 @@
 * Menu inputs (save, edit hotkey, water level, etc) are reset on window resize
 * Chat input caret is reset on window resize
 * Position in chat (if you scrolled up into history) is reset on window resize
+* Two blank lines get shown in chat when you type /client cuboid
