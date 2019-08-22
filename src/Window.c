@@ -972,43 +972,31 @@ int Window_GetWindowState(void) {
 	}
 	if (data) XFree(data);
 
-	if (minimised)      return WINDOW_STATE_MINIMISED;
-	if (maximised == 2) return WINDOW_STATE_MAXIMISED;
 	if (fullscreen)     return WINDOW_STATE_FULLSCREEN;
+	if (minimised)      return WINDOW_STATE_MINIMISED;
+	if (maximised == 2) return WINDOW_STATE_MAXIMISED;	
 	return WINDOW_STATE_NORMAL;
 }
 
-static void Window_SendNetWMState(long op, Atom a1, Atom a2) {
+static void Window_ToggleFullscreen(long op) {
 	XEvent ev = { 0 };
-	ev.xclient.type = ClientMessage;
-	ev.xclient.send_event = true;
+	ev.xclient.type   = ClientMessage;
 	ev.xclient.window = win_handle;
 	ev.xclient.message_type = net_wm_state;
 	ev.xclient.format = 32;
 	ev.xclient.data.l[0] = op;
-	ev.xclient.data.l[1] = a1;
-	ev.xclient.data.l[2] = a2;
+	ev.xclient.data.l[1] = net_wm_state_fullscreen;
 
 	XSendEvent(win_display, win_rootWin, false,
 		SubstructureRedirectMask | SubstructureNotifyMask, &ev);
-}
-
-static void Window_ToggleFullscreen(long op) {
-	Window_SendNetWMState(op, net_wm_state_fullscreen, 0);
 	XSync(win_display, false);
 	XRaiseWindow(win_display, win_handle);
 	Window_ProcessEvents();
 }
 
 void Window_EnterFullscreen(void) {
-	/* TODO: Do we actually need to remove maximised state? */
-	if (Window_GetWindowState() == WINDOW_STATE_MAXIMISED) {
-		Window_SendNetWMState(_NET_WM_STATE_TOGGLE, net_wm_state_maximized_horizontal, 
-			net_wm_state_maximized_vertical);
-	}
 	Window_ToggleFullscreen(_NET_WM_STATE_ADD);
 }
-
 void Window_ExitFullscreen(void) {
 	Window_ToggleFullscreen(_NET_WM_STATE_REMOVE);
 }
