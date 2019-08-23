@@ -740,9 +740,9 @@ static void HUDScreen_ChatInit(struct HUDScreen* s) {
 							s->clientStatusTextures, HUDScreen_GetClientStatus);
 	TextWidget_Make(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Window_Height / 4);
 
-	s->status.placeholderHeight[0]       = false; /* Texture pack download status */
-	s->clientStatus.placeholderHeight[0] = false;
-	s->clientStatus.placeholderHeight[1] = false;
+	s->status.collapsible[0]       = true; /* Texture pack download status */
+	s->clientStatus.collapsible[0] = true;
+	s->clientStatus.collapsible[1] = true;
 
 	s->chat.underlineUrls = !Game_ClassicMode;
 	s->chatIndex = Chat_Log.count - Gui_Chatlines;
@@ -1234,6 +1234,14 @@ void HUDScreen_OpenInput(const String* text) {
 void HUDScreen_AppendInput(const String* text) {
 	struct HUDScreen* s = &HUDScreen_Instance;
 	InputWidget_AppendString(&s->input.base, text);
+}
+
+void HUDScreen_SetChatlines(int lines) {
+	struct HUDScreen* s = &HUDScreen_Instance;
+	Elem_Free(&s->chat);
+	s->chatIndex += s->chat.lines - lines;
+	s->chat.lines = lines;
+	TextGroupWidget_RedrawAll(&s->chat);
 }
 
 struct Widget* HUDScreen_GetHotbar(void) {

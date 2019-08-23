@@ -2448,7 +2448,7 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 		}
 		Drawer2D_ReducePadding_Tex(&tex, w->font->Size, 3);
 	} else {
-		tex.Height = w->placeholderHeight[index] ? w->defaultHeight : 0;
+		tex.Height = w->collapsible[index] ? 0 : w->defaultHeight;
 	}
 
 	tex.X = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, Window_Width);
@@ -2482,7 +2482,7 @@ void TextGroupWidget_SetFont(struct TextGroupWidget* w, FontDesc* font) {
 	w->defaultHeight = height;
 
 	for (i = 0; i < w->lines; i++) {
-		w->textures[i].Height = w->placeholderHeight[i] ? height : 0;
+		w->textures[i].Height = w->collapsible[i] ? 0 : height;
 	}
 	w->font = font;
 	Widget_Reposition(w);
@@ -2515,11 +2515,8 @@ static const struct WidgetVTABLE TextGroupWidget_VTABLE = {
 	TextGroupWidget_Reposition
 };
 void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine) {
-	int i;
 	Widget_Reset(w);
-	w->VTABLE = &TextGroupWidget_VTABLE;
-	for (i = 0; i < lines; i++) { w->placeholderHeight[i] = true; }
-
+	w->VTABLE   = &TextGroupWidget_VTABLE;
 	w->lines    = lines;
 	w->textures = textures;
 	w->GetLine  = getLine;

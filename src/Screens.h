@@ -34,5 +34,6 @@ extern struct Screen* LoadingScreen_UNSAFE_RawPointer;
 void HUDScreen_OpenInput(const String* text);
 /* Appends text to the chat input in the HUD. */
 void HUDScreen_AppendInput(const String* text);
+void HUDScreen_SetChatlines(int lines);
 struct Widget* HUDScreen_GetHotbar(void);
 #endif

@@ -2377,8 +2377,8 @@ static void GuiOptionsScreen_SetChatScale(const String* v) { GuiOptionsScreen_Se
 static void GuiOptionsScreen_GetChatlines(String* v) { String_AppendInt(v, Gui_Chatlines); }
 static void GuiOptionsScreen_SetChatlines(const String* v) {
 	Gui_Chatlines = Menu_Int(v);
+	HUDScreen_SetChatlines(Gui_Chatlines);
 	Options_Set(OPT_CHATLINES, v);
-	Gui_RefreshHud();
 }
 
 static void GuiOptionsScreen_GetUseFont(String* v) { Menu_GetBool(v, !Drawer2D_BitmappedText); }

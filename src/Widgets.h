@@ -204,8 +204,8 @@ struct TextGroupWidget {
 	Widget_Layout
 	int lines, defaultHeight;
 	FontDesc* font;
-	/* Whether a line has non-zero height when that line has no text in it. */
-	bool placeholderHeight[TEXTGROUPWIDGET_MAX_LINES];
+	/* Whether a line has zero height when that line has no text in it. */
+	bool collapsible[TEXTGROUPWIDGET_MAX_LINES];
 	bool underlineUrls;
 	struct Texture* textures;
 	TextGroupWidget_Get GetLine;
