@@ -954,7 +954,7 @@ static void HUDScreen_DrawChat(struct HUDScreen* s, double delta) {
 		}
 	}
 
-	if (s->announcement.texture.ID && now > Chat_AnnouncementReceived + (5 * 1000)) {
+	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + (5 * 1000)) {
 		Elem_TryFree(&s->announcement);
 	}
 }

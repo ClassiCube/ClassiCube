@@ -11,8 +11,7 @@
 /* A text label. */
 struct TextWidget {
 	Widget_Layout
-	struct Texture texture;
-
+	struct Texture tex;
 	bool reducePadding;
 	PackedCol col;
 };
@@ -30,9 +29,8 @@ typedef void (*Button_Set)(const String* raw);
 /* A labelled button that can be clicked on. */
 struct ButtonWidget {
 	Widget_Layout
-	struct Texture texture;
+	struct Texture tex;
 	int minWidth;
-
 	const char* optName;
 	Button_Get GetValue;
 	Button_Set SetValue;

@@ -30,19 +30,18 @@ static bool Widget_MouseScroll(void* elem, float delta) { return false; }
 *#########################################################################################################################*/
 static void TextWidget_Render(void* widget, double delta) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	if (w->texture.ID) Texture_RenderShaded(&w->texture, w->col);
+	if (w->tex.ID) Texture_RenderShaded(&w->tex, w->col);
 }
 
 static void TextWidget_Free(void* widget) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	Gfx_DeleteTexture(&w->texture.ID);
+	Gfx_DeleteTexture(&w->tex.ID);
 }
 
 static void TextWidget_Reposition(void* widget) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	Widget_CalcPosition(w);
-	w->texture.X = w->x;
-	w->texture.Y = w->y;
+	w->tex.X = w->x; w->tex.Y = w->y;
 }
 
 static const struct WidgetVTABLE TextWidget_VTABLE = {
@@ -61,23 +60,22 @@ void TextWidget_Make(struct TextWidget* w, uint8_t horAnchor, uint8_t verAnchor,
 
 void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* font) {
 	struct DrawTextArgs args;
-	Gfx_DeleteTexture(&w->texture.ID);
+	Gfx_DeleteTexture(&w->tex.ID);
 
 	if (Drawer2D_IsEmptyText(text)) {
-		w->texture.Width  = 0; 
-		w->texture.Height = Drawer2D_FontHeight(font, true);
+		w->tex.Width  = 0; 
+		w->tex.Height = Drawer2D_FontHeight(font, true);
 	} else {	
 		DrawTextArgs_Make(&args, text, font, true);
-		Drawer2D_MakeTextTexture(&w->texture, &args, 0, 0);
+		Drawer2D_MakeTextTexture(&w->tex, &args, 0, 0);
 	}
 
 	if (w->reducePadding) {
-		Drawer2D_ReducePadding_Tex(&w->texture, font->Size, 4);
+		Drawer2D_ReducePadding_Tex(&w->tex, font->Size, 4);
 	}
 
-	w->width = w->texture.Width; w->height = w->texture.Height;
+	w->width = w->tex.Width; w->height = w->tex.Height;
 	Widget_Reposition(w);
-	w->texture.X = w->x; w->texture.Y = w->y;
 }
 
 void TextWidget_SetConst(struct TextWidget* w, const char* text, const FontDesc* font) {
@@ -98,15 +96,15 @@ static struct Texture Button_DisabledTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widge
 
 static void ButtonWidget_Free(void* widget) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
-	Gfx_DeleteTexture(&w->texture.ID);
+	Gfx_DeleteTexture(&w->tex.ID);
 }
 
 static void ButtonWidget_Reposition(void* widget) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
 	Widget_CalcPosition(w);
 	
-	w->texture.X = w->x + (w->width  / 2 - w->texture.Width  / 2);
-	w->texture.Y = w->y + (w->height / 2 - w->texture.Height / 2);
+	w->tex.X = w->x + (w->width  / 2 - w->tex.Width  / 2);
+	w->tex.Y = w->y + (w->height / 2 - w->tex.Height / 2);
 }
 
 static void ButtonWidget_Render(void* widget, double delta) {
@@ -143,9 +141,9 @@ static void ButtonWidget_Render(void* widget, double delta) {
 		Gfx_Draw2DTexture(&back, white);
 	}
 
-	if (!w->texture.ID) return;
+	if (!w->tex.ID) return;
 	col = w->disabled ? disabledCol : (w->active ? activeCol : normCol);
-	Texture_RenderShaded(&w->texture, col);
+	Texture_RenderShaded(&w->tex, col);
 }
 
 static const struct WidgetVTABLE ButtonWidget_VTABLE = {
@@ -165,18 +163,18 @@ void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 
 void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc* font) {
 	struct DrawTextArgs args;
-	Gfx_DeleteTexture(&w->texture.ID);
+	Gfx_DeleteTexture(&w->tex.ID);
 
 	if (Drawer2D_IsEmptyText(text)) {
-		w->texture.Width  = 0;
-		w->texture.Height = Drawer2D_FontHeight(font, true);
+		w->tex.Width  = 0;
+		w->tex.Height = Drawer2D_FontHeight(font, true);
 	} else {
 		DrawTextArgs_Make(&args, text, font, true);
-		Drawer2D_MakeTextTexture(&w->texture, &args, 0, 0);
+		Drawer2D_MakeTextTexture(&w->tex, &args, 0, 0);
 	}
 
-	w->width  = max(w->texture.Width,  w->minWidth);
-	w->height = max(w->texture.Height, BUTTON_MIN_WIDTH);
+	w->width  = max(w->tex.Width,  w->minWidth);
+	w->height = max(w->tex.Height, BUTTON_MIN_WIDTH);
 	Widget_Reposition(w);
 }
 
@@ -516,14 +514,6 @@ static bool TableWidget_GetCoords(struct TableWidget* w, int i, int* cellX, int*
 	return y >= 0 && y < TABLE_MAX_ROWS_DISPLAYED;
 }
 
-static void TableWidget_UpdateScrollbarPos(struct TableWidget* w) {
-	struct ScrollbarWidget* scroll = &w->scroll;
-	scroll->x = Table_X(w) + Table_Width(w);
-	scroll->y = Table_Y(w);
-	scroll->height    = Table_Height(w);
-	scroll->totalRows = w->rowsCount;
-}
-
 static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	int x, y, idx;
 	if (w->selectedIndex == -1) return;
@@ -553,15 +543,6 @@ static void TableWidget_MakeBlockDesc(String* desc, BlockID block) {
 static void TableWidget_UpdateDescTexPos(struct TableWidget* w) {
 	w->descTex.X = w->x + w->width / 2 - w->descTex.Width / 2;
 	w->descTex.Y = w->y - w->descTex.Height - 5;
-}
-
-static void TableWidget_UpdatePos(struct TableWidget* w) {
-	int rowsDisplayed = min(TABLE_MAX_ROWS_DISPLAYED, w->rowsCount);
-	w->width  = w->cellSize * w->blocksPerRow;
-	w->height = w->cellSize * rowsDisplayed;
-	w->x = Window_Width  / 2 - w->width  / 2;
-	w->y = Window_Height / 2 - w->height / 2;
-	TableWidget_UpdateDescTexPos(w);
 }
 
 static void TableWidget_RecreateDescTex(struct TableWidget* w) {
@@ -613,8 +594,7 @@ static void TableWidget_RecreateElements(struct TableWidget* w) {
 	}
 
 	w->rowsCount = Math_CeilDiv(w->blocksCount, w->blocksPerRow);
-	TableWidget_UpdateScrollbarPos(w);
-	TableWidget_UpdatePos(w);
+	Widget_Reposition(w);
 }
 
 static void TableWidget_Init(void* widget) {
@@ -697,11 +677,21 @@ void TableWidget_Recreate(struct TableWidget* w) {
 static void TableWidget_Reposition(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	float scale = Game_GetInventoryScale();
-	w->cellSize = (int)(50 * Math_SqrtF(scale));
-	w->selBlockExpand = 25.0f * Math_SqrtF(scale);
+	int rowsDisplayed;
 
-	TableWidget_UpdatePos(w);
-	TableWidget_UpdateScrollbarPos(w);
+	w->cellSize       = (int)(50 * Math_SqrtF(scale));
+	w->selBlockExpand = 25.0f * Math_SqrtF(scale);
+	rowsDisplayed     = min(TABLE_MAX_ROWS_DISPLAYED, w->rowsCount);
+
+	w->width  = w->cellSize * w->blocksPerRow;
+	w->height = w->cellSize * rowsDisplayed;
+	Widget_CalcPosition(w);
+	TableWidget_UpdateDescTexPos(w);
+
+	w->scroll.x = Table_X(w) + Table_Width(w);
+	w->scroll.y = Table_Y(w);
+	w->scroll.height    = Table_Height(w);
+	w->scroll.totalRows = w->rowsCount;
 }
 
 static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
@@ -818,6 +808,9 @@ void TableWidget_Create(struct TableWidget* w) {
 	w->VTABLE = &TableWidget_VTABLE;
 	w->lastCreatedIndex = -1000;
 	ScrollbarWidget_Create(&w->scroll);
+	
+	w->horAnchor = ANCHOR_CENTRE;
+	w->verAnchor = ANCHOR_CENTRE;
 	w->lastX = Mouse_X; w->lastY = Mouse_Y;
 }
 
