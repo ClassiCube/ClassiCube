@@ -351,7 +351,6 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 }
 
 static void HotbarWidget_RepositonBackgroundTexture(struct HotbarWidget* w) {
-	w->backTex.ID = GFX_NULL;
 	Tex_SetRect(w->backTex, w->x,w->y, w->width,w->height);
 	Tex_SetUV(w->backTex,   0,0, 182/256.0f,22/256.0f);
 }
@@ -362,7 +361,6 @@ static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* w) {
 	int vSize = (int)(22.0f * scale);
 	int y = w->y + (w->height - (int)(23.0f * scale));
 
-	w->selTex.ID = GFX_NULL;
 	Tex_SetRect(w->selTex, 0,y, hSize,vSize);
 	Tex_SetUV(w->selTex,   0,22/256.0f, 24/256.0f,44/256.0f);
 }
@@ -956,6 +954,8 @@ static void InputWidget_OnPressedEnter(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	InputWidget_Clear(w);
 	w->height = w->lineHeight;
+	/* TODO get rid of this awful hack.. */
+	Widget_Reposition(w);
 }
 
 void InputWidget_Clear(struct InputWidget* w) {
@@ -2691,8 +2691,7 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct Special
 
 void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
 	SpecialInputWidget_Make(w, &w->tabs[w->selectedIndex]);
-	w->width  = w->tex.Width;
-	w->height = w->active ? w->tex.Height : 0;
+	w->width = w->tex.Width;
 	w->pendingRedraw = false;
 	Widget_Reposition(w);
 }
@@ -2709,6 +2708,7 @@ static void SpecialInputWidget_Free(void* widget) {
 
 static void SpecialInputWidget_Reposition(void* widget) {
 	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
+	w->height = w->active ? w->tex.Height : 0;
 	Widget_CalcPosition(w);
 	w->tex.X = w->x; w->tex.Y = w->y;
 }
@@ -2737,8 +2737,8 @@ void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w) {
 
 void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
 	w->active = active;
-	w->height = active ? w->tex.Height : 0;
 	if (active && w->pendingRedraw) SpecialInputWidget_Redraw(w);
+	Widget_Reposition(w);
 }
 
 static const struct WidgetVTABLE SpecialInputWidget_VTABLE = {

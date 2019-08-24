@@ -658,22 +658,19 @@ void GeneratingScreen_Show(void) {
 static struct HUDScreen HUDScreen_Instance;
 #define CH_EXTENT 16
 
-static int HUDScreen_BottomOffset(void) { return HUDScreen_Instance.hotbar.height; }
-static int HUDScreen_InputUsedHeight(struct HUDScreen* s) {
-	if (s->altText.height == 0) {
-		return s->input.base.height + 20;
-	} else {
-		return (Window_Height - s->altText.y) + 5;
-	}
-}
-
-static void HUDScreen_UpdateAltTextY(struct HUDScreen* s) {
-	struct InputWidget* input = &s->input.base;
-	int height = max(input->height + input->yOffset, HUDScreen_BottomOffset());
-	height += input->yOffset;
-
-	s->altText.yOffset = height;
+static void HUDScreen_UpdateChatYOffsets(struct HUDScreen* s) {
+	int pad, y;
+		
+	y = min(s->input.base.y, s->hotbar.y);
+	y -= s->input.base.yOffset; /* add some padding */
+	s->altText.yOffset = Window_Height - y;
 	Widget_Reposition(&s->altText);
+
+	pad = s->altText.active ? 5 : 10;
+	s->clientStatus.yOffset = Window_Height - s->altText.y + pad;
+	Widget_Reposition(&s->clientStatus);
+	s->chat.yOffset = s->clientStatus.yOffset + s->clientStatus.height;
+	Widget_Reposition(&s->chat);
 }
 
 static String HUDScreen_GetChat(void* obj, int i) {
@@ -715,15 +712,14 @@ static void HUDScreen_ChatUpdateFont(struct HUDScreen* s) {
 }
 
 static void HUDScreen_ChatUpdateLayout(struct HUDScreen* s) {
-	int yOffset = HUDScreen_BottomOffset() + 15;
-	Widget_SetLocation(&s->input.base, ANCHOR_MIN, ANCHOR_MAX, 5, 5);
-	Widget_SetLocation(&s->altText,    ANCHOR_MIN, ANCHOR_MAX, 5, 5);
-	HUDScreen_UpdateAltTextY(s);
-
-	Widget_SetLocation(&s->status,       ANCHOR_MAX, ANCHOR_MIN,  0,       0);
+	int yOffset = s->hotbar.height + 15;
+	Widget_SetLocation(&s->input.base,   ANCHOR_MIN, ANCHOR_MAX,  5, 5);
+	Widget_SetLocation(&s->altText,      ANCHOR_MIN, ANCHOR_MAX,  5, 5);
+	Widget_SetLocation(&s->status,       ANCHOR_MAX, ANCHOR_MIN,  0, 0);
 	Widget_SetLocation(&s->bottomRight,  ANCHOR_MAX, ANCHOR_MAX,  0, yOffset);
-	Widget_SetLocation(&s->chat,         ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
-	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
+	Widget_SetLocation(&s->chat,         ANCHOR_MIN, ANCHOR_MAX, 10, 0);
+	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, 0);
+	HUDScreen_UpdateChatYOffsets(s);
 }
 
 static void HUDScreen_ChatInit(struct HUDScreen* s) {
@@ -757,19 +753,6 @@ static void HUDScreen_Redraw(struct HUDScreen* s) {
 
 	if (s->grabsInput) InputWidget_UpdateText(&s->input.base);
 	SpecialInputWidget_Redraw(&s->altText);
-}
-
-static void HUDScreen_UpdateChatYOffset(struct HUDScreen* s, bool force) {
-	int height = HUDScreen_InputUsedHeight(s);
-	if (force || height != s->inputOldHeight) {
-		int bottomOffset = HUDScreen_BottomOffset() + 15;
-		s->clientStatus.yOffset = max(bottomOffset, height);
-		Widget_Reposition(&s->clientStatus);
-		
-		s->chat.yOffset = s->clientStatus.yOffset + s->clientStatus.height;
-		Widget_Reposition(&s->chat);
-		s->inputOldHeight = height;
-	}
 }
 
 static int HUDScreen_ClampChatIndex(int index) {
@@ -807,6 +790,7 @@ static void HUDScreen_EnterChatInput(struct HUDScreen* s, bool close) {
 	input = &s->input.base;
 	input->OnPressedEnter(input);
 	SpecialInputWidget_SetActive(&s->altText, false);
+	HUDScreen_UpdateChatYOffsets(s);
 
 	/* Reset chat when user has scrolled up in chat history */
 	defaultIndex = Chat_Log.count - Gui_Chatlines;
@@ -886,7 +870,7 @@ static void HUDScreen_ChatReceived(void* screen, const String* msg, int type) {
 		TextWidget_Set(&s->announcement, msg, &s->announcementFont);
 	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_2) {
 		TextGroupWidget_Redraw(&s->clientStatus, type - MSG_TYPE_CLIENTSTATUS_1);
-		HUDScreen_UpdateChatYOffset(s, true);
+		HUDScreen_UpdateChatYOffsets(s);
 	}
 }
 
@@ -927,8 +911,6 @@ static void HUDScreen_DrawChat(struct HUDScreen* s, double delta) {
 	HUDScreen_UpdateTexpackStatus(s);
 	if (!Game_PureClassic) { Elem_Render(&s->status, delta); }
 	Elem_Render(&s->bottomRight, delta);
-
-	HUDScreen_UpdateChatYOffset(s, false);
 	Elem_Render(&s->clientStatus, delta);
 
 	now = DateTime_CurrentUTC_MS();
@@ -996,7 +978,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	HUDScreen_ChatUpdateLayout(s);
 
 	HUDScreen_Redraw(s);
-	HUDScreen_UpdateChatYOffset(s, true);
+	HUDScreen_UpdateChatYOffsets(s);
 	HUDScreen_RemakePlayerList(s);
 	Widget_Reposition(&s->hotbar);
 }
@@ -1018,7 +1000,7 @@ static bool HUDScreen_KeyPress(void* screen, char keyChar) {
 	}
 
 	InputWidget_Append(&s->input.base, keyChar);
-	HUDScreen_UpdateAltTextY(s);
+	HUDScreen_UpdateChatYOffsets(s);
 	return true;
 }
 
@@ -1053,7 +1035,7 @@ static bool HUDScreen_KeyDown(void* screen, Key key) {
 			HUDScreen_ScrollChatBy(s, +Gui_Chatlines);
 		} else {
 			Elem_HandlesKeyDown(&s->input.base, key);
-			HUDScreen_UpdateAltTextY(s);
+			HUDScreen_UpdateChatYOffsets(s);
 		}
 		return key < KEY_F1 || key > KEY_F35;
 	}
@@ -1088,6 +1070,7 @@ static bool HUDScreen_KeyUp(void* screen, Key key) {
 	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
 		if (!Window_Focused) return true;
 		SpecialInputWidget_SetActive(&s->altText, !s->altText.active);
+		HUDScreen_UpdateChatYOffsets(s);
 	}
 	return true;
 }
@@ -1127,7 +1110,7 @@ static bool HUDScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	if (!Widget_Contains(&s->chat, x, y)) {
 		if (s->altText.active && Widget_Contains(&s->altText, x, y)) {
 			Elem_HandlesMouseDown(&s->altText, x, y, btn);
-			HUDScreen_UpdateAltTextY(s);
+			HUDScreen_UpdateChatYOffsets(s);
 			return true;
 		}
 		Elem_HandlesMouseDown(&s->input.base, x, y, btn);
@@ -1145,8 +1128,7 @@ static bool HUDScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	if (Utils_IsUrlPrefix(&text)) {
 		UrlWarningOverlay_Show(&text);
 	} else if (Gui_ClickableChat) {
-		InputWidget_AppendString(&s->input.base, &text);
-		HUDScreen_UpdateAltTextY(s);
+		HUDScreen_AppendInput(&text);
 	}
 	return true;
 }
@@ -1234,6 +1216,7 @@ void HUDScreen_OpenInput(const String* text) {
 void HUDScreen_AppendInput(const String* text) {
 	struct HUDScreen* s = &HUDScreen_Instance;
 	InputWidget_AppendString(&s->input.base, text);
+	HUDScreen_UpdateChatYOffsets(s);
 }
 
 void HUDScreen_SetChatlines(int lines) {
