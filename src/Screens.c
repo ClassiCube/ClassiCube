@@ -119,7 +119,7 @@ static void InventoryScreen_Init(void* screen) {
 	TableWidget_Create(&s->table);
 	s->table.font         = &s->font;
 	s->table.blocksPerRow = Game_PureClassic ? 9 : 10;
-	Elem_Init(&s->table);
+	TableWidget_RecreateBlocks(&s->table);
 
 	/* Can't immediately move to selected here, because cursor grabbed  */
 	/* status might be toggled after InventoryScreen_Init() is called. */
@@ -672,8 +672,8 @@ static void HUDScreen_UpdateAltTextY(struct HUDScreen* s) {
 	int height = max(input->height + input->yOffset, HUDScreen_BottomOffset());
 	height += input->yOffset;
 
-	s->altText.tex.Y = Window_Height - (height + s->altText.tex.Height);
-	s->altText.y     = s->altText.tex.Y;
+	s->altText.yOffset = height;
+	Widget_Reposition(&s->altText);
 }
 
 static String HUDScreen_GetChat(void* obj, int i) {

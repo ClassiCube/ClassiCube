@@ -578,7 +578,7 @@ static bool TableWidget_RowEmpty(struct TableWidget* w, int start) {
 	return true;
 }
 
-static void TableWidget_RecreateElements(struct TableWidget* w) {
+void TableWidget_RecreateBlocks(struct TableWidget* w) {
 	int i, max = Game_UseCPEBlocks ? BLOCK_COUNT : BLOCK_ORIGINAL_COUNT;
 	BlockID block;
 	w->blocksCount = 0;
@@ -594,12 +594,6 @@ static void TableWidget_RecreateElements(struct TableWidget* w) {
 	}
 
 	w->rowsCount = Math_CeilDiv(w->blocksCount, w->blocksPerRow);
-	Widget_Reposition(w);
-}
-
-static void TableWidget_Init(void* widget) {
-	struct TableWidget* w = (struct TableWidget*)widget;
-	TableWidget_RecreateElements(w);
 	Widget_Reposition(w);
 }
 
@@ -798,7 +792,7 @@ static bool TableWidget_KeyDown(void* widget, Key key) {
 }
 
 static const struct WidgetVTABLE TableWidget_VTABLE = {
-	TableWidget_Init,      TableWidget_Render,  TableWidget_Free,
+	Widget_NullFunc,       TableWidget_Render,  TableWidget_Free,
 	TableWidget_KeyDown,   Widget_Key,
 	TableWidget_MouseDown, TableWidget_MouseUp, TableWidget_MouseMove, TableWidget_MouseScroll,
 	TableWidget_Reposition
@@ -832,7 +826,7 @@ void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
 }
 
 void TableWidget_OnInventoryChanged(struct TableWidget* w) {
-	TableWidget_RecreateElements(w);
+	TableWidget_RecreateBlocks(w);
 	if (w->selectedIndex >= w->blocksCount) {
 		w->selectedIndex = w->blocksCount - 1;
 	}
@@ -2700,6 +2694,7 @@ void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
 	w->width  = w->tex.Width;
 	w->height = w->active ? w->tex.Height : 0;
 	w->pendingRedraw = false;
+	Widget_Reposition(w);
 }
 
 static void SpecialInputWidget_Render(void* widget, double delta) {
@@ -2710,6 +2705,12 @@ static void SpecialInputWidget_Render(void* widget, double delta) {
 static void SpecialInputWidget_Free(void* widget) {
 	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
 	Gfx_DeleteTexture(&w->tex.ID);
+}
+
+static void SpecialInputWidget_Reposition(void* widget) {
+	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
+	Widget_CalcPosition(w);
+	w->tex.X = w->x; w->tex.Y = w->y;
 }
 
 static bool SpecialInputWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
@@ -2744,7 +2745,7 @@ static const struct WidgetVTABLE SpecialInputWidget_VTABLE = {
 	Widget_NullFunc,              SpecialInputWidget_Render, SpecialInputWidget_Free,
 	Widget_Key,                   Widget_Key,
 	SpecialInputWidget_MouseDown, Widget_Mouse,              Widget_MouseMove,        Widget_MouseScroll,
-	Widget_CalcPosition
+	SpecialInputWidget_Reposition
 };
 void SpecialInputWidget_Create(struct SpecialInputWidget* w, FontDesc* font, struct InputWidget* target) {
 	Widget_Reset(w);
