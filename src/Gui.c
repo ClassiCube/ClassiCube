@@ -320,7 +320,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc
 			args.text = String_UNSAFE_Substring(chars, i, 1);
 			Drawer2D_DrawText(&bmp, &args, atlas->offsets[i], 0);
 		}
-		Drawer2D_Make2DTexture(&atlas->tex, &bmp, size, 0, 0);
+		Drawer2D_Make2DTexture(&atlas->tex, &bmp, size);
 	}	
 	Mem_Free(bmp.Scan0);
 

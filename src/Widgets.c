@@ -67,7 +67,7 @@ void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* fo
 		w->tex.Height = Drawer2D_FontHeight(font, true);
 	} else {	
 		DrawTextArgs_Make(&args, text, font, true);
-		Drawer2D_MakeTextTexture(&w->tex, &args, 0, 0);
+		Drawer2D_MakeTextTexture(&w->tex, &args);
 	}
 
 	if (w->reducePadding) {
@@ -170,7 +170,7 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc
 		w->tex.Height = Drawer2D_FontHeight(font, true);
 	} else {
 		DrawTextArgs_Make(&args, text, font, true);
-		Drawer2D_MakeTextTexture(&w->tex, &args, 0, 0);
+		Drawer2D_MakeTextTexture(&w->tex, &args);
 	}
 
 	w->width  = max(w->tex.Width,  w->minWidth);
@@ -563,7 +563,7 @@ void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
 	TableWidget_MakeBlockDesc(&desc, block);
 	
 	DrawTextArgs_Make(&args, &desc, w->font, true);
-	Drawer2D_MakeTextTexture(&w->descTex, &args, 0, 0);
+	Drawer2D_MakeTextTexture(&w->descTex, &args);
 	TableWidget_UpdateDescTexPos(w);
 }
 
@@ -897,7 +897,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 
 	if (!w->caretTex.ID) {
 		DrawTextArgs_Make(&args, &caret, w->font, true);
-		Drawer2D_MakeTextTexture(&w->caretTex, &args, 0, 0);
+		Drawer2D_MakeTextTexture(&w->caretTex, &args);
 		w->caretWidth = (uint16_t)((w->caretTex.Width * 3) / 4);
 	}
 	
@@ -1399,7 +1399,7 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	}
 
 	tex = &w->base.inputTex;
-	Drawer2D_Make2DTexture(tex, &bmp, adjSize, 0, 0);
+	Drawer2D_Make2DTexture(tex, &bmp, adjSize);
 	Mem_Free(bmp.Scan0);
 
 	Widget_Reposition(&w->base);
@@ -1506,7 +1506,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 		y += w->lineHeight;
 	}
 
-	Drawer2D_Make2DTexture(&w->inputTex, &bmp, size, 0, 0);
+	Drawer2D_Make2DTexture(&w->inputTex, &bmp, size);
 	Mem_Free(bmp.Scan0);
 	w->caretAccumulator = 0;
 
@@ -1720,6 +1720,7 @@ void ChatInputWidget_SetFont(struct ChatInputWidget* w, FontDesc* font) {
 	w->base.font        = font;
 	w->base.prefixWidth = Drawer2D_TextWidth(&args);
 	w->base.lineHeight  = Drawer2D_TextHeight(&args);
+	Gfx_DeleteTexture(&w->base.caretTex.ID);
 }	
 
 
@@ -1743,7 +1744,7 @@ static void PlayerListWidget_DrawName(struct Texture* tex, struct PlayerListWidg
 	}
 
 	DrawTextArgs_Make(&args, &tmp, w->font, !w->classic);
-	Drawer2D_MakeTextTexture(tex, &args, 0, 0);
+	Drawer2D_MakeTextTexture(tex, &args);
 	Drawer2D_ReducePadding_Tex(tex, w->font->Size, 3);
 }
 
@@ -2408,7 +2409,7 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 
 			x += partWidths[i];
 		}
-		Drawer2D_Make2DTexture(tex, &bmp, size, 0, 0);
+		Drawer2D_Make2DTexture(tex, &bmp, size);
 	}
 	Mem_Free(bmp.Scan0);
 }
@@ -2431,7 +2432,7 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 		if (w->underlineUrls && TextGroupWidget_MightHaveUrls(w)) {
 			TextGroupWidget_DrawAdvanced(w, &tex, &args, index, &text);
 		} else {
-			Drawer2D_MakeTextTexture(&tex, &args, 0, 0);
+			Drawer2D_MakeTextTexture(&tex, &args);
 		}
 		Drawer2D_ReducePadding_Tex(&tex, w->font->Size, 3);
 	} else {
@@ -2685,7 +2686,7 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct Special
 		Drawer2D_Clear(&bmp, col, 0, titles.Height, size.Width, content.Height);
 		SpecialInputWidget_DrawContent(w, tab, &bmp, titles.Height);
 	}
-	Drawer2D_Make2DTexture(&w->tex, &bmp, size, w->x, w->y);
+	Drawer2D_Make2DTexture(&w->tex, &bmp, size);
 	Mem_Free(bmp.Scan0);
 }
 

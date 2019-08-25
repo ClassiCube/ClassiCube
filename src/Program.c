@@ -104,10 +104,12 @@ static int Program_Run(int argc, char** argv) {
 	uint16_t port;
 
 	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
+#ifdef _MSC_VER
 	/* NOTE: Make sure to comment this out before pushing a commit */
 	/* String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565"); */
-	/* String rawArgs = String_FromConst("UnknownShadow200"); */
-	/* argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4); */
+	String rawArgs = String_FromConst("UnknownShadow200"); 
+	argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4);
+#endif
 
 	if (argsCount == 0) {
 #ifdef CC_BUILD_WEB

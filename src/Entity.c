@@ -267,7 +267,7 @@ static void Entity_MakeNameTexture(struct Entity* e) {
 			args.text = name;
 			Drawer2D_DrawText(&bmp, &args, 0, 0);
 		}
-		Drawer2D_Make2DTexture(&e->NameTex, &bmp, size, 0, 0);
+		Drawer2D_Make2DTexture(&e->NameTex, &bmp, size);
 		Mem_Free(bmp.Scan0);
 	}
 	Drawer2D_BitmappedText = bitmapped;

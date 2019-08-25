@@ -543,7 +543,6 @@ void Launcher_MarkAllDirty(void) {
 *#########################################################################################################################*/
 static TimeMS lastJoin;
 bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
-	String path; char pathBuffer[FILENAME_SIZE];
 	String args; char argsBuffer[512];
 	TimeMS now;
 	ReturnCode res;
