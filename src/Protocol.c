@@ -27,7 +27,6 @@
 
 /* Classic state */
 static uint8_t classic_tabList[ENTITIES_MAX_COUNT >> 3];
-static struct Screen* classic_prevScreen;
 static bool classic_receivedFirstPos;
 
 /* Map state */
@@ -424,13 +423,6 @@ static void Classic_StartLoading(void) {
 	Event_RaiseVoid(&WorldEvents.NewMap);
 	Stream_ReadonlyMemory(&map_part, NULL, 0);
 
-	classic_prevScreen = Gui_Active;
-	if (classic_prevScreen == LoadingScreen_UNSAFE_RawPointer) {
-		/* otherwise replacing LoadingScreen with LoadingScreen will cause issues */
-		Gui_FreeActive();
-		classic_prevScreen = NULL;
-	}
-
 	LoadingScreen_Show(&Server.Name, &Server.MOTD);
 	WoM_CheckMotd();
 	classic_receivedFirstPos = false;
@@ -511,9 +503,7 @@ static void Classic_LevelFinalise(uint8_t* data) {
 	int width, height, length;
 	int loadingMs;
 
-	Gui_CloseActive();
-	Gui_Active = classic_prevScreen;
-	classic_prevScreen = NULL;
+	Gui_Remove(LoadingScreen_UNSAFE_RawPointer);
 	Camera_CheckFocus();
 
 	loadingMs = (int)(DateTime_CurrentUTC_MS() - map_receiveStart);

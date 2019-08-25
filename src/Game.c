@@ -177,9 +177,8 @@ void Game_UpdateProjection(void) {
 
 void Game_Disconnect(const String* title, const String* reason) {
 	Event_RaiseVoid(&NetEvents.Disconnected);
-	Gui_FreeActive();
-	DisconnectScreen_Show(title, reason);
 	Game_Reset();
+	DisconnectScreen_Show(title, reason);
 }
 
 void Game_Reset(void) {
@@ -619,7 +618,6 @@ void Game_TakeScreenshot(void) {
 
 static void Game_RenderFrame(double delta) {
 	struct ScheduledTask entTask;
-	bool allowZoom, visible;
 	float t;
 
 	/* TODO: Should other tasks get called back too? */
@@ -637,13 +635,9 @@ static void Game_RenderFrame(double delta) {
 	Game_Vertices = 0;
 
 	Camera.Active->UpdateMouse(delta);
-	if (!Window_Focused && !Gui_GetActiveScreen()->handlesAllInput) {
-		Gui_FreeActive();
-		Gui_SetActive(PauseScreen_MakeInstance());
-	}
+	if (!Window_Focused && !Gui_GetInputGrab()) PauseScreen_Show();
 
-	allowZoom = !Gui_Active && !Gui_HUD->handlesAllInput;
-	if (allowZoom && KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) {
+	if (KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL) && !Gui_GetInputGrab()) {
 		InputHandler_SetFOV(Game_ZoomFov);
 	}
 
@@ -656,8 +650,7 @@ static void Game_RenderFrame(double delta) {
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	Game_UpdateViewMatrix();
 
-	visible = !Gui_Active || !Gui_Active->blocksWorld;
-	if (visible && World.Blocks) {
+	if (!Gui_GetBlocksWorld() && World.Blocks) {
 		Game_Render3D(delta, t);
 	} else {
 		PickedPos_SetAsInvalid(&Game_SelectedPos);

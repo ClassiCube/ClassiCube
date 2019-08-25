@@ -11,17 +11,17 @@
 /* A text label. */
 struct TextWidget {
 	Widget_Layout
-	struct Texture texture;
-
+	struct Texture tex;
 	bool reducePadding;
 	PackedCol col;
 };
-/* Resets state of the given text widget to default. */
-CC_NOINLINE void TextWidget_Make(struct TextWidget* w);
+/* Initialises a text widget. */
+CC_NOINLINE void TextWidget_Make(struct TextWidget* w, 
+								uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* font);
-/* Shorthand for TextWidget_Make then TextWidget_Set */
-CC_NOINLINE void TextWidget_Create(struct TextWidget* w, const String* text, const FontDesc* font);
+/* Shorthand for TextWidget_Set using String_FromReadonly */
+CC_NOINLINE void TextWidget_SetConst(struct TextWidget* w, const char* text, const FontDesc* font);
 
 
 typedef void (*Button_Get)(String* raw);
@@ -29,19 +29,19 @@ typedef void (*Button_Set)(const String* raw);
 /* A labelled button that can be clicked on. */
 struct ButtonWidget {
 	Widget_Layout
-	struct Texture texture;
+	struct Texture tex;
 	int minWidth;
-
 	const char* optName;
 	Button_Get GetValue;
 	Button_Set SetValue;
 };
-/* Resets state of the given button widget to default. */
-CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
+/* Initialises a button widget. */
+CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, 
+								uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc* font);
-/* Resets state of the given button widget, then calls ButtonWidget_Set */
-CC_NOINLINE void ButtonWidget_Create(struct ButtonWidget* w, int minWidth, const String* text, const FontDesc* font, Widget_LeftClick onClick);
+/* Shorthand for ButtonWidget_Set using String_FromReadonly */
+CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, const FontDesc* font);
 
 /* Clickable and draggable scrollbar. */
 struct ScrollbarWidget {
@@ -70,7 +70,7 @@ CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
 /* A table of blocks. */
 struct TableWidget {
 	Widget_Layout
-	int elementsCount, elementsPerRow, rowsCount;
+	int blocksCount, blocksPerRow, rowsCount;
 	int lastCreatedIndex;
 	FontDesc* font;
 	int selectedIndex, cellSize;
@@ -78,7 +78,7 @@ struct TableWidget {
 	GfxResourceID vb;
 	bool pendingClose;
 
-	BlockID elements[BLOCK_COUNT];
+	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;
 	struct Texture descTex;
 	int lastX, lastY;
@@ -88,8 +88,10 @@ CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
 /* Sets the selected block in the table to the given block. */
 /* Also adjusts scrollbar and moves cursor to be over the given block. */
 CC_NOINLINE void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block);
+CC_NOINLINE void TableWidget_RecreateBlocks(struct TableWidget* w);
 CC_NOINLINE void TableWidget_OnInventoryChanged(struct TableWidget* w);
 CC_NOINLINE void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block);
+CC_NOINLINE void TableWidget_Recreate(struct TableWidget* w);
 
 
 #define INPUTWIDGET_MAX_LINES 3
@@ -103,11 +105,11 @@ struct InputWidget {
 	bool (*AllowedChar)(void* elem, char c);
 
 	String text;
-	String lines[INPUTWIDGET_MAX_LINES];     /* raw text of each line */
-	Size2D lineSizes[INPUTWIDGET_MAX_LINES]; /* size of each line in pixels */
+	String lines[INPUTWIDGET_MAX_LINES];    /* raw text of each line */
+	int lineWidths[INPUTWIDGET_MAX_LINES];  /* Width of each line in pixels */
+	int lineHeight;
 	struct Texture inputTex;
-	String prefix;
-	int prefixWidth, prefixHeight;
+	int prefixWidth;
 	bool convertPercents;
 
 	uint8_t padding;
@@ -126,6 +128,8 @@ CC_NOINLINE void InputWidget_Clear(struct InputWidget* w);
 CC_NOINLINE void InputWidget_AppendString(struct InputWidget* w, const String* text);
 /* Tries appending the given character, then updates the input texture. */
 CC_NOINLINE void InputWidget_Append(struct InputWidget* w, char c);
+/* Redraws text and recalculates associated state. */
+CC_NOINLINE void InputWidget_UpdateText(struct InputWidget* w);
 
 
 struct MenuInputDesc;
@@ -185,7 +189,8 @@ struct ChatInputWidget {
 	char _origBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];	
 };
 
-CC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w, FontDesc* font);
+CC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w);
+CC_NOINLINE void ChatInputWidget_SetFont(struct ChatInputWidget* w, FontDesc* font);
 
 
 /* Retrieves the text for the i'th line in the group */
@@ -198,17 +203,16 @@ struct TextGroupWidget {
 	Widget_Layout
 	int lines, defaultHeight;
 	FontDesc* font;
-	bool placeholderHeight[TEXTGROUPWIDGET_MAX_LINES];
+	/* Whether a line has zero height when that line has no text in it. */
+	bool collapsible[TEXTGROUPWIDGET_MAX_LINES];
 	bool underlineUrls;
 	struct Texture* textures;
 	TextGroupWidget_Get GetLine;
 	void* getLineObj;
 };
 
-CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, FontDesc* font, struct Texture* textures, TextGroupWidget_Get getLine);
-/* Sets whether the given line has non-zero height when that line has no text in it. */
-/* By default, all lines are placeholder lines. */
-CC_NOINLINE void TextGroupWidget_SetUsePlaceHolder(struct TextGroupWidget* w, int index, bool placeHolder);
+CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine);
+CC_NOINLINE void TextGroupWidget_SetFont(struct TextGroupWidget* w, FontDesc* font);
 /* Deletes first line, then moves all other lines upwards, then redraws last line. */
 /* NOTE: GetLine must also adjust the lines it returns for this to behave properly. */
 CC_NOINLINE void TextGroupWidget_ShiftUp(struct TextGroupWidget* w);
@@ -246,8 +250,7 @@ CC_NOINLINE void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, int m
 
 typedef void (*SpecialInputAppendFunc)(void* userData, char c);
 struct SpecialInputTab {
-	int itemsPerRow, charsPerItem;
-	Size2D titleSize;
+	int itemsPerRow, charsPerItem, titleWidth;
 	String title, contents;	
 };
 
@@ -259,12 +262,14 @@ struct SpecialInputWidget {
 	struct InputWidget* target;
 	struct Texture tex;
 	FontDesc* font;
+	int titleHeight;
 	struct SpecialInputTab tabs[5];
 	String colString;
 	char _colBuffer[DRAWER2D_MAX_COLS * 4];
 };
 
 CC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, FontDesc* font, struct InputWidget* target);
+CC_NOINLINE void SpecialInputWidget_Redraw(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active);
 #endif

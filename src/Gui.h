@@ -16,7 +16,7 @@ enum GuiAnchor {
 };
 
 struct IGameComponent;
-struct GuiElem;
+struct Widget;
 extern struct IGameComponent Gui_Component;
 
 /* Whether vanilla Minecraft Classic gui texture is used. */
@@ -34,50 +34,44 @@ extern bool Gui_TabAutocomplete;
 /* Whether FPS counter (and other info) is shown in top left. */
 extern bool Gui_ShowFPS;
 
-#define GuiElemVTABLE_Layout() \
-	void (*Init)(void* elem); \
-	void (*Render)(void* elem, double delta); \
-	void (*Free)(void* elem); \
-	void (*Recreate)(void* elem); \
-	bool (*HandlesKeyDown)(void* elem, Key key, bool wasDown); \
-	bool (*HandlesKeyUp)(void* elem, Key key); \
-	bool (*HandlesKeyPress)(void* elem, char keyChar); \
-	bool (*HandlesMouseDown)(void* elem, int x, int y, MouseButton btn); \
-	bool (*HandlesMouseUp)(void* elem, int x, int y, MouseButton btn); \
-	bool (*HandlesMouseMove)(void* elem, int x, int y); \
-	bool (*HandlesMouseScroll)(void* elem, float delta);
-
-struct GuiElemVTABLE { GuiElemVTABLE_Layout() };
-struct GuiElem { struct GuiElemVTABLE* VTABLE; };
-void Gui_DefaultRecreate(void* elem);
-
-
 struct ScreenVTABLE {
-	GuiElemVTABLE_Layout()
+	void (*Init)(void* elem);
+	void (*Render)(void* elem, double delta);
+	void (*Free)(void* elem);
+	bool (*HandlesKeyDown)(void* elem, Key key);
+	bool (*HandlesKeyUp)(void* elem, Key key);
+	bool (*HandlesKeyPress)(void* elem, char keyChar);
+	bool (*HandlesMouseDown)(void* elem, int x, int y, MouseButton btn);
+	bool (*HandlesMouseUp)(void* elem, int x, int y, MouseButton btn);
+	bool (*HandlesMouseMove)(void* elem, int x, int y);
+	bool (*HandlesMouseScroll)(void* elem, float delta);
 	void (*OnResize)(void* elem);
 	Event_Void_Callback ContextLost;
 	Event_Void_Callback ContextRecreated;
 };
-#define Screen_Layout struct ScreenVTABLE* VTABLE; \
-	bool handlesAllInput; /* Whether this screen handles all input. Prevents user interacting with the world. */ \
-	bool blocksWorld;     /* Whether this screen completely and opaquely covers the game world behind it. */ \
-	bool hidesHUD;        /* Whether this screen hides the normal in-game HUD. */ \
-	bool renderHUDOver;   /* Whether the normal in-game HUD should be drawn over the top of this screen. */ \
-	bool closable;        /* Whether this screen is automatically closed when pressing Escape */
+#define Screen_Layout const struct ScreenVTABLE* VTABLE; \
+	bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
+	bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
+	bool closable;    /* Whether this screen is automatically closed when pressing Escape */ \
+	struct Widget** widgets; int numWidgets;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Layout };
-void Screen_CommonInit(void* screen);
-void Screen_CommonFree(void* screen);
-
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
-struct Widget;
 struct WidgetVTABLE {
-	GuiElemVTABLE_Layout()
+	void (*Init)(void* elem);
+	void (*Render)(void* elem, double delta);
+	void (*Free)(void* elem);
+	bool (*HandlesKeyDown)(void* elem, Key key);
+	bool (*HandlesKeyUp)(void* elem, Key key);
+	bool (*HandlesMouseDown)(void* elem, int x, int y, MouseButton btn);
+	bool (*HandlesMouseUp)(void* elem, int x, int y, MouseButton btn);
+	bool (*HandlesMouseMove)(void* elem, int x, int y);
+	bool (*HandlesMouseScroll)(void* elem, float delta);
 	void (*Reposition)(void* elem);
 };
-#define Widget_Layout struct WidgetVTABLE* VTABLE; \
+#define Widget_Layout const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;      /* Top left corner, and dimensions, of this widget */ \
 	bool active;                  /* Whether this widget is currently being moused over */ \
 	bool disabled;                /* Whether widget is prevented from being interacted with */ \
@@ -97,54 +91,55 @@ bool Widget_Contains(void* widget, int x, int y);
 
 extern GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 
+/* Higher priority handles input first and draws on top */
 enum GuiPriority {
-	GUI_PRIORITY_STATUS     = 1,
-	GUI_PRIORITY_DISCONNECT = 3,
-	GUI_PRIORITY_URLWARNING = 5,
-	GUI_PRIORITY_TEXPACK    = 7,
-	GUI_PRIORITY_TEXIDS     = 9,
-	GUI_PRIORITY_MENU       = 11,
-	GUI_PRIORITY_INVENTORY  = 13,
-	GUI_PRIORITY_HUD        = 15,
-	GUI_PRIORITY_LOADING    = 17,
+	GUI_PRIORITY_DISCONNECT = 50,
+	GUI_PRIORITY_OLDLOADING = 45,
+	GUI_PRIORITY_URLWARNING = 40,
+	GUI_PRIORITY_TEXPACK    = 35,
+	GUI_PRIORITY_TEXIDS     = 30,
+	GUI_PRIORITY_MENU       = 25,
+	GUI_PRIORITY_INVENTORY  = 20,
+	GUI_PRIORITY_STATUS     = 15,
+	GUI_PRIORITY_HUD        = 10,
+	GUI_PRIORITY_LOADING    =  5,
 };
 
 extern struct Screen* Gui_Status;
 extern struct Screen* Gui_HUD;
-extern struct Screen* Gui_Active;
-#define GUI_MAX_OVERLAYS 4
-extern struct Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
-extern int Gui_OverlaysCount;
+#define GUI_MAX_SCREENS 10
+extern struct Screen* Gui_Screens[GUI_MAX_SCREENS];
+extern int Gui_ScreensCount;
 
 /* Calculates position of an element on a particular axis */
 /* For example, to calculate X position of a text widget on screen */
 int  Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen);
 /* Returns whether the given rectangle contains the given point. */
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
-/* Gets the screen that the user is currently interacting with. */
-/* This means if an overlay is active, it will be over the top of other screens. */
-struct Screen* Gui_GetActiveScreen(void);
-/* Gets the non-overlay screen that the user is currently interacting with. */
-/* This means if an overlay is active, the screen under it is returned. */
-struct Screen* Gui_GetUnderlyingScreen(void);
+/* Shows HUD and Status screens. */
+void Gui_ShowDefault(void);
 
-/* Frees the active screen if it is not NULL. */
-/* NOTE: You should usually use Gui_CloseActive instead. */
-CC_NOINLINE void Gui_FreeActive(void);
-/* Sets the active screen/menu that the user interacts with. */
-/* NOTE: This doesn't free old active screen - must call Gui_FreeActive() first */
-CC_NOINLINE void Gui_SetActive(struct Screen* screen);
-/* Shortcut for Gui_Close(Gui_Active) */
-CC_NOINLINE void Gui_CloseActive(void);
-/* Frees the given screen, and if == Gui_Active, calls Gui_SetActive(NULL) */
-CC_NOINLINE void Gui_Close(void* screen);
+/* Returns index of the given screen in the screens list, -1 if not */
+int Gui_Index(struct Screen* screen);
+/* Inserts a screen into the screen lists with the given priority. */
+/* NOTE: You MUST ensure a screen isn't added twice. Or use Gui_Replace. */
+void Gui_Add(struct Screen* screen, int priority);
+/* Removes the screen from the screens list. */
+void Gui_Remove(struct Screen* screen);
+/* Shorthand for Gui_Remove then Gui_Add. */
+void Gui_Replace(struct Screen* screen, int priority);
 
+/* Returns highest priority screen that has grabbed input. */
+struct Screen* Gui_GetInputGrab(void);
+/* Returns highest priority screen that blocks world rendering. */
+struct Screen* Gui_GetBlocksWorld(void);
+/* Returns highest priority screen that is closable. */
+struct Screen* Gui_GetClosable(void);
+
+void Gui_RefreshAll(void);
 void Gui_RefreshHud(void);
-void Gui_ShowOverlay(struct Screen* screen);
-/* Returns index of the given screen in the overlays list, -1 if not */
-int  Gui_IndexOverlay(const void* screen);
-/* Removes given screen from the overlays list */
-void Gui_RemoveOverlay(const void* screen);
+void Gui_Refresh(struct Screen* s);
+
 void Gui_RenderGui(double delta);
 void Gui_OnResize(void);
 
@@ -153,8 +148,8 @@ struct TextAtlas {
 	struct Texture tex;
 	int offset, curX;
 	float uScale;
-	int16_t widths[TEXTATLAS_MAX_WIDTHS];
-	int16_t offsets[TEXTATLAS_MAX_WIDTHS];
+	short widths[TEXTATLAS_MAX_WIDTHS];
+	short offsets[TEXTATLAS_MAX_WIDTHS];
 };
 void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc* font, const String* prefix);
 void TextAtlas_Free(struct TextAtlas* atlas);
@@ -162,19 +157,17 @@ void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertice
 void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vertices);
 
 
-#define Elem_Init(elem)           (elem)->VTABLE->Init(elem)
-#define Elem_Render(elem, delta)  (elem)->VTABLE->Render(elem, delta)
-#define Elem_Free(elem)           (elem)->VTABLE->Free(elem)
-#define Elem_Recreate(elem)       (elem)->VTABLE->Recreate(elem)
-#define Elem_HandlesKeyPress(elem, key)      (elem)->VTABLE->HandlesKeyPress(elem, key)
-#define Elem_HandlesKeyDown(elem, key, was)  (elem)->VTABLE->HandlesKeyDown(elem, key, was)
-#define Elem_HandlesKeyUp(elem, key)         (elem)->VTABLE->HandlesKeyUp(elem, key)
+#define Elem_Init(elem)          (elem)->VTABLE->Init(elem)
+#define Elem_Render(elem, delta) (elem)->VTABLE->Render(elem, delta)
+#define Elem_Free(elem)          (elem)->VTABLE->Free(elem)
+#define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress(elem, key)
+#define Elem_HandlesKeyDown(elem, key)  (elem)->VTABLE->HandlesKeyDown(elem, key)
+#define Elem_HandlesKeyUp(elem, key)    (elem)->VTABLE->HandlesKeyUp(elem, key)
 #define Elem_HandlesMouseDown(elem, x, y, btn) (elem)->VTABLE->HandlesMouseDown(elem, x, y, btn)
 #define Elem_HandlesMouseUp(elem, x, y, btn)   (elem)->VTABLE->HandlesMouseUp(elem, x, y, btn)
 #define Elem_HandlesMouseMove(elem, x, y)      (elem)->VTABLE->HandlesMouseMove(elem, x, y)
 #define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll(elem, delta)
 
-#define Screen_OnResize(screen)   (screen)->VTABLE->OnResize(screen);
 #define Widget_Reposition(widget) (widget)->VTABLE->Reposition(widget);
 #define Elem_TryFree(elem)        if ((elem)->VTABLE) { Elem_Free(elem); }
 #endif

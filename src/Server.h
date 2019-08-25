@@ -63,7 +63,7 @@ CC_VAR extern struct _ServerConnectionData {
 	/* Sends a position update to the server. */
 	void (*SendPosition)(Vec3 pos, float rotY, float headX);
 	/* Sends raw data to the server. */
-	/* NOTE: Prefer SendBlock/Position/Chat instead, this does not work in singleplayer. */
+	/* NOTE: Prefer SendBlock/Position/Chat instead, this does NOT work in singleplayer. */
 	void (*SendData)(const uint8_t* data, uint32_t len);
 
 	/* The current name of the server. (Shows as first line when loading) */
@@ -71,7 +71,7 @@ CC_VAR extern struct _ServerConnectionData {
 	/* The current MOTD of the server. (Shows as second line when loading) */
 	String MOTD;
 	/* The software name the client identifies itself as being to the server. */
-	/* By default this is the same as GAME_APP_NAME */
+	/* By default this is GAME_APP_NAME. */
 	String AppName;
 
 	/* Buffer to data to send to the server. */

@@ -46,7 +46,7 @@ void Server_RetrieveTexturePack(const String* url) {
 	if (!url->length || TextureCache_HasAccepted(url)) {
 		World_ApplyTexturePack(url);
 	} else {
-		Gui_ShowOverlay(TexPackOverlay_MakeInstance(url));
+		TexPackOverlay_Show(url);
 	}
 }
 
@@ -139,7 +139,6 @@ static void SPConnection_BeginConnect(void) {
 	path = Game_Username;
 	if (SP_HasDir(path) && File_Exists(&path)) {
 		Map_LoadFrom(&path);
-		Gui_CloseActive();
 		return;
 	}
 
@@ -147,8 +146,6 @@ static void SPConnection_BeginConnect(void) {
 	World_SetDimensions(128, 64, 128);
 	Gen_Vanilla = true;
 	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
-
-	Gui_FreeActive();
 	GeneratingScreen_Show();
 }
 
@@ -316,7 +313,6 @@ static void MPConnection_BeginConnect(void) {
 		MPConnection_FailConnect(res);
 	} else {
 		String_Format2(&title, "Connecting to %s:%i..", &Server.IP, &Server.Port);
-		Gui_FreeActive();
 		LoadingScreen_Show(&title, &String_Empty);
 	}
 }

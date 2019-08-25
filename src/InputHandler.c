@@ -62,10 +62,8 @@ static void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
 	}
 }
 
-void InputHandler_ScreenChanged(struct Screen* oldScreen, struct Screen* newScreen) {
-	if (oldScreen && oldScreen->handlesAllInput) {
-		input_lastClick = DateTime_CurrentUTC_MS();
-	}
+void InputHandler_OnScreensChanged(void) {
+	input_lastClick = DateTime_CurrentUTC_MS();
 
 	if (Server.SupportsPlayerClick) {
 		input_pickingId = -1;
@@ -172,8 +170,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 			Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 		}
 	} else if (key == KeyBinds[KEYBIND_IDOVERLAY]) {
-		if (Gui_OverlaysCount) return true;
-		Gui_ShowOverlay(TexIdsOverlay_MakeInstance());
+		TexIdsOverlay_Show();
 	} else if (key == KeyBinds[KEYBIND_BREAK_LIQUIDS]) {
 		InputHandler_Toggle(key, &Game_BreakableLiquids,
 			"  &eBreakable liquids is &aenabled",
@@ -185,8 +182,6 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 }
 
 static bool InputHandler_HandleCoreKey(Key key) {
-	struct Screen* active = Gui_GetActiveScreen();
-
 	if (key == KeyBinds[KEYBIND_HIDE_FPS]) {
 		Gui_ShowFPS = !Gui_ShowFPS;
 	} else if (key == KeyBinds[KEYBIND_FULLSCREEN]) {
@@ -206,9 +201,6 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		} else {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
-	} else if (key == KeyBinds[KEYBIND_INVENTORY] && active == Gui_HUD) {
-		Gui_FreeActive();
-		InventoryScreen_Show();
 	} else if (key == KEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
@@ -331,15 +323,14 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 
 	if (cooldown && delta < 250) return; /* 4 times per second */
 	input_lastClick = now;
+	if (Gui_GetInputGrab()) return;
 
-	if (Server.SupportsPlayerClick && !Gui_GetActiveScreen()->handlesAllInput) {
+	if (Server.SupportsPlayerClick) {
 		input_pickingId = -1;
 		InputHandler_ButtonStateChanged(MOUSE_LEFT,   left);
 		InputHandler_ButtonStateChanged(MOUSE_RIGHT,  right);
 		InputHandler_ButtonStateChanged(MOUSE_MIDDLE, middle);
 	}
-
-	if (Gui_GetActiveScreen()->handlesAllInput) return;
 
 	if (left) {
 		/* always play delete animations, even if we aren't picking a block */
@@ -401,10 +392,15 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 }
 
 static void InputHandler_MouseWheel(void* obj, float delta) {
-	struct Screen* active = Gui_GetActiveScreen();
+	struct Screen* s;
+	int i;
 	struct Widget* widget;
 	bool hotbar;
-	if (Elem_HandlesMouseScroll(active, delta)) return;
+	
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesMouseScroll(s, delta)) return;
+	}
 
 	hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
 	if (!hotbar && Camera.Active->Zoom(delta)) return;
@@ -415,30 +411,42 @@ static void InputHandler_MouseWheel(void* obj, float delta) {
 }
 
 static void InputHandler_MouseMove(void* obj, int xDelta, int yDelta) {
-	struct Screen* active = Gui_GetActiveScreen();
-	/* In case MouseMove is called before game is fully initialised */
-	if (active) Elem_HandlesMouseMove(active, Mouse_X, Mouse_Y);
-}
+	struct Screen* s;
+	int i;
 
-static void InputHandler_MouseDown(void* obj, int button) {
-	struct Screen* active = Gui_GetActiveScreen();
-	if (!Elem_HandlesMouseDown(active, Mouse_X, Mouse_Y, button)) {
-		bool left   = button == MOUSE_LEFT;
-		bool middle = button == MOUSE_MIDDLE;
-		bool right  = button == MOUSE_RIGHT;
-		InputHandler_PickBlocks(false, left, middle, right);
-	} else {
-		input_lastClick = DateTime_CurrentUTC_MS();
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesMouseMove(s, Mouse_X, Mouse_Y)) return;
 	}
 }
 
-static void InputHandler_MouseUp(void* obj, int button) {
-	struct Screen* active = Gui_GetActiveScreen();
-	if (!Elem_HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
-		if (Server.SupportsPlayerClick && button <= MOUSE_MIDDLE) {
-			input_pickingId = -1;
-			InputHandler_ButtonStateChanged(button, false);
+static void InputHandler_MouseDown(void* obj, int btn) {
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesMouseDown(s, Mouse_X, Mouse_Y, btn)) {
+			input_lastClick = DateTime_CurrentUTC_MS(); return;
 		}
+	}
+
+	InputHandler_PickBlocks(false, btn == MOUSE_LEFT, 
+			  btn == MOUSE_MIDDLE, btn == MOUSE_RIGHT);
+}
+
+static void InputHandler_MouseUp(void* obj, int btn) {
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesMouseUp(s, Mouse_X, Mouse_Y, btn)) return;
+	}
+
+	if (Server.SupportsPlayerClick && btn <= MOUSE_MIDDLE) {
+		input_pickingId = -1;
+		InputHandler_ButtonStateChanged(btn, false);
 	}
 }
 
@@ -456,18 +464,16 @@ static bool InputHandler_SimulateMouse(Key key, bool pressed) {
 }
 
 static void InputHandler_KeyDown(void* obj, int key, bool was) {
-	struct Screen* active;
-	int idx;
+	struct Screen* s;
+	int i;
 	struct HotkeyData* hkey;
 	String text;
 
 	if (!was && InputHandler_SimulateMouse(key, true)) return;
-	active = Gui_GetActiveScreen();
-
 #ifndef CC_BUILD_WEB
-	if (key == KEY_ESCAPE && active->closable) {
+	if (key == KEY_ESCAPE && (s = Gui_GetClosable())) {
 		/* Don't want holding down escape to go in and out of pause menu */
-		if (!was) Gui_Close(active); 
+		if (!was) Gui_Remove(s);
 		return;
 	}
 #endif
@@ -477,9 +483,14 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		Window_Close(); return;
 	} else if (key == KeyBinds[KEYBIND_SCREENSHOT] && !was) {
 		Game_ScreenshotRequested = true; return;
-	} else if (Elem_HandlesKeyDown(active, key, was)) {
-		return;
-	} else if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !active->handlesAllInput) {
+	}
+	
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesKeyDown(s, key)) return;
+	}
+
+	if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !Gui_GetInputGrab()) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
@@ -488,8 +499,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		/* closes the pause screen. Hence why the next KeyUp must be supressed. */
 		suppressEscape = true;
 #endif
-		Gui_FreeActive();
-		Gui_SetActive(PauseScreen_MakeInstance()); return;
+		PauseScreen_Show(); return;
 	}
 
 	/* These should not be triggered multiple times when holding down */
@@ -497,42 +507,51 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	if (InputHandler_HandleCoreKey(key)) {
 	} else if (LocalPlayer_HandlesKey(key)) {
 	} else {
-		idx = Hotkeys_FindPartial(key);
-		if (idx == -1) return;
+		i = Hotkeys_FindPartial(key);
+		if (i == -1) return;
 
-		hkey = &HotkeysList[idx];
+		hkey = &HotkeysList[i];
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, hkey->TextIndex);
 
 		if (!hkey->StaysOpen) {
 			Chat_Send(&text, false);
-		} else if (!Gui_Active) {
+		} else if (!Gui_GetInputGrab()) {
 			HUDScreen_OpenInput(&text);
 		}
 	}
 }
 
 static void InputHandler_KeyUp(void* obj, int key) {
-	struct Screen* active;
-	if (InputHandler_SimulateMouse(key, false)) return;
+	struct Screen* s;
+	int i;
 
+	if (InputHandler_SimulateMouse(key, false)) return;
 	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) Game_SetFov(Game_DefaultFov);
-	active = Gui_GetActiveScreen();
 
 #ifdef CC_BUILD_WEB
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */
 	/* done in key up, the cursor disappears as expected. */
-	if (key == KEY_ESCAPE && active->closable) {
+	if (key == KEY_ESCAPE && (s = Gui_GetClosable())) {
 		if (suppressEscape) { suppressEscape = false; return; }
-		Gui_Close(active); return;
+		Gui_Remove(s); return;
 	}
 #endif
-	Elem_HandlesKeyUp(active, key);
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesKeyUp(s, key)) return;
+	}
 }
 
 static void InputHandler_KeyPress(void* obj, int keyChar) {
-	struct Screen* active = Gui_GetActiveScreen();
-	Elem_HandlesKeyPress(active, keyChar);
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesKeyPress(s, keyChar)) return;
+	}
 }
 
 void InputHandler_Init(void) {

@@ -591,6 +591,10 @@ int Drawer2D_TextWidth(struct DrawTextArgs* args) {
 	return width;
 }
 
+int Drawer2D_TextHeight(struct DrawTextArgs* args) {
+	return Drawer2D_FontHeight(&args->font, args->useShadow);
+}
+
 int Drawer2D_FontHeight(const FontDesc* font, bool useShadow) {
 	int height, point;
 	if (Drawer2D_BitmappedText) {
@@ -609,7 +613,7 @@ int Drawer2D_FontHeight(const FontDesc* font, bool useShadow) {
 Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
 	Size2D size;
 	size.Width  = Drawer2D_TextWidth(args);
-	size.Height = Drawer2D_FontHeight(&args->font, args->useShadow);
+	size.Height = Drawer2D_TextHeight(args);
 
 	if (!size.Width) size.Height = 0;
 	return size;
