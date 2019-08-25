@@ -691,24 +691,25 @@ static void HUDScreen_FreeChatFonts(struct HUDScreen* s) {
 	Font_Free(&s->announcementFont);
 }
 
-static void HUDScreen_InitChatFonts(struct HUDScreen* s) {
-	int size;
-
-	size = (int)(8  * Game_GetChatScale());
+static bool HUDScreen_ChatUpdateFont(struct HUDScreen* s) {
+	int size = (int)(8  * Game_GetChatScale());
 	Math_Clamp(size, 8, 60);
+
+	/* don't recreate font if possible */
+	if (size == s->chatFont.Size) return false;
+	HUDScreen_FreeChatFonts(s);
 	Drawer2D_MakeFont(&s->chatFont, size, FONT_STYLE_NORMAL);
 
 	size = (int)(16 * Game_GetChatScale());
 	Math_Clamp(size, 8, 60);
 	Drawer2D_MakeFont(&s->announcementFont, size, FONT_STYLE_NORMAL);
-}
 
-static void HUDScreen_ChatUpdateFont(struct HUDScreen* s) {
-	ChatInputWidget_SetFont(&s->input, &s->chatFont);
-	TextGroupWidget_SetFont(&s->status, &s->chatFont);
-	TextGroupWidget_SetFont(&s->bottomRight, &s->chatFont);
-	TextGroupWidget_SetFont(&s->chat, &s->chatFont);
+	ChatInputWidget_SetFont(&s->input,        &s->chatFont);
+	TextGroupWidget_SetFont(&s->status,       &s->chatFont);
+	TextGroupWidget_SetFont(&s->bottomRight,  &s->chatFont);
+	TextGroupWidget_SetFont(&s->chat,         &s->chatFont);
 	TextGroupWidget_SetFont(&s->clientStatus, &s->chatFont);
+	return true;
 }
 
 static void HUDScreen_ChatUpdateLayout(struct HUDScreen* s) {
@@ -973,20 +974,20 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	int size = Drawer2D_BitmappedText ? 16 : 11;
 	Drawer2D_MakeFont(&s->playerFont, size, FONT_STYLE_NORMAL);
-	HUDScreen_InitChatFonts(s);
 	HUDScreen_ChatUpdateFont(s);
-	HUDScreen_ChatUpdateLayout(s);
 
 	HUDScreen_Redraw(s);
-	HUDScreen_UpdateChatYOffsets(s);
-	HUDScreen_RemakePlayerList(s);
 	Widget_Reposition(&s->hotbar);
+	HUDScreen_ChatUpdateLayout(s);
+	HUDScreen_RemakePlayerList(s);
 }
 
 static void HUDScreen_OnResize(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	HUDScreen_ChatUpdateLayout(s);
 	Widget_Reposition(&s->hotbar);
+
+	if (HUDScreen_ChatUpdateFont(s)) HUDScreen_Redraw(s);
+	HUDScreen_ChatUpdateLayout(s);
 	if (s->showingList) { Widget_Reposition(&s->playerList); }
 }
 
