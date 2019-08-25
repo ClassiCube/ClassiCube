@@ -1942,7 +1942,7 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
 	int index;
 	struct MenuInputDesc* desc;
-	const char** names;
+	const char* const* names;
 	int raw, count;
 	
 	index = Menu_Index(s, btn);

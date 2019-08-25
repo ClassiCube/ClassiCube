@@ -59,8 +59,17 @@ typedef unsigned __INTPTR_TYPE__ cc_uintptr;
 #endif
 #endif
 #elif __MWERKS__
+typedef signed char  cc_int8;
+typedef signed short cc_int16;
+typedef signed int   cc_int32;
+typedef signed long long cc_int64;
+
+typedef unsigned char  cc_uint8;
+typedef unsigned short cc_uint16;
+typedef unsigned int   cc_uint32;
+typedef unsigned long long cc_uint64;
+typedef unsigned int   cc_uintptr;
 /* TODO: Is there actual attribute support for these somewhere? */
-#include <stdint.h>
 #define CC_INLINE inline
 #define CC_NOINLINE
 #define CC_API

@@ -87,7 +87,7 @@ float Options_GetFloat(const char* key, float min, float max, float defValue) {
 	return value;
 }
 
-int Options_GetEnum(const char* key, int defValue, const char** names, int namesCount) {
+int Options_GetEnum(const char* key, int defValue, const char* const* names, int namesCount) {
 	String str;
 	if (!Options_UNSAFE_Get(key, &str)) return defValue;
 	return Utils_ParseEnum(&str, defValue, names, namesCount);

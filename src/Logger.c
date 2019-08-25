@@ -333,7 +333,7 @@ static void Logger_DumpFrame(String* trace, void* addr) {
 /* android's bionic libc doesn't provide backtrace (execinfo.h) */
 #include <unwind.h>
 
-static _Unwind_Reason_Code Logger_DumpFrame(struct _Unwind_Context* ctx, void* arg) {
+static _Unwind_Reason_Code Logger_UnwindFrame(struct _Unwind_Context* ctx, void* arg) {
 	cc_uintptr addr = _Unwind_GetIP(ctx);
 	if (!addr) return _URC_END_OF_STACK;
 
@@ -342,7 +342,7 @@ static _Unwind_Reason_Code Logger_DumpFrame(struct _Unwind_Context* ctx, void* a
 }
 
 void Logger_Backtrace(String* trace, void* ctx) {
-    _Unwind_Backtrace(Logger_DumpFrame, trace);
+    _Unwind_Backtrace(Logger_UnwindFrame, trace);
 	String_AppendConst(trace, _NL);
 }
 #elif defined CC_BUILD_OSX

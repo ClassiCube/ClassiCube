@@ -84,7 +84,7 @@ CC_API bool Options_GetBool(const char*   key, bool defValue);
 CC_API float Options_GetFloat(const char* key, float min, float max, float defValue);
 /* Returns value of given option as an integer, or defalt value if could not be converted. */
 /* NOTE: Conversion is done by going through all elements of names, returning index of a match. */
-CC_API int   Options_GetEnum(const char*  key, int defValue, const char** names, int namesCount);
+CC_API int   Options_GetEnum(const char*  key, int defValue, const char* const* names, int namesCount);
 
 /* Sets value of given option to either "true" or "false". */
 CC_API void Options_SetBool(const char* keyRaw,  bool value);
