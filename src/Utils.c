@@ -61,10 +61,10 @@ int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
 
 /* Checks if an area is completely black, so Alex skins edited with Microsoft Paint are still treated as Alex */
 static bool Utils_IsAllBlack(const Bitmap* bmp, int x1, int y1, int width, int height) {
-	uint32_t black = PackedCol_ARGB(0, 0, 0, 255);
+	cc_uint32 black = PackedCol_ARGB(0, 0, 0, 255);
 	int x, y;
 	for (y = y1; y < y1 + height; y++) {
-		uint32_t* row = Bitmap_RawRow(bmp, y);
+		cc_uint32* row = Bitmap_RawRow(bmp, y);
 
 		for (x = x1; x < x1 + width; x++) {
 			if (row[x] != black) return false;
@@ -73,7 +73,7 @@ static bool Utils_IsAllBlack(const Bitmap* bmp, int x1, int y1, int width, int h
 	return true;
 }
 
-uint8_t Utils_CalcSkinType(const Bitmap* bmp) {
+cc_uint8 Utils_CalcSkinType(const Bitmap* bmp) {
 	int scale;
 	if (bmp->Width == bmp->Height * 2) return SKIN_64x32;
 	if (bmp->Width != bmp->Height)     return SKIN_INVALID;
@@ -86,8 +86,8 @@ uint8_t Utils_CalcSkinType(const Bitmap* bmp) {
 		&& Utils_IsAllBlack(bmp, 50 * scale, 16 * scale, 2 * scale,  4 * scale) ? SKIN_64x64_SLIM : SKIN_64x64;
 }
 
-uint32_t Utils_CRC32(const uint8_t* data, uint32_t length) {
-	uint32_t crc = 0xffffffffUL;
+cc_uint32 Utils_CRC32(const cc_uint8* data, cc_uint32 length) {
+	cc_uint32 crc = 0xffffffffUL;
 	int i;
 
 	for (i = 0; i < length; i++) {
@@ -96,7 +96,7 @@ uint32_t Utils_CRC32(const uint8_t* data, uint32_t length) {
 	return crc ^ 0xffffffffUL;
 }
 
-const uint32_t Utils_Crc32Table[256] = {
+const cc_uint32 Utils_Crc32Table[256] = {
 	0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91,
 	0x1DB71064, 0x6AB020F2, 0xF3B97148, 0x84BE41DE, 0x1ADAD47D, 0x6DDDE4EB, 0xF4D4B551, 0x83D385C7, 0x136C9856, 0x646BA8C0, 0xFD62F97A, 0x8A65C9EC, 0x14015C4F, 0x63066CD9, 0xFA0F3D63, 0x8D080DF5,
 	0x3B6E20C8, 0x4C69105E, 0xD56041E4, 0xA2677172, 0x3C03E4D1, 0x4B04D447, 0xD20D85FD, 0xA50AB56B, 0x35B5A8FA, 0x42B2986C, 0xDBBBC9D6, 0xACBCF940, 0x32D86CE3, 0x45DF5C75, 0xDCD60DCF, 0xABD13D59,
@@ -115,21 +115,21 @@ const uint32_t Utils_Crc32Table[256] = {
 	0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D,
 };
 
-void Utils_Resize(void** buffer, int* capacity, uint32_t elemSize, int defCapacity, int expandElems) {
+void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapacity, int expandElems) {
 	/* We use a statically allocated buffer initally, so can't realloc first time */
 	int curCapacity = *capacity, newCapacity = curCapacity + expandElems;
 	*capacity = newCapacity;
 
 	if (curCapacity <= defCapacity) {
 		void* resized = Mem_Alloc(newCapacity, elemSize, "initing array");
-		Mem_Copy(resized, *buffer, (uint32_t)curCapacity * elemSize);
+		Mem_Copy(resized, *buffer, (cc_uint32)curCapacity * elemSize);
 		*buffer = resized;
 	} else {
 		*buffer = Mem_Realloc(*buffer, newCapacity, elemSize, "resizing array");
 	}
 }
 
-bool Utils_ParseIP(const String* ip, uint8_t* data) {
+bool Utils_ParseIP(const String* ip, cc_uint8* data) {
 	String parts[4];
 	int count = String_UNSAFE_Split(ip, '.', parts, 4);
 	if (count != 4) return false;
@@ -145,7 +145,7 @@ static const char base64_table[64] = {
 	'g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v',
 	'w','x','y','z','0','1','2','3','4','5','6','7','8','9','+','/'
 };
-int Convert_ToBase64(const uint8_t* src, int len, char* dst) {
+int Convert_ToBase64(const cc_uint8* src, int len, char* dst) {
 	char* beg = dst;
 	/* 3 bytes to 4 chars */
 	for (; len >= 3; len -= 3, src += 3) {
@@ -182,8 +182,8 @@ CC_NOINLINE static int Convert_DecodeBase64(char c) {
 	return -1;
 }
 
-int Convert_FromBase64(const char* src, int len, uint8_t* dst) {
-	uint8_t* beg = dst;
+int Convert_FromBase64(const char* src, int len, cc_uint8* dst) {
+	cc_uint8* beg = dst;
 	int a, b, c, d;
 	/* base 64 must be padded with = to 4 characters */
 	if (len & 0x3) return 0;
@@ -216,7 +216,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 	String path;  char pathBuffer[FILENAME_SIZE];
 	String key, value;
 
-	uint8_t buffer[2048];
+	cc_uint8 buffer[2048];
 	struct Stream stream, buffered;
 	ReturnCode res;
 

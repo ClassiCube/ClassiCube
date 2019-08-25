@@ -32,7 +32,7 @@ CC_VAR extern struct _WorldData {
 	/* Adds one Y coordinate to a packed index. */
 	int OneY;
 	/* Unique identifier for this world. */
-	uint8_t Uuid[16];
+	cc_uint8 Uuid[16];
 
 #ifdef EXTENDED_BLOCKS
 	/* Masks access to World.Blocks/World.Blocks2 */

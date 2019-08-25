@@ -58,9 +58,9 @@ enum SKIN_TYPE { SKIN_64x32, SKIN_64x64, SKIN_64x64_SLIM, SKIN_INVALID = 0xF0 };
 enum FONT_STYLE { FONT_STYLE_NORMAL, FONT_STYLE_BOLD, FONT_STYLE_ITALIC, FONT_FLAG_UNDERLINE = 0x80 };
 #define DRAWER2D_MAX_COLS 256
 
-#define UInt8_MaxValue  ((uint8_t)255)
-#define Int16_MaxValue  ((int16_t)32767)
-#define UInt16_MaxValue ((uint16_t)65535)
-#define Int32_MinValue  ((int32_t)-2147483647L - (int32_t)1L)
-#define Int32_MaxValue  ((int32_t)2147483647L)
+#define UInt8_MaxValue  ((cc_uint8)255)
+#define Int16_MaxValue  ((cc_int16)32767)
+#define UInt16_MaxValue ((cc_uint16)65535)
+#define Int32_MinValue  ((cc_int32)-2147483647L - (cc_int32)1L)
+#define Int32_MaxValue  ((cc_int32)2147483647L)
 #endif

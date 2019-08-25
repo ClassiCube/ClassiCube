@@ -128,7 +128,7 @@ bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 dir, Vec3 min, Vec3 max, fl
 *#########################################################################################################################*/
 #define SEARCHER_STATES_MIN 64
 static struct SearcherState searcherDefaultStates[SEARCHER_STATES_MIN];
-static uint32_t searcherCapacity = SEARCHER_STATES_MIN;
+static cc_uint32 searcherCapacity = SEARCHER_STATES_MIN;
 struct SearcherState* Searcher_States = searcherDefaultStates;
 
 static void Searcher_QuickSort(int left, int right) {
@@ -152,7 +152,7 @@ static void Searcher_QuickSort(int left, int right) {
 int Searcher_FindReachableBlocks(struct Entity* entity, struct AABB* entityBB, struct AABB* entityExtentBB) {
 	Vec3 vel = entity->Velocity;
 	IVec3 min, max;
-	uint32_t elements;
+	cc_uint32 elements;
 	struct SearcherState* curState;
 	int count;
 

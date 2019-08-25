@@ -50,7 +50,7 @@ static const struct WidgetVTABLE TextWidget_VTABLE = {
 	Widget_Mouse,    Widget_Mouse,      Widget_MouseMove, Widget_MouseScroll,
 	TextWidget_Reposition
 };
-void TextWidget_Make(struct TextWidget* w, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
+void TextWidget_Make(struct TextWidget* w, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	PackedCol col = PACKEDCOL_WHITE;
 	Widget_Reset(w);
 	w->VTABLE = &TextWidget_VTABLE;
@@ -152,7 +152,7 @@ static const struct WidgetVTABLE ButtonWidget_VTABLE = {
 	Widget_Mouse,    Widget_Mouse,        Widget_MouseMove,  Widget_MouseScroll,
 	ButtonWidget_Reposition
 };
-void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
+void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	Widget_Reset(w);
 	w->VTABLE    = &ButtonWidget_VTABLE;
 	w->optName   = NULL;
@@ -898,7 +898,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	if (!w->caretTex.ID) {
 		DrawTextArgs_Make(&args, &caret, w->font, true);
 		Drawer2D_MakeTextTexture(&w->caretTex, &args);
-		w->caretWidth = (uint16_t)((w->caretTex.Width * 3) / 4);
+		w->caretWidth = (cc_uint16)((w->caretTex.Width * 3) / 4);
 	}
 	
 	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
@@ -1916,7 +1916,7 @@ static int PlayerListWidget_GetGroupCount(struct PlayerListWidget* w, int id, in
 static int PlayerListWidget_PlayerCompare(int x, int y) {
 	String xName; char xNameBuffer[STRING_SIZE];
 	String yName; char yNameBuffer[STRING_SIZE];
-	uint8_t xRank, yRank;
+	cc_uint8 xRank, yRank;
 	String xNameRaw, yNameRaw;
 
 	xRank = TabList.GroupRanks[x];
@@ -1946,7 +1946,7 @@ struct PlayerListWidget* List_SortObj;
 int (*List_SortCompare)(int x, int y);
 static void PlayerListWidget_QuickSort(int left, int right) {
 	struct Texture* values = List_SortObj->textures; struct Texture value;
-	uint16_t* keys = List_SortObj->ids; uint16_t key;
+	cc_uint16* keys = List_SortObj->ids; cc_uint16 key;
 
 	while (left < right) {
 		int i = left, j = right;

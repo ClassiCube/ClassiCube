@@ -21,9 +21,9 @@ struct Screen* Gui_Status;
 struct Screen* Gui_HUD;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 int Gui_ScreensCount;
-static uint8_t priorities[GUI_MAX_SCREENS];
+static cc_uint8 priorities[GUI_MAX_SCREENS];
 
-void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
+void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	struct Widget* w = (struct Widget*)widget;
 	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
 	w->xOffset   = xOffset;   w->yOffset   = yOffset;
@@ -57,7 +57,7 @@ bool Widget_Contains(void* widget, int x, int y) {
 /*########################################################################################################################*
 *----------------------------------------------------------Gui------------------------------------------------------------*
 *#########################################################################################################################*/
-int Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen) {
+int Gui_CalcPos(cc_uint8 anchor, int offset, int size, int axisLen) {
 	if (anchor == ANCHOR_MIN) return offset;
 	if (anchor == ANCHOR_MAX) return axisLen - size - offset;
 
@@ -352,7 +352,7 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vert
 	if (value < 0) {
 		TextAtlas_Add(atlas, 10, vertices); value = -value; /* - sign */
 	}
-	count = String_MakeUInt32((uint32_t)value, digits);
+	count = String_MakeUInt32((cc_uint32)value, digits);
 
 	for (i = count - 1; i >= 0; i--) {
 		TextAtlas_Add(atlas, digits[i] - '0' , vertices);

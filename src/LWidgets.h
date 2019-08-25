@@ -38,14 +38,14 @@ struct LWidgetVTABLE {
 	bool Selected;                /* Whether this widget is last widget to be clicked on */ \
 	bool Hidden;                  /* Whether this widget is hidden from view */ \
 	bool TabSelectable;           /* Whether this widget gets selected when pressing tab */ \
-	uint8_t HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
+	cc_uint8 HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
 	int XOffset, YOffset;         /* Offset from the reference point */ \
 	void (*OnClick)(void* widget, int x, int y); /* Called when widget is clicked */ \
 	Rect2D Last;                  /* Widget's last drawn area */
 
 /* Represents an individual 2D gui component in the launcher. */
 struct LWidget { LWidget_Layout };
-void LWidget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
+void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 void LWidget_CalcPosition(void* widget);
 void LWidget_Draw(void* widget);
 void LWidget_Redraw(void* widget);

@@ -23,8 +23,8 @@ static void Audio_Free(void) { }
 
 void Audio_SetMusic(int volume) { }
 void Audio_SetSounds(int volume) { }
-void Audio_PlayDigSound(uint8_t type) { }
-void Audio_PlayStepSound(uint8_t type) { }
+void Audio_PlayDigSound(cc_uint8 type) { }
+void Audio_PlayStepSound(cc_uint8 type) { }
 #else
 #if defined CC_BUILD_WINMM
 #define WIN32_LEAN_AND_MEAN
@@ -50,7 +50,7 @@ void Audio_PlayStepSound(uint8_t type) { }
 #endif
 static StringsBuffer files;
 
-static void Volume_Mix16(int16_t* samples, int count, int volume) {
+static void Volume_Mix16(cc_int16* samples, int count, int volume) {
 	int i;
 
 	for (i = 0; i < (count & ~0x07); i += 8, samples += 8) {
@@ -70,7 +70,7 @@ static void Volume_Mix16(int16_t* samples, int count, int volume) {
 	}
 }
 
-static void Volume_Mix8(uint8_t* samples, int count, int volume) {
+static void Volume_Mix8(cc_uint8* samples, int count, int volume) {
 	int i;
 	for (i = 0; i < count; i++, samples++) {
 		samples[0] = (127 + (samples[0] - 127) * volume / 100);
@@ -149,7 +149,7 @@ ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	return waveOutOpen(&ctx->Handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
 }
 
-ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, uint32_t dataSize) {
+ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
 	ReturnCode res;
@@ -335,7 +335,7 @@ ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	return 0;
 }
 
-ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, uint32_t dataSize) {
+ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ALuint buffer = ctx->Buffers[idx];
 	ALenum err;
@@ -427,7 +427,7 @@ ReturnCode Audio_StopAndClose(AudioHandle handle) {
 *#########################################################################################################################*/
 struct Sound {
 	struct AudioFormat Format;
-	uint8_t* Data; uint32_t Size;
+	cc_uint8* Data; cc_uint32 Size;
 };
 
 #define AUDIO_MAX_SOUNDS 10
@@ -441,12 +441,12 @@ struct Soundboard {
 	struct SoundGroup Groups[AUDIO_MAX_SOUNDS];
 };
 
-#define WAV_FourCC(a, b, c, d) (((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)c << 8) | (uint32_t)d)
+#define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
 #define WAV_FMT_SIZE 16
 
 static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
-	uint32_t fourCC, size;
-	uint8_t tmp[WAV_FMT_SIZE];
+	cc_uint32 fourCC, size;
+	cc_uint8 tmp[WAV_FMT_SIZE];
 	ReturnCode res;
 
 	if ((res = Stream_Read(stream, tmp, 12))) return res;
@@ -471,7 +471,7 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			snd->Format.BitsPerSample = Stream_GetU16_LE(&tmp[14]);
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
-			snd->Data = (uint8_t*)Mem_TryAlloc(size, 1);
+			snd->Data = (cc_uint8*)Mem_TryAlloc(size, 1);
 			snd->Size = size;
 
 			if (!snd->Data) return ERR_OUT_OF_MEMORY;
@@ -557,7 +557,7 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, S
 	}
 }
 
-static struct Sound* Soundboard_PickRandom(struct Soundboard* board, uint8_t type) {
+static struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 type) {
 	String name;
 	struct SoundGroup* group;
 	int idx;
@@ -577,7 +577,7 @@ static struct Sound* Soundboard_PickRandom(struct Soundboard* board, uint8_t typ
 /*########################################################################################################################*
 *--------------------------------------------------------Sounds-----------------------------------------------------------*
 *#########################################################################################################################*/
-struct SoundOutput { AudioHandle Handle; void* Buffer; uint32_t BufferSize; };
+struct SoundOutput { AudioHandle Handle; void* Buffer; cc_uint32 BufferSize; };
 #define AUDIO_MAX_HANDLES 6
 #define HANDLE_INV -1
 #define SOUND_INV { HANDLE_INV, NULL, 0 }
@@ -611,9 +611,9 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 
 		Mem_Copy(data, snd->Data, snd->Size);
 		if (fmt->BitsPerSample == 8) {
-			Volume_Mix8((uint8_t*)data,  snd->Size,     volume);
+			Volume_Mix8((cc_uint8*)data,  snd->Size,     volume);
 		} else {
-			Volume_Mix16((int16_t*)data, snd->Size / 2, volume);
+			Volume_Mix16((cc_int16*)data, snd->Size / 2, volume);
 		}
 	}
 
@@ -621,7 +621,7 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 	if ((res = Audio_Play(output->Handle)))                           { Sounds_Fail(res); return; }
 }
 
-static void Sounds_Play(uint8_t type, struct Soundboard* board) {
+static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	struct Sound* snd;
 	struct AudioFormat  fmt;
 	struct SoundOutput* outputs;
@@ -720,8 +720,8 @@ void Audio_SetSounds(int volume) {
 	Audio_SoundsVolume = volume;
 }
 
-void Audio_PlayDigSound(uint8_t type)  { Sounds_Play(type, &digBoard); }
-void Audio_PlayStepSound(uint8_t type) { Sounds_Play(type, &stepBoard); }
+void Audio_PlayDigSound(cc_uint8 type)  { Sounds_Play(type, &digBoard); }
+void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
 
 
 /*########################################################################################################################*
@@ -732,9 +732,9 @@ static void* music_thread;
 static void* music_waitable;
 static volatile bool music_pendingStop, music_joining;
 
-static ReturnCode Music_Buffer(int i, int16_t* data, int maxSamples, struct VorbisState* ctx) {
+static ReturnCode Music_Buffer(int i, cc_int16* data, int maxSamples, struct VorbisState* ctx) {
 	int samples = 0;
-	int16_t* cur;
+	cc_int16* cur;
 	ReturnCode res = 0, res2;
 
 	while (samples < maxSamples) {
@@ -751,13 +751,13 @@ static ReturnCode Music_Buffer(int i, int16_t* data, int maxSamples, struct Vorb
 }
 
 static ReturnCode Music_PlayOgg(struct Stream* source) {
-	uint8_t buffer[OGG_BUFFER_SIZE];
+	cc_uint8 buffer[OGG_BUFFER_SIZE];
 	struct Stream stream;
 	struct VorbisState vorbis = { 0 };
 	struct AudioFormat fmt;
 
 	int chunkSize, samplesPerSecond;
-	int16_t* data = NULL;
+	cc_int16* data = NULL;
 	bool completed;
 	int i, next;
 	ReturnCode res;
@@ -775,7 +775,7 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	/* so we may end up decoding slightly over a second of audio */
 	chunkSize        = fmt.Channels * (fmt.SampleRate + vorbis.blockSizes[1]);
 	samplesPerSecond = fmt.Channels * fmt.SampleRate;
-	data = (int16_t*)Mem_Alloc(chunkSize * AUDIO_MAX_BUFFERS, 2, "Ogg final output");
+	data = (cc_int16*)Mem_Alloc(chunkSize * AUDIO_MAX_BUFFERS, 2, "Ogg final output");
 
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) {

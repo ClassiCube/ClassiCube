@@ -163,7 +163,7 @@ void String_AppendBool(String* str, bool value) {
 	String_AppendConst(str, value ? "True" : "False");
 }
 
-int String_MakeUInt32(uint32_t num, char* digits) {
+int String_MakeUInt32(cc_uint32 num, char* digits) {
 	int len = 0;
 	do {
 		digits[len] = '0' + (num % 10); num /= 10; len++;
@@ -176,10 +176,10 @@ void String_AppendInt(String* str, int num) {
 		num = -num;
 		String_Append(str, '-');
 	}
-	String_AppendUInt32(str, (uint32_t)num);
+	String_AppendUInt32(str, (cc_uint32)num);
 }
 
-void String_AppendUInt32(String* str, uint32_t num) {
+void String_AppendUInt32(String* str, cc_uint32 num) {
 	char digits[STRING_INT_CHARS];
 	int i, count = String_MakeUInt32(num, digits);
 
@@ -224,31 +224,31 @@ void String_AppendFloat(String* str, float num, int fracDigits) {
 	}
 }
 
-void String_AppendHex(String* str, uint8_t value) {
+void String_AppendHex(String* str, cc_uint8 value) {
 	/* 48 = index of 0, 55 = index of (A - 10) */
-	uint8_t hi = (value >> 4) & 0xF;
+	cc_uint8 hi = (value >> 4) & 0xF;
 	char c_hi  = hi < 10 ? (hi + 48) : (hi + 55);
-	uint8_t lo = value & 0xF;
+	cc_uint8 lo = value & 0xF;
 	char c_lo  = lo < 10 ? (lo + 48) : (lo + 55);
 
 	String_Append(str, c_hi);
 	String_Append(str, c_lo);
 }
 
-CC_NOINLINE static void String_Hex32(String* str, uint32_t value) {
+CC_NOINLINE static void String_Hex32(String* str, cc_uint32 value) {
 	int shift;
 
 	for (shift = 24; shift >= 0; shift -= 8) {
-		uint8_t part = (uint8_t)(value >> shift);
+		cc_uint8 part = (cc_uint8)(value >> shift);
 		String_AppendHex(str, part);
 	}
 }
 
-CC_NOINLINE static void String_Hex64(String* str, uint64_t value) {
+CC_NOINLINE static void String_Hex64(String* str, cc_uint64 value) {
 	int shift;
 
 	for (shift = 56; shift >= 0; shift -= 8) {
-		uint8_t part = (uint8_t)(value >> shift);
+		cc_uint8 part = (cc_uint8)(value >> shift);
 		String_AppendHex(str, part);
 	}
 }
@@ -407,7 +407,7 @@ int String_Compare(const String* a, const String* b) {
 		bCur = b->buffer[i]; Char_MakeLower(bCur);
 
 		if (aCur == bCur) continue;
-		return (uint8_t)aCur - (uint8_t)bCur;
+		return (cc_uint8)aCur - (cc_uint8)bCur;
 	}
 
 	/* all chars are equal here - same string, or a substring */
@@ -437,7 +437,7 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 
 		switch (formatStr.buffer[++i]) {
 		case 'b': 
-			String_AppendInt(str, *((uint8_t*)arg)); break;
+			String_AppendInt(str, *((cc_uint8*)arg)); break;
 		case 'i': 
 			String_AppendInt(str, *((int*)arg)); break;
 		case 'f': 
@@ -455,13 +455,13 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 		case 'r':
 			String_Append(str, *((char*)arg)); break;
 		case 'x':
-			if (sizeof(uintptr_t) == 4) {
-				String_Hex32(str, *((uint32_t*)arg)); break;
+			if (sizeof(cc_uintptr) == 4) {
+				String_Hex32(str, *((cc_uint32*)arg)); break;
 			} else {
-				String_Hex64(str, *((uint64_t*)arg)); break;
+				String_Hex64(str, *((cc_uint64*)arg)); break;
 			}
 		case 'h':
-			String_Hex32(str, *((uint32_t*)arg)); break;
+			String_Hex32(str, *((cc_uint32*)arg)); break;
 		case '%':
 			String_Append(str, '%'); break;
 		default: 
@@ -501,7 +501,7 @@ static const Codepoint extendedChars[129] = { 0x2302,
 };
 
 Codepoint Convert_CP437ToUnicode(char c) {
-	uint8_t raw = (uint8_t)c;
+	cc_uint8 raw = (cc_uint8)c;
 	if (raw < 0x20) return controlChars[raw];
 	if (raw < 0x7F) return raw;
 	return extendedChars[raw - 0x7F];
@@ -525,7 +525,7 @@ bool Convert_TryUnicodeToCP437(Codepoint cp, char* c) {
 	*c = '?'; return false;
 }
 
-int Convert_Utf8ToUnicode(Codepoint* cp, const uint8_t* data, uint32_t len) {
+int Convert_Utf8ToUnicode(Codepoint* cp, const cc_uint8* data, cc_uint32 len) {
 	*cp = '\0';
 	if (!len) return 0;
 
@@ -552,9 +552,9 @@ int Convert_Utf8ToUnicode(Codepoint* cp, const uint8_t* data, uint32_t len) {
 	}
 }
 
-int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data) {
+int Convert_UnicodeToUtf8(Codepoint cp, cc_uint8* data) {
 	if (cp <= 0x7F) {
-		data[0] = (uint8_t)cp;
+		data[0] = (cc_uint8)cp;
 		return 1;
 	} else if (cp <= 0x7FF) {
 		data[0] = 0xC0 | ((cp >> 6) & 0x1F);
@@ -568,10 +568,10 @@ int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data) {
 	}
 }
 
-int Convert_CP437ToUtf8(char c, uint8_t* data) {
+int Convert_CP437ToUtf8(char c, cc_uint8* data) {
 	/* Common ASCII case */
 	if (c >= 0x20 && c < 0x7F) {
-		data[0] = (uint8_t)c;
+		data[0] = (cc_uint8)c;
 		return 1;
 	}
 	return Convert_UnicodeToUtf8(Convert_CP437ToUnicode(c), data);
@@ -585,7 +585,7 @@ void String_AppendUtf16(String* value, const Codepoint* chars, int numBytes) {
 	}
 }
 
-void String_AppendUtf8(String* value, const uint8_t* chars, int numBytes) {
+void String_AppendUtf8(String* value, const cc_uint8* chars, int numBytes) {
 	int len; Codepoint cp; char c;
 
 	for (; numBytes > 0; numBytes -= len) {
@@ -597,7 +597,7 @@ void String_AppendUtf8(String* value, const uint8_t* chars, int numBytes) {
 	}
 }
 
-void String_DecodeCP1252(String* value, const uint8_t* chars, int numBytes) {
+void String_DecodeCP1252(String* value, const cc_uint8* chars, int numBytes) {
 	int i; char c;
 
 	for (i = 0; i < numBytes; i++) {
@@ -609,18 +609,18 @@ void String_DecodeCP1252(String* value, const uint8_t* chars, int numBytes) {
 /*########################################################################################################################*
 *--------------------------------------------------Numerical conversions--------------------------------------------------*
 *#########################################################################################################################*/
-bool Convert_ParseUInt8(const String* str, uint8_t* value) {
+bool Convert_ParseUInt8(const String* str, cc_uint8* value) {
 	int tmp; 
 	*value = 0;
 	if (!Convert_ParseInt(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
-	*value = (uint8_t)tmp; return true;
+	*value = (cc_uint8)tmp; return true;
 }
 
-bool Convert_ParseUInt16(const String* str, uint16_t* value) {
+bool Convert_ParseUInt16(const String* str, cc_uint16* value) {
 	int tmp; 
 	*value = 0;
 	if (!Convert_ParseInt(str, &tmp) || tmp < 0 || tmp > UInt16_MaxValue) return false;
-	*value = (uint16_t)tmp; return true;
+	*value = (cc_uint16)tmp; return true;
 }
 
 static int Convert_CompareDigits(const char* digits, const char* magnitude) {
@@ -684,11 +684,11 @@ bool Convert_ParseInt(const String* str, int* value) {
 }
 
 #define UINT64_DIGITS 20
-bool Convert_ParseUInt64(const String* str, uint64_t* value) {
+bool Convert_ParseUInt64(const String* str, cc_uint64* value) {
 	bool negative;
 	char digits[UINT64_DIGITS];
 	int i, compare;
-	uint64_t sum = 0;
+	cc_uint64 sum = 0;
 
 	*value = 0;
 	if (!Convert_TryParseDigits(str, &negative, digits, UINT64_DIGITS)) return false;
@@ -775,7 +775,7 @@ void StringsBuffer_Clear(StringsBuffer* buffer) {
 }
 
 String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
-	uint32_t flags, offset, len;
+	cc_uint32 flags, offset, len;
 	if (i < 0 || i >= buffer->count) Logger_Abort("Tried to get String past StringsBuffer end");
 
 	flags  = buffer->flagsBuffer[i];
@@ -812,8 +812,8 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 }
 
 void StringsBuffer_Remove(StringsBuffer* buffer, int index) {
-	uint32_t flags, offset, len;
-	uint32_t i, offsetAdj;
+	cc_uint32 flags, offset, len;
+	cc_uint32 i, offsetAdj;
 	if (index < 0 || index >= buffer->count) Logger_Abort("Tried to remove String past StringsBuffer end");
 
 	flags  = buffer->flagsBuffer[index];

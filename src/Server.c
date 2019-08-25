@@ -72,7 +72,7 @@ static void Server_CheckAsyncResources(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------PingList---------------------------------------------------------*
 *#########################################################################################################################*/
-struct PingEntry { int64_t sent, recv; uint16_t id; };
+struct PingEntry { cc_int64 sent, recv; cc_uint16 id; };
 static struct PingEntry ping_entries[10];
 static int ping_head;
 
@@ -194,7 +194,7 @@ static void SPConnection_SendChat(const String* text) {
 }
 
 static void SPConnection_SendPosition(Vec3 pos, float rotY, float headX) { }
-static void SPConnection_SendData(const uint8_t* data, uint32_t len) { }
+static void SPConnection_SendData(const cc_uint8* data, cc_uint32 len) { }
 
 static void SPConnection_Tick(struct ScheduledTask* task) {
 	if (Server.Disconnected) return;
@@ -226,17 +226,17 @@ static void SPConnection_Init(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Multiplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-uint16_t Net_PacketSizes[OPCODE_COUNT];
+cc_uint16 Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];
 
 static SocketHandle net_socket;
-static uint8_t  net_readBuffer[4096 * 5];
-static uint8_t  net_writeBuffer[131];
-static uint8_t* net_readCurrent;
+static cc_uint8  net_readBuffer[4096 * 5];
+static cc_uint8  net_writeBuffer[131];
+static cc_uint8* net_readCurrent;
 
 static bool net_writeFailed;
 static TimeMS net_lastPacket;
-static uint8_t net_lastOpcode;
+static cc_uint8 net_lastOpcode;
 
 static bool net_connecting;
 static TimeMS net_connectTimeout;
@@ -348,7 +348,7 @@ static void MPConnection_CheckDisconnection(void) {
 	static const String title  = String_FromConst("Disconnected!");
 	static const String reason = String_FromConst("You've lost connection to the server");
 	ReturnCode availRes, selectRes;
-	uint32_t pending = 0;
+	cc_uint32 pending = 0;
 	bool poll_read;
 
 	availRes  = Socket_Available(net_socket, &pending);
@@ -369,8 +369,8 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 	struct LocalPlayer* p;
 	TimeMS now;
-	uint32_t pending;
-	uint8_t* readEnd;
+	cc_uint32 pending;
+	cc_uint8* readEnd;
 	Net_Handler handler;
 	int i, remaining;
 	ReturnCode res;
@@ -404,7 +404,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 	net_readCurrent = net_readBuffer;
 	while (net_readCurrent < readEnd) {
-		uint8_t opcode = net_readCurrent[0];
+		cc_uint8 opcode = net_readCurrent[0];
 
 		/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
 		if (cpe_needD3Fix && net_lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
@@ -455,8 +455,8 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	ticks++;
 }
 
-static void MPConnection_SendData(const uint8_t* data, uint32_t len) {
-	uint32_t wrote;
+static void MPConnection_SendData(const cc_uint8* data, cc_uint32 len) {
+	cc_uint32 wrote;
 	ReturnCode res;
 	if (Server.Disconnected) return;
 
@@ -469,7 +469,7 @@ static void MPConnection_SendData(const uint8_t* data, uint32_t len) {
 }
 
 void Net_SendPacket(void) {
-	uint32_t len = (uint32_t)(Server.WriteBuffer - net_writeBuffer);
+	cc_uint32 len = (cc_uint32)(Server.WriteBuffer - net_writeBuffer);
 	Server.WriteBuffer = net_writeBuffer;
 	Server.SendData(net_writeBuffer, len);
 }

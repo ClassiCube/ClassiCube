@@ -24,7 +24,7 @@ extern bool Drawer2D_BitmappedText;
 extern bool Drawer2D_BlackTextShadows;
 /* List of all colours. (An A of 0 means the colour is not used) */
 extern BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
-#define Drawer2D_GetCol(c) Drawer2D_Cols[(uint8_t)c]
+#define Drawer2D_GetCol(c) Drawer2D_Cols[(cc_uint8)c]
 /* Name of default system font. */
 extern String Drawer2D_FontName;
 
@@ -46,13 +46,13 @@ CC_API void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
 						   int x, int y, int width, int height);
 /* Tints the given area, linearly interpolating from a to b. */
 /* Note that this only tints RGB, A is not tinted. */
-CC_API void Gradient_Tint(Bitmap* bmp, uint8_t tintA, uint8_t tintB,
+CC_API void Gradient_Tint(Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 						  int x, int y, int width, int height);
 
 /* Fills the given area using pixels from an indexed bitmap. */
 /* TODO: Currently this only handles square areas. */
 CC_API void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
-								uint8_t* indices, BitmapCol* palette);
+								cc_uint8* indices, BitmapCol* palette);
 /* Fills the given area using pixels from the source bitmap. */
 CC_API void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src);
 /* Fills the area with the given colour. */

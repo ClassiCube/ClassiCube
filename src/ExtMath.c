@@ -30,8 +30,8 @@ int Math_Ceil(float value) {
 	return valueI < value ? valueI + 1 : valueI;
 }
 
-int Math_Log2(uint32_t value) {
-	uint32_t r = 0;
+int Math_Log2(cc_uint32 value) {
+	cc_uint32 r = 0;
 	while (value >>= 1) r++;
 	return r;
 }
@@ -118,12 +118,12 @@ void Random_Seed(RNGState* seed, int seedInit) {
 }
 
 int Random_Next(RNGState* seed, int n) {
-	int64_t raw;
+	cc_int64 raw;
 	int bits, val;
 
 	if ((n & -n) == n) { /* i.e., n is a power of 2 */
 		*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
-		raw   = (int64_t)(*seed >> (48 - 31));
+		raw   = (cc_int64)(*seed >> (48 - 31));
 		return (int)((n * raw) >> 31);
 	}
 

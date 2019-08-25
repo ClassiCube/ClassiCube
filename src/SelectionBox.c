@@ -18,12 +18,12 @@ struct SelectionBox {
 #define SelectionBox_X(x) x,0,0, x,1,0, x,1,1, x,0,1,
 
 static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** faceVertices, VertexP3fC4b** edgeVertices) {
-	static const uint8_t faceIndices[72] = {
+	static const cc_uint8 faceIndices[72] = {
 		SelectionBox_Y(0) SelectionBox_Y(1) /* YMin, YMax */
 		SelectionBox_Z(0) SelectionBox_Z(1) /* ZMin, ZMax */
 		SelectionBox_X(0) SelectionBox_X(1) /* XMin, XMax */
 	};
-	static const uint8_t edgeIndices[72] = {
+	static const cc_uint8 edgeIndices[72] = {
 		0,0,0, 1,0,0,  1,0,0, 1,0,1,  1,0,1, 0,0,1,  0,0,1, 0,0,0, /* YMin */
 		0,1,0, 1,1,0,  1,1,0, 1,1,1,  1,1,1, 0,1,1,  0,1,1, 0,1,0, /* YMax */
 		0,0,0, 0,1,0,  1,0,0, 1,1,0,  1,0,1, 1,1,1,  0,0,1, 0,1,1, /* X/Z  */
@@ -104,11 +104,11 @@ static void SelectionBox_Intersect(struct SelectionBox* box, Vec3 origin) {
 
 static int selections_count;
 static struct SelectionBox selections_list[SELECTIONS_MAX];
-static uint8_t selections_ids[SELECTIONS_MAX];
+static cc_uint8 selections_ids[SELECTIONS_MAX];
 static GfxResourceID selections_VB, selections_LineVB;
 static bool selections_used;
 
-void Selections_Add(uint8_t id, IVec3 p1, IVec3 p2, PackedCol col) {
+void Selections_Add(cc_uint8 id, IVec3 p1, IVec3 p2, PackedCol col) {
 	struct SelectionBox sel;
 	IVec3 min, max;
 	IVec3_Min(&min, &p1, &p2); IVec3_ToVec3(&sel.Min, &min);
@@ -121,7 +121,7 @@ void Selections_Add(uint8_t id, IVec3 p1, IVec3 p2, PackedCol col) {
 	selections_count++;
 }
 
-void Selections_Remove(uint8_t id) {
+void Selections_Remove(cc_uint8 id) {
 	int i;
 	for (i = 0; i < selections_count; i++) {
 		if (selections_ids[i] != id) continue;
@@ -148,7 +148,7 @@ static void Selections_ContextRecreated(void* obj) {
 }
 
 static void Selections_QuickSort(int left, int right) {
-	uint8_t* values = selections_ids; uint8_t value;
+	cc_uint8* values = selections_ids; cc_uint8 value;
 	struct SelectionBox* keys = selections_list; struct SelectionBox key;
 
 	while (left < right) {

@@ -24,7 +24,7 @@ static void Gen_Init(void) {
 *-----------------------------------------------------Flatgrass gen-------------------------------------------------------*
 *#########################################################################################################################*/
 static void FlatgrassGen_MapSet(int yBeg, int yEnd, BlockRaw block) {
-	uint32_t oneY = (uint32_t)World.OneY;
+	cc_uint32 oneY = (cc_uint32)World.OneY;
 	BlockRaw* ptr = Gen_Blocks;
 	int y, yHeight;
 
@@ -58,8 +58,8 @@ void FlatgrassGen_Generate(void) {
 *---------------------------------------------------Noise generation------------------------------------------------------*
 *#########################################################################################################################*/
 #define NOISE_TABLE_SIZE 512
-static void ImprovedNoise_Init(uint8_t* p, RNGState* rnd) {
-	uint8_t tmp;
+static void ImprovedNoise_Init(cc_uint8* p, RNGState* rnd) {
+	cc_uint8 tmp;
 	int i, j;
 	for (i = 0; i < 256; i++) { p[i] = i; }
 
@@ -74,7 +74,7 @@ static void ImprovedNoise_Init(uint8_t* p, RNGState* rnd) {
 	}
 }
 
-static float ImprovedNoise_Calc(const uint8_t* p, float x, float y) {
+static float ImprovedNoise_Calc(const cc_uint8* p, float x, float y) {
 	int xFloor, yFloor, X, Y;
 	float u, v;
 	int A, B, hash;
@@ -112,7 +112,7 @@ static float ImprovedNoise_Calc(const uint8_t* p, float x, float y) {
 }
 
 
-struct OctaveNoise { uint8_t p[8][NOISE_TABLE_SIZE]; int octaves; };
+struct OctaveNoise { cc_uint8 p[8][NOISE_TABLE_SIZE]; int octaves; };
 static void OctaveNoise_Init(struct OctaveNoise* n, RNGState* rnd, int octaves) {
 	int i;
 	n->octaves = octaves;
@@ -152,7 +152,7 @@ static float CombinedNoise_Calc(const struct CombinedNoise* n, float x, float y)
 *----------------------------------------------------Notchy map gen-------------------------------------------------------*
 *#########################################################################################################################*/
 static int waterLevel, minHeight;
-static int16_t* Heightmap;
+static cc_int16* Heightmap;
 static RNGState rnd;
 
 static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, BlockRaw block) {
@@ -183,8 +183,8 @@ static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, Bloc
 
 #define STACK_FAST 8192
 static void NotchyGen_FloodFill(int index, BlockRaw block) {
-	int32_t* stack;
-	int32_t stack_default[STACK_FAST]; /* try to avoid malloc if we can */
+	cc_int32* stack;
+	cc_int32 stack_default[STACK_FAST]; /* try to avoid malloc if we can */
 	int count = 0, limit = STACK_FAST;
 	int x, y, z;
 
@@ -252,7 +252,7 @@ static void NotchyGen_CreateHeightmap(void) {
 }
 
 static int NotchyGen_CreateStrataFast(void) {
-	uint32_t oneY = (uint32_t)World.OneY;
+	cc_uint32 oneY = (cc_uint32)World.OneY;
 	int stoneHeight, airHeight;
 	int y;
 
@@ -607,7 +607,7 @@ static void NotchyGen_PlantTrees(void) {
 
 void NotchyGen_Generate(void) {
 	Gen_Init();
-	Heightmap = (int16_t*)Mem_Alloc(World.Width * World.Length, 2, "gen heightmap");
+	Heightmap = (cc_int16*)Mem_Alloc(World.Width * World.Length, 2, "gen heightmap");
 
 	Random_Seed(&rnd, Gen_Seed);
 	waterLevel = World.Height / 2;	

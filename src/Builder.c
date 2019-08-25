@@ -22,7 +22,7 @@ int Builder_SidesLevel, Builder_EdgeLevel;
 #define Builder_PackChunk(xx, yy, zz) (((yy) + 1) * EXTCHUNK_SIZE_2 + ((zz) + 1) * EXTCHUNK_SIZE + ((xx) + 1))
 
 static BlockID* Builder_Chunk;
-static uint8_t* Builder_Counts;
+static cc_uint8* Builder_Counts;
 static int* Builder_BitFlags;
 static bool Builder_UseBitFlags;
 static int Builder_X, Builder_Y, Builder_Z;
@@ -325,7 +325,7 @@ static bool ReadBorderChunkData(int x1, int y1, int z1, bool* outAllAir) {
 
 static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 	BlockID chunk[EXTCHUNK_SIZE_3]; 
-	uint8_t counts[CHUNK_SIZE_3 * FACE_COUNT]; 
+	cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
 	int bitFlags[EXTCHUNK_SIZE_3];
 
 	bool allSolid, onBorder;
@@ -420,7 +420,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 
 #ifdef OCCLUSION
 	if (info.NormalParts != null || info.TranslucentParts != null)
-		info.occlusionFlags = (uint8_t)ComputeOcclusion();
+		info.occlusionFlags = (cc_uint8)ComputeOcclusion();
 #endif
 }
 
@@ -462,7 +462,7 @@ static void Builder_DrawSprite(int count) {
 	VertexP3fT2fC4b v;
 	PackedCol white = PACKEDCOL_WHITE;
 
-	uint8_t offsetType;
+	cc_uint8 offsetType;
 	TextureLoc loc;
 	float v1, v2;
 	int index;
@@ -920,7 +920,7 @@ static int Adv_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, Blo
 
 
 #define Adv_CountBits(F, a, b, c, d) (((F >> a) & 1) + ((F >> b) & 1) + ((F >> c) & 1) + ((F >> d) & 1))
-#define Adv_Tint(c) c.R = (uint8_t)(c.R * tint.R / 255); c.G = (uint8_t)(c.G * tint.G / 255); c.B = (uint8_t)(c.B * tint.B / 255);
+#define Adv_Tint(c) c.R = (cc_uint8)(c.R * tint.R / 255); c.G = (cc_uint8)(c.G * tint.G / 255); c.B = (cc_uint8)(c.B * tint.B / 255);
 
 static void Adv_DrawXMin(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_XMIN);

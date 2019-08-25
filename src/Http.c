@@ -18,7 +18,7 @@
 #ifdef UNICODE
 #define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, (Codepoint*)(src), (len) * 2)
 #else
-#define Platform_DecodeString(dst, src, len) String_DecodeCP1252(dst, (uint8_t*)(src), len)
+#define Platform_DecodeString(dst, src, len) String_DecodeCP1252(dst, (cc_uint8*)(src), len)
 #endif
 
 #include <windows.h>
@@ -131,7 +131,7 @@ static void Http_DownloadNextAsync(void);
 #endif
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
-static void Http_Add(const String* url, bool priority, const String* id, uint8_t type, const String* lastModified, const String* etag, const void* data, uint32_t size, struct EntryList* cookies) {
+static void Http_Add(const String* url, bool priority, const String* id, cc_uint8 type, const String* lastModified, const String* etag, const void* data, cc_uint32 size, struct EntryList* cookies) {
 	struct HttpRequest req = { 0 };
 	String str;
 
@@ -154,7 +154,7 @@ static void Http_Add(const String* url, bool priority, const String* id, uint8_t
 	}
 
 	if (data) {
-		req.Data = (uint8_t*)Mem_Alloc(size, 1, "Http_PostData");
+		req.Data = (cc_uint8*)Mem_Alloc(size, 1, "Http_PostData");
 		Mem_Copy(req.Data, data, size);
 		req.Size = size;
 	}
@@ -400,27 +400,27 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 /*########################################################################################################################*
 *--------------------------------------------------Native implementation--------------------------------------------------*
 *#########################################################################################################################*/
-static uint32_t bufferSize;
+static cc_uint32 bufferSize;
 
 /* Allocates initial data buffer to store response contents */
 static void Http_BufferInit(struct HttpRequest* req) {
 	http_curProgress = 0;
 	bufferSize = req->ContentLength ? req->ContentLength : 1;
-	req->Data  = (uint8_t*)Mem_Alloc(bufferSize, 1, "http get data");
+	req->Data  = (cc_uint8*)Mem_Alloc(bufferSize, 1, "http get data");
 	req->Size  = 0;
 }
 
 /* Ensures data buffer has enough space left to append amount bytes, reallocates if not */
-static void Http_BufferEnsure(struct HttpRequest* req, uint32_t amount) {
-	uint32_t newSize = req->Size + amount;
+static void Http_BufferEnsure(struct HttpRequest* req, cc_uint32 amount) {
+	cc_uint32 newSize = req->Size + amount;
 	if (newSize <= bufferSize) return;
 
 	bufferSize = newSize;
-	req->Data  = (uint8_t*)Mem_Realloc(req->Data, newSize, 1, "http inc data");
+	req->Data  = (cc_uint8*)Mem_Realloc(req->Data, newSize, 1, "http inc data");
 }
 
 /* Increases size and updates current progress */
-static void Http_BufferExpanded(struct HttpRequest* req, uint32_t read) {
+static void Http_BufferExpanded(struct HttpRequest* req, cc_uint32 read) {
 	req->Size += read;
 	if (req->ContentLength) http_curProgress = (int)(100.0f * req->Size / req->ContentLength);
 }
@@ -432,7 +432,7 @@ static HINTERNET hInternet;
 struct HttpCacheEntry {
 	HINTERNET Handle; /* Native connection handle. */
 	String Address;   /* Address of server. (e.g. "classicube.net") */
-	uint16_t Port;    /* Port server is listening on. (e.g 80) */
+	cc_uint16 Port;    /* Port server is listening on. (e.g 80) */
 	bool Https;       /* Whether HTTPS or just HTTP protocol. */
 	char _addressBuffer[STRING_SIZE + 1];
 };
@@ -497,7 +497,7 @@ static ReturnCode HttpCache_Lookup(struct HttpCacheEntry* e) {
 	}
 
 	/* TODO: Should we be consistent in which entry gets evicted? */
-	i = (uint8_t)Stopwatch_Measure() % HTTP_CACHE_ENTRIES;
+	i = (cc_uint8)Stopwatch_Measure() % HTTP_CACHE_ENTRIES;
 	InternetCloseHandle(http_cache[i].Handle);
 	return HttpCache_Insert(i, e);
 }
@@ -836,8 +836,8 @@ static void Http_SysFree(void) { }
 static void Http_WorkerLoop(void) {
 	struct HttpRequest request;
 	bool hasRequest, stop;
-	uint64_t beg, end;
-	uint32_t elapsed;
+	cc_uint64 beg, end;
+	cc_uint32 elapsed;
 
 	for (;;) {
 		hasRequest = false;
@@ -907,7 +907,7 @@ void Http_AsyncGetData(const String* url, bool priority, const String* id) {
 void Http_AsyncGetHeaders(const String* url, bool priority, const String* id) {
 	Http_Add(url, priority, id, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0, NULL);
 }
-void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size, struct EntryList* cookies) {
+void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, cc_uint32 size, struct EntryList* cookies) {
 	Http_Add(url, priority, id, REQUEST_TYPE_POST, NULL, NULL, data, size, cookies);
 }
 void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, const String* lastModified, const String* etag, struct EntryList* cookies) {
@@ -944,15 +944,15 @@ void Http_ClearPending(void) {
 	Waitable_Signal(workerWaitable);
 }
 
-static bool Http_UrlDirect(uint8_t c) {
+static bool Http_UrlDirect(cc_uint8 c) {
 	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
 		|| c == '-' || c == '_' || c == '.' || c == '~';
 }
 
-void Http_UrlEncode(String* dst, const uint8_t* data, int len) {
+void Http_UrlEncode(String* dst, const cc_uint8* data, int len) {
 	int i;
 	for (i = 0; i < len; i++) {
-		uint8_t c = data[i];
+		cc_uint8 c = data[i];
 
 		if (Http_UrlDirect(c)) {
 			String_Append(dst, c);
@@ -964,7 +964,7 @@ void Http_UrlEncode(String* dst, const uint8_t* data, int len) {
 }
 
 void Http_UrlEncodeUtf8(String* dst, const String* src) {
-	uint8_t data[4];
+	cc_uint8 data[4];
 	int i, len;
 
 	for (i = 0; i < src->length; i++) {

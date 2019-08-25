@@ -73,7 +73,7 @@ CC_API void Event_RaiseVoid(struct Event_Void* handlers);
 #define Event_UnregisterVoid(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
 /* Calls all registered callback for an event which has an int argument. */
-/* NOTE: The actual argument "type" may be char, Key, uint8_t etc */
+/* NOTE: The actual argument "type" may be char, Key, cc_uint8 etc */
 CC_API void Event_RaiseInt(struct Event_Int* handlers, int arg);
 #define Event_RegisterInt(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
 #define Event_UnregisterInt(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)

@@ -17,8 +17,8 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 
 typedef struct String_ {	
 	char* buffer;      /* Pointer to characters, NOT NULL TERMINATED */
-	uint16_t length;   /* Number of characters used */
-	uint16_t capacity; /* Max number of characters  */
+	cc_uint16 length;   /* Number of characters used */
+	cc_uint16 capacity; /* Max number of characters  */
 } String;
 
 /* Constant string that points to NULL and has 0 length. */
@@ -84,7 +84,7 @@ CC_API bool String_CaselessEquals(const String* a, const String* b);
 CC_API bool String_CaselessEqualsConst(const String* a, const char* b);
 /* Breaks down an integer into an array of digits. */
 /* NOTE: Digits are in reverse order, so e.g. '200' becomes '0','0','2' */
-CC_API int  String_MakeUInt32(uint32_t num, char* digits);
+CC_API int  String_MakeUInt32(cc_uint32 num, char* digits);
 
 /* Attempts to append a character. */
 /* Does nothing if str->length == str->capcity. */
@@ -94,7 +94,7 @@ CC_API void String_AppendBool(String* str, bool value);
 /* Attempts to append the digits of an integer (and -sign if negative). */
 CC_API void String_AppendInt(String* str, int num);
 /* Attempts to append the digits of an unsigned 32 bit integer. */
-CC_API void String_AppendUInt32(String* str, uint32_t num);
+CC_API void String_AppendUInt32(String* str, cc_uint32 num);
 /* Attempts to append the digits of an integer, padding left with 0. */
 CC_API void String_AppendPaddedInt(String* str, int num, int minDigits);
 
@@ -110,7 +110,7 @@ CC_API void String_AppendString(String* str, const String* src);
 /* Attempts to append characters of a string, skipping any colour codes. */
 CC_API void String_AppendColorless(String* str, const String* src);
 /* Attempts to append the two hex digits of a byte. */
-CC_API void String_AppendHex(String* str, uint8_t value);
+CC_API void String_AppendHex(String* str, cc_uint8 value);
 
 /* Returns first index of the given character in the given string, -1 if not found. */
 #define String_IndexOf(str, c) String_IndexOfAt(str, 0, c)
@@ -168,32 +168,32 @@ char Convert_UnicodeToCP437(Codepoint cp);
 bool Convert_TryUnicodeToCP437(Codepoint cp, char* c);
 /* Decodes a unicode character from UTF8, returning number of bytes read. */
 /* Returns 0 if not enough input data to read the character. */
-int Convert_Utf8ToUnicode(Codepoint* cp, const uint8_t* data, uint32_t len);
+int Convert_Utf8ToUnicode(Codepoint* cp, const cc_uint8* data, cc_uint32 len);
 /* Encodes a unicode character in UTF8, returning number of bytes written. */
 /* The number of bytes written is always either 1,2 or 3. */
-int Convert_UnicodeToUtf8(Codepoint cp, uint8_t* data);
+int Convert_UnicodeToUtf8(Codepoint cp, cc_uint8* data);
 /* Encodes a code page 437 character in UTF8, returning number of bytes written. */
 /* The number of bytes written is always either 1,2 or 3. */
-int Convert_CP437ToUtf8(char c, uint8_t* data);
+int Convert_CP437ToUtf8(char c, cc_uint8* data);
 
 /* Attempts to append all characters from UTF16 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
 void String_AppendUtf16(String* str, const Codepoint* chars, int numBytes);
 /* Attempts to append all characters from UTF8 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_AppendUtf8(String* str, const uint8_t* chars, int numBytes);
+void String_AppendUtf8(String* str, const cc_uint8* chars, int numBytes);
 /* Attempts to append all characters from CP-1252 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_DecodeCP1252(String* str, const uint8_t* chars, int numBytes);
+void String_DecodeCP1252(String* str, const cc_uint8* chars, int numBytes);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
-CC_API bool Convert_ParseUInt8(const String*  str, uint8_t* value);
+CC_API bool Convert_ParseUInt8(const String*  str, cc_uint8* value);
 /* Attempts to convert the given string into an unsigned 16 bit integer. */
-CC_API bool Convert_ParseUInt16(const String* str, uint16_t* value);
+CC_API bool Convert_ParseUInt16(const String* str, cc_uint16* value);
 /* Attempts to convert the given string into an integer. */
 CC_API bool Convert_ParseInt(const String*    str, int* value);
 /* Attempts to convert the given string into an unsigned 64 bit integer. */
-CC_API bool Convert_ParseUInt64(const String* str, uint64_t* value);
+CC_API bool Convert_ParseUInt64(const String* str, cc_uint64* value);
 /* Attempts to convert the given string into a floating point number. */
 CC_API bool Convert_ParseFloat(const String*  str, float* value);
 /* Attempts to convert the given string into a bool. */
@@ -207,12 +207,12 @@ CC_API bool Convert_ParseBool(const String*   str, bool* value);
 
 typedef struct StringsBuffer_ {
 	char*      textBuffer;  /* Raw characters of all entries */
-	uint32_t*  flagsBuffer; /* Private flags for each entry */
+	cc_uint32*  flagsBuffer; /* Private flags for each entry */
 	int count, totalLength;
 	/* internal state */
 	int      _textCapacity, _flagsCapacity;
 	char     _defaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
-	uint32_t _defaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
+	cc_uint32 _defaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
 } StringsBuffer;
 
 /* Resets counts to 0, and frees any allocated memory. */

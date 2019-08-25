@@ -15,7 +15,7 @@
 #define BORDER3 (3 * BORDER)
 #define BORDER4 (4 * BORDER)
 
-void LWidget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset) {
+void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	struct LWidget* w = (struct LWidget*)widget;
 	w->HorAnchor = horAnchor; w->VerAnchor = verAnchor;
 	w->XOffset   = xOffset;   w->YOffset   = yOffset;
@@ -1150,7 +1150,7 @@ static int LTable_SortOrder(const struct ServerInfo* a, const struct ServerInfo*
 }
 
 static void LTable_QuickSort(int left, int right) {
-	uint16_t* keys = FetchServersTask.Orders; uint16_t key;
+	cc_uint16* keys = FetchServersTask.Orders; cc_uint16 key;
 
 	while (left < right) {
 		int i = left, j = right;

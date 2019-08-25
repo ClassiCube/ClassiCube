@@ -25,7 +25,7 @@ static int gfx_batchStride, gfx_batchFormat = -1;
 
 static bool gfx_vsync, gfx_fogEnabled;
 static float gfx_minFrameMs;
-static uint64_t frameStart;
+static cc_uint64 frameStart;
 bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 
 /* Initialises/Restores render state. */
@@ -40,7 +40,7 @@ static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
 *#########################################################################################################################*/
 static void Gfx_InitDefaultResources(void) {
-	uint16_t indices[GFX_MAX_INDICES];
+	cc_uint16 indices[GFX_MAX_INDICES];
 	Gfx_MakeIndices(indices, GFX_MAX_INDICES);
 	Gfx_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
 
@@ -56,7 +56,7 @@ static void Gfx_FreeDefaultResources(void) {
 
 static void Gfx_LimitFPS(void) {
 #ifndef CC_BUILD_WEBGL
-	uint64_t frameEnd = Stopwatch_Measure();
+	cc_uint64 frameEnd = Stopwatch_Measure();
 	float elapsedMs = Stopwatch_ElapsedMicroseconds(frameStart, frameEnd) / 1000.0f;
 	float leftOver  = gfx_minFrameMs - elapsedMs;
 
@@ -168,30 +168,30 @@ void Gfx_Mode3D(void) {
 	if (gfx_hadFog) Gfx_SetFog(true);
 }
 
-void Gfx_MakeIndices(uint16_t* indices, int iCount) {
+void Gfx_MakeIndices(cc_uint16* indices, int iCount) {
 	int element = 0, i;
 
 	for (i = 0; i < iCount; i += 6) {
-		indices[0] = (uint16_t)(element + 0);
-		indices[1] = (uint16_t)(element + 1);
-		indices[2] = (uint16_t)(element + 2);
+		indices[0] = (cc_uint16)(element + 0);
+		indices[1] = (cc_uint16)(element + 1);
+		indices[2] = (cc_uint16)(element + 2);
 
-		indices[3] = (uint16_t)(element + 2);
-		indices[4] = (uint16_t)(element + 3);
-		indices[5] = (uint16_t)(element + 0);
+		indices[3] = (cc_uint16)(element + 2);
+		indices[4] = (cc_uint16)(element + 3);
+		indices[5] = (cc_uint16)(element + 0);
 
 		indices += 6; element += 4;
 	}
 }
 
-void Gfx_SetupAlphaState(uint8_t draw) {
+void Gfx_SetupAlphaState(cc_uint8 draw) {
 	if (draw == DRAW_TRANSLUCENT)       Gfx_SetAlphaBlending(true);
 	if (draw == DRAW_TRANSPARENT)       Gfx_SetAlphaTest(true);
 	if (draw == DRAW_TRANSPARENT_THICK) Gfx_SetAlphaTest(true);
 	if (draw == DRAW_SPRITE)            Gfx_SetAlphaTest(true);
 }
 
-void Gfx_RestoreAlphaState(uint8_t draw) {
+void Gfx_RestoreAlphaState(cc_uint8 draw) {
 	if (draw == DRAW_TRANSLUCENT)       Gfx_SetAlphaBlending(false);
 	if (draw == DRAW_TRANSPARENT)       Gfx_SetAlphaTest(false);
 	if (draw == DRAW_TRANSPARENT_THICK) Gfx_SetAlphaTest(false);
@@ -203,9 +203,9 @@ void Gfx_RestoreAlphaState(uint8_t draw) {
    The short version: if you want your renderer to properly handle textures with alphas when using
    bilinear interpolation or mipmapping, you need to premultiply your PNG color data by their (unassociated) alphas. */
 static BitmapCol Gfx_Average(BitmapCol p1, BitmapCol p2) {
-	uint32_t a1, a2, aSum;
-	uint32_t b1, g1, r1;
-	uint32_t b2, g2, r2;
+	cc_uint32 a1, a2, aSum;
+	cc_uint32 b1, g1, r1;
+	cc_uint32 b2, g2, r2;
 	BitmapCol ave;
 
 	a1 = p1.A; a2 = p2.A;
@@ -227,7 +227,7 @@ static BitmapCol Gfx_Average(BitmapCol p1, BitmapCol p2) {
 	return ave;
 }
 
-void Gfx_GenMipmaps(int width, int height, uint8_t* lvlScan0, uint8_t* scan0) {
+void Gfx_GenMipmaps(int width, int height, cc_uint8* lvlScan0, cc_uint8* scan0) {
 	BitmapCol* baseSrc = (BitmapCol*)scan0;
 	BitmapCol* baseDst = (BitmapCol*)lvlScan0;
 	int srcWidth = width << 1;
@@ -308,7 +308,7 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 #endif
 
 	if (refCount <= 0) return;
-	uintptr_t addr = (uintptr_t)unk;
+	cc_uintptr addr = (cc_uintptr)unk;
 	Platform_Log2("D3D9 resource has %i outstanding references! ID 0x%x", &refCount, &addr);
 }
 
@@ -436,7 +436,7 @@ static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, int lvl
 	ReturnCode res = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
 	if (res) Logger_Abort2(res, "D3D9_LockTextureData");
 
-	uint32_t size = Bitmap_DataSize(bmp->Width, bmp->Height);
+	cc_uint32 size = Bitmap_DataSize(bmp->Width, bmp->Height);
 	Mem_Copy(rect.pBits, bmp->Scan0, size);
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
@@ -453,10 +453,10 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 	if (res) Logger_Abort2(res, "D3D9_LockTexturePartData");
 
 	/* We need to copy scanline by scanline, as generally rect.stride != data.stride */
-	uint8_t* src = (uint8_t*)bmp->Scan0;
-	uint8_t* dst = (uint8_t*)rect.pBits;
+	cc_uint8* src = (cc_uint8*)bmp->Scan0;
+	cc_uint8* dst = (cc_uint8*)rect.pBits;
 	int yy;
-	uint32_t stride = (uint32_t)bmp->Width * 4;
+	cc_uint32 stride = (cc_uint32)bmp->Width * 4;
 
 	for (yy = 0; yy < bmp->Height; yy++) {
 		Mem_Copy(dst, src, stride);
@@ -469,8 +469,8 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 }
 
 static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, bool partial) {
-	uint8_t* prev = bmp->Scan0;
-	uint8_t* cur;
+	cc_uint8* prev = bmp->Scan0;
+	cc_uint8* cur;
 	Bitmap mipmap;
 
 	int lvls = Gfx_MipmapsLevels(bmp->Width, bmp->Height);
@@ -481,7 +481,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 		if (width > 1)   width /= 2;
 		if (height > 1) height /= 2;
 
-		cur = (uint8_t*)Mem_Alloc(width * height, 4, "mipmaps");
+		cur = (cc_uint8*)Mem_Alloc(width * height, 4, "mipmaps");
 		Gfx_GenMipmaps(width, height, cur, prev);
 
 		Bitmap_Init(mipmap, width, height, cur);
@@ -849,7 +849,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output) {
 	res = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
 	if (res) goto finished;
 	{
-		Bitmap_Init(bmp, desc.Width, desc.Height, (uint8_t*)rect.pBits);
+		Bitmap_Init(bmp, desc.Width, desc.Height, (cc_uint8*)rect.pBits);
 		res = Png_Encode(&bmp, output, NULL, false);
 		if (res) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
 	}
@@ -964,7 +964,7 @@ void Gfx_OnWindowResize(void) {
 static GLuint gfx_activeList;
 #define gl_DYNAMICLISTID 1234567891
 static void* gfx_dynamicListData;
-static uint16_t gl_indices[GFX_MAX_INDICES];
+static cc_uint16 gl_indices[GFX_MAX_INDICES];
 #elif defined CC_BUILD_GLMODERN
 #define _glBindBuffer(t,b)        glBindBuffer(t,b)
 #define _glDeleteBuffers(n,b)     glDeleteBuffers(n,b)
@@ -985,8 +985,8 @@ static uint16_t gl_indices[GFX_MAX_INDICES];
 typedef void (APIENTRY *FUNC_GLBINDBUFFER) (GLenum target, GLuint buffer);
 typedef void (APIENTRY *FUNC_GLDELETEBUFFERS) (GLsizei n, const GLuint *buffers);
 typedef void (APIENTRY *FUNC_GLGENBUFFERS) (GLsizei n, GLuint *buffers);
-typedef void (APIENTRY *FUNC_GLBUFFERDATA) (GLenum target, uintptr_t size, const GLvoid* data, GLenum usage);
-typedef void (APIENTRY *FUNC_GLBUFFERSUBDATA) (GLenum target, uintptr_t offset, uintptr_t size, const GLvoid* data);
+typedef void (APIENTRY *FUNC_GLBUFFERDATA) (GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage);
+typedef void (APIENTRY *FUNC_GLBUFFERSUBDATA) (GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data);
 static FUNC_GLBINDBUFFER    _glBindBuffer;
 static FUNC_GLDELETEBUFFERS _glDeleteBuffers;
 static FUNC_GLGENBUFFERS    _glGenBuffers;
@@ -1039,8 +1039,8 @@ void Gfx_Free(void) {
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
 static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, bool partial) {
-	uint8_t* prev = bmp->Scan0;
-	uint8_t* cur;
+	cc_uint8* prev = bmp->Scan0;
+	cc_uint8* cur;
 
 	int lvls = Gfx_MipmapsLevels(bmp->Width, bmp->Height);
 	int lvl, width = bmp->Width, height = bmp->Height;
@@ -1050,7 +1050,7 @@ static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, bool partial) {
 		if (width > 1)  width /= 2;
 		if (height > 1) height /= 2;
 
-		cur = (uint8_t*)Mem_Alloc(width * height, 4, "mipmaps");
+		cur = (cc_uint8*)Mem_Alloc(width * height, 4, "mipmaps");
 		Gfx_GenMipmaps(width, height, cur, prev);
 
 		if (partial) {
@@ -1158,21 +1158,21 @@ static GLuint GL_GenAndBind(GLenum target) {
 
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	GLuint id     = GL_GenAndBind(GL_ARRAY_BUFFER);
-	uint32_t size = maxVertices * gfx_strideSizes[fmt];
+	cc_uint32 size = maxVertices * gfx_strideSizes[fmt];
 	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
 }
 
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	GLuint id     = GL_GenAndBind(GL_ARRAY_BUFFER);
-	uint32_t size = count * gfx_strideSizes[fmt];
+	cc_uint32 size = count * gfx_strideSizes[fmt];
 	_glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 	return id;
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
 	GLuint id     = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
-	uint32_t size = indicesCount * 2;
+	cc_uint32 size = indicesCount * 2;
 	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
 	return id;
 }
@@ -1195,7 +1195,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	uint32_t size = vCount * gfx_batchStride;
+	cc_uint32 size = vCount * gfx_batchStride;
 	_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
@@ -1621,13 +1621,13 @@ static void GL_SetupVbPos3fTex2fCol4b(void) {
 }
 
 static void GL_SetupVbPos3fCol4b_Range(int startVertex) {
-	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fC4b);
+	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fC4b);
 	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fC4b), (void*)(offset));
 	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fC4b), (void*)(offset + 12));
 }
 
 static void GL_SetupVbPos3fTex2fCol4b_Range(int startVertex) {
-	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
+	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fT2fC4b);
 	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset));
 	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
 	glVertexAttribPointer(2, 2, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
@@ -1666,7 +1666,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 }
 
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
-	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
+	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fT2fC4b);
 	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset));
 	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
 	glVertexAttribPointer(2, 2, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
@@ -1767,7 +1767,7 @@ bool Gfx_WarnIfNecessary(void) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_GL11
 /* point to client side dynamic array */
-#define VB_PTR ((uint8_t*)gfx_dynamicListData)
+#define VB_PTR ((cc_uint8*)gfx_dynamicListData)
 #define IB_PTR gl_indices
 #else
 /* no client side array, use vertex buffer object */
@@ -1787,13 +1787,13 @@ static void GL_SetupVbPos3fTex2fCol4b(void) {
 }
 
 static void GL_SetupVbPos3fCol4b_Range(int startVertex) {
-	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fC4b);
+	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fC4b);
 	glVertexPointer(3, GL_FLOAT,          sizeof(VertexP3fC4b), (void*)(VB_PTR + offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fC4b), (void*)(VB_PTR + offset + 12));
 }
 
 static void GL_SetupVbPos3fTex2fCol4b_Range(int startVertex) {
-	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
+	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fT2fC4b);
 	glVertexPointer(3,  GL_FLOAT,         sizeof(VertexP3fT2fC4b), (void*)(VB_PTR + offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fT2fC4b), (void*)(VB_PTR + offset + 12));
 	glTexCoordPointer(2, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(VB_PTR + offset + 16));
@@ -1838,7 +1838,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 
 #ifndef CC_BUILD_GL11
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
-	uint32_t offset = startVertex * (uint32_t)sizeof(VertexP3fT2fC4b);
+	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fT2fC4b);
 	glVertexPointer(3, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
 	glTexCoordPointer(2, GL_FLOAT,      sizeof(VertexP3fT2fC4b), (void*)(offset + 16));

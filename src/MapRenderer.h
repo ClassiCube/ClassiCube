@@ -33,26 +33,26 @@ struct ChunkPartInfo {
 #endif
 	int Offset;      /* -1 if no vertices at all */
 	int SpriteCount; /* Sprite vertices count */
-	uint16_t Counts[FACE_COUNT]; /* Counts per face */
+	cc_uint16 Counts[FACE_COUNT]; /* Counts per face */
 };
 
 /* Describes data necessary for rendering a chunk. */
 struct ChunkInfo {	
-	uint16_t CentreX, CentreY, CentreZ; /* Centre coordinates of the chunk */
+	cc_uint16 CentreX, CentreY, CentreZ; /* Centre coordinates of the chunk */
 
-	uint8_t Visible : 1;       /* Whether chunk is visible to the player */
-	uint8_t Empty : 1;         /* Whether the chunk is empty of data */
-	uint8_t PendingDelete : 1; /* Whether chunk is pending deletion */
-	uint8_t AllAir : 1;        /* Whether chunk is completely air */
-	uint8_t : 0;               /* pad to next byte*/
+	cc_uint8 Visible : 1;       /* Whether chunk is visible to the player */
+	cc_uint8 Empty : 1;         /* Whether the chunk is empty of data */
+	cc_uint8 PendingDelete : 1; /* Whether chunk is pending deletion */
+	cc_uint8 AllAir : 1;        /* Whether chunk is completely air */
+	cc_uint8 : 0;               /* pad to next byte*/
 
-	uint8_t DrawXMin : 1;
-	uint8_t DrawXMax : 1;
-	uint8_t DrawZMin : 1;
-	uint8_t DrawZMax : 1;
-	uint8_t DrawYMin : 1;
-	uint8_t DrawYMax : 1;
-	uint8_t : 0;          /* pad to next byte */
+	cc_uint8 DrawXMin : 1;
+	cc_uint8 DrawXMax : 1;
+	cc_uint8 DrawZMin : 1;
+	cc_uint8 DrawZMax : 1;
+	cc_uint8 DrawYMin : 1;
+	cc_uint8 DrawYMax : 1;
+	cc_uint8 : 0;          /* pad to next byte */
 #ifdef OCCLUSION
 	public bool Visited = false, Occluded = false;
 	public byte OcclusionFlags, OccludedFlags, DistanceFlags;

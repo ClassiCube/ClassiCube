@@ -26,7 +26,7 @@ void EnvRenderer_RenderSkybox(double deltaTime);
 /* Whether a skybox should be rendered. */
 bool EnvRenderer_ShouldRenderSkybox(void);
 
-extern int16_t* Weather_Heightmap;
+extern cc_int16* Weather_Heightmap;
 void EnvRenderer_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 /* Renders rainfall/snowfall weather. */
 void EnvRenderer_RenderWeather(double deltaTime);

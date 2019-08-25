@@ -120,8 +120,8 @@ void Mouse_SetPosition(int x, int y) {
 /*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
 *#########################################################################################################################*/
-uint8_t KeyBinds[KEYBIND_COUNT];
-const uint8_t KeyBind_Defaults[KEYBIND_COUNT] = {
+cc_uint8 KeyBinds[KEYBIND_COUNT];
+const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	'W', 'S', 'A', 'D',
 	KEY_SPACE, 'R', KEY_ENTER, 'T',
 	'B', 'F', KEY_ENTER, KEY_TAB, 
@@ -194,7 +194,7 @@ void KeyBind_Init(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Hotkeys---------------------------------------------------------*
 *#########################################################################################################################*/
-const uint8_t Hotkeys_LWJGL[256] = {
+const cc_uint8 Hotkeys_LWJGL[256] = {
 	0, KEY_ESCAPE, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', KEY_MINUS, KEY_EQUALS, KEY_BACKSPACE, KEY_TAB,
 	'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', KEY_LBRACKET, KEY_RBRACKET, KEY_ENTER, KEY_LCTRL, 'A', 'S',
 	'D', 'F', 'G', 'H', 'J', 'K', 'L', KEY_SEMICOLON, KEY_QUOTE, KEY_TILDE, KEY_LSHIFT, KEY_BACKSLASH, 'Z', 'X', 'C', 'V',
@@ -220,7 +220,7 @@ static void Hotkeys_QuickSort(int left, int right) {
 
 	while (left < right) {
 		int i = left, j = right;
-		uint8_t pivot = keys[(i + j) >> 1].Flags;
+		cc_uint8 pivot = keys[(i + j) >> 1].Flags;
 
 		/* partition the list */
 		while (i <= j) {
@@ -233,7 +233,7 @@ static void Hotkeys_QuickSort(int left, int right) {
 	}
 }
 
-static void Hotkeys_AddNewHotkey(Key trigger, uint8_t modifiers, const String* text, bool more) {
+static void Hotkeys_AddNewHotkey(Key trigger, cc_uint8 modifiers, const String* text, bool more) {
 	struct HotkeyData hKey;
 	hKey.Trigger = trigger;
 	hKey.Flags   = modifiers;
@@ -262,7 +262,7 @@ static void Hotkeys_RemoveText(int index) {
 }
 
 
-void Hotkeys_Add(Key trigger, uint8_t modifiers, const String* text, bool more) {
+void Hotkeys_Add(Key trigger, cc_uint8 modifiers, const String* text, bool more) {
 	struct HotkeyData* hk = HotkeysList;
 	int i;
 
@@ -278,7 +278,7 @@ void Hotkeys_Add(Key trigger, uint8_t modifiers, const String* text, bool more) 
 	Hotkeys_AddNewHotkey(trigger, modifiers, text, more);
 }
 
-bool Hotkeys_Remove(Key trigger, uint8_t modifiers) {
+bool Hotkeys_Remove(Key trigger, cc_uint8 modifiers) {
 	struct HotkeyData* hk = HotkeysList;
 	int i, j;
 
@@ -317,7 +317,7 @@ void Hotkeys_Init(void) {
 	int i;
 
 	Key trigger;
-	uint8_t modifiers;
+	cc_uint8 modifiers;
 	bool more;
 
 	for (i = 0; i < Options.entries.count; i++) {
@@ -340,7 +340,7 @@ void Hotkeys_Init(void) {
 	}
 }
 
-void Hotkeys_UserRemovedHotkey(Key trigger, uint8_t modifiers) {
+void Hotkeys_UserRemovedHotkey(Key trigger, cc_uint8 modifiers) {
 	String key; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
@@ -348,7 +348,7 @@ void Hotkeys_UserRemovedHotkey(Key trigger, uint8_t modifiers) {
 	Options_SetString(&key, NULL);
 }
 
-void Hotkeys_UserAddedHotkey(Key trigger, uint8_t modifiers, bool moreInput, const String* text) {
+void Hotkeys_UserAddedHotkey(Key trigger, cc_uint8 modifiers, bool moreInput, const String* text) {
 	String key;   char keyBuffer[STRING_SIZE];
 	String value; char valueBuffer[STRING_SIZE * 2];
 	String_InitArray(key, keyBuffer);

@@ -42,7 +42,7 @@ static struct ChunkInfo** renderChunks;
 /* Number of actually used pointers in the renderChunks array. Entries past this are ignored and skipped. */
 static int renderChunksCount;
 /* Distance of each chunk from the camera. */
-static uint32_t* distances;
+static cc_uint32* distances;
 
 /* Buffer for all chunk parts. There are (MapRenderer_ChunksCount * Atlas1D_Count) * 2 parts in the buffer,
  with parts for 'normal' buffer being in lower half. */
@@ -320,7 +320,7 @@ static void MapRenderer_FreeChunks(void) {
 }
 
 static void MapRenderer_AllocateParts(void) {
-	uint32_t count  = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
+	cc_uint32 count  = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
 	partsBuffer_Raw = (struct ChunkPartInfo*)Mem_AllocCleared(count * 2, sizeof(struct ChunkPartInfo), "chunk parts");
 
 	MapRenderer_PartsNormal      = partsBuffer_Raw;
@@ -331,7 +331,7 @@ static void MapRenderer_AllocateChunks(void) {
 	mapChunks    = (struct ChunkInfo*) Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo),  "chunk info");
 	sortedChunks = (struct ChunkInfo**)Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "sorted chunk info");
 	renderChunks = (struct ChunkInfo**)Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "render chunk info");
-	distances    = (uint32_t*)Mem_Alloc(MapRenderer_ChunksCount, 4, "chunk distances");
+	distances    = (cc_uint32*)Mem_Alloc(MapRenderer_ChunksCount, 4, "chunk distances");
 }
 
 static void MapRenderer_ResetPartFlags(void) {
@@ -551,11 +551,11 @@ static void MapRenderer_UpdateChunks(double delta) {
 
 static void MapRenderer_QuickSort(int left, int right) {
 	struct ChunkInfo** values = sortedChunks; struct ChunkInfo* value;
-	uint32_t* keys = distances; uint32_t key;
+	cc_uint32* keys = distances; cc_uint32 key;
 
 	while (left < right) {
 		int i = left, j = right;
-		uint32_t pivot = keys[(i + j) >> 1];
+		cc_uint32 pivot = keys[(i + j) >> 1];
 
 		/* partition the list */
 		while (i <= j) {

@@ -17,7 +17,7 @@ struct TextWidget {
 };
 /* Initialises a text widget. */
 CC_NOINLINE void TextWidget_Make(struct TextWidget* w, 
-								uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
+								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* font);
 /* Shorthand for TextWidget_Set using String_FromReadonly */
@@ -37,7 +37,7 @@ struct ButtonWidget {
 };
 /* Initialises a button widget. */
 CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, 
-								uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
+								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc* font);
 /* Shorthand for ButtonWidget_Set using String_FromReadonly */
@@ -112,7 +112,7 @@ struct InputWidget {
 	int prefixWidth;
 	bool convertPercents;
 
-	uint8_t padding;
+	cc_uint8 padding;
 	bool showCaret;
 	int caretWidth;
 	int caretX, caretY; /* Coordinates of caret in lines */
@@ -241,7 +241,7 @@ struct PlayerListWidget {
 	int xMin, xMax, yHeight;
 	bool classic;
 	struct TextWidget title;
-	uint16_t ids[TABLIST_MAX_NAMES * 2];
+	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
 	struct Texture textures[TABLIST_MAX_NAMES * 2];
 };
 CC_NOINLINE void PlayerListWidget_Create(struct PlayerListWidget* w, FontDesc* font, bool classic);

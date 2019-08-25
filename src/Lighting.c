@@ -8,7 +8,7 @@
 #include "Event.h"
 #include "GameStructs.h"
 
-int16_t* Lighting_Heightmap;
+cc_int16* Lighting_Heightmap;
 #define HEIGHT_UNCALCULATED Int16_MaxValue
 
 #define Lighting_CalcBody(get_block)\
@@ -236,7 +236,7 @@ void Lighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newB
 /*########################################################################################################################*
 *---------------------------------------------------Lighting heightmap----------------------------------------------------*
 *#########################################################################################################################*/
-static int Lighting_InitialHeightmapCoverage(int x1, int z1, int xCount, int zCount, int32_t* skip) {
+static int Lighting_InitialHeightmapCoverage(int x1, int z1, int xCount, int zCount, cc_int32* skip) {
 	int elemsLeft = 0, index = 0, curRunCount = 0;
 	int x, z, hIndex, lightH;
 
@@ -275,7 +275,7 @@ for (y = World.Height - 1; y >= 0; y--) {\
 \
 			if (x < xCount && Blocks.BlocksLight[get_block]) {\
 				lightOffset = (Blocks.LightOffset[get_block] >> FACE_YMAX) & 1;\
-				Lighting_Heightmap[hIndex + x] = (int16_t)(y - lightOffset);\
+				Lighting_Heightmap[hIndex + x] = (cc_int16)(y - lightOffset);\
 				elemsLeft--;\
 				skip[index] = 0;\
 \
@@ -303,7 +303,7 @@ for (y = World.Height - 1; y >= 0; y--) {\
 	}\
 }
 
-static bool Lighting_CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, int32_t* skip) {
+static bool Lighting_CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, cc_int32* skip) {
 	int prevRunCount = 0, curRunCount, newRunCount, oldRunCount;
 	int lightOffset, offset;
 	int mapIndex, hIndex, baseIndex, index;
@@ -340,7 +340,7 @@ void Lighting_LightHint(int startX, int startZ) {
 	int x1 = max(startX, 0), x2 = min(World.Width,  startX + EXTCHUNK_SIZE);
 	int z1 = max(startZ, 0), z2 = min(World.Length, startZ + EXTCHUNK_SIZE);
 	int xCount = x2 - x1, zCount = z2 - z1;
-	int32_t skip[EXTCHUNK_SIZE * EXTCHUNK_SIZE];
+	cc_int32 skip[EXTCHUNK_SIZE * EXTCHUNK_SIZE];
 
 	int elemsLeft = Lighting_InitialHeightmapCoverage(x1, z1, xCount, zCount, skip);
 	if (!Lighting_CalculateHeightmapCoverage(x1, z1, xCount, zCount, elemsLeft, skip)) {
@@ -358,7 +358,7 @@ static void Lighting_Reset(void) {
 }
 
 static void Lighting_OnNewMapLoaded(void) {
-	Lighting_Heightmap = (int16_t*)Mem_Alloc(World.Width * World.Length, 2, "lighting heightmap");
+	Lighting_Heightmap = (cc_int16*)Mem_Alloc(World.Width * World.Length, 2, "lighting heightmap");
 	Lighting_Refresh();
 }
 

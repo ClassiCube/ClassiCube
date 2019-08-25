@@ -16,12 +16,12 @@ extern int Audio_MusicVolume;
 
 void Audio_SetMusic(int volume);
 void Audio_SetSounds(int volume);
-void Audio_PlayDigSound(uint8_t type);
-void Audio_PlayStepSound(uint8_t type);
+void Audio_PlayDigSound(cc_uint8 type);
+void Audio_PlayStepSound(cc_uint8 type);
 
 #define AUDIO_MAX_BUFFERS 4
 /* Information about a source of audio. */
-struct AudioFormat { uint16_t Channels, BitsPerSample; int SampleRate; };
+struct AudioFormat { cc_uint16 Channels, BitsPerSample; int SampleRate; };
 #define AudioFormat_Eq(a, b) ((a)->Channels == (b)->Channels && (a)->BitsPerSample == (b)->BitsPerSample && (a)->SampleRate == (b)->SampleRate)
 typedef int AudioHandle;
 
@@ -39,7 +39,7 @@ struct AudioFormat* Audio_GetFormat(AudioHandle handle);
 ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format);
 /* Sets the audio data in the given buffer. */
 /* NOTE: You should ensure Audio_IsCompleted returns true before calling this. */
-ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, uint32_t dataSize);
+ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize);
 /* Begins playing audio. Audio_BufferData must have been used before this. */
 ReturnCode Audio_Play(AudioHandle handle);
 /* Immediately stops the currently playing audio. */

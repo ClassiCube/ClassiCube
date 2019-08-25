@@ -23,7 +23,7 @@
 #ifdef UNICODE
 #define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, (Codepoint*)(src), (len) * 2)
 #else
-#define Platform_DecodeString(dst, src, len) String_DecodeCP1252(dst, (uint8_t*)(src), len)
+#define Platform_DecodeString(dst, src, len) String_DecodeCP1252(dst, (cc_uint8*)(src), len)
 #endif
 
 #include <windows.h>
@@ -62,7 +62,7 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <utime.h>
 #include <signal.h>
 
-#define Platform_DecodeString(dst, src, len) String_AppendUtf8(dst, (uint8_t*)(src), len)
+#define Platform_DecodeString(dst, src, len) String_AppendUtf8(dst, (cc_uint8*)(src), len)
 #define Socket__Error() errno
 #define NATIVE_STR_LEN 600
 
@@ -99,8 +99,8 @@ const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void Mem_Set(void* dst, uint8_t value,    uint32_t numBytes) { memset(dst, value, numBytes); }
-void Mem_Copy(void* dst, const void* src, uint32_t numBytes) { memcpy(dst, src,   numBytes); }
+void Mem_Set(void* dst, cc_uint8 value,    cc_uint32 numBytes) { memset(dst, value, numBytes); }
+void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
 
 CC_NOINLINE static void Platform_AllocFailed(const char* place) {	
 	String log; char logBuffer[STRING_SIZE+20 + 1];
@@ -112,27 +112,27 @@ CC_NOINLINE static void Platform_AllocFailed(const char* place) {
 }
 
 #if defined CC_BUILD_WIN
-void* Mem_TryAlloc(uint32_t numElems, uint32_t elemsSize) {
-	uint32_t numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	return HeapAlloc(heap, 0, numBytes);
 }
 
-void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place) {
-	uint32_t numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+void* Mem_Alloc(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapAlloc(heap, 0, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_AllocCleared(uint32_t numElems, uint32_t elemsSize, const char* place) {
-	uint32_t numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+void* Mem_AllocCleared(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapAlloc(heap, HEAP_ZERO_MEMORY, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_Realloc(void* mem, uint32_t numElems, uint32_t elemsSize, const char* place) {
-	uint32_t numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+void* Mem_Realloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	void* ptr = HeapReAlloc(heap, 0, mem, numBytes);
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
@@ -142,23 +142,23 @@ void Mem_Free(void* mem) {
 	if (mem) HeapFree(heap, 0, mem);
 }
 #elif defined CC_BUILD_POSIX
-void* Mem_TryAlloc(uint32_t numElems, uint32_t elemsSize) {
+void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	return malloc(numElems * elemsSize); /* TODO: avoid overflow here */
 }
 
-void* Mem_Alloc(uint32_t numElems, uint32_t elemsSize, const char* place) {
+void* Mem_Alloc(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
 	void* ptr = malloc(numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_AllocCleared(uint32_t numElems, uint32_t elemsSize, const char* place) {
+void* Mem_AllocCleared(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
 	void* ptr = calloc(numElems, elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
 }
 
-void* Mem_Realloc(void* mem, uint32_t numElems, uint32_t elemsSize, const char* place) {
+void* Mem_Realloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
 	void* ptr = realloc(mem, numElems * elemsSize); /* TODO: avoid overflow here */
 	if (!ptr) Platform_AllocFailed(place);
 	return ptr;
@@ -197,8 +197,8 @@ void Platform_LogConst(const char* message) {
 }
 
 /* TODO: check this is actually accurate */
-static uint64_t sw_freqMul = 1, sw_freqDiv = 1;
-uint64_t Stopwatch_ElapsedMicroseconds(uint64_t beg, uint64_t end) {
+static cc_uint64 sw_freqMul = 1, sw_freqDiv = 1;
+cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	if (end < beg) return 0;
 	return ((end - beg) * sw_freqMul) / sw_freqDiv;
 }
@@ -225,7 +225,7 @@ void Platform_Log(const String* message) {
 TimeMS DateTime_CurrentUTC_MS(void) {
 	FILETIME ft; GetSystemTimeAsFileTime(&ft); 
 	/* in 100 nanosecond units, since Jan 1 1601 */
-	uint64_t raw = ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
+	cc_uint64 raw = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
 	return FileTime_TotalMS(raw);
 }
 
@@ -252,16 +252,16 @@ void DateTime_CurrentLocal(struct DateTime* time) {
 }
 
 static bool sw_highRes;
-uint64_t Stopwatch_Measure(void) {
+cc_uint64 Stopwatch_Measure(void) {
 	LARGE_INTEGER t;
 	FILETIME ft;
 
 	if (sw_highRes) {
 		QueryPerformanceCounter(&t);
-		return (uint64_t)t.QuadPart;
+		return (cc_uint64)t.QuadPart;
 	} else {		
 		GetSystemTimeAsFileTime(&ft);
-		return (uint64_t)ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
+		return (cc_uint64)ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
 	}
 }
 #elif defined CC_BUILD_POSIX
@@ -283,7 +283,7 @@ void Platform_Log(const String* message) {
 }
 #endif
 
-#define UnixTime_TotalMS(time) ((uint64_t)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
+#define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
 TimeMS DateTime_CurrentUTC_MS(void) {
 	struct timeval cur;
 	gettimeofday(&cur, NULL);
@@ -326,20 +326,20 @@ void DateTime_CurrentLocal(struct DateTime* time_) {
 /* clock_gettime is optional, see http://pubs.opengroup.org/onlinepubs/009696899/functions/clock_getres.html */
 /* "... These functions are part of the Timers option and need not be available on all implementations..." */
 #if defined CC_BUILD_WEB
-uint64_t Stopwatch_Measure(void) {
+cc_uint64 Stopwatch_Measure(void) {
 	/* time is a milliseconds double */
-	return (uint64_t)(emscripten_get_now() * 1000);
+	return (cc_uint64)(emscripten_get_now() * 1000);
 }
 #elif defined CC_BUILD_OSX
-uint64_t Stopwatch_Measure(void) { return mach_absolute_time(); }
+cc_uint64 Stopwatch_Measure(void) { return mach_absolute_time(); }
 #elif defined CC_BUILD_SOLARIS
-uint64_t Stopwatch_Measure(void) { return gethrtime(); }
+cc_uint64 Stopwatch_Measure(void) { return gethrtime(); }
 #elif defined CC_BUILD_POSIX
-uint64_t Stopwatch_Measure(void) {
+cc_uint64 Stopwatch_Measure(void) {
 	struct timespec t;
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
 	clock_gettime(CLOCK_MONOTONIC, &t);
-	return (uint64_t)t.tv_sec * NS_PER_SEC + t.tv_nsec;
+	return (cc_uint64)t.tv_sec * NS_PER_SEC + t.tv_nsec;
 }
 #endif
 
@@ -420,12 +420,12 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 	FileHandle file;
 	FILETIME ft;
-	uint64_t raw;
+	cc_uint64 raw;
 	ReturnCode res = File_Open(&file, path);
 	if (res) return res;
 
 	if (GetFileTime(file, NULL, NULL, &ft)) {
-		raw   = ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32);
+		raw   = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
 		*time = FileTime_TotalMS(raw);
 	} else {
 		res = GetLastError();
@@ -438,13 +438,13 @@ ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
 	FileHandle file;
 	FILETIME ft;
-	uint64_t raw;
+	cc_uint64 raw;
 	ReturnCode res = File_Append(&file, path);
 	if (res) return res;
 
 	raw = 10000 * (time - FILETIME_EPOCH);
-	ft.dwLowDateTime  = (uint32_t)raw;
-	ft.dwHighDateTime = (uint32_t)(raw >> 32);
+	ft.dwLowDateTime  = (cc_uint32)raw;
+	ft.dwHighDateTime = (cc_uint32)(raw >> 32);
 
 	if (!SetFileTime(file, NULL, NULL, &ft)) res = GetLastError();
 	File_Close(file);
@@ -473,12 +473,12 @@ ReturnCode File_Append(FileHandle* file, const String* path) {
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
-ReturnCode File_Read(FileHandle file, uint8_t* data, uint32_t count, uint32_t* bytesRead) {
+ReturnCode File_Read(FileHandle file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
 	BOOL success = ReadFile(file, data, count, bytesRead, NULL);
 	return success ? 0 : GetLastError();
 }
 
-ReturnCode File_Write(FileHandle file, const uint8_t* data, uint32_t count, uint32_t* bytesWrote) {
+ReturnCode File_Write(FileHandle file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
 	BOOL success = WriteFile(file, data, count, bytesWrote, NULL);
 	return success ? 0 : GetLastError();
 }
@@ -488,17 +488,17 @@ ReturnCode File_Close(FileHandle file) {
 }
 
 ReturnCode File_Seek(FileHandle file, int offset, int seekType) {
-	static uint8_t modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
+	static cc_uint8 modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
 	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
 	return pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
 }
 
-ReturnCode File_Position(FileHandle file, uint32_t* pos) {
+ReturnCode File_Position(FileHandle file, cc_uint32* pos) {
 	*pos = SetFilePointer(file, 0, NULL, FILE_CURRENT);
 	return *pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
 }
 
-ReturnCode File_Length(FileHandle file, uint32_t* len) {
+ReturnCode File_Length(FileHandle file, cc_uint32* len) {
 	*len = GetFileSize(file, NULL);
 	return *len != INVALID_FILE_SIZE ? 0 : GetLastError();
 }
@@ -575,7 +575,7 @@ ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
 	Platform_ConvertString(str, path);
 	if (stat(str, &sb) == -1) return errno;
 
-	*time = (uint64_t)sb.st_mtime * 1000 + UNIX_EPOCH;
+	*time = (cc_uint64)sb.st_mtime * 1000 + UNIX_EPOCH;
 	return 0;
 }
 
@@ -617,12 +617,12 @@ ReturnCode File_Append(FileHandle* file, const String* path) {
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
-ReturnCode File_Read(FileHandle file, uint8_t* data, uint32_t count, uint32_t* bytesRead) {
+ReturnCode File_Read(FileHandle file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
 	*bytesRead = read(file, data, count);
 	return *bytesRead == -1 ? errno : 0;
 }
 
-ReturnCode File_Write(FileHandle file, const uint8_t* data, uint32_t count, uint32_t* bytesWrote) {
+ReturnCode File_Write(FileHandle file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
 	*bytesWrote = write(file, data, count);
 	return *bytesWrote == -1 ? errno : 0;
 }
@@ -638,16 +638,16 @@ ReturnCode File_Close(FileHandle file) {
 }
 
 ReturnCode File_Seek(FileHandle file, int offset, int seekType) {
-	static uint8_t modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
+	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
 	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
 }
 
-ReturnCode File_Position(FileHandle file, uint32_t* pos) {
+ReturnCode File_Position(FileHandle file, cc_uint32* pos) {
 	*pos = lseek(file, 0, SEEK_CUR);
 	return *pos == -1 ? errno : 0;
 }
 
-ReturnCode File_Length(FileHandle file, uint32_t* len) {
+ReturnCode File_Length(FileHandle file, cc_uint32* len) {
 	struct stat st;
 	if (fstat(file, &st) == -1) { *len = -1; return errno; }
 	*len = st.st_size; return 0;
@@ -659,7 +659,7 @@ ReturnCode File_Length(FileHandle file, uint32_t* len) {
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-void Thread_Sleep(uint32_t milliseconds) { Sleep(milliseconds); }
+void Thread_Sleep(cc_uint32 milliseconds) { Sleep(milliseconds); }
 DWORD WINAPI Thread_StartCallback(void* param) {
 	Thread_StartFunc* func = (Thread_StartFunc*)param;
 	(*func)();
@@ -720,12 +720,12 @@ void Waitable_Wait(void* handle) {
 	WaitForSingleObject((HANDLE)handle, INFINITE);
 }
 
-void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
+void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	WaitForSingleObject((HANDLE)handle, milliseconds);
 }
 #elif defined CC_BUILD_WEB
 /* No real threading support with emscripten backend */
-void Thread_Sleep(uint32_t milliseconds) { }
+void Thread_Sleep(cc_uint32 milliseconds) { }
 void* Thread_Start(Thread_StartFunc* func, bool detach) { (*func)(); return NULL; }
 void Thread_Detach(void* handle) { }
 void Thread_Join(void* handle) { }
@@ -739,9 +739,9 @@ void* Waitable_Create(void) { return NULL; }
 void Waitable_Free(void* handle) { }
 void Waitable_Signal(void* handle) { }
 void Waitable_Wait(void* handle) { }
-void Waitable_WaitFor(void* handle, uint32_t milliseconds) { }
+void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) { }
 #elif defined CC_BUILD_POSIX
-void Thread_Sleep(uint32_t milliseconds) { usleep(milliseconds * 1000); }
+void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
 void* Thread_StartCallback(void* lpParam) {
 	Thread_StartFunc* func = (Thread_StartFunc*)lpParam;
 	(*func)();
@@ -837,7 +837,7 @@ void Waitable_Wait(void* handle) {
 	Mutex_Unlock(&ptr->mutex);
 }
 
-void Waitable_WaitFor(void* handle, uint32_t milliseconds) {
+void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	struct WaitData* ptr = (struct WaitData*)handle;
 	struct timeval tv;
 	struct timespec ts;
@@ -877,8 +877,8 @@ struct FontData {
 	FT_Face face;
 	struct Stream src, file;
 	FT_StreamRec stream;
-	uint8_t buffer[8192]; /* small buffer to minimise disk I/O */
-	uint16_t widths[256]; /* cached width of each character glyph */
+	cc_uint8 buffer[8192]; /* small buffer to minimise disk I/O */
+	cc_uint16 widths[256]; /* cached width of each character glyph */
 	FT_BitmapGlyph glyphs[256];        /* cached glyphs */
 	FT_BitmapGlyph shadow_glyphs[256]; /* cached glyphs (for back layer shadow) */
 #ifdef CC_BUILD_OSX
@@ -923,7 +923,7 @@ static void FontData_Close(FT_Stream stream) {
 
 static ReturnCode FontData_Init(const String* path, struct FontData* data, FT_Open_Args* args) {
 	FileHandle file;
-	uint32_t size;
+	cc_uint32 size;
 	ReturnCode res;
 
 	if ((res = File_Open(&file, path))) return res;
@@ -1126,7 +1126,7 @@ int Platform_TextWidth(struct DrawTextArgs* args) {
 	Codepoint cp;
 
 	for (i = 0; i < text.length; i++) {
-		charWidth = data->widths[(uint8_t)text.buffer[i]];
+		charWidth = data->widths[(cc_uint8)text.buffer[i]];
 		/* need to calculate glyph width */
 		if (charWidth == UInt16_MaxValue) {
 			cp  = Convert_CP437ToUnicode(text.buffer[i]);
@@ -1139,7 +1139,7 @@ int Platform_TextWidth(struct DrawTextArgs* args) {
 				charWidth = face->glyph->advance.x;		
 			}
 
-			data->widths[(uint8_t)text.buffer[i]] = charWidth;
+			data->widths[(cc_uint8)text.buffer[i]] = charWidth;
 		}
 		width += charWidth;
 	}
@@ -1153,9 +1153,9 @@ int Platform_FontHeight(const FontDesc* font) {
 }
 
 static void Platform_GrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
-	uint8_t* src;
+	cc_uint8* src;
 	BitmapCol* dst;
-	uint8_t intensity, invIntensity;
+	cc_uint8 intensity, invIntensity;
 	int xx, yy;
 
 	for (yy = 0; yy < img->rows; yy++) {
@@ -1177,9 +1177,9 @@ static void Platform_GrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, B
 }
 
 static void Platform_BlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
-	uint8_t* src;
+	cc_uint8* src;
 	BitmapCol* dst;
-	uint8_t intensity;
+	cc_uint8 intensity;
 	int xx, yy;
 
 	for (yy = 0; yy < img->rows; yy++) {
@@ -1225,7 +1225,7 @@ int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, Bitm
 	descender = TEXT_CEIL(face->size->metrics.descender);
 
 	for (i = 0; i < text.length; i++) {
-		glyph = glyphs[(uint8_t)text.buffer[i]];
+		glyph = glyphs[(cc_uint8)text.buffer[i]];
 		if (!glyph) {
 			cp  = Convert_CP437ToUnicode(text.buffer[i]);
 			res = FT_Load_Char(face, cp, FT_LOAD_RENDER);
@@ -1237,7 +1237,7 @@ int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, Bitm
 
 			/* due to FT_LOAD_RENDER, glyph is always a bitmap one */
 			FT_Get_Glyph(face->glyph, (FT_Glyph*)&glyph); /* TODO: Check error */
-			glyphs[(uint8_t)text.buffer[i]] = glyph;
+			glyphs[(cc_uint8)text.buffer[i]] = glyph;
 		}
 
 		offset = (height + descender) - glyph->top;
@@ -1379,7 +1379,7 @@ void Socket_Create(SocketHandle* socketResult) {
 	}
 }
 
-static ReturnCode Socket_ioctl(SocketHandle socket, uint32_t cmd, int* data) {
+static ReturnCode Socket_ioctl(SocketHandle socket, cc_uint32 cmd, int* data) {
 #if defined CC_BUILD_WIN
 	return ioctlsocket(socket, cmd, data);
 #else
@@ -1387,7 +1387,7 @@ static ReturnCode Socket_ioctl(SocketHandle socket, uint32_t cmd, int* data) {
 #endif
 }
 
-ReturnCode Socket_Available(SocketHandle socket, uint32_t* available) {
+ReturnCode Socket_Available(SocketHandle socket, cc_uint32* available) {
 	return Socket_ioctl(socket, FIONREAD, available);
 }
 ReturnCode Socket_SetBlocking(SocketHandle socket, bool blocking) {
@@ -1410,14 +1410,14 @@ ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port) {
 	ReturnCode res;
 
 	addr.sa_family = AF_INET;
-	Stream_SetU16_BE( (uint8_t*)&addr.sa_data[0], port);
-	Utils_ParseIP(ip, (uint8_t*)&addr.sa_data[2]);
+	Stream_SetU16_BE( (cc_uint8*)&addr.sa_data[0], port);
+	Utils_ParseIP(ip, (cc_uint8*)&addr.sa_data[2]);
 
 	res = connect(socket, &addr, sizeof(addr));
 	return res == -1 ? Socket__Error() : 0;
 }
 
-ReturnCode Socket_Read(SocketHandle socket, uint8_t* data, uint32_t count, uint32_t* modified) {
+ReturnCode Socket_Read(SocketHandle socket, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 #ifdef CC_BUILD_WEB
 	/* recv only reads one WebSocket frame at most, hence call it multiple times */
 	int recvCount = 0, pending;
@@ -1438,7 +1438,7 @@ ReturnCode Socket_Read(SocketHandle socket, uint8_t* data, uint32_t count, uint3
 #endif
 }
 
-ReturnCode Socket_Write(SocketHandle socket, const uint8_t* data, uint32_t count, uint32_t* modified) {
+ReturnCode Socket_Write(SocketHandle socket, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int sentCount = send(socket, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return Socket__Error();
@@ -1705,7 +1705,7 @@ ReturnCode Process_StartShell(void) {
 #if defined CC_BUILD_OSX
 static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	Mem_Set(path, '\0', NATIVE_STR_LEN);
-	uint32_t size = NATIVE_STR_LEN;
+	cc_uint32 size = NATIVE_STR_LEN;
 	if (_NSGetExecutablePath(path, &size)) return ERR_INVALID_ARGUMENT;
 
 	/* despite what you'd assume, size is NOT changed to length of path */
@@ -1935,25 +1935,25 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return i;
 }
 
-ReturnCode Platform_Encrypt(const void* data, int len, uint8_t** enc, int* encLen) {
+ReturnCode Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen) {
 	DATA_BLOB dataIn, dataOut;
 	dataIn.cbData = len; dataIn.pbData = (BYTE*)data;
 	if (!CryptProtectData(&dataIn, NULL, NULL, NULL, NULL, 0, &dataOut)) return GetLastError();
 
 	/* copy to memory we can free */
-	*enc    = (uint8_t*)Mem_Alloc(dataOut.cbData, 1, "encrypt data");
+	*enc    = (cc_uint8*)Mem_Alloc(dataOut.cbData, 1, "encrypt data");
 	*encLen = dataOut.cbData;
 	Mem_Copy(*enc, dataOut.pbData, dataOut.cbData);
 	LocalFree(dataOut.pbData);
 	return 0;
 }
-ReturnCode Platform_Decrypt(const void* data, int len, uint8_t** dec, int* decLen) {
+ReturnCode Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen) {
 	DATA_BLOB dataIn, dataOut;
 	dataIn.cbData = len; dataIn.pbData = (BYTE*)data;
 	if (!CryptUnprotectData(&dataIn, NULL, NULL, NULL, NULL, 0, &dataOut)) return GetLastError();
 
 	/* copy to memory we can free */
-	*dec    = (uint8_t*)Mem_Alloc(dataOut.cbData, 1, "decrypt data");
+	*dec    = (cc_uint8*)Mem_Alloc(dataOut.cbData, 1, "decrypt data");
 	*decLen = dataOut.cbData;
 	Mem_Copy(*dec, dataOut.pbData, dataOut.cbData);
 	LocalFree(dataOut.pbData);
@@ -1971,8 +1971,8 @@ bool Platform_DescribeError(ReturnCode res, String* dst) {
 }
 #elif defined CC_BUILD_POSIX
 int Platform_ConvertString(void* data, const String* src) {
-	uint8_t* dst = (uint8_t*)data;
-	uint8_t* cur;
+	cc_uint8* dst = (cc_uint8*)data;
+	cc_uint8* cur;
 	int i, len = 0;
 	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
 
@@ -2007,10 +2007,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 }
 #endif
 
-ReturnCode Platform_Encrypt(const void* data, int len, uint8_t** enc, int* encLen) {
+ReturnCode Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen) {
 	return ERR_NOT_SUPPORTED;
 }
-ReturnCode Platform_Decrypt(const void* data, int len, uint8_t** dec, int* decLen) {
+ReturnCode Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen) {
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -2054,7 +2054,7 @@ static void Platform_InitStopwatch(void) {
 	sw_freqMul = tb.numer;
 	/* tb.denom may be large, so multiplying by 1000 overflows 32 bits */
 	/* (one powerpc system had tb.denom of 33329426) */
-	sw_freqDiv = (int64_t)tb.denom * 1000;
+	sw_freqDiv = (cc_int64)tb.denom * 1000;
 }
 
 void Platform_Init(void) {
@@ -2125,8 +2125,8 @@ String JavaGetString(JNIEnv* env, jstring str) {
 }
 
 jobject JavaMakeString(JNIEnv* env, const String* str) {
-	uint8_t tmp[2048 + 4];
-	uint8_t* cur;
+	cc_uint8 tmp[2048 + 4];
+	cc_uint8* cur;
 	int i, len = 0;
 
 	for (i = 0; i < str->length && len < 2048; i++) {
@@ -2137,7 +2137,7 @@ jobject JavaMakeString(JNIEnv* env, const String* str) {
 	return (*env)->NewStringUTF(env, (const char*)tmp);
 }
 
-jbyteArray JavaMakeBytes(JNIEnv* env, const uint8_t* src, uint32_t len) {
+jbyteArray JavaMakeBytes(JNIEnv* env, const cc_uint8* src, cc_uint32 len) {
     if (!len) return NULL;
     jbyteArray arr = (*env)->NewByteArray(env, len);
     (*env)->SetByteArrayRegion(env, arr, 0, len, src);

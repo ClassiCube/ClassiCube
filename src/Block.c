@@ -47,7 +47,7 @@ static PackedCol DefaultSet_FogColour(BlockID b) {
 	return colZero;
 }
 
-static uint8_t DefaultSet_Draw(BlockID b) {
+static cc_uint8 DefaultSet_Draw(BlockID b) {
 	if (b == BLOCK_AIR)    return DRAW_GAS;
 	if (b == BLOCK_LEAVES) return DRAW_TRANSPARENT_THICK;
 
@@ -68,7 +68,7 @@ static bool DefaultSet_BlocksLight(BlockID b) {
 		|| b == BLOCK_AIR || DefaultSet_Draw(b) == DRAW_SPRITE);
 }
 
-static uint8_t DefaultSet_Collide(BlockID b) {
+static cc_uint8 DefaultSet_Collide(BlockID b) {
 	if (b == BLOCK_ICE) return COLLIDE_ICE;
 	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER) return COLLIDE_LIQUID_WATER;
 	if (b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA)  return COLLIDE_LIQUID_LAVA;
@@ -79,7 +79,7 @@ static uint8_t DefaultSet_Collide(BlockID b) {
 }
 
 /* Returns a backwards compatible collide type of a block. */
-static uint8_t DefaultSet_MapOldCollide(BlockID b, uint8_t collide) {
+static cc_uint8 DefaultSet_MapOldCollide(BlockID b, cc_uint8 collide) {
 	if (b == BLOCK_ROPE && collide == COLLIDE_GAS)   return COLLIDE_CLIMB_ROPE;
 	if (b == BLOCK_ICE  && collide == COLLIDE_SOLID) return COLLIDE_ICE;
 
@@ -90,7 +90,7 @@ static uint8_t DefaultSet_MapOldCollide(BlockID b, uint8_t collide) {
 	return collide;
 }
 
-static uint8_t DefaultSet_DigSound(BlockID b) {
+static cc_uint8 DefaultSet_DigSound(BlockID b) {
 	if (b >= BLOCK_RED && b <= BLOCK_WHITE)            return SOUND_CLOTH;
 	if (b >= BLOCK_LIGHT_PINK && b <= BLOCK_TURQUOISE) return SOUND_CLOTH;
 	if (b == BLOCK_IRON || b == BLOCK_GOLD)            return SOUND_METAL;
@@ -113,7 +113,7 @@ static uint8_t DefaultSet_DigSound(BlockID b) {
 	return SOUND_NONE;
 }
 
-static uint8_t DefaultSet_StepSound(BlockID b) {
+static cc_uint8 DefaultSet_StepSound(BlockID b) {
 	if (b == BLOCK_GLASS) return SOUND_STONE;
 	if (b == BLOCK_ROPE)  return SOUND_CLOTH;
 	if (DefaultSet_Draw(b) == DRAW_SPRITE) return SOUND_NONE;
@@ -124,21 +124,21 @@ static uint8_t DefaultSet_StepSound(BlockID b) {
 /*########################################################################################################################*
 *---------------------------------------------------------Block-----------------------------------------------------------*
 *#########################################################################################################################*/
-static uint32_t Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
+static cc_uint32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
 static char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
 
-static const uint8_t topTex[BLOCK_CPE_COUNT]     = { 0,  1,  0,  2, 16,  4, 15, 
+static const cc_uint8 topTex[BLOCK_CPE_COUNT]     = { 0,  1,  0,  2, 16,  4, 15, 
 17, 14, 14, 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 
 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 24, 23,  6,  6,  7,  9,  
  4, 36, 37, 16, 11, 25, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 26, 53, 52 };
 
-static const uint8_t sideTex[BLOCK_CPE_COUNT]    = { 0,  1,  3,  2, 16,  4, 15, 
+static const cc_uint8 sideTex[BLOCK_CPE_COUNT]    = { 0,  1,  3,  2, 16,  4, 15, 
 17, 14, 14, 30, 30, 18, 19, 32, 33, 34, 20, 22, 48, 49, 64, 65, 66, 67, 68, 69, 
 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 40, 39,  5,  5,  7,  8, 
 35, 36, 37, 16, 11, 41, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 42, 53, 52 };
 
-static const uint8_t bottomTex[BLOCK_CPE_COUNT]  = { 0,  1,  2,  2, 16,  4, 15, 
+static const cc_uint8 bottomTex[BLOCK_CPE_COUNT]  = { 0,  1,  2,  2, 16,  4, 15, 
 17, 14, 14, 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 
 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  
  4, 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
@@ -171,13 +171,13 @@ void Block_DefineCustom(BlockID block) {
 }
 
 static void Block_RecalcIsLiquid(BlockID b) {
-	uint8_t collide = Blocks.ExtendedCollide[b];
+	cc_uint8 collide = Blocks.ExtendedCollide[b];
 	Blocks.IsLiquid[b] =
 		(collide == COLLIDE_LIQUID_WATER && Blocks.Draw[b] == DRAW_TRANSLUCENT) ||
 		(collide == COLLIDE_LIQUID_LAVA  && Blocks.Draw[b] == DRAW_TRANSPARENT);
 }
 
-void Block_SetCollide(BlockID block, uint8_t collide) {
+void Block_SetCollide(BlockID block, cc_uint8 collide) {
 	/* necessary if servers redefined core blocks, before extended collide types were added */
 	collide = DefaultSet_MapOldCollide(block, collide);
 	Blocks.ExtendedCollide[block] = collide;
@@ -192,7 +192,7 @@ void Block_SetCollide(BlockID block, uint8_t collide) {
 	Blocks.Collide[block] = collide;
 }
 
-void Block_SetDrawType(BlockID block, uint8_t draw) {
+void Block_SetDrawType(BlockID block, cc_uint8 draw) {
 	Vec3 zero = Vec3_Zero();
 	Vec3 one  = Vec3_One();
 
@@ -440,7 +440,7 @@ static void Block_CalcStretch(BlockID block) {
 }
 
 static bool Block_MightCull(BlockID block, BlockID other) {
-	uint8_t bType, oType;
+	cc_uint8 bType, oType;
 	/* Sprite blocks can never cull blocks. */
 	if (Blocks.Draw[block] == DRAW_SPRITE) return false;
 

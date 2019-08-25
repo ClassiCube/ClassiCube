@@ -11,7 +11,7 @@ struct Stream;
 
 /* Wraps an OGG container stream around an existing stream. */
 /* NOTE: buffer must be of size OGG_BUFFER_SIZE at least. */
-void Ogg_MakeStream(struct Stream* stream, uint8_t* buffer, struct Stream* source);
+void Ogg_MakeStream(struct Stream* stream, cc_uint8* buffer, struct Stream* source);
 struct Codebook; struct Floor; struct Residue; struct Mapping; struct Mode;
 
 struct imdct_state {
@@ -19,17 +19,17 @@ struct imdct_state {
 	float a[VORBIS_MAX_BLOCK_SIZE / 2];
 	float b[VORBIS_MAX_BLOCK_SIZE / 2];
 	float c[VORBIS_MAX_BLOCK_SIZE / 4];
-	uint32_t reversed[VORBIS_MAX_BLOCK_SIZE / 8];
+	cc_uint32 reversed[VORBIS_MAX_BLOCK_SIZE / 8];
 };
 
 struct VorbisWindow { float* Prev; float* Cur; };
 struct VorbisState {
-	uint32_t Bits;    /* Holds bits across byte boundaries*/
-	uint32_t NumBits; /* Number of bits in Bits buffer*/
+	cc_uint32 Bits;    /* Holds bits across byte boundaries*/
+	cc_uint32 NumBits; /* Number of bits in Bits buffer*/
 	struct Stream* source;  /* Source for filling Input buffer */
 
-	uint8_t channels, modeNumBits;
-	uint16_t curBlockSize, prevBlockSize, dataSize, numCodebooks;
+	cc_uint8 channels, modeNumBits;
+	cc_uint16 curBlockSize, prevBlockSize, dataSize, numCodebooks;
 	int sampleRate; int blockSizes[2];
 	float* temp; /* temp array reused in places */
 	float* values[2]; /* swapped each frame */
@@ -54,5 +54,5 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx);
 /* Reads and decodes the current frame's audio data. */
 ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx);
 /* Produces final interleaved audio samples for the current frame. */
-int Vorbis_OutputFrame(struct VorbisState* ctx, int16_t* data);
+int Vorbis_OutputFrame(struct VorbisState* ctx, cc_int16* data);
 #endif

@@ -9,7 +9,7 @@ struct IGameComponent;
 extern struct IGameComponent Lighting_Component;
 
 #define Lighting_Pack(x, z) ((x) + World.Width * (z))
-extern int16_t* Lighting_Heightmap;
+extern cc_int16* Lighting_Heightmap;
 
 /* Equivalent to (but far more optimised form of)
 * for x = startX; x < startX + 18; x++

@@ -9,18 +9,18 @@ struct Stream;
 /* Represents an ARGB colour, suitable for native graphics API texture pixels. */
 typedef union BitmapCol_ {
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-	struct { uint8_t R, G, B, A; };
+	struct { cc_uint8 R, G, B, A; };
 #else
-	struct { uint8_t B, G, R, A; };
+	struct { cc_uint8 B, G, R, A; };
 #endif
-	uint32_t _raw;
+	cc_uint32 _raw;
 } BitmapCol;
 
 /* Whether components of two colours are all equal. */
 #define BitmapCol_Equals(a,b) ((a)._raw == (b)._raw)
 
 /* A 2D array of BitmapCol pixels */
-typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
+typedef struct Bitmap_ { cc_uint8* Scan0; int Width, Height; } Bitmap;
 
 #define PNG_MAX_DIMS 0x8000
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
@@ -30,11 +30,11 @@ typedef struct Bitmap_ { uint8_t* Scan0; int Width, Height; } Bitmap;
 #endif
 
 /* Returns number of bytes a bitmap consumes. */
-#define Bitmap_DataSize(width, height) ((uint32_t)(width) * (uint32_t)(height) * 4)
-/* Gets the yth row of a bitmap as raw uint32_t* pointer. */
+#define Bitmap_DataSize(width, height) ((cc_uint32)(width) * (cc_uint32)(height) * 4)
+/* Gets the yth row of a bitmap as raw cc_uint32* pointer. */
 /* NOTE: You SHOULD not rely on the order of the 4 bytes in the pointer. */
 /* Different platforms may have different endian, or different component order. */
-#define Bitmap_RawRow(bmp, y) ((uint32_t*)(bmp)->Scan0  + (y) * (bmp)->Width)
+#define Bitmap_RawRow(bmp, y) ((cc_uint32*)(bmp)->Scan0  + (y) * (bmp)->Width)
 /* Gets the yth row of the given bitmap. */
 #define Bitmap_GetRow(bmp, y) ((BitmapCol*)(bmp)->Scan0 + (y) * (bmp)->Width)
 /* Gets the pixel at (x,y) in the given bitmap. */
@@ -58,7 +58,7 @@ void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height);
 CC_API void Bitmap_Scale(Bitmap* dst, Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight);
 
 /* Whether data starts with PNG format signature/identifier. */
-bool Png_Detect(const uint8_t* data, uint32_t len);
+bool Png_Detect(const cc_uint8* data, cc_uint32 len);
 typedef int (*Png_RowSelector)(Bitmap* bmp, int row);
 /*
   Decodes a bitmap in PNG format. Partially based off information from

@@ -18,7 +18,7 @@ extern struct IGameComponent Models_Component;
 enum RotateOrder { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX };
 
 /* Describes a vertex within a model. */
-struct ModelVertex { float X, Y, Z; uint16_t U, V; };
+struct ModelVertex { float X, Y, Z; cc_uint16 U, V; };
 static CC_INLINE void ModelVertex_Init(struct ModelVertex* vertex, float x, float y, float z, int u, int v) {
 	vertex->X = x; vertex->Y = y; vertex->Z = z;
 	vertex->U = u; vertex->V = v;
@@ -26,7 +26,7 @@ static CC_INLINE void ModelVertex_Init(struct ModelVertex* vertex, float x, floa
 
 /* Describes the starting index of this part within a model's array of vertices,
 and the number of vertices following the starting index that this part uses. */
-struct ModelPart { uint16_t Offset, Count; float RotX, RotY, RotZ; };
+struct ModelPart { cc_uint16 Offset, Count; float RotX, RotY, RotZ; };
 static CC_INLINE void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, float rotY, float rotZ) {
 	part->Offset = offset; part->Count = count;
 	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
@@ -34,7 +34,7 @@ static CC_INLINE void ModelPart_Init(struct ModelPart* part, int offset, int cou
 
 struct ModelTex;
 /* Contains information about a texture used for models. */
-struct ModelTex { const char* Name; uint8_t SkinType; GfxResourceID TexID; struct ModelTex* next; };
+struct ModelTex { const char* Name; cc_uint8 SkinType; GfxResourceID TexID; struct ModelTex* next; };
 
 struct Model;
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
@@ -64,7 +64,7 @@ struct Model {
 
 	/* The rest of the fields are set in Model_Init() */
 	int index;
-	uint8_t armX, armY; /* these translate arm model part back to (0, 0) */
+	cc_uint8 armX, armY; /* these translate arm model part back to (0, 0) */
 
 	bool initalised;
 	/* Whether the model should be slightly bobbed up and down when rendering. */
@@ -96,9 +96,9 @@ CC_VAR extern struct _ModelsData {
 	/* Angle of offset of head from body rotation */
 	float cosHead, sinHead;
 	/* Order of axes rotation when rendering parts. */
-	uint8_t Rotation;
+	cc_uint8 Rotation;
 	/* Skin type of current skin texture. */
-	uint8_t skinType;
+	cc_uint8 skinType;
 	/* Whether to render arms like vanilla Minecraft Classic. */
 	bool ClassicArms;
 	/* Model currently being built or rendered. */
@@ -153,8 +153,8 @@ CC_API void Model_RegisterTexture(struct ModelTex* tex);
 
 /* Describes data for a box being built. */
 struct BoxDesc {
-	uint16_t TexX, TexY;         /* Texture origin */
-	uint8_t SizeX, SizeY, SizeZ; /* Texture dimensions */
+	cc_uint16 TexX, TexY;         /* Texture origin */
+	cc_uint8 SizeX, SizeY, SizeZ; /* Texture dimensions */
 	float X1,Y1,Z1, X2,Y2,Z2;    /* Box corners coordinates */
 	float RotX,RotY,RotZ;        /* Rotation origin point */
 };

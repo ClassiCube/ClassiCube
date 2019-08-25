@@ -208,7 +208,7 @@ void Logger_Warn2(ReturnCode res, const char* place, const String* path) {
 /*########################################################################################################################*
 *-------------------------------------------------------Backtracing-------------------------------------------------------*
 *#########################################################################################################################*/
-static void Logger_PrintFrame(String* str, uintptr_t addr, uintptr_t symAddr, const char* symName, const char* modName) {
+static void Logger_PrintFrame(String* str, cc_uintptr addr, cc_uintptr symAddr, const char* symName, const char* modName) {
 	String module;
 	int offset;
 	if (!modName) modName = "???";
@@ -228,7 +228,7 @@ static void Logger_PrintFrame(String* str, uintptr_t addr, uintptr_t symAddr, co
 #if defined CC_BUILD_WEB
 void Logger_Backtrace(String* trace, void* ctx) { }
 #elif defined CC_BUILD_WIN
-struct StackPointers { uintptr_t ip, fp, sp; };
+struct StackPointers { cc_uintptr ip, fp, sp; };
 struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 
 static int Logger_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int max) {
@@ -273,7 +273,7 @@ void Logger_Backtrace(String* trace, void* ctx) {
 	struct StackPointers pointers[40];
 	int i, frames;
 	HANDLE process;
-	uintptr_t addr;
+	cc_uintptr addr;
 
 	process = GetCurrentProcess();
 	SymInitialize(process, NULL, TRUE);
@@ -325,7 +325,7 @@ static void Logger_DumpFrame(String* trace, void* addr) {
 	s.dli_fname = NULL;
 	dladdr(addr, &s);
 
-	Logger_PrintFrame(&str, (uintptr_t)addr, (uintptr_t)s.dli_saddr, s.dli_sname, s.dli_fname);
+	Logger_PrintFrame(&str, (cc_uintptr)addr, (cc_uintptr)s.dli_saddr, s.dli_sname, s.dli_fname);
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
 }
@@ -335,7 +335,7 @@ static void Logger_DumpFrame(String* trace, void* addr) {
 #include <unwind.h>
 
 static _Unwind_Reason_Code Logger_DumpFrame(struct _Unwind_Context* ctx, void* arg) {
-	uintptr_t addr = _Unwind_GetIP(ctx);
+	cc_uintptr addr = _Unwind_GetIP(ctx);
 	if (!addr) return _URC_END_OF_STACK;
 
 	Logger_DumpFrame((String*)arg, (void*)addr);
@@ -602,7 +602,7 @@ static void Logger_DumpRegisters(void* ctx) {
 #if defined CC_BUILD_WIN
 static BOOL CALLBACK Logger_DumpModule(const char* name, ULONG_PTR base, ULONG size, void* ctx) {
 	String str; char strBuffer[256];
-	uintptr_t beg, end;
+	cc_uintptr beg, end;
 
 	beg = base; end = base + (size - 1);
 	String_InitArray(str, strBuffer);
@@ -649,7 +649,7 @@ static void Logger_DumpMisc(void* ctx) {
 static void Logger_DumpMisc(void* ctx) {
 	static const String modules = String_FromConst("-- modules --\n");
 	static const String newLine = String_FromConst(_NL);
-	uint32_t i, count;
+	cc_uint32 i, count;
 	const char* path;
 	String str;
 	
@@ -685,11 +685,11 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 #elif defined CC_BUILD_WIN
 static LONG WINAPI Logger_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
 	String msg; char msgBuffer[128 + 1];
-	uint32_t code;
-	uintptr_t addr;
+	cc_uint32 code;
+	cc_uintptr addr;
 
-	code = (uint32_t)pInfo->ExceptionRecord->ExceptionCode;
-	addr = (uintptr_t)pInfo->ExceptionRecord->ExceptionAddress;
+	code = (cc_uint32)pInfo->ExceptionRecord->ExceptionCode;
+	addr = (cc_uintptr)pInfo->ExceptionRecord->ExceptionAddress;
 
 	String_InitArray_NT(msg, msgBuffer);
 	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
@@ -748,7 +748,7 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 static void Logger_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 	String msg; char msgBuffer[128 + 1];
 	int type, code;
-	uintptr_t addr;
+	cc_uintptr addr;
 
 	/* Uninstall handler to avoid chance of infinite loop */
 	signal(SIGSEGV, SIG_DFL);
@@ -759,7 +759,7 @@ static void Logger_SignalHandler(int sig, siginfo_t* info, void* ctx) {
 
 	type = info->si_signo;
 	code = info->si_code;
-	addr = (uintptr_t)info->si_addr;
+	addr = (cc_uintptr)info->si_addr;
 
 	String_InitArray_NT(msg, msgBuffer);
 	String_Format3(&msg, "Unhandled signal %i (code %i) at 0x%x", &type, &code, &addr);
@@ -806,7 +806,7 @@ void Logger_Log(const String* msg) {
 	}
 
 	if (!logStream.Meta.File) return;
-	Stream_Write(&logStream, (const uint8_t*)msg->buffer, msg->length);
+	Stream_Write(&logStream, (const cc_uint8*)msg->buffer, msg->length);
 #endif
 }
 

@@ -163,7 +163,7 @@ void Options_Save(void) {
 
 void Options_SetSecure(const char* opt, const String* src, const String* key) {
 	char data[2000];
-	uint8_t* enc;
+	cc_uint8* enc;
 	String tmp;
 	int i, encLen;
 
@@ -172,10 +172,10 @@ void Options_SetSecure(const char* opt, const String* src, const String* key) {
 	if (Platform_Encrypt(src->buffer, src->length, &enc, &encLen)) {
 		/* fallback to NOT SECURE XOR. Prevents simple reading from options.txt */
 		encLen = src->length;
-		enc    = (uint8_t*)Mem_Alloc(encLen, 1, "XOR encode");
+		enc    = (cc_uint8*)Mem_Alloc(encLen, 1, "XOR encode");
 	
 		for (i = 0; i < encLen; i++) {
-			enc[i] = (uint8_t)(src->buffer[i] ^ key->buffer[i % key->length] ^ 0x43);
+			enc[i] = (cc_uint8)(src->buffer[i] ^ key->buffer[i % key->length] ^ 0x43);
 		}
 	}
 
@@ -189,8 +189,8 @@ void Options_SetSecure(const char* opt, const String* src, const String* key) {
 }
 
 void Options_GetSecure(const char* opt, String* dst, const String* key) {
-	uint8_t data[1500];
-	uint8_t* dec;
+	cc_uint8 data[1500];
+	cc_uint8* dec;
 	String raw;
 	int i, decLen, dataLen;
 
@@ -202,10 +202,10 @@ void Options_GetSecure(const char* opt, String* dst, const String* key) {
 	if (Platform_Decrypt(data, dataLen, &dec, &decLen)) {
 		/* fallback to NOT SECURE XOR. Prevents simple reading from options.txt */
 		decLen = dataLen;
-		dec    = (uint8_t*)Mem_Alloc(decLen, 1, "XOR decode");
+		dec    = (cc_uint8*)Mem_Alloc(decLen, 1, "XOR decode");
 
 		for (i = 0; i < decLen; i++) {
-			dec[i] = (uint8_t)(data[i] ^ key->buffer[i % key->length] ^ 0x43);
+			dec[i] = (cc_uint8)(data[i] ^ key->buffer[i % key->length] ^ 0x43);
 		}
 	}
 

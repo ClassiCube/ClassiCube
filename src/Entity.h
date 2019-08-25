@@ -40,7 +40,7 @@ enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 struct LocationUpdate {
 	Vec3 Pos;
 	float HeadX, HeadY, RotX, RotZ;
-	uint8_t Flags;
+	cc_uint8 Flags;
 	bool RelativePos;
 };
 
@@ -82,8 +82,8 @@ struct Entity {
 	Vec3 ModelScale, Size;
 	float StepSize;
 	
-	uint8_t SkinType;
-	uint8_t SkinFetchState;
+	cc_uint8 SkinType;
+	cc_uint8 SkinFetchState;
 	bool NoShade, OnGround;
 	GfxResourceID TextureId, MobTextureId;
 	float uScale, vScale;
@@ -130,7 +130,7 @@ void Entity_SetSkin(struct Entity* e, const String* skin);
 /* (Actual entities may point to NetPlayers_List or elsewhere) */
 CC_VAR extern struct _EntitiesData {
 	struct Entity* List[ENTITIES_MAX_COUNT];
-	uint8_t NamesMode, ShadowsMode;
+	cc_uint8 NamesMode, ShadowsMode;
 } Entities;
 
 /* Ticks all entities. */
@@ -154,9 +154,9 @@ CC_VAR extern struct _TabListData {
 	/* Buffer indices for player/list/group names. */
 	/* Use TabList_UNSAFE_GetPlayer/List/Group to get these names. */
 	/* NOTE: An Offset of 0 means the entry is unused. */
-	uint16_t NameOffsets[TABLIST_MAX_NAMES];
+	cc_uint16 NameOffsets[TABLIST_MAX_NAMES];
 	/* Position/Order of this entry within the group. */
-	uint8_t  GroupRanks[TABLIST_MAX_NAMES];
+	cc_uint8  GroupRanks[TABLIST_MAX_NAMES];
 	StringsBuffer _buffer;
 } TabList;
 
@@ -164,7 +164,7 @@ CC_VAR extern struct _TabListData {
 CC_API void TabList_Remove(EntityID id);
 /* Sets the data for the tab list entry with the given id. */
 /* Raises TabListEvents.Changed if replacing, TabListEvents.Added if a new entry. */
-CC_API void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank);
+CC_API void TabList_Set(EntityID id, const String* player, const String* list, const String* group, cc_uint8 rank);
 
 /* Raw unformatted name (for Tab name auto complete) */
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 3);

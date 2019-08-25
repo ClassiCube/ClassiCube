@@ -75,13 +75,13 @@ struct WidgetVTABLE {
 	int x, y, width, height;      /* Top left corner, and dimensions, of this widget */ \
 	bool active;                  /* Whether this widget is currently being moused over */ \
 	bool disabled;                /* Whether widget is prevented from being interacted with */ \
-	uint8_t horAnchor, verAnchor; /* The reference point for when this widget is resized */ \
+	cc_uint8 horAnchor, verAnchor; /* The reference point for when this widget is resized */ \
 	int xOffset, yOffset;         /* Offset from the reference point */ \
 	Widget_LeftClick MenuClick;
 
 /* Represents an individual 2D gui component. */
 struct Widget { Widget_Layout };
-void Widget_SetLocation(void* widget, uint8_t horAnchor, uint8_t verAnchor, int xOffset, int yOffset);
+void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 void Widget_CalcPosition(void* widget);
 /* Resets Widget struct fields to 0/NULL (except VTABLE) */
 void Widget_Reset(void* widget);
@@ -113,7 +113,7 @@ extern int Gui_ScreensCount;
 
 /* Calculates position of an element on a particular axis */
 /* For example, to calculate X position of a text widget on screen */
-int  Gui_CalcPos(uint8_t anchor, int offset, int size, int axisLen);
+int  Gui_CalcPos(cc_uint8 anchor, int offset, int size, int axisLen);
 /* Returns whether the given rectangle contains the given point. */
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
 /* Shows HUD and Status screens. */

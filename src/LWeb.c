@@ -178,7 +178,7 @@ void Json_Parse(struct JsonContext* ctx) {
 	} while (token != TOKEN_NONE);
 }
 
-static void Json_Handle(uint8_t* data, uint32_t len, 
+static void Json_Handle(cc_uint8* data, cc_uint32 len, 
 						JsonOnValue onVal, JsonOnNew newArr, JsonOnNew newObj) {
 	struct JsonContext ctx;
 	/* NOTE: classicube.net uses \u JSON for non ASCII, no need to UTF8 convert characters */
@@ -219,7 +219,7 @@ void LWebTask_Tick(struct LWebTask* task) {
 	task->Working   = false;
 	task->Completed = true;
 	task->Success   = req.Success;
-	if (task->Success) task->Handle((uint8_t*)req.Data, req.Size);
+	if (task->Success) task->Handle((cc_uint8*)req.Data, req.Size);
 	HttpRequest_Free(&req);
 }
 
@@ -239,7 +239,7 @@ static void GetTokenTask_OnValue(struct JsonContext* ctx, const String* str) {
 	String_Copy(&GetTokenTask.Token, str);
 }
 
-static void GetTokenTask_Handle(uint8_t* data, uint32_t len) {
+static void GetTokenTask_Handle(cc_uint8* data, cc_uint32 len) {
 	Json_Handle(data, len, GetTokenTask_OnValue, NULL, NULL);
 }
 
@@ -282,7 +282,7 @@ static void SignInTask_OnValue(struct JsonContext* ctx, const String* str) {
 	}
 }
 
-static void SignInTask_Handle(uint8_t* data, uint32_t len) {
+static void SignInTask_Handle(cc_uint8* data, cc_uint32 len) {
 	Json_Handle(data, len, SignInTask_OnValue, NULL, NULL);
 }
 
@@ -366,7 +366,7 @@ static void ServerInfo_Parse(struct JsonContext* ctx, const String* val) {
 	}
 }
 
-static void FetchServerTask_Handle(uint8_t* data, uint32_t len) {
+static void FetchServerTask_Handle(cc_uint8* data, cc_uint32 len) {
 	curServer = &FetchServerTask.Server;
 	Json_Handle(data, len, ServerInfo_Parse, NULL, NULL);
 }
@@ -401,7 +401,7 @@ static void FetchServersTask_Next(struct JsonContext* ctx) {
 	ServerInfo_Init(curServer);
 }
 
-static void FetchServersTask_Handle(uint8_t* data, uint32_t len) {
+static void FetchServersTask_Handle(cc_uint8* data, cc_uint32 len) {
 	int count;
 	Mem_Free(FetchServersTask.Servers);
 	Mem_Free(FetchServersTask.Orders);
@@ -417,7 +417,7 @@ static void FetchServersTask_Handle(uint8_t* data, uint32_t len) {
 
 	if (count <= 0) return;
 	FetchServersTask.Servers = (struct ServerInfo*)Mem_Alloc(count, sizeof(struct ServerInfo), "servers list");
-	FetchServersTask.Orders  = (uint16_t*)Mem_Alloc(count, 2, "servers order");
+	FetchServersTask.Orders  = (cc_uint16*)Mem_Alloc(count, 2, "servers order");
 
 	/* -2 because servers is surrounded by a { */
 	curServer = FetchServersTask.Servers - 2;
@@ -471,7 +471,7 @@ static void CheckUpdateTask_OnValue(struct JsonContext* ctx, const String* str) 
 	}
 }
 
-static void CheckUpdateTask_Handle(uint8_t* data, uint32_t len) {
+static void CheckUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 	Json_Handle(data, len, CheckUpdateTask_OnValue, NULL, NULL);
 }
 
@@ -495,7 +495,7 @@ void CheckUpdateTask_Run(void) {
 *-----------------------------------------------------FetchUpdateTask-----------------------------------------------------*
 *#########################################################################################################################*/
 struct FetchUpdateData FetchUpdateTask;
-static void FetchUpdateTask_Handle(uint8_t* data, uint32_t len) {
+static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 	static const String path = String_FromConst("ClassiCube.update");
 	ReturnCode res;
 
@@ -589,7 +589,7 @@ static void FetchFlagsTask_Scale(Bitmap* bmp) {
 }
 
 static void FetchFlagsTask_DownloadNext(void);
-static void FetchFlagsTask_Handle(uint8_t* data, uint32_t len) {
+static void FetchFlagsTask_Handle(cc_uint8* data, cc_uint32 len) {
 	struct Stream s;
 	ReturnCode res;
 

@@ -5,19 +5,20 @@
 */
 
 #if _MSC_VER
-typedef unsigned __int8  uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
+typedef signed __int8  cc_int8;
+typedef signed __int16 cc_int16;
+typedef signed __int32 cc_int32;
+typedef signed __int64 cc_int64;
+
+typedef unsigned __int8  cc_uint8;
+typedef unsigned __int16 cc_uint16;
+typedef unsigned __int32 cc_uint32;
+typedef unsigned __int64 cc_uint64;
 #ifdef _WIN64
-typedef unsigned __int64 uintptr_t;
+typedef unsigned __int64 cc_uintptr;
 #else
-typedef unsigned int     uintptr_t;
+typedef unsigned int     cc_uintptr;
 #endif
-typedef signed __int8  int8_t;
-typedef signed __int16 int16_t;
-typedef signed __int32 int32_t;
-typedef signed __int64 int64_t;
 
 #define CC_INLINE inline
 #define CC_NOINLINE __declspec(noinline)
@@ -26,7 +27,26 @@ typedef signed __int64 int64_t;
 #define CC_VAR __declspec(dllexport)
 #endif
 #elif __GNUC__
-#include <stdint.h>
+typedef __INT8_TYPE__  cc_int8;
+typedef __INT16_TYPE__ cc_int16;
+typedef __INT32_TYPE__ cc_int32;
+typedef __INT64_TYPE__ cc_int64;
+
+#ifdef __UINT8_TYPE__
+typedef __UINT8_TYPE__   cc_uint8;
+typedef __UINT16_TYPE__  cc_uint16;
+typedef __UINT32_TYPE__  cc_uint32;
+typedef __UINT64_TYPE__  cc_uint64;
+typedef __UINTPTR_TYPE__ cc_uintptr;
+#else
+/* clang doesn't define the __UINT8_TYPE__ */
+typedef unsigned __INT8_TYPE__   cc_uint8;
+typedef unsigned __INT16_TYPE__  cc_uint16;
+typedef unsigned __INT32_TYPE__  cc_uint32;
+typedef unsigned __INT64_TYPE__  cc_uint64;
+typedef unsigned __INTPTR_TYPE__ cc_uintptr;
+#endif
+
 #define CC_INLINE inline
 #define CC_NOINLINE __attribute__((noinline))
 #ifndef CC_API
@@ -49,13 +69,13 @@ typedef signed __int64 int64_t;
 #error "Unknown compiler. You'll need to add required definitions in Core.h!"
 #endif
 
-typedef uint16_t Codepoint;
+typedef cc_uint16 Codepoint;
 #ifdef __APPLE__
 /* TODO: REMOVE THIS AWFUL AWFUL HACK */
 #include <stdbool.h>
 #elif __cplusplus
 #else
-typedef uint8_t bool;
+typedef cc_uint8 bool;
 #define true 1
 #define false 0
 #endif
@@ -70,27 +90,27 @@ typedef uint8_t bool;
 
 #define EXTENDED_BLOCKS
 #ifdef EXTENDED_BLOCKS
-typedef uint16_t BlockID;
+typedef cc_uint16 BlockID;
 #else
-typedef uint8_t BlockID;
+typedef cc_uint8 BlockID;
 #endif
 
 #define EXTENDED_TEXTURES
 #ifdef EXTENDED_TEXTURES
-typedef uint16_t TextureLoc;
+typedef cc_uint16 TextureLoc;
 #else
-typedef uint8_t TextureLoc;
+typedef cc_uint8 TextureLoc;
 #endif
 
-typedef uint8_t BlockRaw;
-typedef uint8_t EntityID;
-typedef uint8_t Face;
-typedef uint32_t ReturnCode;
-typedef uint64_t TimeMS;
+typedef cc_uint8 BlockRaw;
+typedef cc_uint8 EntityID;
+typedef cc_uint8 Face;
+typedef cc_uint32 ReturnCode;
+typedef cc_uint64 TimeMS;
 
 typedef struct Rect2D_  { int X, Y, Width, Height; } Rect2D;
 typedef struct Size2D_  { int Width, Height; } Size2D;
-typedef struct FontDesc_ { void* Handle; uint16_t Size, Style; } FontDesc;
+typedef struct FontDesc_ { void* Handle; cc_uint16 Size, Style; } FontDesc;
 typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 
 /*#define CC_BUILD_GL11*/
@@ -174,14 +194,14 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 typedef void* GfxResourceID;
 #define GFX_NULL NULL
 #else
-typedef uintptr_t GfxResourceID;
+typedef cc_uintptr GfxResourceID;
 #define GFX_NULL 0
 #endif
 
 /* Contains the information to describe a 2D textured quad. */
 struct Texture {
 	GfxResourceID ID;
-	int16_t X, Y; uint16_t Width, Height;
+	cc_int16 X, Y; cc_uint16 Width, Height;
 	TextureRec uv;
 };
 #endif

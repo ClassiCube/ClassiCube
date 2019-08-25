@@ -8,11 +8,11 @@
 /* Represents an ARGB colour, suitable for native graphics API colours. */
 typedef union PackedCol_ {
 #ifdef CC_BUILD_D3D9
-	 struct { uint8_t B, G, R, A; };
+	 struct { cc_uint8 B, G, R, A; };
 #else
-	 struct { uint8_t R, G, B, A; };
+	 struct { cc_uint8 R, G, B, A; };
 #endif
-	 uint32_t _raw;
+	 cc_uint32 _raw;
 } PackedCol;
 
 #ifdef CC_BUILD_D3D9
@@ -21,7 +21,7 @@ typedef union PackedCol_ {
 #define PACKEDCOL_CONST(r, g, b, a) { r, g, b, a }
 #endif
 #define PACKEDCOL_WHITE PACKEDCOL_CONST(255, 255, 255, 255)
-#define PackedCol_ARGB(r, g, b, a) (((uint32_t)(r) << 16) | ((uint32_t)(g) << 8) | ((uint32_t)(b)) | ((uint32_t)(a) << 24))
+#define PackedCol_ARGB(r, g, b, a) (((cc_uint32)(r) << 16) | ((cc_uint32)(g) << 8) | ((cc_uint32)(b)) | ((cc_uint32)(a) << 24))
 
 /* Whether components of two colours are all equal. */
 #define PackedCol_Equals(a,b) ((a)._raw == (b)._raw)

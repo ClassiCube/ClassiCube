@@ -8,8 +8,8 @@
 /*########################################################################################################################*
 *---------------------------------------------------------Stream----------------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Stream_Read(struct Stream* s, uint8_t* buffer, uint32_t count) {
-	uint32_t read;
+ReturnCode Stream_Read(struct Stream* s, cc_uint8* buffer, cc_uint32 count) {
+	cc_uint32 read;
 	ReturnCode res;
 
 	while (count) {
@@ -22,8 +22,8 @@ ReturnCode Stream_Read(struct Stream* s, uint8_t* buffer, uint32_t count) {
 	return 0;
 }
 
-ReturnCode Stream_Write(struct Stream* s, const uint8_t* buffer, uint32_t count) {
-	uint32_t write;
+ReturnCode Stream_Write(struct Stream* s, const cc_uint8* buffer, cc_uint32 count) {
+	cc_uint32 write;
 	ReturnCode res;
 
 	while (count) {
@@ -36,21 +36,21 @@ ReturnCode Stream_Write(struct Stream* s, const uint8_t* buffer, uint32_t count)
 	return 0;
 }
 
-static ReturnCode Stream_DefaultRead(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Stream_DefaultRead(struct Stream* s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	return ERR_NOT_SUPPORTED;
 }
-static ReturnCode Stream_DefaultWrite(struct Stream* s, const uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Stream_DefaultWrite(struct Stream* s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	return ERR_NOT_SUPPORTED;
 }
-ReturnCode Stream_DefaultReadU8(struct Stream* s, uint8_t* data) {
-	uint32_t modified;
+ReturnCode Stream_DefaultReadU8(struct Stream* s, cc_uint8* data) {
+	cc_uint32 modified;
 	ReturnCode res = s->Read(s, data, 1, &modified);
 	return res ? res : (modified ? 0 : ERR_END_OF_STREAM);
 }
 
-static ReturnCode Stream_DefaultSkip(struct Stream* s, uint32_t count) {
-	uint8_t tmp[3584]; /* not quite 4 KB to avoid chkstk call */
-	uint32_t toRead, read;
+static ReturnCode Stream_DefaultSkip(struct Stream* s, cc_uint32 count) {
+	cc_uint8 tmp[3584]; /* not quite 4 KB to avoid chkstk call */
+	cc_uint32 toRead, read;
 	ReturnCode res;
 
 	while (count) {
@@ -63,10 +63,10 @@ static ReturnCode Stream_DefaultSkip(struct Stream* s, uint32_t count) {
 	return 0;
 }
 
-static ReturnCode Stream_DefaultSeek(struct Stream* s, uint32_t pos) {
+static ReturnCode Stream_DefaultSeek(struct Stream* s, cc_uint32 pos) {
 	return ERR_NOT_SUPPORTED;
 }
-static ReturnCode Stream_DefaultGet(struct Stream* s, uint32_t* value) { 
+static ReturnCode Stream_DefaultGet(struct Stream* s, cc_uint32* value) { 
 	return ERR_NOT_SUPPORTED;
 }
 static ReturnCode Stream_DefaultClose(struct Stream* s) { return 0; }
@@ -87,10 +87,10 @@ void Stream_Init(struct Stream* s) {
 /*########################################################################################################################*
 *-------------------------------------------------------FileStream--------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Stream_FileRead(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Stream_FileRead(struct Stream* s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	return File_Read(s->Meta.File, data, count, modified);
 }
-static ReturnCode Stream_FileWrite(struct Stream* s, const uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Stream_FileWrite(struct Stream* s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	return File_Write(s->Meta.File, data, count, modified);
 }
 static ReturnCode Stream_FileClose(struct Stream* s) {
@@ -98,16 +98,16 @@ static ReturnCode Stream_FileClose(struct Stream* s) {
 	s->Meta.File = 0;
 	return res;
 }
-static ReturnCode Stream_FileSkip(struct Stream* s, uint32_t count) {
+static ReturnCode Stream_FileSkip(struct Stream* s, cc_uint32 count) {
 	return File_Seek(s->Meta.File, count, FILE_SEEKFROM_CURRENT);
 }
-static ReturnCode Stream_FileSeek(struct Stream* s, uint32_t position) {
+static ReturnCode Stream_FileSeek(struct Stream* s, cc_uint32 position) {
 	return File_Seek(s->Meta.File, position, FILE_SEEKFROM_BEGIN);
 }
-static ReturnCode Stream_FilePosition(struct Stream* s, uint32_t* position) {
+static ReturnCode Stream_FilePosition(struct Stream* s, cc_uint32* position) {
 	return File_Position(s->Meta.File, position);
 }
-static ReturnCode Stream_FileLength(struct Stream* s, uint32_t* length) {
+static ReturnCode Stream_FileLength(struct Stream* s, cc_uint32* length) {
 	return File_Length(s->Meta.File, length);
 }
 
@@ -125,7 +125,7 @@ ReturnCode Stream_CreateFile(struct Stream* s, const String* path) {
 	return res;
 }
 
-ReturnCode Stream_WriteAllTo(const String* path, const uint8_t* data, uint32_t length) {
+ReturnCode Stream_WriteAllTo(const String* path, const cc_uint8* data, cc_uint32 length) {
 	struct Stream stream;
 	ReturnCode res, closeRes;
 
@@ -154,7 +154,7 @@ void Stream_FromFile(struct Stream* s, FileHandle file) {
 /*########################################################################################################################*
 *-----------------------------------------------------PortionStream-------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Stream_PortionRead(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Stream_PortionRead(struct Stream* s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	struct Stream* source;
 	ReturnCode res;
 
@@ -166,7 +166,7 @@ static ReturnCode Stream_PortionRead(struct Stream* s, uint8_t* data, uint32_t c
 	return res;
 }
 
-static ReturnCode Stream_PortionReadU8(struct Stream* s, uint8_t* data) {
+static ReturnCode Stream_PortionReadU8(struct Stream* s, cc_uint8* data) {
 	struct Stream* source;
 	if (!s->Meta.Portion.Left) return ERR_END_OF_STREAM;
 	source = s->Meta.Portion.Source;
@@ -175,7 +175,7 @@ static ReturnCode Stream_PortionReadU8(struct Stream* s, uint8_t* data) {
 	return source->ReadU8(source, data);
 }
 
-static ReturnCode Stream_PortionSkip(struct Stream* s, uint32_t count) {
+static ReturnCode Stream_PortionSkip(struct Stream* s, cc_uint32 count) {
 	struct Stream* source;
 	ReturnCode res;
 
@@ -187,14 +187,14 @@ static ReturnCode Stream_PortionSkip(struct Stream* s, uint32_t count) {
 	return res;
 }
 
-static ReturnCode Stream_PortionPosition(struct Stream* s, uint32_t* position) {
+static ReturnCode Stream_PortionPosition(struct Stream* s, cc_uint32* position) {
 	*position = s->Meta.Portion.Length - s->Meta.Portion.Left; return 0;
 }
-static ReturnCode Stream_PortionLength(struct Stream* s, uint32_t* length) {
+static ReturnCode Stream_PortionLength(struct Stream* s, cc_uint32* length) {
 	*length = s->Meta.Portion.Length; return 0;
 }
 
-void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, uint32_t len) {
+void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, cc_uint32 len) {
 	Stream_Init(s);
 	s->Read     = Stream_PortionRead;
 	s->ReadU8   = Stream_PortionReadU8;
@@ -211,7 +211,7 @@ void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, uint32_t le
 /*########################################################################################################################*
 *-----------------------------------------------------MemoryStream--------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Stream_MemoryRead(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Stream_MemoryRead(struct Stream* s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	count = min(count, s->Meta.Mem.Left);
 	Mem_Copy(data, s->Meta.Mem.Cur, count);
 	
@@ -221,7 +221,7 @@ static ReturnCode Stream_MemoryRead(struct Stream* s, uint8_t* data, uint32_t co
 	return 0;
 }
 
-static ReturnCode Stream_MemoryReadU8(struct Stream* s, uint8_t* data) {
+static ReturnCode Stream_MemoryReadU8(struct Stream* s, cc_uint8* data) {
 	if (!s->Meta.Mem.Left) return ERR_END_OF_STREAM;
 
 	*data = *s->Meta.Mem.Cur;
@@ -230,7 +230,7 @@ static ReturnCode Stream_MemoryReadU8(struct Stream* s, uint8_t* data) {
 	return 0;
 }
 
-static ReturnCode Stream_MemorySkip(struct Stream* s, uint32_t count) {
+static ReturnCode Stream_MemorySkip(struct Stream* s, cc_uint32 count) {
 	if (count > s->Meta.Mem.Left) return ERR_INVALID_ARGUMENT;
 
 	s->Meta.Mem.Cur  += count; 
@@ -238,7 +238,7 @@ static ReturnCode Stream_MemorySkip(struct Stream* s, uint32_t count) {
 	return 0;
 }
 
-static ReturnCode Stream_MemorySeek(struct Stream* s, uint32_t position) {
+static ReturnCode Stream_MemorySeek(struct Stream* s, cc_uint32 position) {
 	if (position >= s->Meta.Mem.Length) return ERR_INVALID_ARGUMENT;
 
 	s->Meta.Mem.Cur  = s->Meta.Mem.Base   + position;
@@ -246,14 +246,14 @@ static ReturnCode Stream_MemorySeek(struct Stream* s, uint32_t position) {
 	return 0;
 }
 
-static ReturnCode Stream_MemoryPosition(struct Stream* s, uint32_t* position) {
+static ReturnCode Stream_MemoryPosition(struct Stream* s, cc_uint32* position) {
 	*position = s->Meta.Mem.Length - s->Meta.Mem.Left; return 0;
 }
-static ReturnCode Stream_MemoryLength(struct Stream* s, uint32_t* length) {
+static ReturnCode Stream_MemoryLength(struct Stream* s, cc_uint32* length) {
 	*length = s->Meta.Mem.Length; return 0;
 }
 
-void Stream_ReadonlyMemory(struct Stream* s, void* data, uint32_t len) {
+void Stream_ReadonlyMemory(struct Stream* s, void* data, cc_uint32 len) {
 	Stream_Init(s);
 	s->Read     = Stream_MemoryRead;
 	s->ReadU8   = Stream_MemoryReadU8;
@@ -262,19 +262,19 @@ void Stream_ReadonlyMemory(struct Stream* s, void* data, uint32_t len) {
 	s->Position = Stream_MemoryPosition;
 	s->Length   = Stream_MemoryLength;
 
-	s->Meta.Mem.Cur    = (uint8_t*)data;
+	s->Meta.Mem.Cur    = (cc_uint8*)data;
 	s->Meta.Mem.Left   = len;
 	s->Meta.Mem.Length = len;
-	s->Meta.Mem.Base   = (uint8_t*)data;
+	s->Meta.Mem.Base   = (cc_uint8*)data;
 }
 
 
 /*########################################################################################################################*
 *----------------------------------------------------BufferedStream-------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Stream_BufferedRead(struct Stream* s, uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Stream_BufferedRead(struct Stream* s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	struct Stream* source;
-	uint32_t read;
+	cc_uint32 read;
 	ReturnCode res;
 
 	/* Refill buffer */
@@ -297,7 +297,7 @@ static ReturnCode Stream_BufferedRead(struct Stream* s, uint8_t* data, uint32_t 
 	return 0;
 }
 
-static ReturnCode Stream_BufferedReadU8(struct Stream* s, uint8_t* data) {
+static ReturnCode Stream_BufferedReadU8(struct Stream* s, cc_uint8* data) {
 	if (!s->Meta.Buffered.Left) return Stream_DefaultReadU8(s, data);
 
 	*data = *s->Meta.Buffered.Cur;
@@ -306,13 +306,13 @@ static ReturnCode Stream_BufferedReadU8(struct Stream* s, uint8_t* data) {
 	return 0;
 }
 
-static ReturnCode Stream_BufferedSeek(struct Stream* s, uint32_t position) {
+static ReturnCode Stream_BufferedSeek(struct Stream* s, cc_uint32 position) {
 	struct Stream* source;
-	uint32_t beg, len, offset;
+	cc_uint32 beg, len, offset;
 	ReturnCode res;
 
 	/* Check if seek position is within cached buffer */
-	len = s->Meta.Buffered.Left + (uint32_t)(s->Meta.Buffered.Cur - s->Meta.Buffered.Base);
+	len = s->Meta.Buffered.Left + (cc_uint32)(s->Meta.Buffered.Cur - s->Meta.Buffered.Base);
 	beg = s->Meta.Buffered.End  - len;
 
 	if (position >= beg && position < beg + len) {
@@ -332,7 +332,7 @@ static ReturnCode Stream_BufferedSeek(struct Stream* s, uint32_t position) {
 	return res;
 }
 
-void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data, uint32_t size) {
+void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data, cc_uint32 size) {
 	Stream_Init(s);
 	s->Read   = Stream_BufferedRead;
 	s->ReadU8 = Stream_BufferedReadU8;
@@ -340,8 +340,8 @@ void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data
 
 	s->Meta.Buffered.Left   = 0;
 	s->Meta.Buffered.End    = 0;	
-	s->Meta.Buffered.Cur    = (uint8_t*)data;
-	s->Meta.Buffered.Base   = (uint8_t*)data;
+	s->Meta.Buffered.Cur    = (cc_uint8*)data;
+	s->Meta.Buffered.Base   = (cc_uint8*)data;
 	s->Meta.Buffered.Length = size;
 	s->Meta.Buffered.Source = source;
 }
@@ -350,9 +350,9 @@ void Stream_ReadonlyBuffered(struct Stream* s, struct Stream* source, void* data
 /*########################################################################################################################*
 *-----------------------------------------------------CRC32Stream---------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Stream_Crc32Write(struct Stream* stream, const uint8_t* data, uint32_t count, uint32_t* modified) {
+static ReturnCode Stream_Crc32Write(struct Stream* stream, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	struct Stream* source;
-	uint32_t i, crc32 = stream->Meta.CRC32.CRC32;
+	cc_uint32 i, crc32 = stream->Meta.CRC32.CRC32;
 
 	/* TODO: Optimise this calculation */
 	for (i = 0; i < count; i++) {
@@ -376,52 +376,52 @@ void Stream_WriteonlyCrc32(struct Stream* s, struct Stream* source) {
 /*########################################################################################################################*
 *-------------------------------------------------Read/Write primitives---------------------------------------------------*
 *#########################################################################################################################*/
-uint16_t Stream_GetU16_LE(const uint8_t* data) {
-	return (uint16_t)(data[0] | (data[1] << 8));
+cc_uint16 Stream_GetU16_LE(const cc_uint8* data) {
+	return (cc_uint16)(data[0] | (data[1] << 8));
 }
 
-uint16_t Stream_GetU16_BE(const uint8_t* data) {
-	return (uint16_t)((data[0] << 8) | data[1]);
+cc_uint16 Stream_GetU16_BE(const cc_uint8* data) {
+	return (cc_uint16)((data[0] << 8) | data[1]);
 }
 
-uint32_t Stream_GetU32_LE(const uint8_t* data) {
-	return (uint32_t)(
-		 (uint32_t)data[0]        | ((uint32_t)data[1] << 8) |
-		((uint32_t)data[2] << 16) | ((uint32_t)data[3] << 24));
+cc_uint32 Stream_GetU32_LE(const cc_uint8* data) {
+	return (cc_uint32)(
+		 (cc_uint32)data[0]        | ((cc_uint32)data[1] << 8) |
+		((cc_uint32)data[2] << 16) | ((cc_uint32)data[3] << 24));
 }
 
-uint32_t Stream_GetU32_BE(const uint8_t* data) {
-	return (uint32_t)(
-		((uint32_t)data[0] << 24) | ((uint32_t)data[1] << 16) |
-		((uint32_t)data[2] << 8)  |  (uint32_t)data[3]);
+cc_uint32 Stream_GetU32_BE(const cc_uint8* data) {
+	return (cc_uint32)(
+		((cc_uint32)data[0] << 24) | ((cc_uint32)data[1] << 16) |
+		((cc_uint32)data[2] << 8)  |  (cc_uint32)data[3]);
 }
 
-void Stream_SetU16_LE(uint8_t* data, uint16_t value) {
-	data[0] = (uint8_t)(value      ); data[1] = (uint8_t)(value >> 8 );
+void Stream_SetU16_LE(cc_uint8* data, cc_uint16 value) {
+	data[0] = (cc_uint8)(value      ); data[1] = (cc_uint8)(value >> 8 );
 }
 
-void Stream_SetU16_BE(uint8_t* data, uint16_t value) {
-	data[0] = (uint8_t)(value >> 8 ); data[1] = (uint8_t)(value      );
+void Stream_SetU16_BE(cc_uint8* data, cc_uint16 value) {
+	data[0] = (cc_uint8)(value >> 8 ); data[1] = (cc_uint8)(value      );
 }
 
-void Stream_SetU32_LE(uint8_t* data, uint32_t value) {
-	data[0] = (uint8_t)(value      ); data[1] = (uint8_t)(value >> 8 );
-	data[2] = (uint8_t)(value >> 16); data[3] = (uint8_t)(value >> 24);
+void Stream_SetU32_LE(cc_uint8* data, cc_uint32 value) {
+	data[0] = (cc_uint8)(value      ); data[1] = (cc_uint8)(value >> 8 );
+	data[2] = (cc_uint8)(value >> 16); data[3] = (cc_uint8)(value >> 24);
 }
 
-void Stream_SetU32_BE(uint8_t* data, uint32_t value) {
-	data[0] = (uint8_t)(value >> 24); data[1] = (uint8_t)(value >> 16);
-	data[2] = (uint8_t)(value >> 8 ); data[3] = (uint8_t)(value);
+void Stream_SetU32_BE(cc_uint8* data, cc_uint32 value) {
+	data[0] = (cc_uint8)(value >> 24); data[1] = (cc_uint8)(value >> 16);
+	data[2] = (cc_uint8)(value >> 8 ); data[3] = (cc_uint8)(value);
 }
 
-ReturnCode Stream_ReadU32_LE(struct Stream* s, uint32_t* value) {
-	uint8_t data[4]; ReturnCode res;
+ReturnCode Stream_ReadU32_LE(struct Stream* s, cc_uint32* value) {
+	cc_uint8 data[4]; ReturnCode res;
 	if ((res = Stream_Read(s, data, 4))) return res;
 	*value = Stream_GetU32_LE(data); return 0;
 }
 
-ReturnCode Stream_ReadU32_BE(struct Stream* s, uint32_t* value) {
-	uint8_t data[4]; ReturnCode res;
+ReturnCode Stream_ReadU32_BE(struct Stream* s, cc_uint32* value) {
+	cc_uint8 data[4]; ReturnCode res;
 	if ((res = Stream_Read(s, data, 4))) return res;
 	*value = Stream_GetU32_BE(data); return 0;
 }
@@ -435,8 +435,8 @@ ReturnCode Stream_ReadLine(struct Stream* s, String* text) {
 	Codepoint cp;
 	ReturnCode res;
 
-	uint8_t tmp[8];
-	uint32_t len;
+	cc_uint8 tmp[8];
+	cc_uint32 len;
 
 	text->length = 0;
 	for (;;) {
@@ -465,9 +465,9 @@ ReturnCode Stream_ReadLine(struct Stream* s, String* text) {
 }
 
 ReturnCode Stream_WriteLine(struct Stream* s, String* text) {
-	uint8_t buffer[2048 + 10]; /* some space for newline */
+	cc_uint8 buffer[2048 + 10]; /* some space for newline */
 	const char* nl;
-	uint8_t* cur;
+	cc_uint8* cur;
 	ReturnCode res;
 	int i, len = 0;
 

@@ -385,7 +385,7 @@ static void Entity_SetSkinAll(struct Entity* source, bool reset) {
 
 /* Clears hat area from a skin bitmap if it's completely white or black,
    so skins edited with Microsoft Paint or similiar don't have a solid hat */
-static void Entity_ClearHat(Bitmap* bmp, uint8_t skinType) {
+static void Entity_ClearHat(Bitmap* bmp, cc_uint8 skinType) {
 	int sizeX  = (bmp->Width / 64) * 32;
 	int yScale = skinType == SKIN_64x32 ? 32 : 64;
 	int sizeY  = (bmp->Height / yScale) * 16;
@@ -400,12 +400,12 @@ static void Entity_ClearHat(Bitmap* bmp, uint8_t skinType) {
 	}
 
 	/* only perform filtering when the entire hat is opaque */
-	uint32_t white = PackedCol_ARGB(255, 255, 255, 255);
-	uint32_t black = PackedCol_ARGB(0,   0,   0,   255);
+	cc_uint32 white = PackedCol_ARGB(255, 255, 255, 255);
+	cc_uint32 black = PackedCol_ARGB(0,   0,   0,   255);
 	for (y = 0; y < sizeY; y++) {
-		uint32_t* row = Bitmap_RawRow(bmp, y) + sizeX;
+		cc_uint32* row = Bitmap_RawRow(bmp, y) + sizeX;
 		for (x = 0; x < sizeX; x++) {
-			uint32_t pixel = row[x];
+			cc_uint32 pixel = row[x];
 			if (pixel == white || pixel == black) row[x] = 0;
 		}
 	}
@@ -413,7 +413,7 @@ static void Entity_ClearHat(Bitmap* bmp, uint8_t skinType) {
 
 /* Ensures skin is a power of two size, resizing if needed. */
 static void Entity_EnsurePow2(struct Entity* e, Bitmap* bmp) {
-	uint32_t stride;
+	cc_uint32 stride;
 	int width, height;
 	Bitmap scaled;
 	int y;
@@ -709,9 +709,9 @@ void TabList_Remove(EntityID id) {
 	Event_RaiseInt(&TabListEvents.Removed, id);
 }
 
-void TabList_Set(EntityID id, const String* player, const String* list, const String* group, uint8_t rank) {
+void TabList_Set(EntityID id, const String* player, const String* list, const String* group, cc_uint8 rank) {
 	String oldPlayer, oldList, oldGroup;
-	uint8_t oldRank;
+	cc_uint8 oldRank;
 	struct Event_Int* events;
 	
 	if (TabList.NameOffsets[id]) {

@@ -14,7 +14,7 @@ struct Particle {
 	Vec3 velocity;
 	float lifetime;
 	Vec3 lastPos, nextPos;
-	uint8_t size;
+	cc_uint8 size;
 };
 
 /* http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/ */

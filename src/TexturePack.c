@@ -52,7 +52,7 @@ static void LavaAnimation_Tick(BitmapCol* ptr, int size) {
 
 			/* Lookup table for (int)(1.2 * sin([ANGLE] * 22.5 * MATH_DEG2RAD)); */
 			/* [ANGLE] is integer x/y, so repeats every 16 intervals */
-			static int8_t sin_adj_table[16] = { 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0 };
+			static cc_int8 sin_adj_table[16] = { 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0 };
 			int xx = x + sin_adj_table[y & 0xF], yy = y + sin_adj_table[x & 0xF];
 
 			soupHeat =
@@ -86,9 +86,9 @@ static void LavaAnimation_Tick(BitmapCol* ptr, int size) {
 			col = 2.0f * L_soupHeat[i];
 			Math_Clamp(col, 0.0f, 1.0f);
 
-			ptr->R = (uint8_t)(col * 100.0f + 155.0f);
-			ptr->G = (uint8_t)(col * col * 255.0f);
-			ptr->B = (uint8_t)(col * col * col * col * 128.0f);
+			ptr->R = (cc_uint8)(col * 100.0f + 155.0f);
+			ptr->G = (cc_uint8)(col * col * 255.0f);
+			ptr->B = (cc_uint8)(col * col * col * col * 128.0f);
 			ptr->A = 255;
 
 			ptr++; i++;
@@ -137,9 +137,9 @@ static void WaterAnimation_Tick(BitmapCol* ptr, int size) {
 			Math_Clamp(col, 0.0f, 1.0f);
 			col = col * col;
 
-			ptr->R = (uint8_t)(32.0f  + col * 32.0f);
-			ptr->G = (uint8_t)(50.0f  + col * 64.0f);
-			ptr->A = (uint8_t)(146.0f + col * 50.0f);
+			ptr->R = (cc_uint8)(32.0f  + col * 32.0f);
+			ptr->G = (cc_uint8)(50.0f  + col * 64.0f);
+			ptr->A = (cc_uint8)(146.0f + col * 50.0f);
 			ptr->B = 255;
 
 			ptr++; i++;
@@ -154,12 +154,12 @@ static void WaterAnimation_Tick(BitmapCol* ptr, int size) {
 *#########################################################################################################################*/
 struct AnimationData {
 	TextureLoc TexLoc;       /* Tile (not pixel) coordinates in terrain.png */
-	uint16_t FrameX, FrameY; /* Top left pixel coordinates of start frame in animatons.png */
-	uint16_t FrameSize;      /* Size of each frame in pixel coordinates */
-	uint16_t State;          /* Current animation frame index */
-	uint16_t StatesCount;    /* Total number of animation frames */
-	uint16_t Delay;          /* Delay in ticks until next frame is drawn */
-	uint16_t FrameDelay;     /* Delay between each frame */
+	cc_uint16 FrameX, FrameY; /* Top left pixel coordinates of start frame in animatons.png */
+	cc_uint16 FrameSize;      /* Size of each frame in pixel coordinates */
+	cc_uint16 State;          /* Current animation frame index */
+	cc_uint16 StatesCount;    /* Total number of animation frames */
+	cc_uint16 Delay;          /* Delay in ticks until next frame is drawn */
+	cc_uint16 FrameDelay;     /* Delay between each frame */
 };
 
 static Bitmap anims_bmp;
@@ -173,9 +173,9 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 	String parts[ANIM_MIN_ARGS];
 	int count;
 	struct AnimationData data = { 0 };
-	uint8_t tileX, tileY;
+	cc_uint8 tileX, tileY;
 
-	uint8_t buffer[2048]; 
+	cc_uint8 buffer[2048]; 
 	struct Stream buffered;
 	ReturnCode res;
 
@@ -231,13 +231,13 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 	int dstY = Atlas1D_RowId(texLoc) * Atlas2D.TileSize;
 	GfxResourceID tex;
 
-	uint8_t buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
-	uint8_t* ptr = buffer;
+	cc_uint8 buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
+	cc_uint8* ptr = buffer;
 	Bitmap frame;
 
 	/* cannot allocate memory on the stack for very big animation.png frames */
 	if (size > ANIMS_FAST_SIZE) {	
-		ptr = (uint8_t*)Mem_Alloc(size * size, 4, "anim frame");
+		ptr = (cc_uint8*)Mem_Alloc(size * size, 4, "anim frame");
 	}
 	Bitmap_Init(frame, size, size, ptr);
 
@@ -485,7 +485,7 @@ GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 	int tileSize = Atlas2D.TileSize;
 	Bitmap tile;
 	GfxResourceID texId;
-	uint8_t scan0[Bitmap_DataSize(64, 64)];
+	cc_uint8 scan0[Bitmap_DataSize(64, 64)];
 
 	/* Try to allocate bitmap on stack if possible */
 	if (tileSize > 64) {
@@ -535,7 +535,7 @@ void TextureCache_Deny(const String* url)        {
 }
 
 CC_INLINE static void TextureCache_HashUrl(String* key, const String* url) {
-	String_AppendUInt32(key, Utils_CRC32((const uint8_t*)url->buffer, url->length));
+	String_AppendUInt32(key, Utils_CRC32((const cc_uint8*)url->buffer, url->length));
 }
 
 CC_NOINLINE static void TextureCache_MakePath(String* path, const String* url) {
@@ -577,7 +577,7 @@ CC_NOINLINE static String TextureCache_GetFromTags(const String* url, struct Ent
 
 static String TextureCache_GetLastModified(const String* url) {
 	String entry = TextureCache_GetFromTags(url, &lastModifiedCache);
-	uint64_t raw;
+	cc_uint64 raw;
 
 	/* Entry used to be a timestamp of C# ticks since 01/01/0001 */
 	/* This old format is no longer supported. */
@@ -720,7 +720,7 @@ void TexturePack_ExtractCurrent(bool forceReload) {
 
 void TexturePack_Extract_Req(struct HttpRequest* item) {
 	String url;
-	uint8_t* data; uint32_t len;
+	cc_uint8* data; cc_uint32 len;
 	struct Stream mem;
 	bool png;
 	ReturnCode res;

@@ -311,7 +311,7 @@ static void ListScreen_MoveForwards(void* screen, void* b) {
 
 static void ListScreen_QuickSort(int left, int right) {
 	StringsBuffer* buffer = &ListScreen.entries; 
-	uint32_t* keys = buffer->flagsBuffer; uint32_t key;
+	cc_uint32* keys = buffer->flagsBuffer; cc_uint32 key;
 
 	while (left < right) {
 		int i = left, j = right;
@@ -934,7 +934,7 @@ static void GenLevelScreen_Gen(void* screen, bool vanilla) {
 	int length = GenLevelScreen_GetInt(s, 2);
 	int seed   = GenLevelScreen_GetSeedInt(s, 3);
 
-	uint64_t volume = (uint64_t)width * height * length;
+	cc_uint64 volume = (cc_uint64)width * height * length;
 	if (volume > Int32_MaxValue) {
 		Chat_AddRaw("&cThe generated map's volume is too big.");
 	} else if (!width || !height || !length) {
@@ -1489,7 +1489,7 @@ static struct KeyBindingsScreen {
 	MenuScreen_Layout	
 	int curI, bindsCount;
 	const char** descs;
-	const uint8_t* binds;
+	const cc_uint8* binds;
 	Widget_LeftClick leftPage, rightPage;
 	InitKeyBindings DoInit;
 	const char* titleText;
@@ -1619,7 +1619,7 @@ static const struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
 	KeyBindingsScreen_MouseDown, Screen_TMouse,      Menu_MouseMove,  MenuScreen_MouseScroll,
 	Menu_OnResize,               Menu_ContextLost,   KeyBindingsScreen_ContextRecreated
 };
-static void KeyBindingsScreen_Show(int bindsCount, const uint8_t* binds, const char** descs, InitKeyBindings doInit) {
+static void KeyBindingsScreen_Show(int bindsCount, const cc_uint8* binds, const char** descs, InitKeyBindings doInit) {
 	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
 	s->grabsInput = true;
 	s->closable   = true;
@@ -1646,7 +1646,7 @@ static void ClassicKeyBindingsScreen_Init(struct KeyBindingsScreen* s) {
 }
 
 void ClassicKeyBindingsScreen_Show(void) {
-	static const uint8_t binds[10] = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN };
+	static const cc_uint8 binds[10] = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN };
 	static const char* descs[10]   = { "Forward", "Back", "Jump", "Chat", "Save loc", "Left", "Right", "Build", "Toggle fog", "Load loc" };
 	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, ClassicKeyBindingsScreen_Init);
 }
@@ -1661,7 +1661,7 @@ static void ClassicHacksKeyBindingsScreen_Init(struct KeyBindingsScreen* s) {
 }
 
 void ClassicHacksKeyBindingsScreen_Show(void) {
-	static const uint8_t binds[6] = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN };
+	static const cc_uint8 binds[6] = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN };
 	static const char* descs[6]   = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
 	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, ClassicHacksKeyBindingsScreen_Init);
 }
@@ -1676,7 +1676,7 @@ static void NormalKeyBindingsScreen_Init(struct KeyBindingsScreen* s) {
 }
 
 void NormalKeyBindingsScreen_Show(void) {
-	static const uint8_t binds[12] = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_PLAYER_LIST, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN, KEYBIND_SEND_CHAT };
+	static const cc_uint8 binds[12] = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_PLAYER_LIST, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN, KEYBIND_SEND_CHAT };
 	static const char* descs[12]   = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, NormalKeyBindingsScreen_Init);
 }
@@ -1692,7 +1692,7 @@ static void HacksKeyBindingsScreen_Init(struct KeyBindingsScreen* s) {
 }
 
 void HacksKeyBindingsScreen_Show(void) {
-	static const uint8_t binds[8] = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_ZOOM_SCROLL, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN, KEYBIND_THIRD_PERSON };
+	static const cc_uint8 binds[8] = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_ZOOM_SCROLL, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN, KEYBIND_THIRD_PERSON };
 	static const char* descs[8] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
 	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, HacksKeyBindingsScreen_Init);
 }
@@ -1708,7 +1708,7 @@ static void OtherKeyBindingsScreen_Init(struct KeyBindingsScreen* s) {
 }
 
 void OtherKeyBindingsScreen_Show(void) {
-	static const uint8_t binds[12] = { KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_HIDE_GUI, KEYBIND_HOTBAR_SWITCH, KEYBIND_DROP_BLOCK,KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN, KEYBIND_AXIS_LINES, KEYBIND_AUTOROTATE, KEYBIND_SMOOTH_CAMERA, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS };
+	static const cc_uint8 binds[12] = { KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_HIDE_GUI, KEYBIND_HOTBAR_SWITCH, KEYBIND_DROP_BLOCK,KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN, KEYBIND_AXIS_LINES, KEYBIND_AUTOROTATE, KEYBIND_SMOOTH_CAMERA, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS };
 	static const char* descs[12]   = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
 	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, OtherKeyBindingsScreen_Init);
 }
@@ -1724,7 +1724,7 @@ static void MouseKeyBindingsScreen_Init(struct KeyBindingsScreen* s) {
 }
 
 void MouseKeyBindingsScreen_Show(void) {
-	static const uint8_t binds[3] = { KEYBIND_MOUSE_LEFT, KEYBIND_MOUSE_MIDDLE, KEYBIND_MOUSE_RIGHT };
+	static const cc_uint8 binds[3] = { KEYBIND_MOUSE_LEFT, KEYBIND_MOUSE_MIDDLE, KEYBIND_MOUSE_RIGHT };
 	static const char* descs[3]   = { "Left", "Middle", "Right" };
 	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, MouseKeyBindingsScreen_Init);
 }
@@ -2972,7 +2972,7 @@ void UrlWarningOverlay_Show(const String* url) {
 static struct TexPackOverlay {
 	MenuScreen_Layout
 	bool deny, alwaysDeny;
-	uint32_t contentLength;
+	cc_uint32 contentLength;
 	String url, identifier;
 	struct ButtonWidget buttons[4];
 	struct TextWidget   labels[4];

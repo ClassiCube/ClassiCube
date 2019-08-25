@@ -12,7 +12,7 @@
 #define MATH_LARGENUM 1000000000.0f
 #define MATH_POS_INF ((float)(1e+300 * 1e+300))
 
-#define Math_Deg2Packed(x) ((uint8_t)((x) * 256.0f / 360.0f))
+#define Math_Deg2Packed(x) ((cc_uint8)((x) * 256.0f / 360.0f))
 #define Math_Packed2Deg(x) ((x) * 360.0f / 256.0f)
 
 float Math_AbsF(float x);
@@ -35,7 +35,7 @@ double Math_FastTan(double x);
 
 int Math_Floor(float value);
 int Math_Ceil(float value);
-int Math_Log2(uint32_t value);
+int Math_Log2(cc_uint32 value);
 int Math_CeilDiv(int a, int b);
 int Math_Sign(float value);
 
@@ -47,7 +47,7 @@ int Math_NextPowOf2(int value);
 bool Math_IsPowOf2(int value);
 #define Math_Clamp(val, min, max) val = val < (min) ? (min) : val;  val = val > (max) ? (max) : val;
 
-typedef uint64_t RNGState;
+typedef cc_uint64 RNGState;
 /* Initialises RNG using seed from current UTC time. */
 void Random_SeedFromCurrentTime(RNGState* rnd);
 /* Initialised RNG using the given seed. */

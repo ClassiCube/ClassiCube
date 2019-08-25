@@ -16,7 +16,7 @@
 
 /* Data for a resizable queue, used for liquid physic tick entries. */
 struct TickQueue {
-	uint32_t* entries;     /* Buffer holding the items in the tick queue */
+	cc_uint32* entries;     /* Buffer holding the items in the tick queue */
 	int capacity; /* Max number of elements in the buffer */
 	int mask;     /* capacity - 1, as capacity is always a power of two */
 	int count;    /* Number of used elements */
@@ -40,7 +40,7 @@ static void TickQueue_Clear(struct TickQueue* queue) {
 }
 
 static void TickQueue_Resize(struct TickQueue* queue) {
-	uint32_t* entries;
+	cc_uint32* entries;
 	int i, idx, capacity;
 
 	if (queue->capacity >= (Int32_MaxValue / 4)) {
@@ -51,7 +51,7 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 
 	capacity = queue->capacity * 2;
 	if (capacity < 32) capacity = 32;
-	entries = (uint32_t*)Mem_Alloc(capacity, 4, "physics tick queue");
+	entries = (cc_uint32*)Mem_Alloc(capacity, 4, "physics tick queue");
 
 	for (i = 0; i < queue->count; i++) {
 		idx = (queue->head + i) & queue->mask;
@@ -67,7 +67,7 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 }
 
 /* Appends an entry to the end of the queue, resizing if necessary. */
-static void TickQueue_Enqueue(struct TickQueue* queue, uint32_t item) {
+static void TickQueue_Enqueue(struct TickQueue* queue, cc_uint32 item) {
 	if (queue->count == queue->capacity)
 		TickQueue_Resize(queue);
 
@@ -77,8 +77,8 @@ static void TickQueue_Enqueue(struct TickQueue* queue, uint32_t item) {
 }
 
 /* Retrieves the entry from the front of the queue. */
-static uint32_t TickQueue_Dequeue(struct TickQueue* queue) {
-	uint32_t result = queue->entries[queue->head];
+static cc_uint32 TickQueue_Dequeue(struct TickQueue* queue) {
+	cc_uint32 result = queue->entries[queue->head];
 	queue->head = (queue->head + 1) & queue->mask;
 	queue->count--;
 	return result;
@@ -223,7 +223,7 @@ static void Physics_DoFalling(int index, BlockID block) {
 }
 
 static bool Physics_CheckItem(struct TickQueue* queue, int* posIndex) {
-	uint32_t item = TickQueue_Dequeue(queue);
+	cc_uint32 item = TickQueue_Dequeue(queue);
 	*posIndex     = (int)(item & PHYSICS_POS_MASK);
 
 	if (item >= PHYSICS_ONE_DELAY) {
@@ -468,7 +468,7 @@ static void Physics_HandleCobblestoneSlab(int index, BlockID block) {
 }
 
 
-static const uint8_t blocksTnt[BLOCK_CPE_COUNT] = {
+static const cc_uint8 blocksTnt[BLOCK_CPE_COUNT] = {
 	0, 1, 0, 0, 1, 0, 0, 1,  1, 1, 1, 1, 0, 0, 1, 1,  1, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,  0, 1, 1, 1, 1, 1, 0, 0,
 	1, 1, 1, 0, 1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1,  1, 1,

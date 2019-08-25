@@ -83,7 +83,7 @@ CC_API void Game_UpdateBlock(int x, int y, int z, BlockID block);
 CC_API void Game_ChangeBlock(int x, int y, int z, BlockID block);
 
 bool Game_CanPick(BlockID block);
-bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, uint8_t* skinType);
+bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, cc_uint8* skinType);
 /* Checks that the given bitmap can be loaded into a native gfx texture. */
 /* (must be power of two size and be <= Gfx_MaxTexWidth/Gfx_MaxHeight) */
 bool Game_ValidateBitmap(const String* file, Bitmap* bmp);

@@ -27,7 +27,7 @@ static struct ResourceFile {
 	short size;
 	bool downloaded;
 	/* downloaded archive */
-	uint8_t* data; uint32_t len;
+	cc_uint8* data; cc_uint32 len;
 } fileResources[4] = {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar",  291 },
 	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     4621 },
@@ -38,7 +38,7 @@ static struct ResourceFile {
 static struct ResourceTexture {
 	const char* filename;
 	/* zip data */
-	uint32_t size, offset, crc32;
+	cc_uint32 size, offset, crc32;
 } textureResources[20] = {
 	/* classic jar files */
 	{ "char.png"     }, { "clouds.png"      }, { "default.png" }, { "particles.png" },
@@ -205,7 +205,7 @@ void Resources_CheckExistence(void) {
 *#########################################################################################################################*/
 static ReturnCode ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture* e) {
 	String name = String_FromReadonly(e->filename);
-	uint8_t header[30 + STRING_SIZE];
+	cc_uint8 header[30 + STRING_SIZE];
 	ReturnCode res;
 	if ((res = s->Position(s, &e->offset))) return res;
 
@@ -229,7 +229,7 @@ static ReturnCode ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture*
 
 static ReturnCode ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture* e) {
 	String name = String_FromReadonly(e->filename);
-	uint8_t header[46 + STRING_SIZE];
+	cc_uint8 header[46 + STRING_SIZE];
 	struct DateTime now;
 	int modTime, modDate;
 
@@ -261,8 +261,8 @@ static ReturnCode ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture
 	return Stream_Write(s, header, 46 + name.length);
 }
 
-static ReturnCode ZipPatcher_EndOfCentralDir(struct Stream* s, uint32_t centralDirBeg, uint32_t centralDirEnd) {
-	uint8_t header[22];
+static ReturnCode ZipPatcher_EndOfCentralDir(struct Stream* s, cc_uint32 centralDirBeg, cc_uint32 centralDirEnd) {
+	cc_uint8 header[22];
 
 	Stream_SetU32_LE(&header[0], 0x06054b50); /* signature */
 	Stream_SetU16_LE(&header[4], 0);          /* disk number */
@@ -277,9 +277,9 @@ static ReturnCode ZipPatcher_EndOfCentralDir(struct Stream* s, uint32_t centralD
 
 static ReturnCode ZipPatcher_FixupLocalFile(struct Stream* s, struct ResourceTexture* e) {
 	String name = String_FromReadonly(e->filename);
-	uint8_t tmp[2048];
-	uint32_t dataBeg, dataEnd;
-	uint32_t i, crc, toRead, read;
+	cc_uint8 tmp[2048];
+	cc_uint32 dataBeg, dataEnd;
+	cc_uint32 i, crc, toRead, read;
 	ReturnCode res;
 
 	dataBeg = e->offset + 30 + name.length;
@@ -309,7 +309,7 @@ static ReturnCode ZipPatcher_FixupLocalFile(struct Stream* s, struct ResourceTex
 	return s->Seek(s, dataEnd);
 }
 
-static ReturnCode ZipPatcher_WriteData(struct Stream* dst, struct ResourceTexture* tex, const uint8_t* data, uint32_t len) {
+static ReturnCode ZipPatcher_WriteData(struct Stream* dst, struct ResourceTexture* tex, const cc_uint8* data, cc_uint32 len) {
 	ReturnCode res;
 	tex->size  = len;
 	tex->crc32 = Utils_CRC32(data, len);
@@ -320,8 +320,8 @@ static ReturnCode ZipPatcher_WriteData(struct Stream* dst, struct ResourceTextur
 }
 
 static ReturnCode ZipPatcher_WriteZipEntry(struct Stream* src, struct ResourceTexture* tex, struct ZipState* state) {
-	uint8_t tmp[2048];
-	uint32_t read;
+	cc_uint8 tmp[2048];
+	cc_uint32 read;
 	struct Stream* dst = (struct Stream*)state->Obj;
 	ReturnCode res;
 
@@ -410,7 +410,7 @@ static ReturnCode ClassicPatcher_ExtractFiles(struct Stream* s) {
 }
 
 /* the x,y of tiles in terrain.png which get patched */
-static struct TilePatch { const char* name; uint8_t x1,y1, x2,y2; } modern_tiles[12] = {
+static struct TilePatch { const char* name; cc_uint8 x1,y1, x2,y2; } modern_tiles[12] = {
 	{ "assets/minecraft/textures/blocks/sandstone_bottom.png", 9,3 },
 	{ "assets/minecraft/textures/blocks/sandstone_normal.png", 9,2 },
 	{ "assets/minecraft/textures/blocks/sandstone_top.png", 9,1, },
@@ -461,7 +461,7 @@ static bool ModernPatcher_SelectEntry(const String* path) {
 static ReturnCode ModernPatcher_MakeAnimations(struct Stream* s, struct Stream* data) {
 	static const String animsPng = String_FromConst("animations.png");
 	struct ResourceTexture* entry;
-	uint8_t anim_data[Bitmap_DataSize(512, 16)];
+	cc_uint8 anim_data[Bitmap_DataSize(512, 16)];
 	Bitmap anim, bmp;
 	ReturnCode res;
 	int i;
@@ -522,7 +522,7 @@ static ReturnCode TexPatcher_NewFiles(struct Stream* s) {
 
 	/* make default animations.txt */
 	entry = Resources_FindTex(&animsTxt);
-	res   = ZipPatcher_WriteData(s, entry, (const uint8_t*)ANIMS_TXT, sizeof(ANIMS_TXT) - 1);
+	res   = ZipPatcher_WriteData(s, entry, (const cc_uint8*)ANIMS_TXT, sizeof(ANIMS_TXT) - 1);
 	if (res) return res;
 
 	/* make ClassiCube gui.png */
@@ -561,7 +561,7 @@ static ReturnCode TexPatcher_Terrain(struct Stream* s) {
 }
 
 static ReturnCode TexPatcher_WriteEntries(struct Stream* s) {
-	uint32_t beg, end;
+	cc_uint32 beg, end;
 	int i;
 	ReturnCode res;
 
@@ -606,12 +606,12 @@ static void TexPatcher_MakeDefaultZip(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------Audio patcher----------------------------------------------------*
 *#########################################################################################################################*/
-#define WAV_FourCC(a, b, c, d) (((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)c << 8) | (uint32_t)d)
+#define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
 
 /* Fixes up the .WAV header after having written all samples */
 static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx) {
-	uint8_t header[44];
-	uint32_t length;
+	cc_uint8 header[44];
+	cc_uint32 length;
 	ReturnCode res;
 
 	res = s->Length(s, &length);
@@ -640,17 +640,17 @@ static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx) 
 
 /* Writes an empty .WAV header and then writes all samples */
 static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) {
-	int16_t* samples;
+	cc_int16* samples;
 	int count;
 	ReturnCode res;
 
 	/* ctx is all 0, so reuse it here for header */
-	res = Stream_Write(s, (const uint8_t*)ctx, 44);
+	res = Stream_Write(s, (const cc_uint8*)ctx, 44);
 	if (res) { Logger_Warn(res, "writing .wav header"); return; }
 
 	res = Vorbis_DecodeHeaders(ctx);
 	if (res) { Logger_Warn(res, "decoding .ogg header"); return; }
-	samples = (int16_t*)Mem_Alloc(ctx->blockSizes[1] * ctx->channels, 2, ".ogg samples");
+	samples = (cc_int16*)Mem_Alloc(ctx->blockSizes[1] * ctx->channels, 2, ".ogg samples");
 
 	for (;;) {
 		res = Vorbis_DecodeFrame(ctx);
@@ -667,7 +667,7 @@ static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) 
 
 static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 	String path; char pathBuffer[STRING_SIZE];
-	uint8_t buffer[OGG_BUFFER_SIZE];
+	cc_uint8 buffer[OGG_BUFFER_SIZE];
 	struct Stream src, ogg, dst;
 	struct VorbisState ctx = { 0 };
 	ReturnCode res;

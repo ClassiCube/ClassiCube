@@ -225,7 +225,7 @@ bool Game_CanPick(BlockID block) {
 	return Blocks.Collide[block] != COLLIDE_LIQUID || Game_BreakableLiquids;
 }
 
-bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, uint8_t* skinType) {
+bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, cc_uint8* skinType) {
 	Bitmap bmp;
 	bool success;
 	ReturnCode res;
@@ -697,10 +697,10 @@ void Game_Free(void* obj) {
 
 #ifdef CC_BUILD_WEB
 #include <emscripten.h>
-static uint64_t lastRender;
+static cc_uint64 lastRender;
 
 static void Game_DoFrame(void) {
-	uint64_t render; 
+	cc_uint64 render; 
 	double time;
 	Game_DoFrameBody()
 }
@@ -711,7 +711,7 @@ static void Game_RunLoop(void) {
 }
 #else
 static void Game_RunLoop(void) {
-	uint64_t lastRender, render; 
+	cc_uint64 lastRender, render; 
 	double time;
 	lastRender = Stopwatch_Measure();
 	for (;;) { Game_DoFrameBody() }

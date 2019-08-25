@@ -191,7 +191,7 @@ static int windowX, windowY;
 /*########################################################################################################################*
 *-----------------------------------------------------Private details-----------------------------------------------------*
 *#########################################################################################################################*/
-static const uint8_t key_map[14 * 16] = {
+static const cc_uint8 key_map[14 * 16] = {
 	0, 0, 0, 0, 0, 0, 0, 0, KEY_BACKSPACE, KEY_TAB, 0, 0, 0, KEY_ENTER, 0, 0,
 	0, 0, 0, KEY_PAUSE, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0, KEY_ESCAPE, 0, 0, 0, 0,
 	KEY_SPACE, KEY_PAGEUP, KEY_PAGEDOWN, KEY_END, KEY_HOME, KEY_LEFT, KEY_UP, KEY_RIGHT, KEY_DOWN, 0, KEY_PRINTSCREEN, 0, KEY_PRINTSCREEN, KEY_INSERT, KEY_DELETE, 0,
@@ -484,7 +484,7 @@ void Clipboard_GetText(String* value) {
 		if (isUnicode) {
 			String_AppendUtf16(value, (Codepoint*)src, size - 2);
 		} else {
-			String_DecodeCP1252(value, (uint8_t*)src,  size - 1);
+			String_DecodeCP1252(value, (cc_uint8*)src,  size - 1);
 		}
 
 		GlobalUnlock(hGlobal);
@@ -853,7 +853,7 @@ void Window_Create(int width, int height) {
 	XSetWindowAttributes attributes = { 0 };
 	XSizeHints hints = { 0 };
 	struct GraphicsMode mode;
-	uintptr_t addr;
+	cc_uintptr addr;
 	int supported, x, y;
 
 	x = Display_CentreX(width);
@@ -861,7 +861,7 @@ void Window_Create(int width, int height) {
 	GraphicsMode_MakeDefault(&mode);
 
 	/* Open a display connection to the X server, and obtain the screen and root window */
-	addr = (uintptr_t)win_display;
+	addr = (cc_uintptr)win_display;
 	Platform_Log3("Display: %x, Screen %i, Root window: %h", &addr, &win_screen, &win_rootWin);
 	Window_RegisterAtoms();
 
@@ -1084,7 +1084,7 @@ void Window_ProcessEvents(void) {
 			/* TODO: Does this work for every non-english layout? works for latin keys (e.g. finnish) */
 			char raw; int i;
 			for (i = 0; i < status; i++) {
-				if (!Convert_TryUnicodeToCP437((uint8_t)data[i], &raw)) continue;
+				if (!Convert_TryUnicodeToCP437((cc_uint8)data[i], &raw)) continue;
 				Event_RaiseInt(&KeyEvents.Press, raw);
 			}
 		} break;
@@ -1148,7 +1148,7 @@ void Window_ProcessEvents(void) {
 				Atom prop_type;
 				int prop_format;
 				unsigned long items, after;
-				uint8_t* data = NULL;
+				cc_uint8* data = NULL;
 
 				XGetWindowProperty(win_display, win_handle, xa_data_sel, 0, 1024, false, 0,
 					&prop_type, &prop_format, &items, &after, &data);
@@ -1228,7 +1228,7 @@ void Cursor_SetVisible(bool visible) {
 *-----------------------------------------------------X11 message box-----------------------------------------------------*
 *#########################################################################################################################*/
 static Display* dpy;
-static unsigned long X11_Col(uint8_t r, uint8_t g, uint8_t b) {
+static unsigned long X11_Col(cc_uint8 r, cc_uint8 g, cc_uint8 b) {
     Colormap cmap = XDefaultColormap(dpy, DefaultScreen(dpy));
     XColor col = { 0 };
     col.red   = r << 8;
@@ -1459,7 +1459,7 @@ static XImage* fb_image;
 void Window_AllocFramebuffer(Bitmap* bmp) {
 	if (!fb_gc) fb_gc = XCreateGC(win_display, win_handle, 0, NULL);
 
-	bmp->Scan0 = (uint8_t*)Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
+	bmp->Scan0 = (cc_uint8*)Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
 	fb_image   = XCreateImage(win_display, win_visual.visual,
 		win_visual.depth, ZPixmap, 0, (char*)bmp->Scan0,
 		bmp->Width, bmp->Height, 32, 0);
@@ -1503,7 +1503,7 @@ static void GLContext_SetFullscreen(void);
 *-----------------------------------------------------Private details-----------------------------------------------------*
 *#########################################################################################################################*/
 /* Sourced from https://www.meandmark.com/keycodes.html */
-static const uint8_t key_map[8 * 16] = {
+static const cc_uint8 key_map[8 * 16] = {
 	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
 	'Y', 'T', '1', '2', '3', '4', '6', '5', KEY_EQUALS, '9', '7', KEY_MINUS, '8', '0', KEY_RBRACKET, 'O',
 	'U', KEY_LBRACKET, 'I', 'P', KEY_ENTER, 'L', 'J', KEY_QUOTE, 'K', KEY_SEMICOLON, KEY_BACKSLASH, KEY_COMMA, KEY_SLASH, 'N', 'M', KEY_PERIOD,
@@ -1859,7 +1859,7 @@ void Clipboard_GetText(String* value) {
 	} else if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF8, &outData))) {
 		ptr = CFDataGetBytePtr(outData);
 		len = CFDataGetLength(outData);
-		if (ptr) String_AppendUtf8(value, (uint8_t*)ptr, len);
+		if (ptr) String_AppendUtf8(value, (cc_uint8*)ptr, len);
 	}
 }
 
@@ -3048,8 +3048,8 @@ void Window_AllocFramebuffer(Bitmap* bmp) {
 
 void Window_DrawFramebuffer(Rect2D r) {
 	ANativeWindow_Buffer buffer;
-	uint32_t* src;
-	uint32_t* dst;
+	cc_uint32* src;
+	cc_uint32* dst;
 	ARect b;
 	int y, res, size;
 
@@ -3072,8 +3072,8 @@ void Window_DrawFramebuffer(Rect2D r) {
 	Platform_Log3("WIN SIZE: %i,%i  %i", &width, &height, &format);
 	Platform_Log4("BUF SIZE: %i,%i  %i/%i", &buffer.width, &buffer.height, &buffer.format, &buffer.stride);
 
-	src  = (uint32_t*)fb_bmp.Scan0 + b.left;
-	dst  = (uint32_t*)buffer.bits  + b.left;
+	src  = (cc_uint32*)fb_bmp.Scan0 + b.left;
+	dst  = (cc_uint32*)buffer.bits  + b.left;
 	size = (b.right - b.left) * 4;
 
 	for (y = b.top; y < b.bottom; y++) {

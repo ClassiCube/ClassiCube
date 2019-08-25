@@ -38,22 +38,22 @@ void Utils_UNSAFE_GetFilename(STRING_REF String* path);
 int Utils_AccumulateWheelDelta(float* accumulator, float delta);
 #define Utils_AdjViewDist(value) ((int)(1.4142135f * (value)))
 
-uint8_t Utils_CalcSkinType(const Bitmap* bmp);
-uint32_t Utils_CRC32(const uint8_t* data, uint32_t length);
+cc_uint8 Utils_CalcSkinType(const Bitmap* bmp);
+cc_uint32 Utils_CRC32(const cc_uint8* data, cc_uint32 length);
 /* CRC32 lookup table, for faster CRC32 calculations. */
 /* NOTE: This cannot be just indexed by byte value - see Utils_CRC32 implementation. */
-extern const uint32_t Utils_Crc32Table[256];
-CC_NOINLINE void Utils_Resize(void** buffer, int* capacity, uint32_t elemSize, int defCapacity, int expandElems);
-CC_NOINLINE bool Utils_ParseIP(const String* ip, uint8_t* data);
+extern const cc_uint32 Utils_Crc32Table[256];
+CC_NOINLINE void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapacity, int expandElems);
+CC_NOINLINE bool Utils_ParseIP(const String* ip, cc_uint8* data);
 
 /* Converts blocks of 3 bytes into 4 ASCII characters. (pads if needed) */
 /* Returns the number of ASCII characters written. */
 /* NOTE: You MUST ensure that dst is appropriately sized. */
-int Convert_ToBase64(const uint8_t* src, int len, char* dst);
+int Convert_ToBase64(const cc_uint8* src, int len, char* dst);
 /* Converts blocks of 4 ASCII characters into 3 bytes. */
 /* Returns the number of bytes written. */
 /* NOTE: You MUST ensure that dst is appropriately sized. */
-int Convert_FromBase64(const char* src, int len, uint8_t* dst);
+int Convert_FromBase64(const char* src, int len, cc_uint8* dst);
 
 struct EntryList {
 	const char* path;

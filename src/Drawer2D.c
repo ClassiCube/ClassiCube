@@ -188,9 +188,9 @@ void Gradient_Vertical(Bitmap* bmp, BitmapCol a, BitmapCol b,
 		row = Bitmap_GetRow(bmp, y + yy) + x;
 		t   = (float)yy / (height - 1); /* so last row has colour of b */
 
-		col.B = (uint8_t)Math_Lerp(a.B, b.B, t);	
-		col.G = (uint8_t)Math_Lerp(a.G, b.G, t);
-		col.R = (uint8_t)Math_Lerp(a.R, b.R, t);
+		col.B = (cc_uint8)Math_Lerp(a.B, b.B, t);	
+		col.G = (cc_uint8)Math_Lerp(a.G, b.G, t);
+		col.R = (cc_uint8)Math_Lerp(a.R, b.R, t);
 
 		for (xx = 0; xx < width; xx++) { row[xx] = col; }
 	}
@@ -203,9 +203,9 @@ void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
 
 	/* Pre compute the alpha blended source colour */
-	col.R = (uint8_t)(col.R * blend / 255);
-	col.G = (uint8_t)(col.G * blend / 255);
-	col.B = (uint8_t)(col.B * blend / 255);
+	col.R = (cc_uint8)(col.R * blend / 255);
+	col.G = (cc_uint8)(col.G * blend / 255);
+	col.B = (cc_uint8)(col.B * blend / 255);
 	blend = 255 - blend; /* inverse for existing pixels */
 
 	t = 0;
@@ -225,16 +225,16 @@ void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
 	}
 }
 
-void Gradient_Tint(Bitmap* bmp, uint8_t tintA, uint8_t tintB,
+void Gradient_Tint(Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 				   int x, int y, int width, int height) {
 	BitmapCol* row;
-	uint8_t tint;
+	cc_uint8 tint;
 	int xx, yy;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
 
 	for (yy = 0; yy < height; yy++) {
 		row  = Bitmap_GetRow(bmp, y + yy) + x;
-		tint = (uint8_t)Math_Lerp(tintA, tintB, (float)yy / height);
+		tint = (cc_uint8)Math_Lerp(tintA, tintB, (float)yy / height);
 
 		for (xx = 0; xx < width; xx++) {
 			row[xx].B = (row[xx].B * tint) / 255;
@@ -245,7 +245,7 @@ void Gradient_Tint(Bitmap* bmp, uint8_t tintA, uint8_t tintB,
 }
 
 void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size, 
-						uint8_t* indices, BitmapCol* palette) {
+						cc_uint8* indices, BitmapCol* palette) {
 	BitmapCol* row;
 	BitmapCol col;
 	int xx, yy;
@@ -358,7 +358,7 @@ CC_NOINLINE static BitmapCol Drawer2D_ShadowCol(BitmapCol c) {
 #define Drawer2D_ShadowOffset(point) (point / 8)
 #define Drawer2D_XPadding(point) (Math_CeilDiv(point, 8))
 static int Drawer2D_Width(int point, char c) {
-	return Math_CeilDiv(tileWidths[(uint8_t)c] * point, tileSize);
+	return Math_CeilDiv(tileWidths[(cc_uint8)c] * point, tileSize);
 }
 static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
 
@@ -370,7 +370,7 @@ void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale) {
 	padding = (tex->Height - point) / scale;
 	vAdj    = (float)padding / Math_NextPowOf2(tex->Height);
 	tex->uv.V1 += vAdj; tex->uv.V2 -= vAdj;
-	tex->Height -= (uint16_t)(padding * 2);
+	tex->Height -= (cc_uint16)(padding * 2);
 }
 
 void Drawer2D_ReducePadding_Height(int* height, int point, int scale) {
@@ -426,9 +426,9 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	BitmapCol* srcRow, src;
 	BitmapCol* dstRow, dst;
 
-	uint8_t coords[256];
+	cc_uint8 coords[256];
 	BitmapCol cols[256];
-	uint16_t dstWidths[256];
+	cc_uint16 dstWidths[256];
 
 	col = Drawer2D_Cols['f'];
 	if (shadow) {
@@ -654,10 +654,10 @@ void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 /*########################################################################################################################*
 *---------------------------------------------------Drawer2D component----------------------------------------------------*
 *#########################################################################################################################*/
-static void Drawer2D_HexEncodedCol(int i, int hex, uint8_t lo, uint8_t hi) {
-	Drawer2D_Cols[i].R = (uint8_t)(lo * ((hex >> 2) & 1) + hi * (hex >> 3));
-	Drawer2D_Cols[i].G = (uint8_t)(lo * ((hex >> 1) & 1) + hi * (hex >> 3));
-	Drawer2D_Cols[i].B = (uint8_t)(lo * ((hex >> 0) & 1) + hi * (hex >> 3));
+static void Drawer2D_HexEncodedCol(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
+	Drawer2D_Cols[i].R = (cc_uint8)(lo * ((hex >> 2) & 1) + hi * (hex >> 3));
+	Drawer2D_Cols[i].G = (cc_uint8)(lo * ((hex >> 1) & 1) + hi * (hex >> 3));
+	Drawer2D_Cols[i].B = (cc_uint8)(lo * ((hex >> 0) & 1) + hi * (hex >> 3));
 	Drawer2D_Cols[i].A = 255;
 }
 

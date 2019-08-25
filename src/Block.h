@@ -53,30 +53,30 @@ CC_VAR extern struct _BlockLists {
 	/* How thick fog is when player is inside this block. */
 	float FogDensity[BLOCK_COUNT];
 	/* Basic collision type of this block. (gas, liquid, or solid) */
-	uint8_t Collide[BLOCK_COUNT];
+	cc_uint8 Collide[BLOCK_COUNT];
 	/* Extended collision type of this block, usually same as basic. */
 	/* NOTE: Not always the case. (e.g. ice, water, lava, rope differ) */
-	uint8_t ExtendedCollide[BLOCK_COUNT];
+	cc_uint8 ExtendedCollide[BLOCK_COUNT];
 	/* Speed multiplier when player is touching this block. */
 	/* Can be < 1 to slow player down, or > 1 to speed up. */
 	float SpeedMultiplier[BLOCK_COUNT];
 	/* Bit flags of which faces of this block uses light colour from neighbouring blocks. */
 	/* e.g. a block with Min.X of 0.0 uses light colour at X-1,Y,Z for XMIN face. */
 	/* e.g. a block with Min.X of 0.1 uses light colour at X,Y,Z   for XMIN face. */
-	uint8_t LightOffset[BLOCK_COUNT];
+	cc_uint8 LightOffset[BLOCK_COUNT];
 	/* Draw method used when rendering this block. See DrawType enum. */
-	uint8_t Draw[BLOCK_COUNT];
+	cc_uint8 Draw[BLOCK_COUNT];
 	/* Sound played when the player manually destroys this block. See SoundType enum. */
-	uint8_t DigSounds[BLOCK_COUNT];
+	cc_uint8 DigSounds[BLOCK_COUNT];
 	/* Sound played when the player walks on this block. See SoundType enum. */
-	uint8_t StepSounds[BLOCK_COUNT];
+	cc_uint8 StepSounds[BLOCK_COUNT];
 	/* Whether fog colour is used to apply a tint effect to this block. */
 	bool Tinted[BLOCK_COUNT];
 	/* Whether this block has an opaque draw type, min of (0,0,0), and max of (1,1,1) */
 	bool FullOpaque[BLOCK_COUNT];
 	/* Offset/variation mode of this block. (only when drawn as a sprite) */
 	/* Some modes slightly randomly offset blocks to produce nicer looking clumps. */
-	uint8_t SpriteOffset[BLOCK_COUNT];
+	cc_uint8 SpriteOffset[BLOCK_COUNT];
 
 	/* Coordinates of min corner of this block for collisions. */
 	Vec3 MinBB[BLOCK_COUNT];
@@ -97,17 +97,17 @@ CC_VAR extern struct _BlockLists {
 	bool CanDelete[BLOCK_COUNT];
 
 	/* Bit flags of faces hidden of two neighbouring blocks. */
-	uint8_t Hidden[BLOCK_COUNT * BLOCK_COUNT];
+	cc_uint8 Hidden[BLOCK_COUNT * BLOCK_COUNT];
 	/* Bit flags of which faces of this block can stretch with greedy meshing. */
-	uint8_t CanStretch[BLOCK_COUNT];
+	cc_uint8 CanStretch[BLOCK_COUNT];
 } Blocks;
 
 #define Block_Tint(col, block)\
 if (Blocks.Tinted[block]) {\
 	PackedCol tintCol = Blocks.FogCol[block];\
-	col.R = (uint8_t)(col.R * tintCol.R / 255);\
-	col.G = (uint8_t)(col.G * tintCol.G / 255);\
-	col.B = (uint8_t)(col.B * tintCol.B / 255);\
+	col.R = (cc_uint8)(col.R * tintCol.R / 255);\
+	col.G = (cc_uint8)(col.G * tintCol.G / 255);\
+	col.B = (cc_uint8)(col.B * tintCol.B / 255);\
 }
 
 /* Returns whether the given block has been changed from default. */
@@ -117,9 +117,9 @@ void Block_SetCustomDefined(BlockID block, bool defined);
 void Block_DefineCustom(BlockID block);
 
 /* Sets the basic and extended collide types of the given block. */
-void Block_SetCollide(BlockID block, uint8_t collide);
+void Block_SetCollide(BlockID block, cc_uint8 collide);
 /* Sets draw type and updates related state (e.g. FullOpaque) for the given block. */
-void Block_SetDrawType(BlockID block, uint8_t draw);
+void Block_SetDrawType(BlockID block, cc_uint8 draw);
 /* Resets all the properties of the given block to default. */
 void Block_ResetProps(BlockID block);
 

@@ -7,9 +7,9 @@ struct _DrawerData Drawer;
 /* Performance critical, use macro to ensure always inlined. */
 #define ApplyTint \
 if (Drawer.Tinted) {\
-col.R = (uint8_t)(col.R * Drawer.TintCol.R / 255);\
-col.G = (uint8_t)(col.G * Drawer.TintCol.G / 255);\
-col.B = (uint8_t)(col.B * Drawer.TintCol.B / 255);\
+col.R = (cc_uint8)(col.R * Drawer.TintCol.R / 255);\
+col.G = (cc_uint8)(col.G * Drawer.TintCol.G / 255);\
+col.B = (cc_uint8)(col.B * Drawer.TintCol.B / 255);\
 }
 
 

@@ -356,7 +356,7 @@ static void EnvRenderer_UpdateSkybox(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Weather--------------------------------------------------------*
 *#########################################################################################################################*/
-int16_t* Weather_Heightmap;
+cc_int16* Weather_Heightmap;
 static GfxResourceID rain_tex, snow_tex, weather_vb;
 static double weather_accumulator;
 static IVec3 lastPos;
@@ -367,7 +367,7 @@ static IVec3 lastPos;
 
 static void EnvRenderer_InitWeatherHeightmap(void) {
 	int i;
-	Weather_Heightmap = (int16_t*)Mem_Alloc(World.Width * World.Length, 2, "weather heightmap");
+	Weather_Heightmap = (cc_int16*)Mem_Alloc(World.Width * World.Length, 2, "weather heightmap");
 	
 	for (i = 0; i < World.Width * World.Length; i++) {
 		Weather_Heightmap[i] = Int16_MaxValue;
@@ -386,7 +386,7 @@ for (y = maxY; y >= 0; y--, i -= World.OneY) {\
 
 static int EnvRenderer_CalcRainHeightAt(int x, int maxY, int z, int hIndex) {
 	int i = World_Pack(x, maxY, z), y;
-	uint8_t draw;
+	cc_uint8 draw;
 
 #ifndef EXTENDED_BLOCKS
 	EnvRenderer_RainCalcBody(World.Blocks[i]);
@@ -494,7 +494,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 			dist  = dx * dx + dz * dz;
 			alpha = EnvRenderer_RainAlphaAt((float)dist);
 			Math_Clamp(alpha, 0.0f, 255.0f);
-			col.A = (uint8_t)alpha;
+			col.A = (cc_uint8)alpha;
 
 			worldV = vOffset + (z & 1) / 2.0f - (x & 0x0F) / 16.0f;
 			v1 = y            / 6.0f + worldV; 

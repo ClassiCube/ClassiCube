@@ -186,13 +186,13 @@ void Gfx_Mode2D(int width, int height);
 void Gfx_Mode3D(void);
 
 /* Fills out indices array with {0,1,2} {2,3,0}, {4,5,6} {6,7,4} etc. */
-void Gfx_MakeIndices(uint16_t* indices, int iCount);
+void Gfx_MakeIndices(cc_uint16* indices, int iCount);
 /* Sets appropriate alpha test/blending for given block draw type. */
-void Gfx_SetupAlphaState(uint8_t draw);
+void Gfx_SetupAlphaState(cc_uint8 draw);
 /* Undoes changes to alpha test/blending state by Gfx_SetupAlphaState. */
-void Gfx_RestoreAlphaState(uint8_t draw);
+void Gfx_RestoreAlphaState(cc_uint8 draw);
 /* Generates the next mipmaps level bitmap for the given bitmap. */
-void Gfx_GenMipmaps(int width, int height, uint8_t* lvlScan0, uint8_t* scan0);
+void Gfx_GenMipmaps(int width, int height, cc_uint8* lvlScan0, cc_uint8* scan0);
 /* Returns the maximum number of mipmaps levels used for given size. */
 int Gfx_MipmapsLevels(int width, int height);
 

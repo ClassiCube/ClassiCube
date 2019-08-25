@@ -53,7 +53,7 @@ struct LWebTask {
 	String URL;        /* URL this task is downloading from/uploading to. */
 	TimeMS Start;      /* Point in time this task was started at. */
 	/* Called when task successfully downloaded/uploaded data. */
-	void (*Handle)(uint8_t* data, uint32_t len);
+	void (*Handle)(cc_uint8* data, cc_uint32 len);
 };
 void LWebTask_Tick(struct LWebTask* task);
 void LWebTask_DisplayError(struct LWebTask* task, const char* action, String* dst);
@@ -83,7 +83,7 @@ void FetchServerTask_Run(const String* hash);
 extern struct FetchServersData {
 	struct LWebTask Base;
 	struct ServerInfo* Servers; /* List of all public servers on server list. */
-	uint16_t* Orders;           /* Order of each server (after sorting) */
+	cc_uint16* Orders;           /* Order of each server (after sorting) */
 	int NumServers;             /* Number of public servers. */
 } FetchServersTask;
 void FetchServersTask_Run(void);

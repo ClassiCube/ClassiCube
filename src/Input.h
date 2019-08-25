@@ -108,9 +108,9 @@ enum KeyBind_ {
 typedef int KeyBind;
 
 /* The keys that are bound to each key binding. */
-extern uint8_t KeyBinds[KEYBIND_COUNT];
+extern cc_uint8 KeyBinds[KEYBIND_COUNT];
 /* Default key that each key binding is bound to */
-extern const uint8_t KeyBind_Defaults[KEYBIND_COUNT];
+extern const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT];
 
 /* Gets whether the key bound to the given key binding is pressed. */
 bool KeyBind_IsPressed(KeyBind binding);
@@ -120,11 +120,11 @@ void KeyBind_Set(KeyBind binding, Key key);
 void KeyBind_Init(void);
 
 
-extern const uint8_t Hotkeys_LWJGL[256];
+extern const cc_uint8 Hotkeys_LWJGL[256];
 struct HotkeyData {
 	int TextIndex;     /* contents to copy directly into the input bar */
-	uint8_t Trigger;   /* Member of Key enumeration */
-	uint8_t Flags;     /* HotkeyModifiers bitflags */
+	cc_uint8 Trigger;   /* Member of Key enumeration */
+	cc_uint8 Flags;     /* HotkeyModifiers bitflags */
 	bool StaysOpen;    /* whether the user is able to enter further input */
 };
 
@@ -136,16 +136,16 @@ enum HotkeyModifiers {
 };
 
 /* Adds or updates a new hotkey. */
-void Hotkeys_Add(Key trigger, uint8_t modifiers, const String* text, bool more);
+void Hotkeys_Add(Key trigger, cc_uint8 modifiers, const String* text, bool more);
 /* Removes the given hotkey. */
-bool Hotkeys_Remove(Key trigger, uint8_t modifiers);
+bool Hotkeys_Remove(Key trigger, cc_uint8 modifiers);
 /* Returns the first hotkey which is bound to the given key and has its modifiers pressed. */
 /* NOTE: The hotkeys list is sorted, so hotkeys with most modifiers are checked first. */
 int Hotkeys_FindPartial(Key key);
 /* Initalises and loads hotkeys from options. */
 void Hotkeys_Init(void);
 /* Called when user has removed a hotkey. (removes it from options) */
-void Hotkeys_UserRemovedHotkey(Key trigger, uint8_t modifiers);
+void Hotkeys_UserRemovedHotkey(Key trigger, cc_uint8 modifiers);
 /* Called when user has added a hotkey. (Adds it to options) */
-void Hotkeys_UserAddedHotkey(Key trigger, uint8_t modifiers, bool moreInput, const String* text);
+void Hotkeys_UserAddedHotkey(Key trigger, cc_uint8 modifiers, bool moreInput, const String* text);
 #endif

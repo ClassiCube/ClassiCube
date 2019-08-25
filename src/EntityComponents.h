@@ -67,7 +67,7 @@ struct HacksComp {
 
 void HacksComp_Init(struct HacksComp* hacks);
 bool HacksComp_CanJumpHigher(struct HacksComp* hacks);
-void HacksComp_SetUserType(struct HacksComp* hacks, uint8_t value, bool setBlockPerms);
+void HacksComp_SetUserType(struct HacksComp* hacks, cc_uint8 value, bool setBlockPerms);
 /* Determines hacks permissions based on flags, then calls HacksComp_Update */
 /* e.g. +ophax allows all hacks if op, -push disables entity pushing */
 void HacksComp_RecheckFlags(struct HacksComp* hacks);

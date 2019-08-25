@@ -2,16 +2,16 @@
 #include "ExtMath.h"
 
 PackedCol PackedCol_Scale(PackedCol value, float t) {
-	value.R = (uint8_t)(value.R * t);
-	value.G = (uint8_t)(value.G * t);
-	value.B = (uint8_t)(value.B * t);
+	value.R = (cc_uint8)(value.R * t);
+	value.G = (cc_uint8)(value.G * t);
+	value.B = (cc_uint8)(value.B * t);
 	return value;
 }
 
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t) {
-	a.R = (uint8_t)Math_Lerp(a.R, b.R, t);
-	a.G = (uint8_t)Math_Lerp(a.G, b.G, t);
-	a.B = (uint8_t)Math_Lerp(a.B, b.B, t);
+	a.R = (cc_uint8)Math_Lerp(a.R, b.R, t);
+	a.G = (cc_uint8)Math_Lerp(a.G, b.G, t);
+	a.B = (cc_uint8)Math_Lerp(a.B, b.B, t);
 	return a;
 }
 
@@ -61,9 +61,9 @@ bool PackedCol_TryParseHex(const String* str, PackedCol* value) {
 	if (buffer[0] == '#') buffer++;
 	if (!PackedCol_Unhex(buffer, bits, 6)) return false;
 
-	value->R = (uint8_t)((bits[0] << 4) | bits[1]);
-	value->G = (uint8_t)((bits[2] << 4) | bits[3]);
-	value->B = (uint8_t)((bits[4] << 4) | bits[5]);
+	value->R = (cc_uint8)((bits[0] << 4) | bits[1]);
+	value->G = (cc_uint8)((bits[2] << 4) | bits[3]);
+	value->B = (cc_uint8)((bits[4] << 4) | bits[5]);
 	value->A = 255;
 	return true;
 }

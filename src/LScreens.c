@@ -354,7 +354,7 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 	struct ColoursScreen* s = &ColoursScreen_Instance;
 	int index = LScreen_IndexOf((struct LScreen*)s, w);
 	BitmapCol* col;
-	uint8_t r, g, b;
+	cc_uint8 r, g, b;
 
 	if (index < 3)       col = &Launcher_BackgroundCol;
 	else if (index < 6)  col = &Launcher_ButtonBorderCol;
@@ -376,7 +376,7 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
 	struct LInput* w;
 	int index, newCol;
-	uint8_t col;
+	cc_uint8 col;
 
 	if (!s->selectedWidget) return;
 	index = LScreen_IndexOf(s, s->selectedWidget);
@@ -543,8 +543,8 @@ static void DirectConnectScreen_StartClient(void* w, int x, int y) {
 	const String* mppass = &DirectConnectScreen_Instance.iptMppass.Text;
 
 	String ip, port;
-	uint8_t  raw_ip[4];
-	uint16_t raw_port;
+	cc_uint8  raw_ip[4];
+	cc_uint16 raw_port;
 
 	int index = String_LastIndexOf(addr, ':');
 	if (index <= 0 || index == addr->length - 1) {
@@ -796,8 +796,8 @@ static void MainScreen_UnhoverWidget(struct LScreen* s_, struct LWidget* w) {
 	LWidget_Redraw(&s->lblStatus);
 }
 
-CC_NOINLINE static uint32_t MainScreen_GetVersion(const String* version) {
-	uint8_t raw[4] = { 0, 0, 0, 0 };
+CC_NOINLINE static cc_uint32 MainScreen_GetVersion(const String* version) {
+	cc_uint8 raw[4] = { 0, 0, 0, 0 };
 	String parts[4];
 	int i, count;
 	
@@ -811,7 +811,7 @@ CC_NOINLINE static uint32_t MainScreen_GetVersion(const String* version) {
 
 static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
 	static const String currentStr = String_FromConst(GAME_APP_VER);
-	uint32_t latest, current;
+	cc_uint32 latest, current;
 
 	if (!CheckUpdateTask.Base.Working)   return;
 	LWebTask_Tick(&CheckUpdateTask.Base);
@@ -1385,7 +1385,7 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS 
 		String_AppendConst(&str, "&cCheck failed");
 	} else {
 		now   = DateTime_CurrentUTC_MS();
-		/* must divide as uint64_t, int delta overflows after 26 days */
+		/* must divide as cc_uint64, int delta overflows after 26 days */
 		delta = (int)((now - time) / 1000);
 
 		if (delta < SECS_PER_MIN) {

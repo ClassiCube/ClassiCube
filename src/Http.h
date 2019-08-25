@@ -25,15 +25,15 @@ struct HttpRequest {
 	TimeMS TimeAdded;       /* Time this request was added to queue of requests. */
 	TimeMS TimeDownloaded;  /* Time response contents were completely downloaded. */
 	int StatusCode;         /* HTTP status code returned in the response. */
-	uint32_t ContentLength; /* HTTP content length returned in the response. */
+	cc_uint32 ContentLength; /* HTTP content length returned in the response. */
 
 	ReturnCode Result; /* 0 on success, otherwise platform-specific error. */
-	uint8_t*   Data;   /* Contents of the response. (i.e. result data) */
-	uint32_t   Size;   /* Size of the contents. (may still be non-zero for non 200 status codes) */
+	cc_uint8*   Data;   /* Contents of the response. (i.e. result data) */
+	cc_uint32   Size;   /* Size of the contents. (may still be non-zero for non 200 status codes) */
 
 	char LastModified[STRING_SIZE]; /* Time item cached at (if at all) */
 	char Etag[STRING_SIZE];         /* ETag of cached item (if any) */
-	uint8_t RequestType;            /* See the various REQUEST_TYPE_ */
+	cc_uint8 RequestType;            /* See the various REQUEST_TYPE_ */
 	bool Success;                   /* Whether Result is 0, status is 200, and data is not NULL */
 	struct EntryList* Cookies;      /* Cookie list sent in requests. May be modified by the response. */
 };
@@ -51,13 +51,13 @@ void Http_AsyncGetData(const String* url, bool priority, const String* id);
 void Http_AsyncGetHeaders(const String* url, bool priority, const String* id);
 /* Asynchronously performs a http POST request. (e.g. to submit data) */
 /* NOTE: You don't have to persist data, a copy is made of it. */
-void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, uint32_t size, struct EntryList* cookies);
+void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, cc_uint32 size, struct EntryList* cookies);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 /* Also sets the If-Modified-Since and If-None-Match headers. (if not NULL)  */
 void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, const String* lastModified, const String* etag, struct EntryList* cookies);
 
 /* Encodes data using % or URL encoding. */
-void Http_UrlEncode(String* dst, const uint8_t* data, int len);
+void Http_UrlEncode(String* dst, const cc_uint8* data, int len);
 /* Converts characters to UTF8, then calls Http_URlEncode on them. */
 void Http_UrlEncodeUtf8(String* dst, const String* src);
 /* Outputs more detailed information about errors with http requests. */

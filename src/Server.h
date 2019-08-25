@@ -64,7 +64,7 @@ CC_VAR extern struct _ServerConnectionData {
 	void (*SendPosition)(Vec3 pos, float rotY, float headX);
 	/* Sends raw data to the server. */
 	/* NOTE: Prefer SendBlock/Position/Chat instead, this does NOT work in singleplayer. */
-	void (*SendData)(const uint8_t* data, uint32_t len);
+	void (*SendData)(const cc_uint8* data, cc_uint32 len);
 
 	/* The current name of the server. (Shows as first line when loading) */
 	String Name;
@@ -75,7 +75,7 @@ CC_VAR extern struct _ServerConnectionData {
 	String AppName;
 
 	/* Buffer to data to send to the server. */
-	uint8_t* WriteBuffer;
+	cc_uint8* WriteBuffer;
 	/* Whether the player is connected to singleplayer/internal server. */
 	bool IsSinglePlayer;
 	/* Whether the player has been disconnected from the server. */
@@ -100,8 +100,8 @@ CC_VAR extern struct _ServerConnectionData {
 /* Otherwise just calls World_ApplyTexturePack. */
 void Server_RetrieveTexturePack(const String* url);
 
-typedef void (*Net_Handler)(uint8_t* data);
-extern uint16_t Net_PacketSizes[OPCODE_COUNT];
+typedef void (*Net_Handler)(cc_uint8* data);
+extern cc_uint16 Net_PacketSizes[OPCODE_COUNT];
 extern Net_Handler Net_Handlers[OPCODE_COUNT];
 #define Net_Set(opcode, handler, size) Net_Handlers[opcode] = handler; Net_PacketSizes[opcode] = size;
 
