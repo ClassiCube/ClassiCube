@@ -63,7 +63,7 @@ String Game_Username = String_FromArray(Game_UsernameBuffer);
 String Game_Mppass   = String_FromArray(Game_MppassBuffer);
 String Game_Hash     = String_FromArray(Game_HashBuffer);
 
-const char* FpsLimit_Names[FPS_LIMIT_COUNT] = {
+const char* const FpsLimit_Names[FPS_LIMIT_COUNT] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "Limit144FPS", "LimitNone",
 };
 

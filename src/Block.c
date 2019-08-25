@@ -11,7 +11,7 @@
 
 struct _BlockLists Blocks;
 
-const char* Sound_Names[SOUND_COUNT] = {
+const char* const Sound_Names[SOUND_COUNT] = {
 	"none", "wood", "gravel", "grass", "stone",
 	"metal", "glass", "cloth", "sand", "snow",
 };

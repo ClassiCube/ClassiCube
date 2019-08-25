@@ -11,7 +11,7 @@
 /*########################################################################################################################*
 *----------------------------------------------------------Misc-----------------------------------------------------------*
 *#########################################################################################################################*/
-int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount) {
+int Utils_ParseEnum(const String* text, int defValue, const char* const* names, int namesCount) {
 	int i;
 	for (i = 0; i < namesCount; i++) {
 		if (String_CaselessEqualsConst(text, names[i])) return i;

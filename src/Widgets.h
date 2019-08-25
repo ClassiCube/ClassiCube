@@ -148,21 +148,21 @@ struct MenuInputVTABLE {
 };
 
 struct MenuInputDesc {
-	struct MenuInputVTABLE* VTABLE;
+	const struct MenuInputVTABLE* VTABLE;
 	union {
-		struct { const char** Names; int Count; } e;
+		struct { const char* const* Names; int Count; } e;
 		struct { int Min, Max, Default; } i;
 		struct { float Min, Max, Default; } f;
 		struct { PackedCol Default; } h;
 	} meta;
 };
 
-extern struct MenuInputVTABLE HexValidator_VTABLE;
-extern struct MenuInputVTABLE IntValidator_VTABLE;
-extern struct MenuInputVTABLE SeedValidator_VTABLE;
-extern struct MenuInputVTABLE FloatValidator_VTABLE;
-extern struct MenuInputVTABLE PathValidator_VTABLE;
-extern struct MenuInputVTABLE StringValidator_VTABLE;
+extern const struct MenuInputVTABLE HexValidator_VTABLE;
+extern const struct MenuInputVTABLE IntValidator_VTABLE;
+extern const struct MenuInputVTABLE SeedValidator_VTABLE;
+extern const struct MenuInputVTABLE FloatValidator_VTABLE;
+extern const struct MenuInputVTABLE PathValidator_VTABLE;
+extern const struct MenuInputVTABLE StringValidator_VTABLE;
 
 #define MenuInput_Hex(v, def) v.VTABLE = &HexValidator_VTABLE; v.meta.h.Default = def;
 #define MenuInput_Int(v, lo, hi, def) v.VTABLE = &IntValidator_VTABLE; v.meta.i.Min = lo; v.meta.i.Max = hi; v.meta.i.Default = def;

@@ -1250,7 +1250,7 @@ static void Hex_Default(struct MenuInputDesc* d, String* value) {
 	PackedCol_ToHex(value, d->meta.h.Default);
 }
 
-struct MenuInputVTABLE HexValidator_VTABLE = {
+const struct MenuInputVTABLE HexValidator_VTABLE = {
 	Hex_Range, Hex_ValidChar, Hex_ValidString, Hex_ValidValue, Hex_Default
 };
 
@@ -1277,7 +1277,7 @@ static void Int_Default(struct MenuInputDesc* d, String* value) {
 	String_AppendInt(value, d->meta.i.Default);
 }
 
-struct MenuInputVTABLE IntValidator_VTABLE = {
+const struct MenuInputVTABLE IntValidator_VTABLE = {
 	Int_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, Int_Default
 };
 
@@ -1286,7 +1286,7 @@ static void Seed_Range(struct MenuInputDesc* d, String* range) {
 }
 static void Seed_NoDefault(struct MenuInputDesc* d, String* value) { }
 
-struct MenuInputVTABLE SeedValidator_VTABLE = {
+const struct MenuInputVTABLE SeedValidator_VTABLE = {
 	Seed_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, Seed_NoDefault
 };
 
@@ -1313,7 +1313,7 @@ static void Float_Default(struct MenuInputDesc* d, String* value) {
 	String_AppendFloat(value, d->meta.f.Default, 3);
 }
 
-struct MenuInputVTABLE FloatValidator_VTABLE = {
+const struct MenuInputVTABLE FloatValidator_VTABLE = {
 	Float_Range, Float_ValidChar, Float_ValidString, Float_ValidValue, Float_Default
 };
 
@@ -1327,7 +1327,7 @@ static bool Path_ValidChar(struct MenuInputDesc* d, char c) {
 }
 static bool Path_ValidString(struct MenuInputDesc* d, const String* s) { return true; }
 
-struct MenuInputVTABLE PathValidator_VTABLE = {
+const struct MenuInputVTABLE PathValidator_VTABLE = {
 	Path_Range, Path_ValidChar, Path_ValidString, Path_ValidString, Seed_NoDefault
 };
 
@@ -1343,7 +1343,7 @@ static bool String_ValidString(struct MenuInputDesc* d, const String* s) {
 	return s->length <= STRING_SIZE;
 }
 
-struct MenuInputVTABLE StringValidator_VTABLE = {
+const struct MenuInputVTABLE StringValidator_VTABLE = {
 	String_Range, String_ValidChar, String_ValidString, String_ValidString, Seed_NoDefault
 };
 

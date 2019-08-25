@@ -27,7 +27,7 @@ struct DateTime {
 #define HOURS_PER_DAY 24
 #define MILLIS_PER_DAY (1000 * 60 * 60 * 24)
 
-CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char** names, int namesCount);
+CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char* const* names, int namesCount);
 /* Returns whether value starts with http:// or https:// */
 bool Utils_IsUrlPrefix(const String* value);
 
