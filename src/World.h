@@ -113,7 +113,7 @@ CC_VAR extern struct _EnvData {
 #define Env_SidesHeight (Env.EdgeHeight + Env.SidesOffset)
 
 enum Weather_ { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
-extern const char* Weather_Names[3];
+extern const char* const Weather_Names[3];
 extern const PackedCol Env_DefaultSkyCol, Env_DefaultFogCol, Env_DefaultCloudsCol, Env_DefaultSkyboxCol;
 extern const PackedCol Env_DefaultSunCol, Env_DefaultShadowCol;
 

@@ -478,7 +478,7 @@ static void Floor_SortXList(int left, int right) {
 }
 
 static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
-	static int16_t ranges[4] = { 256, 128, 84, 64 };
+	static const short ranges[4] = { 256, 128, 84, 64 };
 	int i, j, idx, maxClass;
 	int rangeBits, classNum;
 	int16_t xlist_sorted[FLOOR_MAX_VALUES];

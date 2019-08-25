@@ -124,7 +124,7 @@ if (src != dst) { dst = src; Event_RaiseInt(&WorldEvents.EnvVarChanged, var); }
 if (!PackedCol_Equals(src, dst)) { dst = src; Event_RaiseInt(&WorldEvents.EnvVarChanged, var); }
 
 struct _EnvData Env;
-const char* Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
+const char* const Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
 
 const PackedCol Env_DefaultSkyCol    = PACKEDCOL_CONST(0x99, 0xCC, 0xFF, 0xFF);
 const PackedCol Env_DefaultFogCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);

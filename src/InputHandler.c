@@ -22,8 +22,8 @@
 
 static bool input_buttonsDown[3];
 static int input_pickingId = -1;
-static short normViewDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
-static short classicViewDists[4] = { 8, 32, 128, 512 };
+static const short normDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+static const short classicDists[4] = { 8, 32, 128, 512 };
 static TimeMS input_lastClick;
 static float input_fovIndex = -1.0f;
 #ifdef CC_BUILD_WEB
@@ -193,8 +193,8 @@ static bool InputHandler_HandleCoreKey(Key key) {
 			Window_EnterFullscreen();
 		}
 	} else if (key == KeyBinds[KEYBIND_FOG]) {
-		short* viewDists = Gui_ClassicMenu ? classicViewDists : normViewDists;
-		int count = Gui_ClassicMenu ? Array_Elems(classicViewDists) : Array_Elems(normViewDists);
+		const short* viewDists = Gui_ClassicMenu ? classicDists : normDists;
+		int count = Gui_ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
 
 		if (Key_IsShiftPressed()) {
 			InputHandler_CycleDistanceBackwards(viewDists, count);

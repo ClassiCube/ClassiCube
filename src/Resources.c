@@ -24,7 +24,7 @@
 static struct ResourceFile {
 	const char* name;
 	const char* url;
-	uint16_t size;
+	short size;
 	bool downloaded;
 	/* downloaded archive */
 	uint8_t* data; uint32_t len;
@@ -90,7 +90,7 @@ static const struct ResourceSound {
 static struct ResourceMusic {
 	const char* name;
 	const char* hash;
-	uint16_t size;
+	short size;
 	bool downloaded;
 } musicResources[7] = {
 	{ "calm1.ogg", "50a59a4f56e4046701b758ddbb1c1587efa4cadf", 2472 },

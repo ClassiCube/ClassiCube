@@ -45,7 +45,7 @@ enum Key_ {
 typedef int Key;
 
 /* Simple names for each keyboard button. */
-extern const char* Key_Names[KEY_COUNT];
+extern const char* const Key_Names[KEY_COUNT];
 
 #define Key_IsWinPressed()     (Key_Pressed[KEY_LWIN]   || Key_Pressed[KEY_RWIN])
 #define Key_IsAltPressed()     (Key_Pressed[KEY_LALT]   || Key_Pressed[KEY_RALT])

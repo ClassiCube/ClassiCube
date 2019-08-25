@@ -23,7 +23,7 @@ bool Key_Pressed[KEY_COUNT];
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
 
-const char* Key_Names[KEY_COUNT] = {
+const char* const Key_Names[KEY_COUNT] = {
 	"None",
 	Key_Function_Names,
 	"ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight",
@@ -132,7 +132,7 @@ const uint8_t KeyBind_Defaults[KEYBIND_COUNT] = {
 	KEY_F6, KEY_LALT, KEY_F8, 
 	'G', KEY_F10, 0
 };
-const char* KeyBind_Names[KEYBIND_COUNT] = {
+static const char* const keybindNames[KEYBIND_COUNT] = {
 	"Forward", "Back", "Left", "Right",
 	"Jump", "Respawn", "SetSpawn", "Chat", "Inventory", 
 	"ToggleFog", "SendChat", "PlayerList", 
@@ -154,7 +154,7 @@ static void KeyBind_Load(void) {
 	String_InitArray_NT(name, nameBuffer);
 	for (i = 0; i < KEYBIND_COUNT; i++) {
 		name.length = 0;
-		String_Format1(&name, "key-%c", KeyBind_Names[i]);
+		String_Format1(&name, "key-%c", keybindNames[i]);
 		name.buffer[name.length] = '\0';
 
 		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, KEY_COUNT);
@@ -170,7 +170,7 @@ static void KeyBind_Save(void) {
 	String_InitArray(name, nameBuffer);
 	for (i = 0; i < KEYBIND_COUNT; i++) {
 		name.length = 0; 
-		String_Format1(&name, "key-%c", KeyBind_Names[i]);
+		String_Format1(&name, "key-%c", keybindNames[i]);
 
 		value = String_FromReadonly(Key_Names[KeyBinds[i]]);
 		Options_SetString(&name, &value);

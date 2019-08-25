@@ -22,12 +22,12 @@ extern struct IGameComponent Entities_Component;
 enum NameMode {
 	NAME_MODE_NONE, NAME_MODE_HOVERED, NAME_MODE_ALL, NAME_MODE_ALL_HOVERED, NAME_MODE_ALL_UNSCALED, NAME_MODE_COUNT
 };
-extern const char* NameMode_Names[NAME_MODE_COUNT];
+extern const char* const NameMode_Names[NAME_MODE_COUNT];
 
 enum ShadowMode {
 	SHADOW_MODE_NONE, SHADOW_MODE_SNAP_TO_BLOCK, SHADOW_MODE_CIRCLE, SHADOW_MODE_CIRCLE_ALL, SHADOW_MODE_COUNT
 };
-extern const char* ShadowMode_Names[SHADOW_MODE_COUNT];
+extern const char* const ShadowMode_Names[SHADOW_MODE_COUNT];
 
 enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 
