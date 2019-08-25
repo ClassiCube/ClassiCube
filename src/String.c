@@ -278,25 +278,6 @@ void String_AppendColorless(String* str, const String* src) {
 }
 
 
-void UniString_Append(UniString* str, Codepoint c) {
-	if (str->length == str->capacity) return;
-	str->buffer[str->length++] = c;
-}
-
-void UniString_AppendConst(UniString* str, const char* src) {
-	for (; *src; src++) {
-		UniString_Append(str, Convert_CP437ToUnicode(*src));
-	}
-}
-
-void UniString_AppendString(UniString* str, const String* src) {
-	int i;
-	for (i = 0; i < src->length; i++) {
-		UniString_Append(str, Convert_CP437ToUnicode(src->buffer[i]));
-	}
-}
-
-
 int String_IndexOfAt(const String* str, int offset, char c) {
 	int i;
 	for (i = offset; i < str->length; i++) {

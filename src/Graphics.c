@@ -1188,7 +1188,7 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
-	if (!ib || *ib == GFX_NULL) return;
+	if (*ib == GFX_NULL) return;
 	GLuint id = (GLuint)(*ib);
 	_glDeleteBuffers(1, &id);
 	*ib = GFX_NULL;

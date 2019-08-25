@@ -21,11 +21,6 @@ typedef struct String_ {
 	uint16_t capacity; /* Max number of characters  */
 } String;
 
-typedef struct UniString_ {
-	Codepoint* buffer;
-	uint16_t length, capacity;
-} UniString;
-
 /* Constant string that points to NULL and has 0 length. */
 /* NOTE: Do NOT modify the contents of this string! */
 extern const String String_Empty;
@@ -116,14 +111,6 @@ CC_API void String_AppendString(String* str, const String* src);
 CC_API void String_AppendColorless(String* str, const String* src);
 /* Attempts to append the two hex digits of a byte. */
 CC_API void String_AppendHex(String* str, uint8_t value);
-
-/* Attempts to append a character. */
-/* Does nothing if str->length == str->capcity. */
-CC_API void UniString_Append(UniString* str, Codepoint c);
-/* Attempts to append characters. src MUST be null-terminated. */
-CC_API void UniString_AppendConst(UniString* str, const char* src);
-/* Attempts to append characters of a string. */
-CC_API void UniString_AppendString(UniString* str, const String* src);
 
 /* Returns first index of the given character in the given string, -1 if not found. */
 #define String_IndexOf(str, c) String_IndexOfAt(str, 0, c)

@@ -36,10 +36,6 @@ extern const ReturnCode ReturnCode_SocketWouldBlock;
 /* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. */
 /* Returns the number of bytes written, excluding trailing NULL terminator. */
 CC_API int Platform_ConvertString(void* data, const String* src);
-/* Encodes a unicode string in platform specific format. (e.g. unicode on windows, UTF8 on linux) */
-/* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. */
-/* Returns the number of bytes written, excluding trailing NULL terminator. */
-CC_API int Platform_ConvertUniString(void* data, const UniString* src);
 
 /* Initalises the platform specific state. */
 void Platform_Init(void);

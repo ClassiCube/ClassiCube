@@ -1843,16 +1843,6 @@ int Platform_ConvertString(void* data, const String* src) {
 	return src->length * 2;
 }
 
-int Platform_ConvertUniString(void* data, const UniString* src) {
-	TCHAR* dst = (TCHAR*)data;
-	int i;
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
-
-	for (i = 0; i < src->length; i++) { *dst++ = src->buffer[i]; }
-	*dst = '\0';
-	return src->length * 2;
-}
-
 static void Platform_InitStopwatch(void) {
 	LARGE_INTEGER freq;
 	sw_highRes = QueryPerformanceFrequency(&freq);
@@ -1989,21 +1979,6 @@ int Platform_ConvertString(void* data, const String* src) {
 	for (i = 0; i < src->length; i++) {
 		cur = dst + len;
 		len += Convert_CP437ToUtf8(src->buffer[i], cur);
-	}
-	dst[len] = '\0';
-	return len;
-}
-
-int Platform_ConvertUniString(void* data, const UniString* src) {
-	uint8_t* dst = (uint8_t*)data;
-	uint8_t* cur;
-
-	int i, len = 0;
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
-
-	for (i = 0; i < src->length; i++) {
-		cur = dst + len;
-		len += Convert_UnicodeToUtf8(src->buffer[i], cur);
 	}
 	dst[len] = '\0';
 	return len;
