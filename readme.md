@@ -61,7 +61,7 @@ I am assuming you used the installer from https://sourceforge.net/projects/mingw
 I am assuming you used the installer from http://www.mingw.org/
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
-3. Compile with the same flags as **MinGW-w64**, but also add ```-DUNICODE```
+3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of *i586-mingw32msvc-gcc*
 
 #### Linux
 

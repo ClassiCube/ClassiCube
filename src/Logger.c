@@ -22,9 +22,8 @@
 /* OpenBSD doesn't provide sys/ucontext.h */
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID
 /* Need to define this to get REG_ constants */
-#define __USE_GNU
+#define _GNU_SOURCE
 #include <sys/ucontext.h>
-#undef  __USE_GNU
 #include <signal.h>
 #elif defined CC_BUILD_POSIX
 #include <signal.h>
