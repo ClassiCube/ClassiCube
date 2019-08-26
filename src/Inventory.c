@@ -43,6 +43,32 @@ void Inventory_SetSelectedBlock(BlockID block) {
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 }
 
+void Inventory_PickBlock(BlockID block) {
+	int i;
+	if (!Inventory_CheckChangeSelected() || Inventory_SelectedBlock == block) return;
+
+	/* Is the currently selected block an empty slot? */
+	if (Inventory_SelectedBlock == BLOCK_AIR) {
+		Inventory_SetSelectedBlock(block); return;
+	}
+
+	/* Try to replace same block */
+	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
+		if (Inventory_Get(i) != block) continue;
+		Inventory_SetSelectedIndex(i); return;
+	}
+
+	/* Try to replace empty slots */
+	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
+		if (Inventory_Get(i) != BLOCK_AIR) continue;
+		Inventory_Set(i, block);
+		Inventory_SetSelectedIndex(i); return;
+	}
+
+	/* Finally, replace the currently selected block */
+	Inventory_SetSelectedBlock(block);
+}
+
 static const cc_uint8 classicInventory[42] = {
 	BLOCK_STONE, BLOCK_COBBLE, BLOCK_BRICK, BLOCK_DIRT, BLOCK_WOOD, BLOCK_LOG, BLOCK_LEAVES, BLOCK_GLASS, BLOCK_SLAB,
 	BLOCK_MOSSY_ROCKS, BLOCK_SAPLING, BLOCK_DANDELION, BLOCK_ROSE, BLOCK_BROWN_SHROOM, BLOCK_RED_SHROOM, BLOCK_SAND, BLOCK_GRAVEL, BLOCK_SPONGE,

@@ -44,6 +44,9 @@ void Inventory_SetHotbarIndex(int index);
 /* Attempts to set the block for the selected index in the current hotbar. */
 /* NOTE: If another slot is already this block, the selected index is instead changed. */
 void Inventory_SetSelectedBlock(BlockID block);
+/* Attempts to set the selected block in a user-friendly manner. */
+/* e.g. this method tries to replace empty slots before other blocks */
+void Inventory_PickBlock(BlockID block);
 /* Sets all slots to contain their default associated block. */
 /* NOTE: The order of default blocks may not be in order of ID. */
 void Inventory_ApplyDefaultMapping(void);

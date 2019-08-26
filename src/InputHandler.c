@@ -366,28 +366,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 		cur = World_GetBlock(pos.X, pos.Y, pos.Z);
 		if (Blocks.Draw[cur] == DRAW_GAS) return;
 		if (!(Blocks.CanPlace[cur] || Blocks.CanDelete[cur])) return;
-		if (!Inventory_CheckChangeSelected() || Inventory_SelectedBlock == cur) return;
-
-		/* Is the currently selected block an empty slot? */
-		if (Inventory_SelectedBlock == BLOCK_AIR) {
-			Inventory_SetSelectedBlock(cur); return;
-		}
-
-		/* Try to replace same block */
-		for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
-			if (Inventory_Get(i) != cur) continue;
-			Inventory_SetSelectedIndex(i); return;
-		}
-
-		/* Try to replace empty slots */
-		for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
-			if (Inventory_Get(i) != BLOCK_AIR) continue;
-			Inventory_Set(i, cur);
-			Inventory_SetSelectedIndex(i); return;
-		}
-
-		/* Finally, replace the currently selected block */
-		Inventory_SetSelectedBlock(cur);
+		Inventory_PickBlock(cur);
 	}
 }
 
