@@ -69,6 +69,7 @@ static void Menu_Back(void* s, int i, struct ButtonWidget* btn, Widget_LeftClick
 
 CC_NOINLINE static void Menu_MakeTitleFont(FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_STYLE_BOLD); }
 CC_NOINLINE static void Menu_MakeBodyFont(FontDesc* font)  { Drawer2D_MakeFont(font, 16, FONT_STYLE_NORMAL); }
+static void Menu_NullFunc(void* screen) { }
 
 
 static void Menu_ContextLost(void* screen) {
@@ -397,8 +398,6 @@ static void ListScreen_Init(void* screen) {
 	Menu_Label(s,  8, &s->page,  
 					ANCHOR_CENTRE,    ANCHOR_MAX,    0,   75);
 	Menu_Back(s,   9, &s->done, Menu_SwitchPause);
-
-	Menu_MakeTitleFont(&s->font);
 	s->LoadEntries(s);
 }
 
@@ -411,12 +410,18 @@ static void ListScreen_Render(void* screen, double delta) {
 
 static void ListScreen_Free(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
-	Font_Free(&s->font);
 	StringsBuffer_Clear(&s->entries);
+}
+
+static void ListScreen_ContextLost(void* screen) {
+	struct ListScreen* s = (struct ListScreen*)screen;
+	Menu_ContextLost(screen);
+	Font_Free(&s->font);
 }
 
 static void ListScreen_ContextRecreated(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
+	Menu_MakeTitleFont(&s->font);
 	ListScreen_RedrawEntries(s);
 
 	ButtonWidget_SetConst(&s->left,  "<",          &s->font);
@@ -430,7 +435,7 @@ static const struct ScreenVTABLE ListScreen_VTABLE = {
 	ListScreen_Init,    ListScreen_Render, ListScreen_Free,
 	ListScreen_KeyDown, Screen_TKey,       Screen_TKeyPress,
 	Menu_MouseDown,     Screen_TMouse,     Menu_MouseMove,  ListScreen_MouseScroll,
-	Menu_OnResize,      Menu_ContextLost,  ListScreen_ContextRecreated
+	Menu_OnResize,      ListScreen_ContextLost,  ListScreen_ContextRecreated
 };
 void ListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
@@ -471,7 +476,7 @@ static void MenuScreen_Free(void* screen) {
 *-------------------------------------------------------PauseScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 static struct PauseScreen {
-	MenuScreen_Layout
+	Screen_Layout
 	const struct SimpleButtonDesc* descs;
 	struct ButtonWidget buttons[6], quit, back;
 } PauseScreen_Instance;
@@ -487,19 +492,23 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 
 static void PauseScreen_ContextRecreated(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
+	FontDesc titleFont;
 	int i;
+
+	Menu_MakeTitleFont(&titleFont);
 	for (i = 0; i < s->numWidgets - 2; i++) {
-		ButtonWidget_SetConst(&s->buttons[i], s->descs[i].title, &s->titleFont);
+		ButtonWidget_SetConst(&s->buttons[i], s->descs[i].title, &titleFont);
 	}
 
-	if (!Gui_ClassicMenu) ButtonWidget_SetConst(&s->quit, "Quit game", &s->titleFont);
-	ButtonWidget_SetConst(&s->back, "Back to game", &s->titleFont);
+	if (!Gui_ClassicMenu) ButtonWidget_SetConst(&s->quit, "Quit game", &titleFont);
+	ButtonWidget_SetConst(&s->back, "Back to game", &titleFont);
 
 	if (!Server.IsSinglePlayer) {
 		s->buttons[1].disabled = true;
 		s->buttons[2].disabled = true;
 	}
 	PauseScreen_CheckHacksAllowed(s);
+	Font_Free(&titleFont);
 }
 
 static void PauseScreen_Init(void* screen) {
@@ -524,7 +533,6 @@ static void PauseScreen_Init(void* screen) {
 	};
 
 	s->widgets = widgets;
-	MenuScreen_Init(s);
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 
 	if (Gui_ClassicMenu) {
@@ -551,7 +559,6 @@ static void PauseScreen_Init(void* screen) {
 
 static void PauseScreen_Free(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	MenuScreen_Free(s);
 	Event_UnregisterVoid(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 }
 
@@ -1054,7 +1061,7 @@ void GenLevelScreen_Show(void) {
 *----------------------------------------------------ClassicGenScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 static struct ClassicGenScreen {
-	MenuScreen_Layout
+	Screen_Layout
 	struct ButtonWidget buttons[3], cancel;
 } ClassicGenScreen_Instance;
 
@@ -1077,10 +1084,14 @@ static void ClassicGenScreen_Make(struct ClassicGenScreen* s, int i, int y, Widg
 
 static void ClassicGenScreen_ContextRecreated(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
-	ButtonWidget_SetConst(&s->buttons[0], "Small",  &s->titleFont);
-	ButtonWidget_SetConst(&s->buttons[1], "Normal", &s->titleFont);
-	ButtonWidget_SetConst(&s->buttons[2], "Huge",   &s->titleFont);
-	ButtonWidget_SetConst(&s->cancel,     "Cancel", &s->titleFont);
+	FontDesc titleFont;
+
+	Menu_MakeTitleFont(&titleFont);
+	ButtonWidget_SetConst(&s->buttons[0], "Small",  &titleFont);
+	ButtonWidget_SetConst(&s->buttons[1], "Normal", &titleFont);
+	ButtonWidget_SetConst(&s->buttons[2], "Huge",   &titleFont);
+	ButtonWidget_SetConst(&s->cancel,     "Cancel", &titleFont);
+	Font_Free(&titleFont);
 }
 
 static void ClassicGenScreen_Init(void* screen) {
@@ -1099,7 +1110,7 @@ static void ClassicGenScreen_Init(void* screen) {
 }
 
 static const struct ScreenVTABLE ClassicGenScreen_VTABLE = {
-	ClassicGenScreen_Init, MenuScreen_Render,  MenuScreen_Free,
+	ClassicGenScreen_Init, MenuScreen_Render,  Menu_NullFunc,
 	MenuScreen_KeyDown,    Screen_TKey,        Screen_TKeyPress,
 	Menu_MouseDown,        Screen_TMouse,      Menu_MouseMove,  MenuScreen_MouseScroll,
 	Menu_OnResize,         Menu_ContextLost,   ClassicGenScreen_ContextRecreated

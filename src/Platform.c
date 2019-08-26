@@ -1022,17 +1022,13 @@ ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style
 
 void Font_Free(FontDesc* desc) {
 	struct FontData* data;
-	FT_Error err;
-
 	desc->Size  = 0;
 	desc->Style = 0;
 	/* NULL for fonts created by Drawer2D_MakeFont and bitmapped text mode is on */
 	if (!desc->Handle) return;
 
 	data = (struct FontData*)desc->Handle;
-	err  = FT_Done_Face(data->face);
-	if (err) Logger_Abort2(err, "Deleting font failed");
-
+	FT_Done_Face(data->face);
 	Mem_Free(data);
 	desc->Handle = NULL;
 }
