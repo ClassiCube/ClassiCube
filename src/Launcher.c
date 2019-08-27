@@ -642,8 +642,8 @@ static void Launcher_ApplyUpdate(void) {
 	res = File_MarkExecutable(&scriptPath);
 	if (res) Logger_Warn(res, "making update script executable");
 
-	res = Process_StartShell();
-	if (res) { Logger_Warn(res, "starting update script"); return; }
+	res = Process_StartUpdater();
+	if (res) { Logger_Warn(res, "running updater"); return; }
 }
 
 void Launcher_DisplayHttpError(ReturnCode res, int status, const char* action, String* dst) {

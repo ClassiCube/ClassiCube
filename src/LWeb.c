@@ -496,7 +496,7 @@ void CheckUpdateTask_Run(void) {
 *#########################################################################################################################*/
 struct FetchUpdateData FetchUpdateTask;
 static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
-	static const String path = String_FromConst("ClassiCube.update");
+	static const String path = String_FromConst(UPDATE_FILE);
 	ReturnCode res;
 
 	res = Stream_WriteAllTo(&path, data, len);

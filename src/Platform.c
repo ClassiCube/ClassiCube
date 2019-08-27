@@ -1567,7 +1567,7 @@ ReturnCode Process_StartOpen(const String* args) {
 	return instance > 32 ? 0 : (ReturnCode)instance;
 }
 
-ReturnCode Process_StartShell(void) {
+ReturnCode Process_StartUpdater(void) {
 	static const String args = String_FromConst("cmd.exe /C start cmd /C " UPDATE_FILENAME);
 	TCHAR str[NATIVE_STR_LEN];
 	/* args must be modifiable, otherwise access violation */
@@ -1595,7 +1595,7 @@ ReturnCode Process_StartOpen(const String* args) {
 	return 0;
 }
 
-ReturnCode Process_StartShell(void)         { return ERR_NOT_SUPPORTED; }
+ReturnCode Process_StartUpdater(void)       { return ERR_NOT_SUPPORTED; }
 ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_ANDROID
 static char gameArgsBuffer[512];
@@ -1612,7 +1612,7 @@ ReturnCode Process_StartOpen(const String* args) {
 	return 0; /* TODO: Is there a clean way of handling an error */
 }
 
-ReturnCode Process_StartShell(void)         { return ERR_NOT_SUPPORTED; }
+ReturnCode Process_StartUpdater(void)       { return ERR_NOT_SUPPORTED; }
 ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
 static ReturnCode Process_RawStart(const char* path, const char** argv) {
@@ -1681,7 +1681,7 @@ ReturnCode Process_GetExePath(String* path) {
 ReturnCode Process_StartOpen(const String* args) {
 	return Process_RawStartOpen("/usr/bin/open", args);
 }
-ReturnCode Process_StartShell(void) {
+ReturnCode Process_StartUpdater(void) {
 	static const char* args[5] = { "/usr/bin/open", "-a", "Terminal", "./update.sh", NULL };
 	return Process_RawStart("/usr/bin/open", args);
 }
@@ -1690,11 +1690,22 @@ ReturnCode Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
 	return Process_RawStartOpen("xdg-open", args);
 }
-ReturnCode Process_StartShell(void) {
-	/* There isn't a standardised way to "run command in user's preferred terminal" */
-	/* xterm is pretty much universally available though */
-	static const char* args[4] = { "xterm", "-e", "./update.sh", NULL };
-	return Process_RawStart("xterm", args);
+ReturnCode Process_StartUpdater(void) {
+	char path[NATIVE_STR_LEN];
+	int len = 0;
+	char* argv[2];
+
+	ReturnCode res = Process_RawGetExePath(path, &len);
+	if (res) return res;
+	path[len] = '\0';
+	
+	/* Because the process is only referenced by inocde, we can */
+	/* just unlink current filename and rename updated file to it */
+	if (unlink(path) == -1) return errno;
+	if (rename(UPDATE_FILE, path) == -1) return errno;
+
+	argv[0] = path; argv[1] = NULL;
+	return Process_RawStart(path, argv);
 }
 #endif
 /* Retrieving exe path is completely OS dependant */

@@ -21,6 +21,7 @@ typedef int FileHandle;
 #define _NL "\n"
 #define UPDATE_FILENAME "update.sh"
 #endif
+#define UPDATE_FILE "ClassiCube.update"
 
 /* Origin points for when seeking in a file. */
 enum File_SeekFrom { FILE_SEEKFROM_BEGIN, FILE_SEEKFROM_CURRENT, FILE_SEEKFROM_END };
@@ -64,8 +65,8 @@ CC_API void Process_Exit(ReturnCode code);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
 CC_API ReturnCode Process_StartOpen(const String* args);
-/* Starts the platform-specific shell to execute the script in UPDATE_FILENAME. */
-CC_API ReturnCode Process_StartShell(void);
+/* Starts the platform-specific method to update the game using the UPDATE_FILE file. */
+CC_API ReturnCode Process_StartUpdater(void);
 /* Returns the full path of the application's executable. */
 CC_API ReturnCode Process_GetExePath(String* path);
 
