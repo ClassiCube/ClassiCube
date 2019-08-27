@@ -178,7 +178,8 @@ struct MenuInputWidget {
 	struct MenuInputDesc desc;
 	char _textBuffer[INPUTWIDGET_LEN];
 };
-CC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, FontDesc* font, struct MenuInputDesc* d);
+CC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, struct MenuInputDesc* d);
+CC_NOINLINE void MenuInputWidget_SetFont(struct MenuInputWidget* w, FontDesc* font);
 
 
 struct ChatInputWidget {

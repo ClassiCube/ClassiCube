@@ -1436,10 +1436,9 @@ static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
 	InputWidget_MouseDown, Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
 	InputWidget_Reposition
 };
-void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, FontDesc* font, struct MenuInputDesc* desc) {
+void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, struct MenuInputDesc* desc) {
 	Widget_Reset(w);
-	w->base.VTABLE  = &MenuInputWidget_VTABLE;
-	w->base.font     = font;
+	w->base.VTABLE   = &MenuInputWidget_VTABLE;
 	w->base.caretPos = -1;
 
 	w->minWidth  = width;
@@ -1448,7 +1447,6 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, co
 
 	w->base.convertPercents = false;
 	w->base.padding         = 3;
-	w->base.lineHeight      = Drawer2D_FontHeight(font, false);
 
 	w->base.GetMaxLines    = MenuInputWidget_GetMaxLines;
 	w->base.RemakeTexture  = MenuInputWidget_RemakeTexture;
@@ -1457,6 +1455,11 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, co
 
 	String_InitArray(w->base.text, w->_textBuffer);
 	String_Copy(&w->base.text, text);
+}
+
+void MenuInputWidget_SetFont(struct MenuInputWidget* w, FontDesc* font) {
+	w->base.font       = font;
+	w->base.lineHeight = Drawer2D_FontHeight(font, false);
 }
 
 
