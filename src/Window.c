@@ -1355,6 +1355,7 @@ static int X11Button_Contains(X11Button* b, int x, int y) {
            y >= b->Y && y < (b->Y + b->Height);
 }
 
+static Bool X11_FilterEvent(Display* d, XEvent* e, XPointer w) { return e->xany.window == (Window)w; }
 static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
     X11Button ok    = { 0 };
     X11Textbox body = { 0 };
@@ -1408,7 +1409,11 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
     XFlush(dpy);
 
     for (;;) {
-        XNextEvent(dpy, &e);
+		/* The naive solution is to use XNextEvent(dpy, &e) here. */
+		/* However this causes issues as that removes events that */
+		/* should have been delivered to the main game window. */
+		/* (e.g. breaks initial window resize with i3 WM) */
+		XIfEvent(dpy, &e, X11_FilterEvent, w->win);
 
         switch (e.type)
         {
