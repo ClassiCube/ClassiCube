@@ -338,11 +338,11 @@ static _Unwind_Reason_Code Logger_UnwindFrame(struct _Unwind_Context* ctx, void*
 	if (!addr) return _URC_END_OF_STACK;
 
 	Logger_DumpFrame((String*)arg, (void*)addr);
-    return _URC_NO_REASON;
+	return _URC_NO_REASON;
 }
 
 void Logger_Backtrace(String* trace, void* ctx) {
-    _Unwind_Backtrace(Logger_UnwindFrame, trace);
+	_Unwind_Backtrace(Logger_UnwindFrame, trace);
 	String_AppendConst(trace, _NL);
 }
 #elif defined CC_BUILD_OSX

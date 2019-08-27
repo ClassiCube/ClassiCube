@@ -1384,14 +1384,14 @@ static GLuint Gfx_CompileShader(GLenum type, const String* src) {
 	int len;
 
 	shader = glCreateShader(type);
-    if (!shader) Logger_Abort("Failed to create shader");
+	if (!shader) Logger_Abort("Failed to create shader");
 	len = src->length;
 
-    glShaderSource(shader, 1, &src->buffer, &len);
-    glCompileShader(shader);
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &temp);
+	glShaderSource(shader, 1, &src->buffer, &len);
+	glCompileShader(shader);
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &temp);
 
-    if (temp) return shader;
+	if (temp) return shader;
 	temp = 0;
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &temp);
 
@@ -1409,23 +1409,23 @@ static GLuint Gfx_CompileShader(GLenum type, const String* src) {
 /* Tries to compile vertex and fragment shaders, then link into an OpenGL program. */
 static void Gfx_CompileProgram(struct GLShader* shader) {
 	char tmpBuffer[2048]; String tmp;
-    GLuint vertex, fragment, program;
-    GLint temp;
+	GLuint vertex, fragment, program;
+	GLint temp;
 
 	String_InitArray(tmp, tmpBuffer);
 	Gfx_GenVertexShader(shader, &tmp);
-    vertex = Gfx_CompileShader(GL_VERTEX_SHADER, &tmp);
+	vertex = Gfx_CompileShader(GL_VERTEX_SHADER, &tmp);
 
-    tmp.length = 0;
-    Gfx_GenFragmentShader(shader, &tmp);
-    fragment = Gfx_CompileShader(GL_FRAGMENT_SHADER, &tmp);
+	tmp.length = 0;
+	Gfx_GenFragmentShader(shader, &tmp);
+	fragment = Gfx_CompileShader(GL_FRAGMENT_SHADER, &tmp);
 
-    program  = glCreateProgram();
-    if (!program) Logger_Abort("Failed to create program");
-    shader->program = program;
+	program  = glCreateProgram();
+	if (!program) Logger_Abort("Failed to create program");
+	shader->program = program;
 
-    glAttachShader(program, vertex);
-    glAttachShader(program, fragment);
+	glAttachShader(program, vertex);
+	glAttachShader(program, fragment);
 
 	/* Force in_pos/in_col/in_uv attributes to be bound to 0,1,2 locations */
 	/* Although most browsers assign the attributes in this order anyways, */
@@ -1434,10 +1434,10 @@ static void Gfx_CompileProgram(struct GLShader* shader) {
 	glBindAttribLocation(program, 1, "in_col");
 	glBindAttribLocation(program, 2, "in_uv");
 
-    glLinkProgram(program);
-    glGetProgramiv(program, GL_LINK_STATUS, &temp);
+	glLinkProgram(program);
+	glGetProgramiv(program, GL_LINK_STATUS, &temp);
 
-    if (temp) {
+	if (temp) {
 		glDetachShader(program, vertex);
 		glDetachShader(program, fragment);
 
@@ -1450,7 +1450,7 @@ static void Gfx_CompileProgram(struct GLShader* shader) {
 		shader->locations[3] = glGetUniformLocation(program, "fogEnd");
 		shader->locations[4] = glGetUniformLocation(program, "fogDensity");
 		return;
-    }
+	}
 	temp = 0;
 	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &temp);
 

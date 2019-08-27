@@ -307,12 +307,12 @@ ReturnCode Audio_Close(AudioHandle handle) {
 }
 
 static ALenum GetALFormat(int channels, int bitsPerSample) {
-    if (bitsPerSample == 16) {
-        if (channels == 1) return AL_FORMAT_MONO16;
-        if (channels == 2) return AL_FORMAT_STEREO16;
+	if (bitsPerSample == 16) {
+		if (channels == 1) return AL_FORMAT_MONO16;
+		if (channels == 2) return AL_FORMAT_STEREO16;
 	} else if (bitsPerSample == 8) {
-        if (channels == 1) return AL_FORMAT_MONO8;
-        if (channels == 2) return AL_FORMAT_STEREO8;
+		if (channels == 1) return AL_FORMAT_MONO8;
+		if (channels == 2) return AL_FORMAT_STEREO8;
 	}
 	Logger_Abort("Unsupported audio format"); return 0;
 }

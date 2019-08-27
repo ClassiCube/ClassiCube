@@ -2134,10 +2134,10 @@ jobject JavaMakeString(JNIEnv* env, const String* str) {
 }
 
 jbyteArray JavaMakeBytes(JNIEnv* env, const cc_uint8* src, cc_uint32 len) {
-    if (!len) return NULL;
-    jbyteArray arr = (*env)->NewByteArray(env, len);
-    (*env)->SetByteArrayRegion(env, arr, 0, len, src);
-    return arr;
+	if (!len) return NULL;
+	jbyteArray arr = (*env)->NewByteArray(env, len);
+	(*env)->SetByteArrayRegion(env, arr, 0, len, src);
+	return arr;
 }
 
 void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
