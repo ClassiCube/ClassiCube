@@ -3177,9 +3177,8 @@ void GLContext_Init(struct GraphicsMode* mode) {
 void GLContext_Update(void) { }
 bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) {
-	if (!wglDeleteContext(ctx_Handle)) {
-		Logger_Abort2(GetLastError(), "Failed to destroy OpenGL context");
-	}
+	if (!ctx_handle) return;
+	wglDeleteContext(ctx_Handle);
 	ctx_Handle = NULL;
 }
 
@@ -3468,14 +3467,9 @@ void GLContext_Update(void) {
 bool GLContext_TryRestore(void) { return true; }
 
 void GLContext_Free(void) {
-	int code;
 	if (!ctx_handle) return;
-
-	code = aglSetCurrentContext(NULL);
-	GLContext_Check(code, "Unsetting GL context");
-
-	code = aglDestroyContext(ctx_handle);
-	GLContext_Check(code, "Destroying GL context");
+	aglSetCurrentContext(NULL);
+	aglDestroyContext(ctx_handle);
 	ctx_handle = NULL;
 }
 
