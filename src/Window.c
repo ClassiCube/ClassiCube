@@ -1537,13 +1537,10 @@ static Key Window_MapKey(UInt32 key) { return key < Array_Elems(key_map) ? key_m
 /*Menu = 110,      (0x6E, ??? according to that link)*/
 static void Window_RefreshBounds(void) {
 	Rect r;
-	OSStatus res;
 	if (win_fullscreen) return;
 	
 	/* TODO: kWindowContentRgn ??? */
-	res = GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
-	if (res) Logger_Abort2(res, "Getting window clientbounds");
-
+	GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
 	windowX = r.left; Window_Width  = r.right  - r.left;
 	windowY = r.top;  Window_Height = r.bottom - r.top;
 }

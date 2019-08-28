@@ -1460,6 +1460,7 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, co
 void MenuInputWidget_SetFont(struct MenuInputWidget* w, FontDesc* font) {
 	w->base.font       = font;
 	w->base.lineHeight = Drawer2D_FontHeight(font, false);
+	InputWidget_UpdateText(&w->base);
 }
 
 
