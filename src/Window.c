@@ -1397,6 +1397,11 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 	ok.X = width/2 - ok.Width/2;
 	ok.Y = height  - ok.Height - 10;
 
+	/* This marks the window as popup window of the main window */
+	/* http://tronche.com/gui/x/icccm/sec-4.html#WM_TRANSIENT_FOR */
+	/* Depending on WM, removes minimise and doesn't show in taskbar */
+	if (win_handle) XSetTransientForHint(dpy, w->win, win_handle);
+
 	XFreeFontInfo(NULL, font, 1);
 	XUnmapWindow(dpy, w->win); /* Make window non resizeable */
 
@@ -1457,6 +1462,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 
 	X11_MessageBox(title, msg, &w);
 	X11Window_Free(&w);
+	XFlush(dpy); /* flush so window disappears immediately */
 }
 
 static GC fb_gc;
