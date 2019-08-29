@@ -357,8 +357,6 @@ static bool ListScreen_KeyDown(void* screen, Key key) {
 		ListScreen_PageClick(s, false);
 	} else if (key == KEY_RIGHT || key == KEY_PAGEDOWN) {
 		ListScreen_PageClick(s, true);
-	} else {
-		return false;
 	}
 	return true;
 }
