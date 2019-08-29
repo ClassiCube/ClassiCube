@@ -122,7 +122,7 @@ static int Menu_DoMouseDown(void* screen, int x, int y, MouseButton btn) {
 		if (!w || !Widget_Contains(w, x, y)) continue;
 		if (w->disabled) return i;
 
-		if (w->MenuClick && btn == MOUSE_LEFT) {
+		if (w->MenuClick) {
 			w->MenuClick(s, w);
 		} else {
 			Elem_HandlesMouseDown(w, x, y, btn);
@@ -1753,13 +1753,13 @@ void OtherKeyBindingsScreen_Show(void) {
 *#########################################################################################################################*/
 static void MouseKeyBindingsScreen_Init(struct KeyBindingsScreen* s) {
 	s->leftPage = Menu_SwitchKeysOther;
-	s->msgText  = "&eRight click to remove the key binding";
+	s->msgText  = "&ePress escape to reset the binding";
 	KeyBindingsScreen_InitWidgets(s, -40, 10, -1, 260, "Mouse key bindings");
 }
 
 void MouseKeyBindingsScreen_Show(void) {
-	static const cc_uint8 binds[3] = { KEYBIND_MOUSE_LEFT, KEYBIND_PICK_BLOCK, KEYBIND_MOUSE_RIGHT };
-	static const char* descs[3]   = { "Left", "Pick block", "Right" };
+	static const cc_uint8 binds[3] = { KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK };
+	static const char* descs[3]    = { "Delete block", "Pick block", "Place block" };
 	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, MouseKeyBindingsScreen_Init);
 }
 

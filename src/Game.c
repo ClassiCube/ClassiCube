@@ -559,9 +559,9 @@ static void Game_Render3D(double delta, float t) {
 	Selections_Render(delta);
 	Entities_RenderHoveredNames(delta);
 
-	left   = InputHandler_IsMousePressed(MOUSE_LEFT);
+	left   = KeyBind_IsPressed(KEYBIND_DELETE_BLOCK);
 	middle = KeyBind_IsPressed(KEYBIND_PICK_BLOCK);
-	right  = InputHandler_IsMousePressed(MOUSE_RIGHT);
+	right  = KeyBind_IsPressed(KEYBIND_PLACE_BLOCK);
 
 	InputHandler_PickBlocks(true, left, middle, right);
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);

@@ -30,15 +30,6 @@ static float input_fovIndex = -1.0f;
 static bool suppressEscape;
 #endif
 
-bool InputHandler_IsMousePressed(MouseButton button) {
-	if (Mouse_Pressed[button]) return true;
-
-	/* Key --> mouse mappings */
-	if (button == MOUSE_LEFT   && KeyBind_IsPressed(KEYBIND_MOUSE_LEFT))   return true;
-	if (button == MOUSE_RIGHT  && KeyBind_IsPressed(KEYBIND_MOUSE_RIGHT))  return true;
-	return false;
-}
-
 static void InputHandler_ButtonStateUpdate(MouseButton button, bool pressed) {
 	struct Entity* p;
 	/* defer getting the targeted entity, as it's a costly operation */
@@ -200,6 +191,10 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		} else {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
+	} else if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) {
+		InputHandler_PickBlocks(false, true, false, false);
+	} else if (key == KeyBinds[KEYBIND_PLACE_BLOCK]) {
+		InputHandler_PickBlocks(false, false, false, true);
 	} else if (key == KeyBinds[KEYBIND_PICK_BLOCK]) {
 		InputHandler_PickBlocks(false, false, true, false);
 	} else if (key == KEY_F5 && Game_ClassicMode) {
@@ -332,7 +327,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 	}
 
 	if (left) {
-		/* always play delete animations, even if we aren't picking a block */
+		/* always play delete animations, even if we aren't deleting a block */
 		HeldBlockRenderer_ClickAnim(true);
 
 		pos = Game_SelectedPos.BlockPos;
@@ -408,8 +403,6 @@ static void InputHandler_MouseDown(void* obj, int btn) {
 			input_lastClick = DateTime_CurrentUTC_MS(); return;
 		}
 	}
-
-	InputHandler_PickBlocks(false, btn == MOUSE_LEFT, false, btn == MOUSE_RIGHT);
 }
 
 static void InputHandler_MouseUp(void* obj, int btn) {
@@ -420,23 +413,6 @@ static void InputHandler_MouseUp(void* obj, int btn) {
 		s = Gui_Screens[i];
 		if (s->VTABLE->HandlesMouseUp(s, Mouse_X, Mouse_Y, btn)) return;
 	}
-
-	if (Server.SupportsPlayerClick && btn <= MOUSE_MIDDLE) {
-		input_pickingId = -1;
-		InputHandler_ButtonStateChanged(btn, false);
-	}
-}
-
-static bool InputHandler_SimulateMouse(Key key, bool pressed) {
-	Key left   = KeyBinds[KEYBIND_MOUSE_LEFT];
-	Key right  = KeyBinds[KEYBIND_MOUSE_RIGHT];
-	MouseButton btn;
-	if (!(key == left || key == right)) return false;
-
-	btn = key == left ? MOUSE_LEFT : MOUSE_RIGHT;
-	if (pressed) { InputHandler_MouseDown(NULL, btn); }
-	else {         InputHandler_MouseUp(NULL,   btn); }
-	return true;
 }
 
 static void InputHandler_KeyDown(void* obj, int key, bool was) {
@@ -445,7 +421,6 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	struct HotkeyData* hkey;
 	String text;
 
-	if (!was && InputHandler_SimulateMouse(key, true)) return;
 #ifndef CC_BUILD_WEB
 	if (key == KEY_ESCAPE && (s = Gui_GetClosable())) {
 		/* Don't want holding down escape to go in and out of pause menu */
@@ -478,6 +453,11 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		PauseScreen_Show(); return;
 	}
 
+	if (Server.SupportsPlayerClick && key >= KEY_LMOUSE && key <= KEY_MMOUSE) {
+		input_pickingId = -1;
+		InputHandler_ButtonStateChanged(key - KEY_LMOUSE, true);
+	}
+
 	/* These should not be triggered multiple times when holding down */
 	if (was) return;
 	if (InputHandler_HandleCoreKey(key)) {
@@ -501,9 +481,7 @@ static void InputHandler_KeyUp(void* obj, int key) {
 	struct Screen* s;
 	int i;
 
-	if (InputHandler_SimulateMouse(key, false)) return;
 	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) Game_SetFov(Game_DefaultFov);
-
 #ifdef CC_BUILD_WEB
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */
@@ -517,6 +495,11 @@ static void InputHandler_KeyUp(void* obj, int key) {
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
 		if (s->VTABLE->HandlesKeyUp(s, key)) return;
+	}
+
+	if (Server.SupportsPlayerClick && key >= KEY_LMOUSE && key <= KEY_MMOUSE) {
+		input_pickingId = -1;
+		InputHandler_ButtonStateChanged(key - KEY_LMOUSE, false);
 	}
 }
 

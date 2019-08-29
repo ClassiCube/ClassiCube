@@ -39,7 +39,8 @@ enum Key_ {
 	KEY_TILDE, KEY_MINUS, KEY_EQUALS, KEY_LBRACKET, KEY_RBRACKET, KEY_SLASH,
 	KEY_SEMICOLON, KEY_QUOTE, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH,
 
-	KEY_XBUTTON1, KEY_XBUTTON2, KEY_MOUSEMID, /* so these can be used for hotkeys */
+	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
+	KEY_XBUTTON1, KEY_XBUTTON2, KEY_LMOUSE, KEY_RMOUSE, KEY_MMOUSE,
 	KEY_COUNT
 };
 typedef int Key;
@@ -81,11 +82,8 @@ extern float Mouse_Wheel;
 /* X and Y coordinates of the mouse. Use Mouse_SetPosition to change. */
 extern int Mouse_X, Mouse_Y;
 
-/* Pressed state of each mouse button. Use Mouse_SetPressed to change. */
-extern bool Mouse_Pressed[MOUSE_COUNT];
-/* Sets the pressed state of a mouse button. */
-/* Raises MouseEvents.Up or MouseEvents.Down if state differs. */
-void Mouse_SetPressed(MouseButton btn, bool pressed);
+/* Raises MouseEvents.Up or MouseEvents.Down. */
+void Mouse_SetPressed(bool pressed);
 /* Sets wheel position of the mouse, always raising MouseEvents.Wheel. */
 void Mouse_SetWheel(float wheel);
 /* Sets X and Y position of the mouse, always raising MouseEvents.Moved. */
@@ -100,7 +98,7 @@ enum KeyBind_ {
 	KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN,
 	KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN,
 	KEYBIND_THIRD_PERSON, KEYBIND_HIDE_GUI, KEYBIND_AXIS_LINES, KEYBIND_ZOOM_SCROLL,
-	KEYBIND_HALF_SPEED, KEYBIND_MOUSE_LEFT, KEYBIND_PICK_BLOCK, KEYBIND_MOUSE_RIGHT,
+	KEYBIND_HALF_SPEED, KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK,
 	KEYBIND_AUTOROTATE, KEYBIND_HOTBAR_SWITCH, KEYBIND_SMOOTH_CAMERA,
 	KEYBIND_DROP_BLOCK, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS,
 	KEYBIND_COUNT

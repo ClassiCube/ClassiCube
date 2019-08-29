@@ -105,7 +105,7 @@ static void Window_AddTouch(long id, int x, int y) {
 	touchesCount++;
 
 	Mouse_SetPosition(x, y);
-	Mouse_SetPressed(MOUSE_LEFT, true);
+	Key_SetPressed(KEY_LMOUSE, true);
 }
 
 static void Window_UpdateTouch(long id, int x, int y) {
@@ -136,7 +136,7 @@ static void Window_RemoveTouch(long id, int x, int y) {
 
 		touchesCount--;
 		Mouse_SetPosition(x, y);
-		Mouse_SetPressed(MOUSE_LEFT, false);
+		Key_SetPressed(KEY_LMOUSE, false);
 		return;
 	}
 }
@@ -266,9 +266,9 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_MOUSEMOVE:
 		/* Set before position change, in case mouse buttons changed when outside window */
-		Mouse_SetPressed(MOUSE_LEFT,   (wParam & 0x01) != 0);
-		Mouse_SetPressed(MOUSE_RIGHT,  (wParam & 0x02) != 0);
-		Key_SetPressed(KEY_MOUSEMID,   (wParam & 0x10) != 0);
+		Key_SetPressed(KEY_LMOUSE, (wParam & 0x01) != 0);
+		Key_SetPressed(KEY_RMOUSE, (wParam & 0x02) != 0);
+		Key_SetPressed(KEY_MMOUSE, (wParam & 0x10) != 0);
 		/* TODO: do we need to set XBUTTON1/XBUTTON2 here */
 		Mouse_SetPosition(LOWORD(lParam), HIWORD(lParam));
 		break;
@@ -279,21 +279,21 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		return 0;
 
 	case WM_LBUTTONDOWN:
-		Mouse_SetPressed(MOUSE_LEFT,  true); break;
+		Key_SetPressed(KEY_LMOUSE, true); break;
 	case WM_MBUTTONDOWN:
-		Key_SetPressed(KEY_MOUSEMID,  true); break;
+		Key_SetPressed(KEY_MMOUSE, true); break;
 	case WM_RBUTTONDOWN:
-		Mouse_SetPressed(MOUSE_RIGHT, true); break;
+		Key_SetPressed(KEY_RMOUSE, true); break;
 	case WM_XBUTTONDOWN:
 		Key_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, true);
 		break;
 
 	case WM_LBUTTONUP:
-		Mouse_SetPressed(MOUSE_LEFT,  false); break;
+		Key_SetPressed(KEY_LMOUSE, false); break;
 	case WM_MBUTTONUP:
-		Key_SetPressed(KEY_MOUSEMID,  false); break;
+		Key_SetPressed(KEY_MMOUSE, false); break;
 	case WM_RBUTTONUP:
-		Mouse_SetPressed(MOUSE_RIGHT, false); break;
+		Key_SetPressed(KEY_RMOUSE, false); break;
 	case WM_XBUTTONUP:
 		Key_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, false);
 		break;
@@ -1096,9 +1096,9 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case ButtonPress:
-			if (e.xbutton.button == 1)      Mouse_SetPressed(MOUSE_LEFT,  true);
-			else if (e.xbutton.button == 2) Key_SetPressed(KEY_MOUSEMID,  true);
-			else if (e.xbutton.button == 3) Mouse_SetPressed(MOUSE_RIGHT, true);
+			if (e.xbutton.button == 1)      Key_SetPressed(KEY_LMOUSE, true);
+			else if (e.xbutton.button == 2) Key_SetPressed(KEY_MMOUSE, true);
+			else if (e.xbutton.button == 3) Key_SetPressed(KEY_RMOUSE, true);
 			else if (e.xbutton.button == 4) Mouse_SetWheel(Mouse_Wheel + 1);
 			else if (e.xbutton.button == 5) Mouse_SetWheel(Mouse_Wheel - 1);
 			else if (e.xbutton.button == 6) Key_SetPressed(KEY_XBUTTON1,  true);
@@ -1106,9 +1106,9 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case ButtonRelease:
-			if (e.xbutton.button == 1)      Mouse_SetPressed(MOUSE_LEFT,  false);
-			else if (e.xbutton.button == 2) Key_SetPressed(KEY_MOUSEMID,  false);
-			else if (e.xbutton.button == 3) Mouse_SetPressed(MOUSE_RIGHT, false);
+			if (e.xbutton.button == 1)      Key_SetPressed(KEY_LMOUSE, false);
+			else if (e.xbutton.button == 2) Key_SetPressed(KEY_MMOUSE, false);
+			else if (e.xbutton.button == 3) Key_SetPressed(KEY_RMOUSE, false);
 			else if (e.xbutton.button == 6) Key_SetPressed(KEY_XBUTTON1,  false);
 			else if (e.xbutton.button == 7) Key_SetPressed(KEY_XBUTTON2,  false);
 			break;
@@ -1657,11 +1657,11 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 			
 			switch (button) {
 				case kEventMouseButtonPrimary:
-					Mouse_SetPressed(MOUSE_LEFT,  down); break;
+					Key_SetPressed(KEY_LMOUSE, down); break;
 				case kEventMouseButtonSecondary:
-					Mouse_SetPressed(MOUSE_RIGHT, down); break;
+					Key_SetPressed(KEY_RMOUSE, down); break;
 				case kEventMouseButtonTertiary:
-					Key_SetPressed(KEY_MOUSEMID,  down); break;
+					Key_SetPressed(KEY_MMOUSE, down); break;
 			}
 			return eventNotHandledErr;
 			
@@ -2224,15 +2224,15 @@ static void Window_HandleMouseEvent(const SDL_Event* e) {
 	bool pressed = e->button.state == SDL_PRESSED;
 	switch (e->button.button) {
 		case SDL_BUTTON_LEFT:
-			Mouse_SetPressed(MOUSE_LEFT,  pressed); break;
+			Key_SetPressed(KEY_LMOUSE, pressed); break;
 		case SDL_BUTTON_MIDDLE:
-			Key_SetPressed(KEY_MOUSEMID,  pressed); break;
+			Key_SetPressed(KEY_MMOUSE, pressed); break;
 		case SDL_BUTTON_RIGHT:
-			Mouse_SetPressed(MOUSE_RIGHT, pressed); break;
+			Key_SetPressed(KEY_RMOUSE, pressed); break;
 		case SDL_BUTTON_X1:
-			Key_SetPressed(KEY_XBUTTON1,  pressed); break;
+			Key_SetPressed(KEY_XBUTTON1, pressed); break;
 		case SDL_BUTTON_X2:
-			Key_SetPressed(KEY_XBUTTON2,  pressed); break;
+			Key_SetPressed(KEY_XBUTTON2, pressed); break;
 	}
 }
 
@@ -2407,18 +2407,18 @@ static EM_BOOL Window_MouseButton(int type, const EmscriptenMouseEvent* ev, void
 	Window_CorrectFocus();
 
 	switch (ev->button) {
-		case 0: Mouse_SetPressed(MOUSE_LEFT,   down); break;
-		case 1: Input_SetPressed(KEY_MOUSEMID, down); break;
-		case 2: Mouse_SetPressed(MOUSE_RIGHT,  down); break;
+		case 0: Key_SetPressed(KEY_LMOUSE, down); break;
+		case 1: Key_SetPressed(KEY_MMOUSE, down); break;
+		case 2: Key_SetPressed(KEY_RMOUSE, down); break;
 	}
 	return true;
 }
 
 static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
 	/* Set before position change, in case mouse buttons changed when outside window */
-	Mouse_SetPressed(MOUSE_LEFT,   (ev->buttons & 0x01) != 0);
-	Mouse_SetPressed(MOUSE_RIGHT,  (ev->buttons & 0x02) != 0);
-	Input_SetPressed(KEY_MOUSEMID, (ev->buttons & 0x04) != 0);
+	Key_SetPressed(KEY_LMOUSE, (ev->buttons & 0x01) != 0);
+	Key_SetPressed(KEY_RMOUSE, (ev->buttons & 0x02) != 0);
+	Key_SetPressed(KEY_MMOUSE, (ev->buttons & 0x04) != 0);
 
 	Mouse_SetPosition(ev->canvasX, ev->canvasY);
 	if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, ev->movementX, ev->movementY);

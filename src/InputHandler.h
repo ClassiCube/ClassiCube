@@ -6,7 +6,6 @@
 */
 struct Screen;
 
-bool InputHandler_IsMousePressed(MouseButton button);
 bool InputHandler_SetFOV(int fov);
 void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right);
 void InputHandler_Init(void);
