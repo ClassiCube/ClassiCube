@@ -7,13 +7,13 @@
 	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
-struct DrawTextArgs { String text; FontDesc font; bool useShadow; };
+struct DrawTextArgs { String text; FontDesc* font; bool useShadow; };
 struct Texture;
 struct IGameComponent;
 extern struct IGameComponent Drawer2D_Component;
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, const FontDesc* font, bool useShadow);
-void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, const FontDesc* font, bool useShadow);
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, FontDesc* font, bool useShadow);
+void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useShadow);
 /* Initialises the given font. When Drawer2D_BitmappedText is false, creates native font handle using Font_Make. */
 CC_NOINLINE void Drawer2D_MakeFont(FontDesc* desc, int size, int style);
 
@@ -97,4 +97,16 @@ void Drawer2D_ReducePadding_Height(int* height, int point, int scale);
 /* Sets the bitmap used for drawing bitmapped fonts. (i.e. default.png) */
 /* The bitmap must be square and consist of a 16x16 tile layout. */
 void Drawer2D_SetFontBitmap(Bitmap* bmp);
+
+/* Gets the list of all supported system font names on this platform. */
+void Font_GetNames(StringsBuffer* buffer);
+/* Finds the path and face number of the given system font, with closest matching style */
+String Font_Lookup(const String* fontName, int style);
+/* Allocates a new system font from the given arguments. */
+ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style);
+/* Frees an allocated font. */
+CC_API void Font_Free(FontDesc* desc);
+/* Attempts to decode one or fonts from the given file. */
+/* NOTE: If this file has been decoded before (fontscache.txt), does nothing. */
+void SysFonts_Register(const String* path);
 #endif

@@ -233,6 +233,7 @@ static void Entity_MakeNameTexture(struct Entity* e) {
 	BitmapCol origWhiteCol;
 
 	struct DrawTextArgs args;
+	FontDesc font;
 	bool bitmapped;
 	String name;
 	Size2D size;
@@ -243,8 +244,8 @@ static void Entity_MakeNameTexture(struct Entity* e) {
 	Drawer2D_BitmappedText = true;
 	name = String_FromRawArray(e->DisplayNameRaw);
 
-	Drawer2D_MakeFont(&args.font, 24, FONT_STYLE_NORMAL);
-	DrawTextArgs_Make(&args, &name, &args.font, false);
+	Drawer2D_MakeFont(&font, 24, FONT_STYLE_NORMAL);
+	DrawTextArgs_Make(&args, &name, &font, false);
 	size = Drawer2D_MeasureText(&args);
 
 	if (size.Width == 0) {

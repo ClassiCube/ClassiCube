@@ -2333,7 +2333,7 @@ static bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, String* text, int 
 	for (i = 0, x = 0; i < portionsCount; i++) {
 		bit = portions[i];
 		args.text = String_UNSAFE_Substring(&line, bit.LineBeg, bit.LineLen);
-		args.font = *w->font;
+		args.font = w->font;
 
 		width = Drawer2D_TextWidth(&args);
 		if ((bit.Len & TEXTGROUPWIDGET_URL) && mouseX >= x && mouseX < x + width) {
@@ -2407,9 +2407,9 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 			ul  = (bit.Len & TEXTGROUPWIDGET_URL);
 			args->text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
 
-			if (ul) args->font.Style |= FONT_FLAG_UNDERLINE;
+			if (ul) args->font->Style |= FONT_FLAG_UNDERLINE;
 			Drawer2D_DrawText(&bmp, args, x, 0);
-			if (ul) args->font.Style &= ~FONT_FLAG_UNDERLINE;
+			if (ul) args->font->Style &= ~FONT_FLAG_UNDERLINE;
 
 			x += partWidths[i];
 		}

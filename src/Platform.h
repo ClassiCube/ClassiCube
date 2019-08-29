@@ -191,20 +191,7 @@ CC_API void  Waitable_Wait(void* handle);
 /* Blocks the calling thread until the waitable gets signalled, or milliseconds delay passes. */
 CC_API void  Waitable_WaitFor(void* handle, cc_uint32 milliseconds);
 
-/* Gets the list of all supported font names on this platform. */
-void Font_GetNames(StringsBuffer* buffer);
-/* Finds the path and face number of the given font, with closest matching style */
-String Font_Lookup(const String* fontName, int style);
-/* Allocates a new font from the given arguments. */
-ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style);
-/* Frees an allocated font. */
-CC_API void Font_Free(FontDesc* desc);
-/* Measures width of the given text when drawn with the given font. */
-int Platform_TextWidth(struct DrawTextArgs* args);
-/* Measures height of any text when drawn with the given font. */
-int Platform_FontHeight(const FontDesc* font);
-/* Draws the given text with the given font onto the given bitmap. */
-int Platform_TextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow);
+void Platform_LoadSysFonts(void);
 
 /* Allocates a new socket. */
 CC_API void Socket_Create(SocketHandle* socket);

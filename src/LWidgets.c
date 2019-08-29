@@ -242,7 +242,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 		Drawer2D_DrawText(&Launcher_Framebuffer, args, w->X + 5, y + 2);
 	} else {
 		args->text = String_FromReadonly(w->HintText);
-		args->font = Launcher_HintFont;
+		args->font = &Launcher_HintFont;
 
 		hintHeight = Drawer2D_TextHeight(args);
 		y = w->Y + (w->Height - hintHeight) / 2;

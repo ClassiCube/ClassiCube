@@ -4,10 +4,13 @@
 #include "Platform.h"
 #include "ExtMath.h"
 #include "Logger.h"
-#include "Bitmap.h"
 #include "Game.h"
 #include "Event.h"
 #include "Chat.h"
+#include "Stream.h"
+#include "Utils.h"
+#include "Errors.h"
+#include "Window.h"
 
 bool Drawer2D_BitmappedText;
 bool Drawer2D_BlackTextShadows;
@@ -16,15 +19,15 @@ BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 static char fontNameBuffer[STRING_SIZE];
 String Drawer2D_FontName = String_FromArray(fontNameBuffer);
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, const FontDesc* font, bool useShadow) {
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, FontDesc* font, bool useShadow) {
 	args->text = *text;
-	args->font = *font;
+	args->font = font;
 	args->useShadow = useShadow;
 }
 
-void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, const FontDesc* font, bool useShadow) {
+void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useShadow) {
 	args->text = String_Empty;
-	args->font = *font;
+	args->font = font;
 	args->useShadow = useShadow;
 }
 
@@ -131,6 +134,14 @@ void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 	tileSize   = bmp->Width >> LOG2_CHARS_PER_ROW;
 	Drawer2D_CalculateTextWidths();
 }
+
+/* Measures width of the given text when drawn with the given system font. */
+static int Font_SysTextWidth(struct DrawTextArgs* args);
+/* Measures height of any text when drawn with the given system font. */
+static int Font_SysFontHeight(const FontDesc* desc);
+/* Draws the given text with the given system font onto the given bitmap. */
+static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow);
+
 
 
 /*########################################################################################################################*
@@ -416,7 +427,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	BitmapCol black = BITMAPCOL_CONST(0, 0, 0, 255);
 	BitmapCol col;
 	String text  = args->text;
-	int i, point = args->font.Size, count = 0;
+	int i, point = args->font->Size, count = 0;
 
 	int xPadding, yPadding;
 	int srcX, srcY, dstX, dstY;
@@ -493,7 +504,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		x = begX;
 	}
 
-	if (!(args->font.Style & FONT_FLAG_UNDERLINE)) return;
+	if (!(args->font->Style & FONT_FLAG_UNDERLINE)) return;
 	/* scale up bottom row of a cell to drawn text font */
 	cellY = (8 - 1) * dstHeight / 8;
 	underlineY      = y + (cellY + yPadding);
@@ -512,7 +523,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 }
 
 static void Drawer2D_DrawBitmapText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
-	int offset = Drawer2D_ShadowOffset(args->font.Size);
+	int offset = Drawer2D_ShadowOffset(args->font->Size);
 
 	if (args->useShadow) {
 		Drawer2D_DrawCore(bmp, args, x + offset, y + offset, true);
@@ -521,7 +532,7 @@ static void Drawer2D_DrawBitmapText(Bitmap* bmp, struct DrawTextArgs* args, int 
 }
 
 static int Drawer2D_MeasureBitmapWidth(const struct DrawTextArgs* args) {
-	int i, point = args->font.Size;
+	int i, point = args->font->Size;
 	int xPadding, width;
 	String text;
 
@@ -563,10 +574,10 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 		col = Drawer2D_GetCol(colCode);
 		if (args->useShadow) {
 			backCol = Drawer2D_BlackTextShadows ? black : Drawer2D_ShadowCol(col);
-			Platform_TextDraw(args, bmp, x, y, backCol, true);
+			Font_SysTextDraw(args, bmp, x, y, backCol, true);
 		}
 
-		partWidth = Platform_TextDraw(args, bmp, x, y, col, false);
+		partWidth = Font_SysTextDraw(args, bmp, x, y, col, false);
 		x += partWidth;
 	}
 	args->text = value;
@@ -585,7 +596,7 @@ int Drawer2D_TextWidth(struct DrawTextArgs* args) {
 		i = Drawer2D_NextPart(i, &value, &args->text, &nextCol);
 
 		if (!args->text.length) continue;
-		width += Platform_TextWidth(args);
+		width += Font_SysTextWidth(args);
 	}
 
 	if (args->useShadow) width += 2;
@@ -594,7 +605,7 @@ int Drawer2D_TextWidth(struct DrawTextArgs* args) {
 }
 
 int Drawer2D_TextHeight(struct DrawTextArgs* args) {
-	return Drawer2D_FontHeight(&args->font, args->useShadow);
+	return Drawer2D_FontHeight(args->font, args->useShadow);
 }
 
 int Drawer2D_FontHeight(const FontDesc* font, bool useShadow) {
@@ -606,7 +617,7 @@ int Drawer2D_FontHeight(const FontDesc* font, bool useShadow) {
 
 		if (useShadow) { height += Drawer2D_ShadowOffset(point); }
 	} else {
-		height = Platform_FontHeight(font);
+		height = Font_SysFontHeight(font);
 		if (useShadow) height += 2;
 	}
 	return height;
@@ -717,3 +728,454 @@ struct IGameComponent Drawer2D_Component = {
 	Drawer2D_Free,  /* Free  */
 	Drawer2D_Reset, /* Reset */
 };
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Drawer2D component----------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_WEB
+void Font_GetNames(StringsBuffer* buffer) { }
+String Font_Lookup(const String* fontName, int style) {
+	String str = String_FromConst("-----"); return str;
+}
+
+ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
+	desc->Size  = size;
+	desc->Style = style;
+	return 0;
+}
+void Font_Free(FontDesc* desc) {
+	desc->Size  = 0;
+	desc->Style = 0;
+}
+
+void SysFonts_Register(const String* path) { }
+static int Font_SysTextWidth(struct DrawTextArgs* args) { return 0; }
+static int Font_SysFontHeight(const FontDesc* font) { return 0; }
+static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) { return 0; }
+#else
+#include "freetype/ft2build.h"
+#include "freetype/freetype.h"
+#include "freetype/ftmodapi.h"
+#include "freetype/ftglyph.h"
+
+static FT_Library ft_lib;
+static struct FT_MemoryRec_ ft_mem;
+static struct EntryList font_list;
+static bool font_list_changed;
+
+static void* FT_AllocWrapper(FT_Memory memory, long size) {
+	return Mem_Alloc(size, 1, "Freetype data");
+}
+static void FT_FreeWrapper(FT_Memory memory, void* block) { Mem_Free(block); }
+static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, void* block) {
+	return Mem_Realloc(block, new_size, 1, "Freetype data");
+}
+
+#define FONT_CACHE_FILE "fontscache.txt"
+static void SysFonts_Init(void) {
+	static const String cachePath = String_FromConst(FONT_CACHE_FILE);
+	FT_Error err;
+	ft_mem.alloc   = FT_AllocWrapper;
+	ft_mem.free    = FT_FreeWrapper;
+	ft_mem.realloc = FT_ReallocWrapper;
+
+	err = FT_New_Library(&ft_mem, &ft_lib);
+	if (err) Logger_Abort2(err, "Failed to init freetype");
+	FT_Add_Default_Modules(ft_lib);
+
+	if (!File_Exists(&cachePath)) {
+		Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
+	}
+
+	EntryList_Init(&font_list, FONT_CACHE_FILE, '=');
+	Platform_LoadSysFonts();
+	if (font_list_changed) EntryList_Save(&font_list);
+}
+
+struct SysFont {
+	FT_Face face;
+	struct Stream src, file;
+	FT_StreamRec stream;
+	cc_uint8 buffer[8192]; /* small buffer to minimise disk I/O */
+	cc_uint16 widths[256]; /* cached width of each character glyph */
+	FT_BitmapGlyph glyphs[256];        /* cached glyphs */
+	FT_BitmapGlyph shadow_glyphs[256]; /* cached glyphs (for back layer shadow) */
+#ifdef CC_BUILD_OSX
+	char filename[FILENAME_SIZE + 1];
+#endif
+};
+
+static unsigned long SysFont_Read(FT_Stream s, unsigned long offset, unsigned char* buffer, unsigned long count) {
+	struct SysFont* font;
+	ReturnCode res;
+	if (!count && offset > s->size) return 1;
+
+	font = (struct SysFont*)s->descriptor.pointer;
+	if (s->pos != offset) font->src.Seek(&font->src, offset);
+
+	res = Stream_Read(&font->src, buffer, count);
+	return res ? 0 : count;
+}
+
+static void SysFont_Free(struct SysFont* font) {
+	int i;
+
+	/* Close the actual underlying file */
+	struct Stream* source = &font->file;
+	if (!source->Meta.File) return;
+	source->Close(source);
+
+	for (i = 0; i < 256; i++) {
+		if (!font->glyphs[i]) continue;
+		FT_Done_Glyph((FT_Glyph)font->glyphs[i]);
+	}
+	for (i = 0; i < 256; i++) {
+		if (!font->shadow_glyphs[i]) continue;
+		FT_Done_Glyph((FT_Glyph)font->shadow_glyphs[i]);
+	}
+}
+
+static void SysFont_Close(FT_Stream stream) {
+	struct SysFont* font = (struct SysFont*)stream->descriptor.pointer;
+	SysFont_Free(font);
+}
+
+static ReturnCode SysFont_Init(const String* path, struct SysFont* font, FT_Open_Args* args) {
+	FileHandle file;
+	cc_uint32 size;
+	ReturnCode res;
+
+	if ((res = File_Open(&file, path))) return res;
+	if ((res = File_Length(file, &size))) { File_Close(file); return res; }
+
+	font->stream.base = NULL;
+	font->stream.size = size;
+	font->stream.pos  = 0;
+
+	font->stream.descriptor.pointer = font;
+	font->stream.read   = SysFont_Read;
+	font->stream.close  = SysFont_Close;
+
+	font->stream.memory = &ft_mem;
+	font->stream.cursor = NULL;
+	font->stream.limit  = NULL;
+
+	args->flags    = FT_OPEN_STREAM;
+	args->pathname = NULL;
+	args->stream   = &font->stream;
+
+	Stream_FromFile(&font->file, file);
+	Stream_ReadonlyBuffered(&font->src, &font->file, font->buffer, sizeof(font->buffer));
+
+	/* For OSX font suitcase files */
+#ifdef CC_BUILD_OSX
+	String filename = String_NT_Array(data->filename);
+	String_Copy(&filename, path);
+	data->filename[filename.length] = '\0';
+	args->pathname = data->filename;
+#endif
+	Mem_Set(font->widths,        0xFF, sizeof(font->widths));
+	Mem_Set(font->glyphs,        0x00, sizeof(font->glyphs));
+	Mem_Set(font->shadow_glyphs, 0x00, sizeof(font->shadow_glyphs));
+	return 0;
+}
+
+void Font_GetNames(StringsBuffer* buffer) {
+	String entry, name, path;
+	int i;
+	if (!font_list.entries.count) SysFonts_Init();
+
+	for (i = 0; i < font_list.entries.count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&font_list.entries, i);
+		String_UNSAFE_Separate(&entry, font_list.separator, &name, &path);
+
+		/* only want Regular fonts here */
+		if (name.length < 2 || name.buffer[name.length - 1] != 'R') continue;
+		name.length -= 2;
+		StringsBuffer_Add(buffer, &name);
+	}
+}
+
+static String Font_LookupOf(const String* fontName, const char type) {
+	String name; char nameBuffer[STRING_SIZE + 2];
+	String_InitArray(name, nameBuffer);
+
+	String_Format2(&name, "%s %r", fontName, &type);
+	return EntryList_UNSAFE_Get(&font_list, &name);
+}
+
+String Font_Lookup(const String* fontName, int style) {
+	String path;
+	if (!font_list.entries.count) SysFonts_Init();
+	path = String_Empty;
+
+	if (style & FONT_STYLE_BOLD)   path = Font_LookupOf(fontName, 'B');
+	if (style & FONT_STYLE_ITALIC) path = Font_LookupOf(fontName, 'I');
+
+	return path.length ? path : Font_LookupOf(fontName, 'R');
+}
+
+ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
+	struct SysFont* font;
+	String value, path, index;
+	int faceIndex;
+	FT_Open_Args args;
+	FT_Error err;
+
+	desc->Size   = size;
+	desc->Style  = style;
+	desc->Handle = NULL;
+
+	value = Font_Lookup(fontName, style);
+	if (!value.length) return ERR_INVALID_ARGUMENT;
+	String_UNSAFE_Separate(&value, ',', &path, &index);
+	Convert_ParseInt(&index, &faceIndex);
+
+	font = (struct SysFont*)Mem_Alloc(1, sizeof(struct SysFont), "SysFont");
+	if ((err = SysFont_Init(&path, font, &args))) { Mem_Free(font); return err; }
+	desc->Handle = font;
+
+	if ((err = FT_New_Face(ft_lib, &args, faceIndex, &font->face))) return err;
+	return FT_Set_Char_Size(font->face, size * 64, 0, Display_DpiX, Display_DpiY);
+}
+
+void Font_Free(FontDesc* desc) {
+	struct SysFont* font;
+	desc->Size  = 0;
+	desc->Style = 0;
+	/* NULL for fonts created by Drawer2D_MakeFont and bitmapped text mode is on */
+	if (!desc->Handle) return;
+
+	font = (struct SysFont*)desc->Handle;
+	FT_Done_Face(font->face);
+	Mem_Free(font);
+	desc->Handle = NULL;
+}
+
+static void Font_Add(const String* path, FT_Face face, int index, char type, const char* defStyle) {
+	String key;   char keyBuffer[STRING_SIZE];
+	String value; char valueBuffer[FILENAME_SIZE];
+	String style = String_Empty;
+
+	if (!face->family_name || !(face->face_flags & FT_FACE_FLAG_SCALABLE)) return;
+	/* don't want 'Arial Regular' or 'Arial Bold' */
+	if (face->style_name) {
+		style = String_FromReadonly(face->style_name);
+		if (String_CaselessEqualsConst(&style, defStyle)) style.length = 0;
+	}
+
+	String_InitArray(key, keyBuffer);
+	if (style.length) {
+		String_Format3(&key, "%c %c %r", face->family_name, face->style_name, &type);
+	} else {
+		String_Format2(&key, "%c %r", face->family_name, &type);
+	}
+
+	String_InitArray(value, valueBuffer);
+	String_Format2(&value, "%s,%i", path, &index);
+
+	Platform_Log2("Face: %s = %s", &key, &value);
+	EntryList_Set(&font_list, &key, &value);
+	font_list_changed = true;
+}
+
+static int Font_Register(const String* path, int faceIndex) {
+	struct SysFont font;
+	FT_Open_Args args;
+	FT_Error err;
+	int flags, count;
+
+	if (SysFont_Init(path, &font, &args)) return 0;
+	err = FT_New_Face(ft_lib, &args, faceIndex, &font.face);
+	if (err) { SysFont_Free(&font); return 0; }
+
+	flags = font.face->style_flags;
+	count = font.face->num_faces;
+
+	if (flags == (FT_STYLE_FLAG_BOLD | FT_STYLE_FLAG_ITALIC)) {
+		Font_Add(path, font.face, faceIndex, 'Z', "Bold Italic");
+	} else if (flags == FT_STYLE_FLAG_BOLD) {
+		Font_Add(path, font.face, faceIndex, 'B', "Bold");
+	} else if (flags == FT_STYLE_FLAG_ITALIC) {
+		Font_Add(path, font.face, faceIndex, 'I', "Italic");
+	} else if (flags == 0) {
+		Font_Add(path, font.face, faceIndex, 'R', "Regular");
+	}
+
+	FT_Done_Face(font.face);
+	return count;
+}
+
+void SysFonts_Register(const String* path) {
+	String entry, name, value;
+	String fontPath, index;
+	int i, count;
+
+	/* if font is already known, skip it */
+	for (i = 0; i < font_list.entries.count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&font_list.entries, i);
+		String_UNSAFE_Separate(&entry, font_list.separator, &name, &value);
+
+		String_UNSAFE_Separate(&value, ',', &fontPath, &index);
+		if (String_CaselessEquals(path, &fontPath)) return;
+	}
+
+	count = Font_Register(path, 0);
+	/* there may be more than one font in a font file */
+	for (i = 1; i < count; i++) {
+		Font_Register(path, i);
+	}
+}
+
+#define TEXT_CEIL(x) (((x) + 63) >> 6)
+static int Font_SysTextWidth(struct DrawTextArgs* args) {
+	struct SysFont* font = (struct SysFont*)args->font->Handle;
+	FT_Face face = font->face;
+	String text  = args->text;
+	int i, width = 0, charWidth;
+	FT_Error res;
+	Codepoint cp;
+
+	for (i = 0; i < text.length; i++) {
+		charWidth = font->widths[(cc_uint8)text.buffer[i]];
+		/* need to calculate glyph width */
+		if (charWidth == UInt16_MaxValue) {
+			cp  = Convert_CP437ToUnicode(text.buffer[i]);
+			res = FT_Load_Char(face, cp, 0);
+
+			if (res) {
+				Platform_Log2("Error %i measuring width of %r", &res, &text.buffer[i]);
+				charWidth = 0;
+			} else {
+				charWidth = face->glyph->advance.x;		
+			}
+
+			font->widths[(cc_uint8)text.buffer[i]] = charWidth;
+		}
+		width += charWidth;
+	}
+	return TEXT_CEIL(width);
+}
+
+static int Font_SysFontHeight(const FontDesc* desc) {
+	struct SysFont* font = (struct SysFont*)desc->Handle;
+	FT_Face face = font->face;
+	return TEXT_CEIL(face->size->metrics.height);
+}
+
+static void DrawGrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
+	cc_uint8* src;
+	BitmapCol* dst;
+	cc_uint8 intensity, invIntensity;
+	int xx, yy;
+
+	for (yy = 0; yy < img->rows; yy++) {
+		if ((unsigned)(y + yy) >= (unsigned)bmp->Height) continue;
+		src = img->buffer + (yy * img->pitch);
+		dst = Bitmap_GetRow(bmp, y + yy) + x;
+
+		for (xx = 0; xx < img->width; xx++, src++, dst++) {
+			if ((unsigned)(x + xx) >= (unsigned)bmp->Width) continue;
+			intensity = *src; invIntensity = UInt8_MaxValue - intensity;
+
+			dst->B = ((col.B * intensity) >> 8) + ((dst->B * invIntensity) >> 8);
+			dst->G = ((col.G * intensity) >> 8) + ((dst->G * invIntensity) >> 8);
+			dst->R = ((col.R * intensity) >> 8) + ((dst->R * invIntensity) >> 8);
+			/*dst->A = ((col.A * intensity) >> 8) + ((dst->A * invIntensity) >> 8);*/
+			dst->A = intensity + ((dst->A * invIntensity) >> 8);
+		}
+	}
+}
+
+static void DrawBlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
+	cc_uint8* src;
+	BitmapCol* dst;
+	cc_uint8 intensity;
+	int xx, yy;
+
+	for (yy = 0; yy < img->rows; yy++) {
+		if ((unsigned)(y + yy) >= (unsigned)bmp->Height) continue;
+		src = img->buffer + (yy * img->pitch);
+		dst = Bitmap_GetRow(bmp, y + yy) + x;
+
+		for (xx = 0; xx < img->width; xx++, dst++) {
+			if ((unsigned)(x + xx) >= (unsigned)bmp->Width) continue;
+			intensity = src[xx >> 3];
+
+			if (intensity & (1 << (7 - (xx & 7)))) {
+				dst->B = col.B; dst->G = col.G; dst->R = col.R;
+				/*dst->A = col.A*/
+				dst->A = 255;
+			}
+		}
+	}
+}
+
+static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) {
+	struct SysFont* font  = (struct SysFont*)args->font->Handle;
+	FT_BitmapGlyph* glyphs = font->glyphs;
+
+	FT_Face face = font->face;
+	String text  = args->text;	
+	int descender, height, begX = x;
+	
+	/* glyph state */
+	FT_BitmapGlyph glyph;
+	FT_Bitmap* img;
+	int i, offset;
+	FT_Error res;
+	Codepoint cp;
+
+	if (shadow) {
+		glyphs = font->shadow_glyphs;
+		FT_Vector delta = { 83, -83 };
+		FT_Set_Transform(face, NULL, &delta);
+	}
+
+	height    = TEXT_CEIL(face->size->metrics.height);
+	descender = TEXT_CEIL(face->size->metrics.descender);
+
+	for (i = 0; i < text.length; i++) {
+		glyph = glyphs[(cc_uint8)text.buffer[i]];
+		if (!glyph) {
+			cp  = Convert_CP437ToUnicode(text.buffer[i]);
+			res = FT_Load_Char(face, cp, FT_LOAD_RENDER);
+
+			if (res) {
+				Platform_Log2("Error %i drawing %r", &res, &text.buffer[i]);
+				continue;
+			}
+
+			/* due to FT_LOAD_RENDER, glyph is always a bitmap one */
+			FT_Get_Glyph(face->glyph, (FT_Glyph*)&glyph); /* TODO: Check error */
+			glyphs[(cc_uint8)text.buffer[i]] = glyph;
+		}
+
+		offset = (height + descender) - glyph->top;
+		x += glyph->left; y += offset;
+
+		img = &glyph->bitmap;
+		if (img->num_grays == 2) {
+			DrawBlackWhiteGlyph(img, bmp, x, y, col);
+		} else {
+			DrawGrayscaleGlyph(img, bmp, x, y, col);
+		}
+
+		x += TEXT_CEIL(glyph->root.advance.x >> 10);
+		x -= glyph->left; y -= offset;
+	}
+
+	if (args->font->Style & FONT_FLAG_UNDERLINE) {
+		int ul_pos   = FT_MulFix(face->underline_position,  face->size->metrics.y_scale);
+		int ul_thick = FT_MulFix(face->underline_thickness, face->size->metrics.y_scale);
+
+		int ulHeight = TEXT_CEIL(ul_thick);
+		int ulY      = height + TEXT_CEIL(ul_pos);
+		Drawer2D_Underline(bmp, begX, ulY + y, x - begX, ulHeight, col);
+	}
+
+	if (shadow) FT_Set_Transform(face, NULL, NULL);
+	return x - begX;
+}
+#endif
