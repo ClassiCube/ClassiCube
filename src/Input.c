@@ -95,13 +95,12 @@ void Key_Clear(void) {
 *#########################################################################################################################*/
 float Mouse_Wheel;
 int Mouse_X, Mouse_Y;
-bool Mouse_Pressed[MOUSE_COUNT];
 
 void Mouse_SetPressed(bool pressed) {
 	if (pressed) {
-		Event_RaiseInt(&MouseEvents.Down, MOUSE_LEFT);
+		Event_RaiseInt(&MouseEvents.Down, 0);
 	} else {
-		Event_RaiseInt(&MouseEvents.Up,   MOUSE_LEFT);
+		Event_RaiseInt(&MouseEvents.Up,   0);
 	}
 }
 

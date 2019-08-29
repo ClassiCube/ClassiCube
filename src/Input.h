@@ -69,12 +69,6 @@ void Input_SetPressed(Key key, bool pressed);
 /* Resets all keys to be not pressed. */
 /* Raises KeyEvents.Up for each previously pressed key. */
 void Key_Clear(void);
-
-
-enum MouseButton_ {
-	MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE,
-	MOUSE_COUNT
-};
 typedef int MouseButton;
 
 /* Wheel position of the mouse. Use Mouse_SetWheel to change. */

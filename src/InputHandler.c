@@ -29,11 +29,12 @@ static float input_fovIndex = -1.0f;
 #ifdef CC_BUILD_WEB
 static bool suppressEscape;
 #endif
+enum MouseButton_ { MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE };
 
 /*########################################################################################################################*
 *-----------------------------------------------------Mouse helpers-------------------------------------------------------*
 *#########################################################################################################################*/
-static void InputHandler_ButtonStateUpdate(MouseButton button, bool pressed) {
+static void MouseStateUpdate(int button, bool pressed) {
 	struct Entity* p;
 	/* defer getting the targeted entity, as it's a costly operation */
 	if (input_pickingId == -1) {
@@ -45,14 +46,25 @@ static void InputHandler_ButtonStateUpdate(MouseButton button, bool pressed) {
 	CPE_SendPlayerClick(button, pressed, (EntityID)input_pickingId, &Game_SelectedPos);	
 }
 
-static void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
+static void MouseStateChanged(int button, bool pressed) {
 	if (pressed) {
 		/* Can send multiple Pressed events */
-		InputHandler_ButtonStateUpdate(button, true);
+		MouseStateUpdate(button, true);
 	} else {
 		if (!input_buttonsDown[button]) return;
-		InputHandler_ButtonStateUpdate(button, false);
+		MouseStateUpdate(button, false);
 	}
+}
+
+static void MouseStatePress(int button) {
+	input_lastClick = DateTime_CurrentUTC_MS();
+	input_pickingId = -1;
+	MouseStateChanged(button, true);
+}
+
+static void MouseStateRelease(int button) {
+	input_pickingId = -1;
+	MouseStateChanged(button, false);
 }
 
 void InputHandler_OnScreensChanged(void) {
@@ -60,14 +72,14 @@ void InputHandler_OnScreensChanged(void) {
 
 	if (Server.SupportsPlayerClick) {
 		input_pickingId = -1;
-		InputHandler_ButtonStateChanged(MOUSE_LEFT,   false);
-		InputHandler_ButtonStateChanged(MOUSE_RIGHT,  false);
-		InputHandler_ButtonStateChanged(MOUSE_MIDDLE, false);
+		MouseStateChanged(MOUSE_LEFT,   false);
+		MouseStateChanged(MOUSE_RIGHT,  false);
+		MouseStateChanged(MOUSE_MIDDLE, false);
 	}
 }
 
-static bool InputHandler_TouchesSolid(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
-static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
+static bool TouchesSolid(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
+static bool PushbackPlace(struct AABB* blockBB) {
 	struct Entity* p        = &LocalPlayer_Instance.Base;
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	Face closestFace;
@@ -101,7 +113,7 @@ static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
 	if (!insideMap) return false;
 
 	AABB_Make(&playerBB, &pos, &p->Size);
-	if (!hacks->Noclip && Entity_TouchesAny(&playerBB, InputHandler_TouchesSolid)) {
+	if (!hacks->Noclip && Entity_TouchesAny(&playerBB, TouchesSolid)) {
 		/* Don't put player inside another block */
 		return false;
 	}
@@ -111,7 +123,7 @@ static bool InputHandler_PushbackPlace(struct AABB* blockBB) {
 	return true;
 }
 
-static bool InputHandler_IntersectsOthers(Vec3 pos, BlockID block) {
+static bool IntersectsOthers(Vec3 pos, BlockID block) {
 	struct AABB blockBB, entityBB;
 	struct Entity* entity;
 	int id;
@@ -130,7 +142,7 @@ static bool InputHandler_IntersectsOthers(Vec3 pos, BlockID block) {
 	return false;
 }
 
-static bool InputHandler_CheckIsFree(BlockID block) {
+static bool CheckIsFree(BlockID block) {
 	struct Entity* p        = &LocalPlayer_Instance.Base;
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 
@@ -142,20 +154,20 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 	if (Blocks.Collide[block] != COLLIDE_SOLID) return true;
 
 	IVec3_ToVec3(&pos, &Game_SelectedPos.TranslatedPos);
-	if (InputHandler_IntersectsOthers(pos, block)) return false;
+	if (IntersectsOthers(pos, block)) return false;
 	
 	nextPos = LocalPlayer_Instance.Interp.Next.Pos;
 	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
 	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 
-	/* NOTE: Need to also test against next position here, otherwise player can 
-	fall through the block at feet as collision is performed against nextPos */
+	/* NOTE: Need to also test against next position here, otherwise player can */
+	/* fall through the block at feet as collision is performed against nextPos */
 	Entity_GetBounds(p, &playerBB);
 	playerBB.Min.Y = min(nextPos.Y, playerBB.Min.Y);
 
 	if (hacks->Noclip || !AABB_Intersects(&playerBB, &blockBB)) return true;
 	if (hacks->CanPushbackBlocks && hacks->PushbackPlacing && hacks->Enabled) {
-		return InputHandler_PushbackPlace(&blockBB);
+		return PushbackPlace(&blockBB);
 	}
 
 	playerBB.Min.Y += 0.25f + ENTITY_ADJUSTMENT;
@@ -197,7 +209,7 @@ static void InputHandler_PlaceBlock(void) {
 	if (Game_CanPick(old) || !Blocks.CanPlace[block]) return;
 	/* air-ish blocks can only replace over other air-ish blocks */
 	if (Blocks.Draw[block] == DRAW_GAS && Blocks.Draw[old] != DRAW_GAS) return;
-	if (!InputHandler_CheckIsFree(block)) return;
+	if (!CheckIsFree(block)) return;
 
 	Game_ChangeBlock(pos.X, pos.Y, pos.Z, block);
 	Event_RaiseBlock(&UserEvents.BlockChanged, pos, old, block);
@@ -225,9 +237,9 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 
 	if (Server.SupportsPlayerClick) {
 		input_pickingId = -1;
-		InputHandler_ButtonStateChanged(MOUSE_LEFT,   left);
-		InputHandler_ButtonStateChanged(MOUSE_RIGHT,  right);
-		InputHandler_ButtonStateChanged(MOUSE_MIDDLE, middle);
+		MouseStateChanged(MOUSE_LEFT,   left);
+		MouseStateChanged(MOUSE_RIGHT,  right);
+		MouseStateChanged(MOUSE_MIDDLE, middle);
 	}
 
 	if (left) {
@@ -372,11 +384,14 @@ static bool InputHandler_HandleCoreKey(Key key) {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
 	} else if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) {
-		InputHandler_PickBlocks(false, true, false, false);
+		MouseStatePress(MOUSE_LEFT);
+		InputHandler_DeleteBlock();
 	} else if (key == KeyBinds[KEYBIND_PLACE_BLOCK]) {
-		InputHandler_PickBlocks(false, false, false, true);
+		MouseStatePress(MOUSE_RIGHT);
+		InputHandler_PlaceBlock();
 	} else if (key == KeyBinds[KEYBIND_PICK_BLOCK]) {
-		InputHandler_PickBlocks(false, false, true, false);
+		MouseStatePress(MOUSE_MIDDLE);
+		InputHandler_PickBlock();
 	} else if (key == KEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
@@ -476,11 +491,6 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 		PauseScreen_Show(); return;
 	}
 
-	if (Server.SupportsPlayerClick && key >= KEY_LMOUSE && key <= KEY_MMOUSE) {
-		input_pickingId = -1;
-		InputHandler_ButtonStateChanged(key - KEY_LMOUSE, true);
-	}
-
 	/* These should not be triggered multiple times when holding down */
 	if (was) return;
 	if (InputHandler_HandleCoreKey(key)) {
@@ -520,10 +530,9 @@ static void InputHandler_KeyUp(void* obj, int key) {
 		if (s->VTABLE->HandlesKeyUp(s, key)) return;
 	}
 
-	if (Server.SupportsPlayerClick && key >= KEY_LMOUSE && key <= KEY_MMOUSE) {
-		input_pickingId = -1;
-		InputHandler_ButtonStateChanged(key - KEY_LMOUSE, false);
-	}
+	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) MouseStateRelease(MOUSE_LEFT);
+	if (key == KeyBinds[KEYBIND_PLACE_BLOCK])  MouseStateRelease(MOUSE_RIGHT);
+	if (key == KeyBinds[KEYBIND_PICK_BLOCK])   MouseStateRelease(MOUSE_MIDDLE);
 }
 
 static void InputHandler_KeyPress(void* obj, int keyChar) {

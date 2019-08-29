@@ -959,7 +959,7 @@ static void GenLevelScreen_InputClick(void* screen, void* input) {
 	if (s->selected) s->selected->base.showCaret = false;
 
 	s->selected = (struct MenuInputWidget*)input;
-	Elem_HandlesMouseDown(&s->selected->base, Mouse_X, Mouse_Y, MOUSE_LEFT);
+	Elem_HandlesMouseDown(&s->selected->base, Mouse_X, Mouse_Y, 0);
 	s->selected->base.showCaret = true;
 }
 
