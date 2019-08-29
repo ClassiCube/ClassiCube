@@ -3118,7 +3118,7 @@ void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 *-------------------------------------------------------WGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WGL
-static HGLRC ctx_Handle;
+static HGLRC ctx_handle;
 static HDC ctx_DC;
 typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
 static FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
@@ -3154,15 +3154,15 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 
 void GLContext_Init(struct GraphicsMode* mode) {
 	GLContext_SelectGraphicsMode(mode);
-	ctx_Handle = wglCreateContext(win_DC);
-	if (!ctx_Handle) {
-		ctx_Handle = wglCreateContext(win_DC);
+	ctx_handle = wglCreateContext(win_DC);
+	if (!ctx_handle) {
+		ctx_handle = wglCreateContext(win_DC);
 	}
-	if (!ctx_Handle) {
+	if (!ctx_handle) {
 		Logger_Abort2(GetLastError(), "Failed to create OpenGL context");
 	}
 
-	if (!wglMakeCurrent(win_DC, ctx_Handle)) {
+	if (!wglMakeCurrent(win_DC, ctx_handle)) {
 		Logger_Abort2(GetLastError(), "Failed to make OpenGL context current");
 	}
 
@@ -3175,8 +3175,8 @@ void GLContext_Update(void) { }
 bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) {
 	if (!ctx_handle) return;
-	wglDeleteContext(ctx_Handle);
-	ctx_Handle = NULL;
+	wglDeleteContext(ctx_handle);
+	ctx_handle = NULL;
 }
 
 void* GLContext_GetAddress(const char* function) {
@@ -3200,7 +3200,7 @@ void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_GLX
 #include <GL/glx.h>
-static GLXContext ctx_Handle;
+static GLXContext ctx_handle;
 typedef int (*FN_GLXSWAPINTERVAL)(int interval);
 static FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
 static bool ctx_supports_vSync;
@@ -3211,18 +3211,18 @@ void GLContext_Init(struct GraphicsMode* mode) {
 
 	const char* raw_exts;
 	String exts;
-	ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, true);
+	ctx_handle = glXCreateContext(win_display, &win_visual, NULL, true);
 
-	if (!ctx_Handle) {
+	if (!ctx_handle) {
 		Platform_LogConst("Context create failed. Trying indirect...");
-		ctx_Handle = glXCreateContext(win_display, &win_visual, NULL, false);
+		ctx_handle = glXCreateContext(win_display, &win_visual, NULL, false);
 	}
-	if (!ctx_Handle) Logger_Abort("Failed to create OpenGL context");
+	if (!ctx_handle) Logger_Abort("Failed to create OpenGL context");
 
-	if (!glXIsDirect(win_display, ctx_Handle)) {
+	if (!glXIsDirect(win_display, ctx_handle)) {
 		Platform_LogConst("== WARNING: Context is not direct ==");
 	}
-	if (!glXMakeCurrent(win_display, win_handle, ctx_Handle)) {
+	if (!glXMakeCurrent(win_display, win_handle, ctx_handle)) {
 		Logger_Abort("Failed to make OpenGL context current.");
 	}
 
@@ -3243,13 +3243,10 @@ void GLContext_Init(struct GraphicsMode* mode) {
 void GLContext_Update(void) { }
 bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) {
-	if (!ctx_Handle) return;
-
-	if (glXGetCurrentContext() == ctx_Handle) {
-		glXMakeCurrent(win_display, None, NULL);
-	}
-	glXDestroyContext(win_display, ctx_Handle);
-	ctx_Handle = NULL;
+	if (!ctx_handle) return;
+	glXMakeCurrent(win_display, None, NULL);
+	glXDestroyContext(win_display, ctx_handle);
+	ctx_handle = NULL;
 }
 
 void* GLContext_GetAddress(const char* function) {
