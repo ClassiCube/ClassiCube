@@ -296,6 +296,8 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 	static struct Texture empty = { GFX_NULL, Tex_Rect(0,0, 0,0), Tex_UV(0,0, 1,1) };
 	Size2D size;
 	Bitmap bmp;
+	/* pointless to draw anything when context is lost */
+	if (Gfx.LostContext) { *tex = empty; return; }
 
 	size = Drawer2D_MeasureText(args);
 	/* height is only 0 when width is 0 */
