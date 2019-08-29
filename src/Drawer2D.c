@@ -47,6 +47,9 @@ static String font_candidates[9] = {
 	String_FromConst("Roboto") /* android */
 };
 
+/* adjusts height to be closer to system fonts */
+static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
+
 void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style) {
 	int i;
 	ReturnCode res;
@@ -55,6 +58,7 @@ void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style) {
 		desc->handle = NULL;
 		desc->size   = size;
 		desc->style  = style;
+		desc->height = Drawer2D_AdjHeight(size);
 	} else {
 		font_candidates[0] = Drawer2D_FontName;
 
@@ -137,8 +141,6 @@ void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 
 /* Measures width of the given text when drawn with the given system font. */
 static int Font_SysTextWidth(struct DrawTextArgs* args);
-/* Measures height of any text when drawn with the given system font. */
-static int Font_SysFontHeight(const struct FontDesc* desc);
 /* Draws the given text with the given system font onto the given bitmap. */
 static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow);
 
@@ -368,12 +370,12 @@ CC_NOINLINE static BitmapCol Drawer2D_ShadowCol(BitmapCol c) {
 	c.R >>= 2; c.G >>= 2; c.B >>= 2; return c;
 }
 
+/* TODO: Needs to account for DPI */
 #define Drawer2D_ShadowOffset(point) (point / 8)
 #define Drawer2D_XPadding(point) (Math_CeilDiv(point, 8))
 static int Drawer2D_Width(int point, char c) {
 	return Math_CeilDiv(tileWidths[(cc_uint8)c] * point, tileSize);
 }
-static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
 
 void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale) {
 	int padding;
@@ -467,7 +469,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	dstHeight = point; begX = x;
 	/* adjust coords to make drawn text match GDI fonts */
 	xPadding  = Drawer2D_XPadding(point);
-	yPadding  = (Drawer2D_AdjHeight(dstHeight) - dstHeight) / 2;
+	yPadding  = (args->font->height - dstHeight) / 2;
 
 	for (yy = 0; yy < dstHeight; yy++) {
 		dstY = y + (yy + yPadding);
@@ -609,15 +611,10 @@ int Drawer2D_TextHeight(struct DrawTextArgs* args) {
 }
 
 int Drawer2D_FontHeight(const struct FontDesc* font, bool useShadow) {
-	int height, point;
+	int height = font->height;
 	if (Drawer2D_BitmappedText) {
-		point = font->size;
-		/* adjust coords to make drawn text match GDI fonts */
-		height = Drawer2D_AdjHeight(point);
-
-		if (useShadow) { height += Drawer2D_ShadowOffset(point); }
+		if (useShadow) { height += Drawer2D_ShadowOffset(font->size); }
 	} else {
-		height = Font_SysFontHeight(font);
 		if (useShadow) height += 2;
 	}
 	return height;
@@ -740,18 +737,18 @@ String Font_Lookup(const String* fontName, int style) {
 }
 
 ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
-	desc->Size  = size;
-	desc->Style = style;
+	desc->size   = size;
+	desc->style  = style;
+	desc->height = 0;
 	return 0;
 }
 void Font_Free(FontDesc* desc) {
-	desc->Size  = 0;
-	desc->Style = 0;
+	desc->size    = 0;
+	desc->style   = 0;	
 }
 
 void SysFonts_Register(const String* path) { }
 static int Font_SysTextWidth(struct DrawTextArgs* args) { return 0; }
-static int Font_SysFontHeight(const FontDesc* font) { return 0; }
 static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) { return 0; }
 #else
 #include "freetype/ft2build.h"
@@ -991,6 +988,7 @@ String Font_Lookup(const String* fontName, int style) {
 	return path.length ? path : Font_LookupOf(fontName, 'R');
 }
 
+#define TEXT_CEIL(x) (((x) + 63) >> 6)
 ReturnCode Font_Make(struct FontDesc* desc, const String* fontName, int size, int style) {
 	struct SysFont* font;
 	String value, path, index;
@@ -1012,7 +1010,11 @@ ReturnCode Font_Make(struct FontDesc* desc, const String* fontName, int size, in
 	desc->handle = font;
 
 	if ((err = FT_New_Face(ft_lib, &args, faceIndex, &font->face))) return err;
-	return FT_Set_Char_Size(font->face, size * 64, 0, Display_DpiX, Display_DpiY);
+	if ((err = FT_Set_Char_Size(font->face, size * 64, 0, Display_DpiX, Display_DpiY))) return err;
+
+	/* height of any text when drawn with the given system font */
+	desc->height = TEXT_CEIL(font->face->size->metrics.height);
+	return 0;
 }
 
 void Font_Free(struct FontDesc* desc) {
@@ -1028,7 +1030,6 @@ void Font_Free(struct FontDesc* desc) {
 	desc->handle = NULL;
 }
 
-#define TEXT_CEIL(x) (((x) + 63) >> 6)
 static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	struct SysFont* font = (struct SysFont*)args->font->handle;
 	FT_Face face = font->face;
@@ -1056,12 +1057,6 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 		width += charWidth;
 	}
 	return TEXT_CEIL(width);
-}
-
-static int Font_SysFontHeight(const struct FontDesc* desc) {
-	struct SysFont* font = (struct SysFont*)desc->handle;
-	FT_Face face = font->face;
-	return TEXT_CEIL(face->size->metrics.height);
 }
 
 static void DrawGrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
@@ -1133,7 +1128,7 @@ static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y
 		FT_Set_Transform(face, NULL, &delta);
 	}
 
-	height    = TEXT_CEIL(face->size->metrics.height);
+	height    = args->font->height;
 	descender = TEXT_CEIL(face->size->metrics.descender);
 
 	for (i = 0; i < text.length; i++) {

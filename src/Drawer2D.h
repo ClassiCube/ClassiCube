@@ -7,7 +7,7 @@
 	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
-struct FontDesc { void* handle; cc_uint16 size, style; };
+struct FontDesc { void* handle; cc_uint16 size, style; int height; };
 struct DrawTextArgs { String text; struct FontDesc* font; bool useShadow; };
 struct Texture;
 struct IGameComponent;
