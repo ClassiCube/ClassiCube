@@ -764,35 +764,6 @@ static struct FT_MemoryRec_ ft_mem;
 static struct EntryList font_list;
 static bool font_list_changed;
 
-static void* FT_AllocWrapper(FT_Memory memory, long size) {
-	return Mem_Alloc(size, 1, "Freetype data");
-}
-static void FT_FreeWrapper(FT_Memory memory, void* block) { Mem_Free(block); }
-static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, void* block) {
-	return Mem_Realloc(block, new_size, 1, "Freetype data");
-}
-
-#define FONT_CACHE_FILE "fontscache.txt"
-static void SysFonts_Init(void) {
-	static const String cachePath = String_FromConst(FONT_CACHE_FILE);
-	FT_Error err;
-	ft_mem.alloc   = FT_AllocWrapper;
-	ft_mem.free    = FT_FreeWrapper;
-	ft_mem.realloc = FT_ReallocWrapper;
-
-	err = FT_New_Library(&ft_mem, &ft_lib);
-	if (err) Logger_Abort2(err, "Failed to init freetype");
-	FT_Add_Default_Modules(ft_lib);
-
-	if (!File_Exists(&cachePath)) {
-		Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
-	}
-
-	EntryList_Init(&font_list, FONT_CACHE_FILE, '=');
-	Platform_LoadSysFonts();
-	if (font_list_changed) EntryList_Save(&font_list);
-}
-
 struct SysFont {
 	FT_Face face;
 	struct Stream src, file;
@@ -870,15 +841,119 @@ static ReturnCode SysFont_Init(const String* path, struct SysFont* font, FT_Open
 
 	/* For OSX font suitcase files */
 #ifdef CC_BUILD_OSX
-	String filename = String_NT_Array(data->filename);
+	String filename = String_NT_Array(font->filename);
 	String_Copy(&filename, path);
-	data->filename[filename.length] = '\0';
-	args->pathname = data->filename;
+	font->filename[filename.length] = '\0';
+	args->pathname = font->filename;
 #endif
 	Mem_Set(font->widths,        0xFF, sizeof(font->widths));
 	Mem_Set(font->glyphs,        0x00, sizeof(font->glyphs));
 	Mem_Set(font->shadow_glyphs, 0x00, sizeof(font->shadow_glyphs));
 	return 0;
+}
+
+static void* FT_AllocWrapper(FT_Memory memory, long size) {
+	return Mem_Alloc(size, 1, "Freetype data");
+}
+static void FT_FreeWrapper(FT_Memory memory, void* block) { Mem_Free(block); }
+static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, void* block) {
+	return Mem_Realloc(block, new_size, 1, "Freetype data");
+}
+
+#define FONT_CACHE_FILE "fontscache.txt"
+static void SysFonts_Init(void) {
+	static const String cachePath = String_FromConst(FONT_CACHE_FILE);
+	FT_Error err;
+	ft_mem.alloc   = FT_AllocWrapper;
+	ft_mem.free    = FT_FreeWrapper;
+	ft_mem.realloc = FT_ReallocWrapper;
+
+	err = FT_New_Library(&ft_mem, &ft_lib);
+	if (err) Logger_Abort2(err, "Failed to init freetype");
+	FT_Add_Default_Modules(ft_lib);
+
+	if (!File_Exists(&cachePath)) {
+		Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
+	}
+
+	EntryList_Init(&font_list, FONT_CACHE_FILE, '=');
+	Platform_LoadSysFonts();
+	if (font_list_changed) EntryList_Save(&font_list);
+}
+
+static void SysFonts_Add(const String* path, FT_Face face, int index, char type, const char* defStyle) {
+	String key;   char keyBuffer[STRING_SIZE];
+	String value; char valueBuffer[FILENAME_SIZE];
+	String style = String_Empty;
+
+	if (!face->family_name || !(face->face_flags & FT_FACE_FLAG_SCALABLE)) return;
+	/* don't want 'Arial Regular' or 'Arial Bold' */
+	if (face->style_name) {
+		style = String_FromReadonly(face->style_name);
+		if (String_CaselessEqualsConst(&style, defStyle)) style.length = 0;
+	}
+
+	String_InitArray(key, keyBuffer);
+	if (style.length) {
+		String_Format3(&key, "%c %c %r", face->family_name, face->style_name, &type);
+	} else {
+		String_Format2(&key, "%c %r", face->family_name, &type);
+	}
+
+	String_InitArray(value, valueBuffer);
+	String_Format2(&value, "%s,%i", path, &index);
+
+	Platform_Log2("Face: %s = %s", &key, &value);
+	EntryList_Set(&font_list, &key, &value);
+	font_list_changed = true;
+}
+
+static int SysFonts_DoRegister(const String* path, int faceIndex) {
+	struct SysFont font;
+	FT_Open_Args args;
+	FT_Error err;
+	int flags, count;
+
+	if (SysFont_Init(path, &font, &args)) return 0;
+	err = FT_New_Face(ft_lib, &args, faceIndex, &font.face);
+	if (err) { SysFont_Free(&font); return 0; }
+
+	flags = font.face->style_flags;
+	count = font.face->num_faces;
+
+	if (flags == (FT_STYLE_FLAG_BOLD | FT_STYLE_FLAG_ITALIC)) {
+		SysFonts_Add(path, font.face, faceIndex, 'Z', "Bold Italic");
+	} else if (flags == FT_STYLE_FLAG_BOLD) {
+		SysFonts_Add(path, font.face, faceIndex, 'B', "Bold");
+	} else if (flags == FT_STYLE_FLAG_ITALIC) {
+		SysFonts_Add(path, font.face, faceIndex, 'I', "Italic");
+	} else if (flags == 0) {
+		SysFonts_Add(path, font.face, faceIndex, 'R', "Regular");
+	}
+
+	FT_Done_Face(font.face);
+	return count;
+}
+
+void SysFonts_Register(const String* path) {
+	String entry, name, value;
+	String fontPath, index;
+	int i, count;
+
+	/* if font is already known, skip it */
+	for (i = 0; i < font_list.entries.count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&font_list.entries, i);
+		String_UNSAFE_Separate(&entry, font_list.separator, &name, &value);
+
+		String_UNSAFE_Separate(&value, ',', &fontPath, &index);
+		if (String_CaselessEquals(path, &fontPath)) return;
+	}
+
+	count = SysFonts_DoRegister(path, 0);
+	/* there may be more than one font in a font file */
+	for (i = 1; i < count; i++) {
+		SysFonts_DoRegister(path, i);
+	}
 }
 
 void Font_GetNames(StringsBuffer* buffer) {
@@ -951,81 +1026,6 @@ void Font_Free(FontDesc* desc) {
 	FT_Done_Face(font->face);
 	Mem_Free(font);
 	desc->Handle = NULL;
-}
-
-static void Font_Add(const String* path, FT_Face face, int index, char type, const char* defStyle) {
-	String key;   char keyBuffer[STRING_SIZE];
-	String value; char valueBuffer[FILENAME_SIZE];
-	String style = String_Empty;
-
-	if (!face->family_name || !(face->face_flags & FT_FACE_FLAG_SCALABLE)) return;
-	/* don't want 'Arial Regular' or 'Arial Bold' */
-	if (face->style_name) {
-		style = String_FromReadonly(face->style_name);
-		if (String_CaselessEqualsConst(&style, defStyle)) style.length = 0;
-	}
-
-	String_InitArray(key, keyBuffer);
-	if (style.length) {
-		String_Format3(&key, "%c %c %r", face->family_name, face->style_name, &type);
-	} else {
-		String_Format2(&key, "%c %r", face->family_name, &type);
-	}
-
-	String_InitArray(value, valueBuffer);
-	String_Format2(&value, "%s,%i", path, &index);
-
-	Platform_Log2("Face: %s = %s", &key, &value);
-	EntryList_Set(&font_list, &key, &value);
-	font_list_changed = true;
-}
-
-static int Font_Register(const String* path, int faceIndex) {
-	struct SysFont font;
-	FT_Open_Args args;
-	FT_Error err;
-	int flags, count;
-
-	if (SysFont_Init(path, &font, &args)) return 0;
-	err = FT_New_Face(ft_lib, &args, faceIndex, &font.face);
-	if (err) { SysFont_Free(&font); return 0; }
-
-	flags = font.face->style_flags;
-	count = font.face->num_faces;
-
-	if (flags == (FT_STYLE_FLAG_BOLD | FT_STYLE_FLAG_ITALIC)) {
-		Font_Add(path, font.face, faceIndex, 'Z', "Bold Italic");
-	} else if (flags == FT_STYLE_FLAG_BOLD) {
-		Font_Add(path, font.face, faceIndex, 'B', "Bold");
-	} else if (flags == FT_STYLE_FLAG_ITALIC) {
-		Font_Add(path, font.face, faceIndex, 'I', "Italic");
-	} else if (flags == 0) {
-		Font_Add(path, font.face, faceIndex, 'R', "Regular");
-	}
-
-	FT_Done_Face(font.face);
-	return count;
-}
-
-void SysFonts_Register(const String* path) {
-	String entry, name, value;
-	String fontPath, index;
-	int i, count;
-
-	/* if font is already known, skip it */
-	for (i = 0; i < font_list.entries.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&font_list.entries, i);
-		String_UNSAFE_Separate(&entry, font_list.separator, &name, &value);
-
-		String_UNSAFE_Separate(&value, ',', &fontPath, &index);
-		if (String_CaselessEquals(path, &fontPath)) return;
-	}
-
-	count = Font_Register(path, 0);
-	/* there may be more than one font in a font file */
-	for (i = 1; i < count; i++) {
-		Font_Register(path, i);
-	}
 }
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
