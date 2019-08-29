@@ -1758,8 +1758,8 @@ static void MouseKeyBindingsScreen_Init(struct KeyBindingsScreen* s) {
 }
 
 void MouseKeyBindingsScreen_Show(void) {
-	static const cc_uint8 binds[3] = { KEYBIND_MOUSE_LEFT, KEYBIND_MOUSE_MIDDLE, KEYBIND_MOUSE_RIGHT };
-	static const char* descs[3]   = { "Left", "Middle", "Right" };
+	static const cc_uint8 binds[3] = { KEYBIND_MOUSE_LEFT, KEYBIND_PICK_BLOCK, KEYBIND_MOUSE_RIGHT };
+	static const char* descs[3]   = { "Left", "Pick block", "Right" };
 	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, MouseKeyBindingsScreen_Init);
 }
 

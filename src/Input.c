@@ -42,7 +42,7 @@ const char* const Key_Names[KEY_COUNT] = {
 	"KeypadAdd", "KeypadDecimal", "KeypadEnter",	
 	"Tilde", "Minus", "Plus", "BracketLeft", "BracketRight", "Slash",
 	"Semicolon", "Quote", "Comma", "Period", "BackSlash",
-	"XButton1", "XButton2",
+	"XButton1", "XButton2", "MouseMid"
 };
 
 /* TODO: Should this only be shown in GUI? not saved to disc? */
@@ -64,7 +64,7 @@ const char* const Key_Names[KEY_COUNT] = {
 	"5", "6", "7", "8", "9",
 	"GRAVE", "MINUS", "PLUS", "LBRACKET", "RBRACKET",
 	"SEMICOLON", "APOSTROPHE", "COMMA", "PERIOD", "SLASH", "BACKSLASH",
-	"XBUTTON1", "XBUTTON2",
+	"XBUTTON1", "XBUTTON2", "MOUSEMID"
 };*/
 
 void Key_SetPressed(Key key, bool pressed) {
@@ -128,7 +128,7 @@ const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	KEY_LSHIFT, 'X', 'Z', 'Q', 'E', 
 	KEY_LALT, KEY_F3, KEY_F12, KEY_F11, 
 	KEY_F5, KEY_F1, KEY_F7, 'C', 
-	KEY_LCTRL, 0, 0, 0, 
+	KEY_LCTRL, 0, KEY_MOUSEMID, 0, 
 	KEY_F6, KEY_LALT, KEY_F8, 
 	'G', KEY_F10, 0
 };
@@ -139,7 +139,7 @@ static const char* const keybindNames[KEYBIND_COUNT] = {
 	"Speed", "NoClip", "Fly", "FlyUp", "FlyDown", 
 	"ExtInput", "HideFPS", "Screenshot", "Fullscreen", 
 	"ThirdPerson", "HideGUI", "AxisLines", "ZoomScrolling", 
-	"HalfSpeed", "MouseLeft", "MouseMiddle", "MouseRight", 
+	"HalfSpeed", "MouseLeft", "PickBlock", "MouseRight", 
 	"AutoRotate", "HotbarSwitching", "SmoothCamera", 
 	"DropBlock", "IDOverlay", "BreakableLiquids"
 };

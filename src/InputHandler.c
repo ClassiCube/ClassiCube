@@ -35,7 +35,6 @@ bool InputHandler_IsMousePressed(MouseButton button) {
 
 	/* Key --> mouse mappings */
 	if (button == MOUSE_LEFT   && KeyBind_IsPressed(KEYBIND_MOUSE_LEFT))   return true;
-	if (button == MOUSE_MIDDLE && KeyBind_IsPressed(KEYBIND_MOUSE_MIDDLE)) return true;
 	if (button == MOUSE_RIGHT  && KeyBind_IsPressed(KEYBIND_MOUSE_RIGHT))  return true;
 	return false;
 }
@@ -201,6 +200,8 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		} else {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
+	} else if (key == KeyBinds[KEYBIND_PICK_BLOCK]) {
+		InputHandler_PickBlocks(false, false, true, false);
 	} else if (key == KEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
@@ -408,8 +409,7 @@ static void InputHandler_MouseDown(void* obj, int btn) {
 		}
 	}
 
-	InputHandler_PickBlocks(false, btn == MOUSE_LEFT, 
-			  btn == MOUSE_MIDDLE, btn == MOUSE_RIGHT);
+	InputHandler_PickBlocks(false, btn == MOUSE_LEFT, false, btn == MOUSE_RIGHT);
 }
 
 static void InputHandler_MouseUp(void* obj, int btn) {
@@ -429,12 +429,11 @@ static void InputHandler_MouseUp(void* obj, int btn) {
 
 static bool InputHandler_SimulateMouse(Key key, bool pressed) {
 	Key left   = KeyBinds[KEYBIND_MOUSE_LEFT];
-	Key middle = KeyBinds[KEYBIND_MOUSE_MIDDLE];
 	Key right  = KeyBinds[KEYBIND_MOUSE_RIGHT];
 	MouseButton btn;
-	if (!(key == left || key == middle || key == right)) return false;
+	if (!(key == left || key == right)) return false;
 
-	btn = key == left ? MOUSE_LEFT : key == middle ? MOUSE_MIDDLE : MOUSE_RIGHT;
+	btn = key == left ? MOUSE_LEFT : MOUSE_RIGHT;
 	if (pressed) { InputHandler_MouseDown(NULL, btn); }
 	else {         InputHandler_MouseUp(NULL,   btn); }
 	return true;

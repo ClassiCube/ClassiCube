@@ -560,7 +560,7 @@ static void Game_Render3D(double delta, float t) {
 	Entities_RenderHoveredNames(delta);
 
 	left   = InputHandler_IsMousePressed(MOUSE_LEFT);
-	middle = InputHandler_IsMousePressed(MOUSE_MIDDLE);
+	middle = KeyBind_IsPressed(KEYBIND_PICK_BLOCK);
 	right  = InputHandler_IsMousePressed(MOUSE_RIGHT);
 
 	InputHandler_PickBlocks(true, left, middle, right);
