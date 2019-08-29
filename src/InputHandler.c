@@ -227,13 +227,18 @@ static void InputHandler_PickBlock(void) {
 	Inventory_PickBlock(cur);
 }
 
-void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) {
+void InputHandler_PickBlocks(void) {
+	bool left, middle, right;
 	TimeMS now = DateTime_CurrentUTC_MS();
 	int delta  = (int)(now - input_lastClick);
 
-	if (cooldown && delta < 250) return; /* 4 times per second */
+	if (delta < 250) return; /* 4 times per second */
 	input_lastClick = now;
 	if (Gui_GetInputGrab()) return;
+
+	left   = KeyBind_IsPressed(KEYBIND_DELETE_BLOCK);
+	middle = KeyBind_IsPressed(KEYBIND_PICK_BLOCK);
+	right  = KeyBind_IsPressed(KEYBIND_PLACE_BLOCK);
 
 	if (Server.SupportsPlayerClick) {
 		input_pickingId = -1;
@@ -327,7 +332,25 @@ static void InputHandler_CheckZoomFov(void* obj) {
 	if (!h->Enabled || !h->CanUseThirdPersonCamera) Game_SetFov(Game_DefaultFov);
 }
 
-static bool InputHandler_HandleNonClassicKey(Key key) {
+static bool HandleBlockKey(Key key) {
+	if (Gui_GetInputGrab()) return false;
+
+	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) {
+		MouseStatePress(MOUSE_LEFT);
+		InputHandler_DeleteBlock();
+	} else if (key == KeyBinds[KEYBIND_PLACE_BLOCK]) {
+		MouseStatePress(MOUSE_RIGHT);
+		InputHandler_PlaceBlock();
+	} else if (key == KeyBinds[KEYBIND_PICK_BLOCK]) {
+		MouseStatePress(MOUSE_MIDDLE);
+		InputHandler_PickBlock();
+	} else {
+		return false;
+	}
+	return true;
+}
+
+static bool HandleNonClassicKey(Key key) {
 	if (key == KeyBinds[KEYBIND_HIDE_GUI]) {
 		Game_HideGui = !Game_HideGui;
 	} else if (key == KeyBinds[KEYBIND_SMOOTH_CAMERA]) {
@@ -363,7 +386,7 @@ static bool InputHandler_HandleNonClassicKey(Key key) {
 	return true;
 }
 
-static bool InputHandler_HandleCoreKey(Key key) {
+static bool HandleCoreKey(Key key) {
 	if (key == KeyBinds[KEYBIND_HIDE_FPS]) {
 		Gui_ShowFPS = !Gui_ShowFPS;
 	} else if (key == KeyBinds[KEYBIND_FULLSCREEN]) {
@@ -383,25 +406,36 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		} else {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
-	} else if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) {
-		MouseStatePress(MOUSE_LEFT);
-		InputHandler_DeleteBlock();
-	} else if (key == KeyBinds[KEYBIND_PLACE_BLOCK]) {
-		MouseStatePress(MOUSE_RIGHT);
-		InputHandler_PlaceBlock();
-	} else if (key == KeyBinds[KEYBIND_PICK_BLOCK]) {
-		MouseStatePress(MOUSE_MIDDLE);
-		InputHandler_PickBlock();
 	} else if (key == KEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);
 	} else {
 		if (Game_ClassicMode) return false;
-		return InputHandler_HandleNonClassicKey(key);
+		return HandleNonClassicKey(key);
 	}
 	return true;
 }
 
+static void HandleHotkeyDown(Key key) {
+	struct HotkeyData* hkey;
+	String text;
+	int i = Hotkeys_FindPartial(key);
+
+	if (i == -1) return;
+	hkey = &HotkeysList[i];
+	text = StringsBuffer_UNSAFE_Get(&HotkeysText, hkey->TextIndex);
+
+	if (!hkey->StaysOpen) {
+		Chat_Send(&text, false);
+	} else if (!Gui_GetInputGrab()) {
+		HUDScreen_OpenInput(&text);
+	}
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Base handlers-------------------------------------------------------*
+*#########################################################################################################################*/
 static void InputHandler_MouseWheel(void* obj, float delta) {
 	struct Screen* s;
 	int i;
@@ -437,9 +471,7 @@ static void InputHandler_MouseDown(void* obj, int btn) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (s->VTABLE->HandlesMouseDown(s, Mouse_X, Mouse_Y, btn)) {
-			input_lastClick = DateTime_CurrentUTC_MS(); return;
-		}
+		if (s->VTABLE->HandlesMouseDown(s, Mouse_X, Mouse_Y, btn)) return;
 	}
 }
 
@@ -456,8 +488,6 @@ static void InputHandler_MouseUp(void* obj, int btn) {
 static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	struct Screen* s;
 	int i;
-	struct HotkeyData* hkey;
-	String text;
 
 #ifndef CC_BUILD_WEB
 	if (key == KEY_ESCAPE && (s = Gui_GetClosable())) {
@@ -493,21 +523,10 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 
 	/* These should not be triggered multiple times when holding down */
 	if (was) return;
-	if (InputHandler_HandleCoreKey(key)) {
+	if (HandleBlockKey(key)) {
+	} else if (HandleCoreKey(key)) {
 	} else if (LocalPlayer_HandlesKey(key)) {
-	} else {
-		i = Hotkeys_FindPartial(key);
-		if (i == -1) return;
-
-		hkey = &HotkeysList[i];
-		text = StringsBuffer_UNSAFE_Get(&HotkeysText, hkey->TextIndex);
-
-		if (!hkey->StaysOpen) {
-			Chat_Send(&text, false);
-		} else if (!Gui_GetInputGrab()) {
-			HUDScreen_OpenInput(&text);
-		}
-	}
+	} else { HandleHotkeyDown(key); }
 }
 
 static void InputHandler_KeyUp(void* obj, int key) {
@@ -530,6 +549,7 @@ static void InputHandler_KeyUp(void* obj, int key) {
 		if (s->VTABLE->HandlesKeyUp(s, key)) return;
 	}
 
+	if (Gui_GetInputGrab()) return;
 	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) MouseStateRelease(MOUSE_LEFT);
 	if (key == KeyBinds[KEYBIND_PLACE_BLOCK])  MouseStateRelease(MOUSE_RIGHT);
 	if (key == KeyBinds[KEYBIND_PICK_BLOCK])   MouseStateRelease(MOUSE_MIDDLE);

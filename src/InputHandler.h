@@ -7,7 +7,7 @@
 struct Screen;
 
 bool InputHandler_SetFOV(int fov);
-void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right);
+void InputHandler_PickBlocks(void);
 void InputHandler_Init(void);
 void InputHandler_OnScreensChanged(void);
 #endif

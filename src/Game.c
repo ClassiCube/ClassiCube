@@ -516,7 +516,6 @@ static void Game_UpdateViewMatrix(void) {
 
 static void Game_Render3D(double delta, float t) {
 	Vec3 pos;
-	bool left, middle, right;
 
 	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox(delta);
 	AxisLinesRenderer_Render(delta);
@@ -558,12 +557,7 @@ static void Game_Render3D(double delta, float t) {
 
 	Selections_Render(delta);
 	Entities_RenderHoveredNames(delta);
-
-	left   = KeyBind_IsPressed(KEYBIND_DELETE_BLOCK);
-	middle = KeyBind_IsPressed(KEYBIND_PICK_BLOCK);
-	right  = KeyBind_IsPressed(KEYBIND_PLACE_BLOCK);
-
-	InputHandler_PickBlocks(true, left, middle, right);
+	InputHandler_PickBlocks();
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }
 
