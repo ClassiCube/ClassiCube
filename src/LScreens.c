@@ -1099,7 +1099,7 @@ static struct ServersScreen {
 	struct LButton btnBack, btnConnect, btnRefresh;
 	struct LTable table;
 	struct LWidget* _widgets[6];
-	FontDesc rowFont;
+	struct FontDesc rowFont;
 	float tableAcc;
 } ServersScreen_Instance;
 

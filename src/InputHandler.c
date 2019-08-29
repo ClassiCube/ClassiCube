@@ -316,10 +316,8 @@ static bool InputHandler_CheckIsFree(BlockID block) {
 void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) {
 	TimeMS now = DateTime_CurrentUTC_MS();
 	int delta  = (int)(now - input_lastClick);
-
 	IVec3 pos;
 	BlockID old, cur, block;
-	int i;
 
 	if (cooldown && delta < 250) return; /* 4 times per second */
 	input_lastClick = now;

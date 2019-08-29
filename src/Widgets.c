@@ -58,7 +58,7 @@ void TextWidget_Make(struct TextWidget* w, cc_uint8 horAnchor, cc_uint8 verAncho
 	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
 }
 
-void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* font) {
+void TextWidget_Set(struct TextWidget* w, const String* text, const struct FontDesc* font) {
 	struct DrawTextArgs args;
 	Gfx_DeleteTexture(&w->tex.ID);
 
@@ -71,14 +71,14 @@ void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* fo
 	}
 
 	if (w->reducePadding) {
-		Drawer2D_ReducePadding_Tex(&w->tex, font->Size, 4);
+		Drawer2D_ReducePadding_Tex(&w->tex, font->size, 4);
 	}
 
 	w->width = w->tex.Width; w->height = w->tex.Height;
 	Widget_Reposition(w);
 }
 
-void TextWidget_SetConst(struct TextWidget* w, const char* text, const FontDesc* font) {
+void TextWidget_SetConst(struct TextWidget* w, const char* text, const struct FontDesc* font) {
 	String str = String_FromReadonly(text);
 	TextWidget_Set(w, &str, font);
 }
@@ -161,7 +161,7 @@ void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
 }
 
-void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc* font) {
+void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const struct FontDesc* font) {
 	struct DrawTextArgs args;
 	Gfx_DeleteTexture(&w->tex.ID);
 
@@ -178,7 +178,7 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc
 	Widget_Reposition(w);
 }
 
-void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, const FontDesc* font) {
+void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, const struct FontDesc* font) {
 	String str = String_FromReadonly(text);
 	ButtonWidget_Set(w, &str, font);
 }
@@ -1457,7 +1457,7 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, co
 	String_Copy(&w->base.text, text);
 }
 
-void MenuInputWidget_SetFont(struct MenuInputWidget* w, FontDesc* font) {
+void MenuInputWidget_SetFont(struct MenuInputWidget* w, struct FontDesc* font) {
 	w->base.font       = font;
 	w->base.lineHeight = Drawer2D_FontHeight(font, false);
 	InputWidget_UpdateText(&w->base);
@@ -1717,7 +1717,7 @@ void ChatInputWidget_Create(struct ChatInputWidget* w) {
 	String_InitArray(w->origStr,   w->_origBuffer);
 }	
 
-void ChatInputWidget_SetFont(struct ChatInputWidget* w, FontDesc* font) {
+void ChatInputWidget_SetFont(struct ChatInputWidget* w, struct FontDesc* font) {
 	struct DrawTextArgs args;	
 	DrawTextArgs_Make(&args, &chatInputPrefix, font, true);
 
@@ -1749,7 +1749,7 @@ static void PlayerListWidget_DrawName(struct Texture* tex, struct PlayerListWidg
 
 	DrawTextArgs_Make(&args, &tmp, w->font, !w->classic);
 	Drawer2D_MakeTextTexture(tex, &args);
-	Drawer2D_ReducePadding_Tex(tex, w->font->Size, 3);
+	Drawer2D_ReducePadding_Tex(tex, w->font->size, 3);
 }
 
 static int PlayerListWidget_HighlightedName(struct PlayerListWidget* w, int x, int y) {
@@ -2106,7 +2106,7 @@ static const struct WidgetVTABLE PlayerListWidget_VTABLE = {
 	Widget_Mouse,          Widget_Mouse,            Widget_MouseMove,      Widget_MouseScroll,
 	PlayerListWidget_Reposition
 };
-void PlayerListWidget_Create(struct PlayerListWidget* w, FontDesc* font, bool classic) {
+void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic) {
 	Widget_Reset(w);
 	w->VTABLE     = &PlayerListWidget_VTABLE;
 	w->horAnchor  = ANCHOR_CENTRE;
@@ -2407,9 +2407,9 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 			ul  = (bit.Len & TEXTGROUPWIDGET_URL);
 			args->text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
 
-			if (ul) args->font->Style |= FONT_FLAG_UNDERLINE;
+			if (ul) args->font->style |= FONT_FLAG_UNDERLINE;
 			Drawer2D_DrawText(&bmp, args, x, 0);
-			if (ul) args->font->Style &= ~FONT_FLAG_UNDERLINE;
+			if (ul) args->font->style &= ~FONT_FLAG_UNDERLINE;
 
 			x += partWidths[i];
 		}
@@ -2438,7 +2438,7 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 		} else {
 			Drawer2D_MakeTextTexture(&tex, &args);
 		}
-		Drawer2D_ReducePadding_Tex(&tex, w->font->Size, 3);
+		Drawer2D_ReducePadding_Tex(&tex, w->font->size, 3);
 	} else {
 		tex.Height = w->collapsible[index] ? 0 : w->defaultHeight;
 	}
@@ -2466,11 +2466,11 @@ void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* group, char col) {
 }
 
 
-void TextGroupWidget_SetFont(struct TextGroupWidget* w, FontDesc* font) {
+void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font) {
 	int i, height;
 	
 	height = Drawer2D_FontHeight(font, true);
-	Drawer2D_ReducePadding_Height(&height, font->Size, 3);
+	Drawer2D_ReducePadding_Height(&height, font->size, 3);
 	w->defaultHeight = height;
 
 	for (i = 0; i < w->lines; i++) {
@@ -2752,7 +2752,7 @@ static const struct WidgetVTABLE SpecialInputWidget_VTABLE = {
 	SpecialInputWidget_MouseDown, Widget_Mouse,              Widget_MouseMove,        Widget_MouseScroll,
 	SpecialInputWidget_Reposition
 };
-void SpecialInputWidget_Create(struct SpecialInputWidget* w, FontDesc* font, struct InputWidget* target) {
+void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* target) {
 	Widget_Reset(w);
 	w->VTABLE    = &SpecialInputWidget_VTABLE;
 	w->verAnchor = ANCHOR_MAX;

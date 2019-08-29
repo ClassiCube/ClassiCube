@@ -7,15 +7,16 @@
 	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
-struct DrawTextArgs { String text; FontDesc* font; bool useShadow; };
+struct FontDesc { void* handle; cc_uint16 size, style; };
+struct DrawTextArgs { String text; struct FontDesc* font; bool useShadow; };
 struct Texture;
 struct IGameComponent;
 extern struct IGameComponent Drawer2D_Component;
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, FontDesc* font, bool useShadow);
-void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useShadow);
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, struct FontDesc* font, bool useShadow);
+void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, bool useShadow);
 /* Initialises the given font. When Drawer2D_BitmappedText is false, creates native font handle using Font_Make. */
-CC_NOINLINE void Drawer2D_MakeFont(FontDesc* desc, int size, int style);
+CC_NOINLINE void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style);
 
 /* Whether text should be drawn and measured using the currently set font bitmap. */ 
 /* If false, then text is instead draw using platform/system fonts. */
@@ -72,7 +73,7 @@ CC_API Size2D Drawer2D_MeasureText(struct DrawTextArgs* args);
 /* Similar to Drawer2D_DrawText, but trims the text with trailing ".." if wider than maxWidth. */
 void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, int maxWidth);
 /* Returns the line height for drawing any character in the font. */
-int Drawer2D_FontHeight(const FontDesc* font, bool useShadow);
+int Drawer2D_FontHeight(const struct FontDesc* font, bool useShadow);
 
 /* Creates a texture consisting only of the given text drawn onto it. */
 /* NOTE: The returned texture is always padded up to nearest power of two dimensions. */
@@ -103,9 +104,9 @@ void Font_GetNames(StringsBuffer* buffer);
 /* Finds the path and face number of the given system font, with closest matching style */
 String Font_Lookup(const String* fontName, int style);
 /* Allocates a new system font from the given arguments. */
-ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style);
+ReturnCode Font_Make(struct FontDesc* desc, const String* fontName, int size, int style);
 /* Frees an allocated font. */
-CC_API void Font_Free(FontDesc* desc);
+CC_API void Font_Free(struct FontDesc* desc);
 /* Attempts to decode one or fonts from the given file. */
 /* NOTE: If this file has been decoded before (fontscache.txt), does nothing. */
 void SysFonts_Register(const String* path);

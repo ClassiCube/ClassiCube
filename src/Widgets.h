@@ -7,6 +7,7 @@
 /* Contains all 2D widget implementations.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
+struct FontDesc;
 
 /* A text label. */
 struct TextWidget {
@@ -19,9 +20,9 @@ struct TextWidget {
 CC_NOINLINE void TextWidget_Make(struct TextWidget* w, 
 								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
-CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const String* text, const FontDesc* font);
+CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const String* text, const struct FontDesc* font);
 /* Shorthand for TextWidget_Set using String_FromReadonly */
-CC_NOINLINE void TextWidget_SetConst(struct TextWidget* w, const char* text, const FontDesc* font);
+CC_NOINLINE void TextWidget_SetConst(struct TextWidget* w, const char* text, const struct FontDesc* font);
 
 
 typedef void (*Button_Get)(String* raw);
@@ -39,9 +40,9 @@ struct ButtonWidget {
 CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, 
 								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
-CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const FontDesc* font);
+CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const struct FontDesc* font);
 /* Shorthand for ButtonWidget_Set using String_FromReadonly */
-CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, const FontDesc* font);
+CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, const struct FontDesc* font);
 
 /* Clickable and draggable scrollbar. */
 struct ScrollbarWidget {
@@ -72,7 +73,7 @@ struct TableWidget {
 	Widget_Layout
 	int blocksCount, blocksPerRow, rowsCount;
 	int lastCreatedIndex;
-	FontDesc* font;
+	struct FontDesc* font;
 	int selectedIndex, cellSize;
 	float selBlockExpand;
 	GfxResourceID vb;
@@ -98,7 +99,7 @@ CC_NOINLINE void TableWidget_Recreate(struct TableWidget* w);
 #define INPUTWIDGET_LEN STRING_SIZE
 struct InputWidget {
 	Widget_Layout
-	FontDesc* font;
+	struct FontDesc* font;
 	int (*GetMaxLines)(void);
 	void (*RemakeTexture)(void* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(void* elem); /* Invoked when the user presses enter. */
@@ -180,7 +181,7 @@ struct MenuInputWidget {
 };
 CC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, struct MenuInputDesc* d);
 /* Sets the font used, then redraws the input widget. */
-CC_NOINLINE void MenuInputWidget_SetFont(struct MenuInputWidget* w, FontDesc* font);
+CC_NOINLINE void MenuInputWidget_SetFont(struct MenuInputWidget* w, struct FontDesc* font);
 
 
 struct ChatInputWidget {
@@ -192,7 +193,7 @@ struct ChatInputWidget {
 };
 
 CC_NOINLINE void ChatInputWidget_Create(struct ChatInputWidget* w);
-CC_NOINLINE void ChatInputWidget_SetFont(struct ChatInputWidget* w, FontDesc* font);
+CC_NOINLINE void ChatInputWidget_SetFont(struct ChatInputWidget* w, struct FontDesc* font);
 
 
 /* Retrieves the text for the i'th line in the group */
@@ -204,7 +205,7 @@ typedef String (*TextGroupWidget_Get)(void* obj, int i);
 struct TextGroupWidget {
 	Widget_Layout
 	int lines, defaultHeight;
-	FontDesc* font;
+	struct FontDesc* font;
 	/* Whether a line has zero height when that line has no text in it. */
 	bool collapsible[TEXTGROUPWIDGET_MAX_LINES];
 	bool underlineUrls;
@@ -214,7 +215,7 @@ struct TextGroupWidget {
 };
 
 CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine);
-CC_NOINLINE void TextGroupWidget_SetFont(struct TextGroupWidget* w, FontDesc* font);
+CC_NOINLINE void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font);
 /* Deletes first line, then moves all other lines upwards, then redraws last line. */
 /* NOTE: GetLine must also adjust the lines it returns for this to behave properly. */
 CC_NOINLINE void TextGroupWidget_ShiftUp(struct TextGroupWidget* w);
@@ -238,7 +239,7 @@ static String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { ret
 
 struct PlayerListWidget {
 	Widget_Layout
-	FontDesc* font;
+	struct FontDesc* font;
 	int namesCount, elementOffset;
 	int xMin, xMax, yHeight;
 	bool classic;
@@ -246,7 +247,7 @@ struct PlayerListWidget {
 	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
 	struct Texture textures[TABLIST_MAX_NAMES * 2];
 };
-CC_NOINLINE void PlayerListWidget_Create(struct PlayerListWidget* w, FontDesc* font, bool classic);
+CC_NOINLINE void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic);
 CC_NOINLINE void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, int mouseX, int mouseY, String* name);
 
 
@@ -263,14 +264,14 @@ struct SpecialInputWidget {
 	bool pendingRedraw;
 	struct InputWidget* target;
 	struct Texture tex;
-	FontDesc* font;
+	struct FontDesc* font;
 	int titleHeight;
 	struct SpecialInputTab tabs[5];
 	String colString;
 	char _colBuffer[DRAWER2D_MAX_COLS * 4];
 };
 
-CC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, FontDesc* font, struct InputWidget* target);
+CC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* target);
 CC_NOINLINE void SpecialInputWidget_Redraw(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active);

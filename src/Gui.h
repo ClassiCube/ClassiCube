@@ -16,6 +16,7 @@ enum GuiAnchor {
 };
 
 struct IGameComponent;
+struct FontDesc;
 struct Widget;
 extern struct IGameComponent Gui_Component;
 
@@ -151,7 +152,7 @@ struct TextAtlas {
 	short widths[TEXTATLAS_MAX_WIDTHS];
 	short offsets[TEXTATLAS_MAX_WIDTHS];
 };
-void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const FontDesc* font, const String* prefix);
+void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const struct FontDesc* font, const String* prefix);
 void TextAtlas_Free(struct TextAtlas* atlas);
 void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertices);
 void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vertices);

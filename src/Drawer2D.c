@@ -19,13 +19,13 @@ BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 static char fontNameBuffer[STRING_SIZE];
 String Drawer2D_FontName = String_FromArray(fontNameBuffer);
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, FontDesc* font, bool useShadow) {
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, struct FontDesc* font, bool useShadow) {
 	args->text = *text;
 	args->font = font;
 	args->useShadow = useShadow;
 }
 
-void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, FontDesc* font, bool useShadow) {
+void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, bool useShadow) {
 	args->text = String_Empty;
 	args->font = font;
 	args->useShadow = useShadow;
@@ -47,14 +47,14 @@ static String font_candidates[9] = {
 	String_FromConst("Roboto") /* android */
 };
 
-void Drawer2D_MakeFont(FontDesc* desc, int size, int style) {
+void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style) {
 	int i;
 	ReturnCode res;
 
 	if (Drawer2D_BitmappedText) {
-		desc->Handle = NULL;
-		desc->Size   = size;
-		desc->Style  = style;
+		desc->handle = NULL;
+		desc->size   = size;
+		desc->style  = style;
 	} else {
 		font_candidates[0] = Drawer2D_FontName;
 
@@ -138,7 +138,7 @@ void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 /* Measures width of the given text when drawn with the given system font. */
 static int Font_SysTextWidth(struct DrawTextArgs* args);
 /* Measures height of any text when drawn with the given system font. */
-static int Font_SysFontHeight(const FontDesc* desc);
+static int Font_SysFontHeight(const struct FontDesc* desc);
 /* Draws the given text with the given system font onto the given bitmap. */
 static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow);
 
@@ -427,7 +427,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	BitmapCol black = BITMAPCOL_CONST(0, 0, 0, 255);
 	BitmapCol col;
 	String text  = args->text;
-	int i, point = args->font->Size, count = 0;
+	int i, point = args->font->size, count = 0;
 
 	int xPadding, yPadding;
 	int srcX, srcY, dstX, dstY;
@@ -504,7 +504,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		x = begX;
 	}
 
-	if (!(args->font->Style & FONT_FLAG_UNDERLINE)) return;
+	if (!(args->font->style & FONT_FLAG_UNDERLINE)) return;
 	/* scale up bottom row of a cell to drawn text font */
 	cellY = (8 - 1) * dstHeight / 8;
 	underlineY      = y + (cellY + yPadding);
@@ -523,7 +523,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 }
 
 static void Drawer2D_DrawBitmapText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
-	int offset = Drawer2D_ShadowOffset(args->font->Size);
+	int offset = Drawer2D_ShadowOffset(args->font->size);
 
 	if (args->useShadow) {
 		Drawer2D_DrawCore(bmp, args, x + offset, y + offset, true);
@@ -532,7 +532,7 @@ static void Drawer2D_DrawBitmapText(Bitmap* bmp, struct DrawTextArgs* args, int 
 }
 
 static int Drawer2D_MeasureBitmapWidth(const struct DrawTextArgs* args) {
-	int i, point = args->font->Size;
+	int i, point = args->font->size;
 	int xPadding, width;
 	String text;
 
@@ -608,10 +608,10 @@ int Drawer2D_TextHeight(struct DrawTextArgs* args) {
 	return Drawer2D_FontHeight(args->font, args->useShadow);
 }
 
-int Drawer2D_FontHeight(const FontDesc* font, bool useShadow) {
+int Drawer2D_FontHeight(const struct FontDesc* font, bool useShadow) {
 	int height, point;
 	if (Drawer2D_BitmappedText) {
-		point = font->Size;
+		point = font->size;
 		/* adjust coords to make drawn text match GDI fonts */
 		height = Drawer2D_AdjHeight(point);
 
@@ -991,16 +991,16 @@ String Font_Lookup(const String* fontName, int style) {
 	return path.length ? path : Font_LookupOf(fontName, 'R');
 }
 
-ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
+ReturnCode Font_Make(struct FontDesc* desc, const String* fontName, int size, int style) {
 	struct SysFont* font;
 	String value, path, index;
 	int faceIndex;
 	FT_Open_Args args;
 	FT_Error err;
 
-	desc->Size   = size;
-	desc->Style  = style;
-	desc->Handle = NULL;
+	desc->size   = size;
+	desc->style  = style;
+	desc->handle = NULL;
 
 	value = Font_Lookup(fontName, style);
 	if (!value.length) return ERR_INVALID_ARGUMENT;
@@ -1009,28 +1009,28 @@ ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style
 
 	font = (struct SysFont*)Mem_Alloc(1, sizeof(struct SysFont), "SysFont");
 	if ((err = SysFont_Init(&path, font, &args))) { Mem_Free(font); return err; }
-	desc->Handle = font;
+	desc->handle = font;
 
 	if ((err = FT_New_Face(ft_lib, &args, faceIndex, &font->face))) return err;
 	return FT_Set_Char_Size(font->face, size * 64, 0, Display_DpiX, Display_DpiY);
 }
 
-void Font_Free(FontDesc* desc) {
+void Font_Free(struct FontDesc* desc) {
 	struct SysFont* font;
-	desc->Size  = 0;
-	desc->Style = 0;
+	desc->size  = 0;
+	desc->style = 0;
 	/* NULL for fonts created by Drawer2D_MakeFont and bitmapped text mode is on */
-	if (!desc->Handle) return;
+	if (!desc->handle) return;
 
-	font = (struct SysFont*)desc->Handle;
+	font = (struct SysFont*)desc->handle;
 	FT_Done_Face(font->face);
 	Mem_Free(font);
-	desc->Handle = NULL;
+	desc->handle = NULL;
 }
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
 static int Font_SysTextWidth(struct DrawTextArgs* args) {
-	struct SysFont* font = (struct SysFont*)args->font->Handle;
+	struct SysFont* font = (struct SysFont*)args->font->handle;
 	FT_Face face = font->face;
 	String text  = args->text;
 	int i, width = 0, charWidth;
@@ -1058,8 +1058,8 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	return TEXT_CEIL(width);
 }
 
-static int Font_SysFontHeight(const FontDesc* desc) {
-	struct SysFont* font = (struct SysFont*)desc->Handle;
+static int Font_SysFontHeight(const struct FontDesc* desc) {
+	struct SysFont* font = (struct SysFont*)desc->handle;
 	FT_Face face = font->face;
 	return TEXT_CEIL(face->size->metrics.height);
 }
@@ -1113,7 +1113,7 @@ static void DrawBlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitma
 }
 
 static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) {
-	struct SysFont* font  = (struct SysFont*)args->font->Handle;
+	struct SysFont* font  = (struct SysFont*)args->font->handle;
 	FT_BitmapGlyph* glyphs = font->glyphs;
 
 	FT_Face face = font->face;
@@ -1166,7 +1166,7 @@ static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y
 		x -= glyph->left; y -= offset;
 	}
 
-	if (args->font->Style & FONT_FLAG_UNDERLINE) {
+	if (args->font->style & FONT_FLAG_UNDERLINE) {
 		int ul_pos   = FT_MulFix(face->underline_position,  face->size->metrics.y_scale);
 		int ul_thick = FT_MulFix(face->underline_thickness, face->size->metrics.y_scale);
 

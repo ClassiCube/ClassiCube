@@ -64,8 +64,8 @@ static void Menu_Back(void* s, int i, struct ButtonWidget* btn, Widget_LeftClick
 	Menu_Button(s, i, btn, width, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
-CC_NOINLINE static void Menu_MakeTitleFont(FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_STYLE_BOLD); }
-CC_NOINLINE static void Menu_MakeBodyFont(FontDesc* font)  { Drawer2D_MakeFont(font, 16, FONT_STYLE_NORMAL); }
+CC_NOINLINE static void Menu_MakeTitleFont(struct FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_STYLE_BOLD); }
+CC_NOINLINE static void Menu_MakeBodyFont(struct FontDesc* font)  { Drawer2D_MakeFont(font, 16, FONT_STYLE_NORMAL); }
 static void Menu_NullFunc(void* screen) { }
 
 
@@ -231,7 +231,7 @@ static struct ListScreen {
 	Screen_Layout
 	struct ButtonWidget buttons[LIST_SCREEN_ITEMS];
 	struct ButtonWidget left, right, done;
-	FontDesc font;
+	struct FontDesc font;
 	float wheelAcc;
 	int currentIndex;
 	Widget_LeftClick EntryClick;
@@ -476,7 +476,7 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 
 static void PauseScreen_ContextRecreated(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	FontDesc titleFont;
+	struct FontDesc titleFont;
 	int i;
 
 	Menu_MakeTitleFont(&titleFont);
@@ -567,7 +567,7 @@ void PauseScreen_Show(void) {
 static struct OptionsGroupScreen {
 	Screen_Layout
 	int selectedI;
-	FontDesc textFont;
+	struct FontDesc textFont;
 	struct ButtonWidget buttons[7];
 	struct TextWidget desc;	
 	struct ButtonWidget done;	
@@ -609,7 +609,7 @@ static void OptionsGroupScreen_ContextLost(void* screen) {
 
 static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
-	FontDesc titleFont;
+	struct FontDesc titleFont;
 	int i;
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&s->textFont);
@@ -683,7 +683,7 @@ static struct EditHotkeyScreen {
 	struct HotkeyData curHotkey, origHotkey;
 	int selectedI;
 	bool supressNextPress;
-	FontDesc titleFont, textFont;
+	struct FontDesc titleFont, textFont;
 	struct MenuInputWidget input;
 	struct ButtonWidget buttons[5], cancel;
 } EditHotkeyScreen_Instance;
@@ -903,7 +903,7 @@ void EditHotkeyScreen_Show(struct HotkeyData original) {
 *#########################################################################################################################*/
 static struct GenLevelScreen {
 	Screen_Layout
-	FontDesc textFont;
+	struct FontDesc textFont;
 	struct ButtonWidget flatgrass, vanilla, cancel;
 	struct MenuInputWidget* selected;
 	struct MenuInputWidget inputs[4];
@@ -1007,7 +1007,7 @@ static void GenLevelScreen_ContextLost(void* screen) {
 
 static void GenLevelScreen_ContextRecreated(void* screen) {
 	struct GenLevelScreen* s  = (struct GenLevelScreen*)screen;
-	FontDesc titleFont;
+	struct FontDesc titleFont;
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&s->textFont);
 
@@ -1090,7 +1090,7 @@ static void ClassicGenScreen_Make(struct ClassicGenScreen* s, int i, int y, Widg
 
 static void ClassicGenScreen_ContextRecreated(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
-	FontDesc titleFont;
+	struct FontDesc titleFont;
 
 	Menu_MakeTitleFont(&titleFont);
 	ButtonWidget_SetConst(&s->buttons[0], "Small",  &titleFont);
@@ -1133,7 +1133,7 @@ void ClassicGenScreen_Show(void) {
 *#########################################################################################################################*/
 static struct SaveLevelScreen {
 	Screen_Layout
-	FontDesc titleFont, textFont;
+	struct FontDesc titleFont, textFont;
 	struct ButtonWidget save, schem, cancel;
 	struct MenuInputWidget input;
 	struct TextWidget mcEdit, desc;
@@ -1355,7 +1355,7 @@ static void FontListScreen_EntryClick(void* screen, void* widget) {
 }
 
 static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const String* text) {
-	FontDesc font;
+	struct FontDesc font;
 	ReturnCode res;
 
 	if (String_CaselessEqualsConst(text, LIST_SCREEN_EMPTY)) {
@@ -1519,7 +1519,7 @@ static struct KeyBindingsScreen {
 	InitKeyBindings DoInit;
 	const char* titleText;
 	const char* msgText;
-	FontDesc titleFont;
+	struct FontDesc titleFont;
 	struct TextWidget title, msg;
 	struct ButtonWidget back, left, right;
 	struct ButtonWidget buttons[12];
@@ -1586,7 +1586,7 @@ static void KeyBindingsScreen_ContextLost(void* screen) {
 
 static void KeyBindingsScreen_ContextRecreated(void* screen) {
 	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
-	FontDesc textFont;
+	struct FontDesc textFont;
 	int i;
 
 	Menu_MakeTitleFont(&s->titleFont);
@@ -1778,7 +1778,7 @@ static struct MenuOptionsScreen {
 	int activeI, selectedI, descriptionsCount;
 	InitMenuOptions DoInit, DoRecreateExtra, OnHacksChanged;
 	int numButtons;
-	FontDesc titleFont, textFont;
+	struct FontDesc titleFont, textFont;
 	struct ButtonWidget ok, Default;
 	struct MenuInputWidget input;
 	struct TextGroupWidget extHelp;
@@ -2804,7 +2804,7 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	static const String chars  = String_FromConst("0123456789");
 	static const String prefix = String_FromConst("f");
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
-	FontDesc textFont, titleFont;
+	struct FontDesc textFont, titleFont;
 	int size;
 
 	size = Window_Height / ATLAS2D_TILES_PER_ROW;
@@ -2965,7 +2965,7 @@ static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 
 static void UrlWarningOverlay_ContextRecreated(void* screen) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
-	FontDesc titleFont, textFont;
+	struct FontDesc titleFont, textFont;
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&textFont);
 
@@ -3018,7 +3018,7 @@ static struct TexPackOverlay {
 	bool deny, alwaysDeny;
 	cc_uint32 contentLength;
 	String url, identifier;
-	FontDesc textFont;
+	struct FontDesc textFont;
 	struct ButtonWidget buttons[4];
 	struct TextWidget   labels[4];
 	char _identifierBuffer[STRING_SIZE + 4];
@@ -3101,7 +3101,7 @@ static void TexPackOverlay_ContextLost(void* screen) {
 
 static void TexPackOverlay_ContextRecreated(void* screen) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	FontDesc titleFont;
+	struct FontDesc titleFont;
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&s->textFont);
 

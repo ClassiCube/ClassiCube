@@ -21,10 +21,10 @@ struct LScreen* Launcher_Screen;
 Rect2D Launcher_Dirty;
 Bitmap Launcher_Framebuffer;
 bool Launcher_ClassicBackground;
-FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
+struct FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
 
 static bool pendingRedraw;
-static FontDesc logoFont;
+static struct FontDesc logoFont;
 
 bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static void Launcher_ApplyUpdate(void);

@@ -6,6 +6,7 @@
 	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct LScreen;
+struct FontDesc;
 
 /* Currently active screen/menu. */
 extern struct LScreen* Launcher_Screen;
@@ -17,9 +18,9 @@ extern Bitmap Launcher_Framebuffer;
 /* Whether to use stone tile background like minecraft.net. */
 extern bool Launcher_ClassicBackground;
 /* Default font for buttons and labels. */
-extern FontDesc Launcher_TitleFont, Launcher_TextFont;
+extern struct FontDesc Launcher_TitleFont, Launcher_TextFont;
 /* Default font for input widget hints. */
-extern FontDesc Launcher_HintFont;
+extern struct FontDesc Launcher_HintFont;
 
 /* Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. */
 extern bool Launcher_ShouldExit;

@@ -233,7 +233,7 @@ static void Entity_MakeNameTexture(struct Entity* e) {
 	BitmapCol origWhiteCol;
 
 	struct DrawTextArgs args;
-	FontDesc font;
+	struct FontDesc font;
 	bool bitmapped;
 	String name;
 	Size2D size;

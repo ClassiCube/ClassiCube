@@ -1089,7 +1089,7 @@ static struct LWidgetVTABLE ltable_VTABLE = {
 	LTable_MouseDown, LTable_StopDragging, /* Select */
 	LTable_MouseWheel,      /* Wheel */
 };
-void LTable_Init(struct LTable* w, FontDesc* rowFont) {
+void LTable_Init(struct LTable* w, struct FontDesc* rowFont) {
 	int i;
 	w->VTABLE     = &ltable_VTABLE;
 	w->Columns    = tableColumns;

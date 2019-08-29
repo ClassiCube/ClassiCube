@@ -7,6 +7,7 @@
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct LScreen;
+struct FontDesc;
 
 struct LWidgetVTABLE {
 	/* Called to draw contents of this widget */
@@ -94,7 +95,7 @@ CC_NOINLINE void LInput_Clear(struct LInput* w);
 /* Represents non-interactable text. */
 struct LLabel {
 	LWidget_Layout
-	FontDesc* Font;
+	struct FontDesc* Font;
 	String Text;
 	Size2D _TextSize;
 	char _TextBuffer[STRING_SIZE];
@@ -149,7 +150,7 @@ struct LTable {
 	/* Number of columns in the table. */
 	int NumColumns;
 	/* Fonts for text in rows. */
-	FontDesc* RowFont;
+	struct FontDesc* RowFont;
 	/* Y start and end of rows and height of each row. */
 	int RowsBegY, RowsEndY, RowHeight;
 	/* Y height of headers. */
@@ -185,7 +186,7 @@ struct LTable {
 
 /* Initialises a table. */
 /* NOTE: Must also call LTable_Reset to make a table actually useful. */
-void LTable_Init(struct LTable* table, FontDesc* rowFont);
+void LTable_Init(struct LTable* table, struct FontDesc* rowFont);
 /* Resets state of a table (reset sorter, filter, etc) */
 void LTable_Reset(struct LTable* table);
 /* Adjusts Y position of rows and number of visible rows. */

@@ -29,7 +29,7 @@ struct HUDScreen {
 	struct HotbarWidget hotbar;
 	/* player list state */
 	struct PlayerListWidget playerList;
-	FontDesc playerFont;
+	struct FontDesc playerFont;
 	bool showingList, wasShowingList;
 	/* chat state */
 	int inputOldHeight;
@@ -37,7 +37,7 @@ struct HUDScreen {
 	bool suppressNextPress;
 	int chatIndex;
 	int lastDownloadStatus;
-	FontDesc chatFont, announcementFont;
+	struct FontDesc chatFont, announcementFont;
 	struct TextWidget announcement;
 	struct ChatInputWidget input;
 	struct TextGroupWidget status, bottomRight, chat, clientStatus;
@@ -79,7 +79,7 @@ CC_NOINLINE static bool IsOnlyHudActive(void) {
 *#########################################################################################################################*/
 static struct InventoryScreen {
 	Screen_Layout
-	FontDesc font;
+	struct FontDesc font;
 	struct TableWidget table;
 	bool releasedInv, deferredSelect;
 } InventoryScreen_Instance;
@@ -234,7 +234,7 @@ void InventoryScreen_Show(void) {
 *#########################################################################################################################*/
 static struct StatusScreen {
 	Screen_Layout
-	FontDesc font;
+	struct FontDesc font;
 	struct TextWidget line1, line2;
 	struct TextAtlas posAtlas;
 	double accumulator;
@@ -423,7 +423,7 @@ void StatusScreen_Show(void) {
 *#########################################################################################################################*/
 static struct LoadingScreen {
 	Screen_Layout
-	FontDesc font;
+	struct FontDesc font;
 	float progress;
 	
 	struct TextWidget title, message;
@@ -696,7 +696,7 @@ static bool HUDScreen_ChatUpdateFont(struct HUDScreen* s) {
 	Math_Clamp(size, 8, 60);
 
 	/* don't recreate font if possible */
-	if (size == s->chatFont.Size) return false;
+	if (size == s->chatFont.size) return false;
 	HUDScreen_FreeChatFonts(s);
 	Drawer2D_MakeFont(&s->chatFont, size, FONT_STYLE_NORMAL);
 
@@ -1243,7 +1243,7 @@ static struct DisconnectScreen {
 	int lastSecsLeft;
 	struct ButtonWidget reconnect;
 
-	FontDesc titleFont, messageFont;
+	struct FontDesc titleFont, messageFont;
 	struct TextWidget title, message;
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
