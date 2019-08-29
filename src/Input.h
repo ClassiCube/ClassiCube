@@ -41,17 +41,17 @@ enum Key_ {
 
 	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
 	KEY_XBUTTON1, KEY_XBUTTON2, KEY_LMOUSE, KEY_RMOUSE, KEY_MMOUSE,
-	KEY_COUNT
+	INPUT_COUNT
 };
 typedef int Key;
 
 /* Simple names for each keyboard button. */
-extern const char* const Key_Names[KEY_COUNT];
+extern const char* const Input_Names[INPUT_COUNT];
 
-#define Key_IsWinPressed()     (Key_Pressed[KEY_LWIN]   || Key_Pressed[KEY_RWIN])
-#define Key_IsAltPressed()     (Key_Pressed[KEY_LALT]   || Key_Pressed[KEY_RALT])
-#define Key_IsControlPressed() (Key_Pressed[KEY_LCTRL]  || Key_Pressed[KEY_RCTRL])
-#define Key_IsShiftPressed()   (Key_Pressed[KEY_LSHIFT] || Key_Pressed[KEY_RSHIFT])
+#define Key_IsWinPressed()     (Input_Pressed[KEY_LWIN]   || Input_Pressed[KEY_RWIN])
+#define Key_IsAltPressed()     (Input_Pressed[KEY_LALT]   || Input_Pressed[KEY_RALT])
+#define Key_IsControlPressed() (Input_Pressed[KEY_LCTRL]  || Input_Pressed[KEY_RCTRL])
+#define Key_IsShiftPressed()   (Input_Pressed[KEY_LSHIFT] || Input_Pressed[KEY_RSHIFT])
 
 #ifdef CC_BUILD_OSX
 /* osx uses CMD instead of CTRL for clipboard and stuff */
@@ -60,12 +60,12 @@ extern const char* const Key_Names[KEY_COUNT];
 #define Key_IsActionPressed() Key_IsControlPressed()
 #endif
 
-/* Pressed state of each keyboard button. Use Key_SetPressed to change. */
-extern bool Key_Pressed[KEY_COUNT];
+/* Pressed state of each keyboard button. Use Input_SetPressed to change. */
+extern bool Input_Pressed[INPUT_COUNT];
 /* Sets the pressed state of a keyboard button. */
 /* Raises KeyEvents.Up   if not pressed, but was pressed before. */
 /* Raises KeyEvents.Down if pressed (repeating is whether it was pressed before) */
-void Key_SetPressed(Key key, bool pressed);
+void Input_SetPressed(Key key, bool pressed);
 /* Resets all keys to be not pressed. */
 /* Raises KeyEvents.Up for each previously pressed key. */
 void Key_Clear(void);

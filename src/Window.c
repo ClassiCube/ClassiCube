@@ -105,7 +105,7 @@ static void Window_AddTouch(long id, int x, int y) {
 	touchesCount++;
 
 	Mouse_SetPosition(x, y);
-	Key_SetPressed(KEY_LMOUSE, true);
+	Input_SetPressed(KEY_LMOUSE, true);
 }
 
 static void Window_UpdateTouch(long id, int x, int y) {
@@ -136,7 +136,7 @@ static void Window_RemoveTouch(long id, int x, int y) {
 
 		touchesCount--;
 		Mouse_SetPosition(x, y);
-		Key_SetPressed(KEY_LMOUSE, false);
+		Input_SetPressed(KEY_LMOUSE, false);
 		return;
 	}
 }
@@ -266,9 +266,9 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_MOUSEMOVE:
 		/* Set before position change, in case mouse buttons changed when outside window */
-		Key_SetPressed(KEY_LMOUSE, (wParam & 0x01) != 0);
-		Key_SetPressed(KEY_RMOUSE, (wParam & 0x02) != 0);
-		Key_SetPressed(KEY_MMOUSE, (wParam & 0x10) != 0);
+		Input_SetPressed(KEY_LMOUSE, (wParam & 0x01) != 0);
+		Input_SetPressed(KEY_RMOUSE, (wParam & 0x02) != 0);
+		Input_SetPressed(KEY_MMOUSE, (wParam & 0x10) != 0);
 		/* TODO: do we need to set XBUTTON1/XBUTTON2 here */
 		Mouse_SetPosition(LOWORD(lParam), HIWORD(lParam));
 		break;
@@ -279,23 +279,23 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		return 0;
 
 	case WM_LBUTTONDOWN:
-		Key_SetPressed(KEY_LMOUSE, true); break;
+		Input_SetPressed(KEY_LMOUSE, true); break;
 	case WM_MBUTTONDOWN:
-		Key_SetPressed(KEY_MMOUSE, true); break;
+		Input_SetPressed(KEY_MMOUSE, true); break;
 	case WM_RBUTTONDOWN:
-		Key_SetPressed(KEY_RMOUSE, true); break;
+		Input_SetPressed(KEY_RMOUSE, true); break;
 	case WM_XBUTTONDOWN:
-		Key_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, true);
+		Input_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, true);
 		break;
 
 	case WM_LBUTTONUP:
-		Key_SetPressed(KEY_LMOUSE, false); break;
+		Input_SetPressed(KEY_LMOUSE, false); break;
 	case WM_MBUTTONUP:
-		Key_SetPressed(KEY_MMOUSE, false); break;
+		Input_SetPressed(KEY_MMOUSE, false); break;
 	case WM_RBUTTONUP:
-		Key_SetPressed(KEY_RMOUSE, false); break;
+		Input_SetPressed(KEY_RMOUSE, false); break;
 	case WM_XBUTTONUP:
-		Key_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, false);
+		Input_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, false);
 		break;
 
 	case WM_INPUT:
@@ -348,24 +348,24 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			rShiftDown = ((USHORT)GetKeyState(VK_RSHIFT)) >> 15;
 
 			if (!pressed || lShiftDown != rShiftDown) {
-				Key_SetPressed(KEY_LSHIFT,  lShiftDown);
-				Key_SetPressed(KEY_RSHIFT, rShiftDown);
+				Input_SetPressed(KEY_LSHIFT,  lShiftDown);
+				Input_SetPressed(KEY_RSHIFT, rShiftDown);
 			}
 			return 0;
 
 		case VK_CONTROL:
-			Key_SetPressed(ext ? KEY_RCTRL : KEY_LCTRL, pressed);
+			Input_SetPressed(ext ? KEY_RCTRL : KEY_LCTRL, pressed);
 			return 0;
 		case VK_MENU:
-			Key_SetPressed(ext ? KEY_RALT  : KEY_LALT,  pressed);
+			Input_SetPressed(ext ? KEY_RALT  : KEY_LALT,  pressed);
 			return 0;
 		case VK_RETURN:
-			Key_SetPressed(ext ? KEY_KP_ENTER : KEY_ENTER, pressed);
+			Input_SetPressed(ext ? KEY_KP_ENTER : KEY_ENTER, pressed);
 			return 0;
 
 		default:
 			mappedKey = Window_MapKey(wParam);
-			if (mappedKey) Key_SetPressed(mappedKey, pressed);
+			if (mappedKey) Input_SetPressed(mappedKey, pressed);
 			return 0;
 		}
 	} break;
@@ -1024,7 +1024,7 @@ static void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {
 
 	Key key = Window_MapKey(keysym1);
 	if (!key) key = Window_MapKey(keysym2);
-	if (key)  Key_SetPressed(key, pressed);
+	if (key)  Input_SetPressed(key, pressed);
 }
 
 static Atom Window_GetSelectionProperty(XEvent* e) {
@@ -1096,21 +1096,21 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case ButtonPress:
-			if (e.xbutton.button == 1)      Key_SetPressed(KEY_LMOUSE, true);
-			else if (e.xbutton.button == 2) Key_SetPressed(KEY_MMOUSE, true);
-			else if (e.xbutton.button == 3) Key_SetPressed(KEY_RMOUSE, true);
+			if (e.xbutton.button == 1)      Input_SetPressed(KEY_LMOUSE, true);
+			else if (e.xbutton.button == 2) Input_SetPressed(KEY_MMOUSE, true);
+			else if (e.xbutton.button == 3) Input_SetPressed(KEY_RMOUSE, true);
 			else if (e.xbutton.button == 4) Mouse_SetWheel(Mouse_Wheel + 1);
 			else if (e.xbutton.button == 5) Mouse_SetWheel(Mouse_Wheel - 1);
-			else if (e.xbutton.button == 6) Key_SetPressed(KEY_XBUTTON1,  true);
-			else if (e.xbutton.button == 7) Key_SetPressed(KEY_XBUTTON2,  true);
+			else if (e.xbutton.button == 6) Input_SetPressed(KEY_XBUTTON1,  true);
+			else if (e.xbutton.button == 7) Input_SetPressed(KEY_XBUTTON2,  true);
 			break;
 
 		case ButtonRelease:
-			if (e.xbutton.button == 1)      Key_SetPressed(KEY_LMOUSE, false);
-			else if (e.xbutton.button == 2) Key_SetPressed(KEY_MMOUSE, false);
-			else if (e.xbutton.button == 3) Key_SetPressed(KEY_RMOUSE, false);
-			else if (e.xbutton.button == 6) Key_SetPressed(KEY_XBUTTON1,  false);
-			else if (e.xbutton.button == 7) Key_SetPressed(KEY_XBUTTON2,  false);
+			if (e.xbutton.button == 1)      Input_SetPressed(KEY_LMOUSE, false);
+			else if (e.xbutton.button == 2) Input_SetPressed(KEY_MMOUSE, false);
+			else if (e.xbutton.button == 3) Input_SetPressed(KEY_RMOUSE, false);
+			else if (e.xbutton.button == 6) Input_SetPressed(KEY_XBUTTON1,  false);
+			else if (e.xbutton.button == 7) Input_SetPressed(KEY_XBUTTON2,  false);
 			break;
 
 		case MotionNotify:
@@ -1562,7 +1562,7 @@ static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
 			key = Window_MapKey(code);
 			if (!key) { Platform_Log1("Ignoring unmapped key %i", &code); return 0; }
 
-			Key_SetPressed(key, kind != kEventRawKeyUp);
+			Input_SetPressed(key, kind != kEventRawKeyUp);
 			return eventNotHandledErr;
 			
 		case kEventRawKeyModifiersChanged:
@@ -1570,11 +1570,11 @@ static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
 									NULL, sizeof(UInt32), NULL, &code);
 			if (res) Logger_Abort2(res, "Getting key modifiers");
 			
-			Key_SetPressed(KEY_LCTRL,    (code & 0x1000) != 0);
-			Key_SetPressed(KEY_LALT,     (code & 0x0800) != 0);
-			Key_SetPressed(KEY_LSHIFT,   (code & 0x0200) != 0);
-			Key_SetPressed(KEY_LWIN,     (code & 0x0100) != 0);			
-			Key_SetPressed(KEY_CAPSLOCK, (code & 0x0400) != 0);
+			Input_SetPressed(KEY_LCTRL,    (code & 0x1000) != 0);
+			Input_SetPressed(KEY_LALT,     (code & 0x0800) != 0);
+			Input_SetPressed(KEY_LSHIFT,   (code & 0x0200) != 0);
+			Input_SetPressed(KEY_LWIN,     (code & 0x0100) != 0);			
+			Input_SetPressed(KEY_CAPSLOCK, (code & 0x0400) != 0);
 			return eventNotHandledErr;
 	}
 	return eventNotHandledErr;
@@ -1657,11 +1657,11 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 			
 			switch (button) {
 				case kEventMouseButtonPrimary:
-					Key_SetPressed(KEY_LMOUSE, down); break;
+					Input_SetPressed(KEY_LMOUSE, down); break;
 				case kEventMouseButtonSecondary:
-					Key_SetPressed(KEY_RMOUSE, down); break;
+					Input_SetPressed(KEY_RMOUSE, down); break;
 				case kEventMouseButtonTertiary:
-					Key_SetPressed(KEY_MMOUSE, down); break;
+					Input_SetPressed(KEY_MMOUSE, down); break;
 			}
 			return eventNotHandledErr;
 			
@@ -2217,22 +2217,22 @@ static Key Window_MapKey(SDL_Keycode k) {
 static void Window_HandleKeyEvent(const SDL_Event* e) {
 	bool pressed = e->key.state == SDL_PRESSED;
 	Key key = Window_MapKey(e->key.keysym.sym);
-	if (key) Key_SetPressed(key, pressed);
+	if (key) Input_SetPressed(key, pressed);
 }
 
 static void Window_HandleMouseEvent(const SDL_Event* e) {
 	bool pressed = e->button.state == SDL_PRESSED;
 	switch (e->button.button) {
 		case SDL_BUTTON_LEFT:
-			Key_SetPressed(KEY_LMOUSE, pressed); break;
+			Input_SetPressed(KEY_LMOUSE, pressed); break;
 		case SDL_BUTTON_MIDDLE:
-			Key_SetPressed(KEY_MMOUSE, pressed); break;
+			Input_SetPressed(KEY_MMOUSE, pressed); break;
 		case SDL_BUTTON_RIGHT:
-			Key_SetPressed(KEY_RMOUSE, pressed); break;
+			Input_SetPressed(KEY_RMOUSE, pressed); break;
 		case SDL_BUTTON_X1:
-			Key_SetPressed(KEY_XBUTTON1, pressed); break;
+			Input_SetPressed(KEY_XBUTTON1, pressed); break;
 		case SDL_BUTTON_X2:
-			Key_SetPressed(KEY_XBUTTON2, pressed); break;
+			Input_SetPressed(KEY_XBUTTON2, pressed); break;
 	}
 }
 
@@ -2407,18 +2407,18 @@ static EM_BOOL Window_MouseButton(int type, const EmscriptenMouseEvent* ev, void
 	Window_CorrectFocus();
 
 	switch (ev->button) {
-		case 0: Key_SetPressed(KEY_LMOUSE, down); break;
-		case 1: Key_SetPressed(KEY_MMOUSE, down); break;
-		case 2: Key_SetPressed(KEY_RMOUSE, down); break;
+		case 0: Input_SetPressed(KEY_LMOUSE, down); break;
+		case 1: Input_SetPressed(KEY_MMOUSE, down); break;
+		case 2: Input_SetPressed(KEY_RMOUSE, down); break;
 	}
 	return true;
 }
 
 static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
 	/* Set before position change, in case mouse buttons changed when outside window */
-	Key_SetPressed(KEY_LMOUSE, (ev->buttons & 0x01) != 0);
-	Key_SetPressed(KEY_RMOUSE, (ev->buttons & 0x02) != 0);
-	Key_SetPressed(KEY_MMOUSE, (ev->buttons & 0x04) != 0);
+	Input_SetPressed(KEY_LMOUSE, (ev->buttons & 0x01) != 0);
+	Input_SetPressed(KEY_RMOUSE, (ev->buttons & 0x02) != 0);
+	Input_SetPressed(KEY_MMOUSE, (ev->buttons & 0x04) != 0);
 
 	Mouse_SetPosition(ev->canvasX, ev->canvasY);
 	if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, ev->movementX, ev->movementY);
@@ -2558,7 +2558,7 @@ static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* da
 		}
 	}
 	
-	Key_SetPressed(key, type == EMSCRIPTEN_EVENT_KEYDOWN);
+	Input_SetPressed(key, type == EMSCRIPTEN_EVENT_KEYDOWN);
 	/* KeyUp always intercepted */
 	if (type != EMSCRIPTEN_EVENT_KEYDOWN) return true;
 	
@@ -2841,13 +2841,13 @@ static Key Window_MapKey(int code) {
 static void JNICALL java_processKeyDown(JNIEnv* env, jobject o, jint code) {
 	int key = Window_MapKey(code);
 	Platform_Log2("KEY - DOWN %i,%i", &code, &key);
-	if (key) Key_SetPressed(key, true);
+	if (key) Input_SetPressed(key, true);
 }
 
 static void JNICALL java_processKeyUp(JNIEnv* env, jobject o, jint code) {
 	int key = Window_MapKey(code);
 	Platform_Log2("KEY - UP %i,%i", &code, &key);
-	if (key) Key_SetPressed(key, false);
+	if (key) Input_SetPressed(key, false);
 }
 
 static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {

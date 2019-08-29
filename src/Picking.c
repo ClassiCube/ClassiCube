@@ -55,7 +55,6 @@ void PickedPos_SetAsInvalid(struct PickedPos* pos) {
 	pos->Valid   = false;
 	pos->Block   = BLOCK_AIR;
 	pos->Closest = FACE_COUNT;
-	
 }
 
 static float RayTracer_Div(float a, float b) {
