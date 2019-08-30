@@ -72,9 +72,9 @@ void Input_SetPressed(Key key, bool pressed) {
 	Input_Pressed[key] = pressed;
 
 	if (pressed) {
-		Event_RaiseInput(&KeyEvents.Down, key, wasPressed);
+		Event_RaiseInput(&InputEvents.Down, key, wasPressed);
 	} else if (wasPressed) {
-		Event_RaiseInt(&KeyEvents.Up, key);
+		Event_RaiseInt(&InputEvents.Up, key);
 	}
 
 	/* don't allow multiple left mouse down events */
@@ -84,7 +84,8 @@ void Input_SetPressed(Key key, bool pressed) {
 
 void Key_Clear(void) {
 	int i;
-	for (i = 0; i < INPUT_COUNT; i++) {
+	/* only resets keyboard keys, not mouse state */
+	for (i = 0; i < KEY_XBUTTON1; i++) {
 		if (Input_Pressed[i]) Input_SetPressed(i, false);
 	}
 }
@@ -107,7 +108,7 @@ void Mouse_SetPressed(bool pressed) {
 void Mouse_SetWheel(float wheel) {
 	float delta = wheel - Mouse_Wheel;
 	Mouse_Wheel = wheel;
-	Event_RaiseFloat(&MouseEvents.Wheel, delta);
+	Event_RaiseFloat(&InputEvents.Wheel, delta);
 }
 
 void Mouse_SetPosition(int x, int y) {

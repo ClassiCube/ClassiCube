@@ -10,7 +10,7 @@ struct _BlockEventsList   BlockEvents;
 struct _WorldEventsList   WorldEvents;
 struct _ChatEventsList    ChatEvents;
 struct _WindowEventsList  WindowEvents;
-struct _KeyEventsList     KeyEvents;
+struct _KeyEventsList     InputEvents;
 struct _MouseEventsList   MouseEvents;
 struct _NetEventsList     NetEvents;
 

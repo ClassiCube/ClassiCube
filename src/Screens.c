@@ -1023,7 +1023,7 @@ static bool HUDScreen_KeyDown(void* screen, Key key) {
 	/* Handle chat text input */
 	if (s->grabsInput) {
 #ifdef CC_BUILD_WEB
-		/* See reason for this in InputHandler_KeyUp */
+		/* See reason for this in HandleInputUp */
 		if (key == KeyBinds[KEYBIND_SEND_CHAT] || key == KEY_KP_ENTER) {
 			HUDScreen_EnterChatInput(s, false);
 #else
@@ -1064,7 +1064,7 @@ static bool HUDScreen_KeyUp(void* screen, Key key) {
 
 	if (!s->grabsInput) return Elem_HandlesKeyUp(&s->hotbar, key);
 #ifdef CC_BUILD_WEB
-	/* See reason for this in InputHandler_KeyUp */
+	/* See reason for this in HandleInputUp */
 	if (key == KEY_ESCAPE) HUDScreen_EnterChatInput(s, true);
 #endif
 

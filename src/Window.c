@@ -260,7 +260,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_CHAR:
 		if (Convert_TryUnicodeToCP437((Codepoint)wParam, &keyChar)) {
-			Event_RaiseInt(&KeyEvents.Press, keyChar);
+			Event_RaiseInt(&InputEvents.Press, keyChar);
 		}
 		break;
 
@@ -1085,7 +1085,7 @@ void Window_ProcessEvents(void) {
 			char raw; int i;
 			for (i = 0; i < status; i++) {
 				if (!Convert_TryUnicodeToCP437((cc_uint8)data[i], &raw)) continue;
-				Event_RaiseInt(&KeyEvents.Press, raw);
+				Event_RaiseInt(&InputEvents.Press, raw);
 			}
 		} break;
 
@@ -1697,7 +1697,7 @@ static OSStatus Window_ProcessTextEvent(EventRef inEvent) {
 
 	for (i = 0; i < 16 && chars[i]; i++) {
 		if (Convert_TryUnicodeToCP437(chars[i], &keyChar)) {
-			Event_RaiseInt(&KeyEvents.Press, keyChar);
+			Event_RaiseInt(&InputEvents.Press, keyChar);
 		}
 	}
 	return eventNotHandledErr;
@@ -2246,7 +2246,7 @@ static void Window_HandleTextEvent(const SDL_Event* e) {
 	String_AppendUtf8(&str, e->text.text, len);
 
 	for (i = 0; i < str.length; i++) {
-		Event_RaiseInt(&KeyEvents.Press, str.buffer[i]);
+		Event_RaiseInt(&InputEvents.Press, str.buffer[i]);
 	}
 }
 
@@ -2579,7 +2579,7 @@ static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void
 	Window_CorrectFocus();
 
 	if (Convert_TryUnicodeToCP437(ev->charCode, &keyChar)) {
-		Event_RaiseInt(&KeyEvents.Press, keyChar);
+		Event_RaiseInt(&InputEvents.Press, keyChar);
 	}
 	return true;
 }
@@ -2856,7 +2856,7 @@ static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {
 	Platform_Log2("KEY - PRESS %i,%i", &code, &key);
 
 	if (Convert_TryUnicodeToCP437((Codepoint)code, &keyChar)) {
-		Event_RaiseInt(&KeyEvents.Press, keyChar);
+		Event_RaiseInt(&InputEvents.Press, keyChar);
 	}
 }
 

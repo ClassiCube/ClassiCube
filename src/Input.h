@@ -63,11 +63,11 @@ extern const char* const Input_Names[INPUT_COUNT];
 /* Pressed state of each keyboard button. Use Input_SetPressed to change. */
 extern bool Input_Pressed[INPUT_COUNT];
 /* Sets the pressed state of a keyboard button. */
-/* Raises KeyEvents.Up   if not pressed, but was pressed before. */
-/* Raises KeyEvents.Down if pressed (repeating is whether it was pressed before) */
+/* Raises InputEvents.Up   if not pressed, but was pressed before. */
+/* Raises InputEvents.Down if pressed (repeating is whether it was pressed before) */
 void Input_SetPressed(Key key, bool pressed);
-/* Resets all keys to be not pressed. */
-/* Raises KeyEvents.Up for each previously pressed key. */
+/* Resets all keyboard keys to released state. */
+/* Raises InputEvents.Up for each previously pressed key. */
 void Key_Clear(void);
 typedef int MouseButton;
 
@@ -78,7 +78,7 @@ extern int Mouse_X, Mouse_Y;
 
 /* Raises MouseEvents.Up or MouseEvents.Down. */
 void Mouse_SetPressed(bool pressed);
-/* Sets wheel position of the mouse, always raising MouseEvents.Wheel. */
+/* Sets wheel position of the mouse, always raising InputEvents.Wheel. */
 void Mouse_SetWheel(float wheel);
 /* Sets X and Y position of the mouse, always raising MouseEvents.Moved. */
 void Mouse_SetPosition(int x, int y);

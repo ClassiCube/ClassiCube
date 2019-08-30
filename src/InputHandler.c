@@ -436,7 +436,7 @@ static void HandleHotkeyDown(Key key) {
 /*########################################################################################################################*
 *-----------------------------------------------------Base handlers-------------------------------------------------------*
 *#########################################################################################################################*/
-static void InputHandler_MouseWheel(void* obj, float delta) {
+static void HandleMouseWheel(void* obj, float delta) {
 	struct Screen* s;
 	int i;
 	struct Widget* widget;
@@ -455,7 +455,7 @@ static void InputHandler_MouseWheel(void* obj, float delta) {
 	Elem_HandlesMouseScroll(widget, delta);
 }
 
-static void InputHandler_MouseMove(void* obj, int xDelta, int yDelta) {
+static void HandlePointerMove(void* obj, int xDelta, int yDelta) {
 	struct Screen* s;
 	int i;
 
@@ -465,7 +465,7 @@ static void InputHandler_MouseMove(void* obj, int xDelta, int yDelta) {
 	}
 }
 
-static void InputHandler_MouseDown(void* obj, int btn) {
+static void HandlePointerDown(void* obj, int btn) {
 	struct Screen* s;
 	int i;
 
@@ -475,7 +475,7 @@ static void InputHandler_MouseDown(void* obj, int btn) {
 	}
 }
 
-static void InputHandler_MouseUp(void* obj, int btn) {
+static void HandlePointerUp(void* obj, int btn) {
 	struct Screen* s;
 	int i;
 
@@ -485,7 +485,7 @@ static void InputHandler_MouseUp(void* obj, int btn) {
 	}
 }
 
-static void InputHandler_KeyDown(void* obj, int key, bool was) {
+static void HandleInputDown(void* obj, int key, bool was) {
 	struct Screen* s;
 	int i;
 
@@ -529,7 +529,7 @@ static void InputHandler_KeyDown(void* obj, int key, bool was) {
 	} else { HandleHotkeyDown(key); }
 }
 
-static void InputHandler_KeyUp(void* obj, int key) {
+static void HandleInputUp(void* obj, int key) {
 	struct Screen* s;
 	int i;
 
@@ -555,7 +555,7 @@ static void InputHandler_KeyUp(void* obj, int key) {
 	if (key == KeyBinds[KEYBIND_PICK_BLOCK])   MouseStateRelease(MOUSE_MIDDLE);
 }
 
-static void InputHandler_KeyPress(void* obj, int keyChar) {
+static void HandleKeyPress(void* obj, int keyChar) {
 	struct Screen* s;
 	int i;
 
@@ -566,13 +566,13 @@ static void InputHandler_KeyPress(void* obj, int keyChar) {
 }
 
 void InputHandler_Init(void) {
-	Event_RegisterFloat(&MouseEvents.Wheel,     NULL, InputHandler_MouseWheel);
-	Event_RegisterMouseMove(&MouseEvents.Moved, NULL, InputHandler_MouseMove);
-	Event_RegisterInt(&MouseEvents.Down,        NULL, InputHandler_MouseDown);
-	Event_RegisterInt(&MouseEvents.Up,          NULL, InputHandler_MouseUp);
-	Event_RegisterInt(&KeyEvents.Down,          NULL, InputHandler_KeyDown);
-	Event_RegisterInt(&KeyEvents.Up,            NULL, InputHandler_KeyUp);
-	Event_RegisterInt(&KeyEvents.Press,         NULL, InputHandler_KeyPress);
+	Event_RegisterMouseMove(&MouseEvents.Moved, NULL, HandlePointerMove);
+	Event_RegisterInt(&MouseEvents.Down,        NULL, HandlePointerDown);
+	Event_RegisterInt(&MouseEvents.Up,          NULL, HandlePointerUp);
+	Event_RegisterInt(&InputEvents.Down,        NULL, HandleInputDown);
+	Event_RegisterInt(&InputEvents.Up,          NULL, HandleInputUp);
+	Event_RegisterInt(&InputEvents.Press,       NULL, HandleKeyPress);
+	Event_RegisterFloat(&InputEvents.Wheel,     NULL, HandleMouseWheel);
 
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, InputHandler_CheckZoomFov);
 	KeyBind_Init();

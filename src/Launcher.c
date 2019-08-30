@@ -117,30 +117,30 @@ static bool Launcher_IsShutdown(int key) {
 #endif
 }
 
-static void Launcher_KeyDown(void* obj, int key, bool was) {
+static void HandleInputDown(void* obj, int key, bool was) {
 	if (Launcher_IsShutdown(key)) Launcher_ShouldExit = true;
 	Launcher_Screen->KeyDown(Launcher_Screen, key, was);
 }
 
-static void Launcher_KeyPress(void* obj, int c) {
+static void HandleKeyPress(void* obj, int c) {
 	Launcher_Screen->KeyPress(Launcher_Screen, c);
 }
 
-static void Launcher_MouseDown(void* obj, int btn) {
+static void HandleMouseWheel(void* obj, float delta) {
+	Launcher_Screen->MouseWheel(Launcher_Screen, delta);
+}
+
+static void HandlePointerDown(void* obj, int btn) {
 	Launcher_Screen->MouseDown(Launcher_Screen, btn);
 }
 
-static void Launcher_MouseUp(void* obj, int btn) {
+static void HandlePointerUp(void* obj, int btn) {
 	Launcher_Screen->MouseUp(Launcher_Screen, btn);
 }
 
-static void Launcher_MouseMove(void* obj, int deltaX, int deltaY) {
+static void HandlePointerMove(void* obj, int deltaX, int deltaY) {
 	if (!Launcher_Screen) return;
 	Launcher_Screen->MouseMove(Launcher_Screen, deltaX, deltaY);
-}
-
-static void Launcher_MouseWheel(void* obj, float delta) {
-	Launcher_Screen->MouseWheel(Launcher_Screen, delta);
 }
 
 
@@ -167,12 +167,12 @@ static void Launcher_Init(void) {
 	Event_RegisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
 	Event_RegisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
 
-	Event_RegisterInput(&KeyEvents.Down,        NULL, Launcher_KeyDown);
-	Event_RegisterInt(&KeyEvents.Press,         NULL, Launcher_KeyPress);
-	Event_RegisterInt(&MouseEvents.Down,        NULL, Launcher_MouseDown);
-	Event_RegisterInt(&MouseEvents.Up,          NULL, Launcher_MouseUp);
-	Event_RegisterMouseMove(&MouseEvents.Moved, NULL, Launcher_MouseMove);
-	Event_RegisterFloat(&MouseEvents.Wheel,     NULL, Launcher_MouseWheel);
+	Event_RegisterInput(&InputEvents.Down,      NULL, HandleInputDown);
+	Event_RegisterInt(&InputEvents.Press,       NULL, HandleKeyPress);
+	Event_RegisterFloat(&InputEvents.Wheel,     NULL, HandleMouseWheel);
+	Event_RegisterInt(&MouseEvents.Down,        NULL, HandlePointerDown);
+	Event_RegisterInt(&MouseEvents.Up,          NULL, HandlePointerUp);
+	Event_RegisterMouseMove(&MouseEvents.Moved, NULL, HandlePointerMove);
 
 	Drawer2D_MakeFont(&logoFont,           32, FONT_STYLE_NORMAL);
 	Drawer2D_MakeFont(&Launcher_TitleFont, 16, FONT_STYLE_BOLD);
@@ -189,12 +189,13 @@ static void Launcher_Free(void) {
 	Event_UnregisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
 	Event_UnregisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
 	
-	Event_UnregisterInput(&KeyEvents.Down,        NULL, Launcher_KeyDown);
-	Event_UnregisterInt(&KeyEvents.Press,         NULL, Launcher_KeyPress);
-	Event_UnregisterInt(&MouseEvents.Down,        NULL, Launcher_MouseDown);
-	Event_UnregisterInt(&MouseEvents.Up,          NULL, Launcher_MouseUp);
-	Event_UnregisterMouseMove(&MouseEvents.Moved, NULL, Launcher_MouseMove);
-	Event_UnregisterFloat(&MouseEvents.Wheel,     NULL, Launcher_MouseWheel);
+	Event_UnregisterInput(&InputEvents.Down,      NULL, HandleInputDown);
+	Event_UnregisterInt(&InputEvents.Press,       NULL, HandleKeyPress);
+	Event_UnregisterFloat(&InputEvents.Wheel,     NULL, HandleMouseWheel);
+	Event_UnregisterInt(&MouseEvents.Down,        NULL, HandlePointerDown);
+	Event_UnregisterInt(&MouseEvents.Up,          NULL, HandlePointerUp);
+	Event_UnregisterMouseMove(&MouseEvents.Moved, NULL, HandlePointerMove);
+	
 
 	Flags_Free();
 	Font_Free(&logoFont);
