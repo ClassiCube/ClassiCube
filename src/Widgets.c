@@ -244,7 +244,6 @@ static bool ScrollbarWidget_MouseDown(void* widget, int x, int y, MouseButton bt
 	int posY, height;
 
 	if (w->draggingMouse)  return true;
-	if (btn != MOUSE_LEFT) return false;
 	if (x < w->x || x >= w->x + w->width) return false;
 
 	y -= w->y;
@@ -441,7 +440,7 @@ static bool HotbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) 
 	int width, height;
 	int i, cellX, cellY;
 
-	if (btn != MOUSE_LEFT || !Widget_Contains(w, x, y)) return false;
+	if (!Widget_Contains(w, x, y)) return false;
 
 	width  = (int)(w->elemSize + w->borderSize);
 	height = Math_Ceil(w->barHeight);
@@ -704,7 +703,6 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
 static bool TableWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	w->pendingClose = false;
-	if (btn != MOUSE_LEFT) return false;
 
 	if (Elem_HandlesMouseDown(&w->scroll, x, y, btn)) {
 		return true;
@@ -1191,9 +1189,7 @@ static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button
 	int cx, cy, offset = 0;
 	int charX, charWidth, charHeight;
 
-	if (button != MOUSE_LEFT) return true;
 	x -= w->inputTex.X; y -= w->inputTex.Y;
-
 	DrawTextArgs_MakeEmpty(&args, w->font, true);
 	charHeight = w->lineHeight;
 	String_InitArray(line, lineBuffer);

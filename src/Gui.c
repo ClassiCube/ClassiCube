@@ -290,7 +290,7 @@ void Gui_OnResize(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------TextAtlas---------------------------------------------------------*
 *#########################################################################################################################*/
-void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, const struct FontDesc* font, const String* prefix) {
+void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, struct FontDesc* font, const String* prefix) {
 	struct DrawTextArgs args; 
 	Size2D size;
 	Bitmap bmp;

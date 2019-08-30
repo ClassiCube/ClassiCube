@@ -185,7 +185,7 @@ static bool InventoryScreen_MouseDown(void* screen, int x, int y, MouseButton bt
 	if (table->scroll.draggingMouse || Elem_HandlesMouseDown(&hud->hotbar, x, y, btn)) return true;
 	handled = Elem_HandlesMouseDown(table, x, y, btn);
 
-	if ((!handled || table->pendingClose) && btn == MOUSE_LEFT) {
+	if (!handled || table->pendingClose) {
 		hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
 		if (!hotbar) Gui_Remove(screen);
 	}
@@ -1091,7 +1091,7 @@ static bool HUDScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	int height, chatY;
 
-	if (btn != MOUSE_LEFT || !s->grabsInput) return false;
+	if (!s->grabsInput) return false;
 
 	/* player clicks on name in tab list */
 	/* TODO: Move to PlayerListWidget */
@@ -1353,8 +1353,6 @@ static bool DisconnectScreen_KeyDown(void* s, Key key) { return key < KEY_F1 || 
 static bool DisconnectScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	struct ButtonWidget* w = &s->reconnect;
-
-	if (btn != MOUSE_LEFT) return true;
 
 	if (!w->disabled && Widget_Contains(w, x, y)) {
 		Gui_Remove((struct Screen*)s);

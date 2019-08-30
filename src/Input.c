@@ -11,7 +11,7 @@
 /*########################################################################################################################*
 *-----------------------------------------------------------Key-----------------------------------------------------------*
 *#########################################################################################################################*/
-bool Key_Pressed[KEY_COUNT];
+bool Input_Pressed[INPUT_COUNT];
 
 #define Key_Function_Names \
 "F1",  "F2",  "F3",  "F4",  "F5",  "F6",  "F7",  "F8",  "F9",  "F10",\
@@ -23,7 +23,7 @@ bool Key_Pressed[KEY_COUNT];
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
 
-const char* const Key_Names[KEY_COUNT] = {
+const char* const Input_Names[INPUT_COUNT] = {
 	"None",
 	Key_Function_Names,
 	"ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight",
@@ -42,11 +42,11 @@ const char* const Key_Names[KEY_COUNT] = {
 	"KeypadAdd", "KeypadDecimal", "KeypadEnter",	
 	"Tilde", "Minus", "Plus", "BracketLeft", "BracketRight", "Slash",
 	"Semicolon", "Quote", "Comma", "Period", "BackSlash",
-	"XButton1", "XButton2", "MouseMid"
+	"XButton1", "XButton2", "LeftMouse", "RightMouse", "MiddleMouse"
 };
 
 /* TODO: Should this only be shown in GUI? not saved to disc? */
-/*const char* Key_Names[KEY_COUNT] = {
+/*const char* Input_Names[INPUT_COUNT] = {
 	"NONE",
 	"LSHIFT", "RSHIFT", "LCONTROL", "RCONTROL",
 	"LMENU", "RMENU", "LWIN", "RWIN", "MENU",
@@ -64,24 +64,28 @@ const char* const Key_Names[KEY_COUNT] = {
 	"5", "6", "7", "8", "9",
 	"GRAVE", "MINUS", "PLUS", "LBRACKET", "RBRACKET",
 	"SEMICOLON", "APOSTROPHE", "COMMA", "PERIOD", "SLASH", "BACKSLASH",
-	"XBUTTON1", "XBUTTON2", "MOUSEMID"
+	"XBUTTON1", "XBUTTON2", "MMOUSE"
 };*/
 
-void Key_SetPressed(Key key, bool pressed) {
-	bool wasPressed  = Key_Pressed[key];
-	Key_Pressed[key] = pressed;
+void Input_SetPressed(Key key, bool pressed) {
+	bool wasPressed  = Input_Pressed[key];
+	Input_Pressed[key] = pressed;
 
 	if (pressed) {
 		Event_RaiseInput(&KeyEvents.Down, key, wasPressed);
 	} else if (wasPressed) {
 		Event_RaiseInt(&KeyEvents.Up, key);
 	}
+
+	/* don't allow multiple left mouse down events */
+	if (key != KEY_LMOUSE || pressed == wasPressed) return;
+	Mouse_SetPressed(pressed);
 }
 
 void Key_Clear(void) {
 	int i;
-	for (i = 0; i < KEY_COUNT; i++) {
-		if (Key_Pressed[i]) Key_SetPressed((Key)i, false);
+	for (i = 0; i < INPUT_COUNT; i++) {
+		if (Input_Pressed[i]) Input_SetPressed(i, false);
 	}
 }
 
@@ -91,16 +95,12 @@ void Key_Clear(void) {
 *#########################################################################################################################*/
 float Mouse_Wheel;
 int Mouse_X, Mouse_Y;
-bool Mouse_Pressed[MOUSE_COUNT];
 
-void Mouse_SetPressed(MouseButton btn, bool pressed) {
-	if (Mouse_Pressed[btn] == pressed) return;
-	Mouse_Pressed[btn] = pressed;
-
+void Mouse_SetPressed(bool pressed) {
 	if (pressed) {
-		Event_RaiseInt(&MouseEvents.Down, btn);
+		Event_RaiseInt(&MouseEvents.Down, 0);
 	} else {
-		Event_RaiseInt(&MouseEvents.Up, btn);
+		Event_RaiseInt(&MouseEvents.Up,   0);
 	}
 }
 
@@ -128,7 +128,7 @@ const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT] = {
 	KEY_LSHIFT, 'X', 'Z', 'Q', 'E', 
 	KEY_LALT, KEY_F3, KEY_F12, KEY_F11, 
 	KEY_F5, KEY_F1, KEY_F7, 'C', 
-	KEY_LCTRL, 0, KEY_MOUSEMID, 0, 
+	KEY_LCTRL, KEY_LMOUSE, KEY_MMOUSE, KEY_RMOUSE, 
 	KEY_F6, KEY_LALT, KEY_F8, 
 	'G', KEY_F10, 0
 };
@@ -139,12 +139,12 @@ static const char* const keybindNames[KEYBIND_COUNT] = {
 	"Speed", "NoClip", "Fly", "FlyUp", "FlyDown", 
 	"ExtInput", "HideFPS", "Screenshot", "Fullscreen", 
 	"ThirdPerson", "HideGUI", "AxisLines", "ZoomScrolling", 
-	"HalfSpeed", "MouseLeft", "PickBlock", "MouseRight", 
+	"HalfSpeed", "DeleteBlock", "PickBlock", "PlaceBlock", 
 	"AutoRotate", "HotbarSwitching", "SmoothCamera", 
 	"DropBlock", "IDOverlay", "BreakableLiquids"
 };
 
-bool KeyBind_IsPressed(KeyBind binding) { return Key_Pressed[KeyBinds[binding]]; }
+bool KeyBind_IsPressed(KeyBind binding) { return Input_Pressed[KeyBinds[binding]]; }
 
 static void KeyBind_Load(void) {
 	String name; char nameBuffer[STRING_SIZE + 1];
@@ -157,7 +157,7 @@ static void KeyBind_Load(void) {
 		String_Format1(&name, "key-%c", keybindNames[i]);
 		name.buffer[name.length] = '\0';
 
-		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, KEY_COUNT);
+		mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Input_Names, INPUT_COUNT);
 		if (mapping != KEY_ESCAPE) KeyBinds[i] = mapping;
 	}
 }
@@ -172,7 +172,7 @@ static void KeyBind_Save(void) {
 		name.length = 0; 
 		String_Format1(&name, "key-%c", keybindNames[i]);
 
-		value = String_FromReadonly(Key_Names[KeyBinds[i]]);
+		value = String_FromReadonly(Input_Names[KeyBinds[i]]);
 		Options_SetString(&name, &value);
 	}
 }
@@ -331,7 +331,7 @@ void Hotkeys_Init(void) {
 		if (!String_UNSAFE_Separate(&key,   '&', &strKey,  &strMods)) continue;
 		if (!String_UNSAFE_Separate(&value, '&', &strMore, &strText)) continue;
 
-		trigger = Utils_ParseEnum(&strKey, KEY_NONE, Key_Names, Array_Elems(Key_Names));
+		trigger = Utils_ParseEnum(&strKey, KEY_NONE, Input_Names, INPUT_COUNT);
 		if (trigger == KEY_NONE) continue; 
 		if (!Convert_ParseUInt8(&strMods, &modifiers)) continue;
 		if (!Convert_ParseBool(&strMore,  &more))      continue;
@@ -344,7 +344,7 @@ void Hotkeys_UserRemovedHotkey(Key trigger, cc_uint8 modifiers) {
 	String key; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &modifiers);
+	String_Format2(&key, "hotkey-%c&%b", Input_Names[trigger], &modifiers);
 	Options_SetString(&key, NULL);
 }
 
@@ -354,7 +354,7 @@ void Hotkeys_UserAddedHotkey(Key trigger, cc_uint8 modifiers, bool moreInput, co
 	String_InitArray(key, keyBuffer);
 	String_InitArray(value, valueBuffer);
 
-	String_Format2(&key, "hotkey-%c&%b", Key_Names[trigger], &modifiers);
+	String_Format2(&key, "hotkey-%c&%b", Input_Names[trigger], &modifiers);
 	String_Format2(&value, "%t&%s", &moreInput, text);
 	Options_SetString(&key, &value);
 }

@@ -122,7 +122,7 @@ static int Menu_DoMouseDown(void* screen, int x, int y, MouseButton btn) {
 		if (!w || !Widget_Contains(w, x, y)) continue;
 		if (w->disabled) return i;
 
-		if (w->MenuClick && btn == MOUSE_LEFT) {
+		if (w->MenuClick) {
 			w->MenuClick(s, w);
 		} else {
 			Elem_HandlesMouseDown(w, x, y, btn);
@@ -704,7 +704,7 @@ static void EditHotkeyScreen_UpdateBaseKey(struct EditHotkeyScreen* s) {
 		String_AppendConst(&text, "Key: press a key..");
 	} else {
 		String_AppendConst(&text, "Key: ");
-		String_AppendConst(&text, Key_Names[s->curHotkey.Trigger]);
+		String_AppendConst(&text, Input_Names[s->curHotkey.Trigger]);
 	}
 	ButtonWidget_Set(&s->buttons[0], &text, &s->titleFont);
 }
@@ -957,7 +957,7 @@ static void GenLevelScreen_InputClick(void* screen, void* input) {
 	if (s->selected) s->selected->base.showCaret = false;
 
 	s->selected = (struct MenuInputWidget*)input;
-	Elem_HandlesMouseDown(&s->selected->base, Mouse_X, Mouse_Y, MOUSE_LEFT);
+	Elem_HandlesMouseDown(&s->selected->base, Mouse_X, Mouse_Y, 0);
 	s->selected->base.showCaret = true;
 }
 
@@ -1412,7 +1412,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	if (String_ContainsString(&value, &shift)) flags |= HOTKEY_MOD_SHIFT;
 	if (String_ContainsString(&value, &alt))   flags |= HOTKEY_MOD_ALT;
 
-	trigger = Utils_ParseEnum(&key, KEY_NONE, Key_Names, KEY_COUNT);
+	trigger = Utils_ParseEnum(&key, KEY_NONE, Input_Names, INPUT_COUNT);
 	for (i = 0; i < HotkeysText.count; i++) {
 		h = HotkeysList[i];
 		if (h.Trigger == trigger && h.Flags == flags) { original = h; break; }
@@ -1437,7 +1437,7 @@ static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
 	for (i = 0; i < HotkeysText.count; i++) {
 		hKey = HotkeysList[i];
 		text.length = 0;
-		String_AppendConst(&text, Key_Names[hKey.Trigger]);
+		String_AppendConst(&text, Input_Names[hKey.Trigger]);
 
 		if (hKey.Flags) {
 			String_AppendConst(&text, " +");
@@ -1528,7 +1528,7 @@ static void KeyBindingsScreen_Update(struct KeyBindingsScreen* s, int i) {
 	String_InitArray(text, textBuffer);
 
 	String_Format2(&text, s->curI == i ? "> %c: %c <" : "%c: %c", 
-		s->descs[i], Key_Names[KeyBinds[s->binds[i]]]);
+		s->descs[i], Input_Names[KeyBinds[s->binds[i]]]);
 	ButtonWidget_Set(&s->buttons[i], &text, &s->titleFont);
 }
 
@@ -1557,22 +1557,6 @@ static bool KeyBindingsScreen_KeyDown(void* screen, Key key) {
 	s->curI     = -1;
 	s->closable = true;
 	KeyBindingsScreen_Update(s, idx);
-	return true;
-}
-
-static bool KeyBindingsScreen_MouseDown(void* screen, int x, int y, MouseButton btn) {
-	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
-	int i;
-
-	if (btn != MOUSE_RIGHT) { return Menu_MouseDown(s, x, y, btn); }
-	i = Menu_DoMouseDown(s, x, y, btn);
-	if (i == -1) return true;
-
-	/* Reset a key binding by right clicking */
-	if ((s->curI == -1 || s->curI == i) && i < s->bindsCount) {
-		s->curI = i;
-		Elem_HandlesKeyDown(s, KeyBind_Defaults[s->binds[i]]);
-	}
 	return true;
 }
 
@@ -1646,10 +1630,10 @@ static void KeyBindingsScreen_Init(void* screen) {
 }
 
 static const struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
-	KeyBindingsScreen_Init,      MenuScreen_Render,  Menu_NullFunc,
-	KeyBindingsScreen_KeyDown,   Screen_TKey,        Screen_TKeyPress,
-	KeyBindingsScreen_MouseDown, Screen_TMouse,      Menu_MouseMove,  Screen_TMouseScroll,
-	Menu_OnResize,               KeyBindingsScreen_ContextLost, KeyBindingsScreen_ContextRecreated
+	KeyBindingsScreen_Init,    MenuScreen_Render,  Menu_NullFunc,
+	KeyBindingsScreen_KeyDown, Screen_TKey,        Screen_TKeyPress,
+	Menu_MouseDown,            Screen_TMouse,      Menu_MouseMove,  Screen_TMouseScroll,
+	Menu_OnResize,             KeyBindingsScreen_ContextLost, KeyBindingsScreen_ContextRecreated
 };
 static void KeyBindingsScreen_Show(int bindsCount, const cc_uint8* binds, const char** descs, InitKeyBindings doInit) {
 	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
@@ -1751,13 +1735,13 @@ void OtherKeyBindingsScreen_Show(void) {
 *#########################################################################################################################*/
 static void MouseKeyBindingsScreen_Init(struct KeyBindingsScreen* s) {
 	s->leftPage = Menu_SwitchKeysOther;
-	s->msgText  = "&eRight click to remove the key binding";
+	s->msgText  = "&ePress escape to reset the binding";
 	KeyBindingsScreen_InitWidgets(s, -40, 10, -1, 260, "Mouse key bindings");
 }
 
 void MouseKeyBindingsScreen_Show(void) {
-	static const cc_uint8 binds[3] = { KEYBIND_MOUSE_LEFT, KEYBIND_PICK_BLOCK, KEYBIND_MOUSE_RIGHT };
-	static const char* descs[3]   = { "Left", "Pick block", "Right" };
+	static const cc_uint8 binds[3] = { KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK };
+	static const char* descs[3]    = { "Delete block", "Pick block", "Place block" };
 	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, MouseKeyBindingsScreen_Init);
 }
 

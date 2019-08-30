@@ -39,18 +39,19 @@ enum Key_ {
 	KEY_TILDE, KEY_MINUS, KEY_EQUALS, KEY_LBRACKET, KEY_RBRACKET, KEY_SLASH,
 	KEY_SEMICOLON, KEY_QUOTE, KEY_COMMA, KEY_PERIOD, KEY_BACKSLASH,
 
-	KEY_XBUTTON1, KEY_XBUTTON2, KEY_MOUSEMID, /* so these can be used for hotkeys */
-	KEY_COUNT
+	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
+	KEY_XBUTTON1, KEY_XBUTTON2, KEY_LMOUSE, KEY_RMOUSE, KEY_MMOUSE,
+	INPUT_COUNT
 };
 typedef int Key;
 
 /* Simple names for each keyboard button. */
-extern const char* const Key_Names[KEY_COUNT];
+extern const char* const Input_Names[INPUT_COUNT];
 
-#define Key_IsWinPressed()     (Key_Pressed[KEY_LWIN]   || Key_Pressed[KEY_RWIN])
-#define Key_IsAltPressed()     (Key_Pressed[KEY_LALT]   || Key_Pressed[KEY_RALT])
-#define Key_IsControlPressed() (Key_Pressed[KEY_LCTRL]  || Key_Pressed[KEY_RCTRL])
-#define Key_IsShiftPressed()   (Key_Pressed[KEY_LSHIFT] || Key_Pressed[KEY_RSHIFT])
+#define Key_IsWinPressed()     (Input_Pressed[KEY_LWIN]   || Input_Pressed[KEY_RWIN])
+#define Key_IsAltPressed()     (Input_Pressed[KEY_LALT]   || Input_Pressed[KEY_RALT])
+#define Key_IsControlPressed() (Input_Pressed[KEY_LCTRL]  || Input_Pressed[KEY_RCTRL])
+#define Key_IsShiftPressed()   (Input_Pressed[KEY_LSHIFT] || Input_Pressed[KEY_RSHIFT])
 
 #ifdef CC_BUILD_OSX
 /* osx uses CMD instead of CTRL for clipboard and stuff */
@@ -59,21 +60,15 @@ extern const char* const Key_Names[KEY_COUNT];
 #define Key_IsActionPressed() Key_IsControlPressed()
 #endif
 
-/* Pressed state of each keyboard button. Use Key_SetPressed to change. */
-extern bool Key_Pressed[KEY_COUNT];
+/* Pressed state of each keyboard button. Use Input_SetPressed to change. */
+extern bool Input_Pressed[INPUT_COUNT];
 /* Sets the pressed state of a keyboard button. */
 /* Raises KeyEvents.Up   if not pressed, but was pressed before. */
 /* Raises KeyEvents.Down if pressed (repeating is whether it was pressed before) */
-void Key_SetPressed(Key key, bool pressed);
+void Input_SetPressed(Key key, bool pressed);
 /* Resets all keys to be not pressed. */
 /* Raises KeyEvents.Up for each previously pressed key. */
 void Key_Clear(void);
-
-
-enum MouseButton_ {
-	MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE,
-	MOUSE_COUNT
-};
 typedef int MouseButton;
 
 /* Wheel position of the mouse. Use Mouse_SetWheel to change. */
@@ -81,11 +76,8 @@ extern float Mouse_Wheel;
 /* X and Y coordinates of the mouse. Use Mouse_SetPosition to change. */
 extern int Mouse_X, Mouse_Y;
 
-/* Pressed state of each mouse button. Use Mouse_SetPressed to change. */
-extern bool Mouse_Pressed[MOUSE_COUNT];
-/* Sets the pressed state of a mouse button. */
-/* Raises MouseEvents.Up or MouseEvents.Down if state differs. */
-void Mouse_SetPressed(MouseButton btn, bool pressed);
+/* Raises MouseEvents.Up or MouseEvents.Down. */
+void Mouse_SetPressed(bool pressed);
 /* Sets wheel position of the mouse, always raising MouseEvents.Wheel. */
 void Mouse_SetWheel(float wheel);
 /* Sets X and Y position of the mouse, always raising MouseEvents.Moved. */
@@ -100,7 +92,7 @@ enum KeyBind_ {
 	KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN,
 	KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN,
 	KEYBIND_THIRD_PERSON, KEYBIND_HIDE_GUI, KEYBIND_AXIS_LINES, KEYBIND_ZOOM_SCROLL,
-	KEYBIND_HALF_SPEED, KEYBIND_MOUSE_LEFT, KEYBIND_PICK_BLOCK, KEYBIND_MOUSE_RIGHT,
+	KEYBIND_HALF_SPEED, KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK,
 	KEYBIND_AUTOROTATE, KEYBIND_HOTBAR_SWITCH, KEYBIND_SMOOTH_CAMERA,
 	KEYBIND_DROP_BLOCK, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS,
 	KEYBIND_COUNT
