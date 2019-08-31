@@ -115,6 +115,7 @@ void Mouse_SetWheel(float wheel) {
 void Mouse_SetPosition(int x, int y) {
 	int deltaX = x - Mouse_X, deltaY = y - Mouse_Y;
 	Mouse_X = x; Mouse_Y = y;
+	Pointers[0].x = x; Pointers[0].y = y;
 	Event_RaiseMove(&PointerEvents.Moved, 0, deltaX, deltaY);
 }
 

@@ -75,6 +75,7 @@ typedef int MouseButton;
 extern float Mouse_Wheel;
 
 #define INPUT_MAX_POINTERS 1
+#define Pointers_Count 1
 
 /* Data for mouse and touch */
 extern struct Pointer {

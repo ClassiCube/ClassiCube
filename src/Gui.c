@@ -196,7 +196,9 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	s->VTABLE->ContextRecreated(s);
 
 	/* for selecting active button etc */
-	s->VTABLE->HandlesMouseMove(s, Mouse_X, Mouse_Y);
+	for (i = 0; i < Pointers_Count; i++) {
+		s->VTABLE->HandlesPointerMove(s, i, Pointers[i].x, Pointers[i].y);
+	}
 }
 
 static void Gui_RemoveCore(struct Screen* s) {

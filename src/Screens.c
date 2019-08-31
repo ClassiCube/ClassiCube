@@ -1360,7 +1360,7 @@ static bool DisconnectScreen_PointerDown(void* screen, int id, int x, int y) {
 	return true;
 }
 
-static bool DisconnectScreen_MouseMove(void* screen, int x, int y) {
+static bool DisconnectScreen_PointerMove(void* screen, int idx, int x, int y) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	struct ButtonWidget* w     = &s->reconnect;
 
@@ -1371,7 +1371,7 @@ static bool DisconnectScreen_MouseMove(void* screen, int x, int y) {
 static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,        DisconnectScreen_Render, DisconnectScreen_Free,
 	DisconnectScreen_KeyDown,     Screen_TKey,             Screen_TKeyPress,
-	DisconnectScreen_PointerDown, Screen_TPointer,         DisconnectScreen_MouseMove, Screen_TMouseScroll,
+	DisconnectScreen_PointerDown, Screen_TPointer,         DisconnectScreen_PointerMove, Screen_TMouseScroll,
 	DisconnectScreen_OnResize, DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 void DisconnectScreen_Show(const String* title, const String* message) {
