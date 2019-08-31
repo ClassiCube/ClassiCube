@@ -66,8 +66,8 @@ static void Menu_Back(void* s, int i, struct ButtonWidget* btn, Widget_LeftClick
 
 CC_NOINLINE static void Menu_MakeTitleFont(struct FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_STYLE_BOLD); }
 CC_NOINLINE static void Menu_MakeBodyFont(struct FontDesc* font)  { Drawer2D_MakeFont(font, 16, FONT_STYLE_NORMAL); }
-static void Menu_NullFunc(void* screen) { }
-
+static void Menu_NullFunc(void* s) { }
+static void Menu_CloseKeyboard(void* s) { Window_CloseKeyboard(); }
 
 static void Menu_ContextLost(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
@@ -878,10 +878,12 @@ static void EditHotkeyScreen_Init(void* screen) {
 	Menu_Input(s, 6, &s->input, 500, &text, &desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
 	Menu_Back(s,  5, &s->cancel, Menu_SwitchHotkeys);
+	Window_OpenKeyboard();
 }
+static void SaveLevelScreen_Free(void* s) { Window_CloseKeyboard(); }
 
 static const struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
-	EditHotkeyScreen_Init,    EditHotkeyScreen_Render, Menu_NullFunc,
+	EditHotkeyScreen_Init,    EditHotkeyScreen_Render, Menu_CloseKeyboard,
 	EditHotkeyScreen_KeyDown, Screen_TKey,             EditHotkeyScreen_KeyPress,
 	Menu_PointerDown,         Screen_TPointer,         Menu_PointerMove,          Screen_TMouseScroll,
 	Menu_OnResize,            EditHotkeyScreen_ContextLost, EditHotkeyScreen_ContextRecreated
@@ -953,15 +955,6 @@ static void GenLevelScreen_Gen(void* screen, bool vanilla) {
 static void GenLevelScreen_Flatgrass(void* a, void* b) { GenLevelScreen_Gen(a, false); }
 static void GenLevelScreen_Notchy(void* a, void* b)    { GenLevelScreen_Gen(a, true);  }
 
-static void GenLevelScreen_InputClick(void* screen, void* input) {
-	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	if (s->selected) s->selected->base.showCaret = false;
-
-	s->selected = (struct MenuInputWidget*)input;
-	Elem_HandlesPointerDown(&s->selected->base, 0, Mouse_X, Mouse_Y);
-	s->selected->base.showCaret = true;
-}
-
 static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int y, int def) {
 	String tmp; char tmpBuffer[STRING_SIZE];
 	struct MenuInputDesc desc;
@@ -979,7 +972,6 @@ static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int y, int def)
 	Menu_Input(s, i, &s->inputs[i], 200, &tmp, &desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 	s->inputs[i].base.showCaret = false;
-	s->inputs[i].base.MenuClick = GenLevelScreen_InputClick;
 
 	Menu_Label(s, i + 4, &s->labels[i], 
 		ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 110, y);
@@ -995,6 +987,17 @@ static bool GenLevelScreen_KeyDown(void* screen, Key key) {
 static bool GenLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	if (s->selected) InputWidget_Append(&s->selected->base, keyChar);
+	return true;
+}
+
+static bool GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
+	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
+	int i = Menu_DoPointerDown(screen, id, x, y);
+	if (i == -1 || i >= 4) return true;
+
+	if (s->selected) s->selected->base.showCaret = false;
+	s->selected = (struct MenuInputWidget*)&s->inputs[i];
+	s->selected->base.showCaret = true;
 	return true;
 }
 
@@ -1032,6 +1035,7 @@ static void GenLevelScreen_Init(void* screen) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	s->widgets    = widgets;
 	s->numWidgets = Array_Elems(widgets);
+	s->selected   = NULL;
 
 	GenLevelScreen_Make(s, 0, -80, World.Width);
 	GenLevelScreen_Make(s, 1, -40, World.Height);
@@ -1045,12 +1049,13 @@ static void GenLevelScreen_Init(void* screen) {
 	Menu_Button(s, 10, &s->vanilla,   200, GenLevelScreen_Notchy,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  120,  100);
 	Menu_Back(s,   11, &s->cancel, Menu_SwitchPause);
+	Window_OpenKeyboard();
 }
 
 static const struct ScreenVTABLE GenLevelScreen_VTABLE = {
-	GenLevelScreen_Init,    MenuScreen_Render,    Menu_NullFunc,
-	GenLevelScreen_KeyDown, Screen_TKey,          GenLevelScreen_KeyPress,
-	Menu_PointerDown,       Screen_TPointer,      Menu_PointerMove,        Screen_TMouseScroll,
+	GenLevelScreen_Init,        MenuScreen_Render,    Menu_CloseKeyboard,
+	GenLevelScreen_KeyDown,     Screen_TKey,          GenLevelScreen_KeyPress,
+	GenLevelScreen_PointerDown, Screen_TPointer,      Menu_PointerMove,        Screen_TMouseScroll,
 	Menu_OnResize,          GenLevelScreen_ContextLost, GenLevelScreen_ContextRecreated
 };
 void GenLevelScreen_Show(void) {	
@@ -1277,13 +1282,14 @@ static void SaveLevelScreen_Init(void* screen) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 120);
 	Menu_Back(s,   3, &s->cancel, Menu_SwitchPause);
 	Menu_Input(s,  4, &s->input, 500, &String_Empty, &desc,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+		ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -30);
 	Menu_Label(s,  5, &s->desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  65);
+	Window_OpenKeyboard();
 }
 
 static const struct ScreenVTABLE SaveLevelScreen_VTABLE = {
-	SaveLevelScreen_Init,    SaveLevelScreen_Render, Menu_NullFunc,
+	SaveLevelScreen_Init,    SaveLevelScreen_Render, Menu_CloseKeyboard,
 	SaveLevelScreen_KeyDown, Screen_TKey,            SaveLevelScreen_KeyPress,
 	Menu_PointerDown,        Screen_TPointer,        Menu_PointerMove,         Screen_TMouseScroll,
 	Menu_OnResize,           SaveLevelScreen_ContextLost, SaveLevelScreen_ContextRecreated
