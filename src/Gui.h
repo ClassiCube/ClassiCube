@@ -42,9 +42,9 @@ struct ScreenVTABLE {
 	bool (*HandlesKeyDown)(void* elem, Key key);
 	bool (*HandlesKeyUp)(void* elem, Key key);
 	bool (*HandlesKeyPress)(void* elem, char keyChar);
-	bool (*HandlesMouseDown)(void* elem, int x, int y, MouseButton btn);
-	bool (*HandlesMouseUp)(void* elem, int x, int y, MouseButton btn);
-	bool (*HandlesMouseMove)(void* elem, int x, int y);
+	bool (*HandlesPointerDown)(void* elem, int id, int x, int y);
+	bool (*HandlesPointerUp)(void* elem,   int id, int x, int y);
+	bool (*HandlesPointerMove)(void* elem, int id, int x, int y);
 	bool (*HandlesMouseScroll)(void* elem, float delta);
 	void (*OnResize)(void* elem);
 	Event_Void_Callback ContextLost;
@@ -66,10 +66,10 @@ struct WidgetVTABLE {
 	void (*Free)(void* elem);
 	bool (*HandlesKeyDown)(void* elem, Key key);
 	bool (*HandlesKeyUp)(void* elem, Key key);
-	bool (*HandlesMouseDown)(void* elem, int x, int y, MouseButton btn);
-	bool (*HandlesMouseUp)(void* elem, int x, int y, MouseButton btn);
-	bool (*HandlesMouseMove)(void* elem, int x, int y);
 	bool (*HandlesMouseScroll)(void* elem, float delta);
+	bool (*HandlesPointerDown)(void* elem, int id, int x, int y);
+	bool (*HandlesPointerUp)(void* elem,   int id, int x, int y);
+	bool (*HandlesPointerMove)(void* elem, int id, int x, int y);
 	void (*Reposition)(void* elem);
 };
 #define Widget_Layout const struct WidgetVTABLE* VTABLE; \
@@ -165,9 +165,11 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vert
 #define Elem_HandlesKeyDown(elem, key)  (elem)->VTABLE->HandlesKeyDown(elem, key)
 #define Elem_HandlesKeyUp(elem, key)    (elem)->VTABLE->HandlesKeyUp(elem, key)
 #define Elem_HandlesMouseDown(elem, x, y, btn) (elem)->VTABLE->HandlesMouseDown(elem, x, y, btn)
-#define Elem_HandlesMouseUp(elem, x, y, btn)   (elem)->VTABLE->HandlesMouseUp(elem, x, y, btn)
-#define Elem_HandlesMouseMove(elem, x, y)      (elem)->VTABLE->HandlesMouseMove(elem, x, y)
 #define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll(elem, delta)
+
+#define Elem_HandlesPointerDown(elem, id, x, y) (elem)->VTABLE->HandlesPointerDown(elem, id, x, y)
+#define Elem_HandlesPointerUp(elem,   id, x, y) (elem)->VTABLE->HandlesPointerUp(elem,   id, x, y)
+#define Elem_HandlesPointerMove(elem, id, x, y) (elem)->VTABLE->HandlesPointerMove(elem, id, x, y)
 
 #define Widget_Reposition(widget) (widget)->VTABLE->Reposition(widget);
 #define Elem_TryFree(elem)        if ((elem)->VTABLE) { Elem_Free(elem); }

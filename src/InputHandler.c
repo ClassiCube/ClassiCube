@@ -457,31 +457,31 @@ static void HandleMouseWheel(void* obj, float delta) {
 
 static void HandlePointerMove(void* obj, int idx, int xDelta, int yDelta) {
 	struct Screen* s;
-	int i;
+	int i, x = Pointers[idx].x, y = Pointers[idx].y;
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (s->VTABLE->HandlesMouseMove(s, Pointers[idx].x, Pointers[idx].y)) return;
+		if (s->VTABLE->HandlesPointerMove(s, 1 << idx, x, y)) return;
 	}
 }
 
 static void HandlePointerDown(void* obj, int idx) {
 	struct Screen* s;
-	int i;
+	int i, x = Pointers[idx].x, y = Pointers[idx].y;
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (s->VTABLE->HandlesMouseDown(s, Pointers[idx].x, Pointers[idx].y, 0)) return;
+		if (s->VTABLE->HandlesPointerDown(s, 1 << idx, x, y)) return;
 	}
 }
 
 static void HandlePointerUp(void* obj, int idx) {
 	struct Screen* s;
-	int i;
+	int i, x = Pointers[idx].x, y = Pointers[idx].y;
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (s->VTABLE->HandlesMouseUp(s, Pointers[idx].x, Pointers[idx].y, 0)) return;
+		if (s->VTABLE->HandlesPointerUp(s, 1 << idx, x, y)) return;
 	}
 }
 

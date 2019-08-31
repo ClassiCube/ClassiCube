@@ -49,8 +49,8 @@ struct ScrollbarWidget {
 	Widget_Layout
 	int totalRows, topRow;
 	float scrollingAcc;
-	int mouseOffset;
-	bool draggingMouse;
+	int dragOffset;
+	int draggingId;
 };
 /* Resets state of the given scrollbar widget to default. */
 CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w);

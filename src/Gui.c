@@ -194,6 +194,7 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 
 	s->VTABLE->Init(s);
 	s->VTABLE->ContextRecreated(s);
+
 	/* for selecting active button etc */
 	s->VTABLE->HandlesMouseMove(s, Mouse_X, Mouse_Y);
 }

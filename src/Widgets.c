@@ -20,9 +20,9 @@
 
 #define Widget_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f)
 static void Widget_NullFunc(void* widget) { }
-static bool Widget_Mouse(void* elem, int x, int y, MouseButton btn) { return false; }
+static bool Widget_Pointer(void* elem, int id, int x, int y) { return false; }
 static bool Widget_Key(void* elem, Key key) { return false; }
-static bool Widget_MouseMove(void* elem, int x, int y) { return false; }
+static bool Widget_PointerMove(void* elem, int id, int x, int y) { return false; }
 static bool Widget_MouseScroll(void* elem, float delta) { return false; }
 
 /*########################################################################################################################*
@@ -46,8 +46,8 @@ static void TextWidget_Reposition(void* widget) {
 
 static const struct WidgetVTABLE TextWidget_VTABLE = {
 	Widget_NullFunc, TextWidget_Render, TextWidget_Free,
-	Widget_Key,      Widget_Key,
-	Widget_Mouse,    Widget_Mouse,      Widget_MouseMove, Widget_MouseScroll,
+	Widget_Key,      Widget_Key,        Widget_MouseScroll,
+	Widget_Pointer,  Widget_Pointer,    Widget_PointerMove, 
 	TextWidget_Reposition
 };
 void TextWidget_Make(struct TextWidget* w, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
@@ -148,8 +148,8 @@ static void ButtonWidget_Render(void* widget, double delta) {
 
 static const struct WidgetVTABLE ButtonWidget_VTABLE = {
 	Widget_NullFunc, ButtonWidget_Render, ButtonWidget_Free,
-	Widget_Key,	     Widget_Key,
-	Widget_Mouse,    Widget_Mouse,        Widget_MouseMove,  Widget_MouseScroll,
+	Widget_Key,	     Widget_Key,          Widget_MouseScroll,
+	Widget_Pointer,  Widget_Pointer,      Widget_PointerMove,  
 	ButtonWidget_Reposition
 };
 void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
@@ -239,12 +239,14 @@ static void ScrollbarWidget_Render(void* widget, double delta) {
 	Gfx_Draw2DFlat(x, y - 1 + 4, width, SCROLL_BORDER, Scroll_BackCol);
 }
 
-static bool ScrollbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
+static bool ScrollbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int posY, height;
 
-	if (w->draggingMouse) return true;
+	if (w->draggingId == id) return true;
 	if (x < w->x || x >= w->x + w->width) return false;
+	/* only intercept pointer that's dragging scrollbar */
+	if (w->draggingId) return false;
 
 	y -= w->y;
 	ScrollbarWidget_GetScrollbarCoords(w, &posY, &height);
@@ -254,17 +256,19 @@ static bool ScrollbarWidget_MouseDown(void* widget, int x, int y, MouseButton bt
 	} else if (y >= posY + height) {
 		w->topRow += TABLE_MAX_ROWS_DISPLAYED;
 	} else {
-		w->draggingMouse = true;
-		w->mouseOffset = y - posY;
+		w->draggingId = id;
+		w->dragOffset = y - posY;
 	}
 	ScrollbarWidget_ClampTopRow(w);
 	return true;
 }
 
-static bool ScrollbarWidget_MouseUp(void* widget, int x, int y, MouseButton btn) {
+static bool ScrollbarWidget_PointerUp(void* widget, int id, int x, int y) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
-	w->draggingMouse = false;
-	w->mouseOffset   = 0;
+	if (w->draggingId != id) return true;
+
+	w->draggingId = 0;
+	w->dragOffset = 0;
 	return true;
 }
 
@@ -277,14 +281,14 @@ static bool ScrollbarWidget_MouseScroll(void* widget, float delta) {
 	return true;
 }
 
-static bool ScrollbarWidget_MouseMove(void* widget, int x, int y) {
+static bool ScrollbarWidget_PointerMove(void* widget, int id, int x, int y) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	float scale;
 
-	if (w->draggingMouse) {
+	if (w->draggingId == id) {
 		y -= w->y;
 		scale = ScrollbarWidget_GetScale(w);
-		w->topRow = (int)((y - w->mouseOffset) / scale);
+		w->topRow = (int)((y - w->dragOffset) / scale);
 		ScrollbarWidget_ClampTopRow(w);
 		return true;
 	}
@@ -292,20 +296,20 @@ static bool ScrollbarWidget_MouseMove(void* widget, int x, int y) {
 }
 
 static const struct WidgetVTABLE ScrollbarWidget_VTABLE = {
-	Widget_NullFunc,           ScrollbarWidget_Render,  Widget_NullFunc,
-	Widget_Key,                Widget_Key,
-	ScrollbarWidget_MouseDown, ScrollbarWidget_MouseUp, ScrollbarWidget_MouseMove, ScrollbarWidget_MouseScroll,
+	Widget_NullFunc,             ScrollbarWidget_Render,    Widget_NullFunc,
+	Widget_Key,                  Widget_Key,                ScrollbarWidget_MouseScroll,
+	ScrollbarWidget_PointerDown, ScrollbarWidget_PointerUp, ScrollbarWidget_PointerMove, 
 	Widget_CalcPosition
 };
 void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 	Widget_Reset(w);
 	w->VTABLE = &ScrollbarWidget_VTABLE;
 	w->width  = SCROLL_WIDTH;
-	w->totalRows     = 0;
-	w->topRow        = 0;
-	w->scrollingAcc  = 0.0f;
-	w->draggingMouse = false;
-	w->mouseOffset   = 0;
+	w->totalRows    = 0;
+	w->topRow       = 0;
+	w->scrollingAcc = 0.0f;
+	w->draggingId   = 0;
+	w->dragOffset   = 0;
 }
 
 
@@ -435,7 +439,7 @@ static bool HotbarWidget_KeyUp(void* widget, Key key) {
 	return true;
 }
 
-static bool HotbarWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
+static bool HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int width, height;
 	int i, cellX, cellY;
@@ -474,9 +478,9 @@ static bool HotbarWidget_MouseScroll(void* widget, float delta) {
 }
 
 static const struct WidgetVTABLE HotbarWidget_VTABLE = {
-	Widget_NullFunc,        HotbarWidget_Render, Widget_NullFunc,
-	HotbarWidget_KeyDown,	HotbarWidget_KeyUp,
-	HotbarWidget_MouseDown, Widget_Mouse,        Widget_MouseMove, HotbarWidget_MouseScroll,
+	Widget_NullFunc,          HotbarWidget_Render, Widget_NullFunc,
+	HotbarWidget_KeyDown,     HotbarWidget_KeyUp,  HotbarWidget_MouseScroll,
+	HotbarWidget_PointerDown, Widget_Pointer,      Widget_PointerMove, 
 	HotbarWidget_Reposition
 };
 void HotbarWidget_Create(struct HotbarWidget* w) {
@@ -700,11 +704,11 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
 	TableWidget_MoveCursorToSelected(w);
 }
 
-static bool TableWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
+static bool TableWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	w->pendingClose = false;
 
-	if (Elem_HandlesMouseDown(&w->scroll, x, y, btn)) {
+	if (Elem_HandlesPointerDown(&w->scroll, id, x, y)) {
 		return true;
 	} else if (w->selectedIndex != -1 && w->blocks[w->selectedIndex] != BLOCK_AIR) {
 		Inventory_SetSelectedBlock(w->blocks[w->selectedIndex]);
@@ -716,9 +720,9 @@ static bool TableWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
 	return false;
 }
 
-static bool TableWidget_MouseUp(void* widget, int x, int y, MouseButton btn) {
+static bool TableWidget_PointerUp(void* widget, int id, int x, int y) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	return Elem_HandlesMouseUp(&w->scroll, x, y, btn);
+	return Elem_HandlesPointerUp(&w->scroll, id, x, y);
 }
 
 static bool TableWidget_MouseScroll(void* widget, float delta) {
@@ -742,12 +746,12 @@ static bool TableWidget_MouseScroll(void* widget, float delta) {
 	return true;
 }
 
-static bool TableWidget_MouseMove(void* widget, int x, int y) {
+static bool TableWidget_PointerMove(void* widget, int id, int x, int y) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	int cellSize, maxHeight;
 	int i, cellX, cellY;
 
-	if (Elem_HandlesMouseMove(&w->scroll, x, y)) return true;
+	if (Elem_HandlesPointerMove(&w->scroll, id, x, y)) return true;
 	if (w->lastX == x && w->lastY == y) return true;
 	w->lastX = x; w->lastY = y;
 
@@ -788,9 +792,9 @@ static bool TableWidget_KeyDown(void* widget, Key key) {
 }
 
 static const struct WidgetVTABLE TableWidget_VTABLE = {
-	Widget_NullFunc,       TableWidget_Render,  TableWidget_Free,
-	TableWidget_KeyDown,   Widget_Key,
-	TableWidget_MouseDown, TableWidget_MouseUp, TableWidget_MouseMove, TableWidget_MouseScroll,
+	Widget_NullFunc,         TableWidget_Render,    TableWidget_Free,
+	TableWidget_KeyDown,     Widget_Key,            TableWidget_MouseScroll,
+	TableWidget_PointerDown, TableWidget_PointerUp, TableWidget_PointerMove, 
 	TableWidget_Reposition
 };
 void TableWidget_Create(struct TableWidget* w) {	
@@ -1182,7 +1186,7 @@ static bool InputWidget_KeyDown(void* widget, Key key) {
 
 static bool InputWidget_KeyUp(void* widget, Key key) { return true; }
 
-static bool InputWidget_MouseDown(void* widget, int x, int y, MouseButton button) {
+static bool InputWidget_PointerDown(void* widget, int id, int x, int y) {
 	String line; char lineBuffer[STRING_SIZE];
 	struct InputWidget* w = (struct InputWidget*)widget;
 	struct DrawTextArgs args;
@@ -1427,9 +1431,9 @@ static bool MenuInputWidget_AllowedChar(void* widget, char c) {
 
 static int MenuInputWidget_GetMaxLines(void) { return 1; }
 static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
-	Widget_NullFunc,       MenuInputWidget_Render, InputWidget_Free,
-	InputWidget_KeyDown,   InputWidget_KeyUp,
-	InputWidget_MouseDown, Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
+	Widget_NullFunc,         MenuInputWidget_Render, InputWidget_Free,
+	InputWidget_KeyDown,     InputWidget_KeyUp,      Widget_MouseScroll,
+	InputWidget_PointerDown, Widget_Pointer,         Widget_PointerMove,     
 	InputWidget_Reposition
 };
 void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, struct MenuInputDesc* desc) {
@@ -1691,8 +1695,8 @@ static int ChatInputWidget_GetMaxLines(void) {
 
 static const struct WidgetVTABLE ChatInputWidget_VTABLE = {
 	Widget_NullFunc,         ChatInputWidget_Render, InputWidget_Free,
-	ChatInputWidget_KeyDown, InputWidget_KeyUp,
-	InputWidget_MouseDown,   Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
+	ChatInputWidget_KeyDown, InputWidget_KeyUp,      Widget_MouseScroll,
+	InputWidget_PointerDown, Widget_Pointer,         Widget_PointerMove,     
 	InputWidget_Reposition
 };
 void ChatInputWidget_Create(struct ChatInputWidget* w) {
@@ -2098,8 +2102,8 @@ static void PlayerListWidget_Free(void* widget) {
 
 static const struct WidgetVTABLE PlayerListWidget_VTABLE = {
 	PlayerListWidget_Init, PlayerListWidget_Render, PlayerListWidget_Free,
-	Widget_Key,            Widget_Key,
-	Widget_Mouse,          Widget_Mouse,            Widget_MouseMove,      Widget_MouseScroll,
+	Widget_Key,            Widget_Key,              Widget_MouseScroll,
+	Widget_Pointer,        Widget_Pointer,          Widget_PointerMove,      
 	PlayerListWidget_Reposition
 };
 void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic) {
@@ -2498,8 +2502,8 @@ static void TextGroupWidget_Free(void* widget) {
 
 static const struct WidgetVTABLE TextGroupWidget_VTABLE = {
 	Widget_NullFunc, TextGroupWidget_Render, TextGroupWidget_Free,
-	Widget_Key,      Widget_Key,
-	Widget_Mouse,    Widget_Mouse,           Widget_MouseMove,     Widget_MouseScroll,
+	Widget_Key,      Widget_Key,             Widget_MouseScroll,
+	Widget_Pointer,  Widget_Pointer,         Widget_PointerMove,     
 	TextGroupWidget_Reposition
 };
 void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine) {
@@ -2744,8 +2748,8 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
 
 static const struct WidgetVTABLE SpecialInputWidget_VTABLE = {
 	Widget_NullFunc,              SpecialInputWidget_Render, SpecialInputWidget_Free,
-	Widget_Key,                   Widget_Key,
-	SpecialInputWidget_MouseDown, Widget_Mouse,              Widget_MouseMove,        Widget_MouseScroll,
+	Widget_Key,                   Widget_Key,                Widget_MouseScroll,
+	SpecialInputWidget_MouseDown, Widget_Pointer,            Widget_PointerMove,        
 	SpecialInputWidget_Reposition
 };
 void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* target) {

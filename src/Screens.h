@@ -8,18 +8,18 @@ struct Screen;
 struct Widget;
 
 /* These always return false */
-bool Screen_FKey(void* elem, int key);
-bool Screen_FKeyPress(void* elem, char keyChar);
-bool Screen_FMouseScroll(void* elem, float delta);
-bool Screen_FMouse(void* elem, int x, int y, int btn);
-bool Screen_FMouseMove(void* elem, int x, int y);
+bool Screen_FKey(void* s, int key);
+bool Screen_FKeyPress(void* s, char keyChar);
+bool Screen_FMouseScroll(void* s, float delta);
+bool Screen_FPointer(void* s, int id, int x, int y);
+bool Screen_FPointerMove(void* s, int id, int x, int y);
 
 /* These always return true */
-bool Screen_TKeyPress(void* elem, char keyChar);
+bool Screen_TKeyPress(void* s, char keyChar);
 bool Screen_TKey(void* s, int key);
-bool Screen_TMouseScroll(void* screen, float delta);
-bool Screen_TMouse(void* screen, int x, int y, int btn);
-bool Screen_TMouseMove(void* elem, int x, int y);
+bool Screen_TMouseScroll(void* s, float delta);
+bool Screen_TPointer(void* s, int id, int x, int y);
+bool Screen_TPointerMove(void* s, int id, int x, int y);
 
 void InventoryScreen_Show(void);
 void StatusScreen_Show(void);
