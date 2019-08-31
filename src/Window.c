@@ -56,7 +56,7 @@ static void Window_DefaultEnableRawMouse(void) {
 static void Window_DefaultUpdateRawMouse(void) {
 	int x, y;
 	Cursor_GetRawPos(&x, &y);
-	Event_RaiseMouseMove(&MouseEvents.RawMoved, x - cursorPrevX, y - cursorPrevY);
+	Event_RaiseMove(&PointerEvents.RawMoved, 0, x - cursorPrevX, y - cursorPrevY);
 	Window_CentreMousePosition();
 }
 
@@ -319,7 +319,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			prevPosY = raw.data.mouse.lLastY;
 		} else { break; }
 
-		if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, dx, dy);
+		if (win_rawMouse) Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
 	} break;
 
 	case WM_KEYDOWN:
@@ -1635,7 +1635,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	if (win_rawMouse) {
 		raw.x = 0; raw.y = 0;
 		GetEventParameter(inEvent, kEventParamMouseDelta, typeHIPoint, NULL, sizeof(HIPoint), NULL, &raw);
-		Event_RaiseMouseMove(&MouseEvents.RawMoved, (int)raw.x, (int)raw.y);
+		Event_RaiseMove(&PointerEvents.RawMoved, 0, (int)raw.x, (int)raw.y);
 	}
 	
 	mouseX = (int)pt.x; mouseY = (int)pt.y;
@@ -2294,7 +2294,7 @@ void Window_ProcessEvents(void) {
 			break;
 		case SDL_MOUSEMOTION:
 			Mouse_SetPosition(e.motion.x, e.motion.y);
-			if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, e.motion.xrel, e.motion.yrel);
+			if (win_rawMouse) Event_RaiseMove(&PointerEvents.RawMoved, 0, e.motion.xrel, e.motion.yrel);
 			break;
 		case SDL_TEXTINPUT:
 			Window_HandleTextEvent(&e); break;
@@ -2421,7 +2421,7 @@ static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* 
 	Input_SetPressed(KEY_MMOUSE, (ev->buttons & 0x04) != 0);
 
 	Mouse_SetPosition(ev->canvasX, ev->canvasY);
-	if (win_rawMouse) Event_RaiseMouseMove(&MouseEvents.RawMoved, ev->movementX, ev->movementY);
+	if (win_rawMouse) Event_RaiseMove(&PointerEvents.RawMoved, 0, ev->movementX, ev->movementY);
 	return true;
 }
 

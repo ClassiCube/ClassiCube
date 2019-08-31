@@ -40,9 +40,9 @@ struct Event_Block {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_MouseMove_Callback)(void* obj, int xDelta, int yDelta);
-struct Event_MouseMove {
-	Event_MouseMove_Callback Handlers[EVENT_MAX_CALLBACKS];
+typedef void (*Event_PointerMove_Callback)(void* obj, int idx, int xDelta, int yDelta);
+struct Event_PointerMove {
+	Event_PointerMove_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
@@ -95,11 +95,10 @@ void Event_RaiseBlock(struct Event_Block* handlers, IVec3 coords, BlockID oldBlo
 #define Event_RegisterBlock(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
 #define Event_UnregisterBlock(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
-/* Calls all registered callbacks for an event which has mouse movement arguments. */
-/* This is simply delta since last move. Use Mouse_X and Mouse_Y to get the mouse position. */
-void Event_RaiseMouseMove(struct Event_MouseMove* handlers, int xDelta, int yDelta);
-#define Event_RegisterMouseMove(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
-#define Event_UnregisterMouseMove(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
+/* Calls all registered callbacks for an event which has pointer movement arguments. */
+void Event_RaiseMove(struct Event_PointerMove* handlers, int idx, int xDelta, int yDelta);
+#define Event_RegisterMove(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
+#define Event_UnregisterMove(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
 /* Calls all registered callbacks for an event which has chat message type and contents. */
 /* See MsgType enum in Chat.h for what types of messages there are. */
@@ -181,12 +180,12 @@ CC_VAR extern struct _KeyEventsList {
 	struct Event_Float Wheel; /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
 } InputEvents;
 
-CC_VAR extern struct _MouseEventsList {
-	struct Event_MouseMove Moved;    /* Cursor position changed (Arg is delta from last position) */
-	struct Event_Int Down;           /* Mouse button is pressed (Arg is MouseButton member) */
-	struct Event_Int Up;             /* Mouse button is released (Arg is MouseButton member) */
-	struct Event_MouseMove RawMoved; /* Raw mouse position changed (Arg is delta) */
-} MouseEvents;
+CC_VAR extern struct _PointerEventsList {
+	struct Event_PointerMove Moved; /* Pointer position changed (Arg is delta from last position) */
+	struct Event_Int Down;          /* Left mouse or touch is pressed (Arg is index) */
+	struct Event_Int Up;            /* Left mouse or touch is released (Arg is index) */
+	struct Event_PointerMove RawMoved; /* Raw pointer position changed (Arg is delta) */
+} PointerEvents;
 
 CC_VAR extern struct _NetEventsList {
 	struct Event_Void Connected;    /* Connection to a server was established. */

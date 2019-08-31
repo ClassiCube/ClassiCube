@@ -11,7 +11,7 @@ struct _WorldEventsList   WorldEvents;
 struct _ChatEventsList    ChatEvents;
 struct _WindowEventsList  WindowEvents;
 struct _KeyEventsList     InputEvents;
-struct _MouseEventsList   MouseEvents;
+struct _PointerEventsList PointerEvents;
 struct _NetEventsList     NetEvents;
 
 void Event_Register(struct Event_Void* handlers, void* obj, Event_Void_Callback handler) {
@@ -85,10 +85,10 @@ void Event_RaiseBlock(struct Event_Block* handlers, IVec3 coords, BlockID oldBlo
 	}
 }
 
-void Event_RaiseMouseMove(struct Event_MouseMove* handlers, int xDelta, int yDelta) {
+void Event_RaiseMove(struct Event_PointerMove* handlers, int idx, int xDelta, int yDelta) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
-		handlers->Handlers[i](handlers->Objs[i], xDelta, yDelta);
+		handlers->Handlers[i](handlers->Objs[i], idx, xDelta, yDelta);
 	}
 }
 

@@ -220,7 +220,7 @@ static struct Camera cam_ForwardThird = {
 /*########################################################################################################################*
 *-----------------------------------------------------General camera------------------------------------------------------*
 *#########################################################################################################################*/
-static void Camera_RawMouseMovedHandler(void* obj, int deltaX, int deltaY) {
+static void HandleRawMouseMoved(void* obj, int idx, int deltaX, int deltaY) {
 	Camera.Active->OnRawMouseMoved(deltaX, deltaY);
 }
 
@@ -235,7 +235,7 @@ void Camera_Init(void) {
 	Camera_Register(&cam_ForwardThird);
 
 	Camera.Active = &cam_FirstPerson;
-	Event_RegisterMouseMove(&MouseEvents.RawMoved,         NULL, Camera_RawMouseMovedHandler);
+	Event_RegisterMove(&PointerEvents.RawMoved,            NULL, HandleRawMouseMoved);
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, Camera_CheckThirdPerson);
 
 #ifdef CC_BUILD_WIN

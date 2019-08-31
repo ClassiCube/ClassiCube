@@ -130,13 +130,13 @@ void Window_OpenKeyboard(void);
 /* Hides/Removes the previously displayed on-screen keyboard. */
 void Window_CloseKeyboard(void);
 
-/* Begins listening for raw input and starts raising MouseEvents.RawMoved. */
+/* Begins listening for raw input and starts raising PointerEvents.RawMoved. */
 /* NOTE: Some backends only raise it when Window_UpdateRawMouse is called. */
 /* Cursor will also be hidden and moved to window centre. */
 void Window_EnableRawMouse(void);
 /* Updates mouse state. (such as centreing cursor) */
 void Window_UpdateRawMouse(void);
-/* Disables listening for raw input and stops raising MouseEvents.RawMoved */
+/* Disables listening for raw input and stops raising PointerEvents.RawMoved */
 /* Cursor will also be unhidden and moved back to window centre. */
 void Window_DisableRawMouse(void);
 

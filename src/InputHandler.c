@@ -455,33 +455,33 @@ static void HandleMouseWheel(void* obj, float delta) {
 	Elem_HandlesMouseScroll(widget, delta);
 }
 
-static void HandlePointerMove(void* obj, int xDelta, int yDelta) {
+static void HandlePointerMove(void* obj, int idx, int xDelta, int yDelta) {
 	struct Screen* s;
 	int i;
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (s->VTABLE->HandlesMouseMove(s, Mouse_X, Mouse_Y)) return;
+		if (s->VTABLE->HandlesMouseMove(s, Pointers[idx].x, Pointers[idx].y)) return;
 	}
 }
 
-static void HandlePointerDown(void* obj, int btn) {
+static void HandlePointerDown(void* obj, int idx) {
 	struct Screen* s;
 	int i;
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (s->VTABLE->HandlesMouseDown(s, Mouse_X, Mouse_Y, btn)) return;
+		if (s->VTABLE->HandlesMouseDown(s, Pointers[idx].x, Pointers[idx].y, 0)) return;
 	}
 }
 
-static void HandlePointerUp(void* obj, int btn) {
+static void HandlePointerUp(void* obj, int idx) {
 	struct Screen* s;
 	int i;
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (s->VTABLE->HandlesMouseUp(s, Mouse_X, Mouse_Y, btn)) return;
+		if (s->VTABLE->HandlesMouseUp(s, Pointers[idx].x, Pointers[idx].y, 0)) return;
 	}
 }
 
@@ -566,13 +566,13 @@ static void HandleKeyPress(void* obj, int keyChar) {
 }
 
 void InputHandler_Init(void) {
-	Event_RegisterMouseMove(&MouseEvents.Moved, NULL, HandlePointerMove);
-	Event_RegisterInt(&MouseEvents.Down,        NULL, HandlePointerDown);
-	Event_RegisterInt(&MouseEvents.Up,          NULL, HandlePointerUp);
-	Event_RegisterInt(&InputEvents.Down,        NULL, HandleInputDown);
-	Event_RegisterInt(&InputEvents.Up,          NULL, HandleInputUp);
-	Event_RegisterInt(&InputEvents.Press,       NULL, HandleKeyPress);
-	Event_RegisterFloat(&InputEvents.Wheel,     NULL, HandleMouseWheel);
+	Event_RegisterMove(&PointerEvents.Moved, NULL, HandlePointerMove);
+	Event_RegisterInt(&PointerEvents.Down,   NULL, HandlePointerDown);
+	Event_RegisterInt(&PointerEvents.Up,     NULL, HandlePointerUp);
+	Event_RegisterInt(&InputEvents.Down,     NULL, HandleInputDown);
+	Event_RegisterInt(&InputEvents.Up,       NULL, HandleInputUp);
+	Event_RegisterInt(&InputEvents.Press,    NULL, HandleKeyPress);
+	Event_RegisterFloat(&InputEvents.Wheel,  NULL, HandleMouseWheel);
 
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, InputHandler_CheckZoomFov);
 	KeyBind_Init();

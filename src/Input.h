@@ -73,14 +73,22 @@ typedef int MouseButton;
 
 /* Wheel position of the mouse. Use Mouse_SetWheel to change. */
 extern float Mouse_Wheel;
+
+#define INPUT_MAX_POINTERS 1
+
+/* Data for mouse and touch */
+extern struct Pointer {
+	long id;
+	int x, y;
+} Pointers[INPUT_MAX_POINTERS];
 /* X and Y coordinates of the mouse. Use Mouse_SetPosition to change. */
 extern int Mouse_X, Mouse_Y;
 
-/* Raises MouseEvents.Up or MouseEvents.Down. */
-void Mouse_SetPressed(bool pressed);
+/* Raises PointerEvents.Up or PointerEvents.Down. */
+void Mouse_SetPressed(int idx, bool pressed);
 /* Sets wheel position of the mouse, always raising InputEvents.Wheel. */
 void Mouse_SetWheel(float wheel);
-/* Sets X and Y position of the mouse, always raising MouseEvents.Moved. */
+/* Sets X and Y position of the mouse, always raising PointerEvents.Moved. */
 void Mouse_SetPosition(int x, int y);
 
 

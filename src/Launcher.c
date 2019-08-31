@@ -130,15 +130,15 @@ static void HandleMouseWheel(void* obj, float delta) {
 	Launcher_Screen->MouseWheel(Launcher_Screen, delta);
 }
 
-static void HandlePointerDown(void* obj, int btn) {
-	Launcher_Screen->MouseDown(Launcher_Screen, btn);
+static void HandlePointerDown(void* obj, int idx) {
+	Launcher_Screen->MouseDown(Launcher_Screen, 0);
 }
 
-static void HandlePointerUp(void* obj, int btn) {
-	Launcher_Screen->MouseUp(Launcher_Screen, btn);
+static void HandlePointerUp(void* obj, int idx) {
+	Launcher_Screen->MouseUp(Launcher_Screen, 0);
 }
 
-static void HandlePointerMove(void* obj, int deltaX, int deltaY) {
+static void HandlePointerMove(void* obj, int idx, int deltaX, int deltaY) {
 	if (!Launcher_Screen) return;
 	Launcher_Screen->MouseMove(Launcher_Screen, deltaX, deltaY);
 }
@@ -167,12 +167,12 @@ static void Launcher_Init(void) {
 	Event_RegisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
 	Event_RegisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
 
-	Event_RegisterInput(&InputEvents.Down,      NULL, HandleInputDown);
-	Event_RegisterInt(&InputEvents.Press,       NULL, HandleKeyPress);
-	Event_RegisterFloat(&InputEvents.Wheel,     NULL, HandleMouseWheel);
-	Event_RegisterInt(&MouseEvents.Down,        NULL, HandlePointerDown);
-	Event_RegisterInt(&MouseEvents.Up,          NULL, HandlePointerUp);
-	Event_RegisterMouseMove(&MouseEvents.Moved, NULL, HandlePointerMove);
+	Event_RegisterInput(&InputEvents.Down,   NULL, HandleInputDown);
+	Event_RegisterInt(&InputEvents.Press,    NULL, HandleKeyPress);
+	Event_RegisterFloat(&InputEvents.Wheel,  NULL, HandleMouseWheel);
+	Event_RegisterInt(&PointerEvents.Down,   NULL, HandlePointerDown);
+	Event_RegisterInt(&PointerEvents.Up,     NULL, HandlePointerUp);
+	Event_RegisterMove(&PointerEvents.Moved, NULL, HandlePointerMove);
 
 	Drawer2D_MakeFont(&logoFont,           32, FONT_STYLE_NORMAL);
 	Drawer2D_MakeFont(&Launcher_TitleFont, 16, FONT_STYLE_BOLD);
@@ -189,13 +189,12 @@ static void Launcher_Free(void) {
 	Event_UnregisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
 	Event_UnregisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
 	
-	Event_UnregisterInput(&InputEvents.Down,      NULL, HandleInputDown);
-	Event_UnregisterInt(&InputEvents.Press,       NULL, HandleKeyPress);
-	Event_UnregisterFloat(&InputEvents.Wheel,     NULL, HandleMouseWheel);
-	Event_UnregisterInt(&MouseEvents.Down,        NULL, HandlePointerDown);
-	Event_UnregisterInt(&MouseEvents.Up,          NULL, HandlePointerUp);
-	Event_UnregisterMouseMove(&MouseEvents.Moved, NULL, HandlePointerMove);
-	
+	Event_UnregisterInput(&InputEvents.Down,    NULL, HandleInputDown);
+	Event_UnregisterInt(&InputEvents.Press,     NULL, HandleKeyPress);
+	Event_UnregisterFloat(&InputEvents.Wheel,   NULL, HandleMouseWheel);
+	Event_UnregisterInt(&PointerEvents.Down,    NULL, HandlePointerDown);
+	Event_UnregisterInt(&PointerEvents.Up,      NULL, HandlePointerUp);
+	Event_UnregisterMove(&PointerEvents.Moved,  NULL, HandlePointerMove);	
 
 	Flags_Free();
 	Font_Free(&logoFont);

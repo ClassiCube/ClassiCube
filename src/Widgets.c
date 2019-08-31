@@ -243,7 +243,7 @@ static bool ScrollbarWidget_MouseDown(void* widget, int x, int y, MouseButton bt
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int posY, height;
 
-	if (w->draggingMouse)  return true;
+	if (w->draggingMouse) return true;
 	if (x < w->x || x >= w->x + w->width) return false;
 
 	y -= w->y;
