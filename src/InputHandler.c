@@ -47,6 +47,8 @@ static void MouseStateUpdate(int button, bool pressed) {
 }
 
 static void MouseStateChanged(int button, bool pressed) {
+	if (!Server.SupportsPlayerClick) return;
+
 	if (pressed) {
 		/* Can send multiple Pressed events */
 		MouseStateUpdate(button, true);
@@ -69,13 +71,11 @@ static void MouseStateRelease(int button) {
 
 void InputHandler_OnScreensChanged(void) {
 	input_lastClick = DateTime_CurrentUTC_MS();
+	input_pickingId = -1;
 
-	if (Server.SupportsPlayerClick) {
-		input_pickingId = -1;
-		MouseStateChanged(MOUSE_LEFT,   false);
-		MouseStateChanged(MOUSE_RIGHT,  false);
-		MouseStateChanged(MOUSE_MIDDLE, false);
-	}
+	MouseStateChanged(MOUSE_LEFT,   false);
+	MouseStateChanged(MOUSE_RIGHT,  false);
+	MouseStateChanged(MOUSE_MIDDLE, false);
 }
 
 static bool TouchesSolid(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
