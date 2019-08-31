@@ -1480,15 +1480,32 @@ static void UpdatesScreen_RelOpenGL(void* w, int x, int y) { UpdatesScreen_Get(t
 static void UpdatesScreen_DevD3D9(void* w, int x, int y)   { UpdatesScreen_Get(false, true);  }
 static void UpdatesScreen_DevOpenGL(void* w, int x, int y) { UpdatesScreen_Get(false, false); }
 
-static void UpdatesScreen_Init(struct LScreen* s_) {
+static void UpdatesScreen_Update(struct UpdatesScreen* s) {
 	String path; char pathBuffer[FILENAME_SIZE];
-	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
 	TimeMS buildTime;
 	ReturnCode res;
 
+	/* Initially fill out with update check result from main menu */
+	if (CheckUpdateTask.Base.Completed && CheckUpdateTask.Base.Success) {
+		UpdatesScreen_FormatBoth(s);
+	}
+	CheckUpdateTask_Run();
+
+	String_InitArray(path, pathBuffer);
+	res = Process_GetExePath(&path);
+	if (res) { Logger_Warn(res, "getting .exe path"); return; }
+	
+	res = File_GetModifiedTime(&path, &buildTime);
+	if (res) { Logger_Warn(res, "getting build time"); return; }
+
+	UpdatesScreen_Format(&s->lblYour, "Your build: ", buildTime);
+}
+
+static void UpdatesScreen_Init(struct LScreen* s_) {
+	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
 	s->seps[0].Col = Launcher_ButtonBorderCol;
 	s->seps[1].Col = Launcher_ButtonBorderCol;
-	if (s->numWidgets) { CheckUpdateTask_Run(); return; }
+	if (s->numWidgets) { UpdatesScreen_Update(s); return; }
 
 	s->widgets = s->_widgets;
 	LLabel_Init(s_,  &s->lblYour, "Your build: (unknown)");
@@ -1512,21 +1529,7 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	s->btnDev[0].OnClick = UpdatesScreen_DevD3D9;
 	s->btnDev[1].OnClick = UpdatesScreen_DevOpenGL;
 	s->btnBack.OnClick   = SwitchToSettings;
-
-	/* Initially fill out with update check result from main menu */
-	if (CheckUpdateTask.Base.Completed && CheckUpdateTask.Base.Success) {
-		UpdatesScreen_FormatBoth(s);
-	}
-	CheckUpdateTask_Run();
-
-	String_InitArray(path, pathBuffer);
-	res = Process_GetExePath(&path);
-	if (res) { Logger_Warn(res, "getting .exe path"); return; }
-	
-	res = File_GetModifiedTime(&path, &buildTime);
-	if (res) { Logger_Warn(res, "getting build time"); return; }
-
-	UpdatesScreen_Format(&s->lblYour, "Your build: ", buildTime);
+	UpdatesScreen_Update(s);
 }
 
 static void UpdatesScreen_Layout(struct LScreen* s_) {
