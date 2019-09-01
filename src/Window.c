@@ -2731,7 +2731,7 @@ void Window_ProcessEvents(void) { }
 /* Not needed because browser provides relative mouse and touch events */
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 /* Not allowed to move cursor from javascript */
-void Cursor_SetPosition(int x, int y) { Mouse_X = x; Mouse_Y = y; }
+void Cursor_SetPosition(int x, int y) { }
 
 void Cursor_SetVisible(bool visible) {
 	if (visible) {
@@ -3026,9 +3026,9 @@ void Window_ProcessEvents(void) {
 	JavaCallVoid(env, "processEvents", "()V", NULL);
 }
 
-/* No actual cursor, so just fake one */
+/* No actual mouse cursor */
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
-void Cursor_SetPosition(int x, int y) { Mouse_X = x; Mouse_Y = y; }
+void Cursor_SetPosition(int x, int y) { }
 void Cursor_SetVisible(bool visible) { }
 
 void Window_ShowDialog(const char* title, const char* msg) {

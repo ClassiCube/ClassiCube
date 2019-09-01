@@ -70,6 +70,16 @@ bool Gui_Contains(int recX, int recY, int width, int height, int x, int y) {
 	return x >= recX && y >= recY && x < (recX + width) && y < (recY + height);
 }
 
+bool Gui_ContainsPointers(int x, int y, int width, int height) {
+	int i, px, py;
+	for (i = 0; i < Pointers_Count; i++) {
+		px = Pointers[i].x;	py = Pointers[i].y;
+
+		if (px >= x && py >= y && px < (x + width) && py < (y + height)) return true;
+	}
+	return false;
+}
+
 void Gui_ShowDefault(void) {
 	StatusScreen_Show();
 	HUDScreen_Show();

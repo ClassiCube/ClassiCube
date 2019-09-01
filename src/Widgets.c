@@ -226,7 +226,7 @@ static void ScrollbarWidget_Render(void* widget, double delta) {
 	x += SCROLL_BORDER; y += w->y;
 	width -= SCROLL_BORDER * 2; 
 
-	hovered = Gui_Contains(x, y, width, height, Mouse_X, Mouse_Y);
+	hovered = Gui_ContainsPointers(x, y, width, height);
 	barCol  = hovered ? Scroll_HoverCol : Scroll_BarCol;
 	Gfx_Draw2DFlat(x, y, width, height, barCol);
 
@@ -729,8 +729,8 @@ static bool TableWidget_MouseScroll(void* widget, float delta) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	int origTopRow, index;
 
-	bool bounds = Gui_Contains(Table_X(w), Table_Y(w),
-		Table_Width(w) + w->scroll.width, Table_Height(w), Mouse_X, Mouse_Y);
+	bool bounds = Gui_ContainsPointers(Table_X(w), Table_Y(w),
+		Table_Width(w) + w->scroll.width, Table_Height(w));
 	if (!bounds) return false;
 
 	origTopRow = w->scroll.topRow;
@@ -805,7 +805,7 @@ void TableWidget_Create(struct TableWidget* w) {
 	
 	w->horAnchor = ANCHOR_CENTRE;
 	w->verAnchor = ANCHOR_CENTRE;
-	w->lastX = Mouse_X; w->lastY = Mouse_Y;
+	w->lastX = -20; w->lastY = -20;
 }
 
 void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
@@ -2063,7 +2063,7 @@ static void PlayerListWidget_Render(void* widget, double delta) {
 	struct TextWidget* title = &w->title;
 	struct Texture tex;
 	int offset, height;
-	int i, selectedI;
+	int i;
 	PackedCol topCol    = PACKEDCOL_CONST( 0,  0,  0, 180);
 	PackedCol bottomCol = PACKEDCOL_CONST(50, 50, 50, 205);
 
@@ -2077,12 +2077,13 @@ static void PlayerListWidget_Render(void* widget, double delta) {
 	Widget_Reposition(title);
 	Elem_Render(title, delta);
 
-	selectedI = PlayerListWidget_HighlightedName(w, Mouse_X, Mouse_Y);
 	for (i = 0; i < w->namesCount; i++) {
 		if (!w->textures[i].ID) continue;
-
 		tex = w->textures[i];
-		if (i == selectedI) tex.X += 4;
+		
+		if (w->ids[i] != GROUP_NAME_ID) {
+			if (Gui_ContainsPointers(tex.X, tex.Y, tex.Width, tex.Height)) tex.X += 4;
+		}
 		Texture_Render(&tex);
 	}
 }

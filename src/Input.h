@@ -78,9 +78,7 @@ extern float Mouse_Wheel;
 #define Pointers_Count 1
 
 /* Data for mouse and touch */
-extern struct Pointer {
-	int x, y;
-} Pointers[INPUT_MAX_POINTERS];
+extern struct Pointer { int x, y; } Pointers[INPUT_MAX_POINTERS];
 /* X and Y coordinates of the mouse. Use Mouse_SetPosition to change. */
 extern int Mouse_X, Mouse_Y;
 

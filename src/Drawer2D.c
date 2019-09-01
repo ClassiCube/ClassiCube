@@ -736,13 +736,13 @@ String Font_Lookup(const String* fontName, int style) {
 	String str = String_FromConst("-----"); return str;
 }
 
-ReturnCode Font_Make(FontDesc* desc, const String* fontName, int size, int style) {
+ReturnCode Font_Make(struct FontDesc* desc, const String* fontName, int size, int style) {
 	desc->size   = size;
 	desc->style  = style;
 	desc->height = 0;
 	return 0;
 }
-void Font_Free(FontDesc* desc) {
+void Font_Free(struct FontDesc* desc) {
 	desc->size    = 0;
 	desc->style   = 0;	
 }

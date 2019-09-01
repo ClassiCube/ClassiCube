@@ -117,6 +117,8 @@ extern int Gui_ScreensCount;
 int  Gui_CalcPos(cc_uint8 anchor, int offset, int size, int axisLen);
 /* Returns whether the given rectangle contains the given point. */
 bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
+/* Returns whether one or more pointers lie within the given rectangle. */
+bool Gui_ContainsPointers(int x, int y, int width, int height);
 /* Shows HUD and Status screens. */
 void Gui_ShowDefault(void);
 
