@@ -20,9 +20,9 @@ struct TextWidget {
 CC_NOINLINE void TextWidget_Make(struct TextWidget* w, 
 								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
-CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const String* text, const struct FontDesc* font);
+CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const String* text, struct FontDesc* font);
 /* Shorthand for TextWidget_Set using String_FromReadonly */
-CC_NOINLINE void TextWidget_SetConst(struct TextWidget* w, const char* text, const struct FontDesc* font);
+CC_NOINLINE void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc* font);
 
 
 typedef void (*Button_Get)(String* raw);
@@ -40,9 +40,9 @@ struct ButtonWidget {
 CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, 
 								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
-CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const struct FontDesc* font);
+CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const String* text, struct FontDesc* font);
 /* Shorthand for ButtonWidget_Set using String_FromReadonly */
-CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, const struct FontDesc* font);
+CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, struct FontDesc* font);
 
 /* Clickable and draggable scrollbar. */
 struct ScrollbarWidget {
@@ -259,7 +259,7 @@ struct SpecialInputTab {
 
 struct SpecialInputWidget {
 	Widget_Layout
-	Size2D elementSize;
+	int elementWidth, elementHeight;
 	int selectedIndex;
 	bool pendingRedraw;
 	struct InputWidget* target;

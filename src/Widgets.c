@@ -58,7 +58,7 @@ void TextWidget_Make(struct TextWidget* w, cc_uint8 horAnchor, cc_uint8 verAncho
 	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
 }
 
-void TextWidget_Set(struct TextWidget* w, const String* text, const struct FontDesc* font) {
+void TextWidget_Set(struct TextWidget* w, const String* text, struct FontDesc* font) {
 	struct DrawTextArgs args;
 	Gfx_DeleteTexture(&w->tex.ID);
 
@@ -78,7 +78,7 @@ void TextWidget_Set(struct TextWidget* w, const String* text, const struct FontD
 	Widget_Reposition(w);
 }
 
-void TextWidget_SetConst(struct TextWidget* w, const char* text, const struct FontDesc* font) {
+void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc* font) {
 	String str = String_FromReadonly(text);
 	TextWidget_Set(w, &str, font);
 }
@@ -161,7 +161,7 @@ void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
 }
 
-void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const struct FontDesc* font) {
+void ButtonWidget_Set(struct ButtonWidget* w, const String* text, struct FontDesc* font) {
 	struct DrawTextArgs args;
 	Gfx_DeleteTexture(&w->tex.ID);
 
@@ -178,7 +178,7 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, const struct F
 	Widget_Reposition(w);
 }
 
-void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, const struct FontDesc* font) {
+void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, struct FontDesc* font) {
 	String str = String_FromReadonly(text);
 	ButtonWidget_Set(w, &str, font);
 }
@@ -2551,7 +2551,7 @@ static void SpecialInputWidget_IntersectsBody(struct SpecialInputWidget* w, int 
 	int i;
 
 	y -= w->titleHeight;
-	x /= w->elementSize.Width; y /= w->elementSize.Height;
+	x /= w->elementWidth; y /= w->elementHeight;
 	
 	i = (x + y * e.itemsPerRow) * e.charsPerItem;
 	if (i >= e.contents.length) return;
@@ -2645,12 +2645,12 @@ static Size2D SpecialInputWidget_MeasureContent(struct SpecialInputWidget* w, st
 		maxWidth = max(maxWidth, size.Width);
 	}
 
-	w->elementSize.Width  = maxWidth    + SPECIAL_CONTENT_SPACING;
-	w->elementSize.Height = size.Height + SPECIAL_CONTENT_SPACING;
+	w->elementWidth  = maxWidth    + SPECIAL_CONTENT_SPACING;
+	w->elementHeight = size.Height + SPECIAL_CONTENT_SPACING;
 	rows = Math_CeilDiv(tab->contents.length / tab->charsPerItem, tab->itemsPerRow);
 
-	size.Width  = w->elementSize.Width  * tab->itemsPerRow;
-	size.Height = w->elementSize.Height * rows;
+	size.Width  = w->elementWidth  * tab->itemsPerRow;
+	size.Height = w->elementHeight * rows;
 	return size;
 }
 
@@ -2666,8 +2666,8 @@ static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct 
 		args.text.buffer = &tab->contents.buffer[i];
 		item = i / tab->charsPerItem;
 
-		x = (item % wrap) * w->elementSize.Width;
-		y = (item / wrap) * w->elementSize.Height + yOffset;
+		x = (item % wrap) * w->elementWidth;
+		y = (item / wrap) * w->elementHeight + yOffset;
 		Drawer2D_DrawText(bmp, &args, x, y);
 	}
 }

@@ -112,11 +112,11 @@ static void Window_UpdateTouch(long id, int x, int y) {
 	int i;
 	for (i = 0; i < touchesCount; i++) {
 		if (touches[i].id != id) continue;
-		Mouse_SetPosition(x, y);
-
+		
 		if (win_rawMouse) {
-			Event_RaiseMouseMove(&MouseEvents.RawMoved, x - touches[i].x, y - touches[i].y);
+			Event_RaiseMove(&PointerEvents.RawMoved, i, x - touches[i].x, y - touches[i].y);
 		}
+		Mouse_SetPosition(x, y);
 
 		touches[i].x = x;
 		touches[i].y = y;
@@ -1418,7 +1418,7 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 		/* However this causes issues as that removes events that */
 		/* should have been delivered to the main game window. */
 		/* (e.g. breaks initial window resize with i3 WM) */
-		XIfEvent(dpy, &e, X11_FilterEvent, w->win);
+		XIfEvent(dpy, &e, X11_FilterEvent, (XPointer)w->win);
 
 		switch (e.type)
 		{
