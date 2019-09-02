@@ -79,7 +79,7 @@ void Input_SetPressed(Key key, bool pressed) {
 
 	/* don't allow multiple left mouse down events */
 	if (key != KEY_LMOUSE || pressed == wasPressed) return;
-	Mouse_SetPressed(0, pressed);
+	Pointer_SetPressed(0, pressed);
 }
 
 void Key_Clear(void) {
@@ -98,7 +98,7 @@ float Mouse_Wheel;
 int Mouse_X, Mouse_Y;
 struct Pointer Pointers[INPUT_MAX_POINTERS];
 
-void Mouse_SetPressed(int idx, bool pressed) {
+void Pointer_SetPressed(int idx, bool pressed) {
 	if (pressed) {
 		Event_RaiseInt(&PointerEvents.Down, idx);
 	} else {
@@ -112,11 +112,13 @@ void Mouse_SetWheel(float wheel) {
 	Event_RaiseFloat(&InputEvents.Wheel, delta);
 }
 
-void Mouse_SetPosition(int x, int y) {
+void Pointer_SetPosition(int idx, int x, int y) {
 	int deltaX = x - Mouse_X, deltaY = y - Mouse_Y;
 	Mouse_X = x; Mouse_Y = y;
-	Pointers[0].x = x; Pointers[0].y = y;
-	Event_RaiseMove(&PointerEvents.Moved, 0, deltaX, deltaY);
+	if (x == Pointers[idx].x && y == Pointers[idx].y) return;
+	/* TODO: reset to -1, -1 when pointer is removed */
+	Pointers[idx].x = x; Pointers[idx].y = y;
+	Event_RaiseMove(&PointerEvents.Moved, idx, deltaX, deltaY);
 }
 
 

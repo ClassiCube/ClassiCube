@@ -27,6 +27,9 @@ void LoadingScreen_Show(const String* title, const String* message);
 void GeneratingScreen_Show(void);
 void HUDScreen_Show(void);
 void DisconnectScreen_Show(const String* title, const String* message);
+#ifdef CC_BUILD_TOUCH
+void TouchScreen_Show(void);
+#endif
 
 /* Raw pointer to loading screen. DO NOT USE THIS. Use LoadingScreen_MakeInstance() */
 extern struct Screen* LoadingScreen_UNSAFE_RawPointer;

@@ -83,11 +83,11 @@ extern struct Pointer { int x, y; } Pointers[INPUT_MAX_POINTERS];
 extern int Mouse_X, Mouse_Y;
 
 /* Raises PointerEvents.Up or PointerEvents.Down. */
-void Mouse_SetPressed(int idx, bool pressed);
+void Pointer_SetPressed(int idx, bool pressed);
 /* Sets wheel position of the mouse, always raising InputEvents.Wheel. */
 void Mouse_SetWheel(float wheel);
-/* Sets X and Y position of the mouse, always raising PointerEvents.Moved. */
-void Mouse_SetPosition(int x, int y);
+/* Sets X and Y position of the given pointer, always raising PointerEvents.Moved. */
+void Pointer_SetPosition(int idx, int x, int y);
 
 
 /* Enumeration of all key bindings. */

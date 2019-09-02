@@ -784,6 +784,7 @@ static void HUDScreen_EnterChatInput(struct HUDScreen* s, bool close) {
 
 	s->grabsInput = false;
 	Camera_CheckFocus();
+	Window_CloseKeyboard();
 	if (close) InputWidget_Clear(&s->input.base);
 
 	input = &s->input.base;
@@ -1207,6 +1208,7 @@ void HUDScreen_OpenInput(const String* text) {
 	s->suppressNextPress = true;
 	s->grabsInput        = true;
 	Camera_CheckFocus();
+	Window_OpenKeyboard();
 
 	String_Copy(&s->input.base.text, text);
 	InputWidget_UpdateText(&s->input.base);
@@ -1398,3 +1400,157 @@ void DisconnectScreen_Show(const String* title, const String* message) {
 	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_DISCONNECT);
 }
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------TouchScreen------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_TOUCH
+static struct TouchScreen {
+	Screen_Layout
+	int numButtons, layout;
+	cc_uint8 binds[10];
+	struct FontDesc font;
+	struct ButtonWidget buttons[10];
+} TouchScreen_Instance;
+
+static const struct TouchBindDesc {
+	const char* text;
+	cc_uint8 bind, width;
+	cc_int16 xOffset, yOffset;
+} touchDescs[11] = {
+	{ "<",      KEYBIND_LEFT,       40, 150,  50 },
+	{ ">",      KEYBIND_RIGHT,      40,  10,  50 },
+	{ "^",      KEYBIND_FORWARD,    40,  80,  10 },
+	{ "\\/",    KEYBIND_BACK,       40,  80,  90 },
+	{ "Jump",   KEYBIND_JUMP,      100,  50,  50 },
+	{ "Chat",   KEYBIND_CHAT,      100,  50, 150 },
+	{ "Inv",    KEYBIND_INVENTORY, 100,  50, 190 },
+	{ "Speed",  KEYBIND_SPEED,     100,  50, 230 },
+	{ "Noclip", KEYBIND_NOCLIP,    100,  50, 270 },
+	{ "Fly",    KEYBIND_FLY,       100,  50, 310 },
+	/* Chat labels */
+	{ "Send ",  KEYBIND_SEND_CHAT, 100,  50, 10 },
+};
+
+#define TOUCH_LAYOUT_FULL      0
+#define TOUCH_LAYOUT_CHAT      1
+#define TOUCH_LAYOUT_NONE      2
+
+CC_NOINLINE static int CalcTouchMenuLayout(void) {
+	struct Screen* grabbed = Gui_GetInputGrab();
+	if (!grabbed) return TOUCH_LAYOUT_FULL;
+	if (grabbed == &HUDScreen_Instance) return TOUCH_LAYOUT_CHAT;
+	return TOUCH_LAYOUT_NONE;
+}
+
+static void TouchScreen_ContextLost(void* screen) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	int i;
+	Font_Free(&s->font);
+
+	for (i = 0; i < s->numButtons; i++) {
+		Elem_Free(&s->buttons[i]);
+	}
+}
+
+CC_NOINLINE static void TouchScreen_Set(struct TouchScreen* s, int i, const char* text, KeyBind bind) {
+	ButtonWidget_SetConst(&s->buttons[i], text, &s->font);
+	s->binds[i] = bind;
+}
+
+static void TouchScreen_ContextRecreated(void* screen) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	const struct TouchBindDesc* desc;
+	int i, offset = 0;
+
+	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_BOLD);
+	s->layout     = CalcTouchMenuLayout();
+	s->numButtons = 0;
+
+	switch (s->layout) {
+	case TOUCH_LAYOUT_FULL:
+		s->numButtons = 10;
+		break;
+	case TOUCH_LAYOUT_CHAT:
+		offset        = 10;
+		s->numButtons = 1;
+		break;
+	}
+
+	for (i = 0; i < s->numButtons; i++) {
+		desc = &touchDescs[i + offset];
+		ButtonWidget_Make(&s->buttons[i], desc->width, NULL, ANCHOR_MAX, ANCHOR_MIN,
+			desc->xOffset, desc->yOffset);
+		ButtonWidget_SetConst(&s->buttons[i], desc->text, &s->font);
+		s->binds[i] = desc->bind;
+	}
+}
+
+static void TouchScreen_Render(void* screen, double delta) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	int i;
+
+	Gfx_SetTexturing(true);
+	for (i = 0; i < s->numButtons; i++) {
+		Elem_Render(&s->buttons[i], delta);
+	}
+	Gfx_SetTexturing(false);
+
+	i = CalcTouchMenuLayout();
+	/* TODO: AWFUL AWFUL HACK */
+	/* use guiEvents instead */
+	if (i != s->layout) Gui_Refresh(s);
+}
+
+static void TouchScreen_OnResize(void* screen) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	int i;
+	for (i = 0; i < s->numButtons; i++) {
+		Widget_Reposition(&s->buttons[i]);
+	}
+}
+
+static bool TouchScreen_PointerDown(void* screen, int id, int x, int y) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	int i;
+	//Chat_Add1("POINTER DOWN: %i", &id);
+
+	for (i = 0; i < s->numButtons; i++) {
+		if (!Widget_Contains(&s->buttons[i], x, y)) continue;
+
+		Input_SetPressed(KeyBinds[s->binds[i]], true);
+		s->buttons[i].active |= id;
+		return true;
+	}
+	return false;
+}
+
+static bool TouchScreen_PointerUp(void* screen, int id, int x, int y) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	int i;
+	//Chat_Add1("POINTER UP: %i", &id);
+
+	for (i = 0; i < s->numButtons; i++) {
+		if (!(s->buttons[i].active & id)) continue;
+
+		Input_SetPressed(KeyBinds[s->binds[i]], false);
+		s->buttons[i].active &= ~id;
+		return true;
+	}
+	return false;
+}
+
+static const struct ScreenVTABLE TouchScreen_VTABLE = {
+	Screen_NullFunc,         TouchScreen_Render,      Screen_NullFunc,
+	Screen_FKey,             Screen_FKey,             Screen_FKeyPress,
+	TouchScreen_PointerDown, TouchScreen_PointerUp,   Screen_FPointerMove, Screen_FMouseScroll,
+	TouchScreen_OnResize,    TouchScreen_ContextLost, TouchScreen_ContextRecreated
+};
+void TouchScreen_Show(void) {
+	struct TouchScreen* s = &TouchScreen_Instance;
+	s->VTABLE = &TouchScreen_VTABLE;
+	/* TODO: if Window_TouchMode */
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TOUCH);
+}
+#endif

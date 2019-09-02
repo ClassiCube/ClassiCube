@@ -99,13 +99,19 @@ static struct TouchData { long id; int x, y; } touches[32];
 static int touchesCount;
 
 static void Window_AddTouch(long id, int x, int y) {
-	touches[touchesCount].id = id;
-	touches[touchesCount].x  = x;
-	touches[touchesCount].y  = y;
+	int i = touchesCount;
+	touches[i].id = id;
+	touches[i].x  = x;
+	touches[i].y  = y;
 	touchesCount++;
 
-	Mouse_SetPosition(x, y);
-	Input_SetPressed(KEY_LMOUSE, true);
+	Pointer_SetPosition(i, x, y);
+	/* TODO: redo this */
+	if (i == 0) {
+		Input_SetPressed(KEY_LMOUSE, true);
+	} else {
+		Pointer_SetPressed(i, true);
+	}
 }
 
 static void Window_UpdateTouch(long id, int x, int y) {
@@ -116,7 +122,7 @@ static void Window_UpdateTouch(long id, int x, int y) {
 		if (win_rawMouse) {
 			Event_RaiseMove(&PointerEvents.RawMoved, i, x - touches[i].x, y - touches[i].y);
 		}
-		Mouse_SetPosition(x, y);
+		Pointer_SetPosition(i, x, y);
 
 		touches[i].x = x;
 		touches[i].y = y;
@@ -135,8 +141,14 @@ static void Window_RemoveTouch(long id, int x, int y) {
 		}
 
 		touchesCount--;
-		Mouse_SetPosition(x, y);
-		Input_SetPressed(KEY_LMOUSE, false);
+		Pointer_SetPosition(i, x, y);
+
+		/* TODO: redo this */
+		if (i == 0) {
+			Input_SetPressed(KEY_LMOUSE, false);
+		} else {
+			Pointer_SetPressed(i, false);
+		}
 		return;
 	}
 }
@@ -270,7 +282,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		Input_SetPressed(KEY_RMOUSE, (wParam & 0x02) != 0);
 		Input_SetPressed(KEY_MMOUSE, (wParam & 0x10) != 0);
 		/* TODO: do we need to set XBUTTON1/XBUTTON2 here */
-		Mouse_SetPosition(LOWORD(lParam), HIWORD(lParam));
+		Pointer_SetPosition(0, LOWORD(lParam), HIWORD(lParam));
 		break;
 
 	case WM_MOUSEWHEEL:
@@ -1114,7 +1126,7 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case MotionNotify:
-			Mouse_SetPosition(e.xmotion.x, e.xmotion.y);
+			Pointer_SetPosition(0, e.xmotion.x, e.xmotion.y);
 			break;
 
 		case FocusIn:
@@ -1674,7 +1686,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 			
 		case kEventMouseMoved:
 		case kEventMouseDragged:
-			Mouse_SetPosition(mouseX, mouseY);
+			Pointer_SetPosition(0, mouseX, mouseY);
 			return eventNotHandledErr;
 	}
 	return eventNotHandledErr;
@@ -2293,7 +2305,7 @@ void Window_ProcessEvents(void) {
 			Mouse_SetWheel(Mouse_Wheel + e.wheel.y);
 			break;
 		case SDL_MOUSEMOTION:
-			Mouse_SetPosition(e.motion.x, e.motion.y);
+			Pointer_SetPosition(0, e.motion.x, e.motion.y);
 			if (win_rawMouse) Event_RaiseMove(&PointerEvents.RawMoved, 0, e.motion.xrel, e.motion.yrel);
 			break;
 		case SDL_TEXTINPUT:
@@ -2420,7 +2432,7 @@ static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* 
 	Input_SetPressed(KEY_RMOUSE, (ev->buttons & 0x02) != 0);
 	Input_SetPressed(KEY_MMOUSE, (ev->buttons & 0x04) != 0);
 
-	Mouse_SetPosition(ev->canvasX, ev->canvasY);
+	Pointer_SetPosition(0, ev->canvasX, ev->canvasY);
 	if (win_rawMouse) Event_RaiseMove(&PointerEvents.RawMoved, 0, ev->movementX, ev->movementY);
 	return true;
 }
