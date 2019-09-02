@@ -2719,7 +2719,7 @@ static void SpecialInputWidget_Reposition(void* widget) {
 	w->tex.X = w->x; w->tex.Y = w->y;
 }
 
-static bool SpecialInputWidget_MouseDown(void* widget, int x, int y, MouseButton btn) {
+static bool SpecialInputWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
 	x -= w->x; y -= w->y;
 
@@ -2748,9 +2748,9 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
 }
 
 static const struct WidgetVTABLE SpecialInputWidget_VTABLE = {
-	Widget_NullFunc,              SpecialInputWidget_Render, SpecialInputWidget_Free,
-	Widget_Key,                   Widget_Key,                Widget_MouseScroll,
-	SpecialInputWidget_MouseDown, Widget_Pointer,            Widget_PointerMove,        
+	Widget_NullFunc,                SpecialInputWidget_Render, SpecialInputWidget_Free,
+	Widget_Key,                     Widget_Key,                Widget_MouseScroll,
+	SpecialInputWidget_PointerDown, Widget_Pointer,            Widget_PointerMove,        
 	SpecialInputWidget_Reposition
 };
 void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* target) {

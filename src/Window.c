@@ -92,70 +92,6 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 
 
 /*########################################################################################################################*
-*------------------------------------------------------Touch support------------------------------------------------------*
-*#########################################################################################################################*/
-#ifdef CC_BUILD_TOUCH
-static struct TouchData { long id; int x, y; } touches[32];
-static int touchesCount;
-
-static void Window_AddTouch(long id, int x, int y) {
-	int i = touchesCount;
-	touches[i].id = id;
-	touches[i].x  = x;
-	touches[i].y  = y;
-	touchesCount++;
-
-	Pointer_SetPosition(i, x, y);
-	/* TODO: redo this */
-	if (i == 0) {
-		Input_SetPressed(KEY_LMOUSE, true);
-	} else {
-		Pointer_SetPressed(i, true);
-	}
-}
-
-static void Window_UpdateTouch(long id, int x, int y) {
-	int i;
-	for (i = 0; i < touchesCount; i++) {
-		if (touches[i].id != id) continue;
-		
-		if (win_rawMouse) {
-			Event_RaiseMove(&PointerEvents.RawMoved, i, x - touches[i].x, y - touches[i].y);
-		}
-		Pointer_SetPosition(i, x, y);
-
-		touches[i].x = x;
-		touches[i].y = y;
-		return;
-	}
-}
-
-static void Window_RemoveTouch(long id, int x, int y) {
-	int i;
-	for (i = 0; i < touchesCount; i++) {
-		if (touches[i].id != id) continue;
-
-		/* found the touch, remove it*/
-		for (; i < touchesCount - 1; i++) {
-			touches[i] = touches[i + 1];
-		}
-
-		touchesCount--;
-		Pointer_SetPosition(i, x, y);
-
-		/* TODO: redo this */
-		if (i == 0) {
-			Input_SetPressed(KEY_LMOUSE, false);
-		} else {
-			Pointer_SetPressed(i, false);
-		}
-		return;
-	}
-}
-#endif
-
-
-/*########################################################################################################################*
 *------------------------------------------------------Win32 window-------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WINGUI
@@ -2442,7 +2378,7 @@ static EM_BOOL Window_TouchStart(int type, const EmscriptenTouchEvent* ev, void*
 	int i;
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
-		if (t->isChanged) Window_AddTouch(t->identifier, t->canvasX, t->canvasY);
+		if (t->isChanged) Input_AddTouch(t->identifier, t->canvasX, t->canvasY);
 	}
 	return true;
 }
@@ -2452,7 +2388,7 @@ static EM_BOOL Window_TouchMove(int type, const EmscriptenTouchEvent* ev, void* 
 	int i;
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
-		if (t->isChanged) Window_UpdateTouch(t->identifier, t->canvasX, t->canvasY);
+		if (t->isChanged) Input_UpdateTouch(t->identifier, t->canvasX, t->canvasY);
 	}
 	return true;
 }
@@ -2462,7 +2398,7 @@ static EM_BOOL Window_TouchEnd(int type, const EmscriptenTouchEvent* ev, void* d
 	int i;
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
-		if (t->isChanged) Window_RemoveTouch(t->identifier, t->canvasX, t->canvasY);
+		if (t->isChanged) Input_RemoveTouch(t->identifier, t->canvasX, t->canvasY);
 	}
 	return true;
 }
@@ -2874,17 +2810,17 @@ static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {
 
 static void JNICALL java_processMouseDown(JNIEnv* env, jobject o, jint id, jint x, jint y) {
 	Platform_Log3("MOUSE %i - DOWN %i,%i", &id, &x, &y);
-	Window_AddTouch(id, x, y);
+	Input_AddTouch(id, x, y);
 }
 
 static void JNICALL java_processMouseUp(JNIEnv* env, jobject o, jint id, jint x, jint y) {
 	Platform_Log3("MOUSE %i - UP   %i,%i", &id, &x, &y);
-	Window_RemoveTouch(id, x, y);
+	Input_RemoveTouch(id, x, y);
 }
 
 static void JNICALL java_processMouseMove(JNIEnv* env, jobject o, jint id, jint x, jint y) {
 	Platform_Log3("MOUSE %i - MOVE %i,%i", &id, &x, &y);
-	Window_UpdateTouch(id, x, y);
+	Input_UpdateTouch(id, x, y);
 }
 
 static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface) {

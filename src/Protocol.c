@@ -729,7 +729,7 @@ static const char* cpe_clientExtensions[31] = {
 static void CPE_SetMapEnvUrl(cc_uint8* data);
 
 #define Ext_Deg2Packed(x) ((int)((x) * 65536.0f / 360.0f))
-void CPE_SendPlayerClick(MouseButton button, bool pressed, cc_uint8 targetId, struct PickedPos* pos) {
+void CPE_SendPlayerClick(int button, bool pressed, cc_uint8 targetId, struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	cc_uint8 data[15];
 

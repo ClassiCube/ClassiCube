@@ -74,8 +74,17 @@ typedef int MouseButton;
 /* Wheel position of the mouse. Use Mouse_SetWheel to change. */
 extern float Mouse_Wheel;
 
+#ifdef CC_BUILD_TOUCH
+#define INPUT_MAX_POINTERS 32
+extern int Pointers_Count;
+
+void Input_AddTouch(long id,    int x, int y);
+void Input_UpdateTouch(long id, int x, int y);
+void Input_RemoveTouch(long id, int x, int y);
+#else
 #define INPUT_MAX_POINTERS 1
 #define Pointers_Count 1
+#endif
 
 /* Data for mouse and touch */
 extern struct Pointer { int x, y; } Pointers[INPUT_MAX_POINTERS];

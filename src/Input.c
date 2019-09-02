@@ -121,6 +121,65 @@ void Pointer_SetPosition(int idx, int x, int y) {
 	Event_RaiseMove(&PointerEvents.Moved, idx, deltaX, deltaY);
 }
 
+/*########################################################################################################################*
+*------------------------------------------------------Touch support------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_TOUCH
+static long touchIds[INPUT_MAX_POINTERS];
+int Pointers_Count;
+
+void Input_AddTouch(long id, int x, int y) {
+	int i = Pointers_Count;
+	touchIds[i] = id;
+	Pointers_Count++;
+
+	Pointer_SetPosition(i, x, y);
+	/* TODO: redo this */
+	if (i == 0) {
+		Input_SetPressed(KEY_LMOUSE, true);
+	} else {
+		Pointer_SetPressed(i, true);
+	}
+}
+
+void Input_UpdateTouch(long id, int x, int y) {
+	int i;
+	for (i = 0; i < Pointers_Count; i++) {
+		if (touchIds[i] != id) continue;
+		
+		if (win_rawMouse) {
+			Event_RaiseMove(&PointerEvents.RawMoved, i, x - Pointers[i].x, y - Pointers[i].y);
+		}
+		Pointer_SetPosition(i, x, y);
+		return;
+	}
+}
+
+void Input_RemoveTouch(long id, int x, int y) {
+	int i;
+	for (i = 0; i < Pointers_Count; i++) {
+		if (touchIds[i] != id) continue;
+		Pointer_SetPosition(i, x, y);
+
+		/* TODO: redo this */
+		if (i == 0) {
+			Input_SetPressed(KEY_LMOUSE, false);
+		} else {
+			Pointer_SetPressed(i, false);
+		}
+
+		/* found the touch, remove it*/
+		for (; i < Pointers_Count - 1; i++) {
+			touchIds[i] = touchIds[i + 1];
+			Pointers[i] = Pointers[i + 1];
+		}
+
+		Pointers_Count--;
+		return;
+	}
+}
+#endif
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Keybinds--------------------------------------------------------*
