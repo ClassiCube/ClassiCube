@@ -73,6 +73,10 @@ typedef int MouseButton;
 
 /* Wheel position of the mouse. Use Mouse_SetWheel to change. */
 extern float Mouse_Wheel;
+/* Whether raw mouse/touch input is being listened for. */
+extern bool Input_RawMode;
+/* Whether touch input is being used. */
+extern bool Input_TouchMode;
 
 #ifdef CC_BUILD_TOUCH
 #define INPUT_MAX_POINTERS 32

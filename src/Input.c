@@ -97,6 +97,7 @@ void Key_Clear(void) {
 float Mouse_Wheel;
 int Mouse_X, Mouse_Y;
 struct Pointer Pointers[INPUT_MAX_POINTERS];
+bool Input_RawMode, Input_TouchMode;
 
 void Pointer_SetPressed(int idx, bool pressed) {
 	if (pressed) {

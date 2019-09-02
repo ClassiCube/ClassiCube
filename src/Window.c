@@ -34,7 +34,6 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 static int cursorPrevX, cursorPrevY;
 /* Gets the position of the cursor in screen or window coordinates. */
 static void Cursor_GetRawPos(int* x, int* y);
-static bool win_rawMouse;
 
 static void Window_CentreMousePosition(void) {
 	Cursor_SetPosition(Window_Width / 2, Window_Height / 2);
@@ -48,7 +47,7 @@ static void Window_RegrabMouse(void) {
 }
 
 static void Window_DefaultEnableRawMouse(void) {
-	win_rawMouse = true;
+	Input_RawMode = true;
 	Window_RegrabMouse();
 	Cursor_SetVisible(false);
 }
@@ -61,7 +60,7 @@ static void Window_DefaultUpdateRawMouse(void) {
 }
 
 static void Window_DefaultDisableRawMouse(void) {
-	win_rawMouse = false;
+	Input_RawMode = false;
 	Window_RegrabMouse();
 	Cursor_SetVisible(true);
 }
@@ -267,7 +266,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			prevPosY = raw.data.mouse.lLastY;
 		} else { break; }
 
-		if (win_rawMouse) Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
+		if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
 	} break;
 
 	case WM_KEYDOWN:
@@ -1580,7 +1579,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 		Logger_Abort2(res, "Getting mouse position");
 	}
 
-	if (win_rawMouse) {
+	if (Input_RawMode) {
 		raw.x = 0; raw.y = 0;
 		GetEventParameter(inEvent, kEventParamMouseDelta, typeHIPoint, NULL, sizeof(HIPoint), NULL, &raw);
 		Event_RaiseMove(&PointerEvents.RawMoved, 0, (int)raw.x, (int)raw.y);
@@ -2242,7 +2241,7 @@ void Window_ProcessEvents(void) {
 			break;
 		case SDL_MOUSEMOTION:
 			Pointer_SetPosition(0, e.motion.x, e.motion.y);
-			if (win_rawMouse) Event_RaiseMove(&PointerEvents.RawMoved, 0, e.motion.xrel, e.motion.yrel);
+			if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, e.motion.xrel, e.motion.yrel);
 			break;
 		case SDL_TEXTINPUT:
 			Window_HandleTextEvent(&e); break;
@@ -2310,14 +2309,14 @@ void Window_CloseKeyboard(void) {
 void Window_EnableRawMouse(void) {
 	Window_RegrabMouse();
 	SDL_SetRelativeMouseMode(true);
-	win_rawMouse = true;
+	Input_RawMode = true;
 }
 void Window_UpdateRawMouse(void) { Window_CentreMousePosition(); }
 
 void Window_DisableRawMouse(void) {
 	Window_RegrabMouse();
 	SDL_SetRelativeMouseMode(false);
-	win_rawMouse = false;
+	Input_RawMode = false;
 }
 #endif
 
@@ -2340,7 +2339,7 @@ static void Window_CorrectFocus(void) {
 	EmscriptenPointerlockChangeEvent status;
 	status.isActive = false;
 	emscripten_get_pointerlock_status(&status);
-	if (win_rawMouse && !status.isActive) Window_EnableRawMouse();
+	if (Input_RawMode && !status.isActive) Window_EnableRawMouse();
 }
 
 static EM_BOOL Window_MouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
@@ -2369,7 +2368,7 @@ static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* 
 	Input_SetPressed(KEY_MMOUSE, (ev->buttons & 0x04) != 0);
 
 	Pointer_SetPosition(0, ev->canvasX, ev->canvasY);
-	if (win_rawMouse) Event_RaiseMove(&PointerEvents.RawMoved, 0, ev->movementX, ev->movementY);
+	if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, ev->movementX, ev->movementY);
 	return true;
 }
 
@@ -2598,6 +2597,9 @@ void Window_Init(void) {
 			ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
 		});
 	);
+
+	Pointers_Count = 1;
+	/* TODO: detect touch like device here from useragent */
 }
 
 void Window_Create(int width, int height) {
@@ -2703,14 +2705,14 @@ void Window_CloseKeyboard(void) { }
 void Window_EnableRawMouse(void) {
 	Window_RegrabMouse();
 	emscripten_request_pointerlock(NULL, true);
-	win_rawMouse = true;
+	Input_RawMode = true;
 }
 void Window_UpdateRawMouse(void) { }
 
 void Window_DisableRawMouse(void) {
 	Window_RegrabMouse();
 	emscripten_exit_pointerlock();
-	win_rawMouse = false;
+	Input_RawMode = false;
 }
 #endif
 
@@ -2929,6 +2931,7 @@ void Window_Init(void) {
 	JavaRegisterNatives(env, methods);
 
 	Window_SoftKeyboard  = true;
+	Input_TouchMode      = true;
 	Display_BitsPerPixel = 32;
 	Display_DpiX         = JavaCallInt(env, "getDpiX", "()I", NULL);
 	Display_DpiY         = JavaCallInt(env, "getDpiY", "()I", NULL);
