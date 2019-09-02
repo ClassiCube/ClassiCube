@@ -148,7 +148,7 @@ void Input_UpdateTouch(long id, int x, int y) {
 	for (i = 0; i < Pointers_Count; i++) {
 		if (touchIds[i] != id) continue;
 		
-		if (win_rawMouse) {
+		if (Input_RawMode) {
 			Event_RaiseMove(&PointerEvents.RawMoved, i, x - Pointers[i].x, y - Pointers[i].y);
 		}
 		Pointer_SetPosition(i, x, y);
