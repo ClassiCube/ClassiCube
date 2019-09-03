@@ -144,7 +144,7 @@ void Entities_RenderHoveredNames(double delta);
 /* Removes the given entity, raising EntityEvents.Removed event. */
 void Entities_Remove(EntityID id);
 /* Gets the ID of the closest entity to the given entity. */
-EntityID Entities_GetCloset(struct Entity* src);
+EntityID Entities_GetClosest(struct Entity* src);
 /* Draws shadows under entities, depending on Entities.ShadowsMode */
 void Entities_DrawShadows(void);
 

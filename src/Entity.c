@@ -550,7 +550,7 @@ void Entities_RenderNames(double delta) {
 	int i;
 
 	if (Entities.NamesMode == NAME_MODE_NONE) return;
-	entities_closestId = Entities_GetCloset(&p->Base);
+	entities_closestId = Entities_GetClosest(&p->Base);
 	if (!p->Hacks.CanSeeAllNames || Entities.NamesMode != NAME_MODE_ALL) return;
 
 	Gfx_SetTexturing(true);
@@ -634,7 +634,7 @@ void Entities_Remove(EntityID id) {
 	Entities.List[id] = NULL;
 }
 
-EntityID Entities_GetCloset(struct Entity* src) {
+EntityID Entities_GetClosest(struct Entity* src) {
 	Vec3 eyePos = Entity_GetEyePosition(src);
 	Vec3 dir = Vec3_GetDirVector(src->HeadY * MATH_DEG2RAD, src->HeadX * MATH_DEG2RAD);
 	float closestDist = MATH_POS_INF;

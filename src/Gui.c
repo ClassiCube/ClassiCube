@@ -26,7 +26,8 @@ static cc_uint8 priorities[GUI_MAX_SCREENS];
 void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	struct Widget* w = (struct Widget*)widget;
 	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
-	w->xOffset   = xOffset;   w->yOffset   = yOffset;
+	w->xOffset = Display_ScaleX(xOffset);
+	w->yOffset = Display_ScaleY(yOffset);
 	Widget_Reposition(w);
 }
 

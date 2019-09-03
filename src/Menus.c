@@ -1855,6 +1855,7 @@ static void MenuOptionsScreen_FreeInput(struct MenuOptionsScreen* s) {
 		Elem_TryFree(s->widgets[i]);
 		s->widgets[i] = NULL;
 	}
+	Window_CloseKeyboard();
 }
 
 static void MenuOptionsScreen_RedrawInput(struct MenuOptionsScreen* s) {
@@ -2001,7 +2002,9 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 240, 110);
 	Menu_Button(s, i - 3, &s->Default, 200, MenuOptionsScreen_Default,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 150);
+
 	MenuOptionsScreen_RedrawInput(s);
+	Window_OpenKeyboard();
 }
 
 static void MenuOptionsScreen_OnHacksChanged(void* screen) {
@@ -2043,7 +2046,9 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 }
 
 static void MenuOptionsScreen_Free(void* screen) {
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	Event_UnregisterVoid(&UserEvents.HackPermissionsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	if (s->activeI >= 0) Window_CloseKeyboard();
 }
 
 static void MenuOptionsScreen_OnResize(void* screen) {

@@ -466,7 +466,7 @@ static void MouseStateUpdate(int button, bool pressed) {
 	/* defer getting the targeted entity, as it's a costly operation */
 	if (input_pickingId == -1) {
 		p = &LocalPlayer_Instance.Base;
-		input_pickingId = Entities_GetCloset(p);
+		input_pickingId = Entities_GetClosest(p);
 	}
 
 	input_buttonsDown[button] = pressed;

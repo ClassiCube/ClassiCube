@@ -88,11 +88,11 @@ void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
 #define BUTTON_uWIDTH (200.0f / 256.0f)
-#define BUTTON_MIN_WIDTH 40
 
-static struct Texture Button_ShadowTex   = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,66, 200,86)  };
-static struct Texture Button_SelectedTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,86, 200,106) };
-static struct Texture Button_DisabledTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,46, 200,66)  };
+static struct Texture btnShadowTex   = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,66, 200,86)  };
+static struct Texture btnSelectedTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,86, 200,106) };
+static struct Texture btnDisabledTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,46, 200,66)  };
+static int btnMinHeight;
 
 static void ButtonWidget_Free(void* widget) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
@@ -117,8 +117,8 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	struct Texture back;	
 	float scale;
 		
-	back = w->active ? Button_SelectedTex : Button_ShadowTex;
-	if (w->disabled) back = Button_DisabledTex;
+	back = w->active ? btnSelectedTex : btnShadowTex;
+	if (w->disabled) back = btnDisabledTex;
 
 	back.ID = Gui_ClassicTexture ? Gui_GuiClassicTex : Gui_GuiTex;
 	back.X = w->x; back.Width  = w->width;
@@ -156,7 +156,8 @@ void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 	Widget_Reset(w);
 	w->VTABLE    = &ButtonWidget_VTABLE;
 	w->optName   = NULL;
-	w->minWidth  = minWidth;
+	w->minWidth  = Display_ScaleX(minWidth);
+	btnMinHeight = Display_ScaleY(40);
 	w->MenuClick = onClick;
 	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
 }
@@ -174,7 +175,7 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, struct FontDes
 	}
 
 	w->width  = max(w->tex.Width,  w->minWidth);
-	w->height = max(w->tex.Height, BUTTON_MIN_WIDTH);
+	w->height = max(w->tex.Height, btnMinHeight);
 	Widget_Reposition(w);
 }
 
@@ -1441,8 +1442,8 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, co
 	w->base.VTABLE   = &MenuInputWidget_VTABLE;
 	w->base.caretPos = -1;
 
-	w->minWidth  = width;
-	w->minHeight = height;
+	w->minWidth  = Display_ScaleX(width);
+	w->minHeight = Display_ScaleY(height);
 	w->desc      = *desc;
 
 	w->base.convertPercents = false;

@@ -44,7 +44,7 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec3 dir    = Vec3_GetDirVector(p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD);
 	Vec3 eyePos = Entity_GetEyePosition(p);
-	float reach    = LocalPlayer_Instance.ReachDistance;
+	float reach = LocalPlayer_Instance.ReachDistance;
 	Picking_CalculatePickedBlock(eyePos, dir, reach, pos);
 }
 
