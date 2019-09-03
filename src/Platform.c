@@ -1119,14 +1119,6 @@ ReturnCode Process_StartOpen(const String* args) {
 	return instance > 32 ? 0 : (ReturnCode)instance;
 }
 
-ReturnCode Process_StartUpdater(void) {
-	static const String args = String_FromConst("cmd.exe /C start cmd /C " UPDATE_FILENAME);
-	TCHAR str[NATIVE_STR_LEN];
-	/* args must be modifiable, otherwise access violation */
-	Platform_ConvertString(str, &args);
-	return Process_RawStart(NULL, str);
-}
-
 ReturnCode Process_GetExePath(String* path) {
 	TCHAR raw[NATIVE_STR_LEN];
 	int len;
@@ -1147,7 +1139,6 @@ ReturnCode Process_StartOpen(const String* args) {
 	return 0;
 }
 
-ReturnCode Process_StartUpdater(void)       { return ERR_NOT_SUPPORTED; }
 ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_ANDROID
 static char gameArgsBuffer[512];
@@ -1164,7 +1155,6 @@ ReturnCode Process_StartOpen(const String* args) {
 	return 0; /* TODO: Is there a clean way of handling an error */
 }
 
-ReturnCode Process_StartUpdater(void)       { return ERR_NOT_SUPPORTED; }
 ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
 static ReturnCode Process_RawStart(const char* path, const char** argv) {
@@ -1233,31 +1223,10 @@ ReturnCode Process_GetExePath(String* path) {
 ReturnCode Process_StartOpen(const String* args) {
 	return Process_RawStartOpen("/usr/bin/open", args);
 }
-ReturnCode Process_StartUpdater(void) {
-	static const char* args[5] = { "/usr/bin/open", "-a", "Terminal", "./update.sh", NULL };
-	return Process_RawStart("/usr/bin/open", args);
-}
 #elif defined CC_BUILD_UNIX
 ReturnCode Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
 	return Process_RawStartOpen("xdg-open", args);
-}
-ReturnCode Process_StartUpdater(void) {
-	char path[NATIVE_STR_LEN];
-	int len = 0;
-	char* argv[2];
-
-	ReturnCode res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-	path[len] = '\0';
-	
-	/* Because the process is only referenced by inocde, we can */
-	/* just unlink current filename and rename updated file to it */
-	if (unlink(path) == -1) return errno;
-	if (rename(UPDATE_FILE, path) == -1) return errno;
-
-	argv[0] = path; argv[1] = NULL;
-	return Process_RawStart(path, argv);
 }
 #endif
 /* Retrieving exe path is completely OS dependant */
@@ -1324,6 +1293,45 @@ static ReturnCode Process_RawGetExePath(char* path, int* len) {
 static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	*len = readlink("/proc/self/path/a.out", path, NATIVE_STR_LEN);
 	return *len == -1 ? errno : 0;
+}
+#endif
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Updater----------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_WIN
+ReturnCode Updater_Start(void) {
+	static const String args = String_FromConst("cmd.exe /C start cmd /C " UPDATE_FILENAME);
+	TCHAR str[NATIVE_STR_LEN];
+	/* args must be modifiable, otherwise access violation */
+	Platform_ConvertString(str, &args);
+	return Process_RawStart(NULL, str);
+}
+#elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
+ReturnCode Updater_Start(void) { return ERR_NOT_SUPPORTED; }
+#elif defined CC_BUILD_OSX
+ReturnCode Updater_Start(void) {
+	static const char* args[5] = { "/usr/bin/open", "-a", "Terminal", "./update.sh", NULL };
+	return Process_RawStart("/usr/bin/open", args);
+}
+#elif defined CC_BUILD_UNIX
+ReturnCode Updater_Start(void) {
+	char path[NATIVE_STR_LEN];
+	int len = 0;
+	char* argv[2];
+
+	ReturnCode res = Process_RawGetExePath(path, &len);
+	if (res) return res;
+	path[len] = '\0';
+	
+	/* Because the process is only referenced by inocde, we can */
+	/* just unlink current filename and rename updated file to it */
+	if (unlink(path) == -1) return errno;
+	if (rename(UPDATE_FILE, path) == -1) return errno;
+
+	argv[0] = path; argv[1] = NULL;
+	return Process_RawStart(path, argv);
 }
 #endif
 

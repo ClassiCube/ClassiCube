@@ -642,7 +642,7 @@ static void Launcher_ApplyUpdate(void) {
 	res = File_MarkExecutable(&scriptPath);
 	if (res) Logger_Warn(res, "making update script executable");
 
-	res = Process_StartUpdater();
+	res = Updater_Start();
 	if (res) { Logger_Warn(res, "running updater"); return; }
 }
 

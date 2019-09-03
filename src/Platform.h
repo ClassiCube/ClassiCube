@@ -65,10 +65,11 @@ CC_API void Process_Exit(ReturnCode code);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
 CC_API ReturnCode Process_StartOpen(const String* args);
-/* Starts the platform-specific method to update then start the game using the UPDATE_FILE file. */
-CC_API ReturnCode Process_StartUpdater(void);
 /* Returns the full path of the application's executable. */
 CC_API ReturnCode Process_GetExePath(String* path);
+
+/* Starts the platform-specific method to update then start the game using the UPDATE_FILE file. */
+CC_API ReturnCode Updater_Start(void);
 
 /* Attempts to load a native dynamic library from the given path. */
 CC_API ReturnCode DynamicLib_Load(const String* path, void** lib);
