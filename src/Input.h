@@ -1,8 +1,9 @@
 #ifndef CC_INPUT_H
 #define CC_INPUT_H
 #include "String.h"
-/* Manages the keyboard, and raises events when keys are pressed etc.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3 | Based on OpenTK code
+/* Manages keyboard, mouse, and touch state.
+   Raises events when keys are pressed etc, and implements base handlers for them.
+   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 enum Key_ {
@@ -127,9 +128,6 @@ extern const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT];
 bool KeyBind_IsPressed(KeyBind binding);
 /* Set the key that the given key binding is bound to. (also updates options list) */
 void KeyBind_Set(KeyBind binding, Key key);
-/* Initalises and loads key bindings from options. */
-void KeyBind_Init(void);
-
 
 extern const cc_uint8 Hotkeys_LWJGL[256];
 struct HotkeyData {
@@ -153,10 +151,13 @@ bool Hotkeys_Remove(Key trigger, cc_uint8 modifiers);
 /* Returns the first hotkey which is bound to the given key and has its modifiers pressed. */
 /* NOTE: The hotkeys list is sorted, so hotkeys with most modifiers are checked first. */
 int Hotkeys_FindPartial(Key key);
-/* Initalises and loads hotkeys from options. */
-void Hotkeys_Init(void);
 /* Called when user has removed a hotkey. (removes it from options) */
 void Hotkeys_UserRemovedHotkey(Key trigger, cc_uint8 modifiers);
 /* Called when user has added a hotkey. (Adds it to options) */
 void Hotkeys_UserAddedHotkey(Key trigger, cc_uint8 modifiers, bool moreInput, const String* text);
+
+bool InputHandler_SetFOV(int fov);
+void InputHandler_PickBlocks(void);
+void InputHandler_Init(void);
+void InputHandler_OnScreensChanged(void);
 #endif

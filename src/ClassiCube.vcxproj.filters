@@ -240,9 +240,6 @@
     <ClInclude Include="HeldBlockRenderer.h">
       <Filter>Header Files\Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="InputHandler.h">
-      <Filter>Header Files\Game</Filter>
-    </ClInclude>
     <ClInclude Include="Physics.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
@@ -418,9 +415,6 @@
     </ClCompile>
     <ClCompile Include="HeldBlockRenderer.c">
       <Filter>Source Files\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="InputHandler.c">
-      <Filter>Source Files\Game</Filter>
     </ClCompile>
     <ClCompile Include="Physics.c">
       <Filter>Source Files\Math</Filter>

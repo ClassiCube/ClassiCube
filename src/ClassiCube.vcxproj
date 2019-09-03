@@ -215,7 +215,6 @@
     <ClInclude Include="LWidgets.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Input.h" />
-    <ClInclude Include="InputHandler.h" />
     <ClInclude Include="Menus.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="Physics.h" />
@@ -272,7 +271,6 @@
     <ClCompile Include="Graphics.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
-    <ClCompile Include="InputHandler.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="Launcher.c" />
     <ClCompile Include="LScreens.c" />

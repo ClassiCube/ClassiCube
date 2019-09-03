@@ -20,7 +20,7 @@
 #include "Particle.h"
 #include "Http.h"
 #include "Inventory.h"
-#include "InputHandler.h"
+#include "Input.h"
 #include "Server.h"
 #include "TexturePack.h"
 #include "Screens.h"
