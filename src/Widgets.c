@@ -1776,14 +1776,6 @@ void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, int x, int y, Str
 	String_AppendString(name, &player);
 }
 
-static void PlayerListWidget_UpdateTableDimensions(struct PlayerListWidget* w) {
-	int width = w->xMax - w->xMin, height = w->yHeight;
-	w->x = (w->xMin                       ) - LIST_BOUNDS_SIZE;
-	w->y = (Window_Height / 2 - height / 2) - LIST_BOUNDS_SIZE;
-	w->width  = width  + LIST_BOUNDS_SIZE * 2;
-	w->height = height + LIST_BOUNDS_SIZE * 2;
-}
-
 static int PlayerListWidget_GetColumnWidth(struct PlayerListWidget* w, int column) {
 	int i   = column * LIST_NAMES_PER_COLUMN;
 	int end = min(w->namesCount, i + LIST_NAMES_PER_COLUMN);
@@ -1824,45 +1816,31 @@ static void PlayerListWidget_SetColumnPos(struct PlayerListWidget* w, int column
 	}
 }
 
-static void PlayerListWidget_RepositionColumns(struct PlayerListWidget* w) {
-	int x, y, width = 0, height;
-	int col, columns;
-
-	w->yHeight = 0;
-	columns    = Math_CeilDiv(w->namesCount, LIST_NAMES_PER_COLUMN);
-
-	for (col = 0; col < columns; col++) {
-		width += PlayerListWidget_GetColumnWidth(w, col);
-		height = PlayerListWidget_GetColumnHeight(w, col);
-		w->yHeight = max(height, w->yHeight);
-	}
-
-	if (width < 480) width = 480;
-	w->xMin = Window_Width / 2 - width / 2;
-	w->xMax = Window_Width / 2 + width / 2;
-
-	x = w->xMin;
-	y = Window_Height / 2 - w->yHeight / 2;
-
-	for (col = 0; col < columns; col++) {
-		PlayerListWidget_SetColumnPos(w, col, x, y);
-		x += PlayerListWidget_GetColumnWidth(w, col);
-	}
-}
-
 static void PlayerListWidget_Reposition(void* widget) {
 	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
-	int i, y, oldX, oldY;
+	int i, x, y, width = 0, height = 0;
+	int columns = Math_CeilDiv(w->namesCount, LIST_NAMES_PER_COLUMN);
+
+	for (i = 0; i < columns; i++) {
+		width += PlayerListWidget_GetColumnWidth(w, i);
+		y      = PlayerListWidget_GetColumnHeight(w, i);
+		height = max(height, y);
+	}
+	if (width < 480) width = 480;
+
+	w->width  = width  + LIST_BOUNDS_SIZE * 2;
+	w->height = height + LIST_BOUNDS_SIZE * 2;
 
 	y = Window_Height / 4 - w->height / 2;
 	w->yOffset = -max(0, y);
 
-	oldX = w->x; oldY = w->y;
-	Widget_CalcPosition(w);	
+	Widget_CalcPosition(w);
+	x = w->x + LIST_BOUNDS_SIZE;
+	y = w->y + LIST_BOUNDS_SIZE;
 
-	for (i = 0; i < w->namesCount; i++) {
-		w->textures[i].X += w->x - oldX;
-		w->textures[i].Y += w->y - oldY;
+	for (i = 0; i < columns; i++) {
+		PlayerListWidget_SetColumnPos(w, i, x, y);
+		x += PlayerListWidget_GetColumnWidth(w, i);
 	}
 }
 
@@ -2002,9 +1980,7 @@ static void PlayerListWidget_SortEntries(struct PlayerListWidget* w) {
 
 static void PlayerListWidget_SortAndReposition(struct PlayerListWidget* w) {
 	PlayerListWidget_SortEntries(w);
-	PlayerListWidget_RepositionColumns(w);
-	PlayerListWidget_UpdateTableDimensions(w);
-	PlayerListWidget_Reposition(w);
+	Widget_Reposition(w);
 }
 
 static void PlayerListWidget_TabEntryAdded(void* widget, int id) {
@@ -2050,9 +2026,9 @@ static void PlayerListWidget_Init(void* widget) {
 		PlayerListWidget_AddName(w, (EntityID)id, -1);
 	}
 
-	PlayerListWidget_SortAndReposition(w);
 	TextWidget_Make(&w->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
 	TextWidget_SetConst(&w->title, "Connected players:", w->font);
+	PlayerListWidget_SortAndReposition(w);
 
 	Event_RegisterInt(&TabListEvents.Added,   w, PlayerListWidget_TabEntryAdded);
 	Event_RegisterInt(&TabListEvents.Changed, w, PlayerListWidget_TabEntryChanged);

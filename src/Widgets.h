@@ -241,7 +241,6 @@ struct PlayerListWidget {
 	Widget_Layout
 	struct FontDesc* font;
 	int namesCount, elementOffset;
-	int xMin, xMax, yHeight;
 	bool classic;
 	struct TextWidget title;
 	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
