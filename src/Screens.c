@@ -355,10 +355,10 @@ static void StatusScreen_ContextRecreated(void* screen) {
 	struct TextWidget* line2 = &s->line2;
 	int y;
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
+	Font_ReducePadding(&s->font, 4);
 	
 	y = 2;
 	TextWidget_Make(line1, ANCHOR_MIN, ANCHOR_MIN, 2, y);
-	line1->reducePadding = true;
 	StatusScreen_Update(s, 1.0);
 
 	y += line1->height;
@@ -367,7 +367,6 @@ static void StatusScreen_ContextRecreated(void* screen) {
 
 	y += s->posAtlas.tex.Height;
 	TextWidget_Make(line2, ANCHOR_MIN, ANCHOR_MIN, 2, y);
-	line2->reducePadding = true;
 
 	if (Game_ClassicMode) {
 		/* Swap around so 0.30 version is at top */

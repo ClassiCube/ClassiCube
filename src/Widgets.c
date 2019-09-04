@@ -70,10 +70,6 @@ void TextWidget_Set(struct TextWidget* w, const String* text, struct FontDesc* f
 		Drawer2D_MakeTextTexture(&w->tex, &args);
 	}
 
-	if (w->reducePadding) {
-		Drawer2D_ReducePadding_Tex(&w->tex, font->size, 4);
-	}
-
 	w->width = w->tex.Width; w->height = w->tex.Height;
 	Widget_Reposition(w);
 }

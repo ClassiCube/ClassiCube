@@ -139,11 +139,18 @@ void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 	Drawer2D_CalculateTextWidths();
 }
 
+void Font_ReducePadding(struct FontDesc* desc, int scale) {
+	int padding;
+	if (!Drawer2D_BitmappedText) return;
+
+	padding = (desc->height - desc->size) / scale;
+	desc->height -= padding * 2;
+}
+
 /* Measures width of the given text when drawn with the given system font. */
 static int Font_SysTextWidth(struct DrawTextArgs* args);
 /* Draws the given text with the given system font onto the given bitmap. */
 static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow);
-
 
 
 /*########################################################################################################################*

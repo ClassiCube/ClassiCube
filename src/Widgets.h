@@ -13,7 +13,6 @@ struct FontDesc;
 struct TextWidget {
 	Widget_Layout
 	struct Texture tex;
-	bool reducePadding;
 	PackedCol col;
 };
 /* Initialises a text widget. */

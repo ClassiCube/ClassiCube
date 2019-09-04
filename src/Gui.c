@@ -341,7 +341,6 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, struct FontDes
 	}	
 	Mem_Free(bmp.Scan0);
 
-	Drawer2D_ReducePadding_Tex(&atlas->tex, font->size, 4);
 	atlas->uScale = 1.0f / (float)bmp.Width;
 	atlas->tex.uv.U2 = atlas->offset * atlas->uScale;
 	atlas->tex.Width = atlas->offset;	

@@ -2807,6 +2807,7 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 
 	s->dynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
 	Drawer2D_MakeFont(&textFont, 8, FONT_STYLE_NORMAL);
+	Font_ReducePadding(&textFont, 4);
 	TextAtlas_Make(&s->idAtlas, &chars, &textFont, &prefix);
 	Font_Free(&textFont);
 
