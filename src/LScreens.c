@@ -1481,7 +1481,6 @@ static void UpdatesScreen_DevD3D9(void* w, int x, int y)   { UpdatesScreen_Get(f
 static void UpdatesScreen_DevOpenGL(void* w, int x, int y) { UpdatesScreen_Get(false, false); }
 
 static void UpdatesScreen_Update(struct UpdatesScreen* s) {
-	String path; char pathBuffer[FILENAME_SIZE];
 	TimeMS buildTime;
 	ReturnCode res;
 
@@ -1491,13 +1490,8 @@ static void UpdatesScreen_Update(struct UpdatesScreen* s) {
 	}
 	CheckUpdateTask_Run();
 
-	String_InitArray(path, pathBuffer);
-	res = Process_GetExePath(&path);
-	if (res) { Logger_Warn(res, "getting .exe path"); return; }
-	
-	res = File_GetModifiedTime(&path, &buildTime);
+	res = Updater_GetBuildTime(&buildTime);
 	if (res) { Logger_Warn(res, "getting build time"); return; }
-
 	UpdatesScreen_Format(&s->lblYour, "Your build: ", buildTime);
 }
 

@@ -415,24 +415,6 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	return res == ERROR_NO_MORE_FILES ? 0 : GetLastError();
 }
 
-ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
-	FileHandle file;
-	FILETIME ft;
-	cc_uint64 raw;
-	ReturnCode res = File_Open(&file, path);
-	if (res) return res;
-
-	if (GetFileTime(file, NULL, NULL, &ft)) {
-		raw   = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
-		*time = FileTime_TotalMS(raw);
-	} else {
-		res = GetLastError();
-	}
-
-	File_Close(file);
-	return res;
-}
-
 ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
 	FileHandle file;
 	FILETIME ft;
@@ -565,16 +547,6 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	res = errno; /* return code from readdir */
 	closedir(dirPtr);
 	return res;
-}
-
-ReturnCode File_GetModifiedTime(const String* path, TimeMS* time) {
-	char str[NATIVE_STR_LEN];
-	struct stat sb;
-	Platform_ConvertString(str, path);
-	if (stat(str, &sb) == -1) return errno;
-
-	*time = (cc_uint64)sb.st_mtime * 1000 + UNIX_EPOCH;
-	return 0;
 }
 
 ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
@@ -1308,13 +1280,38 @@ ReturnCode Updater_Start(void) {
 	Platform_ConvertString(str, &args);
 	return Process_RawStart(NULL, str);
 }
+ReturnCode Updater_GetBuildTime(TimeMS* time) {
+	TCHAR path[NATIVE_STR_LEN + 1];
+	FileHandle file;
+	FILETIME ft;
+	cc_uint64 raw;
+	int len = 0;
+
+	ReturnCode res = Process_RawGetExePath(path, &len);
+	if (res) return res;
+	path[len] = '\0';
+
+	file = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+	if (file == INVALID_HANDLE_VALUE) return GetLastError();
+
+	if (GetFileTime(file, NULL, NULL, &ft)) {
+		raw = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
+		*time = FileTime_TotalMS(raw);
+	} else {
+		res = GetLastError();
+	}
+
+	File_Close(file);
+	return res;
+}
 #elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-ReturnCode Updater_Start(void) { return ERR_NOT_SUPPORTED; }
+ReturnCode Updater_Start(void)                { return ERR_NOT_SUPPORTED; }
+ReturnCode Updater_GetBuildTime(TimeMS* time) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
 ReturnCode Updater_Start(void) {
-	char path[NATIVE_STR_LEN];
-	int len = 0;
+	char path[NATIVE_STR_LEN + 1];
 	char* argv[2];
+	int len = 0;
 
 	ReturnCode res = Process_RawGetExePath(path, &len);
 	if (res) return res;
@@ -1327,6 +1324,20 @@ ReturnCode Updater_Start(void) {
 
 	argv[0] = path; argv[1] = NULL;
 	return Process_RawStart(path, argv);
+}
+
+ReturnCode Updater_GetBuildTime(TimeMS* ms) {
+	char path[NATIVE_STR_LEN + 1];
+	struct stat sb;
+	int len = 0;
+
+	ReturnCode res = Process_RawGetExePath(path, &len);
+	if (res) return res;
+	path[len] = '\0';
+
+	if (stat(path, &sb) == -1) return errno;
+	*time = (cc_uint64)sb.st_mtime * 1000 + UNIX_EPOCH;
+	return 0;
 }
 #endif
 

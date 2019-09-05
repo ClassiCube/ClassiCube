@@ -70,6 +70,8 @@ CC_API ReturnCode Process_GetExePath(String* path);
 
 /* Starts the platform-specific method to update then start the game using the UPDATE_FILE file. */
 CC_API ReturnCode Updater_Start(void);
+/* Returns the last time the application was modified, as number of milliseconds since 1/1/0001 */
+CC_API ReturnCode Updater_GetBuildTime(TimeMS* ms);
 
 /* Attempts to load a native dynamic library from the given path. */
 CC_API ReturnCode DynamicLib_Load(const String* path, void** lib);
@@ -133,8 +135,6 @@ CC_API ReturnCode Directory_Enum(const String* path, void* obj, Directory_EnumCa
 
 /* Returns whether the given file exists. */
 CC_API bool File_Exists(const String* path);
-/* Returns the last time the file was modified, as number of milliseconds since 1/1/0001 */
-CC_API ReturnCode File_GetModifiedTime(const String* path, TimeMS* ms);
 /* Sets the last time the file was modified, as number of milliseconds since 1/1/0001 */
 CC_API ReturnCode File_SetModifiedTime(const String* path, TimeMS ms);
 /* Marks a file as being executable. */
