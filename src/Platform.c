@@ -1280,7 +1280,7 @@ ReturnCode Updater_Start(void) {
 	Platform_ConvertString(str, &args);
 	return Process_RawStart(NULL, str);
 }
-ReturnCode Updater_GetBuildTime(TimeMS* time) {
+ReturnCode Updater_GetBuildTime(TimeMS* ms) {
 	TCHAR path[NATIVE_STR_LEN + 1];
 	FileHandle file;
 	FILETIME ft;
@@ -1296,7 +1296,7 @@ ReturnCode Updater_GetBuildTime(TimeMS* time) {
 
 	if (GetFileTime(file, NULL, NULL, &ft)) {
 		raw = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
-		*time = FileTime_TotalMS(raw);
+		*ms = FileTime_TotalMS(raw);
 	} else {
 		res = GetLastError();
 	}
@@ -1336,7 +1336,7 @@ ReturnCode Updater_GetBuildTime(TimeMS* ms) {
 	path[len] = '\0';
 
 	if (stat(path, &sb) == -1) return errno;
-	*time = (cc_uint64)sb.st_mtime * 1000 + UNIX_EPOCH;
+	*ms = (cc_uint64)sb.st_mtime * 1000 + UNIX_EPOCH;
 	return 0;
 }
 #endif
