@@ -1310,12 +1310,7 @@ ReturnCode Updater_Start(void) {
 }
 #elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
 ReturnCode Updater_Start(void) { return ERR_NOT_SUPPORTED; }
-#elif defined CC_BUILD_OSX
-ReturnCode Updater_Start(void) {
-	static const char* args[5] = { "/usr/bin/open", "-a", "Terminal", "./update.sh", NULL };
-	return Process_RawStart("/usr/bin/open", args);
-}
-#elif defined CC_BUILD_UNIX
+#elif defined CC_BUILD_POSIX
 ReturnCode Updater_Start(void) {
 	char path[NATIVE_STR_LEN];
 	int len = 0;

@@ -32,7 +32,6 @@ struct HUDScreen {
 	struct FontDesc playerFont;
 	bool showingList, wasShowingList;
 	/* chat state */
-	int inputOldHeight;
 	float chatAcc;
 	bool suppressNextPress;
 	int chatIndex;
@@ -1193,7 +1192,6 @@ static const struct ScreenVTABLE HUDScreen_VTABLE = {
 void HUDScreen_Show(void) {
 	struct HUDScreen* s = &HUDScreen_Instance;
 	s->wasShowingList     = false;
-	s->inputOldHeight     = -1;
 	s->lastDownloadStatus = Int32_MinValue;
 
 	s->VTABLE = &HUDScreen_VTABLE;
