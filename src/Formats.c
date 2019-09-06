@@ -289,58 +289,58 @@ enum NbtTagType {
 
 #define NBT_SMALL_SIZE  STRING_SIZE
 #define NBT_STRING_SIZE STRING_SIZE
-#define NbtTag_IsSmall(tag) ((tag)->DataSize <= NBT_SMALL_SIZE)
+#define NbtTag_IsSmall(tag) ((tag)->dataSize <= NBT_SMALL_SIZE)
 struct NbtTag;
 
 struct NbtTag {
-	struct NbtTag* Parent;
-	cc_uint8  TagID;
-	char     NameBuffer[NBT_STRING_SIZE];
-	String   Name;
-	cc_uint32 DataSize; /* size of data for arrays */
+	struct NbtTag* parent;
+	cc_uint8  type;
+	String    name;
+	cc_uint32 dataSize; /* size of data for arrays */
 
 	union {
-		cc_uint8  U8;
-		cc_int16  I16;
-		cc_uint16 U16;
-		cc_uint32 U32;
-		float    F32;
-		cc_uint8  Small[NBT_SMALL_SIZE];
-		cc_uint8* Big; /* malloc for big byte arrays */
-		struct { String Text; char Buffer[NBT_STRING_SIZE]; } Str;
-	} Value;
+		cc_uint8  u8;
+		cc_int16  i16;
+		cc_uint16 u16;
+		cc_uint32 u32;
+		float     f32;
+		cc_uint8  small[NBT_SMALL_SIZE];
+		cc_uint8* big; /* malloc for big byte arrays */
+		struct { String text; char buffer[NBT_STRING_SIZE]; } str;
+	} value;
+	char _nameBuffer[NBT_STRING_SIZE];
 };
 
 static cc_uint8 NbtTag_U8(struct NbtTag* tag) {
-	if (tag->TagID != NBT_I8) Logger_Abort("Expected I8 NBT tag");
-	return tag->Value.U8;
+	if (tag->type != NBT_I8) Logger_Abort("Expected I8 NBT tag");
+	return tag->value.u8;
 }
 
 static cc_int16 NbtTag_I16(struct NbtTag* tag) {
-	if (tag->TagID != NBT_I16) Logger_Abort("Expected I16 NBT tag");
-	return tag->Value.I16;
+	if (tag->type != NBT_I16) Logger_Abort("Expected I16 NBT tag");
+	return tag->value.i16;
 }
 
 static cc_uint16 NbtTag_U16(struct NbtTag* tag) {
-	if (tag->TagID != NBT_I16) Logger_Abort("Expected I16 NBT tag");
-	return tag->Value.U16;
+	if (tag->type != NBT_I16) Logger_Abort("Expected I16 NBT tag");
+	return tag->value.u16;
 }
 
 static float NbtTag_F32(struct NbtTag* tag) {
-	if (tag->TagID != NBT_F32) Logger_Abort("Expected F32 NBT tag");
-	return tag->Value.F32;
+	if (tag->type != NBT_F32) Logger_Abort("Expected F32 NBT tag");
+	return tag->value.f32;
 }
 
 static cc_uint8* NbtTag_U8_Array(struct NbtTag* tag, int minSize) {
-	if (tag->TagID != NBT_I8S) Logger_Abort("Expected I8_Array NBT tag");
-	if (tag->DataSize < minSize) Logger_Abort("I8_Array NBT tag too small");
+	if (tag->type != NBT_I8S) Logger_Abort("Expected I8_Array NBT tag");
+	if (tag->dataSize < minSize) Logger_Abort("I8_Array NBT tag too small");
 
-	return NbtTag_IsSmall(tag) ? tag->Value.Small : tag->Value.Big;
+	return NbtTag_IsSmall(tag) ? tag->value.small : tag->value.big;
 }
 
 static String NbtTag_String(struct NbtTag* tag) {
-	if (tag->TagID != NBT_STR) Logger_Abort("Expected String NBT tag");
-	return tag->Value.Str.Text;
+	if (tag->type != NBT_STR) Logger_Abort("Expected String NBT tag");
+	return tag->value.str.text;
 }
 
 static ReturnCode Nbt_ReadString(struct Stream* stream, String* str) {
@@ -367,27 +367,27 @@ static ReturnCode Nbt_ReadTag(cc_uint8 typeId, bool readTagName, struct Stream* 
 	cc_uint32 i, count;
 	
 	if (typeId == NBT_END) return 0;
-	tag.TagID  = typeId; 
-	tag.Parent = parent;
-	tag.DataSize = 0;
-	String_InitArray(tag.Name, tag.NameBuffer);
+	tag.type   = typeId; 
+	tag.parent = parent;
+	tag.dataSize = 0;
+	String_InitArray(tag.name, tag._nameBuffer);
 
 	if (readTagName) {
-		res = Nbt_ReadString(stream, &tag.Name);
+		res = Nbt_ReadString(stream, &tag.name);
 		if (res) return res;
 	}
 
 	switch (typeId) {
 	case NBT_I8:
-		res = stream->ReadU8(stream, &tag.Value.U8);
+		res = stream->ReadU8(stream, &tag.value.u8);
 		break;
 	case NBT_I16:
 		res = Stream_Read(stream, tmp, 2);
-		tag.Value.U16 = Stream_GetU16_BE(tmp);
+		tag.value.u16 = Stream_GetU16_BE(tmp);
 		break;
 	case NBT_I32:
 	case NBT_F32:
-		res = Stream_ReadU32_BE(stream, &tag.Value.U32);
+		res = Stream_ReadU32_BE(stream, &tag.value.u32);
 		break;
 	case NBT_I64:
 	case NBT_R64:
@@ -395,21 +395,21 @@ static ReturnCode Nbt_ReadTag(cc_uint8 typeId, bool readTagName, struct Stream* 
 		break; /* (8) data */
 
 	case NBT_I8S:
-		if ((res = Stream_ReadU32_BE(stream, &tag.DataSize))) break;
+		if ((res = Stream_ReadU32_BE(stream, &tag.dataSize))) break;
 
 		if (NbtTag_IsSmall(&tag)) {
-			res = Stream_Read(stream, tag.Value.Small, tag.DataSize);
+			res = Stream_Read(stream, tag.value.small, tag.dataSize);
 		} else {
-			tag.Value.Big = (cc_uint8*)Mem_TryAlloc(tag.DataSize, 1);
-			if (!tag.Value.Big) return ERR_OUT_OF_MEMORY;
+			tag.value.big = (cc_uint8*)Mem_TryAlloc(tag.dataSize, 1);
+			if (!tag.value.big) return ERR_OUT_OF_MEMORY;
 
-			res = Stream_Read(stream, tag.Value.Big, tag.DataSize);
-			if (res) Mem_Free(tag.Value.Big);
+			res = Stream_Read(stream, tag.value.big, tag.dataSize);
+			if (res) Mem_Free(tag.value.big);
 		}
 		break;
 	case NBT_STR:
-		String_InitArray(tag.Value.Str.Text, tag.Value.Str.Buffer);
-		res = Nbt_ReadString(stream, &tag.Value.Str.Text);
+		String_InitArray(tag.value.str.text, tag.value.str.buffer);
+		res = Nbt_ReadString(stream, &tag.value.str.text);
 		break;
 
 	case NBT_LIST:
@@ -440,10 +440,10 @@ static ReturnCode Nbt_ReadTag(cc_uint8 typeId, bool readTagName, struct Stream* 
 	if (res) return res;
 	callback(&tag);
 	/* NOTE: callback must set DataBig to NULL, if doesn't want it to be freed */
-	if (!NbtTag_IsSmall(&tag)) Mem_Free(tag.Value.Big);
+	if (!NbtTag_IsSmall(&tag)) Mem_Free(tag.value.big);
 	return 0;
 }
-#define IsTag(tag, tagName) (String_CaselessEqualsConst(&tag->Name, tagName))
+#define IsTag(tag, tagName) (String_CaselessEqualsConst(&tag->name, tagName))
 
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld format----------------------------------------------------*
@@ -491,11 +491,11 @@ COMPOUND "ClassicWorld" {
 static BlockRaw* Cw_GetBlocks(struct NbtTag* tag) {
 	BlockRaw* ptr;
 	if (NbtTag_IsSmall(tag)) {
-		ptr = (BlockRaw*)Mem_Alloc(tag->DataSize, 1, ".cw map blocks");
-		Mem_Copy(ptr, tag->Value.Small, tag->DataSize);
+		ptr = (BlockRaw*)Mem_Alloc(tag->dataSize, 1, ".cw map blocks");
+		Mem_Copy(ptr, tag->value.small, tag->dataSize);
 	} else {
-		ptr = tag->Value.Big;
-		tag->Value.Big = NULL; /* So Nbt_ReadTag doesn't call Mem_Free on World.Blocks */
+		ptr = tag->value.big;
+		tag->value.big = NULL; /* So Nbt_ReadTag doesn't call Mem_Free on World.Blocks */
 	}
 	return ptr;
 }
@@ -506,13 +506,13 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 	if (IsTag(tag, "Z")) { World.Length = NbtTag_U16(tag); return; }
 
 	if (IsTag(tag, "UUID")) {
-		if (tag->DataSize != sizeof(World.Uuid)) Logger_Abort("Map UUID must be 16 bytes");
-		Mem_Copy(World.Uuid, tag->Value.Small, sizeof(World.Uuid));
+		if (tag->dataSize != sizeof(World.Uuid)) Logger_Abort("Map UUID must be 16 bytes");
+		Mem_Copy(World.Uuid, tag->value.small, sizeof(World.Uuid));
 		return;
 	}
 
 	if (IsTag(tag, "BlockArray")) {
-		World.Volume = tag->DataSize;
+		World.Volume = tag->dataSize;
 		World.Blocks = Cw_GetBlocks(tag);
 	}
 #ifdef EXTENDED_BLOCKS
@@ -522,7 +522,7 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 
 static void Cw_Callback_2(struct NbtTag* tag) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	if (!IsTag(tag->Parent, "Spawn")) return;
+	if (!IsTag(tag->parent, "Spawn")) return;
 	
 	if (IsTag(tag, "X")) { p->Spawn.X = NbtTag_I16(tag); return; }
 	if (IsTag(tag, "Y")) { p->Spawn.Y = NbtTag_I16(tag); return; }
@@ -546,17 +546,17 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 	BlockID id = cw_curID;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 
-	if (!IsTag(tag->Parent->Parent, "CPE")) return;
-	if (!IsTag(tag->Parent->Parent->Parent, "Metadata")) return;
+	if (!IsTag(tag->parent->parent, "CPE")) return;
+	if (!IsTag(tag->parent->parent->parent, "Metadata")) return;
 
-	if (IsTag(tag->Parent, "ClickDistance")) {
+	if (IsTag(tag->parent, "ClickDistance")) {
 		if (IsTag(tag, "Distance")) { p->ReachDistance = NbtTag_U16(tag) / 32.0f; return; }
 	}
-	if (IsTag(tag->Parent, "EnvWeatherType")) {
+	if (IsTag(tag->parent, "EnvWeatherType")) {
 		if (IsTag(tag, "WeatherType")) { Env.Weather = NbtTag_U8(tag); return; }
 	}
 
-	if (IsTag(tag->Parent, "EnvMapAppearance")) {
+	if (IsTag(tag->parent, "EnvMapAppearance")) {
 		if (IsTag(tag, "SideBlock")) { Env.SidesBlock = NbtTag_U8(tag);  return; }
 		if (IsTag(tag, "EdgeBlock")) { Env.EdgeBlock  = NbtTag_U8(tag);  return; }
 		if (IsTag(tag, "SideLevel")) { Env.EdgeHeight = NbtTag_I16(tag); return; }
@@ -569,7 +569,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 	}
 
 	/* Callback for compound tag is called after all its children have been processed */
-	if (IsTag(tag->Parent, "EnvColors")) {
+	if (IsTag(tag->parent, "EnvColors")) {
 		if (IsTag(tag, "Sky")) {
 			Env.SkyCol = Cw_ParseCol(Env_DefaultSkyCol); return;
 		} else if (IsTag(tag, "Cloud")) {
@@ -583,9 +583,9 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 		}
 	}
 
-	if (IsTag(tag->Parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
+	if (IsTag(tag->parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
 		static const String blockStr = String_FromConst("Block");
-		if (!String_CaselessStarts(&tag->Name, &blockStr)) return;	
+		if (!String_CaselessStarts(&tag->name, &blockStr)) return;	
 
 		/* hack for sprite draw (can't rely on order of tags when reading) */
 		if (Blocks.SpriteOffset[id] == 0) {
@@ -609,16 +609,16 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 	cc_uint8* arr;
 	cc_uint8 sound;
 
-	if (!IsTag(tag->Parent->Parent->Parent, "CPE")) return;
-	if (!IsTag(tag->Parent->Parent->Parent->Parent, "Metadata")) return;
+	if (!IsTag(tag->parent->parent->parent, "CPE")) return;
+	if (!IsTag(tag->parent->parent->parent->parent, "Metadata")) return;
 
-	if (IsTag(tag->Parent->Parent, "EnvColors")) {
+	if (IsTag(tag->parent->parent, "EnvColors")) {
 		if (IsTag(tag, "R")) { cw_colR = NbtTag_U16(tag); return; }
 		if (IsTag(tag, "G")) { cw_colG = NbtTag_U16(tag); return; }
 		if (IsTag(tag, "B")) { cw_colB = NbtTag_U16(tag); return; }
 	}
 
-	if (IsTag(tag->Parent->Parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
+	if (IsTag(tag->parent->parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
 		if (IsTag(tag, "ID"))             { cw_curID = NbtTag_U8(tag);  return; }
 		if (IsTag(tag, "ID2"))            { cw_curID = NbtTag_U16(tag); return; }
 		if (IsTag(tag, "CollideType"))    { Block_SetCollide(id, NbtTag_U8(tag)); return; }
@@ -641,7 +641,7 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 			Block_Tex(id, FACE_ZMIN) = arr[4]; Block_Tex(id, FACE_ZMAX) = arr[5];
 
 			/* hacky way of storing upper 8 bits */
-			if (tag->DataSize >= 12) {
+			if (tag->dataSize >= 12) {
 				Block_Tex(id, FACE_YMAX) |= arr[6]  << 8; Block_Tex(id, FACE_YMIN) |= arr[7]  << 8;
 				Block_Tex(id, FACE_XMIN) |= arr[8]  << 8; Block_Tex(id, FACE_XMAX) |= arr[9]  << 8;
 				Block_Tex(id, FACE_ZMIN) |= arr[10] << 8; Block_Tex(id, FACE_ZMAX) |= arr[11] << 8;
@@ -681,9 +681,9 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 }
 
 static void Cw_Callback(struct NbtTag* tag) {
-	struct NbtTag* tmp = tag->Parent;
+	struct NbtTag* tmp = tag->parent;
 	int depth = 0;
-	while (tmp) { depth++; tmp = tmp->Parent; }
+	while (tmp) { depth++; tmp = tmp->parent; }
 
 	switch (depth) {
 	case 1: Cw_Callback_1(tag); return;

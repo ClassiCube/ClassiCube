@@ -372,7 +372,7 @@ static ReturnCode ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* 
 "6 2 0 0 16 32 0"
 static Bitmap terrainBmp;
 
-static bool ClassicPatcher_SelectEntry(const String* path ) {
+static bool ClassicPatcher_SelectEntry(const String* path) {
 	String name = *path;
 	Utils_UNSAFE_GetFilename(&name);
 	return Resources_FindTex(&name) != NULL;

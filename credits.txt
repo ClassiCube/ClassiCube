@@ -1,7 +1,8 @@
 * Goodlyay - many suggestions, and being a great second pairs of eyes for issues and 
   improvements with character modelling, animating, and view bobbing. Also designed the icons.
+  Also designed all the textures in the web client. Big thanks!
 * AndrewPH - Advice on how to improve ui of both client and launcher, multiple 
-  suggestions, and hosting the automatic build bot for ClassicalSharp.
+  suggestions, and hosting the automatic build bot for ClassiCube.
 * 123DMWM - many suggestions, and assistance in identifying bugs and their causes.
 * video_error - Allowing remote use of an OSX machine, pointing out many flaws in the plugin API.
   The OSX port would not have been possible without you, thanks!
