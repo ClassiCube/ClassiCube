@@ -1451,7 +1451,7 @@ void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 
 static WindowRef win_handle;
 static int windowX, windowY;
-static bool win_fullscreen;
+static bool win_fullscreen, showingDialog;
 
 /* fullscreen is tied to OpenGL context unfortunately */
 static void GLContext_UnsetFullscreen(void);
@@ -1585,13 +1585,18 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 		Event_RaiseMove(&PointerEvents.RawMoved, 0, (int)raw.x, (int)raw.y);
 	}
 	
+	if (showingDialog) return eventNotHandledErr;
 	mouseX = (int)pt.x; mouseY = (int)pt.y;
-	/* kEventParamMouseLocation is in screen coordinates */
-	if (!win_fullscreen) { mouseX -= windowX; mouseY -= windowY; }
 
-	/* mouseY is < 0 if user clicks or moves when over titlebar */
-	/* Don't intercept this, prevents clicking close/minimise/maximise from working */
-	if (mouseY < 0) return eventNotHandledErr;
+	/* kEventParamMouseLocation is in screen coordinates */
+	/* So need to make sure mouse click lies inside window */
+	/* Otherwise this breaks close/minimise/maximise in titlebar and dock */
+	if (!win_fullscreen) {
+		mouseX -= windowX; mouseY -= windowY;
+
+		if (mouseX < 0 || mouseX >= Window_Width)  return eventNotHandledErr;
+		if (mouseY < 0 || mouseY >= Window_Height) return eventNotHandledErr;
+	}
 	
 	kind = GetEventKind(inEvent);
 	switch (kind) {
@@ -1609,7 +1614,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 					Input_SetPressed(KEY_RMOUSE, down); break;
 				case kEventMouseButtonTertiary:
 					Input_SetPressed(KEY_MMOUSE, down); break;
-			}
+			}		
 			return eventNotHandledErr;
 			
 		case kEventMouseWheelMoved:
@@ -1676,16 +1681,10 @@ static OSStatus Window_EventHandler(EventHandlerCallRef inCaller, EventRef inEve
 typedef EventTargetRef (*GetMenuBarEventTarget_Func)(void);
 
 static void Window_ConnectEvents(void) {
-	static EventTypeSpec eventTypes[] = {
+	static EventTypeSpec winEventTypes[] = {
 		{ kEventClassApplication, kEventAppActivated },
 		{ kEventClassApplication, kEventAppDeactivated },
 		{ kEventClassApplication, kEventAppQuit },
-		
-		{ kEventClassMouse, kEventMouseDown },
-		{ kEventClassMouse, kEventMouseUp },
-		{ kEventClassMouse, kEventMouseMoved },
-		{ kEventClassMouse, kEventMouseDragged },
-		{ kEventClassMouse, kEventMouseWheelMoved },
 		
 		{ kEventClassKeyboard, kEventRawKeyDown },
 		{ kEventClassKeyboard, kEventRawKeyRepeat },
@@ -1701,12 +1700,23 @@ static void Window_ConnectEvents(void) {
 		{ kEventClassTextInput, kEventTextInputUnicodeForKeyEvent },
 		{ kEventClassAppleEvent, kEventAppleEvent }
 	};
+	static EventTypeSpec appEventTypes[] = {
+		{ kEventClassMouse, kEventMouseDown },
+		{ kEventClassMouse, kEventMouseUp },
+		{ kEventClassMouse, kEventMouseMoved },
+		{ kEventClassMouse, kEventMouseDragged },
+		{ kEventClassMouse, kEventMouseWheelMoved }
+	};
 	GetMenuBarEventTarget_Func getMenuBarEventTarget;
 	EventTargetRef target;
 	
 	target = GetWindowEventTarget(win_handle);
 	InstallEventHandler(target, NewEventHandlerUPP(Window_EventHandler),
-						Array_Elems(eventTypes), eventTypes, NULL, NULL);
+						Array_Elems(winEventTypes), winEventTypes, NULL, NULL);
+
+	target = GetApplicationEventTarget();
+	InstallEventHandler(target, NewEventHandlerUPP(Window_EventHandler),
+		Array_Elems(appEventTypes), appEventTypes, NULL, NULL);
 
 	/* The code below is to get the menubar working. */
 	/* The documentation for 'RunApplicationEventLoop' states that it installs */
@@ -1932,6 +1942,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	DialogRef dialog;
 	DialogItemIndex itemHit;
 
+	showingDialog = true;
 	CreateStandardAlert(kAlertPlainAlert, titleCF, msgCF, NULL, &dialog);
 	CFRelease(titleCF);
 	CFRelease(msgCF);
@@ -1941,6 +1952,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	if (!cursorVisible) CGDisplayShowCursor(CGMainDisplayID());
 	RunStandardAlert(dialog, NULL, &itemHit);
 	if (!cursorVisible) CGDisplayHideCursor(CGMainDisplayID());
+	showingDialog = false;
 }
 
 static CGrafPtr fb_port;
