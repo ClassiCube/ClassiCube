@@ -1559,6 +1559,10 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 			Window_Focused = false;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			return eventNotHandledErr;
+			
+		case kEventWindowDrawContent:
+			Event_RaiseVoid(&WindowEvents.Redraw);
+			return eventNotHandledErr;
 	}
 	return eventNotHandledErr;
 }
@@ -1696,8 +1700,9 @@ static void Window_ConnectEvents(void) {
 		{ kEventClassWindow, kEventWindowBoundsChanged },
 		{ kEventClassWindow, kEventWindowActivated },
 		{ kEventClassWindow, kEventWindowDeactivated },
-		
-		{ kEventClassTextInput, kEventTextInputUnicodeForKeyEvent },
+		{ kEventClassWindow, kEventWindowDrawContent },
+
+		{ kEventClassTextInput,  kEventTextInputUnicodeForKeyEvent },
 		{ kEventClassAppleEvent, kEventAppleEvent }
 	};
 	static EventTypeSpec appEventTypes[] = {
