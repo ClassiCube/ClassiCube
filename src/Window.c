@@ -1753,7 +1753,7 @@ void Window_Create(int width, int height) {
 						  kWindowStandardDocumentAttributes | kWindowStandardHandlerAttribute |
 						  kWindowInWindowMenuAttribute | kWindowLiveResizeAttribute, &r, &win_handle);
 
-	if (res) Logger_Abort2(res, "Failed to create window");
+	if (res) Logger_Abort2(res, "Creating window failed");
 	Window_RefreshBounds();
 
 	AcquireRootMenu();	
@@ -1916,12 +1916,14 @@ void Cursor_SetPosition(int x, int y) {
 	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
 }
 
+static bool cursorVisible = true;
 void Cursor_SetVisible(bool visible) {
 	if (visible) {
 		CGDisplayShowCursor(CGMainDisplayID());
 	} else {
 		CGDisplayHideCursor(CGMainDisplayID());
 	}
+	cursorVisible = visible;
 }
 
 void Window_ShowDialog(const char* title, const char* msg) {
@@ -1933,7 +1935,12 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	CreateStandardAlert(kAlertPlainAlert, titleCF, msgCF, NULL, &dialog);
 	CFRelease(titleCF);
 	CFRelease(msgCF);
+
+	/* If cursor is hidden, showing a dialog doesn't cause it to reappear */
+	/* So just manually make the cursor reappear */
+	if (!cursorVisible) CGDisplayShowCursor(CGMainDisplayID());
 	RunStandardAlert(dialog, NULL, &itemHit);
+	if (!cursorVisible) CGDisplayHideCursor(CGMainDisplayID());
 }
 
 static CGrafPtr fb_port;
