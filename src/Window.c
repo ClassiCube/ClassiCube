@@ -1678,14 +1678,14 @@ static OSStatus Window_EventHandler(EventHandlerCallRef inCaller, EventRef inEve
 	return eventNotHandledErr;
 }
 
+static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
+	Window_Close();
+	return 0;
+}
 typedef EventTargetRef (*GetMenuBarEventTarget_Func)(void);
 
 static void Window_ConnectEvents(void) {
 	static EventTypeSpec winEventTypes[] = {
-		{ kEventClassApplication, kEventAppActivated },
-		{ kEventClassApplication, kEventAppDeactivated },
-		{ kEventClassApplication, kEventAppQuit },
-		
 		{ kEventClassKeyboard, kEventRawKeyDown },
 		{ kEventClassKeyboard, kEventRawKeyRepeat },
 		{ kEventClassKeyboard, kEventRawKeyUp },
@@ -1716,7 +1716,10 @@ static void Window_ConnectEvents(void) {
 
 	target = GetApplicationEventTarget();
 	InstallEventHandler(target, NewEventHandlerUPP(Window_EventHandler),
-		Array_Elems(appEventTypes), appEventTypes, NULL, NULL);
+						Array_Elems(appEventTypes), appEventTypes, NULL, NULL);
+
+	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
+						NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
 
 	/* The code below is to get the menubar working. */
 	/* The documentation for 'RunApplicationEventLoop' states that it installs */
