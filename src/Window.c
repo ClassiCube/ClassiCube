@@ -3658,61 +3658,32 @@ void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 #ifdef CC_BUILD_COCOA
 #include <objc/message.h>
 #include <objc/runtime.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <ApplicationServices/ApplicationServices.h>
 static id appHandle;
 static id winHandle;
-
-typedef struct FailRect_ {
-	// TODO: use CGFloat because that works with 32 bit
-	double x, y;
-	double width, height;
-} FailRect;
-
-id Cocoa_SendIntPtr(id receiver, SEL op) {
-	IMP func = objc_msg_lookup(receiver, op);
-	return func(receiver, op);
-}
-
-id Cocoa_SendIntPtr_I(id receiver, SEL op, int a1) {
-	IMP func = objc_msg_lookup(receiver, op);
-	return func(receiver, op, a1);
-}
-
-id Cocoa_SendIntPtr_P(id receiver, SEL op, id a1) {
-	IMP func = objc_msg_lookup(receiver, op);
-	return func(receiver, op, a1);
-}
-
-void Cocoa_SendIntPtr_R(id receiver, SEL op, FailRect* r) {
-	IMP func = objc_msg_lookup(receiver, op);
-	func(receiver, op, r);
-}
-
-id cmacs_window_init_msgSend(id receiver, SEL op, FailRect a1, int a2, int a3, bool a4) {
-	IMP func = objc_msg_lookup(receiver, op);
-	return func(receiver, op, a1, a2, a3, a4);
-}
+//extern id NSApp;
 
 void Window_Init(void) {
 	id screen, screens;
 	int count;
-	FailRect rect = { 1, 2, 3, 4 };
+	CGRect rect = { 1, 2, 3, 4 };
 
 	Platform_LogConst("hi world");
-	appHandle = Cocoa_SendIntPtr((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
-	Platform_LogConst("all gudd!!");
-
+	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
+	Platform_LogConst("all good!");
 
 	// TODO: why's this bit of code completely stuffed
-	screens = Cocoa_SendIntPtr((id)objc_getClass("NSScreen"), sel_registerName("screens"));
-	count = Cocoa_SendIntPtr(screens, sel_registerName("count"));
+	screens = objc_msgSend((id)objc_getClass("NSScreen"), sel_registerName("screens"));
+	count = objc_msgSend(screens, sel_registerName("count"));
 	Platform_Log1("COUNT: %i", &count);
 
-	screen = Cocoa_SendIntPtr_I(screens, sel_registerName("objectAtIndex:"), 0);
-	Cocoa_SendIntPtr_R(screen, sel_registerName("frame"), &rect);
-	Platform_LogConst("GOT FRAME");
-	printf("STUFF: %f,%f,%f,%f", rect.x, rect.y, rect.width, rect.height);
+	Display_Bounds.Width = 1024;
+	Display_Bounds.Height = 768;
+	//screen = objc_msgSend(screens, sel_registerName("objectAtIndex:"), 0);
+	//objc_msgSend_stret(&rect, screen, sel_registerName("frame"));
+	//Platform_LogConst("GOT FRAME");
+	//printf("STUFF: %f,%f,%f,%f", rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
+	//Platform_LogConst("printed rect");
 }
 
 #define NSTitledWindowMask         (1 << 0)
@@ -3721,18 +3692,21 @@ void Window_Init(void) {
 #define NSResizableWindowMask      (1 << 3)
 
 void Window_Create(int width, int height) {
-	id window;
-	Window_Width = width;
+	Window_Width  = width;
 	Window_Height = height;
 	Window_Exists = true;
 
-	winHandle = Cocoa_SendIntPtr((id)objc_getClass("NSWindow"), sel_registerName("alloc"));
-	winHandle = cmacs_window_init_msgSend(winHandle, sel_getUid("initWithContentRect:styleMask:backing:defer:"), (FailRect) { 0, 0, 1024, 460 }, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
-
+	Platform_Log1("create: %x", &appHandle);
+	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), sel_registerName("alloc"));
+	Platform_Log1("alloc: %x", &winHandle);
+	winHandle = objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), (CGRect) { 0, 0, 1024, 460 }, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)$
+	Platform_Log1("made: %x", &winHandle);
 	// TODO: move to setVisible
-	Cocoa_SendIntPtr_P(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
+	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
 	Platform_LogConst("made window");
+	Platform_Log1("WIN: %x", &winHandle);
 }
+
 
 void Window_SetTitle(const String* title) { }
 void Clipboard_GetText(String* value) { }
