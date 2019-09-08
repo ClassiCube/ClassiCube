@@ -1442,10 +1442,89 @@ void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 
 
 /*########################################################################################################################*
+*---------------------------------------------------Carbon/Cocoa window---------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_CARBON || defined CC_BUILD_COCOA
+#include <ApplicationServices/ApplicationServices.h>
+
+static void Window_CommonInit(void) {
+	CGDirectDisplayID display = CGMainDisplayID();
+	CGRect bounds = CGDisplayBounds(display);
+
+	Display_Bounds.X = (int)bounds.origin.x;
+	Display_Bounds.Y = (int)bounds.origin.y;
+	Display_Bounds.Width  = (int)bounds.size.width;
+	Display_Bounds.Height = (int)bounds.size.height;
+	Display_BitsPerPixel  = CGDisplayBitsPerPixel(display);
+}
+
+/* NOTE: All Pasteboard functions are OSX 10.3 or later */
+static PasteboardRef Window_GetPasteboard(void) {
+	PasteboardRef pbRef;
+	OSStatus err = PasteboardCreate(kPasteboardClipboard, &pbRef);
+
+	if (err) Logger_Abort2(err, "Creating Pasteboard reference");
+	PasteboardSynchronize(pbRef);
+	return pbRef;
+}
+
+#define FMT_UTF8  CFSTR("public.utf8-plain-text")
+#define FMT_UTF16 CFSTR("public.utf16-plain-text")
+
+void Clipboard_GetText(String* value) {
+	PasteboardRef pbRef;
+	ItemCount itemCount;
+	PasteboardItemID itemID;
+	CFDataRef outData;
+	const UInt8* ptr;
+	CFIndex len;
+	OSStatus err;
+	
+	pbRef = Window_GetPasteboard();
+
+	err = PasteboardGetItemCount(pbRef, &itemCount);
+	if (err) Logger_Abort2(err, "Getting item count from Pasteboard");
+	if (itemCount < 1) return;
+	
+	err = PasteboardGetItemIdentifier(pbRef, 1, &itemID);
+	if (err) Logger_Abort2(err, "Getting item identifier from Pasteboard");
+	
+	if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF16, &outData))) {	
+		ptr = CFDataGetBytePtr(outData);
+		len = CFDataGetLength(outData);
+		if (ptr) String_AppendUtf16(value, (Codepoint*)ptr, len);
+	} else if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF8, &outData))) {
+		ptr = CFDataGetBytePtr(outData);
+		len = CFDataGetLength(outData);
+		if (ptr) String_AppendUtf8(value, (cc_uint8*)ptr, len);
+	}
+}
+
+void Clipboard_SetText(const String* value) {
+	PasteboardRef pbRef;
+	CFDataRef cfData;
+	UInt8 str[800];
+	int len;
+	OSStatus err;
+
+	pbRef = Window_GetPasteboard();
+	err   = PasteboardClear(pbRef);
+	if (err) Logger_Abort2(err, "Clearing Pasteboard");
+	PasteboardSynchronize(pbRef);
+
+	len    = Platform_ConvertString(str, value);
+	cfData = CFDataCreate(NULL, str, len);
+	if (!cfData) Logger_Abort("CFDataCreate() returned null pointer");
+
+	PasteboardPutItemFlavor(pbRef, 1, FMT_UTF8, cfData, 0);
+}
+#endif
+
+
+/*########################################################################################################################*
 *------------------------------------------------------Carbon window------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_CARBON
-#include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
 #include <dlfcn.h>
 
@@ -1749,16 +1828,7 @@ static void Window_ConnectEvents(void) {
 /*########################################################################################################################*
  *--------------------------------------------------Public implementation--------------------------------------------------*
  *#########################################################################################################################*/
-void Window_Init(void) {
-	CGDirectDisplayID display = CGMainDisplayID();
-	CGRect bounds = CGDisplayBounds(display);
-
-	Display_Bounds.X = (int)bounds.origin.x;
-	Display_Bounds.Y = (int)bounds.origin.y;
-	Display_Bounds.Width  = (int)bounds.size.width;
-	Display_Bounds.Height = (int)bounds.size.height;
-	Display_BitsPerPixel  = CGDisplayBitsPerPixel(display);
-}
+void Window_Init(void) { Window_CommonInit(); }
 
 void Window_Create(int width, int height) {
 	Rect r;
@@ -1794,67 +1864,6 @@ void Window_SetTitle(const String* title) {
 	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
 	SetWindowTitleWithCFString(win_handle, titleCF);
 }
-
-/* NOTE: All Pasteboard functions are OSX 10.3 or later */
-static PasteboardRef Window_GetPasteboard(void) {
-	PasteboardRef pbRef;
-	OSStatus err = PasteboardCreate(kPasteboardClipboard, &pbRef);
-	
-	if (err) Logger_Abort2(err, "Creating Pasteboard reference");
-	PasteboardSynchronize(pbRef);
-	return pbRef;
-}
-#define FMT_UTF8  CFSTR("public.utf8-plain-text")
-#define FMT_UTF16 CFSTR("public.utf16-plain-text")
-
-void Clipboard_GetText(String* value) {
-	PasteboardRef pbRef;
-	ItemCount itemCount;
-	PasteboardItemID itemID;
-	CFDataRef outData;
-	const UInt8* ptr;
-	CFIndex len;
-	OSStatus err;
-	
-	pbRef = Window_GetPasteboard();
-
-	err = PasteboardGetItemCount(pbRef, &itemCount);
-	if (err) Logger_Abort2(err, "Getting item count from Pasteboard");
-	if (itemCount < 1) return;
-	
-	err = PasteboardGetItemIdentifier(pbRef, 1, &itemID);
-	if (err) Logger_Abort2(err, "Getting item identifier from Pasteboard");
-	
-	if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF16, &outData))) {	
-		ptr = CFDataGetBytePtr(outData);
-		len = CFDataGetLength(outData);
-		if (ptr) String_AppendUtf16(value, (Codepoint*)ptr, len);
-	} else if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF8, &outData))) {
-		ptr = CFDataGetBytePtr(outData);
-		len = CFDataGetLength(outData);
-		if (ptr) String_AppendUtf8(value, (cc_uint8*)ptr, len);
-	}
-}
-
-void Clipboard_SetText(const String* value) {
-	PasteboardRef pbRef;
-	CFDataRef cfData;
-	UInt8 str[800];
-	int len;
-	OSStatus err;
-
-	pbRef = Window_GetPasteboard();
-	err   = PasteboardClear(pbRef);
-	if (err) Logger_Abort2(err, "Clearing Pasteboard");
-	PasteboardSynchronize(pbRef);
-
-	len    = Platform_ConvertString(str, value);
-	cfData = CFDataCreate(NULL, str, len);
-	if (!cfData) Logger_Abort("CFDataCreate() returned null pointer");
-
-	PasteboardPutItemFlavor(pbRef, 1, FMT_UTF8, cfData, 0);
-}
-/* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
 void Window_SetVisible(bool visible) {
 	if (visible) {
@@ -3658,32 +3667,15 @@ void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 #ifdef CC_BUILD_COCOA
 #include <objc/message.h>
 #include <objc/runtime.h>
-#include <ApplicationServices/ApplicationServices.h>
 static id appHandle;
 static id winHandle;
 //extern id NSApp;
 
 void Window_Init(void) {
-	id screen, screens;
-	int count;
-	CGRect rect = { 1, 2, 3, 4 };
-
 	Platform_LogConst("hi world");
 	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
-	Platform_LogConst("all good!");
-
-	// TODO: why's this bit of code completely stuffed
-	screens = objc_msgSend((id)objc_getClass("NSScreen"), sel_registerName("screens"));
-	count = objc_msgSend(screens, sel_registerName("count"));
-	Platform_Log1("COUNT: %i", &count);
-
-	Display_Bounds.Width = 1024;
-	Display_Bounds.Height = 768;
-	//screen = objc_msgSend(screens, sel_registerName("objectAtIndex:"), 0);
-	//objc_msgSend_stret(&rect, screen, sel_registerName("frame"));
-	//Platform_LogConst("GOT FRAME");
-	//printf("STUFF: %f,%f,%f,%f", rect.origin.x, rect.origin.y, rect.size.width, rect.size.height);
-	//Platform_LogConst("printed rect");
+	Platform_Log1("all good! %x", &appHandle);
+	Window_CommonInit();
 }
 
 #define NSTitledWindowMask         (1 << 0)
@@ -3692,14 +3684,22 @@ void Window_Init(void) {
 #define NSResizableWindowMask      (1 << 3)
 
 void Window_Create(int width, int height) {
+	CGRect rect;
 	Window_Width  = width;
 	Window_Height = height;
 	Window_Exists = true;
 
+	rect.origin.x    = Display_CentreX(width);  
+	rect.origin.y    = Display_CentreY(height);
+	rect.size.width  = width; 
+	rect.size.height = height;
+	// TODO: opentk seems to flip y?
+
 	Platform_Log1("create: %x", &appHandle);
 	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), sel_registerName("alloc"));
 	Platform_Log1("alloc: %x", &winHandle);
-	winHandle = objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), (CGRect) { 0, 0, 1024, 460 }, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)$
+	winHandle = objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
+
 	Platform_Log1("made: %x", &winHandle);
 	// TODO: move to setVisible
 	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
@@ -3707,10 +3707,7 @@ void Window_Create(int width, int height) {
 	Platform_Log1("WIN: %x", &winHandle);
 }
 
-
 void Window_SetTitle(const String* title) { }
-void Clipboard_GetText(String* value) { }
-void Clipboard_SetText(const String* value) { }
 
 void Window_SetVisible(bool visible) { }
 int Window_GetWindowState(void) { return 0; }
