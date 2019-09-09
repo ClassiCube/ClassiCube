@@ -3667,14 +3667,19 @@ void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 #ifdef CC_BUILD_COCOA
 #include <objc/message.h>
 #include <objc/runtime.h>
-static id appHandle;
-static id winHandle;
+static id appHandle, winHandle;
+static SEL selAlloc, selInit;
 //extern id NSApp;
 
 void Window_Init(void) {
+	selAlloc = sel_registerName("alloc");
+	selInit  = sel_registerName("init");
+
 	Platform_LogConst("hi world");
 	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
 	Platform_Log1("all good! %x", &appHandle);
+	appHandle = objc_msgSend(appHandle, sel_registerName("activateIgnoringOtherApps:"), true);
+	Platform_Log1("top banter! %x", &appHandle);
 	Window_CommonInit();
 }
 
@@ -3696,7 +3701,7 @@ void Window_Create(int width, int height) {
 	// TODO: opentk seems to flip y?
 
 	Platform_Log1("create: %x", &appHandle);
-	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), sel_registerName("alloc"));
+	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), selAlloc);
 	Platform_Log1("alloc: %x", &winHandle);
 	winHandle = objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
 
@@ -3707,7 +3712,18 @@ void Window_Create(int width, int height) {
 	Platform_Log1("WIN: %x", &winHandle);
 }
 
-void Window_SetTitle(const String* title) { }
+void Window_SetTitle(const String* title) {
+	UInt8 str[600];
+	CFStringRef titleCF;
+	int len;
+
+	/* TODO: This leaks memory, old title isn't released */
+	len = Platform_ConvertString(str, title);
+	Platform_Log1("SET TITLE: %s", title);
+	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
+	Platform_Log2("TITLE STR: %x,%i", &titleCF, &len);
+	objc_msgSend(winHandle, sel_registerName("setTitle:"), titleCF);
+}
 
 void Window_SetVisible(bool visible) { }
 int Window_GetWindowState(void) { return 0; }
@@ -3721,7 +3737,25 @@ void Window_ProcessEvents(void) { }
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 void Cursor_SetPosition(int x, int y) { }
 void Cursor_SetVisible(bool visible) { }
-void Window_ShowDialog(const char* title, const char* msg) { }
+
+void Window_ShowDialog(const char* title, const char* msg) {
+	CFStringRef titleCF, msgCF;
+	id alert;
+	
+	// TODO: what if called before selAlloc is set to something
+	alert   = objc_msgSend((id)objc_getClass("NSAlert"), selAlloc);
+	alert   = objc_msgSend(alert, selInit);
+	titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
+	msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
+	
+	objc_msgSend(alert, sel_registerName("setMessageText:"),     titleCF);
+	objc_msgSend(alert, sel_registerName("setInformativeText:"), msgCF);
+	objc_msgSend(alert, sel_registerName("addButtonWithTitle:"), CFSTR("OK"));
+	objc_msgSend(alert, sel_registerName("runModal"));
+
+	CFRelease(titleCF);
+	CFRelease(msgCF);
+}
 
 void Window_AllocFramebuffer(Bitmap* bmp) {
 	bmp->Scan0 = (cc_uint8*)Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
