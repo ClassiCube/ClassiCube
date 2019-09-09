@@ -1814,7 +1814,8 @@ static void Window_ConnectEvents(void) {
 	getMenuBarEventTarget = dlsym(RTLD_DEFAULT, "GetMenuBarEventTarget");
 	InstallStandardEventHandler(GetApplicationEventTarget());
 
-	/* TODO: Why does this not work properly? and why does it break with quit? */
+	/* TODO: Why does this not work properly until user activates another window */
+	/* Followup: Seems to be a bug in OSX http://www.sheepsystems.com/developers_blog/transformprocesstype--bette.html */
 	if (getMenuBarEventTarget) {
 		InstallStandardEventHandler(getMenuBarEventTarget());
 	} else {
@@ -3669,6 +3670,8 @@ void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 #include <objc/runtime.h>
 static id appHandle, winHandle;
 static SEL selAlloc, selInit;
+static SEL selNextEvent, selType, selSendEvent;
+static void* defaultRunLoopMode;
 //extern id NSApp;
 
 void Window_Init(void) {
@@ -3690,6 +3693,7 @@ void Window_Init(void) {
 
 void Window_Create(int width, int height) {
 	CGRect rect;
+	// TODO: don't set, RefreshBounds
 	Window_Width  = width;
 	Window_Height = height;
 	Window_Exists = true;
@@ -3710,6 +3714,11 @@ void Window_Create(int width, int height) {
 	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
 	Platform_LogConst("made window");
 	Platform_Log1("WIN: %x", &winHandle);
+
+	selNextEvent = sel_registerName("nextEventMatchingMask:untilDate:inMode:dequeue:");
+	selType      = sel_registerName("type");
+	selSendEvent = sel_registerName("sendEvent:");
+	defaultRunLoopMode = DynamicLib_GetFrom("/System/Library/Frameworks/Foundation.framework/Versions/Current/Foundation", "NSDefaultRunLoopMode");
 }
 
 void Window_SetTitle(const String* title) {
@@ -3732,7 +3741,20 @@ void Window_ExitFullscreen(void) { }
 
 void Window_SetSize(int width, int height) { }
 void Window_Close(void) { }
-void Window_ProcessEvents(void) { }
+
+void Window_ProcessEvents(void) {
+	id ev;
+	int type;
+
+	for (;;) {
+		ev = objc_msgSend(appHandle, selNextEvent, 0xFFFFFFFFU, NULL, defaultRunLoopMode, true);
+		if (!ev) break;
+
+		type = (int)objc_msgSend(ev, selType);
+		Platform_Log1("EVENT: %i", &type);
+		objc_msgSend(appHandle, selSendEvent, ev);
+	}
+}
 
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 void Cursor_SetPosition(int x, int y) { }
