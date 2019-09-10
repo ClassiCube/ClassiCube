@@ -1720,8 +1720,8 @@ ReturnCode Platform_SetDefaultCurrentDirectory(void) {
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
 	int i, count;
 	argc--; argv++; /* skip executable path argument */
-	count = min(argc, GAME_MAX_CMDARGS);
 
+	count = min(argc, GAME_MAX_CMDARGS);
 	for (i = 0; i < count; i++) { args[i] = String_FromReadonly(argv[i]); }
 	return count;
 }
@@ -1751,13 +1751,13 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 
 #ifdef CC_BUILD_OSX
 	if (argc) {
-		String arg0 = String_FromReadonly(argv[0]);
-		String psn = String_FromConst("-psn_0_");
+		static const String psn = String_FromConst("-psn_0_");
+		String arg0 = String_FromReadonly(argv[0]);	
 		if (String_CaselessStarts(&arg0, &psn)) { argc--; argv++; }
 	}
 #endif
-	count = min(argc, GAME_MAX_CMDARGS);
 
+	count = min(argc, GAME_MAX_CMDARGS);
 	for (i = 0; i < count; i++) { args[i] = String_FromReadonly(argv[i]); }
 	return count;
 }
@@ -1772,6 +1772,19 @@ ReturnCode Platform_SetDefaultCurrentDirectory(void) {
 	for (i = len - 1; i >= 0; i--, len--) {
 		if (path[i] == '/') break;
 	}
+
+#ifdef CC_BUILD_OSX
+	static const String bundle = String_FromConst(".app/Contents/MacOS/");
+	String raw = String_Init(path, len, 0);	
+
+	if (String_CaselessEnds(&raw, &bundle)) {
+		len -= bundle.length;
+
+		for (i = len - 1; i >= 0; i--, len--) {
+			if (path[i] == '/') break;
+		}
+	}
+#endif
 
 	path[len] = '\0';
 	return chdir(path) == -1 ? errno : 0;
