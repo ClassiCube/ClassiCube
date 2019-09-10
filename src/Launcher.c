@@ -598,28 +598,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 "echo Starting launcher again\r\n" \
 "start \"ClassiCube\" \"%s\"\r\n" \
 "exit\r\n"
-#else
-#define UPDATE_SCRIPT \
-"#!/bin/bash\n" \
-"echo Waiting for launcher to exit..\n" \
-"echo 5..\n" \
-"sleep 1\n" \
-"echo 4..\n" \
-"sleep 1\n" \
-"echo 3..\n" \
-"sleep 1\n" \
-"echo 2..\n" \
-"sleep 1\n" \
-"echo 1..\n" \
-"sleep 1\n" \
-"cd $(cd -P -- \"$(dirname -- \"$0\")\" && pwd -P)\n" \
-"echo Copying updated version\n" \
-"mv ./ClassiCube.update \"./%s\"\n" \
-"echo Starting launcher again\n" \
-"\"./%s\"\n"
 #endif
-/* The weird 'cd' line changes current directory to the directory update.sh is in */
-/* Needed because bash's current directory isn't always client's directory (e.g. on OSX) */
 
 static void Launcher_ApplyUpdate(void) {
 	static const String scriptPath = String_FromConst(UPDATE_FILENAME);
@@ -627,6 +606,7 @@ static void Launcher_ApplyUpdate(void) {
 	String str, exe;
 	ReturnCode res;
 
+#ifdef CC_BUILD_WIN
 	String_InitArray(exe, exeBuffer);
 	res = Process_GetExePath(&exe);
 	if (res) { Logger_Warn(res, "getting executable path"); return; }
@@ -641,6 +621,7 @@ static void Launcher_ApplyUpdate(void) {
 
 	res = File_MarkExecutable(&scriptPath);
 	if (res) Logger_Warn(res, "making update script executable");
+#endif
 
 	res = Updater_Start();
 	if (res) { Logger_Warn(res, "running updater"); return; }
