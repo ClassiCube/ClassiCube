@@ -1570,11 +1570,19 @@ void Platform_Free(void) { }
 #ifndef CC_BUILD_ANDROID
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
 	int i, count;
-	argc--; /* skip executable path argument */
+	argc--; argv++; /* skip executable path argument */
+
+#ifdef CC_BUILD_OSX
+	if (argc) {
+		String arg0 = String_FromReadonly(argv[0]);
+		String psn = String_FromConst("-psn_0_");
+		if (String_CaselessStarts(&arg0, &psn)) { argc--; argv++; }
+	}
+#endif
 	count = min(argc, GAME_MAX_CMDARGS);
 
 	for (i = 0; i < count; i++) {
-		args[i] = String_FromReadonly(argv[i + 1]);
+		args[i] = String_FromReadonly(argv[i]);
 	}
 	return count;
 }
