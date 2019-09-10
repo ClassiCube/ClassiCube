@@ -1453,61 +1453,6 @@ void Platform_Free(void) {
 	HeapDestroy(heap);
 }
 
-ReturnCode Platform_SetDefaultCurrentDirectory(void) {
-	TCHAR path[NATIVE_STR_LEN + 1];
-	int i, len;
-	ReturnCode res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-
-	/* Get rid of filename at end of directory */
-	for (i = len - 1; i >= 0; i--, len--) {
-		if (path[i] == '/' || path[i] == '\\') break;
-	}
-
-	path[len] = '\0';
-	return SetCurrentDirectory(path) ? 0 : GetLastError();
-}
-
-static String Platform_NextArg(STRING_REF String* args) {
-	String arg;
-	int end;
-
-	/* get rid of leading spaces before arg */
-	while (args->length && args->buffer[0] == ' ') {
-		*args = String_UNSAFE_SubstringAt(args, 1);
-	}
-
-	if (args->length && args->buffer[0] == '"') {
-		/* "xy za" is used for arg with spaces */
-		*args = String_UNSAFE_SubstringAt(args, 1);
-		end = String_IndexOf(args, '"');
-	} else {
-		end = String_IndexOf(args, ' ');
-	}
-
-	if (end == -1) {
-		arg   = *args;
-		args->length = 0;
-	} else {
-		arg   = String_UNSAFE_Substring(args, 0, end);
-		*args = String_UNSAFE_SubstringAt(args, end + 1);
-	}
-	return arg;
-}
-
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
-	String cmdArgs = String_FromReadonly(GetCommandLineA());
-	int i;
-	Platform_NextArg(&cmdArgs); /* skip exe path */
-
-	for (i = 0; i < GAME_MAX_CMDARGS; i++) {
-		args[i] = Platform_NextArg(&cmdArgs);
-
-		if (!args[i].length) break;
-	}
-	return i;
-}
-
 ReturnCode Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen) {
 	DATA_BLOB dataIn, dataOut;
 	dataIn.cbData = len; dataIn.pbData = (BYTE*)data;
@@ -1567,50 +1512,12 @@ static void Platform_InitPosix(void) {
 }
 void Platform_Free(void) { }
 
-#ifndef CC_BUILD_ANDROID
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
-	int i, count;
-	argc--; argv++; /* skip executable path argument */
-
-#ifdef CC_BUILD_OSX
-	if (argc) {
-		String arg0 = String_FromReadonly(argv[0]);
-		String psn = String_FromConst("-psn_0_");
-		if (String_CaselessStarts(&arg0, &psn)) { argc--; argv++; }
-	}
-#endif
-	count = min(argc, GAME_MAX_CMDARGS);
-
-	for (i = 0; i < count; i++) {
-		args[i] = String_FromReadonly(argv[i]);
-	}
-	return count;
-}
-#endif
-
 ReturnCode Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen) {
 	return ERR_NOT_SUPPORTED;
 }
 ReturnCode Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen) {
 	return ERR_NOT_SUPPORTED;
 }
-
-#if !defined CC_BUILD_WEB && !defined CC_BUILD_ANDROID
-ReturnCode Platform_SetDefaultCurrentDirectory(void) {
-	char path[NATIVE_STR_LEN];
-	int i, len = 0;
-	ReturnCode res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-
-	/* get rid of filename at end of directory */
-	for (i = len - 1; i >= 0; i--, len--) {
-		if (path[i] == '/') break;
-	}
-
-	path[len] = '\0';
-	return chdir(path) == -1 ? errno : 0;
-}
-#endif
 
 bool Platform_DescribeError(ReturnCode res, String* dst) {
 	char chars[NATIVE_STR_LEN];
@@ -1671,30 +1578,11 @@ void Platform_Init(void) {
 		......
 	*/
 }
-
-ReturnCode Platform_SetDefaultCurrentDirectory(void) { 
-	return chdir("/classicube") == -1 ? errno : 0;
-}
 #elif defined CC_BUILD_ANDROID
 jclass  App_Class;
 jobject App_Instance;
 JavaVM* VM_Ptr;
 void Platform_Init(void) { Platform_InitPosix(); }
-
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
-	if (!gameArgs.length) return 0;
-	return String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
-}
-
-ReturnCode Platform_SetDefaultCurrentDirectory(void) {
-	String dir; char dirBuffer[FILENAME_SIZE + 1];
-	String_InitArray_NT(dir, dirBuffer);
-
-	JavaCall_Void_String("getExternalAppDir", &dir);
-	dir.buffer[dir.length] = '\0';
-	Platform_Log1("EXTERNAL DIR: %s|", &dir);
-	return chdir(dir.buffer) == -1 ? errno : 0;
-}
 
 /* JNI helpers */
 String JavaGetString(JNIEnv* env, jstring str) {
@@ -1766,5 +1654,126 @@ void JavaCall_Void_String(const char* name, String* dst) {
 
 	(*env)->ReleaseStringChars(env, obj, src);
 	(*env)->DeleteLocalRef(env, obj);
+}
+#endif
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Platform---------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_WIN
+static String Platform_NextArg(STRING_REF String* args) {
+	String arg;
+	int end;
+
+	/* get rid of leading spaces before arg */
+	while (args->length && args->buffer[0] == ' ') {
+		*args = String_UNSAFE_SubstringAt(args, 1);
+	}
+
+	if (args->length && args->buffer[0] == '"') {
+		/* "xy za" is used for arg with spaces */
+		*args = String_UNSAFE_SubstringAt(args, 1);
+		end = String_IndexOf(args, '"');
+	} else {
+		end = String_IndexOf(args, ' ');
+	}
+
+	if (end == -1) {
+		arg   = *args;
+		args->length = 0;
+	} else {
+		arg   = String_UNSAFE_Substring(args, 0, end);
+		*args = String_UNSAFE_SubstringAt(args, end + 1);
+	}
+	return arg;
+}
+
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
+	String cmdArgs = String_FromReadonly(GetCommandLineA());
+	int i;
+	Platform_NextArg(&cmdArgs); /* skip exe path */
+
+	for (i = 0; i < GAME_MAX_CMDARGS; i++) {
+		args[i] = Platform_NextArg(&cmdArgs);
+
+		if (!args[i].length) break;
+	}
+	return i;
+}
+
+ReturnCode Platform_SetDefaultCurrentDirectory(void) {
+	TCHAR path[NATIVE_STR_LEN + 1];
+	int i, len;
+	ReturnCode res = Process_RawGetExePath(path, &len);
+	if (res) return res;
+
+	/* Get rid of filename at end of directory */
+	for (i = len - 1; i >= 0; i--, len--) {
+		if (path[i] == '/' || path[i] == '\\') break;
+	}
+
+	path[len] = '\0';
+	return SetCurrentDirectory(path) ? 0 : GetLastError();
+}
+#elif defined CC_BUILD_WEB
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
+	int i, count;
+	argc--; argv++; /* skip executable path argument */
+	count = min(argc, GAME_MAX_CMDARGS);
+
+	for (i = 0; i < count; i++) { args[i] = String_FromReadonly(argv[i]); }
+	return count;
+}
+
+ReturnCode Platform_SetDefaultCurrentDirectory(void) { 
+	return chdir("/classicube") == -1 ? errno : 0;
+}
+#elif defined CC_BUILD_ANDROID
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
+	if (!gameArgs.length) return 0;
+	return String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
+}
+
+ReturnCode Platform_SetDefaultCurrentDirectory(void) {
+	String dir; char dirBuffer[FILENAME_SIZE + 1];
+	String_InitArray_NT(dir, dirBuffer);
+
+	JavaCall_Void_String("getExternalAppDir", &dir);
+	dir.buffer[dir.length] = '\0';
+	Platform_Log1("EXTERNAL DIR: %s|", &dir);
+	return chdir(dir.buffer) == -1 ? errno : 0;
+}
+#elif defined CC_BUILD_POSIX
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
+	int i, count;
+	argc--; argv++; /* skip executable path argument */
+
+#ifdef CC_BUILD_OSX
+	if (argc) {
+		String arg0 = String_FromReadonly(argv[0]);
+		String psn = String_FromConst("-psn_0_");
+		if (String_CaselessStarts(&arg0, &psn)) { argc--; argv++; }
+	}
+#endif
+	count = min(argc, GAME_MAX_CMDARGS);
+
+	for (i = 0; i < count; i++) { args[i] = String_FromReadonly(argv[i]); }
+	return count;
+}
+
+ReturnCode Platform_SetDefaultCurrentDirectory(void) {
+	char path[NATIVE_STR_LEN];
+	int i, len = 0;
+	ReturnCode res = Process_RawGetExePath(path, &len);
+	if (res) return res;
+
+	/* get rid of filename at end of directory */
+	for (i = len - 1; i >= 0; i--, len--) {
+		if (path[i] == '/') break;
+	}
+
+	path[len] = '\0';
+	return chdir(path) == -1 ? errno : 0;
 }
 #endif

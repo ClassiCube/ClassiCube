@@ -44,9 +44,9 @@ void Platform_Init(void);
 void Platform_Free(void);
 /* Sets the appropriate default current/working directory. */
 ReturnCode Platform_SetDefaultCurrentDirectory(void);
-
 /* Gets the command line arguments passed to the program. */
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args);
+
 /* Encrypts data in a platform-specific manner. (may not be supported) */
 /* NOTE: Should only be implemented when platform natively supports it. */
 ReturnCode Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen);
