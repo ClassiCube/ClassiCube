@@ -618,9 +618,6 @@ static void Launcher_ApplyUpdate(void) {
 	/* Can't use WriteLine, want \n as actual newline not code page 437 */
 	res = Stream_WriteAllTo(&scriptPath, (const cc_uint8*)str.buffer, str.length);
 	if (res) { Logger_Warn(res, "saving update script"); return; }
-
-	res = File_MarkExecutable(&scriptPath);
-	if (res) Logger_Warn(res, "making update script executable");
 #endif
 
 	res = Updater_Start();

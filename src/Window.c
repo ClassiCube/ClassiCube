@@ -3671,18 +3671,15 @@ void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 static id appHandle, winHandle;
 static SEL selAlloc, selInit;
 static SEL selNextEvent, selType, selSendEvent;
-static void* defaultRunLoopMode;
-//extern id NSApp;
+extern void* NSDefaultRunLoopMode;
 
 void Window_Init(void) {
 	selAlloc = sel_registerName("alloc");
 	selInit  = sel_registerName("init");
 
-	Platform_LogConst("hi world");
 	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
-	Platform_Log1("all good! %x", &appHandle);
-	appHandle = objc_msgSend(appHandle, sel_registerName("activateIgnoringOtherApps:"), true);
-	Platform_Log1("top banter! %x", &appHandle);
+	Platform_Log1("app handle! %x", &appHandle);
+	objc_msgSend(appHandle, sel_registerName("activateIgnoringOtherApps:"), true);
 	Window_CommonInit();
 }
 
@@ -3704,21 +3701,15 @@ void Window_Create(int width, int height) {
 	rect.size.height = height;
 	// TODO: opentk seems to flip y?
 
-	Platform_Log1("create: %x", &appHandle);
 	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), selAlloc);
-	Platform_Log1("alloc: %x", &winHandle);
-	winHandle = objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
+	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
 
-	Platform_Log1("made: %x", &winHandle);
 	// TODO: move to setVisible
 	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
-	Platform_LogConst("made window");
-	Platform_Log1("WIN: %x", &winHandle);
 
 	selNextEvent = sel_registerName("nextEventMatchingMask:untilDate:inMode:dequeue:");
 	selType      = sel_registerName("type");
 	selSendEvent = sel_registerName("sendEvent:");
-	defaultRunLoopMode = DynamicLib_GetFrom("/System/Library/Frameworks/Foundation.framework/Versions/Current/Foundation", "NSDefaultRunLoopMode");
 }
 
 void Window_SetTitle(const String* title) {
@@ -3728,9 +3719,7 @@ void Window_SetTitle(const String* title) {
 
 	/* TODO: This leaks memory, old title isn't released */
 	len = Platform_ConvertString(str, title);
-	Platform_Log1("SET TITLE: %s", title);
 	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
-	Platform_Log2("TITLE STR: %x,%i", &titleCF, &len);
 	objc_msgSend(winHandle, sel_registerName("setTitle:"), titleCF);
 }
 
@@ -3747,7 +3736,7 @@ void Window_ProcessEvents(void) {
 	int type;
 
 	for (;;) {
-		ev = objc_msgSend(appHandle, selNextEvent, 0xFFFFFFFFU, NULL, defaultRunLoopMode, true);
+		ev = objc_msgSend(appHandle, selNextEvent, 0xFFFFFFFFU, NULL, NSDefaultRunLoopMode, true);
 		if (!ev) break;
 
 		type = (int)objc_msgSend(ev, selType);
