@@ -3678,7 +3678,6 @@ void Window_Init(void) {
 	selInit  = sel_registerName("init");
 
 	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
-	Platform_Log1("app handle! %x", &appHandle);
 	objc_msgSend(appHandle, sel_registerName("activateIgnoringOtherApps:"), true);
 	Window_CommonInit();
 }
