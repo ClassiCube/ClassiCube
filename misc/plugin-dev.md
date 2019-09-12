@@ -76,6 +76,10 @@ Then put ```TestPlugin.so``` into your game's ```plugins``` folder. Done.
 2) Rename compiled executable to ClassiCube.exe
 3) Install the ```mingw-w64-tools``` package
 
+TODO: this also works for mingw. clean this up.
+
+TODO: also document alternate method of compiling the game using --out-implib
+
 **Compiling**
 
 First, generate list of exported symbols: 
@@ -104,3 +108,29 @@ Repeat the steps of *Cross compile for Windows 32 bit*, but use ```x86_64-w64-mi
 ### Windows
 TODO when I have some more time...
 
+**Prerequisites:**
+
+1) Compile the game, see ```Cross compiling for windows``` in main readme
+2) Find the `ClassiCube.lib` that was generated when compiling the game. Usually it is in either `src\x64\Debug` or `src\x86\Debug`.
+3) Add a new `Empty Project` to the ClassiCube solution, then add the plugin .c files to it
+
+Note: If the plugin provides a .vcxproj file, you can skip step 2 and just open that project file instead.
+
+**Configuration**
+
+Right click the plugin project in the `Solution Explorer` pane, then click `Properties`
+
+TODO: add screenshots here
+
+TODO: may need to configure include directories
+
+1) In `Configuration properties` -> `General`, make sure `Configuration type` is set to `Dynamic library (.DLL)`
+
+2) In `Configuration properties` -> `Linker` -> `Input`, click the dropdown button for `Additional Dependencies`, then click `Edit`. Add the full path to `ClassiCube.lib`, then click `OK`
+
+**Compiling**
+
+Build the project. There should be a line in the build output that tells you where you can find the .dll file like this:
+```
+Project1.vcxproj -> C:\classicube-dev\testplugin\src\x64\Debug\Project1.dll
+``` 
