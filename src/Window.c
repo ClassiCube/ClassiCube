@@ -1518,6 +1518,9 @@ void Clipboard_SetText(const String* value) {
 
 	PasteboardPutItemFlavor(pbRef, 1, FMT_UTF8, cfData, 0);
 }
+
+void Window_OpenKeyboard(void)  { }
+void Window_CloseKeyboard(void) { }
 #endif
 
 
@@ -2023,9 +2026,6 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 	Mem_Free(bmp->Scan0);
 	CGColorSpaceRelease(colorSpace);
 }
-
-void Window_OpenKeyboard(void)  { }
-void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void)  {
 	Window_DefaultEnableRawMouse();
@@ -3767,19 +3767,64 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	CFRelease(msgCF);
 }
 
+static Bitmap fb_bmp;
 void Window_AllocFramebuffer(Bitmap* bmp) {
 	bmp->Scan0 = (cc_uint8*)Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
+	fb_bmp = *bmp;
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
+	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+	CGContextRef context = NULL;
+	CGDataProviderRef provider;
+	CGImageRef image;
+	CGRect rect;
+	OSStatus err;
+	id nsView;
+	id nsContext;
+
+	/* Unfortunately CGImageRef is immutable, so changing the */
+	/* underlying data doesn't change what shows when drawing. */
+	/* TODO: Find a better way of doing this in cocoa.. */
+	
+	nsView = objc_msgSend(winHandle, sel_registerName("contentView"));
+	Platform_Log1("VIEW: %x", &nsView);
+
+	objc_msgSend(nsView, sel_registerName("lockFocus"));
+	Platform_LogConst("LOCKED FOCUS");
+
+	nsContext = objc_msgSend((id)objc_getClass("NSGraphicsContext"), sel_registerName("currentContext"));
+	Platform_Log1("NS CTX: %x", &nsContext);
+
+	context = objc_msgSend(nsContext, sel_registerName("graphicsPort"));
+	Platform_Log1("CTX: %x", &context);
+
+	/* TODO: Only update changed bit.. */
+	rect.origin.x = 0; rect.origin.y = 0;
+	rect.size.width  = Window_Width;
+	rect.size.height = Window_Height;
+
+	/* TODO: REPLACE THIS AWFUL HACK */
+
+	provider = CGDataProviderCreateWithData(NULL, fb_bmp.Scan0,
+		Bitmap_DataSize(fb_bmp.Width, fb_bmp.Height), NULL);
+	image = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
+		kCGBitmapByteOrder32Little | kCGImageAlphaFirst, provider, NULL, 0, 0);
+
+	CGContextDrawImage(context, rect, image);
+	CGContextSynchronize(context);
+
+	objc_msgSend(nsView, sel_registerName("unlockFocus"));
+	Platform_LogConst("UNLOCKED FOCUS");
+
+	CGImageRelease(image);
+	CGDataProviderRelease(provider);
+	CGColorSpaceRelease(colorSpace);
 }
 
 void Window_FreeFramebuffer(Bitmap* bmp) {
 	Mem_Free(bmp->Scan0);
 }
-
-void Window_OpenKeyboard(void) { }
-void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void) { }
 void Window_UpdateRawMouse(void) { }
