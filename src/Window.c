@@ -3730,15 +3730,35 @@ void Window_ExitFullscreen(void) { }
 void Window_SetSize(int width, int height) { }
 void Window_Close(void) { }
 
+#define NSMouseMoved        5
+#define NSLeftMouseDragged  6
+#define NSRightMouseDragged 7
+#define NSKeyDown           10
+#define NSKeyUp             11
+#define NSScrollWheel       22
+#define NSOtherMouseDragged 27
+
 void Window_ProcessEvents(void) {
 	id ev;
-	int type;
+	int button, type;
 
 	for (;;) {
 		ev = objc_msgSend(appHandle, selNextEvent, 0xFFFFFFFFU, NULL, NSDefaultRunLoopMode, true);
 		if (!ev) break;
-
 		type = (int)objc_msgSend(ev, selType);
+
+		switch (type) {
+		case  1: /* NSLeftMouseDown  */
+		case  3: /* NSRightMouseDown */
+		case 25: /* NSOtherMouseDown */
+			button = (int)objc_msgSend(ev, sel_registerName("buttonNumber"));
+
+		case  2: /* NSLeftMouseUp  */
+		case  4: /* NSRightMouseUp */
+		case 26: /* NSOtherMouseUp */
+			button = (int)objc_msgSend(ev, sel_registerName("buttonNumber"));
+
+		}
 		Platform_Log1("EVENT: %i", &type);
 		objc_msgSend(appHandle, selSendEvent, ev);
 	}
