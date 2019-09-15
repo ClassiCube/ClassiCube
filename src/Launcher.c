@@ -243,7 +243,7 @@ void Launcher_Run(void) {
 	static const String title = String_FromConst(GAME_APP_TITLE);
 	Window_Create(640, 400);
 	Window_SetTitle(&title);
-	Window_SetVisible(true);
+	Window_Show();
 
 	Drawer2D_Component.Init();
 	Game_UpdateDimensions();

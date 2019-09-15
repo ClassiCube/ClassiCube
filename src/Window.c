@@ -469,14 +469,10 @@ void Clipboard_SetText(const String* value) {
 	}
 }
 
-void Window_SetVisible(bool visible) {
-	if (visible) {
-		ShowWindow(win_handle, SW_SHOW);
-		BringWindowToTop(win_handle);
-		SetForegroundWindow(win_handle);
-	} else {
-		ShowWindow(win_handle, SW_HIDE);
-	}
+void Window_Show(void) {
+	ShowWindow(win_handle, SW_SHOW);
+	BringWindowToTop(win_handle);
+	SetForegroundWindow(win_handle);
 }
 
 int Window_GetWindowState(void) {
@@ -881,13 +877,7 @@ void Clipboard_SetText(const String* value) {
 	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
 }
 
-void Window_SetVisible(bool visible) {
-	if (visible) {
-		XMapWindow(win_display, win_handle);
-	} else {
-		XUnmapWindow(win_display, win_handle);
-	}
-}
+void Window_Show(void) { XMapWindow(win_display, win_handle); }
 
 int Window_GetWindowState(void) {
 	Atom prop_type;
@@ -1870,14 +1860,11 @@ void Window_SetTitle(const String* title) {
 	SetWindowTitleWithCFString(win_handle, titleCF);
 }
 
-void Window_SetVisible(bool visible) {
-	if (visible) {
-		ShowWindow(win_handle);
-		RepositionWindow(win_handle, NULL, kWindowCenterOnMainScreen);
-		SelectWindow(win_handle);
-	} else {
-		HideWindow(win_handle);
-	}
+void Window_Show(void) {
+	ShowWindow(win_handle);
+	/* TODO: Do we actually need to reposition */
+	RepositionWindow(win_handle, NULL, kWindowCenterOnMainScreen);
+	SelectWindow(win_handle);
 }
 
 int Window_GetWindowState(void) {
@@ -2106,13 +2093,7 @@ void Clipboard_SetText(const String* value) {
 	SDL_SetClipboardText(str);
 }
 
-void Window_SetVisible(bool visible) {
-	if (visible) {
-		SDL_ShowWindow(win_handle);
-	} else {
-		SDL_HideWindow(win_handle);
-	}
-}
+void Window_Show(void) { SDL_ShowWindow(win_handle); }
 
 int Window_GetWindowState(void) {
 	Uint32 flags = SDL_GetWindowFlags(win_handle);
@@ -2677,7 +2658,7 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 	clipboard_obj  = obj;
 }
 
-void Window_SetVisible(bool visible) { }
+void Window_Show(void) { }
 
 int Window_GetWindowState(void) {
 	EmscriptenFullscreenChangeEvent status;
@@ -2994,7 +2975,7 @@ void Clipboard_SetText(const String* value) {
 
 
 /* Always a fullscreen window */
-void Window_SetVisible(bool visible) { }
+void Window_Show(void) { }
 int Window_GetWindowState(void) { return WINDOW_STATE_FULLSCREEN; }
 void Window_EnterFullscreen(void) { }
 void Window_ExitFullscreen(void) { }
@@ -3746,7 +3727,7 @@ void Window_SetTitle(const String* title) {
 	objc_msgSend(winHandle, sel_registerName("setTitle:"), titleCF);
 }
 
-void Window_SetVisible(bool visible) { }
+void Window_Show(void) { }
 int Window_GetWindowState(void) { return 0; }
 void Window_EnterFullscreen(void) { }
 void Window_ExitFullscreen(void) { }

@@ -86,8 +86,8 @@ CC_API void Clipboard_SetText(const String* value);
 /* With emscripten however, the callback is instead called when a 'paste' event arrives. */
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj);
 
-/* Sets whether the window is visible on screen at all. */
-void Window_SetVisible(bool visible);
+/* Makes the window visible on screen. */
+void Window_Show(void);
 /* Gets the current state of the window, see WindowState enum. */
 int Window_GetWindowState(void);
 /* Switches the window to occupy the entire screen. */

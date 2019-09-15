@@ -715,7 +715,7 @@ static void Game_RunLoop(void) {
 void Game_Run(int width, int height, const String* title) {
 	Window_Create(width, height);
 	Window_SetTitle(title);
-	Window_SetVisible(true);
+	Window_Show();
 
 	Game_Load();
 	Event_RaiseVoid(&WindowEvents.Resized);
