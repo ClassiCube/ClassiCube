@@ -1748,6 +1748,28 @@ void Clipboard_SetText(const String* value) {
 
 void Window_OpenKeyboard(void)  { }
 void Window_CloseKeyboard(void) { }
+
+
+void Window_EnableRawMouse(void) {
+	Window_DefaultEnableRawMouse();
+	CGAssociateMouseAndMouseCursorPosition(0);
+}
+
+void Window_UpdateRawMouse(void) { Window_CentreMousePosition(); }
+void Window_DisableRawMouse(void) {
+	CGAssociateMouseAndMouseCursorPosition(1);
+	Window_DefaultDisableRawMouse();
+}
+
+
+#ifdef CC_BUILD_GL
+bool GLContext_TryRestore(void) { return true; }
+
+void* GLContext_GetAddress(const char* function) {
+	void* address = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
+	return GLContext_IsInvalidAddress(address) ? NULL : address;
+}
+#endif
 #endif
 
 
@@ -2228,17 +2250,6 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 	CGColorSpaceRelease(colorSpace);
 }
 
-void Window_EnableRawMouse(void)  {
-	Window_DefaultEnableRawMouse();
-	CGAssociateMouseAndMouseCursorPosition(0);
-}
-
-void Window_UpdateRawMouse(void)  { Window_CentreMousePosition(); }
-void Window_DisableRawMouse(void) {
-	CGAssociateMouseAndMouseCursorPosition(1);
-	Window_DefaultDisableRawMouse();
-}
-
 
 /*########################################################################################################################*
 *-------------------------------------------------------AGL OpenGL--------------------------------------------------------*
@@ -2371,18 +2382,12 @@ void GLContext_Update(void) {
 	GLContext_SetDrawable();
 	aglUpdateContext(ctx_handle);
 }
-bool GLContext_TryRestore(void) { return true; }
 
 void GLContext_Free(void) {
 	if (!ctx_handle) return;
 	aglSetCurrentContext(NULL);
 	aglDestroyContext(ctx_handle);
 	ctx_handle = NULL;
-}
-
-void* GLContext_GetAddress(const char* function) {
-	void* address = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
-	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }
 
 bool GLContext_SwapBuffers(void) {
@@ -3885,15 +3890,9 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 	Mem_Free(bmp->Scan0);
 }
 
-void Window_EnableRawMouse(void) { }
-void Window_UpdateRawMouse(void) { }
-void Window_DisableRawMouse(void) { }
-
 void GLContext_Init(struct GraphicsMode* mode) { }
 void GLContext_Update(void) { }
-bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) { }
-void* GLContext_GetAddress(const char* function) { return NULL; }
 bool GLContext_SwapBuffers(void) { return true; }
 void GLContext_SetFpsLimit(bool vsync, float minFrameMs) { }
 #endif
