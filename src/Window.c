@@ -2258,7 +2258,6 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 #include <AGL/agl.h>
 
 static AGLContext ctx_handle;
-static bool ctx_firstFullscreen;
 static int ctx_windowWidth, ctx_windowHeight;
 
 static void GLContext_Check(int code, const char* place) {
@@ -2323,16 +2322,6 @@ static void GLContext_SetFullscreen(void) {
 	GLContext_Check(code, "aglSetFullScreen");
 	GLContext_MakeCurrent();
 
-	/* This is a weird hack to workaround a bug where the first time a context */
-	/* is made fullscreen, we just end up with a blank screen.  So we undo it as fullscreen */
-	/* and redo it as fullscreen. */
-	if (!ctx_firstFullscreen) {
-		ctx_firstFullscreen = true;
-		GLContext_UnsetFullscreen();
-		GLContext_SetFullscreen();
-		return;
-	}
-
 	win_fullscreen   = true;
 	ctx_windowWidth  = Window_Width;
 	ctx_windowHeight = Window_Height;
@@ -2373,15 +2362,10 @@ void GLContext_Init(struct GraphicsMode* mode) {
 	GLContext_Check(0, "Destroying pixel format");
 
 	GLContext_SetDrawable();
-	GLContext_Update();
 	GLContext_MakeCurrent();
 }
 
-void GLContext_Update(void) {
-	if (win_fullscreen) return;
-	GLContext_SetDrawable();
-	aglUpdateContext(ctx_handle);
-}
+void GLContext_Update(void) { aglUpdateContext(ctx_handle); }
 
 void GLContext_Free(void) {
 	if (!ctx_handle) return;
