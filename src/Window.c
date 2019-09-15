@@ -3675,13 +3675,14 @@ static void Window_RefreshBounds(void) {
 	CGRect rect;
 
 	view = objc_msgSend(winHandle, sel_registerName("contentView"));
-	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, sel_registerName("frame"));
+	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, sel_registerName("bounds"));
+	rect = ((CGRect(*)(id, SEL, CGRect))(void *)objc_msgSend_stret)(winHandle, sel_registerName("convertRectToScreen:"), rect);
 
 	windowX = (int)rect.origin.x;
 	windowY = (int)rect.origin.y;
 	Window_Width  = (int)rect.size.width;
 	Window_Height = (int)rect.size.height;
-	Platform_Log2("WINPOS: %i, %i", &windowX, &windowY);
+	Platform_Log4("WINPOS: %i, %i (%i, %i)", &windowX, &windowY, &Window_Width, &Window_Height);
 }
 
 void Window_Init(void) {
@@ -3774,7 +3775,7 @@ void Window_ProcessEvents(void) {
 		case  4: /* NSRightMouseUp */
 		case 26: /* NSOtherMouseUp */
 			key = Window_MapMouse((int)objc_msgSend(ev, sel_registerName("buttonNumber")));
-			if (key) Input_SetPressed(key, true);
+			if (key) Input_SetPressed(key, false);
 			break;
 
 		case 10: /* NSKeyDown */
@@ -3795,17 +3796,20 @@ void Window_ProcessEvents(void) {
 		case  6: /* NSLeftMouseDragged */
 		case  7: /* NSRightMouseDragged */
 		case 27: /* NSOtherMouseDragged */
-			loc = Send_CGPoint((id)objc_getClass("NSEvent"), sel_registerName("mouseLocation"));
-
-			mouseX = (int)loc.x - windowX;
+			loc    = Send_CGPoint((id)objc_getClass("NSEvent"), sel_registerName("mouseLocation"));
+			mouseX = (int)loc.x - windowX;	
 			mouseY = (int)loc.y - windowY;
+			/* need to flip Y coordinates because cocoa has window origin at bottom left */
+			mouseY = Window_Height - mouseY;
+
 			Platform_Log2("MOUSE: %i, %i", &mouseX, &mouseY);
 			Pointer_SetPosition(0, mouseX, mouseY);
 
-			dx  = Send_CGFloat(ev, sel_registerName("deltaX"));
-			dy  = Send_CGFloat(ev, sel_registerName("deltaY"));
-
-			if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
+			if (Input_RawMode) {
+				dx = Send_CGFloat(ev, sel_registerName("deltaX"));
+				dy = Send_CGFloat(ev, sel_registerName("deltaY"));
+				Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
+			}
 			break;
 
 		}

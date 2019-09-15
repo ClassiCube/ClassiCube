@@ -21,7 +21,8 @@ static void Window_RefreshBounds(void) {
 	NSRect rect;
 
 	view = [winHandle contentView];
-	rect = [view frame];
+	rect = [view bounds];
+	rect = [winHandle convertRectToScreen: rect];
 
 	windowX = (int)rect.origin.x;
 	windowY = (int)rect.origin.y;
@@ -137,6 +138,8 @@ void Window_ProcessEvents1(void) {
 
 			mouseX = (int)loc.x - windowX;
 			mouseY = (int)loc.y - windowY;
+			/* need to flip Y coordinates because cocoa has window origin at bottom left */
+			mouseY = Window_Height - mouseY;
 			Pointer_SetPosition(0, mouseX, mouseY);
 
 			if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
