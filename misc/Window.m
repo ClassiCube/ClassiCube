@@ -94,7 +94,7 @@ void Window_ProcessEvents(void) {
 
 		case NSKeyUp:
 			key = Window_MapKey([ev keyCode]);
-			if (key) Input_SetPressed(key, true);
+			if (key) Input_SetPressed(key, false);
 			break;
 
 		case NSScrollWheel:

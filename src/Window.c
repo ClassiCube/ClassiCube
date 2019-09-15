@@ -3785,7 +3785,7 @@ void Window_ProcessEvents(void) {
 
 		case 11: /* NSKeyUp */
 			key = Window_MapKey((int)objc_msgSend(ev, sel_registerName("keyCode")));
-			if (key) Input_SetPressed(key, true);
+			if (key) Input_SetPressed(key, false);
 			break;
 
 		case 22: /* NSScrollWheel */

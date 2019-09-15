@@ -527,6 +527,7 @@ static void TableWidget_MakeBlockDesc(String* desc, BlockID block) {
 	String name;
 	int block_ = block;
 	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
+	if (block == BLOCK_AIR) return;
 
 	name = Block_UNSAFE_GetName(block);
 	String_AppendString(desc, &name);
@@ -558,9 +559,9 @@ void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
 	struct DrawTextArgs args;
 
 	Gfx_DeleteTexture(&w->descTex.ID);
-	if (block == BLOCK_AIR) return;
 	String_InitArray(desc, descBuffer);
 	TableWidget_MakeBlockDesc(&desc, block);
+	if (!desc.length) return;
 	
 	DrawTextArgs_Make(&args, &desc, w->font, true);
 	Drawer2D_MakeTextTexture(&w->descTex, &args);
@@ -618,7 +619,7 @@ static void TableWidget_Render(void* widget, double delta) {
 	}
 
 	cellSize = w->cellSize;
-	if (w->selectedIndex != -1 && Game_ClassicMode) {
+	if (w->selectedIndex != -1 && Game_ClassicMode && w->blocks[w->selectedIndex] != BLOCK_AIR) {
 		TableWidget_GetCoords(w, w->selectedIndex, &x, &y);
 
 		off  = cellSize * 0.1f;
