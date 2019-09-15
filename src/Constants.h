@@ -12,8 +12,8 @@
 #define GAME_APP_NAME  "ClassiCube web client"
 #define GAME_APP_TITLE "ClassiCube"
 #else
-#define GAME_APP_NAME  "ClassiCube 1.0.7"
-#define GAME_APP_TITLE "ClassiCube 1.0.7"
+#define GAME_APP_NAME  "ClassiCube 1.0.7 beta"
+#define GAME_APP_TITLE "ClassiCube 1.0.7 beta"
 #endif
 
 /* Max number of characters strings can have. */
