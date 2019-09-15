@@ -1458,6 +1458,29 @@ static void Window_CommonInit(void) {
 	Display_BitsPerPixel  = CGDisplayBitsPerPixel(display);
 }
 
+/* Sourced from https://www.meandmark.com/keycodes.html */
+static const cc_uint8 key_map[8 * 16] = {
+	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
+	'Y', 'T', '1', '2', '3', '4', '6', '5', KEY_EQUALS, '9', '7', KEY_MINUS, '8', '0', KEY_RBRACKET, 'O',
+	'U', KEY_LBRACKET, 'I', 'P', KEY_ENTER, 'L', 'J', KEY_QUOTE, 'K', KEY_SEMICOLON, KEY_BACKSLASH, KEY_COMMA, KEY_SLASH, 'N', 'M', KEY_PERIOD,
+	KEY_TAB, KEY_SPACE, KEY_TILDE, KEY_BACKSPACE, 0, KEY_ESCAPE, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
+	0, KEY_KP_DECIMAL, 0, KEY_KP_MULTIPLY, 0, KEY_KP_PLUS, 0, 0, 0, 0, 0, KEY_KP_DIVIDE, KEY_KP_ENTER, 0, KEY_KP_MINUS, 0,
+	0, KEY_KP_ENTER, KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP7, 0, KEY_KP8, KEY_KP9, 'N', 'M', KEY_PERIOD,
+	KEY_F5, KEY_F6, KEY_F7, KEY_F3, KEY_F8, KEY_F9, 0, KEY_F11, 0, KEY_F13, 0, KEY_F14, 0, KEY_F10, 0, KEY_F12,
+	'U', KEY_F15, KEY_INSERT, KEY_HOME, KEY_PAGEUP, KEY_DELETE, KEY_F4, KEY_END, KEY_F2, KEY_PAGEDOWN, KEY_F1, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, 0,
+};
+static Key Window_MapKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+/* TODO: Check these.. */
+/*   case 0x37: return KEY_LWIN; */
+/*   case 0x38: return KEY_LSHIFT; */
+/*   case 0x3A: return KEY_LALT; */
+/*   case 0x3B: return Key_ControlLeft; */
+
+/* TODO: Verify these differences from OpenTK */
+/*Backspace = 51,  (0x33, KEY_DELETE according to that link)*/
+/*Return = 52,     (0x34, ??? according to that link)*/
+/*Menu = 110,      (0x6E, ??? according to that link)*/
+
 /* NOTE: All Pasteboard functions are OSX 10.3 or later */
 static PasteboardRef Window_GetPasteboard(void) {
 	PasteboardRef pbRef;
@@ -1542,28 +1565,6 @@ static void GLContext_SetFullscreen(void);
 /*########################################################################################################################*
 *-----------------------------------------------------Private details-----------------------------------------------------*
 *#########################################################################################################################*/
-/* Sourced from https://www.meandmark.com/keycodes.html */
-static const cc_uint8 key_map[8 * 16] = {
-	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
-	'Y', 'T', '1', '2', '3', '4', '6', '5', KEY_EQUALS, '9', '7', KEY_MINUS, '8', '0', KEY_RBRACKET, 'O',
-	'U', KEY_LBRACKET, 'I', 'P', KEY_ENTER, 'L', 'J', KEY_QUOTE, 'K', KEY_SEMICOLON, KEY_BACKSLASH, KEY_COMMA, KEY_SLASH, 'N', 'M', KEY_PERIOD,
-	KEY_TAB, KEY_SPACE, KEY_TILDE, KEY_BACKSPACE, 0, KEY_ESCAPE, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
-	0, KEY_KP_DECIMAL, 0, KEY_KP_MULTIPLY, 0, KEY_KP_PLUS, 0, 0, 0, 0, 0, KEY_KP_DIVIDE, KEY_KP_ENTER, 0, KEY_KP_MINUS, 0,
-	0, KEY_KP_ENTER, KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP7, 0, KEY_KP8, KEY_KP9, 'N', 'M', KEY_PERIOD,
-	KEY_F5, KEY_F6, KEY_F7, KEY_F3, KEY_F8, KEY_F9, 0, KEY_F11, 0, KEY_F13, 0, KEY_F14, 0, KEY_F10, 0, KEY_F12,
-	'U', KEY_F15, KEY_INSERT, KEY_HOME, KEY_PAGEUP, KEY_DELETE, KEY_F4, KEY_END, KEY_F2, KEY_PAGEDOWN, KEY_F1, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, 0,
-};
-static Key Window_MapKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
-/* TODO: Check these.. */
-/*   case 0x37: return KEY_LWIN; */
-/*   case 0x38: return KEY_LSHIFT; */
-/*   case 0x3A: return KEY_LALT; */
-/*   case 0x3B: return Key_ControlLeft; */
-
-/* TODO: Verify these differences from OpenTK */
-/*Backspace = 51,  (0x33, KEY_DELETE according to that link)*/
-/*Return = 52,     (0x34, ??? according to that link)*/
-/*Menu = 110,      (0x6E, ??? according to that link)*/
 static void Window_RefreshBounds(void) {
 	Rect r;
 	if (win_fullscreen) return;
@@ -3730,33 +3731,77 @@ void Window_ExitFullscreen(void) { }
 void Window_SetSize(int width, int height) { }
 void Window_Close(void) { }
 
-#define NSMouseMoved        5
-#define NSLeftMouseDragged  6
-#define NSRightMouseDragged 7
-#define NSKeyDown           10
-#define NSKeyUp             11
-#define NSScrollWheel       22
-#define NSOtherMouseDragged 27
+static CC_INLINE CGFloat Send_CGFloat(id receiver, SEL sel) {
+	/* Sometimes we have to use fpret and sometimes we don't. See this for more details: */
+	/* http://www.sealiesoftware.com/blog/archive/2008/11/16/objc_explain_objc_msgSend_fpret.html */
+	/* return type is void*, but we cannot cast a void* to a float or double */
+
+#ifdef __i386__
+	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend_fpret)(receiver, sel);
+#else
+	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
+#endif
+}
+
+static int Window_MapMouse(int button) {
+	if (button == 0) return KEY_LMOUSE;
+	if (button == 1) return KEY_RMOUSE;
+	if (button == 2) return KEY_MMOUSE;
+	return 0;
+}
 
 void Window_ProcessEvents(void) {
 	id ev;
-	int button, type;
+	int key, type;
+	CGFloat dx, dy;
+	CGPoint loc;
 
 	for (;;) {
 		ev = objc_msgSend(appHandle, selNextEvent, 0xFFFFFFFFU, NULL, NSDefaultRunLoopMode, true);
 		if (!ev) break;
 		type = (int)objc_msgSend(ev, selType);
 
+		// TODO: check if dialog is showing 
+		// TODO: Only raise these events inside the window 
 		switch (type) {
 		case  1: /* NSLeftMouseDown  */
 		case  3: /* NSRightMouseDown */
 		case 25: /* NSOtherMouseDown */
-			button = (int)objc_msgSend(ev, sel_registerName("buttonNumber"));
+			key = Window_MapMouse((int)objc_msgSend(ev, sel_registerName("buttonNumber")));
+			if (key) Input_SetPressed(key, true);
+			break;
 
 		case  2: /* NSLeftMouseUp  */
 		case  4: /* NSRightMouseUp */
 		case 26: /* NSOtherMouseUp */
-			button = (int)objc_msgSend(ev, sel_registerName("buttonNumber"));
+			key = Window_MapMouse((int)objc_msgSend(ev, sel_registerName("buttonNumber")));
+			if (key) Input_SetPressed(key, true);
+			break;
+
+		case 10: /* NSKeyDown */
+			key = Window_MapKey((int)objc_msgSend(ev, sel_registerName("keyCode")));
+			if (key) Input_SetPressed(key, true);
+			break;
+
+		case 11: /* NSKeyUp */
+			key = Window_MapKey((int)objc_msgSend(ev, sel_registerName("keyCode")));
+			if (key) Input_SetPressed(key, true);
+			break;
+
+		case 22: /* NSScrollWheel */
+			Mouse_SetWheel(Mouse_Wheel + Send_CGFloat(ev, sel_registerName("deltaY"));
+			break;
+
+		case  5: /* NSMouseMoved */
+		case  6: /* NSLeftMouseDragged */
+		case  7: /* NSRightMouseDragged */
+		case 27: /* NSOtherMouseDragged */
+			loc = [NSEvent mouseLocation];
+			dx  = Send_CGFloat(ev, sel_registerName("deltaX"));
+			dy  = Send_CGFloat(ev, sel_registerName("deltaY"));
+
+			if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
+			break;
 
 		}
 		Platform_Log1("EVENT: %i", &type);

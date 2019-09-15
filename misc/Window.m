@@ -1,15 +1,20 @@
 #include "Window.h"
 #include "Platform.h"
+#include "Input.h"
+#include "Event.h"
 #import <Cocoa/Cocoa.h>
 
 // this is the source used to generate the raw code used in window.c
 // clang -rewrite-objc winmm.m
 // generates a winmm.cpp with the objective C code as C++
+// I also compile the game including this file and manually verify assembly output
 
 static NSApplication* appHandle;
 static NSWindow* winHandle;
 
 extern void Window_CommonInit(void);
+extern int Window_MapKey(UInt32 key);
+
 void Window_Init(void) {
 	appHandle = [NSApplication sharedApplication];
 	[appHandle activateIgnoringOtherApps: YES];
@@ -50,12 +55,17 @@ void Window_SetTitle(const String* title) {
 }
 
 static int Window_MapMouse(int button) {
-	if (button == 0) return Key_
+	if (button == 0) return KEY_LMOUSE;
+	if (button == 1) return KEY_RMOUSE;
+	if (button == 2) return KEY_MMOUSE;
+	return 0;
 }
 
 void Window_ProcessEvents(void) {
 	NSEvent* ev;
-	int type, button;
+	NSPoint loc;
+	CGFloat dx, dy;
+	int type, key;
 
 	for (;;) {
 		ev = [appHandle nextEventMatchingMask: 0xFFFFFFFFU untilDate:Nil inMode:NSDefaultRunLoopMode dequeue:YES];
@@ -66,12 +76,41 @@ void Window_ProcessEvents(void) {
 		case NSLeftMouseDown:
 		case NSRightMouseDown:
 		case NSOtherMouseDown:
-			button = [ev buttonNumber];
+			key = Window_MapMouse([ev buttonNumber]);
+			if (key) Input_SetPressed(key, true);
+			break;
 
 		case NSLeftMouseUp:
 		case NSRightMouseUp:
 		case NSOtherMouseUp:
-			button = [ev buttonNumber];
+			key = Window_MapMouse([ev buttonNumber]);
+			if (key) Input_SetPressed(key, false);
+			break;
+		
+		case NSKeyDown:
+			key = Window_MapKey([ev keyCode]);
+			if (key) Input_SetPressed(key, true);
+			break;
+
+		case NSKeyUp:
+			key = Window_MapKey([ev keyCode]);
+			if (key) Input_SetPressed(key, true);
+			break;
+
+		case NSScrollWheel:
+			Mouse_SetWheel(Mouse_Wheel + [ev deltaY]);
+			break;
+
+		case NSMouseMoved:
+		case NSLeftMouseDragged:
+		case NSRightMouseDragged:
+		case NSOtherMouseDragged:
+			loc = [NSEvent mouseLocation];
+			dx  = [ev deltaX];
+			dy  = [ev deltaY];
+
+			if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
+			break;
 		}
 
 		Platform_Log1("EVENT: %i", &type);
