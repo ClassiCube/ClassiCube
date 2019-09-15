@@ -1446,6 +1446,7 @@ void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 *#########################################################################################################################*/
 #if defined CC_BUILD_CARBON || defined CC_BUILD_COCOA
 #include <ApplicationServices/ApplicationServices.h>
+static int windowX, windowY;
 
 static void Window_CommonInit(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
@@ -1555,7 +1556,6 @@ void Window_CloseKeyboard(void) { }
 #include <dlfcn.h>
 
 static WindowRef win_handle;
-static int windowX, windowY;
 static bool win_fullscreen, showingDialog;
 
 /* fullscreen is tied to OpenGL context unfortunately */
@@ -1772,7 +1772,7 @@ static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, l
 typedef EventTargetRef (*GetMenuBarEventTarget_Func)(void);
 
 static void Window_ConnectEvents(void) {
-	static EventTypeSpec winEventTypes[] = {
+	static const EventTypeSpec winEventTypes[] = {
 		{ kEventClassKeyboard, kEventRawKeyDown },
 		{ kEventClassKeyboard, kEventRawKeyRepeat },
 		{ kEventClassKeyboard, kEventRawKeyUp },
@@ -1788,7 +1788,7 @@ static void Window_ConnectEvents(void) {
 		{ kEventClassTextInput,  kEventTextInputUnicodeForKeyEvent },
 		{ kEventClassAppleEvent, kEventAppleEvent }
 	};
-	static EventTypeSpec appEventTypes[] = {
+	static const EventTypeSpec appEventTypes[] = {
 		{ kEventClassMouse, kEventMouseDown },
 		{ kEventClassMouse, kEventMouseUp },
 		{ kEventClassMouse, kEventMouseMoved },
@@ -3670,14 +3670,40 @@ void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 #include <objc/message.h>
 #include <objc/runtime.h>
 static id appHandle, winHandle;
-static SEL selAlloc, selInit;
-static SEL selNextEvent, selType, selSendEvent;
 extern void* NSDefaultRunLoopMode;
 
-void Window_Init(void) {
-	selAlloc = sel_registerName("alloc");
-	selInit  = sel_registerName("init");
+static CC_INLINE CGFloat Send_CGFloat(id receiver, SEL sel) {
+	/* Sometimes we have to use fpret and sometimes we don't. See this for more details: */
+	/* http://www.sealiesoftware.com/blog/archive/2008/11/16/objc_explain_objc_msgSend_fpret.html */
+	/* return type is void*, but we cannot cast a void* to a float or double */
 
+#ifdef __i386__
+	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend_fpret)(receiver, sel);
+#else
+	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
+#endif
+}
+
+static CC_INLINE CGPoint Send_CGPoint(id receiver, SEL sel) {
+	/* on x86 and x86_64 CGPoint fit the requirements for 'struct returned in registers' */
+	return ((CGPoint(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
+}
+
+static void Window_RefreshBounds(void) {
+	id view;
+	CGRect rect;
+
+	view = objc_msgSend(winHandle, sel_registerName("contentView"));
+	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, sel_registerName("frame"));
+
+	windowX = (int)rect.origin.x;
+	windowY = (int)rect.origin.y;
+	Window_Width  = (int)rect.size.width;
+	Window_Height = (int)rect.size.height;
+	Platform_Log2("WINPOS: %i, %i", &windowX, &windowY);
+}
+
+void Window_Init(void) {
 	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
 	objc_msgSend(appHandle, sel_registerName("activateIgnoringOtherApps:"), true);
 	Window_CommonInit();
@@ -3701,15 +3727,12 @@ void Window_Create(int width, int height) {
 	rect.size.height = height;
 	// TODO: opentk seems to flip y?
 
-	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), selAlloc);
+	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), sel_registerName("alloc"));
 	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
 
 	// TODO: move to setVisible
 	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
-
-	selNextEvent = sel_registerName("nextEventMatchingMask:untilDate:inMode:dequeue:");
-	selType      = sel_registerName("type");
-	selSendEvent = sel_registerName("sendEvent:");
+	Window_RefreshBounds();
 }
 
 void Window_SetTitle(const String* title) {
@@ -3728,19 +3751,14 @@ int Window_GetWindowState(void) { return 0; }
 void Window_EnterFullscreen(void) { }
 void Window_ExitFullscreen(void) { }
 
-void Window_SetSize(int width, int height) { }
-void Window_Close(void) { }
+void Window_SetSize(int width, int height) { 
+	CGSize size;
+	size.width = width; size.height = height;
+	objc_msgSend(winHandle, sel_registerName("setContentSize"), size);
+}
 
-static CC_INLINE CGFloat Send_CGFloat(id receiver, SEL sel) {
-	/* Sometimes we have to use fpret and sometimes we don't. See this for more details: */
-	/* http://www.sealiesoftware.com/blog/archive/2008/11/16/objc_explain_objc_msgSend_fpret.html */
-	/* return type is void*, but we cannot cast a void* to a float or double */
-
-#ifdef __i386__
-	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend_fpret)(receiver, sel);
-#else
-	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
-#endif
+void Window_Close(void) { 
+	objc_msgSend(winHandle, sel_registerName("close"));
 }
 
 static int Window_MapMouse(int button) {
@@ -3752,14 +3770,14 @@ static int Window_MapMouse(int button) {
 
 void Window_ProcessEvents(void) {
 	id ev;
-	int key, type;
+	int key, type, mouseX, mouseY;
 	CGFloat dx, dy;
 	CGPoint loc;
 
 	for (;;) {
-		ev = objc_msgSend(appHandle, selNextEvent, 0xFFFFFFFFU, NULL, NSDefaultRunLoopMode, true);
+		ev = objc_msgSend(appHandle, sel_registerName("nextEventMatchingMask:untilDate:inMode:dequeue:"), 0xFFFFFFFFU, NULL, NSDefaultRunLoopMode, true);
 		if (!ev) break;
-		type = (int)objc_msgSend(ev, selType);
+		type = (int)objc_msgSend(ev, sel_registerName("type"));
 
 		// TODO: check if dialog is showing 
 		// TODO: Only raise these events inside the window 
@@ -3789,14 +3807,20 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case 22: /* NSScrollWheel */
-			Mouse_SetWheel(Mouse_Wheel + Send_CGFloat(ev, sel_registerName("deltaY"));
+			Mouse_SetWheel(Mouse_Wheel + Send_CGFloat(ev, sel_registerName("deltaY")));
 			break;
 
 		case  5: /* NSMouseMoved */
 		case  6: /* NSLeftMouseDragged */
 		case  7: /* NSRightMouseDragged */
 		case 27: /* NSOtherMouseDragged */
-			loc = [NSEvent mouseLocation];
+			loc = Send_CGPoint((id)objc_getClass("NSEvent"), sel_registerName("mouseLocation"));
+
+			mouseX = (int)loc.x - windowX;
+			mouseY = (int)loc.y - windowY;
+			Platform_Log2("MOUSE: %i, %i", &mouseX, &mouseY);
+			Pointer_SetPosition(0, mouseX, mouseY);
+
 			dx  = Send_CGFloat(ev, sel_registerName("deltaX"));
 			dy  = Send_CGFloat(ev, sel_registerName("deltaY"));
 
@@ -3805,7 +3829,7 @@ void Window_ProcessEvents(void) {
 
 		}
 		Platform_Log1("EVENT: %i", &type);
-		objc_msgSend(appHandle, selSendEvent, ev);
+		objc_msgSend(appHandle, sel_registerName("sendEvent:"), ev);
 	}
 }
 
@@ -3817,9 +3841,8 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	CFStringRef titleCF, msgCF;
 	id alert;
 	
-	// TODO: what if called before selAlloc is set to something
-	alert   = objc_msgSend((id)objc_getClass("NSAlert"), selAlloc);
-	alert   = objc_msgSend(alert, selInit);
+	alert   = objc_msgSend((id)objc_getClass("NSAlert"), sel_registerName("alloc"));
+	alert   = objc_msgSend(alert, sel_registerName("init"));
 	titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
 	msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
 	

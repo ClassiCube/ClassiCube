@@ -11,11 +11,36 @@
 
 static NSApplication* appHandle;
 static NSWindow* winHandle;
+static int windowX, windowY;
 
 extern void Window_CommonInit(void);
 extern int Window_MapKey(UInt32 key);
 
-void Window_Init(void) {
+static void Window_RefreshBounds(void) {
+	NSView* view;
+	NSRect rect;
+
+	view = [winHandle contentView];
+	rect = [view frame];
+
+	windowX = (int)rect.origin.x;
+	windowY = (int)rect.origin.y;
+	Window_Width  = (int)rect.size.width;
+	Window_Height = (int)rect.size.height;
+	Platform_Log2("WINPOS: %i, %i", &windowX, &windowY);
+}
+
+void Window_SetSize1(int width, int height) {
+	NSSize size; 
+	size.width = width; size.height = height;
+	[winHandle setContentSize: size];
+}
+
+void Window_Close1(void) {
+	[winHandle close];
+}
+
+void Window_Init1(void) {
 	appHandle = [NSApplication sharedApplication];
 	[appHandle activateIgnoringOtherApps: YES];
 	Window_CommonInit();
@@ -24,7 +49,7 @@ void Window_Init(void) {
 #define Display_CentreX(width)  (Display_Bounds.X + (Display_Bounds.Width  - width)  / 2)
 #define Display_CentreY(height) (Display_Bounds.Y + (Display_Bounds.Height - height) / 2)
 
-void Window_Create(int width, int height) {
+void Window_Create1(int width, int height) {
 	NSRect rect;
 	// TODO: don't set, RefreshBounds
 	Window_Width  = width;
@@ -41,9 +66,10 @@ void Window_Create(int width, int height) {
 	[winHandle initWithContentRect: rect styleMask: NSTitledWindowMask|NSClosableWindowMask|NSResizableWindowMask|NSMiniaturizableWindowMask backing:0 defer:NO];
 
 	[winHandle makeKeyAndOrderFront: appHandle];
+	Window_RefreshBounds();
 }
 
-void Window_SetTitle(const String* title) {
+void Window_SetTitle1(const String* title) {
 	UInt8 str[600];
 	CFStringRef titleCF;
 	int len;
@@ -61,11 +87,11 @@ static int Window_MapMouse(int button) {
 	return 0;
 }
 
-void Window_ProcessEvents(void) {
+void Window_ProcessEvents1(void) {
 	NSEvent* ev;
 	NSPoint loc;
 	CGFloat dx, dy;
-	int type, key;
+	int type, key, mouseX, mouseY;
 
 	for (;;) {
 		ev = [appHandle nextEventMatchingMask: 0xFFFFFFFFU untilDate:Nil inMode:NSDefaultRunLoopMode dequeue:YES];
@@ -108,6 +134,10 @@ void Window_ProcessEvents(void) {
 			loc = [NSEvent mouseLocation];
 			dx  = [ev deltaX];
 			dy  = [ev deltaY];
+
+			mouseX = (int)loc.x - windowX;
+			mouseY = (int)loc.y - windowY;
+			Pointer_SetPosition(0, mouseX, mouseY);
 
 			if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
 			break;
