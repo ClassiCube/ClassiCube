@@ -136,14 +136,12 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_GL
 #define CC_BUILD_GLMODERN
 #define CC_BUILD_GLES
-#define CC_BUILD_EGL
 #define CC_BUILD_TOUCH
 #elif defined __linux__
 #define CC_BUILD_LINUX
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #define CC_BUILD_X11
-#define CC_BUILD_GLX
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #elif defined __APPLE__
@@ -151,7 +149,6 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #define CC_BUILD_CARBON
-#define CC_BUILD_AGL
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #elif defined __sun__
@@ -159,7 +156,6 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #define CC_BUILD_X11
-#define CC_BUILD_GLX
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #elif defined __FreeBSD__
@@ -167,7 +163,6 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #define CC_BUILD_X11
-#define CC_BUILD_GLX
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #elif defined __OpenBSD__
@@ -175,7 +170,6 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #define CC_BUILD_X11
-#define CC_BUILD_GLX
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #elif defined __NetBSD__
@@ -183,7 +177,6 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #define CC_BUILD_X11
-#define CC_BUILD_GLX
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
 #elif defined __EMSCRIPTEN__
@@ -193,7 +186,6 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_GLMODERN
 #define CC_BUILD_GLES
 #define CC_BUILD_WEBCANVAS
-#define CC_BUILD_WEBGL
 #define CC_BUILD_TOUCH
 #endif
 #endif

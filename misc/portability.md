@@ -31,21 +31,13 @@ Create a window, show a dialog window, set window contents, keyboard/mouse input
 Also monitor size, clipboard, cursor, raw relative mouse movement (optional)
 
 Define:
-- ```CC_BUILD_WINGUI``` - Use Win32 API (Windows)
-- ```CC_BUILD_CARBON``` - Use Carbon (OSX)
-- ```CC_BUILD_X11``` - Use X11/XLib
-- ```CC_BUILD_SDL``` - Use SDL library
-- ```CC_BUILD_WEBCANVAS``` - Use emscripten canvas
+- ```CC_BUILD_WINGUI``` - Use Win32 API (Windows) (WGL)
+- ```CC_BUILD_CARBON``` - Use Carbon (Mac OSX) (AGL)
+- ```CC_BUILD_X11``` - Use X11/XLib (unix-ish) (glX)
+- ```CC_BUILD_SDL``` - Use SDL library (SDL)
+- ```CC_BUILD_WEBCANVAS``` - Use emscripten canvas (WebGL)
 
-If using OpenGL, also OpenGL context creation
-
-Define:
-- ```CC_BUILD_WGL``` - Use WGL (Windows OpenGL)
-- ```CC_BUILD_AGL``` - Use AGL (Apple OpenGL)
-- ```CC_BUILD_GLX``` - Use glX (X11/XLib)
-- ```CC_BUILD_EGL``` - Use EGL (mainly for GLES)
-- ```CC_BUILD_SDL``` - Use SDL library
-- ```CC_BUILD_WEBGL``` - Use emscripten WebGL
+If using OpenGL, also OpenGL context management
 
 ### Logger
 Dump registers and backtrace, log unhandled errors (e.g. invalid memory read)
