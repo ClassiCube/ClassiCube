@@ -2234,7 +2234,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	provider = CGDataProviderCreateWithData(NULL, fb_bmp.Scan0,
 		Bitmap_DataSize(fb_bmp.Width, fb_bmp.Height), NULL);
 	image    = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
-		kCGBitmapByteOrder32Little | kCGImageAlphaFirst, provider, NULL, 0, 0);
+		kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
 
 	CGContextDrawImage(context, rect, image);
 	CGContextSynchronize(context);
@@ -2308,6 +2308,7 @@ static void GLContext_UnsetFullscreen(void) {
 	GLContext_SetDrawable();
 
 	win_fullscreen = false;
+	/* TODO: Eliminate this if possible */
 	Window_SetSize(ctx_windowWidth, ctx_windowHeight);
 }
 
@@ -2326,6 +2327,7 @@ static void GLContext_SetFullscreen(void) {
 	/* This is a weird hack to workaround a bug where the first time a context */
 	/* is made fullscreen, we just end up with a blank screen.  So we undo it as fullscreen */
 	/* and redo it as fullscreen. */
+	/* TODO: We really should'd need to do this. Need to debug on real hardware. */
 	if (!ctx_firstFullscreen) {
 		ctx_firstFullscreen = true;
 		GLContext_UnsetFullscreen();
@@ -3873,7 +3875,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	provider = CGDataProviderCreateWithData(NULL, fb_bmp.Scan0,
 		Bitmap_DataSize(fb_bmp.Width, fb_bmp.Height), NULL);
 	image = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
-		kCGBitmapByteOrder32Little | kCGImageAlphaFirst, provider, NULL, 0, 0);
+		kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
 
 	CGContextDrawImage(context, rect, image);
 	CGContextSynchronize(context);
