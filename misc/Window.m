@@ -2,6 +2,7 @@
 #include "Platform.h"
 #include "Input.h"
 #include "Event.h"
+#include "Logger.h"
 #import <Cocoa/Cocoa.h>
 
 // this is the source used to generate the raw code used in window.c
@@ -149,4 +150,66 @@ void Window_ProcessEvents1(void) {
 		Platform_Log1("EVENT: %i", &type);
 		[appHandle sendEvent:ev];
 	}
+}
+
+static NSOpenGLContext* ctxHandle;
+static NSOpenGLPixelFormat* SelectPixelFormat(struct GraphicsMode* mode, bool fullscreen) {
+	NSOpenGLPixelFormat* fmt;
+	uint32_t attribs[7] = {
+		NSOpenGLPFAColorSize,     0,
+		NSOpenGLPFADepthSize,     GLCONTEXT_DEFAULT_DEPTH,
+		NSOpenGLPFADoubleBuffer,  0, 0
+	};
+
+	attribs[1] = mode->R + mode->G + mode->B + mode->A;
+	attribs[5] = fullscreen ? NSOpenGLPFAFullScreen : 0;
+
+	fmt = [NSOpenGLPixelFormat alloc];
+	return [fmt initWithAttributes: attribs];
+}
+
+void GLContext_Init1(struct GraphicsMode* mode) {
+	NSView* view;
+	NSOpenGLPixelFormat* fmt;
+	
+	fmt = SelectPixelFormat(mode, true);
+	if (!fmt) {
+		Platform_LogConst("Failed to create full screen pixel format.");
+		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
+		fmt = SelectPixelFormat(mode, false);
+	}
+	if (!fmt) Logger_Abort("Choosing pixel format");
+
+	ctxHandle = [NSOpenGLContext alloc];
+	ctxHandle = [ctxHandle initWithFormat:fmt shareContext:Nil];
+	if (!ctxHandle) Logger_Abort("Failed to create OpenGL context");
+
+	view = [winHandle contentView];
+	[ctxHandle setView:view];
+	/* TODO: Support high DPI OSX */
+	/* [ctxHandle setWantsBestResolutionOpenGLSurface:YES]; */
+
+	[fmt release];
+	[ctxHandle makeCurrentContext];
+	[ctxHandle update];
+}
+
+void GLContext_Update1(void) {
+	[ctxHandle update];
+}
+
+void GLContext_Free1(void) {
+	[NSOpenGLContext clearCurrentContext];
+	[ctxHandle clearDrawable];
+	[ctxHandle release];
+}
+
+bool GLContext_SwapBuffers1(void) {
+	[ctxHandle flushBuffer];
+	return true; 
+}
+
+void GLContext_SetFpsLimit1(bool vsync, float minFrameMs) {
+	GLint value = vsync ? 1 : 0;
+	[ctxHandle setValues: &value forParameter: NSOpenGLCPSwapInterval];
 }

@@ -3691,11 +3691,6 @@ void Window_Init(void) {
 
 void Window_Create(int width, int height) {
 	CGRect rect;
-	// TODO: don't set, RefreshBounds
-	Window_Width  = width;
-	Window_Height = height;
-	Window_Exists = true;
-
 	rect.origin.x    = Display_CentreX(width);  
 	rect.origin.y    = Display_CentreY(height);
 	rect.size.width  = width; 
@@ -3704,6 +3699,7 @@ void Window_Create(int width, int height) {
 
 	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), sel_registerName("alloc"));
 	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
+	Window_Exists = true;
 
 	// TODO: move to setVisible
 	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
@@ -3892,9 +3888,69 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 	Mem_Free(bmp->Scan0);
 }
 
-void GLContext_Init(struct GraphicsMode* mode) { }
-void GLContext_Update(void) { }
-void GLContext_Free(void) { }
-bool GLContext_SwapBuffers(void) { return true; }
-void GLContext_SetFpsLimit(bool vsync, float minFrameMs) { }
+
+#define NSOpenGLPFADoubleBuffer 5
+#define NSOpenGLPFAColorSize    8
+#define NSOpenGLPFADepthSize    12
+#define NSOpenGLPFAStencilSize  13
+#define NSOpenGLPFAFullScreen   54
+#define NSOpenGLContextParameterSwapInterval 222
+
+static id ctxHandle;
+static id MakePixelFormat(struct GraphicsMode* mode, bool fullscreen) {
+	id fmt;
+	uint32_t attribs[7] = {
+		NSOpenGLPFAColorSize,    0,
+		NSOpenGLPFADepthSize,    GLCONTEXT_DEFAULT_DEPTH,
+		NSOpenGLPFADoubleBuffer, 0, 0
+	};
+
+	attribs[1] = mode->R + mode->G + mode->B + mode->A;
+	attribs[5] = fullscreen ? NSOpenGLPFAFullScreen : 0;
+	fmt = objc_msgSend((id)objc_getClass("NSOpenGLPixelFormat"), sel_registerName("alloc"));
+	return objc_msgSend(fmt, sel_registerName("initWithAttributes:"), attribs);
+}
+
+void GLContext_Init(struct GraphicsMode* mode) {
+	id view, fmt;
+
+	fmt = MakePixelFormat(mode, true);
+	if (!fmt) {
+		Platform_LogConst("Failed to create full screen pixel format.");
+		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
+		fmt = MakePixelFormat(mode, false);
+	}
+	if (!fmt) Logger_Abort("Choosing pixel format");
+
+	ctxHandle = objc_msgSend((id)objc_getClass("NSOpenGLContext"), sel_registerName("alloc"));
+	ctxHandle = objc_msgSend(ctxHandle, sel_registerName("initWithFormat:shareContext:"), fmt, NULL);
+	if (!ctxHandle) Logger_Abort("Failed to create OpenGL context");
+
+	view = objc_msgSend(winHandle, sel_registerName("contentView"));
+	objc_msgSend(ctxHandle, sel_registerName("setView:"), view);
+
+	objc_msgSend(fmt, sel_registerName("release"));
+	objc_msgSend(ctxHandle, sel_registerName("makeCurrentContext"));
+	objc_msgSend(ctxHandle, sel_registerName("update"));
+}
+
+void GLContext_Update(void) {
+	objc_msgSend(ctxHandle, sel_registerName("update"));
+}
+
+void GLContext_Free(void) { 
+	objc_msgSend((id)objc_getClass("NSOpenGLContext"), sel_registerName("clearCurrentContext"));
+	objc_msgSend(ctxHandle, sel_registerName("clearDrawable"));
+	objc_msgSend(ctxHandle, sel_registerName("release"));
+}
+
+bool GLContext_SwapBuffers(void) {
+	objc_msgSend(ctxHandle, sel_registerName("flushBuffer"));
+	return true; 
+}
+
+void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+	int value = vsync ? 1 : 0;
+	objc_msgSend(ctxHandle, sel_registerName("setValues:forParameter:"), &value, NSOpenGLContextParameterSwapInterval);
+}
 #endif
