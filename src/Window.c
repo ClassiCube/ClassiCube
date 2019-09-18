@@ -3684,6 +3684,7 @@ static void Window_DidDeminiaturize(id self, SEL cmd, id notification) {
 }
 
 static void Window_WillClose(id self, SEL cmd, id notification) {
+	Window_Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
