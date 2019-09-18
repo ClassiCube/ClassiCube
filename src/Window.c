@@ -477,11 +477,9 @@ void Window_Show(void) {
 
 int Window_GetWindowState(void) {
 	DWORD style = GetWindowLong(win_handle, GWL_STYLE);
-	if (style & WS_MINIMIZE) return WINDOW_STATE_MINIMISED;
 
-	if (style & WS_MAXIMIZE) {
-		return (style & WS_POPUP) ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_MAXIMISED;
-	}
+	if (style & WS_MINIMIZE)              return WINDOW_STATE_MINIMISED;
+	if (style & (WS_MAXIMIZE | WS_POPUP)) return WINDOW_STATE_FULLSCREEN;
 	return WINDOW_STATE_NORMAL;
 }
 
@@ -725,8 +723,6 @@ static XVisualInfo win_visual;
 static Atom wm_destroy, net_wm_state;
 static Atom net_wm_state_minimized;
 static Atom net_wm_state_fullscreen;
-static Atom net_wm_state_maximized_horizontal;
-static Atom net_wm_state_maximized_vertical;
 
 static Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
 static Atom xa_atom = 4;
@@ -835,8 +831,6 @@ static void Window_RegisterAtoms(void) {
 	net_wm_state = XInternAtom(display, "_NET_WM_STATE", false);
 	net_wm_state_minimized  = XInternAtom(display, "_NET_WM_STATE_MINIMIZED",  false);
 	net_wm_state_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", false);
-	net_wm_state_maximized_horizontal = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
-	net_wm_state_maximized_vertical   = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", false);
 
 	xa_clipboard   = XInternAtom(display, "CLIPBOARD",   false);
 	xa_targets     = XInternAtom(display, "TARGETS",     false);
@@ -963,7 +957,7 @@ void Window_Show(void) { XMapWindow(win_display, win_handle); }
 int Window_GetWindowState(void) {
 	Atom prop_type;
 	unsigned long items, after;
-	int prop_format;
+	int i, prop_format;
 	Atom* data = NULL;
 
 	XGetWindowProperty(win_display, win_handle,
@@ -971,18 +965,14 @@ int Window_GetWindowState(void) {
 		&prop_format, &items, &after, &data);
 
 	bool fullscreen = false, minimised = false;
-	int maximised = 0, i;
 
 	/* TODO: Check this works right */
 	if (data && items) {
 		for (i = 0; i < items; i++) {
 			Atom atom = data[i];
 
-			if (atom == net_wm_state_maximized_horizontal ||
-				atom == net_wm_state_maximized_vertical) {
-				maximised++;
-			} else if (atom == net_wm_state_minimized) {
-				minimised = true;
+			if (atom == net_wm_state_minimized) {
+				minimised  = true;
 			} else if (atom == net_wm_state_fullscreen) {
 				fullscreen = true;
 			}
@@ -992,7 +982,6 @@ int Window_GetWindowState(void) {
 
 	if (fullscreen)     return WINDOW_STATE_FULLSCREEN;
 	if (minimised)      return WINDOW_STATE_MINIMISED;
-	if (maximised == 2) return WINDOW_STATE_MAXIMISED;	
 	return WINDOW_STATE_NORMAL;
 }
 
@@ -2103,12 +2092,8 @@ void Window_Show(void) {
 }
 
 int Window_GetWindowState(void) {
-	if (win_fullscreen) return WINDOW_STATE_FULLSCREEN;
-
-	if (IsWindowCollapsed(win_handle))
-		return WINDOW_STATE_MINIMISED;
-	if (IsWindowInStandardState(win_handle, NULL, NULL))
-		return WINDOW_STATE_MAXIMISED;
+	if (win_fullscreen)                return WINDOW_STATE_FULLSCREEN;
+	if (IsWindowCollapsed(win_handle)) return WINDOW_STATE_MINIMISED;
 	return WINDOW_STATE_NORMAL;
 }
 
@@ -2475,9 +2460,8 @@ void Window_Show(void) { SDL_ShowWindow(win_handle); }
 
 int Window_GetWindowState(void) {
 	Uint32 flags = SDL_GetWindowFlags(win_handle);
-	if (flags & SDL_WINDOW_MINIMIZED) return WINDOW_STATE_MINIMISED;
-	if (flags & SDL_WINDOW_MAXIMIZED) return WINDOW_STATE_MAXIMISED;
 
+	if (flags & SDL_WINDOW_MINIMIZED)          return WINDOW_STATE_MINIMISED;
 	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) return WINDOW_STATE_FULLSCREEN;
 	return WINDOW_STATE_NORMAL;
 }
@@ -3916,6 +3900,8 @@ void GLContext_Init(struct GraphicsMode* mode) {
 
 	fmt = MakePixelFormat(mode, true);
 	if (!fmt) {
+		/* TODO: Test this works properly */
+		/* TODO: Should we juse use newer NSWindow fullscreen way */
 		Platform_LogConst("Failed to create full screen pixel format.");
 		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
 		fmt = MakePixelFormat(mode, false);

@@ -17,6 +17,57 @@ static int windowX, windowY;
 extern void Window_CommonInit(void);
 extern int Window_MapKey(UInt32 key);
 
+/*@interface ClassiCubeWindow : NSWindow { }
+@end
+
+@implementation ClassiCubeWindow*/
+
+@interface ClassiCubeWindowDelegate : NSObject<NSWindowDelegate> { }
+@end
+
+@implementation ClassiCubeWindowDelegate
+
+- (BOOL)canBecomeKeyWindow
+{
+	return YES;
+}
+
+- (BOOL)canBecomeMainWindow
+{
+	return YES;
+}
+
+- (void)windowDidResize:(NSNotification *)notification
+{
+	Window_RefreshBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
+}
+
+- (void)windowDidMove:(NSNotification *)notification
+{
+	Window_RefreshBounds();
+	GLContext_Update();
+}
+
+- (void)windowDidBecomeKey:(NSNotification *)notification
+{
+	Window_Focused = true;
+	Event_RaiseVoid(&WindowEvents.FocusChanged);
+}
+
+- (void)windowDidResignKey:(NSNotification *)notification
+{
+	Window_Focused = false;
+	Event_RaiseVoid(&WindowEvents.FocusChanged);
+}
+
+- (void)windowDidMiniaturize:(NSNotification *)notification
+{
+	Event_RaiseVoid(&WindowEvents.StateChanged);
+}
+@end
+
+
 static void Window_RefreshBounds(void) {
 	NSView* view;
 	NSRect rect;

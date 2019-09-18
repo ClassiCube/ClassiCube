@@ -32,7 +32,7 @@
 */
 
 /* The states the window can be in. */
-enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_MAXIMISED, WINDOW_STATE_FULLSCREEN };
+enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_FULLSCREEN };
 #define DISPLAY_DEFAULT_DPI 96
 
 /* Number of bits per pixel. (red bits + green bits + blue bits + alpha bits) */
