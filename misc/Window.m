@@ -17,25 +17,10 @@ static int windowX, windowY;
 extern void Window_CommonInit(void);
 extern int Window_MapKey(UInt32 key);
 
-/*@interface ClassiCubeWindow : NSWindow { }
-@end
-
-@implementation ClassiCubeWindow*/
-
-@interface ClassiCubeWindowDelegate : NSObject<NSWindowDelegate> { }
+@interface ClassiCubeWindowDelegate : NSObject { }
 @end
 
 @implementation ClassiCubeWindowDelegate
-
-- (BOOL)canBecomeKeyWindow
-{
-	return YES;
-}
-
-- (BOOL)canBecomeMainWindow
-{
-	return YES;
-}
 
 - (void)windowDidResize:(NSNotification *)notification
 {
@@ -64,6 +49,16 @@ extern int Window_MapKey(UInt32 key);
 - (void)windowDidMiniaturize:(NSNotification *)notification
 {
 	Event_RaiseVoid(&WindowEvents.StateChanged);
+}
+
+- (void)windowDidDeminiaturize:(NSNotification *)notification
+{
+	Event_RaiseVoid(&WindowEvents.StateChanged);
+}
+
+- (void)windowWillClose:(NSNotification *)notification
+{
+	Event_RaiseVoid(&WindowEvents.Closing);
 }
 @end
 

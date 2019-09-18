@@ -336,7 +336,6 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		UnregisterClass(CC_WIN_CLASSNAME, win_instance);
 
 		if (win_DC) ReleaseDC(win_handle, win_DC);
-		Event_RaiseVoid(&WindowEvents.Destroyed);
 		break;
 	}
 	return DefWindowProc(handle, message, wParam, lParam);
@@ -1071,7 +1070,6 @@ void Window_ProcessEvents(void) {
 		case DestroyNotify:
 			Platform_LogConst("Window destroyed");
 			Window_Exists = false;
-			Event_RaiseVoid(&WindowEvents.Destroyed);
 			break;
 
 		case ConfigureNotify:
@@ -1835,7 +1833,6 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 			
 		case kEventWindowClosed:
 			Window_Exists = false;
-			Event_RaiseVoid(&WindowEvents.Destroyed);
 			return 0;
 			
 		case kEventWindowBoundsChanged:
@@ -2632,9 +2629,7 @@ void Window_ProcessEvents(void) {
 		case SDL_QUIT:
 			Window_Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
-
 			SDL_DestroyWindow(win_handle);
-			Event_RaiseVoid(&WindowEvents.Destroyed);
 			break;
 		}
 	}
@@ -3096,7 +3091,6 @@ void Window_Close(void) {
 
 	Window_SetSize(0, 0);
 	Window_UnhookEvents();
-	Event_RaiseVoid(&WindowEvents.Destroyed);
 }
 
 void Window_ProcessEvents(void) { }
@@ -3438,7 +3432,6 @@ void Window_SetSize(int width, int height) { }
 void Window_Close(void) {
 	Window_Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
-	Event_RaiseVoid(&WindowEvents.Destroyed);
 	/* TODO: Do we need to call finish here */
 	/* ANativeActivity_finish(app->activity); */
 }
@@ -3643,7 +3636,7 @@ static CC_INLINE CGFloat Send_CGFloat(id receiver, SEL sel) {
 }
 
 static CC_INLINE CGPoint Send_CGPoint(id receiver, SEL sel) {
-	/* on x86 and x86_64 CGPoint fit the requirements for 'struct returned in registers' */
+	/* on x86 and x86_64 CGPoint fits the requirements for 'struct returned in registers' */
 	return ((CGPoint(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
 }
 
@@ -3662,6 +3655,53 @@ static void Window_RefreshBounds(void) {
 	Platform_Log4("WINPOS: %i, %i (%i, %i)", &windowX, &windowY, &Window_Width, &Window_Height);
 }
 
+static void Window_DidResize(id self, SEL cmd, id notification) {
+	Window_RefreshBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
+}
+
+static void Window_DidMove(id self, SEL cmd, id notification) {
+	Window_RefreshBounds();
+	GLContext_Update();
+}
+
+static void Window_DidBecomeKey(id self, SEL cmd, id notification) {
+	Window_Focused = true;
+	Event_RaiseVoid(&WindowEvents.FocusChanged);
+}
+
+static void Window_DidResignKey(id self, SEL cmd, id notification) {
+	Window_Focused = false;
+	Event_RaiseVoid(&WindowEvents.FocusChanged);
+}
+
+static void Window_DidMiniaturize(id self, SEL cmd, id notification) {
+	Event_RaiseVoid(&WindowEvents.StateChanged);
+}
+
+static void Window_DidDeminiaturize(id self, SEL cmd, id notification) {
+	Event_RaiseVoid(&WindowEvents.StateChanged);
+}
+
+static void Window_WillClose(id self, SEL cmd, id notification) {
+	Event_RaiseVoid(&WindowEvents.Closing);
+}
+
+static id Window_MakeDelegate(void) {
+	Class c = objc_allocateClassPair(objc_getClass("NSObject"), "CC_WindowFuncs", 0);
+
+	class_addMethod(c, sel_registerName("windowDidResize:"),        Window_DidResize,        "v@:@");
+	class_addMethod(c, sel_registerName("windowDidMove:"),          Window_DidMove,          "v@:@");
+	class_addMethod(c, sel_registerName("windowDidBecomeKey:"),     Window_DidBecomeKey,     "v@:@");
+	class_addMethod(c, sel_registerName("windowDidResignKey:"),     Window_DidResignKey,     "v@:@");
+	class_addMethod(c, sel_registerName("windowDidMiniaturize:"),   Window_DidMiniaturize,   "v@:@");
+	class_addMethod(c, sel_registerName("windowDidDeminiaturize:"), Window_DidDeminiaturize, "v@:@");
+	class_addMethod(c, sel_registerName("windowWillClose:"),        Window_WillClose,        "v@:@");
+
+	objc_registerClassPair(c);
+	return objc_msgSend(c, sel_registerName("alloc"));
+}
+
 void Window_Init(void) {
 	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
 	objc_msgSend(appHandle, sel_registerName("activateIgnoringOtherApps:"), true);
@@ -3675,6 +3715,8 @@ void Window_Init(void) {
 
 void Window_Create(int width, int height) {
 	CGRect rect;
+	id funcs;
+
 	rect.origin.x    = Display_CentreX(width);  
 	rect.origin.y    = Display_CentreY(height);
 	rect.size.width  = width; 
@@ -3684,6 +3726,9 @@ void Window_Create(int width, int height) {
 	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), sel_registerName("alloc"));
 	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
 	Window_Exists = true;
+
+	funcs = Window_MakeDelegate();
+	objc_msgSend(winHandle, sel_registerName("setDelegate:"), funcs);
 
 	// TODO: move to setVisible
 	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
