@@ -1649,6 +1649,18 @@ static void Window_CommonInit(void) {
 	Display_BitsPerPixel  = CGDisplayBitsPerPixel(display);
 }
 
+static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
+	Window_Close();
+	return 0;
+}
+
+static void Window_CommonCreate(void) {
+	Window_Exists = true;
+	/* for quit buttons in dock and menubar */
+	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
+		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
+}
+
 /* Sourced from https://www.meandmark.com/keycodes.html */
 static const cc_uint8 key_map[8 * 16] = {
 	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
@@ -1976,10 +1988,6 @@ static OSStatus Window_EventHandler(EventHandlerCallRef inCaller, EventRef inEve
 	return eventNotHandledErr;
 }
 
-static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
-	Window_Close();
-	return 0;
-}
 typedef EventTargetRef (*GetMenuBarEventTarget_Func)(void);
 
 static void Window_ConnectEvents(void) {
@@ -2016,9 +2024,6 @@ static void Window_ConnectEvents(void) {
 	target = GetApplicationEventTarget();
 	InstallEventHandler(target, NewEventHandlerUPP(Window_EventHandler),
 						Array_Elems(appEventTypes), appEventTypes, NULL, NULL);
-
-	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
-						NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
 
 	/* The code below is to get the menubar working. */
 	/* The documentation for 'RunApplicationEventLoop' states that it installs */
@@ -2066,7 +2071,7 @@ void Window_Create(int width, int height) {
 	
 	/* TODO: Use BringWindowToFront instead.. (look in the file which has RepositionWindow in it) !!!! */
 	Window_ConnectEvents();
-	Window_Exists = true;
+	Window_CommonCreate();
 	Window_Handle = win_handle;
 }
 
@@ -3726,8 +3731,8 @@ void Window_Create(int width, int height) {
 
 	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), sel_registerName("alloc"));
 	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
-	Window_Exists = true;
-
+	
+	Window_CommonCreate();
 	funcs = Window_MakeDelegate();
 	objc_msgSend(winHandle, sel_registerName("setDelegate:"), funcs);
 
