@@ -222,7 +222,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_MOUSEWHEEL:
 		wheelDelta = ((short)HIWORD(wParam)) / (float)WHEEL_DELTA;
-		Mouse_SetWheel(Mouse_Wheel + wheelDelta);
+		Mouse_ScrollWheel(wheelDelta);
 		return 0;
 
 	case WM_LBUTTONDOWN:
@@ -1104,8 +1104,8 @@ void Window_ProcessEvents(void) {
 			if (e.xbutton.button == 1)      Input_SetPressed(KEY_LMOUSE, true);
 			else if (e.xbutton.button == 2) Input_SetPressed(KEY_MMOUSE, true);
 			else if (e.xbutton.button == 3) Input_SetPressed(KEY_RMOUSE, true);
-			else if (e.xbutton.button == 4) Mouse_SetWheel(Mouse_Wheel + 1);
-			else if (e.xbutton.button == 5) Mouse_SetWheel(Mouse_Wheel - 1);
+			else if (e.xbutton.button == 4) Mouse_ScrollWheel(+1);
+			else if (e.xbutton.button == 5) Mouse_ScrollWheel(-1);
 			else if (e.xbutton.button == 6) Input_SetPressed(KEY_XBUTTON1,  true);
 			else if (e.xbutton.button == 7) Input_SetPressed(KEY_XBUTTON2,  true);
 			break;
@@ -1931,7 +1931,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 			res = GetEventParameter(inEvent, kEventParamMouseWheelDelta, typeSInt32,
 									NULL, sizeof(SInt32), NULL, &delta);
 			if (res) Logger_Abort2(res, "Getting mouse wheel delta");
-			Mouse_SetWheel(Mouse_Wheel + delta);
+			Mouse_ScrollWheel(delta);
 			return 0;
 			
 		case kEventMouseMoved:
@@ -2620,7 +2620,7 @@ void Window_ProcessEvents(void) {
 		case SDL_MOUSEBUTTONUP:
 			Window_HandleMouseEvent(&e); break;
 		case SDL_MOUSEWHEEL:
-			Mouse_SetWheel(Mouse_Wheel + e.wheel.y);
+			Mouse_ScrollWheel(e.wheel.y);
 			break;
 		case SDL_MOUSEMOTION:
 			Pointer_SetPosition(0, e.motion.x, e.motion.y);
@@ -2767,7 +2767,7 @@ static void Window_CorrectFocus(void) {
 
 static EM_BOOL Window_MouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
 	/* TODO: The scale factor isn't standardised.. is there a better way though? */
-	Mouse_SetWheel(Mouse_Wheel - Math_Sign(ev->deltaY));
+	Mouse_ScrollWheel(-Math_Sign(ev->deltaY));
 	Window_CorrectFocus();
 	return true;
 }
@@ -3813,7 +3813,7 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case 22: /* NSScrollWheel */
-			Mouse_SetWheel(Mouse_Wheel + Send_CGFloat(ev, sel_registerName("deltaY")));
+			Mouse_ScrollWheel(Send_CGFloat(ev, sel_registerName("deltaY")));
 			break;
 
 		case  5: /* NSMouseMoved */

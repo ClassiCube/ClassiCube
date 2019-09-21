@@ -72,8 +72,6 @@ void Input_SetPressed(Key key, bool pressed);
 void Key_Clear(void);
 typedef int MouseButton;
 
-/* Wheel position of the mouse. Use Mouse_SetWheel to change. */
-extern float Mouse_Wheel;
 /* Whether raw mouse/touch input is being listened for. */
 extern bool Input_RawMode;
 /* Whether touch input is being used. */
@@ -98,8 +96,8 @@ extern int Mouse_X, Mouse_Y;
 
 /* Raises PointerEvents.Up or PointerEvents.Down. */
 void Pointer_SetPressed(int idx, bool pressed);
-/* Sets wheel position of the mouse, always raising InputEvents.Wheel. */
-void Mouse_SetWheel(float wheel);
+/* Raises InputEvents.Wheel with the given wheel delta. */
+void Mouse_ScrollWheel(float delta);
 /* Sets X and Y position of the given pointer, always raising PointerEvents.Moved. */
 void Pointer_SetPosition(int idx, int x, int y);
 

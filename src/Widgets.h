@@ -157,20 +157,20 @@ struct MenuInputDesc {
 	} meta;
 };
 
-extern const struct MenuInputVTABLE HexValidator_VTABLE;
-extern const struct MenuInputVTABLE IntValidator_VTABLE;
-extern const struct MenuInputVTABLE SeedValidator_VTABLE;
-extern const struct MenuInputVTABLE FloatValidator_VTABLE;
-extern const struct MenuInputVTABLE PathValidator_VTABLE;
-extern const struct MenuInputVTABLE StringValidator_VTABLE;
+extern const struct MenuInputVTABLE HexInput_VTABLE;
+extern const struct MenuInputVTABLE IntInput_VTABLE;
+extern const struct MenuInputVTABLE SeedInput_VTABLE;
+extern const struct MenuInputVTABLE FloatInput_VTABLE;
+extern const struct MenuInputVTABLE PathInput_VTABLE;
+extern const struct MenuInputVTABLE StringInput_VTABLE;
 
-#define MenuInput_Hex(v, def) v.VTABLE = &HexValidator_VTABLE; v.meta.h.Default = def;
-#define MenuInput_Int(v, lo, hi, def) v.VTABLE = &IntValidator_VTABLE; v.meta.i.Min = lo; v.meta.i.Max = hi; v.meta.i.Default = def;
-#define MenuInput_Seed(v) v.VTABLE = &SeedValidator_VTABLE; v.meta.i.Min = Int32_MinValue; v.meta.i.Max = Int32_MaxValue;
-#define MenuInput_Float(v, lo, hi, def) v.VTABLE = &FloatValidator_VTABLE; v.meta.f.Min = lo; v.meta.f.Max = hi; v.meta.f.Default = def;
-#define MenuInput_Path(v) v.VTABLE = &PathValidator_VTABLE;
+#define MenuInput_Hex(v, def) v.VTABLE = &HexInput_VTABLE; v.meta.h.Default = def;
+#define MenuInput_Int(v, lo, hi, def) v.VTABLE = &IntInput_VTABLE; v.meta.i.Min = lo; v.meta.i.Max = hi; v.meta.i.Default = def;
+#define MenuInput_Seed(v) v.VTABLE = &SeedInput_VTABLE; v.meta.i.Min = Int32_MinValue; v.meta.i.Max = Int32_MaxValue;
+#define MenuInput_Float(v, lo, hi, def) v.VTABLE = &FloatInput_VTABLE; v.meta.f.Min = lo; v.meta.f.Max = hi; v.meta.f.Default = def;
+#define MenuInput_Path(v) v.VTABLE = &PathInput_VTABLE;
 #define MenuInput_Enum(v, names, count) v.VTABLE = NULL; v.meta.e.Names = names; v.meta.e.Count = count;
-#define MenuInput_String(v) v.VTABLE = &StringValidator_VTABLE;
+#define MenuInput_String(v) v.VTABLE = &StringInput_VTABLE;
 
 struct MenuInputWidget {
 	struct InputWidget base;

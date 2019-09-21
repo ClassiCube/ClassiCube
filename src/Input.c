@@ -125,7 +125,6 @@ void Key_Clear(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Mouse----------------------------------------------------------*
 *#########################################################################################################################*/
-float Mouse_Wheel;
 int Mouse_X, Mouse_Y;
 struct Pointer Pointers[INPUT_MAX_POINTERS];
 bool Input_RawMode, Input_TouchMode;
@@ -138,9 +137,7 @@ void Pointer_SetPressed(int idx, bool pressed) {
 	}
 }
 
-void Mouse_SetWheel(float wheel) {
-	float delta = wheel - Mouse_Wheel;
-	Mouse_Wheel = wheel;
+void Mouse_ScrollWheel(float delta) {
 	Event_RaiseFloat(&InputEvents.Wheel, delta);
 }
 
