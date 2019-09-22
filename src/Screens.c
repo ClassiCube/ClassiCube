@@ -365,7 +365,9 @@ static void StatusScreen_ContextRecreated(void* screen) {
 	s->posAtlas.tex.Y = y;
 
 	y += s->posAtlas.tex.Height;
-	TextWidget_Make(line2, ANCHOR_MIN, ANCHOR_MIN, 2, y);
+	TextWidget_Make(line2, ANCHOR_MIN, ANCHOR_MIN, 2, 0);
+	/* We can't pass y to TextWidget_Make because that DPI scales it */
+	line2->yOffset = y;
 
 	if (Game_ClassicMode) {
 		/* Swap around so 0.30 version is at top */
