@@ -711,9 +711,7 @@ static void MainScreen_Singleplayer(void* w, int x, int y) {
 	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
 }
 
-static bool MainScreen_PasswordFilter(char c) {
-	return c >= ' ' && c <= '~';
-}
+static bool MainScreen_PasswordFilter(char c) { return true; }
 
 static void MainScreen_Init(struct LScreen* s_) {
 	String user, pass; char passBuffer[STRING_SIZE];
