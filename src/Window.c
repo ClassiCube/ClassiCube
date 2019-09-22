@@ -1755,7 +1755,6 @@ void Cursor_SetPosition(int x, int y) {
 void Window_OpenKeyboard(void)  { }
 void Window_CloseKeyboard(void) { }
 
-
 void Window_EnableRawMouse(void) {
 	Window_DefaultEnableRawMouse();
 	CGAssociateMouseAndMouseCursorPosition(0);
@@ -3696,6 +3695,7 @@ static void Window_WillClose(id self, SEL cmd, id notification) {
 static id Window_MakeDelegate(void) {
 	Class c = objc_allocateClassPair(objc_getClass("NSObject"), "CC_WindowFuncs", 0);
 
+	// TODO: derive from NSWindow and implement keydown so no beeps when pressing keys.
 	class_addMethod(c, sel_registerName("windowDidResize:"),        Window_DidResize,        "v@:@");
 	class_addMethod(c, sel_registerName("windowDidMove:"),          Window_DidMove,          "v@:@");
 	class_addMethod(c, sel_registerName("windowDidBecomeKey:"),     Window_DidBecomeKey,     "v@:@");
@@ -3705,7 +3705,7 @@ static id Window_MakeDelegate(void) {
 	class_addMethod(c, sel_registerName("windowWillClose:"),        Window_WillClose,        "v@:@");
 
 	objc_registerClassPair(c);
-	return objc_msgSend(c, sel_registerName("alloc"));
+	return objc_msgSend((id)c, sel_registerName("alloc"));
 }
 
 void Window_Init(void) {
@@ -3732,6 +3732,7 @@ void Window_Create(int width, int height) {
 	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), sel_registerName("alloc"));
 	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
 	
+	// TODO: why is the menubar broken
 	Window_CommonCreate();
 	funcs = Window_MakeDelegate();
 	objc_msgSend(winHandle, sel_registerName("setDelegate:"), funcs);
@@ -3823,6 +3824,7 @@ void Window_ProcessEvents(void) {
 			loc    = Send_CGPoint((id)objc_getClass("NSEvent"), sel_registerName("mouseLocation"));
 			mouseX = (int)loc.x - windowX;	
 			mouseY = (int)loc.y - windowY;
+			// TODO: this seems to be off by 1
 			/* need to flip Y coordinates because cocoa has window origin at bottom left */
 			mouseY = Window_Height - mouseY;
 

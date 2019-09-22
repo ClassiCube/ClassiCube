@@ -430,6 +430,10 @@ static void LInput_KeyChar(void* widget, char c) {
 	LInput_Append(w, c);
 }
 
+static bool LInput_DefaultInputFilter(char c) {
+	return c >= ' ' && c <= '~' && c != '&';
+}
+
 static struct LWidgetVTABLE linput_VTABLE = {
 	LInput_Draw, LInput_TickCaret,
 	LInput_KeyDown, LInput_KeyChar, /* Key    */
@@ -440,6 +444,7 @@ static struct LWidgetVTABLE linput_VTABLE = {
 void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hintText) {
 	w->VTABLE = &linput_VTABLE;
 	w->TabSelectable = true;
+	w->TextFilter    = LInput_DefaultInputFilter;
 	String_InitArray(w->Text, w->_TextBuffer);
 	
 	w->Width    = Display_ScaleX(width);
@@ -468,7 +473,7 @@ void LInput_SetText(struct LInput* w, const String* text_) {
 }
 
 static CC_NOINLINE bool LInput_AppendRaw(struct LInput* w, char c) {
-	if (c >= ' ' && c <= '~' && c != '&' && w->Text.length < w->Text.capacity) {
+	if (w->TextFilter(c) && w->Text.length < w->Text.capacity) {
 		if (w->CaretPos == -1) {
 			String_Append(&w->Text, c);
 		} else {

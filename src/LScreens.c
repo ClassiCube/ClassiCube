@@ -421,6 +421,10 @@ static void ColoursScreen_ResetAll(void* w, int x, int y) {
 	Launcher_Redraw();
 }
 
+static bool ColoursScreen_InputFilter(char c) {
+	return c >= '0' && c <= '9';
+}
+
 static void ColoursScreen_Init(struct LScreen* s_) {
 	struct ColoursScreen* s = (struct ColoursScreen*)s_;
 	int i;
@@ -431,6 +435,7 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	
 	for (i = 0; i < 5 * 3; i++) {
 		LInput_Init(s_, &s->iptColours[i], 55, NULL);
+		s->iptColours[i].TextFilter  = ColoursScreen_InputFilter;
 		s->iptColours[i].TextChanged = ColoursScreen_TextChanged;
 	}
 
@@ -706,6 +711,10 @@ static void MainScreen_Singleplayer(void* w, int x, int y) {
 	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
 }
 
+static bool MainScreen_PasswordFilter(char c) {
+	return c >= ' ' && c <= '~';
+}
+
 static void MainScreen_Init(struct LScreen* s_) {
 	String user, pass; char passBuffer[STRING_SIZE];
 	struct MainScreen* s = (struct MainScreen*)s_;
@@ -739,7 +748,8 @@ static void MainScreen_Init(struct LScreen* s_) {
 	/* need to set text here for right size */
 	s->lblUpdate.Font = &Launcher_HintFont;
 	LLabel_SetConst(&s->lblUpdate, "&eChecking..");
-	s->iptPassword.Password = true;
+	s->iptPassword.Password   = true;
+	s->iptPassword.TextFilter = MainScreen_PasswordFilter;
 	
 	String_InitArray(pass, passBuffer);
 	Options_UNSAFE_Get("launcher-cc-username", &user);
