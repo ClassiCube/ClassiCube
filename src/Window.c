@@ -1745,6 +1745,13 @@ void Clipboard_SetText(const String* value) {
 	PasteboardPutItemFlavor(pbRef, 1, FMT_UTF8, cfData, 0);
 }
 
+void Cursor_SetPosition(int x, int y) {
+	CGPoint point;
+	point.x = x + windowX;
+	point.y = y + windowY;
+	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+}
+
 void Window_OpenKeyboard(void)  { }
 void Window_CloseKeyboard(void) { }
 
@@ -2148,13 +2155,6 @@ static void Cursor_GetRawPos(int* x, int* y) {
 	Point point;
 	GetGlobalMouse(&point);
 	*x = (int)point.h; *y = (int)point.v;
-}
-
-void Cursor_SetPosition(int x, int y) {
-	CGPoint point;
-	point.x = x + windowX;
-	point.y = y + windowY;
-	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
 }
 
 static bool cursorVisible = true;
@@ -3843,7 +3843,6 @@ void Window_ProcessEvents(void) {
 }
 
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
-void Cursor_SetPosition(int x, int y) { }
 void Cursor_SetVisible(bool visible) { }
 
 void Window_ShowDialog(const char* title, const char* msg) {
