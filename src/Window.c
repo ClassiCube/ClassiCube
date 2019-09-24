@@ -3692,8 +3692,10 @@ static void Window_WillClose(id self, SEL cmd, id notification) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
-static id Window_MakeDelegate(void) {
-	Class c = objc_allocateClassPair(objc_getClass("NSObject"), "CC_WindowFuncs", 0);
+static void Window_KeyDown(id self, SEL cmd, id ev) { }
+
+static Class Window_MakeClass(void) {
+	Class c = objc_allocateClassPair(objc_getClass("NSWindow"), "ClassiCube_Window", 0);
 
 	// TODO: derive from NSWindow and implement keydown so no beeps when pressing keys.
 	class_addMethod(c, sel_registerName("windowDidResize:"),        Window_DidResize,        "v@:@");
@@ -3703,9 +3705,10 @@ static id Window_MakeDelegate(void) {
 	class_addMethod(c, sel_registerName("windowDidMiniaturize:"),   Window_DidMiniaturize,   "v@:@");
 	class_addMethod(c, sel_registerName("windowDidDeminiaturize:"), Window_DidDeminiaturize, "v@:@");
 	class_addMethod(c, sel_registerName("windowWillClose:"),        Window_WillClose,        "v@:@");
+	class_addMethod(c, sel_registerName("keyDown:"),                Window_KeyDown,          "v@:@");
 
 	objc_registerClassPair(c);
-	return objc_msgSend((id)c, sel_registerName("alloc"));
+	return c;
 }
 
 void Window_Init(void) {
@@ -3720,8 +3723,8 @@ void Window_Init(void) {
 #define NSResizableWindowMask      (1 << 3)
 
 void Window_Create(int width, int height) {
+	Class winClass;
 	CGRect rect;
-	id funcs;
 
 	rect.origin.x    = Display_CentreX(width);  
 	rect.origin.y    = Display_CentreY(height);
@@ -3729,13 +3732,13 @@ void Window_Create(int width, int height) {
 	rect.size.height = height;
 	// TODO: opentk seems to flip y?
 
-	winHandle = objc_msgSend((id)objc_getClass("NSWindow"), sel_registerName("alloc"));
+	winClass  = Window_MakeClass();
+	winHandle = objc_msgSend(winClass, sel_registerName("alloc"));
 	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
 	
 	// TODO: why is the menubar broken
 	Window_CommonCreate();
-	funcs = Window_MakeDelegate();
-	objc_msgSend(winHandle, sel_registerName("setDelegate:"), funcs);
+	objc_msgSend(winHandle, sel_registerName("setDelegate:"), winHandle);
 
 	// TODO: move to setVisible
 	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
