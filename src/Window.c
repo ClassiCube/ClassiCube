@@ -3778,6 +3778,24 @@ static int Window_MapMouse(int button) {
 	return 0;
 }
 
+static void Window_ProcessKeyChars(id ev) {
+	char buffer[128];
+	const char* src;
+	String str;
+	id chars;
+	int i, len;
+
+	chars = objc_msgSend(ev,    sel_registerName("charactersIgnoringModifiers"));
+	src   = objc_msgSend(chars, sel_registerName("UTF8String"));
+	len   = String_CalcLen(src, UInt16_MaxValue);
+	String_InitArray(str, buffer);
+
+	String_AppendUtf8(&str, src, len);
+	for (i = 0; i < str.length; i++) {
+		Event_RaiseInt(&InputEvents.Press, str.buffer[i]);
+	}
+}
+
 void Window_ProcessEvents(void) {
 	id ev;
 	int key, type, mouseX, mouseY;
@@ -3811,6 +3829,7 @@ void Window_ProcessEvents(void) {
 			// TODO: don't intercept keys when dialog box open
 			key = Window_MapKey((int)objc_msgSend(ev, sel_registerName("keyCode")));
 			if (key) Input_SetPressed(key, true);
+			Window_ProcessKeyChars(ev);
 			break;
 
 		case 11: /* NSKeyUp */
