@@ -3697,7 +3697,6 @@ static void Window_KeyDown(id self, SEL cmd, id ev) { }
 static Class Window_MakeClass(void) {
 	Class c = objc_allocateClassPair(objc_getClass("NSWindow"), "ClassiCube_Window", 0);
 
-	// TODO: derive from NSWindow and implement keydown so no beeps when pressing keys.
 	class_addMethod(c, sel_registerName("windowDidResize:"),        Window_DidResize,        "v@:@");
 	class_addMethod(c, sel_registerName("windowDidMove:"),          Window_DidMove,          "v@:@");
 	class_addMethod(c, sel_registerName("windowDidBecomeKey:"),     Window_DidBecomeKey,     "v@:@");
@@ -3737,6 +3736,7 @@ void Window_Create(int width, int height) {
 	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
 	
 	// TODO: why is the menubar broken
+	// TODO: why does cursor position setting break on resize/move
 	Window_CommonCreate();
 	objc_msgSend(winHandle, sel_registerName("setDelegate:"), winHandle);
 
@@ -3807,6 +3807,8 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case 10: /* NSKeyDown */
+			// TODO: Does this allow using F11? if so we should port that to carbon
+			// TODO: don't intercept keys when dialog box open
 			key = Window_MapKey((int)objc_msgSend(ev, sel_registerName("keyCode")));
 			if (key) Input_SetPressed(key, true);
 			break;
@@ -3817,6 +3819,7 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case 22: /* NSScrollWheel */
+			// TODO: Why is this janky
 			Mouse_ScrollWheel(Send_CGFloat(ev, sel_registerName("deltaY")));
 			break;
 
@@ -3864,6 +3867,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	objc_msgSend(alert, sel_registerName("addButtonWithTitle:"), CFSTR("OK"));
 	objc_msgSend(alert, sel_registerName("runModal"));
 
+	// TODO: Make Escape and Enter close this
 	CFRelease(titleCF);
 	CFRelease(msgCF);
 }
@@ -3906,7 +3910,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	rect.size.height = Window_Height;
 
 	/* TODO: REPLACE THIS AWFUL HACK */
-
+	// TODO: This doesn't even work right, we need to move to drawRect
 	provider = CGDataProviderCreateWithData(NULL, fb_bmp.Scan0,
 		Bitmap_DataSize(fb_bmp.Width, fb_bmp.Height), NULL);
 	image = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,

@@ -1757,7 +1757,9 @@ bool Gfx_WarnIfNecessary(void) {
 
 	Chat_AddRaw("&cIntel graphics cards are known to have issues with the OpenGL build.");
 	Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");
-	Chat_AddRaw("&cFor Windows, try downloading the Direct3D 9 build instead.");
+#ifdef CC_BUILD_WIN
+	Chat_AddRaw("&cTry downloading the Direct3D 9 build instead.");
+#else
 	return true;
 }
 
