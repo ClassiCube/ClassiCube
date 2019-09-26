@@ -3650,6 +3650,7 @@ static void Window_RefreshBounds(void) {
 
 	view = objc_msgSend(winHandle, sel_registerName("contentView"));
 	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, sel_registerName("bounds"));
+	// TODO: Only works on 10.7+
 	rect = ((CGRect(*)(id, SEL, CGRect))(void *)objc_msgSend_stret)(winHandle, sel_registerName("convertRectToScreen:"), rect);
 
 	windowX = (int)rect.origin.x;
@@ -3720,6 +3721,7 @@ void Window_Init(void) {
 #define NSClosableWindowMask       (1 << 1)
 #define NSMiniaturizableWindowMask (1 << 2)
 #define NSResizableWindowMask      (1 << 3)
+#define NSFullScreenWindowMask     (1 << 14)
 
 void Window_Create(int width, int height) {
 	Class winClass;
@@ -3739,9 +3741,6 @@ void Window_Create(int width, int height) {
 	// TODO: why does cursor position setting break on resize/move
 	Window_CommonCreate();
 	objc_msgSend(winHandle, sel_registerName("setDelegate:"), winHandle);
-
-	// TODO: move to setVisible
-	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
 	Window_RefreshBounds();
 }
 
@@ -3756,12 +3755,30 @@ void Window_SetTitle(const String* title) {
 	objc_msgSend(winHandle, sel_registerName("setTitle:"), titleCF);
 }
 
-void Window_Show(void) { }
-int Window_GetWindowState(void) { return 0; }
-void Window_EnterFullscreen(void) { }
-void Window_ExitFullscreen(void) { }
+void Window_Show(void) { 
+	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
+	Window_RefreshBounds(); // TODO: even necessary?
+}
 
-void Window_SetSize(int width, int height) { 
+int Window_GetWindowState(void) {
+	int flags;
+
+	flags = (int)objc_msgSend(winHandle, sel_registerName("styleMask"));
+	if (flags & NSFullScreenWindowMask) return WINDOW_STATE_FULLSCREEN;
+
+	flags = (int)objc_msgSend(winHandle, sel_registerName("isMiniaturized"));
+	return flags ? WINDOW_STATE_MINIMISED : WINDOW_STATE_NORMAL;
+}
+
+// TODO: Only works on 10.7+
+void Window_EnterFullscreen(void) {
+	objc_msgSend(winHandle, sel_registerName("toggleFullScreen:"), appHandle);
+}
+void Window_ExitFullscreen(void) {
+	objc_msgSend(winHandle, sel_registerName("toggleFullScreen:"), appHandle);
+}
+
+void Window_SetSize(int width, int height) {
 	CGSize size;
 	size.width = width; size.height = height;
 	objc_msgSend(winHandle, sel_registerName("setContentSize"), size);
@@ -3829,6 +3846,7 @@ void Window_ProcessEvents(void) {
 			// TODO: don't intercept keys when dialog box open
 			key = Window_MapKey((int)objc_msgSend(ev, sel_registerName("keyCode")));
 			if (key) Input_SetPressed(key, true);
+			// TODO: Test works properly with other languages
 			Window_ProcessKeyChars(ev);
 			break;
 
