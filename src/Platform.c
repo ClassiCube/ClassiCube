@@ -1339,6 +1339,8 @@ ReturnCode Updater_GetBuildTime(TimeMS* ms) {
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
+const String DynamicLib_Ext = String_FromConst(".dll");
+
 ReturnCode DynamicLib_Load(const String* path, void** lib) {
 	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
@@ -1355,10 +1357,17 @@ bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
 	return Platform_DescribeError(res, dst);
 }
 #elif defined CC_BUILD_WEB
-ReturnCode DynamicLib_Load(const String* path, void** lib) { return ERR_NOT_SUPPORTED; }
+ReturnCode DynamicLib_Load(const String* path, void** lib)            { return ERR_NOT_SUPPORTED; }
 ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) { return ERR_NOT_SUPPORTED; }
-bool DynamicLib_DescribeError(ReturnCode res, String* dst) { return false; }
+bool DynamicLib_DescribeError(ReturnCode res, String* dst)            { return false; }
 #elif defined CC_BUILD_POSIX
+/* TODO: Should we use .bundle instead of .dylib? */
+#ifdef CC_BUILD_OSX
+const String DynamicLib_Ext = String_FromConst(".dylib");
+#else
+const String DynamicLib_Ext = String_FromConst(".so");
+#endif
+
 ReturnCode DynamicLib_Load(const String* path, void** lib) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);

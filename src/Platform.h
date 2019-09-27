@@ -73,6 +73,8 @@ CC_API ReturnCode Updater_Start(void);
 /* Returns the last time the application was modified, as number of milliseconds since 1/1/0001 */
 CC_API ReturnCode Updater_GetBuildTime(TimeMS* ms);
 
+/* The default file extension used for dynamic libraries on this platform. */
+extern const String DynamicLib_Ext;
 /* Attempts to load a native dynamic library from the given path. */
 CC_API ReturnCode DynamicLib_Load(const String* path, void** lib);
 /* Attempts to get the address of the symbol in the given dynamic library. */

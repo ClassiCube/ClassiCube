@@ -373,14 +373,6 @@ static void Game_LoadOptions(void) {
 static void Game_LoadPlugins(void) { }
 #else
 static void Game_LoadPlugin(const String* path, void* obj) {
-#if defined CC_BUILD_WIN
-	static const String ext = String_FromConst(".dll");
-#elif defined CC_BUILD_OSX
-	static const String ext = String_FromConst(".dylib");
-#else
-	static const String ext = String_FromConst(".so");
-#endif
-
 	void* lib;
 	void* verSymbol;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
 	void* compSymbol; /* EXPORT struct IGameComponent Plugin_Component = { (whatever) } */
@@ -388,7 +380,7 @@ static void Game_LoadPlugin(const String* path, void* obj) {
 	ReturnCode res;
 
 	/* ignore accepted.txt, deskop.ini, .pdb files, etc */
-	if (!String_CaselessEnds(path, &ext)) return;
+	if (!String_CaselessEnds(path, &DynamicLib_Ext)) return;
 	res = DynamicLib_Load(path, &lib);
 	if (res) { Logger_DynamicLibWarn2(res, "loading plugin", path); return; }
 
