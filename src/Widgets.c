@@ -2035,9 +2035,9 @@ static void PlayerListWidget_Init(void* widget) {
 static void PlayerListWidget_Render(void* widget, double delta) {
 	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	struct TextWidget* title = &w->title;
+	struct Screen* grabbed;
 	struct Texture tex;
-	int offset, height;
-	int i;
+	int i, offset, height;
 	PackedCol topCol    = PACKEDCOL_CONST( 0,  0,  0, 180);
 	PackedCol bottomCol = PACKEDCOL_CONST(50, 50, 50, 205);
 
@@ -2050,12 +2050,13 @@ static void PlayerListWidget_Render(void* widget, double delta) {
 	title->yOffset = w->y - offset + 5;
 	Widget_Reposition(title);
 	Elem_Render(title, delta);
+	grabbed = Gui_GetInputGrab();
 
 	for (i = 0; i < w->namesCount; i++) {
 		if (!w->textures[i].ID) continue;
 		tex = w->textures[i];
 		
-		if (w->ids[i] != GROUP_NAME_ID) {
+		if (grabbed && w->ids[i] != GROUP_NAME_ID) {
 			if (Gui_ContainsPointers(tex.X, tex.Y, tex.Width, tex.Height)) tex.X += 4;
 		}
 		Texture_Render(&tex);
