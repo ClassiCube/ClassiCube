@@ -1090,16 +1090,6 @@ ReturnCode Process_StartOpen(const String* args) {
 	instance = ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
 	return instance > 32 ? 0 : (ReturnCode)instance;
 }
-
-ReturnCode Process_GetExePath(String* path) {
-	TCHAR raw[NATIVE_STR_LEN];
-	int len;
-	ReturnCode res = Process_RawGetExePath(raw, &len);
-
-	if (res) return res;
-	Platform_DecodeString(path, raw, len);
-	return 0;
-}
 #elif defined CC_BUILD_WEB
 ReturnCode Process_StartGame(const String* args) { return ERR_NOT_SUPPORTED; }
 void Process_Exit(ReturnCode code) { exit(code); }
@@ -1110,8 +1100,6 @@ ReturnCode Process_StartOpen(const String* args) {
 	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
 	return 0;
 }
-
-ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_ANDROID
 static char gameArgsBuffer[512];
 static String gameArgs = String_FromArray(gameArgsBuffer);
@@ -1126,8 +1114,6 @@ ReturnCode Process_StartOpen(const String* args) {
 	JavaCall_String_Void("startOpen", args);
 	return 0; /* TODO: Is there a clean way of handling an error */
 }
-
-ReturnCode Process_GetExePath(String* path) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
 static ReturnCode Process_RawStart(const char* path, const char** argv) {
 	pid_t pid = fork();
@@ -1179,16 +1165,6 @@ ReturnCode Process_StartGame(const String* args) {
 }
 
 void Process_Exit(ReturnCode code) { exit(code); }
-
-ReturnCode Process_GetExePath(String* path) {
-	char str[NATIVE_STR_LEN];
-	int len = 0;
-	ReturnCode res = Process_RawGetExePath(str, &len);
-
-	if (res) return res;
-	Platform_DecodeString(path, str, len);
-	return 0;
-}
 #endif
 /* Opening browser and starting shell is not really standardised */
 #if defined CC_BUILD_OSX
@@ -1273,13 +1249,28 @@ static ReturnCode Process_RawGetExePath(char* path, int* len) {
 *--------------------------------------------------------Updater----------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-ReturnCode Updater_Start(void) {
-	static const String args = String_FromConst("cmd.exe /C start cmd /C " UPDATE_FILENAME);
-	TCHAR str[NATIVE_STR_LEN];
-	/* args must be modifiable, otherwise access violation */
-	Platform_ConvertString(str, &args);
-	return Process_RawStart(NULL, str);
+#define UPDATE_TMP TEXT("CC_prev.exe")
+#define UPDATE_SRC TEXT(UPDATE_FILE)
+
+bool Updater_Clean(void) {
+	return DeleteFile(UPDATE_TMP) || GetLastError() == ERROR_FILE_NOT_FOUND;
 }
+
+ReturnCode Updater_Start(void) {
+	TCHAR path[NATIVE_STR_LEN + 1];
+	TCHAR args[2] = { 'a', '\0' }; /* don't actually care about arguments */
+	int len = 0;
+
+	ReturnCode res = Process_RawGetExePath(path, &len);
+	if (res) return res;
+	path[len] = '\0';
+
+	if (!MoveFileEx(path, UPDATE_TMP, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
+	if (!MoveFileEx(UPDATE_SRC, path, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
+
+	return Process_RawStart(path, args);
+}
+
 ReturnCode Updater_GetBuildTime(TimeMS* ms) {
 	TCHAR path[NATIVE_STR_LEN + 1];
 	FileHandle file;
@@ -1305,9 +1296,11 @@ ReturnCode Updater_GetBuildTime(TimeMS* ms) {
 	return res;
 }
 #elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
+bool Updater_Clean(void)                      { return true; }
 ReturnCode Updater_Start(void)                { return ERR_NOT_SUPPORTED; }
 ReturnCode Updater_GetBuildTime(TimeMS* time) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
+bool Updater_Clean(void) { return true; }
 ReturnCode Updater_Start(void) {
 	char path[NATIVE_STR_LEN + 1];
 	char* argv[2];

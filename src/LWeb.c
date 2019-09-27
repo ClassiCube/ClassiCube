@@ -4,6 +4,7 @@
 #include "Stream.h"
 #include "Logger.h"
 #include "Window.h"
+#include "Options.h"
 
 #ifndef CC_BUILD_WEB
 /*########################################################################################################################*
@@ -507,6 +508,10 @@ static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 
 	res = File_MarkExecutable(&path);
 	if (res) Logger_Warn(res, "making update executable");
+
+#ifdef CC_BUILD_WIN
+	Options_SetBool("update-dirty", true);
+#endif
 }
 
 void FetchUpdateTask_Run(bool release, bool d3d9) {

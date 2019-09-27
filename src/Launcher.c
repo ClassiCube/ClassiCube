@@ -245,6 +245,13 @@ void Launcher_Run(void) {
 	Window_SetTitle(&title);
 	Window_Show();
 
+#ifdef CC_BUILD_WIN
+	/* clean leftover exe from updating */
+	if (Options_GetBool("update-dirty", false) && Updater_Clean()) {
+		Options_Set("update-dirty", NULL);
+	}
+#endif
+
 	Drawer2D_Component.Init();
 	Game_UpdateDimensions();
 	Drawer2D_BitmappedText    = false;
@@ -579,48 +586,8 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 	return true;
 }
 
-#ifdef CC_BUILD_WIN
-#define UPDATE_SCRIPT \
-"@echo off\r\n" \
-"echo Waiting for launcher to exit..\r\n" \
-"echo 5..\r\n" \
-"ping 127.0.0.1 -n 2 > nul\r\n" \
-"echo 4..\r\n" \
-"ping 127.0.0.1 -n 2 > nul\r\n" \
-"echo 3..\r\n" \
-"ping 127.0.0.1 -n 2 > nul\r\n" \
-"echo 2..\r\n" \
-"ping 127.0.0.1 -n 2 > nul\r\n" \
-"echo 1..\r\n" \
-"ping 127.0.0.1 -n 2 > nul\r\n" \
-"echo Copying updated version\r\n" \
-"move ClassiCube.update \"%s\"\r\n" \
-"echo Starting launcher again\r\n" \
-"start \"ClassiCube\" \"%s\"\r\n" \
-"exit\r\n"
-#endif
-
 static void Launcher_ApplyUpdate(void) {
-	static const String scriptPath = String_FromConst(UPDATE_FILENAME);
-	char strBuffer[1024], exeBuffer[FILENAME_SIZE];
-	String str, exe;
-	ReturnCode res;
-
-#ifdef CC_BUILD_WIN
-	String_InitArray(exe, exeBuffer);
-	res = Process_GetExePath(&exe);
-	if (res) { Logger_Warn(res, "getting executable path"); return; }
-
-	Utils_UNSAFE_GetFilename(&exe);
-	String_InitArray(str, strBuffer);
-	String_Format2(&str, UPDATE_SCRIPT, &exe, &exe);
-
-	/* Can't use WriteLine, want \n as actual newline not code page 437 */
-	res = Stream_WriteAllTo(&scriptPath, (const cc_uint8*)str.buffer, str.length);
-	if (res) { Logger_Warn(res, "saving update script"); return; }
-#endif
-
-	res = Updater_Start();
+	ReturnCode res = Updater_Start();
 	if (res) { Logger_Warn(res, "running updater"); return; }
 }
 

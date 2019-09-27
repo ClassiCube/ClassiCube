@@ -65,9 +65,9 @@ CC_API void Process_Exit(ReturnCode code);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
 CC_API ReturnCode Process_StartOpen(const String* args);
-/* Returns the full path of the application's executable. */
-CC_API ReturnCode Process_GetExePath(String* path);
 
+/* Attempts to clean up any leftover files from an update */
+CC_API bool Updater_Clean(void);
 /* Starts the platform-specific method to update then start the game using the UPDATE_FILE file. */
 CC_API ReturnCode Updater_Start(void);
 /* Returns the last time the application was modified, as number of milliseconds since 1/1/0001 */
