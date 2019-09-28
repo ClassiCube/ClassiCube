@@ -30,7 +30,7 @@ struct HUDScreen {
 	/* player list state */
 	struct PlayerListWidget playerList;
 	struct FontDesc playerFont;
-	bool showingList, wasShowingList;
+	bool showingList;
 	/* chat state */
 	float chatAcc;
 	bool suppressNextPress;
@@ -940,6 +940,21 @@ static void HUDScreen_DrawChat(struct HUDScreen* s, double delta) {
 	}
 }
 
+static void HUDScreen_TabEntryAdded(void* screen, int id) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	if (s->showingList) PlayerListWidget_Add(&s->playerList, id);
+}
+
+static void HUDScreen_TabEntryChanged(void* screen, int id) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	if (s->showingList) PlayerListWidget_Update(&s->playerList, id);
+}
+
+static void HUDScreen_TabEntryRemoved(void* screen, int id) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	if (s->showingList) PlayerListWidget_Remove(&s->playerList, id);
+}
+
 static void HUDScreen_ContextLost(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	Font_Free(&s->playerFont);
@@ -953,14 +968,11 @@ static void HUDScreen_ContextLost(void* screen) {
 	Elem_TryFree(&s->clientStatus);
 	Elem_TryFree(&s->announcement);
 
-	s->wasShowingList = s->showingList;
-	if (s->showingList) { Elem_TryFree(&s->playerList); }
-	s->showingList    = false;
+	if (s->showingList) Elem_Free(&s->playerList);
 }
 
 static void HUDScreen_RemakePlayerList(struct HUDScreen* s) {
 	bool extended = Server.SupportsExtPlayerList && !Gui_ClassicTabList;
-	if (!s->wasShowingList) return;
 	PlayerListWidget_Create(&s->playerList, &s->playerFont, !extended);
 	s->showingList = true;
 
@@ -977,7 +989,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	HUDScreen_Redraw(s);
 	Widget_Reposition(&s->hotbar);
 	HUDScreen_ChatUpdateLayout(s);
-	HUDScreen_RemakePlayerList(s);
+	if (s->showingList) HUDScreen_RemakePlayerList(s);
 }
 
 static void HUDScreen_OnResize(void* screen) {
@@ -986,7 +998,7 @@ static void HUDScreen_OnResize(void* screen) {
 
 	if (HUDScreen_ChatUpdateFont(s)) HUDScreen_Redraw(s);
 	HUDScreen_ChatUpdateLayout(s);
-	if (s->showingList) { Widget_Reposition(&s->playerList); }
+	if (s->showingList) Widget_Reposition(&s->playerList);
 }
 
 static bool HUDScreen_KeyPress(void* screen, char keyChar) {
@@ -1011,7 +1023,6 @@ static bool HUDScreen_KeyDown(void* screen, Key key) {
 
 	if (key == playerListKey && handlesList) {
 		if (!s->showingList && !Server.IsSinglePlayer) {
-			s->wasShowingList = true;
 			HUDScreen_RemakePlayerList(s);
 		}
 		return true;
@@ -1054,9 +1065,8 @@ static bool HUDScreen_KeyDown(void* screen, Key key) {
 static bool HUDScreen_KeyUp(void* screen, Key key) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	if (key == KeyBinds[KEYBIND_PLAYER_LIST] && s->showingList) {
-		s->showingList    = false;
-		s->wasShowingList = false;
-		Elem_TryFree(&s->playerList);
+		s->showingList = false;
+		Elem_Free(&s->playerList);
 		return true;
 	}
 
@@ -1095,7 +1105,7 @@ static bool HUDScreen_PointerDown(void* screen, int id, int x, int y) {
 	/* TODO: Move to PlayerListWidget */
 	if (s->showingList) {
 		String_InitArray(text, textBuffer);
-		PlayerListWidget_GetNameUnder(&s->playerList, x, y, &text);
+		PlayerListWidget_GetNameAt(&s->playerList, x, y, &text);
 
 		if (text.length) {
 			String_Append(&text, ' ');
@@ -1134,12 +1144,14 @@ static bool HUDScreen_PointerDown(void* screen, int id, int x, int y) {
 
 static void HUDScreen_Init(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	s->wasShowingList = false;
 	HotbarWidget_Create(&s->hotbar);
 	HUDScreen_ChatInit(s);
 
 	Event_RegisterChat(&ChatEvents.ChatReceived,  s, HUDScreen_ChatReceived);
 	Event_RegisterInt(&ChatEvents.ColCodeChanged, s, HUDScreen_ColCodeChanged);
+	Event_RegisterInt(&TabListEvents.Added,       s, HUDScreen_TabEntryAdded);
+	Event_RegisterInt(&TabListEvents.Changed,     s, HUDScreen_TabEntryChanged);
+	Event_RegisterInt(&TabListEvents.Removed,     s, HUDScreen_TabEntryRemoved);
 }
 
 static void HUDScreen_Render(void* screen, double delta) {
@@ -1172,8 +1184,8 @@ static void HUDScreen_Render(void* screen, double delta) {
 		Elem_Render(&s->playerList, delta);
 		/* NOTE: Should usually be caught by KeyUp, but just in case. */
 		if (!KeyBind_IsPressed(KEYBIND_PLAYER_LIST)) {
-			Elem_TryFree(&s->playerList);
 			s->showingList = false;
+			Elem_Free(&s->playerList);
 		}
 	}
 	Gfx_SetTexturing(false);
@@ -1181,8 +1193,13 @@ static void HUDScreen_Render(void* screen, double delta) {
 
 static void HUDScreen_Free(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
+	s->showingList = false;
+
 	Event_UnregisterChat(&ChatEvents.ChatReceived,  s, HUDScreen_ChatReceived);
 	Event_UnregisterInt(&ChatEvents.ColCodeChanged, s, HUDScreen_ColCodeChanged);
+	Event_UnregisterInt(&TabListEvents.Added,       s, HUDScreen_TabEntryAdded);
+	Event_UnregisterInt(&TabListEvents.Changed,     s, HUDScreen_TabEntryChanged);
+	Event_UnregisterInt(&TabListEvents.Removed,     s, HUDScreen_TabEntryRemoved);
 }
 
 static const struct ScreenVTABLE HUDScreen_VTABLE = {
@@ -1192,8 +1209,7 @@ static const struct ScreenVTABLE HUDScreen_VTABLE = {
 	HUDScreen_OnResize, HUDScreen_ContextLost, HUDScreen_ContextRecreated
 };
 void HUDScreen_Show(void) {
-	struct HUDScreen* s = &HUDScreen_Instance;
-	s->wasShowingList     = false;
+	struct HUDScreen* s   = &HUDScreen_Instance;
 	s->lastDownloadStatus = Int32_MinValue;
 
 	s->VTABLE = &HUDScreen_VTABLE;

@@ -1750,27 +1750,20 @@ static void PlayerListWidget_DrawName(struct Texture* tex, struct PlayerListWidg
 	Drawer2D_ReducePadding_Tex(tex, w->font->size, 3);
 }
 
-static int PlayerListWidget_HighlightedName(struct PlayerListWidget* w, int x, int y) {
+void PlayerListWidget_GetNameAt(struct PlayerListWidget* w, int x, int y, String* name) {
 	struct Texture tex;
+	String player;
 	int i;
-	if (!w->active) return -1;
-	
+
 	for (i = 0; i < w->namesCount; i++) {
 		if (!w->textures[i].ID || w->ids[i] == GROUP_NAME_ID) continue;
-
 		tex = w->textures[i];
-		if (Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) return i;
+		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
+
+		player = TabList_UNSAFE_GetPlayer(w->ids[i]);
+		String_AppendString(name, &player);
+		return;
 	}
-	return -1;
-}
-
-void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, int x, int y, String* name) {
-	String player;
-	int i = PlayerListWidget_HighlightedName(w, x, y);
-	if (i == -1) return;
-
-	player = TabList_UNSAFE_GetPlayer(w->ids[i]);
-	String_AppendString(name, &player);
 }
 
 static int PlayerListWidget_GetColumnWidth(struct PlayerListWidget* w, int column) {
@@ -1980,14 +1973,12 @@ static void PlayerListWidget_SortAndReposition(struct PlayerListWidget* w) {
 	Widget_Reposition(w);
 }
 
-static void PlayerListWidget_TabEntryAdded(void* widget, int id) {
-	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
+void PlayerListWidget_Add(struct PlayerListWidget* w, int id) {
 	PlayerListWidget_AddName(w, id, -1);
 	PlayerListWidget_SortAndReposition(w);
 }
 
-static void PlayerListWidget_TabEntryChanged(void* widget, int id) {
-	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
+void PlayerListWidget_Update(struct PlayerListWidget* w, int id) {
 	struct Texture tex;
 	int i;
 
@@ -2002,8 +1993,7 @@ static void PlayerListWidget_TabEntryChanged(void* widget, int id) {
 	}
 }
 
-static void PlayerListWidget_TabEntryRemoved(void* widget, int id) {
-	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
+void PlayerListWidget_Remove(struct PlayerListWidget* w, int id) {
 	int i;
 	for (i = 0; i < w->namesCount; i++) {
 		if (w->ids[i] != id) continue;
@@ -2026,10 +2016,6 @@ static void PlayerListWidget_Init(void* widget) {
 	TextWidget_Make(&w->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
 	TextWidget_SetConst(&w->title, "Connected players:", w->font);
 	PlayerListWidget_SortAndReposition(w);
-
-	Event_RegisterInt(&TabListEvents.Added,   w, PlayerListWidget_TabEntryAdded);
-	Event_RegisterInt(&TabListEvents.Changed, w, PlayerListWidget_TabEntryChanged);
-	Event_RegisterInt(&TabListEvents.Removed, w, PlayerListWidget_TabEntryRemoved);
 }
 
 static void PlayerListWidget_Render(void* widget, double delta) {
@@ -2071,9 +2057,6 @@ static void PlayerListWidget_Free(void* widget) {
 	}
 
 	Elem_TryFree(&w->title);
-	Event_UnregisterInt(&TabListEvents.Added,   w, PlayerListWidget_TabEntryAdded);
-	Event_UnregisterInt(&TabListEvents.Changed, w, PlayerListWidget_TabEntryChanged);
-	Event_UnregisterInt(&TabListEvents.Removed, w, PlayerListWidget_TabEntryRemoved);
 }
 
 static const struct WidgetVTABLE PlayerListWidget_VTABLE = {

@@ -246,7 +246,14 @@ struct PlayerListWidget {
 	struct Texture textures[TABLIST_MAX_NAMES * 2];
 };
 CC_NOINLINE void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic);
-CC_NOINLINE void PlayerListWidget_GetNameUnder(struct PlayerListWidget* w, int mouseX, int mouseY, String* name);
+/* Gets the name of the entry that contains the given coordinates. */
+void PlayerListWidget_GetNameAt(struct PlayerListWidget* w, int x, int y, String* name);
+/* Adds a new entry to this widget. */
+void PlayerListWidget_Add(struct PlayerListWidget* w, int id);
+/* Updates an existing entry in the given widget. */
+void PlayerListWidget_Update(struct PlayerListWidget* w, int id);
+/* Removes the given entry from the given widget. */
+void PlayerListWidget_Remove(struct PlayerListWidget* w, int id);
 
 
 typedef void (*SpecialInputAppendFunc)(void* userData, char c);
