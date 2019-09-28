@@ -245,7 +245,8 @@ struct PlayerListWidget {
 	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
 	struct Texture textures[TABLIST_MAX_NAMES * 2];
 };
-CC_NOINLINE void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic);
+/* Creates and adds initial names to this widget. */
+void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic);
 /* Gets the name of the entry that contains the given coordinates. */
 void PlayerListWidget_GetNameAt(struct PlayerListWidget* w, int x, int y, String* name);
 /* Adds a new entry to this widget. */

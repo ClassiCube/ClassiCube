@@ -972,11 +972,9 @@ static void HUDScreen_ContextLost(void* screen) {
 }
 
 static void HUDScreen_RemakePlayerList(struct HUDScreen* s) {
-	bool extended = Server.SupportsExtPlayerList && !Gui_ClassicTabList;
-	PlayerListWidget_Create(&s->playerList, &s->playerFont, !extended);
+	bool classic   = Gui_ClassicTabList || !Server.SupportsExtPlayerList;
+	PlayerListWidget_Create(&s->playerList, &s->playerFont, classic);
 	s->showingList = true;
-
-	Elem_Init(&s->playerList);
 	Widget_Reposition(&s->playerList);
 }
 

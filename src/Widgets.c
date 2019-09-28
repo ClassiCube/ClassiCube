@@ -45,10 +45,9 @@ static void TextWidget_Reposition(void* widget) {
 }
 
 static const struct WidgetVTABLE TextWidget_VTABLE = {
-	Widget_NullFunc, TextWidget_Render, TextWidget_Free,
-	Widget_Key,      Widget_Key,        Widget_MouseScroll,
-	Widget_Pointer,  Widget_Pointer,    Widget_PointerMove, 
-	TextWidget_Reposition
+	TextWidget_Render, TextWidget_Free, TextWidget_Reposition,
+	Widget_Key,        Widget_Key,      Widget_MouseScroll,
+	Widget_Pointer,    Widget_Pointer,  Widget_PointerMove
 };
 void TextWidget_Make(struct TextWidget* w, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	PackedCol col = PACKEDCOL_WHITE;
@@ -143,10 +142,9 @@ static void ButtonWidget_Render(void* widget, double delta) {
 }
 
 static const struct WidgetVTABLE ButtonWidget_VTABLE = {
-	Widget_NullFunc, ButtonWidget_Render, ButtonWidget_Free,
-	Widget_Key,	     Widget_Key,          Widget_MouseScroll,
-	Widget_Pointer,  Widget_Pointer,      Widget_PointerMove,  
-	ButtonWidget_Reposition
+	ButtonWidget_Render, ButtonWidget_Free, ButtonWidget_Reposition,
+	Widget_Key,	         Widget_Key,        Widget_MouseScroll,
+	Widget_Pointer,      Widget_Pointer,    Widget_PointerMove
 };
 void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	Widget_Reset(w);
@@ -293,10 +291,9 @@ static bool ScrollbarWidget_PointerMove(void* widget, int id, int x, int y) {
 }
 
 static const struct WidgetVTABLE ScrollbarWidget_VTABLE = {
-	Widget_NullFunc,             ScrollbarWidget_Render,    Widget_NullFunc,
+	ScrollbarWidget_Render,      Widget_NullFunc,           Widget_CalcPosition,
 	Widget_Key,                  Widget_Key,                ScrollbarWidget_MouseScroll,
-	ScrollbarWidget_PointerDown, ScrollbarWidget_PointerUp, ScrollbarWidget_PointerMove, 
-	Widget_CalcPosition
+	ScrollbarWidget_PointerDown, ScrollbarWidget_PointerUp, ScrollbarWidget_PointerMove
 };
 void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 	Widget_Reset(w);
@@ -475,10 +472,9 @@ static bool HotbarWidget_MouseScroll(void* widget, float delta) {
 }
 
 static const struct WidgetVTABLE HotbarWidget_VTABLE = {
-	Widget_NullFunc,          HotbarWidget_Render, Widget_NullFunc,
-	HotbarWidget_KeyDown,     HotbarWidget_KeyUp,  HotbarWidget_MouseScroll,
-	HotbarWidget_PointerDown, Widget_Pointer,      Widget_PointerMove, 
-	HotbarWidget_Reposition
+	HotbarWidget_Render,      Widget_NullFunc,    HotbarWidget_Reposition,
+	HotbarWidget_KeyDown,     HotbarWidget_KeyUp, HotbarWidget_MouseScroll,
+	HotbarWidget_PointerDown, Widget_Pointer,     Widget_PointerMove
 };
 void HotbarWidget_Create(struct HotbarWidget* w) {
 	Widget_Reset(w);
@@ -790,10 +786,9 @@ static bool TableWidget_KeyDown(void* widget, Key key) {
 }
 
 static const struct WidgetVTABLE TableWidget_VTABLE = {
-	Widget_NullFunc,         TableWidget_Render,    TableWidget_Free,
+	TableWidget_Render,      TableWidget_Free,      TableWidget_Reposition,
 	TableWidget_KeyDown,     Widget_Key,            TableWidget_MouseScroll,
-	TableWidget_PointerDown, TableWidget_PointerUp, TableWidget_PointerMove, 
-	TableWidget_Reposition
+	TableWidget_PointerDown, TableWidget_PointerUp, TableWidget_PointerMove
 };
 void TableWidget_Create(struct TableWidget* w) {	
 	Widget_Reset(w);
@@ -1429,10 +1424,9 @@ static bool MenuInputWidget_AllowedChar(void* widget, char c) {
 
 static int MenuInputWidget_GetMaxLines(void) { return 1; }
 static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
-	Widget_NullFunc,         MenuInputWidget_Render, InputWidget_Free,
-	InputWidget_KeyDown,     InputWidget_KeyUp,      Widget_MouseScroll,
-	InputWidget_PointerDown, Widget_Pointer,         Widget_PointerMove,     
-	InputWidget_Reposition
+	MenuInputWidget_Render,  InputWidget_Free,  InputWidget_Reposition,
+	InputWidget_KeyDown,     InputWidget_KeyUp, Widget_MouseScroll,
+	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove
 };
 void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, struct MenuInputDesc* desc) {
 	Widget_Reset(w);
@@ -1692,10 +1686,9 @@ static int ChatInputWidget_GetMaxLines(void) {
 }
 
 static const struct WidgetVTABLE ChatInputWidget_VTABLE = {
-	Widget_NullFunc,         ChatInputWidget_Render, InputWidget_Free,
-	ChatInputWidget_KeyDown, InputWidget_KeyUp,      Widget_MouseScroll,
-	InputWidget_PointerDown, Widget_Pointer,         Widget_PointerMove,     
-	InputWidget_Reposition
+	ChatInputWidget_Render,  InputWidget_Free,  InputWidget_Reposition,
+	ChatInputWidget_KeyDown, InputWidget_KeyUp, Widget_MouseScroll,
+	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove
 };
 void ChatInputWidget_Create(struct ChatInputWidget* w) {
 	Widget_Reset(w);
@@ -2004,20 +1997,6 @@ void PlayerListWidget_Remove(struct PlayerListWidget* w, int id) {
 	}
 }
 
-static void PlayerListWidget_Init(void* widget) {
-	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
-	int id;
-
-	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
-		if (!TabList.NameOffsets[id]) continue;
-		PlayerListWidget_AddName(w, (EntityID)id, -1);
-	}
-
-	TextWidget_Make(&w->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
-	TextWidget_SetConst(&w->title, "Connected players:", w->font);
-	PlayerListWidget_SortAndReposition(w);
-}
-
 static void PlayerListWidget_Render(void* widget, double delta) {
 	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
 	struct TextWidget* title = &w->title;
@@ -2060,13 +2039,14 @@ static void PlayerListWidget_Free(void* widget) {
 }
 
 static const struct WidgetVTABLE PlayerListWidget_VTABLE = {
-	PlayerListWidget_Init, PlayerListWidget_Render, PlayerListWidget_Free,
-	Widget_Key,            Widget_Key,              Widget_MouseScroll,
-	Widget_Pointer,        Widget_Pointer,          Widget_PointerMove,      
-	PlayerListWidget_Reposition
+	PlayerListWidget_Render, PlayerListWidget_Free, PlayerListWidget_Reposition,
+	Widget_Key,              Widget_Key,            Widget_MouseScroll,
+	Widget_Pointer,          Widget_Pointer,        Widget_PointerMove
 };
 void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic) {
+	int id;
 	Widget_Reset(w);
+
 	w->VTABLE     = &PlayerListWidget_VTABLE;
 	w->horAnchor  = ANCHOR_CENTRE;
 	w->verAnchor  = ANCHOR_CENTRE;
@@ -2075,6 +2055,15 @@ void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, 
 	w->font       = font;
 	w->classic    = classic;
 	w->elementOffset = classic ? 0 : 10;
+
+	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
+		if (!TabList.NameOffsets[id]) continue;
+		PlayerListWidget_AddName(w, (EntityID)id, -1);
+	}
+
+	TextWidget_Make(&w->title,     ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
+	TextWidget_SetConst(&w->title, "Connected players:", w->font);
+	PlayerListWidget_SortAndReposition(w);
 }
 
 
@@ -2460,10 +2449,9 @@ static void TextGroupWidget_Free(void* widget) {
 }
 
 static const struct WidgetVTABLE TextGroupWidget_VTABLE = {
-	Widget_NullFunc, TextGroupWidget_Render, TextGroupWidget_Free,
-	Widget_Key,      Widget_Key,             Widget_MouseScroll,
-	Widget_Pointer,  Widget_Pointer,         Widget_PointerMove,     
-	TextGroupWidget_Reposition
+	TextGroupWidget_Render, TextGroupWidget_Free, TextGroupWidget_Reposition,
+	Widget_Key,             Widget_Key,           Widget_MouseScroll,
+	Widget_Pointer,         Widget_Pointer,       Widget_PointerMove
 };
 void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine) {
 	Widget_Reset(w);
@@ -2706,10 +2694,9 @@ void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
 }
 
 static const struct WidgetVTABLE SpecialInputWidget_VTABLE = {
-	Widget_NullFunc,                SpecialInputWidget_Render, SpecialInputWidget_Free,
-	Widget_Key,                     Widget_Key,                Widget_MouseScroll,
-	SpecialInputWidget_PointerDown, Widget_Pointer,            Widget_PointerMove,        
-	SpecialInputWidget_Reposition
+	SpecialInputWidget_Render,      SpecialInputWidget_Free, SpecialInputWidget_Reposition,
+	Widget_Key,                     Widget_Key,              Widget_MouseScroll,
+	SpecialInputWidget_PointerDown, Widget_Pointer,          Widget_PointerMove
 };
 void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* target) {
 	Widget_Reset(w);

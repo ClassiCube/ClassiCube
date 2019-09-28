@@ -61,16 +61,15 @@ struct Screen { Screen_Layout };
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {
-	void (*Init)(void* elem);
 	void (*Render)(void* elem, double delta);
 	void (*Free)(void* elem);
+	void (*Reposition)(void* elem);
 	bool (*HandlesKeyDown)(void* elem, Key key);
 	bool (*HandlesKeyUp)(void* elem, Key key);
 	bool (*HandlesMouseScroll)(void* elem, float delta);
 	bool (*HandlesPointerDown)(void* elem, int id, int x, int y);
 	bool (*HandlesPointerUp)(void* elem,   int id, int x, int y);
 	bool (*HandlesPointerMove)(void* elem, int id, int x, int y);
-	void (*Reposition)(void* elem);
 };
 #define Widget_Layout const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;      /* Top left corner, and dimensions, of this widget */ \
@@ -160,16 +159,13 @@ void TextAtlas_Free(struct TextAtlas* atlas);
 void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertices);
 void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vertices);
 
-
-#define Elem_Init(elem)          (elem)->VTABLE->Init(elem)
 #define Elem_Render(elem, delta) (elem)->VTABLE->Render(elem, delta)
 #define Elem_Free(elem)          (elem)->VTABLE->Free(elem)
 #define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress(elem, key)
 #define Elem_HandlesKeyDown(elem, key)  (elem)->VTABLE->HandlesKeyDown(elem, key)
 #define Elem_HandlesKeyUp(elem, key)    (elem)->VTABLE->HandlesKeyUp(elem, key)
-#define Elem_HandlesMouseDown(elem, x, y, btn) (elem)->VTABLE->HandlesMouseDown(elem, x, y, btn)
-#define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll(elem, delta)
 
+#define Elem_HandlesMouseScroll(elem, delta)    (elem)->VTABLE->HandlesMouseScroll(elem, delta)
 #define Elem_HandlesPointerDown(elem, id, x, y) (elem)->VTABLE->HandlesPointerDown(elem, id, x, y)
 #define Elem_HandlesPointerUp(elem,   id, x, y) (elem)->VTABLE->HandlesPointerUp(elem,   id, x, y)
 #define Elem_HandlesPointerMove(elem, id, x, y) (elem)->VTABLE->HandlesPointerMove(elem, id, x, y)
