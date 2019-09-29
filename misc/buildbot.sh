@@ -24,7 +24,8 @@
 # change these as needed
 SOURCE_DIR=~/client
 EMSCRIPTEN_PATH=/usr/bin/emscripten/emcc
-CLANGOSX_PATH=/usr/bin/clang/osx
+CLANG32_PATH=/usr/bin/clang/osx32
+CLANG64_PATH=/usr/bin/clang/osx64
 # to simplify stuff
 ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -w"
 WIN32_FLAGS="-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN"
@@ -64,7 +65,13 @@ build_nix64() {
 build_osx32() {
   echo "Building mac32.."
   rm cc-osx32
-  $CLANGOSX_PATH *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenAL -framework OpenGL -lcurl
+  $CLANG32_PATH *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenAL -framework OpenGL -lcurl
+}
+
+build_osx64() {
+  echo "Building mac64.."
+  rm cc-osx32
+  $CLANG64_PATH *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenAL -framework OpenGL -lcurl -lobjc
 }
 
 build_web()  {

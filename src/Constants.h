@@ -8,9 +8,12 @@
 #define GAME_APP_VER "1.0.7"
 #define GAME_API_VER 1
 
-#ifdef CC_BUILD_WEB
+#if defined CC_BUILD_WEB
 #define GAME_APP_NAME  "ClassiCube web client"
 #define GAME_APP_TITLE "ClassiCube"
+#elif defined CC_BUILD_COCOA
+#define GAME_APP_NAME  "ClassiCube 1.0.7 alpha"
+#define GAME_APP_TITLE "ClassiCube 1.0.7 alpha"
 #else
 #define GAME_APP_NAME  "ClassiCube 1.0.7 beta"
 #define GAME_APP_TITLE "ClassiCube 1.0.7 beta"
