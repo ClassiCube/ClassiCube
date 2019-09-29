@@ -1752,6 +1752,16 @@ void Cursor_SetPosition(int x, int y) {
 	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
 }
 
+static bool cursorVisible = true;
+void Cursor_SetVisible(bool visible) {
+	if (visible) {
+		CGDisplayShowCursor(CGMainDisplayID());
+	} else {
+		CGDisplayHideCursor(CGMainDisplayID());
+	}
+	cursorVisible = visible;
+}
+
 void Window_OpenKeyboard(void)  { }
 void Window_CloseKeyboard(void) { }
 
@@ -2154,16 +2164,6 @@ static void Cursor_GetRawPos(int* x, int* y) {
 	Point point;
 	GetGlobalMouse(&point);
 	*x = (int)point.h; *y = (int)point.v;
-}
-
-static bool cursorVisible = true;
-void Cursor_SetVisible(bool visible) {
-	if (visible) {
-		CGDisplayShowCursor(CGMainDisplayID());
-	} else {
-		CGDisplayHideCursor(CGMainDisplayID());
-	}
-	cursorVisible = visible;
 }
 
 void Window_ShowDialog(const char* title, const char* msg) {
@@ -3738,8 +3738,12 @@ static void Window_MakeView(void) {
 	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, sel_registerName("frame"));
 	
 	c = objc_allocateClassPair(objc_getClass("NSView"), "ClassiCube_View", 0);
-	// TODO: 64 bit all the way. need to use d instead of f.
+	// TODO: test rect is actually correct in View_DrawRect on both 32 and 64 bit
+#ifdef __i386__
 	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=ff}{NSSize=ff}}");
+#else
+	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=dd}{NSSize=dd}}");
+#endif
 	objc_registerClassPair(c);
 
 	viewHandle = objc_msgSend(c, sel_registerName("alloc"));
@@ -3923,8 +3927,6 @@ void Window_ProcessEvents(void) {
 }
 
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
-void Cursor_SetVisible(bool visible) { }
-
 void Window_ShowDialog(const char* title, const char* msg) {
 	CFStringRef titleCF, msgCF;
 	id alert;
