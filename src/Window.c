@@ -4036,6 +4036,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 }
 
 void GLContext_Update(void) {
+	// TODO: Why does this crash on resizing
 	objc_msgSend(ctxHandle, sel_registerName("update"));
 }
 

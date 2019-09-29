@@ -524,19 +524,27 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 	const char* exe_ogl  = "ClassiCube.opengl.exe";
 #endif
 #elif defined CC_BUILD_LINUX
-#if __i386__
-	const char* exe_d3d9 = "ClassiCube.32";
-	const char* exe_ogl  = "ClassiCube.32";
-#elif __x86_64__
+#if __x86_64__
 	const char* exe_d3d9 = "ClassiCube";
 	const char* exe_ogl  = "ClassiCube";
+#elif
+	const char* exe_d3d9 = "ClassiCube.32";
+	const char* exe_ogl  = "ClassiCube.32";
 #else
 	const char* exe_d3d9 = "ClassiCube.unknown";
 	const char* exe_ogl  = "ClassiCube.unknown";
 #endif
 #elif defined CC_BUILD_OSX
+#if __x86_64__
+	const char* exe_d3d9 = "ClassiCube.64.osx";
+	const char* exe_ogl  = "ClassiCube.64.osx";
+#elif __i386__
 	const char* exe_d3d9 = "ClassiCube.osx";
 	const char* exe_ogl  = "ClassiCube.osx";
+#else
+	const char* exe_d3d9 = "ClassiCube.unknown";
+	const
+#endif
 #else
 	const char* exe_d3d9 = "ClassiCube.unknown";
 	const char* exe_ogl  = "ClassiCube.unknown";
