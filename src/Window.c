@@ -3624,7 +3624,7 @@ void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 #ifdef CC_BUILD_COCOA
 #include <objc/message.h>
 #include <objc/runtime.h>
-static id appHandle, winHandle;
+static id appHandle, winHandle, viewHandle;
 extern void* NSDefaultRunLoopMode;
 
 static CC_INLINE CGFloat Send_CGFloat(id receiver, SEL sel) {
@@ -3644,20 +3644,28 @@ static CC_INLINE CGPoint Send_CGPoint(id receiver, SEL sel) {
 	return ((CGPoint(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
 }
 
-static void Window_RefreshBounds(void) {
-	id view;
-	CGRect rect;
-
-	view = objc_msgSend(winHandle, sel_registerName("contentView"));
-	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, sel_registerName("bounds"));
-	// TODO: Only works on 10.7+
-	rect = ((CGRect(*)(id, SEL, CGRect))(void *)objc_msgSend_stret)(winHandle, sel_registerName("convertRectToScreen:"), rect);
-
+static void PrintFrame(const char* fmt, CGRect rect) {
 	windowX = (int)rect.origin.x;
 	windowY = (int)rect.origin.y;
-	Window_Width  = (int)rect.size.width;
+	Window_Width = (int)rect.size.width;
 	Window_Height = (int)rect.size.height;
-	Platform_Log4("WINPOS: %i, %i (%i, %i)", &windowX, &windowY, &Window_Width, &Window_Height);
+	Platform_Log4(fmt, &windowX, &windowY, &Window_Width, &Window_Height);
+}
+
+static void Window_RefreshBounds(void) {
+	CGRect rect;
+
+	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle, sel_registerName("frame"));
+	PrintFrame("W_FRM: %i, %i (%i, %i)", rect);
+
+	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(viewHandle, sel_registerName("frame"));
+	PrintFrame("V_FRM: %i, %i (%i, %i)", rect);
+
+	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(viewHandle, sel_registerName("bounds"));
+	PrintFrame("V_BDS: %i, %i (%i, %i)", rect);
+	// TODO: Only works on 10.7+
+	rect = ((CGRect(*)(id, SEL, CGRect))(void *)objc_msgSend_stret)(winHandle, sel_registerName("convertRectToScreen:"), rect);
+	PrintFrame("WINPOS: %i, %i (%i, %i)", rect);
 }
 
 static void Window_DidResize(id self, SEL cmd, id notification) {
@@ -3711,6 +3719,24 @@ static Class Window_MakeClass(void) {
 	return c;
 }
 
+static void View_DrawRect(CGRect r);
+static void Window_MakeView(void) {
+	CGRect rect;
+	id view;
+	Class c;
+
+	view = objc_msgSend(winHandle, sel_registerName("contentView"));
+	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, sel_registerName("frame"));
+	
+	c = objc_allocateClassPair(objc_getClass("NSView"), "ClassiCube_View", 0);
+	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:@{NSRect={NSPoint=ff}{NSSize=ff}}");
+	objc_registerClassPair(c);
+
+	viewHandle = objc_msgSend(c, sel_registerName("alloc"));
+	objc_msgSend(viewHandle, sel_registerName("initWithFrame:"), rect);
+	objc_msgSend(winHandle, sel_registerName("setContentView:"), viewHandle);
+}
+
 void Window_Init(void) {
 	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
 	objc_msgSend(appHandle, sel_registerName("activateIgnoringOtherApps:"), true);
@@ -3742,6 +3768,7 @@ void Window_Create(int width, int height) {
 	Window_CommonCreate();
 	objc_msgSend(winHandle, sel_registerName("setDelegate:"), winHandle);
 	Window_RefreshBounds();
+	Window_MakeView();
 }
 
 void Window_SetTitle(const String* title) {
@@ -3765,7 +3792,7 @@ int Window_GetWindowState(void) {
 
 	flags = (int)objc_msgSend(winHandle, sel_registerName("styleMask"));
 	if (flags & NSFullScreenWindowMask) return WINDOW_STATE_FULLSCREEN;
-
+	     
 	flags = (int)objc_msgSend(winHandle, sel_registerName("isMiniaturized"));
 	return flags ? WINDOW_STATE_MINIMISED : WINDOW_STATE_NORMAL;
 }
@@ -3915,26 +3942,18 @@ void Window_AllocFramebuffer(Bitmap* bmp) {
 	fb_bmp = *bmp;
 }
 
-void Window_DrawFramebuffer(Rect2D r) {
+static void View_DrawRect(CGRect r_) {
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	CGContextRef context = NULL;
 	CGDataProviderRef provider;
 	CGImageRef image;
 	CGRect rect;
-	OSStatus err;
-	id nsView;
 	id nsContext;
 
 	/* Unfortunately CGImageRef is immutable, so changing the */
 	/* underlying data doesn't change what shows when drawing. */
 	/* TODO: Find a better way of doing this in cocoa.. */
-	
-	nsView = objc_msgSend(winHandle, sel_registerName("contentView"));
-	Platform_Log1("VIEW: %x", &nsView);
-
-	objc_msgSend(nsView, sel_registerName("lockFocus"));
-	Platform_LogConst("LOCKED FOCUS");
-
+	if (!fb_bmp.Scan0) return;
 	nsContext = objc_msgSend((id)objc_getClass("NSGraphicsContext"), sel_registerName("currentContext"));
 	Platform_Log1("NS CTX: %x", &nsContext);
 
@@ -3947,7 +3966,6 @@ void Window_DrawFramebuffer(Rect2D r) {
 	rect.size.height = Window_Height;
 
 	/* TODO: REPLACE THIS AWFUL HACK */
-	// TODO: This doesn't even work right, we need to move to drawRect
 	provider = CGDataProviderCreateWithData(NULL, fb_bmp.Scan0,
 		Bitmap_DataSize(fb_bmp.Width, fb_bmp.Height), NULL);
 	image = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
@@ -3956,12 +3974,20 @@ void Window_DrawFramebuffer(Rect2D r) {
 	CGContextDrawImage(context, rect, image);
 	CGContextSynchronize(context);
 
-	objc_msgSend(nsView, sel_registerName("unlockFocus"));
-	Platform_LogConst("UNLOCKED FOCUS");
-
 	CGImageRelease(image);
 	CGDataProviderRelease(provider);
 	CGColorSpaceRelease(colorSpace);
+}
+
+void Window_DrawFramebuffer(Rect2D r) {
+	CGRect rect;
+	rect.origin.x    = r.X; 
+	rect.origin.y    = r.Y;
+	rect.size.width  = r.Width;
+	rect.size.height = r.Height;
+
+	objc_msgSend(viewHandle, sel_registerName("setNeedsDisplayInRect:"), rect);
+	objc_msgSend(viewHandle, sel_registerName("displayIfNeeded"));
 }
 
 void Window_FreeFramebuffer(Bitmap* bmp) {
@@ -4008,10 +4034,8 @@ void GLContext_Init(struct GraphicsMode* mode) {
 	ctxHandle = objc_msgSend(ctxHandle, sel_registerName("initWithFormat:shareContext:"), fmt, NULL);
 	if (!ctxHandle) Logger_Abort("Failed to create OpenGL context");
 
-	view = objc_msgSend(winHandle, sel_registerName("contentView"));
-	objc_msgSend(ctxHandle, sel_registerName("setView:"), view);
-
-	objc_msgSend(fmt, sel_registerName("release"));
+	objc_msgSend(ctxHandle, sel_registerName("setView:"), viewHandle);
+	objc_msgSend(fmt,       sel_registerName("release"));
 	objc_msgSend(ctxHandle, sel_registerName("makeCurrentContext"));
 	objc_msgSend(ctxHandle, sel_registerName("update"));
 }

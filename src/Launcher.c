@@ -588,7 +588,7 @@ bool Launcher_StartGame(const String* user, const String* mppass, const String* 
 
 static void Launcher_ApplyUpdate(void) {
 	ReturnCode res = Updater_Start();
-	if (res) { Logger_Warn(res, "running updater"); return; }
+	if (res) Logger_Warn(res, "running updater");
 }
 
 void Launcher_DisplayHttpError(ReturnCode res, int status, const char* action, String* dst) {
