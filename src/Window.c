@@ -2047,6 +2047,7 @@ static void Window_ConnectEvents(void) {
 	/* However, we cannot use that since the event loop is managed by us instead. */
 	/* Unfortunately, there is no proper API to duplicate that behaviour, so reply */
 	/* on the undocumented GetMenuBarEventTarget to achieve similar behaviour. */
+	/* TODO: Use DynamicLib API instead of dlsym */
 	getMenuBarEventTarget = dlsym(RTLD_DEFAULT, "GetMenuBarEventTarget");
 	InstallStandardEventHandler(GetApplicationEventTarget());
 

@@ -29,7 +29,7 @@ static float EnvRenderer_BlendFactor(float x) {
 	return (float)blend;
 }
 
-#define EnvRenderer_AxisSize() (EnvRenderer_Legacy ? 128 : 65536)
+#define EnvRenderer_AxisSize() (EnvRenderer_Legacy ? 128 : 2048)
 /* Returns the number of vertices needed to subdivide a quad */
 static int EnvRenderer_Vertices(int axis1Len, int axis2Len) {
 	int axisSize = EnvRenderer_AxisSize();
