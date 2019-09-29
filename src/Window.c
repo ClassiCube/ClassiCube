@@ -3645,28 +3645,35 @@ static CC_INLINE CGPoint Send_CGPoint(id receiver, SEL sel) {
 }
 
 static void PrintFrame(const char* fmt, CGRect rect) {
-	windowX = (int)rect.origin.x;
-	windowY = (int)rect.origin.y;
-	Window_Width = (int)rect.size.width;
-	Window_Height = (int)rect.size.height;
-	Platform_Log4(fmt, &windowX, &windowY, &Window_Width, &Window_Height);
+	int x = (int)rect.origin.x;
+	int y = (int)rect.origin.y;
+	int width  = (int)rect.size.width;
+	int height = (int)rect.size.height;
+	Platform_Log4(fmt, &x, &y, &width, &height);
 }
 
 static void Window_RefreshBounds(void) {
-	CGRect rect;
+	CGRect win, view;
+	int viewY;
 
-	// TODO: this is all wrong
-	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle, sel_registerName("frame"));
-	PrintFrame("W_FRM: %i, %i (%i, %i)", rect);
+	win  = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle,  sel_registerName("frame"));
+	PrintFrame("W_FRM: %i, %i (%i, %i)", win);
+	view = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(viewHandle, sel_registerName("frame"));
+	PrintFrame("V_FRM: %i, %i (%i, %i)", view);
 
-	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(viewHandle, sel_registerName("frame"));
-	PrintFrame("V_FRM: %i, %i (%i, %i)", rect);
+	/* For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen. */
+	/* To get window's real Y screen position, first need to find Y of top. (win.y + win.height) */
+	/* Then just subtract from screen height to make relative to top instead of bottom of the screen. */
+	/* Of course this is only half the story, since we're really after Y position of the content. */
+	/* To work out top Y of view relative to window, it's just win.height - (view.y + view.height) */
+	viewY   = (int)win.size.height  - ((int)view.origin.y + (int)view.size.height);
+	windowX = (int)win.origin.x     + (int)view.origin.x;
+	windowY = Display_Bounds.Height - ((int)win.origin.y  + (int)win.size.height) + viewY;
 
-	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(viewHandle, sel_registerName("bounds"));
-	PrintFrame("V_BDS: %i, %i (%i, %i)", rect);
-	// TODO: Only works on 10.7+
-	rect = ((CGRect(*)(id, SEL, CGRect))(void *)objc_msgSend_stret)(winHandle, sel_registerName("convertRectToScreen:"), rect);
-	PrintFrame("WINPOS: %i, %i (%i, %i)", rect);
+	Window_Width  = (int)view.size.width;
+	Window_Height = (int)view.size.height;
+
+	Platform_Log4("WIN: %i,%i (%i, %i)", &windowX, &windowY, &Window_Width, &Window_Height);
 }
 
 static void Window_DidResize(id self, SEL cmd, id notification) {
@@ -3702,6 +3709,7 @@ static void Window_WillClose(id self, SEL cmd, id notification) {
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
+/* If this isn't overriden, an annoying beep sound plays anytime a key is pressed */
 static void Window_KeyDown(id self, SEL cmd, id ev) { }
 
 static Class Window_MakeClass(void) {
@@ -3731,12 +3739,12 @@ static void Window_MakeView(void) {
 	
 	c = objc_allocateClassPair(objc_getClass("NSView"), "ClassiCube_View", 0);
 	// TODO: 64 bit all the way. need to use d instead of f.
-	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect,  "v@:{NSRect={NSPoint=ff}{NSSize=ff}}");
+	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=ff}{NSSize=ff}}");
 	objc_registerClassPair(c);
 
 	viewHandle = objc_msgSend(c, sel_registerName("alloc"));
-	objc_msgSend(viewHandle, sel_registerName("initWithFrame:"), rect);
-	objc_msgSend(winHandle, sel_registerName("setContentView:"), viewHandle);
+	objc_msgSend(viewHandle, sel_registerName("initWithFrame:"),  rect);
+	objc_msgSend(winHandle,  sel_registerName("setContentView:"), viewHandle);
 }
 
 void Window_Init(void) {
@@ -3847,6 +3855,7 @@ void Window_ProcessEvents(void) {
 	int key, type, mouseX, mouseY;
 	CGFloat dx, dy;
 	CGPoint loc;
+	float aaa;
 
 	for (;;) {
 		ev = objc_msgSend(appHandle, sel_registerName("nextEventMatchingMask:untilDate:inMode:dequeue:"), 0xFFFFFFFFU, NULL, NSDefaultRunLoopMode, true);
@@ -3894,12 +3903,9 @@ void Window_ProcessEvents(void) {
 		case  7: /* NSRightMouseDragged */
 		case 27: /* NSOtherMouseDragged */
 			loc    = Send_CGPoint((id)objc_getClass("NSEvent"), sel_registerName("mouseLocation"));
-			mouseX = (int)loc.x - windowX;	
-			mouseY = (int)loc.y - windowY;
+			mouseX = (int)loc.x                           - windowX;	
+			mouseY = (Display_Bounds.Height - (int)loc.y) - windowY;
 			// TODO: this seems to be off by 1
-			/* need to flip Y coordinates because cocoa has window origin at bottom left */
-			mouseY = Window_Height - mouseY;
-
 			Platform_Log2("MOUSE: %i, %i", &mouseX, &mouseY);
 			Pointer_SetPosition(0, mouseX, mouseY);
 
