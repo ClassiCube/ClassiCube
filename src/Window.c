@@ -3885,6 +3885,21 @@ void Window_ProcessEvents(void) {
 			if (key) Input_SetPressed(key, false);
 			break;
 
+		case 12: /* NSFlagsChanged */
+			key = (int)objc_msgSend(ev, sel_registerName("modifierFlags"));
+			Platform_Log1("MODS: %h", &key);
+			// TODO: Figure out how to only get modifiers that changed
+			Input_SetPressed(KEY_LCTRL,    (key & 0x000001) != 0);
+			Input_SetPressed(KEY_LSHIFT,   (key & 0x000002) != 0);
+			Input_SetPressed(KEY_RSHIFT,   (key & 0x000004) != 0);
+			Input_SetPressed(KEY_LWIN,     (key & 0x000008) != 0);
+			Input_SetPressed(KEY_RWIN,     (key & 0x000010) != 0);
+			Input_SetPressed(KEY_LALT,     (key & 0x000020) != 0);
+			Input_SetPressed(KEY_RALT,     (key & 0x000040) != 0);
+			Input_SetPressed(KEY_RCTRL,    (key & 0x002000) != 0);
+			Input_SetPressed(KEY_CAPSLOCK, (key & 0x010000) != 0);
+			break;
+
 		case 22: /* NSScrollWheel */
 			// TODO: Why is this janky
 			Mouse_ScrollWheel(Send_CGFloat(ev, sel_registerName("deltaY")));
