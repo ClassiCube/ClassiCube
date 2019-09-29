@@ -3655,6 +3655,7 @@ static void PrintFrame(const char* fmt, CGRect rect) {
 static void Window_RefreshBounds(void) {
 	CGRect rect;
 
+	// TODO: this is all wrong
 	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle, sel_registerName("frame"));
 	PrintFrame("W_FRM: %i, %i (%i, %i)", rect);
 
@@ -3719,7 +3720,7 @@ static Class Window_MakeClass(void) {
 	return c;
 }
 
-static void View_DrawRect(CGRect r);
+static void View_DrawRect(id self, SEL cmd, CGRect r);
 static void Window_MakeView(void) {
 	CGRect rect;
 	id view;
@@ -3729,7 +3730,8 @@ static void Window_MakeView(void) {
 	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, sel_registerName("frame"));
 	
 	c = objc_allocateClassPair(objc_getClass("NSView"), "ClassiCube_View", 0);
-	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:@{NSRect={NSPoint=ff}{NSSize=ff}}");
+	// TODO: 64 bit all the way. need to use d instead of f.
+	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect,  "v@:{NSRect={NSPoint=ff}{NSSize=ff}}");
 	objc_registerClassPair(c);
 
 	viewHandle = objc_msgSend(c, sel_registerName("alloc"));
@@ -3942,7 +3944,7 @@ void Window_AllocFramebuffer(Bitmap* bmp) {
 	fb_bmp = *bmp;
 }
 
-static void View_DrawRect(CGRect r_) {
+static void View_DrawRect(id self, SEL cmd, CGRect r_) {
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	CGContextRef context = NULL;
 	CGDataProviderRef provider;
@@ -3982,7 +3984,7 @@ static void View_DrawRect(CGRect r_) {
 void Window_DrawFramebuffer(Rect2D r) {
 	CGRect rect;
 	rect.origin.x    = r.X; 
-	rect.origin.y    = r.Y;
+	rect.origin.y    = Window_Height - r.Y - r.Height;
 	rect.size.width  = r.Width;
 	rect.size.height = r.Height;
 
