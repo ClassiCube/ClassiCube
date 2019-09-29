@@ -3644,22 +3644,12 @@ static CC_INLINE CGPoint Send_CGPoint(id receiver, SEL sel) {
 	return ((CGPoint(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
 }
 
-static void PrintFrame(const char* fmt, CGRect rect) {
-	int x = (int)rect.origin.x;
-	int y = (int)rect.origin.y;
-	int width  = (int)rect.size.width;
-	int height = (int)rect.size.height;
-	Platform_Log4(fmt, &x, &y, &width, &height);
-}
-
 static void Window_RefreshBounds(void) {
 	CGRect win, view;
 	int viewY;
 
 	win  = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle,  sel_registerName("frame"));
-	PrintFrame("W_FRM: %i, %i (%i, %i)", win);
 	view = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(viewHandle, sel_registerName("frame"));
-	PrintFrame("V_FRM: %i, %i (%i, %i)", view);
 
 	/* For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen. */
 	/* To get window's real Y screen position, first need to find Y of top. (win.y + win.height) */
@@ -3672,8 +3662,6 @@ static void Window_RefreshBounds(void) {
 
 	Window_Width  = (int)view.size.width;
 	Window_Height = (int)view.size.height;
-
-	Platform_Log4("WIN: %i,%i (%i, %i)", &windowX, &windowY, &Window_Width, &Window_Height);
 }
 
 static void Window_DidResize(id self, SEL cmd, id notification) {
@@ -3965,10 +3953,7 @@ static void View_DrawRect(id self, SEL cmd, CGRect r_) {
 	/* TODO: Find a better way of doing this in cocoa.. */
 	if (!fb_bmp.Scan0) return;
 	nsContext = objc_msgSend((id)objc_getClass("NSGraphicsContext"), sel_registerName("currentContext"));
-	Platform_Log1("NS CTX: %x", &nsContext);
-
-	context = objc_msgSend(nsContext, sel_registerName("graphicsPort"));
-	Platform_Log1("CTX: %x", &context);
+	context   = objc_msgSend(nsContext, sel_registerName("graphicsPort"));
 
 	/* TODO: Only update changed bit.. */
 	rect.origin.x = 0; rect.origin.y = 0;

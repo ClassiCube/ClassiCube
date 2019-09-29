@@ -100,4 +100,5 @@ build_win64
 build_nix32
 build_nix64
 build_osx32
+build_osx64
 build_web
