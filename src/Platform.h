@@ -14,12 +14,10 @@ enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };
 typedef cc_uintptr SocketHandle;
 typedef void* FileHandle;
 #define _NL "\r\n"
-#define UPDATE_FILENAME "update.bat"
 #else
 typedef int SocketHandle;
 typedef int FileHandle;
 #define _NL "\n"
-#define UPDATE_FILENAME "update.sh"
 #endif
 #define UPDATE_FILE "ClassiCube.update"
 

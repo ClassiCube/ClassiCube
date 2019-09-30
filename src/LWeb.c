@@ -527,7 +527,7 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 #if __x86_64__
 	const char* exe_d3d9 = "ClassiCube";
 	const char* exe_ogl  = "ClassiCube";
-#elif
+#elif __i386__
 	const char* exe_d3d9 = "ClassiCube.32";
 	const char* exe_ogl  = "ClassiCube.32";
 #else
@@ -543,7 +543,7 @@ void FetchUpdateTask_Run(bool release, bool d3d9) {
 	const char* exe_ogl  = "ClassiCube.osx";
 #else
 	const char* exe_d3d9 = "ClassiCube.unknown";
-	const
+	const char* exe_ogl  = "ClassiCube.unknown";
 #endif
 #else
 	const char* exe_d3d9 = "ClassiCube.unknown";

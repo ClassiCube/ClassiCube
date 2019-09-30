@@ -3767,7 +3767,6 @@ void Window_Create(int width, int height) {
 	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
 	
 	// TODO: why is the menubar broken
-	// TODO: why does cursor position setting break on resize/move
 	Window_CommonCreate();
 	objc_msgSend(winHandle, sel_registerName("setDelegate:"), winHandle);
 	Window_RefreshBounds();
@@ -3811,7 +3810,8 @@ void Window_ExitFullscreen(void) {
 void Window_SetSize(int width, int height) {
 	CGSize size;
 	size.width = width; size.height = height;
-	objc_msgSend(winHandle, sel_registerName("setContentSize"), size);
+	// TODO: resize from top of window instead
+	objc_msgSend(winHandle, sel_registerName("setContentSize:"), size);
 }
 
 void Window_Close(void) { 
@@ -3845,7 +3845,7 @@ static void Window_ProcessKeyChars(id ev) {
 
 void Window_ProcessEvents(void) {
 	id ev;
-	int key, type, mouseX, mouseY;
+	int key, type, x, y;
 	CGFloat dx, dy;
 	CGPoint loc;
 	float aaa;
@@ -3855,7 +3855,6 @@ void Window_ProcessEvents(void) {
 		if (!ev) break;
 		type = (int)objc_msgSend(ev, sel_registerName("type"));
 
-		// TODO: check if dialog is showing 
 		// TODO: Only raise these events inside the window 
 		switch (type) {
 		case  1: /* NSLeftMouseDown  */
@@ -3873,8 +3872,6 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case 10: /* NSKeyDown */
-			// TODO: Does this allow using F11? if so we should port that to carbon
-			// TODO: don't intercept keys when dialog box open
 			key = Window_MapKey((int)objc_msgSend(ev, sel_registerName("keyCode")));
 			if (key) Input_SetPressed(key, true);
 			// TODO: Test works properly with other languages
@@ -3888,7 +3885,6 @@ void Window_ProcessEvents(void) {
 
 		case 12: /* NSFlagsChanged */
 			key = (int)objc_msgSend(ev, sel_registerName("modifierFlags"));
-			Platform_Log1("MODS: %h", &key);
 			// TODO: Figure out how to only get modifiers that changed
 			Input_SetPressed(KEY_LCTRL,    (key & 0x000001) != 0);
 			Input_SetPressed(KEY_LSHIFT,   (key & 0x000002) != 0);
@@ -3910,12 +3906,12 @@ void Window_ProcessEvents(void) {
 		case  6: /* NSLeftMouseDragged */
 		case  7: /* NSRightMouseDragged */
 		case 27: /* NSOtherMouseDragged */
-			loc    = Send_CGPoint((id)objc_getClass("NSEvent"), sel_registerName("mouseLocation"));
-			mouseX = (int)loc.x                           - windowX;	
-			mouseY = (Display_Bounds.Height - (int)loc.y) - windowY;
+			loc = Send_CGPoint((id)objc_getClass("NSEvent"), sel_registerName("mouseLocation"));
+			x   = (int)loc.x                           - windowX;	
+			y   = (Display_Bounds.Height - (int)loc.y) - windowY;
 			// TODO: this seems to be off by 1
-			Platform_Log2("MOUSE: %i, %i", &mouseX, &mouseY);
-			Pointer_SetPosition(0, mouseX, mouseY);
+			Platform_Log2("MOUSE: %i, %i", &x, &y);
+			Pointer_SetPosition(0, x, y);
 
 			if (Input_RawMode) {
 				dx = Send_CGFloat(ev, sel_registerName("deltaX"));
@@ -3943,9 +3939,11 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	objc_msgSend(alert, sel_registerName("setMessageText:"),     titleCF);
 	objc_msgSend(alert, sel_registerName("setInformativeText:"), msgCF);
 	objc_msgSend(alert, sel_registerName("addButtonWithTitle:"), CFSTR("OK"));
+	
+	if (!cursorVisible) CGDisplayShowCursor(CGMainDisplayID());
 	objc_msgSend(alert, sel_registerName("runModal"));
+	if (!cursorVisible) CGDisplayHideCursor(CGMainDisplayID());
 
-	// TODO: Make Escape and Enter close this
 	CFRelease(titleCF);
 	CFRelease(msgCF);
 }
@@ -4009,7 +4007,6 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 #define NSOpenGLPFADoubleBuffer 5
 #define NSOpenGLPFAColorSize    8
 #define NSOpenGLPFADepthSize    12
-#define NSOpenGLPFAStencilSize  13
 #define NSOpenGLPFAFullScreen   54
 #define NSOpenGLContextParameterSwapInterval 222
 
@@ -4033,8 +4030,6 @@ void GLContext_Init(struct GraphicsMode* mode) {
 
 	fmt = MakePixelFormat(mode, true);
 	if (!fmt) {
-		/* TODO: Test this works properly */
-		/* TODO: Should we juse use newer NSWindow fullscreen way */
 		Platform_LogConst("Failed to create full screen pixel format.");
 		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
 		fmt = MakePixelFormat(mode, false);

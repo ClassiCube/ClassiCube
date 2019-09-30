@@ -1515,9 +1515,11 @@ static void Platform_InitPosix(void) {
 void Platform_Free(void) { }
 
 ReturnCode Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen) {
+	/* TODO: Is there a similar API for OSX/Linux? */
 	return ERR_NOT_SUPPORTED;
 }
 ReturnCode Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen) {
+	/* TODO: Is there a similar API for OSX/Linux? */
 	return ERR_NOT_SUPPORTED;
 }
 
