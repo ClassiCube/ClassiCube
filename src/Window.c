@@ -3808,10 +3808,13 @@ void Window_ExitFullscreen(void) {
 }
 
 void Window_SetSize(int width, int height) {
-	CGSize size;
-	size.width = width; size.height = height;
-	// TODO: resize from top of window instead
-	objc_msgSend(winHandle, sel_registerName("setContentSize:"), size);
+	/* Can't use setContentSize:, because that resizes from the bottom left corner. */
+	CGRect rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle, sel_registerName("frame"));
+
+	rect.origin.y    += Window_Height - height;
+	rect.size.width  += width  - Window_Width;
+	rect.size.height += height - Window_Height;
+	objc_msgSend(winHandle, sel_registerName("setFrame:display:"), rect, true);
 }
 
 void Window_Close(void) { 
