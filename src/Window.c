@@ -3756,17 +3756,17 @@ void Window_Create(int width, int height) {
 	Class winClass;
 	CGRect rect;
 
+	/* Technically the coordinates for the origin are at bottom left corner */
+	/* But since the window is in centre of the screen, don't need to care here */
 	rect.origin.x    = Display_CentreX(width);  
 	rect.origin.y    = Display_CentreY(height);
 	rect.size.width  = width; 
 	rect.size.height = height;
-	// TODO: opentk seems to flip y?
 
 	winClass  = Window_MakeClass();
 	winHandle = objc_msgSend(winClass, sel_registerName("alloc"));
 	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
 	
-	// TODO: why is the menubar broken
 	Window_CommonCreate();
 	objc_msgSend(winHandle, sel_registerName("setDelegate:"), winHandle);
 	Window_RefreshBounds();
@@ -3846,11 +3846,18 @@ static void Window_ProcessKeyChars(id ev) {
 	}
 }
 
+static bool GetMouseCoords(int* x, int* y) {
+	CGPoint loc = Send_CGPoint((id)objc_getClass("NSEvent"), sel_registerName("mouseLocation"));
+	*x = (int)loc.x                           - windowX;	
+	*y = (Display_Bounds.Height - (int)loc.y) - windowY;
+	// TODO: this seems to be off by 1
+	return *x >= 0 && *y >= 0 && *x < Window_Width && *y < Window_Height;
+}
+
 void Window_ProcessEvents(void) {
 	id ev;
 	int key, type, steps, x, y;
 	CGFloat dx, dy;
-	CGPoint loc;
 	float aaa;
 
 	for (;;) {
@@ -3864,14 +3871,14 @@ void Window_ProcessEvents(void) {
 		case  3: /* NSRightMouseDown */
 		case 25: /* NSOtherMouseDown */
 			key = Window_MapMouse((int)objc_msgSend(ev, sel_registerName("buttonNumber")));
-			if (key) Input_SetPressed(key, true);
+			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key, true);
 			break;
 
 		case  2: /* NSLeftMouseUp  */
 		case  4: /* NSRightMouseUp */
 		case 26: /* NSOtherMouseUp */
 			key = Window_MapMouse((int)objc_msgSend(ev, sel_registerName("buttonNumber")));
-			if (key) Input_SetPressed(key, false);
+			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key, false);
 			break;
 
 		case 10: /* NSKeyDown */
@@ -3888,7 +3895,7 @@ void Window_ProcessEvents(void) {
 
 		case 12: /* NSFlagsChanged */
 			key = (int)objc_msgSend(ev, sel_registerName("modifierFlags"));
-			// TODO: Figure out how to only get modifiers that changed
+			/* TODO: Figure out how to only get modifiers that changed */
 			Input_SetPressed(KEY_LCTRL,    (key & 0x000001) != 0);
 			Input_SetPressed(KEY_LSHIFT,   (key & 0x000002) != 0);
 			Input_SetPressed(KEY_RSHIFT,   (key & 0x000004) != 0);
@@ -3916,12 +3923,7 @@ void Window_ProcessEvents(void) {
 		case  6: /* NSLeftMouseDragged */
 		case  7: /* NSRightMouseDragged */
 		case 27: /* NSOtherMouseDragged */
-			loc = Send_CGPoint((id)objc_getClass("NSEvent"), sel_registerName("mouseLocation"));
-			x   = (int)loc.x                           - windowX;	
-			y   = (Display_Bounds.Height - (int)loc.y) - windowY;
-			// TODO: this seems to be off by 1
-			Platform_Log2("MOUSE: %i, %i", &x, &y);
-			Pointer_SetPosition(0, x, y);
+			if (GetMouseCoords(&x, &y)) Pointer_SetPosition(0, x, y);
 
 			if (Input_RawMode) {
 				dx = Send_CGFloat(ev, sel_registerName("deltaX"));
@@ -3931,7 +3933,6 @@ void Window_ProcessEvents(void) {
 			break;
 
 		}
-		Platform_Log1("EVENT: %i", &type);
 		objc_msgSend(appHandle, sel_registerName("sendEvent:"), ev);
 	}
 }
