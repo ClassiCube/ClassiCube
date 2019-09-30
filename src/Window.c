@@ -3845,7 +3845,7 @@ static void Window_ProcessKeyChars(id ev) {
 
 void Window_ProcessEvents(void) {
 	id ev;
-	int key, type, x, y;
+	int key, type, steps, x, y;
 	CGFloat dx, dy;
 	CGPoint loc;
 	float aaa;
@@ -3898,8 +3898,15 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case 22: /* NSScrollWheel */
-			// TODO: Why is this janky
-			Mouse_ScrollWheel(Send_CGFloat(ev, sel_registerName("deltaY")));
+			dy    = Send_CGFloat(ev, sel_registerName("deltaY"));
+			/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175 */
+			/* delta is in 'line height' units, but I don't know how to map that to actual units. */
+			/* All I know is that scrolling by '1 wheel notch' produces a delta of around 0.1, and that */
+			/* sometimes I'll see it go all the way up to 5-6 with a larger wheel scroll. */
+			/* So mulitplying by 10 doesn't really seem a good idea, instead I just round outwards. */
+			/* TODO: Figure out if there's a better way than this. */
+			steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
+			Mouse_ScrollWheel(steps);
 			break;
 
 		case  5: /* NSMouseMoved */
