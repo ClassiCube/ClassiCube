@@ -199,10 +199,10 @@ void Gfx_RestoreAlphaState(cc_uint8 draw) {
 }
 
 
-/* Quoted from http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/
-   The short version: if you want your renderer to properly handle textures with alphas when using
-   bilinear interpolation or mipmapping, you need to premultiply your PNG color data by their (unassociated) alphas. */
-static BitmapCol Gfx_Average(BitmapCol p1, BitmapCol p2) {
+/* Quoted from http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/ */
+/* The short version: if you want your renderer to properly handle textures with alphas when using */
+/* bilinear interpolation or mipmapping, you need to premultiply your PNG color data by their (unassociated) alphas. */
+static BitmapCol AverageCol(BitmapCol p1, BitmapCol p2) {
 	cc_uint32 a1, a2, aSum;
 	cc_uint32 b1, g1, r1;
 	cc_uint32 b2, g2, r2;
@@ -216,10 +216,10 @@ static BitmapCol Gfx_Average(BitmapCol p1, BitmapCol p2) {
 	b1 = p1.B * a1; g1 = p1.G * a1; r1 = p1.R * a1;
 	b2 = p2.B * a2; g2 = p2.G * a2; r2 = p2.R * a2;
 
-	/* https://stackoverflow.com/a/347376
-	   We need to convert RGB back from the pre-multiplied average into normal form
-	   ((r1 + r2) / 2) / ((a1 + a2) / 2)
-	   but we just cancel out the / 2*/
+	/* https://stackoverflow.com/a/347376 */
+	/* We need to convert RGB back from the pre-multiplied average into normal form */
+	/* ((r1 + r2) / 2) / ((a1 + a2) / 2) */
+	/* but we just cancel out the / 2 */
 	ave.B = (b1 + b2) / aSum;
 	ave.G = (g1 + g2) / aSum;
 	ave.R = (r1 + r2) / aSum;
@@ -227,7 +227,8 @@ static BitmapCol Gfx_Average(BitmapCol p1, BitmapCol p2) {
 	return ave;
 }
 
-void Gfx_GenMipmaps(int width, int height, cc_uint8* lvlScan0, cc_uint8* scan0) {
+/* Generates the next mipmaps level bitmap for the given bitmap. */
+static void GenMipmaps(int width, int height, cc_uint8* lvlScan0, cc_uint8* scan0) {
 	BitmapCol* baseSrc = (BitmapCol*)scan0;
 	BitmapCol* baseDst = (BitmapCol*)lvlScan0;
 	int srcWidth = width << 1;
@@ -245,14 +246,15 @@ void Gfx_GenMipmaps(int width, int height, cc_uint8* lvlScan0, cc_uint8* scan0) 
 			BitmapCol src10 = src1[srcX], src11 = src1[srcX + 1];
 
 			/* bilinear filter this mipmap */
-			BitmapCol ave0 = Gfx_Average(src00, src01);
-			BitmapCol ave1 = Gfx_Average(src10, src11);
-			dst[x] = Gfx_Average(ave0, ave1);
+			BitmapCol ave0 = AverageCol(src00, src01);
+			BitmapCol ave1 = AverageCol(src10, src11);
+			dst[x] = AverageCol(ave0, ave1);
 		}
 	}
 }
 
-int Gfx_MipmapsLevels(int width, int height) {
+/* Returns the maximum number of mipmaps levels used for given size. */
+static CC_NOINLINE int CalcMipmapsLevels(int width, int height) {
 	int lvlsWidth = Math_Log2(width), lvlsHeight = Math_Log2(height);
 	if (Gfx.CustomMipmapsLevels) {
 		int lvls = min(lvlsWidth, lvlsHeight);
@@ -473,7 +475,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 	cc_uint8* cur;
 	Bitmap mipmap;
 
-	int lvls = Gfx_MipmapsLevels(bmp->Width, bmp->Height);
+	int lvls = CalcMipmapsLevels(bmp->Width, bmp->Height);
 	int lvl, width = bmp->Width, height = bmp->Height;
 
 	for (lvl = 1; lvl <= lvls; lvl++) {
@@ -482,7 +484,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 		if (height > 1) height /= 2;
 
 		cur = (cc_uint8*)Mem_Alloc(width * height, 4, "mipmaps");
-		Gfx_GenMipmaps(width, height, cur, prev);
+		GenMipmaps(width, height, cur, prev);
 
 		Bitmap_Init(mipmap, width, height, cur);
 		if (partial) {
@@ -500,7 +502,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	IDirect3DTexture9* tex;
 	ReturnCode res;
-	int mipmapsLevels = Gfx_MipmapsLevels(bmp->Width, bmp->Height);
+	int mipmapsLevels = CalcMipmapsLevels(bmp->Width, bmp->Height);
 	int levels = 1 + (mipmaps ? mipmapsLevels : 0);
 
 	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
@@ -1042,7 +1044,7 @@ static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, bool partial) {
 	cc_uint8* prev = bmp->Scan0;
 	cc_uint8* cur;
 
-	int lvls = Gfx_MipmapsLevels(bmp->Width, bmp->Height);
+	int lvls = CalcMipmapsLevels(bmp->Width, bmp->Height);
 	int lvl, width = bmp->Width, height = bmp->Height;
 
 	for (lvl = 1; lvl <= lvls; lvl++) {
@@ -1051,7 +1053,7 @@ static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, bool partial) {
 		if (height > 1) height /= 2;
 
 		cur = (cc_uint8*)Mem_Alloc(width * height, 4, "mipmaps");
-		Gfx_GenMipmaps(width, height, cur, prev);
+		GenMipmaps(width, height, cur, prev);
 
 		if (partial) {
 			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, cur);
@@ -1079,7 +1081,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	if (mipmaps) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 		if (Gfx.CustomMipmapsLevels) {
-			int lvls = Gfx_MipmapsLevels(bmp->Width, bmp->Height);
+			int lvls = CalcMipmapsLevels(bmp->Width, bmp->Height);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, lvls);
 		}
 	} else {

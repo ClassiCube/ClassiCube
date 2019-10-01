@@ -191,10 +191,6 @@ void Gfx_MakeIndices(cc_uint16* indices, int iCount);
 void Gfx_SetupAlphaState(cc_uint8 draw);
 /* Undoes changes to alpha test/blending state by Gfx_SetupAlphaState. */
 void Gfx_RestoreAlphaState(cc_uint8 draw);
-/* Generates the next mipmaps level bitmap for the given bitmap. */
-void Gfx_GenMipmaps(int width, int height, cc_uint8* lvlScan0, cc_uint8* scan0);
-/* Returns the maximum number of mipmaps levels used for given size. */
-int Gfx_MipmapsLevels(int width, int height);
 
 /* Statically initialises the position and dimensions of this texture */
 #define Tex_Rect(x,y, width,height) x,y,width,height
