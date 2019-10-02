@@ -3628,6 +3628,40 @@ void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
 static id appHandle, winHandle, viewHandle;
 extern void* NSDefaultRunLoopMode;
 
+static SEL selFrame, selDeltaX, selDeltaY;
+static SEL selNextEvent, selType, selSendEvent;
+static SEL selButton, selKeycode, selModifiers;
+static SEL selCharacters, selUtf8String, selMouseLoc;
+static SEL selCurrentContext, selGraphicsPort;
+statoc SEL selSetNeedsDisplay, selDisplayInRect;
+static SEL selUpdate, selFlushBuffer;
+
+static void RegisterSelectors(void) {
+	selFrame  = sel_registerName("frame");
+	selDeltaX = sel_registerName("deltaX");
+	selDeltaY = sel_registerName("deltaY");
+
+	selNextEvent = sel_registerName("nextEventMatchingMask:untilDate:inMode:dequeue:");
+	selType      = sel_registerName("type");
+	selSendEvent = sel_registerName("sendEvent:");
+
+	selButton    = sel_registerName("buttonNumber");
+	selKecode    = sel_registerName("keyCode");
+	selModifiers = sel_registerName("modifierFlags");
+
+	selCharacters = sel_registerName("charactersIgnoringModifiers");
+	selUtf8String = sel_registerName("UTF8String");
+	selMouseLoc   = sel_registerName("mouseLocation");
+
+	selCurrentContext  = sel_registerName("currentContext");
+	selGraphicsPort    = sel_registerName("graphicsPort");
+	selSetNeedsDisplay = sel_registerName("setNeedsDisplayInRect:");
+	selDisplayIfNeeded = sel_registerName("displayIfNeeded");
+
+	selUpdate      = sel_registerName("update")
+	selFlushBuffer = sel_registerName("flushBuffer");
+}
+
 static CC_INLINE CGFloat Send_CGFloat(id receiver, SEL sel) {
 	/* Sometimes we have to use fpret and sometimes we don't. See this for more details: */
 	/* http://www.sealiesoftware.com/blog/archive/2008/11/16/objc_explain_objc_msgSend_fpret.html */
@@ -3649,8 +3683,8 @@ static void Window_RefreshBounds(void) {
 	CGRect win, view;
 	int viewY;
 
-	win  = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle,  sel_registerName("frame"));
-	view = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(viewHandle, sel_registerName("frame"));
+	win  = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle,  selFrame);
+	view = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(viewHandle, selFrame);
 
 	/* For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen. */
 	/* To get window's real Y screen position, first need to find Y of top. (win.y + win.height) */
@@ -3724,7 +3758,7 @@ static void Window_MakeView(void) {
 	Class c;
 
 	view = objc_msgSend(winHandle, sel_registerName("contentView"));
-	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, sel_registerName("frame"));
+	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, selFrame);
 	
 	c = objc_allocateClassPair(objc_getClass("NSView"), "ClassiCube_View", 0);
 	// TODO: test rect is actually correct in View_DrawRect on both 32 and 64 bit
@@ -3744,6 +3778,7 @@ void Window_Init(void) {
 	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
 	objc_msgSend(appHandle, sel_registerName("activateIgnoringOtherApps:"), true);
 	Window_CommonInit();
+	RegisterSelectors();
 }
 
 #define NSTitledWindowMask         (1 << 0)
@@ -3809,7 +3844,7 @@ void Window_ExitFullscreen(void) {
 
 void Window_SetSize(int width, int height) {
 	/* Can't use setContentSize:, because that resizes from the bottom left corner. */
-	CGRect rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle, sel_registerName("frame"));
+	CGRect rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle, selFrame);
 
 	rect.origin.y    += Window_Height - height;
 	rect.size.width  += width  - Window_Width;
@@ -3835,8 +3870,8 @@ static void Window_ProcessKeyChars(id ev) {
 	id chars;
 	int i, len;
 
-	chars = objc_msgSend(ev,    sel_registerName("charactersIgnoringModifiers"));
-	src   = objc_msgSend(chars, sel_registerName("UTF8String"));
+	chars = objc_msgSend(ev,    selCharacters);
+	src   = objc_msgSend(chars, selUtf8String);
 	len   = String_CalcLen(src, UInt16_MaxValue);
 	String_InitArray(str, buffer);
 
@@ -3847,7 +3882,7 @@ static void Window_ProcessKeyChars(id ev) {
 }
 
 static bool GetMouseCoords(int* x, int* y) {
-	CGPoint loc = Send_CGPoint((id)objc_getClass("NSEvent"), sel_registerName("mouseLocation"));
+	CGPoint loc = Send_CGPoint((id)objc_getClass("NSEvent"), selMouseLoc);
 	*x = (int)loc.x                           - windowX;	
 	*y = (Display_Bounds.Height - (int)loc.y) - windowY;
 	// TODO: this seems to be off by 1
@@ -3858,43 +3893,41 @@ void Window_ProcessEvents(void) {
 	id ev;
 	int key, type, steps, x, y;
 	CGFloat dx, dy;
-	float aaa;
 
 	for (;;) {
-		ev = objc_msgSend(appHandle, sel_registerName("nextEventMatchingMask:untilDate:inMode:dequeue:"), 0xFFFFFFFFU, NULL, NSDefaultRunLoopMode, true);
+		ev = objc_msgSend(appHandle, selNextEvent, 0xFFFFFFFFU, NULL, NSDefaultRunLoopMode, true);
 		if (!ev) break;
-		type = (int)objc_msgSend(ev, sel_registerName("type"));
+		type = (int)objc_msgSend(ev, selType);
 
-		// TODO: Only raise these events inside the window 
 		switch (type) {
 		case  1: /* NSLeftMouseDown  */
 		case  3: /* NSRightMouseDown */
 		case 25: /* NSOtherMouseDown */
-			key = Window_MapMouse((int)objc_msgSend(ev, sel_registerName("buttonNumber")));
+			key = Window_MapMouse((int)objc_msgSend(ev, selButton));
 			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key, true);
 			break;
 
 		case  2: /* NSLeftMouseUp  */
 		case  4: /* NSRightMouseUp */
 		case 26: /* NSOtherMouseUp */
-			key = Window_MapMouse((int)objc_msgSend(ev, sel_registerName("buttonNumber")));
+			key = Window_MapMouse((int)objc_msgSend(ev, selButton));
 			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key, false);
 			break;
 
 		case 10: /* NSKeyDown */
-			key = Window_MapKey((int)objc_msgSend(ev, sel_registerName("keyCode")));
+			key = Window_MapKey((int)objc_msgSend(ev, selKeycode));
 			if (key) Input_SetPressed(key, true);
 			// TODO: Test works properly with other languages
 			Window_ProcessKeyChars(ev);
 			break;
 
 		case 11: /* NSKeyUp */
-			key = Window_MapKey((int)objc_msgSend(ev, sel_registerName("keyCode")));
+			key = Window_MapKey((int)objc_msgSend(ev, selKeycode));
 			if (key) Input_SetPressed(key, false);
 			break;
 
 		case 12: /* NSFlagsChanged */
-			key = (int)objc_msgSend(ev, sel_registerName("modifierFlags"));
+			key = (int)objc_msgSend(ev, selModifiers);
 			/* TODO: Figure out how to only get modifiers that changed */
 			Input_SetPressed(KEY_LCTRL,    (key & 0x000001) != 0);
 			Input_SetPressed(KEY_LSHIFT,   (key & 0x000002) != 0);
@@ -3908,7 +3941,7 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case 22: /* NSScrollWheel */
-			dy    = Send_CGFloat(ev, sel_registerName("deltaY"));
+			dy    = Send_CGFloat(ev, selDeltaY);
 			/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175 */
 			/* delta is in 'line height' units, but I don't know how to map that to actual units. */
 			/* All I know is that scrolling by '1 wheel notch' produces a delta of around 0.1, and that */
@@ -3926,14 +3959,13 @@ void Window_ProcessEvents(void) {
 			if (GetMouseCoords(&x, &y)) Pointer_SetPosition(0, x, y);
 
 			if (Input_RawMode) {
-				dx = Send_CGFloat(ev, sel_registerName("deltaX"));
-				dy = Send_CGFloat(ev, sel_registerName("deltaY"));
+				dx = Send_CGFloat(ev, selDeltaX);
+				dy = Send_CGFloat(ev, selDeltaY);
 				Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
 			}
 			break;
-
 		}
-		objc_msgSend(appHandle, sel_registerName("sendEvent:"), ev);
+		objc_msgSend(appHandle, selSendEvent, ev);
 	}
 }
 
@@ -3977,8 +4009,8 @@ static void View_DrawRect(id self, SEL cmd, CGRect r_) {
 	/* underlying data doesn't change what shows when drawing. */
 	/* TODO: Find a better way of doing this in cocoa.. */
 	if (!fb_bmp.Scan0) return;
-	nsContext = objc_msgSend((id)objc_getClass("NSGraphicsContext"), sel_registerName("currentContext"));
-	context   = objc_msgSend(nsContext, sel_registerName("graphicsPort"));
+	nsContext = objc_msgSend((id)objc_getClass("NSGraphicsContext"), sel_currentContext);
+	context   = objc_msgSend(nsContext, sel_graphicsPort);
 
 	/* TODO: Only update changed bit.. */
 	rect.origin.x = 0; rect.origin.y = 0;
@@ -4006,8 +4038,8 @@ void Window_DrawFramebuffer(Rect2D r) {
 	rect.size.width  = r.Width;
 	rect.size.height = r.Height;
 
-	objc_msgSend(viewHandle, sel_registerName("setNeedsDisplayInRect:"), rect);
-	objc_msgSend(viewHandle, sel_registerName("displayIfNeeded"));
+	objc_msgSend(viewHandle, selSetNeedsDisplay, rect);
+	objc_msgSend(viewHandle, selDisplayIfNeeded);
 }
 
 void Window_FreeFramebuffer(Bitmap* bmp) {
@@ -4054,12 +4086,12 @@ void GLContext_Init(struct GraphicsMode* mode) {
 	objc_msgSend(ctxHandle, sel_registerName("setView:"), viewHandle);
 	objc_msgSend(fmt,       sel_registerName("release"));
 	objc_msgSend(ctxHandle, sel_registerName("makeCurrentContext"));
-	objc_msgSend(ctxHandle, sel_registerName("update"));
+	objc_msgSend(ctxHandle, selUpdate);
 }
 
 void GLContext_Update(void) {
 	// TODO: Why does this crash on resizing
-	objc_msgSend(ctxHandle, sel_registerName("update"));
+	objc_msgSend(ctxHandle, selUpdate);
 }
 
 void GLContext_Free(void) { 
@@ -4069,7 +4101,7 @@ void GLContext_Free(void) {
 }
 
 bool GLContext_SwapBuffers(void) {
-	objc_msgSend(ctxHandle, sel_registerName("flushBuffer"));
+	objc_msgSend(ctxHandle, selFlushBuffer);
 	return true; 
 }
 
