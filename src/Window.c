@@ -32,6 +32,7 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 #endif
 
 static int cursorPrevX, cursorPrevY;
+static bool cursorVisible = true;
 /* Gets the position of the cursor in screen or window coordinates. */
 static void Cursor_GetRawPos(int* x, int* y);
 
@@ -64,6 +65,17 @@ static void Window_DefaultDisableRawMouse(void) {
 	Window_RegrabMouse();
 	Cursor_SetVisible(true);
 }
+
+static void Window_DoShowDialog(const char* title, const char* msg);
+void Window_ShowDialog(const char* title, const char* msg) {
+	/* Ensure cursor is visible when showing message box */
+	bool visible = cursorVisible;
+
+	if (!visible) Cursor_SetVisible(true);
+	Window_DoShowDialog(title, msg);
+	if (!visible) Cursor_SetVisible(false);
+}
+
 
 void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 	int bpp = Display_BitsPerPixel;
@@ -551,9 +563,12 @@ static void Cursor_GetRawPos(int* x, int* y) {
 void Cursor_SetPosition(int x, int y) { 
 	SetCursorPos(x + windowX, y + windowY);
 }
-void Cursor_SetVisible(bool visible) { ShowCursor(visible); }
+void Cursor_SetVisible(bool visible) {
+	cursorVisible = visible;
+	ShowCursor(visible); 
+}
 
-void Window_ShowDialog(const char* title, const char* msg) {
+static void Window_DoShowDialog(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
 }
 
@@ -1213,6 +1228,7 @@ void Cursor_SetPosition(int x, int y) {
 
 void Cursor_SetVisible(bool visible) {
 	static Cursor blankCursor;
+	cursorVisible = visible;
 
 	if (visible) {
 		XUndefineCursor(win_display, win_handle);
@@ -1461,7 +1477,7 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 	}
 }
 
-void Window_ShowDialog(const char* title, const char* msg) {
+static void Window_DoShowDialog(const char* title, const char* msg) {
 	X11Window w = { 0 };
 	dpy = win_display;
 
@@ -1752,14 +1768,13 @@ void Cursor_SetPosition(int x, int y) {
 	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
 }
 
-static bool cursorVisible = true;
 void Cursor_SetVisible(bool visible) {
+	cursorVisible = visible;
 	if (visible) {
 		CGDisplayShowCursor(CGMainDisplayID());
 	} else {
 		CGDisplayHideCursor(CGMainDisplayID());
 	}
-	cursorVisible = visible;
 }
 
 void Window_OpenKeyboard(void)  { }
@@ -2167,7 +2182,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 	*x = (int)point.h; *y = (int)point.v;
 }
 
-void Window_ShowDialog(const char* title, const char* msg) {
+static void Window_DoShowDialog(const char* title, const char* msg) {
 	CFStringRef titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
 	CFStringRef msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
 	DialogRef dialog;
@@ -2178,11 +2193,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	CFRelease(titleCF);
 	CFRelease(msgCF);
 
-	/* If cursor is hidden, showing a dialog doesn't cause it to reappear */
-	/* So just manually make the cursor reappear */
-	if (!cursorVisible) CGDisplayShowCursor(CGMainDisplayID());
 	RunStandardAlert(dialog, NULL, &itemHit);
-	if (!cursorVisible) CGDisplayHideCursor(CGMainDisplayID());
 	showingDialog = false;
 }
 
@@ -2648,10 +2659,11 @@ void Cursor_SetPosition(int x, int y) {
 }
 
 void Cursor_SetVisible(bool visible) {
+	cursorVisible = visible;
 	SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
 }
 
-void Window_ShowDialog(const char* title, const char* msg) {
+static void Window_DoShowDialog(const char* title, const char* msg) {
 	SDL_ShowSimpleMessageBox(0, title, msg, win_handle);
 }
 
@@ -3106,6 +3118,7 @@ static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 void Cursor_SetPosition(int x, int y) { }
 
 void Cursor_SetVisible(bool visible) {
+	cursorVisible = visible;
 	if (visible) {
 		EM_ASM(Module['canvas'].style['cursor'] = 'default'; );
 	} else {
@@ -3113,7 +3126,7 @@ void Cursor_SetVisible(bool visible) {
 	}
 }
 
-void Window_ShowDialog(const char* title, const char* msg) {
+static void Window_DoShowDialog(const char* title, const char* msg) {
 	EM_ASM_({ alert(UTF8ToString($0) + "\n\n" + UTF8ToString($1)); }, title, msg);
 }
 
@@ -3453,7 +3466,7 @@ static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 void Cursor_SetPosition(int x, int y) { }
 void Cursor_SetVisible(bool visible) { }
 
-void Window_ShowDialog(const char* title, const char* msg) {
+static void Window_DoShowDialog(const char* title, const char* msg) {
 	JNIEnv* env;
 	jvalue args[2];
 	JavaGetCurrentEnv(env);
@@ -3970,7 +3983,7 @@ void Window_ProcessEvents(void) {
 }
 
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
-void Window_ShowDialog(const char* title, const char* msg) {
+static void Window_DoShowDialog(const char* title, const char* msg) {
 	CFStringRef titleCF, msgCF;
 	id alert;
 	
@@ -3983,10 +3996,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	objc_msgSend(alert, sel_registerName("setInformativeText:"), msgCF);
 	objc_msgSend(alert, sel_registerName("addButtonWithTitle:"), CFSTR("OK"));
 	
-	if (!cursorVisible) CGDisplayShowCursor(CGMainDisplayID());
 	objc_msgSend(alert, sel_registerName("runModal"));
-	if (!cursorVisible) CGDisplayHideCursor(CGMainDisplayID());
-
 	CFRelease(titleCF);
 	CFRelease(msgCF);
 }
