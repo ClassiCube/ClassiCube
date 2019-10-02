@@ -3633,7 +3633,7 @@ static SEL selNextEvent, selType, selSendEvent;
 static SEL selButton, selKeycode, selModifiers;
 static SEL selCharacters, selUtf8String, selMouseLoc;
 static SEL selCurrentContext, selGraphicsPort;
-statoc SEL selSetNeedsDisplay, selDisplayInRect;
+static SEL selSetNeedsDisplay, selDisplayIfNeeded;
 static SEL selUpdate, selFlushBuffer;
 
 static void RegisterSelectors(void) {
@@ -3646,7 +3646,7 @@ static void RegisterSelectors(void) {
 	selSendEvent = sel_registerName("sendEvent:");
 
 	selButton    = sel_registerName("buttonNumber");
-	selKecode    = sel_registerName("keyCode");
+	selKeycode   = sel_registerName("keyCode");
 	selModifiers = sel_registerName("modifierFlags");
 
 	selCharacters = sel_registerName("charactersIgnoringModifiers");
@@ -3658,7 +3658,7 @@ static void RegisterSelectors(void) {
 	selSetNeedsDisplay = sel_registerName("setNeedsDisplayInRect:");
 	selDisplayIfNeeded = sel_registerName("displayIfNeeded");
 
-	selUpdate      = sel_registerName("update")
+	selUpdate      = sel_registerName("update");
 	selFlushBuffer = sel_registerName("flushBuffer");
 }
 
@@ -4009,8 +4009,8 @@ static void View_DrawRect(id self, SEL cmd, CGRect r_) {
 	/* underlying data doesn't change what shows when drawing. */
 	/* TODO: Find a better way of doing this in cocoa.. */
 	if (!fb_bmp.Scan0) return;
-	nsContext = objc_msgSend((id)objc_getClass("NSGraphicsContext"), sel_currentContext);
-	context   = objc_msgSend(nsContext, sel_graphicsPort);
+	nsContext = objc_msgSend((id)objc_getClass("NSGraphicsContext"), selCurrentContext);
+	context   = objc_msgSend(nsContext, selGraphicsPort);
 
 	/* TODO: Only update changed bit.. */
 	rect.origin.x = 0; rect.origin.y = 0;
