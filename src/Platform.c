@@ -1778,7 +1778,6 @@ ReturnCode Platform_SetDefaultCurrentDirectory(void) {
 	}
 
 #ifdef CC_BUILD_OSX
-	Window_ShowDialog("(DEBUG) Exe path is", path);
 	static const String bundle = String_FromConst(".app/Contents/MacOS/");
 	String raw = String_Init(path, len, 0);	
 
@@ -1792,9 +1791,6 @@ ReturnCode Platform_SetDefaultCurrentDirectory(void) {
 #endif
 
 	path[len] = '\0';
-#ifdef CC_BUILD_OSX
-	Window_ShowDialog("(DEBUG) And my folder is", path);
-#endif
 	return chdir(path) == -1 ? errno : 0;
 }
 #endif
