@@ -1124,7 +1124,8 @@ void Gfx_SetAlphaBlending(bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(bool enabled) { }
 
 static void GL_ClearCol(PackedCol col) {
-	glClearColor(col.R / 255.0f, col.G / 255.0f, col.B / 255.0f, col.A / 255.0f);
+	glClearColor(PackedCol_R(col) / 255.0f, PackedCol_G(col) / 255.0f,
+				 PackedCol_B(col) / 255.0f, PackedCol_A(col) / 255.0f);
 }
 void Gfx_ClearCol(PackedCol col) {
 	if (col == gfx_clearCol) return;
