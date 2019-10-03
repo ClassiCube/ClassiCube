@@ -2278,14 +2278,14 @@ static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 
 void EnvSettingsScreen_Show(void) {
 	static struct MenuInputDesc descs[11];
-	MenuInput_Hex(descs[0],   Env_DefaultCloudsCol);
-	MenuInput_Hex(descs[1],   Env_DefaultSkyCol);
-	MenuInput_Hex(descs[2],   Env_DefaultFogCol);
+	MenuInput_Hex(descs[0],   ENV_DEFAULT_CLOUDS_COL);
+	MenuInput_Hex(descs[1],   ENV_DEFAULT_SKY_COL);
+	MenuInput_Hex(descs[2],   ENV_DEFAULT_FOG_COL);
 	MenuInput_Float(descs[3],      0,  1000, 1);
 	MenuInput_Int(descs[4],   -10000, 10000, World.Height + 2);
 
-	MenuInput_Hex(descs[5],   Env_DefaultSunCol);
-	MenuInput_Hex(descs[6],   Env_DefaultShadowCol);
+	MenuInput_Hex(descs[5],   ENV_DEFAULT_SUN_COL);
+	MenuInput_Hex(descs[6],   ENV_DEFAULT_SHADOW_COL);
 	MenuInput_Enum(descs[7],  Weather_Names, Array_Elems(Weather_Names));
 	MenuInput_Float(descs[8],  -100,  100, 1);
 	MenuInput_Int(descs[9],   -2048, 2048, World.Height / 2);

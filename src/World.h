@@ -114,8 +114,13 @@ CC_VAR extern struct _EnvData {
 
 enum Weather_ { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
 extern const char* const Weather_Names[3];
-extern const PackedCol Env_DefaultSkyCol, Env_DefaultFogCol, Env_DefaultCloudsCol, Env_DefaultSkyboxCol;
-extern const PackedCol Env_DefaultSunCol, Env_DefaultShadowCol;
+
+#define ENV_DEFAULT_SKY_COL    PackedCol_Make(0x99, 0xCC, 0xFF, 0xFF)
+#define ENV_DEFAULT_FOG_COL    PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_CLOUDS_COL PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_SKYBOX_COL PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_SUN_COL    PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_SHADOW_COL PackedCol_Make(0x9B, 0x9B, 0x9B, 0xFF)
 
 /* If url is empty, extracts default texture pack. */
 /* Else tries extracting cached texture pack for the given URL, */

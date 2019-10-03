@@ -568,15 +568,15 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 	/* Callback for compound tag is called after all its children have been processed */
 	if (IsTag(tag->parent, "EnvColors")) {
 		if (IsTag(tag, "Sky")) {
-			Env.SkyCol = Cw_ParseCol(Env_DefaultSkyCol); return;
+			Env.SkyCol    = Cw_ParseCol(ENV_DEFAULT_SKY_COL); return;
 		} else if (IsTag(tag, "Cloud")) {
-			Env.CloudsCol = Cw_ParseCol(Env_DefaultCloudsCol); return;
+			Env.CloudsCol = Cw_ParseCol(ENV_DEFAULT_CLOUDS_COL); return;
 		} else if (IsTag(tag, "Fog")) {
-			Env.FogCol = Cw_ParseCol(Env_DefaultFogCol); return;
+			Env.FogCol    = Cw_ParseCol(ENV_DEFAULT_FOG_COL); return;
 		} else if (IsTag(tag, "Sunlight")) {
-			Env_SetSunCol(Cw_ParseCol(Env_DefaultSunCol)); return;
+			Env_SetSunCol(Cw_ParseCol(ENV_DEFAULT_SUN_COL)); return;
 		} else if (IsTag(tag, "Ambient")) {
-			Env_SetShadowCol(Cw_ParseCol(Env_DefaultShadowCol)); return;
+			Env_SetShadowCol(Cw_ParseCol(ENV_DEFAULT_SHADOW_COL)); return;
 		}
 	}
 

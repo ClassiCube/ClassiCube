@@ -263,13 +263,13 @@ static void WoM_ParseConfig(struct HttpRequest* item) {
 		if (!String_UNSAFE_Separate(&line, '=', &key, &value)) continue;
 
 		if (String_CaselessEqualsConst(&key, "environment.cloud")) {
-			col = WoM_ParseCol(&value, Env_DefaultCloudsCol);
+			col = WoM_ParseCol(&value, ENV_DEFAULT_CLOUDS_COL);
 			Env_SetCloudsCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.sky")) {
-			col = WoM_ParseCol(&value, Env_DefaultSkyCol);
+			col = WoM_ParseCol(&value, ENV_DEFAULT_SKY_COL);
 			Env_SetSkyCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.fog")) {
-			col = WoM_ParseCol(&value, Env_DefaultFogCol);
+			col = WoM_ParseCol(&value, ENV_DEFAULT_FOG_COL);
 			Env_SetFogCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.level")) {
 			if (Convert_ParseInt(&value, &waterLevel)) {
@@ -1030,17 +1030,17 @@ static void CPE_SetEnvCol(cc_uint8* data) {
 	c = PackedCol_Make(data[1], data[3], data[5], 255);
 
 	if (variable == 0) {
-		Env_SetSkyCol(invalid ? Env_DefaultSkyCol : c);
+		Env_SetSkyCol(invalid    ? ENV_DEFAULT_SKY_COL    : c);
 	} else if (variable == 1) {
-		Env_SetCloudsCol(invalid ? Env_DefaultCloudsCol : c);
+		Env_SetCloudsCol(invalid ? ENV_DEFAULT_CLOUDS_COL : c);
 	} else if (variable == 2) {
-		Env_SetFogCol(invalid ? Env_DefaultFogCol : c);
+		Env_SetFogCol(invalid    ? ENV_DEFAULT_FOG_COL    : c);
 	} else if (variable == 3) {
-		Env_SetShadowCol(invalid ? Env_DefaultShadowCol : c);
+		Env_SetShadowCol(invalid ? ENV_DEFAULT_SHADOW_COL : c);
 	} else if (variable == 4) {
-		Env_SetSunCol(invalid ? Env_DefaultSunCol : c);
+		Env_SetSunCol(invalid    ? ENV_DEFAULT_SUN_COL    : c);
 	} else if (variable == 5) {
-		Env_SetSkyboxCol(invalid ? Env_DefaultSkyboxCol : c);
+		Env_SetSkyboxCol(invalid ? ENV_DEFAULT_SKYBOX_COL : c);
 	}
 }
 

@@ -35,7 +35,6 @@ typedef cc_uint32 PackedCol;
 
 #define PackedCol_Make(r, g, b, a) (PackedCol_R_Bits(r) | PackedCol_G_Bits(g) | PackedCol_B_Bits(b) | PackedCol_A_Bits(a))
 #define PACKEDCOL_WHITE PackedCol_Make(255, 255, 255, 255)
-#define PackedCol_ARGB(r, g, b, a) (((cc_uint32)(r) << 16) | ((cc_uint32)(g) << 8) | ((cc_uint32)(b)) | ((cc_uint32)(a) << 24))
 #define PACKEDCOL_RGB_MASK (PACKEDCOL_R_MASK | PACKEDCOL_G_MASK | PACKEDCOL_B_MASK)
 
 /* Scales RGB components of the given colour. */
