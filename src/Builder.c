@@ -533,7 +533,6 @@ static void Builder_DrawSprite(int count) {
 *--------------------------------------------------Normal mesh builder----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) {
-	PackedCol invalid = PACKEDCOL_CONST(0, 0, 0, 0);
 	int offset = (Blocks.LightOffset[block] >> face) & 1;
 
 	switch (face) {
@@ -550,7 +549,7 @@ static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) 
 	case FACE_YMAX:
 		return y >= World.MaxY           ? Env.SunCol   : Lighting_Col_YMax_Fast(x, (y + 1) - offset, z);
 	}
-	return invalid; /* should never happen */
+	return 0; /* should never happen */
 }
 
 static bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
@@ -559,8 +558,7 @@ static bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int
 	if (cur != initial || Block_IsFaceHidden(cur, Builder_Chunk[chunkIndex + Builder_Offsets[face]], face)) return false;
 	if (Builder_FullBright) return true;
 
-	return PackedCol_Equals(Normal_LightCol(Builder_X, Builder_Y, Builder_Z, face, initial), 
-							Normal_LightCol(x, y, z, face, cur));
+	return Normal_LightCol(Builder_X, Builder_Y, Builder_Z, face, initial) == Normal_LightCol(x, y, z, face, cur);
 }
 
 static int NormalBuilder_StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {

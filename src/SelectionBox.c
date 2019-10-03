@@ -48,8 +48,9 @@ static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** faceVer
 	}
 	*faceVertices = v;
 
-	col.R = ~col.R; col.G = ~col.G; col.B = ~col.B;
-	v     = *edgeVertices;
+	/* invert R/G/B for surrounding line */
+	col = (col & PACKEDCOL_A_MASK) | (~col & PACKEDCOL_RGB_MASK);
+	v   = *edgeVertices;
 	for (i = 0; i < Array_Elems(edgeIndices); i += 3, v++) {
 		v->X   = coords[edgeIndices[i + 0]].X;
 		v->Y   = coords[edgeIndices[i + 1]].Y;

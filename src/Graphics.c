@@ -588,11 +588,11 @@ void Gfx_SetFog(bool enabled) {
 }
 
 void Gfx_SetFogCol(PackedCol col) {
-	if (PackedCol_Equals(col, gfx_fogCol)) return;
+	if (col == gfx_fogCol) return;
 	gfx_fogCol = col;
 
 	if (Gfx.LostContext) return;
-	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR, gfx_fogCol._raw);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR, gfx_fogCol);
 }
 
 void Gfx_SetFogDensity(float value) {
@@ -664,7 +664,7 @@ static void D3D9_RestoreRenderStates(void) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, gfx_alphaBlending);
 
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, gfx_fogEnabled);
-	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR,  gfx_fogCol._raw);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR,  gfx_fogCol);
 	raw.f = gfx_fogDensity;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGDENSITY, raw.u);
 	raw.f = gfx_fogEnd;
@@ -879,7 +879,7 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_Clear(void) {
 	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
-	ReturnCode res = IDirect3DDevice9_Clear(device, 0, NULL, flags, gfx_clearCol._raw, 1.0f, 0);
+	ReturnCode res = IDirect3DDevice9_Clear(device, 0, NULL, flags, gfx_clearCol, 1.0f, 0);
 	if (res) Logger_Abort2(res, "D3D9_Clear");
 }
 
@@ -1127,7 +1127,7 @@ static void GL_ClearCol(PackedCol col) {
 	glClearColor(col.R / 255.0f, col.G / 255.0f, col.B / 255.0f, col.A / 255.0f);
 }
 void Gfx_ClearCol(PackedCol col) {
-	if (PackedCol_Equals(col, gfx_clearCol)) return;
+	if (col == gfx_clearCol) return;
 	GL_ClearCol(col);
 	gfx_clearCol = col;
 }
@@ -1528,7 +1528,7 @@ static void Gfx_SwitchProgram(void) {
 
 void Gfx_SetFog(bool enabled) { gfx_fogEnabled = enabled; Gfx_SwitchProgram(); }
 void Gfx_SetFogCol(PackedCol col) {
-	if (PackedCol_Equals(col, gfx_fogCol)) return;
+	if (col == gfx_fogCol) return;
 	gfx_fogCol = col;
 	Gfx_DirtyUniform(UNI_FOG_COL);
 	Gfx_ReloadUniforms();
@@ -1688,7 +1688,7 @@ void Gfx_SetFog(bool enabled) {
 
 void Gfx_SetFogCol(PackedCol col) {
 	float rgba[4];
-	if (PackedCol_Equals(col, gfx_fogCol)) return;
+	if (col == gfx_fogCol) return;
 
 	rgba[0] = col.R / 255.0f; rgba[1] = col.G / 255.0f;
 	rgba[2] = col.B / 255.0f; rgba[3] = col.A / 255.0f;

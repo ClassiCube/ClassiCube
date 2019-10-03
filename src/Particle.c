@@ -230,12 +230,7 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3f
 		col = World_Contains(x, y, z) ? Lighting_Col_XSide(x, y, z) : Env.SunXSide;
 	}
 
-	if (Blocks.Tinted[p->block]) {
-		PackedCol tintCol = Blocks.FogCol[p->block];
-		col.R = (cc_uint8)(col.R * tintCol.R / 255);
-		col.G = (cc_uint8)(col.G * tintCol.G / 255);
-		col.B = (cc_uint8)(col.B * tintCol.B / 255);
-	}
+	Block_Tint(col, p->block);
 	Particle_DoRender(&size, &pos, &p->rec, col, vertices);
 }
 

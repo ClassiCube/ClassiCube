@@ -535,11 +535,8 @@ static BlockID cw_curID;
 static int cw_colR, cw_colG, cw_colB;
 static PackedCol Cw_ParseCol(PackedCol defValue) {
 	int r = cw_colR, g = cw_colG, b = cw_colB;
-	PackedCol c;
 	if (r > 255 || g > 255 || b > 255) return defValue;
-
-	c.R = r; c.G = g; c.B = b; c.A = 255;
-	return c;		
+	return PackedCol_Make(r, g, b, 255);
 }
 
 static void Cw_Callback_4(struct NbtTag* tag) {
@@ -662,11 +659,7 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 			Blocks.FogDensity[id] = (arr[0] + 1) / 128.0f;
 			/* Fix for older ClassicalSharp versions which saved wrong fog density value */
 			if (arr[0] == 0xFF) Blocks.FogDensity[id] = 0.0f;
- 
-			Blocks.FogCol[id].R = arr[1];
-			Blocks.FogCol[id].G = arr[2];
-			Blocks.FogCol[id].B = arr[3];
-			Blocks.FogCol[id].A = 255;
+			Blocks.FogCol[id] = PackedCol_Make(arr[1], arr[2], arr[3], 255);
 			return;
 		}
 
@@ -1086,7 +1079,7 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 		fog = (cc_uint8)(128 * Blocks.FogDensity[b] - 1);
 		col = Blocks.FogCol[b];
 		tmp[157] = Blocks.FogDensity[b] ? fog : 0;
-		tmp[158] = col.R; tmp[159] = col.G; tmp[160] = col.B;
+		tmp[158] = PackedCol_R(col); tmp[159] = PackedCol_G(col); tmp[160] = PackedCol_B(col);
 
 		minBB = Blocks.MinBB[b]; maxBB = Blocks.MaxBB[b];
 		tmp[174] = (cc_uint8)(minBB.X * 16); tmp[175] = (cc_uint8)(minBB.Y * 16); tmp[176] = (cc_uint8)(minBB.Z * 16);
@@ -1136,11 +1129,11 @@ ReturnCode Cw_Save(struct Stream* stream) {
 		Stream_SetU16_BE(&tmp[44], (cc_uint16)(LocalPlayer_Instance.ReachDistance * 32));
 		tmp[78] = Env.Weather;
 
-		col = Env.SkyCol;    tmp[103] = col.R; tmp[109] = col.G; tmp[115] = col.B;
-		col = Env.CloudsCol; tmp[130] = col.R; tmp[136] = col.G; tmp[142] = col.B;
-		col = Env.FogCol;    tmp[155] = col.R; tmp[161] = col.G; tmp[167] = col.B;
-		col = Env.ShadowCol; tmp[184] = col.R; tmp[190] = col.G; tmp[196] = col.B;
-		col = Env.SunCol;    tmp[214] = col.R; tmp[220] = col.G; tmp[226] = col.B;
+		col = Env.SkyCol;    tmp[103] = PackedCol_R(col); tmp[109] = PackedCol_G(col); tmp[115] = PackedCol_B(col);
+		col = Env.CloudsCol; tmp[130] = PackedCol_R(col); tmp[136] = PackedCol_G(col); tmp[142] = PackedCol_B(col);
+		col = Env.FogCol;    tmp[155] = PackedCol_R(col); tmp[161] = PackedCol_G(col); tmp[167] = PackedCol_B(col);
+		col = Env.ShadowCol; tmp[184] = PackedCol_R(col); tmp[190] = PackedCol_G(col); tmp[196] = PackedCol_B(col);
+		col = Env.SunCol;    tmp[214] = PackedCol_R(col); tmp[220] = PackedCol_G(col); tmp[226] = PackedCol_B(col);
 
 		tmp[260] = (BlockRaw)Env.SidesBlock;
 		tmp[273] = (BlockRaw)Env.EdgeBlock;

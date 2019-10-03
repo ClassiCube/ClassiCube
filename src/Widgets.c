@@ -103,9 +103,9 @@ static void ButtonWidget_Reposition(void* widget) {
 }
 
 static void ButtonWidget_Render(void* widget, double delta) {
-	PackedCol normCol     = PACKEDCOL_CONST(224, 224, 224, 255);
-	PackedCol activeCol   = PACKEDCOL_CONST(255, 255, 160, 255);
-	PackedCol disabledCol = PACKEDCOL_CONST(160, 160, 160, 255);
+	PackedCol normCol     = PackedCol_Make(224, 224, 224, 255);
+	PackedCol activeCol   = PackedCol_Make(255, 255, 160, 255);
+	PackedCol disabledCol = PackedCol_Make(160, 160, 160, 255);
 	PackedCol col, white  = PACKEDCOL_WHITE;
 
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
@@ -186,9 +186,9 @@ void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, struct Font
 #define SCROLL_WIDTH 22
 #define SCROLL_BORDER 2
 #define SCROLL_NUBS_WIDTH 3
-static PackedCol Scroll_BackCol  = PACKEDCOL_CONST( 10,  10,  10, 220);
-static PackedCol Scroll_BarCol   = PACKEDCOL_CONST(100, 100, 100, 220);
-static PackedCol Scroll_HoverCol = PACKEDCOL_CONST(122, 122, 122, 220);
+static PackedCol Scroll_BackCol  = PackedCol_Make( 10,  10,  10, 220);
+static PackedCol Scroll_BarCol   = PackedCol_Make(100, 100, 100, 220);
+static PackedCol Scroll_HoverCol = PackedCol_Make(122, 122, 122, 220);
 
 static void ScrollbarWidget_ClampTopRow(struct ScrollbarWidget* w) {
 	int maxTop = w->totalRows - TABLE_MAX_ROWS_DISPLAYED;
@@ -599,13 +599,13 @@ static void TableWidget_Render(void* widget, double delta) {
 	float off;
 	int i, x, y;
 
-	/* These were sourced by taking a screenshot of vanilla
-	Then using paint to extract the colour components
-	Then using wolfram alpha to solve the glblendfunc equation */
-	PackedCol topBackCol    = PACKEDCOL_CONST( 34,  34,  34, 168);
-	PackedCol bottomBackCol = PACKEDCOL_CONST( 57,  57, 104, 202);
-	PackedCol topSelCol     = PACKEDCOL_CONST(255, 255, 255, 142);
-	PackedCol bottomSelCol  = PACKEDCOL_CONST(255, 255, 255, 192);
+	/* These were sourced by taking a screenshot of vanilla */
+	/* Then using paint to extract the colour components */
+	/* Then using wolfram alpha to solve the glblendfunc equation */
+	PackedCol topBackCol    = PackedCol_Make( 34,  34,  34, 168);
+	PackedCol bottomBackCol = PackedCol_Make( 57,  57, 104, 202);
+	PackedCol topSelCol     = PackedCol_Make(255, 255, 255, 142);
+	PackedCol bottomSelCol  = PackedCol_Make(255, 255, 255, 192);
 
 	Gfx_Draw2DGradient(Table_X(w), Table_Y(w),
 		Table_Width(w), Table_Height(w), topBackCol, bottomBackCol);
@@ -928,11 +928,9 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 
 	if (colCode) {
 		col = Drawer2D_GetCol(colCode);
-		w->caretCol.B = col.B; w->caretCol.G = col.G; 
-		w->caretCol.R = col.R; w->caretCol.A = col.A;
+		w->caretCol = PackedCol_Make(col.R, col.G, col.B, col.A);
 	} else {
-		PackedCol white = PACKEDCOL_WHITE;
-		w->caretCol = PackedCol_Scale(white, 0.8f);
+		w->caretCol = PackedCol_Scale(PACKEDCOL_WHITE, 0.8f);
 	}
 }
 
@@ -1235,8 +1233,8 @@ static bool Hex_ValidString(struct MenuInputDesc* d, const String* s) {
 }
 
 static bool Hex_ValidValue(struct MenuInputDesc* d, const String* s) {
-	PackedCol col;
-	return PackedCol_TryParseHex(s, &col);
+	cc_uint8 rgb[3];
+	return PackedCol_TryParseHex(s, rgb);
 }
 
 static void Hex_Default(struct MenuInputDesc* d, String* value) {
@@ -1346,7 +1344,7 @@ const struct MenuInputVTABLE StringInput_VTABLE = {
 *#########################################################################################################################*/
 static void MenuInputWidget_Render(void* widget, double delta) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	PackedCol backCol = PACKEDCOL_CONST(30, 30, 30, 200);
+	PackedCol backCol     = PackedCol_Make(30, 30, 30, 200);
 
 	Gfx_SetTexturing(false);
 	Gfx_Draw2DFlat(w->x, w->y, w->width, w->height, backCol);
@@ -1514,8 +1512,8 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 }
 
 static void ChatInputWidget_Render(void* widget, double delta) {
-	PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
 	struct InputWidget* w = (struct InputWidget*)widget;
+	PackedCol backCol     = PackedCol_Make(0, 0, 0, 127);
 	int x = w->x, y = w->y;
 	bool caretAtEnd;
 	int i, width;
@@ -2003,8 +2001,8 @@ static void PlayerListWidget_Render(void* widget, double delta) {
 	struct Screen* grabbed;
 	struct Texture tex;
 	int i, offset, height;
-	PackedCol topCol    = PACKEDCOL_CONST( 0,  0,  0, 180);
-	PackedCol bottomCol = PACKEDCOL_CONST(50, 50, 50, 205);
+	PackedCol topCol    = PackedCol_Make( 0,  0,  0, 180);
+	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
 
 	Gfx_SetTexturing(false);
 	offset = title->height + 10;
@@ -2620,7 +2618,7 @@ static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct 
 }
 
 static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
-	BitmapCol col = PACKEDCOL_CONST(30, 30, 30, 200);
+	BitmapCol col = BITMAPCOL_CONST(30, 30, 30, 200);
 	Size2D size, titles, content;
 	Bitmap bmp;
 

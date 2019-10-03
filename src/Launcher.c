@@ -324,12 +324,12 @@ void Launcher_ResetSkin(void) {
 }
 
 CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
-	PackedCol tmp;
+	cc_uint8 rgb[3];
 	String value;
 	if (!Options_UNSAFE_Get(key, &value))     return;
-	if (!PackedCol_TryParseHex(&value, &tmp)) return;
+	if (!PackedCol_TryParseHex(&value, rgb)) return;
 
-	col->R = tmp.R; col->G = tmp.G; col->B = tmp.B;
+	col->R = rgb[0]; col->G = rgb[1]; col->B = rgb[2];
 }
 
 void Launcher_LoadSkin(void) {
@@ -342,9 +342,8 @@ void Launcher_LoadSkin(void) {
 
 CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
 	String value; char valueBuffer[8];
-	PackedCol tmp;
 	/* Component order might be different to BitmapCol */
-	tmp.R = col.R; tmp.G = col.G; tmp.B = col.B; tmp.A = 0;
+	PackedCol tmp = PackedCol_Make(col.R, col.G, col.B, 0);
 	
 	String_InitArray(value, valueBuffer);
 	PackedCol_ToHex(&value, tmp);

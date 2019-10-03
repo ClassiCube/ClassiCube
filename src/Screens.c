@@ -481,7 +481,7 @@ static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int coun
 static void LoadingScreen_DrawBackground(void) {
 	VertexP3fT2fC4b vertices[144];
 	VertexP3fT2fC4b* ptr = vertices;
-	PackedCol col = PACKEDCOL_CONST(64, 64, 64, 255);
+	PackedCol col = PackedCol_Make(64, 64, 64, 255);
 
 	struct Texture tex;
 	TextureLoc loc;
@@ -523,8 +523,8 @@ static void LoadingScreen_Init(void* screen) {
 #define PROG_BAR_HEIGHT 4
 static void LoadingScreen_Render(void* screen, double delta) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	PackedCol backCol = PACKEDCOL_CONST(128, 128, 128, 255);
-	PackedCol progCol = PACKEDCOL_CONST(128, 255, 128, 255);
+	PackedCol backCol = PackedCol_Make(128, 128, 128, 255);
+	PackedCol progCol = PackedCol_Make(128, 255, 128, 255);
 	int progWidth;
 	int x, y;
 
@@ -897,7 +897,7 @@ static void HUDScreen_DrawChatBackground(struct HUDScreen* s) {
 	int height = usedHeight + s->clientStatus.height;
 
 	if (height > 0) {
-		PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
+		PackedCol backCol = PackedCol_Make(0, 0, 0, 127);
 		Gfx_Draw2DFlat(x - 5, y - 5, width + 10, height + 10, backCol);
 	}
 }
@@ -1336,8 +1336,8 @@ static void DisconnectScreen_Init(void* screen) {
 
 static void DisconnectScreen_Render(void* screen, double delta) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	PackedCol top    = PACKEDCOL_CONST(64, 32, 32, 255);
-	PackedCol bottom = PACKEDCOL_CONST(80, 16, 16, 255);
+	PackedCol top    = PackedCol_Make(64, 32, 32, 255);
+	PackedCol bottom = PackedCol_Make(80, 16, 16, 255);
 
 	if (s->canReconnect) { DisconnectScreen_UpdateDelayLeft(s, delta); }
 	Gfx_Draw2DGradient(0, 0, Window_Width, Window_Height, top, bottom);

@@ -38,13 +38,12 @@ static float DefaultSet_FogDensity(BlockID b) {
 }
 
 static PackedCol DefaultSet_FogColour(BlockID b) {
-	PackedCol colWater = PACKEDCOL_CONST(  5,   5,  51, 255);
-	PackedCol colLava  = PACKEDCOL_CONST(153,  25,   0, 255);
-	PackedCol colZero  = PACKEDCOL_CONST(  0,   0,   0,   0);
+	PackedCol colWater = PackedCol_Make(  5,   5,  51, 255);
+	PackedCol colLava  = PackedCol_Make(153,  25,   0, 255);
 
 	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER) return colWater;
 	if (b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA)  return colLava;
-	return colZero;
+	return 0;
 }
 
 static cc_uint8 DefaultSet_Draw(BlockID b) {
@@ -156,9 +155,9 @@ void Block_SetCustomDefined(BlockID block, bool defined) {
 }
 
 void Block_DefineCustom(BlockID block) {
-	PackedCol black = PACKEDCOL_CONST(0, 0, 0, 255);
+	PackedCol black = PackedCol_Make(0, 0, 0, 255);
 	String name     = Block_UNSAFE_GetName(block);
-	Blocks.Tinted[block] = !PackedCol_Equals(Blocks.FogCol[block], black) && String_IndexOf(&name, '#') >= 0;
+	Blocks.Tinted[block] = Blocks.FogCol[block] != black && String_IndexOf(&name, '#') >= 0;
 
 	Block_SetDrawType(block, Blocks.Draw[block]);
 	Block_CalcRenderBounds(block);
