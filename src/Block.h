@@ -103,12 +103,7 @@ CC_VAR extern struct _BlockLists {
 } Blocks;
 
 #define Block_Tint(col, block)\
-if (Blocks.Tinted[block]) {\
-	PackedCol tintCol = Blocks.FogCol[block];\
-	col.R = (cc_uint8)(col.R * tintCol.R / 255);\
-	col.G = (cc_uint8)(col.G * tintCol.G / 255);\
-	col.B = (cc_uint8)(col.B * tintCol.B / 255);\
-}
+if (Blocks.Tinted[block]) col = PackedCol_Tint(col, Blocks.FogCol[block]);
 
 /* Returns whether the given block has been changed from default. */
 bool Block_IsCustomDefined(BlockID block);

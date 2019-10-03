@@ -15,6 +15,13 @@ PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t) {
 	return a;
 }
 
+PackedCol PackedCol_Tint(PackedCol a, PackedCol b) {
+	a.R = (cc_uint8)(a.R * b.R / 255);
+	a.G = (cc_uint8)(a.G * b.G / 255);
+	a.B = (cc_uint8)(a.B * b.B / 255);
+	return a;
+}
+
 void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, PackedCol* yMin) {
 	*xSide = PackedCol_Scale(normal, PACKEDCOL_SHADE_X);
 	*zSide = PackedCol_Scale(normal, PACKEDCOL_SHADE_Z);
