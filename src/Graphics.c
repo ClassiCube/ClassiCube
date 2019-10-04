@@ -1487,8 +1487,8 @@ static void Gfx_ReloadUniforms(void) {
 		s->uniforms &= ~UNI_TEX_MATRIX;
 	}
 	if ((s->uniforms & UNI_FOG_COL) && (s->features & FTR_HASANY_FOG)) {
-		glUniform3f(s->locations[2], gfx_fogCol.R / 255.0f, gfx_fogCol.G / 255.0f, 
-									 gfx_fogCol.B / 255.0f);
+		glUniform3f(s->locations[2], PackedCol_R(gfx_fogCol) / 255.0f, PackedCol_G(gfx_fogCol) / 255.0f, 
+									 PackedCol_B(gfx_fogCol) / 255.0f);
 		s->uniforms &= ~UNI_FOG_COL;
 	}
 	if ((s->uniforms & UNI_FOG_END) && (s->features & FTR_LINEAR_FOG)) {
@@ -1691,8 +1691,8 @@ void Gfx_SetFogCol(PackedCol col) {
 	float rgba[4];
 	if (col == gfx_fogCol) return;
 
-	rgba[0] = col.R / 255.0f; rgba[1] = col.G / 255.0f;
-	rgba[2] = col.B / 255.0f; rgba[3] = col.A / 255.0f;
+	rgba[0] = PackedCol_R(col) / 255.0f; rgba[1] = PackedCol_G(col) / 255.0f;
+	rgba[2] = PackedCol_B(col) / 255.0f; rgba[3] = PackedCol_A(col) / 255.0f;
 
 	glFogfv(GL_FOG_COLOR, rgba);
 	gfx_fogCol = col;
