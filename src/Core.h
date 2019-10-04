@@ -66,8 +66,13 @@ typedef unsigned __INTPTR_TYPE__ cc_uintptr;
 #endif
 #endif
 #define CC_HAS_VARS
+
+#ifdef __BIG_ENDIAN__
+#define CC_BIG_ENDIAN
+#endif
 #elif __MWERKS__
 /* TODO: Is there actual attribute support for CC_API etc somewhere? */
+#define CC_BIG_ENDIAN
 #endif
 
 /* Unrecognised compiler, so just go with sensisble defaults */
