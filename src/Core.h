@@ -65,8 +65,7 @@ typedef unsigned __INTPTR_TYPE__ cc_uintptr;
 #define CC_VAR __attribute__((visibility("default")))
 #endif
 #endif
-#define CC_HAS_VARS
-
+#define CC_HAS_MISC
 #ifdef __BIG_ENDIAN__
 #define CC_BIG_ENDIAN
 #endif
