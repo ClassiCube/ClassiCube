@@ -243,15 +243,9 @@ static void WoM_CheckSendWomID(void) {
 }
 
 static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
-	PackedCol col;
 	int argb;
 	if (!Convert_ParseInt(value, &argb)) return defaultCol;
-
-	col.A = 255;
-	col.R = (cc_uint8)(argb >> 16);
-	col.G = (cc_uint8)(argb >> 8);
-	col.B = (cc_uint8)argb;
-	return col;
+	return PackedCol_Make(argb >> 16, argb >> 8, argb, 255);
 }
 
 static void WoM_ParseConfig(struct HttpRequest* item) {
@@ -269,13 +263,13 @@ static void WoM_ParseConfig(struct HttpRequest* item) {
 		if (!String_UNSAFE_Separate(&line, '=', &key, &value)) continue;
 
 		if (String_CaselessEqualsConst(&key, "environment.cloud")) {
-			col = WoM_ParseCol(&value, Env_DefaultCloudsCol);
+			col = WoM_ParseCol(&value, ENV_DEFAULT_CLOUDS_COL);
 			Env_SetCloudsCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.sky")) {
-			col = WoM_ParseCol(&value, Env_DefaultSkyCol);
+			col = WoM_ParseCol(&value, ENV_DEFAULT_SKY_COL);
 			Env_SetSkyCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.fog")) {
-			col = WoM_ParseCol(&value, Env_DefaultFogCol);
+			col = WoM_ParseCol(&value, ENV_DEFAULT_FOG_COL);
 			Env_SetFogCol(col);
 		} else if (String_CaselessEqualsConst(&key, "environment.level")) {
 			if (Convert_ParseInt(&value, &waterLevel)) {
@@ -1016,7 +1010,7 @@ static void CPE_MakeSelection(cc_uint8* data) {
 	data += 6;
 
 	/* R,G,B,A are actually 16 bit unsigned integers */
-	c.R = data[1]; c.G = data[3]; c.B = data[5]; c.A = data[7];
+	c = PackedCol_Make(data[1], data[3], data[5], data[7]);
 	Selections_Add(selectionId, p1, p2, c);
 }
 
@@ -1033,20 +1027,20 @@ static void CPE_SetEnvCol(cc_uint8* data) {
 	invalid  = data[0] || data[2] || data[4];
 	/* R,G,B are actually 16 bit unsigned integers */
 	/* Above > 255 is 'invalid' (this is used by servers) */
-	c.R = data[1]; c.G = data[3]; c.B = data[5]; c.A = 255;
+	c = PackedCol_Make(data[1], data[3], data[5], 255);
 
 	if (variable == 0) {
-		Env_SetSkyCol(invalid ? Env_DefaultSkyCol : c);
+		Env_SetSkyCol(invalid    ? ENV_DEFAULT_SKY_COL    : c);
 	} else if (variable == 1) {
-		Env_SetCloudsCol(invalid ? Env_DefaultCloudsCol : c);
+		Env_SetCloudsCol(invalid ? ENV_DEFAULT_CLOUDS_COL : c);
 	} else if (variable == 2) {
-		Env_SetFogCol(invalid ? Env_DefaultFogCol : c);
+		Env_SetFogCol(invalid    ? ENV_DEFAULT_FOG_COL    : c);
 	} else if (variable == 3) {
-		Env_SetShadowCol(invalid ? Env_DefaultShadowCol : c);
+		Env_SetShadowCol(invalid ? ENV_DEFAULT_SHADOW_COL : c);
 	} else if (variable == 4) {
-		Env_SetSunCol(invalid ? Env_DefaultSunCol : c);
+		Env_SetSunCol(invalid    ? ENV_DEFAULT_SUN_COL    : c);
 	} else if (variable == 5) {
-		Env_SetSkyboxCol(invalid ? Env_DefaultSkyboxCol : c);
+		Env_SetSkyboxCol(invalid ? ENV_DEFAULT_SKYBOX_COL : c);
 	}
 }
 
@@ -1412,22 +1406,15 @@ static BlockID BlockDefs_DefineBlockCommonStart(cc_uint8** ptr, bool uniqueSideT
 }
 
 static void BlockDefs_DefineBlockCommonEnd(cc_uint8* data, cc_uint8 shape, BlockID block) {
-	cc_uint8 blockDraw;
-	cc_uint8 density;
-	PackedCol c;
-
-	blockDraw = *data++;
+	cc_uint8 draw = data[0];
 	if (shape == 0) {
-		Blocks.SpriteOffset[block] = blockDraw;
-		blockDraw = DRAW_SPRITE;
+		Blocks.SpriteOffset[block] = draw;
+		draw = DRAW_SPRITE;
 	}
-	Blocks.Draw[block] = blockDraw;
+	Blocks.Draw[block] = draw;
 
-	density = *data++;
-	Blocks.FogDensity[block] = density == 0 ? 0.0f : (density + 1) / 128.0f;
-
-	c.R = *data++; c.G = *data++; c.B = *data++; c.A = 255;
-	Blocks.FogCol[block] = c;
+	Blocks.FogDensity[block] = data[1] == 0 ? 0.0f : (data[1] + 1) / 128.0f;
+	Blocks.FogCol[block]     = PackedCol_Make(data[2], data[3], data[4], 255);
 	Block_DefineCustom(block);
 }
 

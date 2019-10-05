@@ -533,7 +533,6 @@ static void Builder_DrawSprite(int count) {
 *--------------------------------------------------Normal mesh builder----------------------------------------------------*
 *#########################################################################################################################*/
 static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) {
-	PackedCol invalid = PACKEDCOL_CONST(0, 0, 0, 0);
 	int offset = (Blocks.LightOffset[block] >> face) & 1;
 
 	switch (face) {
@@ -550,7 +549,7 @@ static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) 
 	case FACE_YMAX:
 		return y >= World.MaxY           ? Env.SunCol   : Lighting_Col_YMax_Fast(x, (y + 1) - offset, z);
 	}
-	return invalid; /* should never happen */
+	return 0; /* should never happen */
 }
 
 static bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
@@ -559,8 +558,7 @@ static bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int
 	if (cur != initial || Block_IsFaceHidden(cur, Builder_Chunk[chunkIndex + Builder_Offsets[face]], face)) return false;
 	if (Builder_FullBright) return true;
 
-	return PackedCol_Equals(Normal_LightCol(Builder_X, Builder_Y, Builder_Z, face, initial), 
-							Normal_LightCol(x, y, z, face, cur));
+	return Normal_LightCol(Builder_X, Builder_Y, Builder_Z, face, initial) == Normal_LightCol(x, y, z, face, cur);
 }
 
 static int NormalBuilder_StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {
@@ -920,7 +918,6 @@ static int Adv_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, Blo
 
 
 #define Adv_CountBits(F, a, b, c, d) (((F >> a) & 1) + ((F >> b) & 1) + ((F >> c) & 1) + ((F >> d) & 1))
-#define Adv_Tint(c) c.R = (cc_uint8)(c.R * tint.R / 255); c.G = (cc_uint8)(c.G * tint.G / 255); c.B = (cc_uint8)(c.B * tint.B / 255);
 
 static void Adv_DrawXMin(int count) {
 	TextureLoc texLoc = Block_Tex(Builder_Block, FACE_XMIN);
@@ -943,8 +940,9 @@ static void Adv_DrawXMin(int count) {
 	VertexP3fT2fC4b* vertices, v;
 
 	if (Builder_Tinted) {
-		tint = Blocks.FogCol[Builder_Block];
-		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
 	vertices = part->fVertices[FACE_XMIN];
@@ -984,8 +982,9 @@ static void Adv_DrawXMax(int count) {
 	VertexP3fT2fC4b* vertices, v;
 
 	if (Builder_Tinted) {
-		tint = Blocks.FogCol[Builder_Block];
-		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
 	vertices = part->fVertices[FACE_XMAX];
@@ -1025,8 +1024,9 @@ static void Adv_DrawZMin(int count) {
 	VertexP3fT2fC4b* vertices, v;
 
 	if (Builder_Tinted) {
-		tint = Blocks.FogCol[Builder_Block];
-		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
 	vertices = part->fVertices[FACE_ZMIN];
@@ -1066,8 +1066,9 @@ static void Adv_DrawZMax(int count) {
 	VertexP3fT2fC4b* vertices, v;
 
 	if (Builder_Tinted) {
-		tint = Blocks.FogCol[Builder_Block];
-		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
 	vertices = part->fVertices[FACE_ZMAX];
@@ -1107,8 +1108,9 @@ static void Adv_DrawYMin(int count) {
 	VertexP3fT2fC4b* vertices, v;
 
 	if (Builder_Tinted) {
-		tint = Blocks.FogCol[Builder_Block];
-		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
 	vertices = part->fVertices[FACE_YMIN];
@@ -1148,8 +1150,9 @@ static void Adv_DrawYMax(int count) {
 	VertexP3fT2fC4b* vertices, v;
 
 	if (Builder_Tinted) {
-		tint = Blocks.FogCol[Builder_Block];
-		Adv_Tint(col0_0); Adv_Tint(col1_0); Adv_Tint(col1_1); Adv_Tint(col0_1);
+		tint   = Blocks.FogCol[Builder_Block];
+		col0_0 = PackedCol_Tint(col0_0, tint); col1_0 = PackedCol_Tint(col1_0, tint);
+		col1_1 = PackedCol_Tint(col1_1, tint); col0_1 = PackedCol_Tint(col0_1, tint);
 	}
 
 	vertices = part->fVertices[FACE_YMAX];

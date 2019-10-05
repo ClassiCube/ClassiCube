@@ -18,6 +18,8 @@ typedef union BitmapCol_ {
 
 /* Whether components of two colours are all equal. */
 #define BitmapCol_Equals(a,b) ((a)._raw == (b)._raw)
+#define PackedCol_ARGB(r, g, b, a) (((cc_uint32)(r) << 16) | ((cc_uint32)(g) << 8) | ((cc_uint32)(b)) | ((cc_uint32)(a) << 24))
+
 
 /* A 2D array of BitmapCol pixels */
 typedef struct Bitmap_ { cc_uint8* Scan0; int Width, Height; } Bitmap;

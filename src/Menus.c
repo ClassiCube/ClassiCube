@@ -106,8 +106,8 @@ static void Menu_RenderBounds(void) {
 	/* These were sourced by taking a screenshot of vanilla
 	Then using paint to extract the colour components
 	Then using wolfram alpha to solve the glblendfunc equation */
-	PackedCol topCol    = PACKEDCOL_CONST(24, 24, 24, 105);
-	PackedCol bottomCol = PACKEDCOL_CONST(51, 51, 98, 162);
+	PackedCol topCol    = PackedCol_Make(24, 24, 24, 105);
+	PackedCol bottomCol = PackedCol_Make(51, 51, 98, 162);
 	Gfx_Draw2DGradient(0, 0, Window_Width, Window_Height, topCol, bottomCol);
 }
 
@@ -190,9 +190,13 @@ static void Menu_BeginGen(int width, int height, int length) {
 	GeneratingScreen_Show();
 }
 
-static int Menu_Int(const String* str)          { int v; Convert_ParseInt(str, &v); return v; }
-static float Menu_Float(const String* str)      { float v; Convert_ParseFloat(str, &v); return v; }
-static PackedCol Menu_HexCol(const String* str) { PackedCol v; PackedCol_TryParseHex(str, &v); return v; }
+static int Menu_Int(const String* str)     { int v;   Convert_ParseInt(str, &v);   return v; }
+static float Menu_Float(const String* str) { float v; Convert_ParseFloat(str, &v); return v; }
+static PackedCol Menu_HexCol(const String* str) { 
+	cc_uint8 rgb[3]; 
+	PackedCol_TryParseHex(str, rgb); 
+	return PackedCol_Make(rgb[0], rgb[1], rgb[2], 255);
+}
 
 static void Menu_SwitchOptions(void* a, void* b)        { OptionsGroupScreen_Show(); }
 static void Menu_SwitchPause(void* a, void* b)          { PauseScreen_Show(); }
@@ -790,7 +794,7 @@ static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 }
 
 static void EditHotkeyScreen_Render(void* screen, double delta) {
-	PackedCol grey = PACKEDCOL_CONST(150, 150, 150, 255);
+	PackedCol grey = PackedCol_Make(150, 150, 150, 255);
 	int x, y;
 	MenuScreen_Render(screen, delta);
 
@@ -958,7 +962,7 @@ static void GenLevelScreen_Notchy(void* a, void* b)    { GenLevelScreen_Gen(a, t
 static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int y, int def) {
 	String tmp; char tmpBuffer[STRING_SIZE];
 	struct MenuInputDesc desc;
-	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
+	PackedCol col = PackedCol_Make(224, 224, 224, 255);
 
 	if (i == 3) {
 		MenuInput_Seed(desc);
@@ -1224,7 +1228,7 @@ static void SaveLevelScreen_Classic(void* a, void* b)   { SaveLevelScreen_Save(a
 static void SaveLevelScreen_Schematic(void* a, void* b) { SaveLevelScreen_Save(a, b, ".schematic"); }
 
 static void SaveLevelScreen_Render(void* screen, double delta) {
-	PackedCol grey = PACKEDCOL_CONST(150, 150, 150, 255);
+	PackedCol grey = PackedCol_Make(150, 150, 150, 255);
 	int x, y;
 	MenuScreen_Render(screen, delta);
 
@@ -2031,7 +2035,7 @@ static void MenuOptionsScreen_Init(void* screen) {
 static void MenuOptionsScreen_Render(void* screen, double delta) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct TextGroupWidget* w;
-	PackedCol tableCol = PACKEDCOL_CONST(20, 20, 20, 200);
+	PackedCol tableCol = PackedCol_Make(20, 20, 20, 200);
 
 	MenuScreen_Render(s, delta);
 	if (!s->extHelp.lines) return;
@@ -2274,14 +2278,14 @@ static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 
 void EnvSettingsScreen_Show(void) {
 	static struct MenuInputDesc descs[11];
-	MenuInput_Hex(descs[0],   Env_DefaultCloudsCol);
-	MenuInput_Hex(descs[1],   Env_DefaultSkyCol);
-	MenuInput_Hex(descs[2],   Env_DefaultFogCol);
+	MenuInput_Hex(descs[0],   ENV_DEFAULT_CLOUDS_COL);
+	MenuInput_Hex(descs[1],   ENV_DEFAULT_SKY_COL);
+	MenuInput_Hex(descs[2],   ENV_DEFAULT_FOG_COL);
 	MenuInput_Float(descs[3],      0,  1000, 1);
 	MenuInput_Int(descs[4],   -10000, 10000, World.Height + 2);
 
-	MenuInput_Hex(descs[5],   Env_DefaultSunCol);
-	MenuInput_Hex(descs[6],   Env_DefaultShadowCol);
+	MenuInput_Hex(descs[5],   ENV_DEFAULT_SUN_COL);
+	MenuInput_Hex(descs[6],   ENV_DEFAULT_SHADOW_COL);
 	MenuInput_Enum(descs[7],  Weather_Names, Array_Elems(Weather_Names));
 	MenuInput_Float(descs[8],  -100,  100, 1);
 	MenuInput_Int(descs[9],   -2048, 2048, World.Height / 2);
@@ -2747,7 +2751,7 @@ void NostalgiaScreen_Show(void) {
 *#########################################################################################################################*/
 static void Overlay_MakeLabels(void* menu, struct TextWidget* labels) {
 	struct MenuScreen* s = (struct MenuScreen*)menu;
-	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
+	PackedCol col = PackedCol_Make(224, 224, 224, 255);
 	int i;
 	Menu_Label(s,     0, &labels[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
 	

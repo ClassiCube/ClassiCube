@@ -1,18 +1,25 @@
 #include "PackedCol.h"
 #include "ExtMath.h"
 
-PackedCol PackedCol_Scale(PackedCol value, float t) {
-	value.R = (cc_uint8)(value.R * t);
-	value.G = (cc_uint8)(value.G * t);
-	value.B = (cc_uint8)(value.B * t);
-	return value;
+PackedCol PackedCol_Scale(PackedCol a, float t) {
+	cc_uint8 R = (cc_uint8)(PackedCol_R(a) * t);
+	cc_uint8 G = (cc_uint8)(PackedCol_G(a) * t);
+	cc_uint8 B = (cc_uint8)(PackedCol_B(a) * t);
+	return (a & PACKEDCOL_A_MASK) | PackedCol_R_Bits(R) | PackedCol_G_Bits(G) | PackedCol_B_Bits(B);
 }
 
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t) {
-	a.R = (cc_uint8)Math_Lerp(a.R, b.R, t);
-	a.G = (cc_uint8)Math_Lerp(a.G, b.G, t);
-	a.B = (cc_uint8)Math_Lerp(a.B, b.B, t);
-	return a;
+	cc_uint8 R = (cc_uint8)Math_Lerp(PackedCol_R(a), PackedCol_R(b), t);
+	cc_uint8 G = (cc_uint8)Math_Lerp(PackedCol_G(a), PackedCol_G(b), t);
+	cc_uint8 B = (cc_uint8)Math_Lerp(PackedCol_B(a), PackedCol_B(b), t);
+	return (a & PACKEDCOL_A_MASK) | PackedCol_R_Bits(R) | PackedCol_G_Bits(G) | PackedCol_B_Bits(B);
+}
+
+PackedCol PackedCol_Tint(PackedCol a, PackedCol b) {
+	cc_uint32 R = PackedCol_R(a) * PackedCol_R(b) / 255;
+	cc_uint32 G = PackedCol_G(a) * PackedCol_G(b) / 255;
+	cc_uint32 B = PackedCol_B(a) * PackedCol_B(b) / 255;
+	return (a & PACKEDCOL_A_MASK) | (R << PACKEDCOL_R_SHIFT) | (G << PACKEDCOL_G_SHIFT) | (B << PACKEDCOL_B_SHIFT);
 }
 
 void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, PackedCol* yMin) {
@@ -42,17 +49,14 @@ bool PackedCol_Unhex(const char* src, int* dst, int count) {
 }
 
 void PackedCol_ToHex(String* str, PackedCol value) {
-	String_AppendHex(str, value.R);
-	String_AppendHex(str, value.G);
-	String_AppendHex(str, value.B);
+	String_AppendHex(str, PackedCol_R(value));
+	String_AppendHex(str, PackedCol_G(value));
+	String_AppendHex(str, PackedCol_B(value));
 }
 
-bool PackedCol_TryParseHex(const String* str, PackedCol* value) {
+bool PackedCol_TryParseHex(const String* str, cc_uint8* rgb) {
 	int bits[6];
-	char* buffer;
-		
-	buffer      = str->buffer;
-	value->_raw = 0;
+	char* buffer = str->buffer;
 
 	/* accept XXYYZZ or #XXYYZZ forms */
 	if (str->length < 6) return false;
@@ -61,9 +65,8 @@ bool PackedCol_TryParseHex(const String* str, PackedCol* value) {
 	if (buffer[0] == '#') buffer++;
 	if (!PackedCol_Unhex(buffer, bits, 6)) return false;
 
-	value->R = (cc_uint8)((bits[0] << 4) | bits[1]);
-	value->G = (cc_uint8)((bits[2] << 4) | bits[3]);
-	value->B = (cc_uint8)((bits[4] << 4) | bits[5]);
-	value->A = 255;
+	rgb[0] = (cc_uint8)((bits[0] << 4) | bits[1]);
+	rgb[1] = (cc_uint8)((bits[2] << 4) | bits[3]);
+	rgb[2] = (cc_uint8)((bits[4] << 4) | bits[5]);
 	return true;
 }

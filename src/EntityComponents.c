@@ -457,7 +457,7 @@ struct ShadowData { float Y; BlockID Block; cc_uint8 A; };
 
 static bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f; }
 static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity* e, struct ShadowData* data, float x1, float z1, float x2, float z2) {
-	PackedCol col = PACKEDCOL_CONST(255, 255, 255, 0);
+	PackedCol col;
 	VertexP3fT2fC4b* v;
 	Vec3 cen;
 	float u1, v1, u2, v2;
@@ -476,8 +476,8 @@ static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity
 	x2 = min(x2, cen.X + shadow_radius); u2 = u2 <= 1.0f ? u2 : 1.0f;
 	z2 = min(z2, cen.Z + shadow_radius); v2 = v2 <= 1.0f ? v2 : 1.0f;
 
-	v     = *vertices;
-	col.A = data->A;
+	v   = *vertices;
+	col = PackedCol_Make(255, 255, 255, data->A);
 
 	v->X = x1; v->Y = data->Y; v->Z = z1; v->Col = col; v->U = u1; v->V = v1; v++;
 	v->X = x2; v->Y = data->Y; v->Z = z1; v->Col = col; v->U = u2; v->V = v1; v++;
@@ -488,7 +488,7 @@ static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity
 }
 
 static void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, float y, float x, float z) {
-	PackedCol col = PACKEDCOL_CONST(255, 255, 255, 220);
+	PackedCol col = PackedCol_Make(255, 255, 255, 220);
 	float     uv1 = 63/128.0f, uv2 = 64/128.0f;
 	VertexP3fT2fC4b* v = *vertices;
 

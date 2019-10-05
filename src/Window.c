@@ -3180,7 +3180,7 @@ void GLContext_Update(void) {
 	/* TODO: do we need to do something here.... ? */
 }
 bool GLContext_TryRestore(void) {
-	return !emscripten_is_webgl_context_lost(ctx_handle);
+	return !emscripten_is_webgl_context_lost(NULL);
 }
 
 void GLContext_Free(void) {

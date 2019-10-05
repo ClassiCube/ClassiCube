@@ -48,7 +48,7 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 		PickedPos_X(0) PickedPos_X(3) /* XMin, XMax */
 		PickedPos_Z(0) PickedPos_Z(3) /* ZMin, ZMax */
 	};
-	PackedCol col = PACKEDCOL_CONST(0, 0, 0, 102);
+	PackedCol col = PackedCol_Make(0, 0, 0, 102);
 	VertexP3fC4b* ptr;
 	int i;
 	Vec3 delta;

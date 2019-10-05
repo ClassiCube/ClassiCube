@@ -20,9 +20,9 @@ void AxisLinesRenderer_Render(double delta) {
 		1,2,3, 1,4,3, 3,4,1, 3,2,1, /* Y arrow */
 	};
 	static const PackedCol cols[3] = {
-		PACKEDCOL_CONST(255,   0,   0, 255), /* Red   */
-		PACKEDCOL_CONST(  0,   0, 255, 255), /* Blue  */
-		PACKEDCOL_CONST(  0, 255,   0, 255), /* Green */
+		PackedCol_Make(255,   0,   0, 255), /* Red   */
+		PackedCol_Make(  0,   0, 255, 255), /* Blue  */
+		PackedCol_Make(  0, 255,   0, 255), /* Green */
 	};
 
 	Vec3 coords[5], pos;

@@ -26,7 +26,12 @@ typedef unsigned int     cc_uintptr;
 #define CC_API __declspec(dllexport, noinline)
 #define CC_VAR __declspec(dllexport)
 #endif
+
+#define CC_HAS_TYPES
+#define CC_HAS_MISC
 #elif __GNUC__
+/* really old GCC/clang might not have these */
+#ifdef __INT8_TYPE__
 typedef __INT8_TYPE__  cc_int8;
 typedef __INT16_TYPE__ cc_int16;
 typedef __INT32_TYPE__ cc_int32;
@@ -46,6 +51,8 @@ typedef unsigned __INT32_TYPE__  cc_uint32;
 typedef unsigned __INT64_TYPE__  cc_uint64;
 typedef unsigned __INTPTR_TYPE__ cc_uintptr;
 #endif
+#define CC_HAS_TYPES
+#endif
 
 #define CC_INLINE inline
 #define CC_NOINLINE __attribute__((noinline))
@@ -58,24 +65,34 @@ typedef unsigned __INTPTR_TYPE__ cc_uintptr;
 #define CC_VAR __attribute__((visibility("default")))
 #endif
 #endif
+#define CC_HAS_MISC
+#ifdef __BIG_ENDIAN__
+#define CC_BIG_ENDIAN
+#endif
 #elif __MWERKS__
-typedef signed char  cc_int8;
-typedef signed short int cc_int16;
-typedef signed long int  cc_int32;
-typedef signed long long cc_int64;
+/* TODO: Is there actual attribute support for CC_API etc somewhere? */
+#define CC_BIG_ENDIAN
+#endif
 
-typedef unsigned char  cc_uint8;
-typedef unsigned short int cc_uint16;
-typedef unsigned long int  cc_uint32;
-typedef unsigned long long cc_uint64;
-typedef unsigned long int  cc_uintptr;
-/* TODO: Is there actual attribute support for these somewhere? */
+/* Unrecognised compiler, so just go with sensisble defaults */
+#ifndef CC_HAS_TYPES
+#include <stdint.h>
+typedef int8_t  cc_int8;
+typedef int16_t cc_int16;
+typedef int32_t cc_int32;
+typedef int64_t cc_int64;
+
+typedef uint8_t   cc_uint8;
+typedef uint16_t  cc_uint16;
+typedef uint32_t  cc_uint32;
+typedef uint64_t  cc_uint64;
+typedef uintptr_t cc_uintptr;
+#endif
+#ifndef CC_HAS_MISC
 #define CC_INLINE inline
 #define CC_NOINLINE
 #define CC_API
 #define CC_VAR
-#else
-#error "Unknown compiler. You'll need to add required definitions in Core.h!"
 #endif
 
 typedef cc_uint16 Codepoint;
