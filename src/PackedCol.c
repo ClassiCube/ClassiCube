@@ -16,10 +16,10 @@ PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t) {
 }
 
 PackedCol PackedCol_Tint(PackedCol a, PackedCol b) {
-	cc_uint8 R = (cc_uint8)(PackedCol_R(a) * PackedCol_R(b) / 255);
-	cc_uint8 G = (cc_uint8)(PackedCol_G(a) * PackedCol_G(b) / 255);
-	cc_uint8 B = (cc_uint8)(PackedCol_B(a) * PackedCol_B(b) / 255);
-	return (a & PACKEDCOL_A_MASK) | PackedCol_R_Bits(R) | PackedCol_G_Bits(G) | PackedCol_B_Bits(B);
+	cc_uint32 R = PackedCol_R(a) * PackedCol_R(b) / 255;
+	cc_uint32 G = PackedCol_G(a) * PackedCol_G(b) / 255;
+	cc_uint32 B = PackedCol_B(a) * PackedCol_B(b) / 255;
+	return (a & PACKEDCOL_A_MASK) | (R << PACKEDCOL_R_SHIFT) | (G << PACKEDCOL_G_SHIFT) | (B << PACKEDCOL_B_SHIFT);
 }
 
 void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, PackedCol* yMin) {
