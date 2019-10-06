@@ -330,15 +330,15 @@ CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, Bit
 	String tmp; char tmpBuffer[3];
 
 	String_InitArray(tmp, tmpBuffer);
-	String_AppendInt(&tmp, col.R);
+	String_AppendInt(&tmp, BitmapCol_R(col));
 	LInput_SetText(&s->iptColours[i + 0], &tmp);
 
 	tmp.length = 0;
-	String_AppendInt(&tmp, col.G);
+	String_AppendInt(&tmp, BitmapCol_G(col));
 	LInput_SetText(&s->iptColours[i + 1], &tmp);
 
 	tmp.length = 0;
-	String_AppendInt(&tmp, col.B);
+	String_AppendInt(&tmp, BitmapCol_B(col));
 	LInput_SetText(&s->iptColours[i + 2], &tmp);
 }
 
@@ -952,7 +952,7 @@ static void ResourcesScreen_Next(void* w, int x, int y) {
 
 static void ResourcesScreen_Init(struct LScreen* s_) {
 	String str; char buffer[STRING_SIZE];
-	BitmapCol progressCol = BITMAPCOL_CONST(0, 220, 0, 255);
+	BitmapCol progressCol = BitmapCol_Make(0, 220, 0, 255);
 	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
 	float size;
 
@@ -1001,13 +1001,13 @@ static void ResourcesScreen_Layout(struct LScreen* s_) {
 }
 
 CC_NOINLINE static void ResourcesScreen_ResetArea(int x, int y, int width, int height) {
-	BitmapCol boxCol = BITMAPCOL_CONST(120, 85, 151, 255);
+	BitmapCol boxCol = BitmapCol_Make(120, 85, 151, 255);
 	Gradient_Noise(&Launcher_Framebuffer, boxCol, 4, x, y, width, height);
 	Launcher_MarkDirty(x, y, width, height);
 }
 
 static void ResourcesScreen_Draw(struct LScreen* s) {
-	BitmapCol backCol = BITMAPCOL_CONST(12, 12, 12, 255);
+	BitmapCol backCol = BitmapCol_Make(12, 12, 12, 255);
 	int x, y, width, height;
 
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 

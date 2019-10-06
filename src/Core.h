@@ -30,8 +30,9 @@ typedef unsigned int     cc_uintptr;
 #define CC_HAS_TYPES
 #define CC_HAS_MISC
 #elif __GNUC__
-/* really old GCC/clang might not have these */
+/* really old GCC/clang might not have these defined */
 #ifdef __INT8_TYPE__
+/* avoid including <stdint.h> because it breaks defining UNICODE in Platform.c with MinGW */
 typedef __INT8_TYPE__  cc_int8;
 typedef __INT16_TYPE__ cc_int16;
 typedef __INT32_TYPE__ cc_int32;
@@ -74,7 +75,7 @@ typedef unsigned __INTPTR_TYPE__ cc_uintptr;
 #define CC_BIG_ENDIAN
 #endif
 
-/* Unrecognised compiler, so just go with sensisble defaults */
+/* Unrecognised compiler, so just go with sensible defaults */
 #ifndef CC_HAS_TYPES
 #include <stdint.h>
 typedef int8_t  cc_int8;

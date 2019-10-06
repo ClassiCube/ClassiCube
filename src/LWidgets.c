@@ -57,8 +57,8 @@ static BitmapCol LButton_Expand(BitmapCol a, int amount) {
 }
 
 static void LButton_DrawBackground(struct LButton* w) {
-	BitmapCol activeCol   = BITMAPCOL_CONST(126, 136, 191, 255);
-	BitmapCol inactiveCol = BITMAPCOL_CONST(111, 111, 111, 255);
+	BitmapCol activeCol   = BitmapCol_Make(126, 136, 191, 255);
+	BitmapCol inactiveCol = BitmapCol_Make(111, 111, 111, 255);
 	BitmapCol col;
 
 	if (Launcher_ClassicBackground) {
@@ -75,7 +75,7 @@ static void LButton_DrawBackground(struct LButton* w) {
 }
 
 static void LButton_DrawBorder(struct LButton* w) {
-	BitmapCol black   = BITMAPCOL_CONST(0, 0, 0, 255);
+	BitmapCol black   = BitmapCol_Make(0, 0, 0, 255);
 	BitmapCol backCol = Launcher_ClassicBackground ? black : Launcher_ButtonBorderCol;
 
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
@@ -93,8 +93,8 @@ static void LButton_DrawBorder(struct LButton* w) {
 }
 
 static void LButton_DrawHighlight(struct LButton* w) {
-	BitmapCol activeCol   = BITMAPCOL_CONST(189, 198, 255, 255);
-	BitmapCol inactiveCol = BITMAPCOL_CONST(168, 168, 168, 255);
+	BitmapCol activeCol   = BitmapCol_Make(189, 198, 255, 255);
+	BitmapCol inactiveCol = BitmapCol_Make(168, 168, 168, 255);
 	BitmapCol highlightCol;
 
 	if (Launcher_ClassicBackground) {
@@ -176,7 +176,7 @@ CC_NOINLINE static void LInput_GetText(struct LInput* w, String* text) {
 }
 
 static void LInput_DrawOuterBorder(struct LInput* w) {
-	BitmapCol col = BITMAPCOL_CONST(97, 81, 110, 255);
+	BitmapCol col = BitmapCol_Make(97, 81, 110, 255);
 
 	if (w->Selected) {
 		Drawer2D_Clear(&Launcher_Framebuffer, col, 
@@ -204,7 +204,7 @@ static void LInput_DrawOuterBorder(struct LInput* w) {
 }
 
 static void LInput_DrawInnerBorder(struct LInput* w) {
-	BitmapCol col = BITMAPCOL_CONST(165, 142, 168, 255);
+	BitmapCol col = BitmapCol_Make(165, 142, 168, 255);
 
 	Drawer2D_Clear(&Launcher_Framebuffer, col,
 		w->X + BORDER,             w->Y + BORDER, 
@@ -221,7 +221,7 @@ static void LInput_DrawInnerBorder(struct LInput* w) {
 }
 
 static void LInput_BlendBoxTop(struct LInput* w) {
-	BitmapCol col = BITMAPCOL_CONST(0, 0, 0, 255);
+	BitmapCol col = BitmapCol_Make(0, 0, 0, 255);
 
 	Gradient_Blend(&Launcher_Framebuffer, col, 75,
 		w->X + BORDER,      w->Y + BORDER, 
@@ -255,7 +255,6 @@ static void LInput_Draw(void* widget) {
 	String text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	Size2D size;
-	BitmapCol white = BITMAPCOL_CONST(255, 255, 255, 255);
 
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
@@ -267,7 +266,7 @@ static void LInput_Draw(void* widget) {
 
 	LInput_DrawOuterBorder(w);
 	LInput_DrawInnerBorder(w);
-	Drawer2D_Clear(&Launcher_Framebuffer, white,
+	Drawer2D_Clear(&Launcher_Framebuffer, BITMAPCOL_WHITE,
 		w->X + BORDER2,     w->Y + BORDER2, 
 		w->Width - BORDER4, w->Height - BORDER4);
 	LInput_BlendBoxTop(w);
@@ -309,7 +308,6 @@ static Rect2D lastCaretRec;
 
 static void LInput_TickCaret(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
-	BitmapCol col = BITMAPCOL_CONST(0, 0, 0, 255);
 	int elapsed;
 	bool caretShow;
 	Rect2D r;
@@ -325,7 +323,7 @@ static void LInput_TickCaret(void* widget) {
 	r = LInput_MeasureCaret(w);
 
 	if (caretShow) {
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
+		Drawer2D_Clear(&Launcher_Framebuffer, BITMAPCOL_BLACK,
 					   r.X, r.Y, r.Width, r.Height);
 	}
 	
@@ -607,8 +605,8 @@ void LLine_Init(struct LScreen* s, struct LLine* w, int width) {
 *------------------------------------------------------SliderWidget-------------------------------------------------------*
 *#########################################################################################################################*/
 static void LSlider_DrawBoxBounds(struct LSlider* w) {
-	BitmapCol boundsTop    =  BITMAPCOL_CONST(119, 100, 132, 255);
-	BitmapCol boundsBottom =  BITMAPCOL_CONST(150, 130, 165, 255);
+	BitmapCol boundsTop    = BitmapCol_Make(119, 100, 132, 255);
+	BitmapCol boundsBottom = BitmapCol_Make(150, 130, 165, 255);
 
 	/* TODO: Check these are actually right */
 	Drawer2D_Clear(&Launcher_Framebuffer, boundsTop,
@@ -627,8 +625,8 @@ static void LSlider_DrawBoxBounds(struct LSlider* w) {
 }
 
 static void LSlider_DrawBox(struct LSlider* w) {
-	BitmapCol progTop    = BITMAPCOL_CONST(220, 204, 233, 255);
-	BitmapCol progBottom = BITMAPCOL_CONST(207, 181, 216, 255);
+	BitmapCol progTop    = BitmapCol_Make(220, 204, 233, 255);
+	BitmapCol progBottom = BitmapCol_Make(207, 181, 216, 255);
 	int halfHeight = (w->Height - BORDER2) / 2;
 
 	Gradient_Vertical(&Launcher_Framebuffer, progTop, progBottom,
@@ -775,7 +773,7 @@ static void LTable_SetSelectedTo(struct LTable* w, int index) {
 
 /* Draws background behind column headers */
 static void LTable_DrawHeaderBackground(struct LTable* w) {
-	BitmapCol gridCol = BITMAPCOL_CONST(20, 20, 10, 255);
+	BitmapCol gridCol = BitmapCol_Make(20, 20, 10, 255);
 
 	if (!Launcher_ClassicBackground) {
 		Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
@@ -787,11 +785,10 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 
 /* Works out the background colour of the given row */
 static BitmapCol LTable_RowCol(struct LTable* w, struct ServerInfo* row) {
-	BitmapCol emptyCol = BITMAPCOL_CONST(0, 0, 0, 0);
-	BitmapCol gridCol  = BITMAPCOL_CONST(20, 20, 10, 255);
-	BitmapCol featSelCol  = BITMAPCOL_CONST( 50,  53,  0, 255);
-	BitmapCol featuredCol = BITMAPCOL_CONST(101, 107,  0, 255);
-	BitmapCol selectedCol = BITMAPCOL_CONST( 40,  40, 40, 255);
+	BitmapCol gridCol     = BitmapCol_Make( 20,  20, 10, 255);
+	BitmapCol featSelCol  = BitmapCol_Make( 50,  53,  0, 255);
+	BitmapCol featuredCol = BitmapCol_Make(101, 107,  0, 255);
+	BitmapCol selectedCol = BitmapCol_Make( 40,  40, 40, 255);
 	bool selected;
 
 	if (row) {
@@ -802,7 +799,7 @@ static BitmapCol LTable_RowCol(struct LTable* w, struct ServerInfo* row) {
 			return selectedCol;
 		}
 	}
-	return Launcher_ClassicBackground ? emptyCol : gridCol;
+	return Launcher_ClassicBackground ? 0 : gridCol;
 }
 
 /* Draws background behind each row in the table */
@@ -912,8 +909,8 @@ static void LTable_DrawRows(struct LTable* w) {
 
 /* Draws scrollbar on the right edge of the table */
 static void LTable_DrawScrollbar(struct LTable* w) {
-	BitmapCol classicBack   = BITMAPCOL_CONST( 80,  80,  80, 255);
-	BitmapCol classicScroll = BITMAPCOL_CONST(160, 160, 160, 255);
+	BitmapCol classicBack   = BitmapCol_Make( 80,  80,  80, 255);
+	BitmapCol classicScroll = BitmapCol_Make(160, 160, 160, 255);
 	BitmapCol backCol   = Launcher_ClassicBackground ? classicBack   : Launcher_ButtonBorderCol;
 	BitmapCol scrollCol = Launcher_ClassicBackground ? classicScroll : Launcher_ButtonForeActiveCol;
 

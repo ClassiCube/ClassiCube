@@ -1161,15 +1161,12 @@ static void CPE_BulkBlockUpdate(cc_uint8* data) {
 }
 
 static void CPE_SetTextColor(cc_uint8* data) {
-	BitmapCol c;
-	cc_uint8 code;
-
-	c.R = *data++; c.G = *data++; c.B = *data++; c.A = *data++;
-	code = *data;
+	BitmapCol c   = BitmapCol_Make(data[0], data[1], data[2], data[3]);
+	cc_uint8 code = data[4];
 
 	/* disallow space, null, and colour code specifiers */
 	if (code == '\0' || code == ' ' || code == 0xFF) return;
-	if (code == '%' || code == '&') return;
+	if (code == '%'  || code == '&') return;
 
 	Drawer2D_Cols[code] = c;
 	Event_RaiseInt(&ChatEvents.ColCodeChanged, code);

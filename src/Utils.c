@@ -61,13 +61,12 @@ int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
 
 /* Checks if an area is completely black, so Alex skins edited with Microsoft Paint are still treated as Alex */
 static bool Utils_IsAllBlack(const Bitmap* bmp, int x1, int y1, int width, int height) {
-	cc_uint32 black = PackedCol_ARGB(0, 0, 0, 255);
 	int x, y;
 	for (y = y1; y < y1 + height; y++) {
-		cc_uint32* row = Bitmap_RawRow(bmp, y);
+		BitmapCol* row = Bitmap_GetRow(bmp, y);
 
 		for (x = x1; x < x1 + width; x++) {
-			if (row[x] != black) return false;
+			if (row[x] != BITMAPCOL_BLACK) return false;
 		}
 	}
 	return true;

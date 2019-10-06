@@ -278,7 +278,7 @@ void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
 		for (xx = 0; xx < size; xx++) {
 			col = palette[*indices++];
 
-			if (col._raw == 0) continue; /* transparent pixel */
+			if (col == 0) continue; /* transparent pixel */
 			if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
 			row[xx] = col;
 		}
@@ -433,7 +433,6 @@ void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, Bitmap
 }
 
 static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, bool shadow) {
-	BitmapCol black = BITMAPCOL_CONST(0, 0, 0, 255);
 	BitmapCol col;
 	String text  = args->text;
 	int i, point = args->font->size, count = 0;
@@ -454,7 +453,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 
 	col = Drawer2D_Cols['f'];
 	if (shadow) {
-		col = Drawer2D_BlackTextShadows ? black : Drawer2D_ShadowCol(col);
+		col = Drawer2D_BlackTextShadows ? BITMAPCOL_BLACK : Drawer2D_ShadowCol(col);
 	}
 
 	for (i = 0; i < text.length; i++) {
@@ -462,7 +461,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
 			col = Drawer2D_GetCol(text.buffer[i + 1]);
 			if (shadow) {
-				col = Drawer2D_BlackTextShadows ? black : Drawer2D_ShadowCol(col);
+				col = Drawer2D_BlackTextShadows ? BITMAPCOL_BLACK : Drawer2D_ShadowCol(col);
 			}
 			i++; continue; /* skip over the colour code */
 		}
@@ -523,7 +522,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		dstWidth = 0;
 		col = cols[i];
 
-		for (; i < count && BitmapCol_Equals(col, cols[i]); i++) {
+		for (; i < count && col == cols[i]; i++) {
 			dstWidth += dstWidths[i] + xPadding;
 		}
 		Drawer2D_Underline(bmp, x, underlineY, dstWidth, underlineHeight, col);
@@ -567,7 +566,7 @@ static int Drawer2D_MeasureBitmapWidth(const struct DrawTextArgs* args) {
 }
 
 void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
-	BitmapCol col, backCol, black = BITMAPCOL_CONST(0, 0, 0, 255);
+	BitmapCol col, backCol;
 	String value = args->text;
 	char colCode, nextCol = 'f';
 	int i, partWidth;
@@ -582,7 +581,7 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 
 		col = Drawer2D_GetCol(colCode);
 		if (args->useShadow) {
-			backCol = Drawer2D_BlackTextShadows ? black : Drawer2D_ShadowCol(col);
+			backCol = Drawer2D_BlackTextShadows ? BITMAPCOL_BLACK : Drawer2D_ShadowCol(col);
 			Font_SysTextDraw(args, bmp, x, y, backCol, true);
 		}
 
@@ -679,11 +678,9 @@ static void Drawer2D_HexEncodedCol(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
 }
 
 static void Drawer2D_Reset(void) {
-	BitmapCol col = BITMAPCOL_CONST(0, 0, 0, 0);
-	int i;
-	
+	int i;	
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
-		Drawer2D_Cols[i] = col;
+		Drawer2D_Cols[i] = 0;
 	}
 
 	for (i = 0; i <= 9; i++) {

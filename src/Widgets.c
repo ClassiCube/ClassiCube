@@ -2557,8 +2557,8 @@ static Size2D SpecialInputWidget_MeasureTitles(struct SpecialInputWidget* w) {
 }
 
 static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, Bitmap* bmp) {
-	BitmapCol col_selected = BITMAPCOL_CONST(30, 30, 30, 200);
-	BitmapCol col_inactive = BITMAPCOL_CONST( 0,  0,  0, 127);
+	BitmapCol col_selected = BitmapCol_Make(30, 30, 30, 200);
+	BitmapCol col_inactive = BitmapCol_Make( 0,  0,  0, 127);
 	BitmapCol col;
 	struct DrawTextArgs args;
 	int i, width, x = 0;
@@ -2618,7 +2618,7 @@ static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct 
 }
 
 static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
-	BitmapCol col = BITMAPCOL_CONST(30, 30, 30, 200);
+	BitmapCol col = BitmapCol_Make(30, 30, 30, 200);
 	Size2D size, titles, content;
 	Bitmap bmp;
 
