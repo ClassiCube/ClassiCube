@@ -1218,7 +1218,7 @@ ReturnCode Gfx_TakeScreenshot(struct Stream* output) {
 	bmp.Width  = vp[2]; 
 	bmp.Height = vp[3];
 
-	bmp.Scan0  = Mem_TryAlloc(bmp.Width * bmp.Height, 4);
+	bmp.Scan0  = (cc_uint8*)Mem_TryAlloc(bmp.Width * bmp.Height, 4);
 	if (!bmp.Scan0) return ERR_OUT_OF_MEMORY;
 	glReadPixels(0, 0, bmp.Width, bmp.Height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, bmp.Scan0);
 

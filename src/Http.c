@@ -617,7 +617,7 @@ static void Http_SysFree(void) {
 static CURL* curl;
 
 bool Http_DescribeError(ReturnCode res, String* dst) {
-	const char* err = curl_easy_strerror(res);
+	const char* err = curl_easy_strerror((CURLcode)res);
 	if (!err) return false;
 
 	String_AppendConst(dst, err);

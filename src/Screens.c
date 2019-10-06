@@ -151,10 +151,10 @@ static bool InventoryScreen_KeyDown(void* screen, Key key) {
 	struct TableWidget* table = &s->table;
 
 	if (key == KeyBinds[KEYBIND_INVENTORY] && s->releasedInv) {
-		Gui_Remove(screen);
+		Gui_Remove((struct Screen*)s);
 	} else if (key == KEY_ENTER && table->selectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
-		Gui_Remove(screen);
+		Gui_Remove((struct Screen*)s);
 	} else if (Elem_HandlesKeyDown(table, key)) {
 	} else {
 		struct HUDScreen* hud = (struct HUDScreen*)Gui_HUD;
@@ -1364,7 +1364,7 @@ static bool DisconnectScreen_KeyDown(void* s, Key key) { return key < KEY_F1 || 
 
 static bool DisconnectScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	struct ButtonWidget* w = &s->reconnect;
+	struct ButtonWidget* w     = &s->reconnect;
 
 	if (!w->disabled && Widget_Contains(w, x, y)) {
 		Gui_Remove((struct Screen*)s);
