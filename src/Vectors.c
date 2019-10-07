@@ -183,8 +183,9 @@ void Matrix_OrthographicOffCenter(struct Matrix* result, float left, float right
 	result->Row3.Z = -(zFar + zNear) / (zFar - zNear);
 }
 
+static double Tan_Simple(double x) { return Math_Sin(x) / Math_Cos(x); }
 void Matrix_PerspectiveFieldOfView(struct Matrix* result, float fovy, float aspect, float zNear, float zFar) {
-	float c = zNear * (float)Math_FastTan(0.5f * fovy);
+	float c = zNear * (float)Tan_Simple(0.5f * fovy);
 	Matrix_PerspectiveOffCenter(result, -c * aspect, c * aspect, -c, c, zNear, zFar);
 }
 

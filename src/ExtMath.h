@@ -31,7 +31,6 @@ double Math_Log(double x);
 /* Computes e^x. Can also be used to approximate y^x. */
 /* e.g. for 3^x, use: Math_Exp(log(3)*x) */
 double Math_Exp(double x);
-double Math_FastTan(double x);
 
 int Math_Floor(float value);
 int Math_Ceil(float value);

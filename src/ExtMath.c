@@ -72,18 +72,6 @@ bool Math_IsPowOf2(int value) {
 	return value != 0 && (value & (value - 1)) == 0;
 }
 
-/* Not the most precise Tan(x), but within 10^-15 of answer, so good enough for here */
-double Math_FastTan(double angle) {
-	double cosA = Math_Cos(angle), sinA = Math_Sin(angle);
-	int sign;
-	if (cosA < -0.00000001 || cosA > 0.00000001) return sinA / cosA;
-
-	/* tan line is parallel to y axis, infinite gradient */
-	sign = Math_Sign(sinA);
-	if (cosA) sign *= Math_Sign(cosA);
-	return sign * MATH_POS_INF;
-}
-
 double Math_FastLog(double x) {
 	/* x = 2^exp * mantissa */
 	/* so log(x) = log(2^exp) + log(mantissa) */
