@@ -325,10 +325,10 @@ void Launcher_ResetSkin(void) {
 CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
 	cc_uint8 rgb[3];
 	String value;
-	if (!Options_UNSAFE_Get(key, &value))     return;
+	if (!Options_UNSAFE_Get(key, &value))    return;
 	if (!PackedCol_TryParseHex(&value, rgb)) return;
 
-	col->R = rgb[0]; col->G = rgb[1]; col->B = rgb[2];
+	*col = BitmapCol_Make(rgb[0], rgb[1], rgb[2], 255);
 }
 
 void Launcher_LoadSkin(void) {

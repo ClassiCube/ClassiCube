@@ -368,7 +368,7 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 	if (!Convert_ParseUInt8(&s->iptColours[index + 1].Text, &g)) return;
 	if (!Convert_ParseUInt8(&s->iptColours[index + 2].Text, &b)) return;
 
-	col->R = r; col->G = g; col->B = b;
+	*col = BitmapCol_Make(r, g, b, 255);
 	Launcher_SaveSkin();
 	Launcher_Redraw();
 }

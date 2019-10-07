@@ -396,7 +396,7 @@ static void Entity_ClearHat(Bitmap* bmp, cc_uint8 skinType) {
 	for (y = 0; y < sizeY; y++) {
 		BitmapCol* row = Bitmap_GetRow(bmp, y) + sizeX;
 		for (x = 0; x < sizeX; x++) {
-			if (row[x].A != 255) return;
+			if (BitmapCol_A(row[x]) != 255) return;
 		}
 	}
 

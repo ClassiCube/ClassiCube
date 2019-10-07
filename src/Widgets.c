@@ -1018,7 +1018,7 @@ static bool InputWidget_CheckCol(struct InputWidget* w, int index) {
 
 	code = w->text.buffer[index];
 	col  = w->text.buffer[index + 1];
-	return (code == '%' || code == '&') && Drawer2D_GetCol(col).A;
+	return (code == '%' || code == '&') && BitmapCol_A(Drawer2D_GetCol(col));
 }
 
 static void InputWidget_BackspaceKey(struct InputWidget* w) {
@@ -2468,8 +2468,8 @@ static void SpecialInputWidget_UpdateColString(struct SpecialInputWidget* w) {
 	String_InitArray(w->colString, w->_colBuffer);
 
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
-		if (i >= 'A' && i <= 'F') continue;
-		if (!Drawer2D_Cols[i].A)  continue;
+		if (i >= 'A' && i <= 'F')           continue;
+		if (!BitmapCol_A(Drawer2D_Cols[i])) continue;
 
 		String_Append(&w->colString, '&'); String_Append(&w->colString, (char)i);
 		String_Append(&w->colString, '%'); String_Append(&w->colString, (char)i);

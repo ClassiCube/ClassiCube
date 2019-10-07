@@ -202,15 +202,16 @@ void Gradient_Vertical(Bitmap* bmp, BitmapCol a, BitmapCol b,
 	int xx, yy;
 	float t;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
-	col.A = 255;
 
 	for (yy = 0; yy < height; yy++) {
 		row = Bitmap_GetRow(bmp, y + yy) + x;
 		t   = (float)yy / (height - 1); /* so last row has colour of b */
 
-		col.B = (cc_uint8)Math_Lerp(a.B, b.B, t);	
-		col.G = (cc_uint8)Math_Lerp(a.G, b.G, t);
-		col.R = (cc_uint8)Math_Lerp(a.R, b.R, t);
+		col = BitmapCol_Make(
+			Math_Lerp(BitmapCol_R(a), BitmapCol_R(b), t),
+			Math_Lerp(BitmapCol_G(a), BitmapCol_G(b), t),
+			Math_Lerp(BitmapCol_B(a), BitmapCol_B(b), t),
+			255);
 
 		for (xx = 0; xx < width; xx++) { row[xx] = col; }
 	}
@@ -496,7 +497,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 			for (xx = 0; xx < dstWidth; xx++) {
 				fontX = srcX + xx * srcWidth / dstWidth;
 				src   = srcRow[fontX];
-				if (!src.A) continue;
+				if (!BitmapCol_A(src)) continue;
 
 				dstX = x + xx;
 				if ((unsigned)dstX >= (unsigned)bmp->Width) continue;
@@ -671,10 +672,11 @@ void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 *---------------------------------------------------Drawer2D component----------------------------------------------------*
 *#########################################################################################################################*/
 static void Drawer2D_HexEncodedCol(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
-	Drawer2D_Cols[i].R = (cc_uint8)(lo * ((hex >> 2) & 1) + hi * (hex >> 3));
-	Drawer2D_Cols[i].G = (cc_uint8)(lo * ((hex >> 1) & 1) + hi * (hex >> 3));
-	Drawer2D_Cols[i].B = (cc_uint8)(lo * ((hex >> 0) & 1) + hi * (hex >> 3));
-	Drawer2D_Cols[i].A = 255;
+	Drawer2D_Cols[i] = BitmapCol_Make(
+		lo * ((hex >> 2) & 1) + hi * (hex >> 3),
+		lo * ((hex >> 1) & 1) + hi * (hex >> 3),
+		lo * ((hex >> 0) & 1) + hi * (hex >> 3),
+		255);
 }
 
 static void Drawer2D_Reset(void) {
@@ -1102,10 +1104,9 @@ static void DrawBlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitma
 			if ((unsigned)(x + xx) >= (unsigned)bmp->Width) continue;
 			intensity = src[xx >> 3];
 
+			/* TODO: transparent text (don't set A to 255) */
 			if (intensity & (1 << (7 - (xx & 7)))) {
-				dst->B = col.B; dst->G = col.G; dst->R = col.R;
-				/*dst->A = col.A*/
-				dst->A = 255;
+				*dst = col | BitmapCol_A_Bits(255);
 			}
 		}
 	}

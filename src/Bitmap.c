@@ -565,11 +565,13 @@ static void Png_MakeRow(const BitmapCol* src, cc_uint8* dst, int lineLen, bool a
 
 	if (alpha) {
 		for (; dst < end; src++, dst += 4) {
-			dst[0] = src->R; dst[1] = src->G; dst[2] = src->B; dst[3] = src->A;
+			dst[0] = BitmapCol_R(*src); dst[1] = BitmapCol_G(*src);
+			dst[2] = BitmapCol_B(*src); dst[3] = BitmapCol_A(*src);
 		}
 	} else {
 		for (; dst < end; src++, dst += 3) {
-			dst[0] = src->R; dst[1] = src->G; dst[2] = src->B;
+			dst[0] = BitmapCol_R(*src); dst[1] = BitmapCol_G(*src);
+			dst[2] = BitmapCol_B(*src);
 		}
 	}
 }

@@ -50,10 +50,10 @@ void LWidget_Redraw(void* widget) {
 *#########################################################################################################################*/
 static BitmapCol LButton_Expand(BitmapCol a, int amount) {
 	int r, g, b;
-	r = a.R + amount; Math_Clamp(r, 0, 255); a.R = r;
-	g = a.G + amount; Math_Clamp(g, 0, 255); a.G = g;
-	b = a.B + amount; Math_Clamp(b, 0, 255); a.B = b;
-	return a;
+	r = BitmapCol_R(a) + amount; Math_Clamp(r, 0, 255);
+	g = BitmapCol_G(a) + amount; Math_Clamp(g, 0, 255);
+	b = BitmapCol_B(a) + amount; Math_Clamp(b, 0, 255);
+	return BitmapCol_Make(r, g, b, 255);
 }
 
 static void LButton_DrawBackground(struct LButton* w) {
@@ -818,7 +818,7 @@ static void LTable_DrawRowsBackground(struct LTable* w) {
 		/* hit the end of the table */
 		if (height < 0) break;
 
-		if (col.A) {
+		if (col) {
 			Drawer2D_Clear(&Launcher_Framebuffer, col,
 				w->X, y, w->Width, height);
 		} else {

@@ -86,10 +86,11 @@ static void LavaAnimation_Tick(BitmapCol* ptr, int size) {
 			col = 2.0f * L_soupHeat[i];
 			Math_Clamp(col, 0.0f, 1.0f);
 
-			ptr->R = (cc_uint8)(col * 100.0f + 155.0f);
-			ptr->G = (cc_uint8)(col * col * 255.0f);
-			ptr->B = (cc_uint8)(col * col * col * col * 128.0f);
-			ptr->A = 255;
+			*ptr = BitmapCol_Make(
+				col * 100.0f + 155.0f,
+				col * col * 255.0f,
+				col * col * col * col * 128.0f,
+				255);
 
 			ptr++; i++;
 		}
@@ -137,10 +138,11 @@ static void WaterAnimation_Tick(BitmapCol* ptr, int size) {
 			Math_Clamp(col, 0.0f, 1.0f);
 			col = col * col;
 
-			ptr->R = (cc_uint8)(32.0f  + col * 32.0f);
-			ptr->G = (cc_uint8)(50.0f  + col * 64.0f);
-			ptr->A = (cc_uint8)(146.0f + col * 50.0f);
-			ptr->B = 255;
+			*ptr = BitmapCol_Make(
+				32.0f  + col * 32.0f,
+				50.0f  + col * 64.0f,
+				255,
+				146.0f + col * 50.0f);
 
 			ptr++; i++;
 		}

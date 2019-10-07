@@ -206,25 +206,25 @@ static BitmapCol AverageCol(BitmapCol p1, BitmapCol p2) {
 	cc_uint32 a1, a2, aSum;
 	cc_uint32 b1, g1, r1;
 	cc_uint32 b2, g2, r2;
-	BitmapCol ave;
 
-	a1 = p1.A; a2 = p2.A;
+	a1 = BitmapCol_A(p1); a2 = BitmapCol_A(p2);
 	aSum = (a1 + a2);
 	aSum = aSum > 0 ? aSum : 1; /* avoid divide by 0 below */
 
 	/* Convert RGB to pre-multiplied form */
-	b1 = p1.B * a1; g1 = p1.G * a1; r1 = p1.R * a1;
-	b2 = p2.B * a2; g2 = p2.G * a2; r2 = p2.R * a2;
+	/* TODO: Don't shift when multiplying/averaging */
+	r1 = BitmapCol_R(p1) * a1; g1 = BitmapCol_G(p1) * a1; b1 = BitmapCol_B(p1) * a1;
+	r2 = BitmapCol_R(p2) * a2; g2 = BitmapCol_G(p2) * a2; b2 = BitmapCol_B(p2) * a2;
 
 	/* https://stackoverflow.com/a/347376 */
 	/* We need to convert RGB back from the pre-multiplied average into normal form */
 	/* ((r1 + r2) / 2) / ((a1 + a2) / 2) */
 	/* but we just cancel out the / 2 */
-	ave.B = (b1 + b2) / aSum;
-	ave.G = (g1 + g2) / aSum;
-	ave.R = (r1 + r2) / aSum;
-	ave.A = aSum >> 1;
-	return ave;
+	return BitmapCol_Make(
+		(r1 + r2) / aSum, 
+		(g1 + g2) / aSum,
+		(b1 + b2) / aSum, 
+		aSum >> 1);
 }
 
 /* Generates the next mipmaps level bitmap for the given bitmap. */
