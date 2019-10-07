@@ -161,8 +161,6 @@ static void Launcher_Display(void) {
 }
 
 static void Launcher_Init(void) {
-	BitmapCol col = BitmapCol_Make(125, 125, 125, 255);
-
 	Event_RegisterVoid(&WindowEvents.Resized,      NULL, Launcher_OnResize);
 	Event_RegisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
 	Event_RegisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
@@ -179,7 +177,7 @@ static void Launcher_Init(void) {
 	Drawer2D_MakeFont(&Launcher_TextFont,  14, FONT_STYLE_NORMAL);
 	Drawer2D_MakeFont(&Launcher_HintFont,  12, FONT_STYLE_ITALIC);
 
-	Drawer2D_Cols['g'] = col;
+	Drawer2D_Cols['g'] = BitmapCol_Make(125, 125, 125, 255);
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("audio");
 }
@@ -342,7 +340,7 @@ void Launcher_LoadSkin(void) {
 CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
 	String value; char valueBuffer[8];
 	/* Component order might be different to BitmapCol */
-	PackedCol tmp = PackedCol_Make(col.R, col.G, col.B, 0);
+	PackedCol tmp = PackedCol_Make(BitmapCol_R(col), BitmapCol_G(col), BitmapCol_B(col), 0);
 	
 	String_InitArray(value, valueBuffer);
 	PackedCol_ToHex(&value, tmp);

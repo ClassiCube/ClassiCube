@@ -928,7 +928,9 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 
 	if (colCode) {
 		col = Drawer2D_GetCol(colCode);
-		w->caretCol = PackedCol_Make(col.R, col.G, col.B, col.A);
+		/* Component order might be different to BitmapCol */
+		w->caretCol = PackedCol_Make(BitmapCol_R(col), BitmapCol_G(col), 
+									 BitmapCol_B(col), BitmapCol_A(col));
 	} else {
 		w->caretCol = PackedCol_Scale(PACKEDCOL_WHITE, 0.8f);
 	}
