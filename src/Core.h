@@ -90,7 +90,7 @@ typedef uint64_t  cc_uint64;
 typedef uintptr_t cc_uintptr;
 #endif
 #ifndef CC_HAS_MISC
-#define CC_INLINE inline
+#define CC_INLINE
 #define CC_NOINLINE
 #define CC_API
 #define CC_VAR

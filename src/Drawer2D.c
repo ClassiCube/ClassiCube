@@ -829,6 +829,9 @@ static ReturnCode SysFont_Init(const String* path, struct SysFont* font, FT_Open
 	FileHandle file;
 	cc_uint32 size;
 	ReturnCode res;
+#ifdef CC_BUILD_OSX
+	String filename;
+#endif
 
 	if ((res = File_Open(&file, path))) return res;
 	if ((res = File_Length(file, &size))) { File_Close(file); return res; }
@@ -854,7 +857,7 @@ static ReturnCode SysFont_Init(const String* path, struct SysFont* font, FT_Open
 
 	/* For OSX font suitcase files */
 #ifdef CC_BUILD_OSX
-	String filename = String_NT_Array(font->filename);
+	String_InitArray_NT(filename, font->filename);
 	String_Copy(&filename, path);
 	font->filename[filename.length] = '\0';
 	args->pathname = font->filename;
@@ -1126,6 +1129,7 @@ static void DrawBlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitma
 	}
 }
 
+static FT_Vector shadow_delta = { 83, -83 };
 static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) {
 	struct SysFont* font  = (struct SysFont*)args->font->handle;
 	FT_BitmapGlyph* glyphs = font->glyphs;
@@ -1143,8 +1147,7 @@ static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y
 
 	if (shadow) {
 		glyphs = font->shadow_glyphs;
-		FT_Vector delta = { 83, -83 };
-		FT_Set_Transform(face, NULL, &delta);
+		FT_Set_Transform(face, NULL, &shadow_delta);
 	}
 
 	height    = args->font->height;
