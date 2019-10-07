@@ -2,6 +2,63 @@ Although most of the code is platform-independent, some per-platform functionali
 
 By default I try to automatically define appropriate backends for your OS in Core.h. Define ```CC_BUILD_MANUAL``` to disable this.
 
+## Before you start
+* IEEE floating support is required.
+* int must be 32-bits. 32-bit addressing (or more) is required.
+* Support for 8/16/32/64 integer types is required. (your compiler must support 64-bit arithmetic)
+
+In other words, the codebase can theroetically be ported to any modern-ish hardware, but not stuff like a UNIVAC machine, the SuperFX chip on the SNES, or an 8-bit microcontroller.
+
+## Supported platforms
+**Note:** Some of these machines are just virtual machines. Should still work on real hardware though.
+
+#### Tier 1 support
+These platforms are regularly tested on and have executables automatically compiled for. (see buildbot.sh)
+
+|Platform|Machine|Notes|
+|--------|-------|-----|
+|Windows x86/x64 | Windows 7 |
+|macOS x86/x64 | macOS 10.12 |
+|Linux x86/x64 | Xubuntu 14 | 
+|Web client | Chrome |
+
+#### Tier 2 support
+These machines are far less frequently tested on, but are otherwise same as tier 1 support.
+
+|Platform|Machine|Notes|
+|--------|-------|-----|
+|Windows x86 | Windows 2000 |
+|Windows x86 | 98 + KernelEX | Updating doesn't work
+|Windows x64 | Windows 10 |
+|Linux x64 | Arch linux |
+|Linux x64 | Linux Mint |
+|Linux x64 | Kubuntu |
+|Linux x64 | Debian |
+|Linux x64 | Fedora |
+|Linux x86/x64 | Lubuntu |
+|Web client | Firefox |
+|Web client | Safari |
+|Web client | Edge | Cursor doesn't seem to disappear
+
+#### Tier 3 support
+The game has been compiled and run on these platforms before. It may or may not still compile for them.
+
+I don't really test these platforms at all, only when I suspect some changes to the code might impact them.
+
+|Platform|Machine|Notes|
+|--------|-------|-----|
+|macOS x86 | macOS 10.4 |
+|FreeBSD x86 | FreeBSD | x64 should work too |
+|NetBSD x86 | NetBSD | x64 should work too |
+|OpenBSD x86 | OpenBSD | x64 should work too |
+|Solaris x86 | OpenIndiana | x64 should work too |
+|macOS PPC | macOS 10.3 | PPC64 completely untested |
+|Linux PPC | Debian | Issues with colour channels incorrectly swapped? |
+|Linux ARM | Raspberry pi | ARM64 should work too |
+|Linux SPARC | Debian | Didn't really work due to lack of 24-bit colours |
+
+## Porting
+
 Listed below are the requirements for implementing each platform-dependent file.
 You should try to take advantage of existing backends when porting to other platforms.
 
