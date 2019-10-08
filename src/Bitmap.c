@@ -564,16 +564,19 @@ static void Png_Filter(cc_uint8 filter, const cc_uint8* cur, const cc_uint8* pri
 
 static void Png_MakeRow(const BitmapCol* src, cc_uint8* dst, int lineLen, bool alpha) {
 	cc_uint8* end = dst + lineLen;
+	BitmapCol col; /* if we use *src, register gets reloaded each time */
 
 	if (alpha) {
 		for (; dst < end; src++, dst += 4) {
-			dst[0] = BitmapCol_R(*src); dst[1] = BitmapCol_G(*src);
-			dst[2] = BitmapCol_B(*src); dst[3] = BitmapCol_A(*src);
+			col    = *src;
+			dst[0] = BitmapCol_R(col); dst[1] = BitmapCol_G(col);
+			dst[2] = BitmapCol_B(col); dst[3] = BitmapCol_A(col);
 		}
 	} else {
 		for (; dst < end; src++, dst += 3) {
-			dst[0] = BitmapCol_R(*src); dst[1] = BitmapCol_G(*src);
-			dst[2] = BitmapCol_B(*src);
+			col    = *src;
+			dst[0] = BitmapCol_R(col); dst[1] = BitmapCol_G(col);
+			dst[2] = BitmapCol_B(col);
 		}
 	}
 }
