@@ -54,7 +54,6 @@ void Bitmap_Scale(Bitmap* dst, Bitmap* src, int srcX, int srcY, int srcWidth, in
 *#########################################################################################################################*/
 #define PNG_SIG_SIZE 8
 #define PNG_IHDR_SIZE 13
-#define PNG_RGB_MASK 0xFFFFFFUL
 #define PNG_PALETTE 256
 #define PNG_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
 
@@ -127,7 +126,7 @@ static void Png_Reconstruct(cc_uint8 type, cc_uint8 bytesPerPixel, cc_uint8* lin
 	}
 }
 
-#define Bitmap_Set(dst, r,g,b,a) dst.B = b; dst.G = g; dst.R = r; dst.A = a;
+#define Bitmap_Set(dst, r,g,b,a) dst = BitmapCol_Make(r, g, b, a);
 
 #define PNG_Do_Grayscale(dstI, src, scale)  rgb = (src) * scale; Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
 #define PNG_Do_Grayscale_8(dstI, srcI)      rgb = src[srcI];     Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
@@ -307,14 +306,15 @@ static Png_RowExpander Png_GetExpander(cc_uint8 col, cc_uint8 bitsPerSample) {
 	return NULL;
 }
 
-static void Png_ComputeTransparency(Bitmap* bmp, BitmapCol col) {
-	cc_uint32 trnsRGB = col.B | (col.G << 8) | (col.R << 16); /* TODO: Remove this!! */
+/* Sets alpha to 0 for any pixels in the bitmap whose RGB is same as col */
+static void ComputeTransparency(Bitmap* bmp, BitmapCol col) {
+	BitmapCol trnsRGB = col & BITMAPCOL_RGB_MASK;
 	int x, y, width = bmp->Width, height = bmp->Height;
 
 	for (y = 0; y < height; y++) {
-		cc_uint32* row = Bitmap_RawRow(bmp, y);
+		BitmapCol* row = Bitmap_GetRow(bmp, y);
 		for (x = 0; x < width; x++) {
-			cc_uint32 rgb = row[x] & PNG_RGB_MASK;
+			BitmapCol rgb = row[x] & BITMAPCOL_RGB_MASK;
 			row[x] = (rgb == trnsRGB) ? trnsRGB : row[x];
 		}
 	}
@@ -337,8 +337,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	cc_uint32 scanlineSize, scanlineBytes;
 
 	/* palette data */
-	BitmapCol black = BITMAPCOL_CONST(0, 0, 0, 255);
-	BitmapCol transparentCol;
+	BitmapCol trnsCol;
 	BitmapCol palette[PNG_PALETTE];
 	cc_uint32 i;
 
@@ -360,8 +359,8 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	if (res) return res;
 	if (!Png_Detect(tmp, PNG_SIG_SIZE)) return PNG_ERR_INVALID_SIG;
 
-	transparentCol = black;
-	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = black; }
+	trnsCol = BITMAPCOL_BLACK;
+	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = BITMAPCOL_BLACK; }
 
 	Inflate_MakeStream(&compStream, &inflate, stream);
 	ZLibHeader_Init(&zlibHeader);
@@ -411,9 +410,10 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 			if (res) return res;
 
 			for (i = 0; i < dataSize; i += 3) {
-				palette[i / 3].R = tmp[i];
-				palette[i / 3].G = tmp[i + 1];
-				palette[i / 3].B = tmp[i + 2];
+				palette[i / 3] &= BITMAPCOL_A_MASK; /* set RGB to 0 */
+				palette[i / 3] |= tmp[i    ] << BITMAPCOL_R_SHIFT;
+				palette[i / 3] |= tmp[i + 1] << BITMAPCOL_G_SHIFT;
+				palette[i / 3] |= tmp[i + 2] << BITMAPCOL_B_SHIFT;
 			}
 		} break;
 
@@ -424,8 +424,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 				if (res) return res;
 
 				/* RGB is 16 bits big endian, ignore least significant 8 bits */
-				transparentCol.R = tmp[0]; transparentCol.G = tmp[0];
-				transparentCol.B = tmp[0]; transparentCol.A = 0;
+				trnsCol = BitmapCol_Make(tmp[0], tmp[0], tmp[0], 0);
 			} else if (col == PNG_COL_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
 				res = Stream_Read(stream, tmp, dataSize);
@@ -433,7 +432,8 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 
 				/* set alpha component of palette */
 				for (i = 0; i < dataSize; i++) {
-					palette[i].A = tmp[i];
+					palette[i] &= BITMAPCOL_RGB_MASK; /* set A to 0 */
+					palette[i] |= tmp[i] << PACKEDCOL_A_SHIFT;
 				}
 			} else if (col == PNG_COL_RGB) {
 				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
@@ -441,8 +441,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 				if (res) return res;
 
 				/* R,G,B is 16 bits big endian, ignore least significant 8 bits */
-				transparentCol.R = tmp[0]; transparentCol.G = tmp[2];
-				transparentCol.B = tmp[4]; transparentCol.A = 0;
+				trnsCol = BitmapCol_Make(tmp[0], tmp[2], tmp[4], 0);
 			} else {
 				return PNG_ERR_TRANS_INVALID;
 			}
@@ -499,7 +498,7 @@ ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
 
 		case PNG_FourCC('I','E','N','D'): {
 			if (dataSize) return PNG_ERR_INVALID_END_SIZE;
-			if (!transparentCol.A) Png_ComputeTransparency(bmp, transparentCol);
+			if (!BitmapCol_A(trnsCol)) ComputeTransparency(bmp, trnsCol);
 			return bmp->Scan0 ? 0 : PNG_ERR_NO_DATA;
 		} break;
 
@@ -565,14 +564,19 @@ static void Png_Filter(cc_uint8 filter, const cc_uint8* cur, const cc_uint8* pri
 
 static void Png_MakeRow(const BitmapCol* src, cc_uint8* dst, int lineLen, bool alpha) {
 	cc_uint8* end = dst + lineLen;
+	BitmapCol col; /* if we use *src, register gets reloaded each time */
 
 	if (alpha) {
 		for (; dst < end; src++, dst += 4) {
-			dst[0] = src->R; dst[1] = src->G; dst[2] = src->B; dst[3] = src->A;
+			col    = *src;
+			dst[0] = BitmapCol_R(col); dst[1] = BitmapCol_G(col);
+			dst[2] = BitmapCol_B(col); dst[3] = BitmapCol_A(col);
 		}
 	} else {
 		for (; dst < end; src++, dst += 3) {
-			dst[0] = src->R; dst[1] = src->G; dst[2] = src->B;
+			col    = *src;
+			dst[0] = BitmapCol_R(col); dst[1] = BitmapCol_G(col);
+			dst[2] = BitmapCol_B(col);
 		}
 	}
 }

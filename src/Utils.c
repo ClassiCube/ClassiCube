@@ -61,26 +61,27 @@ int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
 
 /* Checks if an area is completely black, so Alex skins edited with Microsoft Paint are still treated as Alex */
 static bool Utils_IsAllBlack(const Bitmap* bmp, int x1, int y1, int width, int height) {
-	cc_uint32 black = PackedCol_ARGB(0, 0, 0, 255);
 	int x, y;
 	for (y = y1; y < y1 + height; y++) {
-		cc_uint32* row = Bitmap_RawRow(bmp, y);
+		BitmapCol* row = Bitmap_GetRow(bmp, y);
 
 		for (x = x1; x < x1 + width; x++) {
-			if (row[x] != black) return false;
+			if (row[x] != BITMAPCOL_BLACK) return false;
 		}
 	}
 	return true;
 }
 
 cc_uint8 Utils_CalcSkinType(const Bitmap* bmp) {
+	BitmapCol col;
 	int scale;
 	if (bmp->Width == bmp->Height * 2) return SKIN_64x32;
 	if (bmp->Width != bmp->Height)     return SKIN_INVALID;
 
 	scale = bmp->Width / 64;
 	/* Minecraft alex skins have this particular pixel with alpha of 0 */	
-	if (Bitmap_GetPixel(bmp, 54 * scale, 20 * scale).A < 128) return SKIN_64x64_SLIM;
+	col = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
+	if (BitmapCol_A(col) < 128) return SKIN_64x64_SLIM;
 
 	return Utils_IsAllBlack(bmp, 54 * scale, 20 * scale, 2 * scale, 12 * scale)
 		&& Utils_IsAllBlack(bmp, 50 * scale, 16 * scale, 2 * scale,  4 * scale) ? SKIN_64x64_SLIM : SKIN_64x64;

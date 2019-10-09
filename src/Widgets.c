@@ -928,7 +928,9 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 
 	if (colCode) {
 		col = Drawer2D_GetCol(colCode);
-		w->caretCol = PackedCol_Make(col.R, col.G, col.B, col.A);
+		/* Component order might be different to BitmapCol */
+		w->caretCol = PackedCol_Make(BitmapCol_R(col), BitmapCol_G(col), 
+									 BitmapCol_B(col), BitmapCol_A(col));
 	} else {
 		w->caretCol = PackedCol_Scale(PACKEDCOL_WHITE, 0.8f);
 	}
@@ -1018,7 +1020,7 @@ static bool InputWidget_CheckCol(struct InputWidget* w, int index) {
 
 	code = w->text.buffer[index];
 	col  = w->text.buffer[index + 1];
-	return (code == '%' || code == '&') && Drawer2D_GetCol(col).A;
+	return (code == '%' || code == '&') && BitmapCol_A(Drawer2D_GetCol(col));
 }
 
 static void InputWidget_BackspaceKey(struct InputWidget* w) {
@@ -2468,8 +2470,8 @@ static void SpecialInputWidget_UpdateColString(struct SpecialInputWidget* w) {
 	String_InitArray(w->colString, w->_colBuffer);
 
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
-		if (i >= 'A' && i <= 'F') continue;
-		if (!Drawer2D_Cols[i].A)  continue;
+		if (i >= 'A' && i <= 'F')           continue;
+		if (!BitmapCol_A(Drawer2D_Cols[i])) continue;
 
 		String_Append(&w->colString, '&'); String_Append(&w->colString, (char)i);
 		String_Append(&w->colString, '%'); String_Append(&w->colString, (char)i);
@@ -2557,8 +2559,8 @@ static Size2D SpecialInputWidget_MeasureTitles(struct SpecialInputWidget* w) {
 }
 
 static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, Bitmap* bmp) {
-	BitmapCol col_selected = BITMAPCOL_CONST(30, 30, 30, 200);
-	BitmapCol col_inactive = BITMAPCOL_CONST( 0,  0,  0, 127);
+	BitmapCol col_selected = BitmapCol_Make(30, 30, 30, 200);
+	BitmapCol col_inactive = BitmapCol_Make( 0,  0,  0, 127);
 	BitmapCol col;
 	struct DrawTextArgs args;
 	int i, width, x = 0;
@@ -2618,7 +2620,7 @@ static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct 
 }
 
 static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
-	BitmapCol col = BITMAPCOL_CONST(30, 30, 30, 200);
+	BitmapCol col = BitmapCol_Make(30, 30, 30, 200);
 	Size2D size, titles, content;
 	Bitmap bmp;
 

@@ -352,7 +352,7 @@ static float Block_GetSpriteBB_MinX(int size, int tileX, int tileY, const Bitmap
 	for (x = 0; x < size; x++) {
 		for (y = 0; y < size; y++) {
 			row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-			if (row[x].A) { return (float)x / size; }
+			if (BitmapCol_A(row[x])) { return (float)x / size; }
 		}
 	}
 	return 1.0f;
@@ -365,7 +365,7 @@ static float Block_GetSpriteBB_MinY(int size, int tileX, int tileY, const Bitmap
 	for (y = size - 1; y >= 0; y--) {
 		row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
-			if (row[x].A) { return 1.0f - (float)(y + 1) / size; }
+			if (BitmapCol_A(row[x])) { return 1.0f - (float)(y + 1) / size; }
 		}
 	}
 	return 1.0f;
@@ -378,7 +378,7 @@ static float Block_GetSpriteBB_MaxX(int size, int tileX, int tileY, const Bitmap
 	for (x = size - 1; x >= 0; x--) {
 		for (y = 0; y < size; y++) {
 			row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-			if (row[x].A) { return (float)(x + 1) / size; }
+			if (BitmapCol_A(row[x])) { return (float)(x + 1) / size; }
 		}
 	}
 	return 0.0f;
@@ -391,7 +391,7 @@ static float Block_GetSpriteBB_MaxY(int size, int tileX, int tileY, const Bitmap
 	for (y = 0; y < size; y++) {
 		row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
-			if (row[x].A) { return 1.0f - (float)y / size; }
+			if (BitmapCol_A(row[x])) { return 1.0f - (float)y / size; }
 		}
 	}
 	return 0.0f;

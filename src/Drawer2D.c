@@ -115,7 +115,7 @@ static void Drawer2D_CalculateTextWidths(void) {
 
 			/* Iterate through each pixel of the given character, on the current scanline */
 			for (xx = tileSize - 1; xx >= 0; xx--) {
-				if (!row[x + xx].A) continue;
+				if (!BitmapCol_A(row[x + xx])) continue;
 
 				/* Check if this is the pixel furthest to the right, for the current character */			
 				tileWidths[i] = max(tileWidths[i], xx + 1);
@@ -172,7 +172,7 @@ bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height) {
 void Gradient_Noise(Bitmap* bmp, BitmapCol col, int variation,
 					int x, int y, int width, int height) {
 	BitmapCol* dst;
-	int xx, yy, n;
+	int R, G, B, xx, yy, n;
 	float noise;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
 
@@ -184,14 +184,11 @@ void Gradient_Noise(Bitmap* bmp, BitmapCol col, int variation,
 			n = (n << 13) ^ n;
 			noise = 1.0f - ((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 1073741824.0f;
 
-			n = col.B + (int)(noise * variation);
-			dst->B = Drawer2D_ClampPixel(n);
-			n = col.G + (int)(noise * variation);
-			dst->G = Drawer2D_ClampPixel(n);
-			n = col.R + (int)(noise * variation);
-			dst->R = Drawer2D_ClampPixel(n);
+			R = BitmapCol_R(col) + (int)(noise * variation); Drawer2D_ClampPixel(R);
+			G = BitmapCol_G(col) + (int)(noise * variation); Drawer2D_ClampPixel(G);
+			B = BitmapCol_B(col) + (int)(noise * variation); Drawer2D_ClampPixel(B);
 
-			dst->A = 255;
+			*dst = BitmapCol_Make(R, G, B, 255);
 		}
 	}
 }
@@ -202,15 +199,16 @@ void Gradient_Vertical(Bitmap* bmp, BitmapCol a, BitmapCol b,
 	int xx, yy;
 	float t;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
-	col.A = 255;
 
 	for (yy = 0; yy < height; yy++) {
 		row = Bitmap_GetRow(bmp, y + yy) + x;
 		t   = (float)yy / (height - 1); /* so last row has colour of b */
 
-		col.B = (cc_uint8)Math_Lerp(a.B, b.B, t);	
-		col.G = (cc_uint8)Math_Lerp(a.G, b.G, t);
-		col.R = (cc_uint8)Math_Lerp(a.R, b.R, t);
+		col = BitmapCol_Make(
+			Math_Lerp(BitmapCol_R(a), BitmapCol_R(b), t),
+			Math_Lerp(BitmapCol_G(a), BitmapCol_G(b), t),
+			Math_Lerp(BitmapCol_B(a), BitmapCol_B(b), t),
+			255);
 
 		for (xx = 0; xx < width; xx++) { row[xx] = col; }
 	}
@@ -219,35 +217,35 @@ void Gradient_Vertical(Bitmap* bmp, BitmapCol a, BitmapCol b,
 void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
 					int x, int y, int width, int height) {
 	BitmapCol* dst;
-	int xx, yy, t;
+	int R, G, B, xx, yy;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
 
 	/* Pre compute the alpha blended source colour */
-	col.R = (cc_uint8)(col.R * blend / 255);
-	col.G = (cc_uint8)(col.G * blend / 255);
-	col.B = (cc_uint8)(col.B * blend / 255);
+	/* TODO: Avoid shift when multiplying */
+	col = BitmapCol_Make(
+		BitmapCol_R(col) * blend / 255,
+		BitmapCol_G(col) * blend / 255,
+		BitmapCol_B(col) * blend / 255,
+		0);
 	blend = 255 - blend; /* inverse for existing pixels */
 
-	t = 0;
 	for (yy = 0; yy < height; yy++) {
 		dst = Bitmap_GetRow(bmp, y + yy) + x;
 
 		for (xx = 0; xx < width; xx++, dst++) {
-			t = col.B + (dst->B * blend) / 255;
-			dst->B = Drawer2D_ClampPixel(t);
-			t = col.G + (dst->G * blend) / 255;
-			dst->G = Drawer2D_ClampPixel(t);
-			t = col.R + (dst->R * blend) / 255;
-			dst->R = Drawer2D_ClampPixel(t);
+			/* TODO: Not shift when multiplying */
+			R = BitmapCol_R(col) + (BitmapCol_R(*dst) * blend) / 255;
+			G = BitmapCol_G(col) + (BitmapCol_G(*dst) * blend) / 255;
+			B = BitmapCol_B(col) + (BitmapCol_B(*dst) * blend) / 255;
 
-			dst->A = 255;
+			*dst = BitmapCol_Make(R, G, B, 255);
 		}
 	}
 }
 
 void Gradient_Tint(Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 				   int x, int y, int width, int height) {
-	BitmapCol* row;
+	BitmapCol* row, col;
 	cc_uint8 tint;
 	int xx, yy;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
@@ -257,9 +255,14 @@ void Gradient_Tint(Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 		tint = (cc_uint8)Math_Lerp(tintA, tintB, (float)yy / height);
 
 		for (xx = 0; xx < width; xx++) {
-			row[xx].B = (row[xx].B * tint) / 255;
-			row[xx].G = (row[xx].G * tint) / 255;
-			row[xx].R = (row[xx].R * tint) / 255;
+			/* TODO: Not shift when multiplying */
+			col = BitmapCol_Make(
+				BitmapCol_R(row[xx]) * tint / 255,
+				BitmapCol_G(row[xx]) * tint / 255,
+				BitmapCol_B(row[xx]) * tint / 255,
+				0);
+
+			row[xx] = col | (row[xx] & BITMAPCOL_A_MASK);
 		}
 	}
 }
@@ -278,7 +281,7 @@ void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
 		for (xx = 0; xx < size; xx++) {
 			col = palette[*indices++];
 
-			if (col._raw == 0) continue; /* transparent pixel */
+			if (col == 0) continue; /* transparent pixel */
 			if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
 			row[xx] = col;
 		}
@@ -343,7 +346,7 @@ void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used) {
 
 bool Drawer2D_ValidColCodeAt(const String* text, int i) {
 	if (i >= text->length) return false;
-	return Drawer2D_GetCol(text->buffer[i]).A > 0;
+	return BitmapCol_A(Drawer2D_GetCol(text->buffer[i])) != 0;
 }
 
 bool Drawer2D_IsEmptyText(const String* text) {
@@ -373,8 +376,13 @@ char Drawer2D_LastCol(const String* text, int start) {
 bool Drawer2D_IsWhiteCol(char c) { return c == '\0' || c == 'f' || c == 'F'; }
 
 /* Divides R/G/B by 4 */
+#define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
 CC_NOINLINE static BitmapCol Drawer2D_ShadowCol(BitmapCol c) {
-	c.R >>= 2; c.G >>= 2; c.B >>= 2; return c;
+	/* Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb */
+	/* Shift right 2:  00aa_aaaa|aarr_rrrr|rrgg_gggg|ggbb_bbbb */
+	/* And by 3f3f3f:  0000_0000|00rr_rrrr|00gg_gggg|00bb_bbbb */
+	/* Or by alpha  :  aaaa_aaaa|00rr_rrrr|00gg_gggg|00bb_bbbb */
+	return (c & BITMAPCOL_A_MASK) | ((c >> 2) & SHADOW_MASK);
 }
 
 /* TODO: Needs to account for DPI */
@@ -433,7 +441,6 @@ void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, Bitmap
 }
 
 static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, bool shadow) {
-	BitmapCol black = BITMAPCOL_CONST(0, 0, 0, 255);
 	BitmapCol col;
 	String text  = args->text;
 	int i, point = args->font->size, count = 0;
@@ -454,7 +461,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 
 	col = Drawer2D_Cols['f'];
 	if (shadow) {
-		col = Drawer2D_BlackTextShadows ? black : Drawer2D_ShadowCol(col);
+		col = Drawer2D_BlackTextShadows ? BITMAPCOL_BLACK : Drawer2D_ShadowCol(col);
 	}
 
 	for (i = 0; i < text.length; i++) {
@@ -462,7 +469,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
 			col = Drawer2D_GetCol(text.buffer[i + 1]);
 			if (shadow) {
-				col = Drawer2D_BlackTextShadows ? black : Drawer2D_ShadowCol(col);
+				col = Drawer2D_BlackTextShadows ? BITMAPCOL_BLACK : Drawer2D_ShadowCol(col);
 			}
 			i++; continue; /* skip over the colour code */
 		}
@@ -497,16 +504,19 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 			for (xx = 0; xx < dstWidth; xx++) {
 				fontX = srcX + xx * srcWidth / dstWidth;
 				src   = srcRow[fontX];
-				if (!src.A) continue;
+				if (!BitmapCol_A(src)) continue;
 
 				dstX = x + xx;
 				if ((unsigned)dstX >= (unsigned)bmp->Width) continue;
 
-				dst.B = src.B * col.B / 255;
-				dst.G = src.G * col.G / 255;
-				dst.R = src.R * col.R / 255;
-				dst.A = src.A;
-				dstRow[dstX] = dst;
+				/* TODO: Transparent text by multiplying by col.A */
+				/* TODO: Not shift when multiplying */
+				/* TODO: avoid BitmapCol_A shift */
+				dstRow[dstX] = BitmapCol_Make(
+					BitmapCol_R(src) * BitmapCol_R(col) / 255,
+					BitmapCol_G(src) * BitmapCol_G(col) / 255,
+					BitmapCol_B(src) * BitmapCol_B(col) / 255,
+					BitmapCol_A(src));
 			}
 			x += dstWidth + xPadding;
 		}
@@ -523,7 +533,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 		dstWidth = 0;
 		col = cols[i];
 
-		for (; i < count && BitmapCol_Equals(col, cols[i]); i++) {
+		for (; i < count && col == cols[i]; i++) {
 			dstWidth += dstWidths[i] + xPadding;
 		}
 		Drawer2D_Underline(bmp, x, underlineY, dstWidth, underlineHeight, col);
@@ -567,7 +577,7 @@ static int Drawer2D_MeasureBitmapWidth(const struct DrawTextArgs* args) {
 }
 
 void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
-	BitmapCol col, backCol, black = BITMAPCOL_CONST(0, 0, 0, 255);
+	BitmapCol col, backCol;
 	String value = args->text;
 	char colCode, nextCol = 'f';
 	int i, partWidth;
@@ -582,7 +592,7 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 
 		col = Drawer2D_GetCol(colCode);
 		if (args->useShadow) {
-			backCol = Drawer2D_BlackTextShadows ? black : Drawer2D_ShadowCol(col);
+			backCol = Drawer2D_BlackTextShadows ? BITMAPCOL_BLACK : Drawer2D_ShadowCol(col);
 			Font_SysTextDraw(args, bmp, x, y, backCol, true);
 		}
 
@@ -672,18 +682,17 @@ void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 *---------------------------------------------------Drawer2D component----------------------------------------------------*
 *#########################################################################################################################*/
 static void Drawer2D_HexEncodedCol(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
-	Drawer2D_Cols[i].R = (cc_uint8)(lo * ((hex >> 2) & 1) + hi * (hex >> 3));
-	Drawer2D_Cols[i].G = (cc_uint8)(lo * ((hex >> 1) & 1) + hi * (hex >> 3));
-	Drawer2D_Cols[i].B = (cc_uint8)(lo * ((hex >> 0) & 1) + hi * (hex >> 3));
-	Drawer2D_Cols[i].A = 255;
+	Drawer2D_Cols[i] = BitmapCol_Make(
+		lo * ((hex >> 2) & 1) + hi * (hex >> 3),
+		lo * ((hex >> 1) & 1) + hi * (hex >> 3),
+		lo * ((hex >> 0) & 1) + hi * (hex >> 3),
+		255);
 }
 
 static void Drawer2D_Reset(void) {
-	BitmapCol col = BITMAPCOL_CONST(0, 0, 0, 0);
-	int i;
-	
+	int i;	
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
-		Drawer2D_Cols[i] = col;
+		Drawer2D_Cols[i] = 0;
 	}
 
 	for (i = 0; i <= 9; i++) {
@@ -820,6 +829,9 @@ static ReturnCode SysFont_Init(const String* path, struct SysFont* font, FT_Open
 	FileHandle file;
 	cc_uint32 size;
 	ReturnCode res;
+#ifdef CC_BUILD_OSX
+	String filename;
+#endif
 
 	if ((res = File_Open(&file, path))) return res;
 	if ((res = File_Length(file, &size))) { File_Close(file); return res; }
@@ -845,7 +857,7 @@ static ReturnCode SysFont_Init(const String* path, struct SysFont* font, FT_Open
 
 	/* For OSX font suitcase files */
 #ifdef CC_BUILD_OSX
-	String filename = String_NT_Array(font->filename);
+	String_InitArray_NT(filename, font->filename);
 	String_Copy(&filename, path);
 	font->filename[filename.length] = '\0';
 	args->pathname = font->filename;
@@ -1069,7 +1081,7 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 static void DrawGrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
 	cc_uint8* src;
 	BitmapCol* dst;
-	cc_uint8 intensity, invIntensity;
+	cc_uint8 I, invI; /* intensity */
 	int xx, yy;
 
 	for (yy = 0; yy < img->rows; yy++) {
@@ -1079,13 +1091,17 @@ static void DrawGrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitmap
 
 		for (xx = 0; xx < img->width; xx++, src++, dst++) {
 			if ((unsigned)(x + xx) >= (unsigned)bmp->Width) continue;
-			intensity = *src; invIntensity = UInt8_MaxValue - intensity;
+			I = *src; invI = UInt8_MaxValue - I;
 
-			dst->B = ((col.B * intensity) >> 8) + ((dst->B * invIntensity) >> 8);
-			dst->G = ((col.G * intensity) >> 8) + ((dst->G * invIntensity) >> 8);
-			dst->R = ((col.R * intensity) >> 8) + ((dst->R * invIntensity) >> 8);
-			/*dst->A = ((col.A * intensity) >> 8) + ((dst->A * invIntensity) >> 8);*/
-			dst->A = intensity + ((dst->A * invIntensity) >> 8);
+			/* TODO: Support transparent text */
+			/* dst->A = ((col.A * intensity) >> 8) + ((dst->A * invIntensity) >> 8);*/
+			/* TODO: Not shift when multiplying */
+			*dst = BitmapCol_Make(
+				((BitmapCol_R(col) * I) >> 8) + ((BitmapCol_R(*dst) * invI) >> 8),
+				((BitmapCol_G(col) * I) >> 8) + ((BitmapCol_G(*dst) * invI) >> 8),
+				((BitmapCol_B(col) * I) >> 8) + ((BitmapCol_B(*dst) * invI) >> 8),
+				                                ((BitmapCol_A(*dst) * invI) >> 8)
+			);
 		}
 	}
 }
@@ -1105,15 +1121,15 @@ static void DrawBlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitma
 			if ((unsigned)(x + xx) >= (unsigned)bmp->Width) continue;
 			intensity = src[xx >> 3];
 
+			/* TODO: transparent text (don't set A to 255) */
 			if (intensity & (1 << (7 - (xx & 7)))) {
-				dst->B = col.B; dst->G = col.G; dst->R = col.R;
-				/*dst->A = col.A*/
-				dst->A = 255;
+				*dst = col | BitmapCol_A_Bits(255);
 			}
 		}
 	}
 }
 
+static FT_Vector shadow_delta = { 83, -83 };
 static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) {
 	struct SysFont* font  = (struct SysFont*)args->font->handle;
 	FT_BitmapGlyph* glyphs = font->glyphs;
@@ -1131,8 +1147,7 @@ static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y
 
 	if (shadow) {
 		glyphs = font->shadow_glyphs;
-		FT_Vector delta = { 83, -83 };
-		FT_Set_Transform(face, NULL, &delta);
+		FT_Set_Transform(face, NULL, &shadow_delta);
 	}
 
 	height    = args->font->height;

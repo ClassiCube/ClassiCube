@@ -19,6 +19,7 @@ PackedCol PackedCol_Tint(PackedCol a, PackedCol b) {
 	cc_uint32 R = PackedCol_R(a) * PackedCol_R(b) / 255;
 	cc_uint32 G = PackedCol_G(a) * PackedCol_G(b) / 255;
 	cc_uint32 B = PackedCol_B(a) * PackedCol_B(b) / 255;
+	/* TODO: don't shift when multiplying */
 	return (a & PACKEDCOL_A_MASK) | (R << PACKEDCOL_R_SHIFT) | (G << PACKEDCOL_G_SHIFT) | (B << PACKEDCOL_B_SHIFT);
 }
 

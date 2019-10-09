@@ -6,37 +6,52 @@
 */
 struct Stream;
 
-/* Represents an ARGB colour, suitable for native graphics API texture pixels. */
-typedef union BitmapCol_ {
+/* Represents a packed 32 bit RGBA colour, suitable for native graphics API texture pixels. */
+typedef cc_uint32 BitmapCol;
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-	struct { cc_uint8 R, G, B, A; };
+#define BITMAPCOL_R_SHIFT  0
+#define BITMAPCOL_G_SHIFT  8
+#define BITMAPCOL_B_SHIFT 16
+#define BITMAPCOL_A_SHIFT 24
+#elif defined CC_BIG_ENDIAN
+#define BITMAPCOL_A_SHIFT  0
+#define BITMAPCOL_R_SHIFT  8
+#define BITMAPCOL_G_SHIFT 16
+#define BITMAPCOL_B_SHIFT 24
 #else
-	struct { cc_uint8 B, G, R, A; };
+#define BITMAPCOL_B_SHIFT  0
+#define BITMAPCOL_G_SHIFT  8
+#define BITMAPCOL_R_SHIFT 16
+#define BITMAPCOL_A_SHIFT 24
 #endif
-	cc_uint32 _raw;
-} BitmapCol;
 
-/* Whether components of two colours are all equal. */
-#define BitmapCol_Equals(a,b) ((a)._raw == (b)._raw)
-#define PackedCol_ARGB(r, g, b, a) (((cc_uint32)(r) << 16) | ((cc_uint32)(g) << 8) | ((cc_uint32)(b)) | ((cc_uint32)(a) << 24))
+#define BITMAPCOL_R_MASK (0xFFU << BITMAPCOL_R_SHIFT)
+#define BITMAPCOL_G_MASK (0xFFU << BITMAPCOL_G_SHIFT)
+#define BITMAPCOL_B_MASK (0xFFU << BITMAPCOL_B_SHIFT)
+#define BITMAPCOL_A_MASK (0xFFU << BITMAPCOL_A_SHIFT)
 
+#define BitmapCol_R(col) ((cc_uint8)(col >> BITMAPCOL_R_SHIFT))
+#define BitmapCol_G(col) ((cc_uint8)(col >> BITMAPCOL_G_SHIFT))
+#define BitmapCol_B(col) ((cc_uint8)(col >> BITMAPCOL_B_SHIFT))
+#define BitmapCol_A(col) ((cc_uint8)(col >> BITMAPCOL_A_SHIFT))
+
+#define BitmapCol_R_Bits(col) ((cc_uint8)(col) << BITMAPCOL_R_SHIFT)
+#define BitmapCol_G_Bits(col) ((cc_uint8)(col) << BITMAPCOL_G_SHIFT)
+#define BitmapCol_B_Bits(col) ((cc_uint8)(col) << BITMAPCOL_B_SHIFT)
+#define BitmapCol_A_Bits(col) ((cc_uint8)(col) << BITMAPCOL_A_SHIFT)
+
+#define BitmapCol_Make(r, g, b, a) (BitmapCol_R_Bits(r) | BitmapCol_G_Bits(g) | BitmapCol_B_Bits(b) | BitmapCol_A_Bits(a))
+#define BITMAPCOL_RGB_MASK (BITMAPCOL_R_MASK | BITMAPCOL_G_MASK | BITMAPCOL_B_MASK)
+
+#define BITMAPCOL_BLACK BitmapCol_Make(  0,   0,   0, 255)
+#define BITMAPCOL_WHITE BitmapCol_Make(255, 255, 255, 255)
 
 /* A 2D array of BitmapCol pixels */
 typedef struct Bitmap_ { cc_uint8* Scan0; int Width, Height; } Bitmap;
-
 #define PNG_MAX_DIMS 0x8000
-#if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-#define BITMAPCOL_CONST(r, g, b, a) { r, g, b, a }
-#else
-#define BITMAPCOL_CONST(r, g, b, a) { b, g, r, a }
-#endif
 
 /* Returns number of bytes a bitmap consumes. */
 #define Bitmap_DataSize(width, height) ((cc_uint32)(width) * (cc_uint32)(height) * 4)
-/* Gets the yth row of a bitmap as raw cc_uint32* pointer. */
-/* NOTE: You SHOULD not rely on the order of the 4 bytes in the pointer. */
-/* Different platforms may have different endian, or different component order. */
-#define Bitmap_RawRow(bmp, y) ((cc_uint32*)(bmp)->Scan0  + (y) * (bmp)->Width)
 /* Gets the yth row of the given bitmap. */
 #define Bitmap_GetRow(bmp, y) ((BitmapCol*)(bmp)->Scan0 + (y) * (bmp)->Width)
 /* Gets the pixel at (x,y) in the given bitmap. */

@@ -229,7 +229,7 @@ bool Entity_TouchesAnyWater(struct Entity* e) {
 
 static void Entity_MakeNameTexture(struct Entity* e) {
 	String colorlessName; char colorlessBuffer[STRING_SIZE];
-	BitmapCol shadowCol = BITMAPCOL_CONST(80, 80, 80, 255);
+	BitmapCol shadowCol = BitmapCol_Make(80, 80, 80, 255);
 	BitmapCol origWhiteCol;
 
 	struct DrawTextArgs args;
@@ -396,18 +396,16 @@ static void Entity_ClearHat(Bitmap* bmp, cc_uint8 skinType) {
 	for (y = 0; y < sizeY; y++) {
 		BitmapCol* row = Bitmap_GetRow(bmp, y) + sizeX;
 		for (x = 0; x < sizeX; x++) {
-			if (row[x].A != 255) return;
+			if (BitmapCol_A(row[x]) != 255) return;
 		}
 	}
 
 	/* only perform filtering when the entire hat is opaque */
-	cc_uint32 white = PackedCol_ARGB(255, 255, 255, 255);
-	cc_uint32 black = PackedCol_ARGB(0,   0,   0,   255);
 	for (y = 0; y < sizeY; y++) {
-		cc_uint32* row = Bitmap_RawRow(bmp, y) + sizeX;
+		BitmapCol* row = Bitmap_GetRow(bmp, y) + sizeX;
 		for (x = 0; x < sizeX; x++) {
-			cc_uint32 pixel = row[x];
-			if (pixel == white || pixel == black) row[x] = 0;
+			BitmapCol c = row[x];
+			if (c == BITMAPCOL_WHITE || c == BITMAPCOL_BLACK) row[x] = 0;
 		}
 	}
 }

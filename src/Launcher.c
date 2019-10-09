@@ -161,8 +161,6 @@ static void Launcher_Display(void) {
 }
 
 static void Launcher_Init(void) {
-	BitmapCol col = BITMAPCOL_CONST(125, 125, 125, 255);
-
 	Event_RegisterVoid(&WindowEvents.Resized,      NULL, Launcher_OnResize);
 	Event_RegisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
 	Event_RegisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
@@ -179,7 +177,7 @@ static void Launcher_Init(void) {
 	Drawer2D_MakeFont(&Launcher_TextFont,  14, FONT_STYLE_NORMAL);
 	Drawer2D_MakeFont(&Launcher_HintFont,  12, FONT_STYLE_ITALIC);
 
-	Drawer2D_Cols['g'] = col;
+	Drawer2D_Cols['g'] = BitmapCol_Make(125, 125, 125, 255);
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("audio");
 }
@@ -302,34 +300,33 @@ void Launcher_Run(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Colours/Skin----------------------------------------------------*
 *#########################################################################################################################*/
-BitmapCol Launcher_BackgroundCol       = BITMAPCOL_CONST(153, 127, 172, 255);
-BitmapCol Launcher_ButtonBorderCol     = BITMAPCOL_CONST( 97,  81, 110, 255);
-BitmapCol Launcher_ButtonForeActiveCol = BITMAPCOL_CONST(189, 168, 206, 255);
-BitmapCol Launcher_ButtonForeCol       = BITMAPCOL_CONST(141, 114, 165, 255);
-BitmapCol Launcher_ButtonHighlightCol  = BITMAPCOL_CONST(162, 131, 186, 255);
+#define DEFAULT_BACKGROUND_COL         BitmapCol_Make(153, 127, 172, 255);
+#define DEFAULT_BUTTON_BORDER_COL      BitmapCol_Make( 97,  81, 110, 255);
+#define DEFAULT_BUTTON_FORE_ACTIVE_COL BitmapCol_Make(189, 168, 206, 255);
+#define DEFAULT_BUTTON_FORE_COL        BitmapCol_Make(141, 114, 165, 255);
+#define DEFAULT_BUTTON_HIGHLIGHT_COL   BitmapCol_Make(162, 131, 186, 255);
+
+BitmapCol Launcher_BackgroundCol       = DEFAULT_BACKGROUND_COL;
+BitmapCol Launcher_ButtonBorderCol     = DEFAULT_BUTTON_BORDER_COL;
+BitmapCol Launcher_ButtonForeActiveCol = DEFAULT_BUTTON_FORE_ACTIVE_COL;
+BitmapCol Launcher_ButtonForeCol       = DEFAULT_BUTTON_FORE_COL;
+BitmapCol Launcher_ButtonHighlightCol  = DEFAULT_BUTTON_HIGHLIGHT_COL;
 
 void Launcher_ResetSkin(void) {
-	/* Have to duplicate it here, sigh */
-	BitmapCol defaultBackgroundCol       = BITMAPCOL_CONST(153, 127, 172, 255);
-	BitmapCol defaultButtonBorderCol     = BITMAPCOL_CONST( 97,  81, 110, 255);
-	BitmapCol defaultButtonForeActiveCol = BITMAPCOL_CONST(189, 168, 206, 255);
-	BitmapCol defaultButtonForeCol       = BITMAPCOL_CONST(141, 114, 165, 255);
-	BitmapCol defaultButtonHighlightCol  = BITMAPCOL_CONST(162, 131, 186, 255);
-
-	Launcher_BackgroundCol       = defaultBackgroundCol;
-	Launcher_ButtonBorderCol     = defaultButtonBorderCol;
-	Launcher_ButtonForeActiveCol = defaultButtonForeActiveCol;
-	Launcher_ButtonForeCol       = defaultButtonForeCol;
-	Launcher_ButtonHighlightCol  = defaultButtonHighlightCol;
+	Launcher_BackgroundCol       = DEFAULT_BACKGROUND_COL;
+	Launcher_ButtonBorderCol     = DEFAULT_BUTTON_BORDER_COL;
+	Launcher_ButtonForeActiveCol = DEFAULT_BUTTON_FORE_ACTIVE_COL;
+	Launcher_ButtonForeCol       = DEFAULT_BUTTON_FORE_COL;
+	Launcher_ButtonHighlightCol  = DEFAULT_BUTTON_HIGHLIGHT_COL;
 }
 
 CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
 	cc_uint8 rgb[3];
 	String value;
-	if (!Options_UNSAFE_Get(key, &value))     return;
+	if (!Options_UNSAFE_Get(key, &value))    return;
 	if (!PackedCol_TryParseHex(&value, rgb)) return;
 
-	col->R = rgb[0]; col->G = rgb[1]; col->B = rgb[2];
+	*col = BitmapCol_Make(rgb[0], rgb[1], rgb[2], 255);
 }
 
 void Launcher_LoadSkin(void) {
@@ -343,7 +340,7 @@ void Launcher_LoadSkin(void) {
 CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
 	String value; char valueBuffer[8];
 	/* Component order might be different to BitmapCol */
-	PackedCol tmp = PackedCol_Make(col.R, col.G, col.B, 0);
+	PackedCol tmp = PackedCol_Make(BitmapCol_R(col), BitmapCol_G(col), BitmapCol_B(col), 0);
 	
 	String_InitArray(value, valueBuffer);
 	PackedCol_ToHex(&value, tmp);
