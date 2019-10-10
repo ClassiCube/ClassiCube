@@ -1101,7 +1101,7 @@ static void DrawGrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitmap
 				((BitmapCol_R(col) * I) >> 8) + ((BitmapCol_R(*dst) * invI) >> 8),
 				((BitmapCol_G(col) * I) >> 8) + ((BitmapCol_G(*dst) * invI) >> 8),
 				((BitmapCol_B(col) * I) >> 8) + ((BitmapCol_B(*dst) * invI) >> 8),
-				                                ((BitmapCol_A(*dst) * invI) >> 8)
+				                           I  + ((BitmapCol_A(*dst) * invI) >> 8)
 			);
 		}
 	}
