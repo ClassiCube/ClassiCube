@@ -70,7 +70,6 @@ void Input_SetPressed(Key key, cc_bool pressed);
 /* Resets all keyboard keys to released state. */
 /* Raises InputEvents.Up for each previously pressed key. */
 void Key_Clear(void);
-typedef int MouseButton;
 
 /* Whether raw mouse/touch input is being listened for. */
 extern cc_bool Input_RawMode;

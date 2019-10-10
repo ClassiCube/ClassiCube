@@ -68,7 +68,7 @@ static PackedCol Entity_GetCol(struct Entity* e) {
 
 void Entity_Init(struct Entity* e) {
 	static const String model = String_FromConst("humanoid");
-	e->ModelScale = Vec3_Create1(1.0f);
+	Vec3_Set(e->ModelScale, 1,1,1);
 	e->uScale   = 1.0f;
 	e->vScale   = 1.0f;
 	e->StepSize = 0.5f;
@@ -118,7 +118,7 @@ static void Entity_ParseScale(struct Entity* e, const String* scale) {
 	/* local player doesn't allow giant model scales */
 	/* (can't climb stairs, extremely CPU intensive collisions) */
 	if (e->ModelRestrictedScale) { value = min(value, e->Model->MaxScale); }
-	e->ModelScale = Vec3_Create1(value);
+	Vec3_Set(e->ModelScale, value,value,value);
 }
 
 static void Entity_SetBlockModel(struct Entity* e, const String* model) {
@@ -136,13 +136,13 @@ static void Entity_SetBlockModel(struct Entity* e, const String* model) {
 
 void Entity_SetModel(struct Entity* e, const String* model) {
 	String name, scale, skin;
-	e->ModelScale = Vec3_Create1(1.0f);
+	Vec3_Set(e->ModelScale, 1,1,1);
 	String_UNSAFE_Separate(model, '|', &name, &scale);
 
 	/* 'giant' model kept for backwards compatibility */
 	if (String_CaselessEqualsConst(&name, "giant")) {
 		name = String_FromReadonly("humanoid");
-		e->ModelScale = Vec3_Create1(2.0f);
+		Vec3_Set(e->ModelScale, 2,2,2);
 	}
 
 	e->ModelBlock   = BLOCK_AIR;
@@ -796,7 +796,10 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 		hacks->FlyingDown   = KeyBind_IsPressed(KEYBIND_FLY_DOWN);
 
 		if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
-			if (hacks->Noclip) p->Base.Velocity = Vec3_Zero();
+			if (hacks->Noclip) {
+				/* need the { } because it's a macro */
+				Vec3_Set(p->Base.Velocity, 0,0,0);
+			}
 			hacks->Noclip = KeyBind_IsPressed(KEYBIND_NOCLIP);
 		}
 	}
@@ -826,7 +829,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 
 	/* Immediate stop in noclip mode */
 	if (!hacks->NoclipSlide && (hacks->Noclip && xMoving == 0 && zMoving == 0)) {
-		e->Velocity = Vec3_Zero();
+		Vec3_Set(e->Velocity, 0,0,0);
 	}
 
 	PhysicsComp_UpdateVelocityState(&p->Physics);
@@ -906,7 +909,7 @@ static void LocalPlayer_Init(void) {
 static void LocalPlayer_Reset(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	p->ReachDistance = 5.0f;
-	p->Base.Velocity = Vec3_Zero();
+	Vec3_Set(p->Base.Velocity, 0,0,0);
 	p->Physics.JumpVel       = 0.42f;
 	p->Physics.ServerJumpVel = 0.42f;
 	/* p->Base.Health = 20; TODO: survival mode stuff */
@@ -914,8 +917,8 @@ static void LocalPlayer_Reset(void) {
 
 static void LocalPlayer_OnNewMap(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	p->Base.Velocity = Vec3_Zero();
-	p->OldVelocity   = Vec3_Zero();
+	Vec3_Set(p->Base.Velocity, 0,0,0);
+	Vec3_Set(p->OldVelocity,   0,0,0);
 
 	p->_warnedRespawn = false;
 	p->_warnedFly     = false;
@@ -956,7 +959,7 @@ static void LocalPlayer_DoRespawn(void) {
 	spawn.Y += 2.0f/16.0f;
 	LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnRotY, p->SpawnHeadX, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-	p->Base.Velocity = Vec3_Zero();
+	Vec3_Set(p->Base.Velocity, 0,0,0);
 
 	/* Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before */
 	Entity_GetBounds(&p->Base, &bb);

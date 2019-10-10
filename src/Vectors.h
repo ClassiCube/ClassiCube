@@ -21,14 +21,6 @@ struct Matrix { struct Vec4 Row0, Row1, Row2, Row3; };
 /* Identity matrix. (A * Identity = A) */
 extern const struct Matrix Matrix_Identity;
 
-/* Returns a vector with all components 0. */
-static CC_INLINE Vec3 Vec3_Zero(void) {
-	Vec3 v = { 0, 0, 0 }; return v;
-}
-/* Returns a vector with all components 1. */
-static CC_INLINE Vec3 Vec3_One(void) {
-	Vec3 v = { 1, 1, 1 }; return v;
-}
 /* Returns a vector with all components set to Int32_MaxValue. */
 static CC_INLINE IVec3 IVec3_MaxValue(void) {
 	IVec3 v = { Int32_MaxValue, Int32_MaxValue, Int32_MaxValue }; return v;
@@ -37,12 +29,14 @@ static CC_INLINE Vec3 Vec3_BigPos(void) {
 	Vec3 v = { 1e25f, 1e25f, 1e25f }; return v;
 }
 
-static CC_INLINE Vec3 Vec3_Create1(float value) {
-	Vec3 v; v.X = value; v.Y = value; v.Z = value; return v;
-}
 static CC_INLINE Vec3 Vec3_Create3(float x, float y, float z) {
 	Vec3 v; v.X = x; v.Y = y; v.Z = z; return v;
 }
+
+/* Sets the X, Y, and Z components of a 3D vector */
+#define Vec3_Set(v, x, y, z) (v).X = x; (v).Y = y; (v).Z = z;
+/* Whether all components of a 3D vector are 0 */
+#define Vec3_IsZero(v) ((v).X == 0 && (v).Y == 0 && (v).Z == 0)
 
 /* Returns the squared length of the vector. */
 /* Squared length can be used for comparison, to avoid a costly sqrt() */

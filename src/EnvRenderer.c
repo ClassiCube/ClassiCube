@@ -308,7 +308,7 @@ void EnvRenderer_RenderSkybox(double deltaTime) {
 
 	/* Rotate around camera */
 	pos = Camera.CurrentPos;
-	Camera.CurrentPos = Vec3_Zero();
+	Vec3_Set(Camera.CurrentPos, 0,0,0);
 	Camera.Active->GetView(&view); Matrix_MulBy(&m, &view);
 	Camera.CurrentPos = pos;
 

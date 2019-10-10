@@ -30,14 +30,14 @@ static void HeldBlockRenderer_RenderModel(void) {
 	
 	if (Blocks.Draw[held_block] == DRAW_GAS) {
 		model = LocalPlayer_Instance.Base.Model;
-		held_entity.ModelScale = Vec3_Create1(1.0f);
+		Vec3_Set(held_entity.ModelScale, 1.0f,1.0f,1.0f);
 
 		Gfx_SetAlphaTest(true);
 		Model_RenderArm(model, &held_entity);
 		Gfx_SetAlphaTest(false);
 	} else {	
 		model = Model_Get(&block);
-		held_entity.ModelScale = Vec3_Create1(0.4f);
+		Vec3_Set(held_entity.ModelScale, 0.4f,0.4f,0.4f);
 
 		Gfx_SetupAlphaState(Blocks.Draw[held_block]);
 		Model_Render(model, &held_entity);

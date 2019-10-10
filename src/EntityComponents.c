@@ -874,10 +874,9 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 void Collisions_MoveAndWallSlide(struct CollisionsComp* comp) {
 	struct Entity* e = comp->Entity;
 	struct AABB entityBB, entityExtentBB;
-	Vec3 zero = Vec3_Zero();
 	int count;
 
-	if (Vec3_Equals(&e->Velocity, &zero)) return;
+	if (Vec3_IsZero(e->Velocity)) return;
 	count = Searcher_FindReachableBlocks(e,            &entityBB, &entityExtentBB);
 	Collisions_CollideWithReachableBlocks(comp, count, &entityBB, &entityExtentBB);
 }

@@ -117,7 +117,7 @@ static void LScreen_KeyPress(struct LScreen* s, char key) {
 	s->selectedWidget->VTABLE->KeyPress(s->selectedWidget, key);
 }
 
-static void LScreen_MouseDown(struct LScreen* s, MouseButton btn) {
+static void LScreen_MouseDown(struct LScreen* s, int btn) {
 	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
 	struct LWidget* prev = s->selectedWidget;
 
@@ -125,7 +125,7 @@ static void LScreen_MouseDown(struct LScreen* s, MouseButton btn) {
 	if (over) LScreen_SelectWidget(s, over, over == prev);
 }
 
-static void LScreen_MouseUp(struct LScreen* s, MouseButton btn) {
+static void LScreen_MouseUp(struct LScreen* s, int btn) {
 	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
 	struct LWidget* prev = s->selectedWidget;
 
@@ -1274,7 +1274,7 @@ static void ServersScreen_KeyDown(struct LScreen* s_, Key key, cc_bool was) {
 	}
 }
 
-static void ServersScreen_MouseUp(struct LScreen* s_, MouseButton btn) {
+static void ServersScreen_MouseUp(struct LScreen* s_, int btn) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->table.VTABLE->OnUnselect(&s->table);
 	LScreen_MouseUp(s_, btn);

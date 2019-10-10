@@ -39,9 +39,9 @@ void Model_Init(struct Model* model) {
 	model->UsesHumanSkin  = false;
 	model->Pushes = true;
 
-	model->Gravity        = 0.08f;
-	model->Drag           = Vec3_Create3(0.91f, 0.98f, 0.91f);
-	model->GroundFriction = Vec3_Create3(0.6f, 1.0f, 0.6f);
+	model->Gravity     = 0.08f;
+	Vec3_Set(model->Drag,           0.91f, 0.98f, 0.91f);
+	Vec3_Set(model->GroundFriction, 0.6f,   1.0f,  0.6f);
 
 	model->MaxScale    = 2.0f;
 	model->ShadowScale = 1.0f;

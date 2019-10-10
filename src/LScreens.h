@@ -19,8 +19,8 @@ typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	LScreen_Func OnDisplay; /* Called when framebuffer is about to be displayed. */ \
 	void (*KeyDown)(struct LScreen* s,    Key key, cc_bool wasDown); \
 	void (*KeyPress)(struct LScreen* s,   char c);  \
-	void (*MouseDown)(struct LScreen* s,  MouseButton btn); \
-	void (*MouseUp)(struct LScreen* s,    MouseButton btn); \
+	void (*MouseDown)(struct LScreen* s,  int btn); \
+	void (*MouseUp)(struct LScreen* s,    int btn); \
 	void (*MouseMove)(struct LScreen* s,  int deltaX, int deltaY); \
 	void (*MouseWheel)(struct LScreen* s, float delta); \
 	LWidget_Func HoverWidget;    /* Called when mouse is moved over a given widget. */ \

@@ -192,16 +192,15 @@ void Block_SetCollide(BlockID block, cc_uint8 collide) {
 }
 
 void Block_SetDrawType(BlockID block, cc_uint8 draw) {
-	Vec3 zero = Vec3_Zero();
-	Vec3 one  = Vec3_One();
-
 	if (draw == DRAW_OPAQUE && Blocks.Collide[block] != COLLIDE_SOLID) draw = DRAW_TRANSPARENT;
 	Blocks.Draw[block] = draw;
 	Block_RecalcIsLiquid(block);
 
+	/* Whether a block is opaque and exactly occupies a cell in the world */
+	/* The mesh builder module needs this information for optimisation purposes */
 	Blocks.FullOpaque[block] = draw == DRAW_OPAQUE
-		&& Vec3_Equals(&Blocks.MinBB[block], &zero)
-		&& Vec3_Equals(&Blocks.MaxBB[block], &one);
+		&& Blocks.MinBB[block].X == 0 && Blocks.MinBB[block].Y == 0 && Blocks.MinBB[block].Z == 0
+		&& Blocks.MaxBB[block].X == 1 && Blocks.MaxBB[block].Y == 1 && Blocks.MaxBB[block].Z == 1;
 }
 
 
@@ -244,12 +243,11 @@ void Block_ResetProps(BlockID block) {
 
 	Blocks.Draw[block] = DefaultSet_Draw(block);
 	if (Blocks.Draw[block] == DRAW_SPRITE) {
-		Blocks.MinBB[block] = Vec3_Create3(2.50f/16.0f, 0.0f, 2.50f/16.0f);
-		Blocks.MaxBB[block] = Vec3_Create3(13.5f/16.0f, 1.0f, 13.5f/16.0f);
+		Vec3_Set(Blocks.MinBB[block], 2.50f/16.0f, 0, 2.50f/16.0f);
+		Vec3_Set(Blocks.MaxBB[block], 13.5f/16.0f, 1, 13.5f/16.0f);
 	} else {		
-		Blocks.MinBB[block] = Vec3_Zero();
-		Blocks.MaxBB[block] = Vec3_One();
-		Blocks.MaxBB[block].Y = DefaultSet_Height(block);
+		Vec3_Set(Blocks.MinBB[block], 0, 0,                        0);
+		Vec3_Set(Blocks.MaxBB[block], 1, DefaultSet_Height(block), 1);
 	}
 
 	Block_SetDrawType(block, Blocks.Draw[block]);

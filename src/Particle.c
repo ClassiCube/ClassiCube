@@ -73,8 +73,10 @@ static cc_bool Particle_TestY(struct Particle* p, int y, cc_bool topFace, cc_boo
 	cc_bool collideVer;
 
 	if (y < 0) {
-		p->nextPos.Y = ENTITY_ADJUSTMENT; p->lastPos.Y = ENTITY_ADJUSTMENT;
-		p->velocity  = Vec3_Zero();
+		p->nextPos.Y = ENTITY_ADJUSTMENT; 
+		p->lastPos.Y = ENTITY_ADJUSTMENT;
+
+		Vec3_Set(p->velocity, 0,0,0);
 		particle_hitTerrain = true;
 		return false;
 	}
@@ -90,7 +92,8 @@ static cc_bool Particle_TestY(struct Particle* p, int y, cc_bool topFace, cc_boo
 		float adjust = topFace ? ENTITY_ADJUSTMENT : -ENTITY_ADJUSTMENT;
 		p->lastPos.Y = collideY + adjust;
 		p->nextPos.Y = p->lastPos.Y;
-		p->velocity  = Vec3_Zero();
+
+		Vec3_Set(p->velocity, 0,0,0);
 		particle_hitTerrain = true;
 		return false;
 	}
