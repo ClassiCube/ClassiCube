@@ -112,10 +112,10 @@ void RayTracer_Step(struct RayTracer* t) {
 
 static struct RayTracer tracer;
 #define PICKING_BORDER BLOCK_BEDROCK
-typedef bool (*IntersectTest)(struct PickedPos* pos);
+typedef cc_bool (*IntersectTest)(struct PickedPos* pos);
 
 static BlockID Picking_GetInside(int x, int y, int z) {
-	bool sides;
+	cc_bool sides;
 	int height;
 
 	if (World_ContainsXZ(x, z)) {
@@ -130,7 +130,7 @@ static BlockID Picking_GetInside(int x, int y, int z) {
 }
 
 static BlockID Picking_GetOutside(int x, int y, int z, IVec3 origin) {
-	bool sides;
+	cc_bool sides;
 	int height;
 
 	if (!World_ContainsXZ(x, z)) return BLOCK_AIR;
@@ -150,9 +150,9 @@ static BlockID Picking_GetOutside(int x, int y, int z, IVec3 origin) {
 	return BLOCK_AIR;
 }
 
-static bool Picking_RayTrace(Vec3 origin, Vec3 dir, float reach, struct PickedPos* pos, IntersectTest intersect) {
+static cc_bool Picking_RayTrace(Vec3 origin, Vec3 dir, float reach, struct PickedPos* pos, IntersectTest intersect) {
 	IVec3 pOrigin;
-	bool insideMap;
+	cc_bool insideMap;
 	float reachSq;
 	Vec3 v, minBB, maxBB;
 
@@ -189,7 +189,7 @@ static bool Picking_RayTrace(Vec3 origin, Vec3 dir, float reach, struct PickedPo
 	return false;
 }
 
-static bool Picking_ClipBlock(struct PickedPos* pos) {
+static cc_bool Picking_ClipBlock(struct PickedPos* pos) {
 	Vec3 scaledDir, intersect;
 	float lenSq, reach;
 	float t0, t1;
@@ -214,8 +214,8 @@ static bool Picking_ClipBlock(struct PickedPos* pos) {
 	return true;
 }
 
-static Vec3 picking_adjust = { 0.1f, 0.1f, 0.1f };
-static bool Picking_ClipCamera(struct PickedPos* pos) {
+const static Vec3 picking_adjust = { 0.1f, 0.1f, 0.1f };
+static cc_bool Picking_ClipCamera(struct PickedPos* pos) {
 	Vec3 intersect;
 	float t0, t1;
 
@@ -240,7 +240,7 @@ void Picking_CalculatePickedBlock(Vec3 origin, Vec3 dir, float reach, struct Pic
 }
 
 void Picking_ClipCameraPos(Vec3 origin, Vec3 dir, float reach, struct PickedPos* pos) {
-	bool noClip = !Camera.Clipping || LocalPlayer_Instance.Hacks.Noclip;
+	cc_bool noClip = !Camera.Clipping || LocalPlayer_Instance.Hacks.Noclip;
 	if (noClip || !Picking_RayTrace(origin, dir, reach, pos, Picking_ClipCamera)) {
 		PickedPos_SetAsInvalid(pos);
 		Vec3_Mul1(&pos->Intersect, &dir, reach);             /* intersect = dir * reach */

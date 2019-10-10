@@ -21,39 +21,39 @@ struct Widget;
 extern struct IGameComponent Gui_Component;
 
 /* Whether vanilla Minecraft Classic gui texture is used. */
-extern bool Gui_ClassicTexture;
+extern cc_bool Gui_ClassicTexture;
 /* Whether tab list is laid out like vanilla Minecraft Classic. */
-extern bool Gui_ClassicTabList;
+extern cc_bool Gui_ClassicTabList;
 /* Whether menus are laid out like vanilla Minecraft Classic. */
-extern bool Gui_ClassicMenu;
+extern cc_bool Gui_ClassicMenu;
 /* Maximum number of visible chatlines on screen. Can be 0. */
-extern int  Gui_Chatlines;
+extern int     Gui_Chatlines;
 /* Whether clicking on a chatline inserts it into chat input. */
-extern bool Gui_ClickableChat;
+extern cc_bool Gui_ClickableChat;
 /* Whether pressing tab in chat input attempts to autocomplete player names. */
-extern bool Gui_TabAutocomplete;
+extern cc_bool Gui_TabAutocomplete;
 /* Whether FPS counter (and other info) is shown in top left. */
-extern bool Gui_ShowFPS;
+extern cc_bool Gui_ShowFPS;
 
 struct ScreenVTABLE {
 	void (*Init)(void* elem);
 	void (*Render)(void* elem, double delta);
 	void (*Free)(void* elem);
-	bool (*HandlesKeyDown)(void* elem, Key key);
-	bool (*HandlesKeyUp)(void* elem, Key key);
-	bool (*HandlesKeyPress)(void* elem, char keyChar);
-	bool (*HandlesPointerDown)(void* elem, int id, int x, int y);
-	bool (*HandlesPointerUp)(void* elem,   int id, int x, int y);
-	bool (*HandlesPointerMove)(void* elem, int id, int x, int y);
-	bool (*HandlesMouseScroll)(void* elem, float delta);
+	cc_bool (*HandlesKeyDown)(void* elem, Key key);
+	cc_bool (*HandlesKeyUp)(void* elem, Key key);
+	cc_bool (*HandlesKeyPress)(void* elem, char keyChar);
+	cc_bool (*HandlesPointerDown)(void* elem, int id, int x, int y);
+	cc_bool (*HandlesPointerUp)(void* elem,   int id, int x, int y);
+	cc_bool (*HandlesPointerMove)(void* elem, int id, int x, int y);
+	cc_bool (*HandlesMouseScroll)(void* elem, float delta);
 	void (*OnResize)(void* elem);
 	Event_Void_Callback ContextLost;
 	Event_Void_Callback ContextRecreated;
 };
 #define Screen_Layout const struct ScreenVTABLE* VTABLE; \
-	bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
-	bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
-	bool closable;    /* Whether this screen is automatically closed when pressing Escape */ \
+	cc_bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
+	cc_bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
+	cc_bool closable;    /* Whether this screen is automatically closed when pressing Escape */ \
 	struct Widget** widgets; int numWidgets;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
@@ -64,19 +64,19 @@ struct WidgetVTABLE {
 	void (*Render)(void* elem, double delta);
 	void (*Free)(void* elem);
 	void (*Reposition)(void* elem);
-	bool (*HandlesKeyDown)(void* elem, Key key);
-	bool (*HandlesKeyUp)(void* elem, Key key);
-	bool (*HandlesMouseScroll)(void* elem, float delta);
-	bool (*HandlesPointerDown)(void* elem, int id, int x, int y);
-	bool (*HandlesPointerUp)(void* elem,   int id, int x, int y);
-	bool (*HandlesPointerMove)(void* elem, int id, int x, int y);
+	cc_bool (*HandlesKeyDown)(void* elem, Key key);
+	cc_bool (*HandlesKeyUp)(void* elem, Key key);
+	cc_bool (*HandlesMouseScroll)(void* elem, float delta);
+	cc_bool (*HandlesPointerDown)(void* elem, int id, int x, int y);
+	cc_bool (*HandlesPointerUp)(void* elem,   int id, int x, int y);
+	cc_bool (*HandlesPointerMove)(void* elem, int id, int x, int y);
 };
 #define Widget_Layout const struct WidgetVTABLE* VTABLE; \
-	int x, y, width, height;      /* Top left corner, and dimensions, of this widget */ \
-	bool active;                  /* Whether this widget is currently being moused over */ \
-	bool disabled;                /* Whether widget is prevented from being interacted with */ \
+	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
+	cc_bool active;                /* Whether this widget is currently being moused over */ \
+	cc_bool disabled;              /* Whether widget is prevented from being interacted with */ \
 	cc_uint8 horAnchor, verAnchor; /* The reference point for when this widget is resized */ \
-	int xOffset, yOffset;         /* Offset from the reference point */ \
+	int xOffset, yOffset;          /* Offset from the reference point */ \
 	Widget_LeftClick MenuClick;
 
 /* Represents an individual 2D gui component. */
@@ -86,7 +86,7 @@ void Widget_CalcPosition(void* widget);
 /* Resets Widget struct fields to 0/NULL (except VTABLE) */
 void Widget_Reset(void* widget);
 /* Whether the given point is located within the bounds of the widget. */
-bool Widget_Contains(void* widget, int x, int y);
+cc_bool Widget_Contains(void* widget, int x, int y);
 
 
 extern GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
@@ -116,9 +116,9 @@ extern int Gui_ScreensCount;
 /* For example, to calculate X position of a text widget on screen */
 int  Gui_CalcPos(cc_uint8 anchor, int offset, int size, int axisLen);
 /* Returns whether the given rectangle contains the given point. */
-bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
+cc_bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
 /* Returns whether one or more pointers lie within the given rectangle. */
-bool Gui_ContainsPointers(int x, int y, int width, int height);
+cc_bool Gui_ContainsPointers(int x, int y, int width, int height);
 /* Shows HUD and Status screens. */
 void Gui_ShowDefault(void);
 

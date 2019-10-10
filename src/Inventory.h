@@ -24,7 +24,7 @@ CC_VAR extern struct _InventoryData {
 	/* Currently selected hotbar. */
 	int Offset;
 	/* Whether the user is allowed to change selected/held block. */
-	bool CanChangeSelected;
+	cc_bool CanChangeSelected;
 } Inventory;
 
 /* Gets the block at the nth index in the current hotbar. */
@@ -36,7 +36,7 @@ CC_VAR extern struct _InventoryData {
 
 /* Checks if the user can change their selected/held block. */
 /* NOTE: Shows a message in chat if they are unable to. */
-bool Inventory_CheckChangeSelected(void);
+cc_bool Inventory_CheckChangeSelected(void);
 /* Attempts to set the currently selected index in a hotbar. */
 void Inventory_SetSelectedIndex(int index);
 /* Attempts to set the currently active hotbar. */

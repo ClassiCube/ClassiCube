@@ -18,7 +18,7 @@
 #include "Camera.h"
 #include "Particle.h"
 
-bool EnvRenderer_Legacy, EnvRenderer_Minimal;
+cc_bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 
 #define ENV_SMALL_VERTICES 4096
 static float EnvRenderer_BlendFactor(float x) {
@@ -287,7 +287,7 @@ static void EnvRenderer_UpdateSky(void) {
 *#########################################################################################################################*/
 static GfxResourceID skybox_tex, skybox_vb;
 #define SKYBOX_COUNT (6 * 4)
-bool EnvRenderer_ShouldRenderSkybox(void) { return skybox_tex && !EnvRenderer_Minimal; }
+cc_bool EnvRenderer_ShouldRenderSkybox(void) { return skybox_tex && !EnvRenderer_Minimal; }
 
 void EnvRenderer_RenderSkybox(double deltaTime) {
 	struct Matrix m, rotX, rotY, view;
@@ -415,8 +415,8 @@ static float EnvRenderer_RainHeight(int x, int z) {
 }
 
 void EnvRenderer_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
-	bool didBlock = !(Blocks.Draw[oldBlock] == DRAW_GAS || Blocks.Draw[oldBlock] == DRAW_SPRITE);
-	bool nowBlock = !(Blocks.Draw[newBlock] == DRAW_GAS || Blocks.Draw[newBlock] == DRAW_SPRITE);
+	cc_bool didBlock = !(Blocks.Draw[oldBlock] == DRAW_GAS || Blocks.Draw[oldBlock] == DRAW_SPRITE);
+	cc_bool nowBlock = !(Blocks.Draw[newBlock] == DRAW_GAS || Blocks.Draw[newBlock] == DRAW_SPRITE);
 	int hIndex, height;
 	if (didBlock == nowBlock) return;
 
@@ -448,7 +448,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	VertexP3fT2fC4b* v;
 	int weather, vCount;
 	IVec3 pos;
-	bool moved, particles;
+	cc_bool moved, particles;
 	float speed, vOffset;
 
 	PackedCol col;
@@ -538,7 +538,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 *#########################################################################################################################*/
 static GfxResourceID sides_vb, edges_vb, sides_tex, edges_tex;
 static int sides_vertices, edges_vertices;
-static bool sides_fullBright, edges_fullBright;
+static cc_bool sides_fullBright, edges_fullBright;
 static TextureLoc edges_lastTexLoc, sides_lastTexLoc;
 
 static void EnvRenderer_RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID tex, int count) {

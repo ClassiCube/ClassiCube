@@ -199,7 +199,7 @@ void Env_SetWeatherFade(float rate) {
 void Env_SetWeather(int weather) {
 	Env_Set(weather, Env.Weather, ENV_VAR_WEATHER);
 }
-void Env_SetExpFog(bool expFog) {
+void Env_SetExpFog(cc_bool expFog) {
 	Env_Set(expFog, Env.ExpFog, ENV_VAR_EXP_FOG);
 }
 void Env_SetSkyboxHorSpeed(float speed) {

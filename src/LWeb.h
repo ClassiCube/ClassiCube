@@ -12,10 +12,10 @@ typedef void (*JsonOnNew)(struct JsonContext* ctx);
 
 /* State for parsing JSON text */
 struct JsonContext {
-	char* cur;     /* Pointer to current character in JSON stream being inspected. */
-	int left;      /* Number of characters left to be inspected. */
-	bool failed;   /* Whether there was an error parsing the JSON. */
-	String curKey; /* Key/Name of current member */
+	char* cur;      /* Pointer to current character in JSON stream being inspected. */
+	int left;       /* Number of characters left to be inspected. */
+	cc_bool failed; /* Whether there was an error parsing the JSON. */
+	String curKey;  /* Key/Name of current member */
 	
 	JsonOnNew OnNewArray;  /* Invoked when start of an array is read. */
 	JsonOnNew OnNewObject; /* Invoked when start of an object is read. */
@@ -33,7 +33,7 @@ void Json_Parse(struct JsonContext* ctx);
 struct ServerInfo {
 	String hash, name, ip, mppass, software;
 	int players, maxPlayers, port, uptime;
-	bool featured;
+	cc_bool featured;
 	char country[2];
 	int _order; /* (internal) order in servers table after filtering */
 	char _hashBuffer[32],   _nameBuffer[STRING_SIZE];
@@ -43,11 +43,11 @@ struct ServerInfo {
 
 struct LWebTask;
 struct LWebTask {
-	bool Completed; /* Whether the task has finished executing. */
-	bool Working;   /* Whether the task is currently in progress, or is scheduled to be. */
-	bool Success;   /* Whether the task completed successfully. */
-	ReturnCode Res; /* Error returned (e.g. for DNS failure) */
-	int Status;     /* HTTP return code for the request */
+	cc_bool Completed; /* Whether the task has finished executing. */
+	cc_bool Working;   /* Whether the task is currently in progress, or is scheduled to be. */
+	cc_bool Success;   /* Whether the task completed successfully. */
+	ReturnCode Res;    /* Error returned (e.g. for DNS failure) */
+	int Status;        /* HTTP return code for the request */
 	
 	String Identifier; /* Unique identifier for this web task. */
 	String URL;        /* URL this task is downloading from/uploading to. */
@@ -106,7 +106,7 @@ extern struct FetchUpdateData {
 	/* Timestamp downloaded build was originally built at. */
 	TimeMS Timestamp;
 } FetchUpdateTask;
-void FetchUpdateTask_Run(bool release, bool d3d9);
+void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9);
 
 
 extern struct FetchFlagsData { 

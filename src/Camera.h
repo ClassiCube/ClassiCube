@@ -13,11 +13,11 @@ extern struct _CameraData {
 	/* How sensitive camera is to movements of mouse. */
 	int Sensitivity;
 	/* Whether smooth/cinematic camera mode is used. */
-	bool Smooth;
+	cc_bool Smooth;
 	/* Whether third person camera clip against blocks. */
-	bool Clipping;
+	cc_bool Clipping;
 	/* Whether to invert vertical mouse movement. */
-	bool Invert;
+	cc_bool Invert;
 
 	/* Tilt effect applied to the camera. */
 	struct Matrix TiltM;
@@ -32,7 +32,7 @@ extern struct _CameraData {
 
 struct Camera {
 	/* Whether this camera is third person. (i.e. not allowed when -thirdperson in MOTD) */
-	bool isThirdPerson;
+	cc_bool isThirdPerson;
 
 	/* Calculates the current projection matrix of this camera. */
 	void (*GetProjection)(struct Matrix* proj);
@@ -57,7 +57,7 @@ struct Camera {
 	/* Calculates selected block in the world, based on camera's current state */
 	void (*GetPickedBlock)(struct PickedPos* pos);
 	/* Zooms the camera in or out when scrolling mouse wheel. */
-	bool (*Zoom)(float amount);
+	cc_bool (*Zoom)(float amount);
 
 	/* Next camera in linked list of cameras. */
 	struct Camera* next;

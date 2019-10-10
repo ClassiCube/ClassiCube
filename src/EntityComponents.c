@@ -25,7 +25,7 @@
 #define ANIM_IDLE_XPERIOD (2.0f * MATH_PI / 5.0f)
 #define ANIM_IDLE_ZPERIOD (2.0f * MATH_PI / 3.5f)
 
-static void AnimatedComp_DoTilt(float* tilt, bool reduce) {
+static void AnimatedComp_DoTilt(float* tilt, cc_bool reduce) {
 	if (reduce) {
 		(*tilt) *= 0.84f;
 	} else {
@@ -34,7 +34,7 @@ static void AnimatedComp_DoTilt(float* tilt, bool reduce) {
 	Math_Clamp(*tilt, 0.0f, 1.0f);
 }
 
-static void AnimatedComp_PerpendicularAnim(struct AnimatedComp* anim, float flapSpeed, float idleXRot, float idleZRot, bool left) {
+static void AnimatedComp_PerpendicularAnim(struct AnimatedComp* anim, float flapSpeed, float idleXRot, float idleZRot, cc_bool left) {
 	float verAngle = 0.5f + 0.5f * Math_SinF(anim->WalkTime * flapSpeed);
 	float horAngle = Math_CosF(anim->WalkTime);
 	float zRot = -idleZRot - verAngle * anim->Swing * ANIM_MAX_ANGLE;	
@@ -145,7 +145,7 @@ void TiltComp_GetCurrent(struct TiltComp* anim, float t) {
 /*########################################################################################################################*
 *-----------------------------------------------------HacksComponent------------------------------------------------------*
 *#########################################################################################################################*/
-static void HacksComp_SetAll(struct HacksComp* hacks, bool allowed) {
+static void HacksComp_SetAll(struct HacksComp* hacks, cc_bool allowed) {
 	hacks->CanAnyHacks = allowed; hacks->CanFly            = allowed;
 	hacks->CanNoclip   = allowed; hacks->CanRespawn        = allowed;
 	hacks->CanSpeed    = allowed; hacks->CanPushbackBlocks = allowed;
@@ -168,7 +168,7 @@ void HacksComp_Init(struct HacksComp* hacks) {
 	String_InitArray(hacks->HacksFlags, hacks->__HacksFlagsBuffer);
 }
 
-bool HacksComp_CanJumpHigher(struct HacksComp* hacks) {
+cc_bool HacksComp_CanJumpHigher(struct HacksComp* hacks) {
 	return hacks->Enabled && hacks->CanSpeed;
 }
 
@@ -205,7 +205,7 @@ static int HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks) 
 	return value;
 }
 
-static void HacksComp_ParseFlag(struct HacksComp* hacks, const char* incFlag, const char* excFlag, bool* target) {
+static void HacksComp_ParseFlag(struct HacksComp* hacks, const char* incFlag, const char* excFlag, cc_bool* target) {
 	String include = String_FromReadonly(incFlag);
 	String exclude = String_FromReadonly(excFlag);
 	String* joined = &hacks->HacksFlags;
@@ -229,9 +229,9 @@ static void HacksComp_ParseAllFlag(struct HacksComp* hacks, const char* incFlag,
 	}
 }
 
-void HacksComp_SetUserType(struct HacksComp* hacks, cc_uint8 value, bool setBlockPerms) {
-	bool isOp = value >= 100 && value <= 127;
-	hacks->IsOp = isOp;
+void HacksComp_SetUserType(struct HacksComp* hacks, cc_uint8 value, cc_bool setBlockPerms) {
+	cc_bool isOp = value >= 100 && value <= 127;
+	hacks->IsOp  = isOp;
 	if (!setBlockPerms) return;
 
 	Blocks.CanPlace[BLOCK_BEDROCK]     = isOp;
@@ -245,7 +245,7 @@ void HacksComp_SetUserType(struct HacksComp* hacks, cc_uint8 value, bool setBloc
 void HacksComp_RecheckFlags(struct HacksComp* hacks) {
 	static const String noHaxFlag = String_FromConst("-hax");
 	/* Can use hacks by default (also case with WoM), no need to check +hax */
-	bool hax = !String_ContainsString(&hacks->HacksFlags, &noHaxFlag);
+	cc_bool hax = !String_ContainsString(&hacks->HacksFlags, &noHaxFlag);
 	HacksComp_SetAll(hacks, hax);
 	hacks->CanBePushed = true;
 
@@ -342,7 +342,7 @@ static void NetInterpComp_AddState(struct NetInterpComp* interp, struct InterpSt
 	interp->States[interp->StatesCount] = state; interp->StatesCount++;
 }
 
-void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, bool interpolate) {
+void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, cc_bool interpolate) {
 	struct InterpState last = interp->Cur;
 	struct InterpState* cur = &interp->Cur;
 	cc_uint8 flags = update->Flags;
@@ -388,12 +388,12 @@ void NetInterpComp_AdvanceState(struct NetInterpComp* interp) {
 /*########################################################################################################################*
 *-----------------------------------------------LocalInterpolationComponent-----------------------------------------------*
 *#########################################################################################################################*/
-static void LocalInterpComp_Angle(float* prev, float* next, float value, bool interpolate) {
+static void LocalInterpComp_Angle(float* prev, float* next, float value, cc_bool interpolate) {
 	*next = value;
 	if (!interpolate) *prev = value;
 }
 
-void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, bool interpolate) {
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, cc_bool interpolate) {
 	struct Entity* entity = &LocalPlayer_Instance.Base;
 	struct InterpState* prev = &interp->Prev;
 	struct InterpState* next = &interp->Next;
@@ -450,12 +450,12 @@ void LocalInterpComp_AdvanceState(struct InterpComp* interp) {
 /*########################################################################################################################*
 *-----------------------------------------------------ShadowComponent-----------------------------------------------------*
 *#########################################################################################################################*/
-bool ShadowComponent_BoundShadowTex;
+cc_bool ShadowComponent_BoundShadowTex;
 GfxResourceID ShadowComponent_ShadowTex;
 static float shadow_radius, shadow_uvScale;
 struct ShadowData { float Y; BlockID Block; cc_uint8 A; };
 
-static bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f; }
+static cc_bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f; }
 static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity* e, struct ShadowData* data, float x1, float z1, float x2, float z2) {
 	PackedCol col;
 	VertexP3fT2fC4b* v;
@@ -536,11 +536,11 @@ static void ShadowComponent_CalcAlpha(float playerY, struct ShadowData* data) {
 	else data->Y += 1.0f / 4.0f;
 }
 
-static bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, struct ShadowData* data) {
+static cc_bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, struct ShadowData* data) {
 	struct ShadowData zeroData = { 0 };
 	struct ShadowData* cur;
 	float posY, topY;
-	bool outside;
+	cc_bool outside;
 	BlockID block; cc_uint8 draw;
 	int i;
 
@@ -666,7 +666,7 @@ void ShadowComponent_Draw(struct Entity* e) {
 *---------------------------------------------------CollisionsComponent---------------------------------------------------*
 *#########################################################################################################################*/
 /* Whether a collision occurred with any horizontal sides of any blocks */
-bool Collisions_HitHorizontal(struct CollisionsComp* comp) {
+cc_bool Collisions_HitHorizontal(struct CollisionsComp* comp) {
 	return comp->HitXMin || comp->HitXMax || comp->HitZMin || comp->HitZMax;
 }
 #define COLLISIONS_ADJ 0.001f
@@ -689,7 +689,7 @@ static void Collisions_ClipZ(struct Entity* e, Vec3* size, struct AABB* entityBB
 	entityBB->Max.Z = e->Position.Z + size->Z / 2; extentBB->Max.Z = entityBB->Max.Z;
 }
 
-static bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
+static cc_bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
 	IVec3 bbMin, bbMax; 
 	struct AABB blockBB;
 	BlockID block;
@@ -715,7 +715,7 @@ static bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
 	return true;
 }
 
-static bool Collisions_DidSlide(struct CollisionsComp* comp, struct AABB* blockBB, Vec3* size,
+static cc_bool Collisions_DidSlide(struct CollisionsComp* comp, struct AABB* blockBB, Vec3* size,
 	struct AABB* finalBB, struct AABB* entityBB, struct AABB* extentBB) {
 	float yDist = blockBB->Max.Y - entityBB->Min.Y;
 	struct AABB adjBB;
@@ -743,7 +743,7 @@ static bool Collisions_DidSlide(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipXMin(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB,
-	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
+	cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.X = blockBB->Min.X - size->X / 2 - COLLISIONS_ADJ;
 		Collisions_ClipX(comp->Entity, size, entityBB, extentBB);
@@ -752,7 +752,7 @@ static void Collisions_ClipXMin(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipXMax(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB, 
-	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
+	cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.X = blockBB->Max.X + size->X / 2 + COLLISIONS_ADJ;
 		Collisions_ClipX(comp->Entity, size, entityBB, extentBB);
@@ -761,7 +761,7 @@ static void Collisions_ClipXMax(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipZMax(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB, 
-	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
+	cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.Z = blockBB->Max.Z + size->Z / 2 + COLLISIONS_ADJ;
 		Collisions_ClipZ(comp->Entity, size, entityBB, extentBB);
@@ -770,7 +770,7 @@ static void Collisions_ClipZMax(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipZMin(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB,
-	bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
+	cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.Z = blockBB->Min.Z - size->Z / 2 - COLLISIONS_ADJ;
 		Collisions_ClipZ(comp->Entity, size, entityBB, extentBB);
@@ -799,7 +799,7 @@ static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, i
 	struct SearcherState state;
 	struct AABB blockBB, finalBB;
 	Vec3 size;
-	bool wasOn;
+	cc_bool wasOn;
 
 	Vec3 bPos, v;
 	float tx, ty, tz;
@@ -895,17 +895,17 @@ void PhysicsComp_Init(struct PhysicsComp* comp, struct Entity* entity) {
 	comp->ServerJumpVel = 0.42f;
 }
 
-static bool PhysicsComp_TouchesLiquid(BlockID block) { return Blocks.Collide[block] == COLLIDE_LIQUID; }
+static cc_bool PhysicsComp_TouchesLiquid(BlockID block) { return Blocks.Collide[block] == COLLIDE_LIQUID; }
 void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 	struct Entity* entity   = comp->Entity;
 	struct HacksComp* hacks = comp->Hacks;
 	struct AABB bounds;
 	int dir;
 
-	bool touchWater, touchLava;
-	bool liquidFeet, liquidRest;
+	cc_bool touchWater, touchLava;
+	cc_bool liquidFeet, liquidRest;
 	int feetY, bodyY, headY;
-	bool pastJumpPoint;
+	cc_bool pastJumpPoint;
 
 	if (hacks->Floating) {
 		entity->Velocity.Y = 0.0f; /* eliminate the effect of gravity */
@@ -973,8 +973,8 @@ void PhysicsComp_DoNormalJump(struct PhysicsComp* comp) {
 	comp->CanLiquidJump = false;
 }
 
-static bool PhysicsComp_TouchesSlipperyIce(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_SLIPPERY_ICE; }
-static bool PhysicsComp_OnIce(struct Entity* e) {
+static cc_bool PhysicsComp_TouchesSlipperyIce(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_SLIPPERY_ICE; }
+static cc_bool PhysicsComp_OnIce(struct Entity* e) {
 	struct AABB bounds;
 	int feetX, feetY, feetZ;
 	BlockID feetBlock;
@@ -1041,7 +1041,7 @@ static void PhysicsComp_MoveNormal(struct PhysicsComp* comp, Vec3 vel, float fac
 	PhysicsComp_Move(comp, drag, gravity, yMul);
 }
 
-static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* bounds, bool checkSolid) {
+static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* bounds, cc_bool checkSolid) {
 	IVec3 bbMin, bbMax;
 	float modifier = MATH_POS_INF;
 	struct AABB blockBB;
@@ -1109,7 +1109,7 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
 	struct HacksComp* hacks = comp->Hacks;
 	float baseSpeed, verSpeed, horSpeed;
 	float factor, gravity;
-	bool womSpeedBoost;
+	cc_bool womSpeedBoost;
 
 	if (hacks->Noclip) entity->OnGround = false;
 	baseSpeed = PhysicsComp_GetBaseSpeed(comp);
@@ -1200,7 +1200,7 @@ float PhysicsComp_CalcJumpVelocity(float jumpHeight) {
 
 void PhysicsComp_DoEntityPush(struct Entity* entity) {
 	struct Entity* other;
-	bool yIntersects;
+	cc_bool yIntersects;
 	Vec3 dir;
 	float dist, pushStrength;
 	int id;
@@ -1234,10 +1234,10 @@ void PhysicsComp_DoEntityPush(struct Entity* entity) {
 *----------------------------------------------------SoundsComponent------------------------------------------------------*
 *#########################################################################################################################*/
 static Vec3 sounds_lastPos = { -1e25f, -1e25f, -1e25f };
-static bool sounds_anyNonAir;
+static cc_bool  sounds_anyNonAir;
 static cc_uint8 sounds_type;
 
-static bool Sounds_CheckNonSolid(BlockID b) {
+static cc_bool Sounds_CheckNonSolid(BlockID b) {
 	cc_uint8 type = Blocks.StepSounds[b];
 	cc_uint8 collide = Blocks.Collide[b];
 	if (type != SOUND_NONE && collide != COLLIDE_SOLID) sounds_type = type;
@@ -1246,7 +1246,7 @@ static bool Sounds_CheckNonSolid(BlockID b) {
 	return false;
 }
 
-static bool Sounds_CheckSolid(BlockID b) {
+static cc_bool Sounds_CheckSolid(BlockID b) {
 	cc_uint8 type = Blocks.StepSounds[b];
 	if (type != SOUND_NONE) sounds_type = type;
 
@@ -1287,7 +1287,7 @@ static void SoundComp_GetSound(struct LocalPlayer* p) {
 	Entity_TouchesAny(&bounds, Sounds_CheckSolid);
 }
 
-static bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vec3 soundPos) {
+static cc_bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vec3 soundPos) {
 	Vec3 delta;
 	float distSq;
 	float oldLegRot, newLegRot;
@@ -1308,7 +1308,7 @@ static bool SoundComp_ShouldPlay(struct LocalPlayer* p, Vec3 soundPos) {
 	return Math_Sign(oldLegRot) != Math_Sign(newLegRot);
 }
 
-void SoundComp_Tick(bool wasOnGround) {
+void SoundComp_Tick(cc_bool wasOnGround) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	Vec3 soundPos      = p->Interp.Next.Pos;
 

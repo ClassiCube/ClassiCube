@@ -216,7 +216,7 @@ static cc_uint32 Codebook_Lookup1Values(cc_uint32 entries, cc_uint32 dimensions)
 	return 0;
 }
 
-static bool Codebook_CalcCodewords(struct Codebook* c, cc_uint8* len) {
+static cc_bool Codebook_CalcCodewords(struct Codebook* c, cc_uint8* len) {
 	/* This is taken from stb_vorbis.c because I gave up trying */
 	cc_uint32 i, depth;
 	cc_uint32 root, codeword;
@@ -527,7 +527,7 @@ static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 	return 0;
 }
 
-static bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f, int ch) {
+static cc_bool Floor_DecodeFrame(struct VorbisState* ctx, struct Floor* f, int ch) {
 	cc_int32* yList;
 	int i, j, idx, rangeBits;
 	cc_uint8 klass, cdim, cbits;
@@ -628,7 +628,7 @@ static int high_neighbor(cc_int16* v, int x) {
 static void Floor_Synthesis(struct VorbisState* ctx, struct Floor* f, int ch) {
 	/* amplitude arrays */
 	cc_int32 YFinal[FLOOR_MAX_VALUES];
-	bool Step2[FLOOR_MAX_VALUES];
+	cc_bool Step2[FLOOR_MAX_VALUES];
 	cc_int32* yList;
 	float* data;
 	/* amplitude variables */
@@ -755,7 +755,7 @@ static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r
 	return 0;
 }
 
-static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, cc_uint32 size, int ch, bool* doNotDecode, float** data) {
+static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, cc_uint32 size, int ch, cc_bool* doNotDecode, float** data) {
 	struct Codebook* classbook;
 	cc_uint32 residueBeg, residueEnd;
 	cc_uint32 classwordsPerCodeword;
@@ -837,13 +837,14 @@ static void Residue_DecodeCore(struct VorbisState* ctx, struct Residue* r, cc_ui
 	}
 }
 
-static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, int ch, bool* doNotDecode, float** data) {
+static void Residue_DecodeFrame(struct VorbisState* ctx, struct Residue* r, int ch, cc_bool* doNotDecode, float** data) {
 	cc_uint32 size = ctx->dataSize;
 	float* interleaved;
+	cc_bool decodeAny;
 	int i, j;
 
 	if (r->Type == 2) {
-		bool decodeAny = false;
+		decodeAny = false;
 
 		/* type 2 decodes all channel vectors, if at least 1 channel to decode */
 		for (i = 0; i < ch; i++) {
@@ -1121,13 +1122,13 @@ void Vorbis_Free(struct VorbisState* ctx) {
 	Mem_Free(ctx->temp);
 }
 
-static bool Vorbis_ValidBlockSize(cc_uint32 size) {
+static cc_bool Vorbis_ValidBlockSize(cc_uint32 size) {
 	return size >= 64 && size <= VORBIS_MAX_BLOCK_SIZE && Math_IsPowOf2(size);
 }
 
 static ReturnCode Vorbis_CheckHeader(struct VorbisState* ctx, cc_uint8 type) {
 	cc_uint8 header[7];
-	bool OK;
+	cc_bool OK;
 	ReturnCode res;
 
 	if ((res = Stream_Read(ctx->source, header, sizeof(header)))) return res;
@@ -1287,9 +1288,9 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	int modeIdx;
 
 	/* floor/residue */
-	bool hasFloor[VORBIS_MAX_CHANS];
-	bool hasResidue[VORBIS_MAX_CHANS];
-	bool doNotDecode[VORBIS_MAX_CHANS];
+	cc_bool hasFloor[VORBIS_MAX_CHANS];
+	cc_bool hasResidue[VORBIS_MAX_CHANS];
+	cc_bool doNotDecode[VORBIS_MAX_CHANS];
 	float* data[VORBIS_MAX_CHANS];
 	int submap, floorIdx;
 	int ch, residueIdx;

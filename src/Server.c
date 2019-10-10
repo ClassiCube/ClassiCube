@@ -234,11 +234,11 @@ static cc_uint8  net_readBuffer[4096 * 5];
 static cc_uint8  net_writeBuffer[131];
 static cc_uint8* net_readCurrent;
 
-static bool net_writeFailed;
+static cc_bool net_writeFailed;
 static TimeMS net_lastPacket;
 static cc_uint8 net_lastOpcode;
 
-static bool net_connecting;
+static cc_bool net_connecting;
 static TimeMS net_connectTimeout;
 #define NET_TIMEOUT_MS (15 * 1000)
 
@@ -276,7 +276,7 @@ static void MPConnection_FailConnect(ReturnCode result) {
 
 static void MPConnection_TickConnect(void) {
 	ReturnCode res = 0;
-	bool poll_write;
+	cc_bool poll_write;
 	TimeMS now;
 
 	Socket_GetError(net_socket, &res);
@@ -349,7 +349,7 @@ static void MPConnection_CheckDisconnection(void) {
 	static const String reason = String_FromConst("You've lost connection to the server");
 	ReturnCode availRes, selectRes;
 	cc_uint32 pending = 0;
-	bool poll_read;
+	cc_bool poll_read;
 
 	availRes  = Socket_Available(net_socket, &pending);
 	/* poll read returns true when socket is closed */

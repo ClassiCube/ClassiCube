@@ -11,7 +11,7 @@
 struct _CameraData Camera;
 static struct PickedPos cameraClipPos;
 static Vec2 cam_rotOffset;
-static bool cam_isForwardThird;
+static cc_bool cam_isForwardThird;
 static int cam_deltaX, cam_deltaY;
 
 static void Camera_AcquireFocus(void) {
@@ -146,7 +146,7 @@ static Vec3 FirstPersonCamera_GetPosition(float t) {
 	return camPos;
 }
 
-static bool FirstPersonCamera_Zoom(float amount) { return false; }
+static cc_bool FirstPersonCamera_Zoom(float amount) { return false; }
 static struct Camera cam_FirstPerson = {
 	false,
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
@@ -191,7 +191,7 @@ static Vec3 ThirdPersonCamera_GetPosition(float t) {
 	return cameraClipPos.Intersect;
 }
 
-static bool ThirdPersonCamera_Zoom(float amount) {
+static cc_bool ThirdPersonCamera_Zoom(float amount) {
 	float* dist   = cam_isForwardThird ? &dist_forward : &dist_third;
 	float newDist = *dist - amount;
 
@@ -270,9 +270,9 @@ void Camera_Register(struct Camera* cam) {
 	cam->next = cams_head;
 }
 
-static bool cam_focussed;
+static cc_bool cam_focussed;
 void Camera_CheckFocus(void) {
-	bool focus = Gui_GetInputGrab() == NULL;
+	cc_bool focus = Gui_GetInputGrab() == NULL;
 	if (focus == cam_focussed) return;
 	cam_focussed = focus;
 

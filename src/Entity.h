@@ -41,7 +41,7 @@ struct LocationUpdate {
 	Vec3 Pos;
 	float HeadX, HeadY, RotX, RotZ;
 	cc_uint8 Flags;
-	bool RelativePos;
+	cc_bool RelativePos;
 };
 
 /* Clamps the given angle so it lies between [0, 360). */
@@ -49,15 +49,15 @@ float LocationUpdate_Clamp(float degrees);
 /* Makes a location update only containing yaw and pitch. */
 void LocationUpdate_MakeOri(struct LocationUpdate* update, float rotY, float headX);
 /* Makes a location update only containing position */
-void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, bool rel);
+void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, cc_bool rel);
 /* Makes a location update containing position, yaw and pitch. */
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float rotY, float headX, bool rel);
+void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float rotY, float headX, cc_bool rel);
 
 struct Entity;
 struct EntityVTABLE {
 	void (*Tick)(struct Entity* e, double delta);
 	void (*Despawn)(struct Entity* e);
-	void (*SetLocation)(struct Entity* e, struct LocationUpdate* update, bool interpolate);
+	void (*SetLocation)(struct Entity* e, struct LocationUpdate* update, cc_bool interpolate);
 	PackedCol (*GetCol)(struct Entity* e);
 	void (*RenderModel)(struct Entity* e, double deltaTime, float t);
 	void (*RenderName)(struct Entity* e);
@@ -77,14 +77,14 @@ struct Entity {
 
 	struct Model* Model;
 	BlockID ModelBlock; /* BlockID, if model name was originally a valid block. */
-	bool ModelRestrictedScale; /* true to restrict model scale (needed for local player, otherwise collisions are too costly) */
+	cc_bool ModelRestrictedScale; /* true to restrict model scale (needed for local player, giant model collisions are too costly) */
 	struct AABB ModelAABB;
 	Vec3 ModelScale, Size;
 	float StepSize;
 	
 	cc_uint8 SkinType;
 	cc_uint8 SkinFetchState;
-	bool NoShade, OnGround;
+	cc_bool NoShade, OnGround;
 	GfxResourceID TextureId, MobTextureId;
 	float uScale, vScale;
 	struct Matrix Transform;
@@ -94,7 +94,7 @@ struct Entity {
 	char DisplayNameRaw[STRING_SIZE];
 	struct Texture NameTex;
 };
-typedef bool (*Entity_TouchesCondition)(BlockID block);
+typedef cc_bool (*Entity_TouchesCondition)(BlockID block);
 
 /* Initialises non-zero fields of the given entity. */
 void Entity_Init(struct Entity* e);
@@ -116,10 +116,10 @@ CC_API void Entity_SetModel(struct Entity* e, const String* model);
 void Entity_UpdateModelBounds(struct Entity* e);
 
 /* Whether the given entity is touching any blocks meeting the given condition .*/
-CC_API bool Entity_TouchesAny(struct AABB* bb, Entity_TouchesCondition cond);
-bool Entity_TouchesAnyRope(struct Entity* e);	
-bool Entity_TouchesAnyLava(struct Entity* e);
-bool Entity_TouchesAnyWater(struct Entity* e);
+CC_API cc_bool Entity_TouchesAny(struct AABB* bb, Entity_TouchesCondition cond);
+cc_bool Entity_TouchesAnyRope(struct Entity* e);
+cc_bool Entity_TouchesAnyLava(struct Entity* e);
+cc_bool Entity_TouchesAnyWater(struct Entity* e);
 
 /* Sets the nametag above the given entity's head */
 void Entity_SetName(struct Entity* e, const String* name);
@@ -177,7 +177,7 @@ CC_API void TabList_Set(EntityID id, const String* player, const String* list, c
 struct NetPlayer {
 	struct Entity Base;
 	struct NetInterpComp Interp;
-	bool ShouldRender;
+	cc_bool ShouldRender;
 };
 void NetPlayer_Init(struct NetPlayer* player);
 extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
@@ -192,7 +192,7 @@ struct LocalPlayer {
 	struct InterpComp Interp;
 	struct CollisionsComp Collisions;
 	struct PhysicsComp Physics;
-	bool _warnedRespawn, _warnedFly, _warnedNoclip;
+	cc_bool _warnedRespawn, _warnedFly, _warnedNoclip;
 };
 
 extern struct LocalPlayer LocalPlayer_Instance;
@@ -202,5 +202,5 @@ float LocalPlayer_JumpHeight(void);
 void LocalPlayer_SetInterpPosition(float t);
 /* Returns whether local player handles a key being pressed. */
 /* e.g. for respawn, toggle fly, etc. */
-bool LocalPlayer_HandlesKey(Key key);
+cc_bool LocalPlayer_HandlesKey(Key key);
 #endif

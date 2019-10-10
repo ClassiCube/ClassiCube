@@ -61,7 +61,7 @@ struct HotbarWidget {
 	float barHeight, selBlockSize, elemSize;
 	float barXOffset, borderSize;
 	float scrollAcc;
-	bool altHandled;
+	cc_bool altHandled;
 };
 /* Resets state of the given hotbar widget to default. */
 CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
@@ -76,7 +76,7 @@ struct TableWidget {
 	int selectedIndex, cellSize;
 	float selBlockExpand;
 	GfxResourceID vb;
-	bool pendingClose;
+	cc_bool pendingClose;
 
 	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;
@@ -99,10 +99,10 @@ CC_NOINLINE void TableWidget_Recreate(struct TableWidget* w);
 struct InputWidget {
 	Widget_Layout
 	struct FontDesc* font;
-	int (*GetMaxLines)(void);
+	int  (*GetMaxLines)(void);
 	void (*RemakeTexture)(void* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(void* elem); /* Invoked when the user presses enter. */
-	bool (*AllowedChar)(void* elem, char c);
+	cc_bool (*AllowedChar)(void* elem, char c);
 
 	String text;
 	String lines[INPUTWIDGET_MAX_LINES];    /* raw text of each line */
@@ -110,10 +110,10 @@ struct InputWidget {
 	int lineHeight;
 	struct Texture inputTex;
 	int prefixWidth;
-	bool convertPercents;
+	cc_bool convertPercents;
 
 	cc_uint8 padding;
-	bool showCaret;
+	cc_bool showCaret;
 	int caretWidth;
 	int caretX, caretY; /* Coordinates of caret in lines */
 	int caretPos;       /* Position of caret, -1 for at end of string */
@@ -135,16 +135,16 @@ CC_NOINLINE void InputWidget_UpdateText(struct InputWidget* w);
 struct MenuInputDesc;
 struct MenuInputVTABLE {
 	/* Returns a description of the range of valid values (e.g. "0 - 100") */
-	void (*GetRange)(struct MenuInputDesc*      d, String* range);
+	void (*GetRange)(struct MenuInputDesc*         d, String* range);
 	/* Whether the given character is acceptable for this input */
-	bool (*IsValidChar)(struct MenuInputDesc*   d, char c);
+	cc_bool (*IsValidChar)(struct MenuInputDesc*   d, char c);
 	/* Whether the characters of the given string are acceptable for this input */
 	/* e.g. for an integer, '-' is only valid for the first character */
-	bool (*IsValidString)(struct MenuInputDesc* d, const String* s);
+	cc_bool (*IsValidString)(struct MenuInputDesc* d, const String* s);
 	/* Whether the characters of the given string produce a valid value */
-	bool (*IsValidValue)(struct MenuInputDesc*  d, const String* s);
+	cc_bool (*IsValidValue)(struct MenuInputDesc*  d, const String* s);
 	/* Gets the default value for this input. */
-	void (*GetDefault)(struct MenuInputDesc*    d, String* value);
+	void (*GetDefault)(struct MenuInputDesc*       d, String* value);
 };
 
 struct MenuInputDesc {
@@ -206,8 +206,8 @@ struct TextGroupWidget {
 	int lines, defaultHeight;
 	struct FontDesc* font;
 	/* Whether a line has zero height when that line has no text in it. */
-	bool collapsible[TEXTGROUPWIDGET_MAX_LINES];
-	bool underlineUrls;
+	cc_bool collapsible[TEXTGROUPWIDGET_MAX_LINES];
+	cc_bool underlineUrls;
 	struct Texture* textures;
 	TextGroupWidget_Get GetLine;
 	void* getLineObj;
@@ -240,13 +240,13 @@ struct PlayerListWidget {
 	Widget_Layout
 	struct FontDesc* font;
 	int namesCount, elementOffset;
-	bool classic;
+	cc_bool classic;
 	struct TextWidget title;
 	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
 	struct Texture textures[TABLIST_MAX_NAMES * 2];
 };
 /* Creates and adds initial names to this widget. */
-void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic);
+void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, cc_bool classic);
 /* Gets the name of the entry that contains the given coordinates. */
 void PlayerListWidget_GetNameAt(struct PlayerListWidget* w, int x, int y, String* name);
 /* Adds a new entry to this widget. */
@@ -267,7 +267,7 @@ struct SpecialInputWidget {
 	Widget_Layout
 	int elementWidth, elementHeight;
 	int selectedIndex;
-	bool pendingRedraw;
+	cc_bool pendingRedraw;
 	struct InputWidget* target;
 	struct Texture tex;
 	struct FontDesc* font;
@@ -280,5 +280,5 @@ struct SpecialInputWidget {
 CC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* target);
 CC_NOINLINE void SpecialInputWidget_Redraw(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
-CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active);
+CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_bool active);
 #endif

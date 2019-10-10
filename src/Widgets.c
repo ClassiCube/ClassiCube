@@ -20,10 +20,10 @@
 
 #define Widget_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f)
 static void Widget_NullFunc(void* widget) { }
-static bool Widget_Pointer(void* elem, int id, int x, int y) { return false; }
-static bool Widget_Key(void* elem, Key key) { return false; }
-static bool Widget_PointerMove(void* elem, int id, int x, int y) { return false; }
-static bool Widget_MouseScroll(void* elem, float delta) { return false; }
+static cc_bool Widget_Pointer(void* elem, int id, int x, int y) { return false; }
+static cc_bool Widget_Key(void* elem, Key key) { return false; }
+static cc_bool Widget_PointerMove(void* elem, int id, int x, int y) { return false; }
+static cc_bool Widget_MouseScroll(void* elem, float delta) { return false; }
 
 /*########################################################################################################################*
 *-------------------------------------------------------TextWidget--------------------------------------------------------*
@@ -212,7 +212,7 @@ static void ScrollbarWidget_Render(void* widget, double delta) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int x, y, width, height;
 	PackedCol barCol;
-	bool hovered;
+	cc_bool hovered;
 
 	x = w->x; width = w->width;
 	Gfx_Draw2DFlat(x, w->y, width, w->height, Scroll_BackCol);
@@ -234,7 +234,7 @@ static void ScrollbarWidget_Render(void* widget, double delta) {
 	Gfx_Draw2DFlat(x, y - 1 + 4, width, SCROLL_BORDER, Scroll_BackCol);
 }
 
-static bool ScrollbarWidget_PointerDown(void* widget, int id, int x, int y) {
+static cc_bool ScrollbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int posY, height;
 
@@ -258,7 +258,7 @@ static bool ScrollbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	return true;
 }
 
-static bool ScrollbarWidget_PointerUp(void* widget, int id, int x, int y) {
+static cc_bool ScrollbarWidget_PointerUp(void* widget, int id, int x, int y) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	if (w->draggingId != id) return true;
 
@@ -267,7 +267,7 @@ static bool ScrollbarWidget_PointerUp(void* widget, int id, int x, int y) {
 	return true;
 }
 
-static bool ScrollbarWidget_MouseScroll(void* widget, float delta) {
+static cc_bool ScrollbarWidget_MouseScroll(void* widget, float delta) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int steps = Utils_AccumulateWheelDelta(&w->scrollingAcc, delta);
 
@@ -276,7 +276,7 @@ static bool ScrollbarWidget_MouseScroll(void* widget, float delta) {
 	return true;
 }
 
-static bool ScrollbarWidget_PointerMove(void* widget, int id, int x, int y) {
+static cc_bool ScrollbarWidget_PointerMove(void* widget, int id, int x, int y) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	float scale;
 
@@ -397,7 +397,7 @@ static void HotbarWidget_Render(void* widget, double delta) {
 	HotbarWidget_RenderHotbarBlocks(w);
 }
 
-static bool HotbarWidget_KeyDown(void* widget, Key key) {
+static cc_bool HotbarWidget_KeyDown(void* widget, Key key) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 	if (key < '1' || key > '9') return false;
@@ -413,7 +413,7 @@ static bool HotbarWidget_KeyDown(void* widget, Key key) {
 	return true;
 }
 
-static bool HotbarWidget_KeyUp(void* widget, Key key) {
+static cc_bool HotbarWidget_KeyUp(void* widget, Key key) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 
@@ -433,7 +433,7 @@ static bool HotbarWidget_KeyUp(void* widget, Key key) {
 	return true;
 }
 
-static bool HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
+static cc_bool HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int width, height;
 	int i, cellX, cellY;
@@ -455,7 +455,7 @@ static bool HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	return false;
 }
 
-static bool HotbarWidget_MouseScroll(void* widget, float delta) {
+static cc_bool HotbarWidget_MouseScroll(void* widget, float delta) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 
@@ -498,7 +498,7 @@ static int Table_Height(struct TableWidget* w) {
 
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 
-static bool TableWidget_GetCoords(struct TableWidget* w, int i, int* cellX, int* cellY) {
+static cc_bool TableWidget_GetCoords(struct TableWidget* w, int i, int* cellX, int* cellY) {
 	int x, y;
 	x = i % w->blocksPerRow;
 	y = i / w->blocksPerRow - w->scroll.topRow;
@@ -564,7 +564,7 @@ void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
 	TableWidget_UpdateDescTexPos(w);
 }
 
-static bool TableWidget_RowEmpty(struct TableWidget* w, int start) {
+static cc_bool TableWidget_RowEmpty(struct TableWidget* w, int start) {
 	int i, end = min(start + w->blocksPerRow, Array_Elems(Inventory.Map));
 
 	for (i = start; i < end; i++) {
@@ -698,7 +698,7 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
 	TableWidget_MoveCursorToSelected(w);
 }
 
-static bool TableWidget_PointerDown(void* widget, int id, int x, int y) {
+static cc_bool TableWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	w->pendingClose = false;
 
@@ -714,16 +714,16 @@ static bool TableWidget_PointerDown(void* widget, int id, int x, int y) {
 	return false;
 }
 
-static bool TableWidget_PointerUp(void* widget, int id, int x, int y) {
+static cc_bool TableWidget_PointerUp(void* widget, int id, int x, int y) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	return Elem_HandlesPointerUp(&w->scroll, id, x, y);
 }
 
-static bool TableWidget_MouseScroll(void* widget, float delta) {
+static cc_bool TableWidget_MouseScroll(void* widget, float delta) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	int origTopRow, index;
 
-	bool bounds = Gui_ContainsPointers(Table_X(w), Table_Y(w),
+	cc_bool bounds = Gui_ContainsPointers(Table_X(w), Table_Y(w),
 		Table_Width(w) + w->scroll.width, Table_Height(w));
 	if (!bounds) return false;
 
@@ -740,7 +740,7 @@ static bool TableWidget_MouseScroll(void* widget, float delta) {
 	return true;
 }
 
-static bool TableWidget_PointerMove(void* widget, int id, int x, int y) {
+static cc_bool TableWidget_PointerMove(void* widget, int id, int x, int y) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	int cellSize, maxHeight;
 	int i, cellX, cellY;
@@ -767,7 +767,7 @@ static bool TableWidget_PointerMove(void* widget, int id, int x, int y) {
 	return true;
 }
 
-static bool TableWidget_KeyDown(void* widget, Key key) {
+static cc_bool TableWidget_KeyDown(void* widget, Key key) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	if (w->selectedIndex == -1) return false;
 
@@ -965,7 +965,7 @@ void InputWidget_Clear(struct InputWidget* w) {
 	Gfx_DeleteTexture(&w->inputTex.ID);
 }
 
-static bool InputWidget_AllowedChar(void* widget, char c) {
+static cc_bool InputWidget_AllowedChar(void* widget, char c) {
 	return Server.SupportsFullCP437 || (Convert_CP437ToUnicode(c) == c);
 }
 
@@ -979,7 +979,7 @@ static void InputWidget_AppendChar(struct InputWidget* w, char c) {
 	}
 }
 
-static bool InputWidget_TryAppendChar(struct InputWidget* w, char c) {
+static cc_bool InputWidget_TryAppendChar(struct InputWidget* w, char c) {
 	int maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (w->text.length >= maxChars) return false;
 	if (!w->AllowedChar(w, c)) return false;
@@ -1014,7 +1014,7 @@ static void InputWidget_DeleteChar(struct InputWidget* w) {
 	}
 }
 
-static bool InputWidget_CheckCol(struct InputWidget* w, int index) {
+static cc_bool InputWidget_CheckCol(struct InputWidget* w, int index) {
 	char code, col;
 	if (index < 0) return false;
 
@@ -1113,7 +1113,7 @@ static void InputWidget_CopyFromClipboard(String* text, void* w) {
 	InputWidget_AppendString((struct InputWidget*)w, text);
 }
 
-static bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
+static cc_bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
 	int maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (!Key_IsActionPressed()) return false;
 
@@ -1157,7 +1157,7 @@ static void InputWidget_Reposition(void* widget) {
 	w->inputTex.X += w->x - oldX; w->inputTex.Y += w->y - oldY;
 }
 
-static bool InputWidget_KeyDown(void* widget, Key key) {
+static cc_bool InputWidget_KeyDown(void* widget, Key key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	if (key == KEY_LEFT) {
 		InputWidget_LeftKey(w);
@@ -1177,9 +1177,9 @@ static bool InputWidget_KeyDown(void* widget, Key key) {
 	return true;
 }
 
-static bool InputWidget_KeyUp(void* widget, Key key) { return true; }
+static cc_bool InputWidget_KeyUp(void* widget, Key key) { return true; }
 
-static bool InputWidget_PointerDown(void* widget, int id, int x, int y) {
+static cc_bool InputWidget_PointerDown(void* widget, int id, int x, int y) {
 	String line; char lineBuffer[STRING_SIZE];
 	struct InputWidget* w = (struct InputWidget*)widget;
 	struct DrawTextArgs args;
@@ -1226,15 +1226,15 @@ static void Hex_Range(struct MenuInputDesc* d, String* range) {
 	String_AppendConst(range, "&7(#000000 - #FFFFFF)");
 }
 
-static bool Hex_ValidChar(struct MenuInputDesc* d, char c) {
+static cc_bool Hex_ValidChar(struct MenuInputDesc* d, char c) {
 	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 }
 
-static bool Hex_ValidString(struct MenuInputDesc* d, const String* s) {
+static cc_bool Hex_ValidString(struct MenuInputDesc* d, const String* s) {
 	return s->length <= 6;
 }
 
-static bool Hex_ValidValue(struct MenuInputDesc* d, const String* s) {
+static cc_bool Hex_ValidValue(struct MenuInputDesc* d, const String* s) {
 	cc_uint8 rgb[3];
 	return PackedCol_TryParseHex(s, rgb);
 }
@@ -1251,17 +1251,17 @@ static void Int_Range(struct MenuInputDesc* d, String* range) {
 	String_Format2(range, "&7(%i - %i)", &d->meta.i.Min, &d->meta.i.Max);
 }
 
-static bool Int_ValidChar(struct MenuInputDesc* d, char c) {
+static cc_bool Int_ValidChar(struct MenuInputDesc* d, char c) {
 	return (c >= '0' && c <= '9') || c == '-';
 }
 
-static bool Int_ValidString(struct MenuInputDesc* d, const String* s) {
+static cc_bool Int_ValidString(struct MenuInputDesc* d, const String* s) {
 	int value;
 	if (s->length == 1 && s->buffer[0] == '-') return true; /* input is just a minus sign */
 	return Convert_ParseInt(s, &value);
 }
 
-static bool Int_ValidValue(struct MenuInputDesc* d, const String* s) {
+static cc_bool Int_ValidValue(struct MenuInputDesc* d, const String* s) {
 	int value, min = d->meta.i.Min, max = d->meta.i.Max;
 	return Convert_ParseInt(s, &value) && min <= value && value <= max;
 }
@@ -1287,17 +1287,17 @@ static void Float_Range(struct MenuInputDesc* d, String* range) {
 	String_Format2(range, "&7(%f2 - %f2)", &d->meta.f.Min, &d->meta.f.Max);
 }
 
-static bool Float_ValidChar(struct MenuInputDesc* d, char c) {
+static cc_bool Float_ValidChar(struct MenuInputDesc* d, char c) {
 	return (c >= '0' && c <= '9') || c == '-' || c == '.' || c == ',';
 }
 
-static bool Float_ValidString(struct MenuInputDesc* d, const String* s) {
+static cc_bool Float_ValidString(struct MenuInputDesc* d, const String* s) {
 	float value;
 	if (s->length == 1 && Float_ValidChar(d, s->buffer[0])) return true;
 	return Convert_ParseFloat(s, &value);
 }
 
-static bool Float_ValidValue(struct MenuInputDesc* d, const String* s) {
+static cc_bool Float_ValidValue(struct MenuInputDesc* d, const String* s) {
 	float value, min = d->meta.f.Min, max = d->meta.f.Max;
 	return Convert_ParseFloat(s, &value) && min <= value && value <= max;
 }
@@ -1314,11 +1314,11 @@ static void Path_Range(struct MenuInputDesc* d, String* range) {
 	String_AppendConst(range, "&7(Enter name)");
 }
 
-static bool Path_ValidChar(struct MenuInputDesc* d, char c) {
+static cc_bool Path_ValidChar(struct MenuInputDesc* d, char c) {
 	return !(c == '/' || c == '\\' || c == '?' || c == '*' || c == ':'
 		|| c == '<' || c == '>' || c == '|' || c == '"' || c == '.');
 }
-static bool Path_ValidString(struct MenuInputDesc* d, const String* s) { return true; }
+static cc_bool Path_ValidString(struct MenuInputDesc* d, const String* s) { return true; }
 
 const struct MenuInputVTABLE PathInput_VTABLE = {
 	Path_Range, Path_ValidChar, Path_ValidString, Path_ValidString, Seed_NoDefault
@@ -1328,11 +1328,11 @@ static void String_Range(struct MenuInputDesc* d, String* range) {
 	String_AppendConst(range, "&7(Enter text)");
 }
 
-static bool String_ValidChar(struct MenuInputDesc* d, char c) {
+static cc_bool String_ValidChar(struct MenuInputDesc* d, char c) {
 	return c != '&';
 }
 
-static bool String_ValidString(struct MenuInputDesc* d, const String* s) {
+static cc_bool String_ValidString(struct MenuInputDesc* d, const String* s) {
 	return s->length <= STRING_SIZE;
 }
 
@@ -1402,11 +1402,11 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	}
 }
 
-static bool MenuInputWidget_AllowedChar(void* widget, char c) {
+static cc_bool MenuInputWidget_AllowedChar(void* widget, char c) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	struct MenuInputDesc* desc;
 	int maxChars;
-	bool valid;
+	cc_bool valid;
 
 	if (c == '&') return false;
 	desc = &((struct MenuInputWidget*)w)->desc;
@@ -1517,7 +1517,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	PackedCol backCol     = PackedCol_Make(0, 0, 0, 127);
 	int x = w->x, y = w->y;
-	bool caretAtEnd;
+	cc_bool caretAtEnd;
 	int i, width;
 
 	Gfx_SetTexturing(false);
@@ -1611,7 +1611,7 @@ static void ChatInputWidget_DownKey(struct InputWidget* w) {
 	InputWidget_UpdateText(w);
 }
 
-static bool ChatInputWidget_IsNameChar(char c) {
+static cc_bool ChatInputWidget_IsNameChar(char c) {
 	return c == '_' || c == '.' || (c >= '0' && c <= '9')
 		|| (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
@@ -1673,7 +1673,7 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	}
 }
 
-static bool ChatInputWidget_KeyDown(void* widget, Key key) {
+static cc_bool ChatInputWidget_KeyDown(void* widget, Key key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	if (key == KEY_TAB)  { ChatInputWidget_TabKey(w);  return true; }
 	if (key == KEY_UP)   { ChatInputWidget_UpKey(w);   return true; }
@@ -2043,7 +2043,7 @@ static const struct WidgetVTABLE PlayerListWidget_VTABLE = {
 	Widget_Key,              Widget_Key,            Widget_MouseScroll,
 	Widget_Pointer,          Widget_Pointer,        Widget_PointerMove
 };
-void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, bool classic) {
+void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, cc_bool classic) {
 	int id;
 	Widget_Reset(w);
 
@@ -2160,7 +2160,7 @@ static int TextGroupWidget_NextUrl(char* chars, int charsLen, int i) {
 static int TextGroupWidget_UrlEnd(char* chars, int charsLen, int* begs, int begsLen, int i) {
 	int start = i, j;
 	int next, left;
-	bool isBeg;
+	cc_bool isBeg;
 
 	for (; i < charsLen && chars[i] != ' '; i++) {
 		/* Is this character the start of a line */
@@ -2262,7 +2262,7 @@ static void TextGroupWidget_FormatUrl(String* text, const String* url) {
 	}
 }
 
-static bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, String* text, int index, int mouseX) {
+static cc_bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, String* text, int index, int mouseX) {
 	char chars[TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN];
 	struct Portion portions[2 * (TEXTGROUPWIDGET_LEN / TEXTGROUPWIDGET_HTTP_LEN)];
 	struct Portion bit;
@@ -2314,7 +2314,7 @@ void TextGroupWidget_GetSelected(struct TextGroupWidget* w, String* text, int x,
 	}
 }
 
-static bool TextGroupWidget_MightHaveUrls(struct TextGroupWidget* w) {
+static cc_bool TextGroupWidget_MightHaveUrls(struct TextGroupWidget* w) {
 	String line;
 	int i;
 
@@ -2478,7 +2478,7 @@ static void SpecialInputWidget_UpdateColString(struct SpecialInputWidget* w) {
 	}
 }
 
-static bool SpecialInputWidget_IntersectsTitle(struct SpecialInputWidget* w, int x, int y) {
+static cc_bool SpecialInputWidget_IntersectsTitle(struct SpecialInputWidget* w, int x, int y) {
 	int i, width, titleX = 0;
 
 	for (i = 0; i < Array_Elems(w->tabs); i++) {
@@ -2665,7 +2665,7 @@ static void SpecialInputWidget_Reposition(void* widget) {
 	w->tex.X = w->x; w->tex.Y = w->y;
 }
 
-static bool SpecialInputWidget_PointerDown(void* widget, int id, int x, int y) {
+static cc_bool SpecialInputWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
 	x -= w->x; y -= w->y;
 
@@ -2687,7 +2687,7 @@ void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w) {
 	SpecialInputWidget_Redraw(w);
 }
 
-void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, bool active) {
+void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_bool active) {
 	w->active = active;
 	if (active && w->pendingRedraw) SpecialInputWidget_Redraw(w);
 	Widget_Reposition(w);

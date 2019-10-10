@@ -10,12 +10,12 @@
 #include "Model.h"
 #include "GameStructs.h"
 
-bool HeldBlockRenderer_Show;
+cc_bool HeldBlockRenderer_Show;
 static BlockID held_block;
 static struct Entity held_entity;
 static struct Matrix held_blockProjection;
 
-static bool held_animating, held_breaking, held_swinging;
+static cc_bool held_animating, held_breaking, held_swinging;
 static float held_swingY;
 static double held_time, held_period = 0.25;
 static BlockID held_lastBlock;
@@ -81,7 +81,7 @@ static void HeldBlockRenderer_ResetHeldState(void) {
 }
 
 static void HeldBlockRenderer_SetBaseOffset(void) {
-	bool sprite = Blocks.Draw[held_block] == DRAW_SPRITE;
+	cc_bool sprite = Blocks.Draw[held_block] == DRAW_SPRITE;
 	Vec3 normalOffset = { 0.56f, -0.72f, -0.72f };
 	Vec3 spriteOffset = { 0.46f, -0.52f, -0.72f };
 	Vec3 offset = sprite ? spriteOffset : normalOffset;
@@ -126,7 +126,7 @@ static void HeldBlockRenderer_DigAnimation(void) {
 	held_entity.RotX  += (float)sinHalfCircleWeird   * 20.0f;
 }
 
-static void HeldBlockRenderer_ResetAnim(bool setLastHeld, double period) {
+static void HeldBlockRenderer_ResetAnim(cc_bool setLastHeld, double period) {
 	held_time = 0.0f; held_swingY = 0.0f;
 	held_animating = false; held_swinging = false;
 	held_period = period;
@@ -151,7 +151,7 @@ static PackedCol HeldBlockRenderer_GetCol(struct Entity* entity) {
 	return PackedCol_Scale(col, scale);
 }
 
-void HeldBlockRenderer_ClickAnim(bool digging) {
+void HeldBlockRenderer_ClickAnim(cc_bool digging) {
 	/* TODO: timing still not quite right, rotate2 still not quite right */
 	HeldBlockRenderer_ResetAnim(true, digging ? 0.35 : 0.25);
 	held_swinging  = false;

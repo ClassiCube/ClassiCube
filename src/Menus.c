@@ -131,7 +131,7 @@ static int Menu_DoPointerDown(void* screen, int id, int x, int y) {
 	}
 	return -1;
 }
-static bool Menu_PointerDown(void* screen, int id, int x, int y) {
+static cc_bool Menu_PointerDown(void* screen, int id, int x, int y) {
 	Menu_DoPointerDown(screen, id, x, y); return true;
 }
 
@@ -156,7 +156,7 @@ static int Menu_DoPointerMove(void* screen, int id, int x, int y) {
 	return -1;
 }
 
-static bool Menu_PointerMove(void* screen, int id, int x, int y) {
+static cc_bool Menu_PointerMove(void* screen, int id, int x, int y) {
 	Menu_DoPointerMove(screen, id, x, y); return true;
 }
 
@@ -297,7 +297,7 @@ static void ListScreen_SetCurrentIndex(struct ListScreen* s, int index) {
 	ListScreen_UpdatePage(s);
 }
 
-static void ListScreen_PageClick(struct ListScreen* s, bool forward) {
+static void ListScreen_PageClick(struct ListScreen* s, cc_bool forward) {
 	int delta = forward ? LIST_SCREEN_ITEMS : -LIST_SCREEN_ITEMS;
 	ListScreen_SetCurrentIndex(s, s->currentIndex + delta);
 }
@@ -356,7 +356,7 @@ static void ListScreen_Select(struct ListScreen* s, const String* str) {
 	}
 }
 
-static bool ListScreen_KeyDown(void* screen, Key key) {
+static cc_bool ListScreen_KeyDown(void* screen, Key key) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	if (key == KEY_LEFT || key == KEY_PAGEUP) {
 		ListScreen_PageClick(s, false);
@@ -366,7 +366,7 @@ static bool ListScreen_KeyDown(void* screen, Key key) {
 	return true;
 }
 
-static bool ListScreen_MouseScroll(void* screen, float delta) {
+static cc_bool ListScreen_MouseScroll(void* screen, float delta) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	int steps = Utils_AccumulateWheelDelta(&s->wheelAcc, delta);
 
@@ -449,7 +449,7 @@ void ListScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static bool MenuScreen_KeyDown(void* screen, Key key) { return key < KEY_F1 || key > KEY_F35; }
+static cc_bool MenuScreen_KeyDown(void* screen, Key key) { return key < KEY_F1 || key > KEY_F35; }
 
 static void MenuScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
@@ -652,7 +652,7 @@ static void OptionsGroupScreen_Free(void* screen) {
 	Event_UnregisterVoid(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
 }
 
-static bool OptionsGroupScreen_PointerMove(void* screen, int id, int x, int y) {
+static cc_bool OptionsGroupScreen_PointerMove(void* screen, int id, int x, int y) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 	int i = Menu_DoPointerMove(s, id, x, y);
 	if (i == -1 || i == s->selectedI) return true;
@@ -685,7 +685,7 @@ static struct EditHotkeyScreen {
 	Screen_Layout
 	struct HotkeyData curHotkey, origHotkey;
 	int selectedI;
-	bool supressNextPress;
+	cc_bool supressNextPress;
 	struct FontDesc titleFont, textFont;
 	struct MenuInputWidget input;
 	struct ButtonWidget buttons[5], cancel;
@@ -803,7 +803,7 @@ static void EditHotkeyScreen_Render(void* screen, double delta) {
 	Gfx_Draw2DFlat(x - 250, y + 45, 500, 2, grey);
 }
 
-static bool EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
+static cc_bool EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	if (s->supressNextPress) {
 		s->supressNextPress = false;
@@ -813,7 +813,7 @@ static bool EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
 	return true;
 }
 
-static bool EditHotkeyScreen_KeyDown(void* screen, Key key) {
+static cc_bool EditHotkeyScreen_KeyDown(void* screen, Key key) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	if (s->selectedI >= 0) {
 		if (s->selectedI == 0) {
@@ -844,7 +844,7 @@ static void EditHotkeyScreen_ContextLost(void* screen) {
 
 static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
-	bool existed = s->origHotkey.Trigger != KEY_NONE;
+	cc_bool existed = s->origHotkey.Trigger != KEY_NONE;
 
 	Menu_MakeTitleFont(&s->titleFont);
 	Menu_MakeBodyFont(&s->textFont);
@@ -937,7 +937,7 @@ CC_NOINLINE static int GenLevelScreen_GetSeedInt(struct GenLevelScreen* s, int i
 	return GenLevelScreen_GetInt(s, index);
 }
 
-static void GenLevelScreen_Gen(void* screen, bool vanilla) {
+static void GenLevelScreen_Gen(void* screen, cc_bool vanilla) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	int width  = GenLevelScreen_GetInt(s, 0);
 	int height = GenLevelScreen_GetInt(s, 1);
@@ -982,19 +982,19 @@ static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int y, int def)
 	s->labels[i].col = col;
 }
 
-static bool GenLevelScreen_KeyDown(void* screen, Key key) {
+static cc_bool GenLevelScreen_KeyDown(void* screen, Key key) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	if (s->selected && Elem_HandlesKeyDown(&s->selected->base, key)) return true;
 	return MenuScreen_KeyDown(s, key);
 }
 
-static bool GenLevelScreen_KeyPress(void* screen, char keyChar) {
+static cc_bool GenLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	if (s->selected) InputWidget_Append(&s->selected->base, keyChar);
 	return true;
 }
 
-static bool GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
+static cc_bool GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	int i = Menu_DoPointerDown(screen, id, x, y);
 	if (i == -1 || i >= 4) return true;
@@ -1236,14 +1236,14 @@ static void SaveLevelScreen_Render(void* screen, double delta) {
 	Gfx_Draw2DFlat(x - 250, y + 90, 500, 2, grey);
 }
 
-static bool SaveLevelScreen_KeyPress(void* screen, char keyChar) {
+static cc_bool SaveLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	SaveLevelScreen_RemoveOverwrites(s);
 	InputWidget_Append(&s->input.base, keyChar);
 	return true;
 }
 
-static bool SaveLevelScreen_KeyDown(void* screen, Key key) {
+static cc_bool SaveLevelScreen_KeyDown(void* screen, Key key) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	SaveLevelScreen_RemoveOverwrites(s);
 	if (Elem_HandlesKeyDown(&s->input.base, key)) return true;
@@ -1554,7 +1554,7 @@ static void KeyBindingsScreen_OnBindingClick(void* screen, void* widget) {
 	if (old >= 0) KeyBindingsScreen_Update(s, old);
 }
 
-static bool KeyBindingsScreen_KeyDown(void* screen, Key key) {
+static cc_bool KeyBindingsScreen_KeyDown(void* screen, Key key) {
 	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
 	KeyBind bind;
 	int idx;
@@ -1779,11 +1779,11 @@ static struct MenuOptionsScreen {
 	struct ButtonWidget buttons[10], done;
 } MenuOptionsScreen_Instance;
 
-static void Menu_GetBool(String* raw, bool v) {
+static void Menu_GetBool(String* raw, cc_bool v) {
 	String_AppendConst(raw, v ? "ON" : "OFF");
 }
-static bool Menu_SetBool(const String* raw, const char* key) {
-	bool isOn = String_CaselessEqualsConst(raw, "ON");
+static cc_bool Menu_SetBool(const String* raw, const char* key) {
+	cc_bool isOn = String_CaselessEqualsConst(raw, "ON");
 	Options_SetBool(key, isOn); 
 	return isOn;
 }
@@ -1882,13 +1882,13 @@ static void MenuOptionsScreen_EnterInput(struct MenuOptionsScreen* s) {
 	s->activeI = -1;
 }
 
-static bool MenuOptionsScreen_KeyPress(void* screen, char keyChar) {
+static cc_bool MenuOptionsScreen_KeyPress(void* screen, char keyChar) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	if (s->activeI >= 0) InputWidget_Append(&s->input.base, keyChar);
 	return true;
 }
 
-static bool MenuOptionsScreen_KeyDown(void* screen, Key key) {
+static cc_bool MenuOptionsScreen_KeyDown(void* screen, Key key) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	if (s->activeI >= 0) {
 		if (Elem_HandlesKeyDown(&s->input.base, key)) return true;
@@ -1900,7 +1900,7 @@ static bool MenuOptionsScreen_KeyDown(void* screen, Key key) {
 	return MenuScreen_KeyDown(s, key);
 }
 
-static bool MenuOptionsScreen_PointerMove(void* screen, int id, int x, int y) {
+static cc_bool MenuOptionsScreen_PointerMove(void* screen, int id, int x, int y) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	int i = Menu_DoPointerMove(s, id, x, y);
 	if (i == -1 || i == s->selectedI) return true;
@@ -1954,7 +1954,7 @@ static void MenuOptionsScreen_Bool(void* screen, void* widget) {
 	String value; char valueBuffer[STRING_SIZE];
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
-	bool isOn;
+	cc_bool isOn;
 
 	String_InitArray(value, valueBuffer);
 	btn->GetValue(&value);
@@ -2535,7 +2535,7 @@ static void HacksSettingsScreen_SetFOV(const String* v) {
 static void HacksSettingsScreen_CheckHacksAllowed(struct MenuOptionsScreen* s) {
 	struct Widget** widgets = s->widgets;
 	struct LocalPlayer* p   = &LocalPlayer_Instance;
-	bool disabled           = !p->Hacks.Enabled;
+	cc_bool disabled        = !p->Hacks.Enabled;
 
 	widgets[3]->disabled = disabled || !p->Hacks.CanSpeed;
 	widgets[4]->disabled = disabled || !p->Hacks.CanSpeed;
@@ -2774,7 +2774,7 @@ static void Overlay_MakeExtraButtons(void* s, struct ButtonWidget* btns) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 85);
 }
 
-static bool WarningOverlay_IsAlways(void* screen, void* w) { return Menu_Index(screen, w) >= 6; }
+static cc_bool WarningOverlay_IsAlways(void* screen, void* w) { return Menu_Index(screen, w) >= 6; }
 
 
 /*########################################################################################################################*
@@ -2918,7 +2918,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 	Gfx_SetTexturing(false);
 }
 
-static bool TexIdsOverlay_KeyDown(void* screen, Key key) {
+static cc_bool TexIdsOverlay_KeyDown(void* screen, Key key) {
 	struct Screen* s = (struct Screen*)screen;
 	if (key == KeyBinds[KEYBIND_IDOVERLAY]) { Gui_Remove(s); return true; }
 	return false;
@@ -3014,7 +3014,7 @@ void UrlWarningOverlay_Show(const String* url) {
 *#########################################################################################################################*/
 static struct TexPackOverlay {
 	Screen_Layout
-	bool deny, alwaysDeny;
+	cc_bool deny, alwaysDeny;
 	cc_uint32 contentLength;
 	String url, identifier;
 	struct FontDesc textFont;

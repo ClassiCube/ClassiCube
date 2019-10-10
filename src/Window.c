@@ -17,9 +17,9 @@ int Display_ScaleY(int y) { return y * Display_DpiY / DISPLAY_DEFAULT_DPI; }
 #define Display_CentreY(height) (Display_Bounds.Y + (Display_Bounds.Height - height) / 2)
 
 int Window_Width, Window_Height;
-bool Window_Exists, Window_Focused;
+cc_bool Window_Exists, Window_Focused;
 const void* Window_Handle;
-bool Window_SoftKeyboard;
+cc_bool Window_SoftKeyboard;
 
 #ifndef CC_BUILD_WEBCANVAS
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
@@ -32,7 +32,7 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 #endif
 
 static int cursorPrevX, cursorPrevY;
-static bool cursorVisible = true;
+static cc_bool cursorVisible = true;
 /* Gets the position of the cursor in screen or window coordinates. */
 static void Cursor_GetRawPos(int* x, int* y);
 
@@ -69,7 +69,7 @@ static void Window_DefaultDisableRawMouse(void) {
 static void Window_DoShowDialog(const char* title, const char* msg);
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* Ensure cursor is visible when showing message box */
-	bool visible = cursorVisible;
+	cc_bool visible = cursorVisible;
 
 	if (!visible) Cursor_SetVisible(true);
 	Window_DoShowDialog(title, msg);
@@ -133,7 +133,7 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 #define WM_XBUTTONUP   0x020C
 #endif
 
-static bool rawMouseInited, rawMouseSupported;
+static cc_bool rawMouseInited, rawMouseSupported;
 typedef BOOL (WINAPI *FUNC_RegisterRawInput)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
 static FUNC_RegisterRawInput _registerRawInput;
 typedef UINT (WINAPI *FUNC_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
@@ -142,7 +142,7 @@ static FUNC_GetRawInputData _getRawInputData;
 static HINSTANCE win_instance;
 static HWND win_handle;
 static HDC win_DC;
-static bool suppress_resize;
+static cc_bool suppress_resize;
 static int win_totalWidth, win_totalHeight; /* Size of window including titlebar and borders */
 static int windowX, windowY;
 
@@ -207,7 +207,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	{
 		WINDOWPOS* pos = (WINDOWPOS*)lParam;
 		if (pos->hwnd != win_handle) break;
-		bool sized = pos->cx != win_totalWidth || pos->cy != win_totalHeight;
+		cc_bool sized = pos->cx != win_totalWidth || pos->cy != win_totalHeight;
 
 		Window_RefreshBounds();
 		if (sized && !suppress_resize) Event_RaiseVoid(&WindowEvents.Resized);
@@ -286,16 +286,16 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_SYSKEYDOWN:
 	case WM_SYSKEYUP:
 	{
-		bool pressed = message == WM_KEYDOWN || message == WM_SYSKEYDOWN;
+		cc_bool pressed = message == WM_KEYDOWN || message == WM_SYSKEYDOWN;
 		/* Shift/Control/Alt behave strangely when e.g. ShiftRight is held down and ShiftLeft is pressed
 		and released. It looks like neither key is released in this case, or that the wrong key is
 		released in the case of Control and Alt.
 		To combat this, we are going to release both keys when either is released. Hacky, but should work.
 		Win95 does not distinguish left/right key constants (GetAsyncKeyState returns 0).
 		In this case, both keys will be reported as pressed.	*/
-		bool ext = (lParam & (1UL << 24)) != 0;
+		LPARAM ext = lParam & (1UL << 24);
 
-		bool lShiftDown, rShiftDown;
+		cc_bool lShiftDown, rShiftDown;
 		Key key;
 		switch (wParam)
 		{
@@ -427,11 +427,11 @@ void Clipboard_GetText(String* value) {
 			continue;
 		}
 
-		bool isUnicode = true;
-		HANDLE hGlobal = GetClipboardData(CF_UNICODETEXT);
+		cc_bool unicode = true;
+		HANDLE hGlobal  = GetClipboardData(CF_UNICODETEXT);
 		if (!hGlobal) {
 			hGlobal = GetClipboardData(CF_TEXT);
-			isUnicode = false;
+			unicode = false;
 		}
 		if (!hGlobal) { CloseClipboard(); return; }
 		LPVOID src  = GlobalLock(hGlobal);
@@ -439,7 +439,7 @@ void Clipboard_GetText(String* value) {
 
 		/* ignore trailing NULL at end */
 		/* TODO: Verify it's always there */
-		if (isUnicode) {
+		if (unicode) {
 			String_AppendUtf16(value, (Codepoint*)src, size - 2);
 		} else {
 			String_DecodeCP1252(value, (cc_uint8*)src,  size - 1);
@@ -494,7 +494,7 @@ int Window_GetWindowState(void) {
 	return WINDOW_STATE_NORMAL;
 }
 
-static void Window_ToggleFullscreen(bool fullscreen, UINT finalShow) {
+static void Window_ToggleFullscreen(cc_bool fullscreen, UINT finalShow) {
 	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 	style |= (fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW);
 
@@ -563,7 +563,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 void Cursor_SetPosition(int x, int y) { 
 	SetCursorPos(x + windowX, y + windowY);
 }
-void Cursor_SetVisible(bool visible) {
+void Cursor_SetVisible(cc_bool visible) {
 	cursorVisible = visible;
 	ShowCursor(visible); 
 }
@@ -643,7 +643,7 @@ static HGLRC ctx_handle;
 static HDC ctx_DC;
 typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
 static FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
-static bool ctx_supports_vSync;
+static cc_bool ctx_supports_vSync;
 
 static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
@@ -693,7 +693,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 }
 
 void GLContext_Update(void) { }
-bool GLContext_TryRestore(void) { return true; }
+cc_bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) {
 	if (!ctx_handle) return;
 	wglDeleteContext(ctx_handle);
@@ -705,12 +705,12 @@ void* GLContext_GetAddress(const char* function) {
 	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }
 
-bool GLContext_SwapBuffers(void) {
+cc_bool GLContext_SwapBuffers(void) {
 	if (!SwapBuffers(ctx_DC)) Logger_Abort2(GetLastError(), "Failed to swap buffers");
 	return true;
 }
 
-void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	if (ctx_supports_vSync) wglSwapIntervalEXT(vsync);
 }
 #endif
@@ -978,7 +978,7 @@ int Window_GetWindowState(void) {
 		net_wm_state, 0, 256, false, xa_atom, &prop_type,
 		&prop_format, &items, &after, &data);
 
-	bool fullscreen = false, minimised = false;
+	cc_bool fullscreen = false, minimised = false;
 
 	/* TODO: Check this works right */
 	if (data && items) {
@@ -1039,7 +1039,7 @@ void Window_Close(void) {
 	XFlush(win_display);
 }
 
-static void Window_ToggleKey(XKeyEvent* keyEvent, bool pressed) {
+static void Window_ToggleKey(XKeyEvent* keyEvent, cc_bool pressed) {
 	KeySym keysym1 = XLookupKeysym(keyEvent, 0);
 	KeySym keysym2 = XLookupKeysym(keyEvent, 1);
 
@@ -1056,7 +1056,7 @@ static Atom Window_GetSelectionProperty(XEvent* e) {
 	return e->xselectionrequest.target;
 }
 
-static bool Window_GetPendingEvent(XEvent* e) {
+static cc_bool Window_GetPendingEvent(XEvent* e) {
 	return XCheckWindowEvent(win_display,   win_handle, win_eventMask, e) ||
 		XCheckTypedWindowEvent(win_display, win_handle, ClientMessage, e) ||
 		XCheckTypedWindowEvent(win_display, win_handle, SelectionNotify, e) ||
@@ -1065,7 +1065,7 @@ static bool Window_GetPendingEvent(XEvent* e) {
 
 void Window_ProcessEvents(void) {
 	XEvent e;
-	bool wasFocused;
+	cc_bool wasFocused;
 
 	while (Window_Exists) {
 		if (!Window_GetPendingEvent(&e)) break;
@@ -1226,7 +1226,7 @@ void Cursor_SetPosition(int x, int y) {
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
-void Cursor_SetVisible(bool visible) {
+void Cursor_SetVisible(cc_bool visible) {
 	static Cursor blankCursor;
 	cursorVisible = visible;
 
@@ -1327,7 +1327,7 @@ static void X11Textbox_Draw(X11Textbox* t, X11Window* w) {
 
 typedef struct {
 	int X, Y, Width, Height;
-	bool Clicked;
+	cc_bool Clicked;
 	X11Textbox Text;
 } X11Button;
 
@@ -1522,7 +1522,7 @@ void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
 static GLXContext ctx_handle;
 typedef int (*FN_GLXSWAPINTERVAL)(int interval);
 static FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
-static bool ctx_supports_vSync;
+static cc_bool ctx_supports_vSync;
 
 void GLContext_Init(struct GraphicsMode* mode) {
 	static const String ext_mesa = String_FromConst("GLX_MESA_swap_control");
@@ -1560,7 +1560,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 }
 
 void GLContext_Update(void) { }
-bool GLContext_TryRestore(void) { return true; }
+cc_bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) {
 	if (!ctx_handle) return;
 	glXMakeCurrent(win_display, None, NULL);
@@ -1573,12 +1573,12 @@ void* GLContext_GetAddress(const char* function) {
 	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }
 
-bool GLContext_SwapBuffers(void) {
+cc_bool GLContext_SwapBuffers(void) {
 	glXSwapBuffers(win_display, win_handle);
 	return true;
 }
 
-void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	int res;
 	if (!ctx_supports_vSync) return;
 
@@ -1768,7 +1768,7 @@ void Cursor_SetPosition(int x, int y) {
 	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
 }
 
-void Cursor_SetVisible(bool visible) {
+void Cursor_SetVisible(cc_bool visible) {
 	cursorVisible = visible;
 	if (visible) {
 		CGDisplayShowCursor(CGMainDisplayID());
@@ -1793,7 +1793,7 @@ void Window_DisableRawMouse(void) {
 
 
 #ifdef CC_BUILD_GL
-bool GLContext_TryRestore(void) { return true; }
+cc_bool GLContext_TryRestore(void) { return true; }
 
 void* GLContext_GetAddress(const char* function) {
 	void* address = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
@@ -1811,7 +1811,7 @@ void* GLContext_GetAddress(const char* function) {
 #include <dlfcn.h>
 
 static WindowRef win_handle;
-static bool win_fullscreen, showingDialog;
+static cc_bool win_fullscreen, showingDialog;
 
 /* fullscreen is tied to OpenGL context unfortunately */
 static void GLContext_UnsetFullscreen(void);
@@ -1908,7 +1908,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	int mouseX, mouseY;
 	HIPoint pt, raw;
 	UInt32 kind;
-	bool down;
+	cc_bool down;
 	EventMouseButton button;
 	SInt32 delta;
 	OSStatus res;	
@@ -2256,7 +2256,7 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 #include <AGL/agl.h>
 
 static AGLContext ctx_handle;
-static bool ctx_firstFullscreen;
+static cc_bool ctx_firstFullscreen;
 static int ctx_windowWidth, ctx_windowHeight;
 
 static void GLContext_Check(int code, const char* place) {
@@ -2278,7 +2278,7 @@ static void GLContext_SetDrawable(void) {
 	GLContext_Check(code, "Attaching GL context");
 }
 
-static void GLContext_GetAttribs(struct GraphicsMode* mode, GLint* attribs, bool fullscreen) {
+static void GLContext_GetAttribs(struct GraphicsMode* mode, GLint* attribs, cc_bool fullscreen) {
 	int i = 0;
 
 	if (!mode->IsIndexed) { attribs[i++] = AGL_RGBA; }
@@ -2390,13 +2390,13 @@ void GLContext_Free(void) {
 	ctx_handle = NULL;
 }
 
-bool GLContext_SwapBuffers(void) {
+cc_bool GLContext_SwapBuffers(void) {
 	aglSwapBuffers(ctx_handle);
 	GLContext_Check(0, "Swapping buffers");
 	return true;
 }
 
-void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	int value = vsync ? 1 : 0;
 	aglSetInteger(ctx_handle, AGL_SWAP_INTERVAL, &value);
 }
@@ -2556,13 +2556,13 @@ static Key Window_MapKey(SDL_Keycode k) {
 }
 
 static void Window_HandleKeyEvent(const SDL_Event* e) {
-	bool pressed = e->key.state == SDL_PRESSED;
+	cc_bool pressed = e->key.state == SDL_PRESSED;
 	Key key = Window_MapKey(e->key.keysym.sym);
 	if (key) Input_SetPressed(key, pressed);
 }
 
 static void Window_HandleMouseEvent(const SDL_Event* e) {
-	bool pressed = e->button.state == SDL_PRESSED;
+	cc_bool pressed = e->button.state == SDL_PRESSED;
 	switch (e->button.button) {
 		case SDL_BUTTON_LEFT:
 			Input_SetPressed(KEY_LMOUSE, pressed); break;
@@ -2658,7 +2658,7 @@ void Cursor_SetPosition(int x, int y) {
 	SDL_WarpMouseInWindow(win_handle, x, y);
 }
 
-void Cursor_SetVisible(bool visible) {
+void Cursor_SetVisible(cc_bool visible) {
 	cursorVisible = visible;
 	SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
 }
@@ -2734,7 +2734,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 }
 
 void GLContext_Update(void) { }
-bool GLContext_TryRestore(void) { return true; }
+cc_bool GLContext_TryRestore(void) { return true; }
 void GLContext_Free(void) {
 	SDL_GL_DeleteContext(win_ctx);
 	win_ctx = NULL;
@@ -2744,12 +2744,12 @@ void* GLContext_GetAddress(const char* function) {
 	return SDL_GL_GetProcAddress(function);
 }
 
-bool GLContext_SwapBuffers(void) {
+cc_bool GLContext_SwapBuffers(void) {
 	SDL_GL_SwapWindow(win_handle);
 	return true;
 }
 
-void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	SDL_GL_SetSwapInterval(vsync);
 }
 #endif
@@ -2785,7 +2785,7 @@ static EM_BOOL Window_MouseWheel(int type, const EmscriptenWheelEvent* ev, void*
 }
 
 static EM_BOOL Window_MouseButton(int type, const EmscriptenMouseEvent* ev, void* data) {
-	bool down = type == EMSCRIPTEN_EVENT_MOUSEDOWN;
+	cc_bool down = type == EMSCRIPTEN_EVENT_MOUSEDOWN;
 	Window_CorrectFocus();
 
 	switch (ev->button) {
@@ -3117,7 +3117,7 @@ static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 /* Not allowed to move cursor from javascript */
 void Cursor_SetPosition(int x, int y) { }
 
-void Cursor_SetVisible(bool visible) {
+void Cursor_SetVisible(cc_bool visible) {
 	cursorVisible = visible;
 	if (visible) {
 		EM_ASM(Module['canvas'].style['cursor'] = 'default'; );
@@ -3179,7 +3179,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 void GLContext_Update(void) {
 	/* TODO: do we need to do something here.... ? */
 }
-bool GLContext_TryRestore(void) {
+cc_bool GLContext_TryRestore(void) {
 	return !emscripten_is_webgl_context_lost(NULL);
 }
 
@@ -3189,9 +3189,9 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) { return NULL; }
-bool  GLContext_SwapBuffers(void) { return true; /* Browser implicitly does this */ }
+cc_bool GLContext_SwapBuffers(void) { return true; /* Browser implicitly does this */ }
 
-void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	if (vsync) {
 		emscripten_set_main_loop_timing(EM_TIMING_RAF, 1);
 	} else {
@@ -3464,7 +3464,7 @@ void Window_ProcessEvents(void) {
 /* No actual mouse cursor */
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 void Cursor_SetPosition(int x, int y) { }
-void Cursor_SetVisible(bool visible) { }
+void Cursor_SetVisible(cc_bool visible) { }
 
 static void Window_DoShowDialog(const char* title, const char* msg) {
 	JNIEnv* env;
@@ -3601,7 +3601,7 @@ void GLContext_Update(void) {
 	GLContext_InitSurface();
 }
 
-bool GLContext_TryRestore(void) {
+cc_bool GLContext_TryRestore(void) {
 	GLContext_FreeSurface();
 	GLContext_InitSurface();
 	return ctx_surface != NULL;
@@ -3617,7 +3617,7 @@ void* GLContext_GetAddress(const char* function) {
 	return eglGetProcAddress(function);
 }
 
-bool GLContext_SwapBuffers(void) {
+cc_bool GLContext_SwapBuffers(void) {
 	EGLint err;
 	if (!ctx_surface) return false;
 	if (eglSwapBuffers(ctx_display, ctx_surface)) return true;
@@ -3628,7 +3628,7 @@ bool GLContext_SwapBuffers(void) {
 	return false;
 }
 
-void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	eglSwapInterval(ctx_display, vsync);
 }
 #endif
@@ -3894,7 +3894,7 @@ static void Window_ProcessKeyChars(id ev) {
 	}
 }
 
-static bool GetMouseCoords(int* x, int* y) {
+static cc_bool GetMouseCoords(int* x, int* y) {
 	CGPoint loc = Send_CGPoint((id)objc_getClass("NSEvent"), selMouseLoc);
 	*x = (int)loc.x                           - windowX;	
 	*y = (Display_Bounds.Height - (int)loc.y) - windowY;
@@ -4064,7 +4064,7 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 #define NSOpenGLContextParameterSwapInterval 222
 
 static id ctxHandle;
-static id MakePixelFormat(struct GraphicsMode* mode, bool fullscreen) {
+static id MakePixelFormat(struct GraphicsMode* mode, cc_bool fullscreen) {
 	id fmt;
 	uint32_t attribs[7] = {
 		NSOpenGLPFAColorSize,    0,
@@ -4110,12 +4110,12 @@ void GLContext_Free(void) {
 	objc_msgSend(ctxHandle, sel_registerName("release"));
 }
 
-bool GLContext_SwapBuffers(void) {
+cc_bool GLContext_SwapBuffers(void) {
 	objc_msgSend(ctxHandle, selFlushBuffer);
 	return true; 
 }
 
-void GLContext_SetFpsLimit(bool vsync, float minFrameMs) {
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	int value = vsync ? 1 : 0;
 	objc_msgSend(ctxHandle, sel_registerName("setValues:forParameter:"), &value, NSOpenGLContextParameterSwapInterval);
 }

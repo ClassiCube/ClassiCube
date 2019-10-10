@@ -42,11 +42,11 @@ enum CollideType {
 
 CC_VAR extern struct _BlockLists {
 	/* Whether this block is a liquid. (Like water/lava) */
-	bool IsLiquid[BLOCK_COUNT];
+	cc_bool IsLiquid[BLOCK_COUNT];
 	/* Whether this block prevents lights from passing through it. */
-	bool BlocksLight[BLOCK_COUNT];
+	cc_bool BlocksLight[BLOCK_COUNT];
 	/* Whether this block is fully bright/light emitting. (Like lava) */
-	bool FullBright[BLOCK_COUNT];
+	cc_bool FullBright[BLOCK_COUNT];
 	/* Fog colour when player is inside this block. */
 	/* NOTE: Only applies if fog density is not 0. */
 	PackedCol FogCol[BLOCK_COUNT];
@@ -71,9 +71,9 @@ CC_VAR extern struct _BlockLists {
 	/* Sound played when the player walks on this block. See SoundType enum. */
 	cc_uint8 StepSounds[BLOCK_COUNT];
 	/* Whether fog colour is used to apply a tint effect to this block. */
-	bool Tinted[BLOCK_COUNT];
+	cc_bool Tinted[BLOCK_COUNT];
 	/* Whether this block has an opaque draw type, min of (0,0,0), and max of (1,1,1) */
-	bool FullOpaque[BLOCK_COUNT];
+	cc_bool FullOpaque[BLOCK_COUNT];
 	/* Offset/variation mode of this block. (only when drawn as a sprite) */
 	/* Some modes slightly randomly offset blocks to produce nicer looking clumps. */
 	cc_uint8 SpriteOffset[BLOCK_COUNT];
@@ -92,9 +92,9 @@ CC_VAR extern struct _BlockLists {
 	/* Texture ids of each face of blocks. */
 	TextureLoc Textures[BLOCK_COUNT * FACE_COUNT];
 	/* Whether this block is allowed to be placed. */
-	bool CanPlace[BLOCK_COUNT];
+	cc_bool CanPlace[BLOCK_COUNT];
 	/* Whether this block is allowed to be deleted. */
-	bool CanDelete[BLOCK_COUNT];
+	cc_bool CanDelete[BLOCK_COUNT];
 
 	/* Bit flags of faces hidden of two neighbouring blocks. */
 	cc_uint8 Hidden[BLOCK_COUNT * BLOCK_COUNT];
@@ -106,9 +106,9 @@ CC_VAR extern struct _BlockLists {
 if (Blocks.Tinted[block]) col = PackedCol_Tint(col, Blocks.FogCol[block]);
 
 /* Returns whether the given block has been changed from default. */
-bool Block_IsCustomDefined(BlockID block);
+cc_bool Block_IsCustomDefined(BlockID block);
 /* Sets whether the given block has been changed from default. */
-void Block_SetCustomDefined(BlockID block, bool defined);
+void Block_SetCustomDefined(BlockID block, cc_bool defined);
 void Block_DefineCustom(BlockID block);
 
 /* Sets the basic and extended collide types of the given block. */
@@ -144,7 +144,7 @@ void Block_SetSide(TextureLoc texLoc, BlockID blockId);
 /* The texture for the given face of the given block. */
 #define Block_Tex(block, face) Blocks.Textures[(block) * FACE_COUNT + (face)]
 
-bool Block_IsFaceHidden(BlockID block, BlockID other, Face face);
+cc_bool Block_IsFaceHidden(BlockID block, BlockID other, Face face);
 /* Updates culling data of all blocks. */
 void Block_UpdateAllCulling(void);
 /* Updates culling data just for this block. */
@@ -152,7 +152,7 @@ void Block_UpdateAllCulling(void);
 void Block_UpdateCulling(BlockID block);
 
 /* Whether blocks can be automatically rotated. */
-extern bool AutoRotate_Enabled;
+extern cc_bool AutoRotate_Enabled;
 /* Attempts to find the rotated block based on the user's orientation and offset on selected block. */
 /* If no rotated block is found, returns given block. */
 BlockID AutoRotate_RotateBlock(BlockID block);

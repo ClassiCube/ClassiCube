@@ -359,7 +359,7 @@ static ReturnCode Nbt_ReadString(struct Stream* stream, String* str) {
 }
 
 typedef void (*Nbt_Callback)(struct NbtTag* tag);
-static ReturnCode Nbt_ReadTag(cc_uint8 typeId, bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
+static ReturnCode Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
 	struct NbtTag tag;
 	cc_uint8 childType;
 	cc_uint8 tmp[5];	
@@ -1042,7 +1042,7 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 	String name;
 	int len;
 
-	bool sprite = Blocks.Draw[b] == DRAW_SPRITE;
+	cc_bool sprite = Blocks.Draw[b] == DRAW_SPRITE;
 	union IntAndFloat speed;
 	TextureLoc tex;
 	cc_uint8 fog;

@@ -134,7 +134,7 @@ static void LButton_Draw(void* widget) {
 	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
 }
 
-static void LButton_Hover(void* w, int x, int y, bool wasOver) { 
+static void LButton_Hover(void* w, int x, int y, cc_bool wasOver) {
 	/* only need to redraw when changing from unhovered to hovered */	
 	if (!wasOver) LWidget_Draw(w); 
 }
@@ -302,14 +302,14 @@ static Rect2D LInput_MeasureCaret(struct LInput* w) {
 }
 
 static TimeMS caretStart;
-static bool lastCaretShow;
+static cc_bool lastCaretShow;
 static Rect2D lastCaretRec;
 #define Rect2D_Equals(a, b) a.X == b.X && a.Y == b.Y && a.Width == b.Width && a.Height == b.Height
 
 static void LInput_TickCaret(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
 	int elapsed;
-	bool caretShow;
+	cc_bool caretShow;
 	Rect2D r;
 
 	elapsed = (int)(DateTime_CurrentUTC_MS() - caretStart);
@@ -336,7 +336,7 @@ static void LInput_TickCaret(void* widget) {
 	lastCaretRec = r;
 }
 
-static void LInput_AdvanceCaretPos(struct LInput* w, bool forwards) {
+static void LInput_AdvanceCaretPos(struct LInput* w, cc_bool forwards) {
 	if (forwards && w->CaretPos == -1) return;
 	if (!forwards && w->CaretPos == 0) return;
 	if (w->CaretPos == -1 && !forwards) /* caret after text */
@@ -379,7 +379,7 @@ static void LInput_MoveCaretToCursor(struct LInput* w) {
 	}
 }
 
-static void LInput_Select(void* widget, bool wasSelected) {
+static void LInput_Select(void* widget, cc_bool wasSelected) {
 	caretStart = DateTime_CurrentUTC_MS();
 	LInput_MoveCaretToCursor((struct LInput*)widget);
 	/* TODO: Only draw outer border */
@@ -404,7 +404,7 @@ static void LInput_CopyFromClipboard(String* text, void* widget) {
 	LInput_AppendString(w, text);
 }
 
-static void LInput_KeyDown(void* widget, Key key, bool was) {
+static void LInput_KeyDown(void* widget, Key key, cc_bool was) {
 	struct LInput* w = (struct LInput*)widget;
 	if (key == KEY_BACKSPACE) {
 		LInput_Backspace(w);
@@ -428,7 +428,7 @@ static void LInput_KeyChar(void* widget, char c) {
 	LInput_Append(w, c);
 }
 
-static bool LInput_DefaultInputFilter(char c) {
+static cc_bool LInput_DefaultInputFilter(char c) {
 	return c >= ' ' && c <= '~' && c != '&';
 }
 
@@ -470,7 +470,7 @@ void LInput_SetText(struct LInput* w, const String* text_) {
 	w->_TextHeight = size.Height;
 }
 
-static CC_NOINLINE bool LInput_AppendRaw(struct LInput* w, char c) {
+static CC_NOINLINE cc_bool LInput_AppendRaw(struct LInput* w, char c) {
 	if (w->TextFilter(c) && w->Text.length < w->Text.capacity) {
 		if (w->CaretPos == -1) {
 			String_Append(&w->Text, c);
@@ -484,7 +484,7 @@ static CC_NOINLINE bool LInput_AppendRaw(struct LInput* w, char c) {
 }
 
 void LInput_Append(struct LInput* w, char c) {
-	bool appended = LInput_AppendRaw(w, c);
+	cc_bool appended = LInput_AppendRaw(w, c);
 	if (appended && w->TextChanged) w->TextChanged(w);
 	if (appended) LWidget_Redraw(w);
 }
@@ -789,7 +789,7 @@ static BitmapCol LTable_RowCol(struct LTable* w, struct ServerInfo* row) {
 	BitmapCol featSelCol  = BitmapCol_Make( 50,  53,  0, 255);
 	BitmapCol featuredCol = BitmapCol_Make(101, 107,  0, 255);
 	BitmapCol selectedCol = BitmapCol_Make( 40,  40, 40, 255);
-	bool selected;
+	cc_bool selected;
 
 	if (row) {
 		selected = String_Equals(&row->hash, w->SelectedHash);
@@ -924,11 +924,11 @@ static void LTable_DrawScrollbar(struct LTable* w) {
 					x, w->Y + y, w->ScrollbarWidth, height);
 }
 
-bool LTable_HandlesKey(Key key) {
+cc_bool LTable_HandlesKey(Key key) {
 	return key == KEY_UP || key == KEY_DOWN || key == KEY_PAGEUP || key == KEY_PAGEDOWN;
 }
 
-static void LTable_KeyDown(void* widget, Key key, bool was) {
+static void LTable_KeyDown(void* widget, Key key, cc_bool was) {
 	struct LTable* w = (struct LTable*)widget;
 	int index = LTable_GetSelectedIndex(w);
 
@@ -946,7 +946,7 @@ static void LTable_KeyDown(void* widget, Key key, bool was) {
 	LTable_SetSelectedTo(w, index);
 }
 
-static void LTable_MouseMove(void* widget, int deltaX, int deltaY, bool wasOver) {
+static void LTable_MouseMove(void* widget, int deltaX, int deltaY, cc_bool wasOver) {
 	struct LTable* w = (struct LTable*)widget;
 	int x = Mouse_X - w->X, y = Mouse_Y - w->Y, col;
 
@@ -1031,7 +1031,7 @@ static void LTable_ScrollbarClick(struct LTable* w) {
 	LTable_ClampTopRow(w);
 }
 
-static void LTable_MouseDown(void* widget, bool wasSelected) {
+static void LTable_MouseDown(void* widget, cc_bool wasSelected) {
 	struct LTable* w = (struct LTable*)widget;
 
 	if (Mouse_X >= Window_Width - w->ScrollbarWidth) {

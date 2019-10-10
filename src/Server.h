@@ -77,18 +77,18 @@ CC_VAR extern struct _ServerConnectionData {
 	/* Buffer to data to send to the server. */
 	cc_uint8* WriteBuffer;
 	/* Whether the player is connected to singleplayer/internal server. */
-	bool IsSinglePlayer;
+	cc_bool IsSinglePlayer;
 	/* Whether the player has been disconnected from the server. */
-	bool Disconnected;
+	cc_bool Disconnected;
 
 	/* Whether the server supports separate tab list from entities in world. */
-	bool SupportsExtPlayerList;
+	cc_bool SupportsExtPlayerList;
 	/* Whether the server supports packet with detailed info on mouse clicks. */
-	bool SupportsPlayerClick;
+	cc_bool SupportsPlayerClick;
 	/* Whether the server supports combining multiple chat packets into one. */
-	bool SupportsPartialMessages;
+	cc_bool SupportsPartialMessages;
 	/* Whether the server supports all of code page 437, not just ASCII. */
-	bool SupportsFullCP437;
+	cc_bool SupportsFullCP437;
 
 	/* IP address of the server if multiplayer, empty string if singleplayer. */
 	String IP;

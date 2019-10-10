@@ -43,7 +43,7 @@ float Math_Lerp(float a, float b, float t);
 float Math_LerpAngle(float leftAngle, float rightAngle, float t);
 
 int Math_NextPowOf2(int value);
-bool Math_IsPowOf2(int value);
+cc_bool Math_IsPowOf2(int value);
 #define Math_Clamp(val, min, max) val = val < (min) ? (min) : val;  val = val > (max) ? (max) : val;
 
 typedef cc_uint64 RNGState;

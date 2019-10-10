@@ -27,10 +27,10 @@
 
 /* Classic state */
 static cc_uint8 classic_tabList[ENTITIES_MAX_COUNT >> 3];
-static bool classic_receivedFirstPos;
+static cc_bool classic_receivedFirstPos;
 
 /* Map state */
-static bool map_begunLoading;
+static cc_bool map_begunLoading;
 static TimeMS map_receiveStart;
 static struct Stream map_part;
 static struct GZipHeader map_gzHeader;
@@ -42,7 +42,7 @@ struct MapState {
 	struct Stream stream;
 	BlockRaw* blocks;
 	int index;
-	bool allocFailed;
+	cc_bool allocFailed;
 };
 static struct MapState map;
 #ifdef EXTENDED_BLOCKS
@@ -50,11 +50,11 @@ static struct MapState map2;
 #endif
 
 /* CPE state */
-bool cpe_needD3Fix;
+cc_bool cpe_needD3Fix;
 static int cpe_serverExtensionsCount, cpe_pingTicks;
 static int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
-static bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
-static bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
+static cc_bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
+static cc_bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
 
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
@@ -146,8 +146,8 @@ static void Protocol_CheckName(EntityID id, String* name, String* skin) {
 	String_StripCols(skin);
 }
 
-static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, bool interpolate);
-static void Protocol_AddEntity(cc_uint8* data, EntityID id, const String* displayName, const String* skinName, bool readPosition) {
+static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool interpolate);
+static void Protocol_AddEntity(cc_uint8* data, EntityID id, const String* displayName, const String* skinName, cc_bool readPosition) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Entity* e;
 
@@ -184,7 +184,7 @@ void Protocol_RemoveEntity(EntityID id) {
 	Classic_TabList_Reset(id);
 }
 
-static void Protocol_UpdateLocation(EntityID playerId, struct LocationUpdate* update, bool interpolate) {
+static void Protocol_UpdateLocation(EntityID playerId, struct LocationUpdate* update, cc_bool interpolate) {
 	struct Entity* entity = Entities.List[playerId];
 	if (entity) {
 		entity->VTABLE->SetLocation(entity, update, interpolate);
@@ -201,7 +201,7 @@ static void Protocol_UpdateLocation(EntityID playerId, struct LocationUpdate* up
 static char wom_identifierBuffer[32];
 static String wom_identifier = String_FromArray(wom_identifierBuffer);
 static int wom_counter;
-static bool wom_sendId, wom_sentId;
+static cc_bool wom_sendId, wom_sentId;
 
 static void WoM_UpdateIdentifier(void) {
 	wom_identifier.length = 0;
@@ -301,7 +301,7 @@ static void WoM_Tick(void) {
 *----------------------------------------------------Classic protocol-----------------------------------------------------*
 *#########################################################################################################################*/
 
-void Classic_SendChat(const String* text, bool partial) {
+void Classic_SendChat(const String* text, cc_bool partial) {
 	cc_uint8 data[66];
 	data[0] = OPCODE_MESSAGE;
 	{
@@ -340,7 +340,7 @@ void Classic_WritePosition(Vec3 pos, float rotY, float headX) {
 	Server.WriteBuffer = data;
 }
 
-void Classic_WriteSetBlock(int x, int y, int z, bool place, BlockID block) {
+void Classic_WriteSetBlock(int x, int y, int z, cc_bool place, BlockID block) {
 	cc_uint8* data = Server.WriteBuffer;
 	*data++ = OPCODE_SET_BLOCK_CLIENT;
 	{
@@ -648,7 +648,7 @@ static void Classic_SetPermission(cc_uint8* data) {
 	HacksComp_RecheckFlags(hacks);
 }
 
-static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, bool interpolate) {
+static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool interpolate) {
 	struct LocationUpdate update;
 	int x, y, z;
 	Vec3 pos;
@@ -723,7 +723,7 @@ static const char* cpe_clientExtensions[31] = {
 static void CPE_SetMapEnvUrl(cc_uint8* data);
 
 #define Ext_Deg2Packed(x) ((int)((x) * 65536.0f / 360.0f))
-void CPE_SendPlayerClick(int button, bool pressed, cc_uint8 targetId, struct PickedPos* pos) {
+void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	cc_uint8 data[15];
 
@@ -773,7 +773,7 @@ static void CPE_SendExtEntry(const String* extName, int extVersion) {
 	Server.SendData(data, 69);
 }
 
-static void CPE_WriteTwoWayPing(bool serverToClient, int id) {
+static void CPE_WriteTwoWayPing(cc_bool serverToClient, int id) {
 	cc_uint8* data = Server.WriteBuffer; 
 	*data++ = OPCODE_TWO_WAY_PING;
 	{
@@ -924,7 +924,7 @@ static void CPE_CustomBlockLevel(cc_uint8* data) {
 
 static void CPE_HoldThis(cc_uint8* data) {
 	BlockID block;
-	bool canChange;
+	cc_bool canChange;
 
 	Protocol_ReadBlock(data, block);
 	canChange = *data == 0;
@@ -1021,7 +1021,7 @@ static void CPE_RemoveSelection(cc_uint8* data) {
 static void CPE_SetEnvCol(cc_uint8* data) {
 	PackedCol c;
 	cc_uint8 variable;
-	bool invalid;
+	cc_bool invalid;
 	
 	variable = *data++;
 	invalid  = data[0] || data[2] || data[4];
@@ -1339,7 +1339,7 @@ static void CPE_Tick(void) {
 /*########################################################################################################################*
 *------------------------------------------------------Custom blocks------------------------------------------------------*
 *#########################################################################################################################*/
-static void BlockDefs_OnBlockUpdated(BlockID block, bool didBlockLight) {
+static void BlockDefs_OnBlockUpdated(BlockID block, cc_bool didBlockLight) {
 	if (!World.Blocks) return;
 	/* Need to refresh lighting when a block's light blocking state changes */
 	if (Blocks.BlocksLight[block] != didBlockLight) Lighting_Refresh();
@@ -1358,10 +1358,10 @@ static TextureLoc BlockDefs_Tex(cc_uint8** ptr) {
 	*ptr = data; return loc;
 }
 
-static BlockID BlockDefs_DefineBlockCommonStart(cc_uint8** ptr, bool uniqueSideTexs) {
+static BlockID BlockDefs_DefineBlockCommonStart(cc_uint8** ptr, cc_bool uniqueSideTexs) {
 	String name;
 	BlockID block;
-	bool didBlockLight;
+	cc_bool didBlockLight;
 	float speedLog2;
 	cc_uint8 sound;
 	cc_uint8* data = *ptr;
@@ -1432,7 +1432,7 @@ static void BlockDefs_DefineBlock(cc_uint8* data) {
 
 static void BlockDefs_UndefineBlock(cc_uint8* data) {
 	BlockID block;
-	bool didBlockLight;
+	cc_bool didBlockLight;
 
 	Protocol_ReadBlock(data, block);
 	didBlockLight = Blocks.BlocksLight[block];

@@ -66,11 +66,11 @@ struct Model {
 	int index;
 	cc_uint8 armX, armY; /* these translate arm model part back to (0, 0) */
 
-	bool initalised;
+	cc_bool initalised;
 	/* Whether the model should be slightly bobbed up and down when rendering. */
 	/* e.g. for HumanoidModel, when legs are at the peak of their swing, whole model is moved slightly down */
-	bool Bobbing;
-	bool UsesSkin, CalcHumanAnims, UsesHumanSkin, Pushes;
+	cc_bool Bobbing;
+	cc_bool UsesSkin, CalcHumanAnims, UsesHumanSkin, Pushes;
 
 	float Gravity; Vec3 Drag, GroundFriction;
 
@@ -100,7 +100,7 @@ CC_VAR extern struct _ModelsData {
 	/* Skin type of current skin texture. */
 	cc_uint8 skinType;
 	/* Whether to render arms like vanilla Minecraft Classic. */
-	bool ClassicArms;
+	cc_bool ClassicArms;
 	/* Model currently being built or rendered. */
 	struct Model* Active;
 	/* Dynamic vertex buffer for uploading model vertices. */
@@ -118,7 +118,7 @@ CC_VAR extern struct _ModelsData {
 CC_API void Model_Init(struct Model* model);
 
 /* Whether the bounding sphere of the model is currently visible. */
-bool Model_ShouldRender(struct Entity* entity);
+cc_bool Model_ShouldRender(struct Entity* entity);
 /* Approximately how far the given entity is away from the player. */
 float Model_RenderDistance(struct Entity* entity);
 /* Draws the given entity as the given model. */
@@ -134,7 +134,7 @@ CC_API void Model_ApplyTexture(struct Entity* entity);
 /* Draws the given part with no part-specific rotation (e.g. torso). */
 CC_API void Model_DrawPart(struct ModelPart* part);
 /* Draws the given part with rotation around part's rotation origin. (e.g. arms, head) */
-CC_API void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, bool head);
+CC_API void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, cc_bool head);
 /* Renders the 'arm' of a model. */
 void Model_RenderArm(struct Model* model, struct Entity* entity);
 /* Draws the given part with appropriate rotation to produce an arm look. */
@@ -197,7 +197,7 @@ let SW = sides width, BW = body width, BH = body height
 ********************************************************************************************* */
 CC_API void BoxDesc_BuildRotatedBox(struct ModelPart* part, const struct BoxDesc* desc);
 
-CC_API void BoxDesc_XQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float z1, float z2, float y1, float y2, float x, bool swapU);
-CC_API void BoxDesc_YQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float z1, float z2, float y, bool swapU);
-CC_API void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float y1, float y2, float z, bool swapU);
+CC_API void BoxDesc_XQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float z1, float z2, float y1, float y2, float x, cc_bool swapU);
+CC_API void BoxDesc_YQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float z1, float z2, float y, cc_bool swapU);
+CC_API void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float y1, float y2, float z, cc_bool swapU);
 #endif

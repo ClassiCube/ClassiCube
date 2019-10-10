@@ -13,9 +13,9 @@ extern int Resources_Size;
 void Resources_CheckExistence(void);
 
 /* Whether fetcher is currently downloading resources. */
-extern bool Fetcher_Working;
+extern cc_bool Fetcher_Working;
 /* Whether fetcher has finished. (downloaded all resources, or an error) */
-extern bool Fetcher_Completed;
+extern cc_bool Fetcher_Completed;
 /* Number of resources that have been downloaded so far. */
 extern int Fetcher_Downloaded;
 /* HTTP status code of last failed resource download */
@@ -23,7 +23,7 @@ extern int Fetcher_StatusCode;
 /* Error code of last failed resource download. */
 extern ReturnCode Fetcher_Result;
 /* Whether a resource failed to download. */
-extern bool Fetcher_Failed;
+extern cc_bool Fetcher_Failed;
 
 /* Starts asynchronous download of missing resources. */
 void Fetcher_Run(void);

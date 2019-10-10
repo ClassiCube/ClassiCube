@@ -17,7 +17,7 @@ typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	LScreen_Func Draw;   /* Draws all widgets and any other features such as lines/rectangles. */ \
 	LScreen_Func Tick;   /* Repeatedly called multiple times every second. */ \
 	LScreen_Func OnDisplay; /* Called when framebuffer is about to be displayed. */ \
-	void (*KeyDown)(struct LScreen* s,    Key key, bool wasDown); \
+	void (*KeyDown)(struct LScreen* s,    Key key, cc_bool wasDown); \
 	void (*KeyPress)(struct LScreen* s,   char c);  \
 	void (*MouseDown)(struct LScreen* s,  MouseButton btn); \
 	void (*MouseUp)(struct LScreen* s,    MouseButton btn); \
@@ -30,11 +30,11 @@ typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	struct LWidget* selectedWidget; /* Widget mouse last clicked on. */ \
 	int numWidgets;           /* Number of widgets actually used. */ \
 	struct LWidget** widgets; /* Array of pointers to all widgets in the screen. */ \
-	bool hidesTitlebar;       /* Whether titlebar in window is hidden. */
+	cc_bool hidesTitlebar;    /* Whether titlebar in window is hidden. */
 
 struct LScreen { LScreen_Layout };
 	
-struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime);
+struct LScreen* ChooseModeScreen_MakeInstance(cc_bool firstTime);
 struct LScreen* ColoursScreen_MakeInstance(void);
 struct LScreen* DirectConnectScreen_MakeInstance(void);
 struct LScreen* MainScreen_MakeInstance(void);

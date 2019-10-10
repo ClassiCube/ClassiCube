@@ -23,10 +23,10 @@ GfxResourceID Gfx_quadVb, Gfx_texVb;
 static const int gfx_strideSizes[2] = { 16, 24 };
 static int gfx_batchStride, gfx_batchFormat = -1;
 
-static bool gfx_vsync, gfx_fogEnabled;
+static cc_bool gfx_vsync, gfx_fogEnabled;
 static float gfx_minFrameMs;
 static cc_uint64 frameStart;
-bool Gfx_GetFog(void) { return gfx_fogEnabled; }
+cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 
 /* Initialises/Restores render state. */
 CC_NOINLINE static void Gfx_RestoreState(void);
@@ -145,7 +145,7 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2fC4b** 
 	*vertices = v;
 }
 
-static bool gfx_hadFog;
+static cc_bool gfx_hadFog;
 void Gfx_Mode2D(int width, int height) {
 	struct Matrix ortho;
 	Gfx_CalcOrthoMatrix((float)width, (float)height, &ortho);
@@ -383,7 +383,7 @@ void Gfx_Init(void) {
 	totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 }
 
-bool Gfx_TryRestoreContext(void) {
+cc_bool Gfx_TryRestoreContext(void) {
 	D3DPRESENT_PARAMETERS args = { 0 };
 	ReturnCode res;
 
@@ -470,7 +470,7 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bi
 	if (res) Logger_Abort2(res, "D3D9_UnlockTexturePartData");
 }
 
-static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, bool partial) {
+static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, cc_bool partial) {
 	cc_uint8* prev = bmp->Scan0;
 	cc_uint8* cur;
 	Bitmap mipmap;
@@ -499,7 +499,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 	if (prev != bmp->Scan0) Mem_Free(prev);
 }
 
-GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
+GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
 	ReturnCode res;
 	int mipmapsLevels = CalcMipmapsLevels(bmp->Width, bmp->Height);
@@ -537,7 +537,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	return tex;
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, bool mipmaps) {
+void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, cc_bool mipmaps) {
 	IDirect3DTexture9* texture = (IDirect3DTexture9*)texId;
 	D3D9_SetTexturePartData(texture, x, y, part, 0);
 	if (mipmaps) D3D9_DoMipmaps(texture, x, y, part, true);
@@ -550,7 +550,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 
 void Gfx_DeleteTexture(GfxResourceID* texId) { D3D9_FreeResource(texId); }
 
-void Gfx_SetTexturing(bool enabled) {
+void Gfx_SetTexturing(cc_bool enabled) {
 	if (enabled) return;
 	ReturnCode res = IDirect3DDevice9_SetTexture(device, 0, NULL);
 	if (res) Logger_Abort2(res, "D3D9_SetTexturing");
@@ -571,15 +571,15 @@ void Gfx_DisableMipmaps(void) {
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
-static bool gfx_alphaTesting, gfx_alphaBlending;
-static bool gfx_depthTesting, gfx_depthWriting;
+static cc_bool gfx_alphaTesting, gfx_alphaBlending;
+static cc_bool gfx_depthTesting, gfx_depthWriting;
 
-void Gfx_SetFaceCulling(bool enabled) {
+void Gfx_SetFaceCulling(cc_bool enabled) {
 	D3DCULL mode = enabled ? D3DCULL_CW : D3DCULL_NONE;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_CULLMODE, mode);
 }
 
-void Gfx_SetFog(bool enabled) {
+void Gfx_SetFog(cc_bool enabled) {
 	if (gfx_fogEnabled == enabled) return;
 	gfx_fogEnabled = enabled;
 
@@ -625,35 +625,35 @@ void Gfx_SetFogMode(FogFunc func) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, mode);
 }
 
-void Gfx_SetAlphaTest(bool enabled) {
+void Gfx_SetAlphaTest(cc_bool enabled) {
 	if (gfx_alphaTesting == enabled) return;
 	gfx_alphaTesting = enabled;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE, enabled);
 }
 
-void Gfx_SetAlphaBlending(bool enabled) {
+void Gfx_SetAlphaBlending(cc_bool enabled) {
 	if (gfx_alphaBlending == enabled) return;
 	gfx_alphaBlending = enabled;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, enabled);
 }
 
-void Gfx_SetAlphaArgBlend(bool enabled) {
+void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 	D3DTEXTUREOP op = enabled ? D3DTOP_MODULATE : D3DTOP_SELECTARG1;
 	IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, op);
 }
 
 void Gfx_ClearCol(PackedCol col) { gfx_clearCol = col; }
-void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a) {
+void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	DWORD channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
 	IDirect3DDevice9_SetRenderState(device, D3DRS_COLORWRITEENABLE, channels);
 }
 
-void Gfx_SetDepthTest(bool enabled) {
+void Gfx_SetDepthTest(cc_bool enabled) {
 	gfx_depthTesting = enabled;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ZENABLE, enabled);
 }
 
-void Gfx_SetDepthWrite(bool enabled) {
+void Gfx_SetDepthWrite(cc_bool enabled) {
 	gfx_depthWriting = enabled;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, enabled);
 }
@@ -864,7 +864,7 @@ finished:
 	return res;
 }
 
-void Gfx_SetFpsLimit(bool vsync, float minFrameMs) {
+void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
 	if (gfx_vsync == vsync) return;
 
@@ -895,7 +895,7 @@ void Gfx_EndFrame(void) {
 	if (gfx_minFrameMs) Gfx_LimitFPS();
 }
 
-bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_WarnIfNecessary(void) { return false; }
 static const char* D3D9_StrFlags(void) {
 	if (createFlags & D3DCREATE_HARDWARE_VERTEXPROCESSING) return "Hardware";
 	if (createFlags & D3DCREATE_MIXED_VERTEXPROCESSING)    return "Mixed";
@@ -1023,7 +1023,7 @@ void Gfx_Init(void) {
 	Gfx_RestoreState();
 }
 
-bool Gfx_TryRestoreContext(void) {
+cc_bool Gfx_TryRestoreContext(void) {
 	if (!GLContext_TryRestore()) return false;
 	Gfx_RecreateContext();
 	return true;
@@ -1040,7 +1040,7 @@ void Gfx_Free(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, bool partial) {
+static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, cc_bool partial) {
 	cc_uint8* prev = bmp->Scan0;
 	cc_uint8* cur;
 
@@ -1067,7 +1067,7 @@ static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, bool partial) {
 	if (prev != bmp->Scan0) Mem_Free(prev);
 }
 
-GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
+GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
 	GLuint texId;
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
@@ -1094,7 +1094,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	return texId;
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, bool mipmaps) {
+void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, cc_bool mipmaps) {
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->Width, part->Height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, part->Scan0);
 	if (mipmaps) Gfx_DoMipmaps(x, y, part, true);
@@ -1119,9 +1119,9 @@ void Gfx_DisableMipmaps(void) { }
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
 static int gfx_fogMode  = -1;
-void Gfx_SetFaceCulling(bool enabled)   { gl_Toggle(GL_CULL_FACE); }
-void Gfx_SetAlphaBlending(bool enabled) { gl_Toggle(GL_BLEND); }
-void Gfx_SetAlphaArgBlend(bool enabled) { }
+void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
+void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
+void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
 
 static void GL_ClearCol(PackedCol col) {
 	glClearColor(PackedCol_R(col) / 255.0f, PackedCol_G(col) / 255.0f,
@@ -1133,12 +1133,12 @@ void Gfx_ClearCol(PackedCol col) {
 	gfx_clearCol = col;
 }
 
-void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a) {
+void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	glColorMask(r, g, b, a);
 }
 
-void Gfx_SetDepthWrite(bool enabled) { glDepthMask(enabled); }
-void Gfx_SetDepthTest(bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
+void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
+void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
 
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, -10000.0f, 10000.0f);
@@ -1255,7 +1255,7 @@ void Gfx_GetApiInfo(String* lines) {
 	String_Format2(&lines[4], "Video memory: %f2 MB total, %f2 free", &total, &cur);
 }
 
-void Gfx_SetFpsLimit(bool vsync, float minFrameMs) {
+void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
 	gfx_vsync = vsync;
 	GLContext_SetFpsLimit(vsync, minFrameMs);
@@ -1296,7 +1296,7 @@ void Gfx_OnWindowResize(void) {
 
 /* cached uniforms (cached for multiple programs */
 static struct Matrix _view, _proj, _tex, _mvp;
-static bool gfx_alphaTest, gfx_texTransform;
+static cc_bool gfx_alphaTest, gfx_texTransform;
 
 /* shader programs (emulate fixed function) */
 static struct GLShader {
@@ -1527,7 +1527,7 @@ static void Gfx_SwitchProgram(void) {
 	Gfx_ReloadUniforms();
 }
 
-void Gfx_SetFog(bool enabled) { gfx_fogEnabled = enabled; Gfx_SwitchProgram(); }
+void Gfx_SetFog(cc_bool enabled) { gfx_fogEnabled = enabled; Gfx_SwitchProgram(); }
 void Gfx_SetFogCol(PackedCol col) {
 	if (col == gfx_fogCol) return;
 	gfx_fogCol = col;
@@ -1555,8 +1555,8 @@ void Gfx_SetFogMode(FogFunc func) {
 	Gfx_SwitchProgram();
 }
 
-void Gfx_SetTexturing(bool enabled) { }
-void Gfx_SetAlphaTest(bool enabled) { gfx_alphaTest = enabled; Gfx_SwitchProgram(); }
+void Gfx_SetTexturing(cc_bool enabled) { }
+void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; Gfx_SwitchProgram(); }
 
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	if (type == MATRIX_VIEW || type == MATRIX_PROJECTION) {
@@ -1610,7 +1610,7 @@ static void Gfx_RestoreState(void) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LEQUAL);
 }
-bool Gfx_WarnIfNecessary(void) { return false; }
+cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
 static void GL_SetupVbPos3fCol4b(void) {
 	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fC4b), (void*)0);
@@ -1682,7 +1682,7 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 *------------------------------------------------------OpenGL legacy------------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GLMODERN
-void Gfx_SetFog(bool enabled) {
+void Gfx_SetFog(cc_bool enabled) {
 	gfx_fogEnabled = enabled;
 	gl_Toggle(GL_FOG);
 }
@@ -1718,8 +1718,8 @@ void Gfx_SetFogMode(FogFunc func) {
 	gfx_fogMode = func;
 }
 
-void Gfx_SetTexturing(bool enabled) { gl_Toggle(GL_TEXTURE_2D); }
-void Gfx_SetAlphaTest(bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
+void Gfx_SetTexturing(cc_bool enabled) { gl_Toggle(GL_TEXTURE_2D); }
+void Gfx_SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 
 static GLenum matrix_modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 static int lastMatrix;
@@ -1747,7 +1747,7 @@ static void Gfx_RestoreState(void) {
 	glDepthFunc(GL_LEQUAL);
 }
 
-bool Gfx_WarnIfNecessary(void) {
+cc_bool Gfx_WarnIfNecessary(void) {
 	static const String intel = String_FromConst("Intel");
 	String renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
 

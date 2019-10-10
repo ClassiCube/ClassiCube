@@ -7,8 +7,8 @@
 struct IGameComponent;
 extern struct IGameComponent HeldBlockRenderer_Component;
 /* Whether held block/arm should be shown at all. */
-extern bool HeldBlockRenderer_Show;
+extern cc_bool HeldBlockRenderer_Show;
 
-void HeldBlockRenderer_ClickAnim(bool digging);
+void HeldBlockRenderer_ClickAnim(cc_bool digging);
 void HeldBlockRenderer_Render(double delta);
 #endif

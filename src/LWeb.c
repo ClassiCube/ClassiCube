@@ -22,15 +22,15 @@ static const String strTrue  = String_FromConst("true");
 static const String strFalse = String_FromConst("false");
 static const String strNull  = String_FromConst("null");
 
-static bool Json_IsWhitespace(char c) {
+static cc_bool Json_IsWhitespace(char c) {
 	return c == '\r' || c == '\n' || c == '\t' || c == ' ';
 }
 
-static bool Json_IsNumber(char c) {
+static cc_bool Json_IsNumber(char c) {
 	return c == '-' || c == '.' || (c >= '0' && c <= '9');
 }
 
-static bool Json_ConsumeConstant(struct JsonContext* ctx, const String* value) {
+static cc_bool Json_ConsumeConstant(struct JsonContext* ctx, const String* value) {
 	int i;
 	if (value->length > ctx->left) return false;
 
@@ -514,7 +514,7 @@ static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 #endif
 }
 
-void FetchUpdateTask_Run(bool release, bool d3d9) {
+void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
 #if defined CC_BUILD_WIN
 #if _WIN64
 	const char* exe_d3d9 = "ClassiCube.64.exe";

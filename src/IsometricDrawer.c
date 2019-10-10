@@ -12,7 +12,7 @@ static VertexP3fT2fC4b* iso_vertices;
 static VertexP3fT2fC4b* iso_vertices_base;
 static GfxResourceID iso_vb;
 
-static bool iso_cacheInitalised;
+static cc_bool iso_cacheInitalised;
 static PackedCol iso_col = PACKEDCOL_WHITE;
 static PackedCol iso_colXSide, iso_colZSide, iso_colYBottom;
 
@@ -69,7 +69,7 @@ static TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
 	return loc;
 }
 
-static void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
+static void IsometricDrawer_SpriteZQuad(BlockID block, cc_bool firstPart) {
 	TextureLoc loc = Block_Tex(block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &iso_texIndex);
 
@@ -98,7 +98,7 @@ static void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
 	            v.Y = minY;               v.V = rec.V2; *iso_vertices++ = v;
 }
 
-static void IsometricDrawer_SpriteXQuad(BlockID block, bool firstPart) {
+static void IsometricDrawer_SpriteXQuad(BlockID block, cc_bool firstPart) {
 	TextureLoc loc = Block_Tex(block, FACE_XMAX);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &iso_texIndex);
 	
@@ -138,7 +138,7 @@ void IsometricDrawer_BeginBatch(VertexP3fT2fC4b* vertices, GfxResourceID vb) {
 }
 
 void IsometricDrawer_DrawBatch(BlockID block, float size, float x, float y) {
-	bool bright = Blocks.FullBright[block];
+	cc_bool bright = Blocks.FullBright[block];
 	Vec3 min, max;
 	if (Blocks.Draw[block] == DRAW_GAS) return;
 

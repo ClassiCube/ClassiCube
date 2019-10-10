@@ -29,10 +29,10 @@ struct DateTime {
 
 CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char* const* names, int namesCount);
 /* Returns whether value starts with http:// or https:// */
-bool Utils_IsUrlPrefix(const String* value);
+cc_bool Utils_IsUrlPrefix(const String* value);
 
 /* Creates the directory if it doesn't exist. (logs failure using Logger_Warn2) */
-bool Utils_EnsureDirectory(const char* dirName);
+cc_bool Utils_EnsureDirectory(const char* dirName);
 /* Gets the filename portion of a path. (e.g. "dir/file.txt" -> "file.txt") */
 void Utils_UNSAFE_GetFilename(STRING_REF String* path);
 int Utils_AccumulateWheelDelta(float* accumulator, float delta);
@@ -44,7 +44,7 @@ cc_uint32 Utils_CRC32(const cc_uint8* data, cc_uint32 length);
 /* NOTE: This cannot be just indexed by byte value - see Utils_CRC32 implementation. */
 extern const cc_uint32 Utils_Crc32Table[256];
 CC_NOINLINE void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapacity, int expandElems);
-CC_NOINLINE bool Utils_ParseIP(const String* ip, cc_uint8* data);
+CC_NOINLINE cc_bool Utils_ParseIP(const String* ip, cc_uint8* data);
 
 /* Converts blocks of 3 bytes into 4 ASCII characters. (pads if needed) */
 /* Returns the number of ASCII characters written. */
@@ -60,7 +60,7 @@ struct EntryList {
 	char separator;
 	StringsBuffer entries;
 };
-typedef bool (*EntryList_Filter)(const String* entry);
+typedef cc_bool (*EntryList_Filter)(const String* entry);
 
 /* Loads the entries from disc. */
 CC_NOINLINE void EntryList_Load(struct EntryList* list, EntryList_Filter filter);

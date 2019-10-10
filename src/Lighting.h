@@ -24,7 +24,7 @@ void Lighting_Refresh(void);
 
 /* Returns whether the block at the given coordinates is fully in sunlight. */
 /* NOTE: Does ***NOT*** check that the coordinates are inside the map. */
-bool Lighting_IsLit(int x, int y, int z);
+cc_bool Lighting_IsLit(int x, int y, int z);
 /* Returns the light colour of the block at the given coordinates. */
 /* NOTE: Does ***NOT*** check that the coordinates are inside the map. */
 PackedCol Lighting_Col(int x, int y, int z);

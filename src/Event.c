@@ -99,7 +99,7 @@ void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType
 	}
 }
 
-void Event_RaiseInput(struct Event_Input* handlers, int key, bool repeating) {
+void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], key, repeating);

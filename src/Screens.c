@@ -30,10 +30,10 @@ struct HUDScreen {
 	/* player list state */
 	struct PlayerListWidget playerList;
 	struct FontDesc playerFont;
-	bool showingList;
+	cc_bool showingList;
 	/* chat state */
 	float chatAcc;
-	bool suppressNextPress;
+	cc_bool suppressNextPress;
 	int chatIndex;
 	int lastDownloadStatus;
 	struct FontDesc chatFont, announcementFont;
@@ -48,20 +48,20 @@ struct HUDScreen {
 	struct Texture chatTextures[TEXTGROUPWIDGET_MAX_LINES];
 };
 
-bool Screen_FKey(void* s, int key)             { return false; }
-bool Screen_FKeyPress(void* s, char keyChar)   { return false; }
-bool Screen_FMouseScroll(void* s, float delta) { return false; }
-bool Screen_FPointer(void* s, int id, int x, int y)     { return false; }
-bool Screen_FPointerMove(void* s, int id, int x, int y) { return false; }
+cc_bool Screen_FKey(void* s, int key)             { return false; }
+cc_bool Screen_FKeyPress(void* s, char keyChar)   { return false; }
+cc_bool Screen_FMouseScroll(void* s, float delta) { return false; }
+cc_bool Screen_FPointer(void* s, int id, int x, int y)     { return false; }
+cc_bool Screen_FPointerMove(void* s, int id, int x, int y) { return false; }
 
-bool Screen_TKeyPress(void* s, char keyChar)   { return true; }
-bool Screen_TKey(void* s, int key)             { return true; }
-bool Screen_TMouseScroll(void* s, float delta) { return true; }
-bool Screen_TPointer(void* s, int id, int x, int y)     { return true; }
-bool Screen_TPointerMove(void* s, int id, int x, int y) { return true; }
+cc_bool Screen_TKeyPress(void* s, char keyChar)   { return true; }
+cc_bool Screen_TKey(void* s, int key)             { return true; }
+cc_bool Screen_TMouseScroll(void* s, float delta) { return true; }
+cc_bool Screen_TPointer(void* s, int id, int x, int y)     { return true; }
+cc_bool Screen_TPointerMove(void* s, int id, int x, int y) { return true; }
 static void Screen_NullFunc(void* screen) { }
 
-CC_NOINLINE static bool IsOnlyHudActive(void) {
+CC_NOINLINE static cc_bool IsOnlyHudActive(void) {
 	struct Screen* s;
 	int i;
 
@@ -80,7 +80,7 @@ static struct InventoryScreen {
 	Screen_Layout
 	struct FontDesc font;
 	struct TableWidget table;
-	bool releasedInv, deferredSelect;
+	cc_bool releasedInv, deferredSelect;
 } InventoryScreen_Instance;
 
 static void InventoryScreen_OnBlockChanged(void* screen) {
@@ -146,7 +146,7 @@ static void InventoryScreen_Free(void* screen) {
 	Event_UnregisterVoid(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 }
 
-static bool InventoryScreen_KeyDown(void* screen, Key key) {
+static cc_bool InventoryScreen_KeyDown(void* screen, Key key) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	struct TableWidget* table = &s->table;
 
@@ -163,7 +163,7 @@ static bool InventoryScreen_KeyDown(void* screen, Key key) {
 	return true;
 }
 
-static bool InventoryScreen_KeyUp(void* screen, Key key) {
+static cc_bool InventoryScreen_KeyUp(void* screen, Key key) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	struct HUDScreen* hud;
 
@@ -175,11 +175,11 @@ static bool InventoryScreen_KeyUp(void* screen, Key key) {
 	return Elem_HandlesKeyUp(&hud->hotbar, key);
 }
 
-static bool InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
+static cc_bool InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	struct TableWidget* table = &s->table;
 	struct HUDScreen* hud     = (struct HUDScreen*)Gui_HUD;
-	bool handled, hotbar;
+	cc_bool handled, hotbar;
 
 	if (table->scroll.draggingId == id) return true;
 	if (Elem_HandlesPointerDown(&hud->hotbar, id, x, y)) return true;
@@ -192,20 +192,20 @@ static bool InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 	return true;
 }
 
-static bool InventoryScreen_PointerUp(void* screen, int id, int x, int y) {
+static cc_bool InventoryScreen_PointerUp(void* screen, int id, int x, int y) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	return Elem_HandlesPointerUp(&s->table, id, x, y);
 }
 
-static bool InventoryScreen_PointerMove(void* screen, int id, int x, int y) {
+static cc_bool InventoryScreen_PointerMove(void* screen, int id, int x, int y) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	return Elem_HandlesPointerMove(&s->table, id, x, y);
 }
 
-static bool InventoryScreen_MouseScroll(void* screen, float delta) {
+static cc_bool InventoryScreen_MouseScroll(void* screen, float delta) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 
-	bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
+	cc_bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
 	if (hotbar) return false;
 	return Elem_HandlesMouseScroll(&s->table, delta);
 }
@@ -236,7 +236,7 @@ static struct StatusScreen {
 	struct TextAtlas posAtlas;
 	double accumulator;
 	int frames, fps;
-	bool speed, halfSpeed, noclip, fly, canSpeed;
+	cc_bool speed, halfSpeed, noclip, fly, canSpeed;
 	int lastFov;
 } StatusScreen_Instance;
 
@@ -293,7 +293,7 @@ static void StatusScreen_DrawPosition(struct StatusScreen* s) {
 	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
 }
 
-static bool StatusScreen_HacksChanged(struct StatusScreen* s) {
+static cc_bool StatusScreen_HacksChanged(struct StatusScreen* s) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	return hacks->Speeding != s->speed || hacks->HalfSpeeding != s->halfSpeed || hacks->Flying != s->fly
 		|| hacks->Noclip != s->noclip  || Game_Fov != s->lastFov || hacks->CanSpeed != s->canSpeed;
@@ -302,7 +302,7 @@ static bool StatusScreen_HacksChanged(struct StatusScreen* s) {
 static void StatusScreen_UpdateHackState(struct StatusScreen* s) {
 	String status; char statusBuffer[STRING_SIZE * 2];
 	struct HacksComp* hacks;
-	bool speeding;
+	cc_bool speeding;
 
 	hacks = &LocalPlayer_Instance.Hacks;
 	s->speed = hacks->Speeding; s->halfSpeed = hacks->HalfSpeeding; s->fly = hacks->Flying;
@@ -466,7 +466,7 @@ static void LoadingScreen_ContextRecreated(void* screen) {
 	LoadingScreen_SetMessage(s);
 }
 
-static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int count, int atlasIndex, bool* bound) {
+static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int count, int atlasIndex, cc_bool* bound) {
 	if (!(*bound)) {
 		*bound = true;
 		Gfx_BindTexture(Atlas1D.TexIds[atlasIndex]);
@@ -485,11 +485,11 @@ static void LoadingScreen_DrawBackground(void) {
 
 	struct Texture tex;
 	TextureLoc loc;
-	int count  = 0, atlasIndex, y;
-	bool bound = false;
+	int count = 0, atlasIndex, y;
+	cc_bool bound = false;
 
-	loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
-	tex.ID    = GFX_NULL;
+	loc    = Block_Tex(BLOCK_DIRT, FACE_YMAX);
+	tex.ID = GFX_NULL;
 	Tex_SetRect(tex, 0,0, Window_Width,LOADING_TILE_SIZE);
 	tex.uv    = Atlas1D_TexRec(loc, 1, &atlasIndex);
 	tex.uv.U2 = (float)Window_Width / LOADING_TILE_SIZE;
@@ -688,7 +688,7 @@ static void HUDScreen_FreeChatFonts(struct HUDScreen* s) {
 	Font_Free(&s->announcementFont);
 }
 
-static bool HUDScreen_ChatUpdateFont(struct HUDScreen* s) {
+static cc_bool HUDScreen_ChatUpdateFont(struct HUDScreen* s) {
 	int size = (int)(8  * Game_GetChatScale());
 	Math_Clamp(size, 8, 60);
 
@@ -777,7 +777,7 @@ static void HUDScreen_ScrollChatBy(struct HUDScreen* s, int delta) {
 	}
 }
 
-static void HUDScreen_EnterChatInput(struct HUDScreen* s, bool close) {
+static void HUDScreen_EnterChatInput(struct HUDScreen* s, cc_bool close) {
 	struct InputWidget* input;
 	int defaultIndex;
 
@@ -803,7 +803,7 @@ static void HUDScreen_UpdateTexpackStatus(struct HUDScreen* s) {
 	static const String texPack = String_FromConst("texturePack");
 	struct HttpRequest request;
 	int progress;
-	bool hasRequest;
+	cc_bool hasRequest;
 	String identifier;
 	
 	hasRequest = Http_GetCurrent(&request, &progress);
@@ -972,9 +972,9 @@ static void HUDScreen_ContextLost(void* screen) {
 }
 
 static void HUDScreen_RemakePlayerList(struct HUDScreen* s) {
-	bool classic   = Gui_ClassicTabList || !Server.SupportsExtPlayerList;
+	cc_bool classic = Gui_ClassicTabList || !Server.SupportsExtPlayerList;
 	PlayerListWidget_Create(&s->playerList, &s->playerFont, classic);
-	s->showingList = true;
+	s->showingList  = true;
 	Widget_Reposition(&s->playerList);
 }
 
@@ -999,7 +999,7 @@ static void HUDScreen_OnResize(void* screen) {
 	if (s->showingList) Widget_Reposition(&s->playerList);
 }
 
-static bool HUDScreen_KeyPress(void* screen, char keyChar) {
+static cc_bool HUDScreen_KeyPress(void* screen, char keyChar) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	if (!s->grabsInput) return false;
 
@@ -1013,11 +1013,11 @@ static bool HUDScreen_KeyPress(void* screen, char keyChar) {
 	return true;
 }
 
-static bool HUDScreen_KeyDown(void* screen, Key key) {
+static cc_bool HUDScreen_KeyDown(void* screen, Key key) {
 	static const String slash = String_FromConst("/");
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	Key playerListKey = KeyBinds[KEYBIND_PLAYER_LIST];
-	bool handlesList  = playerListKey != KEY_TAB || !Gui_TabAutocomplete || !s->grabsInput;
+	Key playerListKey   = KeyBinds[KEYBIND_PLAYER_LIST];
+	cc_bool handlesList = playerListKey != KEY_TAB || !Gui_TabAutocomplete || !s->grabsInput;
 
 	if (key == playerListKey && handlesList) {
 		if (!s->showingList && !Server.IsSinglePlayer) {
@@ -1060,7 +1060,7 @@ static bool HUDScreen_KeyDown(void* screen, Key key) {
 	return true;
 }
 
-static bool HUDScreen_KeyUp(void* screen, Key key) {
+static cc_bool HUDScreen_KeyUp(void* screen, Key key) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	if (key == KeyBinds[KEYBIND_PLAYER_LIST] && s->showingList) {
 		s->showingList = false;
@@ -1082,7 +1082,7 @@ static bool HUDScreen_KeyUp(void* screen, Key key) {
 	return true;
 }
 
-static bool HUDScreen_MouseScroll(void* screen, float delta) {
+static cc_bool HUDScreen_MouseScroll(void* screen, float delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	int steps;
 	if (!s->grabsInput) return false;
@@ -1092,7 +1092,7 @@ static bool HUDScreen_MouseScroll(void* screen, float delta) {
 	return true;
 }
 
-static bool HUDScreen_PointerDown(void* screen, int id, int x, int y) {
+static cc_bool HUDScreen_PointerDown(void* screen, int id, int x, int y) {
 	String text; char textBuffer[STRING_SIZE * 4];
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	int height, chatY;
@@ -1154,7 +1154,7 @@ static void HUDScreen_Init(void* screen) {
 
 static void HUDScreen_Render(void* screen, double delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	bool showMinimal;
+	cc_bool showMinimal;
 
 	if (Game_HideGui && s->grabsInput) {
 		Gfx_SetTexturing(true);
@@ -1251,7 +1251,7 @@ struct Widget* HUDScreen_GetHotbar(void) {
 static struct DisconnectScreen {
 	Screen_Layout
 	TimeMS initTime;
-	bool canReconnect, lastActive;
+	cc_bool canReconnect, lastActive;
 	int lastSecsLeft;
 	struct ButtonWidget reconnect;
 
@@ -1360,9 +1360,9 @@ static void DisconnectScreen_OnResize(void* screen) {
 	Widget_Reposition(&s->reconnect);
 }
 
-static bool DisconnectScreen_KeyDown(void* s, Key key) { return key < KEY_F1 || key > KEY_F35; }
+static cc_bool DisconnectScreen_KeyDown(void* s, Key key) { return key < KEY_F1 || key > KEY_F35; }
 
-static bool DisconnectScreen_PointerDown(void* screen, int id, int x, int y) {
+static cc_bool DisconnectScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	struct ButtonWidget* w     = &s->reconnect;
 
@@ -1374,7 +1374,7 @@ static bool DisconnectScreen_PointerDown(void* screen, int id, int x, int y) {
 	return true;
 }
 
-static bool DisconnectScreen_PointerMove(void* screen, int idx, int x, int y) {
+static cc_bool DisconnectScreen_PointerMove(void* screen, int idx, int x, int y) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	struct ButtonWidget* w     = &s->reconnect;
 
@@ -1523,7 +1523,7 @@ static void TouchScreen_OnResize(void* screen) {
 	}
 }
 
-static bool TouchScreen_PointerDown(void* screen, int id, int x, int y) {
+static cc_bool TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	int i;
 	//Chat_Add1("POINTER DOWN: %i", &id);
@@ -1538,7 +1538,7 @@ static bool TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	return false;
 }
 
-static bool TouchScreen_PointerUp(void* screen, int id, int x, int y) {
+static cc_bool TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	int i;
 	//Chat_Add1("POINTER UP: %i", &id);

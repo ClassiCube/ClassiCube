@@ -73,13 +73,13 @@ void Options_Free(void);
 
 /* Sets value to value of option directly in Options.Buffer if found, String_Empty if not. */
 /* Returns whether the option was actually found. */
-STRING_REF bool Options_UNSAFE_Get(const char* keyRaw, String* value);
+STRING_REF cc_bool Options_UNSAFE_Get(const char* keyRaw, String* value);
 /* Returns value of given option, or defalt value if not found. */
 CC_API void Options_Get(const char*       key, String* value, const char* defValue);
 /* Returns value of given option as an integer, or defalt value if could not be converted. */
 CC_API int  Options_GetInt(const char*    key, int min, int max, int defValue);
 /* Returns value of given option as a bool, or defalt value if could not be converted. */
-CC_API bool Options_GetBool(const char*   key, bool defValue);
+CC_API cc_bool Options_GetBool(const char*   key, cc_bool defValue);
 /* Returns value of given option as a float, or defalt value if could not be converted. */
 CC_API float Options_GetFloat(const char* key, float min, float max, float defValue);
 /* Returns value of given option as an integer, or defalt value if could not be converted. */
@@ -87,7 +87,7 @@ CC_API float Options_GetFloat(const char* key, float min, float max, float defVa
 CC_API int   Options_GetEnum(const char*  key, int defValue, const char* const* names, int namesCount);
 
 /* Sets value of given option to either "true" or "false". */
-CC_API void Options_SetBool(const char* keyRaw,  bool value);
+CC_API void Options_SetBool(const char* keyRaw, cc_bool value);
 /* Sets value of given option to given integer converted to a string. */
 CC_API void Options_SetInt(const char*  keyRaw,  int value);
 /* Sets value of given option to given string. */

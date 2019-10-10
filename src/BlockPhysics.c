@@ -111,7 +111,7 @@ static void Physics_OnNewMapLoaded(void* obj) {
 	Tree_Rnd = &physics_rnd;
 }
 
-void Physics_SetEnabled(bool enabled) {
+void Physics_SetEnabled(cc_bool enabled) {
 	Physics.Enabled = enabled;
 	Physics_OnNewMapLoaded(NULL);
 }
@@ -131,7 +131,7 @@ static void Physics_ActivateNeighbours(int x, int y, int z, int index) {
 	if (y < World.MaxY) Physics_Activate(index + World.OneY);
 }
 
-static bool Physics_IsEdgeWater(int x, int y, int z) {
+static cc_bool Physics_IsEdgeWater(int x, int y, int z) {
 	return
 		(Env.EdgeBlock == BLOCK_WATER || Env.EdgeBlock == BLOCK_STILL_WATER)
 		&& (y >= Env_SidesHeight && y < Env.EdgeHeight)
@@ -222,7 +222,7 @@ static void Physics_DoFalling(int index, BlockID block) {
 	Physics_ActivateNeighbours(x, y, z, start);
 }
 
-static bool Physics_CheckItem(struct TickQueue* queue, int* posIndex) {
+static cc_bool Physics_CheckItem(struct TickQueue* queue, int* posIndex) {
 	cc_uint32 item = TickQueue_Dequeue(queue);
 	*posIndex     = (int)(item & PHYSICS_POS_MASK);
 

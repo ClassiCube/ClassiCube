@@ -81,7 +81,7 @@ static void Volume_Mix8(cc_uint8* samples, int count, int volume) {
 /*########################################################################################################################*
 *------------------------------------------------Native implementation----------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished);
+static ReturnCode Audio_AllCompleted(AudioHandle handle, cc_bool* finished);
 #if defined CC_BUILD_WINMM
 struct AudioContext {
 	HWAVEOUT Handle;
@@ -172,7 +172,7 @@ ReturnCode Audio_Stop(AudioHandle handle) {
 	return waveOutReset(ctx->Handle);
 }
 
-ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) {
+ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
 
@@ -186,12 +186,12 @@ ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) {
 	*completed = true; return res;
 }
 
-ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) { return Audio_AllCompleted(handle, finished); }
+ReturnCode Audio_IsFinished(AudioHandle handle, cc_bool* finished) { return Audio_AllCompleted(handle, finished); }
 #elif defined CC_BUILD_OPENAL
 struct AudioContext {
 	ALuint Source;
 	ALuint Buffers[AUDIO_MAX_BUFFERS];
-	bool Completed[AUDIO_MAX_BUFFERS];
+	cc_bool Completed[AUDIO_MAX_BUFFERS];
 	struct AudioFormat Format;
 	int Count;
 	ALenum DataFormat;
@@ -360,7 +360,7 @@ ReturnCode Audio_Stop(AudioHandle handle) {
 	return alGetError();
 }
 
-ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) {
+ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ALint i, processed = 0;
 	ALuint buffer;
@@ -380,7 +380,7 @@ ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed) {
 	*completed = ctx->Completed[idx]; return 0;
 }
 
-ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) {
+ReturnCode Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ALint state = 0;
 	ReturnCode res;
@@ -394,7 +394,7 @@ ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished) {
 }
 #endif
 
-static ReturnCode Audio_AllCompleted(AudioHandle handle, bool* finished) {
+static ReturnCode Audio_AllCompleted(AudioHandle handle, cc_bool* finished) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ReturnCode res;
 	int i;
@@ -415,7 +415,7 @@ struct AudioFormat* Audio_GetFormat(AudioHandle handle) {
 }
 
 ReturnCode Audio_StopAndClose(AudioHandle handle) {
-	bool finished;
+	cc_bool finished;
 	Audio_Stop(handle);
 	Audio_IsFinished(handle, &finished); /* unqueue buffers */
 	return Audio_Close(handle);
@@ -628,7 +628,7 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	struct SoundOutput* output;
 	struct AudioFormat* l;
 
-	bool finished;
+	cc_bool finished;
 	int i, volume;
 	ReturnCode res;
 
@@ -730,7 +730,7 @@ void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
 static AudioHandle music_out;
 static void* music_thread;
 static void* music_waitable;
-static volatile bool music_pendingStop, music_joining;
+static volatile cc_bool music_pendingStop, music_joining;
 
 static ReturnCode Music_Buffer(int i, cc_int16* data, int maxSamples, struct VorbisState* ctx) {
 	int samples = 0;
@@ -758,7 +758,7 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 
 	int chunkSize, samplesPerSecond;
 	cc_int16* data = NULL;
-	bool completed;
+	cc_bool completed;
 	int i, next;
 	ReturnCode res;
 

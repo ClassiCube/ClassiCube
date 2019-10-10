@@ -19,17 +19,17 @@ CC_API void AABB_Make(struct AABB* result, const Vec3* pos, const Vec3* size);
 /* Adds amount to Min and Max corners of the given AABB. */
 void AABB_Offset(struct AABB* result, const struct AABB* bb, const Vec3* amount);
 /* Whether the given AABB touches another AABB on any axis. */
-bool AABB_Intersects(const struct AABB* bb, const struct AABB* other);
+cc_bool AABB_Intersects(const struct AABB* bb, const struct AABB* other);
 /* Whether the given ABBB contains another AABB. */
-bool AABB_Contains(const struct AABB* parent, const struct AABB* child);
+cc_bool AABB_Contains(const struct AABB* parent, const struct AABB* child);
 /* Whether the given point lies insides bounds of the given AABB. */
-bool AABB_ContainsPoint(const struct AABB* parent, const Vec3* P);
+cc_bool AABB_ContainsPoint(const struct AABB* parent, const Vec3* P);
 
 /* Calculates the intersection point of a ray and a rotated bounding box. */
-bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entity* target, float* tMin, float* tMax);
+cc_bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entity* target, float* tMin, float* tMax);
 /* Calculates the intersection point of a ray and a bounding box.
 Source: http://www.cs.utah.edu/~awilliam/box/box.pdf */
-bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 dir, Vec3 min, Vec3 max, float* t0, float* t1);
+cc_bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 dir, Vec3 min, Vec3 max, float* t0, float* t1);
 
 struct SearcherState { int X, Y, Z; float tSquared; };
 extern struct SearcherState* Searcher_States;

@@ -52,7 +52,7 @@ void Model_Init(struct Model* model) {
 	model->DrawArm          = Model_NullFunc;
 }
 
-bool Model_ShouldRender(struct Entity* entity) {
+cc_bool Model_ShouldRender(struct Entity* entity) {
 	Vec3 pos = entity->Position;
 	struct AABB bb;
 	float bbWidth, bbHeight, bbLength;
@@ -110,7 +110,7 @@ void Model_Render(struct Model* model, struct Entity* entity) {
 
 void Model_SetupState(struct Model* model, struct Entity* entity) {
 	PackedCol col;
-	bool _64x64;
+	cc_bool _64x64;
 	float yawDelta;
 
 	model->index = 0;
@@ -151,7 +151,7 @@ void Model_ApplyTexture(struct Entity* entity) {
 	struct Model* model = Models.Active;
 	struct ModelTex* data;
 	GfxResourceID tex;
-	bool _64x64;
+	cc_bool _64x64;
 
 	tex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
 	if (tex) {
@@ -193,7 +193,7 @@ void Model_DrawPart(struct ModelPart* part) {
 #define Model_RotateY t = cosY * v.X - sinY * v.Z; v.Z =  sinY * v.X + cosY * v.Z; v.X = t;
 #define Model_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
 
-void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, bool head) {
+void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, cc_bool head) {
 	struct Model* model     = Models.Active;
 	struct ModelVertex* src = &model->vertices[part->Offset];
 	VertexP3fT2fC4b* dst    = &Models.Vertices[model->index];
@@ -329,7 +329,7 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, const struct BoxDesc* desc)
 }
 
 
-void BoxDesc_XQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float z1, float z2, float y1, float y2, float x, bool swapU) {
+void BoxDesc_XQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float z1, float z2, float y1, float y2, float x, cc_bool swapU) {
 	int u1 = texX, u2 = (texX + texWidth) | UV_MAX, tmp;
 	if (swapU) { tmp = u1; u1 = u2; u2 = tmp; }
 
@@ -339,7 +339,7 @@ void BoxDesc_XQuad(struct Model* m, int texX, int texY, int texWidth, int texHei
 	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, u2, (texY + texHeight) | UV_MAX); m->index++;
 }
 
-void BoxDesc_YQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float z1, float z2, float y, bool swapU) {
+void BoxDesc_YQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float z1, float z2, float y, cc_bool swapU) {
 	int u1 = texX, u2 = (texX + texWidth) | UV_MAX, tmp;
 	if (swapU) { tmp = u1; u1 = u2; u2 = tmp; }
 
@@ -349,7 +349,7 @@ void BoxDesc_YQuad(struct Model* m, int texX, int texY, int texWidth, int texHei
 	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, u2, (texY + texHeight) | UV_MAX); m->index++;
 }
 
-void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float y1, float y2, float z, bool swapU) {
+void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float y1, float y2, float z, cc_bool swapU) {
 	int u1 = texX, u2 = (texX + texWidth) | UV_MAX, tmp;
 	if (swapU) { tmp = u1; u1 = u2; u2 = tmp; }
 
@@ -1515,7 +1515,7 @@ static TextureLoc BlockModel_GetTex(Face face, VertexP3fT2fC4b** ptr) {
 	return texLoc;
 }
 
-static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
+static void BlockModel_SpriteZQuad(cc_bool firstPart, cc_bool mirror) {
 	VertexP3fT2fC4b* ptr, v;
 	PackedCol col;
 	float xz1, xz2;
@@ -1545,7 +1545,7 @@ static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 	bModel_index += 4;
 }
 
-static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
+static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
 	VertexP3fT2fC4b* ptr, v;
 	PackedCol col;
 	float x1, x2, z1, z2;
@@ -1575,7 +1575,7 @@ static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 	bModel_index += 4;
 }
 
-static void BlockModel_DrawParts(bool sprite) {
+static void BlockModel_DrawParts(cc_bool sprite) {
 	Vec3 min, max;
 	TextureLoc loc;
 	VertexP3fT2fC4b* ptr = NULL;
@@ -1612,7 +1612,7 @@ static void BlockModel_DrawParts(bool sprite) {
 
 static void BlockModel_Draw(struct Entity* p) {
 	PackedCol white = PACKEDCOL_WHITE;
-	bool sprite;
+	cc_bool sprite;
 	int i;
 
 	bModel_block = p->ModelBlock;

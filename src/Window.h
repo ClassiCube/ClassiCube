@@ -57,13 +57,13 @@ struct GraphicsMode { int R, G, B, A, IsIndexed; };
 /* This area does NOT include borders and titlebar surrounding the window. */
 extern int Window_Width, Window_Height;
 /* Whether the window is actually valid (i.e. not destroyed). */
-extern bool Window_Exists;
+extern cc_bool Window_Exists;
 /* Whether the user is interacting with the window. */
-extern bool Window_Focused;
+extern cc_bool Window_Focused;
 /* Readonly platform-specific handle to the window. */
 extern const void* Window_Handle;
 /* Whether the platform only supports on-screen keyboard. */
-extern bool Window_SoftKeyboard;
+extern cc_bool Window_SoftKeyboard;
 
 /* Initalises state for window. Also sets Display_ members. */
 void Window_Init(void);
@@ -110,7 +110,7 @@ void Cursor_SetPosition(int x, int y);
 /* Sets whether the cursor is visible when over this window. */
 /* NOTE: You MUST BE VERY CAREFUL with this! OS typically uses a counter for visibility,
 so setting invisible multiple times means you must then set visible multiple times. */
-void Cursor_SetVisible(bool visible);
+void Cursor_SetVisible(cc_bool visible);
 
 /* Shows a dialog box window. */
 CC_API void Window_ShowDialog(const char* title, const char* msg);
@@ -147,7 +147,7 @@ void GLContext_Init(struct GraphicsMode* mode);
 /* Updates the OpenGL context after the window is resized. */
 void GLContext_Update(void);
 /* Attempts to restore a lost OpenGL context. */
-bool GLContext_TryRestore(void);
+cc_bool GLContext_TryRestore(void);
 /* Destroys the OpenGL context. */
 /* NOTE: This also unattaches the OpenGL context from the window. */
 void GLContext_Free(void);
@@ -159,9 +159,9 @@ void GLContext_Free(void);
 /* You MUST check the OpenGL version and/or GL_EXTENSIONS string for actual support! */
 void* GLContext_GetAddress(const char* function);
 /* Swaps the front and back buffer, displaying the back buffer on screen. */
-bool GLContext_SwapBuffers(void);
+cc_bool GLContext_SwapBuffers(void);
 /* Sets whether synchronisation with the monitor is enabled. */
 /* NOTE: The implementation may choose to still ignore this. */
-void GLContext_SetFpsLimit(bool vsync, float minFrameMs);
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs);
 #endif
 #endif

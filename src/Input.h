@@ -62,20 +62,20 @@ extern const char* const Input_Names[INPUT_COUNT];
 #endif
 
 /* Pressed state of each keyboard button. Use Input_SetPressed to change. */
-extern bool Input_Pressed[INPUT_COUNT];
+extern cc_bool Input_Pressed[INPUT_COUNT];
 /* Sets the pressed state of a keyboard button. */
 /* Raises InputEvents.Up   if not pressed, but was pressed before. */
 /* Raises InputEvents.Down if pressed (repeating is whether it was pressed before) */
-void Input_SetPressed(Key key, bool pressed);
+void Input_SetPressed(Key key, cc_bool pressed);
 /* Resets all keyboard keys to released state. */
 /* Raises InputEvents.Up for each previously pressed key. */
 void Key_Clear(void);
 typedef int MouseButton;
 
 /* Whether raw mouse/touch input is being listened for. */
-extern bool Input_RawMode;
+extern cc_bool Input_RawMode;
 /* Whether touch input is being used. */
-extern bool Input_TouchMode;
+extern cc_bool Input_TouchMode;
 
 #ifdef CC_BUILD_TOUCH
 #define INPUT_MAX_POINTERS 32
@@ -95,7 +95,7 @@ extern struct Pointer { int x, y; } Pointers[INPUT_MAX_POINTERS];
 extern int Mouse_X, Mouse_Y;
 
 /* Raises PointerEvents.Up or PointerEvents.Down. */
-void Pointer_SetPressed(int idx, bool pressed);
+void Pointer_SetPressed(int idx, cc_bool pressed);
 /* Raises InputEvents.Wheel with the given wheel delta. */
 void Mouse_ScrollWheel(float delta);
 /* Sets X and Y position of the given pointer, always raising PointerEvents.Moved. */
@@ -123,16 +123,16 @@ extern cc_uint8 KeyBinds[KEYBIND_COUNT];
 extern const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT];
 
 /* Gets whether the key bound to the given key binding is pressed. */
-bool KeyBind_IsPressed(KeyBind binding);
+cc_bool KeyBind_IsPressed(KeyBind binding);
 /* Set the key that the given key binding is bound to. (also updates options list) */
 void KeyBind_Set(KeyBind binding, Key key);
 
 extern const cc_uint8 Hotkeys_LWJGL[256];
 struct HotkeyData {
 	int TextIndex;     /* contents to copy directly into the input bar */
-	cc_uint8 Trigger;   /* Member of Key enumeration */
-	cc_uint8 Flags;     /* HotkeyModifiers bitflags */
-	bool StaysOpen;    /* whether the user is able to enter further input */
+	cc_uint8 Trigger;  /* Member of Key enumeration */
+	cc_uint8 Flags;    /* HotkeyModifiers bitflags */
+	cc_bool StaysOpen; /* whether the user is able to enter further input */
 };
 
 #define HOTKEYS_MAX_COUNT 256
@@ -143,18 +143,18 @@ enum HotkeyModifiers {
 };
 
 /* Adds or updates a new hotkey. */
-void Hotkeys_Add(Key trigger, cc_uint8 modifiers, const String* text, bool more);
+void Hotkeys_Add(Key trigger, cc_uint8 modifiers, const String* text, cc_bool more);
 /* Removes the given hotkey. */
-bool Hotkeys_Remove(Key trigger, cc_uint8 modifiers);
+cc_bool Hotkeys_Remove(Key trigger, cc_uint8 modifiers);
 /* Returns the first hotkey which is bound to the given key and has its modifiers pressed. */
 /* NOTE: The hotkeys list is sorted, so hotkeys with most modifiers are checked first. */
 int Hotkeys_FindPartial(Key key);
 /* Called when user has removed a hotkey. (removes it from options) */
 void Hotkeys_UserRemovedHotkey(Key trigger, cc_uint8 modifiers);
 /* Called when user has added a hotkey. (Adds it to options) */
-void Hotkeys_UserAddedHotkey(Key trigger, cc_uint8 modifiers, bool moreInput, const String* text);
+void Hotkeys_UserAddedHotkey(Key trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text);
 
-bool InputHandler_SetFOV(int fov);
+cc_bool InputHandler_SetFOV(int fov);
 void InputHandler_PickBlocks(void);
 void InputHandler_Init(void);
 void InputHandler_OnScreensChanged(void);

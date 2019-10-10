@@ -96,7 +96,7 @@ Vec3 Vec3_RotateY3(float x, float y, float z, float angle);
 Vec3 Vec3_RotateZ(Vec3 v, float angle);
 
 /* Whether all of the components of the two vectors are equal. */
-static CC_INLINE bool Vec3_Equals(const Vec3* a, const Vec3* b) {
+static CC_INLINE cc_bool Vec3_Equals(const Vec3* a, const Vec3* b) {
 	return a->X == b->X && a->Y == b->Y && a->Z == b->Z;
 }
 
@@ -133,6 +133,6 @@ void Matrix_PerspectiveFieldOfView(struct Matrix* result, float fovy, float aspe
 void Matrix_PerspectiveOffCenter(struct Matrix* result, float left, float right, float bottom, float top, float zNear, float zFar);
 void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot);
 
-bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius);
+cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius);
 void FrustumCulling_CalcFrustumEquations(struct Matrix* projection, struct Matrix* modelView);
 #endif

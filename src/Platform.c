@@ -249,7 +249,7 @@ void DateTime_CurrentLocal(struct DateTime* time) {
 	Platform_FromSysTime(time, &localTime);
 }
 
-static bool sw_highRes;
+static cc_bool sw_highRes;
 cc_uint64 Stopwatch_Measure(void) {
 	LARGE_INTEGER t;
 	FILETIME ft;
@@ -346,7 +346,7 @@ cc_uint64 Stopwatch_Measure(void) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-bool Directory_Exists(const String* path) {
+cc_bool Directory_Exists(const String* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
@@ -364,7 +364,7 @@ ReturnCode Directory_Create(const String* path) {
 	return success ? 0 : GetLastError();
 }
 
-bool File_Exists(const String* path) {
+cc_bool File_Exists(const String* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
@@ -483,7 +483,7 @@ ReturnCode File_Length(FileHandle file, cc_uint32* len) {
 	return *len != INVALID_FILE_SIZE ? 0 : GetLastError();
 }
 #elif defined CC_BUILD_POSIX
-bool Directory_Exists(const String* path) {
+cc_bool Directory_Exists(const String* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	Platform_ConvertString(str, path);
@@ -498,7 +498,7 @@ ReturnCode Directory_Create(const String* path) {
 	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
-bool File_Exists(const String* path) {
+cc_bool File_Exists(const String* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	Platform_ConvertString(str, path);
@@ -636,7 +636,7 @@ DWORD WINAPI Thread_StartCallback(void* param) {
 	return 0;
 }
 
-void* Thread_Start(Thread_StartFunc* func, bool detach) {
+void* Thread_Start(Thread_StartFunc* func, cc_bool detach) {
 	DWORD threadID;
 	void* handle = CreateThread(NULL, 0, Thread_StartCallback, func, 0, &threadID);
 	if (!handle) {
@@ -696,7 +696,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 #elif defined CC_BUILD_WEB
 /* No real threading support with emscripten backend */
 void Thread_Sleep(cc_uint32 milliseconds) { }
-void* Thread_Start(Thread_StartFunc* func, bool detach) { (*func)(); return NULL; }
+void* Thread_Start(Thread_StartFunc* func, cc_bool detach) { (*func)(); return NULL; }
 void Thread_Detach(void* handle) { }
 void Thread_Join(void* handle) { }
 
@@ -718,7 +718,7 @@ void* Thread_StartCallback(void* lpParam) {
 	return NULL;
 }
 
-void* Thread_Start(Thread_StartFunc* func, bool detach) {
+void* Thread_Start(Thread_StartFunc* func, cc_bool detach) {
 	pthread_t* ptr = (pthread_t*)Mem_Alloc(1, sizeof(pthread_t), "thread");
 	int res = pthread_create(ptr, NULL, Thread_StartCallback, func);
 	if (res) Logger_Abort2(res, "Creating thread");
@@ -910,7 +910,7 @@ static ReturnCode Socket_ioctl(SocketHandle socket, cc_uint32 cmd, int* data) {
 ReturnCode Socket_Available(SocketHandle socket, cc_uint32* available) {
 	return Socket_ioctl(socket, FIONREAD, available);
 }
-ReturnCode Socket_SetBlocking(SocketHandle socket, bool blocking) {
+ReturnCode Socket_SetBlocking(SocketHandle socket, cc_bool blocking) {
 #if defined CC_BUILD_WEB
 	return ERR_NOT_SUPPORTED; /* sockets always async */
 #else
@@ -988,7 +988,7 @@ ReturnCode Socket_Close(SocketHandle socket) {
 
 /* Alas, a simple cross-platform select() is not good enough */
 #if defined CC_BUILD_WIN
-ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
+ReturnCode Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
@@ -1008,7 +1008,7 @@ ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
 }
 #elif defined CC_BUILD_OSX
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
-ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
+ReturnCode Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
@@ -1027,7 +1027,7 @@ ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
 }
 #else
 #include <poll.h>
-ReturnCode Socket_Poll(SocketHandle socket, int mode, bool* success) {
+ReturnCode Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
 
@@ -1252,7 +1252,7 @@ static ReturnCode Process_RawGetExePath(char* path, int* len) {
 #define UPDATE_TMP TEXT("CC_prev.exe")
 #define UPDATE_SRC TEXT(UPDATE_FILE)
 
-bool Updater_Clean(void) {
+cc_bool Updater_Clean(void) {
 	return DeleteFile(UPDATE_TMP) || GetLastError() == ERROR_FILE_NOT_FOUND;
 }
 
@@ -1296,11 +1296,11 @@ ReturnCode Updater_GetBuildTime(TimeMS* ms) {
 	return res;
 }
 #elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-bool Updater_Clean(void)                      { return true; }
+cc_bool Updater_Clean(void)                   { return true; }
 ReturnCode Updater_Start(void)                { return ERR_NOT_SUPPORTED; }
 ReturnCode Updater_GetBuildTime(TimeMS* time) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
-bool Updater_Clean(void) { return true; }
+cc_bool Updater_Clean(void) { return true; }
 ReturnCode Updater_Start(void) {
 	char path[NATIVE_STR_LEN + 1];
 	char* argv[2];
@@ -1353,13 +1353,13 @@ ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
 	return *symbol ? 0 : GetLastError();
 }
 
-bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
+cc_bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
 	return Platform_DescribeError(res, dst);
 }
 #elif defined CC_BUILD_WEB
 ReturnCode DynamicLib_Load(const String* path, void** lib)            { return ERR_NOT_SUPPORTED; }
 ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) { return ERR_NOT_SUPPORTED; }
-bool DynamicLib_DescribeError(ReturnCode res, String* dst)            { return false; }
+cc_bool DynamicLib_DescribeError(ReturnCode res, String* dst)         { return false; }
 #elif defined CC_BUILD_POSIX
 /* TODO: Should we use .bundle instead of .dylib? */
 #ifdef CC_BUILD_OSX
@@ -1380,7 +1380,7 @@ ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
 	return *symbol == NULL; /* dlerror would be proper, but eh */
 }
 
-bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
+cc_bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
 	char* err = dlerror();
 	if (err) String_AppendConst(dst, err);
 	return err && err[0];
@@ -1480,7 +1480,7 @@ ReturnCode Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decL
 	return 0;
 }
 
-bool Platform_DescribeError(ReturnCode res, String* dst) {
+cc_bool Platform_DescribeError(ReturnCode res, String* dst) {
 	TCHAR chars[NATIVE_STR_LEN];
 	res = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 					NULL, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, 600, NULL);
@@ -1523,7 +1523,7 @@ ReturnCode Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decL
 	return ERR_NOT_SUPPORTED;
 }
 
-bool Platform_DescribeError(ReturnCode res, String* dst) {
+cc_bool Platform_DescribeError(ReturnCode res, String* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
 

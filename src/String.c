@@ -99,7 +99,7 @@ void String_UNSAFE_SplitBy(STRING_REF String* str, char c, String* part) {
 	}
 }
 
-bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value) {
+cc_bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value) {
 	int idx = String_IndexOf(str, c);
 	if (idx == -1) {
 		*key   = *str;
@@ -117,7 +117,7 @@ bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, S
 }
 
 
-bool String_Equals(const String* a, const String* b) {
+cc_bool String_Equals(const String* a, const String* b) {
 	int i;
 	if (a->length != b->length) return false;
 
@@ -127,7 +127,7 @@ bool String_Equals(const String* a, const String* b) {
 	return true;
 }
 
-bool String_CaselessEquals(const String* a, const String* b) {
+cc_bool String_CaselessEquals(const String* a, const String* b) {
 	int i;
 	char aCur, bCur;
 	if (a->length != b->length) return false;
@@ -140,7 +140,7 @@ bool String_CaselessEquals(const String* a, const String* b) {
 	return true;
 }
 
-bool String_CaselessEqualsConst(const String* a, const char* b) {
+cc_bool String_CaselessEqualsConst(const String* a, const char* b) {
 	int i;
 	char aCur, bCur;
 
@@ -159,7 +159,7 @@ void String_Append(String* str, char c) {
 	str->buffer[str->length++] = c;
 }
 
-void String_AppendBool(String* str, bool value) {
+void String_AppendBool(String* str, cc_bool value) {
 	String_AppendConst(str, value ? "True" : "False");
 }
 
@@ -356,7 +356,7 @@ int String_IndexOfString(const String* str, const String* sub) {
 	return -1;
 }
 
-bool String_CaselessContains(const String* str, const String* sub) {
+cc_bool String_CaselessContains(const String* str, const String* sub) {
 	char strCur, subCur;
 	int i, j;
 
@@ -372,7 +372,7 @@ bool String_CaselessContains(const String* str, const String* sub) {
 	return false;
 }
 
-bool String_CaselessStarts(const String* str, const String* sub) {
+cc_bool String_CaselessStarts(const String* str, const String* sub) {
 	char strCur, subCur;
 	int i;
 	if (str->length < sub->length) return false;
@@ -385,7 +385,7 @@ bool String_CaselessStarts(const String* str, const String* sub) {
 	return true;
 }
 
-bool String_CaselessEnds(const String* str, const String* sub) {
+cc_bool String_CaselessEnds(const String* str, const String* sub) {
 	char strCur, subCur;
 	int i, j = str->length - sub->length;	
 	if (j < 0) return false; /* sub longer than str */
@@ -447,7 +447,7 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 			digits = formatStr.buffer[++i] - '0';
 			String_AppendPaddedInt(str, *((int*)arg), digits); break;
 		case 't': 
-			String_AppendBool(str, *((bool*)arg)); break;
+			String_AppendBool(str, *((cc_bool*)arg)); break;
 		case 'c': 
 			String_AppendConst(str, (char*)arg);  break;
 		case 's': 
@@ -511,7 +511,7 @@ char Convert_UnicodeToCP437(Codepoint cp) {
 	char c; Convert_TryUnicodeToCP437(cp, &c); return c;
 }
 
-bool Convert_TryUnicodeToCP437(Codepoint cp, char* c) {
+cc_bool Convert_TryUnicodeToCP437(Codepoint cp, char* c) {
 	int i;
 	if (cp >= 0x20 && cp < 0x7F) { *c = (char)cp; return true; }
 
@@ -609,14 +609,14 @@ void String_DecodeCP1252(String* value, const cc_uint8* chars, int numBytes) {
 /*########################################################################################################################*
 *--------------------------------------------------Numerical conversions--------------------------------------------------*
 *#########################################################################################################################*/
-bool Convert_ParseUInt8(const String* str, cc_uint8* value) {
+cc_bool Convert_ParseUInt8(const String* str, cc_uint8* value) {
 	int tmp; 
 	*value = 0;
 	if (!Convert_ParseInt(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
 	*value = (cc_uint8)tmp; return true;
 }
 
-bool Convert_ParseUInt16(const String* str, cc_uint16* value) {
+cc_bool Convert_ParseUInt16(const String* str, cc_uint16* value) {
 	int tmp; 
 	*value = 0;
 	if (!Convert_ParseInt(str, &tmp) || tmp < 0 || tmp > UInt16_MaxValue) return false;
@@ -633,7 +633,7 @@ static int Convert_CompareDigits(const char* digits, const char* magnitude) {
 	return 0;
 }
 
-static bool Convert_TryParseDigits(const String* str, bool* negative, char* digits, int maxDigits) {
+static cc_bool Convert_TryParseDigits(const String* str, cc_bool* negative, char* digits, int maxDigits) {
 	char* start = digits;
 	int offset = 0, i;
 
@@ -657,8 +657,8 @@ static bool Convert_TryParseDigits(const String* str, bool* negative, char* digi
 }
 
 #define INT32_DIGITS 10
-bool Convert_ParseInt(const String* str, int* value) {
-	bool negative;
+cc_bool Convert_ParseInt(const String* str, int* value) {
+	cc_bool negative;
 	char digits[INT32_DIGITS];
 	int i, compare, sum = 0;
 
@@ -684,8 +684,8 @@ bool Convert_ParseInt(const String* str, int* value) {
 }
 
 #define UINT64_DIGITS 20
-bool Convert_ParseUInt64(const String* str, cc_uint64* value) {
-	bool negative;
+cc_bool Convert_ParseUInt64(const String* str, cc_uint64* value) {
+	cc_bool negative;
 	char digits[UINT64_DIGITS];
 	int i, compare;
 	cc_uint64 sum = 0;
@@ -704,9 +704,9 @@ bool Convert_ParseUInt64(const String* str, cc_uint64* value) {
 	return true;
 }
 
-bool Convert_ParseFloat(const String* str, float* value) {
+cc_bool Convert_ParseFloat(const String* str, float* value) {
 	int i = 0;
-	bool negate = false;
+	cc_bool negate = false;
 	double sum, whole, fract, divide = 10.0;
 	*value = 0.0f;
 
@@ -736,7 +736,7 @@ bool Convert_ParseFloat(const String* str, float* value) {
 	return true;
 }
 
-bool Convert_ParseBool(const String* str, bool* value) {
+cc_bool Convert_ParseBool(const String* str, cc_bool* value) {
 	if (String_CaselessEqualsConst(str, "True")) {
 		*value = true; return true;
 	}
@@ -845,7 +845,7 @@ void StringsBuffer_Remove(StringsBuffer* buffer, int index) {
 /*########################################################################################################################*
 *------------------------------------------------------Word wrapper-------------------------------------------------------*
 *#########################################################################################################################*/
-static bool WordWrap_IsWrapper(char c) {
+static cc_bool WordWrap_IsWrapper(char c) {
 	return c == '\0' || c == ' ' || c == '-' || c == '>' || c == '<' || c == '/' || c == '\\';
 }
 

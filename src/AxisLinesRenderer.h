@@ -8,7 +8,7 @@
 struct IGameComponent;
 extern struct IGameComponent AxisLinesRenderer_Component;
 /* Whether the 3 axis lines should be rendered */
-extern bool AxisLinesRenderer_Enabled;
+extern cc_bool AxisLinesRenderer_Enabled;
 
 void AxisLinesRenderer_Render(double delta);
 #endif

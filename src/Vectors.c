@@ -214,6 +214,7 @@ void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot) {
 	Matrix_Mul(result, &trans, result);
 }
 
+/* TODO: Move to matrix instance instead */
 static float
 frustum00, frustum01, frustum02, frustum03,
 frustum10, frustum11, frustum12, frustum13,
@@ -227,7 +228,7 @@ static void FrustumCulling_Normalise(float* plane0, float* plane1, float* plane2
 	*plane0 /= t; *plane1 /= t; *plane2 /= t; *plane3 /= t;
 }
 
-bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius) {
+cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius) {
 	float d = frustum00 * x + frustum01 * y + frustum02 * z + frustum03;
 	if (d <= -radius) return false;
 

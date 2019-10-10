@@ -29,13 +29,13 @@ CC_VAR extern struct _GfxData {
 	int MaxTexWidth, MaxTexHeight;
 	float MinZNear;
 	/* Whether context graphics has been lost (all creation/render fails) */
-	bool LostContext;
+	cc_bool LostContext;
 	/* Whether some textures are created with mipmaps. */
-	bool Mipmaps;
+	cc_bool Mipmaps;
 	/* Whether mipmaps must be created for all dimensions down to 1x1 or not. */
-	bool CustomMipmapsLevels;
+	cc_bool CustomMipmapsLevels;
 	/* Whether Gfx_Init has been called to initialise state. */
-	bool Initialised;
+	cc_bool Initialised;
 	struct Matrix View, Projection;
 } Gfx;
 
@@ -50,15 +50,15 @@ extern GfxResourceID Gfx_quadVb, Gfx_texVb;
 /* Creates a new texture. (and also generates mipmaps if mipmaps) */
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures
 use mipmapping may be either a per-texture or global state depending on the backend. */
-CC_API GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps);
+CC_API GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps);
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
-CC_API void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, bool mipmaps);
+CC_API void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, cc_bool mipmaps);
 /* Sets the currently active texture. */
 CC_API void Gfx_BindTexture(GfxResourceID texId);
 /* Deletes the given texture, then sets it to GFX_NULL. */
 CC_API void Gfx_DeleteTexture(GfxResourceID* texId);
 /* Sets whether texture colour is used when rendering vertices. */
-CC_API void Gfx_SetTexturing(bool enabled);
+CC_API void Gfx_SetTexturing(cc_bool enabled);
 /* Turns on mipmapping. (if Gfx_Mipmaps is enabled) */
 /* NOTE: You must have created textures with mipmaps true for this to work. */
 CC_API void Gfx_EnableMipmaps(void);
@@ -67,9 +67,9 @@ CC_API void Gfx_EnableMipmaps(void);
 CC_API void Gfx_DisableMipmaps(void);
 
 /* Returns whether fog blending is enabled. */
-CC_API bool Gfx_GetFog(void);
+CC_API cc_bool Gfx_GetFog(void);
 /* Sets whether fog blending is enabled. */
-CC_API void Gfx_SetFog(bool enabled);
+CC_API void Gfx_SetFog(cc_bool enabled);
 /* Sets the colour of the blended fog. */
 CC_API void Gfx_SetFogCol(PackedCol col);
 /* Sets thickness of fog for FOG_EXP/FOG_EXP2 modes. */
@@ -80,24 +80,24 @@ CC_API void Gfx_SetFogEnd(float value);
 CC_API void Gfx_SetFogMode(FogFunc func);
 
 /* Sets whether backface culling is performed. */
-CC_API void Gfx_SetFaceCulling(bool enabled);
+CC_API void Gfx_SetFaceCulling(cc_bool enabled);
 /* Sets whether pixels with an alpha of less than 128 are discarded. */
-CC_API void Gfx_SetAlphaTest(bool enabled);
+CC_API void Gfx_SetAlphaTest(cc_bool enabled);
 /* Sets whether existing and new pixels are blended together. */
-CC_API void Gfx_SetAlphaBlending(bool enabled);
+CC_API void Gfx_SetAlphaBlending(cc_bool enabled);
 /* Sets whether blending between the alpha components of texture and vertex colour is performed. */
-CC_API void Gfx_SetAlphaArgBlend(bool enabled);
+CC_API void Gfx_SetAlphaArgBlend(cc_bool enabled);
 
 /* Clears the colour and depth buffer to default. */
 CC_API void Gfx_Clear(void);
 /* Sets the colour that the colour buffer is cleared to. */
 CC_API void Gfx_ClearCol(PackedCol col);
 /* Sets whether pixels may be discard based on z/depth. */
-CC_API void Gfx_SetDepthTest(bool enabled);
+CC_API void Gfx_SetDepthTest(cc_bool enabled);
 /* Sets whether R/G/B/A of pixels are actually written to the colour buffer channels. */
-CC_API void Gfx_SetColWriteMask(bool r, bool g, bool b, bool a);
+CC_API void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a);
 /* Sets whether z/depth of pixels is actually written to the depth buffer. */
-CC_API void Gfx_SetDepthWrite(bool enabled);
+CC_API void Gfx_SetDepthWrite(cc_bool enabled);
 
 /* Creates a new dynamic vertex buffer, whose contents can be updated later. */
 CC_API GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices);
@@ -141,14 +141,14 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar,
 ReturnCode Gfx_TakeScreenshot(struct Stream* output);
 /* Warns in chat if the backend has problems with the user's GPU. */
 /* Returns whether legacy rendering mode for borders/sky/clouds is needed. */
-bool Gfx_WarnIfNecessary(void);
+cc_bool Gfx_WarnIfNecessary(void);
 /* Sets up state for rendering a new frame. */
 void Gfx_BeginFrame(void);
 /* Finishes rendering a frame, and swaps it with the back buffer. */
 void Gfx_EndFrame(void);
 /* Sets whether to synchronise with monitor refresh to avoid tearing, and maximum frame rate. */
 /* NOTE: VSync setting may be unsupported or just ignored. */
-void Gfx_SetFpsLimit(bool value, float minFrameMillis);
+void Gfx_SetFpsLimit(cc_bool value, float minFrameMillis);
 /* Updates state when the window's dimensions have changed. */
 /* NOTE: This may require recreating the context depending on the backend. */
 void Gfx_OnWindowResize(void);
@@ -160,7 +160,7 @@ void Gfx_GetApiInfo(String* lines);
 /* Raises ContextLost event and updates state for lost contexts. */
 void Gfx_LoseContext(const char* reason);
 /* Attempts to restore a lost context. Raises ContextRecreated event on success. */
-bool Gfx_TryRestoreContext(void);
+cc_bool Gfx_TryRestoreContext(void);
 
 /* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer. */
 /* NOTE: This replaces the dynamic vertex buffer's data first with the given vertices before drawing. */

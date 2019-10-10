@@ -75,7 +75,7 @@ void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height);
 CC_API void Bitmap_Scale(Bitmap* dst, Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight);
 
 /* Whether data starts with PNG format signature/identifier. */
-bool Png_Detect(const cc_uint8* data, cc_uint32 len);
+cc_bool Png_Detect(const cc_uint8* data, cc_uint32 len);
 typedef int (*Png_RowSelector)(Bitmap* bmp, int row);
 /*
   Decodes a bitmap in PNG format. Partially based off information from
@@ -86,5 +86,5 @@ CC_API ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream);
 /* Encodes a bitmap in PNG format. */
 /* selectRow is optional. Can be used to modify how rows are encoded. (e.g. flip image) */
 /* if alpha is non-zero, RGBA channels are saved, otherwise only RGB channels are. */
-CC_API ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, bool alpha);
+CC_API ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, cc_bool alpha);
 #endif

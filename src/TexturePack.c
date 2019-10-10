@@ -34,7 +34,7 @@ static float L_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
 static float L_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 static float L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 static RNGState L_rnd;
-static bool L_rndInitalised;
+static cc_bool  L_rndInitalised;
 
 static void LavaAnimation_Tick(BitmapCol* ptr, int size) {
 	int mask = size - 1, shift = Math_Log2(size);
@@ -105,7 +105,7 @@ static float W_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
 static float W_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 static float W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 static RNGState W_rnd;
-static bool W_rndInitalised;
+static cc_bool  W_rndInitalised;
 
 static void WaterAnimation_Tick(BitmapCol* ptr, int size) {
 	int mask = size - 1, shift = Math_Log2(size);
@@ -167,7 +167,7 @@ struct AnimationData {
 static Bitmap anims_bmp;
 static struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
 static int anims_count;
-static bool anims_validated, useLavaAnim, useWaterAnim, alwaysLavaAnim, alwaysWaterAnim;
+static cc_bool anims_validated, useLavaAnim, useWaterAnim, alwaysLavaAnim, alwaysWaterAnim;
 #define ANIM_MIN_ARGS 7
 
 static void Animations_ReadDescription(struct Stream* stream, const String* path) {
@@ -277,9 +277,9 @@ static void Animations_Apply(struct AnimationData* data) {
 	Animations_Draw(data, loc, data->FrameSize);
 }
 
-static bool Animations_IsDefaultZip(void) {	
+static cc_bool Animations_IsDefaultZip(void) {
 	String texPack;
-	bool optExists;
+	cc_bool optExists;
 	if (World_TextureUrl.length) return false;
 
 	optExists = Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &texPack);
@@ -524,8 +524,8 @@ void TextureCache_Init(void) {
 	EntryList_Init(&lastModifiedCache, "texturecache/lastmodified.txt", ' ');
 }
 
-bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&acceptedList, url) >= 0; }
-bool TextureCache_HasDenied(const String* url)   { return EntryList_Find(&deniedList,   url) >= 0; }
+cc_bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&acceptedList, url) >= 0; }
+cc_bool TextureCache_HasDenied(const String* url)   { return EntryList_Find(&deniedList,   url) >= 0; }
 
 void TextureCache_Accept(const String* url)      { 
 	EntryList_Set(&acceptedList, url, &String_Empty); 
@@ -548,7 +548,7 @@ CC_NOINLINE static void TextureCache_MakePath(String* path, const String* url) {
 	String_Format1(path, "texturecache/%s", &key);
 }
 
-bool TextureCache_Has(const String* url) {
+cc_bool TextureCache_Has(const String* url) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	String_InitArray(path, pathBuffer);
 
@@ -556,7 +556,7 @@ bool TextureCache_Has(const String* url) {
 	return File_Exists(&path);
 }
 
-bool TextureCache_Get(const String* url, struct Stream* stream) {
+cc_bool TextureCache_Get(const String* url, struct Stream* stream) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	ReturnCode res;
 
@@ -694,12 +694,12 @@ void TexturePack_ExtractZip_File(const String* filename) {
 #endif
 }
 
-static bool texturePackDefault = true;
-void TexturePack_ExtractCurrent(bool forceReload) {
+static cc_bool texturePackDefault = true;
+void TexturePack_ExtractCurrent(cc_bool forceReload) {
 	static const String zipExt = String_FromConst(".zip");
 	String url = World_TextureUrl, file;
 	struct Stream stream;
-	bool zip;
+	cc_bool zip;
 	ReturnCode res;
 
 	if (!url.length || !TextureCache_Get(&url, &stream)) {
@@ -724,7 +724,7 @@ void TexturePack_Extract_Req(struct HttpRequest* item) {
 	String url;
 	cc_uint8* data; cc_uint32 len;
 	struct Stream mem;
-	bool png;
+	cc_bool png;
 	ReturnCode res;
 
 	url = String_FromRawArray(item->URL);

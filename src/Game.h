@@ -20,7 +20,7 @@ CC_VAR extern struct _GameData {
 } Game;
 
 extern struct PickedPos Game_SelectedPos;
-extern bool Game_UseCPEBlocks;
+extern cc_bool Game_UseCPEBlocks;
 
 extern String Game_Username;
 extern String Game_Mppass;
@@ -32,21 +32,21 @@ extern int Game_UserViewDistance;
 extern int Game_Fov;
 extern int Game_DefaultFov, Game_ZoomFov;
 
-extern int  Game_FpsLimit;
-extern bool Game_SimpleArmsAnim;
-extern int  Game_Vertices;
+extern int     Game_FpsLimit;
+extern cc_bool Game_SimpleArmsAnim;
+extern int     Game_Vertices;
 
-extern bool Game_ClassicMode;
-extern bool Game_ClassicHacks;
+extern cc_bool Game_ClassicMode;
+extern cc_bool Game_ClassicHacks;
 #define Game_PureClassic (Game_ClassicMode && !Game_ClassicHacks)
-extern bool Game_AllowCustomBlocks;
-extern bool Game_UseCPE;
-extern bool Game_AllowServerTextures;
+extern cc_bool Game_AllowCustomBlocks;
+extern cc_bool Game_UseCPE;
+extern cc_bool Game_AllowServerTextures;
 
-extern bool Game_ViewBobbing;
-extern bool Game_BreakableLiquids;
-extern bool Game_ScreenshotRequested;
-extern bool Game_HideGui;
+extern cc_bool Game_ViewBobbing;
+extern cc_bool Game_BreakableLiquids;
+extern cc_bool Game_ScreenshotRequested;
+extern cc_bool Game_HideGui;
 
 enum FpsLimitMethod {
 	FPS_LIMIT_VSYNC, FPS_LIMIT_30, FPS_LIMIT_60, FPS_LIMIT_120, FPS_LIMIT_144, FPS_LIMIT_NONE, FPS_LIMIT_COUNT
@@ -66,7 +66,7 @@ String Game_UNSAFE_GetDefaultTexturePack(void);
 void Game_SetDefaultTexturePack(const String* texPack);
 
 /* Attempts to change the terrain atlas. (bitmap containing textures for all blocks) */
-bool Game_ChangeTerrainAtlas(Bitmap* atlas);
+cc_bool Game_ChangeTerrainAtlas(Bitmap* atlas);
 void Game_SetViewDistance(int distance);
 void Game_UserSetViewDistance(int distance);
 void Game_SetFov(int fov);
@@ -82,11 +82,11 @@ CC_API void Game_UpdateBlock(int x, int y, int z, BlockID block);
 /* In multiplayer this is sent to the server, in singleplayer just activates physics. */
 CC_API void Game_ChangeBlock(int x, int y, int z, BlockID block);
 
-bool Game_CanPick(BlockID block);
-bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, cc_uint8* skinType);
+cc_bool Game_CanPick(BlockID block);
+cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, cc_uint8* skinType);
 /* Checks that the given bitmap can be loaded into a native gfx texture. */
 /* (must be power of two size and be <= Gfx_MaxTexWidth/Gfx_MaxHeight) */
-bool Game_ValidateBitmap(const String* file, Bitmap* bmp);
+cc_bool Game_ValidateBitmap(const String* file, Bitmap* bmp);
 /* Updates Game_Width and Game_Height. */
 void Game_UpdateDimensions(void);
 /* Sets the strategy/method used to limit frames per second. */

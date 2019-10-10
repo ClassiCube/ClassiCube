@@ -25,7 +25,7 @@ static struct ResourceFile {
 	const char* name;
 	const char* url;
 	short size;
-	bool downloaded;
+	cc_bool downloaded;
 	/* downloaded archive */
 	cc_uint8* data; cc_uint32 len;
 } fileResources[4] = {
@@ -91,7 +91,7 @@ static struct ResourceMusic {
 	const char* name;
 	const char* hash;
 	short size;
-	bool downloaded;
+	cc_bool downloaded;
 } musicResources[7] = {
 	{ "calm1.ogg", "50a59a4f56e4046701b758ddbb1c1587efa4cadf", 2472 },
 	{ "calm2.ogg", "74da65c99aa578486efa7b69983d3533e14c0d6e", 1931 },
@@ -107,7 +107,7 @@ static struct ResourceMusic {
 *---------------------------------------------------------List/Checker----------------------------------------------------*
 *#########################################################################################################################*/
 int Resources_Count, Resources_Size;
-static bool allSoundsExist, allTexturesExist;
+static cc_bool allSoundsExist, allTexturesExist;
 static int texturesFound;
 
 CC_NOINLINE static struct ResourceTexture* Resources_FindTex(const String* name) {
@@ -157,7 +157,7 @@ static void Resources_CheckSounds(void) {
 	allSoundsExist = true;
 }
 
-static bool Resources_SelectZipEntry(const String* path) {
+static cc_bool Resources_SelectZipEntry(const String* path) {
 	String name = *path;
 	Utils_UNSAFE_GetFilename(&name);
 
@@ -372,7 +372,7 @@ static ReturnCode ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* 
 "6 2 0 0 16 32 0"
 static Bitmap terrainBmp;
 
-static bool ClassicPatcher_SelectEntry(const String* path) {
+static cc_bool ClassicPatcher_SelectEntry(const String* path) {
 	String name = *path;
 	Utils_UNSAFE_GetFilename(&name);
 	return Resources_FindTex(&name) != NULL;
@@ -450,7 +450,7 @@ static ReturnCode ModernPatcher_PatchTile(struct Stream* data, struct TilePatch*
 }
 
 
-static bool ModernPatcher_SelectEntry(const String* path) {
+static cc_bool ModernPatcher_SelectEntry(const String* path) {
 	return
 		String_CaselessEqualsConst(path, "assets/minecraft/textures/environment/snow.png") ||
 		String_CaselessEqualsConst(path, "assets/minecraft/textures/entity/chicken.png")   ||
@@ -704,7 +704,7 @@ static void MusicPatcher_Save(const char* name, struct HttpRequest* req) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Fetcher-------------------------------------------------------*
 *#########################################################################################################################*/
-bool Fetcher_Working, Fetcher_Completed, Fetcher_Failed;
+cc_bool Fetcher_Working, Fetcher_Completed, Fetcher_Failed;
 int  Fetcher_StatusCode, Fetcher_Downloaded;
 ReturnCode Fetcher_Result;
 
@@ -751,7 +751,7 @@ static void Fetcher_Finish(void) {
 	Fetcher_Working   = false;
 }
 
-CC_NOINLINE static bool Fetcher_Get(const String* id, struct HttpRequest* req) {
+CC_NOINLINE static cc_bool Fetcher_Get(const String* id, struct HttpRequest* req) {
 	if (!Http_GetResult(id, req)) return false;
 
 	if (req->Success) {

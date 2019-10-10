@@ -27,14 +27,14 @@
 #include "Protocol.h"
 #include "AxisLinesRenderer.h"
 
-static bool input_buttonsDown[3];
+static cc_bool input_buttonsDown[3];
 static int input_pickingId = -1;
 static const short normDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 static const short classicDists[4] = { 8, 32, 128, 512 };
 static TimeMS input_lastClick;
 static float input_fovIndex = -1.0f;
 #ifdef CC_BUILD_WEB
-static bool suppressEscape;
+static cc_bool suppressEscape;
 #endif
 enum MouseButton_ { MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE };
 
@@ -42,7 +42,7 @@ enum MouseButton_ { MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE };
 /*########################################################################################################################*
 *-----------------------------------------------------------Key-----------------------------------------------------------*
 *#########################################################################################################################*/
-bool Input_Pressed[INPUT_COUNT];
+cc_bool Input_Pressed[INPUT_COUNT];
 
 #define Key_Function_Names \
 "F1",  "F2",  "F3",  "F4",  "F5",  "F6",  "F7",  "F8",  "F9",  "F10",\
@@ -98,8 +98,8 @@ const char* const Input_Names[INPUT_COUNT] = {
 	"XBUTTON1", "XBUTTON2", "MMOUSE"
 };*/
 
-void Input_SetPressed(Key key, bool pressed) {
-	bool wasPressed  = Input_Pressed[key];
+void Input_SetPressed(Key key, cc_bool pressed) {
+	cc_bool wasPressed = Input_Pressed[key];
 	Input_Pressed[key] = pressed;
 
 	if (pressed) {
@@ -127,9 +127,9 @@ void Key_Clear(void) {
 *#########################################################################################################################*/
 int Mouse_X, Mouse_Y;
 struct Pointer Pointers[INPUT_MAX_POINTERS];
-bool Input_RawMode, Input_TouchMode;
+cc_bool Input_RawMode, Input_TouchMode;
 
-void Pointer_SetPressed(int idx, bool pressed) {
+void Pointer_SetPressed(int idx, cc_bool pressed) {
 	if (pressed) {
 		Event_RaiseInt(&PointerEvents.Down, idx);
 	} else {
@@ -237,7 +237,7 @@ static const char* const keybindNames[KEYBIND_COUNT] = {
 	"DropBlock", "IDOverlay", "BreakableLiquids"
 };
 
-bool KeyBind_IsPressed(KeyBind binding) { return Input_Pressed[KeyBinds[binding]]; }
+cc_bool KeyBind_IsPressed(KeyBind binding) { return Input_Pressed[KeyBinds[binding]]; }
 
 static void KeyBind_Load(void) {
 	String name; char nameBuffer[STRING_SIZE + 1];
@@ -327,7 +327,7 @@ static void Hotkeys_QuickSort(int left, int right) {
 	}
 }
 
-static void Hotkeys_AddNewHotkey(Key trigger, cc_uint8 modifiers, const String* text, bool more) {
+static void Hotkeys_AddNewHotkey(Key trigger, cc_uint8 modifiers, const String* text, cc_bool more) {
 	struct HotkeyData hKey;
 	hKey.Trigger = trigger;
 	hKey.Flags   = modifiers;
@@ -356,7 +356,7 @@ static void Hotkeys_RemoveText(int index) {
 }
 
 
-void Hotkeys_Add(Key trigger, cc_uint8 modifiers, const String* text, bool more) {
+void Hotkeys_Add(Key trigger, cc_uint8 modifiers, const String* text, cc_bool more) {
 	struct HotkeyData* hk = HotkeysList;
 	int i;
 
@@ -372,7 +372,7 @@ void Hotkeys_Add(Key trigger, cc_uint8 modifiers, const String* text, bool more)
 	Hotkeys_AddNewHotkey(trigger, modifiers, text, more);
 }
 
-bool Hotkeys_Remove(Key trigger, cc_uint8 modifiers) {
+cc_bool Hotkeys_Remove(Key trigger, cc_uint8 modifiers) {
 	struct HotkeyData* hk = HotkeysList;
 	int i, j;
 
@@ -413,7 +413,7 @@ static void Hotkeys_Init(void) {
 
 	Key trigger;
 	cc_uint8 modifiers;
-	bool more;
+	cc_bool more;
 
 	for (i = 0; i < Options.entries.count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(&Options.entries, i);
@@ -443,7 +443,7 @@ void Hotkeys_UserRemovedHotkey(Key trigger, cc_uint8 modifiers) {
 	Options_SetString(&key, NULL);
 }
 
-void Hotkeys_UserAddedHotkey(Key trigger, cc_uint8 modifiers, bool moreInput, const String* text) {
+void Hotkeys_UserAddedHotkey(Key trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text) {
 	String key;   char keyBuffer[STRING_SIZE];
 	String value; char valueBuffer[STRING_SIZE * 2];
 	String_InitArray(key, keyBuffer);
@@ -458,7 +458,7 @@ void Hotkeys_UserAddedHotkey(Key trigger, cc_uint8 modifiers, bool moreInput, co
 /*########################################################################################################################*
 *-----------------------------------------------------Mouse helpers-------------------------------------------------------*
 *#########################################################################################################################*/
-static void MouseStateUpdate(int button, bool pressed) {
+static void MouseStateUpdate(int button, cc_bool pressed) {
 	struct Entity* p;
 	/* defer getting the targeted entity, as it's a costly operation */
 	if (input_pickingId == -1) {
@@ -470,7 +470,7 @@ static void MouseStateUpdate(int button, bool pressed) {
 	CPE_SendPlayerClick(button, pressed, (EntityID)input_pickingId, &Game_SelectedPos);	
 }
 
-static void MouseStateChanged(int button, bool pressed) {
+static void MouseStateChanged(int button, cc_bool pressed) {
 	if (!Server.SupportsPlayerClick) return;
 
 	if (pressed) {
@@ -502,12 +502,12 @@ void InputHandler_OnScreensChanged(void) {
 	MouseStateChanged(MOUSE_MIDDLE, false);
 }
 
-static bool TouchesSolid(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
-static bool PushbackPlace(struct AABB* blockBB) {
+static cc_bool TouchesSolid(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
+static cc_bool PushbackPlace(struct AABB* blockBB) {
 	struct Entity* p        = &LocalPlayer_Instance.Base;
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	Face closestFace;
-	bool insideMap;
+	cc_bool insideMap;
 
 	Vec3 pos = p->Position;
 	struct AABB playerBB;
@@ -547,7 +547,7 @@ static bool PushbackPlace(struct AABB* blockBB) {
 	return true;
 }
 
-static bool IntersectsOthers(Vec3 pos, BlockID block) {
+static cc_bool IntersectsOthers(Vec3 pos, BlockID block) {
 	struct AABB blockBB, entityBB;
 	struct Entity* entity;
 	int id;
@@ -566,7 +566,7 @@ static bool IntersectsOthers(Vec3 pos, BlockID block) {
 	return false;
 }
 
-static bool CheckIsFree(BlockID block) {
+static cc_bool CheckIsFree(BlockID block) {
 	struct Entity* p        = &LocalPlayer_Instance.Base;
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 
@@ -652,7 +652,7 @@ static void InputHandler_PickBlock(void) {
 }
 
 void InputHandler_PickBlocks(void) {
-	bool left, middle, right;
+	cc_bool left, middle, right;
 	TimeMS now = DateTime_CurrentUTC_MS();
 	int delta  = (int)(now - input_lastClick);
 
@@ -684,7 +684,7 @@ void InputHandler_PickBlocks(void) {
 /*########################################################################################################################*
 *------------------------------------------------------Key helpers--------------------------------------------------------*
 *#########################################################################################################################*/
-static bool InputHandler_IsShutdown(Key key) {
+static cc_bool InputHandler_IsShutdown(Key key) {
 	if (key == KEY_F4 && Key_IsAltPressed()) return true;
 
 	/* On OSX, Cmd+Q should also terminate the process */
@@ -695,7 +695,7 @@ static bool InputHandler_IsShutdown(Key key) {
 #endif
 }
 
-static void InputHandler_Toggle(Key key, bool* target, const char* enableMsg, const char* disableMsg) {
+static void InputHandler_Toggle(Key key, cc_bool* target, const char* enableMsg, const char* disableMsg) {
 	*target = !(*target);
 	if (*target) {
 		Chat_Add2("%c. &ePress &a%c &eto disable.",   enableMsg,  Input_Names[key]);
@@ -728,7 +728,7 @@ static void InputHandler_CycleDistanceBackwards(const short* viewDists, int coun
 	Game_UserSetViewDistance(viewDists[count - 1]);
 }
 
-bool InputHandler_SetFOV(int fov) {
+cc_bool InputHandler_SetFOV(int fov) {
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanUseThirdPersonCamera) return false;
 
@@ -737,7 +737,7 @@ bool InputHandler_SetFOV(int fov) {
 	return true;
 }
 
-static bool InputHandler_DoFovZoom(float deltaPrecise) {
+static cc_bool InputHandler_DoFovZoom(float deltaPrecise) {
 	struct HacksComp* h;
 	if (!KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) return false;
 
@@ -756,7 +756,7 @@ static void InputHandler_CheckZoomFov(void* obj) {
 	if (!h->Enabled || !h->CanUseThirdPersonCamera) Game_SetFov(Game_DefaultFov);
 }
 
-static bool HandleBlockKey(Key key) {
+static cc_bool HandleBlockKey(Key key) {
 	if (Gui_GetInputGrab()) return false;
 
 	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) {
@@ -774,7 +774,7 @@ static bool HandleBlockKey(Key key) {
 	return true;
 }
 
-static bool HandleNonClassicKey(Key key) {
+static cc_bool HandleNonClassicKey(Key key) {
 	if (key == KeyBinds[KEYBIND_HIDE_GUI]) {
 		Game_HideGui = !Game_HideGui;
 	} else if (key == KeyBinds[KEYBIND_SMOOTH_CAMERA]) {
@@ -810,7 +810,7 @@ static bool HandleNonClassicKey(Key key) {
 	return true;
 }
 
-static bool HandleCoreKey(Key key) {
+static cc_bool HandleCoreKey(Key key) {
 	if (key == KeyBinds[KEYBIND_HIDE_FPS]) {
 		Gui_ShowFPS = !Gui_ShowFPS;
 	} else if (key == KeyBinds[KEYBIND_FULLSCREEN]) {
@@ -864,7 +864,7 @@ static void HandleMouseWheel(void* obj, float delta) {
 	struct Screen* s;
 	int i;
 	struct Widget* widget;
-	bool hotbar;
+	cc_bool hotbar;
 	
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
@@ -909,7 +909,7 @@ static void HandlePointerUp(void* obj, int idx) {
 	}
 }
 
-static void HandleInputDown(void* obj, int key, bool was) {
+static void HandleInputDown(void* obj, int key, cc_bool was) {
 	struct Screen* s;
 	int i;
 

@@ -431,7 +431,7 @@ ReturnCode Stream_ReadU32_BE(struct Stream* s, cc_uint32* value) {
 *--------------------------------------------------Read/Write strings-----------------------------------------------------*
 *#########################################################################################################################*/
 ReturnCode Stream_ReadLine(struct Stream* s, String* text) {
-	bool readAny = false;
+	cc_bool readAny = false;
 	Codepoint cp;
 	ReturnCode res;
 

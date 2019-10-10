@@ -791,7 +791,7 @@ void Logger_Abort2(ReturnCode result, const char* raw_msg) {
 *#########################################################################################################################*/
 static FileHandle logFile;
 static struct Stream logStream;
-static bool logOpen;
+static cc_bool logOpen;
 
 void Logger_Log(const String* msg) {
 #ifndef CC_BUILD_WEB

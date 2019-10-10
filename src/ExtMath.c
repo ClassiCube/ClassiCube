@@ -54,8 +54,8 @@ float Math_LerpAngle(float leftAngle, float rightAngle, float t) {
 	/* We have to cheat a bit for angles here */
 	/* Consider 350* --> 0*, we only want to travel 10* */
 	/* But without adjusting for this case, we would interpolate back the whole 350* degrees */
-	bool invertLeft  = leftAngle  > 270.0f && rightAngle < 90.0f;
-	bool invertRight = rightAngle > 270.0f && leftAngle  < 90.0f;
+	cc_bool invertLeft  = leftAngle  > 270.0f && rightAngle < 90.0f;
+	cc_bool invertRight = rightAngle > 270.0f && leftAngle  < 90.0f;
 	if (invertLeft)  leftAngle  = leftAngle  - 360.0f;
 	if (invertRight) rightAngle = rightAngle - 360.0f;
 
@@ -68,7 +68,7 @@ int Math_NextPowOf2(int value) {
 	return next;
 }
 
-bool Math_IsPowOf2(int value) {
+cc_bool Math_IsPowOf2(int value) {
 	return value != 0 && (value & (value - 1)) == 0;
 }
 

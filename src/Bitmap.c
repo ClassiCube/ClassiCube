@@ -69,7 +69,7 @@ enum PngFilter {
 typedef void (*Png_RowExpander)(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst);
 static const cc_uint8 pngSig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-bool Png_Detect(const cc_uint8* data, cc_uint32 len) {
+cc_bool Png_Detect(const cc_uint8* data, cc_uint32 len) {
 	int i;
 	if (len < PNG_SIG_SIZE) return false;
 
@@ -562,7 +562,7 @@ static void Png_Filter(cc_uint8 filter, const cc_uint8* cur, const cc_uint8* pri
 	}
 }
 
-static void Png_MakeRow(const BitmapCol* src, cc_uint8* dst, int lineLen, bool alpha) {
+static void Png_MakeRow(const BitmapCol* src, cc_uint8* dst, int lineLen, cc_bool alpha) {
 	cc_uint8* end = dst + lineLen;
 	BitmapCol col; /* if we use *src, register gets reloaded each time */
 
@@ -581,7 +581,7 @@ static void Png_MakeRow(const BitmapCol* src, cc_uint8* dst, int lineLen, bool a
 	}
 }
 
-static void Png_EncodeRow(const cc_uint8* cur, const cc_uint8* prior, cc_uint8* best, int lineLen, bool alpha) {
+static void Png_EncodeRow(const cc_uint8* cur, const cc_uint8* prior, cc_uint8* best, int lineLen, cc_bool alpha) {
 	cc_uint8* dst;
 	int bestFilter, bestEstimate = Int32_MaxValue;
 	int x, filter, estimate;
@@ -614,7 +614,7 @@ static void Png_EncodeRow(const cc_uint8* cur, const cc_uint8* prior, cc_uint8* 
 }
 
 static int Png_SelectRow(Bitmap* bmp, int y) { return y; }
-ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, bool alpha) {	
+ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, cc_bool alpha) {
 	cc_uint8 tmp[32];
 	/* TODO: This should be * 4 for alpha (should switch to mem_alloc though) */
 	cc_uint8 prevLine[PNG_MAX_DIMS * 3], curLine[PNG_MAX_DIMS * 3];

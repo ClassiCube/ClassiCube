@@ -102,7 +102,7 @@ typedef cc_uint16 Codepoint;
 #include <stdbool.h>
 #elif __cplusplus
 #else
-typedef cc_uint8 bool;
+typedef cc_uint8 cc_bool;
 #define true 1
 #define false 0
 #endif

@@ -12,7 +12,7 @@ struct ChunkInfo;
 
 extern int Builder_SidesLevel, Builder_EdgeLevel;
 /* Whether smooth/advanced lighting mesh builder is used. */
-extern bool Builder_SmoothLighting;
+extern cc_bool Builder_SmoothLighting;
 
 void Builder_Init(void);
 void Builder_OnNewMapLoaded(void);

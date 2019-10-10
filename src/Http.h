@@ -33,8 +33,8 @@ struct HttpRequest {
 
 	char LastModified[STRING_SIZE]; /* Time item cached at (if at all) */
 	char Etag[STRING_SIZE];         /* ETag of cached item (if any) */
-	cc_uint8 RequestType;            /* See the various REQUEST_TYPE_ */
-	bool Success;                   /* Whether Result is 0, status is 200, and data is not NULL */
+	cc_uint8 RequestType;           /* See the various REQUEST_TYPE_ */
+	cc_bool Success;                /* Whether Result is 0, status is 200, and data is not NULL */
 	struct EntryList* Cookies;      /* Cookie list sent in requests. May be modified by the response. */
 };
 
@@ -46,29 +46,29 @@ void HttpRequest_Free(struct HttpRequest* request);
 /* ID of the request is set to skinName. */
 void Http_AsyncGetSkin(const String* skinName);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
-void Http_AsyncGetData(const String* url, bool priority, const String* id);
+void Http_AsyncGetData(const String* url, cc_bool priority, const String* id);
 /* Asynchronously performs a http HEAD request. (e.g. to get Content-Length header) */
-void Http_AsyncGetHeaders(const String* url, bool priority, const String* id);
+void Http_AsyncGetHeaders(const String* url, cc_bool priority, const String* id);
 /* Asynchronously performs a http POST request. (e.g. to submit data) */
 /* NOTE: You don't have to persist data, a copy is made of it. */
-void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, cc_uint32 size, struct EntryList* cookies);
+void Http_AsyncPostData(const String* url, cc_bool priority, const String* id, const void* data, cc_uint32 size, struct EntryList* cookies);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 /* Also sets the If-Modified-Since and If-None-Match headers. (if not NULL)  */
-void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, const String* lastModified, const String* etag, struct EntryList* cookies);
+void Http_AsyncGetDataEx(const String* url, cc_bool priority, const String* id, const String* lastModified, const String* etag, struct EntryList* cookies);
 
 /* Encodes data using % or URL encoding. */
 void Http_UrlEncode(String* dst, const cc_uint8* data, int len);
 /* Converts characters to UTF8, then calls Http_URlEncode on them. */
 void Http_UrlEncodeUtf8(String* dst, const String* src);
 /* Outputs more detailed information about errors with http requests. */
-bool Http_DescribeError(ReturnCode res, String* dst);
+cc_bool Http_DescribeError(ReturnCode res, String* dst);
 
 /* Attempts to retrieve a fully completed request. */
 /* NOTE: You MUST check Success for whether it completed successfully. */
 /* (Data may still be non NULL even on error, e.g. on a http 404 error) */
-bool Http_GetResult(const String* id, struct HttpRequest* item);
+cc_bool Http_GetResult(const String* id, struct HttpRequest* item);
 /* Retrieves information about the request currently being processed. */
-bool Http_GetCurrent(struct HttpRequest* request, int* progress);
+cc_bool Http_GetCurrent(struct HttpRequest* request, int* progress);
 /* Clears the list of pending requests. */
 void Http_ClearPending(void);
 #endif

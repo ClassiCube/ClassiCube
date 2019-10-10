@@ -18,7 +18,7 @@
 static GfxResourceID Particles_TexId, Particles_VB;
 #define PARTICLES_MAX 600
 static RNGState rnd;
-static bool particle_hitTerrain;
+static cc_bool particle_hitTerrain;
 
 void Particle_DoRender(Vec2* size, Vec3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* v) {
 	struct Matrix* view;
@@ -45,12 +45,12 @@ static void Particle_Reset(struct Particle* p, Vec3 pos, Vec3 velocity, float li
 	p->lifetime = lifetime;
 }
 
-static bool Particle_CanPass(BlockID block, bool throughLiquids) {
+static cc_bool Particle_CanPass(BlockID block, cc_bool throughLiquids) {
 	cc_uint8 draw = Blocks.Draw[block];
 	return draw == DRAW_GAS || draw == DRAW_SPRITE || (throughLiquids && Blocks.IsLiquid[block]);
 }
 
-static bool Particle_CollideHor(Vec3* nextPos, BlockID block) {
+static cc_bool Particle_CollideHor(Vec3* nextPos, BlockID block) {
 	Vec3 horPos = Vec3_Create3((float)Math_Floor(nextPos->X), 0.0f, (float)Math_Floor(nextPos->Z));
 	Vec3 min, max;
 	Vec3_Add(&min, &Blocks.MinBB[block], &horPos);
@@ -66,11 +66,11 @@ static BlockID Particle_GetBlock(int x, int y, int z) {
 	return Env.SidesBlock;
 }
 
-static bool Particle_TestY(struct Particle* p, int y, bool topFace, bool throughLiquids) {
+static cc_bool Particle_TestY(struct Particle* p, int y, cc_bool topFace, cc_bool throughLiquids) {
 	BlockID block;
 	Vec3 minBB, maxBB;
 	float collideY;
-	bool collideVer;
+	cc_bool collideVer;
 
 	if (y < 0) {
 		p->nextPos.Y = ENTITY_ADJUSTMENT; p->lastPos.Y = ENTITY_ADJUSTMENT;
@@ -97,7 +97,7 @@ static bool Particle_TestY(struct Particle* p, int y, bool topFace, bool through
 	return true;
 }
 
-static bool Particle_PhysicsTick(struct Particle* p, float gravity, bool throughLiquids, double delta) {
+static cc_bool Particle_PhysicsTick(struct Particle* p, float gravity, cc_bool throughLiquids, double delta) {
 	BlockID cur;
 	float minY, maxY;
 	Vec3 velocity;
@@ -141,7 +141,7 @@ static struct RainParticle rain_Particles[PARTICLES_MAX];
 static int rain_count;
 static TextureRec rain_rec = { 2.0f/128.0f, 14.0f/128.0f, 5.0f/128.0f, 16.0f/128.0f };
 
-static bool RainParticle_Tick(struct RainParticle* p, double delta) {
+static cc_bool RainParticle_Tick(struct RainParticle* p, double delta) {
 	particle_hitTerrain = false;
 	return Particle_PhysicsTick(&p->base, 3.5f, false, delta) || particle_hitTerrain;
 }
@@ -212,7 +212,7 @@ static int terrain_count;
 static cc_uint16 terrain_1DCount[ATLAS1D_MAX_ATLASES];
 static cc_uint16 terrain_1DIndices[ATLAS1D_MAX_ATLASES];
 
-static bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
+static cc_bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
 	return Particle_PhysicsTick(&p->base, 5.4f, true, delta);
 }
 

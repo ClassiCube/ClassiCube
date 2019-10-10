@@ -40,14 +40,14 @@ void LocationUpdate_MakeOri(struct LocationUpdate* update, float rotY, float hea
 	update->HeadY = LocationUpdate_Clamp(rotY);
 }
 
-void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, bool rel) {
+void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, cc_bool rel) {
 	*update = loc_empty;
 	update->Flags = LOCATIONUPDATE_FLAG_POS;
 	update->Pos   = pos;
 	update->RelativePos = rel;
 }
 
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float rotY, float headX, bool rel) {
+void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float rotY, float headX, cc_bool rel) {
 	*update = loc_empty;
 	update->Flags = LOCATIONUPDATE_FLAG_POS | LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
 	update->HeadX = LocationUpdate_Clamp(headX);
@@ -167,7 +167,7 @@ void Entity_UpdateModelBounds(struct Entity* e) {
 	Vec3_Mul3By(&e->ModelAABB.Max, &e->ModelScale);
 }
 
-bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition) {
+cc_bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition) {
 	IVec3 bbMin, bbMax;
 	BlockID block;
 	struct AABB blockBB;
@@ -197,23 +197,23 @@ bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition) {
 	return false;
 }
 
-static bool Entity_IsRope(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_CLIMB_ROPE; }
-bool Entity_TouchesAnyRope(struct Entity* e) {
+static cc_bool Entity_IsRope(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_CLIMB_ROPE; }
+cc_bool Entity_TouchesAnyRope(struct Entity* e) {
 	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	bounds.Max.Y += 0.5f / 16.0f;
 	return Entity_TouchesAny(&bounds, Entity_IsRope);
 }
 
-static Vec3 entity_liqExpand = { 0.25f/16.0f, 0.0f/16.0f, 0.25f/16.0f };
-static bool Entity_IsLava(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
-bool Entity_TouchesAnyLava(struct Entity* e) {
+static const Vec3 entity_liqExpand = { 0.25f/16.0f, 0.0f/16.0f, 0.25f/16.0f };
+static cc_bool Entity_IsLava(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
+cc_bool Entity_TouchesAnyLava(struct Entity* e) {
 	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, Entity_IsLava);
 }
 
-static bool Entity_IsWater(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_LIQUID_WATER; }
-bool Entity_TouchesAnyWater(struct Entity* e) {
+static cc_bool Entity_IsWater(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_LIQUID_WATER; }
+cc_bool Entity_TouchesAnyWater(struct Entity* e) {
 	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, Entity_IsWater);
@@ -234,7 +234,7 @@ static void Entity_MakeNameTexture(struct Entity* e) {
 
 	struct DrawTextArgs args;
 	struct FontDesc font;
-	bool bitmapped;
+	cc_bool bitmapped;
 	String name;
 	Size2D size;
 	Bitmap bmp;
@@ -362,7 +362,7 @@ static void Entity_ResetSkin(struct Entity* e) {
 }
 
 /* Copies or resets skin data for all entity with same skin */
-static void Entity_SetSkinAll(struct Entity* source, bool reset) {
+static void Entity_SetSkinAll(struct Entity* source, cc_bool reset) {
 	struct Entity* e;
 	String skin, eSkin;
 	int i;
@@ -488,7 +488,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 }
 
 /* Returns true if no other entities are sharing this skin texture */
-static bool Entity_CanDeleteTexture(struct Entity* except) {
+static cc_bool Entity_CanDeleteTexture(struct Entity* except) {
 	int i;
 	if (!except->TextureId) return false;
 
@@ -544,7 +544,7 @@ void Entities_RenderModels(double delta, float t) {
 
 void Entities_RenderNames(double delta) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	bool hadFog;
+	cc_bool hadFog;
 	int i;
 
 	if (Entities.NamesMode == NAME_MODE_NONE) return;
@@ -570,7 +570,7 @@ void Entities_RenderNames(double delta) {
 
 void Entities_RenderHoveredNames(double delta) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	bool allNames, hadFog;
+	cc_bool allNames, hadFog;
 	int i;
 
 	if (Entities.NamesMode == NAME_MODE_NONE) return;
@@ -762,7 +762,7 @@ static void Player_Despawn(struct Entity* e) {
 *------------------------------------------------------LocalPlayer--------------------------------------------------------*
 *#########################################################################################################################*/
 struct LocalPlayer LocalPlayer_Instance;
-static bool hackPermMsgs;
+static cc_bool hackPermMsgs;
 float LocalPlayer_JumpHeight(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	return (float)PhysicsComp_CalcMaxHeight(p->Physics.JumpVel);
@@ -802,7 +802,7 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 	}
 }
 
-static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, bool interpolate) {
+static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, cc_bool interpolate) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	LocalInterpComp_SetLocation(&p->Interp, update, interpolate);
 }
@@ -811,7 +811,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	struct LocalPlayer* p = (struct LocalPlayer*)e;
 	struct HacksComp* hacks = &p->Hacks;
 	float xMoving = 0, zMoving = 0;
-	bool wasOnGround;
+	cc_bool wasOnGround;
 	Vec3 headingVelocity;
 
 	if (!World.Blocks) return;
@@ -922,7 +922,7 @@ static void LocalPlayer_OnNewMap(void) {
 	p->_warnedNoclip  = false;
 }
 
-static bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
+static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
 static void LocalPlayer_DoRespawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct LocationUpdate update;
@@ -964,7 +964,7 @@ static void LocalPlayer_DoRespawn(void) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
-static bool LocalPlayer_HandleRespawn(void) {
+static cc_bool LocalPlayer_HandleRespawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanRespawn) {
 		LocalPlayer_DoRespawn();
@@ -976,7 +976,7 @@ static bool LocalPlayer_HandleRespawn(void) {
 	return false;
 }
 
-static bool LocalPlayer_HandleSetSpawn(void) {
+static cc_bool LocalPlayer_HandleSetSpawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanRespawn) {
 
@@ -1000,7 +1000,7 @@ static bool LocalPlayer_HandleSetSpawn(void) {
 	return LocalPlayer_HandleRespawn();
 }
 
-static bool LocalPlayer_HandleFly(void) {
+static cc_bool LocalPlayer_HandleFly(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		p->Hacks.Flying = !p->Hacks.Flying;
@@ -1012,7 +1012,7 @@ static bool LocalPlayer_HandleFly(void) {
 	return false;
 }
 
-static bool LocalPlayer_HandleNoClip(void) {
+static cc_bool LocalPlayer_HandleNoClip(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
@@ -1027,7 +1027,7 @@ static bool LocalPlayer_HandleNoClip(void) {
 	return false;
 }
 
-bool LocalPlayer_HandlesKey(Key key) {
+cc_bool LocalPlayer_HandlesKey(Key key) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
@@ -1060,7 +1060,7 @@ bool LocalPlayer_HandlesKey(Key key) {
 *#########################################################################################################################*/
 struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
-static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, bool interpolate) {
+static void NetPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, cc_bool interpolate) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
 	NetInterpComp_SetLocation(&p->Interp, update, interpolate);
 }

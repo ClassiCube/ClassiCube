@@ -45,7 +45,7 @@ ReturnCode Audio_Play(AudioHandle handle);
 /* Immediately stops the currently playing audio. */
 ReturnCode Audio_Stop(AudioHandle handle);
 /* Returns whether the given buffer has finished playing. */
-ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, bool* completed);
+ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed);
 /* Returns whether all buffers have finished playing. */
-ReturnCode Audio_IsFinished(AudioHandle handle, bool* finished);
+ReturnCode Audio_IsFinished(AudioHandle handle, cc_bool* finished);
 #endif

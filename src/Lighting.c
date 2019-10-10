@@ -48,7 +48,7 @@ static int Lighting_GetLightHeight(int x, int z) {
 }
 
 /* Outside colour is same as sunlight colour, so we reuse when possible */
-bool Lighting_IsLit(int x, int y, int z) {
+cc_bool Lighting_IsLit(int x, int y, int z) {
 	return y > Lighting_GetLightHeight(x, z);
 }
 
@@ -92,10 +92,10 @@ void Lighting_Refresh(void) {
 *----------------------------------------------------Lighting update------------------------------------------------------*
 *#########################################################################################################################*/
 static void Lighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, BlockID newBlock, int index, int lightH) {
-	bool didBlock  = Blocks.BlocksLight[oldBlock];
-	bool nowBlocks = Blocks.BlocksLight[newBlock];
-	int oldOffset  = (Blocks.LightOffset[oldBlock] >> FACE_YMAX) & 1;
-	int newOffset  = (Blocks.LightOffset[newBlock] >> FACE_YMAX) & 1;
+	cc_bool didBlock  = Blocks.BlocksLight[oldBlock];
+	cc_bool nowBlocks = Blocks.BlocksLight[newBlock];
+	int oldOffset     = (Blocks.LightOffset[oldBlock] >> FACE_YMAX) & 1;
+	int newOffset     = (Blocks.LightOffset[newBlock] >> FACE_YMAX) & 1;
 	BlockID above;
 
 	/* Two cases we need to handle here: */
@@ -126,7 +126,7 @@ static void Lighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, Block
 	}
 }
 
-static bool Lighting_Needs(BlockID block, BlockID other) {
+static cc_bool Lighting_Needs(BlockID block, BlockID other) {
 	return Blocks.Draw[block] != DRAW_OPAQUE || Blocks.Draw[other] != DRAW_GAS;
 }
 
@@ -138,9 +138,9 @@ for (; y >= minY; y--, i -= World.OneY) {\
 	if (affected) return true;\
 }
 
-static bool Lighting_NeedsNeighour(BlockID block, int i, int minY, int y, int nY) {
+static cc_bool Lighting_NeedsNeighour(BlockID block, int i, int minY, int y, int nY) {
 	BlockID other;
-	bool affected;
+	cc_bool affected;
 
 #ifndef EXTENDED_BLOCKS
 	Lighting_NeedsNeighourBody(World.Blocks[i]);
@@ -303,7 +303,7 @@ for (y = World.Height - 1; y >= 0; y--) {\
 	}\
 }
 
-static bool Lighting_CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, cc_int32* skip) {
+static cc_bool Lighting_CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, cc_int32* skip) {
 	int prevRunCount = 0, curRunCount, newRunCount, oldRunCount;
 	int lightOffset, offset;
 	int mapIndex, hIndex, baseIndex, index;

@@ -12,9 +12,9 @@
 #include "Platform.h"
 #include "Bitmap.h"
 
-bool Gui_ClassicTexture, Gui_ClassicTabList, Gui_ClassicMenu;
-int  Gui_Chatlines;
-bool Gui_ClickableChat, Gui_TabAutocomplete, Gui_ShowFPS;
+cc_bool Gui_ClassicTexture, Gui_ClassicTabList, Gui_ClassicMenu;
+int     Gui_Chatlines;
+cc_bool Gui_ClickableChat, Gui_TabAutocomplete, Gui_ShowFPS;
 
 GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 struct Screen* Gui_Status;
@@ -49,7 +49,7 @@ void Widget_Reset(void* widget) {
 	w->MenuClick = NULL;
 }
 
-bool Widget_Contains(void* widget, int x, int y) {
+cc_bool Widget_Contains(void* widget, int x, int y) {
 	struct Widget* w = (struct Widget*)widget;
 	return Gui_Contains(w->x, w->y, w->width, w->height, x, y);
 }
@@ -67,11 +67,11 @@ int Gui_CalcPos(cc_uint8 anchor, int offset, int size, int axisLen) {
 	return (axisLen - size) / 2 + offset;
 }
 
-bool Gui_Contains(int recX, int recY, int width, int height, int x, int y) {
+cc_bool Gui_Contains(int recX, int recY, int width, int height, int x, int y) {
 	return x >= recX && y >= recY && x < (recX + width) && y < (recY + height);
 }
 
-bool Gui_ContainsPointers(int x, int y, int width, int height) {
+cc_bool Gui_ContainsPointers(int x, int y, int width, int height) {
 	int i, px, py;
 	for (i = 0; i < Pointers_Count; i++) {
 		px = Pointers[i].x;	py = Pointers[i].y;

@@ -26,7 +26,7 @@ static float DefaultSet_Height(BlockID b) {
 	return 1.00f;
 }
 
-static bool DefaultSet_FullBright(BlockID b) {
+static cc_bool DefaultSet_FullBright(BlockID b) {
 	return b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA
 		|| b == BLOCK_MAGMA || b == BLOCK_FIRE;
 }
@@ -62,7 +62,7 @@ static cc_uint8 DefaultSet_Draw(BlockID b) {
 	return DRAW_OPAQUE;
 }
 
-static bool DefaultSet_BlocksLight(BlockID b) {
+static cc_bool DefaultSet_BlocksLight(BlockID b) {
 	return !(b == BLOCK_GLASS || b == BLOCK_LEAVES
 		|| b == BLOCK_AIR || DefaultSet_Draw(b) == DRAW_SPRITE);
 }
@@ -142,11 +142,11 @@ static const cc_uint8 bottomTex[BLOCK_CPE_COUNT]  = { 0,  1,  2,  2, 16,  4, 15,
 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  
  4, 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
 
-bool Block_IsCustomDefined(BlockID block) {
+cc_bool Block_IsCustomDefined(BlockID block) {
 	return (Block_DefinedCustomBlocks[block >> 5] & (1u << (block & 0x1F))) != 0;
 }
 
-void Block_SetCustomDefined(BlockID block, bool defined) {
+void Block_SetCustomDefined(BlockID block, cc_bool defined) {
 	if (defined) {
 		Block_DefinedCustomBlocks[block >> 5] |=  (1u << (block & 0x1F));
 	} else {
@@ -438,7 +438,7 @@ static void Block_CalcStretch(BlockID block) {
 	}
 }
 
-static bool Block_MightCull(BlockID block, BlockID other) {
+static cc_bool Block_MightCull(BlockID block, BlockID other) {
 	cc_uint8 bType, oType;
 	/* Sprite blocks can never cull blocks. */
 	if (Blocks.Draw[block] == DRAW_SPRITE) return false;
@@ -464,7 +464,7 @@ static bool Block_MightCull(BlockID block, BlockID other) {
 
 static void Block_CalcCulling(BlockID block, BlockID other) {
 	Vec3 bMin, bMax, oMin, oMax;
-	bool occludedX, occludedY, occludedZ, bothLiquid;
+	cc_bool occludedX, occludedY, occludedZ, bothLiquid;
 	int f;
 
 	/* Some blocks may not cull 'other' block, in which case just skip per-face check */
@@ -499,7 +499,7 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 	Blocks.Hidden[(block * BLOCK_COUNT) + other] = f;
 }
 
-bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {
+cc_bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {
 	return (Blocks.Hidden[(block * BLOCK_COUNT) + other] & (1 << face)) != 0;
 }
 
@@ -527,7 +527,7 @@ void Block_UpdateCulling(BlockID block) {
 /*########################################################################################################################*
 *-------------------------------------------------------AutoRotate--------------------------------------------------------*
 *#########################################################################################################################*/
-bool AutoRotate_Enabled;
+cc_bool AutoRotate_Enabled;
 
 /* replaces a portion of a string, appends otherwise */
 static void AutoRotate_Insert(String* str, int offset, const char* suffix) {

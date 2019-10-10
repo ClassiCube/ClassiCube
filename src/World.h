@@ -77,13 +77,13 @@ void World_SetBlock(int x, int y, int z, BlockID block);
 BlockID World_SafeGetBlock_3I(IVec3 p);
 
 /* Whether the given coordinates lie inside the map. */
-static CC_INLINE bool World_Contains(int x, int y, int z) {
+static CC_INLINE cc_bool World_Contains(int x, int y, int z) {
 	return (unsigned)x < (unsigned)World.Width
 		&& (unsigned)y < (unsigned)World.Height
 		&& (unsigned)z < (unsigned)World.Length;
 }
 /* Whether the given coordinates lie horizontally inside the map. */
-static CC_INLINE bool World_ContainsXZ(int x, int z) {
+static CC_INLINE cc_bool World_ContainsXZ(int x, int z) {
 	return (unsigned)x < (unsigned)World.Width 
 		&& (unsigned)z < (unsigned)World.Length;
 }
@@ -153,7 +153,7 @@ CC_API void Env_SetWeatherFade(float rate);
 /* Can be sun/rain/snow, see WEATHER_ enum. */
 CC_API void Env_SetWeather(int weather);
 /* Sets whether exponential/smooth fog is used. (default false) */
-CC_API void Env_SetExpFog(bool expFog);
+CC_API void Env_SetExpFog(cc_bool expFog);
 /* Sets how quickly skybox rotates/spins horizontally. (default 0) */
 /* speed is in rotations/second, so '2' completes two full spins per second. */
 CC_API void Env_SetSkyboxHorSpeed(float speed);

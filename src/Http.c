@@ -119,7 +119,7 @@ static void* workerThread;
 static void* pendingMutex;
 static void* processedMutex;
 static void* curRequestMutex;
-static volatile bool http_terminate;
+static volatile cc_bool http_terminate;
 
 static struct RequestList pendingReqs;
 static struct RequestList processedReqs;
@@ -131,7 +131,7 @@ static void Http_DownloadNextAsync(void);
 #endif
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
-static void Http_Add(const String* url, bool priority, const String* id, cc_uint8 type, const String* lastModified, const String* etag, const void* data, cc_uint32 size, struct EntryList* cookies) {
+static void Http_Add(const String* url, cc_bool priority, const String* id, cc_uint8 type, const String* lastModified, const String* etag, const void* data, cc_uint32 size, struct EntryList* cookies) {
 	struct HttpRequest req = { 0 };
 	String str;
 
@@ -329,7 +329,7 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 static void Http_SysInit(void) { }
 static void Http_SysFree(void) { }
 static void Http_DownloadAsync(struct HttpRequest* req);
-bool Http_DescribeError(ReturnCode res, String* dst) { return false; }
+cc_bool Http_DescribeError(ReturnCode res, String* dst) { return false; }
 static void Http_AddHeader(const char* key, const String* value);
 
 static void Http_DownloadNextAsync(void) {
@@ -432,8 +432,8 @@ static HINTERNET hInternet;
 struct HttpCacheEntry {
 	HINTERNET Handle; /* Native connection handle. */
 	String Address;   /* Address of server. (e.g. "classicube.net") */
-	cc_uint16 Port;    /* Port server is listening on. (e.g 80) */
-	bool Https;       /* Whether HTTPS or just HTTP protocol. */
+	cc_uint16 Port;   /* Port server is listening on. (e.g 80) */
+	cc_bool Https;    /* Whether HTTPS or just HTTP protocol. */
 	char _addressBuffer[STRING_SIZE + 1];
 };
 #define HTTP_CACHE_ENTRIES 10
@@ -502,7 +502,7 @@ static ReturnCode HttpCache_Lookup(struct HttpCacheEntry* e) {
 	return HttpCache_Insert(i, e);
 }
 
-bool Http_DescribeError(ReturnCode res, String* dst) {
+cc_bool Http_DescribeError(ReturnCode res, String* dst) {
 	TCHAR chars[600];
 	res = FormatMessage(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 					 GetModuleHandle(TEXT("wininet.dll")), res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, 600, NULL);
@@ -616,7 +616,7 @@ static void Http_SysFree(void) {
 #elif defined CC_BUILD_CURL
 static CURL* curl;
 
-bool Http_DescribeError(ReturnCode res, String* dst) {
+cc_bool Http_DescribeError(ReturnCode res, String* dst) {
 	const char* err = curl_easy_strerror((CURLcode)res);
 	if (!err) return false;
 
@@ -724,7 +724,7 @@ static void Http_SysFree(void) {
 #elif defined CC_BUILD_ANDROID
 struct HttpRequest* java_req;
 
-bool Http_DescribeError(ReturnCode res, String* dst) {
+cc_bool Http_DescribeError(ReturnCode res, String* dst) {
 	String err;
 	JNIEnv* env;
 	jvalue args[1];
@@ -835,7 +835,7 @@ static void Http_SysFree(void) { }
 #ifndef CC_BUILD_WEB
 static void Http_WorkerLoop(void) {
 	struct HttpRequest request;
-	bool hasRequest, stop;
+	cc_bool hasRequest, stop;
 	cc_uint64 beg, end;
 	cc_uint32 elapsed;
 
@@ -901,20 +901,20 @@ void Http_AsyncGetSkin(const String* skinName) {
 	Http_AsyncGetData(&url, false, skinName);
 }
 
-void Http_AsyncGetData(const String* url, bool priority, const String* id) {
+void Http_AsyncGetData(const String* url, cc_bool priority, const String* id) {
 	Http_Add(url, priority, id, REQUEST_TYPE_GET, NULL, NULL, NULL, 0, NULL);
 }
-void Http_AsyncGetHeaders(const String* url, bool priority, const String* id) {
+void Http_AsyncGetHeaders(const String* url, cc_bool priority, const String* id) {
 	Http_Add(url, priority, id, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0, NULL);
 }
-void Http_AsyncPostData(const String* url, bool priority, const String* id, const void* data, cc_uint32 size, struct EntryList* cookies) {
+void Http_AsyncPostData(const String* url, cc_bool priority, const String* id, const void* data, cc_uint32 size, struct EntryList* cookies) {
 	Http_Add(url, priority, id, REQUEST_TYPE_POST, NULL, NULL, data, size, cookies);
 }
-void Http_AsyncGetDataEx(const String* url, bool priority, const String* id, const String* lastModified, const String* etag, struct EntryList* cookies) {
+void Http_AsyncGetDataEx(const String* url, cc_bool priority, const String* id, const String* lastModified, const String* etag, struct EntryList* cookies) {
 	Http_Add(url, priority, id, REQUEST_TYPE_GET, lastModified, etag, NULL, 0, cookies);
 }
 
-bool Http_GetResult(const String* id, struct HttpRequest* item) {
+cc_bool Http_GetResult(const String* id, struct HttpRequest* item) {
 	int i;
 	Mutex_Lock(processedMutex);
 	{
@@ -925,7 +925,7 @@ bool Http_GetResult(const String* id, struct HttpRequest* item) {
 	return i >= 0;
 }
 
-bool Http_GetCurrent(struct HttpRequest* request, int* progress) {
+cc_bool Http_GetCurrent(struct HttpRequest* request, int* progress) {
 	Mutex_Lock(curRequestMutex);
 	{
 		*request  = http_curRequest;
@@ -944,7 +944,7 @@ void Http_ClearPending(void) {
 	Waitable_Signal(workerWaitable);
 }
 
-static bool Http_UrlDirect(cc_uint8 c) {
+static cc_bool Http_UrlDirect(cc_uint8 c) {
 	return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
 		|| c == '-' || c == '_' || c == '.' || c == '~';
 }

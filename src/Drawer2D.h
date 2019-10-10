@@ -8,21 +8,21 @@
 */
 
 struct FontDesc { void* handle; cc_uint16 size, style; int height; };
-struct DrawTextArgs { String text; struct FontDesc* font; bool useShadow; };
+struct DrawTextArgs { String text; struct FontDesc* font; cc_bool useShadow; };
 struct Texture;
 struct IGameComponent;
 extern struct IGameComponent Drawer2D_Component;
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, struct FontDesc* font, bool useShadow);
-void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, bool useShadow);
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, struct FontDesc* font, cc_bool useShadow);
+void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc_bool useShadow);
 /* Initialises the given font. When Drawer2D_BitmappedText is false, creates native font handle using Font_Make. */
 CC_NOINLINE void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style);
 
 /* Whether text should be drawn and measured using the currently set font bitmap. */ 
 /* If false, then text is instead draw using platform/system fonts. */
-extern bool Drawer2D_BitmappedText;
+extern cc_bool Drawer2D_BitmappedText;
 /* Whether the shadows behind text (that uses shadows) is fully black. */
-extern bool Drawer2D_BlackTextShadows;
+extern cc_bool Drawer2D_BlackTextShadows;
 /* List of all colours. (An A of 0 means the colour is not used) */
 extern BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 #define Drawer2D_GetCol(c) Drawer2D_Cols[(cc_uint8)c]
@@ -31,7 +31,7 @@ extern String Drawer2D_FontName;
 
 /* Clamps the given rectangle to line inside the bitmap. */
 /* Returns false if rectangle is completely outside bitmap's rectangle. */
-bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height);
+cc_bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height);
 
 /* Fills the given area with a simple noisy pattern. */
 /* Variation determines how 'visible/obvious' the noise is. */
@@ -73,7 +73,7 @@ CC_API Size2D Drawer2D_MeasureText(struct DrawTextArgs* args);
 /* Similar to Drawer2D_DrawText, but trims the text with trailing ".." if wider than maxWidth. */
 void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, int maxWidth);
 /* Returns the line height for drawing any character in the font. */
-int Drawer2D_FontHeight(const struct FontDesc* font, bool useShadow);
+int Drawer2D_FontHeight(const struct FontDesc* font, cc_bool useShadow);
 
 /* Creates a texture consisting only of the given text drawn onto it. */
 /* NOTE: The returned texture is always padded up to nearest power of two dimensions. */
@@ -85,13 +85,13 @@ CC_API void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used
 
 /* Returns whether the given colour code is used/valid. */
 /* NOTE: This can change if the server defines custom colour codes. */
-bool Drawer2D_ValidColCodeAt(const String* text, int i);
+cc_bool Drawer2D_ValidColCodeAt(const String* text, int i);
 /* Whether text is empty or consists purely of valid colour codes. */
-bool Drawer2D_IsEmptyText(const String* text);
+cc_bool Drawer2D_IsEmptyText(const String* text);
 /* Returns the last valid colour code in the given input, or \0 if not found. */
 char Drawer2D_LastCol(const String* text, int start);
 /* Returns whether the colour code is f, F or \0. */
-bool Drawer2D_IsWhiteCol(char c);
+cc_bool Drawer2D_IsWhiteCol(char c);
 
 void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale);
 void Drawer2D_ReducePadding_Height(int* height, int point, int scale);

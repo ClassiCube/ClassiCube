@@ -11,11 +11,11 @@
 */
 struct Stream;
 
-struct GZipHeader { cc_uint8 State; bool Done; cc_uint8 PartsRead; cc_int32 Flags; };
+struct GZipHeader { cc_uint8 State; cc_bool Done; cc_uint8 PartsRead; cc_int32 Flags; };
 void GZipHeader_Init(struct GZipHeader* header);
 ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header);
 
-struct ZLibHeader { cc_uint8 State; bool Done; };
+struct ZLibHeader { cc_uint8 State; cc_bool Done; };
 void ZLibHeader_Init(struct ZLibHeader* header);
 ReturnCode ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header);
 
@@ -40,7 +40,7 @@ struct HuffmanTable {
 
 struct InflateState {
 	cc_uint8 State;
-	bool LastBlock;   /* Whether the last DEFLATE block has been encounted in the stream */
+	cc_bool LastBlock; /* Whether the last DEFLATE block has been encounted in the stream */
 	cc_uint32 Bits;    /* Holds bits across byte boundaries */
 	cc_uint32 NumBits; /* Number of bits in Bits buffer */
 
@@ -97,7 +97,7 @@ struct DeflateState {
 	cc_uint8 Output[DEFLATE_OUT_SIZE];
 	int Head[DEFLATE_HASH_SIZE];
 	int Prev[DEFLATE_BUFFER_SIZE];
-	bool WroteHeader;
+	cc_bool WroteHeader;
 };
 /* Compresses input data using DEFLATE, then writes compressed output to another stream. Write only stream. */
 /* DEFLATE compression is pure compressed data, there is no header or footer. */
@@ -128,7 +128,7 @@ struct ZipState {
 	ReturnCode (*ProcessEntry)(const String* path, struct Stream* data, struct ZipState* state);
 	/* Predicate used to select which entries in a .zip archive get processed. */
 	/* NOTE: returning false entirely skips the entry. (avoids pointless seek to entry) */
-	bool (*SelectEntry)(const String* path);
+	cc_bool (*SelectEntry)(const String* path);
 	/* Generic object/pointer for ProcessEntry callback. */
 	void* Obj;
 

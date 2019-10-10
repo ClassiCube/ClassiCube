@@ -34,23 +34,23 @@
 #include "Stream.h"
 
 struct _GameData Game;
-int  Game_Port;
-bool Game_UseCPEBlocks;
+int     Game_Port;
+cc_bool Game_UseCPEBlocks;
 
 struct PickedPos Game_SelectedPos;
 int Game_ViewDistance, Game_MaxViewDistance, Game_UserViewDistance;
 int Game_Fov, Game_DefaultFov, Game_ZoomFov;
 
-int  Game_FpsLimit, Game_Vertices;
-bool Game_SimpleArmsAnim;
+int     Game_FpsLimit, Game_Vertices;
+cc_bool Game_SimpleArmsAnim;
 
-bool Game_ClassicMode, Game_ClassicHacks;
-bool Game_AllowCustomBlocks, Game_UseCPE;
-bool Game_AllowServerTextures;
+cc_bool Game_ClassicMode, Game_ClassicHacks;
+cc_bool Game_AllowCustomBlocks, Game_UseCPE;
+cc_bool Game_AllowServerTextures;
 
-bool Game_ViewBobbing, Game_HideGui;
-bool Game_BreakableLiquids, Game_ScreenshotRequested;
-float Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
+cc_bool Game_ViewBobbing, Game_HideGui;
+cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
+float   Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
 
 static struct ScheduledTask Game_Tasks[6];
 static int Game_TasksCount, entTaskI;
@@ -125,7 +125,7 @@ void Game_SetDefaultTexturePack(const String* texPack) {
 	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
 }
 
-bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
+cc_bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 	static const String terrain = String_FromConst("terrain.png");
 	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
 
@@ -219,15 +219,15 @@ void Game_ChangeBlock(int x, int y, int z, BlockID block) {
 	Server.SendBlock(x, y, z, old, block);
 }
 
-bool Game_CanPick(BlockID block) {
+cc_bool Game_CanPick(BlockID block) {
 	if (Blocks.Draw[block] == DRAW_GAS)    return false;
 	if (Blocks.Draw[block] == DRAW_SPRITE) return true;
 	return Blocks.Collide[block] != COLLIDE_LIQUID || Game_BreakableLiquids;
 }
 
-bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, cc_uint8* skinType) {
+cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, cc_uint8* skinType) {
 	Bitmap bmp;
-	bool success;
+	cc_bool success;
 	ReturnCode res;
 	
 	res = Png_Decode(&bmp, src);
@@ -244,7 +244,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* 
 	return success;
 }
 
-bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
+cc_bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
 	int maxWidth = Gfx.MaxTexWidth, maxHeight = Gfx.MaxTexHeight;
 	if (!bmp->Scan0) {
 		Chat_Add1("&cError loading %s from the texture pack.", file);
@@ -362,7 +362,7 @@ static void Game_LoadOptions(void) {
 	Game_RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
 	Game_RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.35f, 5.0f, 1.0f);
 	/* TODO: Do we need to support option to skip SSL */
-	/*bool skipSsl = Options_GetBool("skip-ssl-check", false);
+	/*cc_bool skipSsl = Options_GetBool("skip-ssl-check", false);
 	if (skipSsl) {
 		ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
 		Options.Set("skip-ssl-check", false);

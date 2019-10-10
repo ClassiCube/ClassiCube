@@ -13,9 +13,9 @@ struct PickedPos {
 	Vec3 Intersect;      /* Coords at which the ray intersected this block. */
 	IVec3 BlockPos;      /* Coords of the block */
 	IVec3 TranslatedPos; /* Coords of the neighbouring block that is closest to the player */	
-	bool Valid;             /* Whether this instance actually has a selected block currently */
-	Face Closest;           /* Face of the picked block that is closet to the player */
-	BlockID Block;          /* Block ID of the picked block */
+	cc_bool Valid;       /* Whether this instance actually has a selected block currently */
+	Face Closest;        /* Face of the picked block that is closet to the player */
+	BlockID Block;       /* Block ID of the picked block */
 };
 
 /* Implements a voxel ray tracer

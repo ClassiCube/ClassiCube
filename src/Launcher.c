@@ -20,13 +20,13 @@
 struct LScreen* Launcher_Screen;
 Rect2D Launcher_Dirty;
 Bitmap Launcher_Framebuffer;
-bool Launcher_ClassicBackground;
+cc_bool Launcher_ClassicBackground;
 struct FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
 
-static bool pendingRedraw;
+static cc_bool pendingRedraw;
 static struct FontDesc logoFont;
 
-bool Launcher_ShouldExit, Launcher_ShouldUpdate;
+cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static void Launcher_ApplyUpdate(void);
 
 void Launcher_SetScreen(struct LScreen* screen) {
@@ -49,7 +49,7 @@ CC_NOINLINE static void Launcher_StartFromInfo(struct ServerInfo* info) {
 	Launcher_StartGame(&SignInTask.Username, &info->mppass, &info->ip, &port, &info->name);
 }
 
-bool Launcher_ConnectToServer(const String* hash) {
+cc_bool Launcher_ConnectToServer(const String* hash) {
 	struct ServerInfo* info;
 	String logMsg;
 	int i;
@@ -106,7 +106,7 @@ static void Launcher_OnResize(void* obj) {
 	Launcher_Redraw();
 }
 
-static bool Launcher_IsShutdown(int key) {
+static cc_bool Launcher_IsShutdown(int key) {
 	if (key == KEY_F4 && Key_IsAltPressed()) return true;
 
 	/* On OSX, Cmd+Q should also terminate the process */
@@ -117,7 +117,7 @@ static bool Launcher_IsShutdown(int key) {
 #endif
 }
 
-static void HandleInputDown(void* obj, int key, bool was) {
+static void HandleInputDown(void* obj, int key, cc_bool was) {
 	if (Launcher_IsShutdown(key)) Launcher_ShouldExit = true;
 	Launcher_Screen->KeyDown(Launcher_Screen, key, was);
 }
@@ -206,7 +206,7 @@ static void Launcher_Free(void) {
 }
 
 #ifdef CC_BUILD_ANDROID
-static bool winCreated;
+static cc_bool winCreated;
 static void OnWindowCreated(void* obj) { winCreated = true; }
 int Program_Run(int argc, char** argv);
 
@@ -359,11 +359,11 @@ void Launcher_SaveSkin(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Background-----------------------------------------------------*
 *#########################################################################################################################*/
-static bool useBitmappedFont;
+static cc_bool useBitmappedFont;
 static Bitmap dirtBmp, stoneBmp, fontBmp;
 #define TILESIZE 48
 
-static bool Launcher_SelectZipEntry(const String* path) {
+static cc_bool Launcher_SelectZipEntry(const String* path) {
 	return
 		String_CaselessEqualsConst(path, "default.png") ||
 		String_CaselessEqualsConst(path, "terrain.png");
@@ -545,7 +545,7 @@ void Launcher_MarkAllDirty(void) {
 *--------------------------------------------------------Starter/Updater--------------------------------------------------*
 *#########################################################################################################################*/
 static TimeMS lastJoin;
-bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
+cc_bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
 	String args; char argsBuffer[512];
 	TimeMS now;
 	ReturnCode res;

@@ -15,17 +15,17 @@ struct LWidgetVTABLE {
 	/* Called repeatedly to update this widget when selected. */
 	void (*Tick)(void* widget);
 	/* Called when key is pressed and this widget is selected. */
-	void (*KeyDown)(void* widget, Key key, bool wasDown);
+	void (*KeyDown)(void* widget, Key key, cc_bool wasDown);
 	/* Called when key is pressed and this widget is selected. */
 	void (*KeyPress)(void* widget, char c);
 	/* Called when mouse hovers/moves over this widget. */
-	void (*MouseMove)(void* widget, int deltaX, int deltaY, bool wasOver);
+	void (*MouseMove)(void* widget, int deltaX, int deltaY, cc_bool wasOver);
 	/* Called when mouse moves away from this widget. */
 	void (*MouseLeft)(void* widget);
 	/* Called when mouse clicks on this widget. */
 	/* NOTE: This function is just for general widget behaviour. */
 	/* OnClick callback is for per-widget instance behaviour. */
-	void (*OnSelect)(void* widget, bool wasSelected);
+	void (*OnSelect)(void* widget, cc_bool wasSelected);
 	/* Called when mouse clicks on another widget. */
 	void (*OnUnselect)(void* widget);
 	/* Called when mouse wheel is scrolled and this widget is selected. */
@@ -33,14 +33,14 @@ struct LWidgetVTABLE {
 };
 
 #define LWidget_Layout \
-	struct LWidgetVTABLE* VTABLE; /* General widget functions */ \
-	int X, Y, Width, Height;      /* Top left corner, and dimensions, of this widget */ \
-	bool Hovered;                 /* Whether this widget is currently being moused over */ \
-	bool Selected;                /* Whether this widget is last widget to be clicked on */ \
-	bool Hidden;                  /* Whether this widget is hidden from view */ \
-	bool TabSelectable;           /* Whether this widget gets selected when pressing tab */ \
+	struct LWidgetVTABLE* VTABLE;  /* General widget functions */ \
+	int X, Y, Width, Height;       /* Top left corner, and dimensions, of this widget */ \
+	cc_bool Hovered;               /* Whether this widget is currently being moused over */ \
+	cc_bool Selected;              /* Whether this widget is last widget to be clicked on */ \
+	cc_bool Hidden;                /* Whether this widget is hidden from view */ \
+	cc_bool TabSelectable;         /* Whether this widget gets selected when pressing tab */ \
 	cc_uint8 HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
-	int XOffset, YOffset;         /* Offset from the reference point */ \
+	int XOffset, YOffset;          /* Offset from the reference point */ \
 	void (*OnClick)(void* widget, int x, int y); /* Called when widget is clicked */ \
 	Rect2D Last;                  /* Widget's last drawn area */
 
@@ -66,13 +66,13 @@ struct LInput {
 	/* Text displayed when the user has not entered anything in the text field. */
 	const char* HintText;
 	/* Whether all characters should be rendered as *. */
-	bool Password;
+	cc_bool Password;
 	/* Filter applied to text received from the clipboard. Can be NULL. */
 	void (*ClipboardFilter)(String* str);
 	/* Callback invoked when the text is changed. Can be NULL. */
 	void (*TextChanged)(struct LInput* w);
 	/* Callback invoked whenever user attempts to append a character to the text. */
-	bool (*TextFilter)(char c);
+	cc_bool (*TextFilter)(char c);
 	/* Specifies the position that characters are inserted/deleted from. */
 	/* NOTE: -1 to insert/delete characters at end of the text. */
 	int CaretPos;
@@ -136,12 +136,12 @@ struct LTableColumn {
 	/* Returns sort order of two rows, based on value of this column in both rows. */
 	int (*SortOrder)(const struct ServerInfo* a, const struct ServerInfo* b);
 	/* Whether a vertical gridline (and padding) appears after this. */
-	bool columnGridline;
+	cc_bool columnGridline;
 	/* Whether user can interact with this column. */
 	/* Non-interactable columns can't be sorted/resized. */
-	bool interactable;
+	cc_bool interactable;
 	/* Whether to invert the order of row sorting. */
-	bool invertSort;
+	cc_bool invertSort;
 };
 
 /* Represents a table of server entries. */
@@ -175,13 +175,13 @@ struct LTable {
 	int DraggingColumn;
 	int GridlineWidth, GridlineHeight;
 
-	bool DraggingScrollbar;	/* Is scrollbar is currently being dragged */
-	int MouseOffset;        /* Offset of mouse for scrollbar dragging */
-	int ScrollbarWidth;     /* How wide scrollbar is in pixels */
+	cc_bool DraggingScrollbar; /* Is scrollbar is currently being dragged */
+	int MouseOffset;    /* Offset of mouse for scrollbar dragging */
+	int ScrollbarWidth; /* How wide scrollbar is in pixels */
 
 	float _wheelAcc; /* mouse wheel accumulator */
-	int _lastRow; /* last clicked row (for doubleclick join) */
-	TimeMS _lastClick;   /* time of last mouse click on a row */
+	int _lastRow;    /* last clicked row (for doubleclick join) */
+	TimeMS _lastClick; /* time of last mouse click on a row */
 };
 /* Gets the current ith row */
 #define LTable_Get(row) (&FetchServersTask.Servers[FetchServersTask.Servers[row]._order])
@@ -195,7 +195,7 @@ void LTable_Reset(struct LTable* table);
 void LTable_Reposition(struct LTable* table);
 /* Whether this table would handle the given key being pressed. */
 /* e.g. used so pressing up/down works even when another widget is selected */
-bool LTable_HandlesKey(Key key);
+cc_bool LTable_HandlesKey(Key key);
 /* Filters rows to only show those containing 'w->Filter' in the name. */
 void LTable_ApplyFilter(struct LTable* table);
 /* Sorts the rows in the table by current Sorter function of table */

@@ -107,7 +107,7 @@ static int selections_count;
 static struct SelectionBox selections_list[SELECTIONS_MAX];
 static cc_uint8 selections_ids[SELECTIONS_MAX];
 static GfxResourceID selections_VB, selections_LineVB;
-static bool selections_used;
+static cc_bool selections_used;
 
 void Selections_Add(cc_uint8 id, IVec3 p1, IVec3 p2, PackedCol col) {
 	struct SelectionBox sel;

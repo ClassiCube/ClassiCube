@@ -40,7 +40,7 @@ static int PackedCol_DeHex(char hex) {
 	return -1;
 }
 
-bool PackedCol_Unhex(const char* src, int* dst, int count) {
+cc_bool PackedCol_Unhex(const char* src, int* dst, int count) {
 	int i;
 	for (i = 0; i < count; i++) {
 		dst[i] = PackedCol_DeHex(src[i]);
@@ -55,7 +55,7 @@ void PackedCol_ToHex(String* str, PackedCol value) {
 	String_AppendHex(str, PackedCol_B(value));
 }
 
-bool PackedCol_TryParseHex(const String* str, cc_uint8* rgb) {
+cc_bool PackedCol_TryParseHex(const String* str, cc_uint8* rgb) {
 	int bits[6];
 	char* buffer = str->buffer;
 

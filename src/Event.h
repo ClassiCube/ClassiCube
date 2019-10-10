@@ -52,7 +52,7 @@ struct Event_Chat {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_Input_Callback)(void* obj, int key, bool repeating);
+typedef void (*Event_Input_Callback)(void* obj, int key, cc_bool repeating);
 struct Event_Input {
 	Event_Input_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
@@ -109,7 +109,7 @@ void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType
 /* Calls all registered callbacks for an event which has keyboard key/mouse button. */
 /* repeating is whether the key/button was already pressed down. (i.e. user is holding down key) */
 /* NOTE: 'pressed up'/'released' events will always have repeating as false. */
-void Event_RaiseInput(struct Event_Input* handlers, int key, bool repeating);
+void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating);
 #define Event_RegisterInput(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
 #define Event_UnregisterInput(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 

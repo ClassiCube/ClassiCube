@@ -713,7 +713,7 @@ static ReturnCode Inflate_StreamRead(struct Stream* stream, cc_uint8* data, cc_u
 	cc_uint8* inputEnd;
 	cc_uint32 read, left;
 	cc_uint32 startAvailOut;
-	bool hasInput;
+	cc_bool hasInput;
 	ReturnCode res;
 
 	*modified = 0;
@@ -1212,7 +1212,7 @@ enum ZipSig {
 };
 
 static ReturnCode Zip_DefaultProcessor(const String* path, struct Stream* data, struct ZipState* s) { return 0; }
-static bool Zip_DefaultSelector(const String* path) { return true; }
+static cc_bool Zip_DefaultSelector(const String* path) { return true; }
 void Zip_Init(struct ZipState* state, struct Stream* input) {
 	state->Input = input;
 	state->Obj   = NULL;

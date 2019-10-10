@@ -19,7 +19,7 @@ int Utils_ParseEnum(const String* text, int defValue, const char* const* names, 
 	return defValue;
 }
 
-bool Utils_IsUrlPrefix(const String* value) {
+cc_bool Utils_IsUrlPrefix(const String* value) {
 	static const String http  = String_FromConst("http://");
 	static const String https = String_FromConst("https://");
 
@@ -27,7 +27,7 @@ bool Utils_IsUrlPrefix(const String* value) {
 		|| String_IndexOfString(value, &https) == 0;
 }
 
-bool Utils_EnsureDirectory(const char* dirName) {
+cc_bool Utils_EnsureDirectory(const char* dirName) {
 	String dir = String_FromReadonly(dirName);
 	ReturnCode res;
 	if (Directory_Exists(&dir)) return true;
@@ -60,7 +60,7 @@ int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
 }
 
 /* Checks if an area is completely black, so Alex skins edited with Microsoft Paint are still treated as Alex */
-static bool Utils_IsAllBlack(const Bitmap* bmp, int x1, int y1, int width, int height) {
+static cc_bool Utils_IsAllBlack(const Bitmap* bmp, int x1, int y1, int width, int height) {
 	int x, y;
 	for (y = y1; y < y1 + height; y++) {
 		BitmapCol* row = Bitmap_GetRow(bmp, y);
@@ -130,7 +130,7 @@ void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapac
 	}
 }
 
-bool Utils_ParseIP(const String* ip, cc_uint8* data) {
+cc_bool Utils_ParseIP(const String* ip, cc_uint8* data) {
 	String parts[4];
 	int count = String_UNSAFE_Split(ip, '.', parts, 4);
 	if (count != 4) return false;

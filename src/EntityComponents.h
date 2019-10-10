@@ -36,38 +36,38 @@ void TiltComp_GetCurrent(struct TiltComp* anim, float t);
 
 /* Entity component that performs management of hack states */
 struct HacksComp {
-	bool IsOp;
+	cc_bool IsOp;
 	/* Speed player move at, relative to normal speed, when the 'speeding' key binding is held down */
 	float SpeedMultiplier;
 	/* Whether blocks that the player places that intersect themselves, should cause the player to
 	be pushed back in the opposite direction of the placed block */
-	bool PushbackPlacing;
+	cc_bool PushbackPlacing;
 	/* Whether the player should be able to step up whole blocks, instead of just slabs */
-	bool FullBlockStep;
+	cc_bool FullBlockStep;
 	/* Whether user has allowed hacks as an option. Note 'can use X' set by the server override this */
-	bool Enabled;
+	cc_bool Enabled;
 
-	bool CanAnyHacks, CanUseThirdPersonCamera, CanSpeed, CanFly;
-	bool CanRespawn, CanNoclip, CanPushbackBlocks,CanSeeAllNames;
-	bool CanDoubleJump, CanBePushed;
+	cc_bool CanAnyHacks, CanUseThirdPersonCamera, CanSpeed, CanFly;
+	cc_bool CanRespawn, CanNoclip, CanPushbackBlocks,CanSeeAllNames;
+	cc_bool CanDoubleJump, CanBePushed;
 	float BaseHorSpeed;
 	/* Max amount of jumps the player can perform */
 	int MaxJumps;
 
 	/* Whether the player should slide after letting go of movement buttons in noclip */
-	bool NoclipSlide;
+	cc_bool NoclipSlide;
 	/* Whether the player has allowed the usage of fast double jumping abilities */
-	bool WOMStyleHacks;
+	cc_bool WOMStyleHacks;
 
-	bool Noclip, Flying, FlyingUp, FlyingDown, Speeding, HalfSpeeding;
-	bool Floating; /* true if NoClip or Flying */
+	cc_bool Noclip, Flying, FlyingUp, FlyingDown, Speeding, HalfSpeeding;
+	cc_bool Floating; /* true if NoClip or Flying */
 	String HacksFlags;
 	char __HacksFlagsBuffer[STRING_SIZE * 2];	
 };
 
 void HacksComp_Init(struct HacksComp* hacks);
-bool HacksComp_CanJumpHigher(struct HacksComp* hacks);
-void HacksComp_SetUserType(struct HacksComp* hacks, cc_uint8 value, bool setBlockPerms);
+cc_bool HacksComp_CanJumpHigher(struct HacksComp* hacks);
+void HacksComp_SetUserType(struct HacksComp* hacks, cc_uint8 value, cc_bool setBlockPerms);
 /* Determines hacks permissions based on flags, then calls HacksComp_Update */
 /* e.g. +ophax allows all hacks if op, -push disables entity pushing */
 void HacksComp_RecheckFlags(struct HacksComp* hacks);
@@ -86,7 +86,7 @@ struct InterpComp { InterpComp_Layout };
 
 void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* entity, float t);
 
-void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, bool interpolate);
+void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdate* update, cc_bool interpolate);
 void LocalInterpComp_AdvanceState(struct InterpComp* interp);
 
 /* Entity component that performs interpolation for network players */
@@ -98,27 +98,27 @@ struct NetInterpComp {
 	struct InterpState States[10];
 };
 
-void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, bool interpolate);
+void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpdate* update, cc_bool interpolate);
 void NetInterpComp_AdvanceState(struct NetInterpComp* interp);
 
 /* Entity component that draws square and circle shadows beneath entities */
 
-extern bool ShadowComponent_BoundShadowTex;
+extern cc_bool ShadowComponent_BoundShadowTex;
 extern GfxResourceID ShadowComponent_ShadowTex;
 void ShadowComponent_Draw(struct Entity* entity);
 
 /* Entity component that performs collision detection */
 struct CollisionsComp {
 	struct Entity* Entity;
-	bool HitXMin, HitYMin, HitZMin, HitXMax, HitYMax, HitZMax, WasOn;
+	cc_bool HitXMin, HitYMin, HitZMin, HitXMax, HitYMax, HitZMax, WasOn;
 };
-bool Collisions_HitHorizontal(struct CollisionsComp* comp);
+cc_bool Collisions_HitHorizontal(struct CollisionsComp* comp);
 void Collisions_MoveAndWallSlide(struct CollisionsComp* comp);
 
 /* Entity component that performs collisions */
 struct PhysicsComp {
-	bool UseLiquidGravity; /* used by BlockDefinitions */
-	bool CanLiquidJump, Jumping;
+	cc_bool UseLiquidGravity; /* used by BlockDefinitions */
+	cc_bool CanLiquidJump, Jumping;
 	int MultiJumps;
 	struct Entity* Entity;
 
@@ -136,5 +136,5 @@ double PhysicsComp_CalcMaxHeight(float u);
 void PhysicsComp_DoEntityPush(struct Entity* entity);
 
 /* Entity component that plays block step sounds */
-void SoundComp_Tick(bool wasOnGround);
+void SoundComp_Tick(cc_bool wasOnGround);
 #endif

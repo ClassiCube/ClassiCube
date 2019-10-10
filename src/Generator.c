@@ -8,9 +8,9 @@
 
 volatile float Gen_CurrentProgress;
 volatile const char* Gen_CurrentState;
-volatile bool Gen_Done;
+volatile cc_bool Gen_Done;
 int Gen_Seed;
-bool Gen_Vanilla;
+cc_bool Gen_Vanilla;
 BlockRaw* Gen_Blocks;
 
 static void Gen_Init(void) {
@@ -641,7 +641,7 @@ void NotchyGen_Generate(void) {
 BlockRaw* Tree_Blocks;
 RNGState* Tree_Rnd;
 
-bool TreeGen_CanGrow(int treeX, int treeY, int treeZ, int treeHeight) {
+cc_bool TreeGen_CanGrow(int treeX, int treeY, int treeZ, int treeHeight) {
 	int baseHeight = treeHeight - 4;
 	int index;
 	int x, y, z;

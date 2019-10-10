@@ -73,9 +73,9 @@ TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index);
 /* Initialises cache state. (e.g. loading accepted/denied lists) */
 void TextureCache_Init(void);
 /* Whether the given URL is in list of accepted URLs. */
-bool TextureCache_HasAccepted(const String* url);
+cc_bool TextureCache_HasAccepted(const String* url);
 /* Whether the given URL is in list of denied URLs. */
-bool TextureCache_HasDenied(const String* url);
+cc_bool TextureCache_HasDenied(const String* url);
 /* Adds the given URL to list of accepted URLs, then saves it. */
 /* Accepted URLs are loaded without prompting the user. */
 void TextureCache_Accept(const String* url);
@@ -84,9 +84,9 @@ void TextureCache_Accept(const String* url);
 void TextureCache_Deny(const String* url);
 
 /* Returns whether the given URL has been cached. */
-bool TextureCache_Has(const String* url);
+cc_bool TextureCache_Has(const String* url);
 /* Attempts to get the cached data stream for the given url. */
-bool TextureCache_Get(const String* url, struct Stream* stream);
+cc_bool TextureCache_Get(const String* url, struct Stream* stream);
 /* Updates cached data, ETag, and Last-Modified for the given URL. */
 void TextureCache_Update(struct HttpRequest* req);
 
@@ -94,7 +94,7 @@ void TextureCache_Update(struct HttpRequest* req);
 void TexturePack_ExtractZip_File(const String* filename);
 /* If World_TextureUrl is empty, extracts user's default texture pack. */
 /* Otherwise extracts the cached texture pack for that URL. */
-void TexturePack_ExtractCurrent(bool forceReload);
+void TexturePack_ExtractCurrent(cc_bool forceReload);
 /* Asynchronously downloads a texture pack. */
 /* Sends ETag and Last-Modified to webserver to avoid redundant downloads. */
 /* NOTE: This does not load cached textures - use TexturePack_ExtractCurrent for that. */

@@ -24,12 +24,12 @@ int Builder_SidesLevel, Builder_EdgeLevel;
 static BlockID* Builder_Chunk;
 static cc_uint8* Builder_Counts;
 static int* Builder_BitFlags;
-static bool Builder_UseBitFlags;
+static cc_bool Builder_UseBitFlags;
 static int Builder_X, Builder_Y, Builder_Z;
 static BlockID Builder_Block;
 static int Builder_ChunkIndex;
-static bool Builder_FullBright;
-static bool Builder_Tinted;
+static cc_bool Builder_FullBright;
+static cc_bool Builder_Tinted;
 static int Builder_ChunkEndX, Builder_ChunkEndZ;
 static int Builder_Offsets[FACE_COUNT] = { -1,1, -EXTCHUNK_SIZE,EXTCHUNK_SIZE, -EXTCHUNK_SIZE_2,EXTCHUNK_SIZE_2 };
 
@@ -97,7 +97,7 @@ static void Builder_AddVertices(BlockID block, Face face) {
 	part->fCount[face] += 4;
 }
 
-static void Builder_SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPartInfo* info, bool* hasParts) {
+static void Builder_SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPartInfo* info, cc_bool* hasParts) {
 	int vCount = Builder1DPart_VerticesCount(part);
 	info->Offset = -1;
 	if (!vCount) return;
@@ -257,8 +257,8 @@ for (yy = -1; yy < 17; ++yy) {\
 	}\
 }
 
-static bool ReadChunkData(int x1, int y1, int z1, bool* outAllAir) {
-	bool allAir = true, allSolid = true;
+static cc_bool ReadChunkData(int x1, int y1, int z1, cc_bool* outAllAir) {
+	cc_bool allAir = true, allSolid = true;
 	int index, cIndex;
 	BlockID block;
 	int xx, yy, zz, y;
@@ -303,8 +303,8 @@ for (yy = -1; yy < 17; ++yy) {\
 	}\
 }
 
-static bool ReadBorderChunkData(int x1, int y1, int z1, bool* outAllAir) {
-	bool allAir = true;
+static cc_bool ReadBorderChunkData(int x1, int y1, int z1, cc_bool* outAllAir) {
+	cc_bool allAir = true;
 	int index, cIndex;
 	BlockID block;
 	int xx, yy, zz, x, y, z;
@@ -323,12 +323,12 @@ static bool ReadBorderChunkData(int x1, int y1, int z1, bool* outAllAir) {
 	return false;
 }
 
-static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
+static cc_bool Builder_BuildChunk(int x1, int y1, int z1, cc_bool* allAir) {
 	BlockID chunk[EXTCHUNK_SIZE_3]; 
 	cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
 	int bitFlags[EXTCHUNK_SIZE_3];
 
-	bool allSolid, onBorder;
+	cc_bool allSolid, onBorder;
 	int xMax, yMax, zMax;
 	int cIndex, index;
 	int x, y, z, xx, yy, zz;
@@ -382,7 +382,7 @@ static bool Builder_BuildChunk(int x1, int y1, int z1, bool* allAir) {
 
 void Builder_MakeChunk(struct ChunkInfo* info) {
 	int x = info->CentreX - 8, y = info->CentreY - 8, z = info->CentreZ - 8;
-	bool allAir, hasMesh, hasNorm, hasTran;
+	cc_bool allAir, hasMesh, hasNorm, hasTran;
 	int totalVerts, partsIndex;
 	int i, j, curIdx, offset;
 
@@ -424,7 +424,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 #endif
 }
 
-static bool Builder_OccludedLiquid(int chunkIndex) {
+static cc_bool Builder_OccludedLiquid(int chunkIndex) {
 	chunkIndex += EXTCHUNK_SIZE_2; /* Checking y above */
 	return
 		Blocks.FullOpaque[Builder_Chunk[chunkIndex]]
@@ -552,7 +552,7 @@ static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) 
 	return 0; /* should never happen */
 }
 
-static bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
+static cc_bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
 	BlockID cur = Builder_Chunk[chunkIndex];
 
 	if (cur != initial || Block_IsFaceHidden(cur, Builder_Chunk[chunkIndex + Builder_Offsets[face]], face)) return false;
@@ -562,7 +562,7 @@ static bool Normal_CanStretch(BlockID initial, int chunkIndex, int x, int y, int
 }
 
 static int NormalBuilder_StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {
-	int count = 1; bool stretchTile;
+	int count = 1; cc_bool stretchTile;
 	if (Builder_OccludedLiquid(chunkIndex)) return 0;
 	
 	x++;
@@ -581,7 +581,7 @@ static int NormalBuilder_StretchXLiquid(int countIndex, int x, int y, int z, int
 }
 
 static int NormalBuilder_StretchX(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face) {
-	int count = 1; bool stretchTile;
+	int count = 1; cc_bool stretchTile;
 	x++;
 	chunkIndex++;
 	countIndex += FACE_COUNT;
@@ -598,7 +598,7 @@ static int NormalBuilder_StretchX(int countIndex, int x, int y, int z, int chunk
 }
 
 static int NormalBuilder_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face) {
-	int count = 1; bool stretchTile;
+	int count = 1; cc_bool stretchTile;
 	z++;
 	chunkIndex += EXTCHUNK_SIZE;
 	countIndex += CHUNK_SIZE * FACE_COUNT;
@@ -624,7 +624,7 @@ static void NormalBuilder_RenderBlock(int index) {
 	PackedCol white = PACKEDCOL_WHITE;
 	Vec3 min, max;
 	int baseOffset, lightFlags;
-	bool fullBright;
+	cc_bool fullBright;
 
 	/* per-face state */
 	struct Builder1DPart* part;
@@ -844,7 +844,7 @@ static int adv_masks[FACE_COUNT] = {
 };
 
 
-static bool Adv_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
+static cc_bool Adv_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, Face face) {
 	BlockID cur = Builder_Chunk[chunkIndex];
 	adv_bitFlags[chunkIndex] = Adv_ComputeLightFlags(x, y, z, chunkIndex);
 
@@ -856,7 +856,7 @@ static bool Adv_CanStretch(BlockID initial, int chunkIndex, int x, int y, int z,
 }
 
 static int Adv_StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {
-	int count = 1; bool stretchTile;
+	int count = 1; cc_bool stretchTile;
 	if (Builder_OccludedLiquid(chunkIndex)) return 0;
 	adv_initBitFlags = Adv_ComputeLightFlags(x, y, z, chunkIndex);
 	adv_bitFlags[chunkIndex] = adv_initBitFlags;
@@ -877,7 +877,7 @@ static int Adv_StretchXLiquid(int countIndex, int x, int y, int z, int chunkInde
 }
 
 static int Adv_StretchX(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face) {
-	int count = 1; bool stretchTile;
+	int count = 1; cc_bool stretchTile;
 	adv_initBitFlags = Adv_ComputeLightFlags(x, y, z, chunkIndex);
 	adv_bitFlags[chunkIndex] = adv_initBitFlags;
 	
@@ -897,7 +897,7 @@ static int Adv_StretchX(int countIndex, int x, int y, int z, int chunkIndex, Blo
 }
 
 static int Adv_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face) {
-	int count = 1; bool stretchTile;
+	int count = 1; cc_bool stretchTile;
 	adv_initBitFlags = Adv_ComputeLightFlags(x, y, z, chunkIndex);
 	adv_bitFlags[chunkIndex] = adv_initBitFlags;
 
@@ -1242,7 +1242,7 @@ void AdvBuilder_SetActive(void) {
 /*########################################################################################################################*
 *---------------------------------------------------Builder interface-----------------------------------------------------*
 *#########################################################################################################################*/
-bool Builder_SmoothLighting;
+cc_bool Builder_SmoothLighting;
 void Builder_ApplyActive(void) {
 	if (Builder_SmoothLighting) {
 		AdvBuilder_SetActive();

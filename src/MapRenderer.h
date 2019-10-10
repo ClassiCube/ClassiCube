@@ -54,7 +54,7 @@ struct ChunkInfo {
 	cc_uint8 DrawYMax : 1;
 	cc_uint8 : 0;          /* pad to next byte */
 #ifdef OCCLUSION
-	public bool Visited = false, Occluded = false;
+	public cc_bool Visited = false, Occluded = false;
 	public byte OcclusionFlags, OccludedFlags, DistanceFlags;
 #endif
 #ifndef CC_BUILD_GL11

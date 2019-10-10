@@ -24,7 +24,7 @@ String Chat_ClientStatus[2] = { String_FromArray(msgs[7]), String_FromArray(msgs
 String Chat_Announcement = String_FromArray(msgs[9]);
 TimeMS Chat_AnnouncementReceived;
 StringsBuffer Chat_Log, Chat_InputLog;
-bool Chat_Logging;
+cc_bool Chat_Logging;
 
 /*########################################################################################################################*
 *-------------------------------------------------------Chat logging------------------------------------------------------*
@@ -77,7 +77,7 @@ static void Chat_CloseLog(void) {
 }
 
 /* Whether the given character is an allowed in a log filename */
-static bool Chat_AllowedLogChar(char c) {
+static cc_bool Chat_AllowedLogChar(char c) {
 	return
 		c == '{' || c == '}' || c == '[' || c == ']' || c == '(' || c == ')' ||
 		(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -218,7 +218,7 @@ void Chat_AddOf(const String* text, int msgType) {
 static struct ChatCommand* cmds_head;
 static struct ChatCommand* cmds_tail;
 
-static bool Commands_IsCommandPrefix(const String* str) {
+static cc_bool Commands_IsCommandPrefix(const String* str) {
 	static const String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
 	static const String prefix      = String_FromConst(COMMANDS_PREFIX);
 
@@ -433,10 +433,10 @@ static struct ChatCommand ModelCommand = {
 *#########################################################################################################################*/
 static int cuboid_block = -1;
 static IVec3 cuboid_mark1, cuboid_mark2;
-static bool cuboid_persist, cuboid_hooked, cuboid_hasMark1;
+static cc_bool cuboid_persist, cuboid_hooked, cuboid_hasMark1;
 static const String cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
 
-static bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
+static cc_bool CuboidCommand_ParseBlock(const String* args, int argsCount) {
 	int block;
 	if (!argsCount) return true;
 	if (String_CaselessEqualsConst(&args[0], "yes")) { cuboid_persist = true; return true; }
@@ -567,7 +567,7 @@ static struct ChatCommand TeleportCommand = {
 /*########################################################################################################################*
 *-------------------------------------------------------Generic chat------------------------------------------------------*
 *#########################################################################################################################*/
-void Chat_Send(const String* text, bool logUsage) {
+void Chat_Send(const String* text, cc_bool logUsage) {
 	if (!text->length) return;
 	Event_RaiseChat(&ChatEvents.ChatSending, text, 0);
 	if (logUsage) StringsBuffer_Add(&Chat_InputLog, text);

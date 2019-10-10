@@ -8,7 +8,7 @@
 
 CC_VAR extern struct _DrawerData {
 	/* Whether a colour tinting effect should be applied to all faces. */
-	bool Tinted;
+	cc_bool Tinted;
 	/* The colour to multiply colour of faces by (tinting effect). */
 	PackedCol TintCol;
 	/* Minimum corner of base block bounding box. (For texture UV) */

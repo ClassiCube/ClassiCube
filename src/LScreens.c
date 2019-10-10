@@ -55,7 +55,7 @@ static void LScreen_Tick(struct LScreen* s) {
 static void LScreen_HoverWidget(struct LScreen* s,   struct LWidget* w) { }
 static void LScreen_UnhoverWidget(struct LScreen* s, struct LWidget* w) { }
 
-CC_NOINLINE static void LScreen_SelectWidget(struct LScreen* s, struct LWidget* w, bool was) {
+CC_NOINLINE static void LScreen_SelectWidget(struct LScreen* s, struct LWidget* w, cc_bool was) {
 	if (!w) return;
 	w->Selected       = true;
 	s->selectedWidget = w;
@@ -91,7 +91,7 @@ static void LScreen_HandleTab(struct LScreen* s) {
 	}
 }
 
-static void LScreen_KeyDown(struct LScreen* s, Key key, bool was) {
+static void LScreen_KeyDown(struct LScreen* s, Key key, cc_bool was) {
 	if (key == KEY_TAB) {
 		LScreen_HandleTab(s);
 	} else if (key == KEY_ENTER) {
@@ -140,7 +140,7 @@ static void LScreen_MouseUp(struct LScreen* s, MouseButton btn) {
 static void LScreen_MouseMove(struct LScreen* s, int deltaX, int deltaY) {
 	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
 	struct LWidget* prev = s->hoveredWidget;
-	bool overSame = prev == over;
+	cc_bool overSame = prev == over;
 
 	if (prev && !overSame) {
 		prev->Hovered    = false;
@@ -218,11 +218,11 @@ static struct ChooseModeScreen {
 	struct LLine seps[2];
 	struct LButton btnEnhanced, btnClassicHax, btnClassic, btnBack;
 	struct LLabel  lblTitle, lblHelp, lblEnhanced[2], lblClassicHax[2], lblClassic[2];
-	bool firstTime;
+	cc_bool firstTime;
 	struct LWidget* _widgets[14];
 } ChooseModeScreen_Instance;
 
-CC_NOINLINE static void ChooseMode_Click(bool classic, bool classicHacks) {
+CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) {
 	Launcher_ClassicBackground = classic;
 	Options_Load();
 	Options_SetBool(OPT_CLASSIC_MODE, classic);
@@ -303,7 +303,7 @@ static void ChooseModeScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->btnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }
 
-struct LScreen* ChooseModeScreen_MakeInstance(bool firstTime) {
+struct LScreen* ChooseModeScreen_MakeInstance(cc_bool firstTime) {
 	struct ChooseModeScreen* s = &ChooseModeScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init      = ChooseModeScreen_Init;
@@ -400,7 +400,7 @@ static void ColoursScreen_MouseWheel(struct LScreen* s_, float delta) {
 	ColoursScreen_AdjustSelected(s_, steps);
 }
 
-static void ColoursScreen_KeyDown(struct LScreen* s, Key key, bool was) {
+static void ColoursScreen_KeyDown(struct LScreen* s, Key key, cc_bool was) {
 	if (key == KEY_LEFT) {
 		ColoursScreen_AdjustSelected(s, -1);
 	} else if (key == KEY_RIGHT) {
@@ -421,7 +421,7 @@ static void ColoursScreen_ResetAll(void* w, int x, int y) {
 	Launcher_Redraw();
 }
 
-static bool ColoursScreen_InputFilter(char c) {
+static cc_bool ColoursScreen_InputFilter(char c) {
 	return c >= '0' && c <= '9';
 }
 
@@ -625,17 +625,17 @@ static struct MainScreen {
 	struct LInput iptUsername, iptPassword;
 	struct LLabel lblStatus, lblUpdate;
 	struct LWidget* _widgets[10];
-	bool signingIn;
+	cc_bool signingIn;
 } MainScreen_Instance;
 
 struct ResumeInfo {
 	String user, ip, port, server, mppass;
 	char _userBuffer[STRING_SIZE], _serverBuffer[STRING_SIZE];
 	char _ipBuffer[16], _portBuffer[16], _mppassBuffer[STRING_SIZE];
-	bool valid;
+	cc_bool valid;
 };
 
-CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, bool full) {
+CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, cc_bool full) {
 	String_InitArray(info->server,   info->_serverBuffer);
 	Options_Get("launcher-server",   &info->server, "");
 	String_InitArray(info->user,     info->_userBuffer);
@@ -711,7 +711,7 @@ static void MainScreen_Singleplayer(void* w, int x, int y) {
 	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
 }
 
-static bool MainScreen_PasswordFilter(char c) { return true; }
+static cc_bool MainScreen_PasswordFilter(char c) { return true; }
 
 static void MainScreen_Init(struct LScreen* s_) {
 	String user, pass; char passBuffer[STRING_SIZE];
@@ -1265,7 +1265,7 @@ static void ServersScreen_MouseWheel(struct LScreen* s_, float delta) {
 	s->table.VTABLE->MouseWheel(&s->table, delta);
 }
 
-static void ServersScreen_KeyDown(struct LScreen* s_, Key key, bool was) {
+static void ServersScreen_KeyDown(struct LScreen* s_, Key key, cc_bool was) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	if (!LTable_HandlesKey(key)) {
 		LScreen_KeyDown(s_, key, was);
@@ -1414,7 +1414,7 @@ static void UpdatesScreen_FormatBoth(struct UpdatesScreen* s) {
 	UpdatesScreen_Format(&s->lblDev, "Latest dev build: ", CheckUpdateTask.DevTimestamp);
 }
 
-static void UpdatesScreen_Get(bool release, bool d3d9) {
+static void UpdatesScreen_Get(cc_bool release, cc_bool d3d9) {
 	String str; char strBuffer[STRING_SIZE];
 	struct UpdatesScreen* s = &UpdatesScreen_Instance;
 

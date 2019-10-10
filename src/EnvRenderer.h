@@ -24,7 +24,7 @@ void EnvRenderer_RenderMapEdges(double delta);
 /* Renders a skybox around the player. */
 void EnvRenderer_RenderSkybox(double deltaTime);
 /* Whether a skybox should be rendered. */
-bool EnvRenderer_ShouldRenderSkybox(void);
+cc_bool EnvRenderer_ShouldRenderSkybox(void);
 
 extern cc_int16* Weather_Heightmap;
 void EnvRenderer_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
@@ -33,10 +33,10 @@ void EnvRenderer_RenderWeather(double deltaTime);
 
 /* Whether large quads are broken down into smaller quads. */
 /* This makes them have less rendering issues when using vertex fog. */
-extern bool EnvRenderer_Legacy;
+extern cc_bool EnvRenderer_Legacy;
 /* Whether minimal environmental effects are rendered. */
 /* Minimal mode disables skybox, clouds and fog. */
-extern bool EnvRenderer_Minimal;
+extern cc_bool EnvRenderer_Minimal;
 /* Sets whether Legacy and Minimal modes are used based on given flags. */
 void EnvRenderer_SetMode(int flags);
 /* Calculates mode flags for the given mode. */

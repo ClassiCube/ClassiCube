@@ -12,20 +12,20 @@
 #include "Errors.h"
 #include "Window.h"
 
-bool Drawer2D_BitmappedText;
-bool Drawer2D_BlackTextShadows;
+cc_bool Drawer2D_BitmappedText;
+cc_bool Drawer2D_BlackTextShadows;
 BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 
 static char fontNameBuffer[STRING_SIZE];
 String Drawer2D_FontName = String_FromArray(fontNameBuffer);
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, struct FontDesc* font, bool useShadow) {
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, struct FontDesc* font, cc_bool useShadow) {
 	args->text = *text;
 	args->font = font;
 	args->useShadow = useShadow;
 }
 
-void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, bool useShadow) {
+void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc_bool useShadow) {
 	args->text = String_Empty;
 	args->font = font;
 	args->useShadow = useShadow;
@@ -150,13 +150,13 @@ void Font_ReducePadding(struct FontDesc* desc, int scale) {
 /* Measures width of the given text when drawn with the given system font. */
 static int Font_SysTextWidth(struct DrawTextArgs* args);
 /* Draws the given text with the given system font onto the given bitmap. */
-static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow);
+static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, cc_bool shadow);
 
 
 /*########################################################################################################################*
 *---------------------------------------------------Drawing functions-----------------------------------------------------*
 *#########################################################################################################################*/
-bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height) {
+cc_bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height) {
 	if (*x >= bmp->Width || *y >= bmp->Height) return false;
 
 	/* origin is negative, move inside */
@@ -344,12 +344,12 @@ void Drawer2D_Make2DTexture(struct Texture* tex, Bitmap* bmp, Size2D used) {
 	tex->uv.V2 = (float)used.Height / (float)bmp->Height;
 }
 
-bool Drawer2D_ValidColCodeAt(const String* text, int i) {
+cc_bool Drawer2D_ValidColCodeAt(const String* text, int i) {
 	if (i >= text->length) return false;
 	return BitmapCol_A(Drawer2D_GetCol(text->buffer[i])) != 0;
 }
 
-bool Drawer2D_IsEmptyText(const String* text) {
+cc_bool Drawer2D_IsEmptyText(const String* text) {
 	int i;
 	if (!text->length) return true;
 	
@@ -373,7 +373,7 @@ char Drawer2D_LastCol(const String* text, int start) {
 	}
 	return '\0';
 }
-bool Drawer2D_IsWhiteCol(char c) { return c == '\0' || c == 'f' || c == 'F'; }
+cc_bool Drawer2D_IsWhiteCol(char c) { return c == '\0' || c == 'f' || c == 'F'; }
 
 /* Divides R/G/B by 4 */
 #define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
@@ -440,7 +440,7 @@ void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, Bitmap
 	}
 }
 
-static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, bool shadow) {
+static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, cc_bool shadow) {
 	BitmapCol col;
 	String text  = args->text;
 	int i, point = args->font->size, count = 0;
@@ -627,7 +627,7 @@ int Drawer2D_TextHeight(struct DrawTextArgs* args) {
 	return Drawer2D_FontHeight(args->font, args->useShadow);
 }
 
-int Drawer2D_FontHeight(const struct FontDesc* font, bool useShadow) {
+int Drawer2D_FontHeight(const struct FontDesc* font, cc_bool useShadow) {
 	int height = font->height;
 	if (Drawer2D_BitmappedText) {
 		if (useShadow) { height += Drawer2D_ShadowOffset(font->size); }
@@ -765,7 +765,7 @@ void Font_Free(struct FontDesc* desc) {
 
 void SysFonts_Register(const String* path) { }
 static int Font_SysTextWidth(struct DrawTextArgs* args) { return 0; }
-static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) { return 0; }
+static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, cc_bool shadow) { return 0; }
 #else
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
@@ -775,7 +775,7 @@ static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y
 static FT_Library ft_lib;
 static struct FT_MemoryRec_ ft_mem;
 static struct EntryList font_list;
-static bool font_list_changed;
+static cc_bool font_list_changed;
 
 struct SysFont {
 	FT_Face face;
@@ -1130,7 +1130,7 @@ static void DrawBlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitma
 }
 
 static FT_Vector shadow_delta = { 83, -83 };
-static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, bool shadow) {
+static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, cc_bool shadow) {
 	struct SysFont* font  = (struct SysFont*)args->font->handle;
 	FT_BitmapGlyph* glyphs = font->glyphs;
 

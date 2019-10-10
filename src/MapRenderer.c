@@ -20,7 +20,7 @@ int MapRenderer_MaxUpdates;
 struct ChunkPartInfo* MapRenderer_PartsNormal;
 struct ChunkPartInfo* MapRenderer_PartsTranslucent;
 
-static bool inTranslucent;
+static cc_bool inTranslucent;
 static IVec3 chunkPos;
 
 /* The number of non-empty Normal/Translucent ChunkPartInfos (across entire world) for each 1D atlas batch. */
@@ -28,9 +28,9 @@ static IVec3 chunkPos;
 static int normPartsCount[ATLAS1D_MAX_ATLASES], tranPartsCount[ATLAS1D_MAX_ATLASES];
 /* Whether there are any visible Normal/Translucent ChunkPartInfos for each 1D atlas batch. */
 /* 1D atlas batches that do not have any visible ChunkPartInfos can be skipped. */
-static bool hasNormParts[ATLAS1D_MAX_ATLASES], hasTranParts[ATLAS1D_MAX_ATLASES];
+static cc_bool hasNormParts[ATLAS1D_MAX_ATLASES], hasTranParts[ATLAS1D_MAX_ATLASES];
 /* Whether renderer should check if there are any visible Normal/Translucent ChunkPartInfos for each 1D atlas batch. */
-static bool checkNormParts[ATLAS1D_MAX_ATLASES], checkTranParts[ATLAS1D_MAX_ATLASES];
+static cc_bool checkNormParts[ATLAS1D_MAX_ATLASES], checkTranParts[ATLAS1D_MAX_ATLASES];
 
 /* Render info for all chunks in the world. Unsorted. */
 static struct ChunkInfo* mapChunks;
@@ -85,7 +85,7 @@ CC_NOINLINE static int MapRenderer_UsedAtlases(void) {
 static void MapRenderer_CheckWeather(double delta) {
 	IVec3 pos;
 	BlockID block;
-	bool outside;
+	cc_bool outside;
 	IVec3_Floor(&pos, &Camera.CurrentPos);
 
 	block   = World_SafeGetBlock_3I(pos);
@@ -117,7 +117,7 @@ static void MapRenderer_RenderNormalBatch(int batch) {
 	int batchOffset = MapRenderer_ChunksCount * batch;
 	struct ChunkInfo* info;
 	struct ChunkPartInfo part;
-	bool drawMin, drawMax;
+	cc_bool drawMin, drawMax;
 	int i, offset, count;
 
 	for (i = 0; i < renderChunksCount; i++) {
@@ -216,7 +216,7 @@ static void MapRenderer_RenderTranslucentBatch(int batch) {
 	int batchOffset = MapRenderer_ChunksCount * batch;
 	struct ChunkInfo* info;
 	struct ChunkPartInfo part;
-	bool drawMin, drawMax;
+	cc_bool drawMin, drawMax;
 	int i, offset;
 
 	for (i = 0; i < renderChunksCount; i++) {
@@ -410,7 +410,7 @@ void MapRenderer_Refresh(void) {
 
 void MapRenderer_RefreshBorders(int maxHeight) {
 	int cx, cy, cz;
-	bool onBorder;
+	cc_bool onBorder;
 
 	chunkPos = IVec3_MaxValue();
 	if (!mapChunks || !World.Blocks) return;
@@ -460,7 +460,7 @@ static int MapRenderer_UpdateChunksAndVisibility(int* chunkUpdates) {
 
 	struct ChunkInfo* info;
 	int i, j = 0, distSqr;
-	bool noData;
+	cc_bool noData;
 
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
 		info = sortedChunks[i];
@@ -493,7 +493,7 @@ static int MapRenderer_UpdateChunksStill(int* chunkUpdates) {
 
 	struct ChunkInfo* info;
 	int i, j = 0, distSqr;
-	bool noData;
+	cc_bool noData;
 
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
 		info = sortedChunks[i];
@@ -525,7 +525,7 @@ static int MapRenderer_UpdateChunksStill(int* chunkUpdates) {
 
 static void MapRenderer_UpdateChunks(double delta) {
 	struct LocalPlayer* p;
-	bool samePos;
+	cc_bool samePos;
 	int chunkUpdates = 0;
 
 	/* Build more chunks if 30 FPS or over, otherwise slowdown */

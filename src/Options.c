@@ -18,7 +18,7 @@ void Options_Free(void) {
 	StringsBuffer_Clear(&Options_Changed);
 }
 
-bool Options_HasChanged(const String* key) {
+cc_bool Options_HasChanged(const String* key) {
 	String entry;
 	int i;
 
@@ -29,7 +29,7 @@ bool Options_HasChanged(const String* key) {
 	return false;
 }
 
-bool Options_UNSAFE_Get(const char* keyRaw, String* value) {
+cc_bool Options_UNSAFE_Get(const char* keyRaw, String* value) {
 	int idx;
 	String key = String_FromReadonly(keyRaw);
 
@@ -68,9 +68,9 @@ int Options_GetInt(const char* key, int min, int max, int defValue) {
 	return value;
 }
 
-bool Options_GetBool(const char* key, bool defValue) {
+cc_bool Options_GetBool(const char* key, cc_bool defValue) {
 	String str;
-	bool value;
+	cc_bool value;
 	if (!Options_UNSAFE_Get(key, &str))   return defValue;
 	if (!Convert_ParseBool(&str, &value)) return defValue;
 
@@ -93,7 +93,7 @@ int Options_GetEnum(const char* key, int defValue, const char* const* names, int
 	return Utils_ParseEnum(&str, defValue, names, namesCount);
 }
 
-void Options_SetBool(const char* keyRaw, bool value) {
+void Options_SetBool(const char* keyRaw, cc_bool value) {
 	static const String str_true  = String_FromConst("True");
 	static const String str_false = String_FromConst("False");
 	Options_Set(keyRaw, value ? &str_true : &str_false);
@@ -128,7 +128,7 @@ void Options_SetString(const String* key, const String* value) {
 	StringsBuffer_Add(&Options_Changed, key);
 }
 
-static bool Options_LoadFilter(const String* entry) {
+static cc_bool Options_LoadFilter(const String* entry) {
 	String key, value;
 	String_UNSAFE_Separate(entry, '=', &key, &value);
 	return !Options_HasChanged(&key);

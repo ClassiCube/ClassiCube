@@ -49,9 +49,9 @@ CC_API PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, float t);
 /* Multiplies RGB components of the two given colours. */
 CC_API PackedCol PackedCol_Tint(PackedCol a, PackedCol b);
 
-CC_NOINLINE bool PackedCol_Unhex(const char* src, int* dst, int count);
+CC_NOINLINE cc_bool PackedCol_Unhex(const char* src, int* dst, int count);
 CC_NOINLINE void PackedCol_ToHex(String* str, PackedCol value);
-CC_NOINLINE bool PackedCol_TryParseHex(const String* str, cc_uint8* rgb);
+CC_NOINLINE cc_bool PackedCol_TryParseHex(const String* str, cc_uint8* rgb);
 
 #define PACKEDCOL_SHADE_X 0.6f
 #define PACKEDCOL_SHADE_Z 0.8f

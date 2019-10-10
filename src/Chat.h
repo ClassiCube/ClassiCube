@@ -28,7 +28,7 @@ extern TimeMS* Chat_LogTime;
 /* All chat entered by the user. */
 extern StringsBuffer Chat_InputLog;
 /* Whether chat messages are logged to disc. */
-extern bool Chat_Logging;
+extern cc_bool Chat_Logging;
 
 /* Time at which last announcement message was received. */
 extern TimeMS Chat_AnnouncementReceived;
@@ -39,8 +39,8 @@ struct ChatCommand {
 	const char* Name;      /* Full name of this command */
 	/* Function pointer for the actual action the command performs */
 	void (*Execute)(const String* args, int argsCount);
-	bool SingleplayerOnly; /* Whether this command is only usable in singleplayer */
-	const char* Help[5];   /* Messages to show when a player uses /help on this command */
+	cc_bool SingleplayerOnly; /* Whether this command is only usable in singleplayer */
+	const char* Help[5];      /* Messages to show when a player uses /help on this command */
 	struct ChatCommand* next; /* Next command in linked-list of client commands */
 };
 /* Registers a client-side command, allowing it to be used with /client [cmd name] */
@@ -53,7 +53,7 @@ void Chat_SetLogName(const String* name);
 /* NOTE: If logUsage is true, can press 'up' in chat input menu later to retype this. */
 /* NOTE: /client is always interpreted as client-side commands. */
 /* In multiplayer this is sent to the server, in singleplayer just Chat_Add. */
-CC_API void Chat_Send(const String* text, bool logUsage);
+CC_API void Chat_Send(const String* text, cc_bool logUsage);
 /* Shorthand for Chat_AddOf(str, MSG_TYPE_NORMAL) */
 CC_API void Chat_Add(const String* text);
 /* Adds a chat message, raising ChatEvents.ChatReceived event. */

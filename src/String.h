@@ -73,15 +73,15 @@ CC_API void String_UNSAFE_SplitBy(STRING_REF String* str, char c, String* part);
 /* UNSAFE: Splits a string of the form [key][c][value] into two substrings. */
 /* e.g., "allowed =true" becomes "allowed" and "true", and excludes the space. */
 /* If c is not found, sets key to str and value to String_Empty, returns false. */
-CC_API bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value);
+CC_API cc_bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value);
 
 /* Whether all characters of the strings are equal. */
-CC_API bool String_Equals(const String* a, const String* b);
+CC_API cc_bool String_Equals(const String* a, const String* b);
 /* Whether all characters of the strings are case-insensitively equal. */
-CC_API bool String_CaselessEquals(const String* a, const String* b);
+CC_API cc_bool String_CaselessEquals(const String* a, const String* b);
 /* Whether all characters of the strings are case-insensitively equal. */
 /* NOTE: Faster than String_CaselessEquals(a, String_FromReadonly(b)) */
-CC_API bool String_CaselessEqualsConst(const String* a, const char* b);
+CC_API cc_bool String_CaselessEqualsConst(const String* a, const char* b);
 /* Breaks down an integer into an array of digits. */
 /* NOTE: Digits are in reverse order, so e.g. '200' becomes '0','0','2' */
 CC_API int  String_MakeUInt32(cc_uint32 num, char* digits);
@@ -90,7 +90,7 @@ CC_API int  String_MakeUInt32(cc_uint32 num, char* digits);
 /* Does nothing if str->length == str->capcity. */
 CC_API void String_Append(String* str, char c);
 /* Attempts to append "true" if value is non-zero, "false" otherwise. */
-CC_API void String_AppendBool(String* str, bool value);
+CC_API void String_AppendBool(String* str, cc_bool value);
 /* Attempts to append the digits of an integer (and -sign if negative). */
 CC_API void String_AppendInt(String* str, int num);
 /* Attempts to append the digits of an unsigned 32 bit integer. */
@@ -139,11 +139,11 @@ CC_API int String_IndexOfString(const String* str, const String* sub);
 /* Returns whether given substring is inside the given string. */
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
 /* Returns whether given substring is case-insensitively inside the given string. */
-CC_API bool String_CaselessContains(const String* str, const String* sub);
+CC_API cc_bool String_CaselessContains(const String* str, const String* sub);
 /* Returns whether given substring is case-insensitively equal to the beginning of the given string. */
-CC_API bool String_CaselessStarts(const String* str, const String* sub);
+CC_API cc_bool String_CaselessStarts(const String* str, const String* sub);
 /* Returns whether given substring is case-insensitively equal to the ending of the given string. */
-CC_API bool String_CaselessEnds(const String* str, const String* sub);
+CC_API cc_bool String_CaselessEnds(const String* str, const String* sub);
 /* Compares the length of the given strings, then compares the characters if same length. Returns: */
 /* -X if a.length < b.length, X if a.length > b.length */
 /* -X if a.buffer[i] < b.buffer[i], X if a.buffer[i] > b.buffer[i] */
@@ -165,7 +165,7 @@ Codepoint Convert_CP437ToUnicode(char c);
 /* Converts a unicode character to its code page 437 equivalent, or '?' if no match. */
 char Convert_UnicodeToCP437(Codepoint cp);
 /* Attempts to convert a unicode character to its code page 437 equivalent. */
-bool Convert_TryUnicodeToCP437(Codepoint cp, char* c);
+cc_bool Convert_TryUnicodeToCP437(Codepoint cp, char* c);
 /* Decodes a unicode character from UTF8, returning number of bytes read. */
 /* Returns 0 if not enough input data to read the character. */
 int Convert_Utf8ToUnicode(Codepoint* cp, const cc_uint8* data, cc_uint32 len);
@@ -187,18 +187,18 @@ void String_AppendUtf8(String* str, const cc_uint8* chars, int numBytes);
 void String_DecodeCP1252(String* str, const cc_uint8* chars, int numBytes);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
-CC_API bool Convert_ParseUInt8(const String*  str, cc_uint8* value);
+CC_API cc_bool Convert_ParseUInt8(const String*  str, cc_uint8* value);
 /* Attempts to convert the given string into an unsigned 16 bit integer. */
-CC_API bool Convert_ParseUInt16(const String* str, cc_uint16* value);
+CC_API cc_bool Convert_ParseUInt16(const String* str, cc_uint16* value);
 /* Attempts to convert the given string into an integer. */
-CC_API bool Convert_ParseInt(const String*    str, int* value);
+CC_API cc_bool Convert_ParseInt(const String*    str, int* value);
 /* Attempts to convert the given string into an unsigned 64 bit integer. */
-CC_API bool Convert_ParseUInt64(const String* str, cc_uint64* value);
+CC_API cc_bool Convert_ParseUInt64(const String* str, cc_uint64* value);
 /* Attempts to convert the given string into a floating point number. */
-CC_API bool Convert_ParseFloat(const String*  str, float* value);
+CC_API cc_bool Convert_ParseFloat(const String*  str, float* value);
 /* Attempts to convert the given string into a bool. */
 /* NOTE: String must case-insensitively equal "true" or "false" */
-CC_API bool Convert_ParseBool(const String*   str, bool* value);
+CC_API cc_bool Convert_ParseBool(const String*   str, cc_bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256

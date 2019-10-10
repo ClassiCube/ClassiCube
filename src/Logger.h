@@ -5,7 +5,7 @@
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
-typedef bool (*Logger_DescribeError)(ReturnCode res, String* dst);
+typedef cc_bool (*Logger_DescribeError)(ReturnCode res, String* dst);
 typedef void (*Logger_DoWarn)(const String* msg);
 /* Informs the user about a non-fatal error. */
 /* By default this shows a message box, but changes to in-game chat when game is running. */

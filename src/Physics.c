@@ -27,20 +27,20 @@ void AABB_Offset(struct AABB* result, const struct AABB* bb, const Vec3* amount)
 	Vec3_Add(&result->Max, &bb->Max, amount);
 }
 
-bool AABB_Intersects(const struct AABB* bb, const struct AABB* other) {
+cc_bool AABB_Intersects(const struct AABB* bb, const struct AABB* other) {
 	return
 		bb->Max.X >= other->Min.X && bb->Min.X <= other->Max.X &&
 		bb->Max.Y >= other->Min.Y && bb->Min.Y <= other->Max.Y &&
 		bb->Max.Z >= other->Min.Z && bb->Min.Z <= other->Max.Z;
 }
 
-bool AABB_Contains(const struct AABB* parent, const struct AABB* child) {
+cc_bool AABB_Contains(const struct AABB* parent, const struct AABB* child) {
 	return
 		child->Min.X >= parent->Min.X && child->Min.Y >= parent->Min.Y && child->Min.Z >= parent->Min.Z &&
 		child->Max.X <= parent->Max.X && child->Max.Y <= parent->Max.Y && child->Max.Z <= parent->Max.Z;
 }
 
-bool AABB_ContainsPoint(const struct AABB* parent, const Vec3* P) {
+cc_bool AABB_ContainsPoint(const struct AABB* parent, const Vec3* P) {
 	return
 		P->X >= parent->Min.X && P->Y >= parent->Min.Y && P->Z >= parent->Min.Z &&
 		P->X <= parent->Max.X && P->Y <= parent->Max.Y && P->Z <= parent->Max.Z;
@@ -57,7 +57,7 @@ static Vec3 Intersection_InverseRotate(Vec3 pos, struct Entity* target) {
 	return pos;
 }
 
-bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entity* target, float* tMin, float* tMax) {
+cc_bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entity* target, float* tMin, float* tMax) {
 	Vec3 delta;
 	struct AABB bb;
 
@@ -78,7 +78,7 @@ bool Intersection_RayIntersectsRotatedBox(Vec3 origin, Vec3 dir, struct Entity* 
 	return Intersection_RayIntersectsBox(origin, dir, bb.Min, bb.Max, tMin, tMax);
 }
 
-bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 dir, Vec3 min, Vec3 max, float* t0, float* t1) {
+cc_bool Intersection_RayIntersectsBox(Vec3 origin, Vec3 dir, Vec3 min, Vec3 max, float* t0, float* t1) {
 	float tmin, tmax, tymin, tymax, tzmin, tzmax;
 	float invDirX, invDirY, invDirZ;
 	*t0 = 0; *t1 = 0;

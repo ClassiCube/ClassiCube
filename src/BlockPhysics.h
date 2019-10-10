@@ -8,7 +8,7 @@ typedef void (*PhysicsHandler)(int index, BlockID block);
 
 CC_VAR extern struct Physics_ {
 	/* Whether block physics are enabled at all. */
-	bool Enabled;
+	cc_bool Enabled;
 	/* Called when block is activated by a neighbouring block change. */
 	/* e.g. trigger sand falling, water flooding */
 	PhysicsHandler OnActivate[256];
@@ -21,7 +21,7 @@ CC_VAR extern struct Physics_ {
 	PhysicsHandler OnDelete[256];
 } Physics;
 
-void Physics_SetEnabled(bool enabled);
+void Physics_SetEnabled(cc_bool enabled);
 void Physics_OnBlockChanged(int x, int y, int z, BlockID old, BlockID now);
 void Physics_Init(void);
 void Physics_Free(void);
