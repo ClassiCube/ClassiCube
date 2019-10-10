@@ -87,10 +87,8 @@ float Entity_GetEyeHeight(struct Entity* e) {
 
 void Entity_GetTransform(struct Entity* e, Vec3 pos, Vec3 scale, struct Matrix* m) {
 	struct Matrix tmp;
-	*m = Matrix_Identity;
+	Matrix_Scale(m, scale.X, scale.Y, scale.Z);
 
-	Matrix_Scale(&tmp, scale.X, scale.Y, scale.Z);
-	Matrix_MulBy(m, &tmp);
 	Matrix_RotateZ(&tmp, -e->RotZ * MATH_DEG2RAD);
 	Matrix_MulBy(m, &tmp);
 	Matrix_RotateX(&tmp, -e->RotX * MATH_DEG2RAD);

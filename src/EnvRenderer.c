@@ -938,7 +938,7 @@ static void EnvRenderer_Reset(void) {
 
 	Mem_Free(Weather_Heightmap);
 	Weather_Heightmap = NULL;
-	lastPos   = IVec3_MaxValue();
+	lastPos = IVec3_MaxValue();
 }
 
 static void EnvRenderer_OnNewMapLoaded(void) {
