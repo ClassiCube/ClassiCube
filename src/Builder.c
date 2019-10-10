@@ -59,17 +59,17 @@ static int Builder1DPart_VerticesCount(struct Builder1DPart* part) {
 	return count;
 }
 
-static void Builder1DPart_CalcOffsets(struct Builder1DPart* part, int* offset) {
-	int pos = *offset, i;
-	part->sOffset  = pos;
+static int Builder1DPart_CalcOffsets(struct Builder1DPart* part, int offset) {
+	int i;
+	part->sOffset  = offset;
 	part->sAdvance = part->sCount >> 2;
 
-	pos += part->sCount;
+	offset += part->sCount;
 	for (i = 0; i < FACE_COUNT; i++) {
-		part->fVertices[i] = &Builder_Vertices[pos];
-		pos += part->fCount[i];
+		part->fVertices[i] = &Builder_Vertices[offset];
+		offset += part->fCount[i];
 	}
-	*offset = pos;
+	return offset;
 }
 
 static int Builder_TotalVerticesCount(void) {
@@ -439,20 +439,22 @@ static void Builder_DefaultPreStretchTiles(int x1, int y1, int z1) {
 }
 
 static void Builder_DefaultPostStretchTiles(int x1, int y1, int z1) {
-	int i, j, vertsCount = Builder_TotalVerticesCount();
-	if (vertsCount > Builder_VerticesElems) {
+	int i, j, offset, count;
+	
+	count = Builder_TotalVerticesCount();
+	if (count > Builder_VerticesElems) {
 		Mem_Free(Builder_Vertices);
 		/* ensure buffer can be accessed with 64 bytes alignment by putting 2 extra vertices at end. */
-		Builder_Vertices = (VertexP3fT2fC4b*)Mem_Alloc(vertsCount + 2, sizeof(VertexP3fT2fC4b), "chunk vertices");
-		Builder_VerticesElems = vertsCount;
+		Builder_Vertices = (VertexP3fT2fC4b*)Mem_Alloc(count + 2, sizeof(VertexP3fT2fC4b), "chunk vertices");
+		Builder_VerticesElems = count;
 	}
 
-	vertsCount = 0;
+	offset = 0;
 	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
 		j = i + ATLAS1D_MAX_ATLASES;
 
-		Builder1DPart_CalcOffsets(&Builder_Parts[i], &vertsCount);
-		Builder1DPart_CalcOffsets(&Builder_Parts[j], &vertsCount);
+		offset = Builder1DPart_CalcOffsets(&Builder_Parts[i], offset);
+		offset = Builder1DPart_CalcOffsets(&Builder_Parts[j], offset);
 	}
 }
 
