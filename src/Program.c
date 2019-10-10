@@ -164,7 +164,7 @@ int main_real(int argc, char** argv) {
 int main(int argc, char** argv) {
 #endif
 	static char ipBuffer[STRING_SIZE];
-	ReturnCode res;
+	cc_result res;
 	Logger_Hook();
 	Platform_Init();
 	Window_Init();

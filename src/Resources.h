@@ -21,7 +21,7 @@ extern int Fetcher_Downloaded;
 /* HTTP status code of last failed resource download */
 extern int Fetcher_StatusCode;
 /* Error code of last failed resource download. */
-extern ReturnCode Fetcher_Result;
+extern cc_result Fetcher_Result;
 /* Whether a resource failed to download. */
 extern cc_bool Fetcher_Failed;
 

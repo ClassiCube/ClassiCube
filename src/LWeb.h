@@ -46,7 +46,7 @@ struct LWebTask {
 	cc_bool Completed; /* Whether the task has finished executing. */
 	cc_bool Working;   /* Whether the task is currently in progress, or is scheduled to be. */
 	cc_bool Success;   /* Whether the task completed successfully. */
-	ReturnCode Res;    /* Error returned (e.g. for DNS failure) */
+	cc_result Res;    /* Error returned (e.g. for DNS failure) */
 	int Status;        /* HTTP return code for the request */
 	
 	String Identifier; /* Unique identifier for this web task. */

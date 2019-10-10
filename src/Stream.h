@@ -11,22 +11,22 @@ struct Stream;
 /* Represents a stream that can be written to and/or read from. */
 struct Stream {
 	/* Attempts to read some bytes from this stream. */
-	ReturnCode (*Read)(struct Stream* s, cc_uint8* data, cc_uint32 count, cc_uint32* modified);
+	cc_result (*Read)(struct Stream* s, cc_uint8* data, cc_uint32 count, cc_uint32* modified);
 	/* Attempts to efficiently read a single byte from this stream. (falls back to Read) */
-	ReturnCode (*ReadU8)(struct Stream* s, cc_uint8* data);
+	cc_result (*ReadU8)(struct Stream* s, cc_uint8* data);
 	/* Attempts to write some bytes to this stream. */
-	ReturnCode (*Write)(struct Stream* s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified);
+	cc_result (*Write)(struct Stream* s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified);
 	/* Attempts to quickly advance the position in this stream. (falls back to reading then discarding) */
-	ReturnCode (*Skip)(struct Stream* s, cc_uint32 count);
+	cc_result (*Skip)(struct Stream* s, cc_uint32 count);
 
 	/* Attempts to seek to the given position in this stream. (may not be supported) */
-	ReturnCode (*Seek)(struct Stream* s, cc_uint32 position);
+	cc_result (*Seek)(struct Stream* s, cc_uint32 position);
 	/* Attempts to find current position this stream. (may not be supported) */
-	ReturnCode (*Position)(struct Stream* s, cc_uint32* position);
+	cc_result (*Position)(struct Stream* s, cc_uint32* position);
 	/* Attempts to find total length of this stream. (may not be supported) */
-	ReturnCode (*Length)(struct Stream* s, cc_uint32* length);
+	cc_result (*Length)(struct Stream* s, cc_uint32* length);
 	/* Attempts to close this stream, freeing associated resources. */
-	ReturnCode (*Close)(struct Stream* s);
+	cc_result (*Close)(struct Stream* s);
 	
 	union {
 		FileHandle File;
@@ -40,20 +40,20 @@ struct Stream {
 };
 
 /* Attempts to fully read up to count bytes from the stream. */
-ReturnCode Stream_Read(struct Stream* s, cc_uint8* buffer, cc_uint32 count);
+cc_result Stream_Read(struct Stream* s, cc_uint8* buffer, cc_uint32 count);
 /* Attempts to fully write up to count bytes from the stream. */
-ReturnCode Stream_Write(struct Stream* s, const cc_uint8* buffer, cc_uint32 count);
+cc_result Stream_Write(struct Stream* s, const cc_uint8* buffer, cc_uint32 count);
 /* Initalises default function pointers for a stream. (all read, write, seeks return an error) */
 void Stream_Init(struct Stream* s);
 /* Slow way of reading a U8 integer through stream->Read(stream, 1, tmp). */
-ReturnCode Stream_DefaultReadU8(struct Stream* s, cc_uint8* data);
+cc_result Stream_DefaultReadU8(struct Stream* s, cc_uint8* data);
 
 /* Wrapper for File_Open() then Stream_FromFile() */
-CC_API ReturnCode Stream_OpenFile(struct Stream* s, const String* path);
+CC_API cc_result Stream_OpenFile(struct Stream* s, const String* path);
 /* Wrapper for File_Create() then Stream_FromFile() */
-CC_API ReturnCode Stream_CreateFile(struct Stream* s, const String* path);
+CC_API cc_result Stream_CreateFile(struct Stream* s, const String* path);
 /* Creates or overwrites a file, setting the contents to the given data. */
-ReturnCode Stream_WriteAllTo(const String* path, const cc_uint8* data, cc_uint32 length);
+cc_result Stream_WriteAllTo(const String* path, const cc_uint8* data, cc_uint32 length);
 /* Wraps a file, allowing reading from/writing to/seeking in the file. */
 CC_API void Stream_FromFile(struct Stream* s, FileHandle file);
 
@@ -86,13 +86,13 @@ void Stream_SetU32_LE(cc_uint8* data, cc_uint32 value);
 /* Writes a big-endian 32 bit unsigned integer to memory. */
 void Stream_SetU32_BE(cc_uint8* data, cc_uint32 value);
 /* Reads a little-endian 32 bit unsigned integer from the stream. */
-ReturnCode Stream_ReadU32_LE(struct Stream* s, cc_uint32* value);
+cc_result Stream_ReadU32_LE(struct Stream* s, cc_uint32* value);
 /* Reads a big-endian 32 bit unsigned integer from the stream. */
-ReturnCode Stream_ReadU32_BE(struct Stream* s, cc_uint32* value);
+cc_result Stream_ReadU32_BE(struct Stream* s, cc_uint32* value);
 
 /* Reads a line of UTF8 encoded character from the stream. */
 /* NOTE: Reads one byte at a time. May want to use Stream_ReadonlyBuffered. */
-CC_API ReturnCode Stream_ReadLine(struct Stream* s, String* text);
+CC_API cc_result Stream_ReadLine(struct Stream* s, String* text);
 /* Writes a line of UTF8 encoded text to the stream. */
-CC_API ReturnCode Stream_WriteLine(struct Stream* s, String* text);
+CC_API cc_result Stream_WriteLine(struct Stream* s, String* text);
 #endif

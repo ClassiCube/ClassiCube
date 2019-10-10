@@ -13,11 +13,11 @@ struct Stream;
 
 struct GZipHeader { cc_uint8 State; cc_bool Done; cc_uint8 PartsRead; cc_int32 Flags; };
 void GZipHeader_Init(struct GZipHeader* header);
-ReturnCode GZipHeader_Read(struct Stream* s, struct GZipHeader* header);
+cc_result GZipHeader_Read(struct Stream* s, struct GZipHeader* header);
 
 struct ZLibHeader { cc_uint8 State; cc_bool Done; };
 void ZLibHeader_Init(struct ZLibHeader* header);
-ReturnCode ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header);
+cc_result ZLibHeader_Read(struct Stream* s, struct ZLibHeader* header);
 
 
 #define INFLATE_MAX_INPUT 8192
@@ -125,7 +125,7 @@ struct ZipState {
 	/* Callback function to process the data in a .zip archive entry. */
 	/* Return non-zero to indicate an error and stop further processing. */
 	/* NOTE: data stream MAY NOT be seekable. (i.e. entry data might be compressed) */
-	ReturnCode (*ProcessEntry)(const String* path, struct Stream* data, struct ZipState* state);
+	cc_result (*ProcessEntry)(const String* path, struct Stream* data, struct ZipState* state);
 	/* Predicate used to select which entries in a .zip archive get processed. */
 	/* NOTE: returning false entirely skips the entry. (avoids pointless seek to entry) */
 	cc_bool (*SelectEntry)(const String* path);
@@ -148,5 +148,5 @@ struct ZipState {
 CC_API void Zip_Init(struct ZipState* state, struct Stream* input);
 /* Reads and processes the entries in a .zip archive. */
 /* NOTE: Must have been initialised with Zip_Init first. */
-CC_API ReturnCode Zip_Extract(struct ZipState* state);
+CC_API cc_result Zip_Extract(struct ZipState* state);
 #endif

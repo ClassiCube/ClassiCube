@@ -382,9 +382,9 @@ static void Launcher_LoadTextures(Bitmap* bmp) {
 	Gradient_Tint(&stoneBmp, 96, 96, 0, 0, TILESIZE, TILESIZE);
 }
 
-static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* data, struct ZipState* s) {
+static cc_result Launcher_ProcessZipEntry(const String* path, struct Stream* data, struct ZipState* s) {
 	Bitmap bmp;
-	ReturnCode res;
+	cc_result res;
 
 	if (String_CaselessEqualsConst(path, "default.png")) {
 		if (fontBmp.Scan0) return 0;
@@ -412,7 +412,7 @@ static ReturnCode Launcher_ProcessZipEntry(const String* path, struct Stream* da
 static void Launcher_ExtractTexturePack(const String* path) {
 	struct ZipState state;
 	struct Stream stream;
-	ReturnCode res;
+	cc_result res;
 
 	res = Stream_OpenFile(&stream, path);
 	if (res) { Logger_Warn(res, "opening texture pack"); return; }
@@ -548,7 +548,7 @@ static TimeMS lastJoin;
 cc_bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
 	String args; char argsBuffer[512];
 	TimeMS now;
-	ReturnCode res;
+	cc_result res;
 	
 	now = DateTime_CurrentUTC_MS();
 	if (lastJoin + 1000 > now) return false;
@@ -583,11 +583,11 @@ cc_bool Launcher_StartGame(const String* user, const String* mppass, const Strin
 }
 
 static void Launcher_ApplyUpdate(void) {
-	ReturnCode res = Updater_Start();
+	cc_result res = Updater_Start();
 	if (res) Logger_Warn(res, "running updater");
 }
 
-void Launcher_DisplayHttpError(ReturnCode res, int status, const char* action, String* dst) {
+void Launcher_DisplayHttpError(cc_result res, int status, const char* action, String* dst) {
 	if (res) {
 		/* Non HTTP error - this is not good */
 		Logger_SysWarn(res, action, Http_DescribeError);

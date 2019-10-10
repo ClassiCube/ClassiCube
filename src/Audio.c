@@ -81,7 +81,7 @@ static void Volume_Mix8(cc_uint8* samples, int count, int volume) {
 /*########################################################################################################################*
 *------------------------------------------------Native implementation----------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Audio_AllCompleted(AudioHandle handle, cc_bool* finished);
+static cc_result Audio_AllCompleted(AudioHandle handle, cc_bool* finished);
 #if defined CC_BUILD_WINMM
 struct AudioContext {
 	HWAVEOUT Handle;
@@ -112,10 +112,10 @@ void Audio_Open(AudioHandle* handle, int buffers) {
 	Logger_Abort("No free audio contexts");
 }
 
-ReturnCode Audio_Close(AudioHandle handle) {
+cc_result Audio_Close(AudioHandle handle) {
 	struct AudioFormat fmt = { 0 };
 	struct AudioContext* ctx;
-	ReturnCode res;
+	cc_result res;
 	ctx = &Audio_Contexts[handle];
 
 	ctx->Count  = 0;
@@ -127,10 +127,10 @@ ReturnCode Audio_Close(AudioHandle handle) {
 	return res;
 }
 
-ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
+cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	struct AudioFormat*  cur = &ctx->Format;
-	ReturnCode res;
+	cc_result res;
 
 	if (AudioFormat_Eq(cur, format)) return 0;
 	if (ctx->Handle && (res = waveOutClose(ctx->Handle))) return res;
@@ -149,10 +149,10 @@ ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	return waveOutOpen(&ctx->Handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
 }
 
-ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
+cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
-	ReturnCode res;
+	cc_result res;
 
 	Mem_Set(hdr, 0, sizeof(WAVEHDR));
 	hdr->lpData         = (LPSTR)data;
@@ -164,21 +164,21 @@ ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 d
 	return 0;
 }
 
-ReturnCode Audio_Play(AudioHandle handle) { return 0; }
+cc_result Audio_Play(AudioHandle handle) { return 0; }
 
-ReturnCode Audio_Stop(AudioHandle handle) {
+cc_result Audio_Stop(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	if (!ctx->Handle) return 0;
 	return waveOutReset(ctx->Handle);
 }
 
-ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
+cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	WAVEHDR* hdr = &ctx->Headers[idx];
 
 	*completed = false;
 	if (!(hdr->dwFlags & WHDR_DONE)) return 0;
-	ReturnCode res = 0;
+	cc_result res = 0;
 
 	if (hdr->dwFlags & WHDR_PREPARED) {
 		res = waveOutUnprepareHeader(ctx->Handle, hdr, sizeof(WAVEHDR));
@@ -186,7 +186,7 @@ ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
 	*completed = true; return res;
 }
 
-ReturnCode Audio_IsFinished(AudioHandle handle, cc_bool* finished) { return Audio_AllCompleted(handle, finished); }
+cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) { return Audio_AllCompleted(handle, finished); }
 #elif defined CC_BUILD_OPENAL
 struct AudioContext {
 	ALuint Source;
@@ -284,7 +284,7 @@ void Audio_Open(AudioHandle* handle, int buffers) {
 	Logger_Abort("No free audio contexts");
 }
 
-ReturnCode Audio_Close(AudioHandle handle) {
+cc_result Audio_Close(AudioHandle handle) {
 	struct AudioFormat fmt = { 0 };
 	struct AudioContext* ctx;
 	ALenum err;
@@ -317,7 +317,7 @@ static ALenum GetALFormat(int channels, int bitsPerSample) {
 	Logger_Abort("Unsupported audio format"); return 0;
 }
 
-ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
+cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	struct AudioFormat*  cur = &ctx->Format;
 	ALenum err;
@@ -335,7 +335,7 @@ ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	return 0;
 }
 
-ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
+cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ALuint buffer = ctx->Buffers[idx];
 	ALenum err;
@@ -348,19 +348,19 @@ ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 d
 	return 0;
 }
 
-ReturnCode Audio_Play(AudioHandle handle) {
+cc_result Audio_Play(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	alSourcePlay(ctx->Source);
 	return alGetError();
 }
 
-ReturnCode Audio_Stop(AudioHandle handle) {
+cc_result Audio_Stop(AudioHandle handle) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	alSourceStop(ctx->Source);
 	return alGetError();
 }
 
-ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
+cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ALint i, processed = 0;
 	ALuint buffer;
@@ -380,10 +380,10 @@ ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
 	*completed = ctx->Completed[idx]; return 0;
 }
 
-ReturnCode Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
+cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
 	ALint state = 0;
-	ReturnCode res;
+	cc_result res;
 
 	if (ctx->Source == -1) { *finished = true; return 0; }
 	res = Audio_AllCompleted(handle, finished);
@@ -394,9 +394,9 @@ ReturnCode Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
 }
 #endif
 
-static ReturnCode Audio_AllCompleted(AudioHandle handle, cc_bool* finished) {
+static cc_result Audio_AllCompleted(AudioHandle handle, cc_bool* finished) {
 	struct AudioContext* ctx = &Audio_Contexts[handle];
-	ReturnCode res;
+	cc_result res;
 	int i;
 	*finished = false;
 
@@ -414,7 +414,7 @@ struct AudioFormat* Audio_GetFormat(AudioHandle handle) {
 	return &Audio_Contexts[handle].Format;
 }
 
-ReturnCode Audio_StopAndClose(AudioHandle handle) {
+cc_result Audio_StopAndClose(AudioHandle handle) {
 	cc_bool finished;
 	Audio_Stop(handle);
 	Audio_IsFinished(handle, &finished); /* unqueue buffers */
@@ -444,10 +444,10 @@ struct Soundboard {
 #define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
 #define WAV_FMT_SIZE 16
 
-static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
+static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	cc_uint32 fourCC, size;
 	cc_uint8 tmp[WAV_FMT_SIZE];
-	ReturnCode res;
+	cc_result res;
 
 	if ((res = Stream_Read(stream, tmp, 12))) return res;
 	fourCC = Stream_GetU32_BE(&tmp[0]);
@@ -483,10 +483,10 @@ static ReturnCode Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	}
 }
 
-static ReturnCode Sound_ReadWave(const String* filename, struct Sound* snd) {
+static cc_result Sound_ReadWave(const String* filename, struct Sound* snd) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
-	ReturnCode res;
+	cc_result res;
 
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "audio/%s", filename);
@@ -514,7 +514,7 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, S
 	String file, name;
 	struct SoundGroup* group;
 	struct Sound* snd;
-	ReturnCode res;
+	cc_result res;
 	int i, dotIndex;
 
 	for (i = 0; i < files->count; i++) {
@@ -586,7 +586,7 @@ static struct Soundboard digBoard, stepBoard;
 static struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES]   = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
 static struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES] = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
 
-CC_NOINLINE static void Sounds_Fail(ReturnCode res) {
+CC_NOINLINE static void Sounds_Fail(cc_result res) {
 	Logger_SimpleWarn(res, "playing sounds");
 	Chat_AddRaw("&cDisabling sounds");
 	Audio_SetSounds(0);
@@ -594,7 +594,7 @@ CC_NOINLINE static void Sounds_Fail(ReturnCode res) {
 
 static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, int volume) {
 	void* data = snd->Data;
-	ReturnCode res;
+	cc_result res;
 	if ((res = Audio_SetFormat(output->Handle, fmt))) { Sounds_Fail(res); return; }
 	
 	/* copy to temp buffer to apply volume */
@@ -630,7 +630,7 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 
 	cc_bool finished;
 	int i, volume;
-	ReturnCode res;
+	cc_result res;
 
 	if (type == SOUND_NONE || !Audio_SoundsVolume) return;
 	snd = Soundboard_PickRandom(board, type);
@@ -732,10 +732,10 @@ static void* music_thread;
 static void* music_waitable;
 static volatile cc_bool music_pendingStop, music_joining;
 
-static ReturnCode Music_Buffer(int i, cc_int16* data, int maxSamples, struct VorbisState* ctx) {
+static cc_result Music_Buffer(int i, cc_int16* data, int maxSamples, struct VorbisState* ctx) {
 	int samples = 0;
 	cc_int16* cur;
-	ReturnCode res = 0, res2;
+	cc_result res = 0, res2;
 
 	while (samples < maxSamples) {
 		if ((res = Vorbis_DecodeFrame(ctx))) break;
@@ -750,7 +750,7 @@ static ReturnCode Music_Buffer(int i, cc_int16* data, int maxSamples, struct Vor
 	return res;
 }
 
-static ReturnCode Music_PlayOgg(struct Stream* source) {
+static cc_result Music_PlayOgg(struct Stream* source) {
 	cc_uint8 buffer[OGG_BUFFER_SIZE];
 	struct Stream stream;
 	struct VorbisState vorbis = { 0 };
@@ -760,7 +760,7 @@ static ReturnCode Music_PlayOgg(struct Stream* source) {
 	cc_int16* data = NULL;
 	cc_bool completed;
 	int i, next;
-	ReturnCode res;
+	cc_result res;
 
 	Ogg_MakeStream(&stream, buffer, source);
 	vorbis.source = &stream;
@@ -828,7 +828,7 @@ static void Music_RunLoop(void) {
 	RNGState rnd;
 	struct Stream stream;
 	int i, count = 0, idx, delay;
-	ReturnCode res = 0;
+	cc_result res = 0;
 
 	for (i = 0; i < files.count && count < MUSIC_MAX_FILES; i++) {
 		file = StringsBuffer_UNSAFE_Get(&files, i);

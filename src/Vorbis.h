@@ -50,9 +50,9 @@ struct VorbisState {
 /* Frees all dynamic memory allocated to decode the given vorbis audio. */
 void Vorbis_Free(struct VorbisState* ctx);
 /* Reads and decodes the initial vorbis headers and setup data. */
-ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx);
+cc_result Vorbis_DecodeHeaders(struct VorbisState* ctx);
 /* Reads and decodes the current frame's audio data. */
-ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx);
+cc_result Vorbis_DecodeFrame(struct VorbisState* ctx);
 /* Produces final interleaved audio samples for the current frame. */
 int Vorbis_OutputFrame(struct VorbisState* ctx, cc_int16* data);
 #endif

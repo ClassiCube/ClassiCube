@@ -256,7 +256,7 @@ static void MPConnection_FinishConnect(void) {
 	net_lastPacket = DateTime_CurrentUTC_MS();
 }
 
-static void MPConnection_FailConnect(ReturnCode result) {
+static void MPConnection_FailConnect(cc_result result) {
 	static const String reason = String_FromConst("You failed to connect to the server. It's probably down!");
 	String msg; char msgBuffer[STRING_SIZE * 2];
 
@@ -275,7 +275,7 @@ static void MPConnection_FailConnect(ReturnCode result) {
 }
 
 static void MPConnection_TickConnect(void) {
-	ReturnCode res = 0;
+	cc_result res = 0;
 	cc_bool poll_write;
 	TimeMS now;
 
@@ -298,7 +298,7 @@ static void MPConnection_TickConnect(void) {
 
 static void MPConnection_BeginConnect(void) {
 	String title; char titleBuffer[STRING_SIZE];
-	ReturnCode res;
+	cc_result res;
 	String_InitArray(title, titleBuffer);
 	
 	Socket_Create(&net_socket);
@@ -347,7 +347,7 @@ static void MPConnection_SendPosition(Vec3 pos, float rotY, float headX) {
 static void MPConnection_CheckDisconnection(void) {
 	static const String title  = String_FromConst("Disconnected!");
 	static const String reason = String_FromConst("You've lost connection to the server");
-	ReturnCode availRes, selectRes;
+	cc_result availRes, selectRes;
 	cc_uint32 pending = 0;
 	cc_bool poll_read;
 
@@ -373,7 +373,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	cc_uint8* readEnd;
 	Net_Handler handler;
 	int i, remaining;
-	ReturnCode res;
+	cc_result res;
 
 	if (Server.Disconnected) return;
 	if (net_connecting) { MPConnection_TickConnect(); return; }
@@ -457,7 +457,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 static void MPConnection_SendData(const cc_uint8* data, cc_uint32 len) {
 	cc_uint32 wrote;
-	ReturnCode res;
+	cc_result res;
 	if (Server.Disconnected) return;
 
 	while (len) {

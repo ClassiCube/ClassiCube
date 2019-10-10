@@ -228,7 +228,7 @@ cc_bool Game_CanPick(BlockID block) {
 cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, cc_uint8* skinType) {
 	Bitmap bmp;
 	cc_bool success;
-	ReturnCode res;
+	cc_result res;
 	
 	res = Png_Decode(&bmp, src);
 	if (res) { Logger_Warn2(res, "decoding", file); }
@@ -297,7 +297,7 @@ static void Game_OnNewMapLoadedCore(void* obj) {
 
 static void Game_TextureChangedCore(void* obj, struct Stream* src, const String* name) {
 	Bitmap bmp;
-	ReturnCode res;
+	cc_result res;
 
 	if (String_CaselessEqualsConst(name, "terrain.png")) {
 		res = Png_Decode(&bmp, src);
@@ -377,7 +377,7 @@ static void Game_LoadPlugin(const String* path, void* obj) {
 	void* verSymbol;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
 	void* compSymbol; /* EXPORT struct IGameComponent Plugin_Component = { (whatever) } */
 	int ver;
-	ReturnCode res;
+	cc_result res;
 
 	/* ignore accepted.txt, deskop.ini, .pdb files, etc */
 	if (!String_CaselessEnds(path, &DynamicLib_Ext)) return;
@@ -403,7 +403,7 @@ static void Game_LoadPlugin(const String* path, void* obj) {
 
 static void Game_LoadPlugins(void) {
 	static const String dir = String_FromConst("plugins");
-	ReturnCode res;
+	cc_result res;
 
 	res = Directory_Enum(&dir, NULL, Game_LoadPlugin);
 	if (res) Logger_Warn(res, "enumerating plugins directory");
@@ -575,7 +575,7 @@ void Game_TakeScreenshot(void) {
 	String path;     char pathBuffer[FILENAME_SIZE];
 	struct DateTime now;
 	struct Stream stream;
-	ReturnCode res;
+	cc_result res;
 
 	Game_ScreenshotRequested = false;
 	if (!Utils_EnsureDirectory("screenshots")) return;

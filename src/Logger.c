@@ -45,7 +45,7 @@ void Logger_DialogWarn(const String* msg) {
 const char* Logger_DialogTitle = "Error";
 Logger_DoWarn Logger_WarnFunc  = Logger_DialogWarn;
 
-void Logger_SimpleWarn(ReturnCode res, const char* place) {
+void Logger_SimpleWarn(cc_result res, const char* place) {
 	String msg; char msgBuffer[128];
 	String_InitArray(msg, msgBuffer);
 
@@ -53,7 +53,7 @@ void Logger_SimpleWarn(ReturnCode res, const char* place) {
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_SimpleWarn2(ReturnCode res, const char* place, const String* path) {
+void Logger_SimpleWarn2(cc_result res, const char* place, const String* path) {
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
@@ -62,7 +62,7 @@ void Logger_SimpleWarn2(ReturnCode res, const char* place, const String* path) {
 }
 
 /* Returns a description for ClassiCube specific error codes */
-static const char* Logger_GetCCErrorDesc(ReturnCode res) {
+static const char* Logger_GetCCErrorDesc(cc_result res) {
 	switch (res) {
 	case ERR_END_OF_STREAM:    return "End of stream";
 	case ERR_NOT_SUPPORTED:    return "Operation not supported";
@@ -162,7 +162,7 @@ static const char* Logger_GetCCErrorDesc(ReturnCode res) {
 }
 
 /* Appends more detailed information about an error if possible */
-static void Logger_AppendErrorDesc(String* msg, ReturnCode res, Logger_DescribeError describeErr) {
+static void Logger_AppendErrorDesc(String* msg, cc_result res, Logger_DescribeError describeErr) {
 	const char* cc_err;
 	String err; char errBuffer[128];
 	String_InitArray(err, errBuffer);
@@ -175,7 +175,7 @@ static void Logger_AppendErrorDesc(String* msg, ReturnCode res, Logger_DescribeE
 	}
 }
 
-void Logger_SysWarn(ReturnCode res, const char* place, Logger_DescribeError describeErr) {
+void Logger_SysWarn(cc_result res, const char* place, Logger_DescribeError describeErr) {
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
@@ -184,7 +184,7 @@ void Logger_SysWarn(ReturnCode res, const char* place, Logger_DescribeError desc
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_SysWarn2(ReturnCode res, const char* place, const String* path, Logger_DescribeError describeErr) {
+void Logger_SysWarn2(cc_result res, const char* place, const String* path, Logger_DescribeError describeErr) {
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
@@ -193,13 +193,13 @@ void Logger_SysWarn2(ReturnCode res, const char* place, const String* path, Logg
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_DynamicLibWarn2(ReturnCode res, const char* place, const String* path) {
+void Logger_DynamicLibWarn2(cc_result res, const char* place, const String* path) {
 	Logger_SysWarn2(res, place, path, DynamicLib_DescribeError);
 }
-void Logger_Warn(ReturnCode res, const char* place) {
+void Logger_Warn(cc_result res, const char* place) {
 	Logger_SysWarn(res, place,  Platform_DescribeError);
 }
-void Logger_Warn2(ReturnCode res, const char* place, const String* path) {
+void Logger_Warn2(cc_result res, const char* place, const String* path) {
 	Logger_SysWarn2(res, place, path, Platform_DescribeError);
 }
 
@@ -674,11 +674,11 @@ static void Logger_DumpMisc(void* ctx) { }
 /*########################################################################################################################*
 *------------------------------------------------------Error handling-----------------------------------------------------*
 *#########################################################################################################################*/
-static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx);
+static void Logger_AbortCommon(cc_result result, const char* raw_msg, void* ctx);
 
 #if defined CC_BUILD_WEB
 void Logger_Hook(void) { }
-void Logger_Abort2(ReturnCode result, const char* raw_msg) {
+void Logger_Abort2(cc_result result, const char* raw_msg) {
 	Logger_AbortCommon(result, raw_msg, NULL);
 }
 #elif defined CC_BUILD_WIN
@@ -703,7 +703,7 @@ void Logger_Hook(void) { SetUnhandledExceptionFilter(Logger_UnhandledFilter); }
 #if _MSC_VER
 #pragma optimize ("", off)
 #endif
-void Logger_Abort2(ReturnCode result, const char* raw_msg) {
+void Logger_Abort2(cc_result result, const char* raw_msg) {
 	CONTEXT ctx;
 #ifndef _M_IX86
 	/* This method is guaranteed to exist on 64 bit windows */
@@ -780,7 +780,7 @@ void Logger_Hook(void) {
 	sigaction(SIGFPE,  &sa, &old);
 }
 
-void Logger_Abort2(ReturnCode result, const char* raw_msg) {
+void Logger_Abort2(cc_result result, const char* raw_msg) {
 	Logger_AbortCommon(result, raw_msg, NULL);
 }
 #endif
@@ -796,7 +796,7 @@ static cc_bool logOpen;
 void Logger_Log(const String* msg) {
 #ifndef CC_BUILD_WEB
 	static const String path = String_FromConst("client.log");
-	ReturnCode res;
+	cc_result res;
 
 	if (!logOpen) {
 		logOpen = true;
@@ -824,7 +824,7 @@ static void Logger_LogCrashHeader(void) {
 	Logger_Log(&msg);
 }
 
-static void Logger_AbortCommon(ReturnCode result, const char* raw_msg, void* ctx) {	
+static void Logger_AbortCommon(cc_result result, const char* raw_msg, void* ctx) {	
 	String msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
 

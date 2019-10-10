@@ -29,23 +29,23 @@ typedef int AudioHandle;
 void Audio_Open(AudioHandle* handle, int buffers);
 /* Frees an allocated audio context. */
 /* NOTE: Audio_StopAndClose should be used, because this method can fail if audio is playing. */
-ReturnCode Audio_Close(AudioHandle handle);
+cc_result Audio_Close(AudioHandle handle);
 /* Stops playing audio, unqueues buffers, then frees the audio context. */
-ReturnCode Audio_StopAndClose(AudioHandle handle);
+cc_result Audio_StopAndClose(AudioHandle handle);
 /* Returns the format audio is played in. */
 struct AudioFormat* Audio_GetFormat(AudioHandle handle);
 /* Sets the format audio to play is in. */
 /* NOTE: Changing the format can be expensive, depending on the platform. */
-ReturnCode Audio_SetFormat(AudioHandle handle, struct AudioFormat* format);
+cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format);
 /* Sets the audio data in the given buffer. */
 /* NOTE: You should ensure Audio_IsCompleted returns true before calling this. */
-ReturnCode Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize);
+cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize);
 /* Begins playing audio. Audio_BufferData must have been used before this. */
-ReturnCode Audio_Play(AudioHandle handle);
+cc_result Audio_Play(AudioHandle handle);
 /* Immediately stops the currently playing audio. */
-ReturnCode Audio_Stop(AudioHandle handle);
+cc_result Audio_Stop(AudioHandle handle);
 /* Returns whether the given buffer has finished playing. */
-ReturnCode Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed);
+cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed);
 /* Returns whether all buffers have finished playing. */
-ReturnCode Audio_IsFinished(AudioHandle handle, cc_bool* finished);
+cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished);
 #endif

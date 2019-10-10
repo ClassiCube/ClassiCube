@@ -20,7 +20,7 @@
 /*########################################################################################################################*
 *--------------------------------------------------------General----------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Map_ReadBlocks(struct Stream* stream) {
+static cc_result Map_ReadBlocks(struct Stream* stream) {
 	World.Volume = World.Width * World.Length * World.Height;
 	World.Blocks = (BlockRaw*)Mem_TryAlloc(World.Volume, 1);
 
@@ -28,9 +28,9 @@ static ReturnCode Map_ReadBlocks(struct Stream* stream) {
 	return Stream_Read(stream, World.Blocks, World.Volume);
 }
 
-static ReturnCode Map_SkipGZipHeader(struct Stream* stream) {
+static cc_result Map_SkipGZipHeader(struct Stream* stream) {
 	struct GZipHeader gzHeader;
-	ReturnCode res;
+	cc_result res;
 	GZipHeader_Init(&gzHeader);
 
 	while (!gzHeader.Done) {
@@ -58,7 +58,7 @@ void Map_LoadFrom(const String* path) {
 	struct LocationUpdate update;
 	IMapImporter importer;
 	struct Stream stream;
-	ReturnCode res;
+	cc_result res;
 	Game_Reset();
 	
 	res = Stream_OpenFile(&stream, path);
@@ -118,11 +118,11 @@ static const cc_uint8 Lvl_table[256] = {
 	29, 22, 10, 22, 22, 41, 19, 35, 21, 29, 49, 34, 16, 41,  0, 22
 };
 
-static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {	
+static cc_result Lvl_ReadCustomBlocks(struct Stream* stream) {	
 	cc_uint8 chunk[LVL_CHUNKSIZE * LVL_CHUNKSIZE * LVL_CHUNKSIZE];
 	cc_uint8 hasCustom;
 	int baseIndex, index, xx, yy, zz;
-	ReturnCode res;
+	cc_result res;
 	int x, y, z, i;
 
 	/* skip bounds checks when we know chunk is entirely inside map */
@@ -161,11 +161,11 @@ static ReturnCode Lvl_ReadCustomBlocks(struct Stream* stream) {
 	return 0;
 }
 
-ReturnCode Lvl_Load(struct Stream* stream) {
+cc_result Lvl_Load(struct Stream* stream) {
 	cc_uint8 header[18];
 	cc_uint8* blocks;
 	cc_uint8 section;
-	ReturnCode res;
+	cc_result res;
 	int i;
 
 	struct LocalPlayer* p = &LocalPlayer_Instance;
@@ -227,10 +227,10 @@ ReturnCode Lvl_Load(struct Stream* stream) {
 	METADATA { STR "Group", "Key", "Value" }
 	U8* "Blocks"
 }*/
-static ReturnCode Fcm_ReadString(struct Stream* stream) {
+static cc_result Fcm_ReadString(struct Stream* stream) {
 	cc_uint8 data[2];
 	int len;
-	ReturnCode res;
+	cc_result res;
 
 	if ((res = Stream_Read(stream, data, sizeof(data)))) return res;
 	len = Stream_GetU16_LE(data);
@@ -238,9 +238,9 @@ static ReturnCode Fcm_ReadString(struct Stream* stream) {
 	return stream->Skip(stream, len);
 }
 
-ReturnCode Fcm_Load(struct Stream* stream) {
+cc_result Fcm_Load(struct Stream* stream) {
 	cc_uint8 header[79];	
-	ReturnCode res;
+	cc_result res;
 	int i, count;
 
 	struct LocalPlayer* p = &LocalPlayer_Instance;
@@ -343,10 +343,10 @@ static String NbtTag_String(struct NbtTag* tag) {
 	return tag->value.str.text;
 }
 
-static ReturnCode Nbt_ReadString(struct Stream* stream, String* str) {
+static cc_result Nbt_ReadString(struct Stream* stream, String* str) {
 	cc_uint8 buffer[NBT_STRING_SIZE * 4];
 	int len;
-	ReturnCode res;
+	cc_result res;
 
 	if ((res = Stream_Read(stream, buffer, 2)))   return res;
 	len = Stream_GetU16_BE(buffer);
@@ -359,11 +359,11 @@ static ReturnCode Nbt_ReadString(struct Stream* stream, String* str) {
 }
 
 typedef void (*Nbt_Callback)(struct NbtTag* tag);
-static ReturnCode Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
+static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream* stream, struct NbtTag* parent, Nbt_Callback callback) {
 	struct NbtTag tag;
 	cc_uint8 childType;
 	cc_uint8 tmp[5];	
-	ReturnCode res;
+	cc_result res;
 	cc_uint32 i, count;
 	
 	if (typeId == NBT_END) return 0;
@@ -688,12 +688,12 @@ static void Cw_Callback(struct NbtTag* tag) {
 	        0             1         2        3          4   */
 }
 
-ReturnCode Cw_Load(struct Stream* stream) {
+cc_result Cw_Load(struct Stream* stream) {
 	cc_uint8 tag;
 	struct Stream compStream;
 	struct InflateState state;
 	Vec3* spawn; IVec3 pos;
-	ReturnCode res;
+	cc_result res;
 
 	Inflate_MakeStream(&compStream, &state, stream);
 	if ((res = Map_SkipGZipHeader(stream))) return res;
@@ -763,9 +763,9 @@ struct JClassDesc {
 	struct JFieldDesc Fields[22];
 };
 
-static ReturnCode Dat_ReadString(struct Stream* stream, cc_uint8* buffer) {
+static cc_result Dat_ReadString(struct Stream* stream, cc_uint8* buffer) {
 	int len;
-	ReturnCode res;
+	cc_result res;
 
 	if ((res = Stream_Read(stream, buffer, 2))) return res;
 	len = Stream_GetU16_BE(buffer);
@@ -775,10 +775,10 @@ static ReturnCode Dat_ReadString(struct Stream* stream, cc_uint8* buffer) {
 	return Stream_Read(stream, buffer, len);
 }
 
-static ReturnCode Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
+static cc_result Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* desc) {
 	cc_uint8 typeCode;
 	cc_uint8 className1[JNAME_SIZE];
-	ReturnCode res;
+	cc_result res;
 
 	if ((res = stream->ReadU8(stream, &desc->Type)))     return res;
 	if ((res = Dat_ReadString(stream, desc->FieldName))) return res;
@@ -797,11 +797,11 @@ static ReturnCode Dat_ReadFieldDesc(struct Stream* stream, struct JFieldDesc* de
 	return 0;
 }
 
-static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
+static cc_result Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* desc) {
 	cc_uint8 typeCode;
 	cc_uint8 count[2];
 	struct JClassDesc superClassDesc;
-	ReturnCode res;
+	cc_result res;
 	int i;
 
 	if ((res = stream->ReadU8(stream, &typeCode))) return res;
@@ -825,12 +825,12 @@ static ReturnCode Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* de
 	return Dat_ReadClassDesc(stream, &superClassDesc);
 }
 
-static ReturnCode Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
+static cc_result Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
 	cc_uint8 typeCode;
 	String fieldName;
 	cc_uint32 count;
 	struct JClassDesc arrayClassDesc;
-	ReturnCode res;
+	cc_result res;
 
 	switch (field->Type) {
 	case JFIELD_I8:
@@ -889,12 +889,12 @@ static cc_int32 Dat_I32(struct JFieldDesc* field) {
 	return field->Value.I32;
 }
 
-ReturnCode Dat_Load(struct Stream* stream) {
+cc_result Dat_Load(struct Stream* stream) {
 	cc_uint8 header[10];
 	struct JClassDesc obj;
 	struct JFieldDesc* field;
 	String fieldName;
-	ReturnCode res;
+	cc_result res;
 	int i;
 
 	struct LocalPlayer* p = &LocalPlayer_Instance;
@@ -1037,7 +1037,7 @@ NBT_END,
 };
 
 
-static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
+static cc_result Cw_WriteBockDef(struct Stream* stream, int b) {
 	cc_uint8 tmp[512];
 	String name;
 	int len;
@@ -1091,11 +1091,11 @@ static ReturnCode Cw_WriteBockDef(struct Stream* stream, int b) {
 	return Stream_Write(stream, tmp, sizeof(cw_meta_def) + len);
 }
 
-ReturnCode Cw_Save(struct Stream* stream) {
+cc_result Cw_Save(struct Stream* stream) {
 	cc_uint8 tmp[768];
 	PackedCol col;
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	ReturnCode res;
+	cc_result res;
 	int b, len;
 
 	Mem_Copy(tmp, cw_begin, sizeof(cw_begin));
@@ -1174,9 +1174,9 @@ static cc_uint8 sc_end[37] = {
 NBT_END,
 };
 
-ReturnCode Schematic_Save(struct Stream* stream) {
+cc_result Schematic_Save(struct Stream* stream) {
 	cc_uint8 tmp[256], chunk[8192] = { 0 };
-	ReturnCode res;
+	cc_result res;
 	int i;
 
 	Mem_Copy(tmp, sc_begin, sizeof(sc_begin));

@@ -1489,7 +1489,7 @@ static void UpdatesScreen_DevOpenGL(void* w, int x, int y) { UpdatesScreen_Get(f
 
 static void UpdatesScreen_Update(struct UpdatesScreen* s) {
 	TimeMS buildTime;
-	ReturnCode res;
+	cc_result res;
 
 	/* Initially fill out with update check result from main menu */
 	if (CheckUpdateTask.Base.Completed && CheckUpdateTask.Base.Success) {

@@ -132,7 +132,7 @@ typedef cc_uint8 TextureLoc;
 typedef cc_uint8 BlockRaw;
 typedef cc_uint8 EntityID;
 typedef cc_uint8 Face;
-typedef cc_uint32 ReturnCode;
+typedef cc_uint32 cc_result;
 typedef cc_uint64 TimeMS;
 
 typedef struct Rect2D_  { int X, Y, Width, Height; } Rect2D;

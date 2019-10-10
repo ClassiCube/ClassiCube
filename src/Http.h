@@ -27,7 +27,7 @@ struct HttpRequest {
 	int StatusCode;         /* HTTP status code returned in the response. */
 	cc_uint32 ContentLength; /* HTTP content length returned in the response. */
 
-	ReturnCode Result; /* 0 on success, otherwise platform-specific error. */
+	cc_result Result; /* 0 on success, otherwise platform-specific error. */
 	cc_uint8*   Data;   /* Contents of the response. (i.e. result data) */
 	cc_uint32   Size;   /* Size of the contents. (may still be non-zero for non 200 status codes) */
 
@@ -61,7 +61,7 @@ void Http_UrlEncode(String* dst, const cc_uint8* data, int len);
 /* Converts characters to UTF8, then calls Http_URlEncode on them. */
 void Http_UrlEncodeUtf8(String* dst, const String* src);
 /* Outputs more detailed information about errors with http requests. */
-cc_bool Http_DescribeError(ReturnCode res, String* dst);
+cc_bool Http_DescribeError(cc_result res, String* dst);
 
 /* Attempts to retrieve a fully completed request. */
 /* NOTE: You MUST check Success for whether it completed successfully. */

@@ -106,7 +106,7 @@ void Font_ReducePadding(struct FontDesc* desc, int scale);
 /* Finds the path and face number of the given system font, with closest matching style */
 String Font_Lookup(const String* fontName, int style);
 /* Allocates a new system font from the given arguments. */
-ReturnCode Font_Make(struct FontDesc* desc, const String* fontName, int size, int style);
+cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int style);
 /* Frees an allocated font. */
 CC_API void Font_Free(struct FontDesc* desc);
 /* Attempts to decode one or fonts from the given file. */

@@ -179,7 +179,7 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 
 	cc_uint8 buffer[2048]; 
 	struct Stream buffered;
-	ReturnCode res;
+	cc_result res;
 
 	String_InitArray(line, lineBuffer);
 	/* ReadLine reads single byte at a time */
@@ -369,7 +369,7 @@ static void Animations_PackChanged(void* obj) {
 }
 
 static void Animations_FileChanged(void* obj, struct Stream* stream, const String* name) {
-	ReturnCode res;
+	cc_result res;
 	if (String_CaselessEqualsConst(name, "animations.png")) {
 		res = Png_Decode(&anims_bmp, stream);
 		if (!res) return;
@@ -558,7 +558,7 @@ cc_bool TextureCache_Has(const String* url) {
 
 cc_bool TextureCache_Get(const String* url, struct Stream* stream) {
 	String path; char pathBuffer[FILENAME_SIZE];
-	ReturnCode res;
+	cc_result res;
 
 	String_InitArray(path, pathBuffer);
 	TextureCache_MakePath(&path, url);
@@ -612,7 +612,7 @@ static void TextureCache_SetLastModified(const String* url, const String* time) 
 
 void TextureCache_Update(struct HttpRequest* req) {
 	String path, url; char pathBuffer[FILENAME_SIZE];
-	ReturnCode res;
+	cc_result res;
 	url = String_FromRawArray(req->URL);
 
 	path = String_FromRawArray(req->Etag);
@@ -630,7 +630,7 @@ void TextureCache_Update(struct HttpRequest* req) {
 /*########################################################################################################################*
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode TexturePack_ProcessZipEntry(const String* path, struct Stream* stream, struct ZipState* s) {
+static cc_result TexturePack_ProcessZipEntry(const String* path, struct Stream* stream, struct ZipState* s) {
 	String name = *path; 
 	Utils_UNSAFE_GetFilename(&name);
 	Event_RaiseEntry(&TextureEvents.FileChanged, stream, &name);
@@ -638,7 +638,7 @@ static ReturnCode TexturePack_ProcessZipEntry(const String* path, struct Stream*
 }
 
 /* Extracts all the files from a stream representing a .zip archive */
-static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
+static cc_result TexturePack_ExtractZip(struct Stream* stream) {
 	struct ZipState state;
 	Event_RaiseVoid(&TextureEvents.PackChanged);
 	if (Gfx.LostContext) return 0;
@@ -650,9 +650,9 @@ static ReturnCode TexturePack_ExtractZip(struct Stream* stream) {
 
 /* Changes the current terrain atlas from a stream representing a .png image */
 /* Raises TextureEvents.PackChanged, so behaves as a .zip with only terrain.png in it */
-static ReturnCode TexturePack_ExtractPng(struct Stream* stream) {
+static cc_result TexturePack_ExtractPng(struct Stream* stream) {
 	Bitmap bmp; 
-	ReturnCode res = Png_Decode(&bmp, stream);
+	cc_result res = Png_Decode(&bmp, stream);
 
 	if (!res) {
 		Event_RaiseVoid(&TextureEvents.PackChanged);
@@ -666,7 +666,7 @@ static ReturnCode TexturePack_ExtractPng(struct Stream* stream) {
 void TexturePack_ExtractZip_File(const String* filename) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
-	ReturnCode res;
+	cc_result res;
 
 	/* TODO: This is an ugly hack to load textures from memory. */
 	/* We need to mount /classicube to IndexedDB, but texpacks folder */
@@ -700,7 +700,7 @@ void TexturePack_ExtractCurrent(cc_bool forceReload) {
 	String url = World_TextureUrl, file;
 	struct Stream stream;
 	cc_bool zip;
-	ReturnCode res;
+	cc_result res;
 
 	if (!url.length || !TextureCache_Get(&url, &stream)) {
 		/* don't pointlessly load default texture pack */
@@ -725,7 +725,7 @@ void TexturePack_Extract_Req(struct HttpRequest* item) {
 	cc_uint8* data; cc_uint32 len;
 	struct Stream mem;
 	cc_bool png;
-	ReturnCode res;
+	cc_result res;
 
 	url = String_FromRawArray(item->URL);
 	/* Took too long to download and is no longer active texture pack */

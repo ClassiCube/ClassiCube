@@ -443,7 +443,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 	struct HttpRequest item;
 	struct Stream mem;
 	Bitmap bmp;
-	ReturnCode res;
+	cc_result res;
 
 	/* Don't check skin if don't have to */
 	if (!e->Model->UsesSkin) return;

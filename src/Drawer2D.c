@@ -52,7 +52,7 @@ static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
 
 void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style) {
 	int i;
-	ReturnCode res;
+	cc_result res;
 
 	if (Drawer2D_BitmappedText) {
 		desc->handle = NULL;
@@ -100,7 +100,8 @@ static int tileSize = 8; /* avoid divide by 0 if default.png missing */
 #define LOG2_CHARS_PER_ROW 4
 static int tileWidths[256];
 
-static void Drawer2D_CalculateTextWidths(void) {
+/* Finds the right-most non-transparent pixel in each tile in default.png */
+static void CalculateTextWidths(void) {
 	int width = fontBitmap.Width, height = fontBitmap.Height;
 	BitmapCol* row;
 	int i, x, y, xx, tileX, tileY;
@@ -136,7 +137,7 @@ void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 	Drawer2D_FreeFontBitmap();
 	fontBitmap = *bmp;
 	tileSize   = bmp->Width >> LOG2_CHARS_PER_ROW;
-	Drawer2D_CalculateTextWidths();
+	CalculateTextWidths();
 }
 
 void Font_ReducePadding(struct FontDesc* desc, int scale) {
@@ -706,7 +707,7 @@ static void Drawer2D_Reset(void) {
 
 static void Drawer2D_TextureChanged(void* obj, struct Stream* src, const String* name) {
 	Bitmap bmp;
-	ReturnCode res;
+	cc_result res;
 	if (!String_CaselessEqualsConst(name, "default.png")) return;
 
 	if ((res = Png_Decode(&bmp, src))) {
@@ -752,7 +753,7 @@ String Font_Lookup(const String* fontName, int style) {
 	String str = String_FromConst("-----"); return str;
 }
 
-ReturnCode Font_Make(struct FontDesc* desc, const String* fontName, int size, int style) {
+cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int style) {
 	desc->size   = size;
 	desc->style  = style;
 	desc->height = 0;
@@ -792,7 +793,7 @@ struct SysFont {
 
 static unsigned long SysFont_Read(FT_Stream s, unsigned long offset, unsigned char* buffer, unsigned long count) {
 	struct SysFont* font;
-	ReturnCode res;
+	cc_result res;
 	if (!count && offset > s->size) return 1;
 
 	font = (struct SysFont*)s->descriptor.pointer;
@@ -825,10 +826,10 @@ static void SysFont_Close(FT_Stream stream) {
 	SysFont_Free(font);
 }
 
-static ReturnCode SysFont_Init(const String* path, struct SysFont* font, FT_Open_Args* args) {
+static cc_result SysFont_Init(const String* path, struct SysFont* font, FT_Open_Args* args) {
 	FileHandle file;
 	cc_uint32 size;
-	ReturnCode res;
+	cc_result res;
 #ifdef CC_BUILD_OSX
 	String filename;
 #endif
@@ -1008,7 +1009,7 @@ String Font_Lookup(const String* fontName, int style) {
 }
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
-ReturnCode Font_Make(struct FontDesc* desc, const String* fontName, int size, int style) {
+cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int style) {
 	struct SysFont* font;
 	String value, path, index;
 	int faceIndex;

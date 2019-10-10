@@ -12,13 +12,13 @@
 *-------------------------------------------------------Ogg stream--------------------------------------------------------*
 *#########################################################################################################################*/
 #define OGG_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
-static ReturnCode Ogg_NextPage(struct Stream* stream) {
+static cc_result Ogg_NextPage(struct Stream* stream) {
 	cc_uint8 header[27];
 	struct Stream* source;
 	cc_uint32 sig, size;
 	int i, numSegments;
 	cc_uint8 segments[255];
-	ReturnCode res;
+	cc_result res;
 
 	/* OGG page format:
 	* header[0]  (4) page signature
@@ -51,8 +51,8 @@ static ReturnCode Ogg_NextPage(struct Stream* stream) {
 	return 0;
 }
 
-static ReturnCode Ogg_Read(struct Stream* stream, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	ReturnCode res;
+static cc_result Ogg_Read(struct Stream* stream, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+	cc_result res;
 	for (;;) {
 		if (stream->Meta.Ogg.Left) {
 			count = min(count, stream->Meta.Ogg.Left);
@@ -71,7 +71,7 @@ static ReturnCode Ogg_Read(struct Stream* stream, cc_uint8* data, cc_uint32 coun
 	}
 }
 
-static ReturnCode Ogg_ReadU8(struct Stream* stream, cc_uint8* data) {
+static cc_result Ogg_ReadU8(struct Stream* stream, cc_uint8* data) {
 	if (!stream->Meta.Ogg.Left) return Stream_DefaultReadU8(stream, data);
 
 	*data = *stream->Meta.Ogg.Cur;
@@ -106,7 +106,7 @@ void Ogg_MakeStream(struct Stream* stream, cc_uint8* buffer, struct Stream* sour
 static cc_uint32 Vorbis_ReadBits(struct VorbisState* ctx, cc_uint32 bitsCount) {
 	cc_uint8 portion;
 	cc_uint32 data;
-	ReturnCode res;
+	cc_result res;
 
 	while (ctx->NumBits < bitsCount) {
 		res = ctx->source->ReadU8(ctx->source, &portion);
@@ -118,9 +118,9 @@ static cc_uint32 Vorbis_ReadBits(struct VorbisState* ctx, cc_uint32 bitsCount) {
 	return data;
 }
 
-static ReturnCode Vorbis_TryReadBits(struct VorbisState* ctx, cc_uint32 bitsCount, cc_uint32* data) {
+static cc_result Vorbis_TryReadBits(struct VorbisState* ctx, cc_uint32 bitsCount, cc_uint32* data) {
 	cc_uint8 portion;
-	ReturnCode res;
+	cc_result res;
 
 	while (ctx->NumBits < bitsCount) {
 		res = ctx->source->ReadU8(ctx->source, &portion);
@@ -135,7 +135,7 @@ static ReturnCode Vorbis_TryReadBits(struct VorbisState* ctx, cc_uint32 bitsCoun
 static cc_uint32 Vorbis_ReadBit(struct VorbisState* ctx) {
 	cc_uint8 portion;
 	cc_uint32 data;
-	ReturnCode res;
+	cc_result res;
 
 	if (!ctx->NumBits) {
 		res = ctx->source->ReadU8(ctx->source, &portion);
@@ -276,7 +276,7 @@ static cc_bool Codebook_CalcCodewords(struct Codebook* c, cc_uint8* len) {
 	return true;
 }
 
-static ReturnCode Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook* c) {
+static cc_result Codebook_DecodeSetup(struct VorbisState* ctx, struct Codebook* c) {
 	cc_uint32 sync;
 	cc_uint8* codewordLens;
 	int i, entry;
@@ -477,7 +477,7 @@ static void Floor_SortXList(int left, int right) {
 	}
 }
 
-static ReturnCode Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
+static cc_result Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 	static const short ranges[4] = { 256, 128, 84, 64 };
 	int i, j, idx, maxClass;
 	int rangeBits, classNum;
@@ -725,7 +725,7 @@ struct Residue {
 	cc_int16  Books[RESIDUE_MAX_CLASSIFICATIONS][8];
 };
 
-static ReturnCode Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r, int type) {
+static cc_result Residue_DecodeSetup(struct VorbisState* ctx, struct Residue* r, int type) {
 	cc_int16 codebook;
 	int i, j;
 
@@ -885,7 +885,7 @@ struct Mapping {
 	cc_uint8 Angle[MAPPING_MAX_COUPLINGS];
 };
 
-static ReturnCode Mapping_DecodeSetup(struct VorbisState* ctx, struct Mapping* m) {
+static cc_result Mapping_DecodeSetup(struct VorbisState* ctx, struct Mapping* m) {
 	int i, submaps, reserved;
 	int couplingSteps, couplingBits;
 
@@ -1075,7 +1075,7 @@ void imdct_calc(float* in, float* out, struct imdct_state* state) {
 *-----------------------------------------------------Vorbis setup--------------------------------------------------------*
 *#########################################################################################################################*/
 struct Mode { cc_uint8 BlockSizeFlag, MappingIdx; };
-static ReturnCode Mode_DecodeSetup(struct VorbisState* ctx, struct Mode* m) {
+static cc_result Mode_DecodeSetup(struct VorbisState* ctx, struct Mode* m) {
 	int windowType, transformType;
 	m->BlockSizeFlag = Vorbis_ReadBit(ctx);
 
@@ -1126,10 +1126,10 @@ static cc_bool Vorbis_ValidBlockSize(cc_uint32 size) {
 	return size >= 64 && size <= VORBIS_MAX_BLOCK_SIZE && Math_IsPowOf2(size);
 }
 
-static ReturnCode Vorbis_CheckHeader(struct VorbisState* ctx, cc_uint8 type) {
+static cc_result Vorbis_CheckHeader(struct VorbisState* ctx, cc_uint8 type) {
 	cc_uint8 header[7];
 	cc_bool OK;
-	ReturnCode res;
+	cc_result res;
 
 	if ((res = Stream_Read(ctx->source, header, sizeof(header)))) return res;
 	if (header[0] != type) return VORBIS_ERR_WRONG_HEADER;
@@ -1140,10 +1140,10 @@ static ReturnCode Vorbis_CheckHeader(struct VorbisState* ctx, cc_uint8 type) {
 	return OK ? 0 : ERR_INVALID_ARGUMENT;
 }
 
-static ReturnCode Vorbis_DecodeIdentifier(struct VorbisState* ctx) {
+static cc_result Vorbis_DecodeIdentifier(struct VorbisState* ctx) {
 	cc_uint8 header[23];
 	cc_uint32 version;
-	ReturnCode res;
+	cc_result res;
 
 	if ((res = Stream_Read(ctx->source, header, sizeof(header)))) return res;
 	version  = Stream_GetU32_LE(&header[0]);
@@ -1164,10 +1164,10 @@ static ReturnCode Vorbis_DecodeIdentifier(struct VorbisState* ctx) {
 	return (header[22] & 1) ? 0 : VORBIS_ERR_FRAMING;
 }
 
-static ReturnCode Vorbis_DecodeComments(struct VorbisState* ctx) {
+static cc_result Vorbis_DecodeComments(struct VorbisState* ctx) {
 	cc_uint32 i, len, comments;
 	cc_uint8 flag;
-	ReturnCode res;
+	cc_result res;
 	struct Stream* stream = ctx->source;
 
 	/* vendor name, followed by comments */
@@ -1186,10 +1186,10 @@ static ReturnCode Vorbis_DecodeComments(struct VorbisState* ctx) {
 	return (flag & 1) ? 0 : VORBIS_ERR_FRAMING;
 }
 
-static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
+static cc_result Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	cc_uint32 framing, alignSkip;
 	int i, count;
-	ReturnCode res;
+	cc_result res;
 
 	count = Vorbis_ReadBits(ctx, 8) + 1;
 	ctx->codebooks = (struct Codebook*)Mem_Alloc(count, sizeof(struct Codebook), "vorbis codebooks");
@@ -1246,9 +1246,9 @@ static ReturnCode Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	return (framing & 1) ? 0 : VORBIS_ERR_FRAMING;
 }
 
-ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
+cc_result Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 	cc_uint32 count;
-	ReturnCode res;
+	cc_result res;
 	
 	if ((res = Vorbis_CheckHeader(ctx, 1)))   return res;
 	if ((res = Vorbis_DecodeIdentifier(ctx))) return res;
@@ -1280,7 +1280,7 @@ ReturnCode Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 /*########################################################################################################################*
 *-----------------------------------------------------Vorbis frame--------------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
+cc_result Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	/* frame header */
 	cc_uint32 packetType;
 	struct Mapping* mapping;
@@ -1304,7 +1304,7 @@ ReturnCode Vorbis_DecodeFrame(struct VorbisState* ctx) {
 	float* tmp;
 	cc_uint32 alignSkip;
 	int i, j; 
-	ReturnCode res;
+	cc_result res;
 	
 	res = Vorbis_TryReadBits(ctx, 1, &packetType);
 	if (res) return res;

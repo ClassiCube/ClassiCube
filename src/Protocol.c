@@ -448,7 +448,7 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 	float progress;
 	cc_uint32 left, read;
 	cc_uint8 value;
-	ReturnCode res;
+	cc_result res;
 
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
 	if (!map_begunLoading) Classic_StartLoading();

@@ -1172,7 +1172,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const String* pat
 	static const String cw = String_FromConst(".cw");
 	struct Stream stream, compStream;
 	struct GZipState state;
-	ReturnCode res;
+	cc_result res;
 
 	res = Stream_CreateFile(&stream, path);
 	if (res) { Logger_Warn2(res, "creating", path); return; }
@@ -1365,7 +1365,7 @@ static void FontListScreen_EntryClick(void* screen, void* widget) {
 
 static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const String* text) {
 	struct FontDesc font;
-	ReturnCode res;
+	cc_result res;
 
 	if (String_CaselessEqualsConst(text, LIST_SCREEN_EMPTY)) {
 		ButtonWidget_Set(button, text, &s->font); return;

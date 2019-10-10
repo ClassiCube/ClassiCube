@@ -498,7 +498,7 @@ void CheckUpdateTask_Run(void) {
 struct FetchUpdateData FetchUpdateTask;
 static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 	static const String path = String_FromConst(UPDATE_FILE);
-	ReturnCode res;
+	cc_result res;
 
 	res = Stream_WriteAllTo(&path, data, len);
 	if (res) { Logger_Warn(res, "saving update"); return; }
@@ -604,7 +604,7 @@ static void FetchFlagsTask_Scale(Bitmap* bmp) {
 static void FetchFlagsTask_DownloadNext(void);
 static void FetchFlagsTask_Handle(cc_uint8* data, cc_uint32 len) {
 	struct Stream s;
-	ReturnCode res;
+	cc_result res;
 
 	Stream_ReadonlyMemory(&s, data, len);
 	res = Png_Decode(&flags[FetchFlagsTask.Count].bmp, &s);

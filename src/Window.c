@@ -2260,7 +2260,7 @@ static cc_bool ctx_firstFullscreen;
 static int ctx_windowWidth, ctx_windowHeight;
 
 static void GLContext_Check(int code, const char* place) {
-	ReturnCode res;
+	cc_result res;
 	if (code) return;
 
 	res = aglGetError();

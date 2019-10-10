@@ -69,7 +69,7 @@ static void Chat_ResetLog(void) {
 
 /* Closes handle to the chat log file */
 static void Chat_CloseLog(void) {
-	ReturnCode res;
+	cc_result res;
 	if (!logStream.Meta.File) return;
 
 	res = logStream.Close(&logStream);
@@ -107,7 +107,7 @@ static void Chat_DisableLogging(void) {
 static void Chat_OpenLog(struct DateTime* now) {	
 	FileHandle file;
 	int i;
-	ReturnCode res;
+	cc_result res;
 	if (!Utils_EnsureDirectory("logs")) { Chat_DisableLogging(); return; }
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
@@ -141,7 +141,7 @@ static void Chat_OpenLog(struct DateTime* now) {
 static void Chat_AppendLog(const String* text) {
 	String str; char strBuffer[STRING_SIZE * 2];
 	struct DateTime now;
-	ReturnCode res;	
+	cc_result res;	
 
 	if (!logName.length || !Chat_Logging) return;
 	DateTime_CurrentLocal(&now);

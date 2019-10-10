@@ -329,7 +329,7 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 static void Http_SysInit(void) { }
 static void Http_SysFree(void) { }
 static void Http_DownloadAsync(struct HttpRequest* req);
-cc_bool Http_DescribeError(ReturnCode res, String* dst) { return false; }
+cc_bool Http_DescribeError(cc_result res, String* dst) { return false; }
 static void Http_AddHeader(const char* key, const String* value);
 
 static void Http_DownloadNextAsync(void) {
@@ -464,7 +464,7 @@ static void HttpCache_MakeEntry(const String* url, struct HttpCacheEntry* entry,
 }
 
 /* Inserts entry into the cache at the given index */
-static ReturnCode HttpCache_Insert(int i, struct HttpCacheEntry* e) {
+static cc_result HttpCache_Insert(int i, struct HttpCacheEntry* e) {
 	HINTERNET conn;
 	conn = InternetConnectA(hInternet, e->Address.buffer, e->Port, NULL, NULL, 
 				INTERNET_SERVICE_HTTP, e->Https ? INTERNET_FLAG_SECURE : 0, 0);
@@ -479,7 +479,7 @@ static ReturnCode HttpCache_Insert(int i, struct HttpCacheEntry* e) {
 }
 
 /* Finds or inserts the given entry into the cache */
-static ReturnCode HttpCache_Lookup(struct HttpCacheEntry* e) {
+static cc_result HttpCache_Lookup(struct HttpCacheEntry* e) {
 	struct HttpCacheEntry* c;
 	int i;
 
@@ -502,7 +502,7 @@ static ReturnCode HttpCache_Lookup(struct HttpCacheEntry* e) {
 	return HttpCache_Insert(i, e);
 }
 
-cc_bool Http_DescribeError(ReturnCode res, String* dst) {
+cc_bool Http_DescribeError(cc_result res, String* dst) {
 	TCHAR chars[600];
 	res = FormatMessage(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 					 GetModuleHandle(TEXT("wininet.dll")), res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, 600, NULL);
@@ -528,7 +528,7 @@ static void Http_AddHeader(const char* key, const String* value) {
 }
 
 /* Creates and sends a HTTP requst */
-static ReturnCode Http_StartRequest(struct HttpRequest* req, HINTERNET* handle) {
+static cc_result Http_StartRequest(struct HttpRequest* req, HINTERNET* handle) {
 	static const char* verbs[3] = { "GET", "HEAD", "POST" };
 	struct HttpCacheEntry entry;
 	DWORD flags;
@@ -554,7 +554,7 @@ static ReturnCode Http_StartRequest(struct HttpRequest* req, HINTERNET* handle) 
 }
 
 /* Gets headers from a HTTP response */
-static ReturnCode Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle) {
+static cc_result Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle) {
 	char buffer[8192];
 	String left, line;
 	DWORD len = 8192;
@@ -569,7 +569,7 @@ static ReturnCode Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle)
 }
 
 /* Downloads the data/contents of a HTTP response */
-static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
+static cc_result Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 	DWORD read, avail;
 	Http_BufferInit(req);
 
@@ -587,9 +587,9 @@ static ReturnCode Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 	return 0;
 }
 
-static ReturnCode Http_SysDo(struct HttpRequest* req) {
+static cc_result Http_SysDo(struct HttpRequest* req) {
 	HINTERNET handle;
-	ReturnCode res = Http_StartRequest(req, &handle);
+	cc_result res = Http_StartRequest(req, &handle);
 	HttpRequest_Free(req);
 	if (res) return res;
 
@@ -616,7 +616,7 @@ static void Http_SysFree(void) {
 #elif defined CC_BUILD_CURL
 static CURL* curl;
 
-cc_bool Http_DescribeError(ReturnCode res, String* dst) {
+cc_bool Http_DescribeError(cc_result res, String* dst) {
 	const char* err = curl_easy_strerror((CURLcode)res);
 	if (!err) return false;
 
@@ -679,7 +679,7 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
 }
 
-static ReturnCode Http_SysDo(struct HttpRequest* req) {
+static cc_result Http_SysDo(struct HttpRequest* req) {
 	String url = String_FromRawArray(req->URL);
 	char urlStr[600];
 	void* post_data = req->Data;
@@ -724,7 +724,7 @@ static void Http_SysFree(void) {
 #elif defined CC_BUILD_ANDROID
 struct HttpRequest* java_req;
 
-cc_bool Http_DescribeError(ReturnCode res, String* dst) {
+cc_bool Http_DescribeError(cc_result res, String* dst) {
 	String err;
 	JNIEnv* env;
 	jvalue args[1];
@@ -783,7 +783,7 @@ static void Http_SysInit(void) {
 	JavaRegisterNatives(env, methods);
 }
 
-static ReturnCode Http_InitReq(JNIEnv* env, struct HttpRequest* req) {
+static cc_result Http_InitReq(JNIEnv* env, struct HttpRequest* req) {
 	static const char* verbs[3] = { "GET", "HEAD", "POST" };
 	jvalue args[2];
 	String url;
@@ -799,7 +799,7 @@ static ReturnCode Http_InitReq(JNIEnv* env, struct HttpRequest* req) {
 	return res;
 }
 
-static ReturnCode Http_SetData(JNIEnv* env, struct HttpRequest* req) {
+static cc_result Http_SetData(JNIEnv* env, struct HttpRequest* req) {
 	jvalue args[1];
 	jint res;
 
@@ -809,7 +809,7 @@ static ReturnCode Http_SetData(JNIEnv* env, struct HttpRequest* req) {
 	return res;
 }
 
-static ReturnCode Http_SysDo(struct HttpRequest* req) {
+static cc_result Http_SysDo(struct HttpRequest* req) {
 	static const String userAgent = String_FromConst(GAME_APP_NAME);
 	JNIEnv* env;
 	jint res;

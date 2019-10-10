@@ -325,10 +325,10 @@ static void ComputeTransparency(Bitmap* bmp, BitmapCol col) {
 #define PNG_BUFFER_SIZE ((PNG_MAX_DIMS * 2 * 4 + 1) * 2)
 
 /* TODO: Test a lot of .png files and ensure output is right */
-ReturnCode Png_Decode(Bitmap* bmp, struct Stream* stream) {
+cc_result Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	cc_uint8 tmp[PNG_PALETTE * 3];
 	cc_uint32 dataSize, fourCC;
-	ReturnCode res;
+	cc_result res;
 
 	/* header variables */
 	static cc_uint32 samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
@@ -614,7 +614,7 @@ static void Png_EncodeRow(const cc_uint8* cur, const cc_uint8* prior, cc_uint8* 
 }
 
 static int Png_SelectRow(Bitmap* bmp, int y) { return y; }
-ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, cc_bool alpha) {
+cc_result Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, cc_bool alpha) {
 	cc_uint8 tmp[32];
 	/* TODO: This should be * 4 for alpha (should switch to mem_alloc though) */
 	cc_uint8 prevLine[PNG_MAX_DIMS * 3], curLine[PNG_MAX_DIMS * 3];
@@ -624,7 +624,7 @@ ReturnCode Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector select
 	struct Stream chunk, zlStream;
 	cc_uint32 stream_end, stream_beg;
 	int y, lineSize;
-	ReturnCode res;
+	cc_result res;
 
 	/* stream may not start at 0 (e.g. when making default.zip) */
 	if ((res = stream->Position(stream, &stream_beg))) return res;

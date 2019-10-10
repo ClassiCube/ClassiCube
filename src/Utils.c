@@ -29,7 +29,7 @@ cc_bool Utils_IsUrlPrefix(const String* value) {
 
 cc_bool Utils_EnsureDirectory(const char* dirName) {
 	String dir = String_FromReadonly(dirName);
-	ReturnCode res;
+	cc_result res;
 	if (Directory_Exists(&dir)) return true;
 
 	res = Directory_Create(&dir);
@@ -219,7 +219,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 
 	cc_uint8 buffer[2048];
 	struct Stream stream, buffered;
-	ReturnCode res;
+	cc_result res;
 
 	String_InitArray(path, pathBuffer);
 	String_AppendConst(&path, list->path);
@@ -264,7 +264,7 @@ void EntryList_Save(struct EntryList* list) {
 	String path, entry; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
 	int i;
-	ReturnCode res;
+	cc_result res;
 
 	String_InitArray(path, pathBuffer);
 	String_AppendConst(&path, list->path);

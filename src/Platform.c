@@ -36,10 +36,10 @@
 #define NATIVE_STR_LEN 300
 static HANDLE heap;
 
-const ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
-const ReturnCode ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
-const ReturnCode ReturnCode_SocketInProgess  = WSAEINPROGRESS;
-const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
+const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
+const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
+const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #elif defined CC_BUILD_POSIX
 /* POSIX can be shared between Linux/BSD/OSX */
 #include <errno.h>
@@ -65,10 +65,10 @@ const ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #define Socket__Error() errno
 #define NATIVE_STR_LEN 600
 
-const ReturnCode ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
-const ReturnCode ReturnCode_FileNotFound     = ENOENT;
-const ReturnCode ReturnCode_SocketInProgess  = EINPROGRESS;
-const ReturnCode ReturnCode_SocketWouldBlock = EWOULDBLOCK;
+const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
+const cc_result ReturnCode_FileNotFound     = ENOENT;
+const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
 /* Platform specific include files (Try to share for UNIX-ish) */
 #if defined CC_BUILD_LINUX
@@ -355,7 +355,7 @@ cc_bool Directory_Exists(const String* path) {
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-ReturnCode Directory_Create(const String* path) {
+cc_result Directory_Create(const String* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	BOOL success;
 
@@ -373,12 +373,12 @@ cc_bool File_Exists(const String* path) {
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
+cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
 	String path; char pathBuffer[MAX_PATH + 10];
 	TCHAR str[NATIVE_STR_LEN];
 	WIN32_FIND_DATA entry;
 	HANDLE find;
-	ReturnCode res;	
+	cc_result res;	
 	int i;
 
 	/* Need to append \* to search for files in directory */
@@ -415,11 +415,11 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	return res == ERROR_NO_MORE_FILES ? 0 : GetLastError();
 }
 
-ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
+cc_result File_SetModifiedTime(const String* path, TimeMS time) {
 	FileHandle file;
 	FILETIME ft;
 	cc_uint64 raw;
-	ReturnCode res = File_Append(&file, path);
+	cc_result res = File_Append(&file, path);
 	if (res) return res;
 
 	raw = 10000 * (time - FILETIME_EPOCH);
@@ -432,53 +432,53 @@ ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
 }
 
 /* Don't need special execute permission on windows */
-ReturnCode File_MarkExecutable(const String* path) { return 0; }
+cc_result File_MarkExecutable(const String* path) { return 0; }
 
-static ReturnCode File_Do(FileHandle* file, const String* path, DWORD access, DWORD createMode) {
+static cc_result File_Do(FileHandle* file, const String* path, DWORD access, DWORD createMode) {
 	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*file = CreateFile(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-ReturnCode File_Open(FileHandle* file, const String* path) {
+cc_result File_Open(FileHandle* file, const String* path) {
 	return File_Do(file, path, GENERIC_READ, OPEN_EXISTING);
 }
-ReturnCode File_Create(FileHandle* file, const String* path) {
+cc_result File_Create(FileHandle* file, const String* path) {
 	return File_Do(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
-ReturnCode File_Append(FileHandle* file, const String* path) {
-	ReturnCode res = File_Do(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
+cc_result File_Append(FileHandle* file, const String* path) {
+	cc_result res = File_Do(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 	if (res) return res;
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
-ReturnCode File_Read(FileHandle file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
+cc_result File_Read(FileHandle file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
 	BOOL success = ReadFile(file, data, count, bytesRead, NULL);
 	return success ? 0 : GetLastError();
 }
 
-ReturnCode File_Write(FileHandle file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
+cc_result File_Write(FileHandle file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
 	BOOL success = WriteFile(file, data, count, bytesWrote, NULL);
 	return success ? 0 : GetLastError();
 }
 
-ReturnCode File_Close(FileHandle file) {
+cc_result File_Close(FileHandle file) {
 	return CloseHandle(file) ? 0 : GetLastError();
 }
 
-ReturnCode File_Seek(FileHandle file, int offset, int seekType) {
+cc_result File_Seek(FileHandle file, int offset, int seekType) {
 	static cc_uint8 modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
 	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
 	return pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
 }
 
-ReturnCode File_Position(FileHandle file, cc_uint32* pos) {
+cc_result File_Position(FileHandle file, cc_uint32* pos) {
 	*pos = SetFilePointer(file, 0, NULL, FILE_CURRENT);
 	return *pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
 }
 
-ReturnCode File_Length(FileHandle file, cc_uint32* len) {
+cc_result File_Length(FileHandle file, cc_uint32* len) {
 	*len = GetFileSize(file, NULL);
 	return *len != INVALID_FILE_SIZE ? 0 : GetLastError();
 }
@@ -490,7 +490,7 @@ cc_bool Directory_Exists(const String* path) {
 	return stat(str, &sb) == 0 && S_ISDIR(sb.st_mode);
 }
 
-ReturnCode Directory_Create(const String* path) {
+cc_result Directory_Create(const String* path) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
@@ -505,7 +505,7 @@ cc_bool File_Exists(const String* path) {
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
-ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
+cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
 	DIR* dirPtr;
@@ -549,7 +549,7 @@ ReturnCode Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallba
 	return res;
 }
 
-ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
+cc_result File_SetModifiedTime(const String* path, TimeMS time) {
 	char str[NATIVE_STR_LEN];
 	struct utimbuf times = { 0 };
 
@@ -558,7 +558,7 @@ ReturnCode File_SetModifiedTime(const String* path, TimeMS time) {
 	return utime(str, &times) == -1 ? errno : 0;
 }
 
-ReturnCode File_MarkExecutable(const String* path) {
+cc_result File_MarkExecutable(const String* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat st;
 	Platform_ConvertString(str, path);
@@ -568,36 +568,36 @@ ReturnCode File_MarkExecutable(const String* path) {
 	return chmod(str, st.st_mode) == -1 ? errno : 0;
 }
 
-static ReturnCode File_Do(FileHandle* file, const String* path, int mode) {
+static cc_result File_Do(FileHandle* file, const String* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
 }
 
-ReturnCode File_Open(FileHandle* file, const String* path) {
+cc_result File_Open(FileHandle* file, const String* path) {
 	return File_Do(file, path, O_RDONLY);
 }
-ReturnCode File_Create(FileHandle* file, const String* path) {
+cc_result File_Create(FileHandle* file, const String* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
-ReturnCode File_Append(FileHandle* file, const String* path) {
-	ReturnCode res = File_Do(file, path, O_RDWR | O_CREAT);
+cc_result File_Append(FileHandle* file, const String* path) {
+	cc_result res = File_Do(file, path, O_RDWR | O_CREAT);
 	if (res) return res;
 	return File_Seek(*file, 0, FILE_SEEKFROM_END);
 }
 
-ReturnCode File_Read(FileHandle file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
+cc_result File_Read(FileHandle file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
 	*bytesRead = read(file, data, count);
 	return *bytesRead == -1 ? errno : 0;
 }
 
-ReturnCode File_Write(FileHandle file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
+cc_result File_Write(FileHandle file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
 	*bytesWrote = write(file, data, count);
 	return *bytesWrote == -1 ? errno : 0;
 }
 
-ReturnCode File_Close(FileHandle file) {
+cc_result File_Close(FileHandle file) {
 #ifndef CC_BUILD_WEB
 	return close(file) == -1 ? errno : 0;
 #else
@@ -607,17 +607,17 @@ ReturnCode File_Close(FileHandle file) {
 #endif
 }
 
-ReturnCode File_Seek(FileHandle file, int offset, int seekType) {
+cc_result File_Seek(FileHandle file, int offset, int seekType) {
 	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
 	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
 }
 
-ReturnCode File_Position(FileHandle file, cc_uint32* pos) {
+cc_result File_Position(FileHandle file, cc_uint32* pos) {
 	*pos = lseek(file, 0, SEEK_CUR);
 	return *pos == -1 ? errno : 0;
 }
 
-ReturnCode File_Length(FileHandle file, cc_uint32* len) {
+cc_result File_Length(FileHandle file, cc_uint32* len) {
 	struct stat st;
 	if (fstat(file, &st) == -1) { *len = -1; return errno; }
 	*len = st.st_size; return 0;
@@ -899,7 +899,7 @@ void Socket_Create(SocketHandle* socketResult) {
 	}
 }
 
-static ReturnCode Socket_ioctl(SocketHandle socket, cc_uint32 cmd, int* data) {
+static cc_result Socket_ioctl(SocketHandle socket, cc_uint32 cmd, int* data) {
 #if defined CC_BUILD_WIN
 	return ioctlsocket(socket, cmd, data);
 #else
@@ -907,10 +907,10 @@ static ReturnCode Socket_ioctl(SocketHandle socket, cc_uint32 cmd, int* data) {
 #endif
 }
 
-ReturnCode Socket_Available(SocketHandle socket, cc_uint32* available) {
+cc_result Socket_Available(SocketHandle socket, cc_uint32* available) {
 	return Socket_ioctl(socket, FIONREAD, available);
 }
-ReturnCode Socket_SetBlocking(SocketHandle socket, cc_bool blocking) {
+cc_result Socket_SetBlocking(SocketHandle socket, cc_bool blocking) {
 #if defined CC_BUILD_WEB
 	return ERR_NOT_SUPPORTED; /* sockets always async */
 #else
@@ -920,14 +920,14 @@ ReturnCode Socket_SetBlocking(SocketHandle socket, cc_bool blocking) {
 }
 
 
-ReturnCode Socket_GetError(SocketHandle socket, ReturnCode* result) {
-	socklen_t resultSize = sizeof(ReturnCode);
+cc_result Socket_GetError(SocketHandle socket, cc_result* result) {
+	socklen_t resultSize = sizeof(cc_result);
 	return getsockopt(socket, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port) {
+cc_result Socket_Connect(SocketHandle socket, const String* ip, int port) {
 	struct sockaddr addr;
-	ReturnCode res;
+	cc_result res;
 
 	addr.sa_family = AF_INET;
 	Stream_SetU16_BE( (cc_uint8*)&addr.sa_data[0], port);
@@ -937,7 +937,7 @@ ReturnCode Socket_Connect(SocketHandle socket, const String* ip, int port) {
 	return res == -1 ? Socket__Error() : 0;
 }
 
-ReturnCode Socket_Read(SocketHandle socket, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+cc_result Socket_Read(SocketHandle socket, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 #ifdef CC_BUILD_WEB
 	/* recv only reads one WebSocket frame at most, hence call it multiple times */
 	int recvCount = 0, pending;
@@ -958,15 +958,15 @@ ReturnCode Socket_Read(SocketHandle socket, cc_uint8* data, cc_uint32 count, cc_
 #endif
 }
 
-ReturnCode Socket_Write(SocketHandle socket, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+cc_result Socket_Write(SocketHandle socket, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int sentCount = send(socket, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
 
-ReturnCode Socket_Close(SocketHandle socket) {
-	ReturnCode res = 0;
-	ReturnCode res1, res2;
+cc_result Socket_Close(SocketHandle socket) {
+	cc_result res = 0;
+	cc_result res1, res2;
 
 #if defined CC_BUILD_WEB
 	res1 = 0;
@@ -988,7 +988,7 @@ ReturnCode Socket_Close(SocketHandle socket) {
 
 /* Alas, a simple cross-platform select() is not good enough */
 #if defined CC_BUILD_WIN
-ReturnCode Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
+cc_result Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
@@ -1008,7 +1008,7 @@ ReturnCode Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 }
 #elif defined CC_BUILD_OSX
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
-ReturnCode Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
+cc_result Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
@@ -1027,7 +1027,7 @@ ReturnCode Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 }
 #else
 #include <poll.h>
-ReturnCode Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
+cc_result Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
 
@@ -1047,7 +1047,7 @@ ReturnCode Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-static ReturnCode Process_RawStart(const TCHAR* path, TCHAR* args) {
+static cc_result Process_RawStart(const TCHAR* path, TCHAR* args) {
 	STARTUPINFO si = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 	BOOL ok;
@@ -1062,17 +1062,17 @@ static ReturnCode Process_RawStart(const TCHAR* path, TCHAR* args) {
 	return 0;
 }
 
-static ReturnCode Process_RawGetExePath(TCHAR* path, int* len) {
+static cc_result Process_RawGetExePath(TCHAR* path, int* len) {
 	*len = GetModuleFileName(NULL, path, NATIVE_STR_LEN);
 	return *len ? 0 : GetLastError();
 }
 
-ReturnCode Process_StartGame(const String* args) {
+cc_result Process_StartGame(const String* args) {
 	String argv; char argvBuffer[NATIVE_STR_LEN];
 	TCHAR raw[NATIVE_STR_LEN], path[NATIVE_STR_LEN + 1];
 	int len;
 
-	ReturnCode res = Process_RawGetExePath(path, &len);
+	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 	path[len] = '\0';
 
@@ -1081,20 +1081,20 @@ ReturnCode Process_StartGame(const String* args) {
 	Platform_ConvertString(raw, &argv);
 	return Process_RawStart(path, raw);
 }
-void Process_Exit(ReturnCode code) { ExitProcess(code); }
+void Process_Exit(cc_result code) { ExitProcess(code); }
 
-ReturnCode Process_StartOpen(const String* args) {
+cc_result Process_StartOpen(const String* args) {
 	TCHAR str[NATIVE_STR_LEN];
 	HINSTANCE instance;
 	Platform_ConvertString(str, args);
 	instance = ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
-	return instance > 32 ? 0 : (ReturnCode)instance;
+	return instance > 32 ? 0 : (cc_result)instance;
 }
 #elif defined CC_BUILD_WEB
-ReturnCode Process_StartGame(const String* args) { return ERR_NOT_SUPPORTED; }
-void Process_Exit(ReturnCode code) { exit(code); }
+cc_result Process_StartGame(const String* args) { return ERR_NOT_SUPPORTED; }
+void Process_Exit(cc_result code) { exit(code); }
 
-ReturnCode Process_StartOpen(const String* args) {
+cc_result Process_StartOpen(const String* args) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, args);
 	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
@@ -1104,18 +1104,18 @@ ReturnCode Process_StartOpen(const String* args) {
 static char gameArgsBuffer[512];
 static String gameArgs = String_FromArray(gameArgsBuffer);
 
-ReturnCode Process_StartGame(const String* args) {
+cc_result Process_StartGame(const String* args) {
 	String_Copy(&gameArgs, args);
 	return 0; /* TODO: Is there a clean way of handling an error */
 }
-void Process_Exit(ReturnCode code) { exit(code); }
+void Process_Exit(cc_result code) { exit(code); }
 
-ReturnCode Process_StartOpen(const String* args) {
+cc_result Process_StartOpen(const String* args) {
 	JavaCall_String_Void("startOpen", args);
 	return 0; /* TODO: Is there a clean way of handling an error */
 }
 #elif defined CC_BUILD_POSIX
-static ReturnCode Process_RawStart(const char* path, const char** argv) {
+static cc_result Process_RawStart(const char* path, const char** argv) {
 	pid_t pid = fork();
 	if (pid == -1) return errno;
 
@@ -1130,7 +1130,7 @@ static ReturnCode Process_RawStart(const char* path, const char** argv) {
 	}
 }
 
-static ReturnCode Process_RawStartOpen(const char* path, const String* url) {
+static cc_result Process_RawStartOpen(const char* path, const String* url) {
 	char raw[NATIVE_STR_LEN];
 	const char* args[3];
 	Platform_ConvertString(raw, url);
@@ -1138,14 +1138,14 @@ static ReturnCode Process_RawStartOpen(const char* path, const String* url) {
 	args[0] = path; args[1] = raw; args[2] = NULL;
 	return Process_RawStart(path, args);
 }
-static ReturnCode Process_RawGetExePath(char* path, int* len);
+static cc_result Process_RawGetExePath(char* path, int* len);
 
-ReturnCode Process_StartGame(const String* args) {
+cc_result Process_StartGame(const String* args) {
 	char path[NATIVE_STR_LEN], raw[NATIVE_STR_LEN];
 	int i, j, len = 0;
 	char* argv[15];
 
-	ReturnCode res = Process_RawGetExePath(path, &len);
+	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 	path[len] = '\0';
 
@@ -1164,22 +1164,22 @@ ReturnCode Process_StartGame(const String* args) {
 	return Process_RawStart(path, argv);
 }
 
-void Process_Exit(ReturnCode code) { exit(code); }
+void Process_Exit(cc_result code) { exit(code); }
 #endif
 /* Opening browser and starting shell is not really standardised */
 #if defined CC_BUILD_OSX
-ReturnCode Process_StartOpen(const String* args) {
+cc_result Process_StartOpen(const String* args) {
 	return Process_RawStartOpen("/usr/bin/open", args);
 }
 #elif defined CC_BUILD_UNIX
-ReturnCode Process_StartOpen(const String* args) {
+cc_result Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
 	return Process_RawStartOpen("xdg-open", args);
 }
 #endif
 /* Retrieving exe path is completely OS dependant */
 #if defined CC_BUILD_OSX
-static ReturnCode Process_RawGetExePath(char* path, int* len) {
+static cc_result Process_RawGetExePath(char* path, int* len) {
 	Mem_Set(path, '\0', NATIVE_STR_LEN);
 	cc_uint32 size = NATIVE_STR_LEN;
 	if (_NSGetExecutablePath(path, &size)) return ERR_INVALID_ARGUMENT;
@@ -1189,12 +1189,12 @@ static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	return 0;
 }
 #elif defined CC_BUILD_LINUX
-static ReturnCode Process_RawGetExePath(char* path, int* len) {
+static cc_result Process_RawGetExePath(char* path, int* len) {
 	*len = readlink("/proc/self/exe", path, NATIVE_STR_LEN);
 	return *len == -1 ? errno : 0;
 }
 #elif defined CC_BUILD_FREEBSD
-static ReturnCode Process_RawGetExePath(char* path, int* len) {
+static cc_result Process_RawGetExePath(char* path, int* len) {
 	static int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
 	size_t size       = NATIVE_STR_LEN;
 
@@ -1203,7 +1203,7 @@ static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	return 0;
 }
 #elif defined CC_BUILD_OPENBSD
-static ReturnCode Process_RawGetExePath(char* path, int* len) {
+static cc_result Process_RawGetExePath(char* path, int* len) {
 	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, 0, KERN_PROC_ARGV };
 	char tmp[NATIVE_STR_LEN];
 	size_t size;
@@ -1229,7 +1229,7 @@ static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	return 0;
 }
 #elif defined CC_BUILD_NETBSD
-static ReturnCode Process_RawGetExePath(char* path, int* len) {
+static cc_result Process_RawGetExePath(char* path, int* len) {
 	static int mib[4] = { CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME };
 	size_t size       = NATIVE_STR_LEN;
 
@@ -1238,7 +1238,7 @@ static ReturnCode Process_RawGetExePath(char* path, int* len) {
 	return 0;
 }
 #elif defined CC_BUILD_SOLARIS
-static ReturnCode Process_RawGetExePath(char* path, int* len) {
+static cc_result Process_RawGetExePath(char* path, int* len) {
 	*len = readlink("/proc/self/path/a.out", path, NATIVE_STR_LEN);
 	return *len == -1 ? errno : 0;
 }
@@ -1256,12 +1256,12 @@ cc_bool Updater_Clean(void) {
 	return DeleteFile(UPDATE_TMP) || GetLastError() == ERROR_FILE_NOT_FOUND;
 }
 
-ReturnCode Updater_Start(void) {
+cc_result Updater_Start(void) {
 	TCHAR path[NATIVE_STR_LEN + 1];
 	TCHAR args[2] = { 'a', '\0' }; /* don't actually care about arguments */
 	int len = 0;
 
-	ReturnCode res = Process_RawGetExePath(path, &len);
+	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 	path[len] = '\0';
 
@@ -1271,14 +1271,14 @@ ReturnCode Updater_Start(void) {
 	return Process_RawStart(path, args);
 }
 
-ReturnCode Updater_GetBuildTime(TimeMS* ms) {
+cc_result Updater_GetBuildTime(TimeMS* ms) {
 	TCHAR path[NATIVE_STR_LEN + 1];
 	FileHandle file;
 	FILETIME ft;
 	cc_uint64 raw;
 	int len = 0;
 
-	ReturnCode res = Process_RawGetExePath(path, &len);
+	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 	path[len] = '\0';
 
@@ -1297,16 +1297,16 @@ ReturnCode Updater_GetBuildTime(TimeMS* ms) {
 }
 #elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
 cc_bool Updater_Clean(void)                   { return true; }
-ReturnCode Updater_Start(void)                { return ERR_NOT_SUPPORTED; }
-ReturnCode Updater_GetBuildTime(TimeMS* time) { return ERR_NOT_SUPPORTED; }
+cc_result Updater_Start(void)                { return ERR_NOT_SUPPORTED; }
+cc_result Updater_GetBuildTime(TimeMS* time) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
 cc_bool Updater_Clean(void) { return true; }
-ReturnCode Updater_Start(void) {
+cc_result Updater_Start(void) {
 	char path[NATIVE_STR_LEN + 1];
 	char* argv[2];
 	int len = 0;
 
-	ReturnCode res = Process_RawGetExePath(path, &len);
+	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 	path[len] = '\0';
 	
@@ -1319,12 +1319,12 @@ ReturnCode Updater_Start(void) {
 	return Process_RawStart(path, argv);
 }
 
-ReturnCode Updater_GetBuildTime(TimeMS* ms) {
+cc_result Updater_GetBuildTime(TimeMS* ms) {
 	char path[NATIVE_STR_LEN + 1];
 	struct stat sb;
 	int len = 0;
 
-	ReturnCode res = Process_RawGetExePath(path, &len);
+	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 	path[len] = '\0';
 
@@ -1341,25 +1341,25 @@ ReturnCode Updater_GetBuildTime(TimeMS* ms) {
 #if defined CC_BUILD_WIN
 const String DynamicLib_Ext = String_FromConst(".dll");
 
-ReturnCode DynamicLib_Load(const String* path, void** lib) {
+cc_result DynamicLib_Load(const String* path, void** lib) {
 	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*lib = LoadLibrary(str);
 	return *lib ? 0 : GetLastError();
 }
 
-ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
+cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) {
 	*symbol = GetProcAddress((HMODULE)lib, name);
 	return *symbol ? 0 : GetLastError();
 }
 
-cc_bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
+cc_bool DynamicLib_DescribeError(cc_result res, String* dst) {
 	return Platform_DescribeError(res, dst);
 }
 #elif defined CC_BUILD_WEB
-ReturnCode DynamicLib_Load(const String* path, void** lib)            { return ERR_NOT_SUPPORTED; }
-ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) { return ERR_NOT_SUPPORTED; }
-cc_bool DynamicLib_DescribeError(ReturnCode res, String* dst)         { return false; }
+cc_result DynamicLib_Load(const String* path, void** lib)            { return ERR_NOT_SUPPORTED; }
+cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) { return ERR_NOT_SUPPORTED; }
+cc_bool DynamicLib_DescribeError(cc_result res, String* dst)         { return false; }
 #elif defined CC_BUILD_POSIX
 /* TODO: Should we use .bundle instead of .dylib? */
 #ifdef CC_BUILD_OSX
@@ -1368,19 +1368,19 @@ const String DynamicLib_Ext = String_FromConst(".dylib");
 const String DynamicLib_Ext = String_FromConst(".so");
 #endif
 
-ReturnCode DynamicLib_Load(const String* path, void** lib) {
+cc_result DynamicLib_Load(const String* path, void** lib) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*lib = dlopen(str, RTLD_NOW);
 	return *lib == NULL;
 }
 
-ReturnCode DynamicLib_Get(void* lib, const char* name, void** symbol) {
+cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) {
 	*symbol = dlsym(lib, name);
 	return *symbol == NULL; /* dlerror would be proper, but eh */
 }
 
-cc_bool DynamicLib_DescribeError(ReturnCode res, String* dst) {
+cc_bool DynamicLib_DescribeError(cc_result res, String* dst) {
 	char* err = dlerror();
 	if (err) String_AppendConst(dst, err);
 	return err && err[0];
@@ -1391,7 +1391,7 @@ void* DynamicLib_GetFrom(const char* filename, const char* name) {
 	void* symbol;
 	void* lib;
 	String path;
-	ReturnCode res;
+	cc_result res;
 
 	path = String_FromReadonly(filename);
 	res = DynamicLib_Load(&path, &lib);
@@ -1432,7 +1432,7 @@ typedef BOOL (WINAPI *AttachConsoleFunc)(DWORD dwProcessId);
 void Platform_Init(void) {
 	AttachConsoleFunc attach;
 	WSADATA wsaData;
-	ReturnCode res;
+	cc_result res;
 
 	Platform_InitStopwatch();
 	heap = GetProcessHeap();
@@ -1455,7 +1455,7 @@ void Platform_Free(void) {
 	HeapDestroy(heap);
 }
 
-ReturnCode Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen) {
+cc_result Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen) {
 	DATA_BLOB dataIn, dataOut;
 	dataIn.cbData = len; dataIn.pbData = (BYTE*)data;
 	if (!CryptProtectData(&dataIn, NULL, NULL, NULL, NULL, 0, &dataOut)) return GetLastError();
@@ -1467,7 +1467,7 @@ ReturnCode Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encL
 	LocalFree(dataOut.pbData);
 	return 0;
 }
-ReturnCode Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen) {
+cc_result Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen) {
 	DATA_BLOB dataIn, dataOut;
 	dataIn.cbData = len; dataIn.pbData = (BYTE*)data;
 	if (!CryptUnprotectData(&dataIn, NULL, NULL, NULL, NULL, 0, &dataOut)) return GetLastError();
@@ -1480,7 +1480,7 @@ ReturnCode Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decL
 	return 0;
 }
 
-cc_bool Platform_DescribeError(ReturnCode res, String* dst) {
+cc_bool Platform_DescribeError(cc_result res, String* dst) {
 	TCHAR chars[NATIVE_STR_LEN];
 	res = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 					NULL, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, 600, NULL);
@@ -1514,16 +1514,16 @@ static void Platform_InitPosix(void) {
 }
 void Platform_Free(void) { }
 
-ReturnCode Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen) {
+cc_result Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen) {
 	/* TODO: Is there a similar API for OSX/Linux? */
 	return ERR_NOT_SUPPORTED;
 }
-ReturnCode Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen) {
+cc_result Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen) {
 	/* TODO: Is there a similar API for OSX/Linux? */
 	return ERR_NOT_SUPPORTED;
 }
 
-cc_bool Platform_DescribeError(ReturnCode res, String* dst) {
+cc_bool Platform_DescribeError(cc_result res, String* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
 
@@ -1706,10 +1706,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return i;
 }
 
-ReturnCode Platform_SetDefaultCurrentDirectory(void) {
+cc_result Platform_SetDefaultCurrentDirectory(void) {
 	TCHAR path[NATIVE_STR_LEN + 1];
 	int i, len;
-	ReturnCode res = Process_RawGetExePath(path, &len);
+	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 
 	/* Get rid of filename at end of directory */
@@ -1730,7 +1730,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return count;
 }
 
-ReturnCode Platform_SetDefaultCurrentDirectory(void) { 
+cc_result Platform_SetDefaultCurrentDirectory(void) { 
 	return chdir("/classicube") == -1 ? errno : 0;
 }
 #elif defined CC_BUILD_ANDROID
@@ -1739,7 +1739,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
 }
 
-ReturnCode Platform_SetDefaultCurrentDirectory(void) {
+cc_result Platform_SetDefaultCurrentDirectory(void) {
 	String dir; char dirBuffer[FILENAME_SIZE + 1];
 	String_InitArray_NT(dir, dirBuffer);
 
@@ -1766,10 +1766,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return count;
 }
 
-ReturnCode Platform_SetDefaultCurrentDirectory(void) {
+cc_result Platform_SetDefaultCurrentDirectory(void) {
 	char path[NATIVE_STR_LEN];
 	int i, len = 0;
-	ReturnCode res = Process_RawGetExePath(path, &len);
+	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 
 	/* get rid of filename at end of directory */
