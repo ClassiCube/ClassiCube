@@ -168,7 +168,7 @@ cc_bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height) {
 	*height = min(*y + *height, bmp->Height) - *y;
 	return *width > 0 && *height > 0;
 }
-#define Drawer2D_ClampPixel(p) (p < 0 ? 0 : (p > 255 ? 255 : p))
+#define Drawer2D_ClampPixel(p) p = (p < 0 ? 0 : (p > 255 ? 255 : p))
 
 void Gradient_Noise(Bitmap* bmp, BitmapCol col, int variation,
 					int x, int y, int width, int height) {
