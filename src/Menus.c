@@ -1314,8 +1314,10 @@ static cc_bool SaveLevelScreen_KeyPress(void* screen, char keyChar) {
 
 static cc_bool SaveLevelScreen_KeyDown(void* screen, Key key) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	SaveLevelScreen_RemoveOverwrites(s);
-	if (Elem_HandlesKeyDown(&s->input.base, key)) return true;
+	if (Elem_HandlesKeyDown(&s->input.base, key)) {
+		SaveLevelScreen_RemoveOverwrites(s);
+		return true;
+	}
 	return MenuScreen_KeyDown(s, key);
 }
 
