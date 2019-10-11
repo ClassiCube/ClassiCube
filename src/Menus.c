@@ -1153,8 +1153,12 @@ static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 }
 
 static void SaveLevelScreen_UpdateSchem(struct SaveLevelScreen* s) {
+#ifdef CC_BUILD_WEB
+	ButtonWidget_SetConst(&s->schem, "Download (WIP)", &s->titleFont);
+#else
 	ButtonWidget_SetConst(&s->schem,
 		s->schem.optName ? "&cOverwrite existing?" : "Save schematic", &s->titleFont);
+#endif
 }
 
 static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
@@ -1168,6 +1172,59 @@ static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
 	}
 }
 
+#ifdef CC_BUILD_WEB
+#include <emscripten.h>
+extern int unlink(const char* path);
+
+static void DownloadMap(const String* path) {
+	struct Stream s;
+	String file;
+	char str[600];
+	cc_uint8* ptr = NULL;
+	cc_uint32 len;
+
+	if (Stream_OpenFile(&s, path))         return;
+	if (File_Length(s.Meta.File, &len))    goto finished;
+	ptr = Mem_TryAlloc(len, 1);
+	if (!ptr || Stream_Read(&s, ptr, len)) goto finished;
+
+	/* maps/aaa.schematic -> aaa.cw */
+	file = String_UNSAFE_SubstringAt(path, 5);
+	file.length = String_LastIndexOf(&file, '.');
+	String_AppendConst(&file, ".cw");
+	Platform_ConvertString(str, &file);
+
+	EM_ASM_({ 
+		var data = HEAPU8.subarray($1, $1 + $2);
+		var blob = new Blob([data], { type: 'application/octet-stream' });
+		var url  = window.URL.createObjectURL(blob);
+		var elem = document.createElement('a');
+
+		elem.href = url;
+		elem.download = UTF8ToString($0);
+		elem.style.display = 'none';
+
+		document.body.appendChild(elem);
+		elem.click();
+		document.body.removeChild(elem);
+
+		window.URL.revokeObjectURL(url);
+	}, str, ptr, len);
+
+	Chat_Add1("&eDownloaded map: %s", &file);
+finished:
+	s.Close(&s);
+	/* TODO: Don't free ptr until download is saved?? */
+	/* TODO: Make save map dialog prettier */
+	Mem_Free(ptr);
+
+	/* Cleanup the schematic file left behind */
+	Platform_ConvertString(str, path);
+	/* TODO: This doesn't seem to work properly */
+	unlink(str);
+}
+#endif
+
 static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const String* path) {
 	static const String cw = String_FromConst(".cw");
 	struct Stream stream, compStream;
@@ -1178,11 +1235,15 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const String* pat
 	if (res) { Logger_Warn2(res, "creating", path); return; }
 	GZip_MakeStream(&compStream, &state, &stream);
 
+#ifdef CC_BUILD_WEB
+	res = Cw_Save(&compStream);
+#else
 	if (String_CaselessEnds(path, &cw)) {
 		res = Cw_Save(&compStream);
 	} else {
 		res = Schematic_Save(&compStream);
 	}
+#endif
 
 	if (res) {
 		stream.Close(&stream);
@@ -1197,7 +1258,15 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const String* pat
 	res = stream.Close(&stream);
 	if (res) { Logger_Warn2(res, "closing", path); return; }
 
+#ifdef CC_BUILD_WEB
+	if (String_CaselessEnds(path, &cw)) {
+		Chat_Add1("&eSaved map to: %s", path);
+	} else {
+		DownloadMap(path);
+	}
+#else
 	Chat_Add1("&eSaved map to: %s", path);
+#endif
 	PauseScreen_Show();
 }
 
