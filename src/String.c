@@ -99,7 +99,7 @@ void String_UNSAFE_SplitBy(STRING_REF String* str, char c, String* part) {
 	}
 }
 
-cc_bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value) {
+int String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value) {
 	int idx = String_IndexOf(str, c);
 	if (idx == -1) {
 		*key   = *str;
@@ -117,7 +117,7 @@ cc_bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key
 }
 
 
-cc_bool String_Equals(const String* a, const String* b) {
+int String_Equals(const String* a, const String* b) {
 	int i;
 	if (a->length != b->length) return false;
 
@@ -127,7 +127,7 @@ cc_bool String_Equals(const String* a, const String* b) {
 	return true;
 }
 
-cc_bool String_CaselessEquals(const String* a, const String* b) {
+int String_CaselessEquals(const String* a, const String* b) {
 	int i;
 	char aCur, bCur;
 	if (a->length != b->length) return false;
@@ -140,7 +140,7 @@ cc_bool String_CaselessEquals(const String* a, const String* b) {
 	return true;
 }
 
-cc_bool String_CaselessEqualsConst(const String* a, const char* b) {
+int String_CaselessEqualsConst(const String* a, const char* b) {
 	int i;
 	char aCur, bCur;
 
@@ -356,7 +356,7 @@ int String_IndexOfString(const String* str, const String* sub) {
 	return -1;
 }
 
-cc_bool String_CaselessContains(const String* str, const String* sub) {
+int String_CaselessContains(const String* str, const String* sub) {
 	char strCur, subCur;
 	int i, j;
 
@@ -372,7 +372,7 @@ cc_bool String_CaselessContains(const String* str, const String* sub) {
 	return false;
 }
 
-cc_bool String_CaselessStarts(const String* str, const String* sub) {
+int String_CaselessStarts(const String* str, const String* sub) {
 	char strCur, subCur;
 	int i;
 	if (str->length < sub->length) return false;
@@ -385,7 +385,7 @@ cc_bool String_CaselessStarts(const String* str, const String* sub) {
 	return true;
 }
 
-cc_bool String_CaselessEnds(const String* str, const String* sub) {
+int String_CaselessEnds(const String* str, const String* sub) {
 	char strCur, subCur;
 	int i, j = str->length - sub->length;	
 	if (j < 0) return false; /* sub longer than str */

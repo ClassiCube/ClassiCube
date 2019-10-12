@@ -66,6 +66,7 @@ CC_API String String_UNSAFE_Substring(STRING_REF const String* str, int offset, 
 CC_API String String_UNSAFE_SubstringAt(STRING_REF const String* str, int offset);
 /* UNSAFE: Splits a string of the form [str1][c][str2][c][str3].. into substrings. */
 /* e.g., "abc:id:xyz" becomes "abc","id","xyz" */
+/* Returns the number of substrings found. (always <= maxSubs) */
 CC_API int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int maxSubs);
 /* UNSAFE: Splits a string of the form [part][c][rest], returning whether [c] was found or not. */
 /* NOTE: This is intended to be repeatedly called until str->length is 0. (unbounded String_UNSAFE_Split) */
@@ -73,18 +74,19 @@ CC_API void String_UNSAFE_SplitBy(STRING_REF String* str, char c, String* part);
 /* UNSAFE: Splits a string of the form [key][c][value] into two substrings. */
 /* e.g., "allowed =true" becomes "allowed" and "true", and excludes the space. */
 /* If c is not found, sets key to str and value to String_Empty, returns false. */
-CC_API cc_bool String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value);
+/* Otherwise if c is found, a non-zero value is returned. */
+CC_API int String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value);
 
-/* Whether all characters of the strings are equal. */
-CC_API cc_bool String_Equals(const String* a, const String* b);
-/* Whether all characters of the strings are case-insensitively equal. */
-CC_API cc_bool String_CaselessEquals(const String* a, const String* b);
-/* Whether all characters of the strings are case-insensitively equal. */
+/* Returns non-zero if all characters of the strings are equal. */
+CC_API int String_Equals(const String* a, const String* b);
+/* Returns non-zero if all characters of the strings are case-insensitively equal. */
+CC_API int String_CaselessEquals(const String* a, const String* b);
+/* Returns non-zero if all characters of the strings are case-insensitively equal. */
 /* NOTE: Faster than String_CaselessEquals(a, String_FromReadonly(b)) */
-CC_API cc_bool String_CaselessEqualsConst(const String* a, const char* b);
-/* Breaks down an integer into an array of digits. */
+CC_API int String_CaselessEqualsConst(const String* a, const char* b);
+/* Breaks down an integer into an array of digits, and returns number of digits. */
 /* NOTE: Digits are in reverse order, so e.g. '200' becomes '0','0','2' */
-CC_API int  String_MakeUInt32(cc_uint32 num, char* digits);
+int String_MakeUInt32(cc_uint32 num, char* digits);
 
 /* Attempts to append a character. */
 /* Does nothing if str->length == str->capcity. */
@@ -136,14 +138,14 @@ CC_API void String_UNSAFE_TrimEnd(String* str);
 /* Returns first index of the given substring in the given string, -1 if not found. */
 /* e.g. index of "ab" within "cbabd" is 2 */
 CC_API int String_IndexOfString(const String* str, const String* sub);
-/* Returns whether given substring is inside the given string. */
+/* Returns non-zero if given substring is inside the given string. */
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
-/* Returns whether given substring is case-insensitively inside the given string. */
-CC_API cc_bool String_CaselessContains(const String* str, const String* sub);
-/* Returns whether given substring is case-insensitively equal to the beginning of the given string. */
-CC_API cc_bool String_CaselessStarts(const String* str, const String* sub);
-/* Returns whether given substring is case-insensitively equal to the ending of the given string. */
-CC_API cc_bool String_CaselessEnds(const String* str, const String* sub);
+/* Returns non-zero if given substring is case-insensitively inside the given string. */
+CC_API int String_CaselessContains(const String* str, const String* sub);
+/* Returns non-zero if given substring is case-insensitively equal to the beginning of the given string. */
+CC_API int String_CaselessStarts(const String* str, const String* sub);
+/* Returns non-zero if given substring is case-insensitively equal to the ending of the given string. */
+CC_API int String_CaselessEnds(const String* str, const String* sub);
 /* Compares the length of the given strings, then compares the characters if same length. Returns: */
 /* -X if a.length < b.length, X if a.length > b.length */
 /* -X if a.buffer[i] < b.buffer[i], X if a.buffer[i] > b.buffer[i] */

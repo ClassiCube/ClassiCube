@@ -346,7 +346,7 @@ cc_uint64 Stopwatch_Measure(void) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-cc_bool Directory_Exists(const String* path) {
+int Directory_Exists(const String* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
@@ -364,7 +364,7 @@ cc_result Directory_Create(const String* path) {
 	return success ? 0 : GetLastError();
 }
 
-cc_bool File_Exists(const String* path) {
+int File_Exists(const String* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
@@ -483,7 +483,7 @@ cc_result File_Length(FileHandle file, cc_uint32* len) {
 	return *len != INVALID_FILE_SIZE ? 0 : GetLastError();
 }
 #elif defined CC_BUILD_POSIX
-cc_bool Directory_Exists(const String* path) {
+int Directory_Exists(const String* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	Platform_ConvertString(str, path);
@@ -498,7 +498,7 @@ cc_result Directory_Create(const String* path) {
 	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
-cc_bool File_Exists(const String* path) {
+int File_Exists(const String* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	Platform_ConvertString(str, path);

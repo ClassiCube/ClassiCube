@@ -124,8 +124,8 @@ CC_API cc_uint64 Stopwatch_Measure(void);
 /* Returns total elapsed microseconds between two stopwatch measurements. */
 CC_API cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end);
 
-/* Returns whether the given directory exists. */
-CC_API cc_bool Directory_Exists(const String* path);
+/* Returns non-zero if the given directory exists. */
+CC_API int Directory_Exists(const String* path);
 /* Attempts to create a new directory. */
 CC_API cc_result Directory_Create(const String* path);
 /* Callback function invoked for each file found. */
@@ -133,8 +133,8 @@ typedef void Directory_EnumCallback(const String* filename, void* obj);
 /* Invokes a callback function on all filenames in the given directory (and its sub-directories) */
 CC_API cc_result Directory_Enum(const String* path, void* obj, Directory_EnumCallback callback);
 
-/* Returns whether the given file exists. */
-CC_API cc_bool File_Exists(const String* path);
+/* Returns non-zero if the given file exists. */
+CC_API int File_Exists(const String* path);
 /* Sets the last time the file was modified, as number of milliseconds since 1/1/0001 */
 CC_API cc_result File_SetModifiedTime(const String* path, TimeMS ms);
 /* Marks a file as being executable. */
