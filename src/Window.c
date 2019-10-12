@@ -3032,7 +3032,7 @@ void Window_Init(void) {
 	/* paste text */
 	EM_ASM(window.addEventListener('paste',
 		function(e) {
-			var contents = e.clipboardData ? e.clipboard.getData('text/plain') : window.clipboardData.getData('Text');
+			var contents = e.clipboardData ? e.clipboardData.getData('text/plain') : window.clipboardData.getData('Text');
 			ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
 		});
 	);
