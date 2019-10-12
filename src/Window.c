@@ -3018,7 +3018,11 @@ void Window_Init(void) {
 		function(e) {
 			if (window.getSelection && window.getSelection().toString()) return;
 			if (window.cc_copyText) {
-				e.clipboardData.setData('text/plain', window.cc_copyText);
+				if (e.clipboardData) {
+					e.clipboardData.setData('text/plain', window.cc_copyText);
+				} else {
+					window.clipboardData.setData('Text',  window.cc_copyText);
+				}
 				e.preventDefault();
 				window.cc_copyText = null;
 			}	
@@ -3028,7 +3032,7 @@ void Window_Init(void) {
 	/* paste text */
 	EM_ASM(window.addEventListener('paste',
 		function(e) {
-			contents = e.clipboardData.getData('text/plain');
+			var contents = e.clipboardData ? e.clipboard.getData('text/plain') : window.clipboardData.getData('Text');
 			ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
 		});
 	);
