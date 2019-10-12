@@ -97,12 +97,12 @@ typedef uintptr_t cc_uintptr;
 #endif
 
 typedef cc_uint16 Codepoint;
+typedef cc_uint8  cc_bool;
 #ifdef __APPLE__
 /* TODO: REMOVE THIS AWFUL AWFUL HACK */
 #include <stdbool.h>
 #elif __cplusplus
 #else
-typedef cc_uint8 cc_bool;
 #define true 1
 #define false 0
 #endif
