@@ -258,18 +258,21 @@ for (yy = -1; yy < 17; ++yy) {\
 }
 
 static cc_bool ReadChunkData(int x1, int y1, int z1, cc_bool* outAllAir) {
+	BlockRaw* blocks = World.Blocks;
+	BlockRaw* blocks2;
 	cc_bool allAir = true, allSolid = true;
 	int index, cIndex;
 	BlockID block;
 	int xx, yy, zz, y;
 
 #ifndef EXTENDED_BLOCKS
-	ReadChunkBody(World.Blocks[index]);
+	ReadChunkBody(blocks[index]);
 #else
 	if (World.IDMask <= 0xFF) {
-		ReadChunkBody(World.Blocks[index]);
+		ReadChunkBody(blocks[index]);
 	} else {
-		ReadChunkBody(World.Blocks[index] | (World.Blocks2[index] << 8));
+		blocks2 = World.Blocks2;
+		ReadChunkBody(blocks[index] | (blocks2[index] << 8));
 	}
 #endif
 
@@ -304,18 +307,21 @@ for (yy = -1; yy < 17; ++yy) {\
 }
 
 static cc_bool ReadBorderChunkData(int x1, int y1, int z1, cc_bool* outAllAir) {
+	BlockRaw* blocks = World.Blocks;
+	BlockRaw* blocks2;
 	cc_bool allAir = true;
 	int index, cIndex;
 	BlockID block;
 	int xx, yy, zz, x, y, z;
 
 #ifndef EXTENDED_BLOCKS
-	ReadBorderChunkBody(World.Blocks[index]);
+	ReadBorderChunkBody(blocks[index]);
 #else
 	if (World.IDMask <= 0xFF) {
-		ReadBorderChunkBody(World.Blocks[index]);
+		ReadBorderChunkBody(blocks[index]);
 	} else {
-		ReadBorderChunkBody(World.Blocks[index] | (World.Blocks2[index] << 8));
+		blocks2 = World.Blocks2;
+		ReadBorderChunkBody(blocks[index] | (blocks2[index] << 8));
 	}
 #endif
 
