@@ -3037,8 +3037,8 @@ void Window_Init(void) {
 		});
 	);
 
-	Pointers_Count = 1;
-	/* TODO: detect touch like device here from useragent */
+	Input_TouchMode = EM_ASM_INT_V({ return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent); });
+	Pointers_Count  = Input_TouchMode ? 0 : 1;
 }
 
 void Window_Create(int width, int height) {
@@ -3138,8 +3138,30 @@ void Window_AllocFramebuffer(Bitmap* bmp) { }
 void Window_DrawFramebuffer(Rect2D r)     { }
 void Window_FreeFramebuffer(Bitmap* bmp)  { }
 
-void Window_OpenKeyboard(void)  { }
-void Window_CloseKeyboard(void) { }
+void Window_OpenKeyboard(void)  {
+	if (!Input_TouchMode) return;
+	Platform_LogConst("OPEN SESAME");
+	EM_ASM({
+		var elem = window.cc_inputElem;
+		if (!elem) {
+			elem = document.createElement('input');
+			window.cc_inputElem = elem;
+		}
+
+		document.body.appendChild(elem);
+		elem.focus();
+		elem.click();
+	});
+}
+void Window_CloseKeyboard(void) {
+	if (!Input_TouchMode) return;
+	Platform_LogConst("CLOSE SESAME");
+	EM_ASM({
+		if (!window.cc_inputElem) return;
+		document.body.removeChild(window.cc_inputElem);
+		window.cc_inputElem = null;
+	});
+}
 
 void Window_EnableRawMouse(void) {
 	Window_RegrabMouse();
