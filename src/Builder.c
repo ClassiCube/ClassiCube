@@ -152,15 +152,10 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 				if (Blocks.Draw[b] == DRAW_GAS) continue;
 				index = Builder_PackCount(xx, yy, zz);
 
-				/* Sprites only use one face to indicate stretching count, so we can take a shortcut here.
-				Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite. */
+				/* Sprites can't be stretched, nor can then be they hidden by other blocks. */
+				/* Note sprites are drawn using DrawSprite and not with any of the DrawXFace. */
 				if (Blocks.Draw[b] == DRAW_SPRITE) {
-					index += FACE_YMAX;
-					if (Builder_Counts[index]) {
-						Builder_X = x; Builder_Y = y; Builder_Z = z;
-						Builder_AddSpriteVertices(b);
-						Builder_Counts[index] = 1;
-					}
+					Builder_AddSpriteVertices(b);
 					continue;
 				}
 
@@ -465,7 +460,7 @@ static void Builder_DefaultPostStretchTiles(int x1, int y1, int z1) {
 }
 
 static RNGState spriteRng;
-static void Builder_DrawSprite(int count) {
+static void Builder_DrawSprite(void) {
 	struct Builder1DPart* part;
 	VertexP3fT2fC4b v;
 	PackedCol white = PACKEDCOL_WHITE;
@@ -626,7 +621,6 @@ static void NormalBuilder_RenderBlock(int index) {
 	/* counters */
 	int count_XMin, count_XMax, count_ZMin;
 	int count_ZMax, count_YMin, count_YMax;
-	int count;
 
 	/* block state */
 	PackedCol white = PACKEDCOL_WHITE;
@@ -643,9 +637,7 @@ static void NormalBuilder_RenderBlock(int index) {
 	if (Blocks.Draw[Builder_Block] == DRAW_SPRITE) {
 		Builder_FullBright = Blocks.FullBright[Builder_Block];
 		Builder_Tinted     = Blocks.Tinted[Builder_Block];
-
-		count = Builder_Counts[index + FACE_YMAX];
-		if (count) Builder_DrawSprite(count);
+		Builder_DrawSprite();
 		return;
 	}
 
@@ -1183,14 +1175,11 @@ static void Adv_RenderBlock(int index) {
 	Vec3 min, max;
 	int count_XMin, count_XMax, count_ZMin;
 	int count_ZMax, count_YMin, count_YMax;
-	int count;
 
 	if (Blocks.Draw[Builder_Block] == DRAW_SPRITE) {
 		Builder_FullBright = Blocks.FullBright[Builder_Block];
 		Builder_Tinted     = Blocks.Tinted[Builder_Block];
-
-		count = Builder_Counts[index + FACE_YMAX];
-		if (count) Builder_DrawSprite(count);
+		Builder_DrawSprite();
 		return;
 	}
 
