@@ -7,12 +7,12 @@
 #include "ExtMath.h"
 
 int Display_BitsPerPixel;
-int Display_DpiX = DISPLAY_DEFAULT_DPI;
-int Display_DpiY = DISPLAY_DEFAULT_DPI;
+float Display_DpiX = 1.0f;
+float Display_DpiY = 1.0f;
 Rect2D Display_Bounds;
 
-int Display_ScaleX(int x) { return x * Display_DpiX / DISPLAY_DEFAULT_DPI; }
-int Display_ScaleY(int y) { return y * Display_DpiY / DISPLAY_DEFAULT_DPI; }
+int Display_ScaleX(int x) { return (int)(x * Display_DpiX); }
+int Display_ScaleY(int y) { return (int)(y * Display_DpiY); }
 #define Display_CentreX(width)  (Display_Bounds.X + (Display_Bounds.Width  - width)  / 2)
 #define Display_CentreY(height) (Display_Bounds.Y + (Display_Bounds.Height - height) / 2)
 
@@ -362,10 +362,8 @@ void Window_Init(void) {
 	Display_Bounds.Width  = GetSystemMetrics(SM_CXSCREEN);
 	Display_Bounds.Height = GetSystemMetrics(SM_CYSCREEN);
 	Display_BitsPerPixel  = GetDeviceCaps(hdc, BITSPIXEL);
-	Display_DpiX          = GetDeviceCaps(hdc, LOGPIXELSX);
-	Display_DpiY          = GetDeviceCaps(hdc, LOGPIXELSY);
-
-	Platform_Log2("DPI: %i, %i", &Display_DpiX, &Display_DpiY);
+	Display_DpiX          = GetDeviceCaps(hdc, LOGPIXELSX) / 96.0f;
+	Display_DpiY          = GetDeviceCaps(hdc, LOGPIXELSY) / 96.0f;
 	ReleaseDC(NULL, hdc);
 }
 
@@ -2763,8 +2761,6 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
-static float dpiScale;
-#define DPI_SCALE(x) ((int)(x * dpiScale))
 
 static void Window_RefreshBounds(void) {
 	emscripten_get_canvas_element_size(NULL, &Window_Width, &Window_Height);
@@ -2804,7 +2800,7 @@ static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* 
 	Input_SetPressed(KEY_RMOUSE, (ev->buttons & 0x02) != 0);
 	Input_SetPressed(KEY_MMOUSE, (ev->buttons & 0x04) != 0);
 
-	Pointer_SetPosition(0, DPI_SCALE(ev->canvasX), DPI_SCALE(ev->canvasY));
+	Pointer_SetPosition(0, Display_ScaleX(ev->canvasX), Display_ScaleY(ev->canvasY));
 	if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, ev->movementX, ev->movementY);
 	return true;
 }
@@ -2816,7 +2812,7 @@ static EM_BOOL Window_TouchStart(int type, const EmscriptenTouchEvent* ev, void*
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
 		
-		Input_AddTouch(t->identifier, DPI_SCALE(t->canvasX), DPI_SCALE(t->canvasY));
+		Input_AddTouch(t->identifier, Display_ScaleX(t->canvasX), Display_ScaleY(t->canvasY));
 	}
 	return true;
 }
@@ -2828,7 +2824,7 @@ static EM_BOOL Window_TouchMove(int type, const EmscriptenTouchEvent* ev, void* 
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
 		
-		Input_UpdateTouch(t->identifier, DPI_SCALE(t->canvasX), DPI_SCALE(t->canvasY));
+		Input_UpdateTouch(t->identifier, Display_ScaleX(t->canvasX), Display_ScaleY(t->canvasY));
 	}
 	return true;
 }
@@ -2840,7 +2836,7 @@ static EM_BOOL Window_TouchEnd(int type, const EmscriptenTouchEvent* ev, void* d
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
 		
-		Input_RemoveTouch(t->identifier, DPI_SCALE(t->canvasX), DPI_SCALE(t->canvasY));
+		Input_RemoveTouch(t->identifier, Display_ScaleX(t->canvasX), Display_ScaleY(t->canvasY));
 	}
 	return true;
 }
@@ -3021,7 +3017,8 @@ void Window_Init(void) {
 	Display_Bounds.Height = EM_ASM_INT_V({ return screen.height; });
 	Display_BitsPerPixel  = 24;
 
-	dpiScale = EM_ASM_DOUBLE_V({ return window.devicePixelRatio || 1.0; });
+	Display_DpiX = EM_ASM_DOUBLE_V({ return window.devicePixelRatio || 1.0; });
+	Display_DpiY = Display_DpiX;
 
 	/* copy text, but only if user isn't selecting something else on the webpage */
 	EM_ASM(window.addEventListener('copy', 

@@ -1012,7 +1012,7 @@ String Font_Lookup(const String* fontName, int style) {
 cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int style) {
 	struct SysFont* font;
 	String value, path, index;
-	int faceIndex;
+	int faceIndex, dpiX, dpiY;
 	FT_Open_Args args;
 	FT_Error err;
 
@@ -1029,8 +1029,12 @@ cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int
 	if ((err = SysFont_Init(&path, font, &args))) { Mem_Free(font); return err; }
 	desc->handle = font;
 
-	if ((err = FT_New_Face(ft_lib, &args, faceIndex, &font->face))) return err;
-	if ((err = FT_Set_Char_Size(font->face, size * 64, 0, Display_DpiX, Display_DpiY))) return err;
+	/* TODO: Use 72 instead of 96 dpi for mobile devices */
+	dpiX = (int)(Display_DpiX * 96);
+	dpiY = (int)(Display_DpiY * 96);
+
+	if ((err = FT_New_Face(ft_lib, &args, faceIndex, &font->face)))     return err;
+	if ((err = FT_Set_Char_Size(font->face, size * 64, 0, dpiX, dpiY))) return err;
 
 	/* height of any text when drawn with the given system font */
 	desc->height = TEXT_CEIL(font->face->size->metrics.height);
