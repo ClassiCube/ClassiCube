@@ -3065,7 +3065,7 @@ void Window_SetTitle(const String* title) {
 static RequestClipboardCallback clipboard_func;
 static void* clipboard_obj;
 
-EMSCRIPTEN_KEEPALIVE static void Window_GotClipboardText(char* src) {
+EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
 	String str = String_FromReadonly(src);
 	if (!clipboard_func) return;
 
