@@ -1142,7 +1142,7 @@ void ClassicGenScreen_Show(void) {
 static struct SaveLevelScreen {
 	Screen_Layout
 	struct FontDesc titleFont, textFont;
-	struct ButtonWidget save, schem, cancel;
+	struct ButtonWidget save, alt, cancel;
 	struct MenuInputWidget input;
 	struct TextWidget mcEdit, desc;
 } SaveLevelScreen_Instance;
@@ -1152,12 +1152,12 @@ static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 		s->save.optName ? "&cOverwrite existing?" : "Save", &s->titleFont);
 }
 
-static void SaveLevelScreen_UpdateSchem(struct SaveLevelScreen* s) {
+static void SaveLevelScreen_UpdateAlt(struct SaveLevelScreen* s) {
 #ifdef CC_BUILD_WEB
-	ButtonWidget_SetConst(&s->schem, "Download (WIP)", &s->titleFont);
+	ButtonWidget_SetConst(&s->alt, "Download (WIP)", &s->titleFont);
 #else
-	ButtonWidget_SetConst(&s->schem,
-		s->schem.optName ? "&cOverwrite existing?" : "Save schematic", &s->titleFont);
+	ButtonWidget_SetConst(&s->alt,
+		s->alt.optName ? "&cOverwrite existing?" : "Save schematic", &s->titleFont);
 #endif
 }
 
@@ -1166,9 +1166,9 @@ static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
 		s->save.optName = NULL;
 		SaveLevelScreen_UpdateSave(s);
 	}
-	if (s->schem.optName) {
-		s->schem.optName = NULL;
-		SaveLevelScreen_UpdateSchem(s);
+	if (s->alt.optName) {
+		s->alt.optName = NULL;
+		SaveLevelScreen_UpdateAlt(s);
 	}
 }
 
@@ -1293,22 +1293,24 @@ static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {
 	if (File_Exists(&path) && !btn->optName) {
 		btn->optName = "";
 		SaveLevelScreen_UpdateSave(s);
-		SaveLevelScreen_UpdateSchem(s);
+		SaveLevelScreen_UpdateAlt(s);
 	} else {
 		SaveLevelScreen_RemoveOverwrites(s);
 		SaveLevelScreen_SaveMap(s, &path);
 	}
 }
-static void SaveLevelScreen_Classic(void* a, void* b)   { SaveLevelScreen_Save(a, b, ".cw"); }
-static void SaveLevelScreen_Schematic(void* a, void* b) { SaveLevelScreen_Save(a, b, ".schematic"); }
+static void SaveLevelScreen_Main(void* a, void* b) { SaveLevelScreen_Save(a, b, ".cw"); }
+static void SaveLevelScreen_Alt(void* a, void* b)  { SaveLevelScreen_Save(a, b, ".schematic"); }
 
 static void SaveLevelScreen_Render(void* screen, double delta) {
 	PackedCol grey = PackedCol_Make(150, 150, 150, 255);
 	int x, y;
 	MenuScreen_Render(screen, delta);
 
+#ifndef CC_BUILD_WEB
 	x = Window_Width / 2; y = Window_Height / 2;
 	Gfx_Draw2DFlat(x - 250, y + 90, 500, 2, grey);
+#endif
 }
 
 static cc_bool SaveLevelScreen_KeyPress(void* screen, char keyChar) {
@@ -1339,9 +1341,11 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 	Menu_MakeTitleFont(&s->titleFont);
 	Menu_MakeBodyFont(&s->textFont);
 	SaveLevelScreen_UpdateSave(s);
-	SaveLevelScreen_UpdateSchem(s);
+	SaveLevelScreen_UpdateAlt(s);
 
+#ifndef CC_BUILD_WEB
 	TextWidget_SetConst(&s->mcEdit,   "&eCan be imported into MCEdit", &s->textFont);
+#endif
 	MenuInputWidget_SetFont(&s->input, &s->textFont);
 	ButtonWidget_SetConst(&s->cancel, "Cancel",                        &s->titleFont);
 }
@@ -1355,17 +1359,28 @@ static void SaveLevelScreen_Init(void* screen) {
 	s->numWidgets = Array_Elems(widgets);
 	MenuInput_Path(desc);
 	
-	Menu_Button(s, 0, &s->save, 300,  SaveLevelScreen_Classic,
+	Menu_Button(s, 0, &s->save, 300, SaveLevelScreen_Main,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  20);
-	Menu_Button(s, 1, &s->schem, 200, SaveLevelScreen_Schematic,
+#ifdef CC_BUILD_WEB
+	Menu_Button(s, 1, &s->alt,  300, SaveLevelScreen_Alt,
+		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  70);
+#else
+	Menu_Button(s, 1, &s->alt,  200, SaveLevelScreen_Alt,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -150, 120);
 	Menu_Label(s,  2, &s->mcEdit,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 120);
+#endif
+
 	Menu_Back(s,   3, &s->cancel, Menu_SwitchPause);
 	Menu_Input(s,  4, &s->input, 500, &String_Empty, &desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -30);
+#ifdef CC_BUILD_WEB
+	Menu_Label(s,  5, &s->desc,
+		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  115);
+#else
 	Menu_Label(s,  5, &s->desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  65);
+#endif
 	Window_OpenKeyboard();
 }
 
