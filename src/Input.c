@@ -201,7 +201,7 @@ cc_bool Input_RawMode, Input_TouchMode;
 
 void Pointer_SetPressed(int idx, cc_bool pressed) {
 #ifdef CC_BUILD_TOUCH
-	if (!(touchTypes[idx] & TOUCH_TYPE_GUI)) return;
+	if (Input_TouchMode && !(touchTypes[idx] & TOUCH_TYPE_GUI)) return;
 #endif
 
 	if (pressed) {
@@ -223,7 +223,7 @@ void Pointer_SetPosition(int idx, int x, int y) {
 	Pointers[idx].x = x; Pointers[idx].y = y;
 	
 #ifdef CC_BUILD_TOUCH
-	if (!(touchTypes[idx] & TOUCH_TYPE_GUI)) return;
+	if (Input_TouchMode && !(touchTypes[idx] & TOUCH_TYPE_GUI)) return;
 #endif
 	Event_RaiseMove(&PointerEvents.Moved, idx, deltaX, deltaY);
 }
