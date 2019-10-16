@@ -1083,22 +1083,19 @@ cc_result Process_StartGame(const String* args) {
 }
 void Process_Exit(cc_result code) { ExitProcess(code); }
 
-cc_result Process_StartOpen(const String* args) {
+void Process_StartOpen(const String* args) {
 	TCHAR str[NATIVE_STR_LEN];
-	HINSTANCE instance;
 	Platform_ConvertString(str, args);
-	instance = ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
-	return instance > 32 ? 0 : (cc_result)instance;
+	ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
 }
 #elif defined CC_BUILD_WEB
 cc_result Process_StartGame(const String* args) { return ERR_NOT_SUPPORTED; }
 void Process_Exit(cc_result code) { exit(code); }
 
-cc_result Process_StartOpen(const String* args) {
+void Process_StartOpen(const String* args) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, args);
 	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
-	return 0;
 }
 #elif defined CC_BUILD_ANDROID
 static char gameArgsBuffer[512];
@@ -1110,9 +1107,8 @@ cc_result Process_StartGame(const String* args) {
 }
 void Process_Exit(cc_result code) { exit(code); }
 
-cc_result Process_StartOpen(const String* args) {
+void Process_StartOpen(const String* args) {
 	JavaCall_String_Void("startOpen", args);
-	return 0; /* TODO: Is there a clean way of handling an error */
 }
 #elif defined CC_BUILD_POSIX
 static cc_result Process_RawStart(const char* path, const char** argv) {
@@ -1130,14 +1126,6 @@ static cc_result Process_RawStart(const char* path, const char** argv) {
 	}
 }
 
-static cc_result Process_RawStartOpen(const char* path, const String* url) {
-	char raw[NATIVE_STR_LEN];
-	const char* args[3];
-	Platform_ConvertString(raw, url);
-
-	args[0] = path; args[1] = raw; args[2] = NULL;
-	return Process_RawStart(path, args);
-}
 static cc_result Process_RawGetExePath(char* path, int* len);
 
 cc_result Process_StartGame(const String* args) {
@@ -1168,8 +1156,8 @@ void Process_Exit(cc_result code) { exit(code); }
 #endif
 /* Opening browser and starting shell is not really standardised */
 #if defined CC_BUILD_OSX
-cc_result Process_StartOpen(const String* args) {
-	/* Formerly return Process_RawStartOpen("/usr/bin/open", args); */
+void Process_StartOpen(const String* args) {
+	/* This used to be exec "/usr/bin/open" str */
 	UInt8 str[600];
 	CFURLRef urlCF;
 	int len;
@@ -1178,13 +1166,16 @@ cc_result Process_StartOpen(const String* args) {
 	urlCF = CFURLCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, NULL);
 	LSOpenCFURLRef(urlCF, NULL);
 	CFRelease(urlCF);
-	return 0;
-}
 }
 #elif defined CC_BUILD_UNIX
-cc_result Process_StartOpen(const String* args) {
+void Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
-	return Process_RawStartOpen("xdg-open", args);
+	char str[NATIVE_STR_LEN];
+	const char* cmd[3];
+	Platform_ConvertString(str, args);
+
+	cmd[0] = "xdg-open"; cmd[1] = str; cmd[2] = NULL;
+	Process_RawStart("xdg-open", cmd);
 }
 #endif
 /* Retrieving exe path is completely OS dependant */

@@ -62,14 +62,14 @@ CC_API cc_result Process_StartGame(const String* args);
 CC_API void Process_Exit(cc_result code);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
-CC_API cc_result Process_StartOpen(const String* args);
+CC_API void Process_StartOpen(const String* args);
 
 /* Attempts to clean up any leftover files from an update */
-CC_API cc_bool Updater_Clean(void);
+cc_bool Updater_Clean(void);
 /* Starts the platform-specific method to update then start the game using the UPDATE_FILE file. */
-CC_API cc_result Updater_Start(void);
+cc_result Updater_Start(void);
 /* Returns the last time the application was modified, as number of milliseconds since 1/1/0001 */
-CC_API cc_result Updater_GetBuildTime(TimeMS* ms);
+cc_result Updater_GetBuildTime(TimeMS* ms);
 
 /* The default file extension used for dynamic libraries on this platform. */
 extern const String DynamicLib_Ext;

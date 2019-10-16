@@ -1373,7 +1373,7 @@ static void SaveLevelScreen_Init(void* screen) {
 
 	Menu_Back(s,   3, &s->cancel, Menu_SwitchPause);
 	Menu_Input(s,  4, &s->input, 500, &String_Empty, &desc,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -30);
+		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  -30);
 #ifdef CC_BUILD_WEB
 	Menu_Label(s,  5, &s->desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  115);
