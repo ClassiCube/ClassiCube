@@ -2301,6 +2301,7 @@ static cc_result GLContext_UnsetFullscreen(void) {
 
 	code = aglSetDrawable(ctx_handle, NULL);
 	if (!code) return aglGetError();
+	/* TODO: I don't think this is necessary */
 	code = aglUpdateContext(ctx_handle);
 	if (!code) return aglGetError();
 
@@ -2319,6 +2320,7 @@ static cc_result GLContext_SetFullscreen(void) {
 	int code;
 
 	Platform_LogConst("Switching to fullscreen");
+	/* TODO: Does aglSetFullScreen capture the screen anyways? */
 	CGDisplayCapture(CGMainDisplayID());
 
 	if (!aglSetFullScreen(ctx_handle, width, height, 0, 0)) {
@@ -2326,6 +2328,7 @@ static cc_result GLContext_SetFullscreen(void) {
 		GLContext_UnsetFullscreen();
 		return code;
 	}
+	/* TODO: Do we really need to call this? */
 	GLContext_MakeCurrent();
 
 	/* This is a weird hack to workaround a bug where the first time a context */
@@ -3159,7 +3162,8 @@ void Window_OpenKeyboard(void)  {
 	EM_ASM({
 		var elem = window.cc_inputElem;
 		if (!elem) {
-			elem = document.createElement('input');
+			elem = document.createElement('textarea');
+			elem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; opacity:0.3;');
 			window.cc_inputElem = elem;
 		}
 
