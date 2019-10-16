@@ -238,6 +238,8 @@ jbyteArray JavaMakeBytes(JNIEnv* env, const cc_uint8* src, cc_uint32 len);
 void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that returns a jint. */
 jint JavaCallInt(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
+/* Calls a method in the activity class that returns a jint. */
+jfloat JavaCallFloat(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that returns a jobject. */
 jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that takes a string and returns nothing. */

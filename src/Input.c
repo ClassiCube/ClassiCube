@@ -40,6 +40,76 @@ enum MouseButton_ { MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE };
 
 
 /*########################################################################################################################*
+*------------------------------------------------------Touch support------------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_TOUCH
+static long touchIds[INPUT_MAX_POINTERS];
+static cc_uint8 touchTypes[INPUT_MAX_POINTERS];
+int Pointers_Count;
+cc_bool Input_Placing;
+
+/* Touch fingers are initially are all type, meaning they could */
+/* trigger menu clicks, camera movement, or place/delete blocks */
+/* But for example, after clicking on a menu button, you wouldn't */
+/* want moving that finger anymore to move the camera */
+#define TOUCH_TYPE_GUI    1
+#define TOUCH_TYPE_CAMERA 2
+#define TOUCH_TYPE_BLOCKS 4
+#define TOUCH_TYPE_ALL (TOUCH_TYPE_GUI | TOUCH_TYPE_CAMERA | TOUCH_TYPE_BLOCKS)
+
+static cc_bool AnyBlockTouches(void) {
+	int i;
+	for (i = 0; i < Pointers_Count; i++) {
+		if (touchTypes[i] & TOUCH_TYPE_BLOCKS) return true;
+	}
+	return false;
+}
+
+void Input_AddTouch(long id, int x, int y) {
+	int i = Pointers_Count;
+	touchIds[i]   = id;
+	touchTypes[i] = TOUCH_TYPE_ALL;
+	Pointers_Count++;
+
+	Pointer_SetPosition(i, x, y);
+	Pointer_SetPressed(i, true);
+}
+
+void Input_UpdateTouch(long id, int x, int y) {
+	int i;
+	for (i = 0; i < Pointers_Count; i++) {
+		if (touchIds[i] != id) continue;
+		
+		if (Input_RawMode && (touchTypes[i] & TOUCH_TYPE_CAMERA)) {
+			Event_RaiseMove(&PointerEvents.RawMoved, i, x - Pointers[i].x, y - Pointers[i].y);
+		}
+		Pointer_SetPosition(i, x, y);
+		return;
+	}
+}
+
+void Input_RemoveTouch(long id, int x, int y) {
+	int i;
+	for (i = 0; i < Pointers_Count; i++) {
+		if (touchIds[i] != id) continue;
+		Pointer_SetPosition(i, x, y);
+		Pointer_SetPressed(i, false);
+
+		/* found the touch, remove it*/
+		for (; i < Pointers_Count - 1; i++) {
+			touchIds[i]   = touchIds[i + 1];
+			touchTypes[i] = touchTypes[i + 1];
+			Pointers[i]   = Pointers[i + 1];
+		}
+
+		Pointers_Count--;
+		return;
+	}
+}
+#endif
+
+
+/*########################################################################################################################*
 *-----------------------------------------------------------Key-----------------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Input_Pressed[INPUT_COUNT];
@@ -130,6 +200,10 @@ struct Pointer Pointers[INPUT_MAX_POINTERS];
 cc_bool Input_RawMode, Input_TouchMode;
 
 void Pointer_SetPressed(int idx, cc_bool pressed) {
+#ifdef CC_BUILD_TOUCH
+	if (!(touchTypes[idx] & TOUCH_TYPE_GUI)) return;
+#endif
+
 	if (pressed) {
 		Event_RaiseInt(&PointerEvents.Down, idx);
 	} else {
@@ -147,68 +221,12 @@ void Pointer_SetPosition(int idx, int x, int y) {
 	if (x == Pointers[idx].x && y == Pointers[idx].y) return;
 	/* TODO: reset to -1, -1 when pointer is removed */
 	Pointers[idx].x = x; Pointers[idx].y = y;
+	
+#ifdef CC_BUILD_TOUCH
+	if (!(touchTypes[idx] & TOUCH_TYPE_GUI)) return;
+#endif
 	Event_RaiseMove(&PointerEvents.Moved, idx, deltaX, deltaY);
 }
-
-/*########################################################################################################################*
-*------------------------------------------------------Touch support------------------------------------------------------*
-*#########################################################################################################################*/
-#ifdef CC_BUILD_TOUCH
-static long touchIds[INPUT_MAX_POINTERS];
-static cc_uint8 touchTypes[INPUT_MAX_POINTERS];
-int Pointers_Count;
-
-/* Touch fingers are initially are all type, meaning they could */
-/* trigger menu clicks, camera movement, or place/delete blocks */
-/* But for example, after clicking on a menu button, you wouldn't */
-/* want moving that finger anymore to move the camera */
-#define TOUCH_TYPE_GUI    1
-#define TOUCH_TYPE_CAMERA 2
-#define TOUCH_TYPE_BLOCKS 4
-#define TOUCH_TYPE_ALL (TOUCH_TYPE_GUI | TOUCH_TYPE_CAMERA | TOUCH_TYPE_BLOCKS)
-
-void Input_AddTouch(long id, int x, int y) {
-	int i = Pointers_Count;
-	touchIds[i]   = id;
-	touchTypes[i] = TOUCH_TYPE_ALL;
-	Pointers_Count++;
-
-	Pointer_SetPosition(i, x, y);
-	Pointer_SetPressed(i, true);
-}
-
-void Input_UpdateTouch(long id, int x, int y) {
-	int i;
-	for (i = 0; i < Pointers_Count; i++) {
-		if (touchIds[i] != id) continue;
-		
-		if (Input_RawMode && (touchTypes[i] & TOUCH_TYPE_CAMERA)) {
-			Event_RaiseMove(&PointerEvents.RawMoved, i, x - Pointers[i].x, y - Pointers[i].y);
-		}
-		Pointer_SetPosition(i, x, y);
-		return;
-	}
-}
-
-void Input_RemoveTouch(long id, int x, int y) {
-	int i;
-	for (i = 0; i < Pointers_Count; i++) {
-		if (touchIds[i] != id) continue;
-		Pointer_SetPosition(i, x, y);
-		Pointer_SetPressed(i, false);
-
-		/* found the touch, remove it*/
-		for (; i < Pointers_Count - 1; i++) {
-			touchIds[i]   = touchIds[i + 1];
-			touchTypes[i] = touchTypes[i + 1];
-			Pointers[i]   = Pointers[i + 1];
-		}
-
-		Pointers_Count--;
-		return;
-	}
-}
-#endif
 
 
 /*########################################################################################################################*
@@ -664,6 +682,14 @@ void InputHandler_PickBlocks(void) {
 	left   = KeyBind_IsPressed(KEYBIND_DELETE_BLOCK);
 	middle = KeyBind_IsPressed(KEYBIND_PICK_BLOCK);
 	right  = KeyBind_IsPressed(KEYBIND_PLACE_BLOCK);
+	
+#ifdef CC_BUILD_TOUCH
+	if (Input_TouchMode) {
+		left   = !Input_Placing && AnyBlockTouches();
+		right  = Input_Placing  && AnyBlockTouches();
+		middle = false;
+	}
+#endif
 
 	if (Server.SupportsPlayerClick) {
 		input_pickingId = -1;
@@ -888,10 +914,6 @@ static void HandlePointerMove(void* obj, int idx, int xDelta, int yDelta) {
 	struct Screen* s;
 	int i, x = Pointers[idx].x, y = Pointers[idx].y;
 
-#ifdef CC_BUILD_TOUCH
-	if (!(touchTypes[idx] & TOUCH_TYPE_GUI)) return;
-#endif
-
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
 		if (s->VTABLE->HandlesPointerMove(s, 1 << idx, x, y)) return;
@@ -901,10 +923,6 @@ static void HandlePointerMove(void* obj, int idx, int xDelta, int yDelta) {
 static void HandlePointerDown(void* obj, int idx) {
 	struct Screen* s;
 	int i, x = Pointers[idx].x, y = Pointers[idx].y;
-
-#ifdef CC_BUILD_TOUCH
-	if (!(touchTypes[idx] & TOUCH_TYPE_GUI)) return;
-#endif
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
@@ -921,10 +939,6 @@ static void HandlePointerDown(void* obj, int idx) {
 static void HandlePointerUp(void* obj, int idx) {
 	struct Screen* s;
 	int i, x = Pointers[idx].x, y = Pointers[idx].y;
-
-#ifdef CC_BUILD_TOUCH
-	if (!(touchTypes[idx] & TOUCH_TYPE_GUI)) return;
-#endif
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];

@@ -3463,8 +3463,8 @@ void Window_Init(void) {
 	Window_SoftKeyboard  = true;
 	Input_TouchMode      = true;
 	Display_BitsPerPixel = 32;
-	Display_DpiX         = JavaCallInt(env, "getDpiX", "()I", NULL);
-	Display_DpiY         = JavaCallInt(env, "getDpiY", "()I", NULL);
+	Display_DpiX         = JavaCallFloat(env, "getDpiX", "()F", NULL);
+	Display_DpiY         = JavaCallFloat(env, "getDpiY", "()F", NULL);
 }
 
 void Window_Create(int width, int height) {

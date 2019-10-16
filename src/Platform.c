@@ -1628,6 +1628,11 @@ jint JavaCallInt(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
 	return (*env)->CallIntMethodA(env, App_Instance, method, args);
 }
 
+jfloat JavaCallFloat(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
+	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
+	return (*env)->CallFloatMethodA(env, App_Instance, method, args);
+}
+
 jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
 	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
 	return (*env)->CallObjectMethodA(env, App_Instance, method, args);
