@@ -85,14 +85,14 @@ CC_API void Clipboard_SetText(const String* value);
 /* With emscripten however, the callback is instead called when a 'paste' event arrives. */
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj);
 
-/* Makes the window visible on screen. */
+/* Makes the window visible and focussed on screen. */
 void Window_Show(void);
 /* Gets the current state of the window, see WindowState enum. */
 int Window_GetWindowState(void);
-/* Switches the window to occupy the entire screen. */
-void Window_EnterFullscreen(void);
-/* Restores the window to before it entered full screen. */
-void Window_ExitFullscreen(void);
+/* Attempts to switch the window to occupy the entire screen. */
+cc_result Window_EnterFullscreen(void);
+/* Attempts to restore the window to before it entered full screen. */
+cc_result Window_ExitFullscreen(void);
 
 /* Sets the size of the internal bounds of the window. */
 /* NOTE: This size excludes the bounds of borders + title */

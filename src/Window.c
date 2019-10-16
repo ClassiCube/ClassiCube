@@ -512,17 +512,19 @@ static void Window_ToggleFullscreen(cc_bool fullscreen, UINT finalShow) {
 }
 
 static UINT win_show;
-void Window_EnterFullscreen(void) {
+cc_result Window_EnterFullscreen(void) {
 	WINDOWPLACEMENT w = { 0 };
 	w.length = sizeof(WINDOWPLACEMENT);
 	GetWindowPlacement(win_handle, &w);
 
 	win_show = w.showCmd;
 	Window_ToggleFullscreen(true, SW_MAXIMIZE);
+	return 0;
 }
 
-void Window_ExitFullscreen(void) {
+cc_result Window_ExitFullscreen(void) {
 	Window_ToggleFullscreen(false, win_show);
+	return 0;
 }
 
 
@@ -1013,11 +1015,11 @@ static void Window_ToggleFullscreen(long op) {
 	Window_ProcessEvents();
 }
 
-void Window_EnterFullscreen(void) {
-	Window_ToggleFullscreen(_NET_WM_STATE_ADD);
+cc_result Window_EnterFullscreen(void) {
+	Window_ToggleFullscreen(_NET_WM_STATE_ADD); return 0;
 }
-void Window_ExitFullscreen(void) {
-	Window_ToggleFullscreen(_NET_WM_STATE_REMOVE);
+cc_result Window_ExitFullscreen(void) {
+	Window_ToggleFullscreen(_NET_WM_STATE_REMOVE); return 0;
 }
 
 void Window_SetSize(int width, int height) {
@@ -1812,8 +1814,8 @@ static WindowRef win_handle;
 static cc_bool win_fullscreen, showingDialog;
 
 /* fullscreen is tied to OpenGL context unfortunately */
-static void GLContext_UnsetFullscreen(void);
-static void GLContext_SetFullscreen(void);
+static cc_result GLContext_UnsetFullscreen(void);
+static cc_result GLContext_SetFullscreen(void);
 
 /*########################################################################################################################*
 *-----------------------------------------------------Private details-----------------------------------------------------*
@@ -2135,13 +2137,15 @@ static void Window_UpdateWindowState(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
-void Window_EnterFullscreen(void) {
-	GLContext_SetFullscreen();
+cc_result Window_EnterFullscreen(void) {
+	cc_result res = GLContext_SetFullscreen();
 	Window_UpdateWindowState();
+	return res;
 }
-void Window_ExitFullscreen(void) {
-	GLContext_UnsetFullscreen();
+cc_result Window_ExitFullscreen(void) {
+	cc_result res = GLContext_UnsetFullscreen();
 	Window_UpdateWindowState();
+	return res;
 }
 
 void Window_SetSize(int width, int height) {
@@ -2291,14 +2295,14 @@ static void GLContext_GetAttribs(struct GraphicsMode* mode, GLint* attribs, cc_b
 	attribs[i++] = 0;
 }
 
-static void GLContext_UnsetFullscreen(void) {
+static cc_result GLContext_UnsetFullscreen(void) {
 	int code;
-	Platform_LogConst("Unsetting AGL fullscreen.");
+	Platform_LogConst("Unsetting fullscreen.");
 
 	code = aglSetDrawable(ctx_handle, NULL);
-	GLContext_Check(code, "Unattaching GL context");
+	if (!code) return aglGetError();
 	code = aglUpdateContext(ctx_handle);
-	GLContext_Check(code, "Updating GL context (from Fullscreen)");
+	if (!code) return aglGetError();
 
 	CGDisplayRelease(CGMainDisplayID());
 	GLContext_SetDrawable();
@@ -2306,18 +2310,22 @@ static void GLContext_UnsetFullscreen(void) {
 	win_fullscreen = false;
 	/* TODO: Eliminate this if possible */
 	Window_SetSize(ctx_windowWidth, ctx_windowHeight);
+	return 0;
 }
 
-static void GLContext_SetFullscreen(void) {
-	int displayWidth  = Display_Bounds.Width;
-	int displayHeight = Display_Bounds.Height;
+static cc_result GLContext_SetFullscreen(void) {
+	int width  = Display_Bounds.Width;
+	int height = Display_Bounds.Height;
 	int code;
 
-	Platform_LogConst("Switching to AGL fullscreen");
+	Platform_LogConst("Switching to fullscreen");
 	CGDisplayCapture(CGMainDisplayID());
 
-	code = aglSetFullScreen(ctx_handle, displayWidth, displayHeight, 0, 0);
-	GLContext_Check(code, "aglSetFullScreen");
+	if (!aglSetFullScreen(ctx_handle, width, height, 0, 0)) {
+		code = aglGetError();
+		GLContext_UnsetFullscreen();
+		return code;
+	}
 	GLContext_MakeCurrent();
 
 	/* This is a weird hack to workaround a bug where the first time a context */
@@ -2327,8 +2335,7 @@ static void GLContext_SetFullscreen(void) {
 	if (!ctx_firstFullscreen) {
 		ctx_firstFullscreen = true;
 		GLContext_UnsetFullscreen();
-		GLContext_SetFullscreen();
-		return;
+		return GLContext_SetFullscreen();
 	}
 
 	win_fullscreen   = true;
@@ -2337,6 +2344,7 @@ static void GLContext_SetFullscreen(void) {
 
 	windowX = Display_Bounds.X; Window_Width  = Display_Bounds.Width;
 	windowY = Display_Bounds.Y; Window_Height = Display_Bounds.Height;
+	return 0;
 }
 
 void GLContext_Init(struct GraphicsMode* mode) {
@@ -2477,10 +2485,10 @@ int Window_GetWindowState(void) {
 	return WINDOW_STATE_NORMAL;
 }
 
-void Window_EnterFullscreen(void) {
-	SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
+cc_result Window_EnterFullscreen(void) {
+	return SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
 }
-void Window_ExitFullscreen(void) { SDL_RestoreWindow(win_handle); }
+cc_result Window_ExitFullscreen(void) { SDL_RestoreWindow(win_handle); return 0; }
 
 void Window_SetSize(int width, int height) {
 	SDL_SetWindowSize(win_handle, width, height);
@@ -3093,7 +3101,7 @@ int Window_GetWindowState(void) {
 	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
 
-void Window_EnterFullscreen(void) {
+cc_result Window_EnterFullscreen(void) {
 	EmscriptenFullscreenStrategy strategy;
 	strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
 	strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
@@ -3101,9 +3109,9 @@ void Window_EnterFullscreen(void) {
 
 	strategy.canvasResizedCallback         = Window_CanvasResize;
 	strategy.canvasResizedCallbackUserData = NULL;
-	emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
+	return emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
 }
-void Window_ExitFullscreen(void) { emscripten_exit_fullscreen(); }
+cc_result Window_ExitFullscreen(void) { return emscripten_exit_fullscreen(); }
 
 void Window_SetSize(int width, int height) {
 	emscripten_set_canvas_element_size(NULL, width, height);
@@ -3476,8 +3484,8 @@ void Clipboard_SetText(const String* value) {
 /* Always a fullscreen window */
 void Window_Show(void) { }
 int Window_GetWindowState(void) { return WINDOW_STATE_FULLSCREEN; }
-void Window_EnterFullscreen(void) { }
-void Window_ExitFullscreen(void) { }
+cc_result Window_EnterFullscreen(void) { return 0; }
+cc_result Window_ExitFullscreen(void)  { return 0; }
 void Window_SetSize(int width, int height) { }
 
 void Window_Close(void) {
@@ -3881,11 +3889,13 @@ int Window_GetWindowState(void) {
 }
 
 // TODO: Only works on 10.7+
-void Window_EnterFullscreen(void) {
+cc_result Window_EnterFullscreen(void) {
 	objc_msgSend(winHandle, sel_registerName("toggleFullScreen:"), appHandle);
+	return 0;
 }
-void Window_ExitFullscreen(void) {
+cc_result Window_ExitFullscreen(void) {
 	objc_msgSend(winHandle, sel_registerName("toggleFullScreen:"), appHandle);
+	return 0;
 }
 
 void Window_SetSize(int width, int height) {
