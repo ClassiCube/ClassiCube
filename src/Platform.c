@@ -1169,7 +1169,17 @@ void Process_Exit(cc_result code) { exit(code); }
 /* Opening browser and starting shell is not really standardised */
 #if defined CC_BUILD_OSX
 cc_result Process_StartOpen(const String* args) {
-	return Process_RawStartOpen("/usr/bin/open", args);
+	/* Formerly return Process_RawStartOpen("/usr/bin/open", args); */
+	UInt8 str[600];
+	CFURLRef urlCF;
+	int len;
+	
+	len   = Platform_ConvertString(str, args);
+	urlCF = CFURLCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, NULL);
+	LSOpenCFURLRef(urlCF, NULL);
+	CFRelease(urlCF);
+	return 0;
+}
 }
 #elif defined CC_BUILD_UNIX
 cc_result Process_StartOpen(const String* args) {
