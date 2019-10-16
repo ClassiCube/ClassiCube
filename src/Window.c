@@ -3163,7 +3163,7 @@ void Window_OpenKeyboard(void)  {
 		var elem = window.cc_inputElem;
 		if (!elem) {
 			elem = document.createElement('textarea');
-			elem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; opacity:0.3;');
+			elem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; opacity:0.3; resize:none; pointer-events:none;');
 			window.cc_inputElem = elem;
 		}
 
