@@ -43,8 +43,11 @@ enum MouseButton_ { MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE };
 *------------------------------------------------------Touch support------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_TOUCH
-static long touchIds[INPUT_MAX_POINTERS];
-static cc_uint8 touchTypes[INPUT_MAX_POINTERS];
+static struct TouchPointer {
+	long id;
+	cc_uint8 type;
+	int begX, begY;
+} touches[INPUT_MAX_POINTERS];
 int Pointers_Count;
 cc_bool Input_Placing;
 
@@ -60,27 +63,42 @@ cc_bool Input_Placing;
 static cc_bool AnyBlockTouches(void) {
 	int i;
 	for (i = 0; i < Pointers_Count; i++) {
-		if (touchTypes[i] & TOUCH_TYPE_BLOCKS) return true;
+		if (touches[i].type & TOUCH_TYPE_BLOCKS) return true;
 	}
 	return false;
 }
 
 void Input_AddTouch(long id, int x, int y) {
 	int i = Pointers_Count;
-	touchIds[i]   = id;
-	touchTypes[i] = TOUCH_TYPE_ALL;
-	Pointers_Count++;
+	touches[i].id   = id;
+	touches[i].type = TOUCH_TYPE_ALL;
+	touches[i].begX = x;
+	touches[i].begY = y;
 
+	Pointers_Count++;
 	Pointer_SetPosition(i, x, y);
 	Pointer_SetPressed(i, true);
+}
+
+static bool MovedFromBeg(int i, int x, int y) {
+	return Math_AbsI(x - touches[i].begX) > Display_ScaleX(5) ||
+		   Math_AbsI(y - touches[i].begY) > Display_ScaleY(5);
 }
 
 void Input_UpdateTouch(long id, int x, int y) {
 	int i;
 	for (i = 0; i < Pointers_Count; i++) {
-		if (touchIds[i] != id) continue;
+		if (touches[i].id != id) continue;
 		
-		if (Input_RawMode && (touchTypes[i] & TOUCH_TYPE_CAMERA)) {
+		if (Input_RawMode && (touches[i].type & TOUCH_TYPE_CAMERA)) {
+			/* If the pointer hasn't been locked to gui or block yet, moving a bit */
+			/* should cause the pointer to get locked to camera movement. */
+			if (touches[i].type == TOUCH_TYPE_ALL && MovedFromBeg(i, x, y)) {
+				/* Allow a little bit of leeway because though, because devices */
+				/* might still report a few pixels of movement depending on how */
+				/* user is holding the finger down on the toiuch surface */
+				touches[i].type = TOUCH_TYPE_CAMERA;
+			}
 			Event_RaiseMove(&PointerEvents.RawMoved, i, x - Pointers[i].x, y - Pointers[i].y);
 		}
 		Pointer_SetPosition(i, x, y);
@@ -91,15 +109,14 @@ void Input_UpdateTouch(long id, int x, int y) {
 void Input_RemoveTouch(long id, int x, int y) {
 	int i;
 	for (i = 0; i < Pointers_Count; i++) {
-		if (touchIds[i] != id) continue;
+		if (touches[i].id != id) continue;
 		Pointer_SetPosition(i, x, y);
 		Pointer_SetPressed(i, false);
 
-		/* found the touch, remove it*/
+		/* found the touch, remove it */
 		for (; i < Pointers_Count - 1; i++) {
-			touchIds[i]   = touchIds[i + 1];
-			touchTypes[i] = touchTypes[i + 1];
-			Pointers[i]   = Pointers[i + 1];
+			touches[i]  = touches[i + 1];
+			Pointers[i] = Pointers[i + 1];
 		}
 
 		Pointers_Count--;
@@ -201,7 +218,7 @@ cc_bool Input_RawMode, Input_TouchMode;
 
 void Pointer_SetPressed(int idx, cc_bool pressed) {
 #ifdef CC_BUILD_TOUCH
-	if (Input_TouchMode && !(touchTypes[idx] & TOUCH_TYPE_GUI)) return;
+	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;
 #endif
 
 	if (pressed) {
@@ -223,7 +240,7 @@ void Pointer_SetPosition(int idx, int x, int y) {
 	Pointers[idx].x = x; Pointers[idx].y = y;
 	
 #ifdef CC_BUILD_TOUCH
-	if (Input_TouchMode && !(touchTypes[idx] & TOUCH_TYPE_GUI)) return;
+	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;
 #endif
 	Event_RaiseMove(&PointerEvents.Moved, idx, deltaX, deltaY);
 }
@@ -928,7 +945,7 @@ static void HandlePointerDown(void* obj, int idx) {
 		s = Gui_Screens[i];
 #ifdef CC_BUILD_TOUCH
 		if (s->VTABLE->HandlesPointerDown(s, 1 << idx, x, y)) {
-			touchTypes[idx] = TOUCH_TYPE_GUI; return;
+			touches[idx].type = TOUCH_TYPE_GUI; return;
 		}
 #else
 		if (s->VTABLE->HandlesPointerDown(s, 1 << idx, x, y)) return;
