@@ -80,7 +80,7 @@ void Input_AddTouch(long id, int x, int y) {
 	Pointer_SetPressed(i, true);
 }
 
-static bool MovedFromBeg(int i, int x, int y) {
+static cc_bool MovedFromBeg(int i, int x, int y) {
 	return Math_AbsI(x - touches[i].begX) > Display_ScaleX(5) ||
 		   Math_AbsI(y - touches[i].begY) > Display_ScaleY(5);
 }

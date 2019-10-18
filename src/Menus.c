@@ -884,7 +884,6 @@ static void EditHotkeyScreen_Init(void* screen) {
 	Menu_Back(s,  5, &s->cancel, Menu_SwitchHotkeys);
 	Window_OpenKeyboard();
 }
-static void SaveLevelScreen_Free(void* s) { Window_CloseKeyboard(); }
 
 static const struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
 	EditHotkeyScreen_Init,    EditHotkeyScreen_Render, Menu_CloseKeyboard,
