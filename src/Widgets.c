@@ -119,7 +119,8 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	back.X = w->x; back.Width  = w->width;
 	back.Y = w->y; back.Height = w->height;
 
-	if (w->width == 400) {
+	/* TODO: Does this 400 need to take DPI into account */
+	if (w->width >= 400) {
 		/* Button can be drawn normally */
 		Texture_Render(&back);
 	} else {
