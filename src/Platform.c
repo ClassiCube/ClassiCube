@@ -1712,16 +1712,29 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return i;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(void) {
+cc_result Platform_SetDefaultCurrentDirectory(const String *requestedDirectory) {
 	TCHAR path[NATIVE_STR_LEN + 1];
 	int i, len;
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
+	cc_result res;
 
-	/* Get rid of filename at end of directory */
-	for (i = len - 1; i >= 0; i--, len--) {
-		if (path[i] == '/' || path[i] == '\\') break;
+	if (requestedDirectory != NULL) {
+		String_CopyToRaw(path, NATIVE_STR_LEN + 1, requestedDirectory);
+		len = requestedDirectory->length;
+	} else {
+		res = Process_RawGetExePath(path, &len);
+		if (res) return res;
+
+		/* Get rid of filename at end of directory */
+		for (i = len - 1; i >= 0; i--, len--) {
+			if (path[i] == '/' || path[i] == '\\') break;
+		}
+
 	}
+
+	if (len > NATIVE_STR_LEN) {
+		len = NATIVE_STR_LEN;
+	}
+
 
 	path[len] = '\0';
 	return SetCurrentDirectory(path) ? 0 : GetLastError();
@@ -1736,8 +1749,21 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return count;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(void) { 
-	return chdir("/classicube") == -1 ? errno : 0;
+cc_result Platform_SetDefaultCurrentDirectory(const String *requestedDirectory) {
+	int len;
+	char path[NATIVE_STR_LEN];
+
+	if (requestedDirectory != NULL) {
+		String_CopyToRaw(path, NATIVE_STR_LEN, requestedDirectory);
+		len = requestedDirectory->length;
+		if (len >= NATIVE_STR_LEN) {
+			len = NATIVE_STR_LEN - 1;
+		}
+		path[len] = '\0';
+		return chdir(path) == -1 ? errno : 0;
+	} else {
+		return chdir("/classicube") == -1 ? errno : 0;
+	}
 }
 #elif defined CC_BUILD_ANDROID
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
@@ -1745,14 +1771,26 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(void) {
-	String dir; char dirBuffer[FILENAME_SIZE + 1];
-	String_InitArray_NT(dir, dirBuffer);
+cc_result Platform_SetDefaultCurrentDirectory(const String *requestedDirectory) {
+	String dir; char dirBuffer[FILENAME_SIZE + 1]; int len;
 
-	JavaCall_Void_String("getExternalAppDir", &dir);
-	dir.buffer[dir.length] = '\0';
-	Platform_Log1("EXTERNAL DIR: %s|", &dir);
-	return chdir(dir.buffer) == -1 ? errno : 0;
+	if (requestedDirectory != NULL) {
+		String_CopyToRaw(dirBuffer, FILENAME_SIZE + 1, requestedDirectory);
+		len = requestedDirectory->length;
+		if (len > FILENAME_SIZE) {
+			len = FILENAME_SIZE;
+		}
+		dirBuffer[len] = '\0';
+
+		return chdir(dirBuffer) == -1 ? errno : 0;
+	} else {
+		String_InitArray_NT(dir, dirBuffer);
+
+		JavaCall_Void_String("getExternalAppDir", &dir);
+		dir.buffer[dir.length] = '\0';
+		Platform_Log1("EXTERNAL DIR: %s|", &dir);
+		return chdir(dir.buffer) == -1 ? errno : 0;
+	}
 }
 #elif defined CC_BUILD_POSIX
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
@@ -1772,29 +1810,40 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return count;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(void) {
+cc_result Platform_SetDefaultCurrentDirectory(const String *requestedDirectory) {
 	char path[NATIVE_STR_LEN];
 	int i, len = 0;
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
+	cc_result res;
 
-	/* get rid of filename at end of directory */
-	for (i = len - 1; i >= 0; i--, len--) {
-		if (path[i] == '/') break;
-	}
+	if (requestedDirectory != NULL) {
+		String_CopyToRaw(path, NATIVE_STR_LEN, requestedDirectory);
+		len = requestedDirectory->length;
+	} else {
+		res = Process_RawGetExePath(path, &len);
+		if (res) return res;
 
-#ifdef CC_BUILD_OSX
-	static const String bundle = String_FromConst(".app/Contents/MacOS/");
-	String raw = String_Init(path, len, 0);	
-
-	if (String_CaselessEnds(&raw, &bundle)) {
-		len -= bundle.length;
-
+		/* get rid of filename at end of directory */
 		for (i = len - 1; i >= 0; i--, len--) {
 			if (path[i] == '/') break;
 		}
-	}
+
+#ifdef CC_BUILD_OSX
+		static const String bundle = String_FromConst(".app/Contents/MacOS/");
+		String raw = String_Init(path, len, 0);
+
+		if (String_CaselessEnds(&raw, &bundle)) {
+			len -= bundle.length;
+
+			for (i = len - 1; i >= 0; i--, len--) {
+				if (path[i] == '/') break;
+			}
+		}
 #endif
+	}
+
+	if (len >= NATIVE_STR_LEN) {
+		len = NATIVE_STR_LEN - 1;
+	}
 
 	path[len] = '\0';
 	return chdir(path) == -1 ? errno : 0;

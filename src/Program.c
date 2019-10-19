@@ -7,6 +7,7 @@
 #include "Utils.h"
 #include "Launcher.h"
 #include "Server.h"
+#include "Args.h"
 
 /*#define CC_TEST_VORBIS*/
 #ifdef CC_TEST_VORBIS
@@ -99,51 +100,58 @@ int Program_Run(int argc, char** argv) {
 #else
 static int Program_Run(int argc, char** argv) {
 #endif
-	String args[GAME_MAX_CMDARGS];
 	cc_uint8 ip[4];
 	cc_uint16 port;
+	String hashSubStringContainer;
 
-	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 #ifdef _MSC_VER
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	//String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565");
-	//String rawArgs = String_FromConst("UnknownShadow200"); 
-	//argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4);
+	//String rawArgs = String_FromConst("-u UnknownShadow200 -s fffff -a 127.0.0.1 -p 25565");
+	//String rawArgs = String_FromConst("-u UnknownShadow200");
+	//Args_SetCustomArgs(&rawArgs);
 #endif
 
-	if (argsCount == 0) {
+	if (!Args_HasEnoughArgs()) {
+		ExitMissingArgs(Args_GetArgsCount(), Args_GetRawArgs());
+		return 1;
+	}
+
+
+	if (Args_HasNoArguments()) {
 #ifdef CC_BUILD_WEB
 		String_AppendConst(&Game_Username, "WebTest!");
 		RunGame();
 #else
 		Launcher_Run();
 #endif
-	} else if (argsCount == 1) {
 #ifndef CC_BUILD_WEB
+	} else if (Args_OnlyHasHash()) {
 		/* :hash to auto join server with the given hash */
-		if (args[0].buffer[0] == ':') {
-			args[0] = String_UNSAFE_SubstringAt(&args[0], 1);
-			String_Copy(&Game_Hash, &args[0]);
+		const String* hash = Args_GetHash();
+		if (hash->buffer[0] == ':') {
+			hashSubStringContainer = String_UNSAFE_SubstringAt(hash, 1);
+			String_Copy(&Game_Hash, &hashSubStringContainer);
 			Launcher_Run();
 			return 0;
-		}
-#endif
-		String_Copy(&Game_Username, &args[0]);
-		RunGame();
-	} else if (argsCount < 4) {
-		ExitMissingArgs(argsCount, args);
-		return 1;
-	} else {
-		String_Copy(&Game_Username, &args[0]);
-		String_Copy(&Game_Mppass,   &args[1]);
-		String_Copy(&Server.IP,     &args[2]);
-
-		if (!Utils_ParseIP(&args[2], ip)) {
-			ExitInvalidArg("Invalid IP", &args[2]);
+		} else {
+			ExitInvalidArg("Hash must begin with a colon", hash);
 			return 1;
 		}
-		if (!Convert_ParseUInt16(&args[3], &port)) {
-			ExitInvalidArg("Invalid port", &args[3]);
+#endif
+	} else if (Args_OnlyHasUsername()) {
+		String_Copy(&Game_Username, Args_GetUsername());
+		RunGame();
+	} else {
+		String_Copy(&Game_Username, Args_GetUsername());
+		String_Copy(&Game_Mppass, Args_GetMPPass());
+		String_Copy(&Server.IP, Args_GetIP());
+
+		if (!Utils_ParseIP(Args_GetIP(), ip)) {
+			ExitInvalidArg("Invalid IP", Args_GetIP());
+			return 1;
+		}
+		if (!Convert_ParseUInt16(Args_GetPort(), &port)) {
+			ExitInvalidArg("Invalid port", Args_GetPort());
 			return 1;
 		}
 		Server.Port = port;
@@ -168,8 +176,18 @@ int main(int argc, char** argv) {
 	Logger_Hook();
 	Platform_Init();
 	Window_Init();
-	
-	res = Platform_SetDefaultCurrentDirectory();
+	Args_Init(argc, argv);
+
+	if (Args_RequestedSpecificDirectory()) {
+
+
+
+	} else {
+
+		res = Platform_SetDefaultCurrentDirectory();
+
+	}
+
 	if (res) Logger_Warn(res, "setting current directory");
 #ifdef CC_TEST_VORBIS
 	main_imdct();

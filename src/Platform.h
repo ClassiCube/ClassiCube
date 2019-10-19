@@ -41,7 +41,7 @@ void Platform_Init(void);
 /* Frees the platform specific state. */
 void Platform_Free(void);
 /* Sets the appropriate default current/working directory. */
-cc_result Platform_SetDefaultCurrentDirectory(void);
+cc_result Platform_SetDefaultCurrentDirectory(const String *requestedDirectory);
 /* Gets the command line arguments passed to the program. */
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args);
 
