@@ -22,7 +22,7 @@ cc_bool Screen_TPointer(void* s, int id, int x, int y);
 cc_bool Screen_TPointerMove(void* s, int id, int x, int y);
 
 void InventoryScreen_Show(void);
-void StatusScreen_Show(void);
+void HUDScreen_Show(void);
 void LoadingScreen_Show(const String* title, const String* message);
 void GeneratingScreen_Show(void);
 void ChatScreen_Show(void);

@@ -24,30 +24,6 @@
 #define CHAT_MAX_BOTTOMRIGHT Array_Elems(Chat_BottomRight)
 #define CHAT_MAX_CLIENTSTATUS Array_Elems(Chat_ClientStatus)
 
-struct ChatScreen {
-	Screen_Layout
-	struct HotbarWidget hotbar;
-	/* player list state */
-	struct PlayerListWidget playerList;
-	struct FontDesc playerFont;
-	cc_bool showingList;
-	/* chat state */
-	float chatAcc;
-	cc_bool suppressNextPress;
-	int chatIndex;
-	int lastDownloadStatus;
-	struct FontDesc chatFont, announcementFont;
-	struct TextWidget announcement;
-	struct ChatInputWidget input;
-	struct TextGroupWidget status, bottomRight, chat, clientStatus;
-	struct SpecialInputWidget altText;
-
-	struct Texture statusTextures[CHAT_MAX_STATUS];
-	struct Texture bottomRightTextures[CHAT_MAX_BOTTOMRIGHT];
-	struct Texture clientStatusTextures[CHAT_MAX_CLIENTSTATUS];
-	struct Texture chatTextures[TEXTGROUPWIDGET_MAX_LINES];
-};
-
 cc_bool Screen_FKey(void* s, int key)             { return false; }
 cc_bool Screen_FKeyPress(void* s, char keyChar)   { return false; }
 cc_bool Screen_FMouseScroll(void* s, float delta) { return false; }
@@ -70,159 +46,6 @@ CC_NOINLINE static cc_bool IsOnlyHudActive(void) {
 		if (s->grabsInput && s != Gui_Chat) return false;
 	}
 	return true;
-}
-
-
-/*########################################################################################################################*
-*-----------------------------------------------------InventoryScreen-----------------------------------------------------*
-*#########################################################################################################################*/
-static struct InventoryScreen {
-	Screen_Layout
-	struct FontDesc font;
-	struct TableWidget table;
-	cc_bool releasedInv, deferredSelect;
-} InventoryScreen_Instance;
-
-static void InventoryScreen_OnBlockChanged(void* screen) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	TableWidget_OnInventoryChanged(&s->table);
-}
-
-static void InventoryScreen_ContextLost(void* screen) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Font_Free(&s->font);
-	Elem_TryFree(&s->table);
-}
-
-static void InventoryScreen_ContextRecreated(void* screen) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
-	TableWidget_Recreate(&s->table);
-}
-
-static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
-	struct TableWidget* table = &s->table;
-	TableWidget_SetBlockTo(table, Inventory_SelectedBlock);
-	TableWidget_Recreate(table);
-
-	s->deferredSelect = false;
-	/* User is holding invalid block */
-	if (table->selectedIndex == -1) {
-		TableWidget_MakeDescTex(table, Inventory_SelectedBlock);
-	}
-}
-
-static void InventoryScreen_Init(void* screen) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	
-	TableWidget_Create(&s->table);
-	s->table.font         = &s->font;
-	s->table.blocksPerRow = Game_PureClassic ? 9 : 10;
-	TableWidget_RecreateBlocks(&s->table);
-
-	/* Can't immediately move to selected here, because cursor grabbed  */
-	/* status might be toggled after InventoryScreen_Init() is called. */
-	/* That causes the cursor to be moved back to the middle of the window. */
-	s->deferredSelect = true;
-
-	Event_RegisterVoid(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
-	Event_RegisterVoid(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
-}
-
-static void InventoryScreen_Render(void* screen, double delta) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	if (s->deferredSelect) InventoryScreen_MoveToSelected(s);
-	Elem_Render(&s->table, delta);
-}
-
-static void InventoryScreen_OnResize(void* screen) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Widget_Reposition(&s->table);
-}
-
-static void InventoryScreen_Free(void* screen) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Event_UnregisterVoid(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
-	Event_UnregisterVoid(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
-}
-
-static cc_bool InventoryScreen_KeyDown(void* screen, Key key) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	struct TableWidget* table = &s->table;
-
-	if (key == KeyBinds[KEYBIND_INVENTORY] && s->releasedInv) {
-		Gui_Remove((struct Screen*)s);
-	} else if (key == KEY_ENTER && table->selectedIndex != -1) {
-		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
-		Gui_Remove((struct Screen*)s);
-	} else if (Elem_HandlesKeyDown(table, key)) {
-	} else {
-		struct ChatScreen* hud = (struct ChatScreen*)Gui_Chat;
-		return Elem_HandlesKeyDown(&hud->hotbar, key);
-	}
-	return true;
-}
-
-static cc_bool InventoryScreen_KeyUp(void* screen, Key key) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	struct ChatScreen* hud;
-
-	if (key == KeyBinds[KEYBIND_INVENTORY]) {
-		s->releasedInv = true; return true;
-	}
-
-	hud = (struct ChatScreen*)Gui_Chat;
-	return Elem_HandlesKeyUp(&hud->hotbar, key);
-}
-
-static cc_bool InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	struct TableWidget* table = &s->table;
-	struct ChatScreen* hud    = (struct ChatScreen*)Gui_Chat;
-	cc_bool handled, hotbar;
-
-	if (table->scroll.draggingId == id) return true;
-	if (Elem_HandlesPointerDown(&hud->hotbar, id, x, y)) return true;
-	handled = Elem_HandlesPointerDown(table, id, x, y);
-
-	if (!handled || table->pendingClose) {
-		hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
-		if (!hotbar) Gui_Remove(screen);
-	}
-	return true;
-}
-
-static cc_bool InventoryScreen_PointerUp(void* screen, int id, int x, int y) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	return Elem_HandlesPointerUp(&s->table, id, x, y);
-}
-
-static cc_bool InventoryScreen_PointerMove(void* screen, int id, int x, int y) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	return Elem_HandlesPointerMove(&s->table, id, x, y);
-}
-
-static cc_bool InventoryScreen_MouseScroll(void* screen, float delta) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-
-	cc_bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
-	if (hotbar) return false;
-	return Elem_HandlesMouseScroll(&s->table, delta);
-}
-
-static const struct ScreenVTABLE InventoryScreen_VTABLE = {
-	InventoryScreen_Init,        InventoryScreen_Render,    InventoryScreen_Free,
-	InventoryScreen_KeyDown,     InventoryScreen_KeyUp,     Screen_TKeyPress,
-	InventoryScreen_PointerDown, InventoryScreen_PointerUp, InventoryScreen_PointerMove, InventoryScreen_MouseScroll,
-	InventoryScreen_OnResize,  InventoryScreen_ContextLost, InventoryScreen_ContextRecreated
-};
-void InventoryScreen_Show(void) {
-	struct InventoryScreen* s = &InventoryScreen_Instance;
-	s->grabsInput = true;
-	s->closable   = true;
-
-	s->VTABLE = &InventoryScreen_VTABLE;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_INVENTORY);
 }
 
 
@@ -416,243 +239,31 @@ void HUDScreen_Show(void) {
 
 
 /*########################################################################################################################*
-*------------------------------------------------------LoadingScreen------------------------------------------------------*
-*#########################################################################################################################*/
-static struct LoadingScreen {
-	Screen_Layout
-	struct FontDesc font;
-	float progress;
-	
-	struct TextWidget title, message;
-	String titleStr, messageStr;
-	const char* lastState;
-
-	char _titleBuffer[STRING_SIZE];
-	char _messageBuffer[STRING_SIZE];
-} LoadingScreen_Instance;
-
-static void LoadingScreen_SetTitle(struct LoadingScreen* s) {
-	TextWidget_Set(&s->title, &s->titleStr, &s->font);
-}
-static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
-	TextWidget_Set(&s->message, &s->messageStr, &s->font);
-}
-
-static void LoadingScreen_MapLoading(void* screen, float progress) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	s->progress = progress;
-}
-
-static void LoadingScreen_OnResize(void* screen) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	if (!s->title.VTABLE) return;
-	Widget_Reposition(&s->title);
-	Widget_Reposition(&s->message);
-}
-
-static void LoadingScreen_ContextLost(void* screen) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	Font_Free(&s->font);
-	if (!s->title.VTABLE) return;
-
-	Elem_Free(&s->title);
-	Elem_Free(&s->message);
-}
-
-static void LoadingScreen_ContextRecreated(void* screen) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
-	LoadingScreen_SetTitle(s);
-	LoadingScreen_SetMessage(s);
-}
-
-static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int count, int atlasIndex, cc_bool* bound) {
-	if (!(*bound)) {
-		*bound = true;
-		Gfx_BindTexture(Atlas1D.TexIds[atlasIndex]);
-	}
-
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
-	/* TODO: Do we need to use a separate VB here? */
-	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
-}
-
-#define LOADING_TILE_SIZE 64
-static void LoadingScreen_DrawBackground(void) {
-	VertexP3fT2fC4b vertices[144];
-	VertexP3fT2fC4b* ptr = vertices;
-	PackedCol col = PackedCol_Make(64, 64, 64, 255);
-
-	struct Texture tex;
-	TextureLoc loc;
-	int count = 0, atlasIndex, y;
-	cc_bool bound = false;
-
-	loc    = Block_Tex(BLOCK_DIRT, FACE_YMAX);
-	tex.ID = GFX_NULL;
-	Tex_SetRect(tex, 0,0, Window_Width,LOADING_TILE_SIZE);
-	tex.uv    = Atlas1D_TexRec(loc, 1, &atlasIndex);
-	tex.uv.U2 = (float)Window_Width / LOADING_TILE_SIZE;
-	
-	for (y = 0; y < Window_Height; y += LOADING_TILE_SIZE) {
-		tex.Y = y;
-		Gfx_Make2DQuad(&tex, col, &ptr);
-		count += 4;
-
-		if (count < Array_Elems(vertices)) continue;
-		LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
-		count = 0;
-		ptr = vertices;
-	}
-
-	if (!count) return;
-	LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
-}
-
-static void LoadingScreen_Init(void* screen) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-
-	TextWidget_Make(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
-	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
-
-	Gfx_SetFog(false);
-	Event_RegisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
-}
-
-#define PROG_BAR_WIDTH 200
-#define PROG_BAR_HEIGHT 4
-static void LoadingScreen_Render(void* screen, double delta) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	PackedCol backCol = PackedCol_Make(128, 128, 128, 255);
-	PackedCol progCol = PackedCol_Make(128, 255, 128, 255);
-	int progWidth;
-	int x, y;
-
-	Gfx_SetTexturing(true);
-	LoadingScreen_DrawBackground();
-
-	Elem_Render(&s->title,   delta);
-	Elem_Render(&s->message, delta);
-	Gfx_SetTexturing(false);
-
-	x = Gui_CalcPos(ANCHOR_CENTRE,  0, PROG_BAR_WIDTH,  Window_Width);
-	y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, Window_Height);
-	progWidth = (int)(PROG_BAR_WIDTH * s->progress);
-
-	Gfx_Draw2DFlat(x, y, PROG_BAR_WIDTH, PROG_BAR_HEIGHT, backCol);
-	Gfx_Draw2DFlat(x, y, progWidth,      PROG_BAR_HEIGHT, progCol);
-}
-
-static void LoadingScreen_Free(void* screen) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	Event_UnregisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
-}
-
-CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const String* message) {
-	struct LoadingScreen* s = &LoadingScreen_Instance;
-	s->lastState = NULL;
-	s->progress  = 0.0f;
-
-	String_InitArray(s->titleStr,   s->_titleBuffer);
-	String_AppendString(&s->titleStr,   title);
-	String_InitArray(s->messageStr, s->_messageBuffer);
-	String_AppendString(&s->messageStr, message);
-	
-	s->grabsInput  = true;
-	s->blocksWorld = true;
-	Gui_Replace((struct Screen*)s, 
-		Game_ClassicMode ? GUI_PRIORITY_OLDLOADING : GUI_PRIORITY_LOADING);
-}
-
-static const struct ScreenVTABLE LoadingScreen_VTABLE = {
-	LoadingScreen_Init, LoadingScreen_Render, LoadingScreen_Free,
-	Screen_TKey,        Screen_TKey,          Screen_TKeyPress,
-	Screen_TPointer,    Screen_TPointer,      Screen_TPointerMove, Screen_TMouseScroll,
-	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
-};
-void LoadingScreen_Show(const String* title, const String* message) {
-	LoadingScreen_Instance.VTABLE = &LoadingScreen_VTABLE;
-	LoadingScreen_ShowCommon(title, message);
-}
-struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_Instance;
-
-
-/*########################################################################################################################*
-*--------------------------------------------------GeneratingMapScreen----------------------------------------------------*
-*#########################################################################################################################*/
-static void GeneratingScreen_Init(void* screen) {
-	Gen_Done = false;
-	LoadingScreen_Init(screen);
-	Event_RaiseVoid(&WorldEvents.NewMap);
-
-	Gen_Blocks = (BlockRaw*)Mem_TryAlloc(World.Volume, 1);
-	if (!Gen_Blocks) {
-		Window_ShowDialog("Out of memory", "Not enough free memory to generate a map that large.\nTry a smaller size.");
-		Gen_Done = true;
-	} else if (Gen_Vanilla) {
-		Thread_Start(NotchyGen_Generate, true);
-	} else {
-		Thread_Start(FlatgrassGen_Generate, true);
-	}
-}
-
-static void GeneratingScreen_EndGeneration(void) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct LocationUpdate update;
-	float x, z;
-
-	Gui_Remove(LoadingScreen_UNSAFE_RawPointer);
-	Gen_Done = false;
-
-	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
-	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
-	Gen_Blocks = NULL;
-
-	x = (World.Width / 2) + 0.5f; z = (World.Length / 2) + 0.5f;
-	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
-
-	LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
-	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-
-	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
-	Event_RaiseVoid(&WorldEvents.MapLoaded);
-}
-
-static void GeneratingScreen_Render(void* screen, double delta) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	const volatile char* state;
-
-	LoadingScreen_Render(s, delta);
-	if (Gen_Done) { GeneratingScreen_EndGeneration(); return; }
-
-	state       = Gen_CurrentState;
-	s->progress = Gen_CurrentProgress;
-	if (state == s->lastState) return;
-
-	s->messageStr.length = 0;
-	String_AppendConst(&s->messageStr, (const char*)state);
-	LoadingScreen_SetMessage(s);
-}
-
-static const struct ScreenVTABLE GeneratingScreen_VTABLE = {
-	GeneratingScreen_Init, GeneratingScreen_Render, LoadingScreen_Free,
-	Screen_TKey,           Screen_TKey,             Screen_TKeyPress,
-	Screen_TPointer,       Screen_TPointer,         Screen_FPointerMove, Screen_TMouseScroll,
-	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
-};
-void GeneratingScreen_Show(void) {
-	static const String title   = String_FromConst("Generating level");
-	static const String message = String_FromConst("Generating..");
-
-	LoadingScreen_Instance.VTABLE = &GeneratingScreen_VTABLE;
-	LoadingScreen_ShowCommon(&title, &message);
-}
-
-
-/*########################################################################################################################*
 *--------------------------------------------------------ChatScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static struct ChatScreen ChatScreen_Instance;
+static struct ChatScreen {
+	Screen_Layout
+	struct HotbarWidget hotbar;
+	/* player list state */
+	struct PlayerListWidget playerList;
+	struct FontDesc playerFont;
+	cc_bool showingList;
+	/* chat state */
+	float chatAcc;
+	cc_bool suppressNextPress;
+	int chatIndex;
+	int lastDownloadStatus;
+	struct FontDesc chatFont, announcementFont;
+	struct TextWidget announcement;
+	struct ChatInputWidget input;
+	struct TextGroupWidget status, bottomRight, chat, clientStatus;
+	struct SpecialInputWidget altText;
+
+	struct Texture statusTextures[CHAT_MAX_STATUS];
+	struct Texture bottomRightTextures[CHAT_MAX_BOTTOMRIGHT];
+	struct Texture clientStatusTextures[CHAT_MAX_CLIENTSTATUS];
+	struct Texture chatTextures[TEXTGROUPWIDGET_MAX_LINES];
+} ChatScreen_Instance;
 #define CH_EXTENT 16
 
 static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
@@ -1242,6 +853,393 @@ void ChatScreen_SetChatlines(int lines) {
 
 struct Widget* ChatScreen_GetHotbar(void) {
 	return (struct Widget*)&ChatScreen_Instance.hotbar;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------InventoryScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+static struct InventoryScreen {
+	Screen_Layout
+	struct FontDesc font;
+	struct TableWidget table;
+	cc_bool releasedInv, deferredSelect;
+} InventoryScreen_Instance;
+
+static void InventoryScreen_OnBlockChanged(void* screen) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	TableWidget_OnInventoryChanged(&s->table);
+}
+
+static void InventoryScreen_ContextLost(void* screen) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	Font_Free(&s->font);
+	Elem_TryFree(&s->table);
+}
+
+static void InventoryScreen_ContextRecreated(void* screen) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
+	TableWidget_Recreate(&s->table);
+}
+
+static void InventoryScreen_MoveToSelected(struct InventoryScreen* s) {
+	struct TableWidget* table = &s->table;
+	TableWidget_SetBlockTo(table, Inventory_SelectedBlock);
+	TableWidget_Recreate(table);
+
+	s->deferredSelect = false;
+	/* User is holding invalid block */
+	if (table->selectedIndex == -1) {
+		TableWidget_MakeDescTex(table, Inventory_SelectedBlock);
+	}
+}
+
+static void InventoryScreen_Init(void* screen) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	
+	TableWidget_Create(&s->table);
+	s->table.font         = &s->font;
+	s->table.blocksPerRow = Game_PureClassic ? 9 : 10;
+	TableWidget_RecreateBlocks(&s->table);
+
+	/* Can't immediately move to selected here, because cursor grabbed  */
+	/* status might be toggled after InventoryScreen_Init() is called. */
+	/* That causes the cursor to be moved back to the middle of the window. */
+	s->deferredSelect = true;
+
+	Event_RegisterVoid(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
+	Event_RegisterVoid(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
+}
+
+static void InventoryScreen_Render(void* screen, double delta) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	if (s->deferredSelect) InventoryScreen_MoveToSelected(s);
+	Elem_Render(&s->table, delta);
+}
+
+static void InventoryScreen_OnResize(void* screen) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	Widget_Reposition(&s->table);
+}
+
+static void InventoryScreen_Free(void* screen) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	Event_UnregisterVoid(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
+	Event_UnregisterVoid(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
+}
+
+static cc_bool InventoryScreen_KeyDown(void* screen, Key key) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	struct TableWidget* table = &s->table;
+
+	if (key == KeyBinds[KEYBIND_INVENTORY] && s->releasedInv) {
+		Gui_Remove((struct Screen*)s);
+	} else if (key == KEY_ENTER && table->selectedIndex != -1) {
+		Inventory_SetSelectedBlock(table->blocks[table->selectedIndex]);
+		Gui_Remove((struct Screen*)s);
+	} else if (Elem_HandlesKeyDown(table, key)) {
+	} else {
+		struct ChatScreen* hud = (struct ChatScreen*)Gui_Chat;
+		return Elem_HandlesKeyDown(&hud->hotbar, key);
+	}
+	return true;
+}
+
+static cc_bool InventoryScreen_KeyUp(void* screen, Key key) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	struct ChatScreen* hud;
+
+	if (key == KeyBinds[KEYBIND_INVENTORY]) {
+		s->releasedInv = true; return true;
+	}
+
+	hud = (struct ChatScreen*)Gui_Chat;
+	return Elem_HandlesKeyUp(&hud->hotbar, key);
+}
+
+static cc_bool InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	struct TableWidget* table = &s->table;
+	struct ChatScreen* hud    = (struct ChatScreen*)Gui_Chat;
+	cc_bool handled, hotbar;
+
+	if (table->scroll.draggingId == id) return true;
+	if (Elem_HandlesPointerDown(&hud->hotbar, id, x, y)) return true;
+	handled = Elem_HandlesPointerDown(table, id, x, y);
+
+	if (!handled || table->pendingClose) {
+		hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
+		if (!hotbar) Gui_Remove(screen);
+	}
+	return true;
+}
+
+static cc_bool InventoryScreen_PointerUp(void* screen, int id, int x, int y) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	return Elem_HandlesPointerUp(&s->table, id, x, y);
+}
+
+static cc_bool InventoryScreen_PointerMove(void* screen, int id, int x, int y) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	return Elem_HandlesPointerMove(&s->table, id, x, y);
+}
+
+static cc_bool InventoryScreen_MouseScroll(void* screen, float delta) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+
+	cc_bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
+	if (hotbar) return false;
+	return Elem_HandlesMouseScroll(&s->table, delta);
+}
+
+static const struct ScreenVTABLE InventoryScreen_VTABLE = {
+	InventoryScreen_Init,        InventoryScreen_Render,    InventoryScreen_Free,
+	InventoryScreen_KeyDown,     InventoryScreen_KeyUp,     Screen_TKeyPress,
+	InventoryScreen_PointerDown, InventoryScreen_PointerUp, InventoryScreen_PointerMove, InventoryScreen_MouseScroll,
+	InventoryScreen_OnResize,  InventoryScreen_ContextLost, InventoryScreen_ContextRecreated
+};
+void InventoryScreen_Show(void) {
+	struct InventoryScreen* s = &InventoryScreen_Instance;
+	s->grabsInput = true;
+	s->closable   = true;
+
+	s->VTABLE = &InventoryScreen_VTABLE;
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_INVENTORY);
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------LoadingScreen------------------------------------------------------*
+*#########################################################################################################################*/
+static struct LoadingScreen {
+	Screen_Layout
+	struct FontDesc font;
+	float progress;
+	
+	struct TextWidget title, message;
+	String titleStr, messageStr;
+	const char* lastState;
+
+	char _titleBuffer[STRING_SIZE];
+	char _messageBuffer[STRING_SIZE];
+} LoadingScreen_Instance;
+
+static void LoadingScreen_SetTitle(struct LoadingScreen* s) {
+	TextWidget_Set(&s->title, &s->titleStr, &s->font);
+}
+static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
+	TextWidget_Set(&s->message, &s->messageStr, &s->font);
+}
+
+static void LoadingScreen_MapLoading(void* screen, float progress) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	s->progress = progress;
+}
+
+static void LoadingScreen_OnResize(void* screen) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	if (!s->title.VTABLE) return;
+	Widget_Reposition(&s->title);
+	Widget_Reposition(&s->message);
+}
+
+static void LoadingScreen_ContextLost(void* screen) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	Font_Free(&s->font);
+	if (!s->title.VTABLE) return;
+
+	Elem_Free(&s->title);
+	Elem_Free(&s->message);
+}
+
+static void LoadingScreen_ContextRecreated(void* screen) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
+	LoadingScreen_SetTitle(s);
+	LoadingScreen_SetMessage(s);
+}
+
+static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int count, int atlasIndex, cc_bool* bound) {
+	if (!(*bound)) {
+		*bound = true;
+		Gfx_BindTexture(Atlas1D.TexIds[atlasIndex]);
+	}
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	/* TODO: Do we need to use a separate VB here? */
+	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
+}
+
+#define LOADING_TILE_SIZE 64
+static void LoadingScreen_DrawBackground(void) {
+	VertexP3fT2fC4b vertices[144];
+	VertexP3fT2fC4b* ptr = vertices;
+	PackedCol col = PackedCol_Make(64, 64, 64, 255);
+
+	struct Texture tex;
+	TextureLoc loc;
+	int count = 0, atlasIndex, y;
+	cc_bool bound = false;
+
+	loc    = Block_Tex(BLOCK_DIRT, FACE_YMAX);
+	tex.ID = GFX_NULL;
+	Tex_SetRect(tex, 0,0, Window_Width,LOADING_TILE_SIZE);
+	tex.uv    = Atlas1D_TexRec(loc, 1, &atlasIndex);
+	tex.uv.U2 = (float)Window_Width / LOADING_TILE_SIZE;
+	
+	for (y = 0; y < Window_Height; y += LOADING_TILE_SIZE) {
+		tex.Y = y;
+		Gfx_Make2DQuad(&tex, col, &ptr);
+		count += 4;
+
+		if (count < Array_Elems(vertices)) continue;
+		LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
+		count = 0;
+		ptr = vertices;
+	}
+
+	if (!count) return;
+	LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
+}
+
+static void LoadingScreen_Init(void* screen) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+
+	TextWidget_Make(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
+	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
+
+	Gfx_SetFog(false);
+	Event_RegisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
+}
+
+#define PROG_BAR_WIDTH 200
+#define PROG_BAR_HEIGHT 4
+static void LoadingScreen_Render(void* screen, double delta) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	PackedCol backCol = PackedCol_Make(128, 128, 128, 255);
+	PackedCol progCol = PackedCol_Make(128, 255, 128, 255);
+	int progWidth;
+	int x, y;
+
+	Gfx_SetTexturing(true);
+	LoadingScreen_DrawBackground();
+
+	Elem_Render(&s->title,   delta);
+	Elem_Render(&s->message, delta);
+	Gfx_SetTexturing(false);
+
+	x = Gui_CalcPos(ANCHOR_CENTRE,  0, PROG_BAR_WIDTH,  Window_Width);
+	y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, Window_Height);
+	progWidth = (int)(PROG_BAR_WIDTH * s->progress);
+
+	Gfx_Draw2DFlat(x, y, PROG_BAR_WIDTH, PROG_BAR_HEIGHT, backCol);
+	Gfx_Draw2DFlat(x, y, progWidth,      PROG_BAR_HEIGHT, progCol);
+}
+
+static void LoadingScreen_Free(void* screen) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	Event_UnregisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
+}
+
+CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const String* message) {
+	struct LoadingScreen* s = &LoadingScreen_Instance;
+	s->lastState = NULL;
+	s->progress  = 0.0f;
+
+	String_InitArray(s->titleStr,   s->_titleBuffer);
+	String_AppendString(&s->titleStr,   title);
+	String_InitArray(s->messageStr, s->_messageBuffer);
+	String_AppendString(&s->messageStr, message);
+	
+	s->grabsInput  = true;
+	s->blocksWorld = true;
+	Gui_Replace((struct Screen*)s, 
+		Game_ClassicMode ? GUI_PRIORITY_OLDLOADING : GUI_PRIORITY_LOADING);
+}
+
+static const struct ScreenVTABLE LoadingScreen_VTABLE = {
+	LoadingScreen_Init, LoadingScreen_Render, LoadingScreen_Free,
+	Screen_TKey,        Screen_TKey,          Screen_TKeyPress,
+	Screen_TPointer,    Screen_TPointer,      Screen_TPointerMove, Screen_TMouseScroll,
+	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
+};
+void LoadingScreen_Show(const String* title, const String* message) {
+	LoadingScreen_Instance.VTABLE = &LoadingScreen_VTABLE;
+	LoadingScreen_ShowCommon(title, message);
+}
+struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_Instance;
+
+
+/*########################################################################################################################*
+*--------------------------------------------------GeneratingMapScreen----------------------------------------------------*
+*#########################################################################################################################*/
+static void GeneratingScreen_Init(void* screen) {
+	Gen_Done = false;
+	LoadingScreen_Init(screen);
+	Event_RaiseVoid(&WorldEvents.NewMap);
+
+	Gen_Blocks = (BlockRaw*)Mem_TryAlloc(World.Volume, 1);
+	if (!Gen_Blocks) {
+		Window_ShowDialog("Out of memory", "Not enough free memory to generate a map that large.\nTry a smaller size.");
+		Gen_Done = true;
+	} else if (Gen_Vanilla) {
+		Thread_Start(NotchyGen_Generate, true);
+	} else {
+		Thread_Start(FlatgrassGen_Generate, true);
+	}
+}
+
+static void GeneratingScreen_EndGeneration(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocationUpdate update;
+	float x, z;
+
+	Gui_Remove(LoadingScreen_UNSAFE_RawPointer);
+	Gen_Done = false;
+
+	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
+	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
+	Gen_Blocks = NULL;
+
+	x = (World.Width / 2) + 0.5f; z = (World.Length / 2) + 0.5f;
+	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
+
+	LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
+	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+
+	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
+	Event_RaiseVoid(&WorldEvents.MapLoaded);
+}
+
+static void GeneratingScreen_Render(void* screen, double delta) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	const volatile char* state;
+
+	LoadingScreen_Render(s, delta);
+	if (Gen_Done) { GeneratingScreen_EndGeneration(); return; }
+
+	state       = Gen_CurrentState;
+	s->progress = Gen_CurrentProgress;
+	if (state == s->lastState) return;
+
+	s->messageStr.length = 0;
+	String_AppendConst(&s->messageStr, (const char*)state);
+	LoadingScreen_SetMessage(s);
+}
+
+static const struct ScreenVTABLE GeneratingScreen_VTABLE = {
+	GeneratingScreen_Init, GeneratingScreen_Render, LoadingScreen_Free,
+	Screen_TKey,           Screen_TKey,             Screen_TKeyPress,
+	Screen_TPointer,       Screen_TPointer,         Screen_FPointerMove, Screen_TMouseScroll,
+	LoadingScreen_OnResize, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
+};
+void GeneratingScreen_Show(void) {
+	static const String title   = String_FromConst("Generating level");
+	static const String message = String_FromConst("Generating..");
+
+	LoadingScreen_Instance.VTABLE = &GeneratingScreen_VTABLE;
+	LoadingScreen_ShowCommon(&title, &message);
 }
 
 

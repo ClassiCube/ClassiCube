@@ -82,7 +82,7 @@ cc_bool Gui_ContainsPointers(int x, int y, int width, int height) {
 }
 
 void Gui_ShowDefault(void) {
-	StatusScreen_Show();
+	HUDScreen_Show();
 	ChatScreen_Show();
 #ifdef CC_BUILD_TOUCH
 	TouchScreen_Show();
