@@ -2805,49 +2805,63 @@ static EM_BOOL Window_MouseButton(int type, const EmscriptenMouseEvent* ev, void
 	return true;
 }
 
+/* input coordinates are CSS pixels, remap to internal pixels */
+static void RescaleXY(int srcX, int srcY, int* dstX, int* dstY) {
+	double css_width, css_height;
+	emscripten_get_element_css_size(NULL, &css_width, &css_height);
+
+	*dstX = (int)(srcX * Window_Width  / css_width);
+	*dstY = (int)(srcY * Window_Height / css_height);
+}
+
 static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
+	int x, y;
 	/* Set before position change, in case mouse buttons changed when outside window */
 	Input_SetPressed(KEY_LMOUSE, (ev->buttons & 0x01) != 0);
 	Input_SetPressed(KEY_RMOUSE, (ev->buttons & 0x02) != 0);
 	Input_SetPressed(KEY_MMOUSE, (ev->buttons & 0x04) != 0);
 
-	Pointer_SetPosition(0, Display_ScaleX(ev->canvasX), Display_ScaleY(ev->canvasY));
+	RescaleXY(ev->canvasX, ev->canvasY, &x, &y);
+	Pointer_SetPosition(0, x, y);
 	if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, ev->movementX, ev->movementY);
 	return true;
 }
 
 static EM_BOOL Window_TouchStart(int type, const EmscriptenTouchEvent* ev, void* data) {
 	const EmscriptenTouchPoint* t;
-	int i;
+	int i, x, y;
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
 		
-		Input_AddTouch(t->identifier, Display_ScaleX(t->canvasX), Display_ScaleY(t->canvasY));
+		RescaleXY(t->canvasX, t->canvasY, &x, &y);
+		Input_AddTouch(t->identifier, x, y);
 	}
 	return true;
 }
 
 static EM_BOOL Window_TouchMove(int type, const EmscriptenTouchEvent* ev, void* data) {
 	const EmscriptenTouchPoint* t;
-	int i;
+	int i, x, y;
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
 		
-		Input_UpdateTouch(t->identifier, Display_ScaleX(t->canvasX), Display_ScaleY(t->canvasY));
+		RescaleXY(t->canvasX, t->canvasY, &x, &y);
+		Input_UpdateTouch(t->identifier, x, y);
 	}
 	return true;
 }
 
 static EM_BOOL Window_TouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) {
 	const EmscriptenTouchPoint* t;
-	int i;
+	int i, x, y;
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
 		
-		Input_RemoveTouch(t->identifier, Display_ScaleX(t->canvasX), Display_ScaleY(t->canvasY));
+		RescaleXY(t->canvasX, t->canvasY, &x, &y);
+		Input_RemoveTouch(t->identifier, x, y);
 	}
 	return true;
 }
@@ -3028,7 +3042,7 @@ void Window_Init(void) {
 	Display_Bounds.Height = EM_ASM_INT_V({ return screen.height; });
 	Display_BitsPerPixel  = 24;
 
-	Display_DpiX = EM_ASM_DOUBLE_V({ return window.devicePixelRatio || 1.0; });
+	Display_DpiX = emscripten_get_device_pixel_ratio();
 	Display_DpiY = Display_DpiX;
 
 	/* copy text, but only if user isn't selecting something else on the webpage */
