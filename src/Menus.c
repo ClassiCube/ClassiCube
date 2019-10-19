@@ -2504,7 +2504,7 @@ static void GuiOptionsScreen_SetChatScale(const String* v) { GuiOptionsScreen_Se
 static void GuiOptionsScreen_GetChatlines(String* v) { String_AppendInt(v, Gui_Chatlines); }
 static void GuiOptionsScreen_SetChatlines(const String* v) {
 	Gui_Chatlines = Menu_Int(v);
-	HUDScreen_SetChatlines(Gui_Chatlines);
+	ChatScreen_SetChatlines(Gui_Chatlines);
 	Options_Set(OPT_CHATLINES, v);
 }
 
@@ -3049,7 +3049,7 @@ static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 
 static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
-	if (Gui_ClickableChat) HUDScreen_AppendInput(&s->url);
+	if (Gui_ClickableChat) ChatScreen_AppendInput(&s->url);
 	Gui_Remove((struct Screen*)s);
 }
 

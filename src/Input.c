@@ -900,7 +900,7 @@ static void HandleHotkeyDown(Key key) {
 	if (!hkey->StaysOpen) {
 		Chat_Send(&text, false);
 	} else if (!Gui_GetInputGrab()) {
-		HUDScreen_OpenInput(&text);
+		ChatScreen_OpenInput(&text);
 	}
 }
 
@@ -923,7 +923,7 @@ static void HandleMouseWheel(void* obj, float delta) {
 	if (!hotbar && Camera.Active->Zoom(delta)) return;
 	if (InputHandler_DoFovZoom(delta) || !Inventory.CanChangeSelected) return;
 
-	widget = HUDScreen_GetHotbar();
+	widget = ChatScreen_GetHotbar();
 	Elem_HandlesMouseScroll(widget, delta);
 }
 

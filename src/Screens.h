@@ -25,7 +25,7 @@ void InventoryScreen_Show(void);
 void StatusScreen_Show(void);
 void LoadingScreen_Show(const String* title, const String* message);
 void GeneratingScreen_Show(void);
-void HUDScreen_Show(void);
+void ChatScreen_Show(void);
 void DisconnectScreen_Show(const String* title, const String* message);
 #ifdef CC_BUILD_TOUCH
 void TouchScreen_Show(void);
@@ -34,9 +34,9 @@ void TouchScreen_Show(void);
 /* Raw pointer to loading screen. DO NOT USE THIS. Use LoadingScreen_MakeInstance() */
 extern struct Screen* LoadingScreen_UNSAFE_RawPointer;
 /* Opens chat input for the HUD with the given initial text. */
-void HUDScreen_OpenInput(const String* text);
+void ChatScreen_OpenInput(const String* text);
 /* Appends text to the chat input in the HUD. */
-void HUDScreen_AppendInput(const String* text);
-void HUDScreen_SetChatlines(int lines);
-struct Widget* HUDScreen_GetHotbar(void);
+void ChatScreen_AppendInput(const String* text);
+void ChatScreen_SetChatlines(int lines);
+struct Widget* ChatScreen_GetHotbar(void);
 #endif

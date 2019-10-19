@@ -17,8 +17,8 @@ int     Gui_Chatlines;
 cc_bool Gui_ClickableChat, Gui_TabAutocomplete, Gui_ShowFPS;
 
 GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
-struct Screen* Gui_Status;
 struct Screen* Gui_HUD;
+struct Screen* Gui_Chat;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 int Gui_ScreensCount;
 static cc_uint8 priorities[GUI_MAX_SCREENS];
@@ -83,7 +83,7 @@ cc_bool Gui_ContainsPointers(int x, int y, int width, int height) {
 
 void Gui_ShowDefault(void) {
 	StatusScreen_Show();
-	HUDScreen_Show();
+	ChatScreen_Show();
 #ifdef CC_BUILD_TOUCH
 	TouchScreen_Show();
 #endif
@@ -173,7 +173,7 @@ void Gui_RefreshAll(void) {
 	Gui_ContextRecreated(NULL);
 }
 
-void Gui_RefreshHud(void) { Gui_Refresh(Gui_HUD); }
+void Gui_RefreshHud(void) { Gui_Refresh(Gui_Chat); }
 void Gui_Refresh(struct Screen* s) {
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->ContextRecreated(s);
