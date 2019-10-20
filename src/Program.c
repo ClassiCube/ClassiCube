@@ -97,13 +97,12 @@ CC_NOINLINE static void ExitMissingArgs(int argsCount, const String* args) {
 #ifdef CC_BUILD_ANDROID
 int Program_Run(int argc, char** argv) {
 #else
-static int Program_Run(int argc, char** argv) {
+static int Program_Run(int argsCount, String args[GAME_MAX_CMDARGS]) {
 #endif
-	String args[GAME_MAX_CMDARGS];
 	cc_uint8 ip[4];
 	cc_uint16 port;
 
-	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
+
 #ifdef _MSC_VER
 	/* NOTE: Make sure to comment this out before pushing a commit */
 	//String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565");
@@ -164,12 +163,26 @@ int main_real(int argc, char** argv) {
 int main(int argc, char** argv) {
 #endif
 	static char ipBuffer[STRING_SIZE];
+	String args[GAME_MAX_CMDARGS];
+	int argsCount;
 	cc_result res;
 	Logger_Hook();
 	Platform_Init();
 	Window_Init();
-	
+
+	argsCount = Platform_GetCommandLineArgs(argc, argv, args);
+
+#if defined CC_BUILD_POSIX
+	if (argsCount > 0 && args[argsCount - 1].length > 2 && args[argsCount - 1].buffer[0] == '-' && args[argsCount - 1].buffer[1] == 'd') {
+		res = Platform_SetDefaultCurrentDirectory(&args[--argsCount]);
+	} else {
+		res = Platform_SetDefaultCurrentDirectory(NULL);
+	}
+#else
 	res = Platform_SetDefaultCurrentDirectory();
+#endif
+
+
 	if (res) Logger_Warn(res, "setting current directory");
 #ifdef CC_TEST_VORBIS
 	main_imdct();
@@ -183,7 +196,7 @@ int main(int argc, char** argv) {
 	Utils_EnsureDirectory("plugins");
 	Options_Load();
 
-	return Program_Run(argc, argv);
+	return Program_Run(argsCount, args);
 }
 
 /* ClassiCube is just a native library on android, */
