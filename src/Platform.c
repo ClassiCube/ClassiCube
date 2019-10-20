@@ -1716,7 +1716,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return i;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(void) {
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	TCHAR path[NATIVE_STR_LEN + 1];
 	int i, len;
 	cc_result res = Process_RawGetExePath(path, &len);
@@ -1740,7 +1740,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return count;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(void) { 
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return chdir("/classicube") == -1 ? errno : 0;
 }
 #elif defined CC_BUILD_ANDROID
@@ -1749,7 +1749,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(void) {
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	String dir; char dirBuffer[FILENAME_SIZE + 1];
 	String_InitArray_NT(dir, dirBuffer);
 
