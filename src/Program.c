@@ -164,6 +164,9 @@ int main(int argc, char** argv) {
 #endif
 	static char ipBuffer[STRING_SIZE];
 	String args[GAME_MAX_CMDARGS];
+#if defined CC_BUILD_POSIX
+	String pathString;
+#endif
 	int argsCount;
 	cc_result res;
 	Logger_Hook();
@@ -173,8 +176,15 @@ int main(int argc, char** argv) {
 	argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 
 #if defined CC_BUILD_POSIX
-	if (argsCount > 0 && args[argsCount - 1].length > 2 && args[argsCount - 1].buffer[0] == '-' && args[argsCount - 1].buffer[1] == 'd') {
-		res = Platform_SetDefaultCurrentDirectory(&args[--argsCount]);
+	if (argsCount > 0 && args[argsCount - 1].length > 1 && args[argsCount - 1].buffer[0] == '-' && args[argsCount - 1].buffer[1] == 'd') {
+
+		pathString = String_UNSAFE_SubstringAt(&args[--argsCount], 2);
+
+		if (pathString.length > 0) {
+			res = Platform_SetDefaultCurrentDirectory(&pathString);
+		} else {
+			res = Platform_SetDefaultCurrentDirectory(NULL);
+		}
 	} else {
 		res = Platform_SetDefaultCurrentDirectory(NULL);
 	}
