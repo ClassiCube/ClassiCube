@@ -65,6 +65,7 @@ const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #define Socket__Error() errno
 #define NATIVE_STR_LEN 600
 
+static const char *Platform_DefaultDirectory = NULL;
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
@@ -1131,7 +1132,7 @@ static cc_result Process_RawGetExePath(char* path, int* len);
 cc_result Process_StartGame(const String* args) {
 	char path[NATIVE_STR_LEN], raw[NATIVE_STR_LEN];
 	int i, j, len = 0;
-	char* argv[15];
+	const char* argv[15];
 
 	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
@@ -1147,6 +1148,9 @@ cc_result Process_StartGame(const String* args) {
 		/* null terminate previous argument */
 		raw[i] = '\0';
 		argv[j++] = &raw[i + 1];
+	}
+	if (Platform_DefaultDirectory) {
+		argv[j++] = Platform_DefaultDirectory;
 	}
 	argv[j] = NULL;
 	return Process_RawStart(path, argv);
@@ -1768,13 +1772,32 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 #endif
 
 	count = min(argc, GAME_MAX_CMDARGS);
-	for (i = 0; i < count; i++) { args[i] = String_FromReadonly(argv[i]); }
+	for (i = 0; i < count; i++) {
+		if (strlen(argv[i]) > 1 && argv[i][0] == '-' && argv[i][1] == 'd') {
+			--count;
+			continue;
+		}
+		args[i] = String_FromReadonly(argv[i]);
+	}
 	return count;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(void) {
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	char path[NATIVE_STR_LEN];
 	int i, len = 0;
+
+	for (i = 1; i < argc; ++i) {
+		if (strlen(argv[i]) > 2 && argv[i][0] == '-' && argv[i][1] == 'd') {
+			Platform_DefaultDirectory = argv[i];
+			break;
+		}
+	}
+
+	if (Platform_DefaultDirectory) {
+		return chdir(Platform_DefaultDirectory + 2) == -1 ? errno : 0;
+	}
+
 	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 
