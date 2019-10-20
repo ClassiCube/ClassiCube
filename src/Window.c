@@ -1480,7 +1480,17 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 static void Window_DoShowDialog(const char* title, const char* msg) {
 	X11Window w = { 0 };
 	dpy = win_display;
-
+	
+	/* Failing to create a display means can't display a message box. */
+	/* However the user might have launched the game through terminal, */
+	/* so fallback to console instead of just dying from a segfault */
+	if (!dpy) {
+		Platform_LogConst("### MESSAGE ###");
+		Platform_LogConst(title);
+		Platform_LogConst(msg);
+		return;
+	}
+	
 	X11_MessageBox(title, msg, &w);
 	X11Window_Free(&w);
 	XFlush(dpy); /* flush so window disappears immediately */
