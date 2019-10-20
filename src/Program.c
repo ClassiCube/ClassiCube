@@ -84,7 +84,7 @@ CC_NOINLINE static void ExitMissingArgs(int argsCount, const String* args) {
 	int i;
 	String_InitArray(tmp, tmpBuffer);
 
-	String_AppendConst(&tmp, "Missing IP and/or port - ");
+	String_AppendConst(&tmp, "Missing IP and/or port. Or an incorrect number of arguments were passed - ");
 	for (i = 0; i < argsCount; i++) { 
 		String_AppendString(&tmp, &args[i]);
 		String_Append(&tmp, ' ');
@@ -176,16 +176,16 @@ int main(int argc, char** argv) {
 	Logger_Hook();
 	Platform_Init();
 	Window_Init();
-	Args_Init(argc, argv);
+
+	if (Args_Init(argc, argv) < 0) {
+		ExitMissingArgs(Args_GetArgsCount(), Args_GetRawArgs());
+		return 1;
+	}
 
 	if (Args_RequestedSpecificDirectory()) {
-
-
-
+		res = Platform_SetDefaultCurrentDirectory(Args_GetWorkingDir());
 	} else {
-
-		res = Platform_SetDefaultCurrentDirectory();
-
+		res = Platform_SetDefaultCurrentDirectory(NULL);
 	}
 
 	if (res) Logger_Warn(res, "setting current directory");

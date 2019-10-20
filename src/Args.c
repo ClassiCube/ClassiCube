@@ -38,6 +38,7 @@ void Args_Parse(int count, const String args[GAME_MAX_CMDARGS]) {
 		for (j = 0; j < ARGS_TYPE_COUNT; ++j) {
 			if (String_CaselessEqualsConst(&args[i], Args_ArgPrefixes[j])) {
 				Args_ArgCache[j] = args[++i];
+				break;
 			}
 		}
 	}

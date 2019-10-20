@@ -15,6 +15,7 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Logger.h"
+#include "Args.h"
 
 #ifndef CC_BUILD_WEB
 struct LScreen* Launcher_Screen;
@@ -568,8 +569,19 @@ cc_bool Launcher_StartGame(const String* user, const String* mppass, const Strin
 	}
 
 	String_InitArray(args, argsBuffer);
+	String_AppendConst(&args, "-u ");
 	String_AppendString(&args, user);
-	if (mppass->length) String_Format3(&args, " %s %s %s", mppass, ip, port);
+	if (mppass->length) {
+		if (Args_RequestedSpecificDirectory()) {
+			String_Format4(&args, " -s %s -a %s -p %s -d %s", mppass, ip, port, Args_GetWorkingDir());
+		} else {
+			String_Format3(&args, " -s %s -a %s -p %s", mppass, ip, port);
+		}
+	} else {
+		if (Args_RequestedSpecificDirectory()) {
+			String_Format1(&args, " -d %s", Args_GetWorkingDir());
+		}
+	}
 
 	res = Process_StartGame(&args);
 	if (res) { Logger_Warn(res, "starting game"); return false; }
