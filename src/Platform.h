@@ -42,7 +42,6 @@ void Platform_Init(void);
 void Platform_Free(void);
 /* Sets the appropriate default current/working directory. */
 #if defined CC_BUILD_POSIX
-extern const String *Platform_RequestedDirectory;
 cc_result Platform_SetDefaultCurrentDirectory(const String *requestedDirectory);
 #else
 cc_result Platform_SetDefaultCurrentDirectory(void);

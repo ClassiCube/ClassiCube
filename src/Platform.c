@@ -1772,13 +1772,10 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return count;
 }
 
-const String * Platform_RequestedDirectory = NULL;
-
 cc_result Platform_SetDefaultCurrentDirectory(const String *requestedDirectory) {
 	char path[NATIVE_STR_LEN];
 	int i, len = 0;
 	cc_result res;
-	Platform_RequestedDirectory = requestedDirectory;
 
 	if (requestedDirectory != NULL) {
 		String_CopyToRaw(path, NATIVE_STR_LEN, requestedDirectory);

@@ -571,12 +571,6 @@ cc_bool Launcher_StartGame(const String* user, const String* mppass, const Strin
 	String_AppendString(&args, user);
 	if (mppass->length) String_Format3(&args, " %s %s %s", mppass, ip, port);
 
-#if defined CC_BUILD_POSIX
-	if (Platform_RequestedDirectory) {
-		String_Format1(&args, " -d%s", Platform_RequestedDirectory);
-	}
-#endif
-
 	res = Process_StartGame(&args);
 	if (res) { Logger_Warn(res, "starting game"); return false; }
 
