@@ -1772,40 +1772,29 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 	return count;
 }
 
-cc_result Platform_SetDefaultCurrentDirectory(const String *requestedDirectory) {
+cc_result Platform_SetDefaultCurrentDirectory(void) {
 	char path[NATIVE_STR_LEN];
 	int i, len = 0;
-	cc_result res;
+	cc_result res = Process_RawGetExePath(path, &len);
+	if (res) return res;
 
-	if (requestedDirectory != NULL) {
-		String_CopyToRaw(path, NATIVE_STR_LEN, requestedDirectory);
-		len = requestedDirectory->length;
-	} else {
-		res = Process_RawGetExePath(path, &len);
-		if (res) return res;
+	/* get rid of filename at end of directory */
+	for (i = len - 1; i >= 0; i--, len--) {
+		if (path[i] == '/') break;
+	}
 
-		/* get rid of filename at end of directory */
+#ifdef CC_BUILD_OSX
+	static const String bundle = String_FromConst(".app/Contents/MacOS/");
+	String raw = String_Init(path, len, 0);	
+
+	if (String_CaselessEnds(&raw, &bundle)) {
+		len -= bundle.length;
+
 		for (i = len - 1; i >= 0; i--, len--) {
 			if (path[i] == '/') break;
 		}
-
-#ifdef CC_BUILD_OSX
-		static const String bundle = String_FromConst(".app/Contents/MacOS/");
-		String raw = String_Init(path, len, 0);
-
-		if (String_CaselessEnds(&raw, &bundle)) {
-			len -= bundle.length;
-
-			for (i = len - 1; i >= 0; i--, len--) {
-				if (path[i] == '/') break;
-			}
-		}
+	}
 #endif
-	}
-
-	if (len >= NATIVE_STR_LEN) {
-		len = NATIVE_STR_LEN - 1;
-	}
 
 	path[len] = '\0';
 	return chdir(path) == -1 ? errno : 0;
