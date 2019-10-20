@@ -41,7 +41,11 @@ void Platform_Init(void);
 /* Frees the platform specific state. */
 void Platform_Free(void);
 /* Sets the appropriate default current/working directory. */
+#if defined CC_BUILD_POSIX
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv);
+#else
 cc_result Platform_SetDefaultCurrentDirectory(void);
+#endif
 /* Gets the command line arguments passed to the program. */
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args);
 
