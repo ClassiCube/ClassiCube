@@ -1256,7 +1256,7 @@ static cc_bool Sounds_CheckSolid(BlockID b) {
 static void SoundComp_GetSound(struct LocalPlayer* p) {
 	struct AABB bounds;
 	Vec3 pos;
-	IVec3 feetPos;
+	IVec3 coords;
 	BlockID blockUnder;
 	float maxY;
 	cc_uint8 typeUnder, collideUnder;
@@ -1269,11 +1269,11 @@ static void SoundComp_GetSound(struct LocalPlayer* p) {
 	Entity_TouchesAny(&bounds, Sounds_CheckNonSolid);
 	if (sounds_type != SOUND_NONE) return;
 
-	/* then check block standing on */
+	/* then check block standing on (feet) */
 	pos = p->Interp.Next.Pos; pos.Y -= 0.01f;
-	IVec3_Floor(&feetPos, &pos);
-	blockUnder = World_SafeGetBlock_3I(feetPos);
-	maxY = feetPos.Y + Blocks.MaxBB[blockUnder].Y;
+	IVec3_Floor(&coords, &pos);
+	blockUnder = World_SafeGetBlock(coords.X, coords.Y, coords.Z);
+	maxY = coords.Y + Blocks.MaxBB[blockUnder].Y;
 
 	typeUnder    = Blocks.StepSounds[blockUnder];
 	collideUnder = Blocks.Collide[blockUnder];

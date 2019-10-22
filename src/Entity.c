@@ -939,13 +939,13 @@ static void LocalPlayer_DoRespawn(void) {
 
 	/* Spawn player at highest solid position to match vanilla Minecraft classic */
 	/* Only when player can noclip, since this can let you 'clip' to above solid blocks */
-	if (p->Hacks.CanNoclip && World_Contains(pos.X, pos.Y, pos.Z)) {
+	if (p->Hacks.CanNoclip) {
 		AABB_Make(&bb, &spawn, &p->Base.Size);
 		for (y = pos.Y; y <= World.Height; y++) {
 			spawnY = Respawn_HighestSolidY(&bb);
 
 			if (spawnY == RESPAWN_NOT_FOUND) {
-				block   = World_GetPhysicsBlock(pos.X, y, pos.Z);
+				block   = World_SafeGetBlock(pos.X, y, pos.Z);
 				height  = Blocks.Collide[block] == COLLIDE_SOLID ? Blocks.MaxBB[block].Y : 0.0f;
 				spawn.Y = y + height + ENTITY_ADJUSTMENT;
 				break;

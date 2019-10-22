@@ -74,7 +74,7 @@ BlockID World_GetPhysicsBlock(int x, int y, int z);
 void World_SetBlock(int x, int y, int z, BlockID block);
 /* If coordinates are outside the map, returns BLOCK_AIR. */
 /* Otherwise returns the block at the given coordinates. */
-BlockID World_SafeGetBlock_3I(IVec3 p);
+BlockID World_SafeGetBlock(int x, int y, int z);
 
 /* Whether the given coordinates lie inside the map. */
 static CC_INLINE cc_bool World_Contains(int x, int y, int z) {

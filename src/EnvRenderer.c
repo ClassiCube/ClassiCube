@@ -50,7 +50,7 @@ static void EnvRenderer_CalcFog(float* density, PackedCol* col) {
 	IVec3_Floor(&coords, &Camera.CurrentPos); /* coords = floor(camera_pos); */
 	IVec3_ToVec3(&pos, &coords);              /* pos = coords; */
 
-	block = World_SafeGetBlock_3I(coords);
+	block = World_SafeGetBlock(coords.X, coords.Y, coords.Z);
 	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
 	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 

@@ -106,8 +106,11 @@ enum GuiPriority {
 	GUI_PRIORITY_LOADING    =  5,
 };
 
-extern struct Screen* Gui_HUD;
-extern struct Screen* Gui_Chat;
+struct HUDScreen;
+struct ChatScreen;
+extern struct HUDScreen*  Gui_HUD;
+extern struct ChatScreen* Gui_Chat;
+
 #define GUI_MAX_SCREENS 10
 extern struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 extern int Gui_ScreensCount;
@@ -140,7 +143,7 @@ struct Screen* Gui_GetBlocksWorld(void);
 struct Screen* Gui_GetClosable(void);
 
 void Gui_RefreshAll(void);
-void Gui_RefreshHud(void);
+void Gui_RefreshChat(void);
 void Gui_Refresh(struct Screen* s);
 
 void Gui_RenderGui(double delta);

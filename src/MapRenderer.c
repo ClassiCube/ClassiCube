@@ -88,7 +88,7 @@ static void MapRenderer_CheckWeather(double delta) {
 	cc_bool outside;
 	IVec3_Floor(&pos, &Camera.CurrentPos);
 
-	block   = World_SafeGetBlock_3I(pos);
+	block   = World_SafeGetBlock(pos.X, pos.Y, pos.Z);
 	outside = pos.Y < 0 || !World_ContainsXZ(pos.X, pos.Z);
 	inTranslucent = Blocks.Draw[block] == DRAW_TRANSLUCENT || (pos.Y < Env.EdgeHeight && outside);
 

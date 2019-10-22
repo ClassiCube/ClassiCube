@@ -109,8 +109,8 @@ BlockID World_GetPhysicsBlock(int x, int y, int z) {
 	return World_GetBlock(x, y, z);
 }
 
-BlockID World_SafeGetBlock_3I(IVec3 p) {
-	return World_Contains(p.X, p.Y, p.Z) ? World_GetBlock(p.X, p.Y, p.Z) : BLOCK_AIR;
+BlockID World_SafeGetBlock(int x, int y, int z) {
+	return World_Contains(x, y, z) ? World_GetBlock(x, y, z) : BLOCK_AIR;
 }
 
 
@@ -250,7 +250,7 @@ float Respawn_HighestSolidY(struct AABB* bb) {
 		for (z = minZ; z <= maxZ; z++) { v.Z = (float)z;
 			for (x = minX; x <= maxX; x++) { v.X = (float)x;
 
-				block = World_GetPhysicsBlock(x, y, z);
+				block = World_SafeGetBlock(x, y, z);
 				Vec3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
 				Vec3_Add(&blockBB.Max, &v, &Blocks.MaxBB[block]);
 
