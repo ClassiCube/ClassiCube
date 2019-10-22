@@ -690,7 +690,7 @@ void TexturePack_ExtractZip_File(const String* filename) {
 	if (res) { Logger_Warn2(res, "closing", &path); }
 
 #ifdef CC_BUILD_WEB
-	Platform_SetDefaultCurrentDirectory();
+	Platform_SetDefaultCurrentDirectory(0, NULL);
 #endif
 }
 
