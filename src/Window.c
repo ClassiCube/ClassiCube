@@ -3192,6 +3192,8 @@ void Window_OpenKeyboard(void)  {
 		if (!elem) {
 			elem = document.createElement('textarea');
 			elem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; opacity:0.3; resize:none; pointer-events:none;');
+			elem.setAttribute('autocomplete', 'off');
+			elem.setAttribute('autocorrect',  'off');
 			elem.addEventListener("textInput", 
 				function(ev) {
 					for (var i = 0; i < ev.data.length; i++) {
@@ -3199,10 +3201,10 @@ void Window_OpenKeyboard(void)  {
 						ccall('Window_ProcessKeyChar', 'void', ['number'], [code]);
 					}
 				}, false);
-			window.cc_inputElem = elem;
-		}
 
-		document.body.appendChild(elem);
+			window.cc_inputElem = elem;
+			document.body.appendChild(elem);
+		}
 		elem.focus();
 		elem.click();
 	});
