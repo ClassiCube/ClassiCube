@@ -250,6 +250,10 @@ float Respawn_HighestSolidY(struct AABB* bb) {
 		for (z = minZ; z <= maxZ; z++) { v.Z = (float)z;
 			for (x = minX; x <= maxX; x++) { v.X = (float)x;
 
+				/* TODO: Maybe use how picking gets blocks, so the bedrock */
+				/* just below and just on borders of the map is treated as such */
+				/* Not sure if this is really necessary though, it seems to work */
+				/* just fine already when you're standing on the bottom of the map. */
 				block = World_SafeGetBlock(x, y, z);
 				Vec3_Add(&blockBB.Min, &v, &Blocks.MinBB[block]);
 				Vec3_Add(&blockBB.Max, &v, &Blocks.MaxBB[block]);

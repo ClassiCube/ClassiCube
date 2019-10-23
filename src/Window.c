@@ -2995,13 +2995,17 @@ static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* da
 		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK && key != KEY_SPACE);
 }
 
-static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
+/* reused for touch keyboard input down in Window_OpenKeyboard */
+EMSCRIPTEN_KEEPALIVE void Window_ProcessKeyChar(int charCode) {
 	char keyChar;
-	Window_CorrectFocus();
-
-	if (Convert_TryUnicodeToCP437(ev->charCode, &keyChar)) {
+	if (Convert_TryUnicodeToCP437(charCode, &keyChar)) {
 		Event_RaiseInt(&InputEvents.Press, keyChar);
 	}
+}
+
+static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
+	Window_CorrectFocus();
+	Window_ProcessKeyChar(ev->charCode);
 	return true;
 }
 
@@ -3188,6 +3192,13 @@ void Window_OpenKeyboard(void)  {
 		if (!elem) {
 			elem = document.createElement('textarea');
 			elem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; opacity:0.3; resize:none; pointer-events:none;');
+			elem.addEventListener("textInput", 
+				function(ev) {
+					for (var i = 0; i < ev.data.length; i++) {
+						var code = ev.data.charCodeAt(i);
+						ccall('Window_ProcessKeyChar', 'void', ['number'], [code]);
+					}
+				}, false);
 			window.cc_inputElem = elem;
 		}
 
@@ -3196,6 +3207,7 @@ void Window_OpenKeyboard(void)  {
 		elem.click();
 	});
 }
+
 void Window_CloseKeyboard(void) {
 	if (!Input_TouchMode) return;
 	Platform_LogConst("CLOSE SESAME");
