@@ -3184,6 +3184,11 @@ void Window_AllocFramebuffer(Bitmap* bmp) { }
 void Window_DrawFramebuffer(Rect2D r)     { }
 void Window_FreeFramebuffer(Bitmap* bmp)  { }
 
+EMSCRIPTEN_KEEPALIVE void SendFakeBackspace(void) { 
+	Input_SetPressed(KEY_BACKSPACE, true); 
+	Input_SetPressed(KEY_BACKSPACE, false);
+}
+
 void Window_OpenKeyboard(void)  {
 	if (!Input_TouchMode) return;
 	Platform_LogConst("OPEN SESAME");
@@ -3194,12 +3199,21 @@ void Window_OpenKeyboard(void)  {
 			elem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; opacity:0.3; resize:none; pointer-events:none;');
 			elem.setAttribute('autocomplete', 'off');
 			elem.setAttribute('autocorrect',  'off');
-			elem.addEventListener("textInput", 
+
+			var oldLen = 0|0;
+			elem.addEventListener("input", 
 				function(ev) {
-					for (var i = 0; i < ev.data.length; i++) {
-						var code = ev.data.charCodeAt(i);
-						ccall('Window_ProcessKeyChar', 'void', ['number'], [code]);
+					var str = ev.target.value;
+					if (str.length > oldLen) {
+						for (var i = oldLen; i < str.length; i++) {
+							ccall('Window_ProcessKeyChar', 'void', ['number'], [str.charCodeAt(i)]);
+						}
+					} else {
+						for (var i = str.length; i < oldLen; i++) {
+							ccall('SendFakeBackspace', 'void', [], []);
+						}
 					}
+					oldLen = str.length;
 				}, false);
 
 			window.cc_inputElem = elem;

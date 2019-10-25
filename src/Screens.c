@@ -828,7 +828,11 @@ void ChatScreen_Show(void) {
 
 void ChatScreen_OpenInput(const String* text) {
 	struct ChatScreen* s  = &ChatScreen_Instance;
+#ifdef CC_BUILD_TOUCH
+	s->suppressNextPress = !Input_TouchMode;
+#else
 	s->suppressNextPress = true;
+#endif
 	s->grabsInput        = true;
 	Camera_CheckFocus();
 	Window_OpenKeyboard();
