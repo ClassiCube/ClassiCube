@@ -1432,17 +1432,14 @@ static const struct TouchBindDesc {
 	const char* text;
 	cc_uint8 bind, width;
 	cc_int16 xOffset, yOffset;
-} touchDescs[11] = {
+} touchDescs[8] = {
 	{ "<",      KEYBIND_LEFT,       40, 150,  50 },
 	{ ">",      KEYBIND_RIGHT,      40,  10,  50 },
 	{ "^",      KEYBIND_FORWARD,    40,  80,  10 },
 	{ "\\/",    KEYBIND_BACK,       40,  80,  90 },
-	{ "Jump",   KEYBIND_JUMP,      100,  50,  50 },
-	{ "Chat",   KEYBIND_CHAT,      100,  50, 150 },
-	{ "Inv",    KEYBIND_INVENTORY, 100,  50, 190 },
-	{ "Speed",  KEYBIND_SPEED,     100,  50, 230 },
-	{ "Noclip", KEYBIND_NOCLIP,    100,  50, 270 },
-	{ "Fly",    KEYBIND_FLY,       100,  50, 310 },
+	{ "Jump",   KEYBIND_JUMP,      100,  50, 150 },
+	{ "Mode",   KEYBIND_COUNT,     100,  50, 190 },
+	{ "More",   KEYBIND_COUNT,     100,  50, 230 },
 	/* Chat labels */
 	{ "Send ",  KEYBIND_SEND_CHAT, 100,  50, 10 },
 };
@@ -1473,6 +1470,9 @@ CC_NOINLINE static void TouchScreen_Set(struct TouchScreen* s, int i, const char
 	s->binds[i] = bind;
 }
 
+static void TouchScreen_ModeClick(void* s, void* w) { Input_Placing = !Input_Placing; }
+static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreOverlay_Show(); }
+
 static void TouchScreen_ContextRecreated(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	const struct TouchBindDesc* desc;
@@ -1484,10 +1484,10 @@ static void TouchScreen_ContextRecreated(void* screen) {
 
 	switch (s->layout) {
 	case TOUCH_LAYOUT_FULL:
-		s->numButtons = 10;
+		s->numButtons = 7;
 		break;
 	case TOUCH_LAYOUT_CHAT:
-		offset        = 10;
+		offset        = 7;
 		s->numButtons = 1;
 		break;
 	}
@@ -1499,6 +1499,11 @@ static void TouchScreen_ContextRecreated(void* screen) {
 		ButtonWidget_SetConst(&s->buttons[i], desc->text, &s->font);
 		s->binds[i] = desc->bind;
 	}
+	
+	/* TODO: Mode should display 'Place' or 'Delete' */
+	/* TODO: this is pretty nasty hacky. rewrite! */
+	s->buttons[5].MenuClick = TouchScreen_ModeClick;
+	s->buttons[6].MenuClick = TouchScreen_MoreClick;
 }
 
 static void TouchScreen_Render(void* screen, double delta) {
@@ -1533,7 +1538,11 @@ static cc_bool TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	for (i = 0; i < s->numButtons; i++) {
 		if (!Widget_Contains(&s->buttons[i], x, y)) continue;
 
-		Input_SetPressed(KeyBinds[s->binds[i]], true);
+		if (s->binds[i] < KEYBIND_COUNT) {
+			Input_SetPressed(KeyBinds[s->binds[i]], true);
+		} else {
+			s->buttons[i].MenuClick(screen, &s->buttons[i]);
+		}
 		s->buttons[i].active |= id;
 		return true;
 	}
@@ -1548,7 +1557,9 @@ static cc_bool TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	for (i = 0; i < s->numButtons; i++) {
 		if (!(s->buttons[i].active & id)) continue;
 
-		Input_SetPressed(KeyBinds[s->binds[i]], false);
+		if (s->binds[i] < KEYBIND_COUNT) {
+			Input_SetPressed(KeyBinds[s->binds[i]], false);
+		}
 		s->buttons[i].active &= ~id;
 		return true;
 	}

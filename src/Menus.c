@@ -47,6 +47,21 @@ static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, Wid
 	((struct Screen*)s)->widgets[i] = (struct Widget*)btn;
 }
 
+static void Menu_Buttons(void* s, struct ButtonWidget* btns, int width, struct SimpleButtonDesc* descs, int count) {
+	int i;
+	for (i = 0; i < count; i++) {
+		Menu_Button(s, i, &btns[i], width, descs[i].onClick,
+			ANCHOR_CENTRE, ANCHOR_CENTRE,  descs[i].x, descs[i].y);
+	}
+}
+
+static void Menu_SetButtons(struct ButtonWidget* btns, struct FontDesc* font, struct SimpleButtonDesc* descs, int count) {
+	int i;
+	for (i = 0; i < count; i++) {
+		ButtonWidget_SetConst(&btns[i], descs[i].title, font);
+	}
+}
+
 static void Menu_Label(void* s, int i, struct TextWidget* label, int horAnchor, int verAnchor, int x, int y) {
 	TextWidget_Make(label, horAnchor, verAnchor, x, y);
 	((struct Screen*)s)->widgets[i] = (struct Widget*)label;
@@ -480,12 +495,9 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 static void PauseScreen_ContextRecreated(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	struct FontDesc titleFont;
-	int i;
 
 	Menu_MakeTitleFont(&titleFont);
-	for (i = 0; i < s->numWidgets - 2; i++) {
-		ButtonWidget_SetConst(&s->buttons[i], s->descs[i].title, &titleFont);
-	}
+	Menu_SetButtons(&s->buttons, &titleFont, s->descs, s->numWidgets - 2);
 
 	if (!Gui_ClassicMenu) ButtonWidget_SetConst(&s->quit, "Quit game", &titleFont);
 	ButtonWidget_SetConst(&s->back, "Back to game", &titleFont);
@@ -501,7 +513,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 static void PauseScreen_Init(void* screen) {
 	static struct Widget* widgets[8];
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	int i, count, width;
+	int count, width;
 
 	static const struct SimpleButtonDesc classicDescs[5] = {
 		{    0, -100, "Options...",             Menu_SwitchClassicOptions },
@@ -533,11 +545,7 @@ static void PauseScreen_Init(void* screen) {
 
 	s->numWidgets = count + 2;
 	width = Gui_ClassicMenu ? 400 : 300;
-
-	for (i = 0; i < count; i++) {
-		Menu_Button(s, i, &s->buttons[i], width, s->descs[i].onClick,
-			ANCHOR_CENTRE, ANCHOR_CENTRE, s->descs[i].x, s->descs[i].y);
-	}
+	Menu_Buttons(s, &s->buttons, width, s->descs, count);
 
 	Menu_Button(s, count,     &s->quit, 120, PauseScreen_Quit,
 			ANCHOR_MAX, ANCHOR_MAX, 5, 5);
@@ -613,13 +621,10 @@ static void OptionsGroupScreen_ContextLost(void* screen) {
 static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 	struct FontDesc titleFont;
-	int i;
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&s->textFont);
 
-	for (i = 0; i < Array_Elems(optsGroup_btns); i++) {
-		ButtonWidget_SetConst(&s->buttons[i], optsGroup_btns[i].title, &titleFont);
-	}
+	Menu_SetButtons(&s->buttons, &titleFont, optsGroup_btns, 7);
 	ButtonWidget_SetConst(&s->done, "Done", &titleFont);
 
 	if (s->selectedI >= 0) OptionsGroupScreen_UpdateDesc(s);
@@ -637,14 +642,9 @@ static void OptionsGroupScreen_Init(void* screen) {
 	s->numWidgets = Array_Elems(widgets);
 	s->selectedI  = -1;
 
-	for (i = 0; i < Array_Elems(optsGroup_btns); i++) {
-		Menu_Button(s, i, &s->buttons[i], 300, optsGroup_btns[i].onClick,
-						ANCHOR_CENTRE, ANCHOR_CENTRE, optsGroup_btns[i].x, optsGroup_btns[i].y);
-	}
-
-	Menu_Label(s, 7, &s->desc, 
-						ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
-	Menu_Back(s,  8, &s->done, Menu_SwitchPause);
+	Menu_Buttons(s,  &s->buttons, 300, optsGroup_btns, 7);
+	Menu_Label(s, 7, &s->desc,    ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
+	Menu_Back(s,  8, &s->done,    Menu_SwitchPause);
 }
 
 static void OptionsGroupScreen_Free(void* screen) {
@@ -3250,3 +3250,70 @@ void TexPackOverlay_Show(const String* url) {
 	Http_AsyncGetHeaders(url, true, &s->identifier);
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TEXPACK);
 }
+
+
+#ifdef CC_BUILD_TOUCH
+/*########################################################################################################################*
+*----------------------------------------------------UrlWarningOverlay----------------------------------------------------*
+*#########################################################################################################################*/
+static struct TouchMoreOverlay {
+	Screen_Layout
+	struct ButtonWidget buttons[6];
+} TouchMoreOverlay_Instance;
+
+static void TouchMore_Toggle(KeyBind bind) {
+	Key key = KeyBinds[bind];
+	Gui_Remove((struct Screen*)&TouchMoreOverlay_Instance);
+	Input_SetPressed(key, !Input_Pressed[key]);
+}
+
+static void TouchMore_Chat(void*   s, void* w) { TouchMore_Toggle(KEYBIND_CHAT); }
+static void TouchMore_Speed(void*  s, void* w) { TouchMore_Toggle(KEYBIND_SPEED); }
+static void TouchMore_Fly(void*    s, void* w) { TouchMore_Toggle(KEYBIND_FLY); }
+static void TouchMore_Inv(void*    s, void* w) { TouchMore_Toggle(KEYBIND_INVENTORY); }
+static void TouchMore_Screen(void* s, void* w) { TouchMore_Toggle(KEYBIND_FULLSCREEN); }
+static void TouchMore_Noclip(void* s, void* w) { TouchMore_Toggle(KEYBIND_NOCLIP); }
+
+static const struct SimpleButtonDesc touchOverlay_btns[6] = {
+	{ -160,  -50, "Chat",       TouchMore_Chat   },
+	{ -160,    0, "Speed",      TouchMore_Speed  },
+	{ -160,   50, "Fly",        TouchMore_Fly    },
+	{  160,  -50, "Inventory",  TouchMore_Inv    },
+	{  160,    0, "Fullscreen", TouchMore_Screen },
+	{  160,   50, "Noclip",     TouchMore_Noclip }
+};
+
+static void TouchMoreOverlay_ContextRecreated(void* screen) {
+	struct TouchMoreOverlay* s = (struct TouchMoreOverlay*)screen;
+	struct FontDesc titleFont;
+	Menu_MakeTitleFont(&titleFont);
+
+	Menu_SetButtons(&s->buttons, &titleFont, touchOverlay_btns, 6);
+	Font_Free(&titleFont);
+}
+
+static void TouchMoreOverlay_Init(void* screen) {
+	static struct Widget* widgets[6];
+	struct TouchMoreOverlay* s = (struct TouchMoreOverlay*)screen;
+	s->widgets    = widgets;
+	s->numWidgets = Array_Elems(widgets);
+
+	Menu_Buttons(s, &s->buttons, 300, touchOverlay_btns, 6);
+	/* TODO: Close button */
+}
+
+static const struct ScreenVTABLE TouchMoreOverlay_VTABLE = {
+	TouchMoreOverlay_Init, MenuScreen_Render, Menu_NullFunc,
+	Screen_TKey,           Screen_TKey,       Screen_TKeyPress,
+	Menu_PointerDown,      Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
+	Menu_OnResize,         Menu_ContextLost,  TouchMoreOverlay_ContextRecreated
+};
+void TouchMoreOverlay_Show(void) {
+	struct TouchMoreOverlay* s = &TouchMoreOverlay_Instance;
+	s->grabsInput = true;
+	s->closable   = true;
+	s->VTABLE     = &TouchMoreOverlay_VTABLE;
+
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TOUCHMORE);
+}
+#endif
