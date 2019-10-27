@@ -3258,7 +3258,7 @@ void TexPackOverlay_Show(const String* url) {
 *#########################################################################################################################*/
 static struct TouchMoreOverlay {
 	Screen_Layout
-	struct ButtonWidget buttons[6];
+	struct ButtonWidget buttons[8];
 } TouchMoreOverlay_Instance;
 
 static void TouchMore_Toggle(KeyBind bind) {
@@ -3274,13 +3274,25 @@ static void TouchMore_Inv(void*    s, void* w) { TouchMore_Toggle(KEYBIND_INVENT
 static void TouchMore_Screen(void* s, void* w) { TouchMore_Toggle(KEYBIND_FULLSCREEN); }
 static void TouchMore_Noclip(void* s, void* w) { TouchMore_Toggle(KEYBIND_NOCLIP); }
 
-static const struct SimpleButtonDesc touchOverlay_btns[6] = {
+static void TouchMore_Menu(void* s, void* w) {
+	Gui_Remove((struct Screen*)&TouchMoreOverlay_Instance);
+	PauseScreen_Show();
+}
+
+static void TouchMore_Fog(void* s, void* w) {
+	Input_SetPressed(KeyBinds[KEYBIND_FOG], true);
+	Input_SetPressed(KeyBinds[KEYBIND_FOG], false);
+}
+
+static const struct SimpleButtonDesc touchOverlay_btns[8] = {
 	{ -160,  -50, "Chat",       TouchMore_Chat   },
 	{ -160,    0, "Speed",      TouchMore_Speed  },
 	{ -160,   50, "Fly",        TouchMore_Fly    },
+	{ -160,  100, "Menu",       TouchMore_Menu   },
 	{  160,  -50, "Inventory",  TouchMore_Inv    },
 	{  160,    0, "Fullscreen", TouchMore_Screen },
-	{  160,   50, "Noclip",     TouchMore_Noclip }
+	{  160,   50, "Noclip",     TouchMore_Noclip },
+	{  160,  100, "Fog",        TouchMore_Fog    }
 };
 
 static void TouchMoreOverlay_ContextRecreated(void* screen) {
@@ -3288,17 +3300,17 @@ static void TouchMoreOverlay_ContextRecreated(void* screen) {
 	struct FontDesc titleFont;
 	Menu_MakeTitleFont(&titleFont);
 
-	Menu_SetButtons(&s->buttons, &titleFont, touchOverlay_btns, 6);
+	Menu_SetButtons(&s->buttons, &titleFont, touchOverlay_btns, 8);
 	Font_Free(&titleFont);
 }
 
 static void TouchMoreOverlay_Init(void* screen) {
-	static struct Widget* widgets[6];
+	static struct Widget* widgets[8];
 	struct TouchMoreOverlay* s = (struct TouchMoreOverlay*)screen;
 	s->widgets    = widgets;
 	s->numWidgets = Array_Elems(widgets);
 
-	Menu_Buttons(s, &s->buttons, 300, touchOverlay_btns, 6);
+	Menu_Buttons(s, &s->buttons, 300, touchOverlay_btns, 8);
 	/* TODO: Close button */
 }
 
