@@ -1047,14 +1047,6 @@ static void InputWidget_BackspaceKey(struct InputWidget* w) {
 		}
 		InputWidget_UpdateText(w);
 	} else if (w->text.length > 0 && w->caretPos != 0) {
-		int index = w->caretPos == -1 ? w->text.length - 1 : w->caretPos;
-		if (InputWidget_CheckCol(w, index - 1)) {
-			InputWidget_DeleteChar(w); /* backspace XYZ%e to XYZ */
-		} else if (InputWidget_CheckCol(w, index - 2)) {
-			InputWidget_DeleteChar(w); 
-			InputWidget_DeleteChar(w); /* backspace XYZ%eH to XYZ */
-		}
-
 		InputWidget_DeleteChar(w);
 		InputWidget_UpdateText(w);
 	}
