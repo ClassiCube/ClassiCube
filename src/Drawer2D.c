@@ -55,6 +55,8 @@ void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style) {
 	cc_result res;
 
 	if (Drawer2D_BitmappedText) {
+		/* TODO: Scale X and Y independently */
+		size = Display_ScaleY(size);
 		desc->handle = NULL;
 		desc->size   = size;
 		desc->style  = style;

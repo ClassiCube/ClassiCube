@@ -47,7 +47,7 @@ static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, Wid
 	((struct Screen*)s)->widgets[i] = (struct Widget*)btn;
 }
 
-static void Menu_Buttons(void* s, struct ButtonWidget* btns, int width, struct SimpleButtonDesc* descs, int count) {
+static void Menu_Buttons(void* s, struct ButtonWidget* btns, int width, const struct SimpleButtonDesc* descs, int count) {
 	int i;
 	for (i = 0; i < count; i++) {
 		Menu_Button(s, i, &btns[i], width, descs[i].onClick,
@@ -55,7 +55,7 @@ static void Menu_Buttons(void* s, struct ButtonWidget* btns, int width, struct S
 	}
 }
 
-static void Menu_SetButtons(struct ButtonWidget* btns, struct FontDesc* font, struct SimpleButtonDesc* descs, int count) {
+static void Menu_SetButtons(struct ButtonWidget* btns, struct FontDesc* font, const struct SimpleButtonDesc* descs, int count) {
 	int i;
 	for (i = 0; i < count; i++) {
 		ButtonWidget_SetConst(&btns[i], descs[i].title, font);
@@ -497,7 +497,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 	struct FontDesc titleFont;
 
 	Menu_MakeTitleFont(&titleFont);
-	Menu_SetButtons(&s->buttons, &titleFont, s->descs, s->numWidgets - 2);
+	Menu_SetButtons(s->buttons, &titleFont, s->descs, s->numWidgets - 2);
 
 	if (!Gui_ClassicMenu) ButtonWidget_SetConst(&s->quit, "Quit game", &titleFont);
 	ButtonWidget_SetConst(&s->back, "Back to game", &titleFont);
@@ -545,7 +545,7 @@ static void PauseScreen_Init(void* screen) {
 
 	s->numWidgets = count + 2;
 	width = Gui_ClassicMenu ? 400 : 300;
-	Menu_Buttons(s, &s->buttons, width, s->descs, count);
+	Menu_Buttons(s, s->buttons, width, s->descs, count);
 
 	Menu_Button(s, count,     &s->quit, 120, PauseScreen_Quit,
 			ANCHOR_MAX, ANCHOR_MAX, 5, 5);
@@ -624,7 +624,7 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&s->textFont);
 
-	Menu_SetButtons(&s->buttons, &titleFont, optsGroup_btns, 7);
+	Menu_SetButtons(s->buttons, &titleFont, optsGroup_btns, 7);
 	ButtonWidget_SetConst(&s->done, "Done", &titleFont);
 
 	if (s->selectedI >= 0) OptionsGroupScreen_UpdateDesc(s);
@@ -642,9 +642,9 @@ static void OptionsGroupScreen_Init(void* screen) {
 	s->numWidgets = Array_Elems(widgets);
 	s->selectedI  = -1;
 
-	Menu_Buttons(s,  &s->buttons, 300, optsGroup_btns, 7);
-	Menu_Label(s, 7, &s->desc,    ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
-	Menu_Back(s,  8, &s->done,    Menu_SwitchPause);
+	Menu_Buttons(s,  s->buttons, 300, optsGroup_btns, 7);
+	Menu_Label(s, 7, &s->desc,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
+	Menu_Back(s,  8, &s->done,   Menu_SwitchPause);
 }
 
 static void OptionsGroupScreen_Free(void* screen) {
@@ -3300,7 +3300,7 @@ static void TouchMoreOverlay_ContextRecreated(void* screen) {
 	struct FontDesc titleFont;
 	Menu_MakeTitleFont(&titleFont);
 
-	Menu_SetButtons(&s->buttons, &titleFont, touchOverlay_btns, 8);
+	Menu_SetButtons(s->buttons, &titleFont, touchOverlay_btns, 8);
 	Font_Free(&titleFont);
 }
 
@@ -3310,7 +3310,7 @@ static void TouchMoreOverlay_Init(void* screen) {
 	s->widgets    = widgets;
 	s->numWidgets = Array_Elems(widgets);
 
-	Menu_Buttons(s, &s->buttons, 300, touchOverlay_btns, 8);
+	Menu_Buttons(s, s->buttons, 300, touchOverlay_btns, 8);
 	/* TODO: Close button */
 }
 
