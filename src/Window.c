@@ -615,6 +615,7 @@ static void Window_InitRawMouse(void) {
 }
 
 void Window_OpenKeyboard(void)  { }
+void Window_SetKeyboardText(const String* text) { }
 void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void) {
@@ -1518,6 +1519,7 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 }
 
 void Window_OpenKeyboard(void)  { }
+void Window_SetKeyboardText(const String* text) { }
 void Window_CloseKeyboard(void) { }
 void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
 void Window_UpdateRawMouse(void)  { Window_DefaultUpdateRawMouse();  }
@@ -1788,6 +1790,7 @@ void Cursor_SetVisible(cc_bool visible) {
 }
 
 void Window_OpenKeyboard(void)  { }
+void Window_SetKeyboardText(const String* text) { }
 void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void) {
@@ -2711,12 +2714,9 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 	/* TODO: Do we still need to unlock it though? */
 }
 
-void Window_OpenKeyboard(void) { 
-	SDL_StartTextInput();
-}
-void Window_CloseKeyboard(void) {
-	SDL_StopTextInput();
-}
+void Window_OpenKeyboard(void)  { SDL_StartTextInput(); }
+void Window_SetKeyboardText(const String* text) { }
+void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
 
 void Window_EnableRawMouse(void) {
 	Window_RegrabMouse();
@@ -3224,9 +3224,19 @@ void Window_OpenKeyboard(void)  {
 	});
 }
 
+void Window_SetKeyboardText(const String* text) {
+	char str[600];
+	if (!Input_TouchMode) return;
+	Platform_ConvertString(str, text);
+
+	EM_ASM_({
+		if (!window.cc_inputElem) return;
+		window.cc_inputElem.value = UTF8ToString($0);
+	}, str);
+}
+
 void Window_CloseKeyboard(void) {
 	if (!Input_TouchMode) return;
-	Platform_LogConst("CLOSE SESAME");
 	EM_ASM({
 		if (!window.cc_inputElem) return;
 		document.body.removeChild(window.cc_inputElem);
@@ -3630,6 +3640,7 @@ void Window_OpenKeyboard(void) {
 	JavaGetCurrentEnv(env);
 	JavaCallVoid(env, "openKeyboard", "()V", NULL);
 }
+void Window_SetKeyboardText(const String* text) { }
 
 void Window_CloseKeyboard(void) {
 	JNIEnv* env;

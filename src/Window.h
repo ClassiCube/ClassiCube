@@ -126,6 +126,12 @@ void Window_FreeFramebuffer(Bitmap* bmp);
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */
 void Window_OpenKeyboard(void);
+/* Sets the text used for keyboard input. */
+/* NOTE: This is only used for mobile on-screen keyboard input with the web client, */
+/* because it is backed by a HTML input, rather than true keyboard input events. */
+/* As such, this is necessary to ensure the HTML input is consistent with */
+/* whatever text input widget is actually being displayed on screen. */
+void Window_SetKeyboardText(const String* text);
 /* Hides/Removes the previously displayed on-screen keyboard. */
 void Window_CloseKeyboard(void);
 

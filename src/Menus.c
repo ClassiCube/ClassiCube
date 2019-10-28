@@ -883,6 +883,7 @@ static void EditHotkeyScreen_Init(void* screen) {
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
 	Menu_Back(s,  5, &s->cancel, Menu_SwitchHotkeys);
 	Window_OpenKeyboard();
+	Window_SetKeyboardText(&text);
 }
 
 static const struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
@@ -1001,6 +1002,7 @@ static cc_bool GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
 	if (s->selected) s->selected->base.showCaret = false;
 	s->selected = (struct MenuInputWidget*)&s->inputs[i];
 	s->selected->base.showCaret = true;
+	Window_SetKeyboardText(&s->inputs[i].base.text);
 	return true;
 }
 
@@ -2100,6 +2102,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 
 	MenuOptionsScreen_RedrawInput(s);
 	Window_OpenKeyboard();
+	Window_SetKeyboardText(&value);
 }
 
 static void MenuOptionsScreen_OnHacksChanged(void* screen) {

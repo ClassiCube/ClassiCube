@@ -233,7 +233,7 @@ static const struct ScreenVTABLE HUDScreen_VTABLE = {
 void HUDScreen_Show(void) {
 	struct HUDScreen* s = &HUDScreen_Instance;
 	s->VTABLE = &HUDScreen_VTABLE;
-	Gui_HUD   = (struct Screen*)s;
+	Gui_HUD   = s;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_STATUS);
 }
 
@@ -822,13 +822,14 @@ void ChatScreen_Show(void) {
 	s->lastDownloadStatus = Int32_MinValue;
 
 	s->VTABLE = &ChatScreen_VTABLE;
-	Gui_Chat   = (struct Screen*)s;
+	Gui_Chat  = s;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_HUD);
 }
 
 void ChatScreen_OpenInput(const String* text) {
-	struct ChatScreen* s  = &ChatScreen_Instance;
+	struct ChatScreen* s = &ChatScreen_Instance;
 #ifdef CC_BUILD_TOUCH
+	/* TODO: This is the wrong approach. need an event for all text input. */
 	s->suppressNextPress = !Input_TouchMode;
 #else
 	s->suppressNextPress = true;
@@ -836,6 +837,7 @@ void ChatScreen_OpenInput(const String* text) {
 	s->grabsInput        = true;
 	Camera_CheckFocus();
 	Window_OpenKeyboard();
+	Window_SetKeyboardText(text);
 
 	String_Copy(&s->input.base.text, text);
 	InputWidget_UpdateText(&s->input.base);
