@@ -30,6 +30,7 @@ CLANG64_PATH=/usr/bin/clang/osx64
 ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -w"
 WIN32_FLAGS="-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN"
 WIN64_FLAGS="-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN"
+LINUX_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_X11ICON"
 
 # -----------------------------
 build_win32() {
@@ -52,14 +53,16 @@ build_win64() {
 
 build_nix32() {
   echo "Building linux32.."
+  cp $SOURCE_DIR/misc/CCicon_nix32 $SOURCE_DIR/src/CCicon_nix32.o
   rm cc-nix32
-  gcc *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -m32 -o cc-nix32 -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl
+  gcc *.c $ALL_FLAGS $LINUX_FLAGS CCicon_nix32.o -DCC_COMMIT_SHA=\"$LATEST\" -m32 -o cc-nix32 -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl
 }
 
 build_nix64() {
   echo "Building linux64.."
+  cp $SOURCE_DIR/misc/CCicon_nix64 $SOURCE_DIR/src/CCicon_nix64.o
   rm cc-nix64
-  gcc *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -m64 -o cc-nix64 -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl
+  gcc *.c $ALL_FLAGS $LINUX_FLAGS CCicon_nix64.o -DCC_COMMIT_SHA=\"$LATEST\" -m64 -o cc-nix64 -lX11 -lpthread -lGL -lm -lcurl -lopenal -ldl
 }
 
 build_osx32() {

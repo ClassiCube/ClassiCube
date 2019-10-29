@@ -42,22 +42,22 @@ void HttpRequest_Free(struct HttpRequest* request) {
 *#########################################################################################################################*/
 #define HTTP_DEF_ELEMS 10
 struct RequestList {
-	int Count, Capacity;
-	struct HttpRequest* Entries;
-	struct HttpRequest DefaultEntries[HTTP_DEF_ELEMS];
+	int count, capacity;
+	struct HttpRequest* entries;
+	struct HttpRequest defaultEntries[HTTP_DEF_ELEMS];
 };
 
 /* Expands request list buffer if there is no room for another request */
 static void RequestList_EnsureSpace(struct RequestList* list) {
-	if (list->Count < list->Capacity) return;
-	Utils_Resize((void**)&list->Entries, &list->Capacity,
+	if (list->count < list->capacity) return;
+	Utils_Resize((void**)&list->entries, &list->capacity,
 				sizeof(struct HttpRequest), HTTP_DEF_ELEMS, 10);
 }
 
 /* Adds another request to end (for normal priority request) */
 static void RequestList_Append(struct RequestList* list, struct HttpRequest* item) {
 	RequestList_EnsureSpace(list);
-	list->Entries[list->Count++] = *item;
+	list->entries[list->count++] = *item;
 }
 
 /* Inserts a request at start (for high priority request) */
@@ -65,21 +65,21 @@ static void RequestList_Prepend(struct RequestList* list, struct HttpRequest* it
 	int i;
 	RequestList_EnsureSpace(list);
 	
-	for (i = list->Count; i > 0; i--) {
-		list->Entries[i] = list->Entries[i - 1];
+	for (i = list->count; i > 0; i--) {
+		list->entries[i] = list->entries[i - 1];
 	}
-	list->Entries[0] = *item;
-	list->Count++;
+	list->entries[0] = *item;
+	list->count++;
 }
 
 /* Removes the request at the given index */
 static void RequestList_RemoveAt(struct RequestList* list, int i) {
-	if (i < 0 || i >= list->Count) Logger_Abort("Tried to remove element at list end");
+	if (i < 0 || i >= list->count) Logger_Abort("Tried to remove element at list end");
 
-	for (; i < list->Count - 1; i++) {
-		list->Entries[i] = list->Entries[i + 1];
+	for (; i < list->count - 1; i++) {
+		list->entries[i] = list->entries[i + 1];
 	}
-	list->Count--;
+	list->count--;
 }
 
 /* Finds index of request whose id matches the given id */
@@ -87,11 +87,11 @@ static int RequestList_Find(struct RequestList* list, const String* id, struct H
 	String reqID;
 	int i;
 
-	for (i = 0; i < list->Count; i++) {
-		reqID = String_FromRawArray(list->Entries[i].ID);
+	for (i = 0; i < list->count; i++) {
+		reqID = String_FromRawArray(list->entries[i].ID);
 		if (!String_Equals(id, &reqID)) continue;
 
-		*item = list->Entries[i];
+		*item = list->entries[i];
 		return i;
 	}
 	return -1;
@@ -99,14 +99,14 @@ static int RequestList_Find(struct RequestList* list, const String* id, struct H
 
 /* Resets state to default */
 static void RequestList_Init(struct RequestList* list) {
-	list->Capacity = HTTP_DEF_ELEMS;
-	list->Count    = 0;
-	list->Entries = list->DefaultEntries;
+	list->capacity = HTTP_DEF_ELEMS;
+	list->count    = 0;
+	list->entries = list->defaultEntries;
 }
 
 /* Frees any dynamically allocated memory, then resets state to default */
 static void RequestList_Free(struct RequestList* list) {
-	if (list->Entries != list->DefaultEntries) Mem_Free(list->Entries);
+	if (list->entries != list->defaultEntries) Mem_Free(list->entries);
 	RequestList_Init(list);
 }
 
@@ -207,7 +207,7 @@ static void Http_CompleteRequest(struct HttpRequest* req) {
 		} else {
 			/* normal case, replace older req */
 			HttpRequest_Free(&older);
-			processedReqs.Entries[index] = *req;
+			processedReqs.entries[index] = *req;
 		}
 	} else {
 		RequestList_Append(&processedReqs, req);
@@ -242,8 +242,8 @@ static void Http_CleanCacheTask(struct ScheduledTask* task) {
 	Mutex_Lock(processedMutex);
 	{
 		TimeMS now = DateTime_CurrentUTC_MS();
-		for (i = processedReqs.Count - 1; i >= 0; i--) {
-			item = &processedReqs.Entries[i];
+		for (i = processedReqs.count - 1; i >= 0; i--) {
+			item = &processedReqs.entries[i];
 			if (item->TimeDownloaded + (10 * 1000) >= now) continue;
 
 			HttpRequest_Free(item);
@@ -334,11 +334,11 @@ static void Http_AddHeader(const char* key, const String* value);
 
 static void Http_DownloadNextAsync(void) {
 	struct HttpRequest req;
-	if (http_terminate || !pendingReqs.Count) return;
+	if (http_terminate || !pendingReqs.count) return;
 	/* already working on a request currently */
 	if (http_curRequest.ID[0] != '\0') return;
 
-	req = pendingReqs.Entries[0];
+	req = pendingReqs.entries[0];
 	RequestList_RemoveAt(&pendingReqs, 0);
 	Http_DownloadAsync(&req);
 }
@@ -845,8 +845,8 @@ static void Http_WorkerLoop(void) {
 		Mutex_Lock(pendingMutex);
 		{
 			stop = http_terminate;
-			if (!stop && pendingReqs.Count) {
-				request = pendingReqs.Entries[0];
+			if (!stop && pendingReqs.count) {
+				request = pendingReqs.entries[0];
 				hasRequest = true;
 				RequestList_RemoveAt(&pendingReqs, 0);
 			}

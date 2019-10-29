@@ -929,6 +929,14 @@ void Window_Create(int width, int height) {
 	Window_RefreshBounds(width, height);
 	Window_Exists = true;
 	Window_Handle = (void*)win_handle;
+
+#ifdef CC_BUILD_X11ICON
+	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
+	Atom xa_cardinal = XInternAtom(win_display, "CARDINAL",     false);
+	extern const long CCIcon_Data[];
+	extern const int  CCIcon_Size;
+	XChangeProperty(win_display, win_handle, net_wm_icon, xa_cardinal, 32, PropModeReplace, CCIcon_Data, CCIcon_Size);
+#endif
 }
 
 void Window_SetTitle(const String* title) {
