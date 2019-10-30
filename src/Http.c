@@ -382,9 +382,20 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 		attr.requestDataSize = req->Size;
 	}
 
-	/* TODO: Why does this break */
-	/*static const char* headers[3] = { "cache-control", "max-age=0", NULL }; */
-	/*attr.requestHeaders = headers; */
+	/* Can't use this for all URLs, because cache-control isn't in allowed CORS headers */
+	/* For example, if you try this with dropbox, you'll get a '404' with
+	/*   Access to XMLHttpRequest at 'https://dl.dropbox.com/s/a/a.zip' from 
+	/*   origin 'http://www.classicube.net' has been blocked by CORS policy: 
+	/*   Response to preflight request doesn't pass access control check: 
+	/*   Redirect is not allowed for a preflight request. */
+	/* printed to console. But this is still used for skins, that way when users change */
+	/* their skins, the change shows up instantly. But 99% of the time we'll get a 304 */
+	/* response and can avoid downloading the whole skin over and over. */
+	if (urlStr[0] == '/') {
+		static const char* const headers[3] = { "cache-control", "max-age=0", NULL };
+		attr.requestHeaders = headers;
+	}
+
 	attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
 	attr.onsuccess  = Http_FinishedAsync;
 	attr.onerror    = Http_FinishedAsync;
