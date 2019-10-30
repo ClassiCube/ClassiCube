@@ -3013,6 +3013,13 @@ EMSCRIPTEN_KEEPALIVE void Window_ProcessKeyChar(int charCode) {
 
 static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	Window_CorrectFocus();
+	/* When on-screen keyboard is open, we don't want to intercept any key presses, */
+	/* because they should be sent to the HTML text input instead. */
+	/* If any keys are intercepted, this causes attempting to backspace all text */
+	/* later to not actually backspace everything. (because the HTML text input */
+	/* does not have these intercepted key presses in its text buffer) */
+	/* (e.g. chrome for android sends keypresses sometimes for '0' to '9' keys) */
+	if (keyboardOpen) return false;
 	Window_ProcessKeyChar(ev->charCode);
 	return true;
 }
@@ -3197,9 +3204,12 @@ EMSCRIPTEN_KEEPALIVE void SendFakeBackspace(void) {
 	Input_SetPressed(KEY_BACKSPACE, false);
 }
 
+static bool keyboardOpen;
 void Window_OpenKeyboard(void)  {
 	if (!Input_TouchMode) return;
+	keyboardOpen = true;
 	Platform_LogConst("OPEN SESAME");
+
 	EM_ASM({
 		var elem = window.cc_inputElem;
 		if (!elem) {
@@ -3245,6 +3255,8 @@ void Window_SetKeyboardText(const String* text) {
 
 void Window_CloseKeyboard(void) {
 	if (!Input_TouchMode) return;
+	keyboardOpen = false;
+
 	EM_ASM({
 		if (!window.cc_inputElem) return;
 		document.body.removeChild(window.cc_inputElem);
