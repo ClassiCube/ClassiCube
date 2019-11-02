@@ -892,10 +892,11 @@ static void Http_WorkerLoop(void) {
 #ifdef CC_BUILD_WEB
 /* Access to XMLHttpRequest at 'http://static.classicube.net' from origin 'http://www.classicube.net' has been blocked by CORS policy: */
 /* No 'Access-Control-Allow-Origin' header is present on the requested resource. */
-#define SKIN_SERVER "/skins/"
+#define SKIN_SERVER "http://classicube.s3.amazonaws.com/skin/"
 #else
 /* Prefer static.classicube.net to avoid a pointless redirect */
-#define SKIN_SERVER "http://static.classicube.net/skins/"
+/* Skins were moved to use Amazon S3, so link directly to them */
+#define SKIN_SERVER "http://classicube.s3.amazonaws.com/skin/"
 #endif
 
 void Http_AsyncGetSkin(const String* skinName) {
