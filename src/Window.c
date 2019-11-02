@@ -2790,6 +2790,7 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
+static cc_bool keyboardOpen;
 
 static void Window_RefreshBounds(void) {
 	emscripten_get_canvas_element_size(NULL, &Window_Width, &Window_Height);
@@ -3204,7 +3205,6 @@ EMSCRIPTEN_KEEPALIVE void SendFakeBackspace(void) {
 	Input_SetPressed(KEY_BACKSPACE, false);
 }
 
-static cc_bool keyboardOpen;
 void Window_OpenKeyboard(void)  {
 	if (!Input_TouchMode) return;
 	keyboardOpen = true;
