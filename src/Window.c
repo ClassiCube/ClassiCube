@@ -3204,7 +3204,7 @@ EMSCRIPTEN_KEEPALIVE void SendFakeBackspace(void) {
 	Input_SetPressed(KEY_BACKSPACE, false);
 }
 
-static bool keyboardOpen;
+static cc_bool keyboardOpen;
 void Window_OpenKeyboard(void)  {
 	if (!Input_TouchMode) return;
 	keyboardOpen = true;
