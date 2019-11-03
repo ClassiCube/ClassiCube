@@ -28,7 +28,7 @@ void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, in
 	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
 	w->xOffset = Display_ScaleX(xOffset);
 	w->yOffset = Display_ScaleY(yOffset);
-	Widget_Reposition(w);
+	Widget_Layout(w);
 }
 
 void Widget_CalcPosition(void* widget) {
@@ -293,13 +293,13 @@ void Gui_RenderGui(double delta) {
 	Gfx_Mode3D();
 }
 
-void Gui_OnResize(void) {
+void Gui_Layout(void) {
 	struct Screen* s;
 	int i;
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		s->VTABLE->OnResize(s);
+		s->VTABLE->Layout(s);
 	}
 }
 

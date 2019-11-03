@@ -58,6 +58,12 @@ struct Event_Input {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
+typedef void (*Event_String_Callback)(void* obj, const String* str);
+struct Event_String {
+	Event_String_Callback Handlers[EVENT_MAX_CALLBACKS];
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
+};
+
 /* Registers a callback function for the given event. */
 /* NOTE: Trying to register a callback twice or over EVENT_MAX_CALLBACKS callbacks will terminate the game. */
 CC_API void Event_Register(struct Event_Void* handlers,   void* obj, Event_Void_Callback handler);
@@ -112,6 +118,11 @@ void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType
 void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating);
 #define Event_RegisterInput(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
 #define Event_UnregisterInput(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
+
+/* Calls all registered callbacks for an event which has a string argument. */
+void Event_RaiseString(struct Event_String* handlers, const String* str);
+#define Event_RegisterString(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
+#define Event_UnregisterString(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
 CC_VAR extern struct _EntityEventsList {
 	struct Event_Int Added;    /* Entity is spawned in the current world */
@@ -172,11 +183,12 @@ CC_VAR extern struct _WindowEventsList {
 	struct Event_Void Created;      /* Window has been created, Window_Handle is valid now. */
 } WindowEvents;
 
-CC_VAR extern struct _KeyEventsList {
+CC_VAR extern struct _InputEventsList {
 	struct Event_Int Press;   /* Key input character is typed. Arg is a character */
 	struct Event_Input Down;  /* Key or button is pressed. Arg is a member of Key enumeration */
 	struct Event_Int Up;      /* Key or button is released. Arg is a member of Key enumeration */
 	struct Event_Float Wheel; /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
+	struct Event_String TextChanged; /* HTML text input changed */
 } InputEvents;
 
 CC_VAR extern struct _PointerEventsList {

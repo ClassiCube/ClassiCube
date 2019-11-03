@@ -70,7 +70,7 @@ void TextWidget_Set(struct TextWidget* w, const String* text, struct FontDesc* f
 	}
 
 	w->width = w->tex.Width; w->height = w->tex.Height;
-	Widget_Reposition(w);
+	Widget_Layout(w);
 }
 
 void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc* font) {
@@ -171,7 +171,7 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, struct FontDes
 
 	w->width  = max(w->tex.Width,  w->minWidth);
 	w->height = max(w->tex.Height, btnMinHeight);
-	Widget_Reposition(w);
+	Widget_Layout(w);
 }
 
 void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, struct FontDesc* font) {
@@ -590,7 +590,7 @@ void TableWidget_RecreateBlocks(struct TableWidget* w) {
 	}
 
 	w->rowsCount = Math_CeilDiv(w->blocksCount, w->blocksPerRow);
-	Widget_Reposition(w);
+	Widget_Layout(w);
 }
 
 static void TableWidget_Render(void* widget, double delta) {
@@ -951,7 +951,7 @@ static void InputWidget_OnPressedEnter(void* widget) {
 	InputWidget_Clear(w);
 	w->height = w->lineHeight;
 	/* TODO get rid of this awful hack.. */
-	Widget_Reposition(w);
+	Widget_Layout(w);
 }
 
 void InputWidget_Clear(struct InputWidget* w) {
@@ -1388,7 +1388,7 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	Drawer2D_Make2DTexture(tex, &bmp, adjSize);
 	Mem_Free(bmp.Scan0);
 
-	Widget_Reposition(&w->base);
+	Widget_Layout(&w->base);
 	tex->X = w->base.x; tex->Y = w->base.y;
 	if (size.Height < w->minHeight) {
 		tex->Y += w->minHeight / 2 - size.Height / 2;
@@ -1501,7 +1501,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 
 	w->width  = size.Width;
 	w->height = size.Height;
-	Widget_Reposition(w);
+	Widget_Layout(w);
 	w->inputTex.X = w->x + w->padding;
 	w->inputTex.Y = w->y;
 }
@@ -1956,7 +1956,7 @@ static void PlayerListWidget_SortEntries(struct PlayerListWidget* w) {
 
 static void PlayerListWidget_SortAndReposition(struct PlayerListWidget* w) {
 	PlayerListWidget_SortEntries(w);
-	Widget_Reposition(w);
+	Widget_Layout(w);
 }
 
 void PlayerListWidget_Add(struct PlayerListWidget* w, int id) {
@@ -2006,7 +2006,7 @@ static void PlayerListWidget_Render(void* widget, double delta) {
 
 	Gfx_SetTexturing(true);
 	title->yOffset = w->y - offset + 5;
-	Widget_Reposition(title);
+	Widget_Layout(title);
 	Elem_Render(title, delta);
 	grabbed = Gui_GetInputGrab();
 
@@ -2386,7 +2386,7 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 
 	tex.X = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, Window_Width);
 	w->textures[index] = tex;
-	Widget_Reposition(w);
+	Widget_Layout(w);
 }
 
 void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* group, char col) {
@@ -2418,7 +2418,7 @@ void TextGroupWidget_SetFont(struct TextGroupWidget* w, struct FontDesc* font) {
 		w->textures[i].Height = w->collapsible[i] ? 0 : height;
 	}
 	w->font = font;
-	Widget_Reposition(w);
+	Widget_Layout(w);
 }
 
 static void TextGroupWidget_Render(void* widget, double delta) {
@@ -2638,7 +2638,7 @@ void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
 	SpecialInputWidget_Make(w, &w->tabs[w->selectedIndex]);
 	w->width = w->tex.Width;
 	w->pendingRedraw = false;
-	Widget_Reposition(w);
+	Widget_Layout(w);
 }
 
 static void SpecialInputWidget_Render(void* widget, double delta) {
@@ -2683,7 +2683,7 @@ void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w) {
 void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_bool active) {
 	w->active = active;
 	if (active && w->pendingRedraw) SpecialInputWidget_Redraw(w);
-	Widget_Reposition(w);
+	Widget_Layout(w);
 }
 
 static const struct WidgetVTABLE SpecialInputWidget_VTABLE = {

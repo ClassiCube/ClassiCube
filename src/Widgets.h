@@ -11,7 +11,7 @@ struct FontDesc;
 
 /* A text label. */
 struct TextWidget {
-	Widget_Layout
+	Widget_Body
 	struct Texture tex;
 	PackedCol col;
 };
@@ -28,7 +28,7 @@ typedef void (*Button_Get)(String* raw);
 typedef void (*Button_Set)(const String* raw);
 /* A labelled button that can be clicked on. */
 struct ButtonWidget {
-	Widget_Layout
+	Widget_Body
 	struct Texture tex;
 	int minWidth;
 	const char* optName;
@@ -45,7 +45,7 @@ CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text,
 
 /* Clickable and draggable scrollbar. */
 struct ScrollbarWidget {
-	Widget_Layout
+	Widget_Body
 	int totalRows, topRow;
 	float scrollingAcc;
 	int dragOffset;
@@ -56,7 +56,7 @@ CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w);
 
 /* A row of blocks with a background. */
 struct HotbarWidget {
-	Widget_Layout
+	Widget_Body
 	struct Texture selTex, backTex;
 	float barHeight, selBlockSize, elemSize;
 	float barXOffset, borderSize;
@@ -69,7 +69,7 @@ CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
 
 /* A table of blocks. */
 struct TableWidget {
-	Widget_Layout
+	Widget_Body
 	int blocksCount, blocksPerRow, rowsCount;
 	int lastCreatedIndex;
 	struct FontDesc* font;
@@ -97,7 +97,7 @@ CC_NOINLINE void TableWidget_Recreate(struct TableWidget* w);
 #define INPUTWIDGET_MAX_LINES 3
 #define INPUTWIDGET_LEN STRING_SIZE
 struct InputWidget {
-	Widget_Layout
+	Widget_Body
 	struct FontDesc* font;
 	int  (*GetMaxLines)(void);
 	void (*RemakeTexture)(void* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
@@ -202,7 +202,7 @@ typedef String (*TextGroupWidget_Get)(void* obj, int i);
 
 /* A group of text labels. */
 struct TextGroupWidget {
-	Widget_Layout
+	Widget_Body
 	int lines, defaultHeight;
 	struct FontDesc* font;
 	/* Whether a line has zero height when that line has no text in it. */
@@ -237,7 +237,7 @@ static String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { ret
 
 
 struct PlayerListWidget {
-	Widget_Layout
+	Widget_Body
 	struct FontDesc* font;
 	int namesCount, elementOffset;
 	cc_bool classic;
@@ -264,7 +264,7 @@ struct SpecialInputTab {
 };
 
 struct SpecialInputWidget {
-	Widget_Layout
+	Widget_Body
 	int elementWidth, elementHeight;
 	int selectedIndex;
 	cc_bool pendingRedraw;

@@ -36,28 +36,41 @@ extern cc_bool Gui_TabAutocomplete;
 extern cc_bool Gui_ShowFPS;
 
 struct ScreenVTABLE {
+	/* Initialises persistent state. */
 	void (*Init)(void* elem);
+	/* Draws this screen and its widgets on screen. */
 	void (*Render)(void* elem, double delta);
+	/* Frees/releases persistent state. */
 	void (*Free)(void* elem);
-	cc_bool (*HandlesKeyDown)(void* elem, Key key);
-	cc_bool (*HandlesKeyUp)(void* elem, Key key);
-	cc_bool (*HandlesKeyPress)(void* elem, char keyChar);
-	cc_bool (*HandlesPointerDown)(void* elem, int id, int x, int y);
-	cc_bool (*HandlesPointerUp)(void* elem,   int id, int x, int y);
-	cc_bool (*HandlesPointerMove)(void* elem, int id, int x, int y);
-	cc_bool (*HandlesMouseScroll)(void* elem, float delta);
-	void (*OnResize)(void* elem);
-	Event_Void_Callback ContextLost;
-	Event_Void_Callback ContextRecreated;
+	/* Returns non-zero if an input press is handled. */
+	int  (*HandlesKeyDown)(void* elem, Key key);
+	/* Returns non-zero if an input release is handled. */
+	int  (*HandlesKeyUp)(void* elem, Key key);
+	/* Returns non-zero if a key character press is handled. */
+	int  (*HandlesKeyPress)(void* elem, char keyChar);
+	/* Returns non-zero if a pointer press is handled. */
+	int  (*HandlesPointerDown)(void* elem, int id, int x, int y);
+	/* Returns non-zero if a pointer release is handled. */
+	int  (*HandlesPointerUp)(void* elem,   int id, int x, int y);
+	/* Returns non-zero if a pointer movement is handled. */
+	int  (*HandlesPointerMove)(void* elem, int id, int x, int y);
+	/* Returns non-zero if a mouse wheel scroll is handled. */
+	int  (*HandlesMouseScroll)(void* elem, float delta);
+	/* Positions widgets on screen. Typically called on window resize. */
+	void (*Layout)(void* elem);
+	/* Destroys graphics resources. (textures, vertex buffers, etc) */
+	void (*ContextLost)(void* elem);
+	/* Allocates graphics resources. (textures, vertex buffers, etc) */
+	void (*ContextRecreated)(void* elem);
 };
-#define Screen_Layout const struct ScreenVTABLE* VTABLE; \
+#define Screen_Body const struct ScreenVTABLE* VTABLE; \
 	cc_bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
 	cc_bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
 	cc_bool closable;    /* Whether this screen is automatically closed when pressing Escape */ \
 	struct Widget** widgets; int numWidgets;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
-struct Screen { Screen_Layout };
+struct Screen { Screen_Body };
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {
@@ -71,7 +84,7 @@ struct WidgetVTABLE {
 	cc_bool (*HandlesPointerUp)(void* elem,   int id, int x, int y);
 	cc_bool (*HandlesPointerMove)(void* elem, int id, int x, int y);
 };
-#define Widget_Layout const struct WidgetVTABLE* VTABLE; \
+#define Widget_Body const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
 	cc_bool active;                /* Whether this widget is currently being moused over */ \
 	cc_bool disabled;              /* Whether widget is prevented from being interacted with */ \
@@ -80,7 +93,7 @@ struct WidgetVTABLE {
 	Widget_LeftClick MenuClick;
 
 /* Represents an individual 2D gui component. */
-struct Widget { Widget_Layout };
+struct Widget { Widget_Body };
 void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
 void Widget_CalcPosition(void* widget);
 /* Resets Widget struct fields to 0/NULL (except VTABLE) */
@@ -148,7 +161,7 @@ void Gui_RefreshChat(void);
 void Gui_Refresh(struct Screen* s);
 
 void Gui_RenderGui(double delta);
-void Gui_OnResize(void);
+void Gui_Layout(void);
 
 #define TEXTATLAS_MAX_WIDTHS 16
 struct TextAtlas {
@@ -174,6 +187,6 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vert
 #define Elem_HandlesPointerUp(elem,   id, x, y) (elem)->VTABLE->HandlesPointerUp(elem,   id, x, y)
 #define Elem_HandlesPointerMove(elem, id, x, y) (elem)->VTABLE->HandlesPointerMove(elem, id, x, y)
 
-#define Widget_Reposition(widget) (widget)->VTABLE->Reposition(widget);
-#define Elem_TryFree(elem)        if ((elem)->VTABLE) { Elem_Free(elem); }
+#define Widget_Layout(widget) (widget)->VTABLE->Reposition(widget);
+#define Elem_TryFree(elem)    if ((elem)->VTABLE) { Elem_Free(elem); }
 #endif

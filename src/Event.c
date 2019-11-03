@@ -10,7 +10,7 @@ struct _BlockEventsList   BlockEvents;
 struct _WorldEventsList   WorldEvents;
 struct _ChatEventsList    ChatEvents;
 struct _WindowEventsList  WindowEvents;
-struct _KeyEventsList     InputEvents;
+struct _InputEventsList   InputEvents;
 struct _PointerEventsList PointerEvents;
 struct _NetEventsList     NetEvents;
 
@@ -103,5 +103,12 @@ void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating) 
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], key, repeating);
+	}
+}
+
+void Event_RaiseString(struct Event_String* handlers, const String* str) {
+	int i;
+	for (i = 0; i < handlers->Count; i++) {
+		handlers->Handlers[i](handlers->Objs[i], str);
 	}
 }

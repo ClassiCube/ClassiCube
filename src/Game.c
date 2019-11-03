@@ -278,7 +278,7 @@ static void Game_OnResize(void* obj) {
 	Game_UpdateDimensions();
 	Gfx_OnWindowResize();
 	Game_UpdateProjection();
-	Gui_OnResize();
+	Gui_Layout();
 }
 
 static void Game_OnNewMapCore(void* obj) {

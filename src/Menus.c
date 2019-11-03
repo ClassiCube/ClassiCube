@@ -95,14 +95,14 @@ static void Menu_ContextLost(void* screen) {
 	}
 }
 
-static void Menu_OnResize(void* screen) {
+static void Menu_Layout(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 	int i;
 	
 	for (i = 0; i < s->numWidgets; i++) {
 		if (!widgets[i]) continue;
-		Widget_Reposition(widgets[i]);
+		Widget_Layout(widgets[i]);
 	}
 }
 
@@ -146,7 +146,7 @@ static int Menu_DoPointerDown(void* screen, int id, int x, int y) {
 	}
 	return -1;
 }
-static cc_bool Menu_PointerDown(void* screen, int id, int x, int y) {
+static int Menu_PointerDown(void* screen, int id, int x, int y) {
 	Menu_DoPointerDown(screen, id, x, y); return true;
 }
 
@@ -171,7 +171,7 @@ static int Menu_DoPointerMove(void* screen, int id, int x, int y) {
 	return -1;
 }
 
-static cc_bool Menu_PointerMove(void* screen, int id, int x, int y) {
+static int Menu_PointerMove(void* screen, int id, int x, int y) {
 	Menu_DoPointerMove(screen, id, x, y); return true;
 }
 
@@ -248,7 +248,7 @@ struct ListScreen;
 #define LIST_SCREEN_EMPTY "-----"
 
 static struct ListScreen {
-	Screen_Layout
+	Screen_Body
 	struct ButtonWidget buttons[LIST_SCREEN_ITEMS];
 	struct ButtonWidget left, right, done;
 	struct FontDesc font;
@@ -371,7 +371,7 @@ static void ListScreen_Select(struct ListScreen* s, const String* str) {
 	}
 }
 
-static cc_bool ListScreen_KeyDown(void* screen, Key key) {
+static int ListScreen_KeyDown(void* screen, Key key) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	if (key == KEY_LEFT || key == KEY_PAGEUP) {
 		ListScreen_PageClick(s, false);
@@ -381,7 +381,7 @@ static cc_bool ListScreen_KeyDown(void* screen, Key key) {
 	return true;
 }
 
-static cc_bool ListScreen_MouseScroll(void* screen, float delta) {
+static int ListScreen_MouseScroll(void* screen, float delta) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	int steps = Utils_AccumulateWheelDelta(&s->wheelAcc, delta);
 
@@ -448,9 +448,9 @@ static void ListScreen_ContextRecreated(void* screen) {
 
 static const struct ScreenVTABLE ListScreen_VTABLE = {
 	ListScreen_Init,    ListScreen_Render, ListScreen_Free,
-	ListScreen_KeyDown, Screen_TKey,       Screen_TKeyPress,
+	ListScreen_KeyDown, Screen_TInput,     Screen_TKeyPress,
 	Menu_PointerDown,   Screen_TPointer,   Menu_PointerMove, ListScreen_MouseScroll,
-	Menu_OnResize,      ListScreen_ContextLost,  ListScreen_ContextRecreated
+	Menu_Layout,      ListScreen_ContextLost,  ListScreen_ContextRecreated
 };
 void ListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
@@ -464,7 +464,7 @@ void ListScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool MenuScreen_KeyDown(void* screen, Key key) { return key < KEY_F1 || key > KEY_F35; }
+static int MenuScreen_KeyDown(void* screen, Key key) { return key < KEY_F1 || key > KEY_F35; }
 
 static void MenuScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
@@ -478,7 +478,7 @@ static void MenuScreen_Render(void* screen, double delta) {
 *-------------------------------------------------------PauseScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 static struct PauseScreen {
-	Screen_Layout
+	Screen_Body
 	const struct SimpleButtonDesc* descs;
 	struct ButtonWidget buttons[6], quit, back;
 } PauseScreen_Instance;
@@ -559,9 +559,9 @@ static void PauseScreen_Free(void* screen) {
 
 static const struct ScreenVTABLE PauseScreen_VTABLE = {
 	PauseScreen_Init,   MenuScreen_Render,  PauseScreen_Free,
-	MenuScreen_KeyDown, Screen_TKey,        Screen_TKeyPress,
+	MenuScreen_KeyDown, Screen_TInput,      Screen_TKeyPress,
 	Menu_PointerDown,   Screen_TPointer,    Menu_PointerMove, Screen_TMouseScroll,
-	Menu_OnResize,      Menu_ContextLost,   PauseScreen_ContextRecreated
+	Menu_Layout,      Menu_ContextLost,   PauseScreen_ContextRecreated
 };
 void PauseScreen_Show(void) {
 	struct PauseScreen* s = &PauseScreen_Instance;
@@ -576,7 +576,7 @@ void PauseScreen_Show(void) {
 *--------------------------------------------------OptionsGroupScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 static struct OptionsGroupScreen {
-	Screen_Layout
+	Screen_Body
 	int selectedI;
 	struct FontDesc textFont;
 	struct ButtonWidget buttons[7];
@@ -635,7 +635,6 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 static void OptionsGroupScreen_Init(void* screen) {
 	static struct Widget* widgets[9];
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
-	int i;
 
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
 	s->widgets    = widgets;
@@ -652,7 +651,7 @@ static void OptionsGroupScreen_Free(void* screen) {
 	Event_UnregisterVoid(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
 }
 
-static cc_bool OptionsGroupScreen_PointerMove(void* screen, int id, int x, int y) {
+static int OptionsGroupScreen_PointerMove(void* screen, int id, int x, int y) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 	int i = Menu_DoPointerMove(s, id, x, y);
 	if (i == -1 || i == s->selectedI) return true;
@@ -665,9 +664,9 @@ static cc_bool OptionsGroupScreen_PointerMove(void* screen, int id, int x, int y
 
 static const struct ScreenVTABLE OptionsGroupScreen_VTABLE = {
 	OptionsGroupScreen_Init, MenuScreen_Render,  OptionsGroupScreen_Free,
-	MenuScreen_KeyDown,      Screen_TKey,        Screen_TKeyPress,
+	MenuScreen_KeyDown,      Screen_TInput,      Screen_TKeyPress,
 	Menu_PointerDown,        Screen_TPointer,    OptionsGroupScreen_PointerMove, Screen_TMouseScroll,
-	Menu_OnResize,           OptionsGroupScreen_ContextLost, OptionsGroupScreen_ContextRecreated
+	Menu_Layout,           OptionsGroupScreen_ContextLost, OptionsGroupScreen_ContextRecreated
 };
 void OptionsGroupScreen_Show(void) {
 	struct OptionsGroupScreen* s = &OptionsGroupScreen;
@@ -682,7 +681,7 @@ void OptionsGroupScreen_Show(void) {
 *----------------------------------------------------EditHotkeyScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 static struct EditHotkeyScreen {
-	Screen_Layout
+	Screen_Body
 	struct HotkeyData curHotkey, origHotkey;
 	int selectedI;
 	cc_bool supressNextPress;
@@ -803,7 +802,7 @@ static void EditHotkeyScreen_Render(void* screen, double delta) {
 	Gfx_Draw2DFlat(x - 250, y + 45, 500, 2, grey);
 }
 
-static cc_bool EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
+static int EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	if (s->supressNextPress) {
 		s->supressNextPress = false;
@@ -813,7 +812,7 @@ static cc_bool EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
 	return true;
 }
 
-static cc_bool EditHotkeyScreen_KeyDown(void* screen, Key key) {
+static int EditHotkeyScreen_KeyDown(void* screen, Key key) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	if (s->selectedI >= 0) {
 		if (s->selectedI == 0) {
@@ -888,9 +887,9 @@ static void EditHotkeyScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
 	EditHotkeyScreen_Init,    EditHotkeyScreen_Render, Menu_CloseKeyboard,
-	EditHotkeyScreen_KeyDown, Screen_TKey,             EditHotkeyScreen_KeyPress,
+	EditHotkeyScreen_KeyDown, Screen_TInput,           EditHotkeyScreen_KeyPress,
 	Menu_PointerDown,         Screen_TPointer,         Menu_PointerMove,          Screen_TMouseScroll,
-	Menu_OnResize,            EditHotkeyScreen_ContextLost, EditHotkeyScreen_ContextRecreated
+	Menu_Layout,            EditHotkeyScreen_ContextLost, EditHotkeyScreen_ContextRecreated
 };
 void EditHotkeyScreen_Show(struct HotkeyData original) {
 	struct EditHotkeyScreen* s = &EditHotkeyScreen_Instance;
@@ -907,7 +906,7 @@ void EditHotkeyScreen_Show(struct HotkeyData original) {
 *-----------------------------------------------------GenLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
 static struct GenLevelScreen {
-	Screen_Layout
+	Screen_Body
 	struct FontDesc textFont;
 	struct ButtonWidget flatgrass, vanilla, cancel;
 	struct MenuInputWidget* selected;
@@ -982,19 +981,19 @@ static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int y, int def)
 	s->labels[i].col = col;
 }
 
-static cc_bool GenLevelScreen_KeyDown(void* screen, Key key) {
+static int GenLevelScreen_KeyDown(void* screen, Key key) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	if (s->selected && Elem_HandlesKeyDown(&s->selected->base, key)) return true;
 	return MenuScreen_KeyDown(s, key);
 }
 
-static cc_bool GenLevelScreen_KeyPress(void* screen, char keyChar) {
+static int GenLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	if (s->selected) InputWidget_Append(&s->selected->base, keyChar);
 	return true;
 }
 
-static cc_bool GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
+static int GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	int i = Menu_DoPointerDown(screen, id, x, y);
 	if (i == -1 || i >= 4) return true;
@@ -1059,9 +1058,9 @@ static void GenLevelScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE GenLevelScreen_VTABLE = {
 	GenLevelScreen_Init,        MenuScreen_Render,    Menu_CloseKeyboard,
-	GenLevelScreen_KeyDown,     Screen_TKey,          GenLevelScreen_KeyPress,
+	GenLevelScreen_KeyDown,     Screen_TInput,        GenLevelScreen_KeyPress,
 	GenLevelScreen_PointerDown, Screen_TPointer,      Menu_PointerMove,        Screen_TMouseScroll,
-	Menu_OnResize,          GenLevelScreen_ContextLost, GenLevelScreen_ContextRecreated
+	Menu_Layout,          GenLevelScreen_ContextLost, GenLevelScreen_ContextRecreated
 };
 void GenLevelScreen_Show(void) {	
 	struct GenLevelScreen* s = &GenLevelScreen_Instance;
@@ -1076,7 +1075,7 @@ void GenLevelScreen_Show(void) {
 *----------------------------------------------------ClassicGenScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 static struct ClassicGenScreen {
-	Screen_Layout
+	Screen_Body
 	struct ButtonWidget buttons[3], cancel;
 } ClassicGenScreen_Instance;
 
@@ -1124,9 +1123,9 @@ static void ClassicGenScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE ClassicGenScreen_VTABLE = {
 	ClassicGenScreen_Init, MenuScreen_Render,  Menu_NullFunc,
-	MenuScreen_KeyDown,    Screen_TKey,        Screen_TKeyPress,
+	MenuScreen_KeyDown,    Screen_TInput,      Screen_TKeyPress,
 	Menu_PointerDown,      Screen_TPointer,    Menu_PointerMove, Screen_TMouseScroll,
-	Menu_OnResize,         Menu_ContextLost,   ClassicGenScreen_ContextRecreated
+	Menu_Layout,         Menu_ContextLost,   ClassicGenScreen_ContextRecreated
 };
 void ClassicGenScreen_Show(void) {
 	struct ClassicGenScreen* s = &ClassicGenScreen_Instance;
@@ -1141,7 +1140,7 @@ void ClassicGenScreen_Show(void) {
 *----------------------------------------------------SaveLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
 static struct SaveLevelScreen {
-	Screen_Layout
+	Screen_Body
 	struct FontDesc titleFont, textFont;
 	struct ButtonWidget save, alt, cancel;
 	struct MenuInputWidget input;
@@ -1314,14 +1313,14 @@ static void SaveLevelScreen_Render(void* screen, double delta) {
 #endif
 }
 
-static cc_bool SaveLevelScreen_KeyPress(void* screen, char keyChar) {
+static int SaveLevelScreen_KeyPress(void* screen, char keyChar) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	SaveLevelScreen_RemoveOverwrites(s);
 	InputWidget_Append(&s->input.base, keyChar);
 	return true;
 }
 
-static cc_bool SaveLevelScreen_KeyDown(void* screen, Key key) {
+static int SaveLevelScreen_KeyDown(void* screen, Key key) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	if (Elem_HandlesKeyDown(&s->input.base, key)) {
 		SaveLevelScreen_RemoveOverwrites(s);
@@ -1387,9 +1386,9 @@ static void SaveLevelScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE SaveLevelScreen_VTABLE = {
 	SaveLevelScreen_Init,    SaveLevelScreen_Render, Menu_CloseKeyboard,
-	SaveLevelScreen_KeyDown, Screen_TKey,            SaveLevelScreen_KeyPress,
+	SaveLevelScreen_KeyDown, Screen_TInput,          SaveLevelScreen_KeyPress,
 	Menu_PointerDown,        Screen_TPointer,        Menu_PointerMove,         Screen_TMouseScroll,
-	Menu_OnResize,           SaveLevelScreen_ContextLost, SaveLevelScreen_ContextRecreated
+	Menu_Layout,           SaveLevelScreen_ContextLost, SaveLevelScreen_ContextRecreated
 };
 void SaveLevelScreen_Show(void) {
 	struct SaveLevelScreen* s = &SaveLevelScreen_Instance;
@@ -1613,7 +1612,7 @@ struct KeyBindingsScreen;
 typedef void (*InitKeyBindings)(struct KeyBindingsScreen* s);
 
 static struct KeyBindingsScreen {
-	Screen_Layout	
+	Screen_Body	
 	int curI, bindsCount;
 	const char* const* descs;
 	const cc_uint8* binds;
@@ -1647,7 +1646,7 @@ static void KeyBindingsScreen_OnBindingClick(void* screen, void* widget) {
 	if (old >= 0) KeyBindingsScreen_Update(s, old);
 }
 
-static cc_bool KeyBindingsScreen_KeyDown(void* screen, Key key) {
+static int KeyBindingsScreen_KeyDown(void* screen, Key key) {
 	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
 	KeyBind bind;
 	int idx;
@@ -1735,9 +1734,9 @@ static void KeyBindingsScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
 	KeyBindingsScreen_Init,    MenuScreen_Render,  Menu_NullFunc,
-	KeyBindingsScreen_KeyDown, Screen_TKey,        Screen_TKeyPress,
+	KeyBindingsScreen_KeyDown, Screen_TInput,      Screen_TKeyPress,
 	Menu_PointerDown,          Screen_TPointer,    Menu_PointerMove, Screen_TMouseScroll,
-	Menu_OnResize,             KeyBindingsScreen_ContextLost, KeyBindingsScreen_ContextRecreated
+	Menu_Layout,             KeyBindingsScreen_ContextLost, KeyBindingsScreen_ContextRecreated
 };
 static void KeyBindingsScreen_Show(int bindsCount, const cc_uint8* binds, const char* const* descs, InitKeyBindings doInit) {
 	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
@@ -1858,7 +1857,7 @@ typedef void (*InitMenuOptions)(struct MenuOptionsScreen* s);
 #define MENUOPTIONS_CORE_WIDGETS 4 /* back + 3 input */
 
 static struct MenuOptionsScreen {
-	Screen_Layout
+	Screen_Body
 	struct MenuInputDesc* descs;
 	const char** descriptions;
 	int activeI, selectedI, descriptionsCount;
@@ -1914,7 +1913,7 @@ CC_NOINLINE static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* 
 
 static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* s) {
 	s->extHelp.xOffset = Window_Width / 2 - s->extHelp.width / 2;
-	Widget_Reposition(&s->extHelp);
+	Widget_Layout(&s->extHelp);
 }
 
 static String MenuOptionsScreen_GetDesc(void* obj, int i) {
@@ -1975,13 +1974,13 @@ static void MenuOptionsScreen_EnterInput(struct MenuOptionsScreen* s) {
 	s->activeI = -1;
 }
 
-static cc_bool MenuOptionsScreen_KeyPress(void* screen, char keyChar) {
+static int MenuOptionsScreen_KeyPress(void* screen, char keyChar) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	if (s->activeI >= 0) InputWidget_Append(&s->input.base, keyChar);
 	return true;
 }
 
-static cc_bool MenuOptionsScreen_KeyDown(void* screen, Key key) {
+static int MenuOptionsScreen_KeyDown(void* screen, Key key) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	if (s->activeI >= 0) {
 		if (Elem_HandlesKeyDown(&s->input.base, key)) return true;
@@ -1993,7 +1992,7 @@ static cc_bool MenuOptionsScreen_KeyDown(void* screen, Key key) {
 	return MenuScreen_KeyDown(s, key);
 }
 
-static cc_bool MenuOptionsScreen_PointerMove(void* screen, int id, int x, int y) {
+static int MenuOptionsScreen_PointerMove(void* screen, int id, int x, int y) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	int i = Menu_DoPointerMove(s, id, x, y);
 	if (i == -1 || i == s->selectedI) return true;
@@ -2149,9 +2148,9 @@ static void MenuOptionsScreen_Free(void* screen) {
 	if (s->activeI >= 0) Window_CloseKeyboard();
 }
 
-static void MenuOptionsScreen_OnResize(void* screen) {
+static void MenuOptionsScreen_Layout(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	Menu_OnResize(s);
+	Menu_Layout(s);
 	MenuOptionsScreen_RepositionExtHelp(s);
 }
 
@@ -2182,9 +2181,9 @@ static void MenuOptionsScreen_ContextRecreated(void* screen) {
 
 static const struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	MenuOptionsScreen_Init,     MenuOptionsScreen_Render, MenuOptionsScreen_Free,
-	MenuOptionsScreen_KeyDown,  Screen_TKey,              MenuOptionsScreen_KeyPress,
+	MenuOptionsScreen_KeyDown,  Screen_TInput,            MenuOptionsScreen_KeyPress,
 	Menu_PointerDown,           Screen_TPointer,          MenuOptionsScreen_PointerMove, Screen_TMouseScroll,
-	MenuOptionsScreen_OnResize, MenuOptionsScreen_ContextLost, MenuOptionsScreen_ContextRecreated
+	MenuOptionsScreen_Layout, MenuOptionsScreen_ContextLost, MenuOptionsScreen_ContextRecreated
 };
 void MenuOptionsScreen_Show(struct MenuInputDesc* descs, const char** descriptions, int descsCount, InitMenuOptions init) {
 	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
@@ -2878,7 +2877,7 @@ static cc_bool WarningOverlay_IsAlways(void* screen, void* w) { return Menu_Inde
 #define TEXID_OVERLAY_VERTICES_COUNT (TEXID_OVERLAY_MAX_PER_PAGE * 4)
 
 static struct TexIdsOverlay {
-	Screen_Layout	
+	Screen_Body	
 	GfxResourceID dynamicVb;
 	int xOffset, yOffset, tileSize, baseTexLoc;
 	struct TextAtlas idAtlas;
@@ -3012,7 +3011,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 	Gfx_SetTexturing(false);
 }
 
-static cc_bool TexIdsOverlay_KeyDown(void* screen, Key key) {
+static int TexIdsOverlay_KeyDown(void* screen, Key key) {
 	struct Screen* s = (struct Screen*)screen;
 	if (key == KeyBinds[KEYBIND_IDOVERLAY]) { Gui_Remove(s); return true; }
 	return false;
@@ -3020,9 +3019,9 @@ static cc_bool TexIdsOverlay_KeyDown(void* screen, Key key) {
 
 static const struct ScreenVTABLE TexIdsOverlay_VTABLE = {
 	TexIdsOverlay_Init,    TexIdsOverlay_Render, Menu_NullFunc,
-	TexIdsOverlay_KeyDown, Screen_FKey,          Screen_FKeyPress,
+	TexIdsOverlay_KeyDown, Screen_FInput,        Screen_FKeyPress,
 	Menu_PointerDown,      Screen_TPointer,      Menu_PointerMove, Screen_TMouseScroll,
-	Menu_OnResize,         TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated
+	Menu_Layout,         TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated
 };
 void TexIdsOverlay_Show(void) {
 	struct TexIdsOverlay* s = &TexIdsOverlay_Instance;
@@ -3037,7 +3036,7 @@ void TexIdsOverlay_Show(void) {
 *----------------------------------------------------UrlWarningOverlay----------------------------------------------------*
 *#########################################################################################################################*/
 static struct UrlWarningOverlay {
-	Screen_Layout
+	Screen_Body
 	String url;
 	struct ButtonWidget buttons[2];
 	struct TextWidget   labels[4];
@@ -3087,9 +3086,9 @@ static void UrlWarningOverlay_Init(void* screen) {
 
 static const struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
 	UrlWarningOverlay_Init, MenuScreen_Render, Menu_NullFunc,
-	Screen_TKey,            Screen_TKey,       Screen_TKeyPress,
+	Screen_TInput,          Screen_TInput,     Screen_TKeyPress,
 	Menu_PointerDown,       Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	Menu_OnResize,          Menu_ContextLost,  UrlWarningOverlay_ContextRecreated
+	Menu_Layout,            Menu_ContextLost,  UrlWarningOverlay_ContextRecreated
 };
 void UrlWarningOverlay_Show(const String* url) {
 	struct UrlWarningOverlay* s = &UrlWarningOverlay_Instance;
@@ -3107,7 +3106,7 @@ void UrlWarningOverlay_Show(const String* url) {
 *-----------------------------------------------------TexPackOverlay------------------------------------------------------*
 *#########################################################################################################################*/
 static struct TexPackOverlay {
-	Screen_Layout
+	Screen_Body
 	cc_bool deny, alwaysDeny;
 	cc_uint32 contentLength;
 	String url, identifier;
@@ -3236,9 +3235,9 @@ static void TexPackOverlay_Init(void* screen) {
 
 static const struct ScreenVTABLE TexPackOverlay_VTABLE = {
 	TexPackOverlay_Init, TexPackOverlay_Render, Menu_NullFunc,
-	Screen_TKey,         Screen_TKey,           Screen_TKeyPress,
+	Screen_TInput,       Screen_TInput,         Screen_TKeyPress,
 	Menu_PointerDown,    Screen_TPointer,       Menu_PointerMove, Screen_TMouseScroll,
-	Menu_OnResize,       TexPackOverlay_ContextLost, TexPackOverlay_ContextRecreated
+	Menu_Layout,       TexPackOverlay_ContextLost, TexPackOverlay_ContextRecreated
 };
 void TexPackOverlay_Show(const String* url) {
 	struct TexPackOverlay* s = &TexPackOverlay_Instance;
@@ -3260,7 +3259,7 @@ void TexPackOverlay_Show(const String* url) {
 *----------------------------------------------------UrlWarningOverlay----------------------------------------------------*
 *#########################################################################################################################*/
 static struct TouchMoreOverlay {
-	Screen_Layout
+	Screen_Body
 	struct ButtonWidget buttons[8];
 } TouchMoreOverlay_Instance;
 
@@ -3319,9 +3318,9 @@ static void TouchMoreOverlay_Init(void* screen) {
 
 static const struct ScreenVTABLE TouchMoreOverlay_VTABLE = {
 	TouchMoreOverlay_Init, MenuScreen_Render, Menu_NullFunc,
-	Screen_TKey,           Screen_TKey,       Screen_TKeyPress,
+	Screen_TInput,         Screen_TInput,     Screen_TKeyPress,
 	Menu_PointerDown,      Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	Menu_OnResize,         Menu_ContextLost,  TouchMoreOverlay_ContextRecreated
+	Menu_Layout,         Menu_ContextLost,  TouchMoreOverlay_ContextRecreated
 };
 void TouchMoreOverlay_Show(void) {
 	struct TouchMoreOverlay* s = &TouchMoreOverlay_Instance;
