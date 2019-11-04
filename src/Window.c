@@ -21,7 +21,7 @@ cc_bool Window_Exists, Window_Focused;
 const void* Window_Handle;
 cc_bool Window_SoftKeyboard;
 
-#ifndef CC_BUILD_WEBCANVAS
+#ifndef CC_BUILD_WEB
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 	String text; char textBuffer[512];
 	String_InitArray(text, textBuffer);
@@ -2786,7 +2786,7 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 /*########################################################################################################################*
 *------------------------------------------------Emscripten canvas window-------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WEBCANVAS
+#ifdef CC_BUILD_WEB
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>

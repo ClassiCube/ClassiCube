@@ -61,6 +61,7 @@ I don't really test these platforms at all, only when I suspect some changes to 
 
 Listed below are the requirements for implementing each platform-dependent file.
 You should try to take advantage of existing backends when porting to other platforms.
+Only cross platform backends are listed below.
 
 ### Platform
 General platform specific functionality.
@@ -76,7 +77,6 @@ General platform specific functionality.
 - Encrypt/decrypt data, getting command line args
 
 Define:
-- ```CC_BUILD_WIN``` - Use Win32 API (Windows)
 - ```CC_BUILD_POSIX``` - Use posix API
 
 posix note: Some functions are not covered. (stopwatch, getting exe path, open url in browser)
@@ -88,11 +88,8 @@ Create a window, show a dialog window, set window contents, keyboard/mouse input
 Also monitor size, clipboard, cursor, raw relative mouse movement (optional)
 
 Define:
-- ```CC_BUILD_WINGUI``` - Use Win32 API (Windows) (WGL)
-- ```CC_BUILD_CARBON``` - Use Carbon (Mac OSX) (AGL)
 - ```CC_BUILD_X11``` - Use X11/XLib (unix-ish) (glX)
 - ```CC_BUILD_SDL``` - Use SDL library (SDL)
-- ```CC_BUILD_WEBCANVAS``` - Use emscripten canvas (WebGL)
 
 If using OpenGL, also OpenGL context management
 
@@ -100,8 +97,7 @@ If using OpenGL, also OpenGL context management
 Dump registers and backtrace, log unhandled errors (e.g. invalid memory read)
 
 Define:
-- ```CC_BUILD_WIN``` - Use Win32 api
-- ```CC_BUILD_POSIX``` - Use POSIX api
+- ```CC_BUILD_POSIX``` - use POSIX api
 
 posix note: Register access is highly dependent on OS and architecture.
 
@@ -111,8 +107,8 @@ posix note: Register access is highly dependent on OS and architecture.
 Play multiple audio streams with varying sample rates
 
 Define:
-- ```CC_BUILD_WINMM``` - Use WinMM (Windows)
-- ```CC_BUILD_OpenAL``` - Use OpenAL
+- ```CC_BUILD_OPENAL``` - use OpenAL
+- ```CC_BUILD_NOAUDIO``` - stub audio implementation (silent)
 
 ### 3D Graphics
 Texturing, depth buffer, alpha, etc (See Graphics.h for full list)
@@ -128,7 +124,6 @@ Define:
 HTTP, HTTPS, and setting request/getting response headers
 
 Define:
-- ```CC_BUILD_WININET``` - use WinINet for http (Windows)
 - ```CC_BUILD_CURL``` - use libcurl for http
 
 Supporting connection reuse is highly recommended. (but not required)
