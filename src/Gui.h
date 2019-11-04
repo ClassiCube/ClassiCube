@@ -35,6 +35,7 @@ extern cc_bool Gui_TabAutocomplete;
 /* Whether FPS counter (and other info) is shown in top left. */
 extern cc_bool Gui_ShowFPS;
 
+/* Functions for a Screen instance. */
 struct ScreenVTABLE {
 	/* Initialises persistent state. */
 	void (*Init)(void* elem);
@@ -74,15 +75,24 @@ struct Screen { Screen_Body };
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {
+	/* Draws this particular widget on-screen. */
 	void (*Render)(void* elem, double delta);
+	/* Destroys allocated graphics resources. */
 	void (*Free)(void* elem);
+	/* Positions this widget on-screen. */
 	void (*Reposition)(void* elem);
-	cc_bool (*HandlesKeyDown)(void* elem, Key key);
-	cc_bool (*HandlesKeyUp)(void* elem, Key key);
-	cc_bool (*HandlesMouseScroll)(void* elem, float delta);
-	cc_bool (*HandlesPointerDown)(void* elem, int id, int x, int y);
-	cc_bool (*HandlesPointerUp)(void* elem,   int id, int x, int y);
-	cc_bool (*HandlesPointerMove)(void* elem, int id, int x, int y);
+	/* Returns non-zero if an input press is handled. */
+	int (*HandlesKeyDown)(void* elem, Key key);
+	/* Returns non-zero if an input release is handled. */
+	int (*HandlesKeyUp)(void* elem, Key key);
+	/* Returns non-zero if a mouse wheel scroll is handled. */
+	int (*HandlesMouseScroll)(void* elem, float delta);
+	/* Returns non-zero if a pointer press is handled. */
+	int (*HandlesPointerDown)(void* elem, int id, int x, int y);
+	/* Returns non-zero if a pointer release is handled. */
+	int (*HandlesPointerUp)(void* elem,   int id, int x, int y);
+	/* Returns non-zero if a pointer movement is handled. */
+	int (*HandlesPointerMove)(void* elem, int id, int x, int y);
 };
 #define Widget_Body const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
@@ -95,11 +105,13 @@ struct WidgetVTABLE {
 /* Represents an individual 2D gui component. */
 struct Widget { Widget_Body };
 void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
+/* Calculates where this widget should be on-screen based on its attributes. */
+/* These attributes are width/height, horAnchor/verAnchor, xOffset/yOffset */
 void Widget_CalcPosition(void* widget);
 /* Resets Widget struct fields to 0/NULL (except VTABLE) */
 void Widget_Reset(void* widget);
-/* Whether the given point is located within the bounds of the widget. */
-cc_bool Widget_Contains(void* widget, int x, int y);
+/* Returns non-zero if the given point is located within the bounds of the widget. */
+int Widget_Contains(void* widget, int x, int y);
 
 
 extern GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
@@ -131,11 +143,11 @@ extern int Gui_ScreensCount;
 
 /* Calculates position of an element on a particular axis */
 /* For example, to calculate X position of a text widget on screen */
-int  Gui_CalcPos(cc_uint8 anchor, int offset, int size, int axisLen);
-/* Returns whether the given rectangle contains the given point. */
-cc_bool Gui_Contains(int recX, int recY, int width, int height, int x, int y);
-/* Returns whether one or more pointers lie within the given rectangle. */
-cc_bool Gui_ContainsPointers(int x, int y, int width, int height);
+int Gui_CalcPos(cc_uint8 anchor, int offset, int size, int axisLen);
+/* Returns non-zero if the given rectangle contains the given point. */
+int Gui_Contains(int recX, int recY, int width, int height, int x, int y);
+/* Returns non-zero if one or more pointers lie within the given rectangle. */
+int Gui_ContainsPointers(int x, int y, int width, int height);
 /* Shows HUD and Status screens. */
 void Gui_ShowDefault(void);
 

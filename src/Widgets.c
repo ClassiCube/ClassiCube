@@ -20,10 +20,10 @@
 
 #define Widget_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f)
 static void Widget_NullFunc(void* widget) { }
-static cc_bool Widget_Pointer(void* elem, int id, int x, int y) { return false; }
-static cc_bool Widget_Key(void* elem, Key key) { return false; }
-static cc_bool Widget_PointerMove(void* elem, int id, int x, int y) { return false; }
-static cc_bool Widget_MouseScroll(void* elem, float delta) { return false; }
+static int Widget_Pointer(void* elem, int id, int x, int y) { return false; }
+static int Widget_Key(void* elem, Key key) { return false; }
+static int Widget_PointerMove(void* elem, int id, int x, int y) { return false; }
+static int Widget_MouseScroll(void* elem, float delta) { return false; }
 
 /*########################################################################################################################*
 *-------------------------------------------------------TextWidget--------------------------------------------------------*
@@ -235,7 +235,7 @@ static void ScrollbarWidget_Render(void* widget, double delta) {
 	Gfx_Draw2DFlat(x, y - 1 + 4, width, SCROLL_BORDER, Scroll_BackCol);
 }
 
-static cc_bool ScrollbarWidget_PointerDown(void* widget, int id, int x, int y) {
+static int ScrollbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int posY, height;
 
@@ -259,7 +259,7 @@ static cc_bool ScrollbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	return true;
 }
 
-static cc_bool ScrollbarWidget_PointerUp(void* widget, int id, int x, int y) {
+static int ScrollbarWidget_PointerUp(void* widget, int id, int x, int y) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	if (w->draggingId != id) return true;
 
@@ -268,7 +268,7 @@ static cc_bool ScrollbarWidget_PointerUp(void* widget, int id, int x, int y) {
 	return true;
 }
 
-static cc_bool ScrollbarWidget_MouseScroll(void* widget, float delta) {
+static int ScrollbarWidget_MouseScroll(void* widget, float delta) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	int steps = Utils_AccumulateWheelDelta(&w->scrollingAcc, delta);
 
@@ -277,7 +277,7 @@ static cc_bool ScrollbarWidget_MouseScroll(void* widget, float delta) {
 	return true;
 }
 
-static cc_bool ScrollbarWidget_PointerMove(void* widget, int id, int x, int y) {
+static int ScrollbarWidget_PointerMove(void* widget, int id, int x, int y) {
 	struct ScrollbarWidget* w = (struct ScrollbarWidget*)widget;
 	float scale;
 
@@ -398,7 +398,7 @@ static void HotbarWidget_Render(void* widget, double delta) {
 	HotbarWidget_RenderHotbarBlocks(w);
 }
 
-static cc_bool HotbarWidget_KeyDown(void* widget, Key key) {
+static int HotbarWidget_KeyDown(void* widget, Key key) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 	if (key < '1' || key > '9') return false;
@@ -414,7 +414,7 @@ static cc_bool HotbarWidget_KeyDown(void* widget, Key key) {
 	return true;
 }
 
-static cc_bool HotbarWidget_KeyUp(void* widget, Key key) {
+static int HotbarWidget_KeyUp(void* widget, Key key) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 
@@ -434,7 +434,7 @@ static cc_bool HotbarWidget_KeyUp(void* widget, Key key) {
 	return true;
 }
 
-static cc_bool HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
+static int HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int width, height;
 	int i, cellX, cellY;
@@ -456,7 +456,7 @@ static cc_bool HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	return false;
 }
 
-static cc_bool HotbarWidget_MouseScroll(void* widget, float delta) {
+static int HotbarWidget_MouseScroll(void* widget, float delta) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 
@@ -699,7 +699,7 @@ static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
 	TableWidget_MoveCursorToSelected(w);
 }
 
-static cc_bool TableWidget_PointerDown(void* widget, int id, int x, int y) {
+static int TableWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	w->pendingClose = false;
 
@@ -715,12 +715,12 @@ static cc_bool TableWidget_PointerDown(void* widget, int id, int x, int y) {
 	return false;
 }
 
-static cc_bool TableWidget_PointerUp(void* widget, int id, int x, int y) {
+static int TableWidget_PointerUp(void* widget, int id, int x, int y) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	return Elem_HandlesPointerUp(&w->scroll, id, x, y);
 }
 
-static cc_bool TableWidget_MouseScroll(void* widget, float delta) {
+static int TableWidget_MouseScroll(void* widget, float delta) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	int origTopRow, index;
 
@@ -741,7 +741,7 @@ static cc_bool TableWidget_MouseScroll(void* widget, float delta) {
 	return true;
 }
 
-static cc_bool TableWidget_PointerMove(void* widget, int id, int x, int y) {
+static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	int cellSize, maxHeight;
 	int i, cellX, cellY;
@@ -768,7 +768,7 @@ static cc_bool TableWidget_PointerMove(void* widget, int id, int x, int y) {
 	return true;
 }
 
-static cc_bool TableWidget_KeyDown(void* widget, Key key) {
+static int TableWidget_KeyDown(void* widget, Key key) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	if (w->selectedIndex == -1) return false;
 
@@ -1150,7 +1150,7 @@ static void InputWidget_Reposition(void* widget) {
 	w->inputTex.X += w->x - oldX; w->inputTex.Y += w->y - oldY;
 }
 
-static cc_bool InputWidget_KeyDown(void* widget, Key key) {
+static int InputWidget_KeyDown(void* widget, Key key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	if (key == KEY_LEFT) {
 		InputWidget_LeftKey(w);
@@ -1170,9 +1170,9 @@ static cc_bool InputWidget_KeyDown(void* widget, Key key) {
 	return true;
 }
 
-static cc_bool InputWidget_KeyUp(void* widget, Key key) { return true; }
+static int InputWidget_KeyUp(void* widget, Key key) { return true; }
 
-static cc_bool InputWidget_PointerDown(void* widget, int id, int x, int y) {
+static int InputWidget_PointerDown(void* widget, int id, int x, int y) {
 	String line; char lineBuffer[STRING_SIZE];
 	struct InputWidget* w = (struct InputWidget*)widget;
 	struct DrawTextArgs args;
@@ -1666,7 +1666,7 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	}
 }
 
-static cc_bool ChatInputWidget_KeyDown(void* widget, Key key) {
+static int ChatInputWidget_KeyDown(void* widget, Key key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	if (key == KEY_TAB)  { ChatInputWidget_TabKey(w);  return true; }
 	if (key == KEY_UP)   { ChatInputWidget_UpKey(w);   return true; }
@@ -2658,7 +2658,7 @@ static void SpecialInputWidget_Reposition(void* widget) {
 	w->tex.X = w->x; w->tex.Y = w->y;
 }
 
-static cc_bool SpecialInputWidget_PointerDown(void* widget, int id, int x, int y) {
+static int SpecialInputWidget_PointerDown(void* widget, int id, int x, int y) {
 	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
 	x -= w->x; y -= w->y;
 
