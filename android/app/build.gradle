@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
 
     defaultConfig {
-        applicationId = 'com.classicube.ClassiCube'
+        applicationId = 'com.classicube.android'
         minSdkVersion 14
         targetSdkVersion 28
         externalNativeBuild {

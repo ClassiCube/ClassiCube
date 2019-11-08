@@ -37,9 +37,9 @@ import android.view.inputmethod.InputMethodManager;
 public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	LauncherView curView;
 	
-    // ======================================
-    // -------------- COMMANDS --------------
-    // ======================================
+	// ======================================
+	// -------------- COMMANDS --------------
+	// ======================================
 	class NativeCmdArgs { public int cmd, arg1, arg2, arg3; public Surface sur; }
 	Queue<NativeCmdArgs> nativeCmds = new ConcurrentLinkedQueue<NativeCmdArgs>();
 	Queue<NativeCmdArgs> freeCmds   = new ConcurrentLinkedQueue<NativeCmdArgs>();
@@ -89,43 +89,43 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	final static int CMD_WIN_CREATED   = 6;
 	final static int CMD_WIN_DESTROYED = 7;
 	final static int CMD_WIN_RESIZED   = 8;
-	final static int CMD_WIN_REDRAW    = 9;
+	final static int CMD_WIN_REDRAW	= 9;
 
 	final static int CMD_APP_START   = 10;
-	final static int CMD_APP_STOP    = 11;
+	final static int CMD_APP_STOP	= 11;
 	final static int CMD_APP_RESUME  = 12;
 	final static int CMD_APP_PAUSE   = 13;
 	final static int CMD_APP_DESTROY = 14;
 
-	final static int CMD_GOT_FOCUS      = 15;
-	final static int CMD_LOST_FOCUS     = 16;
+	final static int CMD_GOT_FOCUS	  = 15;
+	final static int CMD_LOST_FOCUS	 = 16;
 	final static int CMD_CONFIG_CHANGED = 17;
-	final static int CMD_LOW_MEMORY     = 18;
+	final static int CMD_LOW_MEMORY	 = 18;
 	
 	// ======================================
-    // --------------- EVENTS ---------------
-    // ======================================
+	// --------------- EVENTS ---------------
+	// ======================================
 	static boolean gameHooked;
 	
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
 		Log.i("CC_WIN", "CREATE EVENT");
 		Window window = getWindow();
 		Log.i("CC_WIN", "GAME RUNNING?" + gameHooked);
 		gameHooked = true;
-        //window.takeSurface(this);
-        //window.takeInputQueue(this);
+		//window.takeSurface(this);
+		//window.takeInputQueue(this);
 		// TODO: Should this be RGBA_8888??
-        window.setFormat(PixelFormat.RGBX_8888);
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+		window.setFormat(PixelFormat.RGBX_8888);
+		window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		// TODO: semaphore for destroyed and surfaceDestroyed
    
 		Log.i("CC_WIN", "handing off to native..");
-        System.loadLibrary("classicube");    
-        runGameAsync();
-        super.onCreate(savedInstanceState);
-    }
+		System.loadLibrary("classicube");	
+		runGameAsync();
+		super.onCreate(savedInstanceState);
+	}
 
 	
 	/*@Override
@@ -251,20 +251,20 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 			case CMD_MOUSE_MOVE: processMouseMove(c.arg1, c.arg2, c.arg3); break;
 	
 			case CMD_WIN_CREATED:   processSurfaceCreated(c.sur);   break;
-			case CMD_WIN_DESTROYED: processSurfaceDestroyed();      break;
+			case CMD_WIN_DESTROYED: processSurfaceDestroyed();	  break;
 			case CMD_WIN_RESIZED:   processSurfaceResized(c.sur);   break;
-			case CMD_WIN_REDRAW:    processSurfaceRedrawNeeded();   break;
+			case CMD_WIN_REDRAW:	processSurfaceRedrawNeeded();   break;
 
 			case CMD_APP_START:   processOnStart();   break;
-			case CMD_APP_STOP:    processOnStop();    break;
+			case CMD_APP_STOP:	processOnStop();	break;
 			case CMD_APP_RESUME:  processOnResume();  break;
 			case CMD_APP_PAUSE:   processOnPause();   break;
 			case CMD_APP_DESTROY: processOnDestroy(); break;
 
-			case CMD_GOT_FOCUS:      processOnGotFocus();      break;
-			case CMD_LOST_FOCUS:     processOnLostFocus();     break;
+			case CMD_GOT_FOCUS:	  processOnGotFocus();	  break;
+			case CMD_LOST_FOCUS:	 processOnLostFocus();	 break;
 			//case CMD_CONFIG_CHANGED: processOnConfigChanged(); break;
-			case CMD_LOW_MEMORY:     processOnLowMemory();     break;
+			case CMD_LOW_MEMORY:	 processOnLowMemory();	 break;
 			}
 			
 			c.sur = null; // don't keep a reference to it
@@ -298,9 +298,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	
 	native void runGameAsync();
 	
-    // ======================================
-    // --------------- VIEWS ----------------
-    // ======================================		
+	// ======================================
+	// --------------- VIEWS ----------------
+	// ======================================		
 	public void surfaceCreated(SurfaceHolder holder) {
 		Log.i("CC_WIN", "win created " + holder.getSurface());
 		pushCmd(CMD_WIN_CREATED, holder.getSurface());
@@ -326,8 +326,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 
 		pushCmd(CMD_WIN_DESTROYED);
 		try {
-            winDestroyedSem.acquire();
-        } catch (InterruptedException e) { }
+			winDestroyedSem.acquire();
+		} catch (InterruptedException e) { }
 	}
 	
 	// Game calls this on its thread to notify the main thread
@@ -346,8 +346,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		curView.getHolder().addCallback(this);
 		curView.getHolder().setFormat(PixelFormat.RGBX_8888);
 		
-        setContentView(curView);
-        curView.requestFocus();
+		setContentView(curView);
+		curView.requestFocus();
 	}
 	
 	void detachSurface() {
@@ -365,19 +365,19 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		}
 	}
 	
-    // ======================================
-    // -------------- PLATFORM --------------
-    // ======================================
+	// ======================================
+	// -------------- PLATFORM --------------
+	// ======================================
 	public void setupForGame() {
 		// Once a surface has been locked for drawing with canvas, can't ever be detached
 		// This means trying to attach an OpenGL ES context to the surface will fail
 		// So just destroy the current surface and make a new one
-        runOnUiThread(new Runnable() {
-            public void run() {
+		runOnUiThread(new Runnable() {
+			public void run() {
 				detachSurface();
 				attachSurface();
-            }
-        });
+			}
+		});
 	}
 	
 	public void startOpen(String url) {
@@ -390,43 +390,34 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	public String getExternalAppDir() {
 		return getExternalFilesDir(null).getAbsolutePath();
 	}
-	
-	public String getCmdLineArg(int i) {
-		Intent intent = getIntent();
-		if (intent == null) return null;
-		
-		String[] all = intent.getStringArrayExtra("com.classicube.args");
-		if (all == null) return null;
-		return i >= all.length ? null : all[i];
-	}
 
-    // ======================================
-    // --------------- WINDOW ---------------
-    // ======================================
+	// ======================================
+	// --------------- WINDOW ---------------
+	// ======================================
 	public void setWindowTitle(String str) { setTitle(str); }
 	
-    public void openKeyboard() {
-        InputMethodManager input = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+	public void openKeyboard() {
+		InputMethodManager input = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 		View view = getWindow().getDecorView();
-        input.showSoftInput(view, 0);
-    }
+		input.showSoftInput(view, 0);
+	}
 
-    public void closeKeyboard() {
-        InputMethodManager input = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+	public void closeKeyboard() {
+		InputMethodManager input = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 		View view = getWindow().getDecorView();
-        input.hideSoftInputFromWindow(view.getWindowToken(), 0);
-    }
+		input.hideSoftInputFromWindow(view.getWindowToken(), 0);
+	}
 
-    public String getClipboardText() {
-        ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
-        CharSequence chars = clipboard.getText();
-        return chars == null ? null : chars.toString();
-    }
+	public String getClipboardText() {
+		ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+		CharSequence chars = clipboard.getText();
+		return chars == null ? null : chars.toString();
+	}
 
-    public void setClipboardText(String str) {
-        ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
-        clipboard.setText(str);
-    }
+	public void setClipboardText(String str) {
+		ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+		clipboard.setText(str);
+	}
 	
 	DisplayMetrics getMetrics() {
 		DisplayMetrics dm = new DisplayMetrics();
@@ -438,116 +429,116 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	public float getDpiX() { return getMetrics().xdpi / 160.0f; }
 	public float getDpiY() { return getMetrics().ydpi / 160.0f; }
 
-    final Semaphore dialogSem = new Semaphore(0, true);
+	final Semaphore dialogSem = new Semaphore(0, true);
 
-    public void showAlert(final String title, final String message) {
-        //final Activity activity = this;
-        runOnUiThread(new Runnable() {
-            public void run() {
-                AlertDialog.Builder dlg = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_HOLO_DARK);
-                dlg.setTitle(title);
-                dlg.setMessage(message);
-                dlg.setPositiveButton("Close", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialogSem.release();
-                    }
-                });
-                dlg.setCancelable(false);
-                dlg.create().show();
-            }
-        });
+	public void showAlert(final String title, final String message) {
+		//final Activity activity = this;
+		runOnUiThread(new Runnable() {
+			public void run() {
+				AlertDialog.Builder dlg = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_HOLO_DARK);
+				dlg.setTitle(title);
+				dlg.setMessage(message);
+				dlg.setPositiveButton("Close", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						dialogSem.release();
+					}
+				});
+				dlg.setCancelable(false);
+				dlg.create().show();
+			}
+		});
 
-        // wait for dialog to be closed
+		// wait for dialog to be closed
+		// TODO: this fails because multiple dialog boxes show
+	}
 
-    }
+	// ======================================
+	// ---------------- HTTP ----------------
+	// ======================================
+	HttpURLConnection conn;
+	InputStream src;
+	byte[] readCache = new byte[8192];
 
-    // ======================================
-    // ---------------- HTTP ----------------
-    // ======================================
-    HttpURLConnection conn;
-    InputStream src;
-    byte[] readCache = new byte[8192];
-
-    public int httpInit(String url, String method) {
+	public int httpInit(String url, String method) {
 		url = url.replace("http://", "https://");
-        try {
-            conn = (HttpURLConnection)new URL(url).openConnection();
-            conn.setDoInput(true);
-            conn.setRequestMethod(method);
-            conn.setInstanceFollowRedirects(true);
-            return 0;
-        } catch (Exception ex) {
-            return httpOnError(ex);
-        }
-    }
+		try {
+			conn = (HttpURLConnection)new URL(url).openConnection();
+			conn.setDoInput(true);
+			conn.setRequestMethod(method);
+			conn.setInstanceFollowRedirects(true);
+			return 0;
+		} catch (Exception ex) {
+			return httpOnError(ex);
+		}
+	}
 
-    public void httpSetHeader(String name, String value) {
-        conn.setRequestProperty(name, value);
-    }
+	public void httpSetHeader(String name, String value) {
+		conn.setRequestProperty(name, value);
+	}
 
-    public int httpSetData(byte[] data) {
-        try {
-            conn.setDoOutput(true);
-            conn.getOutputStream().write(data);
-            conn.getOutputStream().flush();
-            return 0;
-        } catch (Exception ex) {
-            return httpOnError(ex);
-        }
-    }
+	public int httpSetData(byte[] data) {
+		try {
+			conn.setDoOutput(true);
+			conn.getOutputStream().write(data);
+			conn.getOutputStream().flush();
+			return 0;
+		} catch (Exception ex) {
+			return httpOnError(ex);
+		}
+	}
 
-    public int httpPerform() {
-        int len;
-        try {
-            conn.connect();
-            Map<String, List<String>> all = conn.getHeaderFields();
+	public int httpPerform() {
+		int len;
+		try {
+			conn.connect();
+			Map<String, List<String>> all = conn.getHeaderFields();
 
-            for (Map.Entry<String, List<String>> h : all.entrySet()) {
-                String key = h.getKey();
-                for (String value : h.getValue()) {
-                    if (key == null) {
-                        httpParseHeader(value);
-                    } else {
-                        httpParseHeader(key + ":" + value);
-                    }
-                }
-            }
+			for (Map.Entry<String, List<String>> h : all.entrySet()) {
+				String key = h.getKey();
+				for (String value : h.getValue()) {
+					if (key == null) {
+						httpParseHeader(value);
+					} else {
+						httpParseHeader(key + ":" + value);
+					}
+				}
+			}
 
-            src = conn.getInputStream();
-            while ((len = src.read(readCache)) > 0) {
-                httpAppendData(readCache, len);
-            }
+			src = conn.getInputStream();
+			while ((len = src.read(readCache)) > 0) {
+				httpAppendData(readCache, len);
+			}
 
-            httpFinish();
-            return 0;
-        } catch (Exception ex) {
-            return httpOnError(ex);
-        }
-    }
+			httpFinish();
+			return 0;
+		} catch (Exception ex) {
+			return httpOnError(ex);
+		}
+	}
 
-    void httpFinish() {
-        conn = null;
-        try {
-            src.close();
-        } catch (Exception ex) { }
-        src = null;
-    }
+	void httpFinish() {
+		conn = null;
+		try {
+			src.close();
+		} catch (Exception ex) { }
+		src = null;
+	}
 
-    // TODO: Should we prune this list?
-    List<String> errors = new ArrayList<String>();
+	// TODO: Should we prune this list?
+	List<String> errors = new ArrayList<String>();
 
-    int httpOnError(Exception ex) {
-        ex.printStackTrace();
-        httpFinish();
-        errors.add(ex.getMessage());
-        return -errors.size(); // don't want 0 as an error code
-    }
+	int httpOnError(Exception ex) {
+		ex.printStackTrace();
+		httpFinish();
+		errors.add(ex.getMessage());
+		return -errors.size(); // don't want 0 as an error code
+	}
 
-    public String httpDescribeError(int res) {
-        res = -res - 1;
-        return res >= 0 && res < errors.size() ? errors.get(res) : null;
-    }
+	public String httpDescribeError(int res) {
+		res = -res - 1;
+		return res >= 0 && res < errors.size() ? errors.get(res) : null;
+	}
 
-    native void httpParseHeader(String header);
-    native void httpAppendData(byte[] data, int len);
+	native void httpParseHeader(String header);
+	native void httpAppendData(byte[] data, int len);
 }
