@@ -10,8 +10,16 @@
 *.VC.db
 *.VC.VC.opendb
 
+# Android build results
+android/.gradle/
+android/gradle/
+android/build/
+android/app/build/
+android/app/.externalNativeBuild/
+android/local.properties
+*.iml
+
 # Build results
-[Aa]ndroid/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
