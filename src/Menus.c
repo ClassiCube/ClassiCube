@@ -254,7 +254,7 @@ static struct ListScreen {
 	struct FontDesc font;
 	float wheelAcc;
 	int currentIndex;
-	Widget_LeftClick EntryClick;
+	Widget_LeftClick EntryClick, DoneClick;
 	void (*LoadEntries)(struct ListScreen* s);
 	void (*UpdateEntry)(struct ListScreen* s, struct ButtonWidget* btn, const String* text);
 	const char* titleText;
@@ -412,7 +412,7 @@ static void ListScreen_Init(void* screen) {
 					ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -155);
 	Menu_Label(s,  8, &s->page,  
 					ANCHOR_CENTRE,    ANCHOR_MAX,    0,   75);
-	Menu_Back(s,   9, &s->done, Menu_SwitchPause);
+	Menu_Back(s,   9, &s->done, s->DoneClick);
 	s->LoadEntries(s);
 }
 
@@ -1437,6 +1437,7 @@ void TexturePackScreen_Show(void) {
 	s->titleText   = "Select a texture pack zip";
 	s->LoadEntries = TexturePackScreen_LoadEntries;
 	s->EntryClick  = TexturePackScreen_EntryClick;
+	s->DoneClick   = Menu_SwitchPause;
 	s->UpdateEntry = ListScreen_UpdateEntry;
 	ListScreen_Show();
 }
@@ -1484,6 +1485,7 @@ void FontListScreen_Show(void) {
 	s->titleText   = "Select a font";
 	s->LoadEntries = FontListScreen_LoadEntries;
 	s->EntryClick  = FontListScreen_EntryClick;
+	s->DoneClick   = Menu_SwitchGui;
 	s->UpdateEntry = FontListScreen_UpdateEntry;
 	ListScreen_Show();
 }
@@ -1559,6 +1561,7 @@ void HotkeyListScreen_Show(void) {
 	s->titleText   = "Modify hotkeys";
 	s->LoadEntries = HotkeyListScreen_LoadEntries;
 	s->EntryClick  = HotkeyListScreen_EntryClick;
+	s->DoneClick   = Menu_SwitchPause;
 	s->UpdateEntry = ListScreen_UpdateEntry;
 	ListScreen_Show();
 }
@@ -1600,6 +1603,7 @@ void LoadLevelScreen_Show(void) {
 	s->titleText   = "Select a level";
 	s->LoadEntries = LoadLevelScreen_LoadEntries;
 	s->EntryClick  = LoadLevelScreen_EntryClick;
+	s->DoneClick   = Menu_SwitchPause;
 	s->UpdateEntry = ListScreen_UpdateEntry;
 	ListScreen_Show();
 }
