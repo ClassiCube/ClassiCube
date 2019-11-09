@@ -1024,7 +1024,7 @@ cc_result Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 	}
 
 	if (selectCount == -1) { *success = false; return Socket__Error(); }
-	*success = FD_ISSET(socket, &set); return 0;
+	*success = FD_ISSET(socket, &set) != 0; return 0;
 }
 #else
 #include <poll.h>
