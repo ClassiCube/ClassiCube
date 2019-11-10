@@ -1570,8 +1570,8 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {
 	Screen_NullFunc,         TouchScreen_Render,      Screen_NullFunc,
-	Screen_FInput,           Screen_FInput,           Screen_FKeyPress,    Screen_FText,
-	TouchScreen_PointerDown, TouchScreen_PointerUp,   Screen_FPointerMove, Screen_FMouseScroll,
+	Screen_FInput,           Screen_FInput,           Screen_FKeyPress, Screen_FText,
+	TouchScreen_PointerDown, TouchScreen_PointerUp,   Screen_FPointer,  Screen_FMouseScroll,
 	TouchScreen_Layout,    TouchScreen_ContextLost, TouchScreen_ContextRecreated
 };
 void TouchScreen_Show(void) {
