@@ -185,7 +185,7 @@ const char* const Input_Names[INPUT_COUNT] = {
 	"XBUTTON1", "XBUTTON2", "MMOUSE"
 };*/
 
-void Input_SetPressed(Key key, cc_bool pressed) {
+void Input_SetPressed(int key, cc_bool pressed) {
 	cc_bool wasPressed = Input_Pressed[key];
 	Input_Pressed[key] = pressed;
 
@@ -277,7 +277,7 @@ cc_bool KeyBind_IsPressed(KeyBind binding) { return Input_Pressed[KeyBinds[bindi
 
 static void KeyBind_Load(void) {
 	String name; char nameBuffer[STRING_SIZE + 1];
-	Key mapping;
+	int mapping;
 	int i;
 
 	String_InitArray_NT(name, nameBuffer);
@@ -306,7 +306,7 @@ static void KeyBind_Save(void) {
 	}
 }
 
-void KeyBind_Set(KeyBind binding, Key key) {
+void KeyBind_Set(KeyBind binding, int key) {
 	KeyBinds[binding] = key;
 	KeyBind_Save();
 }
@@ -363,7 +363,7 @@ static void Hotkeys_QuickSort(int left, int right) {
 	}
 }
 
-static void Hotkeys_AddNewHotkey(Key trigger, cc_uint8 modifiers, const String* text, cc_bool more) {
+static void Hotkeys_AddNewHotkey(int trigger, cc_uint8 modifiers, const String* text, cc_bool more) {
 	struct HotkeyData hKey;
 	hKey.Trigger = trigger;
 	hKey.Flags   = modifiers;
@@ -392,7 +392,7 @@ static void Hotkeys_RemoveText(int index) {
 }
 
 
-void Hotkeys_Add(Key trigger, cc_uint8 modifiers, const String* text, cc_bool more) {
+void Hotkeys_Add(int trigger, cc_uint8 modifiers, const String* text, cc_bool more) {
 	struct HotkeyData* hk = HotkeysList;
 	int i;
 
@@ -408,7 +408,7 @@ void Hotkeys_Add(Key trigger, cc_uint8 modifiers, const String* text, cc_bool mo
 	Hotkeys_AddNewHotkey(trigger, modifiers, text, more);
 }
 
-cc_bool Hotkeys_Remove(Key trigger, cc_uint8 modifiers) {
+cc_bool Hotkeys_Remove(int trigger, cc_uint8 modifiers) {
 	struct HotkeyData* hk = HotkeysList;
 	int i, j;
 
@@ -424,7 +424,7 @@ cc_bool Hotkeys_Remove(Key trigger, cc_uint8 modifiers) {
 	return false;
 }
 
-int Hotkeys_FindPartial(Key key) {
+int Hotkeys_FindPartial(int key) {
 	struct HotkeyData hk;
 	int i, modifiers = 0;
 
@@ -447,7 +447,7 @@ static void Hotkeys_Init(void) {
 	String entry, key, value;
 	int i;
 
-	Key trigger;
+	int trigger;
 	cc_uint8 modifiers;
 	cc_bool more;
 
@@ -471,7 +471,7 @@ static void Hotkeys_Init(void) {
 	}
 }
 
-void Hotkeys_UserRemovedHotkey(Key trigger, cc_uint8 modifiers) {
+void Hotkeys_UserRemovedHotkey(int trigger, cc_uint8 modifiers) {
 	String key; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
@@ -479,7 +479,7 @@ void Hotkeys_UserRemovedHotkey(Key trigger, cc_uint8 modifiers) {
 	Options_SetString(&key, NULL);
 }
 
-void Hotkeys_UserAddedHotkey(Key trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text) {
+void Hotkeys_UserAddedHotkey(int trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text) {
 	String key;   char keyBuffer[STRING_SIZE];
 	String value; char valueBuffer[STRING_SIZE * 2];
 	String_InitArray(key, keyBuffer);
@@ -728,7 +728,7 @@ void InputHandler_PickBlocks(void) {
 /*########################################################################################################################*
 *------------------------------------------------------Key helpers--------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool InputHandler_IsShutdown(Key key) {
+static cc_bool InputHandler_IsShutdown(int key) {
 	if (key == KEY_F4 && Key_IsAltPressed()) return true;
 
 	/* On OSX, Cmd+Q should also terminate the process */
@@ -739,7 +739,7 @@ static cc_bool InputHandler_IsShutdown(Key key) {
 #endif
 }
 
-static void InputHandler_Toggle(Key key, cc_bool* target, const char* enableMsg, const char* disableMsg) {
+static void InputHandler_Toggle(int key, cc_bool* target, const char* enableMsg, const char* disableMsg) {
 	*target = !(*target);
 	if (*target) {
 		Chat_Add2("%c. &ePress &a%c &eto disable.",   enableMsg,  Input_Names[key]);
@@ -800,7 +800,7 @@ static void InputHandler_CheckZoomFov(void* obj) {
 	if (!h->Enabled || !h->CanUseThirdPersonCamera) Game_SetFov(Game_DefaultFov);
 }
 
-static cc_bool HandleBlockKey(Key key) {
+static cc_bool HandleBlockKey(int key) {
 	if (Gui_GetInputGrab()) return false;
 
 	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) {
@@ -818,7 +818,7 @@ static cc_bool HandleBlockKey(Key key) {
 	return true;
 }
 
-static cc_bool HandleNonClassicKey(Key key) {
+static cc_bool HandleNonClassicKey(int key) {
 	if (key == KeyBinds[KEYBIND_HIDE_GUI]) {
 		Game_HideGui = !Game_HideGui;
 	} else if (key == KeyBinds[KEYBIND_SMOOTH_CAMERA]) {
@@ -854,7 +854,7 @@ static cc_bool HandleNonClassicKey(Key key) {
 	return true;
 }
 
-static cc_bool HandleCoreKey(Key key) {
+static cc_bool HandleCoreKey(int key) {
 	cc_result res;
 
 	if (key == KeyBinds[KEYBIND_HIDE_FPS]) {
@@ -888,7 +888,7 @@ static cc_bool HandleCoreKey(Key key) {
 	return true;
 }
 
-static void HandleHotkeyDown(Key key) {
+static void HandleHotkeyDown(int key) {
 	struct HotkeyData* hkey;
 	String text;
 	int i = Hotkeys_FindPartial(key);

@@ -8,6 +8,7 @@
 #include "LWeb.h"
 #include "Platform.h"
 #include "LScreens.h"
+#include "Input.h"
 
 #ifndef CC_BUILD_WEB
 #define BORDER 1
@@ -404,7 +405,7 @@ static void LInput_CopyFromClipboard(String* text, void* widget) {
 	LInput_AppendString(w, text);
 }
 
-static void LInput_KeyDown(void* widget, Key key, cc_bool was) {
+static void LInput_KeyDown(void* widget, int key, cc_bool was) {
 	struct LInput* w = (struct LInput*)widget;
 	if (key == KEY_BACKSPACE) {
 		LInput_Backspace(w);
@@ -924,11 +925,11 @@ static void LTable_DrawScrollbar(struct LTable* w) {
 					x, w->Y + y, w->ScrollbarWidth, height);
 }
 
-cc_bool LTable_HandlesKey(Key key) {
+cc_bool LTable_HandlesKey(int key) {
 	return key == KEY_UP || key == KEY_DOWN || key == KEY_PAGEUP || key == KEY_PAGEDOWN;
 }
 
-static void LTable_KeyDown(void* widget, Key key, cc_bool was) {
+static void LTable_KeyDown(void* widget, int key, cc_bool was) {
 	struct LTable* w = (struct LTable*)widget;
 	int index = LTable_GetSelectedIndex(w);
 

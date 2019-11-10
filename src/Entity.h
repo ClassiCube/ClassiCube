@@ -3,7 +3,6 @@
 #include "EntityComponents.h"
 #include "Physics.h"
 #include "Constants.h"
-#include "Input.h"
 #include "PackedCol.h"
 /* Represents an in-game entity.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
@@ -202,5 +201,5 @@ float LocalPlayer_JumpHeight(void);
 void LocalPlayer_SetInterpPosition(float t);
 /* Returns whether local player handles a key being pressed. */
 /* e.g. for respawn, toggle fly, etc. */
-cc_bool LocalPlayer_HandlesKey(Key key);
+cc_bool LocalPlayer_HandlesKey(int key);
 #endif

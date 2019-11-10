@@ -166,7 +166,7 @@ static const cc_uint8 key_map[14 * 16] = {
 	KEY_TILDE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_LBRACKET, KEY_BACKSLASH, KEY_RBRACKET, KEY_QUOTE, 0,
 };
-static Key Window_MapKey(WPARAM key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+static int Window_MapKey(WPARAM key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 
 static void Window_RefreshBounds(void) {
 	RECT rect;
@@ -296,7 +296,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		LPARAM ext = lParam & (1UL << 24);
 
 		cc_bool lShiftDown, rShiftDown;
-		Key key;
+		int key;
 		switch (wParam)
 		{
 		case VK_SHIFT:
@@ -747,7 +747,7 @@ static long win_eventMask;
 /*########################################################################################################################*
 *-----------------------------------------------------Private details-----------------------------------------------------*
 *#########################################################################################################################*/
-static Key Window_MapKey(KeySym key) {
+static int Window_MapKey(KeySym key) {
 	if (key >= XK_0 && key <= XK_9) { return '0' + (key - XK_0); }
 	if (key >= XK_A && key <= XK_Z) { return 'A' + (key - XK_A); }
 	if (key >= XK_a && key <= XK_z) { return 'A' + (key - XK_a); }
@@ -1052,7 +1052,7 @@ static void Window_ToggleKey(XKeyEvent* keyEvent, cc_bool pressed) {
 	KeySym keysym1 = XLookupKeysym(keyEvent, 0);
 	KeySym keysym2 = XLookupKeysym(keyEvent, 1);
 
-	Key key = Window_MapKey(keysym1);
+	int key = Window_MapKey(keysym1);
 	if (!key) key = Window_MapKey(keysym2);
 	if (key)  Input_SetPressed(key, pressed);
 }
@@ -1708,7 +1708,7 @@ static const cc_uint8 key_map[8 * 16] = {
 	KEY_F5, KEY_F6, KEY_F7, KEY_F3, KEY_F8, KEY_F9, 0, KEY_F11, 0, KEY_F13, 0, KEY_F14, 0, KEY_F10, 0, KEY_F12,
 	'U', KEY_F15, KEY_INSERT, KEY_HOME, KEY_PAGEUP, KEY_DELETE, KEY_F4, KEY_END, KEY_F2, KEY_PAGEDOWN, KEY_F1, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, 0,
 };
-static Key Window_MapKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+static int Window_MapKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 /* TODO: Check these.. */
 /*   case 0x37: return KEY_LWIN; */
 /*   case 0x38: return KEY_LSHIFT; */
@@ -1853,7 +1853,7 @@ static void Window_RefreshBounds(void) {
 
 static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
 	UInt32 kind, code;
-	Key key;
+	int key;
 	OSStatus res;
 	
 	kind = GetEventKind(inEvent);
@@ -2524,7 +2524,7 @@ void Window_Close(void) {
 	SDL_PushEvent(&e);
 }
 
-static Key Window_MapKey(SDL_Keycode k) {
+static int Window_MapKey(SDL_Keycode k) {
 	if (k >= SDLK_0   && k <= SDLK_9)   { return '0'     + (k - SDLK_0); }
 	if (k >= SDLK_a   && k <= SDLK_z)   { return 'A'     + (k - SDLK_a); }
 	if (k >= SDLK_F1  && k <= SDLK_F12) { return KEY_F1  + (k - SDLK_F1); }
@@ -2587,7 +2587,7 @@ static Key Window_MapKey(SDL_Keycode k) {
 
 static void Window_HandleKeyEvent(const SDL_Event* e) {
 	cc_bool pressed = e->key.state == SDL_PRESSED;
-	Key key = Window_MapKey(e->key.keysym.sym);
+	int key = Window_MapKey(e->key.keysym.sym);
 	if (key) Input_SetPressed(key, pressed);
 }
 
@@ -2911,7 +2911,7 @@ static const char* Window_BeforeUnload(int type, const void* ev, void *data) {
 	return NULL;
 }
 
-static Key Window_MapKey(int k) {
+static int Window_MapKey(int k) {
 	if (k >= '0' && k <= '9') return k;
 	if (k >= 'A' && k <= 'Z') return k;
 	if (k >= DOM_VK_F1      && k <= DOM_VK_F24)      { return KEY_F1  + (k - DOM_VK_F1); }
@@ -2971,7 +2971,7 @@ static Key Window_MapKey(int k) {
 }
 
 static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* data) {
-	Key key = Window_MapKey(ev->keyCode);
+	int key = Window_MapKey(ev->keyCode);
 	Window_CorrectFocus();
 	if (!key) return false;
 
@@ -3344,7 +3344,7 @@ static void Window_RefreshBounds(void) {
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
-static Key Window_MapKey(int code) {
+static int Window_MapKey(int code) {
 	if (code >= AKEYCODE_0  && code <= AKEYCODE_9)   return (code - AKEYCODE_0)  + '0';
 	if (code >= AKEYCODE_A  && code <= AKEYCODE_Z)   return (code - AKEYCODE_A)  + 'A';
 	if (code >= AKEYCODE_F1 && code <= AKEYCODE_F12) return (code - AKEYCODE_F1) + KEY_F1;

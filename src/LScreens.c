@@ -12,6 +12,7 @@
 #include "Resources.h"
 #include "Logger.h"
 #include "Window.h"
+#include "Input.h"
 
 #ifndef CC_BUILD_WEB
 /*########################################################################################################################*
@@ -91,7 +92,7 @@ static void LScreen_HandleTab(struct LScreen* s) {
 	}
 }
 
-static void LScreen_KeyDown(struct LScreen* s, Key key, cc_bool was) {
+static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 	if (key == KEY_TAB) {
 		LScreen_HandleTab(s);
 	} else if (key == KEY_ENTER) {
@@ -400,7 +401,7 @@ static void ColoursScreen_MouseWheel(struct LScreen* s_, float delta) {
 	ColoursScreen_AdjustSelected(s_, steps);
 }
 
-static void ColoursScreen_KeyDown(struct LScreen* s, Key key, cc_bool was) {
+static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 	if (key == KEY_LEFT) {
 		ColoursScreen_AdjustSelected(s, -1);
 	} else if (key == KEY_RIGHT) {
@@ -1265,7 +1266,7 @@ static void ServersScreen_MouseWheel(struct LScreen* s_, float delta) {
 	s->table.VTABLE->MouseWheel(&s->table, delta);
 }
 
-static void ServersScreen_KeyDown(struct LScreen* s_, Key key, cc_bool was) {
+static void ServersScreen_KeyDown(struct LScreen* s_, int key, cc_bool was) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	if (!LTable_HandlesKey(key)) {
 		LScreen_KeyDown(s_, key, was);

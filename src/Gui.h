@@ -1,6 +1,5 @@
 #ifndef CC_GUI_H
 #define CC_GUI_H
-#include "Input.h"
 #include "Event.h"
 #include "VertexStructs.h"
 /* Describes and manages 2D GUI elements on screen.
@@ -44,11 +43,14 @@ struct ScreenVTABLE {
 	/* Frees/releases persistent state. */
 	void (*Free)(void* elem);
 	/* Returns non-zero if an input press is handled. */
-	int  (*HandlesKeyDown)(void* elem, Key key);
+	int  (*HandlesKeyDown)(void* elem, int key);
 	/* Returns non-zero if an input release is handled. */
-	int  (*HandlesKeyUp)(void* elem, Key key);
+	int  (*HandlesKeyUp)(void* elem, int key);
 	/* Returns non-zero if a key character press is handled. */
 	int  (*HandlesKeyPress)(void* elem, char keyChar);
+	/* Returns non-zero if a key character press is handled. */
+	/* Currently only raised by on-screen keyboard in web client. */
+	int  (*HandlesTextChanged)(void* elem, const String* str);
 	/* Returns non-zero if a pointer press is handled. */
 	int  (*HandlesPointerDown)(void* elem, int id, int x, int y);
 	/* Returns non-zero if a pointer release is handled. */
@@ -82,9 +84,9 @@ struct WidgetVTABLE {
 	/* Positions this widget on-screen. */
 	void (*Reposition)(void* elem);
 	/* Returns non-zero if an input press is handled. */
-	int (*HandlesKeyDown)(void* elem, Key key);
+	int (*HandlesKeyDown)(void* elem, int key);
 	/* Returns non-zero if an input release is handled. */
-	int (*HandlesKeyUp)(void* elem, Key key);
+	int (*HandlesKeyUp)(void* elem, int key);
 	/* Returns non-zero if a mouse wheel scroll is handled. */
 	int (*HandlesMouseScroll)(void* elem, float delta);
 	/* Returns non-zero if a pointer press is handled. */

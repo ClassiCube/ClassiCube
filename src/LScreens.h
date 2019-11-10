@@ -1,6 +1,6 @@
 #ifndef CC_LSCREENS_H
 #define CC_LSCREENS_H
-#include "Input.h"
+#include "Core.h"
 /* Implements screens/menus for the launcher.
 	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
@@ -17,7 +17,7 @@ typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	LScreen_Func Draw;   /* Draws all widgets and any other features such as lines/rectangles. */ \
 	LScreen_Func Tick;   /* Repeatedly called multiple times every second. */ \
 	LScreen_Func OnDisplay; /* Called when framebuffer is about to be displayed. */ \
-	void (*KeyDown)(struct LScreen* s,    Key key, cc_bool wasDown); \
+	void (*KeyDown)(struct LScreen* s,    int key, cc_bool wasDown); \
 	void (*KeyPress)(struct LScreen* s,   char c);  \
 	void (*MouseDown)(struct LScreen* s,  int btn); \
 	void (*MouseUp)(struct LScreen* s,    int btn); \

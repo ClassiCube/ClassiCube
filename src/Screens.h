@@ -10,16 +10,16 @@ struct Widget;
 /* These always return false */
 int Screen_FInput(void* s, int key);
 int Screen_FKeyPress(void* s, char keyChar);
+int Screen_FText(void* s, const String* str);
 int Screen_FMouseScroll(void* s, float delta);
 int Screen_FPointer(void* s, int id, int x, int y);
-int Screen_FPointerMove(void* s, int id, int x, int y);
 
 /* These always return true */
 int Screen_TInput(void* s, int key);
 int Screen_TKeyPress(void* s, char keyChar);
+int Screen_TText(void* s, const String* str);
 int Screen_TMouseScroll(void* s, float delta);
 int Screen_TPointer(void* s, int id, int x, int y);
-int Screen_TPointerMove(void* s, int id, int x, int y);
 
 void InventoryScreen_Show(void);
 void HUDScreen_Show(void);

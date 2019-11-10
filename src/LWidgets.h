@@ -2,7 +2,7 @@
 #define CC_LWIDGETS_H
 #include "Bitmap.h"
 #include "Constants.h"
-#include "Input.h"
+#include "String.h"
 /* Describes and manages individual 2D GUI elements in the launcher.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
@@ -15,7 +15,7 @@ struct LWidgetVTABLE {
 	/* Called repeatedly to update this widget when selected. */
 	void (*Tick)(void* widget);
 	/* Called when key is pressed and this widget is selected. */
-	void (*KeyDown)(void* widget, Key key, cc_bool wasDown);
+	void (*KeyDown)(void* widget, int key, cc_bool wasDown);
 	/* Called when key is pressed and this widget is selected. */
 	void (*KeyPress)(void* widget, char c);
 	/* Called when mouse hovers/moves over this widget. */
@@ -195,7 +195,7 @@ void LTable_Reset(struct LTable* table);
 void LTable_Reposition(struct LTable* table);
 /* Whether this table would handle the given key being pressed. */
 /* e.g. used so pressing up/down works even when another widget is selected */
-cc_bool LTable_HandlesKey(Key key);
+cc_bool LTable_HandlesKey(int key);
 /* Filters rows to only show those containing 'w->Filter' in the name. */
 void LTable_ApplyFilter(struct LTable* table);
 /* Sorts the rows in the table by current Sorter function of table */

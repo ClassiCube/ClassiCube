@@ -6,7 +6,7 @@
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
-enum Key_ {
+enum Key {
 	KEY_NONE, /* Unrecognised key */
 
 	KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10,
@@ -44,7 +44,6 @@ enum Key_ {
 	KEY_XBUTTON1, KEY_XBUTTON2, KEY_LMOUSE, KEY_RMOUSE, KEY_MMOUSE,
 	INPUT_COUNT
 };
-typedef int Key;
 
 /* Simple names for each keyboard button. */
 extern const char* const Input_Names[INPUT_COUNT];
@@ -66,7 +65,7 @@ extern cc_bool Input_Pressed[INPUT_COUNT];
 /* Sets the pressed state of a keyboard button. */
 /* Raises InputEvents.Up   if not pressed, but was pressed before. */
 /* Raises InputEvents.Down if pressed (repeating is whether it was pressed before) */
-void Input_SetPressed(Key key, cc_bool pressed);
+void Input_SetPressed(int key, cc_bool pressed);
 /* Resets all keyboard keys to released state. */
 /* Raises InputEvents.Up for each previously pressed key. */
 void Key_Clear(void);
@@ -125,7 +124,7 @@ extern const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT];
 /* Gets whether the key bound to the given key binding is pressed. */
 cc_bool KeyBind_IsPressed(KeyBind binding);
 /* Set the key that the given key binding is bound to. (also updates options list) */
-void KeyBind_Set(KeyBind binding, Key key);
+void KeyBind_Set(KeyBind binding, int key);
 
 extern const cc_uint8 Hotkeys_LWJGL[256];
 struct HotkeyData {
@@ -143,16 +142,16 @@ enum HotkeyModifiers {
 };
 
 /* Adds or updates a new hotkey. */
-void Hotkeys_Add(Key trigger, cc_uint8 modifiers, const String* text, cc_bool more);
+void Hotkeys_Add(int trigger, cc_uint8 modifiers, const String* text, cc_bool more);
 /* Removes the given hotkey. */
-cc_bool Hotkeys_Remove(Key trigger, cc_uint8 modifiers);
+cc_bool Hotkeys_Remove(int trigger, cc_uint8 modifiers);
 /* Returns the first hotkey which is bound to the given key and has its modifiers pressed. */
 /* NOTE: The hotkeys list is sorted, so hotkeys with most modifiers are checked first. */
-int Hotkeys_FindPartial(Key key);
+int Hotkeys_FindPartial(int key);
 /* Called when user has removed a hotkey. (removes it from options) */
-void Hotkeys_UserRemovedHotkey(Key trigger, cc_uint8 modifiers);
+void Hotkeys_UserRemovedHotkey(int trigger, cc_uint8 modifiers);
 /* Called when user has added a hotkey. (Adds it to options) */
-void Hotkeys_UserAddedHotkey(Key trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text);
+void Hotkeys_UserAddedHotkey(int trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text);
 
 cc_bool InputHandler_SetFOV(int fov);
 void InputHandler_PickBlocks(void);

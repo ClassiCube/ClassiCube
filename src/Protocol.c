@@ -939,7 +939,7 @@ static void CPE_SetTextHotkey(cc_uint8* data) {
 	String action    = Protocol_UNSAFE_GetString(&data[64]);
 	cc_uint32 keyCode = Stream_GetU32_BE(&data[128]);
 	cc_uint8 keyMods  = data[132];
-	Key key;
+	int key;
 	
 	if (keyCode > 255) return;
 	key = Hotkeys_LWJGL[keyCode];

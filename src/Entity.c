@@ -1028,7 +1028,7 @@ static cc_bool LocalPlayer_HandleNoClip(void) {
 	return false;
 }
 
-cc_bool LocalPlayer_HandlesKey(Key key) {
+cc_bool LocalPlayer_HandlesKey(int key) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;

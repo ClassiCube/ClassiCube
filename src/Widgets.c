@@ -21,7 +21,7 @@
 #define Widget_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f)
 static void Widget_NullFunc(void* widget) { }
 static int Widget_Pointer(void* elem, int id, int x, int y) { return false; }
-static int Widget_Key(void* elem, Key key) { return false; }
+static int Widget_Key(void* elem, int key) { return false; }
 static int Widget_PointerMove(void* elem, int id, int x, int y) { return false; }
 static int Widget_MouseScroll(void* elem, float delta) { return false; }
 
@@ -398,7 +398,7 @@ static void HotbarWidget_Render(void* widget, double delta) {
 	HotbarWidget_RenderHotbarBlocks(w);
 }
 
-static int HotbarWidget_KeyDown(void* widget, Key key) {
+static int HotbarWidget_KeyDown(void* widget, int key) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 	if (key < '1' || key > '9') return false;
@@ -414,7 +414,7 @@ static int HotbarWidget_KeyDown(void* widget, Key key) {
 	return true;
 }
 
-static int HotbarWidget_KeyUp(void* widget, Key key) {
+static int HotbarWidget_KeyUp(void* widget, int key) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	int index;
 
@@ -768,7 +768,7 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 	return true;
 }
 
-static int TableWidget_KeyDown(void* widget, Key key) {
+static int TableWidget_KeyDown(void* widget, int key) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	if (w->selectedIndex == -1) return false;
 
@@ -1106,7 +1106,7 @@ static void InputWidget_CopyFromClipboard(String* text, void* w) {
 	InputWidget_AppendString((struct InputWidget*)w, text);
 }
 
-static cc_bool InputWidget_OtherKey(struct InputWidget* w, Key key) {
+static cc_bool InputWidget_OtherKey(struct InputWidget* w, int key) {
 	int maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
 	if (!Key_IsActionPressed()) return false;
 
@@ -1150,7 +1150,7 @@ static void InputWidget_Reposition(void* widget) {
 	w->inputTex.X += w->x - oldX; w->inputTex.Y += w->y - oldY;
 }
 
-static int InputWidget_KeyDown(void* widget, Key key) {
+static int InputWidget_KeyDown(void* widget, int key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	if (key == KEY_LEFT) {
 		InputWidget_LeftKey(w);
@@ -1170,7 +1170,7 @@ static int InputWidget_KeyDown(void* widget, Key key) {
 	return true;
 }
 
-static int InputWidget_KeyUp(void* widget, Key key) { return true; }
+static int InputWidget_KeyUp(void* widget, int key) { return true; }
 
 static int InputWidget_PointerDown(void* widget, int id, int x, int y) {
 	String line; char lineBuffer[STRING_SIZE];
@@ -1666,7 +1666,7 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 	}
 }
 
-static int ChatInputWidget_KeyDown(void* widget, Key key) {
+static int ChatInputWidget_KeyDown(void* widget, int key) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	if (key == KEY_TAB)  { ChatInputWidget_TabKey(w);  return true; }
 	if (key == KEY_UP)   { ChatInputWidget_UpKey(w);   return true; }
