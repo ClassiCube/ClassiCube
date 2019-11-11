@@ -90,6 +90,8 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <mach/mach_time.h>
 #include <mach-o/dyld.h>
 #include <ApplicationServices/ApplicationServices.h>
+#elif defined CC_BUILD_HAIKU
+#include <kernel/image.h>
 #elif defined CC_BUILD_WEB
 #include <emscripten.h>
 #endif
@@ -1250,6 +1252,18 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 static cc_result Process_RawGetExePath(char* path, int* len) {
 	*len = readlink("/proc/self/path/a.out", path, NATIVE_STR_LEN);
 	return *len == -1 ? errno : 0;
+}
+#elif defined CC_BUILD_HAIKU
+static cc_result Process_RawGetExePath(char* path, int* len) {
+	image_info info;
+	int32 cookie = 0;
+
+	cc_result res = get_next_image_info(B_CURRENT_TEAM, &cookie, &info);
+	if (res != B_OK) return res;
+
+	*len = String_CalcLen(info.name, NATIVE_STR_LEN);
+	Mem_Copy(path, info.name, *len);
+	return 0;
 }
 #endif
 

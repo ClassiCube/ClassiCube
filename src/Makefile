@@ -90,6 +90,8 @@ openbsd:
 	$(MAKE) $(ENAME) PLAT=openbsd -j$(JOBS)
 netbsd:
 	$(MAKE) $(ENAME) PLAT=netbsd -j$(JOBS)
+haiku:
+	$(MAKE) $(ENAME) PLAT=haiku -j$(JOBS)
 	
 clean:
 	$(DEL) $(OBJECTS)
