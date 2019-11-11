@@ -584,6 +584,19 @@ static void Logger_PrintRegisters(String* str, void* ctx) {
 	#error "Unknown CPU architecture"
 #endif
 }
+#elif defined CC_BUILD_HAIKU
+static void Logger_PrintRegisters(String* str, void* ctx) {
+	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
+#if defined __i386__
+	#define REG_GET(reg, ign) &r.me##reg
+	Logger_Dump_X86()
+#elif defined __x86_64__
+	#define REG_GET(reg, ign) &r.r##reg
+	Logger_Dump_X64()
+#else
+	#error "Unknown CPU architecture"
+#endif
+}
 #endif
 static void Logger_DumpRegisters(void* ctx) {
 	String str; char strBuffer[768];

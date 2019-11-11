@@ -91,6 +91,8 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <mach-o/dyld.h>
 #include <ApplicationServices/ApplicationServices.h>
 #elif defined CC_BUILD_HAIKU
+#define CC_BUILD_HAIKU
+/* TODO: Use open instead of xdg-open */
 #include <kernel/image.h>
 #elif defined CC_BUILD_WEB
 #include <emscripten.h>
@@ -874,6 +876,10 @@ void Platform_LoadSysFonts(void) {
 		String_FromConst("/usr/pkg/lib/X11/fonts"),
 		String_FromConst("/usr/pkg/share/fonts")
 	};
+#elif defined CC_BUILD_HAIKU
+	static const String dirs[1] = {
+		String_FromConst("/system/data/fonts")
+	};
 #elif defined CC_BUILD_UNIX
 	static const String dirs[2] = {
 		String_FromConst("/usr/share/fonts"),
@@ -883,10 +889,6 @@ void Platform_LoadSysFonts(void) {
 	static const String dirs[2] = {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
-	};
-#elif defined CC_BUILD_HAIKU
-	static const String dirs[1] = {
-		String_FromConst("/system/data/fonts")
 	};
 #endif
 	for (i = 0; i < Array_Elems(dirs); i++) {
