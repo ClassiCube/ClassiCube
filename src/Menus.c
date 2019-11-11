@@ -3322,7 +3322,7 @@ static void TouchMoreOverlay_Init(void* screen) {
 
 static const struct ScreenVTABLE TouchMoreOverlay_VTABLE = {
 	TouchMoreOverlay_Init, MenuScreen_Render, Menu_NullFunc,
-	Screen_TInput,         Screen_TInput,     Screen_TKeyPress,
+	Screen_TInput,         Screen_TInput,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,      Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
 	Menu_Layout,         Menu_ContextLost,  TouchMoreOverlay_ContextRecreated
 };
