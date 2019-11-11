@@ -62,6 +62,12 @@ LDFLAGS=-L /usr/X11R7/lib -L /usr/pkg/lib
 LIBS=-lcurl -lexecinfo -lopenal -lGL -lX11
 endif
 
+ifeq ($(PLAT),haiku)
+CFLAGS=-w -g -pipe
+LDFLAGS=-g
+LIBS=-lcurl -lm -lexecinfo -lopenal -lGL
+endif
+
 ifeq ($(OS),Windows_NT)
 DEL=del
 endif

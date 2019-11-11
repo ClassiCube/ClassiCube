@@ -17,7 +17,7 @@
 #define NOIME
 #include <windows.h>
 #include <imagehlp.h>
-#elif defined CC_BUILD_OPENBSD
+#elif defined CC_BUILD_OPENBSD || defined CC_BUILD_HAIKU
 #include <signal.h>
 /* OpenBSD doesn't provide sys/ucontext.h */
 #elif defined CC_BUILD_LINUX || defined CC_BUILD_ANDROID

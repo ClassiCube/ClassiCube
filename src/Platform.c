@@ -882,6 +882,10 @@ void Platform_LoadSysFonts(void) {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
 	};
+#elif defined CC_BUILD_HAIKU
+	static const String dirs[1] = {
+		String_FromConst("/system/data/fonts")
+	};
 #endif
 	for (i = 0; i < Array_Elems(dirs); i++) {
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);

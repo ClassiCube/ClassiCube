@@ -202,6 +202,12 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_X11
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
+#elif defined __HAIKU__
+#define CC_BUILD_HAIKU
+#define CC_BUILD_POSIX
+#define CC_BUILD_GL
+#define CC_BUILD_CURL
+#define CC_BUILD_OPENAL
 #elif defined __EMSCRIPTEN__
 #define CC_BUILD_WEB
 #define CC_BUILD_POSIX
