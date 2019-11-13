@@ -1,6 +1,5 @@
 SOURCES=$(wildcard *.c)
 OBJECTS=$(patsubst %.c, %.o, $(SOURCES))
-COMMITSHA=$(shell git rev-parse --short HEAD)
 ENAME=ClassiCube
 DEL=rm
 JOBS=1
@@ -100,4 +99,4 @@ $(ENAME): $(OBJECTS)
 	$(CC) $(LDFLAGS) -o $@$(OEXT) $(OBJECTS) $(LIBS)
 
 $(OBJECTS): %.o : %.c
-	$(CC) $(CFLAGS) -DCC_COMMIT_SHA=\"$(COMMITSHA)\" -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
