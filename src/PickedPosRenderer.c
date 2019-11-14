@@ -101,24 +101,24 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 /*########################################################################################################################*
 *-----------------------------------------------PickedPosRenderer component-----------------------------------------------*
 *#########################################################################################################################*/
-static void PickedPosRenderer_ContextLost(void* obj) {
+static void OnContextLost(void* obj) {
 	Gfx_DeleteVb(&pickedPos_vb);
 }
 
-static void PickedPosRenderer_ContextRecreated(void* obj) {
+static void OnContextRecreated(void* obj) {
 	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, PICKEDPOS_NUM_VERTICES);
 }
 
 static void PickedPosRenderer_Init(void) {
-	PickedPosRenderer_ContextRecreated(NULL);
-	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, PickedPosRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
+	OnContextRecreated(NULL);
+	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
 static void PickedPosRenderer_Free(void) {
-	PickedPosRenderer_ContextLost(NULL);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, PickedPosRenderer_ContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
+	OnContextLost(NULL);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
 struct IGameComponent PickedPosRenderer_Component = {

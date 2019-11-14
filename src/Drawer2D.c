@@ -707,7 +707,7 @@ static void Drawer2D_Reset(void) {
 	}
 }
 
-static void Drawer2D_TextureChanged(void* obj, struct Stream* src, const String* name) {
+static void OnFileChanged(void* obj, struct Stream* src, const String* name) {
 	Bitmap bmp;
 	cc_result res;
 	if (!String_CaselessEqualsConst(name, "default.png")) return;
@@ -730,13 +730,13 @@ static void Drawer2D_Init(void) {
 	if (Game_ClassicMode) font_candidates[0].length = 0;
 
 	Drawer2D_CheckFont();
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Drawer2D_TextureChanged);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 static void Drawer2D_Free(void) { 
 	Drawer2D_FreeFontBitmap();
 	fontBitmap.Scan0 = NULL;
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Drawer2D_TextureChanged);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 struct IGameComponent Drawer2D_Component = {

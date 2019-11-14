@@ -360,7 +360,7 @@ static void Animations_Tick(struct ScheduledTask* task) {
 /*########################################################################################################################*
 *--------------------------------------------------Animations component---------------------------------------------------*
 *#########################################################################################################################*/
-static void Animations_PackChanged(void* obj) {
+static void OnPackChanged(void* obj) {
 	Animations_Clear();
 	useLavaAnim     = Animations_IsDefaultZip();
 	useWaterAnim    = useLavaAnim;
@@ -368,7 +368,7 @@ static void Animations_PackChanged(void* obj) {
 	alwaysWaterAnim = false;
 }
 
-static void Animations_FileChanged(void* obj, struct Stream* stream, const String* name) {
+static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
 	cc_result res;
 	if (String_CaselessEqualsConst(name, "animations.png")) {
 		res = Png_Decode(&anims_bmp, stream);
@@ -390,14 +390,14 @@ static void Animations_FileChanged(void* obj, struct Stream* stream, const Strin
 
 static void Animations_Init(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
-	Event_RegisterVoid(&TextureEvents.PackChanged,  NULL, Animations_PackChanged);
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Animations_FileChanged);
+	Event_RegisterVoid(&TextureEvents.PackChanged,  NULL, OnPackChanged);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 static void Animations_Free(void) {
 	Animations_Clear();
-	Event_UnregisterVoid(&TextureEvents.PackChanged,  NULL, Animations_PackChanged);
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Animations_FileChanged);
+	Event_UnregisterVoid(&TextureEvents.PackChanged,  NULL, OnPackChanged);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 struct IGameComponent Animations_Component = {

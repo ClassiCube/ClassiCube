@@ -61,17 +61,17 @@ void AxisLinesRenderer_Render(double delta) {
 /*########################################################################################################################*
 *-----------------------------------------------AxisLinesRenderer component-----------------------------------------------*
 *#########################################################################################################################*/
-static void AxisLinesRenderer_ContextLost(void* obj) {
+static void OnContextLost(void* obj) {
 	Gfx_DeleteVb(&axisLines_vb);
 }
 
 static void AxisLinesRenderer_Init(void) {
-	Event_RegisterVoid(&GfxEvents.ContextLost, NULL, AxisLinesRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextLost, NULL, OnContextLost);
 }
 
 static void AxisLinesRenderer_Free(void) {
-	AxisLinesRenderer_ContextLost(NULL);
-	Event_UnregisterVoid(&GfxEvents.ContextLost, NULL, AxisLinesRenderer_ContextLost);
+	OnContextLost(NULL);
+	Event_UnregisterVoid(&GfxEvents.ContextLost, NULL, OnContextLost);
 }
 
 struct IGameComponent AxisLinesRenderer_Component = {

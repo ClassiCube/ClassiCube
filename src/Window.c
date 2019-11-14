@@ -3249,7 +3249,10 @@ void Window_SetKeyboardText(const String* text) {
 
 	EM_ASM_({
 		if (!window.cc_inputElem) return;
-		window.cc_inputElem.value = UTF8ToString($0);
+		var str = UTF8ToString($0);
+
+		if (str == window.cc_inputElem.value) return;
+		window.cc_inputElem.value = str;
 	}, str);
 }
 

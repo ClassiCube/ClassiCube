@@ -108,7 +108,8 @@ static void EnvRenderer_UpdateFogNormal(float fogDensity, PackedCol fogCol) {
 }
 
 void EnvRenderer_UpdateFog(void) {
-	float fogDensity; PackedCol fogCol;
+	float fogDensity; 
+	PackedCol fogCol;
 	if (!World.Blocks) return;
 
 	EnvRenderer_CalcFog(&fogDensity, &fogCol);
@@ -782,7 +783,7 @@ static void EnvRenderer_UpdateMapEdges(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-static void EnvRenderer_DeleteVbs(void) {
+static void DeleteVbs(void) {
 	Gfx_DeleteVb(&sky_vb);
 	Gfx_DeleteVb(&clouds_vb);
 	Gfx_DeleteVb(&skybox_vb);
@@ -791,14 +792,14 @@ static void EnvRenderer_DeleteVbs(void) {
 	Gfx_DeleteVb(&weather_vb);
 }
 
-static void EnvRenderer_ContextLost(void* obj) {
-	EnvRenderer_DeleteVbs();
+static void OnContextLost(void* obj) {
+	DeleteVbs();
 	Gfx_DeleteTexture(&sides_tex);
 	Gfx_DeleteTexture(&edges_tex);
 }
 
-static void EnvRenderer_UpdateAll(void) {
-	EnvRenderer_DeleteVbs();
+static void UpdateAll(void) {
+	DeleteVbs();
 	EnvRenderer_UpdateMapSides();
 	EnvRenderer_UpdateMapEdges();
 	EnvRenderer_UpdateClouds();
@@ -813,15 +814,15 @@ static void EnvRenderer_UpdateAll(void) {
 	EnvRenderer_UpdateBorderTextures();
 }
 
-static void EnvRenderer_ContextRecreated(void* obj) {
+static void OnContextRecreated(void* obj) {
 	Gfx_SetFog(!EnvRenderer_Minimal);
-	EnvRenderer_UpdateAll();
+	UpdateAll();
 }
 
 void EnvRenderer_SetMode(int flags) {
 	EnvRenderer_Legacy  = flags & ENV_LEGACY;
 	EnvRenderer_Minimal = flags & ENV_MINIMAL;
-	EnvRenderer_ContextRecreated(NULL);
+	OnContextRecreated(NULL);
 }
 
 int EnvRenderer_CalcFlags(const String* mode) {
@@ -834,7 +835,7 @@ int EnvRenderer_CalcFlags(const String* mode) {
 }
 
 
-static void EnvRenderer_FileChanged(void* obj, struct Stream* src, const String* name) {
+static void OnFileChanged(void* obj, struct Stream* src, const String* name) {
 	if (String_CaselessEqualsConst(name, "clouds.png")) {
 		Game_UpdateTexture(&clouds_tex, src, name, NULL);
 	} else if (String_CaselessEqualsConst(name, "skybox.png")) {
@@ -846,19 +847,17 @@ static void EnvRenderer_FileChanged(void* obj, struct Stream* src, const String*
 	}
 }
 
-static void EnvRenderer_TexturePackChanged(void* obj) {
+static void OnTexturePackChanged(void* obj) {
 	/* TODO: Find better way, really should delete them all here */
 	Gfx_DeleteTexture(&skybox_tex);
 }
-static void EnvRenderer_TerrainAtlasChanged(void* obj) {
+static void OnTerrainAtlasChanged(void* obj) {
 	EnvRenderer_UpdateBorderTextures();
 }
 
-static void EnvRenderer_ViewDistanceChanged(void* obj) {
-	EnvRenderer_UpdateAll();
-}
+static void OnViewDistanceChanged(void* obj) { UpdateAll(); }
 
-static void EnvRenderer_EnvVariableChanged(void* obj, int envVar) {
+static void OnEnvVariableChanged(void* obj, int envVar) {
 	if (envVar == ENV_VAR_EDGE_BLOCK) {
 		EnvRenderer_MakeBorderTex(&edges_tex, Env.EdgeBlock);
 		EnvRenderer_UpdateMapEdges();
@@ -900,29 +899,29 @@ static void EnvRenderer_Init(void) {
 	EnvRenderer_Legacy  = flags & ENV_LEGACY;
 	EnvRenderer_Minimal = flags & ENV_MINIMAL;
 
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, EnvRenderer_FileChanged);
-	Event_RegisterVoid(&TextureEvents.PackChanged,  NULL, EnvRenderer_TexturePackChanged);
-	Event_RegisterVoid(&TextureEvents.AtlasChanged, NULL, EnvRenderer_TerrainAtlasChanged);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	Event_RegisterVoid(&TextureEvents.PackChanged,  NULL, OnTexturePackChanged);
+	Event_RegisterVoid(&TextureEvents.AtlasChanged, NULL, OnTerrainAtlasChanged);
 
-	Event_RegisterVoid(&GfxEvents.ViewDistanceChanged, NULL, EnvRenderer_ViewDistanceChanged);
-	Event_RegisterInt(&WorldEvents.EnvVarChanged,      NULL, EnvRenderer_EnvVariableChanged);
-	Event_RegisterVoid(&GfxEvents.ContextLost,         NULL, EnvRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
+	Event_RegisterVoid(&GfxEvents.ViewDistanceChanged, NULL, OnViewDistanceChanged);
+	Event_RegisterInt(&WorldEvents.EnvVarChanged,      NULL, OnEnvVariableChanged);
+	Event_RegisterVoid(&GfxEvents.ContextLost,         NULL, OnContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated,    NULL, OnContextRecreated);
 
 	Game_SetViewDistance(Game_UserViewDistance);
 }
 
 static void EnvRenderer_Free(void) {
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, EnvRenderer_FileChanged);
-	Event_UnregisterVoid(&TextureEvents.PackChanged,  NULL, EnvRenderer_TexturePackChanged);
-	Event_UnregisterVoid(&TextureEvents.AtlasChanged, NULL, EnvRenderer_TerrainAtlasChanged);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	Event_UnregisterVoid(&TextureEvents.PackChanged,  NULL, OnTexturePackChanged);
+	Event_UnregisterVoid(&TextureEvents.AtlasChanged, NULL, OnTerrainAtlasChanged);
 
-	Event_UnregisterVoid(&GfxEvents.ViewDistanceChanged, NULL, EnvRenderer_ViewDistanceChanged);
-	Event_UnregisterInt(&WorldEvents.EnvVarChanged,      NULL, EnvRenderer_EnvVariableChanged);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,         NULL, EnvRenderer_ContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
+	Event_UnregisterVoid(&GfxEvents.ViewDistanceChanged, NULL, OnViewDistanceChanged);
+	Event_UnregisterInt(&WorldEvents.EnvVarChanged,      NULL, OnEnvVariableChanged);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,         NULL, OnContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated,    NULL, OnContextRecreated);
 
-	EnvRenderer_ContextLost(NULL);
+	OnContextLost(NULL);
 	Mem_Free(Weather_Heightmap);
 	Weather_Heightmap = NULL;
 
@@ -934,16 +933,14 @@ static void EnvRenderer_Free(void) {
 
 static void EnvRenderer_Reset(void) {
 	Gfx_SetFog(false);
-	EnvRenderer_DeleteVbs();
+	DeleteVbs();
 
 	Mem_Free(Weather_Heightmap);
 	Weather_Heightmap = NULL;
 	lastPos = IVec3_MaxValue();
 }
 
-static void EnvRenderer_OnNewMapLoaded(void) {
-	EnvRenderer_ContextRecreated(NULL);
-}
+static void EnvRenderer_OnNewMapLoaded(void) { OnContextRecreated(NULL); }
 
 struct IGameComponent EnvRenderer_Component = {
 	EnvRenderer_Init,  /* Init  */

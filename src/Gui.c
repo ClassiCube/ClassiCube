@@ -89,7 +89,18 @@ void Gui_ShowDefault(void) {
 #endif
 }
 
-static void Gui_ContextLost(void* obj) {
+static void Gui_LoadOptions(void) {
+	Gui_Chatlines       = Options_GetInt(OPT_CHATLINES, 0, 30, 12);
+	Gui_ClickableChat   = Options_GetBool(OPT_CLICKABLE_CHAT,   !Game_ClassicMode);
+	Gui_TabAutocomplete = Options_GetBool(OPT_TAB_AUTOCOMPLETE, !Game_ClassicMode);
+
+	Gui_ClassicTexture = Options_GetBool(OPT_CLASSIC_GUI, true)      || Game_ClassicMode;
+	Gui_ClassicTabList = Options_GetBool(OPT_CLASSIC_TABLIST, false) || Game_ClassicMode;
+	Gui_ClassicMenu    = Options_GetBool(OPT_CLASSIC_OPTIONS, false) || Game_ClassicMode;
+	Gui_ShowFPS        = Options_GetBool(OPT_SHOW_FPS, true);
+}
+
+static void OnContextLost(void* obj) {
 	struct Screen* s;
 	int i;
 
@@ -99,7 +110,7 @@ static void Gui_ContextLost(void* obj) {
 	}
 }
 
-static void Gui_ContextRecreated(void* obj) {
+static void OnContextRecreated(void* obj) {
 	struct Screen* s;
 	int i;
 
@@ -109,21 +120,9 @@ static void Gui_ContextRecreated(void* obj) {
 	}
 }
 
-static void Gui_LoadOptions(void) {
-	Gui_Chatlines       = Options_GetInt(OPT_CHATLINES, 0, 30, 12);
-	Gui_ClickableChat   = Options_GetBool(OPT_CLICKABLE_CHAT,   !Game_ClassicMode);
-	Gui_TabAutocomplete = Options_GetBool(OPT_TAB_AUTOCOMPLETE, !Game_ClassicMode);
+static void OnFontChanged(void* obj) { Gui_RefreshAll(); }
 
-	Gui_ClassicTexture = Options_GetBool(OPT_CLASSIC_GUI, true)      || Game_ClassicMode;
-	Gui_ClassicTabList = Options_GetBool(OPT_CLASSIC_TABLIST, false) || Game_ClassicMode;
-	Gui_ClassicMenu    = Options_GetBool(OPT_CLASSIC_OPTIONS, false) || Game_ClassicMode;
-
-	Gui_ShowFPS = Options_GetBool(OPT_SHOW_FPS, true);
-}
-
-static void Gui_FontChanged(void* obj) { Gui_RefreshAll(); }
-
-static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name) {
+static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
 	if (String_CaselessEqualsConst(name, "gui.png")) {
 		Game_UpdateTexture(&Gui_GuiTex, stream, name, NULL);
 	} else if (String_CaselessEqualsConst(name, "gui_classic.png")) {
@@ -134,10 +133,10 @@ static void Gui_FileChanged(void* obj, struct Stream* stream, const String* name
 }
 
 static void Gui_Init(void) {
-	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, Gui_FontChanged);
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Gui_FileChanged);
-	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Gui_ContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Gui_ContextRecreated);
+	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, OnFontChanged);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 	Gui_LoadOptions();
 	Gui_ShowDefault();
 }
@@ -147,10 +146,10 @@ static void Gui_Reset(void) {
 }
 
 static void Gui_Free(void) {
-	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, Gui_FontChanged);
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Gui_FileChanged);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Gui_ContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Gui_ContextRecreated);
+	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, OnFontChanged);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 
 	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
 
@@ -169,11 +168,11 @@ struct IGameComponent Gui_Component = {
 };
 
 void Gui_RefreshAll(void) { 
-	Gui_ContextLost(NULL);
-	Gui_ContextRecreated(NULL);
+	OnContextLost(NULL);
+	OnContextRecreated(NULL);
 }
 
-void Gui_RefreshChat(void) { Gui_Refresh(Gui_Chat); }
+void Gui_RefreshChat(void) { Gui_Refresh((struct Screen*)Gui_Chat); }
 void Gui_Refresh(struct Screen* s) {
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->ContextRecreated(s);
