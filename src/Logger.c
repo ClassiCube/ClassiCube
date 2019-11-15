@@ -311,7 +311,10 @@ void Logger_Backtrace(String* trace, void* ctx) {
 	String_AppendConst(trace, _NL);
 }
 #elif defined CC_BUILD_POSIX
+#ifndef __USE_GNU
+/* need to define __USE_GNU for dladdr */
 #define __USE_GNU
+#endif
 #include <dlfcn.h>
 #undef __USE_GNU
 

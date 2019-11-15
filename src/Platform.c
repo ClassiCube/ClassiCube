@@ -1118,7 +1118,7 @@ void Process_StartOpen(const String* args) {
 	JavaCall_String_Void("startOpen", args);
 }
 #elif defined CC_BUILD_POSIX
-static cc_result Process_RawStart(const char* path, const char** argv) {
+static cc_result Process_RawStart(const char* path, char** argv) {
 	pid_t pid = fork();
 	if (pid == -1) return errno;
 
@@ -1138,7 +1138,7 @@ static cc_result Process_RawGetExePath(char* path, int* len);
 cc_result Process_StartGame(const String* args) {
 	char path[NATIVE_STR_LEN], raw[NATIVE_STR_LEN];
 	int i, j, len = 0;
-	const char* argv[15];
+	char* argv[15];
 
 	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
@@ -1181,7 +1181,7 @@ void Process_StartOpen(const String* args) {
 void Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
 	char str[NATIVE_STR_LEN];
-	const char* cmd[3];
+	char* cmd[3];
 	Platform_ConvertString(str, args);
 
 	cmd[0] = "xdg-open"; cmd[1] = str; cmd[2] = NULL;

@@ -43,7 +43,7 @@ CC_NOINLINE static cc_bool IsOnlyHudActive(void) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (s->grabsInput && s != Gui_Chat) return false;
+		if (s->grabsInput && s != (struct Screen*)Gui_Chat) return false;
 	}
 	return true;
 }
