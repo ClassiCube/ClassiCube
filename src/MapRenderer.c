@@ -571,7 +571,6 @@ static void MapRenderer_QuickSort(int left, int right) {
 static void MapRenderer_UpdateSortOrder(void) {
 	struct ChunkInfo* info;
 	IVec3 pos;
-	int dXMin, dXMax, dYMin, dYMax, dZMin, dZMax;
 	int i, dx, dy, dz;
 
 	/* pos is centre coordinate of chunk camera is in */
@@ -591,18 +590,17 @@ static void MapRenderer_UpdateSortOrder(void) {
 		dx = info->CentreX - pos.X; dy = info->CentreY - pos.Y; dz = info->CentreZ - pos.Z;
 		distances[i] = dx * dx + dy * dy + dz * dz;
 
-		/* Can work out distance to chunk faces as offset from distance to chunk centre on each axis */
-		dXMin = dx - HALF_CHUNK_SIZE; dXMax = dx + HALF_CHUNK_SIZE;
-		dYMin = dy - HALF_CHUNK_SIZE; dYMax = dy + HALF_CHUNK_SIZE;
-		dZMin = dz - HALF_CHUNK_SIZE; dZMax = dz + HALF_CHUNK_SIZE;
+		/* Consider these 3 chunks: */
+		/* |       X-1      |        X        |       X+1      | */
+		/* |################|########@########|################| */
+		/* Assume the player is standing at @, then DrawXMin/XMax is calculated as this */
+		/*    X-1: DrawXMin = false, DrawXMax = true  */
+		/*    X  : DrawXMin = true,  DrawXMax = true  */
+		/*    X+1: DraWXMin = true,  DrawXMax = false */
 
-		/* Back face culling: make sure that the chunk is definitely entirely back facing */
-		info->DrawXMin = !(dXMin <= 0 && dXMax <= 0);
-		info->DrawXMax = !(dXMin >= 0 && dXMax >= 0);
-		info->DrawZMin = !(dZMin <= 0 && dZMax <= 0);
-		info->DrawZMax = !(dZMin >= 0 && dZMax >= 0);
-		info->DrawYMin = !(dYMin <= 0 && dYMax <= 0);
-		info->DrawYMax = !(dYMin >= 0 && dYMax >= 0);
+		info->DrawXMin = dx >= 0; info->DrawXMax = dx <= 0;
+		info->DrawZMin = dz >= 0; info->DrawZMax = dz <= 0;
+		info->DrawYMin = dy >= 0; info->DrawYMax = dy <= 0;
 	}
 
 	MapRenderer_QuickSort(0, MapRenderer_ChunksCount - 1);
