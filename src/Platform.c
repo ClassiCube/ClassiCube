@@ -33,7 +33,6 @@
 #include <wincrypt.h>
 
 #define Socket__Error() WSAGetLastError()
-#define NATIVE_STR_LEN 300
 static HANDLE heap;
 
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
@@ -63,7 +62,6 @@ const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 
 #define Platform_DecodeString(dst, src, len) String_AppendUtf8(dst, (cc_uint8*)(src), len)
 #define Socket__Error() errno
-#define NATIVE_STR_LEN 600
 
 static const char *Platform_DefaultDirectory = NULL;
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */

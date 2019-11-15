@@ -30,6 +30,7 @@ These machines are far less frequently tested on, but are otherwise same as tier
 |Windows x86 | Windows 2000 |
 |Windows x86 | 98 + KernelEX | Updating doesn't work
 |Windows x64 | Windows 10 |
+|ReactOS | ReactOS |
 |Linux x64 | Arch linux |
 |Linux x64 | Linux Mint |
 |Linux x64 | Kubuntu |
@@ -56,6 +57,7 @@ I don't really test these platforms at all, only when I suspect some changes to 
 |Linux PPC | Debian | Issues with colour channels incorrectly swapped? |
 |Linux ARM | Raspberry pi | ARM64 should work too |
 |Linux SPARC | Debian | Didn't really work due to lack of 24-bit colours |
+|HaikuOS | Nightly | Requires SDL for windowing
 
 ## Porting
 

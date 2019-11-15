@@ -410,7 +410,7 @@ void Window_Create(int width, int height) {
 }
 
 void Window_SetTitle(const String* title) {
-	TCHAR str[300]; 
+	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, title);
 	SetWindowText(win_handle, str);
 }
@@ -940,7 +940,7 @@ void Window_Create(int width, int height) {
 }
 
 void Window_SetTitle(const String* title) {
-	char str[600]; 
+	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, title);
 	XStoreName(win_display, win_handle, str);
 }
@@ -2129,7 +2129,7 @@ void Window_Create(int width, int height) {
 }
 
 void Window_SetTitle(const String* title) {
-	UInt8 str[600];
+	UInt8 str[NATIVE_STR_LEN];
 	CFStringRef titleCF;
 	int len;
 	
@@ -2479,7 +2479,7 @@ void Window_Create(int width, int height) {
 }
 
 void Window_SetTitle(const String* title) {
-	char str[600];
+	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, title);
 	SDL_SetWindowTitle(win_handle, str);
 }
@@ -2494,7 +2494,7 @@ void Clipboard_GetText(String* value) {
 }
 
 void Clipboard_SetText(const String* value) {
-	char str[600];
+	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, value);
 	SDL_SetClipboardText(str);
 }
@@ -3112,7 +3112,7 @@ void Window_Create(int width, int height) {
 }
 
 void Window_SetTitle(const String* title) {
-	char str[600];
+	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, title);
 	EM_ASM_({ document.title = UTF8ToString($0); }, str);
 }
@@ -3130,7 +3130,7 @@ EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
 
 void Clipboard_GetText(String* value) { }
 void Clipboard_SetText(const String* value) {
-	char str[600];
+	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, value);
 	EM_ASM_({ window.cc_copyText = UTF8ToString($0); }, str);
 }
@@ -3243,7 +3243,7 @@ void Window_OpenKeyboard(void)  {
 }
 
 void Window_SetKeyboardText(const String* text) {
-	char str[600];
+	char str[NATIVE_STR_LEN];
 	if (!Input_TouchMode) return;
 	Platform_ConvertString(str, text);
 
@@ -3953,7 +3953,7 @@ void Window_Create(int width, int height) {
 }
 
 void Window_SetTitle(const String* title) {
-	UInt8 str[600];
+	UInt8 str[NATIVE_STR_LEN];
 	CFStringRef titleCF;
 	int len;
 
