@@ -100,18 +100,21 @@ void Ping_Update(int id) {
 }
 
 int Ping_AveragePingMS(void) {
-	double totalMs = 0.0;
-	int i, measures = 0;
+	int i, measures = 0, totalMs = 0;
 
 	for (i = 0; i < Array_Elems(ping_entries); i++) {
 		struct PingEntry entry = ping_entries[i];
 		if (!entry.sent || !entry.recv) continue;
-
-		/* Half, because received->reply time is actually twice time it takes to send data */
-		totalMs += (entry.recv - entry.sent) * 0.5;
+	
+		totalMs += (int)(entry.recv - entry.sent);
 		measures++;
 	}
-	return measures == 0 ? 0 : (int)(totalMs / measures);
+
+	if (!measures) return 0;
+	/* (recv - send) is time for packet to be sent to server and then sent back. */
+	/* However for ping, only want time to send data to server, so half the total. */
+	totalMs /= 2;
+	return totalMs / measures;
 }
 
 
