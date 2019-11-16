@@ -812,6 +812,14 @@ static int EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
 	return true;
 }
 
+static int EditHotkeyScreen_TextChanged(void* screen, const String* str) {
+#ifdef CC_BUILD_TOUCH
+	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
+	InputWidget_SetAndSyncText(&s->input.base, str);
+#endif
+	return true;
+}
+
 static int EditHotkeyScreen_KeyDown(void* screen, int key) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	if (s->selectedI >= 0) {
@@ -887,7 +895,7 @@ static void EditHotkeyScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
 	EditHotkeyScreen_Init,    EditHotkeyScreen_Render, Menu_CloseKeyboard,
-	EditHotkeyScreen_KeyDown, Screen_TInput,           EditHotkeyScreen_KeyPress, Screen_TText,
+	EditHotkeyScreen_KeyDown, Screen_TInput,           EditHotkeyScreen_KeyPress, EditHotkeyScreen_TextChanged,
 	Menu_PointerDown,         Screen_TPointer,         Menu_PointerMove,          Screen_TMouseScroll,
 	Menu_Layout,            EditHotkeyScreen_ContextLost, EditHotkeyScreen_ContextRecreated
 };
@@ -993,6 +1001,14 @@ static int GenLevelScreen_KeyPress(void* screen, char keyChar) {
 	return true;
 }
 
+static int GenLevelScreen_TextChanged(void* screen, const String* str) {
+#ifdef CC_BUILD_TOUCH
+	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
+	if (s->selected) InputWidget_SetAndSyncText(&s->selected->base, str);
+#endif
+	return true;
+}
+
 static int GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	int i = Menu_DoPointerDown(screen, id, x, y);
@@ -1058,7 +1074,7 @@ static void GenLevelScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE GenLevelScreen_VTABLE = {
 	GenLevelScreen_Init,        MenuScreen_Render,    Menu_CloseKeyboard,
-	GenLevelScreen_KeyDown,     Screen_TInput,        GenLevelScreen_KeyPress, Screen_TText,
+	GenLevelScreen_KeyDown,     Screen_TInput,        GenLevelScreen_KeyPress, GenLevelScreen_TextChanged,
 	GenLevelScreen_PointerDown, Screen_TPointer,      Menu_PointerMove,        Screen_TMouseScroll,
 	Menu_Layout,          GenLevelScreen_ContextLost, GenLevelScreen_ContextRecreated
 };
@@ -1320,6 +1336,15 @@ static int SaveLevelScreen_KeyPress(void* screen, char keyChar) {
 	return true;
 }
 
+static int SaveLevelScreen_TextChanged(void* screen, const String* str) {
+#ifdef CC_BUILD_TOUCH
+	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
+	SaveLevelScreen_RemoveOverwrites(s);
+	InputWidget_SetAndSyncText(&s->input.base, str);
+#endif
+	return true;
+}
+
 static int SaveLevelScreen_KeyDown(void* screen, int key) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	if (Elem_HandlesKeyDown(&s->input.base, key)) {
@@ -1386,7 +1411,7 @@ static void SaveLevelScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE SaveLevelScreen_VTABLE = {
 	SaveLevelScreen_Init,    SaveLevelScreen_Render, Menu_CloseKeyboard,
-	SaveLevelScreen_KeyDown, Screen_TInput,          SaveLevelScreen_KeyPress, Screen_TText,
+	SaveLevelScreen_KeyDown, Screen_TInput,          SaveLevelScreen_KeyPress, SaveLevelScreen_TextChanged,
 	Menu_PointerDown,        Screen_TPointer,        Menu_PointerMove,         Screen_TMouseScroll,
 	Menu_Layout,           SaveLevelScreen_ContextLost, SaveLevelScreen_ContextRecreated
 };
@@ -1984,6 +2009,14 @@ static int MenuOptionsScreen_KeyPress(void* screen, char keyChar) {
 	return true;
 }
 
+static int MenuOptionsScreen_TextChanged(void* screen, const String* str) {
+#ifdef CC_BUILD_TOUCH
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	if (s->activeI >= 0) InputWidget_SetAndSyncText(&s->input.base, str);
+#endif
+	return true;
+}
+
 static int MenuOptionsScreen_KeyDown(void* screen, int key) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	if (s->activeI >= 0) {
@@ -2185,7 +2218,7 @@ static void MenuOptionsScreen_ContextRecreated(void* screen) {
 
 static const struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	MenuOptionsScreen_Init,     MenuOptionsScreen_Render, MenuOptionsScreen_Free,
-	MenuOptionsScreen_KeyDown,  Screen_TInput,            MenuOptionsScreen_KeyPress,    Screen_TText,
+	MenuOptionsScreen_KeyDown,  Screen_TInput,            MenuOptionsScreen_KeyPress,    MenuOptionsScreen_TextChanged,
 	Menu_PointerDown,           Screen_TPointer,          MenuOptionsScreen_PointerMove, Screen_TMouseScroll,
 	MenuOptionsScreen_Layout, MenuOptionsScreen_ContextLost, MenuOptionsScreen_ContextRecreated
 };

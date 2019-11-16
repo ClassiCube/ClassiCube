@@ -3004,24 +3004,22 @@ static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* da
 		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK && key != KEY_SPACE);
 }
 
-/* reused for touch keyboard input down in Window_OpenKeyboard */
-EMSCRIPTEN_KEEPALIVE void Window_ProcessKeyChar(int charCode) {
-	char keyChar;
-	if (Convert_TryUnicodeToCP437(charCode, &keyChar)) {
-		Event_RaiseInt(&InputEvents.Press, keyChar);
-	}
-}
-
 static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	Window_CorrectFocus();
 	/* When on-screen keyboard is open, we don't want to intercept any key presses, */
 	/* because they should be sent to the HTML text input instead. */
-	/* If any keys are intercepted, this causes attempting to backspace all text */
-	/* later to not actually backspace everything. (because the HTML text input */
-	/* does not have these intercepted key presses in its text buffer) */
-	/* (e.g. chrome for android sends keypresses sometimes for '0' to '9' keys) */
+	/* (Chrome for android sends keypresses sometimes for '0' to '9' keys) */
+	/* - If any keys are intercepted, this causes the HTML text input to become */
+	/*   desynchronised from the chat/menu input widget the user sees in game. */
+	/* - This causes problems such as attempting to backspace all text later to */
+	/*   not actually backspace everything. (because the HTML text input does not */
+	/*   have these intercepted key presses in its text buffer) */
 	if (keyboardOpen) return false;
-	Window_ProcessKeyChar(ev->charCode);
+
+	char keyChar;
+	if (Convert_TryUnicodeToCP437(ev->charCode, &keyChar)) {
+		Event_RaiseInt(&InputEvents.Press, keyChar);
+	}
 	return true;
 }
 
@@ -3200,9 +3198,14 @@ void Window_AllocFramebuffer(Bitmap* bmp) { }
 void Window_DrawFramebuffer(Rect2D r)     { }
 void Window_FreeFramebuffer(Bitmap* bmp)  { }
 
-EMSCRIPTEN_KEEPALIVE void SendFakeBackspace(void) { 
-	Input_SetPressed(KEY_BACKSPACE, true); 
-	Input_SetPressed(KEY_BACKSPACE, false);
+EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) { 
+	char buffer[800];
+	int len;
+	String str;
+
+	String_InitArray(str, buffer);
+	String_AppendUtf8(&str, src, String_CalcLen(src, 800));
+	Event_RaiseString(&InputEvents.TextChanged, &str);
 }
 
 void Window_OpenKeyboard(void)  {
@@ -3215,23 +3218,10 @@ void Window_OpenKeyboard(void)  {
 		if (!elem) {
 			elem = document.createElement('textarea');
 			elem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; opacity:0.3; resize:none; pointer-events:none;');
-			elem.setAttribute('autocomplete', 'off');
-			elem.setAttribute('autocorrect',  'off');
 
-			var oldLen = 0|0;
 			elem.addEventListener("input", 
 				function(ev) {
-					var str = ev.target.value;
-					if (str.length > oldLen) {
-						for (var i = oldLen; i < str.length; i++) {
-							ccall('Window_ProcessKeyChar', 'void', ['number'], [str.charCodeAt(i)]);
-						}
-					} else {
-						for (var i = str.length; i < oldLen; i++) {
-							ccall('SendFakeBackspace', 'void', [], []);
-						}
-					}
-					oldLen = str.length;
+					ccall('Window_OnTextChanged', 'void', ['string'], [ev.target.value]);
 				}, false);
 
 			window.cc_inputElem = elem;

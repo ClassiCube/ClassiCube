@@ -32,7 +32,7 @@ int Screen_FPointer(void* s, int id, int x, int y) { return false; }
 
 int Screen_TInput(void* s, int key)           { return true; }
 int Screen_TKeyPress(void* s, char keyChar)   { return true; }
-int Screen_TText(void* s, const String* str)  { return false; }
+int Screen_TText(void* s, const String* str)  { return true; }
 int Screen_TMouseScroll(void* s, float delta) { return true; }
 int Screen_TPointer(void* s, int id, int x, int y) { return true; }
 static void Screen_NullFunc(void* screen) { }
@@ -624,6 +624,17 @@ static int ChatScreen_KeyPress(void* screen, char keyChar) {
 	return true;
 }
 
+static int ChatScreen_TextChanged(void* screen, const String* str) {
+#ifdef CC_BUILD_TOUCH
+	struct ChatScreen* s = (struct ChatScreen*)screen;
+	if (!s->grabsInput) return false;
+
+	InputWidget_SetAndSyncText(&s->input.base, str);
+	ChatScreen_UpdateChatYOffsets(s);
+#endif
+	return true;
+}
+
 static int ChatScreen_KeyDown(void* screen, int key) {
 	static const String slash = String_FromConst("/");
 	struct ChatScreen* s = (struct ChatScreen*)screen;
@@ -813,7 +824,7 @@ static void ChatScreen_Free(void* screen) {
 
 static const struct ScreenVTABLE ChatScreen_VTABLE = {
 	ChatScreen_Init,        ChatScreen_Render, ChatScreen_Free,
-	ChatScreen_KeyDown,     ChatScreen_KeyUp,  ChatScreen_KeyPress, Screen_TText,
+	ChatScreen_KeyDown,     ChatScreen_KeyUp,  ChatScreen_KeyPress, ChatScreen_TextChanged,
 	ChatScreen_PointerDown, Screen_FPointer,   Screen_FPointer,     ChatScreen_MouseScroll,
 	ChatScreen_Layout, ChatScreen_ContextLost, ChatScreen_ContextRecreated
 };
@@ -828,12 +839,7 @@ void ChatScreen_Show(void) {
 
 void ChatScreen_OpenInput(const String* text) {
 	struct ChatScreen* s = &ChatScreen_Instance;
-#ifdef CC_BUILD_TOUCH
-	/* TODO: This is the wrong approach. need an event for all text input. */
-	s->suppressNextPress = !Input_TouchMode;
-#else
 	s->suppressNextPress = true;
-#endif
 	s->grabsInput        = true;
 	Camera_CheckFocus();
 	Window_OpenKeyboard();

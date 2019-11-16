@@ -1135,6 +1135,12 @@ void InputWidget_UpdateText(struct InputWidget* w) {
 	InputWidget_UpdateCaret(w);
 }
 
+void InputWidget_SetAndSyncText(struct InputWidget* w, const String* str) {
+	InputWidget_Clear(w);
+	InputWidget_AppendString(w, str);
+	Window_SetKeyboardText(&w->text);
+}
+
 static void InputWidget_Free(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_DeleteTexture(&w->inputTex.ID);

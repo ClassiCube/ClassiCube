@@ -992,7 +992,7 @@ static void HandleInputDown(void* obj, int key, cc_bool was) {
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
 		/* But switching to pause screen disables mouse lock, causing a KeyUp */
-		/* event to be sent, triggering the active->closable case which immediately
+		/* event to be sent, triggering the active->closable case which immediately */
 		/* closes the pause screen. Hence why the next KeyUp must be supressed. */
 		suppressEscape = true;
 #endif
@@ -1033,23 +1033,12 @@ static void HandleInputUp(void* obj, int key) {
 	if (key == KeyBinds[KEYBIND_PICK_BLOCK])   MouseStateRelease(MOUSE_MIDDLE);
 }
 
-static void HandleKeyPress(void* obj, int keyChar) {
-	struct Screen* s;
-	int i;
-
-	for (i = 0; i < Gui_ScreensCount; i++) {
-		s = Gui_Screens[i];
-		if (s->VTABLE->HandlesKeyPress(s, keyChar)) return;
-	}
-}
-
 void InputHandler_Init(void) {
 	Event_RegisterMove(&PointerEvents.Moved, NULL, HandlePointerMove);
 	Event_RegisterInt(&PointerEvents.Down,   NULL, HandlePointerDown);
 	Event_RegisterInt(&PointerEvents.Up,     NULL, HandlePointerUp);
 	Event_RegisterInt(&InputEvents.Down,     NULL, HandleInputDown);
 	Event_RegisterInt(&InputEvents.Up,       NULL, HandleInputUp);
-	Event_RegisterInt(&InputEvents.Press,    NULL, HandleKeyPress);
 	Event_RegisterFloat(&InputEvents.Wheel,  NULL, HandleMouseWheel);
 
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, InputHandler_CheckZoomFov);

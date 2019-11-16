@@ -120,53 +120,6 @@ static void OnContextRecreated(void* obj) {
 	}
 }
 
-static void OnFontChanged(void* obj) { Gui_RefreshAll(); }
-
-static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
-	if (String_CaselessEqualsConst(name, "gui.png")) {
-		Game_UpdateTexture(&Gui_GuiTex, stream, name, NULL);
-	} else if (String_CaselessEqualsConst(name, "gui_classic.png")) {
-		Game_UpdateTexture(&Gui_GuiClassicTex, stream, name, NULL);
-	} else if (String_CaselessEqualsConst(name, "icons.png")) {
-		Game_UpdateTexture(&Gui_IconsTex, stream, name, NULL);
-	}
-}
-
-static void Gui_Init(void) {
-	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, OnFontChanged);
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
-	Gui_LoadOptions();
-	Gui_ShowDefault();
-}
-
-static void Gui_Reset(void) {
-	/* TODO:Should we reset all screens here.. ? */
-}
-
-static void Gui_Free(void) {
-	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, OnFontChanged);
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
-
-	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
-
-	Gfx_DeleteTexture(&Gui_GuiTex);
-	Gfx_DeleteTexture(&Gui_GuiClassicTex);
-	Gfx_DeleteTexture(&Gui_IconsTex);
-	Gui_Reset();
-}
-
-struct IGameComponent Gui_Component = {
-	Gui_Init,  /* Init  */
-	Gui_Free,  /* Free  */
-	Gui_Reset, /* Reset */
-	NULL, /* OnNewMap */
-	NULL, /* OnNewMapLoaded */
-};
-
 void Gui_RefreshAll(void) { 
 	OnContextLost(NULL);
 	OnContextRecreated(NULL);
@@ -373,3 +326,84 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vert
 		TextAtlas_Add(atlas, digits[i] - '0' , vertices);
 	}
 }
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Gui component------------------------------------------------------*
+*#########################################################################################################################*/
+static void OnFontChanged(void* obj) { Gui_RefreshAll(); }
+
+static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
+	if (String_CaselessEqualsConst(name, "gui.png")) {
+		Game_UpdateTexture(&Gui_GuiTex, stream, name, NULL);
+	} else if (String_CaselessEqualsConst(name, "gui_classic.png")) {
+		Game_UpdateTexture(&Gui_GuiClassicTex, stream, name, NULL);
+	} else if (String_CaselessEqualsConst(name, "icons.png")) {
+		Game_UpdateTexture(&Gui_IconsTex, stream, name, NULL);
+	}
+}
+
+static void OnKeyPress(void* obj, int keyChar) {
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesKeyPress(s, keyChar)) return;
+	}
+}
+
+#ifdef CC_BUILD_TOUCH
+static void OnTextChanged(void* obj, const String* str) {
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		s = Gui_Screens[i];
+		if (s->VTABLE->HandlesTextChanged(s, str)) return;
+	}
+}
+#endif
+
+static void Gui_Init(void) {
+	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, OnFontChanged);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+	Event_RegisterInt(&InputEvents.Press,           NULL, OnKeyPress);
+#ifdef CC_BUILD_TOUCH
+	Event_RegisterString(&InputEvents.TextChanged,  NULL, OnTextChanged);
+#endif
+	Gui_LoadOptions();
+	Gui_ShowDefault();
+}
+
+static void Gui_Reset(void) {
+	/* TODO:Should we reset all screens here.. ? */
+}
+
+static void Gui_Free(void) {
+	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, OnFontChanged);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+	Event_UnregisterInt(&InputEvents.Press,           NULL, OnKeyPress);
+#ifdef CC_BUILD_TOUCH
+	Event_UnregisterString(&InputEvents.TextChanged,  NULL, OnTextChanged);
+#endif
+
+	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
+
+	Gfx_DeleteTexture(&Gui_GuiTex);
+	Gfx_DeleteTexture(&Gui_GuiClassicTex);
+	Gfx_DeleteTexture(&Gui_IconsTex);
+	Gui_Reset();
+}
+
+struct IGameComponent Gui_Component = {
+	Gui_Init,  /* Init  */
+	Gui_Free,  /* Free  */
+	Gui_Reset, /* Reset */
+	NULL, /* OnNewMap */
+	NULL, /* OnNewMapLoaded */
+};

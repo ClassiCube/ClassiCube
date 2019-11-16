@@ -130,6 +130,11 @@ CC_NOINLINE void InputWidget_AppendString(struct InputWidget* w, const String* t
 CC_NOINLINE void InputWidget_Append(struct InputWidget* w, char c);
 /* Redraws text and recalculates associated state. */
 CC_NOINLINE void InputWidget_UpdateText(struct InputWidget* w);
+/* Shorthand for InputWidget_Clear followed by InputWidget_AppendString, */
+/* then calls Window_SetKeyboardText with the text in the input widget. */
+/* This way native text input state stays synchronised with the input widget. */
+/* (e.g. may only accept numerical input, so 'c' gets stripped from str) */
+CC_NOINLINE void InputWidget_SetAndSyncText(struct InputWidget* w, const String* str);
 
 
 struct MenuInputDesc;
