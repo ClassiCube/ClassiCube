@@ -929,6 +929,11 @@ void Window_Create(int width, int height) {
 	Window_RefreshBounds(width, height);
 	Window_Exists = true;
 	Window_Handle = (void*)win_handle;
+	
+	XClassHint hint = { 0 };
+	hint.res_name   = GAME_APP_TITLE;
+	hint.res_class  = GAME_APP_TITLE;
+	XSetClassHint(win_display, win_handle, &hint);
 
 #ifdef CC_BUILD_X11ICON
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
