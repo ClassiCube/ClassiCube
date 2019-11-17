@@ -105,6 +105,7 @@ static void EnvRenderer_UpdateFogNormal(float fogDensity, PackedCol fogCol) {
 		Gfx_SetFogEnd((float)Game_ViewDistance);
 	}
 	Gfx_SetFogCol(fogCol);
+	Game_SetViewDistance(Game_UserViewDistance);
 }
 
 void EnvRenderer_UpdateFog(void) {
