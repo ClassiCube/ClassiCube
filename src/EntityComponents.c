@@ -1042,7 +1042,7 @@ static void PhysicsComp_MoveNormal(struct PhysicsComp* comp, Vec3 vel, float fac
 
 static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* bounds, cc_bool checkSolid) {
 	IVec3 bbMin, bbMax;
-	float modifier = MATH_POS_INF;
+	float modifier = MATH_LARGENUM;
 	struct AABB blockBB;
 	BlockID block;
 	cc_uint8 collide;
@@ -1097,8 +1097,8 @@ static float PhysicsComp_GetBaseSpeed(struct PhysicsComp* comp) {
 	bounds.Min.Y -= 0.5f/16.0f; /* also check block standing on */
 	solidModifier = PhysicsComp_LowestModifier(comp, &bounds, true);
 
-	if (baseModifier == MATH_POS_INF && solidModifier == MATH_POS_INF) return 1.0f;
-	return baseModifier == MATH_POS_INF ? solidModifier : baseModifier;
+	if (baseModifier == MATH_LARGENUM && solidModifier == MATH_LARGENUM) return 1.0f;
+	return baseModifier == MATH_LARGENUM ? solidModifier : baseModifier;
 }
 
 #define LIQUID_GRAVITY 0.02f
