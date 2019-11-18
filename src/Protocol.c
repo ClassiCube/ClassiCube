@@ -25,6 +25,9 @@
 #include "Camera.h"
 #include "Window.h"
 
+cc_uint16 Net_PacketSizes[OPCODE_COUNT];
+Net_Handler Net_Handlers[OPCODE_COUNT];
+
 /* Classic state */
 static cc_uint8 classic_tabList[ENTITIES_MAX_COUNT >> 3];
 static cc_bool classic_receivedFirstPos;

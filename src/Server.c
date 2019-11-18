@@ -229,9 +229,6 @@ static void SPConnection_Init(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Multiplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-cc_uint16 Net_PacketSizes[OPCODE_COUNT];
-Net_Handler Net_Handlers[OPCODE_COUNT];
-
 static SocketHandle net_socket;
 static cc_uint8  net_readBuffer[4096 * 5];
 static cc_uint8  net_writeBuffer[131];
