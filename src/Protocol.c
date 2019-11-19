@@ -1523,8 +1523,6 @@ void HandleDefineModel(cc_uint8* data) {
 		if (model != null) model.ReadRotationPacket(reader);
 		break;
 	}
-	int total = packetSizes[(byte)Opcode.CpeDefineModel];
-	reader.Skip(total - (reader.index - start));
 }
 #endif
 static void BlockDefs_Reset(void) {

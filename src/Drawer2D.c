@@ -879,6 +879,17 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 	return Mem_Realloc(block, new_size, 1, "Freetype data");
 }
 
+static cc_bool updatedSysFonts;
+/* Updates fonts list cache with system's list of fonts */
+/* This should be avoided due to overhead potential */
+static void SysFonts_Update(void) {
+	if (updatedSysFonts) return;
+	updatedSysFonts = true;
+
+	Platform_LoadSysFonts();
+	if (font_list_changed) EntryList_Save(&font_list);
+}
+
 #define FONT_CACHE_FILE "fontscache.txt"
 static void SysFonts_Init(void) {
 	static const String cachePath = String_FromConst(FONT_CACHE_FILE);
@@ -896,8 +907,7 @@ static void SysFonts_Init(void) {
 	}
 
 	EntryList_Init(&font_list, FONT_CACHE_FILE, '=');
-	Platform_LoadSysFonts();
-	if (font_list_changed) EntryList_Save(&font_list);
+	if (!font_list.entries.count) SysFonts_Update();
 }
 
 static void SysFonts_Add(const String* path, FT_Face face, int index, char type, const char* defStyle) {
@@ -979,6 +989,7 @@ void Font_GetNames(StringsBuffer* buffer) {
 	String entry, name, path;
 	int i;
 	if (!font_list.entries.count) SysFonts_Init();
+	SysFonts_Update();
 
 	for (i = 0; i < font_list.entries.count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(&font_list.entries, i);
@@ -999,7 +1010,7 @@ static String Font_LookupOf(const String* fontName, const char type) {
 	return EntryList_UNSAFE_Get(&font_list, &name);
 }
 
-String Font_Lookup(const String* fontName, int style) {
+static String Font_DoLookup(const String* fontName, int style) {
 	String path;
 	if (!font_list.entries.count) SysFonts_Init();
 	path = String_Empty;
@@ -1008,6 +1019,14 @@ String Font_Lookup(const String* fontName, int style) {
 	if (style & FONT_STYLE_ITALIC) path = Font_LookupOf(fontName, 'I');
 
 	return path.length ? path : Font_LookupOf(fontName, 'R');
+}
+
+String Font_Lookup(const String* fontName, int style) {
+	String path = Font_DoLookup(fontName, style);
+	if (path.length) return path;
+
+	SysFonts_Update();
+	return Font_DoLookup(fontName, style);
 }
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
