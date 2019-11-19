@@ -714,12 +714,13 @@ static void Classic_Tick(void) {
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-static const char* cpe_clientExtensions[31] = {
+static const char* cpe_clientExtensions[32] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
+	"SetSpawnpoint",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -880,6 +881,7 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		Net_PacketSizes[OPCODE_ENTITY_TELEPORT] += 6;
 		Net_PacketSizes[OPCODE_ADD_ENTITY]      += 6;
 		Net_PacketSizes[OPCODE_EXT_ADD_ENTITY2] += 6;
+		Net_PacketSizes[OPCODE_SET_SPAWNPOINT]  += 6;
 		cpe_extEntityPos = true;
 	} else if (String_CaselessEqualsConst(&ext, "TwoWayPing")) {
 		cpe_twoWayPing = true;
@@ -1293,6 +1295,29 @@ static void CPE_SetHotbar(cc_uint8* data) {
 	Inventory_Set(index, block);
 }
 
+static void CPE_SetSpawnPoint(cc_uint8* data) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	int x, y, z;
+
+	if (cpe_extEntityPos) {
+		x = (int)Stream_GetU32_BE(&data[0]);
+		y = (int)Stream_GetU32_BE(&data[4]);
+		z = (int)Stream_GetU32_BE(&data[8]);
+		data += 12;
+	}
+	else {
+		x = (cc_int16)Stream_GetU16_BE(&data[0]);
+		y = (cc_int16)Stream_GetU16_BE(&data[2]);
+		z = (cc_int16)Stream_GetU16_BE(&data[4]);
+		data += 6;
+	}
+	p->SpawnRotY = Math_Packed2Deg(*data++);
+	p->SpawnHeadX = Math_Packed2Deg(*data++);
+
+	y -= 51; /* Convert to feet position */
+	Vec3_Set(p->Spawn, (float)(x / 32.0f), (float)(y / 32.0f), (float)(z / 32.0f));
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1331,6 +1356,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_TWO_WAY_PING, CPE_TwoWayPing, 4);
 	Net_Set(OPCODE_SET_INVENTORY_ORDER, CPE_SetInventoryOrder, 3);
 	Net_Set(OPCODE_SET_HOTBAR, CPE_SetHotbar, 3);
+	Net_Set(OPCODE_SET_SPAWNPOINT, CPE_SetSpawnPoint, 9);
 }
 
 static void CPE_Tick(void) {
