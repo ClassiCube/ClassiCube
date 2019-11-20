@@ -227,10 +227,9 @@ static void Logger_PrintFrame(String* str, cc_uintptr addr, cc_uintptr symAddr, 
 #if defined CC_BUILD_WEB
 void Logger_Backtrace(String* trace, void* ctx) { }
 #elif defined CC_BUILD_WIN
-struct StackPointers { cc_uintptr ip, fp, sp; };
 struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 
-static int Logger_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int max) {
+static int Logger_GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	STACKFRAME frame = { 0 };
 	frame.AddrPC.Mode     = AddrModeFlat;
 	frame.AddrFrame.Mode  = AddrModeFlat;
@@ -259,27 +258,24 @@ static int Logger_GetFrames(CONTEXT* ctx, struct StackPointers* pointers, int ma
 	for (count = 0; count < max; count++) {
 		if (!StackWalk(type, process, thread, &frame, &copy, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL)) break;
 		if (!frame.AddrFrame.Offset) break;
-
-		pointers[count].ip = frame.AddrPC.Offset;
-		pointers[count].fp = frame.AddrFrame.Offset;
-		pointers[count].sp = frame.AddrStack.Offset;
+		addrs[count] = frame.AddrPC.Offset;
 	}
 	return count;
 }
 
 void Logger_Backtrace(String* trace, void* ctx) {
 	char strBuffer[512]; String str;
-	struct StackPointers pointers[40];
+	cc_uintptr addrs[40];
 	int i, frames;
 	HANDLE process;
 	cc_uintptr addr;
 
 	process = GetCurrentProcess();
 	SymInitialize(process, NULL, TRUE);
-	frames  = Logger_GetFrames((CONTEXT*)ctx, pointers, 40);
+	frames  = Logger_GetFrames((CONTEXT*)ctx, addrs, 40);
 
 	for (i = 0; i < frames; i++) {
-		addr = pointers[i].ip;
+		addr = addrs[i];
 		String_InitArray(str, strBuffer);
 
 		struct SymbolAndName s = { 0 };
@@ -293,9 +289,6 @@ void Logger_Backtrace(String* trace, void* ctx) {
 
 		Logger_PrintFrame(&str, addr, s.Symbol.Address, s.Symbol.Name, m.ModuleName);
 		String_AppendString(trace, &str);
-
-		/* frame and stack address */
-		String_Format2(&str, "  fp: %x, sp: %x\r\n", &pointers[i].fp, &pointers[i].sp);
 
 /* This function only works for .pdb debug info */
 /* This function is also missing on Windows98 + KernelEX */
