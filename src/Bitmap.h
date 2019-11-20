@@ -13,11 +13,6 @@ typedef cc_uint32 BitmapCol;
 #define BITMAPCOL_G_SHIFT  8
 #define BITMAPCOL_B_SHIFT 16
 #define BITMAPCOL_A_SHIFT 24
-#elif defined CC_BIG_ENDIAN
-#define BITMAPCOL_A_SHIFT  0
-#define BITMAPCOL_R_SHIFT  8
-#define BITMAPCOL_G_SHIFT 16
-#define BITMAPCOL_B_SHIFT 24
 #else
 #define BITMAPCOL_B_SHIFT  0
 #define BITMAPCOL_G_SHIFT  8

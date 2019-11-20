@@ -1003,6 +1003,16 @@ static FUNC_GLBUFFERSUBDATA _glBufferSubData;
 #endif
 #define GL_TEXTURE_MAX_LEVEL 0x813D
 
+#if defined CC_BIG_ENDIAN
+/* Pixels are stored in memory as A,R,G,B but GL_UNSIGNED_BYTE will interpret as B,G,R,A */
+/* So use GL_UNSIGNED_INT_8_8_8_8 REV instead to remedy this */
+#define TRANSFER_FORMAT GL_UNSIGNED_INT_8_8_8_8_REV
+#else
+/* Pixels are stored in memory as B,G,R,A and GL_UNSIGNED_BYTE will interpret as B,G,R,A */
+/* So fine to just use GL_UNSIGNED_BYTE here */
+#define TRANSFER_FORMAT GL_UNSIGNED_BYTE
+#endif
+
 typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
@@ -1056,9 +1066,9 @@ static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, cc_bool partial) {
 		GenMipmaps(width, height, cur, prev);
 
 		if (partial) {
-			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, cur);
+			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
 		} else {
-			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, cur);
+			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
 		}
 
 		if (prev != bmp->Scan0) Mem_Free(prev);
@@ -1088,7 +1098,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->Width, bmp->Height, 0, PIXEL_FORMAT, GL_UNSIGNED_BYTE, bmp->Scan0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->Width, bmp->Height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->Scan0);
 
 	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, false);
 	return texId;
@@ -1096,7 +1106,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, cc_bool mipmaps) {
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->Width, part->Height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, part->Scan0);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->Width, part->Height, PIXEL_FORMAT, TRANSFER_FORMAT, part->Scan0);
 	if (mipmaps) Gfx_DoMipmaps(x, y, part, true);
 }
 
