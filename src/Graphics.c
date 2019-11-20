@@ -1005,7 +1005,7 @@ static FUNC_GLBUFFERSUBDATA _glBufferSubData;
 
 #if defined CC_BIG_ENDIAN
 /* Pixels are stored in memory as A,R,G,B but GL_UNSIGNED_BYTE will interpret as B,G,R,A */
-/* So use GL_UNSIGNED_INT_8_8_8_8 REV instead to remedy this */
+/* So use GL_UNSIGNED_INT_8_8_8_8_REV instead to remedy this */
 #define TRANSFER_FORMAT GL_UNSIGNED_INT_8_8_8_8_REV
 #else
 /* Pixels are stored in memory as B,G,R,A and GL_UNSIGNED_BYTE will interpret as B,G,R,A */
@@ -1230,7 +1230,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 
 	bmp.Scan0  = (cc_uint8*)Mem_TryAlloc(bmp.Width * bmp.Height, 4);
 	if (!bmp.Scan0) return ERR_OUT_OF_MEMORY;
-	glReadPixels(0, 0, bmp.Width, bmp.Height, PIXEL_FORMAT, GL_UNSIGNED_BYTE, bmp.Scan0);
+	glReadPixels(0, 0, bmp.Width, bmp.Height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.Scan0);
 
 	res = Png_Encode(&bmp, output, GL_SelectRow, false);
 	Mem_Free(bmp.Scan0);
