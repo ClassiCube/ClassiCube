@@ -2259,8 +2259,13 @@ void Window_DrawFramebuffer(Rect2D r) {
 
 	provider = CGDataProviderCreateWithData(NULL, fb_bmp.Scan0,
 		Bitmap_DataSize(fb_bmp.Width, fb_bmp.Height), NULL);
+#ifdef CC_BIG_ENDIAN
 	image    = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
 				kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
+#else
+	image    = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
+				kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
+#endif
 
 	CGContextDrawImage(context, rect, image);
 	CGContextSynchronize(context);
