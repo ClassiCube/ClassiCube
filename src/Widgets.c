@@ -50,10 +50,9 @@ static const struct WidgetVTABLE TextWidget_VTABLE = {
 	Widget_Pointer,    Widget_Pointer,  Widget_PointerMove
 };
 void TextWidget_Make(struct TextWidget* w, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
-	PackedCol col = PACKEDCOL_WHITE;
 	Widget_Reset(w);
 	w->VTABLE = &TextWidget_VTABLE;
-	w->col    = col;
+	w->col    = PACKEDCOL_WHITE;
 	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
 }
 
@@ -84,9 +83,9 @@ void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc
 *#########################################################################################################################*/
 #define BUTTON_uWIDTH (200.0f / 256.0f)
 
-static struct Texture btnShadowTex   = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,66, 200,86)  };
-static struct Texture btnSelectedTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,86, 200,106) };
-static struct Texture btnDisabledTex = { GFX_NULL, Tex_Rect(0,0, 0,0), Widget_UV(0,46, 200,66)  };
+static struct Texture btnShadowTex   = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,66, 200,86)  };
+static struct Texture btnSelectedTex = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,86, 200,106) };
+static struct Texture btnDisabledTex = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,46, 200,66)  };
 static int btnMinHeight;
 
 static void ButtonWidget_Free(void* widget) {
@@ -1846,7 +1845,7 @@ static void PlayerListWidget_DeleteAt(struct PlayerListWidget* w, int i) {
 
 	w->namesCount--;
 	w->ids[w->namesCount]         = 0;
-	w->textures[w->namesCount].ID = GFX_NULL;
+	w->textures[w->namesCount].ID = 0;
 }
 
 static void PlayerListWidget_AddGroup(struct PlayerListWidget* w, int id, int* index) {
@@ -2077,7 +2076,7 @@ void TextGroupWidget_ShiftUp(struct TextGroupWidget* w) {
 	for (i = 0; i < last; i++) {
 		w->textures[i] = w->textures[i + 1];
 	}
-	w->textures[last].ID = GFX_NULL; /* Delete() called by TextGroupWidget_Redraw otherwise */
+	w->textures[last].ID = 0; /* Gfx_DeleteTexture() called by TextGroupWidget_Redraw otherwise */
 	TextGroupWidget_Redraw(w, last);
 }
 
@@ -2089,7 +2088,7 @@ void TextGroupWidget_ShiftDown(struct TextGroupWidget* w) {
 	for (i = last; i > 0; i--) {
 		w->textures[i] = w->textures[i - 1];
 	}
-	w->textures[0].ID = GFX_NULL; /* Delete() called by TextGroupWidget_Redraw otherwise */
+	w->textures[0].ID = 0; /* Gfx_DeleteTexture() called by TextGroupWidget_Redraw otherwise */
 	TextGroupWidget_Redraw(w, 0);
 }
 

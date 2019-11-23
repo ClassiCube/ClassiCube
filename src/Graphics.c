@@ -298,10 +298,10 @@ static void D3D9_RestoreRenderStates(void);
 static void D3D9_FreeResource(GfxResourceID* resource) {
 	IUnknown* unk;
 	ULONG refCount;
-
-	if (*resource == GFX_NULL) return;
+	
 	unk = (IUnknown*)(*resource);
-	*resource = GFX_NULL;
+	if (!unk) return;
+	*resource = 0;
 
 #ifdef __cplusplus
 	refCount = unk->Release();
@@ -508,7 +508,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
 		Logger_Abort("Textures must have power of two dimensions");
 	}
-	if (Gfx.LostContext) return GFX_NULL;
+	if (Gfx.LostContext) return 0;
 
 	if (managedPool) {
 		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels,
@@ -1086,7 +1086,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
 		Logger_Abort("Textures must have power of two dimensions");
 	}
-	if (Gfx.LostContext) return GFX_NULL;
+	if (Gfx.LostContext) return 0;
 
 	if (mipmaps) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
@@ -1115,10 +1115,10 @@ void Gfx_BindTexture(GfxResourceID texId) {
 }
 
 void Gfx_DeleteTexture(GfxResourceID* texId) {
-	if (*texId == GFX_NULL) return;
 	GLuint id = (GLuint)(*texId);
+	if (!id) return;
 	glDeleteTextures(1, &id);
-	*texId = GFX_NULL;
+	*texId = 0;
 }
 
 void Gfx_EnableMipmaps(void) { }
@@ -1194,17 +1194,17 @@ void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); 
 void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	if (*vb == GFX_NULL) return;
 	GLuint id = (GLuint)(*vb);
+	if (!id) return;
 	_glDeleteBuffers(1, &id);
-	*vb = GFX_NULL;
+	*vb = 0;
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
-	if (*ib == GFX_NULL) return;
 	GLuint id = (GLuint)(*ib);
+	if (!id) return;
 	_glDeleteBuffers(1, &id);
-	*ib = GFX_NULL;
+	*ib = 0;
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
@@ -1910,15 +1910,16 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	return list;
 }
 
-GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { return GFX_NULL; }
+GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) { return 0; }
 void Gfx_BindVb(GfxResourceID vb) { gfx_activeList = (GLuint)vb; }
 void Gfx_BindIb(GfxResourceID ib) { }
 void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
-	if (*vb == GFX_NULL) return;
-	if (*vb != gl_DYNAMICLISTID) glDeleteLists((GLuint)(*vb), 1);
-	*vb = GFX_NULL;
+	GLuint id = (GLuint)(*vb);
+	if (!id) return;
+	if (id != gl_DYNAMICLISTID) glDeleteLists(id, 1);
+	*vb = 0;
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {

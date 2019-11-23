@@ -55,7 +55,7 @@ CC_API GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool
 CC_API void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, cc_bool mipmaps);
 /* Sets the currently active texture. */
 CC_API void Gfx_BindTexture(GfxResourceID texId);
-/* Deletes the given texture, then sets it to GFX_NULL. */
+/* Deletes the given texture, then sets it to 0. */
 CC_API void Gfx_DeleteTexture(GfxResourceID* texId);
 /* Sets whether texture colour is used when rendering vertices. */
 CC_API void Gfx_SetTexturing(cc_bool enabled);
@@ -109,9 +109,9 @@ CC_API GfxResourceID Gfx_CreateIb(void* indices, int indicesCount);
 CC_API void Gfx_BindVb(GfxResourceID vb);
 /* Sets the currently active index buffer. */
 CC_API void Gfx_BindIb(GfxResourceID ib);
-/* Deletes the given vertex buffer, then sets it to GFX_NULL. */
+/* Deletes the given vertex buffer, then sets it to 0. */
 CC_API void Gfx_DeleteVb(GfxResourceID* vb);
-/* Deletes the given index buffer, then sets it to GFX_NULL. */
+/* Deletes the given index buffer, then sets it to 0. */
 CC_API void Gfx_DeleteIb(GfxResourceID* ib);
 
 /* Sets the format of the rendered vertices. */

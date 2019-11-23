@@ -221,10 +221,8 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 
 #ifdef CC_BUILD_D3D9
 typedef void* GfxResourceID;
-#define GFX_NULL NULL
 #else
 typedef cc_uintptr GfxResourceID;
-#define GFX_NULL 0
 #endif
 
 /* Contains the information to describe a 2D textured quad. */

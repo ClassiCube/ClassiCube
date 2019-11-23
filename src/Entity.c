@@ -145,7 +145,7 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 
 	e->ModelBlock   = BLOCK_AIR;
 	e->Model        = Model_Get(&name);
-	e->MobTextureId = GFX_NULL;
+	e->MobTextureId = 0;
 	if (!e->Model) Entity_SetBlockModel(e, &name);
 
 	Entity_ParseScale(e, &scale);
@@ -247,7 +247,7 @@ static void Entity_MakeNameTexture(struct Entity* e) {
 	size = Drawer2D_MeasureText(&args);
 
 	if (size.Width == 0) {
-		e->NameTex.ID = GFX_NULL;
+		e->NameTex.ID = 0;
 		e->NameTex.X  = NAME_IS_EMPTY;
 	} else {
 		String_InitArray(colorlessName, colorlessBuffer);
@@ -346,7 +346,7 @@ static void Entity_CopySkin(struct Entity* dst, struct Entity* src) {
 	dst->vScale    = src->vScale;
 
 	/* Custom mob textures */
-	dst->MobTextureId = GFX_NULL;
+	dst->MobTextureId = 0;
 	skin = String_FromRawArray(dst->SkinNameRaw);
 	if (Utils_IsUrlPrefix(&skin)) dst->MobTextureId = dst->TextureId;
 }
@@ -354,8 +354,8 @@ static void Entity_CopySkin(struct Entity* dst, struct Entity* src) {
 /* Resets skin data for the given entity */
 static void Entity_ResetSkin(struct Entity* e) {
 	e->uScale = 1.0f; e->vScale = 1.0f;
-	e->MobTextureId = GFX_NULL;
-	e->TextureId    = GFX_NULL;
+	e->MobTextureId = 0;
+	e->TextureId    = 0;
 	e->SkinType     = SKIN_64x32;
 }
 

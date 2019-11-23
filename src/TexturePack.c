@@ -477,7 +477,7 @@ void Atlas_Update(Bitmap* bmp) {
 static GfxResourceID Atlas_LoadTile_Raw(TextureLoc texLoc, Bitmap* element) {
 	int size = Atlas2D.TileSize;
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
-	if (y >= Atlas2D.RowsCount) return GFX_NULL;
+	if (y >= Atlas2D.RowsCount) return 0;
 
 	Bitmap_UNSAFE_CopyBlock(x * size, y * size, 0, 0, &Atlas2D.Bmp, element, size);
 	return Gfx_CreateTexture(element, false, Gfx.Mipmaps);

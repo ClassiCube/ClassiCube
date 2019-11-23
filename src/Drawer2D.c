@@ -319,7 +319,7 @@ void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int hei
 
 
 void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
-	static struct Texture empty = { GFX_NULL, Tex_Rect(0,0, 0,0), Tex_UV(0,0, 1,1) };
+	static struct Texture empty = { 0, Tex_Rect(0,0, 0,0), Tex_UV(0,0, 1,1) };
 	Size2D size;
 	Bitmap bmp;
 	/* pointless to draw anything when context is lost */
