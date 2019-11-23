@@ -538,16 +538,18 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 		}
 	}
 
+	/* Destroy announcement texture before even rendering it at all, */
+	/* otherwise changing texture pack shows announcement for one frame */
+	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + (5 * 1000)) {
+		Elem_TryFree(&s->announcement);
+	}
 	Elem_Render(&s->announcement, delta);
+
 	if (s->grabsInput) {
 		Elem_Render(&s->input.base, delta);
 		if (s->altText.active) {
 			Elem_Render(&s->altText, delta);
 		}
-	}
-
-	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + (5 * 1000)) {
-		Elem_TryFree(&s->announcement);
 	}
 }
 
