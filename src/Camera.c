@@ -42,7 +42,7 @@ static void PerspectiveCamera_GetView(struct Matrix* mat) {
 
 static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	Vec3 dir    = Vec3_GetDirVector(p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD);
+	Vec3 dir    = Vec3_GetDirVector(p->Yaw * MATH_DEG2RAD, p->Pitch * MATH_DEG2RAD);
 	Vec3 eyePos = Entity_GetEyePosition(p);
 	float reach = LocalPlayer_Instance.ReachDistance;
 	Picking_CalculatePickedBlock(eyePos, dir, reach, pos);
@@ -77,7 +77,7 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 	struct Entity* e      = &p->Base;
 
 	struct LocationUpdate update;
-	float headY, headX;
+	float yaw, pitch;
 	Vec2 rot = PerspectiveCamera_GetMouseDelta(delta);
 
 	if (Key_IsAltPressed() && Camera.Active->isThirdPerson) {
@@ -85,13 +85,13 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 		return;
 	}
 	
-	headY = p->Interp.Next.HeadY + rot.X;
-	headX = p->Interp.Next.HeadX + rot.Y;
-	LocationUpdate_MakeOri(&update, headY, headX);
+	yaw   = p->Interp.Next.Yaw   + rot.X;
+	pitch = p->Interp.Next.Pitch + rot.Y;
+	LocationUpdate_MakeOri(&update, yaw, pitch);
 
 	/* Need to make sure we don't cross the vertical axes, because that gets weird. */
-	if (update.HeadX >= 90.0f && update.HeadX <= 270.0f) {
-		update.HeadX = p->Interp.Next.HeadX < 180.0f ? 90.0f : 270.0f;
+	if (update.Pitch >= 90.0f && update.Pitch <= 270.0f) {
+		update.Pitch = p->Interp.Next.Pitch < 180.0f ? 90.0f : 270.0f;
 	}
 	e->VTABLE->SetLocation(e, &update, false);
 }
@@ -130,19 +130,19 @@ static void PerspectiveCamera_CalcViewBobbing(float t, float velTiltScale) {
 static Vec2 FirstPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec2 v;	
-	v.X = p->HeadY * MATH_DEG2RAD; v.Y = p->HeadX * MATH_DEG2RAD; 
+	v.X = p->Yaw * MATH_DEG2RAD; v.Y = p->Pitch * MATH_DEG2RAD;
 	return v;
 }
 
 static Vec3 FirstPersonCamera_GetPosition(float t) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec3 camPos   = Entity_GetEyePosition(p);
-	float headY      = p->HeadY * MATH_DEG2RAD;
+	float yaw     = p->Yaw * MATH_DEG2RAD;
 	PerspectiveCamera_CalcViewBobbing(t, 1);
 	
 	camPos.Y += Camera.BobbingVer;
-	camPos.X += Camera.BobbingHor * (float)Math_Cos(headY);
-	camPos.Z += Camera.BobbingHor * (float)Math_Sin(headY);
+	camPos.X += Camera.BobbingHor * (float)Math_Cos(yaw);
+	camPos.Z += Camera.BobbingHor * (float)Math_Sin(yaw);
 	return camPos;
 }
 
@@ -165,7 +165,7 @@ float dist_third = 3.0f, dist_forward = 3.0f;
 static Vec2 ThirdPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec2 v;	
-	v.X = p->HeadY * MATH_DEG2RAD; v.Y = p->HeadX * MATH_DEG2RAD;
+	v.X = p->Yaw * MATH_DEG2RAD; v.Y = p->Pitch * MATH_DEG2RAD;
 	if (cam_isForwardThird) { v.X += MATH_PI; v.Y = -v.Y; }
 
 	v.X += cam_rotOffset.X * MATH_DEG2RAD; 

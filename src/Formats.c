@@ -76,7 +76,7 @@ void Map_LoadFrom(const String* path) {
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
 	Event_RaiseVoid(&WorldEvents.MapLoaded);
 
-	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
+	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnYaw, p->SpawnPitch, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 }
 
@@ -184,8 +184,8 @@ cc_result Lvl_Load(struct Stream* stream) {
 	p->Spawn.X = Stream_GetU16_LE(&header[8]);
 	p->Spawn.Z = Stream_GetU16_LE(&header[10]);
 	p->Spawn.Y = Stream_GetU16_LE(&header[12]);
-	p->SpawnRotY  = Math_Packed2Deg(header[14]);
-	p->SpawnHeadX = Math_Packed2Deg(header[15]);
+	p->SpawnYaw   = Math_Packed2Deg(header[14]);
+	p->SpawnPitch = Math_Packed2Deg(header[15]);
 	/* (2) pervisit, perbuild permissions */
 
 	if ((res = Map_ReadBlocks(&compStream))) return res;
@@ -259,8 +259,8 @@ cc_result Fcm_Load(struct Stream* stream) {
 	p->Spawn.X = ((int)Stream_GetU32_LE(&header[11])) / 32.0f;
 	p->Spawn.Y = ((int)Stream_GetU32_LE(&header[15])) / 32.0f;
 	p->Spawn.Z = ((int)Stream_GetU32_LE(&header[19])) / 32.0f;
-	p->SpawnRotY  = Math_Packed2Deg(header[23]);
-	p->SpawnHeadX = Math_Packed2Deg(header[24]);
+	p->SpawnYaw   = Math_Packed2Deg(header[23]);
+	p->SpawnPitch = Math_Packed2Deg(header[24]);
 
 	/* header[25] (4) date modified */
 	/* header[29] (4) date created */
@@ -527,8 +527,8 @@ static void Cw_Callback_2(struct NbtTag* tag) {
 	if (IsTag(tag, "X")) { p->Spawn.X = NbtTag_I16(tag); return; }
 	if (IsTag(tag, "Y")) { p->Spawn.Y = NbtTag_I16(tag); return; }
 	if (IsTag(tag, "Z")) { p->Spawn.Z = NbtTag_I16(tag); return; }
-	if (IsTag(tag, "H")) { p->SpawnRotY  = Math_Packed2Deg(NbtTag_U8(tag)); return; }
-	if (IsTag(tag, "P")) { p->SpawnHeadX = Math_Packed2Deg(NbtTag_U8(tag)); return; }
+	if (IsTag(tag, "H")) { p->SpawnYaw   = Math_Packed2Deg(NbtTag_U8(tag)); return; }
+	if (IsTag(tag, "P")) { p->SpawnPitch = Math_Packed2Deg(NbtTag_U8(tag)); return; }
 }
 
 static BlockID cw_curID;
@@ -1110,8 +1110,8 @@ cc_result Cw_Save(struct Stream* stream) {
 		Stream_SetU16_BE(&tmp[89],  (cc_uint16)p->Base.Position.X);
 		Stream_SetU16_BE(&tmp[95],  (cc_uint16)p->Base.Position.Y);
 		Stream_SetU16_BE(&tmp[101], (cc_uint16)p->Base.Position.Z);
-		tmp[107] = Math_Deg2Packed(p->SpawnRotY);
-		tmp[112] = Math_Deg2Packed(p->SpawnHeadX);
+		tmp[107] = Math_Deg2Packed(p->SpawnYaw);
+		tmp[112] = Math_Deg2Packed(p->SpawnPitch);
 	}
 	if ((res = Stream_Write(stream, tmp,      sizeof(cw_begin)))) return res;
 	if ((res = Stream_Write(stream, World.Blocks, World.Volume))) return res;

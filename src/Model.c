@@ -134,7 +134,7 @@ void Model_SetupState(struct Model* model, struct Entity* entity) {
 
 	Models.Cols[3] = Models.Cols[2]; 
 	Models.Cols[5] = Models.Cols[4];
-	yawDelta = entity->HeadY - entity->RotY;
+	yawDelta = entity->Yaw - entity->RotY;
 
 	Models.cosHead = (float)Math_Cos(yawDelta * MATH_DEG2RAD);
 	Models.sinHead = (float)Math_Sin(yawDelta * MATH_DEG2RAD);
@@ -451,7 +451,7 @@ static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* mode
 	type = Models.skinType;
 	set  = &model->Limbs[type & 0x3];
 
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Head, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &model->Head, true);
 	Model_DrawPart(&model->Torso);
 	Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->LeftLeg,  false);
 	Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->RightLeg, false);
@@ -473,7 +473,7 @@ static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* mode
 		Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->RightArmLayer, false);
 		Models.Rotation = ROTATE_ORDER_ZYX;
 	}
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &model->Hat, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &model->Hat, true);
 	Model_UpdateVB();
 }
 
@@ -808,9 +808,9 @@ static void HeadModel_Draw(struct Entity* entity) {
 	Model_ApplyTexture(entity);
 
 	part = human_set.Head; part.RotY += 4.0f/16.0f;
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &part, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &part, true);
 	part = human_set.Hat;  part.RotY += 4.0f/16.0f;
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &part, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &part, true);
 
 	Model_UpdateVB();
 }
@@ -904,9 +904,9 @@ static void ChickenModel_Draw(struct Entity* entity) {
 	int i;
 	Model_ApplyTexture(entity);
 
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &chicken_head,   true);
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &chicken_wattle, true);
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &chicken_beak,   true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &chicken_head,   true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &chicken_wattle, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &chicken_beak,   true);
 
 	Model_DrawPart(&chicken_torso);
 	Model_DrawRotate(0, 0, -Math_AbsF(entity->Anim.LeftArmX), &chicken_leftWing,  false);
@@ -988,7 +988,7 @@ static void CreeperModel_MakeParts(void) {
 
 static void CreeperModel_Draw(struct Entity* entity) {
 	Model_ApplyTexture(entity);
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &creeper_head, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &creeper_head, true);
 
 	Model_DrawPart(&creeper_torso);
 	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0, &creeper_leftLegFront,  false);
@@ -1066,7 +1066,7 @@ static void PigModel_MakeParts(void) {
 
 static void PigModel_Draw(struct Entity* entity) {
 	Model_ApplyTexture(entity);
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &pig_head, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &pig_head, true);
 
 	Model_DrawPart(&pig_torso);
 	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0, &pig_leftLegFront,  false);
@@ -1190,7 +1190,7 @@ static void SheepModel_MakeParts(void) {
 
 static void FurlessModel_Draw(struct Entity* entity) {
 	Model_ApplyTexture(entity);
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &sheep_head, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &sheep_head, true);
 
 	Model_DrawPart(&sheep_torso);
 	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0, &sheep_leftLegFront,  false);
@@ -1203,7 +1203,7 @@ static void FurlessModel_Draw(struct Entity* entity) {
 static void SheepModel_Draw(struct Entity* entity) {
 	FurlessModel_Draw(entity);
 	Gfx_BindTexture(fur_tex.TexID);
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &fur_head, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &fur_head, true);
 
 	Model_DrawPart(&fur_torso);
 	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0, &fur_leftLegFront,  false);
@@ -1290,7 +1290,7 @@ static void SkeletonModel_MakeParts(void) {
 
 static void SkeletonModel_Draw(struct Entity* entity) {
 	Model_ApplyTexture(entity);
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &skeleton_head, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &skeleton_head, true);
 
 	Model_DrawPart(&skeleton_torso);
 	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0,                      &skeleton_leftLeg,  false);
@@ -1370,7 +1370,7 @@ static void SpiderModel_MakeParts(void) {
 static void SpiderModel_Draw(struct Entity* entity) {
 	float rotX, rotY, rotZ;
 	Model_ApplyTexture(entity);
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &spider_head, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &spider_head, true);
 	Model_DrawPart(&spider_link);
 	Model_DrawPart(&spider_end);
 
@@ -1418,7 +1418,7 @@ static struct Model* SpiderModel_GetInstance(void) {
 
 static void ZombieModel_Draw(struct Entity* entity) {
 	Model_ApplyTexture(entity);
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &human_set.Head, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &human_set.Head, true);
 
 	Model_DrawPart(&human_set.Torso);
 	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0,                      &human_set.Limbs[0].LeftLeg,  false);
@@ -1426,7 +1426,7 @@ static void ZombieModel_Draw(struct Entity* entity) {
 	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.LeftArmZ,  &human_set.Limbs[0].LeftArm,  false);
 	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.RightArmZ, &human_set.Limbs[0].RightArm, false);
 
-	Model_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, &human_set.Hat, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &human_set.Hat, true);
 	Model_UpdateVB();
 }
 

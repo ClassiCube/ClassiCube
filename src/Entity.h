@@ -31,14 +31,14 @@ extern const char* const ShadowMode_Names[SHADOW_MODE_COUNT];
 enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 
 #define LOCATIONUPDATE_FLAG_POS   0x01
-#define LOCATIONUPDATE_FLAG_HEADX 0x02
-#define LOCATIONUPDATE_FLAG_HEADY 0x04
+#define LOCATIONUPDATE_FLAG_PITCH 0x02
+#define LOCATIONUPDATE_FLAG_YAW   0x04
 #define LOCATIONUPDATE_FLAG_ROTX  0x08
 #define LOCATIONUPDATE_FLAG_ROTZ  0x10
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
 struct LocationUpdate {
 	Vec3 Pos;
-	float HeadX, HeadY, RotX, RotZ;
+	float Pitch, Yaw, RotX, RotZ;
 	cc_uint8 Flags;
 	cc_bool RelativePos;
 };
@@ -46,11 +46,11 @@ struct LocationUpdate {
 /* Clamps the given angle so it lies between [0, 360). */
 float LocationUpdate_Clamp(float degrees);
 /* Makes a location update only containing yaw and pitch. */
-void LocationUpdate_MakeOri(struct LocationUpdate* update, float rotY, float headX);
+void LocationUpdate_MakeOri(struct LocationUpdate* update, float yaw, float pitch);
 /* Makes a location update only containing position */
 void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, cc_bool rel);
 /* Makes a location update containing position, yaw and pitch. */
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float rotY, float headX, cc_bool rel);
+void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float yaw, float pitch, cc_bool rel);
 
 struct Entity;
 struct EntityVTABLE {
@@ -71,7 +71,7 @@ struct EntityVTABLE {
 struct Entity {
 	struct EntityVTABLE* VTABLE;
 	Vec3 Position;
-	float HeadX, HeadY, RotX, RotY, RotZ;
+	float Pitch, Yaw, RotX, RotY, RotZ;
 	Vec3 Velocity;
 
 	struct Model* Model;
@@ -185,7 +185,7 @@ extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 struct LocalPlayer {
 	struct Entity Base;
 	Vec3 Spawn, OldVelocity;
-	float SpawnRotY, SpawnHeadX, ReachDistance;
+	float SpawnYaw, SpawnPitch, ReachDistance;
 	struct HacksComp Hacks;
 	struct TiltComp Tilt;
 	struct InterpComp Interp;

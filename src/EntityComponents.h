@@ -76,7 +76,7 @@ void HacksComp_RecheckFlags(struct HacksComp* hacks);
 void HacksComp_Update(struct HacksComp* hacks);
 
 /* Represents a position and orientation state */
-struct InterpState { Vec3 Pos; float HeadX, HeadY, RotX, RotZ; };
+struct InterpState { Vec3 Pos; float Pitch, Yaw, RotX, RotZ; };
 
 #define InterpComp_Layout \
 struct InterpState Prev, Next; float PrevRotY, NextRotY; int RotYCount; float RotYStates[15];

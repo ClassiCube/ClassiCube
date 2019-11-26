@@ -436,7 +436,7 @@ void MapRenderer_RefreshBorders(int maxHeight) {
 #define CHUNK_TARGET_TIME ((1.0/30) + 0.01)
 static int chunksTarget = 12;
 static Vec3 lastCamPos;
-static float lastHeadY, lastHeadX;
+static float lastYaw, lastPitch;
 /* Max distance from camera that chunks are rendered within */
 /* This may differ from the view distance configured by the user */
 static int renderDistSquared;
@@ -535,15 +535,15 @@ static void MapRenderer_UpdateChunks(double delta) {
 
 	p = &LocalPlayer_Instance;
 	samePos = Vec3_Equals(&Camera.CurrentPos, &lastCamPos)
-		&& p->Base.HeadX == lastHeadX && p->Base.HeadY == lastHeadY;
+		&& p->Base.Pitch == lastPitch && p->Base.Yaw == lastYaw;
 
 	renderChunksCount = samePos ?
 		MapRenderer_UpdateChunksStill(&chunkUpdates) :
 		MapRenderer_UpdateChunksAndVisibility(&chunkUpdates);
 
 	lastCamPos = Camera.CurrentPos;
-	lastHeadX  = p->Base.HeadX; 
-	lastHeadY  = p->Base.HeadY;
+	lastPitch  = p->Base.Pitch;
+	lastYaw    = p->Base.Yaw;
 
 	if (!samePos || chunkUpdates) {
 		MapRenderer_ResetPartFlags();

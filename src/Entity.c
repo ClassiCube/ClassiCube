@@ -33,11 +33,11 @@ float LocationUpdate_Clamp(float degrees) {
 }
 
 static struct LocationUpdate loc_empty;
-void LocationUpdate_MakeOri(struct LocationUpdate* update, float rotY, float headX) {
+void LocationUpdate_MakeOri(struct LocationUpdate* update, float yaw, float pitch) {
 	*update = loc_empty;
-	update->Flags = LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
-	update->HeadX = LocationUpdate_Clamp(headX);
-	update->HeadY = LocationUpdate_Clamp(rotY);
+	update->Flags = LOCATIONUPDATE_FLAG_PITCH | LOCATIONUPDATE_FLAG_YAW;
+	update->Pitch = LocationUpdate_Clamp(pitch);
+	update->Yaw   = LocationUpdate_Clamp(yaw);
 }
 
 void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, cc_bool rel) {
@@ -47,11 +47,11 @@ void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, cc_bool rel
 	update->RelativePos = rel;
 }
 
-void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float rotY, float headX, cc_bool rel) {
+void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float yaw, float pitch, cc_bool rel) {
 	*update = loc_empty;
-	update->Flags = LOCATIONUPDATE_FLAG_POS | LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
-	update->HeadX = LocationUpdate_Clamp(headX);
-	update->HeadY = LocationUpdate_Clamp(rotY);
+	update->Flags = LOCATIONUPDATE_FLAG_POS | LOCATIONUPDATE_FLAG_PITCH | LOCATIONUPDATE_FLAG_YAW;
+	update->Pitch = LocationUpdate_Clamp(pitch);
+	update->Yaw   = LocationUpdate_Clamp(yaw);
 	update->Pos   = pos;
 	update->RelativePos = rel;
 }
@@ -633,7 +633,7 @@ void Entities_Remove(EntityID id) {
 
 EntityID Entities_GetClosest(struct Entity* src) {
 	Vec3 eyePos = Entity_GetEyePosition(src);
-	Vec3 dir = Vec3_GetDirVector(src->HeadY * MATH_DEG2RAD, src->HeadX * MATH_DEG2RAD);
+	Vec3 dir = Vec3_GetDirVector(src->Yaw * MATH_DEG2RAD, src->Pitch * MATH_DEG2RAD);
 	float closestDist = MATH_POS_INF;
 	EntityID targetId = ENTITIES_SELF_ID;
 
@@ -832,7 +832,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	}
 
 	PhysicsComp_UpdateVelocityState(&p->Physics);
-	headingVelocity = Vec3_RotateY3(xMoving, 0, zMoving, e->HeadY * MATH_DEG2RAD);
+	headingVelocity = Vec3_RotateY3(xMoving, 0, zMoving, e->Yaw * MATH_DEG2RAD);
 	PhysicsComp_PhysicsTick(&p->Physics, headingVelocity);
 
 	/* Fixes high jump, when holding down a movement key, jump, fly, then let go of fly key */
@@ -956,7 +956,7 @@ static void LocalPlayer_DoRespawn(void) {
 	}
 
 	spawn.Y += 2.0f/16.0f;
-	LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnRotY, p->SpawnHeadX, false);
+	LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnYaw, p->SpawnPitch, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 	Vec3_Set(p->Base.Velocity, 0,0,0);
 
@@ -996,8 +996,8 @@ static cc_bool LocalPlayer_HandleSetSpawn(void) {
 			p->Spawn.Z = Math_Floor(p->Base.Position.Z) + 0.5f;
 		}
 		
-		p->SpawnRotY   = p->Base.RotY;
-		p->SpawnHeadX  = p->Base.HeadX;
+		p->SpawnYaw   = p->Base.Yaw;
+		p->SpawnPitch = p->Base.Pitch;
 	}
 	return LocalPlayer_HandleRespawn();
 }

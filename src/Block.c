@@ -577,7 +577,7 @@ static int RotateVertical(String* name, int offset) {
 static int RotateFence(String* name, int offset) {
 	float yaw;
 	/* Fence type blocks */
-	yaw = LocalPlayer_Instance.Base.HeadY;
+	yaw = LocalPlayer_Instance.Base.Yaw;
 	yaw = LocationUpdate_Clamp(yaw);
 
 	if (yaw < 45.0f || (yaw >= 135.0f && yaw < 225.0f) || yaw > 315.0f) {
@@ -604,7 +604,7 @@ static int RotatePillar(String* name, int offset) {
 
 static int RotateDirection(String* name, int offset) {
 	float yaw;
-	yaw = LocalPlayer_Instance.Base.HeadY;
+	yaw = LocalPlayer_Instance.Base.Yaw;
 	yaw = LocationUpdate_Clamp(yaw);
 
 	if (yaw >= 45.0f && yaw < 135.0f) {

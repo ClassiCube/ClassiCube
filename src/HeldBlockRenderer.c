@@ -69,8 +69,8 @@ static void HeldBlockRenderer_ResetHeldState(void) {
 	held_entity.Position.Y -= Camera.BobbingVer;
 	held_entity.Position.Z -= Camera.BobbingHor;
 
-	held_entity.HeadY = -45.0f; held_entity.RotY = -45.0f;
-	held_entity.HeadX = 0.0f;   held_entity.RotX = 0.0f;
+	held_entity.Yaw   = -45.0f; held_entity.RotY = -45.0f;
+	held_entity.Pitch = 0.0f;   held_entity.RotX = 0.0f;
 	held_entity.ModelBlock   = held_block;
 
 	held_entity.SkinType     = p->SkinType;
@@ -122,7 +122,7 @@ static void HeldBlockRenderer_DigAnimation(void) {
 
 	sinHalfCircleWeird = Math_Sin(t * t * MATH_PI);
 	held_entity.RotY  -= (float)Math_Sin(sqrtLerpPI) * 80.0f;
-	held_entity.HeadY -= (float)Math_Sin(sqrtLerpPI) * 80.0f;
+	held_entity.Yaw   -= (float)Math_Sin(sqrtLerpPI) * 80.0f;
 	held_entity.RotX  += (float)sinHalfCircleWeird   * 20.0f;
 }
 
@@ -136,17 +136,17 @@ static void HeldBlockRenderer_ResetAnim(cc_bool setLastHeld, double period) {
 static PackedCol HeldBlockRenderer_GetCol(struct Entity* entity) {
 	struct Entity* player;
 	PackedCol col;
-	float adjHeadX, t, scale;
+	float adjPitch, t, scale;
 
 	player = &LocalPlayer_Instance.Base;
 	col    = player->VTABLE->GetCol(player);
 
 	/* Adjust pitch so angle when looking straight down is 0. */
-	adjHeadX = player->HeadX - 90.0f;
-	if (adjHeadX < 0.0f) adjHeadX += 360.0f;
+	adjPitch = player->Pitch - 90.0f;
+	if (adjPitch < 0.0f) adjPitch += 360.0f;
 
 	/* Adjust colour so held block is brighter when looking straight up */
-	t     = Math_AbsF(adjHeadX - 180.0f) / 180.0f;
+	t     = Math_AbsF(adjPitch - 180.0f) / 180.0f;
 	scale = Math_Lerp(0.9f, 0.7f, t);
 	return PackedCol_Scale(col, scale);
 }

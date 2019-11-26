@@ -308,11 +308,11 @@ void InterpComp_LerpAngles(struct InterpComp* interp, struct Entity* e, float t)
 	struct InterpState* prev = &interp->Prev;
 	struct InterpState* next = &interp->Next;
 
-	e->HeadX = Math_LerpAngle(prev->HeadX, next->HeadX, t);
-	e->HeadY = Math_LerpAngle(prev->HeadY, next->HeadY, t);
-	e->RotX  = Math_LerpAngle(prev->RotX,  next->RotX, t);
+	e->Pitch = Math_LerpAngle(prev->Pitch, next->Pitch, t);
+	e->Yaw   = Math_LerpAngle(prev->Yaw,   next->Yaw,   t);
+	e->RotX  = Math_LerpAngle(prev->RotX,  next->RotX,  t);
 	e->RotY  = Math_LerpAngle(interp->PrevRotY, interp->NextRotY, t);
-	e->RotZ  = Math_LerpAngle(prev->RotZ,  next->RotZ, t);
+	e->RotZ  = Math_LerpAngle(prev->RotZ,  next->RotZ,  t);
 }
 
 static void InterpComp_SetPos(struct InterpState* state, struct LocationUpdate* update) {
@@ -350,12 +350,12 @@ void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpda
 	if (flags & LOCATIONUPDATE_FLAG_POS)   InterpComp_SetPos(cur, update);
 	if (flags & LOCATIONUPDATE_FLAG_ROTX)  cur->RotX  = update->RotX;
 	if (flags & LOCATIONUPDATE_FLAG_ROTZ)  cur->RotZ  = update->RotZ;
-	if (flags & LOCATIONUPDATE_FLAG_HEADX) cur->HeadX = update->HeadX;
-	if (flags & LOCATIONUPDATE_FLAG_HEADY) cur->HeadY = update->HeadY;
+	if (flags & LOCATIONUPDATE_FLAG_PITCH) cur->Pitch = update->Pitch;
+	if (flags & LOCATIONUPDATE_FLAG_YAW)   cur->Yaw   = update->Yaw;
 
 	if (!interpolate) {
-		interp->Prev = *cur; interp->PrevRotY = cur->HeadY;
-		interp->Next = *cur; interp->NextRotY = cur->HeadY;
+		interp->Prev = *cur; interp->PrevRotY = cur->Yaw;
+		interp->Next = *cur; interp->NextRotY = cur->Yaw;
 		interp->RotYCount = 0; interp->StatesCount = 0;
 	} else {
 		/* Smoother interpolation by also adding midpoint. */
@@ -363,15 +363,15 @@ void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpda
 		Vec3_Lerp(&mid.Pos, &last.Pos, &cur->Pos, 0.5f);
 		mid.RotX  = Math_LerpAngle(last.RotX,  cur->RotX,  0.5f);
 		mid.RotZ  = Math_LerpAngle(last.RotZ,  cur->RotZ,  0.5f);
-		mid.HeadX = Math_LerpAngle(last.HeadX, cur->HeadX, 0.5f);
-		mid.HeadY = Math_LerpAngle(last.HeadY, cur->HeadY, 0.5f);
+		mid.Pitch = Math_LerpAngle(last.Pitch, cur->Pitch, 0.5f);
+		mid.Yaw   = Math_LerpAngle(last.Yaw,   cur->Yaw,   0.5f);
 		NetInterpComp_AddState(interp, mid);
 		NetInterpComp_AddState(interp, *cur);
 
-		/* Head rotation lags behind body a tiny bit */
-		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 0.33333333f));
-		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 0.66666667f));
-		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 1.00000000f));
+		/* Body rotation lags behind head a tiny bit */
+		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.Yaw, cur->Yaw, 0.33333333f));
+		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.Yaw, cur->Yaw, 0.66666667f));
+		InterpComp_AddRotY((struct InterpComp*)interp, Math_LerpAngle(last.Yaw, cur->Yaw, 1.00000000f));
 	}
 }
 
@@ -409,11 +409,11 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 		if (!interpolate) { prev->Pos = next->Pos; entity->Position = next->Pos; }
 	}
 
-	if (flags & LOCATIONUPDATE_FLAG_HEADX) {
-		LocalInterpComp_Angle(&prev->HeadX, &next->HeadX, update->HeadX, interpolate);
+	if (flags & LOCATIONUPDATE_FLAG_PITCH) {
+		LocalInterpComp_Angle(&prev->Pitch, &next->Pitch, update->Pitch, interpolate);
 	}
-	if (flags & LOCATIONUPDATE_FLAG_HEADY) {
-		LocalInterpComp_Angle(&prev->HeadY, &next->HeadY, update->HeadY, interpolate);
+	if (flags & LOCATIONUPDATE_FLAG_YAW) {
+		LocalInterpComp_Angle(&prev->Yaw,   &next->Yaw,   update->Yaw, interpolate);
 	}
 	if (flags & LOCATIONUPDATE_FLAG_ROTX) {
 		LocalInterpComp_Angle(&prev->RotX,  &next->RotX,  update->RotX,  interpolate);
@@ -422,16 +422,16 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 		LocalInterpComp_Angle(&prev->RotZ,  &next->RotZ,  update->RotZ,  interpolate);
 	}
 
-	if (flags & LOCATIONUPDATE_FLAG_HEADY) {
+	if (flags & LOCATIONUPDATE_FLAG_YAW) {
 		if (!interpolate) {
-			interp->NextRotY = update->HeadY;
-			entity->RotY     = update->HeadY;
+			interp->NextRotY = update->Yaw;
+			entity->RotY     = update->Yaw;
 			interp->RotYCount = 0;
 		} else {
 			/* Body Y rotation lags slightly behind */
-			InterpComp_AddRotY(interp, Math_LerpAngle(prev->HeadY, next->HeadY, 0.33333333f));
-			InterpComp_AddRotY(interp, Math_LerpAngle(prev->HeadY, next->HeadY, 0.66666667f));
-			InterpComp_AddRotY(interp, Math_LerpAngle(prev->HeadY, next->HeadY, 1.00000000f));
+			InterpComp_AddRotY(interp, Math_LerpAngle(prev->Yaw, next->Yaw, 0.33333333f));
+			InterpComp_AddRotY(interp, Math_LerpAngle(prev->Yaw, next->Yaw, 0.66666667f));
+			InterpComp_AddRotY(interp, Math_LerpAngle(prev->Yaw, next->Yaw, 1.00000000f));
 
 			interp->NextRotY = interp->RotYStates[0];
 		}
