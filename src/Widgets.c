@@ -1360,43 +1360,44 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	struct MenuInputDesc* desc;
 	struct DrawTextArgs args;
 	struct Texture* tex;
-	Size2D size, adjSize;
-	int hintX;
+	int textWidth, lineHeight;
+	int width, hintX;
 	Bitmap bmp;
 
 	DrawTextArgs_Make(&args, &w->base.text, w->base.font, false);
-	size.Width   = Drawer2D_TextWidth(&args);
-	size.Height  = w->base.lineHeight;
+	textWidth   = Drawer2D_TextWidth(&args);
+	lineHeight  = w->base.lineHeight;
 	w->base.caretAccumulator = 0.0;
 
 	String_InitArray(range, rangeBuffer);
 	desc = &w->desc;
 	desc->VTABLE->GetRange(desc, &range);
 
-	w->base.width  = max(size.Width,  w->minWidth);
-	w->base.height = max(size.Height, w->minHeight);
-	adjSize = size; adjSize.Width = w->base.width;
+	w->base.width  = max(textWidth,  w->minWidth);
+	w->base.height = max(lineHeight, w->minHeight);
+	width = w->base.width;
 
-	Bitmap_AllocateClearedPow2(&bmp, adjSize.Width, adjSize.Height);
+	Bitmap_AllocateClearedPow2(&bmp, width, lineHeight);
 	{
 		Drawer2D_DrawText(&bmp, &args, w->base.padding, 0);
 
 		args.text = range;
-		hintX     = adjSize.Width - Drawer2D_TextWidth(&args);
+		hintX     = width - Drawer2D_TextWidth(&args);
 		/* Draw hint text right-aligned if it won't overlap input text */
-		if (size.Width + 3 < hintX) {
+		if (textWidth + 3 < hintX) {
 			Drawer2D_DrawText(&bmp, &args, hintX, 0);
 		}
 	}
 
 	tex = &w->base.inputTex;
-	Drawer2D_Make2DTexture(tex, &bmp, adjSize);
+	Drawer2D_MakeTexture(tex, &bmp, width, lineHeight);
 	Mem_Free(bmp.Scan0);
 
 	Widget_Layout(&w->base);
 	tex->X = w->base.x; tex->Y = w->base.y;
-	if (size.Height < w->minHeight) {
-		tex->Y += w->minHeight / 2 - size.Height / 2;
+	/* Centre text vertically */
+	if (lineHeight < w->minHeight) {
+		tex->Y += w->minHeight / 2 - lineHeight / 2;
 	}
 }
 
@@ -1463,20 +1464,20 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	String line; char lineBuffer[STRING_SIZE + 2];
 	struct InputWidget* w = (struct InputWidget*)widget;
 	struct DrawTextArgs args;
-	Size2D size = { 0, 0 };
+	int width = 0, height = 0;
 	Bitmap bmp; 
 	char lastCol;
 	int i, x, y;
 
 	for (i = 0; i < w->GetMaxLines(); i++) {
 		if (!w->lines[i].length) break;
-		size.Height += w->lineHeight;
-		size.Width   = max(size.Width, w->lineWidths[i]);
+		height += w->lineHeight;
+		width   = max(width, w->lineWidths[i]);
 	}
 
-	if (!size.Width)  size.Width  = w->prefixWidth;
-	if (!size.Height) size.Height = w->lineHeight;
-	Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	if (!width)  width  = w->prefixWidth;
+	if (!height) height = w->lineHeight;
+	Bitmap_AllocateClearedPow2(&bmp, width, height);
 
 	DrawTextArgs_Make(&args, &chatInputPrefix, w->font, true);
 	Drawer2D_DrawText(&bmp, &args, 0, 0);
@@ -1500,12 +1501,12 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 		y += w->lineHeight;
 	}
 
-	Drawer2D_Make2DTexture(&w->inputTex, &bmp, size);
+	Drawer2D_MakeTexture(&w->inputTex, &bmp, width, height);
 	Mem_Free(bmp.Scan0);
 	w->caretAccumulator = 0;
 
-	w->width  = size.Width;
-	w->height = size.Height;
+	w->width  = width;
+	w->height = height;
 	Widget_Layout(w);
 	w->inputTex.X = w->x + w->padding;
 	w->inputTex.Y = w->y;
@@ -2327,14 +2328,14 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 	char chars[TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN];
 	struct Portion portions[2 * (TEXTGROUPWIDGET_LEN / TEXTGROUPWIDGET_HTTP_LEN)];
 	struct Portion bit;
-	Size2D size;
+	int width, height;
 	int partWidths[Array_Elems(portions)];
 	Bitmap bmp;
 	int portionsCount;
 	int i, x, ul;
 
-	size.Width    = 0;
-	size.Height   = Drawer2D_TextHeight(args);
+	width = 0;
+	height = Drawer2D_TextHeight(args);
 	portionsCount = TextGroupWidget_Reduce(w, chars, index, portions);
 	
 	for (i = 0; i < portionsCount; i++) {
@@ -2342,10 +2343,10 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 		args->text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
 
 		partWidths[i] = Drawer2D_TextWidth(args);
-		size.Width += partWidths[i];
+		width += partWidths[i];
 	}
 	
-	Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	Bitmap_AllocateClearedPow2(&bmp, width, height);
 	{
 		x = 0;
 		for (i = 0; i < portionsCount; i++) {
@@ -2359,7 +2360,7 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 
 			x += partWidths[i];
 		}
-		Drawer2D_Make2DTexture(tex, &bmp, size);
+		Drawer2D_MakeTexture(tex, &bmp, width, height);
 	}
 	Mem_Free(bmp.Scan0);
 }
@@ -2619,23 +2620,24 @@ static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct 
 
 static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
 	BitmapCol col = BitmapCol_Make(30, 30, 30, 200);
-	Size2D size, titles, content;
+	Size2D titles, content;
+	int width, height;
 	Bitmap bmp;
 
 	titles  = SpecialInputWidget_MeasureTitles(w);
 	content = SpecialInputWidget_MeasureContent(w, tab);	
 
-	size.Width  = max(titles.Width, content.Width);
-	size.Height = titles.Height + content.Height;
+	width  = max(titles.Width, content.Width);
+	height = titles.Height + content.Height;
 	Gfx_DeleteTexture(&w->tex.ID);
 
-	Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	Bitmap_AllocateClearedPow2(&bmp, width, height);
 	{
 		SpecialInputWidget_DrawTitles(w, &bmp);
-		Drawer2D_Clear(&bmp, col, 0, titles.Height, size.Width, content.Height);
+		Drawer2D_Clear(&bmp, col, 0, titles.Height, width, content.Height);
 		SpecialInputWidget_DrawContent(w, tab, &bmp, titles.Height);
 	}
-	Drawer2D_Make2DTexture(&w->tex, &bmp, size);
+	Drawer2D_MakeTexture(&w->tex, &bmp, width, height);
 	Mem_Free(bmp.Scan0);
 }
 

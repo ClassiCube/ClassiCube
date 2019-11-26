@@ -233,8 +233,8 @@ static void Entity_MakeNameTexture(struct Entity* e) {
 	struct DrawTextArgs args;
 	struct FontDesc font;
 	cc_bool bitmapped;
+	int width, height;
 	String name;
-	Size2D size;
 	Bitmap bmp;
 
 	/* Names are always drawn not using the system font */
@@ -244,16 +244,17 @@ static void Entity_MakeNameTexture(struct Entity* e) {
 
 	Drawer2D_MakeFont(&font, 24, FONT_STYLE_NORMAL);
 	DrawTextArgs_Make(&args, &name, &font, false);
-	size = Drawer2D_MeasureText(&args);
+	width = Drawer2D_TextWidth(&args);
 
-	if (size.Width == 0) {
+	if (!width) {
 		e->NameTex.ID = 0;
 		e->NameTex.X  = NAME_IS_EMPTY;
 	} else {
 		String_InitArray(colorlessName, colorlessBuffer);
-		size.Width += NAME_OFFSET; size.Height += NAME_OFFSET;
+		width  += NAME_OFFSET; 
+		height = Drawer2D_TextHeight(&args) + NAME_OFFSET;
 
-		Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+		Bitmap_AllocateClearedPow2(&bmp, width, height);
 		{
 			origWhiteCol = Drawer2D_Cols['f'];
 
@@ -266,7 +267,7 @@ static void Entity_MakeNameTexture(struct Entity* e) {
 			args.text = name;
 			Drawer2D_DrawText(&bmp, &args, 0, 0);
 		}
-		Drawer2D_Make2DTexture(&e->NameTex, &bmp, size);
+		Drawer2D_MakeTexture(&e->NameTex, &bmp, width, height);
 		Mem_Free(bmp.Scan0);
 	}
 	Drawer2D_BitmappedText = bitmapped;

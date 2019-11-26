@@ -261,26 +261,26 @@ void Gui_Layout(void) {
 *#########################################################################################################################*/
 void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, struct FontDesc* font, const String* prefix) {
 	struct DrawTextArgs args; 
-	Size2D size;
+	int width, height;
 	Bitmap bmp;
-	int i, width;
+	int i, charWidth;
 
 	DrawTextArgs_Make(&args, prefix, font, true);
-	size = Drawer2D_MeasureText(&args);
-	atlas->offset = size.Width;
+	width = Drawer2D_TextWidth(&args);
+	atlas->offset = width;
 	
-	width = atlas->offset;
 	for (i = 0; i < chars->length; i++) {
 		args.text = String_UNSAFE_Substring(chars, i, 1);
-		size = Drawer2D_MeasureText(&args);
+		charWidth = Drawer2D_TextWidth(&args);
 
-		atlas->widths[i]  = size.Width;
+		atlas->widths[i]  = charWidth;
 		atlas->offsets[i] = width;
 		/* add 1 pixel of padding */
-		width += size.Width + 1;
+		width += charWidth + 1;
 	}
+	height = Drawer2D_TextHeight(&args);
 
-	Bitmap_AllocateClearedPow2(&bmp, width, size.Height);
+	Bitmap_AllocateClearedPow2(&bmp, width, height);
 	{
 		args.text = *prefix;
 		Drawer2D_DrawText(&bmp, &args, 0, 0);	
@@ -289,7 +289,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, struct FontDes
 			args.text = String_UNSAFE_Substring(chars, i, 1);
 			Drawer2D_DrawText(&bmp, &args, atlas->offsets[i], 0);
 		}
-		Drawer2D_Make2DTexture(&atlas->tex, &bmp, size);
+		Drawer2D_MakeTexture(&atlas->tex, &bmp, width, height);
 	}	
 	Mem_Free(bmp.Scan0);
 
