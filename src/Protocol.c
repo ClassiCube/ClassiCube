@@ -1318,6 +1318,15 @@ static void CPE_SetSpawnPoint(cc_uint8* data) {
 	Vec3_Set(p->Spawn, (float)(x / 32.0f), (float)(y / 32.0f), (float)(z / 32.0f));
 }
 
+static float CalcVelocity(float cur, int raw, cc_uint8 mode) {
+	float value = Math_AbsF(raw / 10000.0f);
+	value = Math_Sign(raw) * PhysicsComp_CalcJumpVelocity(value);
+
+	if (mode == 0) return cur + value;
+	if (mode == 1) return value;
+	return cur;
+}
+
 static void CPE_VelocityControl(cc_uint8* data) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	int x, y, z;
@@ -1331,34 +1340,9 @@ static void CPE_VelocityControl(cc_uint8* data) {
 	yMode = *data++;
 	zMode = *data++;
 
-	float xReal = (float)x / 1000.0f;
-	float yReal = (float)y / 1000.0f;
-	float zReal = (float)z / 1000.0f;
-	xReal = PhysicsComp_CalcJumpVelocity(xReal/32.0f);
-	yReal = PhysicsComp_CalcJumpVelocity(yReal/32.0f);
-	zReal = PhysicsComp_CalcJumpVelocity(zReal/32.0f);
-
-	if (xMode == 0) {
-		p->Base.Velocity.X += xReal;
-	}
-	else if (xMode == 1) {
-		p->Base.Velocity.X = xReal;
-	}
-
-	if (yMode == 0) {
-		p->Base.Velocity.Y += yReal;
-	}
-	else if (yMode == 1) {
-		p->Base.Velocity.Y = yReal;
-	}
-
-	if (zMode == 0) {
-		p->Base.Velocity.Z += zReal;
-	}
-	else if (zMode == 1) {
-		p->Base.Velocity.Z = zReal;
-	}
-
+	p->Base.Velocity.X = CalcVelocity(p->Base.Velocity.X, x, xMode);
+	p->Base.Velocity.Y = CalcVelocity(p->Base.Velocity.Y, y, yMode);
+	p->Base.Velocity.Z = CalcVelocity(p->Base.Velocity.Z, z, zMode);
 }
 
 static void CPE_Reset(void) {
