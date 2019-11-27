@@ -714,13 +714,13 @@ static void Classic_Tick(void) {
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-static const char* cpe_clientExtensions[32] = {
+static const char* cpe_clientExtensions[33] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint",
+	"SetSpawnpoint", "VelocityControl",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -1318,6 +1318,49 @@ static void CPE_SetSpawnPoint(cc_uint8* data) {
 	Vec3_Set(p->Spawn, (float)(x / 32.0f), (float)(y / 32.0f), (float)(z / 32.0f));
 }
 
+static void CPE_VelocityControl(cc_uint8* data) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	int x, y, z;
+	cc_uint8 xMode, yMode, zMode;
+
+	x = (int)Stream_GetU32_BE(&data[0]);
+	y = (int)Stream_GetU32_BE(&data[4]);
+	z = (int)Stream_GetU32_BE(&data[8]);
+	data += 12;
+	xMode = *data++;
+	yMode = *data++;
+	zMode = *data++;
+
+	float xReal = (float)x / 1000.0f;
+	float yReal = (float)y / 1000.0f;
+	float zReal = (float)z / 1000.0f;
+	xReal = PhysicsComp_CalcJumpVelocity(xReal/32.0f);
+	yReal = PhysicsComp_CalcJumpVelocity(yReal/32.0f);
+	zReal = PhysicsComp_CalcJumpVelocity(zReal/32.0f);
+
+	if (xMode == 0) {
+		p->Base.Velocity.X += xReal;
+	}
+	else if (xMode == 1) {
+		p->Base.Velocity.X = xReal;
+	}
+
+	if (yMode == 0) {
+		p->Base.Velocity.Y += yReal;
+	}
+	else if (yMode == 1) {
+		p->Base.Velocity.Y = yReal;
+	}
+
+	if (zMode == 0) {
+		p->Base.Velocity.Z += zReal;
+	}
+	else if (zMode == 1) {
+		p->Base.Velocity.Z = zReal;
+	}
+
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1357,6 +1400,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_SET_INVENTORY_ORDER, CPE_SetInventoryOrder, 3);
 	Net_Set(OPCODE_SET_HOTBAR, CPE_SetHotbar, 3);
 	Net_Set(OPCODE_SET_SPAWNPOINT, CPE_SetSpawnPoint, 9);
+	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
 }
 
 static void CPE_Tick(void) {
