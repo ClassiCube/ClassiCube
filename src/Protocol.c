@@ -571,15 +571,15 @@ static void Classic_EntityTeleport(cc_uint8* data) {
 
 static void Classic_RelPosAndOrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
-	EntityID id = *data++; 
+	EntityID id = data[0];
 	Vec3 pos;
 	float yaw, pitch;
 
-	pos.X = (cc_int8)(*data++) / 32.0f;
-	pos.Y = (cc_int8)(*data++) / 32.0f;
-	pos.Z = (cc_int8)(*data++) / 32.0f;
-	yaw   = Math_Packed2Deg(*data++);
-	pitch = Math_Packed2Deg(*data++);
+	pos.X = (cc_int8)data[1] / 32.0f;
+	pos.Y = (cc_int8)data[2] / 32.0f;
+	pos.Z = (cc_int8)data[3] / 32.0f;
+	yaw   = Math_Packed2Deg(data[4]);
+	pitch = Math_Packed2Deg(data[5]);
 
 	LocationUpdate_MakePosAndOri(&update, pos, yaw, pitch, true);
 	Protocol_UpdateLocation(id, &update, true);
@@ -587,12 +587,12 @@ static void Classic_RelPosAndOrientationUpdate(cc_uint8* data) {
 
 static void Classic_RelPositionUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
-	EntityID id = *data++; 
+	EntityID id = data[0];
 	Vec3 pos;
 
-	pos.X = (cc_int8)(*data++) / 32.0f;
-	pos.Y = (cc_int8)(*data++) / 32.0f;
-	pos.Z = (cc_int8)(*data++) / 32.0f;
+	pos.X = (cc_int8)data[1] / 32.0f;
+	pos.Y = (cc_int8)data[2] / 32.0f;
+	pos.Z = (cc_int8)data[3] / 32.0f;
 
 	LocationUpdate_MakePos(&update, pos, true);
 	Protocol_UpdateLocation(id, &update, true);
@@ -600,18 +600,18 @@ static void Classic_RelPositionUpdate(cc_uint8* data) {
 
 static void Classic_OrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
-	EntityID id = *data++;
+	EntityID id = data[0];
 	float yaw, pitch;
 
-	yaw   = Math_Packed2Deg(*data++);
-	pitch = Math_Packed2Deg(*data++);
+	yaw   = Math_Packed2Deg(data[1]);
+	pitch = Math_Packed2Deg(data[2]);
 
 	LocationUpdate_MakeOri(&update, yaw, pitch);
 	Protocol_UpdateLocation(id, &update, true);
 }
 
 static void Classic_RemoveEntity(cc_uint8* data) {
-	EntityID id = *data;
+	EntityID id = data[0];
 	Protocol_RemoveEntity(id);
 }
 
@@ -647,7 +647,7 @@ static void Classic_Kick(cc_uint8* data) {
 
 static void Classic_SetPermission(cc_uint8* data) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	HacksComp_SetUserType(hacks, *data, !cpe_blockPerms);
+	HacksComp_SetUserType(hacks, data[0], !cpe_blockPerms);
 	HacksComp_RecheckFlags(hacks);
 }
 
@@ -997,30 +997,24 @@ static void CPE_ExtRemovePlayerName(cc_uint8* data) {
 }
 
 static void CPE_MakeSelection(cc_uint8* data) {
-	cc_uint8 selectionId;
 	IVec3 p1, p2;
 	PackedCol c;
+	/* data[0] is id, data[1..64] is label */
 
-	selectionId = *data++;
-	data += STRING_SIZE; /* label */
-
-	p1.X = (cc_int16)Stream_GetU16_BE(&data[0]);
-	p1.Y = (cc_int16)Stream_GetU16_BE(&data[2]);
-	p1.Z = (cc_int16)Stream_GetU16_BE(&data[4]);
-	data += 6;
-
-	p2.X = (cc_int16)Stream_GetU16_BE(&data[0]);
-	p2.Y = (cc_int16)Stream_GetU16_BE(&data[2]);
-	p2.Z = (cc_int16)Stream_GetU16_BE(&data[4]);
-	data += 6;
+	p1.X = (cc_int16)Stream_GetU16_BE(data + 65);
+	p1.Y = (cc_int16)Stream_GetU16_BE(data + 67);
+	p1.Z = (cc_int16)Stream_GetU16_BE(data + 69);
+	p2.X = (cc_int16)Stream_GetU16_BE(data + 71);
+	p2.Y = (cc_int16)Stream_GetU16_BE(data + 73);
+	p2.Z = (cc_int16)Stream_GetU16_BE(data + 75);
 
 	/* R,G,B,A are actually 16 bit unsigned integers */
-	c = PackedCol_Make(data[1], data[3], data[5], data[7]);
-	Selections_Add(selectionId, p1, p2, c);
+	c = PackedCol_Make(data[78], data[80], data[82], data[84]);
+	Selections_Add(data[0], p1, p2, c);
 }
 
 static void CPE_RemoveSelection(cc_uint8* data) {
-	Selections_Remove(*data);
+	Selections_Remove(data[0]);
 }
 
 static void CPE_SetEnvCol(cc_uint8* data) {
@@ -1028,11 +1022,11 @@ static void CPE_SetEnvCol(cc_uint8* data) {
 	cc_uint8 variable;
 	cc_bool invalid;
 	
-	variable = *data++;
-	invalid  = data[0] || data[2] || data[4];
+	variable = data[0];
+	invalid  = data[1] || data[3] || data[5];
 	/* R,G,B are actually 16 bit unsigned integers */
 	/* Above > 255 is 'invalid' (this is used by servers) */
-	c = PackedCol_Make(data[1], data[3], data[5], 255);
+	c = PackedCol_Make(data[2], data[4], data[6], 255);
 
 	if (variable == 0) {
 		Env_SetSkyCol(invalid    ? ENV_DEFAULT_SKY_COL    : c);
@@ -1061,7 +1055,7 @@ static void CPE_SetBlockPermission(cc_uint8* data) {
 static void CPE_ChangeModel(cc_uint8* data) {
 	struct Entity* entity;
 	EntityID id  = data[0];
-	String model = Protocol_UNSAFE_GetString(&data[1]);
+	String model = Protocol_UNSAFE_GetString(data + 1);
 
 	entity = Entities.List[id];
 	if (entity) Entity_SetModel(entity, &model);
@@ -1073,18 +1067,18 @@ static void CPE_EnvSetMapAppearance(cc_uint8* data) {
 	CPE_SetMapEnvUrl(data);
 	Env_SetSidesBlock(data[64]);
 	Env_SetEdgeBlock(data[65]);
-	Env_SetEdgeHeight((cc_int16)Stream_GetU16_BE(&data[66]));
+	Env_SetEdgeHeight((cc_int16)Stream_GetU16_BE(data + 66));
 	if (cpe_envMapVer == 1) return;
 
 	/* Version 2 */
-	Env_SetCloudsHeight((cc_int16)Stream_GetU16_BE(&data[68]));
-	maxViewDist       = (cc_int16)Stream_GetU16_BE(&data[70]);
+	Env_SetCloudsHeight((cc_int16)Stream_GetU16_BE(data + 68));
+	maxViewDist       = (cc_int16)Stream_GetU16_BE(data + 70);
 	Game_MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
 	Game_SetViewDistance(Game_UserViewDistance);
 }
 
 static void CPE_EnvWeatherType(cc_uint8* data) {
-	Env_SetWeather(*data);
+	Env_SetWeather(data[0]);
 }
 
 static void CPE_HackControl(cc_uint8* data) {
@@ -1092,14 +1086,14 @@ static void CPE_HackControl(cc_uint8* data) {
 	struct PhysicsComp* physics;
 	int jumpHeight;
 
-	p->Hacks.CanFly                  = *data++ != 0;
-	p->Hacks.CanNoclip               = *data++ != 0;
-	p->Hacks.CanSpeed                = *data++ != 0;
-	p->Hacks.CanRespawn              = *data++ != 0;
-	p->Hacks.CanUseThirdPersonCamera = *data++ != 0;
+	p->Hacks.CanFly                  = data[0] != 0;
+	p->Hacks.CanNoclip               = data[1] != 0;
+	p->Hacks.CanSpeed                = data[2] != 0;
+	p->Hacks.CanRespawn              = data[3] != 0;
+	p->Hacks.CanUseThirdPersonCamera = data[4] != 0;
 	HacksComp_Update(&p->Hacks);
 
-	jumpHeight = Stream_GetU16_BE(data);
+	jumpHeight = Stream_GetU16_BE(data + 5);
 	physics    = &p->Physics;
 
 	if (jumpHeight == UInt16_MaxValue) { /* special value of -1 to reset default */
@@ -1187,11 +1181,10 @@ static void CPE_SetMapEnvUrl(cc_uint8* data) {
 }
 
 static void CPE_SetMapEnvProperty(cc_uint8* data) {
-	cc_uint8 type = *data++;
-	int value    = (int)Stream_GetU32_BE(data);
+	int value = (int)Stream_GetU32_BE(data + 1);
 	Math_Clamp(value, -0xFFFFFF, 0xFFFFFF);
 
-	switch (type) {
+	switch (data[0]) {
 	case 0:
 		Math_Clamp(value, 0, BLOCK_MAX_DEFINED);
 		Env_SetSidesBlock((BlockID)value); break;
@@ -1228,23 +1221,23 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 	struct Entity* entity;
 	float scale;
 
-	EntityID id  = *data++;
-	cc_uint8 type = *data++;
-	int value    = (int)Stream_GetU32_BE(data);
+	EntityID id   = data[0];
+	cc_uint8 type = data[1];
+	int value    = (int)Stream_GetU32_BE(data + 2);
 
 	entity = Entities.List[id];
 	if (!entity) return;
 
 	switch (type) {
 	case 0:
-		update.Flags |= LOCATIONUPDATE_FLAG_ROTX;
-		update.RotX = LocationUpdate_Clamp((float)value); break;
+		update.Flags = LOCATIONUPDATE_FLAG_ROTX;
+		update.RotX  = LocationUpdate_Clamp((float)value); break;
 	case 1:
-		update.Flags |= LOCATIONUPDATE_FLAG_YAW;
-		update.Yaw  = LocationUpdate_Clamp((float)value); break;
+		update.Flags = LOCATIONUPDATE_FLAG_YAW;
+		update.Yaw   = LocationUpdate_Clamp((float)value); break;
 	case 2:
-		update.Flags |= LOCATIONUPDATE_FLAG_ROTZ;
-		update.RotZ = LocationUpdate_Clamp((float)value); break;
+		update.Flags = LOCATIONUPDATE_FLAG_ROTZ;
+		update.RotZ  = LocationUpdate_Clamp((float)value); break;
 
 	case 3:
 	case 4:
@@ -1267,8 +1260,8 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 }
 
 static void CPE_TwoWayPing(cc_uint8* data) {
-	cc_uint8 serverToClient = *data++;
-	int id = Stream_GetU16_BE(data);
+	cc_uint8 serverToClient = data[0];
+	int id = Stream_GetU16_BE(data + 1);
 
 	if (serverToClient) {
 		CPE_WriteTwoWayPing(true, id); /* server to client reply */
