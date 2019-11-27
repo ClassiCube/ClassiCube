@@ -31,7 +31,7 @@ CC_VAR extern struct _ServerConnectionData {
 	/* Sends a chat message to the server. */
 	void (*SendChat)(const String* text);
 	/* Sends a position update to the server. */
-	void (*SendPosition)(Vec3 pos, float rotY, float pitch);
+	void (*SendPosition)(Vec3 pos, float yaw, float pitch);
 	/* Sends raw data to the server. */
 	/* NOTE: Prefer SendBlock/Position/Chat instead, this does NOT work in singleplayer. */
 	void (*SendData)(const cc_uint8* data, cc_uint32 len);

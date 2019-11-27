@@ -314,7 +314,7 @@ void Classic_SendChat(const String* text, cc_bool partial) {
 	Server.SendData(data, 66);
 }
 
-void Classic_WritePosition(Vec3 pos, float rotY, float pitch) {
+void Classic_WritePosition(Vec3 pos, float yaw, float pitch) {
 	BlockID payload;
 	int x, y, z;
 
@@ -337,7 +337,7 @@ void Classic_WritePosition(Vec3 pos, float rotY, float pitch) {
 			Stream_SetU16_BE(data, z); data += 2;
 		}
 
-		*data++ = Math_Deg2Packed(rotY);
+		*data++ = Math_Deg2Packed(yaw);
 		*data++ = Math_Deg2Packed(pitch);
 	}
 	Server.WriteBuffer = data;
@@ -573,15 +573,15 @@ static void Classic_RelPosAndOrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = *data++; 
 	Vec3 pos;
-	float rotY, pitch;
+	float yaw, pitch;
 
 	pos.X = (cc_int8)(*data++) / 32.0f;
 	pos.Y = (cc_int8)(*data++) / 32.0f;
 	pos.Z = (cc_int8)(*data++) / 32.0f;
-	rotY  = Math_Packed2Deg(*data++);
+	yaw   = Math_Packed2Deg(*data++);
 	pitch = Math_Packed2Deg(*data++);
 
-	LocationUpdate_MakePosAndOri(&update, pos, rotY, pitch, true);
+	LocationUpdate_MakePosAndOri(&update, pos, yaw, pitch, true);
 	Protocol_UpdateLocation(id, &update, true);
 }
 
@@ -601,12 +601,12 @@ static void Classic_RelPositionUpdate(cc_uint8* data) {
 static void Classic_OrientationUpdate(cc_uint8* data) {
 	struct LocationUpdate update;
 	EntityID id = *data++;
-	float rotY, pitch;
+	float yaw, pitch;
 
-	rotY  = Math_Packed2Deg(*data++);
+	yaw   = Math_Packed2Deg(*data++);
 	pitch = Math_Packed2Deg(*data++);
 
-	LocationUpdate_MakeOri(&update, rotY, pitch);
+	LocationUpdate_MakeOri(&update, yaw, pitch);
 	Protocol_UpdateLocation(id, &update, true);
 }
 
@@ -655,7 +655,7 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool in
 	struct LocationUpdate update;
 	int x, y, z;
 	Vec3 pos;
-	float rotY, pitch;
+	float yaw, pitch;
 
 	if (cpe_extEntityPos) {
 		x = (int)Stream_GetU32_BE(&data[0]);
@@ -673,11 +673,11 @@ static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool in
 	if (id == ENTITIES_SELF_ID) y += 22;
 
 	pos.X = x/32.0f; pos.Y = y/32.0f; pos.Z = z/32.0f;
-	rotY  = Math_Packed2Deg(*data++);
+	yaw   = Math_Packed2Deg(*data++);
 	pitch = Math_Packed2Deg(*data++);
 
 	if (id == ENTITIES_SELF_ID) classic_receivedFirstPos = true;
-	LocationUpdate_MakePosAndOri(&update, pos, rotY, pitch, false);
+	LocationUpdate_MakePosAndOri(&update, pos, yaw, pitch, false);
 	Protocol_UpdateLocation(id, &update, interpolate);
 }
 
@@ -1318,31 +1318,20 @@ static void CPE_SetSpawnPoint(cc_uint8* data) {
 	Vec3_Set(p->Spawn, (float)(x / 32.0f), (float)(y / 32.0f), (float)(z / 32.0f));
 }
 
-static float CalcVelocity(float cur, int raw, cc_uint8 mode) {
+static void CalcVelocity(float* vel, cc_uint8* src, cc_uint8 mode) {
+	int raw     = (int)Stream_GetU32_BE(src);
 	float value = Math_AbsF(raw / 10000.0f);
-	value = Math_Sign(raw) * PhysicsComp_CalcJumpVelocity(value);
+	value       = Math_Sign(raw) * PhysicsComp_CalcJumpVelocity(value);
 
-	if (mode == 0) return cur + value;
-	if (mode == 1) return value;
-	return cur;
+	if (mode == 0) *vel += value;
+	if (mode == 1) *vel = value;
 }
 
 static void CPE_VelocityControl(cc_uint8* data) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	int x, y, z;
-	cc_uint8 xMode, yMode, zMode;
-
-	x = (int)Stream_GetU32_BE(&data[0]);
-	y = (int)Stream_GetU32_BE(&data[4]);
-	z = (int)Stream_GetU32_BE(&data[8]);
-	data += 12;
-	xMode = *data++;
-	yMode = *data++;
-	zMode = *data++;
-
-	p->Base.Velocity.X = CalcVelocity(p->Base.Velocity.X, x, xMode);
-	p->Base.Velocity.Y = CalcVelocity(p->Base.Velocity.Y, y, yMode);
-	p->Base.Velocity.Z = CalcVelocity(p->Base.Velocity.Z, z, zMode);
+	CalcVelocity(&p->Base.Velocity.X, data + 0, data[12]);
+	CalcVelocity(&p->Base.Velocity.Y, data + 4, data[13]);
+	CalcVelocity(&p->Base.Velocity.Z, data + 8, data[14]);
 }
 
 static void CPE_Reset(void) {

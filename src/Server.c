@@ -196,7 +196,7 @@ static void SPConnection_SendChat(const String* text) {
 	SPConnection_AddPart(&left);
 }
 
-static void SPConnection_SendPosition(Vec3 pos, float rotY, float pitch) { }
+static void SPConnection_SendPosition(Vec3 pos, float yaw, float pitch) { }
 static void SPConnection_SendData(const cc_uint8* data, cc_uint32 len) { }
 
 static void SPConnection_Tick(struct ScheduledTask* task) {
@@ -339,8 +339,8 @@ static void MPConnection_SendChat(const String* text) {
 	Classic_SendChat(&left, false);
 }
 
-static void MPConnection_SendPosition(Vec3 pos, float rotY, float pitch) {
-	Classic_WritePosition(pos, rotY, pitch);
+static void MPConnection_SendPosition(Vec3 pos, float yaw, float pitch) {
+	Classic_WritePosition(pos, yaw, pitch);
 	Net_SendPacket();
 }
 
