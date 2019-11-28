@@ -35,6 +35,13 @@ static int cursorPrevX, cursorPrevY;
 static cc_bool cursorVisible = true;
 /* Gets the position of the cursor in screen or window coordinates. */
 static void Cursor_GetRawPos(int* x, int* y);
+static void Cursor_DoSetVisible(cc_bool visible);
+
+void Cursor_SetVisible(cc_bool visible) {
+	if (cursorVisible == visible) return;
+	cursorVisible = visible;
+	Cursor_DoSetVisible(visible);
+}
 
 static void Window_CentreMousePosition(void) {
 	Cursor_SetPosition(Window_Width / 2, Window_Height / 2);
@@ -563,10 +570,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 void Cursor_SetPosition(int x, int y) { 
 	SetCursorPos(x + windowX, y + windowY);
 }
-void Cursor_SetVisible(cc_bool visible) {
-	cursorVisible = visible;
-	ShowCursor(visible); 
-}
+static void Cursor_DoSetVisible(cc_bool visible) { ShowCursor(visible); }
 
 static void Window_DoShowDialog(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
@@ -1240,10 +1244,8 @@ void Cursor_SetPosition(int x, int y) {
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
-void Cursor_SetVisible(cc_bool visible) {
+static void Cursor_DoSetVisible(cc_bool visible) {
 	static Cursor blankCursor;
-	cursorVisible = visible;
-
 	if (visible) {
 		XUndefineCursor(win_display, win_handle);
 	} else {
@@ -1793,8 +1795,7 @@ void Cursor_SetPosition(int x, int y) {
 	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
 }
 
-void Cursor_SetVisible(cc_bool visible) {
-	cursorVisible = visible;
+static void Cursor_DoSetVisible(cc_bool visible) {
 	if (visible) {
 		CGDisplayShowCursor(CGMainDisplayID());
 	} else {
@@ -2710,8 +2711,7 @@ void Cursor_SetPosition(int x, int y) {
 	SDL_WarpMouseInWindow(win_handle, x, y);
 }
 
-void Cursor_SetVisible(cc_bool visible) {
-	cursorVisible = visible;
+static void Cursor_DoSetVisible(cc_bool visible) {
 	SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
 }
 
@@ -3203,8 +3203,7 @@ static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 /* Not allowed to move cursor from javascript */
 void Cursor_SetPosition(int x, int y) { }
 
-void Cursor_SetVisible(cc_bool visible) {
-	cursorVisible = visible;
+static void Cursor_DoSetVisible(cc_bool visible) {
 	if (visible) {
 		EM_ASM(Module['canvas'].style['cursor'] = 'default'; );
 	} else {
@@ -3606,7 +3605,7 @@ void Window_ProcessEvents(void) {
 /* No actual mouse cursor */
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 void Cursor_SetPosition(int x, int y) { }
-void Cursor_SetVisible(cc_bool visible) { }
+static void Cursor_DoSetVisible(cc_bool visible) { }
 
 static void Window_DoShowDialog(const char* title, const char* msg) {
 	JNIEnv* env;
