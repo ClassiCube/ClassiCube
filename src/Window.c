@@ -2109,6 +2109,15 @@ static void Window_ConnectEvents(void) {
  *#########################################################################################################################*/
 void Window_Init(void) { Window_CommonInit(); }
 
+/* Private CGS/CGL stuff */
+typedef int CGSConnectionID;
+extern CGSConnectionID _CGSDefaultConnection(void);
+extern CGWindowID GetNativeWindowFromWindowRef(WindowRef window);
+extern CGContextRef CGWindowContextCreate(CGSConnectionID conn, CGWindowID win, void* opts);
+
+static CGSConnectionID conn;
+static CGWindowID winId;
+
 void Window_Create(int width, int height) {
 	Rect r;
 	OSStatus res;
@@ -2131,6 +2140,9 @@ void Window_Create(int width, int height) {
 	Window_ConnectEvents();
 	Window_CommonCreate();
 	Window_Handle = win_handle;
+
+	conn  = _CGSDefaultConnection();
+	winId = GetNativeWindowFromWindowRef(win_handle);
 }
 
 void Window_SetTitle(const String* title) {
