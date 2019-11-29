@@ -1,15 +1,15 @@
-### Types
-* Integers generally use plain ```int```, floating point numbers use ```float``` or ```double```. 
-* Explicit integer types are also provided in ```Core.h```.
-* There are a few typedefs of integer types to provide better context in some functions
-* A few common simple structs are typedef-ed, but are rarely otherwise.
-* ```bool``` is an alias for 8 bit unsigned integer
-* ```GfxResourceID``` is not constant type - can be pointer or integer, depending on underlying 3D graphics API
-* ```PackedCol``` field order differs depending on the underlying 3D graphics API
+### Guidelines
+* Code should be C89 compatible and compilable as C++.
+* Each .c file should represent a module. (see architecture.md for more details)
+* Public functions and variables should be prefixed by module to avoid name collisions. (e.g. `Game_Reset`)
+* Private functions should be named using pascal case. Prefixing module is optional - do it when it makes sense.
+* Private variables don't really have a consistent style.
 
-As such, your compiler is required to support:
-- explicit 8/16/32/64 bit signed and unsigned integers
-- 32 and 64 bit floating point numbers
+### Types
+* Explicit integer typedefs are provided in ```Core.h``` for when needed. Otherwise just use int.
+* A few common simple structs are typedef-ed, but are rarely otherwise.
+* ```cc_bool``` is an alias for 8 bit unsigned integer
+* ```PackedCol``` field order differs depending on the underlying 3D graphics API
 
 I may not have defined the appropriate types for your compiler, so you may need to modify ```Core.h```
 
