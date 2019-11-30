@@ -66,9 +66,9 @@ extern cc_bool Input_Pressed[INPUT_COUNT];
 /* Raises InputEvents.Up   if not pressed, but was pressed before. */
 /* Raises InputEvents.Down if pressed (repeating is whether it was pressed before) */
 void Input_SetPressed(int key, cc_bool pressed);
-/* Resets all keyboard keys to released state. */
-/* Raises InputEvents.Up for each previously pressed key. */
-void Key_Clear(void);
+/* Resets all keyboard buttons to released state. */
+/* Raises InputEvents.Up for each previously pressed button. */
+void Input_Clear(void);
 
 /* Whether raw mouse/touch input is being listened for. */
 extern cc_bool Input_RawMode;

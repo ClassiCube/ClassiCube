@@ -200,10 +200,9 @@ void Input_SetPressed(int key, cc_bool pressed) {
 	Pointer_SetPressed(0, pressed);
 }
 
-void Key_Clear(void) {
+void Input_Clear(void) {
 	int i;
-	/* only resets keyboard keys, not mouse state */
-	for (i = 0; i < KEY_XBUTTON1; i++) {
+	for (i = 0; i < INPUT_COUNT; i++) {
 		if (Input_Pressed[i]) Input_SetPressed(i, false);
 	}
 }
@@ -1033,6 +1032,7 @@ static void HandleInputUp(void* obj, int key) {
 	if (key == KeyBinds[KEYBIND_PICK_BLOCK])   MouseStateRelease(MOUSE_MIDDLE);
 }
 
+static void HandleFocusChanged(void* obj) { if (!Window_Focused) Input_Clear(); }
 void InputHandler_Init(void) {
 	Event_RegisterMove(&PointerEvents.Moved, NULL, HandlePointerMove);
 	Event_RegisterInt(&PointerEvents.Down,   NULL, HandlePointerDown);
@@ -1041,6 +1041,7 @@ void InputHandler_Init(void) {
 	Event_RegisterInt(&InputEvents.Up,       NULL, HandleInputUp);
 	Event_RegisterFloat(&InputEvents.Wheel,  NULL, HandleMouseWheel);
 
+	Event_RegisterVoid(&WindowEvents.FocusChanged,         NULL, HandleFocusChanged);
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, InputHandler_CheckZoomFov);
 	KeyBind_Init();
 	Hotkeys_Init();

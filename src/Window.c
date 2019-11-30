@@ -231,11 +231,6 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_MOUSEMOVE:
-		/* Set before position change, in case mouse buttons changed when outside window */
-		Input_SetPressed(KEY_LMOUSE, (wParam & 0x01) != 0);
-		Input_SetPressed(KEY_RMOUSE, (wParam & 0x02) != 0);
-		Input_SetPressed(KEY_MMOUSE, (wParam & 0x10) != 0);
-		/* TODO: do we need to set XBUTTON1/XBUTTON2 here */
 		Pointer_SetPosition(0, LOWORD(lParam), HIWORD(lParam));
 		break;
 
@@ -341,7 +336,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_KILLFOCUS:
 		/* TODO: Keep track of keyboard when focus is lost */
-		Key_Clear();
+		Input_Clear();
 		break;
 
 	case WM_CLOSE:
@@ -1163,7 +1158,7 @@ void Window_ProcessEvents(void) {
 			Window_Focused = e.type == FocusIn;
 			Event_RaiseVoid(&WindowEvents.FocusChanged);
 			/* TODO: Keep track of keyboard when focus is lost */
-			if (!Window_Focused) Key_Clear();
+			if (!Window_Focused) Input_Clear();
 			break;
 
 		case MappingNotify:
@@ -2909,7 +2904,7 @@ static EM_BOOL Window_TouchEnd(int type, const EmscriptenTouchEvent* ev, void* d
 
 static EM_BOOL Window_Focus(int type, const EmscriptenFocusEvent* ev, void* data) {
 	Window_Focused = type == EMSCRIPTEN_EVENT_FOCUS;
-	if (!Window_Focused) Key_Clear();
+	if (!Window_Focused) Input_Clear();
 
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 	return true;
