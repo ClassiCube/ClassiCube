@@ -82,6 +82,8 @@ void TextureCache_Accept(const String* url);
 /* Adds the given URL to list of denied URLs, then saves it. */
 /* Denied URLs are never loaded. */
 void TextureCache_Deny(const String* url);
+/* Clears the list of denied URLs, returning number removed. */
+int TextureCache_ClearDenied(void);
 
 /* Returns whether the given URL has been cached. */
 cc_bool TextureCache_Has(const String* url);

@@ -527,13 +527,20 @@ void TextureCache_Init(void) {
 cc_bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&acceptedList, url) >= 0; }
 cc_bool TextureCache_HasDenied(const String* url)   { return EntryList_Find(&deniedList,   url) >= 0; }
 
-void TextureCache_Accept(const String* url)      { 
+void TextureCache_Accept(const String* url) { 
 	EntryList_Set(&acceptedList, url, &String_Empty); 
 	EntryList_Save(&acceptedList);
 }
-void TextureCache_Deny(const String* url)        { 
+void TextureCache_Deny(const String* url) { 
 	EntryList_Set(&deniedList,   url, &String_Empty); 
 	EntryList_Save(&deniedList);
+}
+
+int TextureCache_ClearDenied(void) {
+	int count = deniedList.entries.count;
+	StringsBuffer_Clear(&deniedList.entries);
+	EntryList_Save(&deniedList);
+	return count;
 }
 
 CC_INLINE static void TextureCache_HashUrl(String* key, const String* url) {

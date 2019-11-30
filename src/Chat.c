@@ -429,6 +429,19 @@ static struct ChatCommand ModelCommand = {
 	}
 };
 
+static void ClearDeniedCommand_Execute(const String* args, int argsCount) {
+	int count = TextureCache_ClearDenied();
+	Chat_Add1("Removed &e%i &fdenied texture pack URLs.", &count);
+}
+
+static struct ChatCommand ClearDeniedCommand = {
+	"ClearDenied", ClearDeniedCommand_Execute, false,
+	{
+		"&a/client cleardenied",
+		"&eClears the list of texture pack URLs you have denied",
+	}
+};
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------CuboidCommand-----------------------------------------------------*
@@ -589,6 +602,7 @@ static void Chat_Init(void) {
 	Commands_Register(&ModelCommand);
 	Commands_Register(&CuboidCommand);
 	Commands_Register(&TeleportCommand);
+	Commands_Register(&ClearDeniedCommand);
 
 	Chat_Logging = Options_GetBool(OPT_CHAT_LOGGING, true);
 }
