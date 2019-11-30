@@ -34,15 +34,15 @@ struct LWidgetVTABLE {
 
 #define LWidget_Layout \
 	struct LWidgetVTABLE* VTABLE;  /* General widget functions */ \
-	int X, Y, Width, Height;       /* Top left corner, and dimensions, of this widget */ \
-	cc_bool Hovered;               /* Whether this widget is currently being moused over */ \
-	cc_bool Selected;              /* Whether this widget is last widget to be clicked on */ \
-	cc_bool Hidden;                /* Whether this widget is hidden from view */ \
-	cc_bool TabSelectable;         /* Whether this widget gets selected when pressing tab */ \
-	cc_uint8 HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
-	int XOffset, YOffset;          /* Offset from the reference point */ \
+	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
+	cc_bool hovered;               /* Whether this widget is currently being moused over */ \
+	cc_bool selected;              /* Whether this widget is last widget to be clicked on */ \
+	cc_bool hidden;                /* Whether this widget is hidden from view */ \
+	cc_bool tabSelectable;         /* Whether this widget gets selected when pressing tab */ \
+	cc_uint8 horAnchor, verAnchor; /* Specifies the reference point for when this widget is resized */ \
+	int xOffset, yOffset;          /* Offset from the reference point */ \
 	void (*OnClick)(void* widget, int x, int y); /* Called when widget is clicked */ \
-	Rect2D Last;                  /* Widget's last drawn area */
+	Rect2D last;                  /* Widget's last drawn area */
 
 /* Represents an individual 2D gui component in the launcher. */
 struct LWidget { LWidget_Layout };
@@ -53,8 +53,8 @@ void LWidget_Redraw(void* widget);
 
 struct LButton {
 	LWidget_Layout
-	String Text;
-	Size2D _TextSize;
+	String text;
+	Size2D _textSize;
 };
 CC_NOINLINE void LButton_Init(struct LScreen* s, struct LButton* w, int width, int height, const char* text);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
@@ -62,11 +62,11 @@ CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
 struct LInput;
 struct LInput {
 	LWidget_Layout
-	int MinWidth;
+	int minWidth;
 	/* Text displayed when the user has not entered anything in the text field. */
-	const char* HintText;
+	const char* hintText;
 	/* Whether all characters should be rendered as *. */
-	cc_bool Password;
+	cc_bool password;
 	/* Filter applied to text received from the clipboard. Can be NULL. */
 	void (*ClipboardFilter)(String* str);
 	/* Callback invoked when the text is changed. Can be NULL. */
@@ -75,10 +75,10 @@ struct LInput {
 	cc_bool (*TextFilter)(char c);
 	/* Specifies the position that characters are inserted/deleted from. */
 	/* NOTE: -1 to insert/delete characters at end of the text. */
-	int CaretPos;
-	String Text;
-	int _TextHeight;
-	char _TextBuffer[STRING_SIZE];
+	int caretPos;
+	String text;
+	int _textHeight;
+	char _textBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hintText);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text);
@@ -97,10 +97,10 @@ CC_NOINLINE void LInput_Clear(struct LInput* w);
 /* Represents non-interactable text. */
 struct LLabel {
 	LWidget_Layout
-	struct FontDesc* Font;
-	String Text;
-	Size2D _TextSize;
-	char _TextBuffer[STRING_SIZE];
+	struct FontDesc* font;
+	String text;
+	Size2D _textSize;
+	char _textBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* text);
 CC_NOINLINE void LLabel_SetText(struct LLabel* w, const String* text);
@@ -109,15 +109,15 @@ CC_NOINLINE void LLabel_SetConst(struct LLabel* w, const char* text);
 /* Represents a coloured translucent line separator. */
 struct LLine {
 	LWidget_Layout
-	BitmapCol Col;
+	BitmapCol col;
 };
 CC_NOINLINE void LLine_Init(struct LScreen* s, struct LLine* w, int width);
 
 /* Represents a slider bar that may or may not be modifiable by the user. */
 struct LSlider {
 	LWidget_Layout
-	int Value, MaxValue;
-	BitmapCol Col;
+	int value, maxValue;
+	BitmapCol col;
 };
 CC_NOINLINE void LSlider_Init(struct LScreen* s, struct LSlider* w, int width, int height, BitmapCol col);
 
@@ -148,36 +148,36 @@ struct LTableColumn {
 struct LTable {
 	LWidget_Layout
 	/* Columns of the table. */
-	struct LTableColumn* Columns;
+	struct LTableColumn* columns;
 	/* Number of columns in the table. */
-	int NumColumns;
+	int numColumns;
 	/* Fonts for text in rows. */
-	struct FontDesc* RowFont;
+	struct FontDesc* rowFont;
 	/* Y start and end of rows and height of each row. */
-	int RowsBegY, RowsEndY, RowHeight;
+	int rowsBegY, rowsEndY, rowHeight;
 	/* Y height of headers. */
-	int HdrHeight;
+	int hdrHeight;
 	/* Maximum number of rows visible. */
-	int VisibleRows;
+	int visibleRows;
 	/* Total number of rows in the table (after filter is applied). */
-	int RowsCount;
+	int rowsCount;
 	/* Index of top row currently visible. */
-	int TopRow;
+	int topRow;
 
 	/* Hash of the currently selected server. */
-	String* SelectedHash;
+	String* selectedHash;
 	/* Filter for which server names to show. */
-	String* Filter;
+	String* filter;
 	/* Callback when selected has has changed. */
 	void (*OnSelectedChanged)(void);
 
 	/* Index of table column currently being dragged. */
-	int DraggingColumn;
-	int GridlineWidth, GridlineHeight;
+	int draggingColumn;
+	int gridlineWidth, gridlineHeight;
 
-	cc_bool DraggingScrollbar; /* Is scrollbar is currently being dragged */
-	int MouseOffset;    /* Offset of mouse for scrollbar dragging */
-	int ScrollbarWidth; /* How wide scrollbar is in pixels */
+	cc_bool draggingScrollbar; /* Is scrollbar is currently being dragged */
+	int mouseOffset;    /* Offset of mouse for scrollbar dragging */
+	int scrollbarWidth; /* How wide scrollbar is in pixels */
 
 	float _wheelAcc; /* mouse wheel accumulator */
 	int _lastRow;    /* last clicked row (for doubleclick join) */

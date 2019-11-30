@@ -33,9 +33,9 @@ CC_NOINLINE static struct LWidget* LScreen_WidgetAt(struct LScreen* s, int x, in
 
 	for (i = 0; i < s->numWidgets; i++) {
 		w = s->widgets[i];
-		if (w->Hidden) continue;
+		if (w->hidden) continue;
 
-		if (Gui_Contains(w->X, w->Y, w->Width, w->Height, x, y)) return w;
+		if (Gui_Contains(w->x, w->y, w->width, w->height, x, y)) return w;
 	}
 	return NULL;
 }
@@ -58,14 +58,14 @@ static void LScreen_UnhoverWidget(struct LScreen* s, struct LWidget* w) { }
 
 CC_NOINLINE static void LScreen_SelectWidget(struct LScreen* s, struct LWidget* w, cc_bool was) {
 	if (!w) return;
-	w->Selected       = true;
+	w->selected       = true;
 	s->selectedWidget = w;
 	if (w->VTABLE->OnSelect) w->VTABLE->OnSelect(w, was);
 }
 
 CC_NOINLINE static void LScreen_UnselectWidget(struct LScreen* s, struct LWidget* w) {
 	if (!w) return;
-	w->Selected       = false;
+	w->selected       = false;
 	s->selectedWidget = NULL;
 	if (w->VTABLE->OnUnselect) w->VTABLE->OnUnselect(w);
 }
@@ -84,7 +84,7 @@ static void LScreen_HandleTab(struct LScreen* s) {
 		if (i < 0) i += s->numWidgets;
 
 		w = s->widgets[i];
-		if (w->Hidden || !w->TabSelectable) continue;
+		if (w->hidden || !w->tabSelectable) continue;
 
 		LScreen_UnselectWidget(s, s->selectedWidget);
 		LScreen_SelectWidget(s, w, false);
@@ -144,7 +144,7 @@ static void LScreen_MouseMove(struct LScreen* s, int deltaX, int deltaY) {
 	cc_bool overSame = prev == over;
 
 	if (prev && !overSame) {
-		prev->Hovered    = false;
+		prev->hovered    = false;
 		s->hoveredWidget = NULL;
 		s->UnhoverWidget(s, prev);
 
@@ -152,7 +152,7 @@ static void LScreen_MouseMove(struct LScreen* s, int deltaX, int deltaY) {
 	}
 
 	if (over) {
-		over->Hovered    = true;
+		over->hovered    = true;
 		s->hoveredWidget = over;
 		s->HoverWidget(s, over);
 
@@ -181,8 +181,8 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 
 	/* reset all widgets mouse state */
 	for (i = 0; i < s->numWidgets; i++) { 
-		s->widgets[i]->Hovered  = false;
-		s->widgets[i]->Selected = false;
+		s->widgets[i]->hovered  = false;
+		s->widgets[i]->selected = false;
 	}
 
 	s->onEnterWidget  = NULL;
@@ -247,10 +247,10 @@ static void UseModeClassic(void* w, int x, int y)    { ChooseMode_Click(true,  f
 static void ChooseModeScreen_Init(struct LScreen* s_) {
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;	
 
-	s->lblHelp.Hidden = !s->firstTime;
-	s->btnBack.Hidden = s->firstTime;
-	s->seps[0].Col    = Launcher_ButtonBorderCol;
-	s->seps[1].Col    = Launcher_ButtonBorderCol;
+	s->lblHelp.hidden = !s->firstTime;
+	s->btnBack.hidden = s->firstTime;
+	s->seps[0].col    = Launcher_ButtonBorderCol;
+	s->seps[1].col    = Launcher_ButtonBorderCol;
 
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
@@ -278,7 +278,7 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 	s->btnClassic.OnClick    = UseModeClassic;
 	s->btnBack.OnClick       = SwitchToSettings;
 
-	s->lblTitle.Font = &Launcher_TitleFont;
+	s->lblTitle.font = &Launcher_TitleFont;
 	LLabel_SetConst(&s->lblTitle, "Choose game mode");
 }
 
@@ -365,9 +365,9 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 
 	/* if index of G input, changes to index of R input */
 	index = (index / 3) * 3;
-	if (!Convert_ParseUInt8(&s->iptColours[index + 0].Text, &r)) return;
-	if (!Convert_ParseUInt8(&s->iptColours[index + 1].Text, &g)) return;
-	if (!Convert_ParseUInt8(&s->iptColours[index + 2].Text, &b)) return;
+	if (!Convert_ParseUInt8(&s->iptColours[index + 0].text, &r)) return;
+	if (!Convert_ParseUInt8(&s->iptColours[index + 1].text, &g)) return;
+	if (!Convert_ParseUInt8(&s->iptColours[index + 2].text, &b)) return;
 
 	*col = BitmapCol_Make(r, g, b, 255);
 	Launcher_SaveSkin();
@@ -384,14 +384,14 @@ static void ColoursScreen_AdjustSelected(struct LScreen* s, int delta) {
 	if (index >= 15) return;
 
 	w = (struct LInput*)s->selectedWidget;
-	if (!Convert_ParseUInt8(&w->Text, &col)) return;
+	if (!Convert_ParseUInt8(&w->text, &col)) return;
 	newCol = col + delta;
 
 	Math_Clamp(newCol, 0, 255);
-	w->Text.length = 0;
-	String_AppendInt(&w->Text, newCol);
+	w->text.length = 0;
+	String_AppendInt(&w->text, newCol);
 
-	if (w->CaretPos >= w->Text.length) w->CaretPos = -1;
+	if (w->caretPos >= w->text.length) w->caretPos = -1;
 	ColoursScreen_TextChanged(w);
 }
 
@@ -544,9 +544,9 @@ static void DirectConnectScreen_Save(const String* user, const String* mppass, c
 static void DirectConnectScreen_StartClient(void* w, int x, int y) {
 	static const String loopbackIp = String_FromConst("127.0.0.1");
 	static const String defMppass  = String_FromConst("(none)");
-	const String* user   = &DirectConnectScreen_Instance.iptUsername.Text;
-	const String* addr   = &DirectConnectScreen_Instance.iptAddress.Text;
-	const String* mppass = &DirectConnectScreen_Instance.iptMppass.Text;
+	const String* user   = &DirectConnectScreen_Instance.iptUsername.text;
+	const String* addr   = &DirectConnectScreen_Instance.iptAddress.text;
+	const String* mppass = &DirectConnectScreen_Instance.iptMppass.text;
 
 	String ip, port;
 	cc_uint8  raw_ip[4];
@@ -669,8 +669,8 @@ CC_NOINLINE static void MainScreen_Error(struct LWebTask* task, const char* acti
 
 static void MainScreen_Login(void* w, int x, int y) {
 	struct MainScreen* s = &MainScreen_Instance;
-	String* user = &s->iptUsername.Text;
-	String* pass = &s->iptPassword.Text;
+	String* user = &s->iptUsername.text;
+	String* pass = &s->iptPassword.text;
 
 	if (!user->length) {
 		LLabel_SetConst(&s->lblStatus, "&eUsername required");
@@ -706,7 +706,7 @@ static void MainScreen_Resume(void* w, int x, int y) {
 
 static void MainScreen_Singleplayer(void* w, int x, int y) {
 	static const String defUser = String_FromConst("Singleplayer");
-	const String* user = &MainScreen_Instance.iptUsername.Text;
+	const String* user = &MainScreen_Instance.iptUsername.text;
 
 	if (!user->length) user = &defUser;
 	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
@@ -719,7 +719,7 @@ static void MainScreen_Init(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 
 	/* status should reset after user has gone to another menu */
-	s->lblStatus.Text.length = 0;
+	s->lblStatus.text.length = 0;
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 
@@ -745,9 +745,9 @@ static void MainScreen_Init(struct LScreen* s_) {
 	s->btnRegister.OnClick = MainScreen_Register;
 
 	/* need to set text here for right size */
-	s->lblUpdate.Font = &Launcher_HintFont;
+	s->lblUpdate.font = &Launcher_HintFont;
 	LLabel_SetConst(&s->lblUpdate, "&eChecking..");
-	s->iptPassword.Password   = true;
+	s->iptPassword.password   = true;
 	s->iptPassword.TextFilter = MainScreen_PasswordFilter;
 	
 	String_InitArray(pass, passBuffer);
@@ -785,7 +785,7 @@ static void MainScreen_HoverWidget(struct LScreen* s_, struct LWidget* w) {
 	if (!info.user.length) return;
 	String_InitArray(str, strBuffer);
 
-	if (info.server.length && String_Equals(&info.user,	&s->iptUsername.Text)) {
+	if (info.server.length && String_Equals(&info.user,	&s->iptUsername.text)) {
 		String_Format1(&str, "&eResume to %s", &info.server);
 	} else if (info.server.length) {
 		String_Format2(&str, "&eResume as %s to %s", &info.user, &info.server);
@@ -842,7 +842,7 @@ static void MainScreen_TickGetToken(struct MainScreen* s) {
 	if (!GetTokenTask.Base.Completed) return;
 
 	if (GetTokenTask.Base.Success) {
-		SignInTask_Run(&s->iptUsername.Text, &s->iptPassword.Text);
+		SignInTask_Run(&s->iptUsername.text, &s->iptPassword.text);
 	} else {
 		MainScreen_Error(&GetTokenTask.Base, "signing in");
 	}
@@ -858,7 +858,7 @@ static void MainScreen_TickSignIn(struct MainScreen* s) {
 		LWidget_Redraw(&s->lblStatus);
 	} else if (SignInTask.Base.Success) {
 		/* website returns case correct username */
-		if (!String_Equals(&s->iptUsername.Text, &SignInTask.Username)) {
+		if (!String_Equals(&s->iptUsername.text, &SignInTask.Username)) {
 			LInput_SetText(&s->iptUsername, &SignInTask.Username);
 			LWidget_Redraw(&s->iptUsername);
 		}
@@ -931,12 +931,12 @@ static void ResourcesScreen_Download(void* w, int x, int y) {
 	Fetcher_Run();
 	s->selectedWidget = NULL;
 
-	s->btnYes.Hidden   = true;
-	s->btnNo.Hidden    = true;
-	s->lblLine1.Hidden = true;
-	s->lblLine2.Hidden = true;
-	s->btnCancel.Hidden   = false;
-	s->sdrProgress.Hidden = false;
+	s->btnYes.hidden   = true;
+	s->btnNo.hidden    = true;
+	s->lblLine1.hidden = true;
+	s->lblLine2.hidden = true;
+	s->btnCancel.hidden   = false;
+	s->sdrProgress.hidden = false;
 	s->Draw((struct LScreen*)s);
 }
 
@@ -971,14 +971,14 @@ static void ResourcesScreen_Init(struct LScreen* s_) {
 	LButton_Init(s_, &s->btnCancel, 120, 35, "Cancel");
 	LSlider_Init(s_, &s->sdrProgress, 200, 12, progressCol);
 
-	s->btnCancel.Hidden   = true;
-	s->sdrProgress.Hidden = true;
+	s->btnCancel.hidden   = true;
+	s->sdrProgress.hidden = true;
 
 	/* TODO: Size 13 italic font?? does it matter?? */
 	String_InitArray(str, buffer);
 	size = Resources_Size / 1024.0f;
 
-	s->lblStatus.Font = &Launcher_HintFont;
+	s->lblStatus.font = &Launcher_HintFont;
 	String_Format1(&str, "&eDownload size: %f2 megabytes", &size);
 	LLabel_SetText(&s->lblStatus, &str);
 
@@ -1025,12 +1025,12 @@ static void ResourcesScreen_Draw(struct LScreen* s) {
 
 static void ResourcesScreen_SetStatus(const String* str) {
 	struct LLabel* w = &ResourcesScreen_Instance.lblStatus;
-	ResourcesScreen_ResetArea(w->Last.X, w->Last.Y, 
-							  w->Last.Width, w->Last.Height);
+	ResourcesScreen_ResetArea(w->last.X, w->last.Y, 
+							  w->last.Width, w->last.Height);
 	LLabel_SetText(w, str);
 
-	w->YOffset = -10;
-	ResourcesScreen_Instance.statusYOffset = w->YOffset;	
+	w->yOffset = -10;
+	ResourcesScreen_Instance.statusYOffset = w->yOffset;	
 	LWidget_CalcPosition(w);
 	LWidget_Draw(w);
 }
@@ -1046,7 +1046,7 @@ static void ResourcesScreen_UpdateStatus(struct HttpRequest* req) {
 	count = Fetcher_Downloaded + 1;
 	String_Format3(&str, "&eFetching %s.. (%i/%i)", &id, &count, &Resources_Count);
 
-	if (String_Equals(&str, &w->Text)) return;
+	if (String_Equals(&str, &w->text)) return;
 	ResourcesScreen_SetStatus(&str);
 }
 
@@ -1059,8 +1059,8 @@ static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
 	/* making request still, haven't started download yet */
 	if (progress < 0 || progress > 100) return;
 
-	if (progress == s->sdrProgress.Value) return;
-	s->sdrProgress.Value = progress;
+	if (progress == s->sdrProgress.value) return;
+	s->sdrProgress.value = progress;
 	LWidget_Draw(&s->sdrProgress);
 }
 
@@ -1113,10 +1113,10 @@ static struct ServersScreen {
 
 static void ServersScreen_Connect(void* w, int x, int y) {
 	struct LTable* table = &ServersScreen_Instance.table;
-	String* hash         = &ServersScreen_Instance.iptHash.Text;
+	String* hash         = &ServersScreen_Instance.iptHash.text;
 
-	if (!hash->length && table->RowsCount) { 
-		hash = &LTable_Get(table->TopRow)->hash; 
+	if (!hash->length && table->rowsCount) { 
+		hash = &LTable_Get(table->topRow)->hash; 
 	}
 	Launcher_ConnectToServer(hash);
 }
@@ -1192,8 +1192,8 @@ static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	s->iptHash.ClipboardFilter = ServersScreen_HashFilter;
 
 	LTable_Init(&s->table,  &s->rowFont);
-	s->table.Filter       = &s->iptSearch.Text;
-	s->table.SelectedHash = &s->iptHash.Text;
+	s->table.filter       = &s->iptSearch.text;
+	s->table.selectedHash = &s->iptHash.text;
 	s->table.OnSelectedChanged = ServersScreen_OnSelectedChanged;
 
 	s->widgets[s->numWidgets++] = (struct LWidget*)&s->table;
@@ -1204,7 +1204,7 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	Drawer2D_MakeFont(&s->rowFont, 11, FONT_STYLE_NORMAL);
 
 	if (!s->numWidgets) ServersScreen_InitWidgets(s_);
-	s->table.RowFont = &s->rowFont;
+	s->table.rowFont = &s->rowFont;
 	/* also resets hash and filter */
 	LTable_Reset(&s->table);
 
@@ -1254,9 +1254,9 @@ static void ServersScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->btnRefresh, ANCHOR_MAX, ANCHOR_MIN, 135, 10);
 	
 	LWidget_SetLocation(&s->table, ANCHOR_MIN, ANCHOR_MIN, 10, 50);
-	s->table.Width  = Window_Width  - s->table.X;
-	s->table.Height = Window_Height - s->table.Y * 2;
-	s->table.Height = max(1, s->table.Height);
+	s->table.width  = Window_Width  - s->table.x;
+	s->table.height = Window_Height - s->table.y * 2;
+	s->table.height = max(1, s->table.height);
 
 	LTable_Reposition(&s->table);
 }
@@ -1312,8 +1312,8 @@ static struct SettingsScreen {
 static void SettingsScreen_Init(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
 
-	s->btnColours.Hidden = Launcher_ClassicBackground;
-	s->lblColours.Hidden = Launcher_ClassicBackground;
+	s->btnColours.hidden = Launcher_ClassicBackground;
+	s->lblColours.hidden = Launcher_ClassicBackground;
 
 	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
@@ -1505,8 +1505,8 @@ static void UpdatesScreen_Update(struct UpdatesScreen* s) {
 
 static void UpdatesScreen_Init(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
-	s->seps[0].Col = Launcher_ButtonBorderCol;
-	s->seps[1].Col = Launcher_ButtonBorderCol;
+	s->seps[0].col = Launcher_ButtonBorderCol;
+	s->seps[1].col = Launcher_ButtonBorderCol;
 	if (s->numWidgets) { UpdatesScreen_Update(s); return; }
 
 	s->widgets = s->_widgets;
@@ -1568,7 +1568,7 @@ static void UpdatesScreen_Free(struct LScreen* s_) {
 	s->buildProgress = -1;
 
 	FetchUpdateTask.Base.Working = false;
-	s->lblStatus.Text.length     = 0;
+	s->lblStatus.text.length     = 0;
 }
 
 struct LScreen* UpdatesScreen_MakeInstance(void) {

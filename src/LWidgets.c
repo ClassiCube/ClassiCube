@@ -18,30 +18,30 @@
 
 void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	struct LWidget* w = (struct LWidget*)widget;
-	w->HorAnchor = horAnchor; w->VerAnchor = verAnchor;
-	w->XOffset   = xOffset;   w->YOffset   = yOffset;
+	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
+	w->xOffset   = xOffset;   w->yOffset   = yOffset;
 	LWidget_CalcPosition(widget);
 }
 
 void LWidget_CalcPosition(void* widget) {
 	struct LWidget* w = (struct LWidget*)widget;
-	w->X = Gui_CalcPos(w->HorAnchor, Display_ScaleX(w->XOffset), w->Width,  Window_Width);
-	w->Y = Gui_CalcPos(w->VerAnchor, Display_ScaleY(w->YOffset), w->Height, Window_Height);
+	w->x = Gui_CalcPos(w->horAnchor, Display_ScaleX(w->xOffset), w->width,  Window_Width);
+	w->y = Gui_CalcPos(w->verAnchor, Display_ScaleY(w->yOffset), w->height, Window_Height);
 }
 
 void LWidget_Draw(void* widget) {
 	struct LWidget* w = (struct LWidget*)widget;
-	w->Last.X = w->X; w->Last.Width  = w->Width;
-	w->Last.Y = w->Y; w->Last.Height = w->Height;
+	w->last.X = w->x; w->last.Width  = w->width;
+	w->last.Y = w->y; w->last.Height = w->height;
 
-	if (w->Hidden) return;
+	if (w->hidden) return;
 	w->VTABLE->Draw(w);
-	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
+	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 }
 
 void LWidget_Redraw(void* widget) {
 	struct LWidget* w = (struct LWidget*)widget;
-	Launcher_ResetArea(w->Last.X, w->Last.Y, w->Last.Width, w->Last.Height);
+	Launcher_ResetArea(w->last.X, w->last.Y, w->last.Width, w->last.Height);
 	LWidget_Draw(w);
 }
 
@@ -63,15 +63,15 @@ static void LButton_DrawBackground(struct LButton* w) {
 	BitmapCol col;
 
 	if (Launcher_ClassicBackground) {
-		col = w->Hovered ? activeCol : inactiveCol;
+		col = w->hovered ? activeCol : inactiveCol;
 		Gradient_Noise(&Launcher_Framebuffer, col, 8,
-						w->X + BORDER,      w->Y + BORDER,
-						w->Width - BORDER2, w->Height - BORDER2);
+						w->x + BORDER,      w->y + BORDER,
+						w->width - BORDER2, w->height - BORDER2);
 	} else {
-		col = w->Hovered ? Launcher_ButtonForeActiveCol : Launcher_ButtonForeCol;
+		col = w->hovered ? Launcher_ButtonForeActiveCol : Launcher_ButtonForeCol;
 		Gradient_Vertical(&Launcher_Framebuffer, LButton_Expand(col, 8), LButton_Expand(col, -8),
-						  w->X + BORDER,      w->Y + BORDER,
-						  w->Width - BORDER2, w->Height - BORDER2);
+						  w->x + BORDER,      w->y + BORDER,
+						  w->width - BORDER2, w->height - BORDER2);
 	}
 }
 
@@ -80,17 +80,17 @@ static void LButton_DrawBorder(struct LButton* w) {
 	BitmapCol backCol = Launcher_ClassicBackground ? black : Launcher_ButtonBorderCol;
 
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
-					w->X + BORDER,            w->Y,
-					w->Width - BORDER2,       BORDER);
+					w->x + BORDER,            w->y,
+					w->width - BORDER2,       BORDER);
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
-					w->X + BORDER,            w->Y + w->Height - BORDER,
-					w->Width - BORDER2,       BORDER);
+					w->x + BORDER,            w->y + w->height - BORDER,
+					w->width - BORDER2,       BORDER);
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
-					w->X,                     w->Y + BORDER,
-					BORDER,                   w->Height - BORDER2);
+					w->x,                     w->y + BORDER,
+					BORDER,                   w->height - BORDER2);
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
-					w->X + w->Width - BORDER, w->Y + BORDER,
-					BORDER,                   w->Height - BORDER2);
+					w->x + w->width - BORDER, w->y + BORDER,
+					BORDER,                   w->height - BORDER2);
 }
 
 static void LButton_DrawHighlight(struct LButton* w) {
@@ -99,17 +99,17 @@ static void LButton_DrawHighlight(struct LButton* w) {
 	BitmapCol highlightCol;
 
 	if (Launcher_ClassicBackground) {
-		highlightCol = w->Hovered ? activeCol : inactiveCol;
+		highlightCol = w->hovered ? activeCol : inactiveCol;
 		Drawer2D_Clear(&Launcher_Framebuffer, highlightCol,
-						w->X + BORDER2,     w->Y + BORDER,
-						w->Width - BORDER4, BORDER);
+						w->x + BORDER2,     w->y + BORDER,
+						w->width - BORDER4, BORDER);
 		Drawer2D_Clear(&Launcher_Framebuffer, highlightCol, 
-						w->X + BORDER,       w->Y + BORDER2,
-						BORDER,              w->Height - BORDER4);
-	} else if (!w->Hovered) {
+						w->x + BORDER,       w->y + BORDER2,
+						BORDER,              w->height - BORDER4);
+	} else if (!w->hovered) {
 		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_ButtonHighlightCol, 
-						w->X + BORDER2,      w->Y + BORDER,
-						w->Width - BORDER4,  BORDER);
+						w->x + BORDER2,      w->y + BORDER,
+						w->width - BORDER4,  BORDER);
 	}
 }
 
@@ -117,22 +117,22 @@ static void LButton_Draw(void* widget) {
 	struct LButton* w = (struct LButton*)widget;
 	struct DrawTextArgs args;
 	int xOffset, yOffset;
-	if (w->Hidden) return;
+	if (w->hidden) return;
 
-	xOffset = w->Width  - w->_TextSize.Width;
-	yOffset = w->Height - w->_TextSize.Height;
-	DrawTextArgs_Make(&args, &w->Text, &Launcher_TitleFont, true);
+	xOffset = w->width  - w->_textSize.Width;
+	yOffset = w->height - w->_textSize.Height;
+	DrawTextArgs_Make(&args, &w->text, &Launcher_TitleFont, true);
 
 	LButton_DrawBackground(w);
 	LButton_DrawBorder(w);
 	LButton_DrawHighlight(w);
 
-	if (!w->Hovered) Drawer2D_Cols['f'] = Drawer2D_Cols['7'];
+	if (!w->hovered) Drawer2D_Cols['f'] = Drawer2D_Cols['7'];
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, 
-					  w->X + xOffset / 2, w->Y + yOffset / 2);
+					  w->x + xOffset / 2, w->y + yOffset / 2);
 
-	if (!w->Hovered) Drawer2D_Cols['f'] = Drawer2D_Cols['F'];
-	Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
+	if (!w->hovered) Drawer2D_Cols['f'] = Drawer2D_Cols['F'];
+	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 }
 
 static void LButton_Hover(void* w, int x, int y, cc_bool wasOver) {
@@ -148,9 +148,9 @@ static struct LWidgetVTABLE lbutton_VTABLE = {
 };
 void LButton_Init(struct LScreen* s, struct LButton* w, int width, int height, const char* text) {
 	w->VTABLE = &lbutton_VTABLE;
-	w->TabSelectable = true;
-	w->Width  = Display_ScaleX(width);
-	w->Height = Display_ScaleY(height);
+	w->tabSelectable = true;
+	w->width  = Display_ScaleX(width);
+	w->height = Display_ScaleY(height);
 
 	LButton_SetConst(w, text);
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
@@ -158,9 +158,9 @@ void LButton_Init(struct LScreen* s, struct LButton* w, int width, int height, c
 
 void LButton_SetConst(struct LButton* w, const char* text) {
 	struct DrawTextArgs args;
-	w->Text = String_FromReadonly(text);
-	DrawTextArgs_Make(&args, &w->Text, &Launcher_TitleFont, true);
-	w->_TextSize = Drawer2D_MeasureText(&args);
+	w->text = String_FromReadonly(text);
+	DrawTextArgs_Make(&args, &w->text, &Launcher_TitleFont, true);
+	w->_textSize = Drawer2D_MeasureText(&args);
 }
 
 
@@ -169,9 +169,9 @@ void LButton_SetConst(struct LButton* w, const char* text) {
 *#########################################################################################################################*/
 CC_NOINLINE static void LInput_GetText(struct LInput* w, String* text) {
 	int i;
-	if (!w->Password) { *text = w->Text; return; }
+	if (!w->password) { *text = w->text; return; }
 
-	for (i = 0; i < w->Text.length; i++) {
+	for (i = 0; i < w->text.length; i++) {
 		String_Append(text, '*');
 	}
 }
@@ -179,28 +179,28 @@ CC_NOINLINE static void LInput_GetText(struct LInput* w, String* text) {
 static void LInput_DrawOuterBorder(struct LInput* w) {
 	BitmapCol col = BitmapCol_Make(97, 81, 110, 255);
 
-	if (w->Selected) {
+	if (w->selected) {
 		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->X,                     w->Y, 
-			w->Width,                 BORDER);
+			w->x,                     w->y, 
+			w->width,                 BORDER);
 		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->X,                     w->Y + w->Height - BORDER, 
-			w->Width,                 BORDER);
+			w->x,                     w->y + w->height - BORDER, 
+			w->width,                 BORDER);
 		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->X,                     w->Y, 
-			BORDER,                   w->Height);
+			w->x,                     w->y, 
+			BORDER,                   w->height);
 		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->X + w->Width - BORDER, w->Y, 
-			BORDER,                   w->Height);
+			w->x + w->width - BORDER, w->y, 
+			BORDER,                   w->height);
 	} else {
-		Launcher_ResetArea(w->X,                     w->Y, 
-						   w->Width,                 BORDER);
-		Launcher_ResetArea(w->X,                     w->Y + w->Height - BORDER,
-						   w->Width,                 BORDER);
-		Launcher_ResetArea(w->X,                     w->Y, 
-						   BORDER,                   w->Height);
-		Launcher_ResetArea(w->X + w->Width - BORDER, w->Y, 
-						   BORDER,                   w->Height);
+		Launcher_ResetArea(w->x,                     w->y, 
+						   w->width,                 BORDER);
+		Launcher_ResetArea(w->x,                     w->y + w->height - BORDER,
+						   w->width,                 BORDER);
+		Launcher_ResetArea(w->x,                     w->y, 
+						   BORDER,                   w->height);
+		Launcher_ResetArea(w->x + w->width - BORDER, w->y, 
+						   BORDER,                   w->height);
 	}
 }
 
@@ -208,46 +208,46 @@ static void LInput_DrawInnerBorder(struct LInput* w) {
 	BitmapCol col = BitmapCol_Make(165, 142, 168, 255);
 
 	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->X + BORDER,             w->Y + BORDER, 
-		w->Width - BORDER2,        BORDER);
+		w->x + BORDER,             w->y + BORDER, 
+		w->width - BORDER2,        BORDER);
 	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->X + BORDER,             w->Y + w->Height - BORDER2,
-		w->Width - BORDER2,        BORDER);
+		w->x + BORDER,             w->y + w->height - BORDER2,
+		w->width - BORDER2,        BORDER);
 	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->X + BORDER,             w->Y + BORDER, 
-		BORDER,                    w->Height - BORDER2);
+		w->x + BORDER,             w->y + BORDER, 
+		BORDER,                    w->height - BORDER2);
 	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->X + w->Width - BORDER2, w->Y + BORDER,
-		BORDER,                    w->Height - BORDER2);
+		w->x + w->width - BORDER2, w->y + BORDER,
+		BORDER,                    w->height - BORDER2);
 }
 
 static void LInput_BlendBoxTop(struct LInput* w) {
 	BitmapCol col = BitmapCol_Make(0, 0, 0, 255);
 
 	Gradient_Blend(&Launcher_Framebuffer, col, 75,
-		w->X + BORDER,      w->Y + BORDER, 
-		w->Width - BORDER2, BORDER);
+		w->x + BORDER,      w->y + BORDER, 
+		w->width - BORDER2, BORDER);
 	Gradient_Blend(&Launcher_Framebuffer, col, 50,
-		w->X + BORDER,      w->Y + BORDER2,
-		w->Width - BORDER2, BORDER);
+		w->x + BORDER,      w->y + BORDER2,
+		w->width - BORDER2, BORDER);
 	Gradient_Blend(&Launcher_Framebuffer, col, 25,
-		w->X + BORDER,      w->Y + BORDER3, 
-		w->Width - BORDER2, BORDER);
+		w->x + BORDER,      w->y + BORDER3, 
+		w->width - BORDER2, BORDER);
 }
 
 static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 	int y, hintHeight;
 
-	if (w->Text.length || !w->HintText) {
-		y = w->Y + (w->Height - w->_TextHeight) / 2;
-		Drawer2D_DrawText(&Launcher_Framebuffer, args, w->X + 5, y + 2);
+	if (w->text.length || !w->hintText) {
+		y = w->y + (w->height - w->_textHeight) / 2;
+		Drawer2D_DrawText(&Launcher_Framebuffer, args, w->x + 5, y + 2);
 	} else {
-		args->text = String_FromReadonly(w->HintText);
+		args->text = String_FromReadonly(w->hintText);
 		args->font = &Launcher_HintFont;
 
 		hintHeight = Drawer2D_TextHeight(args);
-		y = w->Y + (w->Height - hintHeight) / 2;
-		Drawer2D_DrawText(&Launcher_Framebuffer, args, w->X + 5, y);
+		y = w->y + (w->height - hintHeight) / 2;
+		Drawer2D_DrawText(&Launcher_Framebuffer, args, w->x + 5, y);
 	}
 }
 
@@ -262,14 +262,14 @@ static void LInput_Draw(void* widget) {
 	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, false);
 
 	size = Drawer2D_MeasureText(&args);
-	w->Width       = max(w->MinWidth, size.Width + 20);
-	w->_TextHeight = size.Height;
+	w->width       = max(w->minWidth, size.Width + 20);
+	w->_textHeight = size.Height;
 
 	LInput_DrawOuterBorder(w);
 	LInput_DrawInnerBorder(w);
 	Drawer2D_Clear(&Launcher_Framebuffer, BITMAPCOL_WHITE,
-		w->X + BORDER2,     w->Y + BORDER2, 
-		w->Width - BORDER4, w->Height - BORDER4);
+		w->x + BORDER2,     w->y + BORDER2, 
+		w->width - BORDER4, w->height - BORDER4);
 	LInput_BlendBoxTop(w);
 
 	Drawer2D_Cols['f'] = Drawer2D_Cols['0'];
@@ -286,17 +286,17 @@ static Rect2D LInput_MeasureCaret(struct LInput* w) {
 	LInput_GetText(w, &text);
 	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
 
-	r.X = w->X + 5;
-	r.Y = w->Y + w->Height - 5; r.Height = 2;
+	r.X = w->x + 5;
+	r.Y = w->y + w->height - 5; r.Height = 2;
 
-	if (w->CaretPos == -1) {
+	if (w->caretPos == -1) {
 		r.X += Drawer2D_TextWidth(&args);
 		r.Width = 10;
 	} else {
-		args.text = String_UNSAFE_Substring(&text, 0, w->CaretPos);
+		args.text = String_UNSAFE_Substring(&text, 0, w->caretPos);
 		r.X += Drawer2D_TextWidth(&args);
 
-		args.text = String_UNSAFE_Substring(&text, w->CaretPos, 1);
+		args.text = String_UNSAFE_Substring(&text, w->caretPos, 1);
 		r.Width   = Drawer2D_TextWidth(&args);
 	}
 	return r;
@@ -332,19 +332,19 @@ static void LInput_TickCaret(void* widget) {
 		/* Fast path, caret is blinking in same spot */
 		Launcher_MarkDirty(r.X, r.Y, r.Width, r.Height);
 	} else {
-		Launcher_MarkDirty(w->X, w->Y, w->Width, w->Height);
+		Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 	}
 	lastCaretRec = r;
 }
 
 static void LInput_AdvanceCaretPos(struct LInput* w, cc_bool forwards) {
-	if (forwards && w->CaretPos == -1) return;
-	if (!forwards && w->CaretPos == 0) return;
-	if (w->CaretPos == -1 && !forwards) /* caret after text */
-		w->CaretPos = w->Text.length;
+	if (forwards && w->caretPos == -1) return;
+	if (!forwards && w->caretPos == 0) return;
+	if (w->caretPos == -1 && !forwards) /* caret after text */
+		w->caretPos = w->text.length;
 
-	w->CaretPos += (forwards ? 1 : -1);
-	if (w->CaretPos < 0 || w->CaretPos >= w->Text.length) w->CaretPos = -1;
+	w->caretPos += (forwards ? 1 : -1);
+	if (w->caretPos < 0 || w->caretPos >= w->text.length) w->caretPos = -1;
 	LWidget_Redraw(w);
 }
 
@@ -356,16 +356,16 @@ static void LInput_MoveCaretToCursor(struct LInput* w) {
 
 	/* Input widget may have been selected by pressing tab */
 	/* In which case cursor is completely outside, so ignore */
-	if (!Gui_Contains(w->X, w->Y, w->Width, w->Height, x, y)) return;
+	if (!Gui_Contains(w->x, w->y, w->width, w->height, x, y)) return;
 	lastCaretShow = false;
 
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
-	x -= w->X; y -= w->Y;
+	x -= w->x; y -= w->y;
 
 	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
 	if (x >= Drawer2D_TextWidth(&args)) {
-		w->CaretPos = -1; return; 
+		w->caretPos = -1; return; 
 	}
 
 	for (i = 0; i < text.length; i++) {
@@ -375,7 +375,7 @@ static void LInput_MoveCaretToCursor(struct LInput* w) {
 		args.text = String_UNSAFE_Substring(&text, i, 1);
 		charWidth = Drawer2D_TextWidth(&args);
 		if (x >= charX && x < charX + charWidth) {
-			w->CaretPos = i; return;
+			w->caretPos = i; return;
 		}
 	}
 }
@@ -412,7 +412,7 @@ static void LInput_KeyDown(void* widget, int key, cc_bool was) {
 	} else if (key == KEY_DELETE) {
 		LInput_Delete(w);
 	} else if (key == 'C' && Key_IsActionPressed()) {
-		if (w->Text.length) Clipboard_SetText(&w->Text);
+		if (w->text.length) Clipboard_SetText(&w->text);
 	} else if (key == 'V' && Key_IsActionPressed()) {
 		Clipboard_RequestText(LInput_CopyFromClipboard, w);
 	} else if (key == KEY_ESCAPE) {
@@ -442,17 +442,17 @@ static struct LWidgetVTABLE linput_VTABLE = {
 };
 void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hintText) {
 	w->VTABLE = &linput_VTABLE;
-	w->TabSelectable = true;
+	w->tabSelectable = true;
 	w->TextFilter    = LInput_DefaultInputFilter;
-	String_InitArray(w->Text, w->_TextBuffer);
+	String_InitArray(w->text, w->_textBuffer);
 	
-	w->Width    = Display_ScaleX(width);
-	w->Height   = Display_ScaleY(30);
-	w->MinWidth = w->Width;
+	w->width    = Display_ScaleX(width);
+	w->height   = Display_ScaleY(30);
+	w->minWidth = w->width;
 	LWidget_CalcPosition(w);
 
-	w->HintText = hintText;
-	w->CaretPos = -1;
+	w->hintText = hintText;
+	w->caretPos = -1;
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
@@ -461,23 +461,23 @@ void LInput_SetText(struct LInput* w, const String* text_) {
 	struct DrawTextArgs args;
 	Size2D size;
 
-	String_Copy(&w->Text, text_);
+	String_Copy(&w->text, text_);
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
 	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
 
 	size = Drawer2D_MeasureText(&args);
-	w->Width       = max(w->MinWidth, size.Width + 20);
-	w->_TextHeight = size.Height;
+	w->width       = max(w->minWidth, size.Width + 20);
+	w->_textHeight = size.Height;
 }
 
 static CC_NOINLINE cc_bool LInput_AppendRaw(struct LInput* w, char c) {
-	if (w->TextFilter(c) && w->Text.length < w->Text.capacity) {
-		if (w->CaretPos == -1) {
-			String_Append(&w->Text, c);
+	if (w->TextFilter(c) && w->text.length < w->text.capacity) {
+		if (w->caretPos == -1) {
+			String_Append(&w->text, c);
 		} else {
-			String_InsertAt(&w->Text, w->CaretPos, c);
-			w->CaretPos++;
+			String_InsertAt(&w->text, w->caretPos, c);
+			w->caretPos++;
 		}
 		return true;
 	}
@@ -501,38 +501,38 @@ void LInput_AppendString(struct LInput* w, const String* str) {
 }
 
 void LInput_Backspace(struct LInput* w) {
-	if (!w->Text.length || w->CaretPos == 0) return;
+	if (!w->text.length || w->caretPos == 0) return;
 
-	if (w->CaretPos == -1) {
-		String_DeleteAt(&w->Text, w->Text.length - 1);
+	if (w->caretPos == -1) {
+		String_DeleteAt(&w->text, w->text.length - 1);
 	} else {	
-		String_DeleteAt(&w->Text, w->CaretPos - 1);
-		w->CaretPos--;
-		if (w->CaretPos == -1) w->CaretPos = 0;
+		String_DeleteAt(&w->text, w->caretPos - 1);
+		w->caretPos--;
+		if (w->caretPos == -1) w->caretPos = 0;
 	}
 
 	if (w->TextChanged) w->TextChanged(w);
-	if (w->CaretPos >= w->Text.length) w->CaretPos = -1;
+	if (w->caretPos >= w->text.length) w->caretPos = -1;
 	LWidget_Redraw(w);
 }
 
 void LInput_Delete(struct LInput* w) {
-	if (!w->Text.length || w->CaretPos == -1) return;
+	if (!w->text.length || w->caretPos == -1) return;
 
-	String_DeleteAt(&w->Text, w->CaretPos);
-	if (w->CaretPos == -1) w->CaretPos = 0;
+	String_DeleteAt(&w->text, w->caretPos);
+	if (w->caretPos == -1) w->caretPos = 0;
 
 	if (w->TextChanged) w->TextChanged(w);
-	if (w->CaretPos >= w->Text.length) w->CaretPos = -1;
+	if (w->caretPos >= w->text.length) w->caretPos = -1;
 	LWidget_Redraw(w);
 }
 
 void LInput_Clear(struct LInput* w) {
-	if (!w->Text.length) return;
-	w->Text.length = 0;
+	if (!w->text.length) return;
+	w->text.length = 0;
 
 	if (w->TextChanged) w->TextChanged(w);
-	w->CaretPos = -1;
+	w->caretPos = -1;
 	LWidget_Redraw(w);
 }
 
@@ -544,8 +544,8 @@ static void LLabel_Draw(void* widget) {
 	struct LLabel* w = (struct LLabel*)widget;
 	struct DrawTextArgs args;
 
-	DrawTextArgs_Make(&args, &w->Text, w->Font, true);
-	Drawer2D_DrawText(&Launcher_Framebuffer, &args, w->X, w->Y);
+	DrawTextArgs_Make(&args, &w->text, w->font, true);
+	Drawer2D_DrawText(&Launcher_Framebuffer, &args, w->x, w->y);
 }
 
 static struct LWidgetVTABLE llabel_VTABLE = {
@@ -556,9 +556,9 @@ static struct LWidgetVTABLE llabel_VTABLE = {
 };
 void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* text) {
 	w->VTABLE = &llabel_VTABLE;
-	w->Font   = &Launcher_TextFont;
+	w->font   = &Launcher_TextFont;
 
-	String_InitArray(w->Text, w->_TextBuffer);
+	String_InitArray(w->text, w->_textBuffer);
 	LLabel_SetConst(w, text);
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
@@ -566,11 +566,11 @@ void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* text) {
 void LLabel_SetText(struct LLabel* w, const String* text) {
 	struct DrawTextArgs args;
 	Size2D size;
-	String_Copy(&w->Text, text);
+	String_Copy(&w->text, text);
 
-	DrawTextArgs_Make(&args, &w->Text, w->Font, true);
+	DrawTextArgs_Make(&args, &w->text, w->font, true);
 	size = Drawer2D_MeasureText(&args);
-	w->Width = size.Width; w->Height = size.Height;
+	w->width = size.Width; w->height = size.Height;
 	LWidget_CalcPosition(w);
 }
 
@@ -585,7 +585,7 @@ void LLabel_SetConst(struct LLabel* w, const char* text) {
 *#########################################################################################################################*/
 static void LLine_Draw(void* widget) {
 	struct LLine* w = (struct LLine*)widget;
-	Gradient_Blend(&Launcher_Framebuffer, w->Col, 128, w->X, w->Y, w->Width, w->Height);
+	Gradient_Blend(&Launcher_Framebuffer, w->col, 128, w->x, w->y, w->width, w->height);
 }
 
 static struct LWidgetVTABLE lline_VTABLE = {
@@ -596,8 +596,8 @@ static struct LWidgetVTABLE lline_VTABLE = {
 };
 void LLine_Init(struct LScreen* s, struct LLine* w, int width) {
 	w->VTABLE = &lline_VTABLE;
-	w->Width  = Display_ScaleX(width);
-	w->Height = Display_ScaleY(2);
+	w->width  = Display_ScaleX(width);
+	w->height = Display_ScaleY(2);
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
@@ -611,31 +611,31 @@ static void LSlider_DrawBoxBounds(struct LSlider* w) {
 
 	/* TODO: Check these are actually right */
 	Drawer2D_Clear(&Launcher_Framebuffer, boundsTop,
-				  w->X,     w->Y,
-				  w->Width, BORDER);
+				  w->x,     w->y,
+				  w->width, BORDER);
 	Drawer2D_Clear(&Launcher_Framebuffer, boundsBottom,
-				  w->X,	    w->Y + w->Height - BORDER,
-				  w->Width, BORDER);
+				  w->x,	    w->y + w->height - BORDER,
+				  w->width, BORDER);
 
 	Gradient_Vertical(&Launcher_Framebuffer, boundsTop, boundsBottom,
-					 w->X,					   w->Y,
-					 BORDER,                   w->Height);
+					 w->x,					   w->y,
+					 BORDER,                   w->height);
 	Gradient_Vertical(&Launcher_Framebuffer, boundsTop, boundsBottom,
-					 w->X + w->Width - BORDER, w->Y,
-					 BORDER,				   w->Height);
+					 w->x + w->width - BORDER, w->y,
+					 BORDER,				   w->height);
 }
 
 static void LSlider_DrawBox(struct LSlider* w) {
 	BitmapCol progTop    = BitmapCol_Make(220, 204, 233, 255);
 	BitmapCol progBottom = BitmapCol_Make(207, 181, 216, 255);
-	int halfHeight = (w->Height - BORDER2) / 2;
+	int halfHeight = (w->height - BORDER2) / 2;
 
 	Gradient_Vertical(&Launcher_Framebuffer, progTop, progBottom,
-					  w->X + BORDER,	  w->Y + BORDER, 
-					  w->Width - BORDER2, halfHeight);
+					  w->x + BORDER,	  w->y + BORDER, 
+					  w->width - BORDER2, halfHeight);
 	Gradient_Vertical(&Launcher_Framebuffer, progBottom, progTop,
-					  w->X + BORDER,	  w->Y + BORDER + halfHeight, 
-		              w->Width - BORDER2, halfHeight);
+					  w->x + BORDER,	  w->y + BORDER + halfHeight, 
+		              w->width - BORDER2, halfHeight);
 }
 
 static void LSlider_Draw(void* widget) {
@@ -645,10 +645,10 @@ static void LSlider_Draw(void* widget) {
 	LSlider_DrawBoxBounds(w);
 	LSlider_DrawBox(w);
 
-	curWidth = (int)((w->Width - BORDER2) * w->Value / w->MaxValue);
-	Drawer2D_Clear(&Launcher_Framebuffer, w->Col,
-				   w->X + BORDER, w->Y + BORDER, 
-				   curWidth,      w->Height - BORDER2);
+	curWidth = (int)((w->width - BORDER2) * w->value / w->maxValue);
+	Drawer2D_Clear(&Launcher_Framebuffer, w->col,
+				   w->x + BORDER, w->y + BORDER, 
+				   curWidth,      w->height - BORDER2);
 }
 
 static struct LWidgetVTABLE lslider_VTABLE = {
@@ -659,10 +659,10 @@ static struct LWidgetVTABLE lslider_VTABLE = {
 };
 void LSlider_Init(struct LScreen* s, struct LSlider* w, int width, int height, BitmapCol col) {
 	w->VTABLE   = &lslider_VTABLE;
-	w->Width    = Display_ScaleX(width); 
-	w->Height   = Display_ScaleY(height);
-	w->MaxValue = 100;
-	w->Col      = col;
+	w->width    = Display_ScaleX(width); 
+	w->height   = Display_ScaleY(height);
+	w->maxValue = 100;
+	w->col      = col;
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
@@ -726,20 +726,20 @@ static int sortingCol = -1;
 /* Works out top and height of the scrollbar */
 static void LTable_GetScrollbarCoords(struct LTable* w, int* y, int* height) {
 	float scale;
-	if (!w->RowsCount) { *y = 0; *height = 0; return; }
+	if (!w->rowsCount) { *y = 0; *height = 0; return; }
 
-	scale   = w->Height / (float)w->RowsCount;
-	*y      = Math_Ceil(w->TopRow * scale);
-	*height = Math_Ceil(w->VisibleRows * scale);
-	*height = min(*y + *height, w->Height) - *y;
+	scale   = w->height / (float)w->rowsCount;
+	*y      = Math_Ceil(w->topRow * scale);
+	*height = Math_Ceil(w->visibleRows * scale);
+	*height = min(*y + *height, w->height) - *y;
 }
 
 /* Ensures top/first visible row index lies within table */
 static void LTable_ClampTopRow(struct LTable* w) { 
-	if (w->TopRow > w->RowsCount - w->VisibleRows) {
-		w->TopRow = w->RowsCount - w->VisibleRows;
+	if (w->topRow > w->rowsCount - w->visibleRows) {
+		w->topRow = w->rowsCount - w->visibleRows;
 	}
-	if (w->TopRow < 0) w->TopRow = 0;
+	if (w->topRow < 0) w->topRow = 0;
 }
 
 /* Returns index of selected row in currently visible rows */
@@ -747,20 +747,20 @@ static int LTable_GetSelectedIndex(struct LTable* w) {
 	struct ServerInfo* entry;
 	int row;
 
-	for (row = 0; row < w->RowsCount; row++) {
+	for (row = 0; row < w->rowsCount; row++) {
 		entry = LTable_Get(row);
-		if (String_CaselessEquals(w->SelectedHash, &entry->hash)) return row;
+		if (String_CaselessEquals(w->selectedHash, &entry->hash)) return row;
 	}
 	return -1;
 }
 
 /* Sets selected row to given row, scrolling table if needed */
 static void LTable_SetSelectedTo(struct LTable* w, int index) {
-	if (!w->RowsCount) return;
-	if (index >= w->RowsCount) index = w->RowsCount - 1;
+	if (!w->rowsCount) return;
+	if (index >= w->rowsCount) index = w->rowsCount - 1;
 	if (index < 0) index = 0;
 
-	String_Copy(w->SelectedHash, &LTable_Get(index)->hash);
+	String_Copy(w->selectedHash, &LTable_Get(index)->hash);
 	LTable_ShowSelected(w);
 	w->OnSelectedChanged();
 }
@@ -778,9 +778,9 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 
 	if (!Launcher_ClassicBackground) {
 		Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
-						w->X, w->Y, w->Width, w->HdrHeight);
+						w->x, w->y, w->width, w->hdrHeight);
 	} else {
-		Launcher_ResetArea(w->X, w->Y, w->Width, w->HdrHeight);
+		Launcher_ResetArea(w->x, w->y, w->width, w->hdrHeight);
 	}
 }
 
@@ -793,7 +793,7 @@ static BitmapCol LTable_RowCol(struct LTable* w, struct ServerInfo* row) {
 	cc_bool selected;
 
 	if (row) {
-		selected = String_Equals(&row->hash, w->SelectedHash);
+		selected = String_Equals(&row->hash, w->selectedHash);
 		if (row->featured) {
 			return selected ? featSelCol : featuredCol;
 		} else if (selected) {
@@ -809,21 +809,21 @@ static void LTable_DrawRowsBackground(struct LTable* w) {
 	BitmapCol col;
 	int y, height, row;
 
-	y = w->RowsBegY;
-	for (row = w->TopRow; ; row++, y += w->RowHeight) {
-		entry = row < w->RowsCount ? LTable_Get(row) : NULL;
+	y = w->rowsBegY;
+	for (row = w->topRow; ; row++, y += w->rowHeight) {
+		entry = row < w->rowsCount ? LTable_Get(row) : NULL;
 		col   = LTable_RowCol(w, entry);	
 
 		/* last row may get chopped off */
-		height = min(y + w->RowHeight, w->RowsEndY) - y;
+		height = min(y + w->rowHeight, w->rowsEndY) - y;
 		/* hit the end of the table */
 		if (height < 0) break;
 
 		if (col) {
 			Drawer2D_Clear(&Launcher_Framebuffer, col,
-				w->X, y, w->Width, height);
+				w->x, y, w->width, height);
 		} else {
-			Launcher_ResetArea(w->X, y, w->Width, height);
+			Launcher_ResetArea(w->x, y, w->width, height);
 		}
 	}
 }
@@ -833,17 +833,17 @@ static void LTable_DrawGridlines(struct LTable* w) {
 	int i, x;
 	if (Launcher_ClassicBackground) return;
 
-	x = w->X;
+	x = w->x;
 	Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
-				   x, w->Y + w->HdrHeight, w->Width, w->GridlineHeight);
+				   x, w->y + w->hdrHeight, w->width, w->gridlineHeight);
 
-	for (i = 0; i < w->NumColumns; i++) {
-		x += w->Columns[i].width;
-		if (!w->Columns[i].columnGridline) continue;
+	for (i = 0; i < w->numColumns; i++) {
+		x += w->columns[i].width;
+		if (!w->columns[i].columnGridline) continue;
 			
 		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
-					   x, w->Y, w->GridlineWidth, w->Height);
-		x += w->GridlineWidth;
+					   x, w->y, w->gridlineWidth, w->height);
+		x += w->gridlineWidth;
 	}
 }
 
@@ -860,16 +860,16 @@ static void LTable_DrawHeaders(struct LTable* w) {
 	int i, x, y;
 
 	DrawTextArgs_MakeEmpty(&args, &Launcher_TextFont, true);
-	x = w->X; y = w->Y;
+	x = w->x; y = w->y;
 
-	for (i = 0; i < w->NumColumns; i++) {
-		args.text = String_FromReadonly(w->Columns[i].name);
+	for (i = 0; i < w->numColumns; i++) {
+		args.text = String_FromReadonly(w->columns[i].name);
 		Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
 								x + CELL_XOFFSET, y + HDR_YOFFSET, 
-								w->Columns[i].width - CELL_XPADDING);
+								w->columns[i].width - CELL_XPADDING);
 
-		x += w->Columns[i].width;
-		if (w->Columns[i].columnGridline) x += w->GridlineWidth;
+		x += w->columns[i].width;
+		if (w->columns[i].columnGridline) x += w->gridlineWidth;
 	}
 }
 
@@ -881,29 +881,29 @@ static void LTable_DrawRows(struct LTable* w) {
 	int i, x, y, row, end;
 
 	String_InitArray(str, strBuffer);
-	DrawTextArgs_Make(&args, &str, w->RowFont, true);
-	y   = w->RowsBegY;
-	end = w->TopRow + w->VisibleRows;
+	DrawTextArgs_Make(&args, &str, w->rowFont, true);
+	y   = w->rowsBegY;
+	end = w->topRow + w->visibleRows;
 
-	for (row = w->TopRow; row < end; row++, y += w->RowHeight) {
-		x = w->X;
+	for (row = w->topRow; row < end; row++, y += w->rowHeight) {
+		x = w->x;
 
-		if (row >= w->RowsCount)            break;
-		if (y + w->RowHeight > w->RowsEndY) break;
+		if (row >= w->rowsCount)            break;
+		if (y + w->rowHeight > w->rowsEndY) break;
 		entry = LTable_Get(row);
 
-		for (i = 0; i < w->NumColumns; i++) {
+		for (i = 0; i < w->numColumns; i++) {
 			args.text = str;
-			w->Columns[i].DrawRow(entry, &args, x, y);
+			w->columns[i].DrawRow(entry, &args, x, y);
 
 			if (args.text.length) {
 				Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
 										x + CELL_XOFFSET, y + ROW_YOFFSET, 
-										w->Columns[i].width - CELL_XPADDING);
+										w->columns[i].width - CELL_XPADDING);
 			}
 
-			x += w->Columns[i].width;
-			if (w->Columns[i].columnGridline) x += w->GridlineWidth;
+			x += w->columns[i].width;
+			if (w->columns[i].columnGridline) x += w->gridlineWidth;
 		}
 	}
 }
@@ -916,13 +916,13 @@ static void LTable_DrawScrollbar(struct LTable* w) {
 	BitmapCol scrollCol = Launcher_ClassicBackground ? classicScroll : Launcher_ButtonForeActiveCol;
 
 	int x, y, height;
-	x = w->X + w->Width - w->ScrollbarWidth;
+	x = w->x + w->width - w->scrollbarWidth;
 	LTable_GetScrollbarCoords(w, &y, &height);
 
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol,
-					x, w->Y,     w->ScrollbarWidth, w->Height);		
+					x, w->y,     w->scrollbarWidth, w->height);		
 	Drawer2D_Clear(&Launcher_Framebuffer, scrollCol, 
-					x, w->Y + y, w->ScrollbarWidth, height);
+					x, w->y + y, w->scrollbarWidth, height);
 }
 
 cc_bool LTable_HandlesKey(int key) {
@@ -938,9 +938,9 @@ static void LTable_KeyDown(void* widget, int key, cc_bool was) {
 	} else if (key == KEY_DOWN) {
 		index++;
 	} else if (key == KEY_PAGEUP) {
-		index -= w->VisibleRows;
+		index -= w->visibleRows;
 	} else if (key == KEY_PAGEDOWN) {
-		index += w->VisibleRows;
+		index += w->visibleRows;
 	} else { return; }
 
 	w->_lastRow = -1;
@@ -949,30 +949,30 @@ static void LTable_KeyDown(void* widget, int key, cc_bool was) {
 
 static void LTable_MouseMove(void* widget, int deltaX, int deltaY, cc_bool wasOver) {
 	struct LTable* w = (struct LTable*)widget;
-	int x = Mouse_X - w->X, y = Mouse_Y - w->Y, col;
+	int x = Mouse_X - w->x, y = Mouse_Y - w->y, col;
 
-	if (w->DraggingScrollbar) {
-		float scale = w->Height / (float)w->RowsCount;
-		int row     = (int)((y - w->MouseOffset) / scale);
+	if (w->draggingScrollbar) {
+		float scale = w->height / (float)w->rowsCount;
+		int row     = (int)((y - w->mouseOffset) / scale);
 		/* avoid expensive redraw when possible */
-		if (w->TopRow == row) return;
+		if (w->topRow == row) return;
 
-		w->TopRow = row;
+		w->topRow = row;
 		LTable_ClampTopRow(w);
 		LWidget_Draw(w);
-	} else if (w->DraggingColumn >= 0) {
-		if (!deltaX || x >= w->X + w->Width - 20) return;
-		col = w->DraggingColumn;
+	} else if (w->draggingColumn >= 0) {
+		if (!deltaX || x >= w->x + w->width - 20) return;
+		col = w->draggingColumn;
 
-		w->Columns[col].width += deltaX;
-		Math_Clamp(w->Columns[col].width, 20, w->Width - 20);
+		w->columns[col].width += deltaX;
+		Math_Clamp(w->columns[col].width, 20, w->width - 20);
 		LWidget_Draw(w);
 	}
 }
 
 static void LTable_RowsClick(struct LTable* w) {
-	int mouseY = Mouse_Y - w->RowsBegY;
-	int row    = w->TopRow + mouseY / w->RowHeight;
+	int mouseY = Mouse_Y - w->rowsBegY;
+	int row    = w->topRow + mouseY / w->rowHeight;
 	TimeMS now;
 
 	LTable_SetSelectedTo(w, row);
@@ -991,54 +991,54 @@ static void LTable_RowsClick(struct LTable* w) {
 static void LTable_HeadersClick(struct LTable* w) {
 	int x, i, mouseX = Mouse_X;
 
-	for (i = 0, x = w->X; i < w->NumColumns; i++) {
+	for (i = 0, x = w->x; i < w->numColumns; i++) {
 		/* clicked on gridline, begin dragging */
-		if (mouseX >= (x - 8) && mouseX < (x + 8) && w->Columns[i].interactable) {
-			w->DraggingColumn = i - 1;
+		if (mouseX >= (x - 8) && mouseX < (x + 8) && w->columns[i].interactable) {
+			w->draggingColumn = i - 1;
 			return;
 		}
 
-		x += w->Columns[i].width;
-		if (w->Columns[i].columnGridline) x += w->GridlineWidth;
+		x += w->columns[i].width;
+		if (w->columns[i].columnGridline) x += w->gridlineWidth;
 	}
 
-	for (i = 0, x = w->X; i < w->NumColumns; i++) {
-		if (mouseX >= x && mouseX < (x + w->Columns[i].width) && w->Columns[i].interactable) {
+	for (i = 0, x = w->x; i < w->numColumns; i++) {
+		if (mouseX >= x && mouseX < (x + w->columns[i].width) && w->columns[i].interactable) {
 			sortingCol = i;
-			w->Columns[i].invertSort = !w->Columns[i].invertSort;
+			w->columns[i].invertSort = !w->columns[i].invertSort;
 			LTable_Sort(w);
 			return;
 		}
 
-		x += w->Columns[i].width;
-		if (w->Columns[i].columnGridline) x += w->GridlineWidth;
+		x += w->columns[i].width;
+		if (w->columns[i].columnGridline) x += w->gridlineWidth;
 	}
 }
 
 /* Handles clicking on the scrollbar on right edge of table */
 static void LTable_ScrollbarClick(struct LTable* w) {
-	int y, height, mouseY = Mouse_Y - w->Y;
+	int y, height, mouseY = Mouse_Y - w->y;
 	LTable_GetScrollbarCoords(w, &y, &height);
 
 	if (mouseY < y) {
-		w->TopRow -= w->VisibleRows;
+		w->topRow -= w->visibleRows;
 	} else if (mouseY >= y + height) {
-		w->TopRow += w->VisibleRows;
+		w->topRow += w->visibleRows;
 	} else {
-		w->MouseOffset = mouseY - y;
+		w->mouseOffset = mouseY - y;
 	}
 
-	w->DraggingScrollbar = true;
+	w->draggingScrollbar = true;
 	LTable_ClampTopRow(w);
 }
 
 static void LTable_MouseDown(void* widget, cc_bool wasSelected) {
 	struct LTable* w = (struct LTable*)widget;
 
-	if (Mouse_X >= Window_Width - w->ScrollbarWidth) {
+	if (Mouse_X >= Window_Width - w->scrollbarWidth) {
 		LTable_ScrollbarClick(w);
 		w->_lastRow = -1;
-	} else if (Mouse_Y < w->RowsBegY) {
+	} else if (Mouse_Y < w->rowsBegY) {
 		LTable_HeadersClick(w);
 		w->_lastRow = -1;
 	} else {
@@ -1049,7 +1049,7 @@ static void LTable_MouseDown(void* widget, cc_bool wasSelected) {
 
 static void LTable_MouseWheel(void* widget, float delta) {
 	struct LTable* w = (struct LTable*)widget;
-	w->TopRow -= Utils_AccumulateWheelDelta(&w->_wheelAcc, delta);
+	w->topRow -= Utils_AccumulateWheelDelta(&w->_wheelAcc, delta);
 	LTable_ClampTopRow(w);
 	LWidget_Draw(w);
 	w->_lastRow = -1;
@@ -1058,21 +1058,21 @@ static void LTable_MouseWheel(void* widget, float delta) {
 /* Stops an in-progress dragging of resizing column. */
 static void LTable_StopDragging(void* widget) {
 	struct LTable* w = (struct LTable*)widget;
-	w->DraggingColumn    = -1;
-	w->DraggingScrollbar = false;
-	w->MouseOffset       = 0;
+	w->draggingColumn    = -1;
+	w->draggingScrollbar = false;
+	w->mouseOffset       = 0;
 }
 
 void LTable_Reposition(struct LTable* w) {
 	int rowsHeight;
-	w->HdrHeight = Drawer2D_FontHeight(&Launcher_TextFont, true) + HDR_YPADDING;
-	w->RowHeight = Drawer2D_FontHeight(w->RowFont,         true) + ROW_YPADDING;
+	w->hdrHeight = Drawer2D_FontHeight(&Launcher_TextFont, true) + HDR_YPADDING;
+	w->rowHeight = Drawer2D_FontHeight(w->rowFont,         true) + ROW_YPADDING;
 
-	w->RowsBegY = w->Y + w->HdrHeight + w->GridlineHeight;
-	w->RowsEndY = w->Y + w->Height;
-	rowsHeight  = w->Height - (w->RowsBegY - w->Y);
+	w->rowsBegY = w->y + w->hdrHeight + w->gridlineHeight;
+	w->rowsEndY = w->y + w->height;
+	rowsHeight  = w->height - (w->rowsBegY - w->y);
 
-	w->VisibleRows = rowsHeight / w->RowHeight;
+	w->visibleRows = rowsHeight / w->rowHeight;
 	LTable_ClampTopRow(w);
 }
 
@@ -1095,16 +1095,16 @@ static struct LWidgetVTABLE ltable_VTABLE = {
 void LTable_Init(struct LTable* w, struct FontDesc* rowFont) {
 	int i;
 	w->VTABLE     = &ltable_VTABLE;
-	w->Columns    = tableColumns;
-	w->NumColumns = Array_Elems(tableColumns);
-	w->RowFont    = rowFont;
+	w->columns    = tableColumns;
+	w->numColumns = Array_Elems(tableColumns);
+	w->rowFont    = rowFont;
 
-	w->ScrollbarWidth = Display_ScaleX(10);
-	w->GridlineWidth  = Display_ScaleX(2);
-	w->GridlineHeight = Display_ScaleY(2);
+	w->scrollbarWidth = Display_ScaleX(10);
+	w->gridlineWidth  = Display_ScaleX(2);
+	w->gridlineHeight = Display_ScaleY(2);
 	
-	for (i = 0; i < w->NumColumns; i++) {
-		w->Columns[i].width = Display_ScaleX(w->Columns[i].width);
+	for (i = 0; i < w->numColumns; i++) {
+		w->columns[i].width = Display_ScaleX(w->columns[i].width);
 	}
 }
 
@@ -1112,13 +1112,13 @@ void LTable_Reset(struct LTable* w) {
 	LTable_StopDragging(w);
 	LTable_Reposition(w);
 
-	w->TopRow    = 0;
-	w->RowsCount = 0;
+	w->topRow    = 0;
+	w->rowsCount = 0;
 	sortingCol   = -1;
 	w->_wheelAcc = 0.0f;
 
-	w->SelectedHash->length = 0;
-	w->Filter->length       = 0;
+	w->selectedHash->length = 0;
+	w->filter->length       = 0;
 }
 
 void LTable_ApplyFilter(struct LTable* w) {
@@ -1126,12 +1126,12 @@ void LTable_ApplyFilter(struct LTable* w) {
 
 	count = FetchServersTask.NumServers;
 	for (i = 0, j = 0; i < count; i++) {
-		if (String_CaselessContains(&Servers_Get(i)->name, w->Filter)) {
+		if (String_CaselessContains(&Servers_Get(i)->name, w->filter)) {
 			FetchServersTask.Servers[j++]._order = FetchServersTask.Orders[i];
 		}
 	}
 
-	w->RowsCount = j;
+	w->rowsCount = j;
 	for (; j < count; j++) {
 		FetchServersTask.Servers[j]._order = -100000;
 	}
@@ -1183,10 +1183,10 @@ void LTable_ShowSelected(struct LTable* w) {
 	int i = LTable_GetSelectedIndex(w);
 	if (i == -1) return;
 
-	if (i >= w->TopRow + w->VisibleRows) {
-		w->TopRow = i - (w->VisibleRows - 1);
+	if (i >= w->topRow + w->visibleRows) {
+		w->topRow = i - (w->visibleRows - 1);
 	}
-	if (i < w->TopRow) w->TopRow = i;
+	if (i < w->topRow) w->topRow = i;
 	LTable_ClampTopRow(w);
 }
 #endif
