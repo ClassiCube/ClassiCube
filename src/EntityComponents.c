@@ -347,11 +347,11 @@ void NetInterpComp_SetLocation(struct NetInterpComp* interp, struct LocationUpda
 	struct InterpState* cur = &interp->Cur;
 	cc_uint8 flags = update->Flags;
 
-	if (flags & LOCATIONUPDATE_FLAG_POS)   InterpComp_SetPos(cur, update);
-	if (flags & LOCATIONUPDATE_FLAG_ROTX)  cur->RotX  = update->RotX;
-	if (flags & LOCATIONUPDATE_FLAG_ROTZ)  cur->RotZ  = update->RotZ;
-	if (flags & LOCATIONUPDATE_FLAG_PITCH) cur->Pitch = update->Pitch;
-	if (flags & LOCATIONUPDATE_FLAG_YAW)   cur->Yaw   = update->Yaw;
+	if (flags & LOCATIONUPDATE_POS)   InterpComp_SetPos(cur, update);
+	if (flags & LOCATIONUPDATE_ROTX)  cur->RotX  = update->RotX;
+	if (flags & LOCATIONUPDATE_ROTZ)  cur->RotZ  = update->RotZ;
+	if (flags & LOCATIONUPDATE_PITCH) cur->Pitch = update->Pitch;
+	if (flags & LOCATIONUPDATE_YAW)   cur->Yaw   = update->Yaw;
 
 	if (!interpolate) {
 		interp->Prev = *cur; interp->PrevRotY = cur->Yaw;
@@ -400,7 +400,7 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 	cc_uint8 flags = update->Flags;
 	float yOffset;
 
-	if (flags & LOCATIONUPDATE_FLAG_POS) {
+	if (flags & LOCATIONUPDATE_POS) {
 		InterpComp_SetPos(next, update);
 		/* If server sets Y position exactly on ground, push up a tiny bit */
 		yOffset = next->Pos.Y - Math_Floor(next->Pos.Y);
@@ -409,20 +409,20 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 		if (!interpolate) { prev->Pos = next->Pos; entity->Position = next->Pos; }
 	}
 
-	if (flags & LOCATIONUPDATE_FLAG_PITCH) {
+	if (flags & LOCATIONUPDATE_PITCH) {
 		LocalInterpComp_Angle(&prev->Pitch, &next->Pitch, update->Pitch, interpolate);
 	}
-	if (flags & LOCATIONUPDATE_FLAG_YAW) {
+	if (flags & LOCATIONUPDATE_YAW) {
 		LocalInterpComp_Angle(&prev->Yaw,   &next->Yaw,   update->Yaw, interpolate);
 	}
-	if (flags & LOCATIONUPDATE_FLAG_ROTX) {
+	if (flags & LOCATIONUPDATE_ROTX) {
 		LocalInterpComp_Angle(&prev->RotX,  &next->RotX,  update->RotX,  interpolate);
 	}
-	if (flags & LOCATIONUPDATE_FLAG_ROTZ) {
+	if (flags & LOCATIONUPDATE_ROTZ) {
 		LocalInterpComp_Angle(&prev->RotZ,  &next->RotZ,  update->RotZ,  interpolate);
 	}
 
-	if (flags & LOCATIONUPDATE_FLAG_YAW) {
+	if (flags & LOCATIONUPDATE_YAW) {
 		if (!interpolate) {
 			interp->NextRotY = update->Yaw;
 			entity->RotY     = update->Yaw;

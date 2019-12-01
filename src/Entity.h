@@ -30,11 +30,11 @@ extern const char* const ShadowMode_Names[SHADOW_MODE_COUNT];
 
 enum EntityType { ENTITY_TYPE_NONE, ENTITY_TYPE_PLAYER };
 
-#define LOCATIONUPDATE_FLAG_POS   0x01
-#define LOCATIONUPDATE_FLAG_PITCH 0x02
-#define LOCATIONUPDATE_FLAG_YAW   0x04
-#define LOCATIONUPDATE_FLAG_ROTX  0x08
-#define LOCATIONUPDATE_FLAG_ROTZ  0x10
+#define LOCATIONUPDATE_POS   0x01
+#define LOCATIONUPDATE_PITCH 0x02
+#define LOCATIONUPDATE_YAW   0x04
+#define LOCATIONUPDATE_ROTX  0x08
+#define LOCATIONUPDATE_ROTZ  0x10
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
 struct LocationUpdate {
 	Vec3 Pos;

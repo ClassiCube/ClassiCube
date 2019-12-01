@@ -14,7 +14,7 @@ struct _WorldData World;
 /*########################################################################################################################*
 *----------------------------------------------------------World----------------------------------------------------------*
 *#########################################################################################################################*/
-static void World_NewUuid(void) {
+static void GenerateNewUuid(void) {
 	RNGState rnd;
 	int i;
 	Random_SeedFromCurrentTime(&rnd);
@@ -63,7 +63,7 @@ void World_SetNewMap(BlockRaw* blocks, int width, int height, int length) {
 
 	if (Env.EdgeHeight == -1)   { Env.EdgeHeight   = height / 2; }
 	if (Env.CloudsHeight == -1) { Env.CloudsHeight = height + 2; }
-	World_NewUuid();
+	GenerateNewUuid();
 }
 
 CC_NOINLINE void World_SetDimensions(int width, int height, int length) {

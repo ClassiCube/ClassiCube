@@ -1230,13 +1230,13 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 
 	switch (type) {
 	case 0:
-		update.Flags = LOCATIONUPDATE_FLAG_ROTX;
+		update.Flags = LOCATIONUPDATE_ROTX;
 		update.RotX  = LocationUpdate_Clamp((float)value); break;
 	case 1:
-		update.Flags = LOCATIONUPDATE_FLAG_YAW;
+		update.Flags = LOCATIONUPDATE_YAW;
 		update.Yaw   = LocationUpdate_Clamp((float)value); break;
 	case 2:
-		update.Flags = LOCATIONUPDATE_FLAG_ROTZ;
+		update.Flags = LOCATIONUPDATE_ROTZ;
 		update.RotZ  = LocationUpdate_Clamp((float)value); break;
 
 	case 3:

@@ -281,21 +281,21 @@ static void Game_OnResize(void* obj) {
 	Gui_Layout();
 }
 
-static void Game_OnNewMapCore(void* obj) {
+static void HandleOnNewMap(void* obj) {
 	struct IGameComponent* comp;
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->OnNewMap) comp->OnNewMap();
 	}
 }
 
-static void Game_OnNewMapLoadedCore(void* obj) {
+static void HandleOnNewMapLoaded(void* obj) {
 	struct IGameComponent* comp;
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->OnNewMapLoaded) comp->OnNewMapLoaded();
 	}
 }
 
-static void Game_TextureChangedCore(void* obj, struct Stream* src, const String* name) {
+static void HandleTextureChanged(void* obj, struct Stream* src, const String* name) {
 	Bitmap bmp;
 	cc_result res;
 
@@ -311,7 +311,7 @@ static void Game_TextureChangedCore(void* obj, struct Stream* src, const String*
 	}
 }
 
-static void Game_OnLowVRAMDetected(void* obj) {
+static void HandleLowVRAMDetected(void* obj) {
 	if (Game_UserViewDistance <= 16) Logger_Abort("Out of video memory!");
 	Game_UserViewDistance /= 2;
 	Game_UserViewDistance = max(16, Game_UserViewDistance);
@@ -329,7 +329,7 @@ static void Game_WarnFunc(const String* msg) {
 	}
 }
 
-static void Game_ExtractInitialTexturePack(void) {
+static void ExtractInitialTexturePack(void) {
 	String texPack;
 	Options_Get(OPT_DEFAULT_TEX_PACK, &game_defTexPack, "default.zip");
 	TexturePack_ExtractZip_File(&defaultZip);
@@ -426,10 +426,10 @@ static void Game_Load(void) {
 	Game_UpdateDimensions();
 	Game_LoadOptions();
 
-	Event_RegisterVoid(&WorldEvents.NewMap,         NULL, Game_OnNewMapCore);
-	Event_RegisterVoid(&WorldEvents.MapLoaded,      NULL, Game_OnNewMapLoadedCore);
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Game_TextureChangedCore);
-	Event_RegisterVoid(&GfxEvents.LowVRAMDetected,  NULL, Game_OnLowVRAMDetected);
+	Event_RegisterVoid(&WorldEvents.NewMap,         NULL, HandleOnNewMap);
+	Event_RegisterVoid(&WorldEvents.MapLoaded,      NULL, HandleOnNewMapLoaded);
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, HandleTextureChanged);
+	Event_RegisterVoid(&GfxEvents.LowVRAMDetected,  NULL, HandleLowVRAMDetected);
 
 	Event_RegisterVoid(&WindowEvents.Resized,       NULL, Game_OnResize);
 	Event_RegisterVoid(&WindowEvents.Closing,       NULL, Game_Free);
@@ -476,7 +476,7 @@ static void Game_Load(void) {
 		if (comp->Init) comp->Init();
 	}
 
-	Game_ExtractInitialTexturePack();
+	ExtractInitialTexturePack();
 	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
 
 	/* set vsync after because it causes a context loss depending on backend */
@@ -500,7 +500,7 @@ void Game_SetFpsLimit(int method) {
 	Gfx_SetFpsLimit(method == FPS_LIMIT_VSYNC, minFrameTime);
 }
 
-static void Game_UpdateViewMatrix(void) {
+static void UpdateViewMatrix(void) {
 	Camera.Active->GetView(&Gfx.View);
 	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);
@@ -553,7 +553,7 @@ static void Game_Render3D(double delta, float t) {
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }
 
-static void Game_DoScheduledTasks(double time) {
+static void PerformScheduledTasks(double time) {
 	struct ScheduledTask task;
 	int i;
 
@@ -627,14 +627,14 @@ static void Game_RenderFrame(double delta) {
 		InputHandler_SetFOV(Game_ZoomFov);
 	}
 
-	Game_DoScheduledTasks(delta);
+	PerformScheduledTasks(delta);
 	entTask = Game_Tasks[entTaskI];
 	t = (float)(entTask.Accumulator / entTask.Interval);
 	LocalPlayer_SetInterpPosition(t);
 
 	Gfx_Clear();
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
-	Game_UpdateViewMatrix();
+	UpdateViewMatrix();
 
 	if (!Gui_GetBlocksWorld() && World.Blocks) {
 		Game_Render3D(delta, t);
@@ -651,10 +651,10 @@ void Game_Free(void* obj) {
 	struct IGameComponent* comp;
 	Atlas_Free();
 
-	Event_UnregisterVoid(&WorldEvents.NewMap,         NULL, Game_OnNewMapCore);
-	Event_UnregisterVoid(&WorldEvents.MapLoaded,      NULL, Game_OnNewMapLoadedCore);
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Game_TextureChangedCore);
-	Event_UnregisterVoid(&GfxEvents.LowVRAMDetected,  NULL, Game_OnLowVRAMDetected);
+	Event_UnregisterVoid(&WorldEvents.NewMap,         NULL, HandleOnNewMap);
+	Event_UnregisterVoid(&WorldEvents.MapLoaded,      NULL, HandleOnNewMapLoaded);
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, HandleTextureChanged);
+	Event_UnregisterVoid(&GfxEvents.LowVRAMDetected,  NULL, HandleLowVRAMDetected);
 
 	Event_UnregisterVoid(&WindowEvents.Resized,       NULL, Game_OnResize);
 	Event_UnregisterVoid(&WindowEvents.Closing,       NULL, Game_Free);

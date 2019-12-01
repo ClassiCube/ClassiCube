@@ -35,21 +35,21 @@ float LocationUpdate_Clamp(float degrees) {
 static struct LocationUpdate loc_empty;
 void LocationUpdate_MakeOri(struct LocationUpdate* update, float yaw, float pitch) {
 	*update = loc_empty;
-	update->Flags = LOCATIONUPDATE_FLAG_PITCH | LOCATIONUPDATE_FLAG_YAW;
+	update->Flags = LOCATIONUPDATE_PITCH | LOCATIONUPDATE_YAW;
 	update->Pitch = LocationUpdate_Clamp(pitch);
 	update->Yaw   = LocationUpdate_Clamp(yaw);
 }
 
 void LocationUpdate_MakePos(struct LocationUpdate* update, Vec3 pos, cc_bool rel) {
 	*update = loc_empty;
-	update->Flags = LOCATIONUPDATE_FLAG_POS;
+	update->Flags = LOCATIONUPDATE_POS;
 	update->Pos   = pos;
 	update->RelativePos = rel;
 }
 
 void LocationUpdate_MakePosAndOri(struct LocationUpdate* update, Vec3 pos, float yaw, float pitch, cc_bool rel) {
 	*update = loc_empty;
-	update->Flags = LOCATIONUPDATE_FLAG_POS | LOCATIONUPDATE_FLAG_PITCH | LOCATIONUPDATE_FLAG_YAW;
+	update->Flags = LOCATIONUPDATE_POS | LOCATIONUPDATE_PITCH | LOCATIONUPDATE_YAW;
 	update->Pitch = LocationUpdate_Clamp(pitch);
 	update->Yaw   = LocationUpdate_Clamp(yaw);
 	update->Pos   = pos;
