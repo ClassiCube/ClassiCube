@@ -422,7 +422,7 @@ cc_result File_SetModifiedTime(const String* path, TimeMS time) {
 	FileHandle file;
 	FILETIME ft;
 	cc_uint64 raw;
-	cc_result res = File_Append(&file, path);
+	cc_result res = File_OpenOrCreate(&file, path);
 	if (res) return res;
 
 	raw = 10000 * (time - FILETIME_EPOCH);
@@ -450,10 +450,8 @@ cc_result File_Open(FileHandle* file, const String* path) {
 cc_result File_Create(FileHandle* file, const String* path) {
 	return File_Do(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
-cc_result File_Append(FileHandle* file, const String* path) {
-	cc_result res = File_Do(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
-	if (res) return res;
-	return File_Seek(*file, 0, FILE_SEEKFROM_END);
+cc_result File_OpenOrCreate(FileHandle* file, const String* path) {
+	return File_Do(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 
 cc_result File_Read(FileHandle file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -584,10 +582,8 @@ cc_result File_Open(FileHandle* file, const String* path) {
 cc_result File_Create(FileHandle* file, const String* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
-cc_result File_Append(FileHandle* file, const String* path) {
-	cc_result res = File_Do(file, path, O_RDWR | O_CREAT);
-	if (res) return res;
-	return File_Seek(*file, 0, FILE_SEEKFROM_END);
+cc_result File_OpenOrCreate(FileHandle* file, const String* path) {
+	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 
 cc_result File_Read(FileHandle file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {

@@ -52,6 +52,8 @@ cc_result Stream_DefaultReadU8(struct Stream* s, cc_uint8* data);
 CC_API cc_result Stream_OpenFile(struct Stream* s, const String* path);
 /* Wrapper for File_Create() then Stream_FromFile() */
 CC_API cc_result Stream_CreateFile(struct Stream* s, const String* path);
+/* Wrapper for File_OpenOrCreate, then File_Seek(END), then Stream_FromFile() */
+cc_result Stream_AppendFile(struct Stream* s, const String* path);
 /* Creates or overwrites a file, setting the contents to the given data. */
 cc_result Stream_WriteAllTo(const String* path, const cc_uint8* data, cc_uint32 length);
 /* Wraps a file, allowing reading from/writing to/seeking in the file. */

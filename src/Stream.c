@@ -125,6 +125,16 @@ cc_result Stream_CreateFile(struct Stream* s, const String* path) {
 	return res;
 }
 
+cc_result Stream_AppendFile(struct Stream* s, const String* path) {
+	FileHandle file;
+	cc_result res;
+	
+	if ((res = File_OpenOrCreate(&file, path)))        return res;
+	if ((res = File_Seek(file, 0, FILE_SEEKFROM_END))) return res;
+	Stream_FromFile(s, file);
+	return res;
+}
+
 cc_result Stream_WriteAllTo(const String* path, const cc_uint8* data, cc_uint32 length) {
 	struct Stream stream;
 	cc_result res, closeRes;

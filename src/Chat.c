@@ -105,10 +105,9 @@ static void Chat_DisableLogging(void) {
 	Chat_AddRaw("&cDisabling chat logging");
 }
 
-static void Chat_OpenLog(struct DateTime* now) {	
-	FileHandle file;
-	int i;
+static void Chat_OpenLog(struct DateTime* now) {
 	cc_result res;
+	int i;
 	if (!Utils_EnsureDirectory("logs")) { Chat_DisableLogging(); return; }
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
@@ -122,7 +121,7 @@ static void Chat_OpenLog(struct DateTime* now) {
 			String_Format1(&logPath, "%s.log", &logName);
 		}
 
-		res = File_Append(&file, &logPath);
+		res = Stream_AppendFile(&logStream, &logPath);
 		if (res && res != ReturnCode_FileShareViolation) {
 			Chat_DisableLogging();
 			Logger_Warn2(res, "appending to", &logPath);
@@ -130,7 +129,6 @@ static void Chat_OpenLog(struct DateTime* now) {
 		}
 
 		if (res == ReturnCode_FileShareViolation) continue;
-		Stream_FromFile(&logStream, file);
 		return;
 	}
 

@@ -147,8 +147,8 @@ CC_API cc_result File_MarkExecutable(const String* path);
 cc_result File_Create(FileHandle* file, const String* path);
 /* Attempts to open an existing file for reading. */
 cc_result File_Open(FileHandle* file, const String* path);
-/* Attempts to open (or create) a file, for appending data to the end of the file. */
-cc_result File_Append(FileHandle* file, const String* path);
+/* Attempts to open an existing or create a new file for reading and writing. */
+cc_result File_OpenOrCreate(FileHandle* file, const String* path);
 /* Attempts to read data from the file. */
 cc_result File_Read(FileHandle file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead);
 /* Attempts to write data to the file. */

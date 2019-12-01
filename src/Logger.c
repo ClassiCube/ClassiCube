@@ -805,12 +805,9 @@ static cc_bool logOpen;
 void Logger_Log(const String* msg) {
 #ifndef CC_BUILD_WEB
 	static const String path = String_FromConst("client.log");
-	cc_result res;
-
 	if (!logOpen) {
 		logOpen = true;
-		res     = File_Append(&logFile, &path);
-		if (!res) Stream_FromFile(&logStream, logFile);
+		Stream_AppendFile(&logStream, &path);
 	}
 
 	if (!logStream.Meta.File) return;
@@ -855,7 +852,7 @@ static void Logger_AbortCommon(cc_result result, const char* raw_msg, void* ctx)
 	if (ctx) Logger_DumpRegisters(ctx);
 	Logger_DumpBacktrace(&msg, ctx);
 	Logger_DumpMisc(ctx);
-	if (logStream.Meta.File) File_Close(logFile);
+	if (logStream.Meta.File) logStream.Close(&logStream);
 
 	msg.buffer[msg.length] = '\0';
 	Window_ShowDialog("We're sorry", msg.buffer);
