@@ -82,20 +82,14 @@ static void SelectionBox_UpdateDist(Vec3 p, float x2, float y2, float z2, float*
 	if (dist > *furthest) *furthest = dist;
 }
 
-static void SelectionBox_Intersect(struct SelectionBox* box, Vec3 origin) {
-	Vec3 min = box->Min, max = box->Max;
-	float closest = MATH_POS_INF, furthest = -MATH_POS_INF;
-	/* Bottom corners */
-	SelectionBox_UpdateDist(origin, min.X, min.Y, min.Z, &closest, &furthest);
-	SelectionBox_UpdateDist(origin, max.X, min.Y, min.Z, &closest, &furthest);
-	SelectionBox_UpdateDist(origin, max.X, min.Y, max.Z, &closest, &furthest);
-	SelectionBox_UpdateDist(origin, min.X, min.Y, max.Z, &closest, &furthest);
-	/* Top corners */
-	SelectionBox_UpdateDist(origin, min.X, max.Y, min.Z, &closest, &furthest);
-	SelectionBox_UpdateDist(origin, max.X, max.Y, min.Z, &closest, &furthest);
-	SelectionBox_UpdateDist(origin, max.X, max.Y, max.Z, &closest, &furthest);
-	SelectionBox_UpdateDist(origin, min.X, max.Y, max.Z, &closest, &furthest);
-	box->MinDist = closest; box->MaxDist = furthest;
+static void SelectionBox_Intersect(struct SelectionBox* box, Vec3 P) {
+	float dx1 = (P.X - box->Min.X) * (P.X - box->Min.X), dx2 = (P.X - box->Max.X) * (P.X - box->Max.X);
+	float dy1 = (P.Y - box->Min.Y) * (P.Y - box->Min.Y), dy2 = (P.Y - box->Max.Y) * (P.Y - box->Max.Y);
+	float dz1 = (P.Z - box->Min.Z) * (P.Z - box->Min.Z), dz2 = (P.Z - box->Max.Z) * (P.Z - box->Max.Z);
+
+	/* Distance to closest and furthest of the eight box corners */
+	box->MinDist = min(dx1, dx2) + min(dy1, dy2) + min(dz1, dz2);
+	box->MaxDist = max(dx1, dx2) + max(dy1, dy2) + max(dz1, dz2);
 }
 
 

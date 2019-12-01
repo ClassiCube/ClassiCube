@@ -1209,7 +1209,7 @@ static void GeneratingScreen_EndGeneration(void) {
 	struct LocationUpdate update;
 	float x, z;
 
-	Gui_Remove(LoadingScreen_UNSAFE_RawPointer);
+	Gui_Remove((struct Screen*)&LoadingScreen_Instance);
 	Gen_Done = false;
 
 	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
