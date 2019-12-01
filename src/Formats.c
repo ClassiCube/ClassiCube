@@ -865,18 +865,22 @@ static cc_result Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fie
 
 	case JFIELD_ARRAY: {
 		if ((res = stream->ReadU8(stream, &typeCode))) return res;
-		if (typeCode == TC_NULL) break;
-		if (typeCode != TC_ARRAY) return DAT_ERR_JARRAY_TYPE;
+		/* NULL/empty array */
+		if (typeCode == TC_NULL) {
+			field->Value.Array.Size = 0;
+			field->Value.Array.Ptr  = NULL;
+			break;
+		}
 
+		if (typeCode != TC_ARRAY) return DAT_ERR_JARRAY_TYPE;
 		if ((res = Dat_ReadClassDesc(stream, &arrayClassDesc))) return res;
 		if (arrayClassDesc.ClassName[1] != JFIELD_I8) return DAT_ERR_JARRAY_CONTENT;
 
 		if ((res = Stream_ReadU32_BE(stream, &count))) return res;
 		field->Value.Array.Size = count;
-
 		field->Value.Array.Ptr  = (cc_uint8*)Mem_TryAlloc(count, 1);
-		if (!field->Value.Array.Ptr) return ERR_OUT_OF_MEMORY;
 
+		if (!field->Value.Array.Ptr) return ERR_OUT_OF_MEMORY;
 		res = Stream_Read(stream, field->Value.Array.Ptr, count);
 		if (res) { Mem_Free(field->Value.Array.Ptr); return res; }
 	} break;
