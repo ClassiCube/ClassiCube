@@ -115,7 +115,7 @@ static void Entity_ParseScale(struct Entity* e, const String* scale) {
 	value = max(value, 0.001f);
 	/* local player doesn't allow giant model scales */
 	/* (can't climb stairs, extremely CPU intensive collisions) */
-	if (e->ModelRestrictedScale) { value = min(value, e->Model->MaxScale); }
+	if (e->ModelRestrictedScale) { value = min(value, e->Model->maxScale); }
 	Vec3_Set(e->ModelScale, value,value,value);
 }
 
@@ -290,7 +290,7 @@ static void Entity_DrawName(struct Entity* e) {
 	model = e->Model;
 	Vec3_TransformY(&pos, model->GetNameY(e), &e->Transform);
 
-	scale  = model->NameScale * e->ModelScale.Y;
+	scale  = model->nameScale * e->ModelScale.Y;
 	scale  = scale > 1.0f ? (1.0f/70.0f) : (scale/70.0f);
 	size.X = e->NameTex.Width * scale; size.Y = e->NameTex.Height * scale;
 
@@ -445,7 +445,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 	cc_result res;
 
 	/* Don't check skin if don't have to */
-	if (!e->Model->UsesSkin) return;
+	if (!e->Model->usesSkin) return;
 	if (e->SkinFetchState == SKIN_FETCH_COMPLETED) return;
 	skin = String_FromRawArray(e->SkinNameRaw);
 
@@ -479,7 +479,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 	if (bmp.Width > Gfx.MaxTexWidth || bmp.Height > Gfx.MaxTexHeight) {
 		Chat_Add1("&cSkin %s is too large", &skin);
 	} else if (e->SkinType != SKIN_INVALID) {
-		if (e->Model->UsesHumanSkin) Entity_ClearHat(&bmp, e->SkinType);
+		if (e->Model->usesHumanSkin) Entity_ClearHat(&bmp, e->SkinType);
 		e->TextureId = Gfx_CreateTexture(&bmp, true, false);
 		Entity_SetSkinAll(e, false);
 	}

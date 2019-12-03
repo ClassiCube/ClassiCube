@@ -107,7 +107,7 @@ void AnimatedComp_GetCurrent(struct Entity* e, float t) {
 	anim->BobbingVer   = Math_AbsF(Math_SinF(anim->WalkTime)) * anim->Swing * (2.5f/16.0f);
 	anim->BobbingModel = Math_AbsF(Math_CosF(anim->WalkTime)) * anim->Swing * (4.0f/16.0f);
 
-	if (e->Model->CalcHumanAnims && !Game_SimpleArmsAnim) {
+	if (e->Model->calcHumanAnims && !Game_SimpleArmsAnim) {
 		AnimatedComp_CalcHumanAnim(anim, idleXRot, idleZRot);
 	}
 }
@@ -618,7 +618,7 @@ void ShadowComponent_Draw(struct Entity* e) {
 	if (pos.Y < 0.0f) return;
 	y = min((int)pos.Y, World.MaxY);
 
-	radius = 7.0f * min(e->ModelScale.Y, 1.0f) * e->Model->ShadowScale;
+	radius = 7.0f * min(e->ModelScale.Y, 1.0f) * e->Model->shadowScale;
 	shadow_radius  = radius / 16.0f;
 	shadow_uvScale = 16.0f / (radius * 2.0f);
 
@@ -1139,12 +1139,12 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
 		PhysicsComp_MoveNormal(comp, vel, 0.02f * 1.7f, ropeDrag, ROPE_GRAVITY, verSpeed);
 	} else {
 		factor  = hacks->Floating || entity->OnGround ? 0.1f : 0.02f;
-		gravity = comp->UseLiquidGravity ? LIQUID_GRAVITY : entity->Model->Gravity;
+		gravity = comp->UseLiquidGravity ? LIQUID_GRAVITY : entity->Model->gravity;
 
 		if (hacks->Floating) {
-			PhysicsComp_MoveFlying(comp, vel, factor * horSpeed, entity->Model->Drag, gravity, verSpeed);
+			PhysicsComp_MoveFlying(comp, vel, factor * horSpeed, entity->Model->drag, gravity, verSpeed);
 		} else {
-			PhysicsComp_MoveNormal(comp, vel, factor * horSpeed, entity->Model->Drag, gravity, verSpeed);
+			PhysicsComp_MoveNormal(comp, vel, factor * horSpeed, entity->Model->drag, gravity, verSpeed);
 		}
 
 		if (PhysicsComp_OnIce(entity) && !hacks->Floating) {
@@ -1158,7 +1158,7 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
 				entity->Velocity.Z *= scale;
 			}
 		} else if (entity->OnGround || hacks->Flying) {
-			Vec3_Mul3By(&entity->Velocity, &entity->Model->GroundFriction); /* air drag or ground friction */
+			Vec3_Mul3By(&entity->Velocity, &entity->Model->groundFriction); /* air drag or ground friction */
 		}
 	}
 
@@ -1208,7 +1208,7 @@ void PhysicsComp_DoEntityPush(struct Entity* entity) {
 	for (id = 0; id < ENTITIES_MAX_COUNT; id++) {
 		other = Entities.List[id];
 		if (!other || other == entity) continue;
-		if (!other->Model->Pushes)     continue;
+		if (!other->Model->pushes)     continue;
 
 		yIntersects =
 			entity->Position.Y <= (other->Position.Y  + other->Size.Y) &&

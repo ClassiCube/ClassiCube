@@ -1244,7 +1244,7 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 	case 5:
 		scale = value / 1000.0f;
 		if (entity->ModelRestrictedScale) {
-			Math_Clamp(scale, 0.01f, entity->Model->MaxScale);
+			Math_Clamp(scale, 0.01f, entity->Model->maxScale);
 		}
 
 		if (type == 3) entity->ModelScale.X = scale;

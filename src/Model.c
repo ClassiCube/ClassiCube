@@ -33,19 +33,19 @@ static void Model_NullFunc(struct Entity* entity) { }
 static void Model_NoParts(void) { }
 
 void Model_Init(struct Model* model) {
-	model->Bobbing  = true;
-	model->UsesSkin = true;
-	model->CalcHumanAnims = false;
-	model->UsesHumanSkin  = false;
-	model->Pushes = true;
+	model->bobbing  = true;
+	model->usesSkin = true;
+	model->calcHumanAnims = false;
+	model->usesHumanSkin  = false;
+	model->pushes = true;
 
-	model->Gravity     = 0.08f;
-	Vec3_Set(model->Drag,           0.91f, 0.98f, 0.91f);
-	Vec3_Set(model->GroundFriction, 0.6f,   1.0f,  0.6f);
+	model->gravity     = 0.08f;
+	Vec3_Set(model->drag,           0.91f, 0.98f, 0.91f);
+	Vec3_Set(model->groundFriction, 0.6f,   1.0f,  0.6f);
 
-	model->MaxScale    = 2.0f;
-	model->ShadowScale = 1.0f;
-	model->NameScale   = 1.0f;
+	model->maxScale    = 2.0f;
+	model->shadowScale = 1.0f;
+	model->nameScale   = 1.0f;
 	model->armX = 6; model->armY = 12;
 
 	model->GetTransform     = Model_GetTransform;
@@ -95,7 +95,7 @@ float Model_RenderDistance(struct Entity* entity) {
 void Model_Render(struct Model* model, struct Entity* entity) {
 	struct Matrix m;
 	Vec3 pos = entity->Position;
-	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
+	if (model->bobbing) pos.Y += entity->Anim.BobbingModel;
 
 	Model_SetupState(model, entity);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
@@ -118,7 +118,7 @@ void Model_SetupState(struct Model* model, struct Entity* entity) {
 
 	_64x64  = entity->SkinType != SKIN_64x32;
 	/* only apply when using humanoid skins */
-	_64x64 &= model->UsesHumanSkin || entity->MobTextureId;
+	_64x64 &= model->usesHumanSkin || entity->MobTextureId;
 
 	Models.uScale = entity->uScale * 0.015625f;
 	Models.vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
@@ -153,13 +153,13 @@ void Model_ApplyTexture(struct Entity* entity) {
 	GfxResourceID tex;
 	cc_bool _64x64;
 
-	tex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
+	tex = model->usesHumanSkin ? entity->TextureId : entity->MobTextureId;
 	if (tex) {
 		Models.skinType = entity->SkinType;
 	} else {
 		data = model->defaultTex;
-		tex  = data->TexID;
-		Models.skinType = data->SkinType;
+		tex  = data->texID;
+		Models.skinType = data->skinType;
 	}
 
 	Gfx_BindTexture(tex);
@@ -171,11 +171,11 @@ void Model_ApplyTexture(struct Entity* entity) {
 
 void Model_DrawPart(struct ModelPart* part) {
 	struct Model* model     = Models.Active;
-	struct ModelVertex* src = &model->vertices[part->Offset];
+	struct ModelVertex* src = &model->vertices[part->offset];
 	VertexP3fT2fC4b* dst    = &Models.Vertices[model->index];
 
 	struct ModelVertex v;
-	int i, count = part->Count;
+	int i, count = part->count;
 
 	for (i = 0; i < count; i++) {
 		v = *src;
@@ -195,16 +195,16 @@ void Model_DrawPart(struct ModelPart* part) {
 
 void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, cc_bool head) {
 	struct Model* model     = Models.Active;
-	struct ModelVertex* src = &model->vertices[part->Offset];
+	struct ModelVertex* src = &model->vertices[part->offset];
 	VertexP3fT2fC4b* dst    = &Models.Vertices[model->index];
 
 	float cosX = (float)Math_Cos(-angleX), sinX = (float)Math_Sin(-angleX);
 	float cosY = (float)Math_Cos(-angleY), sinY = (float)Math_Sin(-angleY);
 	float cosZ = (float)Math_Cos(-angleZ), sinZ = (float)Math_Sin(-angleZ);
-	float t, x = part->RotX, y = part->RotY, z = part->RotZ;
+	float t, x = part->rotX, y = part->rotY, z = part->rotZ;
 	
 	struct ModelVertex v;
-	int i, count = part->Count;
+	int i, count = part->count;
 
 	for (i = 0; i < count; i++) {
 		v = *src;
@@ -242,7 +242,7 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 void Model_RenderArm(struct Model* model, struct Entity* entity) {
 	struct Matrix m, translate;
 	Vec3 pos = entity->Position;
-	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
+	if (model->bobbing) pos.Y += entity->Anim.BobbingModel;
 
 	Model_SetupState(model, entity);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
@@ -271,8 +271,8 @@ void Model_RenderArm(struct Model* model, struct Entity* entity) {
 void Model_DrawArmPart(struct ModelPart* part) {
 	struct Model* model  = Models.Active;
 	struct ModelPart arm = *part;
-	arm.RotX = model->armX / 16.0f; 
-	arm.RotY = (model->armY + model->armY / 2) / 16.0f;
+	arm.rotX = model->armX / 16.0f; 
+	arm.rotY = (model->armY + model->armY / 2) / 16.0f;
 
 	if (Models.ClassicArms) {
 		Model_DrawRotate(0, -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, &arm, false);
@@ -286,10 +286,10 @@ void Model_DrawArmPart(struct ModelPart* part) {
 *----------------------------------------------------------BoxDesc--------------------------------------------------------*
 *#########################################################################################################################*/
 void BoxDesc_BuildBox(struct ModelPart* part, const struct BoxDesc* desc) {
-	int sidesW = desc->SizeZ, bodyW = desc->SizeX, bodyH = desc->SizeY;
-	float x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
-	float x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
-	int x = desc->TexX, y = desc->TexY;
+	int sidesW = desc->sizeZ, bodyW = desc->sizeX, bodyH = desc->sizeY;
+	float x1 = desc->x1, y1 = desc->y1, z1 = desc->z1;
+	float x2 = desc->x2, y2 = desc->y2, z2 = desc->z2;
+	int x = desc->texX, y = desc->texY;
 	struct Model* m = Models.Active;
 
 	BoxDesc_YQuad(m, x + sidesW,                  y,          bodyW, sidesW, x1, x2, z2, z1, y2, true);  /* top */
@@ -300,14 +300,14 @@ void BoxDesc_BuildBox(struct ModelPart* part, const struct BoxDesc* desc) {
 	BoxDesc_XQuad(m, x + sidesW + bodyW,          y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x1, true);  /* right */
 
 	ModelPart_Init(part, m->index - MODEL_BOX_VERTICES, MODEL_BOX_VERTICES,
-		desc->RotX, desc->RotY, desc->RotZ);
+		desc->rotX, desc->rotY, desc->rotZ);
 }
 
 void BoxDesc_BuildRotatedBox(struct ModelPart* part, const struct BoxDesc* desc) {
-	int sidesW = desc->SizeY, bodyW = desc->SizeX, bodyH = desc->SizeZ;
-	float x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
-	float x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
-	int x = desc->TexX, y = desc->TexY, i;
+	int sidesW = desc->sizeY, bodyW = desc->sizeX, bodyH = desc->sizeZ;
+	float x1 = desc->x1, y1 = desc->y1, z1 = desc->z1;
+	float x2 = desc->x2, y2 = desc->y2, z2 = desc->z2;
+	int x = desc->texX, y = desc->texY, i;
 	struct Model* m = Models.Active;
 
 	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW,  bodyH, x1, x2, z1, z2, y2, false); /* top */
@@ -325,7 +325,7 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, const struct BoxDesc* desc)
 	}
 
 	ModelPart_Init(part, m->index - MODEL_BOX_VERTICES, MODEL_BOX_VERTICES,
-		desc->RotX, desc->RotY, desc->RotZ);
+		desc->rotX, desc->rotY, desc->rotZ);
 }
 
 
@@ -393,7 +393,7 @@ struct Model* Model_Get(const String* name) {
 	struct Model* model;
 
 	for (model = models_head; model; model = model->next) {
-		if (!String_CaselessEqualsConst(name, model->Name)) continue;
+		if (!String_CaselessEqualsConst(name, model->name)) continue;
 
 		if (!model->initalised) Model_Make(model);
 		return model;
@@ -405,7 +405,7 @@ struct ModelTex* Model_GetTexture(const String* name) {
 	struct ModelTex* tex;
 
 	for (tex = textures_head; tex; tex = tex->next) {
-		if (String_CaselessEqualsConst(name, tex->Name)) return tex;
+		if (String_CaselessEqualsConst(name, tex->name)) return tex;
 	}
 	return NULL;
 }
@@ -422,9 +422,9 @@ static void Models_TextureChanged(void* obj, struct Stream* stream, const String
 	struct ModelTex* tex;
 
 	for (tex = textures_head; tex; tex = tex->next) {
-		if (!String_CaselessEqualsConst(name, tex->Name)) continue;
+		if (!String_CaselessEqualsConst(name, tex->name)) continue;
 
-		Game_UpdateTexture(&tex->TexID, stream, name, &tex->SkinType);
+		Game_UpdateTexture(&tex->texID, stream, name, &tex->skinType);
 		return;
 	}
 }
@@ -434,11 +434,11 @@ static void Models_TextureChanged(void* obj, struct Stream* stream, const String
 *---------------------------------------------------------HumanModel------------------------------------------------------*
 *#########################################################################################################################*/
 struct ModelLimbs {
-	struct ModelPart LeftLeg, RightLeg, LeftArm, RightArm, LeftLegLayer, RightLegLayer, LeftArmLayer, RightArmLayer;
+	struct ModelPart leftLeg, rightLeg, leftArm, rightArm, leftLegLayer, rightLegLayer, leftArmLayer, rightArmLayer;
 };
 struct ModelSet {
-	struct ModelPart Head, Torso, Hat, TorsoLayer;
-	struct ModelLimbs Limbs[3];
+	struct ModelPart head, torso, hat, torsoLayer;
+	struct ModelLimbs limbs[3];
 };
 
 static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* model) {
@@ -449,31 +449,31 @@ static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* mode
 	Gfx_SetAlphaTest(false);
 
 	type = Models.skinType;
-	set  = &model->Limbs[type & 0x3];
+	set  = &model->limbs[type & 0x3];
 
-	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &model->Head, true);
-	Model_DrawPart(&model->Torso);
-	Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->LeftLeg,  false);
-	Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->RightLeg, false);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &model->head, true);
+	Model_DrawPart(&model->torso);
+	Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->leftLeg,  false);
+	Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->rightLeg, false);
 
 	Models.Rotation = ROTATE_ORDER_XZY;
-	Model_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &set->LeftArm,  false);
-	Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->RightArm, false);
+	Model_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &set->leftArm,  false);
+	Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->rightArm, false);
 	Models.Rotation = ROTATE_ORDER_ZYX;
 	Model_UpdateVB();
 
 	Gfx_SetAlphaTest(true);
 	if (type != SKIN_64x32) {
-		Model_DrawPart(&model->TorsoLayer);
-		Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->LeftLegLayer,  false);
-		Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->RightLegLayer, false);
+		Model_DrawPart(&model->torsoLayer);
+		Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->leftLegLayer,  false);
+		Model_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, &set->rightLegLayer, false);
 
 		Models.Rotation = ROTATE_ORDER_XZY;
-		Model_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &set->LeftArmLayer,  false);
-		Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->RightArmLayer, false);
+		Model_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &set->leftArmLayer,  false);
+		Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->rightArmLayer, false);
 		Models.Rotation = ROTATE_ORDER_ZYX;
 	}
-	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &model->Hat, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &model->hat, true);
 	Model_UpdateVB();
 }
 
@@ -482,10 +482,10 @@ static void HumanModel_DrawArmSet(struct Entity* entity, struct ModelSet* model)
 	int type;
 
 	type = Models.skinType;
-	set  = &model->Limbs[type & 0x3];
+	set  = &model->limbs[type & 0x3];
 
-	Model_DrawArmPart(&set->RightArm);
-	if (type != SKIN_64x32) Model_DrawArmPart(&set->RightArmLayer);
+	Model_DrawArmPart(&set->rightArm);
+	if (type != SKIN_64x32) Model_DrawArmPart(&set->rightArmLayer);
 	Model_UpdateVB();
 }
 
@@ -571,47 +571,47 @@ static void HumanModel_MakeParts(void) {
 		BoxDesc_Rot(0,12,0),
 	};
 
-	struct ModelLimbs* set     = &human_set.Limbs[0];
-	struct ModelLimbs* set64   = &human_set.Limbs[1];
-	struct ModelLimbs* setSlim = &human_set.Limbs[2];
+	struct ModelLimbs* set     = &human_set.limbs[0];
+	struct ModelLimbs* set64   = &human_set.limbs[1];
+	struct ModelLimbs* setSlim = &human_set.limbs[2];
 
-	BoxDesc_BuildBox(&human_set.Head,  &head);
-	BoxDesc_BuildBox(&human_set.Torso, &torso);
-	BoxDesc_BuildBox(&human_set.Hat,   &hat);
-	BoxDesc_BuildBox(&human_set.TorsoLayer, &torsoL);
+	BoxDesc_BuildBox(&human_set.head,  &head);
+	BoxDesc_BuildBox(&human_set.torso, &torso);
+	BoxDesc_BuildBox(&human_set.hat,   &hat);
+	BoxDesc_BuildBox(&human_set.torsoLayer, &torsoL);
 
-	BoxDesc_BuildBox(&set->LeftLeg,  &lLeg);
-	BoxDesc_BuildBox(&set->RightLeg, &rLeg);
-	BoxDesc_BuildBox(&set->LeftArm,  &lArm);
-	BoxDesc_BuildBox(&set->RightArm, &rArm);
+	BoxDesc_BuildBox(&set->leftLeg,  &lLeg);
+	BoxDesc_BuildBox(&set->rightLeg, &rLeg);
+	BoxDesc_BuildBox(&set->leftArm,  &lArm);
+	BoxDesc_BuildBox(&set->rightArm, &rArm);
 
 	/* 64x64 arms */
-	BoxDesc_BuildBox(&set64->LeftLeg, &lLeg64);
-	set64->RightLeg = set->RightLeg;
-	BoxDesc_BuildBox(&set64->LeftArm, &lArm64);
-	set64->RightArm = set->RightArm;
+	BoxDesc_BuildBox(&set64->leftLeg, &lLeg64);
+	set64->rightLeg = set->rightLeg;
+	BoxDesc_BuildBox(&set64->leftArm, &lArm64);
+	set64->rightArm = set->rightArm;
 
-	lArm64.SizeX -= 1; lArm64.X1 += 1.0f/16.0f;
-	rArm.SizeX   -= 1; rArm.X2   -= 1.0f/16.0f;
+	lArm64.sizeX -= 1; lArm64.x1 += 1.0f/16.0f;
+	rArm.sizeX   -= 1; rArm.x2   -= 1.0f/16.0f;
 
-	setSlim->LeftLeg  = set64->LeftLeg;
-	setSlim->RightLeg = set64->RightLeg;
-	BoxDesc_BuildBox(&setSlim->LeftArm,  &lArm64);
-	BoxDesc_BuildBox(&setSlim->RightArm, &rArm);
+	setSlim->leftLeg  = set64->leftLeg;
+	setSlim->rightLeg = set64->rightLeg;
+	BoxDesc_BuildBox(&setSlim->leftArm,  &lArm64);
+	BoxDesc_BuildBox(&setSlim->rightArm, &rArm);
 
 	/* 64x64 legs */
-	BoxDesc_BuildBox(&set64->LeftLegLayer,  &lLegL);
-	BoxDesc_BuildBox(&set64->RightLegLayer, &rLegL);
-	BoxDesc_BuildBox(&set64->LeftArmLayer,  &lArmL);
-	BoxDesc_BuildBox(&set64->RightArmLayer, &rArmL);
+	BoxDesc_BuildBox(&set64->leftLegLayer,  &lLegL);
+	BoxDesc_BuildBox(&set64->rightLegLayer, &rLegL);
+	BoxDesc_BuildBox(&set64->leftArmLayer,  &lArmL);
+	BoxDesc_BuildBox(&set64->rightArmLayer, &rArmL);
 
-	lArmL.SizeX -= 1; lArmL.X1 += 1.0f/16.0f;
-	rArmL.SizeX -= 1; rArmL.X2 -= 1.0f/16.0f;
+	lArmL.sizeX -= 1; lArmL.x1 += 1.0f/16.0f;
+	rArmL.sizeX -= 1; rArmL.x2 -= 1.0f/16.0f;
 
-	setSlim->LeftLegLayer  = set64->LeftLegLayer;
-	setSlim->RightLegLayer = set64->RightLegLayer;
-	BoxDesc_BuildBox(&setSlim->LeftArmLayer,  &lArmL);
-	BoxDesc_BuildBox(&setSlim->RightArmLayer, &rArmL);
+	setSlim->leftLegLayer  = set64->leftLegLayer;
+	setSlim->rightLegLayer = set64->rightLegLayer;
+	BoxDesc_BuildBox(&setSlim->leftArmLayer,  &lArmL);
+	BoxDesc_BuildBox(&setSlim->rightArmLayer, &rArmL);
 }
 
 static void HumanModel_Draw(struct Entity* entity) {
@@ -639,8 +639,8 @@ static struct Model  human_model = {
 static struct Model* HumanoidModel_GetInstance(void) {
 	Model_Init(&human_model);
 	human_model.DrawArm  = HumanModel_DrawArm;
-	human_model.CalcHumanAnims = true;
-	human_model.UsesHumanSkin  = true;
+	human_model.calcHumanAnims = true;
+	human_model.usesHumanSkin  = true;
 	return &human_model;
 }
 
@@ -655,9 +655,9 @@ CC_NOINLINE static void ChibiModel_ScalePart(struct ModelPart* dst, struct Model
 	int i;
 
 	*dst = *src;
-	dst->RotX *= 0.5f; dst->RotY *= 0.5f; dst->RotZ *= 0.5f;
+	dst->rotX *= 0.5f; dst->rotY *= 0.5f; dst->rotZ *= 0.5f;
 	
-	for (i = src->Offset; i < src->Offset + src->Count; i++) {
+	for (i = src->offset; i < src->offset + src->count; i++) {
 		chibi->vertices[i] = human_model.vertices[i];
 
 		chibi->vertices[i].X *= 0.5f;
@@ -667,15 +667,15 @@ CC_NOINLINE static void ChibiModel_ScalePart(struct ModelPart* dst, struct Model
 }
 
 CC_NOINLINE static void ChibiModel_ScaleLimbs(struct ModelLimbs* dst, struct ModelLimbs* src) {
-	ChibiModel_ScalePart(&dst->LeftLeg,  &src->LeftLeg);
-	ChibiModel_ScalePart(&dst->RightLeg, &src->RightLeg);
-	ChibiModel_ScalePart(&dst->LeftArm,  &src->LeftArm);
-	ChibiModel_ScalePart(&dst->RightArm, &src->RightArm);
+	ChibiModel_ScalePart(&dst->leftLeg,  &src->leftLeg);
+	ChibiModel_ScalePart(&dst->rightLeg, &src->rightLeg);
+	ChibiModel_ScalePart(&dst->leftArm,  &src->leftArm);
+	ChibiModel_ScalePart(&dst->rightArm, &src->rightArm);
 
-	ChibiModel_ScalePart(&dst->LeftLegLayer,  &src->LeftLegLayer);
-	ChibiModel_ScalePart(&dst->RightLegLayer, &src->RightLegLayer);
-	ChibiModel_ScalePart(&dst->LeftArmLayer,  &src->LeftArmLayer);
-	ChibiModel_ScalePart(&dst->RightArmLayer, &src->RightArmLayer);
+	ChibiModel_ScalePart(&dst->leftLegLayer,  &src->leftLegLayer);
+	ChibiModel_ScalePart(&dst->rightLegLayer, &src->rightLegLayer);
+	ChibiModel_ScalePart(&dst->leftArmLayer,  &src->leftArmLayer);
+	ChibiModel_ScalePart(&dst->rightArmLayer, &src->rightArmLayer);
 }
 
 static void ChibiModel_MakeParts(void) {
@@ -692,17 +692,17 @@ static void ChibiModel_MakeParts(void) {
 	}; 
 
 	/* Chibi is mostly just half scale humanoid */
-	ChibiModel_ScalePart(&chibi_set.Torso,      &human_set.Torso);
-	ChibiModel_ScalePart(&chibi_set.TorsoLayer, &human_set.TorsoLayer);
-	ChibiModel_ScaleLimbs(&chibi_set.Limbs[0], &human_set.Limbs[0]);
-	ChibiModel_ScaleLimbs(&chibi_set.Limbs[1], &human_set.Limbs[1]);
-	ChibiModel_ScaleLimbs(&chibi_set.Limbs[2], &human_set.Limbs[2]);
+	ChibiModel_ScalePart(&chibi_set.torso,      &human_set.torso);
+	ChibiModel_ScalePart(&chibi_set.torsoLayer, &human_set.torsoLayer);
+	ChibiModel_ScaleLimbs(&chibi_set.limbs[0], &human_set.limbs[0]);
+	ChibiModel_ScaleLimbs(&chibi_set.limbs[1], &human_set.limbs[1]);
+	ChibiModel_ScaleLimbs(&chibi_set.limbs[2], &human_set.limbs[2]);
 
 	/* But head is at normal size */
-	Models.Active->index = human_set.Head.Offset;
-	BoxDesc_BuildBox(&chibi_set.Head, &head);
-	Models.Active->index = human_set.Hat.Offset;
-	BoxDesc_BuildBox(&chibi_set.Hat,  &hat);
+	Models.Active->index = human_set.head.offset;
+	BoxDesc_BuildBox(&chibi_set.head, &head);
+	Models.Active->index = human_set.hat.offset;
+	BoxDesc_BuildBox(&chibi_set.hat,  &hat);
 }
 
 static void ChibiModel_Draw(struct Entity* entity) {
@@ -729,10 +729,10 @@ static struct Model* ChibiModel_GetInstance(void) {
 	Model_Init(&chibi_model);
 	chibi_model.DrawArm  = ChibiModel_DrawArm;
 	chibi_model.armX = 3; chibi_model.armY = 6;
-	chibi_model.CalcHumanAnims = true;
-	chibi_model.UsesHumanSkin  = true;
-	chibi_model.MaxScale    = 3.0f;
-	chibi_model.ShadowScale = 0.5f;
+	chibi_model.calcHumanAnims = true;
+	chibi_model.usesHumanSkin  = true;
+	chibi_model.maxScale    = 3.0f;
+	chibi_model.shadowScale = 0.5f;
 	return &chibi_model;
 }
 
@@ -766,9 +766,9 @@ static struct Model sitting_model = { "sit", human_vertices, &human_tex,
 static struct Model* SittingModel_GetInstance(void) {
 	Model_Init(&sitting_model);
 	sitting_model.DrawArm  = HumanModel_DrawArm;
-	sitting_model.CalcHumanAnims = true;
-	sitting_model.UsesHumanSkin  = true;
-	sitting_model.ShadowScale  = 0.5f;
+	sitting_model.calcHumanAnims = true;
+	sitting_model.usesHumanSkin  = true;
+	sitting_model.shadowScale  = 0.5f;
 	sitting_model.GetTransform = SittingModel_GetTransform;
 	return &sitting_model;
 }
@@ -788,7 +788,7 @@ static void CorpseModel_Draw(struct Entity* entity) {
 static struct Model corpse_model;
 static struct Model* CorpseModel_GetInstance(void) {
 	corpse_model      = human_model;
-	corpse_model.Name = "corpse";
+	corpse_model.name = "corpse";
 	corpse_model.MakeParts = Model_NoParts;
 	corpse_model.Draw = CorpseModel_Draw;
 	return &corpse_model;
@@ -807,9 +807,9 @@ static void HeadModel_Draw(struct Entity* entity) {
 	struct ModelPart part;
 	Model_ApplyTexture(entity);
 
-	part = human_set.Head; part.RotY += 4.0f/16.0f;
+	part = human_set.head; part.rotY += 4.0f/16.0f;
 	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &part, true);
-	part = human_set.Hat;  part.RotY += 4.0f/16.0f;
+	part = human_set.hat;  part.rotY += 4.0f/16.0f;
 	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &part, true);
 
 	Model_UpdateVB();
@@ -827,8 +827,8 @@ static struct Model head_model = { "head", human_vertices, &human_tex,
 
 static struct Model* HeadModel_GetInstance(void) {
 	Model_Init(&head_model);
-	head_model.UsesHumanSkin = true;
-	head_model.Pushes        = false;
+	head_model.usesHumanSkin = true;
+	head_model.pushes        = false;
 	head_model.GetTransform  = HeadModel_GetTransform;
 	return &head_model;
 }
@@ -1202,7 +1202,7 @@ static void FurlessModel_Draw(struct Entity* entity) {
 
 static void SheepModel_Draw(struct Entity* entity) {
 	FurlessModel_Draw(entity);
-	Gfx_BindTexture(fur_tex.TexID);
+	Gfx_BindTexture(fur_tex.texID);
 	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &fur_head, true);
 
 	Model_DrawPart(&fur_torso);
@@ -1418,20 +1418,20 @@ static struct Model* SpiderModel_GetInstance(void) {
 
 static void ZombieModel_Draw(struct Entity* entity) {
 	Model_ApplyTexture(entity);
-	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &human_set.Head, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &human_set.head, true);
 
-	Model_DrawPart(&human_set.Torso);
-	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0,                      &human_set.Limbs[0].LeftLeg,  false);
-	Model_DrawRotate(entity->Anim.RightLegX, 0, 0,                      &human_set.Limbs[0].RightLeg, false);
-	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.LeftArmZ,  &human_set.Limbs[0].LeftArm,  false);
-	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.RightArmZ, &human_set.Limbs[0].RightArm, false);
+	Model_DrawPart(&human_set.torso);
+	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0,                      &human_set.limbs[0].leftLeg,  false);
+	Model_DrawRotate(entity->Anim.RightLegX, 0, 0,                      &human_set.limbs[0].rightLeg, false);
+	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.LeftArmZ,  &human_set.limbs[0].leftArm,  false);
+	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.RightArmZ, &human_set.limbs[0].rightArm, false);
 
-	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &human_set.Hat, true);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &human_set.hat, true);
 	Model_UpdateVB();
 }
 
 static void ZombieModel_DrawArm(struct Entity* entity) {
-	Model_DrawArmPart(&human_set.Limbs[0].RightArm);
+	Model_DrawArmPart(&human_set.limbs[0].rightArm);
 	Model_UpdateVB();
 }
 
@@ -1643,9 +1643,9 @@ static struct Model block_model = { "block", NULL, &human_tex,
 
 static struct Model* BlockModel_GetInstance(void) {
 	Model_Init(&block_model);
-	block_model.Bobbing  = false;
-	block_model.UsesSkin = false;
-	block_model.Pushes   = false;
+	block_model.bobbing  = false;
+	block_model.usesSkin = false;
+	block_model.pushes   = false;
 	return &block_model;
 }
 
@@ -1704,7 +1704,7 @@ static void Models_Free(void) {
 	struct ModelTex* tex;
 
 	for (tex = textures_head; tex; tex = tex->next) {
-		Gfx_DeleteTexture(&tex->TexID);
+		Gfx_DeleteTexture(&tex->texID);
 	}
 	Models_ContextLost(NULL);
 

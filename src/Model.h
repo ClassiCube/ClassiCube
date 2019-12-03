@@ -26,22 +26,22 @@ static CC_INLINE void ModelVertex_Init(struct ModelVertex* vertex, float x, floa
 
 /* Describes the starting index of this part within a model's array of vertices,
 and the number of vertices following the starting index that this part uses. */
-struct ModelPart { cc_uint16 Offset, Count; float RotX, RotY, RotZ; };
+struct ModelPart { cc_uint16 offset, count; float rotX, rotY, rotZ; };
 static CC_INLINE void ModelPart_Init(struct ModelPart* part, int offset, int count, float rotX, float rotY, float rotZ) {
-	part->Offset = offset; part->Count = count;
-	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
+	part->offset = offset; part->count = count;
+	part->rotX = rotX; part->rotY = rotY; part->rotZ = rotZ;
 }
 
 struct ModelTex;
 /* Contains information about a texture used for models. */
-struct ModelTex { const char* Name; cc_uint8 SkinType; GfxResourceID TexID; struct ModelTex* next; };
+struct ModelTex { const char* name; cc_uint8 skinType; GfxResourceID texID; struct ModelTex* next; };
 
 struct Model;
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
 the bounding boxes that contain the entire set of quads and/or boxes. */
 struct Model {
 	/* Name of this model */
-	const char* Name;
+	const char* name;
 	/* Pointer to the raw vertices of the model */
 	struct ModelVertex* vertices;	
 	/* Pointer to default texture for this model */
@@ -69,17 +69,17 @@ struct Model {
 	cc_bool initalised;
 	/* Whether the model should be slightly bobbed up and down when rendering. */
 	/* e.g. for HumanoidModel, when legs are at the peak of their swing, whole model is moved slightly down */
-	cc_bool Bobbing;
-	cc_bool UsesSkin, CalcHumanAnims, UsesHumanSkin, Pushes;
+	cc_bool bobbing;
+	cc_bool usesSkin, calcHumanAnims, usesHumanSkin, pushes;
 
-	float Gravity; Vec3 Drag, GroundFriction;
+	float gravity; Vec3 drag, groundFriction;
 
 	/* Returns the transformation matrix applied to the model when rendering. */
 	/* NOTE: Most models just use Entity_GetTransform (except SittingModel) */
 	void (*GetTransform)(struct Entity* entity, Vec3 pos, struct Matrix* m);
 	void (*DrawArm)(struct Entity* entity);
 
-	float MaxScale, ShadowScale, NameScale;
+	float maxScale, shadowScale, nameScale;
 	struct Model* next;
 };
 #if 0
@@ -153,10 +153,10 @@ CC_API void Model_RegisterTexture(struct ModelTex* tex);
 
 /* Describes data for a box being built. */
 struct BoxDesc {
-	cc_uint16 TexX, TexY;         /* Texture origin */
-	cc_uint8 SizeX, SizeY, SizeZ; /* Texture dimensions */
-	float X1,Y1,Z1, X2,Y2,Z2;    /* Box corners coordinates */
-	float RotX,RotY,RotZ;        /* Rotation origin point */
+	cc_uint16 texX, texY;         /* Texture origin */
+	cc_uint8 sizeX, sizeY, sizeZ; /* Texture dimensions */
+	float x1,y1,z1, x2,y2,z2;    /* Box corners coordinates */
+	float rotX,rotY,rotZ;        /* Rotation origin point */
 };
 
 #define BoxDesc_Dim(p1, p2) p1 < p2 ? p2 - p1 : p1 - p2
