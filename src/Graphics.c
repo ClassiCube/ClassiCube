@@ -66,6 +66,7 @@ static void Gfx_LimitFPS(void) {
 }
 
 void Gfx_LoseContext(const char* reason) {
+	if (Gfx.LostContext) return;
 	Gfx.LostContext = true;
 	Platform_Log1("Lost graphics context: %c", reason);
 
@@ -932,13 +933,7 @@ void Gfx_GetApiInfo(String* lines) {
 	String_Format1(&lines[5], "Depth buffer bits: %i", &depthBits);
 }
 
-void Gfx_OnWindowResize(void) {
-	if (Gfx.LostContext) return;
-	Gfx_LoseContext(" (resizing window)");
-	/* NOTE: Windows enters a size/move modal loop. (WM_ENTERSIZEMOVE) */
-	/* This blocks the normal game loop from running, which means */
-	/* Gfx_OnWindowResize can end up getting called multiple times. */
-}
+void Gfx_OnWindowResize(void) { Gfx_LoseContext(" (resizing window)"); }
 #endif
 
 
