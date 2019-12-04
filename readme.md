@@ -32,16 +32,6 @@ Run ClassiCube.exe. You can connect to LAN/locally hosted servers, ~~minecraft.n
 ###### *Windows specific*
 *If you are stuck using the built-in OpenGL 1.1 software renderer, you can use the MESA software renderer from either [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) or [here](https://wiki.qt.io/Cross_compiling_Mesa_for_Windows) for slightly better performance. Typically though, this occurs because you have not installed GPU drivers.*
 
-#### Tips
-* Press escape (after joining a world) or pause to switch to the pause menu.
-* Pause menu -> Options -> Controls lists all of the key combinations used by the client. 
-* Note that toggling 'vsync' to on will minimise CPU usage, while off will maximimise chunk loading speed.
-* Press F to cycle view distance. A smaller number of visible chunks can improve performance.
-
-* If the server has disabled hacks, key combinations such as fly and speed will not do anything.
-* To see the list of built in commands, type `/client`.
-* To see help for a given built in command, type `/client help <command name>`.
-
 ### Compiling
 
 #### Windows
@@ -120,3 +110,13 @@ You'll have to write the necessary code. You should read portability.md in misc 
 Functions and variables in .h files are mostly documented.
 
 Further information (e.g. portablity, style) for the game's source code can be found in the misc folder.
+
+#### Tips
+* Press escape (after joining a world) or pause to switch to the pause menu.
+* Pause menu -> Options -> Controls lists all of the key combinations used by the client. 
+* Note that toggling 'vsync' to on will minimise CPU usage, while off will maximimise chunk loading speed.
+* Press F to cycle view distance. A smaller number of visible chunks can improve performance.
+
+* If the server has disabled hacks, key combinations such as fly and speed will not do anything.
+* To see the list of built in commands, type `/client`.
+* To see help for a given built in command, type `/client help <command name>`.

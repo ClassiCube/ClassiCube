@@ -222,6 +222,7 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #ifdef CC_BUILD_D3D9
 typedef void* GfxResourceID;
 #else
+/* Ensure size is same as D3D9, even though only 32 bits are used */
 typedef cc_uintptr GfxResourceID;
 #endif
 
