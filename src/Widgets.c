@@ -44,10 +44,25 @@ static void TextWidget_Reposition(void* widget) {
 	w->tex.X = w->x; w->tex.Y = w->y;
 }
 
+static void TextWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
+	struct TextWidget* w = (struct TextWidget*)widget;
+	Gfx_Make2DQuad(&w->tex, w->col, vertices);
+}
+
+static int TextWidget_Render2(void* widget, int offset) {
+	struct TextWidget* w = (struct TextWidget*)widget;
+	if (w->tex.ID) {
+		Gfx_BindTexture(w->tex.ID);
+		Gfx_DrawVb_IndexedTris_Range(4, offset);
+	}
+	return offset + 4;
+}
+
 static const struct WidgetVTABLE TextWidget_VTABLE = {
 	TextWidget_Render, TextWidget_Free, TextWidget_Reposition,
 	Widget_Key,        Widget_Key,      Widget_MouseScroll,
-	Widget_Pointer,    Widget_Pointer,  Widget_PointerMove
+	Widget_Pointer,    Widget_Pointer,  Widget_PointerMove,
+	TextWidget_BuildMesh, TextWidget_Render2
 };
 void TextWidget_Make(struct TextWidget* w, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	Widget_Reset(w);
@@ -141,10 +156,61 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	Texture_RenderShaded(&w->tex, col);
 }
 
+static void ButtonWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
+	PackedCol normCol     = PackedCol_Make(224, 224, 224, 255);
+	PackedCol activeCol   = PackedCol_Make(255, 255, 160, 255);
+	PackedCol disabledCol = PackedCol_Make(160, 160, 160, 255);
+	PackedCol col;
+
+	struct ButtonWidget* w = (struct ButtonWidget*)widget;
+	struct Texture back;	
+	float scale;
+		
+	back = w->active ? btnSelectedTex : btnShadowTex;
+	if (w->disabled) back = btnDisabledTex;
+	back.X = w->x; back.Width  = w->width;
+	back.Y = w->y; back.Height = w->height;
+
+	/* TODO: Does this 400 need to take DPI into account */
+	if (w->width >= 400) {
+		/* Button can be drawn normally */
+		Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
+		*vertices += 4; /* always use up 8 vertices for body */
+	} else {
+		/* Split button down the middle */
+		scale = (w->width / 400.0f) * 0.5f;
+
+		back.Width = (w->width / 2);
+		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
+		Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
+
+		back.X += (w->width / 2);
+		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
+		Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
+	}
+
+	col = w->disabled ? disabledCol : (w->active ? activeCol : normCol);
+	Gfx_Make2DQuad(&w->tex, col, vertices);
+}
+
+static int ButtonWidget_Render2(void* widget, int offset) {
+	struct ButtonWidget* w = (struct ButtonWidget*)widget;	
+	Gfx_BindTexture(Gui_ClassicTexture ? Gui_GuiClassicTex : Gui_GuiTex);
+	/* TODO: Does this 400 need to take DPI into account */
+	Gfx_DrawVb_IndexedTris_Range(w->width >= 400 ? 4 : 8, offset);
+
+	if (w->tex.ID) {
+		Gfx_BindTexture(w->tex.ID);
+		Gfx_DrawVb_IndexedTris_Range(4, offset + 8);
+	}
+	return offset + 12;
+}
+
 static const struct WidgetVTABLE ButtonWidget_VTABLE = {
 	ButtonWidget_Render, ButtonWidget_Free, ButtonWidget_Reposition,
 	Widget_Key,	         Widget_Key,        Widget_MouseScroll,
-	Widget_Pointer,      Widget_Pointer,    Widget_PointerMove
+	Widget_Pointer,      Widget_Pointer,    Widget_PointerMove,
+	ButtonWidget_BuildMesh, ButtonWidget_Render2
 };
 void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
 	Widget_Reset(w);

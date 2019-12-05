@@ -253,6 +253,7 @@ void Gui_Layout(void) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
+		s->dirty = true;
 		s->VTABLE->Layout(s);
 	}
 }

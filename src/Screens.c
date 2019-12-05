@@ -1281,6 +1281,7 @@ static struct DisconnectScreen {
 	char _messageBuffer[STRING_SIZE];
 	String titleStr, messageStr;
 } DisconnectScreen_Instance;
+#define DISCONNECTSCREEN_MAX_VERTICES (BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
 
 #define DISCONNECT_DELAY_MS 5000
 static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, String* msg) {
@@ -1311,14 +1312,16 @@ static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* s, double 
 	s->reconnect.disabled = secsLeft != 0;
 	s->lastSecsLeft = secsLeft;
 	s->lastActive   = s->reconnect.active;
+	s->dirty        = true;
 }
 
 static void DisconnectScreen_ContextLost(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	Font_Free(&s->titleFont);
 	Font_Free(&s->messageFont);
-	if (!s->title.VTABLE) return;
+	Gfx_DeleteVb(&s->vb);
 
+	if (!s->title.VTABLE) return;
 	Elem_Free(&s->title);
 	Elem_Free(&s->message);
 	Elem_Free(&s->reconnect);
@@ -1327,9 +1330,10 @@ static void DisconnectScreen_ContextLost(void* screen) {
 static void DisconnectScreen_ContextRecreated(void* screen) {
 	String msg; char msgBuffer[STRING_SIZE];
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, DISCONNECTSCREEN_MAX_VERTICES);
+
 	Drawer2D_MakeFont(&s->titleFont,   16, FONT_STYLE_BOLD);
 	Drawer2D_MakeFont(&s->messageFont, 16, FONT_STYLE_NORMAL);
-
 	TextWidget_Set(&s->title,   &s->titleStr,   &s->titleFont);
 	TextWidget_Set(&s->message, &s->messageStr, &s->messageFont);
 
@@ -1338,7 +1342,16 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 	ButtonWidget_Set(&s->reconnect, &msg, &s->titleFont);
 }
 
-static void DisconnectScreen_BuildMesh(void* screen) { }
+static void DisconnectScreen_BuildMesh(void* screen) {
+	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
+	VertexP3fT2fC4b vertices[DISCONNECTSCREEN_MAX_VERTICES];
+	VertexP3fT2fC4b* ptr = vertices;
+
+	Widget_BuildMesh(&s->title,     &ptr);
+	Widget_BuildMesh(&s->message,   &ptr);
+	Widget_BuildMesh(&s->reconnect, &ptr);
+	Gfx_SetDynamicVbData(s->vb, vertices, DISCONNECTSCREEN_MAX_VERTICES);
+}
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
@@ -1361,14 +1374,21 @@ static void DisconnectScreen_Render(void* screen, double delta) {
 	PackedCol top    = PackedCol_Make(64, 32, 32, 255);
 	PackedCol bottom = PackedCol_Make(80, 16, 16, 255);
 
-	if (s->canReconnect) { DisconnectScreen_UpdateDelayLeft(s, delta); }
+	int offset = 0;
 	Gfx_Draw2DGradient(0, 0, Window_Width, Window_Height, top, bottom);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	Gfx_SetTexturing(true);
-	Elem_Render(&s->title, delta);
-	Elem_Render(&s->message, delta);
+	Gfx_BindVb(s->vb);
+	offset = Widget_Render2(&s->title,   offset);
+	offset = Widget_Render2(&s->message, offset);
 
-	if (s->canReconnect) { Elem_Render(&s->reconnect, delta); }
+	if (s->canReconnect) { 
+		Widget_Render2(&s->reconnect, offset);
+		/* TODO: don't delay to next frame */
+		/* TODO: simplify some of this stuff */
+		DisconnectScreen_UpdateDelayLeft(s, delta);
+	}
 	Gfx_SetTexturing(false);
 }
 

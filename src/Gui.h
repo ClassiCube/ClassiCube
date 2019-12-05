@@ -73,14 +73,14 @@ struct ScreenVTABLE {
 	cc_bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
 	cc_bool closable;    /* Whether this screen is automatically closed when pressing Escape */ \
 	cc_bool dirty;       /* Whether this screens needs to have its mesh rebuilt. */ \
-	struct Widget** widgets; int numWidgets;
+	GfxResourceID vb; struct Widget** widgets; int numWidgets;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Body };
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {
-	/* Draws this particular widget on-screen. */
+	/* Draws this widget on-screen. */
 	void (*Render)(void* elem, double delta);
 	/* Destroys allocated graphics resources. */
 	void (*Free)(void* elem);
@@ -98,6 +98,10 @@ struct WidgetVTABLE {
 	int (*HandlesPointerUp)(void* elem,   int id, int x, int y);
 	/* Returns non-zero if a pointer movement is handled. */
 	int (*HandlesPointerMove)(void* elem, int id, int x, int y);
+	/* Builds the mesh of vertices for this widget. */
+	void (*BuildMesh)(void* elem, VertexP3fT2fC4b** vertices);
+	/* Draws this widget on-screen. */
+	int  (*Render2)(void* elem, int offset);
 };
 #define Widget_Body const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
@@ -204,6 +208,8 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vert
 #define Elem_HandlesPointerUp(elem,   id, x, y) (elem)->VTABLE->HandlesPointerUp(elem,   id, x, y)
 #define Elem_HandlesPointerMove(elem, id, x, y) (elem)->VTABLE->HandlesPointerMove(elem, id, x, y)
 
+#define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices);
+#define Widget_Render2(widget, offset)     (widget)->VTABLE->Render2(widget, offset);
 #define Widget_Layout(widget) (widget)->VTABLE->Reposition(widget);
 #define Elem_TryFree(elem)    if ((elem)->VTABLE) { Elem_Free(elem); }
 #endif
