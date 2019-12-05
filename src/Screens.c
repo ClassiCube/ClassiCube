@@ -84,6 +84,18 @@ void Screen_Layout(void* screen) {
 	}
 }
 
+void Screen_ContextLost(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	int i;
+	Gfx_DeleteVb(&s->vb);
+
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!widgets[i]) continue;
+		Elem_Free(widgets[i]);
+	}
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------HUDScreen--------------------------------------------------------*
@@ -1079,7 +1091,7 @@ static struct LoadingScreen {
 
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
-} LoadingScreen_Instance;
+} LoadingScreen;
 
 static void LoadingScreen_SetTitle(struct LoadingScreen* s) {
 	TextWidget_Set(&s->title, &s->titleStr, &s->font);
@@ -1201,7 +1213,7 @@ static void LoadingScreen_Free(void* screen) {
 }
 
 CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const String* message) {
-	struct LoadingScreen* s = &LoadingScreen_Instance;
+	struct LoadingScreen* s = &LoadingScreen;
 	s->lastState = NULL;
 	s->progress  = 0.0f;
 
@@ -1223,10 +1235,10 @@ static const struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_Layout, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void LoadingScreen_Show(const String* title, const String* message) {
-	LoadingScreen_Instance.VTABLE = &LoadingScreen_VTABLE;
+	LoadingScreen.VTABLE = &LoadingScreen_VTABLE;
 	LoadingScreen_ShowCommon(title, message);
 }
-struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen_Instance;
+struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen;
 
 
 /*########################################################################################################################*
@@ -1253,7 +1265,7 @@ static void GeneratingScreen_EndGeneration(void) {
 	struct LocationUpdate update;
 	float x, z;
 
-	Gui_Remove((struct Screen*)&LoadingScreen_Instance);
+	Gui_Remove((struct Screen*)&LoadingScreen);
 	Gen_Done = false;
 
 	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
@@ -1296,7 +1308,7 @@ void GeneratingScreen_Show(void) {
 	static const String title   = String_FromConst("Generating level");
 	static const String message = String_FromConst("Generating..");
 
-	LoadingScreen_Instance.VTABLE = &GeneratingScreen_VTABLE;
+	LoadingScreen.VTABLE = &GeneratingScreen_VTABLE;
 	LoadingScreen_ShowCommon(&title, &message);
 }
 
@@ -1316,10 +1328,16 @@ static struct DisconnectScreen {
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
 	String titleStr, messageStr;
-} DisconnectScreen_Instance;
-#define DISCONNECTSCREEN_MAX_VERTICES (BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
+} DisconnectScreen;
 
+static struct Widget* disconnect_widgets[3] = {
+	(struct Widget*)&DisconnectScreen.title, 
+	(struct Widget*)&DisconnectScreen.message,
+	(struct Widget*)&DisconnectScreen.reconnect
+};
+#define DISCONNECT_MAX_VERTICES (BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
 #define DISCONNECT_DELAY_MS 5000
+
 static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, String* msg) {
 	if (s->canReconnect) {
 		int elapsedMS = (int)(DateTime_CurrentUTC_MS() - s->initTime);
@@ -1355,18 +1373,13 @@ static void DisconnectScreen_ContextLost(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	Font_Free(&s->titleFont);
 	Font_Free(&s->messageFont);
-	Gfx_DeleteVb(&s->vb);
-
-	if (!s->title.VTABLE) return;
-	Elem_Free(&s->title);
-	Elem_Free(&s->message);
-	Elem_Free(&s->reconnect);
+	Screen_ContextLost(screen);
 }
 
 static void DisconnectScreen_ContextRecreated(void* screen) {
 	String msg; char msgBuffer[STRING_SIZE];
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, DISCONNECTSCREEN_MAX_VERTICES);
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, DISCONNECT_MAX_VERTICES);
 
 	Drawer2D_MakeFont(&s->titleFont,   16, FONT_STYLE_BOLD);
 	Drawer2D_MakeFont(&s->messageFont, 16, FONT_STYLE_NORMAL);
@@ -1380,13 +1393,13 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 
 static void DisconnectScreen_BuildMesh(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	VertexP3fT2fC4b vertices[DISCONNECTSCREEN_MAX_VERTICES];
+	VertexP3fT2fC4b vertices[DISCONNECT_MAX_VERTICES];
 	VertexP3fT2fC4b* ptr = vertices;
 
 	Widget_BuildMesh(&s->title,     &ptr);
 	Widget_BuildMesh(&s->message,   &ptr);
 	Widget_BuildMesh(&s->reconnect, &ptr);
-	Gfx_SetDynamicVbData(s->vb, vertices, DISCONNECTSCREEN_MAX_VERTICES);
+	Gfx_SetDynamicVbData(s->vb, vertices, DISCONNECT_MAX_VERTICES);
 }
 
 static void DisconnectScreen_Init(void* screen) {
@@ -1405,13 +1418,8 @@ static void DisconnectScreen_Init(void* screen) {
 
 	s->initTime     = DateTime_CurrentUTC_MS();
 	s->lastSecsLeft = DISCONNECT_DELAY_MS / MILLIS_PER_SEC;
-
-	/* TODO: static init */
-	s->widgets = widgets;
-	s->widgets[0] = &s->title;
-	s->widgets[1] = &s->message;
-	s->widgets[2] = &s->reconnect;
-	s->numWidgets = s->canReconnect ? 3 : 2;
+	s->widgets      = disconnect_widgets;
+	s->numWidgets   = s->canReconnect ? 3 : 2;
 }
 
 static void DisconnectScreen_Render(void* screen, double delta) {
@@ -1463,7 +1471,7 @@ void DisconnectScreen_Show(const String* title, const String* message) {
 	static const String kick = String_FromConst("Kicked ");
 	static const String ban  = String_FromConst("Banned ");
 	String why; char whyBuffer[STRING_SIZE];
-	struct DisconnectScreen* s = &DisconnectScreen_Instance;
+	struct DisconnectScreen* s = &DisconnectScreen;
 
 	s->grabsInput  = true;
 	s->blocksWorld = true;

@@ -84,17 +84,6 @@ CC_NOINLINE static void Menu_MakeBodyFont(struct FontDesc* font)  { Drawer2D_Mak
 static void Menu_NullFunc(void* s) { }
 static void Menu_CloseKeyboard(void* s) { Window_CloseKeyboard(); }
 
-static void Menu_ContextLost(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	struct Widget** widgets = s->widgets;
-	int i;
-	
-	for (i = 0; i < s->numWidgets; i++) {
-		if (!widgets[i]) continue;
-		Elem_Free(widgets[i]);
-	}
-}
-
 static void Menu_RenderBounds(void) {
 	/* These were sourced by taking a screenshot of vanilla
 	Then using paint to extract the colour components
@@ -408,7 +397,7 @@ static void ListScreen_Free(void* screen) {
 
 static void ListScreen_ContextLost(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
-	Menu_ContextLost(screen);
+	Screen_ContextLost(screen);
 	Font_Free(&s->font);
 }
 
@@ -450,6 +439,13 @@ static void MenuScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
 	Screen_RenderWidgets(screen, delta);
+	Gfx_SetTexturing(false);
+}
+
+static void MenuScreen_Render2(void* screen, double delta) {
+	Menu_RenderBounds();
+	Gfx_SetTexturing(true);
+	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
 }
 
@@ -543,7 +539,7 @@ static const struct ScreenVTABLE PauseScreen_VTABLE = {
 	PauseScreen_Init,   MenuScreen_Render, PauseScreen_Free, PauseScreen_BuildMesh,
 	MenuScreen_KeyDown, Screen_TInput,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,   Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,      Menu_ContextLost,  PauseScreen_ContextRecreated
+	Screen_Layout,      Screen_ContextLost, PauseScreen_ContextRecreated
 };
 void PauseScreen_Show(void) {
 	struct PauseScreen* s = &PauseScreen_Instance;
@@ -597,7 +593,7 @@ CC_NOINLINE static void OptionsGroupScreen_UpdateDesc(struct OptionsGroupScreen*
 static void OptionsGroupScreen_ContextLost(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 	Font_Free(&s->textFont);
-	Menu_ContextLost(screen);
+	Screen_ContextLost(screen);
 }
 
 static void OptionsGroupScreen_ContextRecreated(void* screen) {
@@ -830,7 +826,7 @@ static void EditHotkeyScreen_ContextLost(void* screen) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	Font_Free(&s->titleFont);
 	Font_Free(&s->textFont);
-	Menu_ContextLost(screen);
+	Screen_ContextLost(screen);
 }
 
 static void EditHotkeyScreen_ContextRecreated(void* screen) {
@@ -1010,7 +1006,7 @@ static int GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
 static void GenLevelScreen_ContextLost(void* screen) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	Font_Free(&s->textFont);
-	Menu_ContextLost(screen);
+	Screen_ContextLost(screen);
 }
 
 static void GenLevelScreen_ContextRecreated(void* screen) {
@@ -1081,14 +1077,20 @@ void GenLevelScreen_Show(void) {
 static struct ClassicGenScreen {
 	Screen_Body
 	struct ButtonWidget buttons[3], cancel;
-} ClassicGenScreen_Instance;
+} ClassicGenScreen;
+
+static struct Widget* classicgen_widgets[4] = {
+	(struct Widget*)&ClassicGenScreen.buttons[0], (struct Widget*)&ClassicGenScreen.buttons[1],
+	(struct Widget*)&ClassicGenScreen.buttons[2], (struct Widget*)&ClassicGenScreen.cancel
+};
+#define CLASSICGEN_MAX_VERTICES (4 * BUTTONWIDGET_MAX)
 
 static void ClassicGenScreen_Gen(int size) {
 	RNGState rnd; Random_SeedFromCurrentTime(&rnd);
 	Gen_Vanilla = true;
 	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
 
-	Gui_Remove((struct Screen*)&ClassicGenScreen_Instance);
+	Gui_Remove((struct Screen*)&ClassicGenScreen);
 	Menu_BeginGen(size, 64, size);
 }
 
@@ -1097,12 +1099,13 @@ static void ClassicGenScreen_Medium(void* a, void* b) { ClassicGenScreen_Gen(256
 static void ClassicGenScreen_Huge(void* a, void* b)   { ClassicGenScreen_Gen(512); }
 
 static void ClassicGenScreen_Make(struct ClassicGenScreen* s, int i, int y, Widget_LeftClick onClick) {
-	Menu_Button(s, i, &s->buttons[i], 400, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
+	ButtonWidget_Make(&s->buttons[i], 400, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 }
 
 static void ClassicGenScreen_ContextRecreated(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
 	struct FontDesc titleFont;
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, CLASSICGEN_MAX_VERTICES);
 
 	Menu_MakeTitleFont(&titleFont);
 	ButtonWidget_SetConst(&s->buttons[0], "Small",  &titleFont);
@@ -1112,13 +1115,22 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 	Font_Free(&titleFont);
 }
 
-static void ClassicGenScreen_BuildMesh(void* screen) { }
+static void ClassicGenScreen_BuildMesh(void* screen) {
+	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
+	VertexP3fT2fC4b vertices[CLASSICGEN_MAX_VERTICES];
+	VertexP3fT2fC4b* ptr = vertices;
+
+	Widget_BuildMesh(&s->buttons[0], &ptr);
+	Widget_BuildMesh(&s->buttons[1], &ptr);
+	Widget_BuildMesh(&s->buttons[2], &ptr);
+	Widget_BuildMesh(&s->cancel,     &ptr);
+	Gfx_SetDynamicVbData(s->vb, vertices, CLASSICGEN_MAX_VERTICES);
+}
 
 static void ClassicGenScreen_Init(void* screen) {
-	static struct Widget* widgets[4];
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
+	s->widgets    = classicgen_widgets;
+	s->numWidgets = Array_Elems(classicgen_widgets);
 
 	ClassicGenScreen_Make(s, 0, -100, ClassicGenScreen_Small);
 	ClassicGenScreen_Make(s, 1,  -50, ClassicGenScreen_Medium);
@@ -1128,16 +1140,16 @@ static void ClassicGenScreen_Init(void* screen) {
 }
 
 static const struct ScreenVTABLE ClassicGenScreen_VTABLE = {
-	ClassicGenScreen_Init, MenuScreen_Render,  Menu_NullFunc,    ClassicGenScreen_BuildMesh,
+	ClassicGenScreen_Init, MenuScreen_Render2, Menu_NullFunc,    ClassicGenScreen_BuildMesh,
 	MenuScreen_KeyDown,    Screen_TInput,      Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,      Screen_TPointer,    Menu_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,         Menu_ContextLost,   ClassicGenScreen_ContextRecreated
+	Screen_Layout,         Screen_ContextLost, ClassicGenScreen_ContextRecreated
 };
 void ClassicGenScreen_Show(void) {
-	struct ClassicGenScreen* s = &ClassicGenScreen_Instance;
+	struct ClassicGenScreen* s = &ClassicGenScreen;
 	s->grabsInput = true;
 	s->closable   = true;
-	s->VTABLE = &ClassicGenScreen_VTABLE;
+	s->VTABLE     = &ClassicGenScreen_VTABLE;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
@@ -1348,7 +1360,7 @@ static void SaveLevelScreen_ContextLost(void* screen) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	Font_Free(&s->titleFont);
 	Font_Free(&s->textFont);
-	Menu_ContextLost(screen);
+	Screen_ContextLost(screen);
 }
 
 static void SaveLevelScreen_ContextRecreated(void* screen) {
@@ -1687,7 +1699,7 @@ static int KeyBindingsScreen_KeyDown(void* screen, int key) {
 static void KeyBindingsScreen_ContextLost(void* screen) {
 	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
 	Font_Free(&s->titleFont);
-	Menu_ContextLost(screen);
+	Screen_ContextLost(screen);
 }
 
 static void KeyBindingsScreen_ContextRecreated(void* screen) {
@@ -2189,7 +2201,7 @@ static void MenuOptionsScreen_ContextLost(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	Font_Free(&s->titleFont);
 	Font_Free(&s->textFont);
-	Menu_ContextLost(s);
+	Screen_ContextLost(s);
 	Elem_Free(&s->extHelp);
 }
 
@@ -2919,7 +2931,7 @@ static struct TexIdsOverlay {
 
 static void TexIdsOverlay_ContextLost(void* screen) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
-	Menu_ContextLost(s);
+	Screen_ContextLost(s);
 	Gfx_DeleteVb(&s->dynamicVb);
 	TextAtlas_Free(&s->idAtlas);
 }
@@ -3125,7 +3137,7 @@ static const struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
 	UrlWarningOverlay_Init, MenuScreen_Render, Menu_NullFunc,    UrlWarningOverlay_BuildMesh,
 	Screen_TInput,          Screen_TInput,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,       Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,          Menu_ContextLost,  UrlWarningOverlay_ContextRecreated
+	Screen_Layout,          Screen_ContextLost, UrlWarningOverlay_ContextRecreated
 };
 void UrlWarningOverlay_Show(const String* url) {
 	struct UrlWarningOverlay* s = &UrlWarningOverlay_Instance;
@@ -3225,7 +3237,7 @@ static void TexPackOverlay_Render(void* screen, double delta) {
 static void TexPackOverlay_ContextLost(void* screen) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
 	Font_Free(&s->textFont);
-	Menu_ContextLost(screen);
+	Screen_ContextLost(screen);
 }
 
 static void TexPackOverlay_ContextRecreated(void* screen) {
@@ -3359,7 +3371,7 @@ static const struct ScreenVTABLE TouchMoreOverlay_VTABLE = {
 	TouchMoreOverlay_Init, MenuScreen_Render, Menu_NullFunc,
 	Screen_TInput,         Screen_TInput,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,      Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,         Menu_ContextLost,  TouchMoreOverlay_ContextRecreated
+	Screen_Layout,         Screen_ContextLost, TouchMoreOverlay_ContextRecreated
 };
 void TouchMoreOverlay_Show(void) {
 	struct TouchMoreOverlay* s = &TouchMoreOverlay_Instance;

@@ -27,6 +27,9 @@ void Screen_RenderWidgets(void* screen, double delta);
 void Screen_Render2Widgets(void* screen, double delta);
 /* Calls Widget_Layout on each widget in the screen. */
 void Screen_Layout(void* screen);
+/* Calls Widget_Free on each widget in the screen. */
+/* Also deletes the screen's vb. */
+void Screen_ContextLost(void* screen);
 
 void InventoryScreen_Show(void);
 void HUDScreen_Show(void);

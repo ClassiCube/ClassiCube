@@ -686,14 +686,14 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	return vbuffer;
 }
 
-static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size, const char* lockMsg, const char* unlockMsg, int lockFlags) {
+static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size, int lockFlags) {
 	void* dst = NULL;
 	cc_result res = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
-	if (res) Logger_Abort2(res, lockMsg);
+	if (res) Logger_Abort2(res, "D3D9_LockVb");
 
 	Mem_Copy(dst, data, size);
 	res = IDirect3DVertexBuffer9_Unlock(buffer);
-	if (res) Logger_Abort2(res, unlockMsg);
+	if (res) Logger_Abort2(res, "D3D9_UnlockVb");
 }
 
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
@@ -710,7 +710,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 		Event_RaiseVoid(&GfxEvents.LowVRAMDetected);
 	}
 
-	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_LockVb", "D3D9_UnlockVb", 0);
+	D3D9_SetVbData(vbuffer, vertices, size, 0);
 	return vbuffer;
 }
 
@@ -761,7 +761,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	int size = vCount * gfx_batchStride;
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
-	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_LockDynamicVbData", "D3D9_UnlockDynamicVbData", D3DLOCK_DISCARD);
+	D3D9_SetVbData(vbuffer, vertices, size, D3DLOCK_DISCARD);
 
 	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_batchStride);
 	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
