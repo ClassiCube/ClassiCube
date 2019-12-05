@@ -158,6 +158,7 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	priorities[i]  = priority;
 	Gui_ScreensCount++;
 
+	s->dirty = true;
 	s->VTABLE->Init(s);
 	s->VTABLE->ContextRecreated(s);
 
@@ -240,6 +241,7 @@ void Gui_RenderGui(double delta) {
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui_ScreensCount - 1; i >= 0; i--) {
 		s = Gui_Screens[i];
+		if (s->dirty) { s->VTABLE->BuildMesh(s); s->dirty = false; }
 		s->VTABLE->Render(s, delta);
 	}
 	Gfx_Mode3D();

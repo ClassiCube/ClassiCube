@@ -42,10 +42,12 @@ struct ScreenVTABLE {
 	void (*Render)(void* elem, double delta);
 	/* Frees/releases persistent state. */
 	void (*Free)(void* elem);
+	/* Builds the vertex mesh for all the widgets in the screen. */
+	void (*BuildMesh)(void* elem);
 	/* Returns non-zero if an input press is handled. */
-	int  (*HandlesKeyDown)(void* elem, int key);
+	int  (*HandlesInputDown)(void* elem, int key);
 	/* Returns non-zero if an input release is handled. */
-	int  (*HandlesKeyUp)(void* elem, int key);
+	int  (*HandlesInputUp)(void* elem, int key);
 	/* Returns non-zero if a key character press is handled. */
 	int  (*HandlesKeyPress)(void* elem, char keyChar);
 	/* Returns non-zero if a key character press is handled. */
@@ -70,6 +72,7 @@ struct ScreenVTABLE {
 	cc_bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
 	cc_bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
 	cc_bool closable;    /* Whether this screen is automatically closed when pressing Escape */ \
+	cc_bool dirty;       /* Whether this screens needs to have its mesh rebuilt. */ \
 	struct Widget** widgets; int numWidgets;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */

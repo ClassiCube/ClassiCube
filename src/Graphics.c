@@ -583,16 +583,12 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 void Gfx_SetFog(cc_bool enabled) {
 	if (gfx_fogEnabled == enabled) return;
 	gfx_fogEnabled = enabled;
-
-	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, enabled);
 }
 
 void Gfx_SetFogCol(PackedCol col) {
 	if (col == gfx_fogCol) return;
 	gfx_fogCol = col;
-
-	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR, gfx_fogCol);
 }
 
@@ -601,7 +597,6 @@ void Gfx_SetFogDensity(float value) {
 	if (value == gfx_fogDensity) return;
 	gfx_fogDensity = value;
 
-	if (Gfx.LostContext) return;
 	raw.f = value;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGDENSITY, raw.u);
 }
@@ -611,7 +606,6 @@ void Gfx_SetFogEnd(float value) {
 	if (value == gfx_fogEnd) return;
 	gfx_fogEnd = value;
 
-	if (Gfx.LostContext) return;
 	raw.f = value;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGEND, raw.u);
 }
@@ -622,7 +616,6 @@ void Gfx_SetFogMode(FogFunc func) {
 	if (mode == gfx_fogMode) return;
 
 	gfx_fogMode = mode;
-	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, mode);
 }
 
@@ -683,7 +676,10 @@ static void D3D9_RestoreRenderStates(void) {
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	int size = maxVertices * gfx_strideSizes[fmt];
 	IDirect3DVertexBuffer9* vbuffer;
-	cc_result res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
+	cc_result res;
+	if (Gfx.LostContext) return 0;
+		
+	res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
 		d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
 	if (res) Logger_Abort2(res, "D3D9_CreateDynamicVb");
 
@@ -1165,7 +1161,8 @@ static GLuint GL_GenAndBind(GLenum target) {
 }
 
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	GLuint id     = GL_GenAndBind(GL_ARRAY_BUFFER);
+	if (Gfx.LostContext) return 0;
+	GLuint id      = GL_GenAndBind(GL_ARRAY_BUFFER);
 	cc_uint32 size = maxVertices * gfx_strideSizes[fmt];
 	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
