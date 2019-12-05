@@ -48,6 +48,42 @@ CC_NOINLINE static cc_bool IsOnlyHudActive(void) {
 	return true;
 }
 
+void Screen_RenderWidgets(void* screen, double delta) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	int i;
+
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!widgets[i]) continue;
+		Elem_Render(widgets[i], delta);
+	}
+}
+
+void Screen_Render2Widgets(void* screen, double delta) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	int i, offset = 0;
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_BindVb(s->vb);
+
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!widgets[i]) continue;
+		offset = Widget_Render2(widgets[i], offset);
+	}
+}
+
+void Screen_Layout(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	int i;
+
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!widgets[i]) continue;
+		Widget_Layout(widgets[i]);
+	}
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------HUDScreen--------------------------------------------------------*
@@ -1354,7 +1390,9 @@ static void DisconnectScreen_BuildMesh(void* screen) {
 }
 
 static void DisconnectScreen_Init(void* screen) {
+	static struct Widget* widgets[3];
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
+
 	TextWidget_Make(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
 
@@ -1367,41 +1405,32 @@ static void DisconnectScreen_Init(void* screen) {
 
 	s->initTime     = DateTime_CurrentUTC_MS();
 	s->lastSecsLeft = DISCONNECT_DELAY_MS / MILLIS_PER_SEC;
+
+	/* TODO: static init */
+	s->widgets = widgets;
+	s->widgets[0] = &s->title;
+	s->widgets[1] = &s->message;
+	s->widgets[2] = &s->reconnect;
+	s->numWidgets = s->canReconnect ? 3 : 2;
 }
 
 static void DisconnectScreen_Render(void* screen, double delta) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	PackedCol top    = PackedCol_Make(64, 32, 32, 255);
 	PackedCol bottom = PackedCol_Make(80, 16, 16, 255);
-
-	int offset = 0;
 	Gfx_Draw2DGradient(0, 0, Window_Width, Window_Height, top, bottom);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	Gfx_SetTexturing(true);
-	Gfx_BindVb(s->vb);
-	offset = Widget_Render2(&s->title,   offset);
-	offset = Widget_Render2(&s->message, offset);
+	Screen_Render2Widgets(screen, delta);
+	Gfx_SetTexturing(false);
 
-	if (s->canReconnect) { 
-		Widget_Render2(&s->reconnect, offset);
+	if (s->canReconnect) {
 		/* TODO: don't delay to next frame */
-		/* TODO: simplify some of this stuff */
 		DisconnectScreen_UpdateDelayLeft(s, delta);
 	}
-	Gfx_SetTexturing(false);
 }
 
 static void DisconnectScreen_Free(void* screen) { Game_SetFpsLimit(Game_FpsLimit); }
-
-static void DisconnectScreen_Layout(void* screen) {
-	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	if (!s->title.VTABLE) return;
-	Widget_Layout(&s->title);
-	Widget_Layout(&s->message);
-	Widget_Layout(&s->reconnect);
-}
-
 static int DisconnectScreen_KeyDown(void* s, int key) { return key < KEY_F1 || key > KEY_F35; }
 
 static int DisconnectScreen_PointerDown(void* screen, int id, int x, int y) {
@@ -1428,7 +1457,7 @@ static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,        DisconnectScreen_Render, DisconnectScreen_Free,        DisconnectScreen_BuildMesh,
 	DisconnectScreen_KeyDown,     Screen_TInput,           Screen_TKeyPress,             Screen_TText,
 	DisconnectScreen_PointerDown, Screen_TPointer,         DisconnectScreen_PointerMove, Screen_TMouseScroll,
-	DisconnectScreen_Layout, DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
+	Screen_Layout,                DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 void DisconnectScreen_Show(const String* title, const String* message) {
 	static const String kick = String_FromConst("Kicked ");
