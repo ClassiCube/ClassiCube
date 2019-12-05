@@ -212,11 +212,10 @@ static void Menu_SwitchFont(void* a, void* b)            { FontListScreen_Show()
 *#########################################################################################################################*/
 struct ListScreen;
 #define LIST_SCREEN_ITEMS 5
-#define LIST_SCREEN_EMPTY "-----"
 
 static struct ListScreen {
 	Screen_Body
-	struct ButtonWidget buttons[LIST_SCREEN_ITEMS];
+	struct ButtonWidget btns[LIST_SCREEN_ITEMS];
 	struct ButtonWidget left, right, done;
 	struct FontDesc font;
 	float wheelAcc;
@@ -228,6 +227,16 @@ static struct ListScreen {
 	struct TextWidget title, page;
 	StringsBuffer entries;
 } ListScreen;
+
+static struct Widget* list_widgets[10] = {
+	(struct Widget*)&ListScreen.btns[0], (struct Widget*)&ListScreen.btns[1],
+	(struct Widget*)&ListScreen.btns[2], (struct Widget*)&ListScreen.btns[3],
+	(struct Widget*)&ListScreen.btns[4], (struct Widget*)&ListScreen.left,
+	(struct Widget*)&ListScreen.right,   (struct Widget*)&ListScreen.title,   
+	(struct Widget*)&ListScreen.page,    (struct Widget*)&ListScreen.done
+};
+#define LIST_MAX_VERTICES (8 * BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
+#define LIST_SCREEN_EMPTY "-----"
 
 static STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
 	static const String str = String_FromConst(LIST_SCREEN_EMPTY);
@@ -266,7 +275,7 @@ static void ListScreen_RedrawEntries(struct ListScreen* s) {
 
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
 		str = ListScreen_UNSAFE_Get(s, s->currentIndex + i);
-		s->UpdateEntry(s, &s->buttons[i], &str);
+		s->UpdateEntry(s, &s->btns[i], &str);
 	}
 }
 
@@ -357,27 +366,25 @@ static int ListScreen_MouseScroll(void* screen, float delta) {
 }
 
 static void ListScreen_Init(void* screen) {
-	static struct Widget* widgets[LIST_SCREEN_ITEMS + 3 + 2];
 	struct ListScreen* s = (struct ListScreen*)screen;
 	int i;
-
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
+	s->widgets    = list_widgets;
+	s->numWidgets = Array_Elems(list_widgets);
 	s->wheelAcc   = 0.0f;
 	s->currentIndex = 0;
 
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
-		Menu_Button(s, i, &s->buttons[i],  300, s->EntryClick,
+		ButtonWidget_Make(&s->btns[i], 300, s->EntryClick,
 					ANCHOR_CENTRE, ANCHOR_CENTRE,    0, (i - 2) * 50);
 	}
 
-	Menu_Button(s, 5, &s->left,  40, ListScreen_MoveBackwards,
+	ButtonWidget_Make(&s->left,  40, ListScreen_MoveBackwards,
 					ANCHOR_CENTRE, ANCHOR_CENTRE, -220,    0);
-	Menu_Button(s, 6, &s->right, 40, ListScreen_MoveForwards,
+	ButtonWidget_Make(&s->right, 40, ListScreen_MoveForwards,
 					ANCHOR_CENTRE, ANCHOR_CENTRE,  220,    0);
-	Menu_Label(s,  7, &s->title, 
+	TextWidget_Make(&s->title, 
 					ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -155);
-	Menu_Label(s,  8, &s->page,  
+	TextWidget_Make(&s->page,
 					ANCHOR_CENTRE,    ANCHOR_MAX,    0,   75);
 	Menu_Back(s,   9, &s->done, s->DoneClick);
 	s->LoadEntries(s);
@@ -386,7 +393,7 @@ static void ListScreen_Init(void* screen) {
 static void ListScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
-	Screen_RenderWidgets(screen, delta);
+	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
 }
 
@@ -403,6 +410,7 @@ static void ListScreen_ContextLost(void* screen) {
 
 static void ListScreen_ContextRecreated(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, LIST_MAX_VERTICES);
 	Menu_MakeTitleFont(&s->font);
 	ListScreen_RedrawEntries(s);
 
@@ -413,7 +421,22 @@ static void ListScreen_ContextRecreated(void* screen) {
 	ListScreen_UpdatePage(s);
 }
 
-static void ListScreen_BuildMesh(void* screen) { }
+static void ListScreen_BuildMesh(void* screen) {
+	struct ListScreen* s = (struct ListScreen*)screen;
+	VertexP3fT2fC4b vertices[LIST_MAX_VERTICES];
+	VertexP3fT2fC4b* ptr = vertices;
+	int i;
+
+	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
+		Widget_BuildMesh(&s->btns[i], &ptr);
+	}
+	Widget_BuildMesh(&s->left,  &ptr);
+	Widget_BuildMesh(&s->right, &ptr);
+	Widget_BuildMesh(&s->title, &ptr);
+	Widget_BuildMesh(&s->page,  &ptr);
+	Widget_BuildMesh(&s->done, &ptr);
+	Gfx_SetDynamicVbData(s->vb, vertices, LIST_MAX_VERTICES);
+}
 
 static const struct ScreenVTABLE ListScreen_VTABLE = {
 	ListScreen_Init,    ListScreen_Render, ListScreen_Free,  ListScreen_BuildMesh,
@@ -1076,12 +1099,12 @@ void GenLevelScreen_Show(void) {
 *#########################################################################################################################*/
 static struct ClassicGenScreen {
 	Screen_Body
-	struct ButtonWidget buttons[3], cancel;
+	struct ButtonWidget btns[3], cancel;
 } ClassicGenScreen;
 
 static struct Widget* classicgen_widgets[4] = {
-	(struct Widget*)&ClassicGenScreen.buttons[0], (struct Widget*)&ClassicGenScreen.buttons[1],
-	(struct Widget*)&ClassicGenScreen.buttons[2], (struct Widget*)&ClassicGenScreen.cancel
+	(struct Widget*)&ClassicGenScreen.btns[0], (struct Widget*)&ClassicGenScreen.btns[1],
+	(struct Widget*)&ClassicGenScreen.btns[2], (struct Widget*)&ClassicGenScreen.cancel
 };
 #define CLASSICGEN_MAX_VERTICES (4 * BUTTONWIDGET_MAX)
 
@@ -1098,20 +1121,16 @@ static void ClassicGenScreen_Small(void* a, void* b)  { ClassicGenScreen_Gen(128
 static void ClassicGenScreen_Medium(void* a, void* b) { ClassicGenScreen_Gen(256); }
 static void ClassicGenScreen_Huge(void* a, void* b)   { ClassicGenScreen_Gen(512); }
 
-static void ClassicGenScreen_Make(struct ClassicGenScreen* s, int i, int y, Widget_LeftClick onClick) {
-	ButtonWidget_Make(&s->buttons[i], 400, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
-}
-
 static void ClassicGenScreen_ContextRecreated(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
 	struct FontDesc titleFont;
 	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, CLASSICGEN_MAX_VERTICES);
 
 	Menu_MakeTitleFont(&titleFont);
-	ButtonWidget_SetConst(&s->buttons[0], "Small",  &titleFont);
-	ButtonWidget_SetConst(&s->buttons[1], "Normal", &titleFont);
-	ButtonWidget_SetConst(&s->buttons[2], "Huge",   &titleFont);
-	ButtonWidget_SetConst(&s->cancel,     "Cancel", &titleFont);
+	ButtonWidget_SetConst(&s->btns[0], "Small",  &titleFont);
+	ButtonWidget_SetConst(&s->btns[1], "Normal", &titleFont);
+	ButtonWidget_SetConst(&s->btns[2], "Huge",   &titleFont);
+	ButtonWidget_SetConst(&s->cancel,  "Cancel", &titleFont);
 	Font_Free(&titleFont);
 }
 
@@ -1120,11 +1139,15 @@ static void ClassicGenScreen_BuildMesh(void* screen) {
 	VertexP3fT2fC4b vertices[CLASSICGEN_MAX_VERTICES];
 	VertexP3fT2fC4b* ptr = vertices;
 
-	Widget_BuildMesh(&s->buttons[0], &ptr);
-	Widget_BuildMesh(&s->buttons[1], &ptr);
-	Widget_BuildMesh(&s->buttons[2], &ptr);
+	Widget_BuildMesh(&s->btns[0], &ptr);
+	Widget_BuildMesh(&s->btns[1], &ptr);
+	Widget_BuildMesh(&s->btns[2], &ptr);
 	Widget_BuildMesh(&s->cancel,     &ptr);
 	Gfx_SetDynamicVbData(s->vb, vertices, CLASSICGEN_MAX_VERTICES);
+}
+
+static void ClassicGenScreen_Make(struct ClassicGenScreen* s, int i, int y, Widget_LeftClick onClick) {
+	ButtonWidget_Make(&s->btns[i], 400, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 }
 
 static void ClassicGenScreen_Init(void* screen) {
