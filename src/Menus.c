@@ -79,6 +79,11 @@ static void Menu_Back(void* s, int i, struct ButtonWidget* btn, Widget_LeftClick
 	Menu_Button(s, i, btn, width, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
+static void Menu_MakeBack(struct ButtonWidget* btn, Widget_LeftClick onClick) {
+	int width = Gui_ClassicMenu ? 400 : 200;
+	ButtonWidget_Make(btn, width, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
+}
+
 CC_NOINLINE static void Menu_MakeTitleFont(struct FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_STYLE_BOLD); }
 CC_NOINLINE static void Menu_MakeBodyFont(struct FontDesc* font)  { Drawer2D_MakeFont(font, 16, FONT_STYLE_NORMAL); }
 static void Menu_NullFunc(void* s) { }
@@ -386,7 +391,7 @@ static void ListScreen_Init(void* screen) {
 					ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -155);
 	TextWidget_Make(&s->page,
 					ANCHOR_CENTRE,    ANCHOR_MAX,    0,   75);
-	Menu_Back(s,   9, &s->done, s->DoneClick);
+	Menu_MakeBack(&s->done, s->DoneClick);
 	s->LoadEntries(s);
 }
 
@@ -424,17 +429,8 @@ static void ListScreen_ContextRecreated(void* screen) {
 static void ListScreen_BuildMesh(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	VertexP3fT2fC4b vertices[LIST_MAX_VERTICES];
-	VertexP3fT2fC4b* ptr = vertices;
-	int i;
 
-	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
-		Widget_BuildMesh(&s->btns[i], &ptr);
-	}
-	Widget_BuildMesh(&s->left,  &ptr);
-	Widget_BuildMesh(&s->right, &ptr);
-	Widget_BuildMesh(&s->title, &ptr);
-	Widget_BuildMesh(&s->page,  &ptr);
-	Widget_BuildMesh(&s->done, &ptr);
+	Screen_BuildMesh(screen, vertices);
 	Gfx_SetDynamicVbData(s->vb, vertices, LIST_MAX_VERTICES);
 }
 
@@ -1137,12 +1133,8 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 static void ClassicGenScreen_BuildMesh(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
 	VertexP3fT2fC4b vertices[CLASSICGEN_MAX_VERTICES];
-	VertexP3fT2fC4b* ptr = vertices;
 
-	Widget_BuildMesh(&s->btns[0], &ptr);
-	Widget_BuildMesh(&s->btns[1], &ptr);
-	Widget_BuildMesh(&s->btns[2], &ptr);
-	Widget_BuildMesh(&s->cancel,     &ptr);
+	Screen_BuildMesh(screen, vertices);
 	Gfx_SetDynamicVbData(s->vb, vertices, CLASSICGEN_MAX_VERTICES);
 }
 
@@ -1159,7 +1151,7 @@ static void ClassicGenScreen_Init(void* screen) {
 	ClassicGenScreen_Make(s, 1,  -50, ClassicGenScreen_Medium);
 	ClassicGenScreen_Make(s, 2,    0, ClassicGenScreen_Huge);
 
-	Menu_Back(s, 3, &s->cancel, Menu_SwitchPause);
+	Menu_MakeBack(&s->cancel, Menu_SwitchPause);
 }
 
 static const struct ScreenVTABLE ClassicGenScreen_VTABLE = {
@@ -3108,10 +3100,17 @@ void TexIdsOverlay_Show(void) {
 static struct UrlWarningOverlay {
 	Screen_Body
 	String url;
-	struct ButtonWidget buttons[2];
-	struct TextWidget   labels[4];
+	struct ButtonWidget btns[2];
+	struct TextWidget   lbls[4];
 	char _urlBuffer[STRING_SIZE * 4];
-} UrlWarningOverlay_Instance;
+} UrlWarningOverlay;
+
+static struct Widget* urlwarning_widgets[6] = {
+	(struct Widget*)&UrlWarningOverlay.lbls[0], (struct Widget*)&UrlWarningOverlay.lbls[1],
+	(struct Widget*)&UrlWarningOverlay.lbls[2], (struct Widget*)&UrlWarningOverlay.lbls[3],
+	(struct Widget*)&UrlWarningOverlay.btns[0], (struct Widget*)&UrlWarningOverlay.btns[1]
+};
+#define URLWARNING_MAX_VERTICES (4 * TEXTWIDGET_MAX + 2 * BUTTONWIDGET_MAX)
 
 static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
@@ -3128,42 +3127,49 @@ static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 static void UrlWarningOverlay_ContextRecreated(void* screen) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
 	struct FontDesc titleFont, textFont;
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, URLWARNING_MAX_VERTICES);
+
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&textFont);
 
-	TextWidget_SetConst(&s->labels[0], "&eAre you sure you want to open this link?", &titleFont);
-	TextWidget_Set(&s->labels[1],      &s->url,                                      &textFont);
-	TextWidget_SetConst(&s->labels[2], "Be careful - links from strangers may be websites that", &textFont);
-	TextWidget_SetConst(&s->labels[3], " have viruses, or things you may not want to open/see.", &textFont);
+	TextWidget_SetConst(&s->lbls[0], "&eAre you sure you want to open this link?", &titleFont);
+	TextWidget_Set(&s->lbls[1],      &s->url,                                      &textFont);
+	TextWidget_SetConst(&s->lbls[2], "Be careful - links from strangers may be websites that", &textFont);
+	TextWidget_SetConst(&s->lbls[3], " have viruses, or things you may not want to open/see.", &textFont);
 
-	ButtonWidget_SetConst(&s->buttons[0], "Yes", &titleFont);
-	ButtonWidget_SetConst(&s->buttons[1], "No",  &titleFont);
+	ButtonWidget_SetConst(&s->btns[0], "Yes", &titleFont);
+	ButtonWidget_SetConst(&s->btns[1], "No",  &titleFont);
 	Font_Free(&titleFont);
 	Font_Free(&textFont);
 }
 
-static void UrlWarningOverlay_BuildMesh(void* screen) { }
+static void UrlWarningOverlay_BuildMesh(void* screen) {
+	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
+	VertexP3fT2fC4b vertices[URLWARNING_MAX_VERTICES];
+
+	Screen_BuildMesh(screen, vertices);
+	Gfx_SetDynamicVbData(s->vb, vertices, URLWARNING_MAX_VERTICES);
+}
 
 static void UrlWarningOverlay_Init(void* screen) {
-	static struct Widget* widgets[6];
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
+	s->widgets    = urlwarning_widgets;
+	s->numWidgets = Array_Elems(urlwarning_widgets);
 
-	Overlay_MakeLabels(s, s->labels);
-	Overlay_MakeMainButtons(s, s->buttons);
-	s->buttons[0].MenuClick = UrlWarningOverlay_OpenUrl;
-	s->buttons[1].MenuClick = UrlWarningOverlay_AppendUrl;
+	Overlay_MakeLabels(s, s->lbls);
+	Overlay_MakeMainButtons(s, s->btns);
+	s->btns[0].MenuClick = UrlWarningOverlay_OpenUrl;
+	s->btns[1].MenuClick = UrlWarningOverlay_AppendUrl;
 }
 
 static const struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
-	UrlWarningOverlay_Init, MenuScreen_Render, Menu_NullFunc,    UrlWarningOverlay_BuildMesh,
-	Screen_TInput,          Screen_TInput,     Screen_TKeyPress, Screen_TText,
-	Menu_PointerDown,       Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
+	UrlWarningOverlay_Init, MenuScreen_Render2, Menu_NullFunc,    UrlWarningOverlay_BuildMesh,
+	Screen_TInput,          Screen_TInput,      Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,       Screen_TPointer,    Menu_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,          Screen_ContextLost, UrlWarningOverlay_ContextRecreated
 };
 void UrlWarningOverlay_Show(const String* url) {
-	struct UrlWarningOverlay* s = &UrlWarningOverlay_Instance;
+	struct UrlWarningOverlay* s = &UrlWarningOverlay;
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &UrlWarningOverlay_VTABLE;

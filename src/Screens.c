@@ -96,6 +96,18 @@ void Screen_ContextLost(void* screen) {
 	}
 }
 
+void Screen_BuildMesh(void* screen, VertexP3fT2fC4b* vertices) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	VertexP3fT2fC4b** ptr   = &vertices;
+	int i;
+
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!widgets[i]) continue;
+		Widget_BuildMesh(widgets[i], ptr);
+	}
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------HUDScreen--------------------------------------------------------*
@@ -1335,7 +1347,7 @@ static struct Widget* disconnect_widgets[3] = {
 	(struct Widget*)&DisconnectScreen.message,
 	(struct Widget*)&DisconnectScreen.reconnect
 };
-#define DISCONNECT_MAX_VERTICES (BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
+#define DISCONNECT_MAX_VERTICES (2 * TEXTWIDGET_MAX + BUTTONWIDGET_MAX)
 #define DISCONNECT_DELAY_MS 5000
 
 static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, String* msg) {
@@ -1394,11 +1406,8 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 static void DisconnectScreen_BuildMesh(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	VertexP3fT2fC4b vertices[DISCONNECT_MAX_VERTICES];
-	VertexP3fT2fC4b* ptr = vertices;
 
-	Widget_BuildMesh(&s->title,     &ptr);
-	Widget_BuildMesh(&s->message,   &ptr);
-	Widget_BuildMesh(&s->reconnect, &ptr);
+	Screen_BuildMesh(screen, vertices);
 	Gfx_SetDynamicVbData(s->vb, vertices, DISCONNECT_MAX_VERTICES);
 }
 
