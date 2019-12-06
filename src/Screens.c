@@ -1404,7 +1404,7 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 }
 
 static void DisconnectScreen_BuildMesh(void* screen) {
-	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
+	struct Screen* s = (struct Screen*)screen;
 	VertexP3fT2fC4b vertices[DISCONNECT_MAX_VERTICES];
 
 	Screen_BuildMesh(screen, vertices);

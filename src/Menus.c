@@ -427,7 +427,7 @@ static void ListScreen_ContextRecreated(void* screen) {
 }
 
 static void ListScreen_BuildMesh(void* screen) {
-	struct ListScreen* s = (struct ListScreen*)screen;
+	struct Screen* s = (struct Screen*)screen;
 	VertexP3fT2fC4b vertices[LIST_MAX_VERTICES];
 
 	Screen_BuildMesh(screen, vertices);
@@ -576,10 +576,19 @@ static struct OptionsGroupScreen {
 	Screen_Body
 	int selectedI;
 	struct FontDesc textFont;
-	struct ButtonWidget buttons[7];
+	struct ButtonWidget btns[7];
 	struct TextWidget desc;	
 	struct ButtonWidget done;	
 } OptionsGroupScreen;
+
+static struct Widget* optGroups_widgets[9] = {
+	(struct Widget*)&OptionsGroupScreen.btns[0], (struct Widget*)&OptionsGroupScreen.btns[1],
+	(struct Widget*)&OptionsGroupScreen.btns[2], (struct Widget*)&OptionsGroupScreen.btns[3],
+	(struct Widget*)&OptionsGroupScreen.btns[4], (struct Widget*)&OptionsGroupScreen.btns[5],
+	(struct Widget*)&OptionsGroupScreen.btns[6], (struct Widget*)&OptionsGroupScreen.desc,
+	(struct Widget*)&OptionsGroupScreen.done
+};
+#define OPTGROUPS_MAX_VERTICES (7 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX + BUTTONWIDGET_MAX)
 
 static const char* const optsGroup_descs[7] = {
 	"&eMusic/Sound, view bobbing, and more",
@@ -602,7 +611,8 @@ static const struct SimpleButtonDesc optsGroup_btns[7] = {
 
 static void OptionsGroupScreen_CheckHacksAllowed(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
-	s->buttons[5].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
+	s->btns[5].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
+	s->dirty = true;
 }
 
 CC_NOINLINE static void OptionsGroupScreen_UpdateDesc(struct OptionsGroupScreen* s) {
@@ -618,10 +628,12 @@ static void OptionsGroupScreen_ContextLost(void* screen) {
 static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 	struct FontDesc titleFont;
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, OPTGROUPS_MAX_VERTICES);
+
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&s->textFont);
 
-	Menu_SetButtons(s->buttons, &titleFont, optsGroup_btns, 7);
+	Menu_SetButtons(s->btns, &titleFont, optsGroup_btns, 7);
 	ButtonWidget_SetConst(&s->done, "Done", &titleFont);
 
 	if (s->selectedI >= 0) OptionsGroupScreen_UpdateDesc(s);
@@ -629,20 +641,25 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	Font_Free(&titleFont);
 }
 
-static void OptionsGroupScreen_BuildMesh(void* screen) { }
+static void OptionsGroupScreen_BuildMesh(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	VertexP3fT2fC4b vertices[OPTGROUPS_MAX_VERTICES];
+
+	Screen_BuildMesh(screen, vertices);
+	Gfx_SetDynamicVbData(s->vb, vertices, OPTGROUPS_MAX_VERTICES);
+}
 
 static void OptionsGroupScreen_Init(void* screen) {
-	static struct Widget* widgets[9];
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
+	s->widgets    = optGroups_widgets;
+	s->numWidgets = Array_Elems(optGroups_widgets);
 	s->selectedI  = -1;
 
-	Menu_Buttons(s,  s->buttons, 300, optsGroup_btns, 7);
-	Menu_Label(s, 7, &s->desc,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
-	Menu_Back(s,  8, &s->done,   Menu_SwitchPause);
+	Menu_Buttons(s,  s->btns, 300, optsGroup_btns, 7);
+	TextWidget_Make(&s->desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
+	Menu_MakeBack(&s->done,   Menu_SwitchPause);
 }
 
 static void OptionsGroupScreen_Free(void* screen) {
@@ -662,7 +679,7 @@ static int OptionsGroupScreen_PointerMove(void* screen, int id, int x, int y) {
 }
 
 static const struct ScreenVTABLE OptionsGroupScreen_VTABLE = {
-	OptionsGroupScreen_Init, MenuScreen_Render,  OptionsGroupScreen_Free,        OptionsGroupScreen_BuildMesh,
+	OptionsGroupScreen_Init, MenuScreen_Render2, OptionsGroupScreen_Free,        OptionsGroupScreen_BuildMesh,
 	MenuScreen_KeyDown,      Screen_TInput,      Screen_TKeyPress,               Screen_TText,
 	Menu_PointerDown,        Screen_TPointer,    OptionsGroupScreen_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,           OptionsGroupScreen_ContextLost, OptionsGroupScreen_ContextRecreated
@@ -686,11 +703,11 @@ static struct EditHotkeyScreen {
 	cc_bool supressNextPress;
 	struct FontDesc titleFont, textFont;
 	struct MenuInputWidget input;
-	struct ButtonWidget buttons[5], cancel;
+	struct ButtonWidget btns[5], cancel;
 } EditHotkeyScreen_Instance;
 
 static void EditHotkeyScreen_Make(struct EditHotkeyScreen* s, int i, int x, int y, Widget_LeftClick onClick) {
-	Menu_Button(s, i, &s->buttons[i], 300, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
+	Menu_Button(s, i, &s->btns[i], 300, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
 static void HotkeyListScreen_MakeFlags(int flags, String* str);
@@ -709,7 +726,7 @@ static void EditHotkeyScreen_UpdateBaseKey(struct EditHotkeyScreen* s) {
 		String_AppendConst(&text, "Key: ");
 		String_AppendConst(&text, Input_Names[s->curHotkey.Trigger]);
 	}
-	ButtonWidget_Set(&s->buttons[0], &text, &s->titleFont);
+	ButtonWidget_Set(&s->btns[0], &text, &s->titleFont);
 }
 
 static void EditHotkeyScreen_UpdateModifiers(struct EditHotkeyScreen* s) {
@@ -722,7 +739,7 @@ static void EditHotkeyScreen_UpdateModifiers(struct EditHotkeyScreen* s) {
 		String_AppendConst(&text, "Modifiers:");
 		EditHotkeyScreen_MakeFlags(s->curHotkey.Flags, &text);
 	}
-	ButtonWidget_Set(&s->buttons[1], &text, &s->titleFont);
+	ButtonWidget_Set(&s->btns[1], &text, &s->titleFont);
 }
 
 static void EditHotkeyScreen_UpdateLeaveOpen(struct EditHotkeyScreen* s) {
@@ -731,7 +748,7 @@ static void EditHotkeyScreen_UpdateLeaveOpen(struct EditHotkeyScreen* s) {
 
 	String_AppendConst(&text, "Input stays open: ");
 	String_AppendConst(&text, s->curHotkey.StaysOpen ? "ON" : "OFF");
-	ButtonWidget_Set(&s->buttons[2], &text, &s->titleFont);
+	ButtonWidget_Set(&s->btns[2], &text, &s->titleFont);
 }
 
 static void EditHotkeyScreen_BaseKey(void* screen, void* b) {
@@ -858,8 +875,8 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	EditHotkeyScreen_UpdateModifiers(s);
 	EditHotkeyScreen_UpdateLeaveOpen(s);
 
-	ButtonWidget_SetConst(&s->buttons[3], existed ? "Save changes" : "Add hotkey", &s->titleFont);
-	ButtonWidget_SetConst(&s->buttons[4], existed ? "Remove hotkey" : "Cancel",    &s->titleFont);
+	ButtonWidget_SetConst(&s->btns[3], existed ? "Save changes" : "Add hotkey", &s->titleFont);
+	ButtonWidget_SetConst(&s->btns[4], existed ? "Remove hotkey" : "Cancel",    &s->titleFont);
 	MenuInputWidget_SetFont(&s->input, &s->textFont);
 	ButtonWidget_SetConst(&s->cancel, "Cancel", &s->titleFont);
 }
@@ -1131,7 +1148,7 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 }
 
 static void ClassicGenScreen_BuildMesh(void* screen) {
-	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
+	struct Screen* s = (struct Screen*)screen;
 	VertexP3fT2fC4b vertices[CLASSICGEN_MAX_VERTICES];
 
 	Screen_BuildMesh(screen, vertices);
@@ -2902,22 +2919,21 @@ void NostalgiaScreen_Show(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Overlay---------------------------------------------------------*
 *#########################################################################################################################*/
-static void Overlay_MakeLabels(void* menu, struct TextWidget* labels) {
-	struct MenuScreen* s = (struct MenuScreen*)menu;
+static void Overlay_MakeLabels(struct TextWidget* labels) {
 	PackedCol col = PackedCol_Make(224, 224, 224, 255);
 	int i;
-	Menu_Label(s,     0, &labels[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
+	TextWidget_Make(&labels[0],     ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
 	
 	for (i = 1; i < 4; i++) {
-		Menu_Label(s, i, &labels[i], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -70 + 20 * i);
+		TextWidget_Make(&labels[i], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -70 + 20 * i);
 		labels[i].col = col;
 	}
 }
 
-static void Overlay_MakeMainButtons(void* s, struct ButtonWidget* btns) {
-	Menu_Button(s, 4, &btns[0], 160, NULL, 
+static void Overlay_MakeMainButtons(struct ButtonWidget* btns) {
+	ButtonWidget_Make(&btns[0], 160, NULL, 
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 30);
-	Menu_Button(s, 5, &btns[1], 160, NULL, 
+	ButtonWidget_Make(&btns[1], 160, NULL,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 30);
 }
 
@@ -3136,7 +3152,7 @@ static void UrlWarningOverlay_ContextRecreated(void* screen) {
 }
 
 static void UrlWarningOverlay_BuildMesh(void* screen) {
-	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
+	struct Screen* s = (struct Screen*)screen;
 	VertexP3fT2fC4b vertices[URLWARNING_MAX_VERTICES];
 
 	Screen_BuildMesh(screen, vertices);
@@ -3148,8 +3164,8 @@ static void UrlWarningOverlay_Init(void* screen) {
 	s->widgets    = urlwarning_widgets;
 	s->numWidgets = Array_Elems(urlwarning_widgets);
 
-	Overlay_MakeLabels(s, s->lbls);
-	Overlay_MakeMainButtons(s, s->btns);
+	Overlay_MakeLabels(s->lbls);
+	Overlay_MakeMainButtons(s->btns);
 	s->btns[0].MenuClick = UrlWarningOverlay_OpenUrl;
 	s->btns[1].MenuClick = UrlWarningOverlay_AppendUrl;
 }
@@ -3262,6 +3278,7 @@ static void TexPackOverlay_Render(void* screen, double delta) {
 	MenuScreen_Render2(s, delta);
 	if (!Http_GetResult(&s->identifier, &item)) return;
 	/* TODO: Don't delay this by a frame */
+	/* TODO: This screws up download size for one frame!! */
 	s->contentLength = item.ContentLength;
 	TexPackOverlay_UpdateLine3(s);
 }
@@ -3304,7 +3321,7 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 }
 
 static void TexPackOverlay_BuildMesh(void* screen) {
-	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
+	struct Screen* s = (struct Screen*)screen;
 	VertexP3fT2fC4b vertices[TEXPACK_MAX_VERTICES];
 
 	Screen_BuildMesh(screen, vertices);
@@ -3318,12 +3335,12 @@ static void TexPackOverlay_Init(void* screen) {
 
 	s->contentLength = 0;
 	s->deny          = false;	
-	Overlay_MakeLabels(s,       s->lbls);
-	Overlay_MakeMainButtons(s,  s->btns);
+	Overlay_MakeLabels(s->lbls);
+	Overlay_MakeMainButtons(s->btns);
 
-	Menu_Button(s, 6, &s->btns[2], 160, NULL,
+	ButtonWidget_Make(&s->btns[2], 160, NULL,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 85);
-	Menu_Button(s, 7, &s->btns[3], 160, NULL,
+	ButtonWidget_Make(&s->btns[3], 160, NULL,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 85);
 }
 
