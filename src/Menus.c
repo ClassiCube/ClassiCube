@@ -2920,14 +2920,6 @@ static void Overlay_MakeMainButtons(void* s, struct ButtonWidget* btns) {
 	Menu_Button(s, 5, &btns[1], 160, NULL, 
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 30);
 }
-static void Overlay_MakeExtraButtons(void* s, struct ButtonWidget* btns) {
-	Menu_Button(s, 6, &btns[2], 160, NULL,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 85);
-	Menu_Button(s, 7, &btns[3], 160, NULL,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 85);
-}
-
-static cc_bool WarningOverlay_IsAlways(void* screen, void* w) { return Menu_Index(screen, w) >= 6; }
 
 
 /*########################################################################################################################*
@@ -3189,21 +3181,31 @@ static struct TexPackOverlay {
 	cc_uint32 contentLength;
 	String url, identifier;
 	struct FontDesc textFont;
-	struct ButtonWidget buttons[4];
-	struct TextWidget   labels[4];
+	struct ButtonWidget btns[4];
+	struct TextWidget   lbls[4];
 	char _identifierBuffer[STRING_SIZE + 4];
-} TexPackOverlay_Instance;
+} TexPackOverlay;
+
+static struct Widget* texpack_widgets[8] = {
+	(struct Widget*)&TexPackOverlay.lbls[0], (struct Widget*)&TexPackOverlay.lbls[1],
+	(struct Widget*)&TexPackOverlay.lbls[2], (struct Widget*)&TexPackOverlay.lbls[3],
+	(struct Widget*)&TexPackOverlay.btns[0], (struct Widget*)&TexPackOverlay.btns[1],
+	(struct Widget*)&TexPackOverlay.btns[2], (struct Widget*)&TexPackOverlay.btns[3]
+};
+#define TEXPACK_MAX_VERTICES (4 * TEXTWIDGET_MAX + 4 * BUTTONWIDGET_MAX)
+
+static cc_bool TexPackOverlay_IsAlways(void* screen, void* w) { return Menu_Index(screen, w) >= 6; }
 
 static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
 	World_ApplyTexturePack(&s->url);
-	if (WarningOverlay_IsAlways(s, widget)) TextureCache_Accept(&s->url);
+	if (TexPackOverlay_IsAlways(s, widget)) TextureCache_Accept(&s->url);
 	Gui_Remove((struct Screen*)s);
 }
 
 static void TexPackOverlay_NoClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	s->alwaysDeny = WarningOverlay_IsAlways(s, widget);
+	s->alwaysDeny = TexPackOverlay_IsAlways(s, widget);
 	s->deny       = true;
 	Gui_Refresh((struct Screen*)s);
 }
@@ -3234,7 +3236,7 @@ static void TexPackOverlay_UpdateLine2(struct TexPackOverlay* s) {
 			url = String_UNSAFE_SubstringAt(&url, http.length);
 		}
 	}
-	TextWidget_Set(&s->labels[2], &url, &s->textFont);
+	TextWidget_Set(&s->lbls[2], &url, &s->textFont);
 }
 
 static void TexPackOverlay_UpdateLine3(struct TexPackOverlay* s) {
@@ -3242,14 +3244,14 @@ static void TexPackOverlay_UpdateLine3(struct TexPackOverlay* s) {
 	float contentLengthMB;
 
 	if (s->deny) {
-		TextWidget_SetConst(&s->labels[3], "Sure you don't want to download the texture pack?", &s->textFont);
+		TextWidget_SetConst(&s->lbls[3], "Sure you don't want to download the texture pack?", &s->textFont);
 	} else if (s->contentLength) {
 		String_InitArray(contents, contentsBuffer);
 		contentLengthMB = s->contentLength / (1024.0f * 1024.0f);
 		String_Format1(&contents, "Download size: %f3 MB", &contentLengthMB);
-		TextWidget_Set(&s->labels[3], &contents, &s->textFont);
+		TextWidget_Set(&s->lbls[3], &contents, &s->textFont);
 	} else {
-		TextWidget_SetConst(&s->labels[3], "Download size: Determining...", &s->textFont);
+		TextWidget_SetConst(&s->lbls[3], "Download size: Determining...", &s->textFont);
 	}
 }
 
@@ -3257,8 +3259,9 @@ static void TexPackOverlay_Render(void* screen, double delta) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
 	struct HttpRequest item;
 
-	MenuScreen_Render(s, delta);
+	MenuScreen_Render2(s, delta);
 	if (!Http_GetResult(&s->identifier, &item)) return;
+	/* TODO: Don't delay this by a frame */
 	s->contentLength = item.ContentLength;
 	TexPackOverlay_UpdateLine3(s);
 }
@@ -3272,45 +3275,56 @@ static void TexPackOverlay_ContextLost(void* screen) {
 static void TexPackOverlay_ContextRecreated(void* screen) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
 	struct FontDesc titleFont;
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXPACK_MAX_VERTICES);
+
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&s->textFont);
 
-	TextWidget_SetConst(&s->labels[0], s->deny  ? "&eYou might be missing out." 
+	TextWidget_SetConst(&s->lbls[0], s->deny  ? "&eYou might be missing out." 
 		: "Do you want to download the server's texture pack?", &titleFont);
-	TextWidget_SetConst(&s->labels[1], !s->deny ? "Texture pack url:"
+	TextWidget_SetConst(&s->lbls[1], !s->deny ? "Texture pack url:"
 		: "Texture packs can play a vital role in the look and feel of maps.", &s->textFont);
 	TexPackOverlay_UpdateLine2(s);
 	TexPackOverlay_UpdateLine3(s);
 
-	ButtonWidget_SetConst(&s->buttons[0], s->deny ? "I'm sure" : "Yes", &titleFont);
-	ButtonWidget_SetConst(&s->buttons[1], s->deny ? "Go back"  : "No",  &titleFont);
-	s->buttons[0].MenuClick = s->deny ? TexPackOverlay_ConfirmNoClick : TexPackOverlay_YesClick;
-	s->buttons[1].MenuClick = s->deny ? TexPackOverlay_GoBackClick    : TexPackOverlay_NoClick;
+	ButtonWidget_SetConst(&s->btns[0], s->deny ? "I'm sure" : "Yes", &titleFont);
+	ButtonWidget_SetConst(&s->btns[1], s->deny ? "Go back"  : "No",  &titleFont);
+	s->btns[0].MenuClick = s->deny ? TexPackOverlay_ConfirmNoClick : TexPackOverlay_YesClick;
+	s->btns[1].MenuClick = s->deny ? TexPackOverlay_GoBackClick    : TexPackOverlay_NoClick;
 
 	if (!s->deny) {
-		ButtonWidget_SetConst(&s->buttons[2], "Always yes", &titleFont);
-		ButtonWidget_SetConst(&s->buttons[3], "Always no",  &titleFont);
-		s->buttons[2].MenuClick = TexPackOverlay_YesClick;
-		s->buttons[3].MenuClick = TexPackOverlay_NoClick;
+		ButtonWidget_SetConst(&s->btns[2], "Always yes", &titleFont);
+		ButtonWidget_SetConst(&s->btns[3], "Always no",  &titleFont);
+		s->btns[2].MenuClick = TexPackOverlay_YesClick;
+		s->btns[3].MenuClick = TexPackOverlay_NoClick;
 	}
 
 	s->numWidgets = s->deny ? 6 : 8;
 	Font_Free(&titleFont);
 }
 
-static void TexPackOverlay_BuildMesh(void* screen) { }
+static void TexPackOverlay_BuildMesh(void* screen) {
+	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
+	VertexP3fT2fC4b vertices[TEXPACK_MAX_VERTICES];
+
+	Screen_BuildMesh(screen, vertices);
+	Gfx_SetDynamicVbData(s->vb, vertices, TEXPACK_MAX_VERTICES);
+}
 
 static void TexPackOverlay_Init(void* screen) {
-	static struct Widget* widgets[8];
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
+	s->widgets    = texpack_widgets;
+	s->numWidgets = Array_Elems(texpack_widgets);
 
 	s->contentLength = 0;
 	s->deny          = false;	
-	Overlay_MakeLabels(s,       s->labels);
-	Overlay_MakeMainButtons(s,  s->buttons);
-	Overlay_MakeExtraButtons(s, s->buttons);
+	Overlay_MakeLabels(s,       s->lbls);
+	Overlay_MakeMainButtons(s,  s->btns);
+
+	Menu_Button(s, 6, &s->btns[2], 160, NULL,
+		ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 85);
+	Menu_Button(s, 7, &s->btns[3], 160, NULL,
+		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 85);
 }
 
 static const struct ScreenVTABLE TexPackOverlay_VTABLE = {
@@ -3320,7 +3334,7 @@ static const struct ScreenVTABLE TexPackOverlay_VTABLE = {
 	Screen_Layout,       TexPackOverlay_ContextLost, TexPackOverlay_ContextRecreated
 };
 void TexPackOverlay_Show(const String* url) {
-	struct TexPackOverlay* s = &TexPackOverlay_Instance;
+	struct TexPackOverlay* s = &TexPackOverlay;
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &TexPackOverlay_VTABLE;
