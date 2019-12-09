@@ -3434,8 +3434,11 @@ static void TouchMoreOverlay_Init(void* screen) {
 	/* TODO: Close button */
 }
 
+static void TouchMoreOverlay_BuildMesh(void* screen) { }
+
 static const struct ScreenVTABLE TouchMoreOverlay_VTABLE = {
-	TouchMoreOverlay_Init, MenuScreen_Render, Screen_NullFunc,
+	TouchMoreOverlay_Init, Screen_NullUpdate, Screen_NullFunc,
+	MenuScreen_Render,     TouchMoreOverlay_BuildMesh,
 	Screen_InputDown,      Screen_TInput,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,      Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,         Screen_ContextLost, TouchMoreOverlay_ContextRecreated

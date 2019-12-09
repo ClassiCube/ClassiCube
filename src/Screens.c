@@ -1439,6 +1439,11 @@ static void DisconnectScreen_Init(void* screen) {
 	s->numWidgets   = s->canReconnect ? 3 : 2;
 }
 
+static void DisconnectScreen_Update(void* screen, double delta) {
+	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
+	if (s->canReconnect) DisconnectScreen_UpdateDelayLeft(s, delta);
+}
+
 static void DisconnectScreen_Render(void* screen, double delta) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	PackedCol top    = PackedCol_Make(64, 32, 32, 255);
@@ -1448,11 +1453,6 @@ static void DisconnectScreen_Render(void* screen, double delta) {
 	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
-
-	if (s->canReconnect) {
-		/* TODO: don't delay to next frame */
-		DisconnectScreen_UpdateDelayLeft(s, delta);
-	}
 }
 
 static void DisconnectScreen_Free(void* screen) { Game_SetFpsLimit(Game_FpsLimit); }
@@ -1478,10 +1478,10 @@ static int DisconnectScreen_PointerMove(void* screen, int idx, int x, int y) {
 }
 
 static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
-	DisconnectScreen_Init,        Screen_NullUpdate, DisconnectScreen_Free,
+	DisconnectScreen_Init,        DisconnectScreen_Update, DisconnectScreen_Free,
 	DisconnectScreen_Render,      DisconnectScreen_BuildMesh,
-	Screen_InputDown,             Screen_TInput,    Screen_TKeyPress,             Screen_TText,
-	DisconnectScreen_PointerDown, Screen_TPointer,  DisconnectScreen_PointerMove, Screen_TMouseScroll,
+	Screen_InputDown,             Screen_TInput,           Screen_TKeyPress,             Screen_TText,
+	DisconnectScreen_PointerDown, Screen_TPointer,         DisconnectScreen_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,                DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 void DisconnectScreen_Show(const String* title, const String* message) {
@@ -1660,10 +1660,13 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	return false;
 }
 
+static void TouchScreen_BuildMesh(void* screen) { }
+
 static const struct ScreenVTABLE TouchScreen_VTABLE = {
-	Screen_NullFunc,         TouchScreen_Render,      Screen_NullFunc,
-	Screen_FInput,           Screen_FInput,           Screen_FKeyPress, Screen_FText,
-	TouchScreen_PointerDown, TouchScreen_PointerUp,   Screen_FPointer,  Screen_FMouseScroll,
+	Screen_NullFunc,         Screen_NullUpdate,     Screen_NullFunc,
+	TouchScreen_Render,      TouchScreen_BuildMesh,
+	Screen_FInput,           Screen_FInput,         Screen_FKeyPress, Screen_FText,
+	TouchScreen_PointerDown, TouchScreen_PointerUp, Screen_FPointer,  Screen_FMouseScroll,
 	TouchScreen_Layout,    TouchScreen_ContextLost, TouchScreen_ContextRecreated
 };
 void TouchScreen_Show(void) {
