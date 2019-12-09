@@ -35,7 +35,8 @@ int Screen_TKeyPress(void* s, char keyChar)   { return true; }
 int Screen_TText(void* s, const String* str)  { return true; }
 int Screen_TMouseScroll(void* s, float delta) { return true; }
 int Screen_TPointer(void* s, int id, int x, int y) { return true; }
-static void Screen_NullFunc(void* screen) { }
+void Screen_NullFunc(void* screen) { }
+void Screen_NullUpdate(void* screen, double delta) { }
 
 CC_NOINLINE static cc_bool IsOnlyHudActive(void) {
 	struct Screen* s;
@@ -287,10 +288,11 @@ static void HUDScreen_Render(void* screen, double delta) {
 }
 
 static const struct ScreenVTABLE HUDScreen_VTABLE = {
-	Screen_NullFunc, HUDScreen_Render,    Screen_NullFunc,  HUDScreen_BuildMesh,
-	Screen_FInput,   Screen_FInput,       Screen_FKeyPress, Screen_FText,
-	Screen_FPointer, Screen_FPointer,     Screen_FPointer,  Screen_FMouseScroll,
-	Screen_NullFunc, HUDScreen_ContextLost, HUDScreen_ContextRecreated
+	Screen_NullFunc,  Screen_NullUpdate, Screen_NullFunc,  
+	HUDScreen_Render, HUDScreen_BuildMesh,
+	Screen_FInput,    Screen_FInput,     Screen_FKeyPress, Screen_FText,
+	Screen_FPointer,  Screen_FPointer,   Screen_FPointer,  Screen_FMouseScroll,
+	Screen_NullFunc,  HUDScreen_ContextLost, HUDScreen_ContextRecreated
 };
 void HUDScreen_Show(void) {
 	struct HUDScreen* s = &HUDScreen_Instance;
@@ -889,7 +891,8 @@ static void ChatScreen_Free(void* screen) {
 }
 
 static const struct ScreenVTABLE ChatScreen_VTABLE = {
-	ChatScreen_Init,        ChatScreen_Render, ChatScreen_Free,     ChatScreen_BuildMesh,
+	ChatScreen_Init,        Screen_NullUpdate, ChatScreen_Free,    
+	ChatScreen_Render,      ChatScreen_BuildMesh,
 	ChatScreen_KeyDown,     ChatScreen_KeyUp,  ChatScreen_KeyPress, ChatScreen_TextChanged,
 	ChatScreen_PointerDown, Screen_FPointer,   Screen_FPointer,     ChatScreen_MouseScroll,
 	ChatScreen_Layout, ChatScreen_ContextLost, ChatScreen_ContextRecreated
@@ -1074,7 +1077,8 @@ static int InventoryScreen_MouseScroll(void* screen, float delta) {
 }
 
 static const struct ScreenVTABLE InventoryScreen_VTABLE = {
-	InventoryScreen_Init,        InventoryScreen_Render,    InventoryScreen_Free,        InventoryScreen_BuildMesh,
+	InventoryScreen_Init,        Screen_NullUpdate,         InventoryScreen_Free, 
+	InventoryScreen_Render,      InventoryScreen_BuildMesh,
 	InventoryScreen_KeyDown,     InventoryScreen_KeyUp,     Screen_TKeyPress,            Screen_TText,
 	InventoryScreen_PointerDown, InventoryScreen_PointerUp, InventoryScreen_PointerMove, InventoryScreen_MouseScroll,
 	InventoryScreen_Layout,  InventoryScreen_ContextLost, InventoryScreen_ContextRecreated
@@ -1241,9 +1245,10 @@ CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const Stri
 }
 
 static const struct ScreenVTABLE LoadingScreen_VTABLE = {
-	LoadingScreen_Init, LoadingScreen_Render, LoadingScreen_Free, LoadingScreen_BuildMesh,
-	Screen_TInput,      Screen_TInput,        Screen_TKeyPress,   Screen_TText,
-	Screen_TPointer,    Screen_TPointer,      Screen_TPointer,    Screen_TMouseScroll,
+	LoadingScreen_Init,   Screen_NullUpdate, LoadingScreen_Free, 
+	LoadingScreen_Render, LoadingScreen_BuildMesh,
+	Screen_TInput,        Screen_TInput,     Screen_TKeyPress,   Screen_TText,
+	Screen_TPointer,      Screen_TPointer,   Screen_TPointer,    Screen_TMouseScroll,
 	LoadingScreen_Layout, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void LoadingScreen_Show(const String* title, const String* message) {
@@ -1311,9 +1316,10 @@ static void GeneratingScreen_Render(void* screen, double delta) {
 }
 
 static const struct ScreenVTABLE GeneratingScreen_VTABLE = {
-	GeneratingScreen_Init, GeneratingScreen_Render, LoadingScreen_Free, LoadingScreen_BuildMesh,
-	Screen_TInput,         Screen_TInput,           Screen_TKeyPress,   Screen_TText,
-	Screen_TPointer,       Screen_TPointer,         Screen_FPointer,    Screen_TMouseScroll,
+	GeneratingScreen_Init,   Screen_NullUpdate, LoadingScreen_Free,
+	GeneratingScreen_Render, LoadingScreen_BuildMesh,
+	Screen_TInput,           Screen_TInput,     Screen_TKeyPress,   Screen_TText,
+	Screen_TPointer,         Screen_TPointer,   Screen_FPointer,    Screen_TMouseScroll,
 	LoadingScreen_Layout, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void GeneratingScreen_Show(void) {
@@ -1471,9 +1477,10 @@ static int DisconnectScreen_PointerMove(void* screen, int idx, int x, int y) {
 }
 
 static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
-	DisconnectScreen_Init,        DisconnectScreen_Render, DisconnectScreen_Free,        DisconnectScreen_BuildMesh,
-	DisconnectScreen_KeyDown,     Screen_TInput,           Screen_TKeyPress,             Screen_TText,
-	DisconnectScreen_PointerDown, Screen_TPointer,         DisconnectScreen_PointerMove, Screen_TMouseScroll,
+	DisconnectScreen_Init,        Screen_NullUpdate, DisconnectScreen_Free,
+	DisconnectScreen_Render,      DisconnectScreen_BuildMesh,
+	DisconnectScreen_KeyDown,     Screen_TInput,    Screen_TKeyPress,             Screen_TText,
+	DisconnectScreen_PointerDown, Screen_TPointer,  DisconnectScreen_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,                DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 void DisconnectScreen_Show(const String* title, const String* message) {

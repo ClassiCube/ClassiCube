@@ -38,10 +38,12 @@ extern cc_bool Gui_ShowFPS;
 struct ScreenVTABLE {
 	/* Initialises persistent state. */
 	void (*Init)(void* elem);
-	/* Draws this screen and its widgets on screen. */
-	void (*Render)(void* elem, double delta);
+	/* Updates this screen, called every frame just before Render(). */
+	void (*Update)(void* elem, double delta);
 	/* Frees/releases persistent state. */
 	void (*Free)(void* elem);
+	/* Draws this screen and its widgets on screen. */
+	void (*Render)(void* elem, double delta);
 	/* Builds the vertex mesh for all the widgets in the screen. */
 	void (*BuildMesh)(void* elem);
 	/* Returns non-zero if an input press is handled. */

@@ -21,6 +21,9 @@ int Screen_TText(void* s, const String* str);
 int Screen_TMouseScroll(void* s, float delta);
 int Screen_TPointer(void* s, int id, int x, int y);
 
+void Screen_NullFunc(void* screen);
+void Screen_NullUpdate(void* screen, double delta);
+
 /* Calls Elem_Render on each widget in the screen. */
 void Screen_RenderWidgets(void* screen, double delta);
 /* Calls Widget_Render2 on each widget in the screen. */
