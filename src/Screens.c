@@ -35,8 +35,10 @@ int Screen_TKeyPress(void* s, char keyChar)   { return true; }
 int Screen_TText(void* s, const String* str)  { return true; }
 int Screen_TMouseScroll(void* s, float delta) { return true; }
 int Screen_TPointer(void* s, int id, int x, int y) { return true; }
+
 void Screen_NullFunc(void* screen) { }
 void Screen_NullUpdate(void* screen, double delta) { }
+int  Screen_InputDown(void* screen, int key) { return key < KEY_F1 || key > KEY_F35; }
 
 CC_NOINLINE static cc_bool IsOnlyHudActive(void) {
 	struct Screen* s;
@@ -1454,7 +1456,6 @@ static void DisconnectScreen_Render(void* screen, double delta) {
 }
 
 static void DisconnectScreen_Free(void* screen) { Game_SetFpsLimit(Game_FpsLimit); }
-static int DisconnectScreen_KeyDown(void* s, int key) { return key < KEY_F1 || key > KEY_F35; }
 
 static int DisconnectScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
@@ -1479,7 +1480,7 @@ static int DisconnectScreen_PointerMove(void* screen, int idx, int x, int y) {
 static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,        Screen_NullUpdate, DisconnectScreen_Free,
 	DisconnectScreen_Render,      DisconnectScreen_BuildMesh,
-	DisconnectScreen_KeyDown,     Screen_TInput,    Screen_TKeyPress,             Screen_TText,
+	Screen_InputDown,             Screen_TInput,    Screen_TKeyPress,             Screen_TText,
 	DisconnectScreen_PointerDown, Screen_TPointer,  DisconnectScreen_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,                DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };

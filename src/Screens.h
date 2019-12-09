@@ -23,6 +23,7 @@ int Screen_TPointer(void* s, int id, int x, int y);
 
 void Screen_NullFunc(void* screen);
 void Screen_NullUpdate(void* screen, double delta);
+int  Screen_InputDown(void* screen, int key);
 
 /* Calls Elem_Render on each widget in the screen. */
 void Screen_RenderWidgets(void* screen, double delta);
