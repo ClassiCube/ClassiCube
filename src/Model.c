@@ -441,12 +441,13 @@ struct ModelSet {
 	struct ModelLimbs limbs[3];
 };
 
-static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* model) {
+static void HumanModel_DrawCore(struct Entity* entity, struct ModelSet* model, cc_bool opaque) {
 	struct ModelLimbs* set;
 	int type;
 
 	Model_ApplyTexture(entity);
-	Gfx_SetAlphaTest(false);
+	/* human model draws the body opaque so players can't have invisible skins */
+	if (opaque) Gfx_SetAlphaTest(false);
 
 	type = Models.skinType;
 	set  = &model->limbs[type & 0x3];
@@ -460,9 +461,13 @@ static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* mode
 	Model_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  &set->leftArm,  false);
 	Model_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, &set->rightArm, false);
 	Models.Rotation = ROTATE_ORDER_ZYX;
-	Model_UpdateVB();
 
-	Gfx_SetAlphaTest(true);
+	/* have to seperately draw these vertices without alpha testing */
+	if (opaque) {
+		Model_UpdateVB();
+		Gfx_SetAlphaTest(true);
+	}
+
 	if (type != SKIN_64x32) {
 		Model_DrawPart(&model->torsoLayer);
 		Model_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  &set->leftLegLayer,  false);
@@ -477,7 +482,7 @@ static void HumanModel_DrawModelSet(struct Entity* entity, struct ModelSet* mode
 	Model_UpdateVB();
 }
 
-static void HumanModel_DrawArmSet(struct Entity* entity, struct ModelSet* model) {
+static void HumanModel_DrawArmCore(struct Entity* entity, struct ModelSet* model) {
 	struct ModelLimbs* set;
 	int type;
 
@@ -615,11 +620,11 @@ static void HumanModel_MakeParts(void) {
 }
 
 static void HumanModel_Draw(struct Entity* entity) {
-	HumanModel_DrawModelSet(entity, &human_set);
+	HumanModel_DrawCore(entity, &human_set, true);
 }
 
 static void HumanModel_DrawArm(struct Entity* entity) {
-	HumanModel_DrawArmSet(entity, &human_set);
+	HumanModel_DrawArmCore(entity, &human_set);
 }
 
 static float HumanModel_GetNameY(struct Entity* e) { return 32.5f/16.0f; }
@@ -706,11 +711,11 @@ static void ChibiModel_MakeParts(void) {
 }
 
 static void ChibiModel_Draw(struct Entity* entity) {
-	HumanModel_DrawModelSet(entity, &chibi_set);
+	HumanModel_DrawCore(entity, &chibi_set, true);
 }
 
 static void ChibiModel_DrawArm(struct Entity* entity) {
-	HumanModel_DrawArmSet(entity, &chibi_set);
+	HumanModel_DrawArmCore(entity, &chibi_set);
 }
 
 static float ChibiModel_GetNameY(struct Entity* e) { return 20.2f/16.0f; }
@@ -1417,22 +1422,12 @@ static struct Model* SpiderModel_GetInstance(void) {
 *#########################################################################################################################*/
 
 static void ZombieModel_Draw(struct Entity* entity) {
-	Model_ApplyTexture(entity);
-	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &human_set.head, true);
-
-	Model_DrawPart(&human_set.torso);
-	Model_DrawRotate(entity->Anim.LeftLegX,  0, 0,                      &human_set.limbs[0].leftLeg,  false);
-	Model_DrawRotate(entity->Anim.RightLegX, 0, 0,                      &human_set.limbs[0].rightLeg, false);
-	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.LeftArmZ,  &human_set.limbs[0].leftArm,  false);
-	Model_DrawRotate(90.0f * MATH_DEG2RAD,   0, entity->Anim.RightArmZ, &human_set.limbs[0].rightArm, false);
-
-	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &human_set.hat, true);
-	Model_UpdateVB();
+	entity->Anim.LeftArmX  = 90.0f * MATH_DEG2RAD;
+	entity->Anim.RightArmX = 90.0f * MATH_DEG2RAD;
+	HumanModel_DrawCore(entity, &human_set, false);
 }
-
 static void ZombieModel_DrawArm(struct Entity* entity) {
-	Model_DrawArmPart(&human_set.limbs[0].rightArm);
-	Model_UpdateVB();
+	HumanModel_DrawArmCore(entity, &human_set);
 }
 
 static void ZombieModel_GetBounds(struct Entity* e) { Model_RetAABB(-4,0,-4, 4,32,4); }
