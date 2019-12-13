@@ -825,8 +825,8 @@ static void Logger_LogCrashHeader(void) {
 	msg.length = 0;
 
 	DateTime_CurrentLocal(&now);
-	String_Format3(&msg, "Crash time: %p2/%p2/%p4 ", &now.Day,  &now.Month,  &now.Year);
-	String_Format3(&msg, "%p2:%p2:%p2" _NL,          &now.Hour, &now.Minute, &now.Second);
+	String_Format3(&msg, "Crash time: %p2/%p2/%p4 ", &now.day,  &now.month,  &now.year);
+	String_Format3(&msg, "%p2:%p2:%p2" _NL,          &now.hour, &now.minute, &now.second);
 	Logger_Log(&msg);
 }
 

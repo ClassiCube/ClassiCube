@@ -3638,9 +3638,138 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 /* SDL and EGL are platform agnostic, other OpenGL context backends are tied to one windowing system. */
 
 /*########################################################################################################################*
+*-------------------------------------------------------SDL OpenGL--------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_SDL
+static SDL_GLContext win_ctx;
+
+void GLContext_Init(struct GraphicsMode* mode) {
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   mode->R);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, mode->G);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  mode->B);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, mode->A);
+
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   GLCONTEXT_DEFAULT_DEPTH);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, true);
+
+	win_ctx = SDL_GL_CreateContext(win_handle);
+	if (!win_ctx) Window_SDLFail("creating OpenGL context");
+}
+
+void GLContext_Update(void) { }
+cc_bool GLContext_TryRestore(void) { return true; }
+void GLContext_Free(void) {
+	SDL_GL_DeleteContext(win_ctx);
+	win_ctx = NULL;
+}
+
+void* GLContext_GetAddress(const char* function) {
+	return SDL_GL_GetProcAddress(function);
+}
+
+cc_bool GLContext_SwapBuffers(void) {
+	SDL_GL_SwapWindow(win_handle);
+	return true;
+}
+
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+	SDL_GL_SetSwapInterval(vsync);
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------EGL OpenGL--------------------------------------------------------*
+*#########################################################################################################################*/
+#elif defined CC_BUILD_ANDROID
+#include <EGL/egl.h>
+static EGLDisplay ctx_display;
+static EGLContext ctx_context;
+static EGLSurface ctx_surface;
+static EGLConfig ctx_config;
+static EGLint ctx_numConfig;
+
+static void GLContext_InitSurface(void) {
+	if (!win_handle) return; /* window not created or lost */
+	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
+
+	if (!ctx_surface) return;
+	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
+}
+
+static void GLContext_FreeSurface(void) {
+	if (!ctx_surface) return;
+	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	eglDestroySurface(ctx_display, ctx_surface);
+	ctx_surface = NULL;
+}
+
+void GLContext_Init(struct GraphicsMode* mode) {
+	static EGLint contextAttribs[3] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+	static EGLint attribs[19] = {
+		EGL_RED_SIZE,  0, EGL_GREEN_SIZE,  0,
+		EGL_BLUE_SIZE, 0, EGL_ALPHA_SIZE,  0,
+		EGL_DEPTH_SIZE,        GLCONTEXT_DEFAULT_DEPTH,
+		EGL_STENCIL_SIZE,      0,
+		EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+		EGL_RENDERABLE_TYPE,   EGL_OPENGL_ES2_BIT,
+		EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
+		EGL_NONE
+	};
+
+	attribs[1]  = mode->R; attribs[3] = mode->G;
+	attribs[5]  = mode->B; attribs[7] = mode->A;
+
+	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	eglInitialize(ctx_display, NULL, NULL);
+	eglBindAPI(EGL_OPENGL_ES_API);
+	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
+
+	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, contextAttribs);
+	GLContext_InitSurface();
+}
+
+void GLContext_Update(void) {
+	GLContext_FreeSurface();
+	GLContext_InitSurface();
+}
+
+cc_bool GLContext_TryRestore(void) {
+	GLContext_FreeSurface();
+	GLContext_InitSurface();
+	return ctx_surface != NULL;
+}
+
+void GLContext_Free(void) {
+	GLContext_FreeSurface();
+	eglDestroyContext(ctx_display, ctx_context);
+	eglTerminate(ctx_display);
+}
+
+void* GLContext_GetAddress(const char* function) {
+	return eglGetProcAddress(function);
+}
+
+cc_bool GLContext_SwapBuffers(void) {
+	EGLint err;
+	if (!ctx_surface) return false;
+	if (eglSwapBuffers(ctx_display, ctx_surface)) return true;
+
+	err = eglGetError();
+	/* TODO: figure out what errors need to be handled here */
+	Logger_Abort2(err, "Failed to swap buffers");
+	return false;
+}
+
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+	eglSwapInterval(ctx_display, vsync);
+}
+
+
+/*########################################################################################################################*
 *-------------------------------------------------------WGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WINGUI
+#elif defined CC_BUILD_WINGUI
 static HGLRC ctx_handle;
 static HDC ctx_DC;
 typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
@@ -3714,13 +3843,12 @@ cc_bool GLContext_SwapBuffers(void) {
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	if (ctx_supports_vSync) wglSwapIntervalEXT(vsync);
 }
-#endif
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------glX OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_X11
+#elif defined CC_BUILD_X11
 #include <GL/glx.h>
 static GLXContext ctx_handle;
 typedef int (*FN_GLXSWAPINTERVAL)(int interval);
@@ -3846,13 +3974,12 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	XFree(visual);
 	return info;
 }
-#endif
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------AGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_CARBON
+#elif defined CC_BUILD_CARBON
 #include <AGL/agl.h>
 
 static AGLContext ctx_handle;
@@ -4013,13 +4140,12 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	int value = vsync ? 1 : 0;
 	aglSetInteger(ctx_handle, AGL_SWAP_INTERVAL, &value);
 }
-#endif
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------NSOpenGL---------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_COCOA
+#elif defined CC_BUILD_COCOA
 #define NSOpenGLPFADoubleBuffer 5
 #define NSOpenGLPFAColorSize    8
 #define NSOpenGLPFADepthSize    12
@@ -4088,55 +4214,12 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	int value = vsync ? 1 : 0;
 	objc_msgSend(ctxHandle, sel_registerName("setValues:forParameter:"), &value, NSOpenGLContextParameterSwapInterval);
 }
-#endif
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------SDL OpenGL--------------------------------------------------------*
-*#########################################################################################################################*/
-#ifdef CC_BUILD_SDL
-static SDL_GLContext win_ctx;
-
-void GLContext_Init(struct GraphicsMode* mode) {
-	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   mode->R);
-	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, mode->G);
-	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  mode->B);
-	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, mode->A);
-
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   GLCONTEXT_DEFAULT_DEPTH);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, true);
-
-	win_ctx = SDL_GL_CreateContext(win_handle);
-	if (!win_ctx) Window_SDLFail("creating OpenGL context");
-}
-
-void GLContext_Update(void) { }
-cc_bool GLContext_TryRestore(void) { return true; }
-void GLContext_Free(void) {
-	SDL_GL_DeleteContext(win_ctx);
-	win_ctx = NULL;
-}
-
-void* GLContext_GetAddress(const char* function) {
-	return SDL_GL_GetProcAddress(function);
-}
-
-cc_bool GLContext_SwapBuffers(void) {
-	SDL_GL_SwapWindow(win_handle);
-	return true;
-}
-
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	SDL_GL_SetSwapInterval(vsync);
-}
-#endif
 
 
 /*########################################################################################################################*
 *------------------------------------------------Emscripten WebGL context-------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WEB
+#elif defined CC_BUILD_WEB
 #include "Graphics.h"
 static EMSCRIPTEN_WEBGL_CONTEXT_HANDLE ctx_handle;
 
@@ -4179,95 +4262,6 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	} else {
 		emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, (int)minFrameMs);
 	}
-}
-#endif
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------EGL OpenGL--------------------------------------------------------*
-*#########################################################################################################################*/
-#ifdef CC_BUILD_ANDROID
-#include <EGL/egl.h>
-static EGLDisplay ctx_display;
-static EGLContext ctx_context;
-static EGLSurface ctx_surface;
-static EGLConfig ctx_config;
-static EGLint ctx_numConfig;
-
-static void GLContext_InitSurface(void) {
-	if (!win_handle) return; /* window not created or lost */
-	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
-
-	if (!ctx_surface) return;
-	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
-}
-
-static void GLContext_FreeSurface(void) {
-	if (!ctx_surface) return;
-	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-	eglDestroySurface(ctx_display, ctx_surface);
-	ctx_surface = NULL;
-}
-
-void GLContext_Init(struct GraphicsMode* mode) {
-	static EGLint contextAttribs[3] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
-	static EGLint attribs[19] = {
-		EGL_RED_SIZE,  0, EGL_GREEN_SIZE,  0,
-		EGL_BLUE_SIZE, 0, EGL_ALPHA_SIZE,  0,
-		EGL_DEPTH_SIZE,        GLCONTEXT_DEFAULT_DEPTH,
-		EGL_STENCIL_SIZE,      0,
-		EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
-		EGL_RENDERABLE_TYPE,   EGL_OPENGL_ES2_BIT,
-		EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
-		EGL_NONE
-	};
-
-	attribs[1]  = mode->R; attribs[3] = mode->G;
-	attribs[5]  = mode->B; attribs[7] = mode->A;
-
-	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-	eglInitialize(ctx_display, NULL, NULL);
-	eglBindAPI(EGL_OPENGL_ES_API);
-	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
-
-	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, contextAttribs);
-	GLContext_InitSurface();
-}
-
-void GLContext_Update(void) {
-	GLContext_FreeSurface();
-	GLContext_InitSurface();
-}
-
-cc_bool GLContext_TryRestore(void) {
-	GLContext_FreeSurface();
-	GLContext_InitSurface();
-	return ctx_surface != NULL;
-}
-
-void GLContext_Free(void) {
-	GLContext_FreeSurface();
-	eglDestroyContext(ctx_display, ctx_context);
-	eglTerminate(ctx_display);
-}
-
-void* GLContext_GetAddress(const char* function) {
-	return eglGetProcAddress(function);
-}
-
-cc_bool GLContext_SwapBuffers(void) {
-	EGLint err;
-	if (!ctx_surface) return false;
-	if (eglSwapBuffers(ctx_display, ctx_surface)) return true;
-
-	err = eglGetError();
-	/* TODO: figure out what errors need to be handled here */
-	Logger_Abort2(err, "Failed to swap buffers");
-	return false;
-}
-
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	eglSwapInterval(ctx_display, vsync);
 }
 #endif
 #endif

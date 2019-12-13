@@ -234,8 +234,8 @@ static cc_result ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture*
 	int modTime, modDate;
 
 	DateTime_CurrentLocal(&now);
-	modTime = (now.Second / 2) | (now.Minute << 5) | (now.Hour << 11);
-	modDate = (now.Day) | (now.Month << 5) | ((now.Year - 1980) << 9);
+	modTime = (now.second / 2) | (now.minute << 5) | (now.hour << 11);
+	modDate = (now.day) | (now.month << 5) | ((now.year - 1980) << 9);
 
 	Stream_SetU32_LE(&header[0],  0x02014b50);  /* signature */
 	Stream_SetU16_LE(&header[4],  20);          /* version */

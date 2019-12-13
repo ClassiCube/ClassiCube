@@ -155,13 +155,13 @@ static void WaterAnimation_Tick(BitmapCol* ptr, int size) {
 *-------------------------------------------------------Animations--------------------------------------------------------*
 *#########################################################################################################################*/
 struct AnimationData {
-	TextureLoc TexLoc;       /* Tile (not pixel) coordinates in terrain.png */
-	cc_uint16 FrameX, FrameY; /* Top left pixel coordinates of start frame in animatons.png */
-	cc_uint16 FrameSize;      /* Size of each frame in pixel coordinates */
-	cc_uint16 State;          /* Current animation frame index */
-	cc_uint16 StatesCount;    /* Total number of animation frames */
-	cc_uint16 Delay;          /* Delay in ticks until next frame is drawn */
-	cc_uint16 FrameDelay;     /* Delay between each frame */
+	TextureLoc texLoc;       /* Tile (not pixel) coordinates in terrain.png */
+	cc_uint16 frameX, frameY; /* Top left pixel coordinates of start frame in animatons.png */
+	cc_uint16 frameSize;      /* Size of each frame in pixel coordinates */
+	cc_uint16 state;          /* Current animation frame index */
+	cc_uint16 statesCount;    /* Total number of animation frames */
+	cc_uint16 delay;          /* Delay in ticks until next frame is drawn */
+	cc_uint16 frameDelay;     /* Delay between each frame */
 };
 
 static Bitmap anims_bmp;
@@ -202,19 +202,19 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 		if (!Convert_ParseUInt8(&parts[1], &tileY) || tileY >= ATLAS2D_MAX_ROWS_COUNT) {
 			Chat_Add1("&cInvalid anim tile Y coord: %s", &line); continue;
 		}
-		if (!Convert_ParseUInt16(&parts[2], &data.FrameX)) {
+		if (!Convert_ParseUInt16(&parts[2], &data.frameX)) {
 			Chat_Add1("&cInvalid anim frame X coord: %s", &line); continue;
 		}
-		if (!Convert_ParseUInt16(&parts[3], &data.FrameY)) {
+		if (!Convert_ParseUInt16(&parts[3], &data.frameY)) {
 			Chat_Add1("&cInvalid anim frame Y coord: %s", &line); continue;
 		}
-		if (!Convert_ParseUInt16(&parts[4], &data.FrameSize)) {
+		if (!Convert_ParseUInt16(&parts[4], &data.frameSize)) {
 			Chat_Add1("&cInvalid anim frame size: %s", &line); continue;
 		}
-		if (!Convert_ParseUInt16(&parts[5], &data.StatesCount)) {
+		if (!Convert_ParseUInt16(&parts[5], &data.statesCount)) {
 			Chat_Add1("&cInvalid anim states count: %s", &line); continue;
 		}
-		if (!Convert_ParseUInt16(&parts[6], &data.FrameDelay)) {
+		if (!Convert_ParseUInt16(&parts[6], &data.frameDelay)) {
 			Chat_Add1("&cInvalid anim frame delay: %s", &line); continue;
 		}
 
@@ -222,7 +222,7 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 			Chat_AddRaw("&cCannot show over 512 animations"); return;
 		}
 
-		data.TexLoc = tileX + (tileY * ATLAS2D_TILES_PER_ROW);
+		data.texLoc = tileX + (tileY * ATLAS2D_TILES_PER_ROW);
 		anims_list[anims_count++] = data;
 	}
 }
@@ -252,8 +252,8 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 		}
 #endif
 	} else {
-		srcX = data->FrameX + data->State * size;
-		Bitmap_UNSAFE_CopyBlock(srcX, data->FrameY, 0, 0, &anims_bmp, &frame, size);
+		srcX = data->frameX + data->state * size;
+		Bitmap_UNSAFE_CopyBlock(srcX, data->frameY, 0, 0, &anims_bmp, &frame, size);
 	}
 
 	tex = Atlas1D.TexIds[dstX];
@@ -263,18 +263,18 @@ static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int s
 
 static void Animations_Apply(struct AnimationData* data) {
 	TextureLoc loc;
-	if (data->Delay) { data->Delay--; return; }
+	if (data->delay) { data->delay--; return; }
 
-	data->State++;
-	data->State %= data->StatesCount;
-	data->Delay  = data->FrameDelay;
+	data->state++;
+	data->state %= data->statesCount;
+	data->delay  = data->frameDelay;
 
-	loc = data->TexLoc;
+	loc = data->texLoc;
 #ifndef CC_BUILD_WEB
 	if (loc == LAVA_TEX_LOC  && useLavaAnim)  return;
 	if (loc == WATER_TEX_LOC && useWaterAnim) return;
 #endif
-	Animations_Draw(data, loc, data->FrameSize);
+	Animations_Draw(data, loc, data->frameSize);
 }
 
 static cc_bool Animations_IsDefaultZip(void) {
@@ -302,12 +302,12 @@ static void Animations_Validate(void) {
 	for (i = 0; i < anims_count; i++) {
 		data  = anims_list[i];
 
-		maxX  = data.FrameX + data.FrameSize * data.StatesCount;
-		maxY  = data.FrameY + data.FrameSize;
-		tileX = Atlas2D_TileX(data.TexLoc); 
-		tileY = Atlas2D_TileY(data.TexLoc);
+		maxX  = data.frameX + data.frameSize * data.statesCount;
+		maxY  = data.frameY + data.frameSize;
+		tileX = Atlas2D_TileX(data.texLoc); 
+		tileY = Atlas2D_TileY(data.texLoc);
 
-		if (data.FrameSize > Atlas2D.TileSize || tileY >= Atlas2D.RowsCount) {
+		if (data.frameSize > Atlas2D.TileSize || tileY >= Atlas2D.RowsCount) {
 			Chat_Add2("&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
 		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {
 			Chat_Add2("&cSome of the animation frames for tile (%i, %i) are at coordinates outside animations.png", &tileX, &tileY);
@@ -315,8 +315,8 @@ static void Animations_Validate(void) {
 			/* if user has water/lava animations in their default.zip, disable built-in */
 			/* However, 'usewateranim' and 'uselavaanim' files should always disable use */
 			/* of custom water/lava animations, even when they exist in animations.png */
-			if (data.TexLoc == LAVA_TEX_LOC  && !alwaysLavaAnim)  useLavaAnim  = false;
-			if (data.TexLoc == WATER_TEX_LOC && !alwaysWaterAnim) useWaterAnim = false;		
+			if (data.texLoc == LAVA_TEX_LOC  && !alwaysLavaAnim)  useLavaAnim  = false;
+			if (data.texLoc == WATER_TEX_LOC && !alwaysWaterAnim) useWaterAnim = false;		
 			continue;
 		}
 

@@ -10,13 +10,13 @@
 /* NOTE: It is far more efficient to use TimeMS and DateTime_CurrentUTC_MS(). */
 /* This should only be used when atually needed. (e.g. log mesage time) */
 struct DateTime {
-	int Year;   /* Year,   ranges from 0 to 65535 */
-	int Month;  /* Month,  ranges from 1 to 12 */
-	int Day;    /* Day,    ranges from 1 to 31 */
-	int Hour;   /* Hour,   ranges from 0 to 23 */
-	int Minute; /* Minute, ranges from 0 to 59 */
-	int Second; /* Second, ranges from 0 to 59 */
-	int Milli;  /* Milliseconds, ranges from 0 to 999 */
+	int year;   /* Year,   ranges from 0 to 65535 */
+	int month;  /* Month,  ranges from 1 to 12 */
+	int day;    /* Day,    ranges from 1 to 31 */
+	int hour;   /* Hour,   ranges from 0 to 23 */
+	int minute; /* Minute, ranges from 0 to 59 */
+	int second; /* Second, ranges from 0 to 59 */
+	int milli;  /* Milliseconds, ranges from 0 to 999 */
 };
 
 #define MILLIS_PER_SEC 1000

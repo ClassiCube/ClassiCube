@@ -231,13 +231,13 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 }
 
 static void Platform_FromSysTime(struct DateTime* time, SYSTEMTIME* sysTime) {
-	time->Year   = sysTime->wYear;
-	time->Month  = sysTime->wMonth;
-	time->Day    = sysTime->wDay;
-	time->Hour   = sysTime->wHour;
-	time->Minute = sysTime->wMinute;
-	time->Second = sysTime->wSecond;
-	time->Milli  = sysTime->wMilliseconds;
+	time->year   = sysTime->wYear;
+	time->month  = sysTime->wMonth;
+	time->day    = sysTime->wDay;
+	time->hour   = sysTime->wHour;
+	time->minute = sysTime->wMinute;
+	time->second = sysTime->wSecond;
+	time->milli  = sysTime->wMilliseconds;
 }
 
 void DateTime_CurrentUTC(struct DateTime* time) {
@@ -292,12 +292,12 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 }
 
 static void Platform_FromSysTime(struct DateTime* time, struct tm* sysTime) {
-	time->Year   = sysTime->tm_year + 1900;
-	time->Month  = sysTime->tm_mon + 1;
-	time->Day    = sysTime->tm_mday;
-	time->Hour   = sysTime->tm_hour;
-	time->Minute = sysTime->tm_min;
-	time->Second = sysTime->tm_sec;
+	time->year   = sysTime->tm_year + 1900;
+	time->month  = sysTime->tm_mon + 1;
+	time->day    = sysTime->tm_mday;
+	time->hour   = sysTime->tm_hour;
+	time->minute = sysTime->tm_min;
+	time->second = sysTime->tm_sec;
 }
 
 void DateTime_CurrentUTC(struct DateTime* time_) {
@@ -308,7 +308,7 @@ void DateTime_CurrentUTC(struct DateTime* time_) {
 	gmtime_r(&cur.tv_sec, &utc_time);
 
 	Platform_FromSysTime(time_, &utc_time);
-	time_->Milli = cur.tv_usec / 1000;
+	time_->milli = cur.tv_usec / 1000;
 }
 
 void DateTime_CurrentLocal(struct DateTime* time_) {
@@ -319,7 +319,7 @@ void DateTime_CurrentLocal(struct DateTime* time_) {
 	localtime_r(&cur.tv_sec, &loc_time);
 
 	Platform_FromSysTime(time_, &loc_time);
-	time_->Milli = cur.tv_usec / 1000;
+	time_->milli = cur.tv_usec / 1000;
 }
 
 #define NS_PER_SEC 1000000000ULL

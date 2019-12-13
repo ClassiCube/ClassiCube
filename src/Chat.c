@@ -63,9 +63,9 @@ static struct DateTime lastLogDate;
 /* Resets log name to empty and last log date to 0 */
 static void Chat_ResetLog(void) {
 	logName.length = 0;
-	lastLogDate.Day   = 0;
-	lastLogDate.Month = 0;
-	lastLogDate.Year  = 0;
+	lastLogDate.day   = 0;
+	lastLogDate.month = 0;
+	lastLogDate.year  = 0;
 }
 
 /* Closes handle to the chat log file */
@@ -113,7 +113,7 @@ static void Chat_OpenLog(struct DateTime* now) {
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
 	for (i = 0; i < 20; i++) {
 		logPath.length = 0;
-		String_Format3(&logPath, "logs/%p4-%p2-%p2 ", &now->Year, &now->Month, &now->Day);
+		String_Format3(&logPath, "logs/%p4-%p2-%p2 ", &now->year, &now->month, &now->day);
 
 		if (i > 0) {
 			String_Format2(&logPath, "%s _%i.log", &logName, &i);
@@ -145,7 +145,7 @@ static void Chat_AppendLog(const String* text) {
 	if (!logName.length || !Chat_Logging) return;
 	DateTime_CurrentLocal(&now);
 
-	if (now.Day != lastLogDate.Day || now.Month != lastLogDate.Month || now.Year != lastLogDate.Year) {
+	if (now.day != lastLogDate.day || now.month != lastLogDate.month || now.year != lastLogDate.year) {
 		Chat_CloseLog();
 		Chat_OpenLog(&now);
 	}
@@ -155,7 +155,7 @@ static void Chat_AppendLog(const String* text) {
 
 	/* [HH:mm:ss] text */
 	String_InitArray(str, strBuffer);
-	String_Format3(&str, "[%p2:%p2:%p2] ", &now.Hour, &now.Minute, &now.Second);
+	String_Format3(&str, "[%p2:%p2:%p2] ", &now.hour, &now.minute, &now.second);
 	String_AppendColorless(&str, text);
 
 	res = Stream_WriteLine(&logStream, &str);
