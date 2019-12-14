@@ -63,6 +63,11 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libgl1-m
 
 ```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
 
+##### Raspberry pi
+Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
+
+```gcc *.c -o ClassiCube -DCC_BUILD_GLMODERN -DCC_BUILD_GLES -DCC_BUILD_EGL -lm -lpthread -lX11 -lEGL -lGLESv1 -lcurl -lopenal -ldl```
+
 #### Mac OSX (32 bit)
 
 ```gcc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenAL -framework OpenGL -lcurl```

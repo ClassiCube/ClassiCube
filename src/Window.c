@@ -3681,13 +3681,24 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 /*########################################################################################################################*
 *-------------------------------------------------------EGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#elif defined CC_BUILD_ANDROID
+#elif defined CC_BUILD_EGL
 #include <EGL/egl.h>
 static EGLDisplay ctx_display;
 static EGLContext ctx_context;
 static EGLSurface ctx_surface;
 static EGLConfig ctx_config;
 static EGLint ctx_numConfig;
+
+#ifdef CC_BUILD_X11
+static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
+	XVisualInfo info;
+	cc_result res;
+
+	res = XMatchVisualInfo(win_display, win_screen, 24, TrueColor, &info);
+	if (res) Logger_Abort(res, "Selecting visual");
+	return info;
+}
+#endif
 
 static void GLContext_InitSurface(void) {
 	if (!win_handle) return; /* window not created or lost */

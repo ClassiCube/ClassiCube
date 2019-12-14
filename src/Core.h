@@ -154,6 +154,7 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_GL
 #define CC_BUILD_GLMODERN
 #define CC_BUILD_GLES
+#define CC_BUILD_EGL
 #define CC_BUILD_TOUCH
 #define CC_BUILD_NOAUDIO
 #elif defined __linux__
