@@ -121,6 +121,7 @@ struct InputWidget {
 	int caretWidth;
 	int caretX, caretY; /* Coordinates of caret in lines */
 	int caretPos;       /* Position of caret, -1 for at end of string */
+	int caretOffset;
 	PackedCol caretCol;
 	struct Texture caretTex;
 	double caretAccumulator;

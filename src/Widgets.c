@@ -900,6 +900,12 @@ void TableWidget_OnInventoryChanged(struct TableWidget* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------InputWidget-------------------------------------------------------*
 *#########################################################################################################################*/
+static void InputWidget_Reset(struct InputWidget* w) {
+	Widget_Reset(w);
+	w->caretPos    = -1;
+	w->caretOffset = Display_ScaleY(2);
+}
+
 static void InputWidget_FormatLine(struct InputWidget* w, int i, String* line) {
 	String src = w->lines[i];
 	if (!w->convertPercents) { String_AppendString(line, &src); return; }
@@ -989,7 +995,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	}
 
 	w->caretTex.X = w->x + w->padding + lineWidth;
-	w->caretTex.Y = w->inputTex.Y + w->caretY * w->lineHeight + 2;
+	w->caretTex.Y = (w->inputTex.Y + w->caretOffset) + w->caretY * w->lineHeight;
 	colCode = InputWidget_GetLastCol(w, w->caretX, w->caretY);
 
 	if (colCode) {
@@ -1410,12 +1416,6 @@ const struct MenuInputVTABLE StringInput_VTABLE = {
 *#########################################################################################################################*/
 static void MenuInputWidget_Render(void* widget, double delta) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	PackedCol backCol     = PackedCol_Make(30, 30, 30, 200);
-
-	Gfx_SetTexturing(false);
-	Gfx_Draw2DFlat(w->x, w->y, w->width, w->height, backCol);
-	Gfx_SetTexturing(true);
-
 	Texture_Render(&w->inputTex);
 	InputWidget_RenderCaret(w, delta);
 }
@@ -1423,11 +1423,12 @@ static void MenuInputWidget_Render(void* widget, double delta) {
 static void MenuInputWidget_RemakeTexture(void* widget) {
 	String range; char rangeBuffer[STRING_SIZE];
 	struct MenuInputWidget* w = (struct MenuInputWidget*)widget;
+	PackedCol backCol = PackedCol_Make(30, 30, 30, 200);
 	struct MenuInputDesc* desc;
 	struct DrawTextArgs args;
 	struct Texture* tex;
 	int textWidth, lineHeight;
-	int width, hintX;
+	int width, height, hintX, y;
 	Bitmap bmp;
 
 	DrawTextArgs_Make(&args, &w->base.text, w->base.font, false);
@@ -1439,32 +1440,33 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	desc = &w->desc;
 	desc->VTABLE->GetRange(desc, &range);
 
-	w->base.width  = max(textWidth,  w->minWidth);
-	w->base.height = max(lineHeight, w->minHeight);
-	width = w->base.width;
+	width  = max(textWidth,  w->minWidth);  w->base.width  = width;
+	height = max(lineHeight, w->minHeight); w->base.height = height;
 
-	Bitmap_AllocateClearedPow2(&bmp, width, lineHeight);
+	Bitmap_AllocateClearedPow2(&bmp, width, height);
 	{
-		Drawer2D_DrawText(&bmp, &args, w->base.padding, 0);
+		/* Centre text vertically */
+		y = 0;
+		if (lineHeight < height) { y = height / 2 - lineHeight / 2; }
+		w->base.caretOffset = 2 + y;
+
+		Drawer2D_Clear(&bmp, backCol, 0, 0, width, height);
+		Drawer2D_DrawText(&bmp, &args, w->base.padding, y);
 
 		args.text = range;
 		hintX     = width - Drawer2D_TextWidth(&args);
 		/* Draw hint text right-aligned if it won't overlap input text */
 		if (textWidth + 3 < hintX) {
-			Drawer2D_DrawText(&bmp, &args, hintX, 0);
+			Drawer2D_DrawText(&bmp, &args, hintX, y);
 		}
 	}
 
 	tex = &w->base.inputTex;
-	Drawer2D_MakeTexture(tex, &bmp, width, lineHeight);
+	Drawer2D_MakeTexture(tex, &bmp, width, height);
 	Mem_Free(bmp.Scan0);
 
 	Widget_Layout(&w->base);
 	tex->X = w->base.x; tex->Y = w->base.y;
-	/* Centre text vertically */
-	if (lineHeight < w->minHeight) {
-		tex->Y += w->minHeight / 2 - lineHeight / 2;
-	}
 }
 
 static cc_bool MenuInputWidget_AllowedChar(void* widget, char c) {
@@ -1494,9 +1496,8 @@ static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
 	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove
 };
 void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, struct MenuInputDesc* desc) {
-	Widget_Reset(w);
-	w->base.VTABLE   = &MenuInputWidget_VTABLE;
-	w->base.caretPos = -1;
+	InputWidget_Reset(&w->base);
+	w->base.VTABLE = &MenuInputWidget_VTABLE;
 
 	w->minWidth  = Display_ScaleX(width);
 	w->minHeight = Display_ScaleY(height);
@@ -1756,10 +1757,9 @@ static const struct WidgetVTABLE ChatInputWidget_VTABLE = {
 	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove
 };
 void ChatInputWidget_Create(struct ChatInputWidget* w) {
-	Widget_Reset(w);
-	w->typingLogPos  = Chat_InputLog.count; /* Index of newest entry + 1. */
-	w->base.VTABLE   = &ChatInputWidget_VTABLE;
-	w->base.caretPos = -1;
+	InputWidget_Reset(&w->base);
+	w->typingLogPos = Chat_InputLog.count; /* Index of newest entry + 1. */
+	w->base.VTABLE  = &ChatInputWidget_VTABLE;
 
 	w->base.convertPercents = !Game_ClassicMode;
 	w->base.showCaret       = true;
