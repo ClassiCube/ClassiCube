@@ -102,7 +102,7 @@ void PickedPosRenderer_Update(struct PickedPos* selected) {
 *-----------------------------------------------PickedPosRenderer component-----------------------------------------------*
 *#########################################################################################################################*/
 static void OnContextLost(void* obj) {
-	Gfx_DeleteVb(&pickedPos_vb);
+	Gfx_DeleteDynamicVb(&pickedPos_vb);
 }
 
 static void OnContextRecreated(void* obj) {

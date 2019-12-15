@@ -2961,7 +2961,7 @@ static struct TexIdsOverlay {
 static void TexIdsOverlay_ContextLost(void* screen) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	Screen_ContextLost(s);
-	Gfx_DeleteVb(&s->dynamicVb);
+	Gfx_DeleteDynamicVb(&s->dynamicVb);
 	TextAtlas_Free(&s->idAtlas);
 }
 

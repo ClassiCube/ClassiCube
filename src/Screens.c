@@ -68,7 +68,7 @@ void Screen_Render2Widgets(void* screen, double delta) {
 	int i, offset = 0;
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
-	Gfx_BindVb(s->vb);
+	Gfx_BindDynamicVb(s->vb);
 
 	for (i = 0; i < s->numWidgets; i++) {
 		if (!widgets[i]) continue;
@@ -91,7 +91,7 @@ void Screen_ContextLost(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 	int i;
-	Gfx_DeleteVb(&s->vb);
+	Gfx_DeleteDynamicVb(&s->vb);
 
 	for (i = 0; i < s->numWidgets; i++) {
 		if (!widgets[i]) continue;

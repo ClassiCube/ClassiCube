@@ -790,7 +790,7 @@ static void DeleteVbs(void) {
 	Gfx_DeleteVb(&skybox_vb);
 	Gfx_DeleteVb(&sides_vb);
 	Gfx_DeleteVb(&edges_vb);
-	Gfx_DeleteVb(&weather_vb);
+	Gfx_DeleteDynamicVb(&weather_vb);
 }
 
 static void OnContextLost(void* obj) {

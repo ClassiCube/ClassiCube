@@ -49,8 +49,8 @@ static void Gfx_InitDefaultResources(void) {
 }
 
 static void Gfx_FreeDefaultResources(void) {
-	Gfx_DeleteVb(&Gfx_quadVb);
-	Gfx_DeleteVb(&Gfx_texVb);
+	Gfx_DeleteDynamicVb(&Gfx_quadVb);
+	Gfx_DeleteDynamicVb(&Gfx_texVb);
 	Gfx_DeleteIb(&Gfx_defaultIb);
 }
 
@@ -1880,7 +1880,6 @@ static void GL_CheckSupport(void) {
 	Gfx.CustomMipmapsLevels = true;
 }
 #else
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { return gl_DYNAMICLISTID;  }
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	/* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
 	count &= ~0x01;
@@ -1909,14 +1908,28 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GLuint id = (GLuint)(*vb);
-	if (!id) return;
-	if (id != gl_DYNAMICLISTID) glDeleteLists(id, 1);
+	if (id) glDeleteLists(id, 1);
+	*vb = 0;
+}
+
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { 
+	return (GfxResourceID)Mem_Alloc(maxVertices, gfx_strideSizes[fmt], "creating dynamic vb");
+}
+
+void Gfx_BindDynamicVb(GfxResourceID vb) {
+	gfx_activeList      = gl_DYNAMICLISTID;
+	gfx_dynamicListData = (void*)vb;
+}
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
+	cc_uintptr id = (cc_uintptr)(*vb);
+	if (id) Mem_Free((void*)id);
 	*vb = 0;
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gfx_activeList      = gl_DYNAMICLISTID;
-	gfx_dynamicListData = vertices;
+	Gfx_BindDynamicVb(vb);
+	Mem_Copy((void*)vb, vertices, vCount * gfx_batchStride);
 }
 
 static GLuint gl_lastPartialList;

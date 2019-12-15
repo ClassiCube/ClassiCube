@@ -718,7 +718,7 @@ static void TableWidget_Render(void* widget, double delta) {
 
 static void TableWidget_Free(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	Gfx_DeleteVb(&w->vb);
+	Gfx_DeleteDynamicVb(&w->vb);
 	Gfx_DeleteTexture(&w->descTex.ID);
 	w->lastCreatedIndex = -1000;
 }
