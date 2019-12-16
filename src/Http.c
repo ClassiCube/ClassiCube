@@ -130,35 +130,12 @@ static volatile int http_curProgress = ASYNC_PROGRESS_NOTHING;
 static void Http_DownloadNextAsync(void);
 #endif
 
-static const String urlRewrites[4] = {
-	String_FromConst("http://dl.dropbox.com/"),  String_FromConst("https://dl.dropboxusercontent.com/"),
-	String_FromConst("https://dl.dropbox.com/"), String_FromConst("https://dl.dropboxusercontent.com/")
-};
-
-/* Converts say dl.dropbox.com/xyZ into dl.dropboxusercontent.com/xyz */
-static void Http_GetUrl(const String* url, String* dst) {
-	String part;
-	int i;
-
-	for (i = 0; i < Array_Elems(urlRewrites); i += 2) {
-		if (!String_CaselessStarts(url, &urlRewrites[i])) continue;
-
-		part = String_UNSAFE_SubstringAt(url, urlRewrites[i].length);
-		String_Format2(dst, "%s%s", &urlRewrites[i + 1], &part);
-		return;
-	}
-
-	String_Copy(dst, url);
-}
-
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
 static void Http_Add(const String* url, cc_bool priority, const String* id, cc_uint8 type, const String* lastModified, const String* etag, const void* data, cc_uint32 size, struct EntryList* cookies) {
 	struct HttpRequest req = { 0 };
-	String str;
 
-	String_InitArray(str, req.URL);
-	Http_GetUrl(url, &str);
-	Platform_Log2("Adding %s (type %b)", &str, &type);
+	String_CopyToRawArray(req.URL, url);
+	Platform_Log2("Adding %s (type %b)", url, &type);
 
 	String_CopyToRawArray(req.ID, id);
 	req.RequestType = type;
@@ -195,10 +172,32 @@ static void Http_Add(const String* url, cc_bool priority, const String* id, cc_u
 #endif
 }
 
-/* Sets up state to begin a http request */
-static void Http_BeginRequest(struct HttpRequest* req) {
+static const String urlRewrites[4] = {
+	String_FromConst("http://dl.dropbox.com/"),  String_FromConst("https://dl.dropboxusercontent.com/"),
+	String_FromConst("https://dl.dropbox.com/"), String_FromConst("https://dl.dropboxusercontent.com/")
+};
+/* Converts say dl.dropbox.com/xyZ into dl.dropboxusercontent.com/xyz */
+static void Http_GetUrl(struct HttpRequest* req, String* dst) {
 	String url = String_FromRawArray(req->URL);
-	Platform_Log2("Downloading from %s (type %b)", &url, &req->RequestType);
+	String part;
+	int i;
+
+	for (i = 0; i < Array_Elems(urlRewrites); i += 2) {
+		if (!String_CaselessStarts(&url, &urlRewrites[i])) continue;
+
+		part = String_UNSAFE_SubstringAt(&url, urlRewrites[i].length);
+		String_Format2(dst, "%s%s", &urlRewrites[i + 1], &part);
+		return;
+	}
+
+	String_Copy(dst, &url);
+}
+
+
+/* Sets up state to begin a http request */
+static void Http_BeginRequest(struct HttpRequest* req, String* url) {
+	Http_GetUrl(req, url);
+	Platform_Log2("Downloading from %s (type %b)", url, &req->RequestType);
 
 	Mutex_Lock(curRequestMutex);
 	{
@@ -338,7 +337,6 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 	Http_AddHeader("Cookie", &cookies);
 }
 
-
 /*########################################################################################################################*
 *------------------------------------------------Emscripten implementation------------------------------------------------*
 *#########################################################################################################################*/
@@ -384,9 +382,8 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	emscripten_fetch_attr_t attr;
 	emscripten_fetch_attr_init(&attr);
 
-	String url = String_FromRawArray(req->URL);
-	char urlStr[600];
-	Platform_ConvertString(urlStr, &url);
+	char urlBuffer[URL_MAX_SIZE]; String url;
+	char str[NATIVE_STR_LEN];
 
 	switch (req->RequestType) {
 	case REQUEST_TYPE_GET:  Mem_Copy(attr.requestMethod, "GET",  4); break;
@@ -408,7 +405,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	/* printed to console. But this is still used for skins, that way when users change */
 	/* their skins, the change shows up instantly. But 99% of the time we'll get a 304 */
 	/* response and can avoid downloading the whole skin over and over. */
-	if (urlStr[0] == '/') {
+	if (req.URL[0] == '/') {
 		static const char* const headers[3] = { "cache-control", "max-age=0", NULL };
 		attr.requestHeaders = headers;
 	}
@@ -418,7 +415,10 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	attr.onerror    = Http_FinishedAsync;
 	attr.onprogress = Http_UpdateProgress;
 
-	Http_BeginRequest(req);
+	String_InitArray(url, urlBuffer);
+	Http_BeginRequest(req, &url);
+	Platform_ConvertString(str, &url);
+
 	/* TODO: SET requestHeaders!!! */
 	emscripten_fetch(&attr, urlStr);
 }
@@ -556,15 +556,13 @@ static void Http_AddHeader(const char* key, const String* value) {
 }
 
 /* Creates and sends a HTTP requst */
-static cc_result Http_StartRequest(struct HttpRequest* req, HINTERNET* handle) {
+static cc_result Http_StartRequest(struct HttpRequest* req, String* url, HINTERNET* handle) {
 	static const char* verbs[3] = { "GET", "HEAD", "POST" };
 	struct HttpCacheEntry entry;
+	String path; char pathBuffer[URL_MAX_SIZE + 1];
 	DWORD flags;
 
-	String path; char pathBuffer[URL_MAX_SIZE + 1];
-	String url = String_FromRawArray(req->URL);
-
-	HttpCache_MakeEntry(&url, &entry, &path);
+	HttpCache_MakeEntry(url, &entry, &path);
 	Mem_Copy(pathBuffer, path.buffer, path.length);
 	pathBuffer[path.length] = '\0';
 	HttpCache_Lookup(&entry);
@@ -615,9 +613,9 @@ static cc_result Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 	return 0;
 }
 
-static cc_result Http_SysDo(struct HttpRequest* req) {
+static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	HINTERNET handle;
-	cc_result res = Http_StartRequest(req, &handle);
+	cc_result res = Http_StartRequest(req, url, &handle);
 	HttpRequest_Free(req);
 	if (res) return res;
 
@@ -707,9 +705,8 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
 }
 
-static cc_result Http_SysDo(struct HttpRequest* req) {
-	String url = String_FromRawArray(req->URL);
-	char urlStr[600];
+static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
+	char urlStr[NATIVE_STR_LEN];
 	void* post_data = req->Data;
 	CURLcode res;
 
@@ -719,7 +716,7 @@ static cc_result Http_SysDo(struct HttpRequest* req) {
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers_list);
 
 	Http_SetCurlOpts(req);
-	Platform_ConvertString(urlStr, &url);
+	Platform_ConvertString(urlStr, url);
 	curl_easy_setopt(curl, CURLOPT_URL, urlStr);
 
 	if (req->RequestType == REQUEST_TYPE_HEAD) {
@@ -862,6 +859,7 @@ static void Http_SysFree(void) { }
 
 #ifndef CC_BUILD_WEB
 static void Http_WorkerLoop(void) {
+	char urlBuffer[URL_MAX_SIZE]; String url;
 	struct HttpRequest request;
 	cc_bool hasRequest, stop;
 	cc_uint64 beg, end;
@@ -888,10 +886,12 @@ static void Http_WorkerLoop(void) {
 			Waitable_Wait(workerWaitable);
 			continue;
 		}
-		Http_BeginRequest(&request);
+
+		String_InitArray(url, urlBuffer);
+		Http_BeginRequest(&request, &url);
 
 		beg = Stopwatch_Measure();
-		request.Result = Http_SysDo(&request);
+		request.Result = Http_SysDo(&request, &url);
 		end = Stopwatch_Measure();
 
 		elapsed = Stopwatch_ElapsedMicroseconds(beg, end) / 1000;
