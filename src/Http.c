@@ -383,7 +383,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	emscripten_fetch_attr_init(&attr);
 
 	char urlBuffer[URL_MAX_SIZE]; String url;
-	char str[NATIVE_STR_LEN];
+	char urlStr[NATIVE_STR_LEN];
 
 	switch (req->RequestType) {
 	case REQUEST_TYPE_GET:  Mem_Copy(attr.requestMethod, "GET",  4); break;
@@ -405,7 +405,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	/* printed to console. But this is still used for skins, that way when users change */
 	/* their skins, the change shows up instantly. But 99% of the time we'll get a 304 */
 	/* response and can avoid downloading the whole skin over and over. */
-	if (req.URL[0] == '/') {
+	if (req->URL[0] == '/') {
 		static const char* const headers[3] = { "cache-control", "max-age=0", NULL };
 		attr.requestHeaders = headers;
 	}
@@ -417,7 +417,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 
 	String_InitArray(url, urlBuffer);
 	Http_BeginRequest(req, &url);
-	Platform_ConvertString(str, &url);
+	Platform_ConvertString(urlStr, &url);
 
 	/* TODO: SET requestHeaders!!! */
 	emscripten_fetch(&attr, urlStr);
@@ -808,14 +808,12 @@ static void Http_SysInit(void) {
 	JavaRegisterNatives(env, methods);
 }
 
-static cc_result Http_InitReq(JNIEnv* env, struct HttpRequest* req) {
+static cc_result Http_InitReq(JNIEnv* env, struct HttpRequest* req, String* url) {
 	static const char* verbs[3] = { "GET", "HEAD", "POST" };
 	jvalue args[2];
-	String url;
 	jint res;
 
-	url = String_FromRawArray(req->URL);
-	args[0].l = JavaMakeString(env, &url);
+	args[0].l = JavaMakeString(env, url);
 	args[1].l = JavaMakeConst(env,  verbs[req->RequestType]);
 
 	res = JavaCallInt(env, "httpInit", "(Ljava/lang/String;Ljava/lang/String;)I", args);
@@ -834,13 +832,13 @@ static cc_result Http_SetData(JNIEnv* env, struct HttpRequest* req) {
 	return res;
 }
 
-static cc_result Http_SysDo(struct HttpRequest* req) {
+static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	static const String userAgent = String_FromConst(GAME_APP_NAME);
 	JNIEnv* env;
 	jint res;
 
 	JavaGetCurrentEnv(env);
-	if ((res = Http_InitReq(env, req))) return res;
+	if ((res = Http_InitReq(env, req, url))) return res;
 	java_req = req;
 
 	Http_SetRequestHeaders(req);
