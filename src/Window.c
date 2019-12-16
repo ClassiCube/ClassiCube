@@ -418,24 +418,29 @@ void Window_SetTitle(const String* title) {
 }
 
 void Clipboard_GetText(String* value) {
-	/* retry up to 50 times */
+	cc_bool unicode;
+	HANDLE hGlobal;
+	LPVOID src;
+	SIZE_T size;
 	int i;
 
+	/* retry up to 50 times */
 	for (i = 0; i < 50; i++) {
 		if (!OpenClipboard(win_handle)) {
 			Thread_Sleep(10);
 			continue;
 		}
 
-		cc_bool unicode = true;
-		HANDLE hGlobal  = GetClipboardData(CF_UNICODETEXT);
+		unicode = true;
+		hGlobal = GetClipboardData(CF_UNICODETEXT);
 		if (!hGlobal) {
 			hGlobal = GetClipboardData(CF_TEXT);
 			unicode = false;
 		}
+
 		if (!hGlobal) { CloseClipboard(); return; }
-		LPVOID src  = GlobalLock(hGlobal);
-		SIZE_T size = GlobalSize(hGlobal);
+		src  = GlobalLock(hGlobal);
+		size = GlobalSize(hGlobal);
 
 		/* ignore trailing NULL at end */
 		/* TODO: Verify it's always there */
