@@ -130,27 +130,44 @@ static volatile int http_curProgress = ASYNC_PROGRESS_NOTHING;
 static void Http_DownloadNextAsync(void);
 #endif
 
+static const String urlRewrites[4] = {
+	String_FromConst("http://dl.dropbox.com/"),  String_FromConst("https://dl.dropboxusercontent.com/"),
+	String_FromConst("https://dl.dropbox.com/"), String_FromConst("https://dl.dropboxusercontent.com/")
+};
+
+/* Converts say dl.dropbox.com/xyZ into dl.dropboxusercontent.com/xyz */
+static void Http_GetUrl(const String* url, String* dst) {
+	String part;
+	int i;
+
+	for (i = 0; i < Array_Elems(urlRewrites); i += 2) {
+		if (!String_CaselessStarts(url, &urlRewrites[i])) continue;
+
+		part = String_UNSAFE_SubstringAt(url, urlRewrites[i].length);
+		String_Format2(dst, "%s%s", &urlRewrites[i + 1], &part);
+		return;
+	}
+
+	String_Copy(dst, url);
+}
+
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
 static void Http_Add(const String* url, cc_bool priority, const String* id, cc_uint8 type, const String* lastModified, const String* etag, const void* data, cc_uint32 size, struct EntryList* cookies) {
 	struct HttpRequest req = { 0 };
 	String str;
 
 	String_InitArray(str, req.URL);
-	String_Copy(&str, url);
-	Platform_Log2("Adding %s (type %b)", url, &type);
+	Http_GetUrl(url, &str);
+	Platform_Log2("Adding %s (type %b)", &str, &type);
 
-	String_InitArray(str, req.ID);
-	String_Copy(&str, id);
+	String_CopyToRawArray(req.ID, id);
 	req.RequestType = type;
 	
 	if (lastModified) {
-		String_InitArray(str, req.LastModified);
-		String_Copy(&str, lastModified);
+		String_CopyToRawArray(req.LastModified, lastModified);
 	}
-
 	if (etag) { 
-		String_InitArray(str, req.Etag);
-		String_Copy(&str, etag); 
+		String_CopyToRawArray(req.Etag, etag);
 	}
 
 	if (data) {
