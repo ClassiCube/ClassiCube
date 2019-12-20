@@ -673,16 +673,18 @@ static void D3D9_RestoreRenderStates(void) {
 /*########################################################################################################################*
 *---------------------------------------------------Vertex/Index buffers--------------------------------------------------*
 *#########################################################################################################################*/
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	int size = maxVertices * gfx_strideSizes[fmt];
+static IDirect3DVertexBuffer9* D3D9_AllocVertexBuffer(VertexFormat fmt, int size, DWORD usage) {
 	IDirect3DVertexBuffer9* vbuffer;
 	cc_result res;
-	if (Gfx.LostContext) return 0;
-		
-	res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
-		d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
-	if (res) Logger_Abort2(res, "D3D9_CreateDynamicVb");
 
+	for (;;) {
+		res = IDirect3DDevice9_CreateVertexBuffer(device, size, usage,
+			d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
+		if (!res) break;
+
+		if (res != D3DERR_OUTOFVIDEOMEMORY) Logger_Abort2(res, "D3D9_CreateVb");
+		Event_RaiseVoid(&GfxEvents.LowVRAMDetected);
+	}
 	return vbuffer;
 }
 
@@ -696,20 +698,17 @@ static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size,
 	if (res) Logger_Abort2(res, "D3D9_UnlockVb");
 }
 
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
+	int size = maxVertices * gfx_strideSizes[fmt];
+	if (Gfx.LostContext) return 0;
+	return D3D9_AllocVertexBuffer(fmt, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
+}
+
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	int size = count * gfx_strideSizes[fmt];
 	IDirect3DVertexBuffer9* vbuffer;
-	cc_result res;
 
-	for (;;) {
-		res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_WRITEONLY,
-			d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
-		if (!res) break;
-
-		if (res != D3DERR_OUTOFVIDEOMEMORY) Logger_Abort2(res, "D3D9_CreateVb");
-		Event_RaiseVoid(&GfxEvents.LowVRAMDetected);
-	}
-
+	vbuffer = D3D9_AllocVertexBuffer(fmt, size, D3DUSAGE_WRITEONLY);
 	D3D9_SetVbData(vbuffer, vertices, size, 0);
 	return vbuffer;
 }
