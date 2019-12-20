@@ -114,6 +114,16 @@ CC_API void Gfx_DeleteVb(GfxResourceID* vb);
 /* Deletes the given index buffer, then sets it to 0. */
 CC_API void Gfx_DeleteIb(GfxResourceID* ib);
 
+#ifndef CC_BUILD_GL11
+/* Static and dynamic vertex buffers are drawn in the same way */
+#define Gfx_BindDynamicVb   Gfx_BindVb
+#define Gfx_DeleteDynamicVb Gfx_DeleteVb
+#else
+/* OpenGL 1.1 draws static vertex buffers completely differently. */
+void Gfx_BindDynamicVb(GfxResourceID vb);
+void Gfx_DeleteDynamicVb(GfxResourceID* vb);
+#endif
+
 /* Sets the format of the rendered vertices. */
 CC_API void Gfx_SetVertexFormat(VertexFormat fmt);
 /* Updates the data of a dynamic vertex buffer. */

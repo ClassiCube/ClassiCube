@@ -440,7 +440,7 @@ void Particles_RainSnowEffect(Vec3 pos) {
 *---------------------------------------------------Particles component---------------------------------------------------*
 *#########################################################################################################################*/
 static void OnContextLost(void* obj) {
-	Gfx_DeleteVb(&Particles_VB); 
+	Gfx_DeleteDynamicVb(&Particles_VB); 
 }
 static void OnContextRecreated(void* obj) {
 	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, PARTICLES_MAX * 4);

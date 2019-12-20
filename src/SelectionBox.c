@@ -132,8 +132,8 @@ void Selections_Remove(cc_uint8 id) {
 }
 
 static void Selections_ContextLost(void* obj) {
-	Gfx_DeleteVb(&selections_VB);
-	Gfx_DeleteVb(&selections_LineVB);
+	Gfx_DeleteDynamicVb(&selections_VB);
+	Gfx_DeleteDynamicVb(&selections_LineVB);
 }
 
 static void Selections_ContextRecreated(void* obj) {

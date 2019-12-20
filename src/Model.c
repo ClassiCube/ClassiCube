@@ -372,7 +372,7 @@ static struct ModelTex* textures_tail;
 #define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; e->ModelAABB = BB;
 
 static void Models_ContextLost(void* obj) {
-	Gfx_DeleteVb(&Models.Vb);
+	Gfx_DeleteDynamicVb(&Models.Vb);
 }
 
 static void Models_ContextRecreated(void* obj) {

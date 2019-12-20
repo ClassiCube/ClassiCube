@@ -15,6 +15,8 @@ struct TextWidget {
 	struct Texture tex;
 	PackedCol col;
 };
+#define TEXTWIDGET_MAX 4
+
 /* Initialises a text widget. */
 CC_NOINLINE void TextWidget_Make(struct TextWidget* w, 
 								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
@@ -35,6 +37,8 @@ struct ButtonWidget {
 	Button_Get GetValue;
 	Button_Set SetValue;
 };
+#define BUTTONWIDGET_MAX 12
+
 /* Initialises a button widget. */
 CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, 
 								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
@@ -117,6 +121,7 @@ struct InputWidget {
 	int caretWidth;
 	int caretX, caretY; /* Coordinates of caret in lines */
 	int caretPos;       /* Position of caret, -1 for at end of string */
+	int caretOffset;
 	PackedCol caretCol;
 	struct Texture caretTex;
 	double caretAccumulator;

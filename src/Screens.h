@@ -1,6 +1,6 @@
 #ifndef CC_SCREENS_H
 #define CC_SCREENS_H
-#include "String.h"
+#include "VertexStructs.h"
 /* Contains all 2D non-menu screen implementations.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
@@ -20,6 +20,22 @@ int Screen_TKeyPress(void* s, char keyChar);
 int Screen_TText(void* s, const String* str);
 int Screen_TMouseScroll(void* s, float delta);
 int Screen_TPointer(void* s, int id, int x, int y);
+
+void Screen_NullFunc(void* screen);
+void Screen_NullUpdate(void* screen, double delta);
+int  Screen_InputDown(void* screen, int key);
+
+/* Calls Elem_Render on each widget in the screen. */
+void Screen_RenderWidgets(void* screen, double delta);
+/* Calls Widget_Render2 on each widget in the screen. */
+void Screen_Render2Widgets(void* screen, double delta);
+/* Calls Widget_Layout on each widget in the screen. */
+void Screen_Layout(void* screen);
+/* Calls Widget_Free on each widget in the screen. */
+/* Also deletes the screen's vb. */
+void Screen_ContextLost(void* screen);
+/* Calls Widget_BuildMesh on each widget in the screen. */
+void Screen_BuildMesh(void* screen, VertexP3fT2fC4b* vertices);
 
 void InventoryScreen_Show(void);
 void HUDScreen_Show(void);

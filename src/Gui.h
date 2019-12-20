@@ -38,14 +38,18 @@ extern cc_bool Gui_ShowFPS;
 struct ScreenVTABLE {
 	/* Initialises persistent state. */
 	void (*Init)(void* elem);
-	/* Draws this screen and its widgets on screen. */
-	void (*Render)(void* elem, double delta);
+	/* Updates this screen, called every frame just before Render(). */
+	void (*Update)(void* elem, double delta);
 	/* Frees/releases persistent state. */
 	void (*Free)(void* elem);
+	/* Draws this screen and its widgets on screen. */
+	void (*Render)(void* elem, double delta);
+	/* Builds the vertex mesh for all the widgets in the screen. */
+	void (*BuildMesh)(void* elem);
 	/* Returns non-zero if an input press is handled. */
-	int  (*HandlesKeyDown)(void* elem, int key);
+	int  (*HandlesInputDown)(void* elem, int key);
 	/* Returns non-zero if an input release is handled. */
-	int  (*HandlesKeyUp)(void* elem, int key);
+	int  (*HandlesInputUp)(void* elem, int key);
 	/* Returns non-zero if a key character press is handled. */
 	int  (*HandlesKeyPress)(void* elem, char keyChar);
 	/* Returns non-zero if a key character press is handled. */
@@ -70,14 +74,15 @@ struct ScreenVTABLE {
 	cc_bool grabsInput;  /* Whether this screen grabs input. Causes the cursor to become visible. */ \
 	cc_bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
 	cc_bool closable;    /* Whether this screen is automatically closed when pressing Escape */ \
-	struct Widget** widgets; int numWidgets;
+	cc_bool dirty;       /* Whether this screens needs to have its mesh rebuilt. */ \
+	GfxResourceID vb; struct Widget** widgets; int numWidgets;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Body };
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {
-	/* Draws this particular widget on-screen. */
+	/* Draws this widget on-screen. */
 	void (*Render)(void* elem, double delta);
 	/* Destroys allocated graphics resources. */
 	void (*Free)(void* elem);
@@ -95,6 +100,10 @@ struct WidgetVTABLE {
 	int (*HandlesPointerUp)(void* elem,   int id, int x, int y);
 	/* Returns non-zero if a pointer movement is handled. */
 	int (*HandlesPointerMove)(void* elem, int id, int x, int y);
+	/* Builds the mesh of vertices for this widget. */
+	void (*BuildMesh)(void* elem, VertexP3fT2fC4b** vertices);
+	/* Draws this widget on-screen. */
+	int  (*Render2)(void* elem, int offset);
 };
 #define Widget_Body const struct WidgetVTABLE* VTABLE; \
 	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
@@ -201,6 +210,8 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vert
 #define Elem_HandlesPointerUp(elem,   id, x, y) (elem)->VTABLE->HandlesPointerUp(elem,   id, x, y)
 #define Elem_HandlesPointerMove(elem, id, x, y) (elem)->VTABLE->HandlesPointerMove(elem, id, x, y)
 
+#define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices);
+#define Widget_Render2(widget, offset)     (widget)->VTABLE->Render2(widget, offset);
 #define Widget_Layout(widget) (widget)->VTABLE->Reposition(widget);
 #define Elem_TryFree(elem)    if ((elem)->VTABLE) { Elem_Free(elem); }
 #endif

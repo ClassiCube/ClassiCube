@@ -49,8 +49,8 @@ static void Gfx_InitDefaultResources(void) {
 }
 
 static void Gfx_FreeDefaultResources(void) {
-	Gfx_DeleteVb(&Gfx_quadVb);
-	Gfx_DeleteVb(&Gfx_texVb);
+	Gfx_DeleteDynamicVb(&Gfx_quadVb);
+	Gfx_DeleteDynamicVb(&Gfx_texVb);
 	Gfx_DeleteIb(&Gfx_defaultIb);
 }
 
@@ -583,16 +583,12 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 void Gfx_SetFog(cc_bool enabled) {
 	if (gfx_fogEnabled == enabled) return;
 	gfx_fogEnabled = enabled;
-
-	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, enabled);
 }
 
 void Gfx_SetFogCol(PackedCol col) {
 	if (col == gfx_fogCol) return;
 	gfx_fogCol = col;
-
-	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR, gfx_fogCol);
 }
 
@@ -601,7 +597,6 @@ void Gfx_SetFogDensity(float value) {
 	if (value == gfx_fogDensity) return;
 	gfx_fogDensity = value;
 
-	if (Gfx.LostContext) return;
 	raw.f = value;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGDENSITY, raw.u);
 }
@@ -611,7 +606,6 @@ void Gfx_SetFogEnd(float value) {
 	if (value == gfx_fogEnd) return;
 	gfx_fogEnd = value;
 
-	if (Gfx.LostContext) return;
 	raw.f = value;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGEND, raw.u);
 }
@@ -622,7 +616,6 @@ void Gfx_SetFogMode(FogFunc func) {
 	if (mode == gfx_fogMode) return;
 
 	gfx_fogMode = mode;
-	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, mode);
 }
 
@@ -683,21 +676,24 @@ static void D3D9_RestoreRenderStates(void) {
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	int size = maxVertices * gfx_strideSizes[fmt];
 	IDirect3DVertexBuffer9* vbuffer;
-	cc_result res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
+	cc_result res;
+	if (Gfx.LostContext) return 0;
+		
+	res = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
 		d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
 	if (res) Logger_Abort2(res, "D3D9_CreateDynamicVb");
 
 	return vbuffer;
 }
 
-static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size, const char* lockMsg, const char* unlockMsg, int lockFlags) {
+static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size, int lockFlags) {
 	void* dst = NULL;
 	cc_result res = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
-	if (res) Logger_Abort2(res, lockMsg);
+	if (res) Logger_Abort2(res, "D3D9_LockVb");
 
 	Mem_Copy(dst, data, size);
 	res = IDirect3DVertexBuffer9_Unlock(buffer);
-	if (res) Logger_Abort2(res, unlockMsg);
+	if (res) Logger_Abort2(res, "D3D9_UnlockVb");
 }
 
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
@@ -714,7 +710,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 		Event_RaiseVoid(&GfxEvents.LowVRAMDetected);
 	}
 
-	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_LockVb", "D3D9_UnlockVb", 0);
+	D3D9_SetVbData(vbuffer, vertices, size, 0);
 	return vbuffer;
 }
 
@@ -765,7 +761,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	int size = vCount * gfx_batchStride;
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
-	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_LockDynamicVbData", "D3D9_UnlockDynamicVbData", D3DLOCK_DISCARD);
+	D3D9_SetVbData(vbuffer, vertices, size, D3DLOCK_DISCARD);
 
 	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_batchStride);
 	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
@@ -1165,7 +1161,8 @@ static GLuint GL_GenAndBind(GLenum target) {
 }
 
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	GLuint id     = GL_GenAndBind(GL_ARRAY_BUFFER);
+	if (Gfx.LostContext) return 0;
+	GLuint id      = GL_GenAndBind(GL_ARRAY_BUFFER);
 	cc_uint32 size = maxVertices * gfx_strideSizes[fmt];
 	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
@@ -1883,7 +1880,6 @@ static void GL_CheckSupport(void) {
 	Gfx.CustomMipmapsLevels = true;
 }
 #else
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { return gl_DYNAMICLISTID;  }
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
 	/* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
 	count &= ~0x01;
@@ -1912,14 +1908,28 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GLuint id = (GLuint)(*vb);
-	if (!id) return;
-	if (id != gl_DYNAMICLISTID) glDeleteLists(id, 1);
+	if (id) glDeleteLists(id, 1);
+	*vb = 0;
+}
+
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { 
+	return (GfxResourceID)Mem_Alloc(maxVertices, gfx_strideSizes[fmt], "creating dynamic vb");
+}
+
+void Gfx_BindDynamicVb(GfxResourceID vb) {
+	gfx_activeList      = gl_DYNAMICLISTID;
+	gfx_dynamicListData = (void*)vb;
+}
+
+void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
+	cc_uintptr id = (cc_uintptr)(*vb);
+	if (id) Mem_Free((void*)id);
 	*vb = 0;
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	gfx_activeList      = gl_DYNAMICLISTID;
-	gfx_dynamicListData = vertices;
+	Gfx_BindDynamicVb(vb);
+	Mem_Copy((void*)vb, vertices, vCount * gfx_batchStride);
 }
 
 static GLuint gl_lastPartialList;

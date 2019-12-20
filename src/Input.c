@@ -747,7 +747,7 @@ static void InputHandler_Toggle(int key, cc_bool* target, const char* enableMsg,
 	}
 }
 
-static void InputHandler_CycleDistanceForwards(const short* viewDists, int count) {
+static void CycleViewDistanceForwards(const short* viewDists, int count) {
 	int i, dist;
 	for (i = 0; i < count; i++) {
 		dist = viewDists[i];
@@ -759,7 +759,7 @@ static void InputHandler_CycleDistanceForwards(const short* viewDists, int count
 	Game_UserSetViewDistance(viewDists[0]);
 }
 
-static void InputHandler_CycleDistanceBackwards(const short* viewDists, int count) {
+static void CycleViewDistanceBackwards(const short* viewDists, int count) {
 	int i, dist;
 	for (i = count - 1; i >= 0; i--) {
 		dist = viewDists[i];
@@ -873,9 +873,9 @@ static cc_bool HandleCoreKey(int key) {
 		int count = Gui_ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
 
 		if (Key_IsShiftPressed()) {
-			InputHandler_CycleDistanceBackwards(viewDists, count);
+			CycleViewDistanceBackwards(viewDists, count);
 		} else {
-			InputHandler_CycleDistanceForwards(viewDists, count);
+			CycleViewDistanceForwards(viewDists, count);
 		}
 	} else if (key == KEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
@@ -915,6 +915,7 @@ static void HandleMouseWheel(void* obj, float delta) {
 	
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
+		s->dirty = true;
 		if (s->VTABLE->HandlesMouseScroll(s, delta)) return;
 	}
 
@@ -924,6 +925,7 @@ static void HandleMouseWheel(void* obj, float delta) {
 
 	widget = ChatScreen_GetHotbar();
 	Elem_HandlesMouseScroll(widget, delta);
+	((struct Screen*)Gui_Chat)->dirty = true;
 }
 
 static void HandlePointerMove(void* obj, int idx, int xDelta, int yDelta) {
@@ -932,6 +934,7 @@ static void HandlePointerMove(void* obj, int idx, int xDelta, int yDelta) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
+		s->dirty = true;
 		if (s->VTABLE->HandlesPointerMove(s, 1 << idx, x, y)) return;
 	}
 }
@@ -942,6 +945,7 @@ static void HandlePointerDown(void* obj, int idx) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
+		s->dirty = true;
 #ifdef CC_BUILD_TOUCH
 		if (s->VTABLE->HandlesPointerDown(s, 1 << idx, x, y)) {
 			touches[idx].type = TOUCH_TYPE_GUI; return;
@@ -958,6 +962,7 @@ static void HandlePointerUp(void* obj, int idx) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
+		s->dirty = true;
 		if (s->VTABLE->HandlesPointerUp(s, 1 << idx, x, y)) return;
 	}
 }
@@ -983,7 +988,8 @@ static void HandleInputDown(void* obj, int key, cc_bool was) {
 	
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (s->VTABLE->HandlesKeyDown(s, key)) return;
+		s->dirty = true;
+		if (s->VTABLE->HandlesInputDown(s, key)) return;
 	}
 
 	if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !Gui_GetInputGrab()) {
@@ -1023,7 +1029,8 @@ static void HandleInputUp(void* obj, int key) {
 
 	for (i = 0; i < Gui_ScreensCount; i++) {
 		s = Gui_Screens[i];
-		if (s->VTABLE->HandlesKeyUp(s, key)) return;
+		s->dirty = true;
+		if (s->VTABLE->HandlesInputUp(s, key)) return;
 	}
 
 	if (Gui_GetInputGrab()) return;

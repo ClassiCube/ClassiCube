@@ -62,7 +62,7 @@ void AxisLinesRenderer_Render(double delta) {
 *-----------------------------------------------AxisLinesRenderer component-----------------------------------------------*
 *#########################################################################################################################*/
 static void OnContextLost(void* obj) {
-	Gfx_DeleteVb(&axisLines_vb);
+	Gfx_DeleteDynamicVb(&axisLines_vb);
 }
 
 static void AxisLinesRenderer_Init(void) {
