@@ -29,7 +29,9 @@ extern struct ChunkPartInfo* MapRenderer_PartsTranslucent;
 /* Describes a portion of the data needed for rendering a chunk. */
 struct ChunkPartInfo {
 #ifdef CC_BUILD_GL11
-	GfxResourceID Vb;
+	/* 1 VB per face, another VB for sprites */
+	#define CHUNKPART_MAX_VBS (FACE_COUNT + 1)
+	GfxResourceID Vbs[CHUNKPART_MAX_VBS];
 #endif
 	int Offset;      /* -1 if no vertices at all */
 	int SpriteCount; /* Sprite vertices count */

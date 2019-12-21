@@ -1880,14 +1880,12 @@ static void GL_CheckSupport(void) {
 }
 #else
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
-	/* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
-	count &= ~0x01;
 	GLuint list = glGenLists(1);
 
-	/* We need to setup client state properly when building the list */
-	int curFormat = gfx_batchFormat;
+	/* We need to restore client state afer building the list */
+	int curFormat  = gfx_batchFormat;
+	void* dyn_data = gfx_dynamicListData;
 	Gfx_SetVertexFormat(fmt);
-	void* dyn_data     = gfx_dynamicListData;
 	gfx_dynamicListData = vertices;
 
 	glNewList(list, GL_COMPILE);
@@ -1931,13 +1929,7 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Mem_Copy((void*)vb, vertices, vCount * gfx_batchStride);
 }
 
-static GLuint gl_lastPartialList;
-void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
-	/* TODO: This renders the whole map, bad performance!! FIX FIX */
-	if (gfx_activeList == gl_lastPartialList) return;
-	glCallList(gfx_activeList);
-	gl_lastPartialList = gfx_activeList;
-}
+void Gfx_DrawIndexedVb_TrisT2fC4b(int list, int ignored) { glCallList(list); }
 
 static void GL_CheckSupport(void) {
 	Gfx_MakeIndices(gl_indices, GFX_MAX_INDICES);

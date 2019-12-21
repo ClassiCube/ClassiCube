@@ -97,6 +97,31 @@ static void Builder_AddVertices(BlockID block, Face face) {
 	part->fCount[face] += 4;
 }
 
+#ifdef CC_BUILD_GL11
+static void BuildPartVbs(struct ChunkPartInfo* info) {
+	/* Sprites vertices are stored before chunk face sides */
+	int i, count, offset = info->Offset + info->SpriteCount;
+	for (i = 0; i < FACE_COUNT; i++) {
+		count = info->Counts[i];
+
+		if (count) {
+			info->Vbs[i] = Gfx_CreateVb(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
+			offset += count;
+		} else {
+			info->Vbs[i] = 0;
+		}
+	}
+
+	count  = info->SpriteCount;
+	offset = info->Offset;
+	if (count) {
+		info->Vbs[i] = Gfx_CreateVb(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
+	} else {
+		info->Vbs[i] = 0;
+	}
+}
+#endif
+
 static void Builder_SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPartInfo* info, cc_bool* hasParts) {
 	int vCount = Builder1DPart_VerticesCount(part);
 	info->Offset = -1;
@@ -106,10 +131,6 @@ static void Builder_SetPartInfo(struct Builder1DPart* part, int* offset, struct 
 	*offset += vCount;
 	*hasParts = true;
 
-#ifdef CC_BUILD_GL11
-	info->Vb = Gfx_CreateVb(&Builder_Vertices[info->Offset], VERTEX_FORMAT_P3FT2FC4B, vCount);
-#endif
-
 	info->Counts[FACE_XMIN] = part->fCount[FACE_XMIN];
 	info->Counts[FACE_XMAX] = part->fCount[FACE_XMAX];
 	info->Counts[FACE_ZMIN] = part->fCount[FACE_ZMIN];
@@ -117,6 +138,10 @@ static void Builder_SetPartInfo(struct Builder1DPart* part, int* offset, struct 
 	info->Counts[FACE_YMIN] = part->fCount[FACE_YMIN];
 	info->Counts[FACE_YMAX] = part->fCount[FACE_YMAX];
 	info->SpriteCount       = part->sCount;
+
+#ifdef CC_BUILD_GL11
+	BuildPartVbs(info);
+#endif
 }
 
 

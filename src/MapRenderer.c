@@ -100,17 +100,25 @@ static void MapRenderer_CheckWeather(double delta) {
 	Gfx_SetAlphaBlending(false);
 }
 
+#ifdef CC_BUILD_GL11
+#define MapRenderer_DrawFace(face, ign)    Gfx_DrawIndexedVb_TrisT2fC4b(part.Vbs[face], 0);
+#define MapRenderer_DrawFaces(f1, f2, ign) MapRenderer_DrawFace(f1, ign); MapRenderer_DrawFace(f2, ign);
+#else
+#define MapRenderer_DrawFace(face, offset)    Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[face], offset);
+#define MapRenderer_DrawFaces(f1, f2, offset) Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[f1] + part.Counts[f2], offset);
+#endif
+
 #define MapRenderer_DrawNormalFaces(minFace, maxFace) \
 if (drawMin && drawMax) { \
 	Gfx_SetFaceCulling(true); \
-	Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[minFace] + part.Counts[maxFace], offset); \
+	MapRenderer_DrawFaces(minFace, maxFace, offset); \
 	Gfx_SetFaceCulling(false); \
 	Game_Vertices += (part.Counts[minFace] + part.Counts[maxFace]); \
 } else if (drawMin) { \
-	Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[minFace], offset); \
+	MapRenderer_DrawFace(minFace, offset); \
 	Game_Vertices += part.Counts[minFace]; \
 } else if (drawMax) { \
-	Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[maxFace], offset + part.Counts[minFace]); \
+	MapRenderer_DrawFace(maxFace, offset + part.Counts[minFace]); \
 	Game_Vertices += part.Counts[maxFace]; \
 }
 
@@ -131,8 +139,6 @@ static void MapRenderer_RenderNormalBatch(int batch) {
 
 #ifndef CC_BUILD_GL11
 		Gfx_BindVb(info->Vb);
-#else
-		Gfx_BindVb(part.Vb);
 #endif
 
 		offset  = part.Offset + part.SpriteCount;
@@ -155,6 +161,13 @@ static void MapRenderer_RenderNormalBatch(int batch) {
 		count  = part.SpriteCount >> 2; /* 4 per sprite */
 
 		Gfx_SetFaceCulling(true);
+		/* TODO: fix to not render them all */
+#ifdef CC_BUILD_GL11
+		Gfx_DrawIndexedVb_TrisT2fC4b(part.Vbs[FACE_COUNT], 0);
+		Game_Vertices += count * 4;
+		Gfx_SetFaceCulling(false);
+		continue;
+#endif
 		if (info->DrawXMax || info->DrawZMin) {
 			Gfx_DrawIndexedVb_TrisT2fC4b(count, offset); Game_Vertices += count;
 		} offset += count;
@@ -203,13 +216,13 @@ void MapRenderer_RenderNormal(double delta) {
 
 #define MapRenderer_DrawTranslucentFaces(minFace, maxFace) \
 if (drawMin && drawMax) { \
-	Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[minFace] + part.Counts[maxFace], offset); \
+	MapRenderer_DrawFaces(minFace, maxFace, offset); \
 	Game_Vertices += (part.Counts[minFace] + part.Counts[maxFace]); \
 } else if (drawMin) { \
-	Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[minFace], offset); \
+	MapRenderer_DrawFace(minFace, offset); \
 	Game_Vertices += part.Counts[minFace]; \
 } else if (drawMax) { \
-	Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[maxFace], offset + part.Counts[minFace]); \
+	MapRenderer_DrawFace(maxFace, offset + part.Counts[minFace]); \
 	Game_Vertices += part.Counts[maxFace]; \
 }
 
@@ -230,8 +243,6 @@ static void MapRenderer_RenderTranslucentBatch(int batch) {
 
 #ifndef CC_BUILD_GL11
 		Gfx_BindVb(info->Vb);
-#else
-		Gfx_BindVb(part.Vb);
 #endif
 
 		offset  = part.Offset;
@@ -633,14 +644,16 @@ void MapRenderer_RefreshChunk(int cx, int cy, int cz) {
 void MapRenderer_DeleteChunk(struct ChunkInfo* info) {
 	struct ChunkPartInfo* ptr;
 	int i;
+#ifdef CC_BUILD_GL11
+	int j;
+#else
+	Gfx_DeleteVb(&info->Vb);
+#endif
 
 	info->Empty = false; info->AllAir = false;
 #ifdef OCCLUSION
 	info.OcclusionFlags = 0;
 	info.OccludedFlags = 0;
-#endif
-#ifndef CC_BUILD_GL11
-	Gfx_DeleteVb(&info->Vb);
 #endif
 
 	if (info->NormalParts) {
@@ -649,7 +662,7 @@ void MapRenderer_DeleteChunk(struct ChunkInfo* info) {
 			if (ptr->Offset < 0) continue; 
 			normPartsCount[i]--;
 #ifdef CC_BUILD_GL11
-			Gfx_DeleteVb(&ptr->Vb);
+			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->Vbs[j]);
 #endif
 		}
 		info->NormalParts = NULL;
@@ -661,7 +674,7 @@ void MapRenderer_DeleteChunk(struct ChunkInfo* info) {
 			if (ptr->Offset < 0) continue;
 			tranPartsCount[i]--;
 #ifdef CC_BUILD_GL11
-			Gfx_DeleteVb(&ptr->Vb);
+			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->Vbs[j]);
 #endif
 		}
 		info->TranslucentParts = NULL;
