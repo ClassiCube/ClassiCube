@@ -341,7 +341,7 @@ static void ExtractInitialTexturePack(void) {
 	}
 }
 
-static void Game_LoadOptions(void) {
+static void LoadOptions(void) {
 	Game_ClassicMode       = Options_GetBool(OPT_CLASSIC_MODE, false);
 	Game_ClassicHacks      = Options_GetBool(OPT_CLASSIC_HACKS, false);
 	Game_AllowCustomBlocks = Options_GetBool(OPT_CUSTOM_BLOCKS, true);
@@ -370,9 +370,9 @@ static void Game_LoadOptions(void) {
 }
 
 #if defined CC_BUILD_WEB
-static void Game_LoadPlugins(void) { }
+static void LoadPlugins(void) { }
 #else
-static void Game_LoadPlugin(const String* path, void* obj) {
+static void LoadPlugin(const String* path, void* obj) {
 	void* lib;
 	void* verSymbol;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
 	void* compSymbol; /* EXPORT struct IGameComponent Plugin_Component = { (whatever) } */
@@ -401,11 +401,11 @@ static void Game_LoadPlugin(const String* path, void* obj) {
 	Game_AddComponent((struct IGameComponent*)compSymbol);
 }
 
-static void Game_LoadPlugins(void) {
+static void LoadPlugins(void) {
 	static const String dir = String_FromConst("plugins");
 	cc_result res;
 
-	res = Directory_Enum(&dir, NULL, Game_LoadPlugin);
+	res = Directory_Enum(&dir, NULL, LoadPlugin);
 	if (res) Logger_Warn(res, "enumerating plugins directory");
 }
 #endif
@@ -424,7 +424,7 @@ static void Game_Load(void) {
 	Gfx.Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
 
 	Game_UpdateDimensions();
-	Game_LoadOptions();
+	LoadOptions();
 
 	Event_RegisterVoid(&WorldEvents.NewMap,         NULL, HandleOnNewMap);
 	Event_RegisterVoid(&WorldEvents.MapLoaded,      NULL, HandleOnNewMapLoaded);
@@ -471,7 +471,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&Audio_Component);
 	Game_AddComponent(&AxisLinesRenderer_Component);
 
-	Game_LoadPlugins();
+	LoadPlugins();
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Init) comp->Init();
 	}

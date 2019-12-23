@@ -195,26 +195,26 @@ cc_bool Entity_TouchesAny(struct AABB* bounds, Entity_TouchesCondition condition
 	return false;
 }
 
-static cc_bool Entity_IsRope(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_CLIMB_ROPE; }
+static cc_bool IsRopeCollide(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_CLIMB_ROPE; }
 cc_bool Entity_TouchesAnyRope(struct Entity* e) {
 	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	bounds.Max.Y += 0.5f / 16.0f;
-	return Entity_TouchesAny(&bounds, Entity_IsRope);
+	return Entity_TouchesAny(&bounds, IsRopeCollide);
 }
 
 static const Vec3 entity_liqExpand = { 0.25f/16.0f, 0.0f/16.0f, 0.25f/16.0f };
-static cc_bool Entity_IsLava(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
+static cc_bool IsLavaCollide(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
 cc_bool Entity_TouchesAnyLava(struct Entity* e) {
 	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
-	return Entity_TouchesAny(&bounds, Entity_IsLava);
+	return Entity_TouchesAny(&bounds, IsLavaCollide);
 }
 
-static cc_bool Entity_IsWater(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_LIQUID_WATER; }
+static cc_bool IsWaterCollide(BlockID b) { return Blocks.ExtendedCollide[b] == COLLIDE_LIQUID_WATER; }
 cc_bool Entity_TouchesAnyWater(struct Entity* e) {
 	struct AABB bounds; Entity_GetBounds(e, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
-	return Entity_TouchesAny(&bounds, Entity_IsWater);
+	return Entity_TouchesAny(&bounds, IsWaterCollide);
 }
 
 

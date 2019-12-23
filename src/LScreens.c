@@ -169,7 +169,6 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->Free = LScreen_NullFunc;
 	s->Draw       = LScreen_Draw;
 	s->Tick       = LScreen_Tick;
-	s->OnDisplay  = LScreen_NullFunc;
 	s->KeyDown    = LScreen_KeyDown;
 	s->KeyPress   = LScreen_KeyPress;
 	s->MouseDown  = LScreen_MouseDown;

@@ -153,9 +153,7 @@ static void Launcher_Display(void) {
 		pendingRedraw = false;
 	}
 
-	Launcher_Screen->OnDisplay(Launcher_Screen);
 	Window_DrawFramebuffer(Launcher_Dirty);
-
 	Launcher_Dirty.X = 0; Launcher_Dirty.Width   = 0;
 	Launcher_Dirty.Y = 0; Launcher_Dirty.Height  = 0;
 }
