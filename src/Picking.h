@@ -38,7 +38,7 @@ struct RayTracer {
 
 void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, Vec3 intersect);
 void PickedPos_SetAsInvalid(struct PickedPos* pos);
-void RayTracer_SetVectors(struct RayTracer* t, Vec3 origin, Vec3 dir);
+void RayTracer_Init(struct RayTracer* t, Vec3 origin, Vec3 dir);
 void RayTracer_Step(struct RayTracer* t);
 
 /* Determines the picked block based on the given origin and direction vector.

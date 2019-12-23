@@ -184,7 +184,7 @@ struct LTable {
 	TimeMS _lastClick; /* time of last mouse click on a row */
 };
 /* Gets the current ith row */
-#define LTable_Get(row) (&FetchServersTask.Servers[FetchServersTask.Servers[row]._order])
+#define LTable_Get(row) (&FetchServersTask.servers[FetchServersTask.servers[row]._order])
 
 /* Initialises a table. */
 /* NOTE: Must also call LTable_Reset to make a table actually useful. */

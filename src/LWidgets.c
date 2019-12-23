@@ -1124,16 +1124,16 @@ void LTable_Reset(struct LTable* w) {
 void LTable_ApplyFilter(struct LTable* w) {
 	int i, j, count;
 
-	count = FetchServersTask.NumServers;
+	count = FetchServersTask.numServers;
 	for (i = 0, j = 0; i < count; i++) {
 		if (String_CaselessContains(&Servers_Get(i)->name, w->filter)) {
-			FetchServersTask.Servers[j++]._order = FetchServersTask.Orders[i];
+			FetchServersTask.servers[j++]._order = FetchServersTask.orders[i];
 		}
 	}
 
 	w->rowsCount = j;
 	for (; j < count; j++) {
-		FetchServersTask.Servers[j]._order = -100000;
+		FetchServersTask.servers[j]._order = -100000;
 	}
 
 	w->_lastRow = -1;
@@ -1153,7 +1153,7 @@ static int LTable_SortOrder(const struct ServerInfo* a, const struct ServerInfo*
 }
 
 static void LTable_QuickSort(int left, int right) {
-	cc_uint16* keys = FetchServersTask.Orders; cc_uint16 key;
+	cc_uint16* keys = FetchServersTask.orders; cc_uint16 key;
 
 	while (left < right) {
 		int i = left, j = right;
@@ -1171,9 +1171,9 @@ static void LTable_QuickSort(int left, int right) {
 }
 
 void LTable_Sort(struct LTable* w) {
-	if (!FetchServersTask.NumServers) return;
+	if (!FetchServersTask.numServers) return;
 	FetchServersTask_ResetOrder();
-	LTable_QuickSort(0, FetchServersTask.NumServers - 1);
+	LTable_QuickSort(0, FetchServersTask.numServers - 1);
 
 	LTable_ApplyFilter(w);
 	LTable_ShowSelected(w);

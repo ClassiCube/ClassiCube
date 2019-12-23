@@ -46,7 +46,7 @@ CC_NOINLINE static void Launcher_StartFromInfo(struct ServerInfo* info) {
 	String_InitArray(port, portBuffer);
 
 	String_AppendInt(&port, info->port);
-	Launcher_StartGame(&SignInTask.Username, &info->mppass, &info->ip, &port, &info->name);
+	Launcher_StartGame(&SignInTask.username, &info->mppass, &info->ip, &port, &info->name);
 }
 
 cc_bool Launcher_ConnectToServer(const String* hash) {
@@ -55,8 +55,8 @@ cc_bool Launcher_ConnectToServer(const String* hash) {
 	int i;
 	if (!hash->length) return false;
 
-	for (i = 0; i < FetchServersTask.NumServers; i++) {
-		info = &FetchServersTask.Servers[i];
+	for (i = 0; i < FetchServersTask.numServers; i++) {
+		info = &FetchServersTask.servers[i];
 		if (!String_Equals(hash, &info->hash)) continue;
 
 		Launcher_StartFromInfo(info);
@@ -67,15 +67,15 @@ cc_bool Launcher_ConnectToServer(const String* hash) {
 	/* TODO: Rewrite to be async */
 	FetchServerTask_Run(hash);
 
-	while (!FetchServerTask.Base.Completed) { 
+	while (!FetchServerTask.Base.completed) { 
 		LWebTask_Tick(&FetchServerTask.Base);
 		Thread_Sleep(10); 
 	}
 
-	if (FetchServerTask.Server.hash.length) {
-		Launcher_StartFromInfo(&FetchServerTask.Server);
+	if (FetchServerTask.server.hash.length) {
+		Launcher_StartFromInfo(&FetchServerTask.server);
 		return true;
-	} else if (FetchServerTask.Base.Success) {
+	} else if (FetchServerTask.Base.success) {
 		Window_ShowDialog("Failed to connect", "No server has that hash");
 	} else {
 		logMsg = String_Init(NULL, 0, 0);

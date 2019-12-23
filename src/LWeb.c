@@ -197,35 +197,35 @@ static void Json_Handle(cc_uint8* data, cc_uint32 len,
 *--------------------------------------------------------Web task---------------------------------------------------------*
 *#########################################################################################################################*/
 static void LWebTask_Reset(struct LWebTask* task) {
-	task->Completed = false;
-	task->Working   = true;
-	task->Success   = false;
-	task->Start     = DateTime_CurrentUTC_MS();
-	task->Res       = 0;
-	task->Status    = 0;
+	task->completed = false;
+	task->working   = true;
+	task->success   = false;
+	task->start     = DateTime_CurrentUTC_MS();
+	task->res       = 0;
+	task->status    = 0;
 }
 
 void LWebTask_Tick(struct LWebTask* task) {
 	struct HttpRequest req;
 	int delta;
-	if (task->Completed) return;
+	if (task->completed) return;
 
-	if (!Http_GetResult(&task->Identifier, &req)) return;
-	delta = (int)(DateTime_CurrentUTC_MS() - task->Start);
-	Platform_Log2("%s took %i", &task->Identifier, &delta);
+	if (!Http_GetResult(&task->identifier, &req)) return;
+	delta = (int)(DateTime_CurrentUTC_MS() - task->start);
+	Platform_Log2("%s took %i", &task->identifier, &delta);
 
-	task->Res    = req.Result;
-	task->Status = req.StatusCode;
+	task->res    = req.Result;
+	task->status = req.StatusCode;
 
-	task->Working   = false;
-	task->Completed = true;
-	task->Success   = req.Success;
-	if (task->Success) task->Handle((cc_uint8*)req.Data, req.Size);
+	task->working   = false;
+	task->completed = true;
+	task->success   = req.Success;
+	if (task->success) task->Handle((cc_uint8*)req.Data, req.Size);
 	HttpRequest_Free(&req);
 }
 
 void LWebTask_DisplayError(struct LWebTask* task, const char* action, String* dst) {
-	Launcher_DisplayHttpError(task->Res, task->Status, action, dst);
+	Launcher_DisplayHttpError(task->res, task->status, action, dst);
 }
 
 
@@ -237,7 +237,7 @@ struct GetTokenTaskData GetTokenTask;
 
 static void GetTokenTask_OnValue(struct JsonContext* ctx, const String* str) {
 	if (!String_CaselessEqualsConst(&ctx->curKey, "token")) return;
-	String_Copy(&GetTokenTask.Token, str);
+	String_Copy(&GetTokenTask.token, str);
 }
 
 static void GetTokenTask_Handle(cc_uint8* data, cc_uint32 len) {
@@ -248,12 +248,12 @@ void GetTokenTask_Run(void) {
 	static const String id  = String_FromConst("CC get token");
 	static const String url = String_FromConst("https://www.classicube.net/api/login");
 	static char tokenBuffer[STRING_SIZE];
-	if (GetTokenTask.Base.Working) return;
+	if (GetTokenTask.Base.working) return;
 
 	LWebTask_Reset(&GetTokenTask.Base);
-	String_InitArray(GetTokenTask.Token, tokenBuffer);
+	String_InitArray(GetTokenTask.token, tokenBuffer);
 
-	GetTokenTask.Base.Identifier = id;
+	GetTokenTask.Base.identifier = id;
 	Http_AsyncGetDataEx(&url, false, &id, NULL, NULL, &ccCookies);
 	GetTokenTask.Base.Handle     = GetTokenTask_Handle;
 }
@@ -267,17 +267,17 @@ char userBuffer[STRING_SIZE];
 
 static void SignInTask_LogError(const String* str) {
 	if (String_CaselessEqualsConst(str, "username") || String_CaselessEqualsConst(str, "password")) {
-		SignInTask.Error = "&cWrong username or password";
+		SignInTask.error = "&cWrong username or password";
 	} else if (String_CaselessEqualsConst(str, "verification")) {
-		SignInTask.Error = "&cAccount verification required";
+		SignInTask.error = "&cAccount verification required";
 	} else if (str->length) {
-		SignInTask.Error = "&cUnknown error occurred";
+		SignInTask.error = "&cUnknown error occurred";
 	}
 }
 
 static void SignInTask_OnValue(struct JsonContext* ctx, const String* str) {
 	if (String_CaselessEqualsConst(&ctx->curKey, "username")) {
-		String_Copy(&SignInTask.Username, str);
+		String_Copy(&SignInTask.username, str);
 	} else if (String_CaselessEqualsConst(&ctx->curKey, "errors")) {
 		SignInTask_LogError(str);
 	}
@@ -296,18 +296,18 @@ void SignInTask_Run(const String* user, const String* pass) {
 	static const String id  = String_FromConst("CC post login");
 	static const String url = String_FromConst("https://www.classicube.net/api/login");
 	String tmp; char tmpBuffer[384];
-	if (SignInTask.Base.Working) return;
+	if (SignInTask.Base.working) return;
 
 	LWebTask_Reset(&SignInTask.Base);
-	String_InitArray(SignInTask.Username, userBuffer);
-	SignInTask.Error = NULL;
+	String_InitArray(SignInTask.username, userBuffer);
+	SignInTask.error = NULL;
 
 	String_InitArray(tmp, tmpBuffer);
 	SignInTask_Append(&tmp, "username=",  user);
 	SignInTask_Append(&tmp, "&password=", pass);
-	SignInTask_Append(&tmp, "&token=",    &GetTokenTask.Token);
+	SignInTask_Append(&tmp, "&token=",    &GetTokenTask.token);
 
-	SignInTask.Base.Identifier = id;
+	SignInTask.Base.identifier = id;
 	Http_AsyncPostData(&url, false, &id, tmp.buffer, tmp.length, &ccCookies);
 	SignInTask.Base.Handle     = SignInTask_Handle;
 }
@@ -368,21 +368,21 @@ static void ServerInfo_Parse(struct JsonContext* ctx, const String* val) {
 }
 
 static void FetchServerTask_Handle(cc_uint8* data, cc_uint32 len) {
-	curServer = &FetchServerTask.Server;
+	curServer = &FetchServerTask.server;
 	Json_Handle(data, len, ServerInfo_Parse, NULL, NULL);
 }
 
 void FetchServerTask_Run(const String* hash) {
 	static const String id  = String_FromConst("CC fetch server");
 	String url; char urlBuffer[URL_MAX_SIZE];
-	if (FetchServerTask.Base.Working) return;
+	if (FetchServerTask.Base.working) return;
 
 	LWebTask_Reset(&FetchServerTask.Base);
-	ServerInfo_Init(&FetchServerTask.Server);
+	ServerInfo_Init(&FetchServerTask.server);
 	String_InitArray(url, urlBuffer);
 	String_Format1(&url, "https://www.classicube.net/api/server/%s", hash);
 
-	FetchServerTask.Base.Identifier = id;
+	FetchServerTask.Base.identifier = id;
 	Http_AsyncGetDataEx(&url, false, &id, NULL, NULL, &ccCookies);
 	FetchServerTask.Base.Handle  = FetchServerTask_Handle;
 }
@@ -393,53 +393,53 @@ void FetchServerTask_Run(const String* hash) {
 *#########################################################################################################################*/
 struct FetchServersData FetchServersTask;
 static void FetchServersTask_Count(struct JsonContext* ctx) {
-	FetchServersTask.NumServers++;
+	FetchServersTask.numServers++;
 }
 
 static void FetchServersTask_Next(struct JsonContext* ctx) {
 	curServer++;
-	if (curServer < FetchServersTask.Servers) return;
+	if (curServer < FetchServersTask.servers) return;
 	ServerInfo_Init(curServer);
 }
 
 static void FetchServersTask_Handle(cc_uint8* data, cc_uint32 len) {
 	int count;
-	Mem_Free(FetchServersTask.Servers);
-	Mem_Free(FetchServersTask.Orders);
+	Mem_Free(FetchServersTask.servers);
+	Mem_Free(FetchServersTask.orders);
 
-	FetchServersTask.NumServers = 0;
-	FetchServersTask.Servers    = NULL;
-	FetchServersTask.Orders     = NULL;
+	FetchServersTask.numServers = 0;
+	FetchServersTask.servers    = NULL;
+	FetchServersTask.orders     = NULL;
 
 	/* -1 because servers is surrounded by a { */
-	FetchServersTask.NumServers = -1;
+	FetchServersTask.numServers = -1;
 	Json_Handle(data, len, NULL, NULL, FetchServersTask_Count);
-	count = FetchServersTask.NumServers;
+	count = FetchServersTask.numServers;
 
 	if (count <= 0) return;
-	FetchServersTask.Servers = (struct ServerInfo*)Mem_Alloc(count, sizeof(struct ServerInfo), "servers list");
-	FetchServersTask.Orders  = (cc_uint16*)Mem_Alloc(count, 2, "servers order");
+	FetchServersTask.servers = (struct ServerInfo*)Mem_Alloc(count, sizeof(struct ServerInfo), "servers list");
+	FetchServersTask.orders  = (cc_uint16*)Mem_Alloc(count, 2, "servers order");
 
 	/* -2 because servers is surrounded by a { */
-	curServer = FetchServersTask.Servers - 2;
+	curServer = FetchServersTask.servers - 2;
 	Json_Handle(data, len, ServerInfo_Parse, NULL, FetchServersTask_Next);
 }
 
 void FetchServersTask_Run(void) {
 	static const String id  = String_FromConst("CC fetch servers");
 	static const String url = String_FromConst("https://www.classicube.net/api/servers");
-	if (FetchServersTask.Base.Working) return;
+	if (FetchServersTask.Base.working) return;
 	LWebTask_Reset(&FetchServersTask.Base);
 
-	FetchServersTask.Base.Identifier = id;
+	FetchServersTask.Base.identifier = id;
 	Http_AsyncGetDataEx(&url, false, &id, NULL, NULL, &ccCookies);
 	FetchServersTask.Base.Handle = FetchServersTask_Handle;
 }
 
 void FetchServersTask_ResetOrder(void) {
 	int i;
-	for (i = 0; i < FetchServersTask.NumServers; i++) {
-		FetchServersTask.Orders[i] = i;
+	for (i = 0; i < FetchServersTask.numServers; i++) {
+		FetchServersTask.orders[i] = i;
 	}
 }
 
@@ -464,11 +464,11 @@ CC_NOINLINE static TimeMS CheckUpdateTask_ParseTime(const String* str) {
 
 static void CheckUpdateTask_OnValue(struct JsonContext* ctx, const String* str) {
 	if (String_CaselessEqualsConst(&ctx->curKey, "release_version")) {
-		String_Copy(&CheckUpdateTask.LatestRelease, str);
+		String_Copy(&CheckUpdateTask.latestRelease, str);
 	} else if (String_CaselessEqualsConst(&ctx->curKey, "latest_ts")) {
-		CheckUpdateTask.DevTimestamp = CheckUpdateTask_ParseTime(str);
+		CheckUpdateTask.devTimestamp = CheckUpdateTask_ParseTime(str);
 	} else if (String_CaselessEqualsConst(&ctx->curKey, "release_ts")) {
-		CheckUpdateTask.RelTimestamp = CheckUpdateTask_ParseTime(str);
+		CheckUpdateTask.relTimestamp = CheckUpdateTask_ParseTime(str);
 	}
 }
 
@@ -479,14 +479,14 @@ static void CheckUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 void CheckUpdateTask_Run(void) {
 	static const String id  = String_FromConst("CC update check");
 	static const String url = String_FromConst("http://cs.classicube.net/c_client/builds.json");
-	if (CheckUpdateTask.Base.Working) return;
+	if (CheckUpdateTask.Base.working) return;
 
 	LWebTask_Reset(&CheckUpdateTask.Base);
-	CheckUpdateTask.DevTimestamp = 0;
-	CheckUpdateTask.RelTimestamp = 0;
-	String_InitArray(CheckUpdateTask.LatestRelease, relVersionBuffer);
+	CheckUpdateTask.devTimestamp = 0;
+	CheckUpdateTask.relTimestamp = 0;
+	String_InitArray(CheckUpdateTask.latestRelease, relVersionBuffer);
 
-	CheckUpdateTask.Base.Identifier = id;
+	CheckUpdateTask.Base.identifier = id;
 	Http_AsyncGetData(&url, false, &id);
 	CheckUpdateTask.Base.Handle     = CheckUpdateTask_Handle;
 }
@@ -503,7 +503,7 @@ static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 	res = Stream_WriteAllTo(&path, data, len);
 	if (res) { Logger_Warn(res, "saving update"); return; }
 
-	res = File_SetModifiedTime(&path, FetchUpdateTask.Timestamp);
+	res = File_SetModifiedTime(&path, FetchUpdateTask.timestamp);
 	if (res) Logger_Warn(res, "setting update time");
 
 	res = File_MarkExecutable(&path);
@@ -555,8 +555,8 @@ void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
 	String url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 
-	String_InitArray(FetchUpdateTask.Base.Identifier, idBuffer);
-	String_Format1(&FetchUpdateTask.Base.Identifier, "CC update fetch%i", &idCounter);
+	String_InitArray(FetchUpdateTask.Base.identifier, idBuffer);
+	String_Format1(&FetchUpdateTask.Base.identifier, "CC update fetch%i", &idCounter);
 	/* User may click another update button in the updates menu before original update finished downloading */
 	/* Hence must use a different ID for each update fetch, otherwise old update gets downloaded and applied */
 	idCounter++;
@@ -564,12 +564,12 @@ void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
 	String_Format2(&url, "http://cs.classicube.net/c_client/%c/%c",
 		release ? "release" : "latest",
 		d3d9    ? exe_d3d9  : exe_ogl);
-	if (FetchUpdateTask.Base.Working) return;
+	if (FetchUpdateTask.Base.working) return;
 
 	LWebTask_Reset(&FetchUpdateTask.Base);
-	FetchUpdateTask.Timestamp = release ? CheckUpdateTask.RelTimestamp : CheckUpdateTask.DevTimestamp;
+	FetchUpdateTask.timestamp = release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;
 
-	Http_AsyncGetData(&url, false, &FetchUpdateTask.Base.Identifier);
+	Http_AsyncGetData(&url, false, &FetchUpdateTask.Base.identifier);
 	FetchUpdateTask.Base.Handle = FetchUpdateTask_Handle;
 }
 
@@ -607,11 +607,11 @@ static void FetchFlagsTask_Handle(cc_uint8* data, cc_uint32 len) {
 	cc_result res;
 
 	Stream_ReadonlyMemory(&s, data, len);
-	res = Png_Decode(&flags[FetchFlagsTask.Count].bmp, &s);
+	res = Png_Decode(&flags[FetchFlagsTask.count].bmp, &s);
 	if (res) Logger_Warn(res, "decoding flag");
 
-	FetchFlagsTask_Scale(&flags[FetchFlagsTask.Count].bmp);
-	FetchFlagsTask.Count++;
+	FetchFlagsTask_Scale(&flags[FetchFlagsTask.count].bmp);
+	FetchFlagsTask.count++;
 	FetchFlagsTask_DownloadNext();
 }
 
@@ -620,14 +620,14 @@ static void FetchFlagsTask_DownloadNext(void) {
 	String url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 
-	if (FetchFlagsTask.Base.Working)        return;
-	if (FetchFlagsTask.Count == flagsCount) return;
+	if (FetchFlagsTask.Base.working)        return;
+	if (FetchFlagsTask.count == flagsCount) return;
 
 	LWebTask_Reset(&FetchFlagsTask.Base);
 	String_Format2(&url, "http://static.classicube.net/img/flags/%r%r.png",
-			&flags[FetchFlagsTask.Count].country[0], &flags[FetchFlagsTask.Count].country[1]);
+			&flags[FetchFlagsTask.count].country[0], &flags[FetchFlagsTask.count].country[1]);
 
-	FetchFlagsTask.Base.Identifier = id;
+	FetchFlagsTask.Base.identifier = id;
 	Http_AsyncGetData(&url, false, &id);
 	FetchFlagsTask.Base.Handle = FetchFlagsTask_Handle;
 }
@@ -663,7 +663,7 @@ void FetchFlagsTask_Add(const struct ServerInfo* server) {
 
 Bitmap* Flags_Get(const struct ServerInfo* server) {
 	int i;
-	for (i = 0; i < FetchFlagsTask.Count; i++) {
+	for (i = 0; i < FetchFlagsTask.count; i++) {
 		if (flags[i].country[0] != server->country[0]) continue;
 		if (flags[i].country[1] != server->country[1]) continue;
 		return &flags[i].bmp;
@@ -673,7 +673,7 @@ Bitmap* Flags_Get(const struct ServerInfo* server) {
 
 void Flags_Free(void) {
 	int i;
-	for (i = 0; i < FetchFlagsTask.Count; i++) {
+	for (i = 0; i < FetchFlagsTask.count; i++) {
 		Mem_Free(flags[i].bmp.Scan0);
 	}
 }

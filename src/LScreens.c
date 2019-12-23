@@ -681,7 +681,7 @@ static void MainScreen_Login(void* w, int x, int y) {
 		LWidget_Redraw(&s->lblStatus); return;
 	}
 
-	if (GetTokenTask.Base.Working) return;
+	if (GetTokenTask.Base.working) return;
 	Options_Set("launcher-cc-username", user);
 	Options_SetSecure("launcher-cc-password", pass, user);
 
@@ -822,12 +822,12 @@ static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
 	static const String currentStr = String_FromConst(GAME_APP_VER);
 	cc_uint32 latest, current;
 
-	if (!CheckUpdateTask.Base.Working)   return;
+	if (!CheckUpdateTask.Base.working)   return;
 	LWebTask_Tick(&CheckUpdateTask.Base);
-	if (!CheckUpdateTask.Base.Completed) return;
+	if (!CheckUpdateTask.Base.completed) return;
 
-	if (CheckUpdateTask.Base.Success) {
-		latest  = MainScreen_GetVersion(&CheckUpdateTask.LatestRelease);
+	if (CheckUpdateTask.Base.success) {
+		latest  = MainScreen_GetVersion(&CheckUpdateTask.latestRelease);
 		current = MainScreen_GetVersion(&currentStr);
 		LLabel_SetConst(&s->lblUpdate, latest > current ? "&aNew release" : "&eUp to date");
 	} else {
@@ -837,11 +837,11 @@ static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
 }
 
 static void MainScreen_TickGetToken(struct MainScreen* s) {
-	if (!GetTokenTask.Base.Working)   return;
+	if (!GetTokenTask.Base.working)   return;
 	LWebTask_Tick(&GetTokenTask.Base);
-	if (!GetTokenTask.Base.Completed) return;
+	if (!GetTokenTask.Base.completed) return;
 
-	if (GetTokenTask.Base.Success) {
+	if (GetTokenTask.Base.success) {
 		SignInTask_Run(&s->iptUsername.text, &s->iptPassword.text);
 	} else {
 		MainScreen_Error(&GetTokenTask.Base, "signing in");
@@ -849,17 +849,17 @@ static void MainScreen_TickGetToken(struct MainScreen* s) {
 }
 
 static void MainScreen_TickSignIn(struct MainScreen* s) {
-	if (!SignInTask.Base.Working)   return;
+	if (!SignInTask.Base.working)   return;
 	LWebTask_Tick(&SignInTask.Base);
-	if (!SignInTask.Base.Completed) return;
+	if (!SignInTask.Base.completed) return;
 
-	if (SignInTask.Error) {
-		LLabel_SetConst(&s->lblStatus, SignInTask.Error);
+	if (SignInTask.error) {
+		LLabel_SetConst(&s->lblStatus, SignInTask.error);
 		LWidget_Redraw(&s->lblStatus);
-	} else if (SignInTask.Base.Success) {
+	} else if (SignInTask.Base.success) {
 		/* website returns case correct username */
-		if (!String_Equals(&s->iptUsername.text, &SignInTask.Username)) {
-			LInput_SetText(&s->iptUsername, &SignInTask.Username);
+		if (!String_Equals(&s->iptUsername.text, &SignInTask.username)) {
+			LInput_SetText(&s->iptUsername, &SignInTask.username);
 			LWidget_Redraw(&s->iptUsername);
 		}
 
@@ -872,11 +872,11 @@ static void MainScreen_TickSignIn(struct MainScreen* s) {
 }
 
 static void MainScreen_TickFetchServers(struct MainScreen* s) {
-	if (!FetchServersTask.Base.Working)   return;
+	if (!FetchServersTask.Base.working)   return;
 	LWebTask_Tick(&FetchServersTask.Base);
-	if (!FetchServersTask.Base.Completed) return;
+	if (!FetchServersTask.Base.completed) return;
 
-	if (FetchServersTask.Base.Success) {
+	if (FetchServersTask.Base.success) {
 		s->signingIn = false;
 		if (Game_Hash.length) {
 			Launcher_ConnectToServer(&Game_Hash);
@@ -1123,7 +1123,7 @@ static void ServersScreen_Connect(void* w, int x, int y) {
 
 static void ServersScreen_Refresh(void* w, int x, int y) {
 	struct LButton* btn;
-	if (FetchServersTask.Base.Working) return;
+	if (FetchServersTask.Base.working) return;
 
 	FetchServersTask_Run();
 	btn = &ServersScreen_Instance.btnRefresh;
@@ -1167,8 +1167,8 @@ static void ServersScreen_ReloadServers(struct ServersScreen* s) {
 	int i;
 	LTable_Sort(&s->table);
 
-	for (i = 0; i < FetchServersTask.NumServers; i++) {
-		FetchFlagsTask_Add(&FetchServersTask.Servers[i]);
+	for (i = 0; i < FetchServersTask.numServers; i++) {
+		FetchFlagsTask_Add(&FetchServersTask.servers[i]);
 	}
 }
 
@@ -1220,22 +1220,22 @@ static void ServersScreen_Tick(struct LScreen* s_) {
 	int count;
 	LScreen_Tick(s_);
 
-	count = FetchFlagsTask.Count;
+	count = FetchFlagsTask.count;
 	LWebTask_Tick(&FetchFlagsTask.Base);
 	/* TODO: Only redraw flags */
-	if (count != FetchFlagsTask.Count) LWidget_Draw(&s->table);
+	if (count != FetchFlagsTask.count) LWidget_Draw(&s->table);
 
-	if (!FetchServersTask.Base.Working) return;
+	if (!FetchServersTask.Base.working) return;
 	LWebTask_Tick(&FetchServersTask.Base);
-	if (!FetchServersTask.Base.Completed) return;
+	if (!FetchServersTask.Base.completed) return;
 
-	if (FetchServersTask.Base.Success) {
+	if (FetchServersTask.Base.success) {
 		ServersScreen_ReloadServers(s);
 		LWidget_Draw(&s->table);
 	}
 
 	LButton_SetConst(&s->btnRefresh, 
-				FetchServersTask.Base.Success ? "Refresh" : "&cFailed");
+				FetchServersTask.Base.success ? "Refresh" : "&cFailed");
 	LWidget_Redraw(&s->btnRefresh);
 }
 
@@ -1411,16 +1411,16 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS 
 }
 
 static void UpdatesScreen_FormatBoth(struct UpdatesScreen* s) {
-	UpdatesScreen_Format(&s->lblRel, "Latest release: ",   CheckUpdateTask.RelTimestamp);
-	UpdatesScreen_Format(&s->lblDev, "Latest dev build: ", CheckUpdateTask.DevTimestamp);
+	UpdatesScreen_Format(&s->lblRel, "Latest release: ",   CheckUpdateTask.relTimestamp);
+	UpdatesScreen_Format(&s->lblDev, "Latest dev build: ", CheckUpdateTask.devTimestamp);
 }
 
 static void UpdatesScreen_Get(cc_bool release, cc_bool d3d9) {
 	String str; char strBuffer[STRING_SIZE];
 	struct UpdatesScreen* s = &UpdatesScreen_Instance;
 
-	TimeMS time = release ? CheckUpdateTask.RelTimestamp : CheckUpdateTask.DevTimestamp;
-	if (!time || FetchUpdateTask.Base.Working) return;
+	TimeMS time = release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;
+	if (!time || FetchUpdateTask.Base.working) return;
 	FetchUpdateTask_Run(release, d3d9);
 
 	if (release && d3d9)   s->buildName = "&eFetching latest release (Direct3D9)";
@@ -1437,9 +1437,9 @@ static void UpdatesScreen_Get(cc_bool release, cc_bool d3d9) {
 }
 
 static void UpdatesScreen_CheckTick(struct UpdatesScreen* s) {
-	if (!CheckUpdateTask.Base.Working) return;
+	if (!CheckUpdateTask.Base.working) return;
 	LWebTask_Tick(&CheckUpdateTask.Base);
-	if (!CheckUpdateTask.Base.Completed) return;
+	if (!CheckUpdateTask.Base.completed) return;
 	UpdatesScreen_FormatBoth(s);
 }
 
@@ -1451,7 +1451,7 @@ static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTas
 	if (!Http_GetCurrent(&item, &progress)) return;
 
 	identifier = String_FromRawArray(item.ID);
-	if (!String_Equals(&identifier, &task->Identifier)) return;
+	if (!String_Equals(&identifier, &task->identifier)) return;
 	if (progress == s->buildProgress) return;
 
 	s->buildProgress = progress;
@@ -1465,13 +1465,13 @@ static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTas
 
 static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
 	String str; char strBuffer[STRING_SIZE];
-	if (!FetchUpdateTask.Base.Working) return;
+	if (!FetchUpdateTask.Base.working) return;
 
 	LWebTask_Tick(&FetchUpdateTask.Base);
 	UpdatesScreen_UpdateProgress(s, &FetchUpdateTask.Base);
-	if (!FetchUpdateTask.Base.Completed) return;
+	if (!FetchUpdateTask.Base.completed) return;
 
-	if (!FetchUpdateTask.Base.Success) {
+	if (!FetchUpdateTask.Base.success) {
 		String_InitArray(str, strBuffer);
 		LWebTask_DisplayError(&FetchUpdateTask.Base, "fetching update", &str);
 		LLabel_SetText(&s->lblStatus, &str);
@@ -1493,7 +1493,7 @@ static void UpdatesScreen_Update(struct UpdatesScreen* s) {
 	cc_result res;
 
 	/* Initially fill out with update check result from main menu */
-	if (CheckUpdateTask.Base.Completed && CheckUpdateTask.Base.Success) {
+	if (CheckUpdateTask.Base.completed && CheckUpdateTask.Base.success) {
 		UpdatesScreen_FormatBoth(s);
 	}
 	CheckUpdateTask_Run();
@@ -1567,7 +1567,7 @@ static void UpdatesScreen_Free(struct LScreen* s_) {
 	s->buildName     = NULL;
 	s->buildProgress = -1;
 
-	FetchUpdateTask.Base.Working = false;
+	FetchUpdateTask.Base.working = false;
 	s->lblStatus.text.length     = 0;
 }
 

@@ -41,17 +41,16 @@ struct ServerInfo {
 	char _softBuffer[STRING_SIZE];
 };
 
-struct LWebTask;
 struct LWebTask {
-	cc_bool Completed; /* Whether the task has finished executing. */
-	cc_bool Working;   /* Whether the task is currently in progress, or is scheduled to be. */
-	cc_bool Success;   /* Whether the task completed successfully. */
-	cc_result Res;    /* Error returned (e.g. for DNS failure) */
-	int Status;        /* HTTP return code for the request */
+	cc_bool completed; /* Whether the task has finished executing. */
+	cc_bool working;   /* Whether the task is currently in progress, or is scheduled to be. */
+	cc_bool success;   /* Whether the task completed successfully. */
+	cc_result res;    /* Error returned (e.g. for DNS failure) */
+	int status;        /* HTTP return code for the request */
 	
-	String Identifier; /* Unique identifier for this web task. */
-	String URL;        /* URL this task is downloading from/uploading to. */
-	TimeMS Start;      /* Point in time this task was started at. */
+	String identifier; /* Unique identifier for this web task. */
+	String url;        /* URL this task is downloading from/uploading to. */
+	TimeMS start;      /* Point in time this task was started at. */
 	/* Called when task successfully downloaded/uploaded data. */
 	void (*Handle)(cc_uint8* data, cc_uint32 len);
 };
@@ -61,42 +60,42 @@ void LWebTask_DisplayError(struct LWebTask* task, const char* action, String* ds
 
 extern struct GetTokenTaskData {
 	struct LWebTask Base;
-	String Token; /* Random CSRF token for logging in. */
+	String token; /* Random CSRF token for logging in. */
 } GetTokenTask;
 void GetTokenTask_Run(void);
 
 extern struct SignInTaskData {
 	struct LWebTask Base;
-	String Username;   /* Username to sign in as. Changed to case correct username. */
-	const char* Error; /* If sign in fails, the reason as to why. */
+	String username;   /* Username to sign in as. Changed to case correct username. */
+	const char* error; /* If sign in fails, the reason as to why. */
 } SignInTask;
 void SignInTask_Run(const String* user, const String* pass);
 
 
 extern struct FetchServerData {
 	struct LWebTask Base;
-	struct ServerInfo Server; /* Details about the given server on success. */
+	struct ServerInfo server; /* Details about the given server on success. */
 } FetchServerTask;
 void FetchServerTask_Run(const String* hash);
 
 
 extern struct FetchServersData {
 	struct LWebTask Base;
-	struct ServerInfo* Servers; /* List of all public servers on server list. */
-	cc_uint16* Orders;           /* Order of each server (after sorting) */
-	int NumServers;             /* Number of public servers. */
+	struct ServerInfo* servers; /* List of all public servers on server list. */
+	cc_uint16* orders;          /* Order of each server (after sorting) */
+	int numServers;             /* Number of public servers. */
 } FetchServersTask;
 void FetchServersTask_Run(void);
 void FetchServersTask_ResetOrder(void);
-#define Servers_Get(i) (&FetchServersTask.Servers[FetchServersTask.Orders[i]])
+#define Servers_Get(i) (&FetchServersTask.servers[FetchServersTask.orders[i]])
 
 
 extern struct CheckUpdateData {
 	struct LWebTask Base;
 	/* Timestamp latest commit/dev build and release were at. */
-	TimeMS DevTimestamp, RelTimestamp;
+	TimeMS devTimestamp, relTimestamp;
 	/* Version of latest release. */
-	String LatestRelease;
+	String latestRelease;
 } CheckUpdateTask; /* TODO: Work out the JSON for this.. */
 void CheckUpdateTask_Run(void);
 
@@ -104,7 +103,7 @@ void CheckUpdateTask_Run(void);
 extern struct FetchUpdateData {
 	struct LWebTask Base;
 	/* Timestamp downloaded build was originally built at. */
-	TimeMS Timestamp;
+	TimeMS timestamp;
 } FetchUpdateTask;
 void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9);
 
@@ -112,7 +111,7 @@ void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9);
 extern struct FetchFlagsData { 
 	struct LWebTask Base;
 	/* Number of flags downloaded. */
-	int Count;
+	int count;
 } FetchFlagsTask;
 /* Asynchronously downloads the flag associated with the given server's country. */
 void FetchFlagsTask_Add(const struct ServerInfo* server);

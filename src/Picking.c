@@ -62,7 +62,7 @@ static float RayTracer_Div(float a, float b) {
 	return a / b;
 }
 
-void RayTracer_SetVectors(struct RayTracer* t, Vec3 origin, Vec3 dir) {
+void RayTracer_Init(struct RayTracer* t, Vec3 origin, Vec3 dir) {
 	IVec3 start, cellBoundary;
 	t->Origin = origin; t->Dir = dir;
 
@@ -161,7 +161,7 @@ static cc_bool Picking_RayTrace(Vec3 origin, Vec3 dir, float reach, struct Picke
 	float dzMin, dzMax, dz;
 	int i, x, y, z;
 
-	RayTracer_SetVectors(&tracer, origin, dir);
+	RayTracer_Init(&tracer, origin, dir);
 	IVec3_Floor(&pOrigin, &origin);
 	insideMap = World_Contains(pOrigin.X, pOrigin.Y, pOrigin.Z);
 	reachSq   = reach * reach;
