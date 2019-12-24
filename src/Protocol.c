@@ -259,7 +259,7 @@ static void WoM_ParseConfig(struct HttpRequest* item) {
 	PackedCol col;
 
 	String_InitArray(line, lineBuffer);
-	Stream_ReadonlyMemory(&mem, item->Data, item->Size);
+	Stream_ReadonlyMemory(&mem, item->data, item->size);
 
 	while (!Stream_ReadLine(&mem, &line)) {
 		Platform_Log(&line);
@@ -293,7 +293,7 @@ static void WoM_Reset(void) {
 static void WoM_Tick(void) {
 	struct HttpRequest item;
 	if (!Http_GetResult(&wom_identifier, &item)) return;
-	if (!item.Success) return;
+	if (!item.success) return;
 
 	WoM_ParseConfig(&item);
 	HttpRequest_Free(&item);

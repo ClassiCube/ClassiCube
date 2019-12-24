@@ -672,7 +672,7 @@ static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 	struct VorbisState ctx = { 0 };
 	cc_result res;
 
-	Stream_ReadonlyMemory(&src, req->Data, req->Size);
+	Stream_ReadonlyMemory(&src, req->data, req->size);
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "audio/%c.wav", name);
 
@@ -696,7 +696,7 @@ static void MusicPatcher_Save(const char* name, struct HttpRequest* req) {
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "audio/%c", name);
 
-	res = Stream_WriteAllTo(&path, req->Data, req->Size);
+	res = Stream_WriteAllTo(&path, req->data, req->size);
 	if (res) Logger_Warn(res, "saving music file");
 }
 
@@ -754,14 +754,14 @@ static void Fetcher_Finish(void) {
 CC_NOINLINE static cc_bool Fetcher_Get(const String* id, struct HttpRequest* req) {
 	if (!Http_GetResult(id, req)) return false;
 
-	if (req->Success) {
+	if (req->success) {
 		Fetcher_Downloaded++;
 		return true;
 	}
 
 	Fetcher_Failed     = true;
-	Fetcher_Result     = req->Result;
-	Fetcher_StatusCode = req->StatusCode;
+	Fetcher_Result     = req->result;
+	Fetcher_StatusCode = req->statusCode;
 
 	HttpRequest_Free(req);
 	Fetcher_Finish();
@@ -774,8 +774,8 @@ static void Fetcher_CheckFile(struct ResourceFile* file) {
 	if (!Fetcher_Get(&id, &req)) return;
 	
 	file->downloaded = true;
-	file->data       = req.Data;
-	file->len        = req.Size;
+	file->data       = req.data;
+	file->len        = req.size;
 	/* don't free request */
 }
 

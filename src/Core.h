@@ -224,6 +224,7 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 typedef void* GfxResourceID;
 #else
 /* Ensure size is same as D3D9, even though only 32 bits are used */
+/* NOTE: OpenGL 1.1 does actually use the full 64 bits for 'dynamic' vertex buffers */
 typedef cc_uintptr GfxResourceID;
 #endif
 

@@ -620,16 +620,16 @@ static void TextureCache_SetLastModified(const String* url, const String* time) 
 void TextureCache_Update(struct HttpRequest* req) {
 	String path, url; char pathBuffer[FILENAME_SIZE];
 	cc_result res;
-	url = String_FromRawArray(req->URL);
+	url = String_FromRawArray(req->url);
 
-	path = String_FromRawArray(req->Etag);
+	path = String_FromRawArray(req->etag);
 	TextureCache_SetETag(&url, &path);
-	path = String_FromRawArray(req->LastModified);
+	path = String_FromRawArray(req->lastModified);
 	TextureCache_SetLastModified(&url, &path);
 
 	String_InitArray(path, pathBuffer);
 	TextureCache_MakePath(&path, &url);
-	res = Stream_WriteAllTo(&path, req->Data, req->Size);
+	res = Stream_WriteAllTo(&path, req->data, req->size);
 	if (res) { Logger_Warn2(res, "caching", &url); }
 }
 
@@ -734,12 +734,12 @@ void TexturePack_Extract_Req(struct HttpRequest* item) {
 	cc_bool png;
 	cc_result res;
 
-	url = String_FromRawArray(item->URL);
+	url = String_FromRawArray(item->url);
 	/* Took too long to download and is no longer active texture pack */
 	if (!String_Equals(&World_TextureUrl, &url)) return;
 
-	data = item->Data;
-	len  = item->Size;
+	data = item->data;
+	len  = item->size;
 	Stream_ReadonlyMemory(&mem, data, len);
 
 	png = Png_Detect(data, len);

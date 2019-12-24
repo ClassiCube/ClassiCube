@@ -484,7 +484,7 @@ static void ChatScreen_UpdateTexpackStatus(struct ChatScreen* s) {
 	String identifier;
 	
 	hasRequest = Http_GetCurrent(&request, &progress);
-	identifier = String_FromRawArray(request.ID);	
+	identifier = String_FromRawArray(request.id);	
 
 	/* Is terrain/texture pack currently being downloaded? */
 	if (!hasRequest || !String_Equals(&identifier, &texPack)) {

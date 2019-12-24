@@ -3285,7 +3285,7 @@ static void TexPackOverlay_Update(void* screen, double delta) {
 	if (!Http_GetResult(&s->identifier, &item)) return;
 
 	s->dirty         = true;
-	s->contentLength = item.ContentLength;
+	s->contentLength = item.contentLength;
 	TexPackOverlay_UpdateLine3(s);
 }
 

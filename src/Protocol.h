@@ -1,6 +1,5 @@
 #ifndef CC_PROTOCOL_H
 #define CC_PROTOCOL_H
-#include "Input.h"
 #include "String.h"
 #include "Vectors.h"
 /* Implements network protocols for original classic, CPE, and WoM textures.
@@ -47,7 +46,6 @@ extern Net_Handler Net_Handlers[OPCODE_COUNT];
 #define Net_Set(opcode, handler, size) Net_Handlers[opcode] = handler; Net_PacketSizes[opcode] = size;
 
 struct PickedPos;
-struct Stream;
 void Protocol_RemoveEntity(EntityID id);
 void Protocol_Reset(void);
 void Protocol_Tick(void);

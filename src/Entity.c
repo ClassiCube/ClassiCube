@@ -462,11 +462,11 @@ static void Entity_CheckSkin(struct Entity* e) {
 	}
 
 	if (!Http_GetResult(&skin, &item)) return;
-	if (!item.Success) { Entity_SetSkinAll(e, true); return; }
-	Stream_ReadonlyMemory(&mem, item.Data, item.Size);
+	if (!item.success) { Entity_SetSkinAll(e, true); return; }
+	Stream_ReadonlyMemory(&mem, item.data, item.size);
 
 	if ((res = Png_Decode(&bmp, &mem))) {
-		url = String_FromRawArray(item.URL);
+		url = String_FromRawArray(item.url);
 		Logger_Warn2(res, "decoding", &url);
 		Mem_Free(bmp.Scan0); return;
 	}

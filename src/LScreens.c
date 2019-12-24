@@ -1040,7 +1040,7 @@ static void ResourcesScreen_UpdateStatus(struct HttpRequest* req) {
 	struct LLabel* w = &ResourcesScreen_Instance.lblStatus;
 	int count;
 
-	id = String_FromRawArray(req->ID);
+	id = String_FromRawArray(req->id);
 	String_InitArray(str, strBuffer);
 	count = Fetcher_Downloaded + 1;
 	String_Format3(&str, "&eFetching %s.. (%i/%i)", &id, &count, &Resources_Count);
@@ -1449,7 +1449,7 @@ static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTas
 	int progress;
 	if (!Http_GetCurrent(&item, &progress)) return;
 
-	identifier = String_FromRawArray(item.ID);
+	identifier = String_FromRawArray(item.id);
 	if (!String_Equals(&identifier, &task->identifier)) return;
 	if (progress == s->buildProgress) return;
 

@@ -32,9 +32,9 @@
 #endif
 
 void HttpRequest_Free(struct HttpRequest* request) {
-	Mem_Free(request->Data);
-	request->Data = NULL;
-	request->Size = 0;
+	Mem_Free(request->data);
+	request->data = NULL;
+	request->size = 0;
 }
 
 /*########################################################################################################################*
@@ -88,7 +88,7 @@ static int RequestList_Find(struct RequestList* list, const String* id, struct H
 	int i;
 
 	for (i = 0; i < list->count; i++) {
-		reqID = String_FromRawArray(list->entries[i].ID);
+		reqID = String_FromRawArray(list->entries[i].id);
 		if (!String_Equals(id, &reqID)) continue;
 
 		*item = list->entries[i];
@@ -134,29 +134,29 @@ static void Http_DownloadNextAsync(void);
 static void Http_Add(const String* url, cc_bool priority, const String* id, cc_uint8 type, const String* lastModified, const String* etag, const void* data, cc_uint32 size, struct EntryList* cookies) {
 	struct HttpRequest req = { 0 };
 
-	String_CopyToRawArray(req.URL, url);
+	String_CopyToRawArray(req.url, url);
 	Platform_Log2("Adding %s (type %b)", url, &type);
 
-	String_CopyToRawArray(req.ID, id);
-	req.RequestType = type;
+	String_CopyToRawArray(req.id, id);
+	req.requestType = type;
 	
 	if (lastModified) {
-		String_CopyToRawArray(req.LastModified, lastModified);
+		String_CopyToRawArray(req.lastModified, lastModified);
 	}
 	if (etag) { 
-		String_CopyToRawArray(req.Etag, etag);
+		String_CopyToRawArray(req.etag, etag);
 	}
 
 	if (data) {
-		req.Data = (cc_uint8*)Mem_Alloc(size, 1, "Http_PostData");
-		Mem_Copy(req.Data, data, size);
-		req.Size = size;
+		req.data = (cc_uint8*)Mem_Alloc(size, 1, "Http_PostData");
+		Mem_Copy(req.data, data, size);
+		req.size = size;
 	}
-	req.Cookies = cookies;
+	req.cookies = cookies;
 
 	Mutex_Lock(pendingMutex);
 	{	
-		req.TimeAdded = DateTime_CurrentUTC_MS();
+		req.timeAdded = DateTime_CurrentUTC_MS();
 		if (priority) {
 			RequestList_Prepend(&pendingReqs, &req);
 		} else {
@@ -178,7 +178,7 @@ static const String urlRewrites[4] = {
 };
 /* Converts say dl.dropbox.com/xyZ into dl.dropboxusercontent.com/xyz */
 static void Http_GetUrl(struct HttpRequest* req, String* dst) {
-	String url = String_FromRawArray(req->URL);
+	String url = String_FromRawArray(req->url);
 	String part;
 	int i;
 
@@ -197,7 +197,7 @@ static void Http_GetUrl(struct HttpRequest* req, String* dst) {
 /* Sets up state to begin a http request */
 static void Http_BeginRequest(struct HttpRequest* req, String* url) {
 	Http_GetUrl(req, url);
-	Platform_Log2("Downloading from %s (type %b)", url, &req->RequestType);
+	Platform_Log2("Downloading from %s (type %b)", url, &req->requestType);
 
 	Mutex_Lock(curRequestMutex);
 	{
@@ -210,15 +210,15 @@ static void Http_BeginRequest(struct HttpRequest* req, String* url) {
 /* Adds given request to list of processed/completed requests */
 static void Http_CompleteRequest(struct HttpRequest* req) {
 	struct HttpRequest older;
-	String id = String_FromRawArray(req->ID);
+	String id = String_FromRawArray(req->id);
 	int index;
-	req->TimeDownloaded = DateTime_CurrentUTC_MS();
+	req->timeDownloaded = DateTime_CurrentUTC_MS();
 
 	index = RequestList_Find(&processedReqs, &id, &older);
 	if (index >= 0) {
 		/* very rare case - priority item was inserted, then inserted again (so put before first item), */
 		/* and both items got downloaded before an external function removed them from the queue */
-		if (older.TimeAdded > req->TimeAdded) {
+		if (older.timeAdded > req->timeAdded) {
 			HttpRequest_Free(req);
 		} else {
 			/* normal case, replace older req */
@@ -232,9 +232,9 @@ static void Http_CompleteRequest(struct HttpRequest* req) {
 
 /* Updates state after a completed http request */
 static void Http_FinishRequest(struct HttpRequest* req) {
-	if (req->Data) Platform_Log1("HTTP returned data: %i bytes", &req->Size);
-	req->Success = !req->Result && req->StatusCode == 200 && req->Data && req->Size;
-	if (!req->Success) HttpRequest_Free(req);
+	if (req->data) Platform_Log1("HTTP returned data: %i bytes", &req->size);
+	req->success = !req->result && req->statusCode == 200 && req->data && req->size;
+	if (!req->success) HttpRequest_Free(req);
 
 	Mutex_Lock(processedMutex);
 	{
@@ -244,7 +244,7 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 
 	Mutex_Lock(curRequestMutex);
 	{
-		http_curRequest.ID[0] = '\0';
+		http_curRequest.id[0] = '\0';
 		http_curProgress = ASYNC_PROGRESS_NOTHING;
 	}
 	Mutex_Unlock(curRequestMutex);
@@ -260,7 +260,7 @@ static void Http_CleanCacheTask(struct ScheduledTask* task) {
 		TimeMS now = DateTime_CurrentUTC_MS();
 		for (i = processedReqs.count - 1; i >= 0; i--) {
 			item = &processedReqs.entries[i];
-			if (item->TimeDownloaded + (10 * 1000) >= now) continue;
+			if (item->timeDownloaded + (10 * 1000) >= now) continue;
 
 			HttpRequest_Free(item);
 			RequestList_RemoveAt(&processedReqs, i);
@@ -278,8 +278,8 @@ static void Http_ParseCookie(struct HttpRequest* req, const String* value) {
 	dataEnd = String_IndexOf(&data, ';');
 	if (dataEnd >= 0) data.length = dataEnd;
 
-	req->Cookies->separator = '=';
-	EntryList_Set(req->Cookies, &name, &data);
+	req->cookies->separator = '=';
+	EntryList_Set(req->cookies, &name, &data);
 }
 
 /* Parses a HTTP header */
@@ -291,18 +291,18 @@ static void Http_ParseHeader(struct HttpRequest* req, const String* line) {
 	/* HTTP[version] [status code] [status reason] */
 	if (String_CaselessStarts(line, &httpVersion)) {
 		numParts = String_UNSAFE_Split(line, ' ', parts, 3);
-		if (numParts >= 2) Convert_ParseInt(&parts[1], &req->StatusCode);
+		if (numParts >= 2) Convert_ParseInt(&parts[1], &req->statusCode);
 	}
 	/* For all other headers:  name: value */
 	if (!String_UNSAFE_Separate(line, ':', &name, &value)) return;
 
 	if (String_CaselessEqualsConst(&name, "ETag")) {
-		String_CopyToRawArray(req->Etag, &value);
+		String_CopyToRawArray(req->etag, &value);
 	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
-		Convert_ParseInt(&value, &req->ContentLength);
+		Convert_ParseInt(&value, &req->contentLength);
 	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
-		String_CopyToRawArray(req->LastModified, &value);
-	} else if (req->Cookies && String_CaselessEqualsConst(&name, "Set-Cookie")) {
+		String_CopyToRawArray(req->lastModified, &value);
+	} else if (req->cookies && String_CaselessEqualsConst(&name, "Set-Cookie")) {
 		Http_ParseCookie(req, &value);
 	}
 }
@@ -316,22 +316,22 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 	String str, cookies; char cookiesBuffer[1024];
 	int i;
 
-	if (req->LastModified[0]) {
-		str = String_FromRawArray(req->LastModified);
+	if (req->lastModified[0]) {
+		str = String_FromRawArray(req->lastModified);
 		Http_AddHeader("If-Modified-Since", &str);
 	}
-	if (req->Etag[0]) {
-		str = String_FromRawArray(req->Etag);
+	if (req->etag[0]) {
+		str = String_FromRawArray(req->etag);
 		Http_AddHeader("If-None-Match", &str);
 	}
 
-	if (req->Data) Http_AddHeader("Content-Type", &contentType);
-	if (!req->Cookies || !req->Cookies->entries.count) return;
+	if (req->data) Http_AddHeader("Content-Type", &contentType);
+	if (!req->cookies || !req->cookies->entries.count) return;
 
 	String_InitArray(cookies, cookiesBuffer);
-	for (i = 0; i < req->Cookies->entries.count; i++) {
+	for (i = 0; i < req->cookies->entries.count; i++) {
 		if (i) String_AppendConst(&cookies, "; ");
-		str = StringsBuffer_UNSAFE_Get(&req->Cookies->entries, i);
+		str = StringsBuffer_UNSAFE_Get(&req->cookies->entries, i);
 		String_AppendString(&cookies, &str);
 	}
 	Http_AddHeader("Cookie", &cookies);
@@ -365,10 +365,10 @@ static void Http_UpdateProgress(emscripten_fetch_t* fetch) {
 
 static void Http_FinishedAsync(emscripten_fetch_t* fetch) {
 	struct HttpRequest* req = &http_curRequest;
-	req->Data          = fetch->data;
-	req->Size          = fetch->numBytes;
-	req->StatusCode    = fetch->status;
-	req->ContentLength = fetch->totalBytes;
+	req->data          = fetch->data;
+	req->size          = fetch->numBytes;
+	req->statusCode    = fetch->status;
+	req->contentLength = fetch->totalBytes;
 
 	/* data needs to persist beyond closing of fetch data */
 	fetch->data = NULL;
@@ -385,15 +385,15 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	char urlBuffer[URL_MAX_SIZE]; String url;
 	char urlStr[NATIVE_STR_LEN];
 
-	switch (req->RequestType) {
+	switch (req->requestType) {
 	case REQUEST_TYPE_GET:  Mem_Copy(attr.requestMethod, "GET",  4); break;
 	case REQUEST_TYPE_HEAD: Mem_Copy(attr.requestMethod, "HEAD", 5); break;
 	case REQUEST_TYPE_POST: Mem_Copy(attr.requestMethod, "POST", 5); break;
 	}
 
-	if (req->RequestType == REQUEST_TYPE_POST) {
-		attr.requestData     = req->Data;
-		attr.requestDataSize = req->Size;
+	if (req->requestType == REQUEST_TYPE_POST) {
+		attr.requestData     = req->data;
+		attr.requestDataSize = req->size;
 	}
 
 	/* Can't use this for all URLs, because cache-control isn't in allowed CORS headers */
@@ -405,7 +405,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	/* printed to console. But this is still used for skins, that way when users change */
 	/* their skins, the change shows up instantly. But 99% of the time we'll get a 304 */
 	/* response and can avoid downloading the whole skin over and over. */
-	if (req->URL[0] == '/') {
+	if (req->url[0] == '/') {
 		static const char* const headers[3] = { "cache-control", "max-age=0", NULL };
 		attr.requestHeaders = headers;
 	}
@@ -433,24 +433,24 @@ static cc_uint32 bufferSize;
 /* Allocates initial data buffer to store response contents */
 static void Http_BufferInit(struct HttpRequest* req) {
 	http_curProgress = 0;
-	bufferSize = req->ContentLength ? req->ContentLength : 1;
-	req->Data  = (cc_uint8*)Mem_Alloc(bufferSize, 1, "http get data");
-	req->Size  = 0;
+	bufferSize = req->contentLength ? req->contentLength : 1;
+	req->data  = (cc_uint8*)Mem_Alloc(bufferSize, 1, "http get data");
+	req->size  = 0;
 }
 
 /* Ensures data buffer has enough space left to append amount bytes, reallocates if not */
 static void Http_BufferEnsure(struct HttpRequest* req, cc_uint32 amount) {
-	cc_uint32 newSize = req->Size + amount;
+	cc_uint32 newSize = req->size + amount;
 	if (newSize <= bufferSize) return;
 
 	bufferSize = newSize;
-	req->Data  = (cc_uint8*)Mem_Realloc(req->Data, newSize, 1, "http inc data");
+	req->data  = (cc_uint8*)Mem_Realloc(req->data, newSize, 1, "http inc data");
 }
 
 /* Increases size and updates current progress */
 static void Http_BufferExpanded(struct HttpRequest* req, cc_uint32 read) {
-	req->Size += read;
-	if (req->ContentLength) http_curProgress = (int)(100.0f * req->Size / req->ContentLength);
+	req->size += read;
+	if (req->contentLength) http_curProgress = (int)(100.0f * req->size / req->contentLength);
 }
 
 #if defined CC_BUILD_WININET
@@ -570,13 +570,13 @@ static cc_result Http_StartRequest(struct HttpRequest* req, String* url, HINTERN
 	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_COOKIES;
 	if (entry.Https) flags |= INTERNET_FLAG_SECURE;
 
-	*handle = HttpOpenRequestA(entry.Handle, verbs[req->RequestType], 
+	*handle = HttpOpenRequestA(entry.Handle, verbs[req->requestType], 
 								pathBuffer, NULL, NULL, NULL, flags, 0);
 	curReq  = *handle;
 	if (!curReq) return GetLastError();
 
 	Http_SetRequestHeaders(req);
-	return HttpSendRequestA(*handle, NULL, 0, req->Data, req->Size) ? 0 : GetLastError();
+	return HttpSendRequestA(*handle, NULL, 0, req->data, req->size) ? 0 : GetLastError();
 }
 
 /* Gets headers from a HTTP response */
@@ -604,7 +604,7 @@ static cc_result Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 		if (!avail) break;
 		Http_BufferEnsure(req, avail);
 
-		if (!InternetReadFile(handle, &req->Data[req->Size], avail, &read)) return GetLastError();
+		if (!InternetReadFile(handle, &req->data[req->size], avail, &read)) return GetLastError();
 		if (!read) break;
 		Http_BufferExpanded(req, read);
 	}
@@ -623,7 +623,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	res = Http_ProcessHeaders(req, handle);
 	if (res) { InternetCloseHandle(handle); return res; }
 
-	if (req->RequestType != REQUEST_TYPE_HEAD) {
+	if (req->requestType != REQUEST_TYPE_HEAD) {
 		res = Http_DownloadData(req, handle);
 		if (res) { InternetCloseHandle(handle); return res; }
 	}
@@ -688,7 +688,7 @@ static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, void* u
 	if (!bufferSize) Http_BufferInit(req);
 	Http_BufferEnsure(req, nitems);
 
-	Mem_Copy(&req->Data[req->Size], buffer, nitems);
+	Mem_Copy(&req->data[req->size], buffer, nitems);
 	Http_BufferExpanded(req, nitems);
 	return nitems;
 }
@@ -707,7 +707,7 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 
 static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	char urlStr[NATIVE_STR_LEN];
-	void* post_data = req->Data;
+	void* post_data = req->data;
 	CURLcode res;
 
 	curl_easy_reset(curl);
@@ -719,15 +719,15 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	Platform_ConvertString(urlStr, url);
 	curl_easy_setopt(curl, CURLOPT_URL, urlStr);
 
-	if (req->RequestType == REQUEST_TYPE_HEAD) {
+	if (req->requestType == REQUEST_TYPE_HEAD) {
 		curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
-	} else if (req->RequestType == REQUEST_TYPE_POST) {
+	} else if (req->requestType == REQUEST_TYPE_POST) {
 		curl_easy_setopt(curl, CURLOPT_POST,   1L);
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,  req->Size);
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS,     req->Data);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,  req->size);
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS,     req->data);
 
 		/* per curl docs, we must persist POST data until request finishes */
-		req->Data = NULL;
+		req->data = NULL;
 		HttpRequest_Free(req);
 	}
 
@@ -794,7 +794,7 @@ static void JNICALL java_HttpAppendData(JNIEnv* env, jobject o, jbyteArray arr, 
 	if (!bufferSize) Http_BufferInit(req);
 
 	Http_BufferEnsure(req, len);
-	(*env)->GetByteArrayRegion(env, arr, 0, len, &req->Data[req->Size]);
+	(*env)->GetByteArrayRegion(env, arr, 0, len, &req->data[req->size]);
 	Http_BufferExpanded(req, len);
 }
 
@@ -814,7 +814,7 @@ static cc_result Http_InitReq(JNIEnv* env, struct HttpRequest* req, String* url)
 	jint res;
 
 	args[0].l = JavaMakeString(env, url);
-	args[1].l = JavaMakeConst(env,  verbs[req->RequestType]);
+	args[1].l = JavaMakeConst(env,  verbs[req->requestType]);
 
 	res = JavaCallInt(env, "httpInit", "(Ljava/lang/String;Ljava/lang/String;)I", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
@@ -826,7 +826,7 @@ static cc_result Http_SetData(JNIEnv* env, struct HttpRequest* req) {
 	jvalue args[1];
 	jint res;
 
-	args[0].l = JavaMakeBytes(env, req->Data, req->Size);
+	args[0].l = JavaMakeBytes(env, req->data, req->size);
 	res = JavaCallInt(env, "httpSetData", "([B)I", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 	return res;
@@ -843,7 +843,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 
 	Http_SetRequestHeaders(req);
 	Http_AddHeader("User-Agent", &userAgent);
-	if (req->Data && (res = Http_SetData(env, req))) return res;
+	if (req->data && (res = Http_SetData(env, req))) return res;
 
 	bufferSize = 0;
 	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
@@ -889,12 +889,12 @@ static void Http_WorkerLoop(void) {
 		Http_BeginRequest(&request, &url);
 
 		beg = Stopwatch_Measure();
-		request.Result = Http_SysDo(&request, &url);
+		request.result = Http_SysDo(&request, &url);
 		end = Stopwatch_Measure();
 
 		elapsed = Stopwatch_ElapsedMicroseconds(beg, end) / 1000;
 		Platform_Log3("HTTP: return code %i (http %i), in %i ms",
-					&request.Result, &request.StatusCode, &elapsed);
+					&request.result, &request.statusCode, &elapsed);
 		Http_FinishRequest(&request);
 	}
 }
@@ -959,7 +959,7 @@ cc_bool Http_GetCurrent(struct HttpRequest* request, int* progress) {
 		*progress = http_curProgress;
 	}
 	Mutex_Unlock(curRequestMutex);
-	return request->ID[0];
+	return request->id[0];
 }
 
 void Http_ClearPending(void) {

@@ -55,14 +55,14 @@ static void Server_CheckAsyncResources(void) {
 	struct HttpRequest item;
 	if (!Http_GetResult(&texPack, &item)) return;
 
-	if (item.Success) {
+	if (item.success) {
 		TextureCache_Update(&item);
 		TexturePack_Extract_Req(&item);
 		HttpRequest_Free(&item);
-	} else if (item.Result) {
-		Logger_SysWarn(item.Result, "trying to download texture pack", Http_DescribeError);
+	} else if (item.result) {
+		Logger_SysWarn(item.result, "trying to download texture pack", Http_DescribeError);
 	} else {
-		int status = item.StatusCode;
+		int status = item.statusCode;
 		if (status == 200 || status == 304) return;
 		Chat_Add1("&c%i error when trying to download texture pack", &status);
 	}

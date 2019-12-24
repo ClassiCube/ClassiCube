@@ -214,13 +214,13 @@ void LWebTask_Tick(struct LWebTask* task) {
 	delta = (int)(DateTime_CurrentUTC_MS() - task->start);
 	Platform_Log2("%s took %i", &task->identifier, &delta);
 
-	task->res    = req.Result;
-	task->status = req.StatusCode;
+	task->res    = req.result;
+	task->status = req.statusCode;
 
 	task->working   = false;
 	task->completed = true;
-	task->success   = req.Success;
-	if (task->success) task->Handle((cc_uint8*)req.Data, req.Size);
+	task->success   = req.success;
+	if (task->success) task->Handle((cc_uint8*)req.data, req.size);
 	HttpRequest_Free(&req);
 }
 

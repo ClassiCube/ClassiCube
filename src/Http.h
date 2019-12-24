@@ -20,22 +20,22 @@ enum HttpProgress {
 };
 
 struct HttpRequest {
-	char URL[URL_MAX_SIZE]; /* URL data is downloaded from/uploaded to. */
-	char ID[URL_MAX_SIZE];  /* Unique identifier for this request. */
-	TimeMS TimeAdded;       /* Time this request was added to queue of requests. */
-	TimeMS TimeDownloaded;  /* Time response contents were completely downloaded. */
-	int StatusCode;         /* HTTP status code returned in the response. */
-	cc_uint32 ContentLength; /* HTTP content length returned in the response. */
+	char url[URL_MAX_SIZE]; /* URL data is downloaded from/uploaded to. */
+	char id[URL_MAX_SIZE];  /* Unique identifier for this request. */
+	TimeMS timeAdded;       /* Time this request was added to queue of requests. */
+	TimeMS timeDownloaded;  /* Time response contents were completely downloaded. */
+	int statusCode;         /* HTTP status code returned in the response. */
+	cc_uint32 contentLength; /* HTTP content length returned in the response. */
 
-	cc_result Result; /* 0 on success, otherwise platform-specific error. */
-	cc_uint8*   Data;   /* Contents of the response. (i.e. result data) */
-	cc_uint32   Size;   /* Size of the contents. (may still be non-zero for non 200 status codes) */
+	cc_result result; /* 0 on success, otherwise platform-specific error. */
+	cc_uint8*   data; /* Contents of the response. (i.e. result data) */
+	cc_uint32   size; /* Size of the contents. (may still be non-zero for non 200 status codes) */
 
-	char LastModified[STRING_SIZE]; /* Time item cached at (if at all) */
-	char Etag[STRING_SIZE];         /* ETag of cached item (if any) */
-	cc_uint8 RequestType;           /* See the various REQUEST_TYPE_ */
-	cc_bool Success;                /* Whether Result is 0, status is 200, and data is not NULL */
-	struct EntryList* Cookies;      /* Cookie list sent in requests. May be modified by the response. */
+	char lastModified[STRING_SIZE]; /* Time item cached at (if at all) */
+	char etag[STRING_SIZE];         /* ETag of cached item (if any) */
+	cc_uint8 requestType;           /* See the various REQUEST_TYPE_ */
+	cc_bool success;                /* Whether Result is 0, status is 200, and data is not NULL */
+	struct EntryList* cookies;      /* Cookie list sent in requests. May be modified by the response. */
 };
 
 /* Frees data from a HTTP request. */
