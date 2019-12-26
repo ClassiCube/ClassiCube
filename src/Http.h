@@ -29,7 +29,7 @@ struct HttpRequest {
 
 	cc_result result; /* 0 on success, otherwise platform-specific error. */
 	cc_uint8*   data; /* Contents of the response. (i.e. result data) */
-	cc_uint32   size; /* Size of the contents. (may still be non-zero for non 200 status codes) */
+	cc_uint32   size; /* Size of the contents. */
 
 	char lastModified[STRING_SIZE]; /* Time item cached at (if at all) */
 	char etag[STRING_SIZE];         /* ETag of cached item (if any) */

@@ -351,7 +351,7 @@ static void Http_DownloadNextAsync(void) {
 	struct HttpRequest req;
 	if (http_terminate || !pendingReqs.count) return;
 	/* already working on a request currently */
-	if (http_curRequest.ID[0] != '\0') return;
+	if (http_curRequest.id[0]) return;
 
 	req = pendingReqs.entries[0];
 	RequestList_RemoveAt(&pendingReqs, 0);
@@ -560,12 +560,13 @@ static cc_result Http_StartRequest(struct HttpRequest* req, String* url, HINTERN
 	static const char* verbs[3] = { "GET", "HEAD", "POST" };
 	struct HttpCacheEntry entry;
 	String path; char pathBuffer[URL_MAX_SIZE + 1];
+	cc_result res;
 	DWORD flags;
 
 	HttpCache_MakeEntry(url, &entry, &path);
 	Mem_Copy(pathBuffer, path.buffer, path.length);
 	pathBuffer[path.length] = '\0';
-	HttpCache_Lookup(&entry);
+	if ((res = HttpCache_Lookup(&entry))) return res;
 
 	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_COOKIES;
 	if (entry.Https) flags |= INTERNET_FLAG_SECURE;
