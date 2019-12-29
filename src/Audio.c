@@ -912,8 +912,9 @@ static int Audio_LoadVolume(const char* volKey, const char* boolKey) {
 }
 
 static void Audio_FilesCallback(const String* path, void* obj) {
-	String file = *path; Utils_UNSAFE_GetFilename(&file);
-	StringsBuffer_Add(&files, &file);
+	String relPath = *path; 
+	Utils_UNSAFE_TrimFirstDirectory(&relPath);
+	StringsBuffer_Add(&files, &relPath);
 }
 
 static void Audio_Init(void) {

@@ -1484,11 +1484,11 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 
 static void TexturePackScreen_FilterFiles(const String* path, void* obj) {
 	static const String zip = String_FromConst(".zip");
-	String file = *path;
+	String relPath = *path;
 	if (!String_CaselessEnds(path, &zip)) return;
 
-	Utils_UNSAFE_GetFilename(&file);
-	StringsBuffer_Add((StringsBuffer*)obj, &file);
+	Utils_UNSAFE_TrimFirstDirectory(&relPath);
+	StringsBuffer_Add((StringsBuffer*)obj, &relPath);
 }
 
 static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
@@ -1650,11 +1650,11 @@ static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 
 static void LoadLevelScreen_FilterFiles(const String* path, void* obj) {
 	IMapImporter importer = Map_FindImporter(path);
-	String file = *path;
+	String relPath = *path;
 	if (!importer) return;
 
-	Utils_UNSAFE_GetFilename(&file);
-	StringsBuffer_Add((StringsBuffer*)obj, &file);
+	Utils_UNSAFE_TrimFirstDirectory(&relPath);
+	StringsBuffer_Add((StringsBuffer*)obj, &relPath);
 }
 
 static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {

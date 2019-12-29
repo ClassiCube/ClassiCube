@@ -49,6 +49,19 @@ void Utils_UNSAFE_GetFilename(STRING_REF String* path) {
 	}
 }
 
+void Utils_UNSAFE_TrimFirstDirectory(STRING_REF String* path) {
+	char c;
+	int i;
+
+	for (i = 0; i < path->length; i++) {
+		c = path->buffer[i];
+		if (c == '/' || c == '\\') {
+			*path = String_UNSAFE_SubstringAt(path, i + 1); return;
+		}
+	}
+}
+
+
 int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
 	int steps;
 	/* Some mice may use deltas of say (0.2, 0.3, 0.4, 0.1) */

@@ -35,6 +35,8 @@ cc_bool Utils_IsUrlPrefix(const String* value);
 cc_bool Utils_EnsureDirectory(const char* dirName);
 /* Gets the filename portion of a path. (e.g. "dir/file.txt" -> "file.txt") */
 void Utils_UNSAFE_GetFilename(STRING_REF String* path);
+/* Gets rid of first directory in a path. (e.g. "dx/gl/aa.txt" -> "gl/aa.txt" */
+void Utils_UNSAFE_TrimFirstDirectory(STRING_REF String* path);
 int Utils_AccumulateWheelDelta(float* accumulator, float delta);
 #define Utils_AdjViewDist(value) ((int)(1.4142135f * (value)))
 
