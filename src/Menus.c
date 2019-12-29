@@ -1470,14 +1470,14 @@ void SaveLevelScreen_Show(void) {
 static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	struct ListScreen* s = (struct ListScreen*)screen;
-	String filename;
+	String relPath;
 	
-	filename = ListScreen_UNSAFE_GetCur(s, widget);
+	relPath = ListScreen_UNSAFE_GetCur(s, widget);
 	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "texpacks/%s", &filename);
+	String_Format1(&path, "texpacks/%s", &relPath);
 	if (!File_Exists(&path)) return;
 	
-	Game_SetDefaultTexturePack(&filename);
+	Game_SetDefaultTexturePack(&relPath);
 	World_TextureUrl.length = 0;
 	TexturePack_ExtractCurrent(true);
 }
@@ -1638,13 +1638,11 @@ void HotkeyListScreen_Show(void) {
 static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	struct ListScreen* s = (struct ListScreen*)screen;
-	String filename;
+	String relPath;
 
-	filename = ListScreen_UNSAFE_GetCur(s, widget);
+	relPath = ListScreen_UNSAFE_GetCur(s, widget);
 	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "maps/%s", &filename);
-
-	if (!File_Exists(&path)) return;
+	String_Format1(&path, "maps/%s", &relPath);
 	Map_LoadFrom(&path);
 }
 
