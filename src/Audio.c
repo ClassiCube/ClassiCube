@@ -21,8 +21,13 @@ int Audio_SoundsVolume, Audio_MusicVolume;
 static void Audio_Init(void) { }
 static void Audio_Free(void) { }
 
-void Audio_SetMusic(int volume) { }
-void Audio_SetSounds(int volume) { }
+void Audio_SetMusic(int volume) {
+	if (volume) Chat_AddRaw("&cMusic is not supported currently");
+}
+void Audio_SetSounds(int volume) {
+	if (volume) Chat_AddRaw("&cSounds are not supported currently");
+}
+
 void Audio_PlayDigSound(cc_uint8 type) { }
 void Audio_PlayStepSound(cc_uint8 type) { }
 #else
