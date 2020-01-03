@@ -182,7 +182,7 @@ void Json_Parse(struct JsonContext* ctx) {
 static void Json_Handle(cc_uint8* data, cc_uint32 len, 
 						JsonOnValue onVal, JsonOnNew newArr, JsonOnNew newObj) {
 	struct JsonContext ctx;
-	/* NOTE: classicube.net uses \u JSON for non ASCII, no need to UTF8 convert characters */
+	/* NOTE: classicube.net uses \u JSON for non ASCII, no need to UTF8 convert characters here */
 	String str = String_Init((char*)data, len, len);
 	Json_Init(&ctx, &str);
 	
@@ -263,7 +263,7 @@ void GetTokenTask_Run(void) {
 *--------------------------------------------------------SignInTask-------------------------------------------------------*
 *#########################################################################################################################*/
 struct SignInTaskData SignInTask;
-char userBuffer[STRING_SIZE];
+static char userBuffer[STRING_SIZE];
 
 static void SignInTask_LogError(const String* str) {
 	if (String_CaselessEqualsConst(str, "username") || String_CaselessEqualsConst(str, "password")) {
@@ -295,20 +295,20 @@ static void SignInTask_Append(String* dst, const char* key, const String* value)
 void SignInTask_Run(const String* user, const String* pass) {
 	static const String id  = String_FromConst("CC post login");
 	static const String url = String_FromConst("https://www.classicube.net/api/login");
-	String tmp; char tmpBuffer[384];
+	String args; char argsBuffer[384];
 	if (SignInTask.Base.working) return;
 
 	LWebTask_Reset(&SignInTask.Base);
 	String_InitArray(SignInTask.username, userBuffer);
 	SignInTask.error = NULL;
 
-	String_InitArray(tmp, tmpBuffer);
-	SignInTask_Append(&tmp, "username=",  user);
-	SignInTask_Append(&tmp, "&password=", pass);
-	SignInTask_Append(&tmp, "&token=",    &GetTokenTask.token);
+	String_InitArray(args, argsBuffer);
+	SignInTask_Append(&args, "username=",  user);
+	SignInTask_Append(&args, "&password=", pass);
+	SignInTask_Append(&args, "&token=",    &GetTokenTask.token);
 
 	SignInTask.Base.identifier = id;
-	Http_AsyncPostData(&url, false, &id, tmp.buffer, tmp.length, &ccCookies);
+	Http_AsyncPostData(&url, false, &id, args.buffer, args.length, &ccCookies);
 	SignInTask.Base.Handle     = SignInTask_Handle;
 }
 

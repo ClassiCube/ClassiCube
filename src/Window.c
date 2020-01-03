@@ -492,10 +492,10 @@ void Window_Show(void) {
 }
 
 int Window_GetWindowState(void) {
-	DWORD style = GetWindowLong(win_handle, GWL_STYLE);
+	DWORD s = GetWindowLong(win_handle, GWL_STYLE);
 
-	if (style & WS_MINIMIZE)              return WINDOW_STATE_MINIMISED;
-	if (style & (WS_MAXIMIZE | WS_POPUP)) return WINDOW_STATE_FULLSCREEN;
+	if ((s & WS_MINIMIZE))                   return WINDOW_STATE_MINIMISED;
+	if ((s & WS_MAXIMIZE) && (s & WS_POPUP)) return WINDOW_STATE_FULLSCREEN;
 	return WINDOW_STATE_NORMAL;
 }
 
