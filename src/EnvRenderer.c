@@ -185,8 +185,8 @@ static void UpdateClouds(void) {
 	int extent;
 	int x1, z1, x2, z2;
 	
-	if (!World.Blocks || Gfx.LostContext) return;
 	Gfx_DeleteVb(&clouds_vb);
+	if (!World.Blocks || Gfx.LostContext) return;
 	if (EnvRenderer_Minimal) return;
 
 	extent = Utils_AdjViewDist(Game_ViewDistance);
@@ -263,8 +263,8 @@ static void UpdateSky(void) {
 	int extent, height;
 	int x1, z1, x2, z2;
 
-	if (!World.Blocks || Gfx.LostContext) return;
 	Gfx_DeleteVb(&sky_vb);
+	if (!World.Blocks || Gfx.LostContext) return;
 	if (EnvRenderer_Minimal) return;
 
 	extent = Utils_AdjViewDist(Game_ViewDistance);
@@ -346,8 +346,8 @@ static void UpdateSkybox(void) {
 	};
 	int i;
 
-	if (Gfx.LostContext) return;
 	Gfx_DeleteVb(&skybox_vb);
+	if (Gfx.LostContext) return;
 	if (EnvRenderer_Minimal) return;
 
 	for (i = 0; i < SKYBOX_COUNT; i++) { vertices[i].Col = Env.SkyboxCol; }
@@ -685,8 +685,8 @@ static void UpdateMapSides(void) {
 	VertexP3fT2fC4b* ptr;
 	VertexP3fT2fC4b* cur;
 
-	if (!World.Blocks || Gfx.LostContext) return;
 	Gfx_DeleteVb(&sides_vb);
+	if (!World.Blocks || Gfx.LostContext) return;
 	block = Env.SidesBlock;
 
 	if (Blocks.Draw[block] == DRAW_GAS) return;
@@ -744,8 +744,8 @@ static void UpdateMapEdges(void) {
 	VertexP3fT2fC4b* ptr;
 	VertexP3fT2fC4b* cur;
 
-	if (!World.Blocks || Gfx.LostContext) return;
 	Gfx_DeleteVb(&edges_vb);
+	if (!World.Blocks || Gfx.LostContext) return;
 	block = Env.EdgeBlock;
 
 	if (Blocks.Draw[block] == DRAW_GAS) return;
@@ -798,7 +798,6 @@ static void OnContextLost(void* obj) {
 }
 
 static void UpdateAll(void) {
-	DeleteVbs();
 	UpdateMapSides();
 	UpdateMapEdges();
 	UpdateClouds();
@@ -806,6 +805,7 @@ static void UpdateAll(void) {
 	UpdateSkybox();
 	EnvRenderer_UpdateFog();
 
+	Gfx_DeleteDynamicVb(&weather_vb);
 	if (Gfx.LostContext) return;
 	/* TODO: Don't allocate unless used? */
 	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, WEATHER_VERTS_COUNT);
