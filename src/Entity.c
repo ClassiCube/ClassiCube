@@ -225,7 +225,7 @@ cc_bool Entity_TouchesAnyWater(struct Entity* e) {
 #define NAME_IS_EMPTY -30000
 #define NAME_OFFSET 3 /* offset of back layer of name above an entity */
 
-static void Entity_MakeNameTexture(struct Entity* e) {
+static void MakeNameTexture(struct Entity* e) {
 	String colorlessName; char colorlessBuffer[STRING_SIZE];
 	BitmapCol shadowCol = BitmapCol_Make(80, 80, 80, 255);
 	BitmapCol origWhiteCol;
@@ -273,7 +273,7 @@ static void Entity_MakeNameTexture(struct Entity* e) {
 	Drawer2D_BitmappedText = bitmapped;
 }
 
-static void Entity_DrawName(struct Entity* e) {
+static void DrawName(struct Entity* e) {
 	VertexP3fT2fC4b vertices[4];
 	PackedCol col = PACKEDCOL_WHITE;
 
@@ -284,7 +284,7 @@ static void Entity_DrawName(struct Entity* e) {
 	Vec2 size;
 
 	if (e->NameTex.X == NAME_IS_EMPTY) return;
-	if (!e->NameTex.ID) Entity_MakeNameTexture(e);
+	if (!e->NameTex.ID) MakeNameTexture(e);
 	Gfx_BindTexture(e->NameTex.ID);
 
 	model = e->Model;
@@ -307,13 +307,13 @@ static void Entity_DrawName(struct Entity* e) {
 }
 
 /* Deletes the texture containing the entity's nametag */
-CC_NOINLINE static void Entity_DeleteNameTex(struct Entity* e) {
+CC_NOINLINE static void DeleteNameTex(struct Entity* e) {
 	Gfx_DeleteTexture(&e->NameTex.ID);
 	e->NameTex.X = 0; /* X is used as an 'empty name' flag */
 }
 
 void Entity_SetName(struct Entity* e, const String* name) {
-	Entity_DeleteNameTex(e);
+	DeleteNameTex(e);
 	String_CopyToRawArray(e->DisplayNameRaw, name);
 	/* name texture redraw deferred until necessary */
 }
@@ -487,7 +487,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 }
 
 /* Returns true if no other entities are sharing this skin texture */
-static cc_bool Entity_CanDeleteTexture(struct Entity* except) {
+static cc_bool CanDeleteTexture(struct Entity* except) {
 	int i;
 	if (!except->TextureId) return false;
 
@@ -498,17 +498,15 @@ static cc_bool Entity_CanDeleteTexture(struct Entity* except) {
 	return true;
 }
 
-CC_NOINLINE static void Entity_DeleteSkin(struct Entity* e) {
-	if (Entity_CanDeleteTexture(e)) {
-		Gfx_DeleteTexture(&e->TextureId);
-	}
+CC_NOINLINE static void DeleteSkin(struct Entity* e) {
+	if (CanDeleteTexture(e)) Gfx_DeleteTexture(&e->TextureId);
 
 	Entity_ResetSkin(e);
 	e->SkinFetchState = 0;
 }
 
 void Entity_SetSkin(struct Entity* e, const String* skin) {
-	Entity_DeleteSkin(e);
+	DeleteSkin(e);
 	String_CopyToRawArray(e->SkinNameRaw, skin);
 }
 
@@ -595,9 +593,7 @@ void Entities_RenderHoveredNames(double delta) {
 	if (hadFog) Gfx_SetFog(true);
 }
 
-static void Entity_ContextLost(struct Entity* e) {
-	Entity_DeleteNameTex(e);
-}
+static void Entity_ContextLost(struct Entity* e) { DeleteNameTex(e); }
 
 static void Entities_ContextLost(void* obj) {
 	int i;
@@ -620,7 +616,7 @@ static void Entities_ChatFontChanged(void* obj) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i]) continue;
-		Entity_DeleteNameTex(Entities.List[i]);
+		DeleteNameTex(Entities.List[i]);
 		/* name redraw is deferred until rendered */
 	}
 }
@@ -752,7 +748,7 @@ struct IGameComponent TabList_Component = {
 
 
 static void Player_Despawn(struct Entity* e) {
-	Entity_DeleteSkin(e);
+	DeleteSkin(e);
 	Entity_ContextLost(e);
 }
 
@@ -857,7 +853,7 @@ static void LocalPlayer_RenderModel(struct Entity* e, double deltaTime, float t)
 
 static void LocalPlayer_RenderName(struct Entity* e) {
 	if (!Camera.Active->isThirdPerson) return;
-	Entity_DrawName(e);
+	DrawName(e);
 }
 
 static void LocalPlayer_CheckJumpVelocity(void* obj) {
@@ -1092,7 +1088,7 @@ static void NetPlayer_RenderName(struct Entity* e) {
 
 	distance  = Model_RenderDistance(e);
 	threshold = Entities.NamesMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
-	if (distance <= (float)threshold) Entity_DrawName(e);
+	if (distance <= (float)threshold) DrawName(e);
 }
 
 struct EntityVTABLE netPlayer_VTABLE = {

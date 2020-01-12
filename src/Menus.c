@@ -1641,6 +1641,8 @@ static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	String relPath;
 
 	relPath = ListScreen_UNSAFE_GetCur(s, widget);
+	if (String_CaselessEqualsConst(&relPath, LIST_SCREEN_EMPTY)) return;
+
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "maps/%s", &relPath);
 	Map_LoadFrom(&path);
