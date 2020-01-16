@@ -161,7 +161,7 @@ static void Selections_QuickSort(int left, int right) {
 	}
 }
 
-void Selections_Render(double delta) {
+void Selections_Render(void) {
 	VertexP3fC4b faceVertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* facesPtr;
 	VertexP3fC4b edgeVertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* edgesPtr;
 	Vec3 cameraPos;

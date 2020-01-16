@@ -10,5 +10,5 @@ extern struct IGameComponent AxisLinesRenderer_Component;
 /* Whether the 3 axis lines should be rendered */
 extern cc_bool AxisLinesRenderer_Enabled;
 
-void AxisLinesRenderer_Render(double delta);
+void AxisLinesRenderer_Render(void);
 #endif

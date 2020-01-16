@@ -620,10 +620,10 @@ static void MapRenderer_UpdateSortOrder(void) {
 	/*SimpleOcclusionCulling();*/
 }
 
-void MapRenderer_Update(double deltaTime) {
+void MapRenderer_Update(double delta) {
 	if (!mapChunks) return;
 	MapRenderer_UpdateSortOrder();
-	MapRenderer_UpdateChunks(deltaTime);
+	MapRenderer_UpdateChunks(delta);
 }
 
 

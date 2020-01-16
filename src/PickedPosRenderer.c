@@ -12,7 +12,7 @@ static GfxResourceID pickedPos_vb;
 #define PICKEDPOS_NUM_VERTICES (16 * 6)
 static VertexP3fC4b pickedPos_vertices[PICKEDPOS_NUM_VERTICES];
 
-void PickedPosRenderer_Render(double delta) {
+void PickedPosRenderer_Render(void) {
 	if (Gfx.LostContext) return;
 
 	Gfx_SetAlphaBlending(true);

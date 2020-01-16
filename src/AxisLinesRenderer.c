@@ -13,7 +13,7 @@ static GfxResourceID axisLines_vb;
 #define AXISLINES_THICKNESS (1.0f / 32.0f)
 #define AXISLINES_LENGTH 3.0f
 
-void AxisLinesRenderer_Render(double delta) {
+void AxisLinesRenderer_Render(void) {
 	static const cc_uint8 indices[36] = {
 		2,2,1, 2,2,3, 4,2,3, 4,2,1, /* X arrow */
 		1,2,2, 1,2,4, 3,2,4, 3,2,2, /* Z arrow */

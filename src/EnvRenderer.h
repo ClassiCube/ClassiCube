@@ -11,18 +11,18 @@ extern struct IGameComponent EnvRenderer_Component;
 #define ENV_LEGACY  2
 
 /* Renders coloured sky plane. */
-void EnvRenderer_RenderSky(double deltaTime);
+void EnvRenderer_RenderSky(void);
 /* Renders textured cloud plane. */
-void EnvRenderer_RenderClouds(double deltaTime);
+void EnvRenderer_RenderClouds(void);
 /* Updates current fog colour and mode. */
 void EnvRenderer_UpdateFog(void);
 
 /* Renders borders around map and under horizon. */
-void EnvRenderer_RenderMapSides(double delta);
+void EnvRenderer_RenderMapSides(void);
 /* Renders flat horizon surrounding map. */
-void EnvRenderer_RenderMapEdges(double delta);
+void EnvRenderer_RenderMapEdges(void);
 /* Renders a skybox around the player. */
-void EnvRenderer_RenderSkybox(double deltaTime);
+void EnvRenderer_RenderSkybox(void);
 /* Whether a skybox should be rendered. */
 cc_bool EnvRenderer_ShouldRenderSkybox(void);
 

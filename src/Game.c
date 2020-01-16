@@ -509,46 +509,46 @@ static void UpdateViewMatrix(void) {
 static void Game_Render3D(double delta, float t) {
 	Vec3 pos;
 
-	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox(delta);
-	AxisLinesRenderer_Render(delta);
+	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
+	AxisLinesRenderer_Render();
 	Entities_RenderModels(delta, t);
-	Entities_RenderNames(delta);
+	Entities_RenderNames();
 
-	Particles_Render(delta, t);
+	Particles_Render(t);
 	Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
 
 	EnvRenderer_UpdateFog();
-	EnvRenderer_RenderSky(delta);
-	EnvRenderer_RenderClouds(delta);
+	EnvRenderer_RenderSky();
+	EnvRenderer_RenderClouds();
 
 	MapRenderer_Update(delta);
 	MapRenderer_RenderNormal(delta);
-	EnvRenderer_RenderMapSides(delta);
+	EnvRenderer_RenderMapSides();
 
 	Entities_DrawShadows();
 	if (Game_SelectedPos.Valid && !Game_HideGui) {
 		PickedPosRenderer_Update(&Game_SelectedPos);
-		PickedPosRenderer_Render(delta);
+		PickedPosRenderer_Render();
 	}
 
 	/* Render water over translucent blocks when underwater for proper alpha blending */
 	pos = LocalPlayer_Instance.Base.Position;
 	if (Camera.CurrentPos.Y < Env.EdgeHeight && (pos.X < 0 || pos.Z < 0 || pos.X > World.Width || pos.Z > World.Length)) {
 		MapRenderer_RenderTranslucent(delta);
-		EnvRenderer_RenderMapEdges(delta);
+		EnvRenderer_RenderMapEdges();
 	} else {
-		EnvRenderer_RenderMapEdges(delta);
+		EnvRenderer_RenderMapEdges();
 		MapRenderer_RenderTranslucent(delta);
 	}
 
 	/* Need to render again over top of translucent block, as the selection outline */
 	/* is drawn without writing to the depth buffer */
 	if (Game_SelectedPos.Valid && !Game_HideGui && Blocks.Draw[Game_SelectedPos.Block] == DRAW_TRANSLUCENT) {
-		PickedPosRenderer_Render(delta);
+		PickedPosRenderer_Render();
 	}
 
-	Selections_Render(delta);
-	Entities_RenderHoveredNames(delta);
+	Selections_Render();
+	Entities_RenderHoveredNames();
 	InputHandler_PickBlocks();
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }

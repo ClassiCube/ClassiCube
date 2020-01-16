@@ -137,9 +137,9 @@ void Entities_Tick(struct ScheduledTask* task);
 /* Renders all entities. */
 void Entities_RenderModels(double delta, float t);
 /* Renders the name tags of entities, depending on Entities.NamesMode. */
-void Entities_RenderNames(double delta);
+void Entities_RenderNames(void);
 /* Renders hovered entity name tags. (these appears through blocks) */
-void Entities_RenderHoveredNames(double delta);
+void Entities_RenderHoveredNames(void);
 /* Removes the given entity, raising EntityEvents.Removed event. */
 void Entities_Remove(EntityID id);
 /* Gets the ID of the closest entity to the given entity. */

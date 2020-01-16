@@ -130,7 +130,7 @@ void EnvRenderer_UpdateFog(void) {
 static GfxResourceID clouds_vb, clouds_tex;
 static int clouds_vertices;
 
-void EnvRenderer_RenderClouds(double deltaTime) {
+void EnvRenderer_RenderClouds(void) {
 	float offset;
 	struct Matrix m;
 
@@ -212,7 +212,7 @@ static void UpdateClouds(void) {
 static GfxResourceID sky_vb;
 static int sky_vertices;
 
-void EnvRenderer_RenderSky(double deltaTime) {
+void EnvRenderer_RenderSky(void) {
 	struct Matrix m;
 	float skyY, normY, dy;
 	if (!sky_vb || EnvRenderer_ShouldRenderSkybox()) return;
@@ -291,7 +291,7 @@ static GfxResourceID skybox_tex, skybox_vb;
 #define SKYBOX_COUNT (6 * 4)
 cc_bool EnvRenderer_ShouldRenderSkybox(void) { return skybox_tex && !EnvRenderer_Minimal; }
 
-void EnvRenderer_RenderSkybox(double deltaTime) {
+void EnvRenderer_RenderSkybox(void) {
 	struct Matrix m, rotX, rotY, view;
 	float rotTime;
 	Vec3 pos;
@@ -560,11 +560,11 @@ static void RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID tex, in
 	Gfx_SetTexturing(false);
 }
 
-void EnvRenderer_RenderMapSides(double delta) {
+void EnvRenderer_RenderMapSides(void) {
 	RenderBorders(Env.SidesBlock, sides_vb, sides_tex, sides_vertices);
 }
 
-void EnvRenderer_RenderMapEdges(double delta) {
+void EnvRenderer_RenderMapEdges(void) {
 	/* Do not draw water when player cannot see it */
 	/* Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps */
 	int yVisible = min(0, Env_SidesHeight);

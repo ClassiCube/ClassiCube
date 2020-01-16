@@ -77,7 +77,7 @@ void MapRenderer_RenderTranslucent(double delta);
 /* Potentially updates sort order of rendered chunks. */
 /* Potentially builds meshes for several nearby chunks. */
 /* NOTE: This should be called once per frame. */
-void MapRenderer_Update(double deltaTime);
+void MapRenderer_Update(double delta);
 
 /* Marks the given chunk as needing to be rebuilt/redrawn. */
 /* NOTE: Coordinates outside the map are simply ignored. */
