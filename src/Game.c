@@ -531,9 +531,9 @@ static void Game_Render3D(double delta, float t) {
 		PickedPosRenderer_Render();
 	}
 
-	/* Render water over translucent blocks when underwater for proper alpha blending */
-	pos = LocalPlayer_Instance.Base.Position;
-	if (Camera.CurrentPos.Y < Env.EdgeHeight && (pos.X < 0 || pos.Z < 0 || pos.X > World.Width || pos.Z > World.Length)) {
+	/* Render water over translucent blocks when under the water outside the map for proper alpha blending */
+	pos = Camera.CurrentPos;
+	if (pos.Y < Env.EdgeHeight && (pos.X < 0 || pos.Z < 0 || pos.X > World.Width || pos.Z > World.Length)) {
 		MapRenderer_RenderTranslucent(delta);
 		EnvRenderer_RenderMapEdges();
 	} else {
