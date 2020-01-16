@@ -152,7 +152,7 @@ static void SPConnection_BeginConnect(void) {
 	GeneratingScreen_Show();
 }
 
-static char SPConnection_LastCol = '\0';
+static char sp_lastCol = '\0';
 static void SPConnection_AddPart(const String* text) {
 	String tmp; char tmpBuffer[STRING_SIZE * 2];
 	char col;
@@ -160,9 +160,9 @@ static void SPConnection_AddPart(const String* text) {
 	String_InitArray(tmp, tmpBuffer);
 
 	/* Prepend colour codes for subsequent lines of multi-line chat */
-	if (!Drawer2D_IsWhiteCol(SPConnection_LastCol)) {
+	if (!Drawer2D_IsWhiteCol(sp_lastCol)) {
 		String_Append(&tmp, '&');
-		String_Append(&tmp, SPConnection_LastCol);
+		String_Append(&tmp, sp_lastCol);
 	}
 	String_AppendString(&tmp, text);
 	
@@ -173,7 +173,7 @@ static void SPConnection_AddPart(const String* text) {
 	String_UNSAFE_TrimEnd(&tmp);
 
 	col = Drawer2D_LastCol(&tmp, tmp.length);
-	if (col) SPConnection_LastCol = col;
+	if (col) sp_lastCol = col;
 	Chat_Add(&tmp);
 }
 
@@ -185,7 +185,7 @@ static void SPConnection_SendChat(const String* text) {
 	String left, part;
 	if (!text->length) return;
 
-	SPConnection_LastCol = '\0';
+	sp_lastCol = '\0';
 	left = *text;
 
 	while (left.length > STRING_SIZE) {

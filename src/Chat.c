@@ -35,7 +35,7 @@ static TimeMS defaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
 static int logTimesCapacity = CHAT_LOGTIMES_DEF_ELEMS, logTimesCount;
 TimeMS* Chat_LogTime = defaultLogTimes;
 
-static void Chat_AppendLogTime(void) {
+static void AppendChatLogTime(void) {
 	TimeMS now = DateTime_CurrentUTC_MS();
 
 	if (logTimesCount == logTimesCapacity) {
@@ -46,11 +46,11 @@ static void Chat_AppendLogTime(void) {
 }
 
 #ifdef CC_BUILD_WEB
-static void Chat_ResetLog(void) { }
-static void Chat_CloseLog(void) { }
+static void ResetLogFile(void) { }
+static void CloseLogFile(void) { }
 void Chat_SetLogName(const String* name) { }
-static void Chat_OpenLog(struct DateTime* now) { }
-static void Chat_AppendLog(const String* text) { }
+static void OpenChatLog(struct DateTime* now) { }
+static void AppendChatLog(const String* text) { }
 #else
 static char   logNameBuffer[STRING_SIZE];
 static String logName = String_FromArray(logNameBuffer);
@@ -61,7 +61,7 @@ static struct Stream logStream;
 static struct DateTime lastLogDate;
 
 /* Resets log name to empty and last log date to 0 */
-static void Chat_ResetLog(void) {
+static void ResetLogFile(void) {
 	logName.length = 0;
 	lastLogDate.day   = 0;
 	lastLogDate.month = 0;
@@ -69,7 +69,7 @@ static void Chat_ResetLog(void) {
 }
 
 /* Closes handle to the chat log file */
-static void Chat_CloseLog(void) {
+static void CloseLogFile(void) {
 	cc_result res;
 	if (!logStream.Meta.File) return;
 
@@ -78,7 +78,7 @@ static void Chat_CloseLog(void) {
 }
 
 /* Whether the given character is an allowed in a log filename */
-static cc_bool Chat_AllowedLogChar(char c) {
+static cc_bool AllowedLogNameChar(char c) {
 	return
 		c == '{' || c == '}' || c == '[' || c == ']' || c == '(' || c == ')' ||
 		(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -92,7 +92,7 @@ void Chat_SetLogName(const String* name) {
 	for (i = 0; i < name->length; i++) {
 		c = name->buffer[i];
 
-		if (Chat_AllowedLogChar(c)) {
+		if (AllowedLogNameChar(c)) {
 			String_Append(&logName, c);
 		} else if (c == '&') {
 			i++; /* skip over following colour code */
@@ -100,15 +100,15 @@ void Chat_SetLogName(const String* name) {
 	}
 }
 
-static void Chat_DisableLogging(void) {
+static void DisableChatLogging(void) {
 	Chat_Logging = false;
 	Chat_AddRaw("&cDisabling chat logging");
 }
 
-static void Chat_OpenLog(struct DateTime* now) {
+static void OpenChatLog(struct DateTime* now) {
 	cc_result res;
 	int i;
-	if (!Utils_EnsureDirectory("logs")) { Chat_DisableLogging(); return; }
+	if (!Utils_EnsureDirectory("logs")) { DisableChatLogging(); return; }
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
 	for (i = 0; i < 20; i++) {
@@ -123,7 +123,7 @@ static void Chat_OpenLog(struct DateTime* now) {
 
 		res = Stream_AppendFile(&logStream, &logPath);
 		if (res && res != ReturnCode_FileShareViolation) {
-			Chat_DisableLogging();
+			DisableChatLogging();
 			Logger_Warn2(res, "appending to", &logPath);
 			return;
 		}
@@ -133,11 +133,11 @@ static void Chat_OpenLog(struct DateTime* now) {
 	}
 
 	logStream.Meta.File = 0;
-	Chat_DisableLogging();
+	DisableChatLogging();
 	Chat_Add1("&cFailed to open a chat log file after %i tries, giving up", &i);	
 }
 
-static void Chat_AppendLog(const String* text) {
+static void AppendChatLog(const String* text) {
 	String str; char strBuffer[STRING_SIZE * 2];
 	struct DateTime now;
 	cc_result res;	
@@ -146,8 +146,8 @@ static void Chat_AppendLog(const String* text) {
 	DateTime_CurrentLocal(&now);
 
 	if (now.day != lastLogDate.day || now.month != lastLogDate.month || now.year != lastLogDate.year) {
-		Chat_CloseLog();
-		Chat_OpenLog(&now);
+		CloseLogFile();
+		OpenChatLog(&now);
 	}
 
 	lastLogDate = now;
@@ -160,7 +160,7 @@ static void Chat_AppendLog(const String* text) {
 
 	res = Stream_WriteLine(&logStream, &str);
 	if (!res) return;
-	Chat_DisableLogging();
+	DisableChatLogging();
 	Logger_Warn2(res, "writing to", &logPath);
 }
 #endif
@@ -191,8 +191,8 @@ void Chat_Add(const String* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
 void Chat_AddOf(const String* text, int msgType) {
 	if (msgType == MSG_TYPE_NORMAL) {
 		StringsBuffer_Add(&Chat_Log, text);
-		Chat_AppendLogTime();
-		Chat_AppendLog(text);
+		AppendChatLogTime();
+		AppendChatLog(text);
 	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_3) {
 		/* Status[0] is for texture pack downloading message */
 		String_Copy(&Chat_Status[1 + (msgType - MSG_TYPE_STATUS_1)], text);
@@ -607,8 +607,8 @@ static void Chat_Init(void) {
 }
 
 static void Chat_Reset(void) {
-	Chat_CloseLog();
-	Chat_ResetLog();
+	CloseLogFile();
+	ResetLogFile();
 
 	/* reset CPE messages */
 	Chat_AddOf(&String_Empty, MSG_TYPE_ANNOUNCEMENT);
@@ -621,7 +621,7 @@ static void Chat_Reset(void) {
 }
 
 static void Chat_Free(void) {
-	Chat_CloseLog();
+	CloseLogFile();
 	cmds_head = NULL;
 
 	if (Chat_LogTime != defaultLogTimes) Mem_Free(Chat_LogTime);

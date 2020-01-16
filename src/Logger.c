@@ -247,7 +247,7 @@ static int Logger_GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	frame.AddrFrame.Offset = ctx->Rsp;
 	frame.AddrStack.Offset = ctx->Rsp;
 #else
-	#error "Unknown machine type"
+	#error "Unknown CPU architecture"
 #endif
 
 	HANDLE process = GetCurrentProcess();
