@@ -1889,12 +1889,13 @@ void Window_Init(void) { Window_CommonInit(); }
 
 /* Private CGS/CGL stuff */
 typedef int CGSConnectionID;
+typedef int CGSWindowID;
 extern CGSConnectionID _CGSDefaultConnection(void);
-extern CGWindowID GetNativeWindowFromWindowRef(WindowRef window);
-extern CGContextRef CGWindowContextCreate(CGSConnectionID conn, CGWindowID win, void* opts);
+extern CGSWindowID GetNativeWindowFromWindowRef(WindowRef window);
+extern CGContextRef CGWindowContextCreate(CGSConnectionID conn, CGSWindowID win, void* opts);
 
 static CGSConnectionID conn;
-static CGWindowID winId;
+static CGSWindowID winId;
 
 void Window_Create(int width, int height) {
 	Rect r;
