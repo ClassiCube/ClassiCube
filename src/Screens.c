@@ -702,6 +702,7 @@ static void ChatScreen_Layout(void* screen) {
 	if (s->showingList) Widget_Layout(&s->playerList);
 
 #ifdef CC_BUILD_TOUCH
+	if (!Input_TouchMode) return;
 	Widget_Layout(&s->send);
 	Widget_Layout(&s->cancel);
 #endif
@@ -1553,11 +1554,18 @@ void DisconnectScreen_Show(const String* title, const String* message) {
 #ifdef CC_BUILD_TOUCH
 static struct TouchScreen {
 	Screen_Body
-	int numButtons, layout;
-	cc_uint8 binds[10];
+	cc_uint8 binds[7];
 	struct FontDesc font;
-	struct ButtonWidget buttons[10];
-} TouchScreen_Instance;
+	struct ButtonWidget btns[7];
+} TouchScreen;
+
+static struct Widget* touch_widgets[7] = {
+	(struct Widget*)&TouchScreen.btns[0], (struct Widget*)&TouchScreen.btns[1],
+	(struct Widget*)&TouchScreen.btns[2], (struct Widget*)&TouchScreen.btns[3],
+	(struct Widget*)&TouchScreen.btns[4], (struct Widget*)&TouchScreen.btns[5],
+	(struct Widget*)&TouchScreen.btns[6],
+};
+#define TOUCH_MAX_VERTICES (7 * BUTTONWIDGET_MAX)
 
 static const struct TouchBindDesc {
 	const char* text;
@@ -1575,17 +1583,8 @@ static const struct TouchBindDesc {
 
 static void TouchScreen_ContextLost(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	int i;
 	Font_Free(&s->font);
-
-	for (i = 0; i < s->numButtons; i++) {
-		Elem_Free(&s->buttons[i]);
-	}
-}
-
-CC_NOINLINE static void TouchScreen_Set(struct TouchScreen* s, int i, const char* text, KeyBind bind) {
-	ButtonWidget_SetConst(&s->buttons[i], text, &s->font);
-	s->binds[i] = bind;
+	Screen_ContextLost(screen);
 }
 
 static void TouchScreen_ModeClick(void* s, void* w) { Input_Placing = !Input_Placing; }
@@ -1594,64 +1593,44 @@ static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreOverlay_Show(); }
 static void TouchScreen_ContextRecreated(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	const struct TouchBindDesc* desc;
-	int i, offset = 0;
+	int i;
 
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_BOLD);
-	s->layout     = Gui_GetInputGrab() == NULL;
-	s->numButtons = s->layout ? 7 : 0;
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TOUCH_MAX_VERTICES);
 
-	for (i = 0; i < s->numButtons; i++) {
-		desc = &touchDescs[i + offset];
-		ButtonWidget_Make(&s->buttons[i], desc->width, NULL, ANCHOR_MAX, ANCHOR_MIN,
-			desc->xOffset, desc->yOffset);
-		ButtonWidget_SetConst(&s->buttons[i], desc->text, &s->font);
-		s->binds[i] = desc->bind;
+	for (i = 0; i < s->numWidgets; i++) {
+		desc = &touchDescs[i];
+		ButtonWidget_SetConst(&s->btns[i], desc->text, &s->font);
 	}
 	
 	/* TODO: Mode should display 'Place' or 'Delete' */
 	/* TODO: this is pretty nasty hacky. rewrite! */
-	s->buttons[5].MenuClick = TouchScreen_ModeClick;
-	s->buttons[6].MenuClick = TouchScreen_MoreClick;
 }
 
 static void TouchScreen_Render(void* screen, double delta) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	int i;
+	if (Gui_GetInputGrab()) return;
 
 	Gfx_SetTexturing(true);
-	for (i = 0; i < s->numButtons; i++) {
-		Elem_Render(&s->buttons[i], delta);
-	}
+	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
-
-	i = Gui_GetInputGrab() == NULL;
-	/* TODO: AWFUL AWFUL HACK */
-	/* use guiEvents instead */
-	if (i != s->layout) Gui_Refresh(s);
-}
-
-static void TouchScreen_Layout(void* screen) {
-	struct TouchScreen* s = (struct TouchScreen*)screen;
-	int i;
-	for (i = 0; i < s->numButtons; i++) {
-		Widget_Layout(&s->buttons[i]);
-	}
 }
 
 static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	int i;
 	//Chat_Add1("POINTER DOWN: %i", &id);
+	if (Gui_GetInputGrab()) return false;
 
-	for (i = 0; i < s->numButtons; i++) {
-		if (!Widget_Contains(&s->buttons[i], x, y)) continue;
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!Widget_Contains(&s->btns[i], x, y)) continue;
 
 		if (s->binds[i] < KEYBIND_COUNT) {
 			Input_SetPressed(KeyBinds[s->binds[i]], true);
 		} else {
-			s->buttons[i].MenuClick(screen, &s->buttons[i]);
+			s->btns[i].MenuClick(screen, &s->btns[i]);
 		}
-		s->buttons[i].active |= id;
+		s->btns[i].active |= id;
 		return true;
 	}
 	return false;
@@ -1662,29 +1641,54 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	int i;
 	//Chat_Add1("POINTER UP: %i", &id);
 
-	for (i = 0; i < s->numButtons; i++) {
-		if (!(s->buttons[i].active & id)) continue;
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!(s->btns[i].active & id)) continue;
 
 		if (s->binds[i] < KEYBIND_COUNT) {
 			Input_SetPressed(KeyBinds[s->binds[i]], false);
 		}
-		s->buttons[i].active &= ~id;
+		s->btns[i].active &= ~id;
 		return true;
 	}
 	return false;
 }
 
-static void TouchScreen_BuildMesh(void* screen) { }
+static void TouchScreen_BuildMesh(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	VertexP3fT2fC4b vertices[TOUCH_MAX_VERTICES];
+
+	Screen_BuildMesh(screen, vertices);
+	Gfx_SetDynamicVbData(s->vb, vertices, TOUCH_MAX_VERTICES);
+}
+
+static void TouchScreen_Init(void* screen) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	const struct TouchBindDesc* desc;
+	int i;
+
+	s->widgets    = touch_widgets;
+	s->numWidgets = Array_Elems(touch_widgets);
+
+	for (i = 0; i < s->numWidgets; i++) {
+		desc = &touchDescs[i];
+		ButtonWidget_Make(&s->btns[i], desc->width, NULL, ANCHOR_MAX, ANCHOR_MIN,
+			desc->xOffset, desc->yOffset);
+		s->binds[i] = desc->bind;
+	}
+
+	s->btns[5].MenuClick = TouchScreen_ModeClick;
+	s->btns[6].MenuClick = TouchScreen_MoreClick;
+}
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {
-	Screen_NullFunc,         Screen_NullUpdate,     Screen_NullFunc,
+	TouchScreen_Init,        Screen_NullUpdate,     Screen_NullFunc,
 	TouchScreen_Render,      TouchScreen_BuildMesh,
 	Screen_FInput,           Screen_FInput,         Screen_FKeyPress, Screen_FText,
 	TouchScreen_PointerDown, TouchScreen_PointerUp, Screen_FPointer,  Screen_FMouseScroll,
-	TouchScreen_Layout,    TouchScreen_ContextLost, TouchScreen_ContextRecreated
+	Screen_Layout,           TouchScreen_ContextLost, TouchScreen_ContextRecreated
 };
 void TouchScreen_Show(void) {
-	struct TouchScreen* s = &TouchScreen_Instance;
+	struct TouchScreen* s = &TouchScreen;
 	s->VTABLE = &TouchScreen_VTABLE;
 
 	if (!Input_TouchMode) return;

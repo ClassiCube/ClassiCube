@@ -7,6 +7,7 @@
 #include "Gui.h"
 #include "Entity.h"
 #include "Input.h"
+#include "Event.h"
 
 struct _CameraData Camera;
 static struct PickedPos cameraClipPos;
