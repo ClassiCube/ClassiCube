@@ -324,6 +324,9 @@ static struct ChatScreen {
 	struct ChatInputWidget input;
 	struct TextGroupWidget status, bottomRight, chat, clientStatus;
 	struct SpecialInputWidget altText;
+#ifdef CC_BUILD_TOUCH
+	struct ButtonWidget send, cancel;
+#endif
 
 	struct Texture statusTextures[CHAT_MAX_STATUS];
 	struct Texture bottomRightTextures[CHAT_MAX_BOTTOMRIGHT];
@@ -616,6 +619,12 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 		if (s->altText.active) {
 			Elem_Render(&s->altText, delta);
 		}
+
+#ifdef CC_BUILD_TOUCH
+		if (!Input_TouchMode) return;
+		Elem_Render(&s->send,   delta);
+		Elem_Render(&s->cancel, delta);
+#endif
 	}
 }
 
@@ -638,6 +647,7 @@ static void ChatScreen_ContextLost(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	Font_Free(&s->playerFont);
 	ChatScreen_FreeChatFonts(s);
+	if (s->showingList) Elem_Free(&s->playerList);
 
 	Elem_TryFree(&s->chat);
 	Elem_TryFree(&s->input.base);
@@ -647,7 +657,10 @@ static void ChatScreen_ContextLost(void* screen) {
 	Elem_TryFree(&s->clientStatus);
 	Elem_TryFree(&s->announcement);
 
-	if (s->showingList) Elem_Free(&s->playerList);
+#ifdef CC_BUILD_TOUCH
+	Elem_TryFree(&s->send);
+	Elem_TryFree(&s->cancel);
+#endif
 }
 
 static void ChatScreen_RemakePlayerList(struct ChatScreen* s) {
@@ -660,6 +673,7 @@ static void ChatScreen_RemakePlayerList(struct ChatScreen* s) {
 static void ChatScreen_ContextRecreated(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	int size = Drawer2D_BitmappedText ? 16 : 11;
+	struct FontDesc font;
 	Drawer2D_MakeFont(&s->playerFont, size, FONT_STYLE_NORMAL);
 	ChatScreen_ChatUpdateFont(s);
 
@@ -667,6 +681,14 @@ static void ChatScreen_ContextRecreated(void* screen) {
 	Widget_Layout(&s->hotbar);
 	ChatScreen_ChatUpdateLayout(s);
 	if (s->showingList) ChatScreen_RemakePlayerList(s);
+
+#ifdef CC_BUILD_TOUCH
+	if (!Input_TouchMode) return;
+	Drawer2D_MakeFont(&font, 16, FONT_STYLE_BOLD);
+	ButtonWidget_SetConst(&s->send,   "Send",   &font);
+	ButtonWidget_SetConst(&s->cancel, "Cancel", &font);
+	Font_Free(&font);
+#endif
 }
 
 static void ChatScreen_BuildMesh(void* screen) { }
@@ -678,6 +700,11 @@ static void ChatScreen_Layout(void* screen) {
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
 	ChatScreen_ChatUpdateLayout(s);
 	if (s->showingList) Widget_Layout(&s->playerList);
+
+#ifdef CC_BUILD_TOUCH
+	Widget_Layout(&s->send);
+	Widget_Layout(&s->cancel);
+#endif
 }
 
 static int ChatScreen_KeyPress(void* screen, char keyChar) {
@@ -806,6 +833,15 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 
 	if (Game_HideGui) return false;
 
+#ifdef CC_BUILD_TOUCH
+	if (Widget_Contains(&s->send, x, y)) {
+		ChatScreen_EnterChatInput(s, false); return true;
+	}
+	if (Widget_Contains(&s->cancel, x, y)) {
+		ChatScreen_EnterChatInput(s, true); return true;
+	}
+#endif
+
 	if (!Widget_Contains(&s->chat, x, y)) {
 		if (s->altText.active && Widget_Contains(&s->altText, x, y)) {
 			Elem_HandlesPointerDown(&s->altText, id, x, y);
@@ -842,6 +878,12 @@ static void ChatScreen_Init(void* screen) {
 	Event_RegisterInt(&TabListEvents.Added,       s, ChatScreen_TabEntryAdded);
 	Event_RegisterInt(&TabListEvents.Changed,     s, ChatScreen_TabEntryChanged);
 	Event_RegisterInt(&TabListEvents.Removed,     s, ChatScreen_TabEntryRemoved);
+
+#ifdef CC_BUILD_TOUCH
+	if (!Input_TouchMode) return;
+	ButtonWidget_Make(&s->send,   100, NULL, ANCHOR_MAX, ANCHOR_MIN, 10, 10);
+	ButtonWidget_Make(&s->cancel, 100, NULL, ANCHOR_MAX, ANCHOR_MIN, 10, 60);
+#endif
 }
 
 static void ChatScreen_Render(void* screen, double delta) {
@@ -1025,32 +1067,27 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 		Gui_Remove((struct Screen*)s);
 	} else if (Elem_HandlesKeyDown(table, key)) {
 	} else {
-		struct ChatScreen* hud = (struct ChatScreen*)Gui_Chat;
-		return Elem_HandlesKeyDown(&hud->hotbar, key);
+		return Elem_HandlesKeyDown(&Gui_Chat->hotbar, key);
 	}
 	return true;
 }
 
 static int InventoryScreen_KeyUp(void* screen, int key) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	struct ChatScreen* hud;
 
 	if (key == KeyBinds[KEYBIND_INVENTORY]) {
 		s->releasedInv = true; return true;
 	}
-
-	hud = (struct ChatScreen*)Gui_Chat;
-	return Elem_HandlesKeyUp(&hud->hotbar, key);
+	return Elem_HandlesKeyUp(&Gui_Chat->hotbar, key);
 }
 
 static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	struct TableWidget* table = &s->table;
-	struct ChatScreen* hud    = (struct ChatScreen*)Gui_Chat;
 	cc_bool handled, hotbar;
 
 	if (table->scroll.draggingId == id) return true;
-	if (Elem_HandlesPointerDown(&hud->hotbar, id, x, y)) return true;
+	if (Elem_HandlesPointerDown(&Gui_Chat->hotbar, id, x, y)) return true;
 	handled = Elem_HandlesPointerDown(table, id, x, y);
 
 	if (!handled || table->pendingClose) {
@@ -1526,28 +1563,15 @@ static const struct TouchBindDesc {
 	const char* text;
 	cc_uint8 bind, width;
 	cc_int16 xOffset, yOffset;
-} touchDescs[8] = {
-	{ "<",      KEYBIND_LEFT,       40, 150,  50 },
-	{ ">",      KEYBIND_RIGHT,      40,  10,  50 },
-	{ "^",      KEYBIND_FORWARD,    40,  80,  10 },
-	{ "\\/",    KEYBIND_BACK,       40,  80,  90 },
-	{ "Jump",   KEYBIND_JUMP,      100,  50, 150 },
-	{ "Mode",   KEYBIND_COUNT,     100,  50, 190 },
-	{ "More",   KEYBIND_COUNT,     100,  50, 230 },
-	/* Chat labels */
-	{ "Send ",  KEYBIND_SEND_CHAT, 100,  50, 10 },
+} touchDescs[7] = {
+	{ "<",    KEYBIND_LEFT,     40, 150,  50 },
+	{ ">",    KEYBIND_RIGHT,    40,  10,  50 },
+	{ "^",    KEYBIND_FORWARD,  40,  80,  10 },
+	{ "\\/",  KEYBIND_BACK,     40,  80,  90 },
+	{ "Jump", KEYBIND_JUMP,    100,  50, 150 },
+	{ "Mode", KEYBIND_COUNT,   100,  50, 190 },
+	{ "More", KEYBIND_COUNT,   100,  50, 230 },
 };
-
-#define TOUCH_LAYOUT_FULL      0
-#define TOUCH_LAYOUT_CHAT      1
-#define TOUCH_LAYOUT_NONE      2
-
-CC_NOINLINE static int CalcTouchMenuLayout(void) {
-	struct Screen* grabbed = Gui_GetInputGrab();
-	if (!grabbed) return TOUCH_LAYOUT_FULL;
-	if (grabbed == &ChatScreen_Instance) return TOUCH_LAYOUT_CHAT;
-	return TOUCH_LAYOUT_NONE;
-}
 
 static void TouchScreen_ContextLost(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
@@ -1573,18 +1597,8 @@ static void TouchScreen_ContextRecreated(void* screen) {
 	int i, offset = 0;
 
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_BOLD);
-	s->layout     = CalcTouchMenuLayout();
-	s->numButtons = 0;
-
-	switch (s->layout) {
-	case TOUCH_LAYOUT_FULL:
-		s->numButtons = 7;
-		break;
-	case TOUCH_LAYOUT_CHAT:
-		offset        = 7;
-		s->numButtons = 1;
-		break;
-	}
+	s->layout     = Gui_GetInputGrab() == NULL;
+	s->numButtons = s->layout ? 7 : 0;
 
 	for (i = 0; i < s->numButtons; i++) {
 		desc = &touchDescs[i + offset];
@@ -1610,7 +1624,7 @@ static void TouchScreen_Render(void* screen, double delta) {
 	}
 	Gfx_SetTexturing(false);
 
-	i = CalcTouchMenuLayout();
+	i = Gui_GetInputGrab() == NULL;
 	/* TODO: AWFUL AWFUL HACK */
 	/* use guiEvents instead */
 	if (i != s->layout) Gui_Refresh(s);
