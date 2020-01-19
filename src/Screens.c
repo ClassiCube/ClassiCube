@@ -1577,7 +1577,7 @@ static const struct TouchBindDesc {
 	{ "^",    KEYBIND_FORWARD,  40,  80,  10 },
 	{ "\\/",  KEYBIND_BACK,     40,  80,  90 },
 	{ "Jump", KEYBIND_JUMP,    100,  50, 150 },
-	{ "Mode", KEYBIND_COUNT,   100,  50, 190 },
+	{ "",     KEYBIND_COUNT,   100,  50, 190 },
 	{ "More", KEYBIND_COUNT,   100,  50, 230 },
 };
 
@@ -1587,7 +1587,15 @@ static void TouchScreen_ContextLost(void* screen) {
 	Screen_ContextLost(screen);
 }
 
-static void TouchScreen_ModeClick(void* s, void* w) { Input_Placing = !Input_Placing; }
+static void TouchScreen_UpdateModeText(void* screen) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	ButtonWidget_SetConst(&s->btns[5], Input_Placing ? "Place" : "Delete", &s->font);
+}
+
+static void TouchScreen_ModeClick(void* s, void* w) { 
+	Input_Placing = !Input_Placing; 
+	TouchScreen_UpdateModeText(s);
+}
 static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreOverlay_Show(); }
 
 static void TouchScreen_ContextRecreated(void* screen) {
@@ -1602,7 +1610,7 @@ static void TouchScreen_ContextRecreated(void* screen) {
 		desc = &touchDescs[i];
 		ButtonWidget_SetConst(&s->btns[i], desc->text, &s->font);
 	}
-	
+	TouchScreen_UpdateModeText(s);
 	/* TODO: Mode should display 'Place' or 'Delete' */
 	/* TODO: this is pretty nasty hacky. rewrite! */
 }
