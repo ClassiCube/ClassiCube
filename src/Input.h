@@ -70,7 +70,7 @@ void Input_SetPressed(int key, cc_bool pressed);
 /* Raises InputEvents.Up for each previously pressed button. */
 void Input_Clear(void);
 
-/* Whether raw mouse/touch input is being listened for. */
+/* Whether raw mouse/touch input is currently being listened for. */
 extern cc_bool Input_RawMode;
 /* Whether touch input is being used. */
 extern cc_bool Input_TouchMode;

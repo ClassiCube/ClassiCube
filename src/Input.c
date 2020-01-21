@@ -47,6 +47,7 @@ static struct TouchPointer {
 	long id;
 	cc_uint8 type;
 	int begX, begY;
+	TimeMS start;
 } touches[INPUT_MAX_POINTERS];
 int Pointers_Count;
 cc_bool Input_Placing;
@@ -59,6 +60,11 @@ cc_bool Input_Placing;
 #define TOUCH_TYPE_CAMERA 2
 #define TOUCH_TYPE_BLOCKS 4
 #define TOUCH_TYPE_ALL (TOUCH_TYPE_GUI | TOUCH_TYPE_CAMERA | TOUCH_TYPE_BLOCKS)
+
+static void DoDeleteBlock(void);
+static void DoPlaceBlock(void);
+static void MouseStatePress(int button);
+static void MouseStateRelease(int button);
 
 static cc_bool AnyBlockTouches(void) {
 	int i;
@@ -74,6 +80,7 @@ void Input_AddTouch(long id, int x, int y) {
 	touches[i].type = TOUCH_TYPE_ALL;
 	touches[i].begX = x;
 	touches[i].begY = y;
+	touches[i].start = DateTime_CurrentUTC_MS();
 
 	Pointers_Count++;
 	Pointer_SetPosition(i, x, y);
@@ -96,7 +103,7 @@ void Input_UpdateTouch(long id, int x, int y) {
 			if (touches[i].type == TOUCH_TYPE_ALL && MovedFromBeg(i, x, y)) {
 				/* Allow a little bit of leeway because though, because devices */
 				/* might still report a few pixels of movement depending on how */
-				/* user is holding the finger down on the toiuch surface */
+				/* user is holding the finger down on the touch surface */
 				touches[i].type = TOUCH_TYPE_CAMERA;
 			}
 			Event_RaiseMove(&PointerEvents.RawMoved, i, x - Pointers[i].x, y - Pointers[i].y);
@@ -106,12 +113,29 @@ void Input_UpdateTouch(long id, int x, int y) {
 	}
 }
 
+/* Quickly tapping should trigger a block place/delete */
+static void CheckBlockTap(int i) {
+	int btn, pressed;
+	if (DateTime_CurrentUTC_MS() > touches[i].start + 250) return;
+	if (touches[i].type != TOUCH_TYPE_ALL) return;
+
+	btn = Input_Placing ? MOUSE_RIGHT : MOUSE_LEFT;
+	pressed = input_buttonsDown[btn];
+	MouseStatePress(btn);
+
+	if (btn == MOUSE_LEFT) { DoDeleteBlock(); }
+	else { DoPlaceBlock(); }
+
+	if (!pressed) MouseStateRelease(btn);
+}
+
 void Input_RemoveTouch(long id, int x, int y) {
 	int i;
 	for (i = 0; i < Pointers_Count; i++) {
 		if (touches[i].id != id) continue;
 		Pointer_SetPosition(i, x, y);
 		Pointer_SetPressed(i, false);
+		CheckBlockTap(i);
 
 		/* found the touch, remove it */
 		for (; i < Pointers_Count - 1; i++) {
@@ -639,7 +663,7 @@ static cc_bool CheckIsFree(BlockID block) {
 	return true;
 }
 
-static void InputHandler_DeleteBlock(void) {
+static void DoDeleteBlock(void) {
 	IVec3 pos;
 	BlockID old;
 	/* always play delete animations, even if we aren't deleting a block */
@@ -655,7 +679,7 @@ static void InputHandler_DeleteBlock(void) {
 	Event_RaiseBlock(&UserEvents.BlockChanged, pos, old, BLOCK_AIR);
 }
 
-static void InputHandler_PlaceBlock(void) {
+static void DoPlaceBlock(void) {
 	IVec3 pos;
 	BlockID old, block;
 	pos = Game_SelectedPos.TranslatedPos;
@@ -674,7 +698,7 @@ static void InputHandler_PlaceBlock(void) {
 	Event_RaiseBlock(&UserEvents.BlockChanged, pos, old, block);
 }
 
-static void InputHandler_PickBlock(void) {
+static void DoPickBlock(void) {
 	IVec3 pos;
 	BlockID cur;
 	pos = Game_SelectedPos.BlockPos;
@@ -715,11 +739,11 @@ void InputHandler_PickBlocks(void) {
 	}
 
 	if (left) {
-		InputHandler_DeleteBlock();
+		DoDeleteBlock();
 	} else if (right) {
-		InputHandler_PlaceBlock();
+		DoPlaceBlock();
 	} else if (middle) {
-		InputHandler_PickBlock();
+		DoPickBlock();
 	}
 }
 
@@ -804,13 +828,13 @@ static cc_bool HandleBlockKey(int key) {
 
 	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) {
 		MouseStatePress(MOUSE_LEFT);
-		InputHandler_DeleteBlock();
+		DoDeleteBlock();
 	} else if (key == KeyBinds[KEYBIND_PLACE_BLOCK]) {
 		MouseStatePress(MOUSE_RIGHT);
-		InputHandler_PlaceBlock();
+		DoPlaceBlock();
 	} else if (key == KeyBinds[KEYBIND_PICK_BLOCK]) {
 		MouseStatePress(MOUSE_MIDDLE);
-		InputHandler_PickBlock();
+		DoPickBlock();
 	} else {
 		return false;
 	}
