@@ -80,7 +80,12 @@ void Input_AddTouch(long id, int x, int y) {
 	touches[i].type = TOUCH_TYPE_ALL;
 	touches[i].begX = x;
 	touches[i].begY = y;
+
 	touches[i].start = DateTime_CurrentUTC_MS();
+	/* Also set last click time, otherwise quickly tapping */
+	/* sometimes triggers a 'delete' in InputHandler_PickBlocks, */
+	/* and then another 'delete' in CheckBlockTap. */
+	input_lastClick = touches[i].start;
 
 	Pointers_Count++;
 	Pointer_SetPosition(i, x, y);
