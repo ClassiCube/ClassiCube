@@ -727,7 +727,7 @@ static int ChatScreen_TextChanged(void* screen, const String* str) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	if (!s->grabsInput) return false;
 
-	InputWidget_SetAndSyncText(&s->input.base, str);
+	InputWidget_SetText(&s->input.base, str);
 	ChatScreen_UpdateChatYOffsets(s);
 #endif
 	return true;
@@ -965,7 +965,7 @@ void ChatScreen_OpenInput(const String* text) {
 
 void ChatScreen_AppendInput(const String* text) {
 	struct ChatScreen* s = &ChatScreen_Instance;
-	InputWidget_AppendString(&s->input.base, text);
+	InputWidget_AppendText(&s->input.base, text);
 	ChatScreen_UpdateChatYOffsets(s);
 }
 

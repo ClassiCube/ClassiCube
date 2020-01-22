@@ -1060,7 +1060,7 @@ static cc_bool InputWidget_TryAppendChar(struct InputWidget* w, char c) {
 	return true;
 }
 
-void InputWidget_AppendString(struct InputWidget* w, const String* text) {
+void InputWidget_AppendText(struct InputWidget* w, const String* text) {
 	int i, appended = 0;
 	for (i = 0; i < text->length; i++) {
 		if (InputWidget_TryAppendChar(w, text->buffer[i])) appended++;
@@ -1174,7 +1174,7 @@ static void InputWidget_EndKey(struct InputWidget* w) {
 }
 
 static void InputWidget_CopyFromClipboard(String* text, void* w) {
-	InputWidget_AppendString((struct InputWidget*)w, text);
+	InputWidget_AppendText((struct InputWidget*)w, text);
 }
 
 static cc_bool InputWidget_OtherKey(struct InputWidget* w, int key) {
@@ -1204,12 +1204,14 @@ void InputWidget_UpdateText(struct InputWidget* w) {
 	InputWidget_CalculateLineSizes(w);
 	w->RemakeTexture(w);
 	InputWidget_UpdateCaret(w);
+	Window_SetKeyboardText(&w->text);
 }
 
-void InputWidget_SetAndSyncText(struct InputWidget* w, const String* str) {
+void InputWidget_SetText(struct InputWidget* w, const String* str) {
 	InputWidget_Clear(w);
-	InputWidget_AppendString(w, str);
-	Window_SetKeyboardText(&w->text);
+	InputWidget_AppendText(w, str);
+	/* If text is empty, InputWidget_UpdateText won't have been called */
+	if (!w->text.length) Window_SetKeyboardText(&w->text);
 }
 
 static void InputWidget_Free(void* widget) {
@@ -1723,7 +1725,7 @@ static void ChatInputWidget_TabKey(struct InputWidget* w) {
 
 		if (w->caretPos != -1) w->caretPos -= len;
 		name = TabList_UNSAFE_GetPlayer(matches[0]);
-		InputWidget_AppendString(w, &name);
+		InputWidget_AppendText(w, &name);
 	} else if (numMatches > 1) {
 		String_InitArray(str, strBuffer);
 		String_Format1(&str, "&e%i matching names: ", &numMatches);
@@ -2573,7 +2575,7 @@ static void SpecialInputWidget_IntersectsBody(struct SpecialInputWidget* w, int 
 
 	/* TODO: Not be so hacky */
 	if (w->selectedIndex == 0) str.length = 2;
-	InputWidget_AppendString(w->target, &str);
+	InputWidget_AppendText(w->target, &str);
 }
 
 static void SpecialInputTab_Init(struct SpecialInputTab* tab, STRING_REF String* title, int itemsPerRow, int charsPerItem, STRING_REF String* contents) {

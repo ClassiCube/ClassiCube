@@ -831,7 +831,7 @@ static int EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
 static int EditHotkeyScreen_TextChanged(void* screen, const String* str) {
 #ifdef CC_BUILD_TOUCH
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
-	InputWidget_SetAndSyncText(&s->input.base, str);
+	InputWidget_SetText(&s->input.base, str);
 #endif
 	return true;
 }
@@ -1023,7 +1023,7 @@ static int GenLevelScreen_KeyPress(void* screen, char keyChar) {
 static int GenLevelScreen_TextChanged(void* screen, const String* str) {
 #ifdef CC_BUILD_TOUCH
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	if (s->selected) InputWidget_SetAndSyncText(&s->selected->base, str);
+	if (s->selected) InputWidget_SetText(&s->selected->base, str);
 #endif
 	return true;
 }
@@ -1377,7 +1377,7 @@ static int SaveLevelScreen_TextChanged(void* screen, const String* str) {
 #ifdef CC_BUILD_TOUCH
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	SaveLevelScreen_RemoveOverwrites(s);
-	InputWidget_SetAndSyncText(&s->input.base, str);
+	InputWidget_SetText(&s->input.base, str);
 #endif
 	return true;
 }
@@ -2055,7 +2055,7 @@ static int MenuOptionsScreen_KeyPress(void* screen, char keyChar) {
 static int MenuOptionsScreen_TextChanged(void* screen, const String* str) {
 #ifdef CC_BUILD_TOUCH
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	if (s->activeI >= 0) InputWidget_SetAndSyncText(&s->input.base, str);
+	if (s->activeI >= 0) InputWidget_SetText(&s->input.base, str);
 #endif
 	return true;
 }
@@ -2112,14 +2112,11 @@ static void MenuOptionsScreen_OK(void* screen, void* widget) {
 static void MenuOptionsScreen_Default(void* screen, void* widget) {
 	String value; char valueBuffer[STRING_SIZE];
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	struct MenuInputDesc* desc;
+	struct MenuInputDesc* desc  = &s->descs[s->activeI];
 
-	desc = &s->descs[s->activeI];
 	String_InitArray(value, valueBuffer);
 	desc->VTABLE->GetDefault(desc, &value);
-
-	InputWidget_Clear(&s->input.base);
-	InputWidget_AppendString(&s->input.base, &value);
+	InputWidget_SetText(&s->input.base, &value);
 }
 
 static void MenuOptionsScreen_Bool(void* screen, void* widget) {
