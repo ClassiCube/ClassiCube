@@ -96,8 +96,9 @@ build_web() {
 
 build_rpi() {
   echo "Building rpi.."
+  cp $SOURCE_DIR/misc/CCicon_rpi $SOURCE_DIR/src/CCicon_rpi.o
   rm cc-rpi
-  $RPI_PATH *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -DCC_BUILD_RPI -I ~/rpi/include -L ~/rpi/lib *.c -lGLESv2 -lEGL -lX11 -lcurl -lopenal -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
+  $RPI_PATH *.c $ALL_FLAGS $LINUX_FLAGS CCicon_rpi.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -DCC_BUILD_RPI -I ~/rpi/include -L ~/rpi/lib *.c -lGLESv2 -lEGL -lX11 -lcurl -lopenal -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
 }
 
 # -----------------------------
