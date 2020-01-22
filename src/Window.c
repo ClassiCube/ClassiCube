@@ -3700,7 +3700,9 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	XVisualInfo info;
 	cc_result res;
 
-	res = XMatchVisualInfo(win_display, win_screen, 24, TrueColor, &info);
+	res = XMatchVisualInfo(win_display, win_screen, 24, TrueColor, &info) ||
+		  XMatchVisualInfo(win_display, win_screen, 32, TrueColor, &info);
+
 	if (!res) Logger_Abort("Selecting visual");
 	return info;
 }

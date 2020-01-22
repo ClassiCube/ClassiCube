@@ -32,6 +32,10 @@ WIN32_FLAGS="-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN"
 WIN64_FLAGS="-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN"
 LINUX_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_X11ICON"
 
+# I cloned https://github.com/raspberrypi/tools to get prebuilt cross compilers
+# Then I copied across various files/folders from /usr/include and /usr/lib as needed
+RPI_PATH=~/rpi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-gcc-4.8.3
+
 # -----------------------------
 build_win32() {
   echo "Building win32.."
@@ -77,7 +81,7 @@ build_osx64() {
   $CLANG64_PATH *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenAL -framework OpenGL -lcurl -lobjc
 }
 
-build_web()  {
+build_web() {
   echo "Building web.."
   rm cc.js
   $EMSCRIPTEN_PATH *.c -O1 -o cc.js -s FETCH=1 -s WASM=0 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file texpacks/default.zip -w
@@ -88,6 +92,12 @@ build_web()  {
   # fix mouse wheel scrolling page not being properly prevented
   # "[Intervention] Unable to preventDefault inside passive event listener due to target being treated as passive."
   sed -i 's#eventHandler.useCapture);#{ useCapture: eventHandler.useCapture, passive: false });#g' cc.js
+}
+
+build_rpi() {
+  echo "Building rpi.."
+  rm cc-rpi
+  $RPI_PATH *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -DCC_BUILD_RPI -I ~/rpi/include -L ~/rpi/lib *.c -lGLESv2 -lEGL -lX11 -lcurl -lopenal -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
 }
 
 # -----------------------------
@@ -105,3 +115,4 @@ build_nix64
 build_osx32
 build_osx64
 build_web
+build_rpi
