@@ -130,16 +130,19 @@ struct InputWidget {
 /* Removes all characters and then deletes the input texture. */
 CC_NOINLINE void InputWidget_Clear(struct InputWidget* w);
 /* Tries appending all characters from the given string, then update the input texture. */
-CC_NOINLINE void InputWidget_AppendString(struct InputWidget* w, const String* text);
+CC_NOINLINE void InputWidget_AppendText(struct InputWidget* w, const String* text);
 /* Tries appending the given character, then updates the input texture. */
 CC_NOINLINE void InputWidget_Append(struct InputWidget* w, char c);
 /* Redraws text and recalculates associated state. */
+/* Also calls Window_SetKeyboardText with the text in the input widget. */
+/* This way native text input state stays synchronised with the input widget. */
+/* (e.g. may only accept numerical input, so 'c' gets stripped from str) */
 CC_NOINLINE void InputWidget_UpdateText(struct InputWidget* w);
-/* Shorthand for InputWidget_Clear followed by InputWidget_AppendString, */
+/* Shorthand for InputWidget_Clear followed by InputWidget_AppendText, */
 /* then calls Window_SetKeyboardText with the text in the input widget. */
 /* This way native text input state stays synchronised with the input widget. */
 /* (e.g. may only accept numerical input, so 'c' gets stripped from str) */
-CC_NOINLINE void InputWidget_SetAndSyncText(struct InputWidget* w, const String* str);
+CC_NOINLINE void InputWidget_SetText(struct InputWidget* w, const String* str);
 
 
 struct MenuInputDesc;
