@@ -66,7 +66,7 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libgl1-m
 ##### Raspberry pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
 
-```gcc *.c -o ClassiCube -DCC_BUILD_GLMODERN -DCC_BUILD_GLES -DCC_BUILD_EGL -lm -lpthread -lX11 -lEGL -lGLESv2 -lcurl -lopenal -ldl```
+```gcc *.c -o ClassiCube -DCC_BUILD_RPI -lm -lpthread -lX11 -lEGL -lGLESv2 -lcurl -lopenal -ldl```
 
 #### Mac OSX (32 bit)
 

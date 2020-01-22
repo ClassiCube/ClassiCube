@@ -164,6 +164,11 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_X11
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
+#if defined CC_BUILD_RPI
+#define CC_BUILD_GLMODERN
+#define CC_BUILD_GLES
+#define CC_BUILD_EGL
+#endif
 #elif defined __APPLE__
 #define CC_BUILD_OSX
 #define CC_BUILD_POSIX
