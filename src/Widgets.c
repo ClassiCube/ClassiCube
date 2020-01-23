@@ -387,11 +387,11 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 	Texture_Render(&w->backTex);
 
 	i     = Inventory.SelectedIndex;
-	width = w->elemSize + w->borderSize;
+	width = w->elemSize + w->borderWidth;
 	x     = (int)(w->x + w->barXOffset + width * i + w->elemSize / 2);
 
 	w->selTex.ID = tex;
-	w->selTex.X  = (int)(x - w->selBlockSize / 2);
+	w->selTex.X  = (int)(x - w->selBlockWidth / 2);
 	Gfx_Draw2DTexture(&w->selTex, white);
 }
 
@@ -402,7 +402,7 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 	int i, x, y;
 
 	IsometricDrawer_BeginBatch(vertices, Models.Vb);
-	width =  w->elemSize + w->borderSize;
+	width =  w->elemSize + w->borderWidth;
 	scale = (w->elemSize * 13.5f/16.0f) / 2.0f;
 
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
@@ -420,7 +420,7 @@ static void HotbarWidget_RepositonBackgroundTexture(struct HotbarWidget* w) {
 
 static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* w) {
 	float scale = Game_GetHotbarScale();
-	int hSize = (int)w->selBlockSize;
+	int hSize = (int)w->selBlockWidth;
 	int vSize = (int)(22.0f * scale);
 	int y = w->y + (w->height - (int)(23.0f * scale));
 
@@ -447,10 +447,10 @@ static void HotbarWidget_Reposition(void* widget) {
 	w->width     = (int)(182 * scale);
 	w->height    = (int)w->barHeight;
 
-	w->selBlockSize = (float)Math_Ceil(24.0f * scale);
-	w->elemSize     = 16.0f * scale;
-	w->barXOffset   = 3.1f * scale;
-	w->borderSize   = 4.0f * scale;
+	w->selBlockWidth = (float)Math_Ceil(24.0f * scale);
+	w->elemSize      = 16.0f * scale;
+	w->barXOffset    =  3.1f * scale;
+	w->borderWidth   =  4.0f * scale;
 
 	Widget_CalcPosition(w);
 	HotbarWidget_RepositonBackgroundTexture(w);
@@ -506,7 +506,7 @@ static int HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 
 	if (!Widget_Contains(w, x, y)) return false;
 
-	width  = (int)(w->elemSize + w->borderSize);
+	width  = (int)(w->elemSize + w->borderWidth);
 	height = Math_Ceil(w->barHeight);
 
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {

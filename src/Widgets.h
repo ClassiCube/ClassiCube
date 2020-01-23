@@ -62,8 +62,8 @@ CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w);
 struct HotbarWidget {
 	Widget_Body
 	struct Texture selTex, backTex;
-	float barHeight, selBlockSize, elemSize;
-	float barXOffset, borderSize;
+	float barHeight, selBlockWidth, elemSize;
+	float barXOffset, borderWidth;
 	float scrollAcc;
 	cc_bool altHandled;
 };
