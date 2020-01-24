@@ -387,11 +387,11 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 	Texture_Render(&w->backTex);
 
 	i     = Inventory.SelectedIndex;
-	width = w->elemSize + w->borderWidth;
-	x     = (int)(w->x + w->barXOffset + width * i + w->elemSize / 2);
+	width = w->slotWidth;
+	x     = (int)(w->x + w->slotXOffset + width * i);
 
 	w->selTex.ID = tex;
-	w->selTex.X  = (int)(x - w->selBlockWidth / 2);
+	w->selTex.X  = (int)(x - w->selWidth / 2);
 	Gfx_Draw2DTexture(&w->selTex, white);
 }
 
@@ -402,30 +402,15 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 	int i, x, y;
 
 	IsometricDrawer_BeginBatch(vertices, Models.Vb);
-	width =  w->elemSize + w->borderWidth;
-	scale = (w->elemSize * 13.5f/16.0f) / 2.0f;
+	width = w->slotWidth;
+	scale = w->elemSize / 2.0f;
 
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
-		x = (int)(w->x + w->barXOffset + width * i + w->elemSize / 2);
-		y = (int)(w->y + (w->height - w->barHeight / 2));
+		x = (int)(w->x + w->slotXOffset + width * i);
+		y = w->y + (w->height / 2);
 		IsometricDrawer_DrawBatch(Inventory_Get(i), scale, x, y);
 	}
 	IsometricDrawer_EndBatch();
-}
-
-static void HotbarWidget_RepositonBackgroundTexture(struct HotbarWidget* w) {
-	Tex_SetRect(w->backTex, w->x,w->y, w->width,w->height);
-	Tex_SetUV(w->backTex,   0,0, 182/256.0f,22/256.0f);
-}
-
-static void HotbarWidget_RepositionSelectionTexture(struct HotbarWidget* w) {
-	float scale = Game_GetHotbarScale();
-	int hSize = (int)w->selBlockWidth;
-	int vSize = (int)(22.0f * scale);
-	int y = w->y + (w->height - (int)(23.0f * scale));
-
-	Tex_SetRect(w->selTex, 0,y, hSize,vSize);
-	Tex_SetUV(w->selTex,   0,22/256.0f, 24/256.0f,44/256.0f);
 }
 
 static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int index, int dir) {
@@ -442,19 +427,23 @@ static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int i
 static void HotbarWidget_Reposition(void* widget) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	float scale = Game_GetHotbarScale();
+	int y;
 
-	w->barHeight = (float)Math_Floor(22.0f * scale);
-	w->width     = (int)(182 * scale);
-	w->height    = (int)w->barHeight;
-
-	w->selBlockWidth = (float)Math_Ceil(24.0f * scale);
-	w->elemSize      = 16.0f * scale;
-	w->barXOffset    =  3.1f * scale;
-	w->borderWidth   =  4.0f * scale;
-
+	w->width  = (int)(182 * scale);
+	w->height = Math_Floor(22.0f * scale);
 	Widget_CalcPosition(w);
-	HotbarWidget_RepositonBackgroundTexture(w);
-	HotbarWidget_RepositionSelectionTexture(w);
+
+	w->selWidth    = (float)Math_Ceil(24.0f * scale);
+	w->elemSize    = 13.5f * scale;
+	w->slotXOffset = 11.1f * scale;
+	w->slotWidth   = 20.0f * scale;
+
+	Tex_SetRect(w->backTex, w->x,w->y, w->width,w->height);
+	Tex_SetUV(w->backTex,   0,0, 182/256.0f,22/256.0f);
+
+	y = w->y + (w->height - (int)(23.0f * scale));
+	Tex_SetRect(w->selTex, 0,y, (int)w->selWidth,w->height);
+	Tex_SetUV(w->selTex,   0,22/256.0f, 24/256.0f,44/256.0f);
 }
 
 static void HotbarWidget_Render(void* widget, double delta) {
@@ -505,13 +494,12 @@ static int HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	int i, cellX, cellY;
 
 	if (!Widget_Contains(w, x, y)) return false;
-
-	width  = (int)(w->elemSize + w->borderWidth);
-	height = Math_Ceil(w->barHeight);
+	width  = (int)w->slotWidth;
+	height = w->height;
 
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		cellX = (int)(w->x + width * i);
-		cellY = (int)(w->y + (w->height - height));
+		cellY = w->y;
 
 		if (Gui_Contains(cellX, cellY, width, height, x, y)) {
 			Inventory_SetSelectedIndex(i);
