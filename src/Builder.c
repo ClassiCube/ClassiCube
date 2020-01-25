@@ -13,7 +13,7 @@
 #include "PackedCol.h"
 #include "TexturePack.h"
 #include "VertexStructs.h"
-#include "Options.h"
+#include "Game.h"
 
 int Builder_SidesLevel, Builder_EdgeLevel;
 /* Packs an index into the 16x16x16 count array. Coordinates range from 0 to 15. */
@@ -1281,6 +1281,7 @@ void Builder_Init(void) {
 	Builder_Offsets[FACE_YMIN] = -EXTCHUNK_SIZE_2;
 	Builder_Offsets[FACE_YMAX] =  EXTCHUNK_SIZE_2;
 
+	if (Game_ClassicMode) return;
 	Builder_SmoothLighting = Options_GetBool(OPT_SMOOTH_LIGHTING, false);
 }
 
