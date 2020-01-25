@@ -629,7 +629,7 @@ cc_result File_Length(FileHandle file, cc_uint32* len) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
 void Thread_Sleep(cc_uint32 milliseconds) { Sleep(milliseconds); }
-DWORD WINAPI Thread_StartCallback(void* param) {
+static DWORD WINAPI Thread_StartCallback(void* param) {
 	Thread_StartFunc* func = (Thread_StartFunc*)param;
 	(*func)();
 	return 0;
@@ -711,7 +711,7 @@ void Waitable_Wait(void* handle) { }
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) { }
 #elif defined CC_BUILD_POSIX
 void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
-void* Thread_StartCallback(void* lpParam) {
+static void* Thread_StartCallback(void* lpParam) {
 	Thread_StartFunc* func = (Thread_StartFunc*)lpParam;
 	(*func)();
 	return NULL;
@@ -1800,6 +1800,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	char path[NATIVE_STR_LEN];
 	int i, len = 0;
+	cc_result res;
 
 	for (i = 1; i < argc; ++i) {
 		if (strlen(argv[i]) > 2 && argv[i][0] == '-' && argv[i][1] == 'd') {
@@ -1812,7 +1813,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 		return chdir(Platform_DefaultDirectory + 2) == -1 ? errno : 0;
 	}
 
-	cc_result res = Process_RawGetExePath(path, &len);
+	res = Process_RawGetExePath(path, &len);
 	if (res) return res;
 
 	/* get rid of filename at end of directory */

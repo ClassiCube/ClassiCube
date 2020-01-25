@@ -413,7 +413,7 @@ void LocalInterpComp_SetLocation(struct InterpComp* interp, struct LocationUpdat
 		LocalInterpComp_Angle(&prev->Pitch, &next->Pitch, update->Pitch, interpolate);
 	}
 	if (flags & LOCATIONUPDATE_YAW) {
-		LocalInterpComp_Angle(&prev->Yaw,   &next->Yaw,   update->Yaw, interpolate);
+		LocalInterpComp_Angle(&prev->Yaw,   &next->Yaw,   update->Yaw,   interpolate);
 	}
 	if (flags & LOCATIONUPDATE_ROTX) {
 		LocalInterpComp_Angle(&prev->RotX,  &next->RotX,  update->RotX,  interpolate);

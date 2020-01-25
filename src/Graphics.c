@@ -1160,9 +1160,12 @@ static GLuint GL_GenAndBind(GLenum target) {
 }
 
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
+	GLuint id;
+	cc_uint32 size;
 	if (Gfx.LostContext) return 0;
-	GLuint id      = GL_GenAndBind(GL_ARRAY_BUFFER);
-	cc_uint32 size = maxVertices * gfx_strideSizes[fmt];
+
+	id   = GL_GenAndBind(GL_ARRAY_BUFFER);
+	size = maxVertices * gfx_strideSizes[fmt];
 	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
 }
@@ -1230,10 +1233,10 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 
 void Gfx_GetApiInfo(String* lines) {
 	static const String memExt = String_FromConst("GL_NVX_gpu_memory_info");
-	int totalKb, curKb; 
+	GLint totalKb, curKb, depthBits;
 	float total, cur;
 	String extensions;
-	int depthBits, pointerSize = sizeof(void*) * 8;
+	int pointerSize = sizeof(void*) * 8;
 
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
 	String_Format1(&lines[0], "-- Using OpenGL (%i bit) --", &pointerSize);
