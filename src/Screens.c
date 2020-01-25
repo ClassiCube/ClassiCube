@@ -124,6 +124,7 @@ static struct HUDScreen {
 	int frames, fps;
 	cc_bool speed, halfSpeed, noclip, fly, canSpeed;
 	int lastFov;
+	struct HotbarWidget hotbar;
 } HUDScreen_Instance;
 
 static void HUDScreen_MakeText(struct HUDScreen* s, String* status) {
@@ -239,6 +240,8 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	struct TextWidget* line1 = &s->line1;
 	struct TextWidget* line2 = &s->line2;
 	int y;
+
+	Widget_Layout(&s->hotbar);
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
 	Font_ReducePadding(&s->font, 4);
 	
@@ -270,6 +273,26 @@ static void HUDScreen_ContextRecreated(void* screen) {
 
 static void HUDScreen_BuildMesh(void* screen) { }
 
+static void HUDScreen_Layout(void* screen) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	Widget_Layout(&s->hotbar);
+}
+
+static int HUDScreen_KeyDown(void* screen, int key) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	return Elem_HandlesKeyDown(&s->hotbar, key);
+}
+
+static int HUDScreen_KeyUp(void* screen, int key) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	return Elem_HandlesKeyUp(&s->hotbar, key);
+}
+
+static void HUDScreen_Init(void* screen) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	HotbarWidget_Create(&s->hotbar);
+}
+
 static void HUDScreen_Render(void* screen, double delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	HUDScreen_Update(s, delta);
@@ -286,15 +309,17 @@ static void HUDScreen_Render(void* screen, double delta) {
 		HUDScreen_DrawPosition(s);
 		Elem_Render(&s->line2, delta);
 	}
+
+	if (!Gui_GetBlocksWorld()) Elem_Render(&s->hotbar, delta);
 	Gfx_SetTexturing(false);
 }
 
 static const struct ScreenVTABLE HUDScreen_VTABLE = {
-	Screen_NullFunc,  Screen_NullUpdate, Screen_NullFunc,  
-	HUDScreen_Render, HUDScreen_BuildMesh,
-	Screen_FInput,    Screen_FInput,     Screen_FKeyPress, Screen_FText,
-	Screen_FPointer,  Screen_FPointer,   Screen_FPointer,  Screen_FMouseScroll,
-	Screen_NullFunc,  HUDScreen_ContextLost, HUDScreen_ContextRecreated
+	HUDScreen_Init,    Screen_NullUpdate,   Screen_NullFunc,  
+	HUDScreen_Render,  HUDScreen_BuildMesh,
+	HUDScreen_KeyDown, HUDScreen_KeyUp,     Screen_FKeyPress, Screen_FText,
+	Screen_FPointer,   Screen_FPointer,     Screen_FPointer,  Screen_FMouseScroll,
+	Screen_NullFunc,   HUDScreen_ContextLost, HUDScreen_ContextRecreated
 };
 void HUDScreen_Show(void) {
 	struct HUDScreen* s = &HUDScreen_Instance;
@@ -303,13 +328,16 @@ void HUDScreen_Show(void) {
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_STATUS);
 }
 
+struct Widget* HUDScreen_GetHotbar(void) {
+	return (struct Widget*)&HUDScreen_Instance.hotbar;
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------ChatScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 static struct ChatScreen {
 	Screen_Body
-	struct HotbarWidget hotbar;
 	/* player list state */
 	struct PlayerListWidget playerList;
 	struct FontDesc playerFont;
@@ -338,7 +366,7 @@ static struct ChatScreen {
 static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 	int pad, y;
 		
-	y = min(s->input.base.y, s->hotbar.y);
+	y = min(s->input.base.y, Gui_HUD->hotbar.y);
 	y -= s->input.base.yOffset; /* add some padding */
 	s->altText.yOffset = Window_Height - y;
 	Widget_Layout(&s->altText);
@@ -390,7 +418,7 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 }
 
 static void ChatScreen_ChatUpdateLayout(struct ChatScreen* s) {
-	int yOffset = s->hotbar.height + 15;
+	int yOffset = Gui_HUD->hotbar.height + 15;
 	Widget_SetLocation(&s->input.base,   ANCHOR_MIN, ANCHOR_MAX,  5, 5);
 	Widget_SetLocation(&s->altText,      ANCHOR_MIN, ANCHOR_MAX,  5, 5);
 	Widget_SetLocation(&s->status,       ANCHOR_MAX, ANCHOR_MIN,  0, 0);
@@ -398,28 +426,6 @@ static void ChatScreen_ChatUpdateLayout(struct ChatScreen* s) {
 	Widget_SetLocation(&s->chat,         ANCHOR_MIN, ANCHOR_MAX, 10, 0);
 	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, 0);
 	ChatScreen_UpdateChatYOffsets(s);
-}
-
-static void ChatScreen_ChatInit(struct ChatScreen* s) {
-	ChatInputWidget_Create(&s->input);
-	SpecialInputWidget_Create(&s->altText, &s->chatFont, &s->input.base);
-
-	TextGroupWidget_Create(&s->status, CHAT_MAX_STATUS,
-							s->statusTextures, ChatScreen_GetStatus);
-	TextGroupWidget_Create(&s->bottomRight, CHAT_MAX_BOTTOMRIGHT, 
-							s->bottomRightTextures, ChatScreen_GetBottomRight);
-	TextGroupWidget_Create(&s->chat, Gui_Chatlines,
-							s->chatTextures, ChatScreen_GetChat);
-	TextGroupWidget_Create(&s->clientStatus, CHAT_MAX_CLIENTSTATUS,
-							s->clientStatusTextures, ChatScreen_GetClientStatus);
-	TextWidget_Make(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Window_Height / 4);
-
-	s->status.collapsible[0]       = true; /* Texture pack download status */
-	s->clientStatus.collapsible[0] = true;
-	s->clientStatus.collapsible[1] = true;
-
-	s->chat.underlineUrls = !Game_ClassicMode;
-	s->chatIndex = Chat_Log.count - Gui_Chatlines;
 }
 
 static void ChatScreen_Redraw(struct ChatScreen* s) {
@@ -678,7 +684,6 @@ static void ChatScreen_ContextRecreated(void* screen) {
 	ChatScreen_ChatUpdateFont(s);
 
 	ChatScreen_Redraw(s);
-	Widget_Layout(&s->hotbar);
 	ChatScreen_ChatUpdateLayout(s);
 	if (s->showingList) ChatScreen_RemakePlayerList(s);
 
@@ -695,7 +700,6 @@ static void ChatScreen_BuildMesh(void* screen) { }
 
 static void ChatScreen_Layout(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	Widget_Layout(&s->hotbar);
 
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
 	ChatScreen_ChatUpdateLayout(s);
@@ -775,7 +779,7 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	} else if (key == KeyBinds[KEYBIND_INVENTORY]) {
 		InventoryScreen_Show();
 	} else {
-		return Elem_HandlesKeyDown(&s->hotbar, key);
+		return false;
 	}
 	return true;
 }
@@ -788,7 +792,7 @@ static int ChatScreen_KeyUp(void* screen, int key) {
 		return true;
 	}
 
-	if (!s->grabsInput) return Elem_HandlesKeyUp(&s->hotbar, key);
+	if (!s->grabsInput) return false;
 #ifdef CC_BUILD_WEB
 	/* See reason for this in HandleInputUp */
 	if (key == KEY_ESCAPE) ChatScreen_EnterChatInput(s, true);
@@ -871,8 +875,25 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 
 static void ChatScreen_Init(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	HotbarWidget_Create(&s->hotbar);
-	ChatScreen_ChatInit(s);
+	ChatInputWidget_Create(&s->input);
+	SpecialInputWidget_Create(&s->altText, &s->chatFont, &s->input.base);
+
+	TextGroupWidget_Create(&s->status, CHAT_MAX_STATUS,
+							s->statusTextures, ChatScreen_GetStatus);
+	TextGroupWidget_Create(&s->bottomRight, CHAT_MAX_BOTTOMRIGHT, 
+							s->bottomRightTextures, ChatScreen_GetBottomRight);
+	TextGroupWidget_Create(&s->chat, Gui_Chatlines,
+							s->chatTextures, ChatScreen_GetChat);
+	TextGroupWidget_Create(&s->clientStatus, CHAT_MAX_CLIENTSTATUS,
+							s->clientStatusTextures, ChatScreen_GetClientStatus);
+	TextWidget_Make(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Window_Height / 4);
+
+	s->status.collapsible[0]       = true; /* Texture pack download status */
+	s->clientStatus.collapsible[0] = true;
+	s->clientStatus.collapsible[1] = true;
+
+	s->chat.underlineUrls = !Game_ClassicMode;
+	s->chatIndex = Chat_Log.count - Gui_Chatlines;
 
 	Event_RegisterChat(&ChatEvents.ChatReceived,  s, ChatScreen_ChatReceived);
 	Event_RegisterInt(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
@@ -889,7 +910,6 @@ static void ChatScreen_Init(void* screen) {
 
 static void ChatScreen_Render(void* screen, double delta) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	cc_bool showMinimal;
 
 	if (Game_HideGui && s->grabsInput) {
 		Gfx_SetTexturing(true);
@@ -897,9 +917,8 @@ static void ChatScreen_Render(void* screen, double delta) {
 		Gfx_SetTexturing(false);
 	}
 	if (Game_HideGui) return;
-	showMinimal = Gui_GetBlocksWorld() != NULL;
 
-	if (!s->showingList && !showMinimal) {
+	if (!s->showingList && !Gui_GetBlocksWorld()) {
 		Gfx_SetTexturing(true);
 		ChatScreen_DrawCrosshairs();
 		Gfx_SetTexturing(false);
@@ -909,7 +928,6 @@ static void ChatScreen_Render(void* screen, double delta) {
 	}
 
 	Gfx_SetTexturing(true);
-	if (!showMinimal) { Elem_Render(&s->hotbar, delta); }
 	ChatScreen_DrawChat(s, delta);
 
 	if (s->showingList && IsOnlyHudActive()) {
@@ -975,10 +993,6 @@ void ChatScreen_SetChatlines(int lines) {
 	s->chatIndex += s->chat.lines - lines;
 	s->chat.lines = lines;
 	TextGroupWidget_RedrawAll(&s->chat);
-}
-
-struct Widget* ChatScreen_GetHotbar(void) {
-	return (struct Widget*)&ChatScreen_Instance.hotbar;
 }
 
 
@@ -1068,7 +1082,7 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 		Gui_Remove((struct Screen*)s);
 	} else if (Elem_HandlesKeyDown(table, key)) {
 	} else {
-		return Elem_HandlesKeyDown(&Gui_Chat->hotbar, key);
+		return Elem_HandlesKeyDown(&Gui_HUD->hotbar, key);
 	}
 	return true;
 }
@@ -1079,7 +1093,7 @@ static int InventoryScreen_KeyUp(void* screen, int key) {
 	if (key == KeyBinds[KEYBIND_INVENTORY]) {
 		s->releasedInv = true; return true;
 	}
-	return Elem_HandlesKeyUp(&Gui_Chat->hotbar, key);
+	return Elem_HandlesKeyUp(&Gui_HUD->hotbar, key);
 }
 
 static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
@@ -1088,7 +1102,7 @@ static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 	cc_bool handled, hotbar;
 
 	if (table->scroll.draggingId == id) return true;
-	if (Elem_HandlesPointerDown(&Gui_Chat->hotbar, id, x, y)) return true;
+	if (Elem_HandlesPointerDown(&Gui_HUD->hotbar, id, x, y)) return true;
 	handled = Elem_HandlesPointerDown(table, id, x, y);
 
 	if (!handled || table->pendingClose) {
