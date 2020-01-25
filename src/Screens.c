@@ -288,6 +288,18 @@ static int HUDScreen_KeyUp(void* screen, int key) {
 	return Elem_HandlesKeyUp(&s->hotbar, key);
 }
 
+static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+#ifdef CC_BUILD_TOUCH
+	if (Input_TouchMode || Gui_GetInputGrab()) {
+		return Elem_HandlesPointerDown(&s->hotbar, id, x, y);
+	}
+#else
+	if (Gui_GetInputGrab()) return Elem_HandlesPointerDown(&s->hotbar, id, x, y);
+#endif
+	return false;
+}
+
 static void HUDScreen_Init(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	HotbarWidget_Create(&s->hotbar);
@@ -315,10 +327,10 @@ static void HUDScreen_Render(void* screen, double delta) {
 }
 
 static const struct ScreenVTABLE HUDScreen_VTABLE = {
-	HUDScreen_Init,    Screen_NullUpdate,   Screen_NullFunc,  
-	HUDScreen_Render,  HUDScreen_BuildMesh,
-	HUDScreen_KeyDown, HUDScreen_KeyUp,     Screen_FKeyPress, Screen_FText,
-	Screen_FPointer,   Screen_FPointer,     Screen_FPointer,  Screen_FMouseScroll,
+	HUDScreen_Init,        Screen_NullUpdate,   Screen_NullFunc,  
+	HUDScreen_Render,      HUDScreen_BuildMesh,
+	HUDScreen_KeyDown,     HUDScreen_KeyUp,     Screen_FKeyPress, Screen_FText,
+	HUDscreen_PointerDown, Screen_FPointer,     Screen_FPointer,  Screen_FMouseScroll,
 	Screen_NullFunc,   HUDScreen_ContextLost, HUDScreen_ContextRecreated
 };
 void HUDScreen_Show(void) {
@@ -1102,7 +1114,7 @@ static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 	cc_bool handled, hotbar;
 
 	if (table->scroll.draggingId == id) return true;
-	if (Elem_HandlesPointerDown(&Gui_HUD->hotbar, id, x, y)) return true;
+	if (HUDscreen_PointerDown(Gui_HUD, id, x, y)) return true;
 	handled = Elem_HandlesPointerDown(table, id, x, y);
 
 	if (!handled || table->pendingClose) {
