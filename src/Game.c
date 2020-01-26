@@ -32,6 +32,7 @@
 #include "Menus.h"
 #include "Audio.h"
 #include "Stream.h"
+#include "Builder.h"
 
 struct _GameData Game;
 int     Game_Port;
@@ -454,6 +455,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&Inventory_Component);
 	World_Reset();
 
+	Game_AddComponent(&Builder_Component);
 	Game_AddComponent(&MapRenderer_Component);
 	Game_AddComponent(&EnvRenderer_Component);
 	Game_AddComponent(&Server_Component);

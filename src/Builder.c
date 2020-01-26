@@ -760,7 +760,7 @@ static void Builder_SetDefault(void) {
 	Builder_PostStretchTiles = Builder_DefaultPostStretchTiles;
 }
 
-void NormalBuilder_SetActive(void) {
+static void NormalBuilder_SetActive(void) {
 	Builder_SetDefault();
 	Builder_StretchXLiquid = NormalBuilder_StretchXLiquid;
 	Builder_StretchX       = NormalBuilder_StretchX;
@@ -1251,7 +1251,7 @@ static void Adv_PreStretchTiles(int x1, int y1, int z1) {
 	}
 }
 
-void AdvBuilder_SetActive(void) {
+static void AdvBuilder_SetActive(void) {
 	Builder_SetDefault();
 	Builder_StretchXLiquid  = Adv_StretchXLiquid;
 	Builder_StretchX        = Adv_StretchX;
@@ -1273,7 +1273,7 @@ void Builder_ApplyActive(void) {
 	}
 }
 
-void Builder_Init(void) {
+static void Builder_Init(void) {
 	Builder_Offsets[FACE_XMIN] = -1;
 	Builder_Offsets[FACE_XMAX] =  1;
 	Builder_Offsets[FACE_ZMIN] = -EXTCHUNK_SIZE;
@@ -1281,11 +1281,19 @@ void Builder_Init(void) {
 	Builder_Offsets[FACE_YMIN] = -EXTCHUNK_SIZE_2;
 	Builder_Offsets[FACE_YMAX] =  EXTCHUNK_SIZE_2;
 
-	if (Game_ClassicMode) return;
-	Builder_SmoothLighting = Options_GetBool(OPT_SMOOTH_LIGHTING, false);
+	if (!Game_ClassicMode) Builder_SmoothLighting = Options_GetBool(OPT_SMOOTH_LIGHTING, false);
+	Builder_ApplyActive();
 }
 
-void Builder_OnNewMapLoaded(void) {
+static void Builder_OnNewMapLoaded(void) {
 	Builder_SidesLevel = max(0, Env_SidesHeight);
 	Builder_EdgeLevel  = max(0, Env.EdgeHeight);
 }
+
+struct IGameComponent Builder_Component = {
+	Builder_Init, /* Init */
+	NULL, /* Free */
+	NULL, /* Reset */
+	NULL, /* OnNewMap */
+	Builder_OnNewMapLoaded /* OnNewMapLoaded */
+};

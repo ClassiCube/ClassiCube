@@ -774,7 +774,6 @@ static void MapRenderer_OnNewMapLoaded(void) {
 	/*}*/
 
 	MapRenderer_InitChunks();
-	Builder_OnNewMapLoaded();
 	lastCamPos = Vec3_BigPos();
 }
 
@@ -792,9 +791,6 @@ static void MapRenderer_Init(void) {
 	MapRenderer_1DUsedCount = 87; /* Atlas1D_UsedAtlasesCount(); */
 	chunkPos   = IVec3_MaxValue();
 	MapRenderer_MaxUpdates = Options_GetInt(OPT_MAX_CHUNK_UPDATES, 4, 1024, 30);
-
-	Builder_Init();
-	Builder_ApplyActive();
 	MapRenderer_CalcViewDists();
 }
 
@@ -812,8 +808,8 @@ static void MapRenderer_Free(void) {
 }
 
 struct IGameComponent MapRenderer_Component = {
-	MapRenderer_Init, /* Init  */
-	MapRenderer_Free, /* Free  */
+	MapRenderer_Init, /* Init */
+	MapRenderer_Free, /* Free */
 	MapRenderer_OnNewMap, /* Reset */
 	MapRenderer_OnNewMap, /* OnNewMap */
 	MapRenderer_OnNewMapLoaded /* OnNewMapLoaded */

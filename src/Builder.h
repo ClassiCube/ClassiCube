@@ -9,17 +9,15 @@ NormalMeshBuilder:
 Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct ChunkInfo;
+struct IGameComponent;
+extern struct IGameComponent Builder_Component;
 
 extern int Builder_SidesLevel, Builder_EdgeLevel;
 /* Whether smooth/advanced lighting mesh builder is used. */
 extern cc_bool Builder_SmoothLighting;
 
-void Builder_Init(void);
-void Builder_OnNewMapLoaded(void);
 /* Builds the mesh of vertices for the given chunk. */
 void Builder_MakeChunk(struct ChunkInfo* info);
 
-void NormalBuilder_SetActive(void);
-void AdvBuilder_SetActive(void);
 void Builder_ApplyActive(void);
 #endif
