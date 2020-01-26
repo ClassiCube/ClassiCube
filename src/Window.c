@@ -2511,8 +2511,8 @@ static const char* Window_BeforeUnload(int type, const void* ev, void *data) {
 static int Window_MapKey(int k) {
 	if (k >= '0' && k <= '9') return k;
 	if (k >= 'A' && k <= 'Z') return k;
-	if (k >= DOM_VK_F1      && k <= DOM_VK_F24)      { return KEY_F1  + (k - DOM_VK_F1); }
-	if (k >= DOM_VK_NUMPAD0 && k <= DOM_VK_NUMPAD9)  { return KEY_KP0 + (k - DOM_VK_NUMPAD0); }
+	if (k >= DOM_VK_F1      && k <= DOM_VK_F24)     { return KEY_F1  + (k - DOM_VK_F1); }
+	if (k >= DOM_VK_NUMPAD0 && k <= DOM_VK_NUMPAD9) { return KEY_KP0 + (k - DOM_VK_NUMPAD0); }
 
 	switch (k) {
 	case DOM_VK_BACK_SPACE: return KEY_BACKSPACE;
