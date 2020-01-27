@@ -1572,13 +1572,13 @@ static const struct TouchBindDesc {
 	cc_uint8 bind, width;
 	cc_int16 xOffset, yOffset;
 } touchDescs[7] = {
-	{ "<",    KEYBIND_LEFT,     40, 150,  50 },
-	{ ">",    KEYBIND_RIGHT,    40,  10,  50 },
-	{ "^",    KEYBIND_FORWARD,  40,  80,  10 },
-	{ "\\/",  KEYBIND_BACK,     40,  80,  90 },
-	{ "Jump", KEYBIND_JUMP,    100,  50, 150 },
-	{ "",     KEYBIND_COUNT,   100,  50, 190 },
-	{ "More", KEYBIND_COUNT,   100,  50, 230 },
+	{ "<",    KEYBIND_LEFT,     40, 150,  90 },
+	{ ">",    KEYBIND_RIGHT,    40,  10,  90 },
+	{ "^",    KEYBIND_FORWARD,  40,  80,  50 },
+	{ "\\/",  KEYBIND_BACK,     40,  80, 130 },
+	{ "Jump", KEYBIND_JUMP,    100,  50,  50 },
+	{ "",     KEYBIND_COUNT,   100,  50,  90 },
+	{ "More", KEYBIND_COUNT,   100,  50, 130 },
 };
 
 static void TouchScreen_ContextLost(void* screen) {
@@ -1679,8 +1679,8 @@ static void TouchScreen_Init(void* screen) {
 
 	for (i = 0; i < s->numWidgets; i++) {
 		desc = &touchDescs[i];
-		ButtonWidget_Make(&s->btns[i], desc->width, NULL, ANCHOR_MAX, ANCHOR_MIN,
-			desc->xOffset, desc->yOffset);
+		ButtonWidget_Make(&s->btns[i], desc->width, NULL, i < 4 ? ANCHOR_MIN : ANCHOR_MAX, 
+			ANCHOR_MIN, desc->xOffset, desc->yOffset);
 		s->binds[i] = desc->bind;
 	}
 
