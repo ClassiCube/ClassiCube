@@ -1572,8 +1572,8 @@ static const struct TouchBindDesc {
 	cc_uint8 bind, width;
 	cc_int16 xOffset, yOffset;
 } touchDescs[7] = {
-	{ "<",    KEYBIND_LEFT,     40, 150,  90 },
-	{ ">",    KEYBIND_RIGHT,    40,  10,  90 },
+	{ "<",    KEYBIND_LEFT,     40,  10,  90 },
+	{ ">",    KEYBIND_RIGHT,    40, 150,  90 },
 	{ "^",    KEYBIND_FORWARD,  40,  80,  50 },
 	{ "\\/",  KEYBIND_BACK,     40,  80, 130 },
 	{ "Jump", KEYBIND_JUMP,    100,  50,  50 },
