@@ -530,6 +530,9 @@ void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
 #elif __i386__
 	const char* exe_d3d9 = "ClassiCube.32";
 	const char* exe_ogl  = "ClassiCube.32";
+#elif CC_BUILD_RPI
+	const char* exe_d3d9 = "ClassiCube.rpi";
+	const char* exe_ogl  = "ClassiCube.rpi";
 #else
 	const char* exe_d3d9 = "ClassiCube.unknown";
 	const char* exe_ogl  = "ClassiCube.unknown";
