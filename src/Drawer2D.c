@@ -37,13 +37,13 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc
 *#########################################################################################################################*/
 static String font_candidates[9] = {
 	String_FromConst(""), /* Filled in with Drawer2D_FontName */
-	String_FromConst("Arial"),                      /* preferred font on all platforms */
-	String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
-	String_FromConst("Nimbus Sans"),                /* other common ones */
-	String_FromConst("Liberation Sans"),
+	String_FromConst("Arial"),           /* preferred font on all platforms */
+	String_FromConst("Liberation Sans"), /* nice looking fallbacks for linux */
+	String_FromConst("Nimbus Sans"),
 	String_FromConst("Bitstream Charter"),
 	String_FromConst("Cantarell"),
-	String_FromConst("DejaVu Sans Book"),
+	String_FromConst("DejaVu Sans Book"), 
+	String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
 	String_FromConst("Roboto") /* android */
 };
 
