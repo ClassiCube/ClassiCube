@@ -1074,15 +1074,6 @@ static void InputWidget_DeleteChar(struct InputWidget* w) {
 	}
 }
 
-static cc_bool InputWidget_CheckCol(struct InputWidget* w, int index) {
-	char code, col;
-	if (index < 0) return false;
-
-	code = w->text.buffer[index];
-	col  = w->text.buffer[index + 1];
-	return (code == '%' || code == '&') && BitmapCol_A(Drawer2D_GetCol(col));
-}
-
 static void InputWidget_BackspaceKey(struct InputWidget* w) {
 	int i, len;
 

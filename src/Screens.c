@@ -1484,7 +1484,6 @@ static void DisconnectScreen_BuildMesh(void* screen) {
 }
 
 static void DisconnectScreen_Init(void* screen) {
-	static struct Widget* widgets[3];
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 
 	TextWidget_Make(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
@@ -1509,7 +1508,6 @@ static void DisconnectScreen_Update(void* screen, double delta) {
 }
 
 static void DisconnectScreen_Render(void* screen, double delta) {
-	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	PackedCol top    = PackedCol_Make(64, 32, 32, 255);
 	PackedCol bottom = PackedCol_Make(80, 16, 16, 255);
 	Gfx_Draw2DGradient(0, 0, Window_Width, Window_Height, top, bottom);

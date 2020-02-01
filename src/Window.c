@@ -1002,8 +1002,6 @@ static cc_bool Window_GetPendingEvent(XEvent* e) {
 
 void Window_ProcessEvents(void) {
 	XEvent e;
-	cc_bool wasFocused;
-
 	while (Window_Exists) {
 		if (!Window_GetPendingEvent(&e)) break;
 

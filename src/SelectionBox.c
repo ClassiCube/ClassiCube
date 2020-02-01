@@ -74,14 +74,6 @@ static int SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) 
 	return 0;
 }
 
-static void SelectionBox_UpdateDist(Vec3 p, float x2, float y2, float z2, float* closest, float* furthest) {
-	float dx = x2 - p.X, dy = y2 - p.Y, dz = z2 - p.Z;
-	float dist = dx * dx + dy * dy + dz * dz;
-
-	if (dist < *closest)  *closest  = dist;
-	if (dist > *furthest) *furthest = dist;
-}
-
 static void SelectionBox_Intersect(struct SelectionBox* box, Vec3 P) {
 	float dx1 = (P.X - box->Min.X) * (P.X - box->Min.X), dx2 = (P.X - box->Max.X) * (P.X - box->Max.X);
 	float dy1 = (P.Y - box->Min.Y) * (P.Y - box->Min.Y), dy2 = (P.Y - box->Max.Y) * (P.Y - box->Max.Y);
