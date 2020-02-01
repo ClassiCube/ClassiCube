@@ -1329,34 +1329,27 @@ cc_result Updater_GetBuildTime(TimeMS* time) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
 cc_bool Updater_Clean(void) { return true; }
 
+const char* Updater_D3D9 = NULL;
 #if defined CC_BUILD_LINUX
 #if __x86_64__
-const char* Updater_D3D9 = "ClassiCube";
-const char* Updater_OGL  = "ClassiCube";
+const char* Updater_OGL = "ClassiCube";
 #elif __i386__
-const char* Updater_D3D9 = "ClassiCube.32";
-const char* Updater_OGL  = "ClassiCube.32";
+const char* Updater_OGL = "ClassiCube.32";
 #elif CC_BUILD_RPI
-const char* Updater_D3D9 = "ClassiCube.rpi";
-const char* Updater_OGL  = "ClassiCube.rpi";
+const char* Updater_OGL = "ClassiCube.rpi";
 #else
-const char* Updater_D3D9 = "ClassiCube.unknown";
-const char* Updater_OGL  = "ClassiCube.unknown";
+const char* Updater_OGL = "ClassiCube.unknown";
 #endif
 #elif defined CC_BUILD_OSX
 #if __x86_64__
-const char* Updater_D3D9 = "ClassiCube.64.osx";
-const char* Updater_OGL  = "ClassiCube.64.osx";
+const char* Updater_OGL = "ClassiCube.64.osx";
 #elif __i386__
-const char* Updater_D3D9 = "ClassiCube.osx";
-const char* Updater_OGL  = "ClassiCube.osx";
+const char* Updater_OGL = "ClassiCube.osx";
 #else
-const char* Updater_D3D9 = "ClassiCube.unknown";
-const char* Updater_OGL  = "ClassiCube.unknown";
+const char* Updater_OGL = "ClassiCube.unknown";
 #endif
 #else
-const char* Updater_D3D9 = "ClassiCube.unknown";
-const char* Updater_OGL  = "ClassiCube.unknown";
+const char* Updater_OGL = "ClassiCube.unknown";
 #endif
 
 cc_result Updater_Start(void) {

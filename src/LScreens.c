@@ -1513,17 +1513,21 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	LLine_Init(s_,   &s->seps[0],   320);
 	LLine_Init(s_,   &s->seps[1],   320);
 
-	LLabel_Init(s_,  &s->lblRel, "Latest release: Checking..");
-	LButton_Init(s_, &s->btnRel[0], 130, 35, "Direct3D 9");
-	LButton_Init(s_, &s->btnRel[1], 130, 35, "OpenGL");
-
+	LLabel_Init(s_,  &s->lblRel, "Latest release: Checking..");	
 	LLabel_Init(s_,  &s->lblDev, "Latest dev build: Checking..");
-	LButton_Init(s_, &s->btnDev[0], 130, 35, "Direct3D 9");
-	LButton_Init(s_, &s->btnDev[1], 130, 35, "OpenGL");
-
-	LLabel_Init(s_,  &s->lblInfo, "&eDirect3D 9 is recommended for Windows");
 	LLabel_Init(s_,  &s->lblStatus, "");
 	LButton_Init(s_, &s->btnBack, 80, 35, "Back");
+
+	if (Updater_D3D9) {
+		LButton_Init(s_, &s->btnRel[0], 130, 35, "Direct3D 9");
+		LButton_Init(s_, &s->btnDev[0], 130, 35, "Direct3D 9");
+		LLabel_Init(s_,  &s->lblInfo, "&eDirect3D 9 is recommended");
+	}
+
+	if (Updater_OGL) {
+		LButton_Init(s_, &s->btnRel[1], 130, 35, "OpenGL");
+		LButton_Init(s_, &s->btnDev[1], 130, 35, "OpenGL");
+	}
 
 	s->btnRel[0].OnClick = UpdatesScreen_RelD3D9;
 	s->btnRel[1].OnClick = UpdatesScreen_RelOpenGL;
