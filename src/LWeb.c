@@ -515,44 +515,6 @@ static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
-#if defined CC_BUILD_WIN
-#if _WIN64
-	const char* exe_d3d9 = "ClassiCube.64.exe";
-	const char* exe_ogl  = "ClassiCube.64-opengl.exe";
-#else
-	const char* exe_d3d9 = "ClassiCube.exe";
-	const char* exe_ogl  = "ClassiCube.opengl.exe";
-#endif
-#elif defined CC_BUILD_LINUX
-#if __x86_64__
-	const char* exe_d3d9 = "ClassiCube";
-	const char* exe_ogl  = "ClassiCube";
-#elif __i386__
-	const char* exe_d3d9 = "ClassiCube.32";
-	const char* exe_ogl  = "ClassiCube.32";
-#elif CC_BUILD_RPI
-	const char* exe_d3d9 = "ClassiCube.rpi";
-	const char* exe_ogl  = "ClassiCube.rpi";
-#else
-	const char* exe_d3d9 = "ClassiCube.unknown";
-	const char* exe_ogl  = "ClassiCube.unknown";
-#endif
-#elif defined CC_BUILD_OSX
-#if __x86_64__
-	const char* exe_d3d9 = "ClassiCube.64.osx";
-	const char* exe_ogl  = "ClassiCube.64.osx";
-#elif __i386__
-	const char* exe_d3d9 = "ClassiCube.osx";
-	const char* exe_ogl  = "ClassiCube.osx";
-#else
-	const char* exe_d3d9 = "ClassiCube.unknown";
-	const char* exe_ogl  = "ClassiCube.unknown";
-#endif
-#else
-	const char* exe_d3d9 = "ClassiCube.unknown";
-	const char* exe_ogl  = "ClassiCube.unknown";
-#endif
-
 	static char idBuffer[24];
 	static int idCounter;
 	String url; char urlBuffer[URL_MAX_SIZE];
@@ -565,8 +527,8 @@ void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
 	idCounter++;
 
 	String_Format2(&url, "http://cs.classicube.net/c_client/%c/%c",
-		release ? "release" : "latest",
-		d3d9    ? exe_d3d9  : exe_ogl);
+		release ? "release"    : "latest",
+		d3d9    ? Updater_D3D9 : Updater_OGL);
 	if (FetchUpdateTask.Base.working) return;
 
 	LWebTask_Reset(&FetchUpdateTask.Base);
