@@ -952,7 +952,7 @@ static void HandleMouseWheel(void* obj, float delta) {
 	if (!hotbar && Camera.Active->Zoom(delta)) return;
 	if (InputHandler_DoFovZoom(delta) || !Inventory.CanChangeSelected) return;
 
-	widget = ChatScreen_GetHotbar();
+	widget = HUDScreen_GetHotbar();
 	Elem_HandlesMouseScroll(widget, delta);
 	((struct Screen*)Gui_Chat)->dirty = true;
 }
