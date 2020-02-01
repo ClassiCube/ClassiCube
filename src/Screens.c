@@ -337,7 +337,7 @@ void HUDScreen_Show(void) {
 	struct HUDScreen* s = &HUDScreen_Instance;
 	s->VTABLE = &HUDScreen_VTABLE;
 	Gui_HUD   = s;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_STATUS);
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_HUD);
 }
 
 struct Widget* HUDScreen_GetHotbar(void) {
@@ -978,7 +978,7 @@ void ChatScreen_Show(void) {
 
 	s->VTABLE = &ChatScreen_VTABLE;
 	Gui_Chat  = s;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_HUD);
+	Gui_Replace((struct Screen*)s, GUI_PRIORITY_CHAT);
 }
 
 void ChatScreen_OpenInput(const String* text) {
@@ -1637,7 +1637,6 @@ static void TouchScreen_ContextRecreated(void* screen) {
 		ButtonWidget_SetConst(&s->btns[i], desc->text, &s->font);
 	}
 	TouchScreen_UpdateModeText(s);
-	/* TODO: Mode should display 'Place' or 'Delete' */
 	/* TODO: this is pretty nasty hacky. rewrite! */
 }
 

@@ -59,11 +59,12 @@ const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <sys/time.h>
 #include <utime.h>
 #include <signal.h>
+#include <stdio.h>
 
 #define Platform_DecodeString(dst, src, len) String_AppendUtf8(dst, (cc_uint8*)(src), len)
 #define Socket__Error() errno
 
-static const char *Platform_DefaultDirectory = NULL;
+static char* defaultDirectory;
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
@@ -1151,9 +1152,8 @@ cc_result Process_StartGame(const String* args) {
 		raw[i] = '\0';
 		argv[j++] = &raw[i + 1];
 	}
-	if (Platform_DefaultDirectory) {
-		argv[j++] = Platform_DefaultDirectory;
-	}
+
+	if (defaultDirectory) { argv[j++] = defaultDirectory; }
 	argv[j] = NULL;
 	return Process_RawStart(path, argv);
 }
@@ -1787,7 +1787,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) 
 
 	count = min(argc, GAME_MAX_CMDARGS);
 	for (i = 0; i < count; i++) {
-		if (strlen(argv[i]) > 1 && argv[i][0] == '-' && argv[i][1] == 'd') {
+		if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2]) {
 			--count;
 			continue;
 		}
@@ -1802,14 +1802,14 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	int i, len = 0;
 
 	for (i = 1; i < argc; ++i) {
-		if (strlen(argv[i]) > 2 && argv[i][0] == '-' && argv[i][1] == 'd') {
-			Platform_DefaultDirectory = argv[i];
+		if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2]) {
+			defaultDirectory = argv[i];
 			break;
 		}
 	}
 
-	if (Platform_DefaultDirectory) {
-		return chdir(Platform_DefaultDirectory + 2) == -1 ? errno : 0;
+	if (defaultDirectory) {
+		return chdir(defaultDirectory + 2) == -1 ? errno : 0;
 	}
 
 	cc_result res = Process_RawGetExePath(path, &len);
