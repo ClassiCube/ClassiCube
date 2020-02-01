@@ -75,21 +75,26 @@ static cc_bool AnyBlockTouches(void) {
 }
 
 void Input_AddTouch(long id, int x, int y) {
-	int i = Pointers_Count;
-	touches[i].id   = id;
-	touches[i].type = TOUCH_TYPE_ALL;
-	touches[i].begX = x;
-	touches[i].begY = y;
+	int i;
+	for (i = 0; i < INPUT_MAX_POINTERS; i++) {
+		if (touches[i].type) continue;
 
-	touches[i].start = DateTime_CurrentUTC_MS();
-	/* Also set last click time, otherwise quickly tapping */
-	/* sometimes triggers a 'delete' in InputHandler_PickBlocks, */
-	/* and then another 'delete' in CheckBlockTap. */
-	input_lastClick = touches[i].start;
+		touches[i].id   = id;
+		touches[i].type = TOUCH_TYPE_ALL;
+		touches[i].begX = x;
+		touches[i].begY = y;
 
-	Pointers_Count++;
-	Pointer_SetPosition(i, x, y);
-	Pointer_SetPressed(i, true);
+		touches[i].start = DateTime_CurrentUTC_MS();
+		/* Also set last click time, otherwise quickly tapping */
+		/* sometimes triggers a 'delete' in InputHandler_PickBlocks, */
+		/* and then another 'delete' in CheckBlockTap. */
+		input_lastClick  = touches[i].start;
+
+		if (i == Pointers_Count) Pointers_Count++;
+		Pointer_SetPosition(i, x, y);
+		Pointer_SetPressed(i, true);
+		return;
+	}
 }
 
 static cc_bool MovedFromBeg(int i, int x, int y) {
@@ -100,7 +105,7 @@ static cc_bool MovedFromBeg(int i, int x, int y) {
 void Input_UpdateTouch(long id, int x, int y) {
 	int i;
 	for (i = 0; i < Pointers_Count; i++) {
-		if (touches[i].id != id) continue;
+		if (touches[i].id != id || !touches[i].type) continue;
 		
 		if (Input_RawMode && (touches[i].type & TOUCH_TYPE_CAMERA)) {
 			/* If the pointer hasn't been locked to gui or block yet, moving a bit */
@@ -137,18 +142,18 @@ static void CheckBlockTap(int i) {
 void Input_RemoveTouch(long id, int x, int y) {
 	int i;
 	for (i = 0; i < Pointers_Count; i++) {
-		if (touches[i].id != id) continue;
+		if (touches[i].id != id || !touches[i].type) continue;
+
 		Pointer_SetPosition(i, x, y);
 		Pointer_SetPressed(i, false);
 		CheckBlockTap(i);
 
 		/* found the touch, remove it */
-		for (; i < Pointers_Count - 1; i++) {
-			touches[i]  = touches[i + 1];
-			Pointers[i] = Pointers[i + 1];
-		}
+		touches[i].type = 0;
+		Pointers[i].x   = -100000;
+		Pointers[i].y   = -100000;
 
-		Pointers_Count--;
+		if ((i + 1) == Pointers_Count) Pointers_Count--;
 		return;
 	}
 }
