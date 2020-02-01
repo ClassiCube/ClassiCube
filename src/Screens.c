@@ -377,6 +377,11 @@ static struct ChatScreen {
 
 static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 	int pad, y;
+
+	/* Determining chat Y requires us to know hotbar's position */
+	/* But HUD is lower priority, so it gets laid out AFTER chat */
+	/* Hence use this hack to resize HUD first */
+	HUDScreen_Layout(Gui_HUD);
 		
 	y = min(s->input.base.y, Gui_HUD->hotbar.y);
 	y -= s->input.base.yOffset; /* add some padding */
