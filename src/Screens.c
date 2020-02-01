@@ -331,7 +331,7 @@ static const struct ScreenVTABLE HUDScreen_VTABLE = {
 	HUDScreen_Render,      HUDScreen_BuildMesh,
 	HUDScreen_KeyDown,     HUDScreen_KeyUp,     Screen_FKeyPress, Screen_FText,
 	HUDscreen_PointerDown, Screen_FPointer,     Screen_FPointer,  Screen_FMouseScroll,
-	Screen_NullFunc,   HUDScreen_ContextLost, HUDScreen_ContextRecreated
+	HUDScreen_Layout,      HUDScreen_ContextLost, HUDScreen_ContextRecreated
 };
 void HUDScreen_Show(void) {
 	struct HUDScreen* s = &HUDScreen_Instance;
