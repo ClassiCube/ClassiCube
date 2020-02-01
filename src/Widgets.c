@@ -426,22 +426,24 @@ static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int i
 
 static void HotbarWidget_Reposition(void* widget) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
-	float scale = Game_GetHotbarScale();
+	float scale  = Game_GetHotbarScale();
+	float scaleX = scale * Display_DpiX;
+	float scaleY = scale * Display_DpiY;
 	int y;
 
-	w->width  = (int)(182 * scale);
-	w->height = Math_Floor(22.0f * scale);
+	w->width  = (int)(182 * scaleX);
+	w->height = Math_Floor(22.0f * scaleY);
 	Widget_CalcPosition(w);
 
-	w->selWidth    = (float)Math_Ceil(24.0f * scale);
-	w->elemSize    = 13.5f * scale;
-	w->slotXOffset = 11.1f * scale;
-	w->slotWidth   = 20.0f * scale;
+	w->selWidth    = (float)Math_Ceil(24.0f * scaleX);
+	w->elemSize    = 13.5f * scaleX;
+	w->slotXOffset = 11.1f * scaleX;
+	w->slotWidth   = 20.0f * scaleX;
 
 	Tex_SetRect(w->backTex, w->x,w->y, w->width,w->height);
 	Tex_SetUV(w->backTex,   0,0, 182/256.0f,22/256.0f);
 
-	y = w->y + (w->height - (int)(23.0f * scale));
+	y = w->y + (w->height - (int)(23.0f * scaleY));
 	Tex_SetRect(w->selTex, 0,y, (int)w->selWidth,w->height);
 	Tex_SetUV(w->selTex,   0,22/256.0f, 24/256.0f,44/256.0f);
 }

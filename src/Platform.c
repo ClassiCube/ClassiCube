@@ -1338,7 +1338,7 @@ const char* Updater_OGL = "ClassiCube.32";
 #elif CC_BUILD_RPI
 const char* Updater_OGL = "ClassiCube.rpi";
 #else
-const char* Updater_OGL = "ClassiCube.unknown";
+const char* Updater_OGL = NULL;
 #endif
 #elif defined CC_BUILD_OSX
 #if __x86_64__
@@ -1346,10 +1346,10 @@ const char* Updater_OGL = "ClassiCube.64.osx";
 #elif __i386__
 const char* Updater_OGL = "ClassiCube.osx";
 #else
-const char* Updater_OGL = "ClassiCube.unknown";
+const char* Updater_OGL = NULL;
 #endif
 #else
-const char* Updater_OGL = "ClassiCube.unknown";
+const char* Updater_OGL = NULL;
 #endif
 
 cc_result Updater_Start(void) {
