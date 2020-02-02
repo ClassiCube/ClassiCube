@@ -99,8 +99,6 @@ CC_API void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a);
 /* Sets whether z/depth of pixels is actually written to the depth buffer. */
 CC_API void Gfx_SetDepthWrite(cc_bool enabled);
 
-/* Creates a new dynamic vertex buffer, whose contents can be updated later. */
-CC_API GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices);
 /* Creates a new vertex buffer and fills out its contents. */
 CC_API GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count);
 /* Creates a new index buffer and fills out its contents. */
@@ -114,6 +112,8 @@ CC_API void Gfx_DeleteVb(GfxResourceID* vb);
 /* Deletes the given index buffer, then sets it to 0. */
 CC_API void Gfx_DeleteIb(GfxResourceID* ib);
 
+/* Creates a new dynamic vertex buffer, whose contents can be updated later. */
+CC_API GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices);
 #ifndef CC_BUILD_GL11
 /* Static and dynamic vertex buffers are drawn in the same way */
 #define Gfx_BindDynamicVb   Gfx_BindVb
@@ -123,6 +123,10 @@ CC_API void Gfx_DeleteIb(GfxResourceID* ib);
 void Gfx_BindDynamicVb(GfxResourceID vb);
 void Gfx_DeleteDynamicVb(GfxResourceID* vb);
 #endif
+/* Acquires temp memory for changing the contents of a dynamic vertex buffer. */
+CC_API void* Gfx_LockDynamicVb(GfxResourceID vb, int size);
+/* Submits the changed contents of a dynamic vertex buffer. */
+CC_API void  Gfx_UnlockDynamicVb(GfxResourceID vb, void* data, int size);
 
 /* Sets the format of the rendered vertices. */
 CC_API void Gfx_SetVertexFormat(VertexFormat fmt);
