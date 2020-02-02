@@ -164,19 +164,19 @@ static void RainParticle_Render(struct RainParticle* p, float t, VertexP3fT2fC4b
 }
 
 static void Rain_Render(float t) {
-	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
-	VertexP3fT2fC4b* ptr;
+	VertexP3fT2fC4b* data;
 	int i;
 	if (!rain_count) return;
 	
-	ptr = vertices;
+	data = Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, rain_count * 4);
 	for (i = 0; i < rain_count; i++) {
-		RainParticle_Render(&rain_Particles[i], t, ptr);
-		ptr += 4;
+		RainParticle_Render(&rain_Particles[i], t, data);
+		data += 4;
 	}
 
 	Gfx_BindTexture(Particles_TexId);
-	Gfx_UpdateDynamicVb_IndexedTris(Particles_VB, vertices, rain_count * 4);
+	Gfx_UnlockDynamicVb(Particles_VB);
+	Gfx_DrawVb_IndexedTris(rain_count * 4);
 }
 
 static void Rain_RemoveAt(int index) {
@@ -254,22 +254,23 @@ static void Terrain_Update1DCounts(void) {
 }
 
 static void Terrain_Render(float t) {
-	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
+	VertexP3fT2fC4b* data;
 	VertexP3fT2fC4b* ptr;
 	int offset = 0;
 	int i, index;
 	if (!terrain_count) return;
 
+	data = Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, terrain_count * 4);
 	Terrain_Update1DCounts();
 	for (i = 0; i < terrain_count; i++) {
 		index = Atlas1D_Index(terrain_particles[i].texLoc);
-		ptr   = &vertices[terrain_1DIndices[index]];
+		ptr   = data + terrain_1DIndices[index];
 
 		TerrainParticle_Render(&terrain_particles[i], t, ptr);
 		terrain_1DIndices[index] += 4;
 	}
 
-	Gfx_SetDynamicVbData(Particles_VB, vertices, terrain_count * 4);
+	Gfx_UnlockDynamicVb(Particles_VB);
 	for (i = 0; i < Atlas1D.Count; i++) {
 		int partCount = terrain_1DCount[i];
 		if (!partCount) continue;

@@ -124,9 +124,9 @@ void Gfx_BindDynamicVb(GfxResourceID vb);
 void Gfx_DeleteDynamicVb(GfxResourceID* vb);
 #endif
 /* Acquires temp memory for changing the contents of a dynamic vertex buffer. */
-CC_API void* Gfx_LockDynamicVb(GfxResourceID vb, int size);
-/* Submits the changed contents of a dynamic vertex buffer. */
-CC_API void  Gfx_UnlockDynamicVb(GfxResourceID vb, void* data, int size);
+CC_API void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int elems);
+/* Binds then submits the changed contents of a dynamic vertex buffer. */
+CC_API void  Gfx_UnlockDynamicVb(GfxResourceID vb);
 
 /* Sets the format of the rendered vertices. */
 CC_API void Gfx_SetVertexFormat(VertexFormat fmt);

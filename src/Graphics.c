@@ -781,18 +781,21 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	return D3D9_AllocVertexBuffer(fmt, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
 }
 
-void* Gfx_LockDynamicVb(GfxResourceID vb, int size) {
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int elems) {
 	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
-	void* dst     = NULL;
+	void* dst = NULL;
+	int size  = elems * gfx_strideSizes[fmt];
+
 	cc_result res = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, D3DLOCK_DISCARD);
 	if (res) Logger_Abort2(res, "Gfx_LockDynamicVb");
 	return dst;
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb, void* data, int size) {
+void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
 	cc_result res = IDirect3DVertexBuffer9_Unlock(buffer);
 	if (res) Logger_Abort2(res, "Gfx_UnlockDynamicVb");
+	Gfx_BindVb(vb); /* TODO: Inline this? */
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
@@ -1225,14 +1228,18 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	return id;
 }
 
-void* Gfx_LockDynamicVb(GfxResourceID vb, int size) {
-	return Mem_Alloc(size, "Gfx_LockDynamicVb");
+static void* lockedData;
+static int lockedSize;
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int elems) {
+	lockedSize = elems * gfx_strideSizes[fmt];
+	lockedData = Mem_Alloc(lockedSize, "Gfx_LockDynamicVb");
+	return lockedData;
 	/* TODO: Reuse buffer instead of always allocating */
 }
 
-void Gfx_UnlockDynamicVb(GfxResourceID vb, void* data, int size) {
+void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
-	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+	_glBufferSubData(GL_ARRAY_BUFFER, 0, lockedSize, lockedData);
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
@@ -1256,8 +1263,8 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
 	*vb = 0;
 }
 
-void* Gfx_LockDynamicVb(GfxResourceID vb, int size) { return (void*)vb; }
-void  Gfx_UnlockDynamicVb(GfxResourceID vb, void* data, int size) { }
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int elems) { return (void*)vb; }
+void  Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindDynamicVb(vb); }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Gfx_BindDynamicVb(vb);

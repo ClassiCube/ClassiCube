@@ -174,7 +174,7 @@ void Selections_Render(void) {
 	}
 
 	facesPtr = faceVertices; edgesPtr = edgeVertices;
-	for (i = 0; i < selections_count; i++) {	
+	for (i = 0; i < selections_count; i++) {
 		SelectionBox_Render(&selections_list[i], &facesPtr, &edgesPtr);
 	}
 
