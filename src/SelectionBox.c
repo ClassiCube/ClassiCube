@@ -189,14 +189,14 @@ void Selections_Render(void) {
 	count = selections_count * SELECTIONS_VERTICES;
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
 
-	data = Gfx_LockDynamicVb(selections_LineVB, VERTEX_FORMAT_P3FC4B, count);
+	data = (VertexP3fC4b*)Gfx_LockDynamicVb(selections_LineVB, VERTEX_FORMAT_P3FC4B, count);
 	for (i = 0; i < selections_count; i++, data += SELECTIONS_VERTICES) {
 		SelectionBox_RenderEdges(&selections_list[i], data);
 	}
 	Gfx_UnlockDynamicVb(selections_LineVB);
 	Gfx_DrawVb_Lines(count);
 
-	data = Gfx_LockDynamicVb(selections_VB, VERTEX_FORMAT_P3FC4B, count);
+	data = (VertexP3fC4b*)Gfx_LockDynamicVb(selections_VB, VERTEX_FORMAT_P3FC4B, count);
 	for (i = 0; i < selections_count; i++, data += SELECTIONS_VERTICES) {
 		SelectionBox_RenderFaces(&selections_list[i], data);
 	}

@@ -168,7 +168,7 @@ static void Rain_Render(float t) {
 	int i;
 	if (!rain_count) return;
 	
-	data = Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, rain_count * 4);
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, rain_count * 4);
 	for (i = 0; i < rain_count; i++) {
 		RainParticle_Render(&rain_Particles[i], t, data);
 		data += 4;
@@ -260,7 +260,7 @@ static void Terrain_Render(float t) {
 	int i, index;
 	if (!terrain_count) return;
 
-	data = Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, terrain_count * 4);
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, terrain_count * 4);
 	Terrain_Update1DCounts();
 	for (i = 0; i < terrain_count; i++) {
 		index = Atlas1D_Index(terrain_particles[i].texLoc);

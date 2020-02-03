@@ -376,6 +376,7 @@ static void ListScreen_Init(void* screen) {
 	s->numWidgets = Array_Elems(list_widgets);
 	s->wheelAcc   = 0.0f;
 	s->currentIndex = 0;
+	s->maxVertices  = LIST_MAX_VERTICES;
 
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
 		ButtonWidget_Make(&s->btns[i], 300, s->EntryClick,
@@ -414,7 +415,7 @@ static void ListScreen_ContextLost(void* screen) {
 
 static void ListScreen_ContextRecreated(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
-	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, LIST_MAX_VERTICES);
+	Screen_CreateVb(screen);
 	Menu_MakeTitleFont(&s->font);
 	ListScreen_RedrawEntries(s);
 
@@ -425,26 +426,18 @@ static void ListScreen_ContextRecreated(void* screen) {
 	ListScreen_UpdatePage(s);
 }
 
-static void ListScreen_BuildMesh(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	VertexP3fT2fC4b vertices[LIST_MAX_VERTICES];
-
-	Screen_BuildMesh(screen, vertices);
-	Gfx_SetDynamicVbData(s->vb, vertices, LIST_MAX_VERTICES);
-}
-
 static const struct ScreenVTABLE ListScreen_VTABLE = {
 	ListScreen_Init,    Screen_NullUpdate, ListScreen_Free,  
-	ListScreen_Render,  ListScreen_BuildMesh,
+	ListScreen_Render,  Screen_BuildMesh,
 	ListScreen_KeyDown, Screen_TInput,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,   Screen_TPointer,   Menu_PointerMove, ListScreen_MouseScroll,
 	Screen_Layout,      ListScreen_ContextLost,  ListScreen_ContextRecreated
 };
 void ListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
-	s->grabsInput   = true;
-	s->closable     = true;
-	s->VTABLE       = &ListScreen_VTABLE;
+	s->grabsInput = true;
+	s->closable   = true;
+	s->VTABLE     = &ListScreen_VTABLE;
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
@@ -627,7 +620,7 @@ static void OptionsGroupScreen_ContextLost(void* screen) {
 static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 	struct FontDesc titleFont;
-	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, OPTGROUPS_MAX_VERTICES);
+	Screen_CreateVb(screen);
 
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&s->textFont);
@@ -640,21 +633,14 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	Font_Free(&titleFont);
 }
 
-static void OptionsGroupScreen_BuildMesh(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	VertexP3fT2fC4b vertices[OPTGROUPS_MAX_VERTICES];
-
-	Screen_BuildMesh(screen, vertices);
-	Gfx_SetDynamicVbData(s->vb, vertices, OPTGROUPS_MAX_VERTICES);
-}
-
 static void OptionsGroupScreen_Init(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
-	s->widgets    = optGroups_widgets;
-	s->numWidgets = Array_Elems(optGroups_widgets);
-	s->selectedI  = -1;
+	s->widgets     = optGroups_widgets;
+	s->numWidgets  = Array_Elems(optGroups_widgets);
+	s->selectedI   = -1;
+	s->maxVertices = OPTGROUPS_MAX_VERTICES;
 
 	Menu_Buttons(s,  s->btns, 300, optsGroup_btns, 7);
 	TextWidget_Make(&s->desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
@@ -679,7 +665,7 @@ static int OptionsGroupScreen_PointerMove(void* screen, int id, int x, int y) {
 
 static const struct ScreenVTABLE OptionsGroupScreen_VTABLE = {
 	OptionsGroupScreen_Init, Screen_NullUpdate, OptionsGroupScreen_Free,
-	MenuScreen_Render2,      OptionsGroupScreen_BuildMesh,
+	MenuScreen_Render2,      Screen_BuildMesh,
 	Screen_InputDown,        Screen_TInput,     Screen_TKeyPress,               Screen_TText,
 	Menu_PointerDown,        Screen_TPointer,   OptionsGroupScreen_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,           OptionsGroupScreen_ContextLost, OptionsGroupScreen_ContextRecreated
@@ -1139,7 +1125,7 @@ static void ClassicGenScreen_Huge(void* a, void* b)   { ClassicGenScreen_Gen(512
 static void ClassicGenScreen_ContextRecreated(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
 	struct FontDesc titleFont;
-	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, CLASSICGEN_MAX_VERTICES);
+	Screen_CreateVb(screen);
 
 	Menu_MakeTitleFont(&titleFont);
 	ButtonWidget_SetConst(&s->btns[0], "Small",  &titleFont);
@@ -1149,22 +1135,15 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 	Font_Free(&titleFont);
 }
 
-static void ClassicGenScreen_BuildMesh(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	VertexP3fT2fC4b vertices[CLASSICGEN_MAX_VERTICES];
-
-	Screen_BuildMesh(screen, vertices);
-	Gfx_SetDynamicVbData(s->vb, vertices, CLASSICGEN_MAX_VERTICES);
-}
-
 static void ClassicGenScreen_Make(struct ClassicGenScreen* s, int i, int y, Widget_LeftClick onClick) {
 	ButtonWidget_Make(&s->btns[i], 400, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 }
 
 static void ClassicGenScreen_Init(void* screen) {
 	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
-	s->widgets    = classicgen_widgets;
-	s->numWidgets = Array_Elems(classicgen_widgets);
+	s->widgets     = classicgen_widgets;
+	s->numWidgets  = Array_Elems(classicgen_widgets);
+	s->maxVertices = CLASSICGEN_MAX_VERTICES;
 
 	ClassicGenScreen_Make(s, 0, -100, ClassicGenScreen_Small);
 	ClassicGenScreen_Make(s, 1,  -50, ClassicGenScreen_Medium);
@@ -1175,7 +1154,7 @@ static void ClassicGenScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE ClassicGenScreen_VTABLE = {
 	ClassicGenScreen_Init, Screen_NullUpdate,  Screen_NullFunc,
-	MenuScreen_Render2,    ClassicGenScreen_BuildMesh,
+	MenuScreen_Render2,    Screen_BuildMesh,
 	Screen_InputDown,      Screen_TInput,      Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,      Screen_TPointer,    Menu_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,         Screen_ContextLost, ClassicGenScreen_ContextRecreated
@@ -3139,7 +3118,7 @@ static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 static void UrlWarningOverlay_ContextRecreated(void* screen) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
 	struct FontDesc titleFont, textFont;
-	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, URLWARNING_MAX_VERTICES);
+	Screen_CreateVb(screen);
 
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&textFont);
@@ -3155,18 +3134,11 @@ static void UrlWarningOverlay_ContextRecreated(void* screen) {
 	Font_Free(&textFont);
 }
 
-static void UrlWarningOverlay_BuildMesh(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	VertexP3fT2fC4b vertices[URLWARNING_MAX_VERTICES];
-
-	Screen_BuildMesh(screen, vertices);
-	Gfx_SetDynamicVbData(s->vb, vertices, URLWARNING_MAX_VERTICES);
-}
-
 static void UrlWarningOverlay_Init(void* screen) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
-	s->widgets    = urlwarning_widgets;
-	s->numWidgets = Array_Elems(urlwarning_widgets);
+	s->widgets     = urlwarning_widgets;
+	s->numWidgets  = Array_Elems(urlwarning_widgets);
+	s->maxVertices = URLWARNING_MAX_VERTICES;
 
 	Overlay_MakeLabels(s->lbls);
 	Overlay_MakeMainButtons(s->btns);
@@ -3176,7 +3148,7 @@ static void UrlWarningOverlay_Init(void* screen) {
 
 static const struct ScreenVTABLE UrlWarningOverlay_VTABLE = {
 	UrlWarningOverlay_Init, Screen_NullUpdate,  Screen_NullFunc,  
-	MenuScreen_Render2,     UrlWarningOverlay_BuildMesh,
+	MenuScreen_Render2,     Screen_BuildMesh,
 	Screen_InputDown,       Screen_TInput,      Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,       Screen_TPointer,    Menu_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,          Screen_ContextLost, UrlWarningOverlay_ContextRecreated
@@ -3295,7 +3267,7 @@ static void TexPackOverlay_ContextLost(void* screen) {
 static void TexPackOverlay_ContextRecreated(void* screen) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
 	struct FontDesc titleFont;
-	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXPACK_MAX_VERTICES);
+	Screen_CreateVb(screen);
 
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&s->textFont);
@@ -3323,18 +3295,11 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 	Font_Free(&titleFont);
 }
 
-static void TexPackOverlay_BuildMesh(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	VertexP3fT2fC4b vertices[TEXPACK_MAX_VERTICES];
-
-	Screen_BuildMesh(screen, vertices);
-	Gfx_SetDynamicVbData(s->vb, vertices, TEXPACK_MAX_VERTICES);
-}
-
 static void TexPackOverlay_Init(void* screen) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	s->widgets    = texpack_widgets;
-	s->numWidgets = Array_Elems(texpack_widgets);
+	s->widgets     = texpack_widgets;
+	s->numWidgets  = Array_Elems(texpack_widgets);
+	s->maxVertices = TEXPACK_MAX_VERTICES;
 
 	s->contentLength = 0;
 	s->deny          = false;	
@@ -3349,7 +3314,7 @@ static void TexPackOverlay_Init(void* screen) {
 
 static const struct ScreenVTABLE TexPackOverlay_VTABLE = {
 	TexPackOverlay_Init, TexPackOverlay_Update, Screen_NullFunc,
-	MenuScreen_Render2,  TexPackOverlay_BuildMesh,
+	MenuScreen_Render2,  Screen_BuildMesh,
 	Screen_InputDown,    Screen_TInput,         Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,    Screen_TPointer,       Menu_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,       TexPackOverlay_ContextLost, TexPackOverlay_ContextRecreated
