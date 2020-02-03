@@ -13,19 +13,26 @@ struct SelectionBox {
 	float MinDist, MaxDist;
 };
 
-#define SelectionBox_Y(y) 0,y,0, 0,y,1, 1,y,1, 1,y,0,
-#define SelectionBox_Z(z) 0,0,z, 0,1,z, 1,1,z, 1,0,z,
-#define SelectionBox_X(x) x,0,0, x,1,0, x,1,1, x,0,1,
+#define X0 0
+#define X1 1
+#define Y0 0
+#define Y1 2
+#define Z0 0
+#define Z1 4
+
+#define SelectionBox_Y(y) X0|y |Z0, X0|y |Z1, X1|y |Z1, X1|y |Z0,
+#define SelectionBox_Z(z) X0|Y0|z , X0|Y1|z , X1|Y1|z , X1|Y0|z ,
+#define SelectionBox_X(x) x |Y0|Z0, x |Y1|Z0, x |Y1|Z1, x |Y0|Z1,
 
 static void SelectionBox_RenderFaces(struct SelectionBox* box, VertexP3fC4b** faceVertices) {
-	static const cc_uint8 faceIndices[72] = {
-		SelectionBox_Y(0) SelectionBox_Y(1) /* YMin, YMax */
-		SelectionBox_Z(0) SelectionBox_Z(1) /* ZMin, ZMax */
-		SelectionBox_X(0) SelectionBox_X(1) /* XMin, XMax */
+	static const cc_uint8 faceIndices[24] = {
+		SelectionBox_Y(Y0) SelectionBox_Y(Y1) /* YMin, YMax */
+		SelectionBox_Z(Z0) SelectionBox_Z(Z1) /* ZMin, ZMax */
+		SelectionBox_X(X0) SelectionBox_X(X1) /* XMin, XMax */
 	};
 	VertexP3fC4b* v;
 	PackedCol col;
-	int i;
+	int i, flags;
 
 	float offset = box->MinDist < 32.0f * 32.0f ? (1/32.0f) : (1/16.0f);
 	Vec3 coords[2];
@@ -34,25 +41,25 @@ static void SelectionBox_RenderFaces(struct SelectionBox* box, VertexP3fC4b** fa
 
 	col = box->Col;
 	v   = *faceVertices;
-	for (i = 0; i < Array_Elems(faceIndices); i += 3, v++) {
-		v->X   = coords[faceIndices[i + 0]].X;
-		v->Y   = coords[faceIndices[i + 1]].Y;
-		v->Z   = coords[faceIndices[i + 2]].Z;
+	for (i = 0; i < Array_Elems(faceIndices); i++, v++) {
+		flags  = faceIndices[i];
+		v->X   = coords[(flags     ) & 1].X;
+		v->Y   = coords[(flags >> 1) & 1].Y;
+		v->Z   = coords[(flags >> 2)    ].Z;
 		v->Col = col;
 	}
 	*faceVertices = v;
 }
 
 static void SelectionBox_RenderEdges(struct SelectionBox* box, VertexP3fC4b** edgeVertices) {
-	static const cc_uint8 edgeIndices[72] = {
-		0,0,0, 1,0,0,  1,0,0, 1,0,1,  1,0,1, 0,0,1,  0,0,1, 0,0,0, /* YMin */
-		0,1,0, 1,1,0,  1,1,0, 1,1,1,  1,1,1, 0,1,1,  0,1,1, 0,1,0, /* YMax */
-		0,0,0, 0,1,0,  1,0,0, 1,1,0,  1,0,1, 1,1,1,  0,0,1, 0,1,1, /* X/Z  */
+	static const cc_uint8 edgeIndices[24] = {
+		X0|Y0|Z0, X1|Y0|Z0,  X1|Y0|Z0, X1|Y0|Z1,  X1|Y0|Z1, X0|Y0|Z1,  X0|Y0|Z1, X0|Y0|Z0, /* YMin */
+		X0|Y1|Z0, X1|Y1|Z0,  X1|Y1|Z0, X1|Y1|Z1,  X1|Y1|Z1, X0|Y1|Z1,  X0|Y1|Z1, X0|Y1|Z0, /* YMax */
+		X0|Y0|Z0, X0|Y1|Z0,  X1|Y0|Z0, X1|Y1|Z0,  X1|Y0|Z1, X1|Y1|Z1,  X0|Y0|Z1, X0|Y1|Z1, /* X/Z  */
 	};
-
 	VertexP3fC4b* v;
 	PackedCol col;
-	int i;
+	int i, flags;
 
 	float offset = box->MinDist < 32.0f * 32.0f ? (1/32.0f) : (1/16.0f);
 	Vec3 coords[2];
@@ -63,10 +70,12 @@ static void SelectionBox_RenderEdges(struct SelectionBox* box, VertexP3fC4b** ed
 	/* invert R/G/B for surrounding line */
 	col = (col & PACKEDCOL_A_MASK) | (~col & PACKEDCOL_RGB_MASK);
 	v   = *edgeVertices;
-	for (i = 0; i < Array_Elems(edgeIndices); i += 3, v++) {
-		v->X   = coords[edgeIndices[i + 0]].X;
-		v->Y   = coords[edgeIndices[i + 1]].Y;
-		v->Z   = coords[edgeIndices[i + 2]].Z;
+
+	for (i = 0; i < Array_Elems(edgeIndices); i++, v++) {
+		flags  = edgeIndices[i];
+		v->X   = coords[(flags     ) & 1].X;
+		v->Y   = coords[(flags >> 1) & 1].Y;
+		v->Z   = coords[(flags >> 2)    ].Z;
 		v->Col = col;
 	}
 	*edgeVertices = v;
