@@ -24,13 +24,12 @@ struct SelectionBox {
 #define SelectionBox_Z(z) X0|Y0|z , X0|Y1|z , X1|Y1|z , X1|Y0|z ,
 #define SelectionBox_X(x) x |Y0|Z0, x |Y1|Z0, x |Y1|Z1, x |Y0|Z1,
 
-static void SelectionBox_RenderFaces(struct SelectionBox* box, VertexP3fC4b** faceVertices) {
+static void SelectionBox_RenderFaces(struct SelectionBox* box, VertexP3fC4b* v) {
 	static const cc_uint8 faceIndices[24] = {
 		SelectionBox_Y(Y0) SelectionBox_Y(Y1) /* YMin, YMax */
 		SelectionBox_Z(Z0) SelectionBox_Z(Z1) /* ZMin, ZMax */
 		SelectionBox_X(X0) SelectionBox_X(X1) /* XMin, XMax */
 	};
-	VertexP3fC4b* v;
 	PackedCol col;
 	int i, flags;
 
@@ -40,7 +39,6 @@ static void SelectionBox_RenderFaces(struct SelectionBox* box, VertexP3fC4b** fa
 	Vec3_Add1(&coords[1], &box->Max,  offset);
 
 	col = box->Col;
-	v   = *faceVertices;
 	for (i = 0; i < Array_Elems(faceIndices); i++, v++) {
 		flags  = faceIndices[i];
 		v->X   = coords[(flags     ) & 1].X;
@@ -48,16 +46,14 @@ static void SelectionBox_RenderFaces(struct SelectionBox* box, VertexP3fC4b** fa
 		v->Z   = coords[(flags >> 2)    ].Z;
 		v->Col = col;
 	}
-	*faceVertices = v;
 }
 
-static void SelectionBox_RenderEdges(struct SelectionBox* box, VertexP3fC4b** edgeVertices) {
+static void SelectionBox_RenderEdges(struct SelectionBox* box, VertexP3fC4b* v) {
 	static const cc_uint8 edgeIndices[24] = {
 		X0|Y0|Z0, X1|Y0|Z0,  X1|Y0|Z0, X1|Y0|Z1,  X1|Y0|Z1, X0|Y0|Z1,  X0|Y0|Z1, X0|Y0|Z0, /* YMin */
 		X0|Y1|Z0, X1|Y1|Z0,  X1|Y1|Z0, X1|Y1|Z1,  X1|Y1|Z1, X0|Y1|Z1,  X0|Y1|Z1, X0|Y1|Z0, /* YMax */
 		X0|Y0|Z0, X0|Y1|Z0,  X1|Y0|Z0, X1|Y1|Z0,  X1|Y0|Z1, X1|Y1|Z1,  X0|Y0|Z1, X0|Y1|Z1, /* X/Z  */
 	};
-	VertexP3fC4b* v;
 	PackedCol col;
 	int i, flags;
 
@@ -69,7 +65,6 @@ static void SelectionBox_RenderEdges(struct SelectionBox* box, VertexP3fC4b** ed
 	col = box->Col;
 	/* invert R/G/B for surrounding line */
 	col = (col & PACKEDCOL_A_MASK) | (~col & PACKEDCOL_RGB_MASK);
-	v   = *edgeVertices;
 
 	for (i = 0; i < Array_Elems(edgeIndices); i++, v++) {
 		flags  = edgeIndices[i];
@@ -78,7 +73,6 @@ static void SelectionBox_RenderEdges(struct SelectionBox* box, VertexP3fC4b** ed
 		v->Z   = coords[(flags >> 2)    ].Z;
 		v->Col = col;
 	}
-	*edgeVertices = v;
 }
 
 static int SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) {
@@ -91,7 +85,7 @@ static int SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) 
 
 	/* Reversed comparison order result, because we need to render back to front for alpha blending */
 	if (aDist < bDist) return 1;
-	if (aDist > bDist) return -1;	
+	if (aDist > bDist) return -1;
 	return 0;
 }
 
@@ -196,15 +190,15 @@ void Selections_Render(void) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
 
 	data = Gfx_LockDynamicVb(selections_LineVB, VERTEX_FORMAT_P3FC4B, count);
-	for (i = 0; i < selections_count; i++) {
-		SelectionBox_RenderEdges(&selections_list[i], &data);
+	for (i = 0; i < selections_count; i++, data += SELECTIONS_VERTICES) {
+		SelectionBox_RenderEdges(&selections_list[i], data);
 	}
 	Gfx_UnlockDynamicVb(selections_LineVB);
 	Gfx_DrawVb_Lines(count);
 
 	data = Gfx_LockDynamicVb(selections_VB, VERTEX_FORMAT_P3FC4B, count);
-	for (i = 0; i < selections_count; i++) {
-		SelectionBox_RenderFaces(&selections_list[i], &data);
+	for (i = 0; i < selections_count; i++, data += SELECTIONS_VERTICES) {
+		SelectionBox_RenderFaces(&selections_list[i], data);
 	}
 	Gfx_UnlockDynamicVb(selections_VB);
 

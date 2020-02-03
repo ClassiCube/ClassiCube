@@ -1232,7 +1232,7 @@ static void* lockedData;
 static int lockedSize;
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int elems) {
 	lockedSize = elems * gfx_strideSizes[fmt];
-	lockedData = Mem_Alloc(lockedSize, "Gfx_LockDynamicVb");
+	lockedData = Mem_Alloc(elems, gfx_strideSizes[fmt], "Gfx_LockDynamicVb");
 	return lockedData;
 	/* TODO: Reuse buffer instead of always allocating */
 }
