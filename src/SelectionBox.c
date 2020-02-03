@@ -17,18 +17,12 @@ struct SelectionBox {
 #define SelectionBox_Z(z) 0,0,z, 0,1,z, 1,1,z, 1,0,z,
 #define SelectionBox_X(x) x,0,0, x,1,0, x,1,1, x,0,1,
 
-static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** faceVertices, VertexP3fC4b** edgeVertices) {
+static void SelectionBox_RenderFaces(struct SelectionBox* box, VertexP3fC4b** faceVertices) {
 	static const cc_uint8 faceIndices[72] = {
 		SelectionBox_Y(0) SelectionBox_Y(1) /* YMin, YMax */
 		SelectionBox_Z(0) SelectionBox_Z(1) /* ZMin, ZMax */
 		SelectionBox_X(0) SelectionBox_X(1) /* XMin, XMax */
 	};
-	static const cc_uint8 edgeIndices[72] = {
-		0,0,0, 1,0,0,  1,0,0, 1,0,1,  1,0,1, 0,0,1,  0,0,1, 0,0,0, /* YMin */
-		0,1,0, 1,1,0,  1,1,0, 1,1,1,  1,1,1, 0,1,1,  0,1,1, 0,1,0, /* YMax */
-		0,0,0, 0,1,0,  1,0,0, 1,1,0,  1,0,1, 1,1,1,  0,0,1, 0,1,1, /* X/Z  */
-	};
-
 	VertexP3fC4b* v;
 	PackedCol col;
 	int i;
@@ -47,7 +41,25 @@ static void SelectionBox_Render(struct SelectionBox* box, VertexP3fC4b** faceVer
 		v->Col = col;
 	}
 	*faceVertices = v;
+}
 
+static void SelectionBox_RenderEdges(struct SelectionBox* box, VertexP3fC4b** edgeVertices) {
+	static const cc_uint8 edgeIndices[72] = {
+		0,0,0, 1,0,0,  1,0,0, 1,0,1,  1,0,1, 0,0,1,  0,0,1, 0,0,0, /* YMin */
+		0,1,0, 1,1,0,  1,1,0, 1,1,1,  1,1,1, 0,1,1,  0,1,1, 0,1,0, /* YMax */
+		0,0,0, 0,1,0,  1,0,0, 1,1,0,  1,0,1, 1,1,1,  0,0,1, 0,1,1, /* X/Z  */
+	};
+
+	VertexP3fC4b* v;
+	PackedCol col;
+	int i;
+
+	float offset = box->MinDist < 32.0f * 32.0f ? (1/32.0f) : (1/16.0f);
+	Vec3 coords[2];
+	Vec3_Add1(&coords[0], &box->Min, -offset);
+	Vec3_Add1(&coords[1], &box->Max,  offset);
+
+	col = box->Col;
 	/* invert R/G/B for surrounding line */
 	col = (col & PACKEDCOL_A_MASK) | (~col & PACKEDCOL_RGB_MASK);
 	v   = *edgeVertices;
@@ -154,10 +166,9 @@ static void Selections_QuickSort(int left, int right) {
 }
 
 void Selections_Render(void) {
-	VertexP3fC4b faceVertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* facesPtr;
-	VertexP3fC4b edgeVertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* edgesPtr;
+	VertexP3fC4b* data;
 	Vec3 cameraPos;
-	int i;
+	int i, count;
 	if (!selections_count || Gfx.LostContext) return;
 
 	/* TODO: Proper selection box sorting. But this is very difficult because
@@ -172,20 +183,25 @@ void Selections_Render(void) {
 		selections_used = true;
 		Selections_ContextRecreated(NULL);
 	}
-
-	facesPtr = faceVertices; edgesPtr = edgeVertices;
-	for (i = 0; i < selections_count; i++) {
-		SelectionBox_Render(&selections_list[i], &facesPtr, &edgesPtr);
-	}
-
+	count = selections_count * SELECTIONS_VERTICES;
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
-	Gfx_UpdateDynamicVb_Lines(selections_LineVB, edgeVertices,
-		selections_count * SELECTIONS_VERTICES);
+
+	data = Gfx_LockDynamicVb(selections_LineVB, VERTEX_FORMAT_P3FC4B, count);
+	for (i = 0; i < selections_count; i++) {
+		SelectionBox_RenderEdges(&selections_list[i], &data);
+	}
+	Gfx_UnlockDynamicVb(selections_LineVB);
+	Gfx_DrawVb_Lines(count);
+
+	data = Gfx_LockDynamicVb(selections_VB, VERTEX_FORMAT_P3FC4B, count);
+	for (i = 0; i < selections_count; i++) {
+		SelectionBox_RenderFaces(&selections_list[i], &data);
+	}
+	Gfx_UnlockDynamicVb(selections_VB);
 
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaBlending(true);
-	Gfx_UpdateDynamicVb_IndexedTris(selections_VB, faceVertices,
-		selections_count * SELECTIONS_VERTICES);
+	Gfx_DrawVb_IndexedTris(count);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
 }
