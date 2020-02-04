@@ -74,6 +74,12 @@ static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width,
 	((struct Screen*)s)->widgets[i] = (struct Widget*)input;
 }
 
+static void Menu_MakeInput(struct MenuInputWidget* input, int width, const String* text, struct MenuInputDesc* desc, int horAnchor, int verAnchor, int x, int y) {
+	MenuInputWidget_Create(input, width, 30, text, desc);
+	Widget_SetLocation(input, horAnchor, verAnchor, x, y);
+	input->base.showCaret = true;
+}
+
 static void Menu_Back(void* s, int i, struct ButtonWidget* btn, Widget_LeftClick onClick) {
 	int width = Gui_ClassicMenu ? 400 : 200;
 	Menu_Button(s, i, btn, width, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
@@ -690,10 +696,18 @@ static struct EditHotkeyScreen {
 	struct FontDesc titleFont, textFont;
 	struct MenuInputWidget input;
 	struct ButtonWidget btns[5], cancel;
-} EditHotkeyScreen_Instance;
+} EditHotkeyScreen;
 
-static void EditHotkeyScreen_Make(struct EditHotkeyScreen* s, int i, int x, int y, Widget_LeftClick onClick) {
-	Menu_Button(s, i, &s->btns[i], 300, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
+static struct Widget* edithotkey_widgets[7] = {
+	(struct Widget*)&EditHotkeyScreen.btns[0], (struct Widget*)&EditHotkeyScreen.btns[1],
+	(struct Widget*)&EditHotkeyScreen.btns[2], (struct Widget*)&EditHotkeyScreen.btns[3],
+	(struct Widget*)&EditHotkeyScreen.btns[4], (struct Widget*)&EditHotkeyScreen.input,
+	(struct Widget*)&EditHotkeyScreen.cancel
+};
+#define EDITHOTKEY_MAX_VERTICES (MENUINPUTWIDGET_MAX + 6 * BUTTONWIDGET_MAX)
+
+static void EditHotkeyScreen_Make(struct ButtonWidget* btn, int x, int y, Widget_LeftClick onClick) {
+	ButtonWidget_Make(btn, 300, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
 static void HotkeyListScreen_MakeFlags(int flags, String* str);
@@ -797,7 +811,7 @@ static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 static void EditHotkeyScreen_Render(void* screen, double delta) {
 	PackedCol grey = PackedCol_Make(150, 150, 150, 255);
 	int x, y;
-	MenuScreen_Render(screen, delta);
+	MenuScreen_Render2(screen, delta);
 
 	x = Window_Width / 2; y = Window_Height / 2;
 	Gfx_Draw2DFlat(x - 250, y - 65, 500, 2, grey);
@@ -857,6 +871,8 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 
 	Menu_MakeTitleFont(&s->titleFont);
 	Menu_MakeBodyFont(&s->textFont);
+	Screen_CreateVb(screen);
+
 	EditHotkeyScreen_UpdateBaseKey(s);
 	EditHotkeyScreen_UpdateModifiers(s);
 	EditHotkeyScreen_UpdateLeaveOpen(s);
@@ -867,45 +883,48 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	ButtonWidget_SetConst(&s->cancel, "Cancel", &s->titleFont);
 }
 
-static void EditHotkeyScreen_BuildMesh(void* screen) { }
+static void EditHotkeyScreen_Update(void* screen, double delta) {
+	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
+	s->input.base.caretAccumulator += delta;
+}
 
 static void EditHotkeyScreen_Init(void* screen) {
-	static struct Widget* widgets[7];
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	struct MenuInputDesc desc;
 	String text;
 
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
-	s->selectedI  = -1;
+	s->widgets     = edithotkey_widgets;
+	s->numWidgets  = Array_Elems(edithotkey_widgets);
+	s->selectedI   = -1;
+	s->maxVertices = EDITHOTKEY_MAX_VERTICES;
 	MenuInput_String(desc);
 
-	EditHotkeyScreen_Make(s, 0,    0, -150, EditHotkeyScreen_BaseKey);
-	EditHotkeyScreen_Make(s, 1,    0, -100, EditHotkeyScreen_Modifiers);
-	EditHotkeyScreen_Make(s, 2, -100,   10, EditHotkeyScreen_LeaveOpen);
-	EditHotkeyScreen_Make(s, 3,    0,   80, EditHotkeyScreen_SaveChanges);
-	EditHotkeyScreen_Make(s, 4,    0,  130, EditHotkeyScreen_RemoveHotkey);
+	EditHotkeyScreen_Make(&s->btns[0],    0, -150, EditHotkeyScreen_BaseKey);
+	EditHotkeyScreen_Make(&s->btns[1],    0, -100, EditHotkeyScreen_Modifiers);
+	EditHotkeyScreen_Make(&s->btns[2], -100,   10, EditHotkeyScreen_LeaveOpen);
+	EditHotkeyScreen_Make(&s->btns[3],    0,   80, EditHotkeyScreen_SaveChanges);
+	EditHotkeyScreen_Make(&s->btns[4],    0,  130, EditHotkeyScreen_RemoveHotkey);
 
 	if (s->origHotkey.Trigger) {
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->origHotkey.TextIndex);
 	} else { text = String_Empty; }
 
-	Menu_Input(s, 6, &s->input, 500, &text, &desc,
+	Menu_MakeInput(&s->input, 500, &text, &desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
-	Menu_Back(s,  5, &s->cancel, Menu_SwitchHotkeys);
+	Menu_MakeBack( &s->cancel, Menu_SwitchHotkeys);
 	Window_OpenKeyboard();
 	Window_SetKeyboardText(&text);
 }
 
 static const struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
-	EditHotkeyScreen_Init,    Screen_NullUpdate, Menu_CloseKeyboard,        
-	EditHotkeyScreen_Render,  EditHotkeyScreen_BuildMesh,
+	EditHotkeyScreen_Init,    EditHotkeyScreen_Update, Menu_CloseKeyboard,
+	EditHotkeyScreen_Render,  Screen_BuildMesh,
 	EditHotkeyScreen_KeyDown, Screen_TInput,     EditHotkeyScreen_KeyPress, EditHotkeyScreen_TextChanged,
 	Menu_PointerDown,         Screen_TPointer,   Menu_PointerMove,          Screen_TMouseScroll,
 	Screen_Layout,            EditHotkeyScreen_ContextLost, EditHotkeyScreen_ContextRecreated
 };
 void EditHotkeyScreen_Show(struct HotkeyData original) {
-	struct EditHotkeyScreen* s = &EditHotkeyScreen_Instance;
+	struct EditHotkeyScreen* s = &EditHotkeyScreen;
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &EditHotkeyScreen_VTABLE;
@@ -994,7 +1013,7 @@ static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int y, int def)
 	String_InitArray(tmp, tmpBuffer);
 	desc.VTABLE->GetDefault(&desc, &tmp);
 
-	Menu_Input(s, i, &s->inputs[i], 200, &tmp, &desc,
+	Menu_MakeInput(&s->inputs[i], 200, &tmp, &desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 	s->inputs[i].base.showCaret = false;
 
@@ -1354,11 +1373,6 @@ static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {
 static void SaveLevelScreen_Main(void* a, void* b) { SaveLevelScreen_Save(a, b, ".cw"); }
 static void SaveLevelScreen_Alt(void* a, void* b)  { SaveLevelScreen_Save(a, b, ".schematic"); }
 
-static void SaveLevelScreen_Update(void* screen, double delta) {
-	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	s->input.base.caretAccumulator += delta;
-}
-
 static void SaveLevelScreen_Render(void* screen, double delta) {
 	PackedCol grey = PackedCol_Make(150, 150, 150, 255);
 	int x, y;
@@ -1418,6 +1432,11 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 	ButtonWidget_SetConst(&s->cancel, "Cancel",                        &s->titleFont);
 }
 
+static void SaveLevelScreen_Update(void* screen, double delta) {
+	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
+	s->input.base.caretAccumulator += delta;
+}
+
 static void SaveLevelScreen_Init(void* screen) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	struct MenuInputDesc desc;
@@ -1441,7 +1460,7 @@ static void SaveLevelScreen_Init(void* screen) {
 #endif
 
 	Menu_MakeBack(    &s->cancel, Menu_SwitchPause);
-	Menu_Input(s,  4, &s->input, 500, &String_Empty, &desc,
+	Menu_MakeInput(   &s->input, 500, &String_Empty, &desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  -30);
 #ifdef CC_BUILD_WEB
 	TextWidget_Make(  &s->desc,
