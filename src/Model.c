@@ -379,7 +379,7 @@ static void Models_ContextRecreated(void* obj) {
 	Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, Models.MaxVertices);
 }
 
-static void Model_Make(struct Model* model) {
+static void MakeModel(struct Model* model) {
 	struct Model* active = Models.Active;
 	Models.Active = model;
 	model->MakeParts();
@@ -395,7 +395,7 @@ struct Model* Model_Get(const String* name) {
 	for (model = models_head; model; model = model->next) {
 		if (!String_CaselessEqualsConst(name, model->name)) continue;
 
-		if (!model->initalised) Model_Make(model);
+		if (!model->initalised) MakeModel(model);
 		return model;
 	}
 	return NULL;
@@ -1663,7 +1663,7 @@ static void Model_RegisterDefaultModels(void) {
 	Model_RegisterTexture(&zombie_tex);
 
 	Model_Register(HumanoidModel_GetInstance());
-	Model_Make(&human_model);
+	MakeModel(&human_model);
 	Models.Human = &human_model;
 
 	Model_Register(ChickenModel_GetInstance());

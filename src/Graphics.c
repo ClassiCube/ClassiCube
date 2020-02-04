@@ -83,11 +83,6 @@ static void Gfx_RecreateContext(void) {
 }
 
 
-void Gfx_UpdateDynamicVb_Lines(GfxResourceID vb, void* vertices, int vCount) {
-	Gfx_SetDynamicVbData(vb, vertices, vCount);
-	Gfx_DrawVb_Lines(vCount);
-}
-
 void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount) {
 	Gfx_SetDynamicVbData(vb, vertices, vCount);
 	Gfx_DrawVb_IndexedTris(vCount);

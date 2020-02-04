@@ -239,11 +239,11 @@ static struct Widget* list_widgets[10] = {
 	(struct Widget*)&ListScreen.right,   (struct Widget*)&ListScreen.title,   
 	(struct Widget*)&ListScreen.page,    (struct Widget*)&ListScreen.done
 };
-#define LIST_MAX_VERTICES (8 * BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
-#define LIST_SCREEN_EMPTY "-----"
+#define LISTSCREEN_MAX_VERTICES (8 * BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
+#define LISTSCREEN_EMPTY "-----"
 
 static STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
-	static const String str = String_FromConst(LIST_SCREEN_EMPTY);
+	static const String str = String_FromConst(LISTSCREEN_EMPTY);
 
 	if (index >= 0 && index < s->entries.count) {
 		return StringsBuffer_UNSAFE_Get(&s->entries, index);
@@ -376,7 +376,7 @@ static void ListScreen_Init(void* screen) {
 	s->numWidgets = Array_Elems(list_widgets);
 	s->wheelAcc   = 0.0f;
 	s->currentIndex = 0;
-	s->maxVertices  = LIST_MAX_VERTICES;
+	s->maxVertices  = LISTSCREEN_MAX_VERTICES;
 
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
 		ButtonWidget_Make(&s->btns[i], 300, s->EntryClick,
@@ -1177,7 +1177,14 @@ static struct SaveLevelScreen {
 	struct ButtonWidget save, alt, cancel;
 	struct MenuInputWidget input;
 	struct TextWidget mcEdit, desc;
-} SaveLevelScreen_Instance;
+} SaveLevelScreen;
+
+static struct Widget* save_widgets[6] = {
+	(struct Widget*)&SaveLevelScreen.save,   (struct Widget*)&SaveLevelScreen.alt,
+	(struct Widget*)&SaveLevelScreen.mcEdit, (struct Widget*)&SaveLevelScreen.cancel,
+	(struct Widget*)&SaveLevelScreen.input,  (struct Widget*)&SaveLevelScreen.desc,
+};
+#define SAVESCREEN_MAX_VERTICES (3 * BUTTONWIDGET_MAX + MENUINPUTWIDGET_MAX + 2 * TEXTWIDGET_MAX)
 
 static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 	ButtonWidget_SetConst(&s->save, 
@@ -1334,10 +1341,15 @@ static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {
 static void SaveLevelScreen_Main(void* a, void* b) { SaveLevelScreen_Save(a, b, ".cw"); }
 static void SaveLevelScreen_Alt(void* a, void* b)  { SaveLevelScreen_Save(a, b, ".schematic"); }
 
+static void SaveLevelScreen_Update(void* screen, double delta) {
+	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
+	s->input.base.caretAccumulator += delta;
+}
+
 static void SaveLevelScreen_Render(void* screen, double delta) {
 	PackedCol grey = PackedCol_Make(150, 150, 150, 255);
 	int x, y;
-	MenuScreen_Render(screen, delta);
+	MenuScreen_Render2(screen, delta);
 
 #ifndef CC_BUILD_WEB
 	x = Window_Width / 2; y = Window_Height / 2;
@@ -1381,6 +1393,8 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	Menu_MakeTitleFont(&s->titleFont);
 	Menu_MakeBodyFont(&s->textFont);
+
+	Screen_CreateVb(screen);
 	SaveLevelScreen_UpdateSave(s);
 	SaveLevelScreen_UpdateAlt(s);
 
@@ -1391,51 +1405,50 @@ static void SaveLevelScreen_ContextRecreated(void* screen) {
 	ButtonWidget_SetConst(&s->cancel, "Cancel",                        &s->titleFont);
 }
 
-static void SaveLevelScreen_BuildMesh(void* screen) { }
-
 static void SaveLevelScreen_Init(void* screen) {
-	static struct Widget* widgets[6];
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	struct MenuInputDesc desc;
 	
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
+	s->widgets     = save_widgets;
+	s->numWidgets  = Array_Elems(save_widgets);
+	s->maxVertices = SAVESCREEN_MAX_VERTICES;
 	MenuInput_Path(desc);
 	
-	Menu_Button(s, 0, &s->save, 300, SaveLevelScreen_Main,
+	ButtonWidget_Make(&s->save, 300, SaveLevelScreen_Main,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  20);
 #ifdef CC_BUILD_WEB
-	Menu_Button(s, 1, &s->alt,  300, SaveLevelScreen_Alt,
+	ButtonWidget_Make(&s->alt,  300, SaveLevelScreen_Alt,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  70);
+	s->widgets[2] = NULL; /* null mcEdit widget */
 #else
-	Menu_Button(s, 1, &s->alt,  200, SaveLevelScreen_Alt,
+	ButtonWidget_Make(&s->alt,  200, SaveLevelScreen_Alt,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -150, 120);
-	Menu_Label(s,  2, &s->mcEdit,
+	TextWidget_Make(  &s->mcEdit,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 120);
 #endif
 
-	Menu_Back(s,   3, &s->cancel, Menu_SwitchPause);
+	Menu_MakeBack(    &s->cancel, Menu_SwitchPause);
 	Menu_Input(s,  4, &s->input, 500, &String_Empty, &desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  -30);
 #ifdef CC_BUILD_WEB
-	Menu_Label(s,  5, &s->desc,
+	TextWidget_Make(  &s->desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  115);
 #else
-	Menu_Label(s,  5, &s->desc,
+	TextWidget_Make(  &s->desc,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  65);
 #endif
 	Window_OpenKeyboard();
 }
 
 static const struct ScreenVTABLE SaveLevelScreen_VTABLE = {
-	SaveLevelScreen_Init,    Screen_NullUpdate, Menu_CloseKeyboard,       
-	SaveLevelScreen_Render,  SaveLevelScreen_BuildMesh,
-	SaveLevelScreen_KeyDown, Screen_TInput,     SaveLevelScreen_KeyPress, SaveLevelScreen_TextChanged,
-	Menu_PointerDown,        Screen_TPointer,   Menu_PointerMove,         Screen_TMouseScroll,
+	SaveLevelScreen_Init,    SaveLevelScreen_Update, Menu_CloseKeyboard,
+	SaveLevelScreen_Render,  Screen_BuildMesh,
+	SaveLevelScreen_KeyDown, Screen_TInput,    SaveLevelScreen_KeyPress, SaveLevelScreen_TextChanged,
+	Menu_PointerDown,        Screen_TPointer,  Menu_PointerMove,         Screen_TMouseScroll,
 	Screen_Layout,           SaveLevelScreen_ContextLost, SaveLevelScreen_ContextRecreated
 };
 void SaveLevelScreen_Show(void) {
-	struct SaveLevelScreen* s = &SaveLevelScreen_Instance;
+	struct SaveLevelScreen* s = &SaveLevelScreen;
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE = &SaveLevelScreen_VTABLE;
@@ -1494,7 +1507,7 @@ static void FontListScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	String fontName = ListScreen_UNSAFE_GetCur(s, widget);
 
-	if (String_CaselessEqualsConst(&fontName, LIST_SCREEN_EMPTY)) return;
+	if (String_CaselessEqualsConst(&fontName, LISTSCREEN_EMPTY)) return;
 	String_Copy(&Drawer2D_FontName, &fontName);
 	Options_Set(OPT_FONT_NAME,      &fontName);
 	Event_RaiseVoid(&ChatEvents.FontChanged);
@@ -1504,7 +1517,7 @@ static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget
 	struct FontDesc font;
 	cc_result res;
 
-	if (String_CaselessEqualsConst(text, LIST_SCREEN_EMPTY)) {
+	if (String_CaselessEqualsConst(text, LISTSCREEN_EMPTY)) {
 		ButtonWidget_Set(button, text, &s->font); return;
 	}
 
@@ -1551,7 +1564,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	int i, flags = 0;
 
 	text = ListScreen_UNSAFE_GetCur(s, widget);
-	if (String_CaselessEqualsConst(&text, LIST_SCREEN_EMPTY)) {
+	if (String_CaselessEqualsConst(&text, LISTSCREEN_EMPTY)) {
 		EditHotkeyScreen_Show(original); 
 		return;
 	}
@@ -1577,7 +1590,7 @@ static void HotkeyListScreen_MakeFlags(int flags, String* str) {
 }
 
 static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
-	static const String empty = String_FromConst(LIST_SCREEN_EMPTY);
+	static const String empty = String_FromConst(LISTSCREEN_EMPTY);
 	String text; char textBuffer[STRING_SIZE];
 	struct HotkeyData hKey;
 	int i;
@@ -1620,7 +1633,7 @@ static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	String relPath;
 
 	relPath = ListScreen_UNSAFE_GetCur(s, widget);
-	if (String_CaselessEqualsConst(&relPath, LIST_SCREEN_EMPTY)) return;
+	if (String_CaselessEqualsConst(&relPath, LISTSCREEN_EMPTY)) return;
 
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "maps/%s", &relPath);

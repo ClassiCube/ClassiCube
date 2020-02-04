@@ -62,7 +62,7 @@ CC_API void Gfx_SetTexturing(cc_bool enabled);
 /* Turns on mipmapping. (if Gfx_Mipmaps is enabled) */
 /* NOTE: You must have created textures with mipmaps true for this to work. */
 CC_API void Gfx_EnableMipmaps(void);
-/* Turns off mipmapping. (if GfX_Mipmaps is enabled) */
+/* Turns off mipmapping. (if Gfx_Mipmaps is enabled) */
 /* NOTE: You must have created textures with mipmaps true for this to work. */
 CC_API void Gfx_DisableMipmaps(void);
 
@@ -176,9 +176,6 @@ void Gfx_LoseContext(const char* reason);
 /* Attempts to restore a lost context. Raises ContextRecreated event on success. */
 cc_bool Gfx_TryRestoreContext(void);
 
-/* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer. */
-/* NOTE: This replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
-void Gfx_UpdateDynamicVb_Lines(GfxResourceID vb, void* vertices, int vCount);
 /* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer. */
 /* NOTE: This replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
 void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount);
