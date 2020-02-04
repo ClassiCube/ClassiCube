@@ -239,7 +239,7 @@ static struct Widget* list_widgets[10] = {
 	(struct Widget*)&ListScreen.right,   (struct Widget*)&ListScreen.title,   
 	(struct Widget*)&ListScreen.page,    (struct Widget*)&ListScreen.done
 };
-#define LISTSCREEN_MAX_VERTICES (8 * BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
+#define LIST_MAX_VERTICES (8 * BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
 #define LISTSCREEN_EMPTY "-----"
 
 static STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
@@ -376,7 +376,7 @@ static void ListScreen_Init(void* screen) {
 	s->numWidgets = Array_Elems(list_widgets);
 	s->wheelAcc   = 0.0f;
 	s->currentIndex = 0;
-	s->maxVertices  = LISTSCREEN_MAX_VERTICES;
+	s->maxVertices  = LIST_MAX_VERTICES;
 
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
 		ButtonWidget_Make(&s->btns[i], 300, s->EntryClick,
@@ -925,7 +925,17 @@ static struct GenLevelScreen {
 	struct MenuInputWidget* selected;
 	struct MenuInputWidget inputs[4];
 	struct TextWidget labels[4], title;
-} GenLevelScreen_Instance;
+} GenLevelScreen;
+
+static struct Widget* gen_widgets[12] = {
+	(struct Widget*)&GenLevelScreen.inputs[0], (struct Widget*)&GenLevelScreen.inputs[1],
+	(struct Widget*)&GenLevelScreen.inputs[2], (struct Widget*)&GenLevelScreen.inputs[3],
+	(struct Widget*)&GenLevelScreen.labels[0], (struct Widget*)&GenLevelScreen.labels[1],
+	(struct Widget*)&GenLevelScreen.labels[2], (struct Widget*)&GenLevelScreen.labels[3],
+	(struct Widget*)&GenLevelScreen.title,     (struct Widget*)&GenLevelScreen.flatgrass,
+	(struct Widget*)&GenLevelScreen.vanilla,   (struct Widget*)&GenLevelScreen.cancel
+};
+#define GEN_MAX_VERTICES (3 * BUTTONWIDGET_MAX + 4 * MENUINPUTWIDGET_MAX + 5 * TEXTWIDGET_MAX)
 
 CC_NOINLINE static int GenLevelScreen_GetInt(struct GenLevelScreen* s, int index) {
 	struct MenuInputWidget* input = &s->inputs[index];
@@ -974,7 +984,6 @@ static void GenLevelScreen_Notchy(void* a, void* b)    { GenLevelScreen_Gen(a, t
 static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int y, int def) {
 	String tmp; char tmpBuffer[STRING_SIZE];
 	struct MenuInputDesc desc;
-	PackedCol col = PackedCol_Make(224, 224, 224, 255);
 
 	if (i == 3) {
 		MenuInput_Seed(desc);
@@ -989,9 +998,9 @@ static void GenLevelScreen_Make(struct GenLevelScreen* s, int i, int y, int def)
 		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 	s->inputs[i].base.showCaret = false;
 
-	Menu_Label(s, i + 4, &s->labels[i], 
+	TextWidget_Make(&s->labels[i], 
 		ANCHOR_CENTRE_MAX, ANCHOR_CENTRE, 110, y);
-	s->labels[i].col = col;
+	s->labels[i].col = PackedCol_Make(224, 224, 224, 255);
 }
 
 static int GenLevelScreen_KeyDown(void* screen, int key) {
@@ -1037,6 +1046,7 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	struct FontDesc titleFont;
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&s->textFont);
+	Screen_CreateVb(screen);
 
 	MenuInputWidget_SetFont(&s->inputs[0], &s->textFont);
 	MenuInputWidget_SetFont(&s->inputs[1], &s->textFont);
@@ -1055,39 +1065,42 @@ static void GenLevelScreen_ContextRecreated(void* screen) {
 	Font_Free(&titleFont);
 }
 
-static void GenLevelScreen_BuildMesh(void* screen) { }
+static void GenLevelScreen_Update(void* screen, double delta) {
+	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
+	if (s->selected) s->selected->base.caretAccumulator += delta;
+}
 
 static void GenLevelScreen_Init(void* screen) {
-	static struct Widget* widgets[12];
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
-	s->selected   = NULL;
+	s->widgets     = gen_widgets;
+	s->numWidgets  = Array_Elems(gen_widgets);
+	s->selected    = NULL;
+	s->maxVertices = GEN_MAX_VERTICES;
 
 	GenLevelScreen_Make(s, 0, -80, World.Width);
 	GenLevelScreen_Make(s, 1, -40, World.Height);
 	GenLevelScreen_Make(s, 2,   0, World.Length);
 	GenLevelScreen_Make(s, 3,  40, 0);
 
-	Menu_Label(s,   8, &s->title,
+	TextWidget_Make(  &s->title,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -130);
-	Menu_Button(s,  9, &s->flatgrass, 200, GenLevelScreen_Flatgrass,
+	ButtonWidget_Make(&s->flatgrass, 200, GenLevelScreen_Flatgrass,
 		ANCHOR_CENTRE, ANCHOR_CENTRE, -120,  100);
-	Menu_Button(s, 10, &s->vanilla,   200, GenLevelScreen_Notchy,
+	ButtonWidget_Make(&s->vanilla,   200, GenLevelScreen_Notchy,
 		ANCHOR_CENTRE, ANCHOR_CENTRE,  120,  100);
-	Menu_Back(s,   11, &s->cancel, Menu_SwitchPause);
+	Menu_MakeBack(    &s->cancel, Menu_SwitchPause);
 	Window_OpenKeyboard();
 }
 
 static const struct ScreenVTABLE GenLevelScreen_VTABLE = {
-	GenLevelScreen_Init,        Screen_NullUpdate, Menu_CloseKeyboard,      
-	MenuScreen_Render,          GenLevelScreen_BuildMesh,
+	GenLevelScreen_Init,        GenLevelScreen_Update, Menu_CloseKeyboard,
+	MenuScreen_Render2,         Screen_BuildMesh,
 	GenLevelScreen_KeyDown,     Screen_TInput,     GenLevelScreen_KeyPress, GenLevelScreen_TextChanged,
 	GenLevelScreen_PointerDown, Screen_TPointer,   Menu_PointerMove,        Screen_TMouseScroll,
 	Screen_Layout,              GenLevelScreen_ContextLost, GenLevelScreen_ContextRecreated
 };
 void GenLevelScreen_Show(void) {	
-	struct GenLevelScreen* s = &GenLevelScreen_Instance;
+	struct GenLevelScreen* s = &GenLevelScreen;
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &GenLevelScreen_VTABLE;
@@ -1184,7 +1197,7 @@ static struct Widget* save_widgets[6] = {
 	(struct Widget*)&SaveLevelScreen.mcEdit, (struct Widget*)&SaveLevelScreen.cancel,
 	(struct Widget*)&SaveLevelScreen.input,  (struct Widget*)&SaveLevelScreen.desc,
 };
-#define SAVESCREEN_MAX_VERTICES (3 * BUTTONWIDGET_MAX + MENUINPUTWIDGET_MAX + 2 * TEXTWIDGET_MAX)
+#define SAVE_MAX_VERTICES (3 * BUTTONWIDGET_MAX + MENUINPUTWIDGET_MAX + 2 * TEXTWIDGET_MAX)
 
 static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 	ButtonWidget_SetConst(&s->save, 
@@ -1411,7 +1424,7 @@ static void SaveLevelScreen_Init(void* screen) {
 	
 	s->widgets     = save_widgets;
 	s->numWidgets  = Array_Elems(save_widgets);
-	s->maxVertices = SAVESCREEN_MAX_VERTICES;
+	s->maxVertices = SAVE_MAX_VERTICES;
 	MenuInput_Path(desc);
 	
 	ButtonWidget_Make(&s->save, 300, SaveLevelScreen_Main,
