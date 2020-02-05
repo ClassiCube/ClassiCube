@@ -1433,10 +1433,11 @@ static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, String
 		int secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / MILLIS_PER_SEC;
 
 		if (secsLeft > 0) {
-			String_Format1(msg, "Reconnect in %i", &secsLeft); return;
+			String_Format1(msg, "Reconnect in %i", &secsLeft);
+		} else {
+			String_AppendConst(msg, "Reconnect");
 		}
 	}
-	String_AppendConst(msg, "Reconnect");
 }
 
 static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* s, double delta) {
