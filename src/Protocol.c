@@ -396,6 +396,15 @@ static void MapState_Init(struct MapState* m) {
 	m->allocFailed = false;
 }
 
+static void FreeMapStates(void) {
+	Mem_Free(map.blocks);
+	map.blocks  = NULL;
+#ifdef EXTENDED_BLOCKS
+	Mem_Free(map2.blocks);
+	map2.blocks = NULL;
+#endif
+}
+
 static void MapState_Read(struct MapState* m) {
 	cc_uint32 left, read;
 	if (m->allocFailed) return;
@@ -510,15 +519,18 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 
 	if (map.allocFailed) return;
 #ifdef EXTENDED_BLOCKS
-	if (map2.allocFailed) { Mem_Free(map.blocks); map.blocks = NULL; return; }
+	if (map2.allocFailed) { FreeMapStates(); return; }
 #endif
 
-	width  = Stream_GetU16_BE(&data[0]);
-	height = Stream_GetU16_BE(&data[2]);
-	length = Stream_GetU16_BE(&data[4]);
+	width  = Stream_GetU16_BE(data + 0);
+	height = Stream_GetU16_BE(data + 2);
+	length = Stream_GetU16_BE(data + 4);
 
 	if (map_volume != (width * height * length)) {
-		Logger_Abort("Blocks array size does not match volume of map");
+		Chat_AddRaw("&cFailed to load map, try joining a different map");
+		Chat_AddRaw("   &cBlocks array size does not match volume of map");
+		FreeMapStates();
+		return;
 	}
 
 	World_SetNewMap(map.blocks, width, height, length);
