@@ -549,13 +549,14 @@ void Window_Close(void) {
 }
 
 void Window_ProcessEvents(void) {
+	HWND foreground;
 	MSG msg;
 	while (PeekMessage(&msg, NULL, 0, 0, 1)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
 
-	HWND foreground = GetForegroundWindow();
+	foreground = GetForegroundWindow();
 	if (foreground) {
 		Window_Focused = foreground == win_handle;
 	}

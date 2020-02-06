@@ -298,11 +298,11 @@ void Launcher_Run(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Colours/Skin----------------------------------------------------*
 *#########################################################################################################################*/
-#define DEFAULT_BACKGROUND_COL         BitmapCol_Make(153, 127, 172, 255);
-#define DEFAULT_BUTTON_BORDER_COL      BitmapCol_Make( 97,  81, 110, 255);
-#define DEFAULT_BUTTON_FORE_ACTIVE_COL BitmapCol_Make(189, 168, 206, 255);
-#define DEFAULT_BUTTON_FORE_COL        BitmapCol_Make(141, 114, 165, 255);
-#define DEFAULT_BUTTON_HIGHLIGHT_COL   BitmapCol_Make(162, 131, 186, 255);
+#define DEFAULT_BACKGROUND_COL         BitmapCol_Make(153, 127, 172, 255)
+#define DEFAULT_BUTTON_BORDER_COL      BitmapCol_Make( 97,  81, 110, 255)
+#define DEFAULT_BUTTON_FORE_ACTIVE_COL BitmapCol_Make(189, 168, 206, 255)
+#define DEFAULT_BUTTON_FORE_COL        BitmapCol_Make(141, 114, 165, 255)
+#define DEFAULT_BUTTON_HIGHLIGHT_COL   BitmapCol_Make(162, 131, 186, 255)
 
 BitmapCol Launcher_BackgroundCol       = DEFAULT_BACKGROUND_COL;
 BitmapCol Launcher_ButtonBorderCol     = DEFAULT_BUTTON_BORDER_COL;

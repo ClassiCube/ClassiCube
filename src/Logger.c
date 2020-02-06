@@ -231,10 +231,10 @@ struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 
 static int Logger_GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	STACKFRAME frame = { 0 };
+	DWORD type;
 	frame.AddrPC.Mode     = AddrModeFlat;
 	frame.AddrFrame.Mode  = AddrModeFlat;
 	frame.AddrStack.Mode  = AddrModeFlat;
-	DWORD type;
 
 #if defined _M_IX86
 	type = IMAGE_FILE_MACHINE_I386;

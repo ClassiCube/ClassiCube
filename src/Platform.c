@@ -225,9 +225,12 @@ void Platform_Log(const String* message) {
 #define FILETIME_EPOCH 50491123200000ULL
 #define FileTime_TotalMS(time) ((time / 10000) + FILETIME_EPOCH)
 TimeMS DateTime_CurrentUTC_MS(void) {
-	FILETIME ft; GetSystemTimeAsFileTime(&ft); 
+	FILETIME ft; 
+	cc_uint64 raw;
+	
+	GetSystemTimeAsFileTime(&ft);
 	/* in 100 nanosecond units, since Jan 1 1601 */
-	cc_uint64 raw = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
+	raw = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
 	return FileTime_TotalMS(raw);
 }
 
@@ -380,6 +383,7 @@ int File_Exists(const String* path) {
 cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
 	String path; char pathBuffer[MAX_PATH + 10];
 	TCHAR str[NATIVE_STR_LEN];
+	TCHAR* src;
 	WIN32_FIND_DATA entry;
 	HANDLE find;
 	cc_result res;	
@@ -398,7 +402,7 @@ cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallbac
 		String_Format1(&path, "%s/", dirPath);
 
 		/* ignore . and .. entry */
-		TCHAR* src = entry.cFileName;
+		src = entry.cFileName;
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 		
