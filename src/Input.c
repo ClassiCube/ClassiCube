@@ -149,9 +149,8 @@ void Input_RemoveTouch(long id, int x, int y) {
 		CheckBlockTap(i);
 
 		/* found the touch, remove it */
+		Pointer_SetPosition(i, -100000, -100000);
 		touches[i].type = 0;
-		Pointers[i].x   = -100000;
-		Pointers[i].y   = -100000;
 
 		if ((i + 1) == Pointers_Count) Pointers_Count--;
 		return;
