@@ -1,12 +1,9 @@
 #ifndef CC_PLATFORM_H
 #define CC_PLATFORM_H
-#include "PackedCol.h"
-#include "Bitmap.h"
+#include "String.h"
 /* Abstracts platform specific memory management, I/O, etc.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
-struct DrawTextArgs;
-struct HttpRequest;
 struct DateTime;
 
 enum Socket_PollMode { SOCKET_POLL_READ, SOCKET_POLL_WRITE };

@@ -4,7 +4,6 @@
 #include "ExtMath.h"
 #include "Drawer2D.h"
 #include "Funcs.h"
-#include "Bitmap.h"
 #include "Window.h"
 #include "Utils.h"
 #include "Errors.h"

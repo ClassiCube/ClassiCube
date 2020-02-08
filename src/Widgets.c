@@ -1956,11 +1956,11 @@ static int PlayerListWidget_GroupCompare(int x, int y) {
 	return String_Compare(&xGroup, &yGroup);
 }
 
-struct PlayerListWidget* List_SortObj;
-int (*List_SortCompare)(int x, int y);
+static struct PlayerListWidget* list_SortObj;
+static int (*list_SortCompare)(int x, int y);
 static void PlayerListWidget_QuickSort(int left, int right) {
-	struct Texture* values = List_SortObj->textures; struct Texture value;
-	cc_uint16* keys = List_SortObj->ids; cc_uint16 key;
+	struct Texture* values = list_SortObj->textures; struct Texture value;
+	cc_uint16* keys = list_SortObj->ids; cc_uint16 key;
 
 	while (left < right) {
 		int i = left, j = right;
@@ -1968,8 +1968,8 @@ static void PlayerListWidget_QuickSort(int left, int right) {
 
 		/* partition the list */
 		while (i <= j) {
-			while (List_SortCompare(pivot, keys[i]) > 0) i++;
-			while (List_SortCompare(pivot, keys[j]) < 0) j--;
+			while (list_SortCompare(pivot, keys[i]) > 0) i++;
+			while (list_SortCompare(pivot, keys[j]) < 0) j--;
 			QuickSort_Swap_KV_Maybe();
 		}
 		/* recurse into the smaller subset */
@@ -1981,9 +1981,9 @@ static void PlayerListWidget_SortEntries(struct PlayerListWidget* w) {
 	int i, id, count;
 	if (!w->namesCount) return;
 
-	List_SortObj = w;
+	list_SortObj = w;
 	if (w->classic) {
-		List_SortCompare = PlayerListWidget_PlayerCompare;
+		list_SortCompare = PlayerListWidget_PlayerCompare;
 		PlayerListWidget_QuickSort(0, w->namesCount - 1);
 		return;
 	}
@@ -1994,11 +1994,11 @@ static void PlayerListWidget_SortEntries(struct PlayerListWidget* w) {
 		if (w->ids[i] != GROUP_NAME_ID) continue;
 		PlayerListWidget_DeleteAt(w, i);
 	}
-	List_SortCompare = PlayerListWidget_GroupCompare;
+	list_SortCompare = PlayerListWidget_GroupCompare;
 	PlayerListWidget_QuickSort(0, w->namesCount - 1);
 
 	/* Sort the entries in each group */
-	List_SortCompare = PlayerListWidget_PlayerCompare;
+	list_SortCompare = PlayerListWidget_PlayerCompare;
 	for (i = 0; i < w->namesCount; ) {
 		id = w->ids[i];
 		PlayerListWidget_AddGroup(w, id, &i);

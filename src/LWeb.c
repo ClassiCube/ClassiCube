@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "Window.h"
 #include "Options.h"
+#include "PackedCol.h"
 
 #ifndef CC_BUILD_WEB
 /*########################################################################################################################*

@@ -1,7 +1,6 @@
 #ifndef CC_LWEB_H
 #define CC_LWEB_H
 #include "Http.h"
-#include "String.h"
 /* Implements asynchronous web tasks for the launcher.
 	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
