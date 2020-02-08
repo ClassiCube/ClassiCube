@@ -659,7 +659,7 @@ static int win_screen;
 static Window win_rootWin, win_handle;
 static XVisualInfo win_visual;
  
-static Atom wm_destroy, net_wm_state;
+static Atom wm_destroy, net_wm_state, net_wm_ping;
 static Atom net_wm_state_minimized;
 static Atom net_wm_state_fullscreen;
 
@@ -768,6 +768,7 @@ static void Window_RegisterAtoms(void) {
 	Display* display = win_display;
 	wm_destroy = XInternAtom(display, "WM_DELETE_WINDOW", true);
 	net_wm_state = XInternAtom(display, "_NET_WM_STATE", false);
+	net_wm_ping  = XInternAtom(display, "_NET_WM_PING",  false);
 	net_wm_state_minimized  = XInternAtom(display, "_NET_WM_STATE_MINIMIZED",  false);
 	net_wm_state_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", false);
 
@@ -809,6 +810,7 @@ void Window_Init(void) {
 void Window_Create(int width, int height) {
 	XSetWindowAttributes attributes = { 0 };
 	XSizeHints hints = { 0 };
+	Atom protocols[2];
 	struct GraphicsMode mode;
 	cc_uintptr addr;
 	int supported, x, y;
@@ -843,7 +845,10 @@ void Window_Create(int width, int height) {
 	XSetWMNormalHints(win_display, win_handle, &hints);
 
 	/* Register for window destroy notification */
-	XSetWMProtocols(win_display, win_handle, &wm_destroy, 1);
+	protocols[0] = wm_destroy;
+	protocols[1] = net_wm_ping;
+	XSetWMProtocols(win_display, win_handle, protocols, 2);
+
 	/* Request that auto-repeat is only set on devices that support it physically.
 	   This typically means that it's turned off for keyboards (which is what we want).
 	   We prefer this method over XAutoRepeatOff/On, because the latter needs to
@@ -1001,6 +1006,22 @@ static cc_bool Window_GetPendingEvent(XEvent* e) {
 		XCheckTypedWindowEvent(win_display, win_handle, SelectionRequest, e);
 }
 
+static void HandleWMDestroy(void) {
+	Platform_LogConst("Exit message received.");
+	Event_RaiseVoid(&WindowEvents.Closing);
+
+	/* sync and discard all events queued */
+	XSync(win_display, true);
+	XDestroyWindow(win_display, win_handle);
+	Window_Exists = false;
+}
+
+static void HandleWMPing(XEvent* e) {
+	e->xany.window = win_rootWin;
+	XSendEvent(win_display, win_rootWin, false,
+		SubstructureRedirectMask | SubstructureNotifyMask, e);
+}
+
 void Window_ProcessEvents(void) {
 	XEvent e;
 	while (Window_Exists) {
@@ -1008,14 +1029,11 @@ void Window_ProcessEvents(void) {
 
 		switch (e.type) {
 		case ClientMessage:
-			if (e.xclient.data.l[0] != wm_destroy) break;
-			Platform_LogConst("Exit message received.");			
-			Event_RaiseVoid(&WindowEvents.Closing);
-
-			/* sync and discard all events queued */
-			XSync(win_display, true);
-			XDestroyWindow(win_display, win_handle);
-			Window_Exists = false;
+			if (e.xclient.data.l[0] == wm_destroy) {
+				HandleWMDestroy();
+			} else if (e.xclient.data.l[0] == net_wm_ping) {
+				HandleWMPing(&e);
+			}
 			break;
 
 		case DestroyNotify:
@@ -1315,8 +1333,8 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 	X11Button ok    = { 0 };
 	X11Textbox body = { 0 };
 
+	Atom protocols[2];
 	XFontStruct* font;
-	Atom wmDelete;
 	int x, y, width, height;
 	XSizeHints hints = { 0 };
 	int mouseX = -1, mouseY = -1, over;
@@ -1326,8 +1344,9 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 	XMapWindow(dpy, w->win);
 	XStoreName(dpy, w->win, title);
 
-	wmDelete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
-	XSetWMProtocols(dpy, w->win, &wmDelete, 1);
+	protocols[0] = XInternAtom(dpy, "WM_DELETE_WINDOW", false);
+	protocols[1] = XInternAtom(dpy, "_NET_WM_PING",     false);
+	XSetWMProtocols(dpy, w->win, protocols, 2);
 
 	font = XQueryFont(dpy, XGContextFromGC(w->gc));
 	if (!font) return;
@@ -1401,7 +1420,9 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 			break;
 
 		case ClientMessage:
-			if (e.xclient.data.l[0] == wmDelete) return;
+			/* { WM_DELETE_WINDOW, _NET_WM_PING } */
+			if (e.xclient.data.l[0] == protocols[0]) return;
+			if (e.xclient.data.l[0] == protocols[1]) HandleWMPing(&e);
 			break;
 
 		case MotionNotify:
