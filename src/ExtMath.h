@@ -15,8 +15,16 @@
 #define Math_Deg2Packed(x) ((cc_uint8)((x) * 256.0f / 360.0f))
 #define Math_Packed2Deg(x) ((x) * 360.0f / 256.0f)
 
+#ifdef __GNUC__
+/* fabsf/sqrtf are single intrinsic instructions in gcc/clang */
+/* (sqrtf is only when -fno-math-errno though) */
+#define Math_AbsF(x) __builtin_fabsf(x)
+#define Math_SqrtF(x) __builtin_sqrtf(x)
+#else
 float Math_AbsF(float x);
 float Math_SqrtF(float x);
+#endif
+
 float Math_Mod1(float x);
 int   Math_AbsI(int x);
 

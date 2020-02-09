@@ -7,8 +7,11 @@
 
 /* TODO: Replace with own functions that don't rely on <math> */
 
+#ifndef __GNUC__
 float Math_AbsF(float x)  { return fabsf(x); /* MSVC intrinsic */ }
 float Math_SqrtF(float x) { return sqrtf(x); /* MSVC intrinsic */ }
+#endif
+
 float Math_Mod1(float x)  { return x - (int)x; /* fmodf(x, 1); */ }
 int   Math_AbsI(int x)    { return abs(x); /* MSVC intrinsic */ }
 
