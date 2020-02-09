@@ -51,7 +51,6 @@ struct Builder1DPart {
 The first ATLAS1D_MAX_ATLASES parts are for normal parts, remainder are for translucent parts. */
 static struct Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
 static VertexP3fT2fC4b* Builder_Vertices;
-static int Builder_VerticesElems;
 
 static int Builder1DPart_VerticesCount(struct Builder1DPart* part) {
 	int i, count = part->sCount;
@@ -355,7 +354,7 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 	int bitFlags[EXTCHUNK_SIZE_3];
 
 	cc_bool allAir, allSolid, onBorder;
-	int xMax, yMax, zMax;
+	int xMax, yMax, zMax, totalVerts;
 	int cIndex, index;
 	int x, y, z, xx, yy, zz;
 
@@ -387,6 +386,15 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 
 	Builder_ChunkEndX = xMax; Builder_ChunkEndZ = zMax;
 	Builder_Stretch(x1, y1, z1);
+
+	totalVerts = Builder_TotalVerticesCount();
+	if (!totalVerts) return false;
+
+#ifndef CC_BUILD_GL11
+	/* add an extra element to fix crashing on some GPUs */
+	info->Vb         = Gfx_CreateVb(        VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
+	Builder_Vertices = Gfx_LockVb(info->Vb, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
+#endif
 	Builder_PostStretchTiles();
 
 	for (y = y1, yy = 0; y < yMax; y++, yy++) {
@@ -404,24 +412,21 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 			}
 		}
 	}
+
+#ifndef CC_BUILD_GL11
+	Gfx_UnlockVb(info->Vb);
+#endif
 	return true;
 }
 
 void Builder_MakeChunk(struct ChunkInfo* info) {
 	int x = info->CentreX - 8, y = info->CentreY - 8, z = info->CentreZ - 8;
 	cc_bool hasMesh, hasNorm, hasTran;
-	int totalVerts, partsIndex;
+	int partsIndex;
 	int i, j, curIdx, offset;
 
 	hasMesh = BuildChunk(x, y, z, info);
 	if (!hasMesh) return;
-
-	totalVerts = Builder_TotalVerticesCount();
-	if (!totalVerts) return;
-#ifndef CC_BUILD_GL11
-	/* add an extra element to fix crashing on some GPUs */
-	info->Vb = Gfx_CreateVb2(Builder_Vertices, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
-#endif
 
 	partsIndex = MapRenderer_Pack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
 	offset  = 0;
@@ -464,16 +469,7 @@ static void DefaultPreStretchTiles(void) {
 }
 
 static void DefaultPostStretchTiles(void) {
-	int i, j, offset, count;
-	
-	count = Builder_TotalVerticesCount();
-	if (count > Builder_VerticesElems) {
-		Mem_Free(Builder_Vertices);
-		/* ensure buffer can be accessed with 64 bytes alignment by putting 2 extra vertices at end. */
-		Builder_Vertices = (VertexP3fT2fC4b*)Mem_Alloc(count + 2, sizeof(VertexP3fT2fC4b), "chunk vertices");
-		Builder_VerticesElems = count;
-	}
-
+	int i, j, offset;
 	offset = 0;
 	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
 		j = i + ATLAS1D_MAX_ATLASES;
