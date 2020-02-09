@@ -700,9 +700,10 @@ void Gfx_DeleteIb(GfxResourceID* ib) { D3D9_FreeResource(ib); }
 /*########################################################################################################################*
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
-static IDirect3DVertexBuffer9* D3D9_AllocVertexBuffer(VertexFormat fmt, int size, DWORD usage) {
+static IDirect3DVertexBuffer9* D3D9_AllocVertexBuffer(VertexFormat fmt, int count, DWORD usage) {
 	IDirect3DVertexBuffer9* vbuffer;
 	cc_result res;
+	int size = count * gfx_strideSizes[fmt];
 
 	for (;;) {
 		res = IDirect3DDevice9_CreateVertexBuffer(device, size, usage,
@@ -725,13 +726,25 @@ static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size,
 	if (res) Logger_Abort2(res, "D3D9_UnlockVb");
 }
 
-GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
-	int size = count * gfx_strideSizes[fmt];
-	IDirect3DVertexBuffer9* vbuffer;
+static void* D3D9_LockVb(GfxResourceID vb, VertexFormat fmt, int count, int lockFlags) {
+	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
+	void* dst = NULL;
+	int size  = count * gfx_strideSizes[fmt];
 
-	vbuffer = D3D9_AllocVertexBuffer(fmt, size, D3DUSAGE_WRITEONLY);
-	D3D9_SetVbData(vbuffer, vertices, size, 0);
+	cc_result res = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
+	if (res) Logger_Abort2(res, "D3D9_LockVb");
+	return dst;
+}
+
+GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
+	IDirect3DVertexBuffer9* vbuffer;
+	vbuffer = D3D9_AllocVertexBuffer(fmt, count, D3DUSAGE_WRITEONLY);
+	D3D9_SetVbData(vbuffer, vertices, count * gfx_strideSizes[fmt], 0);
 	return vbuffer;
+}
+
+GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+	return D3D9_AllocVertexBuffer(fmt, count, D3DUSAGE_WRITEONLY);
 }
 
 void Gfx_BindVb(GfxResourceID vb) {
@@ -741,6 +754,16 @@ void Gfx_BindVb(GfxResourceID vb) {
 }
 
 void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
+void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return D3D9_LockVb(vb, fmt, count, 0);
+}
+
+void Gfx_UnlockVb(GfxResourceID vb) {
+	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
+	cc_result res = IDirect3DVertexBuffer9_Unlock(buffer);
+	if (res) Logger_Abort2(res, "Gfx_UnlockVb");
+}
+
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_batchFormat) return;
@@ -776,25 +799,16 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 *--------------------------------------------------Dynamic vertex buffers-------------------------------------------------*
 *#########################################################################################################################*/
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
-	int size = maxVertices * gfx_strideSizes[fmt];
 	if (Gfx.LostContext) return 0;
-	return D3D9_AllocVertexBuffer(fmt, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
+	return D3D9_AllocVertexBuffer(fmt, maxVertices, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY);
 }
 
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int elems) {
-	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
-	void* dst = NULL;
-	int size  = elems * gfx_strideSizes[fmt];
-
-	cc_result res = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, D3DLOCK_DISCARD);
-	if (res) Logger_Abort2(res, "Gfx_LockDynamicVb");
-	return dst;
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return D3D9_LockVb(vb, fmt, count, D3DLOCK_DISCARD);
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
-	cc_result res = IDirect3DVertexBuffer9_Unlock(buffer);
-	if (res) Logger_Abort2(res, "Gfx_UnlockDynamicVb");
+	Gfx_UnlockVb(vb);
 	Gfx_BindVb(vb); /* TODO: Inline this? */
 }
 
@@ -1206,7 +1220,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
-GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
+GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
 	GLuint id     = GL_GenAndBind(GL_ARRAY_BUFFER);
 	cc_uint32 size = count * gfx_strideSizes[fmt];
 	_glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
@@ -1222,7 +1236,7 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	*vb = 0;
 }
 #else
-GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count) {
+GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
 	GLuint list = glGenLists(1);
 
 	/* We need to restore client state afer building the list */
@@ -1268,9 +1282,9 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 
 static void* lockedData;
 static int lockedSize;
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int elems) {
-	lockedSize = elems * gfx_strideSizes[fmt];
-	lockedData = Mem_Alloc(elems, gfx_strideSizes[fmt], "Gfx_LockDynamicVb");
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	lockedSize = count * gfx_strideSizes[fmt];
+	lockedData = Mem_Alloc(count, gfx_strideSizes[fmt], "Gfx_LockDynamicVb");
 	return lockedData;
 	/* TODO: Reuse buffer instead of always allocating */
 }
@@ -1301,7 +1315,7 @@ void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
 	*vb = 0;
 }
 
-void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int elems) { return (void*)vb; }
+void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) { return (void*)vb; }
 void  Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindDynamicVb(vb); }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {

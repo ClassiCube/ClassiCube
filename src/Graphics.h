@@ -107,11 +107,21 @@ CC_API void Gfx_BindIb(GfxResourceID ib);
 CC_API void Gfx_DeleteIb(GfxResourceID* ib);
 
 /* Creates a new vertex buffer and fills out its contents. */
-CC_API GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count);
+CC_API GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count);
+/* Creates a new vertex buffer. */
+CC_API GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count);
 /* Sets the currently active vertex buffer. */
 CC_API void Gfx_BindVb(GfxResourceID vb);
 /* Deletes the given vertex buffer, then sets it to 0. */
 CC_API void Gfx_DeleteVb(GfxResourceID* vb);
+/* Acquires temp memory for changing the contents of a vertex buffer. */
+CC_API void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count);
+/* Submits the changed contents of a vertex buffer. */
+CC_API void  Gfx_UnlockVb(GfxResourceID vb);
+/* TODO: Reuse memory for OpenGL, don't allocate mem all the time! */
+/* TODO: How to make LockDynamicVb work with OpenGL 1.1 Builder stupidity.. */
+/* TODO: Cleanup the D3D9 Init and remove the if (i == count) stuff. */
+/* TODO: Maybe need a Gfx_CreateAndLockVb for common usage? */
 
 /* Creates a new dynamic vertex buffer, whose contents can be updated later. */
 CC_API GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices);
@@ -125,7 +135,7 @@ void Gfx_BindDynamicVb(GfxResourceID vb);
 void Gfx_DeleteDynamicVb(GfxResourceID* vb);
 #endif
 /* Acquires temp memory for changing the contents of a dynamic vertex buffer. */
-CC_API void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int elems);
+CC_API void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count);
 /* Binds then submits the changed contents of a dynamic vertex buffer. */
 CC_API void  Gfx_UnlockDynamicVb(GfxResourceID vb);
 

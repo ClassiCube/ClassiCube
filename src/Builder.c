@@ -105,7 +105,7 @@ static void BuildPartVbs(struct ChunkPartInfo* info) {
 		count = info->Counts[i];
 
 		if (count) {
-			info->Vbs[i] = Gfx_CreateVb(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
+			info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
 			offset += count;
 		} else {
 			info->Vbs[i] = 0;
@@ -115,7 +115,7 @@ static void BuildPartVbs(struct ChunkPartInfo* info) {
 	count  = info->SpriteCount;
 	offset = info->Offset;
 	if (count) {
-		info->Vbs[i] = Gfx_CreateVb(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
+		info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
 	} else {
 		info->Vbs[i] = 0;
 	}
@@ -421,7 +421,7 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 	if (!totalVerts) return;
 #ifndef CC_BUILD_GL11
 	/* add an extra element to fix crashing on some GPUs */
-	info->Vb = Gfx_CreateVb(Builder_Vertices, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
+	info->Vb = Gfx_CreateVb2(Builder_Vertices, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
 #endif
 
 	partsIndex = MapRenderer_Pack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);

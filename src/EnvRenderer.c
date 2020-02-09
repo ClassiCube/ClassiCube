@@ -180,8 +180,7 @@ static void DrawCloudsY(int x1, int z1, int x2, int z2, int y, VertexP3fT2fC4b* 
 }
 
 static void UpdateClouds(void) {
-	VertexP3fT2fC4b v[ENV_SMALL_VERTICES];
-	VertexP3fT2fC4b* ptr;
+	VertexP3fT2fC4b* data;
 	int extent;
 	int x1, z1, x2, z2;
 	
@@ -194,15 +193,11 @@ static void UpdateClouds(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	clouds_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	ptr = v;
-	if (clouds_vertices > ENV_SMALL_VERTICES) {
-		ptr = (VertexP3fT2fC4b*)Mem_Alloc(clouds_vertices, sizeof(VertexP3fT2fC4b), "clouds vertices");
-	}
+	clouds_vb = Gfx_CreateVb(VERTEX_FORMAT_P3FT2FC4B, clouds_vertices);
+	data      = Gfx_LockVb(clouds_vb, VERTEX_FORMAT_P3FT2FC4B, clouds_vertices);
 
-	DrawCloudsY(x1, z1, x2, z2, Env.CloudsHeight, ptr);
-	clouds_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, clouds_vertices);
-
-	if (clouds_vertices > ENV_SMALL_VERTICES) Mem_Free(ptr);
+	DrawCloudsY(x1, z1, x2, z2, Env.CloudsHeight, data);
+	Gfx_UnlockVb(clouds_vb);
 }
 
 
@@ -258,8 +253,7 @@ static void DrawSkyY(int x1, int z1, int x2, int z2, int y, VertexP3fC4b* v) {
 }
 
 static void UpdateSky(void) {
-	VertexP3fC4b v[ENV_SMALL_VERTICES];
-	VertexP3fC4b* ptr;
+	VertexP3fC4b* data;
 	int extent, height;
 	int x1, z1, x2, z2;
 
@@ -272,16 +266,12 @@ static void UpdateSky(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	sky_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	ptr = v;
-	if (sky_vertices > ENV_SMALL_VERTICES) {
-		ptr = (VertexP3fC4b*)Mem_Alloc(sky_vertices, sizeof(VertexP3fC4b), "sky vertices");
-	}
+	sky_vb = Gfx_CreateVb(      VERTEX_FORMAT_P3FC4B, sky_vertices);
+	data   = Gfx_LockVb(sky_vb, VERTEX_FORMAT_P3FC4B, sky_vertices);
 
 	height = max((World.Height + 2), Env.CloudsHeight) + 6;
-	DrawSkyY(x1, z1, x2, z2, height, ptr);
-	sky_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FC4B, sky_vertices);
-
-	if (sky_vertices > ENV_SMALL_VERTICES) Mem_Free(ptr);
+	DrawSkyY(x1, z1, x2, z2, height, data);
+	Gfx_UnlockVb(sky_vb);
 }
 
 /*########################################################################################################################*
@@ -324,7 +314,7 @@ void EnvRenderer_RenderSkybox(void) {
 }
 
 static void UpdateSkybox(void) {
-	static VertexP3fT2fC4b vertices[SKYBOX_COUNT] = {
+	static const VertexP3fT2fC4b vertices[SKYBOX_COUNT] = {
 		/* Front quad */
 		{ -1, -1, -1,  0, 0.25f, 1.00f }, {  1, -1, -1,  0, 0.50f, 1.00f },
 		{  1,  1, -1,  0, 0.50f, 0.50f }, { -1,  1, -1,  0, 0.25f, 0.50f },
@@ -344,14 +334,19 @@ static void UpdateSkybox(void) {
 		{  1, -1, -1,  0, 0.75f, 0.50f }, {  1, -1,  1,  0, 0.75f, 0.00f },
 		{ -1, -1,  1,  0, 0.50f, 0.00f }, { -1, -1, -1,  0, 0.50f, 0.50f },
 	};
+	VertexP3fT2fC4b* data;
 	int i;
 
 	Gfx_DeleteVb(&skybox_vb);
-	if (Gfx.LostContext) return;
+	if (Gfx.LostContext)     return;
 	if (EnvRenderer_Minimal) return;
 
-	for (i = 0; i < SKYBOX_COUNT; i++) { vertices[i].Col = Env.SkyboxCol; }
-	skybox_vb = Gfx_CreateVb(vertices, VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
+	skybox_vb = Gfx_CreateVb(         VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
+	data      = Gfx_LockVb(skybox_vb, VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
+
+	Mem_Copy(data, vertices, sizeof(vertices));
+	for (i = 0; i < SKYBOX_COUNT; i++) { data[i].Col = Env.SkyboxCol; }
+	Gfx_UnlockVb(skybox_vb);
 }
 
 
@@ -680,10 +675,7 @@ static void UpdateMapSides(void) {
 	PackedCol col, white = PACKEDCOL_WHITE;
 	int y, y1, y2;
 	int i;
-
-	VertexP3fT2fC4b v[ENV_SMALL_VERTICES];
-	VertexP3fT2fC4b* ptr;
-	VertexP3fT2fC4b* cur;
+	VertexP3fT2fC4b* data;
 
 	Gfx_DeleteVb(&sides_vb);
 	if (!World.Blocks || Gfx.LostContext) return;
@@ -703,11 +695,8 @@ static void UpdateMapSides(void) {
 	sides_vertices += 2 * CalcNumVertices(World.Width,  Math_AbsI(y)); /* ZQuads */
 	sides_vertices += 2 * CalcNumVertices(World.Length, Math_AbsI(y)); /* XQuads */
 
-	ptr = v;
-	if (sides_vertices > ENV_SMALL_VERTICES) {
-		ptr = (VertexP3fT2fC4b*)Mem_Alloc(sides_vertices, sizeof(VertexP3fT2fC4b), "sides vertices");
-	}
-	cur = ptr;
+	sides_vb = Gfx_CreateVb(        VERTEX_FORMAT_P3FT2FC4B, sides_vertices);
+	data     = Gfx_LockVb(sides_vb, VERTEX_FORMAT_P3FT2FC4B, sides_vertices);
 
 	sides_fullBright = Blocks.FullBright[block];
 	col = sides_fullBright ? white : Env.ShadowCol;
@@ -716,21 +705,20 @@ static void UpdateMapSides(void) {
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
 		DrawBorderY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, (float)y, col,
-			0, Borders_YOffset(block), &cur);
+			0, Borders_YOffset(block), &data);
 	}
 
 	/* Work properly for when ground level is below 0 */
 	y1 = 0; y2 = y;
 	if (y < 0) { y1 = y; y2 = 0; }
 
-	DrawBorderY(0, 0, World.Width, World.Length, 0, col, 0, 0, &cur);
-	DrawBorderZ(0, 0, World.Width, y1, y2, col, &cur);
-	DrawBorderZ(World.Length, 0, World.Width, y1, y2, col, &cur);
-	DrawBorderX(0, 0, World.Length, y1, y2, col, &cur);
-	DrawBorderX(World.Width, 0, World.Length, y1, y2, col, &cur);
+	DrawBorderY(0, 0, World.Width, World.Length, 0, col, 0, 0, &data);
+	DrawBorderZ(0, 0, World.Width, y1, y2, col, &data);
+	DrawBorderZ(World.Length, 0, World.Width, y1, y2, col, &data);
+	DrawBorderX(0, 0, World.Length, y1, y2, col, &data);
+	DrawBorderX(World.Width, 0, World.Length, y1, y2, col, &data);
 
-	sides_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, sides_vertices);
-	if (sides_vertices > ENV_SMALL_VERTICES) Mem_Free(ptr);
+	Gfx_UnlockVb(sides_vb);
 }
 
 static void UpdateMapEdges(void) {
@@ -739,10 +727,7 @@ static void UpdateMapEdges(void) {
 	PackedCol col, white = PACKEDCOL_WHITE;
 	float y;
 	int i;
-
-	VertexP3fT2fC4b v[ENV_SMALL_VERTICES];
-	VertexP3fT2fC4b* ptr;
-	VertexP3fT2fC4b* cur;
+	VertexP3fT2fC4b* data;
 
 	Gfx_DeleteVb(&edges_vb);
 	if (!World.Blocks || Gfx.LostContext) return;
@@ -757,11 +742,8 @@ static void UpdateMapEdges(void) {
 		edges_vertices += CalcNumVertices(r.Width, r.Height); /* YPlanes outside */
 	}
 
-	ptr = v;
-	if (edges_vertices > ENV_SMALL_VERTICES) {
-		ptr = (VertexP3fT2fC4b*)Mem_Alloc(edges_vertices, sizeof(VertexP3fT2fC4b), "edge vertices");
-	}
-	cur = ptr;
+	edges_vb = Gfx_CreateVb(        VERTEX_FORMAT_P3FT2FC4B, edges_vertices);
+	data     = Gfx_LockVb(edges_vb, VERTEX_FORMAT_P3FT2FC4B, edges_vertices);
 
 	edges_fullBright = Blocks.FullBright[block];
 	col = edges_fullBright ? white : Env.SunCol;
@@ -771,11 +753,9 @@ static void UpdateMapEdges(void) {
 	for (i = 0; i < 4; i++) {
 		r = rects[i];
 		DrawBorderY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, col,
-			Borders_HorOffset(block), Borders_YOffset(block), &cur);
+			Borders_HorOffset(block), Borders_YOffset(block), &data);
 	}
-
-	edges_vb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, edges_vertices);
-	if (edges_vertices > ENV_SMALL_VERTICES) Mem_Free(ptr);
+	Gfx_UnlockVb(edges_vb);
 }
 
 
