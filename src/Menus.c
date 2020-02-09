@@ -3381,16 +3381,24 @@ void TexPackOverlay_Show(const String* url) {
 
 #ifdef CC_BUILD_TOUCH
 /*########################################################################################################################*
-*----------------------------------------------------UrlWarningOverlay----------------------------------------------------*
+*-----------------------------------------------------TouchMoreScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-static struct TouchMoreOverlay {
+static struct TouchMoreScreen {
 	Screen_Body
-	struct ButtonWidget buttons[8];
-} TouchMoreOverlay_Instance;
+	struct ButtonWidget btns[8];
+} TouchMoreScreen;
+
+static struct Widget* touchMore_widgets[8] = {
+	(struct Widget*)&TouchMoreScreen.btns[0], (struct Widget*)&TouchMoreScreen.btns[1],
+	(struct Widget*)&TouchMoreScreen.btns[2], (struct Widget*)&TouchMoreScreen.btns[3],
+	(struct Widget*)&TouchMoreScreen.btns[4], (struct Widget*)&TouchMoreScreen.btns[5],
+	(struct Widget*)&TouchMoreScreen.btns[6], (struct Widget*)&TouchMoreScreen.btns[7]
+};
+#define TOUCHMORE_MAX_VERTICES (8 * BUTTONWIDGET_MAX)
 
 static void TouchMore_Toggle(KeyBind bind) {
 	int key = KeyBinds[bind];
-	Gui_Remove((struct Screen*)&TouchMoreOverlay_Instance);
+	Gui_Remove((struct Screen*)&TouchMoreScreen);
 	Input_SetPressed(key, !Input_Pressed[key]);
 }
 
@@ -3402,7 +3410,7 @@ static void TouchMore_Screen(void* s, void* w) { TouchMore_Toggle(KEYBIND_FULLSC
 static void TouchMore_Noclip(void* s, void* w) { TouchMore_Toggle(KEYBIND_NOCLIP); }
 
 static void TouchMore_Menu(void* s, void* w) {
-	Gui_Remove((struct Screen*)&TouchMoreOverlay_Instance);
+	Gui_Remove((struct Screen*)&TouchMoreScreen);
 	PauseScreen_Show();
 }
 
@@ -3411,7 +3419,7 @@ static void TouchMore_Fog(void* s, void* w) {
 	Input_SetPressed(KeyBinds[KEYBIND_FOG], false);
 }
 
-static const struct SimpleButtonDesc touchOverlay_btns[8] = {
+static const struct SimpleButtonDesc touchMore_btns[8] = {
 	{ -160,  -50, "Chat",       TouchMore_Chat   },
 	{ -160,    0, "Speed",      TouchMore_Speed  },
 	{ -160,   50, "Fly",        TouchMore_Fly    },
@@ -3422,39 +3430,38 @@ static const struct SimpleButtonDesc touchOverlay_btns[8] = {
 	{  160,  100, "Fog",        TouchMore_Fog    }
 };
 
-static void TouchMoreOverlay_ContextRecreated(void* screen) {
-	struct TouchMoreOverlay* s = (struct TouchMoreOverlay*)screen;
+static void TouchMoreScreen_ContextRecreated(void* screen) {
+	struct TouchMoreScreen* s = (struct TouchMoreScreen*)screen;
 	struct FontDesc titleFont;
 	Menu_MakeTitleFont(&titleFont);
+	Screen_CreateVb(screen);
 
-	Menu_SetButtons(s->buttons, &titleFont, touchOverlay_btns, 8);
+	Menu_SetButtons(s->btns, &titleFont, touchMore_btns, 8);
 	Font_Free(&titleFont);
 }
 
-static void TouchMoreOverlay_Init(void* screen) {
-	static struct Widget* widgets[8];
-	struct TouchMoreOverlay* s = (struct TouchMoreOverlay*)screen;
-	s->widgets    = widgets;
-	s->numWidgets = Array_Elems(widgets);
+static void TouchMoreScreen_Init(void* screen) {
+	struct TouchMoreScreen* s = (struct TouchMoreScreen*)screen;
+	s->widgets     = touchMore_widgets;
+	s->numWidgets  = Array_Elems(touchMore_widgets);
+	s->maxVertices = TOUCHMORE_MAX_VERTICES;
 
-	Menu_Buttons(s, s->buttons, 300, touchOverlay_btns, 8);
+	Menu_Buttons(s, s->btns, 300, touchMore_btns, 8);
 	/* TODO: Close button */
 }
 
-static void TouchMoreOverlay_BuildMesh(void* screen) { }
-
-static const struct ScreenVTABLE TouchMoreOverlay_VTABLE = {
-	TouchMoreOverlay_Init, Screen_NullUpdate, Screen_NullFunc,
-	MenuScreen_Render,     TouchMoreOverlay_BuildMesh,
+static const struct ScreenVTABLE TouchMoreScreen_VTABLE = {
+	TouchMoreScreen_Init, Screen_NullUpdate, Screen_NullFunc,
+	MenuScreen_Render,     Screen_BuildMesh,
 	Screen_InputDown,      Screen_TInput,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,      Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,         Screen_ContextLost, TouchMoreOverlay_ContextRecreated
+	Screen_Layout,         Screen_ContextLost, TouchMoreScreen_ContextRecreated
 };
-void TouchMoreOverlay_Show(void) {
-	struct TouchMoreOverlay* s = &TouchMoreOverlay_Instance;
+void TouchMoreScreen_Show(void) {
+	struct TouchMoreScreen* s = &TouchMoreScreen;
 	s->grabsInput = true;
 	s->closable   = true;
-	s->VTABLE     = &TouchMoreOverlay_VTABLE;
+	s->VTABLE     = &TouchMoreScreen_VTABLE;
 
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TOUCHMORE);
 }

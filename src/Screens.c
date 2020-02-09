@@ -1628,7 +1628,7 @@ static void TouchScreen_ModeClick(void* s, void* w) {
 	Input_Placing = !Input_Placing; 
 	TouchScreen_UpdateModeText(s);
 }
-static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreOverlay_Show(); }
+static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreScreen_Show(); }
 
 static void TouchScreen_ContextRecreated(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
