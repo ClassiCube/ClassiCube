@@ -1072,10 +1072,11 @@ static void* tmpData;
 static int tmpSize;
 
 static void* FastAllocTempMem(int size) {
-	if (size <= tmpSize) return tmpData;
-	Mem_Free(tmpData);
+	if (size > tmpSize) {
+		Mem_Free(tmpData);
+		tmpData = Mem_Alloc(size, 1, "Gfx_AllocTempMemory");
+	}
 
-	tmpData = Mem_Alloc(size, 1, "Gfx_AllocTempMemory");
 	tmpSize = size;
 	return tmpData;
 }

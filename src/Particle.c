@@ -20,7 +20,7 @@ static GfxResourceID Particles_TexId, Particles_VB;
 static RNGState rnd;
 static cc_bool particle_hitTerrain;
 
-void Particle_DoRender(Vec2* size, Vec3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* v) {
+void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec, PackedCol col, VertexP3fT2fC4b* v) {
 	struct Matrix* view;
 	float sX, sY;
 	Vec3 centre;
