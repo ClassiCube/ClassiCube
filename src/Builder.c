@@ -392,8 +392,7 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 
 #ifndef CC_BUILD_GL11
 	/* add an extra element to fix crashing on some GPUs */
-	info->Vb         = Gfx_CreateVb(        VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
-	Builder_Vertices = Gfx_LockVb(info->Vb, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
+	Builder_Vertices = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1, &info->Vb);
 #endif
 	Builder_PostStretchTiles();
 

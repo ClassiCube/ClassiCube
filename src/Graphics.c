@@ -88,6 +88,11 @@ void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCoun
 	Gfx_DrawVb_IndexedTris(vCount);
 }
 
+void* Gfx_CreateAndLockVb(VertexFormat fmt, int count, GfxResourceID* vb) {
+	*vb = Gfx_CreateVb(fmt, count);
+	return Gfx_LockVb(*vb, fmt, count);
+}
+
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol col) {
 	VertexP3fC4b verts[4];
 	VertexP3fC4b* v = verts;
@@ -736,13 +741,6 @@ static void* D3D9_LockVb(GfxResourceID vb, VertexFormat fmt, int count, int lock
 	return dst;
 }
 
-GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
-	IDirect3DVertexBuffer9* vbuffer;
-	vbuffer = D3D9_AllocVertexBuffer(fmt, count, D3DUSAGE_WRITEONLY);
-	D3D9_SetVbData(vbuffer, vertices, count * gfx_strideSizes[fmt], 0);
-	return vbuffer;
-}
-
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 	return D3D9_AllocVertexBuffer(fmt, count, D3DUSAGE_WRITEONLY);
 }
@@ -1070,6 +1068,17 @@ void Gfx_Free(void) {
 }
 
 #define gl_Toggle(cap) if (enabled) { glEnable(cap); } else { glDisable(cap); }
+static void* tmpData;
+static int tmpSize;
+
+static void* FastAllocTempMem(int size) {
+	if (size <= tmpSize) return tmpData;
+	Mem_Free(tmpData);
+
+	tmpData = Mem_Alloc(size, 1, "Gfx_AllocTempMemory");
+	tmpSize = size;
+	return tmpData;
+}
 
 
 /*########################################################################################################################*
@@ -1220,11 +1229,8 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *------------------------------------------------------Vertex buffers-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
-GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
-	GLuint id     = GL_GenAndBind(GL_ARRAY_BUFFER);
-	cc_uint32 size = count * gfx_strideSizes[fmt];
-	_glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
-	return id;
+GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
+	return GL_GenAndBind(GL_ARRAY_BUFFER);
 }
 
 void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); }
@@ -1234,6 +1240,14 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	if (!id) return;
 	_glDeleteBuffers(1, &id);
 	*vb = 0;
+}
+
+void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	return FastAllocTempMem(count * gfx_strideSizes[fmt]);
+}
+
+void Gfx_UnlockVb(GfxResourceID vb) {
+	_glBufferData(GL_ARRAY_BUFFER, tmpSize, tmpData, GL_STATIC_DRAW);
 }
 #else
 GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
@@ -1280,18 +1294,13 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	return id;
 }
 
-static void* lockedData;
-static int lockedSize;
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	lockedSize = count * gfx_strideSizes[fmt];
-	lockedData = Mem_Alloc(count, gfx_strideSizes[fmt], "Gfx_LockDynamicVb");
-	return lockedData;
-	/* TODO: Reuse buffer instead of always allocating */
+	return FastAllocTempMem(count * gfx_strideSizes[fmt]);
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 	_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
-	_glBufferSubData(GL_ARRAY_BUFFER, 0, lockedSize, lockedData);
+	_glBufferSubData(GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {

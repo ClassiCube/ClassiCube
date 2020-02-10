@@ -193,9 +193,7 @@ static void UpdateClouds(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	clouds_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	clouds_vb = Gfx_CreateVb(VERTEX_FORMAT_P3FT2FC4B, clouds_vertices);
-	data      = Gfx_LockVb(clouds_vb, VERTEX_FORMAT_P3FT2FC4B, clouds_vertices);
-
+	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, clouds_vertices, &clouds_vb);
 	DrawCloudsY(x1, z1, x2, z2, Env.CloudsHeight, data);
 	Gfx_UnlockVb(clouds_vb);
 }
@@ -266,9 +264,7 @@ static void UpdateSky(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	sky_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	sky_vb = Gfx_CreateVb(      VERTEX_FORMAT_P3FC4B, sky_vertices);
-	data   = Gfx_LockVb(sky_vb, VERTEX_FORMAT_P3FC4B, sky_vertices);
-
+	data   = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FC4B, sky_vertices, &sky_vb);
 	height = max((World.Height + 2), Env.CloudsHeight) + 6;
 	DrawSkyY(x1, z1, x2, z2, height, data);
 	Gfx_UnlockVb(sky_vb);
@@ -341,9 +337,7 @@ static void UpdateSkybox(void) {
 	if (Gfx.LostContext)     return;
 	if (EnvRenderer_Minimal) return;
 
-	skybox_vb = Gfx_CreateVb(         VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
-	data      = Gfx_LockVb(skybox_vb, VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
-
+	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT, &skybox_vb);
 	Mem_Copy(data, vertices, sizeof(vertices));
 	for (i = 0; i < SKYBOX_COUNT; i++) { data[i].Col = Env.SkyboxCol; }
 	Gfx_UnlockVb(skybox_vb);
@@ -691,12 +685,10 @@ static void UpdateMapSides(void) {
 	}
 
 	y = Env_SidesHeight;
-	sides_vertices += CalcNumVertices(World.Width, World.Length); /* YQuads beneath map */
+	sides_vertices +=     CalcNumVertices(World.Width, World.Length);  /* YQuads beneath map */
 	sides_vertices += 2 * CalcNumVertices(World.Width,  Math_AbsI(y)); /* ZQuads */
 	sides_vertices += 2 * CalcNumVertices(World.Length, Math_AbsI(y)); /* XQuads */
-
-	sides_vb = Gfx_CreateVb(        VERTEX_FORMAT_P3FT2FC4B, sides_vertices);
-	data     = Gfx_LockVb(sides_vb, VERTEX_FORMAT_P3FT2FC4B, sides_vertices);
+	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, sides_vertices, &sides_vb);
 
 	sides_fullBright = Blocks.FullBright[block];
 	col = sides_fullBright ? white : Env.ShadowCol;
@@ -741,9 +733,7 @@ static void UpdateMapEdges(void) {
 		r = rects[i];
 		edges_vertices += CalcNumVertices(r.Width, r.Height); /* YPlanes outside */
 	}
-
-	edges_vb = Gfx_CreateVb(        VERTEX_FORMAT_P3FT2FC4B, edges_vertices);
-	data     = Gfx_LockVb(edges_vb, VERTEX_FORMAT_P3FT2FC4B, edges_vertices);
+	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, edges_vertices, &edges_vb);
 
 	edges_fullBright = Blocks.FullBright[block];
 	col = edges_fullBright ? white : Env.SunCol;
