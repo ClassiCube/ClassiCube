@@ -22,5 +22,5 @@ void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec,
 void Particles_Render(float t);
 void Particles_Tick(struct ScheduledTask* task);
 void Particles_BreakBlockEffect(IVec3 coords, BlockID oldBlock, BlockID block);
-void Particles_RainSnowEffect(Vec3 pos);
+void Particles_RainSnowEffect(float x, float y, float z);
 #endif

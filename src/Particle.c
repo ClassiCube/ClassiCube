@@ -408,9 +408,8 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 	}
 }
 
-void Particles_RainSnowEffect(Vec3 pos) {
+void Particles_RainSnowEffect(float x, float y, float z) {
 	struct Particle* p;
-	Vec3 origin = pos;
 	Vec3 offset, velocity;
 	int i, type;
 
@@ -418,16 +417,16 @@ void Particles_RainSnowEffect(Vec3 pos) {
 		if (rain_count == PARTICLES_MAX) Rain_RemoveAt(0);
 		p = &rain_Particles[rain_count++];
 
-		velocity.X = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
-		velocity.Z = Random_Float(&rnd) * 0.8f - 0.4f;
-		velocity.Y = Random_Float(&rnd) + 0.4f;
+		p->velocity.X = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
+		p->velocity.Z = Random_Float(&rnd) * 0.8f - 0.4f;
+		p->velocity.Y = Random_Float(&rnd) + 0.4f;
 
-		offset.X = Random_Float(&rnd); /* [0.0, 1.0] */
-		offset.Y = Random_Float(&rnd) * 0.1f + 0.01f;
-		offset.Z = Random_Float(&rnd);
+		p->lastPos.X = x + Random_Float(&rnd); /* [0.0, 1.0] */
+		p->lastPos.Y = y + Random_Float(&rnd) * 0.1f + 0.01f;
+		p->lastPos.Z = z + Random_Float(&rnd);
 
-		Vec3_Add(&pos, &origin, &offset);
-		Particle_Reset(p, pos, velocity, 40.0f);
+		p->nextPos  = p->lastPos;
+		p->lifetime = 40.0f;
 
 		type = Random_Next(&rnd, 30);
 		p->size = (cc_uint8)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));

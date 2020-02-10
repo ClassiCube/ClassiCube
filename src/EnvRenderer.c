@@ -478,8 +478,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 			if (height <= 0) continue;
 
 			if (particles && (weather_accumulator >= 0.25 || moved)) {
-				Vec3 particlePos = Vec3_Create3((float)x, y, (float)z);
-				Particles_RainSnowEffect(particlePos);
+				Particles_RainSnowEffect((float)x, y, (float)z);
 			}
 
 			dist  = dx * dx + dz * dz;
