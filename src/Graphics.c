@@ -986,9 +986,9 @@ void Gfx_OnWindowResize(void) { Gfx_LoseContext(" (resizing window)"); }
 #endif
 
 #if defined CC_BUILD_GL11
-static GLuint gfx_activeList;
+static GLuint activeList;
 #define gl_DYNAMICLISTID 1234567891
-static void* gfx_dynamicListData;
+static void* dynamicListData;
 static cc_uint16 gl_indices[GFX_MAX_INDICES];
 #elif defined CC_BUILD_GLMODERN
 #define _glBindBuffer(t,b)        glBindBuffer(t,b)
@@ -1250,14 +1250,12 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 	_glBufferData(GL_ARRAY_BUFFER, tmpSize, tmpData, GL_STATIC_DRAW);
 }
 #else
-GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
-	GLuint list = glGenLists(1);
-
+static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int count) {
 	/* We need to restore client state afer building the list */
 	int curFormat  = gfx_batchFormat;
-	void* dyn_data = gfx_dynamicListData;
+	void* dyn_data = dynamicListData;
 	Gfx_SetVertexFormat(fmt);
-	gfx_dynamicListData = vertices;
+	dynamicListData = vertices;
 
 	glNewList(list, GL_COMPILE);
 	gfx_setupVBFunc();
@@ -1265,16 +1263,36 @@ GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
 	glEndList();
 
 	Gfx_SetVertexFormat(curFormat);
-	gfx_dynamicListData = dyn_data;
-	return list;
+	dynamicListData = dyn_data;
 }
 
-void Gfx_BindVb(GfxResourceID vb) { gfx_activeList = (GLuint)vb; }
+GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) { return glGenLists(1); }
+void Gfx_BindVb(GfxResourceID vb) { activeList = (GLuint)vb; }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GLuint id = (GLuint)(*vb);
 	if (id) glDeleteLists(id, 1);
 	*vb = 0;
+}
+
+/* NOTE! Building chunk in Builder.c relies on vb being ignored */
+/* If that changes, you must fix Builder.c to properly call Gfx_LockVb */
+static VertexFormat tmpFormat;
+static int tmpCount;
+void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
+	tmpFormat = fmt;
+	tmpCount  = count;
+	return FastAllocTempMem(count * gfx_strideSizes[fmt]);
+}
+
+void Gfx_UnlockVb(GfxResourceID vb) {
+	UpdateDisplayList((GLuint)vb, tmpData, tmpFormat, tmpCount);
+}
+
+GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count) {
+	GLuint list = glGenLists(1);
+	UpdateDisplayList(list, vertices, fmt, count);
+	return list;
 }
 #endif
 
@@ -1314,8 +1332,8 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 }
 
 void Gfx_BindDynamicVb(GfxResourceID vb) {
-	gfx_activeList      = gl_DYNAMICLISTID;
-	gfx_dynamicListData = (void*)vb;
+	activeList      = gl_DYNAMICLISTID;
+	dynamicListData = (void*)vb;
 }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
@@ -1901,7 +1919,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_GL11
 /* point to client side dynamic array */
-#define VB_PTR ((cc_uint8*)gfx_dynamicListData)
+#define VB_PTR ((cc_uint8*)dynamicListData)
 #define IB_PTR gl_indices
 #else
 /* no client side array, use vertex buffer object */
@@ -1956,7 +1974,7 @@ void Gfx_DrawVb_Lines(int verticesCount) {
 
 void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 #ifdef CC_BUILD_GL11
-	if (gfx_activeList != gl_DYNAMICLISTID) { glCallList(gfx_activeList); return; }
+	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
 #endif
 	gfx_setupVBRangeFunc(startVertex);
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
@@ -1964,7 +1982,7 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 
 void Gfx_DrawVb_IndexedTris(int verticesCount) {
 #ifdef CC_BUILD_GL11
-	if (gfx_activeList != gl_DYNAMICLISTID) { glCallList(gfx_activeList); return; }
+	if (activeList != gl_DYNAMICLISTID) { glCallList(activeList); return; }
 #endif
 	gfx_setupVBFunc();
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, IB_PTR);
