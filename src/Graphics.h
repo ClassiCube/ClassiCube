@@ -62,7 +62,7 @@ CC_API void Gfx_SetTexturing(cc_bool enabled);
 /* Turns on mipmapping. (if Gfx_Mipmaps is enabled) */
 /* NOTE: You must have created textures with mipmaps true for this to work. */
 CC_API void Gfx_EnableMipmaps(void);
-/* Turns off mipmapping. (if GfX_Mipmaps is enabled) */
+/* Turns off mipmapping. (if Gfx_Mipmaps is enabled) */
 /* NOTE: You must have created textures with mipmaps true for this to work. */
 CC_API void Gfx_DisableMipmaps(void);
 
@@ -99,21 +99,32 @@ CC_API void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a);
 /* Sets whether z/depth of pixels is actually written to the depth buffer. */
 CC_API void Gfx_SetDepthWrite(cc_bool enabled);
 
-/* Creates a new dynamic vertex buffer, whose contents can be updated later. */
-CC_API GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices);
-/* Creates a new vertex buffer and fills out its contents. */
-CC_API GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat fmt, int count);
 /* Creates a new index buffer and fills out its contents. */
 CC_API GfxResourceID Gfx_CreateIb(void* indices, int indicesCount);
-/* Sets the currently active vertex buffer. */
-CC_API void Gfx_BindVb(GfxResourceID vb);
 /* Sets the currently active index buffer. */
 CC_API void Gfx_BindIb(GfxResourceID ib);
-/* Deletes the given vertex buffer, then sets it to 0. */
-CC_API void Gfx_DeleteVb(GfxResourceID* vb);
 /* Deletes the given index buffer, then sets it to 0. */
 CC_API void Gfx_DeleteIb(GfxResourceID* ib);
 
+/* Creates a new vertex buffer. */
+CC_API GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count);
+/* Sets the currently active vertex buffer. */
+CC_API void Gfx_BindVb(GfxResourceID vb);
+/* Deletes the given vertex buffer, then sets it to 0. */
+CC_API void Gfx_DeleteVb(GfxResourceID* vb);
+/* Acquires temp memory for changing the contents of a vertex buffer. */
+CC_API void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count);
+/* Submits the changed contents of a vertex buffer. */
+CC_API void  Gfx_UnlockVb(GfxResourceID vb);
+/* TODO: How to make LockDynamicVb work with OpenGL 1.1 Builder stupidity.. */
+/* TODO: Cleanup the D3D9 Init and remove the if (i == count) stuff. */
+#ifdef CC_BUILD_GL11
+/* Special case of Gfx_Create/LockVb for building chunks in Builder.c */
+GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count);
+#endif
+
+/* Creates a new dynamic vertex buffer, whose contents can be updated later. */
+CC_API GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices);
 #ifndef CC_BUILD_GL11
 /* Static and dynamic vertex buffers are drawn in the same way */
 #define Gfx_BindDynamicVb   Gfx_BindVb
@@ -123,6 +134,10 @@ CC_API void Gfx_DeleteIb(GfxResourceID* ib);
 void Gfx_BindDynamicVb(GfxResourceID vb);
 void Gfx_DeleteDynamicVb(GfxResourceID* vb);
 #endif
+/* Acquires temp memory for changing the contents of a dynamic vertex buffer. */
+CC_API void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count);
+/* Binds then submits the changed contents of a dynamic vertex buffer. */
+CC_API void  Gfx_UnlockDynamicVb(GfxResourceID vb);
 
 /* Sets the format of the rendered vertices. */
 CC_API void Gfx_SetVertexFormat(VertexFormat fmt);
@@ -174,10 +189,9 @@ cc_bool Gfx_TryRestoreContext(void);
 
 /* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer. */
 /* NOTE: This replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
-void Gfx_UpdateDynamicVb_Lines(GfxResourceID vb, void* vertices, int vCount);
-/* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer. */
-/* NOTE: This replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
 void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount);
+/* Shorthand for Gfx_CreateVb followed by Gfx_LockVb */
+void* Gfx_CreateAndLockVb(VertexFormat fmt, int count, GfxResourceID* vb);
 
 /* Renders a 2D flat coloured rectangle. */
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol col);

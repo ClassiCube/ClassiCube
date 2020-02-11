@@ -1403,6 +1403,25 @@ static void MenuInputWidget_Render(void* widget, double delta) {
 	InputWidget_RenderCaret(w, delta);
 }
 
+static void MenuInputWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
+	struct InputWidget* w = (struct InputWidget*)widget;
+	Gfx_Make2DQuad(&w->inputTex, PACKEDCOL_WHITE, vertices);
+	Gfx_Make2DQuad(&w->caretTex, w->caretCol,     vertices);
+}
+
+static int MenuInputWidget_Render2(void* widget, int offset) {
+	struct InputWidget* w = (struct InputWidget*)widget;
+	Gfx_BindTexture(w->inputTex.ID);
+	Gfx_DrawVb_IndexedTris_Range(4, offset);
+	offset += 4;
+
+	if (w->showCaret && Math_Mod1((float)w->caretAccumulator) < 0.5f) {
+		Gfx_BindTexture(w->caretTex.ID);
+		Gfx_DrawVb_IndexedTris_Range(4, offset);
+	}
+	return offset + 4;
+}
+
 static void MenuInputWidget_RemakeTexture(void* widget) {
 	String range; char rangeBuffer[STRING_SIZE];
 	struct MenuInputWidget* w = (struct MenuInputWidget*)widget;
@@ -1476,7 +1495,8 @@ static int MenuInputWidget_GetMaxLines(void) { return 1; }
 static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
 	MenuInputWidget_Render,  InputWidget_Free,  InputWidget_Reposition,
 	InputWidget_KeyDown,     InputWidget_KeyUp, Widget_MouseScroll,
-	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove
+	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove,
+	MenuInputWidget_BuildMesh, MenuInputWidget_Render2
 };
 void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, struct MenuInputDesc* desc) {
 	InputWidget_Reset(&w->base);

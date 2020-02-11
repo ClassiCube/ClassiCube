@@ -20,7 +20,7 @@ static GfxResourceID Particles_TexId, Particles_VB;
 static RNGState rnd;
 static cc_bool particle_hitTerrain;
 
-void Particle_DoRender(Vec2* size, Vec3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* v) {
+void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec, PackedCol col, VertexP3fT2fC4b* v) {
 	struct Matrix* view;
 	float sX, sY;
 	Vec3 centre;
@@ -138,25 +138,23 @@ static cc_bool Particle_PhysicsTick(struct Particle* p, float gravity, cc_bool t
 /*########################################################################################################################*
 *-------------------------------------------------------Rain particle-----------------------------------------------------*
 *#########################################################################################################################*/
-struct RainParticle { struct Particle base; };
-
-static struct RainParticle rain_Particles[PARTICLES_MAX];
+static struct Particle rain_Particles[PARTICLES_MAX];
 static int rain_count;
 static TextureRec rain_rec = { 2.0f/128.0f, 14.0f/128.0f, 5.0f/128.0f, 16.0f/128.0f };
 
-static cc_bool RainParticle_Tick(struct RainParticle* p, double delta) {
+static cc_bool RainParticle_Tick(struct Particle* p, double delta) {
 	particle_hitTerrain = false;
-	return Particle_PhysicsTick(&p->base, 3.5f, false, delta) || particle_hitTerrain;
+	return Particle_PhysicsTick(p, 3.5f, false, delta) || particle_hitTerrain;
 }
 
-static void RainParticle_Render(struct RainParticle* p, float t, VertexP3fT2fC4b* vertices) {
+static void RainParticle_Render(struct Particle* p, float t, VertexP3fT2fC4b* vertices) {
 	Vec3 pos;
 	Vec2 size;
 	PackedCol col;
 	int x, y, z;
 
-	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
-	size.X = (float)p->base.size * 0.015625f; size.Y = size.X;
+	Vec3_Lerp(&pos, &p->lastPos, &p->nextPos, t);
+	size.X = (float)p->size * 0.015625f; size.Y = size.X;
 
 	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
 	col = World_Contains(x, y, z) ? Lighting_Col(x, y, z) : Env.SunCol;
@@ -164,23 +162,23 @@ static void RainParticle_Render(struct RainParticle* p, float t, VertexP3fT2fC4b
 }
 
 static void Rain_Render(float t) {
-	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
-	VertexP3fT2fC4b* ptr;
+	VertexP3fT2fC4b* data;
 	int i;
 	if (!rain_count) return;
 	
-	ptr = vertices;
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, rain_count * 4);
 	for (i = 0; i < rain_count; i++) {
-		RainParticle_Render(&rain_Particles[i], t, ptr);
-		ptr += 4;
+		RainParticle_Render(&rain_Particles[i], t, data);
+		data += 4;
 	}
 
 	Gfx_BindTexture(Particles_TexId);
-	Gfx_UpdateDynamicVb_IndexedTris(Particles_VB, vertices, rain_count * 4);
+	Gfx_UnlockDynamicVb(Particles_VB);
+	Gfx_DrawVb_IndexedTris(rain_count * 4);
 }
 
 static void Rain_RemoveAt(int index) {
-	struct RainParticle removed = rain_Particles[index];
+	struct Particle removed = rain_Particles[index];
 	int i;
 
 	for (i = index; i < rain_count - 1; i++) {
@@ -254,22 +252,23 @@ static void Terrain_Update1DCounts(void) {
 }
 
 static void Terrain_Render(float t) {
-	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
+	VertexP3fT2fC4b* data;
 	VertexP3fT2fC4b* ptr;
 	int offset = 0;
 	int i, index;
 	if (!terrain_count) return;
 
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, terrain_count * 4);
 	Terrain_Update1DCounts();
 	for (i = 0; i < terrain_count; i++) {
 		index = Atlas1D_Index(terrain_particles[i].texLoc);
-		ptr   = &vertices[terrain_1DIndices[index]];
+		ptr   = data + terrain_1DIndices[index];
 
 		TerrainParticle_Render(&terrain_particles[i], t, ptr);
 		terrain_1DIndices[index] += 4;
 	}
 
-	Gfx_SetDynamicVbData(Particles_VB, vertices, terrain_count * 4);
+	Gfx_UnlockDynamicVb(Particles_VB);
 	for (i = 0; i < Atlas1D.Count; i++) {
 		int partCount = terrain_1DCount[i];
 		if (!partCount) continue;
@@ -409,29 +408,28 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 	}
 }
 
-void Particles_RainSnowEffect(Vec3 pos) {
-	struct RainParticle* p;
-	Vec3 origin = pos;
+void Particles_RainSnowEffect(float x, float y, float z) {
+	struct Particle* p;
 	Vec3 offset, velocity;
 	int i, type;
 
 	for (i = 0; i < 2; i++) {
-		velocity.X = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
-		velocity.Z = Random_Float(&rnd) * 0.8f - 0.4f;
-		velocity.Y = Random_Float(&rnd) + 0.4f;
-
-		offset.X = Random_Float(&rnd); /* [0.0, 1.0] */
-		offset.Y = Random_Float(&rnd) * 0.1f + 0.01f;
-		offset.Z = Random_Float(&rnd);
-
 		if (rain_count == PARTICLES_MAX) Rain_RemoveAt(0);
 		p = &rain_Particles[rain_count++];
 
-		Vec3_Add(&pos, &origin, &offset);
-		Particle_Reset(&p->base, pos, velocity, 40.0f);
+		p->velocity.X = Random_Float(&rnd) * 0.8f - 0.4f; /* [-0.4, 0.4] */
+		p->velocity.Z = Random_Float(&rnd) * 0.8f - 0.4f;
+		p->velocity.Y = Random_Float(&rnd) + 0.4f;
+
+		p->lastPos.X = x + Random_Float(&rnd); /* [0.0, 1.0] */
+		p->lastPos.Y = y + Random_Float(&rnd) * 0.1f + 0.01f;
+		p->lastPos.Z = z + Random_Float(&rnd);
+
+		p->nextPos  = p->lastPos;
+		p->lifetime = 40.0f;
 
 		type = Random_Next(&rnd, 30);
-		p->base.size = (cc_uint8)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
+		p->size = (cc_uint8)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
 	}
 }
 

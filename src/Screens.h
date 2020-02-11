@@ -34,8 +34,8 @@ void Screen_Layout(void* screen);
 /* Calls Widget_Free on each widget in the screen. */
 /* Also deletes the screen's vb. */
 void Screen_ContextLost(void* screen);
-/* Calls Widget_BuildMesh on each widget in the screen. */
-void Screen_BuildMesh(void* screen, VertexP3fT2fC4b* vertices);
+void Screen_CreateVb(void* screen);
+void Screen_BuildMesh(void* screen);
 
 void InventoryScreen_Show(void);
 void HUDScreen_Show(void);

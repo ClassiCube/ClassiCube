@@ -18,9 +18,9 @@ struct Particle {
 };
 
 /* http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/ */
-void Particle_DoRender(Vec2* size, Vec3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices);
+void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices);
 void Particles_Render(float t);
 void Particles_Tick(struct ScheduledTask* task);
 void Particles_BreakBlockEffect(IVec3 coords, BlockID oldBlock, BlockID block);
-void Particles_RainSnowEffect(Vec3 pos);
+void Particles_RainSnowEffect(float x, float y, float z);
 #endif

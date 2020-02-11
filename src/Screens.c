@@ -99,16 +99,26 @@ void Screen_ContextLost(void* screen) {
 	}
 }
 
-void Screen_BuildMesh(void* screen, VertexP3fT2fC4b* vertices) {
+void Screen_CreateVb(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, s->maxVertices);
+}
+
+void Screen_BuildMesh(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
-	VertexP3fT2fC4b** ptr   = &vertices;
+	VertexP3fT2fC4b* data;
+	VertexP3fT2fC4b** ptr;
 	int i;
+
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(s->vb, VERTEX_FORMAT_P3FT2FC4B, s->maxVertices);
+	ptr  = &data;
 
 	for (i = 0; i < s->numWidgets; i++) {
 		if (!widgets[i]) continue;
 		Widget_BuildMesh(widgets[i], ptr);
 	}
+	Gfx_UnlockDynamicVb(s->vb);
 }
 
 
@@ -1469,7 +1479,7 @@ static void DisconnectScreen_ContextLost(void* screen) {
 static void DisconnectScreen_ContextRecreated(void* screen) {
 	String msg; char msgBuffer[STRING_SIZE];
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, DISCONNECT_MAX_VERTICES);
+	Screen_CreateVb(screen);
 
 	Drawer2D_MakeFont(&s->titleFont,   16, FONT_STYLE_BOLD);
 	Drawer2D_MakeFont(&s->messageFont, 16, FONT_STYLE_NORMAL);
@@ -1481,14 +1491,6 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 	ButtonWidget_Set(&s->reconnect, &msg, &s->titleFont);
 }
 
-static void DisconnectScreen_BuildMesh(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	VertexP3fT2fC4b vertices[DISCONNECT_MAX_VERTICES];
-
-	Screen_BuildMesh(screen, vertices);
-	Gfx_SetDynamicVbData(s->vb, vertices, DISCONNECT_MAX_VERTICES);
-}
-
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 
@@ -1498,6 +1500,7 @@ static void DisconnectScreen_Init(void* screen) {
 	ButtonWidget_Make(&s->reconnect, 300, NULL, 
 					ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 80);
 	s->reconnect.disabled = !s->canReconnect;
+	s->maxVertices  = DISCONNECT_MAX_VERTICES;
 
 	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */
 	Gfx_SetFpsLimit(Game_FpsLimit == FPS_LIMIT_VSYNC, 1000 / 5.0f);
@@ -1547,7 +1550,7 @@ static int DisconnectScreen_PointerMove(void* screen, int idx, int x, int y) {
 
 static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,        DisconnectScreen_Update, DisconnectScreen_Free,
-	DisconnectScreen_Render,      DisconnectScreen_BuildMesh,
+	DisconnectScreen_Render,      Screen_BuildMesh,
 	Screen_InputDown,             Screen_TInput,           Screen_TKeyPress,             Screen_TText,
 	DisconnectScreen_PointerDown, Screen_TPointer,         DisconnectScreen_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,                DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
@@ -1626,15 +1629,14 @@ static void TouchScreen_ModeClick(void* s, void* w) {
 	Input_Placing = !Input_Placing; 
 	TouchScreen_UpdateModeText(s);
 }
-static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreOverlay_Show(); }
+static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreScreen_Show(); }
 
 static void TouchScreen_ContextRecreated(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	const struct TouchBindDesc* desc;
 	int i;
-
+	Screen_CreateVb(screen);
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_BOLD);
-	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TOUCH_MAX_VERTICES);
 
 	for (i = 0; i < s->numWidgets; i++) {
 		desc = &touchDescs[i];
@@ -1690,21 +1692,14 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	return false;
 }
 
-static void TouchScreen_BuildMesh(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	VertexP3fT2fC4b vertices[TOUCH_MAX_VERTICES];
-
-	Screen_BuildMesh(screen, vertices);
-	Gfx_SetDynamicVbData(s->vb, vertices, TOUCH_MAX_VERTICES);
-}
-
 static void TouchScreen_Init(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	const struct TouchBindDesc* desc;
 	int i;
 
-	s->widgets    = touch_widgets;
-	s->numWidgets = Array_Elems(touch_widgets);
+	s->widgets     = touch_widgets;
+	s->numWidgets  = Array_Elems(touch_widgets);
+	s->maxVertices = TOUCH_MAX_VERTICES;
 
 	for (i = 0; i < s->numWidgets; i++) {
 		desc = &touchDescs[i];
@@ -1719,7 +1714,7 @@ static void TouchScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {
 	TouchScreen_Init,        Screen_NullUpdate,     Screen_NullFunc,
-	TouchScreen_Render,      TouchScreen_BuildMesh,
+	TouchScreen_Render,      Screen_BuildMesh,
 	Screen_FInput,           Screen_FInput,         Screen_FKeyPress, Screen_FText,
 	TouchScreen_PointerDown, TouchScreen_PointerUp, Screen_FPointer,  Screen_FMouseScroll,
 	Screen_Layout,           TouchScreen_ContextLost, TouchScreen_ContextRecreated

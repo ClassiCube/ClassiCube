@@ -37,6 +37,6 @@ void UrlWarningOverlay_Show(const String* url);
 void TexIdsOverlay_Show(void);
 void TexPackOverlay_Show(const String* url);
 #ifdef CC_BUILD_TOUCH
-void TouchMoreOverlay_Show(void);
+void TouchMoreScreen_Show(void);
 #endif
 #endif

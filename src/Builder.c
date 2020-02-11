@@ -37,8 +37,8 @@ static int (*Builder_StretchXLiquid)(int countIndex, int x, int y, int z, int ch
 static int (*Builder_StretchX)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face);
 static int (*Builder_StretchZ)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face);
 static void (*Builder_RenderBlock)(int countsIndex);
-static void (*Builder_PreStretchTiles)(int x1, int y1, int z1);
-static void (*Builder_PostStretchTiles)(int x1, int y1, int z1);
+static void (*Builder_PreStretchTiles)(void);
+static void (*Builder_PostStretchTiles)(void);
 
 /* Contains state for vertices for a portion of a chunk mesh (vertices that are in a 1D atlas) */
 struct Builder1DPart {
@@ -51,7 +51,6 @@ struct Builder1DPart {
 The first ATLAS1D_MAX_ATLASES parts are for normal parts, remainder are for translucent parts. */
 static struct Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
 static VertexP3fT2fC4b* Builder_Vertices;
-static int Builder_VerticesElems;
 
 static int Builder1DPart_VerticesCount(struct Builder1DPart* part) {
 	int i, count = part->sCount;
@@ -84,13 +83,13 @@ static int Builder_TotalVerticesCount(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Base mesh builder----------------------------------------------------*
 *#########################################################################################################################*/
-static void Builder_AddSpriteVertices(BlockID block) {
+static void AddSpriteVertices(BlockID block) {
 	int i = Atlas1D_Index(Block_Tex(block, FACE_XMAX));
 	struct Builder1DPart* part = &Builder_Parts[i];
 	part->sCount += 4 * 4;
 }
 
-static void Builder_AddVertices(BlockID block, Face face) {
+static void AddVertices(BlockID block, Face face) {
 	int baseOffset = (Blocks.Draw[block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	int i = Atlas1D_Index(Block_Tex(block, face));
 	struct Builder1DPart* part = &Builder_Parts[baseOffset + i];
@@ -105,7 +104,7 @@ static void BuildPartVbs(struct ChunkPartInfo* info) {
 		count = info->Counts[i];
 
 		if (count) {
-			info->Vbs[i] = Gfx_CreateVb(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
+			info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
 			offset += count;
 		} else {
 			info->Vbs[i] = 0;
@@ -115,14 +114,14 @@ static void BuildPartVbs(struct ChunkPartInfo* info) {
 	count  = info->SpriteCount;
 	offset = info->Offset;
 	if (count) {
-		info->Vbs[i] = Gfx_CreateVb(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
+		info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
 	} else {
 		info->Vbs[i] = 0;
 	}
 }
 #endif
 
-static void Builder_SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPartInfo* info, cc_bool* hasParts) {
+static void SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPartInfo* info, cc_bool* hasParts) {
 	int vCount = Builder1DPart_VerticesCount(part);
 	info->Offset = -1;
 	if (!vCount) return;
@@ -180,7 +179,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 				/* Sprites can't be stretched, nor can then be they hidden by other blocks. */
 				/* Note sprites are drawn using DrawSprite and not with any of the DrawXFace. */
 				if (Blocks.Draw[b] == DRAW_SPRITE) {
-					Builder_AddSpriteVertices(b);
+					AddSpriteVertices(b);
 					continue;
 				}
 
@@ -195,7 +194,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					Builder_Counts[index] = 0;
 				} else {
 					count = Builder_StretchZ(index, x, y, z, cIndex, b, FACE_XMIN);
-					Builder_AddVertices(b, FACE_XMIN);
+					AddVertices(b, FACE_XMIN);
 					Builder_Counts[index] = count;
 				}
 
@@ -206,7 +205,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					Builder_Counts[index] = 0;
 				} else {
 					count = Builder_StretchZ(index, x, y, z, cIndex, b, FACE_XMAX);
-					Builder_AddVertices(b, FACE_XMAX);
+					AddVertices(b, FACE_XMAX);
 					Builder_Counts[index] = count;
 				}
 
@@ -217,7 +216,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					Builder_Counts[index] = 0;
 				} else {
 					count = Builder_StretchX(index, Builder_X, Builder_Y, Builder_Z, cIndex, b, FACE_ZMIN);
-					Builder_AddVertices(b, FACE_ZMIN);
+					AddVertices(b, FACE_ZMIN);
 					Builder_Counts[index] = count;
 				}
 
@@ -228,7 +227,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					Builder_Counts[index] = 0;
 				} else {
 					count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_ZMAX);
-					Builder_AddVertices(b, FACE_ZMAX);
+					AddVertices(b, FACE_ZMAX);
 					Builder_Counts[index] = count;
 				}
 
@@ -238,7 +237,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					Builder_Counts[index] = 0;
 				} else {
 					count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_YMIN);
-					Builder_AddVertices(b, FACE_YMIN);
+					AddVertices(b, FACE_YMIN);
 					Builder_Counts[index] = count;
 				}
 
@@ -248,11 +247,11 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					Builder_Counts[index] = 0;
 				} else if (b < BLOCK_WATER || b > BLOCK_STILL_LAVA) {
 					count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_YMAX);
-					Builder_AddVertices(b, FACE_YMAX);
+					AddVertices(b, FACE_YMAX);
 					Builder_Counts[index] = count;
 				} else {
 					count = Builder_StretchXLiquid(index, x, y, z, cIndex, b);
-					if (count > 0) Builder_AddVertices(b, FACE_YMAX);
+					if (count > 0) AddVertices(b, FACE_YMAX);
 					Builder_Counts[index] = count;
 				}
 			}
@@ -349,20 +348,20 @@ static cc_bool ReadBorderChunkData(int x1, int y1, int z1, cc_bool* outAllAir) {
 	return false;
 }
 
-static cc_bool Builder_BuildChunk(int x1, int y1, int z1, cc_bool* allAir) {
+static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 	BlockID chunk[EXTCHUNK_SIZE_3]; 
 	cc_uint8 counts[CHUNK_SIZE_3 * FACE_COUNT]; 
 	int bitFlags[EXTCHUNK_SIZE_3];
 
-	cc_bool allSolid, onBorder;
-	int xMax, yMax, zMax;
+	cc_bool allAir, allSolid, onBorder;
+	int xMax, yMax, zMax, totalVerts;
 	int cIndex, index;
 	int x, y, z, xx, yy, zz;
 
 	Builder_Chunk  = chunk;
 	Builder_Counts = counts;
 	Builder_BitFlags = bitFlags;
-	Builder_PreStretchTiles(x1, y1, z1);
+	Builder_PreStretchTiles();
 	
 	onBorder = 
 		x1 == 0 || y1 == 0 || z1 == 0   || x1 + CHUNK_SIZE >= World.Width ||
@@ -371,12 +370,13 @@ static cc_bool Builder_BuildChunk(int x1, int y1, int z1, cc_bool* allAir) {
 	if (onBorder) {
 		/* less optimal case here */
 		Mem_Set(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
-		allSolid = ReadBorderChunkData(x1, y1, z1, allAir);
+		allSolid = ReadBorderChunkData(x1, y1, z1, &allAir);
 	} else {
-		allSolid = ReadChunkData(x1, y1, z1, allAir);
+		allSolid = ReadChunkData(x1, y1, z1, &allAir);
 	}
 
-	if (*allAir || allSolid) return false;
+	info->AllAir = allAir;
+	if (allAir || allSolid) return false;
 	Lighting_LightHint(x1 - 1, z1 - 1);
 
 	Mem_Set(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
@@ -386,7 +386,18 @@ static cc_bool Builder_BuildChunk(int x1, int y1, int z1, cc_bool* allAir) {
 
 	Builder_ChunkEndX = xMax; Builder_ChunkEndZ = zMax;
 	Builder_Stretch(x1, y1, z1);
-	Builder_PostStretchTiles(x1, y1, z1);
+
+	totalVerts = Builder_TotalVerticesCount();
+	if (!totalVerts) return false;
+
+#ifndef CC_BUILD_GL11
+	/* add an extra element to fix crashing on some GPUs */
+	Builder_Vertices = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1, &info->Vb);
+#else
+	/* NOTE: Relies on assumption vb is ignored by GL11 Gfx_LockVb implementation */
+	Builder_Vertices = Gfx_LockVb(0, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
+#endif
+	Builder_PostStretchTiles();
 
 	for (y = y1, yy = 0; y < yMax; y++, yy++) {
 		for (z = z1, zz = 0; z < zMax; z++, zz++) {
@@ -403,26 +414,21 @@ static cc_bool Builder_BuildChunk(int x1, int y1, int z1, cc_bool* allAir) {
 			}
 		}
 	}
+
+#ifndef CC_BUILD_GL11
+	Gfx_UnlockVb(info->Vb);
+#endif
 	return true;
 }
 
 void Builder_MakeChunk(struct ChunkInfo* info) {
 	int x = info->CentreX - 8, y = info->CentreY - 8, z = info->CentreZ - 8;
-	cc_bool allAir, hasMesh, hasNorm, hasTran;
-	int totalVerts, partsIndex;
+	cc_bool hasMesh, hasNorm, hasTran;
+	int partsIndex;
 	int i, j, curIdx, offset;
 
-	allAir  = false;
-	hasMesh = Builder_BuildChunk(x, y, z, &allAir);
-	info->AllAir = allAir;
+	hasMesh = BuildChunk(x, y, z, info);
 	if (!hasMesh) return;
-
-	totalVerts = Builder_TotalVerticesCount();
-	if (!totalVerts) return;
-#ifndef CC_BUILD_GL11
-	/* add an extra element to fix crashing on some GPUs */
-	info->Vb = Gfx_CreateVb(Builder_Vertices, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
-#endif
 
 	partsIndex = MapRenderer_Pack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
 	offset  = 0;
@@ -433,8 +439,8 @@ void Builder_MakeChunk(struct ChunkInfo* info) {
 		j = i + ATLAS1D_MAX_ATLASES;
 		curIdx = partsIndex + i * MapRenderer_ChunksCount;
 
-		Builder_SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx],      &hasNorm);
-		Builder_SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx], &hasTran);
+		SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx],      &hasNorm);
+		SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx], &hasTran);
 	}
 
 	if (hasNorm) {
@@ -460,21 +466,12 @@ static cc_bool Builder_OccludedLiquid(int chunkIndex) {
 		&& Blocks.Draw[Builder_Chunk[chunkIndex + EXTCHUNK_SIZE]] != DRAW_GAS;
 }
 
-static void Builder_DefaultPreStretchTiles(int x1, int y1, int z1) {
+static void DefaultPreStretchTiles(void) {
 	Mem_Set(Builder_Parts, 0, sizeof(Builder_Parts));
 }
 
-static void Builder_DefaultPostStretchTiles(int x1, int y1, int z1) {
-	int i, j, offset, count;
-	
-	count = Builder_TotalVerticesCount();
-	if (count > Builder_VerticesElems) {
-		Mem_Free(Builder_Vertices);
-		/* ensure buffer can be accessed with 64 bytes alignment by putting 2 extra vertices at end. */
-		Builder_Vertices = (VertexP3fT2fC4b*)Mem_Alloc(count + 2, sizeof(VertexP3fT2fC4b), "chunk vertices");
-		Builder_VerticesElems = count;
-	}
-
+static void DefaultPostStretchTiles(void) {
+	int i, j, offset;
 	offset = 0;
 	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
 		j = i + ATLAS1D_MAX_ATLASES;
@@ -756,8 +753,8 @@ static void Builder_SetDefault(void) {
 	Builder_RenderBlock    = NULL;
 
 	Builder_UseBitFlags      = false;
-	Builder_PreStretchTiles  = Builder_DefaultPreStretchTiles;
-	Builder_PostStretchTiles = Builder_DefaultPostStretchTiles;
+	Builder_PreStretchTiles  = DefaultPreStretchTiles;
+	Builder_PostStretchTiles = DefaultPostStretchTiles;
 }
 
 static void NormalBuilder_SetActive(void) {
@@ -1238,9 +1235,9 @@ static void Adv_RenderBlock(int index) {
 	if (count_YMax) Adv_DrawYMax(count_YMax);
 }
 
-static void Adv_PreStretchTiles(int x1, int y1, int z1) {
+static void Adv_PreStretchTiles(void) {
 	int i;
-	Builder_DefaultPreStretchTiles(x1, y1, z1);
+	DefaultPreStretchTiles();
 	adv_bitFlags = Builder_BitFlags;
 
 	for (i = 0; i <= 4; i++) {

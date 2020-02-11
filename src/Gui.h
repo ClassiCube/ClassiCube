@@ -74,7 +74,7 @@ struct ScreenVTABLE {
 	cc_bool blocksWorld; /* Whether this screen completely and opaquely covers the game world behind it. */ \
 	cc_bool closable;    /* Whether this screen is automatically closed when pressing Escape */ \
 	cc_bool dirty;       /* Whether this screens needs to have its mesh rebuilt. */ \
-	GfxResourceID vb; struct Widget** widgets; int numWidgets;
+	int maxVertices; GfxResourceID vb; struct Widget** widgets; int numWidgets;
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Body };
