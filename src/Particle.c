@@ -39,12 +39,6 @@ void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec,
 	v->X = centre.X + aX - bX; v->Y = centre.Y + aY - bY; v->Z = centre.Z + aZ - bZ; v->Col = col; v->U = rec->U2; v->V = rec->V2; v++;
 }
 
-static void Particle_Reset(struct Particle* p, Vec3 pos, Vec3 velocity, float lifetime) {
-	p->lastPos = pos; p->nextPos = pos;
-	p->velocity = velocity;
-	p->lifetime = lifetime;
-}
-
 static cc_bool Particle_CanPass(BlockID block, cc_bool throughLiquids) {
 	cc_uint8 draw = Blocks.Draw[block];
 	return draw == DRAW_GAS || draw == DRAW_SPRITE || (throughLiquids && Blocks.IsLiquid[block]);
@@ -336,13 +330,9 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 	int minU, minV, maxU, maxV;
 	int maxUsedU, maxUsedV;
 	
-	/* per-particle coords */
-	float cellX, cellY, cellZ;
-	Vec3 cell, pos;
-	
 	/* per-particle variables */
-	Vec3 velocity;
-	float life;
+	float cellX, cellY, cellZ;
+	Vec3 cell;
 	int x, y, z, type;
 
 	if (now != BLOCK_AIR || Blocks.Draw[old] == DRAW_GAS) return;
@@ -378,10 +368,13 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 				if (cell.X < minBB.X || cell.X > maxBB.X || cell.Y < minBB.Y
 					|| cell.Y > maxBB.Y || cell.Z < minBB.Z || cell.Z > maxBB.Z) continue;
 
+				if (terrain_count == PARTICLES_MAX) Terrain_RemoveAt(0);
+				p = &terrain_particles[terrain_count++];
+
 				/* centre random offset around [-0.2, 0.2] */
-				velocity.X = CELL_CENTRE + (cellX - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
-				velocity.Y = CELL_CENTRE + (cellY - 0.0f) + (Random_Float(&rnd) * 0.4f - 0.2f);
-				velocity.Z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
+				p->base.velocity.X = CELL_CENTRE + (cellX - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
+				p->base.velocity.Y = CELL_CENTRE + (cellY - 0.0f) + (Random_Float(&rnd) * 0.4f - 0.2f);
+				p->base.velocity.Z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 
 				rec = baseRec;
 				rec.U1 = baseRec.U1 + Random_Range(&rnd, minU, maxUsedU) * uScale;
@@ -390,13 +383,10 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 				rec.V2 = rec.V1 + 4 * vScale;
 				rec.U2 = min(rec.U2, maxU2) - 0.01f * uScale;
 				rec.V2 = min(rec.V2, maxV2) - 0.01f * vScale;
-
-				if (terrain_count == PARTICLES_MAX) Terrain_RemoveAt(0);
-				p = &terrain_particles[terrain_count++];
-
-				life = 0.3f + Random_Float(&rnd) * 1.2f;
-				Vec3_Add(&pos, &origin, &cell);
-				Particle_Reset(&p->base, pos, velocity, life);
+		
+				Vec3_Add(&p->base.lastPos, &origin, &cell);
+				p->base.nextPos  = p->base.lastPos;
+				p->base.lifetime = 0.3f + Random_Float(&rnd) * 1.2f;
 
 				p->rec    = rec;
 				p->texLoc = loc;
@@ -410,7 +400,6 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 
 void Particles_RainSnowEffect(float x, float y, float z) {
 	struct Particle* p;
-	Vec3 offset, velocity;
 	int i, type;
 
 	for (i = 0; i < 2; i++) {
