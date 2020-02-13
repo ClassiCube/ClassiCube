@@ -90,14 +90,13 @@ Install libexecinfo package if needed.
 
 ```gcc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lGL -lcurl -lopenal -lexecinfo```
 
-#### Solaris
-
-```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lGL -lcurl -lopenal```
-
 #### Alpine Linux
 
 ```gcc *.c -o ClassiCube -lm -lpthread -lX11 -lGL -lcurl -lopenal -ldl -lexecinfo```
 
+#### Solaris
+
+```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lGL -lcurl -lopenal```
 
 NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
 
