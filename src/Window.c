@@ -2736,8 +2736,11 @@ static RequestClipboardCallback clipboard_func;
 static void* clipboard_obj;
 
 EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
-	String str = String_FromReadonly(src);
+	String str; char strBuffer[512];
 	if (!clipboard_func) return;
+
+	String_InitArray(str, strBuffer);
+	String_AppendUtf8(&str, src, String_CalcLen(src, 2048));
 
 	clipboard_func(&str, clipboard_obj);
 	clipboard_func = NULL;
