@@ -94,6 +94,11 @@ Install libexecinfo package if needed.
 
 ```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lGL -lcurl -lopenal```
 
+#### Alpine Linux
+
+```gcc *.c -o ClassiCube -lm -lpthread -lX11 -lGL -lcurl -lopenal -ldl -lexecinfo```
+
+
 NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
 
 #### Web
