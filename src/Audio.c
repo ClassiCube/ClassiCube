@@ -736,6 +736,7 @@ static AudioHandle music_out;
 static void* music_thread;
 static void* music_waitable;
 static volatile cc_bool music_pendingStop, music_joining;
+static int music_minDelay, music_maxDelay;
 
 static cc_result Music_Buffer(int i, cc_int16* data, int maxSamples, struct VorbisState* ctx) {
 	int samples = 0;
@@ -865,7 +866,7 @@ static void Music_RunLoop(void) {
 		if (res) { Logger_Warn2(res, "closing", &path); break; }
 
 		if (music_pendingStop) break;
-		delay = 120 * 1000 + Random_Next(&rnd, 300 * 1000);
+		delay = Random_Range(&rnd, music_minDelay, music_maxDelay);
 		Waitable_WaitFor(music_waitable, delay);
 	}
 
@@ -929,6 +930,10 @@ static void Audio_Init(void) {
 	Directory_Enum(&path, NULL, Audio_FilesCallback);
 	music_waitable = Waitable_Create();
 	Audio_SysInit();
+
+	/* music is delayed between 2 - 7 minutes */
+	music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
+	music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
 
 	volume = Audio_LoadVolume(OPT_MUSIC_VOLUME, OPT_USE_MUSIC);
 	Audio_SetMusic(volume);
