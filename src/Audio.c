@@ -75,13 +75,6 @@ static void Volume_Mix16(cc_int16* samples, int count, int volume) {
 	}
 }
 
-static void Volume_Mix8(cc_uint8* samples, int count, int volume) {
-	int i;
-	for (i = 0; i < count; i++, samples++) {
-		samples[0] = (127 + (samples[0] - 127) * volume / 100);
-	}
-}
-
 
 /*########################################################################################################################*
 *------------------------------------------------Native implementation----------------------------------------------------*
@@ -140,14 +133,14 @@ cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	if (AudioFormat_Eq(cur, format)) return 0;
 	if (ctx->Handle && (res = waveOutClose(ctx->Handle))) return res;
 
-	int sampleSize = format->Channels * format->BitsPerSample / 8;
+	int sampleSize = format->Channels * 2; /* 16 bits per sample / 8 */
 	WAVEFORMATEX fmt;
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
 	fmt.nChannels       = format->Channels;
 	fmt.nSamplesPerSec  = format->SampleRate;
 	fmt.nAvgBytesPerSec = format->SampleRate * sampleSize;
 	fmt.nBlockAlign     = sampleSize;
-	fmt.wBitsPerSample  = format->BitsPerSample;
+	fmt.wBitsPerSample  = 16;
 	fmt.cbSize          = 0;
 
 	ctx->Format = *format;
@@ -311,14 +304,9 @@ cc_result Audio_Close(AudioHandle handle) {
 	return 0;
 }
 
-static ALenum GetALFormat(int channels, int bitsPerSample) {
-	if (bitsPerSample == 16) {
-		if (channels == 1) return AL_FORMAT_MONO16;
-		if (channels == 2) return AL_FORMAT_STEREO16;
-	} else if (bitsPerSample == 8) {
-		if (channels == 1) return AL_FORMAT_MONO8;
-		if (channels == 2) return AL_FORMAT_STEREO8;
-	}
+static ALenum GetALFormat(int channels) {
+	if (channels == 1) return AL_FORMAT_MONO16;
+	if (channels == 2) return AL_FORMAT_STEREO16;
 	Logger_Abort("Unsupported audio format"); return 0;
 }
 
@@ -328,7 +316,7 @@ cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	ALenum err;
 
 	if (AudioFormat_Eq(cur, format)) return 0;
-	ctx->DataFormat = GetALFormat(format->Channels, format->BitsPerSample);
+	ctx->DataFormat = GetALFormat(format->Channels);
 	ctx->Format     = *format;
 	
 	if ((err = Audio_FreeSource(ctx))) return err;
@@ -453,6 +441,7 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	cc_uint32 fourCC, size;
 	cc_uint8 tmp[WAV_FMT_SIZE];
 	cc_result res;
+	int bitsPerSample;
 
 	if ((res = Stream_Read(stream, tmp, 12))) return res;
 	fourCC = Stream_GetU32_BE(&tmp[0]);
@@ -473,7 +462,9 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			snd->Format.Channels      = Stream_GetU16_LE(&tmp[2]);
 			snd->Format.SampleRate    = Stream_GetU32_LE(&tmp[4]);
 			/* tmp[8] (6) alignment data and stuff */
-			snd->Format.BitsPerSample = Stream_GetU16_LE(&tmp[14]);
+
+			bitsPerSample = Stream_GetU16_LE(&tmp[14]);
+			if (bitsPerSample != 16) return WAV_ERR_SAMPLE_BITS;
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
 			snd->Data = (cc_uint8*)Mem_TryAlloc(size, 1);
@@ -615,11 +606,7 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 		data = output->Buffer;
 
 		Mem_Copy(data, snd->Data, snd->Size);
-		if (fmt->BitsPerSample == 8) {
-			Volume_Mix8((cc_uint8*)data,  snd->Size,     volume);
-		} else {
-			Volume_Mix16((cc_int16*)data, snd->Size / 2, volume);
-		}
+		Volume_Mix16((cc_int16*)data, snd->Size / 2, volume);
 	}
 
 	if ((res = Audio_BufferData(output->Handle, 0, data, snd->Size))) { Sounds_Fail(res); return; }
@@ -772,9 +759,8 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	vorbis.source = &stream;
 	if ((res = Vorbis_DecodeHeaders(&vorbis))) goto cleanup;
 	
-	fmt.Channels      = vorbis.channels;
-	fmt.SampleRate    = vorbis.sampleRate;
-	fmt.BitsPerSample = 16;
+	fmt.Channels   = vorbis.channels;
+	fmt.SampleRate = vorbis.sampleRate;
 	if ((res = Audio_SetFormat(music_out, &fmt))) goto cleanup;
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples */

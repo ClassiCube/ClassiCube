@@ -21,8 +21,8 @@ void Audio_PlayStepSound(cc_uint8 type);
 
 #define AUDIO_MAX_BUFFERS 4
 /* Information about a source of audio. */
-struct AudioFormat { cc_uint16 Channels, BitsPerSample; int SampleRate; };
-#define AudioFormat_Eq(a, b) ((a)->Channels == (b)->Channels && (a)->BitsPerSample == (b)->BitsPerSample && (a)->SampleRate == (b)->SampleRate)
+struct AudioFormat { cc_uint16 Channels; int SampleRate; };
+#define AudioFormat_Eq(a, b) ((a)->Channels == (b)->Channels && (a)->SampleRate == (b)->SampleRate)
 typedef int AudioHandle;
 
 /* Acquires an audio context. */
