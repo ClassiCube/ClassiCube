@@ -892,8 +892,9 @@ void TableWidget_OnInventoryChanged(struct TableWidget* w) {
 *#########################################################################################################################*/
 static void InputWidget_Reset(struct InputWidget* w) {
 	Widget_Reset(w);
-	w->caretPos    = -1;
-	w->caretOffset = Display_ScaleY(2);
+	w->caretPos      = -1;
+	w->caretOffset   = Display_ScaleY(2);
+	w->OnTextChanged = NULL;
 }
 
 static void InputWidget_FormatLine(struct InputWidget* w, int i, String* line) {
@@ -1025,6 +1026,7 @@ void InputWidget_Clear(struct InputWidget* w) {
 
 	w->caretPos = -1;
 	Gfx_DeleteTexture(&w->inputTex.ID);
+	/* TODO: Maybe call w->OnTextChanged */
 }
 
 static cc_bool InputWidget_AllowedChar(void* widget, char c) {
@@ -1186,12 +1188,14 @@ void InputWidget_UpdateText(struct InputWidget* w) {
 	w->RemakeTexture(w);
 	InputWidget_UpdateCaret(w);
 	Window_SetKeyboardText(&w->text);
+	if (w->OnTextChanged) w->OnTextChanged(w);
 }
 
 void InputWidget_SetText(struct InputWidget* w, const String* str) {
 	InputWidget_Clear(w);
 	InputWidget_AppendText(w, str);
 	/* If text is empty, InputWidget_UpdateText won't have been called */
+	/* TODO: InputWidet_UpdateText should probably always be called... */
 	if (!w->text.length) Window_SetKeyboardText(&w->text);
 }
 

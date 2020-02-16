@@ -107,11 +107,12 @@ struct InputWidget {
 	void (*RemakeTexture)(void* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(void* elem); /* Invoked when the user presses enter. */
 	cc_bool (*AllowedChar)(void* elem, char c);
+	void (*OnTextChanged)(void* elem); /* Callback invoked whenever text changes. */
 
-	String text;
-	String lines[INPUTWIDGET_MAX_LINES];    /* raw text of each line */
-	int lineWidths[INPUTWIDGET_MAX_LINES];  /* Width of each line in pixels */
-	int lineHeight;
+	String text; /* The actual raw text */
+	String lines[INPUTWIDGET_MAX_LINES];   /* text of each line after word wrapping */
+	int lineWidths[INPUTWIDGET_MAX_LINES]; /* Width of each line in pixels */
+	int lineHeight; /* Height of a line in pixels */
 	struct Texture inputTex;
 	int prefixWidth;
 	cc_bool convertPercents;

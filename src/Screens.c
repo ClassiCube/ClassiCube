@@ -405,6 +405,10 @@ static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 	Widget_Layout(&s->chat);
 }
 
+static void ChatScreen_OnInputTextChanged(void* elem) {
+	ChatScreen_UpdateChatYOffsets(Gui_Chat);
+}
+
 static String ChatScreen_GetChat(void* obj, int i) {
 	i += ChatScreen_Instance.chatIndex;
 
@@ -749,7 +753,6 @@ static int ChatScreen_KeyPress(void* screen, char keyChar) {
 	}
 
 	InputWidget_Append(&s->input.base, keyChar);
-	ChatScreen_UpdateChatYOffsets(s);
 	return true;
 }
 
@@ -759,7 +762,6 @@ static int ChatScreen_TextChanged(void* screen, const String* str) {
 	if (!s->grabsInput) return false;
 
 	InputWidget_SetText(&s->input.base, str);
-	ChatScreen_UpdateChatYOffsets(s);
 #endif
 	return true;
 }
@@ -794,7 +796,6 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 			ChatScreen_ScrollChatBy(s, +Gui_Chatlines);
 		} else {
 			Elem_HandlesKeyDown(&s->input.base, key);
-			ChatScreen_UpdateChatYOffsets(s);
 		}
 		return key < KEY_F1 || key > KEY_F35;
 	}
@@ -903,6 +904,7 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 static void ChatScreen_Init(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	ChatInputWidget_Create(&s->input);
+	s->input.base.OnTextChanged = ChatScreen_OnInputTextChanged;
 	SpecialInputWidget_Create(&s->altText, &s->chatFont, &s->input.base);
 
 	TextGroupWidget_Create(&s->status, CHAT_MAX_STATUS,
@@ -1011,7 +1013,6 @@ void ChatScreen_OpenInput(const String* text) {
 void ChatScreen_AppendInput(const String* text) {
 	struct ChatScreen* s = &ChatScreen_Instance;
 	InputWidget_AppendText(&s->input.base, text);
-	ChatScreen_UpdateChatYOffsets(s);
 }
 
 void ChatScreen_SetChatlines(int lines) {
