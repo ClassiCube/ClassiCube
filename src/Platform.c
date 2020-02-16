@@ -1167,7 +1167,7 @@ void Process_Exit(cc_result code) { exit(code); }
 #if defined CC_BUILD_OSX
 void Process_StartOpen(const String* args) {
 	/* This used to be exec "/usr/bin/open" str */
-	UInt8 str[600];
+	UInt8 str[NATIVE_STR_LEN];
 	CFURLRef urlCF;
 	int len;
 	
@@ -1537,7 +1537,7 @@ cc_result Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLe
 cc_bool Platform_DescribeError(cc_result res, String* dst) {
 	TCHAR chars[NATIVE_STR_LEN];
 	res = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-					NULL, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, 600, NULL);
+					NULL, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, NATIVE_STR_LEN, NULL);
 	if (!res) return false;
 
 	Platform_DecodeString(dst, chars, res);
