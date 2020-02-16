@@ -9,9 +9,15 @@ struct Stream;
 #define VORBIS_MAX_BLOCK_SIZE 8192
 #define OGG_BUFFER_SIZE (255 * 256)
 
-/* Wraps an OGG container stream around an existing stream. */
-/* NOTE: buffer must be of size OGG_BUFFER_SIZE at least. */
-void Ogg_MakeStream(struct Stream* stream, cc_uint8* buffer, struct Stream* source);
+struct OggState {
+	cc_uint8* cur; 
+	cc_uint32 left, last;
+	struct Stream* source;
+	cc_uint8 buffer[OGG_BUFFER_SIZE];
+};
+
+/* Wraps an OGG container around an existing stream. */
+void Ogg_Init(struct OggState* ctx, struct Stream* source);
 struct Codebook; struct Floor; struct Residue; struct Mapping; struct Mode;
 
 struct imdct_state {
@@ -26,7 +32,7 @@ struct VorbisWindow { float* Prev; float* Cur; };
 struct VorbisState {
 	cc_uint32 Bits;    /* Holds bits across byte boundaries*/
 	cc_uint32 NumBits; /* Number of bits in Bits buffer*/
-	struct Stream* source;  /* Source for filling Input buffer */
+	struct OggState* source; /* Source for filling Input buffer */
 
 	cc_uint8 channels, modeNumBits;
 	cc_uint16 curBlockSize, prevBlockSize, dataSize, numCodebooks;

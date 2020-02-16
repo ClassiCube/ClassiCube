@@ -12,7 +12,7 @@
 *-------------------------------------------------------Ogg stream--------------------------------------------------------*
 *#########################################################################################################################*/
 #define OGG_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
-static cc_result Ogg_NextPage(struct Stream* stream) {
+static cc_result Ogg_NextPage(struct OggState* ctx) {
 	cc_uint8 header[27];
 	struct Stream* source;
 	cc_uint32 sig, size;
@@ -32,7 +32,7 @@ static cc_result Ogg_NextPage(struct Stream* stream) {
 	* [number of segments] number of bytes in each segment
 	* [sum of bytes in each segment] page data
 	*/
-	source = stream->Meta.Ogg.Source;
+	source = ctx->source;
 	if ((res = Stream_Read(source, header, sizeof(header)))) return res;
 
 	sig = Stream_GetU32_BE(&header[0]);
@@ -44,52 +44,68 @@ static cc_result Ogg_NextPage(struct Stream* stream) {
 	if ((res = Stream_Read(source, segments, numSegments))) return res;
 	for (i = 0; i < numSegments; i++) size += segments[i];
 
-	if ((res = Stream_Read(source, stream->Meta.Ogg.Base, size))) return res;
-	stream->Meta.Ogg.Cur  = stream->Meta.Ogg.Base;
-	stream->Meta.Ogg.Left = size;
-	stream->Meta.Ogg.Last = header[5] & 4;
+	if ((res = Stream_Read(source, ctx->buffer, size))) return res;
+	ctx->cur  = ctx->buffer;
+	ctx->left = size;
+	ctx->last = header[5] & 4;
 	return 0;
 }
 
-static cc_result Ogg_Read(struct Stream* stream, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+static cc_result Ogg_Read(struct OggState* ctx, cc_uint8* data, cc_uint32 count) {
+	cc_uint32 left = count;
 	cc_result res;
-	for (;;) {
-		if (stream->Meta.Ogg.Left) {
-			count = min(count, stream->Meta.Ogg.Left);
-			Mem_Copy(data, stream->Meta.Ogg.Cur, count);
+	while (left) {
+		if (ctx->left) {
+			count = min(left, ctx->left);
+			Mem_Copy(data, ctx->cur, count);
 
-			*modified = count;
-			stream->Meta.Ogg.Cur  += count;
-			stream->Meta.Ogg.Left -= count;
-			return 0;
+			ctx->cur  += count;
+			ctx->left -= count;
+			left      -= count;
+		} else {
+			if (ctx->last) return ERR_END_OF_STREAM;
+			if ((res = Ogg_NextPage(ctx))) return res;
 		}
-
-		/* try again with data from next page */
-		*modified = 0;
-		if (stream->Meta.Ogg.Last) return 0;
-		if ((res = Ogg_NextPage(stream))) return res;
 	}
-}
-
-static cc_result Ogg_ReadU8(struct Stream* stream, cc_uint8* data) {
-	if (!stream->Meta.Ogg.Left) return Stream_DefaultReadU8(stream, data);
-
-	*data = *stream->Meta.Ogg.Cur;
-	stream->Meta.Ogg.Cur++; 
-	stream->Meta.Ogg.Left--;
 	return 0;
 }
 
-void Ogg_MakeStream(struct Stream* stream, cc_uint8* buffer, struct Stream* source) {
-	Stream_Init(stream);
-	stream->Read   = Ogg_Read;
-	stream->ReadU8 = Ogg_ReadU8;
+static cc_result Ogg_Skip(struct OggState* ctx, cc_uint32 count) {
+	cc_uint8 tmp[3584]; /* not quite 4 KB to avoid chkstk call */
+	cc_uint32 left = count;
+	cc_result res;
 
-	stream->Meta.Ogg.Cur  = buffer;
-	stream->Meta.Ogg.Base = buffer;
-	stream->Meta.Ogg.Left = 0;
-	stream->Meta.Ogg.Last = 0;
-	stream->Meta.Ogg.Source = source;
+	/* TODO: Should Ogg_Read be duplicated here to avoid Mem_Copy call? */
+	/* Probably not worth it considering how small comments are */
+	while (left) {
+		count = min(left, sizeof(tmp));
+		if ((res = Ogg_Read(ctx, tmp, count))) return res;
+		left -= count;
+	}
+	return 0;
+}
+
+static cc_result Ogg_ReadU8(struct OggState* ctx, cc_uint8* data) {
+	/* The fast path below almost always gets used */
+	if (!ctx->left) return Ogg_Read(ctx, data, 1);
+
+	*data = *ctx->cur;
+	ctx->cur++;
+	ctx->left--;
+	return 0;
+}
+
+static cc_result Ogg_ReadU32(struct OggState* ctx, cc_uint32* value) {
+	cc_uint8 data[4]; cc_result res;
+	if ((res = Ogg_Read(ctx, data, 4))) return res;
+	*value = Stream_GetU32_LE(data); return 0;
+}
+
+void Ogg_Init(struct OggState* ctx, struct Stream* source) {
+	ctx->cur  = ctx->buffer;
+	ctx->left = 0;
+	ctx->last = 0;
+	ctx->source = source;
 }
 
 
@@ -109,7 +125,7 @@ static cc_uint32 Vorbis_ReadBits(struct VorbisState* ctx, cc_uint32 bitsCount) {
 	cc_result res;
 
 	while (ctx->NumBits < bitsCount) {
-		res = ctx->source->ReadU8(ctx->source, &portion);
+		res = Ogg_ReadU8(ctx->source, &portion);
 		if (res) { Logger_Abort2(res, "Failed to read byte for vorbis"); }
 		Vorbis_PushByte(ctx, portion);
 	}
@@ -123,7 +139,7 @@ static cc_result Vorbis_TryReadBits(struct VorbisState* ctx, cc_uint32 bitsCount
 	cc_result res;
 
 	while (ctx->NumBits < bitsCount) {
-		res = ctx->source->ReadU8(ctx->source, &portion);
+		res = Ogg_ReadU8(ctx->source, &portion);
 		if (res) return res;
 		Vorbis_PushByte(ctx, portion);
 	}
@@ -138,7 +154,7 @@ static cc_uint32 Vorbis_ReadBit(struct VorbisState* ctx) {
 	cc_result res;
 
 	if (!ctx->NumBits) {
-		res = ctx->source->ReadU8(ctx->source, &portion);
+		res = Ogg_ReadU8(ctx->source, &portion);
 		if (res) { Logger_Abort2(res, "Failed to read byte for vorbis"); }
 		Vorbis_PushByte(ctx, portion);
 	}
@@ -1131,7 +1147,7 @@ static cc_result Vorbis_CheckHeader(struct VorbisState* ctx, cc_uint8 type) {
 	cc_bool OK;
 	cc_result res;
 
-	if ((res = Stream_Read(ctx->source, header, sizeof(header)))) return res;
+	if ((res = Ogg_Read(ctx->source, header, sizeof(header)))) return res;
 	if (header[0] != type) return VORBIS_ERR_WRONG_HEADER;
 
 	OK = 
@@ -1145,7 +1161,7 @@ static cc_result Vorbis_DecodeIdentifier(struct VorbisState* ctx) {
 	cc_uint32 version;
 	cc_result res;
 
-	if ((res = Stream_Read(ctx->source, header, sizeof(header)))) return res;
+	if ((res = Ogg_Read(ctx->source, header, sizeof(header)))) return res;
 	version  = Stream_GetU32_LE(&header[0]);
 	if (version != 0) return VORBIS_ERR_VERSION;
 
@@ -1168,21 +1184,21 @@ static cc_result Vorbis_DecodeComments(struct VorbisState* ctx) {
 	cc_uint32 i, len, comments;
 	cc_uint8 flag;
 	cc_result res;
-	struct Stream* stream = ctx->source;
+	struct OggState* source = ctx->source;
 
 	/* vendor name, followed by comments */
-	if ((res = Stream_ReadU32_LE(stream, &len)))      return res;
-	if ((res = stream->Skip(stream, len)))            return res;
-	if ((res = Stream_ReadU32_LE(stream, &comments))) return res;
+	if ((res = Ogg_ReadU32(source, &len)))      return res;
+	if ((res = Ogg_Skip(source, len)))          return res;
+	if ((res = Ogg_ReadU32(source, &comments))) return res;
 
 	for (i = 0; i < comments; i++) {
 		/* comments such as artist, year, etc */
-		if ((res = Stream_ReadU32_LE(stream, &len))) return res;
-		if ((res = stream->Skip(stream, len)))       return res;
+		if ((res = Ogg_ReadU32(source, &len))) return res;
+		if ((res = Ogg_Skip(source, len)))     return res;
 	}
 
 	/* check framing flag */
-	if ((res = stream->ReadU8(stream, &flag))) return res;
+	if ((res = Ogg_ReadU8(source, &flag))) return res;
 	return (flag & 1) ? 0 : VORBIS_ERR_FRAMING;
 }
 

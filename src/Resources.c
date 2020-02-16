@@ -667,8 +667,8 @@ static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) 
 
 static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 	String path; char pathBuffer[STRING_SIZE];
-	cc_uint8 buffer[OGG_BUFFER_SIZE];
-	struct Stream src, ogg, dst;
+	struct OggState ogg;
+	struct Stream src, dst;
 	struct VorbisState ctx = { 0 };
 	cc_result res;
 
@@ -679,7 +679,7 @@ static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 	res = Stream_CreateFile(&dst, &path);
 	if (res) { Logger_Warn(res, "creating .wav file"); return; }
 
-	Ogg_MakeStream(&ogg, buffer, &src);
+	Ogg_Init(&ogg, &src);
 	ctx.source = &ogg;
 
 	SoundPatcher_DecodeAudio(&dst, &ctx);
