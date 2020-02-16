@@ -13,7 +13,9 @@ struct OggState {
 	cc_uint8* cur; 
 	cc_uint32 left, last;
 	struct Stream* source;
+	int segmentsRead, numSegments;
 	cc_uint8 buffer[OGG_BUFFER_SIZE];
+	cc_uint8 segments[255];
 };
 
 /* Wraps an OGG container around an existing stream. */

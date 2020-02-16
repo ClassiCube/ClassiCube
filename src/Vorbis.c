@@ -12,12 +12,28 @@
 *-------------------------------------------------------Ogg stream--------------------------------------------------------*
 *#########################################################################################################################*/
 #define OGG_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
+
+static void Ogg_DiscardPacket(struct OggState* ctx) {
+	ctx->cur += ctx->left;
+	ctx->left = 0;
+}
+
+static void Ogg_NextPacket(struct OggState* ctx) {
+	cc_uint8 part;
+	ctx->left = 0;
+
+	for (; ctx->segmentsRead < ctx->numSegments; ) {
+		part = ctx->segments[ctx->segmentsRead++];
+		ctx->left += part;
+		if (part != 255) break; /* end of this packet */
+	}
+}
+
 static cc_result Ogg_NextPage(struct OggState* ctx) {
 	cc_uint8 header[27];
 	struct Stream* source;
 	cc_uint32 sig, size;
 	int i, numSegments;
-	cc_uint8 segments[255];
 	cc_result res;
 
 	/* OGG page format:
@@ -32,6 +48,7 @@ static cc_result Ogg_NextPage(struct OggState* ctx) {
 	* [number of segments] number of bytes in each segment
 	* [sum of bytes in each segment] page data
 	*/
+	/* An OGG page is then further split into one or more packets */
 	source = ctx->source;
 	if ((res = Stream_Read(source, header, sizeof(header)))) return res;
 
@@ -39,15 +56,17 @@ static cc_result Ogg_NextPage(struct OggState* ctx) {
 	if (sig != OGG_FourCC('O','g','g','S')) return OGG_ERR_INVALID_SIG;
 	if (header[4] != 0) return OGG_ERR_VERSION;
 
-	numSegments = header[26];
-	size = 0;
-	if ((res = Stream_Read(source, segments, numSegments))) return res;
-	for (i = 0; i < numSegments; i++) size += segments[i];
+	ctx->segmentsRead = 0;
+	ctx->numSegments  = header[26];
+	if ((res = Stream_Read(source, ctx->segments, ctx->numSegments))) return res;
 
+	size = 0;
+	for (i = 0; i < ctx->numSegments; i++) size += ctx->segments[i];
 	if ((res = Stream_Read(source, ctx->buffer, size))) return res;
+
 	ctx->cur  = ctx->buffer;
-	ctx->left = size;
 	ctx->last = header[5] & 4;
+	Ogg_NextPacket(ctx);
 	return 0;
 }
 
@@ -64,7 +83,12 @@ static cc_result Ogg_Read(struct OggState* ctx, cc_uint8* data, cc_uint32 count)
 			left      -= count;
 		} else {
 			if (ctx->last) return ERR_END_OF_STREAM;
-			if ((res = Ogg_NextPage(ctx))) return res;
+
+			if (ctx->segmentsRead < ctx->numSegments) {
+				Ogg_NextPacket(ctx);
+			} else {
+				if ((res = Ogg_NextPage(ctx))) return res;
+			}
 		}
 	}
 	return 0;
@@ -106,6 +130,8 @@ void Ogg_Init(struct OggState* ctx, struct Stream* source) {
 	ctx->left = 0;
 	ctx->last = 0;
 	ctx->source = source;
+	ctx->segmentsRead = 0;
+	ctx->numSegments  = 0;
 }
 
 
@@ -1268,10 +1294,15 @@ cc_result Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 	
 	if ((res = Vorbis_CheckHeader(ctx, 1)))   return res;
 	if ((res = Vorbis_DecodeIdentifier(ctx))) return res;
+	Ogg_DiscardPacket(ctx->source);
+
 	if ((res = Vorbis_CheckHeader(ctx, 3)))   return res;
 	if ((res = Vorbis_DecodeComments(ctx)))   return res;
+	Ogg_DiscardPacket(ctx->source);
+
 	if ((res = Vorbis_CheckHeader(ctx, 5)))   return res;
 	if ((res = Vorbis_DecodeSetup(ctx)))      return res;
+	Ogg_DiscardPacket(ctx->source);
 
 	/* window calculations can be pre-computed here */
 	count = ctx->blockSizes[0] + ctx->blockSizes[1];
