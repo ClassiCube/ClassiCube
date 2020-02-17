@@ -11,6 +11,7 @@
 #include "Utils.h"
 #include "Errors.h"
 #include "Window.h"
+#include "Options.h"
 
 cc_bool Drawer2D_BitmappedText;
 cc_bool Drawer2D_BlackTextShadows;

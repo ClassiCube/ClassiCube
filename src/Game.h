@@ -1,7 +1,7 @@
 #ifndef CC_GAME_H
 #define CC_GAME_H
 #include "Picking.h"
-#include "Options.h"
+#include "String.h"
 #include "Bitmap.h"
 /* Represents the game.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3

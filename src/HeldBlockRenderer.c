@@ -9,6 +9,7 @@
 #include "Entity.h"
 #include "Model.h"
 #include "GameStructs.h"
+#include "Options.h"
 
 cc_bool HeldBlockRenderer_Show;
 static BlockID held_block;

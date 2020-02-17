@@ -7,6 +7,7 @@
 #include "Utils.h"
 #include "Launcher.h"
 #include "Server.h"
+#include "Options.h"
 
 /*#define CC_TEST_VORBIS*/
 #ifdef CC_TEST_VORBIS

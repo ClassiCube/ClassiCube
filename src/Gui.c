@@ -11,6 +11,7 @@
 #include "Logger.h"
 #include "Platform.h"
 #include "Bitmap.h"
+#include "Options.h"
 
 cc_bool Gui_ClassicTexture, Gui_ClassicTabList, Gui_ClassicMenu;
 int     Gui_Chatlines;

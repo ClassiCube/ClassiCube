@@ -16,6 +16,7 @@
 #include "GameStructs.h"
 #include "Utils.h"
 #include "TexturePack.h"
+#include "Options.h"
 
 static char msgs[10][STRING_SIZE];
 String Chat_Status[4]       = { String_FromArray(msgs[0]), String_FromArray(msgs[1]), String_FromArray(msgs[2]), String_FromArray(msgs[3]) };

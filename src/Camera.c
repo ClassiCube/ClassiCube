@@ -8,6 +8,7 @@
 #include "Entity.h"
 #include "Input.h"
 #include "Event.h"
+#include "Options.h"
 
 struct _CameraData Camera;
 static struct PickedPos cameraClipPos;

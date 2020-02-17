@@ -12,6 +12,7 @@
 #include "Chat.h"
 #include "Stream.h"
 #include "Utils.h"
+#include "Options.h"
 
 int Audio_SoundsVolume, Audio_MusicVolume;
 

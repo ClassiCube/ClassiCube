@@ -27,16 +27,16 @@ WEB_CC=~/emscripten/emsdk/emscripten/tag-1.38.30/emcc
 MAC32_CC=/usr/bin/clang/osx32
 MAC64_CC=/usr/bin/clang/osx64
 WIN32_CC=i686-w64-mingw32-gcc
-WIN64_CC=x86_64-w64-mingw32-gccnostartfiles -Wl,-emain_real -DCC_NOMAIN"
-LINUX_FLAGS="-fvisibility=hidden
+WIN64_CC=x86_64-w64-mingw32-gcc
 
 # to simplify stuff
 ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -w"
 WIN32_FLAGS="-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN"
-WIN64_FLAGS="-mwindows - -rdynamic -DCC_BUILD_X11ICON"
+WIN64_FLAGS="-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN"
+LINUX_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_X11ICON"
 
 # I cloned https://github.com/raspberrypi/tools to get prebuilt cross compilers
-# Then I copied across various files/folders from /usr/include and /usr/lib as needed
+# Then I copied across various files/folders from /usr/include and /usr/lib from a real Raspberry pi as needed
 RPI_CC=~/rpi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-gcc-4.8.3
 
 # -----------------------------

@@ -12,6 +12,7 @@
 #include "Block.h"
 #include "Stream.h"
 #include "Funcs.h"
+#include "Options.h"
 
 struct _ModelsData Models;
 

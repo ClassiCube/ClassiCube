@@ -15,6 +15,7 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Logger.h"
+#include "Options.h"
 
 #ifndef CC_BUILD_WEB
 struct LScreen* Launcher_Screen;

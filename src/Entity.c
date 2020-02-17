@@ -19,6 +19,7 @@
 #include "Stream.h"
 #include "Bitmap.h"
 #include "Logger.h"
+#include "Options.h"
 
 const char* const NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };

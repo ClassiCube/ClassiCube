@@ -13,6 +13,7 @@
 #include "Logger.h"
 #include "Window.h"
 #include "Input.h"
+#include "Options.h"
 
 #ifndef CC_BUILD_WEB
 /*########################################################################################################################*

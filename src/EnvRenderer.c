@@ -17,6 +17,7 @@
 #include "Platform.h"
 #include "Camera.h"
 #include "Particle.h"
+#include "Options.h"
 
 cc_bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 
