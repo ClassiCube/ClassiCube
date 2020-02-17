@@ -89,7 +89,7 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <mach-o/dyld.h>
 #include <ApplicationServices/ApplicationServices.h>
 #elif defined CC_BUILD_HAIKU
-#define CC_BUILD_HAIKU
+#define CC_BUILD_UNIX
 /* TODO: Use open instead of xdg-open */
 #include <kernel/image.h>
 #elif defined CC_BUILD_WEB

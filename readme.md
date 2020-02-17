@@ -1,4 +1,4 @@
-ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, OSX, Linux, BSD, Solaris, and in a browser.
+ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, OSX, Linux, BSD, Solaris, Haiku, and in a browser.
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
@@ -68,11 +68,11 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ```gcc *.c -o ClassiCube -DCC_BUILD_RPI -lm -lpthread -lX11 -lEGL -lGLESv2 -lcurl -lopenal -ldl```
 
-#### Mac OSX (32 bit)
+#### macOS (32 bit)
 
 ```gcc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenAL -framework OpenGL -lcurl```
 
-#### Mac OSX (64 bit)
+#### macOS (64 bit)
 
 ```gcc *.c -o ClassiCube -framework Cocoa -framework OpenAL -framework OpenGL -lcurl -lobjc```
 
@@ -93,6 +93,14 @@ Install libexecinfo package if needed.
 #### Solaris
 
 ```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lGL -lcurl -lopenal```
+
+NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
+
+#### Haiku
+
+Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed.
+
+```gcc *.c -o ClassiCube -lm -lcurl -lexecinfo -lopenal -lGL -lnetwork -lSDL2```
 
 NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
 

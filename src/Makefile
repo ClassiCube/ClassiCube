@@ -64,7 +64,7 @@ endif
 ifeq ($(PLAT),haiku)
 CFLAGS=-g -pipe
 LDFLAGS=-g
-LIBS=-lcurl -lm -lexecinfo -lopenal -lGL -lnetwork
+LIBS=-lcurl -lm -lexecinfo -lopenal -lGL -lnetwork -lSDL2
 endif
 
 ifeq ($(OS),Windows_NT)
