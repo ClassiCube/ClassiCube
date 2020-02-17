@@ -134,12 +134,12 @@ cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	if (AudioFormat_Eq(cur, format)) return 0;
 	if (ctx->handle && (res = waveOutClose(ctx->handle))) return res;
 
-	int sampleSize = format->Channels * 2; /* 16 bits per sample / 8 */
+	int sampleSize = format->channels * 2; /* 16 bits per sample / 8 */
 	WAVEFORMATEX fmt;
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
-	fmt.nChannels       = format->Channels;
-	fmt.nSamplesPerSec  = format->SampleRate;
-	fmt.nAvgBytesPerSec = format->SampleRate * sampleSize;
+	fmt.nChannels       = format->channels;
+	fmt.nSamplesPerSec  = format->sampleRate;
+	fmt.nAvgBytesPerSec = format->sampleRate * sampleSize;
 	fmt.nBlockAlign     = sampleSize;
 	fmt.wBitsPerSample  = 16;
 	fmt.cbSize          = 0;
@@ -460,8 +460,8 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if ((res = Stream_Read(stream, tmp, sizeof(tmp)))) return res;
 			if (Stream_GetU16_LE(&tmp[0]) != 1) return WAV_ERR_DATA_TYPE;
 
-			snd->format.Channels   = Stream_GetU16_LE(&tmp[2]);
-			snd->format.SampleRate = Stream_GetU32_LE(&tmp[4]);
+			snd->format.channels   = Stream_GetU16_LE(&tmp[2]);
+			snd->format.sampleRate = Stream_GetU32_LE(&tmp[4]);
 			/* tmp[8] (6) alignment data and stuff */
 
 			bitsPerSample = Stream_GetU16_LE(&tmp[14]);
@@ -631,14 +631,14 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 
 	fmt     = snd->format;
 	volume  = Audio_SoundsVolume;
-	outputs = fmt.Channels == 1 ? monoOutputs : stereoOutputs;
+	outputs = fmt.channels == 1 ? monoOutputs : stereoOutputs;
 
 	if (board == &digBoard) {
-		if (type == SOUND_METAL) fmt.SampleRate = (fmt.SampleRate * 6) / 5;
-		else fmt.SampleRate = (fmt.SampleRate * 4) / 5;
+		if (type == SOUND_METAL) fmt.sampleRate = (fmt.sampleRate * 6) / 5;
+		else fmt.sampleRate = (fmt.sampleRate * 4) / 5;
 	} else {
 		volume /= 2;
-		if (type == SOUND_METAL) fmt.SampleRate = (fmt.SampleRate * 7) / 5;
+		if (type == SOUND_METAL) fmt.sampleRate = (fmt.sampleRate * 7) / 5;
 	}
 
 	/* Try to play on fresh device, or device with same data format */
@@ -654,7 +654,7 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 		}
 
 		l = Audio_GetFormat(output->Handle);
-		if (!l->Channels || AudioFormat_Eq(l, &fmt)) {
+		if (!l->channels || AudioFormat_Eq(l, &fmt)) {
 			Sounds_PlayRaw(output, snd, &fmt, volume); return;
 		}
 	}
@@ -759,14 +759,14 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	vorbis.source = &ogg;
 	if ((res = Vorbis_DecodeHeaders(&vorbis))) goto cleanup;
 	
-	fmt.Channels   = vorbis.channels;
-	fmt.SampleRate = vorbis.sampleRate;
+	fmt.channels   = vorbis.channels;
+	fmt.sampleRate = vorbis.sampleRate;
 	if ((res = Audio_SetFormat(music_out, &fmt))) goto cleanup;
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples */
 	/* so we may end up decoding slightly over a second of audio */
-	chunkSize        = fmt.Channels * (fmt.SampleRate + vorbis.blockSizes[1]);
-	samplesPerSecond = fmt.Channels * fmt.SampleRate;
+	chunkSize        = fmt.channels * (fmt.sampleRate + vorbis.blockSizes[1]);
+	samplesPerSecond = fmt.channels * fmt.sampleRate;
 	data = (cc_int16*)Mem_Alloc(chunkSize * AUDIO_MAX_BUFFERS, 2, "Ogg final output");
 
 	/* fill up with some samples before playing */

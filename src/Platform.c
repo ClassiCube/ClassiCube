@@ -91,6 +91,8 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #elif defined CC_BUILD_HAIKU
 #define CC_BUILD_UNIX
 /* TODO: Use open instead of xdg-open */
+/* TODO: Use load_image/resume_thread instead of fork */
+/* Otherwise opening browser never works because fork fails */
 #include <kernel/image.h>
 #elif defined CC_BUILD_WEB
 #include <emscripten.h>
