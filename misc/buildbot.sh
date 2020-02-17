@@ -21,20 +21,23 @@
 # As such, you may want to uninstall libcurl package, manually compile curl's source code for both 32 and 64 bit, 
 # then add the .so files to /usr/lib/i386-linux-gnu and /usr/lib/x86_64-linux-gnu/
 
-# change these as needed
+# paths, change these as needed
 SOURCE_DIR=~/client
-EMSCRIPTEN_PATH=/usr/bin/emscripten/emcc
-CLANG32_PATH=/usr/bin/clang/osx32
-CLANG64_PATH=/usr/bin/clang/osx64
+WEB_CC=~/emscripten/emsdk/emscripten/tag-1.38.30/emcc
+MAC32_CC=/usr/bin/clang/osx32
+MAC64_CC=/usr/bin/clang/osx64
+WIN32_CC=i686-w64-mingw32-gcc
+WIN64_CC=x86_64-w64-mingw32-gccnostartfiles -Wl,-emain_real -DCC_NOMAIN"
+LINUX_FLAGS="-fvisibility=hidden
+
 # to simplify stuff
 ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -w"
 WIN32_FLAGS="-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN"
-WIN64_FLAGS="-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN"
-LINUX_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_X11ICON"
+WIN64_FLAGS="-mwindows - -rdynamic -DCC_BUILD_X11ICON"
 
 # I cloned https://github.com/raspberrypi/tools to get prebuilt cross compilers
 # Then I copied across various files/folders from /usr/include and /usr/lib as needed
-RPI_PATH=~/rpi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-gcc-4.8.3
+RPI_CC=~/rpi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin/arm-linux-gnueabihf-gcc-4.8.3
 
 # -----------------------------
 build_win32() {
@@ -42,8 +45,8 @@ build_win32() {
   cp $SOURCE_DIR/misc/CCicon_32.res $SOURCE_DIR/src/CCicon_32.res
   rm cc-w32-d3d.exe cc-w32-ogl.exe
 
-  i686-w64-mingw32-gcc *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-d3d.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9
-  i686-w64-mingw32-gcc *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-ogl.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32
+  $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-d3d.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9
+  $WIN32_CC *.c $ALL_FLAGS $WIN32_FLAGS -o cc-w32-ogl.exe CCicon_32.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32
 }
 
 build_win64() {
@@ -51,8 +54,8 @@ build_win64() {
   cp $SOURCE_DIR/misc/CCicon_64.res $SOURCE_DIR/src/CCicon_64.res
   rm cc-w64-d3d.exe cc-w64-ogl.exe
   
-  x86_64-w64-mingw32-gcc *.c $ALL_FLAGS $WIN64_FLAGS -o cc-w64-d3d.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9
-  x86_64-w64-mingw32-gcc *.c $ALL_FLAGS $WIN64_FLAGS -o cc-w64-ogl.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32
+  $WIN64_CC *.c $ALL_FLAGS $WIN64_FLAGS -o cc-w64-d3d.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9
+  $WIN64_CC *.c $ALL_FLAGS $WIN64_FLAGS -o cc-w64-ogl.exe CCicon_64.res -DCC_COMMIT_SHA=\"$LATEST\" -DCC_BUILD_MANUAL -DCC_BUILD_WIN -DCC_BUILD_GL -DCC_BUILD_WINGUI -DCC_BUILD_WGL -DCC_BUILD_WINMM -DCC_BUILD_WININET -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -lopengl32
 }
 
 build_nix32() {
@@ -72,19 +75,19 @@ build_nix64() {
 build_osx32() {
   echo "Building mac32.."
   rm cc-osx32
-  $CLANG32_PATH *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenAL -framework OpenGL -lcurl
+  $MAC32_CC *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenAL -framework OpenGL -lcurl
 }
 
 build_osx64() {
   echo "Building mac64.."
   rm cc-osx64
-  $CLANG64_PATH *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenAL -framework OpenGL -lcurl -lobjc
+  $MAC64_CC *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenAL -framework OpenGL -lcurl -lobjc
 }
 
 build_web() {
   echo "Building web.."
   rm cc.js
-  $EMSCRIPTEN_PATH *.c -O1 -o cc.js -s FETCH=1 -s WASM=0 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file texpacks/default.zip -w
+  $WEB_CC *.c -O1 -o cc.js -s FETCH=1 -s WASM=0 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file texpacks/default.zip -w
   # so game loads textures from classicube.net/static/default.zip
   sed -i 's#cc.data#/static/default.zip#g' cc.js
   # fix texture pack overlay always showing 'Download size: Determining..."
@@ -98,7 +101,7 @@ build_rpi() {
   echo "Building rpi.."
   cp $SOURCE_DIR/misc/CCicon_rpi $SOURCE_DIR/src/CCicon_rpi.o
   rm cc-rpi
-  $RPI_PATH *.c $ALL_FLAGS $LINUX_FLAGS CCicon_rpi.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -DCC_BUILD_RPI -I ~/rpi/include -L ~/rpi/lib -lGLESv2 -lEGL -lX11 -lcurl -lopenal -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
+  $RPI_CC *.c $ALL_FLAGS $LINUX_FLAGS CCicon_rpi.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -DCC_BUILD_RPI -I ~/rpi/include -L ~/rpi/lib -lGLESv2 -lEGL -lX11 -lcurl -lopenal -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
 }
 
 # -----------------------------
@@ -117,3 +120,6 @@ build_osx32
 build_osx64
 build_web
 build_rpi
+
+cd ~
+python notify.py
