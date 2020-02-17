@@ -317,7 +317,7 @@ cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	ALenum err;
 
 	if (AudioFormat_Eq(cur, format)) return 0;
-	ctx->dataFormat = GetALFormat(format->Channels);
+	ctx->dataFormat = GetALFormat(format->channels);
 	ctx->format     = *format;
 	
 	if ((err = Audio_FreeSource(ctx))) return err;
@@ -335,7 +335,7 @@ cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 da
 	ALenum err;
 	ctx->completed[idx] = false;
 
-	alBufferData(buffer, ctx->dataFormat, data, dataSize, ctx->format.SampleRate);
+	alBufferData(buffer, ctx->dataFormat, data, dataSize, ctx->format.sampleRate);
 	if ((err = alGetError())) return err;
 	alSourceQueueBuffers(ctx->source, 1, &buffer);
 	if ((err = alGetError())) return err;
