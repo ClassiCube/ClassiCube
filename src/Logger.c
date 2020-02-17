@@ -695,14 +695,26 @@ static LONG WINAPI Logger_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
 	String msg; char msgBuffer[128 + 1];
 	cc_uint32 code;
 	cc_uintptr addr;
+	DWORD i, numArgs;
 
 	code = (cc_uint32)pInfo->ExceptionRecord->ExceptionCode;
 	addr = (cc_uintptr)pInfo->ExceptionRecord->ExceptionAddress;
 
 	String_InitArray_NT(msg, msgBuffer);
 	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
-	msg.buffer[msg.length] = '\0';
 
+	numArgs = pInfo->ExceptionRecord->NumberParameters;
+	if (numArgs) {
+		numArgs = min(numArgs, EXCEPTION_MAXIMUM_PARAMETERS);
+		String_AppendConst(&msg, " [");
+
+		for (i = 0; i < numArgs; i++) {
+			String_Format1(&msg, "0x%x,", &pInfo->ExceptionRecord->ExceptionInformation[i]);
+		}
+		String_Append(&msg, ']');
+	}
+
+	msg.buffer[msg.length] = '\0';
 	Logger_AbortCommon(0, msg.buffer, pInfo->ContextRecord);
 	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
 }
