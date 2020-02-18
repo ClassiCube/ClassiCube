@@ -474,19 +474,20 @@ static const cc_uint8 blocksTnt[BLOCK_CPE_COUNT] = {
 	1, 1, 1, 0, 1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1,  1, 1,
 };
 
-static void Physics_Explode(int x, int y, int z, int power) {	
-	int index = World_Pack(x, y, z);
-	int powerSquared = power * power;
-	BlockID block;
+#define TNT_POWER 4
+#define TNT_POWER_SQUARED (TNT_POWER * TNT_POWER)
+static void Physics_HandleTnt(int index, BlockID block) {
+	int x, y, z;
 	int dx, dy, dz, xx, yy, zz;
 
+	World_Unpack(index, x, y, z);
 	Game_UpdateBlock(x, y, z, BLOCK_AIR);
 	Physics_ActivateNeighbours(x, y, z, index);
 	
-	for (dy = -power; dy <= power; dy++) {
-		for (dz = -power; dz <= power; dz++) {
-			for (dx = -power; dx <= power; dx++) {
-				if (dx * dx + dy * dy + dz * dz > powerSquared) continue;
+	for (dy = -TNT_POWER; dy <= TNT_POWER; dy++) {
+		for (dz = -TNT_POWER; dz <= TNT_POWER; dz++) {
+			for (dx = -TNT_POWER; dx <= TNT_POWER; dx++) {
+				if (dx * dx + dy * dy + dz * dz > TNT_POWER_SQUARED) continue;
 
 				xx = x + dx; yy = y + dy; zz = z + dz;
 				if (!World_Contains(xx, yy, zz)) continue;
@@ -500,12 +501,6 @@ static void Physics_Explode(int x, int y, int z, int power) {
 			}
 		}
 	}
-}
-
-static void Physics_HandleTnt(int index, BlockID block) {
-	int x, y, z;
-	World_Unpack(index, x, y, z);
-	Physics_Explode(x, y, z, 4);
 }
 
 void Physics_Init(void) {
