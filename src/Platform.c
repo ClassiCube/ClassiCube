@@ -413,9 +413,6 @@ cc_result File_SetModifiedTime(const String* path, TimeMS time) {
 	return res;
 }
 
-/* Don't need special execute permission on windows */
-cc_result File_MarkExecutable(const String* path) { return 0; }
-
 static cc_result File_Do(FileHandle* file, const String* path, DWORD access, DWORD createMode) {
 	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
@@ -536,16 +533,6 @@ cc_result File_SetModifiedTime(const String* path, TimeMS time) {
 	times.modtime = (time - UNIX_EPOCH) / 1000;
 	Platform_ConvertString(str, path);
 	return utime(str, &times) == -1 ? errno : 0;
-}
-
-cc_result File_MarkExecutable(const String* path) {
-	char str[NATIVE_STR_LEN];
-	struct stat st;
-	Platform_ConvertString(str, path);
-
-	if (stat(str, &st) == -1) return errno;
-	st.st_mode |= S_IXUSR;
-	return chmod(str, st.st_mode) == -1 ? errno : 0;
 }
 
 static cc_result File_Do(FileHandle* file, const String* path, int mode) {
@@ -1300,10 +1287,14 @@ cc_result Updater_GetBuildTime(TimeMS* ms) {
 	File_Close(file);
 	return res;
 }
+
+/* Don't need special execute permission on windows */
+cc_result Updater_MarkExecutable(void) { return 0; }
 #elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-cc_bool Updater_Clean(void)                   { return true; }
+cc_bool Updater_Clean(void)                  { return true; }
 cc_result Updater_Start(void)                { return ERR_NOT_SUPPORTED; }
 cc_result Updater_GetBuildTime(TimeMS* time) { return ERR_NOT_SUPPORTED; }
+cc_result Updater_MarkExecutable(void)       { return 0; }
 #elif defined CC_BUILD_POSIX
 cc_bool Updater_Clean(void) { return true; }
 
@@ -1360,6 +1351,14 @@ cc_result Updater_GetBuildTime(TimeMS* ms) {
 	if (stat(path, &sb) == -1) return errno;
 	*ms = (cc_uint64)sb.st_mtime * 1000 + UNIX_EPOCH;
 	return 0;
+}
+
+cc_result Updater_MarkExecutable(void) {
+	struct stat st;
+	if (stat(UPDATE_FILE, &st) == -1) return errno;
+
+	st.st_mode |= S_IXUSR;
+	return chmod(UPDATE_FILE, st.st_mode) == -1 ? errno : 0;
 }
 #endif
 

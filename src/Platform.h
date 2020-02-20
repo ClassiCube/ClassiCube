@@ -71,6 +71,8 @@ cc_bool Updater_Clean(void);
 cc_result Updater_Start(void);
 /* Returns the last time the application was modified, as number of milliseconds since 1/1/0001 */
 cc_result Updater_GetBuildTime(TimeMS* ms);
+/* Marks the UPDATE_FILE file as being executable. (Needed for some platforms) */
+cc_result Updater_MarkExecutable(void);
 
 /* The default file extension used for dynamic libraries on this platform. */
 extern const String DynamicLib_Ext;
