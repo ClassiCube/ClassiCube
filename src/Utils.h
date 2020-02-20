@@ -7,8 +7,8 @@
 */
 
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */
-/* NOTE: It is far more efficient to use TimeMS and DateTime_CurrentUTC_MS(). */
-/* This should only be used when atually needed. (e.g. log mesage time) */
+/* NOTE: TimeMS and DateTime_CurrentUTC_MS() should almost always be used instead. */
+/* This should only be used when actually needed. (e.g. log mesage time) */
 struct DateTime {
 	int year;   /* Year,   ranges from 0 to 65535 */
 	int month;  /* Month,  ranges from 1 to 12 */
@@ -16,7 +16,7 @@ struct DateTime {
 	int hour;   /* Hour,   ranges from 0 to 23 */
 	int minute; /* Minute, ranges from 0 to 59 */
 	int second; /* Second, ranges from 0 to 59 */
-	int milli;  /* Milliseconds, ranges from 0 to 999 */
+	int __milli;/* Was milliseconds, unused now */
 };
 
 #define MILLIS_PER_SEC 1000

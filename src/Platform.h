@@ -114,11 +114,8 @@ void Platform_Log4(const char* format, const void* a1, const void* a2, const voi
 
 /* Returns the current UTC time, as number of milliseconds since 1/1/0001 */
 CC_API TimeMS DateTime_CurrentUTC_MS(void);
-/* Returns the current UTC Time. */
-/* NOTE: Generally DateTime_CurrentUTC_MS should be used instead. */
-CC_API void DateTime_CurrentUTC(struct DateTime* time);
 /* Returns the current local Time. */
-CC_API void DateTime_CurrentLocal(struct DateTime* time);
+CC_API void DateTime_CurrentLocal(struct DateTime* t);
 /* Takes a platform-specific stopwatch measurement. */
 /* NOTE: The value returned is platform-specific - do NOT try to interpret the value. */
 CC_API cc_uint64 Stopwatch_Measure(void);
