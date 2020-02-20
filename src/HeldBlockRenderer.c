@@ -52,12 +52,11 @@ static void HeldBlockRenderer_RenderModel(void) {
 
 static void HeldBlockRenderer_SetMatrix(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	struct Matrix m, lookAt;
+	struct Matrix lookAt;
 	Vec3 eye = { 0,0,0 }; eye.Y = Entity_GetEyeHeight(p);
 
 	Matrix_Translate(&lookAt, -eye.X, -eye.Y, -eye.Z);
-	Matrix_Mul(&m, &lookAt, &Camera.TiltM);
-	Gfx.View = m;
+	Matrix_Mul(&Gfx.View, &lookAt, &Camera.TiltM);
 }
 
 static void HeldBlockRenderer_ResetHeldState(void) {
