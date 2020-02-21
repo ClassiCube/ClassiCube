@@ -193,7 +193,7 @@ CC_API void  Waitable_WaitFor(void* handle, cc_uint32 milliseconds);
 void Platform_LoadSysFonts(void);
 
 /* Allocates a new socket. */
-CC_API void Socket_Create(SocketHandle* socket);
+CC_API cc_result Socket_Create(SocketHandle* socket);
 /* Returns how much data is available to be read from the given socket. */
 CC_API cc_result Socket_Available(SocketHandle socket, cc_uint32* available);
 /* Sets whether operations on the given socket block the calling thread. */

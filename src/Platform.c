@@ -861,11 +861,9 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-void Socket_Create(SocketHandle* socketResult) {
+cc_result Socket_Create(SocketHandle* socketResult) {
 	*socketResult = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (*socketResult == -1) {
-		Logger_Abort2(Socket__Error(), "Failed to create socket");
-	}
+	return *socketResult == -1 ? Socket__Error() : 0;
 }
 
 static cc_result Socket_ioctl(SocketHandle socket, cc_uint32 cmd, int* data) {

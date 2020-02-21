@@ -17,7 +17,6 @@
 
 int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
 int MapRenderer_1DUsedCount, MapRenderer_ChunksCount;
-int MapRenderer_MaxUpdates;
 struct ChunkPartInfo* MapRenderer_PartsNormal;
 struct ChunkPartInfo* MapRenderer_PartsTranslucent;
 
@@ -44,10 +43,8 @@ static struct ChunkInfo** renderChunks;
 static int renderChunksCount;
 /* Distance of each chunk from the camera. */
 static cc_uint32* distances;
-
-/* Buffer for all chunk parts. There are (MapRenderer_ChunksCount * Atlas1D_Count) * 2 parts in the buffer,
- with parts for 'normal' buffer being in lower half. */
-static struct ChunkPartInfo* partsBuffer_Raw;
+/* Maximum number of chunk updates that can be performed in one frame. */
+static int maxChunkUpdates;
 
 struct ChunkInfo* MapRenderer_GetChunk(int cx, int cy, int cz) {
 	return &mapChunks[MapRenderer_Pack(cx, cy, cz)];
@@ -314,8 +311,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 *----------------------------------------------------Chunks mangagement---------------------------------------------------*
 *#########################################################################################################################*/
 static void FreeParts(void) {
-	Mem_Free(partsBuffer_Raw);
-	partsBuffer_Raw              = NULL;
+	Mem_Free(MapRenderer_PartsNormal);
 	MapRenderer_PartsNormal      = NULL;
 	MapRenderer_PartsTranslucent = NULL;
 }
@@ -333,11 +329,12 @@ static void FreeChunks(void) {
 }
 
 static void AllocateParts(void) {
-	cc_uint32 count  = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
-	partsBuffer_Raw = (struct ChunkPartInfo*)Mem_AllocCleared(count * 2, sizeof(struct ChunkPartInfo), "chunk parts");
+	struct ChunkPartInfo* ptr;
+	cc_uint32 count = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
 
-	MapRenderer_PartsNormal      = partsBuffer_Raw;
-	MapRenderer_PartsTranslucent = partsBuffer_Raw + count;
+	ptr = (struct ChunkPartInfo*)Mem_AllocCleared(count * 2, sizeof(struct ChunkPartInfo), "chunk parts");
+	MapRenderer_PartsNormal      = ptr;
+	MapRenderer_PartsTranslucent = ptr + count;
 }
 
 static void AllocateChunks(void) {
@@ -421,7 +418,8 @@ void MapRenderer_Refresh(void) {
 	ResetPartCounts();
 }
 
-void MapRenderer_RefreshBorders(int maxHeight) {
+/* Refreshes chunks on the border of the map whose y is less than 'maxHeight'. */
+static void RefreshBorderChunks(int maxHeight) {
 	int cx, cy, cz;
 	cc_bool onBorder;
 
@@ -543,7 +541,7 @@ static void UpdateChunks(double delta) {
 
 	/* Build more chunks if 30 FPS or over, otherwise slowdown */
 	chunksTarget += delta < CHUNK_TARGET_TIME ? 1 : -1; 
-	Math_Clamp(chunksTarget, 4, MapRenderer_MaxUpdates);
+	Math_Clamp(chunksTarget, 4, maxChunkUpdates);
 
 	p = &LocalPlayer_Instance;
 	samePos = Vec3_Equals(&Camera.CurrentPos, &lastCamPos)
@@ -717,7 +715,7 @@ static void OnEnvVariableChanged(void* obj, int envVar) {
 		Builder_EdgeLevel  = max(0, Env.EdgeHeight);
 
 		/* Only need to refresh chunks on map borders up to highest edge level.*/
-		MapRenderer_RefreshBorders(max(oldClip, Builder_EdgeLevel));
+		RefreshBorderChunks(max(oldClip, Builder_EdgeLevel));
 	}
 }
 
@@ -789,7 +787,7 @@ static void MapRenderer_Init(void) {
 	/* This = 87 fixes map being invisible when no textures */
 	MapRenderer_1DUsedCount = 87; /* Atlas1D_UsedAtlasesCount(); */
 	chunkPos   = IVec3_MaxValue();
-	MapRenderer_MaxUpdates = Options_GetInt(OPT_MAX_CHUNK_UPDATES, 4, 1024, 30);
+	maxChunkUpdates = Options_GetInt(OPT_MAX_CHUNK_UPDATES, 4, 1024, 30);
 	CalcViewDists();
 }
 

@@ -301,7 +301,8 @@ static void MPConnection_BeginConnect(void) {
 	cc_result res;
 	String_InitArray(title, titleBuffer);
 	
-	Socket_Create(&net_socket);
+	res = Socket_Create(&net_socket);
+	if (res) { MPConnection_FailConnect(res); return; }
 	Server.Disconnected = false;
 
 	Socket_SetBlocking(net_socket, false);
