@@ -123,7 +123,7 @@ if (drawMin && drawMax) { \
 	Game_Vertices += part.Counts[maxFace]; \
 }
 
-static void MapRenderer_RenderNormalBatch(int batch) {
+static void RenderNormalBatch(int batch) {
 	int batchOffset = MapRenderer_ChunksCount * batch;
 	struct ChunkInfo* info;
 	struct ChunkPartInfo part;
@@ -201,7 +201,7 @@ void MapRenderer_RenderNormal(double delta) {
 		if (normPartsCount[batch] <= 0) continue;
 		if (hasNormParts[batch] || checkNormParts[batch]) {
 			Gfx_BindTexture(Atlas1D.TexIds[batch]);
-			MapRenderer_RenderNormalBatch(batch);
+			RenderNormalBatch(batch);
 			checkNormParts[batch] = false;
 		}
 	}
@@ -227,7 +227,7 @@ if (drawMin && drawMax) { \
 	Game_Vertices += part.Counts[maxFace]; \
 }
 
-static void MapRenderer_RenderTranslucentBatch(int batch) {
+static void RenderTranslucentBatch(int batch) {
 	int batchOffset = MapRenderer_ChunksCount * batch;
 	struct ChunkInfo* info;
 	struct ChunkPartInfo part;
@@ -277,7 +277,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (tranPartsCount[batch] <= 0) continue;
 		if (hasTranParts[batch] || checkTranParts[batch]) {
-			MapRenderer_RenderTranslucentBatch(batch);
+			RenderTranslucentBatch(batch);
 			checkTranParts[batch] = false;
 		}
 	}
@@ -294,7 +294,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 		if (tranPartsCount[batch] <= 0) continue;
 		if (!hasTranParts[batch]) continue;
 		Gfx_BindTexture(Atlas1D.TexIds[batch]);
-		MapRenderer_RenderTranslucentBatch(batch);
+		RenderTranslucentBatch(batch);
 	}
 	Gfx_DisableMipmaps();
 
@@ -313,14 +313,14 @@ void MapRenderer_RenderTranslucent(double delta) {
 /*########################################################################################################################*
 *----------------------------------------------------Chunks mangagement---------------------------------------------------*
 *#########################################################################################################################*/
-static void MapRenderer_FreeParts(void) {
+static void FreeParts(void) {
 	Mem_Free(partsBuffer_Raw);
 	partsBuffer_Raw              = NULL;
 	MapRenderer_PartsNormal      = NULL;
 	MapRenderer_PartsTranslucent = NULL;
 }
 
-static void MapRenderer_FreeChunks(void) {
+static void FreeChunks(void) {
 	Mem_Free(mapChunks);
 	Mem_Free(sortedChunks);
 	Mem_Free(renderChunks);
@@ -332,7 +332,7 @@ static void MapRenderer_FreeChunks(void) {
 	distances    = NULL;
 }
 
-static void MapRenderer_AllocateParts(void) {
+static void AllocateParts(void) {
 	cc_uint32 count  = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
 	partsBuffer_Raw = (struct ChunkPartInfo*)Mem_AllocCleared(count * 2, sizeof(struct ChunkPartInfo), "chunk parts");
 
@@ -340,14 +340,14 @@ static void MapRenderer_AllocateParts(void) {
 	MapRenderer_PartsTranslucent = partsBuffer_Raw + count;
 }
 
-static void MapRenderer_AllocateChunks(void) {
+static void AllocateChunks(void) {
 	mapChunks    = (struct ChunkInfo*) Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo),  "chunk info");
 	sortedChunks = (struct ChunkInfo**)Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "sorted chunk info");
 	renderChunks = (struct ChunkInfo**)Mem_Alloc(MapRenderer_ChunksCount, sizeof(struct ChunkInfo*), "render chunk info");
 	distances    = (cc_uint32*)Mem_Alloc(MapRenderer_ChunksCount, 4, "chunk distances");
 }
 
-static void MapRenderer_ResetPartFlags(void) {
+static void ResetPartFlags(void) {
 	int i;
 	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
 		checkNormParts[i] = true;
@@ -357,7 +357,7 @@ static void MapRenderer_ResetPartFlags(void) {
 	}
 }
 
-static void MapRenderer_ResetPartCounts(void) {
+static void ResetPartCounts(void) {
 	int i;
 	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
 		normPartsCount[i] = 0;
@@ -365,7 +365,7 @@ static void MapRenderer_ResetPartCounts(void) {
 	}
 }
 
-static void MapRenderer_InitChunks(void) {
+static void InitChunks(void) {
 	int x, y, z, index = 0;
 	for (z = 0; z < World.Length; z += CHUNK_SIZE) {
 		for (y = 0; y < World.Height; y += CHUNK_SIZE) {
@@ -380,7 +380,7 @@ static void MapRenderer_InitChunks(void) {
 	}
 }
 
-static void MapRenderer_ResetChunks(void) {
+static void ResetChunks(void) {
 	int x, y, z, index = 0;
 	for (z = 0; z < World.Length; z += CHUNK_SIZE) {
 		for (y = 0; y < World.Height; y += CHUNK_SIZE) {
@@ -392,14 +392,14 @@ static void MapRenderer_ResetChunks(void) {
 	}
 }
 
-static void MapRenderer_DeleteChunks(void) {
+static void DeleteChunks(void) {
 	int i;
 	if (!mapChunks) return;
 
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
 		MapRenderer_DeleteChunk(&mapChunks[i]);
 	}
-	MapRenderer_ResetPartCounts();
+	ResetPartCounts();
 }
 
 void MapRenderer_Refresh(void) {
@@ -407,18 +407,18 @@ void MapRenderer_Refresh(void) {
 	chunkPos = IVec3_MaxValue();
 
 	if (mapChunks && World.Blocks) {
-		MapRenderer_DeleteChunks();
-		MapRenderer_ResetChunks();
+		DeleteChunks();
+		ResetChunks();
 
 		oldCount = MapRenderer_1DUsedCount;
 		MapRenderer_1DUsedCount = MapRenderer_UsedAtlases();
 		/* Need to reallocate parts array in this case */
 		if (MapRenderer_1DUsedCount != oldCount) {
-			MapRenderer_FreeParts();
-			MapRenderer_AllocateParts();
+			FreeParts();
+			AllocateParts();
 		}
 	}
-	MapRenderer_ResetPartCounts();
+	ResetPartCounts();
 }
 
 void MapRenderer_RefreshBorders(int maxHeight) {
@@ -456,18 +456,18 @@ static int renderDistSquared;
 /* Chunks past this distance are automatically unloaded */
 static int buildDistSquared;
 
-static int MapRenderer_AdjustDist(int dist) {
+static int AdjustDist(int dist) {
 	if (dist < CHUNK_SIZE) dist = CHUNK_SIZE;
 	dist = Utils_AdjViewDist(dist);
 	return (dist + 24) * (dist + 24);
 }
 
-static void MapRenderer_CalcViewDists(void) {
-	buildDistSquared  = MapRenderer_AdjustDist(Game_UserViewDistance);
-	renderDistSquared = MapRenderer_AdjustDist(Game_ViewDistance);
+static void CalcViewDists(void) {
+	buildDistSquared  = AdjustDist(Game_UserViewDistance);
+	renderDistSquared = AdjustDist(Game_ViewDistance);
 }
 
-static int MapRenderer_UpdateChunksAndVisibility(int* chunkUpdates) {
+static int UpdateChunksAndVisibility(int* chunkUpdates) {
 	int renderDistSqr = renderDistSquared;
 	int buildDistSqr  = buildDistSquared;
 
@@ -500,7 +500,7 @@ static int MapRenderer_UpdateChunksAndVisibility(int* chunkUpdates) {
 	return j;
 }
 
-static int MapRenderer_UpdateChunksStill(int* chunkUpdates) {
+static int UpdateChunksStill(int* chunkUpdates) {
 	int renderDistSqr = renderDistSquared;
 	int buildDistSqr  = buildDistSquared;
 
@@ -536,7 +536,7 @@ static int MapRenderer_UpdateChunksStill(int* chunkUpdates) {
 	return j;
 }
 
-static void MapRenderer_UpdateChunks(double delta) {
+static void UpdateChunks(double delta) {
 	struct LocalPlayer* p;
 	cc_bool samePos;
 	int chunkUpdates = 0;
@@ -550,19 +550,17 @@ static void MapRenderer_UpdateChunks(double delta) {
 		&& p->Base.Pitch == lastPitch && p->Base.Yaw == lastYaw;
 
 	renderChunksCount = samePos ?
-		MapRenderer_UpdateChunksStill(&chunkUpdates) :
-		MapRenderer_UpdateChunksAndVisibility(&chunkUpdates);
+		UpdateChunksStill(&chunkUpdates) :
+		UpdateChunksAndVisibility(&chunkUpdates);
 
 	lastCamPos = Camera.CurrentPos;
 	lastPitch  = p->Base.Pitch;
 	lastYaw    = p->Base.Yaw;
 
-	if (!samePos || chunkUpdates) {
-		MapRenderer_ResetPartFlags();
-	}
+	if (!samePos || chunkUpdates) ResetPartFlags();
 }
 
-static void MapRenderer_QuickSort(int left, int right) {
+static void SortMapChunks(int left, int right) {
 	struct ChunkInfo** values = sortedChunks; struct ChunkInfo* value;
 	cc_uint32* keys = distances; cc_uint32 key;
 
@@ -577,7 +575,7 @@ static void MapRenderer_QuickSort(int left, int right) {
 			QuickSort_Swap_KV_Maybe();
 		}
 		/* recurse into the smaller subset */
-		QuickSort_Recurse(MapRenderer_QuickSort)
+		QuickSort_Recurse(SortMapChunks)
 	}
 }
 
@@ -616,15 +614,15 @@ static void MapRenderer_UpdateSortOrder(void) {
 		info->DrawYMin = dy >= 0; info->DrawYMax = dy <= 0;
 	}
 
-	MapRenderer_QuickSort(0, MapRenderer_ChunksCount - 1);
-	MapRenderer_ResetPartFlags();
+	SortMapChunks(0, MapRenderer_ChunksCount - 1);
+	ResetPartFlags();
 	/*SimpleOcclusionCulling();*/
 }
 
 void MapRenderer_Update(double delta) {
 	if (!mapChunks) return;
 	MapRenderer_UpdateSortOrder();
-	MapRenderer_UpdateChunks(delta);
+	UpdateChunks(delta);
 }
 
 
@@ -710,7 +708,7 @@ void MapRenderer_BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
 	}
 }
 
-static void MapRenderer_EnvVariableChanged(void* obj, int envVar) {
+static void OnEnvVariableChanged(void* obj, int envVar) {
 	if (envVar == ENV_VAR_SUN_COL || envVar == ENV_VAR_SHADOW_COL) {
 		MapRenderer_Refresh();
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
@@ -723,7 +721,7 @@ static void MapRenderer_EnvVariableChanged(void* obj, int envVar) {
 	}
 }
 
-static void MapRenderer_TerrainAtlasChanged(void* obj) {
+static void OnTerrainAtlasChanged(void* obj) {
 	static int tilesPerAtlas;
 	/* e.g. If old atlas was 256x256 and new is 256x256, don't need to refresh */
 	if (MapRenderer_1DUsedCount && tilesPerAtlas != Atlas1D.TilesPerAtlas) {
@@ -732,30 +730,30 @@ static void MapRenderer_TerrainAtlasChanged(void* obj) {
 
 	MapRenderer_1DUsedCount = MapRenderer_UsedAtlases();
 	tilesPerAtlas = Atlas1D.TilesPerAtlas;
-	MapRenderer_ResetPartFlags();
+	ResetPartFlags();
 }
 
-static void MapRenderer_BlockDefinitionChanged(void* obj) {
+static void OnBlockDefinitionChanged(void* obj) {
 	MapRenderer_Refresh();
 	MapRenderer_1DUsedCount = MapRenderer_UsedAtlases();
-	MapRenderer_ResetPartFlags();
+	ResetPartFlags();
 }
 
-static void MapRenderer_RecalcVisibility(void* obj) {
+static void OnVisibilityChanged(void* obj) {
 	lastCamPos = Vec3_BigPos();
-	MapRenderer_CalcViewDists();
+	CalcViewDists();
 }
-static void MapRenderer_DeleteChunks_(void* obj) { MapRenderer_DeleteChunks(); }
+static void MapRenderer_DeleteChunks_(void* obj) { DeleteChunks(); }
 static void MapRenderer_Refresh_(void* obj)      { MapRenderer_Refresh(); }
 
 static void MapRenderer_OnNewMap(void) {
 	Game.ChunkUpdates = 0;
-	MapRenderer_DeleteChunks();
-	MapRenderer_ResetPartCounts();
+	DeleteChunks();
+	ResetPartCounts();
 
 	chunkPos = IVec3_MaxValue();
-	MapRenderer_FreeChunks();
-	MapRenderer_FreeParts();
+	FreeChunks();
+	FreeParts();
 }
 
 static void MapRenderer_OnNewMapLoaded(void) {
@@ -768,23 +766,23 @@ static void MapRenderer_OnNewMapLoaded(void) {
 	/* TODO: Only perform reallocation when map volume has changed */
 	/*if (MapRenderer_ChunksCount != count) { */
 		MapRenderer_ChunksCount = count;
-		MapRenderer_FreeChunks();
-		MapRenderer_FreeParts();
-		MapRenderer_AllocateChunks();
-		MapRenderer_AllocateParts();
+		FreeChunks();
+		FreeParts();
+		AllocateChunks();
+		AllocateParts();
 	/*}*/
 
-	MapRenderer_InitChunks();
+	InitChunks();
 	lastCamPos = Vec3_BigPos();
 }
 
 static void MapRenderer_Init(void) {
-	Event_RegisterVoid(&TextureEvents.AtlasChanged,  NULL, MapRenderer_TerrainAtlasChanged);
-	Event_RegisterInt(&WorldEvents.EnvVarChanged,    NULL, MapRenderer_EnvVariableChanged);
-	Event_RegisterVoid(&BlockEvents.BlockDefChanged, NULL, MapRenderer_BlockDefinitionChanged);
+	Event_RegisterVoid(&TextureEvents.AtlasChanged,  NULL, OnTerrainAtlasChanged);
+	Event_RegisterInt(&WorldEvents.EnvVarChanged,    NULL, OnEnvVariableChanged);
+	Event_RegisterVoid(&BlockEvents.BlockDefChanged, NULL, OnBlockDefinitionChanged);
 
-	Event_RegisterVoid(&GfxEvents.ViewDistanceChanged, NULL, MapRenderer_RecalcVisibility);
-	Event_RegisterVoid(&GfxEvents.ProjectionChanged,   NULL, MapRenderer_RecalcVisibility);
+	Event_RegisterVoid(&GfxEvents.ViewDistanceChanged, NULL, OnVisibilityChanged);
+	Event_RegisterVoid(&GfxEvents.ProjectionChanged,   NULL, OnVisibilityChanged);
 	Event_RegisterVoid(&GfxEvents.ContextLost,         NULL, MapRenderer_DeleteChunks_);
 	Event_RegisterVoid(&GfxEvents.ContextRecreated,    NULL, MapRenderer_Refresh_);
 
@@ -792,16 +790,16 @@ static void MapRenderer_Init(void) {
 	MapRenderer_1DUsedCount = 87; /* Atlas1D_UsedAtlasesCount(); */
 	chunkPos   = IVec3_MaxValue();
 	MapRenderer_MaxUpdates = Options_GetInt(OPT_MAX_CHUNK_UPDATES, 4, 1024, 30);
-	MapRenderer_CalcViewDists();
+	CalcViewDists();
 }
 
 static void MapRenderer_Free(void) {
-	Event_UnregisterVoid(&TextureEvents.AtlasChanged,  NULL, MapRenderer_TerrainAtlasChanged);
-	Event_UnregisterInt(&WorldEvents.EnvVarChanged,    NULL, MapRenderer_EnvVariableChanged);
-	Event_UnregisterVoid(&BlockEvents.BlockDefChanged, NULL, MapRenderer_BlockDefinitionChanged);
+	Event_UnregisterVoid(&TextureEvents.AtlasChanged,  NULL, OnTerrainAtlasChanged);
+	Event_UnregisterInt(&WorldEvents.EnvVarChanged,    NULL, OnEnvVariableChanged);
+	Event_UnregisterVoid(&BlockEvents.BlockDefChanged, NULL, OnBlockDefinitionChanged);
 
-	Event_UnregisterVoid(&GfxEvents.ViewDistanceChanged, NULL, MapRenderer_RecalcVisibility);
-	Event_UnregisterVoid(&GfxEvents.ProjectionChanged,   NULL, MapRenderer_RecalcVisibility);
+	Event_UnregisterVoid(&GfxEvents.ViewDistanceChanged, NULL, OnVisibilityChanged);
+	Event_UnregisterVoid(&GfxEvents.ProjectionChanged,   NULL, OnVisibilityChanged);
 	Event_UnregisterVoid(&GfxEvents.ContextLost,         NULL, MapRenderer_DeleteChunks_);
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated,    NULL, MapRenderer_Refresh_);
 

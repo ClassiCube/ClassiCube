@@ -137,8 +137,6 @@ CC_API cc_result Directory_Enum(const String* path, void* obj, Directory_EnumCal
 CC_API int File_Exists(const String* path);
 /* Sets the last time the file was modified, as number of milliseconds since 1/1/0001 */
 CC_API cc_result File_SetModifiedTime(const String* path, TimeMS ms);
-/* Marks a file as being executable. */
-CC_API cc_result File_MarkExecutable(const String* path);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 /* NOTE: If the file already exists, its contents are discarded. */
