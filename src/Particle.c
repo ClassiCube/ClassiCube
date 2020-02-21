@@ -171,14 +171,10 @@ static void Rain_Render(float t) {
 	Gfx_DrawVb_IndexedTris(rain_count * 4);
 }
 
-static void Rain_RemoveAt(int index) {
-	struct Particle removed = rain_Particles[index];
-	int i;
-
-	for (i = index; i < rain_count - 1; i++) {
+static void Rain_RemoveAt(int i) {
+	for (; i < rain_count - 1; i++) {
 		rain_Particles[i] = rain_Particles[i + 1];
 	}
-	rain_Particles[rain_count - 1] = removed;
 	rain_count--;
 }
 
@@ -273,14 +269,10 @@ static void Terrain_Render(float t) {
 	}
 }
 
-static void Terrain_RemoveAt(int index) {
-	struct TerrainParticle removed = terrain_particles[index];
-	int i;
-
-	for (i = index; i < terrain_count - 1; i++) {
+static void Terrain_RemoveAt(int i) {
+	for (; i < terrain_count - 1; i++) {
 		terrain_particles[i] = terrain_particles[i + 1];
 	}
-	terrain_particles[terrain_count - 1] = removed;
 	terrain_count--;
 }
 

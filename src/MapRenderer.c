@@ -81,7 +81,7 @@ CC_NOINLINE static int MapRenderer_UsedAtlases(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Map rendering-----------------------------------------------------*
 *#########################################################################################################################*/
-static void MapRenderer_CheckWeather(double delta) {
+static void CheckWeather(double delta) {
 	IVec3 pos;
 	BlockID block;
 	cc_bool outside;
@@ -99,24 +99,24 @@ static void MapRenderer_CheckWeather(double delta) {
 }
 
 #ifdef CC_BUILD_GL11
-#define MapRenderer_DrawFace(face, ign)    Gfx_DrawIndexedVb_TrisT2fC4b(part.Vbs[face], 0);
-#define MapRenderer_DrawFaces(f1, f2, ign) MapRenderer_DrawFace(f1, ign); MapRenderer_DrawFace(f2, ign);
+#define DrawFace(face, ign)    Gfx_DrawIndexedVb_TrisT2fC4b(part.Vbs[face], 0);
+#define DrawFaces(f1, f2, ign) MapRenderer_DrawFace(f1, ign); MapRenderer_DrawFace(f2, ign);
 #else
-#define MapRenderer_DrawFace(face, offset)    Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[face], offset);
-#define MapRenderer_DrawFaces(f1, f2, offset) Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[f1] + part.Counts[f2], offset);
+#define DrawFace(face, offset)    Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[face], offset);
+#define DrawFaces(f1, f2, offset) Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[f1] + part.Counts[f2], offset);
 #endif
 
-#define MapRenderer_DrawNormalFaces(minFace, maxFace) \
+#define DrawNormalFaces(minFace, maxFace) \
 if (drawMin && drawMax) { \
 	Gfx_SetFaceCulling(true); \
-	MapRenderer_DrawFaces(minFace, maxFace, offset); \
+	DrawFaces(minFace, maxFace, offset); \
 	Gfx_SetFaceCulling(false); \
 	Game_Vertices += (part.Counts[minFace] + part.Counts[maxFace]); \
 } else if (drawMin) { \
-	MapRenderer_DrawFace(minFace, offset); \
+	DrawFace(minFace, offset); \
 	Game_Vertices += part.Counts[minFace]; \
 } else if (drawMax) { \
-	MapRenderer_DrawFace(maxFace, offset + part.Counts[minFace]); \
+	DrawFace(maxFace, offset + part.Counts[minFace]); \
 	Game_Vertices += part.Counts[maxFace]; \
 }
 
@@ -142,17 +142,17 @@ static void RenderNormalBatch(int batch) {
 		offset  = part.Offset + part.SpriteCount;
 		drawMin = info->DrawXMin && part.Counts[FACE_XMIN];
 		drawMax = info->DrawXMax && part.Counts[FACE_XMAX];
-		MapRenderer_DrawNormalFaces(FACE_XMIN, FACE_XMAX);
+		DrawNormalFaces(FACE_XMIN, FACE_XMAX);
 
 		offset  += part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX];
 		drawMin = info->DrawZMin && part.Counts[FACE_ZMIN];
 		drawMax = info->DrawZMax && part.Counts[FACE_ZMAX];
-		MapRenderer_DrawNormalFaces(FACE_ZMIN, FACE_ZMAX);
+		DrawNormalFaces(FACE_ZMIN, FACE_ZMAX);
 
 		offset  += part.Counts[FACE_ZMIN] + part.Counts[FACE_ZMAX];
 		drawMin = info->DrawYMin && part.Counts[FACE_YMIN];
 		drawMax = info->DrawYMax && part.Counts[FACE_YMAX];
-		MapRenderer_DrawNormalFaces(FACE_YMIN, FACE_YMAX);
+		DrawNormalFaces(FACE_YMIN, FACE_YMAX);
 
 		if (!part.SpriteCount) continue;
 		offset = part.Offset;
@@ -204,7 +204,7 @@ void MapRenderer_RenderNormal(double delta) {
 	}
 	Gfx_DisableMipmaps();
 
-	MapRenderer_CheckWeather(delta);
+	CheckWeather(delta);
 	Gfx_SetAlphaTest(false);
 	Gfx_SetTexturing(false);
 #if DEBUG_OCCLUSION
@@ -212,15 +212,15 @@ void MapRenderer_RenderNormal(double delta) {
 #endif
 }
 
-#define MapRenderer_DrawTranslucentFaces(minFace, maxFace) \
+#define DrawTranslucentFaces(minFace, maxFace) \
 if (drawMin && drawMax) { \
-	MapRenderer_DrawFaces(minFace, maxFace, offset); \
+	DrawFaces(minFace, maxFace, offset); \
 	Game_Vertices += (part.Counts[minFace] + part.Counts[maxFace]); \
 } else if (drawMin) { \
-	MapRenderer_DrawFace(minFace, offset); \
+	DrawFace(minFace, offset); \
 	Game_Vertices += part.Counts[minFace]; \
 } else if (drawMax) { \
-	MapRenderer_DrawFace(maxFace, offset + part.Counts[minFace]); \
+	DrawFace(maxFace, offset + part.Counts[minFace]); \
 	Game_Vertices += part.Counts[maxFace]; \
 }
 
@@ -246,17 +246,17 @@ static void RenderTranslucentBatch(int batch) {
 		offset  = part.Offset;
 		drawMin = (inTranslucent || info->DrawXMin) && part.Counts[FACE_XMIN];
 		drawMax = (inTranslucent || info->DrawXMax) && part.Counts[FACE_XMAX];
-		MapRenderer_DrawTranslucentFaces(FACE_XMIN, FACE_XMAX);
+		DrawTranslucentFaces(FACE_XMIN, FACE_XMAX);
 
 		offset  += part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX];
 		drawMin = (inTranslucent || info->DrawZMin) && part.Counts[FACE_ZMIN];
 		drawMax = (inTranslucent || info->DrawZMax) && part.Counts[FACE_ZMAX];
-		MapRenderer_DrawTranslucentFaces(FACE_ZMIN, FACE_ZMAX);
+		DrawTranslucentFaces(FACE_ZMIN, FACE_ZMAX);
 
 		offset  += part.Counts[FACE_ZMIN] + part.Counts[FACE_ZMAX];
 		drawMin = (inTranslucent || info->DrawYMin) && part.Counts[FACE_YMIN];
 		drawMax = (inTranslucent || info->DrawYMax) && part.Counts[FACE_YMAX];
-		MapRenderer_DrawTranslucentFaces(FACE_YMIN, FACE_YMAX);
+		DrawTranslucentFaces(FACE_YMIN, FACE_YMAX);
 	}
 }
 
