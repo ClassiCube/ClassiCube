@@ -298,28 +298,31 @@ static void Terrain_Tick(double delta) {
 *#########################################################################################################################*/
 struct CustomParticle {
 	struct Particle base;
-	struct CustomParticleProperty* prop;
+	int effectId;
 	float totalLifespan;
 };
 
-struct CustomParticleProperty Particles_CustomEffects[256];
+struct CustomParticleEffect Particles_CustomEffects[256];
 static struct CustomParticle custom_particles[PARTICLES_MAX];
 static int custom_count;
 
 static cc_bool CustomParticle_Tick(struct CustomParticle* p, double delta) {
+	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
 	particle_hitTerrain = false;
-	return Particle_PhysicsTick(&p->base, p->prop->gravity, false, delta) 
-		|| (particle_hitTerrain && p->prop->expireUponTouchingGround);
+
+	return Particle_PhysicsTick(&p->base, e->gravity, false, delta) 
+		|| (particle_hitTerrain && e->expireUponTouchingGround);
 }
 
 static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2fC4b* vertices) {
+	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
 	Vec3 pos;
 	Vec2 size;
 	PackedCol col;
-	TextureRec rec = p->prop->rec;
+	TextureRec rec = e->rec;
 	int x, y, z;
 
-	float frame_time = p->totalLifespan / p->prop->frameCount;
+	float frame_time = p->totalLifespan / e->frameCount;
 	float inverted_lifetime = Math_AbsF(p->base.lifetime - p->totalLifespan);
 	int curFrame = Math_Floor(inverted_lifetime / frame_time);
 	float shiftU = curFrame * (rec.U2 - rec.U1);
@@ -331,8 +334,8 @@ static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2
 	size.X = p->base.size; size.Y = size.X;
 
 	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
-	col = p->prop->fullBright ? PACKEDCOL_WHITE : (World_Contains(x, y, z) ? Lighting_Col(x, y, z) : Env.SunCol);
-	col = PackedCol_Tint(col, p->prop->tint);
+	col = e->fullBright ? PACKEDCOL_WHITE : (World_Contains(x, y, z) ? Lighting_Col(x, y, z) : Env.SunCol);
+	col = PackedCol_Tint(col, e->tintCol);
 
 	Particle_DoRender(&size, &pos, &rec, col, vertices);
 }
@@ -502,24 +505,28 @@ void Particles_RainSnowEffect(float x, float y, float z) {
 
 void Particles_CustomEffect(int effectID, float x, float y, float z, float originX, float originY, float originZ) {
 	struct CustomParticle* p;
-	struct CustomParticleProperty* prop = &Particles_CustomEffects[effectID];
-	int i;
-	int count = prop->particleCount;
+	struct CustomParticleEffect* e = &Particles_CustomEffects[effectID];
+	int i, count = e->particleCount;
+	Vec3 offset;
+	float d;
 
 	for (i = 0; i < count; i++) {
 		if (custom_count == PARTICLES_MAX) Custom_RemoveAt(0);
 		p = &custom_particles[custom_count++];
-		p->prop = prop;
+		p->effectId = effectID;
 
-		Vec3 offset = { Random_Float(&rnd) - 0.5f, Random_Float(&rnd) - 0.5f, Random_Float(&rnd) - 0.5f };
+		offset.X = Random_Float(&rnd) - 0.5f;
+		offset.Y = Random_Float(&rnd) - 0.5f;
+		offset.Z = Random_Float(&rnd) - 0.5f;
 		Vec3_Normalize(&offset, &offset);
-		float d = Random_Float(&rnd);
-		d = Math_Exp(Math_Log(d) / 3.0);
-		Vec3_Mul1By(&offset, d);
-		Vec3_Mul1By(&offset, p->prop->spread);
-		p->base.lastPos.X = x + (offset.X);
-		p->base.lastPos.Y = y + (offset.Y);
-		p->base.lastPos.Z = z + (offset.Z);
+
+		d  = Random_Float(&rnd);
+		d  = Math_Exp(Math_Log(d) / 3.0); /* d^1/3 for better distribution */
+		d *= e->spread;
+
+		p->base.lastPos.X = x + offset.X * d;
+		p->base.lastPos.Y = y + offset.Y * d;
+		p->base.lastPos.Z = z + offset.Z * d;
 		
 		Vec3 origin = { originX, originY, originZ };
 		if (Vec3_Equals(&origin, &p->base.lastPos)) {
@@ -531,16 +538,16 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 			Vec3 diff;
 			Vec3_Sub(&diff, &p->base.lastPos, &origin);
 			Vec3_Normalize(&diff, &diff);
-			p->base.velocity.X = diff.X * p->prop->speed;
-			p->base.velocity.Y = diff.Y * p->prop->speed;
-			p->base.velocity.Z = diff.Z * p->prop->speed;
+			p->base.velocity.X = diff.X * e->speed;
+			p->base.velocity.Y = diff.Y * e->speed;
+			p->base.velocity.Z = diff.Z * e->speed;
 		}
 
-		p->base.nextPos = p->base.lastPos;
-		p->base.lifetime = p->prop->baseLifetime + ( (p->prop->baseLifetime * p->prop->lifetimeVariation) * ((Random_Float(&rnd) - 0.5f) * 2));
+		p->base.nextPos  = p->base.lastPos;
+		p->base.lifetime = e->baseLifetime + (e->baseLifetime * e->lifetimeVariation) * ((Random_Float(&rnd) - 0.5f) * 2);
 		p->totalLifespan = p->base.lifetime;
 
-		p->base.size =  p->prop->size + ( (p->prop->size * p->prop->sizeVariation) * ((Random_Float(&rnd) - 0.5f) * 2) ) ;
+		p->base.size = e->size + (e->size * e->sizeVariation) * ((Random_Float(&rnd) - 0.5f) * 2);
 
 	}
 }

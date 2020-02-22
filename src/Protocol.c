@@ -1341,28 +1341,28 @@ static void CPE_VelocityControl(cc_uint8* data) {
 }
 
 static void CPE_DefineEffect(cc_uint8* data) {
-	struct CustomParticleProperty* effect = &Particles_CustomEffects[data[0]];
+	struct CustomParticleEffect* e = &Particles_CustomEffects[data[0]];
 
 	/* e.g. bounds of 0,0, 15,15 gives an 8x8 icon in the default 128x128 particles.png */
-	effect->rec.U1 = data[1]       / 256.0f;
-	effect->rec.V1 = data[2]       / 256.0f;
-	effect->rec.U2 = (data[3] + 1) / 256.0f;
-	effect->rec.V2 = (data[4] + 1) / 256.0f;
+	e->rec.U1 = data[1]       / 256.0f;
+	e->rec.V1 = data[2]       / 256.0f;
+	e->rec.U2 = (data[3] + 1) / 256.0f;
+	e->rec.V2 = (data[4] + 1) / 256.0f;
 
-	effect->tint = PackedCol_Make(data[5], data[6], data[7], 255);
-	effect->frameCount    = data[8];
-	effect->particleCount = data[9];
-	effect->size          = data[10] / 32.0f; /* 32 units per block */
+	e->tintCol       = PackedCol_Make(data[5], data[6], data[7], 255);
+	e->frameCount    = data[8];
+	e->particleCount = data[9];
+	e->size          = data[10] / 32.0f; /* 32 units per block */
 
-	effect->sizeVariation      = (int)Stream_GetU32_BE(data + 11) / 10000.0f;
-	effect->spread             = (int)Stream_GetU32_BE(data + 15) / 32.0f; /* TODO: should be 10000? */
-	effect->speed              = (int)Stream_GetU32_BE(data + 19) / 10000.0f;
-	effect->gravity            = (int)Stream_GetU32_BE(data + 23) / 10000.0f;
-	effect->baseLifetime       = (int)Stream_GetU32_BE(data + 27) / 10000.0f;
-	effect->lifetimeVariation  = (int)Stream_GetU32_BE(data + 31) / 10000.0f;
+	e->sizeVariation      = (int)Stream_GetU32_BE(data + 11) / 10000.0f;
+	e->spread             = (int)Stream_GetU32_BE(data + 15) / 32.0f; /* TODO: should be 10000? */
+	e->speed              = (int)Stream_GetU32_BE(data + 19) / 10000.0f;
+	e->gravity            = (int)Stream_GetU32_BE(data + 23) / 10000.0f;
+	e->baseLifetime       = (int)Stream_GetU32_BE(data + 27) / 10000.0f;
+	e->lifetimeVariation  = (int)Stream_GetU32_BE(data + 31) / 10000.0f;
 
-	effect->expireUponTouchingGround = data[35];
-	effect->fullBright               = data[36];
+	e->expireUponTouchingGround = data[35];
+	e->fullBright               = data[36];
 }
 
 static void CPE_SpawnEffect(cc_uint8* data) {

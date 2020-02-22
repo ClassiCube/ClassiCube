@@ -19,9 +19,11 @@ struct Particle {
 
 struct CustomParticleEffect {
 	TextureRec rec;
-	PackedCol tint;
-	int frameCount;
-	int particleCount;
+	PackedCol tintCol;
+	cc_uint8 frameCount;
+	cc_uint8 particleCount;
+	cc_bool expireUponTouchingGround;
+	cc_bool fullBright;
 	float size;
 	float sizeVariation;
 	float spread; //how far from the spawnpoint their location can vary
@@ -29,8 +31,6 @@ struct CustomParticleEffect {
 	float gravity;
 	float baseLifetime; //how long (in seconds) the particle lives for
 	float lifetimeVariation;
-	cc_bool expireUponTouchingGround;
-	cc_bool fullBright;
 };
 
 extern struct CustomParticleEffect Particles_CustomEffects[256];
