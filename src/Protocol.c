@@ -1355,14 +1355,14 @@ static void CPE_DefineEffect(cc_uint8* data) {
 	e->size          = data[10] / 32.0f; /* 32 units per block */
 
 	e->sizeVariation      = (int)Stream_GetU32_BE(data + 11) / 10000.0f;
-	e->spread             = (int)Stream_GetU32_BE(data + 15) / 32.0f; /* TODO: should be 10000? */
-	e->speed              = (int)Stream_GetU32_BE(data + 19) / 10000.0f;
-	e->gravity            = (int)Stream_GetU32_BE(data + 23) / 10000.0f;
-	e->baseLifetime       = (int)Stream_GetU32_BE(data + 27) / 10000.0f;
-	e->lifetimeVariation  = (int)Stream_GetU32_BE(data + 31) / 10000.0f;
+	e->spread             =      Stream_GetU16_BE(data + 15) / 32.0f;
+	e->speed              = (int)Stream_GetU32_BE(data + 17) / 10000.0f;
+	e->gravity            = (int)Stream_GetU32_BE(data + 21) / 10000.0f;
+	e->baseLifetime       = (int)Stream_GetU32_BE(data + 25) / 10000.0f;
+	e->lifetimeVariation  = (int)Stream_GetU32_BE(data + 29) / 10000.0f;
 
-	e->expireUponTouchingGround = data[35];
-	e->fullBright               = data[36];
+	e->expireUponTouchingGround = data[33];
+	e->fullBright               = data[34];
 }
 
 static void CPE_SpawnEffect(cc_uint8* data) {
@@ -1418,7 +1418,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_SET_HOTBAR, CPE_SetHotbar, 3);
 	Net_Set(OPCODE_SET_SPAWNPOINT, CPE_SetSpawnPoint, 9);
 	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
-	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 38);
+	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
 	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
 }
 
