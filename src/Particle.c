@@ -322,9 +322,8 @@ static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2
 	TextureRec rec = e->rec;
 	int x, y, z;
 
-	float frame_time = p->totalLifespan / e->frameCount;
-	float inverted_lifetime = Math_AbsF(p->base.lifetime - p->totalLifespan);
-	int curFrame = Math_Floor(inverted_lifetime / frame_time);
+	float time_lived = p->totalLifespan - p->base.lifetime;
+	int curFrame = Math_Floor(e->frameCount * (time_lived / p->totalLifespan));
 	float shiftU = curFrame * (rec.U2 - rec.U1);
 
 	rec.U1 += shiftU;// * 0.0078125f;

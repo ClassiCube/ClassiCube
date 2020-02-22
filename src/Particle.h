@@ -26,10 +26,10 @@ struct CustomParticleEffect {
 	cc_bool fullBright;
 	float size;
 	float sizeVariation;
-	float spread; //how far from the spawnpoint their location can vary
-	float speed; //how fast they move away/towards the origin
+	float spread; /* how far from the spawnpoint their location can vary */
+	float speed; /* how fast they move away/towards the origin */
 	float gravity;
-	float baseLifetime; //how long (in seconds) the particle lives for
+	float baseLifetime; /* how long (in seconds) the particle lives for */
 	float lifetimeVariation;
 };
 
