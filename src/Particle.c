@@ -503,7 +503,7 @@ void Particles_RainSnowEffect(float x, float y, float z) {
 	}
 }
 
-void Particles_CustomEffect(float x, float y, float z, int propertyID, float originX, float originY, float originZ) {
+void Particles_CustomEffect(int propertyID, float x, float y, float z, float originX, float originY, float originZ) {
 	struct CustomParticle* p;
 	struct CustomParticleProperty* prop = &customParticle_properties[propertyID];
 	int i;
@@ -560,7 +560,6 @@ static void OnContextRecreated(void* obj) {
 }
 static void OnBreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	Particles_BreakBlockEffect(coords, old, now);
-	Particles_CustomEffect(coords.X+0.5f, coords.Y+0.5f, coords.Z+0.5f, 0, coords.X+0.5f, coords.Y + 0.5f, coords.Z + 0.5f);
 }
 
 static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
@@ -570,41 +569,6 @@ static void OnFileChanged(void* obj, struct Stream* stream, const String* name) 
 }
 
 static void Particles_Init(void) {
-
-
-	//struct CustomParticleProperty {
-	//	TextureRec rec;
-	//	int frameCount;
-	//	int amount; //how many of this particle are spawned per spawn-packet
-	//	float size; //size of the particle in fixed-point world units (e.g. 32 is a full block's size)
-	//	float sizeVariation;
-	//	float spread; //how far from the spawnpoint their location can vary (in fixed-point world units)
-	//	float speed; //how fast they move away/towards the origin
-	//	float gravity;
-	//	float baseLifetime;
-	//	float lifetimeVariation;
-	//	cc_bool fullBright;
-	//	cc_bool converge; ////true means the particles move toward the origin. False means they move away from the origin
-	//};
-
-	//TEMP CODE IN LIEU OF ANY DEFINING PACKETS
-	struct CustomParticleProperty* prop;
-	prop = &customParticle_properties[0];
-
-	prop->rec = defaultCustomParticle_rec;
-	prop->frameCount = 8;
-	prop->particleCount = 50;
-	prop->size = 64 * 0.03125f;
-	prop->sizeVariation = 0.5f;
-	prop->spread = 96;
-	prop->speed = 0.5;
-	prop->gravity = -0.5f;
-	prop->baseLifetime = 0.7f;
-	prop->lifetimeVariation = 0.5f;
-	prop->fullBright = true;
-	prop->expireUponTouchingGround = true;
-	//END TEMP CODE
-
 	ScheduledTask_Add(GAME_DEF_TICKS, Particles_Tick);
 	Random_SeedFromCurrentTime(&rnd);
 	OnContextRecreated(NULL);	

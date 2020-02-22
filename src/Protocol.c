@@ -24,6 +24,7 @@
 #include "Errors.h"
 #include "Camera.h"
 #include "Window.h"
+#include "Particle.h"
 
 cc_uint16 Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];
@@ -1339,6 +1340,60 @@ static void CPE_VelocityControl(cc_uint8* data) {
 	CalcVelocity(&p->Base.Velocity.Z, data + 8, data[14]);
 }
 
+static void CPE_DefineParticle(cc_uint8* data) {
+	cc_uint8 particleID    = data[0];
+	cc_uint8 U1            = data[1];
+	cc_uint8 V1            = data[2];
+	cc_uint8 U2            = data[3];
+	cc_uint8 V2            = data[4];
+	cc_uint8 frameCount    = data[5];
+	cc_uint8 particleCount = data[6];
+	cc_uint8 size          = data[7];
+	data += 8;
+	int sizeVariation      = (int)Stream_GetU32_BE(&data[0]);
+	int spread             = (int)Stream_GetU32_BE(&data[4]);
+	int speed              = (int)Stream_GetU32_BE(&data[8]);
+	int gravity            = (int)Stream_GetU32_BE(&data[12]);
+	int baseLifetime       = (int)Stream_GetU32_BE(&data[16]);
+	int lifetimeVariation  = (int)Stream_GetU32_BE(&data[20]);
+	data += 24;
+	cc_uint8 expireUponTouchingGround = data[0];
+	cc_uint8 fullBright               = data[1];
+	data += 2;
+
+	struct CustomParticleProperty* prop;
+	prop = &customParticle_properties[particleID];
+	//e.g. bounds of 0 0, 16 16 makes an 8x8 icon in the default 128x128 particles.png
+	TextureRec rec = { U1/256, V1/256, U2/256, V2/256 };
+	prop->rec = rec;
+	prop->frameCount = frameCount;
+	prop->particleCount = particleCount;
+	prop->size = size;
+	prop->sizeVariation = sizeVariation / 10000.0f;
+	prop->spread = spread;
+	prop->speed = speed / 10000.0f;
+	prop->gravity = gravity / 10000.0f;
+	prop->baseLifetime = baseLifetime / 10000.0f;
+	prop->lifetimeVariation = lifetimeVariation / 10000.0f;
+	prop->expireUponTouchingGround = expireUponTouchingGround;
+	prop->fullBright = fullBright;
+}
+
+static void CPE_SpawnParticle(cc_uint8* data) {
+	cc_uint8 particleID = data[0];
+	data++;
+	int x, y, z, originX, originY, originZ;
+
+	x       = (int)Stream_GetU32_BE(&data[0]);
+	y       = (int)Stream_GetU32_BE(&data[4]);
+	z       = (int)Stream_GetU32_BE(&data[8]);
+	originX = (int)Stream_GetU32_BE(&data[12]);
+	originY = (int)Stream_GetU32_BE(&data[16]);
+	originZ = (int)Stream_GetU32_BE(&data[20]);
+	data += 24;
+	Particles_CustomEffect(particleID, x / 32.0f, y / 32.0f, z / 32.0f, originX / 32.0f, originY / 32.0f, originZ / 32.0f);
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1379,6 +1434,8 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_SET_HOTBAR, CPE_SetHotbar, 3);
 	Net_Set(OPCODE_SET_SPAWNPOINT, CPE_SetSpawnPoint, 9);
 	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
+	Net_Set(OPCODE_DEFINE_PARTICLE, CPE_DefineParticle, 35);
+	Net_Set(OPCODE_SPAWN_PARTICLE, CPE_SpawnParticle, 26);
 }
 
 static void CPE_Tick(void) {

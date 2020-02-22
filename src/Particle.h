@@ -21,12 +21,12 @@ struct CustomParticleProperty {
 	TextureRec rec;
 	int frameCount;
 	int particleCount; //how many of this particle are spawned per spawn-packet
-	float size; //size of the particle in fixed-point world units (e.g. 32 is a full block's size)
+	float size; //size of the particle in fixed-point world units (e.g. 32 is a full block's length)
 	float sizeVariation;
 	float spread; //how far from the spawnpoint their location can vary (in fixed-point world units)
 	float speed; //how fast they move away/towards the origin
 	float gravity;
-	float baseLifetime;
+	float baseLifetime; //how long (in seconds) the particle lives for
 	float lifetimeVariation;
 	cc_bool expireUponTouchingGround;
 	cc_bool fullBright;
@@ -40,5 +40,5 @@ void Particles_Render(float t);
 void Particles_Tick(struct ScheduledTask* task);
 void Particles_BreakBlockEffect(IVec3 coords, BlockID oldBlock, BlockID block);
 void Particles_RainSnowEffect(float x, float y, float z);
-void Particles_CustomEffect(float x, float y, float z, int propertyID);
+void Particles_CustomEffect(int propertyID, float x, float y, float z, float originX, float originY, float originZ);
 #endif
