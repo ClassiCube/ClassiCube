@@ -1346,10 +1346,13 @@ static void CPE_DefineParticle(cc_uint8* data) {
 	cc_uint8 V1            = data[2];
 	cc_uint8 U2            = data[3];
 	cc_uint8 V2            = data[4];
-	cc_uint8 frameCount    = data[5];
-	cc_uint8 particleCount = data[6];
-	cc_uint8 size          = data[7];
-	data += 8;
+	cc_uint8 tintRed       = data[5];
+	cc_uint8 tintGreen 	   = data[6];
+	cc_uint8 tintBlue 	   = data[7];
+	cc_uint8 frameCount    = data[8];
+	cc_uint8 particleCount = data[9];
+	cc_uint8 size          = data[10];
+	data += 11;
 	int sizeVariation      = (int)Stream_GetU32_BE(&data[0]);
 	int spread             = (int)Stream_GetU32_BE(&data[4]);
 	int speed              = (int)Stream_GetU32_BE(&data[8]);
@@ -1366,9 +1369,11 @@ static void CPE_DefineParticle(cc_uint8* data) {
 	//e.g. bounds of 0 0, 16 16 makes an 8x8 icon in the default 128x128 particles.png
 	TextureRec rec = { U1/256, V1/256, U2/256, V2/256 };
 	prop->rec = rec;
+	PackedCol tint = PackedCol_Make(tintRed, tintGreen, tintBlue, 255);
+	prop->tint = tint;
 	prop->frameCount = frameCount;
 	prop->particleCount = particleCount;
-	prop->size = size;
+	prop->size = size * 0.03125; //divided by 32 to turn it into world units
 	prop->sizeVariation = sizeVariation / 10000.0f;
 	prop->spread = spread;
 	prop->speed = speed / 10000.0f;
@@ -1434,7 +1439,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_SET_HOTBAR, CPE_SetHotbar, 3);
 	Net_Set(OPCODE_SET_SPAWNPOINT, CPE_SetSpawnPoint, 9);
 	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
-	Net_Set(OPCODE_DEFINE_PARTICLE, CPE_DefineParticle, 35);
+	Net_Set(OPCODE_DEFINE_PARTICLE, CPE_DefineParticle, 38);
 	Net_Set(OPCODE_SPAWN_PARTICLE, CPE_SpawnParticle, 26);
 }
 

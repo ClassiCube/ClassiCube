@@ -19,6 +19,7 @@ struct Particle {
 
 struct CustomParticleProperty {
 	TextureRec rec;
+	PackedCol tint;
 	int frameCount;
 	int particleCount; //how many of this particle are spawned per spawn-packet
 	float size; //size of the particle in fixed-point world units (e.g. 32 is a full block's length)

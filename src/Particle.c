@@ -332,6 +332,7 @@ static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2
 
 	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
 	col = p->prop->fullBright ? PACKEDCOL_WHITE : (World_Contains(x, y, z) ? Lighting_Col(x, y, z) : Env.SunCol);
+	col = PackedCol_Tint(col, p->prop->tint);
 
 	Particle_DoRender(&size, &pos, &rec, col, vertices);
 }
