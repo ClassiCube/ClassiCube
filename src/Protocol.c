@@ -727,13 +727,13 @@ static void Classic_Tick(void) {
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-static const char* cpe_clientExtensions[35] = {
+static const char* cpe_clientExtensions[34] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl", "DefineParticle", "SpawnParticle",
+	"SetSpawnpoint", "VelocityControl", "CustomParticles",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -1367,7 +1367,7 @@ static void CPE_DefineParticle(cc_uint8* data) {
 	struct CustomParticleProperty* prop;
 	prop = &customParticle_properties[particleID];
 	//e.g. bounds of 0 0, 16 16 makes an 8x8 icon in the default 128x128 particles.png
-	TextureRec rec = { U1/256, V1/256, U2/256, V2/256 };
+	TextureRec rec = { U1/256.0f, V1/256.0f, U2/256.0f, V2/256.0f };
 	prop->rec = rec;
 	PackedCol tint = PackedCol_Make(tintRed, tintGreen, tintBlue, 255);
 	prop->tint = tint;
