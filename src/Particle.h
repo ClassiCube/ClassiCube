@@ -30,7 +30,6 @@ struct CustomParticleProperty {
 	float lifetimeVariation;
 	cc_bool expireUponTouchingGround;
 	cc_bool fullBright;
-	cc_bool converge; ////true means the particles move toward the origin. False means they move away from the origin
 };
 
 extern struct CustomParticleProperty customParticle_properties[256];

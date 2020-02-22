@@ -534,18 +534,9 @@ void Particles_CustomEffect(float x, float y, float z, int propertyID, float ori
 			Vec3 diff;
 			Vec3_Sub(&diff, &p->base.lastPos, &origin);
 			Vec3_Normalize(&diff, &diff);
-
-			if (p->prop->converge) {
-				p->base.velocity.X = (-diff.X) * p->prop->speed;
-				p->base.velocity.Y = (-diff.Y) * p->prop->speed;
-				p->base.velocity.Z = (-diff.Z) * p->prop->speed;
-			}
-			else {
-				p->base.velocity.X = diff.X * p->prop->speed;
-				p->base.velocity.Y = diff.Y * p->prop->speed;
-				p->base.velocity.Z = diff.Z * p->prop->speed;
-			}
-
+			p->base.velocity.X = diff.X * p->prop->speed;
+			p->base.velocity.Y = diff.Y * p->prop->speed;
+			p->base.velocity.Z = diff.Z * p->prop->speed;
 		}
 
 		p->base.nextPos = p->base.lastPos;
@@ -611,7 +602,6 @@ static void Particles_Init(void) {
 	prop->baseLifetime = 0.7f;
 	prop->lifetimeVariation = 0.5f;
 	prop->fullBright = true;
-	prop->converge = true;
 	prop->expireUponTouchingGround = true;
 	//END TEMP CODE
 
