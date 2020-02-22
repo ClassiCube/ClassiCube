@@ -302,14 +302,14 @@ struct CustomParticle {
 	float totalLifespan;
 };
 
-struct CustomParticleProperty customParticle_properties[256];
-static struct CustomParticle customParticle_particles[PARTICLES_MAX];
-static int customParticle_count;
-static TextureRec defaultCustomParticle_rec = { 0.0f / 128.0f, 24.0f / 128.0f, 16.0f / 128.0f, 40.0f / 128.0f };
+struct CustomParticleProperty Particles_CustomEffects[256];
+static struct CustomParticle custom_particles[PARTICLES_MAX];
+static int custom_count;
 
 static cc_bool CustomParticle_Tick(struct CustomParticle* p, double delta) {
 	particle_hitTerrain = false;
-	return Particle_PhysicsTick(&p->base, p->prop->gravity, false, delta) || (particle_hitTerrain && p->prop->expireUponTouchingGround);
+	return Particle_PhysicsTick(&p->base, p->prop->gravity, false, delta) 
+		|| (particle_hitTerrain && p->prop->expireUponTouchingGround);
 }
 
 static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2fC4b* vertices) {
@@ -317,6 +317,7 @@ static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2
 	Vec2 size;
 	PackedCol col;
 	TextureRec rec = p->prop->rec;
+	int x, y, z;
 
 	float frame_time = p->totalLifespan / p->prop->frameCount;
 	float inverted_lifetime = Math_AbsF(p->base.lifetime - p->totalLifespan);
@@ -325,7 +326,6 @@ static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2
 
 	rec.U1 += shiftU;// * 0.0078125f;
 	rec.U2 += shiftU;// * 0.0078125f;
-	int x, y, z;
 
 	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
 	size.X = p->base.size; size.Y = size.X;
@@ -340,34 +340,30 @@ static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2
 static void Custom_Render(float t) {
 	VertexP3fT2fC4b* data;
 	int i;
-	if (!customParticle_count) return;
+	if (!custom_count) return;
 
-	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, customParticle_count * 4);
-	for (i = 0; i < customParticle_count; i++) {
-		CustomParticle_Render(&customParticle_particles[i], t, data);
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, custom_count * 4);
+	for (i = 0; i < custom_count; i++) {
+		CustomParticle_Render(&custom_particles[i], t, data);
 		data += 4;
 	}
 
 	Gfx_BindTexture(Particles_TexId);
 	Gfx_UnlockDynamicVb(Particles_VB);
-	Gfx_DrawVb_IndexedTris(customParticle_count * 4);
+	Gfx_DrawVb_IndexedTris(custom_count * 4);
 }
 
-static void Custom_RemoveAt(int index) {
-	struct CustomParticle removed = customParticle_particles[index];
-	int i;
-
-	for (i = index; i < customParticle_count - 1; i++) {
-		customParticle_particles[i] = customParticle_particles[i + 1];
+static void Custom_RemoveAt(int i) {
+	for (; i < custom_count - 1; i++) {
+		custom_particles[i] = custom_particles[i + 1];
 	}
-	customParticle_particles[customParticle_count - 1] = removed;
-	customParticle_count--;
+	custom_count--;
 }
 
 static void Custom_Tick(double delta) {
 	int i;
-	for (i = 0; i < customParticle_count; i++) {
-		if (CustomParticle_Tick(&customParticle_particles[i], delta)) {
+	for (i = 0; i < custom_count; i++) {
+		if (CustomParticle_Tick(&custom_particles[i], delta)) {
 			Custom_RemoveAt(i); i--;
 		}
 	}
@@ -378,7 +374,7 @@ static void Custom_Tick(double delta) {
 *--------------------------------------------------------Particles--------------------------------------------------------*
 *#########################################################################################################################*/
 void Particles_Render(float t) {
-	if (!terrain_count && !rain_count && !customParticle_count) return;
+	if (!terrain_count && !rain_count && !custom_count) return;
 	if (Gfx.LostContext) return;
 
 	Gfx_SetTexturing(true);
@@ -504,15 +500,15 @@ void Particles_RainSnowEffect(float x, float y, float z) {
 	}
 }
 
-void Particles_CustomEffect(int propertyID, float x, float y, float z, float originX, float originY, float originZ) {
+void Particles_CustomEffect(int effectID, float x, float y, float z, float originX, float originY, float originZ) {
 	struct CustomParticle* p;
-	struct CustomParticleProperty* prop = &customParticle_properties[propertyID];
+	struct CustomParticleProperty* prop = &Particles_CustomEffects[effectID];
 	int i;
 	int count = prop->particleCount;
 
 	for (i = 0; i < count; i++) {
-		if (customParticle_count == PARTICLES_MAX) Custom_RemoveAt(0);
-		p = &customParticle_particles[customParticle_count++];
+		if (custom_count == PARTICLES_MAX) Custom_RemoveAt(0);
+		p = &custom_particles[custom_count++];
 		p->prop = prop;
 
 		Vec3 offset = { Random_Float(&rnd) - 0.5f, Random_Float(&rnd) - 0.5f, Random_Float(&rnd) - 0.5f };
@@ -520,7 +516,7 @@ void Particles_CustomEffect(int propertyID, float x, float y, float z, float ori
 		float d = Random_Float(&rnd);
 		d = Math_Exp(Math_Log(d) / 3.0);
 		Vec3_Mul1By(&offset, d);
-		Vec3_Mul1By(&offset, p->prop->spread*0.03125f);
+		Vec3_Mul1By(&offset, p->prop->spread);
 		p->base.lastPos.X = x + (offset.X);
 		p->base.lastPos.Y = y + (offset.Y);
 		p->base.lastPos.Z = z + (offset.Z);
@@ -590,7 +586,7 @@ static void Particles_Free(void) {
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
-static void Particles_Reset(void) { rain_count = 0; terrain_count = 0; customParticle_count = 0; }
+static void Particles_Reset(void) { rain_count = 0; terrain_count = 0; custom_count = 0; }
 
 struct IGameComponent Particles_Component = {
 	Particles_Init,  /* Init  */

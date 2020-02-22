@@ -17,14 +17,14 @@ struct Particle {
 	float size;
 };
 
-struct CustomParticleProperty {
+struct CustomParticleEffect {
 	TextureRec rec;
 	PackedCol tint;
 	int frameCount;
-	int particleCount; //how many of this particle are spawned per spawn-packet
-	float size; //size of the particle in fixed-point world units (e.g. 32 is a full block's length)
+	int particleCount;
+	float size;
 	float sizeVariation;
-	float spread; //how far from the spawnpoint their location can vary (in fixed-point world units)
+	float spread; //how far from the spawnpoint their location can vary
 	float speed; //how fast they move away/towards the origin
 	float gravity;
 	float baseLifetime; //how long (in seconds) the particle lives for
@@ -33,7 +33,7 @@ struct CustomParticleProperty {
 	cc_bool fullBright;
 };
 
-extern struct CustomParticleProperty customParticle_properties[256];
+extern struct CustomParticleEffect Particles_CustomEffects[256];
 
 /* http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/ */
 void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices);
@@ -41,5 +41,5 @@ void Particles_Render(float t);
 void Particles_Tick(struct ScheduledTask* task);
 void Particles_BreakBlockEffect(IVec3 coords, BlockID oldBlock, BlockID block);
 void Particles_RainSnowEffect(float x, float y, float z);
-void Particles_CustomEffect(int propertyID, float x, float y, float z, float originX, float originY, float originZ);
+void Particles_CustomEffect(int effectID, float x, float y, float z, float originX, float originY, float originZ);
 #endif
