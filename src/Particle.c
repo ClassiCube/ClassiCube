@@ -148,7 +148,7 @@ static void RainParticle_Render(struct Particle* p, float t, VertexP3fT2fC4b* ve
 	int x, y, z;
 
 	Vec3_Lerp(&pos, &p->lastPos, &p->nextPos, t);
-	size.X = (float)p->size * 0.015625f; size.Y = size.X;
+	size.X = p->size * 0.015625f; size.Y = size.X;
 
 	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
 	col = World_Contains(x, y, z) ? Lighting_Col(x, y, z) : Env.SunCol;
@@ -218,7 +218,7 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3f
 	int x, y, z;
 
 	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
-	size.X = (float)p->base.size * 0.015625f; size.Y = size.X;
+	size.X = p->base.size * 0.015625f; size.Y = size.X;
 	
 	if (!Blocks.FullBright[p->block]) {
 		x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
@@ -293,12 +293,90 @@ static void Terrain_Tick(double delta) {
 	}
 }
 
+/*########################################################################################################################*
+*-------------------------------------------------------Custom particle---------------------------------------------------*
+*#########################################################################################################################*/
+struct CustomParticle {
+	struct Particle base;
+	struct CustomParticleProperty* prop;
+	float totalLifespan;
+};
+
+static struct CustomParticle customParticle_particles[PARTICLES_MAX];
+static int customParticle_count;
+static TextureRec defaultCustomParticle_rec = { 0.0f / 128.0f, 24.0f / 128.0f, 16.0f / 128.0f, 40.0f / 128.0f };
+
+static cc_bool CustomParticle_Tick(struct CustomParticle* p, double delta) {
+	particle_hitTerrain = false;
+	return Particle_PhysicsTick(&p->base, p->prop->gravity, false, delta) || particle_hitTerrain;
+}
+
+static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2fC4b* vertices) {
+	Vec3 pos;
+	Vec2 size;
+	PackedCol col;
+	TextureRec rec = p->prop->rec;
+
+	float frame_time = p->totalLifespan / p->prop->frameCount;
+	float inverted_lifetime = Math_AbsF(p->base.lifetime - p->totalLifespan);
+	int curFrame = Math_Floor(inverted_lifetime / frame_time);
+	float shiftU = curFrame * (rec.U2 - rec.U1);
+
+	rec.U1 += shiftU;// * 0.0078125f;
+	rec.U2 += shiftU;// * 0.0078125f;
+	int x, y, z;
+
+	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
+	size.X = p->base.size; size.Y = size.X;
+
+	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
+	col = p->prop->fullBright ? PACKEDCOL_WHITE : (World_Contains(x, y, z) ? Lighting_Col(x, y, z) : Env.SunCol);
+
+	Particle_DoRender(&size, &pos, &rec, col, vertices);
+}
+
+static void Custom_Render(float t) {
+	VertexP3fT2fC4b* data;
+	int i;
+	if (!customParticle_count) return;
+
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, customParticle_count * 4);
+	for (i = 0; i < customParticle_count; i++) {
+		CustomParticle_Render(&customParticle_particles[i], t, data);
+		data += 4;
+	}
+
+	Gfx_BindTexture(Particles_TexId);
+	Gfx_UnlockDynamicVb(Particles_VB);
+	Gfx_DrawVb_IndexedTris(customParticle_count * 4);
+}
+
+static void Custom_RemoveAt(int index) {
+	struct CustomParticle removed = customParticle_particles[index];
+	int i;
+
+	for (i = index; i < customParticle_count - 1; i++) {
+		customParticle_particles[i] = customParticle_particles[i + 1];
+	}
+	customParticle_particles[customParticle_count - 1] = removed;
+	customParticle_count--;
+}
+
+static void Custom_Tick(double delta) {
+	int i;
+	for (i = 0; i < customParticle_count; i++) {
+		if (CustomParticle_Tick(&customParticle_particles[i], delta)) {
+			Custom_RemoveAt(i); i--;
+		}
+	}
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Particles--------------------------------------------------------*
 *#########################################################################################################################*/
 void Particles_Render(float t) {
-	if (!terrain_count && !rain_count) return;
+	if (!terrain_count && !rain_count && !customParticle_count) return;
 	if (Gfx.LostContext) return;
 
 	Gfx_SetTexturing(true);
@@ -307,6 +385,7 @@ void Particles_Render(float t) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Terrain_Render(t);
 	Rain_Render(t);
+	Custom_Render(t);
 
 	Gfx_SetAlphaTest(false);
 	Gfx_SetTexturing(false);
@@ -315,6 +394,7 @@ void Particles_Render(float t) {
 void Particles_Tick(struct ScheduledTask* task) {
 	Terrain_Tick(task->Interval);
 	Rain_Tick(task->Interval);
+	Custom_Tick(task->Interval);
 }
 
 void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
@@ -392,7 +472,7 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 				p->texLoc = loc;
 				p->block  = old;
 				type = Random_Next(&rnd, 30);
-				p->base.size = (cc_uint8)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
+				p->base.size = type >= 28 ? 12 : (type >= 25 ? 10 : 8);
 			}
 		}
 	}
@@ -418,7 +498,63 @@ void Particles_RainSnowEffect(float x, float y, float z) {
 		p->lifetime = 40.0f;
 
 		type = Random_Next(&rnd, 30);
-		p->size = (cc_uint8)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
+		p->size = type >= 28 ? 2 : (type >= 25 ? 4 : 3);
+	}
+}
+
+//Vec3 GetRandomSpherePoint() {
+//	float u = Random_Float(&rnd);
+//	float v = Random_Float(&rnd);
+//	float theta = u * 2.0 * MATH_PI;
+//	float phi = Math.acos(2.0 * v - 1.0);
+//	float r = Math.cbrt(Random_Float(&rnd));
+//	float sinTheta = Math.sin(theta);
+//	float cosTheta = Math.cos(theta);
+//	float sinPhi = Math.sin(phi);
+//	float cosPhi = Math.cos(phi);
+//	float x = r * sinPhi * cosTheta;
+//	float y = r * sinPhi * sinTheta;
+//	float z = r * cosPhi;
+//	return { x: x, y : y, z : z };
+//}
+
+
+void Particles_CustomEffect(float x, float y, float z, int propertyID) {
+	struct CustomParticle* p;
+	struct CustomParticleProperty* prop = &customParticle_properties[propertyID];
+	int i;
+	int count = prop->particleCount;
+
+	for (i = 0; i < count; i++) {
+		if (customParticle_count == PARTICLES_MAX) Custom_RemoveAt(0);
+		p = &customParticle_particles[customParticle_count++];
+
+		p->prop = prop;
+
+		//TODO: Add prop speed and origin working here
+		p->base.velocity.X = 0;
+		p->base.velocity.Z = 0;
+		p->base.velocity.Y = 0;
+
+		Vec3 offset = { Random_Float(&rnd) - 0.5f, Random_Float(&rnd) - 0.5f, Random_Float(&rnd) - 0.5f };
+		Vec3_Normalize(&offset, &offset);
+		float d = Random_Float(&rnd);
+
+		d = Math_Exp(Math_Log(d) / 3.0);
+		Vec3_Mul1By(&offset, d);
+		Vec3_Mul1By(&offset, p->prop->spread*0.03125f);
+
+		p->base.lastPos.X = x + (offset.X);
+		p->base.lastPos.Y = y + (offset.Y);
+		p->base.lastPos.Z = z + (offset.Z);
+		
+		
+		p->base.nextPos = p->base.lastPos;
+		p->base.lifetime = p->prop->baseLifetime + ( (p->prop->baseLifetime * p->prop->lifetimeVariation) * ((Random_Float(&rnd) - 0.5f) * 2));
+		p->totalLifespan = p->base.lifetime;
+
+		p->base.size =  p->prop->size + ( (p->prop->size * p->prop->sizeVariation) * ((Random_Float(&rnd) - 0.5f) * 2) ) ;
+
 	}
 }
 
@@ -434,6 +570,7 @@ static void OnContextRecreated(void* obj) {
 }
 static void OnBreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	Particles_BreakBlockEffect(coords, old, now);
+	Particles_CustomEffect(coords.X+0.5f, coords.Y+2.5f, coords.Z+0.5f, 0);
 }
 
 static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
@@ -443,6 +580,41 @@ static void OnFileChanged(void* obj, struct Stream* stream, const String* name) 
 }
 
 static void Particles_Init(void) {
+
+
+	//struct CustomParticleProperty {
+	//	TextureRec rec;
+	//	int frameCount;
+	//	int amount; //how many of this particle are spawned per spawn-packet
+	//	float size; //size of the particle in fixed-point world units (e.g. 32 is a full block's size)
+	//	float sizeVariation;
+	//	float spread; //how far from the spawnpoint their location can vary (in fixed-point world units)
+	//	float speed; //how fast they move away/towards the origin
+	//	float gravity;
+	//	float baseLifetime;
+	//	float lifetimeVariation;
+	//	cc_bool fullBright;
+	//	cc_bool converge; ////true means the particles move toward the origin. False means they move away from the origin
+	//};
+
+	//TEMP CODE IN LIEU OF ANY DEFINING PACKETS
+	struct CustomParticleProperty* prop;
+	prop = &customParticle_properties[0];
+
+	prop->rec = defaultCustomParticle_rec;
+	prop->frameCount = 8;
+	prop->particleCount = 50;
+	prop->size = 32 * 0.03125f;
+	prop->sizeVariation = 0.5f;
+	prop->spread = 96;
+	prop->speed = 2;
+	prop->gravity = 0.0f;
+	prop->baseLifetime = 0.7f;
+	prop->lifetimeVariation = 0.25f;
+	prop->fullBright = true;
+	prop->converge = false;
+	//END TEMP CODE
+
 	ScheduledTask_Add(GAME_DEF_TICKS, Particles_Tick);
 	Random_SeedFromCurrentTime(&rnd);
 	OnContextRecreated(NULL);	
@@ -463,7 +635,7 @@ static void Particles_Free(void) {
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
-static void Particles_Reset(void) { rain_count = 0; terrain_count = 0; }
+static void Particles_Reset(void) { rain_count = 0; terrain_count = 0; customParticle_count = 0; }
 
 struct IGameComponent Particles_Component = {
 	Particles_Init,  /* Init  */
