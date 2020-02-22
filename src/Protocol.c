@@ -727,13 +727,13 @@ static void Classic_Tick(void) {
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-static const char* cpe_clientExtensions[33] = {
+static const char* cpe_clientExtensions[35] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl",
+	"SetSpawnpoint", "VelocityControl", "DefineParticle", "SpawnParticle",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
