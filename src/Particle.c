@@ -302,13 +302,14 @@ struct CustomParticle {
 	float totalLifespan;
 };
 
+struct CustomParticleProperty customParticle_properties[256];
 static struct CustomParticle customParticle_particles[PARTICLES_MAX];
 static int customParticle_count;
 static TextureRec defaultCustomParticle_rec = { 0.0f / 128.0f, 24.0f / 128.0f, 16.0f / 128.0f, 40.0f / 128.0f };
 
 static cc_bool CustomParticle_Tick(struct CustomParticle* p, double delta) {
 	particle_hitTerrain = false;
-	return Particle_PhysicsTick(&p->base, p->prop->gravity, false, delta) || particle_hitTerrain;
+	return Particle_PhysicsTick(&p->base, p->prop->gravity, false, delta) || (particle_hitTerrain && p->prop->expireUponTouchingGround);
 }
 
 static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2fC4b* vertices) {
@@ -502,24 +503,7 @@ void Particles_RainSnowEffect(float x, float y, float z) {
 	}
 }
 
-//Vec3 GetRandomSpherePoint() {
-//	float u = Random_Float(&rnd);
-//	float v = Random_Float(&rnd);
-//	float theta = u * 2.0 * MATH_PI;
-//	float phi = Math.acos(2.0 * v - 1.0);
-//	float r = Math.cbrt(Random_Float(&rnd));
-//	float sinTheta = Math.sin(theta);
-//	float cosTheta = Math.cos(theta);
-//	float sinPhi = Math.sin(phi);
-//	float cosPhi = Math.cos(phi);
-//	float x = r * sinPhi * cosTheta;
-//	float y = r * sinPhi * sinTheta;
-//	float z = r * cosPhi;
-//	return { x: x, y : y, z : z };
-//}
-
-
-void Particles_CustomEffect(float x, float y, float z, int propertyID) {
+void Particles_CustomEffect(float x, float y, float z, int propertyID, float originX, float originY, float originZ) {
 	struct CustomParticle* p;
 	struct CustomParticleProperty* prop = &customParticle_properties[propertyID];
 	int i;
@@ -528,27 +512,42 @@ void Particles_CustomEffect(float x, float y, float z, int propertyID) {
 	for (i = 0; i < count; i++) {
 		if (customParticle_count == PARTICLES_MAX) Custom_RemoveAt(0);
 		p = &customParticle_particles[customParticle_count++];
-
 		p->prop = prop;
-
-		//TODO: Add prop speed and origin working here
-		p->base.velocity.X = 0;
-		p->base.velocity.Z = 0;
-		p->base.velocity.Y = 0;
 
 		Vec3 offset = { Random_Float(&rnd) - 0.5f, Random_Float(&rnd) - 0.5f, Random_Float(&rnd) - 0.5f };
 		Vec3_Normalize(&offset, &offset);
 		float d = Random_Float(&rnd);
-
 		d = Math_Exp(Math_Log(d) / 3.0);
 		Vec3_Mul1By(&offset, d);
 		Vec3_Mul1By(&offset, p->prop->spread*0.03125f);
-
 		p->base.lastPos.X = x + (offset.X);
 		p->base.lastPos.Y = y + (offset.Y);
 		p->base.lastPos.Z = z + (offset.Z);
 		
-		
+		Vec3 origin = { originX, originY, originZ };
+		if (Vec3_Equals(&origin, &p->base.lastPos)) {
+			p->base.velocity.X = 0;
+			p->base.velocity.Y = 0;
+			p->base.velocity.Z = 0;
+		}
+		else {
+			Vec3 diff;
+			Vec3_Sub(&diff, &p->base.lastPos, &origin);
+			Vec3_Normalize(&diff, &diff);
+
+			if (p->prop->converge) {
+				p->base.velocity.X = (-diff.X) * p->prop->speed;
+				p->base.velocity.Y = (-diff.Y) * p->prop->speed;
+				p->base.velocity.Z = (-diff.Z) * p->prop->speed;
+			}
+			else {
+				p->base.velocity.X = diff.X * p->prop->speed;
+				p->base.velocity.Y = diff.Y * p->prop->speed;
+				p->base.velocity.Z = diff.Z * p->prop->speed;
+			}
+
+		}
+
 		p->base.nextPos = p->base.lastPos;
 		p->base.lifetime = p->prop->baseLifetime + ( (p->prop->baseLifetime * p->prop->lifetimeVariation) * ((Random_Float(&rnd) - 0.5f) * 2));
 		p->totalLifespan = p->base.lifetime;
@@ -570,7 +569,7 @@ static void OnContextRecreated(void* obj) {
 }
 static void OnBreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	Particles_BreakBlockEffect(coords, old, now);
-	Particles_CustomEffect(coords.X+0.5f, coords.Y+2.5f, coords.Z+0.5f, 0);
+	Particles_CustomEffect(coords.X+0.5f, coords.Y+0.5f, coords.Z+0.5f, 0, coords.X+0.5f, coords.Y + 0.5f, coords.Z + 0.5f);
 }
 
 static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
@@ -604,15 +603,16 @@ static void Particles_Init(void) {
 	prop->rec = defaultCustomParticle_rec;
 	prop->frameCount = 8;
 	prop->particleCount = 50;
-	prop->size = 32 * 0.03125f;
+	prop->size = 64 * 0.03125f;
 	prop->sizeVariation = 0.5f;
 	prop->spread = 96;
-	prop->speed = 2;
-	prop->gravity = 0.0f;
+	prop->speed = 0.5;
+	prop->gravity = -0.5f;
 	prop->baseLifetime = 0.7f;
-	prop->lifetimeVariation = 0.25f;
+	prop->lifetimeVariation = 0.5f;
 	prop->fullBright = true;
-	prop->converge = false;
+	prop->converge = true;
+	prop->expireUponTouchingGround = true;
 	//END TEMP CODE
 
 	ScheduledTask_Add(GAME_DEF_TICKS, Particles_Tick);

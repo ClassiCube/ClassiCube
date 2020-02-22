@@ -28,11 +28,12 @@ struct CustomParticleProperty {
 	float gravity;
 	float baseLifetime;
 	float lifetimeVariation;
+	cc_bool expireUponTouchingGround;
 	cc_bool fullBright;
 	cc_bool converge; ////true means the particles move toward the origin. False means they move away from the origin
 };
 
-static struct CustomParticleProperty customParticle_properties[256];
+extern struct CustomParticleProperty customParticle_properties[256];
 
 /* http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/ */
 void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices);
