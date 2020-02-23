@@ -1606,13 +1606,13 @@ static const struct TouchBindDesc {
 	cc_uint8 bind, width;
 	cc_int16 xOffset, yOffset;
 } touchDescs[7] = {
-	{ "<",    KEYBIND_LEFT,     40,  10,  90 },
-	{ ">",    KEYBIND_RIGHT,    40, 150,  90 },
-	{ "^",    KEYBIND_FORWARD,  40,  80,  50 },
-	{ "\\/",  KEYBIND_BACK,     40,  80, 130 },
-	{ "Jump", KEYBIND_JUMP,    100,  50,  50 },
-	{ "",     KEYBIND_COUNT,   100,  50,  90 },
-	{ "More", KEYBIND_COUNT,   100,  50, 130 },
+	{ "<",    KEYBIND_LEFT,     40,  10, 50 },
+	{ ">",    KEYBIND_RIGHT,    40, 150, 50 },
+	{ "^",    KEYBIND_FORWARD,  40,  80, 90 },
+	{ "\\/",  KEYBIND_BACK,     40,  80, 10 },
+	{ "Jump", KEYBIND_JUMP,    100,  50, 90 },
+	{ "",     KEYBIND_COUNT,   100,  50, 50 },
+	{ "More", KEYBIND_COUNT,   100,  50, 10 },
 };
 
 static void TouchScreen_ContextLost(void* screen) {
@@ -1705,7 +1705,7 @@ static void TouchScreen_Init(void* screen) {
 	for (i = 0; i < s->numWidgets; i++) {
 		desc = &touchDescs[i];
 		ButtonWidget_Make(&s->btns[i], desc->width, NULL, i < 4 ? ANCHOR_MIN : ANCHOR_MAX, 
-			ANCHOR_MIN, desc->xOffset, desc->yOffset);
+			ANCHOR_MAX, desc->xOffset, desc->yOffset);
 		s->binds[i] = desc->bind;
 	}
 
@@ -1713,12 +1713,26 @@ static void TouchScreen_Init(void* screen) {
 	s->btns[6].MenuClick = TouchScreen_MoreClick;
 }
 
+static void TouchScreen_Layout(void* screen) {
+	struct TouchScreen* s;
+	int i, height;
+
+	s = (struct TouchScreen*)screen;
+	HUDScreen_Layout(Gui_HUD);
+	height = Gui_HUD->hotbar.height;
+
+	for (i = 0; i < s->numWidgets; i++) {
+		s->btns[i].yOffset = height + Display_ScaleY(touchDescs[i].yOffset);
+	}
+	Screen_Layout(screen);
+}
+
 static const struct ScreenVTABLE TouchScreen_VTABLE = {
 	TouchScreen_Init,        Screen_NullUpdate,     Screen_NullFunc,
 	TouchScreen_Render,      Screen_BuildMesh,
 	Screen_FInput,           Screen_FInput,         Screen_FKeyPress, Screen_FText,
 	TouchScreen_PointerDown, TouchScreen_PointerUp, Screen_FPointer,  Screen_FMouseScroll,
-	Screen_Layout,           TouchScreen_ContextLost, TouchScreen_ContextRecreated
+	TouchScreen_Layout,      TouchScreen_ContextLost, TouchScreen_ContextRecreated
 };
 void TouchScreen_Show(void) {
 	struct TouchScreen* s = &TouchScreen;
