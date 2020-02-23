@@ -24,6 +24,7 @@
 #include "Errors.h"
 #include "Camera.h"
 #include "Window.h"
+#include "Particle.h"
 
 cc_uint16 Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];
@@ -726,13 +727,13 @@ static void Classic_Tick(void) {
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-static const char* cpe_clientExtensions[33] = {
+static const char* cpe_clientExtensions[34] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl",
+	"SetSpawnpoint", "VelocityControl", "CustomParticles",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -1339,6 +1340,44 @@ static void CPE_VelocityControl(cc_uint8* data) {
 	CalcVelocity(&p->Base.Velocity.Z, data + 8, data[14]);
 }
 
+static void CPE_DefineEffect(cc_uint8* data) {
+	struct CustomParticleEffect* e = &Particles_CustomEffects[data[0]];
+
+	/* e.g. bounds of 0,0, 15,15 gives an 8x8 icon in the default 128x128 particles.png */
+	e->rec.U1 = data[1]       / 256.0f;
+	e->rec.V1 = data[2]       / 256.0f;
+	e->rec.U2 = (data[3] + 1) / 256.0f;
+	e->rec.V2 = (data[4] + 1) / 256.0f;
+
+	e->tintCol       = PackedCol_Make(data[5], data[6], data[7], 255);
+	e->frameCount    = data[8];
+	e->particleCount = data[9];
+	e->size          = data[10] / 32.0f; /* 32 units per block */
+
+	e->sizeVariation      = (int)Stream_GetU32_BE(data + 11) / 10000.0f;
+	e->spread             =      Stream_GetU16_BE(data + 15) / 32.0f;
+	e->speed              = (int)Stream_GetU32_BE(data + 17) / 10000.0f;
+	e->gravity            = (int)Stream_GetU32_BE(data + 21) / 10000.0f;
+	e->baseLifetime       = (int)Stream_GetU32_BE(data + 25) / 10000.0f;
+	e->lifetimeVariation  = (int)Stream_GetU32_BE(data + 29) / 10000.0f;
+
+	e->expireUponTouchingGround = data[33];
+	e->fullBright               = data[34];
+}
+
+static void CPE_SpawnEffect(cc_uint8* data) {
+	float x, y, z, originX, originY, originZ;
+
+	x       = (int)Stream_GetU32_BE(data +  1) / 32.0f;
+	y       = (int)Stream_GetU32_BE(data +  5) / 32.0f;
+	z       = (int)Stream_GetU32_BE(data +  9) / 32.0f;
+	originX = (int)Stream_GetU32_BE(data + 13) / 32.0f;
+	originY = (int)Stream_GetU32_BE(data + 17) / 32.0f;
+	originZ = (int)Stream_GetU32_BE(data + 21) / 32.0f;
+
+	Particles_CustomEffect(data[0], x, y, z, originX, originY, originZ);
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1379,6 +1418,8 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_SET_HOTBAR, CPE_SetHotbar, 3);
 	Net_Set(OPCODE_SET_SPAWNPOINT, CPE_SetSpawnPoint, 9);
 	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
+	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
+	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
 }
 
 static void CPE_Tick(void) {

@@ -148,7 +148,7 @@ static void RainParticle_Render(struct Particle* p, float t, VertexP3fT2fC4b* ve
 	int x, y, z;
 
 	Vec3_Lerp(&pos, &p->lastPos, &p->nextPos, t);
-	size.X = (float)p->size * 0.015625f; size.Y = size.X;
+	size.X = p->size * 0.015625f; size.Y = size.X;
 
 	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
 	col = World_Contains(x, y, z) ? Lighting_Col(x, y, z) : Env.SunCol;
@@ -218,7 +218,7 @@ static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3f
 	int x, y, z;
 
 	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
-	size.X = (float)p->base.size * 0.015625f; size.Y = size.X;
+	size.X = p->base.size * 0.015625f; size.Y = size.X;
 	
 	if (!Blocks.FullBright[p->block]) {
 		x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
@@ -293,12 +293,90 @@ static void Terrain_Tick(double delta) {
 	}
 }
 
+/*########################################################################################################################*
+*-------------------------------------------------------Custom particle---------------------------------------------------*
+*#########################################################################################################################*/
+struct CustomParticle {
+	struct Particle base;
+	int effectId;
+	float totalLifespan;
+};
+
+struct CustomParticleEffect Particles_CustomEffects[256];
+static struct CustomParticle custom_particles[PARTICLES_MAX];
+static int custom_count;
+
+static cc_bool CustomParticle_Tick(struct CustomParticle* p, double delta) {
+	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
+	particle_hitTerrain = false;
+
+	return Particle_PhysicsTick(&p->base, e->gravity, false, delta) 
+		|| (particle_hitTerrain && e->expireUponTouchingGround);
+}
+
+static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2fC4b* vertices) {
+	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
+	Vec3 pos;
+	Vec2 size;
+	PackedCol col;
+	TextureRec rec = e->rec;
+	int x, y, z;
+
+	float time_lived = p->totalLifespan - p->base.lifetime;
+	int curFrame = Math_Floor(e->frameCount * (time_lived / p->totalLifespan));
+	float shiftU = curFrame * (rec.U2 - rec.U1);
+
+	rec.U1 += shiftU;// * 0.0078125f;
+	rec.U2 += shiftU;// * 0.0078125f;
+
+	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
+	size.X = p->base.size; size.Y = size.X;
+
+	x = Math_Floor(pos.X); y = Math_Floor(pos.Y); z = Math_Floor(pos.Z);
+	col = e->fullBright ? PACKEDCOL_WHITE : (World_Contains(x, y, z) ? Lighting_Col(x, y, z) : Env.SunCol);
+	col = PackedCol_Tint(col, e->tintCol);
+
+	Particle_DoRender(&size, &pos, &rec, col, vertices);
+}
+
+static void Custom_Render(float t) {
+	VertexP3fT2fC4b* data;
+	int i;
+	if (!custom_count) return;
+
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, custom_count * 4);
+	for (i = 0; i < custom_count; i++) {
+		CustomParticle_Render(&custom_particles[i], t, data);
+		data += 4;
+	}
+
+	Gfx_BindTexture(Particles_TexId);
+	Gfx_UnlockDynamicVb(Particles_VB);
+	Gfx_DrawVb_IndexedTris(custom_count * 4);
+}
+
+static void Custom_RemoveAt(int i) {
+	for (; i < custom_count - 1; i++) {
+		custom_particles[i] = custom_particles[i + 1];
+	}
+	custom_count--;
+}
+
+static void Custom_Tick(double delta) {
+	int i;
+	for (i = 0; i < custom_count; i++) {
+		if (CustomParticle_Tick(&custom_particles[i], delta)) {
+			Custom_RemoveAt(i); i--;
+		}
+	}
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Particles--------------------------------------------------------*
 *#########################################################################################################################*/
 void Particles_Render(float t) {
-	if (!terrain_count && !rain_count) return;
+	if (!terrain_count && !rain_count && !custom_count) return;
 	if (Gfx.LostContext) return;
 
 	Gfx_SetTexturing(true);
@@ -307,6 +385,7 @@ void Particles_Render(float t) {
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Terrain_Render(t);
 	Rain_Render(t);
+	Custom_Render(t);
 
 	Gfx_SetAlphaTest(false);
 	Gfx_SetTexturing(false);
@@ -315,6 +394,7 @@ void Particles_Render(float t) {
 void Particles_Tick(struct ScheduledTask* task) {
 	Terrain_Tick(task->Interval);
 	Rain_Tick(task->Interval);
+	Custom_Tick(task->Interval);
 }
 
 void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
@@ -392,7 +472,7 @@ void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {
 				p->texLoc = loc;
 				p->block  = old;
 				type = Random_Next(&rnd, 30);
-				p->base.size = (cc_uint8)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
+				p->base.size = type >= 28 ? 12 : (type >= 25 ? 10 : 8);
 			}
 		}
 	}
@@ -418,7 +498,56 @@ void Particles_RainSnowEffect(float x, float y, float z) {
 		p->lifetime = 40.0f;
 
 		type = Random_Next(&rnd, 30);
-		p->size = (cc_uint8)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
+		p->size = type >= 28 ? 2 : (type >= 25 ? 4 : 3);
+	}
+}
+
+void Particles_CustomEffect(int effectID, float x, float y, float z, float originX, float originY, float originZ) {
+	struct CustomParticle* p;
+	struct CustomParticleEffect* e = &Particles_CustomEffects[effectID];
+	int i, count = e->particleCount;
+	Vec3 offset;
+	float d;
+
+	for (i = 0; i < count; i++) {
+		if (custom_count == PARTICLES_MAX) Custom_RemoveAt(0);
+		p = &custom_particles[custom_count++];
+		p->effectId = effectID;
+
+		offset.X = Random_Float(&rnd) - 0.5f;
+		offset.Y = Random_Float(&rnd) - 0.5f;
+		offset.Z = Random_Float(&rnd) - 0.5f;
+		Vec3_Normalize(&offset, &offset);
+
+		d  = Random_Float(&rnd);
+		d  = Math_Exp(Math_Log(d) / 3.0); /* d^1/3 for better distribution */
+		d *= e->spread;
+
+		p->base.lastPos.X = x + offset.X * d;
+		p->base.lastPos.Y = y + offset.Y * d;
+		p->base.lastPos.Z = z + offset.Z * d;
+		
+		Vec3 origin = { originX, originY, originZ };
+		if (Vec3_Equals(&origin, &p->base.lastPos)) {
+			p->base.velocity.X = 0;
+			p->base.velocity.Y = 0;
+			p->base.velocity.Z = 0;
+		}
+		else {
+			Vec3 diff;
+			Vec3_Sub(&diff, &p->base.lastPos, &origin);
+			Vec3_Normalize(&diff, &diff);
+			p->base.velocity.X = diff.X * e->speed;
+			p->base.velocity.Y = diff.Y * e->speed;
+			p->base.velocity.Z = diff.Z * e->speed;
+		}
+
+		p->base.nextPos  = p->base.lastPos;
+		p->base.lifetime = e->baseLifetime + (e->baseLifetime * e->lifetimeVariation) * ((Random_Float(&rnd) - 0.5f) * 2);
+		p->totalLifespan = p->base.lifetime;
+
+		p->base.size = e->size + (e->size * e->sizeVariation) * ((Random_Float(&rnd) - 0.5f) * 2);
+
 	}
 }
 
@@ -463,7 +592,7 @@ static void Particles_Free(void) {
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
-static void Particles_Reset(void) { rain_count = 0; terrain_count = 0; }
+static void Particles_Reset(void) { rain_count = 0; terrain_count = 0; custom_count = 0; }
 
 struct IGameComponent Particles_Component = {
 	Particles_Init,  /* Init  */
