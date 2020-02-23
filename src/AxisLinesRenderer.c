@@ -26,9 +26,8 @@ void AxisLinesRenderer_Render(void) {
 	};
 
 	Vec3 coords[5], pos;
-	VertexP3fC4b vertices[AXISLINES_NUM_VERTICES];
-	VertexP3fC4b* v = vertices;
 	int i, count;
+	VertexP3fC4b* v;
 
 	if (!AxisLinesRenderer_Enabled || Gfx.LostContext) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
@@ -46,6 +45,7 @@ void AxisLinesRenderer_Render(void) {
 	Vec3_Add1(&coords[3], &pos,  AXISLINES_THICKNESS);
 	Vec3_Add1(&coords[4], &pos,  AXISLINES_LENGTH);
 
+	v = (VertexP3fC4b*)Gfx_LockDynamicVb(axisLines_vb, VERTEX_FORMAT_P3FC4B, AXISLINES_NUM_VERTICES);
 	for (i = 0; i < count; i++, v++) {
 		v->X   = coords[indices[i*3 + 0]].X;
 		v->Y   = coords[indices[i*3 + 1]].Y;
@@ -54,7 +54,8 @@ void AxisLinesRenderer_Render(void) {
 	}
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
-	Gfx_UpdateDynamicVb_IndexedTris(axisLines_vb, vertices, count);
+	Gfx_UnlockDynamicVb(axisLines_vb);
+	Gfx_DrawVb_IndexedTris(AXISLINES_NUM_VERTICES);
 }
 
 

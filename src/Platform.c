@@ -235,26 +235,16 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 	return FileTime_TotalMS(raw);
 }
 
-static void Platform_FromSysTime(struct DateTime* time, SYSTEMTIME* sysTime) {
-	time->year   = sysTime->wYear;
-	time->month  = sysTime->wMonth;
-	time->day    = sysTime->wDay;
-	time->hour   = sysTime->wHour;
-	time->minute = sysTime->wMinute;
-	time->second = sysTime->wSecond;
-	time->milli  = sysTime->wMilliseconds;
-}
-
-void DateTime_CurrentUTC(struct DateTime* time) {
-	SYSTEMTIME utcTime;
-	GetSystemTime(&utcTime);
-	Platform_FromSysTime(time, &utcTime);
-}
-
-void DateTime_CurrentLocal(struct DateTime* time) {
+void DateTime_CurrentLocal(struct DateTime* t) {
 	SYSTEMTIME localTime;
 	GetLocalTime(&localTime);
-	Platform_FromSysTime(time, &localTime);
+
+	t->year   = localTime.wYear;
+	t->month  = localTime.wMonth;
+	t->day    = localTime.wDay;
+	t->hour   = localTime.wHour;
+	t->minute = localTime.wMinute;
+	t->second = localTime.wSecond;
 }
 
 static cc_bool sw_highRes;
@@ -296,35 +286,18 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 	return UnixTime_TotalMS(cur);
 }
 
-static void Platform_FromSysTime(struct DateTime* time, struct tm* sysTime) {
-	time->year   = sysTime->tm_year + 1900;
-	time->month  = sysTime->tm_mon + 1;
-	time->day    = sysTime->tm_mday;
-	time->hour   = sysTime->tm_hour;
-	time->minute = sysTime->tm_min;
-	time->second = sysTime->tm_sec;
-}
-
-void DateTime_CurrentUTC(struct DateTime* time_) {
-	struct timeval cur; 
-	struct tm utc_time;
-
-	gettimeofday(&cur, NULL);
-	gmtime_r(&cur.tv_sec, &utc_time);
-
-	Platform_FromSysTime(time_, &utc_time);
-	time_->milli = cur.tv_usec / 1000;
-}
-
-void DateTime_CurrentLocal(struct DateTime* time_) {
+void DateTime_CurrentLocal(struct DateTime* t) {
 	struct timeval cur; 
 	struct tm loc_time;
-
 	gettimeofday(&cur, NULL);
 	localtime_r(&cur.tv_sec, &loc_time);
 
-	Platform_FromSysTime(time_, &loc_time);
-	time_->milli = cur.tv_usec / 1000;
+	t->year   = loc_time.tm_year + 1900;
+	t->month  = loc_time.tm_mon  + 1;
+	t->day    = loc_time.tm_mday;
+	t->hour   = loc_time.tm_hour;
+	t->minute = loc_time.tm_min;
+	t->second = loc_time.tm_sec;
 }
 
 #define NS_PER_SEC 1000000000ULL
@@ -439,9 +412,6 @@ cc_result File_SetModifiedTime(const String* path, TimeMS time) {
 	File_Close(file);
 	return res;
 }
-
-/* Don't need special execute permission on windows */
-cc_result File_MarkExecutable(const String* path) { return 0; }
 
 static cc_result File_Do(FileHandle* file, const String* path, DWORD access, DWORD createMode) {
 	TCHAR str[NATIVE_STR_LEN];
@@ -563,16 +533,6 @@ cc_result File_SetModifiedTime(const String* path, TimeMS time) {
 	times.modtime = (time - UNIX_EPOCH) / 1000;
 	Platform_ConvertString(str, path);
 	return utime(str, &times) == -1 ? errno : 0;
-}
-
-cc_result File_MarkExecutable(const String* path) {
-	char str[NATIVE_STR_LEN];
-	struct stat st;
-	Platform_ConvertString(str, path);
-
-	if (stat(str, &st) == -1) return errno;
-	st.st_mode |= S_IXUSR;
-	return chmod(str, st.st_mode) == -1 ? errno : 0;
 }
 
 static cc_result File_Do(FileHandle* file, const String* path, int mode) {
@@ -901,11 +861,9 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-void Socket_Create(SocketHandle* socketResult) {
+cc_result Socket_Create(SocketHandle* socketResult) {
 	*socketResult = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (*socketResult == -1) {
-		Logger_Abort2(Socket__Error(), "Failed to create socket");
-	}
+	return *socketResult == -1 ? Socket__Error() : 0;
 }
 
 static cc_result Socket_ioctl(SocketHandle socket, cc_uint32 cmd, int* data) {
@@ -1327,10 +1285,14 @@ cc_result Updater_GetBuildTime(TimeMS* ms) {
 	File_Close(file);
 	return res;
 }
+
+/* Don't need special execute permission on windows */
+cc_result Updater_MarkExecutable(void) { return 0; }
 #elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-cc_bool Updater_Clean(void)                   { return true; }
+cc_bool Updater_Clean(void)                  { return true; }
 cc_result Updater_Start(void)                { return ERR_NOT_SUPPORTED; }
 cc_result Updater_GetBuildTime(TimeMS* time) { return ERR_NOT_SUPPORTED; }
+cc_result Updater_MarkExecutable(void)       { return 0; }
 #elif defined CC_BUILD_POSIX
 cc_bool Updater_Clean(void) { return true; }
 
@@ -1387,6 +1349,14 @@ cc_result Updater_GetBuildTime(TimeMS* ms) {
 	if (stat(path, &sb) == -1) return errno;
 	*ms = (cc_uint64)sb.st_mtime * 1000 + UNIX_EPOCH;
 	return 0;
+}
+
+cc_result Updater_MarkExecutable(void) {
+	struct stat st;
+	if (stat(UPDATE_FILE, &st) == -1) return errno;
+
+	st.st_mode |= S_IXUSR;
+	return chmod(UPDATE_FILE, st.st_mode) == -1 ? errno : 0;
 }
 #endif
 

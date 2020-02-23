@@ -71,6 +71,8 @@ cc_bool Updater_Clean(void);
 cc_result Updater_Start(void);
 /* Returns the last time the application was modified, as number of milliseconds since 1/1/0001 */
 cc_result Updater_GetBuildTime(TimeMS* ms);
+/* Marks the UPDATE_FILE file as being executable. (Needed for some platforms) */
+cc_result Updater_MarkExecutable(void);
 
 /* The default file extension used for dynamic libraries on this platform. */
 extern const String DynamicLib_Ext;
@@ -114,11 +116,8 @@ void Platform_Log4(const char* format, const void* a1, const void* a2, const voi
 
 /* Returns the current UTC time, as number of milliseconds since 1/1/0001 */
 CC_API TimeMS DateTime_CurrentUTC_MS(void);
-/* Returns the current UTC Time. */
-/* NOTE: Generally DateTime_CurrentUTC_MS should be used instead. */
-CC_API void DateTime_CurrentUTC(struct DateTime* time);
 /* Returns the current local Time. */
-CC_API void DateTime_CurrentLocal(struct DateTime* time);
+CC_API void DateTime_CurrentLocal(struct DateTime* t);
 /* Takes a platform-specific stopwatch measurement. */
 /* NOTE: The value returned is platform-specific - do NOT try to interpret the value. */
 CC_API cc_uint64 Stopwatch_Measure(void);
@@ -138,8 +137,6 @@ CC_API cc_result Directory_Enum(const String* path, void* obj, Directory_EnumCal
 CC_API int File_Exists(const String* path);
 /* Sets the last time the file was modified, as number of milliseconds since 1/1/0001 */
 CC_API cc_result File_SetModifiedTime(const String* path, TimeMS ms);
-/* Marks a file as being executable. */
-CC_API cc_result File_MarkExecutable(const String* path);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 /* NOTE: If the file already exists, its contents are discarded. */
@@ -196,7 +193,7 @@ CC_API void  Waitable_WaitFor(void* handle, cc_uint32 milliseconds);
 void Platform_LoadSysFonts(void);
 
 /* Allocates a new socket. */
-CC_API void Socket_Create(SocketHandle* socket);
+CC_API cc_result Socket_Create(SocketHandle* socket);
 /* Returns how much data is available to be read from the given socket. */
 CC_API cc_result Socket_Available(SocketHandle socket, cc_uint32* available);
 /* Sets whether operations on the given socket block the calling thread. */

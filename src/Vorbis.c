@@ -33,8 +33,8 @@ static cc_result Ogg_NextPage(struct OggState* ctx) {
 	cc_uint8 header[27];
 	struct Stream* source;
 	cc_uint32 sig, size;
-	int i, numSegments;
 	cc_result res;
+	int i;
 
 	/* OGG page format:
 	* header[0]  (4) page signature
