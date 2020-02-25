@@ -92,6 +92,11 @@ cc_bool DynamicLib_DescribeError(cc_result res, String* dst);
 
 /* Allocates a block of memory, with undetermined contents. Returns NULL on allocation failure. */
 CC_API void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize);
+/* Allocates a block of memory, with contents of all 0. Returns NULL on allocation failure. */
+CC_API void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize);
+/* Reallocates a block of memory, with undetermined contents. Returns NULL on reallocation failure. */
+CC_API void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize);
+
 /* Allocates a block of memory, with undetermined contents. Exits process on allocation failure. */
 CC_API void* Mem_Alloc(cc_uint32 numElems, cc_uint32 elemsSize, const char* place);
 /* Allocates a block of memory, with contents of all 0. Exits process on allocation failure. */

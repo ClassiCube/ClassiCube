@@ -105,7 +105,7 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 void Mem_Set(void* dst, cc_uint8 value,    cc_uint32 numBytes) { memset(dst, value, numBytes); }
 void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
 
-CC_NOINLINE static void Platform_AllocFailed(const char* place) {	
+CC_NOINLINE static void AbortOnAllocFailed(const char* place) {	
 	String log; char logBuffer[STRING_SIZE+20 + 1];
 	String_InitArray_NT(log, logBuffer);
 
@@ -114,31 +114,38 @@ CC_NOINLINE static void Platform_AllocFailed(const char* place) {
 	Logger_Abort(log.buffer);
 }
 
+void* Mem_Alloc(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+	void* ptr = Mem_TryAlloc(numElems, elemsSize);
+	if (!ptr) AbortOnAllocFailed(place);
+	return ptr;
+}
+
+void* Mem_AllocCleared(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+	void* ptr = Mem_TryAllocCleared(numElems, elemsSize);
+	if (!ptr) AbortOnAllocFailed(place);
+	return ptr;
+}
+
+void* Mem_Realloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+	void* ptr = Mem_TryRealloc(mem, numElems, elemsSize);
+	if (!ptr) AbortOnAllocFailed(place);
+	return ptr;
+}
+
 #if defined CC_BUILD_WIN
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	return HeapAlloc(heap, 0, numBytes);
 }
 
-void* Mem_Alloc(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	void* ptr = HeapAlloc(heap, 0, numBytes);
-	if (!ptr) Platform_AllocFailed(place);
-	return ptr;
+	return HeapAlloc(heap, HEAP_ZERO_MEMORY, numBytes);
 }
 
-void* Mem_AllocCleared(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	void* ptr = HeapAlloc(heap, HEAP_ZERO_MEMORY, numBytes);
-	if (!ptr) Platform_AllocFailed(place);
-	return ptr;
-}
-
-void* Mem_Realloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
-	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	void* ptr = HeapReAlloc(heap, 0, mem, numBytes);
-	if (!ptr) Platform_AllocFailed(place);
-	return ptr;
+	return HeapReAlloc(heap, 0, mem, numBytes);
 }
 
 void Mem_Free(void* mem) {
@@ -149,22 +156,12 @@ void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	return malloc(numElems * elemsSize); /* TODO: avoid overflow here */
 }
 
-void* Mem_Alloc(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
-	void* ptr = malloc(numElems * elemsSize); /* TODO: avoid overflow here */
-	if (!ptr) Platform_AllocFailed(place);
-	return ptr;
+void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+	return calloc(numElems, elemsSize); /* TODO: avoid overflow here */
 }
 
-void* Mem_AllocCleared(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
-	void* ptr = calloc(numElems, elemsSize); /* TODO: avoid overflow here */
-	if (!ptr) Platform_AllocFailed(place);
-	return ptr;
-}
-
-void* Mem_Realloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
-	void* ptr = realloc(mem, numElems * elemsSize); /* TODO: avoid overflow here */
-	if (!ptr) Platform_AllocFailed(place);
-	return ptr;
+void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+	return realloc(mem, numElems * elemsSize); /* TODO: avoid overflow here */
 }
 
 void Mem_Free(void* mem) {
