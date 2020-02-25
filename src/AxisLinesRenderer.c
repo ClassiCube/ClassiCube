@@ -55,7 +55,7 @@ void AxisLinesRenderer_Render(void) {
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
 	Gfx_UnlockDynamicVb(axisLines_vb);
-	Gfx_DrawVb_IndexedTris(AXISLINES_NUM_VERTICES);
+	Gfx_DrawVb_IndexedTris(count);
 }
 
 
