@@ -51,20 +51,26 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 }
 
 #define CAMERA_SENSI_FACTOR (0.0002f / 3.0f * MATH_RAD2DEG)
-#define CAMERA_SLIPPERY 0.97f
-#define CAMERA_ADJUST 0.025f
 
 static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
 	float sensitivity = CAMERA_SENSI_FACTOR * Camera.Sensitivity;
-	static float speedX, speedY;
+	static float speedX, speedY, newSpeedX, newSpeedY, accelX, accelY;
 	Vec2 v;
 
 	if (Camera.Smooth) {
-		speedX += cam_deltaX * CAMERA_ADJUST;
-		speedX *= CAMERA_SLIPPERY;
-		speedY += cam_deltaY * CAMERA_ADJUST;
-		speedY *= CAMERA_SLIPPERY;
-	} else {
+		accelX = (cam_deltaX - speedX) * 35 / Camera.Mass;
+		accelY = (cam_deltaY - speedY) * 35 / Camera.Mass;
+		newSpeedX = accelX * (float)delta + speedX;
+		newSpeedY = accelY * (float)delta + speedY;
+
+		// High acceleration means velocity overshoots the correct position on low FPS,
+		// causing wiggling. If newSpeed has opposite sign of speed, set speed to 0;
+		if (newSpeedX * speedX < 0) speedX = 0;
+		else speedX = newSpeedX;
+		if (newSpeedY * speedY < 0) speedY = 0;
+		else speedY = newSpeedY;
+	}
+	else {
 		speedX = (float)cam_deltaX;
 		speedY = (float)cam_deltaY;
 	}
@@ -247,6 +253,7 @@ void Camera_Init(void) {
 #endif
 	Camera.Clipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
 	Camera.Invert      = Options_GetBool(OPT_INVERT_MOUSE, false);
+	Camera.Mass        = Options_GetFloat(OPT_CAMERA_MASS, 1, 100, 20);
 }
 
 void Camera_CycleActive(void) {
