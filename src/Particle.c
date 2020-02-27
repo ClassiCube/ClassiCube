@@ -19,6 +19,7 @@ static GfxResourceID Particles_TexId, Particles_VB;
 #define PARTICLES_MAX 600
 static RNGState rnd;
 static cc_bool particle_hitTerrain;
+typedef cc_bool (*CanPassThroughFunc)(BlockID b);
 
 void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec, PackedCol col, VertexP3fT2fC4b* v) {
 	struct Matrix* view;
@@ -60,7 +61,7 @@ static BlockID Particle_GetBlock(int x, int y, int z) {
 	return Env.SidesBlock;
 }
 
-static cc_bool Particle_TestY(struct Particle* p, int y, cc_bool topFace, cc_bool throughLiquids) {
+static cc_bool Particle_TestY(struct Particle* p, int y, cc_bool topFace, CanPassThroughFunc canPassThrough) {
 	BlockID block;
 	Vec3 minBB, maxBB;
 	float collideY;
@@ -76,7 +77,7 @@ static cc_bool Particle_TestY(struct Particle* p, int y, cc_bool topFace, cc_boo
 	}
 
 	block = Particle_GetBlock((int)p->nextPos.X, y, (int)p->nextPos.Z);
-	if (Particle_CanPass(block, throughLiquids)) return true;
+	if (canPassThrough(block)) return true;
 	minBB = Blocks.MinBB[block]; maxBB = Blocks.MaxBB[block];
 
 	collideY   = y + (topFace ? maxBB.Y : minBB.Y);
@@ -94,7 +95,7 @@ static cc_bool Particle_TestY(struct Particle* p, int y, cc_bool topFace, cc_boo
 	return true;
 }
 
-static cc_bool Particle_PhysicsTick(struct Particle* p, float gravity, cc_bool throughLiquids, double delta) {
+static cc_bool Particle_PhysicsTick(struct Particle* p, float gravity, CanPassThroughFunc canPassThrough, double delta) {
 	BlockID cur;
 	float minY, maxY;
 	Vec3 velocity;
@@ -105,8 +106,7 @@ static cc_bool Particle_PhysicsTick(struct Particle* p, float gravity, cc_bool t
 	minY = Math_Floor(p->nextPos.Y) + Blocks.MinBB[cur].Y;
 	maxY = Math_Floor(p->nextPos.Y) + Blocks.MaxBB[cur].Y;
 
-	if (!Particle_CanPass(cur, throughLiquids) && p->nextPos.Y >= minY
-		&& p->nextPos.Y < maxY && Particle_CollideHor(&p->nextPos, cur)) {
+	if (!canPassThrough(cur) && p->nextPos.Y >= minY && p->nextPos.Y < maxY && Particle_CollideHor(&p->nextPos, cur)) {
 		return true;
 	}
 
@@ -119,9 +119,9 @@ static cc_bool Particle_PhysicsTick(struct Particle* p, float gravity, cc_bool t
 
 	if (p->velocity.Y > 0.0f) {
 		/* don't test block we are already in */
-		for (y = begY + 1; y <= endY && Particle_TestY(p, y, false, throughLiquids); y++) {}
+		for (y = begY + 1; y <= endY && Particle_TestY(p, y, false, canPassThrough); y++) {}
 	} else {
-		for (y = begY; y >= endY && Particle_TestY(p, y, true, throughLiquids); y--) {}
+		for (y = begY; y >= endY && Particle_TestY(p, y, true, canPassThrough); y--) {}
 	}
 
 	p->lifetime -= (float)delta;
@@ -136,9 +136,14 @@ static struct Particle rain_Particles[PARTICLES_MAX];
 static int rain_count;
 static TextureRec rain_rec = { 2.0f/128.0f, 14.0f/128.0f, 5.0f/128.0f, 16.0f/128.0f };
 
+static cc_bool RainParticle_CanPass(BlockID block) {
+	cc_uint8 draw = Blocks.Draw[block];
+	return draw == DRAW_GAS || draw == DRAW_SPRITE;
+}
+
 static cc_bool RainParticle_Tick(struct Particle* p, double delta) {
 	particle_hitTerrain = false;
-	return Particle_PhysicsTick(p, 3.5f, false, delta) || particle_hitTerrain;
+	return Particle_PhysicsTick(p, 3.5f, RainParticle_CanPass, delta) || particle_hitTerrain;
 }
 
 static void RainParticle_Render(struct Particle* p, float t, VertexP3fT2fC4b* vertices) {
@@ -203,8 +208,13 @@ static int terrain_count;
 static cc_uint16 terrain_1DCount[ATLAS1D_MAX_ATLASES];
 static cc_uint16 terrain_1DIndices[ATLAS1D_MAX_ATLASES];
 
+static cc_bool TerrainParticle_CanPass(BlockID block) {
+	cc_uint8 draw = Blocks.Draw[block];
+	return draw == DRAW_GAS || draw == DRAW_SPRITE || Blocks.IsLiquid[block];
+}
+
 static cc_bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
-	return Particle_PhysicsTick(&p->base, 5.4f, true, delta);
+	return Particle_PhysicsTick(&p->base, 5.4f, TerrainParticle_CanPass, delta);
 }
 
 static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3fT2fC4b* vertices) {
@@ -302,7 +312,7 @@ static cc_bool CustomParticle_Tick(struct CustomParticle* p, double delta) {
 	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
 	particle_hitTerrain = false;
 
-	return Particle_PhysicsTick(&p->base, e->gravity, false, delta) 
+	return Particle_PhysicsTick(&p->base, e->gravity, RainParticle_CanPass, delta)
 		|| (particle_hitTerrain && e->expireUponTouchingGround);
 }
 
