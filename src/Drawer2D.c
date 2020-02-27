@@ -875,7 +875,7 @@ static cc_result SysFont_Init(const String* path, struct SysFont* font, FT_Open_
 static void* FT_AllocWrapper(FT_Memory memory, long size) { return Mem_TryAlloc(size, 1); }
 static void FT_FreeWrapper(FT_Memory memory, void* block) { Mem_Free(block); }
 static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, void* block) {
-	return Mem_Realloc(block, new_size, 1, "Freetype data");
+	return Mem_TryRealloc(block, new_size, 1);
 }
 
 static cc_bool updatedSysFonts;

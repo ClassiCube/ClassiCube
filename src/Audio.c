@@ -767,7 +767,9 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	/* so we may end up decoding slightly over a second of audio */
 	chunkSize        = fmt.channels * (fmt.sampleRate + vorbis.blockSizes[1]);
 	samplesPerSecond = fmt.channels * fmt.sampleRate;
-	data = (cc_int16*)Mem_Alloc(chunkSize * AUDIO_MAX_BUFFERS, 2, "Ogg final output");
+
+	data = (cc_int16*)Mem_TryAlloc(chunkSize * AUDIO_MAX_BUFFERS, 2);
+	if (!data) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
 
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) {

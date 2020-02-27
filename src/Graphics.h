@@ -1,6 +1,5 @@
 #ifndef CC_GFXAPI_H
 #define CC_GFXAPI_H
-#include "PackedCol.h"
 #include "Vectors.h"
 #include "GameStructs.h"
 #include "Bitmap.h"
