@@ -22,7 +22,7 @@ struct CustomParticleEffect {
 	PackedCol tintCol;
 	cc_uint8 frameCount;
 	cc_uint8 particleCount;
-	cc_bool expireUponTouchingGround;
+	cc_uint8 collideFlags;
 	cc_bool fullBright;
 	float size;
 	float sizeVariation;

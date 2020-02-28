@@ -307,13 +307,33 @@ struct CustomParticle {
 struct CustomParticleEffect Particles_CustomEffects[256];
 static struct CustomParticle custom_particles[PARTICLES_MAX];
 static int custom_count;
+static cc_uint8 collideFlags;
+#define EXPIRES_UPON_TOUCHING_GROUND (1 << 0)
+#define SOLID_COLLIDES  (1 << 1)
+#define LIQUID_COLLIDES (1 << 2)
+#define LEAF_COLLIDES   (1 << 3)
+
+static cc_bool CustomParticle_CanPass(BlockID block) {
+	cc_uint8 draw = Blocks.Draw[block];
+	if (draw == DRAW_TRANSPARENT_THICK && !(collideFlags & LEAF_COLLIDES)) {
+		return true;
+	}
+	cc_uint8 collide = Blocks.Collide[block];
+	if (collide == COLLIDE_SOLID && (collideFlags & SOLID_COLLIDES)) {
+		return false;
+	}
+	if (collide == COLLIDE_LIQUID && (collideFlags & LIQUID_COLLIDES)) {
+		return false;
+	}
+	return true;
+}
 
 static cc_bool CustomParticle_Tick(struct CustomParticle* p, double delta) {
 	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
 	particle_hitTerrain = false;
-
-	return Particle_PhysicsTick(&p->base, e->gravity, RainParticle_CanPass, delta)
-		|| (particle_hitTerrain && e->expireUponTouchingGround);
+	collideFlags = e->collideFlags;
+	return Particle_PhysicsTick(&p->base, e->gravity, CustomParticle_CanPass, delta)
+		|| (particle_hitTerrain && e->collideFlags & EXPIRES_UPON_TOUCHING_GROUND);
 }
 
 static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2fC4b* vertices) {

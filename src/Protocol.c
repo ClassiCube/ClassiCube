@@ -1361,8 +1361,8 @@ static void CPE_DefineEffect(cc_uint8* data) {
 	e->baseLifetime       = (int)Stream_GetU32_BE(data + 25) / 10000.0f;
 	e->lifetimeVariation  = (int)Stream_GetU32_BE(data + 29) / 10000.0f;
 
-	e->expireUponTouchingGround = data[33];
-	e->fullBright               = data[34];
+	e->collideFlags = data[33];
+	e->fullBright   = data[34];
 }
 
 static void CPE_SpawnEffect(cc_uint8* data) {
