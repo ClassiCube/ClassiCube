@@ -1045,7 +1045,9 @@ cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int
 	String_UNSAFE_Separate(&value, ',', &path, &index);
 	Convert_ParseInt(&index, &faceIndex);
 
-	font = (struct SysFont*)Mem_Alloc(1, sizeof(struct SysFont), "SysFont");
+	font = (struct SysFont*)Mem_TryAlloc(1, sizeof(struct SysFont));
+	if (!font) return ERR_OUT_OF_MEMORY;
+
 	if ((err = SysFont_Init(&path, font, &args))) { Mem_Free(font); return err; }
 	desc->handle = font;
 

@@ -156,11 +156,11 @@ void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	return malloc(numElems * elemsSize); /* TODO: avoid overflow here */
 }
 
-void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
 	return calloc(numElems, elemsSize); /* TODO: avoid overflow here */
 }
 
-void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
+void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
 	return realloc(mem, numElems * elemsSize); /* TODO: avoid overflow here */
 }
 

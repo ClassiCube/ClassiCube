@@ -62,9 +62,15 @@ void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src
 /* Allocates a new bitmap of the given dimensions. */
 /* NOTE: You are responsible for freeing its memory! */
 void Bitmap_Allocate(Bitmap* bmp, int width, int height);
+/* Attemps to allocates a new bitmap of the given dimensions. */
+/* NOTE: You are responsible for freeing its memory! */
+void Bitmap_TryAllocate(Bitmap* bmp, int width, int height);
 /* Allocates a power-of-2 sized bitmap equal to or greater than the given size, and clears it to 0. */
 /* NOTE: You are responsible for freeing its memory! */
 void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height);
+/* Attempts to allocate a power-of-2 sized bitmap >= than the given size, and clears it to 0. */
+/* NOTE: You are responsible for freeing its memory! */
+void Bitmap_TryAllocateClearedPow2(Bitmap* bmp, int width, int height);
 /* Scales a region of the source bitmap to occupy the entirety of the destination bitmap. */
 /* The pixels from the region are scaled upwards or downwards depending on destination width and height. */
 CC_API void Bitmap_Scale(Bitmap* dst, Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight);
