@@ -1166,9 +1166,11 @@ static void CPE_BulkBlockUpdate(cc_uint8* data) {
 		if (index < 0 || index >= World.Volume) continue;
 		World_Unpack(index, x, y, z);
 
-		if (World_Contains(x, y, z)) {
-			Game_UpdateBlock(x, y, z, blocks[i]);
-		}
+#ifdef EXTENDED_BLOCKS
+		Game_UpdateBlock(x, y, z, blocks[i] % BLOCK_COUNT);
+#else
+		Game_UpdateBlock(x, y, z, blocks[i]);
+#endif
 	}
 }
 
