@@ -102,7 +102,8 @@ void World_SetBlock(int x, int y, int z, BlockID block) {
 	World.Blocks[i] = (BlockRaw)block;
 
 	/* defer allocation of second map array if possible */
-	if (World.Blocks == World.Blocks2 && block >= 256) {
+	if (World.Blocks == World.Blocks2) {
+		if (block < 256) return;
 		LazyInitUpper(i, block);
 		return;
 	}

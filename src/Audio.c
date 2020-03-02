@@ -596,7 +596,8 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 	if ((res = Audio_SetFormat(output->handle, fmt))) { Sounds_Fail(res); return; }
 	
 	/* copy to temp buffer to apply volume */
-	if (volume < 100) {		
+	if (volume < 100) {
+		/* TODO: Don't need a per sound temp buffer, just a global one */
 		if (output->capacity < snd->size) {
 			/* TODO: check if we can realloc NULL without a problem */
 			if (output->buffer) {
