@@ -6,6 +6,7 @@
 #include "Window.h"
 #include "Options.h"
 #include "PackedCol.h"
+#include "Errors.h"
 
 #ifndef CC_BUILD_WEB
 /*########################################################################################################################*
@@ -560,9 +561,12 @@ static void FetchFlagsTask_Scale(Bitmap* bmp) {
 	/* at default DPI don't need to rescale it */
 	if (width == bmp->Width && height == bmp->Height) return;
 
-	Bitmap_Allocate(&scaled, width, height);
-	Bitmap_Scale(&scaled, bmp, 0, 0, bmp->Width, bmp->Height);
+	Bitmap_TryAllocate(&scaled, width, height);
+	if (!scaled.Scan0) {
+		Logger_Warn(ERR_OUT_OF_MEMORY, "resizing flags bitmap"); return;
+	}
 
+	Bitmap_Scale(&scaled, bmp, 0, 0, bmp->Width, bmp->Height);
 	Mem_Free(bmp->Scan0);
 	*bmp = scaled;
 }

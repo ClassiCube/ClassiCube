@@ -422,7 +422,7 @@ static cc_result Entity_EnsurePow2(struct Entity* e, Bitmap* bmp) {
 	height = Math_NextPowOf2(bmp->Height);
 	if (width == bmp->Width && height == bmp->Height) return 0;
 
-	Bitmap_Allocate(&scaled, width, height);
+	Bitmap_TryAllocate(&scaled, width, height);
 	if (!scaled.Scan0) return ERR_OUT_OF_MEMORY;
 
 	e->uScale = (float)bmp->Width  / width;
