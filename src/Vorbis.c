@@ -1234,7 +1234,9 @@ static cc_result Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	cc_result res;
 
 	count = Vorbis_ReadBits(ctx, 8) + 1;
-	ctx->codebooks = (struct Codebook*)Mem_Alloc(count, sizeof(struct Codebook), "vorbis codebooks");
+	ctx->codebooks = (struct Codebook*)Mem_TryAlloc(count, sizeof(struct Codebook));
+	if (!ctx->codebooks) return ERR_OUT_OF_MEMORY;
+
 	for (i = 0; i < count; i++) {
 		res = Codebook_DecodeSetup(ctx, &ctx->codebooks[i]);
 		if (res) return res;
@@ -1248,34 +1250,45 @@ static cc_result Vorbis_DecodeSetup(struct VorbisState* ctx) {
 	}
 
 	count = Vorbis_ReadBits(ctx, 6) + 1;
-	ctx->floors = (struct Floor*)Mem_Alloc(count, sizeof(struct Floor), "vorbis floors");
+	ctx->floors = (struct Floor*)Mem_TryAlloc(count, sizeof(struct Floor));
+	if (!ctx->floors) return ERR_OUT_OF_MEMORY;
+
 	for (i = 0; i < count; i++) {
 		int floor = Vorbis_ReadBits(ctx, 16);
 		if (floor != 1) return VORBIS_ERR_FLOOR_TYPE;
+
 		res = Floor_DecodeSetup(ctx, &ctx->floors[i]);
 		if (res) return res;
 	}
 
 	count = Vorbis_ReadBits(ctx, 6) + 1;
-	ctx->residues = (struct Residue*)Mem_Alloc(count, sizeof(struct Residue), "vorbis residues");
+	ctx->residues = (struct Residue*)Mem_TryAlloc(count, sizeof(struct Residue));
+	if (!ctx->residues) return ERR_OUT_OF_MEMORY;
+
 	for (i = 0; i < count; i++) {
 		int residue = Vorbis_ReadBits(ctx, 16);
 		if (residue > 2) return VORBIS_ERR_FLOOR_TYPE;
+
 		res = Residue_DecodeSetup(ctx, &ctx->residues[i], residue);
 		if (res) return res;
 	}
 
 	count = Vorbis_ReadBits(ctx, 6) + 1;
-	ctx->mappings = (struct Mapping*)Mem_Alloc(count, sizeof(struct Mapping), "vorbis mappings");
+	ctx->mappings = (struct Mapping*)Mem_TryAlloc(count, sizeof(struct Mapping));
+	if (!ctx->mappings) return ERR_OUT_OF_MEMORY;
+
 	for (i = 0; i < count; i++) {
 		int mapping = Vorbis_ReadBits(ctx, 16);
 		if (mapping != 0) return VORBIS_ERR_MAPPING_TYPE;
+
 		res = Mapping_DecodeSetup(ctx, &ctx->mappings[i]);
 		if (res) return res;
 	}
 
 	count = Vorbis_ReadBits(ctx, 6) + 1;
-	ctx->modes = (struct Mode*)Mem_Alloc(count, sizeof(struct Mode), "vorbis modes");
+	ctx->modes = (struct Mode*)Mem_TryAlloc(count, sizeof(struct Mode));
+	if (!ctx->modes) return ERR_OUT_OF_MEMORY;
+
 	for (i = 0; i < count; i++) {
 		res = Mode_DecodeSetup(ctx, &ctx->modes[i]);
 		if (res) return res;
@@ -1306,7 +1319,9 @@ cc_result Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 
 	/* window calculations can be pre-computed here */
 	count = ctx->blockSizes[0] + ctx->blockSizes[1];
-	ctx->windowRaw = (float*)Mem_Alloc(count, sizeof(float), "Vorbis windows");
+	ctx->windowRaw = (float*)Mem_TryAlloc(count, sizeof(float));
+	if (!ctx->windowRaw) return ERR_OUT_OF_MEMORY;
+
 	ctx->windows[0].Prev = ctx->windowRaw;
 	ctx->windows[1].Prev = ctx->windowRaw + ctx->blockSizes[0];
 
@@ -1314,7 +1329,9 @@ cc_result Vorbis_DecodeHeaders(struct VorbisState* ctx) {
 	Vorbis_CalcWindow(&ctx->windows[1], ctx->blockSizes[1]);
 
 	count     = ctx->channels * ctx->blockSizes[1];
-	ctx->temp = (float*)Mem_AllocCleared(count * 3, sizeof(float), "Vorbis values");
+	ctx->temp = (float*)Mem_TryAllocCleared(count * 3, sizeof(float));
+	if (!ctx->temp) return ERR_OUT_OF_MEMORY;
+
 	ctx->values[0] = ctx->temp + count;
 	ctx->values[1] = ctx->temp + count * 2;
 

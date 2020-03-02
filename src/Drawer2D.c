@@ -875,7 +875,7 @@ static cc_result SysFont_Init(const String* path, struct SysFont* font, FT_Open_
 static void* FT_AllocWrapper(FT_Memory memory, long size) { return Mem_TryAlloc(size, 1); }
 static void FT_FreeWrapper(FT_Memory memory, void* block) { Mem_Free(block); }
 static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, void* block) {
-	return Mem_Realloc(block, new_size, 1, "Freetype data");
+	return Mem_TryRealloc(block, new_size, 1);
 }
 
 static cc_bool updatedSysFonts;
@@ -1045,7 +1045,9 @@ cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int
 	String_UNSAFE_Separate(&value, ',', &path, &index);
 	Convert_ParseInt(&index, &faceIndex);
 
-	font = (struct SysFont*)Mem_Alloc(1, sizeof(struct SysFont), "SysFont");
+	font = (struct SysFont*)Mem_TryAlloc(1, sizeof(struct SysFont));
+	if (!font) return ERR_OUT_OF_MEMORY;
+
 	if ((err = SysFont_Init(&path, font, &args))) { Mem_Free(font); return err; }
 	desc->handle = font;
 

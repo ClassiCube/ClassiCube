@@ -22,12 +22,25 @@ void Bitmap_Allocate(Bitmap* bmp, int width, int height) {
 	bmp->Scan0 = (cc_uint8*)Mem_Alloc(width * height, 4, "bitmap data");
 }
 
+void Bitmap_TryAllocate(Bitmap* bmp, int width, int height) {
+	bmp->Width = width; bmp->Height = height;
+	bmp->Scan0 = (cc_uint8*)Mem_TryAlloc(width * height, 4);
+}
+
 void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height) {
 	width  = Math_NextPowOf2(width);
 	height = Math_NextPowOf2(height);
 
 	bmp->Width = width; bmp->Height = height;
 	bmp->Scan0 = (cc_uint8*)Mem_AllocCleared(width * height, 4, "bitmap data");
+}
+
+void Bitmap_TryAllocateClearedPow2(Bitmap* bmp, int width, int height) {
+	width  = Math_NextPowOf2(width);
+	height = Math_NextPowOf2(height);
+
+	bmp->Width = width; bmp->Height = height;
+	bmp->Scan0 = (cc_uint8*)Mem_TryAllocCleared(width * height, 4);
 }
 
 void Bitmap_Scale(Bitmap* dst, Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight) {

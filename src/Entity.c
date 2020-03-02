@@ -20,6 +20,7 @@
 #include "Bitmap.h"
 #include "Logger.h"
 #include "Options.h"
+#include "Errors.h"
 
 const char* const NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const char* const ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
@@ -411,7 +412,7 @@ static void Entity_ClearHat(Bitmap* bmp, cc_uint8 skinType) {
 }
 
 /* Ensures skin is a power of two size, resizing if needed. */
-static void Entity_EnsurePow2(struct Entity* e, Bitmap* bmp) {
+static cc_result Entity_EnsurePow2(struct Entity* e, Bitmap* bmp) {
 	cc_uint32 stride;
 	int width, height;
 	Bitmap scaled;
@@ -419,9 +420,11 @@ static void Entity_EnsurePow2(struct Entity* e, Bitmap* bmp) {
 
 	width  = Math_NextPowOf2(bmp->Width);
 	height = Math_NextPowOf2(bmp->Height);
-	if (width == bmp->Width && height == bmp->Height) return;
+	if (width == bmp->Width && height == bmp->Height) return 0;
 
-	Bitmap_Allocate(&scaled, width, height);
+	Bitmap_TryAllocate(&scaled, width, height);
+	if (!scaled.Scan0) return ERR_OUT_OF_MEMORY;
+
 	e->uScale = (float)bmp->Width  / width;
 	e->vScale = (float)bmp->Height / height;
 	stride = bmp->Width * 4;
@@ -434,6 +437,7 @@ static void Entity_EnsurePow2(struct Entity* e, Bitmap* bmp) {
 
 	Mem_Free(bmp->Scan0);
 	*bmp = scaled;
+	return 0;
 }
 
 static void Entity_CheckSkin(struct Entity* e) {
@@ -464,17 +468,13 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	if (!Http_GetResult(&skin, &item)) return;
 	if (!item.success) { Entity_SetSkinAll(e, true); return; }
-	Stream_ReadonlyMemory(&mem, item.data, item.size);
 
-	if ((res = Png_Decode(&bmp, &mem))) {
-		url = String_FromRawArray(item.url);
-		Logger_Warn2(res, "decoding", &url);
-		Mem_Free(bmp.Scan0); return;
-	}
+	Stream_ReadonlyMemory(&mem, item.data, item.size);
+	if ((res = Png_Decode(&bmp, &mem))) goto failed;
 
 	Gfx_DeleteTexture(&e->TextureId);
 	Entity_SetSkinAll(e, true);
-	Entity_EnsurePow2(e, &bmp);
+	if ((res = Entity_EnsurePow2(e, &bmp))) goto failed;
 	e->SkinType = Utils_CalcSkinType(&bmp);
 
 	if (bmp.Width > Gfx.MaxTexWidth || bmp.Height > Gfx.MaxTexHeight) {
@@ -484,6 +484,12 @@ static void Entity_CheckSkin(struct Entity* e) {
 		e->TextureId = Gfx_CreateTexture(&bmp, true, false);
 		Entity_SetSkinAll(e, false);
 	}
+	Mem_Free(bmp.Scan0);
+	return;
+
+failed:
+	url = String_FromRawArray(item.url);
+	Logger_Warn2(res, "decoding", &url);
 	Mem_Free(bmp.Scan0);
 }
 

@@ -574,7 +574,7 @@ static struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 ty
 /*########################################################################################################################*
 *--------------------------------------------------------Sounds-----------------------------------------------------------*
 *#########################################################################################################################*/
-struct SoundOutput { AudioHandle Handle; void* Buffer; cc_uint32 BufferSize; };
+struct SoundOutput { AudioHandle handle; void* buffer; cc_uint32 capacity; };
 #define AUDIO_MAX_HANDLES 6
 #define HANDLE_INV -1
 #define SOUND_INV { HANDLE_INV, NULL, 0 }
@@ -591,27 +591,33 @@ CC_NOINLINE static void Sounds_Fail(cc_result res) {
 
 static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, int volume) {
 	void* data = snd->data;
+	void* tmp;
 	cc_result res;
-	if ((res = Audio_SetFormat(output->Handle, fmt))) { Sounds_Fail(res); return; }
+	if ((res = Audio_SetFormat(output->handle, fmt))) { Sounds_Fail(res); return; }
 	
 	/* copy to temp buffer to apply volume */
-	if (volume < 100) {		
-		if (output->BufferSize < snd->size) {
+	if (volume < 100) {
+		/* TODO: Don't need a per sound temp buffer, just a global one */
+		if (output->capacity < snd->size) {
 			/* TODO: check if we can realloc NULL without a problem */
-			if (output->Buffer) {
-				output->Buffer = Mem_Realloc(output->Buffer, snd->size, 1, "sound temp buffer");
+			if (output->buffer) {
+				tmp = Mem_TryRealloc(output->buffer, snd->size, 1);
 			} else {
-				output->Buffer = Mem_Alloc(snd->size, 1, "sound temp buffer");
+				tmp = Mem_TryAlloc(snd->size, 1);
 			}
+
+			if (!tmp) { Sounds_Fail(ERR_OUT_OF_MEMORY); return; }
+			output->buffer   = tmp;
+			output->capacity = snd->size;
 		}
-		data = output->Buffer;
+		data = output->buffer;
 
 		Mem_Copy(data, snd->data, snd->size);
 		Volume_Mix16((cc_int16*)data, snd->size / 2, volume);
 	}
 
-	if ((res = Audio_BufferData(output->Handle, 0, data, snd->size))) { Sounds_Fail(res); return; }
-	if ((res = Audio_Play(output->Handle)))                           { Sounds_Fail(res); return; }
+	if ((res = Audio_BufferData(output->handle, 0, data, snd->size))) { Sounds_Fail(res); return; }
+	if ((res = Audio_Play(output->handle)))                           { Sounds_Fail(res); return; }
 }
 
 static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
@@ -644,16 +650,16 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	/* Try to play on fresh device, or device with same data format */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		output = &outputs[i];
-		if (output->Handle == HANDLE_INV) {
-			Audio_Open(&output->Handle, 1);
+		if (output->handle == HANDLE_INV) {
+			Audio_Open(&output->handle, 1);
 		} else {
-			res = Audio_IsFinished(output->Handle, &finished);
+			res = Audio_IsFinished(output->handle, &finished);
 
 			if (res) { Sounds_Fail(res); return; }
 			if (!finished) continue;
 		}
 
-		l = Audio_GetFormat(output->Handle);
+		l = Audio_GetFormat(output->handle);
 		if (!l->channels || AudioFormat_Eq(l, &fmt)) {
 			Sounds_PlayRaw(output, snd, &fmt, volume); return;
 		}
@@ -662,7 +668,7 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	/* Try again with all devices, even if need to recreate one (expensive) */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		output = &outputs[i];
-		res = Audio_IsFinished(output->Handle, &finished);
+		res = Audio_IsFinished(output->handle, &finished);
 
 		if (res) { Sounds_Fail(res); return; }
 		if (!finished) continue;
@@ -682,14 +688,14 @@ static void Audio_PlayBlockSound(void* obj, IVec3 coords, BlockID old, BlockID n
 static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
 	int i;
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		if (outputs[i].Handle == HANDLE_INV) continue;
+		if (outputs[i].handle == HANDLE_INV) continue;
 
-		Audio_StopAndClose(outputs[i].Handle);
-		outputs[i].Handle = HANDLE_INV;
+		Audio_StopAndClose(outputs[i].handle);
+		outputs[i].handle = HANDLE_INV;
 
-		Mem_Free(outputs[i].Buffer);
-		outputs[i].Buffer     = NULL;
-		outputs[i].BufferSize = 0;
+		Mem_Free(outputs[i].buffer);
+		outputs[i].buffer   = NULL;
+		outputs[i].capacity = 0;
 	}
 }
 
@@ -767,7 +773,9 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	/* so we may end up decoding slightly over a second of audio */
 	chunkSize        = fmt.channels * (fmt.sampleRate + vorbis.blockSizes[1]);
 	samplesPerSecond = fmt.channels * fmt.sampleRate;
-	data = (cc_int16*)Mem_Alloc(chunkSize * AUDIO_MAX_BUFFERS, 2, "Ogg final output");
+
+	data = (cc_int16*)Mem_TryAlloc(chunkSize * AUDIO_MAX_BUFFERS, 2);
+	if (!data) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
 
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) {

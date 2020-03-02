@@ -687,6 +687,7 @@ static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 
 	res = dst.Close(&dst);
 	if (res) Logger_Warn(res, "closing .wav file");
+	Vorbis_Free(&ctx);
 }
 
 static void MusicPatcher_Save(const char* name, struct HttpRequest* req) {
