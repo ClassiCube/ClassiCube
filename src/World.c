@@ -9,6 +9,7 @@
 #include "Physics.h"
 #include "Game.h"
 #include "TexturePack.h"
+#include "Window.h"
 
 struct _WorldData World;
 /*########################################################################################################################*
@@ -85,14 +86,25 @@ void World_SetMapUpper(BlockRaw* blocks) {
 
 
 #ifdef EXTENDED_BLOCKS
+static CC_NOINLINE void LazyInitUpper(int i, BlockID block) {
+	BlockRaw* data = Mem_TryAllocCleared(World.Volume, 1);
+	if (data) {
+		World_SetMapUpper(data);
+		World.Blocks2[i] = (BlockRaw)(block >> 8);
+	} else {
+		Window_ShowDialog("Out of memory", "Not enough free memory to load the map.\nTry joining a different map.");
+		World_Reset();
+	}
+}
+
 void World_SetBlock(int x, int y, int z, BlockID block) {
 	int i = World_Pack(x, y, z);
 	World.Blocks[i] = (BlockRaw)block;
 
 	/* defer allocation of second map array if possible */
-	if (World.Blocks == World.Blocks2) {
-		if (block < 256) return;
-		World_SetMapUpper((BlockRaw*)Mem_AllocCleared(World.Volume, 1, "map blocks upper"));
+	if (World.Blocks == World.Blocks2 && block >= 256) {
+		LazyInitUpper(i, block);
+		return;
 	}
 	World.Blocks2[i] = (BlockRaw)(block >> 8);
 }
