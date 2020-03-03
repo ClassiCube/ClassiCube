@@ -50,10 +50,6 @@ CC_API void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
 CC_API void Gradient_Tint(Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 						  int x, int y, int width, int height);
 
-/* Fills the given area using pixels from an indexed bitmap. */
-/* TODO: Currently this only handles square areas. */
-CC_API void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size,
-								cc_uint8* indices, BitmapCol* palette);
 /* Fills the given area using pixels from the source bitmap. */
 CC_API void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src);
 /* Fills the area with the given colour. */

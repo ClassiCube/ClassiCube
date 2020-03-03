@@ -81,7 +81,7 @@ void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style) {
 	}
 }
 
-static void Drawer2D_CheckFont(void) {
+static void CheckFont(void) {
 	String path;
 	int i;
 	/* Try user's default font if set, otherwise try Arial */
@@ -130,14 +130,14 @@ static void CalculateTextWidths(void) {
 	tileWidths[' '] = tileSize / 4;
 }
 
-static void Drawer2D_FreeFontBitmap(void) {
+static void FreeFontBitmap(void) {
 	int i;
 	for (i = 0; i < Array_Elems(tileWidths); i++) tileWidths[i] = 0;
 	Mem_Free(fontBitmap.Scan0);
 }
 
 void Drawer2D_SetFontBitmap(Bitmap* bmp) {
-	Drawer2D_FreeFontBitmap();
+	FreeFontBitmap();
 	fontBitmap = *bmp;
 	tileSize   = bmp->Width >> LOG2_CHARS_PER_ROW;
 	CalculateTextWidths();
@@ -267,27 +267,6 @@ void Gradient_Tint(Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 				0);
 
 			row[xx] = col | (row[xx] & BITMAPCOL_A_MASK);
-		}
-	}
-}
-
-void Drawer2D_BmpIndexed(Bitmap* bmp, int x, int y, int size, 
-						cc_uint8* indices, BitmapCol* palette) {
-	BitmapCol* row;
-	BitmapCol col;
-	int xx, yy;
-
-	for (yy = 0; yy < size; yy++) {
-		if ((y + yy) < 0) { indices += size; continue; }
-		if ((y + yy) >= bmp->Height) break;
-
-		row = Bitmap_GetRow(bmp, y + yy) + x;
-		for (xx = 0; xx < size; xx++) {
-			col = palette[*indices++];
-
-			if (col == 0) continue; /* transparent pixel */
-			if ((x + xx) < 0 || (x + xx) >= bmp->Width) continue;
-			row[xx] = col;
 		}
 	}
 }
@@ -457,7 +436,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	int cellY, underlineY, underlineHeight;
 
 	BitmapCol* srcRow, src;
-	BitmapCol* dstRow, dst;
+	BitmapCol* dstRow;
 
 	cc_uint8 coords[256];
 	BitmapCol cols[256];
@@ -545,7 +524,7 @@ static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	}
 }
 
-static void Drawer2D_DrawBitmapText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
+static void DrawBitmappedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 	int offset = Drawer2D_ShadowOffset(args->font->size);
 
 	if (args->useShadow) {
@@ -554,7 +533,7 @@ static void Drawer2D_DrawBitmapText(Bitmap* bmp, struct DrawTextArgs* args, int 
 	Drawer2D_DrawCore(bmp, args, x, y, false);
 }
 
-static int Drawer2D_MeasureBitmapWidth(const struct DrawTextArgs* args) {
+static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
 	int i, point = args->font->size;
 	int xPadding, width;
 	String text;
@@ -587,7 +566,7 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 	int i, partWidth;
 
 	if (Drawer2D_IsEmptyText(&args->text)) return;
-	if (Drawer2D_BitmappedText) { Drawer2D_DrawBitmapText(bmp, args, x, y); return; }
+	if (Drawer2D_BitmappedText) { DrawBitmappedText(bmp, args, x, y); return; }
 
 	for (i = 0; i < value.length; ) {
 		colCode = nextCol;
@@ -612,7 +591,7 @@ int Drawer2D_TextWidth(struct DrawTextArgs* args) {
 	int i, width;
 
 	if (Drawer2D_IsEmptyText(&args->text)) return 0;
-	if (Drawer2D_BitmappedText) return Drawer2D_MeasureBitmapWidth(args);
+	if (Drawer2D_BitmappedText) return MeasureBitmappedWidth(args);
 	width = 0;
 
 	for (i = 0; i < value.length; ) {
@@ -685,7 +664,7 @@ void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 /*########################################################################################################################*
 *---------------------------------------------------Drawer2D component----------------------------------------------------*
 *#########################################################################################################################*/
-static void Drawer2D_HexEncodedCol(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
+static void InitHexEncodedCol(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
 	Drawer2D_Cols[i] = BitmapCol_Make(
 		lo * ((hex >> 2) & 1) + hi * (hex >> 3),
 		lo * ((hex >> 1) & 1) + hi * (hex >> 3),
@@ -700,11 +679,11 @@ static void Drawer2D_Reset(void) {
 	}
 
 	for (i = 0; i <= 9; i++) {
-		Drawer2D_HexEncodedCol('0' + i, i, 191, 64);
+		InitHexEncodedCol('0' + i, i, 191, 64);
 	}
 	for (i = 10; i <= 15; i++) {
-		Drawer2D_HexEncodedCol('a' + (i - 10), i, 191, 64);
-		Drawer2D_HexEncodedCol('A' + (i - 10), i, 191, 64);
+		InitHexEncodedCol('a' + (i - 10), i, 191, 64);
+		InitHexEncodedCol('A' + (i - 10), i, 191, 64);
 	}
 }
 
@@ -730,12 +709,12 @@ static void Drawer2D_Init(void) {
 	Options_UNSAFE_Get(OPT_FONT_NAME, &font_candidates[0]);
 	if (Game_ClassicMode) font_candidates[0].length = 0;
 
-	Drawer2D_CheckFont();
+	CheckFont();
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 static void Drawer2D_Free(void) { 
-	Drawer2D_FreeFontBitmap();
+	FreeFontBitmap();
 	fontBitmap.Scan0 = NULL;
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
