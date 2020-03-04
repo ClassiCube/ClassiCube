@@ -99,7 +99,7 @@ static const char* Logger_GetCCErrorDesc(cc_result res) {
 			VORBIS_ERR_FRAME_TYPE,
 
 			/* PNG image decoding errors */
-	case PNG_ERR_INVALID_SIG:      return "Invalid PNG signature";
+	case PNG_ERR_INVALID_SIG:      return "Only PNG images supported";
 	case PNG_ERR_INVALID_HDR_SIZE: return "Invalid PNG header size";
 	case PNG_ERR_TOO_WIDE:         return "PNG image too wide";
 	case PNG_ERR_TOO_TALL:         return "PNG image too tall";
