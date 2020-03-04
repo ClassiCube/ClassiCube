@@ -12,7 +12,6 @@
 
 # Android build results
 android/.gradle/
-android/gradle/
 android/build/
 android/app/build/
 android/app/.externalNativeBuild/
