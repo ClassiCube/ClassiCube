@@ -1285,6 +1285,9 @@ cc_result Updater_GetBuildTime(TimeMS* ms) {
 /* Don't need special execute permission on windows */
 cc_result Updater_MarkExecutable(void) { return 0; }
 #elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
+const char* Updater_D3D9 = NULL;
+const char* Updater_OGL  = NULL;
+
 cc_bool Updater_Clean(void)                  { return true; }
 cc_result Updater_Start(void)                { return ERR_NOT_SUPPORTED; }
 cc_result Updater_GetBuildTime(TimeMS* time) { return ERR_NOT_SUPPORTED; }
