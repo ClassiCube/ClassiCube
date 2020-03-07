@@ -423,7 +423,7 @@ void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, Bitmap
 	}
 }
 
-static void Drawer2D_DrawCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, cc_bool shadow) {
+static void DrawBitmappedTextCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, cc_bool shadow) {
 	BitmapCol col;
 	String text  = args->text;
 	int i, point = args->font->size, count = 0;
@@ -528,9 +528,9 @@ static void DrawBitmappedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int
 	int offset = Drawer2D_ShadowOffset(args->font->size);
 
 	if (args->useShadow) {
-		Drawer2D_DrawCore(bmp, args, x + offset, y + offset, true);
+		DrawBitmappedTextCore(bmp, args, x + offset, y + offset, true);
 	}
-	Drawer2D_DrawCore(bmp, args, x, y, false);
+	DrawBitmappedTextCore(bmp, args, x, y, false);
 }
 
 static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
@@ -586,24 +586,9 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 }
 
 int Drawer2D_TextWidth(struct DrawTextArgs* args) {
-	String value = args->text;
-	char nextCol = 'f';
-	int i, width;
-
 	if (Drawer2D_IsEmptyText(&args->text)) return 0;
 	if (Drawer2D_BitmappedText) return MeasureBitmappedWidth(args);
-	width = 0;
-
-	for (i = 0; i < value.length; ) {
-		i = Drawer2D_NextPart(i, &value, &args->text, &nextCol);
-
-		if (!args->text.length) continue;
-		width += Font_SysTextWidth(args);
-	}
-
-	if (args->useShadow) width += 2;
-	args->text = value;
-	return width;
+	return Font_SysTextWidth(args);
 }
 
 int Drawer2D_TextHeight(struct DrawTextArgs* args) {
@@ -1064,24 +1049,32 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	Codepoint cp;
 
 	for (i = 0; i < text.length; i++) {
-		charWidth = font->widths[(cc_uint8)text.buffer[i]];
+		char c = text.buffer[i];
+		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
+			i++; continue; /* skip over the colour code */
+		}
+
+		charWidth = font->widths[(cc_uint8)c];
 		/* need to calculate glyph width */
 		if (charWidth == UInt16_MaxValue) {
-			cp  = Convert_CP437ToUnicode(text.buffer[i]);
+			cp  = Convert_CP437ToUnicode(c);
 			res = FT_Load_Char(face, cp, 0);
 
 			if (res) {
-				Platform_Log2("Error %i measuring width of %r", &res, &text.buffer[i]);
+				Platform_Log2("Error %i measuring width of %r", &res, &c);
 				charWidth = 0;
 			} else {
 				charWidth = face->glyph->advance.x;		
 			}
 
-			font->widths[(cc_uint8)text.buffer[i]] = charWidth;
+			font->widths[(cc_uint8)c] = charWidth;
 		}
 		width += charWidth;
 	}
-	return TEXT_CEIL(width);
+
+	width = TEXT_CEIL(width);
+	if (args->useShadow) width += 2;
+	return width;
 }
 
 static void DrawGrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
