@@ -43,43 +43,44 @@ void Cursor_SetVisible(cc_bool visible) {
 	Cursor_DoSetVisible(visible);
 }
 
-static void Window_CentreMousePosition(void) {
+static void CentreMousePosition(void) {
 	Cursor_SetPosition(Window_Width / 2, Window_Height / 2);
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
 	Cursor_GetRawPos(&cursorPrevX, &cursorPrevY);
 }
 
-static void Window_RegrabMouse(void) {
+static void RegrabMouse(void) {
 	if (!Window_Focused || !Window_Exists) return;
-	Window_CentreMousePosition();
+	CentreMousePosition();
 }
 
-static void Window_DefaultEnableRawMouse(void) {
+static void DefaultEnableRawMouse(void) {
 	Input_RawMode = true;
-	Window_RegrabMouse();
+	RegrabMouse();
 	Cursor_SetVisible(false);
 }
 
-static void Window_DefaultUpdateRawMouse(void) {
+static void DefaultUpdateRawMouse(void) {
 	int x, y;
 	Cursor_GetRawPos(&x, &y);
 	Event_RaiseMove(&PointerEvents.RawMoved, 0, x - cursorPrevX, y - cursorPrevY);
-	Window_CentreMousePosition();
+	CentreMousePosition();
 }
 
-static void Window_DefaultDisableRawMouse(void) {
+static void DefaultDisableRawMouse(void) {
 	Input_RawMode = false;
-	Window_RegrabMouse();
+	RegrabMouse();
 	Cursor_SetVisible(true);
 }
 
-static void Window_DoShowDialog(const char* title, const char* msg);
+/* The actual windowing system specific method to display a message box */
+static void ShowDialogCore(const char* title, const char* msg);
 void Window_ShowDialog(const char* title, const char* msg) {
-	/* Ensure cursor is visible when showing message box */
+	/* Ensure cursor is visible while showing message box */
 	cc_bool visible = cursorVisible;
 
 	if (!visible) Cursor_SetVisible(true);
-	Window_DoShowDialog(title, msg);
+	ShowDialogCore(title, msg);
 	if (!visible) Cursor_SetVisible(false);
 }
 
@@ -116,7 +117,7 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 #include <SDL2/SDL.h>
 static SDL_Window* win_handle;
 
-static void Window_RefreshBounds(void) {
+static void RefreshWindowBounds(void) {
 	SDL_GetWindowSize(win_handle, &Window_Width, &Window_Height);
 }
 
@@ -148,7 +149,7 @@ void Window_Create(int width, int height) {
 	win_handle = SDL_CreateWindow(NULL, x, y, width, height, SDL_WINDOW_OPENGL);
 	if (!win_handle) Window_SDLFail("creating window");
 
-	Window_RefreshBounds();
+	RefreshWindowBounds();
 	Window_Exists = true;
 	Window_Handle = win_handle;
 }
@@ -199,7 +200,7 @@ void Window_Close(void) {
 	SDL_PushEvent(&e);
 }
 
-static int Window_MapKey(SDL_Keycode k) {
+static int MapNativeKey(SDL_Keycode k) {
 	if (k >= SDLK_0   && k <= SDLK_9)   { return '0'     + (k - SDLK_0); }
 	if (k >= SDLK_a   && k <= SDLK_z)   { return 'A'     + (k - SDLK_a); }
 	if (k >= SDLK_F1  && k <= SDLK_F12) { return KEY_F1  + (k - SDLK_F1); }
@@ -260,13 +261,13 @@ static int Window_MapKey(SDL_Keycode k) {
 	return KEY_NONE;
 }
 
-static void Window_HandleKeyEvent(const SDL_Event* e) {
+static void OnKeyEvent(const SDL_Event* e) {
 	cc_bool pressed = e->key.state == SDL_PRESSED;
-	int key = Window_MapKey(e->key.keysym.sym);
+	int key = MapNativeKey(e->key.keysym.sym);
 	if (key) Input_SetPressed(key, pressed);
 }
 
-static void Window_HandleMouseEvent(const SDL_Event* e) {
+static void OnMouseEvent(const SDL_Event* e) {
 	cc_bool pressed = e->button.state == SDL_PRESSED;
 	switch (e->button.button) {
 		case SDL_BUTTON_LEFT:
@@ -282,7 +283,7 @@ static void Window_HandleMouseEvent(const SDL_Event* e) {
 	}
 }
 
-static void Window_HandleTextEvent(const SDL_Event* e) {
+static void OnTextEvent(const SDL_Event* e) {
 	char buffer[SDL_TEXTINPUTEVENT_TEXT_SIZE];
 	String str;
 	int i, len;
@@ -296,13 +297,13 @@ static void Window_HandleTextEvent(const SDL_Event* e) {
 	}
 }
 
-static void Window_HandleWindowEvent(const SDL_Event* e) {
+static void OnWindowEvent(const SDL_Event* e) {
 	switch (e->window.event) {
 		case SDL_WINDOWEVENT_EXPOSED:
 			Event_RaiseVoid(&WindowEvents.Redraw);
 			break;
 		case SDL_WINDOWEVENT_SIZE_CHANGED:
-			Window_RefreshBounds();
+			RefreshWindowBounds();
 			Event_RaiseVoid(&WindowEvents.Resized);
 			break;
 		case SDL_WINDOWEVENT_MINIMIZED:
@@ -331,10 +332,10 @@ void Window_ProcessEvents(void) {
 
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
-			Window_HandleKeyEvent(&e); break;
+			OnKeyEvent(&e); break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
-			Window_HandleMouseEvent(&e); break;
+			OnMouseEvent(&e); break;
 		case SDL_MOUSEWHEEL:
 			Mouse_ScrollWheel(e.wheel.y);
 			break;
@@ -343,9 +344,9 @@ void Window_ProcessEvents(void) {
 			if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, e.motion.xrel, e.motion.yrel);
 			break;
 		case SDL_TEXTINPUT:
-			Window_HandleTextEvent(&e); break;
+			OnTextEvent(&e); break;
 		case SDL_WINDOWEVENT:
-			Window_HandleWindowEvent(&e); break;
+			OnWindowEvent(&e); break;
 
 		case SDL_QUIT:
 			Window_Exists = false;
@@ -367,7 +368,7 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 	SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
 }
 
-static void Window_DoShowDialog(const char* title, const char* msg) {
+static void ShowDialogCore(const char* title, const char* msg) {
 	SDL_ShowSimpleMessageBox(0, title, msg, win_handle);
 }
 
@@ -401,14 +402,14 @@ void Window_SetKeyboardText(const String* text) { }
 void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
 
 void Window_EnableRawMouse(void) {
-	Window_RegrabMouse();
+	RegrabMouse();
 	SDL_SetRelativeMouseMode(true);
 	Input_RawMode = true;
 }
-void Window_UpdateRawMouse(void) { Window_CentreMousePosition(); }
+void Window_UpdateRawMouse(void) { CentreMousePosition(); }
 
 void Window_DisableRawMouse(void) {
-	Window_RegrabMouse();
+	RegrabMouse();
 	SDL_SetRelativeMouseMode(false);
 	Input_RawMode = false;
 }
@@ -474,9 +475,9 @@ static const cc_uint8 key_map[14 * 16] = {
 	KEY_TILDE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_LBRACKET, KEY_BACKSLASH, KEY_RBRACKET, KEY_QUOTE, 0,
 };
-static int Window_MapKey(WPARAM key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+static int MapNativeKey(WPARAM key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 
-static void Window_RefreshBounds(void) {
+static void RefreshWindowBounds(void) {
 	RECT rect;
 	POINT topLeft = { 0, 0 };
 
@@ -517,7 +518,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		if (pos->hwnd != win_handle) break;
 		cc_bool sized = pos->cx != win_totalWidth || pos->cy != win_totalHeight;
 
-		Window_RefreshBounds();
+		RefreshWindowBounds();
 		if (sized && !suppress_resize) Event_RaiseVoid(&WindowEvents.Resized);
 	} break;
 
@@ -626,7 +627,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			return 0;
 
 		default:
-			key = Window_MapKey(wParam);
+			key = MapNativeKey(wParam);
 			if (key) Input_SetPressed(key, pressed);
 			return 0;
 		}
@@ -704,7 +705,7 @@ void Window_Create(int width, int height) {
 		r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL);
 
 	if (!win_handle) Logger_Abort2(GetLastError(), "Failed to create window");
-	Window_RefreshBounds();
+	RefreshWindowBounds();
 
 	win_DC = GetDC(win_handle);
 	if (!win_DC) Logger_Abort2(GetLastError(), "Failed to get device context");
@@ -800,7 +801,7 @@ int Window_GetWindowState(void) {
 	return WINDOW_STATE_NORMAL;
 }
 
-static void Window_ToggleFullscreen(cc_bool fullscreen, UINT finalShow) {
+static void ToggleFullscreen(cc_bool fullscreen, UINT finalShow) {
 	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 	style |= (fullscreen ? WS_POPUP : WS_OVERLAPPEDWINDOW);
 
@@ -815,7 +816,7 @@ static void Window_ToggleFullscreen(cc_bool fullscreen, UINT finalShow) {
 	suppress_resize = false;
 
 	/* call Resized event only once */
-	Window_RefreshBounds();
+	RefreshWindowBounds();
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
@@ -826,12 +827,12 @@ cc_result Window_EnterFullscreen(void) {
 	GetWindowPlacement(win_handle, &w);
 
 	win_show = w.showCmd;
-	Window_ToggleFullscreen(true, SW_MAXIMIZE);
+	ToggleFullscreen(true, SW_MAXIMIZE);
 	return 0;
 }
 
 cc_result Window_ExitFullscreen(void) {
-	Window_ToggleFullscreen(false, win_show);
+	ToggleFullscreen(false, win_show);
 	return 0;
 }
 
@@ -874,7 +875,7 @@ void Cursor_SetPosition(int x, int y) {
 }
 static void Cursor_DoSetVisible(cc_bool visible) { ShowCursor(visible); }
 
-static void Window_DoShowDialog(const char* title, const char* msg) {
+static void ShowDialogCore(const char* title, const char* msg) {
 	MessageBoxA(win_handle, msg, title, 0);
 }
 
@@ -903,7 +904,7 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 	DeleteObject(draw_DIB);
 }
 
-static void Window_InitRawMouse(void) {
+static void InitRawMouse(void) {
 	RAWINPUTDEVICE rid;
 	_registerRawInput = (FUNC_RegisterRawInput)DynamicLib_GetFrom("USER32.DLL", "RegisterRawInputDevices");
 	_getRawInputData  = (FUNC_GetRawInputData) DynamicLib_GetFrom("USER32.DLL", "GetRawInputData");
@@ -925,21 +926,21 @@ void Window_SetKeyboardText(const String* text) { }
 void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void) {
-	Window_DefaultEnableRawMouse();
-	if (!rawMouseInited) Window_InitRawMouse();
+	DefaultEnableRawMouse();
+	if (!rawMouseInited) InitRawMouse();
 	rawMouseInited = true;
 }
 
 void Window_UpdateRawMouse(void) {
 	if (rawMouseSupported) {
 		/* handled in WM_INPUT messages */
-		Window_CentreMousePosition();
+		CentreMousePosition();
 	} else {
-		Window_DefaultUpdateRawMouse();
+		DefaultUpdateRawMouse();
 	}
 }
 
-void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
+void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 
 
 /*########################################################################################################################*
@@ -967,7 +968,7 @@ static Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
 static Atom xa_atom = 4;
 static long win_eventMask;
 
-static int Window_MapKey(KeySym key) {
+static int MapNativeKey(KeySym key) {
 	if (key >= XK_0 && key <= XK_9) { return '0' + (key - XK_0); }
 	if (key >= XK_A && key <= XK_Z) { return 'A' + (key - XK_A); }
 	if (key >= XK_a && key <= XK_z) { return 'A' + (key - XK_a); }
@@ -1060,7 +1061,7 @@ static int Window_MapKey(KeySym key) {
 	return KEY_NONE;
 }
 
-static void Window_RegisterAtoms(void) {
+static void RegisterAtoms(void) {
 	Display* display = win_display;
 	wm_destroy = XInternAtom(display, "WM_DELETE_WINDOW", true);
 	net_wm_state = XInternAtom(display, "_NET_WM_STATE", false);
@@ -1074,7 +1075,7 @@ static void Window_RegisterAtoms(void) {
 	xa_data_sel    = XInternAtom(display, "CC_SEL_DATA", false);
 }
 
-static void Window_RefreshBounds(int width, int height) {
+static void RefreshWindowBounds(int width, int height) {
 	if (width != Window_Width || height != Window_Height) {
 		Window_Width  = width;
 		Window_Height = height;
@@ -1118,7 +1119,7 @@ void Window_Create(int width, int height) {
 	/* Open a display connection to the X server, and obtain the screen and root window */
 	addr = (cc_uintptr)win_display;
 	Platform_Log3("Display: %x, Screen %i, Root window: %h", &addr, &win_screen, &win_rootWin);
-	Window_RegisterAtoms();
+	RegisterAtoms();
 
 	win_eventMask = StructureNotifyMask /*| SubstructureNotifyMask*/ | ExposureMask |
 		KeyReleaseMask  | KeyPressMask    | KeymapStateMask   | PointerMotionMask |
@@ -1151,7 +1152,7 @@ void Window_Create(int width, int height) {
 	   be reset before the program exits. */
 	XkbSetDetectableAutoRepeat(win_display, true, &supported);
 
-	Window_RefreshBounds(width, height);
+	RefreshWindowBounds(width, height);
 	Window_Exists = true;
 	Window_Handle = (void*)win_handle;
 	
@@ -1238,7 +1239,7 @@ int Window_GetWindowState(void) {
 	return WINDOW_STATE_NORMAL;
 }
 
-static void Window_ToggleFullscreen(long op) {
+static void ToggleFullscreen(long op) {
 	XEvent ev = { 0 };
 	ev.xclient.type   = ClientMessage;
 	ev.xclient.window = win_handle;
@@ -1255,10 +1256,10 @@ static void Window_ToggleFullscreen(long op) {
 }
 
 cc_result Window_EnterFullscreen(void) {
-	Window_ToggleFullscreen(_NET_WM_STATE_ADD); return 0;
+	ToggleFullscreen(_NET_WM_STATE_ADD); return 0;
 }
 cc_result Window_ExitFullscreen(void) {
-	Window_ToggleFullscreen(_NET_WM_STATE_REMOVE); return 0;
+	ToggleFullscreen(_NET_WM_STATE_REMOVE); return 0;
 }
 
 void Window_SetSize(int width, int height) {
@@ -1282,8 +1283,8 @@ static void Window_ToggleKey(XKeyEvent* keyEvent, cc_bool pressed) {
 	KeySym keysym1 = XLookupKeysym(keyEvent, 0);
 	KeySym keysym2 = XLookupKeysym(keyEvent, 1);
 
-	int key = Window_MapKey(keysym1);
-	if (!key) key = Window_MapKey(keysym2);
+	int key = MapNativeKey(keysym1);
+	if (!key) key = MapNativeKey(keysym2);
 	if (key)  Input_SetPressed(key, pressed);
 }
 
@@ -1338,7 +1339,7 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case ConfigureNotify:
-			Window_RefreshBounds(e.xconfigure.width, e.xconfigure.height);
+			RefreshWindowBounds(e.xconfigure.width, e.xconfigure.height);
 			break;
 
 		case Expose:
@@ -1728,7 +1729,7 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 	}
 }
 
-static void Window_DoShowDialog(const char* title, const char* msg) {
+static void ShowDialogCore(const char* title, const char* msg) {
 	X11Window w = { 0 };
 	dpy = win_display;
 	
@@ -1771,9 +1772,9 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 void Window_OpenKeyboard(void)  { }
 void Window_SetKeyboardText(const String* text) { }
 void Window_CloseKeyboard(void) { }
-void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
-void Window_UpdateRawMouse(void)  { Window_DefaultUpdateRawMouse();  }
-void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
+void Window_EnableRawMouse(void)  { DefaultEnableRawMouse();  }
+void Window_UpdateRawMouse(void)  { DefaultUpdateRawMouse();  }
+void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 
 
 /*########################################################################################################################*
@@ -1817,7 +1818,7 @@ static const cc_uint8 key_map[8 * 16] = {
 	KEY_F5, KEY_F6, KEY_F7, KEY_F3, KEY_F8, KEY_F9, 0, KEY_F11, 0, KEY_F13, 0, KEY_F14, 0, KEY_F10, 0, KEY_F12,
 	'U', KEY_F15, KEY_INSERT, KEY_HOME, KEY_PAGEUP, KEY_DELETE, KEY_F4, KEY_END, KEY_F2, KEY_PAGEDOWN, KEY_F1, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, 0,
 };
-static int Window_MapKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+static int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 /* TODO: Check these.. */
 /*   case 0x37: return KEY_LWIN; */
 /*   case 0x38: return KEY_LSHIFT; */
@@ -1910,14 +1911,14 @@ void Window_SetKeyboardText(const String* text) { }
 void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void) {
-	Window_DefaultEnableRawMouse();
+	DefaultEnableRawMouse();
 	CGAssociateMouseAndMouseCursorPosition(0);
 }
 
-void Window_UpdateRawMouse(void) { Window_CentreMousePosition(); }
+void Window_UpdateRawMouse(void) { CentreMousePosition(); }
 void Window_DisableRawMouse(void) {
 	CGAssociateMouseAndMouseCursorPosition(1);
-	Window_DefaultDisableRawMouse();
+	DefaultDisableRawMouse();
 }
 
 
@@ -1935,7 +1936,7 @@ static cc_bool win_fullscreen, showingDialog;
 static cc_result GLContext_UnsetFullscreen(void);
 static cc_result GLContext_SetFullscreen(void);
 
-static void Window_RefreshBounds(void) {
+static void RefreshWindowBounds(void) {
 	Rect r;
 	if (win_fullscreen) return;
 	
@@ -1959,7 +1960,7 @@ static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
 									NULL, sizeof(UInt32), NULL, &code);
 			if (res) Logger_Abort2(res, "Getting key button");
 
-			key = Window_MapKey(code);
+			key = MapNativeKey(code);
 			if (!key) { Platform_Log1("Ignoring unmapped key %i", &code); return 0; }
 
 			Input_SetPressed(key, kind != kEventRawKeyUp);
@@ -1995,7 +1996,7 @@ static OSStatus Window_ProcessWindowEvent(EventRef inEvent) {
 			
 		case kEventWindowBoundsChanged:
 			oldWidth = Window_Width; oldHeight = Window_Height;
-			Window_RefreshBounds();
+			RefreshWindowBounds();
 			
 			if (oldWidth != Window_Width || oldHeight != Window_Height) {
 				Event_RaiseVoid(&WindowEvents.Resized);
@@ -2136,7 +2137,7 @@ static OSStatus Window_EventHandler(EventHandlerCallRef inCaller, EventRef inEve
 
 typedef EventTargetRef (*GetMenuBarEventTarget_Func)(void);
 
-static void Window_ConnectEvents(void) {
+static void HookEvents(void) {
 	static const EventTypeSpec winEventTypes[] = {
 		{ kEventClassKeyboard, kEventRawKeyDown },
 		{ kEventClassKeyboard, kEventRawKeyRepeat },
@@ -2220,14 +2221,14 @@ void Window_Create(int width, int height) {
 						  kWindowInWindowMenuAttribute | kWindowLiveResizeAttribute, &r, &win_handle);
 
 	if (res) Logger_Abort2(res, "Creating window failed");
-	Window_RefreshBounds();
+	RefreshWindowBounds();
 
 	AcquireRootMenu();	
 	GetCurrentProcess(&psn);
 	SetFrontProcess(&psn);
 	
 	/* TODO: Use BringWindowToFront instead.. (look in the file which has RepositionWindow in it) !!!! */
-	Window_ConnectEvents();
+	HookEvents();
 	Window_CommonCreate();
 	Window_Handle = win_handle;
 
@@ -2259,20 +2260,20 @@ int Window_GetWindowState(void) {
 	return WINDOW_STATE_NORMAL;
 }
 
-static void Window_UpdateWindowState(void) {
+static void UpdateWindowState(void) {
 	Event_RaiseVoid(&WindowEvents.StateChanged);
-	Window_RefreshBounds();
+	RefreshWindowBounds();
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
 cc_result Window_EnterFullscreen(void) {
 	cc_result res = GLContext_SetFullscreen();
-	Window_UpdateWindowState();
+	UpdateWindowState();
 	return res;
 }
 cc_result Window_ExitFullscreen(void) {
 	cc_result res = GLContext_UnsetFullscreen();
-	Window_UpdateWindowState();
+	UpdateWindowState();
 	return res;
 }
 
@@ -2312,7 +2313,7 @@ static void Cursor_GetRawPos(int* x, int* y) {
 	*x = (int)point.h; *y = (int)point.v;
 }
 
-static void Window_DoShowDialog(const char* title, const char* msg) {
+static void ShowDialogCore(const char* title, const char* msg) {
 	CFStringRef titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
 	CFStringRef msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
 	DialogRef dialog;
@@ -2444,7 +2445,7 @@ static CC_INLINE CGPoint Send_CGPoint(id receiver, SEL sel) {
 	return ((CGPoint(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
 }
 
-static void Window_RefreshBounds(void) {
+static void RefreshWindowBounds(void) {
 	CGRect win, view;
 	int viewY;
 
@@ -2464,60 +2465,60 @@ static void Window_RefreshBounds(void) {
 	Window_Height = (int)view.size.height;
 }
 
-static void Window_DidResize(id self, SEL cmd, id notification) {
-	Window_RefreshBounds();
+static void OnDidResize(id self, SEL cmd, id notification) {
+	RefreshWindowBounds();
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
-static void Window_DidMove(id self, SEL cmd, id notification) {
-	Window_RefreshBounds();
+static void OnDidMove(id self, SEL cmd, id notification) {
+	RefreshWindowBounds();
 	GLContext_Update();
 }
 
-static void Window_DidBecomeKey(id self, SEL cmd, id notification) {
+static void OnDidBecomeKey(id self, SEL cmd, id notification) {
 	Window_Focused = true;
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
-static void Window_DidResignKey(id self, SEL cmd, id notification) {
+static void OnDidResignKey(id self, SEL cmd, id notification) {
 	Window_Focused = false;
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
-static void Window_DidMiniaturize(id self, SEL cmd, id notification) {
+static void OnDidMiniaturize(id self, SEL cmd, id notification) {
 	Event_RaiseVoid(&WindowEvents.StateChanged);
 }
 
-static void Window_DidDeminiaturize(id self, SEL cmd, id notification) {
+static void OnDidDeminiaturize(id self, SEL cmd, id notification) {
 	Event_RaiseVoid(&WindowEvents.StateChanged);
 }
 
-static void Window_WillClose(id self, SEL cmd, id notification) {
+static void OnWillClose(id self, SEL cmd, id notification) {
 	Window_Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
 
 /* If this isn't overriden, an annoying beep sound plays anytime a key is pressed */
-static void Window_KeyDown(id self, SEL cmd, id ev) { }
+static void OnKeyDown(id self, SEL cmd, id ev) { }
 
 static Class Window_MakeClass(void) {
 	Class c = objc_allocateClassPair(objc_getClass("NSWindow"), "ClassiCube_Window", 0);
 
-	class_addMethod(c, sel_registerName("windowDidResize:"),        Window_DidResize,        "v@:@");
-	class_addMethod(c, sel_registerName("windowDidMove:"),          Window_DidMove,          "v@:@");
-	class_addMethod(c, sel_registerName("windowDidBecomeKey:"),     Window_DidBecomeKey,     "v@:@");
-	class_addMethod(c, sel_registerName("windowDidResignKey:"),     Window_DidResignKey,     "v@:@");
-	class_addMethod(c, sel_registerName("windowDidMiniaturize:"),   Window_DidMiniaturize,   "v@:@");
-	class_addMethod(c, sel_registerName("windowDidDeminiaturize:"), Window_DidDeminiaturize, "v@:@");
-	class_addMethod(c, sel_registerName("windowWillClose:"),        Window_WillClose,        "v@:@");
-	class_addMethod(c, sel_registerName("keyDown:"),                Window_KeyDown,          "v@:@");
+	class_addMethod(c, sel_registerName("windowDidResize:"),        OnDidResize,        "v@:@");
+	class_addMethod(c, sel_registerName("windowDidMove:"),          OnDidMove,          "v@:@");
+	class_addMethod(c, sel_registerName("windowDidBecomeKey:"),     OnDidBecomeKey,     "v@:@");
+	class_addMethod(c, sel_registerName("windowDidResignKey:"),     OnDidResignKey,     "v@:@");
+	class_addMethod(c, sel_registerName("windowDidMiniaturize:"),   OnDidMiniaturize,   "v@:@");
+	class_addMethod(c, sel_registerName("windowDidDeminiaturize:"), OnDidDeminiaturize, "v@:@");
+	class_addMethod(c, sel_registerName("windowWillClose:"),        OnWillClose,        "v@:@");
+	class_addMethod(c, sel_registerName("keyDown:"),                OnKeyDown,          "v@:@");
 
 	objc_registerClassPair(c);
 	return c;
 }
 
 static void View_DrawRect(id self, SEL cmd, CGRect r);
-static void Window_MakeView(void) {
+static void MakeContentView(void) {
 	CGRect rect;
 	id view;
 	Class c;
@@ -2569,8 +2570,8 @@ void Window_Create(int width, int height) {
 	
 	Window_CommonCreate();
 	objc_msgSend(winHandle, sel_registerName("setDelegate:"), winHandle);
-	Window_RefreshBounds();
-	Window_MakeView();
+	RefreshWindowBounds();
+	MakeContentView();
 }
 
 void Window_SetTitle(const String* title) {
@@ -2586,7 +2587,7 @@ void Window_SetTitle(const String* title) {
 
 void Window_Show(void) { 
 	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
-	Window_RefreshBounds(); // TODO: even necessary?
+	RefreshWindowBounds(); // TODO: even necessary?
 }
 
 int Window_GetWindowState(void) {
@@ -2630,7 +2631,7 @@ static int Window_MapMouse(int button) {
 	return 0;
 }
 
-static void Window_ProcessKeyChars(id ev) {
+static void ProcessKeyChars(id ev) {
 	char buffer[128];
 	const char* src;
 	String str;
@@ -2682,14 +2683,14 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case 10: /* NSKeyDown */
-			key = Window_MapKey((int)objc_msgSend(ev, selKeycode));
+			key = MapNativeKey((int)objc_msgSend(ev, selKeycode));
 			if (key) Input_SetPressed(key, true);
 			// TODO: Test works properly with other languages
-			Window_ProcessKeyChars(ev);
+			ProcessKeyChars(ev);
 			break;
 
 		case 11: /* NSKeyUp */
-			key = Window_MapKey((int)objc_msgSend(ev, selKeycode));
+			key = MapNativeKey((int)objc_msgSend(ev, selKeycode));
 			if (key) Input_SetPressed(key, false);
 			break;
 
@@ -2737,7 +2738,7 @@ void Window_ProcessEvents(void) {
 }
 
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
-static void Window_DoShowDialog(const char* title, const char* msg) {
+static void ShowDialogCore(const char* title, const char* msg) {
 	CFStringRef titleCF, msgCF;
 	id alert;
 	
@@ -2821,11 +2822,11 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 #include <emscripten/key_codes.h>
 static cc_bool keyboardOpen;
 
-static void Window_RefreshBounds(void) {
+static void RefreshWindowBounds(void) {
 	emscripten_get_canvas_element_size(NULL, &Window_Width, &Window_Height);
 }
 
-static void Window_CorrectFocus(void) {
+static void CorrectFocus(void) {
 	/* Sometimes emscripten_request_pointerlock doesn't always acquire focus */
 	/* Browser also only allows pointer locks requests in response to user input */
 	EmscriptenPointerlockChangeEvent status;
@@ -2834,16 +2835,16 @@ static void Window_CorrectFocus(void) {
 	if (Input_RawMode && !status.isActive) Window_EnableRawMouse();
 }
 
-static EM_BOOL Window_MouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
+static EM_BOOL OnMouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
 	/* TODO: The scale factor isn't standardised.. is there a better way though? */
 	Mouse_ScrollWheel(-Math_Sign(ev->deltaY));
-	Window_CorrectFocus();
+	CorrectPointerFocus();
 	return true;
 }
 
-static EM_BOOL Window_MouseButton(int type, const EmscriptenMouseEvent* ev, void* data) {
+static EM_BOOL OnMouseButton(int type, const EmscriptenMouseEvent* ev, void* data) {
 	cc_bool down = type == EMSCRIPTEN_EVENT_MOUSEDOWN;
-	Window_CorrectFocus();
+	CorrectPointerFocus();
 
 	switch (ev->button) {
 		case 0: Input_SetPressed(KEY_LMOUSE, down); break;
@@ -2862,7 +2863,7 @@ static void RescaleXY(int srcX, int srcY, int* dstX, int* dstY) {
 	*dstY = (int)(srcY * Window_Height / css_height);
 }
 
-static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
+static EM_BOOL OnMouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
 	int x, y;
 	/* Set before position change, in case mouse buttons changed when outside window */
 	Input_SetPressed(KEY_LMOUSE, (ev->buttons & 0x01) != 0);
@@ -2875,7 +2876,7 @@ static EM_BOOL Window_MouseMove(int type, const EmscriptenMouseEvent* ev, void* 
 	return true;
 }
 
-static EM_BOOL Window_TouchStart(int type, const EmscriptenTouchEvent* ev, void* data) {
+static EM_BOOL OnTouchStart(int type, const EmscriptenTouchEvent* ev, void* data) {
 	const EmscriptenTouchPoint* t;
 	int i, x, y;
 	for (i = 0; i < ev->numTouches; ++i) {
@@ -2888,7 +2889,7 @@ static EM_BOOL Window_TouchStart(int type, const EmscriptenTouchEvent* ev, void*
 	return true;
 }
 
-static EM_BOOL Window_TouchMove(int type, const EmscriptenTouchEvent* ev, void* data) {
+static EM_BOOL OnTouchMove(int type, const EmscriptenTouchEvent* ev, void* data) {
 	const EmscriptenTouchPoint* t;
 	int i, x, y;
 	for (i = 0; i < ev->numTouches; ++i) {
@@ -2901,7 +2902,7 @@ static EM_BOOL Window_TouchMove(int type, const EmscriptenTouchEvent* ev, void* 
 	return true;
 }
 
-static EM_BOOL Window_TouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) {
+static EM_BOOL OnTouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) {
 	const EmscriptenTouchPoint* t;
 	int i, x, y;
 	for (i = 0; i < ev->numTouches; ++i) {
@@ -2914,7 +2915,7 @@ static EM_BOOL Window_TouchEnd(int type, const EmscriptenTouchEvent* ev, void* d
 	return true;
 }
 
-static EM_BOOL Window_Focus(int type, const EmscriptenFocusEvent* ev, void* data) {
+static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
 	Window_Focused = type == EMSCRIPTEN_EVENT_FOCUS;
 	if (!Window_Focused) Input_Clear();
 
@@ -2922,25 +2923,25 @@ static EM_BOOL Window_Focus(int type, const EmscriptenFocusEvent* ev, void* data
 	return true;
 }
 
-static EM_BOOL Window_Resize(int type, const EmscriptenUiEvent* ev, void *data) {
-	Window_RefreshBounds();
+static EM_BOOL OnResize(int type, const EmscriptenUiEvent* ev, void *data) {
+	RefreshWindowBounds();
 	Event_RaiseVoid(&WindowEvents.Resized);
 	return true;
 }
 
 /* This is only raised when going into fullscreen */
-static EM_BOOL Window_CanvasResize(int type, const void* reserved, void *data) {
-	Window_RefreshBounds();
+static EM_BOOL OnCanvasResize(int type, const void* reserved, void *data) {
+	RefreshWindowBounds();
 	Event_RaiseVoid(&WindowEvents.Resized);
 	return false;
 }
 
-static const char* Window_BeforeUnload(int type, const void* ev, void *data) {
+static const char* OnBeforeUnload(int type, const void* ev, void *data) {
 	Window_Close();
 	return NULL;
 }
 
-static int Window_MapKey(int k) {
+static int MapNativeKey(int k) {
 	if (k >= '0' && k <= '9') return k;
 	if (k >= 'A' && k <= 'Z') return k;
 	if (k >= DOM_VK_F1      && k <= DOM_VK_F24)     { return KEY_F1  + (k - DOM_VK_F1); }
@@ -2999,9 +3000,9 @@ static int Window_MapKey(int k) {
 	return KEY_NONE;
 }
 
-static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* data) {
-	int key = Window_MapKey(ev->keyCode);
-	Window_CorrectFocus();
+static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev , void* data) {
+	int key = MapNativeKey(ev->keyCode);
+	CorrectPointerFocus();
 	if (!key) return false;
 
 	if (ev->location == DOM_KEY_LOCATION_RIGHT) {
@@ -3033,8 +3034,8 @@ static EM_BOOL Window_Key(int type, const EmscriptenKeyboardEvent* ev , void* da
 		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK && key != KEY_SPACE);
 }
 
-static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
-	Window_CorrectFocus();
+static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
+	CorrectPointerFocus();
 	/* When on-screen keyboard is open, we don't want to intercept any key presses, */
 	/* because they should be sent to the HTML text input instead. */
 	/* (Chrome for android sends keypresses sometimes for '0' to '9' keys) */
@@ -3052,28 +3053,28 @@ static EM_BOOL Window_KeyPress(int type, const EmscriptenKeyboardEvent* ev, void
 	return true;
 }
 
-static void Window_HookEvents(void) {
-	emscripten_set_wheel_callback("#window",     NULL, 0, Window_MouseWheel);
-	emscripten_set_mousedown_callback("#canvas", NULL, 0, Window_MouseButton);
-	emscripten_set_mouseup_callback("#canvas",   NULL, 0, Window_MouseButton);
-	emscripten_set_mousemove_callback("#canvas", NULL, 0, Window_MouseMove);
+static void HookEvents(void) {
+	emscripten_set_wheel_callback("#window",     NULL, 0, OnMouseWheel);
+	emscripten_set_mousedown_callback("#canvas", NULL, 0, OnMouseButton);
+	emscripten_set_mouseup_callback("#canvas",   NULL, 0, OnMouseButton);
+	emscripten_set_mousemove_callback("#canvas", NULL, 0, OnMouseMove);
 
-	emscripten_set_focus_callback("#window",  NULL, 0, Window_Focus);
-	emscripten_set_blur_callback("#window",   NULL, 0, Window_Focus);
-	emscripten_set_resize_callback("#window", NULL, 0, Window_Resize);
-	emscripten_set_beforeunload_callback(     NULL,    Window_BeforeUnload);
+	emscripten_set_focus_callback("#window",  NULL, 0, OnFocus);
+	emscripten_set_blur_callback("#window",   NULL, 0, OnFocus);
+	emscripten_set_resize_callback("#window", NULL, 0, OnResize);
+	emscripten_set_beforeunload_callback(     NULL,    OnBeforeUnload);
 
-	emscripten_set_keydown_callback("#window",  NULL, 0, Window_Key);
-	emscripten_set_keyup_callback("#window",    NULL, 0, Window_Key);
-	emscripten_set_keypress_callback("#window", NULL, 0, Window_KeyPress);
+	emscripten_set_keydown_callback("#window",  NULL, 0, OnKey);
+	emscripten_set_keyup_callback("#window",    NULL, 0, OnKey);
+	emscripten_set_keypress_callback("#window", NULL, 0, OnKeyPress);
 
-	emscripten_set_touchstart_callback("#window",  NULL, 0, Window_TouchStart);
-	emscripten_set_touchmove_callback("#window",   NULL, 0, Window_TouchMove);
-	emscripten_set_touchend_callback("#window",    NULL, 0, Window_TouchEnd);
-	emscripten_set_touchcancel_callback("#window", NULL, 0, Window_TouchEnd);
+	emscripten_set_touchstart_callback("#window",  NULL, 0, OnTouchStart);
+	emscripten_set_touchmove_callback("#window",   NULL, 0, OnTouchMove);
+	emscripten_set_touchend_callback("#window",    NULL, 0, OnTouchEnd);
+	emscripten_set_touchcancel_callback("#window", NULL, 0, OnTouchEnd);
 }
 
-static void Window_UnhookEvents(void) {
+static void UnhookEvents(void) {
 	emscripten_set_wheel_callback("#canvas",     NULL, 0, NULL);
 	emscripten_set_mousedown_callback("#canvas", NULL, 0, NULL);
 	emscripten_set_mouseup_callback("#canvas",   NULL, 0, NULL);
@@ -3133,9 +3134,9 @@ void Window_Init(void) {
 void Window_Create(int width, int height) {
 	Window_Exists  = true;
 	Window_Focused = true;
-	Window_HookEvents();
+	HookEvents();
 	/* let the webpage decide on bounds */
-	Window_RefreshBounds();
+	RefreshWindowBounds();
 }
 
 void Window_SetTitle(const String* title) {
@@ -3192,7 +3193,7 @@ cc_result Window_ExitFullscreen(void) { return emscripten_exit_fullscreen(); }
 
 void Window_SetSize(int width, int height) {
 	emscripten_set_canvas_element_size(NULL, width, height);
-	Window_RefreshBounds();
+	RefreshWindowBounds();
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
@@ -3203,7 +3204,7 @@ void Window_Close(void) {
 	Window_DisableRawMouse();
 
 	Window_SetSize(0, 0);
-	Window_UnhookEvents();
+	UnhookEvents();
 }
 
 void Window_ProcessEvents(void) { }
@@ -3221,7 +3222,7 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 	}
 }
 
-static void Window_DoShowDialog(const char* title, const char* msg) {
+static void ShowDialogCore(const char* title, const char* msg) {
 	EM_ASM_({ alert(UTF8ToString($0) + "\n\n" + UTF8ToString($1)); }, title, msg);
 }
 
@@ -3289,14 +3290,14 @@ void Window_CloseKeyboard(void) {
 }
 
 void Window_EnableRawMouse(void) {
-	Window_RegrabMouse();
+	RegrabMouse();
 	emscripten_request_pointerlock(NULL, true);
 	Input_RawMode = true;
 }
 void Window_UpdateRawMouse(void) { }
 
 void Window_DisableRawMouse(void) {
-	Window_RegrabMouse();
+	RegrabMouse();
 	emscripten_exit_pointerlock();
 	Input_RawMode = false;
 }
@@ -3311,14 +3312,14 @@ void Window_DisableRawMouse(void) {
 #include <android/keycodes.h>
 static ANativeWindow* win_handle;
 
-static void Window_RefreshBounds(void) {
+static void RefreshWindowBounds(void) {
 	Window_Width  = ANativeWindow_getWidth(win_handle);
 	Window_Height = ANativeWindow_getHeight(win_handle);
 	Platform_Log2("SCREEN BOUNDS: %i,%i", &Window_Width, &Window_Height);
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
-static int Window_MapKey(int code) {
+static int MapNativeKey(int code) {
 	if (code >= AKEYCODE_0  && code <= AKEYCODE_9)   return (code - AKEYCODE_0)  + '0';
 	if (code >= AKEYCODE_A  && code <= AKEYCODE_Z)   return (code - AKEYCODE_A)  + 'A';
 	if (code >= AKEYCODE_F1 && code <= AKEYCODE_F12) return (code - AKEYCODE_F1) + KEY_F1;
@@ -3375,20 +3376,20 @@ static int Window_MapKey(int code) {
 }
 
 static void JNICALL java_processKeyDown(JNIEnv* env, jobject o, jint code) {
-	int key = Window_MapKey(code);
+	int key = MapNativeKey(code);
 	Platform_Log2("KEY - DOWN %i,%i", &code, &key);
 	if (key) Input_SetPressed(key, true);
 }
 
 static void JNICALL java_processKeyUp(JNIEnv* env, jobject o, jint code) {
-	int key = Window_MapKey(code);
+	int key = MapNativeKey(code);
 	Platform_Log2("KEY - UP %i,%i", &code, &key);
 	if (key) Input_SetPressed(key, false);
 }
 
 static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {
 	char keyChar;
-	int key = Window_MapKey(code);
+	int key = MapNativeKey(code);
 	Platform_Log2("KEY - PRESS %i,%i", &code, &key);
 
 	if (Convert_TryUnicodeToCP437((Codepoint)code, &keyChar)) {
@@ -3414,7 +3415,7 @@ static void JNICALL java_processMouseMove(JNIEnv* env, jobject o, jint id, jint 
 static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface) {
 	Platform_LogConst("WIN - CREATED");
 	win_handle = ANativeWindow_fromSurface(env, surface);
-	Window_RefreshBounds();
+	RefreshWindowBounds();
 	/* TODO: Restore context */
 	Event_RaiseVoid(&WindowEvents.Created);
 }
@@ -3433,7 +3434,7 @@ static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 
 static void JNICALL java_processSurfaceResized(JNIEnv* env, jobject o, jobject surface) {
 	Platform_LogConst("WIN - RESIZED");
-	Window_RefreshBounds();
+	RefreshWindowBounds();
 }
 
 static void JNICALL java_processSurfaceRedrawNeeded(JNIEnv* env, jobject o) {
@@ -3567,7 +3568,7 @@ static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 void Cursor_SetPosition(int x, int y) { }
 static void Cursor_DoSetVisible(cc_bool visible) { }
 
-static void Window_DoShowDialog(const char* title, const char* msg) {
+static void ShowDialogCore(const char* title, const char* msg) {
 	JNIEnv* env;
 	jvalue args[2];
 	JavaGetCurrentEnv(env);
@@ -3642,9 +3643,9 @@ void Window_CloseKeyboard(void) {
 	JavaCallVoid(env, "closeKeyboard", "()V", NULL);
 }
 
-void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse(); }
+void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }
 void Window_UpdateRawMouse(void)  { }
-void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
+void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 #endif
 
 
