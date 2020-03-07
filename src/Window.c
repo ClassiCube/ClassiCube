@@ -110,9 +110,314 @@ void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------SDL window--------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_SDL
+#include <SDL2/SDL.h>
+static SDL_Window* win_handle;
+
+static void Window_RefreshBounds(void) {
+	SDL_GetWindowSize(win_handle, &Window_Width, &Window_Height);
+}
+
+static void Window_SDLFail(const char* place) {
+	char strBuffer[256];
+	String str;
+	String_InitArray_NT(str, strBuffer);
+
+	String_Format2(&str, "Error when %c: %c", place, SDL_GetError());
+	str.buffer[str.length] = '\0';
+	Logger_Abort(str.buffer);
+}
+
+void Window_Init(void) {
+	SDL_DisplayMode mode = { 0 };
+	SDL_Init(SDL_INIT_VIDEO);
+	SDL_GetDesktopDisplayMode(0, &mode);
+
+	Display_Bounds.Width  = mode.w;
+	Display_Bounds.Height = mode.h;
+	Display_BitsPerPixel  = SDL_BITSPERPIXEL(mode.format);
+}
+
+void Window_Create(int width, int height) {
+	int x = Display_CentreX(width);
+	int y = Display_CentreY(height);
+
+	/* TODO: Don't set this flag for launcher window */
+	win_handle = SDL_CreateWindow(NULL, x, y, width, height, SDL_WINDOW_OPENGL);
+	if (!win_handle) Window_SDLFail("creating window");
+
+	Window_RefreshBounds();
+	Window_Exists = true;
+	Window_Handle = win_handle;
+}
+
+void Window_SetTitle(const String* title) {
+	char str[NATIVE_STR_LEN];
+	Platform_ConvertString(str, title);
+	SDL_SetWindowTitle(win_handle, str);
+}
+
+void Clipboard_GetText(String* value) {
+	char* ptr = SDL_GetClipboardText();
+	if (!ptr) return;
+
+	int len = String_CalcLen(ptr, UInt16_MaxValue);
+	String_AppendUtf8(value, ptr, len);
+	SDL_free(ptr);
+}
+
+void Clipboard_SetText(const String* value) {
+	char str[NATIVE_STR_LEN];
+	Platform_ConvertString(str, value);
+	SDL_SetClipboardText(str);
+}
+
+void Window_Show(void) { SDL_ShowWindow(win_handle); }
+
+int Window_GetWindowState(void) {
+	Uint32 flags = SDL_GetWindowFlags(win_handle);
+
+	if (flags & SDL_WINDOW_MINIMIZED)          return WINDOW_STATE_MINIMISED;
+	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) return WINDOW_STATE_FULLSCREEN;
+	return WINDOW_STATE_NORMAL;
+}
+
+cc_result Window_EnterFullscreen(void) {
+	return SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
+}
+cc_result Window_ExitFullscreen(void) { SDL_RestoreWindow(win_handle); return 0; }
+
+void Window_SetSize(int width, int height) {
+	SDL_SetWindowSize(win_handle, width, height);
+}
+
+void Window_Close(void) {
+	SDL_Event e;
+	e.type = SDL_QUIT;
+	SDL_PushEvent(&e);
+}
+
+static int Window_MapKey(SDL_Keycode k) {
+	if (k >= SDLK_0   && k <= SDLK_9)   { return '0'     + (k - SDLK_0); }
+	if (k >= SDLK_a   && k <= SDLK_z)   { return 'A'     + (k - SDLK_a); }
+	if (k >= SDLK_F1  && k <= SDLK_F12) { return KEY_F1  + (k - SDLK_F1); }
+	if (k >= SDLK_F13 && k <= SDLK_F24) { return KEY_F13 + (k - SDLK_F13); }
+	/* SDLK_KP_0 isn't before SDLK_KP_1 */
+	if (k >= SDLK_KP_1 && k <= SDLK_KP_9) { return KEY_KP1 + (k - SDLK_KP_1); }
+
+	switch (k) {
+		case SDLK_RETURN: return KEY_ENTER;
+		case SDLK_ESCAPE: return KEY_ESCAPE;
+		case SDLK_BACKSPACE: return KEY_BACKSPACE;
+		case SDLK_TAB:    return KEY_TAB;
+		case SDLK_SPACE:  return KEY_SPACE;
+		case SDLK_QUOTE:  return KEY_QUOTE;
+		case SDLK_EQUALS: return KEY_EQUALS;
+		case SDLK_COMMA:  return KEY_COMMA;
+		case SDLK_MINUS:  return KEY_MINUS;
+		case SDLK_PERIOD: return KEY_PERIOD;
+		case SDLK_SLASH:  return KEY_SLASH;
+		case SDLK_SEMICOLON:    return KEY_SEMICOLON;
+		case SDLK_LEFTBRACKET:  return KEY_LBRACKET;
+		case SDLK_BACKSLASH:    return KEY_BACKSLASH;
+		case SDLK_RIGHTBRACKET: return KEY_RBRACKET;
+		case SDLK_BACKQUOTE:    return KEY_TILDE;
+		case SDLK_CAPSLOCK:     return KEY_CAPSLOCK;
+		case SDLK_PRINTSCREEN: return KEY_PRINTSCREEN;
+		case SDLK_SCROLLLOCK:  return KEY_SCROLLLOCK;
+		case SDLK_PAUSE:       return KEY_PAUSE;
+		case SDLK_INSERT:   return KEY_INSERT;
+		case SDLK_HOME:     return KEY_HOME;
+		case SDLK_PAGEUP:   return KEY_PAGEUP;
+		case SDLK_DELETE:   return KEY_DELETE;
+		case SDLK_END:      return KEY_END;
+		case SDLK_PAGEDOWN: return KEY_PAGEDOWN;
+		case SDLK_RIGHT: return KEY_RIGHT;
+		case SDLK_LEFT:  return KEY_LEFT;
+		case SDLK_DOWN:  return KEY_DOWN;
+		case SDLK_UP:    return KEY_UP;
+
+		case SDLK_NUMLOCKCLEAR: return KEY_NUMLOCK;
+		case SDLK_KP_DIVIDE: return KEY_KP_DIVIDE;
+		case SDLK_KP_MULTIPLY: return KEY_KP_MULTIPLY;
+		case SDLK_KP_MINUS: return KEY_KP_MINUS;
+		case SDLK_KP_PLUS: return KEY_KP_PLUS;
+		case SDLK_KP_ENTER: return KEY_KP_ENTER;
+		case SDLK_KP_0: return KEY_KP0;
+		case SDLK_KP_PERIOD: return KEY_KP_DECIMAL;
+
+		case SDLK_LCTRL: return KEY_LCTRL;
+		case SDLK_LSHIFT: return KEY_LSHIFT;
+		case SDLK_LALT: return KEY_LALT;
+		case SDLK_LGUI: return KEY_LWIN;
+		case SDLK_RCTRL: return KEY_RCTRL;
+		case SDLK_RSHIFT: return KEY_RSHIFT;
+		case SDLK_RALT: return KEY_RALT;
+		case SDLK_RGUI: return KEY_RWIN;
+	}
+	return KEY_NONE;
+}
+
+static void Window_HandleKeyEvent(const SDL_Event* e) {
+	cc_bool pressed = e->key.state == SDL_PRESSED;
+	int key = Window_MapKey(e->key.keysym.sym);
+	if (key) Input_SetPressed(key, pressed);
+}
+
+static void Window_HandleMouseEvent(const SDL_Event* e) {
+	cc_bool pressed = e->button.state == SDL_PRESSED;
+	switch (e->button.button) {
+		case SDL_BUTTON_LEFT:
+			Input_SetPressed(KEY_LMOUSE, pressed); break;
+		case SDL_BUTTON_MIDDLE:
+			Input_SetPressed(KEY_MMOUSE, pressed); break;
+		case SDL_BUTTON_RIGHT:
+			Input_SetPressed(KEY_RMOUSE, pressed); break;
+		case SDL_BUTTON_X1:
+			Input_SetPressed(KEY_XBUTTON1, pressed); break;
+		case SDL_BUTTON_X2:
+			Input_SetPressed(KEY_XBUTTON2, pressed); break;
+	}
+}
+
+static void Window_HandleTextEvent(const SDL_Event* e) {
+	char buffer[SDL_TEXTINPUTEVENT_TEXT_SIZE];
+	String str;
+	int i, len;
+
+	String_InitArray(str, buffer);
+	len = String_CalcLen(e->text.text, SDL_TEXTINPUTEVENT_TEXT_SIZE);
+	String_AppendUtf8(&str, e->text.text, len);
+
+	for (i = 0; i < str.length; i++) {
+		Event_RaiseInt(&InputEvents.Press, str.buffer[i]);
+	}
+}
+
+static void Window_HandleWindowEvent(const SDL_Event* e) {
+	switch (e->window.event) {
+		case SDL_WINDOWEVENT_EXPOSED:
+			Event_RaiseVoid(&WindowEvents.Redraw);
+			break;
+		case SDL_WINDOWEVENT_SIZE_CHANGED:
+			Window_RefreshBounds();
+			Event_RaiseVoid(&WindowEvents.Resized);
+			break;
+		case SDL_WINDOWEVENT_MINIMIZED:
+		case SDL_WINDOWEVENT_MAXIMIZED:
+		case SDL_WINDOWEVENT_RESTORED:
+			Event_RaiseVoid(&WindowEvents.StateChanged);
+			break;
+		case SDL_WINDOWEVENT_FOCUS_GAINED:
+			Window_Focused = true;
+			Event_RaiseVoid(&WindowEvents.FocusChanged);
+			break;
+		case SDL_WINDOWEVENT_FOCUS_LOST:
+			Window_Focused = false;
+			Event_RaiseVoid(&WindowEvents.FocusChanged);
+			break;
+		case SDL_WINDOWEVENT_CLOSE:
+			Window_Close();
+			break;
+		}
+}
+
+void Window_ProcessEvents(void) {
+	SDL_Event e;
+	while (SDL_PollEvent(&e)) {
+		switch (e.type) {
+
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			Window_HandleKeyEvent(&e); break;
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+			Window_HandleMouseEvent(&e); break;
+		case SDL_MOUSEWHEEL:
+			Mouse_ScrollWheel(e.wheel.y);
+			break;
+		case SDL_MOUSEMOTION:
+			Pointer_SetPosition(0, e.motion.x, e.motion.y);
+			if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, e.motion.xrel, e.motion.yrel);
+			break;
+		case SDL_TEXTINPUT:
+			Window_HandleTextEvent(&e); break;
+		case SDL_WINDOWEVENT:
+			Window_HandleWindowEvent(&e); break;
+
+		case SDL_QUIT:
+			Window_Exists = false;
+			Event_RaiseVoid(&WindowEvents.Closing);
+			SDL_DestroyWindow(win_handle);
+			break;
+		}
+	}
+}
+
+static void Cursor_GetRawPos(int* x, int* y) {
+	SDL_GetMouseState(x, y);
+}
+void Cursor_SetPosition(int x, int y) {
+	SDL_WarpMouseInWindow(win_handle, x, y);
+}
+
+static void Cursor_DoSetVisible(cc_bool visible) {
+	SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
+}
+
+static void Window_DoShowDialog(const char* title, const char* msg) {
+	SDL_ShowSimpleMessageBox(0, title, msg, win_handle);
+}
+
+static SDL_Surface* surface;
+void Window_AllocFramebuffer(Bitmap* bmp) {
+	surface = SDL_GetWindowSurface(win_handle);
+	if (!surface) Window_SDLFail("getting window surface");
+
+	if (SDL_MUSTLOCK(surface)) {
+		int ret = SDL_LockSurface(surface);
+		if (ret < 0) Window_SDLFail("locking window surface");
+	}
+	bmp->Scan0 = surface->pixels;
+}
+
+void Window_DrawFramebuffer(Rect2D r) {
+	SDL_Rect rect;
+	rect.x = r.X; rect.w = r.Width;
+	rect.y = r.Y; rect.h = r.Height;
+	SDL_UpdateWindowSurfaceRects(win_handle, &rect, 1);
+}
+
+void Window_FreeFramebuffer(Bitmap* bmp) {
+	/* SDL docs explicitly say to NOT free the surface */
+	/* https://wiki.libsdl.org/SDL_GetWindowSurface */
+	/* TODO: Do we still need to unlock it though? */
+}
+
+void Window_OpenKeyboard(void)  { SDL_StartTextInput(); }
+void Window_SetKeyboardText(const String* text) { }
+void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
+
+void Window_EnableRawMouse(void) {
+	Window_RegrabMouse();
+	SDL_SetRelativeMouseMode(true);
+	Input_RawMode = true;
+}
+void Window_UpdateRawMouse(void) { Window_CentreMousePosition(); }
+
+void Window_DisableRawMouse(void) {
+	Window_RegrabMouse();
+	SDL_SetRelativeMouseMode(false);
+	Input_RawMode = false;
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------Win32 window-------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WINGUI
+#elif defined CC_BUILD_WINGUI
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -153,10 +458,6 @@ static cc_bool suppress_resize;
 static int win_totalWidth, win_totalHeight; /* Size of window including titlebar and borders */
 static int windowX, windowY;
 
-
-/*########################################################################################################################*
-*-----------------------------------------------------Private details-----------------------------------------------------*
-*#########################################################################################################################*/
 static const cc_uint8 key_map[14 * 16] = {
 	0, 0, 0, 0, 0, 0, 0, 0, KEY_BACKSPACE, KEY_TAB, 0, 0, 0, KEY_ENTER, 0, 0,
 	0, 0, 0, KEY_PAUSE, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0, KEY_ESCAPE, 0, 0, 0, 0,
@@ -639,13 +940,12 @@ void Window_UpdateRawMouse(void) {
 }
 
 void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
-#endif
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------X11 window--------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_X11
+#elif defined CC_BUILD_X11
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
@@ -667,10 +967,6 @@ static Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
 static Atom xa_atom = 4;
 static long win_eventMask;
 
-
-/*########################################################################################################################*
-*-----------------------------------------------------Private details-----------------------------------------------------*
-*#########################################################################################################################*/
 static int Window_MapKey(KeySym key) {
 	if (key >= XK_0 && key <= XK_9) { return '0' + (key - XK_0); }
 	if (key >= XK_A && key <= XK_Z) { return 'A' + (key - XK_A); }
@@ -1478,13 +1774,12 @@ void Window_CloseKeyboard(void) { }
 void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse();  }
 void Window_UpdateRawMouse(void)  { Window_DefaultUpdateRawMouse();  }
 void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
-#endif
 
 
 /*########################################################################################################################*
 *---------------------------------------------------Carbon/Cocoa window---------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_CARBON || defined CC_BUILD_COCOA
+#elif defined CC_BUILD_CARBON || defined CC_BUILD_COCOA
 #include <ApplicationServices/ApplicationServices.h>
 static int windowX, windowY;
 
@@ -1624,13 +1919,12 @@ void Window_DisableRawMouse(void) {
 	CGAssociateMouseAndMouseCursorPosition(1);
 	Window_DefaultDisableRawMouse();
 }
-#endif
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Carbon window------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_CARBON
+#if defined CC_BUILD_CARBON
 #include <Carbon/Carbon.h>
 #include <dlfcn.h>
 
@@ -1641,9 +1935,6 @@ static cc_bool win_fullscreen, showingDialog;
 static cc_result GLContext_UnsetFullscreen(void);
 static cc_result GLContext_SetFullscreen(void);
 
-/*########################################################################################################################*
-*-----------------------------------------------------Private details-----------------------------------------------------*
-*#########################################################################################################################*/
 static void Window_RefreshBounds(void) {
 	Rect r;
 	if (win_fullscreen) return;
@@ -2091,311 +2382,432 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 	Mem_Free(bmp->Scan0);
 	CGColorSpaceRelease(colorSpace);
 }
-#endif
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------SDL window--------------------------------------------------------*
+*------------------------------------------------------Carbon window------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_SDL
-#include <SDL2/SDL.h>
-static SDL_Window* win_handle;
+#elif defined CC_BUILD_COCOA
+#include <objc/message.h>
+#include <objc/runtime.h>
+static id appHandle, winHandle, viewHandle;
+extern void* NSDefaultRunLoopMode;
 
-static void Window_RefreshBounds(void) {
-	SDL_GetWindowSize(win_handle, &Window_Width, &Window_Height);
+static SEL selFrame, selDeltaX, selDeltaY;
+static SEL selNextEvent, selType, selSendEvent;
+static SEL selButton, selKeycode, selModifiers;
+static SEL selCharacters, selUtf8String, selMouseLoc;
+static SEL selCurrentContext, selGraphicsPort;
+static SEL selSetNeedsDisplay, selDisplayIfNeeded;
+static SEL selUpdate, selFlushBuffer;
+
+static void RegisterSelectors(void) {
+	selFrame  = sel_registerName("frame");
+	selDeltaX = sel_registerName("deltaX");
+	selDeltaY = sel_registerName("deltaY");
+
+	selNextEvent = sel_registerName("nextEventMatchingMask:untilDate:inMode:dequeue:");
+	selType      = sel_registerName("type");
+	selSendEvent = sel_registerName("sendEvent:");
+
+	selButton    = sel_registerName("buttonNumber");
+	selKeycode   = sel_registerName("keyCode");
+	selModifiers = sel_registerName("modifierFlags");
+
+	selCharacters = sel_registerName("charactersIgnoringModifiers");
+	selUtf8String = sel_registerName("UTF8String");
+	selMouseLoc   = sel_registerName("mouseLocation");
+
+	selCurrentContext  = sel_registerName("currentContext");
+	selGraphicsPort    = sel_registerName("graphicsPort");
+	selSetNeedsDisplay = sel_registerName("setNeedsDisplayInRect:");
+	selDisplayIfNeeded = sel_registerName("displayIfNeeded");
+
+	selUpdate      = sel_registerName("update");
+	selFlushBuffer = sel_registerName("flushBuffer");
 }
 
-static void Window_SDLFail(const char* place) {
-	char strBuffer[256];
-	String str;
-	String_InitArray_NT(str, strBuffer);
+static CC_INLINE CGFloat Send_CGFloat(id receiver, SEL sel) {
+	/* Sometimes we have to use fpret and sometimes we don't. See this for more details: */
+	/* http://www.sealiesoftware.com/blog/archive/2008/11/16/objc_explain_objc_msgSend_fpret.html */
+	/* return type is void*, but we cannot cast a void* to a float or double */
 
-	String_Format2(&str, "Error when %c: %c", place, SDL_GetError());
-	str.buffer[str.length] = '\0';
-	Logger_Abort(str.buffer);
+#ifdef __i386__
+	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend_fpret)(receiver, sel);
+#else
+	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
+#endif
+}
+
+static CC_INLINE CGPoint Send_CGPoint(id receiver, SEL sel) {
+	/* on x86 and x86_64 CGPoint fits the requirements for 'struct returned in registers' */
+	return ((CGPoint(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
+}
+
+static void Window_RefreshBounds(void) {
+	CGRect win, view;
+	int viewY;
+
+	win  = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle,  selFrame);
+	view = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(viewHandle, selFrame);
+
+	/* For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen. */
+	/* To get window's real Y screen position, first need to find Y of top. (win.y + win.height) */
+	/* Then just subtract from screen height to make relative to top instead of bottom of the screen. */
+	/* Of course this is only half the story, since we're really after Y position of the content. */
+	/* To work out top Y of view relative to window, it's just win.height - (view.y + view.height) */
+	viewY   = (int)win.size.height  - ((int)view.origin.y + (int)view.size.height);
+	windowX = (int)win.origin.x     + (int)view.origin.x;
+	windowY = Display_Bounds.Height - ((int)win.origin.y  + (int)win.size.height) + viewY;
+
+	Window_Width  = (int)view.size.width;
+	Window_Height = (int)view.size.height;
+}
+
+static void Window_DidResize(id self, SEL cmd, id notification) {
+	Window_RefreshBounds();
+	Event_RaiseVoid(&WindowEvents.Resized);
+}
+
+static void Window_DidMove(id self, SEL cmd, id notification) {
+	Window_RefreshBounds();
+	GLContext_Update();
+}
+
+static void Window_DidBecomeKey(id self, SEL cmd, id notification) {
+	Window_Focused = true;
+	Event_RaiseVoid(&WindowEvents.FocusChanged);
+}
+
+static void Window_DidResignKey(id self, SEL cmd, id notification) {
+	Window_Focused = false;
+	Event_RaiseVoid(&WindowEvents.FocusChanged);
+}
+
+static void Window_DidMiniaturize(id self, SEL cmd, id notification) {
+	Event_RaiseVoid(&WindowEvents.StateChanged);
+}
+
+static void Window_DidDeminiaturize(id self, SEL cmd, id notification) {
+	Event_RaiseVoid(&WindowEvents.StateChanged);
+}
+
+static void Window_WillClose(id self, SEL cmd, id notification) {
+	Window_Exists = false;
+	Event_RaiseVoid(&WindowEvents.Closing);
+}
+
+/* If this isn't overriden, an annoying beep sound plays anytime a key is pressed */
+static void Window_KeyDown(id self, SEL cmd, id ev) { }
+
+static Class Window_MakeClass(void) {
+	Class c = objc_allocateClassPair(objc_getClass("NSWindow"), "ClassiCube_Window", 0);
+
+	class_addMethod(c, sel_registerName("windowDidResize:"),        Window_DidResize,        "v@:@");
+	class_addMethod(c, sel_registerName("windowDidMove:"),          Window_DidMove,          "v@:@");
+	class_addMethod(c, sel_registerName("windowDidBecomeKey:"),     Window_DidBecomeKey,     "v@:@");
+	class_addMethod(c, sel_registerName("windowDidResignKey:"),     Window_DidResignKey,     "v@:@");
+	class_addMethod(c, sel_registerName("windowDidMiniaturize:"),   Window_DidMiniaturize,   "v@:@");
+	class_addMethod(c, sel_registerName("windowDidDeminiaturize:"), Window_DidDeminiaturize, "v@:@");
+	class_addMethod(c, sel_registerName("windowWillClose:"),        Window_WillClose,        "v@:@");
+	class_addMethod(c, sel_registerName("keyDown:"),                Window_KeyDown,          "v@:@");
+
+	objc_registerClassPair(c);
+	return c;
+}
+
+static void View_DrawRect(id self, SEL cmd, CGRect r);
+static void Window_MakeView(void) {
+	CGRect rect;
+	id view;
+	Class c;
+
+	view = objc_msgSend(winHandle, sel_registerName("contentView"));
+	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, selFrame);
+	
+	c = objc_allocateClassPair(objc_getClass("NSView"), "ClassiCube_View", 0);
+	// TODO: test rect is actually correct in View_DrawRect on both 32 and 64 bit
+#ifdef __i386__
+	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=ff}{NSSize=ff}}");
+#else
+	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=dd}{NSSize=dd}}");
+#endif
+	objc_registerClassPair(c);
+
+	viewHandle = objc_msgSend(c, sel_registerName("alloc"));
+	objc_msgSend(viewHandle, sel_registerName("initWithFrame:"),  rect);
+	objc_msgSend(winHandle,  sel_registerName("setContentView:"), viewHandle);
 }
 
 void Window_Init(void) {
-	SDL_DisplayMode mode = { 0 };
-	SDL_Init(SDL_INIT_VIDEO);
-	SDL_GetDesktopDisplayMode(0, &mode);
-
-	Display_Bounds.Width  = mode.w;
-	Display_Bounds.Height = mode.h;
-	Display_BitsPerPixel  = SDL_BITSPERPIXEL(mode.format);
+	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
+	objc_msgSend(appHandle, sel_registerName("activateIgnoringOtherApps:"), true);
+	Window_CommonInit();
+	RegisterSelectors();
 }
 
+#define NSTitledWindowMask         (1 << 0)
+#define NSClosableWindowMask       (1 << 1)
+#define NSMiniaturizableWindowMask (1 << 2)
+#define NSResizableWindowMask      (1 << 3)
+#define NSFullScreenWindowMask     (1 << 14)
+
 void Window_Create(int width, int height) {
-	int x = Display_CentreX(width);
-	int y = Display_CentreY(height);
+	Class winClass;
+	CGRect rect;
 
-	/* TODO: Don't set this flag for launcher window */
-	win_handle = SDL_CreateWindow(NULL, x, y, width, height, SDL_WINDOW_OPENGL);
-	if (!win_handle) Window_SDLFail("creating window");
+	/* Technically the coordinates for the origin are at bottom left corner */
+	/* But since the window is in centre of the screen, don't need to care here */
+	rect.origin.x    = Display_CentreX(width);  
+	rect.origin.y    = Display_CentreY(height);
+	rect.size.width  = width; 
+	rect.size.height = height;
 
+	winClass  = Window_MakeClass();
+	winHandle = objc_msgSend(winClass, sel_registerName("alloc"));
+	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
+	
+	Window_CommonCreate();
+	objc_msgSend(winHandle, sel_registerName("setDelegate:"), winHandle);
 	Window_RefreshBounds();
-	Window_Exists = true;
-	Window_Handle = win_handle;
+	Window_MakeView();
 }
 
 void Window_SetTitle(const String* title) {
-	char str[NATIVE_STR_LEN];
-	Platform_ConvertString(str, title);
-	SDL_SetWindowTitle(win_handle, str);
+	UInt8 str[NATIVE_STR_LEN];
+	CFStringRef titleCF;
+	int len;
+
+	/* TODO: This leaks memory, old title isn't released */
+	len = Platform_ConvertString(str, title);
+	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
+	objc_msgSend(winHandle, sel_registerName("setTitle:"), titleCF);
 }
 
-void Clipboard_GetText(String* value) {
-	char* ptr = SDL_GetClipboardText();
-	if (!ptr) return;
-
-	int len = String_CalcLen(ptr, UInt16_MaxValue);
-	String_AppendUtf8(value, ptr, len);
-	SDL_free(ptr);
+void Window_Show(void) { 
+	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
+	Window_RefreshBounds(); // TODO: even necessary?
 }
-
-void Clipboard_SetText(const String* value) {
-	char str[NATIVE_STR_LEN];
-	Platform_ConvertString(str, value);
-	SDL_SetClipboardText(str);
-}
-
-void Window_Show(void) { SDL_ShowWindow(win_handle); }
 
 int Window_GetWindowState(void) {
-	Uint32 flags = SDL_GetWindowFlags(win_handle);
+	int flags;
 
-	if (flags & SDL_WINDOW_MINIMIZED)          return WINDOW_STATE_MINIMISED;
-	if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) return WINDOW_STATE_FULLSCREEN;
-	return WINDOW_STATE_NORMAL;
+	flags = (int)objc_msgSend(winHandle, sel_registerName("styleMask"));
+	if (flags & NSFullScreenWindowMask) return WINDOW_STATE_FULLSCREEN;
+	     
+	flags = (int)objc_msgSend(winHandle, sel_registerName("isMiniaturized"));
+	return flags ? WINDOW_STATE_MINIMISED : WINDOW_STATE_NORMAL;
 }
 
+// TODO: Only works on 10.7+
 cc_result Window_EnterFullscreen(void) {
-	return SDL_SetWindowFullscreen(win_handle, SDL_WINDOW_FULLSCREEN_DESKTOP);
+	objc_msgSend(winHandle, sel_registerName("toggleFullScreen:"), appHandle);
+	return 0;
 }
-cc_result Window_ExitFullscreen(void) { SDL_RestoreWindow(win_handle); return 0; }
+cc_result Window_ExitFullscreen(void) {
+	objc_msgSend(winHandle, sel_registerName("toggleFullScreen:"), appHandle);
+	return 0;
+}
 
 void Window_SetSize(int width, int height) {
-	SDL_SetWindowSize(win_handle, width, height);
+	/* Can't use setContentSize:, because that resizes from the bottom left corner. */
+	CGRect rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle, selFrame);
+
+	rect.origin.y    += Window_Height - height;
+	rect.size.width  += width  - Window_Width;
+	rect.size.height += height - Window_Height;
+	objc_msgSend(winHandle, sel_registerName("setFrame:display:"), rect, true);
 }
 
-void Window_Close(void) {
-	SDL_Event e;
-	e.type = SDL_QUIT;
-	SDL_PushEvent(&e);
+void Window_Close(void) { 
+	objc_msgSend(winHandle, sel_registerName("close"));
 }
 
-static int Window_MapKey(SDL_Keycode k) {
-	if (k >= SDLK_0   && k <= SDLK_9)   { return '0'     + (k - SDLK_0); }
-	if (k >= SDLK_a   && k <= SDLK_z)   { return 'A'     + (k - SDLK_a); }
-	if (k >= SDLK_F1  && k <= SDLK_F12) { return KEY_F1  + (k - SDLK_F1); }
-	if (k >= SDLK_F13 && k <= SDLK_F24) { return KEY_F13 + (k - SDLK_F13); }
-	/* SDLK_KP_0 isn't before SDLK_KP_1 */
-	if (k >= SDLK_KP_1 && k <= SDLK_KP_9) { return KEY_KP1 + (k - SDLK_KP_1); }
-
-	switch (k) {
-		case SDLK_RETURN: return KEY_ENTER;
-		case SDLK_ESCAPE: return KEY_ESCAPE;
-		case SDLK_BACKSPACE: return KEY_BACKSPACE;
-		case SDLK_TAB:    return KEY_TAB;
-		case SDLK_SPACE:  return KEY_SPACE;
-		case SDLK_QUOTE:  return KEY_QUOTE;
-		case SDLK_EQUALS: return KEY_EQUALS;
-		case SDLK_COMMA:  return KEY_COMMA;
-		case SDLK_MINUS:  return KEY_MINUS;
-		case SDLK_PERIOD: return KEY_PERIOD;
-		case SDLK_SLASH:  return KEY_SLASH;
-		case SDLK_SEMICOLON:    return KEY_SEMICOLON;
-		case SDLK_LEFTBRACKET:  return KEY_LBRACKET;
-		case SDLK_BACKSLASH:    return KEY_BACKSLASH;
-		case SDLK_RIGHTBRACKET: return KEY_RBRACKET;
-		case SDLK_BACKQUOTE:    return KEY_TILDE;
-		case SDLK_CAPSLOCK:     return KEY_CAPSLOCK;
-		case SDLK_PRINTSCREEN: return KEY_PRINTSCREEN;
-		case SDLK_SCROLLLOCK:  return KEY_SCROLLLOCK;
-		case SDLK_PAUSE:       return KEY_PAUSE;
-		case SDLK_INSERT:   return KEY_INSERT;
-		case SDLK_HOME:     return KEY_HOME;
-		case SDLK_PAGEUP:   return KEY_PAGEUP;
-		case SDLK_DELETE:   return KEY_DELETE;
-		case SDLK_END:      return KEY_END;
-		case SDLK_PAGEDOWN: return KEY_PAGEDOWN;
-		case SDLK_RIGHT: return KEY_RIGHT;
-		case SDLK_LEFT:  return KEY_LEFT;
-		case SDLK_DOWN:  return KEY_DOWN;
-		case SDLK_UP:    return KEY_UP;
-
-		case SDLK_NUMLOCKCLEAR: return KEY_NUMLOCK;
-		case SDLK_KP_DIVIDE: return KEY_KP_DIVIDE;
-		case SDLK_KP_MULTIPLY: return KEY_KP_MULTIPLY;
-		case SDLK_KP_MINUS: return KEY_KP_MINUS;
-		case SDLK_KP_PLUS: return KEY_KP_PLUS;
-		case SDLK_KP_ENTER: return KEY_KP_ENTER;
-		case SDLK_KP_0: return KEY_KP0;
-		case SDLK_KP_PERIOD: return KEY_KP_DECIMAL;
-
-		case SDLK_LCTRL: return KEY_LCTRL;
-		case SDLK_LSHIFT: return KEY_LSHIFT;
-		case SDLK_LALT: return KEY_LALT;
-		case SDLK_LGUI: return KEY_LWIN;
-		case SDLK_RCTRL: return KEY_RCTRL;
-		case SDLK_RSHIFT: return KEY_RSHIFT;
-		case SDLK_RALT: return KEY_RALT;
-		case SDLK_RGUI: return KEY_RWIN;
-	}
-	return KEY_NONE;
+static int Window_MapMouse(int button) {
+	if (button == 0) return KEY_LMOUSE;
+	if (button == 1) return KEY_RMOUSE;
+	if (button == 2) return KEY_MMOUSE;
+	return 0;
 }
 
-static void Window_HandleKeyEvent(const SDL_Event* e) {
-	cc_bool pressed = e->key.state == SDL_PRESSED;
-	int key = Window_MapKey(e->key.keysym.sym);
-	if (key) Input_SetPressed(key, pressed);
-}
-
-static void Window_HandleMouseEvent(const SDL_Event* e) {
-	cc_bool pressed = e->button.state == SDL_PRESSED;
-	switch (e->button.button) {
-		case SDL_BUTTON_LEFT:
-			Input_SetPressed(KEY_LMOUSE, pressed); break;
-		case SDL_BUTTON_MIDDLE:
-			Input_SetPressed(KEY_MMOUSE, pressed); break;
-		case SDL_BUTTON_RIGHT:
-			Input_SetPressed(KEY_RMOUSE, pressed); break;
-		case SDL_BUTTON_X1:
-			Input_SetPressed(KEY_XBUTTON1, pressed); break;
-		case SDL_BUTTON_X2:
-			Input_SetPressed(KEY_XBUTTON2, pressed); break;
-	}
-}
-
-static void Window_HandleTextEvent(const SDL_Event* e) {
-	char buffer[SDL_TEXTINPUTEVENT_TEXT_SIZE];
+static void Window_ProcessKeyChars(id ev) {
+	char buffer[128];
+	const char* src;
 	String str;
+	id chars;
 	int i, len;
 
+	chars = objc_msgSend(ev,    selCharacters);
+	src   = objc_msgSend(chars, selUtf8String);
+	len   = String_CalcLen(src, UInt16_MaxValue);
 	String_InitArray(str, buffer);
-	len = String_CalcLen(e->text.text, SDL_TEXTINPUTEVENT_TEXT_SIZE);
-	String_AppendUtf8(&str, e->text.text, len);
 
+	String_AppendUtf8(&str, src, len);
 	for (i = 0; i < str.length; i++) {
 		Event_RaiseInt(&InputEvents.Press, str.buffer[i]);
 	}
 }
 
-static void Window_HandleWindowEvent(const SDL_Event* e) {
-	switch (e->window.event) {
-		case SDL_WINDOWEVENT_EXPOSED:
-			Event_RaiseVoid(&WindowEvents.Redraw);
-			break;
-		case SDL_WINDOWEVENT_SIZE_CHANGED:
-			Window_RefreshBounds();
-			Event_RaiseVoid(&WindowEvents.Resized);
-			break;
-		case SDL_WINDOWEVENT_MINIMIZED:
-		case SDL_WINDOWEVENT_MAXIMIZED:
-		case SDL_WINDOWEVENT_RESTORED:
-			Event_RaiseVoid(&WindowEvents.StateChanged);
-			break;
-		case SDL_WINDOWEVENT_FOCUS_GAINED:
-			Window_Focused = true;
-			Event_RaiseVoid(&WindowEvents.FocusChanged);
-			break;
-		case SDL_WINDOWEVENT_FOCUS_LOST:
-			Window_Focused = false;
-			Event_RaiseVoid(&WindowEvents.FocusChanged);
-			break;
-		case SDL_WINDOWEVENT_CLOSE:
-			Window_Close();
-			break;
-		}
+static cc_bool GetMouseCoords(int* x, int* y) {
+	CGPoint loc = Send_CGPoint((id)objc_getClass("NSEvent"), selMouseLoc);
+	*x = (int)loc.x                           - windowX;	
+	*y = (Display_Bounds.Height - (int)loc.y) - windowY;
+	// TODO: this seems to be off by 1
+	return *x >= 0 && *y >= 0 && *x < Window_Width && *y < Window_Height;
 }
 
 void Window_ProcessEvents(void) {
-	SDL_Event e;
-	while (SDL_PollEvent(&e)) {
-		switch (e.type) {
+	id ev;
+	int key, type, steps, x, y;
+	CGFloat dx, dy;
 
-		case SDL_KEYDOWN:
-		case SDL_KEYUP:
-			Window_HandleKeyEvent(&e); break;
-		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP:
-			Window_HandleMouseEvent(&e); break;
-		case SDL_MOUSEWHEEL:
-			Mouse_ScrollWheel(e.wheel.y);
-			break;
-		case SDL_MOUSEMOTION:
-			Pointer_SetPosition(0, e.motion.x, e.motion.y);
-			if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, e.motion.xrel, e.motion.yrel);
-			break;
-		case SDL_TEXTINPUT:
-			Window_HandleTextEvent(&e); break;
-		case SDL_WINDOWEVENT:
-			Window_HandleWindowEvent(&e); break;
+	for (;;) {
+		ev = objc_msgSend(appHandle, selNextEvent, 0xFFFFFFFFU, NULL, NSDefaultRunLoopMode, true);
+		if (!ev) break;
+		type = (int)objc_msgSend(ev, selType);
 
-		case SDL_QUIT:
-			Window_Exists = false;
-			Event_RaiseVoid(&WindowEvents.Closing);
-			SDL_DestroyWindow(win_handle);
+		switch (type) {
+		case  1: /* NSLeftMouseDown  */
+		case  3: /* NSRightMouseDown */
+		case 25: /* NSOtherMouseDown */
+			key = Window_MapMouse((int)objc_msgSend(ev, selButton));
+			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key, true);
+			break;
+
+		case  2: /* NSLeftMouseUp  */
+		case  4: /* NSRightMouseUp */
+		case 26: /* NSOtherMouseUp */
+			key = Window_MapMouse((int)objc_msgSend(ev, selButton));
+			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key, false);
+			break;
+
+		case 10: /* NSKeyDown */
+			key = Window_MapKey((int)objc_msgSend(ev, selKeycode));
+			if (key) Input_SetPressed(key, true);
+			// TODO: Test works properly with other languages
+			Window_ProcessKeyChars(ev);
+			break;
+
+		case 11: /* NSKeyUp */
+			key = Window_MapKey((int)objc_msgSend(ev, selKeycode));
+			if (key) Input_SetPressed(key, false);
+			break;
+
+		case 12: /* NSFlagsChanged */
+			key = (int)objc_msgSend(ev, selModifiers);
+			/* TODO: Figure out how to only get modifiers that changed */
+			Input_SetPressed(KEY_LCTRL,    (key & 0x000001) != 0);
+			Input_SetPressed(KEY_LSHIFT,   (key & 0x000002) != 0);
+			Input_SetPressed(KEY_RSHIFT,   (key & 0x000004) != 0);
+			Input_SetPressed(KEY_LWIN,     (key & 0x000008) != 0);
+			Input_SetPressed(KEY_RWIN,     (key & 0x000010) != 0);
+			Input_SetPressed(KEY_LALT,     (key & 0x000020) != 0);
+			Input_SetPressed(KEY_RALT,     (key & 0x000040) != 0);
+			Input_SetPressed(KEY_RCTRL,    (key & 0x002000) != 0);
+			Input_SetPressed(KEY_CAPSLOCK, (key & 0x010000) != 0);
+			break;
+
+		case 22: /* NSScrollWheel */
+			dy    = Send_CGFloat(ev, selDeltaY);
+			/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175 */
+			/* delta is in 'line height' units, but I don't know how to map that to actual units. */
+			/* All I know is that scrolling by '1 wheel notch' produces a delta of around 0.1, and that */
+			/* sometimes I'll see it go all the way up to 5-6 with a larger wheel scroll. */
+			/* So mulitplying by 10 doesn't really seem a good idea, instead I just round outwards. */
+			/* TODO: Figure out if there's a better way than this. */
+			steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
+			Mouse_ScrollWheel(steps);
+			break;
+
+		case  5: /* NSMouseMoved */
+		case  6: /* NSLeftMouseDragged */
+		case  7: /* NSRightMouseDragged */
+		case 27: /* NSOtherMouseDragged */
+			if (GetMouseCoords(&x, &y)) Pointer_SetPosition(0, x, y);
+
+			if (Input_RawMode) {
+				dx = Send_CGFloat(ev, selDeltaX);
+				dy = Send_CGFloat(ev, selDeltaY);
+				Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
+			}
 			break;
 		}
+		objc_msgSend(appHandle, selSendEvent, ev);
 	}
 }
 
-static void Cursor_GetRawPos(int* x, int* y) {
-	SDL_GetMouseState(x, y);
-}
-void Cursor_SetPosition(int x, int y) {
-	SDL_WarpMouseInWindow(win_handle, x, y);
-}
-
-static void Cursor_DoSetVisible(cc_bool visible) {
-	SDL_ShowCursor(visible ? SDL_ENABLE : SDL_DISABLE);
-}
-
+static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 static void Window_DoShowDialog(const char* title, const char* msg) {
-	SDL_ShowSimpleMessageBox(0, title, msg, win_handle);
+	CFStringRef titleCF, msgCF;
+	id alert;
+	
+	alert   = objc_msgSend((id)objc_getClass("NSAlert"), sel_registerName("alloc"));
+	alert   = objc_msgSend(alert, sel_registerName("init"));
+	titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
+	msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
+	
+	objc_msgSend(alert, sel_registerName("setMessageText:"),     titleCF);
+	objc_msgSend(alert, sel_registerName("setInformativeText:"), msgCF);
+	objc_msgSend(alert, sel_registerName("addButtonWithTitle:"), CFSTR("OK"));
+	
+	objc_msgSend(alert, sel_registerName("runModal"));
+	CFRelease(titleCF);
+	CFRelease(msgCF);
 }
 
-static SDL_Surface* surface;
+static Bitmap fb_bmp;
 void Window_AllocFramebuffer(Bitmap* bmp) {
-	surface = SDL_GetWindowSurface(win_handle);
-	if (!surface) Window_SDLFail("getting window surface");
+	bmp->Scan0 = (cc_uint8*)Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
+	fb_bmp = *bmp;
+}
 
-	if (SDL_MUSTLOCK(surface)) {
-		int ret = SDL_LockSurface(surface);
-		if (ret < 0) Window_SDLFail("locking window surface");
-	}
-	bmp->Scan0 = surface->pixels;
+static void View_DrawRect(id self, SEL cmd, CGRect r_) {
+	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+	CGContextRef context = NULL;
+	CGDataProviderRef provider;
+	CGImageRef image;
+	CGRect rect;
+	id nsContext;
+
+	/* Unfortunately CGImageRef is immutable, so changing the */
+	/* underlying data doesn't change what shows when drawing. */
+	/* TODO: Find a better way of doing this in cocoa.. */
+	if (!fb_bmp.Scan0) return;
+	nsContext = objc_msgSend((id)objc_getClass("NSGraphicsContext"), selCurrentContext);
+	context   = objc_msgSend(nsContext, selGraphicsPort);
+
+	/* TODO: Only update changed bit.. */
+	rect.origin.x = 0; rect.origin.y = 0;
+	rect.size.width  = Window_Width;
+	rect.size.height = Window_Height;
+
+	/* TODO: REPLACE THIS AWFUL HACK */
+	provider = CGDataProviderCreateWithData(NULL, fb_bmp.Scan0,
+		Bitmap_DataSize(fb_bmp.Width, fb_bmp.Height), NULL);
+	image = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
+		kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
+
+	CGContextDrawImage(context, rect, image);
+	CGContextSynchronize(context);
+
+	CGImageRelease(image);
+	CGDataProviderRelease(provider);
+	CGColorSpaceRelease(colorSpace);
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
-	SDL_Rect rect;
-	rect.x = r.X; rect.w = r.Width;
-	rect.y = r.Y; rect.h = r.Height;
-	SDL_UpdateWindowSurfaceRects(win_handle, &rect, 1);
+	CGRect rect;
+	rect.origin.x    = r.X; 
+	rect.origin.y    = Window_Height - r.Y - r.Height;
+	rect.size.width  = r.Width;
+	rect.size.height = r.Height;
+
+	objc_msgSend(viewHandle, selSetNeedsDisplay, rect);
+	objc_msgSend(viewHandle, selDisplayIfNeeded);
 }
 
 void Window_FreeFramebuffer(Bitmap* bmp) {
-	/* SDL docs explicitly say to NOT free the surface */
-	/* https://wiki.libsdl.org/SDL_GetWindowSurface */
-	/* TODO: Do we still need to unlock it though? */
-}
-
-void Window_OpenKeyboard(void)  { SDL_StartTextInput(); }
-void Window_SetKeyboardText(const String* text) { }
-void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
-
-void Window_EnableRawMouse(void) {
-	Window_RegrabMouse();
-	SDL_SetRelativeMouseMode(true);
-	Input_RawMode = true;
-}
-void Window_UpdateRawMouse(void) { Window_CentreMousePosition(); }
-
-void Window_DisableRawMouse(void) {
-	Window_RegrabMouse();
-	SDL_SetRelativeMouseMode(false);
-	Input_RawMode = false;
+	Mem_Free(bmp->Scan0);
 }
 #endif
 
@@ -2403,7 +2815,7 @@ void Window_DisableRawMouse(void) {
 /*########################################################################################################################*
 *------------------------------------------------Emscripten canvas window-------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WEB
+#elif defined CC_BUILD_WEB
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
@@ -2888,12 +3300,12 @@ void Window_DisableRawMouse(void) {
 	emscripten_exit_pointerlock();
 	Input_RawMode = false;
 }
-#endif
+
 
 /*########################################################################################################################*
 *------------------------------------------------Android activity window-------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_ANDROID
+#elif defined CC_BUILD_ANDROID
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <android/keycodes.h>
@@ -3233,431 +3645,6 @@ void Window_CloseKeyboard(void) {
 void Window_EnableRawMouse(void)  { Window_DefaultEnableRawMouse(); }
 void Window_UpdateRawMouse(void)  { }
 void Window_DisableRawMouse(void) { Window_DefaultDisableRawMouse(); }
-#endif
-
-
-#ifdef CC_BUILD_COCOA
-#include <objc/message.h>
-#include <objc/runtime.h>
-static id appHandle, winHandle, viewHandle;
-extern void* NSDefaultRunLoopMode;
-
-static SEL selFrame, selDeltaX, selDeltaY;
-static SEL selNextEvent, selType, selSendEvent;
-static SEL selButton, selKeycode, selModifiers;
-static SEL selCharacters, selUtf8String, selMouseLoc;
-static SEL selCurrentContext, selGraphicsPort;
-static SEL selSetNeedsDisplay, selDisplayIfNeeded;
-static SEL selUpdate, selFlushBuffer;
-
-static void RegisterSelectors(void) {
-	selFrame  = sel_registerName("frame");
-	selDeltaX = sel_registerName("deltaX");
-	selDeltaY = sel_registerName("deltaY");
-
-	selNextEvent = sel_registerName("nextEventMatchingMask:untilDate:inMode:dequeue:");
-	selType      = sel_registerName("type");
-	selSendEvent = sel_registerName("sendEvent:");
-
-	selButton    = sel_registerName("buttonNumber");
-	selKeycode   = sel_registerName("keyCode");
-	selModifiers = sel_registerName("modifierFlags");
-
-	selCharacters = sel_registerName("charactersIgnoringModifiers");
-	selUtf8String = sel_registerName("UTF8String");
-	selMouseLoc   = sel_registerName("mouseLocation");
-
-	selCurrentContext  = sel_registerName("currentContext");
-	selGraphicsPort    = sel_registerName("graphicsPort");
-	selSetNeedsDisplay = sel_registerName("setNeedsDisplayInRect:");
-	selDisplayIfNeeded = sel_registerName("displayIfNeeded");
-
-	selUpdate      = sel_registerName("update");
-	selFlushBuffer = sel_registerName("flushBuffer");
-}
-
-static CC_INLINE CGFloat Send_CGFloat(id receiver, SEL sel) {
-	/* Sometimes we have to use fpret and sometimes we don't. See this for more details: */
-	/* http://www.sealiesoftware.com/blog/archive/2008/11/16/objc_explain_objc_msgSend_fpret.html */
-	/* return type is void*, but we cannot cast a void* to a float or double */
-
-#ifdef __i386__
-	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend_fpret)(receiver, sel);
-#else
-	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
-#endif
-}
-
-static CC_INLINE CGPoint Send_CGPoint(id receiver, SEL sel) {
-	/* on x86 and x86_64 CGPoint fits the requirements for 'struct returned in registers' */
-	return ((CGPoint(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
-}
-
-static void Window_RefreshBounds(void) {
-	CGRect win, view;
-	int viewY;
-
-	win  = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle,  selFrame);
-	view = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(viewHandle, selFrame);
-
-	/* For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen. */
-	/* To get window's real Y screen position, first need to find Y of top. (win.y + win.height) */
-	/* Then just subtract from screen height to make relative to top instead of bottom of the screen. */
-	/* Of course this is only half the story, since we're really after Y position of the content. */
-	/* To work out top Y of view relative to window, it's just win.height - (view.y + view.height) */
-	viewY   = (int)win.size.height  - ((int)view.origin.y + (int)view.size.height);
-	windowX = (int)win.origin.x     + (int)view.origin.x;
-	windowY = Display_Bounds.Height - ((int)win.origin.y  + (int)win.size.height) + viewY;
-
-	Window_Width  = (int)view.size.width;
-	Window_Height = (int)view.size.height;
-}
-
-static void Window_DidResize(id self, SEL cmd, id notification) {
-	Window_RefreshBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
-}
-
-static void Window_DidMove(id self, SEL cmd, id notification) {
-	Window_RefreshBounds();
-	GLContext_Update();
-}
-
-static void Window_DidBecomeKey(id self, SEL cmd, id notification) {
-	Window_Focused = true;
-	Event_RaiseVoid(&WindowEvents.FocusChanged);
-}
-
-static void Window_DidResignKey(id self, SEL cmd, id notification) {
-	Window_Focused = false;
-	Event_RaiseVoid(&WindowEvents.FocusChanged);
-}
-
-static void Window_DidMiniaturize(id self, SEL cmd, id notification) {
-	Event_RaiseVoid(&WindowEvents.StateChanged);
-}
-
-static void Window_DidDeminiaturize(id self, SEL cmd, id notification) {
-	Event_RaiseVoid(&WindowEvents.StateChanged);
-}
-
-static void Window_WillClose(id self, SEL cmd, id notification) {
-	Window_Exists = false;
-	Event_RaiseVoid(&WindowEvents.Closing);
-}
-
-/* If this isn't overriden, an annoying beep sound plays anytime a key is pressed */
-static void Window_KeyDown(id self, SEL cmd, id ev) { }
-
-static Class Window_MakeClass(void) {
-	Class c = objc_allocateClassPair(objc_getClass("NSWindow"), "ClassiCube_Window", 0);
-
-	class_addMethod(c, sel_registerName("windowDidResize:"),        Window_DidResize,        "v@:@");
-	class_addMethod(c, sel_registerName("windowDidMove:"),          Window_DidMove,          "v@:@");
-	class_addMethod(c, sel_registerName("windowDidBecomeKey:"),     Window_DidBecomeKey,     "v@:@");
-	class_addMethod(c, sel_registerName("windowDidResignKey:"),     Window_DidResignKey,     "v@:@");
-	class_addMethod(c, sel_registerName("windowDidMiniaturize:"),   Window_DidMiniaturize,   "v@:@");
-	class_addMethod(c, sel_registerName("windowDidDeminiaturize:"), Window_DidDeminiaturize, "v@:@");
-	class_addMethod(c, sel_registerName("windowWillClose:"),        Window_WillClose,        "v@:@");
-	class_addMethod(c, sel_registerName("keyDown:"),                Window_KeyDown,          "v@:@");
-
-	objc_registerClassPair(c);
-	return c;
-}
-
-static void View_DrawRect(id self, SEL cmd, CGRect r);
-static void Window_MakeView(void) {
-	CGRect rect;
-	id view;
-	Class c;
-
-	view = objc_msgSend(winHandle, sel_registerName("contentView"));
-	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, selFrame);
-	
-	c = objc_allocateClassPair(objc_getClass("NSView"), "ClassiCube_View", 0);
-	// TODO: test rect is actually correct in View_DrawRect on both 32 and 64 bit
-#ifdef __i386__
-	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=ff}{NSSize=ff}}");
-#else
-	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=dd}{NSSize=dd}}");
-#endif
-	objc_registerClassPair(c);
-
-	viewHandle = objc_msgSend(c, sel_registerName("alloc"));
-	objc_msgSend(viewHandle, sel_registerName("initWithFrame:"),  rect);
-	objc_msgSend(winHandle,  sel_registerName("setContentView:"), viewHandle);
-}
-
-void Window_Init(void) {
-	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
-	objc_msgSend(appHandle, sel_registerName("activateIgnoringOtherApps:"), true);
-	Window_CommonInit();
-	RegisterSelectors();
-}
-
-#define NSTitledWindowMask         (1 << 0)
-#define NSClosableWindowMask       (1 << 1)
-#define NSMiniaturizableWindowMask (1 << 2)
-#define NSResizableWindowMask      (1 << 3)
-#define NSFullScreenWindowMask     (1 << 14)
-
-void Window_Create(int width, int height) {
-	Class winClass;
-	CGRect rect;
-
-	/* Technically the coordinates for the origin are at bottom left corner */
-	/* But since the window is in centre of the screen, don't need to care here */
-	rect.origin.x    = Display_CentreX(width);  
-	rect.origin.y    = Display_CentreY(height);
-	rect.size.width  = width; 
-	rect.size.height = height;
-
-	winClass  = Window_MakeClass();
-	winHandle = objc_msgSend(winClass, sel_registerName("alloc"));
-	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
-	
-	Window_CommonCreate();
-	objc_msgSend(winHandle, sel_registerName("setDelegate:"), winHandle);
-	Window_RefreshBounds();
-	Window_MakeView();
-}
-
-void Window_SetTitle(const String* title) {
-	UInt8 str[NATIVE_STR_LEN];
-	CFStringRef titleCF;
-	int len;
-
-	/* TODO: This leaks memory, old title isn't released */
-	len = Platform_ConvertString(str, title);
-	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
-	objc_msgSend(winHandle, sel_registerName("setTitle:"), titleCF);
-}
-
-void Window_Show(void) { 
-	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
-	Window_RefreshBounds(); // TODO: even necessary?
-}
-
-int Window_GetWindowState(void) {
-	int flags;
-
-	flags = (int)objc_msgSend(winHandle, sel_registerName("styleMask"));
-	if (flags & NSFullScreenWindowMask) return WINDOW_STATE_FULLSCREEN;
-	     
-	flags = (int)objc_msgSend(winHandle, sel_registerName("isMiniaturized"));
-	return flags ? WINDOW_STATE_MINIMISED : WINDOW_STATE_NORMAL;
-}
-
-// TODO: Only works on 10.7+
-cc_result Window_EnterFullscreen(void) {
-	objc_msgSend(winHandle, sel_registerName("toggleFullScreen:"), appHandle);
-	return 0;
-}
-cc_result Window_ExitFullscreen(void) {
-	objc_msgSend(winHandle, sel_registerName("toggleFullScreen:"), appHandle);
-	return 0;
-}
-
-void Window_SetSize(int width, int height) {
-	/* Can't use setContentSize:, because that resizes from the bottom left corner. */
-	CGRect rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle, selFrame);
-
-	rect.origin.y    += Window_Height - height;
-	rect.size.width  += width  - Window_Width;
-	rect.size.height += height - Window_Height;
-	objc_msgSend(winHandle, sel_registerName("setFrame:display:"), rect, true);
-}
-
-void Window_Close(void) { 
-	objc_msgSend(winHandle, sel_registerName("close"));
-}
-
-static int Window_MapMouse(int button) {
-	if (button == 0) return KEY_LMOUSE;
-	if (button == 1) return KEY_RMOUSE;
-	if (button == 2) return KEY_MMOUSE;
-	return 0;
-}
-
-static void Window_ProcessKeyChars(id ev) {
-	char buffer[128];
-	const char* src;
-	String str;
-	id chars;
-	int i, len;
-
-	chars = objc_msgSend(ev,    selCharacters);
-	src   = objc_msgSend(chars, selUtf8String);
-	len   = String_CalcLen(src, UInt16_MaxValue);
-	String_InitArray(str, buffer);
-
-	String_AppendUtf8(&str, src, len);
-	for (i = 0; i < str.length; i++) {
-		Event_RaiseInt(&InputEvents.Press, str.buffer[i]);
-	}
-}
-
-static cc_bool GetMouseCoords(int* x, int* y) {
-	CGPoint loc = Send_CGPoint((id)objc_getClass("NSEvent"), selMouseLoc);
-	*x = (int)loc.x                           - windowX;	
-	*y = (Display_Bounds.Height - (int)loc.y) - windowY;
-	// TODO: this seems to be off by 1
-	return *x >= 0 && *y >= 0 && *x < Window_Width && *y < Window_Height;
-}
-
-void Window_ProcessEvents(void) {
-	id ev;
-	int key, type, steps, x, y;
-	CGFloat dx, dy;
-
-	for (;;) {
-		ev = objc_msgSend(appHandle, selNextEvent, 0xFFFFFFFFU, NULL, NSDefaultRunLoopMode, true);
-		if (!ev) break;
-		type = (int)objc_msgSend(ev, selType);
-
-		switch (type) {
-		case  1: /* NSLeftMouseDown  */
-		case  3: /* NSRightMouseDown */
-		case 25: /* NSOtherMouseDown */
-			key = Window_MapMouse((int)objc_msgSend(ev, selButton));
-			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key, true);
-			break;
-
-		case  2: /* NSLeftMouseUp  */
-		case  4: /* NSRightMouseUp */
-		case 26: /* NSOtherMouseUp */
-			key = Window_MapMouse((int)objc_msgSend(ev, selButton));
-			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key, false);
-			break;
-
-		case 10: /* NSKeyDown */
-			key = Window_MapKey((int)objc_msgSend(ev, selKeycode));
-			if (key) Input_SetPressed(key, true);
-			// TODO: Test works properly with other languages
-			Window_ProcessKeyChars(ev);
-			break;
-
-		case 11: /* NSKeyUp */
-			key = Window_MapKey((int)objc_msgSend(ev, selKeycode));
-			if (key) Input_SetPressed(key, false);
-			break;
-
-		case 12: /* NSFlagsChanged */
-			key = (int)objc_msgSend(ev, selModifiers);
-			/* TODO: Figure out how to only get modifiers that changed */
-			Input_SetPressed(KEY_LCTRL,    (key & 0x000001) != 0);
-			Input_SetPressed(KEY_LSHIFT,   (key & 0x000002) != 0);
-			Input_SetPressed(KEY_RSHIFT,   (key & 0x000004) != 0);
-			Input_SetPressed(KEY_LWIN,     (key & 0x000008) != 0);
-			Input_SetPressed(KEY_RWIN,     (key & 0x000010) != 0);
-			Input_SetPressed(KEY_LALT,     (key & 0x000020) != 0);
-			Input_SetPressed(KEY_RALT,     (key & 0x000040) != 0);
-			Input_SetPressed(KEY_RCTRL,    (key & 0x002000) != 0);
-			Input_SetPressed(KEY_CAPSLOCK, (key & 0x010000) != 0);
-			break;
-
-		case 22: /* NSScrollWheel */
-			dy    = Send_CGFloat(ev, selDeltaY);
-			/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175 */
-			/* delta is in 'line height' units, but I don't know how to map that to actual units. */
-			/* All I know is that scrolling by '1 wheel notch' produces a delta of around 0.1, and that */
-			/* sometimes I'll see it go all the way up to 5-6 with a larger wheel scroll. */
-			/* So mulitplying by 10 doesn't really seem a good idea, instead I just round outwards. */
-			/* TODO: Figure out if there's a better way than this. */
-			steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
-			Mouse_ScrollWheel(steps);
-			break;
-
-		case  5: /* NSMouseMoved */
-		case  6: /* NSLeftMouseDragged */
-		case  7: /* NSRightMouseDragged */
-		case 27: /* NSOtherMouseDragged */
-			if (GetMouseCoords(&x, &y)) Pointer_SetPosition(0, x, y);
-
-			if (Input_RawMode) {
-				dx = Send_CGFloat(ev, selDeltaX);
-				dy = Send_CGFloat(ev, selDeltaY);
-				Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
-			}
-			break;
-		}
-		objc_msgSend(appHandle, selSendEvent, ev);
-	}
-}
-
-static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
-static void Window_DoShowDialog(const char* title, const char* msg) {
-	CFStringRef titleCF, msgCF;
-	id alert;
-	
-	alert   = objc_msgSend((id)objc_getClass("NSAlert"), sel_registerName("alloc"));
-	alert   = objc_msgSend(alert, sel_registerName("init"));
-	titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
-	msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
-	
-	objc_msgSend(alert, sel_registerName("setMessageText:"),     titleCF);
-	objc_msgSend(alert, sel_registerName("setInformativeText:"), msgCF);
-	objc_msgSend(alert, sel_registerName("addButtonWithTitle:"), CFSTR("OK"));
-	
-	objc_msgSend(alert, sel_registerName("runModal"));
-	CFRelease(titleCF);
-	CFRelease(msgCF);
-}
-
-static Bitmap fb_bmp;
-void Window_AllocFramebuffer(Bitmap* bmp) {
-	bmp->Scan0 = (cc_uint8*)Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
-	fb_bmp = *bmp;
-}
-
-static void View_DrawRect(id self, SEL cmd, CGRect r_) {
-	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	CGContextRef context = NULL;
-	CGDataProviderRef provider;
-	CGImageRef image;
-	CGRect rect;
-	id nsContext;
-
-	/* Unfortunately CGImageRef is immutable, so changing the */
-	/* underlying data doesn't change what shows when drawing. */
-	/* TODO: Find a better way of doing this in cocoa.. */
-	if (!fb_bmp.Scan0) return;
-	nsContext = objc_msgSend((id)objc_getClass("NSGraphicsContext"), selCurrentContext);
-	context   = objc_msgSend(nsContext, selGraphicsPort);
-
-	/* TODO: Only update changed bit.. */
-	rect.origin.x = 0; rect.origin.y = 0;
-	rect.size.width  = Window_Width;
-	rect.size.height = Window_Height;
-
-	/* TODO: REPLACE THIS AWFUL HACK */
-	provider = CGDataProviderCreateWithData(NULL, fb_bmp.Scan0,
-		Bitmap_DataSize(fb_bmp.Width, fb_bmp.Height), NULL);
-	image = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
-		kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
-
-	CGContextDrawImage(context, rect, image);
-	CGContextSynchronize(context);
-
-	CGImageRelease(image);
-	CGDataProviderRelease(provider);
-	CGColorSpaceRelease(colorSpace);
-}
-
-void Window_DrawFramebuffer(Rect2D r) {
-	CGRect rect;
-	rect.origin.x    = r.X; 
-	rect.origin.y    = Window_Height - r.Y - r.Height;
-	rect.size.width  = r.Width;
-	rect.size.height = r.Height;
-
-	objc_msgSend(viewHandle, selSetNeedsDisplay, rect);
-	objc_msgSend(viewHandle, selDisplayIfNeeded);
-}
-
-void Window_FreeFramebuffer(Bitmap* bmp) {
-	Mem_Free(bmp->Scan0);
-}
 #endif
 
 
