@@ -3,7 +3,7 @@
 cd $ROOT
 echo $(pwd)
 FILES=$(find . -type f -name "*.c" | tr '\n' ' ')
-FLAGS="-shared -fPIC -O1 -s"
+FLAGS="-shared -fPIC -O1 -s -std=c99"
 
 NIX32_PATH="gcc -m32"
 NIX64_PATH="gcc -m64"

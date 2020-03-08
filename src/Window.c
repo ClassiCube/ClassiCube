@@ -2826,7 +2826,7 @@ static void RefreshWindowBounds(void) {
 	emscripten_get_canvas_element_size(NULL, &Window_Width, &Window_Height);
 }
 
-static void CorrectFocus(void) {
+static void CorrectPointerFocus(void) {
 	/* Sometimes emscripten_request_pointerlock doesn't always acquire focus */
 	/* Browser also only allows pointer locks requests in response to user input */
 	EmscriptenPointerlockChangeEvent status;
@@ -3035,6 +3035,7 @@ static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev , void* data) {
 }
 
 static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
+	char keyChar;
 	CorrectPointerFocus();
 	/* When on-screen keyboard is open, we don't want to intercept any key presses, */
 	/* because they should be sent to the HTML text input instead. */
@@ -3046,7 +3047,6 @@ static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* dat
 	/*   have these intercepted key presses in its text buffer) */
 	if (keyboardOpen) return false;
 
-	char keyChar;
 	if (Convert_TryUnicodeToCP437(ev->charCode, &keyChar)) {
 		Event_RaiseInt(&InputEvents.Press, keyChar);
 	}
@@ -3185,7 +3185,7 @@ cc_result Window_EnterFullscreen(void) {
 	strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_HIDEF;
 	strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
 
-	strategy.canvasResizedCallback         = Window_CanvasResize;
+	strategy.canvasResizedCallback         = OnCanvasResize;
 	strategy.canvasResizedCallbackUserData = NULL;
 	return emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
 }
