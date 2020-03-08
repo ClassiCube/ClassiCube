@@ -4,7 +4,7 @@ ENAME=ClassiCube
 DEL=rm
 JOBS=1
 CC=gcc
-CFLAGS=-g -pipe -rdynamic
+CFLAGS=-g -pipe -rdynamic -fno-math-errno
 LDFLAGS=-g -rdynamic
 
 ifndef $(PLAT)
@@ -24,7 +24,7 @@ endif
 
 ifeq ($(PLAT),mingw)
 OEXT=.exe
-CFLAGS=-g -pipe -DUNICODE
+CFLAGS=-g -pipe -DUNICODE -fno-math-errno
 LDFLAGS=-g
 LIBS=-mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9
 endif
@@ -50,19 +50,19 @@ LIBS=-lcurl -lexecinfo -lopenal -lGL -lX11 -lm -lpthread
 endif
 
 ifeq ($(PLAT),openbsd)
-CFLAGS=-g -pipe -rdynamic -I /usr/X11R6/include -I /usr/local/include
+CFLAGS=-g -pipe -rdynamic -I /usr/X11R6/include -I /usr/local/include -fno-math-errno
 LDFLAGS=-L /usr/X11R6/lib -L /usr/local/lib
 LIBS=-lcurl -lexecinfo -lopenal -lGL -lX11
 endif
 
 ifeq ($(PLAT),netbsd)
-CFLAGS=-g -pipe -rdynamic -I /usr/X11R7/include -I /usr/pkg/include
+CFLAGS=-g -pipe -rdynamic -I /usr/X11R7/include -I /usr/pkg/include -fno-math-errno
 LDFLAGS=-L /usr/X11R7/lib -L /usr/pkg/lib
 LIBS=-lcurl -lexecinfo -lopenal -lGL -lX11
 endif
 
 ifeq ($(PLAT),haiku)
-CFLAGS=-g -pipe
+CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g
 LIBS=-lcurl -lm -lexecinfo -lopenal -lGL -lnetwork -lSDL2
 endif
