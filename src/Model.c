@@ -1462,7 +1462,6 @@ static float BlockModel_GetEyeY(struct Entity* e) {
 	BlockID block = e->ModelBlock;
 	float minY    = Blocks.MinBB[block].Y;
 	float maxY    = Blocks.MaxBB[block].Y;
-	return block == BLOCK_AIR ? 1 : (minY + maxY) / 2.0f;
 }
 
 static void BlockModel_GetSize(struct Entity* e) {
@@ -1647,6 +1646,48 @@ static struct Model* BlockModel_GetInstance(void) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------------SkinnedCubeModel-----------------------------------------------*
+*#########################################################################################################################*/
+static struct ModelPart skinnedCube_head;
+
+static void SkinnedCubeModel_MakeParts(void) {
+	static const struct BoxDesc head = {
+		BoxDesc_Tex(0,0),
+		BoxDesc_Box(-8,0,-8, 8,16,8),
+		BoxDesc_Rot(0,8,0),
+	};
+
+	BoxDesc_BuildBox(&skinnedCube_head, &head);
+}
+
+static void SkinnedCubeModel_Draw(struct Entity* entity) {
+	Model_ApplyTexture(entity);
+	Model_DrawRotate(-entity->Pitch * MATH_DEG2RAD, 0, 0, &skinnedCube_head, true);
+	Model_UpdateVB();
+}
+
+static float SkinnedCubeModel_GetNameY(struct Entity* e) { return 1.075f; }
+static float SkinnedCubeModel_GetEyeY(struct Entity* e) { return 8.0f / 16.0f; }
+static void SkinnedCubeModel_GetSize(struct Entity* e) { Model_RetSize(15.0f, 15.0f, 15.0f); }
+static void SkinnedCubeModel_GetBounds(struct Entity* e) { Model_RetAABB(-8, 0, -8, 8, 16, 8); }
+
+static struct ModelVertex skinnedCube_vertices[MODEL_BOX_VERTICES];
+static struct ModelTex skinnedCube_tex = { "skinnedcube.png" };
+static struct Model skinnedCube_model = { "skinnedcube", skinnedCube_vertices, &skinnedCube_tex,
+SkinnedCubeModel_MakeParts, SkinnedCubeModel_Draw,
+SkinnedCubeModel_GetNameY,  SkinnedCubeModel_GetEyeY,
+SkinnedCubeModel_GetSize,   SkinnedCubeModel_GetBounds
+};
+
+static struct Model* SkinnedCubeModel_GetInstance(void) {
+	Model_Init(&skinnedCube_model);
+	skinnedCube_model.usesHumanSkin = true;
+	skinnedCube_model.pushes = false;
+	return &skinnedCube_model;
+}
+
+
+/*########################################################################################################################*
 *-------------------------------------------------------Model component---------------------------------------------------*
 *#########################################################################################################################*/
 /* NOTE: None of the built in models use more than 12 parts at once. */
@@ -1662,6 +1703,7 @@ static void Model_RegisterDefaultModels(void) {
 	Model_RegisterTexture(&skeleton_tex);
 	Model_RegisterTexture(&spider_tex);
 	Model_RegisterTexture(&zombie_tex);
+	Model_RegisterTexture(&skinnedCube_tex);
 
 	Model_Register(HumanoidModel_GetInstance());
 	MakeModel(&human_model);
@@ -1681,6 +1723,7 @@ static void Model_RegisterDefaultModels(void) {
 	Model_Register(HeadModel_GetInstance());
 	Model_Register(SittingModel_GetInstance());
 	Model_Register(CorpseModel_GetInstance());
+	Model_Register(SkinnedCubeModel_GetInstance());
 }
 
 static void Models_Init(void) {
