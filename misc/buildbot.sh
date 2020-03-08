@@ -24,8 +24,8 @@
 # paths, change these as needed
 SOURCE_DIR=~/client
 WEB_CC=~/emscripten/emsdk/emscripten/tag-1.38.30/emcc
-MAC32_CC=/usr/bin/clang/osx32
-MAC64_CC=/usr/bin/clang/osx64
+MAC32_CC=~/osx/target/bin/o32-clang
+MAC64_CC=~/osx/target/bin/o64-clang
 WIN32_CC=i686-w64-mingw32-gcc
 WIN64_CC=x86_64-w64-mingw32-gcc
 
