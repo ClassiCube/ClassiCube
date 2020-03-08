@@ -1462,6 +1462,7 @@ static float BlockModel_GetEyeY(struct Entity* e) {
 	BlockID block = e->ModelBlock;
 	float minY    = Blocks.MinBB[block].Y;
 	float maxY    = Blocks.MaxBB[block].Y;
+	return (minY + maxY) / 2.0f;
 }
 
 static void BlockModel_GetSize(struct Entity* e) {
