@@ -1418,7 +1418,7 @@ void GeneratingScreen_Show(void) {
 *#########################################################################################################################*/
 static struct DisconnectScreen {
 	Screen_Body
-	TimeMS initTime;
+	double initTime;
 	cc_bool canReconnect, lastActive;
 	int lastSecsLeft;
 	struct ButtonWidget reconnect;
@@ -1436,38 +1436,25 @@ static struct Widget* disconnect_widgets[3] = {
 	(struct Widget*)&DisconnectScreen.reconnect
 };
 #define DISCONNECT_MAX_VERTICES (2 * TEXTWIDGET_MAX + BUTTONWIDGET_MAX)
-#define DISCONNECT_DELAY_MS 5000
+#define DISCONNECT_DELAY_SECS 5
 
-static void DisconnectScreen_ReconnectMessage(struct DisconnectScreen* s, String* msg) {
+static void DisconnectScreen_UpdateReconnect(struct DisconnectScreen* s) {
+	String msg; char msgBuffer[STRING_SIZE];
+	int elapsed, secsLeft;
+	String_InitArray(msg, msgBuffer);
+
 	if (s->canReconnect) {
-		int elapsedMS = (int)(DateTime_CurrentUTC_MS() - s->initTime);
-		int secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / MILLIS_PER_SEC;
+		elapsed  = (int)(Game.Time - s->initTime);
+		secsLeft = DISCONNECT_DELAY_SECS - elapsed;
 
 		if (secsLeft > 0) {
-			String_Format1(msg, "Reconnect in %i", &secsLeft);
+			String_Format1(&msg, "Reconnect in %i", &secsLeft);
 		} else {
-			String_AppendConst(msg, "Reconnect");
+			String_AppendConst(&msg, "Reconnect");
 		}
+		s->reconnect.disabled = secsLeft > 0;
 	}
-}
-
-static void DisconnectScreen_UpdateDelayLeft(struct DisconnectScreen* s, double delta) {
-	String msg; char msgBuffer[STRING_SIZE];
-	int elapsedMS, secsLeft;
-
-	elapsedMS = (int)(DateTime_CurrentUTC_MS() - s->initTime);
-	secsLeft  = (DISCONNECT_DELAY_MS - elapsedMS) / MILLIS_PER_SEC;
-	if (secsLeft < 0) secsLeft = 0;
-	if (s->lastSecsLeft == secsLeft && s->reconnect.active == s->lastActive) return;
-
-	String_InitArray(msg, msgBuffer);
-	DisconnectScreen_ReconnectMessage(s, &msg);
 	ButtonWidget_Set(&s->reconnect, &msg, &s->titleFont);
-
-	s->reconnect.disabled = secsLeft != 0;
-	s->lastSecsLeft = secsLeft;
-	s->lastActive   = s->reconnect.active;
-	s->dirty        = true;
 }
 
 static void DisconnectScreen_ContextLost(void* screen) {
@@ -1478,7 +1465,6 @@ static void DisconnectScreen_ContextLost(void* screen) {
 }
 
 static void DisconnectScreen_ContextRecreated(void* screen) {
-	String msg; char msgBuffer[STRING_SIZE];
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	Screen_CreateVb(screen);
 
@@ -1486,10 +1472,7 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 	Drawer2D_MakeFont(&s->messageFont, 16, FONT_STYLE_NORMAL);
 	TextWidget_Set(&s->title,   &s->titleStr,   &s->titleFont);
 	TextWidget_Set(&s->message, &s->messageStr, &s->messageFont);
-
-	String_InitArray(msg, msgBuffer);
-	DisconnectScreen_ReconnectMessage(s, &msg);
-	ButtonWidget_Set(&s->reconnect, &msg, &s->titleFont);
+	DisconnectScreen_UpdateReconnect(s);
 }
 
 static void DisconnectScreen_Init(void* screen) {
@@ -1506,15 +1489,27 @@ static void DisconnectScreen_Init(void* screen) {
 	/* NOTE: changing VSync can't be done within frame, causes crash on some GPUs */
 	Gfx_SetFpsLimit(Game_FpsLimit == FPS_LIMIT_VSYNC, 1000 / 5.0f);
 
-	s->initTime     = DateTime_CurrentUTC_MS();
-	s->lastSecsLeft = DISCONNECT_DELAY_MS / MILLIS_PER_SEC;
+	s->initTime     = Game.Time;
+	s->lastSecsLeft = DISCONNECT_DELAY_SECS;
 	s->widgets      = disconnect_widgets;
 	s->numWidgets   = s->canReconnect ? 3 : 2;
 }
 
 static void DisconnectScreen_Update(void* screen, double delta) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	if (s->canReconnect) DisconnectScreen_UpdateDelayLeft(s, delta);
+	int elapsed, secsLeft;
+
+	if (!s->canReconnect) return;
+	elapsed  = (int)(Game.Time - s->initTime);
+	secsLeft = DISCONNECT_DELAY_SECS - elapsed;
+
+	if (secsLeft < 0) secsLeft = 0;
+	if (s->lastSecsLeft == secsLeft && s->reconnect.active == s->lastActive) return;
+	DisconnectScreen_UpdateReconnect(s);
+
+	s->lastSecsLeft = secsLeft;
+	s->lastActive   = s->reconnect.active;
+	s->dirty        = true;
 }
 
 static void DisconnectScreen_Render(void* screen, double delta) {
