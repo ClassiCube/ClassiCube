@@ -1285,7 +1285,12 @@ static void Window_ToggleKey(XKeyEvent* keyEvent, cc_bool pressed) {
 
 	int key = MapNativeKey(keysym1);
 	if (!key) key = MapNativeKey(keysym2);
-	if (key)  Input_SetPressed(key, pressed);
+
+	if (key) {
+		Input_SetPressed(key, pressed);
+	} else {
+		Platform_Log2("Ignoring unknown key: (%i, %i)", &keysym1, &keysym2);
+	}
 }
 
 static Atom Window_GetSelectionProperty(XEvent* e) {
@@ -1961,9 +1966,11 @@ static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
 			if (res) Logger_Abort2(res, "Getting key button");
 
 			key = MapNativeKey(code);
-			if (!key) { Platform_Log1("Ignoring unmapped key %i", &code); return 0; }
-
-			Input_SetPressed(key, kind != kEventRawKeyUp);
+			if (key) {
+				Input_SetPressed(key, kind != kEventRawKeyUp);
+			} else {
+				Platform_Log1("Ignoring unknown key %i", &code);
+			}
 			return eventNotHandledErr;
 			
 		case kEventRawKeyModifiersChanged:
