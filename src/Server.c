@@ -306,7 +306,7 @@ static void MPConnection_BeginConnect(void) {
 	Server.Disconnected = false;
 
 	Socket_SetBlocking(net_socket, false);
-	net_connecting = true;
+	net_connecting     = true;
 	net_connectTimeout = DateTime_CurrentUTC_MS() + NET_TIMEOUT_MS;
 
 	res = Socket_Connect(net_socket, &Server.IP, Server.Port);

@@ -23,9 +23,6 @@ struct DateTime {
 #define SECS_PER_MIN 60
 #define SECS_PER_HOUR (60 * 60)
 #define SECS_PER_DAY (60 * 60 * 24)
-#define MINS_PER_HOUR 60
-#define HOURS_PER_DAY 24
-#define MILLIS_PER_DAY (1000 * 60 * 60 * 24)
 
 CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char* const* names, int namesCount);
 /* Returns whether value starts with http:// or https:// */

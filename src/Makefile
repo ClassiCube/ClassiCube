@@ -44,7 +44,7 @@ endif
 
 ifeq ($(PLAT),freebsd)
 CC=clang
-CFLAGS=-g -pipe -rdynamic -I /usr/local/include
+CFLAGS=-g -pipe -rdynamic -I /usr/local/include -fno-math-errno
 LDFLAGS=-L /usr/local/lib
 LIBS=-lcurl -lexecinfo -lopenal -lGL -lX11 -lm -lpthread
 endif

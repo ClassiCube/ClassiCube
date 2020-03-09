@@ -410,7 +410,7 @@ static cc_result ClassicPatcher_ExtractFiles(struct Stream* s) {
 }
 
 /* the x,y of tiles in terrain.png which get patched */
-static struct TilePatch { const char* name; cc_uint8 x1,y1, x2,y2; } modern_tiles[12] = {
+static const struct TilePatch { const char* name; cc_uint8 x1,y1, x2,y2; } modern_tiles[12] = {
 	{ "assets/minecraft/textures/blocks/sandstone_bottom.png", 9,3 },
 	{ "assets/minecraft/textures/blocks/sandstone_normal.png", 9,2 },
 	{ "assets/minecraft/textures/blocks/sandstone_top.png", 9,1, },
@@ -425,7 +425,7 @@ static struct TilePatch { const char* name; cc_uint8 x1,y1, x2,y2; } modern_tile
 	{ "assets/minecraft/textures/blocks/wool_colored_pink.png",  0,5 }
 };
 
-CC_NOINLINE static struct TilePatch* ModernPatcher_GetTile(const String* path) {
+CC_NOINLINE static const struct TilePatch* ModernPatcher_GetTile(const String* path) {
 	int i;
 	for (i = 0; i < Array_Elems(modern_tiles); i++) {
 		if (String_CaselessEqualsConst(path, modern_tiles[i].name)) return &modern_tiles[i];
@@ -433,7 +433,7 @@ CC_NOINLINE static struct TilePatch* ModernPatcher_GetTile(const String* path) {
 	return NULL;
 }
 
-static cc_result ModernPatcher_PatchTile(struct Stream* data, struct TilePatch* tile) {
+static cc_result ModernPatcher_PatchTile(struct Stream* data, const struct TilePatch* tile) {
 	Bitmap bmp;
 	cc_result res;
 
@@ -480,7 +480,7 @@ static cc_result ModernPatcher_MakeAnimations(struct Stream* s, struct Stream* d
 
 static cc_result ModernPatcher_ProcessEntry(const String* path, struct Stream* data, struct ZipState* state) {
 	struct ResourceTexture* entry;
-	struct TilePatch* tile;
+	const struct TilePatch* tile;
 	String name;
 
 	if (String_CaselessEqualsConst(path, "assets/minecraft/textures/environment/snow.png")
