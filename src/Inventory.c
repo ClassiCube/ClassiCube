@@ -76,20 +76,11 @@ static const cc_uint8 classicInventory[42] = {
 	BLOCK_INDIGO, BLOCK_VIOLET, BLOCK_MAGENTA, BLOCK_PINK, BLOCK_BLACK, BLOCK_GRAY, BLOCK_WHITE, BLOCK_COAL_ORE, BLOCK_IRON_ORE,
 	BLOCK_GOLD_ORE, BLOCK_IRON, BLOCK_GOLD, BLOCK_BOOKSHELF, BLOCK_TNT, BLOCK_OBSIDIAN,
 };
-static const cc_uint8 classicHacksInventory[49] = {
-	BLOCK_STONE, BLOCK_GRASS, BLOCK_COBBLE, BLOCK_BRICK, BLOCK_DIRT, BLOCK_WOOD, BLOCK_BEDROCK, BLOCK_WATER, BLOCK_STILL_WATER, BLOCK_LAVA,
-	BLOCK_STILL_LAVA, BLOCK_LOG, BLOCK_LEAVES, BLOCK_GLASS, BLOCK_SLAB, BLOCK_MOSSY_ROCKS, BLOCK_SAPLING, BLOCK_DANDELION, BLOCK_ROSE, BLOCK_BROWN_SHROOM,
-	BLOCK_RED_SHROOM, BLOCK_SAND, BLOCK_GRAVEL, BLOCK_SPONGE, BLOCK_RED, BLOCK_ORANGE, BLOCK_YELLOW, BLOCK_LIME, BLOCK_GREEN, BLOCK_TEAL,
-	BLOCK_AQUA, BLOCK_CYAN, BLOCK_BLUE, BLOCK_INDIGO, BLOCK_VIOLET, BLOCK_MAGENTA, BLOCK_PINK, BLOCK_BLACK, BLOCK_GRAY, BLOCK_WHITE,
-	BLOCK_COAL_ORE, BLOCK_IRON_ORE, BLOCK_GOLD_ORE, BLOCK_DOUBLE_SLAB, BLOCK_IRON, BLOCK_GOLD, BLOCK_BOOKSHELF, BLOCK_TNT, BLOCK_OBSIDIAN,
-};
 
 static BlockID Inventory_DefaultMapping(int slot) {
-	if (Game_PureClassic) {
-		if (slot < 9 * 4 + 6)  return classicInventory[slot];
-	} else if (Game_ClassicMode) {
-		if (slot < 10 * 4 + 9) return classicHacksInventory[slot];
-	} else if (slot < BLOCK_MAX_CPE) {
+	if (Game_ClassicMode) {
+		if (slot < 9 * 4 + 6) return classicInventory[slot];
+	}else if (slot < BLOCK_MAX_CPE) {
 		return (BlockID)(slot + 1);
 	}
 	return BLOCK_AIR;
@@ -134,6 +125,7 @@ static void Inventory_Reset(void) {
 static void Inventory_Init(void) {
 	BlockID* inv = Inventory.Table;
 	Inventory_Reset();
+	Inventory.BlocksPerRow = Game_ClassicMode ? 9 : 10;
 	
 	inv[0] = BLOCK_STONE;  inv[1] = BLOCK_COBBLE; inv[2] = BLOCK_BRICK;
 	inv[3] = BLOCK_DIRT;   inv[4] = BLOCK_WOOD;   inv[5] = BLOCK_LOG;

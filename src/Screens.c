@@ -1070,7 +1070,7 @@ static void InventoryScreen_Init(void* screen) {
 	
 	TableWidget_Create(&s->table);
 	s->table.font         = &s->font;
-	s->table.blocksPerRow = Game_PureClassic ? 9 : 10;
+	s->table.blocksPerRow = Inventory.BlocksPerRow;
 	TableWidget_RecreateBlocks(&s->table);
 
 	/* Can't immediately move to selected here, because cursor grabbed  */

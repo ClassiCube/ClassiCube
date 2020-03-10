@@ -25,6 +25,8 @@ CC_VAR extern struct _InventoryData {
 	int Offset;
 	/* Whether the user is allowed to change selected/held block. */
 	cc_bool CanChangeSelected;
+	/* Number of blocks in each row in inventory menu. */
+	cc_uint8 BlocksPerRow;
 } Inventory;
 
 /* Gets the block at the nth index in the current hotbar. */
