@@ -133,3 +133,13 @@ Further information (e.g. portablity, style) for the game's source code can be f
 * If the server has disabled hacks, key combinations such as fly and speed will not do anything.
 * To see the list of built in commands, type `/client`.
 * To see help for a given built in command, type `/client help <command name>`.
+
+
+#### Open source technologies
+
+* curl - HTTP/HTTPS for linux and macOS
+* FreeType - Font handling for all platforms
+* GCC - Compiles client for linux
+* MinGW - Compiles client for windows
+* Clang - Compiles client for macOS
+* Emscripten - Compiles client for web

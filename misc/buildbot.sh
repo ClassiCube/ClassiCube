@@ -30,7 +30,7 @@ WIN32_CC=i686-w64-mingw32-gcc
 WIN64_CC=x86_64-w64-mingw32-gcc
 
 # to simplify stuff
-ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -w"
+ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -Qn -w"
 WIN32_FLAGS="-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN"
 WIN64_FLAGS="-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN"
 LINUX_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_X11ICON"
