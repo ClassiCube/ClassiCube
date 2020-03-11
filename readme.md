@@ -135,7 +135,7 @@ Further information (e.g. portablity, style) for the game's source code can be f
 * To see help for a given built in command, type `/client help <command name>`.
 
 
-#### Open source technologies
+## Open source technologies
 
 * curl - HTTP/HTTPS for linux and macOS
 * FreeType - Font handling for all platforms
