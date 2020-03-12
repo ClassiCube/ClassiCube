@@ -33,10 +33,10 @@ echo "Compiling nix64"
 $NIX64_PATH $FILES -I ~/client/src/ -I ./src/ -o ${PLUGIN}_nix64.so $FLAGS $NIX_FLAGS
 
 echo "Compiling mac32"
-$MAC32_PATH $FILES -I ~/client/src/ -I ./src/ -o ${PLUGIN}_osx32.dylib $FLAGS $MAC_FLAGS
+$MAC32_PATH $FILES -I ~/client/src/ -I ./src/ -o ${PLUGIN}_mac32.dylib $FLAGS $MAC_FLAGS
 
 echo "Compiling mac64"
-$MAC64_PATH $FILES -I ~/client/src/ -I ./src/ -o ${PLUGIN}_osx64.dylib $FLAGS $MAC_FLAGS
+$MAC64_PATH $FILES -I ~/client/src/ -I ./src/ -o ${PLUGIN}_mac64.dylib $FLAGS $MAC_FLAGS
 
 echo "Compiling win32"
 rm ClassiCube.exe ClassiCube.def
