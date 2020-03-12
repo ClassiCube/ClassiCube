@@ -533,6 +533,11 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_MOUSEMOVE:
+		/* Set before position change, in case mouse buttons changed when outside window */
+		Input_SetPressed(KEY_LMOUSE, (wParam & 0x01) != 0);
+		Input_SetPressed(KEY_RMOUSE, (wParam & 0x02) != 0);
+		Input_SetPressed(KEY_MMOUSE, (wParam & 0x10) != 0);
+		/* TODO: do we need to set XBUTTON1/XBUTTON2 here */
 		Pointer_SetPosition(0, LOWORD(lParam), HIWORD(lParam));
 		break;
 
