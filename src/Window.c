@@ -981,6 +981,9 @@ static int MapNativeKey(KeySym key) {
 	if (key >= XK_F1 && key <= XK_F35)    { return KEY_F1  + (key - XK_F1); }
 	if (key >= XK_KP_0 && key <= XK_KP_9) { return KEY_KP0 + (key - XK_KP_0); }
 
+	/* Keys on a chromebook reported by a user */
+	if (key == 0x8000027) return KEY_QUOTE;
+
 	switch (key) {
 		case XK_Escape: return KEY_ESCAPE;
 		case XK_Return: return KEY_ENTER;

@@ -44,7 +44,8 @@ cc_result GZipHeader_Read(struct Stream* s, struct GZipHeader* header) {
 		header->State++;
 
 	case GZIP_STATE_FLAGS:
-		Header_ReadU8(header->Flags);
+		Header_ReadU8(tmp);
+		header->Flags = tmp;
 		if (header->Flags & 0x04) return GZIP_ERR_FLAGS;
 		header->State++;
 
