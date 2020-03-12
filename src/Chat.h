@@ -24,14 +24,14 @@ extern String Chat_Status[4], Chat_BottomRight[3], Chat_ClientStatus[2], Chat_An
 /* All chat messages received. */
 extern StringsBuffer Chat_Log;
 /* Time each chat message was received at. */
-extern TimeMS* Chat_LogTime;
+extern double* Chat_LogTime;
 /* All chat entered by the user. */
 extern StringsBuffer Chat_InputLog;
 /* Whether chat messages are logged to disc. */
 extern cc_bool Chat_Logging;
 
 /* Time at which last announcement message was received. */
-extern TimeMS Chat_AnnouncementReceived;
+extern double Chat_AnnouncementReceived;
 
 struct ChatCommand;
 /* Represents a client-side command/action. */

@@ -621,7 +621,7 @@ static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {
 
 static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 	struct Texture tex;
-	TimeMS now;
+	double now;
 	int i, logIdx;
 
 	ChatScreen_UpdateTexpackStatus(s);
@@ -629,7 +629,7 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 	Elem_Render(&s->bottomRight, delta);
 	Elem_Render(&s->clientStatus, delta);
 
-	now = DateTime_CurrentUTC_MS();
+	now = Game.Time;
 	if (s->grabsInput) {
 		Elem_Render(&s->chat, delta);
 	} else {
@@ -640,13 +640,13 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 			if (!tex.ID) continue;
 
 			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
-			if (Chat_LogTime[logIdx] + (10 * 1000) >= now) Texture_Render(&tex);
+			if (Chat_LogTime[logIdx] + 10 >= now) Texture_Render(&tex);
 		}
 	}
 
 	/* Destroy announcement texture before even rendering it at all, */
 	/* otherwise changing texture pack shows announcement for one frame */
-	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + (5 * 1000)) {
+	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + 5) {
 		Elem_TryFree(&s->announcement);
 	}
 	Elem_Render(&s->announcement, delta);

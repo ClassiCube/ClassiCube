@@ -24,7 +24,7 @@ String Chat_BottomRight[3]  = { String_FromArray(msgs[4]), String_FromArray(msgs
 String Chat_ClientStatus[2] = { String_FromArray(msgs[7]), String_FromArray(msgs[8]) };
 
 String Chat_Announcement = String_FromArray(msgs[9]);
-TimeMS Chat_AnnouncementReceived;
+double Chat_AnnouncementReceived;
 StringsBuffer Chat_Log, Chat_InputLog;
 cc_bool Chat_Logging;
 
@@ -32,16 +32,16 @@ cc_bool Chat_Logging;
 *-------------------------------------------------------Chat logging------------------------------------------------------*
 *#########################################################################################################################*/
 #define CHAT_LOGTIMES_DEF_ELEMS 256
-static TimeMS defaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
+static double defaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
 static int logTimesCapacity = CHAT_LOGTIMES_DEF_ELEMS, logTimesCount;
-TimeMS* Chat_LogTime = defaultLogTimes;
+double* Chat_LogTime = defaultLogTimes;
 
 static void AppendChatLogTime(void) {
-	TimeMS now = DateTime_CurrentUTC_MS();
+	double now = Game.Time;
 
 	if (logTimesCount == logTimesCapacity) {
 		Utils_Resize((void**)&Chat_LogTime, &logTimesCapacity,
-					sizeof(TimeMS), CHAT_LOGTIMES_DEF_ELEMS, 512);
+					sizeof(double), CHAT_LOGTIMES_DEF_ELEMS, 512);
 	}
 	Chat_LogTime[logTimesCount++] = now;
 }
@@ -201,7 +201,7 @@ void Chat_AddOf(const String* text, int msgType) {
 		String_Copy(&Chat_BottomRight[msgType - MSG_TYPE_BOTTOMRIGHT_1], text);
 	} else if (msgType == MSG_TYPE_ANNOUNCEMENT) {
 		String_Copy(&Chat_Announcement, text);
-		Chat_AnnouncementReceived = DateTime_CurrentUTC_MS();
+		Chat_AnnouncementReceived = Game.Time;
 	} else if (msgType >= MSG_TYPE_CLIENTSTATUS_1 && msgType <= MSG_TYPE_CLIENTSTATUS_2) {
 		String_Copy(&Chat_ClientStatus[msgType - MSG_TYPE_CLIENTSTATUS_1], text);
 	}
