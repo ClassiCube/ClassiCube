@@ -2924,8 +2924,6 @@ static EM_BOOL OnTouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) 
 
 static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
 	Window_Focused = type == EMSCRIPTEN_EVENT_FOCUS;
-	if (!Window_Focused) Input_Clear();
-
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 	return true;
 }
