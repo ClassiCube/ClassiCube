@@ -95,6 +95,7 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <kernel/image.h>
 #elif defined CC_BUILD_WEB
 #include <emscripten.h>
+#include "Chat.h"
 #endif
 
 
@@ -1586,7 +1587,16 @@ void Platform_Init(void) {
 }
 #elif defined CC_BUILD_WEB
 void Platform_Init(void) {
+	char tmp[64+1] = { 0 };
 	EM_ASM( Module['websocket']['subprotocol'] = 'ClassiCube'; );
+
+	/* Check if an error when pre-loading indexed DB */
+	EM_ASM_({ if (window.cc_idbErr) stringToUTF8(window.cc_idbErr, $0, 64); }, tmp);
+
+	if (!tmp[0]) return;
+	Chat_Add1("&cError preloading IndexedDB: %c", tmp);
+	Chat_AddRaw("&cPreviously saved settings/maps will be lost");
+
 	/* NOTE: You must load IndexedDB before main() */
 	/* (because the callback to FS.synfc is asynchronous) */
 	/* If you don't, you'll get errors later trying to sync local to remote */
@@ -1597,7 +1607,7 @@ void Platform_Init(void) {
 		FS.mkdir('/classicube');
 		FS.mount(IDBFS, {}, '/classicube');
 		FS.syncfs(true, function(err) { 
-			assert(!err); 
+			if (err) window.cc_idbErr = err;
 			removeRunDependency('load-idb');
 		})
 	}

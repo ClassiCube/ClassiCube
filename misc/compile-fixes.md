@@ -43,7 +43,7 @@ to
         FS.mkdir('/classicube');
         FS.mount(IDBFS, {}, '/classicube');
         FS.syncfs(true, function(err) { 
-            assert(!err); 
+            if (err) window.cc_idbErr = err; 
             removeRunDependency('load-idb');
         })
       }
