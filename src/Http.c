@@ -370,6 +370,13 @@ static void Http_FinishedAsync(emscripten_fetch_t* fetch) {
 	req->statusCode    = fetch->status;
 	req->contentLength = fetch->totalBytes;
 
+	/* Remove error handler to avoid potential infinite recurison */
+	/*   Sometimes calling emscripten_fetch_close calls fetch->__attributes.onerror */
+	/*   But attr.onerror is actually Http_FinishedAsync, so this will end up doing */
+	/*     Http_FinishedAsync --> emscripten_fetch_close --> Http_FinishedAsync ..  */
+	/*   .. and eventually the browser kills it from too much recursion */
+	fetch->__attributes.onerror = NULL;
+
 	/* data needs to persist beyond closing of fetch data */
 	fetch->data = NULL;
 	emscripten_fetch_close(fetch);
