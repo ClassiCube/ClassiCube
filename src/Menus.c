@@ -475,6 +475,7 @@ static struct PauseScreen {
 	const struct SimpleButtonDesc* descs;
 	struct ButtonWidget buttons[6], quit, back;
 } PauseScreen_Instance;
+#define PAUSE_MAX_VERTICES (8 * BUTTONWIDGET_MAX)
 
 static void PauseScreen_Quit(void* a, void* b) { Window_Close(); }
 static void PauseScreen_Game(void* a, void* b) { Gui_Remove((struct Screen*)&PauseScreen_Instance); }
@@ -483,12 +484,14 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	if (Gui_ClassicMenu) return;
 	s->buttons[4].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
+	s->dirty = true;
 }
 
 static void PauseScreen_ContextRecreated(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	struct FontDesc titleFont;
 
+	Screen_CreateVb(screen);
 	Menu_MakeTitleFont(&titleFont);
 	Menu_SetButtons(s->buttons, &titleFont, s->descs, s->numWidgets - 2);
 
@@ -502,8 +505,6 @@ static void PauseScreen_ContextRecreated(void* screen) {
 	PauseScreen_CheckHacksAllowed(s);
 	Font_Free(&titleFont);
 }
-
-static void PauseScreen_BuildMesh(void* screen) { }
 
 static void PauseScreen_Init(void* screen) {
 	static struct Widget* widgets[8];
@@ -526,7 +527,8 @@ static void PauseScreen_Init(void* screen) {
 		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
 	};
 
-	s->widgets = widgets;
+	s->widgets     = widgets;
+	s->maxVertices = PAUSE_MAX_VERTICES;
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 
 	if (Gui_ClassicMenu) {
@@ -553,11 +555,11 @@ static void PauseScreen_Free(void* screen) {
 }
 
 static const struct ScreenVTABLE PauseScreen_VTABLE = {
-	PauseScreen_Init,  Screen_NullUpdate, PauseScreen_Free, 
-	MenuScreen_Render, PauseScreen_BuildMesh,
-	Screen_InputDown,  Screen_TInput,     Screen_TKeyPress, Screen_TText,
-	Menu_PointerDown,  Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,     Screen_ContextLost, PauseScreen_ContextRecreated
+	PauseScreen_Init,   Screen_NullUpdate, PauseScreen_Free, 
+	MenuScreen_Render2, Screen_BuildMesh,
+	Screen_InputDown,   Screen_TInput,     Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,   Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
+	Screen_Layout,      Screen_ContextLost, PauseScreen_ContextRecreated
 };
 void PauseScreen_Show(void) {
 	struct PauseScreen* s = &PauseScreen_Instance;
@@ -3452,10 +3454,10 @@ static void TouchMoreScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE TouchMoreScreen_VTABLE = {
 	TouchMoreScreen_Init, Screen_NullUpdate, Screen_NullFunc,
-	MenuScreen_Render,     Screen_BuildMesh,
-	Screen_InputDown,      Screen_TInput,     Screen_TKeyPress, Screen_TText,
-	Menu_PointerDown,      Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,         Screen_ContextLost, TouchMoreScreen_ContextRecreated
+	MenuScreen_Render2,   Screen_BuildMesh,
+	Screen_InputDown,     Screen_TInput,     Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,     Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
+	Screen_Layout,        Screen_ContextLost, TouchMoreScreen_ContextRecreated
 };
 void TouchMoreScreen_Show(void) {
 	struct TouchMoreScreen* s = &TouchMoreScreen;
