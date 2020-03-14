@@ -1721,6 +1721,7 @@ static struct KeyBindingsScreen {
 	struct ButtonWidget back, left, right;
 	struct ButtonWidget buttons[12];
 } KeyBindingsScreen_Instance;
+#define KEYBINDINGS_MAX_VERTICES (15 * BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
 
 static void KeyBindingsScreen_Update(struct KeyBindingsScreen* s, int i) {
 	String text; char textBuffer[STRING_SIZE];
@@ -1770,6 +1771,7 @@ static void KeyBindingsScreen_ContextRecreated(void* screen) {
 	struct FontDesc textFont;
 	int i;
 
+	Screen_CreateVb(screen);
 	Menu_MakeTitleFont(&s->titleFont);
 	Menu_MakeBodyFont(&textFont);
 	for (i = 0; i < s->bindsCount; i++) { KeyBindingsScreen_Update(s, i); }
@@ -1783,8 +1785,6 @@ static void KeyBindingsScreen_ContextRecreated(void* screen) {
 	ButtonWidget_SetConst(&s->left,  "<", &s->titleFont);
 	ButtonWidget_SetConst(&s->right, ">", &s->titleFont);
 }
-
-static void KeyBindingsScreen_BuildMesh(void* screen) { }
 
 static void KeyBindingsScreen_InitWidgets(struct KeyBindingsScreen* s, int y, int arrowsY, int leftLength, int btnWidth, const char* title) {
 	int origin, xOffset, i, xDir;
@@ -1823,16 +1823,17 @@ static void KeyBindingsScreen_Init(void* screen) {
 	s->numWidgets = s->bindsCount + 5;
 	s->curI       = -1;
 
-	s->leftPage  = NULL;
-	s->rightPage = NULL;
-	s->titleText = NULL;
-	s->msgText   = "";
+	s->leftPage    = NULL;
+	s->rightPage   = NULL;
+	s->titleText   = NULL;
+	s->msgText     = "";
+	s->maxVertices = KEYBINDINGS_MAX_VERTICES;
 	s->DoInit(s);
 }
 
 static const struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
 	KeyBindingsScreen_Init,    Screen_NullUpdate, Screen_NullFunc,  
-	MenuScreen_Render,         KeyBindingsScreen_BuildMesh,
+	MenuScreen_Render2,        Screen_BuildMesh,
 	KeyBindingsScreen_KeyDown, Screen_TInput,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,          Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,             KeyBindingsScreen_ContextLost, KeyBindingsScreen_ContextRecreated
