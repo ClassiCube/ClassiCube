@@ -240,4 +240,10 @@ struct Texture {
 	cc_int16 X, Y; cc_uint16 Width, Height;
 	TextureRec uv;
 };
+/* Contains the information to describe a 2D textured quad. */
+struct Texture2 {
+	GfxResourceID ID;
+	cc_uint16 Width, Height;
+	float u2, v2;
+};
 #endif

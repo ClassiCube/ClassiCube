@@ -127,6 +127,14 @@ void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol col) {
 	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, texVerts, 4);
 }
 
+void Gfx_Draw2DTexture2(const struct Texture2* tex, int x, int y, PackedCol col) {
+	VertexP3fT2fC4b texVerts[4];
+	VertexP3fT2fC4b* ptr = texVerts;
+	Gfx_Make2DQuad2(tex, x, y, col, &ptr);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, texVerts, 4);
+}
+
 void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
 	float x1 = (float)tex->X, x2 = (float)(tex->X + tex->Width);
 	float y1 = (float)tex->Y, y2 = (float)(tex->Y + tex->Height);
@@ -144,6 +152,17 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2fC4b** 
 	v->X = x2; v->Y = y2; v->Z = 0; v->Col = col; v->U = tex->uv.U2; v->V = tex->uv.V2; v++;
 	v->X = x1; v->Y = y2; v->Z = 0; v->Col = col; v->U = tex->uv.U1; v->V = tex->uv.V2; v++;
 	*vertices = v;
+}
+
+void Gfx_Make2DQuad2(const struct Texture2* tex, int x, int y, PackedCol col, VertexP3fT2fC4b** vertices) {
+	struct Texture tmp;
+	tmp.ID = tex->ID;
+	tmp.X  = x; tmp.Y = y;
+
+	tmp.Width = tex->Width; tmp.Height = tex->Height;
+	tmp.uv.U1 = 0; tmp.uv.U2 = tex->u2;
+	tmp.uv.V1 = 0; tmp.uv.V2 = tex->v2;
+	Gfx_Make2DQuad(&tmp, col, vertices);
 }
 
 static cc_bool gfx_hadFog;
