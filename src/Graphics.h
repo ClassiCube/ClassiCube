@@ -232,5 +232,6 @@ void Gfx_RestoreAlphaState(cc_uint8 draw);
 /* Binds then renders the given texture. */
 void Texture_Render(const struct Texture* tex);
 /* Binds then renders the given texture. */
-void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeCol);
+void Texture_RenderShaded(const struct Texture* tex, PackedCol col);
+void Texture_RenderShaded2(const struct Texture2* tex, int x, int y, PackedCol col);
 #endif

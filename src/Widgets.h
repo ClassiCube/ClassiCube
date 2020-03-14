@@ -12,7 +12,7 @@ struct FontDesc;
 /* A text label. */
 struct TextWidget {
 	Widget_Body
-	struct Texture tex;
+	struct Texture2 tex;
 	PackedCol col;
 };
 #define TEXTWIDGET_MAX 4
@@ -31,7 +31,7 @@ typedef void (*Button_Set)(const String* raw);
 /* A labelled button that can be clicked on. */
 struct ButtonWidget {
 	Widget_Body
-	struct Texture tex;
+	struct Texture2 tex;
 	int minWidth;
 	const char* optName;
 	Button_Get GetValue;

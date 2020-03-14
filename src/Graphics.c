@@ -290,9 +290,14 @@ void Texture_Render(const struct Texture* tex) {
 	Gfx_Draw2DTexture(tex, white);
 }
 
-void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeCol) {
+void Texture_RenderShaded(const struct Texture* tex, PackedCol col) {
 	Gfx_BindTexture(tex->ID);
-	Gfx_Draw2DTexture(tex, shadeCol);
+	Gfx_Draw2DTexture(tex, col);
+}
+
+void Texture_RenderShaded2(const struct Texture2* tex, int x, int y, PackedCol col) {
+	Gfx_BindTexture(tex->ID);
+	Gfx_Draw2DTexture2(tex, x, y, col);
 }
 
 

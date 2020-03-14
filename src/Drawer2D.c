@@ -317,6 +317,25 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 	Mem_Free(bmp.Scan0);
 }
 
+void Drawer2D_MakeTextTexture2(struct Texture2* tex, struct DrawTextArgs* args) {
+	static struct Texture2 empty = { 0, 0,0, 1,1 };
+	int width, height;
+	Bitmap bmp;
+	/* pointless to draw anything when context is lost */
+	if (Gfx.LostContext) { *tex = empty; return; }
+
+	width  = Drawer2D_TextWidth(args);
+	if (!width) { *tex = empty; return; }
+	height = Drawer2D_TextHeight(args);
+
+	Bitmap_AllocateClearedPow2(&bmp, width, height);
+	{
+		Drawer2D_DrawText(&bmp, args, 0, 0);
+		Drawer2D_MakeTexture2(tex, &bmp, width, height);
+	}
+	Mem_Free(bmp.Scan0);
+}
+
 void Drawer2D_MakeTexture(struct Texture* tex, Bitmap* bmp, int width, int height) {
 	tex->ID = Gfx_CreateTexture(bmp, false, false);
 	tex->X  = 0; tex->Width  = width;
@@ -325,6 +344,13 @@ void Drawer2D_MakeTexture(struct Texture* tex, Bitmap* bmp, int width, int heigh
 	tex->uv.U1 = 0.0f; tex->uv.V1 = 0.0f;
 	tex->uv.U2 = (float)width  / (float)bmp->Width;
 	tex->uv.V2 = (float)height / (float)bmp->Height;
+}
+
+void Drawer2D_MakeTexture2(struct Texture2* tex, Bitmap* bmp, int width, int height) {
+	tex->ID = Gfx_CreateTexture(bmp, false, false);
+	tex->Width = width; tex->Height = height;
+	tex->u2 = (float)width  / (float)bmp->Width;
+	tex->v2 = (float)height / (float)bmp->Height;
 }
 
 cc_bool Drawer2D_ValidColCodeAt(const String* text, int i) {

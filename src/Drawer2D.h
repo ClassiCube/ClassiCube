@@ -74,10 +74,12 @@ int Drawer2D_FontHeight(const struct FontDesc* font, cc_bool useShadow);
 /* Creates a texture consisting only of the given text drawn onto it. */
 /* NOTE: The returned texture is always padded up to nearest power of two dimensions. */
 CC_API void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args);
+CC_API void Drawer2D_MakeTextTexture2(struct Texture2* tex, struct DrawTextArgs* args);
 /* Creates a texture consisting of the pixels from the given bitmap. */
 /* NOTE: bmp must always have power of two dimensions. */
 /* width/height specifies what region of the texture actually should be drawn. */
 CC_API void Drawer2D_MakeTexture(struct Texture* tex, Bitmap* bmp, int width, int height);
+CC_API void Drawer2D_MakeTexture2(struct Texture2* tex, Bitmap* bmp, int width, int height);
 
 /* Returns whether the given colour code is used/valid. */
 /* NOTE: This can change if the server defines custom colour codes. */

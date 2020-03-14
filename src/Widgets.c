@@ -30,7 +30,7 @@ static int Widget_MouseScroll(void* elem, float delta) { return false; }
 *#########################################################################################################################*/
 static void TextWidget_Render(void* widget, double delta) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	if (w->tex.ID) Texture_RenderShaded(&w->tex, w->col);
+	if (w->tex.ID) Texture_RenderShaded2(&w->tex, w->x, w->y, w->col);
 }
 
 static void TextWidget_Free(void* widget) {
@@ -38,15 +38,9 @@ static void TextWidget_Free(void* widget) {
 	Gfx_DeleteTexture(&w->tex.ID);
 }
 
-static void TextWidget_Reposition(void* widget) {
-	struct TextWidget* w = (struct TextWidget*)widget;
-	Widget_CalcPosition(w);
-	w->tex.X = w->x; w->tex.Y = w->y;
-}
-
 static void TextWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
 	struct TextWidget* w = (struct TextWidget*)widget;
-	Gfx_Make2DQuad(&w->tex, w->col, vertices);
+	Gfx_Make2DQuad2(&w->tex, w->x, w->y, w->col, vertices);
 }
 
 static int TextWidget_Render2(void* widget, int offset) {
@@ -59,7 +53,7 @@ static int TextWidget_Render2(void* widget, int offset) {
 }
 
 static const struct WidgetVTABLE TextWidget_VTABLE = {
-	TextWidget_Render, TextWidget_Free, TextWidget_Reposition,
+	TextWidget_Render, TextWidget_Free, Widget_CalcPosition,
 	Widget_Key,        Widget_Key,      Widget_MouseScroll,
 	Widget_Pointer,    Widget_Pointer,  Widget_PointerMove,
 	TextWidget_BuildMesh, TextWidget_Render2
@@ -80,7 +74,7 @@ void TextWidget_Set(struct TextWidget* w, const String* text, struct FontDesc* f
 		w->tex.Height = Drawer2D_FontHeight(font, true);
 	} else {	
 		DrawTextArgs_Make(&args, text, font, true);
-		Drawer2D_MakeTextTexture(&w->tex, &args);
+		Drawer2D_MakeTextTexture2(&w->tex, &args);
 	}
 
 	w->width = w->tex.Width; w->height = w->tex.Height;
@@ -108,14 +102,6 @@ static void ButtonWidget_Free(void* widget) {
 	Gfx_DeleteTexture(&w->tex.ID);
 }
 
-static void ButtonWidget_Reposition(void* widget) {
-	struct ButtonWidget* w = (struct ButtonWidget*)widget;
-	Widget_CalcPosition(w);
-	
-	w->tex.X = w->x + (w->width  / 2 - w->tex.Width  / 2);
-	w->tex.Y = w->y + (w->height / 2 - w->tex.Height / 2);
-}
-
 static void ButtonWidget_Render(void* widget, double delta) {
 	PackedCol normCol     = PackedCol_Make(224, 224, 224, 255);
 	PackedCol activeCol   = PackedCol_Make(255, 255, 160, 255);
@@ -125,6 +111,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
 	struct Texture back;	
 	float scale;
+	int x, y;
 		
 	back = w->active ? btnSelectedTex : btnShadowTex;
 	if (w->disabled) back = btnDisabledTex;
@@ -152,8 +139,11 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	}
 
 	if (!w->tex.ID) return;
+	x = w->x + (w->width  / 2 - w->tex.Width  / 2);
+	y = w->y + (w->height / 2 - w->tex.Height / 2);
+
 	col = w->disabled ? disabledCol : (w->active ? activeCol : normCol);
-	Texture_RenderShaded(&w->tex, col);
+	Texture_RenderShaded2(&w->tex, x, y, col);
 }
 
 static void ButtonWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
@@ -165,6 +155,7 @@ static void ButtonWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
 	struct Texture back;	
 	float scale;
+	int x, y;
 		
 	back = w->active ? btnSelectedTex : btnShadowTex;
 	if (w->disabled) back = btnDisabledTex;
@@ -189,8 +180,10 @@ static void ButtonWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
 		Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
 	}
 
+	x   = w->x + (w->width  / 2 - w->tex.Width  / 2);
+	y   = w->y + (w->height / 2 - w->tex.Height / 2);
 	col = w->disabled ? disabledCol : (w->active ? activeCol : normCol);
-	Gfx_Make2DQuad(&w->tex, col, vertices);
+	Gfx_Make2DQuad2(&w->tex, x, y, col, vertices);
 }
 
 static int ButtonWidget_Render2(void* widget, int offset) {
@@ -207,7 +200,7 @@ static int ButtonWidget_Render2(void* widget, int offset) {
 }
 
 static const struct WidgetVTABLE ButtonWidget_VTABLE = {
-	ButtonWidget_Render, ButtonWidget_Free, ButtonWidget_Reposition,
+	ButtonWidget_Render, ButtonWidget_Free, Widget_CalcPosition,
 	Widget_Key,	         Widget_Key,        Widget_MouseScroll,
 	Widget_Pointer,      Widget_Pointer,    Widget_PointerMove,
 	ButtonWidget_BuildMesh, ButtonWidget_Render2
@@ -231,7 +224,7 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, struct FontDes
 		w->tex.Height = Drawer2D_FontHeight(font, true);
 	} else {
 		DrawTextArgs_Make(&args, text, font, true);
-		Drawer2D_MakeTextTexture(&w->tex, &args);
+		Drawer2D_MakeTextTexture2(&w->tex, &args);
 	}
 
 	w->width  = max(w->tex.Width,  w->minWidth);
