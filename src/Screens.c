@@ -1906,6 +1906,9 @@ static void TablistScreen_Layout(void* screen) {
 		TablistScreen_SetColumnPos(s, i, x, y);
 		x += TablistScreen_GetColumnWidth(s, i);
 	}
+
+	s->title.yOffset = s->y - (s->title.height + 5);
+	Widget_Layout(&s->title);
 }
 
 static void TablistScreen_Add(struct TablistScreen* s, int id) {
@@ -1976,17 +1979,14 @@ static void TablistScreen_Render(void* screen, double delta) {
 	struct TextWidget* title = &s->title;
 	struct Screen* grabbed;
 	struct Texture tex;
-	int i, offset, height;
+	int i, height;
 	PackedCol topCol    = PackedCol_Make( 0,  0,  0, 180);
 	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
 
-	offset = title->height + 10;
 	height = max(300, s->height + title->height);
-	Gfx_Draw2DGradient(s->x, s->y - offset, s->width, height, topCol, bottomCol);
+	Gfx_Draw2DGradient(s->x, s->y - (title->height + 10), s->width, height, topCol, bottomCol);
 
 	Gfx_SetTexturing(true);
-	title->yOffset = s->y - offset + 5;
-	Widget_Layout(title);
 	Elem_Render(title, delta);
 	grabbed = Gui_GetInputGrab();
 
@@ -2013,6 +2013,7 @@ static void TablistScreen_ContextLost(void* screen) {
 		Gfx_DeleteTexture(&s->textures[i].ID);
 	}
 
+	s->namesCount = 0;
 	Font_Free(&s->font);
 	Elem_TryFree(&s->title);
 }
