@@ -360,10 +360,6 @@ struct Widget* HUDScreen_GetHotbar(void) {
 *#########################################################################################################################*/
 static struct ChatScreen {
 	Screen_Body
-	/* player list state */
-	struct PlayerListWidget playerList;
-	struct FontDesc playerFont;
-	cc_bool showingList;
 	/* chat state */
 	float chatAcc;
 	cc_bool suppressNextPress;
@@ -383,6 +379,8 @@ static struct ChatScreen {
 	struct Texture clientStatusTextures[CHAT_MAX_CLIENTSTATUS];
 	struct Texture chatTextures[TEXTGROUPWIDGET_MAX_LINES];
 } ChatScreen_Instance;
+
+static cc_bool tablistActive;
 #define CH_EXTENT 16
 
 static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
@@ -665,26 +663,9 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 	}
 }
 
-static void ChatScreen_TabEntryAdded(void* screen, int id) {
-	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (s->showingList) PlayerListWidget_Add(&s->playerList, id);
-}
-
-static void ChatScreen_TabEntryChanged(void* screen, int id) {
-	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (s->showingList) PlayerListWidget_Update(&s->playerList, id);
-}
-
-static void ChatScreen_TabEntryRemoved(void* screen, int id) {
-	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (s->showingList) PlayerListWidget_Remove(&s->playerList, id);
-}
-
 static void ChatScreen_ContextLost(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	Font_Free(&s->playerFont);
 	ChatScreen_FreeChatFonts(s);
-	if (s->showingList) Elem_Free(&s->playerList);
 
 	Elem_TryFree(&s->chat);
 	Elem_TryFree(&s->input.base);
@@ -700,23 +681,12 @@ static void ChatScreen_ContextLost(void* screen) {
 #endif
 }
 
-static void ChatScreen_RemakePlayerList(struct ChatScreen* s) {
-	cc_bool classic = Gui_ClassicTabList || !Server.SupportsExtPlayerList;
-	PlayerListWidget_Create(&s->playerList, &s->playerFont, classic);
-	s->showingList  = true;
-	Widget_Layout(&s->playerList);
-}
-
 static void ChatScreen_ContextRecreated(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int size = Drawer2D_BitmappedText ? 16 : 11;
 	struct FontDesc font;
-	Drawer2D_MakeFont(&s->playerFont, size, FONT_STYLE_NORMAL);
 	ChatScreen_ChatUpdateFont(s);
-
 	ChatScreen_Redraw(s);
 	ChatScreen_ChatUpdateLayout(s);
-	if (s->showingList) ChatScreen_RemakePlayerList(s);
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -734,7 +704,6 @@ static void ChatScreen_Layout(void* screen) {
 
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
 	ChatScreen_ChatUpdateLayout(s);
-	if (s->showingList) Widget_Layout(&s->playerList);
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -773,8 +742,8 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	cc_bool handlesList = playerListKey != KEY_TAB || !Gui_TabAutocomplete || !s->grabsInput;
 
 	if (key == playerListKey && handlesList) {
-		if (!s->showingList && !Server.IsSinglePlayer) {
-			ChatScreen_RemakePlayerList(s);
+		if (!tablistActive && !Server.IsSinglePlayer) {
+			TablistScreen_Show();
 		}
 		return true;
 	}
@@ -814,12 +783,6 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 
 static int ChatScreen_KeyUp(void* screen, int key) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (key == KeyBinds[KEYBIND_PLAYER_LIST] && s->showingList) {
-		s->showingList = false;
-		Elem_Free(&s->playerList);
-		return true;
-	}
-
 	if (!s->grabsInput) return false;
 #ifdef CC_BUILD_WEB
 	/* See reason for this in HandleInputUp */
@@ -850,21 +813,7 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 	int height, chatY;
 
 	if (!s->grabsInput) return false;
-
-	/* player clicks on name in tab list */
-	/* TODO: Move to PlayerListWidget */
-	if (s->showingList) {
-		String_InitArray(text, textBuffer);
-		PlayerListWidget_GetNameAt(&s->playerList, x, y, &text);
-
-		if (text.length) {
-			String_Append(&text, ' ');
-			ChatScreen_AppendInput(&text);
-			return true;
-		}
-	}
-
-	if (Game_HideGui) return false;
+	if (Game_HideGui)   return false;
 
 #ifdef CC_BUILD_TOUCH
 	if (Widget_Contains(&s->send, x, y)) {
@@ -926,9 +875,6 @@ static void ChatScreen_Init(void* screen) {
 
 	Event_RegisterChat(&ChatEvents.ChatReceived,  s, ChatScreen_ChatReceived);
 	Event_RegisterInt(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
-	Event_RegisterInt(&TabListEvents.Added,       s, ChatScreen_TabEntryAdded);
-	Event_RegisterInt(&TabListEvents.Changed,     s, ChatScreen_TabEntryChanged);
-	Event_RegisterInt(&TabListEvents.Removed,     s, ChatScreen_TabEntryRemoved);
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -947,7 +893,7 @@ static void ChatScreen_Render(void* screen, double delta) {
 	}
 	if (Game_HideGui) return;
 
-	if (!s->showingList && !Gui_GetBlocksWorld()) {
+	if (!tablistActive && !Gui_GetBlocksWorld()) {
 		Gfx_SetTexturing(true);
 		ChatScreen_DrawCrosshairs();
 		Gfx_SetTexturing(false);
@@ -958,28 +904,13 @@ static void ChatScreen_Render(void* screen, double delta) {
 
 	Gfx_SetTexturing(true);
 	ChatScreen_DrawChat(s, delta);
-
-	if (s->showingList && IsOnlyHudActive()) {
-		s->playerList.active = s->grabsInput;
-		Elem_Render(&s->playerList, delta);
-		/* NOTE: Should usually be caught by KeyUp, but just in case. */
-		if (!KeyBind_IsPressed(KEYBIND_PLAYER_LIST)) {
-			s->showingList = false;
-			Elem_Free(&s->playerList);
-		}
-	}
 	Gfx_SetTexturing(false);
 }
 
 static void ChatScreen_Free(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	s->showingList = false;
-
 	Event_UnregisterChat(&ChatEvents.ChatReceived,  s, ChatScreen_ChatReceived);
 	Event_UnregisterInt(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
-	Event_UnregisterInt(&TabListEvents.Added,       s, ChatScreen_TabEntryAdded);
-	Event_UnregisterInt(&TabListEvents.Changed,     s, ChatScreen_TabEntryChanged);
-	Event_UnregisterInt(&TabListEvents.Removed,     s, ChatScreen_TabEntryRemoved);
 }
 
 static const struct ScreenVTABLE ChatScreen_VTABLE = {
@@ -1737,3 +1668,402 @@ void TouchScreen_Show(void) {
 	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TOUCH);
 }
 #endif
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------TabListScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+static struct TablistScreen {
+	Screen_Body
+	struct FontDesc font;
+	int namesCount, elementOffset;
+	cc_bool classic;
+	struct TextWidget title;
+	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
+	struct Texture textures[TABLIST_MAX_NAMES * 2];
+} TablistScreen;
+
+#define GROUP_NAME_ID UInt16_MaxValue
+#define LIST_COLUMN_PADDING 5
+#define LIST_BOUNDS_SIZE 10
+#define LIST_NAMES_PER_COLUMN 16
+
+static void TablistScreen_DrawName(struct Texture* tex, struct TablistScreen* s, const String* name) {
+	String tmp; char tmpBuffer[STRING_SIZE];
+	struct DrawTextArgs args;
+
+	if (Game_PureClassic) {
+		String_InitArray(tmp, tmpBuffer);
+		String_AppendColorless(&tmp, name);
+	} else {
+		tmp = *name;
+	}
+
+	DrawTextArgs_Make(&args, &tmp, &s->font, !s->classic);
+	Drawer2D_MakeTextTexture(tex, &args);
+	Drawer2D_ReducePadding_Tex(tex, s->font.size, 3);
+}
+
+static int TablistScreen_GetColumnWidth(struct TablistScreen* s, int column) {
+	int i   = column * LIST_NAMES_PER_COLUMN;
+	int end = min(s->namesCount, i + LIST_NAMES_PER_COLUMN);
+	int maxWidth = 0;
+
+	for (; i < end; i++) {
+		maxWidth = max(maxWidth, s->textures[i].Width);
+	}
+	return maxWidth + LIST_COLUMN_PADDING + s->elementOffset;
+}
+
+static int TablistScreen_GetColumnHeight(struct TablistScreen* s, int column) {
+	int i   = column * LIST_NAMES_PER_COLUMN;
+	int end = min(s->namesCount, i + LIST_NAMES_PER_COLUMN);
+	int height = 0;
+
+	for (; i < end; i++) {
+		height += s->textures[i].Height + 1;
+	}
+	return height;
+}
+
+static void TablistScreen_SetColumnPos(struct TablistScreen* s, int column, int x, int y) {
+	struct Texture tex;
+	int i   = column * LIST_NAMES_PER_COLUMN;
+	int end = min(s->namesCount, i + LIST_NAMES_PER_COLUMN);
+
+	for (; i < end; i++) {
+		tex = s->textures[i];
+		tex.X = x; tex.Y = y - 10;
+
+		y += tex.Height + 1;
+		/* offset player names a bit, compared to group name */
+		if (!s->classic && w->ids[i] != GROUP_NAME_ID) {
+			tex.X += s->elementOffset;
+		}
+		w->textures[i] = tex;
+	}
+}
+
+static void TablistScreen_AddName(struct TablistScreen* s, EntityID id, int index) {
+	String name;
+	/* insert at end of list */
+	if (index == -1) { index = s->namesCount; s->namesCount++; }
+
+	name = TabList_UNSAFE_GetList(id);
+	s->ids[index] = id;
+	TablistScreen_DrawName(&s->textures[index], s, &name);
+}
+
+static void TablistScreen_DeleteAt(struct TablistScreen* s, int i) {
+	Gfx_DeleteTexture(&s->textures[i].ID);
+
+	for (; i < s->namesCount - 1; i++) {
+		s->ids[i]      = s->ids[i + 1];
+		s->textures[i] = s->textures[i + 1];
+	}
+
+	s->namesCount--;
+	s->ids[s->namesCount]         = 0;
+	s->textures[s->namesCount].ID = 0;
+}
+
+static void TablistScreen_AddGroup(struct TablistScreen* s, int id, int* index) {
+	String group;
+	int i;
+	group = TabList_UNSAFE_GetGroup(id);
+
+	for (i = Array_Elems(s->ids) - 1; i > (*index); i--) {
+		s->ids[i]      = s->ids[i - 1];
+		s->textures[i] = s->textures[i - 1];
+	}
+	
+	s->ids[*index] = GROUP_NAME_ID;
+	TablistScreen_DrawName(&s->textures[*index], s, &group);
+
+	(*index)++;
+	s->namesCount++;
+}
+
+static int TablistScreen_GetGroupCount(struct TablistScreen* s, int id, int i) {
+	String group, curGroup;
+	int count;
+	group = TabList_UNSAFE_GetGroup(id);
+
+	for (count = 0; i < s->namesCount; i++, count++) {
+		curGroup = TabList_UNSAFE_GetGroup(s->ids[i]);
+		if (!String_CaselessEquals(&group, &curGroup)) break;
+	}
+	return count;
+}
+
+static int TablistScreen_PlayerCompare(int x, int y) {
+	String xName; char xNameBuffer[STRING_SIZE];
+	String yName; char yNameBuffer[STRING_SIZE];
+	cc_uint8 xRank, yRank;
+	String xNameRaw, yNameRaw;
+
+	xRank = TabList.GroupRanks[x];
+	yRank = TabList.GroupRanks[y];
+	if (xRank != yRank) return (xRank < yRank ? -1 : 1);
+	
+	String_InitArray(xName, xNameBuffer);
+	xNameRaw = TabList_UNSAFE_GetList(x);
+	String_AppendColorless(&xName, &xNameRaw);
+
+	String_InitArray(yName, yNameBuffer);
+	yNameRaw = TabList_UNSAFE_GetList(y);
+	String_AppendColorless(&yName, &yNameRaw);
+
+	return String_Compare(&xName, &yName);
+}
+
+static int TablistScreen_GroupCompare(int x, int y) {
+	String xGroup, yGroup;
+	/* TODO: should we use colourless comparison? ClassicalSharp sorts groups with colours */
+	xGroup = TabList_UNSAFE_GetGroup(x);
+	yGroup = TabList_UNSAFE_GetGroup(y);
+	return String_Compare(&xGroup, &yGroup);
+}
+
+static struct TablistScreen* list_SortObj;
+static int (*list_SortCompare)(int x, int y);
+static void TablistScreen_QuickSort(int left, int right) {
+	struct Texture* values = list_SortObj->textures; struct Texture value;
+	cc_uint16* keys = list_SortObj->ids; cc_uint16 key;
+
+	while (left < right) {
+		int i = left, j = right;
+		int pivot = keys[(i + j) / 2];
+
+		/* partition the list */
+		while (i <= j) {
+			while (list_SortCompare(pivot, keys[i]) > 0) i++;
+			while (list_SortCompare(pivot, keys[j]) < 0) j--;
+			QuickSort_Swap_KV_Maybe();
+		}
+		/* recurse into the smaller subset */
+		QuickSort_Recurse(TablistScreen_QuickSort)
+	}
+}
+
+static void TablistScreen_SortEntries(struct TablistScreen* s) {
+	int i, id, count;
+	if (!s->namesCount) return;
+
+	list_SortObj = s;
+	if (s->classic) {
+		list_SortCompare = TablistScreen_PlayerCompare;
+		TablistScreen_QuickSort(0, s->namesCount - 1);
+		return;
+	}
+
+	/* Sort the list by group */
+	/* Loop backwards, since DeleteAt() reduces NamesCount */
+	for (i = s->namesCount - 1; i >= 0; i--) {
+		if (s->ids[i] != GROUP_NAME_ID) continue;
+		TablistScreen_DeleteAt(s, i);
+	}
+	list_SortCompare = TablistScreen_GroupCompare;
+	TablistScreen_QuickSort(0, s->namesCount - 1);
+
+	/* Sort the entries in each group */
+	list_SortCompare = TablistScreen_PlayerCompare;
+	for (i = 0; i < s->namesCount; ) {
+		id = s->ids[i];
+		TablistScreen_AddGroup(s, id, &i);
+
+		count = TablistScreen_GetGroupCount(s, id, i);
+		TablistScreen_QuickSort(i, i + (count - 1));
+		i += count;
+	}
+}
+
+static void TablistScreen_Layout(void* screen) {
+	struct TablistScreen* s = (struct TablistScreen*)screen;
+	TablistScreen_SortEntries(s);
+	int i, x, y, width = 0, height = 0;
+	int columns = Math_CeilDiv(w->namesCount, LIST_NAMES_PER_COLUMN);
+
+	for (i = 0; i < columns; i++) {
+		width += TablistScreen_GetColumnWidth(w, i);
+		y      = TablistScreen_GetColumnHeight(w, i);
+		height = max(height, y);
+	}
+	if (width < 480) width = 480;
+
+	w->width  = width  + LIST_BOUNDS_SIZE * 2;
+	w->height = height + LIST_BOUNDS_SIZE * 2;
+
+	y = Window_Height / 4 - w->height / 2;
+	w->yOffset = -max(0, y);
+
+	Widget_CalcPosition(w);
+	x = w->x + LIST_BOUNDS_SIZE;
+	y = w->y + LIST_BOUNDS_SIZE;
+
+	for (i = 0; i < columns; i++) {
+		TablistScreen_SetColumnPos(w, i, x, y);
+		x += TablistScreen_GetColumnWidth(w, i);
+	}
+}
+
+static void TablistScreen_Add(struct TablistScreen* s, int id) {
+	TablistScreen_AddName(s, id, -1);
+	TablistScreen_Layout(s);
+}
+
+static void TablistScreen_Update(struct TablistScreen* s, int id) {
+	struct Texture tex;
+	int i;
+
+	for (i = 0; i < s->namesCount; i++) {
+		if (s->ids[i] != id) continue;
+		tex = s->textures[i];
+
+		Gfx_DeleteTexture(&tex.ID);
+		TablistScreen_AddName(s, id, i);
+		TablistScreen_Layout(s);
+		return;
+	}
+}
+
+static void TablistScreen_Remove(struct TablistScreen* s, int id) {
+	int i;
+	for (i = 0; i < s->namesCount; i++) {
+		if (s->ids[i] != id) continue;
+
+		TablistScreen_DeleteAt(s, i);
+		TablistScreen_Layout(s);
+		return;
+	}
+}
+
+static int TablistScreen_PointerDown(void* screen, int id, int x, int y) {
+	struct TablistScreen* s = (struct TablistScreen*)screen;
+	String text; char textBuffer[STRING_SIZE * 4];
+	struct Texture tex;
+	String player;
+	int i;
+
+	if (!Gui_Chat->grabsInput) return false;
+	String_InitArray(text, textBuffer);
+
+	for (i = 0; i < s->namesCount; i++) {
+		if (!s->textures[i].ID || s->ids[i] == GROUP_NAME_ID) continue;
+		tex = s->textures[i];
+		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
+
+		player = TabList_UNSAFE_GetPlayer(s->ids[i]);
+		if (!player.length) return false;
+
+		String_AppendString(&text, &player);
+		String_Append(&text, ' ');
+		ChatScreen_AppendInput(&text);
+		return true;
+	}
+	return false;
+}
+
+static int TablistScreen_KeyUp(void* screen, int key) {
+	struct Screen* s = (struct Screen*)screen;
+	if (key == KeyBinds[KEYBIND_PLAYER_LIST]) { Gui_Remove(s); return true; }
+	return false;
+}
+
+static void TablistScreen_Render(void* widget, double delta) {
+	struct TablistScreen* s = (struct PlayerListWidget*)widget;
+	struct TextWidget* title = &s->title;
+	struct Screen* grabbed;
+	struct Texture tex;
+	int i, offset, height;
+	PackedCol topCol    = PackedCol_Make( 0,  0,  0, 180);
+	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
+
+	offset = title->height + 10;
+	height = max(300, s->height + title->height);
+	Gfx_Draw2DGradient(w->x, w->y - offset, w->width, height, topCol, bottomCol);
+
+	Gfx_SetTexturing(true);
+	title->yOffset = w->y - offset + 5;
+	Widget_Layout(title);
+	Elem_Render(title, delta);
+	grabbed = Gui_GetInputGrab();
+
+	for (i = 0; i < w->namesCount; i++) {
+		if (!w->textures[i].ID) continue;
+		tex = w->textures[i];
+		
+		if (grabbed && w->ids[i] != GROUP_NAME_ID) {
+			if (Gui_ContainsPointers(tex.X, tex.Y, tex.Width, tex.Height)) tex.X += 4;
+		}
+		Texture_Render(&tex);
+	}
+
+	Gfx_SetTexturing(false);
+	if (!IsOnlyHudActive()) return;
+	/* NOTE: Should usually be caught by KeyUp, but just in case */
+	if (!KeyBind_IsPressed(KEYBIND_PLAYER_LIST)) Gui_Remove((struct Screen*)s);
+}
+
+static void TablistScreen_ContextLost(void* screen) {
+	struct TablistScreen* s = (struct TablistScreen*)screen;
+	int i;
+	for (i = 0; i < s->namesCount; i++) {
+		Gfx_DeleteTexture(&s->textures[i].ID);
+	}
+
+	Font_Free(&s->font);
+	Elem_TryFree(&s->title);
+}
+
+static void TablistScreen_ContextRecreated(void* screen) {
+	struct TablistScreen* s = (struct TablistScreen*)screen;
+	int id, size = Drawer2D_BitmappedText ? 16 : 11;
+	Drawer2D_MakeFont(&s->font, size, FONT_STYLE_NORMAL);
+
+	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
+		if (!TabList.NameOffsets[id]) continue;
+		TablistScreen_AddName(s, (EntityID)id, -1);
+	}
+
+	TextWidget_SetConst(&s->title, "Connected players:", &s->font);
+	TablistScreen_Layout(s);
+}
+
+static void TablistScreen_Init(void* screen) {
+	struct TablistScreen* s = (struct TablistScreen*)screen;
+	cc_bool classic = Gui_ClassicTabList || !Server.SupportsExtPlayerList;
+	w->horAnchor    = ANCHOR_CENTRE;
+	w->verAnchor    = ANCHOR_CENTRE;
+
+	w->namesCount = 0;
+	w->classic    = classic;
+	w->elementOffset = classic ? 0 : 10;
+	TextWidget_Make(&s->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
+
+	Event_RegisterInt(&TabListEvents.Added,   s, TablistScreen_Add);
+	Event_RegisterInt(&TabListEvents.Changed, s, TablistScreen_Update);
+	Event_RegisterInt(&TabListEvents.Removed, s, TablistScreen_Remove);
+	tablistActive = true;
+}
+
+static void TablistScreen_Free(void* screen) {
+	struct TablistScreen* s = (struct TablistScreen*)screen;
+	Event_UnregisterInt(&TabListEvents.Added,   s, TablistScreen_Add);
+	Event_UnregisterInt(&TabListEvents.Changed, s, TablistScreen_Update);
+	Event_UnregisterInt(&TabListEvents.Removed, s, TablistScreen_Remove);
+	tablistActive = false;
+}
+
+static const struct ScreenVTABLE TablistScreen_VTABLE = {
+	TablistScreen_Init,        Screen_NullUpdate,   TablistScreen_Free,
+	TablistScreen_Render,      Screen_BuildMesh,
+	Screen_FInput,             TablistScreen_KeyUp, Screen_FKeyPress, Screen_FText,
+	TablistScreen_PointerDown, Screen_FPointer,     Screen_FPointer,  Screen_FMouseScroll,
+	TablistScreen_Layout,      TablistScreen_ContextLost, TablistScreen_ContextRecreated
+};
+void TablistScreen_Show(void) {
+	struct TablistScreen* s = &TablistScreen;
+	s->VTABLE = &TablistScreen_VTABLE;
+	Gui_Replace((struct Screen*)s, GUI_PRIORTIY_TABLIST);
+}

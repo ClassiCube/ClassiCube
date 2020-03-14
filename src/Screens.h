@@ -43,6 +43,7 @@ void LoadingScreen_Show(const String* title, const String* message);
 void GeneratingScreen_Show(void);
 void ChatScreen_Show(void);
 void DisconnectScreen_Show(const String* title, const String* message);
+void TablistScreen_Show(void);
 #ifdef CC_BUILD_TOUCH
 void TouchScreen_Show(void);
 #endif
