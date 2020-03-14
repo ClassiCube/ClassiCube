@@ -3017,7 +3017,6 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 static void TexIdsOverlay_BuildMesh(void* screen) { }
 
 static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
-	PackedCol col = PACKEDCOL_WHITE;
 	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
 	VertexP3fT2fC4b* ptr;
 	struct Texture tex;
@@ -3040,7 +3039,7 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
 			tex.uv.V1 = Atlas1D_RowId(i + s->baseTexLoc) * Atlas1D.InvTileSize;
 			tex.uv.V2 = tex.uv.V1            + UV2_Scale * Atlas1D.InvTileSize;
 		
-			Gfx_Make2DQuad(&tex, col, &ptr);
+			Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &ptr);
 		}
 
 		Gfx_BindTexture(Atlas1D.TexIds[idx]);

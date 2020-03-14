@@ -160,7 +160,6 @@ static void HUDScreen_MakeText(struct HUDScreen* s, String* status) {
 static void HUDScreen_DrawPosition(struct HUDScreen* s) {
 	VertexP3fT2fC4b vertices[4 * 64];
 	VertexP3fT2fC4b* ptr = vertices;
-	PackedCol col = PACKEDCOL_WHITE;
 
 	struct TextAtlas* atlas = &s->posAtlas;
 	struct Texture tex;
@@ -170,7 +169,7 @@ static void HUDScreen_DrawPosition(struct HUDScreen* s) {
 	/* Make "Position: " prefix */
 	tex = atlas->tex; 
 	tex.X = 2; tex.Width = atlas->offset;
-	Gfx_Make2DQuad(&tex, col, &ptr);
+	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &ptr);
 
 	IVec3_Floor(&pos, &LocalPlayer_Instance.Base.Position);
 	atlas->curX = atlas->offset + 2;
@@ -618,7 +617,7 @@ static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {
 }
 
 static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
-	struct Texture tex;
+	struct Texture* tex;
 	double now;
 	int i, logIdx;
 
@@ -633,12 +632,12 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 	} else {
 		/* Only render recent chat */
 		for (i = 0; i < s->chat.lines; i++) {
-			tex    = s->chat.textures[i];
-			logIdx = s->chatIndex + i;
-			if (!tex.ID) continue;
+			tex = &s->chat.textures[i];
+			if (!tex->ID) continue;
 
+			logIdx = s->chatIndex + i;
 			if (logIdx < 0 || logIdx >= Chat_Log.count) continue;
-			if (Chat_LogTime[logIdx] + 10 >= now) Texture_Render(&tex);
+			if (Chat_LogTime[logIdx] + 10 >= now) Texture_Render(tex);
 		}
 	}
 
@@ -1881,7 +1880,6 @@ static void TablistScreen_SortEntries(struct TablistScreen* s) {
 
 static void TablistScreen_Layout(void* screen) {
 	struct TablistScreen* s = (struct TablistScreen*)screen;
-	TablistScreen_SortEntries(s);
 	int i, x, y, width = 0, height = 0;
 	int columns = Math_CeilDiv(s->namesCount, LIST_NAMES_PER_COLUMN);
 
@@ -1911,9 +1909,14 @@ static void TablistScreen_Layout(void* screen) {
 	Widget_Layout(&s->title);
 }
 
+static void TablistScreen_SortAndLayout(struct TablistScreen* s) {
+	TablistScreen_SortEntries(s);
+	TablistScreen_Layout(s);
+}
+
 static void TablistScreen_Add(struct TablistScreen* s, int id) {
 	TablistScreen_AddName(s, id, -1);
-	TablistScreen_Layout(s);
+	TablistScreen_SortAndLayout(s);
 }
 
 static void TablistScreen_Update(struct TablistScreen* s, int id) {
@@ -1926,7 +1929,7 @@ static void TablistScreen_Update(struct TablistScreen* s, int id) {
 
 		Gfx_DeleteTexture(&tex.ID);
 		TablistScreen_AddName(s, id, i);
-		TablistScreen_Layout(s);
+		TablistScreen_SortAndLayout(s);
 		return;
 	}
 }
@@ -1937,7 +1940,7 @@ static void TablistScreen_Remove(struct TablistScreen* s, int id) {
 		if (s->ids[i] != id) continue;
 
 		TablistScreen_DeleteAt(s, i);
-		TablistScreen_Layout(s);
+		TablistScreen_SortAndLayout(s);
 		return;
 	}
 }
@@ -2029,7 +2032,7 @@ static void TablistScreen_ContextRecreated(void* screen) {
 	}
 
 	TextWidget_SetConst(&s->title, "Connected players:", &s->font);
-	TablistScreen_Layout(s);
+	TablistScreen_SortAndLayout(s);
 }
 
 static void TablistScreen_Init(void* screen) {

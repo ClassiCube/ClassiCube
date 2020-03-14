@@ -106,7 +106,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	PackedCol normCol     = PackedCol_Make(224, 224, 224, 255);
 	PackedCol activeCol   = PackedCol_Make(255, 255, 160, 255);
 	PackedCol disabledCol = PackedCol_Make(160, 160, 160, 255);
-	PackedCol col, white  = PACKEDCOL_WHITE;
+	PackedCol col;
 
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
 	struct Texture back;	
@@ -131,11 +131,11 @@ static void ButtonWidget_Render(void* widget, double delta) {
 
 		back.Width = (w->width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-		Gfx_Draw2DTexture(&back, white);
+		Gfx_Draw2DTexture(&back, PACKEDCOL_WHITE);
 
 		back.X += (w->width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-		Gfx_Draw2DTexture(&back, white);
+		Gfx_Draw2DTexture(&back, PACKEDCOL_WHITE);
 	}
 
 	if (!w->tex.ID) return;
@@ -370,7 +370,6 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 *------------------------------------------------------HotbarWidget-------------------------------------------------------*
 *#########################################################################################################################*/
 static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
-	PackedCol white = PACKEDCOL_WHITE;
 	GfxResourceID tex;
 	float width;
 	int i, x;
@@ -385,7 +384,7 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 
 	w->selTex.ID = tex;
 	w->selTex.X  = (int)(x - w->selWidth / 2);
-	Gfx_Draw2DTexture(&w->selTex, white);
+	Gfx_Draw2DTexture(&w->selTex, PACKEDCOL_WHITE);
 }
 
 static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
