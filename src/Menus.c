@@ -2590,7 +2590,7 @@ static void GuiOptionsScreen_SetShowFPS(const String* v) { Gui_ShowFPS = Menu_Se
 static void GuiOptionsScreen_SetScale(const String* v, float* target, const char* optKey) {
 	*target = Menu_Float(v);
 	Options_Set(optKey, v);
-	Gui_RefreshChat();
+	Gui_RefreshAll();
 }
 
 static void GuiOptionsScreen_GetHotbar(String* v) { String_AppendFloat(v, Game_RawHotbarScale, 1); }

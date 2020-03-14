@@ -126,7 +126,6 @@ void Gui_RefreshAll(void) {
 	OnContextRecreated(NULL);
 }
 
-void Gui_RefreshChat(void) { Gui_Refresh((struct Screen*)Gui_Chat); }
 void Gui_Refresh(struct Screen* s) {
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->ContextRecreated(s);
