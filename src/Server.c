@@ -239,8 +239,8 @@ static TimeMS net_lastPacket;
 static cc_uint8 net_lastOpcode;
 
 static cc_bool net_connecting;
-static TimeMS net_connectTimeout;
-#define NET_TIMEOUT_MS (15 * 1000)
+static double net_connectTimeout;
+#define NET_TIMEOUT_SECS 15
 
 static void Server_Free(void);
 static void MPConnection_FinishConnect(void) {
@@ -277,13 +277,13 @@ static void MPConnection_FailConnect(cc_result result) {
 static void MPConnection_TickConnect(void) {
 	cc_result res = 0;
 	cc_bool poll_write;
-	TimeMS now;
+	double now;
 
 	Socket_GetError(net_socket, &res);
 	if (res) { MPConnection_FailConnect(res); return; }
 
-	now = DateTime_CurrentUTC_MS();
 	Socket_Poll(net_socket, SOCKET_POLL_WRITE, &poll_write);
+	now = Game.Time;
 
 	if (poll_write) {
 		Socket_SetBlocking(net_socket, true);
@@ -291,8 +291,8 @@ static void MPConnection_TickConnect(void) {
 	} else if (now > net_connectTimeout) {
 		MPConnection_FailConnect(0);
 	} else {
-		int leftMS = (int)(net_connectTimeout - now);
-		Event_RaiseFloat(&WorldEvents.Loading, (float)leftMS / NET_TIMEOUT_MS);
+		double left = net_connectTimeout - now;
+		Event_RaiseFloat(&WorldEvents.Loading, (float)left / NET_TIMEOUT_SECS);
 	}
 }
 
@@ -307,7 +307,7 @@ static void MPConnection_BeginConnect(void) {
 
 	Socket_SetBlocking(net_socket, false);
 	net_connecting     = true;
-	net_connectTimeout = DateTime_CurrentUTC_MS() + NET_TIMEOUT_MS;
+	net_connectTimeout = Game.Time + NET_TIMEOUT_SECS;
 
 	res = Socket_Connect(net_socket, &Server.IP, Server.Port);
 	if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
