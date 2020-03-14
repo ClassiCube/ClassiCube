@@ -1677,6 +1677,7 @@ static struct TablistScreen {
 	Screen_Body
 	struct FontDesc font;
 	int namesCount, elementOffset;
+	int x, y, width, height;
 	cc_bool classic;
 	struct TextWidget title;
 	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
@@ -1737,10 +1738,10 @@ static void TablistScreen_SetColumnPos(struct TablistScreen* s, int column, int 
 
 		y += tex.Height + 1;
 		/* offset player names a bit, compared to group name */
-		if (!s->classic && w->ids[i] != GROUP_NAME_ID) {
+		if (!s->classic && s->ids[i] != GROUP_NAME_ID) {
 			tex.X += s->elementOffset;
 		}
-		w->textures[i] = tex;
+		s->textures[i] = tex;
 	}
 }
 
@@ -1882,28 +1883,28 @@ static void TablistScreen_Layout(void* screen) {
 	struct TablistScreen* s = (struct TablistScreen*)screen;
 	TablistScreen_SortEntries(s);
 	int i, x, y, width = 0, height = 0;
-	int columns = Math_CeilDiv(w->namesCount, LIST_NAMES_PER_COLUMN);
+	int columns = Math_CeilDiv(s->namesCount, LIST_NAMES_PER_COLUMN);
 
 	for (i = 0; i < columns; i++) {
-		width += TablistScreen_GetColumnWidth(w, i);
-		y      = TablistScreen_GetColumnHeight(w, i);
+		width += TablistScreen_GetColumnWidth(s, i);
+		y      = TablistScreen_GetColumnHeight(s, i);
 		height = max(height, y);
 	}
 	if (width < 480) width = 480;
 
-	w->width  = width  + LIST_BOUNDS_SIZE * 2;
-	w->height = height + LIST_BOUNDS_SIZE * 2;
+	s->width  = width  + LIST_BOUNDS_SIZE * 2;
+	s->height = height + LIST_BOUNDS_SIZE * 2;
 
-	y = Window_Height / 4 - w->height / 2;
-	w->yOffset = -max(0, y);
+	y = Window_Height / 4 - s->height / 2;
+	s->x = Gui_CalcPos(ANCHOR_CENTRE,          0, s->width,  Window_Width);
+	s->y = Gui_CalcPos(ANCHOR_CENTRE, -max(0, y), s->height, Window_Height);
 
-	Widget_CalcPosition(w);
-	x = w->x + LIST_BOUNDS_SIZE;
-	y = w->y + LIST_BOUNDS_SIZE;
+	x = s->x + LIST_BOUNDS_SIZE;
+	y = s->y + LIST_BOUNDS_SIZE;
 
 	for (i = 0; i < columns; i++) {
-		TablistScreen_SetColumnPos(w, i, x, y);
-		x += TablistScreen_GetColumnWidth(w, i);
+		TablistScreen_SetColumnPos(s, i, x, y);
+		x += TablistScreen_GetColumnWidth(s, i);
 	}
 }
 
@@ -1970,8 +1971,8 @@ static int TablistScreen_KeyUp(void* screen, int key) {
 	return false;
 }
 
-static void TablistScreen_Render(void* widget, double delta) {
-	struct TablistScreen* s = (struct PlayerListWidget*)widget;
+static void TablistScreen_Render(void* screen, double delta) {
+	struct TablistScreen* s = (struct TablistScreen*)screen;
 	struct TextWidget* title = &s->title;
 	struct Screen* grabbed;
 	struct Texture tex;
@@ -1981,19 +1982,19 @@ static void TablistScreen_Render(void* widget, double delta) {
 
 	offset = title->height + 10;
 	height = max(300, s->height + title->height);
-	Gfx_Draw2DGradient(w->x, w->y - offset, w->width, height, topCol, bottomCol);
+	Gfx_Draw2DGradient(s->x, s->y - offset, s->width, height, topCol, bottomCol);
 
 	Gfx_SetTexturing(true);
-	title->yOffset = w->y - offset + 5;
+	title->yOffset = s->y - offset + 5;
 	Widget_Layout(title);
 	Elem_Render(title, delta);
 	grabbed = Gui_GetInputGrab();
 
-	for (i = 0; i < w->namesCount; i++) {
-		if (!w->textures[i].ID) continue;
-		tex = w->textures[i];
+	for (i = 0; i < s->namesCount; i++) {
+		if (!s->textures[i].ID) continue;
+		tex = s->textures[i];
 		
-		if (grabbed && w->ids[i] != GROUP_NAME_ID) {
+		if (grabbed && s->ids[i] != GROUP_NAME_ID) {
 			if (Gui_ContainsPointers(tex.X, tex.Y, tex.Width, tex.Height)) tex.X += 4;
 		}
 		Texture_Render(&tex);
@@ -2033,12 +2034,10 @@ static void TablistScreen_ContextRecreated(void* screen) {
 static void TablistScreen_Init(void* screen) {
 	struct TablistScreen* s = (struct TablistScreen*)screen;
 	cc_bool classic = Gui_ClassicTabList || !Server.SupportsExtPlayerList;
-	w->horAnchor    = ANCHOR_CENTRE;
-	w->verAnchor    = ANCHOR_CENTRE;
 
-	w->namesCount = 0;
-	w->classic    = classic;
-	w->elementOffset = classic ? 0 : 10;
+	s->namesCount = 0;
+	s->classic    = classic;
+	s->elementOffset = classic ? 0 : 10;
 	TextWidget_Make(&s->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
 
 	Event_RegisterInt(&TabListEvents.Added,   s, TablistScreen_Add);
@@ -2057,7 +2056,7 @@ static void TablistScreen_Free(void* screen) {
 
 static const struct ScreenVTABLE TablistScreen_VTABLE = {
 	TablistScreen_Init,        Screen_NullUpdate,   TablistScreen_Free,
-	TablistScreen_Render,      Screen_BuildMesh,
+	TablistScreen_Render,      HUDScreen_BuildMesh,
 	Screen_FInput,             TablistScreen_KeyUp, Screen_FKeyPress, Screen_FText,
 	TablistScreen_PointerDown, Screen_FPointer,     Screen_FPointer,  Screen_FMouseScroll,
 	TablistScreen_Layout,      TablistScreen_ContextLost, TablistScreen_ContextRecreated

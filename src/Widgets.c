@@ -2355,7 +2355,7 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct Special
 		Drawer2D_Clear(&bmp, col, 0, titles.Height, width, content.Height);
 		SpecialInputWidget_DrawContent(w, tab, &bmp, titles.Height);
 	}
-	Drawer2D_MakeTexture(&w->tex, &bmp, width, height);
+	Drawer2D_MakeTexture2(&w->tex, &bmp, width, height);
 	Mem_Free(bmp.Scan0);
 }
 
