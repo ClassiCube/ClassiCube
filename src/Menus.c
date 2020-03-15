@@ -2976,8 +2976,7 @@ static void Overlay_MakeMainButtons(struct ButtonWidget* btns) {
 #define TEXID_OVERLAY_VERTICES_COUNT (TEXID_OVERLAY_MAX_PER_PAGE * 4)
 
 static struct TexIdsOverlay {
-	Screen_Body	
-	GfxResourceID dynamicVb;
+	Screen_Body
 	int xOffset, yOffset, tileSize, baseTexLoc;
 	struct TextAtlas idAtlas;
 	struct TextWidget title;
@@ -2986,7 +2985,6 @@ static struct TexIdsOverlay {
 static void TexIdsOverlay_ContextLost(void* screen) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	Screen_ContextLost(s);
-	Gfx_DeleteDynamicVb(&s->dynamicVb);
 	TextAtlas_Free(&s->idAtlas);
 }
 
@@ -3001,7 +2999,7 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	size = (size / 8) * 8;
 	Math_Clamp(size, 8, 40);
 
-	s->dynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
 	Drawer2D_MakeFont(&textFont, 8, FONT_STYLE_NORMAL);
 	Font_ReducePadding(&textFont, 4);
 	TextAtlas_Make(&s->idAtlas, &chars, &textFont, &prefix);
@@ -3020,7 +3018,6 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 static void TexIdsOverlay_BuildMesh(void* screen) { }
 
 static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
-	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
 	VertexP3fT2fC4b* ptr;
 	struct Texture tex;
 	int size, count;
@@ -3029,25 +3026,25 @@ static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
 	size = s->tileSize;
 	tex.uv.U1 = 0.0f; tex.uv.U2 = UV2_Scale;
 	tex.Width = size; tex.Height = size;
+	ptr  = Gfx_LockDynamicVb(s->vb, VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
+
+	for (i = 0; i < TEXID_OVERLAY_MAX_PER_PAGE; i++) {
+		tex.X = s->xOffset + Atlas2D_TileX(i) * size;
+		tex.Y = s->yOffset + Atlas2D_TileY(i) * size;
+
+		tex.uv.V1 = Atlas1D_RowId(i + s->baseTexLoc) * Atlas1D.InvTileSize;
+		tex.uv.V2 = tex.uv.V1            + UV2_Scale * Atlas1D.InvTileSize;
+		Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &ptr);
+	}
+	Gfx_UnlockDynamicVb(s->vb);
 
 	for (i = 0; i < TEXID_OVERLAY_MAX_PER_PAGE;) {
-		ptr = vertices;
 		idx = Atlas1D_Index(i + s->baseTexLoc);
 		end = min(i + Atlas1D.TilesPerAtlas, TEXID_OVERLAY_MAX_PER_PAGE);
 
-		for (; i < end; i++) {
-			tex.X = s->xOffset + Atlas2D_TileX(i) * size;
-			tex.Y = s->yOffset + Atlas2D_TileY(i) * size;
-
-			tex.uv.V1 = Atlas1D_RowId(i + s->baseTexLoc) * Atlas1D.InvTileSize;
-			tex.uv.V2 = tex.uv.V1            + UV2_Scale * Atlas1D.InvTileSize;
-		
-			Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &ptr);
-		}
-
 		Gfx_BindTexture(Atlas1D.TexIds[idx]);
-		count = (int)(ptr - vertices);
-		Gfx_UpdateDynamicVb_IndexedTris(s->dynamicVb, vertices, count);
+		Gfx_DrawVb_IndexedTris_Range((end - i) * 4, i * 4);
+		i = end;
 	}
 }
 
@@ -3074,7 +3071,7 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* s) {
 		Gfx_BindTexture(idAtlas->tex.ID);
 
 		count = (int)(ptr - vertices);
-		Gfx_UpdateDynamicVb_IndexedTris(s->dynamicVb, vertices, count);
+		Gfx_UpdateDynamicVb_IndexedTris(s->vb, vertices, count);
 		ptr = vertices;
 	}
 }
