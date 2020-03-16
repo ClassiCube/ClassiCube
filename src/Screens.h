@@ -28,7 +28,7 @@ int  Screen_InputDown(void* screen, int key);
 /* Calls Elem_Render on each widget in the screen. */
 void Screen_RenderWidgets(void* screen, double delta);
 /* Calls Widget_Render2 on each widget in the screen. */
-void Screen_Render2Widgets(void* screen, double delta);
+void Screen_Render2Widgets(void* screen);
 /* Calls Widget_Layout on each widget in the screen. */
 void Screen_Layout(void* screen);
 /* Calls Widget_Free on each widget in the screen. */

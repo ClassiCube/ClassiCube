@@ -405,7 +405,7 @@ static void ListScreen_Init(void* screen) {
 static void ListScreen_Render(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
-	Screen_Render2Widgets(screen, delta);
+	Screen_Render2Widgets(screen);
 	Gfx_SetTexturing(false);
 }
 
@@ -462,7 +462,7 @@ static void MenuScreen_Render(void* screen, double delta) {
 static void MenuScreen_Render2(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
-	Screen_Render2Widgets(screen, delta);
+	Screen_Render2Widgets(screen);
 	Gfx_SetTexturing(false);
 }
 

@@ -62,7 +62,7 @@ void Screen_RenderWidgets(void* screen, double delta) {
 	}
 }
 
-void Screen_Render2Widgets(void* screen, double delta) {
+void Screen_Render2Widgets(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 	int i, offset = 0;
@@ -1120,12 +1120,19 @@ static struct LoadingScreen {
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
 } LoadingScreen;
+#define LOADING_MAX_VERTICES (2 * TEXTWIDGET_MAX)
+
+static struct Widget* loading_widgets[2] = {
+	(struct Widget*)&LoadingScreen.title, (struct Widget*)&LoadingScreen.message
+};
 
 static void LoadingScreen_SetTitle(struct LoadingScreen* s) {
 	TextWidget_Set(&s->title, &s->titleStr, &s->font);
+	s->dirty = true;
 }
 static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
 	TextWidget_Set(&s->message, &s->messageStr, &s->font);
+	s->dirty = true;
 }
 
 static void LoadingScreen_MapLoading(void* screen, float progress) {
@@ -1133,30 +1140,20 @@ static void LoadingScreen_MapLoading(void* screen, float progress) {
 	s->progress = progress;
 }
 
-static void LoadingScreen_Layout(void* screen) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	if (!s->title.VTABLE) return;
-	Widget_Layout(&s->title);
-	Widget_Layout(&s->message);
-}
-
 static void LoadingScreen_ContextLost(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	Font_Free(&s->font);
-	if (!s->title.VTABLE) return;
-
-	Elem_Free(&s->title);
-	Elem_Free(&s->message);
+	Screen_ContextLost(screen);
 }
 
 static void LoadingScreen_ContextRecreated(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
+	Screen_CreateVb(screen);
+
 	LoadingScreen_SetTitle(s);
 	LoadingScreen_SetMessage(s);
 }
-
-static void LoadingScreen_BuildMesh(void* screen) { }
 
 static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int count, int atlasIndex, cc_bool* bound) {
 	if (!(*bound)) {
@@ -1203,6 +1200,9 @@ static void LoadingScreen_DrawBackground(void) {
 
 static void LoadingScreen_Init(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	s->widgets     = loading_widgets;
+	s->numWidgets  = 2;
+	s->maxVertices = LOADING_MAX_VERTICES;
 
 	TextWidget_Make(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
 	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
@@ -1222,9 +1222,7 @@ static void LoadingScreen_Render(void* screen, double delta) {
 
 	Gfx_SetTexturing(true);
 	LoadingScreen_DrawBackground();
-
-	Elem_Render(&s->title,   delta);
-	Elem_Render(&s->message, delta);
+	Screen_Render2Widgets(screen);
 	Gfx_SetTexturing(false);
 
 	x = Gui_CalcPos(ANCHOR_CENTRE,  0, PROG_BAR_WIDTH,  Window_Width);
@@ -1258,10 +1256,10 @@ CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const Stri
 
 static const struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_Init,   Screen_NullUpdate, LoadingScreen_Free, 
-	LoadingScreen_Render, LoadingScreen_BuildMesh,
+	LoadingScreen_Render, Screen_BuildMesh,
 	Screen_TInput,        Screen_TInput,     Screen_TKeyPress,   Screen_TText,
 	Screen_TPointer,      Screen_TPointer,   Screen_TPointer,    Screen_TMouseScroll,
-	LoadingScreen_Layout, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
+	Screen_Layout,        LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void LoadingScreen_Show(const String* title, const String* message) {
 	LoadingScreen.VTABLE = &LoadingScreen_VTABLE;
@@ -1329,10 +1327,10 @@ static void GeneratingScreen_Render(void* screen, double delta) {
 
 static const struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	GeneratingScreen_Init,   Screen_NullUpdate, LoadingScreen_Free,
-	GeneratingScreen_Render, LoadingScreen_BuildMesh,
+	GeneratingScreen_Render, Screen_BuildMesh,
 	Screen_TInput,           Screen_TInput,     Screen_TKeyPress,   Screen_TText,
 	Screen_TPointer,         Screen_TPointer,   Screen_FPointer,    Screen_TMouseScroll,
-	LoadingScreen_Layout, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
+	Screen_Layout,           LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void GeneratingScreen_Show(void) {
 	static const String title   = String_FromConst("Generating level");
@@ -1448,7 +1446,7 @@ static void DisconnectScreen_Render(void* screen, double delta) {
 	Gfx_Draw2DGradient(0, 0, Window_Width, Window_Height, top, bottom);
 
 	Gfx_SetTexturing(true);
-	Screen_Render2Widgets(screen, delta);
+	Screen_Render2Widgets(screen);
 	Gfx_SetTexturing(false);
 }
 
@@ -1577,7 +1575,7 @@ static void TouchScreen_Render(void* screen, double delta) {
 	if (Gui_GetInputGrab()) return;
 
 	Gfx_SetTexturing(true);
-	Screen_Render2Widgets(screen, delta);
+	Screen_Render2Widgets(screen);
 	Gfx_SetTexturing(false);
 }
 
