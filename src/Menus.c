@@ -452,13 +452,6 @@ void ListScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static void MenuScreen_Render(void* screen, double delta) {
-	Menu_RenderBounds();
-	Gfx_SetTexturing(true);
-	Screen_RenderWidgets(screen, delta);
-	Gfx_SetTexturing(false);
-}
-
 static void MenuScreen_Render2(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
@@ -1970,6 +1963,7 @@ static struct MenuOptionsScreen {
 	struct Texture extHelpTextures[5]; /* max lines is 5 */
 	struct ButtonWidget buttons[10], done;
 } MenuOptionsScreen_Instance;
+#define MENUOPTIONS_MAX_VERTICES (BUTTONWIDGET_MAX * 13 + MENUINPUTWIDGET_MAX)
 
 static void Menu_GetBool(String* raw, cc_bool v) {
 	String_AppendConst(raw, v ? "ON" : "OFF");
@@ -2219,6 +2213,7 @@ static void MenuOptionsScreen_Init(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	int i;
 
+	s->maxVertices = MENUOPTIONS_MAX_VERTICES;
 	s->widgets = widgets;
 	/* The various menu options screens might have different number of widgets */
 	for (i = 0; i < Array_Elems(widgets); i++) { s->widgets[i] = NULL; }
@@ -2228,6 +2223,12 @@ static void MenuOptionsScreen_Init(void* screen) {
 	s->DoInit(s);
 	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, screen, MenuOptionsScreen_OnHacksChanged);
 }
+
+static void MenuOptionsScreen_Update2(void* screen, double delta) {
+	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
+	if (s->activeI == -1) return;
+	s->input.base.caretAccumulator += delta;
+}
 	
 #define EXTHELP_PAD 5 /* padding around extended help box */
 static void MenuOptionsScreen_Render(void* screen, double delta) {
@@ -2235,7 +2236,7 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 	struct TextGroupWidget* w;
 	PackedCol tableCol = PackedCol_Make(20, 20, 20, 200);
 
-	MenuScreen_Render(s, delta);
+	MenuScreen_Render2(screen, delta);
 	if (!s->extHelp.lines) return;
 
 	w = &s->extHelp;
@@ -2270,6 +2271,8 @@ static void MenuOptionsScreen_ContextLost(void* screen) {
 static void MenuOptionsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	int i;
+
+	Screen_CreateVb(screen);
 	Menu_MakeTitleFont(&s->titleFont);
 	Menu_MakeBodyFont(&s->textFont);
 
@@ -2284,11 +2287,9 @@ static void MenuOptionsScreen_ContextRecreated(void* screen) {
 	MenuOptionsScreen_RedrawInput(s);
 }
 
-static void MenuOptionsScreen_BuildMesh(void* screen) { }
-
 static const struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
-	MenuOptionsScreen_Init,    Screen_NullUpdate, MenuOptionsScreen_Free, 
-	MenuOptionsScreen_Render,  MenuOptionsScreen_BuildMesh,
+	MenuOptionsScreen_Init,    MenuOptionsScreen_Update2, MenuOptionsScreen_Free,
+	MenuOptionsScreen_Render,  Screen_BuildMesh,
 	MenuOptionsScreen_KeyDown, Screen_TInput,     MenuOptionsScreen_KeyPress,    MenuOptionsScreen_TextChanged,
 	Menu_PointerDown,          Screen_TPointer,   MenuOptionsScreen_PointerMove, Screen_TMouseScroll,
 	MenuOptionsScreen_Layout, MenuOptionsScreen_ContextLost, MenuOptionsScreen_ContextRecreated
@@ -3020,8 +3021,7 @@ static void TexIdsOverlay_BuildMesh(void* screen) { }
 static void TexIdsOverlay_RenderTerrain(struct TexIdsOverlay* s) {
 	VertexP3fT2fC4b* ptr;
 	struct Texture tex;
-	int size, count;
-	int i, idx, end;
+	int size, i, idx, end;
 
 	size = s->tileSize;
 	tex.uv.U1 = 0.0f; tex.uv.U2 = UV2_Scale;
