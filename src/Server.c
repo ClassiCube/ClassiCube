@@ -235,7 +235,7 @@ static cc_uint8  net_writeBuffer[131];
 static cc_uint8* net_readCurrent;
 
 static cc_bool net_writeFailed;
-static TimeMS net_lastPacket;
+static double net_lastPacket;
 static cc_uint8 net_lastOpcode;
 
 static cc_bool net_connecting;
@@ -253,7 +253,7 @@ static void MPConnection_FinishConnect(void) {
 
 	Protocol_Reset();
 	Classic_SendLogin(&Game_Username, &Game_Mppass);
-	net_lastPacket = DateTime_CurrentUTC_MS();
+	net_lastPacket = Game.Time;
 }
 
 static void MPConnection_FailConnect(cc_result result) {
@@ -369,7 +369,6 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	String msg; char msgBuffer[STRING_SIZE * 2];
 
 	struct LocalPlayer* p;
-	TimeMS now;
 	cc_uint32 pending;
 	cc_uint8* readEnd;
 	Net_Handler handler;
@@ -380,8 +379,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 
 	/* Over 30 seconds since last packet, connection likely dropped */
-	now = DateTime_CurrentUTC_MS();
-	if (net_lastPacket + (30 * 1000) < now) MPConnection_CheckDisconnection();
+	if (net_lastPacket + 30 < Game.Time) MPConnection_CheckDisconnection();
 	if (Server.Disconnected) return;
 
 	pending = 0;
@@ -424,7 +422,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 		if (net_readCurrent + Net_PacketSizes[opcode] > readEnd) break;
 		net_lastOpcode = opcode;
-		net_lastPacket = DateTime_CurrentUTC_MS();
+		net_lastPacket = Game.Time;
 
 		handler = Net_Handlers[opcode];
 		if (!handler) {
