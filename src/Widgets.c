@@ -1000,6 +1000,13 @@ static void InputWidget_RenderCaret(struct InputWidget* w, double delta) {
 	if (second < 0.5f) Texture_RenderShaded(&w->caretTex, w->caretCol);
 }
 
+static void InputWidget_RenderCaret2(struct InputWidget* w, int offset) {
+	if (w->showCaret && Math_Mod1((float)w->caretAccumulator) < 0.5f) {
+		Gfx_BindTexture(w->caretTex.ID);
+		Gfx_DrawVb_IndexedTris_Range(4, offset);
+	}
+}
+
 static void InputWidget_OnPressedEnter(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	InputWidget_Clear(w);
@@ -1393,12 +1400,6 @@ const struct MenuInputVTABLE StringInput_VTABLE = {
 /*########################################################################################################################*
 *-----------------------------------------------------MenuInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-static void MenuInputWidget_Render(void* widget, double delta) {
-	struct InputWidget* w = (struct InputWidget*)widget;
-	Texture_Render(&w->inputTex);
-	InputWidget_RenderCaret(w, delta);
-}
-
 static void MenuInputWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_Make2DQuad(&w->inputTex, PACKEDCOL_WHITE, vertices);
@@ -1409,13 +1410,9 @@ static int MenuInputWidget_Render2(void* widget, int offset) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_BindTexture(w->inputTex.ID);
 	Gfx_DrawVb_IndexedTris_Range(4, offset);
-	offset += 4;
 
-	if (w->showCaret && Math_Mod1((float)w->caretAccumulator) < 0.5f) {
-		Gfx_BindTexture(w->caretTex.ID);
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
-	}
-	return offset + 4;
+	InputWidget_RenderCaret2(w, offset + 4);
+	return offset + 8;
 }
 
 static void MenuInputWidget_RemakeTexture(void* widget) {
@@ -1489,7 +1486,7 @@ static cc_bool MenuInputWidget_AllowedChar(void* widget, char c) {
 
 static int MenuInputWidget_GetMaxLines(void) { return 1; }
 static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
-	MenuInputWidget_Render,  InputWidget_Free,  InputWidget_Reposition,
+	NULL,                    InputWidget_Free,  InputWidget_Reposition,
 	InputWidget_KeyDown,     InputWidget_KeyUp, Widget_MouseScroll,
 	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove,
 	MenuInputWidget_BuildMesh, MenuInputWidget_Render2

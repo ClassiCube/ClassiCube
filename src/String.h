@@ -86,7 +86,7 @@ CC_API int String_CaselessEquals(const String* a, const String* b);
 CC_API int String_CaselessEqualsConst(const String* a, const char* b);
 /* Breaks down an integer into an array of digits, and returns number of digits. */
 /* NOTE: Digits are in reverse order, so e.g. '200' becomes '0','0','2' */
-int String_MakeUInt32(cc_uint32 num, char* digits);
+int String_UInt32ToDigits(cc_uint32 num, char* digits);
 
 /* Attempts to append a character. */
 /* Does nothing if str->length == str->capcity. */
