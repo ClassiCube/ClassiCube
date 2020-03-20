@@ -870,7 +870,7 @@ static void LocalPlayer_CheckJumpVelocity(void* obj) {
 	}
 }
 
-static struct EntityVTABLE localPlayer_VTABLE = {
+const static struct EntityVTABLE localPlayer_VTABLE = {
 	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetCol,
 	LocalPlayer_RenderModel, LocalPlayer_RenderName
 };
@@ -1098,7 +1098,7 @@ static void NetPlayer_RenderName(struct Entity* e) {
 	if (distance <= (float)threshold) DrawName(e);
 }
 
-struct EntityVTABLE netPlayer_VTABLE = {
+const struct EntityVTABLE netPlayer_VTABLE = {
 	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetCol,
 	NetPlayer_RenderModel, NetPlayer_RenderName
 };

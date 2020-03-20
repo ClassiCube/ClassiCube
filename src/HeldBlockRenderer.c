@@ -229,7 +229,7 @@ void HeldBlockRenderer_Render(double delta) {
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
 }
 
-static struct EntityVTABLE heldEntity_VTABLE = {
+const static struct EntityVTABLE heldEntity_VTABLE = {
 	NULL, NULL, NULL, HeldBlockRenderer_GetCol,
 	NULL, NULL
 };

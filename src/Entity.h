@@ -69,7 +69,7 @@ struct EntityVTABLE {
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
 struct Entity {
-	struct EntityVTABLE* VTABLE;
+	const struct EntityVTABLE* VTABLE;
 	Vec3 Position;
 	float Pitch, Yaw, RotX, RotY, RotZ;
 	Vec3 Velocity;

@@ -1232,11 +1232,11 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 #define UPDATE_SRC TEXT(UPDATE_FILE)
 
 #if _WIN64
-const char* Updater_D3D9 = "ClassiCube.64.exe";
-const char* Updater_OGL  = "ClassiCube.64-opengl.exe";
+const char* const Updater_D3D9 = "ClassiCube.64.exe";
+const char* const Updater_OGL  = "ClassiCube.64-opengl.exe";
 #else
-const char* Updater_D3D9 = "ClassiCube.exe";
-const char* Updater_OGL  = "ClassiCube.opengl.exe";
+const char* const Updater_D3D9 = "ClassiCube.exe";
+const char* const Updater_OGL  = "ClassiCube.opengl.exe";
 #endif
 
 cc_bool Updater_Clean(void) {
@@ -1286,8 +1286,8 @@ cc_result Updater_GetBuildTime(TimeMS* ms) {
 /* Don't need special execute permission on windows */
 cc_result Updater_MarkExecutable(void) { return 0; }
 #elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
-const char* Updater_D3D9 = NULL;
-const char* Updater_OGL  = NULL;
+const char* const Updater_D3D9 = NULL;
+const char* const Updater_OGL  = NULL;
 
 cc_bool Updater_Clean(void)                  { return true; }
 cc_result Updater_Start(void)                { return ERR_NOT_SUPPORTED; }
@@ -1296,27 +1296,27 @@ cc_result Updater_MarkExecutable(void)       { return 0; }
 #elif defined CC_BUILD_POSIX
 cc_bool Updater_Clean(void) { return true; }
 
-const char* Updater_D3D9 = NULL;
+const char* const Updater_D3D9 = NULL;
 #if defined CC_BUILD_LINUX
 #if __x86_64__
-const char* Updater_OGL = "ClassiCube";
+const char* const Updater_OGL = "ClassiCube";
 #elif __i386__
-const char* Updater_OGL = "ClassiCube.32";
+const char* const Updater_OGL = "ClassiCube.32";
 #elif CC_BUILD_RPI
-const char* Updater_OGL = "ClassiCube.rpi";
+const char* const Updater_OGL = "ClassiCube.rpi";
 #else
-const char* Updater_OGL = NULL;
+const char* const Updater_OGL = NULL;
 #endif
 #elif defined CC_BUILD_OSX
 #if __x86_64__
-const char* Updater_OGL = "ClassiCube.64.osx";
+const char* const Updater_OGL = "ClassiCube.64.osx";
 #elif __i386__
-const char* Updater_OGL = "ClassiCube.osx";
+const char* const Updater_OGL = "ClassiCube.osx";
 #else
-const char* Updater_OGL = NULL;
+const char* const Updater_OGL = NULL;
 #endif
 #else
-const char* Updater_OGL = NULL;
+const char* const Updater_OGL = NULL;
 #endif
 
 cc_result Updater_Start(void) {

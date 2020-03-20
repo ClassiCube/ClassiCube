@@ -63,8 +63,8 @@ CC_API void Process_Exit(cc_result code);
 /* For example, provide a http:// url to open a website in the user's web browser. */
 CC_API void Process_StartOpen(const String* args);
 
-extern const char* Updater_D3D9;
-extern const char* Updater_OGL;
+extern const char* const Updater_D3D9;
+extern const char* const Updater_OGL;
 /* Attempts to clean up any leftover files from an update */
 cc_bool Updater_Clean(void);
 /* Starts the platform-specific method to update then start the game using the UPDATE_FILE file. */
