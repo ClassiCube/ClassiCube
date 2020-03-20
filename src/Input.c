@@ -617,17 +617,17 @@ static cc_bool PushbackPlace(struct AABB* blockBB) {
 
 static cc_bool IntersectsOthers(Vec3 pos, BlockID block) {
 	struct AABB blockBB, entityBB;
-	struct Entity* entity;
+	struct Entity* e;
 	int id;
 
 	Vec3_Add(&blockBB.Min, &pos, &Blocks.MinBB[block]);
 	Vec3_Add(&blockBB.Max, &pos, &Blocks.MaxBB[block]);
 	
 	for (id = 0; id < ENTITIES_SELF_ID; id++) {
-		entity = Entities.List[id];
-		if (!entity) continue;
+		e = Entities.List[id];
+		if (!e) continue;
 
-		Entity_GetBounds(entity, &entityBB);
+		Entity_GetBounds(e, &entityBB);
 		entityBB.Min.Y += 1.0f / 32.0f; /* when player is exactly standing on top of ground */
 		if (AABB_Intersects(&entityBB, &blockBB)) return true;
 	}

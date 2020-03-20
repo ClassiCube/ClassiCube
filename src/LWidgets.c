@@ -140,7 +140,7 @@ static void LButton_Hover(void* w, int x, int y, cc_bool wasOver) {
 	if (!wasOver) LWidget_Draw(w); 
 }
 
-static struct LWidgetVTABLE lbutton_VTABLE = {
+const static struct LWidgetVTABLE lbutton_VTABLE = {
 	LButton_Draw, NULL,
 	NULL, NULL,                  /* Key    */
 	LButton_Hover, LWidget_Draw, /* Hover  */
@@ -433,7 +433,7 @@ static cc_bool LInput_DefaultInputFilter(char c) {
 	return c >= ' ' && c <= '~' && c != '&';
 }
 
-static struct LWidgetVTABLE linput_VTABLE = {
+const static struct LWidgetVTABLE linput_VTABLE = {
 	LInput_Draw, LInput_TickCaret,
 	LInput_KeyDown, LInput_KeyChar, /* Key    */
 	NULL, NULL,                     /* Hover  */
@@ -548,7 +548,7 @@ static void LLabel_Draw(void* widget) {
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, w->x, w->y);
 }
 
-static struct LWidgetVTABLE llabel_VTABLE = {
+const static struct LWidgetVTABLE llabel_VTABLE = {
 	LLabel_Draw, NULL,
 	NULL, NULL, /* Key    */
 	NULL, NULL, /* Hover  */
@@ -588,7 +588,7 @@ static void LLine_Draw(void* widget) {
 	Gradient_Blend(&Launcher_Framebuffer, w->col, 128, w->x, w->y, w->width, w->height);
 }
 
-static struct LWidgetVTABLE lline_VTABLE = {
+const static struct LWidgetVTABLE lline_VTABLE = {
 	LLine_Draw, NULL,
 	NULL, NULL, /* Key    */
 	NULL, NULL, /* Hover  */
@@ -651,7 +651,7 @@ static void LSlider_Draw(void* widget) {
 				   curWidth,      w->height - BORDER2);
 }
 
-static struct LWidgetVTABLE lslider_VTABLE = {
+const static struct LWidgetVTABLE lslider_VTABLE = {
 	LSlider_Draw, NULL,
 	NULL, NULL, /* Key    */
 	NULL, NULL, /* Hover  */
@@ -1085,7 +1085,7 @@ static void LTable_Draw(void* widget) {
 	Launcher_MarkAllDirty();
 }
 
-static struct LWidgetVTABLE ltable_VTABLE = {
+const static struct LWidgetVTABLE ltable_VTABLE = {
 	LTable_Draw,      NULL,
 	LTable_KeyDown,   NULL, /* Key    */
 	LTable_MouseMove, NULL, /* Hover  */

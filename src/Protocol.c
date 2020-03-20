@@ -178,8 +178,8 @@ static void Protocol_AddEntity(cc_uint8* data, EntityID id, const String* displa
 }
 
 void Protocol_RemoveEntity(EntityID id) {
-	struct Entity* entity = Entities.List[id];
-	if (!entity) return;
+	struct Entity* e = Entities.List[id];
+	if (!e) return;
 	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
 
 	/* See comment about some servers in Classic_AddEntity */
@@ -188,11 +188,9 @@ void Protocol_RemoveEntity(EntityID id) {
 	Classic_TabList_Reset(id);
 }
 
-static void Protocol_UpdateLocation(EntityID playerId, struct LocationUpdate* update, cc_bool interpolate) {
-	struct Entity* entity = Entities.List[playerId];
-	if (entity) {
-		entity->VTABLE->SetLocation(entity, update, interpolate);
-	}
+static void Protocol_UpdateLocation(EntityID id, struct LocationUpdate* update, cc_bool interpolate) {
+	struct Entity* e = Entities.List[id];
+	if (e) { e->VTABLE->SetLocation(e, update, interpolate); }
 }
 
 
@@ -1066,12 +1064,12 @@ static void CPE_SetBlockPermission(cc_uint8* data) {
 }
 
 static void CPE_ChangeModel(cc_uint8* data) {
-	struct Entity* entity;
+	struct Entity* e;
 	EntityID id  = data[0];
 	String model = Protocol_UNSAFE_GetString(data + 1);
 
-	entity = Entities.List[id];
-	if (entity) Entity_SetModel(entity, &model);
+	e = Entities.List[id];
+	if (e) Entity_SetModel(e, &model);
 }
 
 static void CPE_EnvSetMapAppearance(cc_uint8* data) {
@@ -1233,15 +1231,15 @@ static void CPE_SetMapEnvProperty(cc_uint8* data) {
 
 static void CPE_SetEntityProperty(cc_uint8* data) {
 	struct LocationUpdate update = { 0 };
-	struct Entity* entity;
+	struct Entity* e;
 	float scale;
 
 	EntityID id   = data[0];
 	cc_uint8 type = data[1];
-	int value    = (int)Stream_GetU32_BE(data + 2);
+	int value     = (int)Stream_GetU32_BE(data + 2);
 
-	entity = Entities.List[id];
-	if (!entity) return;
+	e = Entities.List[id];
+	if (!e) return;
 
 	switch (type) {
 	case 0:
@@ -1258,20 +1256,20 @@ static void CPE_SetEntityProperty(cc_uint8* data) {
 	case 4:
 	case 5:
 		scale = value / 1000.0f;
-		if (entity->ModelRestrictedScale) {
-			Math_Clamp(scale, 0.01f, entity->Model->maxScale);
+		if (e->ModelRestrictedScale) {
+			Math_Clamp(scale, 0.01f, e->Model->maxScale);
 		}
 
-		if (type == 3) entity->ModelScale.X = scale;
-		if (type == 4) entity->ModelScale.Y = scale;
-		if (type == 5) entity->ModelScale.Z = scale;
+		if (type == 3) e->ModelScale.X = scale;
+		if (type == 4) e->ModelScale.Y = scale;
+		if (type == 5) e->ModelScale.Z = scale;
 
-		Entity_UpdateModelBounds(entity);
+		Entity_UpdateModelBounds(e);
 		return;
 	default:
 		return;
 	}
-	entity->VTABLE->SetLocation(entity, &update, true);
+	e->VTABLE->SetLocation(e, &update, true);
 }
 
 static void CPE_TwoWayPing(cc_uint8* data) {
