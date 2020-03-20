@@ -100,7 +100,7 @@ static void CheckWeather(double delta) {
 
 #ifdef CC_BUILD_GL11
 #define DrawFace(face, ign)    Gfx_DrawIndexedVb_TrisT2fC4b(part.Vbs[face], 0);
-#define DrawFaces(f1, f2, ign) MapRenderer_DrawFace(f1, ign); MapRenderer_DrawFace(f2, ign);
+#define DrawFaces(f1, f2, ign) DrawFace(f1, ign); DrawFace(f2, ign);
 #else
 #define DrawFace(face, offset)    Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[face], offset);
 #define DrawFaces(f1, f2, offset) Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[f1] + part.Counts[f2], offset);
