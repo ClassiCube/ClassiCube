@@ -567,8 +567,8 @@ static cc_result Http_StartRequest(struct HttpRequest* req, String* url, HINTERN
 	static const char* verbs[3] = { "GET", "HEAD", "POST" };
 	struct HttpCacheEntry entry;
 	String path; char pathBuffer[URL_MAX_SIZE + 1];
+	DWORD flags, bufferLen;
 	cc_result res;
-	DWORD flags;
 
 	HttpCache_MakeEntry(url, &entry, &path);
 	Mem_Copy(pathBuffer, path.buffer, path.length);
@@ -582,6 +582,12 @@ static cc_result Http_StartRequest(struct HttpRequest* req, String* url, HINTERN
 								pathBuffer, NULL, NULL, NULL, flags, 0);
 	curReq  = *handle;
 	if (!curReq) return GetLastError();
+
+	/* ignore revocation stuff */
+	bufferLen = sizeof(flags);
+	InternetQueryOption(*handle, INTERNET_OPTION_SECURITY_FLAGS, (void*)&bufferLen, &flags);
+	flags |= SECURITY_FLAG_IGNORE_REVOCATION;
+	InternetSetOption(*handle, INTERNET_OPTION_SECURITY_FLAGS, &flags, sizeof(flags));
 
 	Http_SetRequestHeaders(req);
 	return HttpSendRequestA(*handle, NULL, 0, req->data, req->size) ? 0 : GetLastError();
