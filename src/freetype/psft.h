@@ -70,13 +70,6 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_UInt )
   cf2_getMaxstack( PS_Decoder*  decoder );
 
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  FT_LOCAL( FT_Error )
-  cf2_getNormalizedVector( PS_Decoder*  decoder,
-                           CF2_UInt    *len,
-                           FT_Fixed*   *vec );
-#endif
-
   FT_LOCAL( CF2_Fixed )
   cf2_getPpemY( PS_Decoder*  decoder );
   FT_LOCAL( CF2_Fixed )

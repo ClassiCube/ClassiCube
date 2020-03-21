@@ -1714,11 +1714,6 @@
         sfnt->free_eblc( face );
     }
 
-#ifdef TT_CONFIG_OPTION_BDF
-    /* freeing the embedded BDF properties */
-    tt_face_free_bdf_props( face );
-#endif
-
     /* freeing the collection table */
     FT_FREE( face->ttc_header.offsets );
     face->ttc_header.count = 0;

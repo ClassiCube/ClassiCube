@@ -843,72 +843,6 @@ FT_BEGIN_HEADER
 
   } TT_Post_NamesRec, *TT_Post_Names;
 
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-  /***                                                                   ***/
-  /***                                                                   ***/
-  /***              EMBEDDED BDF PROPERTIES TABLE SUPPORT                ***/
-  /***                                                                   ***/
-  /***                                                                   ***/
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-
-  /*
-   * These types are used to support a `BDF ' table that isn't part of the
-   * official TrueType specification.  It is mainly used in SFNT-based
-   * bitmap fonts that were generated from a set of BDF fonts.
-   *
-   * The format of the table is as follows.
-   *
-   *   USHORT   version      `BDF ' table version number, should be 0x0001.
-   *   USHORT   strikeCount  Number of strikes (bitmap sizes) in this table.
-   *   ULONG    stringTable  Offset (from start of BDF table) to string
-   *                         table.
-   *
-   * This is followed by an array of `strikeCount' descriptors, having the
-   * following format.
-   *
-   *   USHORT   ppem         Vertical pixels per EM for this strike.
-   *   USHORT   numItems     Number of items for this strike (properties and
-   *                         atoms).  Maximum is 255.
-   *
-   * This array in turn is followed by `strikeCount' value sets.  Each
-   * `value set' is an array of `numItems' items with the following format.
-   *
-   *   ULONG    item_name    Offset in string table to item name.
-   *   USHORT   item_type    The item type.  Possible values are
-   *                            0 => string (e.g., COMMENT)
-   *                            1 => atom   (e.g., FONT or even SIZE)
-   *                            2 => int32
-   *                            3 => uint32
-   *                         0x10 => A flag to indicate a properties.  This
-   *                                 is ORed with the above values.
-   *   ULONG    item_value   For strings  => Offset into string table without
-   *                                         the corresponding double quotes.
-   *                         For atoms    => Offset into string table.
-   *                         For integers => Direct value.
-   *
-   * All strings in the string table consist of bytes and are
-   * zero-terminated.
-   *
-   */
-
-#ifdef TT_CONFIG_OPTION_BDF
-
-  typedef struct  TT_BDFRec_
-  {
-    FT_Byte*   table;
-    FT_Byte*   table_end;
-    FT_Byte*   strings;
-    FT_ULong   strings_size;
-    FT_UInt    num_strikes;
-    FT_Bool    loaded;
-
-  } TT_BDFRec, *TT_BDF;
-
-#endif /* TT_CONFIG_OPTION_BDF */
 
   /*************************************************************************/
   /*************************************************************************/
@@ -1477,10 +1411,6 @@ FT_BEGIN_HEADER
     TT_SbitTableType      sbit_table_type;
     FT_UInt               sbit_num_strikes;
     FT_UInt*              sbit_strike_map;
-
-#ifdef TT_CONFIG_OPTION_BDF
-    TT_BDFRec             bdf;
-#endif /* TT_CONFIG_OPTION_BDF */
 
     /* since 2.3.0 */
     FT_ULong              horz_metrics_offset;

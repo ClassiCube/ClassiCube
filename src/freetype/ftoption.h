@@ -544,14 +544,6 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* Define TT_CONFIG_OPTION_BDF if you want to include support for        */
-  /* an embedded `BDF ' table within SFNT-based bitmap formats.            */
-  /*                                                                       */
-#undef TT_CONFIG_OPTION_BDF
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* Option TT_CONFIG_OPTION_MAX_RUNNABLE_OPCODES controls the maximum     */
   /* number of bytecode instructions executed for a single run of the      */
   /* bytecode interpreter, needed to prevent infinite loops.  You don't    */
