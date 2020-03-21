@@ -621,18 +621,6 @@
   /*************************************************************************
    *
    * @macro:
-   *   FT_LCD_FILTER_H
-   *
-   * @description:
-   *   A macro used in #include statements to name the file containing the
-   *   FreeType~2 API which performs color filtering for subpixel rendering.
-   */
-#define FT_LCD_FILTER_H  "ftlcdfil.h"
-
-
-  /*************************************************************************
-   *
-   * @macro:
    *   FT_ADVANCES_H
    *
    * @description:

@@ -24,7 +24,6 @@
 #include "freetype/ftfntfmt.c"
 #include "freetype/ftgloadr.c"
 #include "freetype/fthash.c"
-#include "freetype/ftlcdfil.c"
 #include "freetype/ftmac.c"
 #include "freetype/ftobjs.c"
 #include "freetype/ftoutln.c"

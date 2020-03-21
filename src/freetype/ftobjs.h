@@ -29,7 +29,7 @@
 #include "ft2build.h"
 #include FT_RENDER_H
 #include FT_SIZES_H
-#include FT_LCD_FILTER_H
+#include FT_PARAMETER_TAGS_H /*FT_LCD_FILTER_H*/
 #include FT_INTERNAL_MEMORY_H
 #include FT_INTERNAL_GLYPH_LOADER_H
 #include FT_INTERNAL_DRIVER_H
