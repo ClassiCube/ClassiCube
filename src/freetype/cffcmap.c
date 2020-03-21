@@ -112,13 +112,7 @@
     (FT_CMap_InitFunc)     cff_cmap_encoding_init,        /* init       */
     (FT_CMap_DoneFunc)     cff_cmap_encoding_done,        /* done       */
     (FT_CMap_CharIndexFunc)cff_cmap_encoding_char_index,  /* char_index */
-    (FT_CMap_CharNextFunc) cff_cmap_encoding_char_next,   /* char_next  */
-
-    (FT_CMap_CharVarIndexFunc)    NULL,  /* char_var_index   */
-    (FT_CMap_CharVarIsDefaultFunc)NULL,  /* char_var_default */
-    (FT_CMap_VariantListFunc)     NULL,  /* variant_list     */
-    (FT_CMap_CharVariantListFunc) NULL,  /* charvariant_list */
-    (FT_CMap_VariantCharListFunc) NULL   /* variantchar_list */
+    (FT_CMap_CharNextFunc) cff_cmap_encoding_char_next    /* char_next  */
   )
 
 

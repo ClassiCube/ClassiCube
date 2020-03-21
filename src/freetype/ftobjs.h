@@ -180,31 +180,6 @@ FT_BEGIN_HEADER
   (*FT_CMap_CharNextFunc)( FT_CMap     cmap,
                            FT_UInt32  *achar_code );
 
-  typedef FT_UInt
-  (*FT_CMap_CharVarIndexFunc)( FT_CMap    cmap,
-                               FT_CMap    unicode_cmap,
-                               FT_UInt32  char_code,
-                               FT_UInt32  variant_selector );
-
-  typedef FT_Bool
-  (*FT_CMap_CharVarIsDefaultFunc)( FT_CMap    cmap,
-                                   FT_UInt32  char_code,
-                                   FT_UInt32  variant_selector );
-
-  typedef FT_UInt32 *
-  (*FT_CMap_VariantListFunc)( FT_CMap    cmap,
-                              FT_Memory  mem );
-
-  typedef FT_UInt32 *
-  (*FT_CMap_CharVariantListFunc)( FT_CMap    cmap,
-                                  FT_Memory  mem,
-                                  FT_UInt32  char_code );
-
-  typedef FT_UInt32 *
-  (*FT_CMap_VariantCharListFunc)( FT_CMap    cmap,
-                                  FT_Memory  mem,
-                                  FT_UInt32  variant_selector );
-
 
   typedef struct  FT_CMap_ClassRec_
   {
