@@ -214,16 +214,6 @@ FT_BEGIN_HEADER
     FT_CMap_DoneFunc       done;
     FT_CMap_CharIndexFunc  char_index;
     FT_CMap_CharNextFunc   char_next;
-
-    /* Subsequent entries are special ones for format 14 -- the variant */
-    /* selector subtable which behaves like no other                    */
-
-    FT_CMap_CharVarIndexFunc      char_var_index;
-    FT_CMap_CharVarIsDefaultFunc  char_var_default;
-    FT_CMap_VariantListFunc       variant_list;
-    FT_CMap_CharVariantListFunc   charvariant_list;
-    FT_CMap_VariantCharListFunc   variantchar_list;
-
   } FT_CMap_ClassRec;
 
 
@@ -236,12 +226,7 @@ FT_BEGIN_HEADER
           init_,                    \
           done_,                    \
           char_index_,              \
-          char_next_,               \
-          char_var_index_,          \
-          char_var_default_,        \
-          variant_list_,            \
-          charvariant_list_,        \
-          variantchar_list_ )       \
+          char_next_ )              \
   FT_CALLBACK_TABLE_DEF             \
   const FT_CMap_ClassRec  class_ =  \
   {                                 \
@@ -249,12 +234,7 @@ FT_BEGIN_HEADER
     init_,                          \
     done_,                          \
     char_index_,                    \
-    char_next_,                     \
-    char_var_index_,                \
-    char_var_default_,              \
-    variant_list_,                  \
-    charvariant_list_,              \
-    variantchar_list_               \
+    char_next_                      \
   };
 
 

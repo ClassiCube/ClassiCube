@@ -62,11 +62,6 @@ FT_BEGIN_HEADER
                            done_,              \
                            char_index_,        \
                            char_next_,         \
-                           char_var_index_,    \
-                           char_var_default_,  \
-                           variant_list_,      \
-                           charvariant_list_,  \
-                           variantchar_list_,  \
                            format_,            \
                            validate_,          \
                            get_cmap_info_ )    \
@@ -77,12 +72,7 @@ FT_BEGIN_HEADER
       init_,                                   \
       done_,                                   \
       char_index_,                             \
-      char_next_,                              \
-      char_var_index_,                         \
-      char_var_default_,                       \
-      variant_list_,                           \
-      charvariant_list_,                       \
-      variantchar_list_                        \
+      char_next_                               \
     },                                         \
                                                \
     format_,                                   \
