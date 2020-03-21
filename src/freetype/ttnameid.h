@@ -829,10 +829,6 @@ FT_BEGIN_HEADER
   /* This is new in OpenType 1.8 */
 #define TT_NAME_ID_VARIATIONS_PREFIX      25
 
-  /* these two values are deprecated */
-#define TT_NAME_ID_PREFERRED_FAMILY     TT_NAME_ID_TYPOGRAPHIC_FAMILY
-#define TT_NAME_ID_PREFERRED_SUBFAMILY  TT_NAME_ID_TYPOGRAPHIC_SUBFAMILY
-
 
   /***********************************************************************
    *

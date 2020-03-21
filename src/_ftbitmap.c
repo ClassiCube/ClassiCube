@@ -38,16 +38,6 @@
   }
 
 
-  /* deprecated function name; retained for ABI compatibility */
-
-  FT_EXPORT_DEF( void )
-  FT_Bitmap_New( FT_Bitmap  *abitmap )
-  {
-    if ( abitmap )
-      *abitmap = null_bitmap;
-  }
-
-
   /* documentation is in ftbitmap.h */
 
   FT_EXPORT_DEF( FT_Error )

@@ -57,16 +57,8 @@ FT_BEGIN_HEADER
   /* <InOut>                                                               */
   /*    abitmap :: A pointer to the bitmap structure.                      */
   /*                                                                       */
-  /* <Note>                                                                */
-  /*    A deprecated name for the same function is `FT_Bitmap_New'.        */
-  /*                                                                       */
   FT_EXPORT( void )
   FT_Bitmap_Init( FT_Bitmap  *abitmap );
-
-
-  /* deprecated */
-  FT_EXPORT( void )
-  FT_Bitmap_New( FT_Bitmap  *abitmap );
 
 
   /*************************************************************************/

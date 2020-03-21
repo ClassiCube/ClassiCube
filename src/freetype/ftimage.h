@@ -414,17 +414,6 @@ FT_BEGIN_HEADER
 #define FT_OUTLINE_HIGH_PRECISION   0x100
 #define FT_OUTLINE_SINGLE_PASS      0x200
 
-
-  /* these constants are deprecated; use the corresponding */
-  /* `FT_OUTLINE_XXX' values instead                       */
-#define ft_outline_none             FT_OUTLINE_NONE
-#define ft_outline_owner            FT_OUTLINE_OWNER
-#define ft_outline_even_odd_fill    FT_OUTLINE_EVEN_ODD_FILL
-#define ft_outline_reverse_fill     FT_OUTLINE_REVERSE_FILL
-#define ft_outline_ignore_dropouts  FT_OUTLINE_IGNORE_DROPOUTS
-#define ft_outline_high_precision   FT_OUTLINE_HIGH_PRECISION
-#define ft_outline_single_pass      FT_OUTLINE_SINGLE_PASS
-
   /* */
 
 #define FT_CURVE_TAG( flag )  ( flag & 3 )
@@ -703,15 +692,6 @@ FT_BEGIN_HEADER
   } FT_Glyph_Format;
 
 
-  /* these constants are deprecated; use the corresponding */
-  /* `FT_Glyph_Format' values instead.                     */
-#define ft_glyph_format_none       FT_GLYPH_FORMAT_NONE
-#define ft_glyph_format_composite  FT_GLYPH_FORMAT_COMPOSITE
-#define ft_glyph_format_bitmap     FT_GLYPH_FORMAT_BITMAP
-#define ft_glyph_format_outline    FT_GLYPH_FORMAT_OUTLINE
-#define ft_glyph_format_plotter    FT_GLYPH_FORMAT_PLOTTER
-
-
   /*************************************************************************/
   /*************************************************************************/
   /*************************************************************************/
@@ -920,13 +900,6 @@ FT_BEGIN_HEADER
 #define FT_RASTER_FLAG_AA       0x1
 #define FT_RASTER_FLAG_DIRECT   0x2
 #define FT_RASTER_FLAG_CLIP     0x4
-
-  /* these constants are deprecated; use the corresponding */
-  /* `FT_RASTER_FLAG_XXX' values instead                   */
-#define ft_raster_flag_default  FT_RASTER_FLAG_DEFAULT
-#define ft_raster_flag_aa       FT_RASTER_FLAG_AA
-#define ft_raster_flag_direct   FT_RASTER_FLAG_DIRECT
-#define ft_raster_flag_clip     FT_RASTER_FLAG_CLIP
 
 
   /*************************************************************************/

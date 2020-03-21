@@ -325,15 +325,6 @@ FT_BEGIN_HEADER
   } FT_Glyph_BBox_Mode;
 
 
-  /* these constants are deprecated; use the corresponding */
-  /* `FT_Glyph_BBox_Mode' values instead                   */
-#define ft_glyph_bbox_unscaled   FT_GLYPH_BBOX_UNSCALED
-#define ft_glyph_bbox_subpixels  FT_GLYPH_BBOX_SUBPIXELS
-#define ft_glyph_bbox_gridfit    FT_GLYPH_BBOX_GRIDFIT
-#define ft_glyph_bbox_truncate   FT_GLYPH_BBOX_TRUNCATE
-#define ft_glyph_bbox_pixels     FT_GLYPH_BBOX_PIXELS
-
-
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
