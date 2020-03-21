@@ -24,7 +24,6 @@
 #include "freetype/ttinterp.c"
 #include "freetype/ttobjs.c"     /* object manager      */
 #include "freetype/ttpload.c"    /* tables loader       */
-#include "freetype/ttsubpix.c"
 
 
 /* END */
