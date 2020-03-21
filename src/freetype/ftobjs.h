@@ -270,27 +270,6 @@ FT_BEGIN_HEADER
   FT_CMap_Done( FT_CMap  cmap );
 
 
-  /* adds LCD padding to Min and Max boundaries */
-  FT_BASE( void )
-  ft_lcd_padding( FT_Pos*       Min,
-                  FT_Pos*       Max,
-                  FT_GlyphSlot  slot );
-
-#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
-
-  typedef void  (*FT_Bitmap_LcdFilterFunc)( FT_Bitmap*      bitmap,
-                                            FT_Render_Mode  render_mode,
-                                            FT_Byte*        weights );
-
-
-  /* This is the default LCD filter, an in-place, 5-tap FIR filter. */
-  FT_BASE( void )
-  ft_lcd_filter_fir( FT_Bitmap*           bitmap,
-                     FT_Render_Mode       mode,
-                     FT_LcdFiveTapFilter  weights );
-
-#endif /* FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
-
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
@@ -373,11 +352,6 @@ FT_BEGIN_HEADER
 
     FT_Char              no_stem_darkening;
     FT_Int32             random_seed;
-
-#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
-    FT_LcdFiveTapFilter      lcd_weights;      /* filter weights, if any */
-    FT_Bitmap_LcdFilterFunc  lcd_filter_func;  /* filtering callback     */
-#endif
 
     FT_Int  refcount;
 
@@ -887,11 +861,6 @@ FT_BEGIN_HEADER
     FT_Module          auto_hinter;
 
     FT_DebugHook_Func  debug_hooks[4];
-
-#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
-    FT_LcdFiveTapFilter      lcd_weights;      /* filter weights, if any */
-    FT_Bitmap_LcdFilterFunc  lcd_filter_func;  /* filtering callback     */
-#endif
 
     FT_Int             refcount;
 

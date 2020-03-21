@@ -160,68 +160,6 @@
     params.flags  = FT_RASTER_FLAG_AA;
 
 #ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
-
-    /* implode outline if needed */
-    {
-      FT_Vector*  points     = outline->points;
-      FT_Vector*  points_end = points + outline->n_points;
-      FT_Vector*  vec;
-
-
-      if ( hmul )
-        for ( vec = points; vec < points_end; vec++ )
-          vec->x *= 3;
-
-      if ( vmul )
-        for ( vec = points; vec < points_end; vec++ )
-          vec->y *= 3;
-    }
-
-    /* render outline into the bitmap */
-    error = render->raster_render( render->raster, &params );
-
-    /* deflate outline if needed */
-    {
-      FT_Vector*  points     = outline->points;
-      FT_Vector*  points_end = points + outline->n_points;
-      FT_Vector*  vec;
-
-
-      if ( hmul )
-        for ( vec = points; vec < points_end; vec++ )
-          vec->x /= 3;
-
-      if ( vmul )
-        for ( vec = points; vec < points_end; vec++ )
-          vec->y /= 3;
-    }
-
-    if ( error )
-      goto Exit;
-
-    /* finally apply filtering */
-    if ( hmul || vmul )
-    {
-      FT_Byte*                 lcd_weights;
-      FT_Bitmap_LcdFilterFunc  lcd_filter_func;
-
-
-      /* Per-face LCD filtering takes priority if set up. */
-      if ( slot->face && slot->face->internal->lcd_filter_func )
-      {
-        lcd_weights     = slot->face->internal->lcd_weights;
-        lcd_filter_func = slot->face->internal->lcd_filter_func;
-      }
-      else
-      {
-        lcd_weights     = slot->library->lcd_weights;
-        lcd_filter_func = slot->library->lcd_filter_func;
-      }
-
-      if ( lcd_filter_func )
-        lcd_filter_func( bitmap, mode, lcd_weights );
-    }
-
 #else /* !FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
 
     if ( hmul )  /* lcd */

@@ -3032,14 +3032,6 @@ FT_BEGIN_HEADER
   /*      glyph outline in pixels and use the @FT_PIXEL_MODE_LCD_V mode.   */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    Should you define FT_CONFIG_OPTION_SUBPIXEL_RENDERING in your      */
-  /*    `ftoption.h', which enables patented ClearType-style rendering,    */
-  /*    the LCD-optimized glyph bitmaps should be filtered to reduce color */
-  /*    fringes inherent to this technology.  You can either set up LCD    */
-  /*    filtering with @FT_Library_SetLcdFilter or @FT_Face_Properties,    */
-  /*    or do the filtering yourself.  The default FreeType LCD rendering  */
-  /*    technology does not require filtering.                             */
-  /*                                                                       */
   /*    The selected render mode only affects vector glyphs of a font.     */
   /*    Embedded bitmaps often have a different pixel mode like            */
   /*    @FT_PIXEL_MODE_MONO.  You can use @FT_Bitmap_Convert to transform  */
