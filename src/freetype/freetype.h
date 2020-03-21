@@ -2936,8 +2936,6 @@ FT_BEGIN_HEADER
 #define FT_LOAD_TARGET_NORMAL  FT_LOAD_TARGET_( FT_RENDER_MODE_NORMAL )
 #define FT_LOAD_TARGET_LIGHT   FT_LOAD_TARGET_( FT_RENDER_MODE_LIGHT  )
 #define FT_LOAD_TARGET_MONO    FT_LOAD_TARGET_( FT_RENDER_MODE_MONO   )
-#define FT_LOAD_TARGET_LCD     FT_LOAD_TARGET_( FT_RENDER_MODE_LCD    )
-#define FT_LOAD_TARGET_LCD_V   FT_LOAD_TARGET_( FT_RENDER_MODE_LCD_V  )
 
 
   /**************************************************************************
@@ -3018,18 +3016,6 @@ FT_BEGIN_HEADER
   /*    FT_RENDER_MODE_MONO ::                                             */
   /*      This mode corresponds to 1-bit bitmaps (with 2~levels of         */
   /*      opacity).                                                        */
-  /*                                                                       */
-  /*    FT_RENDER_MODE_LCD ::                                              */
-  /*      This mode corresponds to horizontal RGB and BGR subpixel         */
-  /*      displays like LCD screens.  It produces 8-bit bitmaps that are   */
-  /*      3~times the width of the original glyph outline in pixels, and   */
-  /*      which use the @FT_PIXEL_MODE_LCD mode.                           */
-  /*                                                                       */
-  /*    FT_RENDER_MODE_LCD_V ::                                            */
-  /*      This mode corresponds to vertical RGB and BGR subpixel displays  */
-  /*      (like PDA screens, rotated LCD displays, etc.).  It produces     */
-  /*      8-bit bitmaps that are 3~times the height of the original        */
-  /*      glyph outline in pixels and use the @FT_PIXEL_MODE_LCD_V mode.   */
   /*                                                                       */
   /* <Note>                                                                */
   /*    The selected render mode only affects vector glyphs of a font.     */

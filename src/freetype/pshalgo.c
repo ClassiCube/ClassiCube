@@ -2143,11 +2143,9 @@
       glyph->do_horz_hints = 1;
       glyph->do_vert_hints = 1;
 
-      glyph->do_horz_snapping = FT_BOOL( hint_mode == FT_RENDER_MODE_MONO ||
-                                         hint_mode == FT_RENDER_MODE_LCD  );
+      glyph->do_horz_snapping = FT_BOOL( hint_mode == FT_RENDER_MODE_MONO );
 
-      glyph->do_vert_snapping = FT_BOOL( hint_mode == FT_RENDER_MODE_MONO  ||
-                                         hint_mode == FT_RENDER_MODE_LCD_V );
+      glyph->do_vert_snapping = FT_BOOL( hint_mode == FT_RENDER_MODE_MONO );
 
       glyph->do_stem_adjust   = FT_BOOL( hint_mode != FT_RENDER_MODE_LIGHT );
 

@@ -156,18 +156,6 @@ FT_BEGIN_HEADER
   /*      bitmaps in font files according to the OpenType specification.   */
   /*      We haven't found a single font using this format, however.       */
   /*                                                                       */
-  /*    FT_PIXEL_MODE_LCD ::                                               */
-  /*      An 8-bit bitmap, representing RGB or BGR decimated glyph images  */
-  /*      used for display on LCD displays; the bitmap is three times      */
-  /*      wider than the original glyph image.  See also                   */
-  /*      @FT_RENDER_MODE_LCD.                                             */
-  /*                                                                       */
-  /*    FT_PIXEL_MODE_LCD_V ::                                             */
-  /*      An 8-bit bitmap, representing RGB or BGR decimated glyph images  */
-  /*      used for display on rotated LCD displays; the bitmap is three    */
-  /*      times taller than the original glyph image.  See also            */
-  /*      @FT_RENDER_MODE_LCD_V.                                           */
-  /*                                                                       */
   /*    FT_PIXEL_MODE_BGRA ::                                              */
   /*      [Since 2.5] An image with four 8-bit channels per pixel,         */
   /*      representing a color image (such as emoticons) with alpha        */
@@ -191,15 +179,6 @@ FT_BEGIN_HEADER
     FT_PIXEL_MODE_MAX      /* do not remove */
 
   } FT_Pixel_Mode;
-
-
-  /* these constants are deprecated; use the corresponding `FT_Pixel_Mode' */
-  /* values instead.                                                       */
-#define ft_pixel_mode_none   FT_PIXEL_MODE_NONE
-#define ft_pixel_mode_mono   FT_PIXEL_MODE_MONO
-#define ft_pixel_mode_grays  FT_PIXEL_MODE_GRAY
-#define ft_pixel_mode_pal2   FT_PIXEL_MODE_GRAY2
-#define ft_pixel_mode_pal4   FT_PIXEL_MODE_GRAY4
 
 
   /*************************************************************************/

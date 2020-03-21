@@ -2548,11 +2548,6 @@
     /* compute flags depending on render mode, etc. */
     mode = metrics->root.scaler.render_mode;
 
-#if 0 /* #ifdef AF_CONFIG_OPTION_USE_WARPER */
-    if ( mode == FT_RENDER_MODE_LCD || mode == FT_RENDER_MODE_LCD_V )
-      metrics->root.scaler.render_mode = mode = FT_RENDER_MODE_NORMAL;
-#endif
-
     scaler_flags = hints->scaler_flags;
     other_flags  = 0;
 
@@ -2560,20 +2555,20 @@
      *  We snap the width of vertical stems for the monochrome and
      *  horizontal LCD rendering targets only.
      */
-    if ( mode == FT_RENDER_MODE_MONO || mode == FT_RENDER_MODE_LCD )
+    if ( mode == FT_RENDER_MODE_MONO )
       other_flags |= AF_LATIN_HINTS_HORZ_SNAP;
 
     /*
      *  We snap the width of horizontal stems for the monochrome and
      *  vertical LCD rendering targets only.
      */
-    if ( mode == FT_RENDER_MODE_MONO || mode == FT_RENDER_MODE_LCD_V )
+    if ( mode == FT_RENDER_MODE_MONO )
       other_flags |= AF_LATIN_HINTS_VERT_SNAP;
 
     /*
      *  We adjust stems to full pixels unless in `light' or `lcd' mode.
      */
-    if ( mode != FT_RENDER_MODE_LIGHT && mode != FT_RENDER_MODE_LCD )
+    if ( mode != FT_RENDER_MODE_LIGHT )
       other_flags |= AF_LATIN_HINTS_STEM_ADJUST;
 
     if ( mode == FT_RENDER_MODE_MONO )
@@ -2586,7 +2581,7 @@
      *  However, if warping is enabled (which only works in `light' hinting
      *  mode), advance widths get adjusted, too.
      */
-    if ( mode == FT_RENDER_MODE_LIGHT || mode == FT_RENDER_MODE_LCD ||
+    if ( mode == FT_RENDER_MODE_LIGHT ||
          ( face->style_flags & FT_STYLE_FLAG_ITALIC ) != 0          )
       scaler_flags |= AF_SCALER_FLAG_NO_HORIZONTAL;
 

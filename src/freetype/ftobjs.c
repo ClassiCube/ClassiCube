@@ -343,19 +343,10 @@
 #endif
       break;
 
-    case FT_RENDER_MODE_LCD:
-      pixel_mode = FT_PIXEL_MODE_LCD;
-      goto Round;
-
-    case FT_RENDER_MODE_LCD_V:
-      pixel_mode = FT_PIXEL_MODE_LCD_V;
-      goto Round;
-
     case FT_RENDER_MODE_NORMAL:
     case FT_RENDER_MODE_LIGHT:
     default:
       pixel_mode = FT_PIXEL_MODE_GRAY;
-    Round:
       cbox.xMin = FT_PIX_FLOOR( cbox.xMin );
       cbox.yMin = FT_PIX_FLOOR( cbox.yMin );
       cbox.xMax = FT_PIX_CEIL_LONG( cbox.xMax );
@@ -376,15 +367,6 @@
     case FT_PIXEL_MODE_MONO:
       pitch = ( ( width + 15 ) >> 4 ) << 1;
       break;
-
-    case FT_PIXEL_MODE_LCD:
-      width *= 3;
-      pitch  = FT_PAD_CEIL( width, 4 );
-      break;
-
-    case FT_PIXEL_MODE_LCD_V:
-      height *= 3;
-      /* fall through */
 
     case FT_PIXEL_MODE_GRAY:
     default:

@@ -674,9 +674,7 @@
     params.target = abitmap;
     params.flags  = 0;
 
-    if ( abitmap->pixel_mode == FT_PIXEL_MODE_GRAY  ||
-         abitmap->pixel_mode == FT_PIXEL_MODE_LCD   ||
-         abitmap->pixel_mode == FT_PIXEL_MODE_LCD_V )
+    if ( abitmap->pixel_mode == FT_PIXEL_MODE_GRAY )
       params.flags |= FT_RASTER_FLAG_AA;
 
     return FT_Outline_Render( library, outline, &params );

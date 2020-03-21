@@ -179,8 +179,6 @@
       new_pitch = ( width + xpixels + 1 ) >> 1;
       break;
     case FT_PIXEL_MODE_GRAY:
-    case FT_PIXEL_MODE_LCD:
-    case FT_PIXEL_MODE_LCD_V:
       bpp       = 8;
       new_pitch = width + xpixels;
       break;
@@ -347,14 +345,6 @@
     case FT_PIXEL_MODE_MONO:
       if ( xstr > 8 )
         xstr = 8;
-      break;
-
-    case FT_PIXEL_MODE_LCD:
-      xstr *= 3;
-      break;
-
-    case FT_PIXEL_MODE_LCD_V:
-      ystr *= 3;
       break;
 
     case FT_PIXEL_MODE_BGRA:
@@ -529,8 +519,6 @@
     case FT_PIXEL_MODE_GRAY:
     case FT_PIXEL_MODE_GRAY2:
     case FT_PIXEL_MODE_GRAY4:
-    case FT_PIXEL_MODE_LCD:
-    case FT_PIXEL_MODE_LCD_V:
     case FT_PIXEL_MODE_BGRA:
       {
         FT_Int    pad, old_target_pitch, target_pitch;
@@ -640,8 +628,6 @@
 
 
     case FT_PIXEL_MODE_GRAY:
-    case FT_PIXEL_MODE_LCD:
-    case FT_PIXEL_MODE_LCD_V:
       {
         FT_UInt  width = source->width;
         FT_UInt  i;
