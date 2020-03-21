@@ -104,18 +104,6 @@ FT_BEGIN_HEADER
                      CFF_Parser   parser,
                      FT_UInt      numBlends );
 
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  FT_LOCAL( FT_Error )
-  cff_get_var_blend( CFF_Face     face,
-                     FT_UInt     *num_coords,
-                     FT_Fixed*   *coords,
-                     FT_Fixed*   *normalizedcoords,
-                     FT_MM_Var*  *mm_var );
-
-  FT_LOCAL( void )
-  cff_done_blend( CFF_Face  face );
-#endif
-
 
 FT_END_HEADER
 

@@ -24,10 +24,6 @@
 
 #include "ttpload.h"
 
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-#include "ttgxvar.h"
-#endif
-
 #include "tterrors.h"
 
 
@@ -358,11 +354,6 @@
 
     FT_FRAME_EXIT();
     FT_TRACE2(( "loaded\n" ));
-
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-    if ( face->doblend )
-      error = tt_face_vary_cvt( face, stream );
-#endif
 
   Exit:
     return error;

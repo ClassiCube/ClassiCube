@@ -44,11 +44,6 @@
 #include "psobjs.h"
 #include "cffdecode.h"
 
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-#include FT_MULTIPLE_MASTERS_H
-#include FT_SERVICE_MULTIPLE_MASTERS_H
-#endif
-
 #include FT_SERVICE_CFF_TABLE_LOAD_H
 
 
@@ -471,32 +466,6 @@
 
     return decoder->cff->top_font.font_dict.maxstack;
   }
-
-
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  /* Get normalized design vector for current render request; */
-  /* return pointer and length.                               */
-  /*                                                          */
-  /* Note: Uses FT_Fixed not CF2_Fixed for the vector.        */
-  FT_LOCAL_DEF( FT_Error )
-  cf2_getNormalizedVector( PS_Decoder*  decoder,
-                           CF2_UInt     *len,
-                           FT_Fixed*    *vec )
-  {
-    TT_Face                  face;
-    FT_Service_MultiMasters  mm;
-
-
-    FT_ASSERT( decoder && decoder->builder.face );
-    FT_ASSERT( vec && len );
-    FT_ASSERT( !decoder->builder.is_t1 );
-
-    face = (TT_Face)decoder->builder.face;
-    mm   = (FT_Service_MultiMasters)face->mm;
-
-    return mm->get_var_blend( FT_FACE( face ), len, NULL, vec, NULL );
-  }
-#endif
 
 
   /* get `y_ppem' from `CFF_Size' */

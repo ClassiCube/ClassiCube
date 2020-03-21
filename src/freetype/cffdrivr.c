@@ -36,11 +36,6 @@
 #include "cffparse.h"
 #include "cffobjs.h"
 
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-#include FT_SERVICE_MULTIPLE_MASTERS_H
-#include FT_SERVICE_METRICS_VARIATIONS_H
-#endif
-
 #include "cfferrs.h"
 
 #include FT_SERVICE_FONT_FORMAT_H
@@ -888,20 +883,6 @@
     FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info,
     FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cff_service_ps_name,
     FT_SERVICE_ID_GLYPH_DICT,           &cff_service_glyph_dict,
-    FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
-    FT_SERVICE_ID_CID,                  &cff_service_cid_info,
-    FT_SERVICE_ID_PROPERTIES,           &cff_service_properties,
-    FT_SERVICE_ID_CFF_LOAD,             &cff_service_cff_load
-  )
-#elif defined TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  FT_DEFINE_SERVICEDESCREC9(
-    cff_services,
-
-    FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
-    FT_SERVICE_ID_MULTI_MASTERS,        &cff_service_multi_masters,
-    FT_SERVICE_ID_METRICS_VARIATIONS,   &cff_service_metrics_variations,
-    FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cff_service_ps_name,
     FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
     FT_SERVICE_ID_CID,                  &cff_service_cid_info,
     FT_SERVICE_ID_PROPERTIES,           &cff_service_properties,

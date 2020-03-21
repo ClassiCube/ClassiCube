@@ -25,10 +25,6 @@
 #include FT_TRUETYPE_TABLES_H
 #include FT_INTERNAL_OBJECTS_H
 
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-#include FT_MULTIPLE_MASTERS_H
-#endif
-
 
 FT_BEGIN_HEADER
 
@@ -847,24 +843,6 @@ FT_BEGIN_HEADER
 
   } TT_Post_NamesRec, *TT_Post_Names;
 
-
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-  /***                                                                   ***/
-  /***                                                                   ***/
-  /***                    GX VARIATION TABLE SUPPORT                     ***/
-  /***                                                                   ***/
-  /***                                                                   ***/
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-
-
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  typedef struct GX_BlendRec_  *GX_Blend;
-#endif
-
   /*************************************************************************/
   /*************************************************************************/
   /*************************************************************************/
@@ -1417,16 +1395,6 @@ FT_BEGIN_HEADER
     /* handle glyph names <-> unicode & Mac values                   */
     void*                 psnames;
 
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-    /* a typeless pointer to the FT_Service_MultiMasters table used to */
-    /* handle variation fonts                                          */
-    void*                 mm;
-
-    /* a typeless pointer to the FT_Service_MetricsVariationsRec table */
-    /* used to handle the HVAR, VVAR, and MVAR OpenType tables         */
-    void*                 var;
-#endif
-
     /* a typeless pointer to the PostScript Aux service */
     void*                 psaux;
 
@@ -1489,17 +1457,6 @@ FT_BEGIN_HEADER
     FT_ULong              glyf_offset;    /* since 2.7.1 */
 
     FT_Bool               is_cff2;        /* since 2.7.1 */
-
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-    FT_Bool               doblend;
-    GX_Blend              blend;
-
-    FT_UInt32             variation_support;     /* since 2.7.1 */
-
-    const char*           var_postscript_prefix;     /* since 2.7.2 */
-    FT_UInt               var_postscript_prefix_len; /* since 2.7.2 */
-
-#endif
 
     /* since version 2.2 */
 

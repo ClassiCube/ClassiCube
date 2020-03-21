@@ -32,10 +32,6 @@
 #include "ttinterp.h"
 #endif
 
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-#include "ttgxvar.h"
-#endif
-
   /*************************************************************************/
   /*                                                                       */
   /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
@@ -772,11 +768,6 @@
     FT_FRAME_RELEASE( face->cvt_program );
     face->font_program_size = 0;
     face->cvt_program_size  = 0;
-
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-    tt_done_blend( face );
-    face->blend = NULL;
-#endif
   }
 
 
