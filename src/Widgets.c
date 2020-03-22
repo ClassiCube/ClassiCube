@@ -1600,7 +1600,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		caretAtEnd = (w->caretY == i) && (w->caretX == INPUTWIDGET_LEN || w->caretPos == -1);
 		width      = w->lineWidths[i] + (caretAtEnd ? w->caretTex.Width : 0);
 		/* Cover whole window width to match original classic behaviour */
-		if (Game_PureClassic) { width = max(width, Window_Width - x * 4); }
+		if (Gui_ClassicChat) { width = max(width, Window_Width - x * 4); }
 	
 		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->lineHeight, backCol);
 		y += w->lineHeight;

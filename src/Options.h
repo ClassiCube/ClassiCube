@@ -65,6 +65,7 @@
 #define OPT_CLASSIC_OPTIONS "nostalgia-classicoptions"
 #define OPT_CLASSIC_HACKS "nostalgia-hacks"
 #define OPT_CLASSIC_ARM_MODEL "nostalgia-classicarm"
+#define OPT_CLASSIC_CHAT "nostalgia-classicchat"
 #define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
 
 extern struct EntryList Options;

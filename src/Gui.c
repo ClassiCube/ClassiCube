@@ -13,7 +13,7 @@
 #include "Bitmap.h"
 #include "Options.h"
 
-cc_bool Gui_ClassicTexture, Gui_ClassicTabList, Gui_ClassicMenu;
+cc_bool Gui_ClassicTexture, Gui_ClassicTabList, Gui_ClassicMenu, Gui_ClassicChat;
 int     Gui_Chatlines;
 cc_bool Gui_ClickableChat, Gui_TabAutocomplete, Gui_ShowFPS;
 
@@ -98,6 +98,7 @@ static void Gui_LoadOptions(void) {
 	Gui_ClassicTexture = Options_GetBool(OPT_CLASSIC_GUI, true)      || Game_ClassicMode;
 	Gui_ClassicTabList = Options_GetBool(OPT_CLASSIC_TABLIST, false) || Game_ClassicMode;
 	Gui_ClassicMenu    = Options_GetBool(OPT_CLASSIC_OPTIONS, false) || Game_ClassicMode;
+	Gui_ClassicChat    = Options_GetBool(OPT_CLASSIC_CHAT, false)    || Game_PureClassic;
 	Gui_ShowFPS        = Options_GetBool(OPT_SHOW_FPS, true);
 }
 

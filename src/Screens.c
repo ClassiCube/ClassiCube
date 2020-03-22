@@ -952,7 +952,7 @@ static void ChatScreen_Render(void* screen, double delta) {
 		ChatScreen_DrawCrosshairs();
 		Gfx_SetTexturing(false);
 	}
-	if (s->grabsInput && !Game_PureClassic) {
+	if (s->grabsInput && !Gui_ClassicChat) {
 		ChatScreen_DrawChatBackground(s);
 	}
 
