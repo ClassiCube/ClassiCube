@@ -475,7 +475,20 @@ static const cc_uint8 key_map[14 * 16] = {
 	KEY_TILDE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_LBRACKET, KEY_BACKSLASH, KEY_RBRACKET, KEY_QUOTE, 0,
 };
-static int MapNativeKey(WPARAM key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+static int MapNativeKey(WPARAM key, LPARAM meta) {
+	LPARAM ext = meta & (1UL << 24);
+	switch (key)
+	{
+	case VK_CONTROL:
+		return ext ? KEY_RCTRL : KEY_LCTRL;
+	case VK_MENU:
+		return ext ? KEY_RALT  : KEY_LALT;
+	case VK_RETURN:
+		return ext ? KEY_KP_ENTER : KEY_ENTER;
+	default:
+		return key < Array_Elems(key_map) ? key_map[key] : 0;
+	}
+}
 
 static void RefreshWindowBounds(void) {
 	RECT rect;
@@ -601,14 +614,11 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		released in the case of Control and Alt.
 		To combat this, we are going to release both keys when either is released. Hacky, but should work.
 		Win95 does not distinguish left/right key constants (GetAsyncKeyState returns 0).
-		In this case, both keys will be reported as pressed.	*/
-		LPARAM ext = lParam & (1UL << 24);
-
+		In this case, both keys will be reported as pressed. */
 		cc_bool lShiftDown, rShiftDown;
 		int key;
-		switch (wParam)
-		{
-		case VK_SHIFT:
+
+		if (wParam == VK_SHIFT) {
 			/* The behavior of this key is very strange. Unlike Control and Alt, there is no extended bit
 			to distinguish between left and right keys. Moreover, pressing both keys and releasing one
 			may result in both keys being held down (but not always).*/
@@ -619,23 +629,11 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 				Input_SetPressed(KEY_LSHIFT, lShiftDown);
 				Input_SetPressed(KEY_RSHIFT, rShiftDown);
 			}
-			return 0;
-
-		case VK_CONTROL:
-			Input_SetPressed(ext ? KEY_RCTRL : KEY_LCTRL, pressed);
-			return 0;
-		case VK_MENU:
-			Input_SetPressed(ext ? KEY_RALT  : KEY_LALT,  pressed);
-			return 0;
-		case VK_RETURN:
-			Input_SetPressed(ext ? KEY_KP_ENTER : KEY_ENTER, pressed);
-			return 0;
-
-		default:
-			key = MapNativeKey(wParam);
+		} else {
+			key = MapNativeKey(wParam, lParam);
 			if (key) Input_SetPressed(key, pressed);
-			return 0;
 		}
+		return 0;
 	} break;
 
 	case WM_SYSCHAR:
