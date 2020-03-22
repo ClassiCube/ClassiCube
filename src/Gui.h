@@ -24,6 +24,8 @@ extern cc_bool Gui_ClassicTexture;
 extern cc_bool Gui_ClassicTabList;
 /* Whether menus are laid out like vanilla Minecraft Classic. */
 extern cc_bool Gui_ClassicMenu;
+/* Whether classic-style chat screen is used */
+extern cc_bool Gui_ClassicChat;
 /* Maximum number of visible chatlines on screen. Can be 0. */
 extern int     Gui_Chatlines;
 /* Whether clicking on a chatline inserts it into chat input. */

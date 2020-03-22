@@ -2903,6 +2903,9 @@ static void NostalgiaScreen_SetCPE(const String* v) { Game_UseCPE = Menu_SetBool
 static void NostalgiaScreen_GetTexs(String* v) { Menu_GetBool(v, Game_AllowServerTextures); }
 static void NostalgiaScreen_SetTexs(const String* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_SERVER_TEXTURES); }
 
+static void NostalgiaScreen_GetClassicChat(String* v) { Menu_GetBool(v, Gui_ClassicChat); }
+static void NostalgiaScreen_SetClassicChat(const String* v) { Gui_ClassicChat = Menu_SetBool(v, OPT_CLASSIC_CHAT); }
+
 static void NostalgiaScreen_SwitchBack(void* a, void* b) {
 	if (Gui_ClassicMenu) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
 }
@@ -2913,7 +2916,7 @@ static void NostalgiaScreen_RecreateExtra(struct MenuOptionsScreen* s) {
 }
 
 static void NostalgiaScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[8] = {
+	static const struct MenuOptionDesc buttons[9] = {
 		{ -1, -150, "Classic hand model",   MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand },
 		{ -1, -100, "Classic walk anim",    MenuOptionsScreen_Bool,
@@ -2931,12 +2934,14 @@ static void NostalgiaScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			NostalgiaScreen_GetCPE,    NostalgiaScreen_SetCPE },
 		{ 1,  -50, "Use server textures", MenuOptionsScreen_Bool,
 			NostalgiaScreen_GetTexs,   NostalgiaScreen_SetTexs },
+        { 1,    0, "Use classic chat",    MenuOptionsScreen_Bool,
+            NostalgiaScreen_GetClassicChat, NostalgiaScreen_SetClassicChat },
 	};
-	s->numWidgets      = 8 + 1 + MENUOPTIONS_CORE_WIDGETS;
+	s->numWidgets      = 9 + 1 + MENUOPTIONS_CORE_WIDGETS;
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
 
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), NostalgiaScreen_SwitchBack);
-	Menu_Label(s, 8, &nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
+	Menu_Label(s, 9, &nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 }
 
 void NostalgiaScreen_Show(void) {
