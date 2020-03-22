@@ -806,7 +806,7 @@ static void CycleViewDistanceBackwards(const short* viewDists, int count) {
 
 cc_bool InputHandler_SetFOV(int fov) {
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
-	if (!h->Enabled || !h->CanUseThirdPersonCamera) return false;
+	if (!h->Enabled || !h->CanUseThirdPerson) return false;
 
 	Game_ZoomFov = fov;
 	Game_SetFov(fov);
@@ -818,7 +818,7 @@ static cc_bool InputHandler_DoFovZoom(float deltaPrecise) {
 	if (!KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) return false;
 
 	h = &LocalPlayer_Instance.Hacks;
-	if (!h->Enabled || !h->CanUseThirdPersonCamera) return false;
+	if (!h->Enabled || !h->CanUseThirdPerson) return false;
 
 	if (input_fovIndex == -1.0f) input_fovIndex = (float)Game_ZoomFov;
 	input_fovIndex -= deltaPrecise * 5.0f;
@@ -829,7 +829,7 @@ static cc_bool InputHandler_DoFovZoom(float deltaPrecise) {
 
 static void InputHandler_CheckZoomFov(void* obj) {
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
-	if (!h->Enabled || !h->CanUseThirdPersonCamera) Game_SetFov(Game_DefaultFov);
+	if (!h->Enabled || !h->CanUseThirdPerson) Game_SetFov(Game_DefaultFov);
 }
 
 static cc_bool HandleBlockKey(int key) {

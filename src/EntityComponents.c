@@ -149,7 +149,7 @@ static void HacksComp_SetAll(struct HacksComp* hacks, cc_bool allowed) {
 	hacks->CanAnyHacks = allowed; hacks->CanFly            = allowed;
 	hacks->CanNoclip   = allowed; hacks->CanRespawn        = allowed;
 	hacks->CanSpeed    = allowed; hacks->CanPushbackBlocks = allowed;
-	hacks->CanUseThirdPersonCamera = allowed;
+	hacks->CanUseThirdPerson = allowed;
 }
 
 void HacksComp_Init(struct HacksComp* hacks) {
@@ -249,11 +249,12 @@ void HacksComp_RecheckFlags(struct HacksComp* hacks) {
 	HacksComp_SetAll(hacks, hax);
 	hacks->CanBePushed = true;
 
-	HacksComp_ParseFlag(hacks, "+fly",     "-fly",     &hacks->CanFly);
-	HacksComp_ParseFlag(hacks, "+noclip",  "-noclip",  &hacks->CanNoclip);
-	HacksComp_ParseFlag(hacks, "+speed",   "-speed",   &hacks->CanSpeed);
-	HacksComp_ParseFlag(hacks, "+respawn", "-respawn", &hacks->CanRespawn);
-	HacksComp_ParseFlag(hacks, "+push",    "-push",    &hacks->CanBePushed);
+	HacksComp_ParseFlag(hacks, "+fly",         "-fly",         &hacks->CanFly);
+	HacksComp_ParseFlag(hacks, "+noclip",      "-noclip",      &hacks->CanNoclip);
+	HacksComp_ParseFlag(hacks, "+speed",       "-speed",       &hacks->CanSpeed);
+	HacksComp_ParseFlag(hacks, "+respawn",     "-respawn",     &hacks->CanRespawn);
+	HacksComp_ParseFlag(hacks, "+push",        "-push",        &hacks->CanBePushed);
+	HacksComp_ParseFlag(hacks, "+thirdperson", "-thirdperson", &hacks->CanUseThirdPerson);
 
 	if (hacks->IsOp) HacksComp_ParseAllFlag(hacks, "+ophax", "-ophax");
 	hacks->BaseHorSpeed = HacksComp_ParseFlagFloat("horspeed=", hacks);

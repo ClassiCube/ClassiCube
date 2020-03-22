@@ -1097,11 +1097,11 @@ static void CPE_HackControl(cc_uint8* data) {
 	struct PhysicsComp* physics;
 	int jumpHeight;
 
-	p->Hacks.CanFly                  = data[0] != 0;
-	p->Hacks.CanNoclip               = data[1] != 0;
-	p->Hacks.CanSpeed                = data[2] != 0;
-	p->Hacks.CanRespawn              = data[3] != 0;
-	p->Hacks.CanUseThirdPersonCamera = data[4] != 0;
+	p->Hacks.CanFly            = data[0] != 0;
+	p->Hacks.CanNoclip         = data[1] != 0;
+	p->Hacks.CanSpeed          = data[2] != 0;
+	p->Hacks.CanRespawn        = data[3] != 0;
+	p->Hacks.CanUseThirdPerson = data[4] != 0;
 	HacksComp_Update(&p->Hacks);
 
 	jumpHeight = Stream_GetU16_BE(data + 5);

@@ -228,7 +228,7 @@ static void HandleRawMouseMoved(void* obj, int idx, int deltaX, int deltaY) {
 
 static void Camera_CheckThirdPerson(void* obj) {
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
-	if (!h->CanUseThirdPersonCamera || !h->Enabled) Camera_CycleActive();
+	if (!h->CanUseThirdPerson || !h->Enabled) Camera_CycleActive();
 }
 
 void Camera_Init(void) {
@@ -254,7 +254,7 @@ void Camera_CycleActive(void) {
 	if (Game_ClassicMode) return;
 	Camera.Active = Camera.Active->next;
 
-	if (!p->Hacks.CanUseThirdPersonCamera || !p->Hacks.Enabled) {
+	if (!p->Hacks.CanUseThirdPerson || !p->Hacks.Enabled) {
 		Camera.Active = &cam_FirstPerson;
 	}
 	cam_isForwardThird = Camera.Active == &cam_ForwardThird;

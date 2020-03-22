@@ -47,7 +47,7 @@ struct HacksComp {
 	/* Whether user has allowed hacks as an option. Note 'can use X' set by the server override this */
 	cc_bool Enabled;
 
-	cc_bool CanAnyHacks, CanUseThirdPersonCamera, CanSpeed, CanFly;
+	cc_bool CanAnyHacks, CanUseThirdPerson, CanSpeed, CanFly;
 	cc_bool CanRespawn, CanNoclip, CanPushbackBlocks,CanSeeAllNames;
 	cc_bool CanDoubleJump, CanBePushed;
 	float BaseHorSpeed;
