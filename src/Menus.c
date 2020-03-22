@@ -2775,6 +2775,7 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 void HacksSettingsScreen_Show(void) {
 	static struct MenuInputDesc descs[11];
 	static const char* extDescs[Array_Elems(descs)];
+    struct LocalPlayer* p   = &LocalPlayer_Instance;
 
 	extDescs[2] = "&eIf &fON&e, then the third person cameras will limit\n&etheir zoom distance if they hit a solid block.";
 	extDescs[3] = "&eSets how many blocks high you can jump up.\n&eNote: You jump much higher when holding down the Speed key binding.";
@@ -2786,7 +2787,12 @@ void HacksSettingsScreen_Show(void) {
 
 	MenuInput_Float(descs[1], 0.1f,   50, 10);
 	MenuInput_Float(descs[3], 0.1f, 2048, 1.233f);
-	MenuInput_Int(descs[9],      1,  179, 70);
+
+	if (p->Hacks.MaxFOV > 0) {
+        MenuInput_Int(descs[9], 1, p->Hacks.MaxFOV, 70);
+    } else {
+	    MenuInput_Int(descs[9], 1, 179, 70);
+	}
 
 	MenuOptionsScreen_Show(descs, extDescs, Array_Elems(extDescs), HacksSettingsScreen_InitWidgets);
 }

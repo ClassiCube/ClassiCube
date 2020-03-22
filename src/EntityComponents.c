@@ -164,6 +164,7 @@ void HacksComp_Init(struct HacksComp* hacks) {
 	hacks->MaxJumps = 1;
 	hacks->NoclipSlide = true;
 	hacks->CanBePushed = true;
+    hacks->MaxFOV     = 0;
 
 	String_InitArray(hacks->HacksFlags, hacks->__HacksFlagsBuffer);
 }
@@ -187,21 +188,21 @@ static String HacksComp_UNSAFE_FlagValue(const char* flagRaw, struct HacksComp* 
 	return String_UNSAFE_Substring(joined, beg, end - beg);
 }
 
-static float HacksComp_ParseFlagFloat(const char* flagRaw, struct HacksComp* hacks) {
+static float HacksComp_ParseFlagFloat(const char* flagRaw, struct HacksComp* hacks, float defValue) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
 	float value;
 
-	if (!raw.length || Game_ClassicMode)   return 1.0f;
-	if (!Convert_ParseFloat(&raw, &value)) return 1.0f;
+	if (!raw.length || Game_ClassicMode)   return defValue;
+	if (!Convert_ParseFloat(&raw, &value)) return defValue;
 	return value;
 }
 
-static int HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks) {
+static int HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks, int defValue) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
 	int value;
 
-	if (!raw.length || Game_ClassicMode) return 1;
-	if (!Convert_ParseInt(&raw, &value)) return 1;
+	if (!raw.length || Game_ClassicMode) return defValue;
+	if (!Convert_ParseInt(&raw, &value)) return defValue;
 	return value;
 }
 
@@ -257,8 +258,9 @@ void HacksComp_RecheckFlags(struct HacksComp* hacks) {
 	HacksComp_ParseFlag(hacks, "+thirdperson", "-thirdperson", &hacks->CanUseThirdPerson);
 
 	if (hacks->IsOp) HacksComp_ParseAllFlag(hacks, "+ophax", "-ophax");
-	hacks->BaseHorSpeed = HacksComp_ParseFlagFloat("horspeed=", hacks);
-	hacks->MaxJumps     = HacksComp_ParseFlagInt("jumps=",      hacks);
+	hacks->BaseHorSpeed = HacksComp_ParseFlagFloat("horspeed=", hacks, 1.0f);
+	hacks->MaxJumps     = HacksComp_ParseFlagInt("jumps=",      hacks, 1);
+	hacks->MaxFOV  = HacksComp_ParseFlagInt("maxfov=",        hacks, 0);
 	HacksComp_Update(hacks);
 }
 
@@ -271,6 +273,13 @@ void HacksComp_Update(struct HacksComp* hacks) {
 	}
 	if (!hacks->CanSpeed || !hacks->Enabled) {
 		hacks->Speeding = false; hacks->HalfSpeeding = false;
+	}
+	if (hacks->MaxFOV > 0) {
+        Math_Clamp(hacks->MaxFOV, 1, 179);
+        int newFov = min(Game_Fov, hacks->MaxFOV);
+        if (Game_ZoomFov > newFov) Game_ZoomFov = newFov;
+        Game_DefaultFov = newFov;
+	    Game_SetFov(newFov);
 	}
 
 	hacks->CanDoubleJump  = hacks->Enabled     && hacks->CanSpeed;
