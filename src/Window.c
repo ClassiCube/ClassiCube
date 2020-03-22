@@ -632,6 +632,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		} else {
 			key = MapNativeKey(wParam, lParam);
 			if (key) Input_SetPressed(key, pressed);
+			else Platform_Log1("Unknown key: %x", &wParam);
 		}
 		return 0;
 	} break;

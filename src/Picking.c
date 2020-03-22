@@ -18,7 +18,7 @@ static void PickedPos_TestAxis(struct PickedPos* pos, float dAxis, Face fAxis) {
 	pos->Closest   = fAxis;
 }
 
-void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, Vec3 intersect) {
+void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, const Vec3* intersect) {
 	pos->BlockPos.X    = t->X;
 	pos->BlockPos.Y    = t->Y;
 	pos->BlockPos.Z    = t->Z;
@@ -26,16 +26,16 @@ void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, Vec3 inter
 
 	pos->Valid     = true;
 	pos->Block     = t->Block;	
-	pos->Intersect = intersect;
+	pos->Intersect = *intersect;
 	pos->Min = t->Min; pos->Max = t->Max;
 
 	pickedPos_dist = MATH_LARGENUM;
-	PickedPos_TestAxis(pos, intersect.X - t->Min.X, FACE_XMIN);
-	PickedPos_TestAxis(pos, intersect.X - t->Max.X, FACE_XMAX);
-	PickedPos_TestAxis(pos, intersect.Y - t->Min.Y, FACE_YMIN);
-	PickedPos_TestAxis(pos, intersect.Y - t->Max.Y, FACE_YMAX);
-	PickedPos_TestAxis(pos, intersect.Z - t->Min.Z, FACE_ZMIN);
-	PickedPos_TestAxis(pos, intersect.Z - t->Max.Z, FACE_ZMAX);
+	PickedPos_TestAxis(pos, intersect->X - t->Min.X, FACE_XMIN);
+	PickedPos_TestAxis(pos, intersect->X - t->Max.X, FACE_XMAX);
+	PickedPos_TestAxis(pos, intersect->Y - t->Min.Y, FACE_YMIN);
+	PickedPos_TestAxis(pos, intersect->Y - t->Max.Y, FACE_YMAX);
+	PickedPos_TestAxis(pos, intersect->Z - t->Min.Z, FACE_ZMIN);
+	PickedPos_TestAxis(pos, intersect->Z - t->Max.Z, FACE_ZMAX);
 
 	switch (pos->Closest) {
 	case FACE_XMIN: pos->TranslatedPos.X--; break;
@@ -48,7 +48,7 @@ void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, Vec3 inter
 }
 
 void PickedPos_SetAsInvalid(struct PickedPos* pos) {
-	static IVec3 blockPos = { -1, -1, -1 };
+	static const IVec3 blockPos = { -1, -1, -1 };
 	pos->BlockPos      = blockPos;
 	pos->TranslatedPos = blockPos;
 
@@ -62,16 +62,16 @@ static float RayTracer_Div(float a, float b) {
 	return a / b;
 }
 
-void RayTracer_Init(struct RayTracer* t, Vec3 origin, Vec3 dir) {
+void RayTracer_Init(struct RayTracer* t, const Vec3* origin, const Vec3* dir) {
 	IVec3 start, cellBoundary;
-	t->Origin = origin; t->Dir = dir;
+	t->Origin = *origin; t->Dir = *dir;
 
 	/* Rounds the position's X, Y and Z down to the nearest integer values. */
-	IVec3_Floor(&start, &origin);
+	IVec3_Floor(&start, origin);
 	/* The cell in which the ray starts. */
 	t->X = start.X; t->Y = start.Y; t->Z = start.Z;
 	/* Determine which way we go.*/
-	t->step.X = Math_Sign(dir.X); t->step.Y = Math_Sign(dir.Y); t->step.Z = Math_Sign(dir.Z);
+	t->step.X = Math_Sign(dir->X); t->step.Y = Math_Sign(dir->Y); t->step.Z = Math_Sign(dir->Z);
 
 	/* Calculate cell boundaries. When the step (i.e. direction sign) is positive,
 	the next boundary is AFTER our current position, meaning that we have to add 1.
@@ -82,14 +82,14 @@ void RayTracer_Init(struct RayTracer* t, Vec3 origin, Vec3 dir) {
 
 	/* NOTE: we want it so if dir.x = 0, tmax.x = positive infinity
 	Determine how far we can travel along the ray before we hit a voxel boundary. */
-	t->tMax.X = RayTracer_Div(cellBoundary.X - origin.X, dir.X); /* Boundary is a plane on the YZ axis. */
-	t->tMax.Y = RayTracer_Div(cellBoundary.Y - origin.Y, dir.Y); /* Boundary is a plane on the XZ axis. */
-	t->tMax.Z = RayTracer_Div(cellBoundary.Z - origin.Z, dir.Z); /* Boundary is a plane on the XY axis. */
+	t->tMax.X = RayTracer_Div(cellBoundary.X - origin->X, dir->X); /* Boundary is a plane on the YZ axis. */
+	t->tMax.Y = RayTracer_Div(cellBoundary.Y - origin->Y, dir->Y); /* Boundary is a plane on the XZ axis. */
+	t->tMax.Z = RayTracer_Div(cellBoundary.Z - origin->Z, dir->Z); /* Boundary is a plane on the XY axis. */
 
 	/* Determine how far we must travel along the ray before we have crossed a gridcell. */
-	t->tDelta.X = RayTracer_Div((float)t->step.X, dir.X);
-	t->tDelta.Y = RayTracer_Div((float)t->step.Y, dir.Y);
-	t->tDelta.Z = RayTracer_Div((float)t->step.Z, dir.Z);
+	t->tDelta.X = RayTracer_Div((float)t->step.X, dir->X);
+	t->tDelta.Y = RayTracer_Div((float)t->step.Y, dir->Y);
+	t->tDelta.Z = RayTracer_Div((float)t->step.Z, dir->Z);
 }
 
 void RayTracer_Step(struct RayTracer* t) {
@@ -150,7 +150,7 @@ static BlockID Picking_GetOutside(int x, int y, int z, IVec3 origin) {
 	return BLOCK_AIR;
 }
 
-static cc_bool Picking_RayTrace(Vec3 origin, Vec3 dir, float reach, struct PickedPos* pos, IntersectTest intersect) {
+static cc_bool RayTrace(const Vec3* origin, const Vec3* dir, float reach, struct PickedPos* pos, IntersectTest intersect) {
 	IVec3 pOrigin;
 	cc_bool insideMap;
 	float reachSq;
@@ -162,7 +162,7 @@ static cc_bool Picking_RayTrace(Vec3 origin, Vec3 dir, float reach, struct Picke
 	int i, x, y, z;
 
 	RayTracer_Init(&tracer, origin, dir);
-	IVec3_Floor(&pOrigin, &origin);
+	IVec3_Floor(&pOrigin, origin);
 	insideMap = World_Contains(pOrigin.X, pOrigin.Y, pOrigin.Z);
 	reachSq   = reach * reach;
 		
@@ -174,9 +174,9 @@ static cc_bool Picking_RayTrace(Vec3 origin, Vec3 dir, float reach, struct Picke
 		Vec3_Add(&minBB, &v, &Blocks.RenderMinBB[tracer.Block]);
 		Vec3_Add(&maxBB, &v, &Blocks.RenderMaxBB[tracer.Block]);
 
-		dxMin = Math_AbsF(origin.X - minBB.X); dxMax = Math_AbsF(origin.X - maxBB.X);
-		dyMin = Math_AbsF(origin.Y - minBB.Y); dyMax = Math_AbsF(origin.Y - maxBB.Y);
-		dzMin = Math_AbsF(origin.Z - minBB.Z); dzMax = Math_AbsF(origin.Z - maxBB.Z);
+		dxMin = Math_AbsF(origin->X - minBB.X); dxMax = Math_AbsF(origin->X - maxBB.X);
+		dyMin = Math_AbsF(origin->Y - minBB.Y); dyMax = Math_AbsF(origin->Y - maxBB.Y);
+		dzMin = Math_AbsF(origin->Z - minBB.Z); dzMax = Math_AbsF(origin->Z - maxBB.Z);
 		dx = min(dxMin, dxMax); dy = min(dyMin, dyMax); dz = min(dzMin, dzMax);
 		if (dx * dx + dy * dy + dz * dz > reachSq) return false;
 
@@ -189,7 +189,7 @@ static cc_bool Picking_RayTrace(Vec3 origin, Vec3 dir, float reach, struct Picke
 	return false;
 }
 
-static cc_bool Picking_ClipBlock(struct PickedPos* pos) {
+static cc_bool ClipBlock(struct PickedPos* pos) {
 	Vec3 scaledDir, intersect;
 	float lenSq, reach;
 	float t0, t1;
@@ -207,7 +207,7 @@ static cc_bool Picking_ClipBlock(struct PickedPos* pos) {
 	reach = LocalPlayer_Instance.ReachDistance;
 
 	if (lenSq <= reach * reach) {
-		PickedPos_SetAsValid(pos, &tracer, intersect);
+		PickedPos_SetAsValid(pos, &tracer, &intersect);
 	} else {
 		PickedPos_SetAsInvalid(pos);
 	}
@@ -215,7 +215,7 @@ static cc_bool Picking_ClipBlock(struct PickedPos* pos) {
 }
 
 const static Vec3 picking_adjust = { 0.1f, 0.1f, 0.1f };
-static cc_bool Picking_ClipCamera(struct PickedPos* pos) {
+static cc_bool ClipCamera(struct PickedPos* pos) {
 	Vec3 intersect;
 	float t0, t1;
 
@@ -229,21 +229,21 @@ static cc_bool Picking_ClipCamera(struct PickedPos* pos) {
 	
 	Vec3_Mul1(&intersect, &tracer.Dir, t0);            /* intersect = dir * t0 */
 	Vec3_Add(&intersect,  &tracer.Origin, &intersect); /* intersect = origin + dir * t0 */
-	PickedPos_SetAsValid(pos, &tracer, intersect);
+	PickedPos_SetAsValid(pos, &tracer, &intersect);
 	return true;
 }
 
-void Picking_CalculatePickedBlock(Vec3 origin, Vec3 dir, float reach, struct PickedPos* pos) {
-	if (!Picking_RayTrace(origin, dir, reach, pos, Picking_ClipBlock)) {
+void Picking_CalcPickedBlock(const Vec3* origin, const Vec3* dir, float reach, struct PickedPos* pos) {
+	if (!RayTrace(origin, dir, reach, pos, ClipBlock)) {
 		PickedPos_SetAsInvalid(pos);
 	}
 }
 
-void Picking_ClipCameraPos(Vec3 origin, Vec3 dir, float reach, struct PickedPos* pos) {
+void Picking_ClipCameraPos(const Vec3* origin, const Vec3* dir, float reach, struct PickedPos* pos) {
 	cc_bool noClip = !Camera.Clipping || LocalPlayer_Instance.Hacks.Noclip;
-	if (noClip || !Picking_RayTrace(origin, dir, reach, pos, Picking_ClipCamera)) {
+	if (noClip || !RayTrace(origin, dir, reach, pos, ClipCamera)) {
 		PickedPos_SetAsInvalid(pos);
-		Vec3_Mul1(&pos->Intersect, &dir, reach);             /* intersect = dir * reach */
-		Vec3_Add(&pos->Intersect, &origin, &pos->Intersect); /* intersect = origin + dir * reach */
+		Vec3_Mul1(&pos->Intersect, dir, reach);             /* intersect = dir * reach */
+		Vec3_Add(&pos->Intersect, origin, &pos->Intersect); /* intersect = origin + dir * reach */
 	}
 }

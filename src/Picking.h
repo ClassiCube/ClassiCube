@@ -31,19 +31,19 @@ struct RayTracer {
 	int X, Y, Z;
 	Vec3 Origin, Dir;
 	Vec3 Min, Max; /* Block data */
-	BlockID Block;    /* Block data */
+	BlockID Block; /* Block data */
 	IVec3 step;
 	Vec3 tMax, tDelta;
 };
 
-void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, Vec3 intersect);
+void PickedPos_SetAsValid(struct PickedPos* pos, struct RayTracer* t, const Vec3* intersect);
 void PickedPos_SetAsInvalid(struct PickedPos* pos);
-void RayTracer_Init(struct RayTracer* t, Vec3 origin, Vec3 dir);
+void RayTracer_Init(struct RayTracer* t, const Vec3* origin, const Vec3* dir);
 void RayTracer_Step(struct RayTracer* t);
 
 /* Determines the picked block based on the given origin and direction vector.
    Marks pickedPos as invalid if a block could not be found due to going outside map boundaries
    or not being able to find a suitable candiate within the given reach distance.*/
-void Picking_CalculatePickedBlock(Vec3 origin, Vec3 dir, float reach, struct PickedPos* pos);
-void Picking_ClipCameraPos(Vec3 origin, Vec3 dir, float reach, struct PickedPos* pos);
+void Picking_CalcPickedBlock(const Vec3* origin, const Vec3* dir, float reach, struct PickedPos* pos);
+void Picking_ClipCameraPos(const Vec3* origin, const Vec3* dir, float reach, struct PickedPos* pos);
 #endif

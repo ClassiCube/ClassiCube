@@ -47,7 +47,7 @@ static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
 	Vec3 dir    = Vec3_GetDirVector(p->Yaw * MATH_DEG2RAD, p->Pitch * MATH_DEG2RAD);
 	Vec3 eyePos = Entity_GetEyePosition(p);
 	float reach = LocalPlayer_Instance.ReachDistance;
-	Picking_CalculatePickedBlock(eyePos, dir, reach, pos);
+	Picking_CalcPickedBlock(&eyePos, &dir, reach, pos);
 }
 
 #define CAMERA_SENSI_FACTOR (0.0002f / 3.0f * MATH_RAD2DEG)
@@ -189,7 +189,7 @@ static Vec3 ThirdPersonCamera_GetPosition(float t) {
 	dir = Vec3_GetDirVector(rot.X, rot.Y);
 	Vec3_Negate(&dir, &dir);
 
-	Picking_ClipCameraPos(target, dir, dist, &cameraClipPos);
+	Picking_ClipCameraPos(&target, &dir, dist, &cameraClipPos);
 	return cameraClipPos.Intersect;
 }
 
