@@ -313,7 +313,6 @@
     <ClCompile Include="_cff.c" />
     <ClCompile Include="_ftbase.c" />
     <ClCompile Include="_ftbitmap.c" />
-    <ClCompile Include="_ftcid.c" />
     <ClCompile Include="_ftglyph.c" />
     <ClCompile Include="_ftinit.c" />
     <ClCompile Include="_ftsynth.c" />

@@ -25,7 +25,6 @@ add_library(classicube SHARED
         ../../src/Program.c
         ../../src/_fttype1.c
         ../../src/IsometricDrawer.c
-        ../../src/_ftcid.c
         ../../src/Builder.c
         ../../src/ExtMath.c
         ../../src/_ftbitmap.c

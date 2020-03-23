@@ -458,9 +458,6 @@
     <ClCompile Include="_ftbitmap.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="_ftcid.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
     <ClCompile Include="_ftglyph.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
