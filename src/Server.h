@@ -6,7 +6,7 @@
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
-struct PickedPos;
+struct RayTracer;
 struct Stream;
 struct IGameComponent;
 struct ScheduledTask;

@@ -5,7 +5,7 @@
 /* Represents a camera, may be first or third person.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
-struct PickedPos;
+struct RayTracer;
 struct Camera;
 
 /* Shared data for cameras. */
@@ -55,7 +55,7 @@ struct Camera {
 	void (*LoseFocus)(void);
 
 	/* Calculates selected block in the world, based on camera's current state */
-	void (*GetPickedBlock)(struct PickedPos* pos);
+	void (*GetPickedBlock)(struct RayTracer* t);
 	/* Zooms the camera in or out when scrolling mouse wheel. */
 	cc_bool (*Zoom)(float amount);
 

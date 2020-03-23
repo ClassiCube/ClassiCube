@@ -46,7 +46,7 @@ extern cc_uint16 Net_PacketSizes[OPCODE_COUNT];
 extern Net_Handler Net_Handlers[OPCODE_COUNT];
 #define Net_Set(opcode, handler, size) Net_Handlers[opcode] = handler; Net_PacketSizes[opcode] = size;
 
-struct PickedPos;
+struct RayTracer;
 void Protocol_RemoveEntity(EntityID id);
 void Protocol_Reset(void);
 void Protocol_Tick(void);
@@ -56,5 +56,5 @@ void Classic_SendChat(const String* text, cc_bool partial);
 void Classic_WritePosition(Vec3 pos, float yaw, float pitch);
 void Classic_WriteSetBlock(int x, int y, int z, cc_bool place, BlockID block);
 void Classic_SendLogin(const String* username, const String* verKey);
-void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct PickedPos* pos);
+void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t);
 #endif

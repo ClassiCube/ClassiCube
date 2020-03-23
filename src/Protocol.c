@@ -738,7 +738,7 @@ static const char* cpe_clientExtensions[34] = {
 static void CPE_SetMapEnvUrl(cc_uint8* data);
 
 #define Ext_Deg2Packed(x) ((int)((x) * 65536.0f / 360.0f))
-void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct PickedPos* pos) {
+void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct RayTracer* t) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	cc_uint8 data[15];
 
@@ -750,13 +750,13 @@ void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct 
 		Stream_SetU16_BE(&data[5], Ext_Deg2Packed(p->Pitch));
 
 		data[7] = targetId;
-		Stream_SetU16_BE(&data[8],  pos->BlockPos.X);
-		Stream_SetU16_BE(&data[10], pos->BlockPos.Y);
-		Stream_SetU16_BE(&data[12], pos->BlockPos.Z);
+		Stream_SetU16_BE(&data[8],  t->pos.X);
+		Stream_SetU16_BE(&data[10], t->pos.Y);
+		Stream_SetU16_BE(&data[12], t->pos.Z);
 
 		data[14] = 255;
 		/* Our own face values differ from CPE block face */
-		switch (pos->Closest) {
+		switch (t->Closest) {
 		case FACE_XMAX: data[14] = 0; break;
 		case FACE_XMIN: data[14] = 1; break;
 		case FACE_YMAX: data[14] = 2; break;

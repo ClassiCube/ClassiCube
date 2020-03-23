@@ -678,7 +678,7 @@ static void DoDeleteBlock(void) {
 	/* always play delete animations, even if we aren't deleting a block */
 	HeldBlockRenderer_ClickAnim(true);
 
-	pos = Game_SelectedPos.BlockPos;
+	pos = Game_SelectedPos.pos;
 	if (!Game_SelectedPos.Valid || !World_Contains(pos.X, pos.Y, pos.Z)) return;
 
 	old = World_GetBlock(pos.X, pos.Y, pos.Z);
@@ -710,7 +710,7 @@ static void DoPlaceBlock(void) {
 static void DoPickBlock(void) {
 	IVec3 pos;
 	BlockID cur;
-	pos = Game_SelectedPos.BlockPos;
+	pos = Game_SelectedPos.pos;
 	if (!World_Contains(pos.X, pos.Y, pos.Z)) return;
 
 	cur = World_GetBlock(pos.X, pos.Y, pos.Z);

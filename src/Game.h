@@ -19,7 +19,7 @@ CC_VAR extern struct _GameData {
 	int ChunkUpdates;
 } Game;
 
-extern struct PickedPos Game_SelectedPos;
+extern struct RayTracer Game_SelectedPos;
 extern cc_bool Game_UseCPEBlocks;
 
 extern String Game_Username;

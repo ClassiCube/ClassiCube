@@ -38,7 +38,7 @@ struct _GameData Game;
 int     Game_Port;
 cc_bool Game_UseCPEBlocks;
 
-struct PickedPos Game_SelectedPos;
+struct RayTracer Game_SelectedPos;
 int Game_ViewDistance, Game_MaxViewDistance, Game_UserViewDistance;
 int Game_Fov, Game_DefaultFov, Game_ZoomFov;
 
@@ -545,7 +545,7 @@ static void Game_Render3D(double delta, float t) {
 
 	/* Need to render again over top of translucent block, as the selection outline */
 	/* is drawn without writing to the depth buffer */
-	if (Game_SelectedPos.Valid && !Game_HideGui && Blocks.Draw[Game_SelectedPos.Block] == DRAW_TRANSLUCENT) {
+	if (Game_SelectedPos.Valid && !Game_HideGui && Blocks.Draw[Game_SelectedPos.block] == DRAW_TRANSLUCENT) {
 		PickedPosRenderer_Render();
 	}
 
@@ -641,7 +641,7 @@ static void Game_RenderFrame(double delta) {
 	if (!Gui_GetBlocksWorld() && World.Blocks) {
 		Game_Render3D(delta, t);
 	} else {
-		PickedPos_SetAsInvalid(&Game_SelectedPos);
+		RayTracer_SetInvalid(&Game_SelectedPos);
 	}
 
 	Gui_RenderGui(delta);

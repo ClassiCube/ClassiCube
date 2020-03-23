@@ -11,7 +11,7 @@
 #include "Options.h"
 
 struct _CameraData Camera;
-static struct PickedPos cameraClipPos;
+static struct RayTracer cameraClipPos;
 static Vec2 cam_rotOffset;
 static cc_bool cam_isForwardThird;
 static int cam_deltaX, cam_deltaY;
@@ -42,12 +42,12 @@ static void PerspectiveCamera_GetView(struct Matrix* mat) {
 	Matrix_MulBy(mat, &Camera.TiltM);
 }
 
-static void PerspectiveCamera_GetPickedBlock(struct PickedPos* pos) {
+static void PerspectiveCamera_GetPickedBlock(struct RayTracer* t) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec3 dir    = Vec3_GetDirVector(p->Yaw * MATH_DEG2RAD, p->Pitch * MATH_DEG2RAD);
 	Vec3 eyePos = Entity_GetEyePosition(p);
 	float reach = LocalPlayer_Instance.ReachDistance;
-	Picking_CalcPickedBlock(&eyePos, &dir, reach, pos);
+	Picking_CalcPickedBlock(&eyePos, &dir, reach, t);
 }
 
 #define CAMERA_SENSI_FACTOR (0.0002f / 3.0f * MATH_RAD2DEG)
