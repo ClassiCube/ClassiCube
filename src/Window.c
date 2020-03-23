@@ -972,13 +972,28 @@ static Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
 static Atom xa_atom = 4;
 static long win_eventMask;
 
-static int MapNativeKey(KeySym key) {
+static int MapNativeKey(KeySym key, unsigned int state) {
 	if (key >= XK_0 && key <= XK_9) { return '0' + (key - XK_0); }
 	if (key >= XK_A && key <= XK_Z) { return 'A' + (key - XK_A); }
 	if (key >= XK_a && key <= XK_z) { return 'A' + (key - XK_a); }
 
 	if (key >= XK_F1 && key <= XK_F35)    { return KEY_F1  + (key - XK_F1); }
 	if (key >= XK_KP_0 && key <= XK_KP_9) { return KEY_KP0 + (key - XK_KP_0); }
+
+	/* Same Num Lock behaviour as Windows and text editors */
+	if (key >= XK_KP_Home && key <= XK_KP_Delete && !(state & Mod2Mask)) {
+		if (key == XK_KP_Home) return KEY_HOME;
+		if (key == XK_KP_Up)   return KEY_UP;
+		if (key == XK_KP_Page_Up) return KEY_PAGEUP;
+
+		if (key == XK_KP_Left)   return KEY_LEFT;
+		if (key == XK_KP_Insert) return KEY_INSERT;
+		if (key == XK_KP_Right)  return KEY_RIGHT;
+
+		if (key == XK_KP_End)  return KEY_END;
+		if (key == XK_KP_Down) return KEY_DOWN;
+		if (key == XK_KP_Page_Down) return KEY_PAGEDOWN;
+	}
 
 	/* Keys on a chromebook reported by a user */
 	if (key == 0x8000027) return KEY_QUOTE;
@@ -1286,17 +1301,17 @@ void Window_Close(void) {
 	XFlush(win_display);
 }
 
-static void Window_ToggleKey(XKeyEvent* keyEvent, cc_bool pressed) {
-	KeySym keysym1 = XLookupKeysym(keyEvent, 0);
-	KeySym keysym2 = XLookupKeysym(keyEvent, 1);
+static void Window_ToggleKey(XKeyEvent* ev, cc_bool pressed) {
+	KeySym keysym1 = XLookupKeysym(ev, 0);
+	KeySym keysym2 = XLookupKeysym(ev, 1);
 
-	int key = MapNativeKey(keysym1);
-	if (!key) key = MapNativeKey(keysym2);
+	int key = MapNativeKey(keysym1, ev->state);
+	if (!key) key = MapNativeKey(keysym2, ev->state);
 
 	if (key) {
 		Input_SetPressed(key, pressed);
 	} else {
-		Platform_Log2("Ignoring unknown key: (%i, %i)", &keysym1, &keysym2);
+		Platform_Log2("Unknown key: (%x, %x)", &keysym1, &keysym2);
 	}
 }
 
