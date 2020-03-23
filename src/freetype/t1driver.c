@@ -31,7 +31,6 @@
 
 #include FT_SERVICE_GLYPH_DICT_H
 #include FT_SERVICE_FONT_FORMAT_H
-#include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
 #include FT_SERVICE_POSTSCRIPT_INFO_H
 #include FT_SERVICE_PROPERTIES_H
@@ -87,24 +86,6 @@
   {
     (FT_GlyphDict_GetNameFunc)  t1_get_glyph_name,    /* get_name   */
     (FT_GlyphDict_NameIndexFunc)t1_get_name_index     /* name_index */
-  };
-
-
-  /*
-   *  POSTSCRIPT NAME SERVICE
-   *
-   */
-
-  static const char*
-  t1_get_ps_name( T1_Face  face )
-  {
-    return (const char*) face->type1.font_name;
-  }
-
-
-  static const FT_Service_PsFontNameRec  t1_service_ps_name =
-  {
-    (FT_PsName_GetFunc)t1_get_ps_name     /* get_ps_font_name */
   };
 
 
@@ -589,7 +570,6 @@
 
   static const FT_ServiceDescRec  t1_services[] =
   {
-    { FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &t1_service_ps_name },
     { FT_SERVICE_ID_GLYPH_DICT,           &t1_service_glyph_dict },
     { FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_TYPE_1 },
     { FT_SERVICE_ID_POSTSCRIPT_INFO,      &t1_service_ps_info },

@@ -40,7 +40,6 @@
 #include "ttmtx.h"
 
 #include FT_SERVICE_GLYPH_DICT_H
-#include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_SFNT_H
 #include FT_SERVICE_TT_CMAP_H
 
@@ -215,246 +214,6 @@
 
 
   /*
-   *  POSTSCRIPT NAME SERVICE
-   *
-   */
-
-  /* an array representing allowed ASCII characters in a PS string */
-  static const unsigned char sfnt_ps_map[16] =
-  {
-                /*             4        0        C        8 */
-    0x00, 0x00, /* 0x00: 0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0 */
-    0x00, 0x00, /* 0x10: 0 0 0 0  0 0 0 0  0 0 0 0  0 0 0 0 */
-    0xDE, 0x7C, /* 0x20: 1 1 0 1  1 1 1 0  0 1 1 1  1 1 0 0 */
-    0xFF, 0xAF, /* 0x30: 1 1 1 1  1 1 1 1  1 0 1 0  1 1 1 1 */
-    0xFF, 0xFF, /* 0x40: 1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1 */
-    0xFF, 0xD7, /* 0x50: 1 1 1 1  1 1 1 1  1 1 0 1  0 1 1 1 */
-    0xFF, 0xFF, /* 0x60: 1 1 1 1  1 1 1 1  1 1 1 1  1 1 1 1 */
-    0xFF, 0x57  /* 0x70: 1 1 1 1  1 1 1 1  0 1 0 1  0 1 1 1 */
-  };
-
-
-  static int
-  sfnt_is_postscript( int  c )
-  {
-    unsigned int  cc;
-
-
-    if ( c < 0 || c >= 0x80 )
-      return 0;
-
-    cc = (unsigned int)c;
-
-    return sfnt_ps_map[cc >> 3] & ( 1 << ( cc & 0x07 ) );
-  }
-
-
-  typedef int (*char_type_func)( int  c );
-
-
-  /* handling of PID/EID 3/0 and 3/1 is the same */
-#define IS_WIN( n )  ( (n)->platformID == 3                             && \
-                       ( (n)->encodingID == 1 || (n)->encodingID == 0 ) && \
-                       (n)->languageID == 0x409                         )
-
-#define IS_APPLE( n )  ( (n)->platformID == 1 && \
-                         (n)->encodingID == 0 && \
-                         (n)->languageID == 0 )
-
-  static char*
-  get_win_string( FT_Memory       memory,
-                  FT_Stream       stream,
-                  TT_Name         entry,
-                  char_type_func  char_type,
-                  FT_Bool         report_invalid_characters )
-  {
-    FT_Error  error = FT_Err_Ok;
-
-    char*       result = NULL;
-    FT_String*  r;
-    FT_Char*    p;
-    FT_UInt     len;
-
-    FT_UNUSED( error );
-
-
-    if ( FT_ALLOC( result, entry->stringLength / 2 + 1 ) )
-      return NULL;
-
-    if ( FT_STREAM_SEEK( entry->stringOffset ) ||
-         FT_FRAME_ENTER( entry->stringLength ) )
-    {
-      FT_FREE( result );
-      entry->stringLength = 0;
-      entry->stringOffset = 0;
-      FT_FREE( entry->string );
-
-      return NULL;
-    }
-
-    r = (FT_String*)result;
-    p = (FT_Char*)stream->cursor;
-
-    for ( len = entry->stringLength / 2; len > 0; len--, p += 2 )
-    {
-      if ( p[0] == 0 )
-      {
-        if ( char_type( p[1] ) )
-          *r++ = p[1];
-        else
-        {
-          if ( report_invalid_characters )
-          {
-            FT_TRACE0(( "get_win_string:"
-                        " Character `%c' (0x%X) invalid in PS name string\n",
-                        p[1], p[1] ));
-            /* it's not the job of FreeType to correct PS names... */
-            *r++ = p[1];
-          }
-        }
-      }
-    }
-    *r = '\0';
-
-    FT_FRAME_EXIT();
-
-    return result;
-  }
-
-
-  static char*
-  get_apple_string( FT_Memory       memory,
-                    FT_Stream       stream,
-                    TT_Name         entry,
-                    char_type_func  char_type,
-                    FT_Bool         report_invalid_characters )
-  {
-    FT_Error  error = FT_Err_Ok;
-
-    char*       result = NULL;
-    FT_String*  r;
-    FT_Char*    p;
-    FT_UInt     len;
-
-    FT_UNUSED( error );
-
-
-    if ( FT_ALLOC( result, entry->stringLength + 1 ) )
-      return NULL;
-
-    if ( FT_STREAM_SEEK( entry->stringOffset ) ||
-         FT_FRAME_ENTER( entry->stringLength ) )
-    {
-      FT_FREE( result );
-      entry->stringOffset = 0;
-      entry->stringLength = 0;
-      FT_FREE( entry->string );
-
-      return NULL;
-    }
-
-    r = (FT_String*)result;
-    p = (FT_Char*)stream->cursor;
-
-    for ( len = entry->stringLength; len > 0; len--, p++ )
-    {
-      if ( char_type( *p ) )
-        *r++ = *p;
-      else
-      {
-        if ( report_invalid_characters )
-        {
-          FT_TRACE0(( "get_apple_string:"
-                      " Character `%c' (0x%X) invalid in PS name string\n",
-                      *p, *p ));
-          /* it's not the job of FreeType to correct PS names... */
-          *r++ = *p;
-        }
-      }
-    }
-    *r = '\0';
-
-    FT_FRAME_EXIT();
-
-    return result;
-  }
-
-
-  static FT_Bool
-  sfnt_get_name_id( TT_Face    face,
-                    FT_UShort  id,
-                    FT_Int    *win,
-                    FT_Int    *apple )
-  {
-    FT_Int  n;
-
-
-    *win   = -1;
-    *apple = -1;
-
-    for ( n = 0; n < face->num_names; n++ )
-    {
-      TT_Name  name = face->name_table.names + n;
-
-
-      if ( name->nameID == id && name->stringLength > 0 )
-      {
-        if ( IS_WIN( name ) )
-          *win = n;
-
-        if ( IS_APPLE( name ) )
-          *apple = n;
-      }
-    }
-
-    return ( *win >= 0 ) || ( *apple >= 0 );
-  }
-
-
-  static const char*
-  sfnt_get_ps_name( TT_Face  face )
-  {
-    FT_Int       found, win, apple;
-    const char*  result = NULL;
-
-
-    if ( face->postscript_name )
-      return face->postscript_name;
-
-    /* scan the name table to see whether we have a Postscript name here, */
-    /* either in Macintosh or Windows platform encodings                  */
-    found = sfnt_get_name_id( face, TT_NAME_ID_PS_NAME, &win, &apple );
-    if ( !found )
-      return NULL;
-
-    /* prefer Windows entries over Apple */
-    if ( win != -1 )
-      result = get_win_string( face->root.memory,
-                               face->name_table.stream,
-                               face->name_table.names + win,
-                               sfnt_is_postscript,
-                               1 );
-    else
-      result = get_apple_string( face->root.memory,
-                                 face->name_table.stream,
-                                 face->name_table.names + apple,
-                                 sfnt_is_postscript,
-                                 1 );
-
-    face->postscript_name = result;
-
-    return result;
-  }
-
-
-  FT_DEFINE_SERVICE_PSFONTNAMEREC(
-    sfnt_service_ps_name,
-
-    (FT_PsName_GetFunc)sfnt_get_ps_name       /* get_ps_font_name */
-  )
-
-
-  /*
    *  TT CMAP INFO
    */
   FT_DEFINE_SERVICE_TTCMAPSREC(
@@ -469,19 +228,17 @@
    */
 
 #if defined TT_CONFIG_OPTION_POSTSCRIPT_NAMES
-  FT_DEFINE_SERVICEDESCREC4(
-    sfnt_services,
-
-    FT_SERVICE_ID_SFNT_TABLE,           &sfnt_service_sfnt_table,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &sfnt_service_ps_name,
-    FT_SERVICE_ID_GLYPH_DICT,           &sfnt_service_glyph_dict,
-    FT_SERVICE_ID_TT_CMAP,              &tt_service_get_cmap_info )
-#else
   FT_DEFINE_SERVICEDESCREC3(
     sfnt_services,
 
     FT_SERVICE_ID_SFNT_TABLE,           &sfnt_service_sfnt_table,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &sfnt_service_ps_name,
+    FT_SERVICE_ID_GLYPH_DICT,           &sfnt_service_glyph_dict,
+    FT_SERVICE_ID_TT_CMAP,              &tt_service_get_cmap_info )
+#else
+  FT_DEFINE_SERVICEDESCREC2(
+    sfnt_services,
+
+    FT_SERVICE_ID_SFNT_TABLE,           &sfnt_service_sfnt_table,
     FT_SERVICE_ID_TT_CMAP,              &tt_service_get_cmap_info )
 #endif
 
@@ -566,8 +323,7 @@
 
     tt_face_get_metrics,    /* TT_Get_Metrics_Func     get_metrics     */
 
-    tt_face_get_name,       /* TT_Get_Name_Func        get_name        */
-    sfnt_get_name_id        /* TT_Get_Name_ID_Func     get_name_id     */
+    tt_face_get_name        /* TT_Get_Name_Func        get_name        */
   )
 
 

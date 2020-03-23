@@ -24,7 +24,6 @@
 
 #include "ciderrs.h"
 
-#include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_FONT_FORMAT_H
 #include FT_SERVICE_POSTSCRIPT_INFO_H
 #include FT_SERVICE_CID_H
@@ -42,30 +41,6 @@
   /*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_ciddriver
-
-
-  /*
-   *  POSTSCRIPT NAME SERVICE
-   *
-   */
-
-  static const char*
-  cid_get_postscript_name( CID_Face  face )
-  {
-    const char*  result = face->cid.cid_font_name;
-
-
-    if ( result && result[0] == '/' )
-      result++;
-
-    return result;
-  }
-
-
-  static const FT_Service_PsFontNameRec  cid_service_ps_name =
-  {
-    (FT_PsName_GetFunc)cid_get_postscript_name    /* get_ps_font_name */
-  };
 
 
   /*
@@ -183,7 +158,6 @@
   static const FT_ServiceDescRec  cid_services[] =
   {
     { FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CID },
-    { FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cid_service_ps_name },
     { FT_SERVICE_ID_POSTSCRIPT_INFO,      &cid_service_ps_info },
     { FT_SERVICE_ID_CID,                  &cid_service_cid_info },
     { FT_SERVICE_ID_PROPERTIES,           &cid_service_properties },

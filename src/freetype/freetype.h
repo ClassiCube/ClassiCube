@@ -231,7 +231,6 @@ FT_BEGIN_HEADER
   /*    FT_Render_Glyph                                                    */
   /*    FT_Render_Mode                                                     */
   /*    FT_Get_Glyph_Name                                                  */
-  /*    FT_Get_Postscript_Name                                             */
   /*                                                                       */
   /*    FT_CharMapRec                                                      */
   /*    FT_Select_Charmap                                                  */
@@ -3194,43 +3193,6 @@ FT_BEGIN_HEADER
                      FT_UInt     glyph_index,
                      FT_Pointer  buffer,
                      FT_UInt     buffer_max );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Get_Postscript_Name                                             */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Retrieve the ASCII PostScript name of a given face, if available.  */
-  /*    This only works with PostScript, TrueType, and OpenType fonts.     */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face :: A handle to the source face object.                        */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    A pointer to the face's PostScript name.  NULL if unavailable.     */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    The returned pointer is owned by the face and is destroyed with    */
-  /*    it.                                                                */
-  /*                                                                       */
-  /*    For variation fonts, this string changes if you select a different */
-  /*    instance, and you have to call `FT_Get_PostScript_Name' again to   */
-  /*    retrieve it.  FreeType follows Adobe TechNote #5902, `Generating   */
-  /*    PostScript Names for Fonts Using OpenType Font Variations'.        */
-  /*                                                                       */
-  /*      https://download.macromedia.com/pub/developer/opentype/tech-notes/5902.AdobePSNameGeneration.html */
-  /*                                                                       */
-  /*    [Since 2.9] Special PostScript names for named instances are only  */
-  /*    returned if the named instance is set with @FT_Set_Named_Instance  */
-  /*    (and the font has corresponding entries in its `fvar' table).  If  */
-  /*    @FT_IS_VARIATION returns true, the algorithmically derived         */
-  /*    PostScript name is provided, not looking up special entries for    */
-  /*    named instances.                                                   */
-  /*                                                                       */
-  FT_EXPORT( const char* )
-  FT_Get_Postscript_Name( FT_Face  face );
 
 
   /*************************************************************************/

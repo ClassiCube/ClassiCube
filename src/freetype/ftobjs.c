@@ -34,7 +34,6 @@
 
 #include FT_SERVICE_PROPERTIES_H
 #include FT_SERVICE_SFNT_H
-#include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_GLYPH_DICT_H
 #include FT_SERVICE_TT_CMAP_H
 
@@ -2911,35 +2910,6 @@
       error = FT_THROW( Invalid_Argument );
 
     return error;
-  }
-
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( const char* )
-  FT_Get_Postscript_Name( FT_Face  face )
-  {
-    const char*  result = NULL;
-
-
-    if ( !face )
-      goto Exit;
-
-    if ( !result )
-    {
-      FT_Service_PsFontName  service;
-
-
-      FT_FACE_LOOKUP_SERVICE( face,
-                              service,
-                              POSTSCRIPT_FONT_NAME );
-
-      if ( service && service->get_ps_font_name )
-        result = service->get_ps_font_name( face );
-    }
-
-  Exit:
-    return result;
   }
 
 

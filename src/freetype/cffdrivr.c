@@ -25,7 +25,6 @@
 #include FT_INTERNAL_POSTSCRIPT_PROPS_H
 #include FT_SERVICE_CID_H
 #include FT_SERVICE_POSTSCRIPT_INFO_H
-#include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_TT_CMAP_H
 #include FT_SERVICE_CFF_TABLE_LOAD_H
 
@@ -457,47 +456,6 @@
 
 
   /*
-   *  POSTSCRIPT NAME SERVICE
-   *
-   */
-
-  static const char*
-  cff_get_ps_name( CFF_Face  face )
-  {
-    CFF_Font      cff  = (CFF_Font)face->extra.data;
-    SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
-
-
-    /* following the OpenType specification 1.7, we return the name stored */
-    /* in the `name' table for a CFF wrapped into an SFNT container        */
-
-    if ( FT_IS_SFNT( FT_FACE( face ) ) && sfnt )
-    {
-      FT_Library             library     = FT_FACE_LIBRARY( face );
-      FT_Module              sfnt_module = FT_Get_Module( library, "sfnt" );
-      FT_Service_PsFontName  service     =
-        (FT_Service_PsFontName)ft_module_get_service(
-                                 sfnt_module,
-                                 FT_SERVICE_ID_POSTSCRIPT_FONT_NAME,
-                                 0 );
-
-
-      if ( service && service->get_ps_font_name )
-        return service->get_ps_font_name( FT_FACE( face ) );
-    }
-
-    return (const char*)cff->font_name;
-  }
-
-
-  FT_DEFINE_SERVICE_PSFONTNAMEREC(
-    cff_service_ps_name,
-
-    (FT_PsName_GetFunc)cff_get_ps_name      /* get_ps_font_name */
-  )
-
-
-  /*
    * TT CMAP INFO
    *
    * If the charmap is a synthetic Unicode encoding cmap or
@@ -861,14 +819,13 @@
 
 #if !defined FT_CONFIG_OPTION_NO_GLYPH_NAMES && \
      defined TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  FT_DEFINE_SERVICEDESCREC10(
+  FT_DEFINE_SERVICEDESCREC9(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
     FT_SERVICE_ID_MULTI_MASTERS,        &cff_service_multi_masters,
     FT_SERVICE_ID_METRICS_VARIATIONS,   &cff_service_metrics_variations,
     FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cff_service_ps_name,
     FT_SERVICE_ID_GLYPH_DICT,           &cff_service_glyph_dict,
     FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
     FT_SERVICE_ID_CID,                  &cff_service_cid_info,
@@ -876,12 +833,11 @@
     FT_SERVICE_ID_CFF_LOAD,             &cff_service_cff_load
   )
 #elif !defined FT_CONFIG_OPTION_NO_GLYPH_NAMES
-  FT_DEFINE_SERVICEDESCREC8(
+  FT_DEFINE_SERVICEDESCREC7(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
     FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cff_service_ps_name,
     FT_SERVICE_ID_GLYPH_DICT,           &cff_service_glyph_dict,
     FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
     FT_SERVICE_ID_CID,                  &cff_service_cid_info,
@@ -889,12 +845,11 @@
     FT_SERVICE_ID_CFF_LOAD,             &cff_service_cff_load
   )
 #else
-  FT_DEFINE_SERVICEDESCREC7(
+  FT_DEFINE_SERVICEDESCREC6(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
     FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &cff_service_ps_name,
     FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
     FT_SERVICE_ID_CID,                  &cff_service_cid_info,
     FT_SERVICE_ID_PROPERTIES,           &cff_service_properties,
