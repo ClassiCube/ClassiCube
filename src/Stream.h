@@ -40,9 +40,9 @@ struct Stream {
 };
 
 /* Attempts to fully read up to count bytes from the stream. */
-cc_result Stream_Read(struct Stream* s, cc_uint8* buffer, cc_uint32 count);
+CC_API cc_result Stream_Read(struct Stream* s, cc_uint8* buffer, cc_uint32 count);
 /* Attempts to fully write up to count bytes from the stream. */
-cc_result Stream_Write(struct Stream* s, const cc_uint8* buffer, cc_uint32 count);
+CC_API cc_result Stream_Write(struct Stream* s, const cc_uint8* buffer, cc_uint32 count);
 /* Initalises default function pointers for a stream. (all read, write, seeks return an error) */
 void Stream_Init(struct Stream* s);
 /* Slow way of reading a U8 integer through stream->Read(stream, 1, tmp). */
