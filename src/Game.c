@@ -422,8 +422,6 @@ static void Game_Load(void) {
 	Game_Fov = 70;
 
 	Gfx_Init();
-	Gfx.Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
-
 	Game_UpdateDimensions();
 	LoadOptions();
 

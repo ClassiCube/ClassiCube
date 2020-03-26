@@ -10,7 +10,9 @@
 #include "Block.h"
 #include "ExtMath.h"
 #include "Errors.h"
+#include "Options.h"
 
+/* Avoid pointless includes on Windows */
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -39,7 +41,7 @@ static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
 /*########################################################################################################################*
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
 *#########################################################################################################################*/
-static void Gfx_InitDefaultResources(void) {
+static void InitDefaultResources(void) {
 	cc_uint16 indices[GFX_MAX_INDICES];
 	Gfx_MakeIndices(indices, GFX_MAX_INDICES);
 	Gfx_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
@@ -48,14 +50,22 @@ static void Gfx_InitDefaultResources(void) {
 	Gfx_texVb  = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
 }
 
-static void Gfx_FreeDefaultResources(void) {
+static void FreeDefaultResources(void) {
 	Gfx_DeleteDynamicVb(&Gfx_quadVb);
 	Gfx_DeleteDynamicVb(&Gfx_texVb);
 	Gfx_DeleteIb(&Gfx_defaultIb);
 }
 
-static void Gfx_LimitFPS(void) {
-#ifndef CC_BUILD_WEBGL
+static void CommonInit(void) {
+	Gfx.Initialised = true;
+	Gfx.Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
+}
+
+static void LimitFPS(void) {
+	/* Can't use Thread_Sleep on the web. (spinwaits instead of sleeping) */
+	/* However this is not a problem, because GLContext_SetVsync
+	/* gets the browser to automatically handle the timing instead. */
+#ifndef CC_BUILD_WEB
 	cc_uint64 frameEnd = Stopwatch_Measure();
 	float elapsedMs = Stopwatch_ElapsedMicroseconds(frameStart, frameEnd) / 1000.0f;
 	float leftOver  = gfx_minFrameMs - elapsedMs;
@@ -378,8 +388,8 @@ void Gfx_Init(void) {
 	Gfx.MaxTexWidth  = caps.MaxTextureWidth;
 	Gfx.MaxTexHeight = caps.MaxTextureHeight;
 	Gfx.CustomMipmapsLevels = true;
-	Gfx.Initialised         = true;
 
+	CommonInit();
 	Gfx_RestoreState();
 	totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 }
@@ -406,13 +416,10 @@ void Gfx_Free(void) {
 	D3D9_FreeResource(&d3d);
 }
 
-static void Gfx_FreeState(void) {
-	Gfx_FreeDefaultResources();
-}
-
+static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
 	Gfx_SetFaceCulling(false);
-	Gfx_InitDefaultResources();
+	InitDefaultResources();
 	gfx_batchFormat = -1;
 
 	IDirect3DDevice9_SetRenderState(device, D3DRS_COLORVERTEX,       false);
@@ -921,7 +928,7 @@ void Gfx_EndFrame(void) {
 		/* TODO: Make sure this actually works on all graphics cards. */
 		Gfx_LoseContext(" (Direct3D9 device lost)");
 	}
-	if (gfx_minFrameMs) Gfx_LimitFPS();
+	if (gfx_minFrameMs) LimitFPS();
 }
 
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
@@ -1051,7 +1058,7 @@ void Gfx_Init(void) {
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
 	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
 
-	Gfx.Initialised = true;
+	CommonInit();
 	GL_CheckSupport();
 	Gfx_RestoreState();
 }
@@ -1063,7 +1070,7 @@ cc_bool Gfx_TryRestoreContext(void) {
 }
 
 void Gfx_Free(void) {
-	Gfx_FreeDefaultResources();
+	FreeDefaultResources();
 	GLContext_Free();
 }
 
@@ -1413,7 +1420,7 @@ void Gfx_BeginFrame(void) { frameStart = Stopwatch_Measure(); }
 void Gfx_Clear(void) { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 void Gfx_EndFrame(void) { 
 	if (!GLContext_SwapBuffers()) Gfx_LoseContext("GLContext lost");
-	if (gfx_minFrameMs) Gfx_LimitFPS();
+	if (gfx_minFrameMs) LimitFPS();
 }
 
 void Gfx_OnWindowResize(void) {
@@ -1738,7 +1745,7 @@ static void GL_CheckSupport(void) {
 
 static void Gfx_FreeState(void) {
 	int i;
-	Gfx_FreeDefaultResources();
+	FreeDefaultResources();
 	gfx_activeShader = NULL;
 
 	for (i = 0; i < Array_Elems(shaders); i++) {
@@ -1748,7 +1755,7 @@ static void Gfx_FreeState(void) {
 }
 
 static void Gfx_RestoreState(void) {
-	Gfx_InitDefaultResources();
+	InitDefaultResources();
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	gfx_batchFormat = -1;
@@ -1882,9 +1889,9 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 	glLoadIdentity();
 }
 
-static void Gfx_FreeState(void) { Gfx_FreeDefaultResources(); }
+static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
-	Gfx_InitDefaultResources();
+	InitDefaultResources();
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	gfx_batchFormat = -1;
