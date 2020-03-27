@@ -85,13 +85,6 @@ void TextureCache_Deny(const String* url);
 /* Clears the list of denied URLs, returning number removed. */
 int TextureCache_ClearDenied(void);
 
-/* Returns whether the given URL has been cached. */
-cc_bool TextureCache_Has(const String* url);
-/* Attempts to get the cached data stream for the given url. */
-cc_bool TextureCache_Get(const String* url, struct Stream* stream);
-/* Updates cached data, ETag, and Last-Modified for the given URL. */
-void TextureCache_Update(struct HttpRequest* req);
-
 /* Extracts a texture pack .zip from the given file. */
 void TexturePack_ExtractZip_File(const String* filename);
 /* If World_TextureUrl is empty, extracts user's default texture pack. */
@@ -102,5 +95,6 @@ void TexturePack_ExtractCurrent(cc_bool forceReload);
 /* NOTE: This does not load cached textures - use TexturePack_ExtractCurrent for that. */
 void TexturePack_DownloadAsync(const String* url, const String* id);
 /* Extracts a texture pack or terrain.png from given downloaded data. */
-void TexturePack_Extract_Req(struct HttpRequest* item);
+/* Also updates cached data associated with the given URL. */
+void TexturePack_Apply(struct HttpRequest* item);
 #endif

@@ -555,7 +555,8 @@ CC_NOINLINE static void TextureCache_MakePath(String* path, const String* url) {
 	String_Format1(path, "texturecache/%s", &key);
 }
 
-cc_bool TextureCache_Has(const String* url) {
+/* Returns non-zero if given URL has been cached */
+static int TextureCache_Has(const String* url) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	String_InitArray(path, pathBuffer);
 
@@ -563,7 +564,8 @@ cc_bool TextureCache_Has(const String* url) {
 	return File_Exists(&path);
 }
 
-cc_bool TextureCache_Get(const String* url, struct Stream* stream) {
+/* Attempts to get the cached data stream for the given url */
+static cc_bool TextureCache_Get(const String* url, struct Stream* stream) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	cc_result res;
 
@@ -617,7 +619,8 @@ static void TextureCache_SetLastModified(const String* url, const String* time) 
 	TextureCache_SetEntry(url, time, &lastModifiedCache);
 }
 
-void TextureCache_Update(struct HttpRequest* req) {
+/* Updates cached data, ETag, and Last-Modified for the given URL */
+static void TextureCache_Update(struct HttpRequest* req) {
 	String path, url; char pathBuffer[FILENAME_SIZE];
 	cc_result res;
 	url = String_FromRawArray(req->url);
@@ -727,7 +730,7 @@ void TexturePack_ExtractCurrent(cc_bool forceReload) {
 	}
 }
 
-void TexturePack_Extract_Req(struct HttpRequest* item) {
+void TexturePack_Apply(struct HttpRequest* item) {
 	String url;
 	cc_uint8* data; cc_uint32 len;
 	struct Stream mem;
@@ -735,6 +738,7 @@ void TexturePack_Extract_Req(struct HttpRequest* item) {
 	cc_result res;
 
 	url = String_FromRawArray(item->url);
+	TextureCache_Update(item);
 	/* Took too long to download and is no longer active texture pack */
 	if (!String_Equals(&World_TextureUrl, &url)) return;
 

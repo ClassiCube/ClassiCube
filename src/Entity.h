@@ -71,6 +71,7 @@ struct EntityVTABLE {
 struct Entity {
 	const struct EntityVTABLE* VTABLE;
 	Vec3 Position;
+	/* NOTE: Do NOT change order of yaw/pitch, this will break models in plugins */
 	float Pitch, Yaw, RotX, RotY, RotZ;
 	Vec3 Velocity;
 
