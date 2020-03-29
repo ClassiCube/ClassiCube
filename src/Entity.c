@@ -788,8 +788,8 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 	} else {
 		if (KeyBind_IsPressed(KEYBIND_FORWARD)) *zMoving -= 0.98f;
 		if (KeyBind_IsPressed(KEYBIND_BACK))    *zMoving += 0.98f;
-		if (KeyBind_IsPressed(KEYBIND_LEFT))    *xMoving -= 0.98f;
-		if (KeyBind_IsPressed(KEYBIND_RIGHT))   *xMoving += 0.98f;
+		if (KeyBind_IsPressed(KEYBIND_LEFT))    *xMoving += 0.98f;
+		if (KeyBind_IsPressed(KEYBIND_RIGHT))   *xMoving -= 0.98f;
 
 		p->Physics.Jumping  = KeyBind_IsPressed(KEYBIND_JUMP);
 		hacks->Speeding     = hacks->Enabled && KeyBind_IsPressed(KEYBIND_SPEED);
@@ -835,7 +835,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	}
 
 	PhysicsComp_UpdateVelocityState(&p->Physics);
-	headingVelocity = Vec3_RotateY3(xMoving, 0, zMoving, e->Yaw * MATH_DEG2RAD);
+	headingVelocity = Vec3_RotateY3(0, xMoving, zMoving, e->Yaw * MATH_DEG2RAD);
 	PhysicsComp_PhysicsTick(&p->Physics, headingVelocity);
 
 	/* Fixes high jump, when holding down a movement key, jump, fly, then let go of fly key */
@@ -889,7 +889,7 @@ static void LocalPlayer_Init(void) {
 	TiltComp_Init(&p->Tilt);
 
 	p->Base.ModelRestrictedScale = true;
-	p->ReachDistance = 5.0f;
+	p->Reach         = 5.0f;
 	p->Physics.Hacks = &p->Hacks;
 	p->Physics.Collisions = &p->Collisions;
 	p->Base.VTABLE   = &localPlayer_VTABLE;
@@ -910,7 +910,7 @@ static void LocalPlayer_Init(void) {
 
 static void LocalPlayer_Reset(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	p->ReachDistance = 5.0f;
+	p->Reach = 5.0f;
 	Vec3_Set(p->Base.Velocity, 0,0,0);
 	p->Physics.JumpVel       = 0.42f;
 	p->Physics.ServerJumpVel = 0.42f;

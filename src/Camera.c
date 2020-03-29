@@ -36,17 +36,20 @@ static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 }
 
 static void PerspectiveCamera_GetView(struct Matrix* mat) {
+	struct Matrix m;
 	Vec3 pos = Camera.CurrentPos;
 	Vec2 rot = Camera.Active->GetOrientation();
 	Matrix_LookRot(mat, pos, rot);
 	Matrix_MulBy(mat, &Camera.TiltM);
+	//Matrix_RotateZ(&m, 90 * MATH_DEG2RAD);
+	//Matrix_MulBy(mat, &m);
 }
 
 static void PerspectiveCamera_GetPickedBlock(struct RayTracer* t) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec3 dir    = Vec3_GetDirVector(p->Yaw * MATH_DEG2RAD, p->Pitch * MATH_DEG2RAD);
 	Vec3 eyePos = Entity_GetEyePosition(p);
-	float reach = LocalPlayer_Instance.ReachDistance;
+	float reach = LocalPlayer_Instance.Reach;
 	Picking_CalcPickedBlock(&eyePos, &dir, reach, t);
 }
 

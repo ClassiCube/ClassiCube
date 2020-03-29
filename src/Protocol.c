@@ -926,7 +926,7 @@ static void CPE_ExtEntry(cc_uint8* data) {
 }
 
 static void CPE_SetClickDistance(cc_uint8* data) {
-	LocalPlayer_Instance.ReachDistance = Stream_GetU16_BE(data) / 32.0f;
+	LocalPlayer_Instance.Reach = Stream_GetU16_BE(data) / 32.0f;
 }
 
 static void CPE_CustomBlockLevel(cc_uint8* data) {

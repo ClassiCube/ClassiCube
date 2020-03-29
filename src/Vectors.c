@@ -205,12 +205,15 @@ void Matrix_PerspectiveOffCenter(struct Matrix* result, float left, float right,
 }
 
 void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot) {
-	struct Matrix rotX, rotY, trans;
-	Matrix_RotateX(&rotX, rot.Y);
-	Matrix_RotateY(&rotY, rot.X);
+	struct Matrix yaw, pit, base, trans;
+	Matrix_RotateY(&pit,  -rot.Y);
+	Matrix_RotateX(&yaw,  rot.X);
+	Matrix_RotateZ(&base, 90 * MATH_DEG2RAD);
 	Matrix_Translate(&trans, -pos.X, -pos.Y, -pos.Z);
-
-	Matrix_Mul(result, &rotY, &rotX);
+	
+	Matrix_Mul(result, &base, &Matrix_Identity);
+	Matrix_Mul(result, &yaw, result);
+	Matrix_Mul(result, &pit, result);
 	Matrix_Mul(result, &trans, result);
 }
 

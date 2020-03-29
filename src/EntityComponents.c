@@ -749,6 +749,7 @@ static void Collisions_ClipXMin(struct CollisionsComp* comp, struct AABB* blockB
 		comp->Entity->Position.X = blockBB->Min.X - size->X / 2 - COLLISIONS_ADJ;
 		Collisions_ClipX(comp->Entity, size, entityBB, extentBB);
 		comp->HitXMin = true;
+		comp->Entity->OnGround = true;
 	}
 }
 
@@ -758,6 +759,7 @@ static void Collisions_ClipXMax(struct CollisionsComp* comp, struct AABB* blockB
 		comp->Entity->Position.X = blockBB->Max.X + size->X / 2 + COLLISIONS_ADJ;
 		Collisions_ClipX(comp->Entity, size, entityBB, extentBB);
 		comp->HitXMax = true;
+		comp->Entity->OnGround = true;
 	}
 }
 
@@ -937,25 +939,25 @@ void PhysicsComp_UpdateVelocityState(struct PhysicsComp* comp) {
 		pastJumpPoint = liquidFeet && !liquidRest && (Math_Mod1(entity->Position.Y) >= 0.4f);
 		if (!pastJumpPoint) {
 			comp->CanLiquidJump = true;
-			entity->Velocity.Y += 0.04f;
-			if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.Y += 0.04f;
-			if (hacks->HalfSpeeding && hacks->CanSpeed) entity->Velocity.Y += 0.02f;
+			entity->Velocity.X += 0.04f;
+			if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.X += 0.04f;
+			if (hacks->HalfSpeeding && hacks->CanSpeed) entity->Velocity.X += 0.02f;
 		} else if (pastJumpPoint) {
 			/* either A) climb up solid on side B) jump bob in water */
 			if (Collisions_HitHorizontal(comp->Collisions)) {
-				entity->Velocity.Y += touchLava ? 0.30f : 0.13f;
+				entity->Velocity.X += touchLava ? 0.30f : 0.13f;
 			} else if (comp->CanLiquidJump) {
-				entity->Velocity.Y += touchLava ? 0.20f : 0.10f;
+				entity->Velocity.X += touchLava ? 0.20f : 0.10f;
 			}
 			comp->CanLiquidJump = false;
 		}
 	} else if (comp->UseLiquidGravity) {
-		entity->Velocity.Y += 0.04f;
-		if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.Y += 0.04f;
-		if (hacks->HalfSpeeding && hacks->CanSpeed) entity->Velocity.Y += 0.02f;
+		entity->Velocity.X += 0.04f;
+		if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.X += 0.04f;
+		if (hacks->HalfSpeeding && hacks->CanSpeed) entity->Velocity.X += 0.02f;
 		comp->CanLiquidJump = false;
 	} else if (Entity_TouchesAnyRope(entity)) {
-		entity->Velocity.Y += (hacks->Speeding && hacks->CanSpeed) ? 0.15f : 0.10f;
+		entity->Velocity.X += (hacks->Speeding && hacks->CanSpeed) ? 0.15f : 0.10f;
 		comp->CanLiquidJump = false;
 	} else if (entity->OnGround) {
 		PhysicsComp_DoNormalJump(comp);
@@ -967,9 +969,9 @@ void PhysicsComp_DoNormalJump(struct PhysicsComp* comp) {
 	struct HacksComp* hacks = comp->Hacks;
 	if (comp->JumpVel == 0.0f || hacks->MaxJumps <= 0) return;
 
-	entity->Velocity.Y = comp->JumpVel;
-	if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.Y += comp->JumpVel;
-	if (hacks->HalfSpeeding && hacks->CanSpeed) entity->Velocity.Y += comp->JumpVel / 2;
+	entity->Velocity.X = comp->JumpVel;
+	if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.X += comp->JumpVel;
+	if (hacks->HalfSpeeding && hacks->CanSpeed) entity->Velocity.X += comp->JumpVel / 2;
 	comp->CanLiquidJump = false;
 }
 
@@ -995,7 +997,7 @@ static void PhysicsComp_MoveHor(struct PhysicsComp* comp, Vec3 vel, float factor
 	struct Entity* entity;
 	float dist;
 
-	dist = Math_SqrtF(vel.X * vel.X + vel.Z * vel.Z);
+	dist = Math_SqrtF(vel.Y * vel.Y + vel.Z * vel.Z);
 	if (dist < 0.00001f) return;
 	if (dist < 1.0f) dist = 1.0f;
 
@@ -1007,16 +1009,16 @@ static void PhysicsComp_MoveHor(struct PhysicsComp* comp, Vec3 vel, float factor
 
 static void PhysicsComp_Move(struct PhysicsComp* comp, Vec3 drag, float gravity, float yMul) {
 	struct Entity* entity = comp->Entity;
-	entity->Velocity.Y *= yMul;
+	entity->Velocity.X *= yMul;
 
 	if (!comp->Hacks->Noclip) {
 		Collisions_MoveAndWallSlide(comp->Collisions);
 	}
 	Vec3_AddBy(&entity->Position, &entity->Velocity);
 
-	entity->Velocity.Y /= yMul;
+	entity->Velocity.X /= yMul;
 	Vec3_Mul3By(&entity->Velocity, &drag);
-	entity->Velocity.Y -= gravity;
+	entity->Velocity.X -= gravity;
 }
 
 static void PhysicsComp_MoveFlying(struct PhysicsComp* comp, Vec3 vel, float factor, Vec3 drag, float gravity, float yMul) {
@@ -1025,13 +1027,13 @@ static void PhysicsComp_MoveFlying(struct PhysicsComp* comp, Vec3 vel, float fac
 	float yVel;
 
 	PhysicsComp_MoveHor(comp, vel, factor);
-	yVel = Math_SqrtF(entity->Velocity.X * entity->Velocity.X + entity->Velocity.Z * entity->Velocity.Z);
+	yVel = Math_SqrtF(entity->Velocity.Y * entity->Velocity.Y + entity->Velocity.Z * entity->Velocity.Z);
 	/* make horizontal speed the same as vertical speed */
 	if ((vel.X != 0.0f || vel.Z != 0.0f) && yVel > 0.001f) {
 		entity->Velocity.Y = 0.0f;
 		yMul = 1.0f;
-		if (hacks->FlyingUp || comp->Jumping) entity->Velocity.Y += yVel;
-		if (hacks->FlyingDown)                entity->Velocity.Y -= yVel;
+		if (hacks->FlyingUp || comp->Jumping) entity->Velocity.X += yVel;
+		if (hacks->FlyingDown)                entity->Velocity.X -= yVel;
 	}
 	PhysicsComp_Move(comp, drag, gravity, yMul);
 }
@@ -1150,12 +1152,12 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
 
 		if (PhysicsComp_OnIce(entity) && !hacks->Floating) {
 			/* limit components to +-0.25f by rescaling vector to [-0.25, 0.25] */
-			if (Math_AbsF(entity->Velocity.X) > 0.25f || Math_AbsF(entity->Velocity.Z) > 0.25f) {
-				float xScale = Math_AbsF(0.25f / entity->Velocity.X);
+			if (Math_AbsF(entity->Velocity.Y) > 0.25f || Math_AbsF(entity->Velocity.Z) > 0.25f) {
+				float xScale = Math_AbsF(0.25f / entity->Velocity.Y);
 				float zScale = Math_AbsF(0.25f / entity->Velocity.Z);
 
 				float scale = min(xScale, zScale);
-				entity->Velocity.X *= scale;
+				entity->Velocity.Y *= scale;
 				entity->Velocity.Z *= scale;
 			}
 		} else if (entity->OnGround || hacks->Flying) {

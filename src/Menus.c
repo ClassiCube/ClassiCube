@@ -2795,8 +2795,8 @@ void HacksSettingsScreen_Show(void) {
 /*########################################################################################################################*
 *----------------------------------------------------MiscOptionsScreen----------------------------------------------------*
 *#########################################################################################################################*/
-static void MiscOptionsScreen_GetReach(String* v) { String_AppendFloat(v, LocalPlayer_Instance.ReachDistance, 2); }
-static void MiscOptionsScreen_SetReach(const String* v) { LocalPlayer_Instance.ReachDistance = Menu_Float(v); }
+static void MiscOptionsScreen_GetReach(String* v) { String_AppendFloat(v, LocalPlayer_Instance.Reach, 2); }
+static void MiscOptionsScreen_SetReach(const String* v) { LocalPlayer_Instance.Reach = Menu_Float(v); }
 
 static void MiscOptionsScreen_GetMusic(String* v) { String_AppendInt(v, Audio_MusicVolume); }
 static void MiscOptionsScreen_SetMusic(const String* v) {

@@ -547,7 +547,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 	if (!IsTag(tag->parent->parent->parent, "Metadata")) return;
 
 	if (IsTag(tag->parent, "ClickDistance")) {
-		if (IsTag(tag, "Distance")) { p->ReachDistance = NbtTag_U16(tag) / 32.0f; return; }
+		if (IsTag(tag, "Distance")) { p->Reach = NbtTag_U16(tag) / 32.0f; return; }
 	}
 	if (IsTag(tag->parent, "EnvWeatherType")) {
 		if (IsTag(tag, "WeatherType")) { Env.Weather = NbtTag_U8(tag); return; }
@@ -1130,7 +1130,7 @@ cc_result Cw_Save(struct Stream* stream) {
 
 	Mem_Copy(tmp, cw_meta_cpe, sizeof(cw_meta_cpe));
 	{
-		Stream_SetU16_BE(&tmp[44], (cc_uint16)(LocalPlayer_Instance.ReachDistance * 32));
+		Stream_SetU16_BE(&tmp[44], (cc_uint16)(LocalPlayer_Instance.Reach * 32));
 		tmp[78] = Env.Weather;
 
 		col = Env.SkyCol;    tmp[103] = PackedCol_R(col); tmp[109] = PackedCol_G(col); tmp[115] = PackedCol_B(col);

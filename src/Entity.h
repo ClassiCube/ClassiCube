@@ -183,19 +183,18 @@ void NetPlayer_Init(struct NetPlayer* player);
 extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
 /* Represents the user/player's own entity. */
-struct LocalPlayer {
+CC_VAR extern struct LocalPlayer {
 	struct Entity Base;
 	Vec3 Spawn, OldVelocity;
-	float SpawnYaw, SpawnPitch, ReachDistance;
+	float SpawnYaw, SpawnPitch, Reach;
 	struct HacksComp Hacks;
 	struct TiltComp Tilt;
 	struct InterpComp Interp;
 	struct CollisionsComp Collisions;
 	struct PhysicsComp Physics;
 	cc_bool _warnedRespawn, _warnedFly, _warnedNoclip;
-};
+} LocalPlayer_Instance;
 
-extern struct LocalPlayer LocalPlayer_Instance;
 /* Returns how high (in blocks) the player can jump. */
 float LocalPlayer_JumpHeight(void);
 /* Interpolates current position and orientation between Interp.Prev and Interp.Next */

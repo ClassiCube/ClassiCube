@@ -194,7 +194,7 @@ static cc_bool ClipBlock(struct RayTracer* t) {
 
 	/* Only pick the block if the block is precisely within reach distance. */
 	lenSq = Vec3_LengthSquared(&scaledDir);
-	reach = LocalPlayer_Instance.ReachDistance;
+	reach = LocalPlayer_Instance.Reach;
 
 	if (lenSq <= reach * reach) {
 		SetAsValid(t);
