@@ -67,7 +67,7 @@ void Map_LoadFrom(const String* path) {
 	importer = Map_FindImporter(path);
 	if ((res = importer(&stream))) {
 		World_Reset();
-		Logger_Warn2(res, "decoding", path); stream.Close(&stream); return;
+		Logger_Warn2(res, "decoding", path);
 	}
 
 	res = stream.Close(&stream);

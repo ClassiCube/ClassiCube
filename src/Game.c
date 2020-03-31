@@ -636,7 +636,7 @@ static void Game_RenderFrame(double delta) {
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	UpdateViewMatrix();
 
-	if (!Gui_GetBlocksWorld() && World.Blocks) {
+	if (!Gui_GetBlocksWorld()) {
 		Game_Render3D(delta, t);
 	} else {
 		RayTracer_SetInvalid(&Game_SelectedPos);
