@@ -184,8 +184,7 @@ void Game_Disconnect(const String* title, const String* reason) {
 
 void Game_Reset(void) {
 	struct IGameComponent* comp;
-	World_Reset();
-	Event_RaiseVoid(&WorldEvents.NewMap);
+	World_NewMap();
 
 	if (World_TextureUrl.length) {
 		World_TextureUrl.length = 0;

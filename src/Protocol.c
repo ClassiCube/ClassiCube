@@ -424,8 +424,7 @@ static void MapState_Read(struct MapState* m) {
 }
 
 static void Classic_StartLoading(void) {
-	World_Reset();
-	Event_RaiseVoid(&WorldEvents.NewMap);
+	World_NewMap();
 	Stream_ReadonlyMemory(&map_part, NULL, 0);
 
 	LoadingScreen_Show(&Server.Name, &Server.MOTD);

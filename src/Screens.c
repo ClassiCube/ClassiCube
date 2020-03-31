@@ -1346,7 +1346,6 @@ struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen;
 static void GeneratingScreen_Init(void* screen) {
 	Gen_Done = false;
 	LoadingScreen_Init(screen);
-	Event_RaiseVoid(&WorldEvents.NewMap);
 
 	Gen_Blocks = (BlockRaw*)Mem_TryAlloc(World.Volume, 1);
 	if (!Gen_Blocks) {

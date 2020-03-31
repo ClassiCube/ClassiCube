@@ -49,6 +49,12 @@ void World_Reset(void) {
 	Env_Reset();
 }
 
+void World_NewMap(void) {
+	World_Reset();
+	World.Loaded = false;
+	Event_RaiseVoid(&WorldEvents.NewMap);
+}
+
 void World_SetNewMap(BlockRaw* blocks, int width, int height, int length) {
 	World_SetDimensions(width, height, length);
 	World.Blocks = blocks;
@@ -65,6 +71,7 @@ void World_SetNewMap(BlockRaw* blocks, int width, int height, int length) {
 	if (Env.EdgeHeight == -1)   { Env.EdgeHeight   = height / 2; }
 	if (Env.CloudsHeight == -1) { Env.CloudsHeight = height + 2; }
 	GenerateNewUuid();
+	World.Loaded = true;
 }
 
 CC_NOINLINE void World_SetDimensions(int width, int height, int length) {
