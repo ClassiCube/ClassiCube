@@ -74,8 +74,6 @@ void Map_LoadFrom(const String* path) {
 	if (res) { Logger_Warn2(res, "closing", path); }
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
-	Event_RaiseVoid(&WorldEvents.MapLoaded);
-
 	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnYaw, p->SpawnPitch, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
 }

@@ -1366,8 +1366,8 @@ static void GeneratingScreen_EndGeneration(void) {
 	Gui_Remove((struct Screen*)&LoadingScreen);
 	Gen_Done = false;
 
-	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
 	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
+	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
 	Gen_Blocks = NULL;
 
 	x = (World.Width / 2) + 0.5f; z = (World.Length / 2) + 0.5f;
@@ -1375,9 +1375,8 @@ static void GeneratingScreen_EndGeneration(void) {
 
 	LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-
+	/* TODO: This needs to be before new map... */
 	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
-	Event_RaiseVoid(&WorldEvents.MapLoaded);
 }
 
 static void GeneratingScreen_Render(void* screen, double delta) {

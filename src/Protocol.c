@@ -528,20 +528,12 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 		Chat_AddRaw("   &cBlocks array size does not match volume of map");
 		FreeMapStates();
 	}
-
-	/* TODO: TEMP HACK */
-	if (!map.blocks) {
-		width = 0; height = 0; length = 0;
-	}
-
-	World_SetNewMap(map.blocks, width, height, length);
+	
 #ifdef EXTENDED_BLOCKS
 	/* defer allocation of second map array if possible */
-	if (cpe_extBlocks && map2.blocks) {
-		World_SetMapUpper(map2.blocks);
-	}
+	if (cpe_extBlocks && map2.blocks) World_SetMapUpper(map2.blocks);
 #endif
-	Event_RaiseVoid(&WorldEvents.MapLoaded);
+	World_SetNewMap(map.blocks, width, height, length);
 }
 
 static void Classic_SetBlock(cc_uint8* data) {
