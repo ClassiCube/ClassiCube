@@ -146,6 +146,8 @@ static void SPConnection_BeginConnect(void) {
 
 	Random_SeedFromCurrentTime(&rnd);
 	World_SetDimensions(128, 64, 128);
+	World_NewMap();
+
 	Gen_Vanilla = true;
 	Gen_Seed    = Random_Next(&rnd, Int32_MaxValue);
 	GeneratingScreen_Show();

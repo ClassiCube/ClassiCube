@@ -135,6 +135,7 @@ void* Mem_Realloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char
 #if defined CC_BUILD_WIN
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+	if (numBytes >= 128 * 64 * 128) return NULL;
 	return HeapAlloc(heap, 0, numBytes);
 }
 

@@ -516,7 +516,7 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	WoM_CheckSendWomID();
 
 #ifdef EXTENDED_BLOCKS
-	if (map2.allocFailed) { FreeMapStates(); return; }
+	if (map2.allocFailed) FreeMapStates();
 #endif
 
 	width  = Stream_GetU16_BE(data + 0);
