@@ -112,7 +112,7 @@ static void UpdateFogNormal(float fogDensity, PackedCol fogCol) {
 void EnvRenderer_UpdateFog(void) {
 	float fogDensity; 
 	PackedCol fogCol;
-	if (!World.Blocks) return;
+	if (!World.Loaded) return;
 
 	CalcFog(&fogDensity, &fogCol);
 	Gfx_ClearCol(fogCol);
@@ -186,7 +186,7 @@ static void UpdateClouds(void) {
 	int x1, z1, x2, z2;
 	
 	Gfx_DeleteVb(&clouds_vb);
-	if (!World.Blocks || Gfx.LostContext) return;
+	if (!World.Loaded || Gfx.LostContext) return;
 	if (EnvRenderer_Minimal) return;
 
 	extent = Utils_AdjViewDist(Game_ViewDistance);
@@ -257,7 +257,7 @@ static void UpdateSky(void) {
 	int x1, z1, x2, z2;
 
 	Gfx_DeleteVb(&sky_vb);
-	if (!World.Blocks || Gfx.LostContext) return;
+	if (!World.Loaded || Gfx.LostContext) return;
 	if (EnvRenderer_Minimal) return;
 
 	extent = Utils_AdjViewDist(Game_ViewDistance);
@@ -672,7 +672,7 @@ static void UpdateMapSides(void) {
 	VertexP3fT2fC4b* data;
 
 	Gfx_DeleteVb(&sides_vb);
-	if (!World.Blocks || Gfx.LostContext) return;
+	if (!World.Loaded || Gfx.LostContext) return;
 	block = Env.SidesBlock;
 
 	if (Blocks.Draw[block] == DRAW_GAS) return;
@@ -722,7 +722,7 @@ static void UpdateMapEdges(void) {
 	VertexP3fT2fC4b* data;
 
 	Gfx_DeleteVb(&edges_vb);
-	if (!World.Blocks || Gfx.LostContext) return;
+	if (!World.Loaded || Gfx.LostContext) return;
 	block = Env.EdgeBlock;
 
 	if (Blocks.Draw[block] == DRAW_GAS) return;

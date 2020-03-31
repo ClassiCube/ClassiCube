@@ -515,7 +515,6 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	map_begunLoading = false;
 	WoM_CheckSendWomID();
 
-	if (map.allocFailed) return;
 #ifdef EXTENDED_BLOCKS
 	if (map2.allocFailed) { FreeMapStates(); return; }
 #endif
@@ -528,7 +527,11 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 		Chat_AddRaw("&cFailed to load map, try joining a different map");
 		Chat_AddRaw("   &cBlocks array size does not match volume of map");
 		FreeMapStates();
-		return;
+	}
+
+	/* TODO: TEMP HACK */
+	if (!map.blocks) {
+		width = 0; height = 0; length = 0;
 	}
 
 	World_SetNewMap(map.blocks, width, height, length);
@@ -1434,7 +1437,7 @@ static void CPE_Tick(void) {
 *------------------------------------------------------Custom blocks------------------------------------------------------*
 *#########################################################################################################################*/
 static void BlockDefs_OnBlockUpdated(BlockID block, cc_bool didBlockLight) {
-	if (!World.Blocks) return;
+	if (!World.Loaded) return;
 	/* Need to refresh lighting when a block's light blocking state changes */
 	if (Blocks.BlocksLight[block] != didBlockLight) Lighting_Refresh();
 }
