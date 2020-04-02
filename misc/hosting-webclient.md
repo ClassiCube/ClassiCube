@@ -14,7 +14,7 @@ For simplicitly,
 1) Download `classicube.net/static/classicube.js`, then upload it to `static/classisphere.js` on the webserver
 2) Download `classicube.net/static/default.zip`,   then upload it to `static/default.zip` on the webserver
 
-The play.html page is the trickiest part, because how to implement it is website-specific. (depends on how your website is structured, what webserver you use, etc)
+The play.html page is the trickiest part, because how to implement this is website-specific. (depends on how your website is styled, what webserver you use, what programming language is used to generate the html, etc)
 
 #### Embedding the game in play.html
 
@@ -81,6 +81,7 @@ You are required to have this HTML code somewhere in the page:
 * {server ip} - the IP address of the server to connect to
 * {server port} - the port on the server to connect on (usually `'25565'`)
 
-### Full example in flask
+### Complete example
 
-TODO [other page here]
+The links below show implementing a simple website that hosts the web client
+* [Flask (python webserver)](hosting-full-example.md)
