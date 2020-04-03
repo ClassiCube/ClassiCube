@@ -50,7 +50,7 @@ void World_Reset(void);
 /* Sets up state and raises WorldEvents.NewMap event */
 /* NOTE: This implicitly calls World_Reset. */
 CC_API void World_NewMap(void);
-/* Sets the blocks array and dimensions of the map. */
+/* Sets blocks array/dimensions of the map and raises WorldEvents.MapLoaded event */
 /* May also sets some environment settings like border/clouds height, if they are -1 */
 CC_API void World_SetNewMap(BlockRaw* blocks, int width, int height, int length);
 /* Sets the various dimension and max coordinate related variables. */
