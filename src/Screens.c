@@ -1346,7 +1346,6 @@ struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen;
 static void GeneratingScreen_Init(void* screen) {
 	Gen_Done = false;
 	LoadingScreen_Init(screen);
-	Event_RaiseVoid(&WorldEvents.NewMap);
 
 	Gen_Blocks = (BlockRaw*)Mem_TryAlloc(World.Volume, 1);
 	if (!Gen_Blocks) {
@@ -1367,18 +1366,16 @@ static void GeneratingScreen_EndGeneration(void) {
 	Gui_Remove((struct Screen*)&LoadingScreen);
 	Gen_Done = false;
 
-	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
 	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
+	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
 	Gen_Blocks = NULL;
 
 	x = (World.Width / 2) + 0.5f; z = (World.Length / 2) + 0.5f;
 	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
 
-	LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
-	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-
-	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
-	Event_RaiseVoid(&WorldEvents.MapLoaded);
+	p->SpawnYaw   = 0.0f;
+	p->SpawnPitch = 0.0f;
+	LocalPlayer_MoveToSpawn();
 }
 
 static void GeneratingScreen_Render(void* screen, double delta) {

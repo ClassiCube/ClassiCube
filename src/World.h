@@ -39,12 +39,18 @@ CC_VAR extern struct _WorldData {
 	/* e.g. this will be 255 if only 8 bit blocks are used */
 	int IDMask;
 #endif
+	/* Whether the world has finished loading/generating. */
+	/* NOTE: Blocks may still be NULL. (e.g. error during loading) */
+	cc_bool Loaded;
 } World;
 extern String World_TextureUrl;
 
 /* Frees the blocks array, sets dimensions to 0, resets environment to default. */
-CC_API void World_Reset(void);
-/* Sets the blocks array and dimensions of the map. */
+void World_Reset(void);
+/* Sets up state and raises WorldEvents.NewMap event */
+/* NOTE: This implicitly calls World_Reset. */
+CC_API void World_NewMap(void);
+/* Sets blocks array/dimensions of the map and raises WorldEvents.MapLoaded event */
 /* May also sets some environment settings like border/clouds height, if they are -1 */
 CC_API void World_SetNewMap(BlockRaw* blocks, int width, int height, int length);
 /* Sets the various dimension and max coordinate related variables. */

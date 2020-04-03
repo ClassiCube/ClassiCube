@@ -203,4 +203,6 @@ void LocalPlayer_SetInterpPosition(float t);
 /* Returns whether local player handles a key being pressed. */
 /* e.g. for respawn, toggle fly, etc. */
 cc_bool LocalPlayer_HandlesKey(int key);
+/* Moves local player back to spawn point. */
+void LocalPlayer_MoveToSpawn(void);
 #endif

@@ -184,8 +184,7 @@ void Game_Disconnect(const String* title, const String* reason) {
 
 void Game_Reset(void) {
 	struct IGameComponent* comp;
-	World_Reset();
-	Event_RaiseVoid(&WorldEvents.NewMap);
+	World_NewMap();
 
 	if (World_TextureUrl.length) {
 		World_TextureUrl.length = 0;
@@ -509,15 +508,15 @@ static void UpdateViewMatrix(void) {
 static void Game_Render3D(double delta, float t) {
 	Vec3 pos;
 
+	EnvRenderer_UpdateFog();
 	if (EnvRenderer_ShouldRenderSkybox()) EnvRenderer_RenderSkybox();
+
 	AxisLinesRenderer_Render();
 	Entities_RenderModels(delta, t);
 	Entities_RenderNames();
 
 	Particles_Render(t);
 	Camera.Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
-
-	EnvRenderer_UpdateFog();
 	EnvRenderer_RenderSky();
 	EnvRenderer_RenderClouds();
 
@@ -636,7 +635,7 @@ static void Game_RenderFrame(double delta) {
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	UpdateViewMatrix();
 
-	if (!Gui_GetBlocksWorld() && World.Blocks) {
+	if (!Gui_GetBlocksWorld()) {
 		Game_Render3D(delta, t);
 	} else {
 		RayTracer_SetInvalid(&Game_SelectedPos);

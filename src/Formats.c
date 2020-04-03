@@ -55,7 +55,6 @@ IMapImporter Map_FindImporter(const String* path) {
 
 void Map_LoadFrom(const String* path) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct LocationUpdate update;
 	IMapImporter importer;
 	struct Stream stream;
 	cc_result res;
@@ -67,17 +66,14 @@ void Map_LoadFrom(const String* path) {
 	importer = Map_FindImporter(path);
 	if ((res = importer(&stream))) {
 		World_Reset();
-		Logger_Warn2(res, "decoding", path); stream.Close(&stream); return;
+		Logger_Warn2(res, "decoding", path);
 	}
 
 	res = stream.Close(&stream);
 	if (res) { Logger_Warn2(res, "closing", path); }
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
-	Event_RaiseVoid(&WorldEvents.MapLoaded);
-
-	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnYaw, p->SpawnPitch, false);
-	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+	LocalPlayer_MoveToSpawn();
 }
 
 

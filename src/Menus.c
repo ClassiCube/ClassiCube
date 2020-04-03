@@ -178,7 +178,7 @@ static void Menu_Remove(void* screen, int i) {
 }
 
 static void Menu_BeginGen(int width, int height, int length) {
-	World_Reset();
+	World_NewMap();
 	World_SetDimensions(width, height, length);
 	GeneratingScreen_Show();
 }

@@ -819,7 +819,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	cc_bool wasOnGround;
 	Vec3 headingVelocity;
 
-	if (!World.Blocks) return;
+	if (!World.Loaded) return;
 	e->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanSpeed ? 1.0f : 0.5f;
 	p->OldVelocity = e->Velocity;
 	wasOnGround    = e->OnGround;
@@ -938,7 +938,7 @@ static void LocalPlayer_DoRespawn(void) {
 	float height, spawnY;
 	int y;
 
-	if (!World.Blocks) return;
+	if (!World.Loaded) return;
 	IVec3_Floor(&pos, &spawn);	
 
 	/* Spawn player at highest solid position to match vanilla Minecraft classic */
@@ -1057,6 +1057,16 @@ cc_bool LocalPlayer_HandlesKey(int key) {
 		return true;
 	}
 	return false;
+}
+
+void LocalPlayer_MoveToSpawn(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocationUpdate update;
+
+	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnYaw, p->SpawnPitch, false);
+	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+	/* TODO: This needs to be before new map... */
+	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
 }
 
 
