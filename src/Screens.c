@@ -1373,10 +1373,9 @@ static void GeneratingScreen_EndGeneration(void) {
 	x = (World.Width / 2) + 0.5f; z = (World.Length / 2) + 0.5f;
 	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
 
-	LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
-	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-	/* TODO: This needs to be before new map... */
-	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
+	p->SpawnYaw   = 0.0f;
+	p->SpawnPitch = 0.0f;
+	LocalPlayer_MoveToSpawn();
 }
 
 static void GeneratingScreen_Render(void* screen, double delta) {

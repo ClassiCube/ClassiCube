@@ -1059,6 +1059,16 @@ cc_bool LocalPlayer_HandlesKey(int key) {
 	return false;
 }
 
+void LocalPlayer_MoveToSpawn(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	struct LocationUpdate update;
+
+	LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnYaw, p->SpawnPitch, false);
+	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+	/* TODO: This needs to be before new map... */
+	Camera.CurrentPos = Camera.Active->GetPosition(0.0f);
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------NetPlayer---------------------------------------------------------*
