@@ -145,7 +145,7 @@ static cc_bool RayTrace(struct RayTracer* t, const Vec3* origin, const Vec3* dir
 	IVec3 pOrigin;
 	cc_bool insideMap;
 	float reachSq;
-	Vec3 v, minBB, maxBB;
+	Vec3 v;
 
 	float dxMin, dxMax, dx;
 	float dyMin, dyMax, dy;

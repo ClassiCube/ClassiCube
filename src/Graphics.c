@@ -1903,7 +1903,6 @@ static void Gfx_RestoreState(void) {
 }
 
 cc_bool Gfx_WarnIfNecessary(void) {
-	static const String intel = String_FromConst("Intel");
 	String renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
 
 #ifdef CC_BUILD_GL11
@@ -1911,7 +1910,7 @@ cc_bool Gfx_WarnIfNecessary(void) {
 	Chat_AddRaw("&cAs such you may experience poor performance.");
 	Chat_AddRaw("&cIt is likely you need to install video card drivers.");
 #endif
-	if (!String_ContainsString(&renderer, &intel)) return false;
+	if (!String_ContainsConst(&renderer, "Intel")) return false;
 
 	Chat_AddRaw("&cIntel graphics cards are known to have issues with the OpenGL build.");
 	Chat_AddRaw("&cVSync may not work, and you may see disappearing clouds and map edges.");

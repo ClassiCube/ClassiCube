@@ -20,11 +20,8 @@ int Utils_ParseEnum(const String* text, int defValue, const char* const* names, 
 }
 
 cc_bool Utils_IsUrlPrefix(const String* value) {
-	static const String http  = String_FromConst("http://");
-	static const String https = String_FromConst("https://");
-
-	return String_IndexOfString(value, &http)  == 0
-		|| String_IndexOfString(value, &https) == 0;
+	return String_IndexOfConst(value, "http://")  == 0
+		|| String_IndexOfConst(value, "https://") == 0;
 }
 
 cc_bool Utils_EnsureDirectory(const char* dirName) {

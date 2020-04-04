@@ -211,17 +211,16 @@ static void WoM_UpdateIdentifier(void) {
 }
 
 static void WoM_CheckMotd(void) {
-	static const String cfg = String_FromConst("cfg=");
 	String url; char urlBuffer[STRING_SIZE];
 	String motd, host;
 	int index;	
 
 	motd = Server.MOTD;
 	if (!motd.length) return;
-	index = String_IndexOfString(&motd, &cfg);
+	index = String_IndexOfConst(&motd, "cfg=");
 	if (Game_PureClassic || index == -1) return;
 	
-	host = String_UNSAFE_SubstringAt(&motd, index + cfg.length);
+	host = String_UNSAFE_SubstringAt(&motd, index + 4);
 	String_InitArray(url, urlBuffer);
 	String_Format1(&url, "http://%s", &host);
 	/* TODO: Replace $U with username */
@@ -424,7 +423,8 @@ static void MapState_Read(struct MapState* m) {
 }
 
 static void Classic_StartLoading(void) {
-	World_NewMap();
+	World_Reset();
+	Event_RaiseVoid(&WorldEvents.NewMap);
 	Stream_ReadonlyMemory(&map_part, NULL, 0);
 
 	LoadingScreen_Show(&Server.Name, &Server.MOTD);
@@ -515,8 +515,9 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	map_begunLoading = false;
 	WoM_CheckSendWomID();
 
+	if (map.allocFailed) return;
 #ifdef EXTENDED_BLOCKS
-	if (map2.allocFailed) FreeMapStates();
+	if (map2.allocFailed) { FreeMapStates(); return; }
 #endif
 
 	width  = Stream_GetU16_BE(data + 0);
@@ -527,13 +528,17 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 		Chat_AddRaw("&cFailed to load map, try joining a different map");
 		Chat_AddRaw("   &cBlocks array size does not match volume of map");
 		FreeMapStates();
+		return;
 	}
-	
+
+	World_SetNewMap(map.blocks, width, height, length);
 #ifdef EXTENDED_BLOCKS
 	/* defer allocation of second map array if possible */
-	if (cpe_extBlocks && map2.blocks) World_SetMapUpper(map2.blocks);
+	if (cpe_extBlocks && map2.blocks) {
+		World_SetMapUpper(map2.blocks);
+	}
 #endif
-	World_SetNewMap(map.blocks, width, height, length);
+	Event_RaiseVoid(&WorldEvents.MapLoaded);
 }
 
 static void Classic_SetBlock(cc_uint8* data) {
@@ -1429,7 +1434,7 @@ static void CPE_Tick(void) {
 *------------------------------------------------------Custom blocks------------------------------------------------------*
 *#########################################################################################################################*/
 static void BlockDefs_OnBlockUpdated(BlockID block, cc_bool didBlockLight) {
-	if (!World.Loaded) return;
+	if (!World.Blocks) return;
 	/* Need to refresh lighting when a block's light blocking state changes */
 	if (Blocks.BlocksLight[block] != didBlockLight) Lighting_Refresh();
 }

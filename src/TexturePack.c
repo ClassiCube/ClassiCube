@@ -706,7 +706,6 @@ void TexturePack_ExtractZip_File(const String* filename) {
 
 static cc_bool texturePackDefault = true;
 void TexturePack_ExtractCurrent(cc_bool forceReload) {
-	static const String zipExt = String_FromConst(".zip");
 	String url = World_TextureUrl, file;
 	struct Stream stream;
 	cc_bool zip;
@@ -720,7 +719,7 @@ void TexturePack_ExtractCurrent(cc_bool forceReload) {
 		TexturePack_ExtractZip_File(&file);
 		texturePackDefault = true;
 	} else {
-		zip = String_ContainsString(&url, &zipExt);
+		zip = String_ContainsConst(&url, ".zip");
 		res = zip ? TexturePack_ExtractZip(&stream) : TexturePack_ExtractPng(&stream);
 		if (res) Logger_Warn2(res, zip ? "extracting" : "decoding", &url);
 

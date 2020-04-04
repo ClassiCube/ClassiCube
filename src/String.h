@@ -137,9 +137,9 @@ CC_API void String_UNSAFE_TrimEnd(String* str);
 
 /* Returns first index of the given substring in the given string, -1 if not found. */
 /* e.g. index of "ab" within "cbabd" is 2 */
-CC_API int String_IndexOfString(const String* str, const String* sub);
+CC_API int String_IndexOfConst(const String* str, const char* sub);
 /* Returns non-zero if given substring is inside the given string. */
-#define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
+#define String_ContainsConst(str, sub) (String_IndexOfConst(str, sub) >= 0)
 /* Returns non-zero if given substring is case-insensitively inside the given string. */
 CC_API int String_CaselessContains(const String* str, const String* sub);
 /* Returns non-zero if given substring is case-insensitively equal to the beginning of the given string. */
@@ -150,7 +150,7 @@ CC_API int String_CaselessEnds(const String* str, const String* sub);
 /* -X if a.length < b.length, X if a.length > b.length */
 /* -X if a.buffer[i] < b.buffer[i], X if a.buffer[i] > b.buffer[i] */
 /* else returns 0. NOTE: The return value is not just in -1,0,1! */
-CC_API int  String_Compare(const String* a, const String* b);
+CC_API int String_Compare(const String* a, const String* b);
 
 /* See String_Format4 */
 CC_API void String_Format1(String* str, const char* format, const void* a1);

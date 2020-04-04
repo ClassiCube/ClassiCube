@@ -221,11 +221,11 @@ a { text-decoration: none; }
 #### static/jquery.js
 Download some version of jQuery for this. Version 2.1.1 is known to work.
 
-## Results
+## Notes
 
 * If you don't want the game to resize to fit different resolutions, remove the `resizeGameCanvas` code.
 
-* tmpl_lite.html and 
+* tmpl_lite.html and mobile_mode is used to deliver a minified page for mobile/tablet devices
 
 ## Results
 

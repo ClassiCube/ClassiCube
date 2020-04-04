@@ -476,11 +476,9 @@ static struct HttpCacheEntry http_cache[HTTP_CACHE_ENTRIES];
 
 /* Splits up the components of a URL */
 static void HttpCache_MakeEntry(const String* url, struct HttpCacheEntry* entry, String* resource) {
-	static const String schemeEnd = String_FromConst("://");
 	String scheme, path, addr, name, port;
-
 	/* URL is of form [scheme]://[server name]:[server port]/[resource] */
-	int idx = String_IndexOfString(url, &schemeEnd);
+	int idx = String_IndexOfConst(url, "://");
 
 	scheme = idx == -1 ? String_Empty : String_UNSAFE_Substring(url,   0, idx);
 	path   = idx == -1 ? *url         : String_UNSAFE_SubstringAt(url, idx + 3);

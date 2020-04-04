@@ -172,14 +172,13 @@ cc_bool HacksComp_CanJumpHigher(struct HacksComp* hacks) {
 	return hacks->Enabled && hacks->CanSpeed;
 }
 
-static String HacksComp_UNSAFE_FlagValue(const char* flagRaw, struct HacksComp* hacks) {
+static String HacksComp_UNSAFE_FlagValue(const char* flag, struct HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
-	String flag    = String_FromReadonly(flagRaw);
 	int beg, end;
 
-	beg = String_IndexOfString(joined, &flag);
+	beg = String_IndexOfConst(joined, flag);
 	if (beg < 0) return String_Empty;
-	beg += flag.length;
+	beg += String_CalcLen(flag, UInt16_MaxValue);
 
 	end = String_IndexOfAt(joined, beg, ' ');
 	if (end < 0) end = joined->length;
@@ -205,26 +204,20 @@ static int HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks) 
 	return value;
 }
 
-static void HacksComp_ParseFlag(struct HacksComp* hacks, const char* incFlag, const char* excFlag, cc_bool* target) {
-	String include = String_FromReadonly(incFlag);
-	String exclude = String_FromReadonly(excFlag);
+static void HacksComp_ParseFlag(struct HacksComp* hacks, const char* include, const char* exclude, cc_bool* target) {
 	String* joined = &hacks->HacksFlags;
-
-	if (String_ContainsString(joined, &include)) {
+	if (String_ContainsConst(joined, include)) {
 		*target = true;
-	} else if (String_ContainsString(joined, &exclude)) {
+	} else if (String_ContainsConst(joined, exclude)) {
 		*target = false;
 	}
 }
 
-static void HacksComp_ParseAllFlag(struct HacksComp* hacks, const char* incFlag, const char* excFlag) {
-	String include = String_FromReadonly(incFlag);
-	String exclude = String_FromReadonly(excFlag);
+static void HacksComp_ParseAllFlag(struct HacksComp* hacks, const char* include, const char* exclude) {
 	String* joined = &hacks->HacksFlags;
-
-	if (String_ContainsString(joined, &include)) {
+	if (String_ContainsConst(joined, include)) {
 		HacksComp_SetAll(hacks, true);
-	} else if (String_ContainsString(joined, &exclude)) {
+	} else if (String_ContainsConst(joined, exclude)) {
 		HacksComp_SetAll(hacks, false);
 	}
 }
@@ -243,9 +236,8 @@ void HacksComp_SetUserType(struct HacksComp* hacks, cc_uint8 value, cc_bool setB
 }
 
 void HacksComp_RecheckFlags(struct HacksComp* hacks) {
-	static const String noHaxFlag = String_FromConst("-hax");
 	/* Can use hacks by default (also case with WoM), no need to check +hax */
-	cc_bool hax = !String_ContainsString(&hacks->HacksFlags, &noHaxFlag);
+	cc_bool hax = !String_ContainsConst(&hacks->HacksFlags, "-hax");
 	HacksComp_SetAll(hacks, hax);
 	hacks->CanBePushed = true;
 

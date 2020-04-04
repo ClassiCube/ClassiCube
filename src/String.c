@@ -343,15 +343,15 @@ void String_UNSAFE_TrimEnd(String* str) {
 	}
 }
 
-int String_IndexOfString(const String* str, const String* sub) {
+int String_IndexOfConst(const String* str, const char* sub) {
 	int i, j;
 
 	for (i = 0; i < str->length; i++) {
-		for (j = 0; j < sub->length && (i + j) < str->length; j++) {
+		for (j = 0; sub[j] && (i + j) < str->length; j++) {
 
-			if (str->buffer[i + j] != sub->buffer[j]) break;
+			if (str->buffer[i + j] != sub[j]) break;
 		}
-		if (j == sub->length) return i;
+		if (sub[j] == '\0') return i;
 	}
 	return -1;
 }

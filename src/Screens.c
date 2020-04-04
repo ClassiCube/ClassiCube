@@ -1360,7 +1360,6 @@ static void GeneratingScreen_Init(void* screen) {
 
 static void GeneratingScreen_EndGeneration(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct LocationUpdate update;
 	float x, z;
 
 	Gui_Remove((struct Screen*)&LoadingScreen);

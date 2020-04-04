@@ -1586,10 +1586,6 @@ void FontListScreen_Show(void) {
 *#########################################################################################################################*/
 /* TODO: Hotkey added event for CPE */
 static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
-	static const String ctrl  = String_FromConst("Ctrl");
-	static const String shift = String_FromConst("Shift");
-	static const String alt   = String_FromConst("Alt");
-
 	struct ListScreen* s = (struct ListScreen*)screen;
 	struct HotkeyData h, original = { 0 };
 	String text, key, value;
@@ -1603,9 +1599,9 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	}
 
 	String_UNSAFE_Separate(&text, '+', &key, &value);
-	if (String_ContainsString(&value, &ctrl))  flags |= HOTKEY_MOD_CTRL;
-	if (String_ContainsString(&value, &shift)) flags |= HOTKEY_MOD_SHIFT;
-	if (String_ContainsString(&value, &alt))   flags |= HOTKEY_MOD_ALT;
+	if (String_ContainsConst(&value, "Ctrl"))  flags |= HOTKEY_MOD_CTRL;
+	if (String_ContainsConst(&value, "Shift")) flags |= HOTKEY_MOD_SHIFT;
+	if (String_ContainsConst(&value, "Alt"))   flags |= HOTKEY_MOD_ALT;
 
 	trigger = Utils_ParseEnum(&key, KEY_NONE, Input_Names, INPUT_COUNT);
 	for (i = 0; i < HotkeysText.count; i++) {
