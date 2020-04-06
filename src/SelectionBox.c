@@ -8,9 +8,9 @@
 
 /* Data for a selection box. */
 struct SelectionBox {
-	Vec3 Min, Max;
-	PackedCol Col;
-	float MinDist, MaxDist;
+	Vec3 p0, p1;
+	PackedCol col;
+	float minDist, maxDist;
 };
 
 #define X0 0
@@ -33,12 +33,12 @@ static void SelectionBox_RenderFaces(struct SelectionBox* box, VertexP3fC4b* v) 
 	PackedCol col;
 	int i, flags;
 
-	float offset = box->MinDist < 32.0f * 32.0f ? (1/32.0f) : (1/16.0f);
+	float offset = box->minDist < 32.0f * 32.0f ? (1/32.0f) : (1/16.0f);
 	Vec3 coords[2];
-	Vec3_Add1(&coords[0], &box->Min, -offset);
-	Vec3_Add1(&coords[1], &box->Max,  offset);
+	Vec3_Add1(&coords[0], &box->p0, -offset);
+	Vec3_Add1(&coords[1], &box->p1,  offset);
 
-	col = box->Col;
+	col = box->col;
 	for (i = 0; i < Array_Elems(faceIndices); i++, v++) {
 		flags  = faceIndices[i];
 		v->X   = coords[(flags     ) & 1].X;
@@ -57,12 +57,12 @@ static void SelectionBox_RenderEdges(struct SelectionBox* box, VertexP3fC4b* v) 
 	PackedCol col;
 	int i, flags;
 
-	float offset = box->MinDist < 32.0f * 32.0f ? (1/32.0f) : (1/16.0f);
+	float offset = box->minDist < 32.0f * 32.0f ? (1/32.0f) : (1/16.0f);
 	Vec3 coords[2];
-	Vec3_Add1(&coords[0], &box->Min, -offset);
-	Vec3_Add1(&coords[1], &box->Max,  offset);
+	Vec3_Add1(&coords[0], &box->p0, -offset);
+	Vec3_Add1(&coords[1], &box->p1,  offset);
 
-	col = box->Col;
+	col = box->col;
 	/* invert R/G/B for surrounding line */
 	col = (col & PACKEDCOL_A_MASK) | (~col & PACKEDCOL_RGB_MASK);
 
@@ -77,10 +77,10 @@ static void SelectionBox_RenderEdges(struct SelectionBox* box, VertexP3fC4b* v) 
 
 static int SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) {
 	float aDist, bDist;
-	if (a->MinDist == b->MinDist) {
-		aDist = a->MaxDist; bDist = b->MaxDist;
+	if (a->minDist == b->minDist) {
+		aDist = a->maxDist; bDist = b->maxDist;
 	} else {
-		aDist = a->MinDist; bDist = b->MinDist;
+		aDist = a->minDist; bDist = b->minDist;
 	}
 
 	/* Reversed comparison order result, because we need to render back to front for alpha blending */
@@ -90,13 +90,13 @@ static int SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) 
 }
 
 static void SelectionBox_Intersect(struct SelectionBox* box, Vec3 P) {
-	float dx1 = (P.X - box->Min.X) * (P.X - box->Min.X), dx2 = (P.X - box->Max.X) * (P.X - box->Max.X);
-	float dy1 = (P.Y - box->Min.Y) * (P.Y - box->Min.Y), dy2 = (P.Y - box->Max.Y) * (P.Y - box->Max.Y);
-	float dz1 = (P.Z - box->Min.Z) * (P.Z - box->Min.Z), dz2 = (P.Z - box->Max.Z) * (P.Z - box->Max.Z);
+	float dx0 = (P.X - box->p0.X) * (P.X - box->p0.X), dx1 = (P.X - box->p1.X) * (P.X - box->p1.X);
+	float dy0 = (P.Y - box->p0.Y) * (P.Y - box->p0.Y), dy1 = (P.Y - box->p1.Y) * (P.Y - box->p1.Y);
+	float dz0 = (P.Z - box->p0.Z) * (P.Z - box->p0.Z), dz1 = (P.Z - box->p1.Z) * (P.Z - box->p1.Z);
 
 	/* Distance to closest and furthest of the eight box corners */
-	box->MinDist = min(dx1, dx2) + min(dy1, dy2) + min(dz1, dz2);
-	box->MaxDist = max(dx1, dx2) + max(dy1, dy2) + max(dz1, dz2);
+	box->minDist = min(dx0, dx1) + min(dy0, dy1) + min(dz0, dz1);
+	box->maxDist = max(dx0, dx1) + max(dy0, dy1) + max(dz0, dz1);
 }
 
 
@@ -110,12 +110,11 @@ static cc_uint8 selections_ids[SELECTIONS_MAX];
 static GfxResourceID selections_VB, selections_LineVB;
 static cc_bool selections_used;
 
-void Selections_Add(cc_uint8 id, IVec3 p1, IVec3 p2, PackedCol col) {
+void Selections_Add(cc_uint8 id, const IVec3* p1, const IVec3* p2, PackedCol col) {
 	struct SelectionBox sel;
-	IVec3 min, max;
-	IVec3_Min(&min, &p1, &p2); IVec3_ToVec3(&sel.Min, &min);
-	IVec3_Max(&max, &p1, &p2); IVec3_ToVec3(&sel.Max, &max);
-	sel.Col = col;
+	IVec3_ToVec3(&sel.p0, p1);
+	IVec3_ToVec3(&sel.p1, p2);
+	sel.col = col;
 
 	Selections_Remove(id);
 	selections_list[selections_count] = sel;

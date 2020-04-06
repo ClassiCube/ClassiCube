@@ -1014,7 +1014,7 @@ static void CPE_MakeSelection(cc_uint8* data) {
 
 	/* R,G,B,A are actually 16 bit unsigned integers */
 	c = PackedCol_Make(data[78], data[80], data[82], data[84]);
-	Selections_Add(data[0], p1, p2, c);
+	Selections_Add(data[0], &p1, &p2, c);
 }
 
 static void CPE_RemoveSelection(cc_uint8* data) {

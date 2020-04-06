@@ -9,6 +9,6 @@ struct IGameComponent;
 extern struct IGameComponent Selections_Component;
 
 void Selections_Render(void);
-void Selections_Add(cc_uint8 id, IVec3 p1, IVec3 p2, PackedCol col);
+void Selections_Add(cc_uint8 id, const IVec3* p1, const IVec3* p2, PackedCol col);
 void Selections_Remove(cc_uint8 id);
 #endif
