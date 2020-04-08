@@ -10,19 +10,6 @@
 
 static GfxResourceID pickedPos_vb;
 #define PICKEDPOS_NUM_VERTICES (16 * 6)
-static VertexP3fC4b pickedPos_vertices[PICKEDPOS_NUM_VERTICES];
-
-void PickedPosRenderer_Render(void) {
-	if (Gfx.LostContext) return;
-
-	Gfx_SetAlphaBlending(true);
-	Gfx_SetDepthWrite(false);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
-
-	Gfx_UpdateDynamicVb_IndexedTris(pickedPos_vb, pickedPos_vertices, PICKEDPOS_NUM_VERTICES);
-	Gfx_SetDepthWrite(true);
-	Gfx_SetAlphaBlending(false);
-}
 
 #define PickedPos_Y(y)\
 0,y,1,  0,y,2,  1,y,2,  1,y,1,\
@@ -42,7 +29,7 @@ x,3,0,  x,2,0,  x,2,3,  x,3,3,
 0,0,z,  0,1,z,  3,1,z,  3,0,z,\
 0,3,z,  0,2,z,  3,2,z,  3,3,z,
 
-void PickedPosRenderer_Update(struct RayTracer* selected) {
+static void BuildMesh(struct RayTracer* selected) {
 	static const cc_uint8 indices[288] = {
 		PickedPos_Y(0) PickedPos_Y(3) /* YMin, YMax */
 		PickedPos_X(0) PickedPos_X(3) /* XMin, XMax */
@@ -88,13 +75,29 @@ void PickedPosRenderer_Update(struct RayTracer* selected) {
 	Vec3_Add1(&coords[3], &selected->Max,  offset);
 	Vec3_Add1(&coords[2], &coords[3],     -size);
 	
-	ptr = pickedPos_vertices;
+	ptr = (VertexP3fC4b*)Gfx_LockDynamicVb(pickedPos_vb, VERTEX_FORMAT_P3FC4B, PICKEDPOS_NUM_VERTICES);
 	for (i = 0; i < Array_Elems(indices); i += 3, ptr++) {
 		ptr->X   = coords[indices[i + 0]].X;
 		ptr->Y   = coords[indices[i + 1]].Y;
 		ptr->Z   = coords[indices[i + 2]].Z;
 		ptr->Col = col;
 	}
+	Gfx_UnlockDynamicVb(pickedPos_vb);
+}
+
+void PickedPosRenderer_Render(struct RayTracer* selected, cc_bool dirty) {
+	if (Gfx.LostContext) return;
+	
+	Gfx_SetAlphaBlending(true);
+	Gfx_SetDepthWrite(false);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+
+	if (dirty) BuildMesh(selected);
+	else Gfx_BindDynamicVb(pickedPos_vb);
+
+	Gfx_DrawVb_IndexedTris(PICKEDPOS_NUM_VERTICES);
+	Gfx_SetDepthWrite(true);
+	Gfx_SetAlphaBlending(false);
 }
 
 

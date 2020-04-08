@@ -8,6 +8,5 @@ struct RayTracer;
 struct IGameComponent;
 extern struct IGameComponent PickedPosRenderer_Component;
 
-void PickedPosRenderer_Render(void);
-void PickedPosRenderer_Update(struct RayTracer* selected);
+void PickedPosRenderer_Render(struct RayTracer* selected, cc_bool dirty);
 #endif

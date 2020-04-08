@@ -142,7 +142,7 @@ CC_API void Model_DrawArmPart(struct ModelPart* part);
 
 /* Returns a pointer to the model whose name caselessly matches given name. */
 CC_API struct Model* Model_Get(const String* name);
-/* Returns index of the model texture whose name caselessly matches given name. */
+/* Returns a pointer to the model texture whose name caselessly matches given name. */
 CC_API struct ModelTex* Model_GetTexture(const String* name);
 /* Adds a model to the list of models. (e.g. "skeleton") */
 /* Models can be applied to entities to change their appearance. Use Entity_SetModel for that. */

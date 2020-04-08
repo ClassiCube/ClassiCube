@@ -526,8 +526,7 @@ static void Game_Render3D(double delta, float t) {
 
 	Entities_DrawShadows();
 	if (Game_SelectedPos.Valid && !Game_HideGui) {
-		PickedPosRenderer_Update(&Game_SelectedPos);
-		PickedPosRenderer_Render();
+		PickedPosRenderer_Render(&Game_SelectedPos, true);
 	}
 
 	/* Render water over translucent blocks when under the water outside the map for proper alpha blending */
@@ -543,7 +542,7 @@ static void Game_Render3D(double delta, float t) {
 	/* Need to render again over top of translucent block, as the selection outline */
 	/* is drawn without writing to the depth buffer */
 	if (Game_SelectedPos.Valid && !Game_HideGui && Blocks.Draw[Game_SelectedPos.block] == DRAW_TRANSLUCENT) {
-		PickedPosRenderer_Render();
+		PickedPosRenderer_Render(&Game_SelectedPos, false);
 	}
 
 	Selections_Render();
