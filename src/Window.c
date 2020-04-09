@@ -995,8 +995,13 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 		if (key == XK_KP_Page_Down) return KEY_PAGEDOWN;
 	}
 
-	/* Keys on a chromebook reported by a user */
-	if (key == 0x8000027) return KEY_QUOTE;
+	/* A chromebook user reported issues with pressing some keys: */
+	/*  tilde - "Unknown key press: (8000060, 800007E) */
+	/*  quote - "Unknown key press: (8000027, 8000022) */
+	/* Note if 8000 is stripped, you get '0060' (XK_grave) and 0027 (XK_apostrophe) */
+	/*   ChromeOS seems to also mask to 0xFFFF, so I also do so here 
+	/* https://chromium.googlesource.com/chromium/src/+/lkgr/ui/events/keycodes/keyboard_code_conversion_x.cc */
+	key &= 0xFFFF;
 
 	switch (key) {
 		case XK_Escape: return KEY_ESCAPE;
