@@ -523,8 +523,8 @@ void Launcher_MarkDirty(int x, int y, int width, int height) {
 		x1 = min(x, Launcher_Dirty.X);
 		y1 = min(y, Launcher_Dirty.Y);
 
-		x2 = max(x + width, Launcher_Dirty.X + Launcher_Dirty.Width);
-		y2 = max(y + width, Launcher_Dirty.Y + Launcher_Dirty.Height);
+		x2 = max(x +  width, Launcher_Dirty.X + Launcher_Dirty.Width);
+		y2 = max(y + height, Launcher_Dirty.Y + Launcher_Dirty.Height);
 
 		x = x1; width  = x2 - x1;
 		y = y1; height = y2 - y1;
