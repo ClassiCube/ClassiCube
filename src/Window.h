@@ -50,7 +50,6 @@ extern Rect2D Display_Bounds;
 int Display_ScaleX(int x);
 /* Scales the given Y coordinate from 96 dpi to current display dpi. */
 int Display_ScaleY(int y);
-struct GraphicsMode { int R, G, B, A, IsIndexed; };
 
 /* Size of the content area of the window. (i.e. area that can draw to) */
 /* This area does NOT include borders and titlebar surrounding the window. */
@@ -66,9 +65,6 @@ extern cc_bool Window_SoftKeyboard;
 
 /* Initalises state for window. Also sets Display_ members. */
 void Window_Init(void);
-/* Creates a GraphicsMode compatible with the default display device. */
-void GraphicsMode_MakeDefault(struct GraphicsMode* m);
-
 /* Creates the window as the given size at centre of the screen. */
 void Window_Create(int width, int height);
 /* Sets the text of the titlebar above the window. */
@@ -148,7 +144,7 @@ void Window_DisableRawMouse(void);
 #ifdef CC_BUILD_GL
 /* Initialises an OpenGL context that most closely matches the input arguments. */
 /* NOTE: You MUST have created the window beforehand, as the GL context is attached to the window. */
-void GLContext_Init(struct GraphicsMode* mode);
+void GLContext_Init(void);
 /* Updates the OpenGL context after the window is resized. */
 void GLContext_Update(void);
 /* Attempts to restore a lost OpenGL context. */

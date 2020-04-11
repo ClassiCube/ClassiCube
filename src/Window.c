@@ -85,7 +85,9 @@ void Window_ShowDialog(const char* title, const char* msg) {
 }
 
 
-void GraphicsMode_MakeDefault(struct GraphicsMode* m) {
+struct GraphicsMode { int R, G, B, A, IsIndexed; };
+/* Creates a GraphicsMode compatible with the default display device */
+static void InitGraphicsMode(struct GraphicsMode* m) {
 	int bpp = Display_BitsPerPixel;
 	m->IsIndexed = bpp < 15;
 
@@ -1141,7 +1143,7 @@ void Window_Create(int width, int height) {
 
 	x = Display_CentreX(width);
 	y = Display_CentreY(height);
-	GraphicsMode_MakeDefault(&mode);
+	InitGraphicsMode(&mode);
 
 	/* Open a display connection to the X server, and obtain the screen and root window */
 	addr = (cc_uintptr)win_display;
@@ -3692,11 +3694,13 @@ void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 #if defined CC_BUILD_SDL
 static SDL_GLContext win_ctx;
 
-void GLContext_Init(struct GraphicsMode* mode) {
-	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   mode->R);
-	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, mode->G);
-	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  mode->B);
-	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, mode->A);
+void GLContext_Init(void) {
+	struct GraphicsMode mode;
+	InitGraphicsMode(&mode);
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   mode.R);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, mode.G);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,  mode.B);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, mode.A);
 
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,   GLCONTEXT_DEFAULT_DEPTH);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
@@ -3766,7 +3770,7 @@ static void GLContext_FreeSurface(void) {
 	ctx_surface = NULL;
 }
 
-void GLContext_Init(struct GraphicsMode* mode) {
+void GLContext_Init(void) {
 	static EGLint contextAttribs[3] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	static EGLint attribs[19] = {
 		EGL_RED_SIZE,  0, EGL_GREEN_SIZE,  0,
@@ -3779,8 +3783,10 @@ void GLContext_Init(struct GraphicsMode* mode) {
 		EGL_NONE
 	};
 
-	attribs[1]  = mode->R; attribs[3] = mode->G;
-	attribs[5]  = mode->B; attribs[7] = mode->A;
+	struct GraphicsMode mode;
+	InitGraphicsMode(&mode);
+	attribs[1] = mode.R; attribs[3] = mode.G;
+	attribs[5] = mode.B; attribs[7] = mode.A;
 
 	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 	eglInitialize(ctx_display, NULL, NULL);
@@ -3866,8 +3872,11 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	}
 }
 
-void GLContext_Init(struct GraphicsMode* mode) {
-	GLContext_SelectGraphicsMode(mode);
+void GLContext_Init(void) {
+	struct GraphicsMode mode;
+	InitGraphicsMode(&mode);
+	GLContext_SelectGraphicsMode(&mode);
+
 	ctx_handle = wglCreateContext(win_DC);
 	if (!ctx_handle) ctx_handle = wglCreateContext(win_DC);
 
@@ -3917,7 +3926,7 @@ typedef int (*FN_GLXSWAPINTERVAL)(int interval);
 static FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
 static cc_bool ctx_supports_vSync;
 
-void GLContext_Init(struct GraphicsMode* mode) {
+void GLContext_Init(void) {
 	static const String ext_mesa = String_FromConst("GLX_MESA_swap_control");
 	static const String ext_sgi  = String_FromConst("GLX_SGI_swap_control");
 
@@ -4137,17 +4146,19 @@ static cc_result GLContext_SetFullscreen(void) {
 	return 0;
 }
 
-void GLContext_Init(struct GraphicsMode* mode) {
+void GLContext_Init(void) {
 	GLint attribs[20];
 	AGLPixelFormat fmt;
 	GDHandle gdevice;
 	OSStatus res;
+	struct GraphicsMode mode;
+	InitGraphicsMode(&mode);
 
 	/* Initially try creating fullscreen compatible context */	
 	res = DMGetGDeviceByDisplayID(CGMainDisplayID(), &gdevice, false);
 	if (res) Logger_Abort2(res, "Getting display device failed");
 
-	GLContext_GetAttribs(mode, attribs, true);
+	GLContext_GetAttribs(&mode, attribs, true);
 	fmt = aglChoosePixelFormat(&gdevice, 1, attribs);
 	res = aglGetError();
 
@@ -4156,7 +4167,7 @@ void GLContext_Init(struct GraphicsMode* mode) {
 		Platform_LogConst("Failed to create full screen pixel format.");
 		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
 
-		GLContext_GetAttribs(mode, attribs, false);
+		GLContext_GetAttribs(&mode, attribs, false);
 		fmt = aglChoosePixelFormat(NULL, 0, attribs);
 		res = aglGetError();
 	}
@@ -4229,14 +4240,16 @@ static id MakePixelFormat(struct GraphicsMode* mode, cc_bool fullscreen) {
 	return objc_msgSend(fmt, sel_registerName("initWithAttributes:"), attribs);
 }
 
-void GLContext_Init(struct GraphicsMode* mode) {
+void GLContext_Init(void) {
+	struct GraphicsMode mode;
 	id view, fmt;
 
-	fmt = MakePixelFormat(mode, true);
+	InitGraphicsMode(&mode);
+	fmt = MakePixelFormat(&mode, true);
 	if (!fmt) {
 		Platform_LogConst("Failed to create full screen pixel format.");
 		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
-		fmt = MakePixelFormat(mode, false);
+		fmt = MakePixelFormat(&mode, false);
 	}
 	if (!fmt) Logger_Abort("Choosing pixel format");
 
@@ -4290,7 +4303,7 @@ static EM_BOOL GLContext_OnLost(int eventType, const void *reserved, void *userD
 	return 1;
 }
 
-void GLContext_Init(struct GraphicsMode* mode) {
+void GLContext_Init(void) {
 	EmscriptenWebGLContextAttributes attribs;
 	emscripten_webgl_init_context_attributes(&attribs);
 	attribs.alpha     = false;

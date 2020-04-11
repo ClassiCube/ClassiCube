@@ -1050,10 +1050,7 @@ static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 
 static void GL_CheckSupport(void);
 void Gfx_Init(void) {
-	struct GraphicsMode mode;
-	GraphicsMode_MakeDefault(&mode);
-	GLContext_Init(&mode);
-
+	GLContext_Init();
 	Gfx.MinZNear = 0.1f;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
 	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
