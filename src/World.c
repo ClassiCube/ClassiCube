@@ -148,8 +148,8 @@ if (src != dst) { dst = src; Event_RaiseInt(&WorldEvents.EnvVarChanged, var); }
 struct _EnvData Env;
 const char* const Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
 
-static char World_TextureUrlBuffer[STRING_SIZE];
-String World_TextureUrl = String_FromArray(World_TextureUrlBuffer);
+static char textureUrlBuffer[STRING_SIZE];
+String World_TextureUrl = String_FromArray(textureUrlBuffer);
 
 void World_ApplyTexturePack(const String* url) {
 	static const String texPack = String_FromConst("texturePack");

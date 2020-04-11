@@ -123,7 +123,7 @@ static cc_uint8 DefaultSet_StepSound(BlockID b) {
 /*########################################################################################################################*
 *---------------------------------------------------------Block-----------------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
+static cc_uint32 definedCustomBlocks[BLOCK_COUNT >> 5];
 static char Block_NamesBuffer[STRING_SIZE * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[STRING_SIZE * i]
 
@@ -143,14 +143,14 @@ static const cc_uint8 bottomTex[BLOCK_CPE_COUNT]  = { 0,  1,  2,  2, 16,  4, 15,
  4, 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
 
 cc_bool Block_IsCustomDefined(BlockID block) {
-	return (Block_DefinedCustomBlocks[block >> 5] & (1u << (block & 0x1F))) != 0;
+	return (definedCustomBlocks[block >> 5] & (1u << (block & 0x1F))) != 0;
 }
 
 void Block_SetCustomDefined(BlockID block, cc_bool defined) {
 	if (defined) {
-		Block_DefinedCustomBlocks[block >> 5] |=  (1u << (block & 0x1F));
+		definedCustomBlocks[block >> 5] |=  (1u << (block & 0x1F));
 	} else {
-		Block_DefinedCustomBlocks[block >> 5] &= ~(1u << (block & 0x1F));
+		definedCustomBlocks[block >> 5] &= ~(1u << (block & 0x1F));
 	}
 }
 
@@ -674,8 +674,8 @@ BlockID AutoRotate_RotateBlock(BlockID block) {
 *#########################################################################################################################*/
 static void Blocks_Reset(void) {
 	int i, block;
-	for (i = 0; i < Array_Elems(Block_DefinedCustomBlocks); i++) {
-		Block_DefinedCustomBlocks[i] = 0;
+	for (i = 0; i < Array_Elems(definedCustomBlocks); i++) {
+		definedCustomBlocks[i] = 0;
 	}
 
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
