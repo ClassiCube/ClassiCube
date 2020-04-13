@@ -96,7 +96,7 @@ static void LScreen_HandleTab(struct LScreen* s) {
 static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 	if (key == KEY_TAB) {
 		LScreen_HandleTab(s);
-	} else if (key == KEY_ENTER) {
+	} else if (key == KEY_ENTER || key == KEY_KP_ENTER) {
 		/* Shouldn't multi click when holding down Enter */
 		if (was) return;
 
