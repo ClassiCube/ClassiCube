@@ -349,7 +349,7 @@ static void LoadOptions(void) {
 	Game_SimpleArmsAnim    = Options_GetBool(OPT_SIMPLE_ARMS_ANIM, false);
 	Game_ViewBobbing       = Options_GetBool(OPT_VIEW_BOBBING, true);
 
-	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 16, 4096, 512);
+	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 8, 4096, 512);
 	Game_UserViewDistance = Game_ViewDistance;
 
 	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 179, 70);
