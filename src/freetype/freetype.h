@@ -174,7 +174,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    FT_New_Face                                                        */
   /*    FT_Done_Face                                                       */
-  /*    FT_Reference_Face                                                  */
   /*    FT_New_Memory_Face                                                 */
   /*    FT_Face_Properties                                                 */
   /*    FT_Open_Face                                                       */
@@ -702,21 +701,6 @@ FT_BEGIN_HEADER
   /*      This value is deprecated and was neither used nor reported by    */
   /*      FreeType.  Don't use or test for it.                             */
   /*                                                                       */
-  /*    FT_ENCODING_MS_SJIS ::                                             */
-  /*      Same as FT_ENCODING_SJIS.  Deprecated.                           */
-  /*                                                                       */
-  /*    FT_ENCODING_MS_GB2312 ::                                           */
-  /*      Same as FT_ENCODING_PRC.  Deprecated.                            */
-  /*                                                                       */
-  /*    FT_ENCODING_MS_BIG5 ::                                             */
-  /*      Same as FT_ENCODING_BIG5.  Deprecated.                           */
-  /*                                                                       */
-  /*    FT_ENCODING_MS_WANSUNG ::                                          */
-  /*      Same as FT_ENCODING_WANSUNG.  Deprecated.                        */
-  /*                                                                       */
-  /*    FT_ENCODING_MS_JOHAB ::                                            */
-  /*      Same as FT_ENCODING_JOHAB.  Deprecated.                          */
-  /*                                                                       */
   /* <Note>                                                                */
   /*    By default, FreeType enables a Unicode charmap and tags it with    */
   /*    FT_ENCODING_UNICODE when it is either provided or can be generated */
@@ -770,14 +754,6 @@ FT_BEGIN_HEADER
     FT_ENC_TAG( FT_ENCODING_WANSUNG, 'w', 'a', 'n', 's' ),
     FT_ENC_TAG( FT_ENCODING_JOHAB,   'j', 'o', 'h', 'a' ),
 
-    /* for backward compatibility */
-    FT_ENCODING_GB2312     = FT_ENCODING_PRC,
-    FT_ENCODING_MS_SJIS    = FT_ENCODING_SJIS,
-    FT_ENCODING_MS_GB2312  = FT_ENCODING_PRC,
-    FT_ENCODING_MS_BIG5    = FT_ENCODING_BIG5,
-    FT_ENCODING_MS_WANSUNG = FT_ENCODING_WANSUNG,
-    FT_ENCODING_MS_JOHAB   = FT_ENCODING_JOHAB,
-
     FT_ENC_TAG( FT_ENCODING_ADOBE_STANDARD, 'A', 'D', 'O', 'B' ),
     FT_ENC_TAG( FT_ENCODING_ADOBE_EXPERT,   'A', 'D', 'B', 'E' ),
     FT_ENC_TAG( FT_ENCODING_ADOBE_CUSTOM,   'A', 'D', 'B', 'C' ),
@@ -788,25 +764,6 @@ FT_BEGIN_HEADER
     FT_ENC_TAG( FT_ENCODING_APPLE_ROMAN, 'a', 'r', 'm', 'n' )
 
   } FT_Encoding;
-
-
-  /* these constants are deprecated; use the corresponding `FT_Encoding' */
-  /* values instead                                                      */
-#define ft_encoding_none            FT_ENCODING_NONE
-#define ft_encoding_unicode         FT_ENCODING_UNICODE
-#define ft_encoding_symbol          FT_ENCODING_MS_SYMBOL
-#define ft_encoding_latin_1         FT_ENCODING_ADOBE_LATIN_1
-#define ft_encoding_latin_2         FT_ENCODING_OLD_LATIN_2
-#define ft_encoding_sjis            FT_ENCODING_SJIS
-#define ft_encoding_gb2312          FT_ENCODING_PRC
-#define ft_encoding_big5            FT_ENCODING_BIG5
-#define ft_encoding_wansung         FT_ENCODING_WANSUNG
-#define ft_encoding_johab           FT_ENCODING_JOHAB
-
-#define ft_encoding_adobe_standard  FT_ENCODING_ADOBE_STANDARD
-#define ft_encoding_adobe_expert    FT_ENCODING_ADOBE_EXPERT
-#define ft_encoding_adobe_custom    FT_ENCODING_ADOBE_CUSTOM
-#define ft_encoding_apple_roman     FT_ENCODING_APPLE_ROMAN
 
 
   /*************************************************************************/
@@ -1155,9 +1112,6 @@ FT_BEGIN_HEADER
   /*      The face contains vertical glyph metrics.  This is only          */
   /*      available in some formats, not all of them.                      */
   /*                                                                       */
-  /*    FT_FACE_FLAG_FAST_GLYPHS ::                                        */
-  /*      THIS FLAG IS DEPRECATED.  DO NOT USE OR TEST IT.                 */
-  /*                                                                       */
   /*    FT_FACE_FLAG_MULTIPLE_MASTERS ::                                   */
   /*      The face contains multiple masters and is capable of             */
   /*      interpolating between them.  Supported formats are Adobe MM,     */
@@ -1333,18 +1287,6 @@ FT_BEGIN_HEADER
    */
 #define FT_HAS_FIXED_SIZES( face ) \
           ( (face)->face_flags & FT_FACE_FLAG_FIXED_SIZES )
-
-
-  /*************************************************************************
-   *
-   * @macro:
-   *   FT_HAS_FAST_GLYPHS( face )
-   *
-   * @description:
-   *   Deprecated.
-   *
-   */
-#define FT_HAS_FAST_GLYPHS( face )  0
 
 
   /*************************************************************************
@@ -2157,9 +2099,6 @@ FT_BEGIN_HEADER
   /*    @FT_Open_Face and its siblings can be called multiple times using  */
   /*    the same `library' argument.                                       */
   /*                                                                       */
-  /*    See the discussion of reference counters in the description of     */
-  /*    @FT_Reference_Face.                                                */
-  /*                                                                       */
   /*    To loop over all faces, use code similar to the following snippet  */
   /*    (omitting the error handling).                                     */
   /*                                                                       */
@@ -2238,33 +2177,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    FT_Reference_Face                                                  */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A counter gets initialized to~1 at the time an @FT_Face structure  */
-  /*    is created.  This function increments the counter.  @FT_Done_Face  */
-  /*    then only destroys a face if the counter is~1, otherwise it simply */
-  /*    decrements the counter.                                            */
-  /*                                                                       */
-  /*    This function helps in managing life-cycles of structures that     */
-  /*    reference @FT_Face objects.                                        */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face :: A handle to a target face object.                          */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0~means success.                             */
-  /*                                                                       */
-  /* <Since>                                                               */
-  /*    2.4.2                                                              */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FT_Reference_Face( FT_Face  face );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
   /*    FT_Done_Face                                                       */
   /*                                                                       */
   /* <Description>                                                         */
@@ -2276,10 +2188,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    See the discussion of reference counters in the description of     */
-  /*    @FT_Reference_Face.                                                */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Done_Face( FT_Face  face );
@@ -3033,12 +2941,6 @@ FT_BEGIN_HEADER
     FT_RENDER_MODE_MAX
 
   } FT_Render_Mode;
-
-
-  /* these constants are deprecated; use the corresponding */
-  /* `FT_Render_Mode' values instead                       */
-#define ft_render_mode_normal  FT_RENDER_MODE_NORMAL
-#define ft_render_mode_mono    FT_RENDER_MODE_MONO
 
 
   /*************************************************************************/

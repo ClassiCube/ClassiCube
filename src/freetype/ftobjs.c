@@ -1830,20 +1830,6 @@
   /* documentation is in freetype.h */
 
   FT_EXPORT_DEF( FT_Error )
-  FT_Reference_Face( FT_Face  face )
-  {
-    if ( !face )
-      return FT_THROW( Invalid_Face_Handle );
-
-    face->internal->refcount++;
-
-    return FT_Err_Ok;
-  }
-
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_Error )
   FT_Done_Face( FT_Face  face )
   {
     FT_Error     error;
@@ -3565,20 +3551,6 @@
   /*************************************************************************/
   /*************************************************************************/
   /*************************************************************************/
-
-
-  /* documentation is in ftmodapi.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_Reference_Library( FT_Library  library )
-  {
-    if ( !library )
-      return FT_THROW( Invalid_Library_Handle );
-
-    library->refcount++;
-
-    return FT_Err_Ok;
-  }
 
 
   /* documentation is in ftmodapi.h */
