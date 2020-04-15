@@ -67,6 +67,7 @@
 #define OPT_CLASSIC_ARM_MODEL "nostalgia-classicarm"
 #define OPT_CLASSIC_CHAT "nostalgia-classicchat"
 #define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
+#define OPT_CAMERA_MASS "cameramass"
 
 extern struct EntryList Options;
 /* Returns the number of options changed via Options_SetXYZ since last save. */
