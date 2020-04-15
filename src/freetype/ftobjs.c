@@ -1221,20 +1221,6 @@
 
     face->internal = internal;
 
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-    {
-      int  i;
-
-
-      face->internal->incremental_interface = NULL;
-      for ( i = 0; i < num_params && !face->internal->incremental_interface;
-            i++ )
-        if ( params[i].tag == FT_PARAM_TAG_INCREMENTAL )
-          face->internal->incremental_interface =
-            (FT_Incremental_Interface)params[i].data;
-    }
-#endif
-
     face->internal->random_seed = -1;
 
     if ( clazz->init_face )
@@ -2810,25 +2796,6 @@
         {
           /* use module default */
           face->internal->no_stem_darkening = -1;
-        }
-      }
-      else if ( properties->tag == FT_PARAM_TAG_LCD_FILTER_WEIGHTS )
-      {
-        error = FT_THROW( Unimplemented_Feature );
-        goto Exit;
-      }
-      else if ( properties->tag == FT_PARAM_TAG_RANDOM_SEED )
-      {
-        if ( properties->data )
-        {
-          face->internal->random_seed = *( (FT_Int32*)properties->data );
-          if ( face->internal->random_seed < 0 )
-            face->internal->random_seed = 0;
-        }
-        else
-        {
-          /* use module default */
-          face->internal->random_seed = -1;
         }
       }
       else

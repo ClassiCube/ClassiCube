@@ -64,11 +64,6 @@ FT_BEGIN_HEADER
           FT_MAKE_TAG( 'i', 'g', 'p', 'f' )
 
 
-  /* this constant is deprecated */
-#define FT_PARAM_TAG_IGNORE_PREFERRED_FAMILY \
-          FT_PARAM_TAG_IGNORE_TYPOGRAPHIC_FAMILY
-
-
   /***************************************************************************
    *
    * @constant:
@@ -86,64 +81,6 @@ FT_BEGIN_HEADER
    */
 #define FT_PARAM_TAG_IGNORE_TYPOGRAPHIC_SUBFAMILY \
           FT_MAKE_TAG( 'i', 'g', 'p', 's' )
-
-
-  /* this constant is deprecated */
-#define FT_PARAM_TAG_IGNORE_PREFERRED_SUBFAMILY \
-          FT_PARAM_TAG_IGNORE_TYPOGRAPHIC_SUBFAMILY
-
-
-  /***************************************************************************
-   *
-   * @constant:
-   *   FT_PARAM_TAG_INCREMENTAL
-   *
-   * @description:
-   *   An @FT_Parameter tag to be used with @FT_Open_Face to indicate
-   *   incremental glyph loading.
-   *
-   */
-#define FT_PARAM_TAG_INCREMENTAL \
-          FT_MAKE_TAG( 'i', 'n', 'c', 'r' )
-
-
-  /**************************************************************************
-   *
-   * @constant:
-   *   FT_PARAM_TAG_LCD_FILTER_WEIGHTS
-   *
-   * @description:
-   *   An @FT_Parameter tag to be used with @FT_Face_Properties.  The
-   *   corresponding argument specifies the five LCD filter weights for a
-   *   given face (if using @FT_LOAD_TARGET_LCD, for example), overriding
-   *   the global default values or the values set up with
-   *   @FT_Library_SetLcdFilterWeights.
-   *
-   * @since:
-   *   2.8
-   *
-   */
-#define FT_PARAM_TAG_LCD_FILTER_WEIGHTS \
-          FT_MAKE_TAG( 'l', 'c', 'd', 'f' )
-
-
-  /**************************************************************************
-   *
-   * @constant:
-   *   FT_PARAM_TAG_RANDOM_SEED
-   *
-   * @description:
-   *   An @FT_Parameter tag to be used with @FT_Face_Properties.  The
-   *   corresponding 32bit signed integer argument overrides the font
-   *   driver's random seed value with a face-specific one; see
-   *   @random-seed.
-   *
-   * @since:
-   *   2.8
-   *
-   */
-#define FT_PARAM_TAG_RANDOM_SEED \
-          FT_MAKE_TAG( 's', 'e', 'e', 'd' )
 
 
   /**************************************************************************
@@ -168,23 +105,6 @@ FT_BEGIN_HEADER
    */
 #define FT_PARAM_TAG_STEM_DARKENING \
           FT_MAKE_TAG( 'd', 'a', 'r', 'k' )
-
-
- /***************************************************************************
-  *
-  * @constant:
-  *   FT_PARAM_TAG_UNPATENTED_HINTING
-  *
-  * @description:
-  *   Deprecated, no effect.
-  *
-  *   Previously: A constant used as the tag of an @FT_Parameter structure to
-  *   indicate that unpatented methods only should be used by the TrueType
-  *   bytecode interpreter for a typeface opened by @FT_Open_Face.
-  *
-  */
-#define FT_PARAM_TAG_UNPATENTED_HINTING \
-          FT_MAKE_TAG( 'u', 'n', 'p', 'a' )
 
 
   /* */

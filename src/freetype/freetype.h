@@ -3424,14 +3424,6 @@ FT_BEGIN_HEADER
    *     property `no-stem-darkening' provided by the `autofit', `cff',
    *     `type1', and `t1cid' modules; see @no-stem-darkening).
    *
-   *   * @FT_PARAM_TAG_LCD_FILTER_WEIGHTS (LCD filter weights, corresponding
-   *     to function @FT_Library_SetLcdFilterWeights).
-   *
-   *   * @FT_PARAM_TAG_RANDOM_SEED (seed value for the CFF, Type~1, and CID
-   *     `random' operator, corresponding to the `random-seed' property
-   *     provided by the `cff', `type1', and `t1cid' modules; see
-   *     @random-seed).
-   *
    *   Pass NULL as `data' in @FT_Parameter for a given tag to reset the
    *   option and use the library or module default again.
    *
@@ -3447,51 +3439,6 @@ FT_BEGIN_HEADER
    *
    * @return:
    *   FreeType error code.  0~means success.
-   *
-   * @note:
-   *   Here an example that sets three properties.  You must define
-   *   FT_CONFIG_OPTION_SUBPIXEL_RENDERING to make the LCD filter examples
-   *   work.
-   *
-   *   {
-   *     FT_Parameter         property1;
-   *     FT_Bool              darken_stems = 1;
-   *
-   *     FT_Parameter         property2;
-   *     FT_LcdFiveTapFilter  custom_weight =
-   *                            { 0x11, 0x44, 0x56, 0x44, 0x11 };
-   *
-   *     FT_Parameter         property3;
-   *     FT_Int32             random_seed = 314159265;
-   *
-   *     FT_Parameter         properties[3] = { property1,
-   *                                            property2,
-   *                                            property3 };
-   *
-   *
-   *     property1.tag  = FT_PARAM_TAG_STEM_DARKENING;
-   *     property1.data = &darken_stems;
-   *
-   *     property2.tag  = FT_PARAM_TAG_LCD_FILTER_WEIGHTS;
-   *     property2.data = custom_weight;
-   *
-   *     property3.tag  = FT_PARAM_TAG_RANDOM_SEED;
-   *     property3.data = &random_seed;
-   *
-   *     FT_Face_Properties( face, 3, properties );
-   *   }
-   *
-   *   The next example resets a single property to its default value.
-   *
-   *   {
-   *     FT_Parameter  property;
-   *
-   *
-   *     property.tag  = FT_PARAM_TAG_LCD_FILTER_WEIGHTS;
-   *     property.data = NULL;
-   *
-   *     FT_Face_Properties( face, 1, &property );
-   *   }
    *
    * @since:
    *   2.8
