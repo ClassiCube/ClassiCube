@@ -63,14 +63,13 @@ static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
 		newSpeedX = accelX * (float)delta + speedX;
 		newSpeedY = accelY * (float)delta + speedY;
 
-		// High acceleration means velocity overshoots the correct position on low FPS,
-		// causing wiggling. If newSpeed has opposite sign of speed, set speed to 0;
+		/* High acceleration means velocity overshoots the correct position on low FPS, */
+		/* causing wiggling. If newSpeed has opposite sign of speed, set speed to 0 */
 		if (newSpeedX * speedX < 0) speedX = 0;
 		else speedX = newSpeedX;
 		if (newSpeedY * speedY < 0) speedY = 0;
 		else speedY = newSpeedY;
-	}
-	else {
+	} else {
 		speedX = (float)cam_deltaX;
 		speedY = (float)cam_deltaY;
 	}

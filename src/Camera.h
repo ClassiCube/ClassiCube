@@ -18,8 +18,6 @@ extern struct _CameraData {
 	cc_bool Clipping;
 	/* Whether to invert vertical mouse movement. */
 	cc_bool Invert;
-	/* The mass (i.e. smoothness) of the smooth camera. */
-	float Mass;
 
 	/* Tilt effect applied to the camera. */
 	struct Matrix TiltM;
@@ -30,6 +28,8 @@ extern struct _CameraData {
 	Vec3 CurrentPos;
 	/* Camera user is currently using. */
 	struct Camera* Active;
+	/* The mass (i.e. smoothness) of the smooth camera. */
+	float Mass;
 } Camera;
 
 struct Camera {
