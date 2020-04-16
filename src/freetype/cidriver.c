@@ -25,7 +25,6 @@
 #include "ciderrs.h"
 
 #include FT_SERVICE_FONT_FORMAT_H
-#include FT_SERVICE_POSTSCRIPT_INFO_H
 #include FT_SERVICE_PROPERTIES_H
 #include FT_DRIVER_H
 
@@ -40,33 +39,6 @@
   /*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_ciddriver
-
-
-  /*
-   *  POSTSCRIPT INFO SERVICE
-   *
-   */
-
-  static FT_Error
-  cid_ps_get_font_info( FT_Face          face,
-                        PS_FontInfoRec*  afont_info )
-  {
-    *afont_info = ((CID_Face)face)->cid.font_info;
-
-    return FT_Err_Ok;
-  }
-
-  static const FT_Service_PsInfoRec  cid_service_ps_info =
-  {
-    (PS_GetFontInfoFunc)   cid_ps_get_font_info,   /* ps_get_font_info    */
-    (PS_GetFontExtraFunc)  NULL,                   /* ps_get_font_extra   */
-    /* unsupported with CID fonts */
-    (PS_HasGlyphNamesFunc) NULL,                   /* ps_has_glyph_names  */
-    /* unsupported                */
-    (PS_GetFontPrivateFunc)NULL,                   /* ps_get_font_private */
-    /* not implemented            */
-    (PS_GetFontValueFunc)  NULL                    /* ps_get_font_value   */
-  };
 
 
   /*
@@ -89,7 +61,6 @@
   static const FT_ServiceDescRec  cid_services[] =
   {
     { FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CID },
-    { FT_SERVICE_ID_POSTSCRIPT_INFO,      &cid_service_ps_info },
     { FT_SERVICE_ID_PROPERTIES,           &cid_service_properties },
     { NULL, NULL }
   };

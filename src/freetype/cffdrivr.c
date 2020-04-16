@@ -23,7 +23,6 @@
 #include FT_INTERNAL_SFNT_H
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
 #include FT_INTERNAL_POSTSCRIPT_PROPS_H
-#include FT_SERVICE_POSTSCRIPT_INFO_H
 #include FT_SERVICE_TT_CMAP_H
 #include FT_SERVICE_CFF_TABLE_LOAD_H
 
@@ -321,75 +320,6 @@
 
 
   /*
-   *  POSTSCRIPT INFO SERVICE
-   *
-   */
-
-  static FT_Int
-  cff_ps_has_glyph_names( FT_Face  face )
-  {
-    return ( face->face_flags & FT_FACE_FLAG_GLYPH_NAMES ) > 0;
-  }
-
-
-  static FT_Error
-  cff_ps_get_font_info( CFF_Face         face,
-                        PS_FontInfoRec*  afont_info )
-  {
-    CFF_Font  cff   = (CFF_Font)face->extra.data;
-    FT_Error  error = FT_Err_Ok;
-
-
-    if ( cff && !cff->font_info )
-    {
-      CFF_FontRecDict  dict      = &cff->top_font.font_dict;
-      PS_FontInfoRec  *font_info = NULL;
-      FT_Memory        memory    = face->root.memory;
-
-
-      if ( FT_ALLOC( font_info, sizeof ( *font_info ) ) )
-        goto Fail;
-
-      font_info->version     = cff_index_get_sid_string( cff,
-                                                         dict->version );
-      font_info->notice      = cff_index_get_sid_string( cff,
-                                                         dict->notice );
-      font_info->full_name   = cff_index_get_sid_string( cff,
-                                                         dict->full_name );
-      font_info->family_name = cff_index_get_sid_string( cff,
-                                                         dict->family_name );
-      font_info->weight      = cff_index_get_sid_string( cff,
-                                                         dict->weight );
-      font_info->italic_angle        = dict->italic_angle;
-      font_info->is_fixed_pitch      = dict->is_fixed_pitch;
-      font_info->underline_position  = (FT_Short)dict->underline_position;
-      font_info->underline_thickness = (FT_UShort)dict->underline_thickness;
-
-      cff->font_info = font_info;
-    }
-
-    if ( cff )
-      *afont_info = *cff->font_info;
-
-  Fail:
-    return error;
-  }
-
-
-  FT_DEFINE_SERVICE_PSINFOREC(
-    cff_service_ps_info,
-
-    (PS_GetFontInfoFunc)   cff_ps_get_font_info,    /* ps_get_font_info    */
-    (PS_GetFontExtraFunc)  NULL,                    /* ps_get_font_extra   */
-    (PS_HasGlyphNamesFunc) cff_ps_has_glyph_names,  /* ps_has_glyph_names  */
-    /* unsupported with CFF fonts */
-    (PS_GetFontPrivateFunc)NULL,                    /* ps_get_font_private */
-    /* not implemented            */
-    (PS_GetFontValueFunc)  NULL                     /* ps_get_font_value   */
-  )
-
-
-  /*
    * TT CMAP INFO
    *
    * If the charmap is a synthetic Unicode encoding cmap or
@@ -478,22 +408,20 @@
   /*************************************************************************/
 
 #if !defined FT_CONFIG_OPTION_NO_GLYPH_NAMES
-  FT_DEFINE_SERVICEDESCREC6(
+  FT_DEFINE_SERVICEDESCREC5(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
-    FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info,
     FT_SERVICE_ID_GLYPH_DICT,           &cff_service_glyph_dict,
     FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
     FT_SERVICE_ID_PROPERTIES,           &cff_service_properties,
     FT_SERVICE_ID_CFF_LOAD,             &cff_service_cff_load
   )
 #else
-  FT_DEFINE_SERVICEDESCREC5(
+  FT_DEFINE_SERVICEDESCREC4(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
-    FT_SERVICE_ID_POSTSCRIPT_INFO,      &cff_service_ps_info,
     FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
     FT_SERVICE_ID_PROPERTIES,           &cff_service_properties,
     FT_SERVICE_ID_CFF_LOAD,             &cff_service_cff_load

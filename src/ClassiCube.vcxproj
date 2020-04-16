@@ -316,7 +316,6 @@
     <ClCompile Include="_ftglyph.c" />
     <ClCompile Include="_ftinit.c" />
     <ClCompile Include="_ftsynth.c" />
-    <ClCompile Include="_fttype1.c" />
     <ClCompile Include="_psaux.c" />
     <ClCompile Include="_pshinter.c" />
     <ClCompile Include="_psmodule.c" />

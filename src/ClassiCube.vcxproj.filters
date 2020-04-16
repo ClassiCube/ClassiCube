@@ -467,9 +467,6 @@
     <ClCompile Include="_ftsynth.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="_fttype1.c">
-      <Filter>Source Files\Freetype</Filter>
-    </ClCompile>
     <ClCompile Include="_psaux.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
