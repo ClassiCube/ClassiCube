@@ -3352,27 +3352,6 @@ FT_BEGIN_HEADER
                       FT_Parameter*  properties );
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Get_Name_Index                                                  */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Return the glyph index of a given glyph name.                      */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face       :: A handle to the source face object.                  */
-  /*                                                                       */
-  /*    glyph_name :: The glyph name.                                      */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    The glyph index.  0~means `undefined character code'.              */
-  /*                                                                       */
-  FT_EXPORT( FT_UInt )
-  FT_Get_Name_Index( FT_Face     face,
-                     FT_String*  glyph_name );
-
-
   /*************************************************************************
    *
    * @macro:

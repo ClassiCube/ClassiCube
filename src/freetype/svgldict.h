@@ -40,24 +40,18 @@ FT_BEGIN_HEADER
                                FT_Pointer  buffer,
                                FT_UInt     buffer_max );
 
-  typedef FT_UInt
-  (*FT_GlyphDict_NameIndexFunc)( FT_Face     face,
-                                 FT_String*  glyph_name );
-
 
   FT_DEFINE_SERVICE( GlyphDict )
   {
     FT_GlyphDict_GetNameFunc    get_name;
-    FT_GlyphDict_NameIndexFunc  name_index;  /* optional */
   };
 
 
 #define FT_DEFINE_SERVICE_GLYPHDICTREC( class_,                        \
-                                        get_name_,                     \
-                                        name_index_ )                  \
+                                        get_name_ )                    \
   static const FT_Service_GlyphDictRec  class_ =                       \
   {                                                                    \
-    get_name_, name_index_                                             \
+    get_name_                                                          \
   };
 
   /* */

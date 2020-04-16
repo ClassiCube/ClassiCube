@@ -313,75 +313,10 @@
   }
 
 
-  static FT_UInt
-  cff_get_name_index( CFF_Face    face,
-                      FT_String*  glyph_name )
-  {
-    CFF_Font            cff;
-    CFF_Charset         charset;
-    FT_Service_PsCMaps  psnames;
-    FT_String*          name;
-    FT_UShort           sid;
-    FT_UInt             i;
-
-
-    cff     = (CFF_FontRec *)face->extra.data;
-    charset = &cff->charset;
-
-    /* CFF2 table does not have glyph names; */
-    /* we need to use `post' table method    */
-    if ( cff->version_major == 2 )
-    {
-      FT_Library            library     = FT_FACE_LIBRARY( face );
-      FT_Module             sfnt_module = FT_Get_Module( library, "sfnt" );
-      FT_Service_GlyphDict  service     =
-        (FT_Service_GlyphDict)ft_module_get_service(
-                                 sfnt_module,
-                                 FT_SERVICE_ID_GLYPH_DICT,
-                                 0 );
-
-
-      if ( service && service->name_index )
-        return service->name_index( FT_FACE( face ), glyph_name );
-      else
-      {
-        FT_ERROR(( "cff_get_name_index:"
-                   " cannot get glyph index from a CFF2 font\n"
-                   "                   "
-                   " without the `PSNames' module\n" ));
-        return 0;
-      }
-    }
-
-    FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
-    if ( !psnames )
-      return 0;
-
-    for ( i = 0; i < cff->num_glyphs; i++ )
-    {
-      sid = charset->sids[i];
-
-      if ( sid > 390 )
-        name = cff_index_get_string( cff, sid - 391 );
-      else
-        name = (FT_String *)psnames->adobe_std_strings( sid );
-
-      if ( !name )
-        continue;
-
-      if ( !ft_strcmp( glyph_name, name ) )
-        return i;
-    }
-
-    return 0;
-  }
-
-
   FT_DEFINE_SERVICE_GLYPHDICTREC(
     cff_service_glyph_dict,
 
-    (FT_GlyphDict_GetNameFunc)  cff_get_glyph_name,      /* get_name   */
-    (FT_GlyphDict_NameIndexFunc)cff_get_name_index       /* name_index */
+    (FT_GlyphDict_GetNameFunc)  cff_get_glyph_name       /* get_name   */
   )
 
 

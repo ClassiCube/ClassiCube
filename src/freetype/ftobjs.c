@@ -2803,34 +2803,6 @@
 
   /* documentation is in freetype.h */
 
-  FT_EXPORT_DEF( FT_UInt )
-  FT_Get_Name_Index( FT_Face     face,
-                     FT_String*  glyph_name )
-  {
-    FT_UInt  result = 0;
-
-
-    if ( face                       &&
-         FT_HAS_GLYPH_NAMES( face ) &&
-         glyph_name                 )
-    {
-      FT_Service_GlyphDict  service;
-
-
-      FT_FACE_LOOKUP_SERVICE( face,
-                              service,
-                              GLYPH_DICT );
-
-      if ( service && service->name_index )
-        result = service->name_index( face, glyph_name );
-    }
-
-    return result;
-  }
-
-
-  /* documentation is in freetype.h */
-
   FT_EXPORT_DEF( FT_Error )
   FT_Get_Glyph_Name( FT_Face     face,
                      FT_UInt     glyph_index,

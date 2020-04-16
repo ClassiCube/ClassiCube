@@ -62,30 +62,9 @@
   }
 
 
-  static FT_UInt
-  t1_get_name_index( T1_Face     face,
-                     FT_String*  glyph_name )
-  {
-    FT_Int  i;
-
-
-    for ( i = 0; i < face->type1.num_glyphs; i++ )
-    {
-      FT_String*  gname = face->type1.glyph_names[i];
-
-
-      if ( !ft_strcmp( glyph_name, gname ) )
-        return (FT_UInt)i;
-    }
-
-    return 0;
-  }
-
-
   static const FT_Service_GlyphDictRec  t1_service_glyph_dict =
   {
-    (FT_GlyphDict_GetNameFunc)  t1_get_glyph_name,    /* get_name   */
-    (FT_GlyphDict_NameIndexFunc)t1_get_name_index     /* name_index */
+    (FT_GlyphDict_GetNameFunc)  t1_get_glyph_name     /* get_name   */
   };
 
 

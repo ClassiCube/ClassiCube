@@ -169,45 +169,10 @@
   }
 
 
-  static FT_UInt
-  sfnt_get_name_index( FT_Face     face,
-                       FT_String*  glyph_name )
-  {
-    TT_Face  ttface = (TT_Face)face;
-
-    FT_UInt  i, max_gid = FT_UINT_MAX;
-
-
-    if ( face->num_glyphs < 0 )
-      return 0;
-    else if ( (FT_ULong)face->num_glyphs < FT_UINT_MAX )
-      max_gid = (FT_UInt)face->num_glyphs;
-    else
-      FT_TRACE0(( "Ignore glyph names for invalid GID 0x%08x - 0x%08x\n",
-                  FT_UINT_MAX, face->num_glyphs ));
-
-    for ( i = 0; i < max_gid; i++ )
-    {
-      FT_String*  gname;
-      FT_Error    error = tt_face_get_ps_name( ttface, i, &gname );
-
-
-      if ( error )
-        continue;
-
-      if ( !ft_strcmp( glyph_name, gname ) )
-        return i;
-    }
-
-    return 0;
-  }
-
-
   FT_DEFINE_SERVICE_GLYPHDICTREC(
     sfnt_service_glyph_dict,
 
-    (FT_GlyphDict_GetNameFunc)  sfnt_get_glyph_name,    /* get_name   */
-    (FT_GlyphDict_NameIndexFunc)sfnt_get_name_index     /* name_index */
+    (FT_GlyphDict_GetNameFunc)  sfnt_get_glyph_name     /* get_name   */
   )
 
 #endif /* TT_CONFIG_OPTION_POSTSCRIPT_NAMES */
