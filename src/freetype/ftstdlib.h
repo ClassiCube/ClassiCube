@@ -84,7 +84,6 @@
 #define ft_memset   memset
 #define ft_strcat   strcat
 #define ft_strcmp   strcmp
-#define ft_strcpy   strcpy
 #define ft_strlen   strlen
 #define ft_strncmp  strncmp
 #define ft_strstr   strstr

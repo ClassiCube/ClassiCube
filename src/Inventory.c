@@ -77,7 +77,8 @@ static const cc_uint8 classicInventory[42] = {
 	BLOCK_GOLD_ORE, BLOCK_IRON, BLOCK_GOLD, BLOCK_BOOKSHELF, BLOCK_TNT, BLOCK_OBSIDIAN,
 };
 
-static BlockID Inventory_DefaultMapping(int slot) {
+/* Returns default block that should go in the given inventory slot */
+static BlockID DefaultMapping(int slot) {
 	if (Game_ClassicMode) {
 		if (slot < 9 * 4 + 6) return classicInventory[slot];
 	}else if (slot < BLOCK_MAX_CPE) {
@@ -89,7 +90,7 @@ static BlockID Inventory_DefaultMapping(int slot) {
 void Inventory_ApplyDefaultMapping(void) {
 	int slot;
 	for (slot = 0; slot < Array_Elems(Inventory.Map); slot++) {
-		Inventory.Map[slot] = Inventory_DefaultMapping(slot);
+		Inventory.Map[slot] = DefaultMapping(slot);
 	}
 }
 
@@ -100,7 +101,7 @@ void Inventory_AddDefault(BlockID block) {
 	}
 	
 	for (slot = 0; slot < BLOCK_MAX_CPE; slot++) {
-		if (Inventory_DefaultMapping(slot) != block) continue;
+		if (DefaultMapping(slot) != block) continue;
 		Inventory.Map[slot] = block;
 		return;
 	}

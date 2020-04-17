@@ -222,19 +222,6 @@ static void HacksComp_ParseAllFlag(struct HacksComp* hacks, const char* include,
 	}
 }
 
-void HacksComp_SetUserType(struct HacksComp* hacks, cc_uint8 value, cc_bool setBlockPerms) {
-	cc_bool isOp = value >= 100 && value <= 127;
-	hacks->IsOp  = isOp;
-	if (!setBlockPerms) return;
-
-	Blocks.CanPlace[BLOCK_BEDROCK]     = isOp;
-	Blocks.CanDelete[BLOCK_BEDROCK]    = isOp;
-	Blocks.CanPlace[BLOCK_WATER]       = isOp;
-	Blocks.CanPlace[BLOCK_STILL_WATER] = isOp;
-	Blocks.CanPlace[BLOCK_LAVA]        = isOp;
-	Blocks.CanPlace[BLOCK_STILL_LAVA]  = isOp;
-}
-
 void HacksComp_RecheckFlags(struct HacksComp* hacks) {
 	/* Can use hacks by default (also case with WoM), no need to check +hax */
 	cc_bool hax = !String_ContainsConst(&hacks->HacksFlags, "-hax");

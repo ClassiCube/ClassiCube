@@ -193,6 +193,19 @@ static void UpdateLocation(EntityID id, struct LocationUpdate* update, cc_bool i
 	if (e) { e->VTABLE->SetLocation(e, update, interpolate); }
 }
 
+static void UpdateUserType(struct HacksComp* hacks, cc_uint8 value) {
+	cc_bool isOp = value >= 100 && value <= 127;
+	hacks->IsOp  = isOp;
+	if (cpe_blockPerms) return;
+
+	Blocks.CanPlace[BLOCK_BEDROCK]     = isOp;
+	Blocks.CanDelete[BLOCK_BEDROCK]    = isOp;
+	Blocks.CanPlace[BLOCK_WATER]       = isOp;
+	Blocks.CanPlace[BLOCK_STILL_WATER] = isOp;
+	Blocks.CanPlace[BLOCK_LAVA]        = isOp;
+	Blocks.CanPlace[BLOCK_STILL_LAVA]  = isOp;
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------WoM protocol-------------------------------------------------------*
@@ -378,7 +391,7 @@ static void Classic_Handshake(cc_uint8* data) {
 	Chat_SetLogName(&Server.Name);
 
 	hacks = &LocalPlayer_Instance.Hacks;
-	HacksComp_SetUserType(hacks, *data, !cpe_blockPerms);
+	UpdateUserType(hacks, *data);
 	
 	String_Copy(&hacks->HacksFlags,         &Server.Name);
 	String_AppendString(&hacks->HacksFlags, &Server.MOTD);
@@ -651,7 +664,7 @@ static void Classic_Kick(cc_uint8* data) {
 
 static void Classic_SetPermission(cc_uint8* data) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	HacksComp_SetUserType(hacks, data[0], !cpe_blockPerms);
+	UpdateUserType(hacks, data[0]);
 	HacksComp_RecheckFlags(hacks);
 }
 
