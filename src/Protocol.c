@@ -151,7 +151,7 @@ static void CheckName(EntityID id, String* name, String* skin) {
 }
 
 static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool interpolate);
-static void AddEntity(cc_uint8* data, EntityID id, const String* displayName, const String* skinName, cc_bool readPosition) {
+static void AddEntity(cc_uint8* data, EntityID id, const String* name, const String* skin, cc_bool readPosition) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Entity* e;
 
@@ -165,8 +165,8 @@ static void AddEntity(cc_uint8* data, EntityID id, const String* displayName, co
 	} else {
 		e = &LocalPlayer_Instance.Base;
 	}
-	Entity_SetSkin(e, skinName);
-	Entity_SetName(e, displayName);
+	Entity_SetSkin(e, skin);
+	Entity_SetName(e, name);
 
 	if (!readPosition) return;
 	Classic_ReadAbsoluteLocation(data, id, false);
@@ -994,18 +994,15 @@ static void CPE_ExtAddPlayerName(cc_uint8* data) {
 }
 
 static void CPE_ExtAddEntity(cc_uint8* data) {
-	String name; char nameBuffer[STRING_SIZE];
-	String skin; char skinBuffer[STRING_SIZE];
+	String name, skin;
 	EntityID id;
-	String_InitArray(name, nameBuffer);
-	String_InitArray(skin, skinBuffer);
 
-	id = *data++;
-	ReadString(&data, &name);
-	ReadString(&data, &skin);
+	id   = data[0];
+	name = UNSAFE_GetString(data + 1);
+	skin = UNSAFE_GetString(data + 65);
 
 	CheckName(id, &name, &skin);
-	AddEntity(data, id, &name, &skin, false);
+	AddEntity(data + 129, id, &name, &skin, false);
 }
 
 static void CPE_ExtRemovePlayerName(cc_uint8* data) {
@@ -1122,18 +1119,15 @@ static void CPE_HackControl(cc_uint8* data) {
 }
 
 static void CPE_ExtAddEntity2(cc_uint8* data) {
-	String name; char nameBuffer[STRING_SIZE];
-	String skin; char skinBuffer[STRING_SIZE];
+	String name, skin;
 	EntityID id;
-	String_InitArray(name, nameBuffer);
-	String_InitArray(skin, skinBuffer);
 
-	id = *data++;
-	ReadString(&data, &name);
-	ReadString(&data, &skin);
+	id   = data[0];
+	name = UNSAFE_GetString(data + 1);
+	skin = UNSAFE_GetString(data + 65);
 
 	CheckName(id, &name, &skin);
-	AddEntity(data, id, &name, &skin, true);
+	AddEntity(data + 129, id, &name, &skin, true);
 }
 
 #define BULK_MAX_BLOCKS 256
