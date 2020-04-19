@@ -1502,7 +1502,7 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	String_Format1(&path, "texpacks/%s", &relPath);
 	if (!File_Exists(&path)) return;
 	
-	Game_SetDefaultTexturePack(&relPath);
+	TexturePack_SetDefault(&relPath);
 	World_TextureUrl.length = 0;
 	TexturePack_ExtractCurrent(true);
 }

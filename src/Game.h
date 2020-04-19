@@ -59,12 +59,6 @@ float Game_GetHotbarScale(void);
 float Game_GetInventoryScale(void);
 float Game_GetChatScale(void);
 
-/* Retrieves the filename of the default texture pack used. */
-/* NOTE: Returns default.zip if classic mode or selected pack does not exist. */
-String Game_UNSAFE_GetDefaultTexturePack(void);
-/* Sets the filename of the default texture pack used. */
-void Game_SetDefaultTexturePack(const String* texPack);
-
 /* Attempts to change the terrain atlas. (bitmap containing textures for all blocks) */
 cc_bool Game_ChangeTerrainAtlas(Bitmap* atlas);
 void Game_SetViewDistance(int distance);

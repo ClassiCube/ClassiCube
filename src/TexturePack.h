@@ -85,8 +85,10 @@ void TextureCache_Deny(const String* url);
 /* Clears the list of denied URLs, returning number removed. */
 int TextureCache_ClearDenied(void);
 
-/* Extracts a texture pack .zip from the given file. */
-void TexturePack_ExtractZip_File(const String* filename);
+/* Sets the filename of the default texture pack used. */
+void TexturePack_SetDefault(const String* texPack);
+/* Gets filename of default texture pack and then extracts it. */
+void TexturePack_ExtractInitial(void);
 /* If World_TextureUrl is empty, extracts user's default texture pack. */
 /* Otherwise extracts the cached texture pack for that URL. */
 void TexturePack_ExtractCurrent(cc_bool forceReload);

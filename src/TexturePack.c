@@ -640,6 +640,25 @@ static void TextureCache_Update(struct HttpRequest* req) {
 /*########################################################################################################################*
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
 *#########################################################################################################################*/
+static char defTexPackBuffer[STRING_SIZE];
+static String defTexPack = String_FromArray(defTexPackBuffer);
+static const String defaultZip = String_FromConst("default.zip");
+
+/* Retrieves the filename of the default texture pack used. */
+/* NOTE: Returns default.zip if classic mode or selected pack does not exist. */
+static String TexturePack_UNSAFE_GetDefault(void) {
+	String texPath; char texPathBuffer[STRING_SIZE];
+	String_InitArray(texPath, texPathBuffer);
+
+	String_Format1(&texPath, "texpacks/%s", &defTexPack);
+	return File_Exists(&texPath) && !Game_ClassicMode ? defTexPack : defaultZip;
+}
+
+void TexturePack_SetDefault(const String* texPack) {
+	String_Copy(&defTexPack, texPack);
+	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
+}
+
 static cc_result TexturePack_ProcessZipEntry(const String* path, struct Stream* stream, struct ZipState* s) {
 	String name = *path; 
 	Utils_UNSAFE_GetFilename(&name);
@@ -673,7 +692,8 @@ static cc_result TexturePack_ExtractPng(struct Stream* stream) {
 	return res;
 }
 
-void TexturePack_ExtractZip_File(const String* filename) {
+/* Extracts a .zip texture pack from the given file */
+static void TexturePack_ExtractZip_File(const String* filename) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
 	cc_result res;
@@ -704,6 +724,18 @@ void TexturePack_ExtractZip_File(const String* filename) {
 #endif
 }
 
+void TexturePack_ExtractInitial(void) {
+	String texPack;
+	Options_Get(OPT_DEFAULT_TEX_PACK, &defTexPack, "default.zip");
+	TexturePack_ExtractZip_File(&defaultZip);
+
+	/* in case the user's default texture pack doesn't have all required textures */
+	texPack = TexturePack_UNSAFE_GetDefault();
+	if (!String_CaselessEqualsConst(&texPack, "default.zip")) {
+		TexturePack_ExtractZip_File(&texPack);
+	}
+}
+
 static cc_bool texturePackDefault = true;
 void TexturePack_ExtractCurrent(cc_bool forceReload) {
 	String url = World_TextureUrl, file;
@@ -714,7 +746,7 @@ void TexturePack_ExtractCurrent(cc_bool forceReload) {
 	if (!url.length || !TextureCache_Get(&url, &stream)) {
 		/* don't pointlessly load default texture pack */
 		if (texturePackDefault && !forceReload) return;
-		file = Game_UNSAFE_GetDefaultTexturePack();
+		file = TexturePack_UNSAFE_GetDefault();
 
 		TexturePack_ExtractZip_File(&file);
 		texturePackDefault = true;

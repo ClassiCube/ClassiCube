@@ -109,23 +109,6 @@ float Game_GetChatScale(void) {
 	return Game_Scale(Game_GetWindowScale() * Game_RawChatScale);
 }
 
-static char game_defTexPackBuffer[STRING_SIZE];
-static String game_defTexPack = String_FromArray(game_defTexPackBuffer);
-static const String defaultZip = String_FromConst("default.zip");
-
-String Game_UNSAFE_GetDefaultTexturePack(void) {
-	String texPath; char texPathBuffer[STRING_SIZE];
-	String_InitArray(texPath, texPathBuffer);
-
-	String_Format1(&texPath, "texpacks/%s", &game_defTexPack);
-	return File_Exists(&texPath) && !Game_ClassicMode ? game_defTexPack : defaultZip;
-}
-
-void Game_SetDefaultTexturePack(const String* texPack) {
-	String_Copy(&game_defTexPack, texPack);
-	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
-}
-
 cc_bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 	static const String terrain = String_FromConst("terrain.png");
 	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
@@ -329,18 +312,6 @@ static void Game_WarnFunc(const String* msg) {
 	}
 }
 
-static void ExtractInitialTexturePack(void) {
-	String texPack;
-	Options_Get(OPT_DEFAULT_TEX_PACK, &game_defTexPack, "default.zip");
-	TexturePack_ExtractZip_File(&defaultZip);
-
-	/* in case the user's default texture pack doesn't have all required textures */
-	texPack = Game_UNSAFE_GetDefaultTexturePack();
-	if (!String_CaselessEqualsConst(&texPack, "default.zip")) {
-		TexturePack_ExtractZip_File(&texPack);
-	}
-}
-
 static void LoadOptions(void) {
 	Game_ClassicMode       = Options_GetBool(OPT_CLASSIC_MODE, false);
 	Game_ClassicHacks      = Options_GetBool(OPT_CLASSIC_HACKS, false);
@@ -475,7 +446,7 @@ static void Game_Load(void) {
 		if (comp->Init) comp->Init();
 	}
 
-	ExtractInitialTexturePack();
+	TexturePack_ExtractInitial();
 	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
 
 	/* set vsync after because it causes a context loss depending on backend */
