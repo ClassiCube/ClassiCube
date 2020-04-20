@@ -109,6 +109,9 @@ static void CalculateTextWidths(void) {
 	BitmapCol* row;
 	int i, x, y, xx, tileX, tileY;
 
+	/* If 128x256 font bitmap is supplied, treat it as 128x128 */
+	height = min(width, height);
+
 	for (y = 0; y < height; y++) {
 		tileY = y / tileSize;
 		row   = Bitmap_GetRow(&fontBitmap, y);
