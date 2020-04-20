@@ -93,7 +93,7 @@ void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale);
 void Drawer2D_ReducePadding_Height(int* height, int point, int scale);
 /* Sets the bitmap used for drawing bitmapped fonts. (i.e. default.png) */
 /* The bitmap must be square and consist of a 16x16 tile layout. */
-void Drawer2D_SetFontBitmap(Bitmap* bmp);
+cc_bool Drawer2D_SetFontBitmap(Bitmap* bmp);
 
 /* Gets the list of all supported system font names on this platform. */
 void Font_GetNames(StringsBuffer* buffer);

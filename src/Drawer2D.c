@@ -109,9 +109,6 @@ static void CalculateTextWidths(void) {
 	BitmapCol* row;
 	int i, x, y, xx, tileX, tileY;
 
-	/* If 128x256 font bitmap is supplied, treat it as 128x128 */
-	height = min(width, height);
-
 	for (y = 0; y < height; y++) {
 		tileY = y / tileSize;
 		row   = Bitmap_GetRow(&fontBitmap, y);
@@ -139,11 +136,27 @@ static void FreeFontBitmap(void) {
 	Mem_Free(fontBitmap.Scan0);
 }
 
-void Drawer2D_SetFontBitmap(Bitmap* bmp) {
+cc_bool Drawer2D_SetFontBitmap(Bitmap* bmp) {
+	/* If all these cases are not accounted for, end up overwriting memory after tileWidths */
+	if (bmp->Width != bmp->Height) {
+		static const String msg = String_FromConst("&cWidth of default.png must equal its height");
+		Logger_WarnFunc(&msg);
+		return false;
+	} else if (bmp->Width < 16) {
+		static const String msg = String_FromConst("&cdefault.png must be at least 16 pixels wide");
+		Logger_WarnFunc(&msg);
+		return false;
+	} else if (!Math_IsPowOf2(bmp->Width)) {
+		static const String msg = String_FromConst("&cWidth of default.png must be a power of two");
+		Logger_WarnFunc(&msg);
+		return false;
+	}
+
 	FreeFontBitmap();
 	fontBitmap = *bmp;
 	tileSize   = bmp->Width >> LOG2_CHARS_PER_ROW;
 	CalculateTextWidths();
+	return true;
 }
 
 void Font_ReducePadding(struct FontDesc* desc, int scale) {
@@ -683,9 +696,10 @@ static void OnFileChanged(void* obj, struct Stream* src, const String* name) {
 	if ((res = Png_Decode(&bmp, src))) {
 		Logger_Warn2(res, "decoding", name);
 		Mem_Free(bmp.Scan0);
-	} else {
-		Drawer2D_SetFontBitmap(&bmp);
+	} else if (Drawer2D_SetFontBitmap(&bmp)) {
 		Event_RaiseVoid(&ChatEvents.FontChanged);
+	} else {
+		Mem_Free(bmp.Scan0);
 	}
 }
 

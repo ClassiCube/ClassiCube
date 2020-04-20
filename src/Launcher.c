@@ -391,9 +391,11 @@ static cc_result Launcher_ProcessZipEntry(const String* path, struct Stream* dat
 
 		if (res) {
 			Logger_Warn(res, "decoding default.png"); return res;
-		} else {
-			Drawer2D_SetFontBitmap(&fontBmp);
+		} else if (Drawer2D_SetFontBitmap(&fontBmp)) {
 			useBitmappedFont = !Options_GetBool(OPT_USE_CHAT_FONT, false);
+		} else {
+			Mem_Free(fontBmp.Scan0);
+			fontBmp.Scan0 = NULL;
 		}
 	} else if (String_CaselessEqualsConst(path, "terrain.png")) {
 		if (dirtBmp.Scan0) return 0;
