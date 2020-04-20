@@ -107,21 +107,20 @@ static int tileWidths[256];
 static void CalculateTextWidths(void) {
 	int width = fontBitmap.Width, height = fontBitmap.Height;
 	BitmapCol* row;
-	int i, x, y, xx, tileX, tileY;
+	int i, x, y, xx, tileY;
 
 	for (y = 0; y < height; y++) {
 		tileY = y / tileSize;
 		row   = Bitmap_GetRow(&fontBitmap, y);
+		i     = 0 | (tileY << LOG2_CHARS_PER_ROW);
 
-		for (x = 0; x < width; x += tileSize) {
-			tileX = x / tileSize;
-			i = tileX | (tileY << LOG2_CHARS_PER_ROW);
-
+		/* Iterate through each tile on current scanline */
+		for (x = 0; x < width; x += tileSize, i++) {
 			/* Iterate through each pixel of the given character, on the current scanline */
 			for (xx = tileSize - 1; xx >= 0; xx--) {
 				if (!BitmapCol_A(row[x + xx])) continue;
 
-				/* Check if this is the pixel furthest to the right, for the current character */			
+				/* Check if this is the pixel furthest to the right, for the current character */
 				tileWidths[i] = max(tileWidths[i], xx + 1);
 				break;
 			}
@@ -137,7 +136,7 @@ static void FreeFontBitmap(void) {
 }
 
 cc_bool Drawer2D_SetFontBitmap(Bitmap* bmp) {
-	/* If all these cases are not accounted for, end up overwriting memory after tileWidths */
+	/* If not all of these cases are accounted for, end up overwriting memory after tileWidths */
 	if (bmp->Width != bmp->Height) {
 		static const String msg = String_FromConst("&cWidth of default.png must equal its height");
 		Logger_WarnFunc(&msg);
@@ -155,6 +154,7 @@ cc_bool Drawer2D_SetFontBitmap(Bitmap* bmp) {
 	FreeFontBitmap();
 	fontBitmap = *bmp;
 	tileSize   = bmp->Width >> LOG2_CHARS_PER_ROW;
+
 	CalculateTextWidths();
 	return true;
 }
