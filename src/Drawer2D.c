@@ -151,6 +151,7 @@ cc_bool Drawer2D_SetFontBitmap(Bitmap* bmp) {
 		return false;
 	}
 
+	/* TODO: Use shift instead of mul/div */
 	FreeFontBitmap();
 	fontBitmap = *bmp;
 	tileSize   = bmp->Width >> LOG2_CHARS_PER_ROW;

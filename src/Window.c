@@ -3992,7 +3992,7 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	if (res) Platform_Log1("Set VSync failed, error: %i", &res);
 }
 
-static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs) {
+static void GetAttribs(struct GraphicsMode* mode, int* attribs, int depth) {
 	int i = 0;
 	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig */
 	/* See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree */
@@ -4003,7 +4003,7 @@ static void GLContext_GetAttribs(struct GraphicsMode* mode, int* attribs) {
 	attribs[i++] = GLX_GREEN_SIZE; attribs[i++] = mode->G;
 	attribs[i++] = GLX_BLUE_SIZE;  attribs[i++] = mode->B;
 	attribs[i++] = GLX_ALPHA_SIZE; attribs[i++] = mode->A;
-	attribs[i++] = GLX_DEPTH_SIZE; attribs[i++] = GLCONTEXT_DEFAULT_DEPTH;
+	attribs[i++] = GLX_DEPTH_SIZE; attribs[i++] = depth;
 
 	attribs[i++] = GLX_DOUBLEBUFFER;
 	attribs[i++] = 0;
@@ -4018,7 +4018,7 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	GLXFBConfig* fbconfigs;
 	XVisualInfo info;
 
-	GLContext_GetAttribs(mode, attribs);	
+	GetAttribs(mode, attribs, GLCONTEXT_DEFAULT_DEPTH);
 	if (!glXQueryVersion(win_display, &major, &minor)) {
 		Logger_Abort("glXQueryVersion failed");
 	}
@@ -4037,9 +4037,12 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 		Platform_LogConst("Falling back to glXChooseVisual.");
 		visual = glXChooseVisual(win_display, win_screen, attribs);
 	}
+	/* Some really old devices will only supply 16 bit depths */
 	if (!visual) {
-		Logger_Abort("Requested GraphicsMode not available.");
+		GetAttribs(mode, attribs, 16);
+		visual = glXChooseVisual(win_display, win_screen, attribs);
 	}
+	if (!visual) Logger_Abort("Requested GraphicsMode not available.");
 
 	info = *visual;
 	XFree(visual);
