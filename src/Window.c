@@ -1406,16 +1406,16 @@ void Window_ProcessEvents(void) {
 			else if (e.xbutton.button == 3) Input_SetPressed(KEY_RMOUSE, true);
 			else if (e.xbutton.button == 4) Mouse_ScrollWheel(+1);
 			else if (e.xbutton.button == 5) Mouse_ScrollWheel(-1);
-			else if (e.xbutton.button == 6) Input_SetPressed(KEY_XBUTTON1,  true);
-			else if (e.xbutton.button == 7) Input_SetPressed(KEY_XBUTTON2,  true);
+			else if (e.xbutton.button == 8) Input_SetPressed(KEY_XBUTTON1,  true);
+			else if (e.xbutton.button == 9) Input_SetPressed(KEY_XBUTTON2,  true);
 			break;
 
 		case ButtonRelease:
 			if (e.xbutton.button == 1)      Input_SetPressed(KEY_LMOUSE, false);
 			else if (e.xbutton.button == 2) Input_SetPressed(KEY_MMOUSE, false);
 			else if (e.xbutton.button == 3) Input_SetPressed(KEY_RMOUSE, false);
-			else if (e.xbutton.button == 6) Input_SetPressed(KEY_XBUTTON1,  false);
-			else if (e.xbutton.button == 7) Input_SetPressed(KEY_XBUTTON2,  false);
+			else if (e.xbutton.button == 8) Input_SetPressed(KEY_XBUTTON1,  false);
+			else if (e.xbutton.button == 9) Input_SetPressed(KEY_XBUTTON2,  false);
 			break;
 
 		case MotionNotify:
