@@ -167,8 +167,7 @@ cc_bool Input_Pressed[INPUT_COUNT];
 #define Key_Function_Names \
 "F1",  "F2",  "F3",  "F4",  "F5",  "F6",  "F7",  "F8",  "F9",  "F10",\
 "F11", "F12", "F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20",\
-"F21", "F22", "F23", "F24", "F25", "F26", "F27", "F28", "F29", "F30",\
-"F31", "F32", "F33", "F34", "F35"
+"F21", "F22", "F23", "F24"
 #define Key_Ascii_Names \
 "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",\
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
@@ -177,6 +176,8 @@ cc_bool Input_Pressed[INPUT_COUNT];
 const char* const Input_Names[INPUT_COUNT] = {
 	"None",
 	Key_Function_Names,
+	"Tilde", "Minus", "Plus", "BracketLeft", "BracketRight", "Slash",
+	"Semicolon", "Quote", "Comma", "Period", "BackSlash",
 	"ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight",
 	"AltLeft", "AltRight", "WinLeft", "WinRight",
 	"Up", "Down", "Left", "Right",
@@ -190,19 +191,21 @@ const char* const Input_Names[INPUT_COUNT] = {
 	"Keypad0", "Keypad1", "Keypad2", "Keypad3", "Keypad4",
 	"Keypad5", "Keypad6", "Keypad7", "Keypad8", "Keypad9",
 	"KeypadDivide", "KeypadMultiply", "KeypadSubtract",
-	"KeypadAdd", "KeypadDecimal", "KeypadEnter",	
-	"Tilde", "Minus", "Plus", "BracketLeft", "BracketRight", "Slash",
-	"Semicolon", "Quote", "Comma", "Period", "BackSlash",
+	"KeypadAdd", "KeypadDecimal", "KeypadEnter",
 	"XButton1", "XButton2", "LeftMouse", "RightMouse", "MiddleMouse"
 };
 
 /* TODO: Should this only be shown in GUI? not saved to disc? */
-/*const char* Input_Names[INPUT_COUNT] = {
+/*const char* const Input_Names[INPUT_COUNT] = {
 	"NONE",
+	Key_Function_Names,
+	"GRAVE", "MINUS", "PLUS", "LBRACKET", "RBRACKET",
+	"SEMICOLON", "APOSTROPHE", "COMMA", "PERIOD", "SLASH", "BACKSLASH",
 	"LSHIFT", "RSHIFT", "LCONTROL", "RCONTROL",
 	"LMENU", "RMENU", "LWIN", "RWIN", "MENU",
-	Key_Function_Names,
 	"UP", "DOWN", "LEFT", "RIGHT",
+	"0", "1", "2", "3", "4",
+	"5", "6", "7", "8", "9",
 	"RETURN", "ESCAPE", "SPACE", "TAB", "BACK", "INSERT",
 	"DELETE", "PRIOR", "DOWN", "HOME", "END", "CAPITAL",
 	"SCROLL", "PRINT", "PAUSE", "NUMLOCK",
@@ -211,11 +214,7 @@ const char* const Input_Names[INPUT_COUNT] = {
 	"DIVIDE", "MULTIPLY", "SUBTRACT",
 	"ADD", "DECIMAL", "NUMPADENTER",
 	Key_Ascii_Names,
-	"0", "1", "2", "3", "4",
-	"5", "6", "7", "8", "9",
-	"GRAVE", "MINUS", "PLUS", "LBRACKET", "RBRACKET",
-	"SEMICOLON", "APOSTROPHE", "COMMA", "PERIOD", "SLASH", "BACKSLASH",
-	"XBUTTON1", "XBUTTON2", "MMOUSE"
+	"XBUTTON1", "XBUTTON2, "MMOUSE"
 };*/
 
 void Input_SetPressed(int key, cc_bool pressed) {

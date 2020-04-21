@@ -38,7 +38,7 @@ int Screen_TPointer(void* s, int id, int x, int y) { return true; }
 
 void Screen_NullFunc(void* screen) { }
 void Screen_NullUpdate(void* screen, double delta) { }
-int  Screen_InputDown(void* screen, int key) { return key < KEY_F1 || key > KEY_F35; }
+int  Screen_InputDown(void* screen, int key) { return key < KEY_F1 || key > KEY_F24; }
 
 CC_NOINLINE static cc_bool IsOnlyHudActive(void) {
 	struct Screen* s;
@@ -797,7 +797,7 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 		} else {
 			Elem_HandlesKeyDown(&s->input.base, key);
 		}
-		return key < KEY_F1 || key > KEY_F35;
+		return key < KEY_F1 || key > KEY_F24;
 	}
 
 	if (key == KeyBinds[KEYBIND_CHAT]) {

@@ -979,7 +979,7 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 	if (key >= XK_A && key <= XK_Z) { return 'A' + (key - XK_A); }
 	if (key >= XK_a && key <= XK_z) { return 'A' + (key - XK_a); }
 
-	if (key >= XK_F1 && key <= XK_F35)    { return KEY_F1  + (key - XK_F1); }
+	if (key >= XK_F1 && key <= XK_F24)    { return KEY_F1  + (key - XK_F1); }
 	if (key >= XK_KP_0 && key <= XK_KP_9) { return KEY_KP0 + (key - XK_KP_0); }
 
 	/* Same Num Lock behaviour as Windows and text editors */
@@ -3064,7 +3064,7 @@ static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev , void* data) {
 	/* Must not intercept KeyDown for regular keys, otherwise KeyPress doesn't get raised. */
 	/* However, do want to prevent browser's behaviour on F11, F5, home etc. */
 	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
-	return (key >= KEY_F1 && key <= KEY_F35)   || (key >= KEY_UP && key <= KEY_RIGHT) ||
+	return (key >= KEY_F1 && key <= KEY_F24)   || (key >= KEY_UP && key <= KEY_RIGHT) ||
 		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK && key != KEY_SPACE);
 }
 
