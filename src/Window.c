@@ -1330,11 +1330,8 @@ static Atom Window_GetSelectionProperty(XEvent* e) {
 	return e->xselectionrequest.target;
 }
 
-static cc_bool Window_GetPendingEvent(XEvent* e) {
-	return XCheckWindowEvent(win_display,   win_handle, win_eventMask, e) ||
-		XCheckTypedWindowEvent(win_display, win_handle, ClientMessage, e) ||
-		XCheckTypedWindowEvent(win_display, win_handle, SelectionNotify, e) ||
-		XCheckTypedWindowEvent(win_display, win_handle, SelectionRequest, e);
+static Bool FilterEvent(Display* d, XEvent* e, XPointer w) { 
+	return e->xany.window == (Window)w;
 }
 
 static void HandleWMDestroy(void) {
@@ -1356,7 +1353,7 @@ static void HandleWMPing(XEvent* e) {
 void Window_ProcessEvents(void) {
 	XEvent e;
 	while (Window_Exists) {
-		if (!Window_GetPendingEvent(&e)) break;
+		if (!XCheckIfEvent(win_display, &e, FilterEvent, (XPointer)win_handle)) break;
 
 		switch (e.type) {
 		case ClientMessage:
