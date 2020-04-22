@@ -1438,6 +1438,7 @@ void Gfx_OnWindowResize(void) {
 #define FTR_LINEAR_FOG (1 << 3)
 #define FTR_DENSIT_FOG (1 << 4)
 #define FTR_HASANY_FOG (FTR_LINEAR_FOG | FTR_DENSIT_FOG)
+#define FTR_FS_MEDIUMP (1 << 7)
 
 #define UNI_MVP_MATRIX (1 << 0)
 #define UNI_TEX_MATRIX (1 << 1)
@@ -1482,7 +1483,7 @@ static struct GLShader {
 static struct GLShader* gfx_activeShader;
 
 /* Generates source code for a GLSL vertex shader, based on shader's flags */
-static void Gfx_GenVertexShader(const struct GLShader* shader, String* dst) {
+static void GenVertexShader(const struct GLShader* shader, String* dst) {
 	int uv = shader->features & FTR_TEXTURE_UV;
 	int tm = shader->features & FTR_TEX_MATRIX;
 
@@ -1504,7 +1505,7 @@ static void Gfx_GenVertexShader(const struct GLShader* shader, String* dst) {
 }
 
 /* Generates source code for a GLSL fragment shader, based on shader's flags */
-static void Gfx_GenFragmentShader(const struct GLShader* shader, String* dst) {
+static void GenFragmentShader(const struct GLShader* shader, String* dst) {
 	int uv = shader->features & FTR_TEXTURE_UV;
 	int al = shader->features & FTR_ALPHA_TEST;
 	int fl = shader->features & FTR_LINEAR_FOG;
@@ -1512,8 +1513,9 @@ static void Gfx_GenFragmentShader(const struct GLShader* shader, String* dst) {
 	int fm = shader->features & FTR_HASANY_FOG;
 
 #ifdef CC_BUILD_GLES
-	String_AppendConst(dst,         "precision highp float;\n");
+	String_AppendConst(dst, "precision highp float;\n");
 #endif
+
 	String_AppendConst(dst,         "varying vec4 out_col;\n");
 	if (uv) String_AppendConst(dst, "varying vec2 out_uv;\n");
 	if (uv) String_AppendConst(dst, "uniform sampler2D texImage;\n");
@@ -1533,21 +1535,28 @@ static void Gfx_GenFragmentShader(const struct GLShader* shader, String* dst) {
 	String_AppendConst(dst,         "}");
 }
 
-/* Tries to compile GLSL shader code. Aborts program on failure. */
-static GLuint Gfx_CompileShader(GLenum type, const String* src) {
-	char logInfo[2048];
+/* Tries to compile GLSL shader code. */
+static GLint CompileShader(GLenum type, const String* src, GLuint* obj) {
 	GLint temp, shader;
 	int len;
 
 	shader = glCreateShader(type);
-	if (!shader) Logger_Abort("Failed to create shader");
+	*obj   = shader;
+	if (!shader) return false;
 	len = src->length;
 
 	glShaderSource(shader, 1, &src->buffer, &len);
 	glCompileShader(shader);
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &temp);
+	return temp;
+}
 
-	if (temp) return shader;
+/* Logs information then aborts program. */
+static void ShaderFailed(GLint shader) {
+	char logInfo[2048];
+	GLint temp;
+	if (!shader) Logger_Abort("Failed to create shader");
+
 	temp = 0;
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &temp);
 
@@ -1557,29 +1566,28 @@ static GLuint Gfx_CompileShader(GLenum type, const String* src) {
 		Window_ShowDialog("Failed to compile shader", logInfo);
 	}
 	Logger_Abort("Failed to compile shader");
-	return 0;
 }
 
 /* Tries to compile vertex and fragment shaders, then link into an OpenGL program. */
-static void Gfx_CompileProgram(struct GLShader* shader) {
+static void CompileProgram(struct GLShader* shader) {
 	char tmpBuffer[2048]; String tmp;
-	GLuint vertex, fragment, program;
+	GLuint vs, fs, program;
 	GLint temp;
 
 	String_InitArray(tmp, tmpBuffer);
-	Gfx_GenVertexShader(shader, &tmp);
-	vertex = Gfx_CompileShader(GL_VERTEX_SHADER, &tmp);
+	GenVertexShader(shader, &tmp);
+	if (!CompileShader(GL_VERTEX_SHADER,   &tmp, &vs)) ShaderFailed(vs);
 
 	tmp.length = 0;
-	Gfx_GenFragmentShader(shader, &tmp);
-	fragment = Gfx_CompileShader(GL_FRAGMENT_SHADER, &tmp);
+	GenFragmentShader(shader, &tmp);
+	if (!CompileShader(GL_FRAGMENT_SHADER, &tmp, &fs)) ShaderFailed(fs);
 
 	program  = glCreateProgram();
 	if (!program) Logger_Abort("Failed to create program");
 	shader->program = program;
 
-	glAttachShader(program, vertex);
-	glAttachShader(program, fragment);
+	glAttachShader(program, vs);
+	glAttachShader(program, fs);
 
 	/* Force in_pos/in_col/in_uv attributes to be bound to 0,1,2 locations */
 	/* Although most browsers assign the attributes in this order anyways, */
@@ -1592,11 +1600,11 @@ static void Gfx_CompileProgram(struct GLShader* shader) {
 	glGetProgramiv(program, GL_LINK_STATUS, &temp);
 
 	if (temp) {
-		glDetachShader(program, vertex);
-		glDetachShader(program, fragment);
+		glDetachShader(program, vs);
+		glDetachShader(program, fs);
 
-		glDeleteShader(vertex);
-		glDeleteShader(fragment);
+		glDeleteShader(vs);
+		glDeleteShader(fs);
 
 		shader->locations[0] = glGetUniformLocation(program, "mvp");
 		shader->locations[1] = glGetUniformLocation(program, "texMatrix");
@@ -1617,15 +1625,15 @@ static void Gfx_CompileProgram(struct GLShader* shader) {
 }
 
 /* Marks a uniform as changed on all programs */
-static void Gfx_DirtyUniform(int uniform) {
+static void DirtyUniform(int uniform) {
 	int i;
 	for (i = 0; i < Array_Elems(shaders); i++) {
 		shaders[i].uniforms |= uniform;
 	}
 }
 
-/* Sends changes uniforms to the GPU for current program */
-static void Gfx_ReloadUniforms(void) {
+/* Sends changed uniforms to the GPU for current program */
+static void ReloadUniforms(void) {
 	struct GLShader* s = gfx_activeShader;
 	if (!s) return; /* NULL if context is lost */
 
@@ -1656,7 +1664,7 @@ static void Gfx_ReloadUniforms(void) {
 
 /* Switches program to one that duplicates current fixed function state */
 /* Compiles program and reloads uniforms if needed */
-static void Gfx_SwitchProgram(void) {
+static void SwitchProgram(void) {
 	struct GLShader* shader;
 	int index = 0;
 
@@ -1670,44 +1678,44 @@ static void Gfx_SwitchProgram(void) {
 	if (gfx_alphaTest)    index += 1;
 
 	shader = &shaders[index];
-	if (shader == gfx_activeShader) { Gfx_ReloadUniforms(); return; }
-	if (!shader->program) Gfx_CompileProgram(shader);
+	if (shader == gfx_activeShader) { ReloadUniforms(); return; }
+	if (!shader->program) CompileProgram(shader);
 
 	gfx_activeShader = shader;
 	glUseProgram(shader->program);
-	Gfx_ReloadUniforms();
+	ReloadUniforms();
 }
 
-void Gfx_SetFog(cc_bool enabled) { gfx_fogEnabled = enabled; Gfx_SwitchProgram(); }
+void Gfx_SetFog(cc_bool enabled) { gfx_fogEnabled = enabled; SwitchProgram(); }
 void Gfx_SetFogCol(PackedCol col) {
 	if (col == gfx_fogCol) return;
 	gfx_fogCol = col;
-	Gfx_DirtyUniform(UNI_FOG_COL);
-	Gfx_ReloadUniforms();
+	DirtyUniform(UNI_FOG_COL);
+	ReloadUniforms();
 }
 
 void Gfx_SetFogDensity(float value) {
 	if (gfx_fogDensity == value) return;
 	gfx_fogDensity = value;
-	Gfx_DirtyUniform(UNI_FOG_DENS);
-	Gfx_ReloadUniforms();
+	DirtyUniform(UNI_FOG_DENS);
+	ReloadUniforms();
 }
 
 void Gfx_SetFogEnd(float value) {
 	if (gfx_fogEnd == value) return;
 	gfx_fogEnd = value;
-	Gfx_DirtyUniform(UNI_FOG_END);
-	Gfx_ReloadUniforms();
+	DirtyUniform(UNI_FOG_END);
+	ReloadUniforms();
 }
 
 void Gfx_SetFogMode(FogFunc func) {
 	if (gfx_fogMode == func) return;
 	gfx_fogMode = func;
-	Gfx_SwitchProgram();
+	SwitchProgram();
 }
 
 void Gfx_SetTexturing(cc_bool enabled) { }
-void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; Gfx_SwitchProgram(); }
+void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; SwitchProgram(); }
 
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	if (type == MATRIX_VIEW || type == MATRIX_PROJECTION) {
@@ -1715,13 +1723,13 @@ void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 		if (type == MATRIX_PROJECTION) _proj = *matrix;
 
 		Matrix_Mul(&_mvp, &_view, &_proj);
-		Gfx_DirtyUniform(UNI_MVP_MATRIX);
-		Gfx_ReloadUniforms();
+		DirtyUniform(UNI_MVP_MATRIX);
+		ReloadUniforms();
 	} else {
 		_tex = *matrix;
 		gfx_texTransform = true;
-		Gfx_DirtyUniform(UNI_TEX_MATRIX);
-		Gfx_SwitchProgram();
+		DirtyUniform(UNI_TEX_MATRIX);
+		SwitchProgram();
 	}
 }
 void Gfx_LoadIdentityMatrix(MatrixType type) {
@@ -1729,7 +1737,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 		Gfx_LoadMatrix(type, &Matrix_Identity);
 	} else {
 		gfx_texTransform = false;
-		Gfx_SwitchProgram();
+		SwitchProgram();
 	}
 }
 
@@ -1756,7 +1764,7 @@ static void Gfx_RestoreState(void) {
 	glEnableVertexAttribArray(1);
 	gfx_batchFormat = -1;
 
-	Gfx_DirtyUniform(UNI_MASK_ALL);
+	DirtyUniform(UNI_MASK_ALL);
 	GL_ClearCol(gfx_clearCol);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LEQUAL);
@@ -1801,7 +1809,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 		gfx_setupVBFunc      = GL_SetupVbPos3fCol4b;
 		gfx_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
 	}
-	Gfx_SwitchProgram();
+	SwitchProgram();
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
