@@ -1837,7 +1837,7 @@ static void InitRawMouse(void) {
 		return;
 	}
 
-	major = 2; minor = 0;
+	major = 2; minor = 2;
 	if (XIQueryVersion(win_display, &major, &minor) != Success) {
 		Platform_Log2("Only XInput %i.%i supported", &major, &minor);
 		return;
