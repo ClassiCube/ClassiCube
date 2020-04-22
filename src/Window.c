@@ -1331,7 +1331,10 @@ static Atom Window_GetSelectionProperty(XEvent* e) {
 }
 
 static Bool FilterEvent(Display* d, XEvent* e, XPointer w) { 
-	return e->xany.window == (Window)w;
+	return
+		e->xany.window == (Window)w ||
+		!e->xany.window || /* KeymapNotify events don't have a window */
+		e->type == GenericEvent; /* For XInput events */
 }
 
 static void HandleWMDestroy(void) {
@@ -1349,6 +1352,7 @@ static void HandleWMPing(XEvent* e) {
 	XSendEvent(win_display, win_rootWin, false,
 		SubstructureRedirectMask | SubstructureNotifyMask, e);
 }
+static void HandleGenericEvent(XEvent* e);
 
 void Window_ProcessEvents(void) {
 	XEvent e;
@@ -1356,6 +1360,8 @@ void Window_ProcessEvents(void) {
 		if (!XCheckIfEvent(win_display, &e, FilterEvent, (XPointer)win_handle)) break;
 
 		switch (e.type) {
+		case GenericEvent:
+			HandleGenericEvent(&e); break;
 		case ClientMessage:
 			if (e.xclient.data.l[0] == wm_destroy) {
 				HandleWMDestroy();
@@ -1803,7 +1809,48 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 void Window_OpenKeyboard(void)  { }
 void Window_SetKeyboardText(const String* text) { }
 void Window_CloseKeyboard(void) { }
-void Window_EnableRawMouse(void)  { DefaultEnableRawMouse();  }
+
+static cc_bool rawMouseInited, rawMouseSupported;
+static int xiOpcode;
+
+static void HandleGenericEvent(XEvent* e) {
+	Platform_Log1("OK.. %i", &xiOpcode);
+	if (!rawMouseSupported || e->xcookie.extension != xiOpcode) return;
+	if (!XGetEventData(win_display, &e->xcookie)) return;
+	Platform_Log1("RAW MOUSE EVENT: %i", &e->xcookie.evtype);
+}
+
+static void InitRawMouse(void) {
+	XIEventMask evmask;
+	unsigned char masks[(XI_LASTEVENT + 7)/8] = { 0 };
+	int ev, err, major, minor;
+
+	if (!XQueryExtension(win_display, "XInputExtension", &xiOpcode, &ev, &err)) {
+		Platform_LogConst("XInput unsupported");
+		return;
+	}
+
+	major = 2; minor = 0;
+	if (XIQueryVersion(win_display, &major, &minor) != Success) {
+		Platform_Log2("Only XInput %i.%i supported", &major, &minor);
+		return;
+	}
+
+	XISetMask(masks, XI_RawMotion);
+	evmask.deviceid = XIAllMasterDevices;
+	evmask.mask_len = sizeof(masks);
+	evmask.mask     = masks;
+
+	XISelectEvents(win_display, win_rootWin, &evmask, 1);
+	rawMouseSupported = true;
+}
+
+void Window_EnableRawMouse(void) {
+	DefaultEnableRawMouse();
+	if (!rawMouseInited) InitRawMouse();
+	rawMouseInited = true;
+}
+
 void Window_UpdateRawMouse(void)  { DefaultUpdateRawMouse();  }
 void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 
