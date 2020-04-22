@@ -1819,10 +1819,10 @@ static void HandleGenericEvent(XEvent* e) {
 	if (!rawMouseSupported || e->xcookie.extension != xiOpcode) return;
 	if (!XGetEventData(win_display, &e->xcookie)) return;
 
-	if (e->xcookie.evtype == XI_RawMotion) {
+	if (e->xcookie.evtype == XI_RawMotion && Input_RawMode) {
 		ev = (XIRawEvent*)e->xcookie.data;
-		float dx = ev->raw_values[0], dy = ev->raw_values[1];
-		Platform_Log2("raw  %f4,%f4", &dx, &dy);
+		Event_RaiseMove(&PointerEvents.RawMoved, 0, 
+						ev->raw_values[0], dy = ev->raw_values[1]);
 	}
 	XFreeEventData(win_display, &e->xcookie);
 }
@@ -1858,7 +1858,15 @@ void Window_EnableRawMouse(void) {
 	rawMouseInited = true;
 }
 
-void Window_UpdateRawMouse(void)  { DefaultUpdateRawMouse();  }
+void Window_UpdateRawMouse(void) {
+	if (rawMouseSupported) {
+		/* Handled by XI_RawMotion generic event */
+		CentreMousePosition();
+	} else {
+		DefaultUpdateRawMouse();
+	}
+}
+
 void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 
 
