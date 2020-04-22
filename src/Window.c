@@ -956,6 +956,7 @@ void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
+#include <X11/extensions/XInput2.h>
 
 #define _NET_WM_STATE_REMOVE 0
 #define _NET_WM_STATE_ADD    1
@@ -1814,15 +1815,21 @@ static cc_bool rawMouseInited, rawMouseSupported;
 static int xiOpcode;
 
 static void HandleGenericEvent(XEvent* e) {
-	Platform_Log1("OK.. %i", &xiOpcode);
+	XIRawEvent* ev;
 	if (!rawMouseSupported || e->xcookie.extension != xiOpcode) return;
 	if (!XGetEventData(win_display, &e->xcookie)) return;
-	Platform_Log1("RAW MOUSE EVENT: %i", &e->xcookie.evtype);
+
+	if (e->xcookie.evtype == XI_RawMotion) {
+		ev = (XIRawEvent*)e->xcookie.data;
+		float dx = ev->raw_values[0], dy = ev->raw_values[1];
+		Platform_Log2("raw  %f4,%f4", &dx, &dy);
+	}
+	XFreeEventData(win_display, &e->xcookie);
 }
 
 static void InitRawMouse(void) {
 	XIEventMask evmask;
-	unsigned char masks[(XI_LASTEVENT + 7)/8] = { 0 };
+	unsigned char masks[XIMaskLen(XI_LASTEVENT)] = { 0 };
 	int ev, err, major, minor;
 
 	if (!XQueryExtension(win_display, "XInputExtension", &xiOpcode, &ev, &err)) {
