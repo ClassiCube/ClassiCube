@@ -1535,6 +1535,7 @@ static void Gfx_GenFragmentShader(const struct GLShader* shader, String* dst) {
 
 /* Tries to compile GLSL shader code. Aborts program on failure. */
 static GLuint Gfx_CompileShader(GLenum type, const String* src) {
+	char logInfo[2048];
 	GLint temp, shader;
 	int len;
 
@@ -1551,11 +1552,9 @@ static GLuint Gfx_CompileShader(GLenum type, const String* src) {
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &temp);
 
 	if (temp > 1) {
-		char logInfo[2048];
 		glGetShaderInfoLog(shader, 2047, NULL, logInfo);
-
 		logInfo[2047] = '\0';
-		Platform_LogConst(logInfo);
+		Window_ShowDialog("Failed to compile shader", logInfo);
 	}
 	Logger_Abort("Failed to compile shader");
 	return 0;
@@ -1612,7 +1611,7 @@ static void Gfx_CompileProgram(struct GLShader* shader) {
 	if (temp > 0) {
 		glGetProgramInfoLog(program, 2047, NULL, tmpBuffer);
 		tmpBuffer[2047] = '\0';
-		Platform_LogConst(tmpBuffer);
+		Window_ShowDialog("Failed to compile program", tmpBuffer);
 	}
 	Logger_Abort("Failed to compile program");
 }
