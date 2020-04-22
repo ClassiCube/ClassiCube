@@ -448,7 +448,6 @@ void Window_DisableRawMouse(void) {
 #define WM_XBUTTONUP   0x020C
 #endif
 
-static cc_bool rawMouseInited, rawMouseSupported;
 typedef BOOL (WINAPI *FUNC_RegisterRawInput)(PCRAWINPUTDEVICE devices, UINT numDevices, UINT size);
 static FUNC_RegisterRawInput _registerRawInput;
 typedef UINT (WINAPI *FUNC_GetRawInputData)(HRAWINPUT hRawInput, UINT cmd, void* data, UINT* size, UINT headerSize);
@@ -910,6 +909,7 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 	DeleteObject(draw_DIB);
 }
 
+static cc_bool rawMouseInited, rawMouseSupported;
 static void InitRawMouse(void) {
 	RAWINPUTDEVICE rid;
 	_registerRawInput = (FUNC_RegisterRawInput)DynamicLib_GetFrom("USER32.DLL", "RegisterRawInputDevices");
@@ -1531,138 +1531,138 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 /*########################################################################################################################*
 *-----------------------------------------------------X11 message box-----------------------------------------------------*
 *#########################################################################################################################*/
-static Display* dpy;
-static unsigned long X11_Col(cc_uint8 r, cc_uint8 g, cc_uint8 b) {
-	Colormap cmap = XDefaultColormap(dpy, DefaultScreen(dpy));
+struct X11MessageBox {
+	Window win;
+	Display* dpy;
+	GC gc;
+	unsigned long white, black, background;
+	unsigned long btnBorder, highlight, shadow;
+};
+
+static unsigned long X11_Col(struct X11MessageBox* m, cc_uint8 r, cc_uint8 g, cc_uint8 b) {
+	Colormap cmap = XDefaultColormap(m->dpy, DefaultScreen(m->dpy));
 	XColor col = { 0 };
 	col.red   = r << 8;
 	col.green = g << 8;
 	col.blue  = b << 8;
 	col.flags = DoRed | DoGreen | DoBlue;
 
-	XAllocColor(dpy, cmap, &col);
+	XAllocColor(m->dpy, cmap, &col);
 	return col.pixel;
 }
 
-typedef struct {
-	Window win;
-	GC gc;
-	unsigned long white, black, background;
-	unsigned long btnBorder, highlight, shadow;
-} X11Window;
+static void X11MessageBox_Init(struct X11MessageBox* m) {
+	m->black = BlackPixel(m->dpy, DefaultScreen(m->dpy));
+	m->white = WhitePixel(m->dpy, DefaultScreen(m->dpy));
+	m->background = X11_Col(m, 206, 206, 206);
 
-static void X11Window_Init(X11Window* w) {
-	w->black = BlackPixel(dpy, DefaultScreen(dpy));
-	w->white = WhitePixel(dpy, DefaultScreen(dpy));
-	w->background = X11_Col(206, 206, 206);
+	m->btnBorder = X11_Col(m, 60,  60,  60);
+	m->highlight = X11_Col(m, 144, 144, 144);
+	m->shadow    = X11_Col(m, 49,  49,  49);
 
-	w->btnBorder = X11_Col(60,  60,  60);
-	w->highlight = X11_Col(144, 144, 144);
-	w->shadow    = X11_Col(49,  49,  49);
+	m->win = XCreateSimpleWindow(m->dpy, DefaultRootWindow(m->dpy), 0, 0, 100, 100,
+								0, m->black, m->background);
+	XSelectInput(m->dpy, m->win, ExposureMask   | StructureNotifyMask |
+							   KeyReleaseMask   | PointerMotionMask |
+								ButtonPressMask | ButtonReleaseMask );
 
-	w->win = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), 0, 0, 100, 100,
-								0, w->black, w->background);
-	XSelectInput(dpy, w->win, ExposureMask     | StructureNotifyMask |
-							   KeyReleaseMask  | PointerMotionMask |
-							ButtonPressMask | ButtonReleaseMask );
-
-	w->gc = XCreateGC(dpy, w->win, 0, NULL);
-	XSetForeground(dpy, w->gc, w->black);
-	XSetBackground(dpy, w->gc, w->background);
+	m->gc = XCreateGC(m->dpy, m->win, 0, NULL);
+	XSetForeground(m->dpy, m->gc, m->black);
+	XSetBackground(m->dpy, m->gc, m->background);
 }
 
-static void X11Window_Free(X11Window* w) {
-	XFreeGC(dpy, w->gc);
-	XDestroyWindow(dpy, w->win);
+static void X11MessageBox_Free(struct X11MessageBox* m) {
+	XFreeGC(m->dpy, m->gc);
+	XDestroyWindow(m->dpy, m->win);
 }
 
-typedef struct {
-	int X, Y, Width, Height;
-	int LineHeight, Descent;
-	const char* Text;
-} X11Textbox;
+struct X11Textbox {
+	int x, y, width, height;
+	int lineHeight, descent;
+	const char* text;
+};
 
-static void X11Textbox_Measure(X11Textbox* t, XFontStruct* font) {
-	String str = String_FromReadonly(t->Text), line;
+static void X11Textbox_Measure(struct X11Textbox* t, XFontStruct* font) {
+	String str = String_FromReadonly(t->text), line;
 	XCharStruct overall;
 	int direction, ascent, descent, lines = 0;
 
 	for (; str.length; lines++) {
 		String_UNSAFE_SplitBy(&str, '\n', &line);
 		XTextExtents(font, line.buffer, line.length, &direction, &ascent, &descent, &overall);
-		t->Width = max(overall.width, t->Width);
+		t->width = max(overall.width, t->width);
 	}
 
-	t->LineHeight = ascent + descent;
-	t->Descent    = descent;
-	t->Height     = t->LineHeight * lines;
+	t->lineHeight = ascent + descent;
+	t->descent    = descent;
+	t->height     = t->lineHeight * lines;
 }
 
-static void X11Textbox_Draw(X11Textbox* t, X11Window* w) {
-	String str = String_FromReadonly(t->Text), line;
-	int y = t->Y + t->LineHeight - t->Descent; /* TODO: is -Descent even right? */
+static void X11Textbox_Draw(struct X11Textbox* t, struct X11MessageBox* m) {
+	String str = String_FromReadonly(t->text), line;
+	int y = t->y + t->lineHeight - t->descent; /* TODO: is -descent even right? */
 
-	for (; str.length; y += t->LineHeight) {
+	for (; str.length; y += t->lineHeight) {
 		String_UNSAFE_SplitBy(&str, '\n', &line);
-		XDrawString(dpy, w->win, w->gc, t->X, y, line.buffer, line.length);		
+		XDrawString(m->dpy, m->win, m->gc, t->x, y, line.buffer, line.length);		
 	}
 }
 
-typedef struct {
-	int X, Y, Width, Height;
-	cc_bool Clicked;
-	X11Textbox Text;
-} X11Button;
+struct X11Button {
+	int x, y, width, height;
+	cc_bool clicked;
+	struct X11Textbox text;
+};
 
-static void X11Button_Draw(X11Button* b, X11Window* w) {
-	X11Textbox* t;
+static void X11Button_Draw(struct X11Button* b, struct X11MessageBox* m) {
+	struct X11Textbox* t;
 	int begX, endX, begY, endY;
 
-	XSetForeground(dpy, w->gc, w->btnBorder);
-	XDrawRectangle(dpy, w->win, w->gc, b->X, b->Y,
-					b->Width, b->Height);
+	XSetForeground(m->dpy, m->gc,  m->btnBorder);
+	XDrawRectangle(m->dpy, m->win, m->gc, b->x, b->y,
+					b->width, b->height);
 
-	t = &b->Text;
-	begX = b->X + 1; endX = b->X + b->Width - 1;
-	begY = b->Y + 1; endY = b->Y + b->Height - 1;
+	t = &b->text;
+	begX = b->x + 1; endX = b->x + b->width  - 1;
+	begY = b->y + 1; endY = b->y + b->height - 1;
 
-	if (b->Clicked) {
-		XSetForeground(dpy, w->gc, w->highlight);
-		XDrawRectangle(dpy, w->win, w->gc, begX, begY,
+	if (b->clicked) {
+		XSetForeground(m->dpy, m->gc,  m->highlight);
+		XDrawRectangle(m->dpy, m->win, m->gc, begX, begY,
 						endX - begX, endY - begY);
 	} else {
-		XSetForeground(dpy, w->gc, w->white);
-		XDrawLine(dpy, w->win, w->gc, begX, begY,
+		XSetForeground(m->dpy, m->gc, m->white);
+		XDrawLine(m->dpy, m->win, m->gc, begX, begY,
 					endX - 1, begY);
-		XDrawLine(dpy, w->win, w->gc, begX, begY,
+		XDrawLine(m->dpy, m->win, m->gc, begX, begY,
 					begX, endY - 1);
 
-		XSetForeground(dpy, w->gc, w->highlight);
-		XDrawLine(dpy, w->win, w->gc, begX + 1, endY - 1,
+		XSetForeground(m->dpy, m->gc, m->highlight);
+		XDrawLine(m->dpy, m->win, m->gc, begX + 1, endY - 1,
 					endX - 1, endY - 1);
-		XDrawLine(dpy, w->win, w->gc, endX - 1, begY + 1,
+		XDrawLine(m->dpy, m->win, m->gc, endX - 1, begY + 1,
 					endX - 1, endY - 1);
 
-		XSetForeground(dpy, w->gc, w->shadow);
-		XDrawLine(dpy, w->win, w->gc, begX, endY, endX, endY);
-		XDrawLine(dpy, w->win, w->gc, endX, begY, endX, endY);
+		XSetForeground(m->dpy, m->gc, m->shadow);
+		XDrawLine(m->dpy, m->win, m->gc, begX, endY, endX, endY);
+		XDrawLine(m->dpy, m->win, m->gc, endX, begY, endX, endY);
 	}
 
-	XSetForeground(dpy, w->gc, w->black);
-	t->X = b->X + b->Clicked + (b->Width  - t->Width)  / 2;
-	t->Y = b->Y + b->Clicked + (b->Height - t->Height) / 2;
-	X11Textbox_Draw(t, w);
+	XSetForeground(m->dpy, m->gc, m->black);
+	t->x = b->x + b->clicked + (b->width  - t->width)  / 2;
+	t->y = b->y + b->clicked + (b->height - t->height) / 2;
+	X11Textbox_Draw(t, m);
 }
 
-static int X11Button_Contains(X11Button* b, int x, int y) {
-	return x >= b->X && x < (b->X + b->Width) &&
-		   y >= b->Y && y < (b->Y + b->Height);
+static int X11Button_Contains(struct X11Button* b, int x, int y) {
+	return x >= b->x && x < (b->x + b->width) &&
+		   y >= b->y && y < (b->y + b->height);
 }
 
 static Bool X11_FilterEvent(Display* d, XEvent* e, XPointer w) { return e->xany.window == (Window)w; }
-static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
-	X11Button ok    = { 0 };
-	X11Textbox body = { 0 };
+static void X11_MessageBox(const char* title, const char* text, struct X11MessageBox* m) {
+	struct X11Button ok    = { 0 };
+	struct X11Textbox body = { 0 };
 
 	Atom protocols[2];
 	XFontStruct* font;
@@ -1671,59 +1671,59 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 	int mouseX = -1, mouseY = -1, over;
 	XEvent e;
 
-	X11Window_Init(w);
-	XMapWindow(dpy, w->win);
-	XStoreName(dpy, w->win, title);
+	X11MessageBox_Init(m);
+	XMapWindow(m->dpy, m->win);
+	XStoreName(m->dpy, m->win, title);
 
-	protocols[0] = XInternAtom(dpy, "WM_DELETE_WINDOW", false);
-	protocols[1] = XInternAtom(dpy, "_NET_WM_PING",     false);
-	XSetWMProtocols(dpy, w->win, protocols, 2);
+	protocols[0] = XInternAtom(m->dpy, "WM_DELETE_WINDOW", false);
+	protocols[1] = XInternAtom(m->dpy, "_NET_WM_PING",     false);
+	XSetWMProtocols(m->dpy, m->win, protocols, 2);
 
-	font = XQueryFont(dpy, XGContextFromGC(w->gc));
+	font = XQueryFont(m->dpy, XGContextFromGC(m->gc));
 	if (!font) return;
 
 	/* Compute size of widgets */
-	body.Text = text;
+	body.text = text;
 	X11Textbox_Measure(&body, font);
-	ok.Text.Text = "OK";
-	X11Textbox_Measure(&ok.Text, font);
-	ok.Width  = ok.Text.Width  + 70;
-	ok.Height = ok.Text.Height + 10;
+	ok.text.text = "OK";
+	X11Textbox_Measure(&ok.text, font);
+	ok.width  = ok.text.width  + 70;
+	ok.height = ok.text.height + 10;
 
 	/* Compute size and position of window */
-	width  = body.Width                   + 20;
-	height = body.Height + 20 + ok.Height + 20;
-	x = DisplayWidth (dpy, DefaultScreen(dpy))/2 -  width/2;
-	y = DisplayHeight(dpy, DefaultScreen(dpy))/2 - height/2;
-	XMoveResizeWindow(dpy, w->win, x, y, width, height);
+	width  = body.width                   + 20;
+	height = body.height + 20 + ok.height + 20;
+	x = DisplayWidth (m->dpy, DefaultScreen(m->dpy))/2 -  width/2;
+	y = DisplayHeight(m->dpy, DefaultScreen(m->dpy))/2 - height/2;
+	XMoveResizeWindow(m->dpy, m->win, x, y, width, height);
 
 	/* Adjust bounds of widgets */
-	body.X = 10; body.Y = 10;
-	ok.X = width/2 - ok.Width/2;
-	ok.Y = height  - ok.Height - 10;
+	body.x = 10; body.y = 10;
+	ok.x = width/2 - ok.width/2;
+	ok.y = height  - ok.height - 10;
 
 	/* This marks the window as popup window of the main window */
 	/* http://tronche.com/gui/x/icccm/sec-4.html#WM_TRANSIENT_FOR */
 	/* Depending on WM, removes minimise and doesn't show in taskbar */
-	if (win_handle) XSetTransientForHint(dpy, w->win, win_handle);
+	if (win_handle) XSetTransientForHint(m->dpy, m->win, win_handle);
 
 	XFreeFontInfo(NULL, font, 1);
-	XUnmapWindow(dpy, w->win); /* Make window non resizeable */
+	XUnmapWindow(m->dpy, m->win); /* Make window non resizeable */
 
 	hints.flags      = PSize | PMinSize | PMaxSize;
 	hints.min_width  = hints.max_width  = hints.base_width  = width;
 	hints.min_height = hints.max_height = hints.base_height = height;
 
-	XSetWMNormalHints(dpy, w->win, &hints);
-	XMapRaised(dpy, w->win);
-	XFlush(dpy);
+	XSetWMNormalHints(m->dpy, m->win, &hints);
+	XMapRaised(m->dpy, m->win);
+	XFlush(m->dpy);
 
     for (;;) {
-		/* The naive solution is to use XNextEvent(dpy, &e) here. */
+		/* The naive solution is to use XNextEvent(m->dpy, &e) here. */
 		/* However this causes issues as that removes events that */
 		/* should have been delivered to the main game window. */
 		/* (e.g. breaks initial window resize with i3 WM) */
-		XIfEvent(dpy, &e, X11_FilterEvent, (XPointer)w->win);
+		XIfEvent(m->dpy, &e, X11_FilterEvent, (XPointer)m->win);
 
 		switch (e.type)
 		{
@@ -1732,18 +1732,18 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 			if (e.xbutton.button != Button1) break;
 			over = X11Button_Contains(&ok, mouseX, mouseY);
 
-			if (ok.Clicked && e.type == ButtonRelease) {
+			if (ok.clicked && e.type == ButtonRelease) {
 				if (over) return;
 			}
-			ok.Clicked = e.type == ButtonPress && over;
+			ok.clicked = e.type == ButtonPress && over;
 			/* fallthrough to redraw window */
 
 		case Expose:
 		case MapNotify:
-			XClearWindow(dpy, w->win);
-			X11Textbox_Draw(&body, w);
-			X11Button_Draw(&ok, w);
-			XFlush(dpy);
+			XClearWindow(m->dpy, m->win);
+			X11Textbox_Draw(&body, m);
+			X11Button_Draw(&ok, m);
+			XFlush(m->dpy);
 			break;
 
 		case KeyRelease:
@@ -1764,22 +1764,22 @@ static void X11_MessageBox(const char* title, const char* text, X11Window* w) {
 }
 
 static void ShowDialogCore(const char* title, const char* msg) {
-	X11Window w = { 0 };
-	dpy = win_display;
+	struct X11MessageBox m = { 0 };
+	m.dpy = win_display;
 	
 	/* Failing to create a display means can't display a message box. */
 	/* However the user might have launched the game through terminal, */
 	/* so fallback to console instead of just dying from a segfault */
-	if (!dpy) {
+	if (!m.dpy) {
 		Platform_LogConst("### MESSAGE ###");
 		Platform_LogConst(title);
 		Platform_LogConst(msg);
 		return;
 	}
 	
-	X11_MessageBox(title, msg, &w);
-	X11Window_Free(&w);
-	XFlush(dpy); /* flush so window disappears immediately */
+	X11_MessageBox(title, msg, &m);
+	X11MessageBox_Free(&m);
+	XFlush(m.dpy); /* flush so window disappears immediately */
 }
 
 static GC fb_gc;
