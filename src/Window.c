@@ -1822,7 +1822,7 @@ static void HandleGenericEvent(XEvent* e) {
 	if (e->xcookie.evtype == XI_RawMotion && Input_RawMode) {
 		ev = (XIRawEvent*)e->xcookie.data;
 		Event_RaiseMove(&PointerEvents.RawMoved, 0, 
-						ev->raw_values[0], dy = ev->raw_values[1]);
+						ev->raw_values[0], ev->raw_values[1]);
 	}
 	XFreeEventData(win_display, &e->xcookie);
 }
