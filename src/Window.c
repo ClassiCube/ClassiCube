@@ -1821,8 +1821,9 @@ static void HandleGenericEvent(XEvent* e) {
 
 	if (e->xcookie.evtype == XI_RawMotion && Input_RawMode) {
 		ev = (XIRawEvent*)e->xcookie.data;
+		/* Using 0.5f here makes the sensitivity about same as normal cursor movement */
 		Event_RaiseMove(&PointerEvents.RawMoved, 0, 
-						ev->raw_values[0], ev->raw_values[1]);
+						ev->raw_values[0] * 0.5f, ev->raw_values[1] * 0.5f);
 	}
 	XFreeEventData(win_display, &e->xcookie);
 }
@@ -1848,7 +1849,6 @@ static void InitRawMouse(void) {
 		return;
 	}
 
-	// todo multiply detla by 2
 	XISetMask(masks, XI_RawMotion);
 	evmask.deviceid = XIAllMasterDevices;
 	evmask.mask_len = sizeof(masks);
