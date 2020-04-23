@@ -1837,12 +1837,18 @@ static void InitRawMouse(void) {
 		return;
 	}
 
+	/* Only XInput 2.0 is actually required. However, 2.0 has the annoying */
+	/* behaviour where raw input is NOT delivered while pointer is grabbed. */
+	/* (i.e. if you press mouse button, no more raw mouse movement events) */
+	/* http://wine.1045685.n8.nabble.com/PATCH-0-9-Implement-DInput8-mouse-using-RawInput-and-XInput2-RawEvents-only-td6016923.html */
+	/* Thankfully XInput >= 2.1 corrects this behaviour */
 	major = 2; minor = 2;
 	if (XIQueryVersion(win_display, &major, &minor) != Success) {
 		Platform_Log2("Only XInput %i.%i supported", &major, &minor);
 		return;
 	}
 
+	// todo multiply detla by 2
 	XISetMask(masks, XI_RawMotion);
 	evmask.deviceid = XIAllMasterDevices;
 	evmask.mask_len = sizeof(masks);

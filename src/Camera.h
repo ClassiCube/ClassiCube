@@ -9,7 +9,7 @@ struct RayTracer;
 struct Camera;
 
 /* Shared data for cameras. */
-extern struct _CameraData {
+CC_VAR extern struct _CameraData {
 	/* How sensitive camera is to movements of mouse. */
 	int Sensitivity;
 	/* Whether smooth/cinematic camera mode is used. */
