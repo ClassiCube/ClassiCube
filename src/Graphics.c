@@ -1513,7 +1513,9 @@ static void GenFragmentShader(const struct GLShader* shader, String* dst) {
 	int fm = shader->features & FTR_HASANY_FOG;
 
 #ifdef CC_BUILD_GLES
-	String_AppendConst(dst, "precision highp float;\n");
+	int mp = shader->features & FTR_FS_MEDIUMP;
+	if (mp) String_AppendConst(dst, "precision mediump float;\n");
+	else    String_AppendConst(dst, "precision highp float;\n");
 #endif
 
 	String_AppendConst(dst,         "varying vec4 out_col;\n");
@@ -1580,7 +1582,17 @@ static void CompileProgram(struct GLShader* shader) {
 
 	tmp.length = 0;
 	GenFragmentShader(shader, &tmp);
-	if (!CompileShader(GL_FRAGMENT_SHADER, &tmp, &fs)) ShaderFailed(fs);
+	if (!CompileShader(GL_FRAGMENT_SHADER, &tmp, &fs)) {
+		/* Sometimes fails 'highp precision is not supported in fragment shader' */
+		/* So try compiling shader again without highp precision */
+		glDeleteShader(fs);
+		shader->features |= FTR_FS_MEDIUMP;
+
+		tmp.length = 0;
+		GenFragmentShader(shader, &tmp);
+		if (!CompileShader(GL_FRAGMENT_SHADER, &tmp, &fs)) ShaderFailed(fs);
+	}
+
 
 	program  = glCreateProgram();
 	if (!program) Logger_Abort("Failed to create program");
