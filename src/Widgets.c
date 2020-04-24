@@ -482,7 +482,7 @@ static int HotbarWidget_KeyUp(void* widget, int key) {
 	if (w->altHandled) { w->altHandled = false; return true; } /* handled already */
 
 	/* Don't switch hotbar when alt+tab */
-	if (!Window_Focused) return true;
+	if (!WindowInfo.Focused) return true;
 
 	/* Alternate between first and second row */
 	index = Inventory.Offset == 0 ? 1 : 0;
@@ -1600,7 +1600,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		caretAtEnd = (w->caretY == i) && (w->caretX == INPUTWIDGET_LEN || w->caretPos == -1);
 		width      = w->lineWidths[i] + (caretAtEnd ? w->caretTex.Width : 0);
 		/* Cover whole window width to match original classic behaviour */
-		if (Gui_ClassicChat) { width = max(width, Window_Width - x * 4); }
+		if (Gui_ClassicChat) { width = max(width, WindowInfo.Width - x * 4); }
 	
 		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->lineHeight, backCol);
 		y += w->lineHeight;
@@ -1886,7 +1886,7 @@ static void PlayerListWidget_Reposition(void* widget) {
 	w->width  = width  + LIST_BOUNDS_SIZE * 2;
 	w->height = height + LIST_BOUNDS_SIZE * 2;
 
-	y = Window_Height / 4 - w->height / 2;
+	y = WindowInfo.Height / 4 - w->height / 2;
 	w->yOffset = -max(0, y);
 
 	Widget_CalcPosition(w);
@@ -2194,7 +2194,7 @@ static void TextGroupWidget_Reposition(void* widget) {
 	Widget_CalcPosition(w);
 
 	for (i = 0, y = w->y; i < w->lines; i++) {
-		textures[i].X = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, Window_Width);
+		textures[i].X = Gui_CalcPos(w->horAnchor, w->xOffset, textures[i].Width, WindowInfo.Width);
 		textures[i].Y = y;
 		y += textures[i].Height;
 	}
@@ -2463,7 +2463,7 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 		tex.Height = w->collapsible[index] ? 0 : w->defaultHeight;
 	}
 
-	tex.X = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, Window_Width);
+	tex.X = Gui_CalcPos(w->horAnchor, w->xOffset, tex.Width, WindowInfo.Width);
 	w->textures[index] = tex;
 	Widget_Layout(w);
 }

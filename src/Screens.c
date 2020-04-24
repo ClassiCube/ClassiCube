@@ -395,11 +395,11 @@ static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 		
 	y = min(s->input.base.y, Gui_HUD->hotbar.y);
 	y -= s->input.base.yOffset; /* add some padding */
-	s->altText.yOffset = Window_Height - y;
+	s->altText.yOffset = WindowInfo.Height - y;
 	Widget_Layout(&s->altText);
 
 	pad = s->altText.active ? 5 : 10;
-	s->clientStatus.yOffset = Window_Height - s->altText.y + pad;
+	s->clientStatus.yOffset = WindowInfo.Height - s->altText.y + pad;
 	Widget_Layout(&s->clientStatus);
 	s->chat.yOffset = s->clientStatus.yOffset + s->clientStatus.height;
 	Widget_Layout(&s->chat);
@@ -595,10 +595,10 @@ static void ChatScreen_DrawCrosshairs(void) {
 	int extent;
 	if (!Gui_IconsTex) return;
 
-	extent = (int)(CH_EXTENT * Game_Scale(Window_Height / 480.0f));
+	extent = (int)(CH_EXTENT * Game_Scale(WindowInfo.Height / 480.0f));
 	tex.ID = Gui_IconsTex;
-	tex.X  = (Window_Width  / 2) - extent;
-	tex.Y  = (Window_Height / 2) - extent;
+	tex.X  = (WindowInfo.Width  / 2) - extent;
+	tex.Y  = (WindowInfo.Height / 2) - extent;
 
 	tex.Width  = extent * 2;
 	tex.Height = extent * 2;
@@ -827,7 +827,7 @@ static int ChatScreen_KeyUp(void* screen, int key) {
 #endif
 
 	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
-		if (!Window_Focused) return true;
+		if (!WindowInfo.Focused) return true;
 		SpecialInputWidget_SetActive(&s->altText, !s->altText.active);
 		ChatScreen_UpdateChatYOffsets(s);
 	}
@@ -915,7 +915,7 @@ static void ChatScreen_Init(void* screen) {
 							s->chatTextures, ChatScreen_GetChat);
 	TextGroupWidget_Create(&s->clientStatus, CHAT_MAX_CLIENTSTATUS,
 							s->clientStatusTextures, ChatScreen_GetClientStatus);
-	TextWidget_Make(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Window_Height / 4);
+	TextWidget_Make(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -WindowInfo.Height / 4);
 
 	s->status.collapsible[0]       = true; /* Texture pack download status */
 	s->clientStatus.collapsible[0] = true;
@@ -1252,11 +1252,11 @@ static void LoadingScreen_DrawBackground(void) {
 
 	loc    = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 	tex.ID = 0;
-	Tex_SetRect(tex, 0,0, Window_Width,LOADING_TILE_SIZE);
+	Tex_SetRect(tex, 0,0, WindowInfo.Width,LOADING_TILE_SIZE);
 	tex.uv    = Atlas1D_TexRec(loc, 1, &atlasIndex);
-	tex.uv.U2 = (float)Window_Width / LOADING_TILE_SIZE;
+	tex.uv.U2 = (float)WindowInfo.Width / LOADING_TILE_SIZE;
 	
-	for (y = 0; y < Window_Height; y += LOADING_TILE_SIZE) {
+	for (y = 0; y < WindowInfo.Height; y += LOADING_TILE_SIZE) {
 		tex.Y = y;
 		Gfx_Make2DQuad(&tex, col, &ptr);
 		count += 4;
@@ -1297,8 +1297,8 @@ static void LoadingScreen_Render(void* screen, double delta) {
 	Elem_Render(&s->message, delta);
 	Gfx_SetTexturing(false);
 
-	x = Gui_CalcPos(ANCHOR_CENTRE,  0, PROG_BAR_WIDTH,  Window_Width);
-	y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, Window_Height);
+	x = Gui_CalcPos(ANCHOR_CENTRE,  0, PROG_BAR_WIDTH,  WindowInfo.Width);
+	y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, WindowInfo.Height);
 	progWidth = (int)(PROG_BAR_WIDTH * s->progress);
 
 	Gfx_Draw2DFlat(x, y, PROG_BAR_WIDTH, PROG_BAR_HEIGHT, backCol);
@@ -1511,7 +1511,7 @@ static void DisconnectScreen_Update(void* screen, double delta) {
 static void DisconnectScreen_Render(void* screen, double delta) {
 	PackedCol top    = PackedCol_Make(64, 32, 32, 255);
 	PackedCol bottom = PackedCol_Make(80, 16, 16, 255);
-	Gfx_Draw2DGradient(0, 0, Window_Width, Window_Height, top, bottom);
+	Gfx_Draw2DGradient(0, 0, WindowInfo.Width, WindowInfo.Height, top, bottom);
 
 	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);

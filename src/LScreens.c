@@ -1012,12 +1012,12 @@ static void ResourcesScreen_Draw(struct LScreen* s) {
 	int x, y, width, height;
 
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
-					0, 0, Window_Width, Window_Height);
+					0, 0, WindowInfo.Width, WindowInfo.Height);
 	width  = Display_ScaleX(380);
 	height = Display_ScaleY(140);
 
-	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  Window_Width);
-	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, Window_Height);
+	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  WindowInfo.Width);
+	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, WindowInfo.Height);
 
 	ResourcesScreen_ResetArea(x, y, width, height);
 	LScreen_Draw(s);
@@ -1211,7 +1211,7 @@ static void ServersScreen_Init(struct LScreen* s_) {
 	ServersScreen_ReloadServers(s);
 	/* This is so typing on keyboard by default searchs server list */
 	/* But don't do that when it would cause on-screen keyboard to show */
-	if (Window_SoftKeyboard) return;
+	if (WindowInfo.SoftKeyboard) return;
 	LScreen_SelectWidget(s_, (struct LWidget*)&s->iptSearch, false);
 }
 
@@ -1254,8 +1254,8 @@ static void ServersScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->btnRefresh, ANCHOR_MAX, ANCHOR_MIN, 135, 10);
 	
 	LWidget_SetLocation(&s->table, ANCHOR_MIN, ANCHOR_MIN, 10, 50);
-	s->table.width  = Window_Width  - s->table.x;
-	s->table.height = Window_Height - s->table.y * 2;
+	s->table.width  = WindowInfo.Width  - s->table.x;
+	s->table.height = WindowInfo.Height - s->table.y * 2;
 	s->table.height = max(1, s->table.height);
 
 	LTable_Reposition(&s->table);

@@ -274,7 +274,7 @@ void Launcher_Run(void) {
 
 	for (;;) {
 		Window_ProcessEvents();
-		if (!Window_Exists || Launcher_ShouldExit) break;
+		if (!WindowInfo.Exists || Launcher_ShouldExit) break;
 
 		Launcher_Screen->Tick(Launcher_Screen);
 		if (Launcher_Dirty.Width) Launcher_Display();
@@ -292,7 +292,7 @@ void Launcher_Run(void) {
 #ifdef CC_BUILD_ANDROID
 	if (Launcher_ShouldExit) SwitchToGame();
 #endif
-	if (Window_Exists) Window_Close();
+	if (WindowInfo.Exists) Window_Close();
 }
 
 
@@ -486,20 +486,20 @@ void Launcher_ResetPixels(void) {
 	int x;
 
 	if (Launcher_Screen && Launcher_Screen->hidesTitlebar) {
-		Launcher_ResetArea(0, 0, Window_Width, Window_Height);
+		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
 		return;
 	}
 
 	if (Launcher_ClassicBackground && dirtBmp.Scan0) {
-		Launcher_ClearTile(0,        0, Window_Width,                 TILESIZE, &dirtBmp);
-		Launcher_ClearTile(0, TILESIZE, Window_Width, Window_Height - TILESIZE, &stoneBmp);
+		Launcher_ClearTile(0,        0, WindowInfo.Width,                     TILESIZE, &dirtBmp);
+		Launcher_ClearTile(0, TILESIZE, WindowInfo.Width, WindowInfo.Height - TILESIZE, &stoneBmp);
 	} else {
-		Launcher_ResetArea(0, 0, Window_Width, Window_Height);
+		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
 	}
 
 	Drawer2D_BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && fontBmp.Scan0;
 	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);
-	x = Window_Width / 2 - Drawer2D_TextWidth(&args) / 2;
+	x = WindowInfo.Width / 2 - Drawer2D_TextWidth(&args) / 2;
 
 	args.text = title_back;
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x + 4, 4);

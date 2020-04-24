@@ -89,7 +89,7 @@ int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 
 
 int Game_GetWindowScale(void) {
-	float windowScale = min(Window_Width / 640.0f, Window_Height / 480.0f);
+	float windowScale = min(WindowInfo.Width / 640.0f, WindowInfo.Height / 480.0f);
 	return 1 + (int)windowScale;
  }
 
@@ -253,8 +253,8 @@ cc_bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
 }
 
 void Game_UpdateDimensions(void) {
-	Game.Width  = max(Window_Width,  1);
-	Game.Height = max(Window_Height, 1);
+	Game.Width  = max(WindowInfo.Width,  1);
+	Game.Height = max(WindowInfo.Height, 1);
 }
 
 static void Game_OnResize(void* obj) {
@@ -590,7 +590,7 @@ static void Game_RenderFrame(double delta) {
 	Game_Vertices = 0;
 
 	Camera.Active->UpdateMouse(delta);
-	if (!Window_Focused && !Gui_GetInputGrab()) PauseScreen_Show();
+	if (!WindowInfo.Focused && !Gui_GetInputGrab()) PauseScreen_Show();
 
 	if (KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL) && !Gui_GetInputGrab()) {
 		InputHandler_SetFOV(Game_ZoomFov);
@@ -642,7 +642,7 @@ void Game_Free(void* obj) {
 
 #define Game_DoFrameBody() \
 	Window_ProcessEvents();\
-	if (!Window_Exists) return;\
+	if (!WindowInfo.Exists) return;\
 	\
 	render = Stopwatch_Measure();\
 	time   = Stopwatch_ElapsedMicroseconds(lastRender, render) / (1000.0 * 1000.0);\

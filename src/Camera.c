@@ -104,7 +104,7 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 }
 
 static void PerspectiveCamera_UpdateMouse(double delta) {
-	if (!Gui_GetInputGrab() && Window_Focused) Window_UpdateRawMouse();
+	if (!Gui_GetInputGrab() && WindowInfo.Focused) Window_UpdateRawMouse();
 
 	PerspectiveCamera_UpdateMouseRotation(delta);
 	cam_deltaX = 0; cam_deltaY = 0;

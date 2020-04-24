@@ -25,8 +25,8 @@ void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, i
 
 void LWidget_CalcPosition(void* widget) {
 	struct LWidget* w = (struct LWidget*)widget;
-	w->x = Gui_CalcPos(w->horAnchor, Display_ScaleX(w->xOffset), w->width,  Window_Width);
-	w->y = Gui_CalcPos(w->verAnchor, Display_ScaleY(w->yOffset), w->height, Window_Height);
+	w->x = Gui_CalcPos(w->horAnchor, Display_ScaleX(w->xOffset), w->width,  WindowInfo.Width);
+	w->y = Gui_CalcPos(w->verAnchor, Display_ScaleY(w->yOffset), w->height, WindowInfo.Height);
 }
 
 void LWidget_Draw(void* widget) {
@@ -1035,7 +1035,7 @@ static void LTable_ScrollbarClick(struct LTable* w) {
 static void LTable_MouseDown(void* widget, cc_bool wasSelected) {
 	struct LTable* w = (struct LTable*)widget;
 
-	if (Mouse_X >= Window_Width - w->scrollbarWidth) {
+	if (Mouse_X >= WindowInfo.Width - w->scrollbarWidth) {
 		LTable_ScrollbarClick(w);
 		w->_lastRow = -1;
 	} else if (Mouse_Y < w->rowsBegY) {

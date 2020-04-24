@@ -51,17 +51,20 @@ int Display_ScaleX(int x);
 /* Scales the given Y coordinate from 96 dpi to current display dpi. */
 int Display_ScaleY(int y);
 
-/* Size of the content area of the window. (i.e. area that can draw to) */
-/* This area does NOT include borders and titlebar surrounding the window. */
-extern int Window_Width, Window_Height;
-/* Whether the window is actually valid (i.e. not destroyed). */
-extern cc_bool Window_Exists;
-/* Whether the user is interacting with the window. */
-extern cc_bool Window_Focused;
-/* Readonly platform-specific handle to the window. */
-extern const void* Window_Handle;
-/* Whether the platform only supports on-screen keyboard. */
-extern cc_bool Window_SoftKeyboard;
+/* Data for the window. */
+CC_VAR extern struct _WinData {
+	/* Readonly platform-specific handle to the window. */
+	void* Handle;
+	/* Size of the content area of the window. (i.e. area that can draw to) */
+	/* This area does NOT include borders and titlebar surrounding the window. */
+	int Width, Height;
+	/* Whether the window is actually valid (i.e. not destroyed). */
+	cc_bool Exists;
+	/* Whether the user is interacting with the window. */
+	cc_bool Focused;
+	/* Whether the platform only supports on-screen keyboard. */
+	cc_bool SoftKeyboard;
+} WindowInfo;
 
 /* Initalises state for window. Also sets Display_ members. */
 void Window_Init(void);

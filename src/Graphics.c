@@ -361,7 +361,7 @@ static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* a
 
 void Gfx_Init(void) {
 	Gfx.MinZNear = 0.05f;
-	HWND winHandle = (HWND)Window_Handle;
+	HWND winHandle = (HWND)WindowInfo.Handle;
 	d3d = Direct3DCreate9(D3D_SDK_VERSION);
 
 	D3D9_FindCompatibleFormat();

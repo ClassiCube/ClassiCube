@@ -34,8 +34,8 @@ void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, in
 
 void Widget_CalcPosition(void* widget) {
 	struct Widget* w = (struct Widget*)widget;
-	w->x = Gui_CalcPos(w->horAnchor, w->xOffset, w->width , Window_Width );
-	w->y = Gui_CalcPos(w->verAnchor, w->yOffset, w->height, Window_Height);
+	w->x = Gui_CalcPos(w->horAnchor, w->xOffset, w->width , WindowInfo.Width );
+	w->y = Gui_CalcPos(w->verAnchor, w->yOffset, w->height, WindowInfo.Height);
 }
 
 void Widget_Reset(void* widget) {

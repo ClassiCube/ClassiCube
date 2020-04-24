@@ -1071,7 +1071,7 @@ static void HandleInputUp(void* obj, int key) {
 	if (key == KeyBinds[KEYBIND_PICK_BLOCK])   MouseStateRelease(MOUSE_MIDDLE);
 }
 
-static void HandleFocusChanged(void* obj) { if (!Window_Focused) Input_Clear(); }
+static void HandleFocusChanged(void* obj) { if (!WindowInfo.Focused) Input_Clear(); }
 void InputHandler_Init(void) {
 	Event_RegisterMove(&PointerEvents.Moved, NULL, HandlePointerMove);
 	Event_RegisterInt(&PointerEvents.Down,   NULL, HandlePointerDown);
