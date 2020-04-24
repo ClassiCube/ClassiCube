@@ -6,17 +6,13 @@
 #include "Funcs.h"
 #include "ExtMath.h"
 
-int Display_BitsPerPixel;
-float Display_DpiX = 1.0f;
-float Display_DpiY = 1.0f;
-Rect2D Display_Bounds;
-
-int Display_ScaleX(int x) { return (int)(x * Display_DpiX); }
-int Display_ScaleY(int y) { return (int)(y * Display_DpiY); }
-#define Display_CentreX(width)  (Display_Bounds.X + (Display_Bounds.Width  - width)  / 2)
-#define Display_CentreY(height) (Display_Bounds.Y + (Display_Bounds.Height - height) / 2)
-
+struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
+
+int Display_ScaleX(int x) { return (int)(x * DisplayInfo.DpiX); }
+int Display_ScaleY(int y) { return (int)(y * DisplayInfo.DpiY); }
+#define Display_CentreX(width)  (DisplayInfo.X + (DisplayInfo.Width  - width)  / 2)
+#define Display_CentreY(height) (DisplayInfo.Y + (DisplayInfo.Height - height) / 2)
 
 #ifndef CC_BUILD_WEB
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
@@ -85,7 +81,7 @@ void Window_ShowDialog(const char* title, const char* msg) {
 struct GraphicsMode { int R, G, B, A, IsIndexed; };
 /* Creates a GraphicsMode compatible with the default display device */
 static void InitGraphicsMode(struct GraphicsMode* m) {
-	int bpp = Display_BitsPerPixel;
+	int bpp = DisplayInfo.Depth;
 	m->IsIndexed = bpp < 15;
 
 	m->A = 0;
@@ -135,9 +131,9 @@ void Window_Init(void) {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_GetDesktopDisplayMode(0, &mode);
 
-	Display_Bounds.Width  = mode.w;
-	Display_Bounds.Height = mode.h;
-	Display_BitsPerPixel  = SDL_BITSPERPIXEL(mode.format);
+	DisplayInfo.Width  = mode.w;
+	DisplayInfo.Height = mode.h;
+	DisplayInfo.Depth  = SDL_BITSPERPIXEL(mode.format);
 }
 
 void Window_Create(int width, int height) {
@@ -665,11 +661,11 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 *#########################################################################################################################*/
 void Window_Init(void) {
 	HDC hdc = GetDC(NULL);
-	Display_Bounds.Width  = GetSystemMetrics(SM_CXSCREEN);
-	Display_Bounds.Height = GetSystemMetrics(SM_CYSCREEN);
-	Display_BitsPerPixel  = GetDeviceCaps(hdc, BITSPIXEL);
-	Display_DpiX          = GetDeviceCaps(hdc, LOGPIXELSX) / 96.0f;
-	Display_DpiY          = GetDeviceCaps(hdc, LOGPIXELSY) / 96.0f;
+	DisplayInfo.Width  = GetSystemMetrics(SM_CXSCREEN);
+	DisplayInfo.Height = GetSystemMetrics(SM_CYSCREEN);
+	DisplayInfo.Depth  = GetDeviceCaps(hdc, BITSPIXEL);
+	DisplayInfo.DpiX   = GetDeviceCaps(hdc, LOGPIXELSX) / 96.0f;
+	DisplayInfo.DpiY   = GetDeviceCaps(hdc, LOGPIXELSY) / 96.0f;
 	ReleaseDC(NULL, hdc);
 }
 
@@ -1126,9 +1122,9 @@ void Window_Init(void) {
 	win_rootWin = RootWindow(display, screen);
 
 	/* TODO: Use Xinerama and XRandR for querying these */
-	Display_Bounds.Width  = DisplayWidth(display,  screen);
-	Display_Bounds.Height = DisplayHeight(display, screen);
-	Display_BitsPerPixel  = DefaultDepth(display,  screen);
+	DisplayInfo.Width  = DisplayWidth(display,  screen);
+	DisplayInfo.Height = DisplayHeight(display, screen);
+	DisplayInfo.Depth  = DefaultDepth(display,  screen);
 }
 
 void Window_Create(int width, int height) {
@@ -1884,11 +1880,11 @@ static void Window_CommonInit(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
 	CGRect bounds = CGDisplayBounds(display);
 
-	Display_Bounds.X = (int)bounds.origin.x;
-	Display_Bounds.Y = (int)bounds.origin.y;
-	Display_Bounds.Width  = (int)bounds.size.width;
-	Display_Bounds.Height = (int)bounds.size.height;
-	Display_BitsPerPixel  = CGDisplayBitsPerPixel(display);
+	DisplayInfo.X      = (int)bounds.origin.x;
+	DisplayInfo.Y      = (int)bounds.origin.y;
+	DisplayInfo.Width  = (int)bounds.size.width;
+	DisplayInfo.Height = (int)bounds.size.height;
+	DisplayInfo.Depth  = CGDisplayBitsPerPixel(display);
 }
 
 static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
@@ -2328,7 +2324,7 @@ void Window_Create(int width, int height) {
 	/* TODO: Use BringWindowToFront instead.. (look in the file which has RepositionWindow in it) !!!! */
 	HookEvents();
 	Window_CommonCreate();
-	Window_Handle = win_handle;
+	WindowInfo.Handle = win_handle;
 
 	conn  = _CGSDefaultConnection();
 	winId = GetNativeWindowFromWindowRef(win_handle);
@@ -2557,7 +2553,7 @@ static void RefreshWindowBounds(void) {
 	/* To work out top Y of view relative to window, it's just win.height - (view.y + view.height) */
 	viewY   = (int)win.size.height  - ((int)view.origin.y + (int)view.size.height);
 	windowX = (int)win.origin.x     + (int)view.origin.x;
-	windowY = Display_Bounds.Height - ((int)win.origin.y  + (int)win.size.height) + viewY;
+	windowY = DisplayInfo.Height - ((int)win.origin.y  + (int)win.size.height) + viewY;
 
 	WindowInfo.Width  = (int)view.size.width;
 	WindowInfo.Height = (int)view.size.height;
@@ -2749,8 +2745,8 @@ static void ProcessKeyChars(id ev) {
 
 static cc_bool GetMouseCoords(int* x, int* y) {
 	CGPoint loc = Send_CGPoint((id)objc_getClass("NSEvent"), selMouseLoc);
-	*x = (int)loc.x                           - windowX;	
-	*y = (Display_Bounds.Height - (int)loc.y) - windowY;
+	*x = (int)loc.x                        - windowX;	
+	*y = (DisplayInfo.Height - (int)loc.y) - windowY;
 	// TODO: this seems to be off by 1
 	return *x >= 0 && *y >= 0 && *x < WindowInfo.Width && *y < WindowInfo.Height;
 }
@@ -3192,12 +3188,12 @@ static void UnhookEvents(void) {
 }
 
 void Window_Init(void) {
-	Display_Bounds.Width  = EM_ASM_INT_V({ return screen.width; });
-	Display_Bounds.Height = EM_ASM_INT_V({ return screen.height; });
-	Display_BitsPerPixel  = 24;
+	DisplayInfo.Width  = EM_ASM_INT_V({ return screen.width; });
+	DisplayInfo.Height = EM_ASM_INT_V({ return screen.height; });
+	DisplayInfo.Depth  = 24;
 
-	Display_DpiX = emscripten_get_device_pixel_ratio();
-	Display_DpiY = Display_DpiX;
+	DisplayInfo.DpiX = emscripten_get_device_pixel_ratio();
+	DisplayInfo.DpiY = DisplayInfo.DpiX;
 
 	/* copy text, but only if user isn't selecting something else on the webpage */
 	EM_ASM(window.addEventListener('copy', 
@@ -3615,9 +3611,9 @@ void Window_Init(void) {
 
 	WindowInfo.SoftKeyboard = true;
 	Input_TouchMode         = true;
-	Display_BitsPerPixel = 32;
-	Display_DpiX         = JavaCallFloat(env, "getDpiX", "()F", NULL);
-	Display_DpiY         = JavaCallFloat(env, "getDpiY", "()F", NULL);
+	DisplayInfo.Depth = 32;
+	DisplayInfo.DpiX  = JavaCallFloat(env, "getDpiX", "()F", NULL);
+	DisplayInfo.DpiY  = JavaCallFloat(env, "getDpiY", "()F", NULL);
 }
 
 void Window_Create(int width, int height) {
@@ -4176,8 +4172,8 @@ static cc_result GLContext_UnsetFullscreen(void) {
 }
 
 static cc_result GLContext_SetFullscreen(void) {
-	int width  = Display_Bounds.Width;
-	int height = Display_Bounds.Height;
+	int width  = DisplayInfo.Width;
+	int height = DisplayInfo.Height;
 	int code;
 
 	Platform_LogConst("Switching to fullscreen");
@@ -4206,8 +4202,8 @@ static cc_result GLContext_SetFullscreen(void) {
 	ctx_windowWidth  = WindowInfo.Width;
 	ctx_windowHeight = WindowInfo.Height;
 
-	windowX = Display_Bounds.X; WindowInfo.Width  = Display_Bounds.Width;
-	windowY = Display_Bounds.Y; WindowInfo.Height = Display_Bounds.Height;
+	windowX = DisplayInfo.X; WindowInfo.Width  = DisplayInfo.Width;
+	windowY = DisplayInfo.Y; WindowInfo.Height = DisplayInfo.Height;
 	return 0;
 }
 

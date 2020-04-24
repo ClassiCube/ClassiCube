@@ -427,8 +427,8 @@ static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int i
 static void HotbarWidget_Reposition(void* widget) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	float scale  = Game_GetHotbarScale();
-	float scaleX = scale * Display_DpiX;
-	float scaleY = scale * Display_DpiY;
+	float scaleX = scale * DisplayInfo.DpiX;
+	float scaleY = scale * DisplayInfo.DpiY;
 	int y;
 
 	w->width  = (int)(182 * scaleX);

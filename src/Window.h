@@ -33,25 +33,30 @@
 
 /* The states the window can be in. */
 enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_FULLSCREEN };
+/* Can't use call Window/Display, because it conflicts with X11's Window/Display typedef */
 
-/* Number of bits per pixel. (red bits + green bits + blue bits + alpha bits) */
-/* NOTE: Only 24 or 32 bits per pixel are officially supported. */
-/* Support for other values of bits per pixel is platform dependent. */
-extern int Display_BitsPerPixel;
-/* Scale based on number of physical dots per inch of the display. (horizontally and vertically) */
-/* NOTE: Usually 1 for compatibility, even if the display's DPI is really higher. */
-/* GUI elements must be scaled by this to look correct. */
-extern float Display_DpiX, Display_DpiY;
-/* Position and size of this display. */
-/* NOTE: Position may be non-zero in a multi-monitor setup. Platform dependent. */
-extern Rect2D Display_Bounds;
+/* Data for the display monitor. */
+CC_VAR extern struct _DisplayData {
+	/* Number of bits per pixel. (red bits + green bits + blue bits + alpha bits) */
+	/* NOTE: Only 24 or 32 bits per pixel are officially supported. */
+	/* Support for other values of bits per pixel is platform dependent. */
+	int Depth;
+	/* Scale based on number of physical dots per inch of the display. (horizontally and vertically) */
+	/* NOTE: Usually 1 for compatibility, even if the display's DPI is really higher. */
+	/* GUI elements must be scaled by this to look correct. */
+	float DpiX, DpiY;
+	/* Position of this display. (may be non-zero in multi-monitor setup. Platform dependent) */
+	int X, Y;
+	/* Size/Dimensions of this display in pixels. */
+	int Width, Height;
+} DisplayInfo;
 
 /* Scales the given X coordinate from 96 dpi to current display dpi. */
 int Display_ScaleX(int x);
 /* Scales the given Y coordinate from 96 dpi to current display dpi. */
 int Display_ScaleY(int y);
 
-/* Data for the window. */
+/* Data for the game/launcher window. */
 CC_VAR extern struct _WinData {
 	/* Readonly platform-specific handle to the window. */
 	void* Handle;

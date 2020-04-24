@@ -391,7 +391,7 @@ static void ResolutionCommand_Execute(const String* args, int argsCount) {
 	int width, height;
 	if (argsCount < 2) {
 		Chat_Add4("&e/client: &fCurrent resolution is %i@%f2 x %i@%f2", 
-				&WindowInfo.Width, &Display_DpiX, &WindowInfo.Height, &Display_DpiY);
+				&WindowInfo.Width, &DisplayInfo.DpiX, &WindowInfo.Height, &DisplayInfo.DpiY);
 	} else if (!Convert_ParseInt(&args[0], &width) || !Convert_ParseInt(&args[1], &height)) {
 		Chat_AddRaw("&e/client: &cWidth and height must be integers.");
 	} else if (width <= 0 || height <= 0) {
@@ -399,8 +399,8 @@ static void ResolutionCommand_Execute(const String* args, int argsCount) {
 	} else {
 		Window_SetSize(width, height);
 		/* Window_Create uses these, but scales by DPI. Hence DPI unscale them here. */
-		Options_SetInt(OPT_WINDOW_WIDTH,  (int)(width  / Display_DpiX));
-		Options_SetInt(OPT_WINDOW_HEIGHT, (int)(height / Display_DpiY));
+		Options_SetInt(OPT_WINDOW_WIDTH,  (int)(width  / DisplayInfo.DpiX));
+		Options_SetInt(OPT_WINDOW_HEIGHT, (int)(height / DisplayInfo.DpiY));
 	}
 }
 

@@ -53,13 +53,13 @@ static void RunGame(void) {
 	}
 #endif
 
-	width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, Display_Bounds.Width,  0);
-	height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, Display_Bounds.Height, 0);
+	width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, DisplayInfo.Width,  0);
+	height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, DisplayInfo.Height, 0);
 
 	/* No custom resolution has been set */
 	if (width == 0 || height == 0) {
 		width = 854; height = 480;
-		if (Display_Bounds.Width < 854) width = 640;
+		if (DisplayInfo.Width < 854) width = 640;
 	}
 
 	String_InitArray(title, titleBuffer);
