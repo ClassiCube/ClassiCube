@@ -134,6 +134,8 @@ void Window_Init(void) {
 	DisplayInfo.Width  = mode.w;
 	DisplayInfo.Height = mode.h;
 	DisplayInfo.Depth  = SDL_BITSPERPIXEL(mode.format);
+	DisplayInfo.DpiX   = 1;
+	DisplayInfo.DpiY   = 1;
 }
 
 void Window_Create(int width, int height) {
@@ -1125,6 +1127,8 @@ void Window_Init(void) {
 	DisplayInfo.Width  = DisplayWidth(display,  screen);
 	DisplayInfo.Height = DisplayHeight(display, screen);
 	DisplayInfo.Depth  = DefaultDepth(display,  screen);
+	DisplayInfo.DpiX   = 1;
+	DisplayInfo.DpiY   = 1;
 }
 
 void Window_Create(int width, int height) {
@@ -1885,6 +1889,8 @@ static void Window_CommonInit(void) {
 	DisplayInfo.Width  = (int)bounds.size.width;
 	DisplayInfo.Height = (int)bounds.size.height;
 	DisplayInfo.Depth  = CGDisplayBitsPerPixel(display);
+	DisplayInfo.DpiX   = 1;
+	DisplayInfo.DpiY   = 1;
 }
 
 static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
