@@ -106,18 +106,18 @@ void RayTracer_Step(struct RayTracer* t) {
 typedef cc_bool (*IntersectTest)(struct RayTracer* t);
 
 static BlockID Picking_GetInside(int x, int y, int z) {
-	cc_bool sides;
-	int height;
+	int floorY;
 
 	if (World_ContainsXZ(x, z)) {
 		if (y >= World.Height) return BLOCK_AIR;
 		if (y >= 0) return World_GetBlock(x, y, z);
+		floorY = 0;
+	} else {
+		floorY = Env_SidesHeight;
 	}
 
 	/* bedrock on bottom or outside map */
-	sides  = Env.SidesBlock != BLOCK_AIR;
-	height = Env_SidesHeight; if (height < 1) height = 1;
-	return sides && y < height ? PICKING_BORDER : BLOCK_AIR;
+	return Env.SidesBlock != BLOCK_AIR && y < floorY ? PICKING_BORDER : BLOCK_AIR;
 }
 
 static BlockID Picking_GetOutside(int x, int y, int z, IVec3 origin) {
