@@ -33,7 +33,7 @@
 
 /* The states the window can be in. */
 enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_FULLSCREEN };
-/* Can't use call Window/Display, because it conflicts with X11's Window/Display typedef */
+/* Can't name these Window/Display, because it conflicts with X11's Window/Display typedef */
 
 /* Data for the display monitor. */
 CC_VAR extern struct _DisplayData {

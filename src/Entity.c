@@ -71,11 +71,11 @@ static PackedCol Entity_GetCol(struct Entity* e) {
 void Entity_Init(struct Entity* e) {
 	static const String model = String_FromConst("humanoid");
 	Vec3_Set(e->ModelScale, 1,1,1);
-	e->uScale   = 1.0f;
-	e->vScale   = 1.0f;
-	e->StepSize = 0.5f;
-	e->SkinNameRaw[0]    = '\0';
-	e->DisplayNameRaw[0] = '\0';
+	e->uScale     = 1.0f;
+	e->vScale     = 1.0f;
+	e->StepSize   = 0.5f;
+	e->SkinRaw[0] = '\0';
+	e->NameRaw[0] = '\0';
 	Entity_SetModel(e, &model);
 }
 
@@ -153,7 +153,7 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 	Entity_ParseScale(e, &scale);
 	Entity_UpdateModelBounds(e);
 	
-	skin = String_FromRawArray(e->SkinNameRaw);
+	skin = String_FromRawArray(e->SkinRaw);
 	if (Utils_IsUrlPrefix(&skin)) e->MobTextureId = e->TextureId;
 }
 
@@ -242,7 +242,7 @@ static void MakeNameTexture(struct Entity* e) {
 	/* Names are always drawn not using the system font */
 	bitmapped = Drawer2D_BitmappedText;
 	Drawer2D_BitmappedText = true;
-	name = String_FromRawArray(e->DisplayNameRaw);
+	name = String_FromRawArray(e->NameRaw);
 
 	Drawer2D_MakeFont(&font, 24, FONT_STYLE_NORMAL);
 	DrawTextArgs_Make(&args, &name, &font, false);
@@ -316,7 +316,7 @@ CC_NOINLINE static void DeleteNameTex(struct Entity* e) {
 
 void Entity_SetName(struct Entity* e, const String* name) {
 	DeleteNameTex(e);
-	String_CopyToRawArray(e->DisplayNameRaw, name);
+	String_CopyToRawArray(e->NameRaw, name);
 	/* name texture redraw deferred until necessary */
 }
 
@@ -329,12 +329,12 @@ static struct Entity* Entity_FirstOtherWithSameSkinAndFetchedSkin(struct Entity*
 	String skin, eSkin;
 	int i;
 
-	skin = String_FromRawArray(except->SkinNameRaw);
+	skin = String_FromRawArray(except->SkinRaw);
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i] || Entities.List[i] == except) continue;
 
 		e     = Entities.List[i];
-		eSkin = String_FromRawArray(e->SkinNameRaw);
+		eSkin = String_FromRawArray(e->SkinRaw);
 		if (e->SkinFetchState && String_Equals(&skin, &eSkin)) return e;
 	}
 	return NULL;
@@ -350,7 +350,7 @@ static void Entity_CopySkin(struct Entity* dst, struct Entity* src) {
 
 	/* Custom mob textures */
 	dst->MobTextureId = 0;
-	skin = String_FromRawArray(dst->SkinNameRaw);
+	skin = String_FromRawArray(dst->SkinRaw);
 	if (Utils_IsUrlPrefix(&skin)) dst->MobTextureId = dst->TextureId;
 }
 
@@ -368,12 +368,12 @@ static void Entity_SetSkinAll(struct Entity* source, cc_bool reset) {
 	String skin, eSkin;
 	int i;
 
-	skin = String_FromRawArray(source->SkinNameRaw);
+	skin = String_FromRawArray(source->SkinRaw);
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i]) continue;
 
 		e     = Entities.List[i];
-		eSkin = String_FromRawArray(e->SkinNameRaw);
+		eSkin = String_FromRawArray(e->SkinRaw);
 		if (!String_Equals(&skin, &eSkin)) continue;
 
 		if (reset) {
@@ -452,7 +452,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 	/* Don't check skin if don't have to */
 	if (!e->Model->usesSkin) return;
 	if (e->SkinFetchState == SKIN_FETCH_COMPLETED) return;
-	skin = String_FromRawArray(e->SkinNameRaw);
+	skin = String_FromRawArray(e->SkinRaw);
 
 	if (!e->SkinFetchState) {
 		first = Entity_FirstOtherWithSameSkinAndFetchedSkin(e);
@@ -514,7 +514,7 @@ CC_NOINLINE static void DeleteSkin(struct Entity* e) {
 
 void Entity_SetSkin(struct Entity* e, const String* skin) {
 	DeleteSkin(e);
-	String_CopyToRawArray(e->SkinNameRaw, skin);
+	String_CopyToRawArray(e->SkinRaw, skin);
 }
 
 

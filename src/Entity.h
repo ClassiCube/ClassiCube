@@ -90,8 +90,8 @@ struct Entity {
 	struct Matrix Transform;
 
 	struct AnimatedComp Anim;
-	char SkinNameRaw[STRING_SIZE];
-	char DisplayNameRaw[STRING_SIZE];
+	char SkinRaw[STRING_SIZE];
+	char NameRaw[STRING_SIZE];
 	struct Texture NameTex;
 };
 typedef cc_bool (*Entity_TouchesCondition)(BlockID block);

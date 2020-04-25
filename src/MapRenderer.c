@@ -605,7 +605,7 @@ static void MapRenderer_UpdateSortOrder(void) {
 		/* Assume the player is standing at @, then DrawXMin/XMax is calculated as this */
 		/*    X-1: DrawXMin = false, DrawXMax = true  */
 		/*    X  : DrawXMin = true,  DrawXMax = true  */
-		/*    X+1: DraWXMin = true,  DrawXMax = false */
+		/*    X+1: DrawXMin = true,  DrawXMax = false */
 
 		info->DrawXMin = dx >= 0; info->DrawXMax = dx <= 0;
 		info->DrawZMin = dz >= 0; info->DrawZMax = dz <= 0;
