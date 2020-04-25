@@ -61,6 +61,18 @@ All plugins require this boilerplate, so feel free to copy and paste it.
 
 ---
 
+### Writing plugins in other languages
+When writing plugins with C++, game headers must be surroundined with `extern "C"`, i.e.
+```C
+extern "C" {
+#include "src/Chat.h"
+#include "src/GameStructs.h"
+}
+```
+Otherwise you will get obscure `Undefined reference` errors when compiling.
+
+---
+
 ### Linux
 #### For Linux
 **Compiling**

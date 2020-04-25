@@ -124,7 +124,8 @@ if __name__ == "__main__":
     if (canv_w % 2) { canv_w = canv_w - 1; }
 
 {% if mobile_mode %}
-        canv_h = Math.min(canv_h, window.outerHeight);
+        var screen_h = window.outerHeight || window.innerHeight;
+        canv_h = Math.min(canv_h, screen_h);
 {% endif %}
         cc_canv[0].width  = canv_w * dpi;
         cc_canv[0].height = canv_h * dpi;
