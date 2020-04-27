@@ -208,8 +208,6 @@ void Gfx_Mode2D(int width, int height);
 /* NOTE: This means restoring fog/depth test, restoring matrices, etc. */
 void Gfx_Mode3D(void);
 
-/* Fills out indices array with {0,1,2} {2,3,0}, {4,5,6} {6,7,4} etc. */
-void Gfx_MakeIndices(cc_uint16* indices, int iCount);
 /* Sets appropriate alpha test/blending for given block draw type. */
 void Gfx_SetupAlphaState(cc_uint8 draw);
 /* Undoes changes to alpha test/blending state by Gfx_SetupAlphaState. */

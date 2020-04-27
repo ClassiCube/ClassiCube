@@ -64,6 +64,12 @@ struct Event_String {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
+typedef void (*Event_RawMove_Callback)(void* obj, float xDelta, float yDelta);
+struct Event_RawMove {
+	Event_RawMove_Callback Handlers[EVENT_MAX_CALLBACKS];
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
+};
+
 /* Registers a callback function for the given event. */
 /* NOTE: Trying to register a callback twice or over EVENT_MAX_CALLBACKS callbacks will terminate the game. */
 CC_API void Event_Register(struct Event_Void* handlers,   void* obj, Event_Void_Callback handler);
@@ -123,6 +129,11 @@ void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating);
 void Event_RaiseString(struct Event_String* handlers, const String* str);
 #define Event_RegisterString(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
 #define Event_UnregisterString(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
+
+/* Calls all registered callbacks for an event which has raw pointer movement arguments. */
+void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDelta);
+#define Event_RegisterRawMove(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
+#define Event_UnregisterRawMove(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
 CC_VAR extern struct _EntityEventsList {
 	struct Event_Int Added;    /* Entity is spawned in the current world */
@@ -195,7 +206,7 @@ CC_VAR extern struct _PointerEventsList {
 	struct Event_PointerMove Moved; /* Pointer position changed (Arg is delta from last position) */
 	struct Event_Int Down;          /* Left mouse or touch is pressed (Arg is index) */
 	struct Event_Int Up;            /* Left mouse or touch is released (Arg is index) */
-	struct Event_PointerMove RawMoved; /* Raw pointer position changed (Arg is delta) */
+	struct Event_RawMove RawMoved;  /* Raw pointer position changed (Arg is delta) */
 } PointerEvents;
 
 CC_VAR extern struct _NetEventsList {

@@ -112,3 +112,10 @@ void Event_RaiseString(struct Event_String* handlers, const String* str) {
 		handlers->Handlers[i](handlers->Objs[i], str);
 	}
 }
+
+void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDelta) {
+	int i;
+	for (i = 0; i < handlers->Count; i++) {
+		handlers->Handlers[i](handlers->Objs[i], xDelta, yDelta);
+	}
+}

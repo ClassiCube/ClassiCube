@@ -41,9 +41,26 @@ static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
 /*########################################################################################################################*
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
 *#########################################################################################################################*/
+/* Fills out indices array with {0,1,2} {2,3,0}, {4,5,6} {6,7,4} etc. */
+static void MakeIndices(cc_uint16* indices, int iCount) {
+	int element = 0, i;
+
+	for (i = 0; i < iCount; i += 6) {
+		indices[0] = (cc_uint16)(element + 0);
+		indices[1] = (cc_uint16)(element + 1);
+		indices[2] = (cc_uint16)(element + 2);
+
+		indices[3] = (cc_uint16)(element + 2);
+		indices[4] = (cc_uint16)(element + 3);
+		indices[5] = (cc_uint16)(element + 0);
+
+		indices += 6; element += 4;
+	}
+}
+
 static void InitDefaultResources(void) {
 	cc_uint16 indices[GFX_MAX_INDICES];
-	Gfx_MakeIndices(indices, GFX_MAX_INDICES);
+	MakeIndices(indices, GFX_MAX_INDICES);
 	Gfx_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
 
 	Gfx_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
@@ -177,22 +194,6 @@ void Gfx_Mode3D(void) {
 	Gfx_SetDepthTest(true);
 	Gfx_SetAlphaBlending(false);
 	if (gfx_hadFog) Gfx_SetFog(true);
-}
-
-void Gfx_MakeIndices(cc_uint16* indices, int iCount) {
-	int element = 0, i;
-
-	for (i = 0; i < iCount; i += 6) {
-		indices[0] = (cc_uint16)(element + 0);
-		indices[1] = (cc_uint16)(element + 1);
-		indices[2] = (cc_uint16)(element + 2);
-
-		indices[3] = (cc_uint16)(element + 2);
-		indices[4] = (cc_uint16)(element + 3);
-		indices[5] = (cc_uint16)(element + 0);
-
-		indices += 6; element += 4;
-	}
 }
 
 void Gfx_SetupAlphaState(cc_uint8 draw) {
@@ -2051,7 +2052,7 @@ static void GL_CheckSupport(void) {
 void Gfx_DrawIndexedVb_TrisT2fC4b(int list, int ignored) { glCallList(list); }
 
 static void GL_CheckSupport(void) {
-	Gfx_MakeIndices(gl_indices, GFX_MAX_INDICES);
+	MakeIndices(gl_indices, GFX_MAX_INDICES);
 }
 #endif /* CC_BUILD_GL11 */
 #endif /* !CC_BUILD_GLMODERN */

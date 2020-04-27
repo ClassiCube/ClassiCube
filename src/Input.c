@@ -116,7 +116,7 @@ void Input_UpdateTouch(long id, int x, int y) {
 				/* user is holding the finger down on the touch surface */
 				touches[i].type = TOUCH_TYPE_CAMERA;
 			}
-			Event_RaiseMove(&PointerEvents.RawMoved, i, x - Pointers[i].x, y - Pointers[i].y);
+			Event_RaiseRawMove(&PointerEvents.RawMoved, x - Pointers[i].x, y - Pointers[i].y);
 		}
 		Pointer_SetPosition(i, x, y);
 		return;

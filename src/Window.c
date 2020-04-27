@@ -56,7 +56,7 @@ static void DefaultEnableRawMouse(void) {
 static void DefaultUpdateRawMouse(void) {
 	int x, y;
 	Cursor_GetRawPos(&x, &y);
-	Event_RaiseMove(&PointerEvents.RawMoved, 0, x - cursorPrevX, y - cursorPrevY);
+	Event_RaiseRawMove(&PointerEvents.RawMoved, x - cursorPrevX, y - cursorPrevY);
 	CentreMousePosition();
 }
 
@@ -338,7 +338,7 @@ void Window_ProcessEvents(void) {
 			break;
 		case SDL_MOUSEMOTION:
 			Pointer_SetPosition(0, e.motion.x, e.motion.y);
-			if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, e.motion.xrel, e.motion.yrel);
+			if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, e.motion.xrel, e.motion.yrel);
 			break;
 		case SDL_TEXTINPUT:
 			OnTextEvent(&e); break;
@@ -596,7 +596,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			prevPosY = raw.data.mouse.lLastY;
 		} else { break; }
 
-		if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
+		if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
 	} break;
 
 	case WM_KEYDOWN:
@@ -1819,7 +1819,7 @@ static void HandleGenericEvent(XEvent* e) {
 	if (e->xcookie.evtype == XI_RawMotion && Input_RawMode) {
 		ev = (XIRawEvent*)e->xcookie.data;
 		/* Using 0.5f here makes the sensitivity about same as normal cursor movement */
-		Event_RaiseMove(&PointerEvents.RawMoved, 0, 
+		Event_RaiseRawMove(&PointerEvents.RawMoved,
 						ev->raw_values[0] * 0.5f, ev->raw_values[1] * 0.5f);
 	}
 	XFreeEventData(win_display, &e->xcookie);
@@ -2139,7 +2139,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 	if (Input_RawMode) {
 		raw.x = 0; raw.y = 0;
 		GetEventParameter(inEvent, kEventParamMouseDelta, typeHIPoint, NULL, sizeof(HIPoint), NULL, &raw);
-		Event_RaiseMove(&PointerEvents.RawMoved, 0, (int)raw.x, (int)raw.y);
+		Event_RaiseRawMove(&PointerEvents.RawMoved, raw.x, raw.y);
 	}
 	
 	if (showingDialog) return eventNotHandledErr;
@@ -2829,7 +2829,7 @@ void Window_ProcessEvents(void) {
 			if (Input_RawMode) {
 				dx = Send_CGFloat(ev, selDeltaX);
 				dy = Send_CGFloat(ev, selDeltaY);
-				Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
+				Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
 			}
 			break;
 		}
@@ -2972,7 +2972,7 @@ static EM_BOOL OnMouseMove(int type, const EmscriptenMouseEvent* ev, void* data)
 
 	RescaleXY(ev->canvasX, ev->canvasY, &x, &y);
 	Pointer_SetPosition(0, x, y);
-	if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, ev->movementX, ev->movementY);
+	if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, ev->movementX, ev->movementY);
 	return true;
 }
 
