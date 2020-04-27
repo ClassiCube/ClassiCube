@@ -14,7 +14,7 @@ struct _CameraData Camera;
 static struct RayTracer cameraClipPos;
 static Vec2 cam_rotOffset;
 static cc_bool cam_isForwardThird;
-static int cam_deltaX, cam_deltaY;
+static float cam_deltaX, cam_deltaY;
 
 static void Camera_AcquireFocus(void) {
 	Window_EnableRawMouse();
@@ -70,8 +70,8 @@ static Vec2 PerspectiveCamera_GetMouseDelta(double delta) {
 		if (newSpeedY * speedY < 0) speedY = 0;
 		else speedY = newSpeedY;
 	} else {
-		speedX = (float)cam_deltaX;
-		speedY = (float)cam_deltaY;
+		speedX = cam_deltaX;
+		speedY = cam_deltaY;
 	}
 
 	v.X = speedX * sensitivity; v.Y = speedY * sensitivity;
