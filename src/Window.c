@@ -1812,15 +1812,23 @@ static cc_bool rawMouseInited, rawMouseSupported;
 static int xiOpcode;
 
 static void HandleGenericEvent(XEvent* e) {
+	const double* values;
 	XIRawEvent* ev;
+	double dx, dy;
+
 	if (!rawMouseSupported || e->xcookie.extension != xiOpcode) return;
 	if (!XGetEventData(win_display, &e->xcookie)) return;
 
 	if (e->xcookie.evtype == XI_RawMotion && Input_RawMode) {
-		ev = (XIRawEvent*)e->xcookie.data;
+		ev     = (XIRawEvent*)e->xcookie.data;
+		values = ev->raw_values;
+
+		/* Raw motion events may not always have values for both axes */
+		dx = XIMaskIsSet(ev->valuators.mask, 0) ? *values++ : 0;
+		dy = XIMaskIsSet(ev->valuators.mask, 1) ? *values++ : 0;
+
 		/* Using 0.5f here makes the sensitivity about same as normal cursor movement */
-		Event_RaiseRawMove(&PointerEvents.RawMoved,
-						ev->raw_values[0] * 0.5f, ev->raw_values[1] * 0.5f);
+		Event_RaiseRawMove(&PointerEvents.RawMoved, dx * 0.5f, dy * 0.5f);
 	}
 	XFreeEventData(win_display, &e->xcookie);
 }
