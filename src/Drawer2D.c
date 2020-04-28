@@ -171,7 +171,7 @@ void Font_ReducePadding(struct FontDesc* desc, int scale) {
 /* Measures width of the given text when drawn with the given system font. */
 static int Font_SysTextWidth(struct DrawTextArgs* args);
 /* Draws the given text with the given system font onto the given bitmap. */
-static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, cc_bool shadow);
+static void Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, cc_bool shadow);
 
 
 /*########################################################################################################################*
@@ -377,7 +377,9 @@ cc_bool Drawer2D_IsWhiteCol(char c) { return c == '\0' || c == 'f' || c == 'F'; 
 
 /* Divides R/G/B by 4 */
 #define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
-CC_NOINLINE static BitmapCol Drawer2D_ShadowCol(BitmapCol c) {
+CC_NOINLINE static BitmapCol GetShadowCol(BitmapCol c) {
+	if (Drawer2D_BlackTextShadows) return BITMAPCOL_BLACK;
+
 	/* Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb */
 	/* Shift right 2:  00aa_aaaa|aarr_rrrr|rrgg_gggg|ggbb_bbbb */
 	/* And by 3f3f3f:  0000_0000|00rr_rrrr|00gg_gggg|00bb_bbbb */
@@ -409,20 +411,6 @@ void Drawer2D_ReducePadding_Height(int* height, int point, int scale) {
 
 	padding = (*height - point) / scale;
 	*height -= padding * 2;
-}
-
-static int Drawer2D_NextPart(int i, STRING_REF String* value, String* part, char* nextCol) {
-	int length = 0, start = i;
-	for (; i < value->length; i++) {
-		if (value->buffer[i] == '&' && Drawer2D_ValidColCodeAt(value, i + 1)) break;
-		length++;
-	}
-
-	*part = String_UNSAFE_Substring(value, start, length);
-	i += 2; /* skip over colour code */
-
-	if (i <= value->length) *nextCol = value->buffer[i - 1];
-	return i;
 }
 
 void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, BitmapCol col) {
@@ -460,17 +448,14 @@ static void DrawBitmappedTextCore(Bitmap* bmp, struct DrawTextArgs* args, int x,
 	cc_uint16 dstWidths[256];
 
 	col = Drawer2D_Cols['f'];
-	if (shadow) {
-		col = Drawer2D_BlackTextShadows ? BITMAPCOL_BLACK : Drawer2D_ShadowCol(col);
-	}
+	if (shadow) col = GetShadowCol(col);
 
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
 			col = Drawer2D_GetCol(text.buffer[i + 1]);
-			if (shadow) {
-				col = Drawer2D_BlackTextShadows ? BITMAPCOL_BLACK : Drawer2D_ShadowCol(col);
-			}
+
+			if (shadow) col = GetShadowCol(col);
 			i++; continue; /* skip over the colour code */
 		}
 
@@ -585,21 +570,8 @@ void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 	if (Drawer2D_IsEmptyText(&args->text)) return;
 	if (Drawer2D_BitmappedText) { DrawBitmappedText(bmp, args, x, y); return; }
 
-	for (i = 0; i < value.length; ) {
-		colCode = nextCol;
-		i = Drawer2D_NextPart(i, &value, &args->text, &nextCol);	
-		if (!args->text.length) continue;
-
-		col = Drawer2D_GetCol(colCode);
-		if (args->useShadow) {
-			backCol = Drawer2D_BlackTextShadows ? BITMAPCOL_BLACK : Drawer2D_ShadowCol(col);
-			Font_SysTextDraw(args, bmp, x, y, backCol, true);
-		}
-
-		partWidth = Font_SysTextDraw(args, bmp, x, y, col, false);
-		x += partWidth;
-	}
-	args->text = value;
+	if (args->useShadow) { Font_SysTextDraw(args, bmp, x, y, true); }
+	Font_SysTextDraw(args, bmp, x, y, false);
 }
 
 int Drawer2D_TextWidth(struct DrawTextArgs* args) {
@@ -1147,13 +1119,14 @@ static void DrawBlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitma
 }
 
 static FT_Vector shadow_delta = { 83, -83 };
-static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, BitmapCol col, cc_bool shadow) {
+static void Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, cc_bool shadow) {
 	struct SysFont* font  = (struct SysFont*)args->font->handle;
 	FT_BitmapGlyph* glyphs = font->glyphs;
 
 	FT_Face face = font->face;
 	String text  = args->text;	
 	int descender, height, begX = x;
+	BitmapCol col;
 	
 	/* glyph state */
 	FT_BitmapGlyph glyph;
@@ -1170,10 +1143,21 @@ static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y
 	height    = args->font->height;
 	descender = TEXT_CEIL(face->size->metrics.descender);
 
+	col = Drawer2D_Cols['f'];
+	if (shadow) col = GetShadowCol(col);
+
 	for (i = 0; i < text.length; i++) {
-		glyph = glyphs[(cc_uint8)text.buffer[i]];
+		char c = text.buffer[i];
+		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
+			col = Drawer2D_GetCol(text.buffer[i + 1]);
+
+			if (shadow) col = GetShadowCol(col);
+			i++; continue; /* skip over the colour code */
+		}
+
+		glyph = glyphs[(cc_uint8)c];
 		if (!glyph) {
-			cp  = Convert_CP437ToUnicode(text.buffer[i]);
+			cp  = Convert_CP437ToUnicode(c);
 			res = FT_Load_Char(face, cp, FT_LOAD_RENDER);
 
 			if (res) {
@@ -1183,7 +1167,7 @@ static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y
 
 			/* due to FT_LOAD_RENDER, glyph is always a bitmap one */
 			FT_Get_Glyph(face->glyph, (FT_Glyph*)&glyph); /* TODO: Check error */
-			glyphs[(cc_uint8)text.buffer[i]] = glyph;
+			glyphs[(cc_uint8)c] = glyph;
 		}
 
 		offset = (height + descender) - glyph->top;
@@ -1210,6 +1194,5 @@ static int Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y
 	}
 
 	if (shadow) FT_Set_Transform(face, NULL, NULL);
-	return x - begX;
 }
 #endif
