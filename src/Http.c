@@ -927,15 +927,13 @@ static void Http_WorkerLoop(void) {
 #endif
 
 void Http_AsyncGetSkin(const String* skinName) {
-	String url; char urlBuffer[STRING_SIZE];
+	String url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 
 	if (Utils_IsUrlPrefix(skinName)) {
 		String_Copy(&url, skinName);
 	} else {
-		String_AppendConst(&url, SKIN_SERVER);
-		String_AppendColorless(&url, skinName);
-		String_AppendConst(&url, ".png");
+		String_Format1(&url, SKIN_SERVER "%s.png", skinName);
 	}
 	Http_AsyncGetData(&url, false, skinName);
 }

@@ -513,8 +513,16 @@ CC_NOINLINE static void DeleteSkin(struct Entity* e) {
 }
 
 void Entity_SetSkin(struct Entity* e, const String* skin) {
+	String tmp; char tmpBuffer[STRING_SIZE];
 	DeleteSkin(e);
-	String_CopyToRawArray(e->SkinRaw, skin);
+
+	if (Utils_IsUrlPrefix(skin)) {
+		tmp = *skin;
+	} else {
+		String_InitArray(tmp, tmpBuffer);
+		String_AppendColorless(&tmp, skin);
+	}
+	String_CopyToRawArray(e->SkinRaw, &tmp);
 }
 
 
