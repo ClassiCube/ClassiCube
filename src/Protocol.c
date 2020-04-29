@@ -134,6 +134,15 @@ static void AddTablistEntry(EntityID id, const String* playerName, const String*
 	TabList_Set(id, &rawName, listName, groupName, groupRank);
 }
 
+static void StripCols(String* str) {
+	int i;
+	for (i = str->length - 1; i >= 0; i--) {
+		if (str->buffer[i] != '&') continue;
+		/* Remove the & and the colour code following it */
+		String_DeleteAt(str, i); String_DeleteAt(str, i);
+	}
+}
+
 static void CheckName(EntityID id, String* name, String* skin) {
 	String colorlessName; char colorlessBuffer[STRING_SIZE];
 
@@ -147,7 +156,7 @@ static void CheckName(EntityID id, String* name, String* skin) {
 
 	if (!skin->length) String_Copy(skin, name);
 	RemoveEndPlus(skin);
-	String_StripCols(skin);
+	StripCols(skin);
 }
 
 static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool interpolate);

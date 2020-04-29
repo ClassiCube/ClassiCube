@@ -27,15 +27,6 @@ String String_FromReadonly(STRING_REF const char* buffer) {
 }
 
 
-void String_StripCols(String* str) {
-	int i;
-	for (i = str->length - 1; i >= 0; i--) {
-		if (str->buffer[i] != '&') continue;
-		/* Remove the & and the colour code following it */
-		String_DeleteAt(str, i); String_DeleteAt(str, i);
-	}
-}
-
 void String_Copy(String* dst, const String* src) {
 	dst->length = 0;
 	String_AppendString(dst, src);

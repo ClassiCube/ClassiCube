@@ -723,7 +723,7 @@ void Font_Free(struct FontDesc* desc) {
 
 void SysFonts_Register(const String* path) { }
 static int Font_SysTextWidth(struct DrawTextArgs* args) { return 0; }
-static void Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, cc_bool shadow) { return 0; }
+static void Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, cc_bool shadow) { }
 #else
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"

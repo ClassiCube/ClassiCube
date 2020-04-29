@@ -49,8 +49,6 @@ CC_NOINLINE String String_FromReadonly(STRING_REF const char* buffer);
 /* Initialises a string from a compile time array. (leaving 1 byte of room for null terminator) */
 #define String_InitArray_NT(str, buffr) str.buffer = buffr; str.length = 0; str.capacity = sizeof(buffr) - 1;
 
-/* Removes all colour codes from the given string. */
-CC_API void String_StripCols(String* str);
 /* Sets length of dst to 0, then appends all characters in src. */
 CC_API void String_Copy(String* dst, const String* src);
 /* Copies up to capacity characters from src into dst. Appends \0 after if src->length is < capacity. */
