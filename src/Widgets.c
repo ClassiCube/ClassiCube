@@ -2612,22 +2612,20 @@ static void SpecialInputWidget_InitTabs(struct SpecialInputWidget* w) {
 
 #define SPECIAL_TITLE_SPACING 10
 #define SPECIAL_CONTENT_SPACING 5
-static Size2D SpecialInputWidget_MeasureTitles(struct SpecialInputWidget* w) {
+static int SpecialInputWidget_MeasureTitles(struct SpecialInputWidget* w) {
 	struct DrawTextArgs args; 
-	Size2D size = { 0, 0 };
-	int i;
+	int i, width = 0;
 
 	DrawTextArgs_MakeEmpty(&args, w->font, false);
 	for (i = 0; i < Array_Elems(w->tabs); i++) {
 		args.text = w->tabs[i].title;
 
 		w->tabs[i].titleWidth = Drawer2D_TextWidth(&args) + SPECIAL_TITLE_SPACING;
-		size.Width += w->tabs[i].titleWidth;
+		width += w->tabs[i].titleWidth;
 	}
 
 	w->titleHeight = Drawer2D_TextHeight(&args);
-	size.Height    = w->titleHeight;
-	return size;
+	return width;
 }
 
 static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, Bitmap* bmp) {
@@ -2649,10 +2647,9 @@ static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, Bitmap* 
 	}
 }
 
-static Size2D SpecialInputWidget_MeasureContent(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
+static int SpecialInputWidget_MeasureContent(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
 	struct DrawTextArgs args;
 	int textWidth, textHeight;
-	Size2D size;
 	int i, rows;
 	
 	int maxWidth = 0;
@@ -2669,10 +2666,12 @@ static Size2D SpecialInputWidget_MeasureContent(struct SpecialInputWidget* w, st
 	w->elementWidth  = maxWidth   + SPECIAL_CONTENT_SPACING;
 	w->elementHeight = textHeight + SPECIAL_CONTENT_SPACING;
 	rows = Math_CeilDiv(tab->contents.length / tab->charsPerItem, tab->itemsPerRow);
+	return w->elementWidth  * tab->itemsPerRow;
+}
 
-	size.Width  = w->elementWidth  * tab->itemsPerRow;
-	size.Height = w->elementHeight * rows;
-	return size;
+static int SpecialInputWidget_ContentHeight(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
+	int rows = Math_CeilDiv(tab->contents.length / tab->charsPerItem, tab->itemsPerRow);
+	return w->elementHeight * rows;
 }
 
 static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct SpecialInputTab* tab, Bitmap* bmp, int yOffset) {
@@ -2695,22 +2694,25 @@ static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct 
 
 static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
 	BitmapCol col = BitmapCol_Make(30, 30, 30, 200);
-	Size2D titles, content;
+	int titlesWidth, titlesHeight;
+	int contentWidth, contentHeight;
 	int width, height;
 	Bitmap bmp;
 
-	titles  = SpecialInputWidget_MeasureTitles(w);
-	content = SpecialInputWidget_MeasureContent(w, tab);	
+	titlesWidth   = SpecialInputWidget_MeasureTitles(w);
+	titlesHeight  = w->titleHeight;
+	contentWidth  = SpecialInputWidget_MeasureContent(w, tab);
+	contentHeight = SpecialInputWidget_ContentHeight(w, tab);
 
-	width  = max(titles.Width, content.Width);
-	height = titles.Height + content.Height;
+	width  = max(titlesWidth, contentWidth);
+	height = titlesHeight + contentHeight;
 	Gfx_DeleteTexture(&w->tex.ID);
 
 	Bitmap_AllocateClearedPow2(&bmp, width, height);
 	{
 		SpecialInputWidget_DrawTitles(w, &bmp);
-		Drawer2D_Clear(&bmp, col, 0, titles.Height, width, content.Height);
-		SpecialInputWidget_DrawContent(w, tab, &bmp, titles.Height);
+		Drawer2D_Clear(&bmp, col, 0, titlesHeight, width, contentHeight);
+		SpecialInputWidget_DrawContent(w, tab, &bmp, titlesHeight);
 	}
 	Drawer2D_MakeTexture(&w->tex, &bmp, width, height);
 	Mem_Free(bmp.Scan0);

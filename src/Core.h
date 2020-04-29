@@ -136,7 +136,6 @@ typedef cc_uint32 cc_result;
 typedef cc_uint64 TimeMS;
 
 typedef struct Rect2D_  { int X, Y, Width, Height; } Rect2D;
-typedef struct Size2D_  { int Width, Height; } Size2D;
 typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 
 /*#define CC_BUILD_GL11*/

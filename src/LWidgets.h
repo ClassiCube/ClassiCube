@@ -99,7 +99,6 @@ struct LLabel {
 	LWidget_Layout
 	struct FontDesc* font;
 	String text;
-	Size2D _textSize;
 	char _textBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* text);
