@@ -54,7 +54,7 @@ void LWidget_Redraw(void* widget);
 struct LButton {
 	LWidget_Layout
 	String text;
-	Size2D _textSize;
+	int _textWidth, _textHeight;
 };
 CC_NOINLINE void LButton_Init(struct LScreen* s, struct LButton* w, int width, int height, const char* text);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);

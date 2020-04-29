@@ -59,13 +59,10 @@ void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, Bitmap
 /* Draws text using the given font at the given coordinates. */
 CC_API void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y);
 /* Returns how wide the given text would be when drawn. */
-int Drawer2D_TextWidth(struct DrawTextArgs* args);
+CC_API int Drawer2D_TextWidth(struct DrawTextArgs* args);
 /* Returns how tall the given text would be when drawn. */
 /* NOTE: Height returned only depends on the font. (see Drawer2D_FontHeight). */
-int Drawer2D_TextHeight(struct DrawTextArgs* args);
-/* Returns size the given text would be when drawn. */
-/* NOTE: Height returned only depends on the font. (see Drawer2D_FontHeight). */
-CC_API Size2D Drawer2D_MeasureText(struct DrawTextArgs* args);
+CC_API int Drawer2D_TextHeight(struct DrawTextArgs* args);
 /* Similar to Drawer2D_DrawText, but trims the text with trailing ".." if wider than maxWidth. */
 void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, int maxWidth);
 /* Returns the line height for drawing any character in the font. */

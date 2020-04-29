@@ -119,8 +119,8 @@ static void LButton_Draw(void* widget) {
 	int xOffset, yOffset;
 	if (w->hidden) return;
 
-	xOffset = w->width  - w->_textSize.Width;
-	yOffset = w->height - w->_textSize.Height;
+	xOffset = w->width  - w->_textWidth;
+	yOffset = w->height - w->_textHeight;
 	DrawTextArgs_Make(&args, &w->text, &Launcher_TitleFont, true);
 
 	LButton_DrawBackground(w);
@@ -160,7 +160,8 @@ void LButton_SetConst(struct LButton* w, const char* text) {
 	struct DrawTextArgs args;
 	w->text = String_FromReadonly(text);
 	DrawTextArgs_Make(&args, &w->text, &Launcher_TitleFont, true);
-	w->_textSize = Drawer2D_MeasureText(&args);
+	w->_textWidth  = Drawer2D_TextWidth(&args);
+	w->_textHeight = Drawer2D_TextHeight(&args);
 }
 
 
@@ -255,15 +256,15 @@ static void LInput_Draw(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
 	String text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
-	Size2D size;
+	int textWidth;
 
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
 	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, false);
 
-	size = Drawer2D_MeasureText(&args);
-	w->width       = max(w->minWidth, size.Width + 20);
-	w->_textHeight = size.Height;
+	textWidth      = Drawer2D_TextWidth(&args);
+	w->width       = max(w->minWidth, textWidth + 20);
+	w->_textHeight = Drawer2D_TextHeight(&args);
 
 	LInput_DrawOuterBorder(w);
 	LInput_DrawInnerBorder(w);
@@ -459,16 +460,16 @@ void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hin
 void LInput_SetText(struct LInput* w, const String* text_) {
 	String text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
-	Size2D size;
+	int textWidth;
 
 	String_Copy(&w->text, text_);
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
 	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
 
-	size = Drawer2D_MeasureText(&args);
-	w->width       = max(w->minWidth, size.Width + 20);
-	w->_textHeight = size.Height;
+	textWidth      = Drawer2D_TextWidth(&args);
+	w->width       = max(w->minWidth, textWidth + 20);
+	w->_textHeight = Drawer2D_TextHeight(&args);
 }
 
 static CC_NOINLINE cc_bool LInput_AppendRaw(struct LInput* w, char c) {
@@ -565,12 +566,11 @@ void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* text) {
 
 void LLabel_SetText(struct LLabel* w, const String* text) {
 	struct DrawTextArgs args;
-	Size2D size;
 	String_Copy(&w->text, text);
 
 	DrawTextArgs_Make(&args, &w->text, w->font, true);
-	size = Drawer2D_MeasureText(&args);
-	w->width = size.Width; w->height = size.Height;
+	w->width  = Drawer2D_TextWidth(&args);
+	w->height = Drawer2D_TextHeight(&args);
 	LWidget_CalcPosition(w);
 }
 

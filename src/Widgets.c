@@ -2651,21 +2651,23 @@ static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, Bitmap* 
 
 static Size2D SpecialInputWidget_MeasureContent(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
 	struct DrawTextArgs args;
+	int textWidth, textHeight;
 	Size2D size;
 	int i, rows;
 	
 	int maxWidth = 0;
 	DrawTextArgs_MakeEmpty(&args, w->font, false);
 	args.text.length = tab->charsPerItem;
+	textHeight       = Drawer2D_TextHeight(&args);
 
 	for (i = 0; i < tab->contents.length; i += tab->charsPerItem) {
 		args.text.buffer = &tab->contents.buffer[i];
-		size     = Drawer2D_MeasureText(&args);
-		maxWidth = max(maxWidth, size.Width);
+		textWidth = Drawer2D_TextWidth(&args);
+		maxWidth  = max(maxWidth, textWidth);
 	}
 
-	w->elementWidth  = maxWidth    + SPECIAL_CONTENT_SPACING;
-	w->elementHeight = size.Height + SPECIAL_CONTENT_SPACING;
+	w->elementWidth  = maxWidth   + SPECIAL_CONTENT_SPACING;
+	w->elementHeight = textHeight + SPECIAL_CONTENT_SPACING;
 	rows = Math_CeilDiv(tab->contents.length / tab->charsPerItem, tab->itemsPerRow);
 
 	size.Width  = w->elementWidth  * tab->itemsPerRow;

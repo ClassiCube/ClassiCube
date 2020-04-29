@@ -594,15 +594,6 @@ int Drawer2D_FontHeight(const struct FontDesc* font, cc_bool useShadow) {
 	return height;
 }
 
-Size2D Drawer2D_MeasureText(struct DrawTextArgs* args) {
-	Size2D size;
-	size.Width  = Drawer2D_TextWidth(args);
-	size.Height = Drawer2D_TextHeight(args);
-
-	if (!size.Width) size.Height = 0;
-	return size;
-}
-
 void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, int maxWidth) {
 	char strBuffer[512];
 	struct DrawTextArgs part;
