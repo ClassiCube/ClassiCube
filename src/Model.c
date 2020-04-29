@@ -1451,7 +1451,7 @@ static struct Model* ZombieModel_GetInstance(void) {
 *---------------------------------------------------------BlockModel------------------------------------------------------*
 *#########################################################################################################################*/
 static BlockID bModel_block = BLOCK_AIR;
-static int bModel_lastTexIndex = -1, bModel_texIndex, bModel_index;
+static int bModel_index, bModel_texIndices[8];
 
 static float BlockModel_GetNameY(struct Entity* e) {
 	BlockID block = e->ModelBlock;
@@ -1488,37 +1488,19 @@ static void BlockModel_GetBounds(struct Entity* e) {
 	Vec3_Add(&e->ModelAABB.Max, &Blocks.MaxBB[block], &offset);
 }
 
-static void BlockModel_Flush(void) {
-	if (bModel_lastTexIndex != -1) {
-		Gfx_BindTexture(Atlas1D.TexIds[bModel_lastTexIndex]);
-		Models.Active->index = bModel_index;
-		Model_UpdateVB();
-	}
-
-	bModel_lastTexIndex = bModel_texIndex;
-	bModel_index = 0;
-}
-
-#define BlockModel_FlushIfNotSame if (bModel_lastTexIndex != bModel_texIndex) { BlockModel_Flush(); }
-static TextureLoc BlockModel_GetTex(Face face, VertexP3fT2fC4b** ptr) {
-	TextureLoc texLoc = Block_Tex(bModel_block, face);
-	bModel_texIndex   = Atlas1D_Index(texLoc);
-	BlockModel_FlushIfNotSame;
-
-	/* Need to reload ptr, in case was flushed */
-	*ptr = &Models.Vertices[bModel_index];
-	bModel_index += 4;
-	return texLoc;
+static TextureLoc BlockModel_GetTex(Face face) {
+	TextureLoc loc = Block_Tex(bModel_block, face);
+	bModel_texIndices[bModel_index++] = Atlas1D_Index(loc);
+	return loc;
 }
 
 static void BlockModel_SpriteZQuad(cc_bool firstPart, cc_bool mirror) {
 	VertexP3fT2fC4b* ptr, v;
-	PackedCol col;
+	PackedCol col; int tmp;
 	float xz1, xz2;
-	TextureLoc loc = Block_Tex(bModel_block, FACE_ZMAX);
-	TextureRec rec = Atlas1D_TexRec(loc, 1, &bModel_texIndex);
+	TextureLoc loc = BlockModel_GetTex(FACE_ZMAX);
+	TextureRec rec = Atlas1D_TexRec(loc, 1, &tmp);
 
-	BlockModel_FlushIfNotSame;
 	col = Models.Cols[0];
 	Block_Tint(col, bModel_block);
 
@@ -1531,24 +1513,22 @@ static void BlockModel_SpriteZQuad(cc_bool firstPart, cc_bool mirror) {
 		else {        rec.U1 = 0.5f; xz1 =  5.5f/16.0f; }
 	}
 
-	ptr   = &Models.Vertices[bModel_index];
+	ptr   = &Models.Vertices[(bModel_index - 1) << 2];
 	v.Col = col;
 
 	v.X = xz1; v.Y = 0.0f; v.Z = xz1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
 	           v.Y = 1.0f;                          v.V = rec.V1; *ptr++ = v;
 	v.X = xz2;             v.Z = xz2; v.U = rec.U1;               *ptr++ = v;
 	           v.Y = 0.0f;                          v.V = rec.V2; *ptr++ = v;
-	bModel_index += 4;
 }
 
 static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
 	VertexP3fT2fC4b* ptr, v;
-	PackedCol col;
+	PackedCol col; int tmp;
 	float x1, x2, z1, z2;
-	TextureLoc loc = Block_Tex(bModel_block, FACE_XMAX);
-	TextureRec rec = Atlas1D_TexRec(loc, 1, &bModel_texIndex);
+	TextureLoc loc = BlockModel_GetTex(FACE_XMAX);
+	TextureRec rec = Atlas1D_TexRec(loc, 1, &tmp);
 
-	BlockModel_FlushIfNotSame;
 	col = Models.Cols[0];
 	Block_Tint(col, bModel_block);
 
@@ -1561,20 +1541,19 @@ static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
 		else {        rec.U2 = 0.5f; x2 =  5.5f/16.0f; z2 = -5.5f/16.0f; }
 	}
 
-	ptr   = &Models.Vertices[bModel_index];
+	ptr   = &Models.Vertices[(bModel_index - 1) << 2];
 	v.Col = col;
 
 	v.X = x1; v.Y = 0.0f; v.Z = z1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
 	          v.Y = 1.0f;                         v.V = rec.V1; *ptr++ = v;
 	v.X = x2;             v.Z = z2; v.U = rec.U1;               *ptr++ = v;
 	          v.Y = 0.0f;                         v.V = rec.V2; *ptr++ = v;
-	bModel_index += 4;
 }
 
-static void BlockModel_DrawParts(cc_bool sprite) {
+static void BlockModel_BuildParts(cc_bool sprite) {
 	Vec3 min, max;
 	TextureLoc loc;
-	VertexP3fT2fC4b* ptr = NULL;
+	VertexP3fT2fC4b* ptr;
 
 	if (sprite) {
 		BlockModel_SpriteXQuad(false, false);
@@ -1592,42 +1571,66 @@ static void BlockModel_DrawParts(cc_bool sprite) {
 		Drawer.Tinted  = Blocks.Tinted[bModel_block];
 		Drawer.TintCol = Blocks.FogCol[bModel_block];
 
+		ptr = Models.Vertices;
 		min = Blocks.RenderMinBB[bModel_block];
 		max = Blocks.RenderMaxBB[bModel_block];
+
 		Drawer.X1 = min.X - 0.5f; Drawer.Y1 = min.Y; Drawer.Z1 = min.Z - 0.5f;
 		Drawer.X2 = max.X - 0.5f; Drawer.Y2 = max.Y; Drawer.Z2 = max.Z - 0.5f;		
 
-		loc = BlockModel_GetTex(FACE_YMIN, &ptr); Drawer_YMin(1, Models.Cols[1], loc, &ptr);
-		loc = BlockModel_GetTex(FACE_ZMIN, &ptr); Drawer_ZMin(1, Models.Cols[3], loc, &ptr);
-		loc = BlockModel_GetTex(FACE_XMAX, &ptr); Drawer_XMax(1, Models.Cols[5], loc, &ptr);
-		loc = BlockModel_GetTex(FACE_ZMAX, &ptr); Drawer_ZMax(1, Models.Cols[2], loc, &ptr);
-		loc = BlockModel_GetTex(FACE_XMIN, &ptr); Drawer_XMin(1, Models.Cols[4], loc, &ptr);
-		loc = BlockModel_GetTex(FACE_YMAX, &ptr); Drawer_YMax(1, Models.Cols[0], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_YMIN); Drawer_YMin(1, Models.Cols[1], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_ZMIN); Drawer_ZMin(1, Models.Cols[3], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_XMAX); Drawer_XMax(1, Models.Cols[5], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_ZMAX); Drawer_ZMax(1, Models.Cols[2], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_XMIN); Drawer_XMin(1, Models.Cols[4], loc, &ptr);
+		loc = BlockModel_GetTex(FACE_YMAX); Drawer_YMax(1, Models.Cols[0], loc, &ptr);
 	}
 }
 
+static void BlockModel_DrawParts(void) {
+	int lastTexIndex, i, offset = 0, count = 0;
+	Gfx_SetDynamicVbData(Models.Vb, Models.Vertices, bModel_index * 4);
+
+	lastTexIndex = bModel_texIndices[0];
+	for (i = 0; i < bModel_index; i++) {
+		if (bModel_texIndices[i] == lastTexIndex) {
+			count += 4; continue;
+		}
+
+		/* Different 1D flush texture, flush current vertices */
+		Gfx_BindTexture(Atlas1D.TexIds[lastTexIndex]);
+		Gfx_DrawVb_IndexedTris_Range(count, offset);
+		lastTexIndex = bModel_texIndices[i];
+			
+		offset += count;
+		count = 4;
+	}
+
+	/* Leftover vertices */
+	if (!count) return;
+	Gfx_BindTexture(Atlas1D.TexIds[lastTexIndex]); 
+	Gfx_DrawVb_IndexedTris_Range(count, offset);
+}
+
 static void BlockModel_Draw(struct Entity* p) {
-	PackedCol white = PACKEDCOL_WHITE;
 	cc_bool sprite;
 	int i;
 
 	bModel_block = p->ModelBlock;
+	bModel_index = 0;
 	if (Blocks.Draw[bModel_block] == DRAW_GAS) return;
 
 	if (Blocks.FullBright[bModel_block]) {
 		for (i = 0; i < FACE_COUNT; i++) {
-			Models.Cols[i] = white;
+			Models.Cols[i] = PACKEDCOL_WHITE;
 		}
 	}
-	sprite = Blocks.Draw[bModel_block] == DRAW_SPRITE;
 
-	bModel_lastTexIndex = -1;	
-	BlockModel_DrawParts(sprite);
-	if (!bModel_index) return;
+	sprite = Blocks.Draw[bModel_block] == DRAW_SPRITE;
+	BlockModel_BuildParts(sprite);
 
 	if (sprite) Gfx_SetFaceCulling(true);
-	bModel_lastTexIndex = bModel_texIndex;
-	BlockModel_Flush();
+	BlockModel_DrawParts();
 	if (sprite) Gfx_SetFaceCulling(false);
 }
 
