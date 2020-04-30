@@ -121,23 +121,33 @@ static BlockID Picking_GetInside(int x, int y, int z) {
 }
 
 static BlockID Picking_GetOutside(int x, int y, int z, IVec3 origin) {
-	cc_bool sides;
-	int height;
+	cc_bool sides = Env.SidesBlock != BLOCK_AIR;
+	if (World_ContainsXZ(x, z)) {
+		if (y >= World.Height) return BLOCK_AIR;
 
-	if (!World_ContainsXZ(x, z)) return BLOCK_AIR;
-	sides = Env.SidesBlock != BLOCK_AIR;
-	/* handling of blocks inside the map, above, and on borders */
+		if (sides && y == -1 && origin.Y > 0) return PICKING_BORDER;
+		if (sides && y ==  0 && origin.Y < 0) return PICKING_BORDER;
 
-	if (y >= World.Height) return BLOCK_AIR;
-	if (sides && y == -1 && origin.Y > 0) return PICKING_BORDER;
-	if (sides && y ==  0 && origin.Y < 0) return PICKING_BORDER;
-	height = Env_SidesHeight; if (height < 1) height = 1;
+		if (sides && y >= 0 && y < Env_SidesHeight && origin.Y < Env_SidesHeight) {
+			if (x == 0          && origin.X < 0)  return PICKING_BORDER;
+			if (z == 0          && origin.Z < 0)  return PICKING_BORDER;
+			if (x == World.MaxX && origin.X >= 0) return PICKING_BORDER;
+			if (z == World.MaxZ && origin.Z >= 0) return PICKING_BORDER;
+		}
+		if (y >= 0) return World_GetBlock(x, y, z);
 
-	if (sides && x == 0          && y >= 0 && y < height && origin.X < 0)             return PICKING_BORDER;
-	if (sides && z == 0          && y >= 0 && y < height && origin.Z < 0)             return PICKING_BORDER;
-	if (sides && x == World.MaxX && y >= 0 && y < height && origin.X >= World.Width)  return PICKING_BORDER;
-	if (sides && z == World.MaxZ && y >= 0 && y < height && origin.Z >= World.Length) return PICKING_BORDER;
-	if (y >= 0) return World_GetBlock(x, y, z);
+	} else if (Env.SidesBlock != BLOCK_AIR && y >= 0 && y < Env_SidesHeight) {
+		/*         |
+		          X|\         If # represents player and is above the map border,
+		           | \        they should be able to place blocks on other map borders
+		           *--\----   (i.e. same behaviour as when player is inside map)
+				       #  
+         */
+		if (x == -1           && origin.X >= 0) return PICKING_BORDER;
+		if (x == World.Width  && origin.X <  0) return PICKING_BORDER;
+		if (z == -1           && origin.Z >= 0) return PICKING_BORDER;
+		if (z == World.Length && origin.Z <  0) return PICKING_BORDER;
+	}
 	return BLOCK_AIR;
 }
 
