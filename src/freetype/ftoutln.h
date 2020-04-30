@@ -53,7 +53,6 @@ FT_BEGIN_HEADER
   /*    FT_Outline_Transform                                               */
   /*    FT_Outline_Embolden                                                */
   /*    FT_Outline_EmboldenXY                                              */
-  /*    FT_Outline_Reverse                                                 */
   /*    FT_Outline_Check                                                   */
   /*                                                                       */
   /*    FT_Outline_Get_CBox                                                */
@@ -383,29 +382,6 @@ FT_BEGIN_HEADER
   FT_Outline_EmboldenXY( FT_Outline*  outline,
                          FT_Pos       xstrength,
                          FT_Pos       ystrength );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Outline_Reverse                                                 */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Reverse the drawing direction of an outline.  This is used to      */
-  /*    ensure consistent fill conventions for mirrored glyphs.            */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    outline :: A pointer to the target outline descriptor.             */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    This function toggles the bit flag @FT_OUTLINE_REVERSE_FILL in     */
-  /*    the outline's `flags' field.                                       */
-  /*                                                                       */
-  /*    It shouldn't be used by a normal client application, unless it     */
-  /*    knows what it is doing.                                            */
-  /*                                                                       */
-  FT_EXPORT( void )
-  FT_Outline_Reverse( FT_Outline*  outline );
 
 
   /*************************************************************************/

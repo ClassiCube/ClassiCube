@@ -26,8 +26,8 @@
   /*                                                                       */
   /* Implementing basic computation routines.                              */
   /*                                                                       */
-  /* FT_MulDiv(), FT_MulFix(), FT_DivFix(), FT_RoundFix(), FT_CeilFix(),   */
-  /* and FT_FloorFix() are declared in freetype.h.                         */
+  /* FT_MulDiv(), FT_MulFix(), FT_DivFix(), FT_RoundFix()                  */
+  /* are declared in freetype.h.                                           */
   /*                                                                       */
   /*************************************************************************/
 
@@ -90,23 +90,6 @@
     return ( ADD_LONG( a, 0x8000L - ( a < 0 ) ) ) & ~0xFFFFL;
   }
 
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_Fixed )
-  FT_CeilFix( FT_Fixed  a )
-  {
-    return ( ADD_LONG( a, 0xFFFFL ) ) & ~0xFFFFL;
-  }
-
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_Fixed )
-  FT_FloorFix( FT_Fixed  a )
-  {
-    return a & ~0xFFFFL;
-  }
 
 #ifndef FT_MSB
 
@@ -653,34 +636,6 @@
 
 
 #endif /* !FT_LONG64 */
-
-
-  /* documentation is in ftglyph.h */
-
-  FT_EXPORT_DEF( void )
-  FT_Matrix_Multiply( const FT_Matrix*  a,
-                      FT_Matrix        *b )
-  {
-    FT_Fixed  xx, xy, yx, yy;
-
-
-    if ( !a || !b )
-      return;
-
-    xx = ADD_LONG( FT_MulFix( a->xx, b->xx ),
-                   FT_MulFix( a->xy, b->yx ) );
-    xy = ADD_LONG( FT_MulFix( a->xx, b->xy ),
-                   FT_MulFix( a->xy, b->yy ) );
-    yx = ADD_LONG( FT_MulFix( a->yx, b->xx ),
-                   FT_MulFix( a->yy, b->yx ) );
-    yy = ADD_LONG( FT_MulFix( a->yx, b->xy ),
-                   FT_MulFix( a->yy, b->yy ) );
-
-    b->xx = xx;
-    b->xy = xy;
-    b->yx = yx;
-    b->yy = yy;
-  }
 
 
   /* documentation is in ftglyph.h */

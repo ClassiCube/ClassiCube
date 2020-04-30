@@ -550,67 +550,6 @@
 
   /* documentation is in ftoutln.h */
 
-  FT_EXPORT_DEF( void )
-  FT_Outline_Reverse( FT_Outline*  outline )
-  {
-    FT_UShort  n;
-    FT_Int     first, last;
-
-
-    if ( !outline )
-      return;
-
-    first = 0;
-
-    for ( n = 0; n < outline->n_contours; n++ )
-    {
-      last  = outline->contours[n];
-
-      /* reverse point table */
-      {
-        FT_Vector*  p = outline->points + first;
-        FT_Vector*  q = outline->points + last;
-        FT_Vector   swap;
-
-
-        while ( p < q )
-        {
-          swap = *p;
-          *p   = *q;
-          *q   = swap;
-          p++;
-          q--;
-        }
-      }
-
-      /* reverse tags table */
-      {
-        char*  p = outline->tags + first;
-        char*  q = outline->tags + last;
-
-
-        while ( p < q )
-        {
-          char  swap;
-
-
-          swap = *p;
-          *p   = *q;
-          *q   = swap;
-          p++;
-          q--;
-        }
-      }
-
-      first = last + 1;
-    }
-
-    outline->flags ^= FT_OUTLINE_REVERSE_FILL;
-  }
-
-
-  /* documentation is in ftoutln.h */
-
   FT_EXPORT_DEF( FT_Error )
   FT_Outline_Render( FT_Library         library,
                      FT_Outline*        outline,

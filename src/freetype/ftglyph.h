@@ -543,31 +543,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    FT_Matrix_Multiply                                                 */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Perform the matrix operation `b = a*b'.                            */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    a :: A pointer to matrix `a'.                                      */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    b :: A pointer to matrix `b'.                                      */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    The result is undefined if either `a' or `b' is zero.              */
-  /*                                                                       */
-  /*    Since the function uses wrap-around arithmetic, results become     */
-  /*    meaningless if the arguments are very large.                       */
-  /*                                                                       */
-  FT_EXPORT( void )
-  FT_Matrix_Multiply( const FT_Matrix*  a,
-                      FT_Matrix*        b );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
   /*    FT_Matrix_Invert                                                   */
   /*                                                                       */
   /* <Description>                                                         */

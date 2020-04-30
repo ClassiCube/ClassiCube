@@ -169,12 +169,7 @@
   tt_cmap0_get_info( TT_CMap       cmap,
                      TT_CMapInfo  *cmap_info )
   {
-    FT_Byte*  p = cmap->data + 4;
-
-
-    cmap_info->format   = 0;
-    cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
-
+    cmap_info->format = 0;
     return FT_Err_Ok;
   }
 
@@ -577,12 +572,7 @@
   tt_cmap2_get_info( TT_CMap       cmap,
                      TT_CMapInfo  *cmap_info )
   {
-    FT_Byte*  p = cmap->data + 4;
-
-
-    cmap_info->format   = 2;
-    cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
-
+    cmap_info->format = 2;
     return FT_Err_Ok;
   }
 
@@ -1518,12 +1508,7 @@
   tt_cmap4_get_info( TT_CMap       cmap,
                      TT_CMapInfo  *cmap_info )
   {
-    FT_Byte*  p = cmap->data + 4;
-
-
-    cmap_info->format   = 4;
-    cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
-
+    cmap_info->format = 4;
     return FT_Err_Ok;
   }
 
@@ -1682,12 +1667,7 @@
   tt_cmap6_get_info( TT_CMap       cmap,
                      TT_CMapInfo  *cmap_info )
   {
-    FT_Byte*  p = cmap->data + 4;
-
-
-    cmap_info->format   = 6;
-    cmap_info->language = (FT_ULong)TT_PEEK_USHORT( p );
-
+    cmap_info->format = 6;
     return FT_Err_Ok;
   }
 
@@ -1970,12 +1950,7 @@
   tt_cmap8_get_info( TT_CMap       cmap,
                      TT_CMapInfo  *cmap_info )
   {
-    FT_Byte*  p = cmap->data + 8;
-
-
-    cmap_info->format   = 8;
-    cmap_info->language = (FT_ULong)TT_PEEK_ULONG( p );
-
+    cmap_info->format = 8;
     return FT_Err_Ok;
   }
 
@@ -2136,12 +2111,7 @@
   tt_cmap10_get_info( TT_CMap       cmap,
                       TT_CMapInfo  *cmap_info )
   {
-    FT_Byte*  p = cmap->data + 8;
-
-
-    cmap_info->format   = 10;
-    cmap_info->language = (FT_ULong)TT_PEEK_ULONG( p );
-
+    cmap_info->format = 10;
     return FT_Err_Ok;
   }
 
@@ -2486,12 +2456,7 @@
   tt_cmap12_get_info( TT_CMap       cmap,
                       TT_CMapInfo  *cmap_info )
   {
-    FT_Byte*  p = cmap->data + 8;
-
-
-    cmap_info->format   = 12;
-    cmap_info->language = (FT_ULong)TT_PEEK_ULONG( p );
-
+    cmap_info->format = 12;
     return FT_Err_Ok;
   }
 
@@ -2806,12 +2771,7 @@
   tt_cmap13_get_info( TT_CMap       cmap,
                       TT_CMapInfo  *cmap_info )
   {
-    FT_Byte*  p = cmap->data + 8;
-
-
-    cmap_info->format   = 13;
-    cmap_info->language = (FT_ULong)TT_PEEK_ULONG( p );
-
+    cmap_info->format = 13;
     return FT_Err_Ok;
   }
 
@@ -3114,12 +3074,7 @@
   tt_cmap14_get_info( TT_CMap       cmap,
                       TT_CMapInfo  *cmap_info )
   {
-    FT_UNUSED( cmap );
-
-    cmap_info->format   = 14;
-    /* subtable 14 does not define a language field */
-    cmap_info->language = 0xFFFFFFFFUL;
-
+    cmap_info->format = 14;
     return FT_Err_Ok;
   }
 

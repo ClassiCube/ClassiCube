@@ -727,20 +727,6 @@ FT_BEGIN_HEADER
   /*    and `encoding_id' is not `TT_MAC_ID_ROMAN' (otherwise it is set to */
   /*    FT_ENCODING_APPLE_ROMAN).                                          */
   /*                                                                       */
-  /*    If `platform_id' is @TT_PLATFORM_MACINTOSH, use the function       */
-  /*    @FT_Get_CMap_Language_ID to query the Mac language ID that may     */
-  /*    be needed to be able to distinguish Apple encoding variants.  See  */
-  /*                                                                       */
-  /*      https://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/Readme.txt */
-  /*                                                                       */
-  /*    to get an idea how to do that.  Basically, if the language ID      */
-  /*    is~0, don't use it, otherwise subtract 1 from the language ID.     */
-  /*    Then examine `encoding_id'.  If, for example, `encoding_id' is     */
-  /*    `TT_MAC_ID_ROMAN' and the language ID (minus~1) is                 */
-  /*    `TT_MAC_LANGID_GREEK', it is the Greek encoding, not Roman.        */
-  /*    `TT_MAC_ID_ARABIC' with `TT_MAC_LANGID_FARSI' means the Farsi      */
-  /*    variant the Arabic encoding.                                       */
-  /*                                                                       */
   typedef enum  FT_Encoding_
   {
     FT_ENC_TAG( FT_ENCODING_NONE, 0, 0, 0, 0 ),
@@ -3455,10 +3441,7 @@ FT_BEGIN_HEADER
   /*    FT_MulFix                                                          */
   /*    FT_DivFix                                                          */
   /*    FT_RoundFix                                                        */
-  /*    FT_CeilFix                                                         */
-  /*    FT_FloorFix                                                        */
   /*    FT_Vector_Transform                                                */
-  /*    FT_Matrix_Multiply                                                 */
   /*    FT_Matrix_Invert                                                   */
   /*                                                                       */
   /*************************************************************************/
@@ -3570,45 +3553,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   FT_EXPORT( FT_Fixed )
   FT_RoundFix( FT_Fixed  a );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_CeilFix                                                         */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Compute the smallest following integer of a 16.16 fixed number.    */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    a :: The number for which the ceiling function is to be computed.  */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    `a' rounded towards plus infinity.                                 */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    The function uses wrap-around arithmetic.                          */
-  /*                                                                       */
-  FT_EXPORT( FT_Fixed )
-  FT_CeilFix( FT_Fixed  a );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_FloorFix                                                        */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Compute the largest previous integer of a 16.16 fixed number.      */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    a :: The number for which the floor function is to be computed.    */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    `a' rounded towards minus infinity.                                */
-  /*                                                                       */
-  FT_EXPORT( FT_Fixed )
-  FT_FloorFix( FT_Fixed  a );
 
 
   /*************************************************************************/

@@ -57,7 +57,6 @@ FT_BEGIN_HEADER
   /*    FT_Load_Sfnt_Table                                                 */
   /*    FT_Sfnt_Table_Info                                                 */
   /*                                                                       */
-  /*    FT_Get_CMap_Language_ID                                            */
   /*    FT_Get_CMap_Format                                                 */
   /*                                                                       */
   /*    FT_PARAM_TAG_UNPATENTED_HINTING                                    */
@@ -784,30 +783,6 @@ FT_BEGIN_HEADER
                       FT_UInt    table_index,
                       FT_ULong  *tag,
                       FT_ULong  *length );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Get_CMap_Language_ID                                            */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Return cmap language ID as specified in the OpenType standard.     */
-  /*    Definitions of language ID values are in file @FT_TRUETYPE_IDS_H.  */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    charmap ::                                                         */
-  /*      The target charmap.                                              */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    The language ID of `charmap'.  If `charmap' doesn't belong to an   */
-  /*    SFNT face, just return~0 as the default value.                     */
-  /*                                                                       */
-  /*    For a format~14 cmap (to access Unicode IVS), the return value is  */
-  /*    0xFFFFFFFF.                                                        */
-  /*                                                                       */
-  FT_EXPORT( FT_ULong )
-  FT_Get_CMap_Language_ID( FT_CharMap  charmap );
 
 
   /*************************************************************************/

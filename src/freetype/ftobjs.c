@@ -2909,30 +2909,6 @@
 
   /* documentation is in tttables.h */
 
-  FT_EXPORT_DEF( FT_ULong )
-  FT_Get_CMap_Language_ID( FT_CharMap  charmap )
-  {
-    FT_Service_TTCMaps  service;
-    FT_Face             face;
-    TT_CMapInfo         cmap_info;
-
-
-    if ( !charmap || !charmap->face )
-      return 0;
-
-    face = charmap->face;
-    FT_FACE_FIND_SERVICE( face, service, TT_CMAP );
-    if ( !service )
-      return 0;
-    if ( service->get_cmap_info( charmap, &cmap_info ))
-      return 0;
-
-    return cmap_info.language;
-  }
-
-
-  /* documentation is in tttables.h */
-
   FT_EXPORT_DEF( FT_Long )
   FT_Get_CMap_Format( FT_CharMap  charmap )
   {

@@ -43,10 +43,6 @@ FT_BEGIN_HEADER
   /*    structure can be accessed with the @FT_Get_TT_CMap_Info function.  */
   /*                                                                       */
   /* <Fields>                                                              */
-  /*    language ::                                                        */
-  /*      The language ID used in Mac fonts.  Definitions of values are in */
-  /*      `ttnameid.h'.                                                    */
-  /*                                                                       */
   /*    format ::                                                          */
   /*      The cmap format.  OpenType 1.6 defines the formats 0 (byte       */
   /*      encoding table), 2~(high-byte mapping through table), 4~(segment */
@@ -57,7 +53,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef struct  TT_CMapInfo_
   {
-    FT_ULong  language;
     FT_Long   format;
 
   } TT_CMapInfo;
