@@ -40,11 +40,6 @@ void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec,
 	v->X = centre.X + aX - bX; v->Y = centre.Y + aY - bY; v->Z = centre.Z + aZ - bZ; v->Col = col; v->U = rec->U2; v->V = rec->V2; v++;
 }
 
-static cc_bool Particle_CanPass(BlockID block, cc_bool throughLiquids) {
-	cc_uint8 draw = Blocks.Draw[block];
-	return draw == DRAW_GAS || draw == DRAW_SPRITE || (throughLiquids && Blocks.IsLiquid[block]);
-}
-
 static cc_bool Particle_CollideHor(Vec3* nextPos, BlockID block) {
 	Vec3 horPos = Vec3_Create3((float)Math_Floor(nextPos->X), 0.0f, (float)Math_Floor(nextPos->Z));
 	Vec3 min, max;

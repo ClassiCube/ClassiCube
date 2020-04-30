@@ -562,11 +562,6 @@ static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
 }
 
 void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
-	BitmapCol col, backCol;
-	String value = args->text;
-	char colCode, nextCol = 'f';
-	int i, partWidth;
-
 	if (Drawer2D_IsEmptyText(&args->text)) return;
 	if (Drawer2D_BitmappedText) { DrawBitmappedText(bmp, args, x, y); return; }
 

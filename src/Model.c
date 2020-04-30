@@ -1592,10 +1592,8 @@ static void BlockModel_DrawParts(void) {
 	Gfx_SetDynamicVbData(Models.Vb, Models.Vertices, bModel_index * 4);
 
 	lastTexIndex = bModel_texIndices[0];
-	for (i = 0; i < bModel_index; i++) {
-		if (bModel_texIndices[i] == lastTexIndex) {
-			count += 4; continue;
-		}
+	for (i = 0; i < bModel_index; i++, count += 4) {
+		if (bModel_texIndices[i] == lastTexIndex) continue;
 
 		/* Different 1D flush texture, flush current vertices */
 		Gfx_BindTexture(Atlas1D.TexIds[lastTexIndex]);
@@ -1603,7 +1601,7 @@ static void BlockModel_DrawParts(void) {
 		lastTexIndex = bModel_texIndices[i];
 			
 		offset += count;
-		count = 4;
+		count   = 0;
 	}
 
 	/* Leftover vertices */
