@@ -252,27 +252,6 @@ CC_NOINLINE void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* w, cha
 static String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { return w->GetLine(w->getLineObj, i); }
 
 
-struct PlayerListWidget {
-	Widget_Body
-	struct FontDesc* font;
-	int namesCount, elementOffset;
-	cc_bool classic;
-	struct TextWidget title;
-	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
-	struct Texture textures[TABLIST_MAX_NAMES * 2];
-};
-/* Creates and adds initial names to this widget. */
-void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, cc_bool classic);
-/* Gets the name of the entry that contains the given coordinates. */
-void PlayerListWidget_GetNameAt(struct PlayerListWidget* w, int x, int y, String* name);
-/* Adds a new entry to this widget. */
-void PlayerListWidget_Add(struct PlayerListWidget* w, int id);
-/* Updates an existing entry in the given widget. */
-void PlayerListWidget_Update(struct PlayerListWidget* w, int id);
-/* Removes the given entry from the given widget. */
-void PlayerListWidget_Remove(struct PlayerListWidget* w, int id);
-
-
 typedef void (*SpecialInputAppendFunc)(void* userData, char c);
 struct SpecialInputTab {
 	int itemsPerRow, charsPerItem, titleWidth;

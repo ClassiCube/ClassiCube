@@ -356,6 +356,362 @@ struct Widget* HUDScreen_GetHotbar(void) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------PlayerListWidget-----------------------------------------------------*
+*#########################################################################################################################*/
+#define GROUP_NAME_ID UInt16_MaxValue
+#define LIST_COLUMN_PADDING 5
+#define LIST_BOUNDS_SIZE 10
+#define LIST_NAMES_PER_COLUMN 16
+struct PlayerListWidget {
+	Widget_Body
+		struct FontDesc* font;
+	int namesCount, elementOffset;
+	cc_bool classic;
+	struct TextWidget title;
+	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
+	struct Texture textures[TABLIST_MAX_NAMES * 2];
+};
+
+static void PlayerListWidget_DrawName(struct Texture* tex, struct PlayerListWidget* w, const String* name) {
+	String tmp; char tmpBuffer[STRING_SIZE];
+	struct DrawTextArgs args;
+
+	if (Game_PureClassic) {
+		String_InitArray(tmp, tmpBuffer);
+		String_AppendColorless(&tmp, name);
+	} else {
+		tmp = *name;
+	}
+
+	DrawTextArgs_Make(&args, &tmp, w->font, !w->classic);
+	Drawer2D_MakeTextTexture(tex, &args);
+	Drawer2D_ReducePadding_Tex(tex, w->font->size, 3);
+}
+
+/* Gets the name of the entry that contains the given coordinates. */
+static void PlayerListWidget_GetNameAt(struct PlayerListWidget* w, int x, int y, String* name) {
+	struct Texture tex;
+	String player;
+	int i;
+
+	for (i = 0; i < w->namesCount; i++) {
+		if (!w->textures[i].ID || w->ids[i] == GROUP_NAME_ID) continue;
+		tex = w->textures[i];
+		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
+
+		player = TabList_UNSAFE_GetPlayer(w->ids[i]);
+		String_AppendString(name, &player);
+		return;
+	}
+}
+
+static int PlayerListWidget_GetColumnWidth(struct PlayerListWidget* w, int column) {
+	int i   = column * LIST_NAMES_PER_COLUMN;
+	int end = min(w->namesCount, i + LIST_NAMES_PER_COLUMN);
+	int maxWidth = 0;
+
+	for (; i < end; i++) {
+		maxWidth = max(maxWidth, w->textures[i].Width);
+	}
+	return maxWidth + LIST_COLUMN_PADDING + w->elementOffset;
+}
+
+static int PlayerListWidget_GetColumnHeight(struct PlayerListWidget* w, int column) {
+	int i   = column * LIST_NAMES_PER_COLUMN;
+	int end = min(w->namesCount, i + LIST_NAMES_PER_COLUMN);
+	int height = 0;
+
+	for (; i < end; i++) {
+		height += w->textures[i].Height + 1;
+	}
+	return height;
+}
+
+static void PlayerListWidget_SetColumnPos(struct PlayerListWidget* w, int column, int x, int y) {
+	struct Texture tex;
+	int i   = column * LIST_NAMES_PER_COLUMN;
+	int end = min(w->namesCount, i + LIST_NAMES_PER_COLUMN);
+
+	for (; i < end; i++) {
+		tex = w->textures[i];
+		tex.X = x; tex.Y = y - 10;
+
+		y += tex.Height + 1;
+		/* offset player names a bit, compared to group name */
+		if (!w->classic && w->ids[i] != GROUP_NAME_ID) {
+			tex.X += w->elementOffset;
+		}
+		w->textures[i] = tex;
+	}
+}
+
+static void PlayerListWidget_Reposition(void* widget) {
+	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
+	int i, x, y, width = 0, height = 0;
+	int columns = Math_CeilDiv(w->namesCount, LIST_NAMES_PER_COLUMN);
+
+	for (i = 0; i < columns; i++) {
+		width += PlayerListWidget_GetColumnWidth(w, i);
+		y      = PlayerListWidget_GetColumnHeight(w, i);
+		height = max(height, y);
+	}
+	if (width < 480) width = 480;
+
+	w->width  = width  + LIST_BOUNDS_SIZE * 2;
+	w->height = height + LIST_BOUNDS_SIZE * 2;
+
+	y = WindowInfo.Height / 4 - w->height / 2;
+	w->yOffset = -max(0, y);
+
+	Widget_CalcPosition(w);
+	x = w->x + LIST_BOUNDS_SIZE;
+	y = w->y + LIST_BOUNDS_SIZE;
+
+	for (i = 0; i < columns; i++) {
+		PlayerListWidget_SetColumnPos(w, i, x, y);
+		x += PlayerListWidget_GetColumnWidth(w, i);
+	}
+}
+
+static void PlayerListWidget_AddName(struct PlayerListWidget* w, EntityID id, int index) {
+	String name;
+	/* insert at end of list */
+	if (index == -1) { index = w->namesCount; w->namesCount++; }
+
+	name = TabList_UNSAFE_GetList(id);
+	w->ids[index] = id;
+	PlayerListWidget_DrawName(&w->textures[index], w, &name);
+}
+
+static void PlayerListWidget_DeleteAt(struct PlayerListWidget* w, int i) {
+	Gfx_DeleteTexture(&w->textures[i].ID);
+
+	for (; i < w->namesCount - 1; i++) {
+		w->ids[i]      = w->ids[i + 1];
+		w->textures[i] = w->textures[i + 1];
+	}
+
+	w->namesCount--;
+	w->ids[w->namesCount]         = 0;
+	w->textures[w->namesCount].ID = 0;
+}
+
+static void PlayerListWidget_AddGroup(struct PlayerListWidget* w, int id, int* index) {
+	String group;
+	int i;
+	group = TabList_UNSAFE_GetGroup(id);
+
+	for (i = Array_Elems(w->ids) - 1; i > (*index); i--) {
+		w->ids[i]      = w->ids[i - 1];
+		w->textures[i] = w->textures[i - 1];
+	}
+	
+	w->ids[*index] = GROUP_NAME_ID;
+	PlayerListWidget_DrawName(&w->textures[*index], w, &group);
+
+	(*index)++;
+	w->namesCount++;
+}
+
+static int PlayerListWidget_GetGroupCount(struct PlayerListWidget* w, int id, int i) {
+	String group, curGroup;
+	int count;
+	group = TabList_UNSAFE_GetGroup(id);
+
+	for (count = 0; i < w->namesCount; i++, count++) {
+		curGroup = TabList_UNSAFE_GetGroup(w->ids[i]);
+		if (!String_CaselessEquals(&group, &curGroup)) break;
+	}
+	return count;
+}
+
+static int PlayerListWidget_PlayerCompare(int x, int y) {
+	String xName; char xNameBuffer[STRING_SIZE];
+	String yName; char yNameBuffer[STRING_SIZE];
+	cc_uint8 xRank, yRank;
+	String xNameRaw, yNameRaw;
+
+	xRank = TabList.GroupRanks[x];
+	yRank = TabList.GroupRanks[y];
+	if (xRank != yRank) return (xRank < yRank ? -1 : 1);
+	
+	String_InitArray(xName, xNameBuffer);
+	xNameRaw = TabList_UNSAFE_GetList(x);
+	String_AppendColorless(&xName, &xNameRaw);
+
+	String_InitArray(yName, yNameBuffer);
+	yNameRaw = TabList_UNSAFE_GetList(y);
+	String_AppendColorless(&yName, &yNameRaw);
+
+	return String_Compare(&xName, &yName);
+}
+
+static int PlayerListWidget_GroupCompare(int x, int y) {
+	String xGroup, yGroup;
+	/* TODO: should we use colourless comparison? ClassicalSharp sorts groups with colours */
+	xGroup = TabList_UNSAFE_GetGroup(x);
+	yGroup = TabList_UNSAFE_GetGroup(y);
+	return String_Compare(&xGroup, &yGroup);
+}
+
+static struct PlayerListWidget* list_SortObj;
+static int (*list_SortCompare)(int x, int y);
+static void PlayerListWidget_QuickSort(int left, int right) {
+	struct Texture* values = list_SortObj->textures; struct Texture value;
+	cc_uint16* keys = list_SortObj->ids; cc_uint16 key;
+
+	while (left < right) {
+		int i = left, j = right;
+		int pivot = keys[(i + j) / 2];
+
+		/* partition the list */
+		while (i <= j) {
+			while (list_SortCompare(pivot, keys[i]) > 0) i++;
+			while (list_SortCompare(pivot, keys[j]) < 0) j--;
+			QuickSort_Swap_KV_Maybe();
+		}
+		/* recurse into the smaller subset */
+		QuickSort_Recurse(PlayerListWidget_QuickSort)
+	}
+}
+
+static void PlayerListWidget_SortEntries(struct PlayerListWidget* w) {
+	int i, id, count;
+	if (!w->namesCount) return;
+
+	list_SortObj = w;
+	if (w->classic) {
+		list_SortCompare = PlayerListWidget_PlayerCompare;
+		PlayerListWidget_QuickSort(0, w->namesCount - 1);
+		return;
+	}
+
+	/* Sort the list by group */
+	/* Loop backwards, since DeleteAt() reduces NamesCount */
+	for (i = w->namesCount - 1; i >= 0; i--) {
+		if (w->ids[i] != GROUP_NAME_ID) continue;
+		PlayerListWidget_DeleteAt(w, i);
+	}
+	list_SortCompare = PlayerListWidget_GroupCompare;
+	PlayerListWidget_QuickSort(0, w->namesCount - 1);
+
+	/* Sort the entries in each group */
+	list_SortCompare = PlayerListWidget_PlayerCompare;
+	for (i = 0; i < w->namesCount; ) {
+		id = w->ids[i];
+		PlayerListWidget_AddGroup(w, id, &i);
+
+		count = PlayerListWidget_GetGroupCount(w, id, i);
+		PlayerListWidget_QuickSort(i, i + (count - 1));
+		i += count;
+	}
+}
+
+static void PlayerListWidget_SortAndReposition(struct PlayerListWidget* w) {
+	PlayerListWidget_SortEntries(w);
+	Widget_Layout(w);
+}
+
+/* Adds a new entry to this widget. */
+static void PlayerListWidget_Add(struct PlayerListWidget* w, int id) {
+	PlayerListWidget_AddName(w, id, -1);
+	PlayerListWidget_SortAndReposition(w);
+}
+
+/* Updates an existing entry in the given widget. */
+static void PlayerListWidget_Update(struct PlayerListWidget* w, int id) {
+	struct Texture tex;
+	int i;
+
+	for (i = 0; i < w->namesCount; i++) {
+		if (w->ids[i] != id) continue;
+		tex = w->textures[i];
+
+		Gfx_DeleteTexture(&tex.ID);
+		PlayerListWidget_AddName(w, id, i);
+		PlayerListWidget_SortAndReposition(w);
+		return;
+	}
+}
+
+/* Removes the given entry from the given widget. */
+static void PlayerListWidget_Remove(struct PlayerListWidget* w, int id) {
+	int i;
+	for (i = 0; i < w->namesCount; i++) {
+		if (w->ids[i] != id) continue;
+
+		PlayerListWidget_DeleteAt(w, i);
+		PlayerListWidget_SortAndReposition(w);
+		return;
+	}
+}
+
+static void PlayerListWidget_Render(void* widget, double delta) {
+	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
+	struct TextWidget* title = &w->title;
+	struct Screen* grabbed;
+	struct Texture tex;
+	int i, offset, height;
+	PackedCol topCol    = PackedCol_Make( 0,  0,  0, 180);
+	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
+
+	Gfx_SetTexturing(false);
+	offset = title->height + 10;
+	height = max(300, w->height + title->height);
+	Gfx_Draw2DGradient(w->x, w->y - offset, w->width, height, topCol, bottomCol);
+
+	Gfx_SetTexturing(true);
+	title->yOffset = w->y - offset + 5;
+	Widget_Layout(title);
+	Elem_Render(title, delta);
+	grabbed = Gui_GetInputGrab();
+
+	for (i = 0; i < w->namesCount; i++) {
+		if (!w->textures[i].ID) continue;
+		tex = w->textures[i];
+		
+		if (grabbed && w->ids[i] != GROUP_NAME_ID) {
+			if (Gui_ContainsPointers(tex.X, tex.Y, tex.Width, tex.Height)) tex.X += 4;
+		}
+		Texture_Render(&tex);
+	}
+}
+
+static void PlayerListWidget_Free(void* widget) {
+	struct PlayerListWidget* w = (struct PlayerListWidget*)widget;
+	int i;
+	for (i = 0; i < w->namesCount; i++) {
+		Gfx_DeleteTexture(&w->textures[i].ID);
+	}
+
+	Elem_TryFree(&w->title);
+}
+
+/* Creates and adds initial names to this widget. */
+static void PlayerListWidget_Create(struct PlayerListWidget* w, struct FontDesc* font, cc_bool classic) {
+	int id;
+	Widget_Reset(w);
+
+	w->horAnchor  = ANCHOR_CENTRE;
+	w->verAnchor  = ANCHOR_CENTRE;
+
+	w->namesCount = 0;
+	w->font       = font;
+	w->classic    = classic;
+	w->elementOffset = classic ? 0 : 10;
+
+	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
+		if (!TabList.NameOffsets[id]) continue;
+		PlayerListWidget_AddName(w, (EntityID)id, -1);
+	}
+
+	TextWidget_Make(&w->title,     ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
+	TextWidget_SetConst(&w->title, "Connected players:", w->font);
+	PlayerListWidget_SortAndReposition(w);
+}
+
+
+/*########################################################################################################################*
 *--------------------------------------------------------ChatScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 static struct ChatScreen {
@@ -684,7 +1040,7 @@ static void ChatScreen_ContextLost(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	Font_Free(&s->playerFont);
 	ChatScreen_FreeChatFonts(s);
-	if (s->showingList) Elem_Free(&s->playerList);
+	if (s->showingList) PlayerListWidget_Free(&s->playerList);
 
 	Elem_TryFree(&s->chat);
 	Elem_TryFree(&s->input.base);
@@ -704,7 +1060,7 @@ static void ChatScreen_RemakePlayerList(struct ChatScreen* s) {
 	cc_bool classic = Gui_ClassicTabList || !Server.SupportsExtPlayerList;
 	PlayerListWidget_Create(&s->playerList, &s->playerFont, classic);
 	s->showingList  = true;
-	Widget_Layout(&s->playerList);
+	PlayerListWidget_Reposition(&s->playerList);
 }
 
 static void ChatScreen_ContextRecreated(void* screen) {
@@ -734,7 +1090,7 @@ static void ChatScreen_Layout(void* screen) {
 
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
 	ChatScreen_ChatUpdateLayout(s);
-	if (s->showingList) Widget_Layout(&s->playerList);
+	if (s->showingList) PlayerListWidget_Reposition(&s->playerList);
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -816,7 +1172,7 @@ static int ChatScreen_KeyUp(void* screen, int key) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	if (key == KeyBinds[KEYBIND_PLAYER_LIST] && s->showingList) {
 		s->showingList = false;
-		Elem_Free(&s->playerList);
+		PlayerListWidget_Free(&s->playerList);
 		return true;
 	}
 
@@ -961,11 +1317,11 @@ static void ChatScreen_Render(void* screen, double delta) {
 
 	if (s->showingList && IsOnlyHudActive()) {
 		s->playerList.active = s->grabsInput;
-		Elem_Render(&s->playerList, delta);
+		PlayerListWidget_Render(&s->playerList, delta);
 		/* NOTE: Should usually be caught by KeyUp, but just in case. */
 		if (!KeyBind_IsPressed(KEYBIND_PLAYER_LIST)) {
 			s->showingList = false;
-			Elem_Free(&s->playerList);
+			PlayerListWidget_Free(&s->playerList);
 		}
 	}
 	Gfx_SetTexturing(false);
