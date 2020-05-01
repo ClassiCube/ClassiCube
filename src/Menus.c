@@ -2992,6 +2992,22 @@ static struct TexIdsOverlay {
 } TexIdsOverlay_Instance;
 #define TEXIDS_MAX_VERTICES (TEXTWIDGET_MAX + 4 * ATLAS1D_MAX_ATLASES)
 
+static void TexIdsOverlay_Layout(void* screen) {
+	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
+	int size;
+
+	size = WindowInfo.Height / ATLAS2D_TILES_PER_ROW;
+	size = (size / 8) * 8;
+	Math_Clamp(size, 8, 40);
+
+	s->xOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D.RowsCount,     WindowInfo.Width);
+	s->yOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, WindowInfo.Height);
+	s->tileSize = size;
+
+	s->title.yOffset = s->yOffset - 30;
+	Widget_Layout(&s->title);
+}
+
 static void TexIdsOverlay_ContextLost(void* screen) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	Screen_ContextLost(s);
@@ -3004,11 +3020,6 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	static const String prefix = String_FromConst("f");
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	struct FontDesc textFont, titleFont;
-	int size;
-
-	size = WindowInfo.Height / ATLAS2D_TILES_PER_ROW;
-	size = (size / 8) * 8;
-	Math_Clamp(size, 8, 40);
 
 	Screen_CreateVb(screen);
 	s->dynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
@@ -3016,15 +3027,11 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	Font_ReducePadding(&textFont, 4);
 	TextAtlas_Make(&s->idAtlas, &chars, &textFont, &prefix);
 	Font_Free(&textFont);
-
-	s->xOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * Atlas2D.RowsCount,     WindowInfo.Width);
-	s->yOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, WindowInfo.Height);
-	s->tileSize = size;
 	
-	s->title.yOffset = s->yOffset - 30;
 	Menu_MakeTitleFont(&titleFont);
 	TextWidget_SetConst(&s->title, "Texture ID reference sheet", &titleFont);
 	Font_Free(&titleFont);
+	TexIdsOverlay_Layout(screen); /* TODO: REMOVE THIS */
 }
 
 static void TexIdsOverlay_BuildTerrain(struct TexIdsOverlay* s, VertexP3fT2fC4b** ptr) {
@@ -3109,13 +3116,28 @@ static void TexIdsOverlay_RenderTextOverlay(struct TexIdsOverlay* s) {
 	}
 }
 
+static void TexIdsOverlay_OnAtlasChanged(void* screen) {
+	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
+	s->dirty = true;
+	/* Atlas may have 256 or 512 textures, which changes xOffset */
+	/* This can resize the position of the 'pages', so just re-layout */
+	TexIdsOverlay_Layout(screen);
+}
+
 static void TexIdsOverlay_Init(void* screen) {
 	static struct Widget* widgets[1];
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	s->widgets     = widgets;
 	s->numWidgets  = Array_Elems(widgets);
 	s->maxVertices = TEXIDS_MAX_VERTICES;
+
 	Menu_Label(s, 0, &s->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
+	Event_RegisterVoid(&TextureEvents.AtlasChanged, s, TexIdsOverlay_OnAtlasChanged);
+}
+
+static void TexIdsOverlay_Free(void* screen) {
+	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
+	Event_UnregisterVoid(&TextureEvents.AtlasChanged, s, TexIdsOverlay_OnAtlasChanged);
 }
 
 static void TexIdsOverlay_Render(void* screen, double delta) {
@@ -3151,11 +3173,11 @@ static int TexIdsOverlay_KeyDown(void* screen, int key) {
 }
 
 static const struct ScreenVTABLE TexIdsOverlay_VTABLE = {
-	TexIdsOverlay_Init,    Screen_NullUpdate, Screen_NullFunc,  
+	TexIdsOverlay_Init,    Screen_NullUpdate, TexIdsOverlay_Free,
 	TexIdsOverlay_Render,  TexIdsOverlay_BuildMesh,
 	TexIdsOverlay_KeyDown, Screen_FInput,     Screen_FKeyPress, Screen_FText,
 	Menu_PointerDown,      Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,         TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated
+	TexIdsOverlay_Layout,  TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated
 };
 void TexIdsOverlay_Show(void) {
 	struct TexIdsOverlay* s = &TexIdsOverlay_Instance;
