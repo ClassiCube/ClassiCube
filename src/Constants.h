@@ -5,7 +5,7 @@
 */
 
 #define GAME_MAX_CMDARGS 5
-#define GAME_APP_VER "1.1.4"
+#define GAME_APP_VER "1.1.5"
 #define GAME_API_VER 1
 
 #if defined CC_BUILD_WEB
