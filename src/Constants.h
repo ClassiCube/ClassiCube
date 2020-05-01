@@ -12,11 +12,11 @@
 #define GAME_APP_NAME  "ClassiCube web client"
 #define GAME_APP_TITLE "ClassiCube"
 #elif defined CC_BUILD_COCOA
-#define GAME_APP_NAME  "ClassiCube 1.1.4 alpha"
-#define GAME_APP_TITLE "ClassiCube 1.1.4 alpha"
+#define GAME_APP_NAME  "ClassiCube 1.1.5 alpha"
+#define GAME_APP_TITLE "ClassiCube 1.1.5 alpha"
 #else
-#define GAME_APP_NAME  "ClassiCube 1.1.4"
-#define GAME_APP_TITLE "ClassiCube 1.1.4"
+#define GAME_APP_NAME  "ClassiCube 1.1.5"
+#define GAME_APP_TITLE "ClassiCube 1.1.5"
 #endif
 
 /* Max number of characters strings can have. */
