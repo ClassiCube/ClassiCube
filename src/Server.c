@@ -362,11 +362,18 @@ static void MPConnection_CheckDisconnection(void) {
 	}
 }
 
+static void DisconnectInvalidOpcode(cc_uint8 opcode) {
+	static const String title_disc = String_FromConst("Disconnected");
+	String tmp; char tmpBuffer[STRING_SIZE];
+	String_InitArray(tmp, tmpBuffer);
+
+	String_Format1(&tmp, "Server sent invalid packet %b!", &opcode);
+	Game_Disconnect(&title_disc, &tmp); return;
+}
+
 static void MPConnection_Tick(struct ScheduledTask* task) {
 	static const String title_lost  = String_FromConst("&eLost connection to the server");
 	static const String reason_err  = String_FromConst("I/O error when reading packets");
-	static const String title_disc  = String_FromConst("Disconnected");
-	static const String msg_invalid = String_FromConst("Server sent invalid packet!");
 	String msg; char msgBuffer[STRING_SIZE * 2];
 
 	struct LocalPlayer* p;
@@ -417,18 +424,14 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 			continue;
 		}
 
-		if (opcode >= OPCODE_COUNT) {
-			Game_Disconnect(&title_disc, &msg_invalid); return; 
-		}
+		if (opcode >= OPCODE_COUNT) { DisconnectInvalidOpcode(opcode); return; }
 
 		if (net_readCurrent + Net_PacketSizes[opcode] > readEnd) break;
 		net_lastOpcode = opcode;
 		net_lastPacket = Game.Time;
 
 		handler = Net_Handlers[opcode];
-		if (!handler) {
-			Game_Disconnect(&title_disc, &msg_invalid); return;
-		}
+		if (!handler) { DisconnectInvalidOpcode(opcode); return; }
 
 		handler(net_readCurrent + 1);  /* skip opcode */
 		net_readCurrent += Net_PacketSizes[opcode];
