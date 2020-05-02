@@ -2985,7 +2985,8 @@ static struct TexIdsOverlay {
 	int xOffset, yOffset, tileSize, textVertices;
 	struct TextAtlas idAtlas;
 	struct TextWidget title;
-} TexIdsOverlay_Instance;
+} TexIdsOverlay;
+static struct Widget* texids_widgets[1] = { (struct Widget*)&TexIdsOverlay.title };
 
 #define TEXIDS_MAX_PER_PAGE (ATLAS2D_TILES_PER_ROW * ATLAS2D_TILES_PER_ROW)
 #define TEXIDS_TEXT_VERTICES (10 * 4 + 90 * 8 + 412 * 12) /* '0'-'9' + '10'-'99' + '100'-'511' */
@@ -3004,7 +3005,7 @@ static void TexIdsOverlay_Layout(void* screen) {
 	s->tileSize = size;
 
 	s->title.yOffset = s->yOffset - 30;
-	Widget_Layout(&s->title);
+	Screen_Layout(s);
 }
 
 static void TexIdsOverlay_ContextLost(void* screen) {
@@ -3121,13 +3122,12 @@ static void TexIdsOverlay_OnAtlasChanged(void* screen) {
 }
 
 static void TexIdsOverlay_Init(void* screen) {
-	static struct Widget* widgets[1];
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
-	s->widgets     = widgets;
-	s->numWidgets  = Array_Elems(widgets);
+	s->widgets     = texids_widgets;
+	s->numWidgets  = Array_Elems(texids_widgets);
 	s->maxVertices = TEXIDS_MAX_VERTICES;
 
-	Menu_Label(s, 0, &s->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
+	TextWidget_Make(&s->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
 	Event_RegisterVoid(&TextureEvents.AtlasChanged, s, TexIdsOverlay_OnAtlasChanged);
 }
 
@@ -3168,7 +3168,7 @@ static const struct ScreenVTABLE TexIdsOverlay_VTABLE = {
 	TexIdsOverlay_Layout,  TexIdsOverlay_ContextLost, TexIdsOverlay_ContextRecreated
 };
 void TexIdsOverlay_Show(void) {
-	struct TexIdsOverlay* s = &TexIdsOverlay_Instance;
+	struct TexIdsOverlay* s = &TexIdsOverlay;
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &TexIdsOverlay_VTABLE;
@@ -3498,7 +3498,7 @@ static void TouchMoreScreen_Init(void* screen) {
 
 static const struct ScreenVTABLE TouchMoreScreen_VTABLE = {
 	TouchMoreScreen_Init, Screen_NullUpdate, Screen_NullFunc,
-	MenuScreen_Render,     Screen_BuildMesh,
+	MenuScreen_Render2,    Screen_BuildMesh,
 	Screen_InputDown,      Screen_TInput,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,      Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
 	Screen_Layout,         Screen_ContextLost, TouchMoreScreen_ContextRecreated
