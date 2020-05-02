@@ -23,7 +23,7 @@ struct JsonContext {
 	char _tmpBuffer[STRING_SIZE];
 };
 /* Initialises state of JSON parser. */
-void Json_Init(struct JsonContext* ctx, String* str);
+void Json_Init(struct JsonContext* ctx, STRING_REF char* str, int len);
 /* Parses the JSON text, invoking callbacks when value/array/objects are read. */
 /* NOTE: DO NOT persist the value argument in OnValue. */
 void Json_Parse(struct JsonContext* ctx);
