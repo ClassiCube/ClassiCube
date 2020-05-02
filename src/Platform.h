@@ -88,7 +88,7 @@ void* DynamicLib_GetFrom(const char* filename, const char* name);
 /* Outputs more detailed information about errors with the DynamicLib functions. */
 /* NOTE: You must call this immediately after DynamicLib_Load/DynamicLib_Get,
  because on some platforms, the error is a static string instead of from error code. */
-cc_bool DynamicLib_DescribeError(cc_result res, String* dst);
+CC_API cc_bool DynamicLib_DescribeError(cc_result res, String* dst);
 
 /* Allocates a block of memory, with undetermined contents. Returns NULL on allocation failure. */
 CC_API void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize);
