@@ -878,7 +878,7 @@ static void LocalPlayer_CheckJumpVelocity(void* obj) {
 	}
 }
 
-const static struct EntityVTABLE localPlayer_VTABLE = {
+static const struct EntityVTABLE localPlayer_VTABLE = {
 	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetCol,
 	LocalPlayer_RenderModel, LocalPlayer_RenderName
 };

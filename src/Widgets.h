@@ -212,7 +212,7 @@ CC_NOINLINE void ChatInputWidget_SetFont(struct ChatInputWidget* w, struct FontD
 
 
 /* Retrieves the text for the i'th line in the group */
-typedef String (*TextGroupWidget_Get)(void* obj, int i);
+typedef String (*TextGroupWidget_Get)(int i);
 #define TEXTGROUPWIDGET_MAX_LINES 30
 #define TEXTGROUPWIDGET_LEN (STRING_SIZE + (STRING_SIZE / 2))
 
@@ -226,7 +226,6 @@ struct TextGroupWidget {
 	cc_bool underlineUrls;
 	struct Texture* textures;
 	TextGroupWidget_Get GetLine;
-	void* getLineObj;
 };
 
 CC_NOINLINE void TextGroupWidget_Create(struct TextGroupWidget* w, int lines, struct Texture* textures, TextGroupWidget_Get getLine);
@@ -249,7 +248,7 @@ CC_NOINLINE void TextGroupWidget_RedrawAll(struct TextGroupWidget* w);
 /* Typically only called in response to the ChatEvents.ColCodeChanged event. */
 CC_NOINLINE void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* w, char col);
 /* Gets the text for the i'th line. */
-static String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { return w->GetLine(w->getLineObj, i); }
+static String TextGroupWidget_UNSAFE_Get(struct TextGroupWidget* w, int i) { return w->GetLine(i); }
 
 
 typedef void (*SpecialInputAppendFunc)(void* userData, char c);

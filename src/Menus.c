@@ -71,14 +71,13 @@ static void Menu_Label(void* s, int i, struct TextWidget* label, int horAnchor, 
 static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, struct MenuInputDesc* desc, int horAnchor, int verAnchor, int x, int y) {
 	MenuInputWidget_Create(input, width, 30, text, desc);
 	Widget_SetLocation(input, horAnchor, verAnchor, x, y);
-	input->base.showCaret = true;
 	((struct Screen*)s)->widgets[i] = (struct Widget*)input;
 }
 
 static void Menu_MakeInput(struct MenuInputWidget* input, int width, const String* text, struct MenuInputDesc* desc, int horAnchor, int verAnchor, int x, int y) {
 	MenuInputWidget_Create(input, width, 30, text, desc);
 	Widget_SetLocation(input, horAnchor, verAnchor, x, y);
-	input->base.showCaret = true;
+	
 }
 
 static void Menu_Back(void* s, int i, struct ButtonWidget* btn, Widget_LeftClick onClick) {
@@ -1962,6 +1961,7 @@ static struct MenuOptionsScreen {
 	struct TextGroupWidget extHelp;
 	struct Texture extHelpTextures[5]; /* max lines is 5 */
 	struct ButtonWidget buttons[10], done;
+	const char* extHelpDesc;
 } MenuOptionsScreen_Instance;
 
 static void Menu_GetBool(String* raw, cc_bool v) {
@@ -2009,8 +2009,8 @@ static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* s) {
 	Widget_Layout(&s->extHelp);
 }
 
-static String MenuOptionsScreen_GetDesc(void* obj, int i) {
-	const char* desc = (const char*)obj;
+static String MenuOptionsScreen_GetDesc(int i) {
+	const char* desc = MenuOptionsScreen_Instance.extHelpDesc;
 	String descRaw, descLines[5];
 
 	descRaw = String_FromReadonly(desc);
@@ -2030,7 +2030,7 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 	descRaw          = String_FromReadonly(desc);
 	s->extHelp.lines = String_UNSAFE_Split(&descRaw, '\n', descLines, Array_Elems(descLines));
 	
-	s->extHelp.getLineObj = desc;
+	s->extHelpDesc = desc;
 	TextGroupWidget_RedrawAll(&s->extHelp);
 	MenuOptionsScreen_RepositionExtHelp(s);
 }

@@ -1512,6 +1512,7 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, co
 
 	w->base.convertPercents = false;
 	w->base.padding         = 3;
+	w->base.showCaret       = true;
 
 	w->base.GetMaxLines    = MenuInputWidget_GetMaxLines;
 	w->base.RemakeTexture  = MenuInputWidget_RemakeTexture;

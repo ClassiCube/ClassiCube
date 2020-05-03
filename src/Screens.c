@@ -763,7 +763,7 @@ static void ChatScreen_OnInputTextChanged(void* elem) {
 	ChatScreen_UpdateChatYOffsets(Gui_Chat);
 }
 
-static String ChatScreen_GetChat(void* obj, int i) {
+static String ChatScreen_GetChat(int i) {
 	i += ChatScreen_Instance.chatIndex;
 
 	if (i >= 0 && i < Chat_Log.count) {
@@ -772,9 +772,9 @@ static String ChatScreen_GetChat(void* obj, int i) {
 	return String_Empty;
 }
 
-static String ChatScreen_GetStatus(void* obj, int i)       { return Chat_Status[i]; }
-static String ChatScreen_GetBottomRight(void* obj, int i)  { return Chat_BottomRight[2 - i]; }
-static String ChatScreen_GetClientStatus(void* obj, int i) { return Chat_ClientStatus[i]; }
+static String ChatScreen_GetStatus(int i)       { return Chat_Status[i]; }
+static String ChatScreen_GetBottomRight(int i)  { return Chat_BottomRight[2 - i]; }
+static String ChatScreen_GetClientStatus(int i) { return Chat_ClientStatus[i]; }
 
 static void ChatScreen_FreeChatFonts(struct ChatScreen* s) {
 	Font_Free(&s->chatFont);
@@ -1489,7 +1489,7 @@ static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 
 	if (!handled || table->pendingClose) {
 		hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
-		if (!hotbar) Gui_Remove(screen);
+		if (!hotbar) Gui_Remove((struct Screen*)s);
 	}
 	return true;
 }

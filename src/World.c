@@ -99,7 +99,7 @@ void World_SetMapUpper(BlockRaw* blocks) {
 
 #ifdef EXTENDED_BLOCKS
 static CC_NOINLINE void LazyInitUpper(int i, BlockID block) {
-	BlockRaw* data = Mem_TryAllocCleared(World.Volume, 1);
+	BlockRaw* data = (BlockRaw*)Mem_TryAllocCleared(World.Volume, 1);
 	if (data) {
 		World_SetMapUpper(data);
 		World.Blocks2[i] = (BlockRaw)(block >> 8);

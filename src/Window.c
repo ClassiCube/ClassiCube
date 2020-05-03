@@ -3974,8 +3974,8 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	void* address = wglGetProcAddress(function);
-	return GLContext_IsInvalidAddress(address) ? NULL : address;
+	void* addr = (void*)wglGetProcAddress(function);
+	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
 }
 
 cc_bool GLContext_SwapBuffers(void) {
@@ -4043,8 +4043,8 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	void* address = glXGetProcAddress((const GLubyte*)function);
-	return GLContext_IsInvalidAddress(address) ? NULL : address;
+	void* addr = (void*)glXGetProcAddress((const GLubyte*)function);
+	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
 }
 
 cc_bool GLContext_SwapBuffers(void) {
@@ -4274,8 +4274,8 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	void* address = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
-	return GLContext_IsInvalidAddress(address) ? NULL : address;
+	void* addr = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
+	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
 }
 
 cc_bool GLContext_SwapBuffers(void) {
@@ -4351,8 +4351,8 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	void* address = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
-	return GLContext_IsInvalidAddress(address) ? NULL : address;
+	void* addr = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
+	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
 }
 
 cc_bool GLContext_SwapBuffers(void) {
