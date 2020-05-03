@@ -255,7 +255,6 @@ static ALenum Audio_FreeSource(struct AudioContext* ctx) {
 }
 
 void Audio_Open(AudioHandle* handle, int buffers) {
-	ALenum err;
 	int i, j;
 
 	Mutex_Lock(&audio_lock);

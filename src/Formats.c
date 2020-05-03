@@ -54,7 +54,6 @@ IMapImporter Map_FindImporter(const String* path) {
 }
 
 void Map_LoadFrom(const String* path) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
 	IMapImporter importer;
 	struct Stream stream;
 	cc_result res;

@@ -363,12 +363,12 @@ static void MPConnection_CheckDisconnection(void) {
 }
 
 static void DisconnectInvalidOpcode(cc_uint8 opcode) {
-	static const String title_disc = String_FromConst("Disconnected");
+	static const String title = String_FromConst("Disconnected");
 	String tmp; char tmpBuffer[STRING_SIZE];
 	String_InitArray(tmp, tmpBuffer);
 
 	String_Format1(&tmp, "Server sent invalid packet %b!", &opcode);
-	Game_Disconnect(&title_disc, &tmp); return;
+	Game_Disconnect(&title, &tmp); return;
 }
 
 static void MPConnection_Tick(struct ScheduledTask* task) {

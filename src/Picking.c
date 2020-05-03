@@ -217,7 +217,7 @@ static cc_bool ClipBlock(struct RayTracer* t) {
 	return true;
 }
 
-const static Vec3 picking_adjust = { 0.1f, 0.1f, 0.1f };
+static const Vec3 picking_adjust = { 0.1f, 0.1f, 0.1f };
 static cc_bool ClipCamera(struct RayTracer* t) {
 	Vec3 intersect;
 	float t0, t1;

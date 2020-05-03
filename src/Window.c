@@ -997,7 +997,7 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 	/*  tilde - "Unknown key press: (8000060, 800007E) */
 	/*  quote - "Unknown key press: (8000027, 8000022) */
 	/* Note if 8000 is stripped, you get '0060' (XK_grave) and 0027 (XK_apostrophe) */
-	/*   ChromeOS seems to also mask to 0xFFFF, so I also do so here 
+	/*   ChromeOS seems to also mask to 0xFFFF, so I also do so here */
 	/* https://chromium.googlesource.com/chromium/src/+/lkgr/ui/events/keycodes/keyboard_code_conversion_x.cc */
 	key &= 0xFFFF;
 

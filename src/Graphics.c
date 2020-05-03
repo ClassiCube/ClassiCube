@@ -80,7 +80,7 @@ static void CommonInit(void) {
 
 static void LimitFPS(void) {
 	/* Can't use Thread_Sleep on the web. (spinwaits instead of sleeping) */
-	/* However this is not a problem, because GLContext_SetVsync
+	/* However this is not a problem, because GLContext_SetVsync */
 	/* gets the browser to automatically handle the timing instead. */
 #ifndef CC_BUILD_WEB
 	cc_uint64 frameEnd = Stopwatch_Measure();

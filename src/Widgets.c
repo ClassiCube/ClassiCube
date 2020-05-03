@@ -2650,9 +2650,8 @@ static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, Bitmap* 
 static int SpecialInputWidget_MeasureContent(struct SpecialInputWidget* w, struct SpecialInputTab* tab) {
 	struct DrawTextArgs args;
 	int textWidth, textHeight;
-	int i, rows;
-	
-	int maxWidth = 0;
+	int i, maxWidth = 0;
+
 	DrawTextArgs_MakeEmpty(&args, w->font, false);
 	args.text.length = tab->charsPerItem;
 	textHeight       = Drawer2D_TextHeight(&args);
@@ -2665,7 +2664,6 @@ static int SpecialInputWidget_MeasureContent(struct SpecialInputWidget* w, struc
 
 	w->elementWidth  = maxWidth   + SPECIAL_CONTENT_SPACING;
 	w->elementHeight = textHeight + SPECIAL_CONTENT_SPACING;
-	rows = Math_CeilDiv(tab->contents.length / tab->charsPerItem, tab->itemsPerRow);
 	return w->elementWidth  * tab->itemsPerRow;
 }
 
