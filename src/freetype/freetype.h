@@ -192,9 +192,7 @@ FT_BEGIN_HEADER
   /*    FT_Set_Transform                                                   */
   /*    FT_Load_Glyph                                                      */
   /*    FT_Get_Char_Index                                                  */
-  /*    FT_Get_First_Char                                                  */
   /*    FT_Get_Next_Char                                                   */
-  /*    FT_Get_Name_Index                                                  */
   /*    FT_Load_Char                                                       */
   /*                                                                       */
   /*    FT_OPEN_MEMORY                                                     */
@@ -234,10 +232,8 @@ FT_BEGIN_HEADER
   /*    FT_CharMapRec                                                      */
   /*    FT_Select_Charmap                                                  */
   /*    FT_Set_Charmap                                                     */
-  /*    FT_Get_Charmap_Index                                               */
   /*                                                                       */
   /*    FT_Get_FSType_Flags                                                */
-  /*    FT_Get_SubGlyph_Info                                               */
   /*                                                                       */
   /*    FT_Face_Internal                                                   */
   /*    FT_Size_Internal                                                   */
@@ -1593,9 +1589,6 @@ FT_BEGIN_HEADER
   /* <Note>                                                                */
   /*    The subglyph implementation is not part of the high-level API,     */
   /*    hence the forward structure declaration.                           */
-  /*                                                                       */
-  /*    You can however retrieve subglyph information with                 */
-  /*    @FT_Get_SubGlyph_Info.                                             */
   /*                                                                       */
   typedef struct FT_SubGlyphRec_*  FT_SubGlyph;
 
@@ -3146,27 +3139,6 @@ FT_BEGIN_HEADER
                   FT_CharMap  charmap );
 
 
-  /*************************************************************************
-   *
-   * @function:
-   *   FT_Get_Charmap_Index
-   *
-   * @description:
-   *   Retrieve index of a given charmap.
-   *
-   * @input:
-   *   charmap ::
-   *     A handle to a charmap.
-   *
-   * @return:
-   *   The index into the array of character maps within the face to which
-   *   `charmap' belongs.  If an error occurs, -1 is returned.
-   *
-   */
-  FT_EXPORT( FT_Int )
-  FT_Get_Charmap_Index( FT_CharMap  charmap );
-
-
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
@@ -3205,60 +3177,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    FT_Get_First_Char                                                  */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Return the first character code in the current charmap of a given  */
-  /*    face, together with its corresponding glyph index.                 */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    face    :: A handle to the source face object.                     */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    agindex :: Glyph index of first character code.  0~if charmap is   */
-  /*               empty.                                                  */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    The charmap's first character code.                                */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    You should use this function together with @FT_Get_Next_Char to    */
-  /*    parse all character codes available in a given charmap.  The code  */
-  /*    should look like this:                                             */
-  /*                                                                       */
-  /*    {                                                                  */
-  /*      FT_ULong  charcode;                                              */
-  /*      FT_UInt   gindex;                                                */
-  /*                                                                       */
-  /*                                                                       */
-  /*      charcode = FT_Get_First_Char( face, &gindex );                   */
-  /*      while ( gindex != 0 )                                            */
-  /*      {                                                                */
-  /*        ... do something with (charcode,gindex) pair ...               */
-  /*                                                                       */
-  /*        charcode = FT_Get_Next_Char( face, charcode, &gindex );        */
-  /*      }                                                                */
-  /*    }                                                                  */
-  /*                                                                       */
-  /*    Be aware that character codes can have values up to 0xFFFFFFFF;    */
-  /*    this might happen for non-Unicode or malformed cmaps.  However,    */
-  /*    even with regular Unicode encoding, so-called `last resort fonts'  */
-  /*    (using SFNT cmap format 13, see function @FT_Get_CMap_Format)      */
-  /*    normally have entries for all Unicode characters up to 0x1FFFFF,   */
-  /*    which can cause *a lot* of iterations.                             */
-  /*                                                                       */
-  /*    Note that `*agindex' is set to~0 if the charmap is empty.  The     */
-  /*    result itself can be~0 in two cases: if the charmap is empty or    */
-  /*    if the value~0 is the first valid character code.                  */
-  /*                                                                       */
-  FT_EXPORT( FT_ULong )
-  FT_Get_First_Char( FT_Face   face,
-                     FT_UInt  *agindex );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
   /*    FT_Get_Next_Char                                                   */
   /*                                                                       */
   /* <Description>                                                         */
@@ -3279,10 +3197,6 @@ FT_BEGIN_HEADER
   /*    The charmap's next character code.                                 */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    You should use this function with @FT_Get_First_Char to walk       */
-  /*    over all character codes available in a given charmap.  See the    */
-  /*    note for that function for a simple code example.                  */
-  /*                                                                       */
   /*    Note that `*agindex' is set to~0 when there are no more codes in   */
   /*    the charmap.                                                       */
   /*                                                                       */
@@ -3366,59 +3280,6 @@ FT_BEGIN_HEADER
 #define FT_SUBGLYPH_FLAG_XY_SCALE             0x40
 #define FT_SUBGLYPH_FLAG_2X2                  0x80
 #define FT_SUBGLYPH_FLAG_USE_MY_METRICS      0x200
-
-
-  /*************************************************************************
-   *
-   * @func:
-   *   FT_Get_SubGlyph_Info
-   *
-   * @description:
-   *   Retrieve a description of a given subglyph.  Only use it if
-   *   `glyph->format' is @FT_GLYPH_FORMAT_COMPOSITE; an error is
-   *   returned otherwise.
-   *
-   * @input:
-   *   glyph ::
-   *     The source glyph slot.
-   *
-   *   sub_index ::
-   *     The index of the subglyph.  Must be less than
-   *     `glyph->num_subglyphs'.
-   *
-   * @output:
-   *   p_index ::
-   *     The glyph index of the subglyph.
-   *
-   *   p_flags ::
-   *     The subglyph flags, see @FT_SUBGLYPH_FLAG_XXX.
-   *
-   *   p_arg1 ::
-   *     The subglyph's first argument (if any).
-   *
-   *   p_arg2 ::
-   *     The subglyph's second argument (if any).
-   *
-   *   p_transform ::
-   *     The subglyph transformation (if any).
-   *
-   * @return:
-   *   FreeType error code.  0~means success.
-   *
-   * @note:
-   *   The values of `*p_arg1', `*p_arg2', and `*p_transform' must be
-   *   interpreted depending on the flags returned in `*p_flags'.  See the
-   *   OpenType specification for details.
-   *
-   */
-  FT_EXPORT( FT_Error )
-  FT_Get_SubGlyph_Info( FT_GlyphSlot  glyph,
-                        FT_UInt       sub_index,
-                        FT_Int       *p_index,
-                        FT_UInt      *p_flags,
-                        FT_Int       *p_arg1,
-                        FT_Int       *p_arg2,
-                        FT_Matrix    *p_transform );
 
 
   /*************************************************************************/

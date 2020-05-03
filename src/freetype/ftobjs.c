@@ -2530,27 +2530,6 @@
   }
 
 
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_Int )
-  FT_Get_Charmap_Index( FT_CharMap  charmap )
-  {
-    FT_Int  i;
-
-
-    if ( !charmap || !charmap->face )
-      return -1;
-
-    for ( i = 0; i < charmap->face->num_charmaps; i++ )
-      if ( charmap->face->charmaps[i] == charmap )
-        break;
-
-    FT_ASSERT( i < charmap->face->num_charmaps );
-
-    return i;
-  }
-
-
   static void
   ft_cmap_done_internal( FT_CMap  cmap )
   {
@@ -2688,31 +2667,6 @@
       if ( result >= (FT_UInt)face->num_glyphs )
         result = 0;
     }
-
-    return result;
-  }
-
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_ULong )
-  FT_Get_First_Char( FT_Face   face,
-                     FT_UInt  *agindex )
-  {
-    FT_ULong  result = 0;
-    FT_UInt   gindex = 0;
-
-
-    /* only do something if we have a charmap, and we have glyphs at all */
-    if ( face && face->charmap && face->num_glyphs )
-    {
-      gindex = FT_Get_Char_Index( face, 0 );
-      if ( gindex == 0 )
-        result = FT_Get_Next_Char( face, 0, &gindex );
-    }
-
-    if ( agindex )
-      *agindex = gindex;
 
     return result;
   }
@@ -3652,41 +3606,6 @@
          hook_index <
            ( sizeof ( library->debug_hooks ) / sizeof ( void* ) ) )
       library->debug_hooks[hook_index] = debug_hook;
-  }
-
-
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_Get_SubGlyph_Info( FT_GlyphSlot  glyph,
-                        FT_UInt       sub_index,
-                        FT_Int       *p_index,
-                        FT_UInt      *p_flags,
-                        FT_Int       *p_arg1,
-                        FT_Int       *p_arg2,
-                        FT_Matrix    *p_transform )
-  {
-    FT_Error  error = FT_ERR( Invalid_Argument );
-
-
-    if ( glyph                                      &&
-         glyph->subglyphs                           &&
-         glyph->format == FT_GLYPH_FORMAT_COMPOSITE &&
-         sub_index < glyph->num_subglyphs           )
-    {
-      FT_SubGlyph  subg = glyph->subglyphs + sub_index;
-
-
-      *p_index     = subg->index;
-      *p_flags     = subg->flags;
-      *p_arg1      = subg->arg1;
-      *p_arg2      = subg->arg2;
-      *p_transform = subg->transform;
-
-      error = FT_Err_Ok;
-    }
-
-    return error;
   }
 
 

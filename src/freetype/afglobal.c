@@ -109,22 +109,6 @@
   };
 
 
-#ifdef FT_DEBUG_LEVEL_TRACE
-
-#undef  STYLE
-#define STYLE( s, S, d, ws, sc, ss, c )  #s,
-
-  FT_LOCAL_ARRAY_DEF( char* )
-  af_style_names[] =
-  {
-
-#include "afstyles.h"
-
-  };
-
-#endif /* FT_DEBUG_LEVEL_TRACE */
-
-
   /* Compute the style index of each glyph within a given face. */
 
   static FT_Error
@@ -284,45 +268,6 @@
       }
     }
 
-#ifdef FT_DEBUG_LEVEL_TRACE
-
-    FT_TRACE4(( "\n"
-                "style coverage\n"
-                "==============\n"
-                "\n" ));
-
-    for ( ss = 0; af_style_classes[ss]; ss++ )
-    {
-      AF_StyleClass  style_class = af_style_classes[ss];
-      FT_UInt        count       = 0;
-      FT_Long        idx;
-
-
-      FT_TRACE4(( "%s:\n", af_style_names[style_class->style] ));
-
-      for ( idx = 0; idx < globals->glyph_count; idx++ )
-      {
-        if ( ( gstyles[idx] & AF_STYLE_MASK ) == style_class->style )
-        {
-          if ( !( count % 10 ) )
-            FT_TRACE4(( " " ));
-
-          FT_TRACE4(( " %d", idx ));
-          count++;
-
-          if ( !( count % 10 ) )
-            FT_TRACE4(( "\n" ));
-        }
-      }
-
-      if ( !count )
-        FT_TRACE4(( "  (none)\n" ));
-      if ( count % 10 )
-        FT_TRACE4(( "\n" ));
-    }
-
-#endif /* FT_DEBUG_LEVEL_TRACE */
-
     FT_Set_Charmap( face, old_charmap );
     return error;
   }
@@ -358,11 +303,6 @@
     globals->standard_vertical_width   = 0;
     globals->standard_horizontal_width = 0;
     globals->scale_down_factor         = 0;
-
-#ifdef FT_CONFIG_OPTION_USE_HARFBUZZ
-    globals->hb_font = hb_ft_font_create( face, NULL );
-    globals->hb_buf  = hb_buffer_create();
-#endif
 
     error = af_face_globals_compute_style_coverage( globals );
     if ( error )
@@ -404,11 +344,6 @@
           FT_FREE( globals->metrics[nn] );
         }
       }
-
-#ifdef FT_CONFIG_OPTION_USE_HARFBUZZ
-      hb_font_destroy( globals->hb_font );
-      hb_buffer_destroy( globals->hb_buf );
-#endif
 
       /* no need to free `globals->glyph_styles'; */
       /* it is part of the `globals' array        */

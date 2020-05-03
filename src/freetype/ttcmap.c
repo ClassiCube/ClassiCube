@@ -2862,50 +2862,7 @@
     TT_CMapRec  cmap;
     FT_ULong    num_selectors;
 
-    /* This array is used to store the results of various
-     * cmap 14 query functions.  The data is overwritten
-     * on each call to these functions.
-     */
-    FT_UInt32   max_results;
-    FT_UInt32*  results;
-    FT_Memory   memory;
-
   } TT_CMap14Rec, *TT_CMap14;
-
-
-  FT_CALLBACK_DEF( void )
-  tt_cmap14_done( TT_CMap14  cmap )
-  {
-    FT_Memory  memory = cmap->memory;
-
-
-    cmap->max_results = 0;
-    if ( memory && cmap->results )
-      FT_FREE( cmap->results );
-  }
-
-
-  static FT_Error
-  tt_cmap14_ensure( TT_CMap14  cmap,
-                    FT_UInt32  num_results,
-                    FT_Memory  memory )
-  {
-    FT_UInt32  old_max = cmap->max_results;
-    FT_Error   error   = FT_Err_Ok;
-
-
-    if ( num_results > cmap->max_results )
-    {
-       cmap->memory = memory;
-
-       if ( FT_QRENEW_ARRAY( cmap->results, old_max, num_results ) )
-         return error;
-
-       cmap->max_results = num_results;
-    }
-
-    return error;
-  }
 
 
   FT_CALLBACK_DEF( FT_Error )
@@ -2916,9 +2873,6 @@
 
     table               += 6;
     cmap->num_selectors  = FT_PEEK_ULONG( table );
-    cmap->max_results    = 0;
-    cmap->results        = NULL;
-
     return FT_Err_Ok;
   }
 
@@ -3085,7 +3039,7 @@
       sizeof ( TT_CMap14Rec ),
 
       (FT_CMap_InitFunc)     tt_cmap14_init,        /* init       */
-      (FT_CMap_DoneFunc)     tt_cmap14_done,        /* done       */
+      (FT_CMap_DoneFunc)     NULL,                  /* done       */
       (FT_CMap_CharIndexFunc)tt_cmap14_char_index,  /* char_index */
       (FT_CMap_CharNextFunc) tt_cmap14_char_next,   /* char_next  */
 

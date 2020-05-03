@@ -3091,7 +3091,6 @@ static void TexIdsOverlay_BuildMesh(void* screen) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
 	VertexP3fT2fC4b* data;
 	VertexP3fT2fC4b** ptr;
-	int offset = 0;
 
 	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(s->vb, VERTEX_FORMAT_P3FT2FC4B, s->maxVertices);
 	ptr  = &data;
