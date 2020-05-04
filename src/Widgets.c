@@ -2434,3 +2434,101 @@ void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* fo
 	w->target    = target;
 	SpecialInputWidget_InitTabs(w);
 }
+
+#ifdef CC_BUILD_TOUCH
+/*########################################################################################################################*
+*-------------------------------------------------------DPadWidget--------------------------------------------------------*
+*#########################################################################################################################*/
+static const struct DPadLocation {
+	cc_uint8 x, y, bind;
+} dpad_locs[4] = {
+	{ 1, 0, KEYBIND_FORWARD }, { 0, 1, KEYBIND_LEFT }, 
+	{ 2, 1, KEYBIND_RIGHT },   { 1, 2, KEYBIND_BACK }
+};
+
+static void DPadWidget_Free(void* widget) {
+	struct DPadWidget* w = (struct DPadWidget*)widget;
+	Gfx_DeleteTexture(&w->tex.ID);
+}
+
+static void DPadWidget_Layout(void* widget) {
+	struct DPadWidget* w = (struct DPadWidget*)widget;
+
+	w->width  = w->btnWidth  * 3;
+	w->height = w->btnHeight * 3;
+	Widget_CalcPosition(w);
+}
+
+static void DPadWidget_BuildButton(struct DPadWidget* w, int i, VertexP3fT2fC4b** vertices) {
+	PackedCol normCol   = PackedCol_Make(224, 224, 224, 255);
+	PackedCol activeCol = PackedCol_Make(255, 255, 160, 255);
+	PackedCol col;
+	struct Texture back;	
+	float scale;
+		
+	back = w->active ? btnSelectedTex : btnShadowTex;
+	back.X = w->x + w->btnWidth  * dpad_locs[i].x; back.Width  = w->btnWidth / 2;
+	back.Y = w->y + w->btnHeight * dpad_locs[i].y; back.Height = w->btnHeight;
+
+	/* Split button down the middle */
+	scale = (w->btnWidth / 400.0f) * 0.5f;
+	back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
+	Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
+
+	back.X += (w->btnWidth / 2);
+	back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
+	Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
+
+	//col = w->active ? activeCol : normCol);
+	//Gfx_Make2DQuad(&w->tex, col, vertices);
+}
+
+static void DPadWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
+	struct DPadWidget* w = (struct DPadWidget*)widget;
+	int i;
+
+	for (i = 0; i < Array_Elems(dpad_locs); i++) {
+		DPadWidget_BuildButton(w, i, vertices);
+	}
+}
+
+static int DPadWidget_Render2(void* widget, int offset) {
+	struct DPadWidget* w = (struct DPadWidget*)widget;
+	Gfx_BindTexture(Gui_ClassicTexture ? Gui_GuiClassicTex : Gui_GuiTex);
+	Gfx_DrawVb_IndexedTris_Range(4 * 8, offset);
+
+	if (w->tex.ID) {
+		//Gfx_BindTexture(w->tex.ID);
+		//Gfx_DrawVb_IndexedTris_Range(4 * 4, offset + 4 * 8);
+	}
+	return offset + DPADWIDGET_MAX;
+}
+
+static const struct WidgetVTABLE DPadWidget_VTABLE = {
+	NULL,                 DPadWidget_Free,   DPadWidget_Layout,
+	Widget_Key,	          Widget_Key,        Widget_MouseScroll,
+	Widget_Pointer,       Widget_Pointer,    Widget_PointerMove,
+	DPadWidget_BuildMesh, DPadWidget_Render2
+};
+void DPadWidget_Make(struct DPadWidget* w, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
+	Widget_Reset(w);
+	w->VTABLE    = &DPadWidget_VTABLE;
+	w->btnWidth  = Display_ScaleX(40);
+	w->btnHeight = Display_ScaleY(40);
+	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
+	/*	
+	{ "<",    KEYBIND_LEFT,     40,  10, 50 },
+	{ ">",    KEYBIND_RIGHT,    40, 150, 50 },
+	{ "^",    KEYBIND_FORWARD,  40,  80, 90 },
+	{ "\\/",  KEYBIND_BACK,     40,  80, 10 },*/
+}
+
+void DPadWidget_SetFont(struct DPadWidget* w, struct FontDesc* font) {
+	static const String text = String_FromConst(">");
+	struct DrawTextArgs args;
+	Gfx_DeleteTexture(&w->tex.ID);
+
+	DrawTextArgs_Make(&args, &text, font, true);
+	Drawer2D_MakeTextTexture(&w->tex, &args);
+}
+#endif

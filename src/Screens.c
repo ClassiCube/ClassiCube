@@ -1933,28 +1933,23 @@ void DisconnectScreen_Show(const String* title, const String* message) {
 #ifdef CC_BUILD_TOUCH
 static struct TouchScreen {
 	Screen_Body
-	cc_uint8 binds[7];
+	cc_uint8 binds[4];
 	struct FontDesc font;
-	struct ButtonWidget btns[7];
+	struct DPadWidget dpad;
+	struct ButtonWidget btns[4];
 } TouchScreen;
 
-static struct Widget* touch_widgets[7] = {
-	(struct Widget*)&TouchScreen.btns[0], (struct Widget*)&TouchScreen.btns[1],
-	(struct Widget*)&TouchScreen.btns[2], (struct Widget*)&TouchScreen.btns[3],
-	(struct Widget*)&TouchScreen.btns[4], (struct Widget*)&TouchScreen.btns[5],
-	(struct Widget*)&TouchScreen.btns[6],
+static struct Widget* touch_widgets[4] = {
+	(struct Widget*)&TouchScreen.dpad,    (struct Widget*)&TouchScreen.btns[0],
+	(struct Widget*)&TouchScreen.btns[1], (struct Widget*)&TouchScreen.btns[2]
 };
-#define TOUCH_MAX_VERTICES (7 * BUTTONWIDGET_MAX)
+#define TOUCH_MAX_VERTICES (DPADWIDGET_MAX + 3 * BUTTONWIDGET_MAX)
 
 static const struct TouchBindDesc {
 	const char* text;
 	cc_uint8 bind, width;
 	cc_int16 xOffset, yOffset;
-} touchDescs[7] = {
-	{ "<",    KEYBIND_LEFT,     40,  10, 50 },
-	{ ">",    KEYBIND_RIGHT,    40, 150, 50 },
-	{ "^",    KEYBIND_FORWARD,  40,  80, 90 },
-	{ "\\/",  KEYBIND_BACK,     40,  80, 10 },
+} touchDescs[3] = {
 	{ "Jump", KEYBIND_JUMP,    100,  50, 90 },
 	{ "",     KEYBIND_COUNT,   100,  50, 50 },
 	{ "More", KEYBIND_COUNT,   100,  50, 10 },
@@ -1968,7 +1963,7 @@ static void TouchScreen_ContextLost(void* screen) {
 
 static void TouchScreen_UpdateModeText(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	ButtonWidget_SetConst(&s->btns[5], Input_Placing ? "Place" : "Delete", &s->font);
+	ButtonWidget_SetConst(&s->btns[1], Input_Placing ? "Place" : "Delete", &s->font);
 }
 
 static void TouchScreen_ModeClick(void* s, void* w) { 
@@ -1984,10 +1979,12 @@ static void TouchScreen_ContextRecreated(void* screen) {
 	Screen_CreateVb(screen);
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_BOLD);
 
-	for (i = 0; i < s->numWidgets; i++) {
+	for (i = 0; i < Array_Elems(touchDescs); i++) {
 		desc = &touchDescs[i];
 		ButtonWidget_SetConst(&s->btns[i], desc->text, &s->font);
 	}
+	
+	DPadWidget_SetFont(&s->dpad, &s->font);
 	TouchScreen_UpdateModeText(s);
 	/* TODO: this is pretty nasty hacky. rewrite! */
 }
@@ -2006,8 +2003,9 @@ static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	int i;
 	//Chat_Add1("POINTER DOWN: %i", &id);
 	if (Gui_GetInputGrab()) return false;
+	if (Elem_HandlesPointerDown(&s->dpad, id, x, y)) return true;
 
-	for (i = 0; i < s->numWidgets; i++) {
+	for (i = 0; i < Array_Elems(touchDescs); i++) {
 		if (!Widget_Contains(&s->btns[i], x, y)) continue;
 
 		if (s->binds[i] < KEYBIND_COUNT) {
@@ -2026,7 +2024,7 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	int i;
 	//Chat_Add1("POINTER UP: %i", &id);
 
-	for (i = 0; i < s->numWidgets; i++) {
+	for (i = 0; i < Array_Elems(touchDescs); i++) {
 		if (!(s->btns[i].active & id)) continue;
 
 		if (s->binds[i] < KEYBIND_COUNT) {
@@ -2038,6 +2036,12 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	return false;
 }
 
+static int TouchScreen_PointerMove(void* screen, int id, int x, int y) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	if (Gui_GetInputGrab()) return false;
+	return Elem_HandlesPointerMove(&s->dpad, id, x, y);
+}
+
 static void TouchScreen_Init(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	const struct TouchBindDesc* desc;
@@ -2047,15 +2051,16 @@ static void TouchScreen_Init(void* screen) {
 	s->numWidgets  = Array_Elems(touch_widgets);
 	s->maxVertices = TOUCH_MAX_VERTICES;
 
-	for (i = 0; i < s->numWidgets; i++) {
+	for (i = 0; i < Array_Elems(touchDescs); i++) {
 		desc = &touchDescs[i];
-		ButtonWidget_Make(&s->btns[i], desc->width, NULL, i < 4 ? ANCHOR_MIN : ANCHOR_MAX, 
-			ANCHOR_MAX, desc->xOffset, desc->yOffset);
+		ButtonWidget_Make(&s->btns[i], desc->width, NULL, 
+			ANCHOR_MAX, ANCHOR_MAX, desc->xOffset, desc->yOffset);
 		s->binds[i] = desc->bind;
 	}
 
-	s->btns[5].MenuClick = TouchScreen_ModeClick;
-	s->btns[6].MenuClick = TouchScreen_MoreClick;
+	DPadWidget_Make(&s->dpad, ANCHOR_MIN, ANCHOR_MAX, 10, 10);
+	s->btns[1].MenuClick = TouchScreen_ModeClick;
+	s->btns[2].MenuClick = TouchScreen_MoreClick;
 }
 
 static void TouchScreen_Layout(void* screen) {
@@ -2066,17 +2071,19 @@ static void TouchScreen_Layout(void* screen) {
 	HUDScreen_Layout(Gui_HUD);
 	height = Gui_HUD->hotbar.height;
 
-	for (i = 0; i < s->numWidgets; i++) {
+	for (i = 0; i < Array_Elems(touchDescs); i++) {
 		s->btns[i].yOffset = height + Display_ScaleY(touchDescs[i].yOffset);
 	}
+
+	s->dpad.yOffset = height + Display_ScaleY(10);
 	Screen_Layout(screen);
 }
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {
 	TouchScreen_Init,        Screen_NullUpdate,     Screen_NullFunc,
 	TouchScreen_Render,      Screen_BuildMesh,
-	Screen_FInput,           Screen_FInput,         Screen_FKeyPress, Screen_FText,
-	TouchScreen_PointerDown, TouchScreen_PointerUp, Screen_FPointer,  Screen_FMouseScroll,
+	Screen_FInput,           Screen_FInput,         Screen_FKeyPress,        Screen_FText,
+	TouchScreen_PointerDown, TouchScreen_PointerUp, TouchScreen_PointerMove, Screen_FMouseScroll,
 	TouchScreen_Layout,      TouchScreen_ContextLost, TouchScreen_ContextRecreated
 };
 void TouchScreen_Show(void) {

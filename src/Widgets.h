@@ -275,4 +275,20 @@ CC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct 
 CC_NOINLINE void SpecialInputWidget_Redraw(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_bool active);
+
+
+#ifdef CC_BUILD_TOUCH
+/* 4 button directional pad widget */
+struct DPadWidget {
+	Widget_Body
+	struct Texture tex;
+	int btnWidth, btnHeight;
+};
+#define DPADWIDGET_MAX (4 * 8 + 4 * 4)
+
+/* Initialises a DPad widget. */
+CC_NOINLINE void DPadWidget_Make(struct DPadWidget* w, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
+/* Draws the arrows using the given font. */
+CC_NOINLINE void DPadWidget_SetFont(struct DPadWidget* w, struct FontDesc* font);
+#endif
 #endif
