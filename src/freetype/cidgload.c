@@ -58,49 +58,7 @@
 
     FT_Bool  force_scaling = FALSE;
 
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-    FT_Incremental_InterfaceRec  *inc =
-                                   face->root.internal->incremental_interface;
-#endif
-
-
     FT_TRACE1(( "cid_load_glyph: glyph index %d\n", glyph_index ));
-
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-
-    /* For incremental fonts get the character data using */
-    /* the callback function.                             */
-    if ( inc )
-    {
-      FT_Data  glyph_data;
-
-
-      error = inc->funcs->get_glyph_data( inc->object,
-                                          glyph_index, &glyph_data );
-      if ( error )
-        goto Exit;
-
-      p         = (FT_Byte*)glyph_data.pointer;
-      fd_select = cid_get_offset( &p, (FT_Byte)cid->fd_bytes );
-
-      if ( glyph_data.length != 0 )
-      {
-        glyph_length = (FT_ULong)( glyph_data.length - cid->fd_bytes );
-        (void)FT_ALLOC( charstring, glyph_length );
-        if ( !error )
-          ft_memcpy( charstring, glyph_data.pointer + cid->fd_bytes,
-                     glyph_length );
-      }
-
-      inc->funcs->free_glyph_data( inc->object, &glyph_data );
-
-      if ( error )
-        goto Exit;
-    }
-
-    else
-
-#endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
     /* For ordinary fonts read the CID font dictionary index */
     /* and charstring offset from the CIDMap.                */
@@ -228,29 +186,6 @@
       }
     }
 
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-
-    /* Incremental fonts can optionally override the metrics. */
-    if ( !error && inc && inc->funcs->get_glyph_metrics )
-    {
-      FT_Incremental_MetricsRec  metrics;
-
-
-      metrics.bearing_x = FIXED_TO_INT( decoder->builder.left_bearing.x );
-      metrics.bearing_y = 0;
-      metrics.advance   = FIXED_TO_INT( decoder->builder.advance.x );
-      metrics.advance_v = FIXED_TO_INT( decoder->builder.advance.y );
-
-      error = inc->funcs->get_glyph_metrics( inc->object,
-                                             glyph_index, FALSE, &metrics );
-
-      decoder->builder.left_bearing.x = INT_TO_FIXED( metrics.bearing_x );
-      decoder->builder.advance.x      = INT_TO_FIXED( metrics.advance );
-      decoder->builder.advance.y      = INT_TO_FIXED( metrics.advance_v );
-    }
-
-#endif /* FT_CONFIG_OPTION_INCREMENTAL */
-
   Exit:
     FT_FREE( charstring );
 
@@ -258,79 +193,6 @@
 
     return error;
   }
-
-
-#if 0
-
-
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-  /**********                                                      *********/
-  /**********                                                      *********/
-  /**********            COMPUTE THE MAXIMUM ADVANCE WIDTH         *********/
-  /**********                                                      *********/
-  /**********    The following code is in charge of computing      *********/
-  /**********    the maximum advance width of the font.  It        *********/
-  /**********    quickly processes each glyph charstring to        *********/
-  /**********    extract the value from either a `sbw' or `seac'   *********/
-  /**********    operator.                                         *********/
-  /**********                                                      *********/
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-
-
-  FT_LOCAL_DEF( FT_Error )
-  cid_face_compute_max_advance( CID_Face  face,
-                                FT_Int*   max_advance )
-  {
-    FT_Error       error;
-    T1_DecoderRec  decoder;
-    FT_Int         glyph_index;
-
-    PSAux_Service  psaux = (PSAux_Service)face->psaux;
-
-
-    *max_advance = 0;
-
-    /* Initialize load decoder */
-    error = psaux->t1_decoder_funcs->init( &decoder,
-                                           (FT_Face)face,
-                                           0, /* size       */
-                                           0, /* glyph slot */
-                                           0, /* glyph names! XXX */
-                                           0, /* blend == 0 */
-                                           0, /* hinting == 0 */
-                                           cid_load_glyph );
-    if ( error )
-      return error;
-
-    /* TODO: initialize decoder.len_buildchar and decoder.buildchar */
-    /*       if we ever support CID-keyed multiple master fonts     */
-
-    decoder.builder.metrics_only = 1;
-    decoder.builder.load_points  = 0;
-
-    /* for each glyph, parse the glyph charstring and extract */
-    /* the advance width                                      */
-    for ( glyph_index = 0; glyph_index < face->root.num_glyphs;
-          glyph_index++ )
-    {
-      /* now get load the unscaled outline */
-      error = cid_load_glyph( &decoder, glyph_index );
-      /* ignore the error if one occurred - skip to next glyph */
-    }
-
-    *max_advance = FIXED_TO_INT( decoder.builder.advance.x );
-
-    psaux->t1_decoder_funcs->done( &decoder );
-
-    return FT_Err_Ok;
-  }
-
-
-#endif /* 0 */
 
 
   FT_LOCAL_DEF( FT_Error )

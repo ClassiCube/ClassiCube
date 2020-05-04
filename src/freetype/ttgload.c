@@ -173,78 +173,6 @@
   }
 
 
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-
-  static void
-  tt_get_metrics_incr_overrides( TT_Loader  loader,
-                                 FT_UInt    glyph_index )
-  {
-    TT_Face  face = loader->face;
-
-    FT_Short   left_bearing = 0, top_bearing = 0;
-    FT_UShort  advance_width = 0, advance_height = 0;
-
-
-    /* If this is an incrementally loaded font check whether there are */
-    /* overriding metrics for this glyph.                              */
-    if ( face->root.internal->incremental_interface                           &&
-         face->root.internal->incremental_interface->funcs->get_glyph_metrics )
-    {
-      FT_Incremental_MetricsRec  incr_metrics;
-      FT_Error                   error;
-
-
-      incr_metrics.bearing_x = loader->left_bearing;
-      incr_metrics.bearing_y = 0;
-      incr_metrics.advance   = loader->advance;
-      incr_metrics.advance_v = 0;
-
-      error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
-                face->root.internal->incremental_interface->object,
-                glyph_index, FALSE, &incr_metrics );
-      if ( error )
-        goto Exit;
-
-      left_bearing  = (FT_Short)incr_metrics.bearing_x;
-      advance_width = (FT_UShort)incr_metrics.advance;
-
-#if 0
-
-      /* GWW: Do I do the same for vertical metrics? */
-      incr_metrics.bearing_x = 0;
-      incr_metrics.bearing_y = loader->top_bearing;
-      incr_metrics.advance   = loader->vadvance;
-
-      error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
-                face->root.internal->incremental_interface->object,
-                glyph_index, TRUE, &incr_metrics );
-      if ( error )
-        goto Exit;
-
-      top_bearing    = (FT_Short)incr_metrics.bearing_y;
-      advance_height = (FT_UShort)incr_metrics.advance;
-
-#endif /* 0 */
-
-      loader->left_bearing = left_bearing;
-      loader->advance      = advance_width;
-      loader->top_bearing  = top_bearing;
-      loader->vadvance     = advance_height;
-
-      if ( !loader->linear_def )
-      {
-        loader->linear_def = 1;
-        loader->linear     = advance_width;
-      }
-    }
-
-  Exit:
-    return;
-  }
-
-#endif /* FT_CONFIG_OPTION_INCREMENTAL */
-
-
   /*************************************************************************/
   /*                                                                       */
   /* The following functions are used by default with TrueType fonts.      */
@@ -927,32 +855,6 @@
 
     n_points += 4;
 
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-
-    if ( FT_IS_NAMED_INSTANCE( FT_FACE( loader->face ) ) ||
-         FT_IS_VARIATION( FT_FACE( loader->face ) )      )
-    {
-      /* Deltas apply to the unscaled data. */
-      error = TT_Vary_Apply_Glyph_Deltas( loader->face,
-                                          loader->glyph_index,
-                                          outline,
-                                          (FT_UInt)n_points );
-
-      /* recalculate linear horizontal and vertical advances */
-      /* if we don't have HVAR and VVAR, respectively        */
-      if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_HADVANCE ) )
-        loader->linear = outline->points[n_points - 3].x -
-                         outline->points[n_points - 4].x;
-      if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_VADVANCE ) )
-        loader->vadvance = outline->points[n_points - 1].x -
-                           outline->points[n_points - 2].x;
-
-      if ( error )
-        return error;
-    }
-
-#endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
-
     if ( IS_HINTED( loader->load_flags ) )
     {
       tt_prepare_zone( &loader->zone, &gloader->current, 0, 0 );
@@ -1514,17 +1416,6 @@
     FT_GlyphLoader  gloader      = loader->gloader;
     FT_Bool         opened_frame = 0;
 
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-    FT_StreamRec    inc_stream;
-    FT_Data         glyph_data;
-    FT_Bool         glyph_data_loaded = 0;
-#endif
-
-
-#ifdef FT_DEBUG_LEVEL_TRACE
-    if ( recurse_count )
-      FT_TRACE5(( "  nesting level: %d\n", recurse_count ));
-#endif
 
     /* some fonts have an incorrect value of `maxComponentDepth' */
     if ( recurse_count > face->max_profile.maxComponentDepth )
@@ -1648,68 +1539,6 @@
       /* glyph metrics from the incremental interface        */
       tt_loader_set_pp( loader );
 
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-      tt_get_metrics_incr_overrides( loader, glyph_index );
-#endif
-
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-
-      if ( FT_IS_NAMED_INSTANCE( FT_FACE( face ) ) ||
-           FT_IS_VARIATION( FT_FACE( face ) )      )
-      {
-        /* a small outline structure with four elements for */
-        /* communication with `TT_Vary_Apply_Glyph_Deltas'  */
-        FT_Vector   points[4];
-        char        tags[4]     = { 1, 1, 1, 1 };
-        short       contours[4] = { 0, 1, 2, 3 };
-        FT_Outline  outline;
-
-
-        points[0].x = loader->pp1.x;
-        points[0].y = loader->pp1.y;
-        points[1].x = loader->pp2.x;
-        points[1].y = loader->pp2.y;
-
-        points[2].x = loader->pp3.x;
-        points[2].y = loader->pp3.y;
-        points[3].x = loader->pp4.x;
-        points[3].y = loader->pp4.y;
-
-        outline.n_points   = 4;
-        outline.n_contours = 4;
-        outline.points     = points;
-        outline.tags       = tags;
-        outline.contours   = contours;
-
-        /* this must be done before scaling */
-        error = TT_Vary_Apply_Glyph_Deltas( loader->face,
-                                            glyph_index,
-                                            &outline,
-                                            (FT_UInt)outline.n_points );
-        if ( error )
-          goto Exit;
-
-        loader->pp1.x = points[0].x;
-        loader->pp1.y = points[0].y;
-        loader->pp2.x = points[1].x;
-        loader->pp2.y = points[1].y;
-
-        loader->pp3.x = points[2].x;
-        loader->pp3.y = points[2].y;
-        loader->pp4.x = points[3].x;
-        loader->pp4.y = points[3].y;
-
-
-        /* recalculate linear horizontal and vertical advances */
-        /* if we don't have HVAR and VVAR, respectively        */
-        if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_HADVANCE ) )
-          loader->linear = loader->pp2.x - loader->pp1.x;
-        if ( !( loader->face->variation_support & TT_FACE_FLAG_VAR_VADVANCE ) )
-          loader->vadvance = loader->pp4.x - loader->pp3.x;
-      }
-
-#endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
-
       /* scale phantom points, if necessary; */
       /* they get rounded in `TT_Hint_Glyph' */
       if ( ( loader->load_flags & FT_LOAD_NO_SCALE ) == 0 )
@@ -1731,10 +1560,6 @@
     /* must initialize phantom points before (possibly) overriding */
     /* glyph metrics from the incremental interface                */
     tt_loader_set_pp( loader );
-
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-    tt_get_metrics_incr_overrides( loader, glyph_index );
-#endif
 
     /***********************************************************************/
     /***********************************************************************/
@@ -1826,124 +1651,6 @@
       /* all data we need are read */
       face->forget_glyph_frame( loader );
       opened_frame = 0;
-
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-
-      if ( FT_IS_NAMED_INSTANCE( FT_FACE( face ) ) ||
-           FT_IS_VARIATION( FT_FACE( face ) )      )
-      {
-        short        i, limit;
-        FT_SubGlyph  subglyph;
-
-        FT_Outline  outline;
-        FT_Vector*  points   = NULL;
-        char*       tags     = NULL;
-        short*      contours = NULL;
-
-
-        limit = (short)gloader->current.num_subglyphs;
-
-        /* construct an outline structure for              */
-        /* communication with `TT_Vary_Apply_Glyph_Deltas' */
-        outline.n_points   = (short)( gloader->current.num_subglyphs + 4 );
-        outline.n_contours = outline.n_points;
-
-        outline.points   = NULL;
-        outline.tags     = NULL;
-        outline.contours = NULL;
-
-        if ( FT_NEW_ARRAY( points, outline.n_points )   ||
-             FT_NEW_ARRAY( tags, outline.n_points )     ||
-             FT_NEW_ARRAY( contours, outline.n_points ) )
-          goto Exit1;
-
-        subglyph = gloader->current.subglyphs;
-
-        for ( i = 0; i < limit; i++, subglyph++ )
-        {
-          /* applying deltas for anchor points doesn't make sense, */
-          /* but we don't have to specially check this since       */
-          /* unused delta values are zero anyways                  */
-          points[i].x = subglyph->arg1;
-          points[i].y = subglyph->arg2;
-          tags[i]     = 1;
-          contours[i] = i;
-        }
-
-        points[i].x = loader->pp1.x;
-        points[i].y = loader->pp1.y;
-        tags[i]     = 1;
-        contours[i] = i;
-
-        i++;
-        points[i].x = loader->pp2.x;
-        points[i].y = loader->pp2.y;
-        tags[i]     = 1;
-        contours[i] = i;
-
-        i++;
-        points[i].x = loader->pp3.x;
-        points[i].y = loader->pp3.y;
-        tags[i]     = 1;
-        contours[i] = i;
-
-        i++;
-        points[i].x = loader->pp4.x;
-        points[i].y = loader->pp4.y;
-        tags[i]     = 1;
-        contours[i] = i;
-
-        outline.points   = points;
-        outline.tags     = tags;
-        outline.contours = contours;
-
-        /* this call provides additional offsets */
-        /* for each component's translation      */
-        if ( FT_SET_ERROR( TT_Vary_Apply_Glyph_Deltas(
-                             face,
-                             glyph_index,
-                             &outline,
-                             (FT_UInt)outline.n_points ) ) )
-          goto Exit1;
-
-        subglyph = gloader->current.subglyphs;
-
-        for ( i = 0; i < limit; i++, subglyph++ )
-        {
-          if ( subglyph->flags & ARGS_ARE_XY_VALUES )
-          {
-            subglyph->arg1 = (FT_Int16)points[i].x;
-            subglyph->arg2 = (FT_Int16)points[i].y;
-          }
-        }
-
-        loader->pp1.x = points[i + 0].x;
-        loader->pp1.y = points[i + 0].y;
-        loader->pp2.x = points[i + 1].x;
-        loader->pp2.y = points[i + 1].y;
-
-        loader->pp3.x = points[i + 2].x;
-        loader->pp3.y = points[i + 2].y;
-        loader->pp4.x = points[i + 3].x;
-        loader->pp4.y = points[i + 3].y;
-
-        /* recalculate linear horizontal and vertical advances */
-        /* if we don't have HVAR and VVAR, respectively        */
-        if ( !( face->variation_support & TT_FACE_FLAG_VAR_HADVANCE ) )
-          loader->linear = loader->pp2.x - loader->pp1.x;
-        if ( !( face->variation_support & TT_FACE_FLAG_VAR_VADVANCE ) )
-          loader->vadvance = loader->pp4.x - loader->pp3.x;
-
-      Exit1:
-        FT_FREE( outline.points );
-        FT_FREE( outline.tags );
-        FT_FREE( outline.contours );
-
-        if ( error )
-          goto Exit;
-      }
-
-#endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
 
       /* scale phantom points, if necessary; */
       /* they get rounded in `TT_Hint_Glyph' */
@@ -2083,15 +1790,6 @@
     if ( opened_frame )
       face->forget_glyph_frame( loader );
 
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-
-    if ( glyph_data_loaded )
-      face->root.internal->incremental_interface->funcs->free_glyph_data(
-        face->root.internal->incremental_interface->object,
-        &glyph_data );
-
-#endif
-
     return error;
   }
 
@@ -2225,39 +1923,6 @@
 
         top = ( advance - height ) / 2;
       }
-
-#ifdef FT_CONFIG_OPTION_INCREMENTAL
-      {
-        FT_Incremental_InterfaceRec*  incr;
-        FT_Incremental_MetricsRec     incr_metrics;
-        FT_Error                      error;
-
-
-        incr = face->root.internal->incremental_interface;
-
-        /* If this is an incrementally loaded font see if there are */
-        /* overriding metrics for this glyph.                       */
-        if ( incr && incr->funcs->get_glyph_metrics )
-        {
-          incr_metrics.bearing_x = 0;
-          incr_metrics.bearing_y = top;
-          incr_metrics.advance   = advance;
-
-          error = incr->funcs->get_glyph_metrics( incr->object,
-                                                  glyph_index,
-                                                  TRUE,
-                                                  &incr_metrics );
-          if ( error )
-            return error;
-
-          top     = incr_metrics.bearing_y;
-          advance = incr_metrics.advance;
-        }
-      }
-
-      /* GWW: Do vertical metrics get loaded incrementally too? */
-
-#endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
       glyph->linearVertAdvance = advance;
 

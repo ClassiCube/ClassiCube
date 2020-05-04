@@ -176,13 +176,6 @@
 
     if ( flags & FT_LOAD_VERTICAL_LAYOUT )
     {
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-      /* no fast retrieval for blended MM fonts without VVAR table */
-      if ( ( FT_IS_NAMED_INSTANCE( ttface ) || FT_IS_VARIATION( ttface ) ) &&
-           !( face->variation_support & TT_FACE_FLAG_VAR_VADVANCE )        )
-        return FT_THROW( Unimplemented_Feature );
-#endif
-
       for ( nn = 0; nn < count; nn++ )
       {
         FT_Short   tsb;
@@ -196,13 +189,6 @@
     }
     else
     {
-#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-      /* no fast retrieval for blended MM fonts without HVAR table */
-      if ( ( FT_IS_NAMED_INSTANCE( ttface ) || FT_IS_VARIATION( ttface ) ) &&
-           !( face->variation_support & TT_FACE_FLAG_VAR_HADVANCE )        )
-        return FT_THROW( Unimplemented_Feature );
-#endif
-
       for ( nn = 0; nn < count; nn++ )
       {
         FT_Short   lsb;
