@@ -554,6 +554,7 @@ static void Logger_PrintRegisters(String* str, void* ctx) {
 #endif
 }
 #elif defined CC_BUILD_FREEBSD
+/* See /usr/include/machine/ucontext.h */
 static void Logger_PrintRegisters(String* str, void* ctx) {
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
 #if defined __i386__

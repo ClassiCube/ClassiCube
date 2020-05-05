@@ -186,7 +186,7 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_X11
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
-#elif defined __FreeBSD__
+#elif defined __FreeBSD__ || defined __DragonFly__
 #define CC_BUILD_FREEBSD
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL

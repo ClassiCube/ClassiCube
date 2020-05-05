@@ -71,6 +71,13 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 /* Platform specific include files (Try to share for UNIX-ish) */
 #if defined CC_BUILD_LINUX
 #define CC_BUILD_UNIX
+#elif defined CC_BUILD_OSX
+#include <mach/mach_time.h>
+#include <mach-o/dyld.h>
+#include <ApplicationServices/ApplicationServices.h>
+#elif defined CC_BUILD_SOLARIS
+#define CC_BUILD_UNIX
+#include <sys/filio.h>
 #elif defined CC_BUILD_FREEBSD
 #define CC_BUILD_UNIX
 #include <sys/sysctl.h>
@@ -80,13 +87,6 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #elif defined CC_BUILD_NETBSD
 #define CC_BUILD_UNIX
 #include <sys/sysctl.h>
-#elif defined CC_BUILD_SOLARIS
-#define CC_BUILD_UNIX
-#include <sys/filio.h>
-#elif defined CC_BUILD_OSX
-#include <mach/mach_time.h>
-#include <mach-o/dyld.h>
-#include <ApplicationServices/ApplicationServices.h>
 #elif defined CC_BUILD_HAIKU
 #define CC_BUILD_UNIX
 /* TODO: Use open instead of xdg-open */

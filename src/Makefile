@@ -61,6 +61,12 @@ LDFLAGS=-L /usr/X11R7/lib -L /usr/pkg/lib
 LIBS=-lcurl -lexecinfo -lopenal -lGL -lX11 -lXi
 endif
 
+ifeq ($(PLAT),dragonfly)
+CFLAGS=-g -pipe -rdynamic -I /usr/local/include -fno-math-errno
+LDFLAGS=-L /usr/local/lib
+LIBS=-lcurl -lexecinfo -lopenal -lGL -lX11 -lXi -lm -lpthread
+endif
+
 ifeq ($(PLAT),haiku)
 CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g
@@ -89,6 +95,8 @@ openbsd:
 	$(MAKE) $(ENAME) PLAT=openbsd -j$(JOBS)
 netbsd:
 	$(MAKE) $(ENAME) PLAT=netbsd -j$(JOBS)
+dragonfly:
+	$(MAKE) $(ENAME) PLAT=dragonfly -j$(JOBS)
 haiku:
 	$(MAKE) $(ENAME) PLAT=haiku -j$(JOBS)
 	
