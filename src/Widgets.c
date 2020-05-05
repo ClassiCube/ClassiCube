@@ -2460,12 +2460,9 @@ static void DPadWidget_Layout(void* widget) {
 }
 
 static void DPadWidget_BuildButton(struct DPadWidget* w, int i, VertexP3fT2fC4b** vertices) {
-	PackedCol normCol   = PackedCol_Make(224, 224, 224, 255);
-	PackedCol activeCol = PackedCol_Make(255, 255, 160, 255);
-	PackedCol col;
 	struct Texture back;	
 	float scale;
-		
+
 	back = w->active ? btnSelectedTex : btnShadowTex;
 	back.X = w->x + w->btnWidth  * dpad_locs[i].x; back.Width  = w->btnWidth / 2;
 	back.Y = w->y + w->btnHeight * dpad_locs[i].y; back.Height = w->btnHeight;
@@ -2478,9 +2475,15 @@ static void DPadWidget_BuildButton(struct DPadWidget* w, int i, VertexP3fT2fC4b*
 	back.X += (w->btnWidth / 2);
 	back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
 	Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
+}
 
-	//col = w->active ? activeCol : normCol);
-	//Gfx_Make2DQuad(&w->tex, col, vertices);
+static void DPadWidget_BuildText(struct DPadWidget* w, int i, VertexP3fT2fC4b** vertices) {
+	PackedCol normCol   = PackedCol_Make(224, 224, 224, 255);
+	PackedCol activeCol = PackedCol_Make(255, 255, 160, 255);
+
+	w->tex.X = (w->x + w->btnWidth  * dpad_locs[i].x) + (w->btnWidth  - w->tex.Width ) / 2;
+	w->tex.Y = (w->y + w->btnHeight * dpad_locs[i].y) + (w->btnHeight - w->tex.Height) / 2;
+	Gfx_Make2DQuad(&w->tex, w->hovered[i] ? activeCol : normCol, vertices);
 }
 
 static void DPadWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
@@ -2490,6 +2493,9 @@ static void DPadWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
 	for (i = 0; i < Array_Elems(dpad_locs); i++) {
 		DPadWidget_BuildButton(w, i, vertices);
 	}
+	for (i = 0; i < Array_Elems(dpad_locs); i++) {
+		DPadWidget_BuildText(w, i, vertices);
+	}
 }
 
 static int DPadWidget_Render2(void* widget, int offset) {
@@ -2498,8 +2504,8 @@ static int DPadWidget_Render2(void* widget, int offset) {
 	Gfx_DrawVb_IndexedTris_Range(4 * 8, offset);
 
 	if (w->tex.ID) {
-		//Gfx_BindTexture(w->tex.ID);
-		//Gfx_DrawVb_IndexedTris_Range(4 * 4, offset + 4 * 8);
+		Gfx_BindTexture(w->tex.ID);
+		Gfx_DrawVb_IndexedTris_Range(4 * 4, offset + 4 * 8);
 	}
 	return offset + DPADWIDGET_MAX;
 }

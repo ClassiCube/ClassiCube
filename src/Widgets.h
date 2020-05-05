@@ -283,6 +283,7 @@ struct DPadWidget {
 	Widget_Body
 	struct Texture tex;
 	int btnWidth, btnHeight;
+	cc_bool hovered[4];
 };
 #define DPADWIDGET_MAX (4 * 8 + 4 * 4)
 
