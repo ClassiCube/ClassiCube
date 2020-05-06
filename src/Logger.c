@@ -193,9 +193,19 @@ void Logger_SysWarn2(cc_result res, const char* place, const String* path, Logge
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_DynamicLibWarn2(cc_result res, const char* place, const String* path) {
-	Logger_SysWarn2(res, place, path, DynamicLib_DescribeError);
+void Logger_DynamicLibWarn(const char* place, const String* path) {
+	String err; char errBuffer[128];
+	String msg; char msgBuffer[256];
+	String_InitArray(msg, msgBuffer);
+	String_InitArray(err, errBuffer);
+
+	String_Format2(&msg, "Error %c '%s'", place, path);
+	if (DynamicLib_DescribeError(&err)) {
+		String_Format1(&msg, "\n  Error meaning: %s", &err);
+	}
+	Logger_WarnFunc(&msg);
 }
+
 void Logger_Warn(cc_result res, const char* place) {
 	Logger_SysWarn(res, place,  Platform_DescribeError);
 }

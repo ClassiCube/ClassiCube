@@ -345,22 +345,21 @@ static void LoadPlugins(void) { }
 #else
 static void LoadPlugin(const String* path, void* obj) {
 	void* lib;
-	void* verSymbol;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
-	void* compSymbol; /* EXPORT struct IGameComponent Plugin_Component = { (whatever) } */
+	void* verSym;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
+	void* compSym; /* EXPORT struct IGameComponent Plugin_Component = { (whatever) } */
 	int ver;
-	cc_result res;
 
 	/* ignore accepted.txt, deskop.ini, .pdb files, etc */
 	if (!String_CaselessEnds(path, &DynamicLib_Ext)) return;
-	res = DynamicLib_Load(path, &lib);
-	if (res) { Logger_DynamicLibWarn2(res, "loading plugin", path); return; }
+	lib = DynamicLib_Load2(path);
+	if (!lib) { Logger_DynamicLibWarn("loading", path); return; }
 
-	res = DynamicLib_Get(lib, "Plugin_ApiVersion", &verSymbol);
-	if (res) { Logger_DynamicLibWarn2(res, "getting version of", path); return; }
-	res = DynamicLib_Get(lib, "Plugin_Component", &compSymbol);
-	if (res) { Logger_DynamicLibWarn2(res, "initing", path); return; }
+	verSym  = DynamicLib_Get2(lib, "Plugin_ApiVersion");
+	if (!verSym)  { Logger_DynamicLibWarn("getting version of", path); return; }
+	compSym = DynamicLib_Get2(lib, "Plugin_Component");
+	if (!compSym) { Logger_DynamicLibWarn("initing", path); return; }
 
-	ver = *((int*)verSymbol);
+	ver = *((int*)verSym);
 	if (ver < GAME_API_VER) {
 		Chat_Add1("&c%s plugin is outdated! Try getting a more recent version.", path);
 		return;
@@ -369,7 +368,7 @@ static void LoadPlugin(const String* path, void* obj) {
 		return;
 	}
 
-	Game_AddComponent((struct IGameComponent*)compSymbol);
+	Game_AddComponent((struct IGameComponent*)compSym);
 }
 
 static void LoadPlugins(void) {

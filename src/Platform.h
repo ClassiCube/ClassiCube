@@ -52,7 +52,7 @@ cc_result Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLe
 cc_result Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen);
 /* Outputs more detailed information about errors with operating system functions. */
 /* NOTE: This is for general functions like file I/O. If a more specific 
-describe exists (e.g. DynamicLib_DescribeError), that should be preferred. */
+describe exists (e.g. Http_DescribeError), that should be preferred. */
 cc_bool Platform_DescribeError(cc_result res, String* dst);
 
 /* Starts the game with the given arguments. */
@@ -76,19 +76,18 @@ cc_result Updater_MarkExecutable(void);
 
 /* The default file extension used for dynamic libraries on this platform. */
 extern const String DynamicLib_Ext;
+CC_API cc_result DynamicLib_Load(const String* path, void** lib); /* OBSOLETE */
+CC_API cc_result DynamicLib_Get(void* lib, const char* name, void** symbol); /* OBSOLETE */
+
 /* Attempts to load a native dynamic library from the given path. */
-CC_API cc_result DynamicLib_Load(const String* path, void** lib);
+CC_API void* DynamicLib_Load2(const String* path);
 /* Attempts to get the address of the symbol in the given dynamic library. */
 /* NOTE: Do NOT use this to load OpenGL functions, use GLContext_GetAddress. */
-CC_API cc_result DynamicLib_Get(void* lib, const char* name, void** symbol);
-/* Simple wrapper for DynamicLib_Load then DynamicLib_Get. */
-/* NOTE: This should ONLY be used for dynamically loading platform-specific symbols. */
-/* (e.g. functionality that only exists on recent operating system versions) */
-void* DynamicLib_GetFrom(const char* filename, const char* name);
+CC_API void* DynamicLib_Get2(void* lib, const char* name);
+void* DynamicLib_GetFrom(const char* filename, const char* name);  /* OBSOLETE */
 /* Outputs more detailed information about errors with the DynamicLib functions. */
-/* NOTE: You must call this immediately after DynamicLib_Load/DynamicLib_Get,
- because on some platforms, the error is a static string instead of from error code. */
-CC_API cc_bool DynamicLib_DescribeError(cc_result res, String* dst);
+/* NOTE: You MUST call this immediately after DynamicLib_Load2/DynamicLib_Get2 returns NULL. */
+CC_API cc_bool DynamicLib_DescribeError(String* dst);
 
 /* Allocates a block of memory, with undetermined contents. Returns NULL on allocation failure. */
 CC_API void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize);

@@ -1367,25 +1367,26 @@ cc_result Updater_MarkExecutable(void) {
 #if defined CC_BUILD_WIN
 const String DynamicLib_Ext = String_FromConst(".dll");
 
-cc_result DynamicLib_Load(const String* path, void** lib) {
+void* DynamicLib_Load2(const String* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
-	*lib = LoadLibrary(str);
-	return *lib ? 0 : GetLastError();
+	return LoadLibrary(str);
 }
 
-cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) {
-	*symbol = GetProcAddress((HMODULE)lib, name);
-	return *symbol ? 0 : GetLastError();
+void* DynamicLib_Get2(void* lib, const char* name) {
+	return GetProcAddress((HMODULE)lib, name);
 }
 
-cc_bool DynamicLib_DescribeError(cc_result res, String* dst) {
-	return Platform_DescribeError(res, dst);
+cc_bool DynamicLib_DescribeError(String* dst) {
+	cc_result res = GetLastError();
+	Platform_DescribeError(res, dst);
+	String_Format1(dst, " (%i)", &res);
+	return true;
 }
 #elif defined CC_BUILD_WEB
-cc_result DynamicLib_Load(const String* path, void** lib)            { return ERR_NOT_SUPPORTED; }
-cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) { return ERR_NOT_SUPPORTED; }
-cc_bool DynamicLib_DescribeError(cc_result res, String* dst)         { return false; }
+void* DynamicLib_Load2(const String* path)         { return NULL; }
+void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
+cc_bool DynamicLib_DescribeError(String* dst)      { return false; }
 #elif defined CC_BUILD_POSIX
 /* TODO: Should we use .bundle instead of .dylib? */
 #ifdef CC_BUILD_OSX
@@ -1394,37 +1395,42 @@ const String DynamicLib_Ext = String_FromConst(".dylib");
 const String DynamicLib_Ext = String_FromConst(".so");
 #endif
 
-cc_result DynamicLib_Load(const String* path, void** lib) {
+void* DynamicLib_Load2(const String* path) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
-	*lib = dlopen(str, RTLD_NOW);
-	return *lib == NULL;
+	return dlopen(str, RTLD_NOW);
 }
 
-cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) {
-	*symbol = dlsym(lib, name);
-	return *symbol == NULL; /* dlerror would be proper, but eh */
+void* DynamicLib_Get2(void* lib, const char* name) {
+	return dlsym(lib, name);
 }
 
-cc_bool DynamicLib_DescribeError(cc_result res, String* dst) {
+cc_bool DynamicLib_DescribeError(String* dst) {
 	char* err = dlerror();
 	if (err) String_AppendConst(dst, err);
 	return err && err[0];
 }
 #endif
 
+cc_result DynamicLib_Load(const String* path, void** lib) {
+	*lib = DynamicLib_Load2(path);
+	return *lib == NULL;
+}
+
+cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) {
+	*symbol = DynamicLib_Get2(lib, name);
+	return *symbol == NULL;
+}
+
 void* DynamicLib_GetFrom(const char* filename, const char* name) {
-	void* symbol;
 	void* lib;
 	String path;
-	cc_result res;
 
 	path = String_FromReadonly(filename);
-	res = DynamicLib_Load(&path, &lib);
-	if (res) return NULL;
+	lib  = DynamicLib_Load2(&path);
+	if (!lib) return NULL;
 
-	res = DynamicLib_Get(lib, name, &symbol);
-	return res ? NULL : symbol;
+	return DynamicLib_Get2(lib, name);
 }
 
 
@@ -1455,8 +1461,19 @@ static void Platform_InitStopwatch(void) {
 }
 
 typedef BOOL (WINAPI *AttachConsoleFunc)(DWORD dwProcessId);
-void Platform_Init(void) {
+static void AttachParentConsole(void) {
+	static const String kernel32 = String_FromConst("KERNEL32.DLL");
 	AttachConsoleFunc attach;
+	void* lib;
+
+	/* NOTE: Need to dynamically load, not supported on Windows 2000 */
+	if ((lib = DynamicLib_Load2(&kernel32))) {
+		attach = (AttachConsoleFunc)DynamicLib_Get2(lib, "AttachConsole");
+		if (attach) attach((DWORD)-1); /* ATTACH_PARENT_PROCESS */
+	}
+}
+
+void Platform_Init(void) {
 	WSADATA wsaData;
 	cc_result res;
 
@@ -1468,9 +1485,7 @@ void Platform_Init(void) {
 
 	hasDebugger = IsDebuggerPresent();
 	/* For when user runs from command prompt */
-	/* NOTE: Need to dynamically load, not supported on Windows 2000 */
-	attach = (AttachConsoleFunc)DynamicLib_GetFrom("KERNEL32.DLL", "AttachConsole");
-	if (attach) attach((DWORD)-1); /* ATTACH_PARENT_PROCESS */
+	AttachParentConsole();
 
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (conHandle == INVALID_HANDLE_VALUE) conHandle = NULL;

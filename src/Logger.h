@@ -25,8 +25,8 @@ void Logger_SysWarn(cc_result res, const char* place, Logger_DescribeError descr
 "Error [error desc] ([result]) when [place] 'path' or "Error [result] when [place] 'path' */
 void Logger_SysWarn2(cc_result res, const char* place, const String* path, Logger_DescribeError describeErr);
 
-/* Shortcut for Logger_SysWarn2 with DynamicLib_DescribeError */
-void Logger_DynamicLibWarn2(cc_result res, const char* place, const String* path);
+/* Shows a warning for a failed DynamicLib_Load2/Get2 call. */
+void Logger_DynamicLibWarn(const char* place, const String* path);
 /* Shortcut for Logger_SysWarn with Platform_DescribeError */
 void Logger_Warn(cc_result res, const char* place);
 /* Shortcut for Logger_SysWarn2 with Platform_DescribeError */

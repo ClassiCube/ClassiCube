@@ -906,10 +906,15 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 
 static cc_bool rawMouseInited, rawMouseSupported;
 static void InitRawMouse(void) {
+	static const String user32 = String_FromConst("USER32.DLL");
+	void* lib;
 	RAWINPUTDEVICE rid;
-	_registerRawInput = (FUNC_RegisterRawInput)DynamicLib_GetFrom("USER32.DLL", "RegisterRawInputDevices");
-	_getRawInputData  = (FUNC_GetRawInputData) DynamicLib_GetFrom("USER32.DLL", "GetRawInputData");
-	rawMouseSupported = _registerRawInput && _getRawInputData;
+
+	if ((lib = DynamicLib_Load2(&user32))) {
+		_registerRawInput = (FUNC_RegisterRawInput)DynamicLib_Get2(lib, "RegisterRawInputDevices");
+		_getRawInputData  = (FUNC_GetRawInputData) DynamicLib_Get2(lib, "GetRawInputData");
+		rawMouseSupported = _registerRawInput && _getRawInputData;
+	}
 	if (!rawMouseSupported) { Platform_LogConst("Raw input unsupported!"); return; }
 
 	rid.usUsagePage = 1; /* HID_USAGE_PAGE_GENERIC; */
