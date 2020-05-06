@@ -55,7 +55,7 @@ I am assuming you used the installer from http://www.mingw.org/
 
 #### Linux
 
-Install appropriate libs as required. For ubuntu these are: libx11-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
+Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
 
 ```gcc *.c -o ClassiCube -lm -lpthread -lX11 -lXi -lGL -lcurl -lopenal -ldl```
 
