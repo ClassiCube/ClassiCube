@@ -197,7 +197,7 @@ cc_bool Gfx_TryRestoreContext(void);
 /* NOTE: This replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
 void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount);
 /* Shorthand for Gfx_CreateVb followed by Gfx_LockVb */
-void* Gfx_CreateAndLockVb(VertexFormat fmt, int count, GfxResourceID* vb);
+void* Gfx_CreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
 
 /* Renders a 2D flat coloured rectangle. */
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol col);

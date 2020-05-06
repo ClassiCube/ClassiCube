@@ -115,7 +115,7 @@ void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCoun
 	Gfx_DrawVb_IndexedTris(vCount);
 }
 
-void* Gfx_CreateAndLockVb(VertexFormat fmt, int count, GfxResourceID* vb) {
+void* Gfx_CreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
 	*vb = Gfx_CreateVb(fmt, count);
 	return Gfx_LockVb(*vb, fmt, count);
 }
