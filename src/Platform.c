@@ -1460,15 +1460,15 @@ static void Platform_InitStopwatch(void) {
 	} else { sw_freqDiv = 10; }
 }
 
-typedef BOOL (WINAPI *AttachConsoleFunc)(DWORD dwProcessId);
+typedef BOOL (WINAPI *FUNC_AttachConsole)(DWORD dwProcessId);
 static void AttachParentConsole(void) {
 	static const String kernel32 = String_FromConst("KERNEL32.DLL");
-	AttachConsoleFunc attach;
+	FUNC_AttachConsole attach;
 	void* lib;
 
 	/* NOTE: Need to dynamically load, not supported on Windows 2000 */
 	if ((lib = DynamicLib_Load2(&kernel32))) {
-		attach = (AttachConsoleFunc)DynamicLib_Get2(lib, "AttachConsole");
+		attach = (FUNC_AttachConsole)DynamicLib_Get2(lib, "AttachConsole");
 		if (attach) attach((DWORD)-1); /* ATTACH_PARENT_PROCESS */
 	}
 }

@@ -129,13 +129,14 @@ cc_result Audio_Close(AudioHandle handle) {
 cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	struct AudioContext* ctx = &audioContexts[handle];
 	struct AudioFormat*  cur = &ctx->format;
+	WAVEFORMATEX fmt;
+	int sampleSize;
 	cc_result res;
 
 	if (AudioFormat_Eq(cur, format)) return 0;
 	if (ctx->handle && (res = waveOutClose(ctx->handle))) return res;
 
-	int sampleSize = format->channels * 2; /* 16 bits per sample / 8 */
-	WAVEFORMATEX fmt;
+	sampleSize = format->channels * 2; /* 16 bits per sample / 8 */
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
 	fmt.nChannels       = format->channels;
 	fmt.nSamplesPerSec  = format->sampleRate;

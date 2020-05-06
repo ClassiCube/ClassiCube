@@ -308,8 +308,9 @@ static float totalMem;
 
 static void D3D9_RestoreRenderStates(void);
 static void D3D9_FreeResource(GfxResourceID* resource) {
-	IUnknown* unk;
+	cc_uintptr addr;
 	ULONG refCount;
+	IUnknown* unk;
 	
 	unk = (IUnknown*)(*resource);
 	if (!unk) return;
@@ -322,7 +323,7 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 #endif
 
 	if (refCount <= 0) return;
-	cc_uintptr addr = (cc_uintptr)unk;
+	addr = (cc_uintptr)unk;
 	Platform_Log2("D3D9 resource has %i outstanding references! ID 0x%x", &refCount, &addr);
 }
 
@@ -361,6 +362,9 @@ static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* a
 }
 
 void Gfx_Init(void) {
+	cc_result res;
+	D3DCAPS9 caps;
+
 	Gfx.MinZNear = 0.05f;
 	HWND winHandle = (HWND)WindowInfo.Handle;
 	d3d = Direct3DCreate9(D3D_SDK_VERSION);
@@ -368,7 +372,6 @@ void Gfx_Init(void) {
 	D3D9_FindCompatibleFormat();
 	D3DPRESENT_PARAMETERS args = { 0 };
 	D3D9_FillPresentArgs(640, 480, &args);
-	cc_result res;
 
 	/* Try to create a device with as much hardware usage as possible. */
 	res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
@@ -382,7 +385,6 @@ void Gfx_Init(void) {
 	}
 	if (res) Logger_Abort2(res, "Creating Direct3D9 device");
 
-	D3DCAPS9 caps;
 	res = IDirect3DDevice9_GetDeviceCaps(device, &caps);
 	if (res) Logger_Abort2(res, "Getting Direct3D9 capabilities");
 
@@ -455,12 +457,14 @@ static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, int lvl
 }
 
 static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, int lvl) {
+	D3DLOCKED_RECT rect;
+	cc_result res;
 	RECT part;
+
 	part.left = x; part.right = x + bmp->Width;
 	part.top = y; part.bottom = y + bmp->Height;
 
-	D3DLOCKED_RECT rect;
-	cc_result res = IDirect3DTexture9_LockRect(texture, lvl, &rect, &part, 0);
+	res = IDirect3DTexture9_LockRect(texture, lvl, &rect, &part, 0);
 	if (res) Logger_Abort2(res, "D3D9_LockTexturePartData");
 
 	/* We need to copy scanline by scanline, as generally rect.stride != data.stride */
@@ -772,10 +776,11 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
+	cc_result res;
 	if (fmt == gfx_batchFormat) return;
 	gfx_batchFormat = fmt;
 
-	cc_result res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
+	res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
 	if (res) Logger_Abort2(res, "D3D9_SetBatchFormat");
 	gfx_batchStride = gfx_strideSizes[fmt];
 }

@@ -309,17 +309,14 @@ static cc_uint8 collideFlags;
 #define LEAF_COLLIDES   (1 << 3)
 
 static cc_bool CustomParticle_CanPass(BlockID block) {
-	cc_uint8 draw = Blocks.Draw[block];
-	if (draw == DRAW_TRANSPARENT_THICK && !(collideFlags & LEAF_COLLIDES)) {
-		return true;
-	}
-	cc_uint8 collide = Blocks.Collide[block];
-	if (collide == COLLIDE_SOLID && (collideFlags & SOLID_COLLIDES)) {
-		return false;
-	}
-	if (collide == COLLIDE_LIQUID && (collideFlags & LIQUID_COLLIDES)) {
-		return false;
-	}
+	cc_uint8 draw, collide;
+	
+	draw = Blocks.Draw[block];
+	if (draw == DRAW_TRANSPARENT_THICK && !(collideFlags & LEAF_COLLIDES)) return true;
+
+	collide = Blocks.Collide[block];
+	if (collide == COLLIDE_SOLID  && (collideFlags & SOLID_COLLIDES))  return false;
+	if (collide == COLLIDE_LIQUID && (collideFlags & LIQUID_COLLIDES)) return false;
 	return true;
 }
 
@@ -343,8 +340,8 @@ static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2
 	int curFrame = Math_Floor(e->frameCount * (time_lived / p->totalLifespan));
 	float shiftU = curFrame * (rec.U2 - rec.U1);
 
-	rec.U1 += shiftU;// * 0.0078125f;
-	rec.U2 += shiftU;// * 0.0078125f;
+	rec.U1 += shiftU;/* * 0.0078125f; */
+	rec.U2 += shiftU;/* * 0.0078125f; */
 
 	Vec3_Lerp(&pos, &p->base.lastPos, &p->base.nextPos, t);
 	size.X = p->base.size; size.Y = size.X;
