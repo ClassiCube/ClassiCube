@@ -2460,21 +2460,21 @@ static void DPadWidget_Layout(void* widget) {
 }
 
 static void DPadWidget_BuildButton(struct DPadWidget* w, int i, VertexP3fT2fC4b** vertices) {
-	struct Texture back;	
+	struct Texture part;	
 	float scale;
 
-	back = w->active ? btnSelectedTex : btnShadowTex;
-	back.X = w->x + w->btnWidth  * dpad_locs[i].x; back.Width  = w->btnWidth / 2;
-	back.Y = w->y + w->btnHeight * dpad_locs[i].y; back.Height = w->btnHeight;
+	part = w->active ? btnSelectedTex : btnShadowTex;
+	part.X = w->x + w->btnWidth  * dpad_locs[i].x; part.Width  = w->btnWidth / 2;
+	part.Y = w->y + w->btnHeight * dpad_locs[i].y; part.Height = w->btnHeight;
 
 	/* Split button down the middle */
 	scale = (w->btnWidth / 400.0f) * 0.5f;
-	back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-	Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
+	part.uv.U1 = 0.0f; part.uv.U2 = BUTTON_uWIDTH * scale;
+	Gfx_Make2DQuad(&part, PACKEDCOL_WHITE, vertices);
 
-	back.X += (w->btnWidth / 2);
-	back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-	Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
+	part.X += part.Width;
+	part.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); part.uv.U2 = BUTTON_uWIDTH;
+	Gfx_Make2DQuad(&part, PACKEDCOL_WHITE, vertices);
 }
 
 static void DPadWidget_BuildText(struct DPadWidget* w, int i, VertexP3fT2fC4b** vertices) {
@@ -2488,6 +2488,7 @@ static void DPadWidget_BuildText(struct DPadWidget* w, int i, VertexP3fT2fC4b** 
 
 static void DPadWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
 	struct DPadWidget* w = (struct DPadWidget*)widget;
+	VertexP3fT2fC4b* data;
 	int i;
 
 	for (i = 0; i < Array_Elems(dpad_locs); i++) {
@@ -2496,6 +2497,28 @@ static void DPadWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
 	for (i = 0; i < Array_Elems(dpad_locs); i++) {
 		DPadWidget_BuildText(w, i, vertices);
 	}
+
+	data = *vertices - 16;
+	/* Change '>' into '<' */
+	data[ 8].U = data[1].U; data[ 9].U = data[0].U;
+	data[10].U = data[3].U; data[11].U = data[2].U;
+
+	/* Change '>' into '\/' */
+	data[12].U = data[1].U; data[12].V = data[1].V;
+	data[13].U = data[2].U; data[13].V = data[2].V;
+	data[14].U = data[3].U; data[14].V = data[3].V;
+	data[15].U = data[0].U; data[15].V = data[0].V;
+
+	/* Change '\/' into '^' */
+	data[0].U = data[12].U; data[0].V = data[12].V;
+	data[1].U = data[13].U; data[1].V = data[12].V;
+	data[2].U = data[14].U; data[2].V = data[13].V;
+	data[3].U = data[15].U; data[3].V = data[13].V;
+	/*
+	{ "<",    KEYBIND_LEFT,     40,  10, 50 },
+	{ ">",    KEYBIND_RIGHT,    40, 150, 50 },
+	{ "^",    KEYBIND_FORWARD,  40,  80, 90 },
+	{ "\\/",  KEYBIND_BACK,     40,  80, 10 },*/
 }
 
 static int DPadWidget_Render2(void* widget, int offset) {
@@ -2522,15 +2545,10 @@ void DPadWidget_Make(struct DPadWidget* w, cc_uint8 horAnchor, cc_uint8 verAncho
 	w->btnWidth  = Display_ScaleX(40);
 	w->btnHeight = Display_ScaleY(40);
 	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
-	/*	
-	{ "<",    KEYBIND_LEFT,     40,  10, 50 },
-	{ ">",    KEYBIND_RIGHT,    40, 150, 50 },
-	{ "^",    KEYBIND_FORWARD,  40,  80, 90 },
-	{ "\\/",  KEYBIND_BACK,     40,  80, 10 },*/
 }
 
 void DPadWidget_SetFont(struct DPadWidget* w, struct FontDesc* font) {
-	static const String text = String_FromConst(">");
+	static const String text = String_FromConst("<");
 	struct DrawTextArgs args;
 	Gfx_DeleteTexture(&w->tex.ID);
 
