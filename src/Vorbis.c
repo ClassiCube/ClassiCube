@@ -81,14 +81,11 @@ static cc_result Ogg_Read(struct OggState* ctx, cc_uint8* data, cc_uint32 count)
 			ctx->cur  += count;
 			ctx->left -= count;
 			left      -= count;
+		} else if (ctx->segmentsRead < ctx->numSegments) {
+			Ogg_NextPacket(ctx);
 		} else {
 			if (ctx->last) return ERR_END_OF_STREAM;
-
-			if (ctx->segmentsRead < ctx->numSegments) {
-				Ogg_NextPacket(ctx);
-			} else {
-				if ((res = Ogg_NextPage(ctx))) return res;
-			}
+			if ((res = Ogg_NextPage(ctx))) return res;
 		}
 	}
 	return 0;
