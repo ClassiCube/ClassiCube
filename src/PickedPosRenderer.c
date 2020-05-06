@@ -75,7 +75,7 @@ static void BuildMesh(struct RayTracer* selected) {
 	Vec3_Add1(&coords[3], &selected->Max,  offset);
 	Vec3_Add1(&coords[2], &coords[3],     -size);
 	
-	ptr = (VertexP3fC4b*)Gfx_LockDynamicVb(pickedPos_vb, VERTEX_FORMAT_P3FC4B, PICKEDPOS_NUM_VERTICES);
+	ptr = (VertexP3fC4b*)Gfx_LockDynamicVb(pickedPos_vb, VERTEX_FORMAT_COLOURED, PICKEDPOS_NUM_VERTICES);
 	for (i = 0; i < Array_Elems(indices); i += 3, ptr++) {
 		ptr->X   = coords[indices[i + 0]].X;
 		ptr->Y   = coords[indices[i + 1]].Y;
@@ -90,7 +90,7 @@ void PickedPosRenderer_Render(struct RayTracer* selected, cc_bool dirty) {
 	
 	Gfx_SetAlphaBlending(true);
 	Gfx_SetDepthWrite(false);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 
 	if (dirty) BuildMesh(selected);
 	else Gfx_BindDynamicVb(pickedPos_vb);
@@ -109,7 +109,7 @@ static void OnContextLost(void* obj) {
 }
 
 static void OnContextRecreated(void* obj) {
-	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, PICKEDPOS_NUM_VERTICES);
+	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, PICKEDPOS_NUM_VERTICES);
 }
 
 static void PickedPosRenderer_Init(void) {

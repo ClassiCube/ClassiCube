@@ -304,7 +304,7 @@ static void DrawName(struct Entity* e) {
 	}
 
 	Particle_DoRender(&size, &pos, &e->NameTex.uv, col, vertices);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, vertices, 4);
 }
 
@@ -673,7 +673,7 @@ void Entities_DrawShadows(void) {
 	Gfx_SetAlphaBlending(true);
 	Gfx_SetTexturing(true);
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	ShadowComponent_Draw(Entities.List[ENTITIES_SELF_ID]);
 
 	if (Entities.ShadowsMode == SHADOW_MODE_CIRCLE_ALL) {	

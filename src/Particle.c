@@ -160,7 +160,7 @@ static void Rain_Render(float t) {
 	int i;
 	if (!rain_count) return;
 	
-	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, rain_count * 4);
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_TEXTURED, rain_count * 4);
 	for (i = 0; i < rain_count; i++) {
 		RainParticle_Render(&rain_Particles[i], t, data);
 		data += 4;
@@ -253,7 +253,7 @@ static void Terrain_Render(float t) {
 	int i, index;
 	if (!terrain_count) return;
 
-	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, terrain_count * 4);
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_TEXTURED, terrain_count * 4);
 	Terrain_Update1DCounts();
 	for (i = 0; i < terrain_count; i++) {
 		index = Atlas1D_Index(terrain_particles[i].texLoc);
@@ -358,7 +358,7 @@ static void Custom_Render(float t) {
 	int i;
 	if (!custom_count) return;
 
-	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, custom_count * 4);
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_TEXTURED, custom_count * 4);
 	for (i = 0; i < custom_count; i++) {
 		CustomParticle_Render(&custom_particles[i], t, data);
 		data += 4;
@@ -396,7 +396,7 @@ void Particles_Render(float t) {
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Terrain_Render(t);
 	Rain_Render(t);
 	Custom_Render(t);
@@ -573,7 +573,7 @@ static void OnContextLost(void* obj) {
 	Gfx_DeleteDynamicVb(&Particles_VB); 
 }
 static void OnContextRecreated(void* obj) {
-	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, PARTICLES_MAX * 4);
+	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
 }
 static void OnBreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	Particles_BreakBlockEffect(coords, old, now);

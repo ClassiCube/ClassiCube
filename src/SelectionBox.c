@@ -144,8 +144,8 @@ static void Selections_ContextLost(void* obj) {
 
 static void Selections_ContextRecreated(void* obj) {
 	if (!selections_used) return;
-	selections_VB     = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, SELECTIONS_MAX_VERTICES);
-	selections_LineVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, SELECTIONS_MAX_VERTICES);
+	selections_VB     = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
+	selections_LineVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
 }
 
 static void Selections_QuickSort(int left, int right) {
@@ -186,16 +186,16 @@ void Selections_Render(void) {
 		Selections_ContextRecreated(NULL);
 	}
 	count = selections_count * SELECTIONS_VERTICES;
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 
-	data = (VertexP3fC4b*)Gfx_LockDynamicVb(selections_LineVB, VERTEX_FORMAT_P3FC4B, count);
+	data = (VertexP3fC4b*)Gfx_LockDynamicVb(selections_LineVB, VERTEX_FORMAT_COLOURED, count);
 	for (i = 0; i < selections_count; i++, data += SELECTIONS_VERTICES) {
 		SelectionBox_RenderEdges(&selections_list[i], data);
 	}
 	Gfx_UnlockDynamicVb(selections_LineVB);
 	Gfx_DrawVb_Lines(count);
 
-	data = (VertexP3fC4b*)Gfx_LockDynamicVb(selections_VB, VERTEX_FORMAT_P3FC4B, count);
+	data = (VertexP3fC4b*)Gfx_LockDynamicVb(selections_VB, VERTEX_FORMAT_COLOURED, count);
 	for (i = 0; i < selections_count; i++, data += SELECTIONS_VERTICES) {
 		SelectionBox_RenderFaces(&selections_list[i], data);
 	}

@@ -99,7 +99,7 @@ void Model_Render(struct Model* model, struct Entity* entity) {
 	if (model->bobbing) pos.Y += entity->Anim.BobbingModel;
 
 	Model_SetupState(model, entity);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
 	model->GetTransform(entity, pos, &entity->Transform);
 	Matrix_Mul(&m, &entity->Transform, &Gfx.View);
@@ -246,7 +246,7 @@ void Model_RenderArm(struct Model* model, struct Entity* entity) {
 	if (model->bobbing) pos.Y += entity->Anim.BobbingModel;
 
 	Model_SetupState(model, entity);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Model_ApplyTexture(entity);
 
 	if (Models.ClassicArms) {
@@ -377,7 +377,7 @@ static void Models_ContextLost(void* obj) {
 }
 
 static void Models_ContextRecreated(void* obj) {
-	Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, Models.MaxVertices);
+	Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
 }
 
 static void MakeModel(struct Model* model) {

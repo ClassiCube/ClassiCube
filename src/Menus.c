@@ -3092,7 +3092,7 @@ static void TexIdsOverlay_BuildMesh(void* screen) {
 	VertexP3fT2fC4b* data;
 	VertexP3fT2fC4b** ptr;
 
-	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(s->vb, VERTEX_FORMAT_P3FT2FC4B, s->maxVertices);
+	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(s->vb, VERTEX_FORMAT_TEXTURED, s->maxVertices);
 	ptr  = &data;
 
 	Widget_BuildMesh(&s->title, ptr);
@@ -3142,7 +3142,7 @@ static void TexIdsOverlay_Render(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
 
 	offset = Widget_Render2(&s->title, offset);

@@ -189,7 +189,7 @@ void MapRenderer_RenderNormal(double delta) {
 	int batch;
 	if (!mapChunks) return;
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 	
@@ -266,7 +266,7 @@ void MapRenderer_RenderTranslucent(double delta) {
 
 	/* First fill depth buffer */
 	vertices = Game_Vertices;
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_SetTexturing(false);
 	Gfx_SetAlphaBlending(false);
 	Gfx_SetColWriteMask(false, false, false, false);

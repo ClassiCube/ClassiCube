@@ -11,7 +11,7 @@
 struct Stream;
 
 typedef enum VertexFormat_ {
-	VERTEX_FORMAT_P3FC4B, VERTEX_FORMAT_P3FT2FC4B
+	VERTEX_FORMAT_COLOURED, VERTEX_FORMAT_TEXTURED
 } VertexFormat;
 typedef enum FogFunc_ {
 	FOG_LINEAR, FOG_EXP, FOG_EXP2
@@ -19,6 +19,9 @@ typedef enum FogFunc_ {
 typedef enum MatrixType_ {
 	MATRIX_PROJECTION, MATRIX_VIEW, MATRIX_TEXTURE
 } MatrixType;
+
+#define SIZEOF_VERTEX_TEXTURED 24
+#define SIZEOF_VERTEX_COLOURED 16
 
 void Gfx_Init(void);
 void Gfx_Free(void);

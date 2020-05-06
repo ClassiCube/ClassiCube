@@ -144,7 +144,7 @@ void EnvRenderer_RenderClouds(void) {
 	Gfx_SetAlphaTest(true);
 	Gfx_SetTexturing(true);
 	Gfx_BindTexture(clouds_tex);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindVb(clouds_vb);
 	Gfx_DrawVb_IndexedTris(clouds_vertices);
 	Gfx_SetAlphaTest(false);
@@ -194,7 +194,7 @@ static void UpdateClouds(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	clouds_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, clouds_vertices, &clouds_vb);
+	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_TEXTURED, clouds_vertices, &clouds_vb);
 	DrawCloudsY(x1, z1, x2, z2, Env.CloudsHeight, data);
 	Gfx_UnlockVb(clouds_vb);
 }
@@ -213,7 +213,7 @@ void EnvRenderer_RenderSky(void) {
 
 	normY = (float)World.Height + 8.0f;
 	skyY  = max(Camera.CurrentPos.Y + 8.0f, normY);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	Gfx_BindVb(sky_vb);
 
 	if (skyY == normY) {
@@ -265,7 +265,7 @@ static void UpdateSky(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	sky_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	data   = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FC4B, sky_vertices, &sky_vb);
+	data   = Gfx_CreateAndLockVb(VERTEX_FORMAT_COLOURED, sky_vertices, &sky_vb);
 	height = max((World.Height + 2), Env.CloudsHeight) + 6;
 	DrawSkyY(x1, z1, x2, z2, height, data);
 	Gfx_UnlockVb(sky_vb);
@@ -287,7 +287,7 @@ void EnvRenderer_RenderSkybox(void) {
 	Gfx_SetDepthWrite(false);
 	Gfx_SetTexturing(true);
 	Gfx_BindTexture(skybox_tex);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
 	/* Base skybox rotation */
 	rotTime = (float)(Game.Time * 2 * MATH_PI); /* So speed of 1 rotates whole skybox every second */
@@ -338,7 +338,7 @@ static void UpdateSkybox(void) {
 	if (Gfx.LostContext)     return;
 	if (EnvRenderer_Minimal) return;
 
-	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT, &skybox_vb);
+	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT, &skybox_vb);
 	Mem_Copy(data, vertices, sizeof(vertices));
 	for (i = 0; i < SKYBOX_COUNT; i++) { data[i].Col = Env.SkyboxCol; }
 	Gfx_UnlockVb(skybox_vb);
@@ -514,7 +514,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaArgBlend(true);
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	vCount = (int)(v - vertices);
 	Gfx_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
 
@@ -540,7 +540,7 @@ static void RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID tex, in
 	Gfx_EnableMipmaps();
 
 	Gfx_BindTexture(tex);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindVb(vb);
 	Gfx_DrawVb_IndexedTris(count);
 
@@ -688,7 +688,7 @@ static void UpdateMapSides(void) {
 	sides_vertices +=     CalcNumVertices(World.Width, World.Length);  /* YQuads beneath map */
 	sides_vertices += 2 * CalcNumVertices(World.Width,  Math_AbsI(y)); /* ZQuads */
 	sides_vertices += 2 * CalcNumVertices(World.Length, Math_AbsI(y)); /* XQuads */
-	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, sides_vertices, &sides_vb);
+	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_TEXTURED, sides_vertices, &sides_vb);
 
 	sides_fullBright = Blocks.FullBright[block];
 	col = sides_fullBright ? white : Env.ShadowCol;
@@ -733,7 +733,7 @@ static void UpdateMapEdges(void) {
 		r = rects[i];
 		edges_vertices += CalcNumVertices(r.Width, r.Height); /* YPlanes outside */
 	}
-	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, edges_vertices, &edges_vb);
+	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_TEXTURED, edges_vertices, &edges_vb);
 
 	edges_fullBright = Blocks.FullBright[block];
 	col = edges_fullBright ? white : Env.SunCol;
@@ -778,7 +778,7 @@ static void UpdateAll(void) {
 	Gfx_DeleteDynamicVb(&weather_vb);
 	if (Gfx.LostContext) return;
 	/* TODO: Don't allocate unless used? */
-	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, WEATHER_VERTS_COUNT);
+	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
 	/* TODO: Don't need to do this on every new map */
 	UpdateBorderTextures();
 }
