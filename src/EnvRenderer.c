@@ -18,6 +18,7 @@
 #include "Camera.h"
 #include "Particle.h"
 #include "Options.h"
+#include "GameStructs.h"
 
 cc_bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 

@@ -13,6 +13,7 @@
 #include "Stream.h"
 #include "Funcs.h"
 #include "Options.h"
+#include "GameStructs.h"
 
 struct _ModelsData Models;
 

@@ -1,10 +1,11 @@
 #ifndef CC_DRAWER_H
 #define CC_DRAWER_H
-#include "VertexStructs.h"
+#include "PackedCol.h"
 #include "Vectors.h"
 /* Draws the vertices for a cuboid region.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
+struct VertexTextured;
 
 CC_VAR extern struct _DrawerData {
 	/* Whether a colour tinting effect should be applied to all faces. */

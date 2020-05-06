@@ -1,9 +1,8 @@
 #ifndef CC_GFXAPI_H
 #define CC_GFXAPI_H
 #include "Vectors.h"
-#include "GameStructs.h"
 #include "Bitmap.h"
-#include "VertexStructs.h"
+#include "PackedCol.h"
 
 /* Abstracts a 3D graphics rendering API.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
@@ -20,8 +19,13 @@ typedef enum MatrixType_ {
 	MATRIX_PROJECTION, MATRIX_VIEW, MATRIX_TEXTURE
 } MatrixType;
 
-#define SIZEOF_VERTEX_TEXTURED 24
 #define SIZEOF_VERTEX_COLOURED 16
+#define SIZEOF_VERTEX_TEXTURED 24
+
+/* 3 floats for position (XYZ), 4 bytes for colour. */
+typedef struct VertexColoured { float X, Y, Z; PackedCol Col; } VertexP3fC4b;
+/* 3 floats for position (XYZ), 2 floats for texture coordinates (UV), 4 bytes for colour. */
+typedef struct VertexTextured { float X, Y, Z; PackedCol Col; float U, V; } VertexP3fT2fC4b;
 
 void Gfx_Init(void);
 void Gfx_Free(void);

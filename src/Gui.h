@@ -1,6 +1,6 @@
 #ifndef CC_GUI_H
 #define CC_GUI_H
-#include "VertexStructs.h"
+#include "String.h"
 /* Describes and manages 2D GUI elements on screen.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
@@ -14,6 +14,7 @@ enum GuiAnchor {
 };
 
 struct IGameComponent;
+struct VertexTextured;
 struct FontDesc;
 struct Widget;
 extern struct IGameComponent Gui_Component;

@@ -1,9 +1,10 @@
 #ifndef CC_ISOMETRICDRAWER_H
 #define CC_ISOMETRICDRAWER_H
-#include "VertexStructs.h"
+#include "Core.h"
 /* Draws 2D isometric blocks for the hotbar and inventory UIs.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
+struct VertexTextured;
 
 /* Maximum number of vertices used to draw a block in isometric way. */
 #define ISOMETRICDRAWER_MAXVERTICES 16

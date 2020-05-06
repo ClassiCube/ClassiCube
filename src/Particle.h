@@ -1,12 +1,13 @@
 #ifndef CC_PARTICLE_H
 #define CC_PARTICLE_H
 #include "Vectors.h"
-#include "VertexStructs.h"
+#include "PackedCol.h"
 /* Represents particle effects, and manages rendering and spawning particles.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
 struct IGameComponent;
+struct VertexTextured;
 struct ScheduledTask;
 extern struct IGameComponent Particles_Component;
 

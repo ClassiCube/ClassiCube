@@ -8,7 +8,6 @@
 #include "Platform.h"
 #include "Camera.h"
 #include "Funcs.h"
-#include "VertexStructs.h"
 #include "Graphics.h"
 #include "Physics.h"
 #include "Model.h"

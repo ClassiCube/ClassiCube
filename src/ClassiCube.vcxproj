@@ -245,7 +245,6 @@
     <ClInclude Include="String.h" />
     <ClInclude Include="Core.h" />
     <ClInclude Include="Vectors.h" />
-    <ClInclude Include="VertexStructs.h" />
     <ClInclude Include="Vorbis.h" />
     <ClInclude Include="Widgets.h" />
     <ClInclude Include="Window.h" />

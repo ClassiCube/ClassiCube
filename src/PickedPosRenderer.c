@@ -1,12 +1,12 @@
 #include "PickedPosRenderer.h"
 #include "PackedCol.h"
-#include "VertexStructs.h"
 #include "Graphics.h"
 #include "Game.h"
 #include "Event.h"
 #include "Picking.h"
 #include "Funcs.h"
 #include "Camera.h"
+#include "GameStructs.h"
 
 static GfxResourceID pickedPos_vb;
 #define PICKEDPOS_NUM_VERTICES (16 * 6)

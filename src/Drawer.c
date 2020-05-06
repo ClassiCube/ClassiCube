@@ -1,6 +1,7 @@
 #include "Drawer.h"
 #include "TexturePack.h"
 #include "Constants.h"
+#include "Graphics.h"
 struct _DrawerData Drawer;
 
 void Drawer_XMin(int count, PackedCol col, TextureLoc texLoc, struct VertexTextured** vertices) {

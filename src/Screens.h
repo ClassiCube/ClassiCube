@@ -1,6 +1,6 @@
 #ifndef CC_SCREENS_H
 #define CC_SCREENS_H
-#include "VertexStructs.h"
+#include "String.h"
 /* Contains all 2D non-menu screen implementations.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
