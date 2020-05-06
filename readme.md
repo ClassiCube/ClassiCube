@@ -90,6 +90,10 @@ Install libexecinfo package if needed.
 
 ```gcc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lcurl -lopenal -lexecinfo```
 
+#### DragonflyBSD
+
+```gcc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lcurl -lopenal -lexecinfo```
+
 #### Solaris
 
 ```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lXi -lGL -lcurl -lopenal```
