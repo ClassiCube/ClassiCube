@@ -102,7 +102,7 @@ struct WidgetVTABLE {
 	/* Returns non-zero if a pointer movement is handled. */
 	int (*HandlesPointerMove)(void* elem, int id, int x, int y);
 	/* Builds the mesh of vertices for this widget. */
-	void (*BuildMesh)(void* elem, VertexP3fT2fC4b** vertices);
+	void (*BuildMesh)(void* elem, struct VertexTextured** vertices);
 	/* Draws this widget on-screen. */
 	int  (*Render2)(void* elem, int offset);
 };
@@ -197,8 +197,8 @@ struct TextAtlas {
 };
 void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, struct FontDesc* font, const String* prefix);
 void TextAtlas_Free(struct TextAtlas* atlas);
-void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertices);
-void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vertices);
+void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** vertices);
+void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured** vertices);
 
 #define Elem_Render(elem, delta) (elem)->VTABLE->Render(elem, delta)
 #define Elem_Free(elem)          (elem)->VTABLE->Free(elem)

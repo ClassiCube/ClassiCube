@@ -8,8 +8,8 @@
 #include "Block.h"
 
 static float iso_scale;
-static VertexP3fT2fC4b* iso_vertices;
-static VertexP3fT2fC4b* iso_vertices_base;
+static struct VertexTextured* iso_vertices;
+static struct VertexTextured* iso_vertices_base;
 static GfxResourceID iso_vb;
 
 static cc_bool iso_cacheInitalised;
@@ -73,7 +73,7 @@ static void IsometricDrawer_SpriteZQuad(BlockID block, cc_bool firstPart) {
 	TextureLoc loc = Block_Tex(block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &iso_texIndex);
 
-	VertexP3fT2fC4b v;
+	struct VertexTextured v;
 	float minX, maxX, minY, maxY;
 	float x1, x2;
 
@@ -102,7 +102,7 @@ static void IsometricDrawer_SpriteXQuad(BlockID block, cc_bool firstPart) {
 	TextureLoc loc = Block_Tex(block, FACE_XMAX);
 	TextureRec rec = Atlas1D_TexRec(loc, 1, &iso_texIndex);
 	
-	VertexP3fT2fC4b v;
+	struct VertexTextured v;
 	float minY, maxY, minZ, maxZ;
 	float z1, z2;
 
@@ -127,7 +127,7 @@ static void IsometricDrawer_SpriteXQuad(BlockID block, cc_bool firstPart) {
 	v.Y = minY;                           v.V = rec.V2; *iso_vertices++ = v;
 }
 
-void IsometricDrawer_BeginBatch(VertexP3fT2fC4b* vertices, GfxResourceID vb) {
+void IsometricDrawer_BeginBatch(struct VertexTextured* vertices, GfxResourceID vb) {
 	IsometricDrawer_InitCache();
 	iso_lastTexIndex = -1;
 	iso_vertices = vertices;

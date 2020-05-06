@@ -6,7 +6,7 @@
 */
 
 /* 3 floats for position (XYZ), 4 bytes for colour. */
-typedef struct VertexP3fC4b_ { float X, Y, Z; PackedCol Col; } VertexP3fC4b;
+typedef struct VertexColoured { float X, Y, Z; PackedCol Col; } VertexP3fC4b;
 /* 3 floats for position (XYZ), 2 floats for texture coordinates (UV), 4 bytes for colour. */
-typedef struct VertexP3fT2fC4b_ { float X, Y, Z; PackedCol Col; float U, V; } VertexP3fT2fC4b;
+typedef struct VertexTextured { float X, Y, Z; PackedCol Col; float U, V; } VertexP3fT2fC4b;
 #endif

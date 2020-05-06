@@ -276,7 +276,7 @@ static void MakeNameTexture(struct Entity* e) {
 }
 
 static void DrawName(struct Entity* e) {
-	VertexP3fT2fC4b vertices[4];
+	struct VertexTextured vertices[4];
 	PackedCol col = PACKEDCOL_WHITE;
 
 	struct Model* model;

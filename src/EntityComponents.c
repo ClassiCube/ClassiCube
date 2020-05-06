@@ -436,9 +436,9 @@ static float shadow_radius, shadow_uvScale;
 struct ShadowData { float Y; BlockID Block; cc_uint8 A; };
 
 static cc_bool lequal(float a, float b) { return a < b || Math_AbsF(a - b) < 0.001f; }
-static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity* e, struct ShadowData* data, float x1, float z1, float x2, float z2) {
+static void ShadowComponent_DrawCoords(struct VertexTextured** vertices, struct Entity* e, struct ShadowData* data, float x1, float z1, float x2, float z2) {
 	PackedCol col;
-	VertexP3fT2fC4b* v;
+	struct VertexTextured* v;
 	Vec3 cen;
 	float u1, v1, u2, v2;
 
@@ -467,10 +467,10 @@ static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, struct Entity
 	*vertices = v;
 }
 
-static void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, float y, float x, float z) {
+static void ShadowComponent_DrawSquareShadow(struct VertexTextured** vertices, float y, float x, float z) {
 	PackedCol col = PackedCol_Make(255, 255, 255, 220);
 	float     uv1 = 63/128.0f, uv2 = 64/128.0f;
-	VertexP3fT2fC4b* v = *vertices;
+	struct VertexTextured* v = *vertices;
 
 	v->X = x;     v->Y = y; v->Z = z;     v->Col = col; v->U = uv1; v->V = uv1; v++;
 	v->X = x + 1; v->Y = y; v->Z = z;     v->Col = col; v->U = uv2; v->V = uv1; v++;
@@ -482,7 +482,7 @@ static void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, float y
 
 /* Shadow may extend down multiple blocks vertically */
 /* If so, shadow on a block must be 'chopped up' to avoid a shadow underneath block above this one */
-static void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, struct Entity* e, struct ShadowData* data, float x, float z) {
+static void ShadowComponent_DrawCircle(struct VertexTextured** vertices, struct Entity* e, struct ShadowData* data, float x, float z) {
 	Vec3 min, max, nMin, nMax;
 	int i;
 	x = (float)Math_Floor(x); z = (float)Math_Floor(z);
@@ -585,8 +585,8 @@ static void ShadowComponent_MakeTex(void) {
 }
 
 void ShadowComponent_Draw(struct Entity* e) {
-	VertexP3fT2fC4b vertices[128];
-	VertexP3fT2fC4b* ptr;
+	struct VertexTextured vertices[128];
+	struct VertexTextured* ptr;
 	struct ShadowData data[4];
 	GfxResourceID vb;
 	Vec3 pos;

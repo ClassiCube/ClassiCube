@@ -106,7 +106,7 @@ CC_VAR extern struct _ModelsData {
 	/* Dynamic vertex buffer for uploading model vertices. */
 	GfxResourceID Vb;
 	/* Temporary storage for vertices. */
-	VertexP3fT2fC4b* Vertices;
+	struct VertexTextured* Vertices;
 	/* Maximum number of vertices that can be stored in Vertices. */
 	/* NOTE: If you change this, you MUST also destroy and recreate the dynamic VB. */
 	int MaxVertices;

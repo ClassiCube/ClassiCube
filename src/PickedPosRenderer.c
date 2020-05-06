@@ -36,7 +36,7 @@ static void BuildMesh(struct RayTracer* selected) {
 		PickedPos_Z(0) PickedPos_Z(3) /* ZMin, ZMax */
 	};
 	PackedCol col = PackedCol_Make(0, 0, 0, 102);
-	VertexP3fC4b* ptr;
+	struct VertexColoured* ptr;
 	int i;
 	Vec3 delta;
 	float dist, offset, size;
@@ -75,7 +75,8 @@ static void BuildMesh(struct RayTracer* selected) {
 	Vec3_Add1(&coords[3], &selected->Max,  offset);
 	Vec3_Add1(&coords[2], &coords[3],     -size);
 	
-	ptr = (VertexP3fC4b*)Gfx_LockDynamicVb(pickedPos_vb, VERTEX_FORMAT_COLOURED, PICKEDPOS_NUM_VERTICES);
+	ptr = (struct VertexColoured*)Gfx_LockDynamicVb(pickedPos_vb, 
+									VERTEX_FORMAT_COLOURED, PICKEDPOS_NUM_VERTICES);
 	for (i = 0; i < Array_Elems(indices); i += 3, ptr++) {
 		ptr->X   = coords[indices[i + 0]].X;
 		ptr->Y   = coords[indices[i + 1]].Y;

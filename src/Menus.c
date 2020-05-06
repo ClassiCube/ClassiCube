@@ -3032,7 +3032,7 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	TexIdsOverlay_Layout(screen); /* TODO: REMOVE THIS */
 }
 
-static void TexIdsOverlay_BuildTerrain(struct TexIdsOverlay* s, VertexP3fT2fC4b** ptr) {
+static void TexIdsOverlay_BuildTerrain(struct TexIdsOverlay* s, struct VertexTextured** ptr) {
 	struct Texture tex;
 	int baseLoc, xOffset;
 	int i, row, size;
@@ -3061,9 +3061,9 @@ static void TexIdsOverlay_BuildTerrain(struct TexIdsOverlay* s, VertexP3fT2fC4b*
 	}
 }
 
-static void TexIdsOverlay_BuildText(struct TexIdsOverlay* s, VertexP3fT2fC4b** ptr) {
+static void TexIdsOverlay_BuildText(struct TexIdsOverlay* s, struct VertexTextured** ptr) {
 	struct TextAtlas* idAtlas;
-	VertexP3fT2fC4b* beg;
+	struct VertexTextured* beg;
 	int xOffset, size, row;
 	int x, y, id = 0;
 
@@ -3089,10 +3089,11 @@ static void TexIdsOverlay_BuildText(struct TexIdsOverlay* s, VertexP3fT2fC4b** p
 
 static void TexIdsOverlay_BuildMesh(void* screen) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
-	VertexP3fT2fC4b* data;
-	VertexP3fT2fC4b** ptr;
+	struct VertexTextured* data;
+	struct VertexTextured** ptr;
 
-	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(s->vb, VERTEX_FORMAT_TEXTURED, s->maxVertices);
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(s->vb, 
+										VERTEX_FORMAT_TEXTURED, s->maxVertices);
 	ptr  = &data;
 
 	Widget_BuildMesh(&s->title, ptr);

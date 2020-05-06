@@ -153,7 +153,7 @@ void EnvRenderer_RenderClouds(void) {
 	Gfx_LoadIdentityMatrix(MATRIX_TEXTURE);
 }
 
-static void DrawCloudsY(int x1, int z1, int x2, int z2, int y, VertexP3fT2fC4b* v) {
+static void DrawCloudsY(int x1, int z1, int x2, int z2, int y, struct VertexTextured* v) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
 	float u1, u2, v1, v2;
 	float yy = (float)y + 0.1f; 
@@ -181,7 +181,7 @@ static void DrawCloudsY(int x1, int z1, int x2, int z2, int y, VertexP3fT2fC4b* 
 }
 
 static void UpdateClouds(void) {
-	VertexP3fT2fC4b* data;
+	struct VertexTextured* data;
 	int extent;
 	int x1, z1, x2, z2;
 	
@@ -231,7 +231,7 @@ void EnvRenderer_RenderSky(void) {
 	}
 }
 
-static void DrawSkyY(int x1, int z1, int x2, int z2, int y, VertexP3fC4b* v) {
+static void DrawSkyY(int x1, int z1, int x2, int z2, int y, struct VertexColoured* v) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
 	PackedCol col = Env.SkyCol;
 
@@ -252,7 +252,7 @@ static void DrawSkyY(int x1, int z1, int x2, int z2, int y, VertexP3fC4b* v) {
 }
 
 static void UpdateSky(void) {
-	VertexP3fC4b* data;
+	struct VertexColoured* data;
 	int extent, height;
 	int x1, z1, x2, z2;
 
@@ -311,7 +311,7 @@ void EnvRenderer_RenderSkybox(void) {
 }
 
 static void UpdateSkybox(void) {
-	static const VertexP3fT2fC4b vertices[SKYBOX_COUNT] = {
+	static const struct VertexTextured vertices[SKYBOX_COUNT] = {
 		/* Front quad */
 		{ -1, -1, -1,  0, 0.25f, 1.00f }, {  1, -1, -1,  0, 0.50f, 1.00f },
 		{  1,  1, -1,  0, 0.50f, 0.50f }, { -1,  1, -1,  0, 0.25f, 0.50f },
@@ -331,7 +331,7 @@ static void UpdateSkybox(void) {
 		{  1, -1, -1,  0, 0.75f, 0.50f }, {  1, -1,  1,  0, 0.75f, 0.00f },
 		{ -1, -1,  1,  0, 0.50f, 0.00f }, { -1, -1, -1,  0, 0.50f, 0.50f },
 	};
-	VertexP3fT2fC4b* data;
+	struct VertexTextured* data;
 	int i;
 
 	Gfx_DeleteVb(&skybox_vb);
@@ -436,8 +436,8 @@ static float CalcRainAlphaAt(float x) {
 }
 
 void EnvRenderer_RenderWeather(double deltaTime) {
-	VertexP3fT2fC4b vertices[WEATHER_VERTS_COUNT];
-	VertexP3fT2fC4b* v;
+	struct VertexTextured vertices[WEATHER_VERTS_COUNT];
+	struct VertexTextured* v;
 	int weather, vCount;
 	IVec3 pos;
 	cc_bool moved, particles;
@@ -593,10 +593,10 @@ static void UpdateBorderTextures(void) {
 #define Borders_HorOffset(block) (Blocks.RenderMinBB[block].X - Blocks.MinBB[block].X)
 #define Borders_YOffset(block)   (Blocks.RenderMinBB[block].Y - Blocks.MinBB[block].Y)
 
-static void DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol col, VertexP3fT2fC4b** vertices) {
+static void DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol col, struct VertexTextured** vertices) {
 	int endZ = z2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
-	VertexP3fT2fC4b* v = *vertices;
+	struct VertexTextured* v = *vertices;
 
 	for (; z1 < endZ; z1 += axisSize) {
 		z2 = z1 + axisSize;
@@ -616,10 +616,10 @@ static void DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol col, Ve
 	*vertices = v;
 }
 
-static void DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol col, VertexP3fT2fC4b** vertices) {
+static void DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol col, struct VertexTextured** vertices) {
 	int endX = x2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
-	VertexP3fT2fC4b* v = *vertices;
+	struct VertexTextured* v = *vertices;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -639,10 +639,10 @@ static void DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol col, Ve
 	*vertices = v;
 }
 
-static void DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol col, float offset, float yOffset, VertexP3fT2fC4b** vertices) {
+static void DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol col, float offset, float yOffset, struct VertexTextured** vertices) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
-	VertexP3fT2fC4b* v = *vertices;
+	struct VertexTextured* v = *vertices;
 	float yy = y + yOffset;
 
 	for (; x1 < endX; x1 += axisSize) {
@@ -669,7 +669,7 @@ static void UpdateMapSides(void) {
 	PackedCol col, white = PACKEDCOL_WHITE;
 	int y, y1, y2;
 	int i;
-	VertexP3fT2fC4b* data;
+	struct VertexTextured* data;
 
 	Gfx_DeleteVb(&sides_vb);
 	if (!World.Loaded || Gfx.LostContext) return;
@@ -719,7 +719,7 @@ static void UpdateMapEdges(void) {
 	PackedCol col, white = PACKEDCOL_WHITE;
 	float y;
 	int i;
-	VertexP3fT2fC4b* data;
+	struct VertexTextured* data;
 
 	Gfx_DeleteVb(&edges_vb);
 	if (!World.Loaded || Gfx.LostContext) return;

@@ -36,7 +36,7 @@ struct CustomParticleEffect {
 extern struct CustomParticleEffect Particles_CustomEffects[256];
 
 /* http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/ */
-void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices);
+void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec, PackedCol col, struct VertexTextured* vertices);
 void Particles_Render(float t);
 void Particles_Tick(struct ScheduledTask* task);
 void Particles_BreakBlockEffect(IVec3 coords, BlockID oldBlock, BlockID block);

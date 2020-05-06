@@ -171,9 +171,9 @@ void Model_ApplyTexture(struct Entity* entity) {
 }
 
 void Model_DrawPart(struct ModelPart* part) {
-	struct Model* model     = Models.Active;
-	struct ModelVertex* src = &model->vertices[part->offset];
-	VertexP3fT2fC4b* dst    = &Models.Vertices[model->index];
+	struct Model* model        = Models.Active;
+	struct ModelVertex* src    = &model->vertices[part->offset];
+	struct VertexTextured* dst = &Models.Vertices[model->index];
 
 	struct ModelVertex v;
 	int i, count = part->count;
@@ -195,9 +195,9 @@ void Model_DrawPart(struct ModelPart* part) {
 #define Model_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
 
 void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart* part, cc_bool head) {
-	struct Model* model     = Models.Active;
-	struct ModelVertex* src = &model->vertices[part->offset];
-	VertexP3fT2fC4b* dst    = &Models.Vertices[model->index];
+	struct Model* model        = Models.Active;
+	struct ModelVertex* src    = &model->vertices[part->offset];
+	struct VertexTextured* dst = &Models.Vertices[model->index];
 
 	float cosX = (float)Math_Cos(-angleX), sinX = (float)Math_Sin(-angleX);
 	float cosY = (float)Math_Cos(-angleY), sinY = (float)Math_Sin(-angleY);
@@ -1495,7 +1495,7 @@ static TextureLoc BlockModel_GetTex(Face face) {
 }
 
 static void BlockModel_SpriteZQuad(cc_bool firstPart, cc_bool mirror) {
-	VertexP3fT2fC4b* ptr, v;
+	struct VertexTextured* ptr, v;
 	PackedCol col; int tmp;
 	float xz1, xz2;
 	TextureLoc loc = BlockModel_GetTex(FACE_ZMAX);
@@ -1523,7 +1523,7 @@ static void BlockModel_SpriteZQuad(cc_bool firstPart, cc_bool mirror) {
 }
 
 static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
-	VertexP3fT2fC4b* ptr, v;
+	struct VertexTextured* ptr, v;
 	PackedCol col; int tmp;
 	float x1, x2, z1, z2;
 	TextureLoc loc = BlockModel_GetTex(FACE_XMAX);
@@ -1551,9 +1551,9 @@ static void BlockModel_SpriteXQuad(cc_bool firstPart, cc_bool mirror) {
 }
 
 static void BlockModel_BuildParts(cc_bool sprite) {
+	struct VertexTextured* ptr;
 	Vec3 min, max;
 	TextureLoc loc;
-	VertexP3fT2fC4b* ptr;
 
 	if (sprite) {
 		BlockModel_SpriteXQuad(false, false);
@@ -1693,7 +1693,7 @@ static struct Model* SkinnedCubeModel_GetInstance(void) {
 *-------------------------------------------------------Model component---------------------------------------------------*
 *#########################################################################################################################*/
 /* NOTE: None of the built in models use more than 12 parts at once. */
-static VertexP3fT2fC4b defaultVertices[MODEL_BOX_VERTICES * 12];
+static struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * 12];
 
 static void Model_RegisterDefaultModels(void) {
 	Model_RegisterTexture(&human_tex);

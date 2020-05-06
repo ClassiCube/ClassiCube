@@ -202,7 +202,7 @@ void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, Pack
 /* Renders a 2D coloured texture. */
 void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol col);
 /* Fills out the vertices for rendering a 2D coloured texture. */
-void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices);
+void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, struct VertexTextured** vertices);
 
 /* Switches state to be suitable for drawing 2D graphics. */
 /* NOTE: This means turning off fog/depth test, changing matrices, etc.*/

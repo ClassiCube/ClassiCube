@@ -25,9 +25,9 @@ void AxisLinesRenderer_Render(void) {
 		PackedCol_Make(  0, 255,   0, 255), /* Green */
 	};
 
+	struct VertexColoured* v;
 	Vec3 coords[5], pos;
 	int i, count;
-	VertexP3fC4b* v;
 
 	if (!AxisLinesRenderer_Enabled || Gfx.LostContext) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
@@ -45,7 +45,8 @@ void AxisLinesRenderer_Render(void) {
 	Vec3_Add1(&coords[3], &pos,  AXISLINES_THICKNESS);
 	Vec3_Add1(&coords[4], &pos,  AXISLINES_LENGTH);
 
-	v = (VertexP3fC4b*)Gfx_LockDynamicVb(axisLines_vb, VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
+	v = (struct VertexColoured*)Gfx_LockDynamicVb(axisLines_vb, 
+									VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
 	for (i = 0; i < count; i++, v++) {
 		v->X   = coords[indices[i*3 + 0]].X;
 		v->Y   = coords[indices[i*3 + 1]].Y;
