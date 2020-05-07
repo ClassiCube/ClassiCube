@@ -507,13 +507,17 @@ cc_result Png_Decode(Bitmap* bmp, struct Stream* stream) {
 					rowExpander(bmp->Width, palette, &scanline[1], Bitmap_GetRow(bmp, curY));
 				}
 			}
+
+			if (curY == bmp->Height) {
+				if (!BitmapCol_A(trnsCol)) ComputeTransparency(bmp, trnsCol);
+				return 0;
+			}
 		} break;
 
-		case PNG_FourCC('I','E','N','D'): {
-			if (dataSize) return PNG_ERR_INVALID_END_SIZE;
-			if (!BitmapCol_A(trnsCol)) ComputeTransparency(bmp, trnsCol);
-			return bmp->Scan0 ? 0 : PNG_ERR_NO_DATA;
-		} break;
+		case PNG_FourCC('I','E','N','D'):
+			/* Reading all image data should be handled by above if in the IDAT chunk */
+			/* If we reached here, it means not all of the image data was read */
+			return PNG_ERR_REACHED_IEND;
 
 		default:
 			if ((res = stream->Skip(stream, dataSize))) return res;

@@ -110,7 +110,7 @@ static const char* Logger_GetCCErrorDesc(cc_result res) {
 	case PNG_ERR_PAL_SIZE:         return "Invalid size of palette data";
 	case PNG_ERR_TRANS_COUNT:      return "Invalid number of transparency entries";
 	case PNG_ERR_TRANS_INVALID:    return "Transparency invalid for color type";
-	case PNG_ERR_INVALID_END_SIZE: return "Non-empty IEND chunk";
+	case PNG_ERR_REACHED_IEND:     return "Incomplete PNG image data";
 	case PNG_ERR_NO_DATA:          return "No image in PNG";
 	case PNG_ERR_INVALID_SCANLINE: return "Invalid PNG scanline type";
 
