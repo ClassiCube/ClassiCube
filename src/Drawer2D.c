@@ -78,6 +78,7 @@ void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style) {
 				return;
 			}
 		}
+		Logger_Abort2(res, "Failed to make system font");
 	}
 }
 
