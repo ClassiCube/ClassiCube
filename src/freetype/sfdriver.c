@@ -40,7 +40,6 @@
 #include "ttmtx.h"
 
 #include FT_SERVICE_GLYPH_DICT_H
-#include FT_SERVICE_SFNT_H
 #include FT_SERVICE_TT_CMAP_H
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
@@ -57,91 +56,6 @@
   /*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_sfdriver
-
-
-  /*
-   *  SFNT TABLE SERVICE
-   *
-   */
-
-  static void*
-  get_sfnt_table( TT_Face      face,
-                  FT_Sfnt_Tag  tag )
-  {
-    void*  table;
-
-
-    switch ( tag )
-    {
-    case FT_SFNT_HEAD:
-      table = &face->header;
-      break;
-
-    case FT_SFNT_HHEA:
-      table = &face->horizontal;
-      break;
-
-    case FT_SFNT_VHEA:
-      table = face->vertical_info ? &face->vertical : NULL;
-      break;
-
-    case FT_SFNT_OS2:
-      table = ( face->os2.version == 0xFFFFU ) ? NULL : &face->os2;
-      break;
-
-    case FT_SFNT_POST:
-      table = &face->postscript;
-      break;
-
-    case FT_SFNT_MAXP:
-      table = &face->max_profile;
-      break;
-
-    case FT_SFNT_PCLT:
-      table = face->pclt.Version ? &face->pclt : NULL;
-      break;
-
-    default:
-      table = NULL;
-    }
-
-    return table;
-  }
-
-
-  static FT_Error
-  sfnt_table_info( TT_Face    face,
-                   FT_UInt    idx,
-                   FT_ULong  *tag,
-                   FT_ULong  *offset,
-                   FT_ULong  *length )
-  {
-    if ( !offset || !length )
-      return FT_THROW( Invalid_Argument );
-
-    if ( !tag )
-      *length = face->num_tables;
-    else
-    {
-      if ( idx >= face->num_tables )
-        return FT_THROW( Table_Missing );
-
-      *tag    = face->dir_tables[idx].Tag;
-      *offset = face->dir_tables[idx].Offset;
-      *length = face->dir_tables[idx].Length;
-    }
-
-    return FT_Err_Ok;
-  }
-
-
-  FT_DEFINE_SERVICE_SFNT_TABLEREC(
-    sfnt_service_sfnt_table,
-
-    (FT_SFNT_TableLoadFunc)tt_face_load_any,     /* load_table */
-    (FT_SFNT_TableGetFunc) get_sfnt_table,       /* get_table  */
-    (FT_SFNT_TableInfoFunc)sfnt_table_info       /* table_info */
-  )
 
 
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
@@ -193,10 +107,9 @@
    */
 
 #if defined TT_CONFIG_OPTION_POSTSCRIPT_NAMES
-  FT_DEFINE_SERVICEDESCREC3(
+  FT_DEFINE_SERVICEDESCREC2(
     sfnt_services,
 
-    FT_SERVICE_ID_SFNT_TABLE,           &sfnt_service_sfnt_table,
     FT_SERVICE_ID_GLYPH_DICT,           &sfnt_service_glyph_dict,
     FT_SERVICE_ID_TT_CMAP,              &tt_service_get_cmap_info )
 #else

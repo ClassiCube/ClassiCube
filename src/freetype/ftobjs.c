@@ -33,7 +33,6 @@
 #include FT_TRUETYPE_IDS_H
 
 #include FT_SERVICE_PROPERTIES_H
-#include FT_SERVICE_SFNT_H
 #include FT_SERVICE_GLYPH_DICT_H
 #include FT_SERVICE_TT_CMAP_H
 
@@ -2789,75 +2788,6 @@
       error = FT_THROW( Invalid_Argument );
 
     return error;
-  }
-
-
-  /* documentation is in tttables.h */
-
-  FT_EXPORT_DEF( void* )
-  FT_Get_Sfnt_Table( FT_Face      face,
-                     FT_Sfnt_Tag  tag )
-  {
-    void*                  table = NULL;
-    FT_Service_SFNT_Table  service;
-
-
-    if ( face && FT_IS_SFNT( face ) )
-    {
-      FT_FACE_FIND_SERVICE( face, service, SFNT_TABLE );
-      if ( service )
-        table = service->get_table( face, tag );
-    }
-
-    return table;
-  }
-
-
-  /* documentation is in tttables.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_Load_Sfnt_Table( FT_Face    face,
-                      FT_ULong   tag,
-                      FT_Long    offset,
-                      FT_Byte*   buffer,
-                      FT_ULong*  length )
-  {
-    FT_Service_SFNT_Table  service;
-
-
-    if ( !face || !FT_IS_SFNT( face ) )
-      return FT_THROW( Invalid_Face_Handle );
-
-    FT_FACE_FIND_SERVICE( face, service, SFNT_TABLE );
-    if ( !service )
-      return FT_THROW( Unimplemented_Feature );
-
-    return service->load_table( face, tag, offset, buffer, length );
-  }
-
-
-  /* documentation is in tttables.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_Sfnt_Table_Info( FT_Face    face,
-                      FT_UInt    table_index,
-                      FT_ULong  *tag,
-                      FT_ULong  *length )
-  {
-    FT_Service_SFNT_Table  service;
-    FT_ULong               offset;
-
-
-    /* test for valid `length' delayed to `service->table_info' */
-
-    if ( !face || !FT_IS_SFNT( face ) )
-      return FT_THROW( Invalid_Face_Handle );
-
-    FT_FACE_FIND_SERVICE( face, service, SFNT_TABLE );
-    if ( !service )
-      return FT_THROW( Unimplemented_Feature );
-
-    return service->table_info( face, table_index, tag, &offset, length );
   }
 
 
