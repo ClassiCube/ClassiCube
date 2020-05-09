@@ -3,7 +3,6 @@
 #include "Vectors.h"
 #include "PackedCol.h"
 #include "Constants.h"
-#include "VertexStructs.h"
 /* Contains various structs and methods for an entity model.
    Also contains a list of models and default textures for those models.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
@@ -11,6 +10,7 @@
 struct Entity;
 struct AABB;
 struct IGameComponent;
+struct VertexTextured;
 extern struct IGameComponent Models_Component;
 
 #define MODEL_QUAD_VERTICES 4
@@ -106,7 +106,7 @@ CC_VAR extern struct _ModelsData {
 	/* Dynamic vertex buffer for uploading model vertices. */
 	GfxResourceID Vb;
 	/* Temporary storage for vertices. */
-	VertexP3fT2fC4b* Vertices;
+	struct VertexTextured* Vertices;
 	/* Maximum number of vertices that can be stored in Vertices. */
 	/* NOTE: If you change this, you MUST also destroy and recreate the dynamic VB. */
 	int MaxVertices;

@@ -12,6 +12,7 @@
 #include "Platform.h"
 #include "Bitmap.h"
 #include "Options.h"
+#include "GameStructs.h"
 
 cc_bool Gui_ClassicTexture, Gui_ClassicTabList, Gui_ClassicMenu, Gui_ClassicChat;
 int     Gui_Chatlines;
@@ -307,7 +308,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, struct FontDes
 
 void TextAtlas_Free(struct TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->tex.ID); }
 
-void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertices) {
+void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** vertices) {
 	struct Texture part = atlas->tex;
 	int width       = atlas->widths[charI];
 	PackedCol white = PACKEDCOL_WHITE;
@@ -320,7 +321,7 @@ void TextAtlas_Add(struct TextAtlas* atlas, int charI, VertexP3fT2fC4b** vertice
 	Gfx_Make2DQuad(&part, white, vertices);
 }
 
-void TextAtlas_AddInt(struct TextAtlas* atlas, int value, VertexP3fT2fC4b** vertices) {
+void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured** vertices) {
 	char digits[STRING_INT_CHARS];
 	int i, count;
 

@@ -1,12 +1,12 @@
 #include "PickedPosRenderer.h"
 #include "PackedCol.h"
-#include "VertexStructs.h"
 #include "Graphics.h"
 #include "Game.h"
 #include "Event.h"
 #include "Picking.h"
 #include "Funcs.h"
 #include "Camera.h"
+#include "GameStructs.h"
 
 static GfxResourceID pickedPos_vb;
 #define PICKEDPOS_NUM_VERTICES (16 * 6)
@@ -36,7 +36,7 @@ static void BuildMesh(struct RayTracer* selected) {
 		PickedPos_Z(0) PickedPos_Z(3) /* ZMin, ZMax */
 	};
 	PackedCol col = PackedCol_Make(0, 0, 0, 102);
-	VertexP3fC4b* ptr;
+	struct VertexColoured* ptr;
 	int i;
 	Vec3 delta;
 	float dist, offset, size;
@@ -75,7 +75,8 @@ static void BuildMesh(struct RayTracer* selected) {
 	Vec3_Add1(&coords[3], &selected->Max,  offset);
 	Vec3_Add1(&coords[2], &coords[3],     -size);
 	
-	ptr = (VertexP3fC4b*)Gfx_LockDynamicVb(pickedPos_vb, VERTEX_FORMAT_P3FC4B, PICKEDPOS_NUM_VERTICES);
+	ptr = (struct VertexColoured*)Gfx_LockDynamicVb(pickedPos_vb, 
+									VERTEX_FORMAT_COLOURED, PICKEDPOS_NUM_VERTICES);
 	for (i = 0; i < Array_Elems(indices); i += 3, ptr++) {
 		ptr->X   = coords[indices[i + 0]].X;
 		ptr->Y   = coords[indices[i + 1]].Y;
@@ -90,7 +91,7 @@ void PickedPosRenderer_Render(struct RayTracer* selected, cc_bool dirty) {
 	
 	Gfx_SetAlphaBlending(true);
 	Gfx_SetDepthWrite(false);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 
 	if (dirty) BuildMesh(selected);
 	else Gfx_BindDynamicVb(pickedPos_vb);
@@ -109,7 +110,7 @@ static void OnContextLost(void* obj) {
 }
 
 static void OnContextRecreated(void* obj) {
-	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, PICKEDPOS_NUM_VERTICES);
+	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, PICKEDPOS_NUM_VERTICES);
 }
 
 static void PickedPosRenderer_Init(void) {

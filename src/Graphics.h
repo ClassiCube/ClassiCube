@@ -1,9 +1,8 @@
 #ifndef CC_GFXAPI_H
 #define CC_GFXAPI_H
 #include "Vectors.h"
-#include "GameStructs.h"
 #include "Bitmap.h"
-#include "VertexStructs.h"
+#include "PackedCol.h"
 
 /* Abstracts a 3D graphics rendering API.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
@@ -11,7 +10,7 @@
 struct Stream;
 
 typedef enum VertexFormat_ {
-	VERTEX_FORMAT_P3FC4B, VERTEX_FORMAT_P3FT2FC4B
+	VERTEX_FORMAT_COLOURED, VERTEX_FORMAT_TEXTURED
 } VertexFormat;
 typedef enum FogFunc_ {
 	FOG_LINEAR, FOG_EXP, FOG_EXP2
@@ -19,6 +18,14 @@ typedef enum FogFunc_ {
 typedef enum MatrixType_ {
 	MATRIX_PROJECTION, MATRIX_VIEW, MATRIX_TEXTURE
 } MatrixType;
+
+#define SIZEOF_VERTEX_COLOURED 16
+#define SIZEOF_VERTEX_TEXTURED 24
+
+/* 3 floats for position (XYZ), 4 bytes for colour. */
+typedef struct VertexColoured { float X, Y, Z; PackedCol Col; } VertexP3fC4b;
+/* 3 floats for position (XYZ), 2 floats for texture coordinates (UV), 4 bytes for colour. */
+typedef struct VertexTextured { float X, Y, Z; PackedCol Col; float U, V; } VertexP3fT2fC4b;
 
 void Gfx_Init(void);
 void Gfx_Free(void);
@@ -190,7 +197,7 @@ cc_bool Gfx_TryRestoreContext(void);
 /* NOTE: This replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
 void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount);
 /* Shorthand for Gfx_CreateVb followed by Gfx_LockVb */
-void* Gfx_CreateAndLockVb(VertexFormat fmt, int count, GfxResourceID* vb);
+void* Gfx_CreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
 
 /* Renders a 2D flat coloured rectangle. */
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol col);
@@ -199,7 +206,7 @@ void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, Pack
 /* Renders a 2D coloured texture. */
 void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol col);
 /* Fills out the vertices for rendering a 2D coloured texture. */
-void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices);
+void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, struct VertexTextured** vertices);
 
 /* Switches state to be suitable for drawing 2D graphics. */
 /* NOTE: This means turning off fog/depth test, changing matrices, etc.*/

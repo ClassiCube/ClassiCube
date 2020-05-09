@@ -18,6 +18,7 @@
 #include "Camera.h"
 #include "Particle.h"
 #include "Options.h"
+#include "GameStructs.h"
 
 cc_bool EnvRenderer_Legacy, EnvRenderer_Minimal;
 
@@ -144,7 +145,7 @@ void EnvRenderer_RenderClouds(void) {
 	Gfx_SetAlphaTest(true);
 	Gfx_SetTexturing(true);
 	Gfx_BindTexture(clouds_tex);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindVb(clouds_vb);
 	Gfx_DrawVb_IndexedTris(clouds_vertices);
 	Gfx_SetAlphaTest(false);
@@ -153,7 +154,7 @@ void EnvRenderer_RenderClouds(void) {
 	Gfx_LoadIdentityMatrix(MATRIX_TEXTURE);
 }
 
-static void DrawCloudsY(int x1, int z1, int x2, int z2, int y, VertexP3fT2fC4b* v) {
+static void DrawCloudsY(int x1, int z1, int x2, int z2, int y, struct VertexTextured* v) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
 	float u1, u2, v1, v2;
 	float yy = (float)y + 0.1f; 
@@ -181,7 +182,7 @@ static void DrawCloudsY(int x1, int z1, int x2, int z2, int y, VertexP3fT2fC4b* 
 }
 
 static void UpdateClouds(void) {
-	VertexP3fT2fC4b* data;
+	struct VertexTextured* data;
 	int extent;
 	int x1, z1, x2, z2;
 	
@@ -194,7 +195,8 @@ static void UpdateClouds(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	clouds_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, clouds_vertices, &clouds_vb);
+	data = (struct VertexTextured*)Gfx_CreateAndLockVb(&clouds_vb,
+										VERTEX_FORMAT_TEXTURED, clouds_vertices);
 	DrawCloudsY(x1, z1, x2, z2, Env.CloudsHeight, data);
 	Gfx_UnlockVb(clouds_vb);
 }
@@ -213,7 +215,7 @@ void EnvRenderer_RenderSky(void) {
 
 	normY = (float)World.Height + 8.0f;
 	skyY  = max(Camera.CurrentPos.Y + 8.0f, normY);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	Gfx_BindVb(sky_vb);
 
 	if (skyY == normY) {
@@ -231,7 +233,7 @@ void EnvRenderer_RenderSky(void) {
 	}
 }
 
-static void DrawSkyY(int x1, int z1, int x2, int z2, int y, VertexP3fC4b* v) {
+static void DrawSkyY(int x1, int z1, int x2, int z2, int y, struct VertexColoured* v) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
 	PackedCol col = Env.SkyCol;
 
@@ -252,7 +254,7 @@ static void DrawSkyY(int x1, int z1, int x2, int z2, int y, VertexP3fC4b* v) {
 }
 
 static void UpdateSky(void) {
-	VertexP3fC4b* data;
+	struct VertexColoured* data;
 	int extent, height;
 	int x1, z1, x2, z2;
 
@@ -265,7 +267,8 @@ static void UpdateSky(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	sky_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	data   = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FC4B, sky_vertices, &sky_vb);
+	data   = (struct VertexColoured*)Gfx_CreateAndLockVb(&sky_vb,
+										VERTEX_FORMAT_COLOURED, sky_vertices);
 	height = max((World.Height + 2), Env.CloudsHeight) + 6;
 	DrawSkyY(x1, z1, x2, z2, height, data);
 	Gfx_UnlockVb(sky_vb);
@@ -287,7 +290,7 @@ void EnvRenderer_RenderSkybox(void) {
 	Gfx_SetDepthWrite(false);
 	Gfx_SetTexturing(true);
 	Gfx_BindTexture(skybox_tex);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
 	/* Base skybox rotation */
 	rotTime = (float)(Game.Time * 2 * MATH_PI); /* So speed of 1 rotates whole skybox every second */
@@ -311,7 +314,7 @@ void EnvRenderer_RenderSkybox(void) {
 }
 
 static void UpdateSkybox(void) {
-	static const VertexP3fT2fC4b vertices[SKYBOX_COUNT] = {
+	static const struct VertexTextured vertices[SKYBOX_COUNT] = {
 		/* Front quad */
 		{ -1, -1, -1,  0, 0.25f, 1.00f }, {  1, -1, -1,  0, 0.50f, 1.00f },
 		{  1,  1, -1,  0, 0.50f, 0.50f }, { -1,  1, -1,  0, 0.25f, 0.50f },
@@ -331,14 +334,15 @@ static void UpdateSkybox(void) {
 		{  1, -1, -1,  0, 0.75f, 0.50f }, {  1, -1,  1,  0, 0.75f, 0.00f },
 		{ -1, -1,  1,  0, 0.50f, 0.00f }, { -1, -1, -1,  0, 0.50f, 0.50f },
 	};
-	VertexP3fT2fC4b* data;
+	struct VertexTextured* data;
 	int i;
 
 	Gfx_DeleteVb(&skybox_vb);
 	if (Gfx.LostContext)     return;
 	if (EnvRenderer_Minimal) return;
 
-	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT, &skybox_vb);
+	data = (struct VertexTextured*)Gfx_CreateAndLockVb(&skybox_vb,
+										VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
 	Mem_Copy(data, vertices, sizeof(vertices));
 	for (i = 0; i < SKYBOX_COUNT; i++) { data[i].Col = Env.SkyboxCol; }
 	Gfx_UnlockVb(skybox_vb);
@@ -436,8 +440,8 @@ static float CalcRainAlphaAt(float x) {
 }
 
 void EnvRenderer_RenderWeather(double deltaTime) {
-	VertexP3fT2fC4b vertices[WEATHER_VERTS_COUNT];
-	VertexP3fT2fC4b* v;
+	struct VertexTextured vertices[WEATHER_VERTS_COUNT];
+	struct VertexTextured* v;
 	int weather, vCount;
 	IVec3 pos;
 	cc_bool moved, particles;
@@ -514,7 +518,7 @@ void EnvRenderer_RenderWeather(double deltaTime) {
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaArgBlend(true);
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	vCount = (int)(v - vertices);
 	Gfx_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
 
@@ -540,7 +544,7 @@ static void RenderBorders(BlockID block, GfxResourceID vb, GfxResourceID tex, in
 	Gfx_EnableMipmaps();
 
 	Gfx_BindTexture(tex);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindVb(vb);
 	Gfx_DrawVb_IndexedTris(count);
 
@@ -593,10 +597,10 @@ static void UpdateBorderTextures(void) {
 #define Borders_HorOffset(block) (Blocks.RenderMinBB[block].X - Blocks.MinBB[block].X)
 #define Borders_YOffset(block)   (Blocks.RenderMinBB[block].Y - Blocks.MinBB[block].Y)
 
-static void DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol col, VertexP3fT2fC4b** vertices) {
+static void DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol col, struct VertexTextured** vertices) {
 	int endZ = z2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
-	VertexP3fT2fC4b* v = *vertices;
+	struct VertexTextured* v = *vertices;
 
 	for (; z1 < endZ; z1 += axisSize) {
 		z2 = z1 + axisSize;
@@ -616,10 +620,10 @@ static void DrawBorderX(int x, int z1, int z2, int y1, int y2, PackedCol col, Ve
 	*vertices = v;
 }
 
-static void DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol col, VertexP3fT2fC4b** vertices) {
+static void DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol col, struct VertexTextured** vertices) {
 	int endX = x2, endY = y2, startY = y1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
-	VertexP3fT2fC4b* v = *vertices;
+	struct VertexTextured* v = *vertices;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -639,10 +643,10 @@ static void DrawBorderZ(int z, int x1, int x2, int y1, int y2, PackedCol col, Ve
 	*vertices = v;
 }
 
-static void DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol col, float offset, float yOffset, VertexP3fT2fC4b** vertices) {
+static void DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol col, float offset, float yOffset, struct VertexTextured** vertices) {
 	int endX = x2, endZ = z2, startZ = z1, axisSize = EnvRenderer_AxisSize();
 	float u2, v2;
-	VertexP3fT2fC4b* v = *vertices;
+	struct VertexTextured* v = *vertices;
 	float yy = y + yOffset;
 
 	for (; x1 < endX; x1 += axisSize) {
@@ -669,7 +673,7 @@ static void UpdateMapSides(void) {
 	PackedCol col, white = PACKEDCOL_WHITE;
 	int y, y1, y2;
 	int i;
-	VertexP3fT2fC4b* data;
+	struct VertexTextured* data;
 
 	Gfx_DeleteVb(&sides_vb);
 	if (!World.Loaded || Gfx.LostContext) return;
@@ -688,7 +692,8 @@ static void UpdateMapSides(void) {
 	sides_vertices +=     CalcNumVertices(World.Width, World.Length);  /* YQuads beneath map */
 	sides_vertices += 2 * CalcNumVertices(World.Width,  Math_AbsI(y)); /* ZQuads */
 	sides_vertices += 2 * CalcNumVertices(World.Length, Math_AbsI(y)); /* XQuads */
-	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, sides_vertices, &sides_vb);
+	data = (struct VertexTextured*)Gfx_CreateAndLockVb(&sides_vb,
+										VERTEX_FORMAT_TEXTURED, sides_vertices);
 
 	sides_fullBright = Blocks.FullBright[block];
 	col = sides_fullBright ? white : Env.ShadowCol;
@@ -719,7 +724,7 @@ static void UpdateMapEdges(void) {
 	PackedCol col, white = PACKEDCOL_WHITE;
 	float y;
 	int i;
-	VertexP3fT2fC4b* data;
+	struct VertexTextured* data;
 
 	Gfx_DeleteVb(&edges_vb);
 	if (!World.Loaded || Gfx.LostContext) return;
@@ -733,7 +738,8 @@ static void UpdateMapEdges(void) {
 		r = rects[i];
 		edges_vertices += CalcNumVertices(r.Width, r.Height); /* YPlanes outside */
 	}
-	data = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, edges_vertices, &edges_vb);
+	data = (struct VertexTextured*)Gfx_CreateAndLockVb(&edges_vb,
+										VERTEX_FORMAT_TEXTURED, edges_vertices);
 
 	edges_fullBright = Blocks.FullBright[block];
 	col = edges_fullBright ? white : Env.SunCol;
@@ -778,7 +784,7 @@ static void UpdateAll(void) {
 	Gfx_DeleteDynamicVb(&weather_vb);
 	if (Gfx.LostContext) return;
 	/* TODO: Don't allocate unless used? */
-	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, WEATHER_VERTS_COUNT);
+	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
 	/* TODO: Don't need to do this on every new map */
 	UpdateBorderTextures();
 }

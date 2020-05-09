@@ -1,7 +1,7 @@
 #ifndef CC_SELECTIONBOX_H
 #define CC_SELECTIONBOX_H
-#include "VertexStructs.h"
 #include "Vectors.h"
+#include "PackedCol.h"
 /* Describes a selection box, and contains methods related to the selection box.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */

@@ -12,9 +12,9 @@
 #include "Block.h"
 #include "PackedCol.h"
 #include "TexturePack.h"
-#include "VertexStructs.h"
 #include "Game.h"
 #include "Options.h"
+#include "GameStructs.h"
 
 int Builder_SidesLevel, Builder_EdgeLevel;
 /* Packs an index into the 16x16x16 count array. Coordinates range from 0 to 15. */
@@ -43,7 +43,7 @@ static void (*Builder_PostStretchTiles)(void);
 
 /* Contains state for vertices for a portion of a chunk mesh (vertices that are in a 1D atlas) */
 struct Builder1DPart {
-	VertexP3fT2fC4b* fVertices[FACE_COUNT];
+	struct VertexTextured* fVertices[FACE_COUNT];
 	int fCount[FACE_COUNT];
 	int sCount, sOffset, sAdvance;
 };
@@ -51,7 +51,7 @@ struct Builder1DPart {
 /* Part builder data, for both normal and translucent parts.
 The first ATLAS1D_MAX_ATLASES parts are for normal parts, remainder are for translucent parts. */
 static struct Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
-static VertexP3fT2fC4b* Builder_Vertices;
+static struct VertexTextured* Builder_Vertices;
 
 static int Builder1DPart_VerticesCount(struct Builder1DPart* part) {
 	int i, count = part->sCount;
@@ -393,10 +393,12 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 
 #ifndef CC_BUILD_GL11
 	/* add an extra element to fix crashing on some GPUs */
-	Builder_Vertices = Gfx_CreateAndLockVb(VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1, &info->Vb);
+	Builder_Vertices = (struct VertexTextured*)Gfx_CreateAndLockVb(&info->Vb,
+													VERTEX_FORMAT_TEXTURED, totalVerts + 1);
 #else
 	/* NOTE: Relies on assumption vb is ignored by GL11 Gfx_LockVb implementation */
-	Builder_Vertices = Gfx_LockVb(0, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
+	Builder_Vertices = (struct VertexTextured*)Gfx_LockVb(0, 
+													VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
 #endif
 	Builder_PostStretchTiles();
 
@@ -485,7 +487,7 @@ static void DefaultPostStretchTiles(void) {
 static RNGState spriteRng;
 static void Builder_DrawSprite(void) {
 	struct Builder1DPart* part;
-	VertexP3fT2fC4b v;
+	struct VertexTextured v;
 	PackedCol white = PACKEDCOL_WHITE;
 
 	cc_uint8 offsetType;
@@ -960,7 +962,7 @@ static void Adv_DrawXMin(int count) {
 	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpX[aY0_Z0], col1_0 = Builder_FullBright ? white : adv_lerpX[aY1_Z0];
 	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpX[aY1_Z1], col0_1 = Builder_FullBright ? white : adv_lerpX[aY0_Z1];
-	VertexP3fT2fC4b* vertices, v;
+	struct VertexTextured* vertices, v;
 
 	if (Builder_Tinted) {
 		tint   = Blocks.FogCol[Builder_Block];
@@ -1002,7 +1004,7 @@ static void Adv_DrawXMax(int count) {
 	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpX[aY0_Z0], col1_0 = Builder_FullBright ? white : adv_lerpX[aY1_Z0];
 	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpX[aY1_Z1], col0_1 = Builder_FullBright ? white : adv_lerpX[aY0_Z1];
-	VertexP3fT2fC4b* vertices, v;
+	struct VertexTextured* vertices, v;
 
 	if (Builder_Tinted) {
 		tint   = Blocks.FogCol[Builder_Block];
@@ -1044,7 +1046,7 @@ static void Adv_DrawZMin(int count) {
 	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpZ[aX0_Y0], col1_0 = Builder_FullBright ? white : adv_lerpZ[aX1_Y0];
 	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpZ[aX1_Y1], col0_1 = Builder_FullBright ? white : adv_lerpZ[aX0_Y1];
-	VertexP3fT2fC4b* vertices, v;
+	struct VertexTextured* vertices, v;
 
 	if (Builder_Tinted) {
 		tint   = Blocks.FogCol[Builder_Block];
@@ -1086,7 +1088,7 @@ static void Adv_DrawZMax(int count) {
 	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col1_1 = Builder_FullBright ? white : adv_lerpZ[aX1_Y1], col1_0 = Builder_FullBright ? white : adv_lerpZ[aX1_Y0];
 	PackedCol col0_0 = Builder_FullBright ? white : adv_lerpZ[aX0_Y0], col0_1 = Builder_FullBright ? white : adv_lerpZ[aX0_Y1];
-	VertexP3fT2fC4b* vertices, v;
+	struct VertexTextured* vertices, v;
 
 	if (Builder_Tinted) {
 		tint   = Blocks.FogCol[Builder_Block];
@@ -1128,7 +1130,7 @@ static void Adv_DrawYMin(int count) {
 	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col0_1 = Builder_FullBright ? white : adv_lerpY[aX0_Z1], col1_1 = Builder_FullBright ? white : adv_lerpY[aX1_Z1];
 	PackedCol col1_0 = Builder_FullBright ? white : adv_lerpY[aX1_Z0], col0_0 = Builder_FullBright ? white : adv_lerpY[aX0_Z0];
-	VertexP3fT2fC4b* vertices, v;
+	struct VertexTextured* vertices, v;
 
 	if (Builder_Tinted) {
 		tint   = Blocks.FogCol[Builder_Block];
@@ -1170,7 +1172,7 @@ static void Adv_DrawYMax(int count) {
 	PackedCol tint, white = PACKEDCOL_WHITE;
 	PackedCol col0_0 = Builder_FullBright ? white : adv_lerp[aX0_Z0], col1_0 = Builder_FullBright ? white : adv_lerp[aX1_Z0];
 	PackedCol col1_1 = Builder_FullBright ? white : adv_lerp[aX1_Z1], col0_1 = Builder_FullBright ? white : adv_lerp[aX0_Z1];
-	VertexP3fT2fC4b* vertices, v;
+	struct VertexTextured* vertices, v;
 
 	if (Builder_Tinted) {
 		tint   = Blocks.FogCol[Builder_Block];

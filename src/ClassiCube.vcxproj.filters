@@ -147,9 +147,6 @@
     <ClInclude Include="ExtMath.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
-    <ClInclude Include="VertexStructs.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="World.h">
       <Filter>Header Files\Map</Filter>
     </ClInclude>

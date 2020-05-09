@@ -67,7 +67,7 @@ void Screen_Render2Widgets(void* screen, double delta) {
 	struct Widget** widgets = s->widgets;
 	int i, offset = 0;
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_BindDynamicVb(s->vb);
 
 	for (i = 0; i < s->numWidgets; i++) {
@@ -101,17 +101,18 @@ void Screen_ContextLost(void* screen) {
 
 void Screen_CreateVb(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
-	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, s->maxVertices);
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, s->maxVertices);
 }
 
 void Screen_BuildMesh(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
-	VertexP3fT2fC4b* data;
-	VertexP3fT2fC4b** ptr;
+	struct VertexTextured* data;
+	struct VertexTextured** ptr;
 	int i;
 
-	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(s->vb, VERTEX_FORMAT_P3FT2FC4B, s->maxVertices);
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(s->vb, 
+										VERTEX_FORMAT_TEXTURED, s->maxVertices);
 	ptr  = &data;
 
 	for (i = 0; i < s->numWidgets; i++) {
@@ -158,8 +159,8 @@ static void HUDScreen_MakeText(struct HUDScreen* s, String* status) {
 }
 
 static void HUDScreen_DrawPosition(struct HUDScreen* s) {
-	VertexP3fT2fC4b vertices[4 * 64];
-	VertexP3fT2fC4b* ptr = vertices;
+	struct VertexTextured vertices[4 * 64];
+	struct VertexTextured* ptr = vertices;
 	PackedCol col = PACKEDCOL_WHITE;
 
 	struct TextAtlas* atlas = &s->posAtlas;
@@ -1582,21 +1583,21 @@ static void LoadingScreen_ContextRecreated(void* screen) {
 
 static void LoadingScreen_BuildMesh(void* screen) { }
 
-static void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, int count, int atlasIndex, cc_bool* bound) {
+static void LoadingScreen_UpdateBackgroundVB(struct VertexTextured* vertices, int count, int atlasIndex, cc_bool* bound) {
 	if (!(*bound)) {
 		*bound = true;
 		Gfx_BindTexture(Atlas1D.TexIds[atlasIndex]);
 	}
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	/* TODO: Do we need to use a separate VB here? */
 	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
 }
 
 #define LOADING_TILE_SIZE 64
 static void LoadingScreen_DrawBackground(void) {
-	VertexP3fT2fC4b vertices[144];
-	VertexP3fT2fC4b* ptr = vertices;
+	struct VertexTextured vertices[144];
+	struct VertexTextured* ptr = vertices;
 	PackedCol col = PackedCol_Make(64, 64, 64, 255);
 
 	struct Texture tex;

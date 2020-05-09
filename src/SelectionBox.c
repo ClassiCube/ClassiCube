@@ -5,6 +5,7 @@
 #include "Funcs.h"
 #include "Game.h"
 #include "Camera.h"
+#include "GameStructs.h"
 
 /* Data for a selection box. */
 struct SelectionBox {
@@ -24,7 +25,7 @@ struct SelectionBox {
 #define SelectionBox_Z(z) X0|Y0|z , X0|Y1|z , X1|Y1|z , X1|Y0|z ,
 #define SelectionBox_X(x) x |Y0|Z0, x |Y1|Z0, x |Y1|Z1, x |Y0|Z1,
 
-static void SelectionBox_RenderFaces(struct SelectionBox* box, VertexP3fC4b* v) {
+static void BuildFaces(struct SelectionBox* box, struct VertexColoured* v) {
 	static const cc_uint8 faceIndices[24] = {
 		SelectionBox_Y(Y0) SelectionBox_Y(Y1) /* YMin, YMax */
 		SelectionBox_Z(Z0) SelectionBox_Z(Z1) /* ZMin, ZMax */
@@ -48,7 +49,7 @@ static void SelectionBox_RenderFaces(struct SelectionBox* box, VertexP3fC4b* v) 
 	}
 }
 
-static void SelectionBox_RenderEdges(struct SelectionBox* box, VertexP3fC4b* v) {
+static void BuildEdges(struct SelectionBox* box, struct VertexColoured* v) {
 	static const cc_uint8 edgeIndices[24] = {
 		X0|Y0|Z0, X1|Y0|Z0,  X1|Y0|Z0, X1|Y0|Z1,  X1|Y0|Z1, X0|Y0|Z1,  X0|Y0|Z1, X0|Y0|Z0, /* YMin */
 		X0|Y1|Z0, X1|Y1|Z0,  X1|Y1|Z0, X1|Y1|Z1,  X1|Y1|Z1, X0|Y1|Z1,  X0|Y1|Z1, X0|Y1|Z0, /* YMax */
@@ -75,7 +76,7 @@ static void SelectionBox_RenderEdges(struct SelectionBox* box, VertexP3fC4b* v) 
 	}
 }
 
-static int SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) {
+static int CompareDists(struct SelectionBox* a, struct SelectionBox* b) {
 	float aDist, bDist;
 	if (a->minDist == b->minDist) {
 		aDist = a->maxDist; bDist = b->maxDist;
@@ -89,7 +90,7 @@ static int SelectionBox_Compare(struct SelectionBox* a, struct SelectionBox* b) 
 	return 0;
 }
 
-static void SelectionBox_Intersect(struct SelectionBox* box, Vec3 P) {
+static void CalcDists(struct SelectionBox* box, Vec3 P) {
 	float dx0 = (P.X - box->p0.X) * (P.X - box->p0.X), dx1 = (P.X - box->p1.X) * (P.X - box->p1.X);
 	float dy0 = (P.Y - box->p0.Y) * (P.Y - box->p0.Y), dy1 = (P.Y - box->p1.Y) * (P.Y - box->p1.Y);
 	float dz0 = (P.Z - box->p0.Z) * (P.Z - box->p0.Z), dz1 = (P.Z - box->p1.Z) * (P.Z - box->p1.Z);
@@ -144,8 +145,8 @@ static void Selections_ContextLost(void* obj) {
 
 static void Selections_ContextRecreated(void* obj) {
 	if (!selections_used) return;
-	selections_VB     = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, SELECTIONS_MAX_VERTICES);
-	selections_LineVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, SELECTIONS_MAX_VERTICES);
+	selections_VB     = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
+	selections_LineVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
 }
 
 static void Selections_QuickSort(int left, int right) {
@@ -158,8 +159,8 @@ static void Selections_QuickSort(int left, int right) {
 
 		/* partition the list */
 		while (i <= j) {
-			while (SelectionBox_Compare(pivot, &keys[i]) > 0) i++;
-			while (SelectionBox_Compare(pivot, &keys[j]) < 0) j--;
+			while (CompareDists(pivot, &keys[i]) > 0) i++;
+			while (CompareDists(pivot, &keys[j]) < 0) j--;
 			QuickSort_Swap_KV_Maybe();
 		}
 		/* recurse into the smaller subset */
@@ -168,7 +169,7 @@ static void Selections_QuickSort(int left, int right) {
 }
 
 void Selections_Render(void) {
-	VertexP3fC4b* data;
+	struct VertexColoured* data;
 	Vec3 cameraPos;
 	int i, count;
 	if (!selections_count || Gfx.LostContext) return;
@@ -177,7 +178,7 @@ void Selections_Render(void) {
 	   we can have boxes within boxes, intersecting boxes, etc. Probably not worth it. */
 	cameraPos = Camera.CurrentPos;
 	for (i = 0; i < selections_count; i++) {
-		SelectionBox_Intersect(&selections_list[i], cameraPos);
+		CalcDists(&selections_list[i], cameraPos);
 	}
 	Selections_QuickSort(0, selections_count - 1);
 
@@ -186,18 +187,20 @@ void Selections_Render(void) {
 		Selections_ContextRecreated(NULL);
 	}
 	count = selections_count * SELECTIONS_VERTICES;
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 
-	data = (VertexP3fC4b*)Gfx_LockDynamicVb(selections_LineVB, VERTEX_FORMAT_P3FC4B, count);
+	data = (struct VertexColoured*)Gfx_LockDynamicVb(selections_LineVB, 
+										VERTEX_FORMAT_COLOURED, count);
 	for (i = 0; i < selections_count; i++, data += SELECTIONS_VERTICES) {
-		SelectionBox_RenderEdges(&selections_list[i], data);
+		BuildEdges(&selections_list[i], data);
 	}
 	Gfx_UnlockDynamicVb(selections_LineVB);
 	Gfx_DrawVb_Lines(count);
 
-	data = (VertexP3fC4b*)Gfx_LockDynamicVb(selections_VB, VERTEX_FORMAT_P3FC4B, count);
+	data = (struct VertexColoured*)Gfx_LockDynamicVb(selections_VB, 
+										VERTEX_FORMAT_COLOURED, count);
 	for (i = 0; i < selections_count; i++, data += SELECTIONS_VERTICES) {
-		SelectionBox_RenderFaces(&selections_list[i], data);
+		BuildFaces(&selections_list[i], data);
 	}
 	Gfx_UnlockDynamicVb(selections_VB);
 

@@ -44,7 +44,7 @@ static void TextWidget_Reposition(void* widget) {
 	w->tex.X = w->x; w->tex.Y = w->y;
 }
 
-static void TextWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
+static void TextWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
 	struct TextWidget* w = (struct TextWidget*)widget;
 	Gfx_Make2DQuad(&w->tex, w->col, vertices);
 }
@@ -156,7 +156,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	Texture_RenderShaded(&w->tex, col);
 }
 
-static void ButtonWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
+static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
 	PackedCol normCol     = PackedCol_Make(224, 224, 224, 255);
 	PackedCol activeCol   = PackedCol_Make(255, 255, 160, 255);
 	PackedCol disabledCol = PackedCol_Make(160, 160, 160, 255);
@@ -397,7 +397,7 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 
 static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 	/* TODO: Should hotbar use its own VB? */
-	VertexP3fT2fC4b vertices[INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES];
+	struct VertexTextured vertices[INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES];
 	float width, scale;
 	int i, x, y;
 
@@ -650,7 +650,7 @@ void TableWidget_RecreateBlocks(struct TableWidget* w) {
 
 static void TableWidget_Render(void* widget, double delta) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	VertexP3fT2fC4b vertices[TABLE_MAX_VERTICES];
+	struct VertexTextured vertices[TABLE_MAX_VERTICES];
 	int cellSize, size;
 	float off;
 	int i, x, y;
@@ -680,7 +680,7 @@ static void TableWidget_Render(void* widget, double delta) {
 			size, size, topSelCol, bottomSelCol);
 	}
 	Gfx_SetTexturing(true);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 
 	IsometricDrawer_BeginBatch(vertices, w->vb);
 	for (i = 0; i < w->blocksCount; i++) {
@@ -715,7 +715,7 @@ static void TableWidget_Free(void* widget) {
 
 void TableWidget_Recreate(struct TableWidget* w) {
 	Elem_TryFree(w);
-	w->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TABLE_MAX_VERTICES);
+	w->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, TABLE_MAX_VERTICES);
 	TableWidget_RecreateDescTex(w);
 }
 
@@ -1407,7 +1407,7 @@ static void MenuInputWidget_Render(void* widget, double delta) {
 	InputWidget_RenderCaret(w, delta);
 }
 
-static void MenuInputWidget_BuildMesh(void* widget, VertexP3fT2fC4b** vertices) {
+static void MenuInputWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_Make2DQuad(&w->inputTex, PACKEDCOL_WHITE, vertices);
 	Gfx_Make2DQuad(&w->caretTex, w->caretCol,     vertices);

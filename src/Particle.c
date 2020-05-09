@@ -21,7 +21,7 @@ static RNGState rnd;
 static cc_bool particle_hitTerrain;
 typedef cc_bool (*CanPassThroughFunc)(BlockID b);
 
-void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec, PackedCol col, VertexP3fT2fC4b* v) {
+void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec, PackedCol col, struct VertexTextured* v) {
 	struct Matrix* view;
 	float sX, sY;
 	Vec3 centre;
@@ -141,7 +141,7 @@ static cc_bool RainParticle_Tick(struct Particle* p, double delta) {
 	return Particle_PhysicsTick(p, 3.5f, RainParticle_CanPass, delta) || particle_hitTerrain;
 }
 
-static void RainParticle_Render(struct Particle* p, float t, VertexP3fT2fC4b* vertices) {
+static void RainParticle_Render(struct Particle* p, float t, struct VertexTextured* vertices) {
 	Vec3 pos;
 	Vec2 size;
 	PackedCol col;
@@ -156,11 +156,12 @@ static void RainParticle_Render(struct Particle* p, float t, VertexP3fT2fC4b* ve
 }
 
 static void Rain_Render(float t) {
-	VertexP3fT2fC4b* data;
+	struct VertexTextured* data;
 	int i;
 	if (!rain_count) return;
 	
-	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, rain_count * 4);
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(Particles_VB, 
+										VERTEX_FORMAT_TEXTURED, rain_count * 4);
 	for (i = 0; i < rain_count; i++) {
 		RainParticle_Render(&rain_Particles[i], t, data);
 		data += 4;
@@ -212,7 +213,7 @@ static cc_bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
 	return Particle_PhysicsTick(&p->base, 5.4f, TerrainParticle_CanPass, delta);
 }
 
-static void TerrainParticle_Render(struct TerrainParticle* p, float t, VertexP3fT2fC4b* vertices) {
+static void TerrainParticle_Render(struct TerrainParticle* p, float t, struct VertexTextured* vertices) {
 	PackedCol col = PACKEDCOL_WHITE;
 	Vec3 pos;
 	Vec2 size;
@@ -247,13 +248,14 @@ static void Terrain_Update1DCounts(void) {
 }
 
 static void Terrain_Render(float t) {
-	VertexP3fT2fC4b* data;
-	VertexP3fT2fC4b* ptr;
+	struct VertexTextured* data;
+	struct VertexTextured* ptr;
 	int offset = 0;
 	int i, index;
 	if (!terrain_count) return;
 
-	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, terrain_count * 4);
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(Particles_VB, 
+										VERTEX_FORMAT_TEXTURED, terrain_count * 4);
 	Terrain_Update1DCounts();
 	for (i = 0; i < terrain_count; i++) {
 		index = Atlas1D_Index(terrain_particles[i].texLoc);
@@ -328,7 +330,7 @@ static cc_bool CustomParticle_Tick(struct CustomParticle* p, double delta) {
 		|| (particle_hitTerrain && e->collideFlags & EXPIRES_UPON_TOUCHING_GROUND);
 }
 
-static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2fC4b* vertices) {
+static void CustomParticle_Render(struct CustomParticle* p, float t, struct VertexTextured* vertices) {
 	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
 	Vec3 pos;
 	Vec2 size;
@@ -354,11 +356,12 @@ static void CustomParticle_Render(struct CustomParticle* p, float t, VertexP3fT2
 }
 
 static void Custom_Render(float t) {
-	VertexP3fT2fC4b* data;
+	struct VertexTextured* data;
 	int i;
 	if (!custom_count) return;
 
-	data = (VertexP3fT2fC4b*)Gfx_LockDynamicVb(Particles_VB, VERTEX_FORMAT_P3FT2FC4B, custom_count * 4);
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(Particles_VB, 
+										VERTEX_FORMAT_TEXTURED, custom_count * 4);
 	for (i = 0; i < custom_count; i++) {
 		CustomParticle_Render(&custom_particles[i], t, data);
 		data += 4;
@@ -396,7 +399,7 @@ void Particles_Render(float t) {
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Terrain_Render(t);
 	Rain_Render(t);
 	Custom_Render(t);
@@ -573,7 +576,7 @@ static void OnContextLost(void* obj) {
 	Gfx_DeleteDynamicVb(&Particles_VB); 
 }
 static void OnContextRecreated(void* obj) {
-	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, PARTICLES_MAX * 4);
+	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
 }
 static void OnBreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	Particles_BreakBlockEffect(coords, old, now);

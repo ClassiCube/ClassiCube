@@ -22,7 +22,7 @@ struct _GfxData Gfx;
 GfxResourceID Gfx_defaultIb;
 GfxResourceID Gfx_quadVb, Gfx_texVb;
 
-static const int gfx_strideSizes[2] = { 16, 24 };
+static const int strideSizes[2] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
 static int gfx_batchStride, gfx_batchFormat = -1;
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
@@ -63,8 +63,8 @@ static void InitDefaultResources(void) {
 	MakeIndices(indices, GFX_MAX_INDICES);
 	Gfx_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
 
-	Gfx_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
-	Gfx_texVb  = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
+	Gfx_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, 4);
+	Gfx_texVb  = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, 4);
 }
 
 static void FreeDefaultResources(void) {
@@ -115,49 +115,49 @@ void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCoun
 	Gfx_DrawVb_IndexedTris(vCount);
 }
 
-void* Gfx_CreateAndLockVb(VertexFormat fmt, int count, GfxResourceID* vb) {
+void* Gfx_CreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
 	*vb = Gfx_CreateVb(fmt, count);
 	return Gfx_LockVb(*vb, fmt, count);
 }
 
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol col) {
-	VertexP3fC4b verts[4];
-	VertexP3fC4b* v = verts;
+	struct VertexColoured verts[4];
+	struct VertexColoured* v = verts;
 
 	v->X = (float)x;           v->Y = (float)y;            v->Z = 0; v->Col = col; v++;
 	v->X = (float)(x + width); v->Y = (float)y;            v->Z = 0; v->Col = col; v++;
 	v->X = (float)(x + width); v->Y = (float)(y + height); v->Z = 0; v->Col = col; v++;
 	v->X = (float)x;           v->Y = (float)(y + height); v->Z = 0; v->Col = col; v++;
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	Gfx_UpdateDynamicVb_IndexedTris(Gfx_quadVb, verts, 4);
 }
 
 void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom) {
-	VertexP3fC4b verts[4];
-	VertexP3fC4b* v = verts;
+	struct VertexColoured verts[4];
+	struct VertexColoured* v = verts;
 
 	v->X = (float)x;           v->Y = (float)y;            v->Z = 0; v->Col = top; v++;
 	v->X = (float)(x + width); v->Y = (float)y;            v->Z = 0; v->Col = top; v++;
 	v->X = (float)(x + width); v->Y = (float)(y + height); v->Z = 0; v->Col = bottom; v++;
 	v->X = (float)x;           v->Y = (float)(y + height); v->Z = 0; v->Col = bottom; v++;
 
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);
 	Gfx_UpdateDynamicVb_IndexedTris(Gfx_quadVb, verts, 4);
 }
 
 void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol col) {
-	VertexP3fT2fC4b texVerts[4];
-	VertexP3fT2fC4b* ptr = texVerts;
+	struct VertexTextured texVerts[4];
+	struct VertexTextured* ptr = texVerts;
 	Gfx_Make2DQuad(tex, col, &ptr);
-	Gfx_SetVertexFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, texVerts, 4);
 }
 
-void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
+void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, struct VertexTextured** vertices) {
 	float x1 = (float)tex->X, x2 = (float)(tex->X + tex->Width);
 	float y1 = (float)tex->Y, y2 = (float)(tex->Y + tex->Height);
-	VertexP3fT2fC4b* v = *vertices;
+	struct VertexTextured* v = *vertices;
 
 #ifdef CC_BUILD_D3D9
 	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
@@ -720,7 +720,7 @@ void Gfx_DeleteIb(GfxResourceID* ib) { D3D9_FreeResource(ib); }
 static IDirect3DVertexBuffer9* D3D9_AllocVertexBuffer(VertexFormat fmt, int count, DWORD usage) {
 	IDirect3DVertexBuffer9* vbuffer;
 	cc_result res;
-	int size = count * gfx_strideSizes[fmt];
+	int size = count * strideSizes[fmt];
 
 	for (;;) {
 		res = IDirect3DDevice9_CreateVertexBuffer(device, size, usage,
@@ -746,7 +746,7 @@ static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, int size,
 static void* D3D9_LockVb(GfxResourceID vb, VertexFormat fmt, int count, int lockFlags) {
 	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
 	void* dst = NULL;
-	int size  = count * gfx_strideSizes[fmt];
+	int size  = count * strideSizes[fmt];
 
 	cc_result res = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
 	if (res) Logger_Abort2(res, "D3D9_LockVb");
@@ -782,7 +782,7 @@ void Gfx_SetVertexFormat(VertexFormat fmt) {
 
 	res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
 	if (res) Logger_Abort2(res, "D3D9_SetBatchFormat");
-	gfx_batchStride = gfx_strideSizes[fmt];
+	gfx_batchStride = strideSizes[fmt];
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -1254,7 +1254,7 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 }
 
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return FastAllocTempMem(count * gfx_strideSizes[fmt]);
+	return FastAllocTempMem(count * strideSizes[fmt]);
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
@@ -1293,7 +1293,7 @@ static int tmpCount;
 void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 	tmpFormat = fmt;
 	tmpCount  = count;
-	return FastAllocTempMem(count * gfx_strideSizes[fmt]);
+	return FastAllocTempMem(count * strideSizes[fmt]);
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
@@ -1318,13 +1318,13 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	if (Gfx.LostContext) return 0;
 
 	id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	size = maxVertices * gfx_strideSizes[fmt];
+	size = maxVertices * strideSizes[fmt];
 	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
 	return id;
 }
 
 void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
-	return FastAllocTempMem(count * gfx_strideSizes[fmt]);
+	return FastAllocTempMem(count * strideSizes[fmt]);
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
@@ -1339,7 +1339,7 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 }
 #else
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { 
-	return (GfxResourceID)Mem_Alloc(maxVertices, gfx_strideSizes[fmt], "creating dynamic vb");
+	return (GfxResourceID)Mem_Alloc(maxVertices, strideSizes[fmt], "creating dynamic vb");
 }
 
 void Gfx_BindDynamicVb(GfxResourceID vb) {
@@ -1691,7 +1691,7 @@ static void SwitchProgram(void) {
 		if (gfx_fogMode >= 1) index += 6; /* exp fog */
 	}
 
-	if (gfx_batchFormat == VERTEX_FORMAT_P3FT2FC4B) index += 2;
+	if (gfx_batchFormat == VERTEX_FORMAT_TEXTURED) index += 2;
 	if (gfx_texTransform) index += 2;
 	if (gfx_alphaTest)    index += 1;
 
@@ -1789,43 +1789,43 @@ static void Gfx_RestoreState(void) {
 }
 cc_bool Gfx_WarnIfNecessary(void) { return false; }
 
-static void GL_SetupVbPos3fCol4b(void) {
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fC4b), (void*)0);
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fC4b), (void*)12);
+static void GL_SetupVbColoured(void) {
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_COLOURED, (void*)0);
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_COLOURED, (void*)12);
 }
 
-static void GL_SetupVbPos3fTex2fCol4b(void) {
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)0);
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fT2fC4b), (void*)12);
-	glVertexAttribPointer(2, 2, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)16);
+static void GL_SetupVbTextured(void) {
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)0);
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, (void*)12);
+	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)16);
 }
 
-static void GL_SetupVbPos3fCol4b_Range(int startVertex) {
-	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fC4b);
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fC4b), (void*)(offset));
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fC4b), (void*)(offset + 12));
+static void GL_SetupVbColoured_Range(int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_COLOURED, (void*)(offset));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_COLOURED, (void*)(offset + 12));
 }
 
-static void GL_SetupVbPos3fTex2fCol4b_Range(int startVertex) {
-	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fT2fC4b);
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset));
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
-	glVertexAttribPointer(2, 2, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
+static void GL_SetupVbTextured_Range(int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)(offset));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, (void*)(offset + 12));
+	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)(offset + 16));
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_batchFormat) return;
 	gfx_batchFormat = fmt;
-	gfx_batchStride = gfx_strideSizes[fmt];
+	gfx_batchStride = strideSizes[fmt];
 
-	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
+	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		glEnableVertexAttribArray(2);
-		gfx_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
-		gfx_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
+		gfx_setupVBFunc      = GL_SetupVbTextured;
+		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
 	} else {
 		glDisableVertexAttribArray(2);
-		gfx_setupVBFunc      = GL_SetupVbPos3fCol4b;
-		gfx_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
+		gfx_setupVBFunc      = GL_SetupVbColoured;
+		gfx_setupVBRangeFunc = GL_SetupVbColoured_Range;
 	}
 	SwitchProgram();
 }
@@ -1846,10 +1846,10 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 }
 
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
-	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fT2fC4b);
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset));
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
-	glVertexAttribPointer(2, 2, GL_FLOAT,         false, sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)(offset));
+	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, (void*)(offset + 12));
+	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)(offset + 16));
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
 }
 #endif
@@ -1956,43 +1956,43 @@ cc_bool Gfx_WarnIfNecessary(void) {
 #define IB_PTR NULL
 #endif
 
-static void GL_SetupVbPos3fCol4b(void) {
-	glVertexPointer(3, GL_FLOAT,        sizeof(VertexP3fC4b), (void*)(VB_PTR + 0));
-	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VertexP3fC4b), (void*)(VB_PTR + 12));
+static void GL_SetupVbColoured(void) {
+	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 0));
+	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + 12));
 }
 
-static void GL_SetupVbPos3fTex2fCol4b(void) {
-	glVertexPointer(3, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(VB_PTR + 0));
-	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VertexP3fT2fC4b), (void*)(VB_PTR + 12));
-	glTexCoordPointer(2, GL_FLOAT,      sizeof(VertexP3fT2fC4b), (void*)(VB_PTR + 16));
+static void GL_SetupVbTextured(void) {
+	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 0));
+	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 12));
+	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + 16));
 }
 
-static void GL_SetupVbPos3fCol4b_Range(int startVertex) {
-	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fC4b);
-	glVertexPointer(3, GL_FLOAT,          sizeof(VertexP3fC4b), (void*)(VB_PTR + offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fC4b), (void*)(VB_PTR + offset + 12));
+static void GL_SetupVbColoured_Range(int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_COLOURED;
+	glVertexPointer(3, GL_FLOAT,          SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset));
+	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_COLOURED, (void*)(VB_PTR + offset + 12));
 }
 
-static void GL_SetupVbPos3fTex2fCol4b_Range(int startVertex) {
-	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fT2fC4b);
-	glVertexPointer(3,  GL_FLOAT,         sizeof(VertexP3fT2fC4b), (void*)(VB_PTR + offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fT2fC4b), (void*)(VB_PTR + offset + 12));
-	glTexCoordPointer(2, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(VB_PTR + offset + 16));
+static void GL_SetupVbTextured_Range(int startVertex) {
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	glVertexPointer(3,  GL_FLOAT,         SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset));
+	glColorPointer(4, GL_UNSIGNED_BYTE,   SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
+	glTexCoordPointer(2, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	if (fmt == gfx_batchFormat) return;
 	gfx_batchFormat = fmt;
-	gfx_batchStride = gfx_strideSizes[fmt];
+	gfx_batchStride = strideSizes[fmt];
 
-	if (fmt == VERTEX_FORMAT_P3FT2FC4B) {
+	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		gfx_setupVBFunc      = GL_SetupVbPos3fTex2fCol4b;
-		gfx_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
+		gfx_setupVBFunc      = GL_SetupVbTextured;
+		gfx_setupVBRangeFunc = GL_SetupVbTextured_Range;
 	} else {
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		gfx_setupVBFunc      = GL_SetupVbPos3fCol4b;
-		gfx_setupVBRangeFunc = GL_SetupVbPos3fCol4b_Range;
+		gfx_setupVBFunc      = GL_SetupVbColoured;
+		gfx_setupVBRangeFunc = GL_SetupVbColoured_Range;
 	}
 }
 
@@ -2019,10 +2019,10 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 
 #ifndef CC_BUILD_GL11
 void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
-	cc_uint32 offset = startVertex * (cc_uint32)sizeof(VertexP3fT2fC4b);
-	glVertexPointer(3, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(offset));
-	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
-	glTexCoordPointer(2, GL_FLOAT,      sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
+	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
+	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(offset));
+	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(offset + 12));
+	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(offset + 16));
 	glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, NULL);
 }
 

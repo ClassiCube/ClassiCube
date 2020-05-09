@@ -1,10 +1,11 @@
 #include "Drawer.h"
 #include "TexturePack.h"
 #include "Constants.h"
+#include "Graphics.h"
 struct _DrawerData Drawer;
 
-void Drawer_XMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
-	VertexP3fT2fC4b* ptr = *vertices; VertexP3fT2fC4b v;
+void Drawer_XMin(int count, PackedCol col, TextureLoc texLoc, struct VertexTextured** vertices) {
+	struct VertexTextured* ptr = *vertices; struct VertexTextured v;
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
 	float u1 = Drawer.MinBB.Z;
@@ -22,8 +23,8 @@ void Drawer_XMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** 
 	*vertices = ptr;
 }
 
-void Drawer_XMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
-	VertexP3fT2fC4b* ptr = *vertices; VertexP3fT2fC4b v;
+void Drawer_XMax(int count, PackedCol col, TextureLoc texLoc, struct VertexTextured** vertices) {
+	struct VertexTextured* ptr = *vertices; struct VertexTextured v;
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
 	float u1 = (count - Drawer.MinBB.Z);
@@ -41,8 +42,8 @@ void Drawer_XMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** 
 	*vertices = ptr;
 }
 
-void Drawer_ZMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
-	VertexP3fT2fC4b* ptr = *vertices; VertexP3fT2fC4b v;
+void Drawer_ZMin(int count, PackedCol col, TextureLoc texLoc, struct VertexTextured** vertices) {
+	struct VertexTextured* ptr = *vertices; struct VertexTextured v;
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
 	float u1 = (count - Drawer.MinBB.X);
@@ -60,8 +61,8 @@ void Drawer_ZMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** 
 	*vertices = ptr;
 }
 
-void Drawer_ZMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
-	VertexP3fT2fC4b* ptr = *vertices; VertexP3fT2fC4b v;
+void Drawer_ZMax(int count, PackedCol col, TextureLoc texLoc, struct VertexTextured** vertices) {
+	struct VertexTextured* ptr = *vertices; struct VertexTextured v;
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
 	float u1 = Drawer.MinBB.X;
@@ -79,8 +80,8 @@ void Drawer_ZMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** 
 	*vertices = ptr;
 }
 
-void Drawer_YMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
-	VertexP3fT2fC4b* ptr = *vertices; VertexP3fT2fC4b v;
+void Drawer_YMin(int count, PackedCol col, TextureLoc texLoc, struct VertexTextured** vertices) {
+	struct VertexTextured* ptr = *vertices; struct VertexTextured v;
 
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 	float u1 = Drawer.MinBB.X;
@@ -98,8 +99,8 @@ void Drawer_YMin(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** 
 	*vertices = ptr;
 }
 
-void Drawer_YMax(int count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices) {
-	VertexP3fT2fC4b* ptr = *vertices; VertexP3fT2fC4b v;
+void Drawer_YMax(int count, PackedCol col, TextureLoc texLoc, struct VertexTextured** vertices) {
+	struct VertexTextured* ptr = *vertices; struct VertexTextured v;
 	float vOrigin = Atlas1D_RowId(texLoc) * Atlas1D.InvTileSize;
 
 	float u1 = Drawer.MinBB.X;
