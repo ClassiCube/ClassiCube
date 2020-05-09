@@ -25,7 +25,7 @@ String Chat_ClientStatus[2] = { String_FromArray(msgs[7]), String_FromArray(msgs
 
 String Chat_Announcement = String_FromArray(msgs[9]);
 double Chat_AnnouncementReceived;
-StringsBuffer Chat_Log, Chat_InputLog;
+struct StringsBuffer Chat_Log, Chat_InputLog;
 cc_bool Chat_Logging;
 
 /*########################################################################################################################*

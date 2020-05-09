@@ -381,8 +381,8 @@ cc_result Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	for (;;) {
 		res = Stream_Read(stream, tmp, 8);
 		if (res) return res;
-		dataSize = Stream_GetU32_BE(&tmp[0]);
-		fourCC   = Stream_GetU32_BE(&tmp[4]);
+		dataSize = Stream_GetU32_BE(tmp + 0);
+		fourCC   = Stream_GetU32_BE(tmp + 4);
 
 		switch (fourCC) {
 		case PNG_FourCC('I','H','D','R'): {
@@ -390,8 +390,8 @@ cc_result Png_Decode(Bitmap* bmp, struct Stream* stream) {
 			res = Stream_Read(stream, tmp, PNG_IHDR_SIZE);
 			if (res) return res;
 
-			bmp->Width  = (int)Stream_GetU32_BE(&tmp[0]);
-			bmp->Height = (int)Stream_GetU32_BE(&tmp[4]);
+			bmp->Width  = (int)Stream_GetU32_BE(tmp + 0);
+			bmp->Height = (int)Stream_GetU32_BE(tmp + 4);
 			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
@@ -465,7 +465,7 @@ cc_result Png_Decode(Bitmap* bmp, struct Stream* stream) {
 			inflate.Source = &datStream;
 
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
-			while (!zlibHeader.Done) {
+			while (!zlibHeader.done) {
 				if ((res = ZLibHeader_Read(&datStream, &zlibHeader))) return res;
 			}
 			if (!bmp->Scan0) return PNG_ERR_NO_DATA;

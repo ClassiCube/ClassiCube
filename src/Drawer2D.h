@@ -93,7 +93,7 @@ void Drawer2D_ReducePadding_Height(int* height, int point, int scale);
 cc_bool Drawer2D_SetFontBitmap(Bitmap* bmp);
 
 /* Gets the list of all supported system font names on this platform. */
-void Font_GetNames(StringsBuffer* buffer);
+void Font_GetNames(struct StringsBuffer* buffer);
 /* Reduces padding for a bitmapped font. */
 void Font_ReducePadding(struct FontDesc* desc, int scale);
 /* Finds the path and face number of the given system font, with closest matching style */

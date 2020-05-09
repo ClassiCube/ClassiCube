@@ -235,7 +235,7 @@ static struct ListScreen {
 	void (*UpdateEntry)(struct ListScreen* s, struct ButtonWidget* btn, const String* text);
 	const char* titleText;
 	struct TextWidget title, page;
-	StringsBuffer entries;
+	struct StringsBuffer entries;
 } ListScreen;
 
 static struct Widget* list_widgets[10] = {
@@ -314,7 +314,7 @@ static void ListScreen_MoveForwards(void* screen, void* b) {
 }
 
 static void ListScreen_QuickSort(int left, int right) {
-	StringsBuffer* buffer = &ListScreen.entries; 
+	struct StringsBuffer* buffer = &ListScreen.entries; 
 	cc_uint32* keys = buffer->flagsBuffer; cc_uint32 key;
 
 	while (left < right) {
@@ -1512,7 +1512,7 @@ static void TexturePackScreen_FilterFiles(const String* path, void* obj) {
 	if (!String_CaselessEnds(path, &zip)) return;
 
 	Utils_UNSAFE_TrimFirstDirectory(&relPath);
-	StringsBuffer_Add((StringsBuffer*)obj, &relPath);
+	StringsBuffer_Add((struct StringsBuffer*)obj, &relPath);
 }
 
 static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
@@ -1674,7 +1674,7 @@ static void LoadLevelScreen_FilterFiles(const String* path, void* obj) {
 	if (!importer) return;
 
 	Utils_UNSAFE_TrimFirstDirectory(&relPath);
-	StringsBuffer_Add((StringsBuffer*)obj, &relPath);
+	StringsBuffer_Add((struct StringsBuffer*)obj, &relPath);
 }
 
 static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {

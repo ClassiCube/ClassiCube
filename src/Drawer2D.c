@@ -693,7 +693,7 @@ struct IGameComponent Drawer2D_Component = {
 *---------------------------------------------------Drawer2D component----------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
-void Font_GetNames(StringsBuffer* buffer) { }
+void Font_GetNames(struct StringsBuffer* buffer) { }
 String Font_Lookup(const String* fontName, int style) {
 	String str = String_FromConst("-----"); return str;
 }
@@ -926,7 +926,7 @@ void SysFonts_Register(const String* path) {
 	}
 }
 
-void Font_GetNames(StringsBuffer* buffer) {
+void Font_GetNames(struct StringsBuffer* buffer) {
 	String entry, name, path;
 	int i;
 	if (!font_list.entries.count) SysFonts_Init();

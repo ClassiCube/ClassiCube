@@ -135,7 +135,7 @@ struct HotkeyData {
 
 #define HOTKEYS_MAX_COUNT 256
 extern struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
-extern StringsBuffer HotkeysText;
+extern struct StringsBuffer HotkeysText;
 enum HotkeyModifiers {
 	HOTKEY_MOD_CTRL = 1, HOTKEY_MOD_SHIFT = 2, HOTKEY_MOD_ALT = 4
 };

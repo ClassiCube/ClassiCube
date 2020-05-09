@@ -33,7 +33,7 @@ static cc_result Map_SkipGZipHeader(struct Stream* stream) {
 	cc_result res;
 	GZipHeader_Init(&gzHeader);
 
-	while (!gzHeader.Done) {
+	while (!gzHeader.done) {
 		if ((res = GZipHeader_Read(stream, &gzHeader))) return res;
 	}
 	return 0;

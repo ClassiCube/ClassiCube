@@ -57,7 +57,7 @@ int Convert_FromBase64(const char* src, int len, cc_uint8* dst);
 struct EntryList {
 	const char* path;
 	char separator;
-	StringsBuffer entries;
+	struct StringsBuffer entries;
 };
 typedef cc_bool (*EntryList_Filter)(const String* entry);
 

@@ -743,7 +743,7 @@ cc_bool Convert_ParseBool(const String* str, cc_bool* value) {
 *#########################################################################################################################*/
 #define STRINGSBUFFER_BUFFER_EXPAND_SIZE 8192
 
-CC_NOINLINE static void StringsBuffer_Init(StringsBuffer* buffer) {
+CC_NOINLINE static void StringsBuffer_Init(struct StringsBuffer* buffer) {
 	buffer->count       = 0;
 	buffer->totalLength = 0;
 	buffer->textBuffer     = buffer->_defaultBuffer;
@@ -752,7 +752,7 @@ CC_NOINLINE static void StringsBuffer_Init(StringsBuffer* buffer) {
 	buffer->_flagsCapacity = STRINGSBUFFER_FLAGS_DEF_ELEMS;
 }
 
-void StringsBuffer_Clear(StringsBuffer* buffer) {
+void StringsBuffer_Clear(struct StringsBuffer* buffer) {
 	/* Never initialised to begin with */
 	if (!buffer->_flagsCapacity) return;
 
@@ -765,7 +765,7 @@ void StringsBuffer_Clear(StringsBuffer* buffer) {
 	StringsBuffer_Init(buffer);
 }
 
-String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
+String StringsBuffer_UNSAFE_Get(struct StringsBuffer* buffer, int i) {
 	cc_uint32 flags, offset, len;
 	if (i < 0 || i >= buffer->count) Logger_Abort("Tried to get String past StringsBuffer end");
 
@@ -775,7 +775,7 @@ String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i) {
 	return String_Init(&buffer->textBuffer[offset], len, len);
 }
 
-void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
+void StringsBuffer_Add(struct StringsBuffer* buffer, const String* str) {
 	int textOffset;
 	/* StringsBuffer hasn't been initalised yet, do it here */
 	if (!buffer->_flagsCapacity) StringsBuffer_Init(buffer);
@@ -802,7 +802,7 @@ void StringsBuffer_Add(StringsBuffer* buffer, const String* str) {
 	buffer->totalLength += str->length;
 }
 
-void StringsBuffer_Remove(StringsBuffer* buffer, int index) {
+void StringsBuffer_Remove(struct StringsBuffer* buffer, int index) {
 	cc_uint32 flags, offset, len;
 	cc_uint32 i, offsetAdj;
 	if (index < 0 || index >= buffer->count) Logger_Abort("Tried to remove String past StringsBuffer end");

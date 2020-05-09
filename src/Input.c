@@ -374,7 +374,7 @@ const cc_uint8 Hotkeys_LWJGL[256] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 struct HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
-StringsBuffer HotkeysText;
+struct StringsBuffer HotkeysText;
 
 static void Hotkeys_QuickSort(int left, int right) {
 	struct HotkeyData* keys = HotkeysList; struct HotkeyData key;

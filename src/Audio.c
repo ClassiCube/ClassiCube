@@ -54,7 +54,7 @@ void Audio_PlayStepSound(cc_uint8 type) { }
 #include <AL/alc.h>
 #endif
 #endif
-static StringsBuffer files;
+static struct StringsBuffer files;
 
 static void Volume_Mix16(cc_int16* samples, int count, int volume) {
 	int i;
@@ -507,7 +507,7 @@ static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const String
 	return NULL;
 }
 
-static void Soundboard_Init(struct Soundboard* board, const String* boardName, StringsBuffer* files) {
+static void Soundboard_Init(struct Soundboard* board, const String* boardName, struct StringsBuffer* files) {
 	String file, name;
 	struct SoundGroup* group;
 	struct Sound* snd;

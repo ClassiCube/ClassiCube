@@ -205,7 +205,7 @@ CC_API cc_bool Convert_ParseBool(const String*   str, cc_bool* value);
 #define STRINGSBUFFER_LEN_SHIFT 9
 #define STRINGSBUFFER_LEN_MASK  0x1FFUL
 
-typedef struct StringsBuffer_ {
+struct StringsBuffer {
 	char*      textBuffer;  /* Raw characters of all entries */
 	cc_uint32*  flagsBuffer; /* Private flags for each entry */
 	int count, totalLength;
@@ -213,17 +213,17 @@ typedef struct StringsBuffer_ {
 	int      _textCapacity, _flagsCapacity;
 	char     _defaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
 	cc_uint32 _defaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
-} StringsBuffer;
+};
 
 /* Resets counts to 0, and frees any allocated memory. */
-CC_API void StringsBuffer_Clear(StringsBuffer* buffer);
+CC_API void StringsBuffer_Clear(struct StringsBuffer* buffer);
 /* UNSAFE: Returns a direct pointer to the i'th string in the given buffer. */
 /* You MUST NOT change the characters of this string. Copy to another string if necessary.*/
-CC_API STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, int i);
+CC_API STRING_REF String StringsBuffer_UNSAFE_Get(struct StringsBuffer* buffer, int i);
 /* Adds a given string to the end of the given buffer. */
-CC_API void StringsBuffer_Add(StringsBuffer* buffer, const String* str);
+CC_API void StringsBuffer_Add(struct StringsBuffer* buffer, const String* str);
 /* Removes the i'th string from the given buffer, shifting following strings downwards. */
-CC_API void StringsBuffer_Remove(StringsBuffer* buffer, int index);
+CC_API void StringsBuffer_Remove(struct StringsBuffer* buffer, int index);
 
 /* Performs line wrapping on the given string. */
 /* e.g. "some random tex|t* (| is lineLen) becomes "some random" "text" */

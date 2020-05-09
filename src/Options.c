@@ -9,21 +9,21 @@
 #include "Logger.h"
 
 struct EntryList Options;
-static StringsBuffer Options_Changed;
+static struct StringsBuffer changedOpts;
 
-int Options_ChangedCount(void) { return Options_Changed.count;  }
+int Options_ChangedCount(void) { return changedOpts.count;  }
 
 void Options_Free(void) {
 	StringsBuffer_Clear(&Options.entries);
-	StringsBuffer_Clear(&Options_Changed);
+	StringsBuffer_Clear(&changedOpts);
 }
 
 cc_bool Options_HasChanged(const String* key) {
 	String entry;
 	int i;
 
-	for (i = 0; i < Options_Changed.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&Options_Changed, i);
+	for (i = 0; i < changedOpts.count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&changedOpts, i);
 		if (String_CaselessEquals(&entry, key)) return true;
 	}
 	return false;
@@ -125,7 +125,7 @@ void Options_SetString(const String* key, const String* value) {
 #endif
 
 	if (Options_HasChanged(key)) return;
-	StringsBuffer_Add(&Options_Changed, key);
+	StringsBuffer_Add(&changedOpts, key);
 }
 
 static cc_bool Options_LoadFilter(const String* entry) {
@@ -158,7 +158,7 @@ void Options_Load(void) {
 
 void Options_Save(void) {
 	EntryList_Save(&Options);
-	StringsBuffer_Clear(&Options_Changed);
+	StringsBuffer_Clear(&changedOpts);
 }
 
 void Options_SetSecure(const char* opt, const String* src, const String* key) {

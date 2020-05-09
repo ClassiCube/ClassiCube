@@ -157,7 +157,7 @@ CC_VAR extern struct _TabListData {
 	cc_uint16 NameOffsets[TABLIST_MAX_NAMES];
 	/* Position/Order of this entry within the group. */
 	cc_uint8  GroupRanks[TABLIST_MAX_NAMES];
-	StringsBuffer _buffer;
+	struct StringsBuffer _buffer;
 } TabList;
 
 /* Removes the tab list entry with the given ID, raising TabListEvents.Removed event. */

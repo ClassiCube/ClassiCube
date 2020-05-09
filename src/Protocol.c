@@ -460,7 +460,7 @@ static void Classic_LevelInit(cc_uint8* data) {
 
 	/* Fast map puts volume in header, and uses raw DEFLATE without GZIP header/footer */
 	map_volume    = Stream_GetU32_BE(data);
-	map_gzHeader.Done = true;
+	map_gzHeader.done = true;
 	map_sizeIndex = 4;
 }
 
@@ -483,12 +483,12 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 	data += 1024;
 	value = *data; /* progress in original classic, but we ignore it */
 
-	if (!map_gzHeader.Done) {
+	if (!map_gzHeader.done) {
 		res = GZipHeader_Read(&map_part, &map_gzHeader);
 		if (res && res != ERR_END_OF_STREAM) Logger_Abort2(res, "reading map data");
 	}
 
-	if (map_gzHeader.Done) {
+	if (map_gzHeader.done) {
 		if (map_sizeIndex < 4) {
 			left = 4 - map_sizeIndex;
 			map.stream.Read(&map.stream, &map_size[map_sizeIndex], left, &read); 
