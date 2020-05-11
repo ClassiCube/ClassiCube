@@ -36,7 +36,7 @@ enum ERRORS_ALL {
 	/* GZIP header decoding errors */
 	GZIP_ERR_HEADER1, GZIP_ERR_HEADER2, GZIP_ERR_METHOD, GZIP_ERR_FLAGS,
 	/* ZLIB header decoding errors */
-	ZLIB_ERR_METHOD, ZLIB_ERR_WINDOW_SIZE, ZLIB_ERR_FLAGS,
+	ZLIB_ERR_METHOD, ZLIB_ERR_FLAGS,
 	/* FCM map decoding errors */
 	FCM_ERR_IDENTIFIER, FCM_ERR_REVISION,
 	/* LVL map decoding errors */

@@ -695,7 +695,7 @@ static cc_bool Collisions_CanSlideThrough(struct AABB* adjFinalBB) {
 }
 
 static cc_bool Collisions_DidSlide(struct CollisionsComp* comp, struct AABB* blockBB, Vec3* size,
-	struct AABB* finalBB, struct AABB* entityBB, struct AABB* extentBB) {
+									struct AABB* finalBB, struct AABB* entityBB, struct AABB* extentBB) {
 	float yDist = blockBB->Max.Y - entityBB->Min.Y;
 	struct AABB adjBB;
 
@@ -722,7 +722,7 @@ static cc_bool Collisions_DidSlide(struct CollisionsComp* comp, struct AABB* blo
 }
 
 static void Collisions_ClipXMin(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB,
-	cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
+								cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.X = blockBB->Min.X - size->X / 2 - COLLISIONS_ADJ;
 		Collisions_ClipX(comp->Entity, size, entityBB, extentBB);
@@ -731,7 +731,7 @@ static void Collisions_ClipXMin(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipXMax(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB, 
-	cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
+								cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.X = blockBB->Max.X + size->X / 2 + COLLISIONS_ADJ;
 		Collisions_ClipX(comp->Entity, size, entityBB, extentBB);
@@ -740,7 +740,7 @@ static void Collisions_ClipXMax(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipZMax(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB, 
-	cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
+								cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.Z = blockBB->Max.Z + size->Z / 2 + COLLISIONS_ADJ;
 		Collisions_ClipZ(comp->Entity, size, entityBB, extentBB);
@@ -749,7 +749,7 @@ static void Collisions_ClipZMax(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipZMin(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB,
-	cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
+								cc_bool wasOn, struct AABB* finalBB, struct AABB* extentBB, Vec3* size) {
 	if (!wasOn || !Collisions_DidSlide(comp, blockBB, size, finalBB, entityBB, extentBB)) {
 		comp->Entity->Position.Z = blockBB->Min.Z - size->Z / 2 - COLLISIONS_ADJ;
 		Collisions_ClipZ(comp->Entity, size, entityBB, extentBB);
@@ -758,14 +758,14 @@ static void Collisions_ClipZMin(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_ClipYMin(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB, 
-	struct AABB* extentBB, Vec3* size) {
+								struct AABB* extentBB, Vec3* size) {
 	comp->Entity->Position.Y = blockBB->Min.Y - size->Y - COLLISIONS_ADJ;
 	Collisions_ClipY(comp->Entity, size, entityBB, extentBB);
 	comp->HitYMin = true;
 }
 
 static void Collisions_ClipYMax(struct CollisionsComp* comp, struct AABB* blockBB, struct AABB* entityBB, 
-	struct AABB* extentBB, Vec3* size) {
+								struct AABB* extentBB, Vec3* size) {
 	comp->Entity->Position.Y = blockBB->Max.Y + COLLISIONS_ADJ;
 	comp->Entity->OnGround = true;
 	Collisions_ClipY(comp->Entity, size, entityBB, extentBB);
@@ -773,7 +773,7 @@ static void Collisions_ClipYMax(struct CollisionsComp* comp, struct AABB* blockB
 }
 
 static void Collisions_CollideWithReachableBlocks(struct CollisionsComp* comp, int count, struct AABB* entityBB,
-	struct AABB* extentBB) {
+												struct AABB* extentBB) {
 	struct Entity* entity = comp->Entity;
 	struct SearcherState state;
 	struct AABB blockBB, finalBB;

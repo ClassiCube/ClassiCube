@@ -322,7 +322,7 @@ static cc_result ZipPatcher_WriteData(struct Stream* dst, struct ResourceTexture
 static cc_result ZipPatcher_WriteZipEntry(struct Stream* src, struct ResourceTexture* tex, struct ZipState* state) {
 	cc_uint8 tmp[2048];
 	cc_uint32 read;
-	struct Stream* dst = (struct Stream*)state->Obj;
+	struct Stream* dst = (struct Stream*)state->obj;
 	cc_result res;
 
 	tex->size  = state->_curEntry->UncompressedSize;
@@ -403,7 +403,7 @@ static cc_result ClassicPatcher_ExtractFiles(struct Stream* s) {
 	Stream_ReadonlyMemory(&src, fileResources[0].data, fileResources[0].len);
 	Zip_Init(&zip, &src);
 
-	zip.Obj = s;
+	zip.obj = s;
 	zip.SelectEntry  = ClassicPatcher_SelectEntry;
 	zip.ProcessEntry = ClassicPatcher_ProcessEntry;
 	return Zip_Extract(&zip);
@@ -493,7 +493,7 @@ static cc_result ModernPatcher_ProcessEntry(const String* path, struct Stream* d
 	}
 
 	if (String_CaselessEqualsConst(path, "assets/minecraft/textures/blocks/fire_layer_1.png")) {
-		struct Stream* dst = (struct Stream*)state->Obj;
+		struct Stream* dst = (struct Stream*)state->obj;
 		return ModernPatcher_MakeAnimations(dst, data);
 	}
 
@@ -508,7 +508,7 @@ static cc_result ModernPatcher_ExtractFiles(struct Stream* s) {
 	Stream_ReadonlyMemory(&src, fileResources[1].data, fileResources[1].len);
 	Zip_Init(&zip, &src);
 
-	zip.Obj = s;
+	zip.obj = s;
 	zip.SelectEntry  = ModernPatcher_SelectEntry;
 	zip.ProcessEntry = ModernPatcher_ProcessEntry;
 	return Zip_Extract(&zip);

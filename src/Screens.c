@@ -266,7 +266,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 
 	y += s->posAtlas.tex.Height;
 	TextWidget_Make(line2, ANCHOR_MIN, ANCHOR_MIN, 2, 0);
-	/* We can't pass y to TextWidget_Make because that DPI scales it */
+	/* We can't use y in TextWidget_Make because that DPI scales it */
 	line2->yOffset = y;
 
 	if (Game_ClassicMode) {

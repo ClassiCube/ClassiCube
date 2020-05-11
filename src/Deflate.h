@@ -121,7 +121,7 @@ struct ZipState;
 /* Stores state for reading and processing entries in a .zip archive. */
 struct ZipState {
 	/* Source of the .zip archive data. Must be seekable. */
-	struct Stream* Input;
+	struct Stream* input;
 	/* Callback function to process the data in a .zip archive entry. */
 	/* Return non-zero to indicate an error and stop further processing. */
 	/* NOTE: data stream MAY NOT be seekable. (i.e. entry data might be compressed) */
@@ -130,7 +130,7 @@ struct ZipState {
 	/* NOTE: returning false entirely skips the entry. (avoids pointless seek to entry) */
 	cc_bool (*SelectEntry)(const String* path);
 	/* Generic object/pointer for ProcessEntry callback. */
-	void* Obj;
+	void* obj;
 
 	/* (internal) Number of entries selected by SelectEntry. */
 	int _usedEntries;
@@ -141,7 +141,7 @@ struct ZipState {
 	/* (internal) Current entry being processed. */
 	struct ZipEntry* _curEntry;
 	/* Data for each entry in the .zip archive. */
-	struct ZipEntry Entries[ZIP_MAX_ENTRIES];
+	struct ZipEntry entries[ZIP_MAX_ENTRIES];
 };
 
 /* Initialises .zip archive reader state to defaults. */
