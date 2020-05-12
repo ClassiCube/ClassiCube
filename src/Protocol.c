@@ -464,6 +464,15 @@ static void Classic_LevelInit(cc_uint8* data) {
 	map_sizeIndex = 4;
 }
 
+static void DisconnectInvalidMap(cc_result res) {
+	static const String title  = String_FromConst("Disconnected");
+	String tmp; char tmpBuffer[STRING_SIZE];
+	String_InitArray(tmp, tmpBuffer);
+
+	String_Format1(&tmp, "Server sent corrupted map data (error %h)", &res);
+	Game_Disconnect(&title, &tmp); return;
+}
+
 static void Classic_LevelDataChunk(cc_uint8* data) {
 	int usedLength;
 	float progress;
@@ -485,7 +494,7 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 
 	if (!map_gzHeader.done) {
 		res = GZipHeader_Read(&map_part, &map_gzHeader);
-		if (res && res != ERR_END_OF_STREAM) Logger_Abort2(res, "reading map data");
+		if (res && res != ERR_END_OF_STREAM) { DisconnectInvalidMap(res); return; }
 	}
 
 	if (map_gzHeader.done) {
