@@ -553,8 +553,10 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 #ifdef EXTENDED_BLOCKS
 	/* defer allocation of second map array if possible */
 	if (cpe_extBlocks && map2.blocks) World_SetMapUpper(map2.blocks);
+	map2.blocks = NULL;
 #endif
 	World_SetNewMap(map.blocks, width, height, length);
+	map.blocks  = NULL;
 }
 
 static void Classic_SetBlock(cc_uint8* data) {
@@ -1635,6 +1637,7 @@ static void OnReset(void) {
 		Net_PacketSizes[i] = 0;
 	}
 	Protocol_Reset();
+	FreeMapStates();
 }
 
 struct IGameComponent Protocol_Component = {
