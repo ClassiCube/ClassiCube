@@ -34,6 +34,7 @@
 #include "Stream.h"
 #include "Builder.h"
 #include "GameStructs.h"
+#include "Protocol.h"
 
 struct _GameData Game;
 int     Game_Port;
@@ -427,6 +428,7 @@ static void Game_Load(void) {
 	Game_AddComponent(&MapRenderer_Component);
 	Game_AddComponent(&EnvRenderer_Component);
 	Game_AddComponent(&Server_Component);
+	Game_AddComponent(&Protocol_Component);
 	Camera_Init();
 	Game_UpdateProjection();
 

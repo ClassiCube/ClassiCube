@@ -46,9 +46,11 @@ extern cc_uint16 Net_PacketSizes[OPCODE_COUNT];
 extern Net_Handler Net_Handlers[OPCODE_COUNT];
 #define Net_Set(opcode, handler, size) Net_Handlers[opcode] = handler; Net_PacketSizes[opcode] = size;
 
-struct RayTracer;			
+struct RayTracer;	
+struct IGameComponent;
+extern struct IGameComponent Protocol_Component;
+
 void Protocol_RemoveEntity(EntityID id);
-void Protocol_Reset(void);
 void Protocol_Tick(void);
 
 extern cc_bool cpe_needD3Fix;

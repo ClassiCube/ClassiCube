@@ -252,7 +252,6 @@ static void MPConnection_FinishConnect(void) {
 	net_readCurrent    = net_readBuffer;
 	Server.WriteBuffer = net_writeBuffer;
 
-	Protocol_Reset();
 	Classic_SendLogin(&Game_Username, &Game_Mppass);
 	net_lastPacket = Game.Time;
 }
@@ -493,7 +492,7 @@ static void MPConnection_Init(void) {
 }
 
 
-static void MPConnection_OnNewMap(void) {
+static void Server_OnNewMap(void) {
 	int i;
 	if (Server.IsSinglePlayer) return;
 
@@ -503,17 +502,10 @@ static void MPConnection_OnNewMap(void) {
 	}
 }
 
-static void MPConnection_Reset(void) {
-	int i;
+static void Server_Reset(void) {
 	if (Server.IsSinglePlayer) return;
-	
-	for (i = 0; i < OPCODE_COUNT; i++) {
-		Net_Handlers[i]    = NULL;
-		Net_PacketSizes[i] = 0;
-	}
 
 	net_writeFailed = false;
-	Protocol_Reset();
 	Server_Free();
 }
 
@@ -545,6 +537,6 @@ static void Server_Free(void) {
 struct IGameComponent Server_Component = {
 	Server_Init, /* Init  */
 	Server_Free, /* Free  */
-	MPConnection_Reset,    /* Reset */
-	MPConnection_OnNewMap  /* OnNewMap */
+	Server_Reset,    /* Reset */
+	Server_OnNewMap  /* OnNewMap */
 };

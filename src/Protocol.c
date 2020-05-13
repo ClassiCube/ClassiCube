@@ -25,6 +25,7 @@
 #include "Camera.h"
 #include "Window.h"
 #include "Particle.h"
+#include "GameStructs.h"
 
 cc_uint16 Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];
@@ -1607,7 +1608,7 @@ static void BlockDefs_Reset(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Public handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-void Protocol_Reset(void) {
+static void Protocol_Reset(void) {
 	Classic_Reset();
 	CPE_Reset();
 	BlockDefs_Reset();
@@ -1619,3 +1620,25 @@ void Protocol_Tick(void) {
 	CPE_Tick();
 	WoM_Tick();
 }
+
+static void OnInit(void) {
+	if (Server.IsSinglePlayer) return;
+	Protocol_Reset();
+}
+
+static void OnReset(void) {
+	int i;
+	if (Server.IsSinglePlayer) return;
+
+	for (i = 0; i < OPCODE_COUNT; i++) {
+		Net_Handlers[i] = NULL;
+		Net_PacketSizes[i] = 0;
+	}
+	Protocol_Reset();
+}
+
+struct IGameComponent Protocol_Component = {
+	OnInit,  /* Init  */
+	NULL,    /* Free  */
+	OnReset, /* Reset */
+};
