@@ -164,15 +164,13 @@ int Gui_ContainsPointers(int x, int y, int width, int height);
 /* Shows HUD and Status screens. */
 void Gui_ShowDefault(void);
 
-/* Returns index of the given screen in the screens list, -1 if not */
-int Gui_Index(struct Screen* screen);
 /* Inserts a screen into the screen lists with the given priority. */
 /* NOTE: You MUST ensure a screen isn't added twice. Or use Gui_Replace. */
-void Gui_Add(struct Screen* screen, int priority);
+CC_API void Gui_Add(struct Screen* screen, int priority);
 /* Removes the screen from the screens list. */
-void Gui_Remove(struct Screen* screen);
+CC_API void Gui_Remove(struct Screen* screen);
 /* Shorthand for Gui_Remove then Gui_Add. */
-void Gui_Replace(struct Screen* screen, int priority);
+CC_API void Gui_Replace(struct Screen* screen, int priority);
 
 /* Returns highest priority screen that has grabbed input. */
 struct Screen* Gui_GetInputGrab(void);

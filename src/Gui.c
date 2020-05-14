@@ -134,14 +134,6 @@ void Gui_Refresh(struct Screen* s) {
 	s->VTABLE->ContextRecreated(s);
 }
 
-int Gui_Index(struct Screen* s) {
-	int i;
-	for (i = 0; i < Gui_ScreensCount; i++) {
-		if (Gui_Screens[i] == s) return i;
-	}
-	return -1;
-}
-
 static void Gui_AddCore(struct Screen* s, int priority) {
 	int i, j;
 	if (Gui_ScreensCount >= GUI_MAX_SCREENS) Logger_Abort("Hit max screens");
@@ -171,8 +163,17 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	}
 }
 
+/* Returns index of the given screen in the screens list, -1 if not */
+static int IndexOfScreen(struct Screen* s) {
+	int i;
+	for (i = 0; i < Gui_ScreensCount; i++) {
+		if (Gui_Screens[i] == s) return i;
+	}
+	return -1;
+}
+
 static void Gui_RemoveCore(struct Screen* s) {
-	int i = Gui_Index(s);
+	int i = IndexOfScreen(s);
 	if (i == -1) return;
 
 	for (; i < Gui_ScreensCount - 1; i++) {
