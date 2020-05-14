@@ -191,17 +191,12 @@ CC_NOINLINE static void Gui_OnScreensChanged(void) {
 	InputHandler_OnScreensChanged();
 }
 
-void Gui_Add(struct Screen* s, int priority) {
-	Gui_AddCore(s, priority);
-	Gui_OnScreensChanged();
-}
-
 void Gui_Remove(struct Screen* s) {
 	Gui_RemoveCore(s);
 	Gui_OnScreensChanged();
 }
 
-void Gui_Replace(struct Screen* s, int priority) {
+void Gui_Add(struct Screen* s, int priority) {
 	int i;
 	Gui_RemoveCore(s);
 	/* Backwards loop since removing changes count and gui_screens */

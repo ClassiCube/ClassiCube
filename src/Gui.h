@@ -130,6 +130,7 @@ int Widget_Contains(void* widget, int x, int y);
 extern GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 
 /* Higher priority handles input first and draws on top */
+/* NOTE: Values are 5 apart to allow plugins to insert custom screens */
 enum GuiPriority {
 	GUI_PRIORITY_DISCONNECT = 60,
 	GUI_PRIORITY_OLDLOADING = 55,
@@ -164,13 +165,11 @@ int Gui_ContainsPointers(int x, int y, int width, int height);
 /* Shows HUD and Status screens. */
 void Gui_ShowDefault(void);
 
-/* Inserts a screen into the screen lists with the given priority. */
-/* NOTE: You MUST ensure a screen isn't added twice. Or use Gui_Replace. */
-CC_API void Gui_Add(struct Screen* screen, int priority);
 /* Removes the screen from the screens list. */
 CC_API void Gui_Remove(struct Screen* screen);
-/* Shorthand for Gui_Remove then Gui_Add. */
-CC_API void Gui_Replace(struct Screen* screen, int priority);
+/* Inserts a screen into the screen lists with the given priority. */
+/* NOTE: If there is an existing screen with the same priority, it is removed. */
+CC_API void Gui_Add(struct Screen* screen, int priority);
 
 /* Returns highest priority screen that has grabbed input. */
 struct Screen* Gui_GetInputGrab(void);

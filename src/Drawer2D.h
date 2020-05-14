@@ -16,7 +16,7 @@ extern struct IGameComponent Drawer2D_Component;
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, struct FontDesc* font, cc_bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc_bool useShadow);
 /* Initialises the given font. When Drawer2D_BitmappedText is false, creates native font handle using Font_Make. */
-CC_NOINLINE void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style);
+CC_API void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style);
 
 /* Whether text should be drawn and measured using the currently set font bitmap. */ 
 /* If false, then text is instead draw using platform/system fonts. */
@@ -93,7 +93,7 @@ void Drawer2D_ReducePadding_Height(int* height, int point, int scale);
 cc_bool Drawer2D_SetFontBitmap(Bitmap* bmp);
 
 /* Gets the list of all supported system font names on this platform. */
-void Font_GetNames(struct StringsBuffer* buffer);
+CC_API void Font_GetNames(struct StringsBuffer* buffer);
 /* Reduces padding for a bitmapped font. */
 void Font_ReducePadding(struct FontDesc* desc, int scale);
 /* Finds the path and face number of the given system font, with closest matching style */

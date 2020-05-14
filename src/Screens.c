@@ -348,7 +348,7 @@ void HUDScreen_Show(void) {
 	struct HUDScreen* s = &HUDScreen_Instance;
 	s->VTABLE = &HUDScreen_VTABLE;
 	Gui_HUD   = s;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_HUD);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_HUD);
 }
 
 struct Widget* HUDScreen_GetHotbar(void) {
@@ -1350,7 +1350,7 @@ void ChatScreen_Show(void) {
 
 	s->VTABLE = &ChatScreen_VTABLE;
 	Gui_Chat  = s;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_CHAT);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_CHAT);
 }
 
 void ChatScreen_OpenInput(const String* text) {
@@ -1526,7 +1526,7 @@ void InventoryScreen_Show(void) {
 	s->closable   = true;
 
 	s->VTABLE = &InventoryScreen_VTABLE;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_INVENTORY);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_INVENTORY);
 }
 
 
@@ -1677,7 +1677,7 @@ CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const Stri
 	
 	s->grabsInput  = true;
 	s->blocksWorld = true;
-	Gui_Replace((struct Screen*)s, 
+	Gui_Add((struct Screen*)s, 
 		Game_ClassicMode ? GUI_PRIORITY_OLDLOADING : GUI_PRIORITY_LOADING);
 }
 
@@ -1924,7 +1924,7 @@ void DisconnectScreen_Show(const String* title, const String* message) {
 
 	/* Get rid of all other menus instead of just hiding to reduce GPU usage */
 	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_DISCONNECT);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_DISCONNECT);
 }
 
 
@@ -2085,6 +2085,6 @@ void TouchScreen_Show(void) {
 	s->VTABLE = &TouchScreen_VTABLE;
 
 	if (!Input_TouchMode) return;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TOUCH);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_TOUCH);
 }
 #endif

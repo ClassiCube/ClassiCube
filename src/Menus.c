@@ -444,7 +444,7 @@ void ListScreen_Show(void) {
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &ListScreen_VTABLE;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -563,7 +563,7 @@ void PauseScreen_Show(void) {
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &PauseScreen_VTABLE;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -681,7 +681,7 @@ void OptionsGroupScreen_Show(void) {
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &OptionsGroupScreen_VTABLE;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -930,7 +930,7 @@ void EditHotkeyScreen_Show(struct HotkeyData original) {
 	s->VTABLE     = &EditHotkeyScreen_VTABLE;
 	s->origHotkey = original;
 	s->curHotkey  = original;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1123,7 +1123,7 @@ void GenLevelScreen_Show(void) {
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &GenLevelScreen_VTABLE;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1196,7 +1196,7 @@ void ClassicGenScreen_Show(void) {
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &ClassicGenScreen_VTABLE;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1484,7 +1484,7 @@ void SaveLevelScreen_Show(void) {
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE = &SaveLevelScreen_VTABLE;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -1840,7 +1840,7 @@ static void KeyBindingsScreen_Show(int bindsCount, const cc_uint8* binds, const 
 	s->binds      = binds;
 	s->descs      = descs;
 	s->DoInit     = doInit;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -2299,7 +2299,7 @@ void MenuOptionsScreen_Show(struct MenuInputDesc* descs, const char** descriptio
 	s->DoInit          = init;
 	s->DoRecreateExtra = NULL;
 	s->OnHacksChanged  = NULL;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_MENU);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
 
@@ -3172,7 +3172,7 @@ void TexIdsOverlay_Show(void) {
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &TexIdsOverlay_VTABLE;
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TEXIDS);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_TEXIDS);
 }
 
 
@@ -3252,7 +3252,7 @@ void UrlWarningOverlay_Show(const String* url) {
 
 	String_InitArray(s->url, s->_urlBuffer);
 	String_Copy(&s->url, url);
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_URLWARNING);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_URLWARNING);
 }
 
 
@@ -3421,7 +3421,7 @@ void TexPackOverlay_Show(const String* url) {
 	s->url = String_UNSAFE_SubstringAt(&s->identifier, 3);
 
 	Http_AsyncGetHeaders(url, true, &s->identifier);
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TEXPACK);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_TEXPACK);
 }
 
 
@@ -3509,6 +3509,6 @@ void TouchMoreScreen_Show(void) {
 	s->closable   = true;
 	s->VTABLE     = &TouchMoreScreen_VTABLE;
 
-	Gui_Replace((struct Screen*)s, GUI_PRIORITY_TOUCHMORE);
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_TOUCHMORE);
 }
 #endif
