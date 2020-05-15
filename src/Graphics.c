@@ -303,7 +303,7 @@ static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ 
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
 static DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
-static D3DFORMAT gfx_viewFormat, gfx_depthFormat;
+static D3DFORMAT viewFormat, depthFormat;
 static float totalMem;
 
 static void D3D9_RestoreRenderStates(void);
@@ -327,33 +327,37 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 	Platform_Log2("D3D9 resource has %i outstanding references! ID 0x%x", &refCount, &addr);
 }
 
-static void D3D9_FindCompatibleFormat(void) {
-	static D3DFORMAT depthFormats[6] = { D3DFMT_D32, D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D16, D3DFMT_D15S1 };
-	static D3DFORMAT viewFormats[4]  = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };
+static void FindCompatibleViewFormat(void) {
+	static const D3DFORMAT formats[4] = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };
 	cc_result res;
-	int i, count = Array_Elems(viewFormats);
+	int i;
 
-	for (i = 0; i < count; i++) {
-		gfx_viewFormat = viewFormats[i];
-		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, gfx_viewFormat, gfx_viewFormat, true);
-		if (!res) break;
+	for (i = 0; i < Array_Elems(formats); i++) {
+		viewFormat = formats[i];
+		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, viewFormat, viewFormat, true);
+		if (!res) return;
 	}
-	if (i == count) Logger_Abort("Unable to create a back buffer with sufficient precision.");
+	Logger_Abort("Failed to create back buffer. Graphics drivers may not be installed.");
+}
 
-	count = Array_Elems(depthFormats);
-	for (i = 0; i < count; i++) {
-		gfx_depthFormat = depthFormats[i];
-		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, gfx_viewFormat, gfx_viewFormat, gfx_depthFormat);
-		if (!res) break;
+static void FindCompatibleDepthFormat(void) {
+	static const D3DFORMAT formats[6] = { D3DFMT_D32, D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D16, D3DFMT_D15S1 };
+	cc_result res;
+	int i;
+
+	for (i = 0; i < Array_Elems(formats); i++) {
+		depthFormat = formats[i];
+		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, viewFormat, viewFormat, depthFormat);
+		if (!res) return;
 	}
-	if (i == count) Logger_Abort("Unable to create a depth buffer with sufficient precision.");
+	Logger_Abort("Failed to create depth buffer. Graphics drivers may not be installed.");
 }
 
 static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* args) {
-	args->AutoDepthStencilFormat = gfx_depthFormat;
+	args->AutoDepthStencilFormat = depthFormat;
 	args->BackBufferWidth  = width;
 	args->BackBufferHeight = height;
-	args->BackBufferFormat = gfx_viewFormat;
+	args->BackBufferFormat = viewFormat;
 	args->BackBufferCount  = 1;
 	args->EnableAutoDepthStencil = true;
 	args->PresentationInterval   = gfx_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
@@ -369,7 +373,8 @@ void Gfx_Init(void) {
 	HWND winHandle = (HWND)WindowInfo.Handle;
 	d3d = Direct3DCreate9(D3D_SDK_VERSION);
 
-	D3D9_FindCompatibleFormat();
+	FindCompatibleViewFormat();
+	FindCompatibleDepthFormat();
 	D3DPRESENT_PARAMETERS args = { 0 };
 	D3D9_FillPresentArgs(640, 480, &args);
 
@@ -960,7 +965,7 @@ static const int D3D9_DepthBufferBts(D3DFORMAT format) {
 void Gfx_GetApiInfo(String* lines) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
 	int pointerSize = sizeof(void*) * 8;
-	int depthBits   = D3D9_DepthBufferBts(gfx_depthFormat);
+	int depthBits   = D3D9_DepthBufferBts(depthFormat);
 	float curMem;
 
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
