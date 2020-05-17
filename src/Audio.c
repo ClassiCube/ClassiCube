@@ -201,34 +201,33 @@ static ALCdevice* audio_device;
 static ALCcontext* audio_context;
 static cc_bool alInited, alSupported;
 
-static void Audio_CheckContextErrors(void) {
-	ALenum err = alcGetError(audio_device);
-	if (err) Logger_Abort2(err, "Error creating OpenAL context");
-}
-
-static void Audio_CreateContext(void) {
+static cc_result CreateALContext(void) {
+	ALenum err;
 	audio_device = alcOpenDevice(NULL);
-	if (!audio_device) Logger_Abort("Failed to create OpenAL device");
-	Audio_CheckContextErrors();
+	if (!audio_device) return AL_ERR_INIT_DEVICE;
+	if ((err = alcGetError(audio_device))) return err;
 
 	audio_context = alcCreateContext(audio_device, NULL);
 	if (!audio_context) {
 		alcCloseDevice(audio_device);
-		Logger_Abort("Failed to create OpenAL context");
+		return AL_ERR_INIT_CONTEXT;
 	}
-	Audio_CheckContextErrors();
+	if ((err = alcGetError(audio_device))) return err;
 
 	alcMakeContextCurrent(audio_context);
-	Audio_CheckContextErrors();
+	return alcGetError(audio_device);
 }
 
 static cc_bool Audio_SysInit(void) {
+	cc_result res;
 	if (alInited) return alSupported;
 	alInited = true;
 
-	Audio_CreateContext();
+	res = CreateALContext();
+	if (res) { Logger_SimpleWarn(res, "initing OpenAL"); return false; }
+
 	alSupported = true;
-	return alSupported;
+	return true;
 }
 
 static void Audio_SysFree(void) {
