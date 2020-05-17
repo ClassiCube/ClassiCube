@@ -201,28 +201,83 @@ static ALCdevice* audio_device;
 static ALCcontext* audio_context;
 static cc_bool alInited, alSupported;
 
+#if defined CC_BUILD_WIN
+static const String alLib = String_FromConst("openal32.dll");
+#elif defined CC_BUILD_OSX
+static const String alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL")
+#else
+static const String alLib = String_FromConst("libopenal.so.1");
+#endif
+
+static LPALCCREATECONTEXT _alcCreateContext;
+static LPALCMAKECONTEXTCURRENT _alcMakeContextCurrent;
+static LPALCDESTROYCONTEXT _alcDestroyContext;
+static LPALCOPENDEVICE _alcOpenDevice;
+static LPALCCLOSEDEVICE _alcCloseDevice;
+static LPALCGETERROR _alcGetError;
+
+static LPALGETERROR _alGetError;
+static LPALGENSOURCES _alGenSources;
+static LPALDELETESOURCES _alDeleteSources;
+static LPALGETSOURCEI _alGetSourcei;
+static LPALSOURCEPLAY _alSourcePlay;
+static LPALSOURCESTOP _alSourceStop;
+static LPALSOURCEQUEUEBUFFERS _alSourceQueueBuffers;
+static LPALSOURCEUNQUEUEBUFFERS _alSourceUnqueueBuffers;
+static LPALGENBUFFERS _alGenBuffers;
+static LPALDELETEBUFFERS _alDeleteBuffers;
+static LPALBUFFERDATA _alBufferData;
+static LPALDISTANCEMODEL _alDistanceModel;
+
+#define QUOTE(x) #x
+#define LoadALFunc(sym, type) (_ ## sym = (type)DynamicLib_Get2(lib, QUOTE(sym)))
+static cc_bool LoadALFuncs(void) {
+	void* lib = DynamicLib_Load2(&alLib);
+	if (!lib) { Logger_DynamicLibWarn("loading", &alLib); return false; }
+
+	return
+		LoadALFunc(alcCreateContext,  LPALCCREATECONTEXT) &&
+		LoadALFunc(alcMakeContextCurrent, LPALCMAKECONTEXTCURRENT) &&
+		LoadALFunc(alcDestroyContext, LPALCDESTROYCONTEXT) &&
+		LoadALFunc(alcOpenDevice,     LPALCOPENDEVICE) &&
+		LoadALFunc(alcCloseDevice,    LPALCCLOSEDEVICE) &&
+		LoadALFunc(alcGetError,       LPALCGETERROR) &&
+
+		LoadALFunc(alGetError,      LPALGETERROR) &&
+		LoadALFunc(alGenSources,    LPALGENSOURCES) &&
+		LoadALFunc(alDeleteSources, LPALDELETESOURCES) &&
+		LoadALFunc(alGetSourcei,    LPALGETSOURCEI) &&
+		LoadALFunc(alSourcePlay,    LPALSOURCEPLAY) &&
+		LoadALFunc(alSourceStop,    LPALSOURCESTOP) &&
+		LoadALFunc(alSourceQueueBuffers,   LPALSOURCEQUEUEBUFFERS) &&
+		LoadALFunc(alSourceUnqueueBuffers, LPALSOURCEUNQUEUEBUFFERS) &&
+		LoadALFunc(alGenBuffers,    LPALGENBUFFERS) &&
+		LoadALFunc(alDeleteBuffers, LPALDELETEBUFFERS) &&
+		LoadALFunc(alBufferData,    LPALBUFFERDATA) &&
+		LoadALFunc(alDistanceModel, LPALDISTANCEMODEL);
+}
+
 static cc_result CreateALContext(void) {
 	ALenum err;
-	audio_device = alcOpenDevice(NULL);
-	if (!audio_device) return AL_ERR_INIT_DEVICE;
-	if ((err = alcGetError(audio_device))) return err;
+	audio_device = _alcOpenDevice(NULL);
+	if (!audio_device)  return AL_ERR_INIT_DEVICE;
+	if ((err = _alcGetError(audio_device))) return err;
 
-	audio_context = alcCreateContext(audio_device, NULL);
-	if (!audio_context) {
-		alcCloseDevice(audio_device);
-		return AL_ERR_INIT_CONTEXT;
-	}
-	if ((err = alcGetError(audio_device))) return err;
+	audio_context = _alcCreateContext(audio_device, NULL);
+	if (!audio_context) return AL_ERR_INIT_CONTEXT;
+	if ((err = _alcGetError(audio_device))) return err;
 
-	alcMakeContextCurrent(audio_context);
-	return alcGetError(audio_device);
+	_alcMakeContextCurrent(audio_context);
+	return _alcGetError(audio_device);
 }
 
 static cc_bool Audio_SysInit(void) {
+	static const String msg = String_FromConst("Failed to init OpenAL. No audio will play.");
 	cc_result res;
 	if (alInited) return alSupported;
 	alInited = true;
 
+	if (!LoadALFuncs()) { Logger_WarnFunc(&msg); return false; }
 	res = CreateALContext();
 	if (res) { Logger_SimpleWarn(res, "initing OpenAL"); return false; }
 
@@ -232,10 +287,10 @@ static cc_bool Audio_SysInit(void) {
 
 static void Audio_SysFree(void) {
 	if (!audio_device) return;
-	alcMakeContextCurrent(NULL);
+	_alcMakeContextCurrent(NULL);
 
-	if (audio_context) alcDestroyContext(audio_context);
-	if (audio_device)  alcCloseDevice(audio_device);
+	if (audio_context) _alcDestroyContext(audio_context);
+	if (audio_device)  _alcCloseDevice(audio_device);
 
 	audio_context = NULL;
 	audio_device  = NULL;
@@ -245,18 +300,18 @@ static ALenum Audio_FreeSource(struct AudioContext* ctx) {
 	ALenum err;
 	if (ctx->source == -1) return 0;
 
-	alDeleteSources(1, &ctx->source);
+	_alDeleteSources(1, &ctx->source);
 	ctx->source = -1;
-	if ((err = alGetError())) return err;
+	if ((err = _alGetError())) return err;
 
-	alDeleteBuffers(ctx->count, ctx->buffers);
-	if ((err = alGetError())) return err;
+	_alDeleteBuffers(ctx->count, ctx->buffers);
+	if ((err = _alGetError())) return err;
 	return 0;
 }
 
 void Audio_Open(AudioHandle* handle, int buffers) {
 	int i, j;
-	alDistanceModel(AL_NONE);
+	_alDistanceModel(AL_NONE);
 
 	for (i = 0; i < Array_Elems(audioContexts); i++) {
 		struct AudioContext* ctx = &audioContexts[i];
@@ -301,11 +356,11 @@ cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	ctx->format     = *format;
 	
 	if ((err = Audio_FreeSource(ctx))) return err;
-	alGenSources(1, &ctx->source);
-	if ((err = alGetError())) return err;
+	_alGenSources(1, &ctx->source);
+	if ((err = _alGetError())) return err;
 
-	alGenBuffers(ctx->count, ctx->buffers);
-	if ((err = alGetError())) return err;
+	_alGenBuffers(ctx->count, ctx->buffers);
+	if ((err = _alGetError())) return err;
 	return 0;
 }
 
@@ -315,23 +370,23 @@ cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 da
 	ALenum err;
 	ctx->completed[idx] = false;
 
-	alBufferData(buffer, ctx->dataFormat, data, dataSize, ctx->format.sampleRate);
-	if ((err = alGetError())) return err;
-	alSourceQueueBuffers(ctx->source, 1, &buffer);
-	if ((err = alGetError())) return err;
+	_alBufferData(buffer, ctx->dataFormat, data, dataSize, ctx->format.sampleRate);
+	if ((err = _alGetError())) return err;
+	_alSourceQueueBuffers(ctx->source, 1, &buffer);
+	if ((err = _alGetError())) return err;
 	return 0;
 }
 
 cc_result Audio_Play(AudioHandle handle) {
 	struct AudioContext* ctx = &audioContexts[handle];
-	alSourcePlay(ctx->source);
-	return alGetError();
+	_alSourcePlay(ctx->source);
+	return _alGetError();
 }
 
 cc_result Audio_Stop(AudioHandle handle) {
 	struct AudioContext* ctx = &audioContexts[handle];
-	alSourceStop(ctx->source);
-	return alGetError();
+	_alSourceStop(ctx->source);
+	return _alGetError();
 }
 
 cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
@@ -340,12 +395,12 @@ cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
 	ALuint buffer;
 	ALenum err;
 
-	alGetSourcei(ctx->source, AL_BUFFERS_PROCESSED, &processed);
-	if ((err = alGetError())) return err;
+	_alGetSourcei(ctx->source, AL_BUFFERS_PROCESSED, &processed);
+	if ((err = _alGetError())) return err;
 
 	if (processed > 0) {
-		alSourceUnqueueBuffers(ctx->source, 1, &buffer);
-		if ((err = alGetError())) return err;
+		_alSourceUnqueueBuffers(ctx->source, 1, &buffer);
+		if ((err = _alGetError())) return err;
 
 		for (i = 0; i < ctx->count; i++) {
 			if (ctx->buffers[i] == buffer) ctx->completed[i] = true;
@@ -363,7 +418,7 @@ cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
 	res = Audio_AllCompleted(handle, finished);
 	if (res) return res;
 	
-	alGetSourcei(ctx->source, AL_SOURCE_STATE, &state);
+	_alGetSourcei(ctx->source, AL_SOURCE_STATE, &state);
 	*finished = state != AL_PLAYING; return 0;
 }
 #endif
