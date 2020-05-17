@@ -45,7 +45,6 @@ void Audio_PlayStepSound(cc_uint8 type) { }
 #include <windows.h>
 #include <mmsystem.h>
 #elif defined CC_BUILD_OPENAL
-#include <pthread.h>
 #if defined CC_BUILD_OSX
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
@@ -89,7 +88,7 @@ struct AudioContext {
 	int count;
 };
 static struct AudioContext audioContexts[20];
-static void Audio_SysInit(void) { }
+static cc_bool Audio_SysInit(void) { return true; }
 static void Audio_SysFree(void) { }
 
 void Audio_Open(AudioHandle* handle, int buffers) {
@@ -198,17 +197,9 @@ struct AudioContext {
 };
 static struct AudioContext audioContexts[20];
 
-static pthread_mutex_t audio_lock;
 static ALCdevice* audio_device;
 static ALCcontext* audio_context;
-static volatile int audio_refs;
-
-static void Audio_SysInit(void) {
-	pthread_mutex_init(&audio_lock, NULL);
-}
-static void Audio_SysFree(void) {
-	pthread_mutex_destroy(&audio_lock);
-}
+static cc_bool alInited, alSupported;
 
 static void Audio_CheckContextErrors(void) {
 	ALenum err = alcGetError(audio_device);
@@ -231,7 +222,16 @@ static void Audio_CreateContext(void) {
 	Audio_CheckContextErrors();
 }
 
-static void Audio_DestroyContext(void) {
+static cc_bool Audio_SysInit(void) {
+	if (alInited) return alSupported;
+	alInited = true;
+
+	Audio_CreateContext();
+	alSupported = true;
+	return alSupported;
+}
+
+static void Audio_SysFree(void) {
 	if (!audio_device) return;
 	alcMakeContextCurrent(NULL);
 
@@ -257,14 +257,6 @@ static ALenum Audio_FreeSource(struct AudioContext* ctx) {
 
 void Audio_Open(AudioHandle* handle, int buffers) {
 	int i, j;
-
-	Mutex_Lock(&audio_lock);
-	{
-		if (!audio_context) Audio_CreateContext();
-		audio_refs++;
-	}
-	Mutex_Unlock(&audio_lock);
-
 	alDistanceModel(AL_NONE);
 
 	for (i = 0; i < Array_Elems(audioContexts); i++) {
@@ -284,25 +276,14 @@ void Audio_Open(AudioHandle* handle, int buffers) {
 }
 
 cc_result Audio_Close(AudioHandle handle) {
-	struct AudioFormat fmt = { 0 };
-	struct AudioContext* ctx;
-	ALenum err;
-	ctx = &audioContexts[handle];
+	struct AudioFormat fmt   = { 0 };
+	struct AudioContext* ctx = &audioContexts[handle];
 
 	if (!ctx->count) return 0;
 	ctx->count  = 0;
 	ctx->format = fmt;
 
-	err = Audio_FreeSource(ctx);
-	if (err) return err;
-
-	Mutex_Lock(&audio_lock);
-	{
-		audio_refs--;
-		if (audio_refs == 0) Audio_DestroyContext();
-	}
-	Mutex_Unlock(&audio_lock);
-	return 0;
+	return Audio_FreeSource(ctx);
 }
 
 static ALenum GetALFormat(int channels) {
@@ -633,7 +614,7 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 
 	if (type == SOUND_NONE || !Audio_SoundsVolume) return;
 	snd = Soundboard_PickRandom(board, type);
-	if (!snd) return;
+	if (!snd || !Audio_SysInit()) return;
 
 	fmt     = snd->format;
 	volume  = Audio_SoundsVolume;
@@ -876,7 +857,7 @@ static void Music_RunLoop(void) {
 }
 
 static void Music_Init(void) {
-	if (music_thread) return;
+	if (music_thread || !Audio_SysInit()) return;
 	music_joining     = false;
 	music_pendingStop = false;
 
@@ -923,7 +904,6 @@ static void Audio_Init(void) {
 
 	Directory_Enum(&path, NULL, Audio_FilesCallback);
 	music_waitable = Waitable_Create();
-	Audio_SysInit();
 
 	/* music is delayed between 2 - 7 minutes */
 	music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
