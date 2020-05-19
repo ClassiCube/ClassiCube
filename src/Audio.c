@@ -199,7 +199,7 @@ static struct AudioContext audioContexts[20];
 
 static ALCdevice* audio_device;
 static ALCcontext* audio_context;
-static cc_bool alInited, alSupported;
+static cc_bool alInited;
 
 #if defined CC_BUILD_WIN
 static const String alLib = String_FromConst("openal32.dll");
@@ -271,20 +271,6 @@ static cc_result CreateALContext(void) {
 	return _alcGetError(audio_device);
 }
 
-static cc_bool Audio_SysInit(void) {
-	static const String msg = String_FromConst("Failed to init OpenAL. No audio will play.");
-	cc_result res;
-	if (alInited) return alSupported;
-	alInited = true;
-
-	if (!LoadALFuncs()) { Logger_WarnFunc(&msg); return false; }
-	res = CreateALContext();
-	if (res) { Logger_SimpleWarn(res, "initing OpenAL"); return false; }
-
-	alSupported = true;
-	return true;
-}
-
 static void Audio_SysFree(void) {
 	if (!audio_device) return;
 	_alcMakeContextCurrent(NULL);
@@ -294,6 +280,21 @@ static void Audio_SysFree(void) {
 
 	audio_context = NULL;
 	audio_device  = NULL;
+}
+
+static cc_bool Audio_SysInit(void) {
+	static const String msg = String_FromConst("Failed to init OpenAL. No audio will play.");
+	cc_result res;
+	if (alInited) return true;
+
+	if (!LoadALFuncs()) { Logger_WarnFunc(&msg); return false; }
+	Audio_SysFree();
+
+	res = CreateALContext();
+	if (res) { Logger_SimpleWarn(res, "initing OpenAL"); return false; }
+
+	alInited = true;
+	return true;
 }
 
 static ALenum Audio_FreeSource(struct AudioContext* ctx) {
@@ -668,7 +669,9 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 
 	if (type == SOUND_NONE || !Audio_SoundsVolume) return;
 	snd = Soundboard_PickRandom(board, type);
-	if (!snd || !Audio_SysInit()) return;
+
+	if (!snd) return;
+	if (!Audio_SysInit()) { Audio_SoundsVolume = 0; return; }
 
 	fmt     = snd->format;
 	volume  = Audio_SoundsVolume;
@@ -911,7 +914,9 @@ static void Music_RunLoop(void) {
 }
 
 static void Music_Init(void) {
-	if (music_thread || !Audio_SysInit()) return;
+	if (music_thread) return;
+	if (!Audio_SysInit()) { Audio_MusicVolume = 0; return; }
+
 	music_joining     = false;
 	music_pendingStop = false;
 
@@ -928,9 +933,9 @@ static void Music_Free(void) {
 }
 
 void Audio_SetMusic(int volume) {
+	Audio_MusicVolume = volume;
 	if (volume) Music_Init();
 	else        Music_Free();
-	Audio_MusicVolume = volume;
 }
 
 
