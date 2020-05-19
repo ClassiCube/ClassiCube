@@ -1859,6 +1859,13 @@ static void InitRawMouse(void) {
 		return;
 	}
 
+	/* Sometimes XIQueryVersion will report Success, even though the */
+	/* supported version is only 2.0! So make sure to handle that. */
+	if (major < 2 || minor < 2) {
+		Platform_Log2("Only XInput %i.%i supported", &major, &minor);
+		return;
+	}
+
 	XISetMask(masks, XI_RawMotion);
 	evmask.deviceid = XIAllMasterDevices;
 	evmask.mask_len = sizeof(masks);
