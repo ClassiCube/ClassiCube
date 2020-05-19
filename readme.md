@@ -57,7 +57,7 @@ I am assuming you used the installer from http://www.mingw.org/
 
 Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
 
-```gcc *.c -o ClassiCube -lm -lpthread -lX11 -lXi -lGL -lcurl -lopenal -ldl```
+```gcc *.c -o ClassiCube -lm -lpthread -lX11 -lXi -lGL -lcurl -ldl```
 
 ##### Cross compiling for windows:
 
@@ -66,7 +66,7 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-de
 ##### Raspberry pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
 
-```gcc *.c -o ClassiCube -DCC_BUILD_RPI -lm -lpthread -lX11 -lEGL -lGLESv2 -lcurl -lopenal -ldl```
+```gcc *.c -o ClassiCube -DCC_BUILD_RPI -lm -lpthread -lX11 -lEGL -lGLESv2 -lcurl -ldl```
 
 #### macOS (32 bit)
 
@@ -78,25 +78,25 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 #### FreeBSD
 
-```clang *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lcurl -lopenal -lexecinfo```
+```clang *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lcurl -lexecinfo```
 
 #### OpenBSD
 
 Install libexecinfo package if needed.
 
-```gcc *.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lX11 -lXi -lGL -lcurl -lopenal -lexecinfo```
+```gcc *.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lX11 -lXi -lGL -lcurl -lexecinfo```
 
 #### NetBSD
 
-```gcc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lcurl -lopenal -lexecinfo```
+```gcc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lcurl -lexecinfo```
 
 #### DragonflyBSD
 
-```gcc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lcurl -lopenal -lexecinfo```
+```gcc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lcurl -lexecinfo```
 
 #### Solaris
 
-```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lXi -lGL -lcurl -lopenal```
+```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lXi -lGL -lcurl```
 
 NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
 
@@ -104,7 +104,7 @@ NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TOD
 
 Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed.
 
-```gcc *.c -o ClassiCube -lm -lcurl -lexecinfo -lopenal -lGL -lnetwork -lSDL2```
+```gcc *.c -o ClassiCube -lm -lcurl -lexecinfo -lGL -lnetwork -lSDL2```
 
 NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
 

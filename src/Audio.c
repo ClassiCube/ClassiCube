@@ -45,8 +45,9 @@ void Audio_PlayStepSound(cc_uint8 type) { }
 #include <windows.h>
 #include <mmsystem.h>
 #elif defined CC_BUILD_OPENAL
-#include <pthread.h>
 #if defined CC_BUILD_OSX
+#define  AL_NO_PROTOTYPES
+#define ALC_NO_PROTOTYPES
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 #else
@@ -89,7 +90,7 @@ struct AudioContext {
 	int count;
 };
 static struct AudioContext audioContexts[20];
-static void Audio_SysInit(void) { }
+static cc_bool Audio_SysInit(void) { return true; }
 static void Audio_SysFree(void) { }
 
 void Audio_Open(AudioHandle* handle, int buffers) {
@@ -198,74 +199,124 @@ struct AudioContext {
 };
 static struct AudioContext audioContexts[20];
 
-static pthread_mutex_t audio_lock;
 static ALCdevice* audio_device;
 static ALCcontext* audio_context;
-static volatile int audio_refs;
+static cc_bool alInited;
 
-static void Audio_SysInit(void) {
-	pthread_mutex_init(&audio_lock, NULL);
+#if defined CC_BUILD_WIN
+static const String alLib = String_FromConst("openal32.dll");
+#elif defined CC_BUILD_OSX
+static const String alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL");
+#elif defined CC_BUILD_OPENBSD
+static const String alLib = String_FromConst("libopenal.so.3.0");
+#else
+static const String alLib = String_FromConst("libopenal.so.1");
+#endif
+
+static LPALCCREATECONTEXT _alcCreateContext;
+static LPALCMAKECONTEXTCURRENT _alcMakeContextCurrent;
+static LPALCDESTROYCONTEXT _alcDestroyContext;
+static LPALCOPENDEVICE _alcOpenDevice;
+static LPALCCLOSEDEVICE _alcCloseDevice;
+static LPALCGETERROR _alcGetError;
+
+static LPALGETERROR _alGetError;
+static LPALGENSOURCES _alGenSources;
+static LPALDELETESOURCES _alDeleteSources;
+static LPALGETSOURCEI _alGetSourcei;
+static LPALSOURCEPLAY _alSourcePlay;
+static LPALSOURCESTOP _alSourceStop;
+static LPALSOURCEQUEUEBUFFERS _alSourceQueueBuffers;
+static LPALSOURCEUNQUEUEBUFFERS _alSourceUnqueueBuffers;
+static LPALGENBUFFERS _alGenBuffers;
+static LPALDELETEBUFFERS _alDeleteBuffers;
+static LPALBUFFERDATA _alBufferData;
+static LPALDISTANCEMODEL _alDistanceModel;
+
+#define QUOTE(x) #x
+#define LoadALFunc(sym, type) (_ ## sym = (type)DynamicLib_Get2(lib, QUOTE(sym)))
+static cc_bool LoadALFuncs(void) {
+	void* lib = DynamicLib_Load2(&alLib);
+	if (!lib) { Logger_DynamicLibWarn("loading", &alLib); return false; }
+
+	return
+		LoadALFunc(alcCreateContext,  LPALCCREATECONTEXT) &&
+		LoadALFunc(alcMakeContextCurrent, LPALCMAKECONTEXTCURRENT) &&
+		LoadALFunc(alcDestroyContext, LPALCDESTROYCONTEXT) &&
+		LoadALFunc(alcOpenDevice,     LPALCOPENDEVICE) &&
+		LoadALFunc(alcCloseDevice,    LPALCCLOSEDEVICE) &&
+		LoadALFunc(alcGetError,       LPALCGETERROR) &&
+
+		LoadALFunc(alGetError,      LPALGETERROR) &&
+		LoadALFunc(alGenSources,    LPALGENSOURCES) &&
+		LoadALFunc(alDeleteSources, LPALDELETESOURCES) &&
+		LoadALFunc(alGetSourcei,    LPALGETSOURCEI) &&
+		LoadALFunc(alSourcePlay,    LPALSOURCEPLAY) &&
+		LoadALFunc(alSourceStop,    LPALSOURCESTOP) &&
+		LoadALFunc(alSourceQueueBuffers,   LPALSOURCEQUEUEBUFFERS) &&
+		LoadALFunc(alSourceUnqueueBuffers, LPALSOURCEUNQUEUEBUFFERS) &&
+		LoadALFunc(alGenBuffers,    LPALGENBUFFERS) &&
+		LoadALFunc(alDeleteBuffers, LPALDELETEBUFFERS) &&
+		LoadALFunc(alBufferData,    LPALBUFFERDATA) &&
+		LoadALFunc(alDistanceModel, LPALDISTANCEMODEL);
 }
+
+static cc_result CreateALContext(void) {
+	ALenum err;
+	audio_device = _alcOpenDevice(NULL);
+	if (!audio_device)  return AL_ERR_INIT_DEVICE;
+	if ((err = _alcGetError(audio_device))) return err;
+
+	audio_context = _alcCreateContext(audio_device, NULL);
+	if (!audio_context) return AL_ERR_INIT_CONTEXT;
+	if ((err = _alcGetError(audio_device))) return err;
+
+	_alcMakeContextCurrent(audio_context);
+	return _alcGetError(audio_device);
+}
+
 static void Audio_SysFree(void) {
-	pthread_mutex_destroy(&audio_lock);
-}
-
-static void Audio_CheckContextErrors(void) {
-	ALenum err = alcGetError(audio_device);
-	if (err) Logger_Abort2(err, "Error creating OpenAL context");
-}
-
-static void Audio_CreateContext(void) {
-	audio_device = alcOpenDevice(NULL);
-	if (!audio_device) Logger_Abort("Failed to create OpenAL device");
-	Audio_CheckContextErrors();
-
-	audio_context = alcCreateContext(audio_device, NULL);
-	if (!audio_context) {
-		alcCloseDevice(audio_device);
-		Logger_Abort("Failed to create OpenAL context");
-	}
-	Audio_CheckContextErrors();
-
-	alcMakeContextCurrent(audio_context);
-	Audio_CheckContextErrors();
-}
-
-static void Audio_DestroyContext(void) {
 	if (!audio_device) return;
-	alcMakeContextCurrent(NULL);
+	_alcMakeContextCurrent(NULL);
 
-	if (audio_context) alcDestroyContext(audio_context);
-	if (audio_device)  alcCloseDevice(audio_device);
+	if (audio_context) _alcDestroyContext(audio_context);
+	if (audio_device)  _alcCloseDevice(audio_device);
 
 	audio_context = NULL;
 	audio_device  = NULL;
+}
+
+static cc_bool Audio_SysInit(void) {
+	static const String msg = String_FromConst("Failed to init OpenAL. No audio will play.");
+	cc_result res;
+	if (alInited) return true;
+
+	if (!LoadALFuncs()) { Logger_WarnFunc(&msg); return false; }
+	Audio_SysFree();
+
+	res = CreateALContext();
+	if (res) { Logger_SimpleWarn(res, "initing OpenAL"); return false; }
+
+	alInited = true;
+	return true;
 }
 
 static ALenum Audio_FreeSource(struct AudioContext* ctx) {
 	ALenum err;
 	if (ctx->source == -1) return 0;
 
-	alDeleteSources(1, &ctx->source);
+	_alDeleteSources(1, &ctx->source);
 	ctx->source = -1;
-	if ((err = alGetError())) return err;
+	if ((err = _alGetError())) return err;
 
-	alDeleteBuffers(ctx->count, ctx->buffers);
-	if ((err = alGetError())) return err;
+	_alDeleteBuffers(ctx->count, ctx->buffers);
+	if ((err = _alGetError())) return err;
 	return 0;
 }
 
 void Audio_Open(AudioHandle* handle, int buffers) {
 	int i, j;
-
-	Mutex_Lock(&audio_lock);
-	{
-		if (!audio_context) Audio_CreateContext();
-		audio_refs++;
-	}
-	Mutex_Unlock(&audio_lock);
-
-	alDistanceModel(AL_NONE);
+	_alDistanceModel(AL_NONE);
 
 	for (i = 0; i < Array_Elems(audioContexts); i++) {
 		struct AudioContext* ctx = &audioContexts[i];
@@ -284,25 +335,14 @@ void Audio_Open(AudioHandle* handle, int buffers) {
 }
 
 cc_result Audio_Close(AudioHandle handle) {
-	struct AudioFormat fmt = { 0 };
-	struct AudioContext* ctx;
-	ALenum err;
-	ctx = &audioContexts[handle];
+	struct AudioFormat fmt   = { 0 };
+	struct AudioContext* ctx = &audioContexts[handle];
 
 	if (!ctx->count) return 0;
 	ctx->count  = 0;
 	ctx->format = fmt;
 
-	err = Audio_FreeSource(ctx);
-	if (err) return err;
-
-	Mutex_Lock(&audio_lock);
-	{
-		audio_refs--;
-		if (audio_refs == 0) Audio_DestroyContext();
-	}
-	Mutex_Unlock(&audio_lock);
-	return 0;
+	return Audio_FreeSource(ctx);
 }
 
 static ALenum GetALFormat(int channels) {
@@ -321,11 +361,11 @@ cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	ctx->format     = *format;
 	
 	if ((err = Audio_FreeSource(ctx))) return err;
-	alGenSources(1, &ctx->source);
-	if ((err = alGetError())) return err;
+	_alGenSources(1, &ctx->source);
+	if ((err = _alGetError())) return err;
 
-	alGenBuffers(ctx->count, ctx->buffers);
-	if ((err = alGetError())) return err;
+	_alGenBuffers(ctx->count, ctx->buffers);
+	if ((err = _alGetError())) return err;
 	return 0;
 }
 
@@ -335,23 +375,23 @@ cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 da
 	ALenum err;
 	ctx->completed[idx] = false;
 
-	alBufferData(buffer, ctx->dataFormat, data, dataSize, ctx->format.sampleRate);
-	if ((err = alGetError())) return err;
-	alSourceQueueBuffers(ctx->source, 1, &buffer);
-	if ((err = alGetError())) return err;
+	_alBufferData(buffer, ctx->dataFormat, data, dataSize, ctx->format.sampleRate);
+	if ((err = _alGetError())) return err;
+	_alSourceQueueBuffers(ctx->source, 1, &buffer);
+	if ((err = _alGetError())) return err;
 	return 0;
 }
 
 cc_result Audio_Play(AudioHandle handle) {
 	struct AudioContext* ctx = &audioContexts[handle];
-	alSourcePlay(ctx->source);
-	return alGetError();
+	_alSourcePlay(ctx->source);
+	return _alGetError();
 }
 
 cc_result Audio_Stop(AudioHandle handle) {
 	struct AudioContext* ctx = &audioContexts[handle];
-	alSourceStop(ctx->source);
-	return alGetError();
+	_alSourceStop(ctx->source);
+	return _alGetError();
 }
 
 cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
@@ -360,12 +400,12 @@ cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
 	ALuint buffer;
 	ALenum err;
 
-	alGetSourcei(ctx->source, AL_BUFFERS_PROCESSED, &processed);
-	if ((err = alGetError())) return err;
+	_alGetSourcei(ctx->source, AL_BUFFERS_PROCESSED, &processed);
+	if ((err = _alGetError())) return err;
 
 	if (processed > 0) {
-		alSourceUnqueueBuffers(ctx->source, 1, &buffer);
-		if ((err = alGetError())) return err;
+		_alSourceUnqueueBuffers(ctx->source, 1, &buffer);
+		if ((err = _alGetError())) return err;
 
 		for (i = 0; i < ctx->count; i++) {
 			if (ctx->buffers[i] == buffer) ctx->completed[i] = true;
@@ -383,7 +423,7 @@ cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
 	res = Audio_AllCompleted(handle, finished);
 	if (res) return res;
 	
-	alGetSourcei(ctx->source, AL_SOURCE_STATE, &state);
+	_alGetSourcei(ctx->source, AL_SOURCE_STATE, &state);
 	*finished = state != AL_PLAYING; return 0;
 }
 #endif
@@ -633,7 +673,9 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 
 	if (type == SOUND_NONE || !Audio_SoundsVolume) return;
 	snd = Soundboard_PickRandom(board, type);
+
 	if (!snd) return;
+	if (!Audio_SysInit()) { Audio_SoundsVolume = 0; return; }
 
 	fmt     = snd->format;
 	volume  = Audio_SoundsVolume;
@@ -877,6 +919,8 @@ static void Music_RunLoop(void) {
 
 static void Music_Init(void) {
 	if (music_thread) return;
+	if (!Audio_SysInit()) { Audio_MusicVolume = 0; return; }
+
 	music_joining     = false;
 	music_pendingStop = false;
 
@@ -893,9 +937,9 @@ static void Music_Free(void) {
 }
 
 void Audio_SetMusic(int volume) {
+	Audio_MusicVolume = volume;
 	if (volume) Music_Init();
 	else        Music_Free();
-	Audio_MusicVolume = volume;
 }
 
 
@@ -923,7 +967,6 @@ static void Audio_Init(void) {
 
 	Directory_Enum(&path, NULL, Audio_FilesCallback);
 	music_waitable = Waitable_Create();
-	Audio_SysInit();
 
 	/* music is delayed between 2 - 7 minutes */
 	music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
