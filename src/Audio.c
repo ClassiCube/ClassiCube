@@ -46,6 +46,8 @@ void Audio_PlayStepSound(cc_uint8 type) { }
 #include <mmsystem.h>
 #elif defined CC_BUILD_OPENAL
 #if defined CC_BUILD_OSX
+#define  AL_NO_PROTOTYPES
+#define ALC_NO_PROTOTYPES
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 #else
@@ -204,7 +206,7 @@ static cc_bool alInited;
 #if defined CC_BUILD_WIN
 static const String alLib = String_FromConst("openal32.dll");
 #elif defined CC_BUILD_OSX
-static const String alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL")
+static const String alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL");
 #elif defined CC_BUILD_OPENBSD
 static const String alLib = String_FromConst("libopenal.so.3.0");
 #else
