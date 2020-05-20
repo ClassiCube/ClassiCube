@@ -588,13 +588,16 @@ CC_NOINLINE static String TextureCache_GetFromTags(const String* url, struct Ent
 }
 
 static String TextureCache_GetLastModified(const String* url) {
+	int i;
 	String entry = TextureCache_GetFromTags(url, &lastModifiedCache);
-	cc_uint64 raw;
-
 	/* Entry used to be a timestamp of C# ticks since 01/01/0001 */
 	/* This old format is no longer supported. */
-	if (Convert_ParseUInt64(&entry, &raw)) entry.length = 0;
-	return entry;
+	for (i = 0; i < entry.length; i++) {
+		if (entry.buffer[i] < '0' || entry.buffer[i] > '9') return entry;
+	}
+
+	/* Entry is all digits, so the old format */
+	entry.length = 0; return entry;
 }
 
 static String TextureCache_GetETag(const String* url) {
