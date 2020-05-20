@@ -222,6 +222,7 @@ typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 #define CC_BUILD_GLES
 #define CC_BUILD_TOUCH
 #define CC_BUILD_NOAUDIO
+#define CC_BUILD_MINFILES
 #endif
 #endif
 

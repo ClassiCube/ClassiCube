@@ -46,7 +46,7 @@ static void AppendChatLogTime(void) {
 	Chat_LogTime[logTimesCount++] = now;
 }
 
-#ifdef CC_BUILD_WEB
+#ifdef CC_BUILD_MINFILES
 static void ResetLogFile(void) { }
 static void CloseLogFile(void) { }
 void Chat_SetLogName(const String* name) { }

@@ -824,8 +824,11 @@ void Logger_Abort2(cc_result result, const char* raw_msg) {
 static struct Stream logStream;
 static cc_bool logOpen;
 
+#ifdef CC_BUILD_MINFILES
+void Logger_Log(const String* msg)      { }
+static void Logger_LogCrashHeader(void) { }
+#else
 void Logger_Log(const String* msg) {
-#ifndef CC_BUILD_WEB
 	static const String path = String_FromConst("client.log");
 	if (!logOpen) {
 		logOpen = true;
@@ -834,7 +837,6 @@ void Logger_Log(const String* msg) {
 
 	if (!logStream.Meta.File) return;
 	Stream_Write(&logStream, (const cc_uint8*)msg->buffer, msg->length);
-#endif
 }
 
 static void Logger_LogCrashHeader(void) {
@@ -851,6 +853,7 @@ static void Logger_LogCrashHeader(void) {
 	String_Format3(&msg, "%p2:%p2:%p2" _NL,          &now.hour, &now.minute, &now.second);
 	Logger_Log(&msg);
 }
+#endif
 
 static void Logger_AbortCommon(cc_result result, const char* raw_msg, void* ctx) {	
 	String msg; char msgBuffer[3070 + 1];
