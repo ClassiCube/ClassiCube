@@ -73,6 +73,8 @@ cc_result Updater_Start(void);
 cc_result Updater_GetBuildTime(TimeMS* ms);
 /* Marks the UPDATE_FILE file as being executable. (Needed for some platforms) */
 cc_result Updater_MarkExecutable(void);
+/* Sets the last time UPDATE_FILE file was modified, as number of milliseconds since 1/1/0001 */
+cc_result Updater_SetNewBuildTime(TimeMS ms);
 
 /* The default file extension used for dynamic libraries on this platform. */
 extern const String DynamicLib_Ext;
@@ -136,11 +138,8 @@ CC_API cc_result Directory_Create(const String* path);
 typedef void Directory_EnumCallback(const String* filename, void* obj);
 /* Invokes a callback function on all filenames in the given directory (and its sub-directories) */
 CC_API cc_result Directory_Enum(const String* path, void* obj, Directory_EnumCallback callback);
-
 /* Returns non-zero if the given file exists. */
 CC_API int File_Exists(const String* path);
-/* Sets the last time the file was modified, as number of milliseconds since 1/1/0001 */
-CC_API cc_result File_SetModifiedTime(const String* path, TimeMS ms);
 
 /* Attempts to create a new (or overwrite) file for writing. */
 /* NOTE: If the file already exists, its contents are discarded. */

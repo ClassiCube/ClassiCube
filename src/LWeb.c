@@ -504,7 +504,7 @@ static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 	res = Stream_WriteAllTo(&path, data, len);
 	if (res) { Logger_Warn(res, "saving update"); return; }
 
-	res = File_SetModifiedTime(&path, FetchUpdateTask.timestamp);
+	res = Updater_SetNewBuildTime(FetchUpdateTask.timestamp);
 	if (res) Logger_Warn(res, "setting update time");
 
 	res = Updater_MarkExecutable();

@@ -394,22 +394,6 @@ cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallbac
 	return res == ERROR_NO_MORE_FILES ? 0 : GetLastError();
 }
 
-cc_result File_SetModifiedTime(const String* path, TimeMS time) {
-	FileHandle file;
-	FILETIME ft;
-	cc_uint64 raw;
-	cc_result res = File_OpenOrCreate(&file, path);
-	if (res) return res;
-
-	raw = 10000 * (time - FILETIME_EPOCH);
-	ft.dwLowDateTime  = (cc_uint32)raw;
-	ft.dwHighDateTime = (cc_uint32)(raw >> 32);
-
-	if (!SetFileTime(file, NULL, NULL, &ft)) res = GetLastError();
-	File_Close(file);
-	return res;
-}
-
 static cc_result File_Do(FileHandle* file, const String* path, DWORD access, DWORD createMode) {
 	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
@@ -521,15 +505,6 @@ cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallbac
 	res = errno; /* return code from readdir */
 	closedir(dirPtr);
 	return res;
-}
-
-cc_result File_SetModifiedTime(const String* path, TimeMS time) {
-	char str[NATIVE_STR_LEN];
-	struct utimbuf times = { 0 };
-
-	times.modtime = (time - UNIX_EPOCH) / 1000;
-	Platform_ConvertString(str, path);
-	return utime(str, &times) == -1 ? errno : 0;
 }
 
 static cc_result File_Do(FileHandle* file, const String* path, int mode) {
@@ -1285,14 +1260,32 @@ cc_result Updater_GetBuildTime(TimeMS* ms) {
 
 /* Don't need special execute permission on windows */
 cc_result Updater_MarkExecutable(void) { return 0; }
+cc_result Updater_SetNewBuildTime(TimeMS ms) {
+	static const String path = String_FromConst(UPDATE_FILE);
+	FileHandle file;
+	FILETIME ft;
+	cc_uint64 raw;
+	cc_result res = File_OpenOrCreate(&file, &path);
+	if (res) return res;
+
+	raw = 10000 * (ms - FILETIME_EPOCH);
+	ft.dwLowDateTime  = (cc_uint32)raw;
+	ft.dwHighDateTime = (cc_uint32)(raw >> 32);
+
+	if (!SetFileTime(file, NULL, NULL, &ft)) res = GetLastError();
+	File_Close(file);
+	return res;
+}
+
 #elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
 const char* const Updater_D3D9 = NULL;
 const char* const Updater_OGL  = NULL;
 
 cc_bool Updater_Clean(void)                  { return true; }
 cc_result Updater_Start(void)                { return ERR_NOT_SUPPORTED; }
-cc_result Updater_GetBuildTime(TimeMS* time) { return ERR_NOT_SUPPORTED; }
+cc_result Updater_GetBuildTime(TimeMS* ms)   { return ERR_NOT_SUPPORTED; }
 cc_result Updater_MarkExecutable(void)       { return 0; }
+cc_result Updater_SetNewBuildTime(TimeMS ms) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
 cc_bool Updater_Clean(void) { return true; }
 
@@ -1357,6 +1350,12 @@ cc_result Updater_MarkExecutable(void) {
 
 	st.st_mode |= S_IXUSR;
 	return chmod(UPDATE_FILE, st.st_mode) == -1 ? errno : 0;
+}
+
+cc_result Updater_SetNewBuildTime(TimeMS ms) {
+	struct utimbuf times = { 0 };
+	times.modtime = (ms - UNIX_EPOCH) / 1000;
+	return utime(UPDATE_FILE, &times) == -1 ? errno : 0;
 }
 #endif
 
