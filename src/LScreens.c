@@ -1381,7 +1381,7 @@ CC_NOINLINE static void UpdatesScreen_FormatTime(String* str, char* type, int de
 	String_AppendConst(str, " ago");
 }
 
-static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS time) {
+static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, cc_uint64 timestamp) {
 	String str; char buffer[STRING_SIZE];
 	TimeMS now;
 	int delta;
@@ -1389,12 +1389,12 @@ static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, TimeMS 
 	String_InitArray(str, buffer);
 	String_AppendConst(&str, prefix);
 
-	if (!time) {
+	if (!timestamp) {
 		String_AppendConst(&str, "&cCheck failed");
 	} else {
-		now   = DateTime_CurrentUTC_MS();
+		now   = DateTime_CurrentUTC_MS() - UNIX_EPOCH;
 		/* must divide as cc_uint64, int delta overflows after 26 days */
-		delta = (int)((now - time) / 1000);
+		delta = (int)((now / 1000) - timestamp);
 
 		if (delta < SECS_PER_MIN) {
 			UpdatesScreen_FormatTime(&str, "second", delta, 1);

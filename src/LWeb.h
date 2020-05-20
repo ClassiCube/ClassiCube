@@ -91,8 +91,8 @@ void FetchServersTask_ResetOrder(void);
 
 extern struct CheckUpdateData {
 	struct LWebTask Base;
-	/* Timestamp latest commit/dev build and release were at. */
-	TimeMS devTimestamp, relTimestamp;
+	/* Unix timestamp latest commit/dev build and release were at. */
+	cc_uint64 devTimestamp, relTimestamp;
 	/* Version of latest release. */
 	String latestRelease;
 } CheckUpdateTask; /* TODO: Work out the JSON for this.. */
@@ -101,8 +101,8 @@ void CheckUpdateTask_Run(void);
 
 extern struct FetchUpdateData {
 	struct LWebTask Base;
-	/* Timestamp downloaded build was originally built at. */
-	TimeMS timestamp;
+	/* Unix timestamp downloaded build was originally built at. */
+	cc_uint64 timestamp;
 } FetchUpdateTask;
 void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9);
 

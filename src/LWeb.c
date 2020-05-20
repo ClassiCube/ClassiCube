@@ -451,16 +451,15 @@ void FetchServersTask_ResetOrder(void) {
 struct CheckUpdateData CheckUpdateTask;
 static char relVersionBuffer[16];
 
-CC_NOINLINE static TimeMS CheckUpdateTask_ParseTime(const String* str) {
+CC_NOINLINE static cc_uint64 CheckUpdateTask_ParseTime(const String* str) {
 	String time, fractional;
-	TimeMS ms;
+	cc_uint64 secs;
 	/* timestamp is in form of "seconds.fractional" */
 	/* But only need to care about the seconds here */
 	String_UNSAFE_Separate(str, '.', &time, &fractional);
 
-	Convert_ParseUInt64(&time, &ms);
-	if (!ms) return 0;
-	return ms * 1000 + UNIX_EPOCH;
+	Convert_ParseUInt64(&time, &secs);
+	return secs;
 }
 
 static void CheckUpdateTask_OnValue(struct JsonContext* ctx, const String* str) {

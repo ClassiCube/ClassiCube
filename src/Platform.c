@@ -221,7 +221,9 @@ void Platform_Log(const String* message) {
 }
 
 #define FILETIME_EPOCH 50491123200000ULL
-#define FileTime_TotalMS(time) ((time / 10000) + FILETIME_EPOCH)
+#define FILETIME_UNIX_EPOCH 11644473600LL
+#define FileTime_TotalMS(time)  ((time / 10000)    + FILETIME_EPOCH)
+#define FileTime_UnixTime(time) ((time / 10000000) - FILETIME_UNIX_EPOCH)
 TimeMS DateTime_CurrentUTC_MS(void) {
 	FILETIME ft; 
 	cc_uint64 raw;
@@ -1233,7 +1235,7 @@ cc_result Updater_Start(void) {
 	return Process_RawStart(path, args);
 }
 
-cc_result Updater_GetBuildTime(TimeMS* ms) {
+cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 	TCHAR path[NATIVE_STR_LEN + 1];
 	FileHandle file;
 	FILETIME ft;
@@ -1248,8 +1250,8 @@ cc_result Updater_GetBuildTime(TimeMS* ms) {
 	if (file == INVALID_HANDLE_VALUE) return GetLastError();
 
 	if (GetFileTime(file, NULL, NULL, &ft)) {
-		raw = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
-		*ms = FileTime_TotalMS(raw);
+		raw        = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
+		*timestamp = FileTime_UnixTime(raw);
 	} else {
 		res = GetLastError();
 	}
@@ -1260,7 +1262,7 @@ cc_result Updater_GetBuildTime(TimeMS* ms) {
 
 /* Don't need special execute permission on windows */
 cc_result Updater_MarkExecutable(void) { return 0; }
-cc_result Updater_SetNewBuildTime(TimeMS ms) {
+cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 	static const String path = String_FromConst(UPDATE_FILE);
 	FileHandle file;
 	FILETIME ft;
@@ -1268,7 +1270,7 @@ cc_result Updater_SetNewBuildTime(TimeMS ms) {
 	cc_result res = File_OpenOrCreate(&file, &path);
 	if (res) return res;
 
-	raw = 10000 * (ms - FILETIME_EPOCH);
+	raw = 10000000 * (timestamp + FILETIME_UNIX_EPOCH);
 	ft.dwLowDateTime  = (cc_uint32)raw;
 	ft.dwHighDateTime = (cc_uint32)(raw >> 32);
 
@@ -1281,11 +1283,11 @@ cc_result Updater_SetNewBuildTime(TimeMS ms) {
 const char* const Updater_D3D9 = NULL;
 const char* const Updater_OGL  = NULL;
 
-cc_bool Updater_Clean(void)                  { return true; }
-cc_result Updater_Start(void)                { return ERR_NOT_SUPPORTED; }
-cc_result Updater_GetBuildTime(TimeMS* ms)   { return ERR_NOT_SUPPORTED; }
-cc_result Updater_MarkExecutable(void)       { return 0; }
-cc_result Updater_SetNewBuildTime(TimeMS ms) { return ERR_NOT_SUPPORTED; }
+cc_bool Updater_Clean(void)   { return true; }
+cc_result Updater_Start(void) { return ERR_NOT_SUPPORTED; }
+cc_result Updater_GetBuildTime(cc_uint64* t)   { return ERR_NOT_SUPPORTED; }
+cc_result Updater_MarkExecutable(void)         { return 0; }
+cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
 cc_bool Updater_Clean(void) { return true; }
 
@@ -1330,7 +1332,7 @@ cc_result Updater_Start(void) {
 	return Process_RawStart(path, argv);
 }
 
-cc_result Updater_GetBuildTime(TimeMS* ms) {
+cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 	char path[NATIVE_STR_LEN + 1];
 	struct stat sb;
 	int len = 0;
@@ -1340,7 +1342,7 @@ cc_result Updater_GetBuildTime(TimeMS* ms) {
 	path[len] = '\0';
 
 	if (stat(path, &sb) == -1) return errno;
-	*ms = (cc_uint64)sb.st_mtime * 1000 + UNIX_EPOCH;
+	*timestamp = (cc_uint64)sb.st_mtime;
 	return 0;
 }
 
@@ -1352,9 +1354,9 @@ cc_result Updater_MarkExecutable(void) {
 	return chmod(UPDATE_FILE, st.st_mode) == -1 ? errno : 0;
 }
 
-cc_result Updater_SetNewBuildTime(TimeMS ms) {
+cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 	struct utimbuf times = { 0 };
-	times.modtime = (ms - UNIX_EPOCH) / 1000;
+	times.modtime = timestamp;
 	return utime(UPDATE_FILE, &times) == -1 ? errno : 0;
 }
 #endif

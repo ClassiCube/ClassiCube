@@ -69,12 +69,12 @@ extern const char* const Updater_OGL;
 cc_bool Updater_Clean(void);
 /* Starts the platform-specific method to update then start the game using the UPDATE_FILE file. */
 cc_result Updater_Start(void);
-/* Returns the last time the application was modified, as number of milliseconds since 1/1/0001 */
-cc_result Updater_GetBuildTime(TimeMS* ms);
+/* Returns the last time the application was modified, as a unix timestamp. */
+cc_result Updater_GetBuildTime(cc_uint64* timestamp);
 /* Marks the UPDATE_FILE file as being executable. (Needed for some platforms) */
 cc_result Updater_MarkExecutable(void);
-/* Sets the last time UPDATE_FILE file was modified, as number of milliseconds since 1/1/0001 */
-cc_result Updater_SetNewBuildTime(TimeMS ms);
+/* Sets the last time UPDATE_FILE file was modified, as a unix timestamp. */
+cc_result Updater_SetNewBuildTime(cc_uint64 timestamp);
 
 /* The default file extension used for dynamic libraries on this platform. */
 extern const String DynamicLib_Ext;
