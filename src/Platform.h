@@ -129,6 +129,8 @@ CC_API void DateTime_CurrentLocal(struct DateTime* t);
 CC_API cc_uint64 Stopwatch_Measure(void);
 /* Returns total elapsed microseconds between two stopwatch measurements. */
 CC_API cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end);
+/* Returns total elapsed milliseconds between two stopwatch measurements. */
+CC_API cc_uint64 Stopwatch_ElapsedMilliseconds(cc_uint64 beg, cc_uint64 end);
 
 /* Returns non-zero if the given directory exists. */
 CC_API int Directory_Exists(const String* path);

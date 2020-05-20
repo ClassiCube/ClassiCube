@@ -203,6 +203,10 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	return ((end - beg) * sw_freqMul) / sw_freqDiv;
 }
 
+cc_uint64 Stopwatch_ElapsedMilliseconds(cc_uint64 beg, cc_uint64 end) {
+	return Stopwatch_ElapsedMicroseconds(beg, end) / 1000;
+}
+
 #if defined CC_BUILD_WIN
 static HANDLE conHandle;
 static BOOL hasDebugger;

@@ -873,7 +873,7 @@ static void Http_WorkerLoop(void) {
 	struct HttpRequest request;
 	cc_bool hasRequest, stop;
 	cc_uint64 beg, end;
-	cc_uint32 elapsed;
+	int elapsed;
 
 	for (;;) {
 		hasRequest = false;
@@ -904,7 +904,7 @@ static void Http_WorkerLoop(void) {
 		request.result = Http_SysDo(&request, &url);
 		end = Stopwatch_Measure();
 
-		elapsed = Stopwatch_ElapsedMicroseconds(beg, end) / 1000;
+		elapsed = (int)Stopwatch_ElapsedMilliseconds(beg, end);
 		Platform_Log3("HTTP: return code %i (http %i), in %i ms",
 					&request.result, &request.statusCode, &elapsed);
 		Http_FinishRequest(&request);

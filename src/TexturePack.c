@@ -591,12 +591,12 @@ static String TextureCache_GetLastModified(const String* url) {
 	int i;
 	String entry = TextureCache_GetFromTags(url, &lastModifiedCache);
 	/* Entry used to be a timestamp of C# ticks since 01/01/0001 */
-	/* This old format is no longer supported. */
+	/* Check if this is new format */
 	for (i = 0; i < entry.length; i++) {
 		if (entry.buffer[i] < '0' || entry.buffer[i] > '9') return entry;
 	}
 
-	/* Entry is all digits, so the old format */
+	/* Entry is all digits, so the old unsupported format */
 	entry.length = 0; return entry;
 }
 
