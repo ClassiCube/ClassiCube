@@ -59,125 +59,7 @@ static void Volume_Mix16(cc_int16* samples, int count, int volume) {
 *------------------------------------------------Native implementation----------------------------------------------------*
 *#########################################################################################################################*/
 static cc_result Audio_AllCompleted(AudioHandle handle, cc_bool* finished);
-#if defined CC_BUILD_WINMM
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#ifndef UNICODE
-#define UNICODE
-#define _UNICODE
-#endif
-
-#include <windows.h>
-#include <mmsystem.h>
-
-struct AudioContext {
-	HWAVEOUT handle;
-	WAVEHDR headers[AUDIO_MAX_BUFFERS];
-	struct AudioFormat format;
-	int count;
-};
-static struct AudioContext audioContexts[20];
-static cc_bool Audio_SysInit(void) { return true; }
-static void Audio_SysFree(void) { }
-
-void Audio_Open(AudioHandle* handle, int buffers) {
-	struct AudioContext* ctx;
-	int i, j;
-
-	for (i = 0; i < Array_Elems(audioContexts); i++) {
-		ctx = &audioContexts[i];
-		if (ctx->count) continue;
-
-		for (j = 0; j < buffers; j++) {
-			ctx->headers[j].dwFlags = WHDR_DONE;
-		}
-
-		*handle    = i;
-		ctx->count = buffers;
-		return;
-	}
-	Logger_Abort("No free audio contexts");
-}
-
-cc_result Audio_Close(AudioHandle handle) {
-	struct AudioFormat fmt = { 0 };
-	struct AudioContext* ctx;
-	cc_result res;
-	ctx = &audioContexts[handle];
-
-	ctx->count  = 0;
-	ctx->format = fmt;
-	if (!ctx->handle) return 0;
-
-	res = waveOutClose(ctx->handle);
-	ctx->handle = NULL;
-	return res;
-}
-
-cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
-	struct AudioContext* ctx = &audioContexts[handle];
-	struct AudioFormat*  cur = &ctx->format;
-	WAVEFORMATEX fmt;
-	int sampleSize;
-	cc_result res;
-
-	if (AudioFormat_Eq(cur, format)) return 0;
-	if (ctx->handle && (res = waveOutClose(ctx->handle))) return res;
-
-	sampleSize = format->channels * 2; /* 16 bits per sample / 8 */
-	fmt.wFormatTag      = WAVE_FORMAT_PCM;
-	fmt.nChannels       = format->channels;
-	fmt.nSamplesPerSec  = format->sampleRate;
-	fmt.nAvgBytesPerSec = format->sampleRate * sampleSize;
-	fmt.nBlockAlign     = sampleSize;
-	fmt.wBitsPerSample  = 16;
-	fmt.cbSize          = 0;
-
-	ctx->format = *format;
-	return waveOutOpen(&ctx->handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
-}
-
-cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
-	struct AudioContext* ctx = &audioContexts[handle];
-	WAVEHDR* hdr = &ctx->headers[idx];
-	cc_result res;
-
-	Mem_Set(hdr, 0, sizeof(WAVEHDR));
-	hdr->lpData         = (LPSTR)data;
-	hdr->dwBufferLength = dataSize;
-	hdr->dwLoops        = 1;
-	
-	if ((res = waveOutPrepareHeader(ctx->handle, hdr, sizeof(WAVEHDR)))) return res;
-	if ((res = waveOutWrite(ctx->handle, hdr, sizeof(WAVEHDR))))         return res;
-	return 0;
-}
-
-cc_result Audio_Play(AudioHandle handle) { return 0; }
-
-cc_result Audio_Stop(AudioHandle handle) {
-	struct AudioContext* ctx = &audioContexts[handle];
-	if (!ctx->handle) return 0;
-	return waveOutReset(ctx->handle);
-}
-
-cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
-	struct AudioContext* ctx = &audioContexts[handle];
-	WAVEHDR* hdr = &ctx->headers[idx];
-
-	*completed = false;
-	if (!(hdr->dwFlags & WHDR_DONE)) return 0;
-	cc_result res = 0;
-
-	if (hdr->dwFlags & WHDR_PREPARED) {
-		res = waveOutUnprepareHeader(ctx->handle, hdr, sizeof(WAVEHDR));
-	}
-	*completed = true; return res;
-}
-
-cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) { return Audio_AllCompleted(handle, finished); }
-#elif defined CC_BUILD_OPENAL
+#if defined CC_BUILD_OPENAL
 /* Simpler to just include subset of OpenAL actually use here instead of including */
 #if defined _WIN32
 #define APIENTRY __cdecl
@@ -454,6 +336,124 @@ cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
 	_alGetSourcei(ctx->source, AL_SOURCE_STATE, &state);
 	*finished = state != AL_PLAYING; return 0;
 }
+#elif defined CC_BUILD_WINMM
+#define WIN32_LEAN_AND_MEAN
+#define NOSERVICE
+#define NOMCX
+#define NOIME
+#ifndef UNICODE
+#define UNICODE
+#define _UNICODE
+#endif
+
+#include <windows.h>
+#include <mmsystem.h>
+
+struct AudioContext {
+	HWAVEOUT handle;
+	WAVEHDR headers[AUDIO_MAX_BUFFERS];
+	struct AudioFormat format;
+	int count;
+};
+static struct AudioContext audioContexts[20];
+static cc_bool Audio_SysInit(void) { return true; }
+static void Audio_SysFree(void) { }
+
+void Audio_Open(AudioHandle* handle, int buffers) {
+	struct AudioContext* ctx;
+	int i, j;
+
+	for (i = 0; i < Array_Elems(audioContexts); i++) {
+		ctx = &audioContexts[i];
+		if (ctx->count) continue;
+
+		for (j = 0; j < buffers; j++) {
+			ctx->headers[j].dwFlags = WHDR_DONE;
+		}
+
+		*handle    = i;
+		ctx->count = buffers;
+		return;
+	}
+	Logger_Abort("No free audio contexts");
+}
+
+cc_result Audio_Close(AudioHandle handle) {
+	struct AudioFormat fmt = { 0 };
+	struct AudioContext* ctx;
+	cc_result res;
+	ctx = &audioContexts[handle];
+
+	ctx->count  = 0;
+	ctx->format = fmt;
+	if (!ctx->handle) return 0;
+
+	res = waveOutClose(ctx->handle);
+	ctx->handle = NULL;
+	return res;
+}
+
+cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
+	struct AudioContext* ctx = &audioContexts[handle];
+	struct AudioFormat*  cur = &ctx->format;
+	WAVEFORMATEX fmt;
+	int sampleSize;
+	cc_result res;
+
+	if (AudioFormat_Eq(cur, format)) return 0;
+	if (ctx->handle && (res = waveOutClose(ctx->handle))) return res;
+
+	sampleSize = format->channels * 2; /* 16 bits per sample / 8 */
+	fmt.wFormatTag      = WAVE_FORMAT_PCM;
+	fmt.nChannels       = format->channels;
+	fmt.nSamplesPerSec  = format->sampleRate;
+	fmt.nAvgBytesPerSec = format->sampleRate * sampleSize;
+	fmt.nBlockAlign     = sampleSize;
+	fmt.wBitsPerSample  = 16;
+	fmt.cbSize          = 0;
+
+	ctx->format = *format;
+	return waveOutOpen(&ctx->handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
+}
+
+cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
+	struct AudioContext* ctx = &audioContexts[handle];
+	WAVEHDR* hdr = &ctx->headers[idx];
+	cc_result res;
+
+	Mem_Set(hdr, 0, sizeof(WAVEHDR));
+	hdr->lpData         = (LPSTR)data;
+	hdr->dwBufferLength = dataSize;
+	hdr->dwLoops        = 1;
+	
+	if ((res = waveOutPrepareHeader(ctx->handle, hdr, sizeof(WAVEHDR)))) return res;
+	if ((res = waveOutWrite(ctx->handle, hdr, sizeof(WAVEHDR))))         return res;
+	return 0;
+}
+
+cc_result Audio_Play(AudioHandle handle) { return 0; }
+
+cc_result Audio_Stop(AudioHandle handle) {
+	struct AudioContext* ctx = &audioContexts[handle];
+	if (!ctx->handle) return 0;
+	return waveOutReset(ctx->handle);
+}
+
+cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
+	struct AudioContext* ctx = &audioContexts[handle];
+	WAVEHDR* hdr = &ctx->headers[idx];
+
+	*completed = false;
+	if (!(hdr->dwFlags & WHDR_DONE)) return 0;
+	cc_result res = 0;
+
+	if (hdr->dwFlags & WHDR_PREPARED) {
+		res = waveOutUnprepareHeader(ctx->handle, hdr, sizeof(WAVEHDR));
+	}
+	*completed = true; return res;
+}
+
+cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) { return Audio_AllCompleted(handle, finished); }
 #endif
 
 static cc_result Audio_AllCompleted(AudioHandle handle, cc_bool* finished) {
