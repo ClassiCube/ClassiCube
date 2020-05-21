@@ -36,7 +36,7 @@ static cc_bool classic_receivedFirstPos;
 
 /* Map state */
 static cc_bool map_begunLoading;
-static TimeMS map_receiveStart;
+static cc_uint64 map_receiveBeg;
 static struct Stream map_part;
 static struct GZipHeader map_gzHeader;
 static int map_sizeIndex, map_volume;
@@ -446,7 +446,7 @@ static void Classic_StartLoading(void) {
 	GZipHeader_Init(&map_gzHeader);
 	map_begunLoading = true;
 	map_sizeIndex    = 0;
-	map_receiveStart = DateTime_CurrentUTC_MS();
+	map_receiveBeg   = Stopwatch_Measure();
 	map_volume       = 0;
 
 	MapState_Init(&map);
@@ -526,13 +526,15 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 
 static void Classic_LevelFinalise(cc_uint8* data) {
 	int width, height, length;
-	int loadingMs;
+	cc_uint64 end;
+	int delta;
 
 	Gui_Remove(LoadingScreen_UNSAFE_RawPointer);
 	Camera_CheckFocus();
 
-	loadingMs = (int)(DateTime_CurrentUTC_MS() - map_receiveStart);
-	Platform_Log1("map loading took: %i", &loadingMs);
+	end   = Stopwatch_Measure();
+	delta = Stopwatch_ElapsedMilliseconds(map_receiveBeg, end);
+	Platform_Log1("map loading took: %i", &delta);
 	map_begunLoading = false;
 	WoM_CheckSendWomID();
 

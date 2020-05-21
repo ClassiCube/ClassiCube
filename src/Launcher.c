@@ -110,7 +110,7 @@ static void Launcher_OnResize(void* obj) {
 static cc_bool Launcher_IsShutdown(int key) {
 	if (key == KEY_F4 && Key_IsAltPressed()) return true;
 
-	/* On OSX, Cmd+Q should also terminate the process */
+	/* On macOS, Cmd+Q should also terminate the process */
 #ifdef CC_BUILD_OSX
 	return key == 'Q' && Key_IsWinPressed();
 #else

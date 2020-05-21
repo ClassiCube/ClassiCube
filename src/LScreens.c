@@ -1419,7 +1419,7 @@ static void UpdatesScreen_Get(cc_bool release, cc_bool d3d9) {
 	String str; char strBuffer[STRING_SIZE];
 	struct UpdatesScreen* s = &UpdatesScreen_Instance;
 
-	TimeMS time = release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;
+	cc_uint64 time = release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;
 	if (!time || FetchUpdateTask.Base.working) return;
 	FetchUpdateTask_Run(release, d3d9);
 
@@ -1489,7 +1489,7 @@ static void UpdatesScreen_DevD3D9(void* w, int x, int y)   { UpdatesScreen_Get(f
 static void UpdatesScreen_DevOpenGL(void* w, int x, int y) { UpdatesScreen_Get(false, false); }
 
 static void UpdatesScreen_Update(struct UpdatesScreen* s) {
-	TimeMS buildTime;
+	cc_uint64 buildTime;
 	cc_result res;
 
 	/* Initially fill out with update check result from main menu */

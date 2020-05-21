@@ -49,7 +49,7 @@ struct LWebTask {
 	
 	String identifier; /* Unique identifier for this web task. */
 	String url;        /* URL this task is downloading from/uploading to. */
-	TimeMS start;      /* Point in time this task was started at. */
+	cc_uint64 start;   /* Timestamp of when this task was started at. */
 	/* Called when task successfully downloaded/uploaded data. */
 	void (*Handle)(cc_uint8* data, cc_uint32 len);
 };
