@@ -55,7 +55,7 @@ I am assuming you used the installer from http://www.mingw.org/
 
 #### Linux
 
-Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
+Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-dev, libgl1-mesa-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
 
 ```gcc *.c -o ClassiCube -lm -lpthread -lX11 -lXi -lGL -lcurl -ldl```
 
@@ -70,11 +70,11 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 #### macOS (32 bit)
 
-```gcc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenAL -framework OpenGL -lcurl```
+```gcc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL -lcurl```
 
 #### macOS (64 bit)
 
-```gcc *.c -o ClassiCube -framework Cocoa -framework OpenAL -framework OpenGL -lcurl -lobjc```
+```gcc *.c -o ClassiCube -framework Cocoa -framework OpenGL -lcurl -lobjc```
 
 #### FreeBSD
 

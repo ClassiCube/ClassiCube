@@ -39,7 +39,7 @@ endif
 
 ifeq ($(PLAT),darwin)
 LIBS=-lcurl
-LDFLAGS=-rdynamic -framework Carbon -framework AGL -framework OpenAL -framework OpenGL
+LDFLAGS=-rdynamic -framework Carbon -framework AGL -framework OpenGL
 endif
 
 ifeq ($(PLAT),freebsd)

@@ -32,29 +32,6 @@ void Audio_SetSounds(int volume) {
 void Audio_PlayDigSound(cc_uint8 type) { }
 void Audio_PlayStepSound(cc_uint8 type) { }
 #else
-#if defined CC_BUILD_WINMM
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#ifndef UNICODE
-#define UNICODE
-#define _UNICODE
-#endif
-
-#include <windows.h>
-#include <mmsystem.h>
-#elif defined CC_BUILD_OPENAL
-#if defined CC_BUILD_OSX
-#define  AL_NO_PROTOTYPES
-#define ALC_NO_PROTOTYPES
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-#else
-#include <AL/al.h>
-#include <AL/alc.h>
-#endif
-#endif
 static struct StringsBuffer files;
 
 static void Volume_Mix16(cc_int16* samples, int count, int volume) {
@@ -83,6 +60,18 @@ static void Volume_Mix16(cc_int16* samples, int count, int volume) {
 *#########################################################################################################################*/
 static cc_result Audio_AllCompleted(AudioHandle handle, cc_bool* finished);
 #if defined CC_BUILD_WINMM
+#define WIN32_LEAN_AND_MEAN
+#define NOSERVICE
+#define NOMCX
+#define NOIME
+#ifndef UNICODE
+#define UNICODE
+#define _UNICODE
+#endif
+
+#include <windows.h>
+#include <mmsystem.h>
+
 struct AudioContext {
 	HWAVEOUT handle;
 	WAVEHDR headers[AUDIO_MAX_BUFFERS];
@@ -189,6 +178,46 @@ cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
 
 cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) { return Audio_AllCompleted(handle, finished); }
 #elif defined CC_BUILD_OPENAL
+/* Simpler to just include subset of OpenAL actually use here instead of including */
+#if defined _WIN32
+#define APIENTRY __cdecl
+#else
+#define APIENTRY
+#endif
+#define AL_NONE              0
+#define AL_SOURCE_STATE      0x1010
+#define AL_PLAYING           0x1012
+#define AL_BUFFERS_QUEUED    0x1015
+#define AL_BUFFERS_PROCESSED 0x1016
+#define AL_FORMAT_MONO16     0x1101
+#define AL_FORMAT_STEREO16   0x1103
+
+typedef char ALboolean;
+typedef int ALint;
+typedef unsigned int ALuint;
+typedef int ALsizei;
+typedef int ALenum;
+
+typedef ALenum (APIENTRY *FP_ALGETERROR)(void);
+typedef void   (APIENTRY *FP_ALGENSOURCES)(ALsizei n, ALuint* sources);
+typedef void   (APIENTRY *FP_ALDELETESOURCES)(ALsizei n, const ALuint* sources);
+typedef void   (APIENTRY *FP_ALGETSOURCEI)(ALuint source, ALenum param, ALint* value);
+typedef void   (APIENTRY *FP_ALSOURCEPLAY)(ALuint source);
+typedef void   (APIENTRY *FP_ALSOURCESTOP)(ALuint source);
+typedef void   (APIENTRY *FP_ALSOURCEQUEUEBUFFERS)(ALuint source, ALsizei nb, const ALuint* buffers);
+typedef void   (APIENTRY *FP_ALSOURCEUNQUEUEBUFFERS)(ALuint source, ALsizei nb, ALuint* buffers);
+typedef void   (APIENTRY *FP_ALGENBUFFERS)(ALsizei n, ALuint* buffers);
+typedef void   (APIENTRY *FP_ALDELETEBUFFERS)(ALsizei n, const ALuint* buffers);
+typedef void   (APIENTRY *FP_ALBUFFERDATA)(ALuint buffer, ALenum format, const void* data, ALsizei size, ALsizei freq);
+typedef void   (APIENTRY *FP_ALDISTANCEMODEL)(ALenum distanceModel);
+typedef void*     (APIENTRY *FP_ALCCREATECONTEXT)(void* device, const ALint* attrlist);
+typedef ALboolean (APIENTRY *FP_ALCMAKECONTEXTCURRENT)(void* context);
+typedef void      (APIENTRY *FP_ALCDESTROYCONTEXT)(void* context);
+typedef void*     (APIENTRY *FP_ALCOPENDEVICE)(const char* devicename);
+typedef ALboolean (APIENTRY *FP_ALCCLOSEDEVICE)(void* device);
+typedef ALenum    (APIENTRY *FP_ALCGETERROR)(void* device);
+/* === End of OpenAL headers === */
+
 struct AudioContext {
 	ALuint source;
 	ALuint buffers[AUDIO_MAX_BUFFERS];
@@ -199,8 +228,8 @@ struct AudioContext {
 };
 static struct AudioContext audioContexts[20];
 
-static ALCdevice* audio_device;
-static ALCcontext* audio_context;
+static void* audio_device;
+static void* audio_context;
 static cc_bool alInited;
 
 #if defined CC_BUILD_WIN
@@ -213,25 +242,24 @@ static const String alLib = String_FromConst("libopenal.so.3.0");
 static const String alLib = String_FromConst("libopenal.so.1");
 #endif
 
-static LPALCCREATECONTEXT _alcCreateContext;
-static LPALCMAKECONTEXTCURRENT _alcMakeContextCurrent;
-static LPALCDESTROYCONTEXT _alcDestroyContext;
-static LPALCOPENDEVICE _alcOpenDevice;
-static LPALCCLOSEDEVICE _alcCloseDevice;
-static LPALCGETERROR _alcGetError;
-
-static LPALGETERROR _alGetError;
-static LPALGENSOURCES _alGenSources;
-static LPALDELETESOURCES _alDeleteSources;
-static LPALGETSOURCEI _alGetSourcei;
-static LPALSOURCEPLAY _alSourcePlay;
-static LPALSOURCESTOP _alSourceStop;
-static LPALSOURCEQUEUEBUFFERS _alSourceQueueBuffers;
-static LPALSOURCEUNQUEUEBUFFERS _alSourceUnqueueBuffers;
-static LPALGENBUFFERS _alGenBuffers;
-static LPALDELETEBUFFERS _alDeleteBuffers;
-static LPALBUFFERDATA _alBufferData;
-static LPALDISTANCEMODEL _alDistanceModel;
+static FP_ALGETERROR _alGetError;
+static FP_ALGENSOURCES _alGenSources;
+static FP_ALDELETESOURCES _alDeleteSources;
+static FP_ALGETSOURCEI _alGetSourcei;
+static FP_ALSOURCEPLAY _alSourcePlay;
+static FP_ALSOURCESTOP _alSourceStop;
+static FP_ALSOURCEQUEUEBUFFERS _alSourceQueueBuffers;
+static FP_ALSOURCEUNQUEUEBUFFERS _alSourceUnqueueBuffers;
+static FP_ALGENBUFFERS _alGenBuffers;
+static FP_ALDELETEBUFFERS _alDeleteBuffers;
+static FP_ALBUFFERDATA _alBufferData;
+static FP_ALDISTANCEMODEL _alDistanceModel;
+static FP_ALCCREATECONTEXT _alcCreateContext;
+static FP_ALCMAKECONTEXTCURRENT _alcMakeContextCurrent;
+static FP_ALCDESTROYCONTEXT _alcDestroyContext;
+static FP_ALCOPENDEVICE _alcOpenDevice;
+static FP_ALCCLOSEDEVICE _alcCloseDevice;
+static FP_ALCGETERROR _alcGetError;
 
 #define QUOTE(x) #x
 #define LoadALFunc(sym, type) (_ ## sym = (type)DynamicLib_Get2(lib, QUOTE(sym)))
@@ -240,25 +268,25 @@ static cc_bool LoadALFuncs(void) {
 	if (!lib) { Logger_DynamicLibWarn("loading", &alLib); return false; }
 
 	return
-		LoadALFunc(alcCreateContext,  LPALCCREATECONTEXT) &&
-		LoadALFunc(alcMakeContextCurrent, LPALCMAKECONTEXTCURRENT) &&
-		LoadALFunc(alcDestroyContext, LPALCDESTROYCONTEXT) &&
-		LoadALFunc(alcOpenDevice,     LPALCOPENDEVICE) &&
-		LoadALFunc(alcCloseDevice,    LPALCCLOSEDEVICE) &&
-		LoadALFunc(alcGetError,       LPALCGETERROR) &&
+		LoadALFunc(alcCreateContext,  FP_ALCCREATECONTEXT) &&
+		LoadALFunc(alcMakeContextCurrent, FP_ALCMAKECONTEXTCURRENT) &&
+		LoadALFunc(alcDestroyContext, FP_ALCDESTROYCONTEXT) &&
+		LoadALFunc(alcOpenDevice,     FP_ALCOPENDEVICE) &&
+		LoadALFunc(alcCloseDevice,    FP_ALCCLOSEDEVICE) &&
+		LoadALFunc(alcGetError,       FP_ALCGETERROR) &&
 
-		LoadALFunc(alGetError,      LPALGETERROR) &&
-		LoadALFunc(alGenSources,    LPALGENSOURCES) &&
-		LoadALFunc(alDeleteSources, LPALDELETESOURCES) &&
-		LoadALFunc(alGetSourcei,    LPALGETSOURCEI) &&
-		LoadALFunc(alSourcePlay,    LPALSOURCEPLAY) &&
-		LoadALFunc(alSourceStop,    LPALSOURCESTOP) &&
-		LoadALFunc(alSourceQueueBuffers,   LPALSOURCEQUEUEBUFFERS) &&
-		LoadALFunc(alSourceUnqueueBuffers, LPALSOURCEUNQUEUEBUFFERS) &&
-		LoadALFunc(alGenBuffers,    LPALGENBUFFERS) &&
-		LoadALFunc(alDeleteBuffers, LPALDELETEBUFFERS) &&
-		LoadALFunc(alBufferData,    LPALBUFFERDATA) &&
-		LoadALFunc(alDistanceModel, LPALDISTANCEMODEL);
+		LoadALFunc(alGetError,      FP_ALGETERROR) &&
+		LoadALFunc(alGenSources,    FP_ALGENSOURCES) &&
+		LoadALFunc(alDeleteSources, FP_ALDELETESOURCES) &&
+		LoadALFunc(alGetSourcei,    FP_ALGETSOURCEI) &&
+		LoadALFunc(alSourcePlay,    FP_ALSOURCEPLAY) &&
+		LoadALFunc(alSourceStop,    FP_ALSOURCESTOP) &&
+		LoadALFunc(alSourceQueueBuffers,   FP_ALSOURCEQUEUEBUFFERS) &&
+		LoadALFunc(alSourceUnqueueBuffers, FP_ALSOURCEUNQUEUEBUFFERS) &&
+		LoadALFunc(alGenBuffers,    FP_ALGENBUFFERS) &&
+		LoadALFunc(alDeleteBuffers, FP_ALDELETEBUFFERS) &&
+		LoadALFunc(alBufferData,    FP_ALBUFFERDATA) &&
+		LoadALFunc(alDistanceModel, FP_ALDISTANCEMODEL);
 }
 
 static cc_result CreateALContext(void) {
