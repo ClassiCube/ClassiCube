@@ -80,24 +80,24 @@ typedef unsigned int ALuint;
 typedef int ALsizei;
 typedef int ALenum;
 
-typedef ALenum (APIENTRY *FP_ALGETERROR)(void);
-typedef void   (APIENTRY *FP_ALGENSOURCES)(ALsizei n, ALuint* sources);
-typedef void   (APIENTRY *FP_ALDELETESOURCES)(ALsizei n, const ALuint* sources);
-typedef void   (APIENTRY *FP_ALGETSOURCEI)(ALuint source, ALenum param, ALint* value);
-typedef void   (APIENTRY *FP_ALSOURCEPLAY)(ALuint source);
-typedef void   (APIENTRY *FP_ALSOURCESTOP)(ALuint source);
-typedef void   (APIENTRY *FP_ALSOURCEQUEUEBUFFERS)(ALuint source, ALsizei nb, const ALuint* buffers);
-typedef void   (APIENTRY *FP_ALSOURCEUNQUEUEBUFFERS)(ALuint source, ALsizei nb, ALuint* buffers);
-typedef void   (APIENTRY *FP_ALGENBUFFERS)(ALsizei n, ALuint* buffers);
-typedef void   (APIENTRY *FP_ALDELETEBUFFERS)(ALsizei n, const ALuint* buffers);
-typedef void   (APIENTRY *FP_ALBUFFERDATA)(ALuint buffer, ALenum format, const void* data, ALsizei size, ALsizei freq);
-typedef void   (APIENTRY *FP_ALDISTANCEMODEL)(ALenum distanceModel);
-typedef void*     (APIENTRY *FP_ALCCREATECONTEXT)(void* device, const ALint* attrlist);
-typedef ALboolean (APIENTRY *FP_ALCMAKECONTEXTCURRENT)(void* context);
-typedef void      (APIENTRY *FP_ALCDESTROYCONTEXT)(void* context);
-typedef void*     (APIENTRY *FP_ALCOPENDEVICE)(const char* devicename);
-typedef ALboolean (APIENTRY *FP_ALCCLOSEDEVICE)(void* device);
-typedef ALenum    (APIENTRY *FP_ALCGETERROR)(void* device);
+typedef ALenum (APIENTRY *FP_alGetError)(void);
+typedef void   (APIENTRY *FP_alGenSources)(ALsizei n, ALuint* sources);
+typedef void   (APIENTRY *FP_alDeleteSources)(ALsizei n, const ALuint* sources);
+typedef void   (APIENTRY *FP_alGetSourcei)(ALuint source, ALenum param, ALint* value);
+typedef void   (APIENTRY *FP_alSourcePlay)(ALuint source);
+typedef void   (APIENTRY *FP_alSourceStop)(ALuint source);
+typedef void   (APIENTRY *FP_alSourceQueueBuffers)(ALuint source, ALsizei nb, const ALuint* buffers);
+typedef void   (APIENTRY *FP_alSourceUnqueueBuffers)(ALuint source, ALsizei nb, ALuint* buffers);
+typedef void   (APIENTRY *FP_alGenBuffers)(ALsizei n, ALuint* buffers);
+typedef void   (APIENTRY *FP_alDeleteBuffers)(ALsizei n, const ALuint* buffers);
+typedef void   (APIENTRY *FP_alBufferData)(ALuint buffer, ALenum format, const void* data, ALsizei size, ALsizei freq);
+typedef void   (APIENTRY *FP_alDistanceModel)(ALenum distanceModel);
+typedef void*     (APIENTRY *FP_alcCreateContext)(void* device, const ALint* attrlist);
+typedef ALboolean (APIENTRY *FP_alcMakeContextCurrent)(void* context);
+typedef void      (APIENTRY *FP_alcDestroyContext)(void* context);
+typedef void*     (APIENTRY *FP_alcOpenDevice)(const char* devicename);
+typedef ALboolean (APIENTRY *FP_alcCloseDevice)(void* device);
+typedef ALenum    (APIENTRY *FP_alcGetError)(void* device);
 /* === End of OpenAL headers === */
 
 struct AudioContext {
@@ -124,51 +124,42 @@ static const String alLib = String_FromConst("libopenal.so.3.0");
 static const String alLib = String_FromConst("libopenal.so.1");
 #endif
 
-static FP_ALGETERROR _alGetError;
-static FP_ALGENSOURCES _alGenSources;
-static FP_ALDELETESOURCES _alDeleteSources;
-static FP_ALGETSOURCEI _alGetSourcei;
-static FP_ALSOURCEPLAY _alSourcePlay;
-static FP_ALSOURCESTOP _alSourceStop;
-static FP_ALSOURCEQUEUEBUFFERS _alSourceQueueBuffers;
-static FP_ALSOURCEUNQUEUEBUFFERS _alSourceUnqueueBuffers;
-static FP_ALGENBUFFERS _alGenBuffers;
-static FP_ALDELETEBUFFERS _alDeleteBuffers;
-static FP_ALBUFFERDATA _alBufferData;
-static FP_ALDISTANCEMODEL _alDistanceModel;
-static FP_ALCCREATECONTEXT _alcCreateContext;
-static FP_ALCMAKECONTEXTCURRENT _alcMakeContextCurrent;
-static FP_ALCDESTROYCONTEXT _alcDestroyContext;
-static FP_ALCOPENDEVICE _alcOpenDevice;
-static FP_ALCCLOSEDEVICE _alcCloseDevice;
-static FP_ALCGETERROR _alcGetError;
+static FP_alGetError _alGetError;
+static FP_alGenSources _alGenSources;
+static FP_alDeleteSources _alDeleteSources;
+static FP_alGetSourcei _alGetSourcei;
+static FP_alSourcePlay _alSourcePlay;
+static FP_alSourceStop _alSourceStop;
+static FP_alSourceQueueBuffers _alSourceQueueBuffers;
+static FP_alSourceUnqueueBuffers _alSourceUnqueueBuffers;
+static FP_alGenBuffers _alGenBuffers;
+static FP_alDeleteBuffers _alDeleteBuffers;
+static FP_alBufferData _alBufferData;
+static FP_alDistanceModel _alDistanceModel;
+static FP_alcCreateContext _alcCreateContext;
+static FP_alcMakeContextCurrent _alcMakeContextCurrent;
+static FP_alcDestroyContext _alcDestroyContext;
+static FP_alcOpenDevice _alcOpenDevice;
+static FP_alcCloseDevice _alcCloseDevice;
+static FP_alcGetError _alcGetError;
 
 #define QUOTE(x) #x
-#define LoadALFunc(sym, type) (_ ## sym = (type)DynamicLib_Get2(lib, QUOTE(sym)))
+#define LoadALFunc(sym) (_ ## sym = (FP_ ## sym)DynamicLib_Get2(lib, QUOTE(sym)))
 static cc_bool LoadALFuncs(void) {
 	void* lib = DynamicLib_Load2(&alLib);
 	if (!lib) { Logger_DynamicLibWarn("loading", &alLib); return false; }
 
 	return
-		LoadALFunc(alcCreateContext,  FP_ALCCREATECONTEXT) &&
-		LoadALFunc(alcMakeContextCurrent, FP_ALCMAKECONTEXTCURRENT) &&
-		LoadALFunc(alcDestroyContext, FP_ALCDESTROYCONTEXT) &&
-		LoadALFunc(alcOpenDevice,     FP_ALCOPENDEVICE) &&
-		LoadALFunc(alcCloseDevice,    FP_ALCCLOSEDEVICE) &&
-		LoadALFunc(alcGetError,       FP_ALCGETERROR) &&
+		LoadALFunc(alcCreateContext)  && LoadALFunc(alcMakeContextCurrent) &&
+		LoadALFunc(alcDestroyContext) && LoadALFunc(alcOpenDevice) &&
+		LoadALFunc(alcCloseDevice)    && LoadALFunc(alcGetError) &&
 
-		LoadALFunc(alGetError,      FP_ALGETERROR) &&
-		LoadALFunc(alGenSources,    FP_ALGENSOURCES) &&
-		LoadALFunc(alDeleteSources, FP_ALDELETESOURCES) &&
-		LoadALFunc(alGetSourcei,    FP_ALGETSOURCEI) &&
-		LoadALFunc(alSourcePlay,    FP_ALSOURCEPLAY) &&
-		LoadALFunc(alSourceStop,    FP_ALSOURCESTOP) &&
-		LoadALFunc(alSourceQueueBuffers,   FP_ALSOURCEQUEUEBUFFERS) &&
-		LoadALFunc(alSourceUnqueueBuffers, FP_ALSOURCEUNQUEUEBUFFERS) &&
-		LoadALFunc(alGenBuffers,    FP_ALGENBUFFERS) &&
-		LoadALFunc(alDeleteBuffers, FP_ALDELETEBUFFERS) &&
-		LoadALFunc(alBufferData,    FP_ALBUFFERDATA) &&
-		LoadALFunc(alDistanceModel, FP_ALDISTANCEMODEL);
+		LoadALFunc(alGetError)        && LoadALFunc(alGenSources) &&
+		LoadALFunc(alDeleteSources)   && LoadALFunc(alGetSourcei) &&
+		LoadALFunc(alSourcePlay)      && LoadALFunc(alSourceStop) &&
+		LoadALFunc(alSourceQueueBuffers) && LoadALFunc(alSourceUnqueueBuffers) &&
+		LoadALFunc(alGenBuffers)      && LoadALFunc(alDeleteBuffers) &&
+		LoadALFunc(alBufferData)      && LoadALFunc(alDistanceModel);
 }
 
 static cc_result CreateALContext(void) {
