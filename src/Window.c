@@ -1853,6 +1853,7 @@ static void InitRawMouse(void) {
 	/* (i.e. if you press mouse button, no more raw mouse movement events) */
 	/* http://wine.1045685.n8.nabble.com/PATCH-0-9-Implement-DInput8-mouse-using-RawInput-and-XInput2-RawEvents-only-td6016923.html */
 	/* Thankfully XInput >= 2.1 corrects this behaviour */
+	/* http://who-t.blogspot.com/2011/09/whats-new-in-xi-21-raw-events.html */
 	major = 2; minor = 2;
 	if (XIQueryVersion(win_display, &major, &minor) != Success) {
 		Platform_Log2("Only XInput %i.%i supported", &major, &minor);
