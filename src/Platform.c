@@ -1392,6 +1392,33 @@ cc_bool DynamicLib_DescribeError(String* dst) {
 void* DynamicLib_Load2(const String* path)         { return NULL; }
 void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
 cc_bool DynamicLib_DescribeError(String* dst)      { return false; }
+#elif defined CC_BUILD_OSX && __ppc__
+/* TODO: Only do it for macOS < 10.4 */
+const String DynamicLib_Ext = String_FromConst(".dylib");
+
+void* DynamicLib_Load2(const String* path) {
+	char str[NATIVE_STR_LEN];
+	Platform_ConvertString(str, path);
+	return NSAddImage(str, NSADDIMAGE_OPTION_WITH_SEARCHING | 
+							NSADDIMAGE_OPTION_RETURN_ON_ERROR);
+}
+
+void* DynamicLib_Get2(void* lib, const char* name) {
+	NSSymbol sym = NSLookupSymbolInImage(lib, name, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW | 
+													NSLOOKUPSYMBOLINIMAGE_OPTION_RETURN_ON_ERROR);
+	return sym ? NSAddressOfSymbol(sym) : NULL;
+}
+
+cc_bool DynamicLib_DescribeError(String* dst) {
+	NSLinkEditErrors err = 0;
+	const char* name = "";
+	const char* msg = "";
+	int errNum = 0;
+
+	NSLinkEditError(&editError, &errno, &name, &msg);
+	String_Format4(dst, "%c in %c (%i, sys %i)", msg, name, &err, &errNum);
+	return true;
+}
 #elif defined CC_BUILD_POSIX
 /* TODO: Should we use .bundle instead of .dylib? */
 #ifdef CC_BUILD_OSX
