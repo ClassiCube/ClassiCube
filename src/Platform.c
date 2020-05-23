@@ -1404,8 +1404,17 @@ void* DynamicLib_Load2(const String* path) {
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {
-	NSSymbol sym = NSLookupSymbolInImage(lib, name, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW | 
-													NSLOOKUPSYMBOLINIMAGE_OPTION_RETURN_ON_ERROR);
+	String tmp; char tmpBuffer[128];
+	NSSymbol sym;
+	String_InitArray_NT(tmp, tmpBuffer);
+
+	/* NS linker api rquires symbols to have a _ prefix */
+	String_Append(&tmp, '_');
+	String_AppendConst(&tmp, name);
+	tmp.buffer[tmp.length] = '\0';
+
+	sym = NSLookupSymbolInImage(lib, tmp.buffer, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW |
+												NSLOOKUPSYMBOLINIMAGE_OPTION_RETURN_ON_ERROR);
 	return sym ? NSAddressOfSymbol(sym) : NULL;
 }
 
@@ -1415,7 +1424,7 @@ cc_bool DynamicLib_DescribeError(String* dst) {
 	const char* msg = "";
 	int errNum = 0;
 
-	NSLinkEditError(&editError, &errno, &name, &msg);
+	NSLinkEditError(&err, &errNum, &name, &msg);
 	String_Format4(dst, "%c in %c (%i, sys %i)", msg, name, &err, &errNum);
 	return true;
 }

@@ -705,11 +705,14 @@ static cc_bool LoadCurlFuncs(void) {
 	void* lib = DynamicLib_Load2(&curlLib);
 	if (!lib) { Logger_DynamicLibWarn("loading", &curlLib); return false; }
 
+	/* Non-essential functions missing in older curl versions */
+	LoadCurlFunc(curl_easy_strerror);
+
 	return
 		LoadCurlFunc(curl_global_init)    && LoadCurlFunc(curl_global_cleanup) &&
 		LoadCurlFunc(curl_easy_init)      && LoadCurlFunc(curl_easy_perform) &&
 		LoadCurlFunc(curl_easy_setopt)    && LoadCurlFunc(curl_easy_reset) &&
-		LoadCurlFunc(curl_easy_cleanup)   && LoadCurlFunc(curl_easy_strerror) &&
+		LoadCurlFunc(curl_easy_cleanup)   &&
 		LoadCurlFunc(curl_slist_free_all) && LoadCurlFunc(curl_slist_append);
 }
 
@@ -717,7 +720,10 @@ static CURL* curl;
 static cc_bool curlInited;
 
 cc_bool Http_DescribeError(cc_result res, String* dst) {
-	const char* err = _curl_easy_strerror((CURLcode)res);
+	const char* err;
+	
+	if (!_curl_easy_strerror) return false;
+	err = _curl_easy_strerror((CURLcode)res);
 	if (!err) return false;
 
 	String_AppendConst(dst, err);
