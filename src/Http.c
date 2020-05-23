@@ -650,7 +650,7 @@ static void Http_SysFree(void) {
 }
 #elif defined CC_BUILD_CURL
 #include "Errors.h"
-#include <stdint.h>
+#include <stddef.h>
 typedef void CURL;
 struct curl_slist;
 typedef int CURLcode;
@@ -694,7 +694,7 @@ typedef struct curl_slist* (APIENTRY *FP_curl_slist_append)(struct curl_slist* l
 #if defined CC_BUILD_WIN
 static const String curlLib = String_FromConst("libcurl.dll");
 #elif defined CC_BUILD_OSX
-static const String curlLib = String_FromConst("libcurl.dylib");
+static const String curlLib = String_FromConst("/usr/lib/libcurl.dylib");
 #else
 static const String curlLib = String_FromConst("libcurl.so.4");
 #endif
