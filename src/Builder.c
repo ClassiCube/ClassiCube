@@ -105,7 +105,7 @@ static void BuildPartVbs(struct ChunkPartInfo* info) {
 		count = info->Counts[i];
 
 		if (count) {
-			info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
+			info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_TEXTURED, count);
 			offset += count;
 		} else {
 			info->Vbs[i] = 0;
@@ -115,7 +115,7 @@ static void BuildPartVbs(struct ChunkPartInfo* info) {
 	count  = info->SpriteCount;
 	offset = info->Offset;
 	if (count) {
-		info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_P3FT2FC4B, count);
+		info->Vbs[i] = Gfx_CreateVb2(&Builder_Vertices[offset], VERTEX_FORMAT_TEXTURED, count);
 	} else {
 		info->Vbs[i] = 0;
 	}
@@ -398,7 +398,7 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 #else
 	/* NOTE: Relies on assumption vb is ignored by GL11 Gfx_LockVb implementation */
 	Builder_Vertices = (struct VertexTextured*)Gfx_LockVb(0, 
-													VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
+													VERTEX_FORMAT_TEXTURED, totalVerts + 1);
 #endif
 	Builder_PostStretchTiles();
 

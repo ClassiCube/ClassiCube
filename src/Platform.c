@@ -47,7 +47,6 @@ const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <dirent.h>
 #include <fcntl.h>
 #include <pthread.h>
-#include <dlfcn.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -1429,7 +1428,9 @@ cc_bool DynamicLib_DescribeError(String* dst) {
 	return true;
 }
 #elif defined CC_BUILD_POSIX
+#include <dlfcn.h>
 /* TODO: Should we use .bundle instead of .dylib? */
+
 #ifdef CC_BUILD_OSX
 const String DynamicLib_Ext = String_FromConst(".dylib");
 #else
