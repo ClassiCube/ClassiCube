@@ -669,7 +669,6 @@ typedef int CURLcode;
 #define CURLOPT_NOBODY         (0     + 44)
 #define CURLOPT_POST           (0     + 47)
 #define CURLOPT_FOLLOWLOCATION (0     + 52)
-#define CURLOPT_AUTOREFERER    (0     + 58)
 #define CURLOPT_POSTFIELDSIZE  (0     + 60)
 #define CURLOPT_MAXREDIRS      (0     + 68)
 #define CURLOPT_HEADERFUNCTION (20000 + 79)
@@ -705,12 +704,12 @@ static cc_bool LoadCurlFuncs(void) {
 	void* lib = DynamicLib_Load2(&curlLib);
 	if (!lib) { Logger_DynamicLibWarn("loading", &curlLib); return false; }
 
-	/* Non-essential functions missing in older curl versions */
+	/* Non-essential function missing in older curl versions */
 	LoadCurlFunc(curl_easy_strerror);
 
 	return
 		LoadCurlFunc(curl_global_init)    && LoadCurlFunc(curl_global_cleanup) &&
-		LoadCurlFunc(curl_easy_init)      && LoadCurlFunc(curl_easy_perform) &&
+		LoadCurlFunc(curl_easy_init)      && LoadCurlFunc(curl_easy_perform)   &&
 		LoadCurlFunc(curl_easy_setopt)    && LoadCurlFunc(curl_easy_cleanup)   &&
 		LoadCurlFunc(curl_slist_free_all) && LoadCurlFunc(curl_slist_append);
 }
@@ -808,13 +807,14 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 		_curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
 	} else if (req->requestType == REQUEST_TYPE_POST) {
 		_curl_easy_setopt(curl, CURLOPT_POST,   1L);
-		_curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,  req->size);
-		_curl_easy_setopt(curl, CURLOPT_POSTFIELDS,     req->data);
+		_curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, req->size);
+		_curl_easy_setopt(curl, CURLOPT_POSTFIELDS,    req->data);
 
 		/* per curl docs, we must persist POST data until request finishes */
 		req->data = NULL;
 		HttpRequest_Free(req);
 	} else {
+		/* Undo POST/HEAD state */
 		_curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 	}
 
