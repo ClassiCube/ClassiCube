@@ -673,6 +673,7 @@ typedef int CURLcode;
 #define CURLOPT_POSTFIELDSIZE  (0     + 60)
 #define CURLOPT_MAXREDIRS      (0     + 68)
 #define CURLOPT_HEADERFUNCTION (20000 + 79)
+#define CURLOPT_HTTPGET        (0     + 80)
 
 #if defined _WIN32
 #define APIENTRY __cdecl
@@ -685,7 +686,6 @@ typedef void     (APIENTRY *FP_curl_global_cleanup)(void);     static FP_curl_gl
 typedef CURL*    (APIENTRY *FP_curl_easy_init)(void);          static FP_curl_easy_init _curl_easy_init;
 typedef CURLcode (APIENTRY *FP_curl_easy_perform)(CURL *c);    static FP_curl_easy_perform _curl_easy_perform;
 typedef CURLcode (APIENTRY *FP_curl_easy_setopt)(CURL *c, int opt, ...);    static FP_curl_easy_setopt _curl_easy_setopt;
-typedef void     (APIENTRY *FP_curl_easy_reset)(CURL* c);      static FP_curl_easy_reset _curl_easy_reset;
 typedef void     (APIENTRY *FP_curl_easy_cleanup)(CURL* c);    static FP_curl_easy_cleanup _curl_easy_cleanup;
 typedef const char* (APIENTRY *FP_curl_easy_strerror)(CURLcode res);        static FP_curl_easy_strerror _curl_easy_strerror;
 typedef void     (APIENTRY *FP_curl_slist_free_all)(struct curl_slist* l);  static FP_curl_slist_free_all _curl_slist_free_all;
@@ -711,8 +711,7 @@ static cc_bool LoadCurlFuncs(void) {
 	return
 		LoadCurlFunc(curl_global_init)    && LoadCurlFunc(curl_global_cleanup) &&
 		LoadCurlFunc(curl_easy_init)      && LoadCurlFunc(curl_easy_perform) &&
-		LoadCurlFunc(curl_easy_setopt)    && LoadCurlFunc(curl_easy_reset) &&
-		LoadCurlFunc(curl_easy_cleanup)   &&
+		LoadCurlFunc(curl_easy_setopt)    && LoadCurlFunc(curl_easy_cleanup)   &&
 		LoadCurlFunc(curl_slist_free_all) && LoadCurlFunc(curl_slist_append);
 }
 
@@ -797,7 +796,6 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 		return ERR_NOT_SUPPORTED;
 	}
 
-	_curl_easy_reset(curl);
 	headers_list = NULL;
 	Http_SetRequestHeaders(req);
 	_curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers_list);
@@ -816,6 +814,8 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 		/* per curl docs, we must persist POST data until request finishes */
 		req->data = NULL;
 		HttpRequest_Free(req);
+	} else {
+		_curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 	}
 
 	bufferSize = 0;
