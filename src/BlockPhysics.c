@@ -150,11 +150,12 @@ void Physics_OnBlockChanged(int x, int y, int z, BlockID old, BlockID now) {
 	}
 	index = World_Pack(x, y, z);
 
+	/* User can place/delete blocks over ID 256 */
 	if (now == BLOCK_AIR) {
-		handler = Physics.OnDelete[old];
+		handler = Physics.OnDelete[(BlockRaw)old];
 		if (handler) handler(index, old);
 	} else {
-		handler = Physics.OnPlace[now];
+		handler = Physics.OnPlace[(BlockRaw)now];
 		if (handler) handler(index, now);
 	}
 	Physics_ActivateNeighbours(x, y, z, index);

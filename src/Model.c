@@ -50,8 +50,8 @@ void Model_Init(struct Model* model) {
 	model->nameScale   = 1.0f;
 	model->armX = 6; model->armY = 12;
 
-	model->GetTransform     = Model_GetTransform;
-	model->DrawArm          = Model_NullFunc;
+	model->GetTransform = Model_GetTransform;
+	model->DrawArm      = Model_NullFunc;
 }
 
 cc_bool Model_ShouldRender(struct Entity* entity) {
