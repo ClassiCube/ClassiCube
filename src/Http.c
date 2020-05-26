@@ -689,11 +689,14 @@ typedef void     (APIENTRY *FP_curl_easy_cleanup)(CURL* c);    static FP_curl_ea
 typedef const char* (APIENTRY *FP_curl_easy_strerror)(CURLcode res);        static FP_curl_easy_strerror _curl_easy_strerror;
 typedef void     (APIENTRY *FP_curl_slist_free_all)(struct curl_slist* l);  static FP_curl_slist_free_all _curl_slist_free_all;
 typedef struct curl_slist* (APIENTRY *FP_curl_slist_append)(struct curl_slist* l, const char* v); static FP_curl_slist_append _curl_slist_append;
+/* End of curl headers */
 
 #if defined CC_BUILD_WIN
 static const String curlLib = String_FromConst("libcurl.dll");
 #elif defined CC_BUILD_OSX
 static const String curlLib = String_FromConst("/usr/lib/libcurl.dylib");
+#elif defined CC_BUILD_OPENBSD
+static const String curlLib = String_FromConst("libcurl.so.25.17");
 #else
 static const String curlLib = String_FromConst("libcurl.so.4");
 #endif
