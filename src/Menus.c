@@ -202,6 +202,7 @@ static void Menu_SwitchKeysOther(void* a, void* b)        { OtherKeyBindingsScre
 static void Menu_SwitchKeysMouse(void* a, void* b)        { MouseKeyBindingsScreen_Show(); }
 
 static void Menu_SwitchMisc(void* a, void* b)      { MiscOptionsScreen_Show(); }
+static void Menu_SwitchChat(void* a, void* b)      { ChatOptionsScreen_Show(); }
 static void Menu_SwitchGui(void* a, void* b)       { GuiOptionsScreen_Show(); }
 static void Menu_SwitchGfx(void* a, void* b)       { GraphicsOptionsScreen_Show(); }
 static void Menu_SwitchHacks(void* a, void* b)     { HacksSettingsScreen_Show(); }
@@ -574,34 +575,36 @@ static struct OptionsGroupScreen {
 	Screen_Body
 	int selectedI;
 	struct FontDesc textFont;
-	struct ButtonWidget btns[7];
+	struct ButtonWidget btns[8];
 	struct TextWidget desc;	
 	struct ButtonWidget done;	
 } OptionsGroupScreen;
 
-static struct Widget* optGroups_widgets[9] = {
+static struct Widget* optGroups_widgets[10] = {
 	(struct Widget*)&OptionsGroupScreen.btns[0], (struct Widget*)&OptionsGroupScreen.btns[1],
 	(struct Widget*)&OptionsGroupScreen.btns[2], (struct Widget*)&OptionsGroupScreen.btns[3],
 	(struct Widget*)&OptionsGroupScreen.btns[4], (struct Widget*)&OptionsGroupScreen.btns[5],
-	(struct Widget*)&OptionsGroupScreen.btns[6], (struct Widget*)&OptionsGroupScreen.desc,
-	(struct Widget*)&OptionsGroupScreen.done
+	(struct Widget*)&OptionsGroupScreen.btns[6], (struct Widget*)&OptionsGroupScreen.btns[7],
+	(struct Widget*)&OptionsGroupScreen.desc,    (struct Widget*)&OptionsGroupScreen.done
 };
-#define OPTGROUPS_MAX_VERTICES (7 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX + BUTTONWIDGET_MAX)
+#define OPTGROUPS_MAX_VERTICES (8 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX + BUTTONWIDGET_MAX)
 
-static const char* const optsGroup_descs[7] = {
+static const char* const optsGroup_descs[8] = {
 	"&eMusic/Sound, view bobbing, and more",
-	"&eChat options, gui scale, font settings, and more",
+	"&eGui scale, font settings, and more",
 	"&eFPS limit, view distance, entity names/shadows",
 	"&eSet key bindings, bind keys to act as mouse clicks",
+	"&eChat options",
 	"&eHacks allowed, jump settings, and more",
 	"&eEnv colours, water level, weather, and more",
 	"&eSettings for resembling the original classic",
 };
-static const struct SimpleButtonDesc optsGroup_btns[7] = {
+static const struct SimpleButtonDesc optsGroup_btns[8] = {
 	{ -160, -100, "Misc options...",      Menu_SwitchMisc       },
 	{ -160,  -50, "Gui options...",       Menu_SwitchGui        },
 	{ -160,    0, "Graphics options...",  Menu_SwitchGfx        },
 	{ -160,   50, "Controls...",          Menu_SwitchKeysNormal },
+	{  160, -100, "Chat options...",      Menu_SwitchChat       },
 	{  160,  -50, "Hacks settings...",    Menu_SwitchHacks      },
 	{  160,    0, "Env settings...",      Menu_SwitchEnv        },
 	{  160,   50, "Nostalgia options...", Menu_SwitchNostalgia  }
@@ -609,7 +612,7 @@ static const struct SimpleButtonDesc optsGroup_btns[7] = {
 
 static void OptionsGroupScreen_CheckHacksAllowed(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
-	s->btns[5].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
+	s->btns[6].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
 	s->dirty = true;
 }
 
@@ -631,7 +634,7 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	Menu_MakeTitleFont(&titleFont);
 	Menu_MakeBodyFont(&s->textFont);
 
-	Menu_SetButtons(s->btns, &titleFont, optsGroup_btns, 7);
+	Menu_SetButtons(s->btns, &titleFont, optsGroup_btns, 8);
 	ButtonWidget_SetConst(&s->done, "Done", &titleFont);
 
 	if (s->selectedI >= 0) OptionsGroupScreen_UpdateDesc(s);
@@ -648,7 +651,7 @@ static void OptionsGroupScreen_Init(void* screen) {
 	s->selectedI   = -1;
 	s->maxVertices = OPTGROUPS_MAX_VERTICES;
 
-	Menu_Buttons(s,  s->btns, 300, optsGroup_btns, 7);
+	Menu_Buttons(s,  s->btns, 300, optsGroup_btns, 8);
 	TextWidget_Make(&s->desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 	Menu_MakeBack(&s->done,   Menu_SwitchPause);
 }
@@ -2582,6 +2585,51 @@ void GraphicsOptionsScreen_Show(void) {
 
 
 /*########################################################################################################################*
+*----------------------------------------------------ChatOptionsScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+static void ChatOptionsScreen_SetScale(const String* v, float* target, const char* optKey) {
+	*target = Menu_Float(v);
+	Options_Set(optKey, v);
+	Gui_RefreshChat();
+}
+
+static void ChatOptionsScreen_GetClickable(String* v) { Menu_GetBool(v, Gui_ClickableChat); }
+static void ChatOptionsScreen_SetClickable(const String* v) { Gui_ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
+
+static void ChatOptionsScreen_GetChatScale(String* v) { String_AppendFloat(v, Game_RawChatScale, 1); }
+static void ChatOptionsScreen_SetChatScale(const String* v) { ChatOptionsScreen_SetScale(v, &Game_RawChatScale, OPT_CHAT_SCALE); }
+
+static void ChatOptionsScreen_GetChatlines(String* v) { String_AppendInt(v, Gui_Chatlines); }
+static void ChatOptionsScreen_SetChatlines(const String* v) {
+	Gui_Chatlines = Menu_Int(v);
+	ChatScreen_SetChatlines(Gui_Chatlines);
+	Options_Set(OPT_CHATLINES, v);
+}
+
+static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
+	static const struct MenuOptionDesc buttons[3] = {
+		{ -1,  0, "Chat scale",         MenuOptionsScreen_Input,
+			ChatOptionsScreen_GetChatScale, ChatOptionsScreen_SetChatScale },
+		{ -1, 50, "Chat lines",         MenuOptionsScreen_Input,
+			ChatOptionsScreen_GetChatlines, ChatOptionsScreen_SetChatlines },
+	
+		{  1, 50, "Clickable chat",     MenuOptionsScreen_Bool,
+			ChatOptionsScreen_GetClickable, ChatOptionsScreen_SetClickable }
+	};
+
+	s->numWidgets = 3 + MENUOPTIONS_CORE_WIDGETS;
+	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+}
+
+void ChatOptionsScreen_Show(void) {
+	static struct MenuInputDesc descs[4];
+	MenuInput_Float(descs[0], 0.25f, 4.00f,  1);
+	MenuInput_Int(descs[1],       0,    30, 10);
+	MenuOptionsScreen_Show(descs, NULL, 0, ChatOptionsScreen_InitWidgets);
+}
+
+
+/*########################################################################################################################*
 *----------------------------------------------------GuiOptionsScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 static void GuiOptionsScreen_GetShadows(String* v) { Menu_GetBool(v, Drawer2D_BlackTextShadows); }
@@ -2593,33 +2641,14 @@ static void GuiOptionsScreen_SetShadows(const String* v) {
 static void GuiOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Gui_ShowFPS); }
 static void GuiOptionsScreen_SetShowFPS(const String* v) { Gui_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
-static void GuiOptionsScreen_SetScale(const String* v, float* target, const char* optKey) {
-	*target = Menu_Float(v);
-	Options_Set(optKey, v);
-	Gui_RefreshChat();
-}
-
 static void GuiOptionsScreen_GetHotbar(String* v) { String_AppendFloat(v, Game_RawHotbarScale, 1); }
-static void GuiOptionsScreen_SetHotbar(const String* v) { GuiOptionsScreen_SetScale(v, &Game_RawHotbarScale, OPT_HOTBAR_SCALE); }
+static void GuiOptionsScreen_SetHotbar(const String* v) { ChatOptionsScreen_SetScale(v, &Game_RawHotbarScale, OPT_HOTBAR_SCALE); }
 
 static void GuiOptionsScreen_GetInventory(String* v) { String_AppendFloat(v, Game_RawInventoryScale, 1); }
-static void GuiOptionsScreen_SetInventory(const String* v) { GuiOptionsScreen_SetScale(v, &Game_RawInventoryScale, OPT_INVENTORY_SCALE); }
+static void GuiOptionsScreen_SetInventory(const String* v) { ChatOptionsScreen_SetScale(v, &Game_RawInventoryScale, OPT_INVENTORY_SCALE); }
 
 static void GuiOptionsScreen_GetTabAuto(String* v) { Menu_GetBool(v, Gui_TabAutocomplete); }
 static void GuiOptionsScreen_SetTabAuto(const String* v) { Gui_TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
-
-static void GuiOptionsScreen_GetClickable(String* v) { Menu_GetBool(v, Gui_ClickableChat); }
-static void GuiOptionsScreen_SetClickable(const String* v) { Gui_ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
-
-static void GuiOptionsScreen_GetChatScale(String* v) { String_AppendFloat(v, Game_RawChatScale, 1); }
-static void GuiOptionsScreen_SetChatScale(const String* v) { GuiOptionsScreen_SetScale(v, &Game_RawChatScale, OPT_CHAT_SCALE); }
-
-static void GuiOptionsScreen_GetChatlines(String* v) { String_AppendInt(v, Gui_Chatlines); }
-static void GuiOptionsScreen_SetChatlines(const String* v) {
-	Gui_Chatlines = Menu_Int(v);
-	ChatScreen_SetChatlines(Gui_Chatlines);
-	Options_Set(OPT_CHATLINES, v);
-}
 
 static void GuiOptionsScreen_GetUseFont(String* v) { Menu_GetBool(v, !Drawer2D_BitmappedText); }
 static void GuiOptionsScreen_SetUseFont(const String* v) {
@@ -2628,41 +2657,32 @@ static void GuiOptionsScreen_SetUseFont(const String* v) {
 }
 
 static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[10] = {
-		{ -1, -150, "Black text shadows", MenuOptionsScreen_Bool,
+	static const struct MenuOptionDesc buttons[7] = {
+		{ -1, -100, "Black text shadows", MenuOptionsScreen_Bool,
 			GuiOptionsScreen_GetShadows,   GuiOptionsScreen_SetShadows },
-		{ -1, -100, "Show FPS",           MenuOptionsScreen_Bool,
+		{ -1,  -50, "Show FPS",           MenuOptionsScreen_Bool,
 			GuiOptionsScreen_GetShowFPS,   GuiOptionsScreen_SetShowFPS },
-		{ -1,  -50, "Hotbar scale",       MenuOptionsScreen_Input,
+		{ -1,    0, "Hotbar scale",       MenuOptionsScreen_Input,
 			GuiOptionsScreen_GetHotbar,    GuiOptionsScreen_SetHotbar },
-		{ -1,    0, "Inventory scale",    MenuOptionsScreen_Input,
+		{ -1,   50, "Inventory scale",    MenuOptionsScreen_Input,
 			GuiOptionsScreen_GetInventory, GuiOptionsScreen_SetInventory },
-		{ -1,   50, "Tab auto-complete",  MenuOptionsScreen_Bool,
+
+		{ 1,  -50, "Tab auto-complete",  MenuOptionsScreen_Bool,
 			GuiOptionsScreen_GetTabAuto,   GuiOptionsScreen_SetTabAuto },
-	
-		{ 1, -150, "Clickable chat",     MenuOptionsScreen_Bool,
-			GuiOptionsScreen_GetClickable, GuiOptionsScreen_SetClickable },
-		{ 1, -100, "Chat scale",         MenuOptionsScreen_Input,
-			GuiOptionsScreen_GetChatScale, GuiOptionsScreen_SetChatScale },
-		{ 1,  -50, "Chat lines",         MenuOptionsScreen_Input,
-			GuiOptionsScreen_GetChatlines, GuiOptionsScreen_SetChatlines },
 		{ 1,    0, "Use system font",    MenuOptionsScreen_Bool,
 			GuiOptionsScreen_GetUseFont,   GuiOptionsScreen_SetUseFont },
 		{ 1,   50, "Select system font", Menu_SwitchFont,
 			NULL,                          NULL }
 	};
 
-	s->numWidgets = 10 + MENUOPTIONS_CORE_WIDGETS;
+	s->numWidgets = 7 + MENUOPTIONS_CORE_WIDGETS;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
 void GuiOptionsScreen_Show(void) {
-	static struct MenuInputDesc descs[11];
-	MenuInput_Float(descs[2], 0.25f, 4.00f,  1);
-	MenuInput_Float(descs[3], 0.25f, 4.00f,  1);
-	MenuInput_Float(descs[6], 0.25f, 4.00f,  1);
-	MenuInput_Int(descs[7],       0,    30, 10);
-
+	static struct MenuInputDesc descs[8];
+	MenuInput_Float(descs[2], 0.25f, 4.00f, 1);
+	MenuInput_Float(descs[3], 0.25f, 4.00f, 1);
 	MenuOptionsScreen_Show(descs, NULL, 0, GuiOptionsScreen_InitWidgets);
 }
 
