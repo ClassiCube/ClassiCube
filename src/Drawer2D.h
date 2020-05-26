@@ -55,7 +55,6 @@ CC_API void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src);
 /* Fills the area with the given colour. */
 CC_API void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height);
 
-void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, BitmapCol col);
 /* Draws text using the given font at the given coordinates. */
 CC_API void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y);
 /* Returns how wide the given text would be when drawn. */

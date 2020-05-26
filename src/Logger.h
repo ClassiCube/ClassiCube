@@ -1,5 +1,5 @@
-#ifndef CC_ERRORHANDLER_H
-#define CC_ERRORHANDLER_H
+#ifndef CC_LOGGER_H
+#define CC_LOGGER_H
 #include "String.h"
 /* Support methods for logging errors.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
@@ -12,20 +12,24 @@ typedef void (*Logger_DoWarn)(const String* msg);
 extern Logger_DoWarn Logger_WarnFunc;
 /* The title shown for warning dialogs. */
 extern const char* Logger_DialogTitle;
+/* Shows a warning message box with the given message. */
 void Logger_DialogWarn(const String* msg);
 
-/* Informs the user about a non-fatal error, with a message of form: "Error [result] when [place] */
+/* Informs the user about a non-fatal error. */
+/* Format: "Error [result] when [place]" */
 void Logger_SimpleWarn(cc_result res, const char* place);
-/* Informs the user about a non-fatal error, with a message of form: "Error [result] when [place] '[path]' */
+/* Informs the user about a non-fatal error. */
+/* Format: "Error [result] when [place] '[path]'" */
 void Logger_SimpleWarn2(cc_result res, const char* place, const String* path);
-/* Informs the user about a non-fatal error, with a message of either: 
-"Error [error desc] ([result]) when [place] or "Error [result] when [place] */
+/* Informs the user about a non-fatal error, with an optional meaning message. */
+/* Format: "Error [result] when [place]  \n  Error meaning: [desc]" */
 void Logger_SysWarn(cc_result res, const char* place, Logger_DescribeError describeErr);
-/* Informs the user about a non-fatal error, with a message of either:
-"Error [error desc] ([result]) when [place] 'path' or "Error [result] when [place] 'path' */
+/* Informs the user about a non-fatal error, with an optional meaning message. */
+/* Format: "Error [result] when [place] '[path]'  \n  Error meaning: [desc]" */
 void Logger_SysWarn2(cc_result res, const char* place, const String* path, Logger_DescribeError describeErr);
 
 /* Shows a warning for a failed DynamicLib_Load2/Get2 call. */
+/* Format: "Error [place] '[path]'  \n  Error meaning: [desc]" */
 void Logger_DynamicLibWarn(const char* place, const String* path);
 /* Shortcut for Logger_SysWarn with Platform_DescribeError */
 void Logger_Warn(cc_result res, const char* place);

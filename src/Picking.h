@@ -29,8 +29,11 @@ struct RayTracer {
 	Face Closest;        /* Face of the intersected block that is closet to the player */
 };
 
+/* Marks the given ray tracer as having no result. */
 void RayTracer_SetInvalid(struct RayTracer* t);
+/* Initialises the given ray tracer with the given origin and direction. */
 void RayTracer_Init(struct RayTracer* t, const Vec3* origin, const Vec3* dir);
+/* Moves to next grid cell position on the ray. */
 void RayTracer_Step(struct RayTracer* t);
 
 /* Determines the picked block based on the given origin and direction vector.

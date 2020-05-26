@@ -415,7 +415,8 @@ void Drawer2D_ReducePadding_Height(int* height, int point, int scale) {
 	*height -= padding * 2;
 }
 
-void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, BitmapCol col) {
+/* Quickly fills the given box region */
+static void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, BitmapCol col) {
 	BitmapCol* row;
 	int xx, yy;
 
