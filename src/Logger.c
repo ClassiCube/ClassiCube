@@ -61,8 +61,8 @@ void Logger_SimpleWarn2(cc_result res, const char* place, const String* path) {
 	Logger_WarnFunc(&msg);
 }
 
-/* Returns a description for ClassiCube specific error codes */
-static const char* Logger_GetCCErrorDesc(cc_result res) {
+/* Returns a description for some ClassiCube specific error codes */
+static const char* GetCCErrorDesc(cc_result res) {
 	switch (res) {
 	case ERR_END_OF_STREAM:    return "End of stream";
 	case ERR_NOT_SUPPORTED:    return "Operation not supported";
@@ -77,28 +77,6 @@ static const char* Logger_GetCCErrorDesc(cc_result res) {
 	case WAV_ERR_DATA_TYPE:   return "Unsupported WAV audio format";
 	case WAV_ERR_NO_DATA:     return "No audio in WAV";
 
-			/* Vorbis audio decoding errors */ /*
-			VORBIS_ERR_HEADER,
-			VORBIS_ERR_WRONG_HEADER,
-			VORBIS_ERR_FRAMING,
-			VORBIS_ERR_VERSION, 
-			VORBIS_ERR_BLOCKSIZE, 
-			VORBIS_ERR_CHANS,
-			VORBIS_ERR_TIME_TYPE,
-			VORBIS_ERR_FLOOR_TYPE, 
-			VORBIS_ERR_RESIDUE_TYPE,
-			VORBIS_ERR_MAPPING_TYPE, 
-			VORBIS_ERR_MODE_TYPE,
-			VORBIS_ERR_CODEBOOK_SYNC, 
-			VORBIS_ERR_CODEBOOK_ENTRY, 
-			VORBIS_ERR_CODEBOOK_LOOKUP,
-			VORBIS_ERR_MODE_WINDOW, 
-			VORBIS_ERR_MODE_TRANSFORM,
-			VORBIS_ERR_MAPPING_CHANS, 
-			VORBIS_ERR_MAPPING_RESERVED,
-			VORBIS_ERR_FRAME_TYPE,
-
-			/* PNG image decoding errors */
 	case PNG_ERR_INVALID_SIG:      return "Only PNG images supported";
 	case PNG_ERR_INVALID_HDR_SIZE: return "Invalid PNG header size";
 	case PNG_ERR_TOO_WIDE:         return "PNG image too wide";
@@ -114,46 +92,6 @@ static const char* Logger_GetCCErrorDesc(cc_result res) {
 	case PNG_ERR_NO_DATA:          return "No image in PNG";
 	case PNG_ERR_INVALID_SCANLINE: return "Invalid PNG scanline type";
 
-			/* ZIP archive decoding errors */ /*
-			ZIP_ERR_TOO_MANY_ENTRIES, 
-			ZIP_ERR_SEEK_END_OF_CENTRAL_DIR, 
-			ZIP_ERR_NO_END_OF_CENTRAL_DIR,
-			ZIP_ERR_SEEK_CENTRAL_DIR, 
-			ZIP_ERR_INVALID_CENTRAL_DIR,
-			ZIP_ERR_SEEK_LOCAL_DIR, 
-			ZIP_ERR_INVALID_LOCAL_DIR, 
-			ZIP_ERR_FILENAME_LEN,
-			/* GZIP header decoding errors */ /*
-			GZIP_ERR_HEADER1, 
-			GZIP_ERR_HEADER2, 
-			GZIP_ERR_METHOD, 
-			GZIP_ERR_FLAGS,
-			/* ZLIB header decoding errors */ /*
-			ZLIB_ERR_METHOD, 
-			ZLIB_ERR_WINDOW_SIZE,
-			ZLIB_ERR_FLAGS,
-			/* FCM map decoding errors */ /*
-			FCM_ERR_IDENTIFIER, 
-			FCM_ERR_REVISION,
-			/* LVL map decoding errors */ /*
-			LVL_ERR_VERSION,
-			/* DAT map decoding errors */ /*
-			DAT_ERR_IDENTIFIER,
-			DAT_ERR_VERSION, 
-			DAT_ERR_JIDENTIFIER,
-			DAT_ERR_JVERSION,
-			DAT_ERR_ROOT_TYPE,
-			DAT_ERR_JSTRING_LEN,
-			DAT_ERR_JFIELD_CLASS_NAME,
-			DAT_ERR_JCLASS_TYPE, 
-			DAT_ERR_JCLASS_FIELDS,
-			DAT_ERR_JCLASS_ANNOTATION,
-			DAT_ERR_JOBJECT_TYPE, 
-			DAT_ERR_JARRAY_TYPE,
-			DAT_ERR_JARRAY_CONTENT,
-			*/
-
-	case NBT_ERR_INT32S:    return "I32_Array NBT tag unsupported";
 	case NBT_ERR_UNKNOWN:   return "Unknown NBT tag type";
 	case CW_ERR_ROOT_TAG:   return "Invalid root NBT tag";
 	case CW_ERR_STRING_LEN: return "NBT string too long";
@@ -162,12 +100,12 @@ static const char* Logger_GetCCErrorDesc(cc_result res) {
 }
 
 /* Appends more detailed information about an error if possible */
-static void Logger_AppendErrorDesc(String* msg, cc_result res, Logger_DescribeError describeErr) {
+static void AppendErrorDesc(String* msg, cc_result res, Logger_DescribeError describeErr) {
 	const char* cc_err;
 	String err; char errBuffer[128];
 	String_InitArray(err, errBuffer);
 
-	cc_err = Logger_GetCCErrorDesc(res);
+	cc_err = GetCCErrorDesc(res);
 	if (cc_err) {
 		String_Format1(msg, "\n  Error meaning: %c", cc_err);
 	} else if (describeErr(res, &err)) {
@@ -180,7 +118,7 @@ void Logger_SysWarn(cc_result res, const char* place, Logger_DescribeError descr
 	String_InitArray(msg, msgBuffer);
 
 	String_Format2(&msg, "Error %h when %c", &res, place);
-	Logger_AppendErrorDesc(&msg, res, describeErr);
+	AppendErrorDesc(&msg, res, describeErr);
 	Logger_WarnFunc(&msg);
 }
 
@@ -189,7 +127,7 @@ void Logger_SysWarn2(cc_result res, const char* place, const String* path, Logge
 	String_InitArray(msg, msgBuffer);
 
 	String_Format3(&msg, "Error %h when %c '%s'", &res, place, path);
-	Logger_AppendErrorDesc(&msg, res, describeErr);
+	AppendErrorDesc(&msg, res, describeErr);
 	Logger_WarnFunc(&msg);
 }
 

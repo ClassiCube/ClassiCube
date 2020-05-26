@@ -578,7 +578,7 @@ static void SortMapChunks(int left, int right) {
 	}
 }
 
-static void MapRenderer_UpdateSortOrder(void) {
+static void UpdateSortOrder(void) {
 	struct ChunkInfo* info;
 	IVec3 pos;
 	int i, dx, dy, dz;
@@ -620,7 +620,7 @@ static void MapRenderer_UpdateSortOrder(void) {
 
 void MapRenderer_Update(double delta) {
 	if (!mapChunks) return;
-	MapRenderer_UpdateSortOrder();
+	UpdateSortOrder();
 	UpdateChunks(delta);
 }
 
