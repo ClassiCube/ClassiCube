@@ -60,12 +60,12 @@ static char   logPathBuffer[FILENAME_SIZE];
 static String logPath = String_FromArray(logPathBuffer);
 
 static struct Stream logStream;
-static struct DateTime lastLogDate;
+static int lastLogDay, lastLogMonth, lastLogYear;
 
 /* Resets log name to empty and resets last log date */
 static void ResetLogFile(void) {
-	logName.length   = 0;
-	lastLogDate.year = -1234;
+	logName.length = 0;
+	lastLogYear    = -123;
 }
 
 /* Closes handle to the chat log file */
@@ -101,8 +101,8 @@ void Chat_SetLogName(const String* name) {
 }
 
 void Chat_DisableLogging(void) {
-	Chat_Logging     = false;
-	lastLogDate.year = -5678;
+	Chat_Logging = false;
+	lastLogYear  = -321;
 	Chat_AddRaw("&cDisabling chat logging");
 	CloseLogFile();
 }
@@ -146,12 +146,12 @@ static void AppendChatLog(const String* text) {
 	if (!logName.length || !Chat_Logging) return;
 	DateTime_CurrentLocal(&now);
 
-	if (now.day != lastLogDate.day || now.month != lastLogDate.month || now.year != lastLogDate.year) {
+	if (now.day != lastLogDay || now.month != lastLogMonth || now.year != lastLogYear) {
 		CloseLogFile();
 		OpenChatLog(&now);
 	}
 
-	lastLogDate = now;
+	lastLogDay = now.day; lastLogMonth = now.month; lastLogYear = now.year;
 	if (!logStream.Meta.File) return;
 
 	/* [HH:mm:ss] text */

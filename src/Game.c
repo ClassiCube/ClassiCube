@@ -342,7 +342,7 @@ static void LoadOptions(void) {
 	}*/
 }
 
-#if defined CC_BUILD_WEB
+#ifdef CC_BUILD_MINFILES
 static void LoadPlugins(void) { }
 #else
 static void LoadPlugin(const String* path, void* obj) {
@@ -541,7 +541,7 @@ static void PerformScheduledTasks(double time) {
 }
 
 void Game_TakeScreenshot(void) {
-#ifndef CC_BUILD_WEB
+#ifndef CC_BUILD_MINFILES
 	String filename; char fileBuffer[STRING_SIZE];
 	String path;     char pathBuffer[FILENAME_SIZE];
 	struct DateTime now;
