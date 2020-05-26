@@ -693,20 +693,28 @@ typedef struct curl_slist* (APIENTRY *FP_curl_slist_append)(struct curl_slist* l
 
 #if defined CC_BUILD_WIN
 static const String curlLib = String_FromConst("libcurl.dll");
+static const String curlAlt = String_FromConst("curl.dll");
 #elif defined CC_BUILD_OSX
-static const String curlLib = String_FromConst("/usr/lib/libcurl.dylib");
+static const String curlLib = String_FromConst("/usr/lib/libcurl.4.dylib");
+static const String curlAlt = String_FromConst("/usr/lib/libcurl.dylib");
 #elif defined CC_BUILD_OPENBSD
 static const String curlLib = String_FromConst("libcurl.so.25.17");
+static const String curlAlt = String_FromConst("libcurl.so.25.16");
 #else
 static const String curlLib = String_FromConst("libcurl.so.4");
+static const String curlAlt = String_FromConst("libcurl.so.3");
 #endif
 
 #define QUOTE(x) #x
 #define LoadCurlFunc(sym) (_ ## sym = (FP_ ## sym)DynamicLib_Get2(lib, QUOTE(sym)))
 static cc_bool LoadCurlFuncs(void) {
 	void* lib = DynamicLib_Load2(&curlLib);
-	if (!lib) { Logger_DynamicLibWarn("loading", &curlLib); return false; }
+	if (!lib) { 
+		Logger_DynamicLibWarn("loading", &curlLib);
 
+		lib = DynamicLib_Load2(&curlAlt);
+		if (!lib) { Logger_DynamicLibWarn("loading", &curlAlt); return false; }
+	}
 	/* Non-essential function missing in older curl versions */
 	LoadCurlFunc(curl_easy_strerror);
 
@@ -718,7 +726,7 @@ static cc_bool LoadCurlFuncs(void) {
 }
 
 static CURL* curl;
-static cc_bool curlInited;
+static cc_bool curlSupported;
 
 cc_bool Http_DescribeError(cc_result res, String* dst) {
 	const char* err;
@@ -732,13 +740,16 @@ cc_bool Http_DescribeError(cc_result res, String* dst) {
 }
 
 static void Http_SysInit(void) {
-	if (!LoadCurlFuncs()) return;
-	CURLcode res = _curl_global_init(CURL_GLOBAL_DEFAULT);
-	if (res) Logger_Abort2(res, "Failed to init curl");
+	static const String msg = String_FromConst("Failed to init libcurl. All HTTP requests will therefore fail.");
+	CURLcode res;
+
+	if (!LoadCurlFuncs()) { Logger_WarnFunc(&msg); return; }
+	res = _curl_global_init(CURL_GLOBAL_DEFAULT);
+	if (res) { Logger_SimpleWarn(res, "initing curl"); return; }
 
 	curl = _curl_easy_init();
-	if (!curl) Logger_Abort("Failed to init easy curl");
-	curlInited = true;
+	if (!curl) { Logger_SimpleWarn(res, "initing curl_easy"); return; }
+	curlSupported = true;
 }
 
 static struct curl_slist* headers_list;
@@ -793,7 +804,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	void* post_data = req->data;
 	CURLcode res;
 
-	if (!curlInited) {
+	if (!curlSupported) {
 		HttpRequest_Free(req);
 		return ERR_NOT_SUPPORTED;
 	}
@@ -833,7 +844,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 }
 
 static void Http_SysFree(void) {
-	if (!curlInited) return;
+	if (!curlSupported) return;
 	_curl_easy_cleanup(curl);
 	_curl_global_cleanup();
 }
