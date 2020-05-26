@@ -49,6 +49,8 @@ CC_API void Commands_Register(struct ChatCommand* cmd);
 /* Sets the name of log file (no .txt, so e.g. just "singleplayer") */
 /* NOTE: This can only be set once. */
 void Chat_SetLogName(const String* name);
+/* Disables chat logging and closes currently open chat log file. */
+void Chat_DisableLogging(void);
 /* Sends a chat message, raising ChatEvents.ChatSending event. */
 /* NOTE: If logUsage is true, can press 'up' in chat input menu later to retype this. */
 /* NOTE: /client is always interpreted as client-side commands. */

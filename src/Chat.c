@@ -50,6 +50,7 @@ static void AppendChatLogTime(void) {
 static void ResetLogFile(void) { }
 static void CloseLogFile(void) { }
 void Chat_SetLogName(const String* name) { }
+void Chat_DisableLogging(void) { }
 static void OpenChatLog(struct DateTime* now) { }
 static void AppendChatLog(const String* text) { }
 #else
@@ -61,12 +62,10 @@ static String logPath = String_FromArray(logPathBuffer);
 static struct Stream logStream;
 static struct DateTime lastLogDate;
 
-/* Resets log name to empty and last log date to 0 */
+/* Resets log name to empty and resets last log date */
 static void ResetLogFile(void) {
-	logName.length = 0;
-	lastLogDate.day   = 0;
-	lastLogDate.month = 0;
-	lastLogDate.year  = 0;
+	logName.length   = 0;
+	lastLogDate.year = -1234;
 }
 
 /* Closes handle to the chat log file */
@@ -101,15 +100,17 @@ void Chat_SetLogName(const String* name) {
 	}
 }
 
-static void DisableChatLogging(void) {
-	Chat_Logging = false;
+void Chat_DisableLogging(void) {
+	Chat_Logging     = false;
+	lastLogDate.year = -5678;
 	Chat_AddRaw("&cDisabling chat logging");
+	CloseLogFile();
 }
 
 static void OpenChatLog(struct DateTime* now) {
 	cc_result res;
 	int i;
-	if (!Utils_EnsureDirectory("logs")) { DisableChatLogging(); return; }
+	if (!Utils_EnsureDirectory("logs")) { Chat_DisableLogging(); return; }
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
 	for (i = 0; i < 20; i++) {
@@ -124,7 +125,7 @@ static void OpenChatLog(struct DateTime* now) {
 
 		res = Stream_AppendFile(&logStream, &logPath);
 		if (res && res != ReturnCode_FileShareViolation) {
-			DisableChatLogging();
+			Chat_DisableLogging();
 			Logger_Warn2(res, "appending to", &logPath);
 			return;
 		}
@@ -133,8 +134,7 @@ static void OpenChatLog(struct DateTime* now) {
 		return;
 	}
 
-	logStream.Meta.File = 0;
-	DisableChatLogging();
+	Chat_DisableLogging();
 	Chat_Add1("&cFailed to open a chat log file after %i tries, giving up", &i);	
 }
 
@@ -161,7 +161,7 @@ static void AppendChatLog(const String* text) {
 
 	res = Stream_WriteLine(&logStream, &str);
 	if (!res) return;
-	DisableChatLogging();
+	Chat_DisableLogging();
 	Logger_Warn2(res, "writing to", &logPath);
 }
 #endif

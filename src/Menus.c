@@ -2593,9 +2593,6 @@ static void ChatOptionsScreen_SetScale(const String* v, float* target, const cha
 	Gui_RefreshChat();
 }
 
-static void ChatOptionsScreen_GetClickable(String* v) { Menu_GetBool(v, Gui_ClickableChat); }
-static void ChatOptionsScreen_SetClickable(const String* v) { Gui_ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
-
 static void ChatOptionsScreen_GetChatScale(String* v) { String_AppendFloat(v, Game_RawChatScale, 1); }
 static void ChatOptionsScreen_SetChatScale(const String* v) { ChatOptionsScreen_SetScale(v, &Game_RawChatScale, OPT_CHAT_SCALE); }
 
@@ -2606,23 +2603,34 @@ static void ChatOptionsScreen_SetChatlines(const String* v) {
 	Options_Set(OPT_CHATLINES, v);
 }
 
+static void ChatOptionsScreen_GetLogging(String* v) { Menu_GetBool(v, Chat_Logging); }
+static void ChatOptionsScreen_SetLogging(const String* v) { 
+	Chat_Logging = Menu_SetBool(v, OPT_CHAT_LOGGING); 
+	if (!Chat_Logging) Chat_DisableLogging();
+}
+
+static void ChatOptionsScreen_GetClickable(String* v) { Menu_GetBool(v, Gui_ClickableChat); }
+static void ChatOptionsScreen_SetClickable(const String* v) { Gui_ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
+
 static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[3] = {
+	static const struct MenuOptionDesc buttons[4] = {
 		{ -1,  0, "Chat scale",         MenuOptionsScreen_Input,
 			ChatOptionsScreen_GetChatScale, ChatOptionsScreen_SetChatScale },
 		{ -1, 50, "Chat lines",         MenuOptionsScreen_Input,
 			ChatOptionsScreen_GetChatlines, ChatOptionsScreen_SetChatlines },
-	
+
+		{  1,  0, "Log to disc",        MenuOptionsScreen_Bool,
+			ChatOptionsScreen_GetLogging,   ChatOptionsScreen_SetLogging },
 		{  1, 50, "Clickable chat",     MenuOptionsScreen_Bool,
 			ChatOptionsScreen_GetClickable, ChatOptionsScreen_SetClickable }
 	};
 
-	s->numWidgets = 3 + MENUOPTIONS_CORE_WIDGETS;
+	s->numWidgets = 4 + MENUOPTIONS_CORE_WIDGETS;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
 void ChatOptionsScreen_Show(void) {
-	static struct MenuInputDesc descs[4];
+	static struct MenuInputDesc descs[5];
 	MenuInput_Float(descs[0], 0.25f, 4.00f,  1);
 	MenuInput_Int(descs[1],       0,    30, 10);
 	MenuOptionsScreen_Show(descs, NULL, 0, ChatOptionsScreen_InitWidgets);
