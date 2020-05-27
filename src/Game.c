@@ -553,7 +553,7 @@ void Game_TakeScreenshot(void) {
 	DateTime_CurrentLocal(&now);
 
 	String_InitArray(filename, fileBuffer);
-	String_Format3(&filename, "screenshot_%p2-%p2-%p4", &now.day, &now.month, &now.year);
+	String_Format3(&filename, "screenshot_%p4-%p2-%p2", &now.year, &now.month, &now.day);
 	String_Format3(&filename, "-%p2-%p2-%p2.png", &now.hour, &now.minute, &now.second);
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "screenshots/%s", &filename);
