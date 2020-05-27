@@ -261,15 +261,6 @@ static struct ChatCommand* Commands_FindMatch(const String* cmdName) {
 	return match;
 }
 
-static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
-	struct ChatCommand* cmd = Commands_FindMatch(cmdName);
-	if (cmd && cmd->SingleplayerOnly && !Server.IsSinglePlayer) {
-		Chat_Add1("&e/client: \"&f%s&e\" can only be used in singleplayer.", cmdName);
-		return NULL;
-	}
-	return cmd;
-}
-
 static void Commands_PrintDefault(void) {
 	String str; char strBuffer[STRING_SIZE];
 	String name;
@@ -315,8 +306,14 @@ static void Commands_Execute(const String* input) {
 	if (!text.length) { Commands_PrintDefault(); return; }
 
 	count = String_UNSAFE_Split(&text, ' ', args, Array_Elems(args));
-	cmd   = Commands_GetMatch(&args[0]);
-	if (cmd) cmd->Execute(&args[1], count - 1);
+	cmd   = Commands_FindMatch(&args[0]);
+	if (!cmd) return;
+
+	if (cmd->SingleplayerOnly && !Server.IsSinglePlayer) {
+		Chat_Add1("&e/client: \"&f%s&e\" can only be used in singleplayer.", &args[0]);
+		return;
+	}
+	cmd->Execute(&args[1], count - 1);
 }
 
 
@@ -328,7 +325,7 @@ static void HelpCommand_Execute(const String* args, int argsCount) {
 	int i;
 
 	if (!argsCount) { Commands_PrintDefault(); return; }
-	cmd = Commands_GetMatch(&args[0]);
+	cmd = Commands_FindMatch(&args[0]);
 	if (!cmd) return;
 
 	for (i = 0; i < Array_Elems(cmd->Help); i++) {
