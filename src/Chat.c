@@ -233,10 +233,15 @@ void Commands_Register(struct ChatCommand* cmd) {
 	LinkedList_Add(cmd, cmds_head, cmds_tail);
 }
 
-static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
+static struct ChatCommand* Commands_FindMatch(const String* cmdName) {
+	struct ChatCommand* match = NULL;
 	struct ChatCommand* cmd;
 	String name;
-	struct ChatCommand* match = NULL;
+
+	for (cmd = cmds_head; cmd; cmd = cmd->next) {
+		name = String_FromReadonly(cmd->Name);
+		if (String_CaselessEquals(&name, cmdName)) return cmd;
+	}
 
 	for (cmd = cmds_head; cmd; cmd = cmd->next) {
 		name = String_FromReadonly(cmd->Name);
@@ -252,13 +257,17 @@ static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
 	if (!match) {
 		Chat_Add1("&e/client: Unrecognised command: \"&f%s&e\".", cmdName);
 		Chat_AddRaw("&e/client: Type &a/client &efor a list of commands.");
-		return NULL;
 	}
-	if (match->SingleplayerOnly && !Server.IsSinglePlayer) {
+	return match;
+}
+
+static struct ChatCommand* Commands_GetMatch(const String* cmdName) {
+	struct ChatCommand* cmd = Commands_FindMatch(cmdName);
+	if (cmd && cmd->SingleplayerOnly && !Server.IsSinglePlayer) {
 		Chat_Add1("&e/client: \"&f%s&e\" can only be used in singleplayer.", cmdName);
 		return NULL;
 	}
-	return match;
+	return cmd;
 }
 
 static void Commands_PrintDefault(void) {
