@@ -5,29 +5,6 @@
 #include "Stream.h"
 #include "GameStructs.h"
 
-#if defined CC_BUILD_WININET
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#ifndef UNICODE
-#define UNICODE
-#define _UNICODE
-#endif
-
-#ifdef UNICODE
-#define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, (Codepoint*)(src), (len) * 2)
-#else
-#define Platform_DecodeString(dst, src, len) String_DecodeCP1252(dst, (cc_uint8*)(src), len)
-#endif
-
-#include <windows.h>
-#include <wininet.h>
-#elif defined CC_BUILD_WEB
-/* Use fetch/XMLHttpRequest api for Emscripten */
-#include <emscripten/fetch.h>
-#endif
-
 void HttpRequest_Free(struct HttpRequest* request) {
 	Mem_Free(request->data);
 	request->data = NULL;
@@ -338,6 +315,9 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 *------------------------------------------------Emscripten implementation------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WEB
+/* Use fetch/XMLHttpRequest api for Emscripten */
+#include <emscripten/fetch.h>
+
 static void Http_SysInit(void) { }
 static void Http_SysFree(void) { }
 static void Http_DownloadAsync(struct HttpRequest* req);
@@ -457,198 +437,7 @@ static void Http_BufferExpanded(struct HttpRequest* req, cc_uint32 read) {
 	if (req->contentLength) http_curProgress = (int)(100.0f * req->size / req->contentLength);
 }
 
-#if defined CC_BUILD_WININET
-static HINTERNET hInternet;
-
-/* caches connections to web servers */
-struct HttpCacheEntry {
-	HINTERNET Handle; /* Native connection handle. */
-	String Address;   /* Address of server. (e.g. "classicube.net") */
-	cc_uint16 Port;   /* Port server is listening on. (e.g 80) */
-	cc_bool Https;    /* Whether HTTPS or just HTTP protocol. */
-	char _addressBuffer[STRING_SIZE + 1];
-};
-#define HTTP_CACHE_ENTRIES 10
-static struct HttpCacheEntry http_cache[HTTP_CACHE_ENTRIES];
-
-/* Splits up the components of a URL */
-static void HttpCache_MakeEntry(const String* url, struct HttpCacheEntry* entry, String* resource) {
-	String scheme, path, addr, name, port;
-	/* URL is of form [scheme]://[server name]:[server port]/[resource] */
-	int idx = String_IndexOfConst(url, "://");
-
-	scheme = idx == -1 ? String_Empty : String_UNSAFE_Substring(url,   0, idx);
-	path   = idx == -1 ? *url         : String_UNSAFE_SubstringAt(url, idx + 3);
-	entry->Https = String_CaselessEqualsConst(&scheme, "https");
-
-	String_UNSAFE_Separate(&path, '/', &addr, resource);
-	String_UNSAFE_Separate(&addr, ':', &name, &port);
-
-	String_InitArray_NT(entry->Address, entry->_addressBuffer);
-	String_Copy(&entry->Address, &name);
-	entry->Address.buffer[entry->Address.length] = '\0';
-
-	if (!Convert_ParseUInt16(&port, &entry->Port)) {
-		entry->Port = entry->Https ? 443 : 80;
-	}
-}
-
-/* Inserts entry into the cache at the given index */
-static cc_result HttpCache_Insert(int i, struct HttpCacheEntry* e) {
-	HINTERNET conn;
-	conn = InternetConnectA(hInternet, e->Address.buffer, e->Port, NULL, NULL, 
-				INTERNET_SERVICE_HTTP, e->Https ? INTERNET_FLAG_SECURE : 0, 0);
-	if (!conn) return GetLastError();
-
-	e->Handle     = conn;
-	http_cache[i] = *e;
-
-	/* otherwise address buffer points to stack buffer */
-	http_cache[i].Address.buffer = http_cache[i]._addressBuffer;
-	return 0;
-}
-
-/* Finds or inserts the given entry into the cache */
-static cc_result HttpCache_Lookup(struct HttpCacheEntry* e) {
-	struct HttpCacheEntry* c;
-	int i;
-
-	for (i = 0; i < HTTP_CACHE_ENTRIES; i++) {
-		c = &http_cache[i];
-		if (c->Https == e->Https && String_Equals(&c->Address, &e->Address) && c->Port == e->Port) {
-			e->Handle = c->Handle;
-			return 0;
-		}
-	}
-
-	for (i = 0; i < HTTP_CACHE_ENTRIES; i++) {
-		if (http_cache[i].Handle) continue;
-		return HttpCache_Insert(i, e);
-	}
-
-	/* TODO: Should we be consistent in which entry gets evicted? */
-	i = (cc_uint8)Stopwatch_Measure() % HTTP_CACHE_ENTRIES;
-	InternetCloseHandle(http_cache[i].Handle);
-	return HttpCache_Insert(i, e);
-}
-
-cc_bool Http_DescribeError(cc_result res, String* dst) {
-	TCHAR chars[600];
-	res = FormatMessage(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-					 GetModuleHandle(TEXT("wininet.dll")), res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, 600, NULL);
-	if (!res) return false;
-
-	Platform_DecodeString(dst, chars, res);
-	return true;
-}
-
-static void Http_SysInit(void) {
-	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
-	hInternet = InternetOpenA(GAME_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
-}
-
-static HINTERNET curReq;
-static void Http_AddHeader(const char* key, const String* value) {
-	String tmp; char tmpBuffer[1024];
-	String_InitArray(tmp, tmpBuffer);
-
-	String_Format2(&tmp, "%c: %s\r\n", key, value);
-	HttpAddRequestHeadersA(curReq, tmp.buffer, tmp.length, HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
-}
-
-/* Creates and sends a HTTP requst */
-static cc_result Http_StartRequest(struct HttpRequest* req, String* url, HINTERNET* handle) {
-	static const char* verbs[3] = { "GET", "HEAD", "POST" };
-	struct HttpCacheEntry entry;
-	String path; char pathBuffer[URL_MAX_SIZE + 1];
-	DWORD flags, bufferLen;
-	cc_result res;
-
-	HttpCache_MakeEntry(url, &entry, &path);
-	Mem_Copy(pathBuffer, path.buffer, path.length);
-	pathBuffer[path.length] = '\0';
-	if ((res = HttpCache_Lookup(&entry))) return res;
-
-	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_COOKIES;
-	if (entry.Https) flags |= INTERNET_FLAG_SECURE;
-
-	*handle = HttpOpenRequestA(entry.Handle, verbs[req->requestType], 
-								pathBuffer, NULL, NULL, NULL, flags, 0);
-	curReq  = *handle;
-	if (!curReq) return GetLastError();
-
-	/* ignore revocation stuff */
-	bufferLen = sizeof(flags);
-	InternetQueryOption(*handle, INTERNET_OPTION_SECURITY_FLAGS, (void*)&bufferLen, &flags);
-	flags |= SECURITY_FLAG_IGNORE_REVOCATION;
-	InternetSetOption(*handle, INTERNET_OPTION_SECURITY_FLAGS, &flags, sizeof(flags));
-
-	Http_SetRequestHeaders(req);
-	return HttpSendRequestA(*handle, NULL, 0, req->data, req->size) ? 0 : GetLastError();
-}
-
-/* Gets headers from a HTTP response */
-static cc_result Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle) {
-	char buffer[8192];
-	String left, line;
-	DWORD len = 8192;
-	if (!HttpQueryInfoA(handle, HTTP_QUERY_RAW_HEADERS, buffer, &len, NULL)) return GetLastError();
-
-	left = String_Init(buffer, len, len);
-	while (left.length) {
-		String_UNSAFE_SplitBy(&left, '\0', &line);
-		Http_ParseHeader(req, &line);
-	}
-	return 0;
-}
-
-/* Downloads the data/contents of a HTTP response */
-static cc_result Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
-	DWORD read, avail;
-	Http_BufferInit(req);
-
-	for (;;) {
-		if (!InternetQueryDataAvailable(handle, &avail, 0, 0)) return GetLastError();
-		if (!avail) break;
-		Http_BufferEnsure(req, avail);
-
-		if (!InternetReadFile(handle, &req->data[req->size], avail, &read)) return GetLastError();
-		if (!read) break;
-		Http_BufferExpanded(req, read);
-	}
-
- 	http_curProgress = 100;
-	return 0;
-}
-
-static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
-	HINTERNET handle;
-	cc_result res = Http_StartRequest(req, url, &handle);
-	HttpRequest_Free(req);
-	if (res) return res;
-
-	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
-	res = Http_ProcessHeaders(req, handle);
-	if (res) { InternetCloseHandle(handle); return res; }
-
-	if (req->requestType != REQUEST_TYPE_HEAD) {
-		res = Http_DownloadData(req, handle);
-		if (res) { InternetCloseHandle(handle); return res; }
-	}
-
-	return InternetCloseHandle(handle) ? 0 : GetLastError();
-}
-
-static void Http_SysFree(void) {
-	int i;
-	for (i = 0; i < HTTP_CACHE_ENTRIES; i++) {
-		if (!http_cache[i].Handle) continue;
-		InternetCloseHandle(http_cache[i].Handle);
-	}
-	InternetCloseHandle(hInternet);
-}
-#elif defined CC_BUILD_CURL
+#if defined CC_BUILD_CURL
 #include "Errors.h"
 #include <stddef.h>
 typedef void CURL;
@@ -847,6 +636,214 @@ static void Http_SysFree(void) {
 	if (!curlSupported) return;
 	_curl_easy_cleanup(curl);
 	_curl_global_cleanup();
+}
+#elif defined CC_BUILD_WININET
+#define WIN32_LEAN_AND_MEAN
+#define NOSERVICE
+#define NOMCX
+#define NOIME
+#ifndef UNICODE
+#define UNICODE
+#define _UNICODE
+#endif
+
+#ifdef UNICODE
+#define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, (Codepoint*)(src), (len) * 2)
+#else
+#define Platform_DecodeString(dst, src, len) String_DecodeCP1252(dst, (cc_uint8*)(src), len)
+#endif
+
+#include <windows.h>
+#include <wininet.h>
+static HINTERNET hInternet;
+
+/* caches connections to web servers */
+struct HttpCacheEntry {
+	HINTERNET Handle; /* Native connection handle. */
+	String Address;   /* Address of server. (e.g. "classicube.net") */
+	cc_uint16 Port;   /* Port server is listening on. (e.g 80) */
+	cc_bool Https;    /* Whether HTTPS or just HTTP protocol. */
+	char _addressBuffer[STRING_SIZE + 1];
+};
+#define HTTP_CACHE_ENTRIES 10
+static struct HttpCacheEntry http_cache[HTTP_CACHE_ENTRIES];
+
+/* Splits up the components of a URL */
+static void HttpCache_MakeEntry(const String* url, struct HttpCacheEntry* entry, String* resource) {
+	String scheme, path, addr, name, port;
+	/* URL is of form [scheme]://[server name]:[server port]/[resource] */
+	int idx = String_IndexOfConst(url, "://");
+
+	scheme = idx == -1 ? String_Empty : String_UNSAFE_Substring(url,   0, idx);
+	path   = idx == -1 ? *url         : String_UNSAFE_SubstringAt(url, idx + 3);
+	entry->Https = String_CaselessEqualsConst(&scheme, "https");
+
+	String_UNSAFE_Separate(&path, '/', &addr, resource);
+	String_UNSAFE_Separate(&addr, ':', &name, &port);
+
+	String_InitArray_NT(entry->Address, entry->_addressBuffer);
+	String_Copy(&entry->Address, &name);
+	entry->Address.buffer[entry->Address.length] = '\0';
+
+	if (!Convert_ParseUInt16(&port, &entry->Port)) {
+		entry->Port = entry->Https ? 443 : 80;
+	}
+}
+
+/* Inserts entry into the cache at the given index */
+static cc_result HttpCache_Insert(int i, struct HttpCacheEntry* e) {
+	HINTERNET conn;
+	conn = InternetConnectA(hInternet, e->Address.buffer, e->Port, NULL, NULL, 
+				INTERNET_SERVICE_HTTP, e->Https ? INTERNET_FLAG_SECURE : 0, 0);
+	if (!conn) return GetLastError();
+
+	e->Handle     = conn;
+	http_cache[i] = *e;
+
+	/* otherwise address buffer points to stack buffer */
+	http_cache[i].Address.buffer = http_cache[i]._addressBuffer;
+	return 0;
+}
+
+/* Finds or inserts the given entry into the cache */
+static cc_result HttpCache_Lookup(struct HttpCacheEntry* e) {
+	struct HttpCacheEntry* c;
+	int i;
+
+	for (i = 0; i < HTTP_CACHE_ENTRIES; i++) {
+		c = &http_cache[i];
+		if (c->Https == e->Https && String_Equals(&c->Address, &e->Address) && c->Port == e->Port) {
+			e->Handle = c->Handle;
+			return 0;
+		}
+	}
+
+	for (i = 0; i < HTTP_CACHE_ENTRIES; i++) {
+		if (http_cache[i].Handle) continue;
+		return HttpCache_Insert(i, e);
+	}
+
+	/* TODO: Should we be consistent in which entry gets evicted? */
+	i = (cc_uint8)Stopwatch_Measure() % HTTP_CACHE_ENTRIES;
+	InternetCloseHandle(http_cache[i].Handle);
+	return HttpCache_Insert(i, e);
+}
+
+cc_bool Http_DescribeError(cc_result res, String* dst) {
+	TCHAR chars[600];
+	res = FormatMessage(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+					 GetModuleHandle(TEXT("wininet.dll")), res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, 600, NULL);
+	if (!res) return false;
+
+	Platform_DecodeString(dst, chars, res);
+	return true;
+}
+
+static void Http_SysInit(void) {
+	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
+	hInternet = InternetOpenA(GAME_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
+}
+
+static HINTERNET curReq;
+static void Http_AddHeader(const char* key, const String* value) {
+	String tmp; char tmpBuffer[1024];
+	String_InitArray(tmp, tmpBuffer);
+
+	String_Format2(&tmp, "%c: %s\r\n", key, value);
+	HttpAddRequestHeadersA(curReq, tmp.buffer, tmp.length, HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
+}
+
+/* Creates and sends a HTTP requst */
+static cc_result Http_StartRequest(struct HttpRequest* req, String* url, HINTERNET* handle) {
+	static const char* verbs[3] = { "GET", "HEAD", "POST" };
+	struct HttpCacheEntry entry;
+	String path; char pathBuffer[URL_MAX_SIZE + 1];
+	DWORD flags, bufferLen;
+	cc_result res;
+
+	HttpCache_MakeEntry(url, &entry, &path);
+	Mem_Copy(pathBuffer, path.buffer, path.length);
+	pathBuffer[path.length] = '\0';
+	if ((res = HttpCache_Lookup(&entry))) return res;
+
+	flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_COOKIES;
+	if (entry.Https) flags |= INTERNET_FLAG_SECURE;
+
+	*handle = HttpOpenRequestA(entry.Handle, verbs[req->requestType], 
+								pathBuffer, NULL, NULL, NULL, flags, 0);
+	curReq  = *handle;
+	if (!curReq) return GetLastError();
+
+	/* ignore revocation stuff */
+	bufferLen = sizeof(flags);
+	InternetQueryOption(*handle, INTERNET_OPTION_SECURITY_FLAGS, (void*)&bufferLen, &flags);
+	flags |= SECURITY_FLAG_IGNORE_REVOCATION;
+	InternetSetOption(*handle, INTERNET_OPTION_SECURITY_FLAGS, &flags, sizeof(flags));
+
+	Http_SetRequestHeaders(req);
+	return HttpSendRequestA(*handle, NULL, 0, req->data, req->size) ? 0 : GetLastError();
+}
+
+/* Gets headers from a HTTP response */
+static cc_result Http_ProcessHeaders(struct HttpRequest* req, HINTERNET handle) {
+	char buffer[8192];
+	String left, line;
+	DWORD len = 8192;
+	if (!HttpQueryInfoA(handle, HTTP_QUERY_RAW_HEADERS, buffer, &len, NULL)) return GetLastError();
+
+	left = String_Init(buffer, len, len);
+	while (left.length) {
+		String_UNSAFE_SplitBy(&left, '\0', &line);
+		Http_ParseHeader(req, &line);
+	}
+	return 0;
+}
+
+/* Downloads the data/contents of a HTTP response */
+static cc_result Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
+	DWORD read, avail;
+	Http_BufferInit(req);
+
+	for (;;) {
+		if (!InternetQueryDataAvailable(handle, &avail, 0, 0)) return GetLastError();
+		if (!avail) break;
+		Http_BufferEnsure(req, avail);
+
+		if (!InternetReadFile(handle, &req->data[req->size], avail, &read)) return GetLastError();
+		if (!read) break;
+		Http_BufferExpanded(req, read);
+	}
+
+ 	http_curProgress = 100;
+	return 0;
+}
+
+static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
+	HINTERNET handle;
+	cc_result res = Http_StartRequest(req, url, &handle);
+	HttpRequest_Free(req);
+	if (res) return res;
+
+	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
+	res = Http_ProcessHeaders(req, handle);
+	if (res) { InternetCloseHandle(handle); return res; }
+
+	if (req->requestType != REQUEST_TYPE_HEAD) {
+		res = Http_DownloadData(req, handle);
+		if (res) { InternetCloseHandle(handle); return res; }
+	}
+
+	return InternetCloseHandle(handle) ? 0 : GetLastError();
+}
+
+static void Http_SysFree(void) {
+	int i;
+	for (i = 0; i < HTTP_CACHE_ENTRIES; i++) {
+		if (!http_cache[i].Handle) continue;
+		InternetCloseHandle(http_cache[i].Handle);
+	}
+	InternetCloseHandle(hInternet);
 }
 #elif defined CC_BUILD_ANDROID
 struct HttpRequest* java_req;
