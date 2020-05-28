@@ -55,9 +55,9 @@ I am assuming you used the installer from http://www.mingw.org/
 
 #### Linux
 
-Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-dev, libgl1-mesa-dev, libcurl4-gnutls-dev or libcurl4-openssl-dev
+Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-dev and libgl1-mesa-dev
 
-```gcc *.c -o ClassiCube -lm -lpthread -lX11 -lXi -lGL -lcurl -ldl```
+```gcc *.c -o ClassiCube -lm -lpthread -lX11 -lXi -lGL -ldl```
 
 ##### Cross compiling for windows:
 
@@ -66,37 +66,36 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-de
 ##### Raspberry pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
 
-```gcc *.c -o ClassiCube -DCC_BUILD_RPI -lm -lpthread -lX11 -lEGL -lGLESv2 -lcurl -ldl```
+```gcc *.c -o ClassiCube -DCC_BUILD_RPI -lm -lpthread -lX11 -lEGL -lGLESv2 -ldl```
 
 #### macOS (32 bit)
 
-```gcc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL -lcurl```
+```gcc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL```
 
 #### macOS (64 bit)
 
-```gcc *.c -o ClassiCube -framework Cocoa -framework OpenGL -lcurl -lobjc```
+```gcc *.c -o ClassiCube -framework Cocoa -framework OpenGL -lobjc```
 
 #### FreeBSD
 
-```clang *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lcurl -lexecinfo```
+```clang *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### OpenBSD
 
 Install libexecinfo package if needed.
 
-```cc *.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lX11 -lXi -lGL -lcurl -lexecinfo -lpthread -lm```
-
+```cc *.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lX11 -lXi -lGL -lexecinfo -lpthread -lm```
 #### NetBSD
 
-```gcc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lcurl -lexecinfo```
+```gcc *.c -o ClassiCube -I /usr/X11R7/include -I /usr/pkg/include -L /usr/X11R7/lib -L /usr/pkg/lib  -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### DragonflyBSD
 
-```gcc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lcurl -lexecinfo```
+```gcc *.c -o ClassiCube -I /usr/local/include -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### Solaris
 
-```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lXi -lGL -lcurl```
+```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lXi -lGL```
 
 NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
 
@@ -104,7 +103,7 @@ NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TOD
 
 Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed.
 
-```gcc *.c -o ClassiCube -lm -lcurl -lexecinfo -lGL -lnetwork -lSDL2```
+```gcc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lSDL2```
 
 NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
 

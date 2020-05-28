@@ -26,9 +26,6 @@
 #elif defined CC_BUILD_WEB
 /* Use fetch/XMLHttpRequest api for Emscripten */
 #include <emscripten/fetch.h>
-#elif defined CC_BUILD_CURL
-#include <curl/curl.h>
-#include <time.h>
 #endif
 
 void HttpRequest_Free(struct HttpRequest* request) {
@@ -652,10 +649,90 @@ static void Http_SysFree(void) {
 	InternetCloseHandle(hInternet);
 }
 #elif defined CC_BUILD_CURL
+#include "Errors.h"
+#include <stddef.h>
+typedef void CURL;
+struct curl_slist;
+typedef int CURLcode;
+
+#define CURL_GLOBAL_DEFAULT ((1<<0) | (1<<1)) /* SSL and Win32 options */
+#define CURLOPT_WRITEDATA      (10000 + 1)
+#define CURLOPT_URL            (10000 + 2)
+#define CURLOPT_ERRORBUFFER    (10000 + 10)
+#define CURLOPT_WRITEFUNCTION  (20000 + 11)
+#define CURLOPT_POSTFIELDS     (10000 + 15)
+#define CURLOPT_USERAGENT      (10000 + 18)
+#define CURLOPT_HTTPHEADER     (10000 + 23)
+#define CURLOPT_HEADERDATA     (10000 + 29)
+#define CURLOPT_VERBOSE        (0     + 41)
+#define CURLOPT_HEADER         (0     + 42)
+#define CURLOPT_NOBODY         (0     + 44)
+#define CURLOPT_POST           (0     + 47)
+#define CURLOPT_FOLLOWLOCATION (0     + 52)
+#define CURLOPT_POSTFIELDSIZE  (0     + 60)
+#define CURLOPT_MAXREDIRS      (0     + 68)
+#define CURLOPT_HEADERFUNCTION (20000 + 79)
+#define CURLOPT_HTTPGET        (0     + 80)
+
+#if defined _WIN32
+#define APIENTRY __cdecl
+#else
+#define APIENTRY
+#endif
+
+typedef CURLcode (APIENTRY *FP_curl_global_init)(long flags);  static FP_curl_global_init _curl_global_init;
+typedef void     (APIENTRY *FP_curl_global_cleanup)(void);     static FP_curl_global_cleanup _curl_global_cleanup;
+typedef CURL*    (APIENTRY *FP_curl_easy_init)(void);          static FP_curl_easy_init _curl_easy_init;
+typedef CURLcode (APIENTRY *FP_curl_easy_perform)(CURL *c);    static FP_curl_easy_perform _curl_easy_perform;
+typedef CURLcode (APIENTRY *FP_curl_easy_setopt)(CURL *c, int opt, ...);    static FP_curl_easy_setopt _curl_easy_setopt;
+typedef void     (APIENTRY *FP_curl_easy_cleanup)(CURL* c);    static FP_curl_easy_cleanup _curl_easy_cleanup;
+typedef const char* (APIENTRY *FP_curl_easy_strerror)(CURLcode res);        static FP_curl_easy_strerror _curl_easy_strerror;
+typedef void     (APIENTRY *FP_curl_slist_free_all)(struct curl_slist* l);  static FP_curl_slist_free_all _curl_slist_free_all;
+typedef struct curl_slist* (APIENTRY *FP_curl_slist_append)(struct curl_slist* l, const char* v); static FP_curl_slist_append _curl_slist_append;
+/* End of curl headers */
+
+#if defined CC_BUILD_WIN
+static const String curlLib = String_FromConst("libcurl.dll");
+static const String curlAlt = String_FromConst("curl.dll");
+#elif defined CC_BUILD_OSX
+static const String curlLib = String_FromConst("/usr/lib/libcurl.4.dylib");
+static const String curlAlt = String_FromConst("/usr/lib/libcurl.dylib");
+#elif defined CC_BUILD_OPENBSD
+static const String curlLib = String_FromConst("libcurl.so.25.17");
+static const String curlAlt = String_FromConst("libcurl.so.25.16");
+#else
+static const String curlLib = String_FromConst("libcurl.so.4");
+static const String curlAlt = String_FromConst("libcurl.so.3");
+#endif
+
+#define QUOTE(x) #x
+#define LoadCurlFunc(sym) (_ ## sym = (FP_ ## sym)DynamicLib_Get2(lib, QUOTE(sym)))
+static cc_bool LoadCurlFuncs(void) {
+	void* lib = DynamicLib_Load2(&curlLib);
+	if (!lib) { 
+		Logger_DynamicLibWarn("loading", &curlLib);
+
+		lib = DynamicLib_Load2(&curlAlt);
+		if (!lib) { Logger_DynamicLibWarn("loading", &curlAlt); return false; }
+	}
+	/* Non-essential function missing in older curl versions */
+	LoadCurlFunc(curl_easy_strerror);
+
+	return
+		LoadCurlFunc(curl_global_init)    && LoadCurlFunc(curl_global_cleanup) &&
+		LoadCurlFunc(curl_easy_init)      && LoadCurlFunc(curl_easy_perform)   &&
+		LoadCurlFunc(curl_easy_setopt)    && LoadCurlFunc(curl_easy_cleanup)   &&
+		LoadCurlFunc(curl_slist_free_all) && LoadCurlFunc(curl_slist_append);
+}
+
 static CURL* curl;
+static cc_bool curlSupported;
 
 cc_bool Http_DescribeError(cc_result res, String* dst) {
-	const char* err = curl_easy_strerror((CURLcode)res);
+	const char* err;
+	
+	if (!_curl_easy_strerror) return false;
+	err = _curl_easy_strerror((CURLcode)res);
 	if (!err) return false;
 
 	String_AppendConst(dst, err);
@@ -663,11 +740,16 @@ cc_bool Http_DescribeError(cc_result res, String* dst) {
 }
 
 static void Http_SysInit(void) {
-	CURLcode res = curl_global_init(CURL_GLOBAL_DEFAULT);
-	if (res) Logger_Abort2(res, "Failed to init curl");
+	static const String msg = String_FromConst("Failed to init libcurl. All HTTP requests will therefore fail.");
+	CURLcode res;
 
-	curl = curl_easy_init();
-	if (!curl) Logger_Abort("Failed to init easy curl");
+	if (!LoadCurlFuncs()) { Logger_WarnFunc(&msg); return; }
+	res = _curl_global_init(CURL_GLOBAL_DEFAULT);
+	if (res) { Logger_SimpleWarn(res, "initing curl"); return; }
+
+	curl = _curl_easy_init();
+	if (!curl) { Logger_SimpleWarn(res, "initing curl_easy"); return; }
+	curlSupported = true;
 }
 
 static struct curl_slist* headers_list;
@@ -677,7 +759,7 @@ static void Http_AddHeader(const char* key, const String* value) {
 	String_Format2(&tmp, "%c: %s", key, value);
 
 	tmp.buffer[tmp.length] = '\0';
-	headers_list = curl_slist_append(headers_list, tmp.buffer);
+	headers_list = _curl_slist_append(headers_list, tmp.buffer);
 }
 
 /* Processes a HTTP header downloaded from the server */
@@ -707,14 +789,14 @@ static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, void* u
 
 /* Sets general curl options for a request */
 static void Http_SetCurlOpts(struct HttpRequest* req) {
-	curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
-	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	curl_easy_setopt(curl, CURLOPT_MAXREDIRS,      20L);
+	_curl_easy_setopt(curl, CURLOPT_USERAGENT,      GAME_APP_NAME);
+	_curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+	_curl_easy_setopt(curl, CURLOPT_MAXREDIRS,      20L);
 
-	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_ProcessHeader);
-	curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,  Http_ProcessData);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
+	_curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, Http_ProcessHeader);
+	_curl_easy_setopt(curl, CURLOPT_HEADERDATA,     req);
+	_curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,  Http_ProcessData);
+	_curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
 }
 
 static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
@@ -722,41 +804,49 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	void* post_data = req->data;
 	CURLcode res;
 
-	curl_easy_reset(curl);
+	if (!curlSupported) {
+		HttpRequest_Free(req);
+		return ERR_NOT_SUPPORTED;
+	}
+
 	headers_list = NULL;
 	Http_SetRequestHeaders(req);
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers_list);
+	_curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers_list);
 
 	Http_SetCurlOpts(req);
 	Platform_ConvertString(urlStr, url);
-	curl_easy_setopt(curl, CURLOPT_URL, urlStr);
+	_curl_easy_setopt(curl, CURLOPT_URL, urlStr);
 
 	if (req->requestType == REQUEST_TYPE_HEAD) {
-		curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+		_curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
 	} else if (req->requestType == REQUEST_TYPE_POST) {
-		curl_easy_setopt(curl, CURLOPT_POST,   1L);
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE,  req->size);
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS,     req->data);
+		_curl_easy_setopt(curl, CURLOPT_POST,   1L);
+		_curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, req->size);
+		_curl_easy_setopt(curl, CURLOPT_POSTFIELDS,    req->data);
 
 		/* per curl docs, we must persist POST data until request finishes */
 		req->data = NULL;
 		HttpRequest_Free(req);
+	} else {
+		/* Undo POST/HEAD state */
+		_curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 	}
 
 	bufferSize = 0;
 	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
-	res = curl_easy_perform(curl);
+	res = _curl_easy_perform(curl);
 	http_curProgress = 100;
 
-	curl_slist_free_all(headers_list);
+	_curl_slist_free_all(headers_list);
 	/* can free now that request has finished */
 	Mem_Free(post_data);
 	return res;
 }
 
 static void Http_SysFree(void) {
-	curl_easy_cleanup(curl);
-	curl_global_cleanup();
+	if (!curlSupported) return;
+	_curl_easy_cleanup(curl);
+	_curl_global_cleanup();
 }
 #elif defined CC_BUILD_ANDROID
 struct HttpRequest* java_req;

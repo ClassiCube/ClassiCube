@@ -30,15 +30,15 @@ LIBS=-mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9
 endif
 
 ifeq ($(PLAT),linux)
-LIBS=-lX11 -lXi -lpthread -lGL -lm -ldl -lcurl
+LIBS=-lX11 -lXi -lpthread -lGL -lm -ldl
 endif
 
 ifeq ($(PLAT),sunos)
-LIBS=-lm -lsocket -lX11 -lXi -lGL -lcurl
+LIBS=-lm -lsocket -lX11 -lXi -lGL
 endif
 
 ifeq ($(PLAT),darwin)
-LIBS=-lcurl
+LIBS=
 LDFLAGS=-rdynamic -framework Carbon -framework AGL -framework OpenGL
 endif
 
@@ -46,32 +46,32 @@ ifeq ($(PLAT),freebsd)
 CC=clang
 CFLAGS=-g -pipe -rdynamic -I /usr/local/include -fno-math-errno
 LDFLAGS=-L /usr/local/lib
-LIBS=-lcurl -lexecinfo -lGL -lX11 -lXi -lm -lpthread
+LIBS=-lexecinfo -lGL -lX11 -lXi -lm -lpthread
 endif
 
 ifeq ($(PLAT),openbsd)
 CC=cc
 CFLAGS=-g -pipe -rdynamic -I /usr/X11R6/include -I /usr/local/include -fno-math-errno
 LDFLAGS=-L /usr/X11R6/lib -L /usr/local/lib
-LIBS=-lcurl -lexecinfo -lGL -lX11 -lXi -lm -lpthread
+LIBS=-lexecinfo -lGL -lX11 -lXi -lm -lpthread
 endif
 
 ifeq ($(PLAT),netbsd)
 CFLAGS=-g -pipe -rdynamic -I /usr/X11R7/include -I /usr/pkg/include -fno-math-errno
 LDFLAGS=-L /usr/X11R7/lib -L /usr/pkg/lib
-LIBS=-lcurl -lexecinfo -lGL -lX11 -lXi
+LIBS=-lexecinfo -lGL -lX11 -lXi
 endif
 
 ifeq ($(PLAT),dragonfly)
 CFLAGS=-g -pipe -rdynamic -I /usr/local/include -fno-math-errno
 LDFLAGS=-L /usr/local/lib
-LIBS=-lcurl -lexecinfo -lGL -lX11 -lXi -lm -lpthread
+LIBS=-lexecinfo -lGL -lX11 -lXi -lm -lpthread
 endif
 
 ifeq ($(PLAT),haiku)
 CFLAGS=-g -pipe -fno-math-errno
 LDFLAGS=-g
-LIBS=-lcurl -lm -lexecinfo -lGL -lnetwork -lSDL2
+LIBS=-lm -lexecinfo -lGL -lnetwork -lSDL2
 endif
 
 ifeq ($(OS),Windows_NT)
