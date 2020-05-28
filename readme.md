@@ -84,7 +84,7 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 Install libexecinfo package if needed.
 
-```gcc *.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lX11 -lXi -lGL -lexecinfo```
+```cc *.c -o ClassiCube -I /usr/X11R6/include -I /usr/local/include -L /usr/X11R6/lib -L /usr/local/lib -lm -lpthread -lX11 -lXi -lGL -lexecinfo```
 
 #### NetBSD
 
