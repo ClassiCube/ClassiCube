@@ -33,7 +33,8 @@ WIN64_CC=x86_64-w64-mingw32-gcc
 ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -Qn -w"
 WIN32_FLAGS="-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN"
 WIN64_FLAGS="-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN"
-LINUX_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_X11ICON"
+LINUX_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
+MACOS_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
 
 # I cloned https://github.com/raspberrypi/tools to get prebuilt cross compilers
 # Then I copied across various files/folders from /usr/include and /usr/lib from a real Raspberry pi as needed
@@ -72,16 +73,17 @@ build_nix64() {
   gcc *.c $ALL_FLAGS $LINUX_FLAGS CCicon_nix64.o -DCC_COMMIT_SHA=\"$LATEST\" -m64 -o cc-nix64 -lX11 -lXi -lpthread -lGL -lm -ldl
 }
 
-build_osx32() {
+build_mac32() {
   echo "Building mac32.."
+  cp $SOURCE_DIR/misc/CCicon_mac32 $SOURCE_DIR/src/CCicon_mac32.o
   rm cc-osx32
-  $MAC32_CC *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenGL
+  $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenGL
 }
 
-build_osx64() {
+build_mac64() {
   echo "Building mac64.."
   rm cc-osx64
-  $MAC64_CC *.c $ALL_FLAGS -fvisibility=hidden -rdynamic -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenGL -lobjc
+  $MAC64_CC *.c $ALL_FLAGS $MACOS_FLAGS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenGL -lobjc
 }
 
 build_web() {
@@ -116,8 +118,8 @@ build_win32
 build_win64
 build_nix32
 build_nix64
-build_osx32
-build_osx64
+build_mac32
+build_mac64
 build_web
 build_rpi
 

@@ -1136,7 +1136,7 @@ void Window_Init(void) {
 	DisplayInfo.DpiY   = 1;
 }
 
-#ifdef CC_BUILD_X11ICON
+#ifdef CC_BUILD_ICON
 static void ApplyIcon(void) {
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
 	Atom xa_cardinal = XInternAtom(win_display, "CARDINAL", false);
@@ -2335,6 +2335,29 @@ extern CGContextRef CGWindowContextCreate(CGSConnectionID conn, CGSWindowID win,
 static CGSConnectionID conn;
 static CGSWindowID winId;
 
+#ifdef CC_BUILD_ICON
+static void ApplyIcon(void) {
+	CGColorSpaceRef colSpace;
+	CGDataProviderRef provider;
+	CGImageRef image;
+	extern const int CCIcon_Data[];
+	extern const int CCIcon_Width, CCIcon_Height;
+
+	colSpace = CGColorSpaceCreateDeviceRGB();
+	provider = CGDataProviderCreateWithData(NULL, CCIcon_Data,
+					Bitmap_DataSize(CCIcon_Width, CCIcon_Height), NULL);
+	image    = CGImageCreate(CCIcon_Width, CCIcon_Height, 8, 32, CCIcon_Width * 4, colSpace,
+					kCGBitmapByteOrder32Little | kCGImageAlphaLast, provider, NULL, 0, 0);
+
+	SetApplicationDockTileImage(image);
+	CGImageRelease(image);
+	CGDataProviderRelease(provider);
+	CGColorSpaceRelease(colSpace);
+}
+#else
+static void ApplyIcon(void) { }
+#endif
+
 void Window_Create(int width, int height) {
 	Rect r;
 	OSStatus res;
@@ -2360,6 +2383,7 @@ void Window_Create(int width, int height) {
 
 	conn  = _CGSDefaultConnection();
 	winId = GetNativeWindowFromWindowRef(win_handle);
+	ApplyIcon();
 }
 
 void Window_SetTitle(const String* title) {
