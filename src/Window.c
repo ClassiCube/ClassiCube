@@ -1136,6 +1136,18 @@ void Window_Init(void) {
 	DisplayInfo.DpiY   = 1;
 }
 
+#ifdef CC_BUILD_X11ICON
+static void ApplyIcon(void) {
+	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
+	Atom xa_cardinal = XInternAtom(win_display, "CARDINAL", false);
+	extern const long CCIcon_Data[];
+	extern const int  CCIcon_Size;
+	XChangeProperty(win_display, win_handle, net_wm_icon, xa_cardinal, 32, PropModeReplace, CCIcon_Data, CCIcon_Size);
+}
+#else
+static void ApplyIcon(void) { }
+#endif
+
 void Window_Create(int width, int height) {
 	XSetWindowAttributes attributes = { 0 };
 	XSizeHints hints = { 0 };
@@ -1192,14 +1204,7 @@ void Window_Create(int width, int height) {
 	hint.res_name   = GAME_APP_TITLE;
 	hint.res_class  = GAME_APP_TITLE;
 	XSetClassHint(win_display, win_handle, &hint);
-
-#ifdef CC_BUILD_X11ICON
-	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
-	Atom xa_cardinal = XInternAtom(win_display, "CARDINAL",     false);
-	extern const long CCIcon_Data[];
-	extern const int  CCIcon_Size;
-	XChangeProperty(win_display, win_handle, net_wm_icon, xa_cardinal, 32, PropModeReplace, CCIcon_Data, CCIcon_Size);
-#endif
+	ApplyIcon();
 }
 
 void Window_SetTitle(const String* title) {
