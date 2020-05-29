@@ -119,7 +119,7 @@ static const String alLib = String_FromConst("openal32.dll");
 #elif defined CC_BUILD_OSX
 static const String alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL");
 #elif defined CC_BUILD_OPENBSD
-static const String alLib = String_FromConst("libopenal.so.3.0");
+static const String alLib = String_FromConst("libopenal.so");
 #else
 static const String alLib = String_FromConst("libopenal.so.1");
 #endif
