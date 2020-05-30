@@ -58,13 +58,10 @@ float   Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
 static struct ScheduledTask Game_Tasks[6];
 static int Game_TasksCount, entTaskI;
 
-static char Game_UsernameBuffer[FILENAME_SIZE];
-static char Game_MppassBuffer[STRING_SIZE];
-static char Game_HashBuffer[STRING_SIZE];
-
-String Game_Username = String_FromArray(Game_UsernameBuffer);
-String Game_Mppass   = String_FromArray(Game_MppassBuffer);
-String Game_Hash     = String_FromArray(Game_HashBuffer);
+static char usernameBuffer[FILENAME_SIZE];
+static char mppassBuffer[STRING_SIZE];
+String Game_Username = String_FromArray(usernameBuffer);
+String Game_Mppass   = String_FromArray(mppassBuffer);
 
 const char* const FpsLimit_Names[FPS_LIMIT_COUNT] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "Limit144FPS", "LimitNone",

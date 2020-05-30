@@ -3,7 +3,6 @@
 #include "LWeb.h"
 #include "Launcher.h"
 #include "Gui.h"
-#include "Game.h"
 #include "Drawer2D.h"
 #include "ExtMath.h"
 #include "Platform.h"
@@ -878,9 +877,9 @@ static void MainScreen_TickFetchServers(struct MainScreen* s) {
 
 	if (FetchServersTask.Base.success) {
 		s->signingIn = false;
-		if (Game_Hash.length) {
-			Launcher_ConnectToServer(&Game_Hash);
-			Game_Hash.length = 0;
+		if (Launcher_AutoHash.length) {
+			Launcher_ConnectToServer(&Launcher_AutoHash);
+			Launcher_AutoHash.length = 0;
 		} else {
 			Launcher_SetScreen(ServersScreen_MakeInstance());
 		}

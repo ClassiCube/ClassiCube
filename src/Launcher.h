@@ -26,6 +26,8 @@ extern struct FontDesc Launcher_HintFont;
 extern cc_bool Launcher_ShouldExit;
 /* Whether game should be updated on exit. */
 extern cc_bool Launcher_ShouldUpdate;
+/* (optional) Hash of the server the game should automatically try to connect to after signing in. */
+extern String Launcher_AutoHash;
 
 /* Base colour of pixels before any widgets are drawn. */
 extern BitmapCol Launcher_BackgroundCol;

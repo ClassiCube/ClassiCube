@@ -1,7 +1,5 @@
 #include "Utils.h"
 #include "Bitmap.h"
-#include "PackedCol.h"
-#include "Chat.h"
 #include "Platform.h"
 #include "Stream.h"
 #include "Errors.h"
@@ -183,7 +181,7 @@ int Convert_ToBase64(const cc_uint8* src, int len, char* dst) {
 	return (int)(dst - beg);
 }
 
-CC_NOINLINE static int Convert_DecodeBase64(char c) {
+CC_NOINLINE static int DecodeBase64(char c) {
 	if (c >= 'A' && c <= 'Z') return (c - 'A');
 	if (c >= 'a' && c <= 'z') return (c - 'a') + 26;
 	if (c >= '0' && c <= '9') return (c - '0') + 52;
@@ -202,16 +200,16 @@ int Convert_FromBase64(const char* src, int len, cc_uint8* dst) {
 	/* 4 chars to 3 bytes */
 	/* stops on any invalid chars (also handles = padding) */
 	for (; len >= 4; len -= 4, src += 4) {
-		a = Convert_DecodeBase64(src[0]);
-		b = Convert_DecodeBase64(src[1]);
+		a = DecodeBase64(src[0]);
+		b = DecodeBase64(src[1]);
 		if (a == -1 || b == -1) break;
 		*dst++ = (a << 2) | (b >> 4);
 
-		c = Convert_DecodeBase64(src[2]);
+		c = DecodeBase64(src[2]);
 		if (c == -1) break;
 		*dst++ = (b << 4) | (c >> 2);
 
-		d = Convert_DecodeBase64(src[3]);
+		d = DecodeBase64(src[3]);
 		if (d == -1) break;
 		*dst++ = (c << 6) | (d     );
 	}

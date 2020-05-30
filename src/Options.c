@@ -3,7 +3,6 @@
 #include "Funcs.h"
 #include "Platform.h"
 #include "Stream.h"
-#include "Chat.h"
 #include "Errors.h"
 #include "Utils.h"
 #include "Logger.h"

@@ -124,7 +124,7 @@ static int Program_Run(int argc, char** argv) {
 		/* :hash to auto join server with the given hash */
 		if (args[0].buffer[0] == ':') {
 			args[0] = String_UNSAFE_SubstringAt(&args[0], 1);
-			String_Copy(&Game_Hash, &args[0]);
+			String_Copy(&Launcher_AutoHash, &args[0]);
 			Launcher_Run();
 			return 0;
 		}
