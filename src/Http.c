@@ -487,8 +487,8 @@ static const String curlAlt = String_FromConst("curl.dll");
 static const String curlLib = String_FromConst("/usr/lib/libcurl.4.dylib");
 static const String curlAlt = String_FromConst("/usr/lib/libcurl.dylib");
 #elif defined CC_BUILD_OPENBSD
-static const String curlLib = String_FromConst("libcurl.so.25.17");
-static const String curlAlt = String_FromConst("libcurl.so.25.16");
+static const String curlLib = String_FromConst("libcurl.so");
+static const String curlAlt = String_FromConst("libcurl.so");
 #else
 static const String curlLib = String_FromConst("libcurl.so.4");
 static const String curlAlt = String_FromConst("libcurl.so.3");
