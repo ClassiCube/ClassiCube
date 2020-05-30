@@ -709,6 +709,7 @@ void Mutex_Unlock(void* handle) {
 struct WaitData {
 	pthread_cond_t  cond;
 	pthread_mutex_t mutex;
+	int signalled;
 };
 
 void* Waitable_Create(void) {
@@ -719,6 +720,8 @@ void* Waitable_Create(void) {
 	if (res) Logger_Abort2(res, "Creating waitable");
 	res = pthread_mutex_init(&ptr->mutex, NULL);
 	if (res) Logger_Abort2(res, "Creating waitable mutex");
+
+	ptr->signalled = false;
 	return ptr;
 }
 
@@ -735,7 +738,13 @@ void Waitable_Free(void* handle) {
 
 void Waitable_Signal(void* handle) {
 	struct WaitData* ptr = (struct WaitData*)handle;
-	int res = pthread_cond_signal(&ptr->cond);
+	int res;
+
+	Mutex_Lock(&ptr->mutex);
+	ptr->signalled = true;
+	Mutex_Unlock(&ptr->mutex);
+
+	res = pthread_cond_signal(&ptr->cond);
 	if (res) Logger_Abort2(res, "Signalling event");
 }
 
@@ -744,8 +753,11 @@ void Waitable_Wait(void* handle) {
 	int res;
 
 	Mutex_Lock(&ptr->mutex);
-	res = pthread_cond_wait(&ptr->cond, &ptr->mutex);
-	if (res) Logger_Abort2(res, "Waitable wait");
+	if (!ptr->signalled) {
+		res = pthread_cond_wait(&ptr->cond, &ptr->mutex);
+		if (res) Logger_Abort2(res, "Waitable wait");
+	}
+	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
 }
 
@@ -763,8 +775,11 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	ts.tv_nsec %= NS_PER_SEC;
 
 	Mutex_Lock(&ptr->mutex);
-	res = pthread_cond_timedwait(&ptr->cond, &ptr->mutex, &ts);
-	if (res && res != ETIMEDOUT) Logger_Abort2(res, "Waitable wait for");
+	if (!ptr->signalled) {
+		res = pthread_cond_timedwait(&ptr->cond, &ptr->mutex, &ts);
+		if (res && res != ETIMEDOUT) Logger_Abort2(res, "Waitable wait for");
+	}
+	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
 }
 #endif
