@@ -486,7 +486,7 @@ static const String curlAlt = String_FromConst("curl.dll");
 #elif defined CC_BUILD_OSX
 static const String curlLib = String_FromConst("/usr/lib/libcurl.4.dylib");
 static const String curlAlt = String_FromConst("/usr/lib/libcurl.dylib");
-#elif defined CC_BUILD_OPENBSD
+#elif defined CC_BUILD_BSD
 static const String curlLib = String_FromConst("libcurl.so");
 static const String curlAlt = String_FromConst("libcurl.so");
 #else
@@ -882,7 +882,6 @@ static void Http_AddHeader(const char* key, const String* value) {
 /* Processes a HTTP header downloaded from the server */
 static void JNICALL java_HttpParseHeader(JNIEnv* env, jobject o, jstring header) {
 	String line = JavaGetString(env, header);
-	Platform_Log(&line);
 	Http_ParseHeader(java_req, &line);
 	(*env)->ReleaseStringUTFChars(env, header, line.buffer);
 }

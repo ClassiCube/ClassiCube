@@ -74,11 +74,7 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #include <ApplicationServices/ApplicationServices.h>
 #elif defined CC_BUILD_SOLARIS
 #include <sys/filio.h>
-#elif defined CC_BUILD_FREEBSD
-#include <sys/sysctl.h>
-#elif defined CC_BUILD_OPENBSD
-#include <sys/sysctl.h>
-#elif defined CC_BUILD_NETBSD
+#elif defined CC_BUILD_BSD
 #include <sys/sysctl.h>
 #elif defined CC_BUILD_HAIKU
 /* TODO: Use open instead of xdg-open */
@@ -1108,10 +1104,9 @@ cc_result Process_StartGame(const String* args) {
 
 void Process_Exit(cc_result code) { exit(code); }
 
-/* Opening browser and starting shell is not really standardised */
+/* Opening browser/starting shell is not really standardised */
 #if defined CC_BUILD_OSX
 void Process_StartOpen(const String* args) {
-	/* This used to be exec "/usr/bin/open" str */
 	UInt8 str[NATIVE_STR_LEN];
 	CFURLRef urlCF;
 	int len;
@@ -1121,13 +1116,22 @@ void Process_StartOpen(const String* args) {
 	LSOpenCFURLRef(urlCF, NULL);
 	CFRelease(urlCF);
 }
-#else
+#elif defined CC_BUILD_HAIKU
 void Process_StartOpen(const String* args) {
-	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
 	char str[NATIVE_STR_LEN];
 	char* cmd[3];
 	Platform_ConvertString(str, args);
 
+	cmd[0] = "open"; cmd[1] = str; cmd[2] = NULL;
+	Process_RawStart("open", cmd);
+}
+#else
+void Process_StartOpen(const String* args) {
+	char str[NATIVE_STR_LEN];
+	char* cmd[3];
+	Platform_ConvertString(str, args);
+
+	/* TODO: Can xdg-open be used on original Solaris, or is it just an OpenIndiana thing */
 	cmd[0] = "xdg-open"; cmd[1] = str; cmd[2] = NULL;
 	Process_RawStart("xdg-open", cmd);
 }
