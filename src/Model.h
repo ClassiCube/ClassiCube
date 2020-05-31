@@ -142,13 +142,11 @@ CC_API void Model_DrawArmPart(struct ModelPart* part);
 
 /* Returns a pointer to the model whose name caselessly matches given name. */
 CC_API struct Model* Model_Get(const String* name);
-/* Returns a pointer to the model texture whose name caselessly matches given name. */
-CC_API struct ModelTex* Model_GetTexture(const String* name);
 /* Adds a model to the list of models. (e.g. "skeleton") */
 /* Models can be applied to entities to change their appearance. Use Entity_SetModel for that. */
 CC_API void Model_Register(struct Model* model);
-/* Adds a texture to the list of model textures. (e.g. "skeleton.png") */
-/* Model textures are automatically loaded from texture packs. Used as a 'default skin' for models. */
+/* Adds a texture to the list of automatically managed model textures. */
+/* These textures are automatically loaded from texture packs. (e.g. "skeleton.png") */
 CC_API void Model_RegisterTexture(struct ModelTex* tex);
 
 /* Describes data for a box being built. */

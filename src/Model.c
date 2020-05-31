@@ -403,15 +403,6 @@ struct Model* Model_Get(const String* name) {
 	return NULL;
 }
 
-struct ModelTex* Model_GetTexture(const String* name) {
-	struct ModelTex* tex;
-
-	for (tex = textures_head; tex; tex = tex->next) {
-		if (String_CaselessEqualsConst(name, tex->name)) return tex;
-	}
-	return NULL;
-}
-
 void Model_Register(struct Model* model) {
 	LinkedList_Add(model, models_head, models_tail);
 }
