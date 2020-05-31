@@ -3,7 +3,7 @@ OBJECTS=$(patsubst %.c, %.o, $(SOURCES))
 ENAME=ClassiCube
 DEL=rm
 JOBS=1
-CC=gcc
+CC=cc
 CFLAGS=-g -pipe -rdynamic -fno-math-errno
 LDFLAGS=-g -rdynamic
 
@@ -23,6 +23,7 @@ LDFLAGS=-s WASM=1 -s NO_EXIT_RUNTIME=1 -s FETCH=1 --preload-file texpacks/defaul
 endif
 
 ifeq ($(PLAT),mingw)
+CC=gcc
 OEXT=.exe
 CFLAGS=-g -pipe -DUNICODE -fno-math-errno
 LDFLAGS=-g
@@ -34,6 +35,7 @@ LIBS=-lX11 -lXi -lpthread -lGL -lm -ldl
 endif
 
 ifeq ($(PLAT),sunos)
+CC=gcc
 LIBS=-lm -lsocket -lX11 -lXi -lGL
 endif
 
@@ -43,14 +45,12 @@ LDFLAGS=-rdynamic -framework Carbon -framework AGL -framework OpenGL
 endif
 
 ifeq ($(PLAT),freebsd)
-CC=clang
 CFLAGS=-g -pipe -rdynamic -I /usr/local/include -fno-math-errno
 LDFLAGS=-L /usr/local/lib
 LIBS=-lexecinfo -lGL -lX11 -lXi -lm -lpthread
 endif
 
 ifeq ($(PLAT),openbsd)
-CC=cc
 CFLAGS=-g -pipe -rdynamic -I /usr/X11R6/include -I /usr/local/include -fno-math-errno
 LDFLAGS=-L /usr/X11R6/lib -L /usr/local/lib
 LIBS=-lexecinfo -lGL -lX11 -lXi -lm -lpthread
@@ -59,7 +59,7 @@ endif
 ifeq ($(PLAT),netbsd)
 CFLAGS=-g -pipe -rdynamic -I /usr/X11R7/include -I /usr/pkg/include -fno-math-errno
 LDFLAGS=-L /usr/X11R7/lib -L /usr/pkg/lib
-LIBS=-lexecinfo -lGL -lX11 -lXi
+LIBS=-lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),dragonfly)
