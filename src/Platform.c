@@ -68,26 +68,19 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
 /* Platform specific include files (Try to share for UNIX-ish) */
-#if defined CC_BUILD_LINUX
-#define CC_BUILD_UNIX
-#elif defined CC_BUILD_OSX
+#if defined CC_BUILD_OSX
 #include <mach/mach_time.h>
 #include <mach-o/dyld.h>
 #include <ApplicationServices/ApplicationServices.h>
 #elif defined CC_BUILD_SOLARIS
-#define CC_BUILD_UNIX
 #include <sys/filio.h>
 #elif defined CC_BUILD_FREEBSD
-#define CC_BUILD_UNIX
 #include <sys/sysctl.h>
 #elif defined CC_BUILD_OPENBSD
-#define CC_BUILD_UNIX
 #include <sys/sysctl.h>
 #elif defined CC_BUILD_NETBSD
-#define CC_BUILD_UNIX
 #include <sys/sysctl.h>
 #elif defined CC_BUILD_HAIKU
-#define CC_BUILD_UNIX
 /* TODO: Use open instead of xdg-open */
 /* TODO: Use load_image/resume_thread instead of fork */
 /* Otherwise opening browser never works because fork fails */
@@ -832,15 +825,15 @@ void Platform_LoadSysFonts(void) {
 	static const String dirs[1] = {
 		String_FromConst("/system/data/fonts")
 	};
-#elif defined CC_BUILD_UNIX
-	static const String dirs[2] = {
-		String_FromConst("/usr/share/fonts"),
-		String_FromConst("/usr/local/share/fonts")
-	};
 #elif defined CC_BUILD_OSX
 	static const String dirs[2] = {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
+	};
+#elif defined CC_BUILD_POSIX
+	static const String dirs[2] = {
+		String_FromConst("/usr/share/fonts"),
+		String_FromConst("/usr/local/share/fonts")
 	};
 #endif
 	for (i = 0; i < Array_Elems(dirs); i++) {
@@ -1114,7 +1107,7 @@ cc_result Process_StartGame(const String* args) {
 }
 
 void Process_Exit(cc_result code) { exit(code); }
-#endif
+
 /* Opening browser and starting shell is not really standardised */
 #if defined CC_BUILD_OSX
 void Process_StartOpen(const String* args) {
@@ -1128,7 +1121,7 @@ void Process_StartOpen(const String* args) {
 	LSOpenCFURLRef(urlCF, NULL);
 	CFRelease(urlCF);
 }
-#elif defined CC_BUILD_UNIX
+#else
 void Process_StartOpen(const String* args) {
 	/* TODO: Can this be used on original Solaris, or is it just an OpenIndiana thing */
 	char str[NATIVE_STR_LEN];
@@ -1139,6 +1132,7 @@ void Process_StartOpen(const String* args) {
 	Process_RawStart("xdg-open", cmd);
 }
 #endif
+
 /* Retrieving exe path is completely OS dependant */
 #if defined CC_BUILD_OSX
 static cc_result Process_RawGetExePath(char* path, int* len) {
@@ -1217,6 +1211,7 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 	return 0;
 }
 #endif
+#endif /* CC_BUILD_POSIX */
 
 
 /*########################################################################################################################*
@@ -1633,10 +1628,7 @@ cc_bool Platform_DescribeError(cc_result res, String* dst) {
 	return true;
 }
 
-#endif
-#if defined CC_BUILD_UNIX
-void Platform_Init(void) { Platform_InitPosix(); }
-#elif defined CC_BUILD_OSX
+#if defined CC_BUILD_OSX
 static void Platform_InitStopwatch(void) {
 	mach_timebase_info_data_t tb = { 0 };
 	mach_timebase_info(&tb);
@@ -1661,117 +1653,22 @@ void Platform_Init(void) {
 void Platform_Init(void) {
 	char tmp[64+1] = { 0 };
 	EM_ASM( Module['websocket']['subprotocol'] = 'ClassiCube'; );
-
-	/* Check if an error when pre-loading indexed DB */
+	/* Check if an error occurred when pre-loading IndexedDB */
 	EM_ASM_({ if (window.cc_idbErr) stringToUTF8(window.cc_idbErr, $0, 64); }, tmp);
 
 	if (!tmp[0]) return;
 	Chat_Add1("&cError preloading IndexedDB: %c", tmp);
 	Chat_AddRaw("&cPreviously saved settings/maps will be lost");
 
-	/* NOTE: You must load IndexedDB before main() */
-	/* (because the callback to FS.synfc is asynchronous) */
+	/* NOTE: You must pre-load IndexedDB before main() */
+	/* (because pre-loading only works asynchronously) */
 	/* If you don't, you'll get errors later trying to sync local to remote */
-
-	/*
-	function preloadIndexedDB() {
-		addRunDependency('load-idb');
-		FS.mkdir('/classicube');
-		FS.mount(IDBFS, {}, '/classicube');
-		FS.syncfs(true, function(err) { 
-			if (err) window.cc_idbErr = err;
-			removeRunDependency('load-idb');
-		})
-	}
-
-	var Module = {
-		preRun: [ preloadIndexedDB ],
-		......
-	*/
+	/* See doc/hosting-webclient.md for example preloading IndexedDB code */
 }
-#elif defined CC_BUILD_ANDROID
-jclass  App_Class;
-jobject App_Instance;
-JavaVM* VM_Ptr;
+#else
 void Platform_Init(void) { Platform_InitPosix(); }
-
-/* JNI helpers */
-String JavaGetString(JNIEnv* env, jstring str) {
-	String dst;
-	dst.buffer   = (*env)->GetStringUTFChars(env,  str, NULL);
-	dst.length   = (*env)->GetStringUTFLength(env, str);
-	dst.capacity = dst.length;
-	return dst;
-}
-
-jobject JavaMakeString(JNIEnv* env, const String* str) {
-	cc_uint8 tmp[2048 + 4];
-	cc_uint8* cur;
-	int i, len = 0;
-
-	for (i = 0; i < str->length && len < 2048; i++) {
-		cur = tmp + len;
-		len += Convert_CP437ToUtf8(str->buffer[i], cur);
-	}
-	tmp[len] = '\0';
-	return (*env)->NewStringUTF(env, (const char*)tmp);
-}
-
-jbyteArray JavaMakeBytes(JNIEnv* env, const cc_uint8* src, cc_uint32 len) {
-	if (!len) return NULL;
-	jbyteArray arr = (*env)->NewByteArray(env, len);
-	(*env)->SetByteArrayRegion(env, arr, 0, len, src);
-	return arr;
-}
-
-void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
-	(*env)->CallVoidMethodA(env, App_Instance, method, args);
-}
-
-jint JavaCallInt(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
-	return (*env)->CallIntMethodA(env, App_Instance, method, args);
-}
-
-jfloat JavaCallFloat(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
-	return (*env)->CallFloatMethodA(env, App_Instance, method, args);
-}
-
-jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
-	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
-	return (*env)->CallObjectMethodA(env, App_Instance, method, args);
-}
-
-void JavaCall_String_Void(const char* name, const String* value) {
-	JNIEnv* env;
-	jvalue args[1];
-	JavaGetCurrentEnv(env);
-
-	args[0].l = JavaMakeString(env, value);
-	JavaCallVoid(env, name, "(Ljava/lang/String;)V", args);
-	(*env)->DeleteLocalRef(env, args[0].l);
-}
-
-void JavaCall_Void_String(const char* name, String* dst) {
-	const jchar* src;
-	jsize len;
-	JNIEnv* env;
-	jobject obj;
-	JavaGetCurrentEnv(env);
-
-	obj = JavaCallObject(env, name, "()Ljava/lang/String;", NULL);
-	if (!obj) return;
-
-	src = (*env)->GetStringChars(env, obj, NULL);
-	len = (*env)->GetStringLength(env, obj);
-	String_AppendUtf16(dst, src, len * 2);
-
-	(*env)->ReleaseStringChars(env, obj, src);
-	(*env)->DeleteLocalRef(env, obj);
-}
 #endif
+#endif /* CC_BUILD_POSIX */
 
 
 /*########################################################################################################################*
@@ -1924,5 +1821,89 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 
 	path[len] = '\0';
 	return chdir(path) == -1 ? errno : 0;
+}
+#endif
+
+/* Android java interop stuff */
+#if defined CC_BUILD_ANDROID
+jclass  App_Class;
+jobject App_Instance;
+JavaVM* VM_Ptr;
+
+/* JNI helpers */
+String JavaGetString(JNIEnv* env, jstring str) {
+	String dst;
+	dst.buffer   = (*env)->GetStringUTFChars(env,  str, NULL);
+	dst.length   = (*env)->GetStringUTFLength(env, str);
+	dst.capacity = dst.length;
+	return dst;
+}
+
+jobject JavaMakeString(JNIEnv* env, const String* str) {
+	cc_uint8 tmp[2048 + 4];
+	cc_uint8* cur;
+	int i, len = 0;
+
+	for (i = 0; i < str->length && len < 2048; i++) {
+		cur = tmp + len;
+		len += Convert_CP437ToUtf8(str->buffer[i], cur);
+	}
+	tmp[len] = '\0';
+	return (*env)->NewStringUTF(env, (const char*)tmp);
+}
+
+jbyteArray JavaMakeBytes(JNIEnv* env, const cc_uint8* src, cc_uint32 len) {
+	if (!len) return NULL;
+	jbyteArray arr = (*env)->NewByteArray(env, len);
+	(*env)->SetByteArrayRegion(env, arr, 0, len, src);
+	return arr;
+}
+
+void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
+	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
+	(*env)->CallVoidMethodA(env, App_Instance, method, args);
+}
+
+jint JavaCallInt(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
+	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
+	return (*env)->CallIntMethodA(env, App_Instance, method, args);
+}
+
+jfloat JavaCallFloat(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
+	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
+	return (*env)->CallFloatMethodA(env, App_Instance, method, args);
+}
+
+jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
+	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
+	return (*env)->CallObjectMethodA(env, App_Instance, method, args);
+}
+
+void JavaCall_String_Void(const char* name, const String* value) {
+	JNIEnv* env;
+	jvalue args[1];
+	JavaGetCurrentEnv(env);
+
+	args[0].l = JavaMakeString(env, value);
+	JavaCallVoid(env, name, "(Ljava/lang/String;)V", args);
+	(*env)->DeleteLocalRef(env, args[0].l);
+}
+
+void JavaCall_Void_String(const char* name, String* dst) {
+	const jchar* src;
+	jsize len;
+	JNIEnv* env;
+	jobject obj;
+	JavaGetCurrentEnv(env);
+
+	obj = JavaCallObject(env, name, "()Ljava/lang/String;", NULL);
+	if (!obj) return;
+
+	src = (*env)->GetStringChars(env, obj, NULL);
+	len = (*env)->GetStringLength(env, obj);
+	String_AppendUtf16(dst, src, len * 2);
+
+	(*env)->ReleaseStringChars(env, obj, src);
+	(*env)->DeleteLocalRef(env, obj);
 }
 #endif

@@ -316,7 +316,7 @@ void Logger_Backtrace(String* trace, void* ctx) {
 	String_AppendConst(trace, _NL);
 }
 #endif
-#endif
+#endif /* CC_BUILD_POSIX */
 static void Logger_DumpBacktrace(String* str, void* ctx) {
 	static const String backtrace = String_FromConst("-- backtrace --" _NL);
 	Logger_Log(&backtrace);
