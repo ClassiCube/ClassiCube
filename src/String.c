@@ -777,7 +777,7 @@ String StringsBuffer_UNSAFE_Get(struct StringsBuffer* buffer, int i) {
 
 void StringsBuffer_Add(struct StringsBuffer* buffer, const String* str) {
 	int textOffset;
-	/* StringsBuffer hasn't been initalised yet, do it here */
+	/* StringsBuffer hasn't been initialised yet, do it here */
 	if (!buffer->_flagsCapacity) StringsBuffer_Init(buffer);
 
 	if (buffer->count == buffer->_flagsCapacity) {

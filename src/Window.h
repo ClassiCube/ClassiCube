@@ -71,7 +71,7 @@ CC_VAR extern struct _WinData {
 	cc_bool SoftKeyboard;
 } WindowInfo;
 
-/* Initalises state for window. Also sets Display_ members. */
+/* Initialises state for window. Also sets Display_ members. */
 void Window_Init(void);
 /* Creates the window as the given size at centre of the screen. */
 void Window_Create(int width, int height);

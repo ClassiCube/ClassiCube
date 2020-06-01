@@ -125,7 +125,7 @@ const cc_uint32 Utils_Crc32Table[256] = {
 };
 
 void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapacity, int expandElems) {
-	/* We use a statically allocated buffer initally, so can't realloc first time */
+	/* We use a statically allocated buffer initially, so can't realloc first time */
 	int curCapacity = *capacity, newCapacity = curCapacity + expandElems;
 	*capacity = newCapacity;
 

@@ -66,7 +66,7 @@ struct Model {
 	int index;
 	cc_uint8 armX, armY; /* these translate arm model part back to (0, 0) */
 
-	cc_bool initalised;
+	cc_bool inited;
 	/* Whether the model should be slightly bobbed up and down when rendering. */
 	/* e.g. for HumanoidModel, when legs are at the peak of their swing, whole model is moved slightly down */
 	cc_bool bobbing;

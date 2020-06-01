@@ -12,7 +12,7 @@ static struct VertexTextured* iso_vertices;
 static struct VertexTextured* iso_vertices_base;
 static GfxResourceID iso_vb;
 
-static cc_bool iso_cacheInitalised;
+static cc_bool iso_cacheInited;
 static PackedCol iso_col = PACKEDCOL_WHITE;
 static PackedCol iso_colXSide, iso_colZSide, iso_colYBottom;
 
@@ -39,9 +39,9 @@ static void IsometricDrawer_RotateY(float cosA, float sinA) {
 
 static void IsometricDrawer_InitCache(void) {
 	struct Matrix rotY, rotX;
-	if (iso_cacheInitalised) return;
+	if (iso_cacheInited) return;
 
-	iso_cacheInitalised = true;
+	iso_cacheInited = true;
 	PackedCol_GetShaded(iso_col, &iso_colXSide, &iso_colZSide, &iso_colYBottom);
 
 	Matrix_RotateY(&rotY,  45.0f * MATH_DEG2RAD);

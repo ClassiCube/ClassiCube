@@ -386,9 +386,9 @@ static void MakeModel(struct Model* model) {
 	Models.Active = model;
 	model->MakeParts();
 
-	model->initalised = true;
-	model->index      = 0;
-	Models.Active     = active;
+	model->inited = true;
+	model->index  = 0;
+	Models.Active = active;
 }
 
 struct Model* Model_Get(const String* name) {
@@ -397,7 +397,7 @@ struct Model* Model_Get(const String* name) {
 	for (model = models_head; model; model = model->next) {
 		if (!String_CaselessEqualsConst(name, model->name)) continue;
 
-		if (!model->initalised) MakeModel(model);
+		if (!model->inited) MakeModel(model);
 		return model;
 	}
 	return NULL;

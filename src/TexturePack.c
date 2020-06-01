@@ -35,16 +35,16 @@ static float L_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
 static float L_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 static float L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 static RNGState L_rnd;
-static cc_bool  L_rndInitalised;
+static cc_bool  L_rndInited;
 
 static void LavaAnimation_Tick(BitmapCol* ptr, int size) {
 	int mask = size - 1, shift = Math_Log2(size);
 	float soupHeat, potHeat, col;
 	int x, y, i = 0;
 
-	if (!L_rndInitalised) {
+	if (!L_rndInited) {
 		Random_SeedFromCurrentTime(&L_rnd);
-		L_rndInitalised = true;
+		L_rndInited = true;
 	}
 	
 	for (y = 0; y < size; y++) {
@@ -106,16 +106,16 @@ static float W_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
 static float W_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 static float W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 static RNGState W_rnd;
-static cc_bool  W_rndInitalised;
+static cc_bool  W_rndInited;
 
 static void WaterAnimation_Tick(BitmapCol* ptr, int size) {
 	int mask = size - 1, shift = Math_Log2(size);
 	float soupHeat, col;
 	int x, y, i = 0;
 
-	if (!W_rndInitalised) {
+	if (!W_rndInited) {
 		Random_SeedFromCurrentTime(&W_rnd);
-		W_rndInitalised = true;
+		W_rndInited = true;
 	}
 	
 	for (y = 0; y < size; y++) {

@@ -10,7 +10,6 @@
 #include "Utils.h"
 #include "Game.h"
 #include "Logger.h"
-#include "Stream.h"
 #include "Block.h"
 #include "Event.h"
 #include "TexturePack.h"
