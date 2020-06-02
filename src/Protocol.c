@@ -744,13 +744,13 @@ static void Classic_Tick(void) {
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-static const char* cpe_clientExtensions[34] = {
+static const char* cpe_clientExtensions[35] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl", "CustomParticles",
+	"SetSpawnpoint", "VelocityControl", "CustomParticles", "DefineModel",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -1391,6 +1391,347 @@ static void CPE_SpawnEffect(cc_uint8* data) {
 	Particles_CustomEffect(data[0], x, y, z, originX, originY, originZ);
 }
 
+
+#define CustomModelPartMax 64
+#define CustomModelPartPacketSize 55
+
+enum CustomModelAnim {
+	CustomModelAnim_None = 0,
+	CustomModelAnim_Head = 1,
+	CustomModelAnim_LeftLeg = 2,
+	CustomModelAnim_RightLeg = 3,
+	CustomModelAnim_LeftArm = 4,
+	CustomModelAnim_RightArm = 5,
+};
+
+struct CustomModelPart {
+	struct BoxDesc boxDesc;
+	float rotationX;
+	float rotationY;
+	float rotationZ;
+	enum CustomModelAnim anim;
+	cc_bool fullbright;
+
+	struct ModelPart model_part;
+};
+
+// struct so we can keep track of allocated pointers, and free them in FreeCustomModels
+struct CustomModel {
+	// initialized by CreateCustomModel
+	struct Model model;
+	struct ModelTex defaultTex;
+
+	char name[STRING_SIZE + 1];
+	struct ModelVertex* vertices;
+	float nameY;
+	float eyeY;
+	Vec3 collisionBounds;
+	struct AABB pickingBoundsAABB;
+
+	cc_bool bobbing;
+	cc_bool pushes;
+	// if true, pulls skin from your account
+	cc_bool usesHumanSkin;
+	// crazy arms!
+	cc_bool calcHumanAnims;
+
+	cc_uint8 numParts;
+	struct CustomModelPart parts[CustomModelPartMax];
+
+	cc_bool valid;
+};
+
+static struct CustomModel custom_models[64];
+static cc_uint8 custom_models_len = 0;
+
+static void CustomModel_MakeParts() {
+	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
+	Platform_LogConst("CustomModel_MakeParts");
+	
+	for (int i = 0; i < customModel->numParts; i++) {
+		BoxDesc_BuildBox(&customModel->parts[i].model_part, &customModel->parts[i].boxDesc);
+	}
+}
+
+static void CustomModel_Draw(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
+
+	if (!customModel->model.inited) {
+		customModel->model.MakeParts();
+
+		customModel->model.inited = true;
+		customModel->model.index  = 0;
+	}
+
+	Model_ApplyTexture(entity);
+	
+	for (int i = 0; i < customModel->numParts; i++) {
+		struct CustomModelPart* part = &customModel->parts[i];
+
+		if (part->fullbright) {
+			for (int j = 0; j < FACE_COUNT; j++) {
+				Models.Cols[j] = PACKEDCOL_WHITE;
+			}
+		}
+
+		if (part->anim == CustomModelAnim_Head) {
+			Model_DrawRotate(
+				-entity->Pitch * MATH_DEG2RAD + part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				part->anim == CustomModelAnim_Head
+			);
+		} else if (part->anim == CustomModelAnim_LeftLeg) {
+			Model_DrawRotate(
+				entity->Anim.LeftLegX + part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				entity->Anim.LeftLegZ + part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				false
+			);
+		} else if (part->anim == CustomModelAnim_RightLeg) {
+			Model_DrawRotate(
+				entity->Anim.RightLegX + part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				entity->Anim.RightLegZ + part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				false
+			);
+		} else if (part->anim == CustomModelAnim_LeftArm) {
+			Models.Rotation = ROTATE_ORDER_XZY;
+			Model_DrawRotate(
+				entity->Anim.LeftArmX + part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				entity->Anim.LeftArmZ + part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				false
+			);
+			Models.Rotation = ROTATE_ORDER_ZYX;
+		} else if (part->anim == CustomModelAnim_RightArm) {
+			Models.Rotation = ROTATE_ORDER_XZY;
+			Model_DrawRotate(
+				entity->Anim.RightArmX + part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				entity->Anim.RightArmZ + part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				false
+			);
+			Models.Rotation = ROTATE_ORDER_ZYX;
+		} else if (
+			part->rotationX != 0 ||
+			part->rotationY != 0 ||
+			part->rotationZ != 0
+		) {
+			Model_DrawRotate(
+				part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				false
+			);
+		} else {
+			Model_DrawPart(&customModel->parts[i].model_part);
+		}
+	}
+
+    Model_UpdateVB();
+}
+
+static float CustomModel_GetNameY(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
+	return customModel->nameY;
+}
+
+static float CustomModel_GetEyeY(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
+	return customModel->eyeY;
+}
+
+static void CustomModel_GetCollisionSize(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
+	entity->Size = customModel->collisionBounds;
+}
+
+static void CustomModel_GetPickingBounds(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
+	entity->ModelAABB = custom_models->pickingBoundsAABB;
+}
+
+static void CustomModel_Init(struct CustomModel* customModel) {
+	String modelName = String_FromRaw(customModel->name, STRING_SIZE);
+	Platform_Log2(
+		"CustomModel_Init '%s' with %i BoxDescs",
+		&modelName,
+		&customModel->numParts
+	);
+
+	customModel->model.name = customModel->name;
+	customModel->model.vertices = customModel->vertices;
+
+	customModel->defaultTex.name = customModel->name;
+	customModel->model.defaultTex = &customModel->defaultTex;
+
+	customModel->model.MakeParts = CustomModel_MakeParts;
+	customModel->model.Draw = CustomModel_Draw;
+	customModel->model.GetNameY = CustomModel_GetNameY;
+	customModel->model.GetEyeY = CustomModel_GetEyeY;
+	customModel->model.GetCollisionSize = CustomModel_GetCollisionSize;
+	customModel->model.GetPickingBounds = CustomModel_GetPickingBounds;
+
+	Model_Init(&customModel->model);
+	customModel->model.bobbing = customModel->bobbing;
+	customModel->model.pushes = customModel->pushes;
+	customModel->model.usesHumanSkin = customModel->usesHumanSkin;
+	customModel->model.calcHumanAnims = customModel->calcHumanAnims;
+
+	customModel->valid = true;
+}
+
+static float ReadFloat(cc_uint8* data, int* i) {
+	float f = ((int)Stream_GetU32_BE(&data[*i])) / 10000.0f;
+	*i += 4;
+	return f;
+}
+
+static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, int* pos) {
+	// read BoxDesc
+	part->boxDesc.texX = Stream_GetU16_BE(&data[*pos]);
+	*pos += 2;
+	part->boxDesc.texY = Stream_GetU16_BE(&data[*pos]);
+	*pos += 2;
+
+	part->boxDesc.sizeX = data[*pos];
+	*pos += 1;
+	part->boxDesc.sizeY = data[*pos];
+	*pos += 1;
+	part->boxDesc.sizeZ = data[*pos];
+	*pos += 1;
+
+	part->boxDesc.x1 = ReadFloat(data, pos);
+	part->boxDesc.y1 = ReadFloat(data, pos);
+	part->boxDesc.z1 = ReadFloat(data, pos);
+
+	part->boxDesc.x2 = ReadFloat(data, pos);
+	part->boxDesc.y2 = ReadFloat(data, pos);
+	part->boxDesc.z2 = ReadFloat(data, pos);
+
+	part->boxDesc.rotX = ReadFloat(data, pos);
+	part->boxDesc.rotY = ReadFloat(data, pos);
+	part->boxDesc.rotZ = ReadFloat(data, pos);
+
+	// read rotation
+	part->rotationX = ReadFloat(data, pos);
+	part->rotationY = ReadFloat(data, pos);
+	part->rotationZ = ReadFloat(data, pos);
+
+	// read anim
+	part->anim = data[*pos];
+	*pos += 1;
+
+	// read bool flags
+	cc_uint8 flags = data[*pos];
+	*pos += 1;
+	part->fullbright = (flags >> 0) & 1;
+}
+
+static void FreeCustomModel(struct CustomModel* customModel) {
+	Mem_Free(customModel->vertices);
+	customModel->valid = false;
+}
+
+static void FreeCustomModels() {
+	Platform_LogConst("FreeCustomModels");
+
+	for (cc_uint8 i = 0; i < custom_models_len; i++) {
+		if (custom_models[i].valid) {
+			FreeCustomModel(&custom_models[i]);
+		}
+	}
+	custom_models_len = 0;
+}
+
+static void CPE_DefineModel(cc_uint8* data) {
+	Platform_LogConst("DefineModel");
+	int pos = 0;
+
+	// read String
+	String name = UNSAFE_GetString(data);
+	pos += STRING_SIZE;
+
+	struct CustomModel* customModel;
+	cc_bool new_custom_model = true;
+
+	// replace existing, same-name CustomModels
+	for (cc_uint8 i = 0; i < custom_models_len; i++) {
+		if (
+			custom_models[i].valid &&
+			String_CaselessEqualsConst(&name, &custom_models[i].name)
+		) {
+			Platform_LogConst("FOUND EXISTING!!");
+			new_custom_model = false;
+
+			customModel = &custom_models[i];
+			FreeCustomModel(customModel);
+			Mem_Set(customModel, 0, sizeof(struct CustomModel));
+			break;
+		}
+	}
+
+	if (new_custom_model) {
+		customModel = &custom_models[custom_models_len];
+	}
+
+	String_CopyToRaw(customModel->name, STRING_SIZE, &name);
+
+	// read nameY, eyeY
+	customModel->nameY = ReadFloat(data, &pos);
+	customModel->eyeY = ReadFloat(data, &pos);
+
+	// read collisionBounds
+	customModel->collisionBounds.X = ReadFloat(data, &pos);
+	customModel->collisionBounds.Y = ReadFloat(data, &pos);
+	customModel->collisionBounds.Z = ReadFloat(data, &pos);
+
+	// read pickingBoundsAABB
+	customModel->pickingBoundsAABB.Min.X = ReadFloat(data, &pos);
+	customModel->pickingBoundsAABB.Min.Y = ReadFloat(data, &pos);
+	customModel->pickingBoundsAABB.Min.Z = ReadFloat(data, &pos);
+
+	customModel->pickingBoundsAABB.Max.X = ReadFloat(data, &pos);
+	customModel->pickingBoundsAABB.Max.Y = ReadFloat(data, &pos);
+	customModel->pickingBoundsAABB.Max.Z = ReadFloat(data, &pos);
+
+	// read bool flags
+	cc_uint8 flags = data[pos++];
+	customModel->bobbing = (flags >> 0) & 1;
+	customModel->pushes = (flags >> 1) & 1;
+	customModel->usesHumanSkin = (flags >> 2) & 1;
+	customModel->calcHumanAnims = (flags >> 3) & 1;
+
+	// read # CustomModelParts
+	cc_uint8 numParts = data[pos++];
+	customModel->numParts = numParts;
+	customModel->vertices = Mem_AllocCleared(
+		numParts * MODEL_BOX_VERTICES,
+		sizeof(struct ModelVertex),
+		"CustomModel vertices"
+	);
+
+	// read each CustomModelPart
+	for (int i = 0; i < numParts; i++) {
+		struct CustomModelPart* part = &customModel->parts[i];
+		ReadCustomModelPart(part, data, &pos);
+	}
+
+	CustomModel_Init(customModel);
+	
+	if (new_custom_model) {
+		Model_Register(&customModel->model);
+		custom_models_len += 1;
+	}
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1433,6 +1774,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
 	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
 	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
+	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 3759);
 }
 
 static void CPE_Tick(void) {
@@ -1630,6 +1972,10 @@ static void OnInit(void) {
 	Protocol_Reset();
 }
 
+static void OnFree(void) {
+	FreeCustomModels();
+}
+
 static void OnReset(void) {
 	int i;
 	if (Server.IsSinglePlayer) return;
@@ -1640,10 +1986,11 @@ static void OnReset(void) {
 	}
 	Protocol_Reset();
 	FreeMapStates();
+	FreeCustomModels();
 }
 
 struct IGameComponent Protocol_Component = {
 	OnInit,  /* Init  */
-	NULL,    /* Free  */
+	OnFree,    /* Free  */
 	OnReset, /* Reset */
 };
