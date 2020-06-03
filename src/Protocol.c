@@ -1453,15 +1453,18 @@ static void CustomModel_MakeParts() {
 	}
 }
 
-static void CustomModel_Draw(struct Entity* entity) {
-	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
-
+static void CustomModel_CheckPartsInited(struct CustomModel* customModel) {
 	if (!customModel->model.inited) {
 		customModel->model.MakeParts();
 
 		customModel->model.inited = true;
 		customModel->model.index  = 0;
 	}
+}
+
+static void CustomModel_Draw(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
+	CustomModel_CheckPartsInited(customModel);
 
 	Model_ApplyTexture(entity);
 	
@@ -1558,6 +1561,19 @@ static void CustomModel_GetPickingBounds(struct Entity* entity) {
 	entity->ModelAABB = custom_models->pickingBoundsAABB;
 }
 
+static void CustomModel_DrawArm(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
+	CustomModel_CheckPartsInited(customModel);
+
+	for (int i = 0; i < customModel->numParts; i++) {
+		struct CustomModelPart* part = &customModel->parts[i];
+		if (part->anim == CustomModelAnim_RightArm) {
+			Model_DrawArmPart(part);
+			Model_UpdateVB();
+		}
+	}
+}
+
 static void CustomModel_Init(struct CustomModel* customModel) {
 	String modelName = String_FromRaw(customModel->name, STRING_SIZE);
 	Platform_Log2(
@@ -1584,6 +1600,7 @@ static void CustomModel_Init(struct CustomModel* customModel) {
 	customModel->model.pushes = customModel->pushes;
 	customModel->model.usesHumanSkin = customModel->usesHumanSkin;
 	customModel->model.calcHumanAnims = customModel->calcHumanAnims;
+	customModel->model.DrawArm  = CustomModel_DrawArm;
 
 	customModel->valid = true;
 }
