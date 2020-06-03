@@ -1391,9 +1391,10 @@ static void CPE_SpawnEffect(cc_uint8* data) {
 	Particles_CustomEffect(data[0], x, y, z, originX, originY, originZ);
 }
 
-
-#define CustomModelPartMax 64
-#define CustomModelPartPacketSize 55
+#define QUOTE(x) #x
+#define STRINGIFY(val) QUOTE(val)
+#define MAX_CUSTOM_MODELS 64
+#define MAX_CUSTOM_MODEL_PARTS 32
 
 enum CustomModelAnim {
 	CustomModelAnim_None = 0,
@@ -1436,12 +1437,12 @@ struct CustomModel {
 	cc_bool calcHumanAnims;
 
 	cc_uint8 numParts;
-	struct CustomModelPart parts[CustomModelPartMax];
+	struct CustomModelPart parts[MAX_CUSTOM_MODEL_PARTS];
 
 	cc_bool valid;
 };
 
-static struct CustomModel custom_models[64];
+static struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 static cc_uint8 custom_models_len = 0;
 
 static void CustomModel_MakeParts() {
@@ -1463,7 +1464,7 @@ static void CustomModel_CheckPartsInited(struct CustomModel* customModel) {
 }
 
 static void CustomModel_Draw(struct Entity* entity) {
-	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
+	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
 	CustomModel_CheckPartsInited(customModel);
 
 	Model_ApplyTexture(entity);
@@ -1696,6 +1697,17 @@ static void CPE_DefineModel(cc_uint8* data) {
 	}
 
 	if (new_custom_model) {
+		if (custom_models_len >= MAX_CUSTOM_MODELS) {
+			String msg; char msgBuffer[256];
+			String_InitArray(msg, msgBuffer);
+
+			String_Format1(
+				&msg,
+				"&cNew Custom Model '%s' exceeds models limit of " STRINGIFY(MAX_CUSTOM_MODELS),
+				&name
+			);
+			Logger_WarnFunc(&msg);
+		}
 		customModel = &custom_models[custom_models_len];
 	}
 
@@ -1728,6 +1740,15 @@ static void CPE_DefineModel(cc_uint8* data) {
 
 	// read # CustomModelParts
 	cc_uint8 numParts = data[pos++];
+
+	if (numParts >= MAX_CUSTOM_MODEL_PARTS) {
+		String msg; char msgBuffer[256];
+		String_InitArray(msg, msgBuffer);
+		
+		String_Format1(&msg, "&cCustom Model '%s' exceeds parts limit of " STRINGIFY(MAX_CUSTOM_MODEL_PARTS), &name);
+		Logger_WarnFunc(&msg);
+	}
+	
 	customModel->numParts = numParts;
 	customModel->vertices = Mem_AllocCleared(
 		numParts * MODEL_BOX_VERTICES,
