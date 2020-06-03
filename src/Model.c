@@ -1725,8 +1725,8 @@ static struct Model* SkinnedCubeModel_GetInstance(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Model component---------------------------------------------------*
 *#########################################################################################################################*/
-/* NOTE: None of the built in models use more than 32 parts at once. */
-static struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * 32];
+/* NOTE: None of the built in models use more than 64 parts at once. */
+static struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * 64];
 
 static void Model_RegisterDefaultModels(void) {
 	Model_RegisterTexture(&human_tex);

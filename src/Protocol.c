@@ -1394,7 +1394,7 @@ static void CPE_SpawnEffect(cc_uint8* data) {
 #define QUOTE(x) #x
 #define STRINGIFY(val) QUOTE(val)
 #define MAX_CUSTOM_MODELS 64
-#define MAX_CUSTOM_MODEL_PARTS 32
+#define MAX_CUSTOM_MODEL_PARTS 64
 
 enum CustomModelAnim {
 	CustomModelAnim_None = 0,
