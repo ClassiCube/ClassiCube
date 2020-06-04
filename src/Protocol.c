@@ -2062,7 +2062,6 @@ static void OnReset(void) {
 	}
 	Protocol_Reset();
 	FreeMapStates();
-	FreeCustomModels();
 }
 
 struct IGameComponent Protocol_Component = {
