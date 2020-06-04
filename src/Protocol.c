@@ -1602,7 +1602,7 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 
 	CustomModel_CheckPartsInited(customModel);
 
-	Models.Rotation = ROTATE_ORDER_XYZ;
+	// Models.Rotation = ROTATE_ORDER_XYZ;
 
 	for (int i = 0; i < customModel->numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
@@ -1613,7 +1613,7 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 
 	Model_UpdateVB();
 
-	Models.Rotation = ROTATE_ORDER_ZYX;
+	// Models.Rotation = ROTATE_ORDER_ZYX;
 }
 
 static void CustomModel_Init(struct CustomModel* customModel) {
