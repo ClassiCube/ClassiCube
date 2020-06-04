@@ -1393,8 +1393,6 @@ static void CPE_SpawnEffect(cc_uint8* data) {
 
 #define QUOTE(x) #x
 #define STRINGIFY(val) QUOTE(val)
-#define MAX_CUSTOM_MODELS 64
-#define MAX_CUSTOM_MODEL_PARTS 64
 
 enum CustomModelAnim {
 	CustomModelAnim_None = 0,
@@ -1456,6 +1454,17 @@ static void CustomModel_MakeParts() {
 	
 	for (int i = 0; i < customModel->numParts; i++) {
 		BoxDesc_BuildBox(&customModel->parts[i].model_part, &customModel->parts[i].boxDesc);
+	}
+}
+
+static void CustomModel_CheckMaxVertices() {
+	if (Models.MaxVertices < Array_Elems(defaultVertices)) {
+		Gfx_DeleteDynamicVb(&Models.Vb);
+
+		Models.Vertices    = defaultVertices;
+		Models.MaxVertices = Array_Elems(defaultVertices);
+
+		Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
 	}
 }
 
@@ -1595,6 +1604,8 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 }
 
 static void CustomModel_Init(struct CustomModel* customModel) {
+	CustomModel_CheckMaxVertices();
+
 	String modelName = String_FromRaw(customModel->name, STRING_SIZE);
 	int a = customModel->numParts;
 	Platform_Log2(

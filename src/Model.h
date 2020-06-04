@@ -3,19 +3,20 @@
 #include "Vectors.h"
 #include "PackedCol.h"
 #include "Constants.h"
+#include "Graphics.h"
 /* Contains various structs and methods for an entity model.
    Also contains a list of models and default textures for those models.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
-struct Entity;
-struct AABB;
-struct IGameComponent;
-struct VertexTextured;
 extern struct IGameComponent Models_Component;
+
+#define MAX_CUSTOM_MODELS 64
+#define MAX_CUSTOM_MODEL_PARTS 64
 
 #define MODEL_QUAD_VERTICES 4
 #define MODEL_BOX_VERTICES (FACE_COUNT * MODEL_QUAD_VERTICES)
 enum RotateOrder { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX, ROTATE_ORDER_XYZ };
+struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS];
 
 /* Describes a vertex within a model. */
 struct ModelVertex { float X, Y, Z; cc_uint16 U, V; };
