@@ -1458,7 +1458,11 @@ static void CustomModel_MakeParts() {
 }
 
 static void CustomModel_CheckMaxVertices() {
+	// hack to undo plugins setting a smaller vertices buffer
 	if (Models.MaxVertices < Array_Elems(defaultVertices)) {
+		Platform_LogConst(
+			"CustomModel_CheckMaxVertices found smaller buffer, resetting Models.Vb"
+		);
 		Gfx_DeleteDynamicVb(&Models.Vb);
 
 		Models.Vertices    = defaultVertices;
@@ -1477,6 +1481,7 @@ static void CustomModel_CheckPartsInited(struct CustomModel* customModel) {
 	}
 }
 
+static PackedCol oldCols[FACE_COUNT];
 static void CustomModel_Draw(struct Entity* entity) {
 	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
 	CustomModel_CheckPartsInited(customModel);
@@ -1493,6 +1498,7 @@ static void CustomModel_Draw(struct Entity* entity) {
 
 		if (part->fullbright) {
 			for (int j = 0; j < FACE_COUNT; j++) {
+				oldCols[j] = Models.Cols[j];
 				Models.Cols[j] = PACKEDCOL_WHITE;
 			}
 		}
@@ -1503,7 +1509,7 @@ static void CustomModel_Draw(struct Entity* entity) {
 				part->rotationY * MATH_DEG2RAD,
 				part->rotationZ * MATH_DEG2RAD,
 				&customModel->parts[i].model_part,
-				part->anim == CustomModelAnim_Head
+				true
 			);
 		} else if (part->anim == CustomModelAnim_LeftLeg) {
 			Model_DrawRotate(
@@ -1555,6 +1561,12 @@ static void CustomModel_Draw(struct Entity* entity) {
 		} else {
 			Model_DrawPart(&customModel->parts[i].model_part);
 		}
+
+		if (part->fullbright) {
+			for (int j = 0; j < FACE_COUNT; j++) {
+				Models.Cols[j] = oldCols[j];
+			}
+		}
 	}
 
     Model_UpdateVB();
@@ -1590,15 +1602,16 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 
 	CustomModel_CheckPartsInited(customModel);
 
-	Models.Rotation = ROTATE_ORDER_YZX;
+	Models.Rotation = ROTATE_ORDER_XYZ;
 
 	for (int i = 0; i < customModel->numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
 		if (part->anim == CustomModelAnim_RightArm) {
 			Model_DrawArmPart(part);
-			Model_UpdateVB();
 		}
 	}
+
+	Model_UpdateVB();
 
 	Models.Rotation = ROTATE_ORDER_ZYX;
 }
