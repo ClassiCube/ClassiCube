@@ -1473,6 +1473,8 @@ static void CustomModel_Draw(struct Entity* entity) {
 	CustomModel_CheckPartsInited(customModel);
 
 	Model_ApplyTexture(entity);
+	Models.uScale = 1.0f / customModel->uScale;
+	Models.vScale = 1.0f / customModel->vScale;
 	
 	for (int i = 0; i < customModel->numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
