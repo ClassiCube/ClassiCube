@@ -224,6 +224,10 @@ void Model_DrawRotate(float angleX, float angleY, float angleZ, struct ModelPart
 			Model_RotateY
 			Model_RotateZ
 			Model_RotateX
+		} else if (Models.Rotation == ROTATE_ORDER_XYZ) {
+			Model_RotateX
+			Model_RotateY
+			Model_RotateZ
 		}
 
 		/* Rotate globally (inlined RotY) */

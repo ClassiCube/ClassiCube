@@ -1469,6 +1469,7 @@ static void CustomModel_Draw(struct Entity* entity) {
 
 	Model_ApplyTexture(entity);
 	
+	Models.Rotation = ROTATE_ORDER_XYZ;
 	for (int i = 0; i < customModel->numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
 
@@ -1538,6 +1539,7 @@ static void CustomModel_Draw(struct Entity* entity) {
 			Model_DrawPart(&customModel->parts[i].model_part);
 		}
 	}
+	Models.Rotation = ROTATE_ORDER_ZYX;
 
     Model_UpdateVB();
 }
@@ -1619,6 +1621,14 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 	part->boxDesc.texY = Stream_GetU16_BE(&data[*pos]);
 	*pos += 2;
 
+	int a = (int)part->boxDesc.texX;
+	int b = (int)part->boxDesc.texY;
+	Platform_Log2(
+		"offset %i, %i",
+		&a,
+		&b
+	);
+
 	part->boxDesc.sizeX = data[*pos];
 	*pos += 1;
 	part->boxDesc.sizeY = data[*pos];
@@ -1626,13 +1636,35 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 	part->boxDesc.sizeZ = data[*pos];
 	*pos += 1;
 
+	int c = (int)part->boxDesc.sizeX;
+	int d = (int)part->boxDesc.sizeY;
+	int e = (int)part->boxDesc.sizeZ;
+	Platform_Log3(
+		"size %i, %i, %i",
+		&c,
+		&d,
+		&e
+	);
+
 	part->boxDesc.x1 = ReadFloat(data, pos);
 	part->boxDesc.y1 = ReadFloat(data, pos);
 	part->boxDesc.z1 = ReadFloat(data, pos);
+	Platform_Log3(
+		"from %f2, %f2, %f2",
+		&part->boxDesc.x1,
+		&part->boxDesc.y1,
+		&part->boxDesc.z1
+	);
 
 	part->boxDesc.x2 = ReadFloat(data, pos);
 	part->boxDesc.y2 = ReadFloat(data, pos);
 	part->boxDesc.z2 = ReadFloat(data, pos);
+	Platform_Log3(
+		"to   %f2, %f2, %f2",
+		&part->boxDesc.x2,
+		&part->boxDesc.y2,
+		&part->boxDesc.z2
+	);
 
 	part->boxDesc.rotX = ReadFloat(data, pos);
 	part->boxDesc.rotY = ReadFloat(data, pos);
@@ -1642,6 +1674,12 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 	part->rotationX = ReadFloat(data, pos);
 	part->rotationY = ReadFloat(data, pos);
 	part->rotationZ = ReadFloat(data, pos);
+	Platform_Log3(
+		"rotation %f2, %f2, %f2",
+		&part->rotationX,
+		&part->rotationY,
+		&part->rotationZ
+	);
 
 	// read anim
 	part->anim = data[*pos];

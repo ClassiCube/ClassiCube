@@ -15,7 +15,7 @@ extern struct IGameComponent Models_Component;
 
 #define MODEL_QUAD_VERTICES 4
 #define MODEL_BOX_VERTICES (FACE_COUNT * MODEL_QUAD_VERTICES)
-enum RotateOrder { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX };
+enum RotateOrder { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX, ROTATE_ORDER_XYZ };
 
 /* Describes a vertex within a model. */
 struct ModelVertex { float X, Y, Z; cc_uint16 U, V; };
