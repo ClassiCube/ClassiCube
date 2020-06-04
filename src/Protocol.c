@@ -1436,6 +1436,11 @@ struct CustomModel {
 	// crazy arms!
 	cc_bool calcHumanAnims;
 
+	cc_bool hideFirstPersonArm;
+
+	cc_uint16 uScale;
+	cc_uint16 vScale;
+
 	cc_uint8 numParts;
 	struct CustomModelPart parts[MAX_CUSTOM_MODEL_PARTS];
 
@@ -1781,6 +1786,13 @@ static void CPE_DefineModel(cc_uint8* data) {
 	customModel->pushes = (flags >> 1) & 1;
 	customModel->usesHumanSkin = (flags >> 2) & 1;
 	customModel->calcHumanAnims = (flags >> 3) & 1;
+	customModel->hideFirstPersonArm = (flags >> 4) & 1;
+
+	// read uScale, vScale
+	customModel->uScale = Stream_GetU16_BE(&data[pos]);
+	pos += 2;
+	customModel->vScale = Stream_GetU16_BE(&data[pos]);
+	pos += 2;
 
 	// read # CustomModelParts
 	cc_uint8 numParts = data[pos++];
@@ -1856,7 +1868,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
 	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
 	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
-	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 3759);
+	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 3763);
 }
 
 static void CPE_Tick(void) {
