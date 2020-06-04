@@ -1469,9 +1469,11 @@ static void CustomModel_Draw(struct Entity* entity) {
 
 	Model_ApplyTexture(entity);
 	
-	Models.Rotation = ROTATE_ORDER_XYZ;
 	for (int i = 0; i < customModel->numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
+
+		// bbmodels use xyz rotation order
+		Models.Rotation = ROTATE_ORDER_XYZ;
 
 		if (part->fullbright) {
 			for (int j = 0; j < FACE_COUNT; j++) {
@@ -1504,6 +1506,7 @@ static void CustomModel_Draw(struct Entity* entity) {
 				false
 			);
 		} else if (part->anim == CustomModelAnim_LeftArm) {
+			// TODO: we're using 2 different rotation orders here
 			Models.Rotation = ROTATE_ORDER_XZY;
 			Model_DrawRotate(
 				entity->Anim.LeftArmX + part->rotationX * MATH_DEG2RAD,
@@ -1512,7 +1515,6 @@ static void CustomModel_Draw(struct Entity* entity) {
 				&customModel->parts[i].model_part,
 				false
 			);
-			Models.Rotation = ROTATE_ORDER_ZYX;
 		} else if (part->anim == CustomModelAnim_RightArm) {
 			Models.Rotation = ROTATE_ORDER_XZY;
 			Model_DrawRotate(
@@ -1522,7 +1524,6 @@ static void CustomModel_Draw(struct Entity* entity) {
 				&customModel->parts[i].model_part,
 				false
 			);
-			Models.Rotation = ROTATE_ORDER_ZYX;
 		} else if (
 			part->rotationX != 0 ||
 			part->rotationY != 0 ||
@@ -1539,9 +1540,10 @@ static void CustomModel_Draw(struct Entity* entity) {
 			Model_DrawPart(&customModel->parts[i].model_part);
 		}
 	}
-	Models.Rotation = ROTATE_ORDER_ZYX;
 
     Model_UpdateVB();
+
+	Models.Rotation = ROTATE_ORDER_ZYX;
 }
 
 static float CustomModel_GetNameY(struct Entity* entity) {
@@ -1568,6 +1570,8 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
 	CustomModel_CheckPartsInited(customModel);
 
+	Models.Rotation = ROTATE_ORDER_YZX;
+
 	for (int i = 0; i < customModel->numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
 		if (part->anim == CustomModelAnim_RightArm) {
@@ -1575,6 +1579,8 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 			Model_UpdateVB();
 		}
 	}
+
+	Models.Rotation = ROTATE_ORDER_ZYX;
 }
 
 static void CustomModel_Init(struct CustomModel* customModel) {
