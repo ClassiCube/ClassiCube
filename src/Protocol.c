@@ -1575,6 +1575,10 @@ static void CustomModel_GetPickingBounds(struct Entity* entity) {
 
 static void CustomModel_DrawArm(struct Entity* entity) {
 	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
+	if (customModel->hideFirstPersonArm) {
+		return;
+	}
+
 	CustomModel_CheckPartsInited(customModel);
 
 	Models.Rotation = ROTATE_ORDER_YZX;
@@ -1592,10 +1596,11 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 
 static void CustomModel_Init(struct CustomModel* customModel) {
 	String modelName = String_FromRaw(customModel->name, STRING_SIZE);
+	int a = customModel->numParts;
 	Platform_Log2(
 		"CustomModel_Init '%s' with %i BoxDescs",
 		&modelName,
-		&customModel->numParts
+		&a
 	);
 
 	customModel->model.name = customModel->name;
@@ -1636,11 +1641,11 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 
 	int a = (int)part->boxDesc.texX;
 	int b = (int)part->boxDesc.texY;
-	Platform_Log2(
-		"offset %i, %i",
-		&a,
-		&b
-	);
+	// Platform_Log2(
+	// 	"offset %i, %i",
+	// 	&a,
+	// 	&b
+	// );
 
 	part->boxDesc.sizeX = data[*pos];
 	*pos += 1;
@@ -1652,32 +1657,32 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 	int c = (int)part->boxDesc.sizeX;
 	int d = (int)part->boxDesc.sizeY;
 	int e = (int)part->boxDesc.sizeZ;
-	Platform_Log3(
-		"size %i, %i, %i",
-		&c,
-		&d,
-		&e
-	);
+	// Platform_Log3(
+	// 	"size %i, %i, %i",
+	// 	&c,
+	// 	&d,
+	// 	&e
+	// );
 
 	part->boxDesc.x1 = ReadFloat(data, pos);
 	part->boxDesc.y1 = ReadFloat(data, pos);
 	part->boxDesc.z1 = ReadFloat(data, pos);
-	Platform_Log3(
-		"from %f2, %f2, %f2",
-		&part->boxDesc.x1,
-		&part->boxDesc.y1,
-		&part->boxDesc.z1
-	);
+	// Platform_Log3(
+	// 	"from %f8, %f8, %f8",
+	// 	&part->boxDesc.x1,
+	// 	&part->boxDesc.y1,
+	// 	&part->boxDesc.z1
+	// );
 
 	part->boxDesc.x2 = ReadFloat(data, pos);
 	part->boxDesc.y2 = ReadFloat(data, pos);
 	part->boxDesc.z2 = ReadFloat(data, pos);
-	Platform_Log3(
-		"to   %f2, %f2, %f2",
-		&part->boxDesc.x2,
-		&part->boxDesc.y2,
-		&part->boxDesc.z2
-	);
+	// Platform_Log3(
+	// 	"to   %f8, %f8, %f8",
+	// 	&part->boxDesc.x2,
+	// 	&part->boxDesc.y2,
+	// 	&part->boxDesc.z2
+	// );
 
 	part->boxDesc.rotX = ReadFloat(data, pos);
 	part->boxDesc.rotY = ReadFloat(data, pos);
@@ -1687,12 +1692,12 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 	part->rotationX = ReadFloat(data, pos);
 	part->rotationY = ReadFloat(data, pos);
 	part->rotationZ = ReadFloat(data, pos);
-	Platform_Log3(
-		"rotation %f2, %f2, %f2",
-		&part->rotationX,
-		&part->rotationY,
-		&part->rotationZ
-	);
+	// Platform_Log3(
+	// 	"rotation %f8, %f8, %f8",
+	// 	&part->rotationX,
+	// 	&part->rotationY,
+	// 	&part->rotationZ
+	// );
 
 	// read anim
 	part->anim = data[*pos];
