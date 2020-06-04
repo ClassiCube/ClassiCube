@@ -1622,9 +1622,9 @@ static void CustomModel_Init(struct CustomModel* customModel) {
 }
 
 static float ReadFloat(cc_uint8* data, int* i) {
-	float f = ((int)Stream_GetU32_BE(&data[*i])) / 10000.0f;
+	float* f = &data[*i];
 	*i += 4;
-	return f;
+	return *f;
 }
 
 static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, int* pos) {
