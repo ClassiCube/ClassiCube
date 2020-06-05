@@ -1340,7 +1340,7 @@ static void CPE_SetSpawnPoint(cc_uint8* data) {
 static void CalcVelocity(float* vel, cc_uint8* src, cc_uint8 mode) {
 	int raw     = (int)Stream_GetU32_BE(src);
 	float value = Math_AbsF(raw / 10000.0f);
-	value       = Math_Sign(raw) * PhysicsComp_CalcJumpVelocity(value);
+	value       = Math_Sign((float)raw) * PhysicsComp_CalcJumpVelocity(value);
 
 	if (mode == 0) *vel += value;
 	if (mode == 1) *vel = value;
