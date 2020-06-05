@@ -1448,7 +1448,7 @@ struct CustomModel {
 static struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 static cc_uint8 custom_models_len = 0;
 
-static void CustomModel_MakeParts() {
+static void CustomModel_MakeParts(void) {
 	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
 	Platform_LogConst("CustomModel_MakeParts");
 	
@@ -1457,7 +1457,7 @@ static void CustomModel_MakeParts() {
 	}
 }
 
-static void CustomModel_CheckMaxVertices() {
+static void CustomModel_CheckMaxVertices(void) {
 	// hack to undo plugins setting a smaller vertices buffer
 	if (Models.MaxVertices < Array_Elems(defaultVertices)) {
 		Platform_LogConst(
@@ -1650,7 +1650,7 @@ static void CustomModel_Init(struct CustomModel* customModel) {
 }
 
 static float ReadFloat(cc_uint8* data, int* i) {
-	float* f = &data[*i];
+	float* f = (float*)(data + *i); 
 	*i += 4;
 	return *f;
 }
@@ -1753,7 +1753,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 	int pos = 0;
 
 	// read String
-	String name = UNSAFE_GetString(data);
+	const String name = UNSAFE_GetString(data);
 	pos += STRING_SIZE;
 
 	struct CustomModel* customModel;
@@ -1763,7 +1763,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 	for (cc_uint8 i = 0; i < custom_models_len; i++) {
 		if (
 			custom_models[i].valid &&
-			String_CaselessEqualsConst(&name, &custom_models[i].name)
+			String_CaselessEqualsConst(&name, custom_models[i].name)
 		) {
 			Platform_LogConst("FOUND EXISTING!!");
 			new_custom_model = false;
