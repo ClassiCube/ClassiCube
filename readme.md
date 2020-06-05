@@ -112,21 +112,21 @@ NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TOD
 
 ```emcc *.c -s FETCH=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file texpacks/default.zip```
 
-The generated javascript file has some issues. [See here for how to fix](misc/compile-fixes.md#webclient-patches)
+The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 
 ##### Other
 
-You'll have to write the necessary code. You should read portability.md in misc folder.
+You'll have to write the necessary code. You should read portability.md in doc folder.
 
 ### Known compilation errors
 
-[Fixes for compilation errors when using musl or old glibc for C standard library](misc/compile-fixes.md#common-compilation-errors)
+[Fixes for compilation errors when using musl or old glibc for C standard library](doc/compile-fixes.md#common-compilation-errors)
 
 ### Documentation
 
 Functions and variables in .h files are mostly documented.
 
-Further information (e.g. portablity, style) for the game's source code can be found in the misc folder.
+Further information (e.g. style) for the game's source code can be found in the doc and misc folders.
 
 #### Tips
 * Press escape (after joining a world) or pause to switch to the pause menu.
