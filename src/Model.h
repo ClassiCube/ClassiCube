@@ -3,7 +3,6 @@
 #include "Vectors.h"
 #include "PackedCol.h"
 #include "Constants.h"
-#include "Graphics.h"
 #include "Physics.h"
 /* Contains various structs and methods for an entity model.
    Also contains a list of models and default textures for those models.
