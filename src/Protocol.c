@@ -1404,14 +1404,14 @@ enum CustomModelAnim {
 };
 
 struct CustomModelPart {
+	struct ModelPart model_part;
+
 	struct BoxDesc boxDesc;
 	float rotationX;
 	float rotationY;
 	float rotationZ;
 	enum CustomModelAnim anim;
 	cc_bool fullbright;
-
-	struct ModelPart model_part;
 };
 
 // struct so we can keep track of allocated pointers, and free them in FreeCustomModels
@@ -1602,18 +1602,17 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 
 	CustomModel_CheckPartsInited(customModel);
 
-	// Models.Rotation = ROTATE_ORDER_XYZ;
+	Models.uScale = 1.0f / customModel->uScale;
+	Models.vScale = 1.0f / customModel->vScale;
 
 	for (int i = 0; i < customModel->numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
 		if (part->anim == CustomModelAnim_RightArm) {
-			Model_DrawArmPart(part);
+			Model_DrawArmPart(&part->model_part);
 		}
 	}
 
 	Model_UpdateVB();
-
-	// Models.Rotation = ROTATE_ORDER_ZYX;
 }
 
 static void CustomModel_Init(struct CustomModel* customModel) {
