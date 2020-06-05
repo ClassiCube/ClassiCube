@@ -750,7 +750,7 @@ static const char* cpe_clientExtensions[35] = {
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl", "CustomParticles", "DefineModel",
+	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -1414,13 +1414,11 @@ struct CustomModelPart {
 	cc_bool fullbright;
 };
 
-// struct so we can keep track of allocated pointers, and free them in FreeCustomModels
 struct CustomModel {
-	// initialized by CreateCustomModel
 	struct Model model;
 	struct ModelTex defaultTex;
 
-	char name[STRING_SIZE + 1];
+	char name[STRING_SIZE];
 	struct ModelVertex* vertices;
 	float nameY;
 	float eyeY;
@@ -1429,7 +1427,7 @@ struct CustomModel {
 
 	cc_bool bobbing;
 	cc_bool pushes;
-	// if true, pulls skin from your account
+	// if true, falls back to using your account's skin
 	cc_bool usesHumanSkin;
 	// crazy arms!
 	cc_bool calcHumanAnims;
@@ -1856,6 +1854,11 @@ static void CPE_DefineModel(cc_uint8* data) {
 	}
 }
 
+static void CPE_RemoveModel(cc_uint8* data) {
+	const String name = UNSAFE_GetString(data);
+	Platform_Log1("RemoveModel '%s'", &name);
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1899,6 +1902,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
 	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
 	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 3763);
+	Net_Set(OPCODE_REMOVE_MODEL, CPE_RemoveModel, 65);
 }
 
 static void CPE_Tick(void) {
