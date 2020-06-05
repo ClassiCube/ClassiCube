@@ -2973,7 +2973,7 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 static cc_bool keyboardOpen;
 
 static void RefreshWindowBounds(void) {
-	emscripten_get_canvas_element_size(NULL, &WindowInfo.Width, &WindowInfo.Height);
+	emscripten_get_canvas_element_size("#canvas", &WindowInfo.Width, &WindowInfo.Height);
 }
 
 static void CorrectPointerFocus(void) {
@@ -3007,7 +3007,7 @@ static EM_BOOL OnMouseButton(int type, const EmscriptenMouseEvent* ev, void* dat
 /* input coordinates are CSS pixels, remap to internal pixels */
 static void RescaleXY(int srcX, int srcY, int* dstX, int* dstY) {
 	double css_width, css_height;
-	emscripten_get_element_css_size(NULL, &css_width, &css_height);
+	emscripten_get_element_css_size("#canvas", &css_width, &css_height);
 
 	*dstX = (int)(srcX * WindowInfo.Width  / css_width);
 	*dstY = (int)(srcY * WindowInfo.Height / css_height);
@@ -3340,7 +3340,7 @@ cc_result Window_EnterFullscreen(void) {
 cc_result Window_ExitFullscreen(void) { return emscripten_exit_fullscreen(); }
 
 void Window_SetSize(int width, int height) {
-	emscripten_set_canvas_element_size(NULL, width, height);
+	emscripten_set_canvas_element_size("#canvas", width, height);
 	RefreshWindowBounds();
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
@@ -3439,7 +3439,7 @@ void Window_CloseKeyboard(void) {
 
 void Window_EnableRawMouse(void) {
 	RegrabMouse();
-	emscripten_request_pointerlock(NULL, true);
+	emscripten_request_pointerlock("#canvas", true);
 	Input_RawMode = true;
 }
 void Window_UpdateRawMouse(void) { }
@@ -4428,7 +4428,7 @@ void GLContext_Init(void) {
 	attribs.stencil   = false;
 	attribs.antialias = false;
 
-	ctx_handle = emscripten_webgl_create_context(NULL, &attribs);
+	ctx_handle = emscripten_webgl_create_context("#canvas", &attribs);
 	emscripten_webgl_make_context_current(ctx_handle);
 	emscripten_set_webglcontextlost_callback("#canvas", NULL, 0, GLContext_OnLost);
 }
