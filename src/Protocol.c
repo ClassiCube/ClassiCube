@@ -1391,248 +1391,7 @@ static void CPE_SpawnEffect(cc_uint8* data) {
 	Particles_CustomEffect(data[0], x, y, z, originX, originY, originZ);
 }
 
-#define QUOTE(x) #x
-#define STRINGIFY(val) QUOTE(val)
-
-enum CustomModelAnim {
-	CustomModelAnim_None = 0,
-	CustomModelAnim_Head = 1,
-	CustomModelAnim_LeftLeg = 2,
-	CustomModelAnim_RightLeg = 3,
-	CustomModelAnim_LeftArm = 4,
-	CustomModelAnim_RightArm = 5,
-};
-
-struct CustomModelPart {
-	struct ModelPart model_part;
-
-	struct BoxDesc boxDesc;
-	float rotationX;
-	float rotationY;
-	float rotationZ;
-	enum CustomModelAnim anim;
-	cc_bool fullbright;
-};
-
-struct CustomModel {
-	struct Model model;
-	struct ModelTex defaultTex;
-
-	char name[STRING_SIZE + 1];
-	struct ModelVertex* vertices;
-	float nameY;
-	float eyeY;
-	Vec3 collisionBounds;
-	struct AABB pickingBoundsAABB;
-
-	cc_bool bobbing;
-	cc_bool pushes;
-	// if true, falls back to using your account's skin
-	cc_bool usesHumanSkin;
-	// crazy arms!
-	cc_bool calcHumanAnims;
-
-	cc_bool hideFirstPersonArm;
-
-	cc_uint16 uScale;
-	cc_uint16 vScale;
-
-	cc_uint8 numParts;
-	struct CustomModelPart parts[MAX_CUSTOM_MODEL_PARTS];
-
-	cc_bool valid;
-};
-
-static struct CustomModel custom_models[MAX_CUSTOM_MODELS];
-
-static void CustomModel_MakeParts(void) {
-	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
-	Platform_LogConst("CustomModel_MakeParts");
-	
-	for (int i = 0; i < customModel->numParts; i++) {
-		BoxDesc_BuildBox(&customModel->parts[i].model_part, &customModel->parts[i].boxDesc);
-	}
-}
-
-static void CustomModel_CheckMaxVertices(void) {
-	// hack to undo plugins setting a smaller vertices buffer
-	if (Models.MaxVertices < Array_Elems(defaultVertices)) {
-		Platform_LogConst(
-			"CustomModel_CheckMaxVertices found smaller buffer, resetting Models.Vb"
-		);
-		Gfx_DeleteDynamicVb(&Models.Vb);
-
-		Models.Vertices    = defaultVertices;
-		Models.MaxVertices = Array_Elems(defaultVertices);
-
-		Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
-	}
-}
-
-static PackedCol oldCols[FACE_COUNT];
-static void CustomModel_Draw(struct Entity* entity) {
-	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
-
-	Model_ApplyTexture(entity);
-	Models.uScale = 1.0f / customModel->uScale;
-	Models.vScale = 1.0f / customModel->vScale;
-	
-	for (int i = 0; i < customModel->numParts; i++) {
-		struct CustomModelPart* part = &customModel->parts[i];
-
-		// bbmodels use xyz rotation order
-		Models.Rotation = ROTATE_ORDER_XYZ;
-
-		if (part->fullbright) {
-			for (int j = 0; j < FACE_COUNT; j++) {
-				oldCols[j] = Models.Cols[j];
-				Models.Cols[j] = PACKEDCOL_WHITE;
-			}
-		}
-
-		if (part->anim == CustomModelAnim_Head) {
-			Model_DrawRotate(
-				-entity->Pitch * MATH_DEG2RAD + part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				part->rotationZ * MATH_DEG2RAD,
-				&customModel->parts[i].model_part,
-				true
-			);
-		} else if (part->anim == CustomModelAnim_LeftLeg) {
-			Model_DrawRotate(
-				entity->Anim.LeftLegX + part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				entity->Anim.LeftLegZ + part->rotationZ * MATH_DEG2RAD,
-				&customModel->parts[i].model_part,
-				false
-			);
-		} else if (part->anim == CustomModelAnim_RightLeg) {
-			Model_DrawRotate(
-				entity->Anim.RightLegX + part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				entity->Anim.RightLegZ + part->rotationZ * MATH_DEG2RAD,
-				&customModel->parts[i].model_part,
-				false
-			);
-		} else if (part->anim == CustomModelAnim_LeftArm) {
-			// TODO: we're using 2 different rotation orders here
-			Models.Rotation = ROTATE_ORDER_XZY;
-			Model_DrawRotate(
-				entity->Anim.LeftArmX + part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				entity->Anim.LeftArmZ + part->rotationZ * MATH_DEG2RAD,
-				&customModel->parts[i].model_part,
-				false
-			);
-		} else if (part->anim == CustomModelAnim_RightArm) {
-			Models.Rotation = ROTATE_ORDER_XZY;
-			Model_DrawRotate(
-				entity->Anim.RightArmX + part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				entity->Anim.RightArmZ + part->rotationZ * MATH_DEG2RAD,
-				&customModel->parts[i].model_part,
-				false
-			);
-		} else if (
-			part->rotationX != 0 ||
-			part->rotationY != 0 ||
-			part->rotationZ != 0
-		) {
-			Model_DrawRotate(
-				part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				part->rotationZ * MATH_DEG2RAD,
-				&customModel->parts[i].model_part,
-				false
-			);
-		} else {
-			Model_DrawPart(&customModel->parts[i].model_part);
-		}
-
-		if (part->fullbright) {
-			for (int j = 0; j < FACE_COUNT; j++) {
-				Models.Cols[j] = oldCols[j];
-			}
-		}
-	}
-
-    Model_UpdateVB();
-
-	Models.Rotation = ROTATE_ORDER_ZYX;
-}
-
-static float CustomModel_GetNameY(struct Entity* entity) {
-	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
-	return customModel->nameY;
-}
-
-static float CustomModel_GetEyeY(struct Entity* entity) {
-	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
-	return customModel->eyeY;
-}
-
-static void CustomModel_GetCollisionSize(struct Entity* entity) {
-	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
-	entity->Size = customModel->collisionBounds;
-}
-
-static void CustomModel_GetPickingBounds(struct Entity* entity) {
-	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
-	entity->ModelAABB = custom_models->pickingBoundsAABB;
-}
-
-static void CustomModel_DrawArm(struct Entity* entity) {
-	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
-	if (customModel->hideFirstPersonArm) {
-		return;
-	}
-
-	Models.uScale = 1.0f / customModel->uScale;
-	Models.vScale = 1.0f / customModel->vScale;
-
-	for (int i = 0; i < customModel->numParts; i++) {
-		struct CustomModelPart* part = &customModel->parts[i];
-		if (part->anim == CustomModelAnim_RightArm) {
-			Model_DrawArmPart(&part->model_part);
-		}
-	}
-
-	Model_UpdateVB();
-}
-
-static void CustomModel_Init(struct CustomModel* customModel) {
-	CustomModel_CheckMaxVertices();
-
-	String modelName = String_FromRaw(customModel->name, STRING_SIZE);
-	int a = customModel->numParts;
-	Platform_Log2(
-		"CustomModel_Init '%s' with %i BoxDescs",
-		&modelName,
-		&a
-	);
-
-	customModel->model.name = customModel->name;
-	customModel->model.vertices = customModel->vertices;
-
-	customModel->defaultTex.name = customModel->name;
-	customModel->model.defaultTex = &customModel->defaultTex;
-
-	customModel->model.MakeParts = CustomModel_MakeParts;
-	customModel->model.Draw = CustomModel_Draw;
-	customModel->model.GetNameY = CustomModel_GetNameY;
-	customModel->model.GetEyeY = CustomModel_GetEyeY;
-	customModel->model.GetCollisionSize = CustomModel_GetCollisionSize;
-	customModel->model.GetPickingBounds = CustomModel_GetPickingBounds;
-
-	Model_Init(&customModel->model);
-	customModel->model.bobbing = customModel->bobbing;
-	customModel->model.pushes = customModel->pushes;
-	customModel->model.usesHumanSkin = customModel->usesHumanSkin;
-	customModel->model.calcHumanAnims = customModel->calcHumanAnims;
-	customModel->model.DrawArm  = CustomModel_DrawArm;
-
-	customModel->valid = true;
-}
+/* CustomModels */
 
 static float ReadFloat(cc_uint8* data, int* i) {
 	union IntAndFloat raw;
@@ -1642,19 +1401,11 @@ static float ReadFloat(cc_uint8* data, int* i) {
 }
 
 static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, int* pos) {
-	// read BoxDesc
+	/* read BoxDesc */
 	part->boxDesc.texX = Stream_GetU16_BE(&data[*pos]);
 	*pos += 2;
 	part->boxDesc.texY = Stream_GetU16_BE(&data[*pos]);
 	*pos += 2;
-
-	int a = (int)part->boxDesc.texX;
-	int b = (int)part->boxDesc.texY;
-	// Platform_Log2(
-	// 	"offset %i, %i",
-	// 	&a,
-	// 	&b
-	// );
 
 	part->boxDesc.sizeX = data[*pos];
 	*pos += 1;
@@ -1663,103 +1414,58 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 	part->boxDesc.sizeZ = data[*pos];
 	*pos += 1;
 
-	int c = (int)part->boxDesc.sizeX;
-	int d = (int)part->boxDesc.sizeY;
-	int e = (int)part->boxDesc.sizeZ;
-	// Platform_Log3(
-	// 	"size %i, %i, %i",
-	// 	&c,
-	// 	&d,
-	// 	&e
-	// );
-
 	part->boxDesc.x1 = ReadFloat(data, pos);
 	part->boxDesc.y1 = ReadFloat(data, pos);
 	part->boxDesc.z1 = ReadFloat(data, pos);
-	// Platform_Log3(
-	// 	"from %f8, %f8, %f8",
-	// 	&part->boxDesc.x1,
-	// 	&part->boxDesc.y1,
-	// 	&part->boxDesc.z1
-	// );
+
 
 	part->boxDesc.x2 = ReadFloat(data, pos);
 	part->boxDesc.y2 = ReadFloat(data, pos);
 	part->boxDesc.z2 = ReadFloat(data, pos);
-	// Platform_Log3(
-	// 	"to   %f8, %f8, %f8",
-	// 	&part->boxDesc.x2,
-	// 	&part->boxDesc.y2,
-	// 	&part->boxDesc.z2
-	// );
 
 	part->boxDesc.rotX = ReadFloat(data, pos);
 	part->boxDesc.rotY = ReadFloat(data, pos);
 	part->boxDesc.rotZ = ReadFloat(data, pos);
 
-	// read rotation
+	/* read rotation */
 	part->rotationX = ReadFloat(data, pos);
 	part->rotationY = ReadFloat(data, pos);
 	part->rotationZ = ReadFloat(data, pos);
-	// Platform_Log3(
-	// 	"rotation %f8, %f8, %f8",
-	// 	&part->rotationX,
-	// 	&part->rotationY,
-	// 	&part->rotationZ
-	// );
 
-	// read anim
+	/* read anim */
 	part->anim = data[*pos];
 	*pos += 1;
 
-	// read bool flags
+	/* read bool flags */
 	cc_uint8 flags = data[*pos];
 	*pos += 1;
 	part->fullbright = (flags >> 0) & 1;
 }
 
-static void FreeCustomModel(struct CustomModel* customModel) {
-	String name = String_FromReadonly(customModel->name);
-	Platform_Log1("FreeCustomModel '%s'", &name);
-	Model_Unregister((struct Model*)customModel);
-
-	Mem_Free(customModel->vertices);
-	Mem_Set(customModel, 0, sizeof(struct CustomModel));
-}
-
-static void FreeCustomModels() {
-	Platform_LogConst("FreeCustomModels");
-
-	for (cc_uint8 i = 0; i < MAX_CUSTOM_MODELS; i++) {
-		if (custom_models[i].valid) {
-			FreeCustomModel(&custom_models[i]);
-		}
-	}
-}
-
 static void CPE_DefineModel(cc_uint8* data) {
 	int pos = 0;
 
-	// read String
+	/* read String */
 	const String name = UNSAFE_GetString(data);
 	pos += STRING_SIZE;
 	
 	Platform_Log1("DefineModel '%s'", &name);
 
-	// remove existing, same-name CustomModels
-	for (cc_uint8 i = 0; i < MAX_CUSTOM_MODELS; i++) {
+	/* remove existing, same-name CustomModels */
+	int i;
+	for (i = 0; i < MAX_CUSTOM_MODELS; i++) {
 		if (
 			custom_models[i].valid &&
 			String_CaselessEqualsConst(&name, custom_models[i].name)
 		) {
 			Platform_LogConst("FOUND EXISTING!!");
-			FreeCustomModel(&custom_models[i]);
+			CustomModel_Free(&custom_models[i]);
 		}
 	}
 
-	// find new slot
+	/* find new slot */
 	struct CustomModel* customModel = NULL;
-	for (cc_uint8 i = 0; i < MAX_CUSTOM_MODELS; i++) {
+	for (i = 0; i < MAX_CUSTOM_MODELS; i++) {
 		if (!custom_models[i].valid) {
 			customModel = &custom_models[i];
 			break;
@@ -1781,16 +1487,16 @@ static void CPE_DefineModel(cc_uint8* data) {
 
 	String_CopyToRaw(customModel->name, STRING_SIZE, &name);
 
-	// read nameY, eyeY
+	/* read nameY, eyeY */
 	customModel->nameY = ReadFloat(data, &pos);
 	customModel->eyeY = ReadFloat(data, &pos);
 
-	// read collisionBounds
+	/* read collisionBounds */
 	customModel->collisionBounds.X = ReadFloat(data, &pos);
 	customModel->collisionBounds.Y = ReadFloat(data, &pos);
 	customModel->collisionBounds.Z = ReadFloat(data, &pos);
 
-	// read pickingBoundsAABB
+	/* read pickingBoundsAABB */
 	customModel->pickingBoundsAABB.Min.X = ReadFloat(data, &pos);
 	customModel->pickingBoundsAABB.Min.Y = ReadFloat(data, &pos);
 	customModel->pickingBoundsAABB.Min.Z = ReadFloat(data, &pos);
@@ -1799,7 +1505,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 	customModel->pickingBoundsAABB.Max.Y = ReadFloat(data, &pos);
 	customModel->pickingBoundsAABB.Max.Z = ReadFloat(data, &pos);
 
-	// read bool flags
+	/* read bool flags */
 	cc_uint8 flags = data[pos++];
 	customModel->bobbing = (flags >> 0) & 1;
 	customModel->pushes = (flags >> 1) & 1;
@@ -1807,13 +1513,13 @@ static void CPE_DefineModel(cc_uint8* data) {
 	customModel->calcHumanAnims = (flags >> 3) & 1;
 	customModel->hideFirstPersonArm = (flags >> 4) & 1;
 
-	// read uScale, vScale
+	/* read uScale, vScale */
 	customModel->uScale = Stream_GetU16_BE(&data[pos]);
 	pos += 2;
 	customModel->vScale = Stream_GetU16_BE(&data[pos]);
 	pos += 2;
 
-	// read # CustomModelParts
+	/* read # CustomModelParts */
 	cc_uint8 numParts = data[pos++];
 
 	if (numParts >= MAX_CUSTOM_MODEL_PARTS) {
@@ -1831,8 +1537,8 @@ static void CPE_DefineModel(cc_uint8* data) {
 		"CustomModel vertices"
 	);
 
-	// read each CustomModelPart
-	for (int i = 0; i < numParts; i++) {
+	/* read each CustomModelPart */
+	for (i = 0; i < numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
 		ReadCustomModelPart(part, data, &pos);
 	}
@@ -1842,16 +1548,17 @@ static void CPE_DefineModel(cc_uint8* data) {
 }
 
 static void CPE_RemoveModel(cc_uint8* data) {
-	// unregisters and frees the custom model
+	/* unregisters and frees the custom model */
 
 	const String name = UNSAFE_GetString(data);
 	Platform_Log1("RemoveModel '%s'", &name);
 
-	// find existing CustomModel
-	for (cc_uint8 i = 0; i < MAX_CUSTOM_MODELS; i++) {
+	/* find existing CustomModel */
+	int i;
+	for (i = 0; i < MAX_CUSTOM_MODELS; i++) {
 		struct CustomModel* customModel = &custom_models[i];
 		if (customModel->valid && String_CaselessEqualsConst(&name, customModel->name)) {
-			FreeCustomModel(customModel);
+			CustomModel_Free(customModel);
 		}
 	}
 }
@@ -2098,7 +1805,7 @@ static void OnInit(void) {
 }
 
 static void OnFree(void) {
-	FreeCustomModels();
+	CustomModel_FreeAll();
 }
 
 static void OnReset(void) {
@@ -2111,7 +1818,7 @@ static void OnReset(void) {
 	}
 	Protocol_Reset();
 	FreeMapStates();
-	FreeCustomModels();
+	CustomModel_FreeAll();
 }
 
 struct IGameComponent Protocol_Component = {

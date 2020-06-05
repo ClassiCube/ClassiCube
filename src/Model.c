@@ -468,7 +468,8 @@ void Model_Unregister(struct Model* model) {
 	}
 
 	// unset this model from all entities, replacing with default fallback
-	for (int i = 0; i < ENTITIES_MAX_COUNT; i++) {
+	int i;
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		struct Entity* entity = Entities.List[i];
 		if (entity && entity->Model == model) {
 			String humanModelName = String_FromReadonly(Models.Human->name);
@@ -490,6 +491,233 @@ static void Models_TextureChanged(void* obj, struct Stream* stream, const String
 
 		Game_UpdateTexture(&tex->texID, stream, name, &tex->skinType);
 		return;
+	}
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Custom Models------------------------------------------------------*
+*#########################################################################################################################*/
+/* NOTE: None of the built in models use more than 12 parts at once, but custom models can use up to 64 parts. */
+struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS];
+
+/*#########################################*
+*-------------Model methods----------------*
+*##########################################*/
+static void CustomModel_MakeParts(void) {
+	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
+	Platform_LogConst("CustomModel_MakeParts");
+
+	int i;
+	for (i = 0; i < customModel->numParts; i++) {
+		BoxDesc_BuildBox(&customModel->parts[i].model_part, &customModel->parts[i].boxDesc);
+	}
+}
+
+static PackedCol oldCols[FACE_COUNT];
+static void CustomModel_Draw(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
+
+	Model_ApplyTexture(entity);
+	Models.uScale = 1.0f / customModel->uScale;
+	Models.vScale = 1.0f / customModel->vScale;
+
+	int i;
+	for (i = 0; i < customModel->numParts; i++) {
+		struct CustomModelPart* part = &customModel->parts[i];
+
+		// bbmodels use xyz rotation order
+		Models.Rotation = ROTATE_ORDER_XYZ;
+
+		if (part->fullbright) {
+			int j;
+			for (j = 0; j < FACE_COUNT; j++) {
+				oldCols[j] = Models.Cols[j];
+				Models.Cols[j] = PACKEDCOL_WHITE;
+			}
+		}
+
+		if (part->anim == CustomModelAnim_Head) {
+			Model_DrawRotate(
+				-entity->Pitch * MATH_DEG2RAD + part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				true
+			);
+		} else if (part->anim == CustomModelAnim_LeftLeg) {
+			Model_DrawRotate(
+				entity->Anim.LeftLegX + part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				entity->Anim.LeftLegZ + part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				false
+			);
+		} else if (part->anim == CustomModelAnim_RightLeg) {
+			Model_DrawRotate(
+				entity->Anim.RightLegX + part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				entity->Anim.RightLegZ + part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				false
+			);
+		} else if (part->anim == CustomModelAnim_LeftArm) {
+			// TODO: we're using 2 different rotation orders here
+			Models.Rotation = ROTATE_ORDER_XZY;
+			Model_DrawRotate(
+				entity->Anim.LeftArmX + part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				entity->Anim.LeftArmZ + part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				false
+			);
+		} else if (part->anim == CustomModelAnim_RightArm) {
+			Models.Rotation = ROTATE_ORDER_XZY;
+			Model_DrawRotate(
+				entity->Anim.RightArmX + part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				entity->Anim.RightArmZ + part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				false
+			);
+		} else if (
+			part->rotationX != 0 ||
+			part->rotationY != 0 ||
+			part->rotationZ != 0
+		) {
+			Model_DrawRotate(
+				part->rotationX * MATH_DEG2RAD,
+				part->rotationY * MATH_DEG2RAD,
+				part->rotationZ * MATH_DEG2RAD,
+				&customModel->parts[i].model_part,
+				false
+			);
+		} else {
+			Model_DrawPart(&customModel->parts[i].model_part);
+		}
+
+		if (part->fullbright) {
+			int j;
+			for (j = 0; j < FACE_COUNT; j++) {
+				Models.Cols[j] = oldCols[j];
+			}
+		}
+	}
+
+    Model_UpdateVB();
+
+	Models.Rotation = ROTATE_ORDER_ZYX;
+}
+
+static float CustomModel_GetNameY(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
+	return customModel->nameY;
+}
+
+static float CustomModel_GetEyeY(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
+	return customModel->eyeY;
+}
+
+static void CustomModel_GetCollisionSize(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
+	entity->Size = customModel->collisionBounds;
+}
+
+static void CustomModel_GetPickingBounds(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
+	entity->ModelAABB = custom_models->pickingBoundsAABB;
+}
+
+static void CustomModel_DrawArm(struct Entity* entity) {
+	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
+	if (customModel->hideFirstPersonArm) {
+		return;
+	}
+
+	Models.uScale = 1.0f / customModel->uScale;
+	Models.vScale = 1.0f / customModel->vScale;
+
+	int i;
+	for (i = 0; i < customModel->numParts; i++) {
+		struct CustomModelPart* part = &customModel->parts[i];
+		if (part->anim == CustomModelAnim_RightArm) {
+			Model_DrawArmPart(&part->model_part);
+		}
+	}
+
+	Model_UpdateVB();
+}
+
+/*#########################################*
+*-----------Init/Free functions------------*
+*##########################################*/
+static void CheckMaxVertices(void) {
+	// hack to undo plugins setting a smaller vertices buffer
+	if (Models.MaxVertices < Array_Elems(defaultVertices)) {
+		Platform_LogConst(
+			"CustomModel_CheckMaxVertices found smaller buffer, resetting Models.Vb"
+		);
+		Gfx_DeleteDynamicVb(&Models.Vb);
+
+		Models.Vertices    = defaultVertices;
+		Models.MaxVertices = Array_Elems(defaultVertices);
+
+		Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
+	}
+}
+
+void CustomModel_Init(struct CustomModel* customModel) {
+	CheckMaxVertices();
+
+	String modelName = String_FromRaw(customModel->name, STRING_SIZE);
+	int a = customModel->numParts;
+	Platform_Log2(
+		"CustomModel_Init '%s' with %i BoxDescs",
+		&modelName,
+		&a
+	);
+
+	customModel->model.name = customModel->name;
+	customModel->model.vertices = customModel->vertices;
+
+	customModel->defaultTex.name = customModel->name;
+	customModel->model.defaultTex = &customModel->defaultTex;
+
+	customModel->model.MakeParts = CustomModel_MakeParts;
+	customModel->model.Draw = CustomModel_Draw;
+	customModel->model.GetNameY = CustomModel_GetNameY;
+	customModel->model.GetEyeY = CustomModel_GetEyeY;
+	customModel->model.GetCollisionSize = CustomModel_GetCollisionSize;
+	customModel->model.GetPickingBounds = CustomModel_GetPickingBounds;
+
+	Model_Init(&customModel->model);
+	customModel->model.bobbing = customModel->bobbing;
+	customModel->model.pushes = customModel->pushes;
+	customModel->model.usesHumanSkin = customModel->usesHumanSkin;
+	customModel->model.calcHumanAnims = customModel->calcHumanAnims;
+	customModel->model.DrawArm  = CustomModel_DrawArm;
+
+	customModel->valid = true;
+}
+
+void CustomModel_Free(struct CustomModel* customModel) {
+	String name = String_FromReadonly(customModel->name);
+	Platform_Log1("CustomModel_Free '%s'", &name);
+	Model_Unregister((struct Model*)customModel);
+
+	Mem_Free(customModel->vertices);
+	Mem_Set(customModel, 0, sizeof(struct CustomModel));
+}
+
+void CustomModel_FreeAll(void) {
+	Platform_LogConst("CustomModel_FreeAll");
+
+	int i;
+	for (i = 0; i < MAX_CUSTOM_MODELS; i++) {
+		if (custom_models[i].valid) {
+			CustomModel_Free(&custom_models[i]);
+		}
 	}
 }
 
@@ -1755,8 +1983,6 @@ static struct Model* SkinnedCubeModel_GetInstance(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Model component---------------------------------------------------*
 *#########################################################################################################################*/
-/* NOTE: None of the built in models use more than 12 parts at once, but custom models can use up to 64 parts. */
-struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS];
 
 static void Model_RegisterDefaultModels(void) {
 	Model_RegisterTexture(&human_tex);
