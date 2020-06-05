@@ -3202,45 +3202,45 @@ static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* dat
 }
 
 static void HookEvents(void) {
-	emscripten_set_wheel_callback("#window",     NULL, 0, OnMouseWheel);
-	emscripten_set_mousedown_callback("#canvas", NULL, 0, OnMouseButton);
-	emscripten_set_mouseup_callback("#canvas",   NULL, 0, OnMouseButton);
-	emscripten_set_mousemove_callback("#canvas", NULL, 0, OnMouseMove);
+	emscripten_set_wheel_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnMouseWheel);
+	emscripten_set_mousedown_callback("#canvas",                  NULL, 0, OnMouseButton);
+	emscripten_set_mouseup_callback("#canvas",                    NULL, 0, OnMouseButton);
+	emscripten_set_mousemove_callback("#canvas",                  NULL, 0, OnMouseMove);
 
-	emscripten_set_focus_callback("#window",  NULL, 0, OnFocus);
-	emscripten_set_blur_callback("#window",   NULL, 0, OnFocus);
-	emscripten_set_resize_callback("#window", NULL, 0, OnResize);
-	emscripten_set_beforeunload_callback(     NULL,    OnBeforeUnload);
+	emscripten_set_focus_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnFocus);
+	emscripten_set_blur_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,   NULL, 0, OnFocus);
+	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnResize);
+	emscripten_set_beforeunload_callback(                          NULL,    OnBeforeUnload);
 
-	emscripten_set_keydown_callback("#window",  NULL, 0, OnKey);
-	emscripten_set_keyup_callback("#window",    NULL, 0, OnKey);
-	emscripten_set_keypress_callback("#window", NULL, 0, OnKeyPress);
+	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnKey);
+	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,    NULL, 0, OnKey);
+	emscripten_set_keypress_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnKeyPress);
 
-	emscripten_set_touchstart_callback("#window",  NULL, 0, OnTouchStart);
-	emscripten_set_touchmove_callback("#window",   NULL, 0, OnTouchMove);
-	emscripten_set_touchend_callback("#window",    NULL, 0, OnTouchEnd);
-	emscripten_set_touchcancel_callback("#window", NULL, 0, OnTouchEnd);
+	emscripten_set_touchstart_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnTouchStart);
+	emscripten_set_touchmove_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,   NULL, 0, OnTouchMove);
+	emscripten_set_touchend_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,    NULL, 0, OnTouchEnd);
+	emscripten_set_touchcancel_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnTouchEnd);
 }
 
 static void UnhookEvents(void) {
-	emscripten_set_wheel_callback("#canvas",     NULL, 0, NULL);
-	emscripten_set_mousedown_callback("#canvas", NULL, 0, NULL);
-	emscripten_set_mouseup_callback("#canvas",   NULL, 0, NULL);
-	emscripten_set_mousemove_callback("#canvas", NULL, 0, NULL);
+	emscripten_set_wheel_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, NULL);
+	emscripten_set_mousedown_callback("#canvas",                  NULL, 0, NULL);
+	emscripten_set_mouseup_callback("#canvas",                    NULL, 0, NULL);
+	emscripten_set_mousemove_callback("#canvas",                  NULL, 0, NULL);
 
-	emscripten_set_focus_callback("#window",  NULL, 0, NULL);
-	emscripten_set_blur_callback("#window",   NULL, 0, NULL);
-	emscripten_set_resize_callback("#window", NULL, 0, NULL);
-	emscripten_set_beforeunload_callback(     NULL,    NULL);
+	emscripten_set_focus_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, NULL);
+	emscripten_set_blur_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,   NULL, 0, NULL);
+	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, NULL);
+	emscripten_set_beforeunload_callback(                          NULL,    NULL);
 
-	emscripten_set_keydown_callback("#window",  NULL, 0, NULL);
-	emscripten_set_keyup_callback("#window",    NULL, 0, NULL);
-	emscripten_set_keypress_callback("#window", NULL, 0, NULL);
+	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, NULL);
+	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,    NULL, 0, NULL);
+	emscripten_set_keypress_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, NULL);
 
-	emscripten_set_touchstart_callback("#window",  NULL, 0, NULL);
-	emscripten_set_touchmove_callback("#window",   NULL, 0, NULL);
-	emscripten_set_touchend_callback("#window",    NULL, 0, NULL);
-	emscripten_set_touchcancel_callback("#window", NULL, 0, NULL);
+	emscripten_set_touchstart_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, NULL);
+	emscripten_set_touchmove_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,   NULL, 0, NULL);
+	emscripten_set_touchend_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,    NULL, 0, NULL);
+	emscripten_set_touchcancel_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, NULL);
 }
 
 void Window_Init(void) {
