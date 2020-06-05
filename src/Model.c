@@ -452,6 +452,32 @@ void Model_Register(struct Model* model) {
 	LinkedList_Add(model, models_head, models_tail);
 }
 
+void Model_Unregister(struct Model* model) {
+	// remove the model from the list
+	struct Model* item = models_head;
+	if (models_head == model) {
+		models_head = model->next;
+	}
+	while (item) {
+		if (item->next == model) {
+			item->next = model->next;
+		}
+
+		models_tail = item;
+		item = item->next;
+	}
+
+	// unset this model from all entities, replacing with default fallback
+	for (int i = 0; i < ENTITIES_MAX_COUNT; i++) {
+		struct Entity* entity = Entities.List[i];
+		if (entity && entity->Model == model) {
+			String humanModelName = String_FromReadonly(Models.Human->name);
+				Platform_LogConst("BO");
+			Entity_SetModel(entity, &humanModelName);
+		}
+	}
+}
+
 void Model_RegisterTexture(struct ModelTex* tex) {
 	LinkedList_Add(tex, textures_head, textures_tail);
 }

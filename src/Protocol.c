@@ -1418,7 +1418,7 @@ struct CustomModel {
 	struct Model model;
 	struct ModelTex defaultTex;
 
-	char name[STRING_SIZE];
+	char name[STRING_SIZE + 1];
 	struct ModelVertex* vertices;
 	float nameY;
 	float eyeY;
@@ -1444,7 +1444,6 @@ struct CustomModel {
 };
 
 static struct CustomModel custom_models[MAX_CUSTOM_MODELS];
-static cc_uint8 custom_models_len = 0;
 
 static void CustomModel_MakeParts(void) {
 	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
@@ -1470,19 +1469,9 @@ static void CustomModel_CheckMaxVertices(void) {
 	}
 }
 
-static void CustomModel_CheckPartsInited(struct CustomModel* customModel) {
-	if (!customModel->model.inited) {
-		customModel->model.MakeParts();
-
-		customModel->model.inited = true;
-		customModel->model.index  = 0;
-	}
-}
-
 static PackedCol oldCols[FACE_COUNT];
 static void CustomModel_Draw(struct Entity* entity) {
 	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
-	CustomModel_CheckPartsInited(customModel);
 
 	Model_ApplyTexture(entity);
 	Models.uScale = 1.0f / customModel->uScale;
@@ -1598,8 +1587,6 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 		return;
 	}
 
-	CustomModel_CheckPartsInited(customModel);
-
 	Models.uScale = 1.0f / customModel->uScale;
 	Models.vScale = 1.0f / customModel->vScale;
 
@@ -1648,9 +1635,10 @@ static void CustomModel_Init(struct CustomModel* customModel) {
 }
 
 static float ReadFloat(cc_uint8* data, int* i) {
-	float* f = (float*)(data + *i); 
+	union IntAndFloat raw;
+	raw.u = Stream_GetU32_BE(&data[*i]);
 	*i += 4;
-	return *f;
+	return raw.f;
 }
 
 static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, int* pos) {
@@ -1731,61 +1719,64 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 }
 
 static void FreeCustomModel(struct CustomModel* customModel) {
+	String name = String_FromReadonly(customModel->name);
+	Platform_Log1("FreeCustomModel '%s'", &name);
+	Model_Unregister((struct Model*)customModel);
+
 	Mem_Free(customModel->vertices);
-	customModel->valid = false;
+	Mem_Set(customModel, 0, sizeof(struct CustomModel));
 }
 
 static void FreeCustomModels() {
 	Platform_LogConst("FreeCustomModels");
 
-	for (cc_uint8 i = 0; i < custom_models_len; i++) {
+	for (cc_uint8 i = 0; i < MAX_CUSTOM_MODELS; i++) {
 		if (custom_models[i].valid) {
 			FreeCustomModel(&custom_models[i]);
 		}
 	}
-	custom_models_len = 0;
 }
 
 static void CPE_DefineModel(cc_uint8* data) {
-	Platform_LogConst("DefineModel");
 	int pos = 0;
 
 	// read String
 	const String name = UNSAFE_GetString(data);
 	pos += STRING_SIZE;
+	
+	Platform_Log1("DefineModel '%s'", &name);
 
-	struct CustomModel* customModel;
-	cc_bool new_custom_model = true;
-
-	// replace existing, same-name CustomModels
-	for (cc_uint8 i = 0; i < custom_models_len; i++) {
+	// remove existing, same-name CustomModels
+	for (cc_uint8 i = 0; i < MAX_CUSTOM_MODELS; i++) {
 		if (
 			custom_models[i].valid &&
 			String_CaselessEqualsConst(&name, custom_models[i].name)
 		) {
 			Platform_LogConst("FOUND EXISTING!!");
-			new_custom_model = false;
+			FreeCustomModel(&custom_models[i]);
+		}
+	}
 
+	// find new slot
+	struct CustomModel* customModel = NULL;
+	for (cc_uint8 i = 0; i < MAX_CUSTOM_MODELS; i++) {
+		if (!custom_models[i].valid) {
 			customModel = &custom_models[i];
-			FreeCustomModel(customModel);
-			Mem_Set(customModel, 0, sizeof(struct CustomModel));
 			break;
 		}
 	}
 
-	if (new_custom_model) {
-		if (custom_models_len >= MAX_CUSTOM_MODELS) {
-			String msg; char msgBuffer[256];
-			String_InitArray(msg, msgBuffer);
+	if (!customModel) {
+		String msg; char msgBuffer[256];
+		String_InitArray(msg, msgBuffer);
 
-			String_Format1(
-				&msg,
-				"&cNew Custom Model '%s' exceeds models limit of " STRINGIFY(MAX_CUSTOM_MODELS),
-				&name
-			);
-			Logger_WarnFunc(&msg);
-		}
-		customModel = &custom_models[custom_models_len];
+		String_Format1(
+			&msg,
+			"&cNew Custom Model '%s' exceeds models limit of " STRINGIFY(MAX_CUSTOM_MODELS),
+			&name
+		);
+		Logger_WarnFunc(&msg);
+		return;
 	}
 
 	String_CopyToRaw(customModel->name, STRING_SIZE, &name);
@@ -1847,16 +1838,22 @@ static void CPE_DefineModel(cc_uint8* data) {
 	}
 
 	CustomModel_Init(customModel);
-	
-	if (new_custom_model) {
-		Model_Register(&customModel->model);
-		custom_models_len += 1;
-	}
+	Model_Register(&customModel->model);
 }
 
 static void CPE_RemoveModel(cc_uint8* data) {
+	// unregisters and frees the custom model
+
 	const String name = UNSAFE_GetString(data);
 	Platform_Log1("RemoveModel '%s'", &name);
+
+	// find existing CustomModel
+	for (cc_uint8 i = 0; i < MAX_CUSTOM_MODELS; i++) {
+		struct CustomModel* customModel = &custom_models[i];
+		if (customModel->valid && String_CaselessEqualsConst(&name, customModel->name)) {
+			FreeCustomModel(customModel);
+		}
+	}
 }
 
 static void CPE_Reset(void) {
@@ -2114,6 +2111,7 @@ static void OnReset(void) {
 	}
 	Protocol_Reset();
 	FreeMapStates();
+	FreeCustomModels();
 }
 
 struct IGameComponent Protocol_Component = {

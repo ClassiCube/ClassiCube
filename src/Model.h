@@ -146,6 +146,8 @@ CC_API struct Model* Model_Get(const String* name);
 /* Adds a model to the list of models. (e.g. "skeleton") */
 /* Models can be applied to entities to change their appearance. Use Entity_SetModel for that. */
 CC_API void Model_Register(struct Model* model);
+/* Unregister a model from the list of models. */
+void Model_Unregister(struct Model* model);
 /* Adds a texture to the list of automatically managed model textures. */
 /* These textures are automatically loaded from texture packs. (e.g. "skeleton.png") */
 CC_API void Model_RegisterTexture(struct ModelTex* tex);
