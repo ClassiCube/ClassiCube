@@ -453,7 +453,7 @@ void Model_Register(struct Model* model) {
 }
 
 void Model_Unregister(struct Model* model) {
-	// remove the model from the list
+	/* remove the model from the list */
 	struct Model* item = models_head;
 	if (models_head == model) {
 		models_head = model->next;
@@ -467,7 +467,7 @@ void Model_Unregister(struct Model* model) {
 		item = item->next;
 	}
 
-	// unset this model from all entities, replacing with default fallback
+	/* unset this model from all entities, replacing with default fallback */
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		struct Entity* entity = Entities.List[i];
@@ -499,7 +499,7 @@ static void Models_TextureChanged(void* obj, struct Stream* stream, const String
 *------------------------------------------------------Custom Models------------------------------------------------------*
 *#########################################################################################################################*/
 /* NOTE: None of the built in models use more than 12 parts at once, but custom models can use up to 64 parts. */
-struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS];
+static struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS];	
 
 /*#########################################*
 *-------------Model methods----------------*
@@ -526,7 +526,7 @@ static void CustomModel_Draw(struct Entity* entity) {
 	for (i = 0; i < customModel->numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
 
-		// bbmodels use xyz rotation order
+		/* bbmodels use xyz rotation order */
 		Models.Rotation = ROTATE_ORDER_XYZ;
 
 		if (part->fullbright) {
@@ -562,7 +562,7 @@ static void CustomModel_Draw(struct Entity* entity) {
 				false
 			);
 		} else if (part->anim == CustomModelAnim_LeftArm) {
-			// TODO: we're using 2 different rotation orders here
+			/* TODO: we're using 2 different rotation orders here */
 			Models.Rotation = ROTATE_ORDER_XZY;
 			Model_DrawRotate(
 				entity->Anim.LeftArmX + part->rotationX * MATH_DEG2RAD,
@@ -653,7 +653,7 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 *-----------Init/Free functions------------*
 *##########################################*/
 static void CheckMaxVertices(void) {
-	// hack to undo plugins setting a smaller vertices buffer
+	/* hack to undo plugins setting a smaller vertices buffer */
 	if (Models.MaxVertices < Array_Elems(defaultVertices)) {
 		Platform_LogConst(
 			"CustomModel_CheckMaxVertices found smaller buffer, resetting Models.Vb"

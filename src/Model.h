@@ -15,9 +15,6 @@ struct IGameComponent;
 struct VertexTextured;
 extern struct IGameComponent Models_Component;
 
-#define MAX_CUSTOM_MODELS 64
-#define MAX_CUSTOM_MODEL_PARTS 64
-
 #define MODEL_QUAD_VERTICES 4
 #define MODEL_BOX_VERTICES (FACE_COUNT * MODEL_QUAD_VERTICES)
 enum RotateOrder { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX, ROTATE_ORDER_XYZ };
@@ -211,7 +208,10 @@ CC_API void BoxDesc_XQuad2(struct Model* m, float z1, float z2, float y1, float 
 CC_API void BoxDesc_YQuad2(struct Model* m, float x1, float x2, float z1, float z2, float y, int u1, int v1, int u2, int v2);
 CC_API void BoxDesc_ZQuad2(struct Model* m, float x1, float x2, float y1, float y2, float z, int u1, int v1, int u2, int v2);
 
-/* CustomModel types */
+/* CustomModels */
+
+#define MAX_CUSTOM_MODELS 64
+#define MAX_CUSTOM_MODEL_PARTS 64
 
 enum CustomModelAnim {
 	CustomModelAnim_None = 0,
