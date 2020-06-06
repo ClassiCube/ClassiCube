@@ -3009,8 +3009,14 @@ static void RescaleXY(int srcX, int srcY, int* dstX, int* dstY) {
 	double css_width, css_height;
 	emscripten_get_element_css_size("#canvas", &css_width, &css_height);
 
-	*dstX = (int)(srcX * WindowInfo.Width  / css_width);
-	*dstY = (int)(srcY * WindowInfo.Height / css_height);
+	if (css_width && css_height) {
+		*dstX = (int)(srcX * WindowInfo.Width  / css_width );
+		*dstY = (int)(srcY * WindowInfo.Height / css_height);
+	} else {
+		/* If css width or height is 0, something is bogus */
+		/* It's still better to avoid divsision by 0 anyways */
+		*dstX = srcX; *dstY = srcY;
+	}
 }
 
 static EM_BOOL OnMouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
