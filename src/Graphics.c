@@ -365,21 +365,19 @@ static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* a
 	args->Windowed   = true;
 }
 
-void Gfx_Init(void) {
+static void TryCreateDevice(void) {
 	cc_result res;
 	D3DCAPS9 caps;
-
-	Gfx.MinZNear = 0.05f;
 	HWND winHandle = (HWND)WindowInfo.Handle;
-	d3d = Direct3DCreate9(D3D_SDK_VERSION);
-
-	FindCompatibleViewFormat();
-	FindCompatibleDepthFormat();
 	D3DPRESENT_PARAMETERS args = { 0 };
 	D3D9_FillPresentArgs(640, 480, &args);
 
 	/* Try to create a device with as much hardware usage as possible. */
 	res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
+	/* Another running fullscreen application might prevent creating device */
+	/*if (res == D3DERR_DEVICELOST) { Gfx.LostContext = true; return; } */
+
+	/* Fallback with using CPU for some parts of rendering */
 	if (res) {
 		createFlags = D3DCREATE_MIXED_VERTEXPROCESSING;
 		res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
@@ -388,18 +386,27 @@ void Gfx_Init(void) {
 		createFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 		res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
 	}
-	if (res) Logger_Abort2(res, "Creating Direct3D9 device");
 
+	if (res) Logger_Abort2(res, "Creating Direct3D9 device");
 	res = IDirect3DDevice9_GetDeviceCaps(device, &caps);
 	if (res) Logger_Abort2(res, "Getting Direct3D9 capabilities");
 
 	Gfx.MaxTexWidth  = caps.MaxTextureWidth;
 	Gfx.MaxTexHeight = caps.MaxTextureHeight;
-	Gfx.CustomMipmapsLevels = true;
 
-	CommonInit();
 	Gfx_RestoreState();
 	totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
+}
+
+void Gfx_Init(void) {
+	d3d = Direct3DCreate9(D3D_SDK_VERSION);
+	FindCompatibleViewFormat();
+	FindCompatibleDepthFormat();
+
+	Gfx.MinZNear            = 0.05f;
+	Gfx.CustomMipmapsLevels = true;
+	CommonInit();
+	TryCreateDevice();
 }
 
 cc_bool Gfx_TryRestoreContext(void) {

@@ -389,8 +389,8 @@ static void Game_Load(void) {
 	Game_UserViewDistance = 512;
 	Game_Fov = 70;
 
-	Gfx_Init();
 	Game_UpdateDimensions();
+	Gfx_Init();
 	LoadOptions();
 
 	Event_RegisterVoid(&WorldEvents.NewMap,         NULL, HandleOnNewMap);
