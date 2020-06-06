@@ -101,7 +101,7 @@ void Gfx_LoseContext(const char* reason) {
 	Event_RaiseVoid(&GfxEvents.ContextLost);
 }
 
-static void Gfx_RecreateContext(void) {
+void Gfx_RecreateContext(void) {
 	Gfx.LostContext = false;
 	Platform_LogConst("Recreating graphics context");
 
@@ -365,17 +365,18 @@ static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* a
 	args->Windowed   = true;
 }
 
+static cc_bool deviceCreated;
 static void TryCreateDevice(void) {
 	cc_result res;
 	D3DCAPS9 caps;
 	HWND winHandle = (HWND)WindowInfo.Handle;
 	D3DPRESENT_PARAMETERS args = { 0 };
-	D3D9_FillPresentArgs(640, 480, &args);
+	D3D9_FillPresentArgs(Game.Width, Game.Height, &args);
 
 	/* Try to create a device with as much hardware usage as possible. */
 	res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
 	/* Another running fullscreen application might prevent creating device */
-	/*if (res == D3DERR_DEVICELOST) { Gfx.LostContext = true; return; } */
+	if (res == D3DERR_DEVICELOST) { Gfx.LostContext = true; return; }
 
 	/* Fallback with using CPU for some parts of rendering */
 	if (res) {
@@ -391,6 +392,7 @@ static void TryCreateDevice(void) {
 	res = IDirect3DDevice9_GetDeviceCaps(device, &caps);
 	if (res) Logger_Abort2(res, "Getting Direct3D9 capabilities");
 
+	deviceCreated    = true;
 	Gfx.MaxTexWidth  = caps.MaxTextureWidth;
 	Gfx.MaxTexHeight = caps.MaxTextureHeight;
 
@@ -412,6 +414,11 @@ void Gfx_Init(void) {
 cc_bool Gfx_TryRestoreContext(void) {
 	D3DPRESENT_PARAMETERS args = { 0 };
 	cc_result res;
+	/* Rarely can't even create device to begin with */
+	if (!deviceCreated) {
+		TryCreateDevice();
+		return deviceCreated;
+	}
 
 	res = IDirect3DDevice9_TestCooperativeLevel(device);
 	if (res && res != D3DERR_DEVICENOTRESET) return false;
@@ -421,7 +428,6 @@ cc_bool Gfx_TryRestoreContext(void) {
 	if (res == D3DERR_DEVICELOST) return false;
 
 	if (res) Logger_Abort2(res, "Error recreating D3D9 context");
-	Gfx_RecreateContext();
 	return true;
 }
 
@@ -1079,9 +1085,7 @@ void Gfx_Init(void) {
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
-	if (!GLContext_TryRestore()) return false;
-	Gfx_RecreateContext();
-	return true;
+	return GLContext_TryRestore();
 }
 
 void Gfx_Free(void) {

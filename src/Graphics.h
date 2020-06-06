@@ -190,7 +190,9 @@ void Gfx_GetApiInfo(String* lines);
 
 /* Raises ContextLost event and updates state for lost contexts. */
 void Gfx_LoseContext(const char* reason);
-/* Attempts to restore a lost context. Raises ContextRecreated event on success. */
+/* Raises ContextRecreated event and restores internal state. */
+void Gfx_RecreateContext(void);
+/* Attempts to restore a lost context. */
 cc_bool Gfx_TryRestoreContext(void);
 
 /* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer. */

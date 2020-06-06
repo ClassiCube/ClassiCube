@@ -432,8 +432,6 @@ static void Game_Load(void) {
 	Game_AddComponent(&Gui_Component);
 	Game_AddComponent(&Selections_Component);
 	Game_AddComponent(&HeldBlockRenderer_Component);
-
-	Gfx_SetDepthTest(true);
 	/* Gfx_SetDepthWrite(true) */
 
 	Game_AddComponent(&PickedPosRenderer_Component);
@@ -471,7 +469,6 @@ void Game_SetFpsLimit(int method) {
 
 static void UpdateViewMatrix(void) {
 	Camera.Active->GetView(&Gfx.View);
-	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 	FrustumCulling_CalcFrustumEquations(&Gfx.Projection, &Gfx.View);
 }
 
@@ -577,10 +574,15 @@ static void Game_RenderFrame(double delta) {
 	/* TODO: Should other tasks get called back too? */
 	/* Might not be such a good idea for the http_clearcache, */
 	/* don't really want all skins getting lost */
-	if (Gfx.LostContext && !Gfx_TryRestoreContext()) {
-		Server.Tick(NULL);
-		Thread_Sleep(16);
-		return;
+	if (Gfx.LostContext) {
+		if (Gfx_TryRestoreContext()) {
+			Gfx_RecreateContext();
+			/* all good, context is back */
+		} else {
+			Server.Tick(NULL);
+			Thread_Sleep(16);
+			return;
+		}
 	}
 
 	Gfx_BeginFrame();
@@ -603,6 +605,7 @@ static void Game_RenderFrame(double delta) {
 	Gfx_Clear();
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	UpdateViewMatrix();
+	Gfx_Mode3D();
 
 	if (!Gui_GetBlocksWorld()) {
 		Game_Render3D(delta, t);
@@ -610,6 +613,7 @@ static void Game_RenderFrame(double delta) {
 		RayTracer_SetInvalid(&Game_SelectedPos);
 	}
 
+	Gfx_Mode2D(Game.Width, Game.Height);
 	Gui_RenderGui(delta);
 	if (Game_ScreenshotRequested) Game_TakeScreenshot();
 	Gfx_EndFrame();

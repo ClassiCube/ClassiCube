@@ -235,7 +235,6 @@ struct Screen* Gui_GetClosable(void) {
 void Gui_RenderGui(double delta) {
 	struct Screen* s;
 	int i;
-	Gfx_Mode2D(Game.Width, Game.Height);
 
 	/* Draw back to front so highest priority screen is on top */
 	for (i = Gui_ScreensCount - 1; i >= 0; i--) {
@@ -245,7 +244,6 @@ void Gui_RenderGui(double delta) {
 		if (s->dirty) { s->VTABLE->BuildMesh(s); s->dirty = false; }
 		s->VTABLE->Render(s, delta);
 	}
-	Gfx_Mode3D();
 }
 
 void Gui_Layout(void) {
