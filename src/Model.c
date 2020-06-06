@@ -626,7 +626,7 @@ static void CustomModel_GetCollisionSize(struct Entity* entity) {
 
 static void CustomModel_GetPickingBounds(struct Entity* entity) {
 	struct CustomModel* customModel = (struct CustomModel*)entity->Model;
-	entity->ModelAABB = custom_models->pickingBoundsAABB;
+	entity->ModelAABB = customModel->pickingBoundsAABB;
 }
 
 static void CustomModel_DrawArm(struct Entity* entity) {
