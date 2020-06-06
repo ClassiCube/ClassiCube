@@ -526,9 +526,6 @@ static void CustomModel_Draw(struct Entity* entity) {
 	for (i = 0; i < customModel->numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
 
-		/* bbmodels use xyz rotation order */
-		Models.Rotation = ROTATE_ORDER_XYZ;
-
 		if (part->fullbright) {
 			int j;
 			for (j = 0; j < FACE_COUNT; j++) {
@@ -536,64 +533,64 @@ static void CustomModel_Draw(struct Entity* entity) {
 				Models.Cols[j] = PACKEDCOL_WHITE;
 			}
 		}
-
+		
+		/* bbmodels use xyz rotation order */
+		Models.Rotation = ROTATE_ORDER_XYZ;
+		
+		float rotationX = part->rotationX * MATH_DEG2RAD;
+		float rotationY = part->rotationY * MATH_DEG2RAD;
+		float rotationZ = part->rotationZ * MATH_DEG2RAD;
+		cc_bool head = false;
+		
 		if (part->anim == CustomModelAnim_Head) {
-			Model_DrawRotate(
-				-entity->Pitch * MATH_DEG2RAD + part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				part->rotationZ * MATH_DEG2RAD,
-				&customModel->parts[i].model_part,
-				true
-			);
+			head = true;
+			rotationX += -entity->Pitch * MATH_DEG2RAD;
 		} else if (part->anim == CustomModelAnim_LeftLeg) {
-			Model_DrawRotate(
-				entity->Anim.LeftLegX + part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				entity->Anim.LeftLegZ + part->rotationZ * MATH_DEG2RAD,
-				&customModel->parts[i].model_part,
-				false
-			);
+			rotationX += entity->Anim.LeftLegX;
+			rotationZ += entity->Anim.LeftLegZ;
 		} else if (part->anim == CustomModelAnim_RightLeg) {
-			Model_DrawRotate(
-				entity->Anim.RightLegX + part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				entity->Anim.RightLegZ + part->rotationZ * MATH_DEG2RAD,
-				&customModel->parts[i].model_part,
-				false
-			);
+			rotationX += entity->Anim.RightLegX;
+			rotationZ += entity->Anim.RightLegZ;
 		} else if (part->anim == CustomModelAnim_LeftArm) {
 			/* TODO: we're using 2 different rotation orders here */
 			Models.Rotation = ROTATE_ORDER_XZY;
-			Model_DrawRotate(
-				entity->Anim.LeftArmX + part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				entity->Anim.LeftArmZ + part->rotationZ * MATH_DEG2RAD,
-				&customModel->parts[i].model_part,
-				false
-			);
+			rotationX += entity->Anim.LeftArmX;
+			rotationZ += entity->Anim.LeftArmZ;
 		} else if (part->anim == CustomModelAnim_RightArm) {
 			Models.Rotation = ROTATE_ORDER_XZY;
-			Model_DrawRotate(
-				entity->Anim.RightArmX + part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				entity->Anim.RightArmZ + part->rotationZ * MATH_DEG2RAD,
-				&customModel->parts[i].model_part,
-				false
-			);
-		} else if (
-			part->rotationX != 0 ||
-			part->rotationY != 0 ||
-			part->rotationZ != 0
+			rotationX += entity->Anim.RightArmX;
+			rotationZ += entity->Anim.RightArmZ;
+		} else if (part->anim == CustomModelAnim_SpinX) {
+			rotationX += fmodf((float)Game.Time * part->animModifier, 360.0f);
+		} else if (part->anim == CustomModelAnim_SpinY) {
+			rotationY += fmodf((float)Game.Time * part->animModifier, 360.0f);
+		} else if (part->anim == CustomModelAnim_SpinZ) {
+			rotationZ += fmodf((float)Game.Time * part->animModifier, 360.0f);
+		} else if (part->anim == CustomModelAnim_SpinXVelocity) {
+			rotationX += fmodf(entity->Anim.WalkTime * part->animModifier, 360.0f);
+		} else if (part->anim == CustomModelAnim_SpinYVelocity) {
+			rotationY += fmodf(entity->Anim.WalkTime * part->animModifier, 360.0f);
+		} else if (part->anim == CustomModelAnim_SpinZVelocity) {
+			rotationZ += fmodf(entity->Anim.WalkTime * part->animModifier, 360.0f);
+		}
+		
+		if (
+			rotationX != 0 ||
+			rotationY != 0 ||
+			rotationZ != 0 ||
+			head
 		) {
 			Model_DrawRotate(
-				part->rotationX * MATH_DEG2RAD,
-				part->rotationY * MATH_DEG2RAD,
-				part->rotationZ * MATH_DEG2RAD,
+				rotationX,
+				rotationY,
+				rotationZ,
 				&customModel->parts[i].model_part,
-				false
+				head
 			);
 		} else {
-			Model_DrawPart(&customModel->parts[i].model_part);
+			Model_DrawPart(
+				&customModel->parts[i].model_part
+			);
 		}
 
 		if (part->fullbright) {

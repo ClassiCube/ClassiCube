@@ -219,6 +219,12 @@ enum CustomModelAnim {
 	CustomModelAnim_RightLeg = 3,
 	CustomModelAnim_LeftArm = 4,
 	CustomModelAnim_RightArm = 5,
+	CustomModelAnim_SpinX = 6,
+	CustomModelAnim_SpinY = 7,
+	CustomModelAnim_SpinZ = 8,
+	CustomModelAnim_SpinXVelocity = 9,
+	CustomModelAnim_SpinYVelocity = 10,
+	CustomModelAnim_SpinZVelocity = 11,
 };
 
 struct CustomModelPart {
@@ -229,6 +235,7 @@ struct CustomModelPart {
 	float rotationY;
 	float rotationZ;
 	enum CustomModelAnim anim;
+	float animModifier;
 	cc_bool fullbright;
 };
 

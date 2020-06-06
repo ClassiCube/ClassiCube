@@ -1436,6 +1436,8 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 	part->anim = data[*pos];
 	*pos += 1;
 
+	part->animModifier = ReadFloat(data, pos);
+
 	/* read bool flags */
 	cc_uint8 flags = data[*pos];
 	*pos += 1;
@@ -1605,7 +1607,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
 	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
 	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
-	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 3763);
+	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 4019);
 	Net_Set(OPCODE_REMOVE_MODEL, CPE_RemoveModel, 65);
 }
 
