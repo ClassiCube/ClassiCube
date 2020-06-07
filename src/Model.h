@@ -242,14 +242,10 @@ struct CustomModelPart {
 struct CustomModel {
 	struct Model model;
 	struct ModelTex defaultTex;
+	struct ModelVertex* vertices;
 
 	char name[STRING_SIZE + 1];
-	struct ModelVertex* vertices;
-	float nameY;
-	float eyeY;
-	Vec3 collisionBounds;
-	struct AABB pickingBoundsAABB;
-
+	
 	cc_bool bobbing;
 	cc_bool pushes;
 	/* if true, falls back to using your account's skin */
@@ -257,6 +253,11 @@ struct CustomModel {
 	/* use crazy arms */
 	cc_bool calcHumanAnims;
 	cc_bool hideFirstPersonArm;
+	
+	float nameY;
+	float eyeY;
+	Vec3 collisionBounds;
+	struct AABB pickingBoundsAABB;
 
 	cc_uint16 uScale;
 	cc_uint16 vScale;

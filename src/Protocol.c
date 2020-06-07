@@ -1437,7 +1437,11 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 	part->anim = data[*pos];
 	*pos += 1;
 
+	/* read animModifier */
 	part->animModifier = ReadFloat(data, pos);
+	
+	/* extra reserved byte for future use */
+	*pos += 1;
 
 	/* read bool flags */
 	flags = data[*pos];
@@ -1489,6 +1493,14 @@ static void CPE_DefineModel(cc_uint8* data) {
 	}
 
 	String_CopyToRaw(customModel->name, STRING_SIZE, &name);
+	
+	/* read bool flags */
+	flags = data[pos++];
+	customModel->bobbing = (flags >> 0) & 1;
+	customModel->pushes = (flags >> 1) & 1;
+	customModel->usesHumanSkin = (flags >> 2) & 1;
+	customModel->calcHumanAnims = (flags >> 3) & 1;
+	customModel->hideFirstPersonArm = (flags >> 4) & 1;
 
 	/* read nameY, eyeY */
 	customModel->nameY = ReadFloat(data, &pos);
@@ -1508,20 +1520,15 @@ static void CPE_DefineModel(cc_uint8* data) {
 	customModel->pickingBoundsAABB.Max.Y = ReadFloat(data, &pos);
 	customModel->pickingBoundsAABB.Max.Z = ReadFloat(data, &pos);
 
-	/* read bool flags */
-	flags = data[pos++];
-	customModel->bobbing = (flags >> 0) & 1;
-	customModel->pushes = (flags >> 1) & 1;
-	customModel->usesHumanSkin = (flags >> 2) & 1;
-	customModel->calcHumanAnims = (flags >> 3) & 1;
-	customModel->hideFirstPersonArm = (flags >> 4) & 1;
-
 	/* read uScale, vScale */
 	customModel->uScale = Stream_GetU16_BE(&data[pos]);
 	pos += 2;
 	customModel->vScale = Stream_GetU16_BE(&data[pos]);
 	pos += 2;
 
+	/* reserve 8 bytes for future use */
+	pos += 8;
+	
 	/* read # CustomModelParts */
 	numParts = data[pos++];
 
@@ -1610,7 +1617,7 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
 	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
 	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
-	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 4019);
+	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 4091);
 	Net_Set(OPCODE_REMOVE_MODEL, CPE_RemoveModel, 65);
 }
 
