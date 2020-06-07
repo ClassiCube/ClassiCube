@@ -1450,8 +1450,6 @@ static void CPE_DefineModel(cc_uint8* data) {
 	/* read String */
 	const String name = UNSAFE_GetString(data);
 	pos += STRING_SIZE;
-	
-	Platform_Log1("DefineModel '%s'", &name);
 
 	/* remove existing, same-name CustomModels */
 	int i;
@@ -1460,7 +1458,6 @@ static void CPE_DefineModel(cc_uint8* data) {
 			custom_models[i].valid &&
 			String_CaselessEqualsConst(&name, custom_models[i].name)
 		) {
-			Platform_LogConst("FOUND EXISTING!!");
 			CustomModel_Free(&custom_models[i]);
 		}
 	}
@@ -1528,7 +1525,11 @@ static void CPE_DefineModel(cc_uint8* data) {
 		String msg; char msgBuffer[256];
 		String_InitArray(msg, msgBuffer);
 		
-		String_Format1(&msg, "&cCustom Model '%s' exceeds parts limit of " STRINGIFY(MAX_CUSTOM_MODEL_PARTS), &name);
+		String_Format1(
+			&msg,
+			"&cCustom Model '%s' exceeds parts limit of " STRINGIFY(MAX_CUSTOM_MODEL_PARTS),
+			&name
+		);
 		Logger_WarnFunc(&msg);
 	}
 	
@@ -1552,7 +1553,6 @@ static void CPE_RemoveModel(cc_uint8* data) {
 	/* unregisters and frees the custom model */
 
 	const String name = UNSAFE_GetString(data);
-	Platform_Log1("RemoveModel '%s'", &name);
 
 	/* find existing CustomModel */
 	int i;

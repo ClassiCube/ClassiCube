@@ -473,7 +473,6 @@ void Model_Unregister(struct Model* model) {
 		struct Entity* entity = Entities.List[i];
 		if (entity && entity->Model == model) {
 			String humanModelName = String_FromReadonly(Models.Human->name);
-				Platform_LogConst("BO");
 			Entity_SetModel(entity, &humanModelName);
 		}
 	}
@@ -506,8 +505,6 @@ static struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * MAX_CUSTOM_MOD
 *##########################################*/
 static void CustomModel_MakeParts(void) {
 	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
-	Platform_LogConst("CustomModel_MakeParts");
-
 	int i;
 	for (i = 0; i < customModel->numParts; i++) {
 		BoxDesc_BuildBox(&customModel->parts[i].model_part, &customModel->parts[i].boxDesc);
@@ -653,7 +650,7 @@ static void CheckMaxVertices(void) {
 	/* hack to undo plugins setting a smaller vertices buffer */
 	if (Models.MaxVertices < Array_Elems(defaultVertices)) {
 		Platform_LogConst(
-			"CustomModel_CheckMaxVertices found smaller buffer, resetting Models.Vb"
+			"CheckMaxVertices found smaller buffer, resetting Models.Vb"
 		);
 		Gfx_DeleteDynamicVb(&Models.Vb);
 
@@ -668,12 +665,6 @@ void CustomModel_Register(struct CustomModel* customModel) {
 	CheckMaxVertices();
 
 	String modelName = String_FromRaw(customModel->name, STRING_SIZE);
-	int a = customModel->numParts;
-	Platform_Log2(
-		"CustomModel_Register '%s' with %i BoxDescs",
-		&modelName,
-		&a
-	);
 
 	customModel->model.name = customModel->name;
 	customModel->model.vertices = customModel->vertices;
@@ -697,8 +688,7 @@ void CustomModel_Register(struct CustomModel* customModel) {
 
 	customModel->valid = true;
 	
-	/* Model_Register(&customModel->model); */
-	/* add to front of linked list so that we overwrite original models */
+	/* add to front of models linked list so that we override original models */
 	if (!models_head) {
 		models_head = &customModel->model;
 		models_tail = models_head;
@@ -710,7 +700,6 @@ void CustomModel_Register(struct CustomModel* customModel) {
 
 void CustomModel_Free(struct CustomModel* customModel) {
 	String name = String_FromReadonly(customModel->name);
-	Platform_Log1("CustomModel_Free '%s'", &name);
 	Model_Unregister((struct Model*)customModel);
 
 	Mem_Free(customModel->vertices);
@@ -718,8 +707,6 @@ void CustomModel_Free(struct CustomModel* customModel) {
 }
 
 void CustomModel_FreeAll(void) {
-	Platform_LogConst("CustomModel_FreeAll");
-
 	int i;
 	for (i = 0; i < MAX_CUSTOM_MODELS; i++) {
 		if (custom_models[i].valid) {
