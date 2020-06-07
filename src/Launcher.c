@@ -227,7 +227,7 @@ static void SwitchToGame() {
 	Platform_LogConst("Entering wait for window loop..");
 
 	/* Loop until window gets created async */
-	while (Window_Exists && !winCreated) {
+	while (WindowInfo.Exists && !winCreated) {
 		Window_ProcessEvents();
 		Thread_Sleep(10);
 	}
