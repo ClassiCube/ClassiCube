@@ -1091,6 +1091,7 @@ static void ChatScreen_Layout(void* screen) {
 	ChatScreen_ChatUpdateLayout(s);
 	if (s->showingList) TabListOverlay_Reposition(&s->playerList);
 
+	s->announcement.yOffset = -WindowInfo.Height / 4;
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
 	Widget_Layout(&s->send);
@@ -1270,7 +1271,7 @@ static void ChatScreen_Init(void* screen) {
 							s->chatTextures, ChatScreen_GetChat);
 	TextGroupWidget_Create(&s->clientStatus, CHAT_MAX_CLIENTSTATUS,
 							s->clientStatusTextures, ChatScreen_GetClientStatus);
-	TextWidget_Make(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -WindowInfo.Height / 4);
+	TextWidget_Make(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
 
 	s->status.collapsible[0]       = true; /* Texture pack download status */
 	s->clientStatus.collapsible[0] = true;
