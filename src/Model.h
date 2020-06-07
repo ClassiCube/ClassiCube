@@ -270,7 +270,7 @@ struct CustomModel {
 
 static struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 
-void CustomModel_Init(struct CustomModel* customModel);
+void CustomModel_Register(struct CustomModel* customModel);
 void CustomModel_Free(struct CustomModel* customModel);
 void CustomModel_FreeAll(void);
 

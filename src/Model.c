@@ -664,13 +664,13 @@ static void CheckMaxVertices(void) {
 	}
 }
 
-void CustomModel_Init(struct CustomModel* customModel) {
+void CustomModel_Register(struct CustomModel* customModel) {
 	CheckMaxVertices();
 
 	String modelName = String_FromRaw(customModel->name, STRING_SIZE);
 	int a = customModel->numParts;
 	Platform_Log2(
-		"CustomModel_Init '%s' with %i BoxDescs",
+		"CustomModel_Register '%s' with %i BoxDescs",
 		&modelName,
 		&a
 	);
@@ -696,6 +696,16 @@ void CustomModel_Init(struct CustomModel* customModel) {
 	customModel->model.DrawArm  = CustomModel_DrawArm;
 
 	customModel->valid = true;
+	
+	/* Model_Register(&customModel->model); */
+	/* add to front of linked list so that we overwrite original models */
+	if (!models_head) {
+		models_head = &customModel->model;
+		models_tail = models_head;
+	} else {
+		customModel->model.next = models_head;
+		models_head = &customModel->model;
+	}
 }
 
 void CustomModel_Free(struct CustomModel* customModel) {

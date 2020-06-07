@@ -1545,8 +1545,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 		ReadCustomModelPart(part, data, &pos);
 	}
 
-	CustomModel_Init(customModel);
-	Model_Register(&customModel->model);
+	CustomModel_Register(customModel);
 }
 
 static void CPE_RemoveModel(cc_uint8* data) {
