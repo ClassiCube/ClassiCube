@@ -224,7 +224,7 @@ enum CustomModelAnim {
 	CustomModelAnim_SpinZ = 8,
 	CustomModelAnim_SpinXVelocity = 9,
 	CustomModelAnim_SpinYVelocity = 10,
-	CustomModelAnim_SpinZVelocity = 11,
+	CustomModelAnim_SpinZVelocity = 11
 };
 
 struct CustomModelPart {
@@ -256,7 +256,6 @@ struct CustomModel {
 	cc_bool usesHumanSkin;
 	/* use crazy arms */
 	cc_bool calcHumanAnims;
-
 	cc_bool hideFirstPersonArm;
 
 	cc_uint16 uScale;

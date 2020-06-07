@@ -453,6 +453,8 @@ void Model_Register(struct Model* model) {
 }
 
 void Model_Unregister(struct Model* model) {
+	int i;
+	
 	/* remove the model from the list */
 	struct Model* item = models_head;
 	if (models_head == model) {
@@ -468,7 +470,6 @@ void Model_Unregister(struct Model* model) {
 	}
 
 	/* unset this model from all entities, replacing with default fallback */
-	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		struct Entity* entity = Entities.List[i];
 		if (entity && entity->Model == model) {
@@ -513,14 +514,18 @@ static void CustomModel_MakeParts(void) {
 
 static PackedCol oldCols[FACE_COUNT];
 static void CustomModel_Draw(struct Entity* entity) {
+	int i;
 	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
 
 	Model_ApplyTexture(entity);
 	Models.uScale = 1.0f / customModel->uScale;
 	Models.vScale = 1.0f / customModel->vScale;
 
-	int i;
 	for (i = 0; i < customModel->numParts; i++) {
+		float rotationX;
+		float rotationY;
+		float rotationZ;
+		cc_bool head;
 		struct CustomModelPart* part = &customModel->parts[i];
 
 		if (part->fullbright) {
@@ -534,10 +539,10 @@ static void CustomModel_Draw(struct Entity* entity) {
 		/* bbmodels use xyz rotation order */
 		Models.Rotation = ROTATE_ORDER_XYZ;
 		
-		float rotationX = part->rotationX * MATH_DEG2RAD;
-		float rotationY = part->rotationY * MATH_DEG2RAD;
-		float rotationZ = part->rotationZ * MATH_DEG2RAD;
-		cc_bool head = false;
+		rotationX = part->rotationX * MATH_DEG2RAD;
+		rotationY = part->rotationY * MATH_DEG2RAD;
+		rotationZ = part->rotationZ * MATH_DEG2RAD;
+		head = false;
 		
 		if (part->anim == CustomModelAnim_Head) {
 			head = true;
@@ -598,7 +603,7 @@ static void CustomModel_Draw(struct Entity* entity) {
 		}
 	}
 
-    Model_UpdateVB();
+	Model_UpdateVB();
 
 	Models.Rotation = ROTATE_ORDER_ZYX;
 }
@@ -624,6 +629,7 @@ static void CustomModel_GetPickingBounds(struct Entity* entity) {
 }
 
 static void CustomModel_DrawArm(struct Entity* entity) {
+	int i;
 	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
 	if (customModel->hideFirstPersonArm) {
 		return;
@@ -632,7 +638,6 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 	Models.uScale = 1.0f / customModel->uScale;
 	Models.vScale = 1.0f / customModel->vScale;
 
-	int i;
 	for (i = 0; i < customModel->numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
 		if (part->anim == CustomModelAnim_RightArm) {
@@ -662,9 +667,11 @@ static void CheckMaxVertices(void) {
 }
 
 void CustomModel_Register(struct CustomModel* customModel) {
+	String modelName;
+	
 	CheckMaxVertices();
 
-	String modelName = String_FromRaw(customModel->name, STRING_SIZE);
+	modelName = String_FromRaw(customModel->name, STRING_SIZE);
 
 	customModel->model.name = customModel->name;
 	customModel->model.vertices = customModel->vertices;

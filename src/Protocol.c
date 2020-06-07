@@ -1401,6 +1401,8 @@ static float ReadFloat(cc_uint8* data, int* i) {
 }
 
 static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, int* pos) {
+	cc_uint8 flags;
+	
 	/* read BoxDesc */
 	part->boxDesc.texX = Stream_GetU16_BE(&data[*pos]);
 	*pos += 2;
@@ -1417,7 +1419,6 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 	part->boxDesc.x1 = ReadFloat(data, pos);
 	part->boxDesc.y1 = ReadFloat(data, pos);
 	part->boxDesc.z1 = ReadFloat(data, pos);
-
 
 	part->boxDesc.x2 = ReadFloat(data, pos);
 	part->boxDesc.y2 = ReadFloat(data, pos);
@@ -1439,12 +1440,16 @@ static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, in
 	part->animModifier = ReadFloat(data, pos);
 
 	/* read bool flags */
-	cc_uint8 flags = data[*pos];
+	flags = data[*pos];
 	*pos += 1;
 	part->fullbright = (flags >> 0) & 1;
 }
 
 static void CPE_DefineModel(cc_uint8* data) {
+	int i;
+	struct CustomModel* customModel;
+	cc_uint8 flags;
+	cc_uint8 numParts;
 	int pos = 0;
 
 	/* read String */
@@ -1452,7 +1457,6 @@ static void CPE_DefineModel(cc_uint8* data) {
 	pos += STRING_SIZE;
 
 	/* remove existing, same-name CustomModels */
-	int i;
 	for (i = 0; i < MAX_CUSTOM_MODELS; i++) {
 		if (
 			custom_models[i].valid &&
@@ -1463,7 +1467,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 	}
 
 	/* find new slot */
-	struct CustomModel* customModel = NULL;
+	customModel = NULL;
 	for (i = 0; i < MAX_CUSTOM_MODELS; i++) {
 		if (!custom_models[i].valid) {
 			customModel = &custom_models[i];
@@ -1505,7 +1509,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 	customModel->pickingBoundsAABB.Max.Z = ReadFloat(data, &pos);
 
 	/* read bool flags */
-	cc_uint8 flags = data[pos++];
+	flags = data[pos++];
 	customModel->bobbing = (flags >> 0) & 1;
 	customModel->pushes = (flags >> 1) & 1;
 	customModel->usesHumanSkin = (flags >> 2) & 1;
@@ -1519,7 +1523,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 	pos += 2;
 
 	/* read # CustomModelParts */
-	cc_uint8 numParts = data[pos++];
+	numParts = data[pos++];
 
 	if (numParts >= MAX_CUSTOM_MODEL_PARTS) {
 		String msg; char msgBuffer[256];
