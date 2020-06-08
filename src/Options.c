@@ -188,26 +188,20 @@ void Options_SetSecure(const char* opt, const String* src, const String* key) {
 }
 
 void Options_GetSecure(const char* opt, String* dst, const String* key) {
-	cc_uint8 data[1500];
-	cc_uint8* dec;
+	cc_uint8 data[1500], c;
+	int i, dataLen;
 	String raw;
-	int i, decLen, dataLen;
 
 	Options_UNSAFE_Get(opt, &raw);
 	if (!raw.length || !key->length) return;
 	if (raw.length > 2000) Logger_Abort("too large to base64");
+
 	dataLen = Convert_FromBase64(raw.buffer, raw.length, data);
+	if (!Platform_Decrypt(data, dataLen, dst)) return;
 
-	if (Platform_Decrypt(data, dataLen, &dec, &decLen)) {
-		/* fallback to NOT SECURE XOR. Prevents simple reading from options.txt */
-		decLen = dataLen;
-		dec    = (cc_uint8*)Mem_Alloc(decLen, 1, "XOR decode");
-
-		for (i = 0; i < decLen; i++) {
-			dec[i] = (cc_uint8)(data[i] ^ key->buffer[i % key->length] ^ 0x43);
-		}
+	/* fallback to NOT SECURE XOR. Prevents simple reading from options.txt */
+	for (i = 0; i < dataLen; i++) {
+		c  = (cc_uint8)(data[i] ^ key->buffer[i % key->length] ^ 0x43);
+		String_Append(dst, c);
 	}
-
-	for (i = 0; i < decLen; i++) String_Append(dst, dec[i]);
-	Mem_Free(dec);
 }

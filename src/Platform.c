@@ -1563,16 +1563,16 @@ cc_result Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLe
 	LocalFree(dataOut.pbData);
 	return 0;
 }
-cc_result Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen) {
-	DATA_BLOB dataIn, dataOut;
-	dataIn.cbData = len; dataIn.pbData = (BYTE*)data;
-	if (!CryptUnprotectData(&dataIn, NULL, NULL, NULL, NULL, 0, &dataOut)) return GetLastError();
+cc_result Platform_Decrypt(const void* data, int len, String* dst) {
+	DATA_BLOB input, output;
+	int i;
+	input.cbData = len; input.pbData = (BYTE*)data;
+	if (!CryptUnprotectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
 
-	/* copy to memory we can free */
-	*dec    = (cc_uint8*)Mem_Alloc(dataOut.cbData, 1, "decrypt data");
-	*decLen = dataOut.cbData;
-	Mem_Copy(*dec, dataOut.pbData, dataOut.cbData);
-	LocalFree(dataOut.pbData);
+	for (i = 0; i < output.cbData; i++) {
+		String_Append(dst, output.pbData[i]);
+	}
+	LocalFree(output.pbData);
 	return 0;
 }
 
@@ -1614,7 +1614,7 @@ cc_result Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLe
 	/* TODO: Is there a similar API for OSX/Linux? */
 	return ERR_NOT_SUPPORTED;
 }
-cc_result Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen) {
+cc_result Platform_Decrypt(const void* data, int len, String* dst) {
 	/* TODO: Is there a similar API for OSX/Linux? */
 	return ERR_NOT_SUPPORTED;
 }

@@ -49,7 +49,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args);
 cc_result Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen);
 /* Decrypts data in a platform-specific manner. (may not be supported) */
 /* NOTE: Should only be implemented when platform natively supports it. */
-cc_result Platform_Decrypt(const void* data, int len, cc_uint8** dec, int* decLen);
+cc_result Platform_Decrypt(const void* data, int len, String* dst);
 /* Outputs more detailed information about errors with operating system functions. */
 /* NOTE: This is for general functions like file I/O. If a more specific 
 describe exists (e.g. Http_DescribeError), that should be preferred. */

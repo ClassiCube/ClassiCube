@@ -533,7 +533,7 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	Camera_CheckFocus();
 
 	end   = Stopwatch_Measure();
-	delta = Stopwatch_ElapsedMilliseconds(map_receiveBeg, end);
+	delta = (int)Stopwatch_ElapsedMilliseconds(map_receiveBeg, end);
 	Platform_Log1("map loading took: %i", &delta);
 	map_begunLoading = false;
 	WoM_CheckSendWomID();
