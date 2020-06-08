@@ -6,7 +6,7 @@
 # - The root folder is ~/client/ (i.e. folder layout is ~/client/.git/, ~/client/src/, etc)
 # First you need to install these packages: gcc, i686-w64-mingw32-gcc and x86_64-w64-mingw32-gcc
 # 
-# You then need to install these packages: libx11-dev, libgl1-mesa-dev, libopenal-dev, libcurl4-gnutls-dev/libcurl4-openssl-dev
+# You then need to install these packages: libx11-dev and libgl1-mesa-dev
 # - if 32 bit, then install the 64 bit variants of all these packages (e.g. libx11-dev:amd64)
 # - if 64 bit, then install the 32 bit variants of all these packages (e.g. libx11-dev:i386)
 #
@@ -15,11 +15,6 @@
 # The alternate bit .so files should have been left behind in the mesa folder, so adding a symlink should make it compile again
 # - for 32 bit: ln -sf /usr/lib/x86_64-linux-gnu/mesa/libGL.so.1 /usr/lib/x86_64-linux-gnu/libGL.so
 # - for 64 bit: ln -sf /usr/lib/i386-linux-gnu/mesa/libGL.so.1 /usr/lib/i386-linux-gnu/libGL.so
-#
-# You should now be able to compile both 32 and 64 bit variants of the client for linux
-# However! The default libcurl package will produce an executable that won't run on Arch (due to defining CURL_OPENSSL_3)
-# As such, you may want to uninstall libcurl package, manually compile curl's source code for both 32 and 64 bit, 
-# then add the .so files to /usr/lib/i386-linux-gnu and /usr/lib/x86_64-linux-gnu/
 
 # paths, change these as needed
 SOURCE_DIR=~/client

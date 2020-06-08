@@ -7,10 +7,9 @@ ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that
 You can grab the latest stable binaries [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
 
 #### What ClassiCube is
-* Works with both ~~minecraft.net~~(classic has been removed by Mojang) and classicube.net accounts.
-* Lightweight, minimal memory usage compared to the standard client.
+* A complete re-implementation of Minecraft Classic, with optional additions.
+* Lightweight, minimal memory usage compared to the vanilla client.
 * Works with effectively all graphics cards that support OpenGL or Direct3D 9.
-* Provides single-player support, and both a flatgrass and vanilla-type map generator.
 
 It **does not** work with 'modern/premium' Minecraft servers.
 
@@ -30,7 +29,7 @@ Run ClassiCube.exe, then click Singleplayer at the main menu.
 Run ClassiCube.exe. You can connect to LAN/locally hosted servers, ~~minecraft.net servers,~~ and classicube.net servers through the launcher.
 
 ###### *Windows specific*
-*If you are stuck using the built-in OpenGL 1.1 software renderer, you can use the MESA software renderer from either [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) or [here](https://wiki.qt.io/Cross_compiling_Mesa_for_Windows) for slightly better performance. Typically though, this occurs because you have not installed GPU drivers.*
+*If you are stuck using the built-in OpenGL 1.1 software renderer, you can use the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance. Typically though, this occurs because you have not installed GPU drivers.*
 
 ### Compiling
 
@@ -39,19 +38,19 @@ Run ClassiCube.exe. You can connect to LAN/locally hosted servers, ~~minecraft.n
 ##### Compiling with Visual Studio:
 Open ClassiCube.sln and compile it.
 
-If you get a ```The Windows SDK version 5.1 was not found``` compilation error, [see here for how to fix](misc/compile-fixes.md#visual-studio-unsupported-platform-toolset)
+If you get a ```The Windows SDK version 5.1 was not found``` compilation error, [see here for how to fix](doc/compile-fixes.md#visual-studio-unsupported-platform-toolset)
 
 ##### Compiling with MinGW-w64
 I am assuming you used the installer from https://sourceforge.net/projects/mingw-w64/
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
-3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of *i586-mingw32msvc-gcc*
+3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of *i686-w64-mingw32-gcc*
 
 ##### Compiling with MinGW
 I am assuming you used the installer from http://www.mingw.org/
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
-3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of *i586-mingw32msvc-gcc*
+3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of *i686-w64-mingw32-gcc*
 
 #### Linux
 
@@ -61,7 +60,7 @@ Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-de
 
 ##### Cross compiling for windows:
 
-```i586-mingw32msvc-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
+```i686-w64-mingw32-gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9```
 
 ##### Raspberry pi
 Although the regular linux compiliation flags will work fine, to take full advantage of the hardware:
@@ -144,6 +143,6 @@ Further information (e.g. style) for the game's source code can be found in the 
 * curl - HTTP/HTTPS for linux and macOS
 * FreeType - Font handling for all platforms
 * GCC - Compiles client for linux
-* MinGW - Compiles client for windows
+* MinGW-w64 - Compiles client for windows
 * Clang - Compiles client for macOS
 * Emscripten - Compiles client for web
