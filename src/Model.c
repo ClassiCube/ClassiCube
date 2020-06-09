@@ -563,17 +563,17 @@ static void CustomModel_Draw(struct Entity* entity) {
 			rotationX += entity->Anim.RightArmX;
 			rotationZ += entity->Anim.RightArmZ;
 		} else if (part->anim == CustomModelAnim_SpinX) {
-			rotationX += fmodf((float)Game.Time * part->animModifier, 360.0f);
+			rotationX += (float)(Game.Time * part->animModifier);
 		} else if (part->anim == CustomModelAnim_SpinY) {
-			rotationY += fmodf((float)Game.Time * part->animModifier, 360.0f);
+			rotationY += (float)(Game.Time * part->animModifier);
 		} else if (part->anim == CustomModelAnim_SpinZ) {
-			rotationZ += fmodf((float)Game.Time * part->animModifier, 360.0f);
+			rotationZ += (float)(Game.Time * part->animModifier);
 		} else if (part->anim == CustomModelAnim_SpinXVelocity) {
-			rotationX += fmodf(entity->Anim.WalkTime * part->animModifier, 360.0f);
+			rotationX += entity->Anim.WalkTime * part->animModifier;
 		} else if (part->anim == CustomModelAnim_SpinYVelocity) {
-			rotationY += fmodf(entity->Anim.WalkTime * part->animModifier, 360.0f);
+			rotationY += entity->Anim.WalkTime * part->animModifier;
 		} else if (part->anim == CustomModelAnim_SpinZVelocity) {
-			rotationZ += fmodf(entity->Anim.WalkTime * part->animModifier, 360.0f);
+			rotationZ += entity->Anim.WalkTime * part->animModifier;
 		}
 		
 		if (
@@ -706,7 +706,6 @@ void CustomModel_Register(struct CustomModel* customModel) {
 }
 
 void CustomModel_Free(struct CustomModel* customModel) {
-	String name = String_FromReadonly(customModel->name);
 	Model_Unregister((struct Model*)customModel);
 
 	Mem_Free(customModel->vertices);
