@@ -3667,7 +3667,7 @@ static const JNINativeMethod methods[18] = {
 
 void Window_Init(void) {
 	JNIEnv* env;
-	/* TODO: ANativeActivity_setWindowFlags(app->activity,  AWINDOW_FLAG_FULLSCREEN, 0); */
+	/* TODO: ANativeActivity_setWindowFlags(app->activity, AWINDOW_FLAG_FULLSCREEN, 0); */
 	JavaGetCurrentEnv(env);
 	JavaRegisterNatives(env, methods);
 

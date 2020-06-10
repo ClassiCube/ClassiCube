@@ -166,11 +166,7 @@ void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct M
 	result->Row3.W = (((lM41 * rM14) + (lM42 * rM24)) + (lM43 * rM34)) + (lM44 * rM44);
 }
 
-void Matrix_Orthographic(struct Matrix* result, float width, float height, float zNear, float zFar) {
-	Matrix_OrthographicOffCenter(result, -width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, zNear, zFar);
-}
-
-void Matrix_OrthographicOffCenter(struct Matrix* result, float left, float right, float bottom, float top, float zNear, float zFar) {
+void Matrix_Orthographic(struct Matrix* result, float left, float right, float top, float bottom, float zNear, float zFar) {
 	/* Transposed, source https://msdn.microsoft.com/en-us/library/dd373965(v=vs.85).aspx */
 	*result = Matrix_Identity;
 

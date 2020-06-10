@@ -55,8 +55,8 @@ cc_bool Game_ViewBobbing, Game_HideGui;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 float   Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
 
-static struct ScheduledTask Game_Tasks[6];
-static int Game_TasksCount, entTaskI;
+static struct ScheduledTask tasks[6];
+static int tasksCount, entTaskI;
 
 static char usernameBuffer[FILENAME_SIZE];
 static char mppassBuffer[STRING_SIZE];
@@ -79,11 +79,11 @@ int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 	task.Interval    = interval;
 	task.Callback    = callback;
 
-	if (Game_TasksCount == Array_Elems(Game_Tasks)) {
+	if (tasksCount == Array_Elems(tasks)) {
 		Logger_Abort("ScheduledTask_Add - hit max count");
 	}
-	Game_Tasks[Game_TasksCount++] = task;
-	return Game_TasksCount - 1;
+	tasks[tasksCount++] = task;
+	return tasksCount - 1;
 }
 
 
@@ -522,15 +522,15 @@ static void PerformScheduledTasks(double time) {
 	struct ScheduledTask task;
 	int i;
 
-	for (i = 0; i < Game_TasksCount; i++) {
-		task = Game_Tasks[i];
+	for (i = 0; i < tasksCount; i++) {
+		task = tasks[i];
 		task.Accumulator += time;
 
 		while (task.Accumulator >= task.Interval) {
 			task.Callback(&task);
 			task.Accumulator -= task.Interval;
 		}
-		Game_Tasks[i] = task;
+		tasks[i] = task;
 	}
 }
 
@@ -598,7 +598,7 @@ static void Game_RenderFrame(double delta) {
 	}
 
 	PerformScheduledTasks(delta);
-	entTask = Game_Tasks[entTaskI];
+	entTask = tasks[entTaskI];
 	t = (float)(entTask.Accumulator / entTask.Interval);
 	LocalPlayer_SetInterpPosition(t);
 

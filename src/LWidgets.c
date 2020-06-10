@@ -314,8 +314,8 @@ static void LInput_TickCaret(void* widget) {
 	cc_bool caretShow;
 	Rect2D r;
 
-	elapsed = (int)(DateTime_CurrentUTC_MS() - caretStart);
 	if (!caretStart) return;
+	elapsed = (int)(DateTime_CurrentUTC_MS() - caretStart);
 
 	caretShow = (elapsed % 1000) < 500;
 	if (caretShow == lastCaretShow) return;

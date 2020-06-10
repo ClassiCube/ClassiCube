@@ -878,7 +878,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 #define d3d9_zN -10000.0f
 #define d3d9_zF  10000.0f
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
-	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, d3d9_zN, d3d9_zF);
+	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, d3d9_zN, d3d9_zF);
 	matrix->Row2.Z = 1.0f    / (d3d9_zN - d3d9_zF);
 	matrix->Row3.Z = d3d9_zN / (d3d9_zN - d3d9_zF);
 }
@@ -1212,7 +1212,7 @@ void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
 void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
 
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
-	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, -10000.0f, 10000.0f);
+	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, -10000.0f, 10000.0f);
 }
 void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix) {
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
