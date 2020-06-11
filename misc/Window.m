@@ -14,6 +14,7 @@ static NSApplication* appHandle;
 static NSWindow* winHandle;
 static int windowX, windowY;
 
+struct GraphicsMode { int R, G, B, A, IsIndexed; };
 extern void Window_CommonInit(void);
 extern int Window_MapKey(UInt32 key);
 
@@ -21,6 +22,7 @@ extern int Window_MapKey(UInt32 key);
 @end
 
 @implementation ClassiCubeWindowDelegate
+static void Window_RefreshBounds(void);
 
 - (void)windowDidResize:(NSNotification *)notification
 {
@@ -36,13 +38,13 @@ extern int Window_MapKey(UInt32 key);
 
 - (void)windowDidBecomeKey:(NSNotification *)notification
 {
-	Window_Focused = true;
+	WindowInfo.Focused = true;
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification
 {
-	Window_Focused = false;
+	WindowInfo.Focused = false;
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
@@ -73,8 +75,8 @@ static void Window_RefreshBounds(void) {
 
 	windowX = (int)rect.origin.x;
 	windowY = (int)rect.origin.y;
-	Window_Width  = (int)rect.size.width;
-	Window_Height = (int)rect.size.height;
+	WindowInfo.Width  = (int)rect.size.width;
+	WindowInfo.Height = (int)rect.size.height;
 	Platform_Log2("WINPOS: %i, %i", &windowX, &windowY);
 }
 
@@ -94,15 +96,15 @@ void Window_Init1(void) {
 	Window_CommonInit();
 }
 
-#define Display_CentreX(width)  (Display_Bounds.X + (Display_Bounds.Width  - width)  / 2)
-#define Display_CentreY(height) (Display_Bounds.Y + (Display_Bounds.Height - height) / 2)
+#define Display_CentreX(width)  (DisplayInfo.X + (DisplayInfo.Width  - width)  / 2)
+#define Display_CentreY(height) (DisplayInfo.Y + (DisplayInfo.Height - height) / 2)
 
 void Window_Create1(int width, int height) {
 	NSRect rect;
 	// TODO: don't set, RefreshBounds
-	Window_Width  = width;
-	Window_Height = height;
-	Window_Exists = true;
+	WindowInfo.Width  = width;
+	WindowInfo.Height = height;
+	WindowInfo.Exists = true;
 
 	rect.origin.x    = Display_CentreX(width);
 	rect.origin.y    = Display_CentreY(height);
@@ -172,7 +174,7 @@ void Window_ProcessEvents1(void) {
 			break;
 
 		case NSScrollWheel:
-			Mouse_SetWheel(Mouse_Wheel + [ev deltaY]);
+			Mouse_ScrollWheel([ev deltaY]);
 			break;
 
 		case NSMouseMoved:
@@ -186,10 +188,10 @@ void Window_ProcessEvents1(void) {
 			mouseX = (int)loc.x - windowX;
 			mouseY = (int)loc.y - windowY;
 			/* need to flip Y coordinates because cocoa has window origin at bottom left */
-			mouseY = Window_Height - mouseY;
+			mouseY = WindowInfo.Height - mouseY;
 			Pointer_SetPosition(0, mouseX, mouseY);
 
-			if (Input_RawMode) Event_RaiseMove(&PointerEvents.RawMoved, 0, dx, dy);
+			if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
 			break;
 		}
 

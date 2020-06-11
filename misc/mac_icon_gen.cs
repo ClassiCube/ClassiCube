@@ -5,8 +5,8 @@ using System.IO;
 namespace test {
 	public static class Program {
 		
-		const string src = @"H:\PortableApps\GitPortable\App\Git\ClassicalSharp\misc\CCIcon.ico";
-		const string dst = @"H:\PortableApps\GitPortable\App\Git\ClassicalSharp\misc\CCIcon.c";
+		const string src = "CCIcon.ico";
+		const string dst = "CCIcon.c";
 		
 		static void DumpIcon(StreamWriter sw, int width, int height) {
 			using (Icon icon = new Icon(src, width, height)) {

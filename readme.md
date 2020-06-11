@@ -69,11 +69,11 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 #### macOS (32 bit)
 
-```gcc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL```
+```cc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL```
 
 #### macOS (64 bit)
 
-```gcc *.c -o ClassiCube -framework Cocoa -framework OpenGL -lobjc```
+```cc *.c -o ClassiCube -framework Cocoa -framework OpenGL -lobjc```
 
 #### FreeBSD
 
