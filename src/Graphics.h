@@ -212,10 +212,10 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, struct VertexTextu
 
 /* Switches state to be suitable for drawing 2D graphics. */
 /* NOTE: This means turning off fog/depth test, changing matrices, etc.*/
-void Gfx_Mode2D(int width, int height);
+void Gfx_Begin2D(int width, int height);
 /* Switches state to be suitable for drawing 3D graphics. */
 /* NOTE: This means restoring fog/depth test, restoring matrices, etc. */
-void Gfx_Mode3D(void);
+void Gfx_End2D(void);
 
 /* Sets appropriate alpha test/blending for given block draw type. */
 void Gfx_SetupAlphaState(cc_uint8 draw);

@@ -7,6 +7,7 @@
 	http://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art001
 	https://www.ietf.org/rfc/rfc1951.txt
 	https://github.com/nothings/stb/blob/master/stb_image.h
+	https://www.hanshq.net/zip.html
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 struct Stream;

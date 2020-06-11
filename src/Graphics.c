@@ -174,10 +174,9 @@ void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, struct VertexTextu
 }
 
 static cc_bool gfx_hadFog;
-void Gfx_Mode2D(int width, int height) {
+void Gfx_Begin2D(int width, int height) {
 	struct Matrix ortho;
 	Gfx_CalcOrthoMatrix((float)width, (float)height, &ortho);
-
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &ortho);
 	Gfx_LoadIdentityMatrix(MATRIX_VIEW);
 
@@ -187,10 +186,7 @@ void Gfx_Mode2D(int width, int height) {
 	if (gfx_hadFog) Gfx_SetFog(false);
 }
 
-void Gfx_Mode3D(void) {
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
-	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
-
+void Gfx_End2D(void) {
 	Gfx_SetDepthTest(true);
 	Gfx_SetAlphaBlending(false);
 	if (gfx_hadFog) Gfx_SetFog(true);

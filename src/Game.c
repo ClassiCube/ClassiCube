@@ -605,7 +605,8 @@ static void Game_RenderFrame(double delta) {
 	Gfx_Clear();
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	UpdateViewMatrix();
-	Gfx_Mode3D();
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
+	Gfx_LoadMatrix(MATRIX_VIEW,       &Gfx.View);
 
 	if (!Gui_GetBlocksWorld()) {
 		Game_Render3D(delta, t);
@@ -613,8 +614,10 @@ static void Game_RenderFrame(double delta) {
 		RayTracer_SetInvalid(&Game_SelectedPos);
 	}
 
-	Gfx_Mode2D(Game.Width, Game.Height);
+	Gfx_Begin2D(Game.Width, Game.Height);
 	Gui_RenderGui(delta);
+	Gfx_End2D();
+
 	if (Game_ScreenshotRequested) Game_TakeScreenshot();
 	Gfx_EndFrame();
 }
