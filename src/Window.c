@@ -1137,11 +1137,12 @@ void Window_Init(void) {
 }
 
 #ifdef CC_BUILD_ICON
+extern const long CCIcon_Data[];
+extern const int  CCIcon_Size;
+
 static void ApplyIcon(void) {
 	Atom net_wm_icon = XInternAtom(win_display, "_NET_WM_ICON", false);
 	Atom xa_cardinal = XInternAtom(win_display, "CARDINAL", false);
-	extern const long CCIcon_Data[];
-	extern const int  CCIcon_Size;
 	XChangeProperty(win_display, win_handle, net_wm_icon, xa_cardinal, 32, PropModeReplace, CCIcon_Data, CCIcon_Size);
 }
 #else
@@ -2336,12 +2337,13 @@ static CGSConnectionID conn;
 static CGSWindowID winId;
 
 #ifdef CC_BUILD_ICON
+extern const int CCIcon_Data[];
+extern const int CCIcon_Width, CCIcon_Height;
+
 static void ApplyIcon(void) {
 	CGColorSpaceRef colSpace;
 	CGDataProviderRef provider;
 	CGImageRef image;
-	extern const int CCIcon_Data[];
-	extern const int CCIcon_Width, CCIcon_Height;
 
 	colSpace = CGColorSpaceCreateDeviceRGB();
 	provider = CGDataProviderCreateWithData(NULL, CCIcon_Data,
@@ -2536,7 +2538,7 @@ void Window_FreeFramebuffer(Bitmap* bmp) {
 
 
 /*########################################################################################################################*
-*------------------------------------------------------Carbon window------------------------------------------------------*
+*-------------------------------------------------------Cocoa window------------------------------------------------------*
 *#########################################################################################################################*/
 #elif defined CC_BUILD_COCOA
 #include <objc/message.h>
@@ -2697,6 +2699,37 @@ void Window_Init(void) {
 	RegisterSelectors();
 }
 
+#ifdef CC_BUILD_ICON
+extern const int CCIcon_Data[];
+extern const int CCIcon_Width, CCIcon_Height;
+
+static void ApplyIcon(void) {
+	CGColorSpaceRef colSpace;
+	CGDataProviderRef provider;
+	CGImageRef image;
+	CGSize size;
+	void* img;
+
+	colSpace = CGColorSpaceCreateDeviceRGB();
+	provider = CGDataProviderCreateWithData(NULL, CCIcon_Data,
+					Bitmap_DataSize(CCIcon_Width, CCIcon_Height), NULL);
+	image    = CGImageCreate(CCIcon_Width, CCIcon_Height, 8, 32, CCIcon_Width * 4, colSpace,
+					kCGBitmapByteOrder32Little | kCGImageAlphaLast, provider, NULL, 0, 0);
+
+	size.width = 0; size.height = 0;
+	img = objc_msgSend((id)objc_getClass("NSImage"), sel_registerName("alloc"));
+	objc_msgSend(img, sel_registerName("initWithCGImage:size:"), image, size);
+	objc_msgSend(appHandle, sel_registerName("setApplicationIconImage:"), img);
+
+	/* TODO need to release NSImage here */
+	CGImageRelease(image);
+	CGDataProviderRelease(provider);
+	CGColorSpaceRelease(colSpace);
+}
+#else
+static void ApplyIcon(void) { }
+#endif
+
 #define NSTitledWindowMask         (1 << 0)
 #define NSClosableWindowMask       (1 << 1)
 #define NSMiniaturizableWindowMask (1 << 2)
@@ -2722,6 +2755,7 @@ void Window_Create(int width, int height) {
 	objc_msgSend(winHandle, sel_registerName("setDelegate:"), winHandle);
 	RefreshWindowBounds();
 	MakeContentView();
+	ApplyIcon();
 }
 
 void Window_SetTitle(const String* title) {
