@@ -4356,7 +4356,12 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	void* addr = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
+	static const String glPath = String_FromConst("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
+	static void* lib;
+	void* addr;
+
+	if (!lib) lib = DynamicLib_Load2(&glPath);
+	addr = DynamicLib_Get2(lib, function);
 	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
 }
 
@@ -4433,7 +4438,12 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	void* addr = DynamicLib_GetFrom("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL", function);
+	static const String glPath = String_FromConst("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
+	static void* lib;
+	void* addr;
+
+	if (!lib) lib = DynamicLib_Load2(&glPath);
+	addr = DynamicLib_Get2(lib, function);
 	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
 }
 

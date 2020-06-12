@@ -1477,17 +1477,6 @@ cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) {
 	return *symbol == NULL;
 }
 
-void* DynamicLib_GetFrom(const char* filename, const char* name) {
-	void* lib;
-	String path;
-
-	path = String_FromReadonly(filename);
-	lib  = DynamicLib_Load2(&path);
-	if (!lib) return NULL;
-
-	return DynamicLib_Get2(lib, name);
-}
-
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*

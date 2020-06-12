@@ -86,7 +86,6 @@ CC_API void* DynamicLib_Load2(const String* path);
 /* Attempts to get the address of the symbol in the given dynamic library. */
 /* NOTE: Do NOT use this to load OpenGL functions, use GLContext_GetAddress. */
 CC_API void* DynamicLib_Get2(void* lib, const char* name);
-void* DynamicLib_GetFrom(const char* filename, const char* name);  /* OBSOLETE */
 /* Outputs more detailed information about errors with the DynamicLib functions. */
 /* NOTE: You MUST call this immediately after DynamicLib_Load2/DynamicLib_Get2 returns NULL. */
 CC_API cc_bool DynamicLib_DescribeError(String* dst);
