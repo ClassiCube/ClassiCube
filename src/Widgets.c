@@ -426,7 +426,7 @@ static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int i
 
 static void HotbarWidget_Reposition(void* widget) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
-	float scale  = Game_GetHotbarScale();
+	float scale  = Gui_GetHotbarScale();
 	float scaleX = scale * DisplayInfo.DpiX;
 	float scaleY = scale * DisplayInfo.DpiY;
 	int y;
@@ -721,7 +721,7 @@ void TableWidget_Recreate(struct TableWidget* w) {
 
 static void TableWidget_Reposition(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	float scale = Game_GetInventoryScale();
+	float scale = Gui_GetInventoryScale();
 	int rowsDisplayed;
 
 	w->cellSize       = (int)(50 * Math_SqrtF(scale));

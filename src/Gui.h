@@ -36,6 +36,12 @@ extern cc_bool Gui_TabAutocomplete;
 /* Whether FPS counter (and other info) is shown in top left. */
 extern cc_bool Gui_ShowFPS;
 
+extern float Gui_RawHotbarScale, Gui_RawChatScale, Gui_RawInventoryScale;
+float Gui_Scale(float value);
+float Gui_GetHotbarScale(void);
+float Gui_GetInventoryScale(void);
+float Gui_GetChatScale(void);
+
 /* Functions for a Screen instance. */
 struct ScreenVTABLE {
 	/* Initialises persistent state. */

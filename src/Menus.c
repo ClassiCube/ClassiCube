@@ -2593,8 +2593,8 @@ static void ChatOptionsScreen_SetScale(const String* v, float* target, const cha
 	Gui_RefreshChat();
 }
 
-static void ChatOptionsScreen_GetChatScale(String* v) { String_AppendFloat(v, Game_RawChatScale, 1); }
-static void ChatOptionsScreen_SetChatScale(const String* v) { ChatOptionsScreen_SetScale(v, &Game_RawChatScale, OPT_CHAT_SCALE); }
+static void ChatOptionsScreen_GetChatScale(String* v) { String_AppendFloat(v, Gui_RawChatScale, 1); }
+static void ChatOptionsScreen_SetChatScale(const String* v) { ChatOptionsScreen_SetScale(v, &Gui_RawChatScale, OPT_CHAT_SCALE); }
 
 static void ChatOptionsScreen_GetChatlines(String* v) { String_AppendInt(v, Gui_Chatlines); }
 static void ChatOptionsScreen_SetChatlines(const String* v) {
@@ -2654,11 +2654,11 @@ static void GuiOptionsScreen_SetShadows(const String* v) {
 static void GuiOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Gui_ShowFPS); }
 static void GuiOptionsScreen_SetShowFPS(const String* v) { Gui_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
-static void GuiOptionsScreen_GetHotbar(String* v) { String_AppendFloat(v, Game_RawHotbarScale, 1); }
-static void GuiOptionsScreen_SetHotbar(const String* v) { ChatOptionsScreen_SetScale(v, &Game_RawHotbarScale, OPT_HOTBAR_SCALE); }
+static void GuiOptionsScreen_GetHotbar(String* v) { String_AppendFloat(v, Gui_RawHotbarScale, 1); }
+static void GuiOptionsScreen_SetHotbar(const String* v) { ChatOptionsScreen_SetScale(v, &Gui_RawHotbarScale, OPT_HOTBAR_SCALE); }
 
-static void GuiOptionsScreen_GetInventory(String* v) { String_AppendFloat(v, Game_RawInventoryScale, 1); }
-static void GuiOptionsScreen_SetInventory(const String* v) { ChatOptionsScreen_SetScale(v, &Game_RawInventoryScale, OPT_INVENTORY_SCALE); }
+static void GuiOptionsScreen_GetInventory(String* v) { String_AppendFloat(v, Gui_RawInventoryScale, 1); }
+static void GuiOptionsScreen_SetInventory(const String* v) { ChatOptionsScreen_SetScale(v, &Gui_RawInventoryScale, OPT_INVENTORY_SCALE); }
 
 static void GuiOptionsScreen_GetTabAuto(String* v) { Menu_GetBool(v, Gui_TabAutocomplete); }
 static void GuiOptionsScreen_SetTabAuto(const String* v) { Gui_TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }

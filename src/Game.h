@@ -52,12 +52,6 @@ enum FpsLimitMethod {
 };
 extern const char* const FpsLimit_Names[FPS_LIMIT_COUNT];
 
-extern float Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
-float Game_Scale(float value);
-float Game_GetHotbarScale(void);
-float Game_GetInventoryScale(void);
-float Game_GetChatScale(void);
-
 /* Attempts to change the terrain atlas. (bitmap containing textures for all blocks) */
 cc_bool Game_ChangeTerrainAtlas(Bitmap* atlas);
 void Game_SetViewDistance(int distance);

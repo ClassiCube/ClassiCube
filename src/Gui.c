@@ -13,10 +13,12 @@
 #include "Bitmap.h"
 #include "Options.h"
 #include "GameStructs.h"
+#include "Funcs.h"
 
 cc_bool Gui_ClassicTexture, Gui_ClassicTabList, Gui_ClassicMenu, Gui_ClassicChat;
 int     Gui_Chatlines;
 cc_bool Gui_ClickableChat, Gui_TabAutocomplete, Gui_ShowFPS;
+float   Gui_RawHotbarScale, Gui_RawChatScale, Gui_RawInventoryScale;
 
 GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 struct HUDScreen*  Gui_HUD;
@@ -60,6 +62,27 @@ int Widget_Contains(void* widget, int x, int y) {
 /*########################################################################################################################*
 *----------------------------------------------------------Gui------------------------------------------------------------*
 *#########################################################################################################################*/
+static CC_NOINLINE int GetWindowScale(void) {
+	float windowScale = min(WindowInfo.Width / 640.0f, WindowInfo.Height / 480.0f);
+	return 1 + (int)windowScale;
+}
+
+float Gui_Scale(float value) {
+	return (float)((int)(value * 10 + 0.5f)) / 10.0f;
+}
+
+float Gui_GetHotbarScale(void) {
+	return Gui_Scale(GetWindowScale() * Gui_RawHotbarScale);
+}
+
+float Gui_GetInventoryScale(void) {
+	return Gui_Scale(GetWindowScale() * (Gui_RawInventoryScale * 0.5f));
+}
+
+float Gui_GetChatScale(void) {
+	return Gui_Scale(GetWindowScale() * Gui_RawChatScale);
+}
+
 int Gui_CalcPos(cc_uint8 anchor, int offset, int size, int axisLen) {
 	if (anchor == ANCHOR_MIN) return offset;
 	if (anchor == ANCHOR_MAX) return axisLen - size - offset;
@@ -101,6 +124,10 @@ static void Gui_LoadOptions(void) {
 	Gui_ClassicMenu    = Options_GetBool(OPT_CLASSIC_OPTIONS, false) || Game_ClassicMode;
 	Gui_ClassicChat    = Options_GetBool(OPT_CLASSIC_CHAT, false)    || Game_PureClassic;
 	Gui_ShowFPS        = Options_GetBool(OPT_SHOW_FPS, true);
+	
+	Gui_RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
+	Gui_RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
+	Gui_RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.35f, 5.0f, 1.0f);
 }
 
 static void OnContextLost(void* obj) {

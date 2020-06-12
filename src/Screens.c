@@ -783,7 +783,7 @@ static void ChatScreen_FreeChatFonts(struct ChatScreen* s) {
 }
 
 static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
-	int size = (int)(8  * Game_GetChatScale());
+	int size = (int)(8  * Gui_GetChatScale());
 	Math_Clamp(size, 8, 60);
 
 	/* don't recreate font if possible */
@@ -791,7 +791,7 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	ChatScreen_FreeChatFonts(s);
 	Drawer2D_MakeFont(&s->chatFont, size, FONT_STYLE_NORMAL);
 
-	size = (int)(16 * Game_GetChatScale());
+	size = (int)(16 * Gui_GetChatScale());
 	Math_Clamp(size, 8, 60);
 	Drawer2D_MakeFont(&s->announcementFont, size, FONT_STYLE_NORMAL);
 
@@ -950,7 +950,7 @@ static void ChatScreen_DrawCrosshairs(void) {
 	int extent;
 	if (!Gui_IconsTex) return;
 
-	extent = (int)(CH_EXTENT * Game_Scale(WindowInfo.Height / 480.0f));
+	extent = (int)(CH_EXTENT * Gui_Scale(WindowInfo.Height / 480.0f));
 	tex.ID = Gui_IconsTex;
 	tex.X  = (WindowInfo.Width  / 2) - extent;
 	tex.Y  = (WindowInfo.Height / 2) - extent;

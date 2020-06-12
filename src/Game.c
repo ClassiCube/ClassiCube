@@ -53,7 +53,6 @@ cc_bool Game_AllowServerTextures;
 
 cc_bool Game_ViewBobbing, Game_HideGui;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
-float   Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
 
 static struct ScheduledTask tasks[6];
 static int tasksCount, entTaskI;
@@ -86,27 +85,6 @@ int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 	return tasksCount - 1;
 }
 
-
-int Game_GetWindowScale(void) {
-	float windowScale = min(WindowInfo.Width / 640.0f, WindowInfo.Height / 480.0f);
-	return 1 + (int)windowScale;
- }
-
-float Game_Scale(float value) {
-	return (float)((int)(value * 10 + 0.5f)) / 10.0f;
-}
-
-float Game_GetHotbarScale(void) {
-	return Game_Scale(Game_GetWindowScale() * Game_RawHotbarScale);
-}
-
-float Game_GetInventoryScale(void) {
-	return Game_Scale(Game_GetWindowScale() * (Game_RawInventoryScale * 0.5f));
-}
-
-float Game_GetChatScale(void) {
-	return Game_Scale(Game_GetWindowScale() * Game_RawChatScale);
-}
 
 cc_bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 	static const String terrain = String_FromConst("terrain.png");
@@ -327,10 +305,6 @@ static void LoadOptions(void) {
 	Game_ZoomFov    = Game_DefaultFov;
 	Game_BreakableLiquids = !Game_ClassicMode && Options_GetBool(OPT_MODIFIABLE_LIQUIDS, false);
 	Game_AllowServerTextures = Options_GetBool(OPT_SERVER_TEXTURES, true);
-
-	Game_RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
-	Game_RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
-	Game_RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.35f, 5.0f, 1.0f);
 	/* TODO: Do we need to support option to skip SSL */
 	/*cc_bool skipSsl = Options_GetBool("skip-ssl-check", false);
 	if (skipSsl) {

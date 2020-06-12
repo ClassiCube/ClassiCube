@@ -98,7 +98,7 @@ cc_result Window_EnterFullscreen(void);
 /* Attempts to restore the window to before it entered full screen. */
 cc_result Window_ExitFullscreen(void);
 
-/* Sets the size of the internal bounds of the window. */
+/* Sets the size of the internal bounds of the window in pixels. */
 /* NOTE: This size excludes the bounds of borders + title */
 void Window_SetSize(int width, int height);
 /* Closes then destroys the window. */
