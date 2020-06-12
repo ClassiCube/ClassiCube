@@ -610,7 +610,9 @@ static void Chat_Init(void) {
 	Commands_Register(&TeleportCommand);
 	Commands_Register(&ClearDeniedCommand);
 
+#ifndef CC_BUILD_MINFILES
 	Chat_Logging = Options_GetBool(OPT_CHAT_LOGGING, true);
+#endif
 }
 
 static void Chat_Reset(void) {
