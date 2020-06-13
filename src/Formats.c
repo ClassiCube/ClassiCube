@@ -1062,12 +1062,16 @@ static cc_result Cw_WriteBockDef(struct Stream* stream, int b) {
 		speed.f = Blocks.SpeedMultiplier[b];
 		Stream_SetU32_BE(&tmp[49], speed.u);
 
-		tex = Block_Tex(b, FACE_YMAX); tmp[68] = tex; tmp[74] = tex >> 8;
-		tex = Block_Tex(b, FACE_YMIN); tmp[69] = tex; tmp[75] = tex >> 8;
-		tex = Block_Tex(b, FACE_XMIN); tmp[70] = tex; tmp[76] = tex >> 8;
-		tex = Block_Tex(b, FACE_XMAX); tmp[71] = tex; tmp[77] = tex >> 8;
-		tex = Block_Tex(b, FACE_ZMIN); tmp[72] = tex; tmp[78] = tex >> 8;
-		tex = Block_Tex(b, FACE_ZMAX); tmp[73] = tex; tmp[79] = tex >> 8;
+		/* Originally only up to 256 textures were supported, which used up 6 bytes total */
+		/* Later, support for more textures was added, which requires 2 bytes per texture */
+		/*  For backwards compatibility, the lower byte of each texture is */
+		/*  written into first 6 bytes, then higher byte into next 6 bytes */
+		tex = Block_Tex(b, FACE_YMAX); tmp[68] = (cc_uint8)tex; tmp[74] = (cc_uint8)(tex >> 8);
+		tex = Block_Tex(b, FACE_YMIN); tmp[69] = (cc_uint8)tex; tmp[75] = (cc_uint8)(tex >> 8);
+		tex = Block_Tex(b, FACE_XMIN); tmp[70] = (cc_uint8)tex; tmp[76] = (cc_uint8)(tex >> 8);
+		tex = Block_Tex(b, FACE_XMAX); tmp[71] = (cc_uint8)tex; tmp[77] = (cc_uint8)(tex >> 8);
+		tex = Block_Tex(b, FACE_ZMIN); tmp[72] = (cc_uint8)tex; tmp[78] = (cc_uint8)(tex >> 8);
+		tex = Block_Tex(b, FACE_ZMAX); tmp[73] = (cc_uint8)tex; tmp[79] = (cc_uint8)(tex >> 8);
 
 		tmp[97]  = Blocks.BlocksLight[b] ? 0 : 1;
 		tmp[110] = Blocks.DigSounds[b];

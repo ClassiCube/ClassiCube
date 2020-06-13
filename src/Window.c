@@ -596,7 +596,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			prevPosY = raw.data.mouse.lLastY;
 		} else { break; }
 
-		if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
+		if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, (float)dx, (float)dy);
 	} break;
 
 	case WM_KEYDOWN:
