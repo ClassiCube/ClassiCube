@@ -54,9 +54,6 @@ cc_bool Game_AllowServerTextures;
 cc_bool Game_ViewBobbing, Game_HideGui;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 
-static struct ScheduledTask tasks[6];
-static int tasksCount, entTaskI;
-
 static char usernameBuffer[FILENAME_SIZE];
 static char mppassBuffer[STRING_SIZE];
 String Game_Username = String_FromArray(usernameBuffer);
@@ -72,15 +69,22 @@ void Game_AddComponent(struct IGameComponent* comp) {
 	LinkedList_Add(comp, comps_head, comps_tail);
 }
 
+#define TASKS_DEF_ELEMS 6
+static struct ScheduledTask defaultTasks[TASKS_DEF_ELEMS];
+static int tasksCapacity = TASKS_DEF_ELEMS, tasksCount, entTaskI;
+static struct ScheduledTask* tasks = defaultTasks;
+
 int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 	struct ScheduledTask task;
 	task.accumulator = 0.0;
 	task.interval    = interval;
 	task.Callback    = callback;
 
-	if (tasksCount == Array_Elems(tasks)) {
-		Logger_Abort("ScheduledTask_Add - hit max count");
+	if (tasksCount == tasksCapacity) {
+		Utils_Resize((void**)&tasks, &tasksCapacity,
+			sizeof(struct ScheduledTask), TASKS_DEF_ELEMS, TASKS_DEF_ELEMS);
 	}
+
 	tasks[tasksCount++] = task;
 	return tasksCount - 1;
 }
@@ -493,18 +497,17 @@ static void Game_Render3D(double delta, float t) {
 }
 
 static void PerformScheduledTasks(double time) {
-	struct ScheduledTask task;
+	struct ScheduledTask* task;
 	int i;
 
 	for (i = 0; i < tasksCount; i++) {
-		task = tasks[i];
-		task.accumulator += time;
+		task = &tasks[i];
+		task->accumulator += time;
 
-		while (task.accumulator >= task.interval) {
-			task.Callback(&task);
-			task.accumulator -= task.interval;
+		while (task->accumulator >= task->interval) {
+			task->Callback(task);
+			task->accumulator -= task->interval;
 		}
-		tasks[i] = task;
 	}
 }
 

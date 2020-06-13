@@ -34,7 +34,6 @@ struct Stream {
 		struct { cc_uint8* Cur; cc_uint32 Left, Length; cc_uint8* Base; } Mem;
 		struct { struct Stream* Source; cc_uint32 Left, Length; } Portion;
 		struct { cc_uint8* Cur; cc_uint32 Left, Length; cc_uint8* Base; struct Stream* Source; cc_uint32 End; } Buffered;
-		struct { cc_uint8* Cur; cc_uint32 Left, Last;   cc_uint8* Base; struct Stream* Source; } Ogg;
 		struct { struct Stream* Source; cc_uint32 CRC32; } CRC32;
 	} Meta;
 };

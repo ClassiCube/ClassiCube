@@ -121,7 +121,7 @@ extern cc_uint8 KeyBinds[KEYBIND_COUNT];
 extern const cc_uint8 KeyBind_Defaults[KEYBIND_COUNT];
 
 /* Gets whether the key bound to the given key binding is pressed. */
-cc_bool KeyBind_IsPressed(KeyBind binding);
+CC_API cc_bool KeyBind_IsPressed(KeyBind binding);
 /* Set the key that the given key binding is bound to. (also updates options list) */
 void KeyBind_Set(KeyBind binding, int key);
 

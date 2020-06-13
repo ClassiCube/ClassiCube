@@ -111,6 +111,6 @@ struct ScheduledTask {
 };
 
 typedef void (*ScheduledTaskCallback)(struct ScheduledTask* task);
-/* Adds a component to list of scheduled tasks. (always at end) */
-CC_NOINLINE int ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
+/* Adds a task to list of scheduled tasks. (always at end) */
+CC_API int ScheduledTask_Add(double interval, ScheduledTaskCallback callback);
 #endif
