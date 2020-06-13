@@ -33,7 +33,6 @@
 #include "Audio.h"
 #include "Stream.h"
 #include "Builder.h"
-#include "GameStructs.h"
 #include "Protocol.h"
 
 struct _GameData Game;

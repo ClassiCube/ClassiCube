@@ -6,7 +6,6 @@
 #include "Camera.h"
 #include "Event.h"
 #include "Entity.h"
-#include "GameStructs.h"
 
 cc_bool AxisLinesRenderer_Enabled;
 static GfxResourceID axisLines_vb;

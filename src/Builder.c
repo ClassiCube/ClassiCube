@@ -14,7 +14,6 @@
 #include "TexturePack.h"
 #include "Game.h"
 #include "Options.h"
-#include "GameStructs.h"
 
 int Builder_SidesLevel, Builder_EdgeLevel;
 /* Packs an index into the 16x16x16 count array. Coordinates range from 0 to 15. */

@@ -9,7 +9,6 @@
 #include "Utils.h"
 #include "Input.h"
 #include "Window.h"
-#include "GameStructs.h"
 #include "Event.h"
 #include "Http.h"
 #include "ExtMath.h"

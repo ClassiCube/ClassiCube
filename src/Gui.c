@@ -12,7 +12,6 @@
 #include "Platform.h"
 #include "Bitmap.h"
 #include "Options.h"
-#include "GameStructs.h"
 #include "Funcs.h"
 
 cc_bool Gui_ClassicTexture, Gui_ClassicTabList, Gui_ClassicMenu, Gui_ClassicChat;

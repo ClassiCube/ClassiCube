@@ -4,7 +4,6 @@
 #include "Block.h"
 #include "Event.h"
 #include "Chat.h"
-#include "GameStructs.h"
 
 struct _InventoryData Inventory;
 

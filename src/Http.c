@@ -3,7 +3,7 @@
 #include "Funcs.h"
 #include "Logger.h"
 #include "Stream.h"
-#include "GameStructs.h"
+#include "Game.h"
 
 void HttpRequest_Free(struct HttpRequest* request) {
 	Mem_Free(request->data);

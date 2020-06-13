@@ -7,7 +7,6 @@
 #include "Inventory.h"
 #include "Event.h"
 #include "Platform.h"
-#include "GameStructs.h"
 
 struct _BlockLists Blocks;
 

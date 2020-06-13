@@ -5,7 +5,6 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Game.h"
-#include "GameStructs.h"
 #include "Errors.h"
 #include "Vorbis.h"
 #include "Chat.h"

@@ -14,7 +14,6 @@
 #include "Utils.h"
 #include "World.h"
 #include "Options.h"
-#include "GameStructs.h"
 
 int MapRenderer_ChunksX, MapRenderer_ChunksY, MapRenderer_ChunksZ;
 int MapRenderer_1DUsedCount, MapRenderer_ChunksCount;

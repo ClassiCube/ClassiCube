@@ -6,7 +6,7 @@
 #include "World.h"
 #include "Logger.h"
 #include "Event.h"
-#include "GameStructs.h"
+#include "Game.h"
 
 cc_int16* Lighting_Heightmap;
 #define HEIGHT_UNCALCULATED Int16_MaxValue

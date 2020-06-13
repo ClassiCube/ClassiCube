@@ -17,7 +17,6 @@
 #include "Chat.h"
 #include "Options.h"
 #include "Logger.h"
-#include "GameStructs.h"
 
 #define LIQUID_ANIM_MAX 64
 #define WATER_TEX_LOC 14

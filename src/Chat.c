@@ -13,7 +13,6 @@
 #include "Funcs.h"
 #include "Block.h"
 #include "EnvRenderer.h"
-#include "GameStructs.h"
 #include "Utils.h"
 #include "TexturePack.h"
 #include "Options.h"

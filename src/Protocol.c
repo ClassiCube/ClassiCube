@@ -25,7 +25,6 @@
 #include "Camera.h"
 #include "Window.h"
 #include "Particle.h"
-#include "GameStructs.h"
 
 cc_uint16 Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];

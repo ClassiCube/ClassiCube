@@ -36,7 +36,7 @@ Here's the idea for a basic plugin that shows "Hello world" in chat when the gam
 ### Basic plugin boilerplate
 ```C
 #include "src/Chat.h"
-#include "src/GameStructs.h"
+#include "src/Game.h"
 
 #ifdef CC_BUILD_WIN
     #define CC_API __declspec(dllimport)
@@ -66,7 +66,7 @@ When writing plugins with C++, game headers must be surroundined with `extern "C
 ```C
 extern "C" {
 #include "src/Chat.h"
-#include "src/GameStructs.h"
+#include "src/Game.h"
 }
 ```
 Otherwise you will get obscure `Undefined reference` errors when compiling.

@@ -5,7 +5,6 @@
 #include "Funcs.h"
 #include "Game.h"
 #include "Camera.h"
-#include "GameStructs.h"
 
 /* Data for a selection box. */
 struct SelectionBox {
