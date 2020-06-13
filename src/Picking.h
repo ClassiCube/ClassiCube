@@ -1,6 +1,5 @@
 #ifndef CC_PICKING_H
 #define CC_PICKING_H
-#include "Constants.h"
 #include "Vectors.h"
 /* Data for picking/selecting block by the user, and clipping the camera.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3

@@ -9,6 +9,7 @@
 #include "Input.h"
 #include "Event.h"
 #include "Options.h"
+#include "Picking.h"
 
 struct _CameraData Camera;
 static struct RayTracer cameraClipPos;

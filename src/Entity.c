@@ -536,7 +536,7 @@ void Entities_Tick(struct ScheduledTask* task) {
 	int i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i]) continue;
-		Entities.List[i]->VTABLE->Tick(Entities.List[i], task->Interval);
+		Entities.List[i]->VTABLE->Tick(Entities.List[i], task->interval);
 	}
 }
 

@@ -34,6 +34,7 @@
 #include "Stream.h"
 #include "Builder.h"
 #include "Protocol.h"
+#include "Picking.h"
 
 struct _GameData Game;
 int     Game_Port;
@@ -73,8 +74,8 @@ void Game_AddComponent(struct IGameComponent* comp) {
 
 int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 	struct ScheduledTask task;
-	task.Accumulator = 0.0;
-	task.Interval    = interval;
+	task.accumulator = 0.0;
+	task.interval    = interval;
 	task.Callback    = callback;
 
 	if (tasksCount == Array_Elems(tasks)) {
@@ -497,11 +498,11 @@ static void PerformScheduledTasks(double time) {
 
 	for (i = 0; i < tasksCount; i++) {
 		task = tasks[i];
-		task.Accumulator += time;
+		task.accumulator += time;
 
-		while (task.Accumulator >= task.Interval) {
+		while (task.accumulator >= task.interval) {
 			task.Callback(&task);
-			task.Accumulator -= task.Interval;
+			task.accumulator -= task.interval;
 		}
 		tasks[i] = task;
 	}
@@ -572,7 +573,7 @@ static void Game_RenderFrame(double delta) {
 
 	PerformScheduledTasks(delta);
 	entTask = tasks[entTaskI];
-	t = (float)(entTask.Accumulator / entTask.Interval);
+	t = (float)(entTask.accumulator / entTask.interval);
 	LocalPlayer_SetInterpPosition(t);
 
 	Gfx_Clear();

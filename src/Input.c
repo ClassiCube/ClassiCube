@@ -26,6 +26,7 @@
 #include "Gui.h"
 #include "Protocol.h"
 #include "AxisLinesRenderer.h"
+#include "Picking.h"
 
 static cc_bool input_buttonsDown[3];
 static int input_pickingId = -1;

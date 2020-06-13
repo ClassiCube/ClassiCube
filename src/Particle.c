@@ -408,9 +408,9 @@ void Particles_Render(float t) {
 }
 
 void Particles_Tick(struct ScheduledTask* task) {
-	Terrain_Tick(task->Interval);
-	Rain_Tick(task->Interval);
-	Custom_Tick(task->Interval);
+	Terrain_Tick(task->interval);
+	Rain_Tick(task->interval);
+	Custom_Tick(task->interval);
 }
 
 void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {

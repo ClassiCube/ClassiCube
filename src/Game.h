@@ -1,15 +1,12 @@
 #ifndef CC_GAME_H
 #define CC_GAME_H
-#include "Picking.h"
 #include "String.h"
 #include "Bitmap.h"
 /* Represents the game and related structures.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
 */
 
-struct DisplayDevice;
 struct Stream;
-
 CC_VAR extern struct _GameData {
 	/* Width and height of the window. (1 at minimum) */
 	int Width, Height;
@@ -106,9 +103,9 @@ CC_NOINLINE void Game_AddComponent(struct IGameComponent* comp);
 struct ScheduledTask;
 struct ScheduledTask {
 	/* How long (in seconds) has elapsed since callback was last invoked */
-	double Accumulator;
+	double accumulator;
 	/* How long (in seconds) between invocations of the callback */
-	double Interval;
+	double interval;
 	/* Callback function that is periodically invoked */
 	void (*Callback)(struct ScheduledTask* task);
 };
