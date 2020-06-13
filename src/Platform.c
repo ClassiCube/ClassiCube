@@ -560,15 +560,15 @@ cc_result File_Length(FileHandle file, cc_uint32* len) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
 void Thread_Sleep(cc_uint32 milliseconds) { Sleep(milliseconds); }
-static DWORD WINAPI Thread_StartCallback(void* param) {
-	Thread_StartFunc* func = (Thread_StartFunc*)param;
-	(*func)();
+static DWORD WINAPI ExecThread(void* param) {
+	Thread_StartFunc func = (Thread_StartFunc)param;
+	func();
 	return 0;
 }
 
-void* Thread_Start(Thread_StartFunc* func, cc_bool detach) {
+void* Thread_Start(Thread_StartFunc func, cc_bool detach) {
 	DWORD threadID;
-	void* handle = CreateThread(NULL, 0, Thread_StartCallback, func, 0, &threadID);
+	void* handle = CreateThread(NULL, 0, ExecThread, (void*)func, 0, &threadID);
 	if (!handle) {
 		Logger_Abort2(GetLastError(), "Creating thread");
 	}
@@ -626,7 +626,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 #elif defined CC_BUILD_WEB
 /* No real threading support with emscripten backend */
 void Thread_Sleep(cc_uint32 milliseconds) { }
-void* Thread_Start(Thread_StartFunc* func, cc_bool detach) { (*func)(); return NULL; }
+void* Thread_Start(Thread_StartFunc func, cc_bool detach) { func(); return NULL; }
 void Thread_Detach(void* handle) { }
 void Thread_Join(void* handle) { }
 
@@ -642,15 +642,15 @@ void Waitable_Wait(void* handle) { }
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) { }
 #elif defined CC_BUILD_POSIX
 void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
-static void* Thread_StartCallback(void* lpParam) {
-	Thread_StartFunc* func = (Thread_StartFunc*)lpParam;
-	(*func)();
+static void* ExecThread(void* param) {
+	Thread_StartFunc func = (Thread_StartFunc)param;
+	func();
 	return NULL;
 }
 
-void* Thread_Start(Thread_StartFunc* func, cc_bool detach) {
+void* Thread_Start(Thread_StartFunc func, cc_bool detach) {
 	pthread_t* ptr = (pthread_t*)Mem_Alloc(1, sizeof(pthread_t), "thread");
-	int res = pthread_create(ptr, NULL, Thread_StartCallback, func);
+	int res = pthread_create(ptr, NULL, ExecThread, func);
 	if (res) Logger_Abort2(res, "Creating thread");
 
 	if (detach) Thread_Detach(ptr);

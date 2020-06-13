@@ -164,9 +164,9 @@ cc_result File_Length(FileHandle file, cc_uint32* len);
 
 /* Blocks the current thread for the given number of milliseconds. */
 CC_API void Thread_Sleep(cc_uint32 milliseconds);
-typedef void Thread_StartFunc(void);
+typedef void (*Thread_StartFunc)(void);
 /* Starts a new thread, optionally immediately detaching it. (See Thread_Detach) */
-CC_API void* Thread_Start(Thread_StartFunc* func, cc_bool detach);
+CC_API void* Thread_Start(Thread_StartFunc func, cc_bool detach);
 /* Frees the platform specific persistent data associated with the thread. */
 /* NOTE: You must either detach or join threads, as this data otherwise leaks. */
 CC_API void Thread_Detach(void* handle);
