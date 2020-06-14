@@ -3291,26 +3291,23 @@ void Window_Init(void) {
 	DisplayInfo.DpiX = emscripten_get_device_pixel_ratio();
 	DisplayInfo.DpiY = DisplayInfo.DpiX;
 
-	/* copy text, but only if user isn't selecting something else on the webpage */
+	/* Copy text, but only if user isn't selecting something else on the webpage */
+	/* (don't check window.clipboardData here, that's handled in Clipboard_SetText instead) */
 	EM_ASM(window.addEventListener('copy', 
 		function(e) {
 			if (window.getSelection && window.getSelection().toString()) return;
 			if (window.cc_copyText) {
-				if (e.clipboardData) {
-					e.clipboardData.setData('text/plain', window.cc_copyText);
-				} else {
-					window.clipboardData.setData('Text',  window.cc_copyText);
-				}
+				if (e.clipboardData) { e.clipboardData.setData('text/plain', window.cc_copyText); }
 				e.preventDefault();
 				window.cc_copyText = null;
 			}	
 		});
 	);
 
-	/* paste text */
+	/* Paste text (window.clipboardData is handled in Clipboard_RequestText instead) */
 	EM_ASM(window.addEventListener('paste',
 		function(e) {
-			var contents = e.clipboardData ? e.clipboardData.getData('text/plain') : window.clipboardData.getData('Text');
+			var contents = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
 			ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
 		});
 	);
@@ -3351,12 +3348,29 @@ void Clipboard_GetText(String* value) { }
 void Clipboard_SetText(const String* value) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, value);
-	EM_ASM_({ window.cc_copyText = UTF8ToString($0); }, str);
+
+	/* For IE11, use window.clipboardData to set the clipboard */
+	/* For other browsers, instead use the window.copy events */
+	EM_ASM_({ 
+		if (window.clipboardData) {
+			if (window.getSelection && window.getSelection().toString()) return;
+			window.clipboardData.setData('Text', UTF8ToString($0));
+		} else {
+			window.cc_copyText = UTF8ToString($0);
+		}
+	}, str);
 }
 
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 	clipboard_func = callback;
 	clipboard_obj  = obj;
+
+	/* For IE11, use window.clipboardData to get the clipboard */
+	EM_ASM_({
+		if (!window.clipboardData) return;
+		var contents = window.clipboardData.getData('Text');
+		ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
+	});
 }
 
 void Window_Show(void) { }
@@ -3369,6 +3383,7 @@ int Window_GetWindowState(void) {
 
 cc_result Window_EnterFullscreen(void) {
 	EmscriptenFullscreenStrategy strategy;
+	cc_result res;
 	strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
 	strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_HIDEF;
 	strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
@@ -3376,6 +3391,7 @@ cc_result Window_EnterFullscreen(void) {
 	strategy.canvasResizedCallback         = OnCanvasResize;
 	strategy.canvasResizedCallbackUserData = NULL;
 	return emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
+	/* TODO: navigator.keyboard.lock(["Escape"] */
 }
 cc_result Window_ExitFullscreen(void) { return emscripten_exit_fullscreen(); }
 
@@ -4487,7 +4503,7 @@ void GLContext_Update(void) {
 	/* TODO: do we need to do something here.... ? */
 }
 cc_bool GLContext_TryRestore(void) {
-	return !emscripten_is_webgl_context_lost(NULL);
+	return !emscripten_is_webgl_context_lost(0);
 }
 
 void GLContext_Free(void) {

@@ -84,15 +84,15 @@ void Game_Run(int width, int height, const String* title);
 struct IGameComponent;
 struct IGameComponent {
 	/* Called when the game is being loaded. */
-	void(*Init)(void);
+	void (*Init)(void);
 	/* Called when the component is being freed. (e.g. due to game being closed) */
-	void(*Free)(void);
+	void (*Free)(void);
 	/* Called to reset the component's state. (e.g. reconnecting to server) */
-	void(*Reset)(void);
+	void (*Reset)(void);
 	/* Called to update the component's state when the user begins loading a new map. */
-	void(*OnNewMap)(void);
+	void (*OnNewMap)(void);
 	/* Called to update the component's state when the user has finished loading a new map. */
-	void(*OnNewMapLoaded)(void);
+	void (*OnNewMapLoaded)(void);
 	/* Next component in linked list of components. */
 	struct IGameComponent* next;
 };
