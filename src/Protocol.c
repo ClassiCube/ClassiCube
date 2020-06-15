@@ -1396,109 +1396,36 @@ static void CPE_SpawnEffect(cc_uint8* data) {
 
 /* CustomModels */
 
-static float ReadFloat(cc_uint8* data, int* i) {
+static float ReadFloat(cc_uint8* data) {
 	union IntAndFloat raw;
-	raw.u = Stream_GetU32_BE(&data[*i]);
-	*i += 4;
+	raw.u = Stream_GetU32_BE(data);
 	return raw.f;
 }
 
-static void ReadCustomModelPart(struct CustomModelPart* part, cc_uint8* data, int* pos) {
-	cc_uint8 flags;
-	
-	/* read BoxDesc */
-	part->boxDesc.texX = Stream_GetU16_BE(&data[*pos]);
-	*pos += 2;
-	part->boxDesc.texY = Stream_GetU16_BE(&data[*pos]);
-	*pos += 2;
-
-	part->boxDesc.sizeX = data[*pos];
-	*pos += 1;
-	part->boxDesc.sizeY = data[*pos];
-	*pos += 1;
-	part->boxDesc.sizeZ = data[*pos];
-	*pos += 1;
-
-	part->boxDesc.x1 = ReadFloat(data, pos);
-	part->boxDesc.y1 = ReadFloat(data, pos);
-	part->boxDesc.z1 = ReadFloat(data, pos);
-
-	part->boxDesc.x2 = ReadFloat(data, pos);
-	part->boxDesc.y2 = ReadFloat(data, pos);
-	part->boxDesc.z2 = ReadFloat(data, pos);
-
-	part->boxDesc.rotX = ReadFloat(data, pos);
-	part->boxDesc.rotY = ReadFloat(data, pos);
-	part->boxDesc.rotZ = ReadFloat(data, pos);
-
-	/* read rotation */
-	part->rotationX = ReadFloat(data, pos);
-	part->rotationY = ReadFloat(data, pos);
-	part->rotationZ = ReadFloat(data, pos);
-
-	/* read anim */
-	part->anim = data[*pos];
-	*pos += 1;
-
-	/* read animModifier */
-	part->animModifier = ReadFloat(data, pos);
-	
-	/* extra reserved byte for future use */
-	*pos += 1;
-
-	/* read bool flags */
-	flags = data[*pos];
-	*pos += 1;
-	part->fullbright = (flags >> 0) & 1;
-}
-
 static void CPE_DefineModel(cc_uint8* data) {
-	int i;
-	struct CustomModel* customModel;
+	// 1 + 64 + 1 + 2*4 + 3*4 + 3*4 + ???
+	cc_uint8 modelId = *data++;
+	struct CustomModel* customModel = &custom_models[modelId];
 	cc_uint8 flags;
 	cc_uint8 numParts;
-	int pos = 0;
+	int i;
 
-	/* read String */
-	const String name = UNSAFE_GetString(data);
-	pos += STRING_SIZE;
-
-	/* remove existing, same-name CustomModels */
-	for (i = 0; i < MAX_CUSTOM_MODELS; i++) {
-		if (
-			custom_models[i].valid &&
-			String_CaselessEqualsConst(&name, custom_models[i].name)
-		) {
-			CustomModel_Free(&custom_models[i]);
-		}
-	}
-
-	/* find new slot */
-	customModel = NULL;
-	for (i = 0; i < MAX_CUSTOM_MODELS; i++) {
-		if (!custom_models[i].valid) {
-			customModel = &custom_models[i];
-			break;
-		}
-	}
-
-	if (!customModel) {
-		String msg; char msgBuffer[256];
-		String_InitArray(msg, msgBuffer);
-
-		String_Format1(
-			&msg,
-			"&cNew Custom Model '%s' exceeds models limit of " STRINGIFY(MAX_CUSTOM_MODELS),
-			&name
-		);
-		Logger_WarnFunc(&msg);
+	if (modelId >= MAX_CUSTOM_MODELS) {
 		return;
 	}
 
-	String_CopyToRaw(customModel->name, STRING_SIZE, &name);
-	
+	/* free existing */
+	if (customModel->initialized) {
+		CustomModel_Free(customModel);
+	}
+
+	/* read name */
+	const String name = UNSAFE_GetString(data);
+	data += STRING_SIZE;
+	String_CopyToRawArray(customModel->name, &name);
+
 	/* read bool flags */
-	flags = data[pos++];
+	flags = *data++;
 	customModel->bobbing = (flags >> 0) & 1;
 	customModel->pushes = (flags >> 1) & 1;
 	customModel->usesHumanSkin = (flags >> 2) & 1;
@@ -1506,47 +1433,56 @@ static void CPE_DefineModel(cc_uint8* data) {
 	customModel->hideFirstPersonArm = (flags >> 4) & 1;
 
 	/* read nameY, eyeY */
-	customModel->nameY = ReadFloat(data, &pos);
-	customModel->eyeY = ReadFloat(data, &pos);
+	customModel->nameY = ReadFloat(data);
+	data += 4;
+	customModel->eyeY = ReadFloat(data);
+	data += 4;
 
 	/* read collisionBounds */
-	customModel->collisionBounds.X = ReadFloat(data, &pos);
-	customModel->collisionBounds.Y = ReadFloat(data, &pos);
-	customModel->collisionBounds.Z = ReadFloat(data, &pos);
+	customModel->collisionBounds.X = ReadFloat(data);
+	data += 4;
+	customModel->collisionBounds.Y = ReadFloat(data);
+	data += 4;
+	customModel->collisionBounds.Z = ReadFloat(data);
+	data += 4;
 
 	/* read pickingBoundsAABB */
-	customModel->pickingBoundsAABB.Min.X = ReadFloat(data, &pos);
-	customModel->pickingBoundsAABB.Min.Y = ReadFloat(data, &pos);
-	customModel->pickingBoundsAABB.Min.Z = ReadFloat(data, &pos);
+	customModel->pickingBoundsAABB.Min.X = ReadFloat(data);
+	data += 4;
+	customModel->pickingBoundsAABB.Min.Y = ReadFloat(data);
+	data += 4;
+	customModel->pickingBoundsAABB.Min.Z = ReadFloat(data);
+	data += 4;
 
-	customModel->pickingBoundsAABB.Max.X = ReadFloat(data, &pos);
-	customModel->pickingBoundsAABB.Max.Y = ReadFloat(data, &pos);
-	customModel->pickingBoundsAABB.Max.Z = ReadFloat(data, &pos);
+	customModel->pickingBoundsAABB.Max.X = ReadFloat(data);
+	data += 4;
+	customModel->pickingBoundsAABB.Max.Y = ReadFloat(data);
+	data += 4;
+	customModel->pickingBoundsAABB.Max.Z = ReadFloat(data);
+	data += 4;
 
 	/* read uScale, vScale */
-	customModel->uScale = Stream_GetU16_BE(&data[pos]);
-	pos += 2;
-	customModel->vScale = Stream_GetU16_BE(&data[pos]);
-	pos += 2;
+	customModel->uScale = Stream_GetU16_BE(data);
+	data += 2;
+	customModel->vScale = Stream_GetU16_BE(data);
+	data += 2;
 
-	/* reserve 8 bytes for future use */
-	pos += 8;
-	
 	/* read # CustomModelParts */
-	numParts = data[pos++];
+	numParts = *data++;
 
 	if (numParts >= MAX_CUSTOM_MODEL_PARTS) {
 		String msg; char msgBuffer[256];
 		String_InitArray(msg, msgBuffer);
-		
+
 		String_Format1(
 			&msg,
 			"&cCustom Model '%s' exceeds parts limit of " STRINGIFY(MAX_CUSTOM_MODEL_PARTS),
 			&name
 		);
 		Logger_WarnFunc(&msg);
+		return;
 	}
-	
+
 	customModel->numParts = numParts;
 	customModel->vertices = Mem_AllocCleared(
 		numParts * MODEL_BOX_VERTICES,
@@ -1554,27 +1490,93 @@ static void CPE_DefineModel(cc_uint8* data) {
 		"CustomModel vertices"
 	);
 
-	/* read each CustomModelPart */
-	for (i = 0; i < numParts; i++) {
-		struct CustomModelPart* part = &customModel->parts[i];
-		ReadCustomModelPart(part, data, &pos);
-	}
-
-	CustomModel_Register(customModel);
+	customModel->initialized = true;
 }
 
-static void CPE_RemoveModel(cc_uint8* data) {
-	/* unregisters and frees the custom model */
+static void CPE_DefineModelPart(cc_uint8* data) {
+	// 1 + 2*2 + 3*1 + 3*4 + 3*4 + 3*4 + 3*4 + 1 + 4 + 1
+	cc_uint8 modelId = *data++;
+	struct CustomModel* customModel = &custom_models[modelId];
+	struct CustomModelPart* part;
+	cc_uint8 flags;
 
-	const String name = UNSAFE_GetString(data);
+	if (
+		modelId >= MAX_CUSTOM_MODELS ||
+		!customModel->initialized ||
+		customModel->curPartIndex >= customModel->numParts
+	) {
+		return;
+	}
 
-	/* find existing CustomModel */
-	int i;
-	for (i = 0; i < MAX_CUSTOM_MODELS; i++) {
-		struct CustomModel* customModel = &custom_models[i];
-		if (customModel->valid && String_CaselessEqualsConst(&name, customModel->name)) {
-			CustomModel_Free(customModel);
-		}
+	part = &customModel->parts[customModel->curPartIndex];
+	customModel->curPartIndex++;
+
+	/* read BoxDesc */
+	part->boxDesc.texX = Stream_GetU16_BE(data);
+	data += 2;
+	part->boxDesc.texY = Stream_GetU16_BE(data);
+	data += 2;
+
+	part->boxDesc.sizeX = data;
+	data += 1;
+	part->boxDesc.sizeY = data;
+	data += 1;
+	part->boxDesc.sizeZ = data;
+	data += 1;
+
+	part->boxDesc.x1 = ReadFloat(data);
+	data += 4;
+	part->boxDesc.y1 = ReadFloat(data);
+	data += 4;
+	part->boxDesc.z1 = ReadFloat(data);
+	data += 4;
+
+	part->boxDesc.x2 = ReadFloat(data);
+	data += 4;
+	part->boxDesc.y2 = ReadFloat(data);
+	data += 4;
+	part->boxDesc.z2 = ReadFloat(data);
+	data += 4;
+
+	part->boxDesc.rotX = ReadFloat(data);
+	data += 4;
+	part->boxDesc.rotY = ReadFloat(data);
+	data += 4;
+	part->boxDesc.rotZ = ReadFloat(data);
+	data += 4;
+
+	/* read rotation */
+	part->rotationX = ReadFloat(data);
+	data += 4;
+	part->rotationY = ReadFloat(data);
+	data += 4;
+	part->rotationZ = ReadFloat(data);
+	data += 4;
+
+	/* read anim */
+	part->anim = *data++;
+
+	/* read animModifier */
+	part->animModifier = ReadFloat(data);
+	data += 4;
+
+	/* read bool flags */
+	flags = *data++;
+	part->fullbright = (flags >> 0) & 1;
+
+	if (customModel->curPartIndex == customModel->numParts) {
+		/* we're the last part, so register our model */
+		CustomModel_Register(customModel);
+	}
+}
+
+/* unregisters and frees the custom model */
+static void CPE_UndefineModel(cc_uint8* data) {
+	cc_uint8 modelId = *data++;
+	struct CustomModel* customModel = &custom_models[modelId];
+
+	if (modelId < MAX_CUSTOM_MODELS && customModel->initialized) {
+		CustomModel_Free(customModel);
 	}
 }
 
@@ -1621,7 +1623,8 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
 	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
 	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 4091);
-	Net_Set(OPCODE_REMOVE_MODEL, CPE_RemoveModel, 65);
+	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 4091);
+	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
 }
 
 static void CPE_Tick(void) {

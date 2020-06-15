@@ -263,9 +263,11 @@ struct CustomModel {
 	cc_uint16 vScale;
 
 	cc_uint8 numParts;
+	cc_uint8 curPartIndex;
 	struct CustomModelPart parts[MAX_CUSTOM_MODEL_PARTS];
 
-	cc_bool valid;
+	cc_bool registered;
+	cc_bool initialized;
 };
 
 static struct CustomModel custom_models[MAX_CUSTOM_MODELS];
