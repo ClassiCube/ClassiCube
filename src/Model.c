@@ -501,6 +501,40 @@ static void Models_TextureChanged(void* obj, struct Stream* stream, const String
 /* NOTE: None of the built in models use more than 12 parts at once, but custom models can use up to 64 parts. */
 static struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS];	
 
+void CustomModelPart_BuildBox(struct CustomModelPart* part) {
+	float x1 = part->min.X, y1 = part->min.Y, z1 = part->min.Z;
+	float x2 = part->max.X, y2 = part->max.Y, z2 = part->max.Z;
+	struct Model* m = Models.Active;
+
+	cc_uint16 du0 = part->u2[0] - part->u1[0];
+	cc_uint16 du1 = part->u2[1] - part->u1[1];
+	cc_uint16 du2 = part->u2[2] - part->u1[2];
+	cc_uint16 du3 = part->u2[3] - part->u1[3];
+	cc_uint16 du4 = part->u2[4] - part->u1[4];
+	cc_uint16 du5 = part->u2[5] - part->u1[5];
+
+	cc_uint16 dv0 = part->v2[0] - part->v1[0];
+	cc_uint16 dv1 = part->v2[1] - part->v1[1];
+	cc_uint16 dv2 = part->v2[2] - part->v1[2];
+	cc_uint16 dv3 = part->v2[3] - part->v1[3];
+	cc_uint16 dv4 = part->v2[4] - part->v1[4];
+	cc_uint16 dv5 = part->v2[5] - part->v1[5];
+
+	BoxDesc_YQuad(m, part->u1[0], part->v1[0], du0, dv0, x1, x2, z1, z2, y2, false);  /* top */
+	BoxDesc_YQuad(m, part->u1[1], part->v1[1], du1, dv1, x2, x1, z2, z1, y1, true); /* bottom */
+	BoxDesc_ZQuad(m, part->u1[2], part->v1[2], du2, dv2, x1, x2, y1, y2, z1, true);  /* front */
+	BoxDesc_ZQuad(m, part->u1[3], part->v1[3], du3, dv3, x2, x1, y1, y2, z2, true);  /* back */
+	BoxDesc_XQuad(m, part->u1[4], part->v1[4], du4, dv4, z1, z2, y1, y2, x2, true);  /* left */
+	BoxDesc_XQuad(m, part->u1[5], part->v1[5], du5, dv5, z2, z1, y1, y2, x1, true);  /* right */
+
+	ModelPart_Init(
+		&part->modelPart,
+		m->index - MODEL_BOX_VERTICES,
+		MODEL_BOX_VERTICES,
+		part->rotationOrigin.X, part->rotationOrigin.Y, part->rotationOrigin.Z
+	);
+}
+
 /*#########################################*
 *-------------Model methods----------------*
 *##########################################*/
@@ -508,10 +542,7 @@ static void CustomModel_MakeParts(void) {
 	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
 	int i;
 	for (i = 0; i < customModel->numParts; i++) {
-		BoxDesc_BuildBox(
-			&customModel->parts[i].model_part,
-			&customModel->parts[i].boxDesc
-		);
+		CustomModelPart_BuildBox(&customModel->parts[i]);
 	}
 }
 
@@ -542,9 +573,9 @@ static void CustomModel_Draw(struct Entity* entity) {
 		/* bbmodels use xyz rotation order */
 		Models.Rotation = ROTATE_ORDER_XYZ;
 		
-		rotationX = part->rotationX * MATH_DEG2RAD;
-		rotationY = part->rotationY * MATH_DEG2RAD;
-		rotationZ = part->rotationZ * MATH_DEG2RAD;
+		rotationX = part->rotation.X * MATH_DEG2RAD;
+		rotationY = part->rotation.Y * MATH_DEG2RAD;
+		rotationZ = part->rotation.Z * MATH_DEG2RAD;
 		head = false;
 		
 		if (part->anim == CustomModelAnim_Head) {
@@ -589,12 +620,12 @@ static void CustomModel_Draw(struct Entity* entity) {
 				rotationX,
 				rotationY,
 				rotationZ,
-				&customModel->parts[i].model_part,
+				&customModel->parts[i].modelPart,
 				head
 			);
 		} else {
 			Model_DrawPart(
-				&customModel->parts[i].model_part
+				&customModel->parts[i].modelPart
 			);
 		}
 
@@ -644,7 +675,7 @@ static void CustomModel_DrawArm(struct Entity* entity) {
 	for (i = 0; i < customModel->numParts; i++) {
 		struct CustomModelPart* part = &customModel->parts[i];
 		if (part->anim == CustomModelAnim_RightArm) {
-			Model_DrawArmPart(&part->model_part);
+			Model_DrawArmPart(&part->modelPart);
 		}
 	}
 

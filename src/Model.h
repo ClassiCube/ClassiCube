@@ -228,14 +228,26 @@ enum CustomModelAnim {
 };
 
 struct CustomModelPart {
-	struct ModelPart model_part;
+	struct ModelPart modelPart;
 
-	struct BoxDesc boxDesc;
-	float rotationX;
-	float rotationY;
-	float rotationZ;
+	/* min and max vec3 points */
+	Vec3 min;
+	Vec3 max;
+
+	/* uv coords in order: top, bottom, front, back, left, right */
+	cc_uint16 u1[6];
+	cc_uint16 v1[6];
+	cc_uint16 u2[6];
+	cc_uint16 v2[6];
+	/* rotation origin point */
+	Vec3 rotationOrigin;
+
+	/* rotation angles */
+	Vec3 rotation;
+
 	enum CustomModelAnim anim;
 	float animModifier;
+
 	cc_bool fullbright;
 };
 

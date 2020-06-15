@@ -1403,12 +1403,11 @@ static float ReadFloat(cc_uint8* data) {
 }
 
 static void CPE_DefineModel(cc_uint8* data) {
-	// 1 + 64 + 1 + 2*4 + 3*4 + 3*4 + ???
+	/* 115 = 1 + 64 + 1 + 2*4 + 3*4 + 2*3*4 + 2*2 + 1 */
 	cc_uint8 modelId = *data++;
 	struct CustomModel* customModel = &custom_models[modelId];
 	cc_uint8 flags;
 	cc_uint8 numParts;
-	int i;
 
 	if (modelId >= MAX_CUSTOM_MODELS) {
 		return;
@@ -1494,11 +1493,12 @@ static void CPE_DefineModel(cc_uint8* data) {
 }
 
 static void CPE_DefineModelPart(cc_uint8* data) {
-	// 1 + 2*2 + 3*1 + 3*4 + 3*4 + 3*4 + 3*4 + 1 + 4 + 1
+	// 103 = 1 + 3*4 + 3*4 + 6*(2*2 + 2*2) + 3*4 + 3*4 + 1 + 4 + 1
 	cc_uint8 modelId = *data++;
 	struct CustomModel* customModel = &custom_models[modelId];
 	struct CustomModelPart* part;
 	cc_uint8 flags;
+	int i;
 
 	if (
 		modelId >= MAX_CUSTOM_MODELS ||
@@ -1511,46 +1511,48 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	part = &customModel->parts[customModel->curPartIndex];
 	customModel->curPartIndex++;
 
-	/* read BoxDesc */
-	part->boxDesc.texX = Stream_GetU16_BE(data);
-	data += 2;
-	part->boxDesc.texY = Stream_GetU16_BE(data);
-	data += 2;
-
-	part->boxDesc.sizeX = data;
-	data += 1;
-	part->boxDesc.sizeY = data;
-	data += 1;
-	part->boxDesc.sizeZ = data;
-	data += 1;
-
-	part->boxDesc.x1 = ReadFloat(data);
+	/* read min, max vec3 coords */
+	part->min.X = ReadFloat(data);
 	data += 4;
-	part->boxDesc.y1 = ReadFloat(data);
+	part->min.Y = ReadFloat(data);
 	data += 4;
-	part->boxDesc.z1 = ReadFloat(data);
+	part->min.Z = ReadFloat(data);
 	data += 4;
 
-	part->boxDesc.x2 = ReadFloat(data);
+	part->max.X = ReadFloat(data);
 	data += 4;
-	part->boxDesc.y2 = ReadFloat(data);
+	part->max.Y = ReadFloat(data);
 	data += 4;
-	part->boxDesc.z2 = ReadFloat(data);
-	data += 4;
-
-	part->boxDesc.rotX = ReadFloat(data);
-	data += 4;
-	part->boxDesc.rotY = ReadFloat(data);
-	data += 4;
-	part->boxDesc.rotZ = ReadFloat(data);
+	part->max.Z = ReadFloat(data);
 	data += 4;
 
-	/* read rotation */
-	part->rotationX = ReadFloat(data);
+	/* read u, v coords for our 6 faces */
+	for (i = 0; i < 6; i++) {
+		part->u1[i] = Stream_GetU16_BE(data);
+		data += 2;
+		part->v1[i] = Stream_GetU16_BE(data);
+		data += 2;
+
+		part->u2[i] = Stream_GetU16_BE(data);
+		data += 2;
+		part->v2[i] = Stream_GetU16_BE(data);
+		data += 2;
+	}
+
+	/* read rotation origin point */
+	part->rotationOrigin.X = ReadFloat(data);
 	data += 4;
-	part->rotationY = ReadFloat(data);
+	part->rotationOrigin.Y = ReadFloat(data);
 	data += 4;
-	part->rotationZ = ReadFloat(data);
+	part->rotationOrigin.Z = ReadFloat(data);
+	data += 4;
+
+	/* read rotation angles */
+	part->rotation.X = ReadFloat(data);
+	data += 4;
+	part->rotation.Y = ReadFloat(data);
+	data += 4;
+	part->rotation.Z = ReadFloat(data);
 	data += 4;
 
 	/* read anim */
@@ -1622,8 +1624,8 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
 	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
 	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
-	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 4091);
-	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 4091);
+	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 116);
+	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
 	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
 }
 
