@@ -27,6 +27,9 @@
 #include "Particle.h"
 #include "Picking.h"
 
+#define QUOTE(x) #x
+#define STRINGIFY(val) QUOTE(val)
+
 cc_uint16 Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];
 
@@ -1816,10 +1819,6 @@ static void OnInit(void) {
 	Protocol_Reset();
 }
 
-static void OnFree(void) {
-	CustomModel_FreeAll();
-}
-
 static void OnReset(void) {
 	int i;
 	if (Server.IsSinglePlayer) return;
@@ -1830,11 +1829,10 @@ static void OnReset(void) {
 	}
 	Protocol_Reset();
 	FreeMapStates();
-	CustomModel_FreeAll();
 }
 
 struct IGameComponent Protocol_Component = {
 	OnInit,  /* Init  */
-	OnFree,    /* Free  */
+	NULL,    /* Free  */
 	OnReset, /* Reset */
 };

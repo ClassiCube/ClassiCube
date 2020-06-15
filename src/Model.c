@@ -2041,9 +2041,16 @@ static void Models_Free(void) {
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Models_TextureChanged);
 	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Models_ContextLost);
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Models_ContextRecreated);
+
+	CustomModel_FreeAll();
+}
+
+static void Models_Reset(void) {
+	CustomModel_FreeAll();
 }
 
 struct IGameComponent Models_Component = {
-	Models_Init, /* Init  */
-	Models_Free, /* Free  */
+	Models_Init,  /* Init  */
+	Models_Free,  /* Free  */
+	Models_Reset, /* Reset */
 };
