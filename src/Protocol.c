@@ -1406,6 +1406,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 	/* 115 = 1 + 64 + 1 + 2*4 + 3*4 + 2*3*4 + 2*2 + 1 */
 	cc_uint8 modelId = *data++;
 	struct CustomModel* customModel = &custom_models[modelId];
+	String name;
 	cc_uint8 flags;
 	cc_uint8 numParts;
 
@@ -1419,7 +1420,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 	}
 
 	/* read name */
-	const String name = UNSAFE_GetString(data);
+	name = UNSAFE_GetString(data);
 	data += STRING_SIZE;
 	String_CopyToRawArray(customModel->name, &name);
 
@@ -1493,7 +1494,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 }
 
 static void CPE_DefineModelPart(cc_uint8* data) {
-	// 103 = 1 + 3*4 + 3*4 + 6*(2*2 + 2*2) + 3*4 + 3*4 + 1 + 4 + 1
+	/* 103 = 1 + 3*4 + 3*4 + 6*(2*2 + 2*2) + 3*4 + 3*4 + 1 + 4 + 1 */
 	cc_uint8 modelId = *data++;
 	struct CustomModel* customModel = &custom_models[modelId];
 	struct CustomModelPart* part;
