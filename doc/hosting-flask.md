@@ -143,7 +143,7 @@ if __name__ == "__main__":
           if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
           console.error(text);
         },
-        canvas: (function() { return getElementById('GameCanvas'); })(),
+        canvas: (function() { return document.getElementById('GameCanvas'); })(),
         setStatus: function(text) {
                         console.log(text);
                         document.getElementById('logmsg').innerHTML = text;

@@ -367,13 +367,13 @@ void Classic_WriteSetBlock(int x, int y, int z, cc_bool place, BlockID block) {
 	Server.WriteBuffer = data;
 }
 
-void Classic_SendLogin(const String* username, const String* verKey) {
+void Classic_SendLogin(void) {
 	cc_uint8 data[131];
 	data[0] = OPCODE_HANDSHAKE;
 	{
 		data[1] = 7; /* protocol version */
-		WriteString(&data[2],  username);
-		WriteString(&data[66], verKey);
+		WriteString(&data[2],  &Game_Username);
+		WriteString(&data[66], &Game_Mppass);
 		data[130] = Game_UseCPE ? 0x42 : 0x00;
 	}
 	Server.SendData(data, 131);
@@ -787,12 +787,12 @@ void CPE_SendPlayerClick(int button, cc_bool pressed, cc_uint8 targetId, struct 
 	Server.SendData(data, 15);
 }
 
-static void CPE_SendExtInfo(const String* appName, int extsCount) {
+static void CPE_SendExtInfo(int extsCount) {
 	cc_uint8 data[67];
 	data[0] = OPCODE_EXT_INFO;
 	{
-		WriteString(&data[1], appName);
-		Stream_SetU16_BE(&data[65],    extsCount);
+		WriteString(&data[1],       &Server.AppName);
+		Stream_SetU16_BE(&data[65], extsCount);
 	}
 	Server.SendData(data, 67);
 }
@@ -802,7 +802,7 @@ static void CPE_SendExtEntry(const String* extName, int extVersion) {
 	data[0] = OPCODE_EXT_ENTRY;
 	{
 		WriteString(&data[1], extName);
-		Stream_SetU32_BE(&data[65],    extVersion);
+		Stream_SetU32_BE(&data[65], extVersion);
 	}
 	Server.SendData(data, 69);
 }
@@ -836,7 +836,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 #else
 	if (!Game_AllowCustomBlocks) count -= 2;
 #endif
-	CPE_SendExtInfo(&Server.AppName, count);
+	CPE_SendExtInfo(count);
 
 	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++) {
 		name = String_FromReadonly(cpe_clientExtensions[i]);

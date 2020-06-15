@@ -251,7 +251,7 @@ static void MPConnection_FinishConnect(void) {
 	net_readCurrent    = net_readBuffer;
 	Server.WriteBuffer = net_writeBuffer;
 
-	Classic_SendLogin(&Game_Username, &Game_Mppass);
+	Classic_SendLogin();
 	net_lastPacket = Game.Time;
 }
 
