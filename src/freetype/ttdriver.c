@@ -29,7 +29,6 @@
 #endif
 
 #include FT_SERVICE_TRUETYPE_GLYF_H
-#include FT_SERVICE_PROPERTIES_H
 #include FT_DRIVER_H
 
 #include "ttdriver.h"
@@ -50,102 +49,6 @@
   /*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_ttdriver
-
-
-  /*
-   *  PROPERTY SERVICE
-   *
-   */
-  static FT_Error
-  tt_property_set( FT_Module    module,         /* TT_Driver */
-                   const char*  property_name,
-                   const void*  value,
-                   FT_Bool      value_is_string )
-  {
-    FT_Error   error  = FT_Err_Ok;
-    TT_Driver  driver = (TT_Driver)module;
-
-#ifndef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
-    FT_UNUSED( value_is_string );
-#endif
-
-
-    if ( !ft_strcmp( property_name, "interpreter-version" ) )
-    {
-      FT_UInt  interpreter_version;
-
-
-#ifdef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
-      if ( value_is_string )
-      {
-        const char*  s = (const char*)value;
-
-
-        interpreter_version = (FT_UInt)ft_strtol( s, NULL, 10 );
-      }
-      else
-#endif
-      {
-        FT_UInt*  iv = (FT_UInt*)value;
-
-
-        interpreter_version = *iv;
-      }
-
-      if ( interpreter_version == TT_INTERPRETER_VERSION_35
-#ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
-           || interpreter_version == TT_INTERPRETER_VERSION_38
-#endif
-#ifdef TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
-           || interpreter_version == TT_INTERPRETER_VERSION_40
-#endif
-         )
-        driver->interpreter_version = interpreter_version;
-      else
-        error = FT_ERR( Unimplemented_Feature );
-
-      return error;
-    }
-
-    FT_TRACE0(( "tt_property_set: missing property `%s'\n",
-                property_name ));
-    return FT_THROW( Missing_Property );
-  }
-
-
-  static FT_Error
-  tt_property_get( FT_Module    module,         /* TT_Driver */
-                   const char*  property_name,
-                   const void*  value )
-  {
-    FT_Error   error  = FT_Err_Ok;
-    TT_Driver  driver = (TT_Driver)module;
-
-    FT_UInt  interpreter_version = driver->interpreter_version;
-
-
-    if ( !ft_strcmp( property_name, "interpreter-version" ) )
-    {
-      FT_UInt*  val = (FT_UInt*)value;
-
-
-      *val = interpreter_version;
-
-      return error;
-    }
-
-    FT_TRACE0(( "tt_property_get: missing property `%s'\n",
-                property_name ));
-    return FT_THROW( Missing_Property );
-  }
-
-
-  FT_DEFINE_SERVICE_PROPERTIESREC(
-    tt_service_properties,
-
-    (FT_Properties_SetFunc)tt_property_set,     /* set_property */
-    (FT_Properties_GetFunc)tt_property_get      /* get_property */
-  )
 
 
   /*************************************************************************/
@@ -461,22 +364,20 @@
 
 
 #ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
-  FT_DEFINE_SERVICEDESCREC6(
+  FT_DEFINE_SERVICEDESCREC5(
     tt_services,
 
     FT_SERVICE_ID_FONT_FORMAT,        FT_FONT_FORMAT_TRUETYPE,
     FT_SERVICE_ID_MULTI_MASTERS,      &tt_service_gx_multi_masters,
     FT_SERVICE_ID_METRICS_VARIATIONS, &tt_service_metrics_variations,
     FT_SERVICE_ID_TRUETYPE_ENGINE,    &tt_service_truetype_engine,
-    FT_SERVICE_ID_TT_GLYF,            &tt_service_truetype_glyf,
-    FT_SERVICE_ID_PROPERTIES,         &tt_service_properties)
+    FT_SERVICE_ID_TT_GLYF,            &tt_service_truetype_glyf)
 #else
-  FT_DEFINE_SERVICEDESCREC3(
+  FT_DEFINE_SERVICEDESCREC2(
     tt_services,
 
     FT_SERVICE_ID_FONT_FORMAT,     FT_FONT_FORMAT_TRUETYPE,
-    FT_SERVICE_ID_TT_GLYF,         &tt_service_truetype_glyf,
-    FT_SERVICE_ID_PROPERTIES,      &tt_service_properties)
+    FT_SERVICE_ID_TT_GLYF,         &tt_service_truetype_glyf)
 #endif
 
 

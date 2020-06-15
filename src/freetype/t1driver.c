@@ -32,7 +32,6 @@
 #include FT_SERVICE_GLYPH_DICT_H
 #include FT_SERVICE_FONT_FORMAT_H
 #include FT_SERVICE_POSTSCRIPT_CMAPS_H
-#include FT_SERVICE_PROPERTIES_H
 
 
   /*************************************************************************/
@@ -68,18 +67,6 @@
 
 
   /*
-   *  PROPERTY SERVICE
-   *
-   */
-
-  FT_DEFINE_SERVICE_PROPERTIESREC(
-    t1_service_properties,
-
-    (FT_Properties_SetFunc)ps_property_set,      /* set_property */
-    (FT_Properties_GetFunc)ps_property_get )     /* get_property */
-
-
-  /*
    *  SERVICE LIST
    *
    */
@@ -88,7 +75,6 @@
   {
     { FT_SERVICE_ID_GLYPH_DICT,           &t1_service_glyph_dict },
     { FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_TYPE_1 },
-    { FT_SERVICE_ID_PROPERTIES,           &t1_service_properties },
     { NULL, NULL }
   };
 

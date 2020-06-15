@@ -1001,7 +1001,6 @@ FT_BEGIN_HEADER
 #define FT_SERVICE_POSTSCRIPT_INFO_H    "svpsinfo.h"
 #define FT_SERVICE_POSTSCRIPT_INFO_H_FT "freetype/svpsinfo.h"
 #define FT_SERVICE_POSTSCRIPT_NAME_H    "svpostnm.h"
-#define FT_SERVICE_PROPERTIES_H         "svprop.h"
 #define FT_SERVICE_SFNT_H               "svsfnt.h"
 #define FT_SERVICE_TRUETYPE_GLYF_H      "svttglyf.h"
 #define FT_SERVICE_TT_CMAP_H            "svttcmap.h"

@@ -37,7 +37,6 @@
 
 #include FT_SERVICE_FONT_FORMAT_H
 #include FT_SERVICE_GLYPH_DICT_H
-#include FT_SERVICE_PROPERTIES_H
 #include FT_DRIVER_H
 
 
@@ -368,18 +367,6 @@
 
 
   /*
-   *  PROPERTY SERVICE
-   *
-   */
-
-  FT_DEFINE_SERVICE_PROPERTIESREC(
-    cff_service_properties,
-
-    (FT_Properties_SetFunc)ps_property_set,      /* set_property */
-    (FT_Properties_GetFunc)ps_property_get )     /* get_property */
-
-
-  /*
    *  CFFLOAD SERVICE
    *
    */
@@ -408,22 +395,20 @@
   /*************************************************************************/
 
 #if !defined FT_CONFIG_OPTION_NO_GLYPH_NAMES
-  FT_DEFINE_SERVICEDESCREC5(
+  FT_DEFINE_SERVICEDESCREC4(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
     FT_SERVICE_ID_GLYPH_DICT,           &cff_service_glyph_dict,
     FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
-    FT_SERVICE_ID_PROPERTIES,           &cff_service_properties,
     FT_SERVICE_ID_CFF_LOAD,             &cff_service_cff_load
   )
 #else
-  FT_DEFINE_SERVICEDESCREC4(
+  FT_DEFINE_SERVICEDESCREC3(
     cff_services,
 
     FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CFF,
     FT_SERVICE_ID_TT_CMAP,              &cff_service_get_cmap_info,
-    FT_SERVICE_ID_PROPERTIES,           &cff_service_properties,
     FT_SERVICE_ID_CFF_LOAD,             &cff_service_cff_load
   )
 #endif

@@ -25,7 +25,6 @@
 #include "ciderrs.h"
 
 #include FT_SERVICE_FONT_FORMAT_H
-#include FT_SERVICE_PROPERTIES_H
 #include FT_DRIVER_H
 
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
@@ -42,18 +41,6 @@
 
 
   /*
-   *  PROPERTY SERVICE
-   *
-   */
-
-  FT_DEFINE_SERVICE_PROPERTIESREC(
-    cid_service_properties,
-
-    (FT_Properties_SetFunc)ps_property_set,      /* set_property */
-    (FT_Properties_GetFunc)ps_property_get )     /* get_property */
-
-
-  /*
    *  SERVICE LIST
    *
    */
@@ -61,7 +48,6 @@
   static const FT_ServiceDescRec  cid_services[] =
   {
     { FT_SERVICE_ID_FONT_FORMAT,          FT_FONT_FORMAT_CID },
-    { FT_SERVICE_ID_PROPERTIES,           &cid_service_properties },
     { NULL, NULL }
   };
 

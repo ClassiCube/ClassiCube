@@ -33,11 +33,6 @@ FT_BEGIN_HEADER
                    const void*  value,
                    FT_Bool      value_is_string );
 
-  FT_BASE_CALLBACK( FT_Error )
-  ps_property_get( FT_Module    module,         /* PS_Driver */
-                   const char*  property_name,
-                   void*        value );
-
 
 FT_END_HEADER
 
