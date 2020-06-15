@@ -27,7 +27,6 @@
 #include "freetype/ftmac.c"
 #include "freetype/ftobjs.c"
 #include "freetype/ftoutln.c"
-#include "freetype/ftpsprop.c"
 #include "freetype/ftstream.c"
 #include "freetype/fttrigon.c"
 #include "freetype/ftutil.c"

@@ -48,24 +48,9 @@
 
 
   static FT_ULong
-  hash_str_lookup( FT_Hashkey*  key )
+  hash_num_lookup( FT_Int  key )
   {
-    const char*  kp  = key->str;
-    FT_ULong     res = 0;
-
-
-    /* Mocklisp hash function. */
-    while ( *kp )
-      res = ( res << 5 ) - res + (FT_ULong)*kp++;
-
-    return res;
-  }
-
-
-  static FT_ULong
-  hash_num_lookup( FT_Hashkey*  key )
-  {
-    FT_ULong  num = (FT_ULong)key->num;
+    FT_ULong  num = (FT_ULong)key;
     FT_ULong  res;
 
 
@@ -80,22 +65,10 @@
 
 
   static FT_Bool
-  hash_str_compare( FT_Hashkey*  a,
-                    FT_Hashkey*  b )
+  hash_num_compare( FT_Int  a,
+                    FT_Int  b )
   {
-    if ( a->str[0] == b->str[0]           &&
-         ft_strcmp( a->str, b->str ) == 0 )
-      return 1;
-
-    return 0;
-  }
-
-
-  static FT_Bool
-  hash_num_compare( FT_Hashkey*  a,
-                    FT_Hashkey*  b )
-  {
-    if ( a->num == b->num )
+    if ( a == b )
       return 1;
 
     return 0;
@@ -103,20 +76,20 @@
 
 
   static FT_Hashnode*
-  hash_bucket( FT_Hashkey  key,
-               FT_Hash     hash )
+  hash_bucket( FT_Int   key,
+               FT_Hash  hash )
   {
     FT_ULong      res = 0;
     FT_Hashnode*  bp  = hash->table;
     FT_Hashnode*  ndp;
 
+    res = hash_num_lookup( key );
 
-    res = (hash->lookup)( &key );
 
     ndp = bp + ( res % hash->size );
     while ( *ndp )
     {
-      if ( (hash->compare)( &(*ndp)->key, &key ) )
+      if ( hash_num_compare( (*ndp)->key, key ) )
         break;
 
       ndp--;
@@ -162,29 +135,16 @@
   }
 
 
-  static FT_Error
-  hash_init( FT_Hash    hash,
-             FT_Bool    is_num,
-             FT_Memory  memory )
+  FT_Error
+  ft_hash_num_init( FT_Hash    hash,
+                    FT_Memory  memory )
   {
     FT_UInt   sz = INITIAL_HT_SIZE;
     FT_Error  error;
 
-
     hash->size  = sz;
     hash->limit = sz / 3;
     hash->used  = 0;
-
-    if ( is_num )
-    {
-      hash->lookup  = hash_num_lookup;
-      hash->compare = hash_num_compare;
-    }
-    else
-    {
-      hash->lookup  = hash_str_lookup;
-      hash->compare = hash_str_compare;
-    }
 
     FT_MEM_NEW_ARRAY( hash->table, sz );
 
@@ -192,24 +152,8 @@
   }
 
 
-  FT_Error
-  ft_hash_str_init( FT_Hash    hash,
-                    FT_Memory  memory )
-  {
-    return hash_init( hash, 0, memory );
-  }
-
-
-  FT_Error
-  ft_hash_num_init( FT_Hash    hash,
-                    FT_Memory  memory )
-  {
-    return hash_init( hash, 1, memory );
-  }
-
-
   void
-  ft_hash_str_free( FT_Hash    hash,
+  ft_hash_num_free( FT_Hash    hash,
                     FT_Memory  memory )
   {
     if ( hash )
@@ -227,17 +171,14 @@
   }
 
 
-  /* `ft_hash_num_free' is the same as `ft_hash_str_free' */
-
-
-  static FT_Error
-  hash_insert( FT_Hashkey  key,
-               size_t      data,
-               FT_Hash     hash,
-               FT_Memory   memory )
+  FT_Error
+  ft_hash_num_insert( FT_Int     num,
+                      size_t     data,
+                      FT_Hash    hash,
+                      FT_Memory  memory )
   {
     FT_Hashnode   nn;
-    FT_Hashnode*  bp    = hash_bucket( key, hash );
+    FT_Hashnode*  bp    = hash_bucket( num, hash );
     FT_Error      error = FT_Err_Ok;
 
 
@@ -248,7 +189,7 @@
         goto Exit;
       *bp = nn;
 
-      nn->key  = key;
+      nn->key  = num;
       nn->data = data;
 
       if ( hash->used >= hash->limit )
@@ -268,71 +209,15 @@
   }
 
 
-  FT_Error
-  ft_hash_str_insert( const char*  key,
-                      size_t       data,
-                      FT_Hash      hash,
-                      FT_Memory    memory )
-  {
-    FT_Hashkey  hk;
-
-
-    hk.str = key;
-
-    return hash_insert( hk, data, hash, memory );
-  }
-
-
-  FT_Error
-  ft_hash_num_insert( FT_Int     num,
-                      size_t     data,
-                      FT_Hash    hash,
-                      FT_Memory  memory )
-  {
-    FT_Hashkey  hk;
-
-
-    hk.num = num;
-
-    return hash_insert( hk, data, hash, memory );
-  }
-
-
-  static size_t*
-  hash_lookup( FT_Hashkey  key,
-               FT_Hash     hash )
-  {
-    FT_Hashnode*  np = hash_bucket( key, hash );
-
-
-    return (*np) ? &(*np)->data
-                 : NULL;
-  }
-
-
-  size_t*
-  ft_hash_str_lookup( const char*  key,
-                      FT_Hash      hash )
-  {
-    FT_Hashkey  hk;
-
-
-    hk.str = key;
-
-    return hash_lookup( hk, hash );
-  }
-
-
   size_t*
   ft_hash_num_lookup( FT_Int   num,
                       FT_Hash  hash )
   {
-    FT_Hashkey  hk;
+    FT_Hashnode*  np = hash_bucket( num, hash );
 
 
-    hk.num = num;
-
-    return hash_lookup( hk, hash );
+    return (*np) ? &(*np)->data
+                 : NULL;
   }
 
 

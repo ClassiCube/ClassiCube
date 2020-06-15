@@ -50,7 +50,6 @@
 
 #define FT_INTERNAL_POSTSCRIPT_AUX_H      "psaux.h"
 #define FT_INTERNAL_POSTSCRIPT_HINTS_H    "pshints.h"
-#define FT_INTERNAL_POSTSCRIPT_PROPS_H    "ftpsprop.h"
 
 #define FT_INTERNAL_AUTOHINT_H            "autohint.h"
 
