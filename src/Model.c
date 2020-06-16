@@ -500,6 +500,7 @@ static void Models_TextureChanged(void* obj, struct Stream* stream, const String
 *#########################################################################################################################*/
 /* NOTE: None of the built in models use more than 12 parts at once, but custom models can use up to 64 parts. */
 static struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS];	
+struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 
 void CustomModelPart_BuildBox(struct CustomModelPart* part) {
 	float x1 = part->min.X, y1 = part->min.Y, z1 = part->min.Z;

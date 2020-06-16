@@ -281,7 +281,7 @@ struct CustomModel {
 	cc_bool initialized;
 };
 
-static struct CustomModel custom_models[MAX_CUSTOM_MODELS];
+extern struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 
 void CustomModel_Register(struct CustomModel* customModel);
 void CustomModel_Free(struct CustomModel* customModel);
