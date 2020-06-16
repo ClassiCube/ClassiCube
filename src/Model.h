@@ -245,8 +245,8 @@ struct CustomModelPart {
 	/* rotation angles */
 	Vec3 rotation;
 
-	enum CustomModelAnim anim;
 	float animModifier;
+	cc_uint8 anim;
 
 	cc_bool fullbright;
 };
