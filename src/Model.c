@@ -507,23 +507,23 @@ void CustomModelPart_BuildBox(struct CustomModelPart* part) {
 	struct Model* m = Models.Active;
 
 	BoxDesc_YQuad2(m, x1, x2, z2, z1, y2, /* top */
-		part->u2[0],                         part->v2[0],
-		part->u1[0],                         part->v1[0]);
+		part->u1[0],                         part->v1[0],
+		part->u2[0],                         part->v2[0]);
 	BoxDesc_YQuad2(m, x2, x1, z2, z1, y1, /* bottom */
-		part->u2[1],                         part->v1[1],
-		part->u1[1],                         part->v2[1]);
+		part->u1[1],                         part->v1[1],
+		part->u2[1],                         part->v2[1]);
 	BoxDesc_ZQuad2(m, x1, x2, y1, y2, z1, /* front */
-		part->u2[2],                         part->v1[2],
-		part->u1[2],                         part->v2[2]);
+		part->u1[2],                         part->v1[2],
+		part->u2[2],                         part->v2[2]);
 	BoxDesc_ZQuad2(m, x2, x1, y1, y2, z2, /* back */
-		part->u2[3],                         part->v1[3],
-		part->u1[3],                         part->v2[3]);
+		part->u1[3],                         part->v1[3],
+		part->u2[3],                         part->v2[3]);
 	BoxDesc_XQuad2(m, z1, z2, y1, y2, x2, /* left */
-		part->u2[4],                         part->v1[4],
-		part->u1[4],                         part->v2[4]);
+		part->u1[4],                         part->v1[4],
+		part->u2[4],                         part->v2[4]);
 	BoxDesc_XQuad2(m, z2, z1, y1, y2, x1, /* right */
-		part->u2[5],                         part->v1[5], 
-		part->u1[5],                         part->v2[5]);
+		part->u1[5],                         part->v1[5], 
+		part->u2[5],                         part->v2[5]);
 
 	ModelPart_Init(
 		&part->modelPart,
