@@ -293,12 +293,24 @@ void BoxDesc_BuildBox(struct ModelPart* part, const struct BoxDesc* desc) {
 	int x = desc->texX, y = desc->texY;
 	struct Model* m = Models.Active;
 
-	BoxDesc_YQuad(m, x + sidesW,                  y,          bodyW, sidesW, x1, x2, z2, z1, y2, true);  /* top */
-	BoxDesc_YQuad(m, x + sidesW + bodyW,          y,          bodyW, sidesW, x2, x1, z2, z1, y1, false); /* bottom */
-	BoxDesc_ZQuad(m, x + sidesW,                  y + sidesW, bodyW,  bodyH, x1, x2, y1, y2, z1, true);  /* front */
-	BoxDesc_ZQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW,  bodyH, x2, x1, y1, y2, z2, true);  /* back */
-	BoxDesc_XQuad(m, x,                           y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x2, true);  /* left */
-	BoxDesc_XQuad(m, x + sidesW + bodyW,          y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x1, true);  /* right */
+	BoxDesc_YQuad2(m, x1, x2, z2, z1, y2, /* top */
+		x + sidesW + bodyW,                  y, 
+		x + sidesW,                          y + sidesW);
+	BoxDesc_YQuad2(m, x2, x1, z2, z1, y1, /* bottom */
+		x + sidesW + bodyW,                  y,
+		x + sidesW + bodyW + bodyW,          y + sidesW);
+	BoxDesc_ZQuad2(m, x1, x2, y1, y2, z1, /* front */
+		x + sidesW + bodyW,                  y + sidesW, 
+		x + sidesW,                          y + sidesW + bodyH); 
+	BoxDesc_ZQuad2(m, x2, x1, y1, y2, z2, /* back */
+		x + sidesW + bodyW + sidesW + bodyW, y + sidesW, 
+		x + sidesW + bodyW + sidesW,         y + sidesW + bodyH);
+	BoxDesc_XQuad2(m, z1, z2, y1, y2, x2,  /* left */
+		x + sidesW,                          y + sidesW, 
+		x,                                   y + sidesW + bodyH);
+	BoxDesc_XQuad2(m, z2, z1, y1, y2, x1, /* right */
+		x + sidesW + bodyW + sidesW,         y + sidesW, 
+		x + sidesW + bodyW,                  y + sidesW + bodyH); 
 
 	ModelPart_Init(part, m->index - MODEL_BOX_VERTICES, MODEL_BOX_VERTICES,
 		desc->rotX, desc->rotY, desc->rotZ);
@@ -311,12 +323,24 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, const struct BoxDesc* desc)
 	int x = desc->texX, y = desc->texY, i;
 	struct Model* m = Models.Active;
 
-	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW,  bodyH, x1, x2, z1, z2, y2, false); /* top */
-	BoxDesc_YQuad(m, x + sidesW,                  y + sidesW, bodyW,  bodyH, x2, x1, z1, z2, y1, false); /* bottom */
-	BoxDesc_ZQuad(m, x + sidesW,                  y,          bodyW, sidesW, x2, x1, y1, y2, z1, false); /* front */
-	BoxDesc_ZQuad(m, x + sidesW + bodyW,          y,          bodyW, sidesW, x1, x2, y2, y1, z2, false); /* back */
-	BoxDesc_XQuad(m, x,                           y + sidesW, sidesW, bodyH, y2, y1, z2, z1, x2, false); /* left */
-	BoxDesc_XQuad(m, x + sidesW + bodyW,          y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1, false); /* right */
+	BoxDesc_YQuad2(m, x1, x2, z1, z2, y2, /* top */
+		x + sidesW + bodyW + sidesW,         y + sidesW,
+		x + sidesW + bodyW + sidesW + bodyW, y + sidesW + bodyH);
+	BoxDesc_YQuad2(m, x2, x1, z1, z2, y1, /* bottom */
+		x + sidesW,                          y + sidesW,
+		x + sidesW + bodyW,                  y + sidesW + bodyH);
+	BoxDesc_ZQuad2(m, x2, x1, y1, y2, z1, /* front */
+		x + sidesW,                          y,
+		x + sidesW + bodyW,                  y + sidesW);
+	BoxDesc_ZQuad2(m, x1, x2, y2, y1, z2, /* back */
+		x + sidesW + bodyW,                  y,
+		x + sidesW + bodyW + bodyW,          y + sidesW);
+	BoxDesc_XQuad2(m, y2, y1, z2, z1, x2, /* left */
+		x,                                   y + sidesW,
+		x + sidesW,                          y + sidesW + bodyH);
+	BoxDesc_XQuad2(m, y1, y2, z2, z1, x1, /* right */
+		x + sidesW + bodyW,                  y + sidesW, 
+		x + sidesW + bodyW + sidesW,         y + sidesW + bodyH); 
 
 	/* rotate left and right 90 degrees	*/
 	for (i = m->index - 8; i < m->index; i++) {
@@ -331,33 +355,51 @@ void BoxDesc_BuildRotatedBox(struct ModelPart* part, const struct BoxDesc* desc)
 
 
 void BoxDesc_XQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float z1, float z2, float y1, float y2, float x, cc_bool swapU) {
-	int u1 = texX, u2 = (texX + texWidth) | UV_MAX, tmp;
+	int u1 = texX, u2 = texX + texWidth, tmp;
 	if (swapU) { tmp = u1; u1 = u2; u2 = tmp; }
-
-	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, u1, (texY + texHeight) | UV_MAX); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x, y2, z1, u1, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x, y2, z2, u2, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, u2, (texY + texHeight) | UV_MAX); m->index++;
+	BoxDesc_XQuad2(m, z1, z2, y1, y2, x, u1, texY, u2, texY + texHeight);
 }
 
 void BoxDesc_YQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float z1, float z2, float y, cc_bool swapU) {
-	int u1 = texX, u2 = (texX + texWidth) | UV_MAX, tmp;
+	int u1 = texX, u2 = texX + texWidth, tmp;
 	if (swapU) { tmp = u1; u1 = u2; u2 = tmp; }
-
-	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, u1, (texY + texHeight) | UV_MAX); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x1, y, z1, u1, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y, z1, u2, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, u2, (texY + texHeight) | UV_MAX); m->index++;
+	BoxDesc_YQuad2(m, x1, x2, z1, z2, y, u1, texY, u2, texY + texHeight);
 }
 
 void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int texHeight, float x1, float x2, float y1, float y2, float z, cc_bool swapU) {
-	int u1 = texX, u2 = (texX + texWidth) | UV_MAX, tmp;
+	int u1 = texX, u2 = texX + texWidth, tmp;
 	if (swapU) { tmp = u1; u1 = u2; u2 = tmp; }
+	BoxDesc_ZQuad2(m, x1, x2, y1, y2, z, u1, texY, u2, texY + texHeight);
+}
 
-	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, u1, (texY + texHeight) | UV_MAX); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x1, y2, z, u1, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y2, z, u2, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, u2, (texY + texHeight) | UV_MAX); m->index++;
+void BoxDesc_XQuad2(struct Model* m, float z1, float z2, float y1, float y2, float x, int u1, int v1, int u2, int v2) {
+	if (u1 <= u2) { u2 |= UV_MAX; } else { u1 |= UV_MAX; }
+	if (v1 <= v2) { v2 |= UV_MAX; } else { v1 |= UV_MAX; }
+
+	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, u1, v2); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y2, z1, u1, v1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y2, z2, u2, v1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, u2, v2); m->index++;
+}
+
+void BoxDesc_YQuad2(struct Model* m, float x1, float x2, float z1, float z2, float y, int u1, int v1, int u2, int v2) {
+	if (u1 <= u2) { u2 |= UV_MAX; } else { u1 |= UV_MAX; }
+	if (v1 <= v2) { v2 |= UV_MAX; } else { v1 |= UV_MAX; }
+
+	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, u1, v2); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x1, y, z1, u1, v1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y, z1, u2, v1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, u2, v2); m->index++;
+}
+
+void BoxDesc_ZQuad2(struct Model* m, float x1, float x2, float y1, float y2, float z, int u1, int v1, int u2, int v2) {
+	if (u1 <= u2) { u2 |= UV_MAX; } else { u1 |= UV_MAX; }
+	if (v1 <= v2) { v2 |= UV_MAX; } else { v1 |= UV_MAX; }
+
+	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, u1, v2); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x1, y2, z, u1, v1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y2, z, u2, v1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, u2, v2); m->index++;
 }
 
 
@@ -838,19 +880,19 @@ static struct ModelPart chicken_head, chicken_wattle, chicken_beak, chicken_tors
 static struct ModelPart chicken_leftLeg, chicken_rightLeg, chicken_leftWing, Chicken_RightWing;
 
 static void ChickenModel_MakeLeg(struct ModelPart* part, int x1, int x2, int legX1, int legX2) {
-#define ch_y1 (1.0f  / 64.0f)
-#define ch_y2 (5.0f  / 16.0f)
-#define ch_z2 (1.0f  / 16.0f)
-#define ch_z1 (-2.0f / 16.0f)
+#define ch_y1 ( 1.0f/64.0f)
+#define ch_y2 ( 5.0f/16.0f)
+#define ch_z2 ( 1.0f/16.0f)
+#define ch_z1 (-2.0f/16.0f)
 
 	struct Model* m = Models.Active;
-	BoxDesc_YQuad(m, 32, 0, 3, 3,
-		x2 / 16.0f, x1 / 16.0f, ch_z1, ch_z2, ch_y1, false); /* bottom feet */
-	BoxDesc_ZQuad(m, 36, 3, 1, 5,
-		legX1 / 16.0f, legX2 / 16.0f, ch_y1, ch_y2, ch_z2, false); /* vertical part of leg */
+	BoxDesc_YQuad2(m, x2/16.0f,    x1/16.0f,    ch_z1, ch_z2, ch_y1,
+		32,0, 35,3); /* bottom feet */
+	BoxDesc_ZQuad2(m, legX1/16.0f, legX2/16.0f, ch_y1, ch_y2, ch_z2,
+		36,3, 37,8); /* vertical part of leg */
 
 	ModelPart_Init(part, m->index - MODEL_QUAD_VERTICES * 2, MODEL_QUAD_VERTICES * 2,
-		0.0f / 16.0f, 5.0f / 16.0f, 1.0f / 16.0f);
+		0.0f/16.0f, 5.0f/16.0f, 1.0f/16.0f);
 }
 
 static void ChickenModel_MakeParts(void) {
