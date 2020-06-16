@@ -253,7 +253,6 @@ struct CustomModelPart {
 
 struct CustomModel {
 	struct Model model;
-	struct ModelTex defaultTex;
 	struct ModelVertex* vertices;
 
 	char name[STRING_SIZE + 1];

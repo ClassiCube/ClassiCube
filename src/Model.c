@@ -699,13 +699,14 @@ static void CheckMaxVertices(void) {
 }
 
 void CustomModel_Register(struct CustomModel* customModel) {
+	static struct ModelTex customDefaultTex;
+
 	CheckMaxVertices();
 
 	customModel->model.name = customModel->name;
 	customModel->model.vertices = customModel->vertices;
 
-	customModel->defaultTex.name = customModel->name;
-	customModel->model.defaultTex = &customModel->defaultTex;
+	customModel->model.defaultTex = &customDefaultTex;
 
 	customModel->model.MakeParts = CustomModel_MakeParts;
 	customModel->model.Draw = CustomModel_Draw;
