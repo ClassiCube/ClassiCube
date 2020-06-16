@@ -27,6 +27,9 @@
 #include "Particle.h"
 #include "Picking.h"
 
+#define QUOTE(x) #x
+#define STRINGIFY(val) QUOTE(val)
+
 cc_uint16 Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];
 
@@ -533,7 +536,7 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	Camera_CheckFocus();
 
 	end   = Stopwatch_Measure();
-	delta = (int)Stopwatch_ElapsedMilliseconds(map_receiveBeg, end);
+	delta = Stopwatch_ElapsedMilliseconds(map_receiveBeg, end);
 	Platform_Log1("map loading took: %i", &delta);
 	map_begunLoading = false;
 	WoM_CheckSendWomID();
@@ -744,13 +747,13 @@ static void Classic_Tick(void) {
 /*########################################################################################################################*
 *------------------------------------------------------CPE protocol-------------------------------------------------------*
 *#########################################################################################################################*/
-static const char* cpe_clientExtensions[34] = {
+static const char* cpe_clientExtensions[35] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap", "SetHotbar",
-	"SetSpawnpoint", "VelocityControl", "CustomParticles",
+	"SetSpawnpoint", "VelocityControl", "CustomParticles", "CustomModels",
 	/* NOTE: These must be placed last for when EXTENDED_TEXTURES or EXTENDED_BLOCKS are not defined */
 	"ExtendedTextures", "ExtendedBlocks"
 };
@@ -1391,6 +1394,195 @@ static void CPE_SpawnEffect(cc_uint8* data) {
 	Particles_CustomEffect(data[0], x, y, z, originX, originY, originZ);
 }
 
+/* CustomModels */
+
+static float ReadFloat(cc_uint8* data) {
+	union IntAndFloat raw;
+	raw.u = Stream_GetU32_BE(data);
+	return raw.f;
+}
+
+static void CPE_DefineModel(cc_uint8* data) {
+	/* 115 = 1 + 64 + 1 + 2*4 + 3*4 + 2*3*4 + 2*2 + 1 */
+	cc_uint8 modelId = *data++;
+	struct CustomModel* customModel = &custom_models[modelId];
+	String name;
+	cc_uint8 flags;
+	cc_uint8 numParts;
+
+	if (modelId >= MAX_CUSTOM_MODELS) {
+		return;
+	}
+
+	/* free existing */
+	if (customModel->initialized) {
+		CustomModel_Free(customModel);
+	}
+
+	/* read name */
+	name = UNSAFE_GetString(data);
+	data += STRING_SIZE;
+	String_CopyToRawArray(customModel->name, &name);
+
+	/* read bool flags */
+	flags = *data++;
+	customModel->bobbing = (flags >> 0) & 1;
+	customModel->pushes = (flags >> 1) & 1;
+	customModel->usesHumanSkin = (flags >> 2) & 1;
+	customModel->calcHumanAnims = (flags >> 3) & 1;
+	customModel->hideFirstPersonArm = (flags >> 4) & 1;
+
+	/* read nameY, eyeY */
+	customModel->nameY = ReadFloat(data);
+	data += 4;
+	customModel->eyeY = ReadFloat(data);
+	data += 4;
+
+	/* read collisionBounds */
+	customModel->collisionBounds.X = ReadFloat(data);
+	data += 4;
+	customModel->collisionBounds.Y = ReadFloat(data);
+	data += 4;
+	customModel->collisionBounds.Z = ReadFloat(data);
+	data += 4;
+
+	/* read pickingBoundsAABB */
+	customModel->pickingBoundsAABB.Min.X = ReadFloat(data);
+	data += 4;
+	customModel->pickingBoundsAABB.Min.Y = ReadFloat(data);
+	data += 4;
+	customModel->pickingBoundsAABB.Min.Z = ReadFloat(data);
+	data += 4;
+
+	customModel->pickingBoundsAABB.Max.X = ReadFloat(data);
+	data += 4;
+	customModel->pickingBoundsAABB.Max.Y = ReadFloat(data);
+	data += 4;
+	customModel->pickingBoundsAABB.Max.Z = ReadFloat(data);
+	data += 4;
+
+	/* read uScale, vScale */
+	customModel->uScale = Stream_GetU16_BE(data);
+	data += 2;
+	customModel->vScale = Stream_GetU16_BE(data);
+	data += 2;
+
+	/* read # CustomModelParts */
+	numParts = *data++;
+
+	if (numParts >= MAX_CUSTOM_MODEL_PARTS) {
+		String msg; char msgBuffer[256];
+		String_InitArray(msg, msgBuffer);
+
+		String_Format1(
+			&msg,
+			"&cCustom Model '%s' exceeds parts limit of " STRINGIFY(MAX_CUSTOM_MODEL_PARTS),
+			&name
+		);
+		Logger_WarnFunc(&msg);
+		return;
+	}
+
+	customModel->numParts = numParts;
+	customModel->vertices = Mem_AllocCleared(
+		numParts * MODEL_BOX_VERTICES,
+		sizeof(struct ModelVertex),
+		"CustomModel vertices"
+	);
+
+	customModel->initialized = true;
+}
+
+static void CPE_DefineModelPart(cc_uint8* data) {
+	/* 103 = 1 + 3*4 + 3*4 + 6*(2*2 + 2*2) + 3*4 + 3*4 + 1 + 4 + 1 */
+	cc_uint8 modelId = *data++;
+	struct CustomModel* customModel = &custom_models[modelId];
+	struct CustomModelPart* part;
+	cc_uint8 flags;
+	int i;
+
+	if (
+		modelId >= MAX_CUSTOM_MODELS ||
+		!customModel->initialized ||
+		customModel->curPartIndex >= customModel->numParts
+	) {
+		return;
+	}
+
+	part = &customModel->parts[customModel->curPartIndex];
+	customModel->curPartIndex++;
+
+	/* read min, max vec3 coords */
+	part->min.X = ReadFloat(data);
+	data += 4;
+	part->min.Y = ReadFloat(data);
+	data += 4;
+	part->min.Z = ReadFloat(data);
+	data += 4;
+
+	part->max.X = ReadFloat(data);
+	data += 4;
+	part->max.Y = ReadFloat(data);
+	data += 4;
+	part->max.Z = ReadFloat(data);
+	data += 4;
+
+	/* read u, v coords for our 6 faces */
+	for (i = 0; i < 6; i++) {
+		part->u1[i] = Stream_GetU16_BE(data);
+		data += 2;
+		part->v1[i] = Stream_GetU16_BE(data);
+		data += 2;
+
+		part->u2[i] = Stream_GetU16_BE(data);
+		data += 2;
+		part->v2[i] = Stream_GetU16_BE(data);
+		data += 2;
+	}
+
+	/* read rotation origin point */
+	part->rotationOrigin.X = ReadFloat(data);
+	data += 4;
+	part->rotationOrigin.Y = ReadFloat(data);
+	data += 4;
+	part->rotationOrigin.Z = ReadFloat(data);
+	data += 4;
+
+	/* read rotation angles */
+	part->rotation.X = ReadFloat(data);
+	data += 4;
+	part->rotation.Y = ReadFloat(data);
+	data += 4;
+	part->rotation.Z = ReadFloat(data);
+	data += 4;
+
+	/* read anim */
+	part->anim = *data++;
+
+	/* read animModifier */
+	part->animModifier = ReadFloat(data);
+	data += 4;
+
+	/* read bool flags */
+	flags = *data++;
+	part->fullbright = (flags >> 0) & 1;
+
+	if (customModel->curPartIndex == customModel->numParts) {
+		/* we're the last part, so register our model */
+		CustomModel_Register(customModel);
+	}
+}
+
+/* unregisters and frees the custom model */
+static void CPE_UndefineModel(cc_uint8* data) {
+	cc_uint8 modelId = *data++;
+	struct CustomModel* customModel = &custom_models[modelId];
+
+	if (modelId < MAX_CUSTOM_MODELS && customModel->initialized) {
+		CustomModel_Free(customModel);
+	}
+}
+
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
@@ -1433,6 +1625,9 @@ static void CPE_Reset(void) {
 	Net_Set(OPCODE_VELOCITY_CONTROL, CPE_VelocityControl, 16);
 	Net_Set(OPCODE_DEFINE_EFFECT, CPE_DefineEffect, 36);
 	Net_Set(OPCODE_SPAWN_EFFECT, CPE_SpawnEffect, 26);
+	Net_Set(OPCODE_DEFINE_MODEL, CPE_DefineModel, 116);
+	Net_Set(OPCODE_DEFINE_MODEL_PART, CPE_DefineModelPart, 104);
+	Net_Set(OPCODE_UNDEFINE_MODEL, CPE_UndefineModel, 2);
 }
 
 static void CPE_Tick(void) {

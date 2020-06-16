@@ -3,6 +3,7 @@
 #include "Vectors.h"
 #include "PackedCol.h"
 #include "Constants.h"
+#include "Physics.h"
 /* Contains various structs and methods for an entity model.
    Also contains a list of models and default textures for those models.
    Copyright 2014-2019 ClassiCube | Licensed under BSD-3
@@ -15,7 +16,7 @@ extern struct IGameComponent Models_Component;
 
 #define MODEL_QUAD_VERTICES 4
 #define MODEL_BOX_VERTICES (FACE_COUNT * MODEL_QUAD_VERTICES)
-enum RotateOrder { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX };
+enum RotateOrder { ROTATE_ORDER_ZYX, ROTATE_ORDER_XZY, ROTATE_ORDER_YZX, ROTATE_ORDER_XYZ };
 
 /* Describes a vertex within a model. */
 struct ModelVertex { float X, Y, Z; cc_uint16 U, V; };
@@ -145,6 +146,8 @@ CC_API struct Model* Model_Get(const String* name);
 /* Adds a model to the list of models. (e.g. "skeleton") */
 /* Models can be applied to entities to change their appearance. Use Entity_SetModel for that. */
 CC_API void Model_Register(struct Model* model);
+/* Unregister a model from the list of models, and set all entities using this model to the default humanoid model. */
+void Model_Unregister(struct Model* model);
 /* Adds a texture to the list of automatically managed model textures. */
 /* These textures are automatically loaded from texture packs. (e.g. "skeleton.png") */
 CC_API void Model_RegisterTexture(struct ModelTex* tex);
@@ -203,4 +206,85 @@ CC_API void BoxDesc_ZQuad(struct Model* m, int texX, int texY, int texWidth, int
 CC_API void BoxDesc_XQuad2(struct Model* m, float z1, float z2, float y1, float y2, float x, int u1, int v1, int u2, int v2);
 CC_API void BoxDesc_YQuad2(struct Model* m, float x1, float x2, float z1, float z2, float y, int u1, int v1, int u2, int v2);
 CC_API void BoxDesc_ZQuad2(struct Model* m, float x1, float x2, float y1, float y2, float z, int u1, int v1, int u2, int v2);
+
+/* CustomModels */
+
+#define MAX_CUSTOM_MODELS 64
+#define MAX_CUSTOM_MODEL_PARTS 64
+
+enum CustomModelAnim {
+	CustomModelAnim_None = 0,
+	CustomModelAnim_Head = 1,
+	CustomModelAnim_LeftLeg = 2,
+	CustomModelAnim_RightLeg = 3,
+	CustomModelAnim_LeftArm = 4,
+	CustomModelAnim_RightArm = 5,
+	CustomModelAnim_SpinX = 6,
+	CustomModelAnim_SpinY = 7,
+	CustomModelAnim_SpinZ = 8,
+	CustomModelAnim_SpinXVelocity = 9,
+	CustomModelAnim_SpinYVelocity = 10,
+	CustomModelAnim_SpinZVelocity = 11
+};
+
+struct CustomModelPart {
+	struct ModelPart modelPart;
+
+	/* min and max vec3 points */
+	Vec3 min;
+	Vec3 max;
+
+	/* uv coords in order: top, bottom, front, back, left, right */
+	cc_uint16 u1[6];
+	cc_uint16 v1[6];
+	cc_uint16 u2[6];
+	cc_uint16 v2[6];
+	/* rotation origin point */
+	Vec3 rotationOrigin;
+
+	/* rotation angles */
+	Vec3 rotation;
+
+	float animModifier;
+	cc_uint8 anim;
+
+	cc_bool fullbright;
+};
+
+struct CustomModel {
+	struct Model model;
+	struct ModelVertex* vertices;
+
+	char name[STRING_SIZE + 1];
+	
+	cc_bool bobbing;
+	cc_bool pushes;
+	/* if true, falls back to using your account's skin */
+	cc_bool usesHumanSkin;
+	/* use crazy arms */
+	cc_bool calcHumanAnims;
+	cc_bool hideFirstPersonArm;
+	
+	float nameY;
+	float eyeY;
+	Vec3 collisionBounds;
+	struct AABB pickingBoundsAABB;
+
+	cc_uint16 uScale;
+	cc_uint16 vScale;
+
+	cc_uint8 numParts;
+	cc_uint8 curPartIndex;
+	struct CustomModelPart parts[MAX_CUSTOM_MODEL_PARTS];
+
+	cc_bool registered;
+	cc_bool initialized;
+};
+
+extern struct CustomModel custom_models[MAX_CUSTOM_MODELS];
+
+void CustomModel_Register(struct CustomModel* customModel);
+void CustomModel_Free(struct CustomModel* customModel);
+void CustomModel_FreeAll(void);
+
 #endif
