@@ -256,13 +256,6 @@ struct CustomModel {
 	struct ModelVertex* vertices;
 
 	char name[STRING_SIZE + 1];
-	
-	cc_bool bobbing;
-	cc_bool pushes;
-	/* if true, falls back to using your account's skin */
-	cc_bool usesHumanSkin;
-	/* use crazy arms */
-	cc_bool calcHumanAnims;
 	cc_bool hideFirstPersonArm;
 	
 	float nameY;

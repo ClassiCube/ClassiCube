@@ -687,9 +687,7 @@ static void CustomModel_DrawArm(struct Entity* e) {
 static void CheckMaxVertices(void) {
 	/* hack to undo plugins setting a smaller vertices buffer */
 	if (Models.MaxVertices < Array_Elems(defaultVertices)) {
-		Platform_LogConst(
-			"CheckMaxVertices found smaller buffer, resetting Models.Vb"
-		);
+		Platform_LogConst("CheckMaxVertices found smaller buffer, resetting Models.Vb");
 		Gfx_DeleteDynamicVb(&Models.Vb);
 
 		Models.Vertices    = defaultVertices;
@@ -713,13 +711,7 @@ void CustomModel_Register(struct CustomModel* cm) {
 	cm->model.GetEyeY   = CustomModel_GetEyeY;
 	cm->model.GetCollisionSize = CustomModel_GetCollisionSize;
 	cm->model.GetPickingBounds = CustomModel_GetPickingBounds;
-
-	Model_Init(&cm->model);
-	cm->model.bobbing = cm->bobbing;
-	cm->model.pushes  = cm->pushes;
-	cm->model.usesHumanSkin  = cm->usesHumanSkin;
-	cm->model.calcHumanAnims = cm->calcHumanAnims;
-	cm->model.DrawArm        = CustomModel_DrawArm;
+	cm->model.DrawArm          = CustomModel_DrawArm;
 
 	/* add to front of models linked list to override original models */
 	if (!models_head) {
@@ -800,7 +792,7 @@ static void HumanModel_DrawCore(struct Entity* e, struct ModelSet* model, cc_boo
 	Model_UpdateVB();
 }
 
-static void HumanModel_DrawArmCore(struct Entity* e, struct ModelSet* model) {
+static void HumanModel_DrawArmCore(struct ModelSet* model) {
 	struct ModelLimbs* set;
 	int type;
 
@@ -942,7 +934,7 @@ static void HumanModel_Draw(struct Entity* e) {
 }
 
 static void HumanModel_DrawArm(struct Entity* e) {
-	HumanModel_DrawArmCore(e, &human_set);
+	HumanModel_DrawArmCore(&human_set);
 }
 
 static float HumanModel_GetNameY(struct Entity* e) { return 32.5f/16.0f; }
@@ -1033,7 +1025,7 @@ static void ChibiModel_Draw(struct Entity* e) {
 }
 
 static void ChibiModel_DrawArm(struct Entity* e) {
-	HumanModel_DrawArmCore(e, &chibi_set);
+	HumanModel_DrawArmCore(&chibi_set);
 }
 
 static float ChibiModel_GetNameY(struct Entity* e) { return 20.2f/16.0f; }
@@ -1745,7 +1737,7 @@ static void ZombieModel_Draw(struct Entity* e) {
 	HumanModel_DrawCore(e, &human_set, false);
 }
 static void ZombieModel_DrawArm(struct Entity* e) {
-	HumanModel_DrawArmCore(e, &human_set);
+	HumanModel_DrawArmCore(&human_set);
 }
 
 static void ZombieModel_GetBounds(struct Entity* e) { Model_RetAABB(-4,0,-4, 4,32,4); }

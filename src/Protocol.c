@@ -1412,6 +1412,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 
 	if (id >= MAX_CUSTOM_MODELS) return;
 	CustomModel_Undefine(customModel);
+	Model_Init(&customModel->model);
 
 	/* read name */
 	name = UNSAFE_GetString(data);
@@ -1420,11 +1421,11 @@ static void CPE_DefineModel(cc_uint8* data) {
 
 	/* read bool flags */
 	flags = *data++;
-	customModel->bobbing = (flags >> 0) & 1;
-	customModel->pushes = (flags >> 1) & 1;
-	customModel->usesHumanSkin = (flags >> 2) & 1;
-	customModel->calcHumanAnims = (flags >> 3) & 1;
-	customModel->hideFirstPersonArm = (flags >> 4) & 1;
+	customModel->model.bobbing        = (flags >> 0) & 1;
+	customModel->model.pushes         = (flags >> 1) & 1;
+	customModel->model.usesHumanSkin  = (flags >> 2) & 1;
+	customModel->model.calcHumanAnims = (flags >> 3) & 1;
+	customModel->hideFirstPersonArm   = (flags >> 4) & 1;
 
 	/* read nameY, eyeY */
 	customModel->nameY = ReadFloat(data);
