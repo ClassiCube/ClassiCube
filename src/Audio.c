@@ -465,13 +465,13 @@ struct Sound {
 
 #define AUDIO_MAX_SOUNDS 10
 struct SoundGroup {
-	String name; int count;
+	int count;
 	struct Sound sounds[AUDIO_MAX_SOUNDS];
 };
 
 struct Soundboard {
 	RNGState rnd; int count;
-	struct SoundGroup groups[AUDIO_MAX_SOUNDS];
+	struct SoundGroup groups[SOUND_COUNT];
 };
 
 #define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
@@ -484,26 +484,26 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	int bitsPerSample;
 
 	if ((res = Stream_Read(stream, tmp, 12))) return res;
-	fourCC = Stream_GetU32_BE(&tmp[0]);
+	fourCC = Stream_GetU32_BE(tmp + 0);
 	if (fourCC != WAV_FourCC('R','I','F','F')) return WAV_ERR_STREAM_HDR;
 	/* tmp[4] (4) file size */
-	fourCC = Stream_GetU32_BE(&tmp[8]);
+	fourCC = Stream_GetU32_BE(tmp + 8);
 	if (fourCC != WAV_FourCC('W','A','V','E')) return WAV_ERR_STREAM_TYPE;
 
 	for (;;) {
 		if ((res = Stream_Read(stream, tmp, 8))) return res;
-		fourCC = Stream_GetU32_BE(&tmp[0]);
-		size   = Stream_GetU32_LE(&tmp[4]);
+		fourCC = Stream_GetU32_BE(tmp + 0);
+		size   = Stream_GetU32_LE(tmp + 4);
 
 		if (fourCC == WAV_FourCC('f','m','t',' ')) {
 			if ((res = Stream_Read(stream, tmp, sizeof(tmp)))) return res;
-			if (Stream_GetU16_LE(&tmp[0]) != 1) return WAV_ERR_DATA_TYPE;
+			if (Stream_GetU16_LE(tmp + 0) != 1) return WAV_ERR_DATA_TYPE;
 
-			snd->format.channels   = Stream_GetU16_LE(&tmp[2]);
-			snd->format.sampleRate = Stream_GetU32_LE(&tmp[4]);
+			snd->format.channels   = Stream_GetU16_LE(tmp + 2);
+			snd->format.sampleRate = Stream_GetU32_LE(tmp + 4);
 			/* tmp[8] (6) alignment data and stuff */
 
-			bitsPerSample = Stream_GetU16_LE(&tmp[14]);
+			bitsPerSample = Stream_GetU16_LE(tmp + 14);
 			if (bitsPerSample != 16) return WAV_ERR_SAMPLE_BITS;
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
@@ -540,8 +540,8 @@ static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const String
 	struct SoundGroup* groups = board->groups;
 	int i;
 
-	for (i = 0; i < board->count; i++) {
-		if (String_CaselessEquals(&groups[i].name, name)) return &groups[i];
+	for (i = 0; i < SOUND_COUNT; i++) {
+		if (String_CaselessEqualsConst(name, Sound_Names[i])) return &groups[i];
 	}
 	return NULL;
 }
@@ -559,7 +559,7 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, s
 
 		/* dig_grass1.wav -> dig_grass1 */
 		dotIndex = String_LastIndexOf(&name, '.');
-		if (dotIndex >= 0) { name = String_UNSAFE_Substring(&name, 0, dotIndex); }
+		if (dotIndex >= 0) name.length = dotIndex;
 		if (!String_CaselessStarts(&name, boardName)) continue;
 
 		/* Convert dig_grass1 to grass */
@@ -568,17 +568,10 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, s
 
 		group = Soundboard_Find(board, &name);
 		if (!group) {
-			if (board->count == Array_Elems(board->groups)) {
-				Chat_AddRaw("&cCannot have more than 10 sound groups"); return;
-			}
-
-			group = &board->groups[board->count++];
-			/* NOTE: This keeps a reference to inside buffer of files */
-			group->name = name;
+			Chat_Add1("&cUnknown sound group '%s'", &name); continue;
 		}
-
 		if (group->count == Array_Elems(group->sounds)) {
-			Chat_AddRaw("&cCannot have more than 10 sounds in a group"); return;
+			Chat_AddRaw("&cCannot have more than 10 sounds in a group"); continue;
 		}
 
 		snd = &group->sounds[group->count];
@@ -594,16 +587,14 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, s
 }
 
 static struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 type) {
-	String name;
 	struct SoundGroup* group;
 	int idx;
 
 	if (type == SOUND_NONE || type >= SOUND_COUNT) return NULL;
 	if (type == SOUND_METAL) type = SOUND_STONE;
 
-	name  = String_FromReadonly(Sound_Names[type]);
-	group = Soundboard_Find(board, &name);
-	if (!group) return NULL;
+	group = &board->groups[type];
+	if (!group->count) return NULL;
 
 	idx = Random_Next(&board->rnd, group->count);
 	return &group->sounds[idx];

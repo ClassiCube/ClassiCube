@@ -538,31 +538,28 @@ void CustomModelPart_BuildBox(struct CustomModelPart* part) {
 *-------------Model methods----------------*
 *##########################################*/
 static void CustomModel_MakeParts(void) {
-	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
+	struct CustomModel* cm = (struct CustomModel*)Models.Active;
 	int i;
-	for (i = 0; i < customModel->numParts; i++) {
-		CustomModelPart_BuildBox(&customModel->parts[i]);
+	for (i = 0; i < cm->numParts; i++) {
+		CustomModelPart_BuildBox(&cm->parts[i]);
 	}
 }
 
 static PackedCol oldCols[FACE_COUNT];
 static void CustomModel_Draw(struct Entity* e) {
-	int i;
-	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
+	int i, j;
+	struct CustomModel* cm = (struct CustomModel*)Models.Active;
 
 	Model_ApplyTexture(e);
-	Models.uScale = 1.0f / customModel->uScale;
-	Models.vScale = 1.0f / customModel->vScale;
+	Models.uScale = 1.0f / cm->uScale;
+	Models.vScale = 1.0f / cm->vScale;
 
-	for (i = 0; i < customModel->numParts; i++) {
-		float rotationX;
-		float rotationY;
-		float rotationZ;
+	for (i = 0; i < cm->numParts; i++) {
+		float rotX, rotY, rotZ;
 		cc_bool head;
-		struct CustomModelPart* part = &customModel->parts[i];
+		struct CustomModelPart* part = &cm->parts[i];
 
 		if (part->fullbright) {
-			int j;
 			for (j = 0; j < FACE_COUNT; j++) {
 				oldCols[j] = Models.Cols[j];
 				Models.Cols[j] = PACKEDCOL_WHITE;
@@ -572,64 +569,50 @@ static void CustomModel_Draw(struct Entity* e) {
 		/* bbmodels use xyz rotation order */
 		Models.Rotation = ROTATE_ORDER_XYZ;
 		
-		rotationX = part->rotation.X * MATH_DEG2RAD;
-		rotationY = part->rotation.Y * MATH_DEG2RAD;
-		rotationZ = part->rotation.Z * MATH_DEG2RAD;
+		rotX = part->rotation.X * MATH_DEG2RAD;
+		rotY = part->rotation.Y * MATH_DEG2RAD;
+		rotZ = part->rotation.Z * MATH_DEG2RAD;
 		head = false;
 		
 		if (part->anim == CustomModelAnim_Head) {
 			head = true;
-			rotationX += -e->Pitch * MATH_DEG2RAD;
+			rotX += -e->Pitch * MATH_DEG2RAD;
 		} else if (part->anim == CustomModelAnim_LeftLeg) {
-			rotationX += e->Anim.LeftLegX;
-			rotationZ += e->Anim.LeftLegZ;
+			rotX += e->Anim.LeftLegX;
+			rotZ += e->Anim.LeftLegZ;
 		} else if (part->anim == CustomModelAnim_RightLeg) {
-			rotationX += e->Anim.RightLegX;
-			rotationZ += e->Anim.RightLegZ;
+			rotX += e->Anim.RightLegX;
+			rotZ += e->Anim.RightLegZ;
 		} else if (part->anim == CustomModelAnim_LeftArm) {
 			/* TODO: we're using 2 different rotation orders here */
 			Models.Rotation = ROTATE_ORDER_XZY;
-			rotationX += e->Anim.LeftArmX;
-			rotationZ += e->Anim.LeftArmZ;
+			rotX += e->Anim.LeftArmX;
+			rotZ += e->Anim.LeftArmZ;
 		} else if (part->anim == CustomModelAnim_RightArm) {
 			Models.Rotation = ROTATE_ORDER_XZY;
-			rotationX += e->Anim.RightArmX;
-			rotationZ += e->Anim.RightArmZ;
+			rotX += e->Anim.RightArmX;
+			rotZ += e->Anim.RightArmZ;
 		} else if (part->anim == CustomModelAnim_SpinX) {
-			rotationX += (float)(Game.Time * part->animModifier);
+			rotX += (float)(Game.Time * part->animModifier);
 		} else if (part->anim == CustomModelAnim_SpinY) {
-			rotationY += (float)(Game.Time * part->animModifier);
+			rotY += (float)(Game.Time * part->animModifier);
 		} else if (part->anim == CustomModelAnim_SpinZ) {
-			rotationZ += (float)(Game.Time * part->animModifier);
+			rotZ += (float)(Game.Time * part->animModifier);
 		} else if (part->anim == CustomModelAnim_SpinXVelocity) {
-			rotationX += e->Anim.WalkTime * part->animModifier;
+			rotX += e->Anim.WalkTime * part->animModifier;
 		} else if (part->anim == CustomModelAnim_SpinYVelocity) {
-			rotationY += e->Anim.WalkTime * part->animModifier;
+			rotY += e->Anim.WalkTime * part->animModifier;
 		} else if (part->anim == CustomModelAnim_SpinZVelocity) {
-			rotationZ += e->Anim.WalkTime * part->animModifier;
+			rotZ += e->Anim.WalkTime * part->animModifier;
 		}
 		
-		if (
-			rotationX != 0 ||
-			rotationY != 0 ||
-			rotationZ != 0 ||
-			head
-		) {
-			Model_DrawRotate(
-				rotationX,
-				rotationY,
-				rotationZ,
-				&customModel->parts[i].modelPart,
-				head
-			);
+		if (rotX || rotY || rotZ || head) {
+			Model_DrawRotate(rotX, rotY, rotZ, &cm->parts[i].modelPart, head);
 		} else {
-			Model_DrawPart(
-				&customModel->parts[i].modelPart
-			);
+			Model_DrawPart(&cm->parts[i].modelPart);
 		}
 
 		if (part->fullbright) {
-			int j;
 			for (j = 0; j < FACE_COUNT; j++) {
 				Models.Cols[j] = oldCols[j];
 			}
@@ -637,48 +620,41 @@ static void CustomModel_Draw(struct Entity* e) {
 	}
 
 	Model_UpdateVB();
-
 	Models.Rotation = ROTATE_ORDER_ZYX;
 }
 
 static float CustomModel_GetNameY(struct Entity* e) {
-	struct CustomModel* customModel = (struct CustomModel*)e->Model;
-	return customModel->nameY;
+	return ((struct CustomModel*)e->Model)->nameY;
 }
 
 static float CustomModel_GetEyeY(struct Entity* e) {
-	struct CustomModel* customModel = (struct CustomModel*)e->Model;
-	return customModel->eyeY;
+	return ((struct CustomModel*)e->Model)->eyeY;
 }
 
 static void CustomModel_GetCollisionSize(struct Entity* e) {
-	struct CustomModel* customModel = (struct CustomModel*)e->Model;
-	e->Size = customModel->collisionBounds;
+	e->Size = ((struct CustomModel*)e->Model)->collisionBounds;
 }
 
 static void CustomModel_GetPickingBounds(struct Entity* e) {
-	struct CustomModel* customModel = (struct CustomModel*)e->Model;
-	e->ModelAABB = customModel->pickingBoundsAABB;
+	e->ModelAABB = ((struct CustomModel*)e->Model)->pickingBoundsAABB;
 }
 
 static void CustomModel_DrawArm(struct Entity* e) {
 	int i;
-	struct CustomModel* customModel = (struct CustomModel*)Models.Active;
-	if (customModel->hideFirstPersonArm) {
-		return;
-	}
+	struct CustomModel* cm = (struct CustomModel*)Models.Active;
+	if (cm->hideFirstPersonArm) return;
 
-	Models.uScale = 1.0f / customModel->uScale;
-	Models.vScale = 1.0f / customModel->vScale;
+	Models.uScale = 1.0f / cm->uScale;
+	Models.vScale = 1.0f / cm->vScale;
 
-	for (i = 0; i < customModel->numParts; i++) {
-		struct CustomModelPart* part = &customModel->parts[i];
+	for (i = 0; i < cm->numParts; i++) {
+		struct CustomModelPart* part = &cm->parts[i];
 		if (part->anim == CustomModelAnim_RightArm) {
 			Model_DrawArmPart(&part->modelPart);
 		}
 	}
 
-	Model_UpdateVB();
+	if (cm->model.index) Model_UpdateVB();
 }
 
 /*#########################################*
