@@ -33,7 +33,7 @@ if (j - left <= right - i) {\
 	right = j;\
 }
 
-#define LinkedList_Add(item, head, tail)\
+#define LinkedList_Append(item, head, tail)\
 if (!head) { head = item; } else { tail->next = item; }\
 tail       = item;\
 item->next = NULL;

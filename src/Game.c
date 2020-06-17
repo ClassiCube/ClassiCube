@@ -66,7 +66,7 @@ const char* const FpsLimit_Names[FPS_LIMIT_COUNT] = {
 static struct IGameComponent* comps_head;
 static struct IGameComponent* comps_tail;
 void Game_AddComponent(struct IGameComponent* comp) {
-	LinkedList_Add(comp, comps_head, comps_tail);
+	LinkedList_Append(comp, comps_head, comps_tail);
 }
 
 #define TASKS_DEF_ELEMS 6

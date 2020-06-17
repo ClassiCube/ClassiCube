@@ -278,13 +278,12 @@ struct CustomModel {
 	struct CustomModelPart parts[MAX_CUSTOM_MODEL_PARTS];
 
 	cc_bool registered;
-	cc_bool initialized;
+	cc_bool defined;
 };
 
 extern struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 
-void CustomModel_Register(struct CustomModel* customModel);
-void CustomModel_Free(struct CustomModel* customModel);
-void CustomModel_FreeAll(void);
+void CustomModel_Register(struct CustomModel* cm);
+void CustomModel_Undefine(struct CustomModel* cm);
 
 #endif

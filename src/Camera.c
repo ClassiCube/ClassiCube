@@ -274,7 +274,7 @@ void Camera_CycleActive(void) {
 static struct Camera* cams_head;
 static struct Camera* cams_tail;
 void Camera_Register(struct Camera* cam) {
-	LinkedList_Add(cam, cams_head, cams_tail);
+	LinkedList_Append(cam, cams_head, cams_tail);
 	/* want a circular linked list */
 	cam->next = cams_head;
 }

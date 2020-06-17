@@ -536,7 +536,7 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	Camera_CheckFocus();
 
 	end   = Stopwatch_Measure();
-	delta = Stopwatch_ElapsedMilliseconds(map_receiveBeg, end);
+	delta = (int)Stopwatch_ElapsedMilliseconds(map_receiveBeg, end);
 	Platform_Log1("map loading took: %i", &delta);
 	map_begunLoading = false;
 	WoM_CheckSendWomID();
@@ -1404,20 +1404,14 @@ static float ReadFloat(cc_uint8* data) {
 
 static void CPE_DefineModel(cc_uint8* data) {
 	/* 115 = 1 + 64 + 1 + 2*4 + 3*4 + 2*3*4 + 2*2 + 1 */
-	cc_uint8 modelId = *data++;
-	struct CustomModel* customModel = &custom_models[modelId];
+	cc_uint8 id = *data++;
+	struct CustomModel* customModel = &custom_models[id];
 	String name;
 	cc_uint8 flags;
 	cc_uint8 numParts;
 
-	if (modelId >= MAX_CUSTOM_MODELS) {
-		return;
-	}
-
-	/* free existing */
-	if (customModel->initialized) {
-		CustomModel_Free(customModel);
-	}
+	if (id >= MAX_CUSTOM_MODELS) return;
+	CustomModel_Undefine(customModel);
 
 	/* read name */
 	name = UNSAFE_GetString(data);
@@ -1490,7 +1484,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 		"CustomModel vertices"
 	);
 
-	customModel->initialized = true;
+	customModel->defined = true;
 }
 
 static void CPE_DefineModelPart(cc_uint8* data) {
@@ -1503,7 +1497,7 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 
 	if (
 		modelId >= MAX_CUSTOM_MODELS ||
-		!customModel->initialized ||
+		!customModel->defined ||
 		customModel->curPartIndex >= customModel->numParts
 	) {
 		return;
@@ -1575,12 +1569,8 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 
 /* unregisters and frees the custom model */
 static void CPE_UndefineModel(cc_uint8* data) {
-	cc_uint8 modelId = *data++;
-	struct CustomModel* customModel = &custom_models[modelId];
-
-	if (modelId < MAX_CUSTOM_MODELS && customModel->initialized) {
-		CustomModel_Free(customModel);
-	}
+	cc_uint8 id = data[0];
+	if (id < MAX_CUSTOM_MODELS) CustomModel_Undefine(&custom_models[id]);
 }
 
 static void CPE_Reset(void) {

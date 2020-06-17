@@ -229,7 +229,7 @@ static cc_bool Commands_IsCommandPrefix(const String* str) {
 }
 
 void Commands_Register(struct ChatCommand* cmd) {
-	LinkedList_Add(cmd, cmds_head, cmds_tail);
+	LinkedList_Append(cmd, cmds_head, cmds_tail);
 }
 
 static struct ChatCommand* Commands_FindMatch(const String* cmdName) {
