@@ -17,12 +17,18 @@ int String_CalcLen(const char* raw, int capacity) {
 	return length;
 }
 
+int String_Length(const char* raw) {
+	int length = 0;
+	while (length < UInt16_MaxValue && *raw) { raw++; length++; }
+	return length;
+}
+
 String String_FromRaw(STRING_REF char* buffer, int capacity) {
 	return String_Init(buffer, String_CalcLen(buffer, capacity), capacity);
 }
 
 String String_FromReadonly(STRING_REF const char* buffer) {
-	int len = String_CalcLen(buffer, UInt16_MaxValue);
+	int len = String_Length(buffer);
 	return String_Init((char*)buffer, len, len);
 }
 
@@ -415,27 +421,26 @@ void String_Format3(String* str, const char* format, const void* a1, const void*
 	String_Format4(str, format, a1, a2, a3, NULL);
 }
 void String_Format4(String* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
-	String formatStr = String_FromReadonly(format);
 	const void* arg;
 	int i, j = 0, digits;
 
 	const void* args[4];
 	args[0] = a1; args[1] = a2; args[2] = a3; args[3] = a4;
 
-	for (i = 0; i < formatStr.length; i++) {
-		if (formatStr.buffer[i] != '%') { String_Append(str, formatStr.buffer[i]); continue; }
+	for (i = 0; format[i]; i++) {
+		if (format[i] != '%') { String_Append(str, format[i]); continue; }
 		arg = args[j++];
 
-		switch (formatStr.buffer[++i]) {
+		switch (format[++i]) {
 		case 'b': 
 			String_AppendInt(str, *((cc_uint8*)arg)); break;
 		case 'i': 
 			String_AppendInt(str, *((int*)arg)); break;
 		case 'f': 
-			digits = formatStr.buffer[++i] - '0';
+			digits = format[++i] - '0';
 			String_AppendFloat(str, *((float*)arg), digits); break;
 		case 'p':
-			digits = formatStr.buffer[++i] - '0';
+			digits = format[++i] - '0';
 			String_AppendPaddedInt(str, *((int*)arg), digits); break;
 		case 't': 
 			String_AppendBool(str, *((cc_bool*)arg)); break;

@@ -161,7 +161,7 @@ void Clipboard_GetText(String* value) {
 	char* ptr = SDL_GetClipboardText();
 	if (!ptr) return;
 
-	int len = String_CalcLen(ptr, UInt16_MaxValue);
+	int len = String_Length(ptr);
 	String_AppendUtf8(value, ptr, len);
 	SDL_free(ptr);
 }
@@ -2824,7 +2824,7 @@ static void ProcessKeyChars(id ev) {
 
 	chars = objc_msgSend(ev,    selCharacters);
 	src   = objc_msgSend(chars, selUtf8String);
-	len   = String_CalcLen(src, UInt16_MaxValue);
+	len   = String_Length(src);
 	String_InitArray(str, buffer);
 
 	String_AppendUtf8(&str, src, len);

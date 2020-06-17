@@ -204,31 +204,31 @@ void Resources_CheckExistence(void) {
 *---------------------------------------------------------Zip writer------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_result ZipPatcher_LocalFile(struct Stream* s, struct ResourceTexture* e) {
-	String name = String_FromReadonly(e->filename);
+	int filenameLen = String_Length(e->filename);
 	cc_uint8 header[30 + STRING_SIZE];
 	cc_result res;
 	if ((res = s->Position(s, &e->offset))) return res;
 
-	Stream_SetU32_LE(&header[0], 0x04034b50);   /* signature */
-	Stream_SetU16_LE(&header[4],  20);          /* version needed */
-	Stream_SetU16_LE(&header[6],  0);           /* bitflags */
-	Stream_SetU16_LE(&header[8] , 0);           /* compression method */
-	Stream_SetU16_LE(&header[10], 0);           /* last modified */
-	Stream_SetU16_LE(&header[12], 0);           /* last modified */
+	Stream_SetU32_LE(header + 0,  0x04034b50);  /* signature */
+	Stream_SetU16_LE(header + 4,  20);          /* version needed */
+	Stream_SetU16_LE(header + 6,  0);           /* bitflags */
+	Stream_SetU16_LE(header + 8,  0);           /* compression method */
+	Stream_SetU16_LE(header + 10, 0);           /* last modified */
+	Stream_SetU16_LE(header + 12, 0);           /* last modified */
 	
-	Stream_SetU32_LE(&header[14], e->crc32);    /* CRC32 */
-	Stream_SetU32_LE(&header[18], e->size);     /* Compressed size */
-	Stream_SetU32_LE(&header[22], e->size);     /* Uncompressed size */
+	Stream_SetU32_LE(header + 14, e->crc32);    /* CRC32 */
+	Stream_SetU32_LE(header + 18, e->size);     /* Compressed size */
+	Stream_SetU32_LE(header + 22, e->size);     /* Uncompressed size */
 	 
-	Stream_SetU16_LE(&header[26], name.length); /* name length */
-	Stream_SetU16_LE(&header[28], 0);           /* extra field length */
+	Stream_SetU16_LE(header + 26, filenameLen); /* name length */
+	Stream_SetU16_LE(header + 28, 0);           /* extra field length */
 
-	Mem_Copy(&header[30], name.buffer, name.length);
-	return Stream_Write(s, header, 30 + name.length);
+	Mem_Copy(header + 30, e->filename, filenameLen);
+	return Stream_Write(s, header, 30 + filenameLen);
 }
 
 static cc_result ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture* e) {
-	String name = String_FromReadonly(e->filename);
+	int filenameLen = String_Length(e->filename);
 	cc_uint8 header[46 + STRING_SIZE];
 	struct DateTime now;
 	int modTime, modDate;
@@ -237,52 +237,52 @@ static cc_result ZipPatcher_CentralDir(struct Stream* s, struct ResourceTexture*
 	modTime = (now.second / 2) | (now.minute << 5) | (now.hour << 11);
 	modDate = (now.day) | (now.month << 5) | ((now.year - 1980) << 9);
 
-	Stream_SetU32_LE(&header[0],  0x02014b50);  /* signature */
-	Stream_SetU16_LE(&header[4],  20);          /* version */
-	Stream_SetU16_LE(&header[6],  20);          /* version needed */
-	Stream_SetU16_LE(&header[8],  0);           /* bitflags */
-	Stream_SetU16_LE(&header[10], 0);           /* compression method */
-	Stream_SetU16_LE(&header[12], modTime);     /* last modified */
-	Stream_SetU16_LE(&header[14], modDate);     /* last modified */
+	Stream_SetU32_LE(header + 0,  0x02014b50);  /* signature */
+	Stream_SetU16_LE(header + 4,  20);          /* version */
+	Stream_SetU16_LE(header + 6,  20);          /* version needed */
+	Stream_SetU16_LE(header + 8,  0);           /* bitflags */
+	Stream_SetU16_LE(header + 10, 0);           /* compression method */
+	Stream_SetU16_LE(header + 12, modTime);     /* last modified */
+	Stream_SetU16_LE(header + 14, modDate);     /* last modified */
 
-	Stream_SetU32_LE(&header[16], e->crc32);    /* CRC32 */
-	Stream_SetU32_LE(&header[20], e->size);     /* compressed size */
-	Stream_SetU32_LE(&header[24], e->size);     /* uncompressed size */
+	Stream_SetU32_LE(header + 16, e->crc32);    /* CRC32 */
+	Stream_SetU32_LE(header + 20, e->size);     /* compressed size */
+	Stream_SetU32_LE(header + 24, e->size);     /* uncompressed size */
 
-	Stream_SetU16_LE(&header[28], name.length); /* name length */
-	Stream_SetU16_LE(&header[30], 0);           /* extra field length */
-	Stream_SetU16_LE(&header[32], 0);           /* file comment length */
-	Stream_SetU16_LE(&header[34], 0);           /* disk number */
-	Stream_SetU16_LE(&header[36], 0);           /* internal attributes */
-	Stream_SetU32_LE(&header[38], 0);           /* external attributes */
-	Stream_SetU32_LE(&header[42], e->offset);   /* local header offset */
+	Stream_SetU16_LE(header + 28, filenameLen); /* name length */
+	Stream_SetU16_LE(header + 30, 0);           /* extra field length */
+	Stream_SetU16_LE(header + 32, 0);           /* file comment length */
+	Stream_SetU16_LE(header + 34, 0);           /* disk number */
+	Stream_SetU16_LE(header + 36, 0);           /* internal attributes */
+	Stream_SetU32_LE(header + 38, 0);           /* external attributes */
+	Stream_SetU32_LE(header + 42, e->offset);   /* local header offset */
 
-	Mem_Copy(&header[46], name.buffer, name.length);
-	return Stream_Write(s, header, 46 + name.length);
+	Mem_Copy(header + 46, e->filename, filenameLen);
+	return Stream_Write(s, header, 46 + filenameLen);
 }
 
 static cc_result ZipPatcher_EndOfCentralDir(struct Stream* s, cc_uint32 centralDirBeg, cc_uint32 centralDirEnd) {
 	cc_uint8 header[22];
 
-	Stream_SetU32_LE(&header[0], 0x06054b50); /* signature */
-	Stream_SetU16_LE(&header[4], 0);          /* disk number */
-	Stream_SetU16_LE(&header[6], 0);          /* disk number of start */
-	Stream_SetU16_LE(&header[8],  Array_Elems(textureResources));  /* disk entries */
-	Stream_SetU16_LE(&header[10], Array_Elems(textureResources));  /* total entries */
-	Stream_SetU32_LE(&header[12], centralDirEnd - centralDirBeg);  /* central dir size */
-	Stream_SetU32_LE(&header[16], centralDirBeg);                  /* central dir start */
-	Stream_SetU16_LE(&header[20], 0);         /* comment length */
+	Stream_SetU32_LE(header + 0,  0x06054b50); /* signature */
+	Stream_SetU16_LE(header + 4,  0);          /* disk number */
+	Stream_SetU16_LE(header + 6,  0);          /* disk number of start */
+	Stream_SetU16_LE(header + 8,  Array_Elems(textureResources));  /* disk entries */
+	Stream_SetU16_LE(header + 10, Array_Elems(textureResources));  /* total entries */
+	Stream_SetU32_LE(header + 12, centralDirEnd - centralDirBeg);  /* central dir size */
+	Stream_SetU32_LE(header + 16, centralDirBeg);                  /* central dir start */
+	Stream_SetU16_LE(header + 20, 0);         /* comment length */
 	return Stream_Write(s, header, 22);
 }
 
 static cc_result ZipPatcher_FixupLocalFile(struct Stream* s, struct ResourceTexture* e) {
-	String name = String_FromReadonly(e->filename);
+	int filenameLen = String_Length(e->filename);
 	cc_uint8 tmp[2048];
 	cc_uint32 dataBeg, dataEnd;
 	cc_uint32 i, crc, toRead, read;
 	cc_result res;
 
-	dataBeg = e->offset + 30 + name.length;
+	dataBeg = e->offset + 30 + filenameLen;
 	if ((res = s->Position(s, &dataEnd))) return res;
 	e->size = dataEnd - dataBeg;
 
@@ -619,20 +619,20 @@ static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx) 
 	res = s->Seek(s, 0);
 	if (res) { Logger_Warn(res, "seeking to .wav start"); return; }
 
-	Stream_SetU32_BE(&header[0],  WAV_FourCC('R','I','F','F'));
-	Stream_SetU32_LE(&header[4],  length - 8);
-	Stream_SetU32_BE(&header[8],  WAV_FourCC('W','A','V','E'));
-	Stream_SetU32_BE(&header[12], WAV_FourCC('f','m','t',' '));
-	Stream_SetU32_LE(&header[16], 16); /* fmt chunk size */
-	Stream_SetU16_LE(&header[20], 1);  /* PCM audio format */
-	Stream_SetU16_LE(&header[22], ctx->channels);
-	Stream_SetU32_LE(&header[24], ctx->sampleRate);
+	Stream_SetU32_BE(header + 0,  WAV_FourCC('R','I','F','F'));
+	Stream_SetU32_LE(header + 4,  length - 8);
+	Stream_SetU32_BE(header + 8,  WAV_FourCC('W','A','V','E'));
+	Stream_SetU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
+	Stream_SetU32_LE(header + 16, 16); /* fmt chunk size */
+	Stream_SetU16_LE(header + 20, 1);  /* PCM audio format */
+	Stream_SetU16_LE(header + 22, ctx->channels);
+	Stream_SetU32_LE(header + 24, ctx->sampleRate);
 
-	Stream_SetU32_LE(&header[28], ctx->sampleRate * ctx->channels * 2); /* byte rate */
-	Stream_SetU16_LE(&header[32], ctx->channels * 2);                   /* block align */
-	Stream_SetU16_LE(&header[34], 16);                                  /* bits per sample */
-	Stream_SetU32_BE(&header[36], WAV_FourCC('d','a','t','a'));
-	Stream_SetU32_LE(&header[40], length - sizeof(header));
+	Stream_SetU32_LE(header + 28, ctx->sampleRate * ctx->channels * 2); /* byte rate */
+	Stream_SetU16_LE(header + 32, ctx->channels * 2);                   /* block align */
+	Stream_SetU16_LE(header + 34, 16);                                  /* bits per sample */
+	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
+	Stream_SetU32_LE(header + 40, length - sizeof(header));
 
 	res = Stream_Write(s, header, sizeof(header));
 	if (res) Logger_Warn(res, "fixing .wav header");

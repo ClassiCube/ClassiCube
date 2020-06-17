@@ -482,7 +482,7 @@ cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallbac
 		if (src[0] == '.' && src[1] == '\0') continue;
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
-		len = String_CalcLen(src, UInt16_MaxValue);
+		len = String_Length(src);
 		Platform_DecodeString(&path, src, len);
 
 		/* TODO: fallback to stat when this fails */

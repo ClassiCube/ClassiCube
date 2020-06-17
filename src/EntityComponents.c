@@ -177,7 +177,7 @@ static String HacksComp_UNSAFE_FlagValue(const char* flag, struct HacksComp* hac
 
 	beg = String_IndexOfConst(joined, flag);
 	if (beg < 0) return String_Empty;
-	beg += String_CalcLen(flag, UInt16_MaxValue);
+	beg += String_Length(flag);
 
 	end = String_IndexOfAt(joined, beg, ' ');
 	if (end < 0) end = joined->length;
