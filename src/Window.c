@@ -2567,7 +2567,7 @@ static void RegisterSelectors(void) {
 	selKeycode   = sel_registerName("keyCode");
 	selModifiers = sel_registerName("modifierFlags");
 
-	selCharacters = sel_registerName("charactersIgnoringModifiers");
+	selCharacters = sel_registerName("characters");
 	selUtf8String = sel_registerName("UTF8String");
 	selMouseLoc   = sel_registerName("mouseLocation");
 
@@ -2863,7 +2863,7 @@ void Window_ProcessEvents(void) {
 		case  4: /* NSRightMouseUp */
 		case 26: /* NSOtherMouseUp */
 			key = Window_MapMouse((int)objc_msgSend(ev, selButton));
-			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key, false);
+			if (key) Input_SetPressed(key, false);
 			break;
 
 		case 10: /* NSKeyDown */
