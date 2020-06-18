@@ -2669,6 +2669,14 @@ static Class Window_MakeClass(void) {
 	return c;
 }
 
+/* When the user users left mouse to drag reisze window, this enters 'live resize' mode */
+/*   Although the game receives a left mouse down event, it does NOT receive a left mouse up */
+/*   This causes the game to get stuck with left mouse down after user finishes resizing */
+/* So work arond that by always releasing left mouse when a live resize is finished */
+static void DidEndLiveResize(id self, SEL cmd) {
+	Input_SetPressed(KEY_LMOUSE, false);
+}
+
 static void View_DrawRect(id self, SEL cmd, CGRect r);
 static void MakeContentView(void) {
 	CGRect rect;
@@ -2685,6 +2693,7 @@ static void MakeContentView(void) {
 #else
 	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=dd}{NSSize=dd}}");
 #endif
+	class_addMethod(c, sel_registerName("viewDidEndLiveResize"), DidEndLiveResize, "v@:");
 	objc_registerClassPair(c);
 
 	viewHandle = objc_msgSend(c, sel_registerName("alloc"));
