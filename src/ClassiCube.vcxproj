@@ -233,7 +233,6 @@
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="Stream.h" />
-    <ClInclude Include="GameStructs.h" />
     <ClInclude Include="TexturePack.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="PackedCol.h" />

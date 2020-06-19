@@ -688,7 +688,7 @@ static void Blocks_Reset(void) {
 static void OnAtlasChanged(void* obj) { Block_RecalculateAllSpriteBB(); }
 static void Blocks_Init(void) {
 	int block;
-	for (block = BLOCK_AIR; block <= BLOCK_MAX_DEFINED; block++) {
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		Blocks.CanPlace[block]  = true;
 		Blocks.CanDelete[block] = true;
 	}

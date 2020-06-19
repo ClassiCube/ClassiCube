@@ -27,11 +27,8 @@ typedef int AudioHandle;
 
 /* Acquires an audio context. */
 void Audio_Open(AudioHandle* handle, int buffers);
-/* Frees an allocated audio context. */
-/* NOTE: Audio_StopAndClose should be used, because this method can fail if audio is playing. */
-cc_result Audio_Close(AudioHandle handle);
 /* Stops playing audio, unqueues buffers, then frees the audio context. */
-cc_result Audio_StopAndClose(AudioHandle handle);
+cc_result Audio_Close(AudioHandle handle);
 /* Returns the format audio is played in. */
 struct AudioFormat* Audio_GetFormat(AudioHandle handle);
 /* Sets the format audio to play is in. */

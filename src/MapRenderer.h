@@ -64,7 +64,6 @@ struct ChunkInfo {
 	struct ChunkPartInfo* TranslucentParts;
 };
 
-void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z);
 /* Gets the chunk at the given chunk coordinates in the world. */
 /* NOTE: Does NOT check coordinates are within bounds. */
 struct ChunkInfo* MapRenderer_GetChunk(int cx, int cy, int cz);

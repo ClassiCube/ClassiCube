@@ -50,7 +50,7 @@ struct ChunkInfo* MapRenderer_GetChunk(int cx, int cy, int cz) {
 	return &mapChunks[MapRenderer_Pack(cx, cy, cz)];
 }
 
-void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
+static void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->CentreX = x + HALF_CHUNK_SIZE; chunk->CentreY = y + HALF_CHUNK_SIZE; 
 	chunk->CentreZ = z + HALF_CHUNK_SIZE;
 #ifndef CC_BUILD_GL11

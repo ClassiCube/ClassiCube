@@ -1464,7 +1464,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 	/* read # CustomModelParts */
 	numParts = *data++;
 
-	if (numParts >= MAX_CUSTOM_MODEL_PARTS) {
+	if (numParts > MAX_CUSTOM_MODEL_PARTS) {
 		String msg; char msgBuffer[256];
 		String_InitArray(msg, msgBuffer);
 
