@@ -249,6 +249,7 @@ struct CustomModelPart {
 	cc_uint8 anim;
 
 	cc_bool fullbright;
+	cc_bool firstPersonArm;
 };
 
 struct CustomModel {
@@ -256,7 +257,6 @@ struct CustomModel {
 	struct ModelVertex* vertices;
 
 	char name[STRING_SIZE + 1];
-	cc_bool hideFirstPersonArm;
 	
 	float nameY;
 	float eyeY;
