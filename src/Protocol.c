@@ -1425,7 +1425,6 @@ static void CPE_DefineModel(cc_uint8* data) {
 	customModel->model.pushes         = (flags >> 1) & 1;
 	customModel->model.usesHumanSkin  = (flags >> 2) & 1;
 	customModel->model.calcHumanAnims = (flags >> 3) & 1;
-	customModel->hideFirstPersonArm   = (flags >> 4) & 1;
 
 	/* read nameY, eyeY */
 	customModel->nameY = ReadFloat(data);
@@ -1561,6 +1560,7 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	/* read bool flags */
 	flags = *data++;
 	part->fullbright = (flags >> 0) & 1;
+	part->firstPersonArm = (flags >> 1) & 1;
 
 	if (customModel->curPartIndex == customModel->numParts) {
 		/* we're the last part, so register our model */

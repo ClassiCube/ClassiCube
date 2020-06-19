@@ -642,14 +642,13 @@ static void CustomModel_GetPickingBounds(struct Entity* e) {
 static void CustomModel_DrawArm(struct Entity* e) {
 	int i;
 	struct CustomModel* cm = (struct CustomModel*)Models.Active;
-	if (cm->hideFirstPersonArm) return;
 
 	Models.uScale = 1.0f / cm->uScale;
 	Models.vScale = 1.0f / cm->vScale;
 
 	for (i = 0; i < cm->numParts; i++) {
 		struct CustomModelPart* part = &cm->parts[i];
-		if (part->anim == CustomModelAnim_RightArm) {
+		if (part->firstPersonArm) {
 			Model_DrawArmPart(&part->modelPart);
 		}
 	}
