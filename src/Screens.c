@@ -1554,11 +1554,6 @@ static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
 	TextWidget_Set(&s->message, &s->messageStr, &s->font);
 }
 
-static void LoadingScreen_MapLoading(void* screen, float progress) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	s->progress = progress;
-}
-
 static void LoadingScreen_Layout(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	if (!s->title.VTABLE) return;
@@ -1627,6 +1622,14 @@ static void LoadingScreen_DrawBackground(void) {
 	LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
 }
 
+static void LoadingScreen_MapLoading(void* screen, float progress) {
+	((struct LoadingScreen*)screen)->progress = progress;
+}
+
+static void LoadingScreen_MapLoaded(void* screen, float progress) {
+	Gui_Remove((struct Screen*)screen);
+}
+
 static void LoadingScreen_Init(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 
@@ -1634,7 +1637,8 @@ static void LoadingScreen_Init(void* screen) {
 	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
 
 	Gfx_SetFog(false);
-	Event_RegisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
+	Event_RegisterFloat(&WorldEvents.Loading,  s, LoadingScreen_MapLoading);
+	Event_RegisterVoid(&WorldEvents.MapLoaded, s, LoadingScreen_MapLoaded);
 }
 
 #define PROG_BAR_WIDTH 200
@@ -1663,7 +1667,8 @@ static void LoadingScreen_Render(void* screen, double delta) {
 
 static void LoadingScreen_Free(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	Event_UnregisterFloat(&WorldEvents.Loading, s, LoadingScreen_MapLoading);
+	Event_UnregisterFloat(&WorldEvents.Loading,  s, LoadingScreen_MapLoading);
+	Event_UnregisterVoid(&WorldEvents.MapLoaded, s, LoadingScreen_MapLoaded);
 }
 
 CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const String* message) {
@@ -1693,7 +1698,6 @@ void LoadingScreen_Show(const String* title, const String* message) {
 	LoadingScreen.VTABLE = &LoadingScreen_VTABLE;
 	LoadingScreen_ShowCommon(title, message);
 }
-struct Screen* LoadingScreen_UNSAFE_RawPointer = (struct Screen*)&LoadingScreen;
 
 
 /*########################################################################################################################*
@@ -1718,9 +1722,7 @@ static void GeneratingScreen_EndGeneration(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	float x, z;
 
-	Gui_Remove((struct Screen*)&LoadingScreen);
-	Gen_Done = false;
-
+	Gen_Done   = false;
 	World_SetNewMap(Gen_Blocks, World.Width, World.Height, World.Length);
 	if (!Gen_Blocks) { Chat_AddRaw("&cFailed to generate the map."); return; }
 	Gen_Blocks = NULL;

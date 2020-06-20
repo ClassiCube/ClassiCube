@@ -47,8 +47,6 @@ void DisconnectScreen_Show(const String* title, const String* message);
 void TouchScreen_Show(void);
 #endif
 
-/* Raw pointer to loading screen. DO NOT USE THIS. Use LoadingScreen_MakeInstance() */
-extern struct Screen* LoadingScreen_UNSAFE_RawPointer;
 /* Opens chat input for the HUD with the given initial text. */
 void ChatScreen_OpenInput(const String* text);
 /* Appends text to the chat input in the HUD. */

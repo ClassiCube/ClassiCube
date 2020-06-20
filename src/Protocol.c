@@ -532,9 +532,6 @@ static void Classic_LevelFinalise(cc_uint8* data) {
 	cc_uint64 end;
 	int delta;
 
-	Gui_Remove(LoadingScreen_UNSAFE_RawPointer);
-	Camera_CheckFocus();
-
 	end   = Stopwatch_Measure();
 	delta = (int)Stopwatch_ElapsedMilliseconds(map_receiveBeg, end);
 	Platform_Log1("map loading took: %i", &delta);
@@ -568,9 +565,9 @@ static void Classic_SetBlock(cc_uint8* data) {
 	int x, y, z;
 	BlockID block;
 
-	x = Stream_GetU16_BE(&data[0]);
-	y = Stream_GetU16_BE(&data[2]);
-	z = Stream_GetU16_BE(&data[4]);
+	x = Stream_GetU16_BE(data + 0);
+	y = Stream_GetU16_BE(data + 2);
+	z = Stream_GetU16_BE(data + 4);
 	data += 6;
 
 	ReadBlock(data, block);
@@ -794,8 +791,8 @@ static void CPE_SendExtInfo(int extsCount) {
 	cc_uint8 data[67];
 	data[0] = OPCODE_EXT_INFO;
 	{
-		WriteString(&data[1],       &Server.AppName);
-		Stream_SetU16_BE(&data[65], extsCount);
+		WriteString(data + 1,       &Server.AppName);
+		Stream_SetU16_BE(data + 65, extsCount);
 	}
 	Server.SendData(data, 67);
 }
@@ -804,8 +801,8 @@ static void CPE_SendExtEntry(const String* extName, int extVersion) {
 	cc_uint8 data[69];
 	data[0] = OPCODE_EXT_ENTRY;
 	{
-		WriteString(&data[1], extName);
-		Stream_SetU32_BE(&data[65], extVersion);
+		WriteString(data + 1,       extName);
+		Stream_SetU32_BE(data + 65, extVersion);
 	}
 	Server.SendData(data, 69);
 }
