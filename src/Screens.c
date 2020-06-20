@@ -1626,7 +1626,7 @@ static void LoadingScreen_MapLoading(void* screen, float progress) {
 	((struct LoadingScreen*)screen)->progress = progress;
 }
 
-static void LoadingScreen_MapLoaded(void* screen, float progress) {
+static void LoadingScreen_MapLoaded(void* screen) {
 	Gui_Remove((struct Screen*)screen);
 }
 
