@@ -479,7 +479,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	if (bmp.Width > Gfx.MaxTexWidth || bmp.Height > Gfx.MaxTexHeight) {
 		Chat_Add1("&cSkin %s is too large", &skin);
-	} else if (e->SkinType != SKIN_INVALID) {
+	} else {
 		if (e->Model->usesHumanSkin) Entity_ClearHat(&bmp, e->SkinType);
 		e->TextureId = Gfx_CreateTexture(&bmp, true, false);
 		Entity_SetSkinAll(e, false);
