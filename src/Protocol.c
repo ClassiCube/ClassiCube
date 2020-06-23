@@ -99,6 +99,12 @@ static String UNSAFE_GetString(cc_uint8* data) {
 	return String_Init((char*)data, length, STRING_SIZE);
 }
 
+static float GetFloat(cc_uint8* data) {
+	union IntAndFloat raw;
+	raw.u = Stream_GetU32_BE(data);
+	return raw.f;
+}
+
 static void ReadString(cc_uint8** ptr, String* str) {
 	int i, length = 0;
 	cc_uint8* data = *ptr;
@@ -1391,75 +1397,44 @@ static void CPE_SpawnEffect(cc_uint8* data) {
 	Particles_CustomEffect(data[0], x, y, z, originX, originY, originZ);
 }
 
-/* CustomModels */
-
-static float ReadFloat(cc_uint8* data) {
-	union IntAndFloat raw;
-	raw.u = Stream_GetU32_BE(data);
-	return raw.f;
-}
-
 static void CPE_DefineModel(cc_uint8* data) {
-	/* 115 = 1 + 64 + 1 + 2*4 + 3*4 + 2*3*4 + 2*2 + 1 */
-	cc_uint8 id = *data++;
-	struct CustomModel* customModel = &custom_models[id];
+	cc_uint8 id = data[0];
+	struct CustomModel* cm = &custom_models[id];
 	String name;
 	cc_uint8 flags;
 	cc_uint8 numParts;
 
 	if (id >= MAX_CUSTOM_MODELS) return;
-	CustomModel_Undefine(customModel);
-	Model_Init(&customModel->model);
+	CustomModel_Undefine(cm);
+	Model_Init(&cm->model);
 
-	/* read name */
-	name = UNSAFE_GetString(data);
-	data += STRING_SIZE;
-	String_CopyToRawArray(customModel->name, &name);
+	name = UNSAFE_GetString(data + 1);
+	String_CopyToRawArray(cm->name, &name);
 
-	/* read bool flags */
-	flags = *data++;
-	customModel->model.bobbing        = (flags >> 0) & 1;
-	customModel->model.pushes         = (flags >> 1) & 1;
-	customModel->model.usesHumanSkin  = (flags >> 2) & 1;
-	customModel->model.calcHumanAnims = (flags >> 3) & 1;
+	flags = data[65];
+	cm->model.bobbing        = flags & 0x01;
+	cm->model.pushes         = flags & 0x02;
+	cm->model.usesHumanSkin  = flags & 0x04;
+	cm->model.calcHumanAnims = flags & 0x08;
 
-	/* read nameY, eyeY */
-	customModel->nameY = ReadFloat(data);
-	data += 4;
-	customModel->eyeY = ReadFloat(data);
-	data += 4;
+	cm->nameY = GetFloat(data + 66);
+	cm->eyeY  = GetFloat(data + 70);
 
-	/* read collisionBounds */
-	customModel->collisionBounds.X = ReadFloat(data);
-	data += 4;
-	customModel->collisionBounds.Y = ReadFloat(data);
-	data += 4;
-	customModel->collisionBounds.Z = ReadFloat(data);
-	data += 4;
+	cm->collisionBounds.X = GetFloat(data + 74);
+	cm->collisionBounds.Y = GetFloat(data + 78);
+	cm->collisionBounds.Z = GetFloat(data + 82);
 
-	/* read pickingBoundsAABB */
-	customModel->pickingBoundsAABB.Min.X = ReadFloat(data);
-	data += 4;
-	customModel->pickingBoundsAABB.Min.Y = ReadFloat(data);
-	data += 4;
-	customModel->pickingBoundsAABB.Min.Z = ReadFloat(data);
-	data += 4;
+	cm->pickingBoundsAABB.Min.X = GetFloat(data + 86);
+	cm->pickingBoundsAABB.Min.Y = GetFloat(data + 90);
+	cm->pickingBoundsAABB.Min.Z = GetFloat(data + 94);
 
-	customModel->pickingBoundsAABB.Max.X = ReadFloat(data);
-	data += 4;
-	customModel->pickingBoundsAABB.Max.Y = ReadFloat(data);
-	data += 4;
-	customModel->pickingBoundsAABB.Max.Z = ReadFloat(data);
-	data += 4;
+	cm->pickingBoundsAABB.Max.X = GetFloat(data + 98);
+	cm->pickingBoundsAABB.Max.Y = GetFloat(data + 102);
+	cm->pickingBoundsAABB.Max.Z = GetFloat(data + 106);
 
-	/* read uScale, vScale */
-	customModel->uScale = Stream_GetU16_BE(data);
-	data += 2;
-	customModel->vScale = Stream_GetU16_BE(data);
-	data += 2;
-
-	/* read # CustomModelParts */
-	numParts = *data++;
+	cm->uScale = Stream_GetU16_BE(data + 110);
+	cm->vScale = Stream_GetU16_BE(data + 112);
+	numParts   = data[114];
 
 	if (numParts > MAX_CUSTOM_MODEL_PARTS) {
 		String msg; char msgBuffer[256];
@@ -1474,14 +1449,13 @@ static void CPE_DefineModel(cc_uint8* data) {
 		return;
 	}
 
-	customModel->numParts = numParts;
-	customModel->vertices = Mem_AllocCleared(
+	cm->numParts = numParts;
+	cm->vertices = Mem_AllocCleared(
 		numParts * MODEL_BOX_VERTICES,
 		sizeof(struct ModelVertex),
 		"CustomModel vertices"
 	);
-
-	customModel->defined = true;
+	cm->defined = true;
 }
 
 static void CPE_DefineModelPart(cc_uint8* data) {
@@ -1504,18 +1478,18 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	customModel->curPartIndex++;
 
 	/* read min, max vec3 coords */
-	part->min.X = ReadFloat(data);
+	part->min.X = GetFloat(data);
 	data += 4;
-	part->min.Y = ReadFloat(data);
+	part->min.Y = GetFloat(data);
 	data += 4;
-	part->min.Z = ReadFloat(data);
+	part->min.Z = GetFloat(data);
 	data += 4;
 
-	part->max.X = ReadFloat(data);
+	part->max.X = GetFloat(data);
 	data += 4;
-	part->max.Y = ReadFloat(data);
+	part->max.Y = GetFloat(data);
 	data += 4;
-	part->max.Z = ReadFloat(data);
+	part->max.Z = GetFloat(data);
 	data += 4;
 
 	/* read u, v coords for our 6 faces */
@@ -1532,26 +1506,26 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	}
 
 	/* read rotation origin point */
-	part->rotationOrigin.X = ReadFloat(data);
+	part->rotationOrigin.X = GetFloat(data);
 	data += 4;
-	part->rotationOrigin.Y = ReadFloat(data);
+	part->rotationOrigin.Y = GetFloat(data);
 	data += 4;
-	part->rotationOrigin.Z = ReadFloat(data);
+	part->rotationOrigin.Z = GetFloat(data);
 	data += 4;
 
 	/* read rotation angles */
-	part->rotation.X = ReadFloat(data);
+	part->rotation.X = GetFloat(data);
 	data += 4;
-	part->rotation.Y = ReadFloat(data);
+	part->rotation.Y = GetFloat(data);
 	data += 4;
-	part->rotation.Z = ReadFloat(data);
+	part->rotation.Z = GetFloat(data);
 	data += 4;
 
 	/* read anim */
 	part->anim = *data++;
 
 	/* read animModifier */
-	part->animModifier = ReadFloat(data);
+	part->animModifier = GetFloat(data);
 	data += 4;
 
 	/* read bool flags */
@@ -1756,34 +1730,6 @@ static void BlockDefs_DefineBlockExt(cc_uint8* data) {
 	BlockDefs_DefineBlockCommonEnd(data, 1, block);
 }
 
-#if 0
-void HandleDefineModel(cc_uint8* data) {
-	int start = reader.index - 1;
-	cc_uint8 id   = *data++;
-	cc_uint8 type = *data++;
-	CustomModel model = null;
-
-	switch (type) {
-	case 0:
-		model = new CustomModel(game);
-		model.ReadSetupPacket(reader);
-		game.ModelCache.CustomModels[id] = model;
-		break;
-	case 1:
-		model = game.ModelCache.CustomModels[id];
-		if (model != null) model.ReadMetadataPacket(reader);
-		break;
-	case 2:
-		model = game.ModelCache.CustomModels[id];
-		if (model != null) model.ReadDefinePartPacket(reader);
-		break;
-	case 3:
-		model = game.ModelCache.CustomModels[id];
-		if (model != null) model.ReadRotationPacket(reader);
-		break;
-	}
-}
-#endif
 static void BlockDefs_Reset(void) {
 	if (!Game_UseCPE || !Game_AllowCustomBlocks) return;
 	Net_Set(OPCODE_DEFINE_BLOCK,     BlockDefs_DefineBlock,    80);
