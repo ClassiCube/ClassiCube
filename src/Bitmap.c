@@ -48,7 +48,7 @@ void Bitmap_Scale(Bitmap* dst, Bitmap* src, int srcX, int srcY, int srcWidth, in
 	BitmapCol* srcRow;
 	int x, y, width, height;
 
-	width = dst->Width;
+	width  = dst->Width;
 	height = dst->Height;
 
 	for (y = 0; y < height; y++) {

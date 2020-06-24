@@ -2829,7 +2829,13 @@ static void ProcessKeyChars(id ev) {
 	const char* src;
 	String str;
 	id chars;
-	int i, len;
+	int i, len, flags;
+
+	/* Ignore text input while cmd is held down */
+	/* e.g. so Cmd + V to paste doesn't leave behind 'v' */
+	flags = (int)objc_msgSend(ev, selModifiers);
+	if (flags & 0x000008) return;
+	if (flags & 0x000010) return;
 
 	chars = objc_msgSend(ev,    selCharacters);
 	src   = objc_msgSend(chars, selUtf8String);
