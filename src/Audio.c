@@ -145,12 +145,12 @@ static cc_bool LoadALFuncs(void) {
 static cc_result CreateALContext(void) {
 	ALenum err;
 	audio_device = _alcOpenDevice(NULL);
-	if (!audio_device)  return AL_ERR_INIT_DEVICE;
 	if ((err = _alcGetError(audio_device))) return err;
+	if (!audio_device)  return AL_ERR_INIT_DEVICE;
 
 	audio_context = _alcCreateContext(audio_device, NULL);
-	if (!audio_context) return AL_ERR_INIT_CONTEXT;
 	if ((err = _alcGetError(audio_device))) return err;
+	if (!audio_context) return AL_ERR_INIT_CONTEXT;
 
 	_alcMakeContextCurrent(audio_context);
 	return _alcGetError(audio_device);
