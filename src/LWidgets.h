@@ -4,7 +4,7 @@
 #include "Constants.h"
 #include "String.h"
 /* Describes and manages individual 2D GUI elements in the launcher.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct LScreen;
 struct FontDesc;

@@ -4,7 +4,7 @@
 #include "Utils.h"
 /* Aysnchronously performs http GET, HEAD, and POST requests.
    Typically this is used to download skins, texture packs, etc.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 struct ScheduledTask;

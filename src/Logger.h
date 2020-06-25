@@ -2,7 +2,7 @@
 #define CC_LOGGER_H
 #include "String.h"
 /* Support methods for logging errors.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
 typedef cc_bool (*Logger_DescribeError)(cc_result res, String* dst);

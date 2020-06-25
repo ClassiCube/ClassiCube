@@ -1628,7 +1628,7 @@ static void Platform_InitStopwatch(void) {
 	sw_freqMul = tb.numer;
 	/* tb.denom may be large, so multiplying by 1000 overflows 32 bits */
 	/* (one powerpc system had tb.denom of 33329426) */
-	sw_freqDiv = (cc_int64)tb.denom * 1000;
+	sw_freqDiv = (cc_uint64)tb.denom * 1000;
 }
 
 void Platform_Init(void) {

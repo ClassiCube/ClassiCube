@@ -2,7 +2,7 @@
 #define CC_LSCREENS_H
 #include "Core.h"
 /* Implements screens/menus for the launcher.
-	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+	Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct LWidget;
 struct LScreen;

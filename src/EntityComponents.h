@@ -4,7 +4,7 @@
 #include "String.h"
 #include "Constants.h"
 /* Various components for entities.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
 struct Entity;

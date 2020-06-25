@@ -5,7 +5,7 @@
 #include "PackedCol.h"
 
 /* Abstracts a 3D graphics rendering API.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct Stream;
 

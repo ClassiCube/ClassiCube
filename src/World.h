@@ -4,7 +4,7 @@
 #include "PackedCol.h"
 /* Represents a fixed size 3D array of blocks.
    Also contains associated environment metadata.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct AABB;
 

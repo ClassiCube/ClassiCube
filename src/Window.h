@@ -3,7 +3,7 @@
 #include "String.h"
 #include "Bitmap.h"
 /* Abstracts creating and managing the native window.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3 | Based on OpenTK code
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3 | Based on OpenTK code
 */
 
 /*

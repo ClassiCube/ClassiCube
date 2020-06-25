@@ -1,4 +1,4 @@
-﻿Copyright (c) 2014 - 2019, UnknownShadow200
+﻿Copyright (c) 2014 - 2020, UnknownShadow200
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, 
@@ -11,7 +11,7 @@ list of conditions and the following disclaimer.
 list of conditions and the following disclaimer in the documentation and/or other 
 materials provided with the distribution.
 
-3. Neither the name of ClassicalSharp nor the names of its contributors may be 
+3. Neither the name of ClassiCube nor the names of its contributors may be 
 used to endorse or promote products derived from this software without specific prior 
 written permission.
 

@@ -4,7 +4,7 @@
 #include "Constants.h"
 #include "Bitmap.h"
 /*  Performs a variety of drawing operations on bitmaps, and converts bitmaps into textures.
-	Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+	Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
 struct FontDesc { void* handle; cc_uint16 size, style; int height; };

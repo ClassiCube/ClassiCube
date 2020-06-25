@@ -5,7 +5,7 @@
    Also implements conversions betweens strings and numbers.
    Also implements converting code page 437 indices to/from unicode.
    Also implements wrapping a single line of text into multiple lines.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
 #define STRING_INT_CHARS 24

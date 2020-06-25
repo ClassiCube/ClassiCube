@@ -3,7 +3,7 @@
 #include "String.h"
 #include "Bitmap.h"
 /* Implements various utility functions.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */

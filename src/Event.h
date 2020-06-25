@@ -3,7 +3,7 @@
 #include "String.h"
 #include "Vectors.h"
 /* Helper methods for using events, and contains all events.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
 /* Max callbacks that can be registered for an event. */

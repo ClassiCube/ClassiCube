@@ -3,7 +3,7 @@
 #include "Input.h"
 #include "Vectors.h"
 /* Represents a connection to either a multiplayer or an internal singleplayer server.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
 struct RayTracer;

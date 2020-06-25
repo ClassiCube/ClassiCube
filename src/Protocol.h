@@ -3,7 +3,7 @@
 #include "String.h"
 #include "Vectors.h"
 /* Implements network protocols for original classic, CPE, and WoM textures.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
 enum OPCODE_ {

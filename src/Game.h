@@ -3,7 +3,7 @@
 #include "String.h"
 #include "Bitmap.h"
 /* Represents the game and related structures.
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
 struct Stream;

@@ -7,7 +7,7 @@
 	- Caching terrain atlases and texture packs to avoid redundant downloads
 	- Terrain atlas (including breaking it down into multiple 1D atlases)
 	- Texture animations (including default water/lava ones)
-   Copyright 2014-2019 ClassiCube | Licensed under BSD-3 */
+   Copyright 2014-2020 ClassiCube | Licensed under BSD-3 */
 
 struct Stream;
 struct HttpRequest;
