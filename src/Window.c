@@ -3256,6 +3256,12 @@ static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* dat
 	return true;
 }
 
+/* Really old emscripten versions (e.g. 1.38.21) don't have this defined */
+/* Can't just use "#window", newer versions switched to const int instead */
+#ifndef EMSCRIPTEN_EVENT_TARGET_WINDOW
+#define EMSCRIPTEN_EVENT_TARGET_WINDOW "#window"
+#endif
+
 static void HookEvents(void) {
 	emscripten_set_wheel_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnMouseWheel);
 	emscripten_set_mousedown_callback("#canvas",                  NULL, 0, OnMouseButton);
