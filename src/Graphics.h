@@ -23,9 +23,9 @@ typedef enum MatrixType_ {
 #define SIZEOF_VERTEX_TEXTURED 24
 
 /* 3 floats for position (XYZ), 4 bytes for colour. */
-typedef struct VertexColoured { float X, Y, Z; PackedCol Col; } VertexP3fC4b;
+struct VertexColoured { float X, Y, Z; PackedCol Col; };
 /* 3 floats for position (XYZ), 2 floats for texture coordinates (UV), 4 bytes for colour. */
-typedef struct VertexTextured { float X, Y, Z; PackedCol Col; float U, V; } VertexP3fT2fC4b;
+struct VertexTextured { float X, Y, Z; PackedCol Col; float U, V; };
 
 void Gfx_Init(void);
 void Gfx_Free(void);
@@ -34,12 +34,12 @@ CC_VAR extern struct _GfxData {
 	/* Maximum dimensions textures can be created up to. (usually 1024 to 16384) */
 	int MaxTexWidth, MaxTexHeight;
 	float MinZNear;
-	/* Whether context graphics has been lost (all creation/render fails) */
+	/* Whether context graphics has been lost (all creation/render calls fail) */
 	cc_bool LostContext;
 	/* Whether some textures are created with mipmaps. */
 	cc_bool Mipmaps;
-	/* Whether mipmaps must be created for all dimensions down to 1x1 or not. */
-	cc_bool CustomMipmapsLevels;
+	/* Whether managed textures are actually supported. */
+	cc_bool ManagedTextures;
 	/* Whether Gfx_Init has been called to initialise state. */
 	cc_bool Initialised;
 	struct Matrix View, Projection;

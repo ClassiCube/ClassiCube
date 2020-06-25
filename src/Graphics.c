@@ -23,7 +23,10 @@ GfxResourceID Gfx_defaultIb;
 GfxResourceID Gfx_quadVb, Gfx_texVb;
 
 static const int strideSizes[2] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
-static int gfx_batchStride, gfx_batchFormat = -1;
+/* Current format and size of vertices */
+static int curStride, curFormat = -1;
+/* Whether mipmaps must be created for all dimensions down to 1x1 or not */
+static cc_bool customMipmapsLevels;
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static float gfx_minFrameMs;
@@ -264,7 +267,7 @@ static void GenMipmaps(int width, int height, cc_uint8* lvlScan0, cc_uint8* scan
 /* Returns the maximum number of mipmaps levels used for given size. */
 static CC_NOINLINE int CalcMipmapsLevels(int width, int height) {
 	int lvlsWidth = Math_Log2(width), lvlsHeight = Math_Log2(height);
-	if (Gfx.CustomMipmapsLevels) {
+	if (customMipmapsLevels) {
 		int lvls = min(lvlsWidth, lvlsHeight);
 		return min(lvls, 4);
 	} else {
@@ -401,8 +404,8 @@ void Gfx_Init(void) {
 	FindCompatibleViewFormat();
 	FindCompatibleDepthFormat();
 
-	Gfx.MinZNear            = 0.05f;
-	Gfx.CustomMipmapsLevels = true;
+	Gfx.MinZNear        = 0.05f;
+	customMipmapsLevels = true;
 	CommonInit();
 	TryCreateDevice();
 }
@@ -437,7 +440,7 @@ static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
 	Gfx_SetFaceCulling(false);
 	InitDefaultResources();
-	gfx_batchFormat = -1;
+	curFormat = -1;
 
 	IDirect3DDevice9_SetRenderState(device, D3DRS_COLORVERTEX,       false);
 	IDirect3DDevice9_SetRenderState(device, D3DRS_LIGHTING,          false);
@@ -773,7 +776,7 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 
 void Gfx_BindVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
-	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_batchStride);
+	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, curStride);
 	if (res) Logger_Abort2(res, "D3D9_BindVb");
 }
 
@@ -791,12 +794,12 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	cc_result res;
-	if (fmt == gfx_batchFormat) return;
-	gfx_batchFormat = fmt;
+	if (fmt == curFormat) return;
+	curFormat = fmt;
 
 	res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
-	if (res) Logger_Abort2(res, "D3D9_SetBatchFormat");
-	gfx_batchStride = strideSizes[fmt];
+	if (res) Logger_Abort2(res, "D3D9_SetVertexFormat");
+	curStride = strideSizes[fmt];
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -838,11 +841,11 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	int size = vCount * gfx_batchStride;
+	int size = vCount * curStride;
 	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
 	D3D9_SetVbData(buffer, vertices, size, D3DLOCK_DISCARD);
 
-	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_batchStride);
+	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, curStride);
 	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
 }
 
@@ -1147,7 +1150,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 
 	if (mipmaps) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		if (Gfx.CustomMipmapsLevels) {
+		if (customMipmapsLevels) {
 			int lvls = CalcMipmapsLevels(bmp->Width, bmp->Height);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, lvls);
 		}
@@ -1275,7 +1278,7 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 #else
 static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int count) {
 	/* We need to restore client state afer building the list */
-	int curFormat  = gfx_batchFormat;
+	int realFormat = curFormat;
 	void* dyn_data = dynamicListData;
 	Gfx_SetVertexFormat(fmt);
 	dynamicListData = vertices;
@@ -1285,7 +1288,7 @@ static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int
 	glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, gl_indices);
 	glEndList();
 
-	Gfx_SetVertexFormat(curFormat);
+	Gfx_SetVertexFormat(realFormat);
 	dynamicListData = dyn_data;
 }
 
@@ -1345,7 +1348,7 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	cc_uint32 size = vCount * gfx_batchStride;
+	cc_uint32 size = vCount * curStride;
 	_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
 	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
 }
@@ -1370,7 +1373,7 @@ void  Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindDynamicVb(vb); }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Gfx_BindDynamicVb(vb);
-	Mem_Copy((void*)vb, vertices, vCount * gfx_batchStride);
+	Mem_Copy((void*)vb, vertices, vCount * curStride);
 }
 #endif
 
@@ -1703,7 +1706,7 @@ static void SwitchProgram(void) {
 		if (gfx_fogMode >= 1) index += 6; /* exp fog */
 	}
 
-	if (gfx_batchFormat == VERTEX_FORMAT_TEXTURED) index += 2;
+	if (curFormat == VERTEX_FORMAT_TEXTURED) index += 2;
 	if (gfx_texTransform) index += 2;
 	if (gfx_alphaTest)    index += 1;
 
@@ -1773,7 +1776,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 
 static void GL_CheckSupport(void) {
 #ifndef CC_BUILD_GLES
-	Gfx.CustomMipmapsLevels = true;
+	customMipmapsLevels = true;
 #endif
 }
 
@@ -1792,7 +1795,7 @@ static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-	gfx_batchFormat = -1;
+	curFormat = -1;
 
 	DirtyUniform(UNI_MASK_ALL);
 	GL_ClearCol(gfx_clearCol);
@@ -1826,9 +1829,9 @@ static void GL_SetupVbTextured_Range(int startVertex) {
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_batchFormat) return;
-	gfx_batchFormat = fmt;
-	gfx_batchStride = strideSizes[fmt];
+	if (fmt == curFormat) return;
+	curFormat = fmt;
+	curStride = strideSizes[fmt];
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		glEnableVertexAttribArray(2);
@@ -1928,7 +1931,7 @@ static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
-	gfx_batchFormat = -1;
+	curFormat = -1;
 
 	glHint(GL_FOG_HINT, GL_NICEST);
 	glAlphaFunc(GL_GREATER, 0.5f);
@@ -1993,9 +1996,9 @@ static void GL_SetupVbTextured_Range(int startVertex) {
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == gfx_batchFormat) return;
-	gfx_batchFormat = fmt;
-	gfx_batchStride = strideSizes[fmt];
+	if (fmt == curFormat) return;
+	curFormat = fmt;
+	curStride = strideSizes[fmt];
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -2063,7 +2066,7 @@ static void GL_CheckSupport(void) {
 		Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
 			"Compile the game with CC_BUILD_GL11, or ask on the classicube forums for it");
 	}
-	Gfx.CustomMipmapsLevels = true;
+	customMipmapsLevels = true;
 }
 #else
 void Gfx_DrawIndexedVb_TrisT2fC4b(int list, int ignored) { glCallList(list); }
