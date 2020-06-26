@@ -617,15 +617,14 @@ static void Entities_ContextLost(void* obj) {
 		Entity_ContextLost(Entities.List[i]);
 	}
 	Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
-}
 
-static void Entities_ContextRecreated(void* obj) {
-	int i;
+	if (Gfx.ManagedTextures) return;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i]) continue;
-		/* name redraw is deferred until rendered */
+		DeleteSkin(Entities.List[i]);
 	}
 }
+/* No OnContextCreated, names/skin textures remade when needed */
 
 static void Entities_ChatFontChanged(void* obj) {
 	int i;
@@ -1127,14 +1126,12 @@ void NetPlayer_Init(struct NetPlayer* p) {
 }
 
 
-
 /*########################################################################################################################*
 *---------------------------------------------------Entities component----------------------------------------------------*
 *#########################################################################################################################*/
 static void Entities_Init(void) {
-	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Entities_ContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Entities_ContextRecreated);
-	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, Entities_ChatFontChanged);
+	Event_RegisterVoid(&GfxEvents.ContextLost,  NULL, Entities_ContextLost);
+	Event_RegisterVoid(&ChatEvents.FontChanged, NULL, Entities_ChatFontChanged);
 
 	Entities.NamesMode = Options_GetEnum(OPT_NAMES_MODE, NAME_MODE_HOVERED,
 		NameMode_Names, Array_Elems(NameMode_Names));
@@ -1155,13 +1152,9 @@ static void Entities_Free(void) {
 		Entities_Remove((EntityID)i);
 	}
 
-	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Entities_ContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Entities_ContextRecreated);
-	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, Entities_ChatFontChanged);
-
-	if (ShadowComponent_ShadowTex) {
-		Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
-	}
+	Event_UnregisterVoid(&GfxEvents.ContextLost,  NULL, Entities_ContextLost);
+	Event_UnregisterVoid(&ChatEvents.FontChanged, NULL, Entities_ChatFontChanged);
+	Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
 }
 
 struct IGameComponent Entities_Component = {
