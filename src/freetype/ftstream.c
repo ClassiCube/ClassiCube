@@ -375,24 +375,6 @@
 
 
   FT_BASE_DEF( FT_ULong )
-  FT_Stream_GetUOffset( FT_Stream  stream )
-  {
-    FT_Byte*  p;
-    FT_ULong  result;
-
-
-    FT_ASSERT( stream && stream->cursor );
-
-    result         = 0;
-    p              = stream->cursor;
-    if ( p + 2 < stream->limit )
-      result       = FT_NEXT_UOFF3( p );
-    stream->cursor = p;
-    return result;
-  }
-
-
-  FT_BASE_DEF( FT_ULong )
   FT_Stream_GetULong( FT_Stream  stream )
   {
     FT_Byte*  p;
@@ -405,24 +387,6 @@
     p              = stream->cursor;
     if ( p + 3 < stream->limit )
       result       = FT_NEXT_ULONG( p );
-    stream->cursor = p;
-    return result;
-  }
-
-
-  FT_BASE_DEF( FT_ULong )
-  FT_Stream_GetULongLE( FT_Stream  stream )
-  {
-    FT_Byte*  p;
-    FT_ULong  result;
-
-
-    FT_ASSERT( stream && stream->cursor );
-
-    result         = 0;
-    p              = stream->cursor;
-    if ( p + 3 < stream->limit )
-      result       = FT_NEXT_ULONG_LE( p );
     stream->cursor = p;
     return result;
   }

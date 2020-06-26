@@ -35,6 +35,7 @@
 #include "Builder.h"
 #include "Protocol.h"
 #include "Picking.h"
+#include "Animations.h"
 
 struct _GameData Game;
 int     Game_Port;

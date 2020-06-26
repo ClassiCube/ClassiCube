@@ -205,10 +205,6 @@ FT_BEGIN_HEADER
                                           FT_BYTE_U32( p, 1,  8 ) | \
                                           FT_BYTE_U32( p, 0,  0 ) )
 
-#define FT_PEEK_OFF3_LE( p )  FT_INT32( FT_BYTE_U32( p, 2, 16 ) | \
-                                        FT_BYTE_U32( p, 1,  8 ) | \
-                                        FT_BYTE_U32( p, 0,  0 ) )
-
 #define FT_PEEK_UOFF3_LE( p )  FT_UINT32( FT_BYTE_U32( p, 2, 16 ) | \
                                           FT_BYTE_U32( p, 1,  8 ) | \
                                           FT_BYTE_U32( p, 0,  0 ) )
@@ -245,9 +241,6 @@ FT_BEGIN_HEADER
 #define FT_NEXT_USHORT_LE( buffer )                                            \
           ( (unsigned short)( buffer += 2, FT_PEEK_USHORT_LE( buffer - 2 ) ) )
 
-#define FT_NEXT_OFF3_LE( buffer )                                  \
-          ( (long)( buffer += 3, FT_PEEK_OFF3_LE( buffer - 3 ) ) )
-
 #define FT_NEXT_UOFF3_LE( buffer )                                           \
           ( (unsigned long)( buffer += 3, FT_PEEK_UOFF3_LE( buffer - 3 ) ) )
 
@@ -269,16 +262,12 @@ FT_BEGIN_HEADER
 #define FT_GET_BYTE()       FT_GET_MACRO( BYTE )
 #define FT_GET_SHORT()      FT_GET_MACRO( SHORT )
 #define FT_GET_USHORT()     FT_GET_MACRO( USHORT )
-#define FT_GET_OFF3()       FT_GET_MACRO( OFF3 )
-#define FT_GET_UOFF3()      FT_GET_MACRO( UOFF3 )
 #define FT_GET_LONG()       FT_GET_MACRO( LONG )
 #define FT_GET_ULONG()      FT_GET_MACRO( ULONG )
 #define FT_GET_TAG4()       FT_GET_MACRO( ULONG )
 
 #define FT_GET_SHORT_LE()   FT_GET_MACRO( SHORT_LE )
 #define FT_GET_USHORT_LE()  FT_GET_MACRO( USHORT_LE )
-#define FT_GET_LONG_LE()    FT_GET_MACRO( LONG_LE )
-#define FT_GET_ULONG_LE()   FT_GET_MACRO( ULONG_LE )
 
 #else
 #define FT_GET_MACRO( func, type )        ( (type)func( stream ) )
@@ -287,16 +276,12 @@ FT_BEGIN_HEADER
 #define FT_GET_BYTE()       FT_GET_MACRO( FT_Stream_GetChar, FT_Byte )
 #define FT_GET_SHORT()      FT_GET_MACRO( FT_Stream_GetUShort, FT_Short )
 #define FT_GET_USHORT()     FT_GET_MACRO( FT_Stream_GetUShort, FT_UShort )
-#define FT_GET_OFF3()       FT_GET_MACRO( FT_Stream_GetUOffset, FT_Long )
-#define FT_GET_UOFF3()      FT_GET_MACRO( FT_Stream_GetUOffset, FT_ULong )
 #define FT_GET_LONG()       FT_GET_MACRO( FT_Stream_GetULong, FT_Long )
 #define FT_GET_ULONG()      FT_GET_MACRO( FT_Stream_GetULong, FT_ULong )
 #define FT_GET_TAG4()       FT_GET_MACRO( FT_Stream_GetULong, FT_ULong )
 
 #define FT_GET_SHORT_LE()   FT_GET_MACRO( FT_Stream_GetUShortLE, FT_Short )
 #define FT_GET_USHORT_LE()  FT_GET_MACRO( FT_Stream_GetUShortLE, FT_UShort )
-#define FT_GET_LONG_LE()    FT_GET_MACRO( FT_Stream_GetULongLE, FT_Long )
-#define FT_GET_ULONG_LE()   FT_GET_MACRO( FT_Stream_GetULongLE, FT_ULong )
 #endif
 
 #define FT_READ_MACRO( func, type, var )        \
@@ -418,10 +403,6 @@ FT_BEGIN_HEADER
   FT_BASE( FT_UShort )
   FT_Stream_GetUShort( FT_Stream  stream );
 
-  /* read a 24-bit big-endian unsigned integer from an entered frame */
-  FT_BASE( FT_ULong )
-  FT_Stream_GetUOffset( FT_Stream  stream );
-
   /* read a 32-bit big-endian unsigned integer from an entered frame */
   FT_BASE( FT_ULong )
   FT_Stream_GetULong( FT_Stream  stream );
@@ -429,10 +410,6 @@ FT_BEGIN_HEADER
   /* read a 16-bit little-endian unsigned integer from an entered frame */
   FT_BASE( FT_UShort )
   FT_Stream_GetUShortLE( FT_Stream  stream );
-
-  /* read a 32-bit little-endian unsigned integer from an entered frame */
-  FT_BASE( FT_ULong )
-  FT_Stream_GetULongLE( FT_Stream  stream );
 
 
   /* read a byte from a stream */

@@ -309,6 +309,9 @@
     <ClInclude Include="Graphics.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="Animations.h">
+      <Filter>Header Files\TexturePack</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -529,6 +532,9 @@
     </ClCompile>
     <ClCompile Include="Graphics.c">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Animations.c">
+      <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -36,40 +36,6 @@
 #define FT_COMPONENT  trace_afmodule
 
 
-  static FT_Error
-  af_property_get_face_globals( FT_Face          face,
-                                AF_FaceGlobals*  aglobals,
-                                AF_Module        module )
-  {
-    FT_Error        error = FT_Err_Ok;
-    AF_FaceGlobals  globals;
-
-
-    if ( !face )
-      return FT_THROW( Invalid_Face_Handle );
-
-    globals = (AF_FaceGlobals)face->autohint.data;
-    if ( !globals )
-    {
-      /* trigger computation of the global style data */
-      /* in case it hasn't been done yet              */
-      error = af_face_globals_new( face, &globals, module );
-      if ( !error )
-      {
-        face->autohint.data =
-          (FT_Pointer)globals;
-        face->autohint.finalizer =
-          (FT_Generic_Finalizer)af_face_globals_free;
-      }
-    }
-
-    if ( !error )
-      *aglobals = globals;
-
-    return error;
-  }
-
-
   static const FT_ServiceDescRec  af_services[] =
   {
 	  { NULL, NULL }

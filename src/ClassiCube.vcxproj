@@ -187,6 +187,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Animations.h" />
     <ClInclude Include="Http.h" />
     <ClInclude Include="Audio.h" />
     <ClInclude Include="AxisLinesRenderer.h" />
@@ -250,6 +251,7 @@
     <ClInclude Include="World.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Animations.c" />
     <ClCompile Include="Http.c" />
     <ClCompile Include="Audio.c" />
     <ClCompile Include="Camera.c" />
