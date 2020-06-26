@@ -39,6 +39,7 @@ CC_VAR extern struct _GfxData {
 	/* Whether some textures are created with mipmaps. */
 	cc_bool Mipmaps;
 	/* Whether managed textures are actually supported. */
+	/* If not, you must free/create them just like normal textures */
 	cc_bool ManagedTextures;
 	/* Whether Gfx_Init has been called to initialise state. */
 	cc_bool Initialised;

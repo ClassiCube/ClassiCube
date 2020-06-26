@@ -602,6 +602,7 @@ static void Game_RenderFrame(double delta) {
 void Game_Free(void* obj) {
 	struct IGameComponent* comp;
 	Atlas_Free();
+	Gfx.ManagedTextures = false;
 
 	Event_UnregisterVoid(&WorldEvents.NewMap,         NULL, HandleOnNewMap);
 	Event_UnregisterVoid(&WorldEvents.MapLoaded,      NULL, HandleOnNewMapLoaded);

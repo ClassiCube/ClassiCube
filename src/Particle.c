@@ -573,6 +573,9 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 *#########################################################################################################################*/
 static void OnContextLost(void* obj) {
 	Gfx_DeleteDynamicVb(&Particles_VB); 
+
+	if (Gfx.ManagedTextures) return;
+	Gfx_DeleteTexture(&Particles_TexId);
 }
 static void OnContextRecreated(void* obj) {
 	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
@@ -599,7 +602,6 @@ static void Particles_Init(void) {
 }
 
 static void Particles_Free(void) {
-	Gfx_DeleteTexture(&Particles_TexId);
 	OnContextLost(NULL);
 
 	Event_UnregisterBlock(&UserEvents.BlockChanged,   NULL, OnBreakBlockEffect_Handler);

@@ -129,7 +129,7 @@ static void Gui_LoadOptions(void) {
 	Gui_RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.35f, 5.0f, 1.0f);
 }
 
-static void OnContextLost(void* obj) {
+static void LoseAllScreens(void) {
 	struct Screen* s;
 	int i;
 
@@ -150,7 +150,7 @@ static void OnContextRecreated(void* obj) {
 }
 
 void Gui_RefreshAll(void) { 
-	OnContextLost(NULL);
+	LoseAllScreens();
 	OnContextRecreated(NULL);
 }
 
@@ -393,6 +393,15 @@ static void OnTextChanged(void* obj, const String* str) {
 }
 #endif
 
+static void OnContextLost(void* obj) {
+	LoseAllScreens();
+	if (Gfx.ManagedTextures) return;
+
+	Gfx_DeleteTexture(&Gui_GuiTex);
+	Gfx_DeleteTexture(&Gui_GuiClassicTex);
+	Gfx_DeleteTexture(&Gui_IconsTex);
+}
+
 static void Gui_Init(void) {
 	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, OnFontChanged);
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
@@ -422,9 +431,7 @@ static void Gui_Free(void) {
 
 	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
 
-	Gfx_DeleteTexture(&Gui_GuiTex);
-	Gfx_DeleteTexture(&Gui_GuiClassicTex);
-	Gfx_DeleteTexture(&Gui_IconsTex);
+	OnContextLost(NULL);
 	Gui_Reset();
 }
 

@@ -406,6 +406,7 @@ void Gfx_Init(void) {
 
 	Gfx.MinZNear        = 0.05f;
 	customMipmapsLevels = true;
+	Gfx.ManagedTextures = true;
 	CommonInit();
 	TryCreateDevice();
 }

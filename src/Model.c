@@ -419,7 +419,13 @@ static struct ModelTex* textures_tail;
 #define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; e->ModelAABB = BB;
 
 static void Models_ContextLost(void* obj) {
+	struct ModelTex* tex;
 	Gfx_DeleteDynamicVb(&Models.Vb);
+	if (Gfx.ManagedTextures) return;
+
+	for (tex = textures_head; tex; tex = tex->next) {
+		Gfx_DeleteTexture(&tex->texID);
+	}
 }
 
 static void Models_ContextRecreated(void* obj) {
@@ -2024,18 +2030,12 @@ static void Models_Init(void) {
 }
 
 static void Models_Free(void) {
-	struct ModelTex* tex;
-
-	for (tex = textures_head; tex; tex = tex->next) {
-		Gfx_DeleteTexture(&tex->texID);
-	}
 	Models_ContextLost(NULL);
+	CustomModel_FreeAll();
 
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Models_TextureChanged);
 	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Models_ContextLost);
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Models_ContextRecreated);
-
-	CustomModel_FreeAll();
 }
 
 static void Models_Reset(void) { CustomModel_FreeAll(); }

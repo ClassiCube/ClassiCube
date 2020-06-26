@@ -769,6 +769,12 @@ static void OnContextLost(void* obj) {
 	DeleteVbs();
 	Gfx_DeleteTexture(&sides_tex);
 	Gfx_DeleteTexture(&edges_tex);
+
+	if (Gfx.ManagedTextures) return;
+	Gfx_DeleteTexture(&clouds_tex);
+	Gfx_DeleteTexture(&skybox_tex);
+	Gfx_DeleteTexture(&rain_tex);
+	Gfx_DeleteTexture(&snow_tex);
 }
 
 static void UpdateAll(void) {
@@ -894,11 +900,6 @@ static void EnvRenderer_Free(void) {
 	OnContextLost(NULL);
 	Mem_Free(Weather_Heightmap);
 	Weather_Heightmap = NULL;
-
-	Gfx_DeleteTexture(&clouds_tex);
-	Gfx_DeleteTexture(&skybox_tex);
-	Gfx_DeleteTexture(&rain_tex);
-	Gfx_DeleteTexture(&snow_tex);
 }
 
 static void EnvRenderer_Reset(void) {
