@@ -11,6 +11,8 @@
 
 struct Stream;
 struct HttpRequest;
+struct IGameComponent;
+extern struct IGameComponent Textures_Component;
 
 /* Number of tiles in each row */
 #define ATLAS2D_TILES_PER_ROW 16
@@ -56,20 +58,15 @@ CC_VAR extern struct _Atlas1DData {
 /* Returns the index of the 1D atlas within the array of 1D atlases that contains the given tile id */
 #define Atlas1D_Index(texLoc) ((texLoc) >> Atlas1D.Shift) /* texLoc / Atlas1D_TilesPerAtlas */
 
-/* Loads the given atlas and converts it into an array of 1D atlases. */
-/* NOTE: Use Game_ChangeTerrainAtlas to change atlas, because that raises TextureEvents.AtlasChanged */
-void Atlas_Update(Bitmap* bmp);
 /* Loads the given tile into a new separate texture. */
 GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc);
-/* Frees the atlas and 1D atlas textures. */
-void Atlas_Free(void);
+/* Attempts to change the terrain atlas. (bitmap containing textures for all blocks) */
+cc_bool Atlas_TryChange(Bitmap* bmp);
 /* Returns the UV rectangle of the given tile id in the 1D atlases. */
 /* That is, returns U1/U2/V1/V2 coords that make up the tile in a 1D atlas. */
 /* index is set to the index of the 1D atlas that the tile is in. */
 TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index);
 
-/* Initialises cache state. (e.g. loading accepted/denied lists) */
-void TextureCache_Init(void);
 /* Whether the given URL is in list of accepted URLs. */
 cc_bool TextureCache_HasAccepted(const String* url);
 /* Whether the given URL is in list of denied URLs. */

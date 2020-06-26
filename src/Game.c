@@ -91,29 +91,6 @@ int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 }
 
 
-cc_bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
-	static const String terrain = String_FromConst("terrain.png");
-	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
-
-	if (atlas->Height < atlas->Width) {
-		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
-		Chat_AddRaw("&c Its height is less than its width.");
-		return false;
-	}
-	if (atlas->Width < ATLAS2D_TILES_PER_ROW) {
-		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
-		Chat_AddRaw("&c It must be 16 or more pixels wide.");
-		return false;
-	}
-	if (Gfx.LostContext) return false;
-
-	Atlas_Free();
-	Atlas_Update(atlas);
-
-	Event_RaiseVoid(&TextureEvents.AtlasChanged);
-	return true;
-}
-
 void Game_SetViewDistance(int distance) {
 	distance = min(distance, Game_MaxViewDistance);
 	if (distance == Game_ViewDistance) return;
@@ -260,22 +237,6 @@ static void HandleOnNewMapLoaded(void* obj) {
 	}
 }
 
-static void HandleTextureChanged(void* obj, struct Stream* src, const String* name) {
-	Bitmap bmp;
-	cc_result res;
-
-	if (String_CaselessEqualsConst(name, "terrain.png")) {
-		res = Png_Decode(&bmp, src);
-
-		if (res) { 
-			Logger_Warn2(res, "decoding", name);
-			Mem_Free(bmp.Scan0);
-		} else if (!Game_ChangeTerrainAtlas(&bmp)) {
-			Mem_Free(bmp.Scan0);
-		}		
-	}
-}
-
 static void HandleLowVRAMDetected(void* obj) {
 	if (Game_UserViewDistance <= 16) Logger_Abort("Out of video memory!");
 	Game_UserViewDistance /= 2;
@@ -372,16 +333,12 @@ static void Game_Load(void) {
 	Gfx_Init();
 	LoadOptions();
 
-	Event_RegisterVoid(&WorldEvents.NewMap,         NULL, HandleOnNewMap);
-	Event_RegisterVoid(&WorldEvents.MapLoaded,      NULL, HandleOnNewMapLoaded);
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, HandleTextureChanged);
-	Event_RegisterVoid(&GfxEvents.LowVRAMDetected,  NULL, HandleLowVRAMDetected);
+	Event_RegisterVoid(&WorldEvents.NewMap,        NULL, HandleOnNewMap);
+	Event_RegisterVoid(&WorldEvents.MapLoaded,     NULL, HandleOnNewMapLoaded);
+	Event_RegisterVoid(&GfxEvents.LowVRAMDetected, NULL, HandleLowVRAMDetected);
 
-	Event_RegisterVoid(&WindowEvents.Resized,       NULL, Game_OnResize);
-	Event_RegisterVoid(&WindowEvents.Closing,       NULL, Game_Free);
-
-	TextureCache_Init();
-	/* TODO: Survival vs Creative game mode */
+	Event_RegisterVoid(&WindowEvents.Resized,      NULL, Game_OnResize);
+	Event_RegisterVoid(&WindowEvents.Closing,      NULL, Game_Free);
 
 	InputHandler_Init();
 	Game_AddComponent(&Blocks_Component);
@@ -398,6 +355,7 @@ static void Game_Load(void) {
 
 	Game_AddComponent(&Animations_Component);
 	Game_AddComponent(&Inventory_Component);
+	Game_AddComponent(&Textures_Component);
 	World_Reset();
 
 	Game_AddComponent(&Builder_Component);
@@ -602,16 +560,16 @@ static void Game_RenderFrame(double delta) {
 
 void Game_Free(void* obj) {
 	struct IGameComponent* comp;
-	Atlas_Free();
+	/* Most components will call OnContextLost in their Free functions */
+	/* Set to false so components will always free managed textures too */
 	Gfx.ManagedTextures = false;
 
-	Event_UnregisterVoid(&WorldEvents.NewMap,         NULL, HandleOnNewMap);
-	Event_UnregisterVoid(&WorldEvents.MapLoaded,      NULL, HandleOnNewMapLoaded);
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, HandleTextureChanged);
-	Event_UnregisterVoid(&GfxEvents.LowVRAMDetected,  NULL, HandleLowVRAMDetected);
+	Event_UnregisterVoid(&WorldEvents.NewMap,        NULL, HandleOnNewMap);
+	Event_UnregisterVoid(&WorldEvents.MapLoaded,     NULL, HandleOnNewMapLoaded);
+	Event_UnregisterVoid(&GfxEvents.LowVRAMDetected, NULL, HandleLowVRAMDetected);
 
-	Event_UnregisterVoid(&WindowEvents.Resized,       NULL, Game_OnResize);
-	Event_UnregisterVoid(&WindowEvents.Closing,       NULL, Game_Free);
+	Event_UnregisterVoid(&WindowEvents.Resized,      NULL, Game_OnResize);
+	Event_UnregisterVoid(&WindowEvents.Closing,      NULL, Game_Free);
 
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Free) comp->Free();

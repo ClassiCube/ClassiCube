@@ -49,8 +49,6 @@ enum FpsLimitMethod {
 };
 extern const char* const FpsLimit_Names[FPS_LIMIT_COUNT];
 
-/* Attempts to change the terrain atlas. (bitmap containing textures for all blocks) */
-cc_bool Game_ChangeTerrainAtlas(Bitmap* atlas);
 void Game_SetViewDistance(int distance);
 void Game_UserSetViewDistance(int distance);
 void Game_SetFov(int fov);

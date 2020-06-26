@@ -12,6 +12,7 @@
 #include "ExtMath.h"
 #include "Options.h"
 #include "Logger.h"
+#include "Chat.h" /* TODO avoid this include */
 
 /*########################################################################################################################*
 *------------------------------------------------------TerrainAtlas-------------------------------------------------------*
@@ -71,7 +72,8 @@ static void Atlas_Update1D(void) {
 	Atlas1D.Shift = Math_Log2(Atlas1D.TilesPerAtlas);
 }
 
-void Atlas_Update(Bitmap* bmp) {
+/* Loads the given atlas and converts it into an array of 1D atlases. */
+static void Atlas_Update(Bitmap* bmp) {
 	Atlas2D.Bmp       = *bmp;
 	Atlas2D.TileSize  = bmp->Width  / ATLAS2D_TILES_PER_ROW;
 	Atlas2D.RowsCount = bmp->Height / Atlas2D.TileSize;
@@ -108,7 +110,8 @@ GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 	}
 }
 
-void Atlas_Free(void) {
+/* Frees the atlas and 1D atlas textures */
+static void Atlas_Free(void) {
 	int i;
 	Mem_Free(Atlas2D.Bmp.Scan0);
 	Atlas2D.Bmp.Scan0 = NULL;
@@ -118,13 +121,37 @@ void Atlas_Free(void) {
 	}
 }
 
+cc_bool Atlas_TryChange(Bitmap* atlas) {
+	static const String terrain = String_FromConst("terrain.png");
+	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
+
+	if (atlas->Height < atlas->Width) {
+		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
+		Chat_AddRaw("&c Its height is less than its width.");
+		return false;
+	}
+	if (atlas->Width < ATLAS2D_TILES_PER_ROW) {
+		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
+		Chat_AddRaw("&c It must be 16 or more pixels wide.");
+		return false;
+	}
+
+	if (Gfx.LostContext) return false;
+	Atlas_Free();
+	Atlas_Update(atlas);
+
+	Event_RaiseVoid(&TextureEvents.AtlasChanged);
+	return true;
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------TextureCache-------------------------------------------------------*
 *#########################################################################################################################*/
 static struct EntryList acceptedList, deniedList, etagCache, lastModifiedCache;
 
-void TextureCache_Init(void) {
+/* Initialises cache state (loading various lists) */
+static void TextureCache_Init(void) {
 	EntryList_Init(&acceptedList,      "texturecache/acceptedurls.txt", ' ');
 	EntryList_Init(&deniedList,        "texturecache/deniedurls.txt",   ' ');
 	EntryList_Init(&etagCache,         "texturecache/etags.txt",        ' ');
@@ -295,7 +322,7 @@ static cc_result TexturePack_ExtractPng(struct Stream* stream) {
 
 	if (!res) {
 		Event_RaiseVoid(&TextureEvents.PackChanged);
-		if (Game_ChangeTerrainAtlas(&bmp)) return 0;
+		if (Atlas_TryChange(&bmp)) return 0;
 	}
 
 	Mem_Free(bmp.Scan0);
@@ -406,3 +433,37 @@ void TexturePack_DownloadAsync(const String* url, const String* id) {
 	}
 	Http_AsyncGetDataEx(url, true, id, &time, &etag, NULL);
 }
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Textures component----------------------------------------------------*
+*#########################################################################################################################*/
+static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
+	Bitmap bmp;
+	cc_result res;
+
+	if (!String_CaselessEqualsConst(name, "terrain.png")) return;
+	res = Png_Decode(&bmp, stream);
+
+	if (res) {
+		Logger_Warn2(res, "decoding", name);
+		Mem_Free(bmp.Scan0);
+	} else if (!Atlas_TryChange(&bmp)) {
+		Mem_Free(bmp.Scan0);
+	}
+}
+
+static void Textures_Init(void) {
+	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	TextureCache_Init();
+}
+
+static void Textures_Free(void) {
+	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	Atlas_Free();
+}
+
+struct IGameComponent Textures_Component = {
+	Textures_Init, /* Init  */
+	Textures_Free  /* Free  */
+};
