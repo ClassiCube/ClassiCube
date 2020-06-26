@@ -86,7 +86,7 @@ static BlockID DefaultMapping(int slot) {
 	return BLOCK_AIR;
 }
 
-void Inventory_ApplyDefaultMapping(void) {
+void Inventory_ResetMapping(void) {
 	int slot;
 	for (slot = 0; slot < Array_Elems(Inventory.Map); slot++) {
 		Inventory.Map[slot] = DefaultMapping(slot);
@@ -118,7 +118,7 @@ void Inventory_Remove(BlockID block) {
 *--------------------------------------------------Inventory component----------------------------------------------------*
 *#########################################################################################################################*/
 static void Inventory_Reset(void) {
-	Inventory_ApplyDefaultMapping();
+	Inventory_ResetMapping();
 	Inventory.CanChangeSelected = true;
 }
 

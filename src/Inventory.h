@@ -51,7 +51,7 @@ void Inventory_SetSelectedBlock(BlockID block);
 void Inventory_PickBlock(BlockID block);
 /* Sets all slots to contain their default associated block. */
 /* NOTE: The order of default blocks may not be in order of ID. */
-void Inventory_ApplyDefaultMapping(void);
+void Inventory_ResetMapping(void);
 
 /* Inserts the given block at its default slot in the inventory. */
 /* NOTE: Replaces (doesn't move) the block that was at that slot before. */

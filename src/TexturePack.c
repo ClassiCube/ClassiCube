@@ -110,12 +110,13 @@ GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 	}
 }
 
-/* Frees the atlas and 1D atlas textures */
-static void Atlas_Free(void) {
-	int i;
+static void Atlas2D_Free(void) {
 	Mem_Free(Atlas2D.Bmp.Scan0);
 	Atlas2D.Bmp.Scan0 = NULL;
+}
 
+static void Atlas1D_Free(void) {
+	int i;
 	for (i = 0; i < Atlas1D.Count; i++) {
 		Gfx_DeleteTexture(&Atlas1D.TexIds[i]);
 	}
@@ -137,9 +138,10 @@ cc_bool Atlas_TryChange(Bitmap* atlas) {
 	}
 
 	if (Gfx.LostContext) return false;
-	Atlas_Free();
-	Atlas_Update(atlas);
+	Atlas1D_Free();
+	Atlas2D_Free();
 
+	Atlas_Update(atlas);
 	Event_RaiseVoid(&TextureEvents.AtlasChanged);
 	return true;
 }
@@ -453,14 +455,29 @@ static void OnFileChanged(void* obj, struct Stream* stream, const String* name) 
 	}
 }
 
+static void OnContextLost(void* obj) {
+	if (!Gfx.ManagedTextures) Atlas1D_Free();
+}
+
+static void OnContextRecreated(void* obj) {
+	if (!Gfx.ManagedTextures) TexturePack_ExtractCurrent(true);
+}
+
 static void Textures_Init(void) {
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+
 	TextureCache_Init();
 }
 
 static void Textures_Free(void) {
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-	Atlas_Free();
+	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+
+	OnContextLost(NULL);
+	Atlas2D_Free();
 }
 
 struct IGameComponent Textures_Component = {
