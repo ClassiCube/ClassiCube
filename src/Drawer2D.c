@@ -257,9 +257,9 @@ void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
 
 		for (xx = 0; xx < width; xx++, dst++) {
 			/* TODO: Not shift when multiplying */
-			R = BitmapCol_R(col) + (BitmapCol_R(*dst) * blend) / 255; Drawer2D_ClampPixel(R);
-			G = BitmapCol_G(col) + (BitmapCol_G(*dst) * blend) / 255; Drawer2D_ClampPixel(G);
-			B = BitmapCol_B(col) + (BitmapCol_B(*dst) * blend) / 255; Drawer2D_ClampPixel(B);
+			R = BitmapCol_R(col) + (BitmapCol_R(*dst) * blend) / 255;
+			G = BitmapCol_G(col) + (BitmapCol_G(*dst) * blend) / 255;
+			B = BitmapCol_B(col) + (BitmapCol_B(*dst) * blend) / 255;
 
 			*dst = BitmapCol_Make(R, G, B, 255);
 		}
