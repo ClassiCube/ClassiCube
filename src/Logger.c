@@ -179,10 +179,13 @@ struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
 
 static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	STACKFRAME frame = { 0 };
-	DWORD type;
-	frame.AddrPC.Mode     = AddrModeFlat;
-	frame.AddrFrame.Mode  = AddrModeFlat;
-	frame.AddrStack.Mode  = AddrModeFlat;
+	HANDLE process, thread;
+	int count, type;
+	CONTEXT copy;
+
+	frame.AddrPC.Mode    = AddrModeFlat;
+	frame.AddrFrame.Mode = AddrModeFlat;
+	frame.AddrStack.Mode = AddrModeFlat;
 
 #if defined _M_IX86
 	type = IMAGE_FILE_MACHINE_I386;
@@ -195,13 +198,12 @@ static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	frame.AddrFrame.Offset = ctx->Rsp;
 	frame.AddrStack.Offset = ctx->Rsp;
 #else
-	#error "Unknown CPU architecture"
+	/* Always available after XP, so use that */
+	return RtlCaptureStackBackTrace(0, max, (void**)addrs, NULL);
 #endif
-
-	HANDLE process = GetCurrentProcess();
-	HANDLE thread  = GetCurrentThread();
-	int count;
-	CONTEXT copy = *ctx;
+	process = GetCurrentProcess();
+	thread  = GetCurrentThread();
+	copy    = *ctx;
 
 	for (count = 0; count < max; count++) {
 		if (!StackWalk(type, process, thread, &frame, &copy, NULL, SymFunctionTableAccess, SymGetModuleBase, NULL)) break;
@@ -354,11 +356,12 @@ String_Format4(str, "r28=%x r29=%x r30=%x r31=%x" _NL, REG_GNUM(28), REG_GNUM(29
 String_Format3(str, "pc =%x lr =%x ctr=%x" _NL,  REG_GET_PC(), REG_GET_LR(), REG_GET_CTR());
 
 #define Dump_ARM32() \
-String_Format3(str, "r0 =%x r1 =%x r2 =%x" _NL, REG_GNUM(0), REG_GNUM(1),  REG_GNUM(2));\
-String_Format3(str, "r3 =%x r4 =%x r5 =%x" _NL, REG_GNUM(3), REG_GNUM(4),  REG_GNUM(5));\
-String_Format3(str, "r6 =%x r7 =%x r8 =%x" _NL, REG_GNUM(6), REG_GNUM(7),  REG_GNUM(8));\
-String_Format3(str, "r9 =%x r10=%x fp =%x" _NL, REG_GNUM(9), REG_GNUM(10), REG_GET(fp,FP));\
-String_Format3(str, "sp =%x lr =%x pc =%x" _NL, REG_GET(sp,SP), REG_GET(lr,LR),  REG_GET(pc,PC));
+String_Format3(str, "r0 =%x r1 =%x r2 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2));\
+String_Format3(str, "r3 =%x r4 =%x r5 =%x" _NL, REG_GNUM(3),  REG_GNUM(4),  REG_GNUM(5));\
+String_Format3(str, "r6 =%x r7 =%x r8 =%x" _NL, REG_GNUM(6),  REG_GNUM(7),  REG_GNUM(8));\
+String_Format3(str, "r9 =%x r10=%x fp =%x" _NL, REG_GNUM(9),  REG_GNUM(10), REG_GET_FP());\
+String_Format3(str, "ip =%x sp =%x lr =%x" _NL, REG_GET_IP(),REG_GET(sp,Sp),REG_GET(lr,Lr));\
+String_Format1(str, "pc =%x"               _NL, REG_GET(pc,Pc));
 
 #define Dump_ARM64() \
 String_Format4(str, "r0 =%x r1 =%x r2 =%x r3 =%x" _NL, REG_GNUM(0),  REG_GNUM(1),  REG_GNUM(2),  REG_GNUM(3)); \
@@ -390,6 +393,12 @@ static void PrintRegisters(String* str, void* ctx) {
 #elif defined _M_X64
 	#define REG_GET(reg, ign) &r->R ## reg
 	Dump_X64()
+#elif defined _M_ARM
+	#define REG_GNUM(num)     &r->R ## num
+	#define REG_GET(ign,reg)  &r-> ## reg
+	#define REG_GET_FP()      &r->R11
+	#define REG_GET_IP()      &r->R12
+	Dump_ARM32()
 #else
 	#error "Unknown CPU architecture"
 #endif
@@ -457,7 +466,9 @@ static void PrintRegisters(String* str, void* ctx) {
 	Dump_ARM64()
 #elif defined __arm__
 	#define REG_GNUM(num)     &r.arm_r##num
-	#define REG_GET(reg, ign) &r.arm_##reg
+	#define REG_GET(reg,ign)  &r.arm_##reg
+	#define REG_GET_FP()      &r.arm_fp
+	#define REG_GET_IP()      &r.arm_ip
 	Dump_ARM32()
 #elif defined __sparc__
 	#define REG_GET(ign, reg) &r.gregs[REG_##reg]
