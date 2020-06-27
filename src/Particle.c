@@ -17,7 +17,7 @@
 static GfxResourceID Particles_TexId, Particles_VB;
 #define PARTICLES_MAX 600
 static RNGState rnd;
-static cc_bool particle_hitTerrain;
+static cc_bool hitTerrain;
 typedef cc_bool (*CanPassThroughFunc)(BlockID b);
 
 void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec, PackedCol col, struct VertexTextured* v) {
@@ -39,7 +39,7 @@ void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec,
 	v->X = centre.X + aX - bX; v->Y = centre.Y + aY - bY; v->Z = centre.Z + aZ - bZ; v->Col = col; v->U = rec->U2; v->V = rec->V2; v++;
 }
 
-static cc_bool Particle_CollideHor(Vec3* nextPos, BlockID block) {
+static cc_bool CollidesHor(Vec3* nextPos, BlockID block) {
 	Vec3 horPos = Vec3_Create3((float)Math_Floor(nextPos->X), 0.0f, (float)Math_Floor(nextPos->Z));
 	Vec3 min, max;
 	Vec3_Add(&min, &Blocks.MinBB[block], &horPos);
@@ -47,15 +47,15 @@ static cc_bool Particle_CollideHor(Vec3* nextPos, BlockID block) {
 	return nextPos->X >= min.X && nextPos->Z >= min.Z && nextPos->X < max.X && nextPos->Z < max.Z;
 }
 
-static BlockID Particle_GetBlock(int x, int y, int z) {
-	if (World_Contains(x, y, z)) { return World_GetBlock(x, y, z); }
+static BlockID GetBlock(int x, int y, int z) {
+	if (World_Contains(x, y, z)) return World_GetBlock(x, y, z);
 
-	if (y >= Env.EdgeHeight) return BLOCK_AIR;
+	if (y >= Env.EdgeHeight)  return BLOCK_AIR;
 	if (y >= Env_SidesHeight) return Env.EdgeBlock;
 	return Env.SidesBlock;
 }
 
-static cc_bool Particle_TestY(struct Particle* p, int y, cc_bool topFace, CanPassThroughFunc canPassThrough) {
+static cc_bool ClipY(struct Particle* p, int y, cc_bool topFace, CanPassThroughFunc canPassThrough) {
 	BlockID block;
 	Vec3 minBB, maxBB;
 	float collideY;
@@ -66,43 +66,43 @@ static cc_bool Particle_TestY(struct Particle* p, int y, cc_bool topFace, CanPas
 		p->lastPos.Y = ENTITY_ADJUSTMENT;
 
 		Vec3_Set(p->velocity, 0,0,0);
-		particle_hitTerrain = true;
+		hitTerrain = true;
 		return false;
 	}
 
-	block = Particle_GetBlock((int)p->nextPos.X, y, (int)p->nextPos.Z);
+	block = GetBlock((int)p->nextPos.X, y, (int)p->nextPos.Z);
 	if (canPassThrough(block)) return true;
 	minBB = Blocks.MinBB[block]; maxBB = Blocks.MaxBB[block];
 
 	collideY   = y + (topFace ? maxBB.Y : minBB.Y);
 	collideVer = topFace ? (p->nextPos.Y < collideY) : (p->nextPos.Y > collideY);
 
-	if (collideVer && Particle_CollideHor(&p->nextPos, block)) {
+	if (collideVer && CollidesHor(&p->nextPos, block)) {
 		float adjust = topFace ? ENTITY_ADJUSTMENT : -ENTITY_ADJUSTMENT;
 		p->lastPos.Y = collideY + adjust;
 		p->nextPos.Y = p->lastPos.Y;
 
 		Vec3_Set(p->velocity, 0,0,0);
-		particle_hitTerrain = true;
+		hitTerrain = true;
 		return false;
 	}
 	return true;
 }
 
-static cc_bool Particle_PhysicsTick(struct Particle* p, float gravity, CanPassThroughFunc canPassThrough, double delta) {
-	BlockID cur;
-	float minY, maxY;
+static cc_bool IntersectsBlock(struct Particle* p, CanPassThroughFunc canPassThrough) {
+	BlockID cur = GetBlock((int)p->nextPos.X, (int)p->nextPos.Y, (int)p->nextPos.Z);
+	float minY  = Math_Floor(p->nextPos.Y) + Blocks.MinBB[cur].Y;
+	float maxY  = Math_Floor(p->nextPos.Y) + Blocks.MaxBB[cur].Y;
+
+	return !canPassThrough(cur) && p->nextPos.Y >= minY && p->nextPos.Y < maxY && CollidesHor(&p->nextPos, cur);
+}
+
+static cc_bool PhysicsTick(struct Particle* p, float gravity, CanPassThroughFunc canPassThrough, double delta) {
 	Vec3 velocity;
 	int y, begY, endY;
 
 	p->lastPos = p->nextPos;
-	cur  = Particle_GetBlock((int)p->nextPos.X, (int)p->nextPos.Y, (int)p->nextPos.Z);
-	minY = Math_Floor(p->nextPos.Y) + Blocks.MinBB[cur].Y;
-	maxY = Math_Floor(p->nextPos.Y) + Blocks.MaxBB[cur].Y;
-
-	if (!canPassThrough(cur) && p->nextPos.Y >= minY && p->nextPos.Y < maxY && Particle_CollideHor(&p->nextPos, cur)) {
-		return true;
-	}
+	if (IntersectsBlock(p, canPassThrough)) return true;
 
 	p->velocity.Y -= gravity * (float)delta;
 	begY = Math_Floor(p->nextPos.Y);
@@ -113,9 +113,9 @@ static cc_bool Particle_PhysicsTick(struct Particle* p, float gravity, CanPassTh
 
 	if (p->velocity.Y > 0.0f) {
 		/* don't test block we are already in */
-		for (y = begY + 1; y <= endY && Particle_TestY(p, y, false, canPassThrough); y++) {}
+		for (y = begY + 1; y <= endY && ClipY(p, y, false, canPassThrough); y++) {}
 	} else {
-		for (y = begY; y >= endY && Particle_TestY(p, y, true, canPassThrough); y--) {}
+		for (y = begY; y >= endY && ClipY(p, y, true, canPassThrough); y--) {}
 	}
 
 	p->lifetime -= (float)delta;
@@ -136,8 +136,8 @@ static cc_bool RainParticle_CanPass(BlockID block) {
 }
 
 static cc_bool RainParticle_Tick(struct Particle* p, double delta) {
-	particle_hitTerrain = false;
-	return Particle_PhysicsTick(p, 3.5f, RainParticle_CanPass, delta) || particle_hitTerrain;
+	hitTerrain = false;
+	return PhysicsTick(p, 3.5f, RainParticle_CanPass, delta) || hitTerrain;
 }
 
 static void RainParticle_Render(struct Particle* p, float t, struct VertexTextured* vertices) {
@@ -209,7 +209,7 @@ static cc_bool TerrainParticle_CanPass(BlockID block) {
 }
 
 static cc_bool TerrainParticle_Tick(struct TerrainParticle* p, double delta) {
-	return Particle_PhysicsTick(&p->base, 5.4f, TerrainParticle_CanPass, delta);
+	return PhysicsTick(&p->base, 5.4f, TerrainParticle_CanPass, delta);
 }
 
 static void TerrainParticle_Render(struct TerrainParticle* p, float t, struct VertexTextured* vertices) {
@@ -323,10 +323,11 @@ static cc_bool CustomParticle_CanPass(BlockID block) {
 
 static cc_bool CustomParticle_Tick(struct CustomParticle* p, double delta) {
 	struct CustomParticleEffect* e = &Particles_CustomEffects[p->effectId];
-	particle_hitTerrain = false;
+	hitTerrain   = false;
 	collideFlags = e->collideFlags;
-	return Particle_PhysicsTick(&p->base, e->gravity, CustomParticle_CanPass, delta)
-		|| (particle_hitTerrain && e->collideFlags & EXPIRES_UPON_TOUCHING_GROUND);
+
+	return PhysicsTick(&p->base, e->gravity, CustomParticle_CanPass, delta)
+		|| (hitTerrain && (e->collideFlags & EXPIRES_UPON_TOUCHING_GROUND));
 }
 
 static void CustomParticle_Render(struct CustomParticle* p, float t, struct VertexTextured* vertices) {
@@ -564,6 +565,10 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 
 		p->base.size = e->size + (e->size * e->sizeVariation) * ((Random_Float(&rnd) - 0.5f) * 2);
 
+		/* Don't spawn custom particle inside a block (otherwise it appears */
+		/*   for a few frames, then disappears in first PhysicsTick call)*/
+		collideFlags = e->collideFlags;
+		if (IntersectsBlock(&p->base, CustomParticle_CanPass)) custom_count--;
 	}
 }
 
