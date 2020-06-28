@@ -3481,16 +3481,25 @@ static void TouchMore_Toggle(KeyBind bind) {
 	Input_SetPressed(key, !Input_Pressed[key]);
 }
 
-static void TouchMore_Chat(void*   s, void* w) { TouchMore_Toggle(KEYBIND_CHAT); }
 static void TouchMore_Speed(void*  s, void* w) { TouchMore_Toggle(KEYBIND_SPEED); }
 static void TouchMore_Fly(void*    s, void* w) { TouchMore_Toggle(KEYBIND_FLY); }
-static void TouchMore_Inv(void*    s, void* w) { TouchMore_Toggle(KEYBIND_INVENTORY); }
-static void TouchMore_Screen(void* s, void* w) { TouchMore_Toggle(KEYBIND_FULLSCREEN); }
 static void TouchMore_Noclip(void* s, void* w) { TouchMore_Toggle(KEYBIND_NOCLIP); }
 
+static void TouchMore_Chat(void* s, void* w) {
+	Gui_Remove((struct Screen*)&TouchMoreScreen);
+	ChatScreen_OpenInput(&String_Empty);
+}
+static void TouchMore_Inv(void* s, void* w) {
+	Gui_Remove((struct Screen*)&TouchMoreScreen);
+	InventoryScreen_Show();
+}
 static void TouchMore_Menu(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
 	PauseScreen_Show();
+}
+static void TouchMore_Screen(void* s, void* w) {
+	Gui_Remove((struct Screen*)&TouchMoreScreen);
+	Game_ToggleFullscreen();
 }
 
 static void TouchMore_Fog(void* s, void* w) {

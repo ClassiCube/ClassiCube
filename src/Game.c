@@ -91,6 +91,19 @@ int ScheduledTask_Add(double interval, ScheduledTaskCallback callback) {
 }
 
 
+void Game_ToggleFullscreen(void) {
+	int state = Window_GetWindowState();
+	cc_result res;
+
+	if (state == WINDOW_STATE_FULLSCREEN) {
+		res = Window_ExitFullscreen();
+		if (res) Logger_Warn(res, "leaving fullscreen");
+	} else {
+		res = Window_EnterFullscreen();
+		if (res) Logger_Warn(res, "going fullscreen");
+	}
+}
+
 void Game_SetViewDistance(int distance) {
 	distance = min(distance, Game_MaxViewDistance);
 	if (distance == Game_ViewDistance) return;

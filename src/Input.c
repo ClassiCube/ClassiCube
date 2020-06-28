@@ -887,20 +887,10 @@ static cc_bool HandleNonClassicKey(int key) {
 }
 
 static cc_bool HandleCoreKey(int key) {
-	cc_result res;
-
 	if (key == KeyBinds[KEYBIND_HIDE_FPS]) {
 		Gui_ShowFPS = !Gui_ShowFPS;
 	} else if (key == KeyBinds[KEYBIND_FULLSCREEN]) {
-		int state = Window_GetWindowState();
-
-		if (state == WINDOW_STATE_FULLSCREEN) {
-			res = Window_ExitFullscreen();
-			if (res) Logger_Warn(res, "leaving fullscreen");
-		} else {
-			res = Window_EnterFullscreen();
-			if (res) Logger_Warn(res, "going fullscreen");
-		}
+		Game_ToggleFullscreen();
 	} else if (key == KeyBinds[KEYBIND_FOG]) {
 		const short* viewDists = Gui_ClassicMenu ? classicDists : normDists;
 		int count = Gui_ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
