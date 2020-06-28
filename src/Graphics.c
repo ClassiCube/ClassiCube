@@ -1010,7 +1010,7 @@ void Gfx_OnWindowResize(void) { Gfx_LoseContext(" (resizing window)"); }
 #include <GL/gl.h>
 #elif defined CC_BUILD_OSX
 #include <OpenGL/gl.h>
-#elif defined CC_BUILD_GLMODERN
+#elif defined CC_BUILD_GLES
 #include <GLES2/gl2.h>
 #else
 #include <GL/gl.h>
