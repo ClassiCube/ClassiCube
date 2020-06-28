@@ -104,6 +104,44 @@ void Game_ToggleFullscreen(void) {
 	}
 }
 
+static void CycleViewDistanceForwards(const short* viewDists, int count) {
+	int i, dist;
+	for (i = 0; i < count; i++) {
+		dist = viewDists[i];
+
+		if (dist > Game_UserViewDistance) {
+			Game_UserSetViewDistance(dist); return;
+		}
+	}
+	Game_UserSetViewDistance(viewDists[0]);
+}
+
+static void CycleViewDistanceBackwards(const short* viewDists, int count) {
+	int i, dist;
+	for (i = count - 1; i >= 0; i--) {
+		dist = viewDists[i];
+
+		if (dist < Game_UserViewDistance) {
+			Game_UserSetViewDistance(dist); return;
+		}
+	}
+	Game_UserSetViewDistance(viewDists[count - 1]);
+}
+
+static const short normDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+static const short classicDists[4] = { 8, 32, 128, 512 };
+void Game_CycleViewDistance(void) {
+	const short* dists = Gui_ClassicMenu ? classicDists : normDists;
+	int count = Gui_ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
+
+	if (Key_IsShiftPressed()) {
+		CycleViewDistanceBackwards(dists, count);
+	} else {
+		CycleViewDistanceForwards(dists, count);
+	}
+}
+
+
 void Game_SetViewDistance(int distance) {
 	distance = min(distance, Game_MaxViewDistance);
 	if (distance == Game_ViewDistance) return;

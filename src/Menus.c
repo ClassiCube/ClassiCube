@@ -3501,11 +3501,7 @@ static void TouchMore_Screen(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
 	Game_ToggleFullscreen();
 }
-
-static void TouchMore_Fog(void* s, void* w) {
-	Input_SetPressed(KeyBinds[KEYBIND_FOG], true);
-	Input_SetPressed(KeyBinds[KEYBIND_FOG], false);
-}
+static void TouchMore_Fog(void* s, void* w) { Game_CycleViewDistance(); }
 
 static const struct SimpleButtonDesc touchMore_btns[8] = {
 	{ -160,  -50, "Chat",       TouchMore_Chat   },

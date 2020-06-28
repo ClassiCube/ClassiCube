@@ -30,8 +30,6 @@
 
 static cc_bool input_buttonsDown[3];
 static int input_pickingId = -1;
-static const short normDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
-static const short classicDists[4] = { 8, 32, 128, 512 };
 static TimeMS input_lastClick;
 static float input_fovIndex = -1.0f;
 #ifdef CC_BUILD_WEB
@@ -780,30 +778,6 @@ static void InputHandler_Toggle(int key, cc_bool* target, const char* enableMsg,
 	}
 }
 
-static void CycleViewDistanceForwards(const short* viewDists, int count) {
-	int i, dist;
-	for (i = 0; i < count; i++) {
-		dist = viewDists[i];
-
-		if (dist > Game_UserViewDistance) {
-			Game_UserSetViewDistance(dist); return;
-		}
-	}
-	Game_UserSetViewDistance(viewDists[0]);
-}
-
-static void CycleViewDistanceBackwards(const short* viewDists, int count) {
-	int i, dist;
-	for (i = count - 1; i >= 0; i--) {
-		dist = viewDists[i];
-
-		if (dist < Game_UserViewDistance) {
-			Game_UserSetViewDistance(dist); return;
-		}
-	}
-	Game_UserSetViewDistance(viewDists[count - 1]);
-}
-
 cc_bool InputHandler_SetFOV(int fov) {
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanUseThirdPerson) return false;
@@ -892,14 +866,7 @@ static cc_bool HandleCoreKey(int key) {
 	} else if (key == KeyBinds[KEYBIND_FULLSCREEN]) {
 		Game_ToggleFullscreen();
 	} else if (key == KeyBinds[KEYBIND_FOG]) {
-		const short* viewDists = Gui_ClassicMenu ? classicDists : normDists;
-		int count = Gui_ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
-
-		if (Key_IsShiftPressed()) {
-			CycleViewDistanceBackwards(viewDists, count);
-		} else {
-			CycleViewDistanceForwards(viewDists, count);
-		}
+		Game_CycleViewDistance();
 	} else if (key == KEY_F5 && Game_ClassicMode) {
 		int weather = Env.Weather == WEATHER_SUNNY ? WEATHER_RAINY : WEATHER_SUNNY;
 		Env_SetWeather(weather);

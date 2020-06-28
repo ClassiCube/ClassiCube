@@ -50,6 +50,8 @@ enum FpsLimitMethod {
 extern const char* const FpsLimit_Names[FPS_LIMIT_COUNT];
 
 void Game_ToggleFullscreen(void);
+void Game_CycleViewDistance(void);
+
 void Game_SetViewDistance(int distance);
 void Game_UserSetViewDistance(int distance);
 void Game_SetFov(int fov);
