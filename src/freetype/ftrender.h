@@ -55,10 +55,6 @@ FT_BEGIN_HEADER
                            FT_BBox*  abbox );
 
   typedef FT_Error
-  (*FT_Glyph_CopyFunc)( FT_Glyph   source,
-                        FT_Glyph   target );
-
-  typedef FT_Error
   (*FT_Glyph_PrepareFunc)( FT_Glyph      glyph,
                            FT_GlyphSlot  slot );
 
@@ -70,7 +66,6 @@ FT_BEGIN_HEADER
 
     FT_Glyph_InitFunc       glyph_init;
     FT_Glyph_DoneFunc       glyph_done;
-    FT_Glyph_CopyFunc       glyph_copy;
     FT_Glyph_TransformFunc  glyph_transform;
     FT_Glyph_GetBBoxFunc    glyph_bbox;
     FT_Glyph_PrepareFunc    glyph_prepare;

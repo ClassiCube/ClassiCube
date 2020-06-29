@@ -945,7 +945,6 @@ FT_BEGIN_HEADER
           format_,                \
           init_,                  \
           done_,                  \
-          copy_,                  \
           transform_,             \
           bbox_,                  \
           prepare_ )              \
@@ -956,7 +955,6 @@ FT_BEGIN_HEADER
     format_,                      \
     init_,                        \
     done_,                        \
-    copy_,                        \
     transform_,                   \
     bbox_,                        \
     prepare_                      \

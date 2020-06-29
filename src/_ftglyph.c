@@ -89,22 +89,6 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_Error )
-  ft_bitmap_glyph_copy( FT_Glyph  bitmap_source,
-                        FT_Glyph  bitmap_target )
-  {
-    FT_Library      library = bitmap_source->library;
-    FT_BitmapGlyph  source  = (FT_BitmapGlyph)bitmap_source;
-    FT_BitmapGlyph  target  = (FT_BitmapGlyph)bitmap_target;
-
-
-    target->left = source->left;
-    target->top  = source->top;
-
-    return FT_Bitmap_Copy( library, &source->bitmap, &target->bitmap );
-  }
-
-
   FT_CALLBACK_DEF( void )
   ft_bitmap_glyph_done( FT_Glyph  bitmap_glyph )
   {
@@ -138,7 +122,6 @@
 
     ft_bitmap_glyph_init,    /* FT_Glyph_InitFunc       glyph_init      */
     ft_bitmap_glyph_done,    /* FT_Glyph_DoneFunc       glyph_done      */
-    ft_bitmap_glyph_copy,    /* FT_Glyph_CopyFunc       glyph_copy      */
     NULL,                    /* FT_Glyph_TransformFunc  glyph_transform */
     ft_bitmap_glyph_bbox,    /* FT_Glyph_GetBBoxFunc    glyph_bbox      */
     NULL                     /* FT_Glyph_PrepareFunc    glyph_prepare   */
@@ -197,27 +180,6 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_Error )
-  ft_outline_glyph_copy( FT_Glyph  outline_source,
-                         FT_Glyph  outline_target )
-  {
-    FT_OutlineGlyph  source  = (FT_OutlineGlyph)outline_source;
-    FT_OutlineGlyph  target  = (FT_OutlineGlyph)outline_target;
-    FT_Error         error;
-    FT_Library       library = FT_GLYPH( source )->library;
-
-
-    error = FT_Outline_New( library,
-                            (FT_UInt)source->outline.n_points,
-                            source->outline.n_contours,
-                            &target->outline );
-    if ( !error )
-      FT_Outline_Copy( &source->outline, &target->outline );
-
-    return error;
-  }
-
-
   FT_CALLBACK_DEF( void )
   ft_outline_glyph_transform( FT_Glyph          outline_glyph,
                               const FT_Matrix*  matrix,
@@ -268,7 +230,6 @@
 
     ft_outline_glyph_init,      /* FT_Glyph_InitFunc       glyph_init      */
     ft_outline_glyph_done,      /* FT_Glyph_DoneFunc       glyph_done      */
-    ft_outline_glyph_copy,      /* FT_Glyph_CopyFunc       glyph_copy      */
     ft_outline_glyph_transform, /* FT_Glyph_TransformFunc  glyph_transform */
     ft_outline_glyph_bbox,      /* FT_Glyph_GetBBoxFunc    glyph_bbox      */
     ft_outline_glyph_prepare    /* FT_Glyph_PrepareFunc    glyph_prepare   */
@@ -306,53 +267,6 @@
 
      return error;
    }
-
-
-  /* documentation is in ftglyph.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_Glyph_Copy( FT_Glyph   source,
-                 FT_Glyph  *target )
-  {
-    FT_Glyph               copy;
-    FT_Error               error;
-    const FT_Glyph_Class*  clazz;
-
-
-    /* check arguments */
-    if ( !target || !source || !source->clazz )
-    {
-      error = FT_THROW( Invalid_Argument );
-      goto Exit;
-    }
-
-    *target = NULL;
-
-    if ( !source || !source->clazz )
-    {
-      error = FT_THROW( Invalid_Argument );
-      goto Exit;
-    }
-
-    clazz = source->clazz;
-    error = ft_new_glyph( source->library, clazz, &copy );
-    if ( error )
-      goto Exit;
-
-    copy->advance = source->advance;
-    copy->format  = source->format;
-
-    if ( clazz->glyph_copy )
-      error = clazz->glyph_copy( source, copy );
-
-    if ( error )
-      FT_Done_Glyph( copy );
-    else
-      *target = copy;
-
-  Exit:
-    return error;
-  }
 
 
   /* documentation is in ftglyph.h */

@@ -239,30 +239,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
-  /*    FT_Glyph_Copy                                                      */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A function used to copy a glyph image.  Note that the created      */
-  /*    @FT_Glyph object must be released with @FT_Done_Glyph.             */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    source :: A handle to the source glyph object.                     */
-  /*                                                                       */
-  /* <Output>                                                              */
-  /*    target :: A handle to the target glyph object.  0~in case of       */
-  /*              error.                                                   */
-  /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0~means success.                             */
-  /*                                                                       */
-  FT_EXPORT( FT_Error )
-  FT_Glyph_Copy( FT_Glyph   source,
-                 FT_Glyph  *target );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
   /*    FT_Glyph_Transform                                                 */
   /*                                                                       */
   /* <Description>                                                         */
