@@ -110,6 +110,7 @@ static void InitGraphicsMode(struct GraphicsMode* m) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_SDL
 #include <SDL2/SDL.h>
+#include "Graphics.h"
 static SDL_Window* win_handle;
 
 static void RefreshWindowBounds(void) {
@@ -349,6 +350,11 @@ void Window_ProcessEvents(void) {
 			WindowInfo.Exists = false;
 			Event_RaiseVoid(&WindowEvents.Closing);
 			SDL_DestroyWindow(win_handle);
+			break;
+
+		case SDL_RENDER_DEVICE_RESET:
+			Gfx_LoseContext("SDL device reset event");
+			Gfx_RecreateContext();
 			break;
 		}
 	}
