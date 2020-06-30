@@ -22,6 +22,7 @@ extern cc_bool Game_UseCPEBlocks;
 extern String Game_Username;
 extern String Game_Mppass;
 
+#define DEFAULT_MAX_VIEWDIST 32768
 extern int Game_ViewDistance;
 extern int Game_MaxViewDistance;
 extern int Game_UserViewDistance;

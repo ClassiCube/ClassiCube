@@ -42,8 +42,9 @@ int     Game_Port;
 cc_bool Game_UseCPEBlocks;
 
 struct RayTracer Game_SelectedPos;
-int Game_ViewDistance, Game_MaxViewDistance, Game_UserViewDistance;
-int Game_Fov, Game_DefaultFov, Game_ZoomFov;
+int Game_ViewDistance = 512, Game_UserViewDistance = 512;
+int Game_MaxViewDistance = DEFAULT_MAX_VIEWDIST;
+int Game_Fov = 70, Game_DefaultFov, Game_ZoomFov;
 
 int     Game_FpsLimit, Game_Vertices;
 cc_bool Game_SimpleArmsAnim;
@@ -373,15 +374,10 @@ static void LoadPlugins(void) {
 void Game_Free(void* obj);
 static void Game_Load(void) {
 	struct IGameComponent* comp;
-	Logger_WarnFunc = Game_WarnFunc;
-
-	Game_ViewDistance     = 512;
-	Game_MaxViewDistance  = 32768;
-	Game_UserViewDistance = 512;
-	Game_Fov = 70;
-
 	Game_UpdateDimensions();
 	Gfx_Init();
+
+	Logger_WarnFunc = Game_WarnFunc;
 	LoadOptions();
 
 	Event_RegisterVoid(&WorldEvents.NewMap,        NULL, HandleOnNewMap);

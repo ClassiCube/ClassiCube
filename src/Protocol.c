@@ -1106,7 +1106,7 @@ static void CPE_EnvSetMapAppearance(cc_uint8* data) {
 	/* Version 2 */
 	Env_SetCloudsHeight((cc_int16)Stream_GetU16_BE(data + 68));
 	maxViewDist       = (cc_int16)Stream_GetU16_BE(data + 70);
-	Game_MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
+	Game_MaxViewDistance = maxViewDist <= 0 ? DEFAULT_MAX_VIEWDIST : maxViewDist;
 	Game_SetViewDistance(Game_UserViewDistance);
 }
 
@@ -1229,7 +1229,7 @@ static void CPE_SetMapEnvProperty(cc_uint8* data) {
 		Env_SetCloudsHeight(value); break;
 	case 4:
 		Math_Clamp(value, -0x7FFF, 0x7FFF);
-		Game_MaxViewDistance = value <= 0 ? 32768 : value;
+		Game_MaxViewDistance = value <= 0 ? DEFAULT_MAX_VIEWDIST : value;
 		Game_SetViewDistance(Game_UserViewDistance); break;
 	case 5:
 		Env_SetCloudsSpeed(value  / 256.0f); break;

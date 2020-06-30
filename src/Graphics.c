@@ -326,6 +326,21 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 	Platform_Log2("D3D9 resource has %i outstanding references! ID 0x%x", &refCount, &addr);
 }
 
+typedef IDirect3D9* (WINAPI *FP_Direct3DCreate9)(UINT SDKVersion);
+static void CreateD3D9(void) {
+	static const String path = String_FromConst("d3d9.dll");
+	FP_Direct3DCreate9 _direct3DCreate9;
+	void* lib = DynamicLib_Load2(&path);
+
+	if (!lib) {
+		Logger_DynamicLibWarn("loading", &path);
+		Logger_Abort("Failed to load d3d9.dll. You may need to install Direct3D9.");
+	}
+
+	_direct3DCreate9 = DynamicLib_Get2(lib, "Direct3DCreate9");
+	d3d = _direct3DCreate9(D3D_SDK_VERSION);
+}
+
 static void FindCompatibleViewFormat(void) {
 	static const D3DFORMAT formats[4] = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };
 	cc_result res;
@@ -400,7 +415,7 @@ static void TryCreateDevice(void) {
 }
 
 void Gfx_Init(void) {
-	d3d = Direct3DCreate9(D3D_SDK_VERSION);
+	CreateD3D9();
 	FindCompatibleViewFormat();
 	FindCompatibleDepthFormat();
 
