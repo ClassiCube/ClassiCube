@@ -256,7 +256,7 @@ void EntryList_Load(struct EntryList* list, const char* file, EntryList_Filter f
 		/* If don't prevent this here, client aborts in StringsBuffer_Add */
 		if (entry.length > STRINGSBUFFER_LEN_MASK) {
 			entry.length = 0;
-			String_Format1(&entry, "Skipping extremely long line in %c, file may have been corrupted", list->path);
+			String_Format1(&entry, "Skipping extremely long line in %c, file may have been corrupted", file);
 			Logger_WarnFunc(&entry); continue;
 		}
 

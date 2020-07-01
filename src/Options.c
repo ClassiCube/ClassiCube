@@ -134,12 +134,14 @@ static cc_bool Options_LoadFilter(const String* entry) {
 }
 
 void Options_Load(void) {
+	static cc_bool loaded;
 	String entry, key, value;
 	int i;
 
-	if (!Options.path) {
+	if (!loaded) {
 		EntryList_Init(&Options, "options-default.txt", '=');
 		EntryList_Init(&Options, "options.txt",         '=');
+		loaded = true;
 	} else {
 		/* Reset all the unchanged options */
 		for (i = Options.entries.count - 1; i >= 0; i--) {

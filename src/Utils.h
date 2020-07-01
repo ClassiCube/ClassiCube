@@ -55,7 +55,6 @@ int Convert_ToBase64(const cc_uint8* src, int len, char* dst);
 int Convert_FromBase64(const char* src, int len, cc_uint8* dst);
 
 struct EntryList {
-	const char* path;
 	char separator;
 	struct StringsBuffer entries;
 };
