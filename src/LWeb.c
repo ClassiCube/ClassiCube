@@ -235,7 +235,7 @@ void LWebTask_DisplayError(struct LWebTask* task, const char* action, String* ds
 /*########################################################################################################################*
 *-------------------------------------------------------GetTokenTask------------------------------------------------------*
 *#########################################################################################################################*/
-static struct EntryList ccCookies;
+static struct StringsBuffer ccCookies;
 struct GetTokenTaskData GetTokenTask;
 
 static void GetTokenTask_OnValue(struct JsonContext* ctx, const String* str) {

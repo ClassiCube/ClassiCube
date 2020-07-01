@@ -105,7 +105,8 @@ static void Http_DownloadNextAsync(void);
 #endif
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
-static void Http_Add(const String* url, cc_bool priority, const String* id, cc_uint8 type, const String* lastModified, const String* etag, const void* data, cc_uint32 size, struct EntryList* cookies) {
+static void Http_Add(const String* url, cc_bool priority, const String* id, cc_uint8 type, const String* lastModified, 
+					const String* etag, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
 	struct HttpRequest req = { 0 };
 
 	String_CopyToRawArray(req.url, url);
@@ -252,8 +253,7 @@ static void Http_ParseCookie(struct HttpRequest* req, const String* value) {
 	dataEnd = String_IndexOf(&data, ';');
 	if (dataEnd >= 0) data.length = dataEnd;
 
-	req->cookies->separator = '=';
-	EntryList_Set(req->cookies, &name, &data);
+	EntryList_Set(req->cookies, &name, &data, '=');
 }
 
 /* Parses a HTTP header */
@@ -300,12 +300,12 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 	}
 
 	if (req->data) Http_AddHeader("Content-Type", &contentType);
-	if (!req->cookies || !req->cookies->entries.count) return;
+	if (!req->cookies || !req->cookies->count) return;
 
 	String_InitArray(cookies, cookiesBuffer);
-	for (i = 0; i < req->cookies->entries.count; i++) {
+	for (i = 0; i < req->cookies->count; i++) {
 		if (i) String_AppendConst(&cookies, "; ");
-		str = StringsBuffer_UNSAFE_Get(&req->cookies->entries, i);
+		str = StringsBuffer_UNSAFE_Get(req->cookies, i);
 		String_AppendString(&cookies, &str);
 	}
 	Http_AddHeader("Cookie", &cookies);
@@ -1030,10 +1030,10 @@ void Http_AsyncGetData(const String* url, cc_bool priority, const String* id) {
 void Http_AsyncGetHeaders(const String* url, cc_bool priority, const String* id) {
 	Http_Add(url, priority, id, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0, NULL);
 }
-void Http_AsyncPostData(const String* url, cc_bool priority, const String* id, const void* data, cc_uint32 size, struct EntryList* cookies) {
+void Http_AsyncPostData(const String* url, cc_bool priority, const String* id, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
 	Http_Add(url, priority, id, REQUEST_TYPE_POST, NULL, NULL, data, size, cookies);
 }
-void Http_AsyncGetDataEx(const String* url, cc_bool priority, const String* id, const String* lastModified, const String* etag, struct EntryList* cookies) {
+void Http_AsyncGetDataEx(const String* url, cc_bool priority, const String* id, const String* lastModified, const String* etag, struct StringsBuffer* cookies) {
 	Http_Add(url, priority, id, REQUEST_TYPE_GET, lastModified, etag, NULL, 0, cookies);
 }
 

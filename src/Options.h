@@ -68,7 +68,7 @@
 #define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
 #define OPT_CAMERA_MASS "cameramass"
 
-extern struct EntryList Options;
+extern struct StringsBuffer Options;
 /* Returns the number of options changed via Options_SetXYZ since last save. */
 int Options_ChangedCount(void);
 /* Frees any memory allocated in storing options. */

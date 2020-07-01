@@ -150,7 +150,7 @@ cc_bool Atlas_TryChange(Bitmap* atlas) {
 /*########################################################################################################################*
 *------------------------------------------------------TextureCache-------------------------------------------------------*
 *#########################################################################################################################*/
-static struct EntryList acceptedList, deniedList, etagCache, lastModCache;
+static struct StringsBuffer acceptedList, deniedList, etagCache, lastModCache;
 #define ACCEPTED_TXT "texturecache/acceptedurls.txt"
 #define DENIED_TXT   "texturecache/deniedurls.txt"
 #define ETAGS_TXT    "texturecache/etags.txt"
@@ -158,27 +158,27 @@ static struct EntryList acceptedList, deniedList, etagCache, lastModCache;
 
 /* Initialises cache state (loading various lists) */
 static void TextureCache_Init(void) {
-	EntryList_Init(&acceptedList, ACCEPTED_TXT, ' ');
-	EntryList_Init(&deniedList,   DENIED_TXT,   ' ');
-	EntryList_Init(&etagCache,    ETAGS_TXT,    ' ');
-	EntryList_Init(&lastModCache, LASTMOD_TXT,  ' ');
+	EntryList_Load(&acceptedList, ACCEPTED_TXT, '=', NULL);
+	EntryList_Load(&deniedList,   DENIED_TXT,   '=', NULL);
+	EntryList_Load(&etagCache,    ETAGS_TXT,    '=', NULL);
+	EntryList_Load(&lastModCache, LASTMOD_TXT,  '=', NULL);
 }
 
-cc_bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&acceptedList, url) >= 0; }
-cc_bool TextureCache_HasDenied(const String* url)   { return EntryList_Find(&deniedList,   url) >= 0; }
+cc_bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&acceptedList, url, ' ') >= 0; }
+cc_bool TextureCache_HasDenied(const String* url)   { return EntryList_Find(&deniedList,   url, ' ') >= 0; }
 
 void TextureCache_Accept(const String* url) { 
-	EntryList_Set(&acceptedList, url, &String_Empty); 
+	EntryList_Set(&acceptedList, url, &String_Empty, ' '); 
 	EntryList_Save(&acceptedList, ACCEPTED_TXT);
 }
 void TextureCache_Deny(const String* url) { 
-	EntryList_Set(&deniedList,  url, &String_Empty); 
+	EntryList_Set(&deniedList,  url, &String_Empty, ' '); 
 	EntryList_Save(&deniedList, DENIED_TXT);
 }
 
 int TextureCache_ClearDenied(void) {
-	int count = deniedList.entries.count;
-	StringsBuffer_Clear(&deniedList.entries);
+	int count = deniedList.count;
+	StringsBuffer_Clear(&deniedList);
 	EntryList_Save(&deniedList, DENIED_TXT);
 	return count;
 }
@@ -218,12 +218,12 @@ static cc_bool OpenCachedData(const String* url, struct Stream* stream) {
 	return true;
 }
 
-CC_NOINLINE static String GetCachedTag(const String* url, struct EntryList* list) {
+CC_NOINLINE static String GetCachedTag(const String* url, struct StringsBuffer* list) {
 	String key; char keyBuffer[STRING_INT_CHARS];
 	String_InitArray(key, keyBuffer);
 
 	HashUrl(&key, url);
-	return EntryList_UNSAFE_Get(list, &key);
+	return EntryList_UNSAFE_Get(list, &key, ' ');
 }
 
 static String GetCachedLastModified(const String* url) {
@@ -243,14 +243,14 @@ static String GetCachedETag(const String* url) {
 	return GetCachedTag(url, &etagCache);
 }
 
-CC_NOINLINE static void SetCachedTag(const String* url, struct EntryList* list,
+CC_NOINLINE static void SetCachedTag(const String* url, struct StringsBuffer* list,
 									 const String* data, const char* file) {
 	String key; char keyBuffer[STRING_INT_CHARS];
 	if (!data->length) return;
 
 	String_InitArray(key, keyBuffer);
 	HashUrl(&key, url);
-	EntryList_Set(list, &key, data);
+	EntryList_Set(list, &key, data, ' ');
 	EntryList_Save(list, file);
 }
 

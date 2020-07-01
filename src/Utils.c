@@ -220,7 +220,7 @@ int Convert_FromBase64(const char* src, int len, cc_uint8* dst) {
 /*########################################################################################################################*
 *--------------------------------------------------------EntryList--------------------------------------------------------*
 *#########################################################################################################################*/
-void EntryList_Load(struct EntryList* list, const char* file, EntryList_Filter filter) {
+void EntryList_Load(struct StringsBuffer* list, const char* file, char separator, EntryList_Filter filter) {
 	String entry; char entryBuffer[768];
 	String path;  char pathBuffer[FILENAME_SIZE];
 	String key, value;
@@ -260,15 +260,15 @@ void EntryList_Load(struct EntryList* list, const char* file, EntryList_Filter f
 			Logger_WarnFunc(&entry); continue;
 		}
 
-		String_UNSAFE_Separate(&entry, list->separator, &key, &value);
-		EntryList_Set(list, &key, &value);
+		String_UNSAFE_Separate(&entry, separator, &key, &value);
+		EntryList_Set(list, &key, &value, separator);
 	}
 
 	res = stream.Close(&stream);
 	if (res) { Logger_Warn2(res, "closing", &path); }
 }
 
-void EntryList_Save(struct EntryList* list, const char* file) {
+void EntryList_Save(struct StringsBuffer* list, const char* file) {
 	String path, entry; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
 	int i;
@@ -280,8 +280,8 @@ void EntryList_Save(struct EntryList* list, const char* file) {
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Logger_Warn2(res, "creating", &path); return; }
 
-	for (i = 0; i < list->entries.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&list->entries, i);
+	for (i = 0; i < list->count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(list, i);
 		res   = Stream_WriteLine(&stream, &entry);
 		if (res) { Logger_Warn2(res, "writing to", &path); break; }
 	}
@@ -290,53 +290,48 @@ void EntryList_Save(struct EntryList* list, const char* file) {
 	if (res) { Logger_Warn2(res, "closing", &path); }
 }
 
-int EntryList_Remove(struct EntryList* list, const String* key) {
-	int i = EntryList_Find(list, key);
-	if (i >= 0) StringsBuffer_Remove(&list->entries, i);
+int EntryList_Remove(struct StringsBuffer* list, const String* key, char separator) {
+	int i = EntryList_Find(list, key, separator);
+	if (i >= 0) StringsBuffer_Remove(list, i);
 	return i;
 }
 
-void EntryList_Set(struct EntryList* list, const String* key, const String* value) {
+void EntryList_Set(struct StringsBuffer* list, const String* key, const String* value, char separator) {
 	String entry; char entryBuffer[1024];
 	String_InitArray(entry, entryBuffer);
 
 	if (value->length) {
-		String_Format3(&entry, "%s%r%s", key, &list->separator, value);
+		String_Format3(&entry, "%s%r%s", key, &separator, value);
 	} else {
 		String_Copy(&entry, key);
 	}
 
-	EntryList_Remove(list, key);
-	StringsBuffer_Add(&list->entries, &entry);
+	EntryList_Remove(list, key, separator);
+	StringsBuffer_Add(list, &entry);
 }
 
-String EntryList_UNSAFE_Get(struct EntryList* list, const String* key) {
+String EntryList_UNSAFE_Get(struct StringsBuffer* list, const String* key, char separator) {
 	String curEntry, curKey, curValue;
 	int i;
 
-	for (i = 0; i < list->entries.count; i++) {
-		curEntry = StringsBuffer_UNSAFE_Get(&list->entries, i);
-		String_UNSAFE_Separate(&curEntry, list->separator, &curKey, &curValue);
+	for (i = 0; i < list->count; i++) {
+		curEntry = StringsBuffer_UNSAFE_Get(list, i);
+		String_UNSAFE_Separate(&curEntry, separator, &curKey, &curValue);
 
 		if (String_CaselessEquals(key, &curKey)) return curValue;
 	}
 	return String_Empty;
 }
 
-int EntryList_Find(struct EntryList* list, const String* key) {
+int EntryList_Find(struct StringsBuffer* list, const String* key, char separator) {
 	String curEntry, curKey, curValue;
 	int i;
 
-	for (i = 0; i < list->entries.count; i++) {
-		curEntry = StringsBuffer_UNSAFE_Get(&list->entries, i);
-		String_UNSAFE_Separate(&curEntry, list->separator, &curKey, &curValue);
+	for (i = 0; i < list->count; i++) {
+		curEntry = StringsBuffer_UNSAFE_Get(list, i);
+		String_UNSAFE_Separate(&curEntry, separator, &curKey, &curValue);
 
 		if (String_CaselessEquals(key, &curKey)) return i;
 	}
 	return -1;
-}
-
-void EntryList_Init(struct EntryList* list, const char* path, char separator) {
-	list->separator = separator;
-	EntryList_Load(list, path, NULL);
 }

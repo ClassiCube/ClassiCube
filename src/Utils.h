@@ -54,24 +54,17 @@ int Convert_ToBase64(const cc_uint8* src, int len, char* dst);
 /* NOTE: You MUST ensure that dst is appropriately sized. */
 int Convert_FromBase64(const char* src, int len, cc_uint8* dst);
 
-struct EntryList {
-	char separator;
-	struct StringsBuffer entries;
-};
 typedef cc_bool (*EntryList_Filter)(const String* entry);
-
 /* Loads the entries from disc. */
-CC_NOINLINE void EntryList_Load(struct EntryList* list, const char* file, EntryList_Filter filter);
+CC_NOINLINE void EntryList_Load(struct StringsBuffer* list, const char* file, char seperator, EntryList_Filter filter);
 /* Saves the entries to disc. */
-CC_NOINLINE void EntryList_Save(struct EntryList* list, const char* file);
+CC_NOINLINE void EntryList_Save(struct StringsBuffer* list, const char* file);
 /* Removes the entry whose key caselessly equals the given key. */
-CC_NOINLINE int  EntryList_Remove(struct EntryList* list, const String* key);
+CC_NOINLINE int  EntryList_Remove(struct StringsBuffer* list, const String* key, char seperator);
 /* Replaces the entry whose key caselessly equals the given key, or adds a new entry. */
-CC_NOINLINE void EntryList_Set(struct EntryList* list, const String* key, const String* value);
+CC_NOINLINE void EntryList_Set(struct StringsBuffer* list, const String* key, const String* value, char seperator);
 /* Returns the value of the entry whose key caselessly equals the given key. */
-CC_NOINLINE STRING_REF String EntryList_UNSAFE_Get(struct EntryList* list, const String* key);
+CC_NOINLINE STRING_REF String EntryList_UNSAFE_Get(struct StringsBuffer* list, const String* key, char seperator);
 /* Finds the index of the entry whose key caselessly equals the given key. */
-CC_NOINLINE int EntryList_Find(struct EntryList* list, const String* key);
-/* Initialises the EntryList and loads the entries from disc. */
-void EntryList_Init(struct EntryList* list, const char* file, char separator);
+CC_NOINLINE int EntryList_Find(struct StringsBuffer* list, const String* key, char seperator);
 #endif

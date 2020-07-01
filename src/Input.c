@@ -477,9 +477,9 @@ static void Hotkeys_Init(void) {
 	cc_uint8 modifiers;
 	cc_bool more;
 
-	for (i = 0; i < Options.entries.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&Options.entries, i);
-		String_UNSAFE_Separate(&entry, Options.separator, &key, &value);
+	for (i = 0; i < Options.count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&Options, i);
+		String_UNSAFE_Separate(&entry, '=', &key, &value);
 
 		if (!String_CaselessStarts(&key, &prefix)) continue;
 		/* Format is: key&modifiers = more-input&text */

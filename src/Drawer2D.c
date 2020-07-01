@@ -721,7 +721,7 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int 
 
 static FT_Library ft_lib;
 static struct FT_MemoryRec_ ft_mem;
-static struct EntryList font_list;
+static struct StringsBuffer font_list;
 static cc_bool fonts_changed;
 
 struct SysFont {
@@ -849,8 +849,8 @@ static void SysFonts_Init(void) {
 		Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
 	}
 
-	EntryList_Init(&font_list, FONT_CACHE_FILE, '=');
-	if (!font_list.entries.count) SysFonts_Update();
+	EntryList_Load(&font_list, FONT_CACHE_FILE, '=', NULL);
+	if (!font_list.count) SysFonts_Update();
 }
 
 static void SysFonts_Add(const String* path, FT_Face face, int index, char type, const char* defStyle) {
@@ -876,7 +876,7 @@ static void SysFonts_Add(const String* path, FT_Face face, int index, char type,
 	String_Format2(&value, "%s,%i", path, &index);
 
 	Platform_Log2("Face: %s = %s", &key, &value);
-	EntryList_Set(&font_list, &key, &value);
+	EntryList_Set(&font_list, &key, &value, '=');
 	fonts_changed = true;
 }
 
@@ -913,9 +913,9 @@ void SysFonts_Register(const String* path) {
 	int i, count;
 
 	/* if font is already known, skip it */
-	for (i = 0; i < font_list.entries.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&font_list.entries, i);
-		String_UNSAFE_Separate(&entry, font_list.separator, &name, &value);
+	for (i = 0; i < font_list.count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&font_list, i);
+		String_UNSAFE_Separate(&entry, '=', &name, &value);
 
 		String_UNSAFE_Separate(&value, ',', &fontPath, &index);
 		if (String_CaselessEquals(path, &fontPath)) return;
@@ -931,12 +931,12 @@ void SysFonts_Register(const String* path) {
 void Font_GetNames(struct StringsBuffer* buffer) {
 	String entry, name, path;
 	int i;
-	if (!font_list.entries.count) SysFonts_Init();
+	if (!font_list.count) SysFonts_Init();
 	SysFonts_Update();
 
-	for (i = 0; i < font_list.entries.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&font_list.entries, i);
-		String_UNSAFE_Separate(&entry, font_list.separator, &name, &path);
+	for (i = 0; i < font_list.count; i++) {
+		entry = StringsBuffer_UNSAFE_Get(&font_list, i);
+		String_UNSAFE_Separate(&entry, '=', &name, &path);
 
 		/* only want Regular fonts here */
 		if (name.length < 2 || name.buffer[name.length - 1] != 'R') continue;
@@ -950,12 +950,12 @@ static String Font_LookupOf(const String* fontName, const char type) {
 	String_InitArray(name, nameBuffer);
 
 	String_Format2(&name, "%s %r", fontName, &type);
-	return EntryList_UNSAFE_Get(&font_list, &name);
+	return EntryList_UNSAFE_Get(&font_list, &name, '=');
 }
 
 static String Font_DoLookup(const String* fontName, int style) {
 	String path;
-	if (!font_list.entries.count) SysFonts_Init();
+	if (!font_list.count) SysFonts_Init();
 	path = String_Empty;
 
 	if (style & FONT_STYLE_BOLD)   path = Font_LookupOf(fontName, 'B');

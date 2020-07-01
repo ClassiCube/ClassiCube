@@ -35,7 +35,7 @@ struct HttpRequest {
 	char etag[STRING_SIZE];         /* ETag of cached item (if any) */
 	cc_uint8 requestType;           /* See the various REQUEST_TYPE_ */
 	cc_bool success;                /* Whether Result is 0, status is 200, and data is not NULL */
-	struct EntryList* cookies;      /* Cookie list sent in requests. May be modified by the response. */
+	struct StringsBuffer* cookies;  /* Cookie list sent in requests. May be modified by the response. */
 };
 
 /* Frees data from a HTTP request. */
@@ -51,10 +51,10 @@ void Http_AsyncGetData(const String* url, cc_bool priority, const String* id);
 void Http_AsyncGetHeaders(const String* url, cc_bool priority, const String* id);
 /* Asynchronously performs a http POST request. (e.g. to submit data) */
 /* NOTE: You don't have to persist data, a copy is made of it. */
-void Http_AsyncPostData(const String* url, cc_bool priority, const String* id, const void* data, cc_uint32 size, struct EntryList* cookies);
+void Http_AsyncPostData(const String* url, cc_bool priority, const String* id, const void* data, cc_uint32 size, struct StringsBuffer* cookies);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 /* Also sets the If-Modified-Since and If-None-Match headers. (if not NULL)  */
-void Http_AsyncGetDataEx(const String* url, cc_bool priority, const String* id, const String* lastModified, const String* etag, struct EntryList* cookies);
+void Http_AsyncGetDataEx(const String* url, cc_bool priority, const String* id, const String* lastModified, const String* etag, struct StringsBuffer* cookies);
 
 /* Encodes data using % or URL encoding. */
 void Http_UrlEncode(String* dst, const cc_uint8* data, int len);

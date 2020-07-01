@@ -7,13 +7,13 @@
 #include "Utils.h"
 #include "Logger.h"
 
-struct EntryList Options;
+struct StringsBuffer Options;
 static struct StringsBuffer changedOpts;
 
 int Options_ChangedCount(void) { return changedOpts.count;  }
 
 void Options_Free(void) {
-	StringsBuffer_Clear(&Options.entries);
+	StringsBuffer_Clear(&Options);
 	StringsBuffer_Clear(&changedOpts);
 }
 
@@ -32,7 +32,7 @@ cc_bool Options_UNSAFE_Get(const char* keyRaw, String* value) {
 	int idx;
 	String key = String_FromReadonly(keyRaw);
 
-	*value = EntryList_UNSAFE_Get(&Options, &key);
+	*value = EntryList_UNSAFE_Get(&Options, &key, '=');
 	if (value->length) return true; 
 
 	/* Fallback to without '-' (e.g. "hacks-fly" to "fly") */
@@ -41,7 +41,7 @@ cc_bool Options_UNSAFE_Get(const char* keyRaw, String* value) {
 	if (idx == -1) return false;
 	key = String_UNSAFE_SubstringAt(&key, idx + 1);
 
-	*value = EntryList_UNSAFE_Get(&Options, &key);
+	*value = EntryList_UNSAFE_Get(&Options, &key, '=');
 	return value->length > 0;
 }
 
@@ -113,10 +113,10 @@ void Options_Set(const char* keyRaw, const String* value) {
 void Options_SetString(const String* key, const String* value) {
 	int i;
 	if (!value || !value->length) {
-		i = EntryList_Remove(&Options, key);
+		i = EntryList_Remove(&Options, key, '=');
 		if (i == -1) return;
 	} else {
-		EntryList_Set(&Options, key, value);
+		EntryList_Set(&Options, key, value, '=');
 	}
 
 #ifdef CC_BUILD_WEB
@@ -134,26 +134,26 @@ static cc_bool Options_LoadFilter(const String* entry) {
 }
 
 void Options_Load(void) {
-	static cc_bool loaded;
+	static cc_bool inited;
 	String entry, key, value;
 	int i;
 
-	if (!loaded) {
-		EntryList_Init(&Options, "options-default.txt", '=');
-		EntryList_Init(&Options, "options.txt",         '=');
-		loaded = true;
+	if (!inited) {
+		EntryList_Load(&Options, "options-default.txt", '=', NULL);
+		EntryList_Load(&Options, "options.txt",         '=', NULL);
+		inited = true;
 	} else {
 		/* Reset all the unchanged options */
-		for (i = Options.entries.count - 1; i >= 0; i--) {
-			entry = StringsBuffer_UNSAFE_Get(&Options.entries, i);
+		for (i = Options.count - 1; i >= 0; i--) {
+			entry = StringsBuffer_UNSAFE_Get(&Options, i);
 			String_UNSAFE_Separate(&entry, '=', &key, &value);
 
 			if (Options_HasChanged(&key)) continue;
-			StringsBuffer_Remove(&Options.entries, i);
+			StringsBuffer_Remove(&Options, i);
 		}
 
 		/* Load only options which have not changed */
-		EntryList_Load(&Options, "options.txt", Options_LoadFilter);
+		EntryList_Load(&Options, "options.txt", '=', Options_LoadFilter);
 	}
 }
 
