@@ -151,12 +151,12 @@ void Options_Load(void) {
 		}
 
 		/* Load only options which have not changed */
-		EntryList_Load(&Options, Options_LoadFilter);
+		EntryList_Load(&Options, "options.txt", Options_LoadFilter);
 	}
 }
 
 void Options_Save(void) {
-	EntryList_Save(&Options);
+	EntryList_Save(&Options, "options.txt");
 	StringsBuffer_Clear(&changedOpts);
 }
 

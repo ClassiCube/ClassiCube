@@ -62,9 +62,9 @@ struct EntryList {
 typedef cc_bool (*EntryList_Filter)(const String* entry);
 
 /* Loads the entries from disc. */
-CC_NOINLINE void EntryList_Load(struct EntryList* list, EntryList_Filter filter);
+CC_NOINLINE void EntryList_Load(struct EntryList* list, const char* file, EntryList_Filter filter);
 /* Saves the entries to disc. */
-CC_NOINLINE void EntryList_Save(struct EntryList* list);
+CC_NOINLINE void EntryList_Save(struct EntryList* list, const char* file);
 /* Removes the entry whose key caselessly equals the given key. */
 CC_NOINLINE int  EntryList_Remove(struct EntryList* list, const String* key);
 /* Replaces the entry whose key caselessly equals the given key, or adds a new entry. */
@@ -74,5 +74,5 @@ CC_NOINLINE STRING_REF String EntryList_UNSAFE_Get(struct EntryList* list, const
 /* Finds the index of the entry whose key caselessly equals the given key. */
 CC_NOINLINE int EntryList_Find(struct EntryList* list, const String* key);
 /* Initialises the EntryList and loads the entries from disc. */
-void EntryList_Init(struct EntryList* list, const char* path, char separator);
+void EntryList_Init(struct EntryList* list, const char* file, char separator);
 #endif

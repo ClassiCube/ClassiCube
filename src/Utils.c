@@ -220,7 +220,7 @@ int Convert_FromBase64(const char* src, int len, cc_uint8* dst) {
 /*########################################################################################################################*
 *--------------------------------------------------------EntryList--------------------------------------------------------*
 *#########################################################################################################################*/
-void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
+void EntryList_Load(struct EntryList* list, const char* file, EntryList_Filter filter) {
 	String entry; char entryBuffer[768];
 	String path;  char pathBuffer[FILENAME_SIZE];
 	String key, value;
@@ -230,7 +230,7 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 	cc_result res;
 
 	String_InitArray(path, pathBuffer);
-	String_AppendConst(&path, list->path);
+	String_AppendConst(&path, file);
 	
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
@@ -268,14 +268,14 @@ void EntryList_Load(struct EntryList* list, EntryList_Filter filter) {
 	if (res) { Logger_Warn2(res, "closing", &path); }
 }
 
-void EntryList_Save(struct EntryList* list) {
+void EntryList_Save(struct EntryList* list, const char* file) {
 	String path, entry; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
 	int i;
 	cc_result res;
 
 	String_InitArray(path, pathBuffer);
-	String_AppendConst(&path, list->path);
+	String_AppendConst(&path, file);
 	
 	res = Stream_CreateFile(&stream, &path);
 	if (res) { Logger_Warn2(res, "creating", &path); return; }
@@ -337,7 +337,6 @@ int EntryList_Find(struct EntryList* list, const String* key) {
 }
 
 void EntryList_Init(struct EntryList* list, const char* path, char separator) {
-	list->path      = path;
 	list->separator = separator;
-	EntryList_Load(list, NULL);
+	EntryList_Load(list, path, NULL);
 }

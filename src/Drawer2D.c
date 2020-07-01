@@ -722,7 +722,7 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int 
 static FT_Library ft_lib;
 static struct FT_MemoryRec_ ft_mem;
 static struct EntryList font_list;
-static cc_bool font_list_changed;
+static cc_bool fonts_changed;
 
 struct SysFont {
 	FT_Face face;
@@ -822,6 +822,8 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 }
 
 static cc_bool updatedSysFonts;
+#define FONT_CACHE_FILE "fontscache.txt"
+
 /* Updates fonts list cache with system's list of fonts */
 /* This should be avoided due to overhead potential */
 static void SysFonts_Update(void) {
@@ -829,10 +831,9 @@ static void SysFonts_Update(void) {
 	updatedSysFonts = true;
 
 	Platform_LoadSysFonts();
-	if (font_list_changed) EntryList_Save(&font_list);
+	if (fonts_changed) EntryList_Save(&font_list, FONT_CACHE_FILE);
 }
 
-#define FONT_CACHE_FILE "fontscache.txt"
 static void SysFonts_Init(void) {
 	static const String cachePath = String_FromConst(FONT_CACHE_FILE);
 	FT_Error err;
@@ -876,7 +877,7 @@ static void SysFonts_Add(const String* path, FT_Face face, int index, char type,
 
 	Platform_Log2("Face: %s = %s", &key, &value);
 	EntryList_Set(&font_list, &key, &value);
-	font_list_changed = true;
+	fonts_changed = true;
 }
 
 static int SysFonts_DoRegister(const String* path, int faceIndex) {

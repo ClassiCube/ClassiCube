@@ -150,14 +150,18 @@ cc_bool Atlas_TryChange(Bitmap* atlas) {
 /*########################################################################################################################*
 *------------------------------------------------------TextureCache-------------------------------------------------------*
 *#########################################################################################################################*/
-static struct EntryList acceptedList, deniedList, etagCache, lastModifiedCache;
+static struct EntryList acceptedList, deniedList, etagCache, lastModCache;
+#define ACCEPTED_TXT "texturecache/acceptedurls.txt"
+#define DENIED_TXT   "texturecache/deniedurls.txt"
+#define ETAGS_TXT    "texturecache/etags.txt"
+#define LASTMOD_TXT  "texturecache/lastmodified.txt"
 
 /* Initialises cache state (loading various lists) */
 static void TextureCache_Init(void) {
-	EntryList_Init(&acceptedList,      "texturecache/acceptedurls.txt", ' ');
-	EntryList_Init(&deniedList,        "texturecache/deniedurls.txt",   ' ');
-	EntryList_Init(&etagCache,         "texturecache/etags.txt",        ' ');
-	EntryList_Init(&lastModifiedCache, "texturecache/lastmodified.txt", ' ');
+	EntryList_Init(&acceptedList, ACCEPTED_TXT, ' ');
+	EntryList_Init(&deniedList,   DENIED_TXT,   ' ');
+	EntryList_Init(&etagCache,    ETAGS_TXT,    ' ');
+	EntryList_Init(&lastModCache, LASTMOD_TXT,  ' ');
 }
 
 cc_bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&acceptedList, url) >= 0; }
@@ -165,48 +169,48 @@ cc_bool TextureCache_HasDenied(const String* url)   { return EntryList_Find(&den
 
 void TextureCache_Accept(const String* url) { 
 	EntryList_Set(&acceptedList, url, &String_Empty); 
-	EntryList_Save(&acceptedList);
+	EntryList_Save(&acceptedList, ACCEPTED_TXT);
 }
 void TextureCache_Deny(const String* url) { 
-	EntryList_Set(&deniedList,   url, &String_Empty); 
-	EntryList_Save(&deniedList);
+	EntryList_Set(&deniedList,  url, &String_Empty); 
+	EntryList_Save(&deniedList, DENIED_TXT);
 }
 
 int TextureCache_ClearDenied(void) {
 	int count = deniedList.entries.count;
 	StringsBuffer_Clear(&deniedList.entries);
-	EntryList_Save(&deniedList);
+	EntryList_Save(&deniedList, DENIED_TXT);
 	return count;
 }
 
-CC_INLINE static void TextureCache_HashUrl(String* key, const String* url) {
+CC_INLINE static void HashUrl(String* key, const String* url) {
 	String_AppendUInt32(key, Utils_CRC32((const cc_uint8*)url->buffer, url->length));
 }
 
-CC_NOINLINE static void TextureCache_MakePath(String* path, const String* url) {
+CC_NOINLINE static void MakeCachePath(String* path, const String* url) {
 	String key; char keyBuffer[STRING_INT_CHARS];
 	String_InitArray(key, keyBuffer);
 
-	TextureCache_HashUrl(&key, url);
+	HashUrl(&key, url);
 	String_Format1(path, "texturecache/%s", &key);
 }
 
 /* Returns non-zero if given URL has been cached */
-static int TextureCache_Has(const String* url) {
+static int IsCached(const String* url) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	String_InitArray(path, pathBuffer);
 
-	TextureCache_MakePath(&path, url);
+	MakeCachePath(&path, url);
 	return File_Exists(&path);
 }
 
-/* Attempts to get the cached data stream for the given url */
-static cc_bool TextureCache_Get(const String* url, struct Stream* stream) {
+/* Attempts to open the cached data stream for the given url */
+static cc_bool OpenCachedData(const String* url, struct Stream* stream) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	cc_result res;
 
 	String_InitArray(path, pathBuffer);
-	TextureCache_MakePath(&path, url);
+	MakeCachePath(&path, url);
 	res = Stream_OpenFile(stream, &path);
 
 	if (res == ReturnCode_FileNotFound) return false;
@@ -214,17 +218,17 @@ static cc_bool TextureCache_Get(const String* url, struct Stream* stream) {
 	return true;
 }
 
-CC_NOINLINE static String TextureCache_GetFromTags(const String* url, struct EntryList* list) {
+CC_NOINLINE static String GetCachedTag(const String* url, struct EntryList* list) {
 	String key; char keyBuffer[STRING_INT_CHARS];
 	String_InitArray(key, keyBuffer);
 
-	TextureCache_HashUrl(&key, url);
+	HashUrl(&key, url);
 	return EntryList_UNSAFE_Get(list, &key);
 }
 
-static String TextureCache_GetLastModified(const String* url) {
+static String GetCachedLastModified(const String* url) {
 	int i;
-	String entry = TextureCache_GetFromTags(url, &lastModifiedCache);
+	String entry = GetCachedTag(url, &lastModCache);
 	/* Entry used to be a timestamp of C# ticks since 01/01/0001 */
 	/* Check if this is new format */
 	for (i = 0; i < entry.length; i++) {
@@ -235,42 +239,34 @@ static String TextureCache_GetLastModified(const String* url) {
 	entry.length = 0; return entry;
 }
 
-static String TextureCache_GetETag(const String* url) {
-	return TextureCache_GetFromTags(url, &etagCache);
+static String GetCachedETag(const String* url) {
+	return GetCachedTag(url, &etagCache);
 }
 
-CC_NOINLINE static void TextureCache_SetEntry(const String* url, const String* data, struct EntryList* list) {
+CC_NOINLINE static void SetCachedTag(const String* url, struct EntryList* list,
+									 const String* data, const char* file) {
 	String key; char keyBuffer[STRING_INT_CHARS];
+	if (!data->length) return;
+
 	String_InitArray(key, keyBuffer);
-
-	TextureCache_HashUrl(&key, url);
+	HashUrl(&key, url);
 	EntryList_Set(list, &key, data);
-	EntryList_Save(list);
-}
-
-static void TextureCache_SetETag(const String* url, const String* etag) {
-	if (!etag->length) return;
-	TextureCache_SetEntry(url, etag, &etagCache);
-}
-
-static void TextureCache_SetLastModified(const String* url, const String* time) {
-	if (!time->length) return;
-	TextureCache_SetEntry(url, time, &lastModifiedCache);
+	EntryList_Save(list, file);
 }
 
 /* Updates cached data, ETag, and Last-Modified for the given URL */
-static void TextureCache_Update(struct HttpRequest* req) {
+static void UpdateCache(struct HttpRequest* req) {
 	String path, url; char pathBuffer[FILENAME_SIZE];
 	cc_result res;
 	url = String_FromRawArray(req->url);
 
 	path = String_FromRawArray(req->etag);
-	TextureCache_SetETag(&url, &path);
+	SetCachedTag(&url, &etagCache, &path, ETAGS_TXT);
 	path = String_FromRawArray(req->lastModified);
-	TextureCache_SetLastModified(&url, &path);
+	SetCachedTag(&url, &lastModCache, &path, LASTMOD_TXT);
 
 	String_InitArray(path, pathBuffer);
-	TextureCache_MakePath(&path, &url);
+	MakeCachePath(&path, &url);
 	res = Stream_WriteAllTo(&path, req->data, req->size);
 	if (res) { Logger_Warn2(res, "caching", &url); }
 }
@@ -382,7 +378,7 @@ void TexturePack_ExtractCurrent(cc_bool forceReload) {
 	cc_bool zip;
 	cc_result res;
 
-	if (!url.length || !TextureCache_Get(&url, &stream)) {
+	if (!url.length || !OpenCachedData(&url, &stream)) {
 		/* don't pointlessly load default texture pack */
 		if (texturePackDefault && !forceReload) return;
 		file = TexturePack_UNSAFE_GetDefault();
@@ -408,7 +404,7 @@ void TexturePack_Apply(struct HttpRequest* item) {
 	cc_result res;
 
 	url = String_FromRawArray(item->url);
-	TextureCache_Update(item);
+	UpdateCache(item);
 	/* Took too long to download and is no longer active texture pack */
 	if (!String_Equals(&World_TextureUrl, &url)) return;
 
@@ -429,9 +425,9 @@ void TexturePack_DownloadAsync(const String* url, const String* id) {
 
 	/* Only retrieve etag/last-modified headers if the file exists */
 	/* This inconsistency can occur if user deleted some cached files */
-	if (TextureCache_Has(url)) {
-		time = TextureCache_GetLastModified(url);
-		etag = TextureCache_GetETag(url);
+	if (IsCached(url)) {
+		time = GetCachedLastModified(url);
+		etag = GetCachedETag(url);
 	}
 	Http_AsyncGetDataEx(url, true, id, &time, &etag, NULL);
 }
