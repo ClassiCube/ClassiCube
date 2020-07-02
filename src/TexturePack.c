@@ -158,10 +158,10 @@ static struct StringsBuffer acceptedList, deniedList, etagCache, lastModCache;
 
 /* Initialises cache state (loading various lists) */
 static void TextureCache_Init(void) {
-	EntryList_Load(&acceptedList, ACCEPTED_TXT, '=', NULL);
-	EntryList_Load(&deniedList,   DENIED_TXT,   '=', NULL);
-	EntryList_Load(&etagCache,    ETAGS_TXT,    '=', NULL);
-	EntryList_Load(&lastModCache, LASTMOD_TXT,  '=', NULL);
+	EntryList_UNSAFE_Load(&acceptedList, ACCEPTED_TXT);
+	EntryList_UNSAFE_Load(&deniedList,   DENIED_TXT);
+	EntryList_UNSAFE_Load(&etagCache,    ETAGS_TXT);
+	EntryList_UNSAFE_Load(&lastModCache, LASTMOD_TXT);
 }
 
 cc_bool TextureCache_HasAccepted(const String* url) { return EntryList_Find(&acceptedList, url, ' ') >= 0; }

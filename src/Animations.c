@@ -18,7 +18,7 @@
 
 #ifndef CC_BUILD_WEB
 /* Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
-	mirrored at https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-lava-animation-algorithm
+	mirrored at https://github.com/UnknownShadow200/ClassiCube/wiki/Minecraft-Classic-lava-animation-algorithm
 	Water animation originally written by cybertoon, big thanks!
 */
 /*########################################################################################################################*

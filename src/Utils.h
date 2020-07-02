@@ -56,15 +56,20 @@ int Convert_FromBase64(const char* src, int len, cc_uint8* dst);
 
 typedef cc_bool (*EntryList_Filter)(const String* entry);
 /* Loads the entries from disc. */
-CC_NOINLINE void EntryList_Load(struct StringsBuffer* list, const char* file, char seperator, EntryList_Filter filter);
-/* Saves the entries to disc. */
+/* NOTE: If separator is \0, does NOT check for duplicate keys when loading. */
+/* filter can be used to optionally skip loading some entries from the file. */
+CC_NOINLINE void EntryList_Load(struct StringsBuffer* list, const char* file, char separator, EntryList_Filter filter);
+/* Shortcut for EntryList_Load with separator of \0 and filter of NULL */
+/* NOTE: Does NOT check for duplicate keys */
+CC_NOINLINE void EntryList_UNSAFE_Load(struct StringsBuffer* list, const char* file);
+/* Saves the entries in the given list to disc. */
 CC_NOINLINE void EntryList_Save(struct StringsBuffer* list, const char* file);
 /* Removes the entry whose key caselessly equals the given key. */
-CC_NOINLINE int  EntryList_Remove(struct StringsBuffer* list, const String* key, char seperator);
+CC_NOINLINE int  EntryList_Remove(struct StringsBuffer* list, const String* key, char separator);
 /* Replaces the entry whose key caselessly equals the given key, or adds a new entry. */
-CC_NOINLINE void EntryList_Set(struct StringsBuffer* list, const String* key, const String* value, char seperator);
+CC_NOINLINE void EntryList_Set(struct StringsBuffer* list, const String* key, const String* value, char separator);
 /* Returns the value of the entry whose key caselessly equals the given key. */
-CC_NOINLINE STRING_REF String EntryList_UNSAFE_Get(struct StringsBuffer* list, const String* key, char seperator);
+CC_NOINLINE STRING_REF String EntryList_UNSAFE_Get(struct StringsBuffer* list, const String* key, char separator);
 /* Finds the index of the entry whose key caselessly equals the given key. */
-CC_NOINLINE int EntryList_Find(struct StringsBuffer* list, const String* key, char seperator);
+CC_NOINLINE int EntryList_Find(struct StringsBuffer* list, const String* key, char separator);
 #endif

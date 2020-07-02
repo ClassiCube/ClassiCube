@@ -849,7 +849,7 @@ static void SysFonts_Init(void) {
 		Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
 	}
 
-	EntryList_Load(&font_list, FONT_CACHE_FILE, '=', NULL);
+	EntryList_UNSAFE_Load(&font_list, FONT_CACHE_FILE);
 	if (!font_list.count) SysFonts_Update();
 }
 

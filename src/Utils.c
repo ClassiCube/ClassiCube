@@ -260,12 +260,20 @@ void EntryList_Load(struct StringsBuffer* list, const char* file, char separator
 			Logger_WarnFunc(&entry); continue;
 		}
 
-		String_UNSAFE_Separate(&entry, separator, &key, &value);
-		EntryList_Set(list, &key, &value, separator);
+		if (separator) {
+			String_UNSAFE_Separate(&entry, separator, &key, &value);
+			EntryList_Set(list, &key, &value, separator);
+		} else {
+			StringsBuffer_Add(list, &entry);
+		}
 	}
 
 	res = stream.Close(&stream);
 	if (res) { Logger_Warn2(res, "closing", &path); }
+}
+
+void EntryList_UNSAFE_Load(struct StringsBuffer* list, const char* file) { 
+	EntryList_Load(list, file, '\0', NULL); 
 }
 
 void EntryList_Save(struct StringsBuffer* list, const char* file) {
