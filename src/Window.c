@@ -3031,31 +3031,32 @@ static void RefreshWindowBounds(void) {
 	emscripten_get_canvas_element_size("#canvas", &WindowInfo.Width, &WindowInfo.Height);
 }
 
-static void CorrectPointerFocus(void) {
-	/* Sometimes emscripten_request_pointerlock doesn't always acquire focus */
-	/* Browser also only allows pointer locks requests in response to user input */
+/* Browser only allows pointer lock requests in response to user input */
+static void DeferredEnableRawMouse(void) {
 	EmscriptenPointerlockChangeEvent status;
+	if (!Input_RawMode) return;
+
 	status.isActive = false;
 	emscripten_get_pointerlock_status(&status);
-	if (Input_RawMode && !status.isActive) Window_EnableRawMouse();
+	if (!status.isActive) emscripten_request_pointerlock("#canvas", false);
 }
 
 static EM_BOOL OnMouseWheel(int type, const EmscriptenWheelEvent* ev, void* data) {
 	/* TODO: The scale factor isn't standardised.. is there a better way though? */
 	Mouse_ScrollWheel(-Math_Sign(ev->deltaY));
-	CorrectPointerFocus();
+	DeferredEnableRawMouse();
 	return true;
 }
 
 static EM_BOOL OnMouseButton(int type, const EmscriptenMouseEvent* ev, void* data) {
 	cc_bool down = type == EMSCRIPTEN_EVENT_MOUSEDOWN;
-	CorrectPointerFocus();
-
 	switch (ev->button) {
 		case 0: Input_SetPressed(KEY_LMOUSE, down); break;
 		case 1: Input_SetPressed(KEY_MMOUSE, down); break;
 		case 2: Input_SetPressed(KEY_RMOUSE, down); break;
 	}
+
+	DeferredEnableRawMouse();
 	return true;
 }
 
@@ -3211,7 +3212,7 @@ static int MapNativeKey(int k) {
 
 static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev , void* data) {
 	int key = MapNativeKey(ev->keyCode);
-	CorrectPointerFocus();
+	DeferredEnableRawMouse();
 	if (!key) return false;
 
 	if (ev->location == DOM_KEY_LOCATION_RIGHT) {
@@ -3245,7 +3246,7 @@ static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev , void* data) {
 
 static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	char keyChar;
-	CorrectPointerFocus();
+	DeferredEnableRawMouse();
 	/* When on-screen keyboard is open, we don't want to intercept any key presses, */
 	/* because they should be sent to the HTML text input instead. */
 	/* (Chrome for android sends keypresses sometimes for '0' to '9' keys) */
@@ -3522,7 +3523,7 @@ void Window_CloseKeyboard(void) {
 
 void Window_EnableRawMouse(void) {
 	RegrabMouse();
-	emscripten_request_pointerlock("#canvas", true);
+	/* defer pointerlock request until next user input */
 	Input_RawMode = true;
 }
 void Window_UpdateRawMouse(void) { }

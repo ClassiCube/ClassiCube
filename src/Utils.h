@@ -65,7 +65,7 @@ CC_NOINLINE void EntryList_UNSAFE_Load(struct StringsBuffer* list, const char* f
 /* Saves the entries in the given list to disc. */
 CC_NOINLINE void EntryList_Save(struct StringsBuffer* list, const char* file);
 /* Removes the entry whose key caselessly equals the given key. */
-CC_NOINLINE int  EntryList_Remove(struct StringsBuffer* list, const String* key, char separator);
+CC_NOINLINE cc_bool EntryList_Remove(struct StringsBuffer* list, const String* key, char separator);
 /* Replaces the entry whose key caselessly equals the given key, or adds a new entry. */
 CC_NOINLINE void EntryList_Set(struct StringsBuffer* list, const String* key, const String* value, char separator);
 /* Returns the value of the entry whose key caselessly equals the given key. */

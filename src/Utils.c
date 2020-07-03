@@ -298,10 +298,17 @@ void EntryList_Save(struct StringsBuffer* list, const char* file) {
 	if (res) { Logger_Warn2(res, "closing", &path); }
 }
 
-int EntryList_Remove(struct StringsBuffer* list, const String* key, char separator) {
-	int i = EntryList_Find(list, key, separator);
-	if (i >= 0) StringsBuffer_Remove(list, i);
-	return i;
+cc_bool EntryList_Remove(struct StringsBuffer* list, const String* key, char separator) {
+	cc_bool found = false;
+	/* Have to use a for loop, because may be multiple entries with same key */
+	for (;;) {
+		int i = EntryList_Find(list, key, separator);
+		if (i == -1) break;
+		
+		StringsBuffer_Remove(list, i);
+		found = true;
+	}
+	return found;
 }
 
 void EntryList_Set(struct StringsBuffer* list, const String* key, const String* value, char separator) {
