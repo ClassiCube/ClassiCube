@@ -395,7 +395,7 @@ static void PrintRegisters(String* str, void* ctx) {
 	Dump_X64()
 #elif defined _M_ARM
 	#define REG_GNUM(num)     &r->R ## num
-	#define REG_GET(ign,reg)  &r-> ## reg
+	#define REG_GET(ign, reg) &r-> ## reg
 	#define REG_GET_FP()      &r->R11
 	#define REG_GET_IP()      &r->R12
 	Dump_ARM32()
@@ -466,7 +466,7 @@ static void PrintRegisters(String* str, void* ctx) {
 	Dump_ARM64()
 #elif defined __arm__
 	#define REG_GNUM(num)     &r.arm_r##num
-	#define REG_GET(reg,ign)  &r.arm_##reg
+	#define REG_GET(reg, ign) &r.arm_##reg
 	#define REG_GET_FP()      &r.arm_fp
 	#define REG_GET_IP()      &r.arm_ip
 	Dump_ARM32()
