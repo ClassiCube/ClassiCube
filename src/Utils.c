@@ -83,10 +83,10 @@ static cc_bool Utils_IsAllBlack(const Bitmap* bmp, int x1, int y1, int width, in
 cc_uint8 Utils_CalcSkinType(const Bitmap* bmp) {
 	BitmapCol col;
 	int scale;
-	if (bmp->Width == bmp->Height * 2) return SKIN_64x32;
-	if (bmp->Width != bmp->Height)     return SKIN_INVALID;
+	if (bmp->width == bmp->height * 2) return SKIN_64x32;
+	if (bmp->width != bmp->height)     return SKIN_INVALID;
 
-	scale = bmp->Width / 64;
+	scale = bmp->width / 64;
 	/* Minecraft alex skins have this particular pixel with alpha of 0 */	
 	col = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
 	if (BitmapCol_A(col) < 128) return SKIN_64x64_SLIM;

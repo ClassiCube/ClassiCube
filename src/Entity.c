@@ -270,7 +270,7 @@ static void MakeNameTexture(struct Entity* e) {
 			Drawer2D_DrawText(&bmp, &args, 0, 0);
 		}
 		Drawer2D_MakeTexture(&e->NameTex, &bmp, width, height);
-		Mem_Free(bmp.Scan0);
+		Mem_Free(bmp.scan0);
 	}
 	Drawer2D_BitmappedText = bitmapped;
 }
@@ -388,9 +388,9 @@ static void Entity_SetSkinAll(struct Entity* source, cc_bool reset) {
 /* Clears hat area from a skin bitmap if it's completely white or black,
    so skins edited with Microsoft Paint or similiar don't have a solid hat */
 static void Entity_ClearHat(Bitmap* bmp, cc_uint8 skinType) {
-	int sizeX  = (bmp->Width / 64) * 32;
+	int sizeX  = (bmp->width / 64) * 32;
 	int yScale = skinType == SKIN_64x32 ? 32 : 64;
-	int sizeY  = (bmp->Height / yScale) * 16;
+	int sizeY  = (bmp->height / yScale) * 16;
 	int x, y;
 
 	/* determine if we actually need filtering */
@@ -418,24 +418,24 @@ static cc_result Entity_EnsurePow2(struct Entity* e, Bitmap* bmp) {
 	Bitmap scaled;
 	int y;
 
-	width  = Math_NextPowOf2(bmp->Width);
-	height = Math_NextPowOf2(bmp->Height);
-	if (width == bmp->Width && height == bmp->Height) return 0;
+	width  = Math_NextPowOf2(bmp->width);
+	height = Math_NextPowOf2(bmp->height);
+	if (width == bmp->width && height == bmp->height) return 0;
 
 	Bitmap_TryAllocate(&scaled, width, height);
-	if (!scaled.Scan0) return ERR_OUT_OF_MEMORY;
+	if (!scaled.scan0) return ERR_OUT_OF_MEMORY;
 
-	e->uScale = (float)bmp->Width  / width;
-	e->vScale = (float)bmp->Height / height;
-	stride = bmp->Width * 4;
+	e->uScale = (float)bmp->width  / width;
+	e->vScale = (float)bmp->height / height;
+	stride = bmp->width * 4;
 
-	for (y = 0; y < bmp->Height; y++) {
+	for (y = 0; y < bmp->height; y++) {
 		BitmapCol* src = Bitmap_GetRow(bmp, y);
 		BitmapCol* dst = Bitmap_GetRow(&scaled, y);
 		Mem_Copy(dst, src, stride);
 	}
 
-	Mem_Free(bmp->Scan0);
+	Mem_Free(bmp->scan0);
 	*bmp = scaled;
 	return 0;
 }
@@ -477,20 +477,20 @@ static void Entity_CheckSkin(struct Entity* e) {
 	if ((res = Entity_EnsurePow2(e, &bmp))) goto failed;
 	e->SkinType = Utils_CalcSkinType(&bmp);
 
-	if (bmp.Width > Gfx.MaxTexWidth || bmp.Height > Gfx.MaxTexHeight) {
+	if (bmp.width > Gfx.MaxTexWidth || bmp.height > Gfx.MaxTexHeight) {
 		Chat_Add1("&cSkin %s is too large", &skin);
 	} else {
 		if (e->Model->usesHumanSkin) Entity_ClearHat(&bmp, e->SkinType);
 		e->TextureId = Gfx_CreateTexture(&bmp, true, false);
 		Entity_SetSkinAll(e, false);
 	}
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 	return;
 
 failed:
 	url = String_FromRawArray(item.url);
 	Logger_Warn2(res, "decoding", &url);
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 }
 
 /* Returns true if no other entities are sharing this skin texture */

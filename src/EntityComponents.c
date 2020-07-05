@@ -564,7 +564,7 @@ static cc_bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, 
 #define sh_size 128
 #define sh_half (sh_size / 2)
 static void ShadowComponent_MakeTex(void) {
-	cc_uint8 pixels[Bitmap_DataSize(sh_size, sh_size)];
+	BitmapCol pixels[sh_size * sh_size];
 	BitmapCol col = BitmapCol_Make(0, 0, 0, 200);
 	Bitmap bmp; 
 	cc_uint32 x, y;

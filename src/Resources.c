@@ -445,7 +445,7 @@ static cc_result ModernPatcher_PatchTile(struct Stream* data, const struct TileP
 		Bitmap_UNSAFE_CopyBlock(0, 0, tile->x2 * 16, tile->y2 * 16, &bmp, &terrainBmp, 16);
 	}
 
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 	return 0;
 }
 
@@ -461,19 +461,19 @@ static cc_bool ModernPatcher_SelectEntry(const String* path) {
 static cc_result ModernPatcher_MakeAnimations(struct Stream* s, struct Stream* data) {
 	static const String animsPng = String_FromConst("animations.png");
 	struct ResourceTexture* entry;
-	cc_uint8 anim_data[Bitmap_DataSize(512, 16)];
+	BitmapCol pixels[512 * 16];
 	Bitmap anim, bmp;
 	cc_result res;
 	int i;
 
 	if ((res = Png_Decode(&bmp, data))) return res;
-	Bitmap_Init(anim, 512, 16, anim_data);
+	Bitmap_Init(anim, 512, 16, pixels);
 
 	for (i = 0; i < 512; i += 16) {
 		Bitmap_UNSAFE_CopyBlock(0, i, i, 0, &bmp, &anim, 16);
 	}
 
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 	entry = Resources_FindTex(&animsPng);
 	return ZipPatcher_WritePng(s, entry, &anim);
 }
@@ -556,7 +556,7 @@ static cc_result TexPatcher_Terrain(struct Stream* s) {
 
 	entry = Resources_FindTex(&terrainPng);
 	res   = ZipPatcher_WritePng(s, entry, &terrainBmp);
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 	return res;
 }
 

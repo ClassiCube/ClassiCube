@@ -54,7 +54,7 @@ static void Atlas_Convert2DTo1D(void) {
 		}
 		Atlas1D.TexIds[i] = Gfx_CreateTexture(&atlas1D, true, Gfx.Mipmaps);
 	}
-	Mem_Free(atlas1D.Scan0);
+	Mem_Free(atlas1D.scan0);
 }
 
 static void Atlas_Update1D(void) {
@@ -75,8 +75,8 @@ static void Atlas_Update1D(void) {
 /* Loads the given atlas and converts it into an array of 1D atlases. */
 static void Atlas_Update(Bitmap* bmp) {
 	Atlas2D.Bmp       = *bmp;
-	Atlas2D.TileSize  = bmp->Width  / ATLAS2D_TILES_PER_ROW;
-	Atlas2D.RowsCount = bmp->Height / Atlas2D.TileSize;
+	Atlas2D.TileSize  = bmp->width  / ATLAS2D_TILES_PER_ROW;
+	Atlas2D.RowsCount = bmp->height / Atlas2D.TileSize;
 	Atlas2D.RowsCount = min(Atlas2D.RowsCount, ATLAS2D_MAX_ROWS_COUNT);
 
 	Atlas_Update1D();
@@ -93,26 +93,26 @@ static GfxResourceID Atlas_LoadTile_Raw(TextureLoc texLoc, Bitmap* element) {
 }
 
 GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
-	int tileSize = Atlas2D.TileSize;
+	BitmapCol pixels[64 * 64];
+	int size = Atlas2D.TileSize;
 	Bitmap tile;
 	GfxResourceID texId;
-	cc_uint8 scan0[Bitmap_DataSize(64, 64)];
 
 	/* Try to allocate bitmap on stack if possible */
-	if (tileSize > 64) {
-		Bitmap_Allocate(&tile, tileSize, tileSize);
+	if (size > 64) {
+		Bitmap_Allocate(&tile, size, size);
 		texId = Atlas_LoadTile_Raw(texLoc, &tile);
-		Mem_Free(tile.Scan0);
+		Mem_Free(tile.scan0);
 		return texId;
 	} else {	
-		Bitmap_Init(tile, tileSize, tileSize, scan0);
+		Bitmap_Init(tile, size, size, pixels);
 		return Atlas_LoadTile_Raw(texLoc, &tile);
 	}
 }
 
 static void Atlas2D_Free(void) {
-	Mem_Free(Atlas2D.Bmp.Scan0);
-	Atlas2D.Bmp.Scan0 = NULL;
+	Mem_Free(Atlas2D.Bmp.scan0);
+	Atlas2D.Bmp.scan0 = NULL;
 }
 
 static void Atlas1D_Free(void) {
@@ -126,12 +126,12 @@ cc_bool Atlas_TryChange(Bitmap* atlas) {
 	static const String terrain = String_FromConst("terrain.png");
 	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
 
-	if (atlas->Height < atlas->Width) {
+	if (atlas->height < atlas->width) {
 		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
 		Chat_AddRaw("&c Its height is less than its width.");
 		return false;
 	}
-	if (atlas->Width < ATLAS2D_TILES_PER_ROW) {
+	if (atlas->width < ATLAS2D_TILES_PER_ROW) {
 		Chat_AddRaw("&cUnable to use terrain.png from the texture pack.");
 		Chat_AddRaw("&c It must be 16 or more pixels wide.");
 		return false;
@@ -323,7 +323,7 @@ static cc_result TexturePack_ExtractPng(struct Stream* stream) {
 		if (Atlas_TryChange(&bmp)) return 0;
 	}
 
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 	return res;
 }
 
@@ -445,9 +445,9 @@ static void OnFileChanged(void* obj, struct Stream* stream, const String* name) 
 
 	if (res) {
 		Logger_Warn2(res, "decoding", name);
-		Mem_Free(bmp.Scan0);
+		Mem_Free(bmp.scan0);
 	} else if (!Atlas_TryChange(&bmp)) {
-		Mem_Free(bmp.Scan0);
+		Mem_Free(bmp.scan0);
 	}
 }
 

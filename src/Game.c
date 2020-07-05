@@ -234,30 +234,30 @@ cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const Strin
 		*texId = Gfx_CreateTexture(&bmp, true, false);
 	}
 
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 	return success;
 }
 
 cc_bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
 	int maxWidth = Gfx.MaxTexWidth, maxHeight = Gfx.MaxTexHeight;
-	if (!bmp->Scan0) {
+	if (!bmp->scan0) {
 		Chat_Add1("&cError loading %s from the texture pack.", file);
 		return false;
 	}
 	
-	if (bmp->Width > maxWidth || bmp->Height > maxHeight) {
+	if (bmp->width > maxWidth || bmp->height > maxHeight) {
 		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
 		Chat_Add4("&c Its size is (%i,%i), your GPU supports (%i,%i) at most.", 
-			&bmp->Width, &bmp->Height, &maxWidth, &maxHeight);
+			&bmp->width, &bmp->height, &maxWidth, &maxHeight);
 		return false;
 	}
 
-	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
+	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Chat_Add1("&cUnable to use %s from the texture pack.", file);
 
 		Chat_Add2("&c Its size is (%i,%i), which is not a power of two size.", 
-			&bmp->Width, &bmp->Height);
+			&bmp->width, &bmp->height);
 		return false;
 	}
 	return true;

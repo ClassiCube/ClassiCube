@@ -556,18 +556,18 @@ static struct Flag* flags;
 /* Scales up flag bitmap if necessary */
 static void FetchFlagsTask_Scale(Bitmap* bmp) {
 	Bitmap scaled;
-	int width  = Display_ScaleX(bmp->Width);
-	int height = Display_ScaleY(bmp->Height);
+	int width  = Display_ScaleX(bmp->width);
+	int height = Display_ScaleY(bmp->height);
 	/* at default DPI don't need to rescale it */
-	if (width == bmp->Width && height == bmp->Height) return;
+	if (width == bmp->width && height == bmp->height) return;
 
 	Bitmap_TryAllocate(&scaled, width, height);
-	if (!scaled.Scan0) {
+	if (!scaled.scan0) {
 		Logger_Warn(ERR_OUT_OF_MEMORY, "resizing flags bitmap"); return;
 	}
 
-	Bitmap_Scale(&scaled, bmp, 0, 0, bmp->Width, bmp->Height);
-	Mem_Free(bmp->Scan0);
+	Bitmap_Scale(&scaled, bmp, 0, 0, bmp->width, bmp->height);
+	Mem_Free(bmp->scan0);
 	*bmp = scaled;
 }
 
@@ -644,7 +644,7 @@ Bitmap* Flags_Get(const struct ServerInfo* server) {
 void Flags_Free(void) {
 	int i;
 	for (i = 0; i < FetchFlagsTask.count; i++) {
-		Mem_Free(flags[i].bmp.Scan0);
+		Mem_Free(flags[i].bmp.scan0);
 	}
 }
 #endif

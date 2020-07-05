@@ -99,8 +99,8 @@ static void Launcher_ReqeustRedraw(void* obj) {
 
 static void Launcher_OnResize(void* obj) {
 	Game_UpdateDimensions();
-	Launcher_Framebuffer.Width  = Game.Width;
-	Launcher_Framebuffer.Height = Game.Height;
+	Launcher_Framebuffer.width  = Game.Width;
+	Launcher_Framebuffer.height = Game.Height;
 
 	Window_FreeFramebuffer(&Launcher_Framebuffer);
 	Window_AllocFramebuffer(&Launcher_Framebuffer);
@@ -259,8 +259,8 @@ void Launcher_Run(void) {
 	Launcher_Init();
 	Launcher_TryLoadTexturePack();
 
-	Launcher_Framebuffer.Width  = Game.Width;
-	Launcher_Framebuffer.Height = Game.Height;
+	Launcher_Framebuffer.width  = Game.Width;
+	Launcher_Framebuffer.height = Game.Height;
 	Window_AllocFramebuffer(&Launcher_Framebuffer);
 
 	Http_Component.Init();
@@ -370,7 +370,7 @@ static cc_bool Launcher_SelectZipEntry(const String* path) {
 }
 
 static void Launcher_LoadTextures(Bitmap* bmp) {
-	int tileSize = bmp->Width / 16;
+	int tileSize = bmp->width / 16;
 	Bitmap_Allocate(&dirtBmp,  TILESIZE, TILESIZE);
 	Bitmap_Allocate(&stoneBmp, TILESIZE, TILESIZE);
 
@@ -387,7 +387,7 @@ static cc_result Launcher_ProcessZipEntry(const String* path, struct Stream* dat
 	cc_result res;
 
 	if (String_CaselessEqualsConst(path, "default.png")) {
-		if (fontBmp.Scan0) return 0;
+		if (fontBmp.scan0) return 0;
 		res = Png_Decode(&fontBmp, data);
 
 		if (res) {
@@ -395,11 +395,11 @@ static cc_result Launcher_ProcessZipEntry(const String* path, struct Stream* dat
 		} else if (Drawer2D_SetFontBitmap(&fontBmp)) {
 			useBitmappedFont = !Options_GetBool(OPT_USE_CHAT_FONT, false);
 		} else {
-			Mem_Free(fontBmp.Scan0);
-			fontBmp.Scan0 = NULL;
+			Mem_Free(fontBmp.scan0);
+			fontBmp.scan0 = NULL;
 		}
 	} else if (String_CaselessEqualsConst(path, "terrain.png")) {
-		if (dirtBmp.Scan0) return 0;
+		if (dirtBmp.scan0) return 0;
 		res = Png_Decode(&bmp, data);
 
 		if (res) {
@@ -448,7 +448,7 @@ void Launcher_TryLoadTexturePack(void) {
 
 	Launcher_ExtractTexturePack(&path);
 	/* user selected texture pack is missing some required .png files */
-	if (!fontBmp.Scan0 || !dirtBmp.Scan0) {
+	if (!fontBmp.scan0 || !dirtBmp.scan0) {
 		Launcher_ExtractTexturePack(&defZipPath);
 	}
 }
@@ -472,7 +472,7 @@ CC_NOINLINE static void Launcher_ClearTile(int x, int y, int width, int height, 
 }
 
 void Launcher_ResetArea(int x, int y, int width, int height) {
-	if (Launcher_ClassicBackground && dirtBmp.Scan0) {
+	if (Launcher_ClassicBackground && dirtBmp.scan0) {
 		Launcher_ClearTile(x, y, width, height, &stoneBmp);
 	} else {
 		Gradient_Noise(&Launcher_Framebuffer, Launcher_BackgroundCol, 6, x, y, width, height);
@@ -491,14 +491,14 @@ void Launcher_ResetPixels(void) {
 		return;
 	}
 
-	if (Launcher_ClassicBackground && dirtBmp.Scan0) {
+	if (Launcher_ClassicBackground && dirtBmp.scan0) {
 		Launcher_ClearTile(0,        0, WindowInfo.Width,                     TILESIZE, &dirtBmp);
 		Launcher_ClearTile(0, TILESIZE, WindowInfo.Width, WindowInfo.Height - TILESIZE, &stoneBmp);
 	} else {
 		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
 	}
 
-	Drawer2D_BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && fontBmp.Scan0;
+	Drawer2D_BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && fontBmp.scan0;
 	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);
 	x = WindowInfo.Width / 2 - Drawer2D_TextWidth(&args) / 2;
 
@@ -538,8 +538,8 @@ void Launcher_MarkDirty(int x, int y, int width, int height) {
 }
 
 void Launcher_MarkAllDirty(void) {
-	Launcher_Dirty.X = 0; Launcher_Dirty.Width  = Launcher_Framebuffer.Width;
-	Launcher_Dirty.Y = 0; Launcher_Dirty.Height = Launcher_Framebuffer.Height;
+	Launcher_Dirty.X = 0; Launcher_Dirty.Width  = Launcher_Framebuffer.width;
+	Launcher_Dirty.Y = 0; Launcher_Dirty.Height = Launcher_Framebuffer.height;
 }
 
 

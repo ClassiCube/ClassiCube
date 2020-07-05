@@ -269,10 +269,10 @@ static void Animations_Apply(struct AnimationData* data) {
 	size = data->frameSize;
 	Bitmap_Init(frame, size, size, NULL);
 
-	frame.Scan0 = anims_bmp.Scan0
-		+ data->frameY * anims_bmp.Width * 4
-		+ (data->frameX + data->state * size) * 4;
-	Animations_Update(loc, &frame, anims_bmp.Width);
+	frame.scan0 = anims_bmp.scan0 
+				+ data->frameY * anims_bmp.width
+				+ (data->frameX + data->state * size);
+	Animations_Update(loc, &frame, anims_bmp.width);
 }
 
 static cc_bool Animations_IsDefaultZip(void) {
@@ -285,9 +285,9 @@ static cc_bool Animations_IsDefaultZip(void) {
 }
 
 static void Animations_Clear(void) {
-	Mem_Free(anims_bmp.Scan0);
+	Mem_Free(anims_bmp.scan0);
 	anims_count = 0;
-	anims_bmp.Scan0 = NULL;
+	anims_bmp.scan0 = NULL;
 	anims_validated = false;
 }
 
@@ -307,7 +307,7 @@ static void Animations_Validate(void) {
 
 		if (data.frameSize > Atlas2D.TileSize || tileY >= Atlas2D.RowsCount) {
 			Chat_Add2("&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
-		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {
+		} else if (maxX > anims_bmp.width || maxY > anims_bmp.height) {
 			Chat_Add2("&cSome of the animation frames for tile (%i, %i) are at coordinates outside animations.png", &tileX, &tileY);
 		} else {
 			/* if user has water/lava animations in their default.zip, disable built-in */
@@ -334,7 +334,7 @@ static void Animations_Tick(struct ScheduledTask* task) {
 #endif
 
 	if (!anims_count) return;
-	if (!anims_bmp.Scan0) {
+	if (!anims_bmp.scan0) {
 		Chat_AddRaw("&cCurrent texture pack specifies it uses animations,");
 		Chat_AddRaw("&cbut is missing animations.png");
 		anims_count = 0; return;
@@ -366,8 +366,8 @@ static void OnFileChanged(void* obj, struct Stream* stream, const String* name) 
 		if (!res) return;
 
 		Logger_Warn2(res, "decoding", name);
-		Mem_Free(anims_bmp.Scan0);
-		anims_bmp.Scan0 = NULL;
+		Mem_Free(anims_bmp.scan0);
+		anims_bmp.scan0 = NULL;
 	} else if (String_CaselessEqualsConst(name, "animations.txt")) {
 		Animations_ReadDescription(stream, name);
 	} else if (String_CaselessEqualsConst(name, "uselavaanim")) {
