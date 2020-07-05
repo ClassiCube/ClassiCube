@@ -39,7 +39,7 @@ CC_NOINLINE static void Gfx_RestoreState(void);
 CC_NOINLINE static void Gfx_FreeState(void);
 
 static PackedCol gfx_clearCol, gfx_fogCol;
-static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
+static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f; 
 
 /*########################################################################################################################*
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
@@ -207,6 +207,10 @@ void Gfx_RestoreAlphaState(cc_uint8 draw) {
 	if (draw == DRAW_TRANSPARENT)       Gfx_SetAlphaTest(false);
 	if (draw == DRAW_TRANSPARENT_THICK) Gfx_SetAlphaTest(false);
 	if (draw == DRAW_SPRITE)            Gfx_SetAlphaTest(false);
+}
+
+void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, cc_bool mipmaps) {
+	Gfx_UpdateTexture(texId, x, y, part, part->Width * 4, mipmaps);
 }
 
 
@@ -583,7 +587,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 	return tex;
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, cc_bool mipmaps) {
+void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, Bitmap* part, int stride, cc_bool mipmaps) {
 	IDirect3DTexture9* texture = (IDirect3DTexture9*)texId;
 	D3D9_SetTexturePartData(texture, x, y, part, 0);
 	if (mipmaps) D3D9_DoMipmaps(texture, x, y, part, true);
@@ -1180,7 +1184,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 	return texId;
 }
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, cc_bool mipmaps) {
+void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, Bitmap* part, int stride, cc_bool mipmaps) {
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->Width, part->Height, PIXEL_FORMAT, TRANSFER_FORMAT, part->Scan0);
 	if (mipmaps) Gfx_DoMipmaps(x, y, part, true);

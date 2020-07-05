@@ -387,49 +387,49 @@ cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallbac
 	return res == ERROR_NO_MORE_FILES ? 0 : GetLastError();
 }
 
-static cc_result File_Do(FileHandle* file, const String* path, DWORD access, DWORD createMode) {
+static cc_result File_Do(cc_file* file, const String* path, DWORD access, DWORD createMode) {
 	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*file = CreateFile(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-cc_result File_Open(FileHandle* file, const String* path) {
+cc_result File_Open(cc_file* file, const String* path) {
 	return File_Do(file, path, GENERIC_READ, OPEN_EXISTING);
 }
-cc_result File_Create(FileHandle* file, const String* path) {
+cc_result File_Create(cc_file* file, const String* path) {
 	return File_Do(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
-cc_result File_OpenOrCreate(FileHandle* file, const String* path) {
+cc_result File_OpenOrCreate(cc_file* file, const String* path) {
 	return File_Do(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 
-cc_result File_Read(FileHandle file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
+cc_result File_Read(cc_file file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
 	BOOL success = ReadFile(file, data, count, bytesRead, NULL);
 	return success ? 0 : GetLastError();
 }
 
-cc_result File_Write(FileHandle file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
+cc_result File_Write(cc_file file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
 	BOOL success = WriteFile(file, data, count, bytesWrote, NULL);
 	return success ? 0 : GetLastError();
 }
 
-cc_result File_Close(FileHandle file) {
+cc_result File_Close(cc_file file) {
 	return CloseHandle(file) ? 0 : GetLastError();
 }
 
-cc_result File_Seek(FileHandle file, int offset, int seekType) {
+cc_result File_Seek(cc_file file, int offset, int seekType) {
 	static cc_uint8 modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
 	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
 	return pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
 }
 
-cc_result File_Position(FileHandle file, cc_uint32* pos) {
+cc_result File_Position(cc_file file, cc_uint32* pos) {
 	*pos = SetFilePointer(file, 0, NULL, FILE_CURRENT);
 	return *pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
 }
 
-cc_result File_Length(FileHandle file, cc_uint32* len) {
+cc_result File_Length(cc_file file, cc_uint32* len) {
 	*len = GetFileSize(file, NULL);
 	return *len != INVALID_FILE_SIZE ? 0 : GetLastError();
 }
@@ -500,34 +500,34 @@ cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallbac
 	return res;
 }
 
-static cc_result File_Do(FileHandle* file, const String* path, int mode) {
+static cc_result File_Do(cc_file* file, const String* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
 }
 
-cc_result File_Open(FileHandle* file, const String* path) {
+cc_result File_Open(cc_file* file, const String* path) {
 	return File_Do(file, path, O_RDONLY);
 }
-cc_result File_Create(FileHandle* file, const String* path) {
+cc_result File_Create(cc_file* file, const String* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
-cc_result File_OpenOrCreate(FileHandle* file, const String* path) {
+cc_result File_OpenOrCreate(cc_file* file, const String* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 
-cc_result File_Read(FileHandle file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
+cc_result File_Read(cc_file file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
 	*bytesRead = read(file, data, count);
 	return *bytesRead == -1 ? errno : 0;
 }
 
-cc_result File_Write(FileHandle file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
+cc_result File_Write(cc_file file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
 	*bytesWrote = write(file, data, count);
 	return *bytesWrote == -1 ? errno : 0;
 }
 
-cc_result File_Close(FileHandle file) {
+cc_result File_Close(cc_file file) {
 #ifndef CC_BUILD_WEB
 	return close(file) == -1 ? errno : 0;
 #else
@@ -537,17 +537,17 @@ cc_result File_Close(FileHandle file) {
 #endif
 }
 
-cc_result File_Seek(FileHandle file, int offset, int seekType) {
+cc_result File_Seek(cc_file file, int offset, int seekType) {
 	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
 	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
 }
 
-cc_result File_Position(FileHandle file, cc_uint32* pos) {
+cc_result File_Position(cc_file file, cc_uint32* pos) {
 	*pos = lseek(file, 0, SEEK_CUR);
 	return *pos == -1 ? errno : 0;
 }
 
-cc_result File_Length(FileHandle file, cc_uint32* len) {
+cc_result File_Length(cc_file file, cc_uint32* len) {
 	struct stat st;
 	if (fstat(file, &st) == -1) { *len = -1; return errno; }
 	*len = st.st_size; return 0;
@@ -841,12 +841,12 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Socket_Create(SocketHandle* socketResult) {
+cc_result Socket_Create(cc_socket* socketResult) {
 	*socketResult = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	return *socketResult == -1 ? Socket__Error() : 0;
 }
 
-static cc_result Socket_ioctl(SocketHandle socket, cc_uint32 cmd, int* data) {
+static cc_result Socket_ioctl(cc_socket socket, cc_uint32 cmd, int* data) {
 #if defined CC_BUILD_WIN
 	return ioctlsocket(socket, cmd, data);
 #else
@@ -854,10 +854,10 @@ static cc_result Socket_ioctl(SocketHandle socket, cc_uint32 cmd, int* data) {
 #endif
 }
 
-cc_result Socket_Available(SocketHandle socket, cc_uint32* available) {
+cc_result Socket_Available(cc_socket socket, cc_uint32* available) {
 	return Socket_ioctl(socket, FIONREAD, available);
 }
-cc_result Socket_SetBlocking(SocketHandle socket, cc_bool blocking) {
+cc_result Socket_SetBlocking(cc_socket socket, cc_bool blocking) {
 #if defined CC_BUILD_WEB
 	return ERR_NOT_SUPPORTED; /* sockets always async */
 #else
@@ -867,12 +867,12 @@ cc_result Socket_SetBlocking(SocketHandle socket, cc_bool blocking) {
 }
 
 
-cc_result Socket_GetError(SocketHandle socket, cc_result* result) {
+cc_result Socket_GetError(cc_socket socket, cc_result* result) {
 	socklen_t resultSize = sizeof(cc_result);
 	return getsockopt(socket, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-cc_result Socket_Connect(SocketHandle socket, const String* ip, int port) {
+cc_result Socket_Connect(cc_socket socket, const String* ip, int port) {
 	struct sockaddr addr;
 	cc_result res;
 
@@ -884,7 +884,7 @@ cc_result Socket_Connect(SocketHandle socket, const String* ip, int port) {
 	return res == -1 ? Socket__Error() : 0;
 }
 
-cc_result Socket_Read(SocketHandle socket, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+cc_result Socket_Read(cc_socket socket, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 #ifdef CC_BUILD_WEB
 	/* recv only reads one WebSocket frame at most, hence call it multiple times */
 	int recvCount = 0, pending;
@@ -905,13 +905,13 @@ cc_result Socket_Read(SocketHandle socket, cc_uint8* data, cc_uint32 count, cc_u
 #endif
 }
 
-cc_result Socket_Write(SocketHandle socket, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+cc_result Socket_Write(cc_socket socket, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int sentCount = send(socket, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
 
-cc_result Socket_Close(SocketHandle socket) {
+cc_result Socket_Close(cc_socket socket) {
 	cc_result res = 0;
 	cc_result res1, res2;
 
@@ -935,7 +935,7 @@ cc_result Socket_Close(SocketHandle socket) {
 
 /* Alas, a simple cross-platform select() is not good enough */
 #if defined CC_BUILD_WIN
-cc_result Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket socket, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
@@ -955,7 +955,7 @@ cc_result Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 }
 #elif defined CC_BUILD_OSX
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
-cc_result Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket socket, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
@@ -974,7 +974,7 @@ cc_result Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
 }
 #else
 #include <poll.h>
-cc_result Socket_Poll(SocketHandle socket, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket socket, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
 
@@ -1253,7 +1253,7 @@ cc_result Updater_Start(void) {
 
 cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 	TCHAR path[NATIVE_STR_LEN + 1];
-	FileHandle file;
+	cc_file file;
 	FILETIME ft;
 	cc_uint64 raw;
 	int len = 0;
@@ -1280,7 +1280,7 @@ cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 cc_result Updater_MarkExecutable(void) { return 0; }
 cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 	static const String path = String_FromConst(UPDATE_FILE);
-	FileHandle file;
+	cc_file file;
 	FILETIME ft;
 	cc_uint64 raw;
 	cc_result res = File_OpenOrCreate(&file, &path);

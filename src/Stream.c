@@ -1,7 +1,6 @@
 #include "Stream.h"
 #include "Platform.h"
 #include "Funcs.h"
-#include "Logger.h"
 #include "Errors.h"
 #include "Utils.h"
 
@@ -112,21 +111,21 @@ static cc_result Stream_FileLength(struct Stream* s, cc_uint32* length) {
 }
 
 cc_result Stream_OpenFile(struct Stream* s, const String* path) {
-	FileHandle file;
+	cc_file file;
 	cc_result res = File_Open(&file, path);
 	Stream_FromFile(s, file);
 	return res;
 }
 
 cc_result Stream_CreateFile(struct Stream* s, const String* path) {
-	FileHandle file;
+	cc_file file;
 	cc_result res = File_Create(&file, path);
 	Stream_FromFile(s, file);
 	return res;
 }
 
 cc_result Stream_AppendFile(struct Stream* s, const String* path) {
-	FileHandle file;
+	cc_file file;
 	cc_result res;
 	
 	if ((res = File_OpenOrCreate(&file, path)))        return res;
@@ -147,7 +146,7 @@ cc_result Stream_WriteAllTo(const String* path, const cc_uint8* data, cc_uint32 
 	return res ? res : closeRes;
 }
 
-void Stream_FromFile(struct Stream* s, FileHandle file) {
+void Stream_FromFile(struct Stream* s, cc_file file) {
 	Stream_Init(s);
 	s->Meta.File = file;
 

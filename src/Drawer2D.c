@@ -773,7 +773,7 @@ static void SysFont_Close(FT_Stream stream) {
 }
 
 static cc_result SysFont_Init(const String* path, struct SysFont* font, FT_Open_Args* args) {
-	FileHandle file;
+	cc_file file;
 	cc_uint32 size;
 	cc_result res;
 #ifdef CC_BUILD_OSX

@@ -29,7 +29,7 @@ struct Stream {
 	cc_result (*Close)(struct Stream* s);
 	
 	union {
-		FileHandle File;
+		cc_file File;
 		void* Inflate;
 		struct { cc_uint8* Cur; cc_uint32 Left, Length; cc_uint8* Base; } Mem;
 		struct { struct Stream* Source; cc_uint32 Left, Length; } Portion;
@@ -56,7 +56,7 @@ cc_result Stream_AppendFile(struct Stream* s, const String* path);
 /* Creates or overwrites a file, setting the contents to the given data. */
 cc_result Stream_WriteAllTo(const String* path, const cc_uint8* data, cc_uint32 length);
 /* Wraps a file, allowing reading from/writing to/seeking in the file. */
-CC_API void Stream_FromFile(struct Stream* s, FileHandle file);
+CC_API void Stream_FromFile(struct Stream* s, cc_file file);
 
 /* Wraps another Stream, only allows reading up to 'len' bytes from the wrapped stream. */
 CC_API void Stream_ReadonlyPortion(struct Stream* s, struct Stream* source, cc_uint32 len);
