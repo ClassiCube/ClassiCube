@@ -211,8 +211,9 @@ CC_API void BoxDesc_ZQuad2(struct Model* m, float x1, float x2, float y1, float 
 
 #define MAX_CUSTOM_MODELS 64
 #define MAX_CUSTOM_MODEL_PARTS 64
+#define MAX_CUSTOM_MODEL_ANIMS 4
 
-enum CustomModelAnim {
+enum CustomModelAnimType {
 	CustomModelAnim_None = 0,
 	CustomModelAnim_Head = 1,
 	CustomModelAnim_LeftLeg = 2,
@@ -224,7 +225,24 @@ enum CustomModelAnim {
 	CustomModelAnim_SpinZ = 8,
 	CustomModelAnim_SpinXVelocity = 9,
 	CustomModelAnim_SpinYVelocity = 10,
-	CustomModelAnim_SpinZVelocity = 11
+	CustomModelAnim_SpinZVelocity = 11,
+	CustomModelAnim_SinTranslateX = 12,
+	CustomModelAnim_SinTranslateY = 13,
+	CustomModelAnim_SinTranslateZ = 14,
+	CustomModelAnim_SinTranslateXVelocity = 15,
+	CustomModelAnim_SinTranslateYVelocity = 16,
+	CustomModelAnim_SinTranslateZVelocity = 17,
+	CustomModelAnim_SinRotateX = 18,
+	CustomModelAnim_SinRotateY = 19,
+	CustomModelAnim_SinRotateZ = 20,
+	CustomModelAnim_SinRotateXVelocity = 21,
+	CustomModelAnim_SinRotateYVelocity = 22,
+	CustomModelAnim_SinRotateZVelocity = 23
+};
+
+struct CustomModelAnim {
+	cc_uint8 type;
+	float a, b, c, d;
 };
 
 struct CustomModelPart {
@@ -245,8 +263,7 @@ struct CustomModelPart {
 	/* rotation angles */
 	Vec3 rotation;
 
-	float animModifier;
-	cc_uint8 anim;
+	struct CustomModelAnim anims[MAX_CUSTOM_MODEL_ANIMS];
 
 	cc_bool fullbright;
 	cc_bool firstPersonArm;
