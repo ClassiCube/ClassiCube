@@ -650,7 +650,7 @@ static void* ExecThread(void* param) {
 
 void* Thread_Start(Thread_StartFunc func, cc_bool detach) {
 	pthread_t* ptr = (pthread_t*)Mem_Alloc(1, sizeof(pthread_t), "thread");
-	int res = pthread_create(ptr, NULL, ExecThread, func);
+	int res = pthread_create(ptr, NULL, ExecThread, (void*)func);
 	if (res) Logger_Abort2(res, "Creating thread");
 
 	if (detach) Thread_Detach(ptr);

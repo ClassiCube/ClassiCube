@@ -262,8 +262,8 @@ static struct ChatCommand* Commands_FindMatch(const String* cmdName) {
 
 static void Commands_PrintDefault(void) {
 	String str; char strBuffer[STRING_SIZE];
-	String name;
 	struct ChatCommand* cmd;
+	String name;
 
 	Chat_AddRaw("&eList of client commands:");
 	String_InitArray(str, strBuffer);
@@ -288,9 +288,9 @@ static void Commands_Execute(const String* input) {
 	static const String prefix      = String_FromConst(COMMANDS_PREFIX);
 	String text = *input;
 
-	int offset, count;
-	String args[10];
 	struct ChatCommand* cmd;
+	int offset, count;
+	String args[50];
 
 	if (String_CaselessStarts(&text, &prefixSpace)) { /* /client command args */
 		offset = prefixSpace.length;

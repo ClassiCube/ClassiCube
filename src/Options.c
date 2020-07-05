@@ -111,7 +111,6 @@ void Options_Set(const char* keyRaw, const String* value) {
 }
 
 void Options_SetString(const String* key, const String* value) {
-	int i;
 	if (!value || !value->length) {
 		if (!EntryList_Remove(&Options, key, '=')) return;
 	} else {
