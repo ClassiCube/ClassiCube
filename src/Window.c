@@ -384,7 +384,7 @@ void Window_AllocFramebuffer(Bitmap* bmp) {
 		int ret = SDL_LockSurface(surface);
 		if (ret < 0) Window_SDLFail("locking window surface");
 	}
-	bmp->Scan0 = surface->pixels;
+	bmp->scan0 = surface->pixels;
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
@@ -1805,10 +1805,10 @@ static XImage* fb_image;
 void Window_AllocFramebuffer(Bitmap* bmp) {
 	if (!fb_gc) fb_gc = XCreateGC(win_display, win_handle, 0, NULL);
 
-	bmp->Scan0 = (cc_uint8*)Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
+	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	fb_image   = XCreateImage(win_display, win_visual.visual,
-		win_visual.depth, ZPixmap, 0, (char*)bmp->Scan0,
-		bmp->Width, bmp->Height, 32, 0);
+		win_visual.depth, ZPixmap, 0, (char*)bmp->scan0,
+		bmp->width, bmp->height, 32, 0);
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
@@ -1818,7 +1818,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 
 void Window_FreeFramebuffer(Bitmap* bmp) {
 	XFree(fb_image);
-	Mem_Free(bmp->Scan0);
+	Mem_Free(bmp->scan0);
 }
 
 void Window_OpenKeyboard(void)  { }
@@ -2493,7 +2493,7 @@ static CGColorSpaceRef colorSpace;
 void Window_AllocFramebuffer(Bitmap* bmp) {
 	if (!fb_port) fb_port = GetWindowPort(win_handle);
 
-	bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
+	bmp->scan0 = Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	colorSpace = CGColorSpaceCreateDeviceRGB();
 	fb_bmp     = *bmp;
 }
@@ -2518,13 +2518,13 @@ void Window_DrawFramebuffer(Rect2D r) {
 	if (err) Logger_Abort2(err, "Begin draw");
 	/* TODO: REPLACE THIS AWFUL HACK */
 
-	provider = CGDataProviderCreateWithData(NULL, fb_bmp.Scan0,
-		Bitmap_DataSize(fb_bmp.Width, fb_bmp.Height), NULL);
+	provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
+		Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
 #ifdef CC_BIG_ENDIAN
-	image    = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
+	image    = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
 				kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
 #else
-	image    = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
+	image    = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
 				kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
 #endif
 
@@ -2538,7 +2538,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 }
 
 void Window_FreeFramebuffer(Bitmap* bmp) {
-	Mem_Free(bmp->Scan0);
+	Mem_Free(bmp->scan0);
 	CGColorSpaceRelease(colorSpace);
 }
 
@@ -2963,7 +2963,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 
 static Bitmap fb_bmp;
 void Window_AllocFramebuffer(Bitmap* bmp) {
-	bmp->Scan0 = (cc_uint8*)Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
+	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	fb_bmp = *bmp;
 }
 
@@ -2978,7 +2978,7 @@ static void View_DrawRect(id self, SEL cmd, CGRect r_) {
 	/* Unfortunately CGImageRef is immutable, so changing the */
 	/* underlying data doesn't change what shows when drawing. */
 	/* TODO: Find a better way of doing this in cocoa.. */
-	if (!fb_bmp.Scan0) return;
+	if (!fb_bmp.scan0) return;
 	nsContext = objc_msgSend((id)objc_getClass("NSGraphicsContext"), selCurrentContext);
 	context   = objc_msgSend(nsContext, selGraphicsPort);
 
@@ -2988,9 +2988,9 @@ static void View_DrawRect(id self, SEL cmd, CGRect r_) {
 	rect.size.height = WindowInfo.Height;
 
 	/* TODO: REPLACE THIS AWFUL HACK */
-	provider = CGDataProviderCreateWithData(NULL, fb_bmp.Scan0,
-		Bitmap_DataSize(fb_bmp.Width, fb_bmp.Height), NULL);
-	image = CGImageCreate(fb_bmp.Width, fb_bmp.Height, 8, 32, fb_bmp.Width * 4, colorSpace,
+	provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
+		Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
+	image = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
 		kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
 
 	CGContextDrawImage(context, rect, image);
@@ -3013,7 +3013,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 }
 
 void Window_FreeFramebuffer(Bitmap* bmp) {
-	Mem_Free(bmp->Scan0);
+	Mem_Free(bmp->scan0);
 }
 #endif
 
@@ -3819,7 +3819,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 
 static Bitmap fb_bmp;
 void Window_AllocFramebuffer(Bitmap* bmp) {
-	bmp->Scan0 = Mem_Alloc(bmp->Width * bmp->Height, 4, "window pixels");
+	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	fb_bmp     = *bmp;
 }
 
@@ -3849,19 +3849,19 @@ void Window_DrawFramebuffer(Rect2D r) {
 	Platform_Log3("WIN SIZE: %i,%i  %i", &width, &height, &format);
 	Platform_Log4("BUF SIZE: %i,%i  %i/%i", &buffer.width, &buffer.height, &buffer.format, &buffer.stride);
 
-	src  = (cc_uint32*)fb_bmp.Scan0 + b.left;
+	src  = (cc_uint32*)fb_bmp.scan0 + b.left;
 	dst  = (cc_uint32*)buffer.bits  + b.left;
 	size = (b.right - b.left) * 4;
 
 	for (y = b.top; y < b.bottom; y++) {
-		Mem_Copy(dst + y * buffer.stride, src + y * fb_bmp.Width, size);
+		Mem_Copy(dst + y * buffer.stride, src + y * fb_bmp.width, size);
 	}
 	res = ANativeWindow_unlockAndPost(win_handle);
 	if (res) Logger_Abort2(res, "Unlocking window pixels");
 }
 
 void Window_FreeFramebuffer(Bitmap* bmp) {
-	Mem_Free(bmp->Scan0);
+	Mem_Free(bmp->scan0);
 }
 
 void Window_OpenKeyboard(void) {
