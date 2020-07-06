@@ -107,7 +107,7 @@ static int tileWidths[256];
 
 /* Finds the right-most non-transparent pixel in each tile in default.png */
 static void CalculateTextWidths(void) {
-	int width = fontBitmap.Width, height = fontBitmap.Height;
+	int width = fontBitmap.width, height = fontBitmap.height;
 	BitmapCol* row;
 	int i, x, y, xx, tileY;
 
@@ -134,20 +134,20 @@ static void CalculateTextWidths(void) {
 static void FreeFontBitmap(void) {
 	int i;
 	for (i = 0; i < Array_Elems(tileWidths); i++) tileWidths[i] = 0;
-	Mem_Free(fontBitmap.Scan0);
+	Mem_Free(fontBitmap.scan0);
 }
 
 cc_bool Drawer2D_SetFontBitmap(Bitmap* bmp) {
 	/* If not all of these cases are accounted for, end up overwriting memory after tileWidths */
-	if (bmp->Width != bmp->Height) {
+	if (bmp->width != bmp->height) {
 		static const String msg = String_FromConst("&cWidth of default.png must equal its height");
 		Logger_WarnFunc(&msg);
 		return false;
-	} else if (bmp->Width < 16) {
+	} else if (bmp->width < 16) {
 		static const String msg = String_FromConst("&cdefault.png must be at least 16 pixels wide");
 		Logger_WarnFunc(&msg);
 		return false;
-	} else if (!Math_IsPowOf2(bmp->Width)) {
+	} else if (!Math_IsPowOf2(bmp->width)) {
 		static const String msg = String_FromConst("&cWidth of default.png must be a power of two");
 		Logger_WarnFunc(&msg);
 		return false;
@@ -156,7 +156,7 @@ cc_bool Drawer2D_SetFontBitmap(Bitmap* bmp) {
 	/* TODO: Use shift instead of mul/div */
 	FreeFontBitmap();
 	fontBitmap = *bmp;
-	tileSize   = bmp->Width >> LOG2_CHARS_PER_ROW;
+	tileSize   = bmp->width >> LOG2_CHARS_PER_ROW;
 
 	CalculateTextWidths();
 	return true;
@@ -180,14 +180,14 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int 
 *---------------------------------------------------Drawing functions-----------------------------------------------------*
 *#########################################################################################################################*/
 cc_bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height) {
-	if (*x >= bmp->Width || *y >= bmp->Height) return false;
+	if (*x >= bmp->width || *y >= bmp->height) return false;
 
 	/* origin is negative, move inside */
 	if (*x < 0) { *width  += *x; *x = 0; }
 	if (*y < 0) { *height += *y; *y = 0; }
 
-	*width  = min(*x + *width,  bmp->Width)  - *x;
-	*height = min(*y + *height, bmp->Height) - *y;
+	*width  = min(*x + *width,  bmp->width)  - *x;
+	*height = min(*y + *height, bmp->height) - *y;
 	return *width > 0 && *height > 0;
 }
 #define Drawer2D_ClampPixel(p) p = (p < 0 ? 0 : (p > 255 ? 255 : p))
@@ -291,7 +291,7 @@ void Gradient_Tint(Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 }
 
 void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src) {
-	int width = src->Width, height = src->Height;
+	int width = src->width, height = src->height;
 	BitmapCol* dstRow;
 	BitmapCol* srcRow;
 	int xx, yy;
@@ -333,7 +333,7 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 		Drawer2D_DrawText(&bmp, args, 0, 0);
 		Drawer2D_MakeTexture(tex, &bmp, width, height);
 	}
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 }
 
 void Drawer2D_MakeTexture(struct Texture* tex, Bitmap* bmp, int width, int height) {
@@ -342,8 +342,8 @@ void Drawer2D_MakeTexture(struct Texture* tex, Bitmap* bmp, int width, int heigh
 	tex->Y  = 0; tex->Height = height;
 
 	tex->uv.U1 = 0.0f; tex->uv.V1 = 0.0f;
-	tex->uv.U2 = (float)width  / (float)bmp->Width;
-	tex->uv.V2 = (float)height / (float)bmp->Height;
+	tex->uv.U2 = (float)width  / (float)bmp->width;
+	tex->uv.V2 = (float)height / (float)bmp->height;
 }
 
 cc_bool Drawer2D_ValidColCodeAt(const String* text, int i) {
@@ -421,11 +421,11 @@ static void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height,
 	int xx, yy;
 
 	for (yy = y; yy < y + height; yy++) {
-		if (yy >= bmp->Height) return;
+		if (yy >= bmp->height) return;
 		row = Bitmap_GetRow(bmp, yy);
 
 		for (xx = x; xx < x + width; xx++) {
-			if (xx >= bmp->Width) break;
+			if (xx >= bmp->width) break;
 			row[xx] = col;
 		}
 	}
@@ -475,7 +475,7 @@ static void DrawBitmappedTextCore(Bitmap* bmp, struct DrawTextArgs* args, int x,
 
 	for (yy = 0; yy < dstHeight; yy++) {
 		dstY = y + (yy + yPadding);
-		if ((unsigned)dstY >= (unsigned)bmp->Height) continue;
+		if ((unsigned)dstY >= (unsigned)bmp->height) continue;
 
 		fontY  = 0 + yy * tileSize / dstHeight;
 		dstRow = Bitmap_GetRow(bmp, dstY);
@@ -495,7 +495,7 @@ static void DrawBitmappedTextCore(Bitmap* bmp, struct DrawTextArgs* args, int x,
 				if (!BitmapCol_A(src)) continue;
 
 				dstX = x + xx;
-				if ((unsigned)dstX >= (unsigned)bmp->Width) continue;
+				if ((unsigned)dstX >= (unsigned)bmp->width) continue;
 
 				/* TODO: Transparent text by multiplying by col.A */
 				/* TODO: Not shift when multiplying */
@@ -657,11 +657,11 @@ static void OnFileChanged(void* obj, struct Stream* src, const String* name) {
 
 	if ((res = Png_Decode(&bmp, src))) {
 		Logger_Warn2(res, "decoding", name);
-		Mem_Free(bmp.Scan0);
+		Mem_Free(bmp.scan0);
 	} else if (Drawer2D_SetFontBitmap(&bmp)) {
 		Event_RaiseVoid(&ChatEvents.FontChanged);
 	} else {
-		Mem_Free(bmp.Scan0);
+		Mem_Free(bmp.scan0);
 	}
 }
 
@@ -679,7 +679,7 @@ static void Drawer2D_Init(void) {
 
 static void Drawer2D_Free(void) { 
 	FreeFontBitmap();
-	fontBitmap.Scan0 = NULL;
+	fontBitmap.scan0 = NULL;
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
@@ -1064,12 +1064,12 @@ static void DrawGrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitmap
 	int xx, yy;
 
 	for (yy = 0; yy < img->rows; yy++) {
-		if ((unsigned)(y + yy) >= (unsigned)bmp->Height) continue;
+		if ((unsigned)(y + yy) >= (unsigned)bmp->height) continue;
 		src = img->buffer + (yy * img->pitch);
 		dst = Bitmap_GetRow(bmp, y + yy) + x;
 
 		for (xx = 0; xx < img->width; xx++, src++, dst++) {
-			if ((unsigned)(x + xx) >= (unsigned)bmp->Width) continue;
+			if ((unsigned)(x + xx) >= (unsigned)bmp->width) continue;
 			I = *src; invI = UInt8_MaxValue - I;
 
 			/* TODO: Support transparent text */
@@ -1092,12 +1092,12 @@ static void DrawBlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitma
 	int xx, yy;
 
 	for (yy = 0; yy < img->rows; yy++) {
-		if ((unsigned)(y + yy) >= (unsigned)bmp->Height) continue;
+		if ((unsigned)(y + yy) >= (unsigned)bmp->height) continue;
 		src = img->buffer + (yy * img->pitch);
 		dst = Bitmap_GetRow(bmp, y + yy) + x;
 
 		for (xx = 0; xx < img->width; xx++, dst++) {
-			if ((unsigned)(x + xx) >= (unsigned)bmp->Width) continue;
+			if ((unsigned)(x + xx) >= (unsigned)bmp->width) continue;
 			intensity = src[xx >> 3];
 
 			/* TODO: transparent text (don't set A to 255) */

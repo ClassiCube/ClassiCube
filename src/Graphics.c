@@ -209,10 +209,23 @@ void Gfx_RestoreAlphaState(cc_uint8 draw) {
 	if (draw == DRAW_SPRITE)            Gfx_SetAlphaTest(false);
 }
 
+
 void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, cc_bool mipmaps) {
-	Gfx_UpdateTexture(texId, x, y, part, part->Width * 4, mipmaps);
+	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
+static void CopyTextureData(void* dst, int dstStride, const Bitmap* src, int srcStride) {
+	/* We need to copy scanline by scanline, as generally srcStride != dstStride */
+	cc_uint8* src_ = (cc_uint8*)src->scan0;
+	cc_uint8* dst_ = (cc_uint8*)dst;
+	int y;
+
+	for (y = 0; y < src->height; y++) {
+		Mem_Copy(dst_, src_, src->width << 2);
+		src_ += srcStride;
+		dst_ += dstStride;
+	}
+}
 
 /* Quoted from http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/ */
 /* The short version: if you want your renderer to properly handle textures with alphas when using */
@@ -243,16 +256,15 @@ static BitmapCol AverageCol(BitmapCol p1, BitmapCol p2) {
 }
 
 /* Generates the next mipmaps level bitmap for the given bitmap. */
-static void GenMipmaps(int width, int height, cc_uint8* lvlScan0, cc_uint8* scan0) {
+static void GenMipmaps(int width, int height, BitmapCol* lvlScan0, BitmapCol* scan0, int rowWidth) {
 	BitmapCol* baseSrc = (BitmapCol*)scan0;
 	BitmapCol* baseDst = (BitmapCol*)lvlScan0;
-	int srcWidth = width << 1;
 
 	int x, y;
 	for (y = 0; y < height; y++) {
 		int srcY = (y << 1);
-		BitmapCol* src0 = baseSrc + srcY * srcWidth;
-		BitmapCol* src1 = src0    + srcWidth;
+		BitmapCol* src0 = baseSrc + srcY * rowWidth;
+		BitmapCol* src1 = src0    + rowWidth;
 		BitmapCol* dst  = baseDst + y * width;
 
 		for (x = 0; x < width; x++) {
@@ -486,97 +498,87 @@ static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, int lvl
 	cc_result res = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
 	if (res) Logger_Abort2(res, "D3D9_LockTextureData");
 
-	cc_uint32 size = Bitmap_DataSize(bmp->Width, bmp->Height);
-	Mem_Copy(rect.pBits, bmp->Scan0, size);
+	cc_uint32 size = Bitmap_DataSize(bmp->width, bmp->height);
+	Mem_Copy(rect.pBits, bmp->scan0, size);
 
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
 	if (res) Logger_Abort2(res, "D3D9_UnlockTextureData");
 }
 
-static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, int lvl) {
+static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, const Bitmap* bmp, int rowWidth, int lvl) {
 	D3DLOCKED_RECT rect;
 	cc_result res;
 	RECT part;
 
-	part.left = x; part.right = x + bmp->Width;
-	part.top = y; part.bottom = y + bmp->Height;
+	part.left = x; part.right  = x + bmp->width;
+	part.top  = y; part.bottom = y + bmp->height;
 
 	res = IDirect3DTexture9_LockRect(texture, lvl, &rect, &part, 0);
 	if (res) Logger_Abort2(res, "D3D9_LockTexturePartData");
 
-	/* We need to copy scanline by scanline, as generally rect.stride != data.stride */
-	cc_uint8* src = (cc_uint8*)bmp->Scan0;
-	cc_uint8* dst = (cc_uint8*)rect.pBits;
-	int yy;
-	cc_uint32 stride = (cc_uint32)bmp->Width * 4;
-
-	for (yy = 0; yy < bmp->Height; yy++) {
-		Mem_Copy(dst, src, stride);
-		src += stride;
-		dst += rect.Pitch;
-	}
-
+	CopyTextureData(rect.pBits, rect.Pitch, bmp, rowWidth << 2);
 	res = IDirect3DTexture9_UnlockRect(texture, lvl);
 	if (res) Logger_Abort2(res, "D3D9_UnlockTexturePartData");
 }
 
-static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, cc_bool partial) {
-	cc_uint8* prev = bmp->Scan0;
-	cc_uint8* cur;
+static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, int rowWidth, cc_bool partial) {
+	BitmapCol* prev = bmp->scan0;
+	BitmapCol* cur;
 	Bitmap mipmap;
 
-	int lvls = CalcMipmapsLevels(bmp->Width, bmp->Height);
-	int lvl, width = bmp->Width, height = bmp->Height;
+	int lvls = CalcMipmapsLevels(bmp->width, bmp->height);
+	int lvl, width = bmp->width, height = bmp->height;
 
 	for (lvl = 1; lvl <= lvls; lvl++) {
 		x /= 2; y /= 2;
-		if (width > 1)   width /= 2;
+		if (width > 1)  width /= 2;
 		if (height > 1) height /= 2;
 
-		cur = (cc_uint8*)Mem_Alloc(width * height, 4, "mipmaps");
-		GenMipmaps(width, height, cur, prev);
+		cur = (BitmapCol*)Mem_Alloc(width * height, 4, "mipmaps");
+		GenMipmaps(width, height, cur, prev, rowWidth);
 
 		Bitmap_Init(mipmap, width, height, cur);
 		if (partial) {
-			D3D9_SetTexturePartData(texture, x, y, &mipmap, lvl);
+			D3D9_SetTexturePartData(texture, x, y, &mipmap, width, lvl);
 		} else {
 			D3D9_SetTextureData(texture, &mipmap, lvl);
 		}
 
-		if (prev != bmp->Scan0) Mem_Free(prev);
-		prev = cur;
+		if (prev != bmp->scan0) Mem_Free(prev);
+		prev     = cur;
+		rowWidth = width;
 	}
-	if (prev != bmp->Scan0) Mem_Free(prev);
+	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
 	cc_result res;
-	int mipmapsLevels = CalcMipmapsLevels(bmp->Width, bmp->Height);
+	int mipmapsLevels = CalcMipmapsLevels(bmp->width, bmp->height);
 	int levels = 1 + (mipmaps ? mipmapsLevels : 0);
 
-	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
+	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Logger_Abort("Textures must have power of two dimensions");
 	}
 	if (Gfx.LostContext) return 0;
 
 	if (managedPool) {
-		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels,
+		res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
 			0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, NULL);
 		if (res) Logger_Abort2(res, "D3D9_CreateTexture");
 
 		D3D9_SetTextureData(tex, bmp, 0);
-		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, false);
+		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, bmp->width, false);
 	} else {
 		IDirect3DTexture9* sys;
-		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels,
+		res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
 			0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &sys, NULL);
 		if (res) Logger_Abort2(res, "D3D9_CreateTexture - SystemMem");
 
 		D3D9_SetTextureData(sys, bmp, 0);
-		if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, false);
+		if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, bmp->width, false);
 
-		res = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels,
+		res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
 			0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, NULL);
 		if (res) Logger_Abort2(res, "D3D9_CreateTexture - GPU");
 
@@ -587,10 +589,10 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 	return tex;
 }
 
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, Bitmap* part, int stride, cc_bool mipmaps) {
+void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	IDirect3DTexture9* texture = (IDirect3DTexture9*)texId;
-	D3D9_SetTexturePartData(texture, x, y, part, 0);
-	if (mipmaps) D3D9_DoMipmaps(texture, x, y, part, true);
+	D3D9_SetTexturePartData(texture, x, y, part, rowWidth, 0);
+	if (mipmaps) D3D9_DoMipmaps(texture, x, y, part, rowWidth, true);
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
@@ -930,7 +932,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	res = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
 	if (res) goto finished;
 	{
-		Bitmap_Init(bmp, desc.Width, desc.Height, (cc_uint8*)rect.pBits);
+		Bitmap_Init(bmp, desc.Width, desc.Height, (BitmapCol*)rect.pBits);
 		res = Png_Encode(&bmp, output, NULL, false);
 		if (res) { IDirect3DSurface9_UnlockRect(temp); goto finished; }
 	}
@@ -1130,20 +1132,20 @@ static void* FastAllocTempMem(int size) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, cc_bool partial) {
-	cc_uint8* prev = bmp->Scan0;
-	cc_uint8* cur;
+static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, int rowWidth, cc_bool partial) {
+	BitmapCol* prev = bmp->scan0;
+	BitmapCol* cur;
 
-	int lvls = CalcMipmapsLevels(bmp->Width, bmp->Height);
-	int lvl, width = bmp->Width, height = bmp->Height;
+	int lvls = CalcMipmapsLevels(bmp->width, bmp->height);
+	int lvl, width = bmp->width, height = bmp->height;
 
 	for (lvl = 1; lvl <= lvls; lvl++) {
 		x /= 2; y /= 2;
 		if (width > 1)  width /= 2;
 		if (height > 1) height /= 2;
 
-		cur = (cc_uint8*)Mem_Alloc(width * height, 4, "mipmaps");
-		GenMipmaps(width, height, cur, prev);
+		cur = (BitmapCol*)Mem_Alloc(width * height, 4, "mipmaps");
+		GenMipmaps(width, height, cur, prev, rowWidth);
 
 		if (partial) {
 			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
@@ -1151,10 +1153,11 @@ static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, cc_bool partial) {
 			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, cur);
 		}
 
-		if (prev != bmp->Scan0) Mem_Free(prev);
-		prev = cur;
+		if (prev != bmp->scan0) Mem_Free(prev);
+		prev    = cur;
+		rowWidth = width;
 	}
-	if (prev != bmp->Scan0) Mem_Free(prev);
+	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
@@ -1163,7 +1166,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 	glBindTexture(GL_TEXTURE_2D, texId);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	if (!Math_IsPowOf2(bmp->Width) || !Math_IsPowOf2(bmp->Height)) {
+	if (!Math_IsPowOf2(bmp->width) || !Math_IsPowOf2(bmp->height)) {
 		Logger_Abort("Textures must have power of two dimensions");
 	}
 	if (Gfx.LostContext) return 0;
@@ -1171,23 +1174,45 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 	if (mipmaps) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 		if (customMipmapsLevels) {
-			int lvls = CalcMipmapsLevels(bmp->Width, bmp->Height);
+			int lvls = CalcMipmapsLevels(bmp->width, bmp->height);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, lvls);
 		}
 	} else {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	}
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->Width, bmp->Height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->Scan0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bmp->width, bmp->height, 0, PIXEL_FORMAT, TRANSFER_FORMAT, bmp->scan0);
 
-	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, false);
+	if (mipmaps) Gfx_DoMipmaps(0, 0, bmp, bmp->width, false);
 	return texId;
 }
 
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, Bitmap* part, int stride, cc_bool mipmaps) {
+#define UPDATE_FAST_SIZE (64 * 64)
+static CC_NOINLINE void UpdateTextureSlow(int x, int y, Bitmap* part, int rowWidth) {
+	BitmapCol buffer[UPDATE_FAST_SIZE];
+	void* ptr = (void*)buffer;
+	int count = part->width * part->height;
+
+	/* cannot allocate memory on the stack for very big updates */
+	if (count > UPDATE_FAST_SIZE) {
+		ptr = Mem_Alloc(count, 4, "Gfx_UpdateTexture temp");
+	}
+
+	CopyTextureData(ptr, part->width << 2, part, rowWidth << 2);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, ptr);
+	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
+}
+
+void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->Width, part->Height, PIXEL_FORMAT, TRANSFER_FORMAT, part->Scan0);
-	if (mipmaps) Gfx_DoMipmaps(x, y, part, true);
+	/* TODO: Use GL_UNPACK_ROW_LENGTH for Desktop OpenGL */
+
+	if (part->width == rowWidth) {
+		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, part->width, part->height, PIXEL_FORMAT, TRANSFER_FORMAT, part->scan0);
+	} else {
+		UpdateTextureSlow(x, y, part, rowWidth);
+	}
+	if (mipmaps) Gfx_DoMipmaps(x, y, part, rowWidth, true);
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
@@ -1401,22 +1426,22 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
-static int GL_SelectRow(Bitmap* bmp, int y) { return (bmp->Height - 1) - y; }
+static int GL_SelectRow(Bitmap* bmp, int y) { return (bmp->height - 1) - y; }
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	Bitmap bmp;
 	cc_result res;
 	GLint vp[4];
 	
 	glGetIntegerv(GL_VIEWPORT, vp); /* { x, y, width, height } */
-	bmp.Width  = vp[2]; 
-	bmp.Height = vp[3];
+	bmp.width  = vp[2]; 
+	bmp.height = vp[3];
 
-	bmp.Scan0  = (cc_uint8*)Mem_TryAlloc(bmp.Width * bmp.Height, 4);
-	if (!bmp.Scan0) return ERR_OUT_OF_MEMORY;
-	glReadPixels(0, 0, bmp.Width, bmp.Height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.Scan0);
+	bmp.scan0  = (BitmapCol*)Mem_TryAlloc(bmp.width * bmp.height, 4);
+	if (!bmp.scan0) return ERR_OUT_OF_MEMORY;
+	glReadPixels(0, 0, bmp.width, bmp.height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.scan0);
 
 	res = Png_Encode(&bmp, output, GL_SelectRow, false);
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 	return res;
 }
 

@@ -18,29 +18,29 @@ void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src
 }
 
 void Bitmap_Allocate(Bitmap* bmp, int width, int height) {
-	bmp->Width = width; bmp->Height = height;
-	bmp->Scan0 = (cc_uint8*)Mem_Alloc(width * height, 4, "bitmap data");
+	bmp->width = width; bmp->height = height;
+	bmp->scan0 = (BitmapCol*)Mem_Alloc(width * height, 4, "bitmap data");
 }
 
 void Bitmap_TryAllocate(Bitmap* bmp, int width, int height) {
-	bmp->Width = width; bmp->Height = height;
-	bmp->Scan0 = (cc_uint8*)Mem_TryAlloc(width * height, 4);
+	bmp->width = width; bmp->height = height;
+	bmp->scan0 = (BitmapCol*)Mem_TryAlloc(width * height, 4);
 }
 
 void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height) {
 	width  = Math_NextPowOf2(width);
 	height = Math_NextPowOf2(height);
 
-	bmp->Width = width; bmp->Height = height;
-	bmp->Scan0 = (cc_uint8*)Mem_AllocCleared(width * height, 4, "bitmap data");
+	bmp->width = width; bmp->height = height;
+	bmp->scan0 = (BitmapCol*)Mem_AllocCleared(width * height, 4, "bitmap data");
 }
 
 void Bitmap_TryAllocateClearedPow2(Bitmap* bmp, int width, int height) {
 	width  = Math_NextPowOf2(width);
 	height = Math_NextPowOf2(height);
 
-	bmp->Width = width; bmp->Height = height;
-	bmp->Scan0 = (cc_uint8*)Mem_TryAllocCleared(width * height, 4);
+	bmp->width = width; bmp->height = height;
+	bmp->scan0 = (BitmapCol*)Mem_TryAllocCleared(width * height, 4);
 }
 
 void Bitmap_Scale(Bitmap* dst, Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight) {
@@ -48,8 +48,8 @@ void Bitmap_Scale(Bitmap* dst, Bitmap* src, int srcX, int srcY, int srcWidth, in
 	BitmapCol* srcRow;
 	int x, y, width, height;
 
-	width  = dst->Width;
-	height = dst->Height;
+	width  = dst->width;
+	height = dst->height;
 
 	for (y = 0; y < height; y++) {
 		srcRow = Bitmap_GetRow(src, srcY + (y * srcHeight / height));
@@ -322,7 +322,7 @@ static Png_RowExpander Png_GetExpander(cc_uint8 col, cc_uint8 bitsPerSample) {
 /* Sets alpha to 0 for any pixels in the bitmap whose RGB is same as col */
 static void ComputeTransparency(Bitmap* bmp, BitmapCol col) {
 	BitmapCol trnsRGB = col & BITMAPCOL_RGB_MASK;
-	int x, y, width = bmp->Width, height = bmp->Height;
+	int x, y, width = bmp->width, height = bmp->height;
 
 	for (y = 0; y < height; y++) {
 		BitmapCol* row = Bitmap_GetRow(bmp, y);
@@ -365,8 +365,8 @@ cc_result Png_Decode(Bitmap* bmp, struct Stream* stream) {
 	struct Stream compStream, datStream;
 	struct ZLibHeader zlibHeader;
 
-	bmp->Width = 0; bmp->Height = 0;
-	bmp->Scan0 = NULL;
+	bmp->width = 0; bmp->height = 0;
+	bmp->scan0 = NULL;
 
 	res = Stream_Read(stream, tmp, PNG_SIG_SIZE);
 	if (res) return res;
@@ -390,13 +390,13 @@ cc_result Png_Decode(Bitmap* bmp, struct Stream* stream) {
 			res = Stream_Read(stream, tmp, PNG_IHDR_SIZE);
 			if (res) return res;
 
-			bmp->Width  = (int)Stream_GetU32_BE(tmp + 0);
-			bmp->Height = (int)Stream_GetU32_BE(tmp + 4);
-			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
-			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
+			bmp->width  = (int)Stream_GetU32_BE(tmp + 0);
+			bmp->height = (int)Stream_GetU32_BE(tmp + 4);
+			if (bmp->width  < 0 || bmp->width  > PNG_MAX_DIMS) return PNG_ERR_TOO_WIDE;
+			if (bmp->height < 0 || bmp->height > PNG_MAX_DIMS) return PNG_ERR_TOO_TALL;
 
-			bmp->Scan0 = (cc_uint8*)Mem_TryAlloc(bmp->Width * bmp->Height, 4);
-			if (!bmp->Scan0) return ERR_OUT_OF_MEMORY;
+			bmp->scan0 = (BitmapCol*)Mem_TryAlloc(bmp->width * bmp->height, 4);
+			if (!bmp->scan0) return ERR_OUT_OF_MEMORY;
 
 			bitsPerSample = tmp[8]; col = tmp[9];
 			rowExpander = Png_GetExpander(col, bitsPerSample);
@@ -407,7 +407,7 @@ cc_result Png_Decode(Bitmap* bmp, struct Stream* stream) {
 			if (tmp[12] != 0) return PNG_ERR_INTERLACED;
 
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
-			scanlineSize  = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
+			scanlineSize  = ((samplesPerPixel[col] * bitsPerSample * bmp->width) + 7) >> 3;
 			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */
 
 			Mem_Set(buffer, 0, scanlineBytes); /* Prior row should be 0 per PNG spec */
@@ -468,9 +468,9 @@ cc_result Png_Decode(Bitmap* bmp, struct Stream* stream) {
 			while (!zlibHeader.done) {
 				if ((res = ZLibHeader_Read(&datStream, &zlibHeader))) return res;
 			}
-			if (!bmp->Scan0) return PNG_ERR_NO_DATA;
+			if (!bmp->scan0) return PNG_ERR_NO_DATA;
 
-			while (curY < bmp->Height) {
+			while (curY < bmp->height) {
 				/* Need to leave one row in buffer untouched for storing prior scanline. Illustrated example of process:
 				*          |=====|        #-----|        |-----|        #-----|        |-----|
 				* initial  #-----| read 3 |-----| read 3 |-----| read 1 |-----| read 3 |-----| etc
@@ -497,18 +497,18 @@ cc_result Png_Decode(Bitmap* bmp, struct Stream* stream) {
 				if (bufferIdx == bufferLen) bufferIdx = 0;
 
 				/* NOTE: Need to check curY too, in case IDAT is corrupted and has extra data */
-				for (rowY = begY; rowY < endY && curY < bmp->Height; rowY++, curY++) {
+				for (rowY = begY; rowY < endY && curY < bmp->height; rowY++, curY++) {
 					cc_uint32 priorY = rowY == 0 ? bufferRows : rowY;
 					cc_uint8* prior    = &buffer[(priorY - 1) * scanlineBytes];
 					cc_uint8* scanline = &buffer[rowY         * scanlineBytes];
 
 					if (scanline[0] > PNG_FILTER_PAETH) return PNG_ERR_INVALID_SCANLINE;
 					Png_Reconstruct(scanline[0], bytesPerPixel, &scanline[1], &prior[1], scanlineSize);
-					rowExpander(bmp->Width, palette, &scanline[1], Bitmap_GetRow(bmp, curY));
+					rowExpander(bmp->width, palette, &scanline[1], Bitmap_GetRow(bmp, curY));
 				}
 			}
 
-			if (curY == bmp->Height) {
+			if (curY == bmp->height) {
 				if (!BitmapCol_A(trnsCol)) ComputeTransparency(bmp, trnsCol);
 				return 0;
 			}
@@ -654,8 +654,8 @@ cc_result Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectR
 	Stream_SetU32_BE(&tmp[0], PNG_IHDR_SIZE);
 	Stream_SetU32_BE(&tmp[4], PNG_FourCC('I','H','D','R'));
 	{
-		Stream_SetU32_BE(&tmp[8],  bmp->Width);
-		Stream_SetU32_BE(&tmp[12], bmp->Height);
+		Stream_SetU32_BE(&tmp[8],  bmp->width);
+		Stream_SetU32_BE(&tmp[12], bmp->height);
 		tmp[16] = 8;           /* bits per sample */
 		tmp[17] = alpha ? PNG_COL_RGB_A : PNG_COL_RGB;
 		tmp[18] = 0;           /* DEFLATE compression method */
@@ -671,10 +671,10 @@ cc_result Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectR
 	if ((res = Stream_Write(&chunk, tmp, 4))) return res;
 
 	ZLib_MakeStream(&zlStream, &zlState, &chunk); 
-	lineSize = bmp->Width * (alpha ? 4 : 3);
+	lineSize = bmp->width * (alpha ? 4 : 3);
 	Mem_Set(prevLine, 0, lineSize);
 
-	for (y = 0; y < bmp->Height; y++) {
+	for (y = 0; y < bmp->height; y++) {
 		int row = selectRow(bmp, y);
 		BitmapCol* src = Bitmap_GetRow(bmp, row);
 		cc_uint8* prev  = (y & 1) == 0 ? prevLine : curLine;

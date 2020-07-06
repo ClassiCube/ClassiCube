@@ -892,12 +892,12 @@ void Window_AllocFramebuffer(Bitmap* bmp) {
 	if (!draw_DC) draw_DC = CreateCompatibleDC(win_DC);
 	
 	hdr.bmiHeader.biSize = sizeof(BITMAPINFO);
-	hdr.bmiHeader.biWidth    =  bmp->Width;
-	hdr.bmiHeader.biHeight   = -bmp->Height;
+	hdr.bmiHeader.biWidth    =  bmp->width;
+	hdr.bmiHeader.biHeight   = -bmp->height;
 	hdr.bmiHeader.biBitCount = 32;
 	hdr.bmiHeader.biPlanes   = 1; 
 
-	draw_DIB = CreateDIBSection(draw_DC, &hdr, DIB_RGB_COLORS, (void**)&bmp->Scan0, NULL, 0);
+	draw_DIB = CreateDIBSection(draw_DC, &hdr, DIB_RGB_COLORS, (void**)&bmp->scan0, NULL, 0);
 }
 
 void Window_DrawFramebuffer(Rect2D r) {

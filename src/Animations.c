@@ -15,6 +15,7 @@
 #define LIQUID_ANIM_MAX 64
 #define WATER_TEX_LOC 14
 #define LAVA_TEX_LOC  30
+static void Animations_Update(int loc, Bitmap* bmp, int stride);
 
 #ifndef CC_BUILD_WEB
 /* Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
@@ -30,10 +31,17 @@ static float L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 static RNGState L_rnd;
 static cc_bool  L_rndInited;
 
-static void LavaAnimation_Tick(BitmapCol* ptr, int size) {
-	int mask = size - 1, shift = Math_Log2(size);
+static void LavaAnimation_Tick(void) {
+	BitmapCol pixels[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+	BitmapCol* ptr = pixels;
 	float soupHeat, potHeat, col;
+	int size, mask, shift;
 	int x, y, i = 0;
+	Bitmap bmp;
+
+	size  = min(Atlas2D.TileSize, LIQUID_ANIM_MAX);
+	mask  = size - 1;
+	shift = Math_Log2(size);
 
 	if (!L_rndInited) {
 		Random_SeedFromCurrentTime(&L_rnd);
@@ -89,6 +97,9 @@ static void LavaAnimation_Tick(BitmapCol* ptr, int size) {
 			ptr++; i++;
 		}
 	}
+
+	Bitmap_Init(bmp, size, size, pixels);
+	Animations_Update(LAVA_TEX_LOC, &bmp, size);
 }
 
 
@@ -101,10 +112,17 @@ static float W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 static RNGState W_rnd;
 static cc_bool  W_rndInited;
 
-static void WaterAnimation_Tick(BitmapCol* ptr, int size) {
-	int mask = size - 1, shift = Math_Log2(size);
+static void WaterAnimation_Tick(void) {
+	BitmapCol pixels[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+	BitmapCol* ptr = pixels;
 	float soupHeat, col;
+	int size, mask, shift;
 	int x, y, i = 0;
+	Bitmap bmp;
+
+	size  = min(Atlas2D.TileSize, LIQUID_ANIM_MAX);
+	mask  = size - 1;
+	shift = Math_Log2(size);
 
 	if (!W_rndInited) {
 		Random_SeedFromCurrentTime(&W_rnd);
@@ -141,6 +159,9 @@ static void WaterAnimation_Tick(BitmapCol* ptr, int size) {
 			ptr++; i++;
 		}
 	}
+
+	Bitmap_Init(bmp, size, size, pixels);
+	Animations_Update(WATER_TEX_LOC, &bmp, size);
 }
 #endif
 
@@ -221,42 +242,18 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 	}
 }
 
-#define ANIMS_FAST_SIZE 64
-static void Animations_Draw(struct AnimationData* data, TextureLoc texLoc, int size) {
-	int dstX = Atlas1D_Index(texLoc), srcX;
+static void Animations_Update(int texLoc, Bitmap* bmp, int stride) {
+	int dstX = Atlas1D_Index(texLoc);
 	int dstY = Atlas1D_RowId(texLoc) * Atlas2D.TileSize;
 	GfxResourceID tex;
 
-	cc_uint8 buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
-	cc_uint8* ptr = buffer;
-	Bitmap frame;
-
-	/* cannot allocate memory on the stack for very big animation.png frames */
-	if (size > ANIMS_FAST_SIZE) {	
-		ptr = (cc_uint8*)Mem_Alloc(size * size, 4, "anim frame");
-	}
-	Bitmap_Init(frame, size, size, ptr);
-
-	if (!data) {
-#ifndef CC_BUILD_WEB
-		if (texLoc == LAVA_TEX_LOC) {
-			LavaAnimation_Tick((BitmapCol*)frame.Scan0, size);
-		} else if (texLoc == WATER_TEX_LOC) {
-			WaterAnimation_Tick((BitmapCol*)frame.Scan0, size);
-		}
-#endif
-	} else {
-		srcX = data->frameX + data->state * size;
-		Bitmap_UNSAFE_CopyBlock(srcX, data->frameY, 0, 0, &anims_bmp, &frame, size);
-	}
-
 	tex = Atlas1D.TexIds[dstX];
-	if (tex) { Gfx_UpdateTexturePart(tex, 0, dstY, &frame, Gfx.Mipmaps); }
-	if (size > ANIMS_FAST_SIZE) Mem_Free(ptr);
+	if (tex) Gfx_UpdateTexture(tex, 0, dstY, bmp, stride, Gfx.Mipmaps);
 }
 
 static void Animations_Apply(struct AnimationData* data) {
-	TextureLoc loc;
+	int loc, size;
+	Bitmap frame;
 	if (data->delay) { data->delay--; return; }
 
 	data->state++;
@@ -268,7 +265,14 @@ static void Animations_Apply(struct AnimationData* data) {
 	if (loc == LAVA_TEX_LOC  && useLavaAnim)  return;
 	if (loc == WATER_TEX_LOC && useWaterAnim) return;
 #endif
-	Animations_Draw(data, loc, data->frameSize);
+
+	size = data->frameSize;
+	Bitmap_Init(frame, size, size, NULL);
+
+	frame.scan0 = anims_bmp.scan0 
+				+ data->frameY * anims_bmp.width
+				+ (data->frameX + data->state * size);
+	Animations_Update(loc, &frame, anims_bmp.width);
 }
 
 static cc_bool Animations_IsDefaultZip(void) {
@@ -281,9 +285,9 @@ static cc_bool Animations_IsDefaultZip(void) {
 }
 
 static void Animations_Clear(void) {
-	Mem_Free(anims_bmp.Scan0);
+	Mem_Free(anims_bmp.scan0);
 	anims_count = 0;
-	anims_bmp.Scan0 = NULL;
+	anims_bmp.scan0 = NULL;
 	anims_validated = false;
 }
 
@@ -303,7 +307,7 @@ static void Animations_Validate(void) {
 
 		if (data.frameSize > Atlas2D.TileSize || tileY >= Atlas2D.RowsCount) {
 			Chat_Add2("&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
-		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {
+		} else if (maxX > anims_bmp.width || maxY > anims_bmp.height) {
 			Chat_Add2("&cSome of the animation frames for tile (%i, %i) are at coordinates outside animations.png", &tileX, &tileY);
 		} else {
 			/* if user has water/lava animations in their default.zip, disable built-in */
@@ -323,21 +327,14 @@ static void Animations_Validate(void) {
 }
 
 static void Animations_Tick(struct ScheduledTask* task) {
-	int i, size;
-
+	int i;
 #ifndef CC_BUILD_WEB
-	if (useLavaAnim) {
-		size = min(Atlas2D.TileSize, 64);
-		Animations_Draw(NULL, LAVA_TEX_LOC, size);
-	}
-	if (useWaterAnim) {
-		size = min(Atlas2D.TileSize, 64);
-		Animations_Draw(NULL, WATER_TEX_LOC, size);
-	}
+	if (useLavaAnim)  LavaAnimation_Tick();
+	if (useWaterAnim) WaterAnimation_Tick();
 #endif
 
 	if (!anims_count) return;
-	if (!anims_bmp.Scan0) {
+	if (!anims_bmp.scan0) {
 		Chat_AddRaw("&cCurrent texture pack specifies it uses animations,");
 		Chat_AddRaw("&cbut is missing animations.png");
 		anims_count = 0; return;
@@ -369,8 +366,8 @@ static void OnFileChanged(void* obj, struct Stream* stream, const String* name) 
 		if (!res) return;
 
 		Logger_Warn2(res, "decoding", name);
-		Mem_Free(anims_bmp.Scan0);
-		anims_bmp.Scan0 = NULL;
+		Mem_Free(anims_bmp.scan0);
+		anims_bmp.scan0 = NULL;
 	} else if (String_CaselessEqualsConst(name, "animations.txt")) {
 		Animations_ReadDescription(stream, name);
 	} else if (String_CaselessEqualsConst(name, "uselavaanim")) {

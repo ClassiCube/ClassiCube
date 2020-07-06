@@ -61,7 +61,8 @@ CC_API GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
 CC_API void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, cc_bool mipmaps); /* OBSOLETE */
 /* Updates a region of the given texture. (and mipmapped regions if mipmaps) */
-CC_API void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, Bitmap* part, int stride, cc_bool mipmaps);
+/* NOTE: rowWidth is in pixels (i.e if bitmap is tightly packed, rowWidth equals width) */
+CC_API void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, Bitmap* part, int rowWidth, cc_bool mipmaps);
 /* Sets the currently active texture. */
 CC_API void Gfx_BindTexture(GfxResourceID texId);
 /* Deletes the given texture, then sets it to 0. */

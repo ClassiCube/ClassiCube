@@ -319,9 +319,9 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, struct FontDes
 		}
 		Drawer2D_MakeTexture(&atlas->tex, &bmp, width, height);
 	}	
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 
-	atlas->uScale = 1.0f / (float)bmp.Width;
+	atlas->uScale = 1.0f / (float)bmp.width;
 	atlas->tex.uv.U2 = atlas->offset * atlas->uScale;
 	atlas->tex.Width = atlas->offset;	
 }

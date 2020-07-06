@@ -42,19 +42,19 @@ typedef cc_uint32 BitmapCol;
 #define BITMAPCOL_WHITE BitmapCol_Make(255, 255, 255, 255)
 
 /* A 2D array of BitmapCol pixels */
-typedef struct Bitmap_ { cc_uint8* Scan0; int Width, Height; } Bitmap;
+typedef struct Bitmap_ { BitmapCol* scan0; int width, height; } Bitmap;
 #define PNG_MAX_DIMS 0x8000
 
 /* Returns number of bytes a bitmap consumes. */
 #define Bitmap_DataSize(width, height) ((cc_uint32)(width) * (cc_uint32)(height) * 4)
 /* Gets the yth row of the given bitmap. */
-#define Bitmap_GetRow(bmp, y) ((BitmapCol*)(bmp)->Scan0 + (y) * (bmp)->Width)
+#define Bitmap_GetRow(bmp, y) ((bmp)->scan0 + (y) * (bmp)->width)
 /* Gets the pixel at (x,y) in the given bitmap. */
 /* NOTE: Does NOT check coordinates are inside the bitmap. */
 #define Bitmap_GetPixel(bmp, x, y) (Bitmap_GetRow(bmp, y)[x])
 
 /* Initialises a bitmap instance. */
-#define Bitmap_Init(bmp, width, height, scan0) bmp.Width = width; bmp.Height = height; bmp.Scan0 = scan0;
+#define Bitmap_Init(bmp, width_, height_, scan0_) bmp.width = width_; bmp.height = height_; bmp.scan0 = scan0_;
 /* Copies a rectangle of pixels from one bitmap to another. */
 /* NOTE: If src and dst are the same, src and dst rectangles MUST NOT overlap. */
 /* NOTE: Rectangles are NOT checked for whether they lie inside the bitmaps. */

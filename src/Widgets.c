@@ -1469,7 +1469,7 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 
 	tex = &w->base.inputTex;
 	Drawer2D_MakeTexture(tex, &bmp, width, height);
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 
 	Widget_Layout(&w->base);
 	tex->X = w->base.x; tex->Y = w->base.y;
@@ -1577,7 +1577,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	}
 
 	Drawer2D_MakeTexture(&w->inputTex, &bmp, width, height);
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 	w->caretAccumulator = 0;
 
 	w->width  = width;
@@ -2088,7 +2088,7 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 		}
 		Drawer2D_MakeTexture(tex, &bmp, width, height);
 	}
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 }
 
 void TextGroupWidget_RedrawAll(struct TextGroupWidget* w) {
@@ -2366,7 +2366,7 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct Special
 		SpecialInputWidget_DrawContent(w, tab, &bmp, titlesHeight);
 	}
 	Drawer2D_MakeTexture(&w->tex, &bmp, width, height);
-	Mem_Free(bmp.Scan0);
+	Mem_Free(bmp.scan0);
 }
 
 void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
