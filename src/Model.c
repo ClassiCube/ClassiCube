@@ -559,9 +559,6 @@ static float CustomModel_GetAnimationValue(
 	struct Entity* e
 ) {
 	switch (anim->type) {
-		case CustomModelAnimType_None:
-			return;
-
 		case CustomModelAnimType_Head:
 			return -e->Pitch * MATH_DEG2RAD;
 
@@ -612,6 +609,8 @@ static float CustomModel_GetAnimationValue(
 		case CustomModelAnimType_SinTranslateVelocity:
 			return ( Math_SinF(e->Anim.WalkTime * anim->a + 2 * MATH_PI * anim->c) + anim->d ) * anim->b;
 	}
+
+	return 0.0f;
 }
 
 static PackedCol oldCols[FACE_COUNT];
