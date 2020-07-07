@@ -647,9 +647,7 @@ static void CustomModel_DrawPart(
 
 		value = CustomModel_GetAnimationValue(anim, part, cm, e);
 		
-		if (anim->type == CustomModelAnimType_Head) {
-			head = true;
-		} else if (
+		if (
 			anim->type == CustomModelAnimType_SinTranslate ||
 			anim->type == CustomModelAnimType_SinTranslateVelocity
 		) {
@@ -678,6 +676,10 @@ static void CustomModel_DrawPart(
 				}
 			}
 		} else {
+			if (anim->type == CustomModelAnimType_Head) {
+				head = true;
+			}
+			
 			switch (anim->axis) {
 				case CustomModelAnimAxis_X:
 					rotX += value;
