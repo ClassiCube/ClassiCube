@@ -60,7 +60,7 @@ static struct MapState map2;
 /* CPE state */
 cc_bool cpe_needD3Fix;
 static int cpe_serverExtensionsCount, cpe_pingTicks;
-static int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
+static int cpe_envMapVer = 2, cpe_blockDefsExtVer = 2, cpe_customModelsVer = 2;
 static cc_bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
 static cc_bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
 
@@ -851,6 +851,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 		if (String_CaselessEqualsConst(&name, "ExtPlayerList"))       ver = 2;
 		if (String_CaselessEqualsConst(&name, "EnvMapAppearance"))    ver = cpe_envMapVer;
 		if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) ver = cpe_blockDefsExtVer;
+		if (String_CaselessEqualsConst(&name, "CustomModels")) ver = cpe_customModelsVer;
 
 		if (!Game_AllowCustomBlocks) {
 			if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) continue;
@@ -924,6 +925,11 @@ static void CPE_ExtEntry(cc_uint8* data) {
 	} else if (String_CaselessEqualsConst(&ext, "FastMap")) {
 		Net_PacketSizes[OPCODE_LEVEL_BEGIN] += 4;
 		cpe_fastMap = true;
+	} else if (String_CaselessEqualsConst(&ext, "CustomModels")) {
+		cpe_customModelsVer = min(2, version);
+		if (version == 2) {
+			Net_PacketSizes[OPCODE_DEFINE_MODEL_PART] = 167;
+		}
 	}
 #ifdef EXTENDED_TEXTURES
 	else if (String_CaselessEqualsConst(&ext, "ExtendedTextures")) {
@@ -1521,12 +1527,26 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	part->rotation.Z = GetFloat(data);
 	data += 4;
 
-	/* read anim */
-	part->anim = *data++;
+	if (cpe_customModelsVer == 1) {
+		/* ignore animations */
+		data++;
+		data += 4;
+	} else if (cpe_customModelsVer == 2) {
+		for (i = 0; i < MAX_CUSTOM_MODEL_ANIMS; i++) {
+			cc_uint8 tmp = *data++;
+			part->anims[i].type = tmp & 0x3F;
+			part->anims[i].axis = tmp >> 6;
 
-	/* read animModifier */
-	part->animModifier = GetFloat(data);
-	data += 4;
+			part->anims[i].a = GetFloat(data);
+			data += 4;
+			part->anims[i].b = GetFloat(data);
+			data += 4;
+			part->anims[i].c = GetFloat(data);
+			data += 4;
+			part->anims[i].d = GetFloat(data);
+			data += 4;
+		}
+	}
 
 	/* read bool flags */
 	flags = *data++;
@@ -1548,7 +1568,7 @@ static void CPE_UndefineModel(cc_uint8* data) {
 static void CPE_Reset(void) {
 	cpe_serverExtensionsCount = 0; cpe_pingTicks = 0;
 	cpe_sendHeldBlock = false; cpe_useMessageTypes = false;
-	cpe_envMapVer = 2; cpe_blockDefsExtVer = 2;
+	cpe_envMapVer = 2; cpe_blockDefsExtVer = 2; cpe_customModelsVer = 2;
 	cpe_needD3Fix = false; cpe_extEntityPos = false; cpe_twoWayPing = false; 
 	cpe_extTextures = false; cpe_fastMap = false; cpe_extBlocks = false;
 	Game_UseCPEBlocks = false;

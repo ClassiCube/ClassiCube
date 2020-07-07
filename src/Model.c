@@ -551,78 +551,182 @@ static void CustomModel_MakeParts(void) {
 	}
 }
 
+struct ModelVertex oldVertices[MODEL_BOX_VERTICES];
+static float CustomModel_GetAnimationValue(
+	struct CustomModelAnim* anim,
+	struct CustomModelPart* part,
+	struct CustomModel* cm,
+	struct Entity* e
+) {
+	switch (anim->type) {
+		case CustomModelAnimType_Head:
+			return -e->Pitch * MATH_DEG2RAD;
+
+		case CustomModelAnimType_LeftLegX:
+			return e->Anim.LeftLegX;
+
+		case CustomModelAnimType_RightLegX:
+			return e->Anim.RightLegX;
+
+		case CustomModelAnimType_LeftArmX:
+			/* TODO: we're using 2 different rotation orders here */
+			Models.Rotation = ROTATE_ORDER_XZY;
+			return e->Anim.LeftArmX;
+
+		case CustomModelAnimType_LeftArmZ:
+			Models.Rotation = ROTATE_ORDER_XZY;
+			return e->Anim.LeftArmZ;
+
+		case CustomModelAnimType_RightArmX:
+			Models.Rotation = ROTATE_ORDER_XZY;
+			return e->Anim.RightArmX;
+
+		case CustomModelAnimType_RightArmZ:
+			Models.Rotation = ROTATE_ORDER_XZY;
+			return e->Anim.RightArmZ;
+
+		/*
+			a: speed
+			b: shift pos
+		*/
+		case CustomModelAnimType_Spin:
+			return (float)Game.Time * anim->a + anim->b;
+
+		case CustomModelAnimType_SpinVelocity:
+			return e->Anim.WalkTime * anim->a + anim->b;
+
+		/*
+			a: speed
+			b: width
+			c: shift cycle
+			d: shift pos
+		*/
+		case CustomModelAnimType_SinRotate:
+		case CustomModelAnimType_SinTranslate:
+			return ( Math_SinF((float)Game.Time * anim->a + 2 * MATH_PI * anim->c) + anim->d ) * anim->b;
+
+		case CustomModelAnimType_SinRotateVelocity:
+		case CustomModelAnimType_SinTranslateVelocity:
+			return ( Math_SinF(e->Anim.WalkTime * anim->a + 2 * MATH_PI * anim->c) + anim->d ) * anim->b;
+	}
+
+	return 0.0f;
+}
+
 static PackedCol oldCols[FACE_COUNT];
+static void CustomModel_DrawPart(
+	struct CustomModelPart* part,
+	struct CustomModel* cm,
+	struct Entity* e
+) {
+	int i, animIndex;
+	float rotX, rotY, rotZ;
+	cc_bool head = false;
+	cc_bool modifiedVertices = false;
+	float value = 0.0f;
+
+	if (part->fullbright) {
+		for (i = 0; i < FACE_COUNT; i++) {
+			oldCols[i] = Models.Cols[i];
+			Models.Cols[i] = PACKEDCOL_WHITE;
+		}
+	}
+	
+	/* bbmodels use xyz rotation order */
+	Models.Rotation = ROTATE_ORDER_XYZ;
+	
+	rotX = part->rotation.X * MATH_DEG2RAD;
+	rotY = part->rotation.Y * MATH_DEG2RAD;
+	rotZ = part->rotation.Z * MATH_DEG2RAD;
+
+	for (animIndex = 0; animIndex < MAX_CUSTOM_MODEL_ANIMS; animIndex++) {
+		struct CustomModelAnim* anim = &part->anims[animIndex];
+		if (anim->type == CustomModelAnimType_None) {
+			continue;
+		}
+
+		value = CustomModel_GetAnimationValue(anim, part, cm, e);
+		
+		if (
+			anim->type == CustomModelAnimType_SinTranslate ||
+			anim->type == CustomModelAnimType_SinTranslateVelocity
+		) {
+			if (!modifiedVertices) {
+				modifiedVertices = true;
+				Mem_Copy(
+					oldVertices,
+					&cm->model.vertices[part->modelPart.offset],
+					sizeof(struct ModelVertex) * MODEL_BOX_VERTICES
+				);
+			}
+
+			for (i = 0; i < MODEL_BOX_VERTICES; i++) {
+				switch (anim->axis) {
+					case CustomModelAnimAxis_X:
+						cm->model.vertices[part->modelPart.offset + i].X += value;
+						break;
+
+					case CustomModelAnimAxis_Y:
+						cm->model.vertices[part->modelPart.offset + i].Y += value;
+						break;
+
+					case CustomModelAnimAxis_Z:
+						cm->model.vertices[part->modelPart.offset + i].Z += value;
+						break;
+				}
+			}
+		} else {
+			if (anim->type == CustomModelAnimType_Head) {
+				head = true;
+			}
+			
+			switch (anim->axis) {
+				case CustomModelAnimAxis_X:
+					rotX += value;
+					break;
+
+				case CustomModelAnimAxis_Y:
+					rotY += value;
+					break;
+
+				case CustomModelAnimAxis_Z:
+					rotZ += value;
+					break;
+			}
+		}
+	}
+
+	if (rotX || rotY || rotZ || head) {
+		Model_DrawRotate(rotX, rotY, rotZ, &part->modelPart, head);
+	} else {
+		Model_DrawPart(&part->modelPart);
+	}
+
+	if (modifiedVertices) {
+		Mem_Copy(
+			&cm->model.vertices[part->modelPart.offset],
+			oldVertices,
+			sizeof(struct ModelVertex) * MODEL_BOX_VERTICES
+		);
+	}
+
+	if (part->fullbright) {
+		for (i = 0; i < FACE_COUNT; i++) {
+			Models.Cols[i] = oldCols[i];
+		}
+	}
+}
+
 static void CustomModel_Draw(struct Entity* e) {
-	int i, j;
 	struct CustomModel* cm = (struct CustomModel*)Models.Active;
+	int partIndex;
 
 	Model_ApplyTexture(e);
 	Models.uScale = 1.0f / cm->uScale;
 	Models.vScale = 1.0f / cm->vScale;
 
-	for (i = 0; i < cm->numParts; i++) {
-		float rotX, rotY, rotZ;
-		cc_bool head;
-		struct CustomModelPart* part = &cm->parts[i];
-
-		if (part->fullbright) {
-			for (j = 0; j < FACE_COUNT; j++) {
-				oldCols[j] = Models.Cols[j];
-				Models.Cols[j] = PACKEDCOL_WHITE;
-			}
-		}
-		
-		/* bbmodels use xyz rotation order */
-		Models.Rotation = ROTATE_ORDER_XYZ;
-		
-		rotX = part->rotation.X * MATH_DEG2RAD;
-		rotY = part->rotation.Y * MATH_DEG2RAD;
-		rotZ = part->rotation.Z * MATH_DEG2RAD;
-		head = false;
-		
-		if (part->anim == CustomModelAnim_Head) {
-			head = true;
-			rotX += -e->Pitch * MATH_DEG2RAD;
-		} else if (part->anim == CustomModelAnim_LeftLeg) {
-			rotX += e->Anim.LeftLegX;
-			rotZ += e->Anim.LeftLegZ;
-		} else if (part->anim == CustomModelAnim_RightLeg) {
-			rotX += e->Anim.RightLegX;
-			rotZ += e->Anim.RightLegZ;
-		} else if (part->anim == CustomModelAnim_LeftArm) {
-			/* TODO: we're using 2 different rotation orders here */
-			Models.Rotation = ROTATE_ORDER_XZY;
-			rotX += e->Anim.LeftArmX;
-			rotZ += e->Anim.LeftArmZ;
-		} else if (part->anim == CustomModelAnim_RightArm) {
-			Models.Rotation = ROTATE_ORDER_XZY;
-			rotX += e->Anim.RightArmX;
-			rotZ += e->Anim.RightArmZ;
-		} else if (part->anim == CustomModelAnim_SpinX) {
-			rotX += (float)(Game.Time * part->animModifier);
-		} else if (part->anim == CustomModelAnim_SpinY) {
-			rotY += (float)(Game.Time * part->animModifier);
-		} else if (part->anim == CustomModelAnim_SpinZ) {
-			rotZ += (float)(Game.Time * part->animModifier);
-		} else if (part->anim == CustomModelAnim_SpinXVelocity) {
-			rotX += e->Anim.WalkTime * part->animModifier;
-		} else if (part->anim == CustomModelAnim_SpinYVelocity) {
-			rotY += e->Anim.WalkTime * part->animModifier;
-		} else if (part->anim == CustomModelAnim_SpinZVelocity) {
-			rotZ += e->Anim.WalkTime * part->animModifier;
-		}
-		
-		if (rotX || rotY || rotZ || head) {
-			Model_DrawRotate(rotX, rotY, rotZ, &cm->parts[i].modelPart, head);
-		} else {
-			Model_DrawPart(&cm->parts[i].modelPart);
-		}
-
-		if (part->fullbright) {
-			for (j = 0; j < FACE_COUNT; j++) {
-				Models.Cols[j] = oldCols[j];
-			}
-		}
+	for (partIndex = 0; partIndex < cm->numParts; partIndex++) {
+		CustomModel_DrawPart(&cm->parts[partIndex], cm, e);
 	}
 
 	Model_UpdateVB();
