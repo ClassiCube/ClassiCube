@@ -567,110 +567,96 @@ static void CustomModel_ApplyAnimation(
 	float value;
 
 	switch (anim->type) {
-		case CustomModelAnim_None:
+		case CustomModelAnimType_None:
 			return;
 
-		case CustomModelAnim_Head:
+		case CustomModelAnimType_Head:
 			*head = true;
 			*rotX += -e->Pitch * MATH_DEG2RAD;
 			break;
 
-		case CustomModelAnim_LeftLeg:
+		case CustomModelAnimType_LeftLeg:
 			*rotX += e->Anim.LeftLegX;
 			*rotZ += e->Anim.LeftLegZ;
 			break;
 
-		case CustomModelAnim_RightLeg:
+		case CustomModelAnimType_RightLeg:
 			*rotX += e->Anim.RightLegX;
 			*rotZ += e->Anim.RightLegZ;
 			break;
 
-		case CustomModelAnim_LeftArm:
+		case CustomModelAnimType_LeftArm:
 			/* TODO: we're using 2 different rotation orders here */
 			Models.Rotation = ROTATE_ORDER_XZY;
 			*rotX += e->Anim.LeftArmX;
 			*rotZ += e->Anim.LeftArmZ;
 			break;
 
-		case CustomModelAnim_RightArm:
+		case CustomModelAnimType_RightArm:
 			Models.Rotation = ROTATE_ORDER_XZY;
 			*rotX += e->Anim.RightArmX;
 			*rotZ += e->Anim.RightArmZ;
 			break;
 
-		case CustomModelAnim_SpinX:
-			/*
-				a: speed
-				b: shift pos
-			*/
-			*rotX += (float)Game.Time * anim->a + anim->b;
-			break;
+		case CustomModelAnimType_Spin:
+		case CustomModelAnimType_SpinVelocity:
+		case CustomModelAnimType_SinRotate:
+		case CustomModelAnimType_SinRotateVelocity:
+		case CustomModelAnimType_SinTranslate:
+		case CustomModelAnimType_SinTranslateVelocity:
 
-		case CustomModelAnim_SpinY:
-			*rotY += (float)Game.Time * anim->a + anim->b;
-			break;
-
-		case CustomModelAnim_SpinZ:
-			*rotZ += (float)Game.Time * anim->a + anim->b;
-			break;
-
-		case CustomModelAnim_SpinXVelocity:
-			*rotX += e->Anim.WalkTime * anim->a + anim->b;
-			break;
-
-		case CustomModelAnim_SpinYVelocity:
-			*rotY += e->Anim.WalkTime * anim->a + anim->b;
-			break;
-
-		case CustomModelAnim_SpinZVelocity:
-			*rotZ += e->Anim.WalkTime * anim->a + anim->b;
-			break;
-
-		case CustomModelAnim_SinTranslateX:
-		case CustomModelAnim_SinTranslateY:
-		case CustomModelAnim_SinTranslateZ:
-		case CustomModelAnim_SinTranslateXVelocity:
-		case CustomModelAnim_SinTranslateYVelocity:
-		case CustomModelAnim_SinTranslateZVelocity:
-		case CustomModelAnim_SinRotateX:
-		case CustomModelAnim_SinRotateY:
-		case CustomModelAnim_SinRotateZ:
-		case CustomModelAnim_SinRotateXVelocity:
-		case CustomModelAnim_SinRotateYVelocity:
-		case CustomModelAnim_SinRotateZVelocity:
-			/*
-				a: speed
-				b: width
-				c: shift cycle
-				d: shift pos
-			*/
 			switch (anim->type) {
-				case CustomModelAnim_SinTranslateX:
-				case CustomModelAnim_SinTranslateY:
-				case CustomModelAnim_SinTranslateZ:
-				case CustomModelAnim_SinRotateX:
-				case CustomModelAnim_SinRotateY:
-				case CustomModelAnim_SinRotateZ:
+				/*
+					a: speed
+					b: shift pos
+				*/
+				case CustomModelAnimType_Spin:
+					value = (float)Game.Time * anim->a + anim->b;
+					break;
+
+				case CustomModelAnimType_SpinVelocity:
+					value = e->Anim.WalkTime * anim->a + anim->b;
+					break;
+
+				/*
+					a: speed
+					b: width
+					c: shift cycle
+					d: shift pos
+				*/
+				case CustomModelAnimType_SinRotate:
+				case CustomModelAnimType_SinTranslate:
 					value = ( Math_SinF((float)Game.Time * anim->a + 2 * MATH_PI * anim->c) + anim->d ) * anim->b;
 					break;
 
-				case CustomModelAnim_SinTranslateXVelocity:
-				case CustomModelAnim_SinTranslateYVelocity:
-				case CustomModelAnim_SinTranslateZVelocity:
-				case CustomModelAnim_SinRotateXVelocity:
-				case CustomModelAnim_SinRotateYVelocity:
-				case CustomModelAnim_SinRotateZVelocity:
+				case CustomModelAnimType_SinRotateVelocity:
+				case CustomModelAnimType_SinTranslateVelocity:
 					value = ( Math_SinF(e->Anim.WalkTime * anim->a + 2 * MATH_PI * anim->c) + anim->d ) * anim->b;
 					break;
 			}
 
 			switch (anim->type) {
-				case CustomModelAnim_SinTranslateX:
-				case CustomModelAnim_SinTranslateY:
-				case CustomModelAnim_SinTranslateZ:
-				case CustomModelAnim_SinTranslateXVelocity:
-				case CustomModelAnim_SinTranslateYVelocity:
-				case CustomModelAnim_SinTranslateZVelocity:
+				case CustomModelAnimType_Spin:
+				case CustomModelAnimType_SpinVelocity:
+				case CustomModelAnimType_SinRotate:
+				case CustomModelAnimType_SinRotateVelocity:
+					switch (anim->axis) {
+						case CustomModelAnimAxis_X:
+							*rotX += value;
+							break;
+
+						case CustomModelAnimAxis_Y:
+							*rotY += value;
+							break;
+
+						case CustomModelAnimAxis_Z:
+							*rotZ += value;
+							break;
+					}
+					break;
+
+				case CustomModelAnimType_SinTranslate:
+				case CustomModelAnimType_SinTranslateVelocity:
 					if (!*modifiedVertices) {
 						*modifiedVertices = true;
 						Mem_Copy(
@@ -681,41 +667,22 @@ static void CustomModel_ApplyAnimation(
 					}
 
 					for (i = 0; i < MODEL_BOX_VERTICES; i++) {
-						switch (anim->type) {
-							case CustomModelAnim_SinTranslateX:
-							case CustomModelAnim_SinTranslateXVelocity:
+						switch (anim->axis) {
+							case CustomModelAnimAxis_X:
 								cm->model.vertices[part->modelPart.offset + i].X += value;
 								break;
 
-							case CustomModelAnim_SinTranslateY:
-							case CustomModelAnim_SinTranslateYVelocity:
+							case CustomModelAnimAxis_Y:
 								cm->model.vertices[part->modelPart.offset + i].Y += value;
 								break;
 
-							case CustomModelAnim_SinTranslateZ:
-							case CustomModelAnim_SinTranslateZVelocity:
+							case CustomModelAnimAxis_Z:
 								cm->model.vertices[part->modelPart.offset + i].Z += value;
 								break;
 						}
 					}
 					break;
-
-				case CustomModelAnim_SinRotateX:
-				case CustomModelAnim_SinRotateXVelocity:
-					*rotX += value;
-					break;
-
-				case CustomModelAnim_SinRotateY:
-				case CustomModelAnim_SinRotateYVelocity:
-					*rotY += value;
-					break;
-
-				case CustomModelAnim_SinRotateZ:
-				case CustomModelAnim_SinRotateZVelocity:
-					*rotZ += value;
-					break;
 			}
-
 			break;
 	}
 }

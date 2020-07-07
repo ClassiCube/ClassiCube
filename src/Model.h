@@ -214,34 +214,29 @@ CC_API void BoxDesc_ZQuad2(struct Model* m, float x1, float x2, float y1, float 
 #define MAX_CUSTOM_MODEL_ANIMS 4
 
 enum CustomModelAnimType {
-	CustomModelAnim_None = 0,
-	CustomModelAnim_Head = 1,
-	CustomModelAnim_LeftLeg = 2,
-	CustomModelAnim_RightLeg = 3,
-	CustomModelAnim_LeftArm = 4,
-	CustomModelAnim_RightArm = 5,
-	CustomModelAnim_SpinX = 6,
-	CustomModelAnim_SpinY = 7,
-	CustomModelAnim_SpinZ = 8,
-	CustomModelAnim_SpinXVelocity = 9,
-	CustomModelAnim_SpinYVelocity = 10,
-	CustomModelAnim_SpinZVelocity = 11,
-	CustomModelAnim_SinTranslateX = 12,
-	CustomModelAnim_SinTranslateY = 13,
-	CustomModelAnim_SinTranslateZ = 14,
-	CustomModelAnim_SinTranslateXVelocity = 15,
-	CustomModelAnim_SinTranslateYVelocity = 16,
-	CustomModelAnim_SinTranslateZVelocity = 17,
-	CustomModelAnim_SinRotateX = 18,
-	CustomModelAnim_SinRotateY = 19,
-	CustomModelAnim_SinRotateZ = 20,
-	CustomModelAnim_SinRotateXVelocity = 21,
-	CustomModelAnim_SinRotateYVelocity = 22,
-	CustomModelAnim_SinRotateZVelocity = 23
+	CustomModelAnimType_None = 0,
+	CustomModelAnimType_Head = 1,
+	CustomModelAnimType_LeftLeg = 2,
+	CustomModelAnimType_RightLeg = 3,
+	CustomModelAnimType_LeftArm = 4,
+	CustomModelAnimType_RightArm = 5,
+	CustomModelAnimType_Spin = 6,
+	CustomModelAnimType_SpinVelocity = 7,
+	CustomModelAnimType_SinRotate = 8,
+	CustomModelAnimType_SinRotateVelocity = 9,
+	CustomModelAnimType_SinTranslate = 10,
+	CustomModelAnimType_SinTranslateVelocity = 11
+};
+
+enum CustomModelAnimAxis {
+	CustomModelAnimAxis_X = 0,
+	CustomModelAnimAxis_Y = 1,
+	CustomModelAnimAxis_Z = 2,
 };
 
 struct CustomModelAnim {
 	cc_uint8 type;
+	cc_uint8 axis;
 	float a, b, c, d;
 };
 

@@ -1528,12 +1528,14 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	data += 4;
 
 	if (cpe_customModelsVer == 1) {
-		part->anims[0].type = *data++;
-		part->anims[0].a = GetFloat(data);
+		/* ignore animations */
+		data++;
 		data += 4;
 	} else if (cpe_customModelsVer == 2) {
 		for (i = 0; i < MAX_CUSTOM_MODEL_ANIMS; i++) {
-			part->anims[i].type = *data++;
+			cc_uint8 tmp = *data++;
+			part->anims[i].type = tmp & 0x3F;
+			part->anims[i].axis = tmp >> 6;
 
 			part->anims[i].a = GetFloat(data);
 			data += 4;
