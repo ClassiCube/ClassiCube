@@ -552,138 +552,65 @@ static void CustomModel_MakeParts(void) {
 }
 
 struct ModelVertex oldVertices[MODEL_BOX_VERTICES];
-static void CustomModel_ApplyAnimation(
+static float CustomModel_GetAnimationValue(
 	struct CustomModelAnim* anim,
 	struct CustomModelPart* part,
 	struct CustomModel* cm,
-	struct Entity* e,
-	cc_bool* head,
-	cc_bool* modifiedVertices,
-	float* rotX,
-	float* rotY,
-	float* rotZ
+	struct Entity* e
 ) {
-	int i;
-	float value;
-
 	switch (anim->type) {
 		case CustomModelAnimType_None:
 			return;
 
 		case CustomModelAnimType_Head:
-			*head = true;
-			*rotX += -e->Pitch * MATH_DEG2RAD;
-			break;
+			return -e->Pitch * MATH_DEG2RAD;
 
-		case CustomModelAnimType_LeftLeg:
-			*rotX += e->Anim.LeftLegX;
-			*rotZ += e->Anim.LeftLegZ;
-			break;
+		case CustomModelAnimType_LeftLegX:
+			return e->Anim.LeftLegX;
 
-		case CustomModelAnimType_RightLeg:
-			*rotX += e->Anim.RightLegX;
-			*rotZ += e->Anim.RightLegZ;
-			break;
+		case CustomModelAnimType_RightLegX:
+			return e->Anim.RightLegX;
 
-		case CustomModelAnimType_LeftArm:
+		case CustomModelAnimType_LeftArmX:
 			/* TODO: we're using 2 different rotation orders here */
 			Models.Rotation = ROTATE_ORDER_XZY;
-			*rotX += e->Anim.LeftArmX;
-			*rotZ += e->Anim.LeftArmZ;
-			break;
+			return e->Anim.LeftArmX;
 
-		case CustomModelAnimType_RightArm:
+		case CustomModelAnimType_LeftArmZ:
 			Models.Rotation = ROTATE_ORDER_XZY;
-			*rotX += e->Anim.RightArmX;
-			*rotZ += e->Anim.RightArmZ;
-			break;
+			return e->Anim.LeftArmZ;
 
+		case CustomModelAnimType_RightArmX:
+			Models.Rotation = ROTATE_ORDER_XZY;
+			return e->Anim.RightArmX;
+
+		case CustomModelAnimType_RightArmZ:
+			Models.Rotation = ROTATE_ORDER_XZY;
+			return e->Anim.RightArmZ;
+
+		/*
+			a: speed
+			b: shift pos
+		*/
 		case CustomModelAnimType_Spin:
+			return (float)Game.Time * anim->a + anim->b;
+
 		case CustomModelAnimType_SpinVelocity:
+			return e->Anim.WalkTime * anim->a + anim->b;
+
+		/*
+			a: speed
+			b: width
+			c: shift cycle
+			d: shift pos
+		*/
 		case CustomModelAnimType_SinRotate:
-		case CustomModelAnimType_SinRotateVelocity:
 		case CustomModelAnimType_SinTranslate:
+			return ( Math_SinF((float)Game.Time * anim->a + 2 * MATH_PI * anim->c) + anim->d ) * anim->b;
+
+		case CustomModelAnimType_SinRotateVelocity:
 		case CustomModelAnimType_SinTranslateVelocity:
-
-			switch (anim->type) {
-				/*
-					a: speed
-					b: shift pos
-				*/
-				case CustomModelAnimType_Spin:
-					value = (float)Game.Time * anim->a + anim->b;
-					break;
-
-				case CustomModelAnimType_SpinVelocity:
-					value = e->Anim.WalkTime * anim->a + anim->b;
-					break;
-
-				/*
-					a: speed
-					b: width
-					c: shift cycle
-					d: shift pos
-				*/
-				case CustomModelAnimType_SinRotate:
-				case CustomModelAnimType_SinTranslate:
-					value = ( Math_SinF((float)Game.Time * anim->a + 2 * MATH_PI * anim->c) + anim->d ) * anim->b;
-					break;
-
-				case CustomModelAnimType_SinRotateVelocity:
-				case CustomModelAnimType_SinTranslateVelocity:
-					value = ( Math_SinF(e->Anim.WalkTime * anim->a + 2 * MATH_PI * anim->c) + anim->d ) * anim->b;
-					break;
-			}
-
-			switch (anim->type) {
-				case CustomModelAnimType_Spin:
-				case CustomModelAnimType_SpinVelocity:
-				case CustomModelAnimType_SinRotate:
-				case CustomModelAnimType_SinRotateVelocity:
-					switch (anim->axis) {
-						case CustomModelAnimAxis_X:
-							*rotX += value;
-							break;
-
-						case CustomModelAnimAxis_Y:
-							*rotY += value;
-							break;
-
-						case CustomModelAnimAxis_Z:
-							*rotZ += value;
-							break;
-					}
-					break;
-
-				case CustomModelAnimType_SinTranslate:
-				case CustomModelAnimType_SinTranslateVelocity:
-					if (!*modifiedVertices) {
-						*modifiedVertices = true;
-						Mem_Copy(
-							oldVertices,
-							&cm->model.vertices[part->modelPart.offset],
-							sizeof(struct ModelVertex) * MODEL_BOX_VERTICES
-						);
-					}
-
-					for (i = 0; i < MODEL_BOX_VERTICES; i++) {
-						switch (anim->axis) {
-							case CustomModelAnimAxis_X:
-								cm->model.vertices[part->modelPart.offset + i].X += value;
-								break;
-
-							case CustomModelAnimAxis_Y:
-								cm->model.vertices[part->modelPart.offset + i].Y += value;
-								break;
-
-							case CustomModelAnimAxis_Z:
-								cm->model.vertices[part->modelPart.offset + i].Z += value;
-								break;
-						}
-					}
-					break;
-			}
-			break;
+			return ( Math_SinF(e->Anim.WalkTime * anim->a + 2 * MATH_PI * anim->c) + anim->d ) * anim->b;
 	}
 }
 
@@ -697,6 +624,7 @@ static void CustomModel_DrawPart(
 	float rotX, rotY, rotZ;
 	cc_bool head = false;
 	cc_bool modifiedVertices = false;
+	float value = 0.0f;
 
 	if (part->fullbright) {
 		for (i = 0; i < FACE_COUNT; i++) {
@@ -714,7 +642,57 @@ static void CustomModel_DrawPart(
 
 	for (animIndex = 0; animIndex < MAX_CUSTOM_MODEL_ANIMS; animIndex++) {
 		struct CustomModelAnim* anim = &part->anims[animIndex];
-		CustomModel_ApplyAnimation(anim, part, cm, e, &head, &modifiedVertices, &rotX, &rotY, &rotZ);
+		if (anim->type == CustomModelAnimType_None) {
+			continue;
+		}
+
+		value = CustomModel_GetAnimationValue(anim, part, cm, e);
+		
+		if (anim->type == CustomModelAnimType_Head) {
+			head = true;
+		} else if (
+			anim->type == CustomModelAnimType_SinTranslate ||
+			anim->type == CustomModelAnimType_SinTranslateVelocity
+		) {
+			if (!modifiedVertices) {
+				modifiedVertices = true;
+				Mem_Copy(
+					oldVertices,
+					&cm->model.vertices[part->modelPart.offset],
+					sizeof(struct ModelVertex) * MODEL_BOX_VERTICES
+				);
+			}
+
+			for (i = 0; i < MODEL_BOX_VERTICES; i++) {
+				switch (anim->axis) {
+					case CustomModelAnimAxis_X:
+						cm->model.vertices[part->modelPart.offset + i].X += value;
+						break;
+
+					case CustomModelAnimAxis_Y:
+						cm->model.vertices[part->modelPart.offset + i].Y += value;
+						break;
+
+					case CustomModelAnimAxis_Z:
+						cm->model.vertices[part->modelPart.offset + i].Z += value;
+						break;
+				}
+			}
+		} else {
+			switch (anim->axis) {
+				case CustomModelAnimAxis_X:
+					rotX += value;
+					break;
+
+				case CustomModelAnimAxis_Y:
+					rotY += value;
+					break;
+
+				case CustomModelAnimAxis_Z:
+					rotZ += value;
+					break;
+			}
+		}
 	}
 
 	if (rotX || rotY || rotZ || head) {

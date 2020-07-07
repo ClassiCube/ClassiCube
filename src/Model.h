@@ -216,16 +216,18 @@ CC_API void BoxDesc_ZQuad2(struct Model* m, float x1, float x2, float y1, float 
 enum CustomModelAnimType {
 	CustomModelAnimType_None = 0,
 	CustomModelAnimType_Head = 1,
-	CustomModelAnimType_LeftLeg = 2,
-	CustomModelAnimType_RightLeg = 3,
-	CustomModelAnimType_LeftArm = 4,
-	CustomModelAnimType_RightArm = 5,
-	CustomModelAnimType_Spin = 6,
-	CustomModelAnimType_SpinVelocity = 7,
-	CustomModelAnimType_SinRotate = 8,
-	CustomModelAnimType_SinRotateVelocity = 9,
-	CustomModelAnimType_SinTranslate = 10,
-	CustomModelAnimType_SinTranslateVelocity = 11
+	CustomModelAnimType_LeftLegX = 2,
+	CustomModelAnimType_RightLegX = 3,
+	CustomModelAnimType_LeftArmX = 4,
+	CustomModelAnimType_LeftArmZ = 5,
+	CustomModelAnimType_RightArmX = 6,
+	CustomModelAnimType_RightArmZ = 7,
+	CustomModelAnimType_Spin = 8,
+	CustomModelAnimType_SpinVelocity = 9,
+	CustomModelAnimType_SinRotate = 10,
+	CustomModelAnimType_SinRotateVelocity = 11,
+	CustomModelAnimType_SinTranslate = 12,
+	CustomModelAnimType_SinTranslateVelocity = 13
 };
 
 enum CustomModelAnimAxis {
