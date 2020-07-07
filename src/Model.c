@@ -803,31 +803,6 @@ static void CustomModel_GetPickingBounds(struct Entity* e) {
 	e->ModelAABB = ((struct CustomModel*)e->Model)->pickingBoundsAABB;
 }
 
-static void CustomModel_DrawArmPart(struct CustomModelPart* part) {
-	struct Model* model  = Models.Active;
-	struct ModelPart arm = part->modelPart;
-	arm.rotX = model->armX / 16.0f; 
-	arm.rotY = (model->armY + model->armY / 2) / 16.0f;
-
-	if (Models.ClassicArms) {
-		Model_DrawRotate(
-			part->rotation.X * MATH_DEG2RAD + 0,
-			part->rotation.Y * MATH_DEG2RAD + -90 * MATH_DEG2RAD,
-			part->rotation.Z * MATH_DEG2RAD + 120 * MATH_DEG2RAD,
-			&arm,
-			false
-		);
-	} else {
-		Model_DrawRotate(
-			part->rotation.X * MATH_DEG2RAD + -20 * MATH_DEG2RAD,
-			part->rotation.Y * MATH_DEG2RAD + -70 * MATH_DEG2RAD,
-			part->rotation.Z * MATH_DEG2RAD + 135 * MATH_DEG2RAD,
-			&arm,
-			false
-		);
-	}
-}
-
 static void CustomModel_DrawArm(struct Entity* e) {
 	int i;
 	struct CustomModel* cm = (struct CustomModel*)Models.Active;
@@ -838,7 +813,7 @@ static void CustomModel_DrawArm(struct Entity* e) {
 	for (i = 0; i < cm->numParts; i++) {
 		struct CustomModelPart* part = &cm->parts[i];
 		if (part->firstPersonArm) {
-			CustomModel_DrawArmPart(part);
+			Model_DrawArmPart(&part->modelPart);
 		}
 	}
 
