@@ -651,31 +651,31 @@ void Logger_Abort2(cc_result result, const char* raw_msg) {
 	AbortCommon(result, raw_msg, NULL);
 }
 #elif defined CC_BUILD_WIN
-static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
+static LONG WINAPI UnhandledFilter(struct _EXCEPTION_POINTERS* info) {
 	String msg; char msgBuffer[128 + 1];
 	cc_uint32 code;
 	cc_uintptr addr;
 	DWORD i, numArgs;
 
-	code = (cc_uint32)pInfo->ExceptionRecord->ExceptionCode;
-	addr = (cc_uintptr)pInfo->ExceptionRecord->ExceptionAddress;
+	code = (cc_uint32)info->ExceptionRecord->ExceptionCode;
+	addr = (cc_uintptr)info->ExceptionRecord->ExceptionAddress;
 
 	String_InitArray_NT(msg, msgBuffer);
 	String_Format2(&msg, "Unhandled exception 0x%h at 0x%x", &code, &addr);
 
-	numArgs = pInfo->ExceptionRecord->NumberParameters;
+	numArgs = info->ExceptionRecord->NumberParameters;
 	if (numArgs) {
 		numArgs = min(numArgs, EXCEPTION_MAXIMUM_PARAMETERS);
 		String_AppendConst(&msg, " [");
 
 		for (i = 0; i < numArgs; i++) {
-			String_Format1(&msg, "0x%x,", &pInfo->ExceptionRecord->ExceptionInformation[i]);
+			String_Format1(&msg, "0x%x,", &info->ExceptionRecord->ExceptionInformation[i]);
 		}
 		String_Append(&msg, ']');
 	}
 
 	msg.buffer[msg.length] = '\0';
-	AbortCommon(0, msg.buffer, pInfo->ContextRecord);
+	AbortCommon(0, msg.buffer, info->ContextRecord);
 	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
 }
 void Logger_Hook(void) { SetUnhandledExceptionFilter(UnhandledFilter); }

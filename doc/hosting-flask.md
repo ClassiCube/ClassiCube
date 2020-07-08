@@ -2,8 +2,6 @@ The website will be structured like so:
 
 ```
 websrv.py
-templates/tmpl.html
-templates/tmpl_lite.html
 templates/play.html
 static/classisphere.js
 static/default.zip
@@ -39,54 +37,31 @@ if __name__ == "__main__":
     app.run()
 ```
 
-#### templates/tmpl.html
-```HTML
-<html>
-    <head>
-        <meta name="viewport" content="width=device-width">
-        <link href="/static/style.css" rel="stylesheet">
-        <script src="/static/jquery.js"></script>
-    </head>
-    <body>
-        <div id="header">
-            <div class="row">
-                 <a href="/"><h1 class="columns">Home</h1></a>
-                 <a href="/play"><h1 class="columns">Play</h1></a>
-            </div>
-        </div>
-
-        <div id="body">
-            {% block main %} {% endblock %}
-        </div>
-    </body>
-</html>
-```
-
-#### templates/tmpl_lite.html
-```HTML
-<html>
-    <head>
-        <meta name="viewport" content="width=device-width">
-        <link href="/static/style.css" rel="stylesheet">
-        <script src="/static/jquery.js"></script>
-    </head>
-    <body>
-        <div id="body">
-            {% block main %} {% endblock %}
-        </div>
-    </body>
-</html>
-```
-
 #### templates/play.html
 ```HTML
 {% set mobile_mode = request.user_agent.platform in ('android', 'iphone', 'ipad') %}
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width">
+    <link href="/static/style.css" rel="stylesheet">
+    <script src="/static/jquery.js"></script>
+  </head>
+  <body>
 {% if mobile_mode %}
-{% extends 'tmpl_lite.html' %}
+    <style>
+      #body {min-height: 0px;}
+      .sec {padding: 0px;}
+      .row {padding: 0px;}
+    </style>
 {% else %}
-{% extends 'tmpl.html' %}
+    <div id="header">
+      <div class="row">
+        <a href="/"><h1 class="columns">Home</h1></a>
+        <a href="/play"><h1 class="columns">Play</h1></a>
+      </div>
+    </div>
 {% endif %}
-{% block main %}
+<div id="body">
 <style>
 /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
 #GameCanvas { display:block; box-sizing:border-box; border-width:0px !important; padding:0 !important; margin:0 auto; background-color: black; width:100%; height:auto; }
@@ -124,60 +99,53 @@ if __name__ == "__main__":
     if (canv_w % 2) { canv_w = canv_w - 1; }
 
 {% if mobile_mode %}
-        var screen_h = window.outerHeight || window.innerHeight;
-        canv_h = Math.min(canv_h, screen_h);
+    var screen_h = window.outerHeight || window.innerHeight;
+    canv_h = Math.min(canv_h, screen_h);
 {% endif %}
-        cc_canv[0].width  = canv_w * dpi;
-        cc_canv[0].height = canv_h * dpi;
-      }
+     cc_canv[0].width  = canv_w * dpi;
+     cc_canv[0].height = canv_h * dpi;
+  }
 
-      var Module = {
-        preRun: [ preloadIndexedDB, resizeGameCanvas ],
-        postRun: [],
-        arguments: {{game_args|safe}},
-        print: function(text) {
-            if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-            console.log(text);
-        },
-        printErr: function(text) {
-          if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-          console.error(text);
-        },
-        canvas: (function() { return document.getElementById('GameCanvas'); })(),
-        setStatus: function(text) {
-                        console.log(text);
-                        document.getElementById('logmsg').innerHTML = text;
-                },
-        totalDependencies: 0,
-        monitorRunDependencies: function(left) {
-          this.totalDependencies = Math.max(this.totalDependencies, left);
-          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
-        }
-      };
-      Module.setStatus('Downloading...');
-      window.onerror = function(event) {
-        // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
-        Module.setStatus('Exception thrown, see JavaScript console');
-        Module.setStatus = function(text) {
-          if (text) Module.printErr('[post-exception status] ' + text);
-        };
-      };
-    </script>
-    <script async type="text/javascript" src="/static/classisphere.js"></script>
-
-{% if mobile_mode %}
-<style>
-#body {min-height: 0px;}
-.sec {padding: 0px;}
-.row {padding: 0px;}
-</style>
-{% else %}
-{% endif %}
-{% endblock %}
+  var Module = {
+    preRun: [ preloadIndexedDB, resizeGameCanvas ],
+    postRun: [],
+    arguments: {{game_args|safe}},
+    print: function(text) {
+        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+        console.log(text);
+    },
+    printErr: function(text) {
+      if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+      console.error(text);
+    },
+    canvas: (function() { return document.getElementById('GameCanvas'); })(),
+    setStatus: function(text) {
+                    console.log(text);
+                    document.getElementById('logmsg').innerHTML = text;
+            },
+    totalDependencies: 0,
+    monitorRunDependencies: function(left) {
+      this.totalDependencies = Math.max(this.totalDependencies, left);
+      Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+    }
+  };
+  Module.setStatus('Downloading...');
+  window.onerror = function(event) {
+    // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
+    Module.setStatus('Exception thrown, see JavaScript console');
+    Module.setStatus = function(text) {
+      if (text) Module.printErr('[post-exception status] ' + text);
+    };
+  };
+</script>
+<script async type="text/javascript" src="/static/classisphere.js"></script>
+        </div>
+    </body>
+</html>
 ```
 
 #### static/classisphere.js
-Download `classicube.s3.amazonaws.com/client/latest/ClassiCube.js` for this
+Download `cs.classicube.net/c_client/latest/ClassiCube.js` for this
 
 #### static/default.zip
 Download `classicube.net/static/default.zip` for this
@@ -226,7 +194,7 @@ Download some version of jQuery for this. Version 2.1.1 is known to work.
 
 * If you don't want the game to resize to fit different resolutions, remove the `resizeGameCanvas` code.
 
-* tmpl_lite.html and mobile_mode is used to deliver a minified page for mobile/tablet devices
+* mobile_mode is used to deliver a minified page for mobile/tablet devices
 
 ## Results
 
