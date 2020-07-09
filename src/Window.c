@@ -2058,7 +2058,6 @@ void Window_DisableRawMouse(void) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_CARBON
 #include <Carbon/Carbon.h>
-#include <dlfcn.h>
 
 static WindowRef win_handle;
 static cc_bool win_fullscreen, showingDialog;
@@ -2311,8 +2310,9 @@ static void HookEvents(void) {
 	/* However, we cannot use that since the event loop is managed by us instead. */
 	/* Unfortunately, there is no proper API to duplicate that behaviour, so reply */
 	/* on the undocumented GetMenuBarEventTarget to achieve similar behaviour. */
-	/* TODO: Use DynamicLib API instead of dlsym */
-	getMenuBarEventTarget = dlsym(RTLD_DEFAULT, "GetMenuBarEventTarget");
+	/* TODO: Check if this still works on PowerPC */
+#define _RTLD_DEFAULT ((void*)-2)
+	getMenuBarEventTarget = DynamicLib_Get2(_RTLD_DEFAULT, "GetMenuBarEventTarget");
 	InstallStandardEventHandler(GetApplicationEventTarget());
 
 	/* TODO: Why does this not work properly until user activates another window */
