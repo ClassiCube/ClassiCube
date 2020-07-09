@@ -2310,7 +2310,7 @@ static void HookEvents(void) {
 	/* However, we cannot use that since the event loop is managed by us instead. */
 	/* Unfortunately, there is no proper API to duplicate that behaviour, so reply */
 	/* on the undocumented GetMenuBarEventTarget to achieve similar behaviour. */
-	/* TODO: Check if this still works on PowerPC */
+	/* TODO: This is wrong for PowerPC. But at least it doesn't crash or anything. */
 #define _RTLD_DEFAULT ((void*)-2)
 	getMenuBarEventTarget = DynamicLib_Get2(_RTLD_DEFAULT, "GetMenuBarEventTarget");
 	InstallStandardEventHandler(GetApplicationEventTarget());

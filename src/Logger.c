@@ -81,13 +81,7 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case PNG_ERR_INVALID_HDR_SIZE: return "Invalid PNG header size";
 	case PNG_ERR_TOO_WIDE:         return "PNG image too wide";
 	case PNG_ERR_TOO_TALL:         return "PNG image too tall";
-	case PNG_ERR_INVALID_COL_BPP:  return "Invalid color type in PNG";
-	case PNG_ERR_COMP_METHOD:      return "Invalid compression in PNG";
-	case PNG_ERR_FILTER:           return "Invalid filter in PNG"; 
 	case PNG_ERR_INTERLACED:       return "Interlaced PNGs unsupported";
-	case PNG_ERR_PAL_SIZE:         return "Invalid size of palette data";
-	case PNG_ERR_TRANS_COUNT:      return "Invalid number of transparency entries";
-	case PNG_ERR_TRANS_INVALID:    return "Transparency invalid for color type";
 	case PNG_ERR_REACHED_IEND:     return "Incomplete PNG image data";
 	case PNG_ERR_NO_DATA:          return "No image in PNG";
 	case PNG_ERR_INVALID_SCANLINE: return "Invalid PNG scanline type";

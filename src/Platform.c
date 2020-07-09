@@ -1433,7 +1433,7 @@ void* DynamicLib_Get2(void* lib, const char* name) {
 cc_bool DynamicLib_DescribeError(String* dst) {
 	NSLinkEditErrors err = 0;
 	const char* name = "";
-	const char* msg = "";
+	const char* msg  = "";
 	int errNum = 0;
 
 	NSLinkEditError(&err, &errNum, &name, &msg);
