@@ -1034,6 +1034,7 @@ void Gfx_OnWindowResize(void) { Gfx_LoseContext(" (resizing window)"); }
 #elif defined CC_BUILD_GLES
 #include <GLES2/gl2.h>
 #else
+#define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 #endif
 
