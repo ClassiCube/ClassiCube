@@ -18,6 +18,8 @@ It **does not** work with 'modern/premium' Minecraft servers.
 * macOS: macOS 10.5 or later. (Can be compiled to work with 10.4 though)
 * Linux: libcurl and libopenal.
 
+**Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work propery.
+
 #### Instructions
 Initially, you will need to run ClassiCube.exe to download the required assets from minecraft.net. 
 Just click 'OK' to the dialog menu that appears when you start the launcher.
@@ -31,28 +33,35 @@ Run ClassiCube.exe. You can connect to LAN/locally hosted servers, ~~minecraft.n
 ###### *Windows specific*
 *If you are stuck using the built-in OpenGL 1.1 software renderer, you can use the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance. Typically though, this occurs because you have not installed GPU drivers.*
 
-### Compiling
+### Compiling - Windows
 
-#### Windows
-
-##### Compiling with Visual Studio:
+##### Using Visual Studio
 Open ClassiCube.sln and compile it.
 
 If you get a ```The Windows SDK version 5.1 was not found``` compilation error, [see here for how to fix](doc/compile-fixes.md#visual-studio-unsupported-platform-toolset)
 
-##### Compiling with MinGW-w64
+##### Using Visual Studio (command line)
+1. Use 'Developer Tools for Visual Studio' from Start Menu
+2. Navigate to directory with game's source code
+3. Enter `cl.exe *.c /link user32.lib gdi32.lib crypt32.lib ws2_32.lib wininet.lib winmm.lib dbghelp.lib d3d9.lib shell32.lib /out:ClassiCube.exe`
+
+##### Using MinGW-w64
 I am assuming you used the installer from https://sourceforge.net/projects/mingw-w64/
 1. Install MinGW-W64
 2. Use either *Run Terminal* from Start Menu or run *mingw-w64.bat* in the installation folder
-3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of *i686-w64-mingw32-gcc*
+3. Navigate to directory with game's source code
+4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9`
 
-##### Compiling with MinGW
+##### Using MinGW
 I am assuming you used the installer from http://www.mingw.org/
 1. Install MinGW. You need mingw32-base-bin and msys-base-bin packages.
 2. Run *msys.bat* in the *C:\MinGW\msys\1.0* folder.
-3. Compile with the same flags as under **Cross Compiling for windows**, but use *gcc* instead of *i686-w64-mingw32-gcc*
+3. Navigate to directory with game's source code
+4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9`
 
-#### Linux
+### Compiling - Linux
+
+##### Using gcc/clang
 
 Install appropriate libs as required. For ubuntu these are: libx11-dev, libxi-dev and libgl1-mesa-dev
 
@@ -67,13 +76,17 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ```gcc *.c -o ClassiCube -DCC_BUILD_RPI -lm -lpthread -lX11 -lEGL -lGLESv2 -ldl```
 
-#### macOS (32 bit)
+### Compiling - macOS
+
+##### Using gcc/clang (32 bit)
 
 ```cc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL```
 
-#### macOS (64 bit)
+##### Using gcc/clang (64 bit)
 
 ```cc *.c -o ClassiCube -framework Cocoa -framework OpenGL -lobjc```
+
+### Compiling - other desktop OSes
 
 #### FreeBSD
 
@@ -106,6 +119,8 @@ Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed.
 ```gcc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lSDL2```
 
 NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
+
+### Compiling - other
 
 #### Web
 
