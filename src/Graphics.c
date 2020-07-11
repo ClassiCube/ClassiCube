@@ -1020,7 +1020,7 @@ void Gfx_OnWindowResize(void) { Gfx_LoseContext(" (resizing window)"); }
 /*########################################################################################################################*
 *----------------------------------------------------------OpenGL---------------------------------------------------------*
 *#########################################################################################################################*/
-/* The OpenGL backend is a bit verbose, since it's really 3 backends in one:
+/* The OpenGL backend is a bit of a mess, since it's really 3 backends in one:
  * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
  * - OpenGL 1.5 or OpenGL 1.2 + GL_ARB_vertex_buffer_object (default desktop backend)
  * - OpenGL 2.0 (alternative modern-ish backend)
@@ -1038,6 +1038,19 @@ void Gfx_OnWindowResize(void) { Gfx_LoseContext(" (resizing window)"); }
 #include <GL/gl.h>
 #endif
 
+/* Not present in gl.h on Windows (only up to OpenGL 1.1) */
+#define _GL_ARRAY_BUFFER         0x8892
+#define _GL_ELEMENT_ARRAY_BUFFER 0x8893
+#define _GL_STATIC_DRAW          0x88E4
+#define _GL_DYNAMIC_DRAW         0x88E8
+#define _GL_TEXTURE_MAX_LEVEL    0x813D
+
+#define _GL_FRAGMENT_SHADER      0x8B30
+#define _GL_VERTEX_SHADER        0x8B31
+#define _GL_COMPILE_STATUS       0x8B81
+#define _GL_LINK_STATUS          0x8B82
+#define _GL_INFO_LOG_LENGTH      0x8B84
+
 #if defined CC_BUILD_GL11
 static GLuint activeList;
 #define gl_DYNAMICLISTID 1234567891
@@ -1050,11 +1063,6 @@ static cc_uint16 gl_indices[GFX_MAX_INDICES];
 #define _glBufferData(t,s,d,u)    glBufferData(t,s,d,u)
 #define _glBufferSubData(t,o,s,d) glBufferSubData(t,o,s,d)
 #else
-/* Not present in gl.h on Windows (only up to OpenGL 1.1) */
-#define GL_ARRAY_BUFFER         0x8892
-#define GL_ELEMENT_ARRAY_BUFFER 0x8893
-#define GL_STATIC_DRAW          0x88E4
-#define GL_DYNAMIC_DRAW         0x88E8
 /* OpenGL functions use stdcall instead of cdecl on Windows */
 #ifndef APIENTRY
 #define APIENTRY
@@ -1077,7 +1085,6 @@ static FUNC_GLBUFFERSUBDATA _glBufferSubData;
 #else
 #define PIXEL_FORMAT 0x80E1 /* GL_BGRA_EXT */
 #endif
-#define GL_TEXTURE_MAX_LEVEL 0x813D
 
 #if defined CC_BIG_ENDIAN
 /* Pixels are stored in memory as A,R,G,B but GL_UNSIGNED_BYTE will interpret as B,G,R,A */
@@ -1176,7 +1183,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 		if (customMipmapsLevels) {
 			int lvls = CalcMipmapsLevels(bmp->width, bmp->height);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, lvls);
+			glTexParameteri(GL_TEXTURE_2D, _GL_TEXTURE_MAX_LEVEL, lvls);
 		}
 	} else {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -1276,13 +1283,13 @@ static GLuint GL_GenAndBind(GLenum target) {
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, int indicesCount) {
-	GLuint id     = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
+	GLuint id     = GL_GenAndBind(_GL_ELEMENT_ARRAY_BUFFER);
 	cc_uint32 size = indicesCount * 2;
-	_glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, indices, GL_STATIC_DRAW);
+	_glBufferData(_GL_ELEMENT_ARRAY_BUFFER, size, indices, _GL_STATIC_DRAW);
 	return id;
 }
 
-void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
+void Gfx_BindIb(GfxResourceID ib) { _glBindBuffer(_GL_ELEMENT_ARRAY_BUFFER, (GLuint)ib); }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
 	GLuint id = (GLuint)(*ib);
@@ -1302,10 +1309,10 @@ void Gfx_DeleteIb(GfxResourceID* ib) { }
 *#########################################################################################################################*/
 #ifndef CC_BUILD_GL11
 GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
-	return GL_GenAndBind(GL_ARRAY_BUFFER);
+	return GL_GenAndBind(_GL_ARRAY_BUFFER);
 }
 
-void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb); }
+void Gfx_BindVb(GfxResourceID vb) { _glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb); }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	GLuint id = (GLuint)(*vb);
@@ -1319,7 +1326,7 @@ void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockVb(GfxResourceID vb) {
-	_glBufferData(GL_ARRAY_BUFFER, tmpSize, tmpData, GL_STATIC_DRAW);
+	_glBufferData(_GL_ARRAY_BUFFER, tmpSize, tmpData, _GL_STATIC_DRAW);
 }
 #else
 static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int count) {
@@ -1378,9 +1385,9 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) {
 	cc_uint32 size;
 	if (Gfx.LostContext) return 0;
 
-	id = GL_GenAndBind(GL_ARRAY_BUFFER);
+	id = GL_GenAndBind(_GL_ARRAY_BUFFER);
 	size = maxVertices * strideSizes[fmt];
-	_glBufferData(GL_ARRAY_BUFFER, size, NULL, GL_DYNAMIC_DRAW);
+	_glBufferData(_GL_ARRAY_BUFFER, size, NULL, _GL_DYNAMIC_DRAW);
 	return id;
 }
 
@@ -1389,14 +1396,14 @@ void* Gfx_LockDynamicVb(GfxResourceID vb, VertexFormat fmt, int count) {
 }
 
 void Gfx_UnlockDynamicVb(GfxResourceID vb) {
-	_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
-	_glBufferSubData(GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
+	_glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb);
+	_glBufferSubData(_GL_ARRAY_BUFFER, 0, tmpSize, tmpData);
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	cc_uint32 size = vCount * curStride;
-	_glBindBuffer(GL_ARRAY_BUFFER, (GLuint)vb);
-	_glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
+	_glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb);
+	_glBufferSubData(_GL_ARRAY_BUFFER, 0, size, vertices);
 }
 #else
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat fmt, int maxVertices) { 
@@ -1616,7 +1623,7 @@ static GLint CompileShader(GLenum type, const String* src, GLuint* obj) {
 
 	glShaderSource(shader, 1, &src->buffer, &len);
 	glCompileShader(shader);
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &temp);
+	glGetShaderiv(shader, _GL_COMPILE_STATUS, &temp);
 	return temp;
 }
 
@@ -1627,7 +1634,7 @@ static void ShaderFailed(GLint shader) {
 	if (!shader) Logger_Abort("Failed to create shader");
 
 	temp = 0;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &temp);
+	glGetShaderiv(shader, _GL_INFO_LOG_LENGTH, &temp);
 
 	if (temp > 1) {
 		glGetShaderInfoLog(shader, 2047, NULL, logInfo);
@@ -1645,11 +1652,11 @@ static void CompileProgram(struct GLShader* shader) {
 
 	String_InitArray(tmp, tmpBuffer);
 	GenVertexShader(shader, &tmp);
-	if (!CompileShader(GL_VERTEX_SHADER,   &tmp, &vs)) ShaderFailed(vs);
+	if (!CompileShader(_GL_VERTEX_SHADER,   &tmp, &vs)) ShaderFailed(vs);
 
 	tmp.length = 0;
 	GenFragmentShader(shader, &tmp);
-	if (!CompileShader(GL_FRAGMENT_SHADER, &tmp, &fs)) {
+	if (!CompileShader(_GL_FRAGMENT_SHADER, &tmp, &fs)) {
 		/* Sometimes fails 'highp precision is not supported in fragment shader' */
 		/* So try compiling shader again without highp precision */
 		glDeleteShader(fs);
@@ -1657,7 +1664,7 @@ static void CompileProgram(struct GLShader* shader) {
 
 		tmp.length = 0;
 		GenFragmentShader(shader, &tmp);
-		if (!CompileShader(GL_FRAGMENT_SHADER, &tmp, &fs)) ShaderFailed(fs);
+		if (!CompileShader(_GL_FRAGMENT_SHADER, &tmp, &fs)) ShaderFailed(fs);
 	}
 
 
@@ -1676,7 +1683,7 @@ static void CompileProgram(struct GLShader* shader) {
 	glBindAttribLocation(program, 2, "in_uv");
 
 	glLinkProgram(program);
-	glGetProgramiv(program, GL_LINK_STATUS, &temp);
+	glGetProgramiv(program, _GL_LINK_STATUS, &temp);
 
 	if (temp) {
 		glDetachShader(program, vs);
@@ -1693,7 +1700,7 @@ static void CompileProgram(struct GLShader* shader) {
 		return;
 	}
 	temp = 0;
-	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &temp);
+	glGetProgramiv(program, _GL_INFO_LOG_LENGTH, &temp);
 
 	if (temp > 0) {
 		glGetProgramInfoLog(program, 2047, NULL, tmpBuffer);
