@@ -126,11 +126,17 @@ CC_API void Gfx_DeleteVb(GfxResourceID* vb);
 CC_API void* Gfx_LockVb(GfxResourceID vb, VertexFormat fmt, int count);
 /* Submits the changed contents of a vertex buffer. */
 CC_API void  Gfx_UnlockVb(GfxResourceID vb);
+
 /* TODO: How to make LockDynamicVb work with OpenGL 1.1 Builder stupidity.. */
-/* TODO: Cleanup the D3D9 Init and remove the if (i == count) stuff. */
 #ifdef CC_BUILD_GL11
 /* Special case of Gfx_Create/LockVb for building chunks in Builder.c */
 GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count);
+#endif
+#ifdef CC_BUILD_GLMODERN
+/* Special case Gfx_BindVb for map renderer */
+void Gfx_BindVb_T2fC4b(GfxResourceID vb);
+#else
+#define Gfx_BindVb_T2fC4b Gfx_BindVb
 #endif
 
 /* Creates a new dynamic vertex buffer, whose contents can be updated later. */
@@ -161,7 +167,7 @@ CC_API void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex);
 /* Renders vertices from the currently bound vertex and index buffer as triangles. */
 CC_API void Gfx_DrawVb_IndexedTris(int verticesCount);
 /* Special case Gfx_DrawVb_IndexedTris_Range for map renderer */
-void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex);
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex);
 
 /* Loads the given matrix over the currently active matrix. */
 CC_API void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix);

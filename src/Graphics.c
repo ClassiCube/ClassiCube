@@ -839,7 +839,7 @@ void Gfx_DrawVb_IndexedTris_Range(int verticesCount, int startVertex) {
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
 }
 
-void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
 }
@@ -1913,12 +1913,20 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
 }
 
-void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
-	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
-	glVertexAttribPointer(0, 3, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)(offset));
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true,  SIZEOF_VERTEX_TEXTURED, (void*)(offset + 12));
-	glVertexAttribPointer(2, 2, GL_FLOAT,         false, SIZEOF_VERTEX_TEXTURED, (void*)(offset + 16));
-	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
+void Gfx_BindVb_T2fC4b(GfxResourceID vb) {
+	Gfx_BindVb(vb);
+	GL_SetupVbTextured();
+}
+
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
+	if (startVertex + verticesCount > GFX_MAX_VERTICES) {
+		GL_SetupVbTextured_Range(startVertex);
+		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
+		GL_SetupVbTextured();
+	} else {
+		/* ICOUNT(startVertex) * 2 = startVertex * 3  */
+		glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, (void*)(startVertex * 3));
+	}
 }
 #endif
 
@@ -2086,7 +2094,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 }
 
 #ifndef CC_BUILD_GL11
-void Gfx_DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
 	glVertexPointer(3, GL_FLOAT,        SIZEOF_VERTEX_TEXTURED, (void*)(offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(offset + 12));
@@ -2122,7 +2130,7 @@ static void GL_CheckSupport(void) {
 	customMipmapsLevels = true;
 }
 #else
-void Gfx_DrawIndexedVb_TrisT2fC4b(int list, int ignored) { glCallList(list); }
+void Gfx_DrawIndexedTris_T2fC4b(int list, int ignored) { glCallList(list); }
 
 static void GL_CheckSupport(void) {
 	MakeIndices(gl_indices, GFX_MAX_INDICES);

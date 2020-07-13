@@ -99,11 +99,11 @@ static void CheckWeather(double delta) {
 }
 
 #ifdef CC_BUILD_GL11
-#define DrawFace(face, ign)    Gfx_DrawIndexedVb_TrisT2fC4b(part.Vbs[face], 0);
+#define DrawFace(face, ign)    Gfx_DrawIndexedTris_T2fC4b(part.Vbs[face], 0);
 #define DrawFaces(f1, f2, ign) DrawFace(f1, ign); DrawFace(f2, ign);
 #else
-#define DrawFace(face, offset)    Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[face], offset);
-#define DrawFaces(f1, f2, offset) Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[f1] + part.Counts[f2], offset);
+#define DrawFace(face, offset)    Gfx_DrawIndexedTris_T2fC4b(part.Counts[face], offset);
+#define DrawFaces(f1, f2, offset) Gfx_DrawIndexedTris_T2fC4b(part.Counts[f1] + part.Counts[f2], offset);
 #endif
 
 #define DrawNormalFaces(minFace, maxFace) \
@@ -136,7 +136,7 @@ static void RenderNormalBatch(int batch) {
 		hasNormParts[batch] = true;
 
 #ifndef CC_BUILD_GL11
-		Gfx_BindVb(info->Vb);
+		Gfx_BindVb_T2fC4b(info->Vb);
 #endif
 
 		offset  = part.Offset + part.SpriteCount;
@@ -161,25 +161,25 @@ static void RenderNormalBatch(int batch) {
 		Gfx_SetFaceCulling(true);
 		/* TODO: fix to not render them all */
 #ifdef CC_BUILD_GL11
-		Gfx_DrawIndexedVb_TrisT2fC4b(part.Vbs[FACE_COUNT], 0);
+		Gfx_DrawIndexedTris_T2fC4b(part.Vbs[FACE_COUNT], 0);
 		Game_Vertices += count * 4;
 		Gfx_SetFaceCulling(false);
 		continue;
 #endif
 		if (info->DrawXMax || info->DrawZMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(count, offset); Game_Vertices += count;
+			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
 		} offset += count;
 
 		if (info->DrawXMin || info->DrawZMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(count, offset); Game_Vertices += count;
+			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
 		} offset += count;
 
 		if (info->DrawXMin || info->DrawZMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(count, offset); Game_Vertices += count;
+			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
 		} offset += count;
 
 		if (info->DrawXMax || info->DrawZMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(count, offset); Game_Vertices += count;
+			Gfx_DrawIndexedTris_T2fC4b(count, offset); Game_Vertices += count;
 		}
 		Gfx_SetFaceCulling(false);
 	}
@@ -240,7 +240,7 @@ static void RenderTranslucentBatch(int batch) {
 		hasTranParts[batch] = true;
 
 #ifndef CC_BUILD_GL11
-		Gfx_BindVb(info->Vb);
+		Gfx_BindVb_T2fC4b(info->Vb);
 #endif
 
 		offset  = part.Offset;
