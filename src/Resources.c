@@ -607,21 +607,17 @@ static void TexPatcher_MakeDefaultZip(void) {
 *--------------------------------------------------------Audio patcher----------------------------------------------------*
 *#########################################################################################################################*/
 #define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
+#define WAV_HDR_SIZE 44
 
 /* Fixes up the .WAV header after having written all samples */
-static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx) {
-	cc_uint8 header[44];
-	cc_uint32 length;
-	cc_result res;
-
-	res = s->Length(s, &length);
-	if (res) { Logger_Warn(res, "getting .wav length"); return; }
-	res = s->Seek(s, 0);
+static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 len) {
+	cc_uint8 header[WAV_HDR_SIZE];
+	cc_result res = s->Seek(s, 0);
 	if (res) { Logger_Warn(res, "seeking to .wav start"); return; }
 
-	Stream_SetU32_BE(header + 0,  WAV_FourCC('R','I','F','F'));
-	Stream_SetU32_LE(header + 4,  length - 8);
-	Stream_SetU32_BE(header + 8,  WAV_FourCC('W','A','V','E'));
+	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
+	Stream_SetU32_LE(header +  4, len - 8);
+	Stream_SetU32_BE(header +  8, WAV_FourCC('W','A','V','E'));
 	Stream_SetU32_BE(header + 12, WAV_FourCC('f','m','t',' '));
 	Stream_SetU32_LE(header + 16, 16); /* fmt chunk size */
 	Stream_SetU16_LE(header + 20, 1);  /* PCM audio format */
@@ -632,20 +628,21 @@ static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx) 
 	Stream_SetU16_LE(header + 32, ctx->channels * 2);                   /* block align */
 	Stream_SetU16_LE(header + 34, 16);                                  /* bits per sample */
 	Stream_SetU32_BE(header + 36, WAV_FourCC('d','a','t','a'));
-	Stream_SetU32_LE(header + 40, length - sizeof(header));
+	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
 
-	res = Stream_Write(s, header, sizeof(header));
+	res = Stream_Write(s, header, WAV_HDR_SIZE);
 	if (res) Logger_Warn(res, "fixing .wav header");
 }
 
-/* Writes an empty .WAV header and then writes all samples */
-static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) {
+/* Decodes all samples, then produces a .WAV file from them */
+static void SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
 	cc_int16* samples;
-	int count;
+	cc_uint32 len = WAV_HDR_SIZE;
 	cc_result res;
+	int count;
 
-	/* ctx is all 0, so reuse it here for header */
-	res = Stream_Write(s, (const cc_uint8*)ctx, 44);
+	/* ctx is all 0, so reuse here for empty header */
+	res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE);
 	if (res) { Logger_Warn(res, "writing .wav header"); return; }
 
 	res = Vorbis_DecodeHeaders(ctx);
@@ -654,10 +651,14 @@ static void SoundPatcher_DecodeAudio(struct Stream* s, struct VorbisState* ctx) 
 
 	for (;;) {
 		res = Vorbis_DecodeFrame(ctx);
-		if (res == ERR_END_OF_STREAM) break;
+		if (res == ERR_END_OF_STREAM) {
+			/* reached end of samples, so done */
+			SoundPatcher_FixupHeader(s, ctx, len); break;
+		}
 		if (res) { Logger_Warn(res, "decoding .ogg"); break; }
 
 		count = Vorbis_OutputFrame(ctx, samples);
+		len  += count * 2;
 		/* TODO: Do we need to account for big endian */
 		res = Stream_Write(s, samples, count * 2);
 		if (res) { Logger_Warn(res, "writing samples"); break; }
@@ -681,9 +682,7 @@ static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 
 	Ogg_Init(&ogg, &src);
 	ctx.source = &ogg;
-
-	SoundPatcher_DecodeAudio(&dst, &ctx);
-	SoundPatcher_FixupHeader(&dst, &ctx);
+	SoundPatcher_WriteWav(&dst, &ctx);
 
 	res = dst.Close(&dst);
 	if (res) Logger_Warn(res, "closing .wav file");
