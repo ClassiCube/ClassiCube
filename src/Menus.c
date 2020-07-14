@@ -2560,7 +2560,7 @@ void GraphicsOptionsScreen_Show(void) {
 		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.\n" \
 		"&e30/60/120/144 FPS: &fRenders 30/60/120/144 frames at most each second.\n" \
 		"&eNoLimit: &fRenders as many frames as possible each second.\n" \
-		"&cUsing NoLimit mode is discouraged.";
+		"&cNoLimit is pointless - it wastefully renders frames that you don't even see!";
 	extDescs[3] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
 	extDescs[4] = \
 		"&eNone: &fNo names of players are drawn.\n" \

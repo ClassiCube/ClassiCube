@@ -29,7 +29,7 @@ void AxisLinesRenderer_Render(void) {
 	Vec3 coords[5], pos;
 	int i, count;
 
-	if (!AxisLinesRenderer_Enabled || Gfx.LostContext) return;
+	if (!AxisLinesRenderer_Enabled) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
 	if (!axisLines_vb) {
 		axisLines_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);

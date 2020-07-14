@@ -171,7 +171,7 @@ void Selections_Render(void) {
 	struct VertexColoured* data;
 	Vec3 cameraPos;
 	int i, count;
-	if (!selections_count || Gfx.LostContext) return;
+	if (!selections_count) return;
 
 	/* TODO: Proper selection box sorting. But this is very difficult because
 	   we can have boxes within boxes, intersecting boxes, etc. Probably not worth it. */
