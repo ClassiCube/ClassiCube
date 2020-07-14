@@ -111,7 +111,7 @@ void Logger_SysWarn(cc_result res, const char* place, Logger_DescribeError descr
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
-	String_Format2(&msg, "Error %h when %c", &res, place);
+	String_Format2(&msg, "Error %i when %c", &res, place);
 	AppendErrorDesc(&msg, res, describeErr);
 	Logger_WarnFunc(&msg);
 }
