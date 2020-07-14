@@ -111,7 +111,8 @@ void Logger_SysWarn(cc_result res, const char* place, Logger_DescribeError descr
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
-	String_Format2(&msg, "Error %i when %c", &res, place);
+	String_Format2(&msg, res < 20000 ? "Error %i when %c" : "Error %h when %c",
+					&res, place);
 	AppendErrorDesc(&msg, res, describeErr);
 	Logger_WarnFunc(&msg);
 }
@@ -120,7 +121,8 @@ void Logger_SysWarn2(cc_result res, const char* place, const String* path, Logge
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
-	String_Format3(&msg, "Error %h when %c '%s'", &res, place, path);
+	String_Format3(&msg, res < 20000 ? "Error %i when %c '%s'" : "Error %h when %c '%s'",
+					&res, place, path);
 	AppendErrorDesc(&msg, res, describeErr);
 	Logger_WarnFunc(&msg);
 }

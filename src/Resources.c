@@ -647,7 +647,9 @@ static void SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
 
 	res = Vorbis_DecodeHeaders(ctx);
 	if (res) { Logger_Warn(res, "decoding .ogg header"); return; }
-	samples = (cc_int16*)Mem_Alloc(ctx->blockSizes[1] * ctx->channels, 2, ".ogg samples");
+
+	samples = (cc_int16*)Mem_TryAlloc(ctx->blockSizes[1] * ctx->channels, 2);
+	if (!samples) { Logger_Warn(ERR_OUT_OF_MEMORY, "allocating .ogg samples"); return; }
 
 	for (;;) {
 		res = Vorbis_DecodeFrame(ctx);
