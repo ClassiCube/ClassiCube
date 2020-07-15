@@ -365,7 +365,7 @@ static void DisconnectInvalidOpcode(cc_uint8 opcode) {
 	String tmp; char tmpBuffer[STRING_SIZE];
 	String_InitArray(tmp, tmpBuffer);
 
-	String_Format1(&tmp, "Server sent invalid packet %b!", &opcode);
+	String_Format2(&tmp, "Server sent invalid packet %b! (prev %b)", &opcode, &net_lastOpcode);
 	Game_Disconnect(&title, &tmp); return;
 }
 
