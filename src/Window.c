@@ -3887,6 +3887,15 @@ void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 #ifdef CC_BUILD_GL
 /* OpenGL contexts are heavily tied to the window, so for simplicitly are also included here */
 /* SDL and EGL are platform agnostic, other OpenGL context backends are tied to one windowing system. */
+#define GLCONTEXT_DEFAULT_DEPTH 24
+#define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
+
+void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
+	int i;
+	for (i = 0; i < count; i++) {
+		*syms[i].symAddr = GLContext_GetAddress(syms[i].name);
+	}
+}
 
 /*########################################################################################################################*
 *-------------------------------------------------------SDL OpenGL--------------------------------------------------------*

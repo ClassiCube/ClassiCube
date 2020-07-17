@@ -2103,6 +2103,16 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 }
 
 static void GL_CheckSupport(void) {
+	static const struct DynamicLibSym coreVboFuncs[5] = {
+		{ "glBindBuffer",    (void**)&_glBindBuffer }, { "glDeleteBuffers", (void**)&_glDeleteBuffers },
+		{ "glGenBuffers",    (void**)&_glGenBuffers }, { "glBufferData",    (void**)&_glBufferData },
+		{ "glBufferSubData", (void**)&_glBufferSubData }
+	};
+	static const struct DynamicLibSym arbVboFuncs[5] = {
+		{ "glBindBufferARB",    (void**)&_glBindBuffer }, { "glDeleteBuffersARB", (void**)&_glDeleteBuffers },
+		{ "glGenBuffersARB",    (void**)&_glGenBuffers }, { "glBufferDataARB",    (void**)&_glBufferData },
+		{ "glBufferSubDataARB", (void**)&_glBufferSubData }
+	};
 	static const String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
 	String extensions  = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
 	const GLubyte* ver = glGetString(GL_VERSION);
@@ -2112,17 +2122,9 @@ static void GL_CheckSupport(void) {
 
 	/* Supported in core since 1.5 */
 	if (major > 1 || (major == 1 && minor >= 5)) {
-		_glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBuffer");
-		_glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffers");
-		_glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffers");
-		_glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
-		_glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubData");
+		GLContext_GetAll(coreVboFuncs, Array_Elems(coreVboFuncs));
 	} else if (String_CaselessContains(&extensions, &vboExt)) {
-		_glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
-		_glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");
-		_glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffersARB");
-		_glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferDataARB");
-		_glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubDataARB");
+		GLContext_GetAll(arbVboFuncs,  Array_Elems(arbVboFuncs));
 	} else {
 		Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
 			"Compile the game with CC_BUILD_GL11, or ask on the classicube forums for it");

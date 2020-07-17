@@ -31,6 +31,7 @@
    OTHER DEALINGS IN THE SOFTWARE.
 */
 
+struct DynamicLibSym;
 /* The states the window can be in. */
 enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_FULLSCREEN };
 /* Can't name these Window/Display, because it conflicts with X11's Window/Display typedef */
@@ -161,12 +162,13 @@ cc_bool GLContext_TryRestore(void);
 /* NOTE: This also unattaches the OpenGL context from the window. */
 void GLContext_Free(void);
 
-#define GLCONTEXT_DEFAULT_DEPTH 24
-#define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 /* Returns the address of a function pointer for the given OpenGL function. */
-/* NOTE: The implementation may still return an address for unsupported functions. */
+/* NOTE: The implementation may still return an address for unsupported functions! */
 /* You MUST check the OpenGL version and/or GL_EXTENSIONS string for actual support! */
 void* GLContext_GetAddress(const char* function);
+/* Loads all OpenGL function pointers using GLContext_GetAddress in the given list */
+void GLContext_GetAll(const struct DynamicLibSym* syms, int count);
+
 /* Swaps the front and back buffer, displaying the back buffer on screen. */
 cc_bool GLContext_SwapBuffers(void);
 /* Sets whether synchronisation with the monitor is enabled. */
