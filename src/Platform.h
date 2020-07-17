@@ -76,11 +76,7 @@ cc_result Updater_MarkExecutable(void);
 /* Sets the last time UPDATE_FILE file was modified, as a unix timestamp. */
 cc_result Updater_SetNewBuildTime(cc_uint64 timestamp);
 
-/* The default file extension used for dynamic libraries on this platform. */
-extern const String DynamicLib_Ext;
-CC_API cc_result DynamicLib_Load(const String* path, void** lib); /* OBSOLETE */
-CC_API cc_result DynamicLib_Get(void* lib, const char* name, void** symbol); /* OBSOLETE */
-
+/* TODO: Rename _Load2 to _Load on next plugin API version */
 /* Attempts to load a native dynamic library from the given path. */
 CC_API void* DynamicLib_Load2(const String* path);
 /* Attempts to get the address of the symbol in the given dynamic library. */
@@ -89,6 +85,16 @@ CC_API void* DynamicLib_Get2(void* lib, const char* name);
 /* Outputs more detailed information about errors with the DynamicLib functions. */
 /* NOTE: You MUST call this immediately after DynamicLib_Load2/DynamicLib_Get2 returns NULL. */
 CC_API cc_bool DynamicLib_DescribeError(String* dst);
+
+/* The default file extension used for dynamic libraries on this platform. */
+extern const String DynamicLib_Ext;
+/* Represents a name, and a pointer to variable that will hold the loaded symbol */
+/* static int (APIENTRY *_myGetError)(void); --- (for example) */
+/* static struct DynamicLibSym sym = { "myGetError", (void**)&_myGetError }; */
+struct DynamicLibSym { const char* name; void** symAddr; };
+/* Loads all symbols using DynamicLib_Get2 in the given list */
+/* Returns true if all symbols were successfully retrieved */
+cc_bool DynamicLib_GetAll(void* lib, const struct DynamicLibSym* syms, int count);
 
 /* Allocates a block of memory, with undetermined contents. Returns NULL on allocation failure. */
 CC_API void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize);
