@@ -1467,6 +1467,16 @@ cc_bool DynamicLib_DescribeError(String* dst) {
 }
 #endif
 
+cc_result DynamicLib_Load(const String* path, void** lib) {
+	*lib = DynamicLib_Load2(path);
+	return *lib == NULL;
+}
+cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) {
+	*symbol = DynamicLib_Get2(lib, name);
+	return *symbol == NULL;
+}
+
+
 cc_bool DynamicLib_GetAll(void* lib, const struct DynamicLibSym* syms, int count) {
 	int i, loaded = 0;
 	void* addr;

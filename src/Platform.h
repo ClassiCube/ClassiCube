@@ -88,6 +88,8 @@ CC_API cc_bool DynamicLib_DescribeError(String* dst);
 
 /* The default file extension used for dynamic libraries on this platform. */
 extern const String DynamicLib_Ext;
+CC_API cc_result DynamicLib_Load(const String* path, void** lib); /* OBSOLETE */
+CC_API cc_result DynamicLib_Get(void* lib, const char* name, void** symbol); /* OBSOLETE */
 /* Represents a name, and a pointer to variable that will hold the loaded symbol */
 /* static int (APIENTRY *_myGetError)(void); --- (for example) */
 /* static struct DynamicLibSym sym = { "myGetError", (void**)&_myGetError }; */
