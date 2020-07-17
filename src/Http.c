@@ -469,15 +469,15 @@ typedef int CURLcode;
 #define APIENTRY
 #endif
 
-typedef CURLcode (APIENTRY *FP_curl_global_init)(long flags);  static FP_curl_global_init _curl_global_init;
-typedef void     (APIENTRY *FP_curl_global_cleanup)(void);     static FP_curl_global_cleanup _curl_global_cleanup;
-typedef CURL*    (APIENTRY *FP_curl_easy_init)(void);          static FP_curl_easy_init _curl_easy_init;
-typedef CURLcode (APIENTRY *FP_curl_easy_perform)(CURL *c);    static FP_curl_easy_perform _curl_easy_perform;
-typedef CURLcode (APIENTRY *FP_curl_easy_setopt)(CURL *c, int opt, ...);    static FP_curl_easy_setopt _curl_easy_setopt;
-typedef void     (APIENTRY *FP_curl_easy_cleanup)(CURL* c);    static FP_curl_easy_cleanup _curl_easy_cleanup;
-typedef const char* (APIENTRY *FP_curl_easy_strerror)(CURLcode res);        static FP_curl_easy_strerror _curl_easy_strerror;
-typedef void     (APIENTRY *FP_curl_slist_free_all)(struct curl_slist* l);  static FP_curl_slist_free_all _curl_slist_free_all;
-typedef struct curl_slist* (APIENTRY *FP_curl_slist_append)(struct curl_slist* l, const char* v); static FP_curl_slist_append _curl_slist_append;
+static CURLcode (APIENTRY *_curl_global_init)(long flags);
+static void     (APIENTRY *_curl_global_cleanup)(void);
+static CURL*    (APIENTRY *_curl_easy_init)(void);
+static CURLcode (APIENTRY *_curl_easy_perform)(CURL *c);
+static CURLcode (APIENTRY *_curl_easy_setopt)(CURL *c, int opt, ...);
+static void     (APIENTRY *_curl_easy_cleanup)(CURL* c);
+static void     (APIENTRY *_curl_slist_free_all)(struct curl_slist* l);
+static struct curl_slist* (APIENTRY *_curl_slist_append)(struct curl_slist* l, const char* v);
+static const char* (APIENTRY *_curl_easy_strerror)(CURLcode res);
 /* End of curl headers */
 
 #if defined CC_BUILD_WIN
@@ -495,8 +495,17 @@ static const String curlAlt = String_FromConst("libcurl.so.3");
 #endif
 
 #define QUOTE(x) #x
-#define LoadCurlFunc(sym) (_ ## sym = (FP_ ## sym)DynamicLib_Get2(lib, QUOTE(sym)))
+#define DefineCurlFunc(sym) { QUOTE(sym), (void**)&_ ## sym }
 static cc_bool LoadCurlFuncs(void) {
+	static const struct DynamicLibSym funcs[8] = {
+		DefineCurlFunc(curl_global_init),    DefineCurlFunc(curl_global_cleanup),
+		DefineCurlFunc(curl_easy_init),      DefineCurlFunc(curl_easy_perform),
+		DefineCurlFunc(curl_easy_setopt),    DefineCurlFunc(curl_easy_cleanup),
+		DefineCurlFunc(curl_slist_free_all), DefineCurlFunc(curl_slist_append)
+	};
+	/* Non-essential function missing in older curl versions */
+	static const struct DynamicLibSym optFuncs[1] = { DefineCurlFunc(curl_easy_strerror) };
+
 	void* lib = DynamicLib_Load2(&curlLib);
 	if (!lib) { 
 		Logger_DynamicLibWarn("loading", &curlLib);
@@ -504,14 +513,9 @@ static cc_bool LoadCurlFuncs(void) {
 		lib = DynamicLib_Load2(&curlAlt);
 		if (!lib) { Logger_DynamicLibWarn("loading", &curlAlt); return false; }
 	}
-	/* Non-essential function missing in older curl versions */
-	LoadCurlFunc(curl_easy_strerror);
 
-	return
-		LoadCurlFunc(curl_global_init)    && LoadCurlFunc(curl_global_cleanup) &&
-		LoadCurlFunc(curl_easy_init)      && LoadCurlFunc(curl_easy_perform)   &&
-		LoadCurlFunc(curl_easy_setopt)    && LoadCurlFunc(curl_easy_cleanup)   &&
-		LoadCurlFunc(curl_slist_free_all) && LoadCurlFunc(curl_slist_append);
+	DynamicLib_GetAll(lib, optFuncs, Array_Elems(optFuncs));
+	return DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
 }
 
 static CURL* curl;

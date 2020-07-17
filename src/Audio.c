@@ -126,7 +126,6 @@ static const String alLib = String_FromConst("libopenal.so.1");
 
 #define QUOTE(x) #x
 #define DefineALFunc(sym) { QUOTE(sym), (void**)&_ ## sym }
-
 static cc_bool LoadALFuncs(void) {
 	static const struct DynamicLibSym funcs[18] = {
 		DefineALFunc(alcCreateContext),  DefineALFunc(alcMakeContextCurrent),
