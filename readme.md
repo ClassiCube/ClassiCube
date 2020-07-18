@@ -15,7 +15,7 @@ It **does not** work with 'modern/premium' Minecraft servers.
 
 #### Requirements
 * Windows: 2000 or later. (Windows 98 with KernelEx also *technically* works)
-* macOS: macOS 10.5 or later. (Can be compiled to work with 10.4 though)
+* macOS: macOS 10.5 or later. (Can be compiled to work with 10.3/10.4 though)
 * Linux: libcurl and libopenal.
 
 **Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work propery.

@@ -38,7 +38,7 @@ const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
 const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #elif defined CC_BUILD_POSIX
-/* POSIX can be shared between Linux/BSD/OSX */
+/* POSIX can be shared between Linux/BSD/macOS */
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -1404,8 +1404,8 @@ cc_bool DynamicLib_DescribeError(String* dst) {
 void* DynamicLib_Load2(const String* path)         { return NULL; }
 void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
 cc_bool DynamicLib_DescribeError(String* dst)      { return false; }
-#elif defined CC_BUILD_OSX && __ppc__
-/* TODO: Only do it for macOS < 10.4 */
+#elif defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
+/* Really old mac OS versions don't have the dlopen/dlsym API */
 const String DynamicLib_Ext = String_FromConst(".dylib");
 
 void* DynamicLib_Load2(const String* path) {
@@ -1606,17 +1606,17 @@ static void Platform_InitPosix(void) {
 	/* So writing to closed socket doesn't raise SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
 	/* Assume stopwatch is in nanoseconds */
-	/* Some platforms (e.g. OSX) override this */
+	/* Some platforms (e.g. macOS) override this */
 	sw_freqDiv = 1000;
 }
 void Platform_Free(void) { }
 
 cc_result Platform_Encrypt(const void* data, int len, cc_uint8** enc, int* encLen) {
-	/* TODO: Is there a similar API for OSX/Linux? */
+	/* TODO: Is there a similar API for macOS/Linux? */
 	return ERR_NOT_SUPPORTED;
 }
 cc_result Platform_Decrypt(const void* data, int len, String* dst) {
-	/* TODO: Is there a similar API for OSX/Linux? */
+	/* TODO: Is there a similar API for macOS/Linux? */
 	return ERR_NOT_SUPPORTED;
 }
 
@@ -1650,7 +1650,7 @@ void Platform_Init(void) {
 	
 	/* NOTE: Call as soon as possible, otherwise can't click on dialog boxes. */
 	GetCurrentProcess(&psn);
-	/* NOTE: TransformProcessType is OSX 10.3 or later */
+	/* NOTE: TransformProcessType is macOS 10.3 or later */
 	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
 }
 #elif defined CC_BUILD_WEB

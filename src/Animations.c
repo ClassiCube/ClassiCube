@@ -171,7 +171,7 @@ static void WaterAnimation_Tick(void) {
 *#########################################################################################################################*/
 struct AnimationData {
 	TextureLoc texLoc;       /* Tile (not pixel) coordinates in terrain.png */
-	cc_uint16 frameX, frameY; /* Top left pixel coordinates of start frame in animatons.png */
+	cc_uint16 frameX, frameY; /* Top left pixel coordinates of start frame in animations.png */
 	cc_uint16 frameSize;      /* Size of each frame in pixel coordinates */
 	cc_uint16 state;          /* Current animation frame index */
 	cc_uint16 statesCount;    /* Total number of animation frames */
@@ -314,7 +314,7 @@ static void Animations_Validate(void) {
 			/* However, 'usewateranim' and 'uselavaanim' files should always disable use */
 			/* of custom water/lava animations, even when they exist in animations.png */
 			if (data.texLoc == LAVA_TEX_LOC  && !alwaysLavaAnim)  useLavaAnim  = false;
-			if (data.texLoc == WATER_TEX_LOC && !alwaysWaterAnim) useWaterAnim = false;		
+			if (data.texLoc == WATER_TEX_LOC && !alwaysWaterAnim) useWaterAnim = false;
 			continue;
 		}
 

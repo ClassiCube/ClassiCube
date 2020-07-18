@@ -1,6 +1,5 @@
 #include "Logger.h"
 #include "Platform.h"
-#include "Chat.h"
 #include "Window.h"
 #include "Funcs.h"
 #include "Stream.h"
@@ -28,6 +27,10 @@
 #elif defined CC_BUILD_POSIX
 #include <signal.h>
 #include <sys/ucontext.h>
+#endif
+#ifdef CC_BUILD_OSX
+/* Need this to detect macOS < 10.4, and switch to NS* api instead if so */
+#include <AvailabilityMacros.h>
 #endif
 
 
@@ -254,6 +257,24 @@ void Logger_Backtrace(String* trace, void* ctx) {
 /* need to define __USE_GNU for dladdr */
 #define __USE_GNU
 #endif
+
+#if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
+#include <mach-o/dyld.h>
+
+static void DumpFrame(String* trace, void* addr) {
+	String str; char strBuffer[384];
+	const char* name = NULL;
+	NSModule module;
+
+	String_InitArray(str, strBuffer);
+	module = NSModuleForSymbol(addr);
+	if (module) name = NSNameOfModule(module);
+
+	PrintFrame(&str, (cc_uintptr)addr, 0, name, NULL);
+	String_AppendString(trace, &str);
+	Logger_Log(&str);
+}
+#else
 #include <dlfcn.h>
 #undef __USE_GNU
 
@@ -270,6 +291,7 @@ static void DumpFrame(String* trace, void* addr) {
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
 }
+#endif
 
 #if defined CC_BUILD_ANDROID
 /* android's bionic libc doesn't provide backtrace (execinfo.h) */
@@ -288,12 +310,12 @@ void Logger_Backtrace(String* trace, void* ctx) {
 	String_AppendConst(trace, _NL);
 }
 #elif defined CC_BUILD_OSX
-/* backtrace is only available on OSX since 10.5 */
+/* backtrace is only available on macOS since 10.5 */
 void Logger_Backtrace(String* trace, void* ctx) {
 	void* addrs[40];
 	unsigned i, frames;
 	/* See lldb/tools/debugserver/source/MacOSX/stack_logging.h */
-	/* backtrace uses this internally too, and exists since OSX 10.1 */
+	/* backtrace uses this internally too, and exists since macOS 10.1 */
 	extern void thread_stack_pcs(void** buffer, unsigned max, unsigned* nb);
 
 	thread_stack_pcs(addrs, 40, &frames);
@@ -400,7 +422,7 @@ static void PrintRegisters(String* str, void* ctx) {
 #endif
 }
 #elif defined CC_BUILD_OSX && __DARWIN_UNIX03
-/* See /usr/include/mach/i386/_structs.h (OSX 10.5+) */
+/* See /usr/include/mach/i386/_structs.h (macOS 10.5+) */
 static void PrintRegisters(String* str, void* ctx) {
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
 #if defined __i386__
@@ -420,7 +442,7 @@ static void PrintRegisters(String* str, void* ctx) {
 #endif
 }
 #elif defined CC_BUILD_OSX
-/* See /usr/include/mach/i386/thread_status.h (OSX 10.4) */
+/* See /usr/include/mach/i386/thread_status.h (macOS 10.4) */
 static void PrintRegisters(String* str, void* ctx) {
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
 #if defined __i386__
