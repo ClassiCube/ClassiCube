@@ -166,6 +166,7 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	int i;
 
 	s->Init = NULL; /* screens should always override this */
+	s->Show = NULL; /* screens should always override this */
 	s->Free = LScreen_NullFunc;
 	s->Draw       = LScreen_Draw;
 	s->Tick       = LScreen_Tick;
@@ -244,14 +245,7 @@ static void UseModeClassicHax(void* w, int x, int y) { ChooseMode_Click(true,  t
 static void UseModeClassic(void* w, int x, int y)    { ChooseMode_Click(true,  false); }
 
 static void ChooseModeScreen_Init(struct LScreen* s_) {
-	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;	
-
-	s->lblHelp.hidden = !s->firstTime;
-	s->btnBack.hidden = s->firstTime;
-	s->seps[0].col    = Launcher_ButtonBorderCol;
-	s->seps[1].col    = Launcher_ButtonBorderCol;
-
-	if (s->numWidgets) return;
+	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
 	s->widgets = s->_widgets;
 	LLabel_Init(s_,  &s->lblTitle, "");
 	LLine_Init(s_,   &s->seps[0], 490);
@@ -281,6 +275,15 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 	LLabel_SetConst(&s->lblTitle, "Choose game mode");
 }
 
+static void ChooseModeScreen_Show(struct LScreen* s_) {
+	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;	
+
+	s->lblHelp.hidden = !s->firstTime;
+	s->btnBack.hidden = s->firstTime;
+	s->seps[0].col    = Launcher_ButtonBorderCol;
+	s->seps[1].col    = Launcher_ButtonBorderCol;
+}
+
 static void ChooseModeScreen_Layout(struct LScreen* s_) {
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
 	LWidget_SetLocation(&s->lblTitle, ANCHOR_CENTRE, ANCHOR_CENTRE, 10, -135);
@@ -307,6 +310,7 @@ struct LScreen* ChooseModeScreen_MakeInstance(cc_bool firstTime) {
 	struct ChooseModeScreen* s = &ChooseModeScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init      = ChooseModeScreen_Init;
+	s->Show      = ChooseModeScreen_Show;
 	s->Layout    = ChooseModeScreen_Layout;
 	s->firstTime = firstTime;
 	s->onEnterWidget = (struct LWidget*)&s->btnEnhanced;
@@ -428,9 +432,6 @@ static cc_bool ColoursScreen_InputFilter(char c) {
 static void ColoursScreen_Init(struct LScreen* s_) {
 	struct ColoursScreen* s = (struct ColoursScreen*)s_;
 	int i;
-
-	s->colourAcc = 0;
-	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 	
 	for (i = 0; i < 5 * 3; i++) {
@@ -454,6 +455,11 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 
 	s->btnDefault.OnClick = ColoursScreen_ResetAll;
 	s->btnBack.OnClick    = SwitchToSettings;
+}
+
+static void ColoursScreen_Show(struct LScreen* s_) {
+	struct ColoursScreen* s = (struct ColoursScreen*)s_;
+	s->colourAcc = 0;
 	ColoursScreen_UpdateAll(s);
 }
 
@@ -485,6 +491,7 @@ struct LScreen* ColoursScreen_MakeInstance(void) {
 	struct ColoursScreen* s = &ColoursScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init       = ColoursScreen_Init;
+	s->Show       = ColoursScreen_Show;
 	s->Layout     = ColoursScreen_Layout;
 	s->KeyDown    = ColoursScreen_KeyDown;
 	s->MouseWheel = ColoursScreen_MouseWheel;
@@ -578,7 +585,6 @@ static void DirectConnectScreen_StartClient(void* w, int x, int y) {
 
 static void DirectConnectScreen_Init(struct LScreen* s_) {
 	struct DirectConnectScreen* s = (struct DirectConnectScreen*)s_;
-	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 
 	LInput_Init(s_, &s->iptUsername, 330, "&gUsername..");
@@ -610,6 +616,7 @@ struct LScreen* DirectConnectScreen_MakeInstance(void) {
 	struct DirectConnectScreen* s = &DirectConnectScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init          = DirectConnectScreen_Init;
+	s->Show          = LScreen_NullFunc;
 	s->Layout        = DirectConnectScreen_Layout;
 	s->onEnterWidget = (struct LWidget*)&s->btnConnect;
 	return (struct LScreen*)s;
@@ -716,10 +723,6 @@ static cc_bool MainScreen_PasswordFilter(char c) { return true; }
 static void MainScreen_Init(struct LScreen* s_) {
 	String user, pass; char passBuffer[STRING_SIZE];
 	struct MainScreen* s = (struct MainScreen*)s_;
-
-	/* status should reset after user has gone to another menu */
-	s->lblStatus.text.length = 0;
-	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 
 	LInput_Init(s_, &s->iptUsername, 280, "&gUsername..");
@@ -755,6 +758,12 @@ static void MainScreen_Init(struct LScreen* s_) {
 
 	LInput_SetText(&s->iptUsername, &user);
 	LInput_SetText(&s->iptPassword, &pass);
+}
+
+static void MainScreen_Show(struct LScreen* s_) {
+	struct MainScreen* s = (struct MainScreen*)s_;
+	/* status should reset after user has gone to another menu */
+	s->lblStatus.text.length = 0;
 }
 
 static void MainScreen_Layout(struct LScreen* s_) {
@@ -902,6 +911,7 @@ struct LScreen* MainScreen_MakeInstance(void) {
 	struct MainScreen* s = &MainScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = MainScreen_Init;
+	s->Show   = MainScreen_Show;
 	s->Tick   = MainScreen_Tick;
 	s->Layout = MainScreen_Layout;
 	s->HoverWidget   = MainScreen_HoverWidget;
@@ -957,7 +967,6 @@ static void ResourcesScreen_Init(struct LScreen* s_) {
 	float size;
 
 	s->statusYOffset = 10;
-	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 
 	LLabel_Init(s_, &s->lblLine1, "Some required resources weren't found");
@@ -984,6 +993,11 @@ static void ResourcesScreen_Init(struct LScreen* s_) {
 	s->btnYes.OnClick    = ResourcesScreen_Download;
 	s->btnNo.OnClick     = ResourcesScreen_Next;
 	s->btnCancel.OnClick = ResourcesScreen_Next;
+}
+
+static void ResourcesScreen_Show(struct LScreen* s_) {
+	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
+	s->statusYOffset = 10;
 }
 
 static void ResourcesScreen_Layout(struct LScreen* s_) {
@@ -1089,6 +1103,7 @@ struct LScreen* ResourcesScreen_MakeInstance(void) {
 	struct ResourcesScreen* s = &ResourcesScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = ResourcesScreen_Init;
+	s->Show   = ResourcesScreen_Show;
 	s->Draw   = ResourcesScreen_Draw;
 	s->Tick   = ResourcesScreen_Tick;
 	s->Layout = ResourcesScreen_Layout;
@@ -1171,7 +1186,7 @@ static void ServersScreen_ReloadServers(struct ServersScreen* s) {
 	}
 }
 
-static void ServersScreen_InitWidgets(struct LScreen* s_) {
+static void ServersScreen_Init(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->widgets = s->_widgets;
 
@@ -1198,11 +1213,10 @@ static void ServersScreen_InitWidgets(struct LScreen* s_) {
 	s->widgets[s->numWidgets++] = (struct LWidget*)&s->table;
 }
 
-static void ServersScreen_Init(struct LScreen* s_) {
+static void ServersScreen_Show(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	Drawer2D_MakeFont(&s->rowFont, 11, FONT_STYLE_NORMAL);
 
-	if (!s->numWidgets) ServersScreen_InitWidgets(s_);
 	s->table.rowFont = &s->rowFont;
 	/* also resets hash and filter */
 	LTable_Reset(&s->table);
@@ -1287,6 +1301,7 @@ struct LScreen* ServersScreen_MakeInstance(void) {
 	s->tableAcc = 0.0f;
 
 	s->Init       = ServersScreen_Init;
+	s->Show       = ServersScreen_Show;
 	s->Tick       = ServersScreen_Tick;
 	s->Free       = ServersScreen_Free;
 	s->Layout     = ServersScreen_Layout;
@@ -1310,11 +1325,6 @@ static struct SettingsScreen {
 
 static void SettingsScreen_Init(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
-
-	s->btnColours.hidden = Launcher_ClassicBackground;
-	s->lblColours.hidden = Launcher_ClassicBackground;
-
-	if (s->numWidgets) return;
 	s->widgets = s->_widgets;
 
 	LButton_Init(s_, &s->btnUpdates, 110, 35, "Updates");
@@ -1332,6 +1342,12 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	s->btnUpdates.OnClick = SwitchToUpdates;
 	s->btnColours.OnClick = SwitchToColours;
 	s->btnBack.OnClick    = SwitchToMain;
+}
+
+static void SettingsScreen_Show(struct LScreen* s_) {
+	struct SettingsScreen* s = (struct SettingsScreen*)s_;
+	s->btnColours.hidden = Launcher_ClassicBackground;
+	s->lblColours.hidden = Launcher_ClassicBackground;
 }
 
 static void SettingsScreen_Layout(struct LScreen* s_) {
@@ -1352,6 +1368,7 @@ struct LScreen* SettingsScreen_MakeInstance(void) {
 	struct SettingsScreen* s = &SettingsScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = SettingsScreen_Init;
+	s->Show   = SettingsScreen_Show;
 	s->Layout = SettingsScreen_Layout;
 	return (struct LScreen*)s;
 }
@@ -1506,9 +1523,8 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
 	s->seps[0].col = Launcher_ButtonBorderCol;
 	s->seps[1].col = Launcher_ButtonBorderCol;
-	if (s->numWidgets) { UpdatesScreen_Update(s); return; }
-
 	s->widgets = s->_widgets;
+
 	LLabel_Init(s_,  &s->lblYour, "Your build: (unknown)");
 	LLine_Init(s_,   &s->seps[0],   320);
 	LLine_Init(s_,   &s->seps[1],   320);
@@ -1523,7 +1539,6 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 		LButton_Init(s_, &s->btnDev[0], 130, 35, "Direct3D 9");
 		LLabel_Init(s_,  &s->lblInfo, "&eDirect3D 9 is recommended");
 	}
-
 	if (Updater_OGL) {
 		LButton_Init(s_, &s->btnRel[1], 130, 35, "OpenGL");
 		LButton_Init(s_, &s->btnDev[1], 130, 35, "OpenGL");
@@ -1534,6 +1549,12 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 	s->btnDev[0].OnClick = UpdatesScreen_DevD3D9;
 	s->btnDev[1].OnClick = UpdatesScreen_DevOpenGL;
 	s->btnBack.OnClick   = SwitchToSettings;
+}
+
+static void UpdatesScreen_Show(struct LScreen* s_) {
+	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
+	s->seps[0].col = Launcher_ButtonBorderCol;
+	s->seps[1].col = Launcher_ButtonBorderCol;
 	UpdatesScreen_Update(s);
 }
 
@@ -1588,6 +1609,7 @@ struct LScreen* UpdatesScreen_MakeInstance(void) {
 	struct UpdatesScreen* s = &UpdatesScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = UpdatesScreen_Init;
+	s->Show   = UpdatesScreen_Show;
 	s->Tick   = UpdatesScreen_Tick;
 	s->Free   = UpdatesScreen_Free;
 	s->Layout = UpdatesScreen_Layout;

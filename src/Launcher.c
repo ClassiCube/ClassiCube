@@ -34,8 +34,9 @@ static void Launcher_ApplyUpdate(void);
 void Launcher_SetScreen(struct LScreen* screen) {
 	if (Launcher_Screen) Launcher_Screen->Free(Launcher_Screen);
 	Launcher_Screen = screen;
+	if (!screen->numWidgets) screen->Init(screen);
 
-	screen->Init(screen);
+	screen->Show(screen);
 	screen->Layout(screen);
 	/* for hovering over active button etc */
 	screen->MouseMove(screen, 0, 0);
