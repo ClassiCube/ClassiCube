@@ -172,7 +172,7 @@ static void Http_GetUrl(struct HttpRequest* req, String* dst) {
 /* Sets up state to begin a http request */
 static void Http_BeginRequest(struct HttpRequest* req, String* url) {
 	Http_GetUrl(req, url);
-	Platform_Log2("Downloading from %s (type %b)", url, &req->requestType);
+	Platform_Log2("Fetching %s (type %b)", url, &req->requestType);
 
 	Mutex_Lock(curRequestMutex);
 	{
@@ -207,7 +207,6 @@ static void Http_CompleteRequest(struct HttpRequest* req) {
 
 /* Updates state after a completed http request */
 static void Http_FinishRequest(struct HttpRequest* req) {
-	if (req->data) Platform_Log1("HTTP returned data: %i bytes", &req->size);
 	req->success = !req->result && req->statusCode == 200 && req->data && req->size;
 	if (!req->success) HttpRequest_Free(req);
 
@@ -358,6 +357,7 @@ static void Http_FinishedAsync(emscripten_fetch_t* fetch) {
 	fetch->data = NULL;
 	emscripten_fetch_close(fetch);
 
+	if (req->data) Platform_Log1("HTTP returned data: %i bytes", &req->size);
 	Http_FinishRequest(&http_curRequest);
 	Http_DownloadNextAsync();
 }
@@ -995,8 +995,8 @@ static void Http_WorkerLoop(void) {
 		end = Stopwatch_Measure();
 
 		elapsed = (int)Stopwatch_ElapsedMilliseconds(beg, end);
-		Platform_Log3("HTTP: return code %i (http %i), in %i ms",
-					&request.result, &request.statusCode, &elapsed);
+		Platform_Log4("HTTP: result %i (http %i) in %i ms (%i bytes)",
+					&request.result, &request.statusCode, &elapsed, &request.size);
 		Http_FinishRequest(&request);
 	}
 }

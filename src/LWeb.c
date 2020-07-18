@@ -201,21 +201,14 @@ static void LWebTask_Reset(struct LWebTask* task) {
 	task->completed = false;
 	task->working   = true;
 	task->success   = false;
-	task->start     = Stopwatch_Measure();
 	task->res       = 0;
 	task->status    = 0;
 }
 
 void LWebTask_Tick(struct LWebTask* task) {
 	struct HttpRequest req;
-	cc_uint64 finish;
-	int delta;
 	if (task->completed) return;
-
 	if (!Http_GetResult(&task->identifier, &req)) return;
-	finish = Stopwatch_Measure();
-	delta  = (int)Stopwatch_ElapsedMilliseconds(task->start, finish);
-	Platform_Log2("%s took %i", &task->identifier, &delta);
 
 	task->res    = req.result;
 	task->status = req.statusCode;

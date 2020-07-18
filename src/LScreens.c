@@ -1439,9 +1439,9 @@ static void UpdatesScreen_Get(cc_bool release, cc_bool d3d9) {
 	if (!time || FetchUpdateTask.Base.working) return;
 	FetchUpdateTask_Run(release, d3d9);
 
-	if (release && d3d9)   s->buildName = "&eFetching latest release (Direct3D9)";
-	if (release && !d3d9)  s->buildName = "&eFetching latest release (OpenGL)";
-	if (!release && d3d9)  s->buildName = "&eFetching latest dev build (Direct3D9)";
+	if (release  && d3d9 ) s->buildName = "&eFetching latest release (Direct3D9)";
+	if (release  && !d3d9) s->buildName = "&eFetching latest release (OpenGL)";
+	if (!release && d3d9 ) s->buildName = "&eFetching latest dev build (Direct3D9)";
 	if (!release && !d3d9) s->buildName = "&eFetching latest dev build (OpenGL)";
 
 	s->buildProgress = -1;
@@ -1504,21 +1504,6 @@ static void UpdatesScreen_RelOpenGL(void* w, int x, int y) { UpdatesScreen_Get(t
 static void UpdatesScreen_DevD3D9(void* w, int x, int y)   { UpdatesScreen_Get(false, true);  }
 static void UpdatesScreen_DevOpenGL(void* w, int x, int y) { UpdatesScreen_Get(false, false); }
 
-static void UpdatesScreen_Update(struct UpdatesScreen* s) {
-	cc_uint64 buildTime;
-	cc_result res;
-
-	/* Initially fill out with update check result from main menu */
-	if (CheckUpdateTask.Base.completed && CheckUpdateTask.Base.success) {
-		UpdatesScreen_FormatBoth(s);
-	}
-	CheckUpdateTask_Run();
-
-	res = Updater_GetBuildTime(&buildTime);
-	if (res) { Logger_Warn(res, "getting build time"); return; }
-	UpdatesScreen_Format(&s->lblYour, "Your build: ", buildTime);
-}
-
 static void UpdatesScreen_Init(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
 	s->seps[0].col = Launcher_ButtonBorderCol;
@@ -1553,9 +1538,20 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 
 static void UpdatesScreen_Show(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
+	cc_uint64 buildTime;
+	cc_result res;
 	s->seps[0].col = Launcher_ButtonBorderCol;
 	s->seps[1].col = Launcher_ButtonBorderCol;
-	UpdatesScreen_Update(s);
+
+	/* Initially fill out with update check result from main menu */
+	if (CheckUpdateTask.Base.completed && CheckUpdateTask.Base.success) {
+		UpdatesScreen_FormatBoth(s);
+	}
+	CheckUpdateTask_Run();
+
+	res = Updater_GetBuildTime(&buildTime);
+	if (res) { Logger_Warn(res, "getting build time"); return; }
+	UpdatesScreen_Format(&s->lblYour, "Your build: ", buildTime);
 }
 
 static void UpdatesScreen_Layout(struct LScreen* s_) {
