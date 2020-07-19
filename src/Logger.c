@@ -259,18 +259,12 @@ void Logger_Backtrace(String* trace, void* ctx) {
 #endif
 
 #if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
-#include <mach-o/dyld.h>
-
 static void DumpFrame(String* trace, void* addr) {
 	String str; char strBuffer[384];
-	const char* name = NULL;
-	NSModule module;
-
 	String_InitArray(str, strBuffer);
-	module = NSModuleForSymbol(addr);
-	if (module) name = NSNameOfModule(module);
+	/* alas NSModuleForSymbol doesn't work with raw addresses */
 
-	PrintFrame(&str, (cc_uintptr)addr, 0, name, NULL);
+	PrintFrame(&str, (cc_uintptr)addr, 0, NULL, NULL);
 	String_AppendString(trace, &str);
 	Logger_Log(&str);
 }

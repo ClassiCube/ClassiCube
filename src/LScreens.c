@@ -1385,6 +1385,7 @@ static struct UpdatesScreen {
 	struct LWidget* _widgets[12];
 	const char* buildName;
 	int buildProgress;
+	cc_bool pendingFetch, release, d3d9;
 } UpdatesScreen_Instance;
 
 CC_NOINLINE static void UpdatesScreen_FormatTime(String* str, char* type, int delta, int unit) {
@@ -1431,18 +1432,19 @@ static void UpdatesScreen_FormatBoth(struct UpdatesScreen* s) {
 	UpdatesScreen_Format(&s->lblDev, "Latest dev build: ", CheckUpdateTask.devTimestamp);
 }
 
-static void UpdatesScreen_Get(cc_bool release, cc_bool d3d9) {
+static void UpdatesScreen_DoFetch(struct UpdatesScreen* s) {
 	String str; char strBuffer[STRING_SIZE];
-	struct UpdatesScreen* s = &UpdatesScreen_Instance;
-
-	cc_uint64 time = release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;
+	cc_uint64 time;
+	
+	time = s->release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;
 	if (!time || FetchUpdateTask.Base.working) return;
-	FetchUpdateTask_Run(release, d3d9);
+	FetchUpdateTask_Run(s->release, s->d3d9);
+	s->pendingFetch = false;
 
-	if (release  && d3d9 ) s->buildName = "&eFetching latest release (Direct3D9)";
-	if (release  && !d3d9) s->buildName = "&eFetching latest release (OpenGL)";
-	if (!release && d3d9 ) s->buildName = "&eFetching latest dev build (Direct3D9)";
-	if (!release && !d3d9) s->buildName = "&eFetching latest dev build (OpenGL)";
+	if ( s->release &&  s->d3d9) s->buildName = "&eFetching latest release (Direct3D9)";
+	if ( s->release && !s->d3d9) s->buildName = "&eFetching latest release (OpenGL)";
+	if (!s->release &&  s->d3d9) s->buildName = "&eFetching latest dev build (Direct3D9)";
+	if (!s->release && !s->d3d9) s->buildName = "&eFetching latest dev build (OpenGL)";
 
 	s->buildProgress = -1;
 	String_InitArray(str, strBuffer);
@@ -1452,11 +1454,25 @@ static void UpdatesScreen_Get(cc_bool release, cc_bool d3d9) {
 	LWidget_Redraw(&s->lblStatus);
 }
 
+static void UpdatesScreen_Get(cc_bool release, cc_bool d3d9) {
+	struct UpdatesScreen* s = &UpdatesScreen_Instance;
+	/* This code is deliberately split up to handle this particular case: */
+	/*  The user clicked this button before CheckUpdateTask completed, */
+	/*  therefore update fetching would not actually occur. (as timestamp is 0) */
+	/*  By storing requested build, it can be fetched later upon completion. */
+	s->pendingFetch = true;
+	s->release      = release;
+	s->d3d9         = d3d9;
+	UpdatesScreen_DoFetch(s);
+}
+
 static void UpdatesScreen_CheckTick(struct UpdatesScreen* s) {
 	if (!CheckUpdateTask.Base.working) return;
 	LWebTask_Tick(&CheckUpdateTask.Base);
+
 	if (!CheckUpdateTask.Base.completed) return;
 	UpdatesScreen_FormatBoth(s);
+	if (s->pendingFetch) UpdatesScreen_DoFetch(s);
 }
 
 static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTask* task) {
@@ -1548,6 +1564,7 @@ static void UpdatesScreen_Show(struct LScreen* s_) {
 		UpdatesScreen_FormatBoth(s);
 	}
 	CheckUpdateTask_Run();
+	s->pendingFetch = false;
 
 	res = Updater_GetBuildTime(&buildTime);
 	if (res) { Logger_Warn(res, "getting build time"); return; }
