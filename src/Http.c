@@ -341,7 +341,7 @@ static void Http_UpdateProgress(emscripten_fetch_t* fetch) {
 
 static void Http_FinishedAsync(emscripten_fetch_t* fetch) {
 	struct HttpRequest* req = &http_curRequest;
-	req->data          = fetch->data;
+	req->data          = (cc_uint8*)fetch->data;
 	req->size          = fetch->numBytes;
 	req->statusCode    = fetch->status;
 	req->contentLength = fetch->totalBytes;
@@ -376,7 +376,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	}
 
 	if (req->requestType == REQUEST_TYPE_POST) {
-		attr.requestData     = req->data;
+		attr.requestData     = (const char*)req->data;
 		attr.requestDataSize = req->size;
 	}
 

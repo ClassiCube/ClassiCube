@@ -3337,7 +3337,7 @@ void Window_Init(void) {
 	/* Paste text (window.clipboardData is handled in Clipboard_RequestText instead) */
 	EM_ASM(window.addEventListener('paste',
 		function(e) {
-			var contents = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
+			var contents = e.clipboardData ? e.clipboardData.getData('text/plain') : "";
 			ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
 		});
 	);
