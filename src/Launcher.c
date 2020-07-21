@@ -99,13 +99,16 @@ static void Launcher_ReqeustRedraw(void* obj) {
 	Launcher_MarkAllDirty();
 }
 
-static void Launcher_OnResize(void* obj) {
-	Game_UpdateDimensions();
-	Launcher_Framebuffer.width  = Game.Width;
-	Launcher_Framebuffer.height = Game.Height;
-
-	Window_FreeFramebuffer(&Launcher_Framebuffer);
+static CC_NOINLINE void Launcher_InitFramebuffer(void) {
+	Launcher_Framebuffer.width  = max(WindowInfo.Width,  1);
+	Launcher_Framebuffer.height = max(WindowInfo.Height, 1);
 	Window_AllocFramebuffer(&Launcher_Framebuffer);
+}
+
+static void Launcher_OnResize(void* obj) {
+	Window_FreeFramebuffer(&Launcher_Framebuffer);
+	Launcher_InitFramebuffer();
+
 	if (Launcher_Screen) Launcher_Screen->Layout(Launcher_Screen);
 	Launcher_Redraw();
 }
@@ -254,17 +257,13 @@ void Launcher_Run(void) {
 #endif
 
 	Drawer2D_Component.Init();
-	Game_UpdateDimensions();
 	Drawer2D_BitmappedText    = false;
 	Drawer2D_BlackTextShadows = true;
+	Launcher_InitFramebuffer();
 
 	Launcher_LoadSkin();
 	Launcher_Init();
 	Launcher_TryLoadTexturePack();
-
-	Launcher_Framebuffer.width  = Game.Width;
-	Launcher_Framebuffer.height = Game.Height;
-	Window_AllocFramebuffer(&Launcher_Framebuffer);
 
 	Http_Component.Init();
 	Resources_CheckExistence();
