@@ -1,5 +1,6 @@
 #include "Launcher.h"
 #include "LScreens.h"
+#include "LWidgets.h"
 #include "LWeb.h"
 #include "Resources.h"
 #include "Drawer2D.h"
@@ -243,6 +244,7 @@ void Launcher_Run(void) {
 	Window_Create(640, 400);
 	Window_SetTitle(&title);
 	Window_Show();
+	LWidget_CalcOffsets();
 
 #ifdef CC_BUILD_WIN
 	/* clean leftover exe from updating */

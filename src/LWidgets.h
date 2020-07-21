@@ -50,6 +50,7 @@ void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, i
 void LWidget_CalcPosition(void* widget);
 void LWidget_Draw(void* widget);
 void LWidget_Redraw(void* widget);
+void LWidget_CalcOffsets(void);
 
 struct LButton {
 	LWidget_Layout
