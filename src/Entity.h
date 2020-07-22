@@ -179,7 +179,7 @@ struct NetPlayer {
 	struct NetInterpComp Interp;
 	cc_bool ShouldRender;
 };
-void NetPlayer_Init(struct NetPlayer* player);
+CC_API void NetPlayer_Init(struct NetPlayer* player);
 extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
 /* Represents the user/player's own entity. */

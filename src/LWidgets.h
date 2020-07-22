@@ -34,7 +34,7 @@ struct LWidgetVTABLE {
 
 #define LWidget_Layout \
 	const struct LWidgetVTABLE* VTABLE;  /* General widget functions */ \
-	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */ \
+	int x, y, width, height;       /* Top left corner and dimensions of this widget */ \
 	cc_bool hovered;               /* Whether this widget is currently being moused over */ \
 	cc_bool selected;              /* Whether this widget is last widget to be clicked on */ \
 	cc_bool hidden;                /* Whether this widget is hidden from view */ \
