@@ -551,7 +551,7 @@ static void CustomModel_MakeParts(void) {
 	}
 }
 
-struct ModelVertex oldVertices[MODEL_BOX_VERTICES];
+static struct ModelVertex oldVertices[MODEL_BOX_VERTICES];
 static float CustomModel_GetAnimationValue(
 	struct CustomModelAnim* anim,
 	struct CustomModelPart* part,

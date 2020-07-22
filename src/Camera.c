@@ -168,7 +168,7 @@ static struct Camera cam_FirstPerson = {
 /*########################################################################################################################*
 *---------------------------------------------------Third person camera---------------------------------------------------*
 *#########################################################################################################################*/
-float dist_third = 3.0f, dist_forward = 3.0f;
+static float dist_third = 3.0f, dist_forward = 3.0f;
 
 static Vec2 ThirdPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;

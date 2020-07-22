@@ -45,7 +45,7 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	Launcher_Redraw();
 }
 
-CC_NOINLINE static void Launcher_StartFromInfo(struct ServerInfo* info) {
+CC_NOINLINE static void StartFromInfo(struct ServerInfo* info) {
 	String port; char portBuffer[STRING_INT_CHARS];
 	String_InitArray(port, portBuffer);
 
@@ -63,7 +63,7 @@ cc_bool Launcher_ConnectToServer(const String* hash) {
 		info = &FetchServersTask.servers[i];
 		if (!String_Equals(hash, &info->hash)) continue;
 
-		Launcher_StartFromInfo(info);
+		StartFromInfo(info);
 		return true;
 	}
 
@@ -77,7 +77,7 @@ cc_bool Launcher_ConnectToServer(const String* hash) {
 	}
 
 	if (FetchServerTask.server.hash.length) {
-		Launcher_StartFromInfo(&FetchServerTask.server);
+		StartFromInfo(&FetchServerTask.server);
 		return true;
 	} else if (FetchServerTask.Base.success) {
 		Window_ShowDialog("Failed to connect", "No server has that hash");
@@ -88,32 +88,38 @@ cc_bool Launcher_ConnectToServer(const String* hash) {
 	return false;
 }
 
+static CC_NOINLINE void InitFramebuffer(void) {
+	Launcher_Framebuffer.width = max(WindowInfo.Width, 1);
+	Launcher_Framebuffer.height = max(WindowInfo.Height, 1);
+	Window_AllocFramebuffer(&Launcher_Framebuffer);
+}
+
+static CC_NOINLINE void SaveOptionsIfChanged(void) {
+	if (!Options_ChangedCount()) return;
+	Options_Load();
+	Options_Save();
+}
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Event handler---------------------------------------------------*
 *#########################################################################################################################*/
-static void Launcher_ReqeustRedraw(void* obj) {
+static void ReqeustRedraw(void* obj) {
 	/* We may get multiple Redraw events in short timespan */
 	/* So we just request a redraw at next launcher tick */
 	pendingRedraw  = true;
 	Launcher_MarkAllDirty();
 }
 
-static CC_NOINLINE void Launcher_InitFramebuffer(void) {
-	Launcher_Framebuffer.width  = max(WindowInfo.Width,  1);
-	Launcher_Framebuffer.height = max(WindowInfo.Height, 1);
-	Window_AllocFramebuffer(&Launcher_Framebuffer);
-}
-
-static void Launcher_OnResize(void* obj) {
+static void OnResize(void* obj) {
 	Window_FreeFramebuffer(&Launcher_Framebuffer);
-	Launcher_InitFramebuffer();
+	InitFramebuffer();
 
 	if (Launcher_Screen) Launcher_Screen->Layout(Launcher_Screen);
 	Launcher_Redraw();
 }
 
-static cc_bool Launcher_IsShutdown(int key) {
+static cc_bool IsShutdown(int key) {
 	if (key == KEY_F4 && Key_IsAltPressed()) return true;
 
 	/* On macOS, Cmd+Q should also terminate the process */
@@ -125,7 +131,7 @@ static cc_bool Launcher_IsShutdown(int key) {
 }
 
 static void HandleInputDown(void* obj, int key, cc_bool was) {
-	if (Launcher_IsShutdown(key)) Launcher_ShouldExit = true;
+	if (IsShutdown(key)) Launcher_ShouldExit = true;
 	Launcher_Screen->KeyDown(Launcher_Screen, key, was);
 }
 
@@ -166,9 +172,9 @@ static void Launcher_Display(void) {
 }
 
 static void Launcher_Init(void) {
-	Event_RegisterVoid(&WindowEvents.Resized,      NULL, Launcher_OnResize);
-	Event_RegisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
-	Event_RegisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
+	Event_RegisterVoid(&WindowEvents.Resized,      NULL, OnResize);
+	Event_RegisterVoid(&WindowEvents.StateChanged, NULL, OnResize);
+	Event_RegisterVoid(&WindowEvents.Redraw,       NULL, ReqeustRedraw);
 
 	Event_RegisterInput(&InputEvents.Down,   NULL, HandleInputDown);
 	Event_RegisterInt(&InputEvents.Press,    NULL, HandleKeyPress);
@@ -188,9 +194,9 @@ static void Launcher_Init(void) {
 }
 
 static void Launcher_Free(void) {
-	Event_UnregisterVoid(&WindowEvents.Resized,      NULL, Launcher_OnResize);
-	Event_UnregisterVoid(&WindowEvents.StateChanged, NULL, Launcher_OnResize);
-	Event_UnregisterVoid(&WindowEvents.Redraw,       NULL, Launcher_ReqeustRedraw);
+	Event_UnregisterVoid(&WindowEvents.Resized,      NULL, OnResize);
+	Event_UnregisterVoid(&WindowEvents.StateChanged, NULL, OnResize);
+	Event_UnregisterVoid(&WindowEvents.Redraw,       NULL, ReqeustRedraw);
 	
 	Event_UnregisterInput(&InputEvents.Down,    NULL, HandleInputDown);
 	Event_UnregisterInt(&InputEvents.Press,     NULL, HandleKeyPress);
@@ -259,7 +265,7 @@ void Launcher_Run(void) {
 	Drawer2D_Component.Init();
 	Drawer2D_BitmappedText    = false;
 	Drawer2D_BlackTextShadows = true;
-	Launcher_InitFramebuffer();
+	InitFramebuffer();
 
 	Launcher_LoadSkin();
 	Launcher_Init();
@@ -284,11 +290,7 @@ void Launcher_Run(void) {
 		Thread_Sleep(10);
 	}
 
-	if (Options_ChangedCount()) {
-		Options_Load();
-		Options_Save();
-	}
-
+	SaveOptionsIfChanged();
 	Launcher_Free();
 	if (Launcher_ShouldUpdate) Launcher_ApplyUpdate();
 
@@ -570,6 +572,9 @@ cc_bool Launcher_StartGame(const String* user, const String* mppass, const Strin
 		Options_SetSecure("launcher-mppass", mppass, user);
 		Options_Save();
 	}
+	/* Save options BEFORE starting new game process */
+	/* Otherwise can have 'file already in use' errors on startup */
+	SaveOptionsIfChanged();
 
 	String_InitArray(args, argsBuffer);
 	String_AppendString(&args, user);

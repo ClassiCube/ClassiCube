@@ -1115,7 +1115,7 @@ static void NetPlayer_RenderName(struct Entity* e) {
 	if (distance <= (float)threshold) DrawName(e);
 }
 
-const struct EntityVTABLE netPlayer_VTABLE = {
+static const struct EntityVTABLE netPlayer_VTABLE = {
 	NetPlayer_Tick,        Player_Despawn,       NetPlayer_SetLocation, Entity_GetCol,
 	NetPlayer_RenderModel, NetPlayer_RenderName
 };
