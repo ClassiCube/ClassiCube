@@ -94,12 +94,6 @@ static CC_NOINLINE void InitFramebuffer(void) {
 	Window_AllocFramebuffer(&Launcher_Framebuffer);
 }
 
-static CC_NOINLINE void SaveOptionsIfChanged(void) {
-	if (!Options_ChangedCount()) return;
-	Options_Load();
-	Options_Save();
-}
-
 
 /*########################################################################################################################*
 *---------------------------------------------------------Event handler---------------------------------------------------*
@@ -290,7 +284,7 @@ void Launcher_Run(void) {
 		Thread_Sleep(10);
 	}
 
-	SaveOptionsIfChanged();
+	Options_SaveIfChanged();
 	Launcher_Free();
 	if (Launcher_ShouldUpdate) Launcher_ApplyUpdate();
 
@@ -560,9 +554,6 @@ cc_bool Launcher_StartGame(const String* user, const String* mppass, const Strin
 	if (lastJoin + 1000 > now) return false;
 	lastJoin = now;
 
-	/* Make sure if the client has changed some settings in the meantime, we keep the changes */
-	Options_Load();
-
 	/* Save resume info */
 	if (server->length) {
 		Options_Set("launcher-server",   server);
@@ -570,11 +561,10 @@ cc_bool Launcher_StartGame(const String* user, const String* mppass, const Strin
 		Options_Set("launcher-ip",       ip);
 		Options_Set("launcher-port",     port);
 		Options_SetSecure("launcher-mppass", mppass, user);
-		Options_Save();
 	}
 	/* Save options BEFORE starting new game process */
-	/* Otherwise can have 'file already in use' errors on startup */
-	SaveOptionsIfChanged();
+	/* Otherwise can get 'file already in use' errors on startup */
+	Options_SaveIfChanged();
 
 	String_InitArray(args, argsBuffer);
 	String_AppendString(&args, user);

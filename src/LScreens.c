@@ -225,7 +225,6 @@ static struct ChooseModeScreen {
 
 CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) {
 	Launcher_ClassicBackground = classic;
-	Options_Load();
 	Options_SetBool(OPT_CLASSIC_MODE, classic);
 	if (classic) Options_SetBool(OPT_CLASSIC_HACKS, classicHacks);
 
@@ -235,8 +234,8 @@ CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) 
 	Options_SetBool(OPT_SERVER_TEXTURES, !classic);
 	Options_SetBool(OPT_CLASSIC_TABLIST, classic);
 	Options_SetBool(OPT_CLASSIC_OPTIONS, classic);
-	Options_Save();
 
+	Options_SaveIfChanged();
 	Launcher_SetScreen(MainScreen_MakeInstance());
 }
 
@@ -520,7 +519,7 @@ static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
 	String addr; char addrBuffer[STRING_SIZE];
 	String mppass; char mppassBuffer[STRING_SIZE];
 	String user, ip, port;
-	Options_Load();
+	Options_Reload();
 
 	Options_UNSAFE_Get("launcher-dc-username", &user);
 	Options_UNSAFE_Get("launcher-dc-ip",       &ip);
@@ -537,14 +536,6 @@ static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
 	LInput_SetText(&s->iptUsername, &user);
 	LInput_SetText(&s->iptAddress,  &addr);
 	LInput_SetText(&s->iptMppass,   &mppass);
-}
-
-static void DirectConnectScreen_Save(const String* user, const String* mppass, const String* ip, const String* port) {
-	Options_Load();
-	Options_Set("launcher-dc-username", user);
-	Options_Set("launcher-dc-ip",       ip);
-	Options_Set("launcher-dc-port",     port);
-	Options_SetSecure("launcher-dc-mppass", mppass, user);
 }
 
 static void DirectConnectScreen_StartClient(void* w, int x, int y) {
@@ -578,7 +569,11 @@ static void DirectConnectScreen_StartClient(void* w, int x, int y) {
 	}
 	if (!mppass->length) mppass = &defMppass;
 
-	DirectConnectScreen_Save(user, mppass, &ip, &port);
+	Options_Set("launcher-dc-username", user);
+	Options_Set("launcher-dc-ip",       &ip);
+	Options_Set("launcher-dc-port",     &port);
+	Options_SetSecure("launcher-dc-mppass", mppass, user);
+
 	DirectConnectScreen_SetStatus("");
 	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty);
 }

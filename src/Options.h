@@ -69,8 +69,6 @@
 #define OPT_CAMERA_MASS "cameramass"
 
 extern struct StringsBuffer Options;
-/* Returns the number of options changed via Options_SetXYZ since last save. */
-int Options_ChangedCount(void);
 /* Frees any memory allocated in storing options. */
 void Options_Free(void);
 
@@ -97,10 +95,15 @@ CC_API void Options_SetInt(const char*  keyRaw,  int value);
 CC_API void Options_Set(const char*     keyRaw,  const String* value);
 /* Sets value of given option to given string. */
 CC_API void Options_SetString(const String* key, const String* value);
-/* Loads options from disc. Leaves options changed in this session alone. */
-CC_API void Options_Load(void);
+
+/* Loads options from disc. */
+void Options_Load(void);
+/* Reloads options from disc, leaving options changed in this session alone. */
+CC_API void Options_Reload(void);
 /* Saves all options to disc. */
 CC_API void Options_Save(void);
+/* Saves options to disc, if any were changed via Options_SetXYZ since last save. */
+void Options_SaveIfChanged(void);
 
 /* Attempts to securely encode an option. */
 /* NOTE: Not all platforms support secure saving. DO NOT RELY ON THIS BEING SECURE! */

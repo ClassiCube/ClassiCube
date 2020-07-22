@@ -10,14 +10,12 @@
 struct StringsBuffer Options;
 static struct StringsBuffer changedOpts;
 
-int Options_ChangedCount(void) { return changedOpts.count;  }
-
 void Options_Free(void) {
 	StringsBuffer_Clear(&Options);
 	StringsBuffer_Clear(&changedOpts);
 }
 
-cc_bool Options_HasChanged(const String* key) {
+static cc_bool HasChanged(const String* key) {
 	String entry;
 	int i;
 
@@ -121,43 +119,46 @@ void Options_SetString(const String* key, const String* value) {
 	Options_Save();
 #endif
 
-	if (Options_HasChanged(key)) return;
+	if (HasChanged(key)) return;
 	StringsBuffer_Add(&changedOpts, key);
 }
 
 static cc_bool Options_LoadFilter(const String* entry) {
 	String key, value;
 	String_UNSAFE_Separate(entry, '=', &key, &value);
-	return !Options_HasChanged(&key);
+	return !HasChanged(&key);
 }
 
 void Options_Load(void) {
-	static cc_bool inited;
+	EntryList_Load(&Options, "options-default.txt", '=', NULL);
+	EntryList_Load(&Options, "options.txt",         '=', NULL);
+}
+
+void Options_Reload(void) {
 	String entry, key, value;
 	int i;
 
-	if (!inited) {
-		EntryList_Load(&Options, "options-default.txt", '=', NULL);
-		EntryList_Load(&Options, "options.txt",         '=', NULL);
-		inited = true;
-	} else {
-		/* Reset all the unchanged options */
-		for (i = Options.count - 1; i >= 0; i--) {
-			entry = StringsBuffer_UNSAFE_Get(&Options, i);
-			String_UNSAFE_Separate(&entry, '=', &key, &value);
+	/* Reset all the unchanged options */
+	for (i = Options.count - 1; i >= 0; i--) {
+		entry = StringsBuffer_UNSAFE_Get(&Options, i);
+		String_UNSAFE_Separate(&entry, '=', &key, &value);
 
-			if (Options_HasChanged(&key)) continue;
-			StringsBuffer_Remove(&Options, i);
-		}
-
-		/* Load only options which have not changed */
-		EntryList_Load(&Options, "options.txt", '=', Options_LoadFilter);
+		if (HasChanged(&key)) continue;
+		StringsBuffer_Remove(&Options, i);
 	}
+	/* Load only options which have not changed */
+	EntryList_Load(&Options, "options.txt", '=', Options_LoadFilter);
 }
 
 void Options_Save(void) {
 	EntryList_Save(&Options, "options.txt");
 	StringsBuffer_Clear(&changedOpts);
+}
+
+void Options_SaveIfChanged(void) {
+	if (!changedOpts.count) return;
+	Options_Reload();
+	Options_Save();
 }
 
 void Options_SetSecure(const char* opt, const String* src, const String* key) {

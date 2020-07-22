@@ -624,10 +624,7 @@ void Game_Free(void* obj) {
 
 	Logger_WarnFunc = Logger_DialogWarn;
 	Gfx_Free();
-
-	if (!Options_ChangedCount()) return;
-	Options_Load();
-	Options_Save();
+	Options_SaveIfChanged();
 }
 
 #define Game_DoFrameBody() \
