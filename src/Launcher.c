@@ -45,6 +45,65 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	Launcher_Redraw();
 }
 
+void Launcher_DisplayHttpError(cc_result res, int status, const char* action, String* dst) {
+	if (res) {
+		/* Non HTTP error - this is not good */
+		Logger_SysWarn(res, action, Http_DescribeError);
+		String_Format2(dst, "&cError %i when %c", &res, action);
+	} else if (status != 200) {
+		String_Format2(dst, "&c%i error when %c", &status, action);
+	} else {
+		String_Format1(dst, "&cEmpty response when %c", action);
+	}
+}
+
+static CC_NOINLINE void InitFramebuffer(void) {
+	Launcher_Framebuffer.width  = max(WindowInfo.Width,  1);
+	Launcher_Framebuffer.height = max(WindowInfo.Height, 1);
+	Window_AllocFramebuffer(&Launcher_Framebuffer);
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Starter/Updater--------------------------------------------------*
+*#########################################################################################################################*/
+static TimeMS lastJoin;
+cc_bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
+	String args; char argsBuffer[512];
+	TimeMS now;
+	cc_result res;
+	
+	now = DateTime_CurrentUTC_MS();
+	if (lastJoin + 1000 > now) return false;
+	lastJoin = now;
+
+	/* Save resume info */
+	if (server->length) {
+		Options_Set("launcher-server",   server);
+		Options_Set("launcher-username", user);
+		Options_Set("launcher-ip",       ip);
+		Options_Set("launcher-port",     port);
+		Options_SetSecure("launcher-mppass", mppass, user);
+	}
+	/* Save options BEFORE starting new game process */
+	/* Otherwise can get 'file already in use' errors on startup */
+	Options_SaveIfChanged();
+
+	String_InitArray(args, argsBuffer);
+	String_AppendString(&args, user);
+	if (mppass->length) String_Format3(&args, " %s %s %s", mppass, ip, port);
+
+	res = Process_StartGame(&args);
+	if (res) { Logger_Warn(res, "starting game"); return false; }
+
+#ifdef CC_BUILD_ANDROID
+	Launcher_ShouldExit = true;
+#else
+	Launcher_ShouldExit = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);
+#endif
+	return true;
+}
+
 CC_NOINLINE static void StartFromInfo(struct ServerInfo* info) {
 	String port; char portBuffer[STRING_INT_CHARS];
 	String_InitArray(port, portBuffer);
@@ -88,12 +147,6 @@ cc_bool Launcher_ConnectToServer(const String* hash) {
 	return false;
 }
 
-static CC_NOINLINE void InitFramebuffer(void) {
-	Launcher_Framebuffer.width = max(WindowInfo.Width, 1);
-	Launcher_Framebuffer.height = max(WindowInfo.Height, 1);
-	Window_AllocFramebuffer(&Launcher_Framebuffer);
-}
-
 
 /*########################################################################################################################*
 *---------------------------------------------------------Event handler---------------------------------------------------*
@@ -124,28 +177,28 @@ static cc_bool IsShutdown(int key) {
 #endif
 }
 
-static void HandleInputDown(void* obj, int key, cc_bool was) {
+static void OnInputDown(void* obj, int key, cc_bool was) {
 	if (IsShutdown(key)) Launcher_ShouldExit = true;
 	Launcher_Screen->KeyDown(Launcher_Screen, key, was);
 }
 
-static void HandleKeyPress(void* obj, int c) {
+static void OnKeyPress(void* obj, int c) {
 	Launcher_Screen->KeyPress(Launcher_Screen, c);
 }
 
-static void HandleMouseWheel(void* obj, float delta) {
+static void OnMouseWheel(void* obj, float delta) {
 	Launcher_Screen->MouseWheel(Launcher_Screen, delta);
 }
 
-static void HandlePointerDown(void* obj, int idx) {
+static void OnPointerDown(void* obj, int idx) {
 	Launcher_Screen->MouseDown(Launcher_Screen, 0);
 }
 
-static void HandlePointerUp(void* obj, int idx) {
+static void OnPointerUp(void* obj, int idx) {
 	Launcher_Screen->MouseUp(Launcher_Screen, 0);
 }
 
-static void HandlePointerMove(void* obj, int idx, int deltaX, int deltaY) {
+static void OnPointerMove(void* obj, int idx, int deltaX, int deltaY) {
 	if (!Launcher_Screen) return;
 	Launcher_Screen->MouseMove(Launcher_Screen, deltaX, deltaY);
 }
@@ -170,12 +223,12 @@ static void Launcher_Init(void) {
 	Event_RegisterVoid(&WindowEvents.StateChanged, NULL, OnResize);
 	Event_RegisterVoid(&WindowEvents.Redraw,       NULL, ReqeustRedraw);
 
-	Event_RegisterInput(&InputEvents.Down,   NULL, HandleInputDown);
-	Event_RegisterInt(&InputEvents.Press,    NULL, HandleKeyPress);
-	Event_RegisterFloat(&InputEvents.Wheel,  NULL, HandleMouseWheel);
-	Event_RegisterInt(&PointerEvents.Down,   NULL, HandlePointerDown);
-	Event_RegisterInt(&PointerEvents.Up,     NULL, HandlePointerUp);
-	Event_RegisterMove(&PointerEvents.Moved, NULL, HandlePointerMove);
+	Event_RegisterInput(&InputEvents.Down,   NULL, OnInputDown);
+	Event_RegisterInt(&InputEvents.Press,    NULL, OnKeyPress);
+	Event_RegisterFloat(&InputEvents.Wheel,  NULL, OnMouseWheel);
+	Event_RegisterInt(&PointerEvents.Down,   NULL, OnPointerDown);
+	Event_RegisterInt(&PointerEvents.Up,     NULL, OnPointerUp);
+	Event_RegisterMove(&PointerEvents.Moved, NULL, OnPointerMove);
 
 	Drawer2D_MakeFont(&logoFont,           32, FONT_STYLE_NORMAL);
 	Drawer2D_MakeFont(&Launcher_TitleFont, 16, FONT_STYLE_BOLD);
@@ -192,12 +245,12 @@ static void Launcher_Free(void) {
 	Event_UnregisterVoid(&WindowEvents.StateChanged, NULL, OnResize);
 	Event_UnregisterVoid(&WindowEvents.Redraw,       NULL, ReqeustRedraw);
 	
-	Event_UnregisterInput(&InputEvents.Down,    NULL, HandleInputDown);
-	Event_UnregisterInt(&InputEvents.Press,     NULL, HandleKeyPress);
-	Event_UnregisterFloat(&InputEvents.Wheel,   NULL, HandleMouseWheel);
-	Event_UnregisterInt(&PointerEvents.Down,    NULL, HandlePointerDown);
-	Event_UnregisterInt(&PointerEvents.Up,      NULL, HandlePointerUp);
-	Event_UnregisterMove(&PointerEvents.Moved,  NULL, HandlePointerMove);	
+	Event_UnregisterInput(&InputEvents.Down,    NULL, OnInputDown);
+	Event_UnregisterInt(&InputEvents.Press,     NULL, OnKeyPress);
+	Event_UnregisterFloat(&InputEvents.Wheel,   NULL, OnMouseWheel);
+	Event_UnregisterInt(&PointerEvents.Down,    NULL, OnPointerDown);
+	Event_UnregisterInt(&PointerEvents.Up,      NULL, OnPointerUp);
+	Event_UnregisterMove(&PointerEvents.Moved,  NULL, OnPointerMove);	
 
 	Flags_Free();
 	Font_Free(&logoFont);
@@ -286,7 +339,11 @@ void Launcher_Run(void) {
 
 	Options_SaveIfChanged();
 	Launcher_Free();
-	if (Launcher_ShouldUpdate) Launcher_ApplyUpdate();
+
+	if (Launcher_ShouldUpdate) {
+		cc_result res = Updater_Start();
+		if (res) Logger_Warn(res, "running updater");
+	}
 
 #ifdef CC_BUILD_ANDROID
 	if (Launcher_ShouldExit) SwitchToGame();
@@ -367,7 +424,7 @@ static cc_bool Launcher_SelectZipEntry(const String* path) {
 		String_CaselessEqualsConst(path, "terrain.png");
 }
 
-static void Launcher_LoadTextures(Bitmap* bmp) {
+static void LoadTextures(Bitmap* bmp) {
 	int tileSize = bmp->width / 16;
 	Bitmap_Allocate(&dirtBmp,  TILESIZE, TILESIZE);
 	Bitmap_Allocate(&stoneBmp, TILESIZE, TILESIZE);
@@ -403,7 +460,7 @@ static cc_result Launcher_ProcessZipEntry(const String* path, struct Stream* dat
 		if (res) {
 			Logger_Warn(res, "decoding terrain.png"); return res;
 		} else {
-			Launcher_LoadTextures(&bmp);
+			LoadTextures(&bmp);
 		}
 	}
 	return 0;
@@ -452,7 +509,7 @@ void Launcher_TryLoadTexturePack(void) {
 }
 
 /* Fills the given area using pixels from the source bitmap, by repeatedly tiling the bitmap. */
-CC_NOINLINE static void Launcher_ClearTile(int x, int y, int width, int height, Bitmap* src) {
+CC_NOINLINE static void ClearTile(int x, int y, int width, int height, Bitmap* src) {
 	Bitmap* dst = &Launcher_Framebuffer;
 	BitmapCol* dstRow;
 	BitmapCol* srcRow;
@@ -471,7 +528,7 @@ CC_NOINLINE static void Launcher_ClearTile(int x, int y, int width, int height, 
 
 void Launcher_ResetArea(int x, int y, int width, int height) {
 	if (Launcher_ClassicBackground && dirtBmp.scan0) {
-		Launcher_ClearTile(x, y, width, height, &stoneBmp);
+		ClearTile(x, y, width, height, &stoneBmp);
 	} else {
 		Gradient_Noise(&Launcher_Framebuffer, Launcher_BackgroundCol, 6, x, y, width, height);
 	}
@@ -490,8 +547,8 @@ void Launcher_ResetPixels(void) {
 	}
 
 	if (Launcher_ClassicBackground && dirtBmp.scan0) {
-		Launcher_ClearTile(0,        0, WindowInfo.Width,                     TILESIZE, &dirtBmp);
-		Launcher_ClearTile(0, TILESIZE, WindowInfo.Width, WindowInfo.Height - TILESIZE, &stoneBmp);
+		ClearTile(0,        0, WindowInfo.Width,                     TILESIZE, &dirtBmp);
+		ClearTile(0, TILESIZE, WindowInfo.Width, WindowInfo.Height - TILESIZE, &stoneBmp);
 	} else {
 		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
 	}
@@ -538,63 +595,5 @@ void Launcher_MarkDirty(int x, int y, int width, int height) {
 void Launcher_MarkAllDirty(void) {
 	Launcher_Dirty.X = 0; Launcher_Dirty.Width  = Launcher_Framebuffer.width;
 	Launcher_Dirty.Y = 0; Launcher_Dirty.Height = Launcher_Framebuffer.height;
-}
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------Starter/Updater--------------------------------------------------*
-*#########################################################################################################################*/
-static TimeMS lastJoin;
-cc_bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
-	String args; char argsBuffer[512];
-	TimeMS now;
-	cc_result res;
-	
-	now = DateTime_CurrentUTC_MS();
-	if (lastJoin + 1000 > now) return false;
-	lastJoin = now;
-
-	/* Save resume info */
-	if (server->length) {
-		Options_Set("launcher-server",   server);
-		Options_Set("launcher-username", user);
-		Options_Set("launcher-ip",       ip);
-		Options_Set("launcher-port",     port);
-		Options_SetSecure("launcher-mppass", mppass, user);
-	}
-	/* Save options BEFORE starting new game process */
-	/* Otherwise can get 'file already in use' errors on startup */
-	Options_SaveIfChanged();
-
-	String_InitArray(args, argsBuffer);
-	String_AppendString(&args, user);
-	if (mppass->length) String_Format3(&args, " %s %s %s", mppass, ip, port);
-
-	res = Process_StartGame(&args);
-	if (res) { Logger_Warn(res, "starting game"); return false; }
-
-#ifdef CC_BUILD_ANDROID
-	Launcher_ShouldExit = true;
-#else
-	Launcher_ShouldExit = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);
-#endif
-	return true;
-}
-
-static void Launcher_ApplyUpdate(void) {
-	cc_result res = Updater_Start();
-	if (res) Logger_Warn(res, "running updater");
-}
-
-void Launcher_DisplayHttpError(cc_result res, int status, const char* action, String* dst) {
-	if (res) {
-		/* Non HTTP error - this is not good */
-		Logger_SysWarn(res, action, Http_DescribeError);
-		String_Format2(dst, "&cError %i when %c", &res, action);
-	} else if (status != 200) {
-		String_Format2(dst, "&c%i error when %c", &status, action);
-	} else {
-		String_Format1(dst, "&cEmpty response when %c", action);
-	}
 }
 #endif

@@ -64,7 +64,7 @@ static CC_INLINE void Vec3_Mul1(Vec3* result, const Vec3* a, float b) {
 static CC_INLINE void Vec3_Mul3(Vec3* result, const Vec3* a, const Vec3* b) {
 	result->X = a->X * b->X; result->Y = a->Y * b->Y; result->Z = a->Z * b->Z;
 }
-/* Negats the components of a vector. */
+/* Negates the components of a vector. */
 static CC_INLINE void Vec3_Negate(Vec3* result, Vec3* a) {
 	result->X = -a->X; result->Y = -a->Y; result->Z = -a->Z;
 }

@@ -152,7 +152,7 @@ static void SPConnection_BeginConnect(void) {
 	GeneratingScreen_Show();
 }
 
-static char sp_lastCol = '\0';
+static char sp_lastCol;
 static void SPConnection_AddPart(const String* text) {
 	String tmp; char tmpBuffer[STRING_SIZE * 2];
 	char col;
@@ -177,10 +177,6 @@ static void SPConnection_AddPart(const String* text) {
 	Chat_Add(&tmp);
 }
 
-static void SPConnection_SendBlock(int x, int y, int z, BlockID old, BlockID now) {
-	Physics_OnBlockChanged(x, y, z, old, now);
-}
-
 static void SPConnection_SendChat(const String* text) {
 	String left, part;
 	if (!text->length) return;
@@ -194,6 +190,10 @@ static void SPConnection_SendChat(const String* text) {
 		left = String_UNSAFE_SubstringAt(&left, STRING_SIZE);
 	}
 	SPConnection_AddPart(&left);
+}
+
+static void SPConnection_SendBlock(int x, int y, int z, BlockID old, BlockID now) {
+	Physics_OnBlockChanged(x, y, z, old, now);
 }
 
 static void SPConnection_SendPosition(Vec3 pos, float yaw, float pitch) { }

@@ -1,6 +1,5 @@
 #include "Options.h"
 #include "ExtMath.h"
-#include "Funcs.h"
 #include "Platform.h"
 #include "Stream.h"
 #include "Errors.h"
@@ -25,6 +24,45 @@ static cc_bool HasChanged(const String* key) {
 	}
 	return false;
 }
+
+static cc_bool Options_LoadFilter(const String* entry) {
+	String key, value;
+	String_UNSAFE_Separate(entry, '=', &key, &value);
+	return !HasChanged(&key);
+}
+
+void Options_Load(void) {
+	EntryList_Load(&Options, "options-default.txt", '=', NULL);
+	EntryList_Load(&Options, "options.txt",         '=', NULL);
+}
+
+void Options_Reload(void) {
+	String entry, key, value;
+	int i;
+
+	/* Reset all the unchanged options */
+	for (i = Options.count - 1; i >= 0; i--) {
+		entry = StringsBuffer_UNSAFE_Get(&Options, i);
+		String_UNSAFE_Separate(&entry, '=', &key, &value);
+
+		if (HasChanged(&key)) continue;
+		StringsBuffer_Remove(&Options, i);
+	}
+	/* Load only options which have not changed */
+	EntryList_Load(&Options, "options.txt", '=', Options_LoadFilter);
+}
+
+static void SaveOptions(void) {
+	EntryList_Save(&Options, "options.txt");
+	StringsBuffer_Clear(&changedOpts);
+}
+
+void Options_SaveIfChanged(void) {
+	if (!changedOpts.count) return;
+	Options_Reload();
+	SaveOptions();
+}
+
 
 cc_bool Options_UNSAFE_Get(const char* keyRaw, String* value) {
 	int idx;
@@ -116,49 +154,11 @@ void Options_SetString(const String* key, const String* value) {
 	}
 
 #ifdef CC_BUILD_WEB
-	Options_Save();
+	SaveOptions();
 #endif
 
 	if (HasChanged(key)) return;
 	StringsBuffer_Add(&changedOpts, key);
-}
-
-static cc_bool Options_LoadFilter(const String* entry) {
-	String key, value;
-	String_UNSAFE_Separate(entry, '=', &key, &value);
-	return !HasChanged(&key);
-}
-
-void Options_Load(void) {
-	EntryList_Load(&Options, "options-default.txt", '=', NULL);
-	EntryList_Load(&Options, "options.txt",         '=', NULL);
-}
-
-void Options_Reload(void) {
-	String entry, key, value;
-	int i;
-
-	/* Reset all the unchanged options */
-	for (i = Options.count - 1; i >= 0; i--) {
-		entry = StringsBuffer_UNSAFE_Get(&Options, i);
-		String_UNSAFE_Separate(&entry, '=', &key, &value);
-
-		if (HasChanged(&key)) continue;
-		StringsBuffer_Remove(&Options, i);
-	}
-	/* Load only options which have not changed */
-	EntryList_Load(&Options, "options.txt", '=', Options_LoadFilter);
-}
-
-void Options_Save(void) {
-	EntryList_Save(&Options, "options.txt");
-	StringsBuffer_Clear(&changedOpts);
-}
-
-void Options_SaveIfChanged(void) {
-	if (!changedOpts.count) return;
-	Options_Reload();
-	Options_Save();
 }
 
 void Options_SetSecure(const char* opt, const String* src, const String* key) {

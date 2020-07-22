@@ -152,13 +152,6 @@ Download `classicube.net/static/default.zip` for this
 
 #### static/style.css
 ```CSS
-.row:before, .row:after {
-    content: " ";
-    display: table;
-}
-
-.row:after { clear: both; }
-
 body { margin: 0; }
 
 .row {
@@ -169,10 +162,7 @@ body { margin: 0; }
 
 a { text-decoration: none; }
 
-.columns {
-    position: relative;
-    float: left;
-}
+.columns { display: inline-block; }
 
 .sec {
     background:#f1ecfa;
@@ -184,6 +174,7 @@ a { text-decoration: none; }
 #header h1 {
     color:#fff;
     margin:0px 10px 0px 10px;
+    width: 200px;
 }
 ```
 
