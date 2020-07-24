@@ -2223,6 +2223,7 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 
 static OSStatus Window_ProcessTextEvent(EventRef inEvent) {
 	UInt32 kind;
+	EventRef keyEvent = NULL;
 	UniChar chars[17] = { 0 };
 	char keyChar;
 	int i;
@@ -2230,6 +2231,16 @@ static OSStatus Window_ProcessTextEvent(EventRef inEvent) {
 	
 	kind = GetEventKind(inEvent);
 	if (kind != kEventTextInputUnicodeForKeyEvent) return eventNotHandledErr;
+
+	/* When command key is pressed, text input should be ignored */
+	res = GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent,
+							typeEventRef, NULL, sizeof(keyEvent), NULL, &keyEvent);
+	if (!res && keyEvent) {
+		UInt32 modifiers = 0;
+		GetEventParameter(keyEvent, kEventParamKeyModifiers,
+							typeUInt32, NULL, sizeof(modifiers), NULL, &modifiers);
+		if (modifiers & 0x0100) return eventNotHandledErr;
+	}
 	
 	/* TODO: is the assumption we only get 1-4 characters always valid */
 	res = GetEventParameter(inEvent, kEventParamTextInputSendText,

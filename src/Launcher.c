@@ -30,7 +30,6 @@ static struct FontDesc logoFont;
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static char hashBuffer[STRING_SIZE];
 String Launcher_AutoHash = String_FromArray(hashBuffer);
-static void Launcher_ApplyUpdate(void);
 
 void Launcher_SetScreen(struct LScreen* screen) {
 	if (Launcher_Screen) Launcher_Screen->Free(Launcher_Screen);
