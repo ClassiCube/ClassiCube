@@ -536,6 +536,8 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 		offset.Z = Random_Float(&rnd) - 0.5f;
 		Vec3_Normalize(&offset, &offset);
 
+		/* See https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/ */
+		/* 'Using normally distributed random numbers' */
 		d  = Random_Float(&rnd);
 		d  = Math_Exp(Math_Log(d) / 3.0); /* d^1/3 for better distribution */
 		d *= e->spread;

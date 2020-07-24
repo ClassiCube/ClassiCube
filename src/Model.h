@@ -83,9 +83,6 @@ struct Model {
 	float maxScale, shadowScale, nameScale;
 	struct Model* next;
 };
-#if 0
-public CustomModel[] CustomModels = new CustomModel[256];
-#endif
 
 /* Shared data for models. */
 CC_VAR extern struct _ModelsData {

@@ -1466,22 +1466,15 @@ static void CPE_DefineModel(cc_uint8* data) {
 
 static void CPE_DefineModelPart(cc_uint8* data) {
 	/* 103 = 1 + 3*4 + 3*4 + 6*(2*2 + 2*2) + 3*4 + 3*4 + 1 + 4 + 1 */
-	cc_uint8 modelId = *data++;
-	struct CustomModel* customModel = &custom_models[modelId];
+	cc_uint8 id = *data++;
+	struct CustomModel* m = &custom_models[id];
 	struct CustomModelPart* part;
 	cc_uint8 flags;
 	int i;
 
-	if (
-		modelId >= MAX_CUSTOM_MODELS ||
-		!customModel->defined ||
-		customModel->curPartIndex >= customModel->numParts
-	) {
-		return;
-	}
-
-	part = &customModel->parts[customModel->curPartIndex];
-	customModel->curPartIndex++;
+	if (id >= MAX_CUSTOM_MODELS || !m->defined || m->curPartIndex >= m->numParts) return;
+	part = &m->parts[m->curPartIndex];
+	m->curPartIndex++;
 
 	/* read min, max vec3 coords */
 	part->min.X = GetFloat(data);
@@ -1550,12 +1543,12 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 
 	/* read bool flags */
 	flags = *data++;
-	part->fullbright = (flags >> 0) & 1;
+	part->fullbright     = (flags >> 0) & 1;
 	part->firstPersonArm = (flags >> 1) & 1;
 
-	if (customModel->curPartIndex == customModel->numParts) {
+	if (m->curPartIndex == m->numParts) {
 		/* we're the last part, so register our model */
-		CustomModel_Register(customModel);
+		CustomModel_Register(m);
 	}
 }
 

@@ -178,7 +178,7 @@ CC_API void Gui_Remove(struct Screen* screen);
 CC_API void Gui_Add(struct Screen* screen, int priority);
 
 /* Returns highest priority screen that has grabbed input. */
-struct Screen* Gui_GetInputGrab(void);
+CC_API struct Screen* Gui_GetInputGrab(void);
 /* Returns highest priority screen that blocks world rendering. */
 struct Screen* Gui_GetBlocksWorld(void);
 /* Returns highest priority screen that is closable. */
