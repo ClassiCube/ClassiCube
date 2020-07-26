@@ -44,8 +44,6 @@ CC_API cc_result Stream_Read(struct Stream* s, cc_uint8* buffer, cc_uint32 count
 CC_API cc_result Stream_Write(struct Stream* s, const cc_uint8* buffer, cc_uint32 count);
 /* Initialises default function pointers for a stream. (all read, write, seeks return an error) */
 void Stream_Init(struct Stream* s);
-/* Slow way of reading a U8 integer through stream->Read(stream, 1, tmp). */
-cc_result Stream_DefaultReadU8(struct Stream* s, cc_uint8* data);
 
 /* Wrapper for File_Open() then Stream_FromFile() */
 CC_API cc_result Stream_OpenFile(struct Stream* s, const String* path);

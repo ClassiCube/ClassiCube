@@ -41,7 +41,8 @@ static cc_result Stream_DefaultRead(struct Stream* s, cc_uint8* data, cc_uint32 
 static cc_result Stream_DefaultWrite(struct Stream* s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	return ERR_NOT_SUPPORTED;
 }
-cc_result Stream_DefaultReadU8(struct Stream* s, cc_uint8* data) {
+/* Slow way of reading a U8 integer through stream->Read(stream, 1, tmp) */
+static cc_result Stream_DefaultReadU8(struct Stream* s, cc_uint8* data) {
 	cc_uint32 modified;
 	cc_result res = s->Read(s, data, 1, &modified);
 	return res ? res : (modified ? 0 : ERR_END_OF_STREAM);

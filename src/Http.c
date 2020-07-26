@@ -127,11 +127,11 @@ static void Http_Add(const String* url, cc_bool priority, const String* id, cc_u
 		Mem_Copy(req.data, data, size);
 		req.size = size;
 	}
-	req.cookies = cookies;
+	req.cookies   = cookies;
+	req.timeAdded = DateTime_CurrentUTC_MS();
 
 	Mutex_Lock(pendingMutex);
 	{	
-		req.timeAdded = DateTime_CurrentUTC_MS();
 		if (priority) {
 			RequestList_Prepend(&pendingReqs, &req);
 		} else {

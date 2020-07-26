@@ -21,7 +21,7 @@
 #define FLAG_GUI     0x04 /* file depends on patched gui.png */
 #define FLAG_TERRAIN 0x08 /* file depends on patched terrain.png */
 
-static struct ResourceFile {
+static struct FileResource {
 	const char* name;
 	const char* url;
 	short size;
@@ -50,7 +50,7 @@ static struct ResourceTexture {
 	{ "animations.png" }, { "animations.txt" }
 };
 
-static const struct ResourceSound {
+static const struct SoundResource {
 	const char* name;
 	const char* hash;
 } soundResources[59] = {
@@ -87,7 +87,7 @@ static const struct ResourceSound {
 	{ "step_wood3",   "45b2aef7b5049e81b39b58f8d631563fadcc778b" }, { "step_wood4",   "dc66978374a46ab2b87db6472804185824868095" }
 };
 
-static struct ResourceMusic {
+static struct MusicResource {
 	const char* name;
 	const char* hash;
 	short size;
@@ -770,7 +770,7 @@ CC_NOINLINE static cc_bool Fetcher_Get(const String* id, struct HttpRequest* req
 	return false;
 }
 
-static void Fetcher_CheckFile(struct ResourceFile* file) {
+static void Fetcher_CheckFile(struct FileResource* file) {
 	String id = String_FromReadonly(file->name);
 	struct HttpRequest req;
 	if (!Fetcher_Get(&id, &req)) return;
@@ -781,7 +781,7 @@ static void Fetcher_CheckFile(struct ResourceFile* file) {
 	/* don't free request */
 }
 
-static void Fetcher_CheckMusic(struct ResourceMusic* music) {
+static void Fetcher_CheckMusic(struct MusicResource* music) {
 	String id = String_FromReadonly(music->name);
 	struct HttpRequest req;
 	if (!Fetcher_Get(&id, &req)) return;
@@ -791,7 +791,7 @@ static void Fetcher_CheckMusic(struct ResourceMusic* music) {
 	HttpRequest_Free(&req);
 }
 
-static void Fetcher_CheckSound(const struct ResourceSound* sound) {
+static void Fetcher_CheckSound(const struct SoundResource* sound) {
 	String id = String_FromReadonly(sound->name);
 	struct HttpRequest req;
 	if (!Fetcher_Get(&id, &req)) return;

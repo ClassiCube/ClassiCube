@@ -47,7 +47,7 @@ static String font_candidates[11] = {
 	String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
 	String_FromConst("Slate For OnePlus"), /* android 10, some devices */
 	String_FromConst("Roboto"), /* android (broken on some android 10 devices) */
-	String_FromConst("Geneva") /* for ancient macOS versions*/
+	String_FromConst("Geneva") /* for ancient macOS versions */
 };
 
 /* adjusts height to be closer to system fonts */
