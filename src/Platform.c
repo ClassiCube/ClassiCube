@@ -1397,7 +1397,7 @@ void* DynamicLib_Get2(void* lib, const char* name) {
 cc_bool DynamicLib_DescribeError(String* dst) {
 	cc_result res = GetLastError();
 	Platform_DescribeError(res, dst);
-	String_Format1(dst, " (%i)", &res);
+	String_Format1(dst, " (error %i)", &res);
 	return true;
 }
 #elif defined CC_BUILD_WEB

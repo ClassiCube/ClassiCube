@@ -138,7 +138,7 @@ void Logger_DynamicLibWarn(const char* place, const String* path) {
 
 	String_Format2(&msg, "Error %c '%s'", place, path);
 	if (DynamicLib_DescribeError(&err)) {
-		String_Format1(&msg, "\n  Error meaning: %s", &err);
+		String_Format1(&msg, ":\n    %s", &err);
 	}
 	Logger_WarnFunc(&msg);
 }
