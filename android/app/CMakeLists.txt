@@ -95,6 +95,7 @@ add_library(classicube SHARED
         ../../src/Physics.c
         ../../src/SelectionBox.c
         ../../src/EnvRenderer.c
+        ../../src/Animations.c
         )
 
 # add lib dependencies
