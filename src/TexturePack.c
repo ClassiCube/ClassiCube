@@ -307,10 +307,15 @@ static cc_result ExtractPng(struct Stream* stream) {
 	return res;
 }
 
+static cc_bool needReload;
 static void ExtractFrom(struct Stream* stream, const String* path) {
 	cc_result res;
+
 	Event_RaiseVoid(&TextureEvents.PackChanged);
-	if (Gfx.LostContext) return;
+	/* If context is lost, then trying to load textures will just fail */
+	/* So defer loading the texture pack until context is restored */
+	if (Gfx.LostContext) { needReload = true; return; }
+	needReload = false;
 
 	if (String_ContainsConst(path, ".zip")) {
 		res = ExtractZip(stream);
@@ -430,7 +435,10 @@ static void OnContextLost(void* obj) {
 }
 
 static void OnContextRecreated(void* obj) {
-	if (!Gfx.ManagedTextures) TexturePack_ExtractCurrent(true);
+	if (!Gfx.ManagedTextures || needReload) {
+		TexturePack_ExtractDefault();
+		TexturePack_ExtractCurrent(false);
+	}
 }
 
 static void OnInit(void) {
