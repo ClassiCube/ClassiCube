@@ -294,41 +294,44 @@ void TexturePack_SetDefault(const String* texPack) {
 	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
 }
 
-static cc_result TexturePack_ProcessZipEntry(const String* path, struct Stream* stream, struct ZipState* s) {
+static cc_result ProcessZipEntry(const String* path, struct Stream* stream, struct ZipState* s) {
 	String name = *path; 
 	Utils_UNSAFE_GetFilename(&name);
 	Event_RaiseEntry(&TextureEvents.FileChanged, stream, &name);
 	return 0;
 }
 
-/* Extracts all the files from a stream representing a .zip archive */
-static cc_result TexturePack_ExtractZip(struct Stream* stream) {
+static cc_result ExtractZip(struct Stream* stream) {
 	struct ZipState state;
-	Event_RaiseVoid(&TextureEvents.PackChanged);
-	if (Gfx.LostContext) return 0;
-	
 	Zip_Init(&state, stream);
-	state.ProcessEntry = TexturePack_ProcessZipEntry;
+	state.ProcessEntry = ProcessZipEntry;
 	return Zip_Extract(&state);
 }
 
-/* Changes the current terrain atlas from a stream representing a .png image */
-/* Raises TextureEvents.PackChanged, so behaves as a .zip with only terrain.png in it */
-static cc_result TexturePack_ExtractPng(struct Stream* stream) {
+static cc_result ExtractPng(struct Stream* stream) {
 	Bitmap bmp; 
 	cc_result res = Png_Decode(&bmp, stream);
-
-	if (!res) {
-		Event_RaiseVoid(&TextureEvents.PackChanged);
-		if (Atlas_TryChange(&bmp)) return 0;
-	}
+	if (!res && Atlas_TryChange(&bmp)) return 0;
 
 	Mem_Free(bmp.scan0);
 	return res;
 }
 
-/* Extracts a .zip texture pack from the given file */
-static void TexturePack_ExtractZip_File(const String* filename) {
+static void ExtractFrom(struct Stream* stream, const String* path) {
+	cc_result res;
+	Event_RaiseVoid(&TextureEvents.PackChanged);
+	if (Gfx.LostContext) return;
+
+	if (String_ContainsConst(path, ".zip")) {
+		res = ExtractZip(stream);
+		if (res) Logger_Warn2(res, "extracting", path);
+	} else {
+		res = ExtractPng(stream);
+		if (res) Logger_Warn2(res, "decoding", path);
+	}
+}
+
+static void ExtractFromFile(const String* filename) {
 	String path; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
 	cc_result res;
@@ -347,9 +350,7 @@ static void TexturePack_ExtractZip_File(const String* filename) {
 
 	res = Stream_OpenFile(&stream, &path);
 	if (res) { Logger_Warn2(res, "opening", &path); return; }
-
-	res = TexturePack_ExtractZip(&stream);
-	if (res) { Logger_Warn2(res, "extracting", &path); }
+	ExtractFrom(&stream, &path);
 
 	res = stream.Close(&stream);
 	if (res) { Logger_Warn2(res, "closing", &path); }
@@ -362,12 +363,12 @@ static void TexturePack_ExtractZip_File(const String* filename) {
 void TexturePack_ExtractInitial(void) {
 	String texPack;
 	Options_Get(OPT_DEFAULT_TEX_PACK, &defTexPack, "default.zip");
-	TexturePack_ExtractZip_File(&defaultZip);
+	ExtractFromFile(&defaultZip);
 
 	/* in case the user's default texture pack doesn't have all required textures */
 	texPack = TexturePack_UNSAFE_GetDefault();
 	if (!String_CaselessEqualsConst(&texPack, "default.zip")) {
-		TexturePack_ExtractZip_File(&texPack);
+		ExtractFromFile(&texPack);
 	}
 }
 
@@ -375,7 +376,6 @@ static cc_bool texturePackDefault = true;
 void TexturePack_ExtractCurrent(cc_bool forceReload) {
 	String url = World_TextureUrl, file;
 	struct Stream stream;
-	cc_bool zip;
 	cc_result res;
 
 	if (!url.length || !OpenCachedData(&url, &stream)) {
@@ -383,39 +383,28 @@ void TexturePack_ExtractCurrent(cc_bool forceReload) {
 		if (texturePackDefault && !forceReload) return;
 		file = TexturePack_UNSAFE_GetDefault();
 
-		TexturePack_ExtractZip_File(&file);
+		ExtractFromFile(&file);
 		texturePackDefault = true;
 	} else {
-		zip = String_ContainsConst(&url, ".zip");
-		res = zip ? TexturePack_ExtractZip(&stream) : TexturePack_ExtractPng(&stream);
-		if (res) Logger_Warn2(res, zip ? "extracting" : "decoding", &url);
+		ExtractFrom(&stream, &url);
+		texturePackDefault = false;
 
 		res = stream.Close(&stream);
 		if (res) Logger_Warn2(res, "closing cache for", &url);
-		texturePackDefault = false;
 	}
 }
 
 void TexturePack_Apply(struct HttpRequest* item) {
-	String url;
-	cc_uint8* data; cc_uint32 len;
 	struct Stream mem;
-	cc_bool png;
-	cc_result res;
+	String url;
 
 	url = String_FromRawArray(item->url);
 	UpdateCache(item);
 	/* Took too long to download and is no longer active texture pack */
 	if (!String_Equals(&World_TextureUrl, &url)) return;
 
-	data = item->data;
-	len  = item->size;
-	Stream_ReadonlyMemory(&mem, data, len);
-
-	png = Png_Detect(data, len);
-	res = png ? TexturePack_ExtractPng(&mem) : TexturePack_ExtractZip(&mem);
-
-	if (res) Logger_Warn2(res, png ? "decoding" : "extracting", &url);
+	Stream_ReadonlyMemory(&mem, item->data, item->size);
+	ExtractFrom(&mem, &url);
 	texturePackDefault = false;
 }
 
