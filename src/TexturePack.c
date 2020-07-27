@@ -279,16 +279,6 @@ static char defTexPackBuffer[STRING_SIZE];
 static String defTexPack = String_FromArray(defTexPackBuffer);
 static const String defaultZip = String_FromConst("default.zip");
 
-/* Retrieves the filename of the default texture pack used. */
-/* NOTE: Returns default.zip if classic mode or selected pack does not exist. */
-static String TexturePack_UNSAFE_GetDefault(void) {
-	String texPath; char texPathBuffer[STRING_SIZE];
-	String_InitArray(texPath, texPathBuffer);
-
-	String_Format1(&texPath, "texpacks/%s", &defTexPack);
-	return File_Exists(&texPath) && !Game_ClassicMode ? defTexPack : defaultZip;
-}
-
 void TexturePack_SetDefault(const String* texPack) {
 	String_Copy(&defTexPack, texPack);
 	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
@@ -361,7 +351,7 @@ static void ExtractFromFile(const String* filename) {
 }
 
 void TexturePack_ExtractDefault(void) {
-	String texPack = TexturePack_UNSAFE_GetDefault();
+	String texPack = Game_ClassicMode ? defaultZip : defTexPack;
 	ExtractFromFile(&defaultZip);
 
 	/* in case the user's default texture pack doesn't have all required textures */
