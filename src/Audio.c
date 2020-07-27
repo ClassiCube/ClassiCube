@@ -954,7 +954,7 @@ static void Audio_FilesCallback(const String* path, void* obj) {
 	StringsBuffer_Add(&files, &relPath);
 }
 
-static void Audio_Init(void) {
+static void OnInit(void) {
 	static const String path = String_FromConst("audio");
 	int volume;
 
@@ -972,7 +972,7 @@ static void Audio_Init(void) {
 	Event_RegisterBlock(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
 
-static void Audio_Free(void) {
+static void OnFree(void) {
 	Music_Free();
 	Sounds_Free();
 	Waitable_Free(music_waitable);
@@ -982,6 +982,6 @@ static void Audio_Free(void) {
 #endif
 
 struct IGameComponent Audio_Component = {
-	Audio_Init, /* Init  */
-	Audio_Free  /* Free  */
+	OnInit, /* Init  */
+	OnFree  /* Free  */
 };

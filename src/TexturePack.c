@@ -443,7 +443,7 @@ static void OnContextRecreated(void* obj) {
 	if (!Gfx.ManagedTextures) TexturePack_ExtractCurrent(true);
 }
 
-static void Textures_Init(void) {
+static void OnInit(void) {
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
@@ -452,7 +452,7 @@ static void Textures_Init(void) {
 	TextureCache_Init();
 }
 
-static void Textures_Free(void) {
+static void OnFree(void) {
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
@@ -462,6 +462,6 @@ static void Textures_Free(void) {
 }
 
 struct IGameComponent Textures_Component = {
-	Textures_Init, /* Init  */
-	Textures_Free  /* Free  */
+	OnInit, /* Init  */
+	OnFree  /* Free  */
 };

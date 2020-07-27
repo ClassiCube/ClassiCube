@@ -242,7 +242,7 @@ static cc_bool net_connecting;
 static double net_connectTimeout;
 #define NET_TIMEOUT_SECS 15
 
-static void Server_Free(void);
+static void OnFree(void);
 static void MPConnection_FinishConnect(void) {
 	net_connecting = false;
 	Event_RaiseVoid(&NetEvents.Connected);
@@ -270,7 +270,7 @@ static void MPConnection_FailConnect(cc_result result) {
 
 	String_Format2(&msg, "Failed to connect to %s:%i", &Server.IP, &Server.Port);
 	Game_Disconnect(&msg, &reason);
-	Server_Free();
+	OnFree();
 }
 
 static void MPConnection_TickConnect(void) {
@@ -491,7 +491,7 @@ static void MPConnection_Init(void) {
 }
 
 
-static void Server_OnNewMap(void) {
+static void OnNewMap(void) {
 	int i;
 	if (Server.IsSinglePlayer) return;
 
@@ -501,14 +501,14 @@ static void Server_OnNewMap(void) {
 	}
 }
 
-static void Server_Reset(void) {
+static void OnReset(void) {
 	if (Server.IsSinglePlayer) return;
 
 	net_writeFailed = false;
-	Server_Free();
+	OnFree();
 }
 
-static void Server_Init(void) {
+static void OnInit(void) {
 	String_InitArray(Server.Name,    nameBuffer);
 	String_InitArray(Server.MOTD,    motdBuffer);
 	String_InitArray(Server.AppName, appBuffer);
@@ -523,7 +523,7 @@ static void Server_Init(void) {
 	String_AppendConst(&Server.AppName, GAME_APP_NAME);
 }
 
-static void Server_Free(void) {
+static void OnFree(void) {
 	if (Server.IsSinglePlayer) {
 		Physics_Free();
 	} else {
@@ -534,8 +534,8 @@ static void Server_Free(void) {
 }
 
 struct IGameComponent Server_Component = {
-	Server_Init, /* Init  */
-	Server_Free, /* Free  */
-	Server_Reset,    /* Reset */
-	Server_OnNewMap  /* OnNewMap */
+	OnInit,  /* Init  */
+	OnFree,  /* Free  */
+	OnReset, /* Reset */
+	OnNewMap /* OnNewMap */
 };

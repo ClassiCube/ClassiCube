@@ -112,19 +112,19 @@ static void OnContextRecreated(void* obj) {
 	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, PICKEDPOS_NUM_VERTICES);
 }
 
-static void PickedPosRenderer_Init(void) {
+static void OnInit(void) {
 	OnContextRecreated(NULL);
 	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
-static void PickedPosRenderer_Free(void) {
+static void OnFree(void) {
 	OnContextLost(NULL);
 	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
 struct IGameComponent PickedPosRenderer_Component = {
-	PickedPosRenderer_Init, /* Init */
-	PickedPosRenderer_Free, /* Free */
+	OnInit, /* Init */
+	OnFree, /* Free */
 };

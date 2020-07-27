@@ -672,7 +672,7 @@ BlockID AutoRotate_RotateBlock(BlockID block) {
 /*########################################################################################################################*
 *----------------------------------------------------Blocks component-----------------------------------------------------*
 *#########################################################################################################################*/
-static void Blocks_Reset(void) {
+static void OnReset(void) {
 	int i, block;
 	for (i = 0; i < Array_Elems(definedCustomBlocks); i++) {
 		definedCustomBlocks[i] = 0;
@@ -686,7 +686,7 @@ static void Blocks_Reset(void) {
 }
 
 static void OnAtlasChanged(void* obj) { Block_RecalculateAllSpriteBB(); }
-static void Blocks_Init(void) {
+static void OnInit(void) {
 	int block;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		Blocks.CanPlace[block]  = true;
@@ -694,7 +694,7 @@ static void Blocks_Init(void) {
 	}
 
 	AutoRotate_Enabled = true;
-	Blocks_Reset();
+	OnReset();
 	Event_RegisterVoid(&TextureEvents.AtlasChanged, NULL, OnAtlasChanged);
 
 	Blocks.CanPlace[BLOCK_AIR] = false;         Blocks.CanDelete[BLOCK_AIR] = false;
@@ -705,12 +705,12 @@ static void Blocks_Init(void) {
 	Blocks.CanPlace[BLOCK_BEDROCK] = false;     Blocks.CanDelete[BLOCK_BEDROCK] = false;
 }
 
-static void Blocks_Free(void) {
+static void OnFree(void) {
 	Event_UnregisterVoid(&TextureEvents.AtlasChanged, NULL, OnAtlasChanged);
 }
 
 struct IGameComponent Blocks_Component = {
-	Blocks_Init,  /* Init  */
-	Blocks_Free,  /* Free  */
-	Blocks_Reset, /* Reset */
+	OnInit,  /* Init  */
+	OnFree,  /* Free  */
+	OnReset, /* Reset */
 };

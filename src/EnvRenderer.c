@@ -865,7 +865,7 @@ static void OnEnvVariableChanged(void* obj, int envVar) {
 /*########################################################################################################################*
 *--------------------------------------------------EnvRenderer component--------------------------------------------------*
 *#########################################################################################################################*/
-static void EnvRenderer_Init(void) {
+static void OnInit(void) {
 	String renderType;
 	int flags;
 	Options_UNSAFE_Get(OPT_RENDER_TYPE, &renderType);
@@ -887,7 +887,7 @@ static void EnvRenderer_Init(void) {
 	Game_SetViewDistance(Game_UserViewDistance);
 }
 
-static void EnvRenderer_Free(void) {
+static void OnFree(void) {
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 	Event_UnregisterVoid(&TextureEvents.PackChanged,  NULL, OnTexturePackChanged);
 	Event_UnregisterVoid(&TextureEvents.AtlasChanged, NULL, OnTerrainAtlasChanged);
@@ -902,7 +902,7 @@ static void EnvRenderer_Free(void) {
 	Weather_Heightmap = NULL;
 }
 
-static void EnvRenderer_Reset(void) {
+static void OnReset(void) {
 	Gfx_SetFog(false);
 	DeleteVbs();
 
@@ -911,12 +911,12 @@ static void EnvRenderer_Reset(void) {
 	lastPos = IVec3_MaxValue();
 }
 
-static void EnvRenderer_OnNewMapLoaded(void) { OnContextRecreated(NULL); }
+static void OnNewMapLoaded(void) { OnContextRecreated(NULL); }
 
 struct IGameComponent EnvRenderer_Component = {
-	EnvRenderer_Init,  /* Init  */
-	EnvRenderer_Free,  /* Free  */
-	EnvRenderer_Reset, /* Reset */
-	EnvRenderer_Reset, /* OnNewMap */
-	EnvRenderer_OnNewMapLoaded /* OnNewMapLoaded */
+	OnInit,  /* Init  */
+	OnFree,  /* Free  */
+	OnReset, /* Reset */
+	OnReset, /* OnNewMap */
+	OnNewMapLoaded /* OnNewMapLoaded */
 };

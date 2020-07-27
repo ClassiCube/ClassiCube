@@ -597,7 +597,7 @@ static void OnFileChanged(void* obj, struct Stream* stream, const String* name) 
 	}
 }
 
-static void Particles_Init(void) {
+static void OnInit(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Particles_Tick);
 	Random_SeedFromCurrentTime(&rnd);
 	OnContextRecreated(NULL);	
@@ -608,7 +608,7 @@ static void Particles_Init(void) {
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
-static void Particles_Free(void) {
+static void OnFree(void) {
 	OnContextLost(NULL);
 
 	Event_UnregisterBlock(&UserEvents.BlockChanged,   NULL, OnBreakBlockEffect_Handler);
@@ -617,11 +617,11 @@ static void Particles_Free(void) {
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
-static void Particles_Reset(void) { rain_count = 0; terrain_count = 0; custom_count = 0; }
+static void OnReset(void) { rain_count = 0; terrain_count = 0; custom_count = 0; }
 
 struct IGameComponent Particles_Component = {
-	Particles_Init,  /* Init  */
-	Particles_Free,  /* Free  */
-	Particles_Reset, /* Reset */
-	Particles_Reset  /* OnNewMap */
+	OnInit,  /* Init  */
+	OnFree,  /* Free  */
+	OnReset, /* Reset */
+	OnReset  /* OnNewMap */
 };

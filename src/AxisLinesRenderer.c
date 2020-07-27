@@ -67,16 +67,16 @@ static void OnContextLost(void* obj) {
 	Gfx_DeleteDynamicVb(&axisLines_vb);
 }
 
-static void AxisLinesRenderer_Init(void) {
+static void OnInit(void) {
 	Event_RegisterVoid(&GfxEvents.ContextLost, NULL, OnContextLost);
 }
 
-static void AxisLinesRenderer_Free(void) {
+static void OnFree(void) {
 	OnContextLost(NULL);
 	Event_UnregisterVoid(&GfxEvents.ContextLost, NULL, OnContextLost);
 }
 
 struct IGameComponent AxisLinesRenderer_Component = {
-	AxisLinesRenderer_Init, /* Init */
-	AxisLinesRenderer_Free, /* Free */
+	OnInit, /* Init */
+	OnFree, /* Free */
 };

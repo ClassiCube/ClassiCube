@@ -599,7 +599,7 @@ void Chat_Send(const String* text, cc_bool logUsage) {
 	}
 }
 
-static void Chat_Init(void) {
+static void OnInit(void) {
 	Commands_Register(&GpuInfoCommand);
 	Commands_Register(&HelpCommand);
 	Commands_Register(&RenderTypeCommand);
@@ -614,7 +614,7 @@ static void Chat_Init(void) {
 #endif
 }
 
-static void Chat_Reset(void) {
+static void OnReset(void) {
 	CloseLogFile();
 	ResetLogFile();
 
@@ -628,7 +628,7 @@ static void Chat_Reset(void) {
 	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_3);
 }
 
-static void Chat_Free(void) {
+static void OnFree(void) {
 	CloseLogFile();
 	cmds_head = NULL;
 
@@ -641,7 +641,7 @@ static void Chat_Free(void) {
 }
 
 struct IGameComponent Chat_Component = {
-	Chat_Init, /* Init  */
-	Chat_Free, /* Free  */
-	Chat_Reset /* Reset */
+	OnInit, /* Init  */
+	OnFree, /* Free  */
+	OnReset /* Reset */
 };

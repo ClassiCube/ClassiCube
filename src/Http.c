@@ -1104,7 +1104,7 @@ void Http_UrlEncodeUtf8(String* dst, const String* src) {
 /*########################################################################################################################*
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
-static void Http_Init(void) {
+static void OnInit(void) {
 #ifdef CC_BUILD_ANDROID
 	if (workerThread) return;
 #endif
@@ -1122,7 +1122,7 @@ static void Http_Init(void) {
 #endif
 }
 
-static void Http_Free(void) {
+static void OnFree(void) {
 	http_terminate = true;
 	Http_ClearPending();
 #ifndef CC_BUILD_WEB
@@ -1140,7 +1140,7 @@ static void Http_Free(void) {
 }
 
 struct IGameComponent Http_Component = {
-	Http_Init,        /* Init  */
-	Http_Free,        /* Free  */
+	OnInit,           /* Init  */
+	OnFree,           /* Free  */
 	Http_ClearPending /* Reset */
 };

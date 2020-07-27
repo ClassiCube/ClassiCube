@@ -214,24 +214,24 @@ void Selections_Render(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Selections component---------------------------------------------------*
 *#########################################################################################################################*/
-static void Selections_Init(void) {
+static void OnInit(void) {
 	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Selections_ContextLost);
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Selections_ContextRecreated);
 }
 
-static void Selections_Reset(void) {
+static void OnReset(void) {
 	selections_count = 0;
 }
 
-static void Selections_Free(void) {
+static void OnFree(void) {
 	Selections_ContextLost(NULL);
 	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Selections_ContextLost);
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Selections_ContextRecreated);
 }
 
 struct IGameComponent Selections_Component = {
-	Selections_Init,  /* Init  */
-	Selections_Free,  /* Free  */
-	Selections_Reset, /* Reset */
-	Selections_Reset  /* OnNewMap */
+	OnInit,  /* Init  */
+	OnFree,  /* Free  */
+	OnReset, /* Reset */
+	OnReset  /* OnNewMap */
 };

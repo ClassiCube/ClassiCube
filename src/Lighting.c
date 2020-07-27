@@ -352,20 +352,20 @@ void Lighting_LightHint(int startX, int startZ) {
 /*########################################################################################################################*
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
-static void Lighting_Reset(void) {
+static void OnReset(void) {
 	Mem_Free(Lighting_Heightmap);
 	Lighting_Heightmap = NULL;
 }
 
-static void Lighting_OnNewMapLoaded(void) {
+static void OnNewMapLoaded(void) {
 	Lighting_Heightmap = (cc_int16*)Mem_Alloc(World.Width * World.Length, 2, "lighting heightmap");
 	Lighting_Refresh();
 }
 
 struct IGameComponent Lighting_Component = {
-	NULL,           /* Init  */
-	Lighting_Reset, /* Free  */
-	Lighting_Reset, /* Reset */
-	Lighting_Reset, /* OnNewMap */
-	Lighting_OnNewMapLoaded /* OnNewMapLoaded */
+	NULL,    /* Init  */
+	OnReset, /* Free  */
+	OnReset, /* Reset */
+	OnReset, /* OnNewMap */
+	OnNewMapLoaded /* OnNewMapLoaded */
 };

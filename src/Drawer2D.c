@@ -636,7 +636,7 @@ static void InitHexEncodedCol(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
 		255);
 }
 
-static void Drawer2D_Reset(void) {
+static void OnReset(void) {
 	int i;	
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
 		Drawer2D_Cols[i] = 0;
@@ -666,8 +666,8 @@ static void OnFileChanged(void* obj, struct Stream* src, const String* name) {
 	}
 }
 
-static void Drawer2D_Init(void) {
-	Drawer2D_Reset();
+static void OnInit(void) {
+	OnReset();
 	Drawer2D_BitmappedText    = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
 	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
 
@@ -678,16 +678,16 @@ static void Drawer2D_Init(void) {
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
-static void Drawer2D_Free(void) { 
+static void OnFree(void) { 
 	FreeFontBitmap();
 	fontBitmap.scan0 = NULL;
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 struct IGameComponent Drawer2D_Component = {
-	Drawer2D_Init,  /* Init  */
-	Drawer2D_Free,  /* Free  */
-	Drawer2D_Reset, /* Reset */
+	OnInit,  /* Init  */
+	OnFree,  /* Free  */
+	OnReset, /* Reset */
 };
 
 

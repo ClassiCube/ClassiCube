@@ -117,14 +117,14 @@ void Inventory_Remove(BlockID block) {
 /*########################################################################################################################*
 *--------------------------------------------------Inventory component----------------------------------------------------*
 *#########################################################################################################################*/
-static void Inventory_Reset(void) {
+static void OnReset(void) {
 	Inventory_ResetMapping();
 	Inventory.CanChangeSelected = true;
 }
 
-static void Inventory_Init(void) {
+static void OnInit(void) {
 	BlockID* inv = Inventory.Table;
-	Inventory_Reset();
+	OnReset();
 	Inventory.BlocksPerRow = Game_ClassicMode ? 9 : 10;
 	
 	inv[0] = BLOCK_STONE;  inv[1] = BLOCK_COBBLE; inv[2] = BLOCK_BRICK;
@@ -133,7 +133,7 @@ static void Inventory_Init(void) {
 }
 
 struct IGameComponent Inventory_Component = {
-	Inventory_Init,  /* Init  */
-	NULL,            /* Free  */
-	Inventory_Reset, /* Reset */
+	OnInit,  /* Init  */
+	NULL,    /* Free  */
+	OnReset, /* Reset */
 };

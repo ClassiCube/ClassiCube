@@ -741,10 +741,10 @@ static void OnVisibilityChanged(void* obj) {
 	lastCamPos = Vec3_BigPos();
 	CalcViewDists();
 }
-static void MapRenderer_DeleteChunks_(void* obj) { DeleteChunks(); }
-static void MapRenderer_Refresh_(void* obj)      { MapRenderer_Refresh(); }
+static void DeleteChunks_(void* obj) { DeleteChunks(); }
+static void Refresh_(void* obj)      { MapRenderer_Refresh(); }
 
-static void MapRenderer_OnNewMap(void) {
+static void OnNewMap(void) {
 	Game.ChunkUpdates = 0;
 	DeleteChunks();
 	ResetPartCounts();
@@ -754,7 +754,7 @@ static void MapRenderer_OnNewMap(void) {
 	FreeParts();
 }
 
-static void MapRenderer_OnNewMapLoaded(void) {
+static void OnNewMapLoaded(void) {
 	int count;
 	MapRenderer_ChunksX = (World.Width  + CHUNK_MAX) >> CHUNK_SHIFT;
 	MapRenderer_ChunksY = (World.Height + CHUNK_MAX) >> CHUNK_SHIFT;
@@ -774,15 +774,15 @@ static void MapRenderer_OnNewMapLoaded(void) {
 	lastCamPos = Vec3_BigPos();
 }
 
-static void MapRenderer_Init(void) {
+static void OnInit(void) {
 	Event_RegisterVoid(&TextureEvents.AtlasChanged,  NULL, OnTerrainAtlasChanged);
 	Event_RegisterInt(&WorldEvents.EnvVarChanged,    NULL, OnEnvVariableChanged);
 	Event_RegisterVoid(&BlockEvents.BlockDefChanged, NULL, OnBlockDefinitionChanged);
 
 	Event_RegisterVoid(&GfxEvents.ViewDistanceChanged, NULL, OnVisibilityChanged);
 	Event_RegisterVoid(&GfxEvents.ProjectionChanged,   NULL, OnVisibilityChanged);
-	Event_RegisterVoid(&GfxEvents.ContextLost,         NULL, MapRenderer_DeleteChunks_);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated,    NULL, MapRenderer_Refresh_);
+	Event_RegisterVoid(&GfxEvents.ContextLost,         NULL, DeleteChunks_);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated,    NULL, Refresh_);
 
 	/* This = 87 fixes map being invisible when no textures */
 	MapRenderer_1DUsedCount = 87; /* Atlas1D_UsedAtlasesCount(); */
@@ -791,23 +791,22 @@ static void MapRenderer_Init(void) {
 	CalcViewDists();
 }
 
-static void MapRenderer_Free(void) {
+static void OnFree(void) {
 	Event_UnregisterVoid(&TextureEvents.AtlasChanged,  NULL, OnTerrainAtlasChanged);
 	Event_UnregisterInt(&WorldEvents.EnvVarChanged,    NULL, OnEnvVariableChanged);
 	Event_UnregisterVoid(&BlockEvents.BlockDefChanged, NULL, OnBlockDefinitionChanged);
 
 	Event_UnregisterVoid(&GfxEvents.ViewDistanceChanged, NULL, OnVisibilityChanged);
 	Event_UnregisterVoid(&GfxEvents.ProjectionChanged,   NULL, OnVisibilityChanged);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,         NULL, MapRenderer_DeleteChunks_);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated,    NULL, MapRenderer_Refresh_);
-
-	MapRenderer_OnNewMap();
+	Event_UnregisterVoid(&GfxEvents.ContextLost,         NULL, DeleteChunks_);
+	Event_UnregisterVoid(&GfxEvents.ContextRecreated,    NULL, Refresh_);
+	OnNewMap();
 }
 
 struct IGameComponent MapRenderer_Component = {
-	MapRenderer_Init, /* Init */
-	MapRenderer_Free, /* Free */
-	MapRenderer_OnNewMap, /* Reset */
-	MapRenderer_OnNewMap, /* OnNewMap */
-	MapRenderer_OnNewMapLoaded /* OnNewMapLoaded */
+	OnInit, /* Init */
+	OnFree, /* Free */
+	OnNewMap, /* Reset */
+	OnNewMap, /* OnNewMap */
+	OnNewMapLoaded /* OnNewMapLoaded */
 };

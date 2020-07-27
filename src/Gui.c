@@ -402,7 +402,7 @@ static void OnContextLost(void* obj) {
 	Gfx_DeleteTexture(&Gui_IconsTex);
 }
 
-static void Gui_Init(void) {
+static void OnInit(void) {
 	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, OnFontChanged);
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
@@ -415,11 +415,11 @@ static void Gui_Init(void) {
 	Gui_ShowDefault();
 }
 
-static void Gui_Reset(void) {
+static void OnReset(void) {
 	/* TODO:Should we reset all screens here.. ? */
 }
 
-static void Gui_Free(void) {
+static void OnFree(void) {
 	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, OnFontChanged);
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
@@ -432,13 +432,13 @@ static void Gui_Free(void) {
 	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
 
 	OnContextLost(NULL);
-	Gui_Reset();
+	OnReset();
 }
 
 struct IGameComponent Gui_Component = {
-	Gui_Init,  /* Init  */
-	Gui_Free,  /* Free  */
-	Gui_Reset, /* Reset */
+	OnInit,  /* Init  */
+	OnFree,  /* Free  */
+	OnReset, /* Reset */
 	NULL, /* OnNewMap */
 	NULL, /* OnNewMapLoaded */
 };

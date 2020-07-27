@@ -2086,8 +2086,7 @@ static struct Model* SkinnedCubeModel_GetInstance(void) {
 /*########################################################################################################################*
 *-------------------------------------------------------Model component---------------------------------------------------*
 *#########################################################################################################################*/
-
-static void Model_RegisterDefaultModels(void) {
+static void RegisterDefaultModels(void) {
 	Model_RegisterTexture(&human_tex);
 	Model_RegisterTexture(&chicken_tex);
 	Model_RegisterTexture(&creeper_tex);
@@ -2120,11 +2119,11 @@ static void Model_RegisterDefaultModels(void) {
 	Model_Register(SkinnedCubeModel_GetInstance());
 }
 
-static void Models_Init(void) {
+static void OnInit(void) {
 	Models.Vertices    = defaultVertices;
 	Models.MaxVertices = Array_Elems(defaultVertices);
 
-	Model_RegisterDefaultModels();
+	RegisterDefaultModels();
 	Models_ContextRecreated(NULL);
 	Models.ClassicArms = Options_GetBool(OPT_CLASSIC_ARM_MODEL, Game_ClassicMode);
 
@@ -2133,7 +2132,7 @@ static void Models_Init(void) {
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Models_ContextRecreated);
 }
 
-static void Models_Free(void) {
+static void OnFree(void) {
 	Models_ContextLost(NULL);
 	CustomModel_FreeAll();
 
@@ -2142,10 +2141,10 @@ static void Models_Free(void) {
 	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Models_ContextRecreated);
 }
 
-static void Models_Reset(void) { CustomModel_FreeAll(); }
+static void OnReset(void) { CustomModel_FreeAll(); }
 
 struct IGameComponent Models_Component = {
-	Models_Init,  /* Init  */
-	Models_Free,  /* Free  */
-	Models_Reset, /* Reset */
+	OnInit,  /* Init  */
+	OnFree,  /* Free  */
+	OnReset, /* Reset */
 };

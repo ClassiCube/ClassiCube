@@ -379,19 +379,19 @@ static void OnFileChanged(void* obj, struct Stream* stream, const String* name) 
 	}
 }
 
-static void Animations_Init(void) {
+static void OnInit(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
 	Event_RegisterVoid(&TextureEvents.PackChanged,  NULL, OnPackChanged);
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
-static void Animations_Free(void) {
+static void OnFree(void) {
 	Animations_Clear();
 	Event_UnregisterVoid(&TextureEvents.PackChanged,  NULL, OnPackChanged);
 	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 struct IGameComponent Animations_Component = {
-	Animations_Init, /* Init  */
-	Animations_Free  /* Free  */
+	OnInit, /* Init  */
+	OnFree  /* Free  */
 };

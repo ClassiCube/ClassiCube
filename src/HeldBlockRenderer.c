@@ -232,7 +232,7 @@ static const struct EntityVTABLE heldEntity_VTABLE = {
 	NULL, NULL, NULL, HeldBlockRenderer_GetCol,
 	NULL, NULL
 };
-static void HeldBlockRenderer_Init(void) {
+static void OnInit(void) {
 	Entity_Init(&held_entity);
 	held_entity.VTABLE  = &heldEntity_VTABLE;
 	held_entity.NoShade = true;
@@ -245,13 +245,13 @@ static void HeldBlockRenderer_Init(void) {
 	Event_RegisterBlock(&UserEvents.BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
 }
 
-static void HeldBlockRenderer_Free(void) {
+static void OnFree(void) {
 	Event_UnregisterVoid(&GfxEvents.ProjectionChanged, NULL, HeldBlockRenderer_ProjectionChanged);
 	Event_UnregisterVoid(&UserEvents.HeldBlockChanged, NULL, HeldBlockRenderer_DoSwitchBlockAnim);
 	Event_UnregisterBlock(&UserEvents.BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
 }
 
 struct IGameComponent HeldBlockRenderer_Component = {
-	HeldBlockRenderer_Init, /* Init  */
-	HeldBlockRenderer_Free  /* Free  */
+	OnInit, /* Init  */
+	OnFree  /* Free  */
 };

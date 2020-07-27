@@ -1271,7 +1271,7 @@ void Builder_ApplyActive(void) {
 	}
 }
 
-static void Builder_Init(void) {
+static void OnInit(void) {
 	Builder_Offsets[FACE_XMIN] = -1;
 	Builder_Offsets[FACE_XMAX] =  1;
 	Builder_Offsets[FACE_ZMIN] = -EXTCHUNK_SIZE;
@@ -1283,15 +1283,15 @@ static void Builder_Init(void) {
 	Builder_ApplyActive();
 }
 
-static void Builder_OnNewMapLoaded(void) {
+static void OnNewMapLoaded(void) {
 	Builder_SidesLevel = max(0, Env_SidesHeight);
 	Builder_EdgeLevel  = max(0, Env.EdgeHeight);
 }
 
 struct IGameComponent Builder_Component = {
-	Builder_Init, /* Init */
+	OnInit, /* Init */
 	NULL, /* Free */
 	NULL, /* Reset */
 	NULL, /* OnNewMap */
-	Builder_OnNewMapLoaded /* OnNewMapLoaded */
+	OnNewMapLoaded /* OnNewMapLoaded */
 };
