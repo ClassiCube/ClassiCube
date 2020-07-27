@@ -82,8 +82,8 @@ int TextureCache_ClearDenied(void);
 
 /* Sets the filename of the default texture pack used. */
 void TexturePack_SetDefault(const String* texPack);
-/* Gets filename of default texture pack and then extracts it. */
-void TexturePack_ExtractInitial(void);
+/* Extracts user's default texture pack. */
+void TexturePack_ExtractDefault(void);
 /* If World_TextureUrl is empty, extracts user's default texture pack. */
 /* Otherwise extracts the cached texture pack for that URL. */
 void TexturePack_ExtractCurrent(cc_bool forceReload);

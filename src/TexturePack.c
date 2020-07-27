@@ -360,30 +360,25 @@ static void ExtractFromFile(const String* filename) {
 #endif
 }
 
-void TexturePack_ExtractInitial(void) {
-	String texPack;
-	Options_Get(OPT_DEFAULT_TEX_PACK, &defTexPack, "default.zip");
+void TexturePack_ExtractDefault(void) {
+	String texPack = TexturePack_UNSAFE_GetDefault();
 	ExtractFromFile(&defaultZip);
 
 	/* in case the user's default texture pack doesn't have all required textures */
-	texPack = TexturePack_UNSAFE_GetDefault();
-	if (!String_CaselessEqualsConst(&texPack, "default.zip")) {
-		ExtractFromFile(&texPack);
-	}
+	if (!String_CaselessEquals(&texPack, &defaultZip)) ExtractFromFile(&texPack);
 }
 
 static cc_bool texturePackDefault = true;
 void TexturePack_ExtractCurrent(cc_bool forceReload) {
-	String url = World_TextureUrl, file;
+	String url = World_TextureUrl;
 	struct Stream stream;
 	cc_result res;
 
 	if (!url.length || !OpenCachedData(&url, &stream)) {
 		/* don't pointlessly load default texture pack */
 		if (texturePackDefault && !forceReload) return;
-		file = TexturePack_UNSAFE_GetDefault();
 
-		ExtractFromFile(&file);
+		TexturePack_ExtractDefault();
 		texturePackDefault = true;
 	} else {
 		ExtractFrom(&stream, &url);
@@ -453,6 +448,7 @@ static void Textures_Init(void) {
 	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 
+	Options_Get(OPT_DEFAULT_TEX_PACK, &defTexPack, "default.zip");
 	TextureCache_Init();
 }
 
