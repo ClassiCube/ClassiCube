@@ -17,8 +17,8 @@ int Audio_SoundsVolume, Audio_MusicVolume;
 /* TODO: Fix for android */
 #if defined CC_BUILD_NOAUDIO
 /* Can't use mojang's sounds or music assets, so just stub everything out */
-static void Audio_Init(void) { }
-static void Audio_Free(void) { }
+static void OnInit(void) { }
+static void OnFree(void) { }
 
 void Audio_SetMusic(int volume) {
 	if (volume) Chat_AddRaw("&cMusic is not supported currently");
