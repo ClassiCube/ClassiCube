@@ -293,6 +293,7 @@ void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, struct FontDes
 	Bitmap bmp;
 	int i, charWidth;
 
+	Gfx_DeleteTexture(&atlas->tex.ID);
 	DrawTextArgs_Make(&args, prefix, font, true);
 	width = Drawer2D_TextWidth(&args);
 	atlas->offset = width;
