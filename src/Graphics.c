@@ -76,11 +76,6 @@ static void FreeDefaultResources(void) {
 	Gfx_DeleteIb(&Gfx_defaultIb);
 }
 
-static void CommonInit(void) {
-	Gfx.Initialised = true;
-	Gfx.Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
-}
-
 static void LimitFPS(void) {
 	/* Can't use Thread_Sleep on the web. (spinwaits instead of sleeping) */
 	/* However this is not a problem, because GLContext_SetVsync */
@@ -99,16 +94,12 @@ void Gfx_LoseContext(const char* reason) {
 	if (Gfx.LostContext) return;
 	Gfx.LostContext = true;
 	Platform_Log1("Lost graphics context: %c", reason);
-
-	Gfx_FreeState();
 	Event_RaiseVoid(&GfxEvents.ContextLost);
 }
 
 void Gfx_RecreateContext(void) {
 	Gfx.LostContext = false;
 	Platform_LogConst("Recreating graphics context");
-
-	Gfx_RestoreState();
 	Event_RaiseVoid(&GfxEvents.ContextRecreated);
 }
 
@@ -425,12 +416,10 @@ static void TryCreateDevice(void) {
 	deviceCreated    = true;
 	Gfx.MaxTexWidth  = caps.MaxTextureWidth;
 	Gfx.MaxTexHeight = caps.MaxTextureHeight;
-
-	Gfx_RestoreState();
 	totalMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 }
 
-void Gfx_Init(void) {
+void Gfx_Create(void) {
 	CreateD3D9();
 	FindCompatibleViewFormat();
 	FindCompatibleDepthFormat();
@@ -438,7 +427,7 @@ void Gfx_Init(void) {
 	Gfx.MinZNear        = 0.05f;
 	customMipmapsLevels = true;
 	Gfx.ManagedTextures = true;
-	CommonInit();
+	Gfx.Created         = true;
 	TryCreateDevice();
 }
 
@@ -1102,13 +1091,13 @@ static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 
 static void GL_CheckSupport(void);
-void Gfx_Init(void) {
-	GLContext_Init();
+void Gfx_Create(void) {
+	GLContext_Create();
 	Gfx.MinZNear = 0.1f;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
 	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
+	Gfx.Created      = true;
 
-	CommonInit();
 	GL_CheckSupport();
 	Gfx_RestoreState();
 }
@@ -2140,3 +2129,27 @@ static void GL_CheckSupport(void) {
 #endif /* CC_BUILD_GL11 */
 #endif /* !CC_BUILD_GLMODERN */
 #endif
+
+
+/*########################################################################################################################*
+*-----------------------------------------------PickedPosRenderer component-----------------------------------------------*
+*#########################################################################################################################*/
+static void OnContextLost(void* obj)      { Gfx_FreeState(); }
+static void OnContextRecreated(void* obj) { Gfx_RestoreState(); }
+
+static void OnInit(void) {
+	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+
+	Gfx.Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
+	if (Gfx.LostContext) return;
+	OnContextRecreated(NULL);
+}
+
+struct IGameComponent Gfx_Component = {
+	OnInit /* Init */
+	/* Can't use OnFree because then Gfx would wrongly be the */
+	/* first component freed, even though it MUST be the last */
+	/* Instead, Game.c calls Gfx_Free after first freeing all */
+	/* the other game components. */
+};

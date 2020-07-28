@@ -8,6 +8,8 @@
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct Stream;
+struct IGameComponent;
+extern struct IGameComponent Gfx_Component;
 
 typedef enum VertexFormat_ {
 	VERTEX_FORMAT_COLOURED, VERTEX_FORMAT_TEXTURED
@@ -27,7 +29,7 @@ struct VertexColoured { float X, Y, Z; PackedCol Col; };
 /* 3 floats for position (XYZ), 2 floats for texture coordinates (UV), 4 bytes for colour. */
 struct VertexTextured { float X, Y, Z; PackedCol Col; float U, V; };
 
-void Gfx_Init(void);
+void Gfx_Create(void);
 void Gfx_Free(void);
 
 CC_VAR extern struct _GfxData {
@@ -41,8 +43,8 @@ CC_VAR extern struct _GfxData {
 	/* Whether managed textures are actually supported. */
 	/* If not, you must free/create them just like normal textures */
 	cc_bool ManagedTextures;
-	/* Whether Gfx_Init has been called to initialise state. */
-	cc_bool Initialised;
+	/* Whether graphics context has been created */
+	cc_bool Created;
 	struct Matrix View, Projection;
 } Gfx;
 

@@ -151,9 +151,9 @@ void Window_UpdateRawMouse(void);
 void Window_DisableRawMouse(void);
 
 #ifdef CC_BUILD_GL
-/* Initialises an OpenGL context. */
+/* Creates an OpenGL context, then makes it the active context. */
 /* NOTE: You MUST have created the window beforehand, as the GL context is attached to the window. */
-void GLContext_Init(void);
+void GLContext_Create(void);
 /* Updates the OpenGL context after the window is resized. */
 void GLContext_Update(void);
 /* Attempts to restore a lost OpenGL context. */

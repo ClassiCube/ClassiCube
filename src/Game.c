@@ -375,8 +375,7 @@ void Game_Free(void* obj);
 static void Game_Load(void) {
 	struct IGameComponent* comp;
 	Game_UpdateDimensions();
-	Gfx_Init();
-
+	Gfx_Create();
 	Logger_WarnFunc = Game_WarnFunc;
 	LoadOptions();
 
@@ -388,6 +387,7 @@ static void Game_Load(void) {
 	Event_RegisterVoid(&WindowEvents.Closing,      NULL, Game_Free);
 
 	InputHandler_Init();
+	Game_AddComponent(&Gfx_Component);
 	Game_AddComponent(&Blocks_Component);
 	Game_AddComponent(&Drawer2D_Component);
 

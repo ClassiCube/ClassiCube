@@ -3673,7 +3673,7 @@ static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 	win_handle = NULL;
 	/* eglSwapBuffers might return EGL_BAD_SURFACE, EGL_BAD_ALLOC, or some other error */
 	/* Instead the context is lost here in a consistent manner */
-	if (Gfx.Initialised) Gfx_LoseContext("surface lost");
+	if (Gfx.Created) Gfx_LoseContext("surface lost");
 	JavaCallVoid(env, "processedSurfaceDestroyed", "()V", NULL);
 }
 
@@ -3914,7 +3914,7 @@ void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
 #if defined CC_BUILD_SDL
 static SDL_GLContext win_ctx;
 
-void GLContext_Init(void) {
+void GLContext_Create(void) {
 	struct GraphicsMode mode;
 	InitGraphicsMode(&mode);
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   mode.R);
@@ -3990,7 +3990,7 @@ static void GLContext_FreeSurface(void) {
 	ctx_surface = NULL;
 }
 
-void GLContext_Init(void) {
+void GLContext_Create(void) {
 	static EGLint contextAttribs[3] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 	static EGLint attribs[19] = {
 		EGL_RED_SIZE,  0, EGL_GREEN_SIZE,  0,
@@ -4092,7 +4092,7 @@ static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	}
 }
 
-void GLContext_Init(void) {
+void GLContext_Create(void) {
 	struct GraphicsMode mode;
 	InitGraphicsMode(&mode);
 	GLContext_SelectGraphicsMode(&mode);
@@ -4146,7 +4146,7 @@ typedef int (*FN_GLXSWAPINTERVAL)(int interval);
 static FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
 static cc_bool ctx_supports_vSync;
 
-void GLContext_Init(void) {
+void GLContext_Create(void) {
 	static const String ext_mesa = String_FromConst("GLX_MESA_swap_control");
 	static const String ext_sgi  = String_FromConst("GLX_SGI_swap_control");
 
@@ -4369,7 +4369,7 @@ static cc_result GLContext_SetFullscreen(void) {
 	return 0;
 }
 
-void GLContext_Init(void) {
+void GLContext_Create(void) {
 	GLint attribs[20];
 	AGLPixelFormat fmt;
 	GDHandle gdevice;
@@ -4468,7 +4468,7 @@ static id MakePixelFormat(struct GraphicsMode* mode, cc_bool fullscreen) {
 	return objc_msgSend(fmt, sel_registerName("initWithAttributes:"), attribs);
 }
 
-void GLContext_Init(void) {
+void GLContext_Create(void) {
 	struct GraphicsMode mode;
 	id view, fmt;
 
@@ -4536,7 +4536,7 @@ static EM_BOOL GLContext_OnLost(int eventType, const void *reserved, void *userD
 	return 1;
 }
 
-void GLContext_Init(void) {
+void GLContext_Create(void) {
 	EmscriptenWebGLContextAttributes attribs;
 	emscripten_webgl_init_context_attributes(&attribs);
 	attribs.alpha     = false;
