@@ -322,9 +322,9 @@ void Launcher_Run(void) {
 	CheckUpdateTask_Run();
 
 	if (Resources_Count) {
-		Launcher_SetScreen(ResourcesScreen_MakeInstance());
+		ResourcesScreen_SetActive();
 	} else {
-		Launcher_SetScreen(MainScreen_MakeInstance());
+		MainScreen_SetActive();
 	}
 
 	for (;;) {

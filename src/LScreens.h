@@ -34,12 +34,12 @@ typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 
 struct LScreen { LScreen_Layout };
 	
-struct LScreen* ChooseModeScreen_MakeInstance(cc_bool firstTime);
-struct LScreen* ColoursScreen_MakeInstance(void);
-struct LScreen* DirectConnectScreen_MakeInstance(void);
-struct LScreen* MainScreen_MakeInstance(void);
-struct LScreen* ResourcesScreen_MakeInstance(void);
-struct LScreen* ServersScreen_MakeInstance(void);
-struct LScreen* SettingsScreen_MakeInstance(void);
-struct LScreen* UpdatesScreen_MakeInstance(void);
+void ChooseModeScreen_SetActive(cc_bool firstTime);
+void ColoursScreen_SetActive(void);
+void DirectConnectScreen_SetActive(void);
+void MainScreen_SetActive(void);
+void ResourcesScreen_SetActive(void);
+void ServersScreen_SetActive(void);
+void SettingsScreen_SetActive(void);
+void UpdatesScreen_SetActive(void);
 #endif

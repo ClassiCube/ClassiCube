@@ -85,9 +85,9 @@ void Game_Run(int width, int height, const String* title);
 /* Represents a game component. */
 struct IGameComponent;
 struct IGameComponent {
-	/* Called when the game is being loaded. */
+	/* Called to init the component's state. (called when game is starting) */
 	void (*Init)(void);
-	/* Called when the component is being freed. (e.g. due to game being closed) */
+	/* Called to free the component's state. (called when game is closing) */
 	void (*Free)(void);
 	/* Called to reset the component's state. (e.g. reconnecting to server) */
 	void (*Reset)(void);
