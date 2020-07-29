@@ -421,15 +421,6 @@ static void OnReset(void) {
 }
 
 static void OnFree(void) {
-	Event_UnregisterVoid(&ChatEvents.FontChanged,     NULL, OnFontChanged);
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
-	Event_UnregisterInt(&InputEvents.Press,           NULL, OnKeyPress);
-#ifdef CC_BUILD_TOUCH
-	Event_UnregisterString(&InputEvents.TextChanged,  NULL, OnTextChanged);
-#endif
-
 	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
 
 	OnContextLost(NULL);

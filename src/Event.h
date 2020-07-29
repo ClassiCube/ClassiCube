@@ -135,6 +135,9 @@ void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDel
 #define Event_RegisterRawMove(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
 #define Event_UnregisterRawMove(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
+/* NOTE: Event_UnregisterAll must be updated if events lists are changed */
+void Event_UnregisterAll(void);
+
 CC_VAR extern struct _EntityEventsList {
 	struct Event_Int Added;    /* Entity is spawned in the current world */
 	struct Event_Int Removed;  /* Entity is despawned from the current world */

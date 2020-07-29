@@ -791,21 +791,9 @@ static void OnInit(void) {
 	CalcViewDists();
 }
 
-static void OnFree(void) {
-	Event_UnregisterVoid(&TextureEvents.AtlasChanged,  NULL, OnTerrainAtlasChanged);
-	Event_UnregisterInt(&WorldEvents.EnvVarChanged,    NULL, OnEnvVariableChanged);
-	Event_UnregisterVoid(&BlockEvents.BlockDefChanged, NULL, OnBlockDefinitionChanged);
-
-	Event_UnregisterVoid(&GfxEvents.ViewDistanceChanged, NULL, OnVisibilityChanged);
-	Event_UnregisterVoid(&GfxEvents.ProjectionChanged,   NULL, OnVisibilityChanged);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,         NULL, DeleteChunks_);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated,    NULL, Refresh_);
-	OnNewMap();
-}
-
 struct IGameComponent MapRenderer_Component = {
 	OnInit, /* Init */
-	OnFree, /* Free */
+	OnNewMap, /* Free */
 	OnNewMap, /* Reset */
 	OnNewMap, /* OnNewMap */
 	OnNewMapLoaded /* OnNewMapLoaded */

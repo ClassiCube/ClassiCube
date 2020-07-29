@@ -245,13 +245,6 @@ static void OnInit(void) {
 	Event_RegisterBlock(&UserEvents.BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
 }
 
-static void OnFree(void) {
-	Event_UnregisterVoid(&GfxEvents.ProjectionChanged, NULL, HeldBlockRenderer_ProjectionChanged);
-	Event_UnregisterVoid(&UserEvents.HeldBlockChanged, NULL, HeldBlockRenderer_DoSwitchBlockAnim);
-	Event_UnregisterBlock(&UserEvents.BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
-}
-
 struct IGameComponent HeldBlockRenderer_Component = {
-	OnInit, /* Init  */
-	OnFree  /* Free  */
+	OnInit /* Init  */
 };

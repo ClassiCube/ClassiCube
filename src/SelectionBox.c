@@ -219,15 +219,9 @@ static void OnInit(void) {
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Selections_ContextRecreated);
 }
 
-static void OnReset(void) {
-	selections_count = 0;
-}
+static void OnReset(void) { selections_count = 0; }
 
-static void OnFree(void) {
-	Selections_ContextLost(NULL);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Selections_ContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Selections_ContextRecreated);
-}
+static void OnFree(void) { Selections_ContextLost(NULL); }
 
 struct IGameComponent Selections_Component = {
 	OnInit,  /* Init  */

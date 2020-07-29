@@ -118,11 +118,7 @@ static void OnInit(void) {
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
-static void OnFree(void) {
-	OnContextLost(NULL);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
-}
+static void OnFree(void) { OnContextLost(NULL); }
 
 struct IGameComponent PickedPosRenderer_Component = {
 	OnInit, /* Init */

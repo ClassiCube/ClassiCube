@@ -610,13 +610,7 @@ void Game_Free(void* obj) {
 	/* Most components will call OnContextLost in their Free functions */
 	/* Set to false so components will always free managed textures too */
 	Gfx.ManagedTextures = false;
-
-	Event_UnregisterVoid(&WorldEvents.NewMap,        NULL, HandleOnNewMap);
-	Event_UnregisterVoid(&WorldEvents.MapLoaded,     NULL, HandleOnNewMapLoaded);
-	Event_UnregisterVoid(&GfxEvents.LowVRAMDetected, NULL, HandleLowVRAMDetected);
-
-	Event_UnregisterVoid(&WindowEvents.Resized,      NULL, Game_OnResize);
-	Event_UnregisterVoid(&WindowEvents.Closing,      NULL, Game_Free);
+	Event_UnregisterAll();
 
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Free) comp->Free();

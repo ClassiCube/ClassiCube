@@ -977,7 +977,6 @@ static void OnFree(void) {
 	Sounds_Free();
 	Waitable_Free(music_waitable);
 	Audio_SysFree();
-	Event_UnregisterBlock(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
 #endif
 

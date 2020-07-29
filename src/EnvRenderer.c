@@ -888,15 +888,6 @@ static void OnInit(void) {
 }
 
 static void OnFree(void) {
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-	Event_UnregisterVoid(&TextureEvents.PackChanged,  NULL, OnTexturePackChanged);
-	Event_UnregisterVoid(&TextureEvents.AtlasChanged, NULL, OnTerrainAtlasChanged);
-
-	Event_UnregisterVoid(&GfxEvents.ViewDistanceChanged, NULL, OnViewDistanceChanged);
-	Event_UnregisterInt(&WorldEvents.EnvVarChanged,      NULL, OnEnvVariableChanged);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,         NULL, OnContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated,    NULL, OnContextRecreated);
-
 	OnContextLost(NULL);
 	Mem_Free(Weather_Heightmap);
 	Weather_Heightmap = NULL;

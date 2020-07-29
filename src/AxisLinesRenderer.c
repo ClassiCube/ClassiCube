@@ -71,10 +71,7 @@ static void OnInit(void) {
 	Event_RegisterVoid(&GfxEvents.ContextLost, NULL, OnContextLost);
 }
 
-static void OnFree(void) {
-	OnContextLost(NULL);
-	Event_UnregisterVoid(&GfxEvents.ContextLost, NULL, OnContextLost);
-}
+static void OnFree(void) { OnContextLost(NULL); }
 
 struct IGameComponent AxisLinesRenderer_Component = {
 	OnInit, /* Init */

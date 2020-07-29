@@ -50,6 +50,63 @@ void Event_Unregister(struct Event_Void* handlers, void* obj, Event_Void_Callbac
 	Logger_Abort("Attempt to unregister event handler that was not registered to begin with");
 }
 
+void Event_UnregisterAll(void) {
+	EntityEvents.Added.Count   = 0;
+	EntityEvents.Removed.Count = 0;
+
+	TabListEvents.Added.Count   = 0;
+	TabListEvents.Changed.Count = 0;
+	TabListEvents.Removed.Count = 0;
+
+	TextureEvents.AtlasChanged.Count = 0;
+	TextureEvents.PackChanged.Count  = 0;
+	TextureEvents.FileChanged.Count  = 0;
+
+	GfxEvents.ViewDistanceChanged.Count = 0;
+	GfxEvents.LowVRAMDetected.Count     = 0;
+	GfxEvents.ProjectionChanged.Count   = 0;
+	GfxEvents.ContextLost.Count         = 0;
+	GfxEvents.ContextRecreated.Count    = 0;
+
+	UserEvents.BlockChanged.Count           = 0;
+	UserEvents.HackPermissionsChanged.Count = 0;
+	UserEvents.HeldBlockChanged.Count       = 0;
+
+	BlockEvents.PermissionsChanged.Count = 0;
+	BlockEvents.BlockDefChanged.Count    = 0;
+
+	WorldEvents.NewMap.Count    = 0;
+	WorldEvents.Loading.Count   = 0;
+	WorldEvents.MapLoaded.Count = 0;
+	WorldEvents.EnvVarChanged.Count = 0;
+
+	ChatEvents.FontChanged.Count    = 0;
+	ChatEvents.ChatReceived.Count   = 0;
+	ChatEvents.ChatSending.Count    = 0;
+	ChatEvents.ColCodeChanged.Count = 0;
+
+	WindowEvents.Redraw.Count  = 0;
+	WindowEvents.Resized.Count = 0;
+	WindowEvents.Closing.Count = 0;
+	WindowEvents.FocusChanged.Count = 0;
+	WindowEvents.StateChanged.Count = 0;
+	WindowEvents.Created.Count = 0;
+
+	InputEvents.Press.Count = 0;
+	InputEvents.Down.Count  = 0;
+	InputEvents.Up.Count    = 0;
+	InputEvents.Wheel.Count = 0;
+	InputEvents.TextChanged.Count = 0;
+
+	PointerEvents.Moved.Count = 0;
+	PointerEvents.Down.Count  = 0;
+	PointerEvents.Up.Count    = 0;
+	PointerEvents.RawMoved.Count = 0;
+
+	NetEvents.Connected.Count    = 0;
+	NetEvents.Disconnected.Count = 0;
+}
+
 void Event_RaiseVoid(struct Event_Void* handlers) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {

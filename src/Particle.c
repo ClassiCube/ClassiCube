@@ -608,14 +608,7 @@ static void OnInit(void) {
 	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
-static void OnFree(void) {
-	OnContextLost(NULL);
-
-	Event_UnregisterBlock(&UserEvents.BlockChanged,   NULL, OnBreakBlockEffect_Handler);
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
-}
+static void OnFree(void) { OnContextLost(NULL); }
 
 static void OnReset(void) { rain_count = 0; terrain_count = 0; custom_count = 0; }
 

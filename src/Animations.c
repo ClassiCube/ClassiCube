@@ -385,13 +385,7 @@ static void OnInit(void) {
 	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
-static void OnFree(void) {
-	Animations_Clear();
-	Event_UnregisterVoid(&TextureEvents.PackChanged,  NULL, OnPackChanged);
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-}
-
 struct IGameComponent Animations_Component = {
-	OnInit, /* Init  */
-	OnFree  /* Free  */
+	OnInit,            /* Init  */
+	Animations_Clear  /* Free  */
 };

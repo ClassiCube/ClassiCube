@@ -1151,9 +1151,6 @@ static void Entities_Free(void) {
 		if (!Entities.List[i]) continue;
 		Entities_Remove((EntityID)i);
 	}
-
-	Event_UnregisterVoid(&GfxEvents.ContextLost,  NULL, Entities_ContextLost);
-	Event_UnregisterVoid(&ChatEvents.FontChanged, NULL, Entities_ChatFontChanged);
 	Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
 }
 

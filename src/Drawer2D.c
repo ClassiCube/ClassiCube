@@ -681,7 +681,6 @@ static void OnInit(void) {
 static void OnFree(void) { 
 	FreeFontBitmap();
 	fontBitmap.scan0 = NULL;
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 struct IGameComponent Drawer2D_Component = {

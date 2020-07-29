@@ -705,12 +705,8 @@ static void OnInit(void) {
 	Blocks.CanPlace[BLOCK_BEDROCK] = false;     Blocks.CanDelete[BLOCK_BEDROCK] = false;
 }
 
-static void OnFree(void) {
-	Event_UnregisterVoid(&TextureEvents.AtlasChanged, NULL, OnAtlasChanged);
-}
-
 struct IGameComponent Blocks_Component = {
 	OnInit,  /* Init  */
-	OnFree,  /* Free  */
+	NULL,    /* Free  */
 	OnReset, /* Reset */
 };

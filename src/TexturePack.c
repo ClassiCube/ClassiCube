@@ -451,10 +451,6 @@ static void OnInit(void) {
 }
 
 static void OnFree(void) {
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
-
 	OnContextLost(NULL);
 	Atlas2D_Free();
 }

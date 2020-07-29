@@ -2135,10 +2135,6 @@ static void OnInit(void) {
 static void OnFree(void) {
 	Models_ContextLost(NULL);
 	CustomModel_FreeAll();
-
-	Event_UnregisterEntry(&TextureEvents.FileChanged, NULL, Models_TextureChanged);
-	Event_UnregisterVoid(&GfxEvents.ContextLost,      NULL, Models_ContextLost);
-	Event_UnregisterVoid(&GfxEvents.ContextRecreated, NULL, Models_ContextRecreated);
 }
 
 static void OnReset(void) { CustomModel_FreeAll(); }
