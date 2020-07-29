@@ -47,7 +47,6 @@ void Event_Unregister(struct Event_Void* handlers, void* obj, Event_Void_Callbac
 		handlers->Objs[handlers->Count]     = NULL;
 		return;
 	}
-	Logger_Abort("Attempt to unregister event handler that was not registered to begin with");
 }
 
 void Event_UnregisterAll(void) {
