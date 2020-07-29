@@ -51,6 +51,7 @@ void Event_Unregister(struct Event_Void* handlers, void* obj, Event_Void_Callbac
 }
 
 void Event_UnregisterAll(void) {
+	/* NOTE: This must be kept in sync with Event.h list of events */
 	EntityEvents.Added.Count   = 0;
 	EntityEvents.Removed.Count = 0;
 

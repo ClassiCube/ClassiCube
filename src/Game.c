@@ -379,12 +379,11 @@ static void Game_Load(void) {
 	Logger_WarnFunc = Game_WarnFunc;
 	LoadOptions();
 
-	Event_RegisterVoid(&WorldEvents.NewMap,        NULL, HandleOnNewMap);
-	Event_RegisterVoid(&WorldEvents.MapLoaded,     NULL, HandleOnNewMapLoaded);
-	Event_RegisterVoid(&GfxEvents.LowVRAMDetected, NULL, HandleLowVRAMDetected);
-
-	Event_RegisterVoid(&WindowEvents.Resized,      NULL, Game_OnResize);
-	Event_RegisterVoid(&WindowEvents.Closing,      NULL, Game_Free);
+	Event_Register_(&WorldEvents.NewMap,        NULL, HandleOnNewMap);
+	Event_Register_(&WorldEvents.MapLoaded,     NULL, HandleOnNewMapLoaded);
+	Event_Register_(&GfxEvents.LowVRAMDetected, NULL, HandleLowVRAMDetected);
+	Event_Register_(&WindowEvents.Resized,      NULL, Game_OnResize);
+	Event_Register_(&WindowEvents.Closing,      NULL, Game_Free);
 
 	InputHandler_Init();
 	Game_AddComponent(&Gfx_Component);

@@ -381,8 +381,8 @@ static void OnFileChanged(void* obj, struct Stream* stream, const String* name) 
 
 static void OnInit(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
-	Event_RegisterVoid(&TextureEvents.PackChanged,  NULL, OnPackChanged);
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	Event_Register_(&TextureEvents.PackChanged, NULL, OnPackChanged);
+	Event_Register_(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 struct IGameComponent Animations_Component = {

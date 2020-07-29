@@ -893,7 +893,7 @@ static void HandleHotkeyDown(int key) {
 /*########################################################################################################################*
 *-----------------------------------------------------Base handlers-------------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleMouseWheel(void* obj, float delta) {
+static void OnMouseWheel(void* obj, float delta) {
 	struct Screen* s;
 	int i;
 	struct Widget* widget;
@@ -914,7 +914,7 @@ static void HandleMouseWheel(void* obj, float delta) {
 	((struct Screen*)Gui_Chat)->dirty = true;
 }
 
-static void HandlePointerMove(void* obj, int idx, int xDelta, int yDelta) {
+static void OnPointerMove(void* obj, int idx, int xDelta, int yDelta) {
 	struct Screen* s;
 	int i, x = Pointers[idx].x, y = Pointers[idx].y;
 
@@ -925,7 +925,7 @@ static void HandlePointerMove(void* obj, int idx, int xDelta, int yDelta) {
 	}
 }
 
-static void HandlePointerDown(void* obj, int idx) {
+static void OnPointerDown(void* obj, int idx) {
 	struct Screen* s;
 	int i, x = Pointers[idx].x, y = Pointers[idx].y;
 
@@ -942,7 +942,7 @@ static void HandlePointerDown(void* obj, int idx) {
 	}
 }
 
-static void HandlePointerUp(void* obj, int idx) {
+static void OnPointerUp(void* obj, int idx) {
 	struct Screen* s;
 	int i, x = Pointers[idx].x, y = Pointers[idx].y;
 
@@ -953,7 +953,7 @@ static void HandlePointerUp(void* obj, int idx) {
 	}
 }
 
-static void HandleInputDown(void* obj, int key, cc_bool was) {
+static void OnInputDown(void* obj, int key, cc_bool was) {
 	struct Screen* s;
 	int i;
 
@@ -998,7 +998,7 @@ static void HandleInputDown(void* obj, int key, cc_bool was) {
 	} else { HandleHotkeyDown(key); }
 }
 
-static void HandleInputUp(void* obj, int key) {
+static void OnInputUp(void* obj, int key) {
 	struct Screen* s;
 	int i;
 
@@ -1025,17 +1025,17 @@ static void HandleInputUp(void* obj, int key) {
 	if (key == KeyBinds[KEYBIND_PICK_BLOCK])   MouseStateRelease(MOUSE_MIDDLE);
 }
 
-static void HandleFocusChanged(void* obj) { if (!WindowInfo.Focused) Input_Clear(); }
+static void OnFocusChanged(void* obj) { if (!WindowInfo.Focused) Input_Clear(); }
 void InputHandler_Init(void) {
-	Event_RegisterMove(&PointerEvents.Moved, NULL, HandlePointerMove);
-	Event_RegisterInt(&PointerEvents.Down,   NULL, HandlePointerDown);
-	Event_RegisterInt(&PointerEvents.Up,     NULL, HandlePointerUp);
-	Event_RegisterInt(&InputEvents.Down,     NULL, HandleInputDown);
-	Event_RegisterInt(&InputEvents.Up,       NULL, HandleInputUp);
-	Event_RegisterFloat(&InputEvents.Wheel,  NULL, HandleMouseWheel);
+	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
+	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
+	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
+	Event_Register_(&InputEvents.Down,    NULL, OnInputDown);
+	Event_Register_(&InputEvents.Up,      NULL, OnInputUp);
+	Event_Register_(&InputEvents.Wheel,   NULL, OnMouseWheel);
 
-	Event_RegisterVoid(&WindowEvents.FocusChanged,         NULL, HandleFocusChanged);
-	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, InputHandler_CheckZoomFov);
+	Event_Register_(&WindowEvents.FocusChanged,         NULL, OnFocusChanged);
+	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, InputHandler_CheckZoomFov);
 	KeyBind_Init();
 	Hotkeys_Init();
 }

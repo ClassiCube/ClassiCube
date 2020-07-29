@@ -76,67 +76,37 @@ CC_API void Event_Register(struct Event_Void* handlers,   void* obj, Event_Void_
 /* Unregisters a callback function for the given event. */
 /* NOTE: Trying to unregister a non-registered callback will terminate the game. */
 CC_API void Event_Unregister(struct Event_Void* handlers, void* obj, Event_Void_Callback handler);
-#define Event_RegisterMacro(handlers,   obj, handler) Event_Register((struct Event_Void*)(handlers),   obj, (Event_Void_Callback)(handler))
-#define Event_UnregisterMacro(handlers, obj, handler) Event_Unregister((struct Event_Void*)(handlers), obj, (Event_Void_Callback)(handler))
+#define Event_Register_(handlers,   obj, handler) Event_Register((struct Event_Void*)(handlers),   obj, (Event_Void_Callback)(handler))
+#define Event_Unregister_(handlers, obj, handler) Event_Unregister((struct Event_Void*)(handlers), obj, (Event_Void_Callback)(handler))
 
 /* Calls all registered callback for an event with no arguments. */
 CC_API void Event_RaiseVoid(struct Event_Void* handlers);
-#define Event_RegisterVoid(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
-#define Event_UnregisterVoid(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
-
 /* Calls all registered callback for an event which has an int argument. */
 /* NOTE: The actual argument "type" may be char, Key, cc_uint8 etc */
 CC_API void Event_RaiseInt(struct Event_Int* handlers, int arg);
-#define Event_RegisterInt(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
-#define Event_UnregisterInt(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
-
 /* Calls all registered callbacks for an event which has a float argument. */
 CC_API void Event_RaiseFloat(struct Event_Float* handlers, float arg);
-#define Event_RegisterFloat(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
-#define Event_UnregisterFloat(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
 /* Calls all registered callbacks for an event which has data stream and name arguments. */
-/* This is (currently) only used for processing entries from texture pack zip */
 void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const String* name);
-#define Event_RegisterEntry(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
-#define Event_UnregisterEntry(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
-
 /* Calls all registered callbacks for an event which takes block change arguments. */
 /* These are the coordinates/location of the change, block there before, block there now. */
 void Event_RaiseBlock(struct Event_Block* handlers, IVec3 coords, BlockID oldBlock, BlockID block);
-#define Event_RegisterBlock(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
-#define Event_UnregisterBlock(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
-
 /* Calls all registered callbacks for an event which has pointer movement arguments. */
 void Event_RaiseMove(struct Event_PointerMove* handlers, int idx, int xDelta, int yDelta);
-#define Event_RegisterMove(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
-#define Event_UnregisterMove(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
-
 /* Calls all registered callbacks for an event which has chat message type and contents. */
 /* See MsgType enum in Chat.h for what types of messages there are. */
 void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType);
-#define Event_RegisterChat(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
-#define Event_UnregisterChat(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
-
 /* Calls all registered callbacks for an event which has keyboard key/mouse button. */
 /* repeating is whether the key/button was already pressed down. (i.e. user is holding down key) */
-/* NOTE: 'pressed up'/'released' events will always have repeating as false. */
 void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating);
-#define Event_RegisterInput(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
-#define Event_UnregisterInput(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
-
 /* Calls all registered callbacks for an event which has a string argument. */
 void Event_RaiseString(struct Event_String* handlers, const String* str);
-#define Event_RegisterString(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
-#define Event_UnregisterString(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
-
 /* Calls all registered callbacks for an event which has raw pointer movement arguments. */
 void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDelta);
-#define Event_RegisterRawMove(handlers,   obj, handler) Event_RegisterMacro(handlers,   obj, handler)
-#define Event_UnregisterRawMove(handlers, obj, handler) Event_UnregisterMacro(handlers, obj, handler)
 
-/* NOTE: Event_UnregisterAll must be updated if events lists are changed */
 void Event_UnregisterAll(void);
+/* NOTE: Event_UnregisterAll must be updated if events lists are changed */
 
 CC_VAR extern struct _EntityEventsList {
 	struct Event_Int Added;    /* Entity is spawned in the current world */
@@ -198,17 +168,17 @@ CC_VAR extern struct _WindowEventsList {
 } WindowEvents;
 
 CC_VAR extern struct _InputEventsList {
-	struct Event_Int Press;   /* Key input character is typed. Arg is a character */
-	struct Event_Input Down;  /* Key or button is pressed. Arg is a member of Key enumeration */
-	struct Event_Int Up;      /* Key or button is released. Arg is a member of Key enumeration */
-	struct Event_Float Wheel; /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
+	struct Event_Int    Press; /* Key input character is typed. Arg is a character */
+	struct Event_Input  Down;  /* Key or button is pressed. Arg is a member of Key enumeration */
+	struct Event_Int    Up;    /* Key or button is released. Arg is a member of Key enumeration */
+	struct Event_Float  Wheel; /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
 	struct Event_String TextChanged; /* HTML text input changed */
 } InputEvents;
 
 CC_VAR extern struct _PointerEventsList {
 	struct Event_PointerMove Moved; /* Pointer position changed (Arg is delta from last position) */
-	struct Event_Int Down;          /* Left mouse or touch is pressed (Arg is index) */
-	struct Event_Int Up;            /* Left mouse or touch is released (Arg is index) */
+	struct Event_Int         Down;  /* Left mouse or touch is pressed (Arg is index) */
+	struct Event_Int         Up;    /* Left mouse or touch is released (Arg is index) */
 	struct Event_RawMove RawMoved;  /* Raw pointer position changed (Arg is delta) */
 } PointerEvents;
 

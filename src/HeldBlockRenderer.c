@@ -49,7 +49,7 @@ static void HeldBlockRenderer_RenderModel(void) {
 	Gfx_SetFaceCulling(false);
 }
 
-static void HeldBlockRenderer_SetMatrix(void) {
+static void SetMatrix(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	struct Matrix lookAt;
 	Vec3 eye = { 0,0,0 }; eye.Y = Entity_GetEyeHeight(p);
@@ -58,7 +58,7 @@ static void HeldBlockRenderer_SetMatrix(void) {
 	Matrix_Mul(&Gfx.View, &lookAt, &Camera.TiltM);
 }
 
-static void HeldBlockRenderer_ResetHeldState(void) {
+static void ResetHeldState(void) {
 	/* Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!) */
 	struct Entity* p = &LocalPlayer_Instance.Base;
 	Vec3 eye = { 0,0,0 }; eye.Y = Entity_GetEyeHeight(p);
@@ -79,7 +79,7 @@ static void HeldBlockRenderer_ResetHeldState(void) {
 	held_entity.vScale       = p->vScale;
 }
 
-static void HeldBlockRenderer_SetBaseOffset(void) {
+static void SetBaseOffset(void) {
 	cc_bool sprite = Blocks.Draw[held_block] == DRAW_SPRITE;
 	Vec3 normalOffset = { 0.56f, -0.72f, -0.72f };
 	Vec3 spriteOffset = { 0.46f, -0.52f, -0.72f };
@@ -92,7 +92,7 @@ static void HeldBlockRenderer_SetBaseOffset(void) {
 	}
 }
 
-static void HeldBlockRenderer_ProjectionChanged(void* obj) {
+static void OnProjectionChanged(void* obj) {
 	float fov = 70.0f * MATH_DEG2RAD;
 	float aspectRatio = (float)Game.Width / (float)Game.Height;
 	float zNear = Gfx.MinZNear;
@@ -160,7 +160,7 @@ void HeldBlockRenderer_ClickAnim(cc_bool digging) {
 	if (!digging) held_time = held_period / 2;
 }
 
-static void HeldBlockRenderer_DoSwitchBlockAnim(void* obj) {
+static void DoSwitchBlockAnim(void* obj) {
 	if (held_swinging) {
 		/* Like graph -sin(x) : x=0.5 and x=2.5 have same y values,
 		   but increasing x causes y to change in opposite directions */
@@ -175,12 +175,12 @@ static void HeldBlockRenderer_DoSwitchBlockAnim(void* obj) {
 	}
 }
 
-static void HeldBlockRenderer_BlockChanged(void* obj, IVec3 coords, BlockID old, BlockID now) {
+static void OnBlockChanged(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	if (now == BLOCK_AIR) return;
 	HeldBlockRenderer_ClickAnim(false);
 }
 
-static void HeldBlockRenderer_DoAnimation(double delta, float lastSwingY) {
+static void DoAnimation(double delta, float lastSwingY) {
 	double t;
 	if (!held_animating) return;
 
@@ -217,11 +217,11 @@ void HeldBlockRenderer_Render(double delta) {
 	view = Gfx.View;
 
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &held_blockProjection);
-	HeldBlockRenderer_SetMatrix();
+	SetMatrix();
 
-	HeldBlockRenderer_ResetHeldState();
-	HeldBlockRenderer_DoAnimation(delta, lastSwingY);
-	HeldBlockRenderer_SetBaseOffset();
+	ResetHeldState();
+	DoAnimation(delta, lastSwingY);
+	SetBaseOffset();
 	if (!Camera.Active->isThirdPerson) HeldBlockRenderer_RenderModel();
 
 	Gfx.View = view;
@@ -240,9 +240,9 @@ static void OnInit(void) {
 	HeldBlockRenderer_Show = Options_GetBool(OPT_SHOW_BLOCK_IN_HAND, true);
 	held_lastBlock         = Inventory_SelectedBlock;
 
-	Event_RegisterVoid(&GfxEvents.ProjectionChanged, NULL, HeldBlockRenderer_ProjectionChanged);
-	Event_RegisterVoid(&UserEvents.HeldBlockChanged, NULL, HeldBlockRenderer_DoSwitchBlockAnim);
-	Event_RegisterBlock(&UserEvents.BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
+	Event_Register_(&GfxEvents.ProjectionChanged, NULL, OnProjectionChanged);
+	Event_Register_(&UserEvents.HeldBlockChanged, NULL, DoSwitchBlockAnim);
+	Event_Register_(&UserEvents.BlockChanged,     NULL, OnBlockChanged);
 }
 
 struct IGameComponent HeldBlockRenderer_Component = {

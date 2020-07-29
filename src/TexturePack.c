@@ -442,9 +442,9 @@ static void OnContextRecreated(void* obj) {
 }
 
 static void OnInit(void) {
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+	Event_Register_(&TextureEvents.FileChanged,  NULL, OnFileChanged);
+	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 
 	Options_Get(OPT_DEFAULT_TEX_PACK, &defTexPack, "default.zip");
 	TextureCache_Init();

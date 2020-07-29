@@ -695,7 +695,7 @@ static void OnInit(void) {
 
 	AutoRotate_Enabled = true;
 	OnReset();
-	Event_RegisterVoid(&TextureEvents.AtlasChanged, NULL, OnAtlasChanged);
+	Event_Register_(&TextureEvents.AtlasChanged, NULL, OnAtlasChanged);
 
 	Blocks.CanPlace[BLOCK_AIR] = false;         Blocks.CanDelete[BLOCK_AIR] = false;
 	Blocks.CanPlace[BLOCK_LAVA] = false;        Blocks.CanDelete[BLOCK_LAVA] = false;

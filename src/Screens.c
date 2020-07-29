@@ -1280,11 +1280,11 @@ static void ChatScreen_Init(void* screen) {
 	s->chat.underlineUrls = !Game_ClassicMode;
 	s->chatIndex = Chat_Log.count - Gui_Chatlines;
 
-	Event_RegisterChat(&ChatEvents.ChatReceived,  s, ChatScreen_ChatReceived);
-	Event_RegisterInt(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
-	Event_RegisterInt(&TabListEvents.Added,       s, ChatScreen_TabEntryAdded);
-	Event_RegisterInt(&TabListEvents.Changed,     s, ChatScreen_TabEntryChanged);
-	Event_RegisterInt(&TabListEvents.Removed,     s, ChatScreen_TabEntryRemoved);
+	Event_Register_(&ChatEvents.ChatReceived,   s, ChatScreen_ChatReceived);
+	Event_Register_(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
+	Event_Register_(&TabListEvents.Added,       s, ChatScreen_TabEntryAdded);
+	Event_Register_(&TabListEvents.Changed,     s, ChatScreen_TabEntryChanged);
+	Event_Register_(&TabListEvents.Removed,     s, ChatScreen_TabEntryRemoved);
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -1331,11 +1331,11 @@ static void ChatScreen_Free(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	s->showingList = false;
 
-	Event_UnregisterChat(&ChatEvents.ChatReceived,  s, ChatScreen_ChatReceived);
-	Event_UnregisterInt(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
-	Event_UnregisterInt(&TabListEvents.Added,       s, ChatScreen_TabEntryAdded);
-	Event_UnregisterInt(&TabListEvents.Changed,     s, ChatScreen_TabEntryChanged);
-	Event_UnregisterInt(&TabListEvents.Removed,     s, ChatScreen_TabEntryRemoved);
+	Event_Unregister_(&ChatEvents.ChatReceived,   s, ChatScreen_ChatReceived);
+	Event_Unregister_(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
+	Event_Unregister_(&TabListEvents.Added,       s, ChatScreen_TabEntryAdded);
+	Event_Unregister_(&TabListEvents.Changed,     s, ChatScreen_TabEntryChanged);
+	Event_Unregister_(&TabListEvents.Removed,     s, ChatScreen_TabEntryRemoved);
 }
 
 static const struct ScreenVTABLE ChatScreen_VTABLE = {
@@ -1434,8 +1434,8 @@ static void InventoryScreen_Init(void* screen) {
 	/* That causes the cursor to be moved back to the middle of the window. */
 	s->deferredSelect = true;
 
-	Event_RegisterVoid(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
-	Event_RegisterVoid(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
+	Event_Register_(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
+	Event_Register_(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 }
 
 static void InventoryScreen_Render(void* screen, double delta) {
@@ -1451,8 +1451,8 @@ static void InventoryScreen_Layout(void* screen) {
 
 static void InventoryScreen_Free(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Event_UnregisterVoid(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
-	Event_UnregisterVoid(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
+	Event_Unregister_(&BlockEvents.PermissionsChanged, s, InventoryScreen_OnBlockChanged);
+	Event_Unregister_(&BlockEvents.BlockDefChanged,    s, InventoryScreen_OnBlockChanged);
 }
 
 static int InventoryScreen_KeyDown(void* screen, int key) {
@@ -1637,8 +1637,8 @@ static void LoadingScreen_Init(void* screen) {
 	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
 
 	Gfx_SetFog(false);
-	Event_RegisterFloat(&WorldEvents.Loading,  s, LoadingScreen_MapLoading);
-	Event_RegisterVoid(&WorldEvents.MapLoaded, s, LoadingScreen_MapLoaded);
+	Event_Register_(&WorldEvents.Loading,   s, LoadingScreen_MapLoading);
+	Event_Register_(&WorldEvents.MapLoaded, s, LoadingScreen_MapLoaded);
 }
 
 #define PROG_BAR_WIDTH 200
@@ -1667,8 +1667,8 @@ static void LoadingScreen_Render(void* screen, double delta) {
 
 static void LoadingScreen_Free(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	Event_UnregisterFloat(&WorldEvents.Loading,  s, LoadingScreen_MapLoading);
-	Event_UnregisterVoid(&WorldEvents.MapLoaded, s, LoadingScreen_MapLoaded);
+	Event_Unregister_(&WorldEvents.Loading,   s, LoadingScreen_MapLoading);
+	Event_Unregister_(&WorldEvents.MapLoaded, s, LoadingScreen_MapLoaded);
 }
 
 CC_NOINLINE static void LoadingScreen_ShowCommon(const String* title, const String* message) {

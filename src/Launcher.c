@@ -218,16 +218,16 @@ static void Launcher_Display(void) {
 }
 
 static void Launcher_Init(void) {
-	Event_RegisterVoid(&WindowEvents.Resized,      NULL, OnResize);
-	Event_RegisterVoid(&WindowEvents.StateChanged, NULL, OnResize);
-	Event_RegisterVoid(&WindowEvents.Redraw,       NULL, ReqeustRedraw);
+	Event_Register_(&WindowEvents.Resized,      NULL, OnResize);
+	Event_Register_(&WindowEvents.StateChanged, NULL, OnResize);
+	Event_Register_(&WindowEvents.Redraw,       NULL, ReqeustRedraw);
 
-	Event_RegisterInput(&InputEvents.Down,   NULL, OnInputDown);
-	Event_RegisterInt(&InputEvents.Press,    NULL, OnKeyPress);
-	Event_RegisterFloat(&InputEvents.Wheel,  NULL, OnMouseWheel);
-	Event_RegisterInt(&PointerEvents.Down,   NULL, OnPointerDown);
-	Event_RegisterInt(&PointerEvents.Up,     NULL, OnPointerUp);
-	Event_RegisterMove(&PointerEvents.Moved, NULL, OnPointerMove);
+	Event_Register_(&InputEvents.Down,    NULL, OnInputDown);
+	Event_Register_(&InputEvents.Press,   NULL, OnKeyPress);
+	Event_Register_(&InputEvents.Wheel,   NULL, OnMouseWheel);
+	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
+	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
+	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 
 	Drawer2D_MakeFont(&logoFont,           32, FONT_STYLE_NORMAL);
 	Drawer2D_MakeFont(&Launcher_TitleFont, 16, FONT_STYLE_BOLD);
@@ -240,16 +240,16 @@ static void Launcher_Init(void) {
 }
 
 static void Launcher_Free(void) {
-	Event_UnregisterVoid(&WindowEvents.Resized,      NULL, OnResize);
-	Event_UnregisterVoid(&WindowEvents.StateChanged, NULL, OnResize);
-	Event_UnregisterVoid(&WindowEvents.Redraw,       NULL, ReqeustRedraw);
+	Event_Unregister_(&WindowEvents.Resized,      NULL, OnResize);
+	Event_Unregister_(&WindowEvents.StateChanged, NULL, OnResize);
+	Event_Unregister_(&WindowEvents.Redraw,       NULL, ReqeustRedraw);
 	
-	Event_UnregisterInput(&InputEvents.Down,    NULL, OnInputDown);
-	Event_UnregisterInt(&InputEvents.Press,     NULL, OnKeyPress);
-	Event_UnregisterFloat(&InputEvents.Wheel,   NULL, OnMouseWheel);
-	Event_UnregisterInt(&PointerEvents.Down,    NULL, OnPointerDown);
-	Event_UnregisterInt(&PointerEvents.Up,      NULL, OnPointerUp);
-	Event_UnregisterMove(&PointerEvents.Moved,  NULL, OnPointerMove);	
+	Event_Unregister_(&InputEvents.Down,     NULL, OnInputDown);
+	Event_Unregister_(&InputEvents.Press,    NULL, OnKeyPress);
+	Event_Unregister_(&InputEvents.Wheel,    NULL, OnMouseWheel);
+	Event_Unregister_(&PointerEvents.Down,   NULL, OnPointerDown);
+	Event_Unregister_(&PointerEvents.Up,     NULL, OnPointerUp);
+	Event_Unregister_(&PointerEvents.Moved,  NULL, OnPointerMove);	
 
 	Flags_Free();
 	Font_Free(&logoFont);
@@ -279,7 +279,7 @@ static void SwitchToGame() {
 	/* Force window to be destroyed and re-created */
 	/* (see comments in setupForGame for why this has to be done) */
 	JavaCallVoid(env, "setupForGame", "()V", NULL);
-	Event_RegisterVoid(&WindowEvents.Created, NULL, OnWindowCreated);
+	Event_Register_(&WindowEvents.Created, NULL, OnWindowCreated);
 	Platform_LogConst("Entering wait for window loop..");
 
 	/* Loop until window gets created async */
@@ -289,7 +289,7 @@ static void SwitchToGame() {
 	}
 
 	Platform_LogConst("OK I'm starting the game..");
-	Event_UnregisterVoid(&WindowEvents.Created, NULL, OnWindowCreated);
+	Event_Unregister_(&WindowEvents.Created, NULL, OnWindowCreated);
 	if (winCreated) Program_Run(0, NULL);
 }
 #endif

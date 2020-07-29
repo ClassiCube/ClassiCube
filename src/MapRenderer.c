@@ -775,14 +775,14 @@ static void OnNewMapLoaded(void) {
 }
 
 static void OnInit(void) {
-	Event_RegisterVoid(&TextureEvents.AtlasChanged,  NULL, OnTerrainAtlasChanged);
-	Event_RegisterInt(&WorldEvents.EnvVarChanged,    NULL, OnEnvVariableChanged);
-	Event_RegisterVoid(&BlockEvents.BlockDefChanged, NULL, OnBlockDefinitionChanged);
+	Event_Register_(&TextureEvents.AtlasChanged,  NULL, OnTerrainAtlasChanged);
+	Event_Register_(&WorldEvents.EnvVarChanged,   NULL, OnEnvVariableChanged);
+	Event_Register_(&BlockEvents.BlockDefChanged, NULL, OnBlockDefinitionChanged);
 
-	Event_RegisterVoid(&GfxEvents.ViewDistanceChanged, NULL, OnVisibilityChanged);
-	Event_RegisterVoid(&GfxEvents.ProjectionChanged,   NULL, OnVisibilityChanged);
-	Event_RegisterVoid(&GfxEvents.ContextLost,         NULL, DeleteChunks_);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated,    NULL, Refresh_);
+	Event_Register_(&GfxEvents.ViewDistanceChanged, NULL, OnVisibilityChanged);
+	Event_Register_(&GfxEvents.ProjectionChanged,   NULL, OnVisibilityChanged);
+	Event_Register_(&GfxEvents.ContextLost,         NULL, DeleteChunks_);
+	Event_Register_(&GfxEvents.ContextRecreated,    NULL, Refresh_);
 
 	/* This = 87 fixes map being invisible when no textures */
 	MapRenderer_1DUsedCount = 87; /* Atlas1D_UsedAtlasesCount(); */

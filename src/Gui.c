@@ -404,13 +404,13 @@ static void OnContextLost(void* obj) {
 }
 
 static void OnInit(void) {
-	Event_RegisterVoid(&ChatEvents.FontChanged,     NULL, OnFontChanged);
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
-	Event_RegisterInt(&InputEvents.Press,           NULL, OnKeyPress);
+	Event_Register_(&ChatEvents.FontChanged,     NULL, OnFontChanged);
+	Event_Register_(&TextureEvents.FileChanged,  NULL, OnFileChanged);
+	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+	Event_Register_(&InputEvents.Press,          NULL, OnKeyPress);
 #ifdef CC_BUILD_TOUCH
-	Event_RegisterString(&InputEvents.TextChanged,  NULL, OnTextChanged);
+	Event_Register_(&InputEvents.TextChanged,    NULL, OnTextChanged);
 #endif
 	Gui_LoadOptions();
 	Gui_ShowDefault();

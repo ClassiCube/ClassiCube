@@ -527,7 +527,7 @@ static void PauseScreen_Init(void* screen) {
 	};
 
 	s->widgets = widgets;
-	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
+	Event_Register_(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 
 	if (Gui_ClassicMenu) {
 		s->descs = classicDescs; /*400*/
@@ -549,7 +549,7 @@ static void PauseScreen_Init(void* screen) {
 
 static void PauseScreen_Free(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	Event_UnregisterVoid(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
+	Event_Unregister_(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 }
 
 static const struct ScreenVTABLE PauseScreen_VTABLE = {
@@ -645,7 +645,7 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 static void OptionsGroupScreen_Init(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 
-	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
+	Event_Register_(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
 	s->widgets     = optGroups_widgets;
 	s->numWidgets  = Array_Elems(optGroups_widgets);
 	s->selectedI   = -1;
@@ -658,7 +658,7 @@ static void OptionsGroupScreen_Init(void* screen) {
 
 static void OptionsGroupScreen_Free(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
-	Event_UnregisterVoid(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
+	Event_Unregister_(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
 }
 
 static int OptionsGroupScreen_PointerMove(void* screen, int id, int x, int y) {
@@ -2222,7 +2222,7 @@ static void MenuOptionsScreen_Init(void* screen) {
 	s->activeI   = -1;
 	s->selectedI = -1;
 	s->DoInit(s);
-	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	Event_Register_(&UserEvents.HackPermissionsChanged, screen, MenuOptionsScreen_OnHacksChanged);
 }
 	
 #define EXTHELP_PAD 5 /* padding around extended help box */
@@ -2245,7 +2245,7 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 
 static void MenuOptionsScreen_Free(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	Event_UnregisterVoid(&UserEvents.HackPermissionsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	Event_Unregister_(&UserEvents.HackPermissionsChanged, screen, MenuOptionsScreen_OnHacksChanged);
 	if (s->activeI >= 0) Window_CloseKeyboard();
 }
 
@@ -3161,12 +3161,12 @@ static void TexIdsOverlay_Init(void* screen) {
 	s->maxVertices = TEXIDS_MAX_VERTICES;
 
 	TextWidget_Make(&s->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
-	Event_RegisterVoid(&TextureEvents.AtlasChanged, s, TexIdsOverlay_OnAtlasChanged);
+	Event_Register_(&TextureEvents.AtlasChanged, s, TexIdsOverlay_OnAtlasChanged);
 }
 
 static void TexIdsOverlay_Free(void* screen) {
 	struct TexIdsOverlay* s = (struct TexIdsOverlay*)screen;
-	Event_UnregisterVoid(&TextureEvents.AtlasChanged, s, TexIdsOverlay_OnAtlasChanged);
+	Event_Unregister_(&TextureEvents.AtlasChanged, s, TexIdsOverlay_OnAtlasChanged);
 }
 
 static void TexIdsOverlay_Render(void* screen, double delta) {

@@ -969,7 +969,7 @@ static void OnInit(void) {
 	Audio_SetMusic(volume);
 	volume = Audio_LoadVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
 	Audio_SetSounds(volume);
-	Event_RegisterBlock(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
+	Event_Register_(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
 
 static void OnFree(void) {

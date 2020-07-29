@@ -602,10 +602,10 @@ static void OnInit(void) {
 	Random_SeedFromCurrentTime(&rnd);
 	OnContextRecreated(NULL);	
 
-	Event_RegisterBlock(&UserEvents.BlockChanged,   NULL, OnBreakBlockEffect_Handler);
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+	Event_Register_(&UserEvents.BlockChanged,    NULL, OnBreakBlockEffect_Handler);
+	Event_Register_(&TextureEvents.FileChanged,  NULL, OnFileChanged);
+	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
 static void OnFree(void) { OnContextLost(NULL); }

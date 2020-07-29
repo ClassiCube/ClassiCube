@@ -512,7 +512,7 @@ static void CuboidCommand_BlockChanged(void* obj, IVec3 coords, BlockID old, Blo
 		CuboidCommand_DoCuboid();
 
 		if (!cuboid_persist) {
-			Event_UnregisterBlock(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
+			Event_Unregister_(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
 			cuboid_hooked = false;
 			Chat_AddOf(&String_Empty, MSG_TYPE_CLIENTSTATUS_1);
 		} else {
@@ -524,7 +524,7 @@ static void CuboidCommand_BlockChanged(void* obj, IVec3 coords, BlockID old, Blo
 
 static void CuboidCommand_Execute(const String* args, int argsCount) {
 	if (cuboid_hooked) {
-		Event_UnregisterBlock(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
+		Event_Unregister_(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
 		cuboid_hooked = false;
 	}
 
@@ -538,7 +538,7 @@ static void CuboidCommand_Execute(const String* args, int argsCount) {
 	}
 
 	Chat_AddOf(&cuboid_msg, MSG_TYPE_CLIENTSTATUS_1);
-	Event_RegisterBlock(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
+	Event_Register_(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
 	cuboid_hooked = true;
 }
 

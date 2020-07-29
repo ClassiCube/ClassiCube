@@ -2138,8 +2138,8 @@ static void OnContextLost(void* obj)      { Gfx_FreeState(); }
 static void OnContextRecreated(void* obj) { Gfx_RestoreState(); }
 
 static void OnInit(void) {
-	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 
 	Gfx.Mipmaps = Options_GetBool(OPT_MIPMAPS, false);
 	if (Gfx.LostContext) return;

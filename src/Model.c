@@ -418,20 +418,6 @@ static struct ModelTex* textures_tail;
 #define Model_RetSize(x,y,z) static Vec3 P = { (x)/16.0f,(y)/16.0f,(z)/16.0f }; e->Size = P;
 #define Model_RetAABB(x1,y1,z1, x2,y2,z2) static struct AABB BB = { (x1)/16.0f,(y1)/16.0f,(z1)/16.0f, (x2)/16.0f,(y2)/16.0f,(z2)/16.0f }; e->ModelAABB = BB;
 
-static void Models_ContextLost(void* obj) {
-	struct ModelTex* tex;
-	Gfx_DeleteDynamicVb(&Models.Vb);
-	if (Gfx.ManagedTextures) return;
-
-	for (tex = textures_head; tex; tex = tex->next) {
-		Gfx_DeleteTexture(&tex->texID);
-	}
-}
-
-static void Models_ContextRecreated(void* obj) {
-	Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
-}
-
 static void MakeModel(struct Model* model) {
 	struct Model* active = Models.Active;
 	Models.Active = model;
@@ -2084,7 +2070,7 @@ static struct Model* SkinnedCubeModel_GetInstance(void) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------Model component---------------------------------------------------*
+*-------------------------------------------------------Models component--------------------------------------------------*
 *#########################################################################################################################*/
 static void RegisterDefaultModels(void) {
 	Model_RegisterTexture(&human_tex);
@@ -2119,21 +2105,35 @@ static void RegisterDefaultModels(void) {
 	Model_Register(SkinnedCubeModel_GetInstance());
 }
 
+static void OnContextLost(void* obj) {
+	struct ModelTex* tex;
+	Gfx_DeleteDynamicVb(&Models.Vb);
+	if (Gfx.ManagedTextures) return;
+
+	for (tex = textures_head; tex; tex = tex->next) {
+		Gfx_DeleteTexture(&tex->texID);
+	}
+}
+
+static void OnContextRecreated(void* obj) {
+	Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
+}
+
 static void OnInit(void) {
 	Models.Vertices    = defaultVertices;
 	Models.MaxVertices = Array_Elems(defaultVertices);
 
 	RegisterDefaultModels();
-	Models_ContextRecreated(NULL);
+	OnContextRecreated(NULL);
 	Models.ClassicArms = Options_GetBool(OPT_CLASSIC_ARM_MODEL, Game_ClassicMode);
 
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, Models_TextureChanged);
-	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Models_ContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Models_ContextRecreated);
+	Event_Register_(&TextureEvents.FileChanged,  NULL, Models_TextureChanged);
+	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
 static void OnFree(void) {
-	Models_ContextLost(NULL);
+	OnContextLost(NULL);
 	CustomModel_FreeAll();
 }
 

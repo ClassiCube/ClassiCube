@@ -875,14 +875,14 @@ static void OnInit(void) {
 	EnvRenderer_Legacy  = flags & ENV_LEGACY;
 	EnvRenderer_Minimal = flags & ENV_MINIMAL;
 
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
-	Event_RegisterVoid(&TextureEvents.PackChanged,  NULL, OnTexturePackChanged);
-	Event_RegisterVoid(&TextureEvents.AtlasChanged, NULL, OnTerrainAtlasChanged);
+	Event_Register_(&TextureEvents.FileChanged,  NULL, OnFileChanged);
+	Event_Register_(&TextureEvents.PackChanged,  NULL, OnTexturePackChanged);
+	Event_Register_(&TextureEvents.AtlasChanged, NULL, OnTerrainAtlasChanged);
 
-	Event_RegisterVoid(&GfxEvents.ViewDistanceChanged, NULL, OnViewDistanceChanged);
-	Event_RegisterInt(&WorldEvents.EnvVarChanged,      NULL, OnEnvVariableChanged);
-	Event_RegisterVoid(&GfxEvents.ContextLost,         NULL, OnContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated,    NULL, OnContextRecreated);
+	Event_Register_(&GfxEvents.ViewDistanceChanged, NULL, OnViewDistanceChanged);
+	Event_Register_(&WorldEvents.EnvVarChanged,     NULL, OnEnvVariableChanged);
+	Event_Register_(&GfxEvents.ContextLost,         NULL, OnContextLost);
+	Event_Register_(&GfxEvents.ContextRecreated,    NULL, OnContextRecreated);
 
 	Game_SetViewDistance(Game_UserViewDistance);
 }

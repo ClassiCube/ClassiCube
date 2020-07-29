@@ -675,7 +675,7 @@ static void OnInit(void) {
 	if (Game_ClassicMode) font_candidates[0].length = 0;
 
 	CheckFont();
-	Event_RegisterEntry(&TextureEvents.FileChanged, NULL, OnFileChanged);
+	Event_Register_(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
 static void OnFree(void) { 

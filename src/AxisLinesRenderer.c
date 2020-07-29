@@ -68,7 +68,7 @@ static void OnContextLost(void* obj) {
 }
 
 static void OnInit(void) {
-	Event_RegisterVoid(&GfxEvents.ContextLost, NULL, OnContextLost);
+	Event_Register_(&GfxEvents.ContextLost, NULL, OnContextLost);
 }
 
 static void OnFree(void) { OnContextLost(NULL); }

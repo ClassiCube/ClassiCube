@@ -888,7 +888,7 @@ static void LocalPlayer_Init(void) {
 	Entity_Init(&p->Base);
 	Entity_SetName(&p->Base, &Game_Username);
 	Entity_SetSkin(&p->Base, &Game_Username);
-	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, LocalPlayer_CheckJumpVelocity);
+	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, LocalPlayer_CheckJumpVelocity);
 
 	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(hacks);
@@ -1130,8 +1130,8 @@ void NetPlayer_Init(struct NetPlayer* p) {
 *---------------------------------------------------Entities component----------------------------------------------------*
 *#########################################################################################################################*/
 static void Entities_Init(void) {
-	Event_RegisterVoid(&GfxEvents.ContextLost,  NULL, Entities_ContextLost);
-	Event_RegisterVoid(&ChatEvents.FontChanged, NULL, Entities_ChatFontChanged);
+	Event_Register_(&GfxEvents.ContextLost,  NULL, Entities_ContextLost);
+	Event_Register_(&ChatEvents.FontChanged, NULL, Entities_ChatFontChanged);
 
 	Entities.NamesMode = Options_GetEnum(OPT_NAMES_MODE, NAME_MODE_HOVERED,
 		NameMode_Names, Array_Elems(NameMode_Names));

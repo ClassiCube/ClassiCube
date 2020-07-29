@@ -215,8 +215,8 @@ void Selections_Render(void) {
 *--------------------------------------------------Selections component---------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
-	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, Selections_ContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, Selections_ContextRecreated);
+	Event_Register_(&GfxEvents.ContextLost,      NULL, Selections_ContextLost);
+	Event_Register_(&GfxEvents.ContextRecreated, NULL, Selections_ContextRecreated);
 }
 
 static void OnReset(void) { selections_count = 0; }

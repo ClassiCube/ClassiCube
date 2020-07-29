@@ -114,8 +114,8 @@ static void OnContextRecreated(void* obj) {
 
 static void OnInit(void) {
 	OnContextRecreated(NULL);
-	Event_RegisterVoid(&GfxEvents.ContextLost,      NULL, OnContextLost);
-	Event_RegisterVoid(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
+	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
+	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 }
 
 static void OnFree(void) { OnContextLost(NULL); }

@@ -228,7 +228,7 @@ static struct Camera cam_ForwardThird = {
 /*########################################################################################################################*
 *-----------------------------------------------------General camera------------------------------------------------------*
 *#########################################################################################################################*/
-static void HandleRawMovement(void* obj, float deltaX, float deltaY) {
+static void OnRawMovement(void* obj, float deltaX, float deltaY) {
 	Camera.Active->OnRawMovement(deltaX, deltaY);
 }
 
@@ -243,8 +243,8 @@ void Camera_Init(void) {
 	Camera_Register(&cam_ForwardThird);
 
 	Camera.Active = &cam_FirstPerson;
-	Event_RegisterRawMove(&PointerEvents.RawMoved,         NULL, HandleRawMovement);
-	Event_RegisterVoid(&UserEvents.HackPermissionsChanged, NULL, Camera_CheckThirdPerson);
+	Event_Register_(&PointerEvents.RawMoved,            NULL, OnRawMovement);
+	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, Camera_CheckThirdPerson);
 
 #ifdef CC_BUILD_WIN
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 40);
