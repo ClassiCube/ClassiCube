@@ -1157,7 +1157,6 @@ static void ApplyIcon(void) { }
 
 void Window_Create(int width, int height) {
 	XSetWindowAttributes attributes = { 0 };
-	XSizeHints hints = { 0 };
 	Atom protocols[2];
 	struct GraphicsMode mode;
 	cc_uintptr addr;
@@ -1186,11 +1185,6 @@ void Window_Create(int width, int height) {
 		0, win_visual.depth /* CopyFromParent*/, InputOutput, win_visual.visual, 
 		CWColormap | CWEventMask | CWBackPixel | CWBorderPixel, &attributes);
 	if (!win_handle) Logger_Abort("XCreateWindow failed");
-
-	hints.base_width  = width;
-	hints.base_height = height;
-	hints.flags = PSize | PPosition;
-	XSetWMNormalHints(win_display, win_handle, &hints);
 
 	/* Register for window destroy notification */
 	protocols[0] = wm_destroy;

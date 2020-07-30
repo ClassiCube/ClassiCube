@@ -1925,8 +1925,8 @@ void DisconnectScreen_Show(const String* title, const String* message) {
 	s->canReconnect = !(String_CaselessStarts(&why, &kick) || String_CaselessStarts(&why, &ban));
 	s->VTABLE       = &DisconnectScreen_VTABLE;
 
-	/* Get rid of all other menus instead of just hiding to reduce GPU usage */
-	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
+	/* Remove all screens instead of just drawing over them to reduce GPU usage */
+	Gui_RemoveAll();
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_DISCONNECT);
 }
 

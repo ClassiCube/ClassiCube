@@ -13,10 +13,18 @@
 #ifndef CC_BUILD_WEB
 static int xBorder, xBorder2, xBorder3, xBorder4;
 static int yBorder, yBorder2, yBorder3, yBorder4;
+static int xInputOffset, yInputOffset;
+static int caretOffset, caretWidth, caretHeight;
 
 void LWidget_CalcOffsets(void) {
 	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
 	yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder3 = yBorder * 3; yBorder4 = yBorder * 4;
+
+	xInputOffset = Display_ScaleX(5);
+	yInputOffset = Display_ScaleY(2);
+	caretOffset  = Display_ScaleY(5);
+	caretWidth   = Display_ScaleX(10);
+	caretHeight  = Display_ScaleY(2);
 }
 
 void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
@@ -244,14 +252,16 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 
 	if (w->text.length || !w->hintText) {
 		y = w->y + (w->height - w->_textHeight) / 2;
-		Drawer2D_DrawText(&Launcher_Framebuffer, args, w->x + 5, y + 2);
+		Drawer2D_DrawText(&Launcher_Framebuffer, args, 
+							w->x + xInputOffset, y + yInputOffset);
 	} else {
 		args->text = String_FromReadonly(w->hintText);
 		args->font = &Launcher_HintFont;
 
 		hintHeight = Drawer2D_TextHeight(args);
 		y = w->y + (w->height - hintHeight) / 2;
-		Drawer2D_DrawText(&Launcher_Framebuffer, args, w->x + 5, y);
+		Drawer2D_DrawText(&Launcher_Framebuffer, args, 
+							w->x + xInputOffset, y);
 	}
 }
 
@@ -290,12 +300,12 @@ static Rect2D LInput_MeasureCaret(struct LInput* w) {
 	LInput_GetText(w, &text);
 	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
 
-	r.X = w->x + 5;
-	r.Y = w->y + w->height - 5; r.Height = 2;
+	r.X = w->x + xInputOffset;
+	r.Y = w->y + w->height - caretOffset; r.Height = caretHeight;
 
 	if (w->caretPos == -1) {
 		r.X += Drawer2D_TextWidth(&args);
-		r.Width = 10;
+		r.Width = caretWidth;
 	} else {
 		args.text = String_UNSAFE_Substring(&text, 0, w->caretPos);
 		r.X += Drawer2D_TextWidth(&args);

@@ -185,6 +185,7 @@ struct Screen* Gui_GetBlocksWorld(void);
 struct Screen* Gui_GetClosable(void);
 
 void Gui_RefreshAll(void);
+void Gui_RemoveAll(void);
 void Gui_RefreshChat(void);
 void Gui_Refresh(struct Screen* s);
 

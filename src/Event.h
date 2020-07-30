@@ -74,7 +74,6 @@ struct Event_RawMove {
 /* NOTE: Trying to register a callback twice or over EVENT_MAX_CALLBACKS callbacks will terminate the game. */
 CC_API void Event_Register(struct Event_Void* handlers,   void* obj, Event_Void_Callback handler);
 /* Unregisters a callback function for the given event. */
-/* NOTE: Trying to unregister a non-registered callback will terminate the game. */
 CC_API void Event_Unregister(struct Event_Void* handlers, void* obj, Event_Void_Callback handler);
 #define Event_Register_(handlers,   obj, handler) Event_Register((struct Event_Void*)(handlers),   obj, (Event_Void_Callback)(handler))
 #define Event_Unregister_(handlers, obj, handler) Event_Unregister((struct Event_Void*)(handlers), obj, (Event_Void_Callback)(handler))
