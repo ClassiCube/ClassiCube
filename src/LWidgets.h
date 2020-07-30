@@ -136,7 +136,7 @@ struct LTableColumn {
 	/* Returns sort order of two rows, based on value of this column in both rows. */
 	int (*SortOrder)(const struct ServerInfo* a, const struct ServerInfo* b);
 	/* Whether a vertical gridline (and padding) appears after this. */
-	cc_bool columnGridline;
+	cc_bool hasGridline;
 	/* Whether user can interact with this column. */
 	/* Non-interactable columns can't be sorted/resized. */
 	cc_bool interactable;
@@ -173,11 +173,8 @@ struct LTable {
 
 	/* Index of table column currently being dragged. */
 	int draggingColumn;
-	int gridlineWidth, gridlineHeight;
-
 	cc_bool draggingScrollbar; /* Is scrollbar is currently being dragged */
 	int mouseOffset;    /* Offset of mouse for scrollbar dragging */
-	int scrollbarWidth; /* How wide scrollbar is in pixels */
 
 	float _wheelAcc; /* mouse wheel accumulator */
 	int _lastRow;    /* last clicked row (for doubleclick join) */

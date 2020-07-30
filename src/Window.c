@@ -16,7 +16,7 @@ int Display_ScaleY(int y) { return (int)(y * DisplayInfo.DpiY); }
 
 #ifndef CC_BUILD_WEB
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
-	String text; char textBuffer[512];
+	String text; char textBuffer[2048];
 	String_InitArray(text, textBuffer);
 
 	Clipboard_GetText(&text);
