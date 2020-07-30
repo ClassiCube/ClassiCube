@@ -13,11 +13,12 @@
 #ifndef CC_BUILD_WEB
 static int xBorder, xBorder2, xBorder3, xBorder4;
 static int yBorder, yBorder2, yBorder3, yBorder4;
-static int xInputOffset, yInputOffset;
+static int xInputOffset, yInputOffset, inputExpand;
 static int caretOffset, caretWidth, caretHeight;
 static int scrollbarWidth, dragPad, gridlineWidth, gridlineHeight;
 static int hdrYOffset, hdrYPadding, rowYOffset, rowYPadding;
 static int cellXOffset, cellXPadding, cellMinWidth;
+static int flagXOffset, flagYOffset;
 
 void LWidget_CalcOffsets(void) {
 	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
@@ -25,6 +26,8 @@ void LWidget_CalcOffsets(void) {
 
 	xInputOffset = Display_ScaleX(5);
 	yInputOffset = Display_ScaleY(2);
+	inputExpand  = Display_ScaleX(20);
+
 	caretOffset  = Display_ScaleY(5);
 	caretWidth   = Display_ScaleX(10);
 	caretHeight  = Display_ScaleY(2);
@@ -42,6 +45,8 @@ void LWidget_CalcOffsets(void) {
 	cellXOffset  = Display_ScaleX(6);
 	cellXPadding = Display_ScaleX(5);
 	cellMinWidth = Display_ScaleX(20);
+	flagXOffset  = Display_ScaleX(2);
+	flagYOffset  = Display_ScaleY(6);
 }
 
 void LWidget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
@@ -293,7 +298,7 @@ static void LInput_Draw(void* widget) {
 	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, false);
 
 	textWidth      = Drawer2D_TextWidth(&args);
-	w->width       = max(w->minWidth, textWidth + 20);
+	w->width       = max(w->minWidth, textWidth + inputExpand);
 	w->_textHeight = Drawer2D_TextHeight(&args);
 
 	LInput_DrawOuterBorder(w);
@@ -498,7 +503,7 @@ void LInput_SetText(struct LInput* w, const String* text_) {
 	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
 
 	textWidth      = Drawer2D_TextWidth(&args);
-	w->width       = max(w->minWidth, textWidth + 20);
+	w->width       = max(w->minWidth, textWidth + inputExpand);
 	w->_textHeight = Drawer2D_TextHeight(&args);
 }
 
@@ -702,7 +707,8 @@ void LSlider_Init(struct LScreen* s, struct LSlider* w, int width, int height, B
 *#########################################################################################################################*/
 static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
 	Bitmap* bmp = Flags_Get(row);
-	if (bmp) Drawer2D_BmpCopy(&Launcher_Framebuffer, x + 2, y + 6, bmp);
+	if (!bmp) return;
+	Drawer2D_BmpCopy(&Launcher_Framebuffer, x + flagXOffset, y + flagYOffset, bmp);
 }
 
 static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {

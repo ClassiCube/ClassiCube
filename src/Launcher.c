@@ -465,12 +465,13 @@ static cc_result Launcher_ProcessZipEntry(const String* path, struct Stream* dat
 	return 0;
 }
 
-static void Launcher_ExtractTexturePack(const String* path) {
+static void ExtractTexturePack(const String* path) {
 	struct ZipState state;
 	struct Stream stream;
 	cc_result res;
 
 	res = Stream_OpenFile(&stream, path);
+	if (res == ReturnCode_FileNotFound) return;
 	if (res) { Logger_Warn(res, "opening texture pack"); return; }
 
 	Zip_Init(&state, &stream);
@@ -493,17 +494,15 @@ void Launcher_TryLoadTexturePack(void) {
 		Launcher_ClassicBackground = Options_GetBool(OPT_CLASSIC_MODE,      false);
 	}
 
-	Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &texPack);
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "texpacks/%s", &texPack);
+	if (Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &texPack)) {
+		String_InitArray(path, pathBuffer);
+		String_Format1(&path, "texpacks/%s", &texPack);
+		ExtractTexturePack(&path);
+	}
 
-	if (!texPack.length || !File_Exists(&path)) path = defZipPath;
-	if (!File_Exists(&path)) return;
-
-	Launcher_ExtractTexturePack(&path);
 	/* user selected texture pack is missing some required .png files */
 	if (!fontBmp.scan0 || !dirtBmp.scan0) {
-		Launcher_ExtractTexturePack(&defZipPath);
+		ExtractTexturePack(&defZipPath);
 	}
 }
 
