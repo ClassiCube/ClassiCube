@@ -26,10 +26,15 @@ struct FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
 
 static cc_bool pendingRedraw;
 static struct FontDesc logoFont;
+static int titleX, titleY;
 
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static char hashBuffer[STRING_SIZE];
 String Launcher_AutoHash = String_FromArray(hashBuffer);
+
+static cc_bool useBitmappedFont;
+static Bitmap dirtBmp, stoneBmp, fontBmp;
+#define TILESIZE 48
 
 void Launcher_SetScreen(struct LScreen* screen) {
 	if (activeScreen) activeScreen->Free(activeScreen);
@@ -60,6 +65,10 @@ static CC_NOINLINE void InitFramebuffer(void) {
 	Launcher_Framebuffer.width  = max(WindowInfo.Width,  1);
 	Launcher_Framebuffer.height = max(WindowInfo.Height, 1);
 	Window_AllocFramebuffer(&Launcher_Framebuffer);
+}
+
+static cc_bool UsingBitmappedFont(void) {
+	return (useBitmappedFont || Launcher_ClassicBackground) && fontBmp.scan0;
 }
 
 
@@ -229,10 +238,10 @@ static void Launcher_Init(void) {
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
 	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 
-	Drawer2D_MakeFont(&logoFont,           32, FONT_STYLE_NORMAL);
 	Drawer2D_MakeFont(&Launcher_TitleFont, 16, FONT_STYLE_BOLD);
 	Drawer2D_MakeFont(&Launcher_TextFont,  14, FONT_STYLE_NORMAL);
 	Drawer2D_MakeFont(&Launcher_HintFont,  12, FONT_STYLE_ITALIC);
+	titleX = Display_ScaleX(4); titleY = Display_ScaleY(4);
 
 	Drawer2D_Cols['g'] = BitmapCol_Make(125, 125, 125, 255);
 	Utils_EnsureDirectory("texpacks");
@@ -413,10 +422,6 @@ void Launcher_SaveSkin(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Background-----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool useBitmappedFont;
-static Bitmap dirtBmp, stoneBmp, fontBmp;
-#define TILESIZE 48
-
 static cc_bool Launcher_SelectZipEntry(const String* path) {
 	return
 		String_CaselessEqualsConst(path, "default.png") ||
@@ -501,9 +506,15 @@ void Launcher_TryLoadTexturePack(void) {
 	}
 
 	/* user selected texture pack is missing some required .png files */
-	if (!fontBmp.scan0 || !dirtBmp.scan0) {
-		ExtractTexturePack(&defZipPath);
-	}
+	if (!fontBmp.scan0 || !dirtBmp.scan0) ExtractTexturePack(&defZipPath);
+	Launcher_UpdateLogoFont();
+}
+
+void Launcher_UpdateLogoFont(void) {
+	Font_Free(&logoFont);
+	Drawer2D_BitmappedText = UsingBitmappedFont();
+	Drawer2D_MakeFont(&logoFont, 32, FONT_STYLE_NORMAL);
+	Drawer2D_BitmappedText = false;
 }
 
 /* Fills the given area using pixels from the source bitmap, by repeatedly tiling the bitmap. */
@@ -551,12 +562,12 @@ void Launcher_ResetPixels(void) {
 		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
 	}
 
-	Drawer2D_BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && fontBmp.scan0;
+	Drawer2D_BitmappedText = UsingBitmappedFont();
 	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);
 	x = WindowInfo.Width / 2 - Drawer2D_TextWidth(&args) / 2;
 
 	args.text = title_back;
-	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x + 4, 4);
+	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x + titleX, titleY);
 	args.text = title_fore;
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x, 0);
 

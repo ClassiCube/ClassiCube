@@ -223,6 +223,7 @@ CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) 
 	Options_SetBool(OPT_CLASSIC_OPTIONS, classic);
 
 	Options_SaveIfChanged();
+	Launcher_UpdateLogoFont();
 	MainScreen_SetActive();
 }
 

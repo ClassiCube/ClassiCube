@@ -46,6 +46,8 @@ void Launcher_LoadSkin(void);
 /* NOTE: Does not save options file itself. */
 void Launcher_SaveSkin(void);
 
+/* Updates logo font. */
+void Launcher_UpdateLogoFont(void);
 /* Attempts to load font and terrain from texture pack. */
 void Launcher_TryLoadTexturePack(void);
 /* Redraws all pixels with default background. */
