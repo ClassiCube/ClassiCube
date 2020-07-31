@@ -741,7 +741,7 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LInput_SetText(&s->iptUsername, &user);
 	LInput_SetText(&s->iptPassword, &pass);
 
-	/* Auto sign in if automatically joining a server */
+	/* Auto sign in when automatically joining a server */
 	if (!Launcher_AutoHash.length)    return;
 	if (!user.length || !pass.length) return;
 	MainScreen_DoLogin();

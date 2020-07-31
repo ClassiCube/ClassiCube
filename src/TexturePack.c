@@ -355,7 +355,7 @@ static void ExtractFromFile(const String* filename) {
 #endif
 }
 
-void TexturePack_ExtractDefault(void) {
+static void ExtractDefault(void) {
 	String texPack = Game_ClassicMode ? defaultZip : defTexPack;
 	ExtractFromFile(&defaultZip);
 
@@ -363,21 +363,21 @@ void TexturePack_ExtractDefault(void) {
 	if (!String_CaselessEquals(&texPack, &defaultZip)) ExtractFromFile(&texPack);
 }
 
-static cc_bool texturePackDefault = true;
+static cc_bool usingDefault;
 void TexturePack_ExtractCurrent(cc_bool forceReload) {
 	String url = World_TextureUrl;
 	struct Stream stream;
 	cc_result res;
 
-	if (!url.length || !OpenCachedData(&url, &stream)) {
-		/* don't pointlessly load default texture pack */
-		if (texturePackDefault && !forceReload) return;
+	/* don't pointlessly load default texture pack */
+	if (!usingDefault || forceReload) {
+		ExtractDefault();
+		usingDefault = true;
+	}
 
-		TexturePack_ExtractDefault();
-		texturePackDefault = true;
-	} else {
+	if (url.length && OpenCachedData(&url, &stream)) {
 		ExtractFrom(&stream, &url);
-		texturePackDefault = false;
+		usingDefault = false;
 
 		res = stream.Close(&stream);
 		if (res) Logger_Warn2(res, "closing cache for", &url);
@@ -395,7 +395,7 @@ void TexturePack_Apply(struct HttpRequest* item) {
 
 	Stream_ReadonlyMemory(&mem, item->data, item->size);
 	ExtractFrom(&mem, &url);
-	texturePackDefault = false;
+	usingDefault = false;
 }
 
 void TexturePack_DownloadAsync(const String* url, const String* id) {
@@ -436,8 +436,7 @@ static void OnContextLost(void* obj) {
 
 static void OnContextRecreated(void* obj) {
 	if (!Gfx.ManagedTextures || needReload) {
-		TexturePack_ExtractDefault();
-		TexturePack_ExtractCurrent(false);
+		TexturePack_ExtractCurrent(true);
 	}
 }
 

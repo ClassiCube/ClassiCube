@@ -426,7 +426,7 @@ static void Game_Load(void) {
 		if (comp->Init) comp->Init();
 	}
 
-	TexturePack_ExtractDefault();
+	TexturePack_ExtractCurrent(false);
 	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
 
 	/* set vsync after because it causes a context loss depending on backend */
