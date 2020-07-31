@@ -166,7 +166,7 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	int i;
 
 	s->Init = NULL; /* screens should always override this */
-	s->Show = NULL; /* screens should always override this */
+	s->Show = LScreen_NullFunc;
 	s->Free = LScreen_NullFunc;
 	s->Draw       = LScreen_Draw;
 	s->Tick       = LScreen_Tick;
@@ -598,7 +598,6 @@ void DirectConnectScreen_SetActive(void) {
 	struct DirectConnectScreen* s = &DirectConnectScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init          = DirectConnectScreen_Init;
-	s->Show          = LScreen_NullFunc;
 	s->Layout        = DirectConnectScreen_Layout;
 	s->onEnterWidget = (struct LWidget*)&s->btnConnect;
 	Launcher_SetScreen((struct LScreen*)s);
@@ -655,7 +654,7 @@ CC_NOINLINE static void MainScreen_Error(struct LWebTask* task, const char* acti
 	s->signingIn = false;
 }
 
-static void MainScreen_Login(void* w, int x, int y) {
+static void MainScreen_DoLogin(void) {
 	struct MainScreen* s = &MainScreen_Instance;
 	String* user = &s->iptUsername.text;
 	String* pass = &s->iptPassword.text;
@@ -678,6 +677,7 @@ static void MainScreen_Login(void* w, int x, int y) {
 	LWidget_Redraw(&s->lblStatus);
 	s->signingIn = true;
 }
+static void MainScreen_Login(void* w, int x, int y) { MainScreen_DoLogin(); }
 
 static void MainScreen_Register(void* w, int x, int y) {
 	static const String ccUrl = String_FromConst("https://www.classicube.net/acc/register/");
@@ -740,11 +740,16 @@ static void MainScreen_Init(struct LScreen* s_) {
 
 	LInput_SetText(&s->iptUsername, &user);
 	LInput_SetText(&s->iptPassword, &pass);
+
+	/* Auto sign in if automatically joining a server */
+	if (!Launcher_AutoHash.length)    return;
+	if (!user.length || !pass.length) return;
+	MainScreen_DoLogin();
 }
 
-static void MainScreen_Show(struct LScreen* s_) {
+static void MainScreen_Free(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
-	/* status should reset after user has gone to another menu */
+	/* status should reset when user goes to another menu */
 	s->lblStatus.text.length = 0;
 }
 
@@ -893,7 +898,7 @@ void MainScreen_SetActive(void) {
 	struct MainScreen* s = &MainScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = MainScreen_Init;
-	s->Show   = MainScreen_Show;
+	s->Free   = MainScreen_Free;
 	s->Tick   = MainScreen_Tick;
 	s->Layout = MainScreen_Layout;
 	s->HoverWidget   = MainScreen_HoverWidget;
