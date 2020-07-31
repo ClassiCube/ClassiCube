@@ -1466,7 +1466,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 
 static void CPE_DefineModelPart(cc_uint8* data) {
 	/* 103 = 1 + 3*4 + 3*4 + 6*(2*2 + 2*2) + 3*4 + 3*4 + 1 + 4 + 1 */
-	cc_uint8 id = *data++;
+	cc_uint8 id = data[0];
 	struct CustomModel* m = &custom_models[id];
 	struct CustomModelPart* part;
 	cc_uint8 flags;
@@ -1476,55 +1476,35 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 	part = &m->parts[m->curPartIndex];
 	m->curPartIndex++;
 
-	/* read min, max vec3 coords */
-	part->min.X = GetFloat(data);
-	data += 4;
-	part->min.Y = GetFloat(data);
-	data += 4;
-	part->min.Z = GetFloat(data);
-	data += 4;
-
-	part->max.X = GetFloat(data);
-	data += 4;
-	part->max.Y = GetFloat(data);
-	data += 4;
-	part->max.Z = GetFloat(data);
-	data += 4;
+	part->min.X = GetFloat(data +  1);
+	part->min.Y = GetFloat(data +  5);
+	part->min.Z = GetFloat(data +  9);
+	part->max.X = GetFloat(data + 13);
+	part->max.Y = GetFloat(data + 17);
+	part->max.Z = GetFloat(data + 21);
 
 	/* read u, v coords for our 6 faces */
 	for (i = 0; i < 6; i++) {
-		part->u1[i] = Stream_GetU16_BE(data);
-		data += 2;
-		part->v1[i] = Stream_GetU16_BE(data);
-		data += 2;
-
-		part->u2[i] = Stream_GetU16_BE(data);
-		data += 2;
-		part->v2[i] = Stream_GetU16_BE(data);
-		data += 2;
+		part->u1[i] = Stream_GetU16_BE(data + 25 + (i*8 + 0));
+		part->v1[i] = Stream_GetU16_BE(data + 25 + (i*8 + 2));
+		part->u2[i] = Stream_GetU16_BE(data + 25 + (i*8 + 4));
+		part->v2[i] = Stream_GetU16_BE(data + 25 + (i*8 + 6));
 	}
 
-	/* read rotation origin point */
-	part->rotationOrigin.X = GetFloat(data);
-	data += 4;
-	part->rotationOrigin.Y = GetFloat(data);
-	data += 4;
-	part->rotationOrigin.Z = GetFloat(data);
-	data += 4;
+	part->rotationOrigin.X = GetFloat(data + 73);
+	part->rotationOrigin.Y = GetFloat(data + 77);
+	part->rotationOrigin.Z = GetFloat(data + 81);
 
-	/* read rotation angles */
-	part->rotation.X = GetFloat(data);
-	data += 4;
-	part->rotation.Y = GetFloat(data);
-	data += 4;
-	part->rotation.Z = GetFloat(data);
-	data += 4;
+	part->rotation.X = GetFloat(data + 85);
+	part->rotation.Y = GetFloat(data + 89);
+	part->rotation.Z = GetFloat(data + 93);
 
 	if (cpe_customModelsVer == 1) {
 		/* ignore animations */
-		data++;
-		data += 4;
+		data += 102;
 	} else if (cpe_customModelsVer == 2) {
+		data += 97;
+
 		for (i = 0; i < MAX_CUSTOM_MODEL_ANIMS; i++) {
 			cc_uint8 tmp = *data++;
 			part->anims[i].type = tmp & 0x3F;
@@ -1541,10 +1521,9 @@ static void CPE_DefineModelPart(cc_uint8* data) {
 		}
 	}
 
-	/* read bool flags */
-	flags = *data++;
-	part->fullbright     = (flags >> 0) & 1;
-	part->firstPersonArm = (flags >> 1) & 1;
+	flags = *data;
+	part->fullbright     = flags & 0x01;
+	part->firstPersonArm = flags & 0x02;
 
 	if (m->curPartIndex == m->numParts) {
 		/* we're the last part, so register our model */
