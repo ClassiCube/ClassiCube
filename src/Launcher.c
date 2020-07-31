@@ -18,7 +18,7 @@
 #include "Options.h"
 
 #ifndef CC_BUILD_WEB
-struct LScreen* Launcher_Screen;
+static struct LScreen* activeScreen;
 Rect2D Launcher_Dirty;
 Bitmap Launcher_Framebuffer;
 cc_bool Launcher_ClassicBackground;
@@ -32,8 +32,8 @@ static char hashBuffer[STRING_SIZE];
 String Launcher_AutoHash = String_FromArray(hashBuffer);
 
 void Launcher_SetScreen(struct LScreen* screen) {
-	if (Launcher_Screen) Launcher_Screen->Free(Launcher_Screen);
-	Launcher_Screen = screen;
+	if (activeScreen) activeScreen->Free(activeScreen);
+	activeScreen = screen;
 	if (!screen->numWidgets) screen->Init(screen);
 
 	screen->Show(screen);
@@ -161,7 +161,7 @@ static void OnResize(void* obj) {
 	Window_FreeFramebuffer(&Launcher_Framebuffer);
 	InitFramebuffer();
 
-	if (Launcher_Screen) Launcher_Screen->Layout(Launcher_Screen);
+	if (activeScreen) activeScreen->Layout(activeScreen);
 	Launcher_Redraw();
 }
 
@@ -178,28 +178,28 @@ static cc_bool IsShutdown(int key) {
 
 static void OnInputDown(void* obj, int key, cc_bool was) {
 	if (IsShutdown(key)) Launcher_ShouldExit = true;
-	Launcher_Screen->KeyDown(Launcher_Screen, key, was);
+	activeScreen->KeyDown(activeScreen, key, was);
 }
 
 static void OnKeyPress(void* obj, int c) {
-	Launcher_Screen->KeyPress(Launcher_Screen, c);
+	activeScreen->KeyPress(activeScreen, c);
 }
 
 static void OnMouseWheel(void* obj, float delta) {
-	Launcher_Screen->MouseWheel(Launcher_Screen, delta);
+	activeScreen->MouseWheel(activeScreen, delta);
 }
 
 static void OnPointerDown(void* obj, int idx) {
-	Launcher_Screen->MouseDown(Launcher_Screen, 0);
+	activeScreen->MouseDown(activeScreen, 0);
 }
 
 static void OnPointerUp(void* obj, int idx) {
-	Launcher_Screen->MouseUp(Launcher_Screen, 0);
+	activeScreen->MouseUp(activeScreen, 0);
 }
 
 static void OnPointerMove(void* obj, int idx, int deltaX, int deltaY) {
-	if (!Launcher_Screen) return;
-	Launcher_Screen->MouseMove(Launcher_Screen, deltaX, deltaY);
+	if (!activeScreen) return;
+	activeScreen->MouseMove(activeScreen, deltaX, deltaY);
 }
 
 
@@ -257,8 +257,8 @@ static void Launcher_Free(void) {
 	Font_Free(&Launcher_TextFont);
 	Font_Free(&Launcher_HintFont);
 
-	Launcher_Screen->Free(Launcher_Screen);
-	Launcher_Screen = NULL;
+	activeScreen->Free(activeScreen);
+	activeScreen = NULL;
 	Window_FreeFramebuffer(&Launcher_Framebuffer);
 }
 
@@ -331,7 +331,7 @@ void Launcher_Run(void) {
 		Window_ProcessEvents();
 		if (!WindowInfo.Exists || Launcher_ShouldExit) break;
 
-		Launcher_Screen->Tick(Launcher_Screen);
+		activeScreen->Tick(activeScreen);
 		if (Launcher_Dirty.Width) Launcher_Display();
 		Thread_Sleep(10);
 	}
@@ -539,7 +539,7 @@ void Launcher_ResetPixels(void) {
 	struct DrawTextArgs args;
 	int x;
 
-	if (Launcher_Screen && Launcher_Screen->hidesTitlebar) {
+	if (activeScreen && activeScreen->hidesTitlebar) {
 		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
 		return;
 	}
@@ -566,7 +566,7 @@ void Launcher_ResetPixels(void) {
 
 void Launcher_Redraw(void) {
 	Launcher_ResetPixels();
-	Launcher_Screen->Draw(Launcher_Screen);
+	activeScreen->Draw(activeScreen);
 	Launcher_MarkAllDirty();
 }
 

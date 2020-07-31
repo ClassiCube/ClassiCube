@@ -118,19 +118,15 @@ static int Program_Run(int argc, char** argv) {
 		RunGame();
 #else
 		Launcher_Run();
+	/* :hash to auto join server with the given hash */
+	} else if (argsCount == 1 && args[0].buffer[0] == ':') {
+		args[0] = String_UNSAFE_SubstringAt(&args[0], 1);
+		String_Copy(&Launcher_AutoHash, &args[0]);
+		Launcher_Run();
 #endif
 	} else if (argsCount == 1) {
-#ifndef CC_BUILD_WEB
-		/* :hash to auto join server with the given hash */
-		if (args[0].buffer[0] == ':') {
-			args[0] = String_UNSAFE_SubstringAt(&args[0], 1);
-			String_Copy(&Launcher_AutoHash, &args[0]);
-			Launcher_Run();
-			return 0;
-		}
-#endif
 		String_Copy(&Game_Username, &args[0]);
-		RunGame();
+		RunGame();		
 	} else if (argsCount < 4) {
 		ExitMissingArgs(argsCount, args);
 		return 1;
