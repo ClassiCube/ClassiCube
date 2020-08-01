@@ -129,7 +129,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	back = w->active ? btnSelectedTex : btnShadowTex;
 	if (w->disabled) back = btnDisabledTex;
 
-	back.ID = Gui_ClassicTexture ? Gui_GuiClassicTex : Gui_GuiTex;
+	back.ID = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
 	back.X = w->x; back.Width  = w->width;
 	back.Y = w->y; back.Height = w->height;
 
@@ -195,7 +195,7 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 
 static int ButtonWidget_Render2(void* widget, int offset) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;	
-	Gfx_BindTexture(Gui_ClassicTexture ? Gui_GuiClassicTex : Gui_GuiTex);
+	Gfx_BindTexture(Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex);
 	/* TODO: Does this 400 need to take DPI into account */
 	Gfx_DrawVb_IndexedTris_Range(w->width >= 400 ? 4 : 8, offset);
 
@@ -382,7 +382,7 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 	float width;
 	int i, x;
 	
-	tex = Gui_ClassicTexture ? Gui_GuiClassicTex : Gui_GuiTex;
+	tex = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
 	w->backTex.ID = tex;
 	Texture_Render(&w->backTex);
 
@@ -1601,7 +1601,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		caretAtEnd = (w->caretY == i) && (w->caretX == INPUTWIDGET_LEN || w->caretPos == -1);
 		width      = w->lineWidths[i] + (caretAtEnd ? w->caretTex.Width : 0);
 		/* Cover whole window width to match original classic behaviour */
-		if (Gui_ClassicChat) { width = max(width, WindowInfo.Width - x * 4); }
+		if (Gui.ClassicChat) { width = max(width, WindowInfo.Width - x * 4); }
 	
 		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->lineHeight, backCol);
 		y += w->lineHeight;

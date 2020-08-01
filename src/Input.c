@@ -858,7 +858,7 @@ static cc_bool HandleNonClassicKey(int key) {
 
 static cc_bool HandleCoreKey(int key) {
 	if (key == KeyBinds[KEYBIND_HIDE_FPS]) {
-		Gui_ShowFPS = !Gui_ShowFPS;
+		Gui.ShowFPS = !Gui.ShowFPS;
 	} else if (key == KeyBinds[KEYBIND_FULLSCREEN]) {
 		Game_ToggleFullscreen();
 	} else if (key == KeyBinds[KEYBIND_FOG]) {
@@ -899,7 +899,7 @@ static void OnMouseWheel(void* obj, float delta) {
 	struct Widget* widget;
 	cc_bool hotbar;
 	
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->dirty = true;
 		if (s->VTABLE->HandlesMouseScroll(s, delta)) return;
@@ -918,7 +918,7 @@ static void OnPointerMove(void* obj, int idx, int xDelta, int yDelta) {
 	struct Screen* s;
 	int i, x = Pointers[idx].x, y = Pointers[idx].y;
 
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->dirty = true;
 		if (s->VTABLE->HandlesPointerMove(s, 1 << idx, x, y)) return;
@@ -929,7 +929,7 @@ static void OnPointerDown(void* obj, int idx) {
 	struct Screen* s;
 	int i, x = Pointers[idx].x, y = Pointers[idx].y;
 
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->dirty = true;
 #ifdef CC_BUILD_TOUCH
@@ -946,7 +946,7 @@ static void OnPointerUp(void* obj, int idx) {
 	struct Screen* s;
 	int i, x = Pointers[idx].x, y = Pointers[idx].y;
 
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->dirty = true;
 		if (s->VTABLE->HandlesPointerUp(s, 1 << idx, x, y)) return;
@@ -972,7 +972,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 		Game_ScreenshotRequested = true; return;
 	}
 	
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->dirty = true;
 		if (s->VTABLE->HandlesInputDown(s, key)) return;
@@ -1013,7 +1013,7 @@ static void OnInputUp(void* obj, int key) {
 	}
 #endif
 
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->dirty = true;
 		if (s->VTABLE->HandlesInputUp(s, key)) return;

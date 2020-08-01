@@ -81,12 +81,12 @@ static void Menu_MakeInput(struct MenuInputWidget* input, int width, const Strin
 }
 
 static void Menu_Back(void* s, int i, struct ButtonWidget* btn, Widget_LeftClick onClick) {
-	int width = Gui_ClassicMenu ? 400 : 200;
+	int width = Gui.ClassicMenu ? 400 : 200;
 	Menu_Button(s, i, btn, width, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
 static void Menu_MakeBack(struct ButtonWidget* btn, Widget_LeftClick onClick) {
-	int width = Gui_ClassicMenu ? 400 : 200;
+	int width = Gui.ClassicMenu ? 400 : 200;
 	ButtonWidget_Make(btn, width, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
@@ -481,7 +481,7 @@ static void PauseScreen_Game(void* a, void* b) { Gui_Remove((struct Screen*)&Pau
 
 static void PauseScreen_CheckHacksAllowed(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	if (Gui_ClassicMenu) return;
+	if (Gui.ClassicMenu) return;
 	s->buttons[4].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
 }
 
@@ -492,7 +492,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 	Menu_MakeTitleFont(&titleFont);
 	Menu_SetButtons(s->buttons, &titleFont, s->descs, s->numWidgets - 2);
 
-	if (!Gui_ClassicMenu) ButtonWidget_SetConst(&s->quit, "Quit game", &titleFont);
+	if (!Gui.ClassicMenu) ButtonWidget_SetConst(&s->quit, "Quit game", &titleFont);
 	ButtonWidget_SetConst(&s->back, "Back to game", &titleFont);
 
 	if (!Server.IsSinglePlayer) {
@@ -529,7 +529,7 @@ static void PauseScreen_Init(void* screen) {
 	s->widgets = widgets;
 	Event_Register_(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 
-	if (Gui_ClassicMenu) {
+	if (Gui.ClassicMenu) {
 		s->descs = classicDescs; /*400*/
 		/* Don't show nostalgia options in classic mode */
 		count    = Game_ClassicMode ? 4 : 5;
@@ -539,7 +539,7 @@ static void PauseScreen_Init(void* screen) {
 	}
 
 	s->numWidgets = count + 2;
-	width = Gui_ClassicMenu ? 400 : 300;
+	width = Gui.ClassicMenu ? 400 : 300;
 	Menu_Buttons(s, s->buttons, width, s->descs, count);
 
 	Menu_Button(s, count,     &s->quit, 120, PauseScreen_Quit,
@@ -1800,7 +1800,7 @@ static void KeyBindingsScreen_InitWidgets(struct KeyBindingsScreen* s, int y, in
 	Menu_Label(s, i, &s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -180); i++;
 	Menu_Label(s, i, &s->msg,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  100); i++;
 	Menu_Back(s,  i, &s->back, 
-		Gui_ClassicMenu ? Menu_SwitchClassicOptions : Menu_SwitchOptions); i++;
+		Gui.ClassicMenu ? Menu_SwitchClassicOptions : Menu_SwitchOptions); i++;
 	if (!s->leftPage && !s->rightPage) return;
 	
 	Menu_Button(s, i, &s->left,  40, s->leftPage,
@@ -2349,8 +2349,8 @@ static void ClassicOptionsScreen_SetSounds(const String* v) {
 	Options_SetInt(OPT_SOUND_VOLUME, Audio_SoundsVolume);
 }
 
-static void ClassicOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Gui_ShowFPS); }
-static void ClassicOptionsScreen_SetShowFPS(const String* v) { Gui_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
+static void ClassicOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Gui.ShowFPS); }
+static void ClassicOptionsScreen_SetShowFPS(const String* v) { Gui.ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
 static void ClassicOptionsScreen_GetViewBob(String* v) { Menu_GetBool(v, Game_ViewBobbing); }
 static void ClassicOptionsScreen_SetViewBob(const String* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
@@ -2593,13 +2593,13 @@ static void ChatOptionsScreen_SetScale(const String* v, float* target, const cha
 	Gui_RefreshChat();
 }
 
-static void ChatOptionsScreen_GetChatScale(String* v) { String_AppendFloat(v, Gui_RawChatScale, 1); }
-static void ChatOptionsScreen_SetChatScale(const String* v) { ChatOptionsScreen_SetScale(v, &Gui_RawChatScale, OPT_CHAT_SCALE); }
+static void ChatOptionsScreen_GetChatScale(String* v) { String_AppendFloat(v, Gui.RawChatScale, 1); }
+static void ChatOptionsScreen_SetChatScale(const String* v) { ChatOptionsScreen_SetScale(v, &Gui.RawChatScale, OPT_CHAT_SCALE); }
 
-static void ChatOptionsScreen_GetChatlines(String* v) { String_AppendInt(v, Gui_Chatlines); }
+static void ChatOptionsScreen_GetChatlines(String* v) { String_AppendInt(v, Gui.Chatlines); }
 static void ChatOptionsScreen_SetChatlines(const String* v) {
-	Gui_Chatlines = Menu_Int(v);
-	ChatScreen_SetChatlines(Gui_Chatlines);
+	Gui.Chatlines = Menu_Int(v);
+	ChatScreen_SetChatlines(Gui.Chatlines);
 	Options_Set(OPT_CHATLINES, v);
 }
 
@@ -2609,8 +2609,8 @@ static void ChatOptionsScreen_SetLogging(const String* v) {
 	if (!Chat_Logging) Chat_DisableLogging();
 }
 
-static void ChatOptionsScreen_GetClickable(String* v) { Menu_GetBool(v, Gui_ClickableChat); }
-static void ChatOptionsScreen_SetClickable(const String* v) { Gui_ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
+static void ChatOptionsScreen_GetClickable(String* v) { Menu_GetBool(v, Gui.ClickableChat); }
+static void ChatOptionsScreen_SetClickable(const String* v) { Gui.ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
 
 static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	static const struct MenuOptionDesc buttons[4] = {
@@ -2651,17 +2651,17 @@ static void GuiOptionsScreen_SetShadows(const String* v) {
 	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
-static void GuiOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Gui_ShowFPS); }
-static void GuiOptionsScreen_SetShowFPS(const String* v) { Gui_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
+static void GuiOptionsScreen_GetShowFPS(String* v) { Menu_GetBool(v, Gui.ShowFPS); }
+static void GuiOptionsScreen_SetShowFPS(const String* v) { Gui.ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
-static void GuiOptionsScreen_GetHotbar(String* v) { String_AppendFloat(v, Gui_RawHotbarScale, 1); }
-static void GuiOptionsScreen_SetHotbar(const String* v) { ChatOptionsScreen_SetScale(v, &Gui_RawHotbarScale, OPT_HOTBAR_SCALE); }
+static void GuiOptionsScreen_GetHotbar(String* v) { String_AppendFloat(v, Gui.RawHotbarScale, 1); }
+static void GuiOptionsScreen_SetHotbar(const String* v) { ChatOptionsScreen_SetScale(v, &Gui.RawHotbarScale, OPT_HOTBAR_SCALE); }
 
-static void GuiOptionsScreen_GetInventory(String* v) { String_AppendFloat(v, Gui_RawInventoryScale, 1); }
-static void GuiOptionsScreen_SetInventory(const String* v) { ChatOptionsScreen_SetScale(v, &Gui_RawInventoryScale, OPT_INVENTORY_SCALE); }
+static void GuiOptionsScreen_GetInventory(String* v) { String_AppendFloat(v, Gui.RawInventoryScale, 1); }
+static void GuiOptionsScreen_SetInventory(const String* v) { ChatOptionsScreen_SetScale(v, &Gui.RawInventoryScale, OPT_INVENTORY_SCALE); }
 
-static void GuiOptionsScreen_GetTabAuto(String* v) { Menu_GetBool(v, Gui_TabAutocomplete); }
-static void GuiOptionsScreen_SetTabAuto(const String* v) { Gui_TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
+static void GuiOptionsScreen_GetTabAuto(String* v) { Menu_GetBool(v, Gui.TabAutocomplete); }
+static void GuiOptionsScreen_SetTabAuto(const String* v) { Gui.TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
 
 static void GuiOptionsScreen_GetUseFont(String* v) { Menu_GetBool(v, !Drawer2D_BitmappedText); }
 static void GuiOptionsScreen_SetUseFont(const String* v) {
@@ -2924,14 +2924,14 @@ static void NostalgiaScreen_SetAnim(const String* v) {
 	Options_SetBool(OPT_SIMPLE_ARMS_ANIM, Game_SimpleArmsAnim);
 }
 
-static void NostalgiaScreen_GetGui(String* v) { Menu_GetBool(v, Gui_ClassicTexture); }
-static void NostalgiaScreen_SetGui(const String* v) { Gui_ClassicTexture = Menu_SetBool(v, OPT_CLASSIC_GUI); }
+static void NostalgiaScreen_GetGui(String* v) { Menu_GetBool(v, Gui.ClassicTexture); }
+static void NostalgiaScreen_SetGui(const String* v) { Gui.ClassicTexture = Menu_SetBool(v, OPT_CLASSIC_GUI); }
 
-static void NostalgiaScreen_GetList(String* v) { Menu_GetBool(v, Gui_ClassicTabList); }
-static void NostalgiaScreen_SetList(const String* v) { Gui_ClassicTabList = Menu_SetBool(v, OPT_CLASSIC_TABLIST); }
+static void NostalgiaScreen_GetList(String* v) { Menu_GetBool(v, Gui.ClassicTabList); }
+static void NostalgiaScreen_SetList(const String* v) { Gui.ClassicTabList = Menu_SetBool(v, OPT_CLASSIC_TABLIST); }
 
-static void NostalgiaScreen_GetOpts(String* v) { Menu_GetBool(v, Gui_ClassicMenu); }
-static void NostalgiaScreen_SetOpts(const String* v) { Gui_ClassicMenu = Menu_SetBool(v, OPT_CLASSIC_OPTIONS); }
+static void NostalgiaScreen_GetOpts(String* v) { Menu_GetBool(v, Gui.ClassicMenu); }
+static void NostalgiaScreen_SetOpts(const String* v) { Gui.ClassicMenu = Menu_SetBool(v, OPT_CLASSIC_OPTIONS); }
 
 static void NostalgiaScreen_GetCustom(String* v) { Menu_GetBool(v, Game_AllowCustomBlocks); }
 static void NostalgiaScreen_SetCustom(const String* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_CUSTOM_BLOCKS); }
@@ -2942,11 +2942,11 @@ static void NostalgiaScreen_SetCPE(const String* v) { Game_UseCPE = Menu_SetBool
 static void NostalgiaScreen_GetTexs(String* v) { Menu_GetBool(v, Game_AllowServerTextures); }
 static void NostalgiaScreen_SetTexs(const String* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_SERVER_TEXTURES); }
 
-static void NostalgiaScreen_GetClassicChat(String* v) { Menu_GetBool(v, Gui_ClassicChat); }
-static void NostalgiaScreen_SetClassicChat(const String* v) { Gui_ClassicChat = Menu_SetBool(v, OPT_CLASSIC_CHAT); }
+static void NostalgiaScreen_GetClassicChat(String* v) { Menu_GetBool(v, Gui.ClassicChat); }
+static void NostalgiaScreen_SetClassicChat(const String* v) { Gui.ClassicChat = Menu_SetBool(v, OPT_CLASSIC_CHAT); }
 
 static void NostalgiaScreen_SwitchBack(void* a, void* b) {
-	if (Gui_ClassicMenu) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
+	if (Gui.ClassicMenu) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
 }
 
 static struct TextWidget nostalgia_desc;
@@ -3235,7 +3235,7 @@ static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 
 static void UrlWarningOverlay_AppendUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
-	if (Gui_ClickableChat) ChatScreen_AppendInput(&s->url);
+	if (Gui.ClickableChat) ChatScreen_AppendInput(&s->url);
 	Gui_Remove((struct Screen*)s);
 }
 

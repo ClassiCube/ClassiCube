@@ -14,16 +14,10 @@
 #include "Options.h"
 #include "Funcs.h"
 
-cc_bool Gui_ClassicTexture, Gui_ClassicTabList, Gui_ClassicMenu, Gui_ClassicChat;
-int     Gui_Chatlines;
-cc_bool Gui_ClickableChat, Gui_TabAutocomplete, Gui_ShowFPS;
-float   Gui_RawHotbarScale, Gui_RawChatScale, Gui_RawInventoryScale;
-
-GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
+struct _GuiData Gui;
 struct HUDScreen*  Gui_HUD;
 struct ChatScreen* Gui_Chat;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
-int Gui_ScreensCount;
 static cc_uint8 priorities[GUI_MAX_SCREENS];
 
 void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
@@ -71,15 +65,15 @@ float Gui_Scale(float value) {
 }
 
 float Gui_GetHotbarScale(void) {
-	return Gui_Scale(GetWindowScale() * Gui_RawHotbarScale);
+	return Gui_Scale(GetWindowScale() * Gui.RawHotbarScale);
 }
 
 float Gui_GetInventoryScale(void) {
-	return Gui_Scale(GetWindowScale() * (Gui_RawInventoryScale * 0.5f));
+	return Gui_Scale(GetWindowScale() * (Gui.RawInventoryScale * 0.5f));
 }
 
 float Gui_GetChatScale(void) {
-	return Gui_Scale(GetWindowScale() * Gui_RawChatScale);
+	return Gui_Scale(GetWindowScale() * Gui.RawChatScale);
 }
 
 int Gui_CalcPos(cc_uint8 anchor, int offset, int size, int axisLen) {
@@ -114,26 +108,26 @@ void Gui_ShowDefault(void) {
 }
 
 static void Gui_LoadOptions(void) {
-	Gui_Chatlines       = Options_GetInt(OPT_CHATLINES, 0, 30, 12);
-	Gui_ClickableChat   = Options_GetBool(OPT_CLICKABLE_CHAT,   true) && !Game_ClassicMode;
-	Gui_TabAutocomplete = Options_GetBool(OPT_TAB_AUTOCOMPLETE, true) && !Game_ClassicMode;
+	Gui.Chatlines       = Options_GetInt(OPT_CHATLINES, 0, 30, 12);
+	Gui.ClickableChat   = Options_GetBool(OPT_CLICKABLE_CHAT,   true) && !Game_ClassicMode;
+	Gui.TabAutocomplete = Options_GetBool(OPT_TAB_AUTOCOMPLETE, true) && !Game_ClassicMode;
 
-	Gui_ClassicTexture = Options_GetBool(OPT_CLASSIC_GUI, true)      || Game_ClassicMode;
-	Gui_ClassicTabList = Options_GetBool(OPT_CLASSIC_TABLIST, false) || Game_ClassicMode;
-	Gui_ClassicMenu    = Options_GetBool(OPT_CLASSIC_OPTIONS, false) || Game_ClassicMode;
-	Gui_ClassicChat    = Options_GetBool(OPT_CLASSIC_CHAT, false)    || Game_PureClassic;
-	Gui_ShowFPS        = Options_GetBool(OPT_SHOW_FPS, true);
+	Gui.ClassicTexture = Options_GetBool(OPT_CLASSIC_GUI, true)      || Game_ClassicMode;
+	Gui.ClassicTabList = Options_GetBool(OPT_CLASSIC_TABLIST, false) || Game_ClassicMode;
+	Gui.ClassicMenu    = Options_GetBool(OPT_CLASSIC_OPTIONS, false) || Game_ClassicMode;
+	Gui.ClassicChat    = Options_GetBool(OPT_CLASSIC_CHAT, false)    || Game_PureClassic;
+	Gui.ShowFPS        = Options_GetBool(OPT_SHOW_FPS, true);
 	
-	Gui_RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
-	Gui_RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
-	Gui_RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.35f, 5.0f, 1.0f);
+	Gui.RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
+	Gui.RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
+	Gui.RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.35f, 5.0f, 1.0f);
 }
 
 static void LoseAllScreens(void) {
 	struct Screen* s;
 	int i;
 
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->VTABLE->ContextLost(s);
 	}
@@ -143,7 +137,7 @@ static void OnContextRecreated(void* obj) {
 	struct Screen* s;
 	int i;
 
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->VTABLE->ContextRecreated(s);
 	}
@@ -155,7 +149,7 @@ void Gui_RefreshAll(void) {
 }
 
 void Gui_RemoveAll(void) {
-	while (Gui_ScreensCount) Gui_Remove(Gui_Screens[0]);
+	while (Gui.ScreensCount) Gui_Remove(Gui_Screens[0]);
 }
 
 void Gui_RefreshChat(void) { Gui_Refresh((struct Screen*)Gui_Chat); }
@@ -166,13 +160,13 @@ void Gui_Refresh(struct Screen* s) {
 
 static void Gui_AddCore(struct Screen* s, int priority) {
 	int i, j;
-	if (Gui_ScreensCount >= GUI_MAX_SCREENS) Logger_Abort("Hit max screens");
+	if (Gui.ScreensCount >= GUI_MAX_SCREENS) Logger_Abort("Hit max screens");
 
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		if (priority <= priorities[i]) continue;
 
 		/* Shift lower priority screens right */
-		for (j = Gui_ScreensCount; j > i; j--) {
+		for (j = Gui.ScreensCount; j > i; j--) {
 			Gui_Screens[j] = Gui_Screens[j - 1];
 			priorities[j]  = priorities[j - 1];
 		}
@@ -181,7 +175,7 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 
 	Gui_Screens[i] = s;
 	priorities[i]  = priority;
-	Gui_ScreensCount++;
+	Gui.ScreensCount++;
 
 	s->dirty = true;
 	s->VTABLE->Init(s);
@@ -196,7 +190,7 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 /* Returns index of the given screen in the screens list, -1 if not */
 static int IndexOfScreen(struct Screen* s) {
 	int i;
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		if (Gui_Screens[i] == s) return i;
 	}
 	return -1;
@@ -206,11 +200,11 @@ static void Gui_RemoveCore(struct Screen* s) {
 	int i = IndexOfScreen(s);
 	if (i == -1) return;
 
-	for (; i < Gui_ScreensCount - 1; i++) {
+	for (; i < Gui.ScreensCount - 1; i++) {
 		Gui_Screens[i] = Gui_Screens[i + 1];
 		priorities[i]  = priorities[i  + 1];
 	}
-	Gui_ScreensCount--;
+	Gui.ScreensCount--;
 
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->Free(s);
@@ -230,7 +224,7 @@ void Gui_Add(struct Screen* s, int priority) {
 	int i;
 	Gui_RemoveCore(s);
 	/* Backwards loop since removing changes count and gui_screens */
-	for (i = Gui_ScreensCount - 1; i >= 0; i--) {
+	for (i = Gui.ScreensCount - 1; i >= 0; i--) {
 		if (priorities[i] == priority) Gui_RemoveCore(Gui_Screens[i]);
 	}
 
@@ -240,7 +234,7 @@ void Gui_Add(struct Screen* s, int priority) {
 
 struct Screen* Gui_GetInputGrab(void) {
 	int i;
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		if (Gui_Screens[i]->grabsInput) return Gui_Screens[i];
 	}
 	return NULL;
@@ -248,7 +242,7 @@ struct Screen* Gui_GetInputGrab(void) {
 
 struct Screen* Gui_GetBlocksWorld(void) {
 	int i;
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		if (Gui_Screens[i]->blocksWorld) return Gui_Screens[i];
 	}
 	return NULL;
@@ -256,7 +250,7 @@ struct Screen* Gui_GetBlocksWorld(void) {
 
 struct Screen* Gui_GetClosable(void) {
 	int i;
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		if (Gui_Screens[i]->closable) return Gui_Screens[i];
 	}
 	return NULL;
@@ -267,7 +261,7 @@ void Gui_RenderGui(double delta) {
 	int i;
 
 	/* Draw back to front so highest priority screen is on top */
-	for (i = Gui_ScreensCount - 1; i >= 0; i--) {
+	for (i = Gui.ScreensCount - 1; i >= 0; i--) {
 		s = Gui_Screens[i];
 		s->VTABLE->Update(s, delta);
 
@@ -280,7 +274,7 @@ void Gui_Layout(void) {
 	struct Screen* s;
 	int i;
 
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->dirty = true;
 		s->VTABLE->Layout(s);
@@ -368,11 +362,11 @@ static void OnFontChanged(void* obj) { Gui_RefreshAll(); }
 
 static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
 	if (String_CaselessEqualsConst(name, "gui.png")) {
-		Game_UpdateTexture(&Gui_GuiTex, stream, name, NULL);
+		Game_UpdateTexture(&Gui.GuiTex, stream, name, NULL);
 	} else if (String_CaselessEqualsConst(name, "gui_classic.png")) {
-		Game_UpdateTexture(&Gui_GuiClassicTex, stream, name, NULL);
+		Game_UpdateTexture(&Gui.GuiClassicTex, stream, name, NULL);
 	} else if (String_CaselessEqualsConst(name, "icons.png")) {
-		Game_UpdateTexture(&Gui_IconsTex, stream, name, NULL);
+		Game_UpdateTexture(&Gui.IconsTex, stream, name, NULL);
 	}
 }
 
@@ -380,7 +374,7 @@ static void OnKeyPress(void* obj, int keyChar) {
 	struct Screen* s;
 	int i;
 
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		if (s->VTABLE->HandlesKeyPress(s, keyChar)) return;
 	}
@@ -391,7 +385,7 @@ static void OnTextChanged(void* obj, const String* str) {
 	struct Screen* s;
 	int i;
 
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		if (s->VTABLE->HandlesTextChanged(s, str)) return;
 	}
@@ -402,12 +396,13 @@ static void OnContextLost(void* obj) {
 	LoseAllScreens();
 	if (Gfx.ManagedTextures) return;
 
-	Gfx_DeleteTexture(&Gui_GuiTex);
-	Gfx_DeleteTexture(&Gui_GuiClassicTex);
-	Gfx_DeleteTexture(&Gui_IconsTex);
+	Gfx_DeleteTexture(&Gui.GuiTex);
+	Gfx_DeleteTexture(&Gui.GuiClassicTex);
+	Gfx_DeleteTexture(&Gui.IconsTex);
 }
 
 static void OnInit(void) {
+	Gui.Screens = Gui_Screens; /* for plugins */
 	Event_Register_(&ChatEvents.FontChanged,     NULL, OnFontChanged);
 	Event_Register_(&TextureEvents.FileChanged,  NULL, OnFileChanged);
 	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);

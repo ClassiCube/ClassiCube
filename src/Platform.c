@@ -841,38 +841,37 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Socket_Create(cc_socket* socketResult) {
-	*socketResult = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	return *socketResult == -1 ? Socket__Error() : 0;
+cc_result Socket_Create(cc_socket* s) {
+	*s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	return *s == -1 ? Socket__Error() : 0;
 }
 
-static cc_result Socket_ioctl(cc_socket socket, cc_uint32 cmd, int* data) {
+static cc_result Socket_ioctl(cc_socket s, cc_uint32 cmd, int* data) {
 #if defined CC_BUILD_WIN
-	return ioctlsocket(socket, cmd, data);
+	return ioctlsocket(s, cmd, data);
 #else
-	return ioctl(socket, cmd, data);
+	return ioctl(s, cmd, data);
 #endif
 }
 
-cc_result Socket_Available(cc_socket socket, cc_uint32* available) {
-	return Socket_ioctl(socket, FIONREAD, available);
+cc_result Socket_Available(cc_socket s, cc_uint32* available) {
+	return Socket_ioctl(s, FIONREAD, available);
 }
-cc_result Socket_SetBlocking(cc_socket socket, cc_bool blocking) {
+cc_result Socket_SetBlocking(cc_socket s, cc_bool blocking) {
 #if defined CC_BUILD_WEB
 	return ERR_NOT_SUPPORTED; /* sockets always async */
 #else
 	int blocking_raw = blocking ? 0 : -1;
-	return Socket_ioctl(socket, FIONBIO, &blocking_raw);
+	return Socket_ioctl(s, FIONBIO, &blocking_raw);
 #endif
 }
 
-
-cc_result Socket_GetError(cc_socket socket, cc_result* result) {
+cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	socklen_t resultSize = sizeof(cc_result);
-	return getsockopt(socket, SOL_SOCKET, SO_ERROR, result, &resultSize);
+	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-cc_result Socket_Connect(cc_socket socket, const String* ip, int port) {
+cc_result Socket_Connect(cc_socket s, const String* ip, int port) {
 	struct sockaddr addr;
 	cc_result res;
 
@@ -880,18 +879,18 @@ cc_result Socket_Connect(cc_socket socket, const String* ip, int port) {
 	Stream_SetU16_BE( (cc_uint8*)&addr.sa_data[0], port);
 	Utils_ParseIP(ip, (cc_uint8*)&addr.sa_data[2]);
 
-	res = connect(socket, &addr, sizeof(addr));
+	res = connect(s, &addr, sizeof(addr));
 	return res == -1 ? Socket__Error() : 0;
 }
 
-cc_result Socket_Read(cc_socket socket, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 #ifdef CC_BUILD_WEB
 	/* recv only reads one WebSocket frame at most, hence call it multiple times */
 	int recvCount = 0, pending;
 	*modified = 0;
 
-	while (count && !Socket_Available(socket, &pending) && pending) {
-		recvCount = recv(socket, data, count, 0);
+	while (count && !Socket_Available(s, &pending) && pending) {
+		recvCount = recv(s, data, count, 0);
 		if (recvCount == -1) return Socket__Error();
 
 		*modified += recvCount;
@@ -899,35 +898,35 @@ cc_result Socket_Read(cc_socket socket, cc_uint8* data, cc_uint32 count, cc_uint
 	}
 	return 0;
 #else
-	int recvCount = recv(socket, data, count, 0);
+	int recvCount = recv(s, data, count, 0);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
 	*modified = 0; return Socket__Error();
 #endif
 }
 
-cc_result Socket_Write(cc_socket socket, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int sentCount = send(socket, data, count, 0);
+cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
+	int sentCount = send(s, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
 	*modified = 0; return Socket__Error();
 }
 
-cc_result Socket_Close(cc_socket socket) {
+cc_result Socket_Close(cc_socket s) {
 	cc_result res = 0;
 	cc_result res1, res2;
 
 #if defined CC_BUILD_WEB
 	res1 = 0;
 #elif defined CC_BUILD_WIN
-	res1 = shutdown(socket, SD_BOTH);
+	res1 = shutdown(s, SD_BOTH);
 #else
-	res1 = shutdown(socket, SHUT_RDWR);
+	res1 = shutdown(s, SHUT_RDWR);
 #endif
 	if (res1 == -1) res = Socket__Error();
 
 #if defined CC_BUILD_WIN
-	res2 = closesocket(socket);
+	res2 = closesocket(s);
 #else
-	res2 = close(socket);
+	res2 = close(s);
 #endif
 	if (res2 == -1) res = Socket__Error();
 	return res;
@@ -935,13 +934,13 @@ cc_result Socket_Close(cc_socket socket) {
 
 /* Alas, a simple cross-platform select() is not good enough */
 #if defined CC_BUILD_WIN
-cc_result Socket_Poll(cc_socket socket, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
 
 	set.fd_count    = 1;
-	set.fd_array[0] = socket;
+	set.fd_array[0] = s;
 
 	if (mode == SOCKET_POLL_READ) {
 		selectCount = select(1, &set, NULL, NULL, &time);
@@ -955,30 +954,30 @@ cc_result Socket_Poll(cc_socket socket, int mode, cc_bool* success) {
 }
 #elif defined CC_BUILD_OSX
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
-cc_result Socket_Poll(cc_socket socket, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
 	struct timeval time = { 0 };
 	int selectCount;
 
 	FD_ZERO(&set);
-	FD_SET(socket, &set);
+	FD_SET(s, &set);
 
 	if (mode == SOCKET_POLL_READ) {
-		selectCount = select(socket + 1, &set, NULL, NULL, &time);
+		selectCount = select(s + 1, &set, NULL, NULL, &time);
 	} else {
-		selectCount = select(socket + 1, NULL, &set, NULL, &time);
+		selectCount = select(s + 1, NULL, &set, NULL, &time);
 	}
 
 	if (selectCount == -1) { *success = false; return Socket__Error(); }
-	*success = FD_ISSET(socket, &set) != 0; return 0;
+	*success = FD_ISSET(s, &set) != 0; return 0;
 }
 #else
 #include <poll.h>
-cc_result Socket_Poll(cc_socket socket, int mode, cc_bool* success) {
+cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	struct pollfd pfd;
 	int flags;
 
-	pfd.fd     = socket;
+	pfd.fd     = s;
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
 	if (poll(&pfd, 1, 0) == -1) { *success = false; return Socket__Error(); }
 	

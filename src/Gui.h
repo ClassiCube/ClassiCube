@@ -19,24 +19,31 @@ struct FontDesc;
 struct Widget;
 extern struct IGameComponent Gui_Component;
 
-/* Whether vanilla Minecraft Classic gui texture is used. */
-extern cc_bool Gui_ClassicTexture;
-/* Whether tab list is laid out like vanilla Minecraft Classic. */
-extern cc_bool Gui_ClassicTabList;
-/* Whether menus are laid out like vanilla Minecraft Classic. */
-extern cc_bool Gui_ClassicMenu;
-/* Whether classic-style chat screen is used */
-extern cc_bool Gui_ClassicChat;
-/* Maximum number of visible chatlines on screen. Can be 0. */
-extern int     Gui_Chatlines;
-/* Whether clicking on a chatline inserts it into chat input. */
-extern cc_bool Gui_ClickableChat;
-/* Whether pressing tab in chat input attempts to autocomplete player names. */
-extern cc_bool Gui_TabAutocomplete;
-/* Whether FPS counter (and other info) is shown in top left. */
-extern cc_bool Gui_ShowFPS;
+CC_VAR extern struct _GuiData {
+	/* The list of screens currently shown. */
+	struct Screen** Screens;
+	/* The number of screens currently shown. */
+	int ScreensCount;
+	/* Whether vanilla Minecraft Classic gui texture is used. */
+	cc_bool ClassicTexture;
+	/* Whether tab list is laid out like vanilla Minecraft Classic. */
+	cc_bool ClassicTabList;
+	/* Whether menus are laid out like vanilla Minecraft Classic. */
+	cc_bool ClassicMenu;
+	/* Whether classic-style chat screen is used */
+	cc_bool ClassicChat;
+	/* Maximum number of visible chatlines on screen. Can be 0. */
+	int     Chatlines;
+	/* Whether clicking on a chatline inserts it into chat input. */
+	cc_bool ClickableChat;
+	/* Whether pressing tab in chat input attempts to autocomplete player names. */
+	cc_bool TabAutocomplete;
+	/* Whether FPS counter (and other info) is shown in top left. */
+	cc_bool ShowFPS;
+	float RawHotbarScale, RawChatScale, RawInventoryScale;
+	GfxResourceID GuiTex, GuiClassicTex, IconsTex;
+} Gui;
 
-extern float Gui_RawHotbarScale, Gui_RawChatScale, Gui_RawInventoryScale;
 float Gui_Scale(float value);
 float Gui_GetHotbarScale(void);
 float Gui_GetInventoryScale(void);
@@ -133,8 +140,6 @@ void Widget_Reset(void* widget);
 int Widget_Contains(void* widget, int x, int y);
 
 
-extern GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
-
 /* Higher priority handles input first and draws on top */
 /* NOTE: Values are 5 apart to allow plugins to insert custom screens */
 enum GuiPriority {
@@ -159,7 +164,6 @@ extern struct ChatScreen* Gui_Chat;
 
 #define GUI_MAX_SCREENS 10
 extern struct Screen* Gui_Screens[GUI_MAX_SCREENS];
-extern int Gui_ScreensCount;
 
 /* Calculates position of an element on a particular axis */
 /* For example, to calculate X position of a text widget on screen */

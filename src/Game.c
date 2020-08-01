@@ -132,8 +132,8 @@ static void CycleViewDistanceBackwards(const short* viewDists, int count) {
 static const short normDists[10]   = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 static const short classicDists[4] = { 8, 32, 128, 512 };
 void Game_CycleViewDistance(void) {
-	const short* dists = Gui_ClassicMenu ? classicDists : normDists;
-	int count = Gui_ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
+	const short* dists = Gui.ClassicMenu ? classicDists : normDists;
+	int count = Gui.ClassicMenu ? Array_Elems(classicDists) : Array_Elems(normDists);
 
 	if (Key_IsShiftPressed()) {
 		CycleViewDistanceBackwards(dists, count);

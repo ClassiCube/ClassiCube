@@ -44,7 +44,7 @@ CC_NOINLINE static cc_bool IsOnlyHudActive(void) {
 	struct Screen* s;
 	int i;
 
-	for (i = 0; i < Gui_ScreensCount; i++) {
+	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		if (s->grabsInput && s != (struct Screen*)Gui_Chat) return false;
 	}
@@ -323,11 +323,11 @@ static void HUDScreen_Render(void* screen, double delta) {
 
 	/* TODO: If Game_ShowFps is off and not classic mode, we should just return here */
 	Gfx_SetTexturing(true);
-	if (Gui_ShowFPS) Elem_Render(&s->line1, delta);
+	if (Gui.ShowFPS) Elem_Render(&s->line1, delta);
 
 	if (Game_ClassicMode) {
 		Elem_Render(&s->line2, delta);
-	} else if (IsOnlyHudActive() && Gui_ShowFPS) {
+	} else if (IsOnlyHudActive() && Gui.ShowFPS) {
 		if (HUDScreen_HacksChanged(s)) { HUDScreen_UpdateHackState(s); }
 		HUDScreen_DrawPosition(s);
 		Elem_Render(&s->line2, delta);
@@ -826,7 +826,7 @@ static void ChatScreen_Redraw(struct ChatScreen* s) {
 }
 
 static int ChatScreen_ClampChatIndex(int index) {
-	int maxIndex = Chat_Log.count - Gui_Chatlines;
+	int maxIndex = Chat_Log.count - Gui.Chatlines;
 	int minIndex = min(0, maxIndex);
 	Math_Clamp(index, minIndex, maxIndex);
 	return index;
@@ -864,7 +864,7 @@ static void ChatScreen_EnterChatInput(struct ChatScreen* s, cc_bool close) {
 	ChatScreen_UpdateChatYOffsets(s);
 
 	/* Reset chat when user has scrolled up in chat history */
-	defaultIndex = Chat_Log.count - Gui_Chatlines;
+	defaultIndex = Chat_Log.count - Gui.Chatlines;
 	if (s->chatIndex != defaultIndex) {
 		s->chatIndex = defaultIndex;
 		TextGroupWidget_RedrawAll(&s->chat);
@@ -929,7 +929,7 @@ static void ChatScreen_ChatReceived(void* screen, const String* msg, int type) {
 
 	if (type == MSG_TYPE_NORMAL) {
 		s->chatIndex++;
-		if (!Gui_Chatlines) return;
+		if (!Gui.Chatlines) return;
 		TextGroupWidget_ShiftUp(&s->chat);
 	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
 		/* Status[0] is for texture pack downloading message */
@@ -948,10 +948,10 @@ static void ChatScreen_ChatReceived(void* screen, const String* msg, int type) {
 static void ChatScreen_DrawCrosshairs(void) {
 	static struct Texture tex = { 0, Tex_Rect(0,0,0,0), Tex_UV(0.0f,0.0f, 15/256.0f,15/256.0f) };
 	int extent;
-	if (!Gui_IconsTex) return;
+	if (!Gui.IconsTex) return;
 
 	extent = (int)(CH_EXTENT * Gui_Scale(WindowInfo.Height / 480.0f));
-	tex.ID = Gui_IconsTex;
+	tex.ID = Gui.IconsTex;
 	tex.X  = (WindowInfo.Width  / 2) - extent;
 	tex.Y  = (WindowInfo.Height / 2) - extent;
 
@@ -1056,7 +1056,7 @@ static void ChatScreen_ContextLost(void* screen) {
 }
 
 static void ChatScreen_RemakePlayerList(struct ChatScreen* s) {
-	cc_bool classic = Gui_ClassicTabList || !Server.SupportsExtPlayerList;
+	cc_bool classic = Gui.ClassicTabList || !Server.SupportsExtPlayerList;
 	TabListOverlay_Create(&s->playerList, &s->playerFont, classic);
 	s->showingList  = true;
 	TabListOverlay_Reposition(&s->playerList);
@@ -1126,7 +1126,7 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	static const String slash = String_FromConst("/");
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	int playerListKey   = KeyBinds[KEYBIND_PLAYER_LIST];
-	cc_bool handlesList = playerListKey != KEY_TAB || !Gui_TabAutocomplete || !s->grabsInput;
+	cc_bool handlesList = playerListKey != KEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
 
 	if (key == playerListKey && handlesList) {
 		if (!s->showingList && !Server.IsSinglePlayer) {
@@ -1147,9 +1147,9 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 			ChatScreen_EnterChatInput(s, key == KEY_ESCAPE);
 #endif
 		} else if (key == KEY_PAGEUP) {
-			ChatScreen_ScrollChatBy(s, -Gui_Chatlines);
+			ChatScreen_ScrollChatBy(s, -Gui.Chatlines);
 		} else if (key == KEY_PAGEDOWN) {
-			ChatScreen_ScrollChatBy(s, +Gui_Chatlines);
+			ChatScreen_ScrollChatBy(s, +Gui.Chatlines);
 		} else {
 			Elem_HandlesKeyDown(&s->input.base, key);
 		}
@@ -1251,7 +1251,7 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 
 	if (Utils_IsUrlPrefix(&text)) {
 		UrlWarningOverlay_Show(&text);
-	} else if (Gui_ClickableChat) {
+	} else if (Gui.ClickableChat) {
 		ChatScreen_AppendInput(&text);
 	}
 	return true;
@@ -1267,7 +1267,7 @@ static void ChatScreen_Init(void* screen) {
 							s->statusTextures, ChatScreen_GetStatus);
 	TextGroupWidget_Create(&s->bottomRight, CHAT_MAX_BOTTOMRIGHT, 
 							s->bottomRightTextures, ChatScreen_GetBottomRight);
-	TextGroupWidget_Create(&s->chat, Gui_Chatlines,
+	TextGroupWidget_Create(&s->chat, Gui.Chatlines,
 							s->chatTextures, ChatScreen_GetChat);
 	TextGroupWidget_Create(&s->clientStatus, CHAT_MAX_CLIENTSTATUS,
 							s->clientStatusTextures, ChatScreen_GetClientStatus);
@@ -1278,7 +1278,7 @@ static void ChatScreen_Init(void* screen) {
 	s->clientStatus.collapsible[1] = true;
 
 	s->chat.underlineUrls = !Game_ClassicMode;
-	s->chatIndex = Chat_Log.count - Gui_Chatlines;
+	s->chatIndex = Chat_Log.count - Gui.Chatlines;
 
 	Event_Register_(&ChatEvents.ChatReceived,   s, ChatScreen_ChatReceived);
 	Event_Register_(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
@@ -1308,7 +1308,7 @@ static void ChatScreen_Render(void* screen, double delta) {
 		ChatScreen_DrawCrosshairs();
 		Gfx_SetTexturing(false);
 	}
-	if (s->grabsInput && !Gui_ClassicChat) {
+	if (s->grabsInput && !Gui.ClassicChat) {
 		ChatScreen_DrawChatBackground(s);
 	}
 
