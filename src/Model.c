@@ -494,49 +494,39 @@ static void Models_TextureChanged(void* obj, struct Stream* stream, const String
 static struct VertexTextured defaultVertices[MODEL_BOX_VERTICES * MAX_CUSTOM_MODEL_PARTS];	
 struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 
-void CustomModelPart_BuildBox(struct CustomModelPart* part) {
+void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* part) {
 	float x1 = part->min.X, y1 = part->min.Y, z1 = part->min.Z;
 	float x2 = part->max.X, y2 = part->max.Y, z2 = part->max.Z;
-	struct Model* m = Models.Active;
 
-	BoxDesc_YQuad2(m, x1, x2, z2, z1, y2, /* top */
+	struct CustomModelPart* p = &cm->parts[cm->curPartIndex];
+	cm->model.index   = cm->curPartIndex * MODEL_BOX_VERTICES;
+	p->fullbright     = part->flags & 0x01;
+	p->firstPersonArm = part->flags & 0x02;
+
+	BoxDesc_YQuad2(&cm->model, x1, x2, z2, z1, y2, /* top */
 		part->u1[0],                         part->v1[0],
 		part->u2[0],                         part->v2[0]);
-	BoxDesc_YQuad2(m, x2, x1, z2, z1, y1, /* bottom */
+	BoxDesc_YQuad2(&cm->model, x2, x1, z2, z1, y1, /* bottom */
 		part->u1[1],                         part->v1[1],
 		part->u2[1],                         part->v2[1]);
-	BoxDesc_ZQuad2(m, x1, x2, y1, y2, z1, /* front */
+	BoxDesc_ZQuad2(&cm->model, x1, x2, y1, y2, z1, /* front */
 		part->u1[2],                         part->v1[2],
 		part->u2[2],                         part->v2[2]);
-	BoxDesc_ZQuad2(m, x2, x1, y1, y2, z2, /* back */
+	BoxDesc_ZQuad2(&cm->model, x2, x1, y1, y2, z2, /* back */
 		part->u1[3],                         part->v1[3],
 		part->u2[3],                         part->v2[3]);
-	BoxDesc_XQuad2(m, z1, z2, y1, y2, x2, /* left */
+	BoxDesc_XQuad2(&cm->model, z1, z2, y1, y2, x2, /* left */
 		part->u1[4],                         part->v1[4],
 		part->u2[4],                         part->v2[4]);
-	BoxDesc_XQuad2(m, z2, z1, y1, y2, x1, /* right */
+	BoxDesc_XQuad2(&cm->model, z2, z1, y1, y2, x1, /* right */
 		part->u1[5],                         part->v1[5], 
 		part->u2[5],                         part->v2[5]);
 
-	ModelPart_Init(
-		&part->modelPart,
-		m->index - MODEL_BOX_VERTICES,
-		MODEL_BOX_VERTICES,
-		part->rotationOrigin.X, part->rotationOrigin.Y, part->rotationOrigin.Z
-	);
+	ModelPart_Init(&p->modelPart, cm->model.index - MODEL_BOX_VERTICES, MODEL_BOX_VERTICES,
+		part->rotationOrigin.X, part->rotationOrigin.Y, part->rotationOrigin.Z);
 }
 
-/*#########################################*
-*-------------Model methods----------------*
-*##########################################*/
-static void CustomModel_MakeParts(void) {
-	struct CustomModel* cm = (struct CustomModel*)Models.Active;
-	int i;
-	for (i = 0; i < cm->numParts; i++) {
-		CustomModelPart_BuildBox(&cm->parts[i]);
-	}
-}
-
+static void CustomModel_MakeParts(void) { }
 static struct ModelVertex oldVertices[MODEL_BOX_VERTICES];
 static float CustomModel_GetAnimationValue(
 	struct CustomModelAnim* anim,
@@ -752,9 +742,6 @@ static void CustomModel_DrawArm(struct Entity* e) {
 	if (cm->model.index) Model_UpdateVB();
 }
 
-/*#########################################*
-*-----------Init/Free functions------------*
-*##########################################*/
 static void CheckMaxVertices(void) {
 	/* hack to undo plugins setting a smaller vertices buffer */
 	if (Models.MaxVertices < Array_Elems(defaultVertices)) {
@@ -773,7 +760,6 @@ void CustomModel_Register(struct CustomModel* cm) {
 
 	CheckMaxVertices();
 	cm->model.name       = cm->name;
-	cm->model.vertices   = cm->vertices;
 	cm->model.defaultTex = &customDefaultTex;
 
 	cm->model.MakeParts = CustomModel_MakeParts;
@@ -799,7 +785,7 @@ void CustomModel_Undefine(struct CustomModel* cm) {
 	if (!cm->defined) return;
 	if (cm->registered) Model_Unregister((struct Model*)cm);
 
-	Mem_Free(cm->vertices);
+	Mem_Free(cm->model.vertices);
 	Mem_Set(cm, 0, sizeof(struct CustomModel));
 }
 

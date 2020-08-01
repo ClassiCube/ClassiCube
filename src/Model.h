@@ -239,34 +239,24 @@ struct CustomModelAnim {
 	float a, b, c, d;
 };
 
+struct CustomModelPartDef {
+	Vec3 min, max;
+	/* uv coords in order: top, bottom, front, back, left, right */
+	cc_uint16 u1[6], v1[6], u2[6], v2[6];
+	Vec3 rotationOrigin;
+	cc_uint8 flags;
+};
+
 struct CustomModelPart {
 	struct ModelPart modelPart;
-
-	/* min and max vec3 points */
-	Vec3 min;
-	Vec3 max;
-
-	/* uv coords in order: top, bottom, front, back, left, right */
-	cc_uint16 u1[6];
-	cc_uint16 v1[6];
-	cc_uint16 u2[6];
-	cc_uint16 v2[6];
-	/* rotation origin point */
-	Vec3 rotationOrigin;
-
-	/* rotation angles */
-	Vec3 rotation;
-
+	Vec3 rotation; /* rotation angles */
 	struct CustomModelAnim anims[MAX_CUSTOM_MODEL_ANIMS];
-
 	cc_bool fullbright;
 	cc_bool firstPersonArm;
 };
 
 struct CustomModel {
 	struct Model model;
-	struct ModelVertex* vertices;
-
 	char name[STRING_SIZE + 1];
 	
 	float nameY;
@@ -287,6 +277,7 @@ struct CustomModel {
 
 extern struct CustomModel custom_models[MAX_CUSTOM_MODELS];
 
+void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* part);
 void CustomModel_Register(struct CustomModel* cm);
 void CustomModel_Undefine(struct CustomModel* cm);
 
