@@ -294,7 +294,7 @@ void Gui_Layout(void) {
 void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, struct FontDesc* font, const String* prefix) {
 	struct DrawTextArgs args; 
 	int width, height;
-	Bitmap bmp;
+	struct Bitmap bmp;
 	int i, charWidth;
 
 	Gfx_DeleteTexture(&atlas->tex.ID);

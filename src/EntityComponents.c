@@ -566,7 +566,7 @@ static cc_bool ShadowComponent_GetBlocks(struct Entity* e, int x, int y, int z, 
 static void ShadowComponent_MakeTex(void) {
 	BitmapCol pixels[sh_size * sh_size];
 	BitmapCol col = BitmapCol_Make(0, 0, 0, 200);
-	Bitmap bmp; 
+	struct Bitmap bmp;
 	cc_uint32 x, y;
 
 	Bitmap_Init(bmp, sh_size, sh_size, pixels);

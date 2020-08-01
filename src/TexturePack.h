@@ -30,7 +30,7 @@ extern struct IGameComponent Textures_Component;
 CC_VAR extern struct _Atlas2DData {
 	/* Bitmap that contains the textures of all tiles. */
 	/* Tiles are indexed left to right, top to bottom. */
-	Bitmap Bmp;
+	struct Bitmap Bmp;
 	/* Size of each tile in pixels. (default 16x16) */
 	int TileSize;
 	/* Number of rows in the atlas. (default 16, can be 32) */
@@ -61,7 +61,7 @@ CC_VAR extern struct _Atlas1DData {
 /* Loads the given tile into a new separate texture. */
 GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc);
 /* Attempts to change the terrain atlas. (bitmap containing textures for all blocks) */
-cc_bool Atlas_TryChange(Bitmap* bmp);
+cc_bool Atlas_TryChange(struct Bitmap* bmp);
 /* Returns the UV rectangle of the given tile id in the 1D atlases. */
 /* That is, returns U1/U2/V1/V2 coords that make up the tile in a 1D atlas. */
 /* index is set to the index of the 1D atlas that the tile is in. */

@@ -12,7 +12,7 @@ struct FontDesc;
 /* If width is 0, means no area needs to be redrawn. */
 extern Rect2D Launcher_Dirty;
 /* Contains the pixels that are drawn to the window. */
-extern Bitmap Launcher_Framebuffer;
+extern struct Bitmap Launcher_Framebuffer;
 /* Whether to use stone tile background like minecraft.net. */
 extern cc_bool Launcher_ClassicBackground;
 /* Default font for buttons and labels. */

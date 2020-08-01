@@ -15,7 +15,7 @@
 #define LIQUID_ANIM_MAX 64
 #define WATER_TEX_LOC 14
 #define LAVA_TEX_LOC  30
-static void Animations_Update(int loc, Bitmap* bmp, int stride);
+static void Animations_Update(int loc, struct Bitmap* bmp, int stride);
 
 #ifndef CC_BUILD_WEB
 /* Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
@@ -37,7 +37,7 @@ static void LavaAnimation_Tick(void) {
 	float soupHeat, potHeat, col;
 	int size, mask, shift;
 	int x, y, i = 0;
-	Bitmap bmp;
+	struct Bitmap bmp;
 
 	size  = min(Atlas2D.TileSize, LIQUID_ANIM_MAX);
 	mask  = size - 1;
@@ -118,7 +118,7 @@ static void WaterAnimation_Tick(void) {
 	float soupHeat, col;
 	int size, mask, shift;
 	int x, y, i = 0;
-	Bitmap bmp;
+	struct Bitmap bmp;
 
 	size  = min(Atlas2D.TileSize, LIQUID_ANIM_MAX);
 	mask  = size - 1;
@@ -179,7 +179,7 @@ struct AnimationData {
 	cc_uint16 frameDelay;     /* Delay between each frame */
 };
 
-static Bitmap anims_bmp;
+static struct Bitmap anims_bmp;
 static struct AnimationData anims_list[ATLAS1D_MAX_ATLASES];
 static int anims_count;
 static cc_bool anims_validated, useLavaAnim, useWaterAnim, alwaysLavaAnim, alwaysWaterAnim;
@@ -242,7 +242,7 @@ static void Animations_ReadDescription(struct Stream* stream, const String* path
 	}
 }
 
-static void Animations_Update(int texLoc, Bitmap* bmp, int stride) {
+static void Animations_Update(int texLoc, struct Bitmap* bmp, int stride) {
 	int dstX = Atlas1D_Index(texLoc);
 	int dstY = Atlas1D_RowId(texLoc) * Atlas2D.TileSize;
 	GfxResourceID tex;
@@ -252,8 +252,8 @@ static void Animations_Update(int texLoc, Bitmap* bmp, int stride) {
 }
 
 static void Animations_Apply(struct AnimationData* data) {
+	struct Bitmap frame;
 	int loc, size;
-	Bitmap frame;
 	if (data->delay) { data->delay--; return; }
 
 	data->state++;

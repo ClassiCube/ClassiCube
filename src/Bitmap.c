@@ -8,7 +8,8 @@
 #include "Errors.h"
 #include "Utils.h"
 
-void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size) {
+void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, 
+							struct Bitmap* src, struct Bitmap* dst, int size) {
 	int x, y;
 	for (y = 0; y < size; y++) {
 		BitmapCol* srcRow = Bitmap_GetRow(src, srcY + y) + srcX;
@@ -17,17 +18,17 @@ void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src
 	}
 }
 
-void Bitmap_Allocate(Bitmap* bmp, int width, int height) {
+void Bitmap_Allocate(struct Bitmap* bmp, int width, int height) {
 	bmp->width = width; bmp->height = height;
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(width * height, 4, "bitmap data");
 }
 
-void Bitmap_TryAllocate(Bitmap* bmp, int width, int height) {
+void Bitmap_TryAllocate(struct Bitmap* bmp, int width, int height) {
 	bmp->width = width; bmp->height = height;
 	bmp->scan0 = (BitmapCol*)Mem_TryAlloc(width * height, 4);
 }
 
-void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height) {
+void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, int width, int height) {
 	width  = Math_NextPowOf2(width);
 	height = Math_NextPowOf2(height);
 
@@ -35,7 +36,7 @@ void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height) {
 	bmp->scan0 = (BitmapCol*)Mem_AllocCleared(width * height, 4, "bitmap data");
 }
 
-void Bitmap_TryAllocateClearedPow2(Bitmap* bmp, int width, int height) {
+void Bitmap_TryAllocateClearedPow2(struct Bitmap* bmp, int width, int height) {
 	width  = Math_NextPowOf2(width);
 	height = Math_NextPowOf2(height);
 
@@ -43,7 +44,8 @@ void Bitmap_TryAllocateClearedPow2(Bitmap* bmp, int width, int height) {
 	bmp->scan0 = (BitmapCol*)Mem_TryAllocCleared(width * height, 4);
 }
 
-void Bitmap_Scale(Bitmap* dst, Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight) {
+void Bitmap_Scale(struct Bitmap* dst, struct Bitmap* src, 
+					int srcX, int srcY, int srcWidth, int srcHeight) {
 	BitmapCol* dstRow;
 	BitmapCol* srcRow;
 	int x, y, width, height;
@@ -320,7 +322,7 @@ static Png_RowExpander Png_GetExpander(cc_uint8 col, cc_uint8 bitsPerSample) {
 }
 
 /* Sets alpha to 0 for any pixels in the bitmap whose RGB is same as col */
-static void ComputeTransparency(Bitmap* bmp, BitmapCol col) {
+static void ComputeTransparency(struct Bitmap* bmp, BitmapCol col) {
 	BitmapCol trnsRGB = col & BITMAPCOL_RGB_MASK;
 	int x, y, width = bmp->width, height = bmp->height;
 
@@ -338,7 +340,7 @@ static void ComputeTransparency(Bitmap* bmp, BitmapCol col) {
 #define PNG_BUFFER_SIZE ((PNG_MAX_DIMS * 2 * 4 + 1) * 2)
 
 /* TODO: Test a lot of .png files and ensure output is right */
-cc_result Png_Decode(Bitmap* bmp, struct Stream* stream) {
+cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	cc_uint8 tmp[PNG_PALETTE * 3];
 	cc_uint32 dataSize, fourCC;
 	cc_result res;
@@ -630,8 +632,9 @@ static void Png_EncodeRow(const cc_uint8* cur, const cc_uint8* prior, cc_uint8* 
 	best[0] = bestFilter;
 }
 
-static int Png_SelectRow(Bitmap* bmp, int y) { return y; }
-cc_result Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, cc_bool alpha) {
+static int Png_SelectRow(struct Bitmap* bmp, int y) { return y; }
+cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream, 
+					Png_RowSelector selectRow, cc_bool alpha) {
 	cc_uint8 tmp[32];
 	/* TODO: This should be * 4 for alpha (should switch to mem_alloc though) */
 	cc_uint8 prevLine[PNG_MAX_DIMS * 3], curLine[PNG_MAX_DIMS * 3];

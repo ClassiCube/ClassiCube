@@ -340,7 +340,7 @@ static cc_result ZipPatcher_WriteZipEntry(struct Stream* src, struct ResourceTex
 	return 0;
 }
 
-static cc_result ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* tex, Bitmap* src) {
+static cc_result ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* tex, struct Bitmap* src) {
 	cc_result res;
 
 	if ((res = ZipPatcher_LocalFile(s, tex)))   return res;
@@ -370,7 +370,7 @@ static cc_result ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* t
 "\r\n" \
 "# fire\r\n" \
 "6 2 0 0 16 32 0"
-static Bitmap terrainBmp;
+static struct Bitmap terrainBmp;
 
 static cc_bool ClassicPatcher_SelectEntry(const String* path) {
 	String name = *path;
@@ -434,7 +434,7 @@ CC_NOINLINE static const struct TilePatch* ModernPatcher_GetTile(const String* p
 }
 
 static cc_result ModernPatcher_PatchTile(struct Stream* data, const struct TilePatch* tile) {
-	Bitmap bmp;
+	struct Bitmap bmp;
 	cc_result res;
 
 	if ((res = Png_Decode(&bmp, data))) return res;
@@ -462,7 +462,7 @@ static cc_result ModernPatcher_MakeAnimations(struct Stream* s, struct Stream* d
 	static const String animsPng = String_FromConst("animations.png");
 	struct ResourceTexture* entry;
 	BitmapCol pixels[512 * 16];
-	Bitmap anim, bmp;
+	struct Bitmap anim, bmp;
 	cc_result res;
 	int i;
 
@@ -532,14 +532,14 @@ static cc_result TexPatcher_NewFiles(struct Stream* s) {
 	return res;
 }
 
-static void TexPatcher_PatchTile(Bitmap* src, int srcX, int srcY, int dstX, int dstY) {
+static void TexPatcher_PatchTile(struct Bitmap* src, int srcX, int srcY, int dstX, int dstY) {
 	Bitmap_UNSAFE_CopyBlock(srcX, srcY, dstX * 16, dstY * 16, src, &terrainBmp, 16);
 }
 
 static cc_result TexPatcher_Terrain(struct Stream* s) {
 	static const String terrainPng = String_FromConst("terrain.png");
 	struct ResourceTexture* entry;
-	Bitmap bmp;
+	struct Bitmap bmp;
 	struct Stream src;
 	cc_result res;
 

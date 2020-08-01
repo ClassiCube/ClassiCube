@@ -376,7 +376,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 }
 
 static SDL_Surface* surface;
-void Window_AllocFramebuffer(Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	surface = SDL_GetWindowSurface(win_handle);
 	if (!surface) Window_SDLFail("getting window surface");
 
@@ -394,7 +394,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	SDL_UpdateWindowSurfaceRects(win_handle, &rect, 1);
 }
 
-void Window_FreeFramebuffer(Bitmap* bmp) {
+void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	/* SDL docs explicitly say to NOT free the surface */
 	/* https://wiki.libsdl.org/SDL_GetWindowSurface */
 	/* TODO: Do we still need to unlock it though? */
@@ -887,7 +887,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 
 static HDC draw_DC;
 static HBITMAP draw_DIB;
-void Window_AllocFramebuffer(Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	BITMAPINFO hdr = { 0 };
 	if (!draw_DC) draw_DC = CreateCompatibleDC(win_DC);
 	
@@ -906,7 +906,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	SelectObject(draw_DC, oldSrc);
 }
 
-void Window_FreeFramebuffer(Bitmap* bmp) {
+void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	DeleteObject(draw_DIB);
 }
 
@@ -1796,7 +1796,7 @@ static void ShowDialogCore(const char* title, const char* msg) {
 
 static GC fb_gc;
 static XImage* fb_image;
-void Window_AllocFramebuffer(Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	if (!fb_gc) fb_gc = XCreateGC(win_display, win_handle, 0, NULL);
 
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
@@ -1810,7 +1810,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 		r.X, r.Y, r.X, r.Y, r.Width, r.Height);
 }
 
-void Window_FreeFramebuffer(Bitmap* bmp) {
+void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	XFree(fb_image);
 	Mem_Free(bmp->scan0);
 }
@@ -2492,10 +2492,10 @@ static void ShowDialogCore(const char* title, const char* msg) {
 }
 
 static CGrafPtr fb_port;
-static Bitmap fb_bmp;
+static struct Bitmap fb_bmp;
 static CGColorSpaceRef colorSpace;
 
-void Window_AllocFramebuffer(Bitmap* bmp) {
+void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	if (!fb_port) fb_port = GetWindowPort(win_handle);
 
 	bmp->scan0 = Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
@@ -2542,7 +2542,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	CGDataProviderRelease(provider);
 }
 
-void Window_FreeFramebuffer(Bitmap* bmp) {
+void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 	CGColorSpaceRelease(colorSpace);
 }
@@ -2966,8 +2966,8 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	CFRelease(msgCF);
 }
 
-static Bitmap fb_bmp;
-void Window_AllocFramebuffer(Bitmap* bmp) {
+static struct Bitmap fb_bmp;
+void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	fb_bmp = *bmp;
 }
@@ -3017,7 +3017,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	objc_msgSend(viewHandle, selDisplayIfNeeded);
 }
 
-void Window_FreeFramebuffer(Bitmap* bmp) {
+void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 #endif
@@ -3465,9 +3465,9 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	EM_ASM_({ alert(UTF8ToString($0) + "\n\n" + UTF8ToString($1)); }, title, msg);
 }
 
-void Window_AllocFramebuffer(Bitmap* bmp) { }
+void Window_AllocFramebuffer(struct Bitmap* bmp) { }
 void Window_DrawFramebuffer(Rect2D r)     { }
-void Window_FreeFramebuffer(Bitmap* bmp)  { }
+void Window_FreeFramebuffer(struct Bitmap* bmp)  { }
 
 EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) { 
 	char buffer[800];
@@ -3822,8 +3822,8 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	(*env)->DeleteLocalRef(env, args[1].l);
 }
 
-static Bitmap fb_bmp;
-void Window_AllocFramebuffer(Bitmap* bmp) {
+static struct Bitmap fb_bmp;
+void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
 	fb_bmp     = *bmp;
 }
@@ -3865,7 +3865,7 @@ void Window_DrawFramebuffer(Rect2D r) {
 	if (res) Logger_Abort2(res, "Unlocking window pixels");
 }
 
-void Window_FreeFramebuffer(Bitmap* bmp) {
+void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 

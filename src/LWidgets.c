@@ -706,7 +706,7 @@ void LSlider_Init(struct LScreen* s, struct LSlider* w, int width, int height, B
 *------------------------------------------------------TableWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	Bitmap* bmp = Flags_Get(row);
+	struct Bitmap* bmp = Flags_Get(row);
 	if (!bmp) return;
 	Drawer2D_BmpCopy(&Launcher_Framebuffer, x + flagXOffset, y + flagYOffset, bmp);
 }

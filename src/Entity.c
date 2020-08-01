@@ -234,10 +234,10 @@ static void MakeNameTexture(struct Entity* e) {
 
 	struct DrawTextArgs args;
 	struct FontDesc font;
+	struct Bitmap bmp;
 	cc_bool bitmapped;
 	int width, height;
 	String name;
-	Bitmap bmp;
 
 	/* Names are always drawn not using the system font */
 	bitmapped = Drawer2D_BitmappedText;
@@ -387,7 +387,7 @@ static void Entity_SetSkinAll(struct Entity* source, cc_bool reset) {
 
 /* Clears hat area from a skin bitmap if it's completely white or black,
    so skins edited with Microsoft Paint or similiar don't have a solid hat */
-static void Entity_ClearHat(Bitmap* bmp, cc_uint8 skinType) {
+static void Entity_ClearHat(struct Bitmap* bmp, cc_uint8 skinType) {
 	int sizeX  = (bmp->width / 64) * 32;
 	int yScale = skinType == SKIN_64x32 ? 32 : 64;
 	int sizeY  = (bmp->height / yScale) * 16;
@@ -412,10 +412,10 @@ static void Entity_ClearHat(Bitmap* bmp, cc_uint8 skinType) {
 }
 
 /* Ensures skin is a power of two size, resizing if needed. */
-static cc_result Entity_EnsurePow2(struct Entity* e, Bitmap* bmp) {
+static cc_result Entity_EnsurePow2(struct Entity* e, struct Bitmap* bmp) {
+	struct Bitmap scaled;
 	cc_uint32 stride;
 	int width, height;
-	Bitmap scaled;
 	int y;
 
 	width  = Math_NextPowOf2(bmp->width);
@@ -446,7 +446,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	struct HttpRequest item;
 	struct Stream mem;
-	Bitmap bmp;
+	struct Bitmap bmp;
 	cc_result res;
 
 	/* Don't check skin if don't have to */

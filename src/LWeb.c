@@ -541,14 +541,14 @@ struct FetchFlagsData FetchFlagsTask;
 static int flagsCount, flagsCapacity;
 
 struct Flag {
-	Bitmap bmp;
+	struct Bitmap bmp;
 	char country[2];
 };
 static struct Flag* flags;
 
 /* Scales up flag bitmap if necessary */
-static void FetchFlagsTask_Scale(Bitmap* bmp) {
-	Bitmap scaled;
+static void FetchFlagsTask_Scale(struct Bitmap* bmp) {
+	struct Bitmap scaled;
 	int width  = Display_ScaleX(bmp->width);
 	int height = Display_ScaleY(bmp->height);
 	/* at default DPI don't need to rescale it */
@@ -624,7 +624,7 @@ void FetchFlagsTask_Add(const struct ServerInfo* server) {
 	FetchFlagsTask_DownloadNext();
 }
 
-Bitmap* Flags_Get(const struct ServerInfo* server) {
+struct Bitmap* Flags_Get(const struct ServerInfo* server) {
 	int i;
 	for (i = 0; i < FetchFlagsTask.count; i++) {
 		if (flags[i].country[0] != server->country[0]) continue;

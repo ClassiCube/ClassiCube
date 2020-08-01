@@ -1435,7 +1435,7 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	struct Texture* tex;
 	int textWidth, lineHeight;
 	int width, height, hintX, y;
-	Bitmap bmp;
+	struct Bitmap bmp;
 
 	DrawTextArgs_Make(&args, &w->base.text, w->base.font, false);
 	textWidth   = Drawer2D_TextWidth(&args);
@@ -1540,7 +1540,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	struct DrawTextArgs args;
 	int width = 0, height = 0;
-	Bitmap bmp; 
+	struct Bitmap bmp;
 	char lastCol;
 	int i, x, y;
 
@@ -2056,7 +2056,7 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 	struct Portion bit;
 	int width, height;
 	int partWidths[Array_Elems(portions)];
-	Bitmap bmp;
+	struct Bitmap bmp;
 	int portionsCount;
 	int i, x, ul;
 
@@ -2281,7 +2281,7 @@ static int SpecialInputWidget_MeasureTitles(struct SpecialInputWidget* w) {
 	return width;
 }
 
-static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, Bitmap* bmp) {
+static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, struct Bitmap* bmp) {
 	BitmapCol col_selected = BitmapCol_Make(30, 30, 30, 200);
 	BitmapCol col_inactive = BitmapCol_Make( 0,  0,  0, 127);
 	BitmapCol col;
@@ -2325,7 +2325,7 @@ static int SpecialInputWidget_ContentHeight(struct SpecialInputWidget* w, struct
 	return w->elementHeight * rows;
 }
 
-static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct SpecialInputTab* tab, Bitmap* bmp, int yOffset) {
+static void SpecialInputWidget_DrawContent(struct SpecialInputWidget* w, struct SpecialInputTab* tab, struct Bitmap* bmp, int yOffset) {
 	struct DrawTextArgs args;
 	int i, x, y, item;	
 
@@ -2348,7 +2348,7 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct Special
 	int titlesWidth, titlesHeight;
 	int contentWidth, contentHeight;
 	int width, height;
-	Bitmap bmp;
+	struct Bitmap bmp;
 
 	titlesWidth   = SpecialInputWidget_MeasureTitles(w);
 	titlesHeight  = w->titleHeight;

@@ -114,7 +114,7 @@ extern struct FetchFlagsData {
 /* Asynchronously downloads the flag associated with the given server's country. */
 void FetchFlagsTask_Add(const struct ServerInfo* server);
 /* Gets the bitmap for the flag associated with the given server's country. */
-Bitmap* Flags_Get(const struct ServerInfo* server);
+struct Bitmap* Flags_Get(const struct ServerInfo* server);
 /* Frees all flag bitmaps. */
 void Flags_Free(void);
 #endif

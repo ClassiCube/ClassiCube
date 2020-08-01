@@ -78,7 +78,6 @@ void Window_Init(void);
 void Window_Create(int width, int height);
 /* Sets the text of the titlebar above the window. */
 CC_API void Window_SetTitle(const String* title);
-/* TODO: IMPLEMENT void Window_SetIcon(Bitmap* bmp); */
 
 typedef void (*RequestClipboardCallback)(String* value, void* obj);
 /* Gets the text currently on the clipboard. */
@@ -121,12 +120,12 @@ CC_API void Window_ShowDialog(const char* title, const char* msg);
 /* Allocates a framebuffer that can be drawn/transferred to the window. */
 /* NOTE: Do NOT free bmp->Scan0, use Window_FreeFramebuffer. */
 /* NOTE: This MUST be called whenever the window is resized. */
-void Window_AllocFramebuffer(Bitmap* bmp);
+void Window_AllocFramebuffer(struct Bitmap* bmp);
 /* Transfers pixels from the allocated framebuffer to the on-screen window. */
 /* r can be used to only update a small region of pixels (may be ignored) */
 void Window_DrawFramebuffer(Rect2D r);
 /* Frees the previously allocated framebuffer. */
-void Window_FreeFramebuffer(Bitmap* bmp);
+void Window_FreeFramebuffer(struct Bitmap* bmp);
 
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */

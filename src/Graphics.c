@@ -201,11 +201,11 @@ void Gfx_RestoreAlphaState(cc_uint8 draw) {
 }
 
 
-void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, Bitmap* part, cc_bool mipmaps) {
+void Gfx_UpdateTexturePart(GfxResourceID texId, int x, int y, struct Bitmap* part, cc_bool mipmaps) {
 	Gfx_UpdateTexture(texId, x, y, part, part->width, mipmaps);
 }
 
-static void CopyTextureData(void* dst, int dstStride, const Bitmap* src, int srcStride) {
+static void CopyTextureData(void* dst, int dstStride, const struct Bitmap* src, int srcStride) {
 	/* We need to copy scanline by scanline, as generally srcStride != dstStride */
 	cc_uint8* src_ = (cc_uint8*)src->scan0;
 	cc_uint8* dst_ = (cc_uint8*)dst;
@@ -482,7 +482,7 @@ static void Gfx_RestoreState(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, int lvl) {
+static void D3D9_SetTextureData(IDirect3DTexture9* texture, struct Bitmap* bmp, int lvl) {
 	D3DLOCKED_RECT rect;
 	cc_result res = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
 	if (res) Logger_Abort2(res, "D3D9_LockTextureData");
@@ -494,7 +494,7 @@ static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, int lvl
 	if (res) Logger_Abort2(res, "D3D9_UnlockTextureData");
 }
 
-static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, const Bitmap* bmp, int rowWidth, int lvl) {
+static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, const struct Bitmap* bmp, int rowWidth, int lvl) {
 	D3DLOCKED_RECT rect;
 	cc_result res;
 	RECT part;
@@ -510,10 +510,10 @@ static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, int x, int y, co
 	if (res) Logger_Abort2(res, "D3D9_UnlockTexturePartData");
 }
 
-static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp, int rowWidth, cc_bool partial) {
+static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, struct Bitmap* bmp, int rowWidth, cc_bool partial) {
 	BitmapCol* prev = bmp->scan0;
 	BitmapCol* cur;
-	Bitmap mipmap;
+	struct Bitmap mipmap;
 
 	int lvls = CalcMipmapsLevels(bmp->width, bmp->height);
 	int lvl, width = bmp->width, height = bmp->height;
@@ -540,7 +540,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, Bitmap* bmp
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
 	cc_result res;
 	int mipmapsLevels = CalcMipmapsLevels(bmp->width, bmp->height);
@@ -578,7 +578,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 	return tex;
 }
 
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, Bitmap* part, int rowWidth, cc_bool mipmaps) {
+void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	IDirect3DTexture9* texture = (IDirect3DTexture9*)texId;
 	D3D9_SetTexturePartData(texture, x, y, part, rowWidth, 0);
 	if (mipmaps) D3D9_DoMipmaps(texture, x, y, part, rowWidth, true);
@@ -905,7 +905,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	IDirect3DSurface9* temp = NULL;
 	D3DSURFACE_DESC desc;
 	D3DLOCKED_RECT rect;
-	Bitmap bmp;
+	struct Bitmap bmp;
 	cc_result res;
 
 	res = IDirect3DDevice9_GetBackBuffer(device, 0, 0, D3DBACKBUFFER_TYPE_MONO, &backbuffer);
@@ -1129,7 +1129,7 @@ static void* FastAllocTempMem(int size) {
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
 *#########################################################################################################################*/
-static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, int rowWidth, cc_bool partial) {
+static void Gfx_DoMipmaps(int x, int y, struct Bitmap* bmp, int rowWidth, cc_bool partial) {
 	BitmapCol* prev = bmp->scan0;
 	BitmapCol* cur;
 
@@ -1157,7 +1157,7 @@ static void Gfx_DoMipmaps(int x, int y, Bitmap* bmp, int rowWidth, cc_bool parti
 	if (prev != bmp->scan0) Mem_Free(prev);
 }
 
-GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
+GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
 	GLuint texId;
 	glGenTextures(1, &texId);
 	glBindTexture(GL_TEXTURE_2D, texId);
@@ -1185,7 +1185,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, cc_bool managedPool, cc_bool mipmap
 }
 
 #define UPDATE_FAST_SIZE (64 * 64)
-static CC_NOINLINE void UpdateTextureSlow(int x, int y, Bitmap* part, int rowWidth) {
+static CC_NOINLINE void UpdateTextureSlow(int x, int y, struct Bitmap* part, int rowWidth) {
 	BitmapCol buffer[UPDATE_FAST_SIZE];
 	void* ptr = (void*)buffer;
 	int count = part->width * part->height;
@@ -1200,7 +1200,7 @@ static CC_NOINLINE void UpdateTextureSlow(int x, int y, Bitmap* part, int rowWid
 	if (count > UPDATE_FAST_SIZE) Mem_Free(ptr);
 }
 
-void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, Bitmap* part, int rowWidth, cc_bool mipmaps) {
+void Gfx_UpdateTexture(GfxResourceID texId, int x, int y, struct Bitmap* part, int rowWidth, cc_bool mipmaps) {
 	glBindTexture(GL_TEXTURE_2D, (GLuint)texId);
 	/* TODO: Use GL_UNPACK_ROW_LENGTH for Desktop OpenGL */
 
@@ -1423,9 +1423,10 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 /*########################################################################################################################*
 *-----------------------------------------------------------Misc----------------------------------------------------------*
 *#########################################################################################################################*/
-static int GL_SelectRow(Bitmap* bmp, int y) { return (bmp->height - 1) - y; }
+/* OpenGL stores bitmap in bottom-up order, so flip order when saving */
+static int SelectRow(struct Bitmap* bmp, int y) { return (bmp->height - 1) - y; }
 cc_result Gfx_TakeScreenshot(struct Stream* output) {
-	Bitmap bmp;
+	struct Bitmap bmp;
 	cc_result res;
 	GLint vp[4];
 	
@@ -1437,7 +1438,7 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	if (!bmp.scan0) return ERR_OUT_OF_MEMORY;
 	glReadPixels(0, 0, bmp.width, bmp.height, PIXEL_FORMAT, TRANSFER_FORMAT, bmp.scan0);
 
-	res = Png_Encode(&bmp, output, GL_SelectRow, false);
+	res = Png_Encode(&bmp, output, SelectRow, false);
 	Mem_Free(bmp.scan0);
 	return res;
 }

@@ -42,7 +42,7 @@ typedef cc_uint32 BitmapCol;
 #define BITMAPCOL_WHITE BitmapCol_Make(255, 255, 255, 255)
 
 /* A 2D array of BitmapCol pixels */
-typedef struct Bitmap_ { BitmapCol* scan0; int width, height; } Bitmap;
+struct Bitmap { BitmapCol* scan0; int width, height; };
 #define PNG_MAX_DIMS 0x8000
 
 /* Returns number of bytes a bitmap consumes. */
@@ -58,34 +58,37 @@ typedef struct Bitmap_ { BitmapCol* scan0; int width, height; } Bitmap;
 /* Copies a rectangle of pixels from one bitmap to another. */
 /* NOTE: If src and dst are the same, src and dst rectangles MUST NOT overlap. */
 /* NOTE: Rectangles are NOT checked for whether they lie inside the bitmaps. */
-void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, Bitmap* src, Bitmap* dst, int size);
+void Bitmap_UNSAFE_CopyBlock(int srcX, int srcY, int dstX, int dstY, 
+							struct Bitmap* src, struct Bitmap* dst, int size);
 /* Allocates a new bitmap of the given dimensions. */
 /* NOTE: You are responsible for freeing its memory! */
-void Bitmap_Allocate(Bitmap* bmp, int width, int height);
+void Bitmap_Allocate(struct Bitmap* bmp, int width, int height);
 /* Attemps to allocates a new bitmap of the given dimensions. */
 /* NOTE: You are responsible for freeing its memory! */
-void Bitmap_TryAllocate(Bitmap* bmp, int width, int height);
+void Bitmap_TryAllocate(struct Bitmap* bmp, int width, int height);
 /* Allocates a power-of-2 sized bitmap equal to or greater than the given size, and clears it to 0. */
 /* NOTE: You are responsible for freeing its memory! */
-void Bitmap_AllocateClearedPow2(Bitmap* bmp, int width, int height);
+void Bitmap_AllocateClearedPow2(struct Bitmap* bmp, int width, int height);
 /* Attempts to allocate a power-of-2 sized bitmap >= than the given size, and clears it to 0. */
 /* NOTE: You are responsible for freeing its memory! */
-void Bitmap_TryAllocateClearedPow2(Bitmap* bmp, int width, int height);
+void Bitmap_TryAllocateClearedPow2(struct Bitmap* bmp, int width, int height);
 /* Scales a region of the source bitmap to occupy the entirety of the destination bitmap. */
 /* The pixels from the region are scaled upwards or downwards depending on destination width and height. */
-CC_API void Bitmap_Scale(Bitmap* dst, Bitmap* src, int srcX, int srcY, int srcWidth, int srcHeight);
+CC_API void Bitmap_Scale(struct Bitmap* dst, struct Bitmap* src, 
+						int srcX, int srcY, int srcWidth, int srcHeight);
 
 /* Whether data starts with PNG format signature/identifier. */
 cc_bool Png_Detect(const cc_uint8* data, cc_uint32 len);
-typedef int (*Png_RowSelector)(Bitmap* bmp, int row);
+typedef int (*Png_RowSelector)(struct Bitmap* bmp, int row);
 /*
   Decodes a bitmap in PNG format. Partially based off information from
      https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way
      https://github.com/nothings/stb/blob/master/stb_image.h
 */
-CC_API cc_result Png_Decode(Bitmap* bmp, struct Stream* stream);
+CC_API cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream);
 /* Encodes a bitmap in PNG format. */
 /* selectRow is optional. Can be used to modify how rows are encoded. (e.g. flip image) */
 /* if alpha is non-zero, RGBA channels are saved, otherwise only RGB channels are. */
-CC_API cc_result Png_Encode(Bitmap* bmp, struct Stream* stream, Png_RowSelector selectRow, cc_bool alpha);
+CC_API cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream, 
+							Png_RowSelector selectRow, cc_bool alpha);
 #endif

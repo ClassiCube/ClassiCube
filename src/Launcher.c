@@ -20,7 +20,7 @@
 #ifndef CC_BUILD_WEB
 static struct LScreen* activeScreen;
 Rect2D Launcher_Dirty;
-Bitmap Launcher_Framebuffer;
+struct Bitmap Launcher_Framebuffer;
 cc_bool Launcher_ClassicBackground;
 struct FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
 
@@ -33,7 +33,7 @@ static char hashBuffer[STRING_SIZE];
 String Launcher_AutoHash = String_FromArray(hashBuffer);
 
 static cc_bool useBitmappedFont;
-static Bitmap dirtBmp, stoneBmp, fontBmp;
+static struct Bitmap dirtBmp, stoneBmp, fontBmp;
 #define TILESIZE 48
 
 void Launcher_SetScreen(struct LScreen* screen) {
@@ -428,7 +428,7 @@ static cc_bool Launcher_SelectZipEntry(const String* path) {
 		String_CaselessEqualsConst(path, "terrain.png");
 }
 
-static void LoadTextures(Bitmap* bmp) {
+static void LoadTextures(struct Bitmap* bmp) {
 	int tileSize = bmp->width / 16;
 	Bitmap_Allocate(&dirtBmp,  TILESIZE, TILESIZE);
 	Bitmap_Allocate(&stoneBmp, TILESIZE, TILESIZE);
@@ -442,7 +442,7 @@ static void LoadTextures(Bitmap* bmp) {
 }
 
 static cc_result Launcher_ProcessZipEntry(const String* path, struct Stream* data, struct ZipState* s) {
-	Bitmap bmp;
+	struct Bitmap bmp;
 	cc_result res;
 
 	if (String_CaselessEqualsConst(path, "default.png")) {
@@ -518,8 +518,8 @@ void Launcher_UpdateLogoFont(void) {
 }
 
 /* Fills the given area using pixels from the source bitmap, by repeatedly tiling the bitmap. */
-CC_NOINLINE static void ClearTile(int x, int y, int width, int height, Bitmap* src) {
-	Bitmap* dst = &Launcher_Framebuffer;
+CC_NOINLINE static void ClearTile(int x, int y, int width, int height, struct Bitmap* src) {
+	struct Bitmap* dst = &Launcher_Framebuffer;
 	BitmapCol* dstRow;
 	BitmapCol* srcRow;
 	int xx, yy;

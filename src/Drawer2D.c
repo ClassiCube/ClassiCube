@@ -100,7 +100,7 @@ static void CheckFont(void) {
 	Logger_Abort("Unable to init default font");
 }
 
-static Bitmap fontBitmap;
+static struct Bitmap fontBitmap;
 static int tileSize = 8; /* avoid divide by 0 if default.png missing */
 /* So really 16 characters per row */
 #define LOG2_CHARS_PER_ROW 4
@@ -138,7 +138,7 @@ static void FreeFontBitmap(void) {
 	Mem_Free(fontBitmap.scan0);
 }
 
-cc_bool Drawer2D_SetFontBitmap(Bitmap* bmp) {
+cc_bool Drawer2D_SetFontBitmap(struct Bitmap* bmp) {
 	/* If not all of these cases are accounted for, end up overwriting memory after tileWidths */
 	if (bmp->width != bmp->height) {
 		static const String msg = String_FromConst("&cWidth of default.png must equal its height");
@@ -174,13 +174,13 @@ void Font_ReducePadding(struct FontDesc* desc, int scale) {
 /* Measures width of the given text when drawn with the given system font. */
 static int Font_SysTextWidth(struct DrawTextArgs* args);
 /* Draws the given text with the given system font onto the given bitmap. */
-static void Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, cc_bool shadow);
+static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow);
 
 
 /*########################################################################################################################*
 *---------------------------------------------------Drawing functions-----------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height) {
+cc_bool Drawer2D_Clamp(struct Bitmap* bmp, int* x, int* y, int* width, int* height) {
 	if (*x >= bmp->width || *y >= bmp->height) return false;
 
 	/* origin is negative, move inside */
@@ -193,7 +193,7 @@ cc_bool Drawer2D_Clamp(Bitmap* bmp, int* x, int* y, int* width, int* height) {
 }
 #define Drawer2D_ClampPixel(p) p = (p < 0 ? 0 : (p > 255 ? 255 : p))
 
-void Gradient_Noise(Bitmap* bmp, BitmapCol col, int variation,
+void Gradient_Noise(struct Bitmap* bmp, BitmapCol col, int variation,
 					int x, int y, int width, int height) {
 	BitmapCol* dst;
 	int R, G, B, xx, yy, n;
@@ -217,7 +217,7 @@ void Gradient_Noise(Bitmap* bmp, BitmapCol col, int variation,
 	}
 }
 
-void Gradient_Vertical(Bitmap* bmp, BitmapCol a, BitmapCol b,
+void Gradient_Vertical(struct Bitmap* bmp, BitmapCol a, BitmapCol b,
 					   int x, int y, int width, int height) {
 	BitmapCol* row, col;
 	int xx, yy;
@@ -238,7 +238,7 @@ void Gradient_Vertical(Bitmap* bmp, BitmapCol a, BitmapCol b,
 	}
 }
 
-void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
+void Gradient_Blend(struct Bitmap* bmp, BitmapCol col, int blend,
 					int x, int y, int width, int height) {
 	BitmapCol* dst;
 	int R, G, B, xx, yy;
@@ -267,7 +267,7 @@ void Gradient_Blend(Bitmap* bmp, BitmapCol col, int blend,
 	}
 }
 
-void Gradient_Tint(Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
+void Gradient_Tint(struct Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 				   int x, int y, int width, int height) {
 	BitmapCol* row, col;
 	cc_uint8 tint;
@@ -291,7 +291,7 @@ void Gradient_Tint(Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 	}
 }
 
-void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src) {
+void Drawer2D_BmpCopy(struct Bitmap* dst, int x, int y, struct Bitmap* src) {
 	int width = src->width, height = src->height;
 	BitmapCol* dstRow;
 	BitmapCol* srcRow;
@@ -306,7 +306,8 @@ void Drawer2D_BmpCopy(Bitmap* dst, int x, int y, Bitmap* src) {
 	}
 }
 
-void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int height) {
+void Drawer2D_Clear(struct Bitmap* bmp, BitmapCol col, 
+					int x, int y, int width, int height) {
 	BitmapCol* row;
 	int xx, yy;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
@@ -320,8 +321,8 @@ void Drawer2D_Clear(Bitmap* bmp, BitmapCol col, int x, int y, int width, int hei
 
 void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 	static struct Texture empty = { 0, Tex_Rect(0,0, 0,0), Tex_UV(0,0, 1,1) };
+	struct Bitmap bmp;
 	int width, height;
-	Bitmap bmp;
 	/* pointless to draw anything when context is lost */
 	if (Gfx.LostContext) { *tex = empty; return; }
 
@@ -337,7 +338,7 @@ void Drawer2D_MakeTextTexture(struct Texture* tex, struct DrawTextArgs* args) {
 	Mem_Free(bmp.scan0);
 }
 
-void Drawer2D_MakeTexture(struct Texture* tex, Bitmap* bmp, int width, int height) {
+void Drawer2D_MakeTexture(struct Texture* tex, struct Bitmap* bmp, int width, int height) {
 	tex->ID = Gfx_CreateTexture(bmp, false, false);
 	tex->X  = 0; tex->Width  = width;
 	tex->Y  = 0; tex->Height = height;
@@ -417,7 +418,7 @@ void Drawer2D_ReducePadding_Height(int* height, int point, int scale) {
 }
 
 /* Quickly fills the given box region */
-static void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height, BitmapCol col) {
+static void Drawer2D_Underline(struct Bitmap* bmp, int x, int y, int width, int height, BitmapCol col) {
 	BitmapCol* row;
 	int xx, yy;
 
@@ -432,7 +433,7 @@ static void Drawer2D_Underline(Bitmap* bmp, int x, int y, int width, int height,
 	}
 }
 
-static void DrawBitmappedTextCore(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, cc_bool shadow) {
+static void DrawBitmappedTextCore(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int y, cc_bool shadow) {
 	BitmapCol col;
 	String text  = args->text;
 	int i, point = args->font->size, count = 0;
@@ -530,7 +531,7 @@ static void DrawBitmappedTextCore(Bitmap* bmp, struct DrawTextArgs* args, int x,
 	}
 }
 
-static void DrawBitmappedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
+static void DrawBitmappedText(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 	int offset = Drawer2D_ShadowOffset(args->font->size);
 
 	if (args->useShadow) {
@@ -565,7 +566,7 @@ static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
 	return width;
 }
 
-void Drawer2D_DrawText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
+void Drawer2D_DrawText(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 	if (Drawer2D_IsEmptyText(&args->text)) return;
 	if (Drawer2D_BitmappedText) { DrawBitmappedText(bmp, args, x, y); return; }
 
@@ -593,7 +594,8 @@ int Drawer2D_FontHeight(const struct FontDesc* font, cc_bool useShadow) {
 	return height;
 }
 
-void Drawer2D_DrawClippedText(Bitmap* bmp, struct DrawTextArgs* args, int x, int y, int maxWidth) {
+void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args, 
+								int x, int y, int maxWidth) {
 	char strBuffer[512];
 	struct DrawTextArgs part;
 	int i, width;
@@ -652,7 +654,7 @@ static void OnReset(void) {
 }
 
 static void OnFileChanged(void* obj, struct Stream* src, const String* name) {
-	Bitmap bmp;
+	struct Bitmap bmp;
 	cc_result res;
 	if (!String_CaselessEqualsConst(name, "default.png")) return;
 
@@ -712,7 +714,7 @@ void Font_Free(struct FontDesc* desc) {
 
 void SysFonts_Register(const String* path) { }
 static int Font_SysTextWidth(struct DrawTextArgs* args) { return 0; }
-static void Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, cc_bool shadow) { }
+static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) { }
 #else
 #include "freetype/ft2build.h"
 #include "freetype/freetype.h"
@@ -1057,7 +1059,7 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	return width;
 }
 
-static void DrawGrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
+static void DrawGrayscaleGlyph(FT_Bitmap* img, struct Bitmap* bmp, int x, int y, BitmapCol col) {
 	cc_uint8* src;
 	BitmapCol* dst;
 	cc_uint8 I, invI; /* intensity */
@@ -1085,7 +1087,7 @@ static void DrawGrayscaleGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitmap
 	}
 }
 
-static void DrawBlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, BitmapCol col) {
+static void DrawBlackWhiteGlyph(FT_Bitmap* img, struct Bitmap* bmp, int x, int y, BitmapCol col) {
 	cc_uint8* src;
 	BitmapCol* dst;
 	cc_uint8 intensity;
@@ -1109,7 +1111,7 @@ static void DrawBlackWhiteGlyph(FT_Bitmap* img, Bitmap* bmp, int x, int y, Bitma
 }
 
 static FT_Vector shadow_delta = { 83, -83 };
-static void Font_SysTextDraw(struct DrawTextArgs* args, Bitmap* bmp, int x, int y, cc_bool shadow) {
+static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) {
 	struct SysFont* font  = (struct SysFont*)args->font->handle;
 	FT_BitmapGlyph* glyphs = font->glyphs;
 

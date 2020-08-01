@@ -37,7 +37,7 @@ static void Atlas_Convert2DTo1D(void) {
 	int tileSize      = Atlas2D.TileSize;
 	int tilesPerAtlas = Atlas1D.TilesPerAtlas;
 	int atlasesCount  = Atlas1D.Count;
-	Bitmap atlas1D;
+	struct Bitmap atlas1D;
 	int atlasX, atlasY;
 	int tile = 0, i, y;
 
@@ -73,7 +73,7 @@ static void Atlas_Update1D(void) {
 }
 
 /* Loads the given atlas and converts it into an array of 1D atlases. */
-static void Atlas_Update(Bitmap* bmp) {
+static void Atlas_Update(struct Bitmap* bmp) {
 	Atlas2D.Bmp       = *bmp;
 	Atlas2D.TileSize  = bmp->width  / ATLAS2D_TILES_PER_ROW;
 	Atlas2D.RowsCount = bmp->height / Atlas2D.TileSize;
@@ -83,7 +83,7 @@ static void Atlas_Update(Bitmap* bmp) {
 	Atlas_Convert2DTo1D();
 }
 
-static GfxResourceID Atlas_LoadTile_Raw(TextureLoc texLoc, Bitmap* element) {
+static GfxResourceID Atlas_LoadTile_Raw(TextureLoc texLoc, struct Bitmap* element) {
 	int size = Atlas2D.TileSize;
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 	if (y >= Atlas2D.RowsCount) return 0;
@@ -95,7 +95,7 @@ static GfxResourceID Atlas_LoadTile_Raw(TextureLoc texLoc, Bitmap* element) {
 GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 	BitmapCol pixels[64 * 64];
 	int size = Atlas2D.TileSize;
-	Bitmap tile;
+	struct Bitmap tile;
 	GfxResourceID texId;
 
 	/* Try to allocate bitmap on stack if possible */
@@ -122,7 +122,7 @@ static void Atlas1D_Free(void) {
 	}
 }
 
-cc_bool Atlas_TryChange(Bitmap* atlas) {
+cc_bool Atlas_TryChange(struct Bitmap* atlas) {
 	static const String terrain = String_FromConst("terrain.png");
 	if (!Game_ValidateBitmap(&terrain, atlas)) return false;
 
@@ -299,7 +299,7 @@ static cc_result ExtractZip(struct Stream* stream) {
 }
 
 static cc_result ExtractPng(struct Stream* stream) {
-	Bitmap bmp; 
+	struct Bitmap bmp;
 	cc_result res = Png_Decode(&bmp, stream);
 	if (!res && Atlas_TryChange(&bmp)) return 0;
 
@@ -416,7 +416,7 @@ void TexturePack_DownloadAsync(const String* url, const String* id) {
 *---------------------------------------------------Textures component----------------------------------------------------*
 *#########################################################################################################################*/
 static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
-	Bitmap bmp;
+	struct Bitmap bmp;
 	cc_result res;
 
 	if (!String_CaselessEqualsConst(name, "terrain.png")) return;

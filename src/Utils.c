@@ -68,7 +68,7 @@ int Utils_AccumulateWheelDelta(float* accumulator, float delta) {
 }
 
 /* Checks if an area is completely black, so Alex skins edited with Microsoft Paint are still treated as Alex */
-static cc_bool Utils_IsAllBlack(const Bitmap* bmp, int x1, int y1, int width, int height) {
+static cc_bool IsAllBlack(const struct Bitmap* bmp, int x1, int y1, int width, int height) {
 	int x, y;
 	for (y = y1; y < y1 + height; y++) {
 		BitmapCol* row = Bitmap_GetRow(bmp, y);
@@ -80,7 +80,7 @@ static cc_bool Utils_IsAllBlack(const Bitmap* bmp, int x1, int y1, int width, in
 	return true;
 }
 
-cc_uint8 Utils_CalcSkinType(const Bitmap* bmp) {
+cc_uint8 Utils_CalcSkinType(const struct Bitmap* bmp) {
 	BitmapCol col;
 	int scale;
 	if (bmp->width == bmp->height * 2) return SKIN_64x32;
@@ -91,8 +91,8 @@ cc_uint8 Utils_CalcSkinType(const Bitmap* bmp) {
 	col = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
 	if (BitmapCol_A(col) < 128) return SKIN_64x64_SLIM;
 
-	return Utils_IsAllBlack(bmp, 54 * scale, 20 * scale, 2 * scale, 12 * scale)
-		&& Utils_IsAllBlack(bmp, 50 * scale, 16 * scale, 2 * scale,  4 * scale) ? SKIN_64x64_SLIM : SKIN_64x64;
+	return IsAllBlack(bmp, 54 * scale, 20 * scale, 2 * scale, 12 * scale)
+		&& IsAllBlack(bmp, 50 * scale, 16 * scale, 2 * scale,  4 * scale) ? SKIN_64x64_SLIM : SKIN_64x64;
 }
 
 cc_uint32 Utils_CRC32(const cc_uint8* data, cc_uint32 length) {

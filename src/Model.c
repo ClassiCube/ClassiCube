@@ -526,7 +526,6 @@ void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* pa
 		part->rotationOrigin.X, part->rotationOrigin.Y, part->rotationOrigin.Z);
 }
 
-static void CustomModel_MakeParts(void) { }
 static struct ModelVertex oldVertices[MODEL_BOX_VERTICES];
 static float CustomModel_GetAnimationValue(
 	struct CustomModelAnim* anim,
@@ -762,7 +761,7 @@ void CustomModel_Register(struct CustomModel* cm) {
 	cm->model.name       = cm->name;
 	cm->model.defaultTex = &customDefaultTex;
 
-	cm->model.MakeParts = CustomModel_MakeParts;
+	cm->model.MakeParts = Model_NoParts;
 	cm->model.Draw      = CustomModel_Draw;
 	cm->model.GetNameY  = CustomModel_GetNameY;
 	cm->model.GetEyeY   = CustomModel_GetEyeY;

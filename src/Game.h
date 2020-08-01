@@ -72,7 +72,7 @@ cc_bool Game_CanPick(BlockID block);
 cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, cc_uint8* skinType);
 /* Checks that the given bitmap can be loaded into a native gfx texture. */
 /* (must be power of two size and be <= Gfx_MaxTexWidth/Gfx_MaxHeight) */
-cc_bool Game_ValidateBitmap(const String* file, Bitmap* bmp);
+cc_bool Game_ValidateBitmap(const String* file, struct Bitmap* bmp);
 /* Updates Game_Width and Game_Height. */
 void Game_UpdateDimensions(void);
 /* Sets the strategy/method used to limit frames per second. */

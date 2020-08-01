@@ -342,7 +342,7 @@ void Block_RecalculateAllSpriteBB(void) {
 	}
 }
 
-static float Block_GetSpriteBB_MinX(int size, int tileX, int tileY, const Bitmap* bmp) {
+static float GetSpriteBB_MinX(int size, int tileX, int tileY, const struct Bitmap* bmp) {
 	BitmapCol* row;
 	int x, y;
 
@@ -355,7 +355,7 @@ static float Block_GetSpriteBB_MinX(int size, int tileX, int tileY, const Bitmap
 	return 1.0f;
 }
 
-static float Block_GetSpriteBB_MinY(int size, int tileX, int tileY, const Bitmap* bmp) {
+static float GetSpriteBB_MinY(int size, int tileX, int tileY, const struct Bitmap* bmp) {
 	BitmapCol* row;
 	int x, y;
 
@@ -368,7 +368,7 @@ static float Block_GetSpriteBB_MinY(int size, int tileX, int tileY, const Bitmap
 	return 1.0f;
 }
 
-static float Block_GetSpriteBB_MaxX(int size, int tileX, int tileY, const Bitmap* bmp) {
+static float GetSpriteBB_MaxX(int size, int tileX, int tileY, const struct Bitmap* bmp) {
 	BitmapCol* row;
 	int x, y;
 
@@ -381,7 +381,7 @@ static float Block_GetSpriteBB_MaxX(int size, int tileX, int tileY, const Bitmap
 	return 0.0f;
 }
 
-static float Block_GetSpriteBB_MaxY(int size, int tileX, int tileY, const Bitmap* bmp) {
+static float GetSpriteBB_MaxY(int size, int tileX, int tileY, const struct Bitmap* bmp) {
 	BitmapCol* row;
 	int x, y;
 
@@ -395,7 +395,7 @@ static float Block_GetSpriteBB_MaxY(int size, int tileX, int tileY, const Bitmap
 }
 
 void Block_RecalculateBB(BlockID block) {
-	Bitmap* bmp  = &Atlas2D.Bmp;
+	struct Bitmap* bmp = &Atlas2D.Bmp;
 	int tileSize = Atlas2D.TileSize;
 	TextureLoc texLoc = Block_Tex(block, FACE_XMAX);
 	int x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
@@ -405,10 +405,10 @@ void Block_RecalculateBB(BlockID block) {
 	Vec3 minRaw, maxRaw;
 
 	if (y < Atlas2D.RowsCount) {
-		minX = Block_GetSpriteBB_MinX(tileSize, x, y, bmp);
-		minY = Block_GetSpriteBB_MinY(tileSize, x, y, bmp);
-		maxX = Block_GetSpriteBB_MaxX(tileSize, x, y, bmp);
-		maxY = Block_GetSpriteBB_MaxY(tileSize, x, y, bmp);
+		minX = GetSpriteBB_MinX(tileSize, x, y, bmp);
+		minY = GetSpriteBB_MinY(tileSize, x, y, bmp);
+		maxX = GetSpriteBB_MaxX(tileSize, x, y, bmp);
+		maxY = GetSpriteBB_MaxY(tileSize, x, y, bmp);
 	}
 
 	minRaw = Vec3_RotateY3(minX - 0.5f, minY, 0.0f, 45.0f * MATH_DEG2RAD);

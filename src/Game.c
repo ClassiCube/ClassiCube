@@ -220,7 +220,7 @@ cc_bool Game_CanPick(BlockID block) {
 }
 
 cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, cc_uint8* skinType) {
-	Bitmap bmp;
+	struct Bitmap bmp;
 	cc_bool success;
 	cc_result res;
 	
@@ -238,7 +238,7 @@ cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const Strin
 	return success;
 }
 
-cc_bool Game_ValidateBitmap(const String* file, Bitmap* bmp) {
+cc_bool Game_ValidateBitmap(const String* file, struct Bitmap* bmp) {
 	int maxWidth = Gfx.MaxTexWidth, maxHeight = Gfx.MaxTexHeight;
 	if (!bmp->scan0) {
 		Chat_Add1("&cError loading %s from the texture pack.", file);
