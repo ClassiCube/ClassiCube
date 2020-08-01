@@ -1,11 +1,11 @@
 #ifndef CC_GAME_H
 #define CC_GAME_H
 #include "String.h"
-#include "Bitmap.h"
 /* Represents the game and related structures.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
+struct Bitmap;
 struct Stream;
 CC_VAR extern struct _GameData {
 	/* Width and height of the window. (1 at minimum) */

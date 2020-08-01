@@ -11,6 +11,7 @@
 #include "ExtMath.h"
 #include "Errors.h"
 #include "Options.h"
+#include "Bitmap.h"
 
 /* Avoid pointless includes on Windows */
 #define WIN32_LEAN_AND_MEAN

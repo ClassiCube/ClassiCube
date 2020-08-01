@@ -1,11 +1,11 @@
 #ifndef CC_UTILS_H
 #define CC_UTILS_H
 #include "String.h"
-#include "Bitmap.h"
 /* Implements various utility functions.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
+struct Bitmap;
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time. */
 /* NOTE: TimeMS and DateTime_CurrentUTC_MS() should almost always be used instead. */
 /* This struct should only be used when actually needed. (e.g. log message time) */

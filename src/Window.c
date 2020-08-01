@@ -5,6 +5,7 @@
 #include "Logger.h"
 #include "Funcs.h"
 #include "ExtMath.h"
+#include "Bitmap.h"
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;

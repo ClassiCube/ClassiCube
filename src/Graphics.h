@@ -1,12 +1,12 @@
 #ifndef CC_GFXAPI_H
 #define CC_GFXAPI_H
 #include "Vectors.h"
-#include "Bitmap.h"
 #include "PackedCol.h"
 
 /* Abstracts a 3D graphics rendering API.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
+struct Bitmap;
 struct Stream;
 struct IGameComponent;
 extern struct IGameComponent Gfx_Component;

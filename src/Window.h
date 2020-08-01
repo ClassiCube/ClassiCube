@@ -1,7 +1,6 @@
 #ifndef CC_WINDOW_H
 #define CC_WINDOW_H
 #include "String.h"
-#include "Bitmap.h"
 /* Abstracts creating and managing the native window.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3 | Based on OpenTK code
 */
@@ -31,6 +30,7 @@
    OTHER DEALINGS IN THE SOFTWARE.
 */
 
+struct Bitmap;
 struct DynamicLibSym;
 /* The states the window can be in. */
 enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_FULLSCREEN };
