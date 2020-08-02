@@ -409,8 +409,18 @@ static void Classic_Handshake(cc_uint8* data) {
 
 static void Classic_Ping(cc_uint8* data) { }
 
+#define MAP_SIZE_LEN 4
+static void DisconnectInvalidMap(cc_result res) {
+	static const String title  = String_FromConst("Disconnected");
+	String tmp; char tmpBuffer[STRING_SIZE];
+	String_InitArray(tmp, tmpBuffer);
+
+	String_Format1(&tmp, "Server sent corrupted map data (error %h)", &res);
+	Game_Disconnect(&title, &tmp); return;
+}
+
 static void MapState_Init(struct MapState* m) {
-	Inflate_MakeStream(&m->stream, &m->inflateState, &map_part);
+	Inflate_MakeStream2(&m->stream, &m->inflateState, &map_part);
 	m->index  = 0;
 	m->blocks = NULL;
 	m->allocFailed = false;
@@ -427,6 +437,7 @@ static void FreeMapStates(void) {
 
 static void MapState_Read(struct MapState* m) {
 	cc_uint32 left, read;
+	cc_result res;
 	if (m->allocFailed) return;
 
 	if (!m->blocks) {
@@ -440,7 +451,9 @@ static void MapState_Read(struct MapState* m) {
 	}
 
 	left = map_volume - m->index;
-	m->stream.Read(&m->stream, &m->blocks[m->index], left, &read);
+	res  = m->stream.Read(&m->stream, &m->blocks[m->index], left, &read);
+
+	if (res) DisconnectInvalidMap(res);
 	m->index += read;
 }
 
@@ -471,16 +484,7 @@ static void Classic_LevelInit(cc_uint8* data) {
 	/* Fast map puts volume in header, and uses raw DEFLATE without GZIP header/footer */
 	map_volume    = Stream_GetU32_BE(data);
 	map_gzHeader.done = true;
-	map_sizeIndex = 4;
-}
-
-static void DisconnectInvalidMap(cc_result res) {
-	static const String title  = String_FromConst("Disconnected");
-	String tmp; char tmpBuffer[STRING_SIZE];
-	String_InitArray(tmp, tmpBuffer);
-
-	String_Format1(&tmp, "Server sent corrupted map data (error %h)", &res);
-	Game_Disconnect(&title, &tmp); return;
+	map_sizeIndex = MAP_SIZE_LEN;
 }
 
 static void Classic_LevelDataChunk(cc_uint8* data) {
@@ -508,13 +512,15 @@ static void Classic_LevelDataChunk(cc_uint8* data) {
 	}
 
 	if (map_gzHeader.done) {
-		if (map_sizeIndex < 4) {
-			left = 4 - map_sizeIndex;
-			map.stream.Read(&map.stream, &map_size[map_sizeIndex], left, &read); 
+		if (map_sizeIndex < MAP_SIZE_LEN) {
+			left = MAP_SIZE_LEN - map_sizeIndex;
+			res  = map.stream.Read(&map.stream, &map_size[map_sizeIndex], left, &read); 
+
+			if (res) { DisconnectInvalidMap(res); return; }
 			map_sizeIndex += read;
 		}
 
-		if (map_sizeIndex == 4) {
+		if (map_sizeIndex == MAP_SIZE_LEN) {
 			if (!map_volume) map_volume = Stream_GetU32_BE(map_size);
 
 #ifndef EXTENDED_BLOCKS

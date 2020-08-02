@@ -64,17 +64,18 @@ struct InflateState {
 	} Table; /* union to save on memory */
 	struct HuffmanTable TableDists;         /* Values represent distances back */
 	cc_uint8 Window[INFLATE_WINDOW_SIZE];    /* Holds circular buffer of recent output data, used for LZ77 */
+	cc_result result;
 };
 
 /* Initialises DEFLATE decompressor state to defaults. */
-CC_API void Inflate_Init(struct InflateState* state, struct Stream* source);
+CC_API void Inflate_Init2(struct InflateState* state, struct Stream* source);
 /* Attempts to decompress as much of the currently pending data as possible. */
 /* NOTE: This is a low level call - usually you treat as a stream via Inflate_MakeStream. */
 void Inflate_Process(struct InflateState* state);
 /* Deompresses input data read from another stream using DEFLATE. Read only stream. */
 /* NOTE: This only uncompresses pure DEFLATE compressed data. */
 /* If data starts with a GZIP or ZLIB header, use GZipHeader_Read or ZLibHeader_Read to first skip it. */
-CC_API void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying);
+CC_API void Inflate_MakeStream2(struct Stream* stream, struct InflateState* state, struct Stream* underlying);
 
 
 #define DEFLATE_BLOCK_SIZE  16384

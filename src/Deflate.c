@@ -154,6 +154,8 @@ enum INFLATE_STATE_ {
 #define Inflate_UNSAFE_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { Inflate_GetByte(state); }
 /* Peeks then consumes given bits */
 #define Inflate_ReadBits(state, bitsCount) Inflate_PeekBits(state, bitsCount); Inflate_ConsumeBits(state, bitsCount);
+/* Sets to given result and sets state to DONE */
+#define Inflate_Fail(state, res) state->result = res; state->State = INFLATE_STATE_DONE;
 
 /* Goes to the next state, after having read data of a block */
 #define Inflate_NextBlockState(state) (state->LastBlock ? INFLATE_STATE_DONE : INFLATE_STATE_HEADER)
@@ -329,7 +331,7 @@ static int Huffman_Unsafe_Decode_Slow(struct InflateState* state, struct Huffman
 	return -1;
 }
 
-void Inflate_Init(struct InflateState* state, struct Stream* source) {
+void Inflate_Init2(struct InflateState* state, struct Stream* source) {
 	state->State = INFLATE_STATE_HEADER;
 	state->LastBlock = false;
 	state->Bits = 0;
@@ -340,6 +342,7 @@ void Inflate_Init(struct InflateState* state, struct Stream* source) {
 	state->AvailOut = 0;
 	state->Source = source;
 	state->WindowIndex = 0;
+	state->result = 0;
 }
 
 static const cc_uint8 fixed_lits[INFLATE_MAX_LITS] = {
@@ -496,7 +499,7 @@ void Inflate_Process(struct InflateState* state) {
 			} break;
 
 			case 3: {
-				Logger_Abort("DEFLATE - Invalid block type");
+				Inflate_Fail(state, INF_ERR_BLOCKTYPE);
 			} break;
 
 			}
@@ -509,7 +512,8 @@ void Inflate_Process(struct InflateState* state) {
 			nlen = Inflate_ReadBits(state, 16);
 
 			if (len != (nlen ^ 0xFFFFUL)) {
-				Logger_Abort("DEFLATE - Uncompressed block LEN check failed");
+				Inflate_Fail(state, INF_ERR_BLOCKTYPE);
+				return;
 			}
 			state->Index = len; /* Reuse for 'uncompressed length' */
 			state->State = INFLATE_STATE_UNCOMPRESSED_DATA;
@@ -602,7 +606,7 @@ void Inflate_Process(struct InflateState* state) {
 			case 16:
 				Inflate_EnsureBits(state, 2);
 				repeatCount = Inflate_ReadBits(state, 2);
-				if (!state->Index) Logger_Abort("DEFLATE - Tried to repeat invalid byte");
+				if (!state->Index) { Inflate_Fail(state, INF_ERR_REPEAT_BEG); return; }
 				repeatCount += 3; repeatValue = state->Buffer[state->Index - 1];
 				break;
 
@@ -621,7 +625,8 @@ void Inflate_Process(struct InflateState* state) {
 
 			count = state->NumLits + state->NumDists;
 			if (state->Index + repeatCount > count) {
-				Logger_Abort("DEFLATE - Tried to repeat past end");
+				Inflate_Fail(state, INF_ERR_REPEAT_END);
+				return;
 			}
 
 			Mem_Set(&state->Buffer[state->Index], repeatValue, repeatCount);
@@ -723,7 +728,7 @@ static cc_result Inflate_StreamRead(struct Stream* stream, cc_uint8* data, cc_ui
 
 	hasInput = true;
 	while (state->AvailOut > 0 && hasInput) {
-		if (state->State == INFLATE_STATE_DONE) break;
+		if (state->State == INFLATE_STATE_DONE) return state->result;
 
 		if (!state->AvailIn) {
 			/* Fully used up input buffer. Cycle back to start. */
@@ -748,9 +753,9 @@ static cc_result Inflate_StreamRead(struct Stream* stream, cc_uint8* data, cc_ui
 	return 0;
 }
 
-void Inflate_MakeStream(struct Stream* stream, struct InflateState* state, struct Stream* underlying) {
+void Inflate_MakeStream2(struct Stream* stream, struct InflateState* state, struct Stream* underlying) {
 	Stream_Init(stream);
-	Inflate_Init(state, underlying);
+	Inflate_Init2(state, underlying);
 	stream->Meta.Inflate = state;
 	stream->Read = Inflate_StreamRead;
 }
@@ -1151,7 +1156,7 @@ static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry
 		return state->ProcessEntry(&path, &portion, state);
 	} else if (method == 8) {
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
-		Inflate_MakeStream(&compStream, &inflate, &portion);
+		Inflate_MakeStream2(&compStream, &inflate, &portion);
 		return state->ProcessEntry(&path, &compStream, state);
 	} else {
 		Platform_Log1("Unsupported.zip entry compression method: %i", &method);

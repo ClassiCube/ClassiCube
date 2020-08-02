@@ -377,7 +377,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 	trnsCol = BITMAPCOL_BLACK;
 	for (i = 0; i < PNG_PALETTE; i++) { palette[i] = BITMAPCOL_BLACK; }
 
-	Inflate_MakeStream(&compStream, &inflate, stream);
+	Inflate_MakeStream2(&compStream, &inflate, stream);
 	ZLibHeader_Init(&zlibHeader);
 
 	for (;;) {

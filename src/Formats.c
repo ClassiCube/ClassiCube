@@ -166,7 +166,7 @@ cc_result Lvl_Load(struct Stream* stream) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Stream compStream;
 	struct InflateState state;
-	Inflate_MakeStream(&compStream, &state, stream);
+	Inflate_MakeStream2(&compStream, &state, stream);
 	
 	if ((res = Map_SkipGZipHeader(stream)))                       return res;
 	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
@@ -241,7 +241,7 @@ cc_result Fcm_Load(struct Stream* stream) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Stream compStream;
 	struct InflateState state;
-	Inflate_MakeStream(&compStream, &state, stream);
+	Inflate_MakeStream2(&compStream, &state, stream);
 
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
 	if (Stream_GetU32_LE(&header[0]) != 0x0FC2AF40UL)        return FCM_ERR_IDENTIFIER;
@@ -690,7 +690,7 @@ cc_result Cw_Load(struct Stream* stream) {
 	Vec3* spawn; IVec3 pos;
 	cc_result res;
 
-	Inflate_MakeStream(&compStream, &state, stream);
+	Inflate_MakeStream2(&compStream, &state, stream);
 	if ((res = Map_SkipGZipHeader(stream))) return res;
 	if ((res = compStream.ReadU8(&compStream, &tag))) return res;
 
@@ -899,7 +899,7 @@ cc_result Dat_Load(struct Stream* stream) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Stream compStream;
 	struct InflateState state;
-	Inflate_MakeStream(&compStream, &state, stream);
+	Inflate_MakeStream2(&compStream, &state, stream);
 
 	if ((res = Map_SkipGZipHeader(stream)))                       return res;
 	if ((res = Stream_Read(&compStream, header, sizeof(header)))) return res;
