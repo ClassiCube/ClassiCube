@@ -342,6 +342,10 @@ static void LoadPlugin(const String* path, void* obj) {
 
 	/* ignore accepted.txt, deskop.ini, .pdb files, etc */
 	if (!String_CaselessEnds(path, &DynamicLib_Ext)) return;
+	/* don't try to load 32 bit plugins on 64 bit OS or vice versa */
+	if (sizeof(void*) == 4 && String_ContainsConst(path, "_64.")) return;
+	if (sizeof(void*) == 8 && String_ContainsConst(path, "_32.")) return;
+
 	lib = DynamicLib_Load2(path);
 	if (!lib) { Logger_DynamicLibWarn("loading", path); return; }
 

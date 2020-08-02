@@ -512,8 +512,7 @@ void Inflate_Process(struct InflateState* state) {
 			nlen = Inflate_ReadBits(state, 16);
 
 			if (len != (nlen ^ 0xFFFFUL)) {
-				Inflate_Fail(state, INF_ERR_BLOCKTYPE);
-				return;
+				Inflate_Fail(state, INF_ERR_BLOCKTYPE); return;
 			}
 			state->Index = len; /* Reuse for 'uncompressed length' */
 			state->State = INFLATE_STATE_UNCOMPRESSED_DATA;
@@ -625,8 +624,7 @@ void Inflate_Process(struct InflateState* state) {
 
 			count = state->NumLits + state->NumDists;
 			if (state->Index + repeatCount > count) {
-				Inflate_Fail(state, INF_ERR_REPEAT_END);
-				return;
+				Inflate_Fail(state, INF_ERR_REPEAT_END); return;
 			}
 
 			Mem_Set(&state->Buffer[state->Index], repeatValue, repeatCount);
