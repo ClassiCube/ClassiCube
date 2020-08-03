@@ -536,9 +536,9 @@ void Game_TakeScreenshot(void) {
 	EM_ASM({
 		var canvas = Module['canvas'];
 		if (canvas.toBlob) {
-			canvas.toBlob(function(blob) { Module.saveBlob(blob, 'ClassiCube_Screenshot'); });
+			canvas.toBlob(function(blob) { Module.saveBlob(blob, 'ClassiCube_Screenshot.png'); });
 		} else if (canvas.msToBlob) {
-			Module.saveBlob(canvas.msToBlob(), 'ClassiCube_Screenshot');
+			Module.saveBlob(canvas.msToBlob(), 'ClassiCube_Screenshot.png');
 		}
 	});
 #elif CC_BUILD_MINFILES
