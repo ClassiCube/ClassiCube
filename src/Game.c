@@ -533,7 +533,14 @@ void Game_TakeScreenshot(void) {
 	Game_ScreenshotRequested = false;
 #ifdef CC_BUILD_WEB
 	/* TODO: Maybe use filename still? */
-	EM_ASM(Module['canvas'].toBlob(function(b) { Module.saveBlob(b, 'ClassiCube_Screenshot'); }); );
+	EM_ASM({
+		var canvas = Module['canvas'];
+		if (canvas.toBlob) {
+			canvas.toBlob(function(blob) { Module.saveBlob(blob, 'ClassiCube_Screenshot'); });
+		} else if (canvas.msToBlob) {
+			Module.saveBlob(canvas.msToBlob(), 'ClassiCube_Screenshot');
+		}
+	});
 #elif CC_BUILD_MINFILES
 	/* no screenshots for these systems */
 #else
