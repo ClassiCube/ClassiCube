@@ -291,7 +291,7 @@ static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table
 		}
 	}
 
-	Logger_Abort("DEFLATE - Invalid huffman code");
+	Inflate_Fail(state, INF_ERR_INVALID_CODE);
 	return -1;
 }
 

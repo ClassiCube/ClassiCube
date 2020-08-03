@@ -1659,6 +1659,25 @@ void Platform_Init(void) {
 	/* Check if an error occurred when pre-loading IndexedDB */
 	EM_ASM_({ if (window.cc_idbErr) stringToUTF8(window.cc_idbErr, $0, 64); }, tmp);
 
+	EM_ASM({
+		Module.saveBlob = function(blob, name) {
+			if (window.navigator.msSaveBlob) {
+				window.navigator.msSaveBlob(blob, name); return;
+			}
+			var url  = window.URL.createObjectURL(blob);
+			var elem = document.createElement('a');
+
+			elem.href     = url;
+			elem.download = name;
+			elem.style.display = 'none';
+
+			document.body.appendChild(elem);
+			elem.click();
+			document.body.removeChild(elem);
+			window.URL.revokeObjectURL(url);
+		}
+	});
+
 	if (!tmp[0]) return;
 	Chat_Add1("&cError preloading IndexedDB: %c", tmp);
 	Chat_AddRaw("&cPreviously saved settings/maps will be lost");

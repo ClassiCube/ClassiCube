@@ -1272,23 +1272,7 @@ static void DownloadMap(const String* path) {
 		var data = HEAPU8.subarray($1, $1 + $2);
 		var blob = new Blob([data], { type: 'application/octet-stream' });
 		var name = UTF8ToString($0);
-
-		if (window.navigator.msSaveBlob) {
-			window.navigator.msSaveBlob(blob, name);
-			return;
-		}
-
-		var url  = window.URL.createObjectURL(blob);
-		var elem = document.createElement('a');
-
-		elem.href     = url;
-		elem.download = name;
-		elem.style.display = 'none';
-
-		document.body.appendChild(elem);
-		elem.click();
-		document.body.removeChild(elem);
-		window.URL.revokeObjectURL(url);
+		Module.saveBlob(blob, name);
 	}, str, ptr, len);
 
 	Chat_Add1("&eDownloaded map: %s", &file);
