@@ -36,6 +36,9 @@
 #include "Protocol.h"
 #include "Picking.h"
 #include "Animations.h"
+#ifdef CC_BUILD_WEB
+#include <emscripten.h>
+#endif
 
 struct _GameData Game;
 int     Game_Port;
@@ -521,7 +524,6 @@ static void PerformScheduledTasks(double time) {
 }
 
 void Game_TakeScreenshot(void) {
-#ifndef CC_BUILD_MINFILES
 	String filename; char fileBuffer[STRING_SIZE];
 	String path;     char pathBuffer[FILENAME_SIZE];
 	struct DateTime now;
@@ -529,6 +531,12 @@ void Game_TakeScreenshot(void) {
 	cc_result res;
 
 	Game_ScreenshotRequested = false;
+#ifdef CC_BUILD_WEB
+	/* TODO: Maybe use filename still? */
+	EM_ASM(Module['canvas'].toBlob(function(b) { Module.saveBlob(b, 'ClassiCube_Screenshot'); }); );
+#elif CC_BUILD_MINFILES
+	/* no screenshots for these systems */
+#else
 	if (!Utils_EnsureDirectory("screenshots")) return;
 	DateTime_CurrentLocal(&now);
 
@@ -635,9 +643,7 @@ void Game_Free(void* obj) {
 	if (time > 0.0) { lastRender = Stopwatch_Measure(); Game_RenderFrame(time); }
 
 #ifdef CC_BUILD_WEB
-#include <emscripten.h>
 static cc_uint64 lastRender;
-
 static void Game_DoFrame(void) {
 	cc_uint64 render; 
 	double time;
