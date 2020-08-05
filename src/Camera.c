@@ -17,12 +17,6 @@ static Vec2 cam_rotOffset;
 static cc_bool cam_isForwardThird;
 static float cam_deltaX, cam_deltaY;
 
-static void Camera_AcquireFocus(void) {
-	Window_EnableRawMouse();
-}
-static void Camera_LoseFocus(void) {
-	Window_DisableRawMouse();
-}
 static void Camera_OnRawMovement(float deltaX, float deltaY) {
 	cam_deltaX += deltaX; cam_deltaY += deltaY;
 }
@@ -160,7 +154,7 @@ static struct Camera cam_FirstPerson = {
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	FirstPersonCamera_GetOrientation, FirstPersonCamera_GetPosition,
 	PerspectiveCamera_UpdateMouse,    Camera_OnRawMovement,
-	Camera_AcquireFocus,              Camera_LoseFocus,
+	Window_EnableRawMouse,            Window_DisableRawMouse,
 	PerspectiveCamera_GetPickedBlock, FirstPersonCamera_Zoom,
 };
 
@@ -212,7 +206,7 @@ static struct Camera cam_ThirdPerson = {
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	ThirdPersonCamera_GetOrientation, ThirdPersonCamera_GetPosition,
 	PerspectiveCamera_UpdateMouse,    Camera_OnRawMovement,
-	Camera_AcquireFocus,              Camera_LoseFocus,
+	Window_EnableRawMouse,            Window_DisableRawMouse,
 	PerspectiveCamera_GetPickedBlock, ThirdPersonCamera_Zoom,
 };
 static struct Camera cam_ForwardThird = {
@@ -220,7 +214,7 @@ static struct Camera cam_ForwardThird = {
 	PerspectiveCamera_GetProjection,  PerspectiveCamera_GetView,
 	ThirdPersonCamera_GetOrientation, ThirdPersonCamera_GetPosition,
 	PerspectiveCamera_UpdateMouse,    Camera_OnRawMovement,
-	Camera_AcquireFocus,              Camera_LoseFocus,
+	Window_EnableRawMouse,            Window_DisableRawMouse,
 	PerspectiveCamera_GetPickedBlock, ThirdPersonCamera_Zoom,
 };
 

@@ -89,7 +89,7 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 /*########################################################################################################################*
 *---------------------------------------------------------Memory----------------------------------------------------------*
 *#########################################################################################################################*/
-void Mem_Set(void* dst, cc_uint8 value,    cc_uint32 numBytes) { memset(dst, value, numBytes); }
+void Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { memset(dst, value, numBytes); }
 void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
 
 CC_NOINLINE static void AbortOnAllocFailed(const char* place) {	

@@ -857,7 +857,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 		if (String_CaselessEqualsConst(&name, "ExtPlayerList"))       ver = 2;
 		if (String_CaselessEqualsConst(&name, "EnvMapAppearance"))    ver = cpe_envMapVer;
 		if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) ver = cpe_blockDefsExtVer;
-		if (String_CaselessEqualsConst(&name, "CustomModels")) ver = cpe_customModelsVer;
+		if (String_CaselessEqualsConst(&name, "CustomModels"))        ver = cpe_customModelsVer;
 
 		if (!Game_AllowCustomBlocks) {
 			if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) continue;
@@ -879,7 +879,7 @@ static void CPE_SendCpeExtInfoReply(void) {
 
 static void CPE_ExtInfo(cc_uint8* data) {
 	static const String d3Server = String_FromConst("D3 server");
-	String appName = UNSAFE_GetString(&data[0]);
+	String appName = UNSAFE_GetString(data);
 	cpe_needD3Fix  = String_CaselessStarts(&appName, &d3Server);
 	Chat_Add1("Server software: %s", &appName);
 
@@ -890,7 +890,7 @@ static void CPE_ExtInfo(cc_uint8* data) {
 }
 
 static void CPE_ExtEntry(cc_uint8* data) {
-	String ext  = UNSAFE_GetString(&data[0]);
+	String ext  = UNSAFE_GetString(data);
 	int version = data[67];
 	Platform_Log2("cpe ext: %s, %i", &ext, &version);
 

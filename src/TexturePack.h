@@ -86,7 +86,6 @@ void TexturePack_SetDefault(const String* texPack);
 /* Otherwise extracts the cached texture pack for that URL. */
 void TexturePack_ExtractCurrent(cc_bool forceReload);
 /* Asynchronously downloads a texture pack. */
-/* Sends ETag and Last-Modified to webserver to avoid redundant downloads. */
 /* NOTE: This does not load cached textures - use TexturePack_ExtractCurrent for that. */
 void TexturePack_DownloadAsync(const String* url, const String* id);
 /* Extracts a texture pack or terrain.png from given downloaded data. */

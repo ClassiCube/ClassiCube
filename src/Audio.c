@@ -473,7 +473,7 @@ struct SoundGroup {
 };
 
 struct Soundboard {
-	RNGState rnd; int count;
+	RNGState rnd; cc_bool inited;
 	struct SoundGroup groups[SOUND_COUNT];
 };
 
@@ -555,6 +555,7 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, s
 	struct Sound* snd;
 	cc_result res;
 	int i, dotIndex;
+	board->inited = true;
 
 	for (i = 0; i < files->count; i++) {
 		file = StringsBuffer_UNSAFE_Get(files, i); 
@@ -738,7 +739,7 @@ static void Sounds_Init(void) {
 	static const String dig  = String_FromConst("dig_");
 	static const String step = String_FromConst("step_");
 
-	if (digBoard.count || stepBoard.count) return;
+	if (digBoard.inited || stepBoard.inited) return;
 	Soundboard_Init(&digBoard,  &dig,  &files);
 	Soundboard_Init(&stepBoard, &step, &files);
 }
