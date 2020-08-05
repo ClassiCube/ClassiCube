@@ -682,19 +682,11 @@ static void OnReset(void) {
 	}
 	Block_UpdateAllCulling();
 	Block_RecalculateAllSpriteBB();
-}
 
-static void OnAtlasChanged(void* obj) { Block_RecalculateAllSpriteBB(); }
-static void OnInit(void) {
-	int block;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
-		Blocks.CanPlace[block]  = true;
+		Blocks.CanPlace[block] = true;
 		Blocks.CanDelete[block] = true;
 	}
-
-	AutoRotate_Enabled = true;
-	OnReset();
-	Event_Register_(&TextureEvents.AtlasChanged, NULL, OnAtlasChanged);
 
 	Blocks.CanPlace[BLOCK_AIR] = false;         Blocks.CanDelete[BLOCK_AIR] = false;
 	Blocks.CanPlace[BLOCK_LAVA] = false;        Blocks.CanDelete[BLOCK_LAVA] = false;
@@ -702,6 +694,13 @@ static void OnInit(void) {
 	Blocks.CanPlace[BLOCK_STILL_LAVA] = false;  Blocks.CanDelete[BLOCK_STILL_LAVA] = false;
 	Blocks.CanPlace[BLOCK_STILL_WATER] = false; Blocks.CanDelete[BLOCK_STILL_WATER] = false;
 	Blocks.CanPlace[BLOCK_BEDROCK] = false;     Blocks.CanDelete[BLOCK_BEDROCK] = false;
+}
+
+static void OnAtlasChanged(void* obj) { Block_RecalculateAllSpriteBB(); }
+static void OnInit(void) {
+	AutoRotate_Enabled = true;
+	Event_Register_(&TextureEvents.AtlasChanged, NULL, OnAtlasChanged);
+	OnReset();
 }
 
 struct IGameComponent Blocks_Component = {
