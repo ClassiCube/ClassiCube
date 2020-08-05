@@ -1543,7 +1543,7 @@ static void CPE_Reset(void) {
 	cpe_envMapVer = 2; cpe_blockDefsExtVer = 2; cpe_customModelsVer = 2;
 	cpe_needD3Fix = false; cpe_extEntityPos = false; cpe_twoWayPing = false; 
 	cpe_extTextures = false; cpe_fastMap = false; cpe_extBlocks = false;
-	Game_UseCPEBlocks = false;
+	Game_UseCPEBlocks = false; cpe_blockPerms = false;
 	if (!Game_UseCPE) return;
 
 	Net_Set(OPCODE_EXT_INFO, CPE_ExtInfo, 67);

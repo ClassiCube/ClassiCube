@@ -1007,12 +1007,12 @@ static struct Model  human_model = {
 	HumanModel_GetSize,   HumanModel_GetBounds,
 };
 
-static struct Model* HumanoidModel_GetInstance(void) {
+static void HumanoidModel_Register(void) {
 	Model_Init(&human_model);
 	human_model.DrawArm  = HumanModel_DrawArm;
 	human_model.calcHumanAnims = true;
 	human_model.usesHumanSkin  = true;
-	return &human_model;
+	Model_Register(&human_model);
 }
 
 
@@ -1096,7 +1096,7 @@ static struct Model chibi_model = { "chibi", chibi_vertices, &human_tex,
 	ChibiModel_GetSize,   ChibiModel_GetBounds
 };
 
-static struct Model* ChibiModel_GetInstance(void) {
+static void ChibiModel_Register(void) {
 	Model_Init(&chibi_model);
 	chibi_model.DrawArm  = ChibiModel_DrawArm;
 	chibi_model.armX = 3; chibi_model.armY = 6;
@@ -1104,7 +1104,7 @@ static struct Model* ChibiModel_GetInstance(void) {
 	chibi_model.usesHumanSkin  = true;
 	chibi_model.maxScale    = 3.0f;
 	chibi_model.shadowScale = 0.5f;
-	return &chibi_model;
+	Model_Register(&chibi_model);
 }
 
 
@@ -1134,14 +1134,14 @@ static struct Model sitting_model = { "sit", human_vertices, &human_tex,
 	SittingModel_GetSize, SittingModel_GetBounds
 };
 
-static struct Model* SittingModel_GetInstance(void) {
+static void SittingModel_Register(void) {
 	Model_Init(&sitting_model);
 	sitting_model.DrawArm  = HumanModel_DrawArm;
 	sitting_model.calcHumanAnims = true;
 	sitting_model.usesHumanSkin  = true;
 	sitting_model.shadowScale  = 0.5f;
 	sitting_model.GetTransform = SittingModel_GetTransform;
-	return &sitting_model;
+	Model_Register(&sitting_model);
 }
 
 
@@ -1157,12 +1157,12 @@ static void CorpseModel_Draw(struct Entity* e) {
 }
 
 static struct Model corpse_model;
-static struct Model* CorpseModel_GetInstance(void) {
+static void CorpseModel_Register(void) {
 	corpse_model      = human_model;
 	corpse_model.name = "corpse";
 	corpse_model.MakeParts = Model_NoParts;
 	corpse_model.Draw = CorpseModel_Draw;
-	return &corpse_model;
+	Model_Register(&corpse_model);
 }
 
 
@@ -1196,12 +1196,12 @@ static struct Model head_model = { "head", human_vertices, &human_tex,
 	HeadModel_GetSize,   HeadModel_GetBounds
 };
 
-static struct Model* HeadModel_GetInstance(void) {
+static void HeadModel_Register(void) {
 	Model_Init(&head_model);
 	head_model.usesHumanSkin = true;
 	head_model.pushes        = false;
 	head_model.GetTransform  = HeadModel_GetTransform;
-	return &head_model;
+	Model_Register(&head_model);
 }
 
 
@@ -1305,9 +1305,9 @@ static struct Model chicken_model = { "chicken", chicken_vertices, &chicken_tex,
 	ChickenModel_GetSize,   ChickenModel_GetBounds
 };
 
-static struct Model* ChickenModel_GetInstance(void) {
+static void ChickenModel_Register(void) {
 	Model_Init(&chicken_model);
-	return &chicken_model;
+	Model_Register(&chicken_model);
 }
 
 
@@ -1383,9 +1383,9 @@ static struct Model creeper_model  = {
 	CreeperModel_GetSize,   CreeperModel_GetBounds
 };
 
-static struct Model* CreeperModel_GetInstance(void) {
+static void CreeperModel_Register(void) {
 	Model_Init(&creeper_model);
-	return &creeper_model;
+	Model_Register(&creeper_model);
 }
 
 
@@ -1460,9 +1460,9 @@ static struct Model pig_model  = { "pig", pig_vertices, &pig_tex,
 	PigModel_GetSize,   PigModel_GetBounds
 };
 
-static struct Model* PigModel_GetInstance(void) {
+static void PigModel_Register(void) {
 	Model_Init(&pig_model);
-	return &pig_model;
+	Model_Register(&pig_model);
 }
 
 
@@ -1602,14 +1602,14 @@ static struct Model nofur_model  = { "sheep_nofur", sheep_vertices, &sheep_tex,
 	SheepModel_GetSize,   SheepModel_GetBounds
 };
 
-static struct Model* SheepModel_GetInstance(void) {
+static void SheepModel_Register(void) {
 	Model_Init(&sheep_model);
-	return &sheep_model;
+	Model_Register(&sheep_model);
 }
 
-static struct Model* NoFurModel_GetInstance(void) {
+static void NoFurModel_Register(void) {
 	Model_Init(&nofur_model);
-	return &nofur_model;
+	Model_Register(&nofur_model);
 }
 
 
@@ -1687,11 +1687,11 @@ static struct Model skeleton_model  = { "skeleton", skeleton_vertices, &skeleton
 	SkeletonModel_GetSize,   SkeletonModel_GetBounds
 };
 
-static struct Model* SkeletonModel_GetInstance(void) {
+static void SkeletonModel_Register(void) {
 	Model_Init(&skeleton_model);
 	skeleton_model.DrawArm  = SkeletonModel_DrawArm;
 	skeleton_model.armX = 5;
-	return &skeleton_model;
+	Model_Register(&skeleton_model);
 }
 
 
@@ -1777,9 +1777,9 @@ static struct Model spider_model  = { "spider", spider_vertices, &spider_tex,
 	SpiderModel_GetSize,   SpiderModel_GetBounds
 };
 
-static struct Model* SpiderModel_GetInstance(void) {
+static void SpiderModel_Register(void) {
 	Model_Init(&spider_model);
-	return &spider_model;
+	Model_Register(&spider_model);
 }
 
 
@@ -1805,10 +1805,10 @@ static struct Model zombie_model  = { "zombie", human_vertices, &zombie_tex,
 	HumanModel_GetSize,  ZombieModel_GetBounds 
 };
 
-static struct Model* ZombieModel_GetInstance(void) {
+static void ZombieModel_Register(void) {
 	Model_Init(&zombie_model);
 	zombie_model.DrawArm  = ZombieModel_DrawArm;
-	return &zombie_model;
+	Model_Register(&zombie_model);
 }
 
 
@@ -2003,12 +2003,12 @@ static struct Model block_model = { "block", NULL, &human_tex,
 	BlockModel_GetSize,  BlockModel_GetBounds,
 };
 
-static struct Model* BlockModel_GetInstance(void) {
+static void BlockModel_Register(void) {
 	Model_Init(&block_model);
 	block_model.bobbing  = false;
 	block_model.usesSkin = false;
 	block_model.pushes   = false;
-	return &block_model;
+	Model_Register(&block_model);
 }
 
 
@@ -2046,11 +2046,11 @@ static struct Model skinnedCube_model = { "skinnedcube", skinnedCube_vertices, &
 	SkinnedCubeModel_GetSize,   SkinnedCubeModel_GetBounds
 };
 
-static struct Model* SkinnedCubeModel_GetInstance(void) {
+static void SkinnedCubeModel_Register(void) {
 	Model_Init(&skinnedCube_model);
 	skinnedCube_model.usesHumanSkin = true;
 	skinnedCube_model.pushes = false;
-	return &skinnedCube_model;
+	Model_Register(&skinnedCube_model);
 }
 
 
@@ -2069,25 +2069,25 @@ static void RegisterDefaultModels(void) {
 	Model_RegisterTexture(&zombie_tex);
 	Model_RegisterTexture(&skinnedCube_tex);
 
-	Model_Register(HumanoidModel_GetInstance());
+	HumanoidModel_Register();
 	MakeModel(&human_model);
 	Models.Human = &human_model;
 
-	Model_Register(ChickenModel_GetInstance());
-	Model_Register(CreeperModel_GetInstance());
-	Model_Register(PigModel_GetInstance());
-	Model_Register(SheepModel_GetInstance());
-	Model_Register(NoFurModel_GetInstance());
-	Model_Register(SkeletonModel_GetInstance());
-	Model_Register(SpiderModel_GetInstance());
-	Model_Register(ZombieModel_GetInstance());
+	ChickenModel_Register();
+	CreeperModel_Register();
+	PigModel_Register();
+	SheepModel_Register();
+	NoFurModel_Register();
+	SkeletonModel_Register();
+	SpiderModel_Register();
+	ZombieModel_Register();
 
-	Model_Register(BlockModel_GetInstance());
-	Model_Register(ChibiModel_GetInstance());
-	Model_Register(HeadModel_GetInstance());
-	Model_Register(SittingModel_GetInstance());
-	Model_Register(CorpseModel_GetInstance());
-	Model_Register(SkinnedCubeModel_GetInstance());
+	BlockModel_Register();
+	ChibiModel_Register();
+	HeadModel_Register();
+	SittingModel_Register();
+	CorpseModel_Register();
+	SkinnedCubeModel_Register();
 }
 
 static void OnContextLost(void* obj) {
