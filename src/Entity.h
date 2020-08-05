@@ -192,7 +192,7 @@ struct LocalPlayer {
 	struct InterpComp Interp;
 	struct CollisionsComp Collisions;
 	struct PhysicsComp Physics;
-	cc_bool _warnedRespawn, _warnedFly, _warnedNoclip;
+	cc_bool _warnedRespawn, _warnedFly, _warnedNoclip, _warnedZoom;
 };
 
 extern struct LocalPlayer LocalPlayer_Instance;
@@ -200,6 +200,7 @@ extern struct LocalPlayer LocalPlayer_Instance;
 float LocalPlayer_JumpHeight(void);
 /* Interpolates current position and orientation between Interp.Prev and Interp.Next */
 void LocalPlayer_SetInterpPosition(float t);
+cc_bool LocalPlayer_CheckCanZoom(void);
 /* Returns whether local player handles a key being pressed. */
 /* e.g. for respawn, toggle fly, etc. */
 cc_bool LocalPlayer_HandlesKey(int key);

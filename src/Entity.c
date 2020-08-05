@@ -932,6 +932,7 @@ static void LocalPlayer_OnNewMap(void) {
 	p->_warnedRespawn = false;
 	p->_warnedFly     = false;
 	p->_warnedNoclip  = false;
+	p->_warnedZoom    = false;
 }
 
 static cc_bool LocalPlayer_IsSolidCollide(BlockID b) { return Blocks.Collide[b] == COLLIDE_SOLID; }
@@ -1035,6 +1036,17 @@ static cc_bool LocalPlayer_HandleNoClip(void) {
 	} else if (!p->_warnedNoclip) {
 		p->_warnedNoclip = true;
 		if (hackPermMsgs) Chat_AddRaw("&cNoclip is currently disabled");
+	}
+	return false;
+}
+
+cc_bool LocalPlayer_CheckCanZoom(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	if (p->Hacks.CanFly) return true;
+
+	if (!p->_warnedZoom) {
+		p->_warnedZoom = true;
+		if (hackPermMsgs) Chat_AddRaw("&cCannot zoom camera out as flying is currently disabled");
 	}
 	return false;
 }

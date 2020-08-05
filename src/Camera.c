@@ -162,7 +162,8 @@ static struct Camera cam_FirstPerson = {
 /*########################################################################################################################*
 *---------------------------------------------------Third person camera---------------------------------------------------*
 *#########################################################################################################################*/
-static float dist_third = 3.0f, dist_forward = 3.0f;
+#define DEF_ZOOM 3.0f
+static float dist_third = DEF_ZOOM, dist_forward = DEF_ZOOM;
 
 static Vec2 ThirdPersonCamera_GetOrientation(void) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
@@ -194,8 +195,12 @@ static Vec3 ThirdPersonCamera_GetPosition(float t) {
 }
 
 static cc_bool ThirdPersonCamera_Zoom(float amount) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
 	float* dist   = cam_isForwardThird ? &dist_forward : &dist_third;
 	float newDist = *dist - amount;
+
+	/* Don't allow zooming out when -fly */
+	if (newDist > DEF_ZOOM && !LocalPlayer_CheckCanZoom()) newDist = DEF_ZOOM;
 
 	*dist = max(newDist, 2.0f); 
 	return true;
