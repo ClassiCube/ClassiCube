@@ -5,18 +5,18 @@
 */
 
 #define GAME_MAX_CMDARGS 5
-#define GAME_APP_VER "1.1.7"
+#define GAME_APP_VER "1.1.8"
 #define GAME_API_VER 1
 
 #if defined CC_BUILD_WEB
 #define GAME_APP_NAME  "ClassiCube web client"
 #define GAME_APP_TITLE "ClassiCube"
 #elif defined CC_BUILD_COCOA
-#define GAME_APP_NAME  "ClassiCube 1.1.7 alpha"
-#define GAME_APP_TITLE "ClassiCube 1.1.7 alpha"
+#define GAME_APP_NAME  "ClassiCube 1.1.8 alpha"
+#define GAME_APP_TITLE "ClassiCube 1.1.8 alpha"
 #else
-#define GAME_APP_NAME  "ClassiCube 1.1.7"
-#define GAME_APP_TITLE "ClassiCube 1.1.7"
+#define GAME_APP_NAME  "ClassiCube 1.1.8"
+#define GAME_APP_TITLE "ClassiCube 1.1.8"
 #endif
 
 /* Max number of characters strings can have. */

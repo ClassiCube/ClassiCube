@@ -1188,6 +1188,8 @@ void Window_Create(int width, int height) {
 		CWColormap | CWEventMask | CWBackPixel | CWBorderPixel, &attributes);
 	if (!win_handle) Logger_Abort("XCreateWindow failed");
 
+	/* Set hints to try to force WM to create window at requested x,y */
+	/* Without this, some WMs will instead place the window whereever */
 	hints.base_width  = width;
 	hints.base_height = height;
 	hints.flags = PSize | PPosition;
@@ -1208,6 +1210,7 @@ void Window_Create(int width, int height) {
 	WindowInfo.Exists = true;
 	WindowInfo.Handle = (void*)win_handle;
 	
+	/* So right name appears in e.g. Ubuntu Unity launchbar */
 	XClassHint hint = { 0 };
 	hint.res_name   = GAME_APP_TITLE;
 	hint.res_class  = GAME_APP_TITLE;
@@ -1254,6 +1257,7 @@ void Clipboard_SetText(const String* value) {
 void Window_Show(void) { XMapWindow(win_display, win_handle); }
 
 int Window_GetWindowState(void) {
+	cc_bool fullscreen = false, minimised = false;
 	Atom prop_type;
 	unsigned long items, after;
 	int i, prop_format;
@@ -1262,8 +1266,6 @@ int Window_GetWindowState(void) {
 	XGetWindowProperty(win_display, win_handle,
 		net_wm_state, 0, 256, false, xa_atom, &prop_type,
 		&prop_format, &items, &after, &data);
-
-	cc_bool fullscreen = false, minimised = false;
 
 	/* TODO: Check this works right */
 	if (data && items) {
