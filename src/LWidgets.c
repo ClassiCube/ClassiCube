@@ -1095,7 +1095,7 @@ static void LTable_StopDragging(void* widget) {
 void LTable_Reposition(struct LTable* w) {
 	int rowsHeight;
 	w->hdrHeight = Drawer2D_FontHeight(&Launcher_TextFont, true) + hdrYPadding;
-	w->rowHeight = Drawer2D_FontHeight(w->rowFont,         true) + hdrYPadding;
+	w->rowHeight = Drawer2D_FontHeight(w->rowFont,         true) + rowYPadding;
 
 	w->rowsBegY = w->y + w->hdrHeight + gridlineHeight;
 	w->rowsEndY = w->y + w->height;
