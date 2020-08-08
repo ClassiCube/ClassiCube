@@ -466,35 +466,50 @@ int Hotkeys_FindPartial(int key) {
 	return -1;
 }
 
-/* Initialises and loads hotkeys from options. */
-static void Hotkeys_Init(void) {
-	static const String prefix = String_FromConst("hotkey-");
+static const String prefix = String_FromConst("hotkey-");
+static void Hotkeys_FromLine(String* key, String* value) {
 	String strKey, strMods, strMore, strText;
-	String entry, key, value;
-	int i;
-
 	int trigger;
 	cc_uint8 modifiers;
 	cc_bool more;
+
+	/* Format is: key&modifiers = more-input&text */
+	key->length -= prefix.length; key->buffer += prefix.length;
+	
+	if (!String_UNSAFE_Separate(key,   '&', &strKey,  &strMods)) return;
+	if (!String_UNSAFE_Separate(value, '&', &strMore, &strText)) return;
+	
+	trigger = Utils_ParseEnum(&strKey, KEY_NONE, Input_Names, INPUT_COUNT);
+	if (trigger == KEY_NONE) return; 
+	if (!Convert_ParseUInt8(&strMods, &modifiers)) return;
+	if (!Convert_ParseBool(&strMore,  &more))      return;
+	
+	Hotkeys_Add(trigger, modifiers, &strText, more);
+}
+
+/* Initialises and loads hotkeys from options. */
+static void Hotkeys_Init(void) {
+	String entry, key, value;
+	int i;
 
 	for (i = 0; i < Options.count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(&Options, i);
 		String_UNSAFE_Separate(&entry, '=', &key, &value);
 
 		if (!String_CaselessStarts(&key, &prefix)) continue;
-		/* Format is: key&modifiers = more-input&text */
-		key.length -= prefix.length; key.buffer += prefix.length;
-	
-		if (!String_UNSAFE_Separate(&key,   '&', &strKey,  &strMods)) continue;
-		if (!String_UNSAFE_Separate(&value, '&', &strMore, &strText)) continue;
-
-		trigger = Utils_ParseEnum(&strKey, KEY_NONE, Input_Names, INPUT_COUNT);
-		if (trigger == KEY_NONE) continue; 
-		if (!Convert_ParseUInt8(&strMods, &modifiers)) continue;
-		if (!Convert_ParseBool(&strMore,  &more))      continue;
-
-		Hotkeys_Add(trigger, modifiers, &strText, more);
+		Hotkeys_FromLine(&key, &value);
 	}
+}
+
+void Hotkeys_AddDefault(int trigger, cc_uint8 modifiers) {
+	String key, value; char keyBuffer[STRING_SIZE];
+	String_InitArray(key, keyBuffer);
+
+	String_Format2(&key, "hotkey-%c&%b", Input_Names[trigger], &modifiers);
+	key.buffer[key.length] = '\0'; /* TODO: Avoid this null terminator */
+
+	Options_UNSAFE_Get(key.buffer, &value);
+	Hotkeys_FromLine(&key, &value);
 }
 
 void Hotkeys_UserRemovedHotkey(int trigger, cc_uint8 modifiers) {

@@ -147,6 +147,8 @@ cc_bool Hotkeys_Remove(int trigger, cc_uint8 modifiers);
 /* Returns the first hotkey which is bound to the given key and has its modifiers pressed. */
 /* NOTE: The hotkeys list is sorted, so hotkeys with most modifiers are checked first. */
 int Hotkeys_FindPartial(int key);
+
+void Hotkeys_AddDefault(int trigger, cc_uint8 modifiers);
 /* Called when user has removed a hotkey. (removes it from options) */
 void Hotkeys_UserRemovedHotkey(int trigger, cc_uint8 modifiers);
 /* Called when user has added a hotkey. (Adds it to options) */
