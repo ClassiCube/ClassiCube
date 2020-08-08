@@ -467,7 +467,7 @@ int Hotkeys_FindPartial(int key) {
 }
 
 static const String prefix = String_FromConst("hotkey-");
-static void Hotkeys_FromLine(String* key, String* value) {
+static void StoredHotkey_Parse(String* key, String* value) {
 	String strKey, strMods, strMore, strText;
 	int trigger;
 	cc_uint8 modifiers;
@@ -487,8 +487,7 @@ static void Hotkeys_FromLine(String* key, String* value) {
 	Hotkeys_Add(trigger, modifiers, &strText, more);
 }
 
-/* Initialises and loads hotkeys from options. */
-static void Hotkeys_Init(void) {
+static void StoredHotkeys_LoadAll(void) {
 	String entry, key, value;
 	int i;
 
@@ -497,11 +496,11 @@ static void Hotkeys_Init(void) {
 		String_UNSAFE_Separate(&entry, '=', &key, &value);
 
 		if (!String_CaselessStarts(&key, &prefix)) continue;
-		Hotkeys_FromLine(&key, &value);
+		StoredHotkey_Parse(&key, &value);
 	}
 }
 
-void Hotkeys_AddDefault(int trigger, cc_uint8 modifiers) {
+void StoredHotkeys_Load(int trigger, cc_uint8 modifiers) {
 	String key, value; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
@@ -509,10 +508,10 @@ void Hotkeys_AddDefault(int trigger, cc_uint8 modifiers) {
 	key.buffer[key.length] = '\0'; /* TODO: Avoid this null terminator */
 
 	Options_UNSAFE_Get(key.buffer, &value);
-	Hotkeys_FromLine(&key, &value);
+	StoredHotkey_Parse(&key, &value);
 }
 
-void Hotkeys_UserRemovedHotkey(int trigger, cc_uint8 modifiers) {
+void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers) {
 	String key; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
@@ -520,7 +519,7 @@ void Hotkeys_UserRemovedHotkey(int trigger, cc_uint8 modifiers) {
 	Options_SetString(&key, NULL);
 }
 
-void Hotkeys_UserAddedHotkey(int trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text) {
+void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text) {
 	String key;   char keyBuffer[STRING_SIZE];
 	String value; char valueBuffer[STRING_SIZE * 2];
 	String_InitArray(key, keyBuffer);
@@ -1052,5 +1051,5 @@ void InputHandler_Init(void) {
 	Event_Register_(&WindowEvents.FocusChanged,         NULL, OnFocusChanged);
 	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, InputHandler_CheckZoomFov);
 	KeyBind_Init();
-	Hotkeys_Init();
+	StoredHotkeys_LoadAll();
 }

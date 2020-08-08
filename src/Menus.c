@@ -788,14 +788,14 @@ static void EditHotkeyScreen_SaveChanges(void* screen, void* b) {
 
 	if (hk.Trigger) {
 		Hotkeys_Remove(hk.Trigger, hk.Flags);
-		Hotkeys_UserRemovedHotkey(hk.Trigger, hk.Flags);
+		StoredHotkeys_Remove(hk.Trigger, hk.Flags);
 	}
 
 	hk = s->curHotkey;
 	if (hk.Trigger) {
 		String text = s->input.base.text;
 		Hotkeys_Add(hk.Trigger, hk.Flags, &text, hk.StaysOpen);
-		Hotkeys_UserAddedHotkey(hk.Trigger, hk.Flags, hk.StaysOpen, &text);
+		StoredHotkeys_Add(hk.Trigger, hk.Flags, hk.StaysOpen, &text);
 	}
 	HotkeyListScreen_Show();
 }
@@ -806,7 +806,7 @@ static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 
 	if (hk.Trigger) {
 		Hotkeys_Remove(hk.Trigger, hk.Flags);
-		Hotkeys_UserRemovedHotkey(hk.Trigger, hk.Flags);
+		StoredHotkeys_Remove(hk.Trigger, hk.Flags);
 	}
 	HotkeyListScreen_Show();
 }

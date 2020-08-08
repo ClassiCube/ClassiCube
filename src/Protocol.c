@@ -1001,7 +1001,7 @@ static void CPE_SetTextHotkey(cc_uint8* data) {
 
 	if (!action.length) {
 		Hotkeys_Remove(key, keyMods);
-		Hotkeys_AddDefault(key, keyMods);
+		StoredHotkeys_Load(key, keyMods);
 	} else if (action.buffer[action.length - 1] == '\n') {
 		action.length--;
 		Hotkeys_Add(key, keyMods, &action, false);

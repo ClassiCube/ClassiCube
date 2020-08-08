@@ -148,11 +148,12 @@ cc_bool Hotkeys_Remove(int trigger, cc_uint8 modifiers);
 /* NOTE: The hotkeys list is sorted, so hotkeys with most modifiers are checked first. */
 int Hotkeys_FindPartial(int key);
 
-void Hotkeys_AddDefault(int trigger, cc_uint8 modifiers);
-/* Called when user has removed a hotkey. (removes it from options) */
-void Hotkeys_UserRemovedHotkey(int trigger, cc_uint8 modifiers);
-/* Called when user has added a hotkey. (Adds it to options) */
-void Hotkeys_UserAddedHotkey(int trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text);
+/* Loads the given hotkey from options. (if it exists) */
+void StoredHotkeys_Load(int trigger, cc_uint8 modifiers);
+/* Removes the given hotkey from options. */
+void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers);
+/* Adds the given hotkey from options. */
+void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text);
 
 cc_bool InputHandler_SetFOV(int fov);
 void InputHandler_PickBlocks(void);
