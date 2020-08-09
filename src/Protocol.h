@@ -41,11 +41,14 @@ enum OPCODE_ {
 
 
 typedef void (*Net_Handler)(cc_uint8* data);
-/* Size of each packet including opcode */
-extern cc_uint16 Net_PacketSizes[OPCODE_COUNT];
-/* Functions that handle processing received packets. */
-extern Net_Handler Net_Handlers[OPCODE_COUNT];
-#define Net_Set(opcode, handler, size) Net_Handlers[opcode] = handler; Net_PacketSizes[opcode] = size;
+#define Net_Set(opcode, handler, size) Protocol.Handlers[opcode] = handler; Protocol.Sizes[opcode] = size;
+
+CC_VAR extern struct _ProtocolData {
+	/* Size of each packet including opcode */
+	cc_uint16 Sizes[256];
+	/* Handlers for processing received packets */
+	Net_Handler Handlers[256];
+} Protocol;
 
 struct RayTracer;	
 struct IGameComponent;

@@ -417,17 +417,15 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 			continue;
 		}
 
-		if (opcode >= OPCODE_COUNT) { DisconnectInvalidOpcode(opcode); return; }
-
-		if (net_readCurrent + Net_PacketSizes[opcode] > readEnd) break;
+		if (net_readCurrent + Protocol.Sizes[opcode] > readEnd) break;
 		lastOpcode = opcode;
 		lastPacket = Game.Time;
 
-		handler = Net_Handlers[opcode];
+		handler = Protocol.Handlers[opcode];
 		if (!handler) { DisconnectInvalidOpcode(opcode); return; }
 
-		handler(net_readCurrent + 1);  /* skip opcode */
-		net_readCurrent += Net_PacketSizes[opcode];
+		handler(net_readCurrent + 1); /* skip opcode */
+		net_readCurrent += Protocol.Sizes[opcode];
 	}
 
 	/* Protocol packets might be split up across TCP packets */

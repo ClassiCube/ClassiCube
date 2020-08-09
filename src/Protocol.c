@@ -29,9 +29,7 @@
 
 #define QUOTE(x) #x
 #define STRINGIFY(val) QUOTE(val)
-
-cc_uint16 Net_PacketSizes[OPCODE_COUNT];
-Net_Handler Net_Handlers[OPCODE_COUNT];
+struct _ProtocolData Protocol;
 
 /* Classic state */
 static cc_uint8 classic_tabList[ENTITIES_MAX_COUNT >> 3];
@@ -911,7 +909,7 @@ static void CPE_ExtEntry(cc_uint8* data) {
 	} else if (String_CaselessEqualsConst(&ext, "EnvMapAppearance")) {
 		cpe_envMapVer = version;
 		if (version == 1) return;
-		Net_PacketSizes[OPCODE_ENV_SET_MAP_APPEARANCE] += 4;
+		Protocol.Sizes[OPCODE_ENV_SET_MAP_APPEARANCE] += 4;
 	} else if (String_CaselessEqualsConst(&ext, "LongerMessages")) {
 		Server.SupportsPartialMessages = true;
 	} else if (String_CaselessEqualsConst(&ext, "FullCP437")) {
@@ -919,28 +917,28 @@ static void CPE_ExtEntry(cc_uint8* data) {
 	} else if (String_CaselessEqualsConst(&ext, "BlockDefinitionsExt")) {
 		cpe_blockDefsExtVer = version;
 		if (version == 1) return;
-		Net_PacketSizes[OPCODE_DEFINE_BLOCK_EXT] += 3;
+		Protocol.Sizes[OPCODE_DEFINE_BLOCK_EXT] += 3;
 	} else if (String_CaselessEqualsConst(&ext, "ExtEntityPositions")) {
-		Net_PacketSizes[OPCODE_ENTITY_TELEPORT] += 6;
-		Net_PacketSizes[OPCODE_ADD_ENTITY]      += 6;
-		Net_PacketSizes[OPCODE_EXT_ADD_ENTITY2] += 6;
-		Net_PacketSizes[OPCODE_SET_SPAWNPOINT]  += 6;
+		Protocol.Sizes[OPCODE_ENTITY_TELEPORT] += 6;
+		Protocol.Sizes[OPCODE_ADD_ENTITY]      += 6;
+		Protocol.Sizes[OPCODE_EXT_ADD_ENTITY2] += 6;
+		Protocol.Sizes[OPCODE_SET_SPAWNPOINT]  += 6;
 		cpe_extEntityPos = true;
 	} else if (String_CaselessEqualsConst(&ext, "TwoWayPing")) {
 		cpe_twoWayPing = true;
 	} else if (String_CaselessEqualsConst(&ext, "FastMap")) {
-		Net_PacketSizes[OPCODE_LEVEL_BEGIN] += 4;
+		Protocol.Sizes[OPCODE_LEVEL_BEGIN] += 4;
 		cpe_fastMap = true;
 	} else if (String_CaselessEqualsConst(&ext, "CustomModels")) {
 		cpe_customModelsVer = min(2, version);
 		if (version == 2) {
-			Net_PacketSizes[OPCODE_DEFINE_MODEL_PART] = 167;
+			Protocol.Sizes[OPCODE_DEFINE_MODEL_PART] = 167;
 		}
 	}
 #ifdef EXTENDED_TEXTURES
 	else if (String_CaselessEqualsConst(&ext, "ExtendedTextures")) {
-		Net_PacketSizes[OPCODE_DEFINE_BLOCK]     += 3;
-		Net_PacketSizes[OPCODE_DEFINE_BLOCK_EXT] += 6;
+		Protocol.Sizes[OPCODE_DEFINE_BLOCK]     += 3;
+		Protocol.Sizes[OPCODE_DEFINE_BLOCK_EXT] += 6;
 		cpe_extTextures = true;
 	}
 #endif
@@ -949,15 +947,15 @@ static void CPE_ExtEntry(cc_uint8* data) {
 		if (!Game_AllowCustomBlocks) return;
 		cpe_extBlocks = true;
 
-		Net_PacketSizes[OPCODE_SET_BLOCK] += 1;
-		Net_PacketSizes[OPCODE_HOLD_THIS] += 1;
-		Net_PacketSizes[OPCODE_SET_BLOCK_PERMISSION] += 1;
-		Net_PacketSizes[OPCODE_DEFINE_BLOCK]     += 1;
-		Net_PacketSizes[OPCODE_UNDEFINE_BLOCK]   += 1;
-		Net_PacketSizes[OPCODE_DEFINE_BLOCK_EXT] += 1;
-		Net_PacketSizes[OPCODE_SET_INVENTORY_ORDER] += 2;
-		Net_PacketSizes[OPCODE_BULK_BLOCK_UPDATE]   += 256 / 4;
-		Net_PacketSizes[OPCODE_SET_HOTBAR]       += 1;
+		Protocol.Sizes[OPCODE_SET_BLOCK] += 1;
+		Protocol.Sizes[OPCODE_HOLD_THIS] += 1;
+		Protocol.Sizes[OPCODE_SET_BLOCK_PERMISSION] += 1;
+		Protocol.Sizes[OPCODE_DEFINE_BLOCK]     += 1;
+		Protocol.Sizes[OPCODE_UNDEFINE_BLOCK]   += 1;
+		Protocol.Sizes[OPCODE_DEFINE_BLOCK_EXT] += 1;
+		Protocol.Sizes[OPCODE_SET_INVENTORY_ORDER] += 2;
+		Protocol.Sizes[OPCODE_BULK_BLOCK_UPDATE]   += 256 / 4;
+		Protocol.Sizes[OPCODE_SET_HOTBAR]       += 1;
 	}
 #endif
 }
@@ -1129,7 +1127,6 @@ static void CPE_EnvWeatherType(cc_uint8* data) {
 
 static void CPE_HackControl(cc_uint8* data) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct PhysicsComp* physics;
 	int jumpHeight;
 
 	p->Hacks.CanFly            = data[0] != 0;
@@ -1751,13 +1748,8 @@ static void OnInit(void) {
 }
 
 static void OnReset(void) {
-	int i;
 	if (Server.IsSinglePlayer) return;
-
-	for (i = 0; i < OPCODE_COUNT; i++) {
-		Net_Handlers[i] = NULL;
-		Net_PacketSizes[i] = 0;
-	}
+	Mem_Set(&Protocol, 0, sizeof(Protocol));
 	Protocol_Reset();
 	FreeMapStates();
 }
