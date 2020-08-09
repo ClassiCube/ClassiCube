@@ -235,8 +235,8 @@ static cc_uint8  net_writeBuffer[131];
 static cc_uint8* net_readCurrent;
 
 static cc_bool net_writeFailed;
-static double net_lastPacket;
-static cc_uint8 net_lastOpcode;
+static double lastPacket;
+static cc_uint8 lastOpcode;
 
 static cc_bool net_connecting;
 static double net_connectTimeout;
@@ -252,7 +252,7 @@ static void MPConnection_FinishConnect(void) {
 	Server.WriteBuffer = net_writeBuffer;
 
 	Classic_SendLogin();
-	net_lastPacket = Game.Time;
+	lastPacket = Game.Time;
 }
 
 static void MPConnection_FailConnect(cc_result result) {
@@ -365,7 +365,7 @@ static void DisconnectInvalidOpcode(cc_uint8 opcode) {
 	String tmp; char tmpBuffer[STRING_SIZE];
 	String_InitArray(tmp, tmpBuffer);
 
-	String_Format2(&tmp, "Server sent invalid packet %b! (prev %b)", &opcode, &net_lastOpcode);
+	String_Format2(&tmp, "Server sent invalid packet %b! (prev %b)", &opcode, &lastOpcode);
 	Game_Disconnect(&title, &tmp); return;
 }
 
@@ -373,8 +373,6 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	static const String title_lost  = String_FromConst("&eLost connection to the server");
 	static const String reason_err  = String_FromConst("I/O error when reading packets");
 	String msg; char msgBuffer[STRING_SIZE * 2];
-
-	struct LocalPlayer* p;
 	cc_uint32 pending;
 	cc_uint8* readEnd;
 	Net_Handler handler;
@@ -385,7 +383,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (net_connecting) { MPConnection_TickConnect(); return; }
 
 	/* Over 30 seconds since last packet, connection likely dropped */
-	if (net_lastPacket + 30 < Game.Time) MPConnection_CheckDisconnection();
+	if (lastPacket + 30 < Game.Time) MPConnection_CheckDisconnection();
 	if (Server.Disconnected) return;
 
 	pending = 0;
@@ -412,21 +410,18 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		cc_uint8 opcode = net_readCurrent[0];
 
 		/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
-		if (cpe_needD3Fix && net_lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
+		if (cpe_needD3Fix && lastOpcode == OPCODE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
 			Platform_LogConst("Skipping invalid HackControl byte from D3 server");
 			net_readCurrent++;
-
-			p = &LocalPlayer_Instance;
-			p->Physics.JumpVel = 0.42f; /* assume default jump height */
-			p->Physics.ServerJumpVel = p->Physics.JumpVel;
+			LocalPlayer_ResetJumpVelocity();
 			continue;
 		}
 
 		if (opcode >= OPCODE_COUNT) { DisconnectInvalidOpcode(opcode); return; }
 
 		if (net_readCurrent + Net_PacketSizes[opcode] > readEnd) break;
-		net_lastOpcode = opcode;
-		net_lastPacket = Game.Time;
+		lastOpcode = opcode;
+		lastPacket = Game.Time;
 
 		handler = Net_Handlers[opcode];
 		if (!handler) { DisconnectInvalidOpcode(opcode); return; }
@@ -449,9 +444,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		Server_CheckAsyncResources();
 		Protocol_Tick();
 		/* Have any packets been written? */
-		if (Server.WriteBuffer != net_writeBuffer) {
-			Net_SendPacket();
-		}
+		if (Server.WriteBuffer != net_writeBuffer) Net_SendPacket();
 	}
 	ticks++;
 }

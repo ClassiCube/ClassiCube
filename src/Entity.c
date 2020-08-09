@@ -915,13 +915,19 @@ static void LocalPlayer_Init(void) {
 	hackPermMsgs           = Options_GetBool(OPT_HACK_PERM_MSGS, true);
 }
 
+void LocalPlayer_ResetJumpVelocity(void) {
+	struct LocalPlayer* p  = &LocalPlayer_Instance;
+	cc_bool higher = HacksComp_CanJumpHigher(&p->Hacks);
+
+	p->Physics.JumpVel       = higher ? p->Physics.UserJumpVel : 0.42f;
+	p->Physics.ServerJumpVel = p->Physics.JumpVel;
+}
+
 static void LocalPlayer_Reset(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	p->ReachDistance = 5.0f;
 	Vec3_Set(p->Base.Velocity, 0,0,0);
-	p->Physics.JumpVel       = 0.42f;
-	p->Physics.ServerJumpVel = 0.42f;
-	/* p->Base.Health = 20; TODO: survival mode stuff */
+	LocalPlayer_ResetJumpVelocity();
 }
 
 static void LocalPlayer_OnNewMap(void) {

@@ -1138,16 +1138,14 @@ static void CPE_HackControl(cc_uint8* data) {
 	p->Hacks.CanRespawn        = data[3] != 0;
 	p->Hacks.CanUseThirdPerson = data[4] != 0;
 	HacksComp_Update(&p->Hacks);
-
 	jumpHeight = Stream_GetU16_BE(data + 5);
-	physics    = &p->Physics;
 
 	if (jumpHeight == UInt16_MaxValue) { /* special value of -1 to reset default */
-		physics->JumpVel = HacksComp_CanJumpHigher(&p->Hacks) ? physics->UserJumpVel : 0.42f;
+		LocalPlayer_ResetJumpVelocity();
 	} else {
-		physics->JumpVel = PhysicsComp_CalcJumpVelocity(jumpHeight / 32.0f);
+		p->Physics.JumpVel       = PhysicsComp_CalcJumpVelocity(jumpHeight / 32.0f);
+		p->Physics.ServerJumpVel = p->Physics.JumpVel;
 	}
-	physics->ServerJumpVel = physics->JumpVel;
 }
 
 static void CPE_ExtAddEntity2(cc_uint8* data) {

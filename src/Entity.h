@@ -200,6 +200,7 @@ extern struct LocalPlayer LocalPlayer_Instance;
 float LocalPlayer_JumpHeight(void);
 /* Interpolates current position and orientation between Interp.Prev and Interp.Next */
 void LocalPlayer_SetInterpPosition(float t);
+void LocalPlayer_ResetJumpVelocity(void);
 cc_bool LocalPlayer_CheckCanZoom(void);
 /* Returns whether local player handles a key being pressed. */
 /* e.g. for respawn, toggle fly, etc. */
