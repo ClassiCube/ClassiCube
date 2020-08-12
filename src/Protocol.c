@@ -1458,11 +1458,8 @@ static void CPE_DefineModel(cc_uint8* data) {
 	}
 
 	cm->numParts = numParts;
-	cm->model.vertices = Mem_AllocCleared(
-		numParts * MODEL_BOX_VERTICES,
-		sizeof(struct ModelVertex),
-		"CustomModel vertices"
-	);
+	cm->model.vertices = (struct ModelVertex*)Mem_AllocCleared(numParts * MODEL_BOX_VERTICES,
+												sizeof(struct ModelVertex), "CustomModel vertices");
 	cm->defined = true;
 }
 

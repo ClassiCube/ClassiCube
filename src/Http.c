@@ -127,8 +127,8 @@ static void Http_Add(const String* url, cc_bool priority, const String* id, cc_u
 		Mem_Copy(req.data, data, size);
 		req.size = size;
 	}
-	req.cookies   = cookies;
-	req.timeAdded = DateTime_CurrentUTC_MS();
+	req.cookies    = cookies;
+	req._timeAdded = Stopwatch_Measure();
 
 	Mutex_Lock(pendingMutex);
 	{	
@@ -193,7 +193,7 @@ static void Http_CompleteRequest(struct HttpRequest* req) {
 	if (index >= 0) {
 		/* very rare case - priority item was inserted, then inserted again (so put before first item), */
 		/* and both items got downloaded before an external function removed them from the queue */
-		if (older.timeAdded > req->timeAdded) {
+		if (older._timeAdded > req->_timeAdded) {
 			HttpRequest_Free(req);
 		} else {
 			/* normal case, replace older req */

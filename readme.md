@@ -18,7 +18,7 @@ It **does not** work with 'modern/premium' Minecraft servers.
 * macOS: macOS 10.5 or later. (Can be compiled to work with 10.3/10.4 though)
 * Linux: libcurl and libopenal.
 
-**Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work propery.
+**Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work properly.
 
 #### Instructions
 Initially, you will need to run ClassiCube.exe to download the required assets from minecraft.net. 
