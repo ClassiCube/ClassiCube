@@ -684,28 +684,17 @@ static void Cw_Callback(struct NbtTag* tag) {
 }
 
 cc_result Cw_Load(struct Stream* stream) {
-	cc_uint8 tag;
 	struct Stream compStream;
 	struct InflateState state;
-	Vec3* spawn; IVec3 pos;
 	cc_result res;
+	cc_uint8 tag;
 
 	Inflate_MakeStream2(&compStream, &state, stream);
 	if ((res = Map_SkipGZipHeader(stream))) return res;
 	if ((res = compStream.ReadU8(&compStream, &tag))) return res;
 
 	if (tag != NBT_DICT) return CW_ERR_ROOT_TAG;
-	res = Nbt_ReadTag(NBT_DICT, true, &compStream, NULL, Cw_Callback);
-	if (res) return res;
-
-	/* Older versions incorrectly multiplied spawn coords by * 32, so we check for that */
-	spawn = &LocalPlayer_Instance.Spawn; 
-	IVec3_Floor(&pos, spawn);
-
-	if (!World_Contains(pos.X, pos.Y, pos.Z)) { 
-		spawn->X /= 32.0f; spawn->Y /= 32.0f; spawn->Z /= 32.0f; 
-	}
-	return 0;
+	return Nbt_ReadTag(NBT_DICT, true, &compStream, NULL, Cw_Callback);
 }
 
 
