@@ -296,7 +296,7 @@ static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table
 }
 
 /* Inline the common <= 9 bits case */
-#define Huffman_Unsafe_Decode(state, table, result) \
+#define Huffman_UNSAFE_Decode(state, table, result) \
 {\
 	Inflate_UNSAFE_EnsureBits(state, INFLATE_MAX_BITS);\
 	packed = table.Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];\
@@ -305,11 +305,11 @@ static int Huffman_Decode(struct InflateState* state, struct HuffmanTable* table
 		Inflate_ConsumeBits(state, consumedBits);\
 		result = packed & 0x1FF;\
 	} else {\
-		result = Huffman_Unsafe_Decode_Slow(state, &table);\
+		result = Huffman_UNSAFE_Decode_Slow(state, &table);\
 	}\
 }
 
-static int Huffman_Unsafe_Decode_Slow(struct InflateState* state, struct HuffmanTable* table) {
+static int Huffman_UNSAFE_Decode_Slow(struct InflateState* state, struct HuffmanTable* table) {
 	cc_uint32 i, j, codeword;
 	int offset;
 
@@ -384,7 +384,7 @@ static const cc_uint8 codelens_order[INFLATE_MAX_CODELENS] = {
 	16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 
 };
 
-static void Inflate_InflateFast(struct InflateState* state) {
+static void Inflate_InflateFast(struct InflateState* s) {
 	/* huffman variables */
 	cc_uint32 lit, len, dist;
 	cc_uint32 bits, lenIdx, distIdx;
@@ -395,36 +395,36 @@ static void Inflate_InflateFast(struct InflateState* state) {
 	cc_uint32 i, curIdx, startIdx;
 	cc_uint32 copyStart, copyLen, partLen;
 
-	window = state->Window;
-	curIdx = state->WindowIndex;
-	copyStart = state->WindowIndex;
+	window = s->Window;
+	curIdx = s->WindowIndex;
+	copyStart = s->WindowIndex;
 	copyLen   = 0;
 
 #define INFLATE_FAST_COPY_MAX (INFLATE_WINDOW_SIZE - INFLATE_FASTINF_OUT)
-	while (state->AvailOut >= INFLATE_FASTINF_OUT && state->AvailIn >= INFLATE_FASTINF_IN && copyLen < INFLATE_FAST_COPY_MAX) {
-		Huffman_Unsafe_Decode(state, state->Table.Lits, lit);
+	while (s->AvailOut >= INFLATE_FASTINF_OUT && s->AvailIn >= INFLATE_FASTINF_IN && copyLen < INFLATE_FAST_COPY_MAX) {
+		Huffman_UNSAFE_Decode(s, s->Table.Lits, lit);
 
 		if (lit <= 256) {
 			if (lit < 256) {
 				window[curIdx] = (cc_uint8)lit;
-				state->AvailOut--; copyLen++;
+				s->AvailOut--; copyLen++;
 				curIdx = (curIdx + 1) & INFLATE_WINDOW_MASK;
 			} else {
-				state->State = Inflate_NextBlockState(state);
+				s->State = Inflate_NextBlockState(s);
 				break;
 			}
 		} else {
 			lenIdx = lit - 257;
 			bits = len_bits[lenIdx];
-			Inflate_UNSAFE_EnsureBits(state, bits);
-			len  = len_base[lenIdx] + Inflate_ReadBits(state, bits);
+			Inflate_UNSAFE_EnsureBits(s, bits);
+			len  = len_base[lenIdx] + Inflate_ReadBits(s, bits);
 
-			Huffman_Unsafe_Decode(state, state->TableDists, distIdx);
+			Huffman_UNSAFE_Decode(s, s->TableDists, distIdx);
 			bits = dist_bits[distIdx];
-			Inflate_UNSAFE_EnsureBits(state, bits);
-			dist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
+			Inflate_UNSAFE_EnsureBits(s, bits);
+			dist = dist_base[distIdx] + Inflate_ReadBits(s, bits);
 	
-			/* Window is infinitely repeating like ... [xyz][xyz][xyz] ... */
+			/* Window infinitely repeats like ...xyz|uvwxyz|uvwxyz|uvw... */
 			/* If start and end don't cross a boundary, can avoid masking index */
 			startIdx = (curIdx - dist) & INFLATE_WINDOW_MASK;
 			if (curIdx >= startIdx && (curIdx + len) < INFLATE_WINDOW_SIZE) {
@@ -441,26 +441,26 @@ static void Inflate_InflateFast(struct InflateState* state) {
 				}
 			}
 			curIdx = (curIdx + len) & INFLATE_WINDOW_MASK;
-			state->AvailOut -= len; copyLen += len;
+			s->AvailOut -= len; copyLen += len;
 		}
 	}
 
-	state->WindowIndex = curIdx;
+	s->WindowIndex = curIdx;
 	if (!copyLen) return;
 
 	if (copyStart + copyLen < INFLATE_WINDOW_SIZE) {
-		Mem_Copy(state->Output, &state->Window[copyStart], copyLen);
-		state->Output += copyLen;
+		Mem_Copy(s->Output, &s->Window[copyStart], copyLen);
+		s->Output += copyLen;
 	} else {
 		partLen = INFLATE_WINDOW_SIZE - copyStart;
-		Mem_Copy(state->Output, &state->Window[copyStart], partLen);
-		state->Output += partLen;
-		Mem_Copy(state->Output, state->Window, copyLen - partLen);
-		state->Output += (copyLen - partLen);
+		Mem_Copy(s->Output, &s->Window[copyStart], partLen);
+		s->Output += partLen;
+		Mem_Copy(s->Output, s->Window, copyLen - partLen);
+		s->Output += (copyLen - partLen);
 	}
 }
 
-void Inflate_Process(struct InflateState* state) {
+void Inflate_Process(struct InflateState* s) {
 	cc_uint32 len, dist, nlen;
 	cc_uint32 i, bits;
 	cc_uint32 blockHeader;
@@ -476,30 +476,30 @@ void Inflate_Process(struct InflateState* state) {
 	cc_uint32 copyLen, windowCopyLen;
 
 	for (;;) {
-		switch (state->State) {
+		switch (s->State) {
 		case INFLATE_STATE_HEADER: {
-			Inflate_EnsureBits(state, 3);
-			blockHeader      = Inflate_ReadBits(state, 3);
-			state->LastBlock = blockHeader & 1;
+			Inflate_EnsureBits(s, 3);
+			blockHeader  = Inflate_ReadBits(s, 3);
+			s->LastBlock = blockHeader & 1;
 
 			switch (blockHeader >> 1) {
 			case 0: { /* Uncompressed block */
-				Inflate_AlignBits(state);
-				state->State = INFLATE_STATE_UNCOMPRESSED_HEADER;
+				Inflate_AlignBits(s);
+				s->State = INFLATE_STATE_UNCOMPRESSED_HEADER;
 			} break;
 
 			case 1: { /* Fixed/static huffman compressed */
-				Huffman_Build(&state->Table.Lits, fixed_lits,  INFLATE_MAX_LITS);
-				Huffman_Build(&state->TableDists, fixed_dists, INFLATE_MAX_DISTS);
-				state->State = Inflate_NextCompressState(state);
+				Huffman_Build(&s->Table.Lits, fixed_lits,  INFLATE_MAX_LITS);
+				Huffman_Build(&s->TableDists, fixed_dists, INFLATE_MAX_DISTS);
+				s->State = Inflate_NextCompressState(s);
 			} break;
 
 			case 2: { /* Dynamic huffman compressed */
-				state->State = INFLATE_STATE_DYNAMIC_HEADER;
+				s->State = INFLATE_STATE_DYNAMIC_HEADER;
 			} break;
 
 			case 3: {
-				Inflate_Fail(state, INF_ERR_BLOCKTYPE);
+				Inflate_Fail(s, INF_ERR_BLOCKTYPE);
 			} break;
 
 			}
@@ -507,200 +507,200 @@ void Inflate_Process(struct InflateState* state) {
 		}
 
 		case INFLATE_STATE_UNCOMPRESSED_HEADER: {
-			Inflate_EnsureBits(state, 32);
-			len  = Inflate_ReadBits(state, 16);
-			nlen = Inflate_ReadBits(state, 16);
+			Inflate_EnsureBits(s, 32);
+			len  = Inflate_ReadBits(s, 16);
+			nlen = Inflate_ReadBits(s, 16);
 
 			if (len != (nlen ^ 0xFFFFUL)) {
-				Inflate_Fail(state, INF_ERR_BLOCKTYPE); return;
+				Inflate_Fail(s, INF_ERR_BLOCKTYPE); return;
 			}
-			state->Index = len; /* Reuse for 'uncompressed length' */
-			state->State = INFLATE_STATE_UNCOMPRESSED_DATA;
+			s->Index = len; /* Reuse for 'uncompressed length' */
+			s->State = INFLATE_STATE_UNCOMPRESSED_DATA;
 		}
 
 		case INFLATE_STATE_UNCOMPRESSED_DATA: {
 			/* read bits left in bit buffer (slow way) */
-			while (state->NumBits && state->AvailOut && state->Index) {
-				*state->Output = Inflate_ReadBits(state, 8);
-				state->Window[state->WindowIndex] = *state->Output;
+			while (s->NumBits && s->AvailOut && s->Index) {
+				*s->Output = Inflate_ReadBits(s, 8);
+				s->Window[s->WindowIndex] = *s->Output;
 
-				state->WindowIndex = (state->WindowIndex + 1) & INFLATE_WINDOW_MASK;
-				state->Output++; state->AvailOut--;	state->Index--;
+				s->WindowIndex = (s->WindowIndex + 1) & INFLATE_WINDOW_MASK;
+				s->Output++; s->AvailOut--;	s->Index--;
 			}
-			if (!state->AvailIn || !state->AvailOut) return;
+			if (!s->AvailIn || !s->AvailOut) return;
 
-			copyLen = min(state->AvailIn, state->AvailOut);
-			copyLen = min(copyLen, state->Index);
+			copyLen = min(s->AvailIn, s->AvailOut);
+			copyLen = min(copyLen, s->Index);
 			if (copyLen > 0) {
-				Mem_Copy(state->Output, state->NextIn, copyLen);
-				windowCopyLen = INFLATE_WINDOW_SIZE - state->WindowIndex;
+				Mem_Copy(s->Output, s->NextIn, copyLen);
+				windowCopyLen = INFLATE_WINDOW_SIZE - s->WindowIndex;
 				windowCopyLen = min(windowCopyLen, copyLen);
 
-				Mem_Copy(&state->Window[state->WindowIndex], state->Output, windowCopyLen);
+				Mem_Copy(&s->Window[s->WindowIndex], s->Output, windowCopyLen);
 				/* Wrap around remainder of copy to start from beginning of window */
 				if (windowCopyLen < copyLen) {
-					Mem_Copy(state->Window, &state->Output[windowCopyLen], copyLen - windowCopyLen);
+					Mem_Copy(s->Window, &s->Output[windowCopyLen], copyLen - windowCopyLen);
 				}
 
-				state->WindowIndex = (state->WindowIndex + copyLen) & INFLATE_WINDOW_MASK;
-				state->Output += copyLen; state->AvailOut -= copyLen; state->Index -= copyLen;
-				state->NextIn += copyLen; state->AvailIn  -= copyLen;		
+				s->WindowIndex = (s->WindowIndex + copyLen) & INFLATE_WINDOW_MASK;
+				s->Output += copyLen; s->AvailOut -= copyLen; s->Index -= copyLen;
+				s->NextIn += copyLen; s->AvailIn  -= copyLen;		
 			}
 
-			if (!state->Index) { state->State = Inflate_NextBlockState(state); }
+			if (!s->Index) { s->State = Inflate_NextBlockState(s); }
 			break;
 		}
 
 		case INFLATE_STATE_DYNAMIC_HEADER: {
-			Inflate_EnsureBits(state, 14);
-			state->NumLits   = 257 + Inflate_ReadBits(state, 5);
-			state->NumDists    = 1 + Inflate_ReadBits(state, 5);
-			state->NumCodeLens = 4 + Inflate_ReadBits(state, 4);
-			state->Index = 0;
-			state->State = INFLATE_STATE_DYNAMIC_CODELENS;
+			Inflate_EnsureBits(s, 14);
+			s->NumLits   = 257 + Inflate_ReadBits(s, 5);
+			s->NumDists    = 1 + Inflate_ReadBits(s, 5);
+			s->NumCodeLens = 4 + Inflate_ReadBits(s, 4);
+			s->Index = 0;
+			s->State = INFLATE_STATE_DYNAMIC_CODELENS;
 		}
 
 		case INFLATE_STATE_DYNAMIC_CODELENS: {
-			while (state->Index < state->NumCodeLens) {
-				Inflate_EnsureBits(state, 3);
-				i = codelens_order[state->Index];
-				state->Buffer[i] = Inflate_ReadBits(state, 3);
-				state->Index++;
+			while (s->Index < s->NumCodeLens) {
+				Inflate_EnsureBits(s, 3);
+				i = codelens_order[s->Index];
+				s->Buffer[i] = Inflate_ReadBits(s, 3);
+				s->Index++;
 			}
-			for (i = state->NumCodeLens; i < INFLATE_MAX_CODELENS; i++) {
-				state->Buffer[codelens_order[i]] = 0;
+			for (i = s->NumCodeLens; i < INFLATE_MAX_CODELENS; i++) {
+				s->Buffer[codelens_order[i]] = 0;
 			}
 
-			state->Index = 0;
-			state->State = INFLATE_STATE_DYNAMIC_LITSDISTS;
-			Huffman_Build(&state->Table.CodeLens, state->Buffer, INFLATE_MAX_CODELENS);
+			s->Index = 0;
+			s->State = INFLATE_STATE_DYNAMIC_LITSDISTS;
+			Huffman_Build(&s->Table.CodeLens, s->Buffer, INFLATE_MAX_CODELENS);
 		}
 
 		case INFLATE_STATE_DYNAMIC_LITSDISTS: {
-			count = state->NumLits + state->NumDists;
-			while (state->Index < count) {
-				int bits = Huffman_Decode(state, &state->Table.CodeLens);
+			count = s->NumLits + s->NumDists;
+			while (s->Index < count) {
+				int bits = Huffman_Decode(s, &s->Table.CodeLens);
 				if (bits < 16) {
 					if (bits == -1) return;
-					state->Buffer[state->Index] = (cc_uint8)bits;
-					state->Index++;
+					s->Buffer[s->Index] = (cc_uint8)bits;
+					s->Index++;
 				} else {
-					state->TmpCodeLens = bits;
-					state->State = INFLATE_STATE_DYNAMIC_LITSDISTSREPEAT;
+					s->TmpCodeLens = bits;
+					s->State = INFLATE_STATE_DYNAMIC_LITSDISTSREPEAT;
 					break;
 				}
 			}
 
-			if (state->Index == count) {
-				state->Index = 0;
-				state->State = Inflate_NextCompressState(state);
-				Huffman_Build(&state->Table.Lits, state->Buffer, state->NumLits);
-				Huffman_Build(&state->TableDists, &state->Buffer[state->NumLits], state->NumDists);
+			if (s->Index == count) {
+				s->Index = 0;
+				s->State = Inflate_NextCompressState(s);
+				Huffman_Build(&s->Table.Lits, s->Buffer, s->NumLits);
+				Huffman_Build(&s->TableDists, &s->Buffer[s->NumLits], s->NumDists);
 			}
 			break;
 		}
 
 		case INFLATE_STATE_DYNAMIC_LITSDISTSREPEAT: {
-			switch (state->TmpCodeLens) {
+			switch (s->TmpCodeLens) {
 			case 16:
-				Inflate_EnsureBits(state, 2);
-				repeatCount = Inflate_ReadBits(state, 2);
-				if (!state->Index) { Inflate_Fail(state, INF_ERR_REPEAT_BEG); return; }
-				repeatCount += 3; repeatValue = state->Buffer[state->Index - 1];
+				Inflate_EnsureBits(s, 2);
+				repeatCount = Inflate_ReadBits(s, 2);
+				if (!s->Index) { Inflate_Fail(s, INF_ERR_REPEAT_BEG); return; }
+				repeatCount += 3; repeatValue = s->Buffer[s->Index - 1];
 				break;
 
 			case 17:
-				Inflate_EnsureBits(state, 3);
-				repeatCount = Inflate_ReadBits(state, 3);
+				Inflate_EnsureBits(s, 3);
+				repeatCount = Inflate_ReadBits(s, 3);
 				repeatCount += 3; repeatValue = 0;
 				break;
 
 			case 18:
-				Inflate_EnsureBits(state, 7);
-				repeatCount = Inflate_ReadBits(state, 7);
+				Inflate_EnsureBits(s, 7);
+				repeatCount = Inflate_ReadBits(s, 7);
 				repeatCount += 11; repeatValue = 0;
 				break;
 			}
 
-			count = state->NumLits + state->NumDists;
-			if (state->Index + repeatCount > count) {
-				Inflate_Fail(state, INF_ERR_REPEAT_END); return;
+			count = s->NumLits + s->NumDists;
+			if (s->Index + repeatCount > count) {
+				Inflate_Fail(s, INF_ERR_REPEAT_END); return;
 			}
 
-			Mem_Set(&state->Buffer[state->Index], repeatValue, repeatCount);
-			state->Index += repeatCount;
-			state->State = INFLATE_STATE_DYNAMIC_LITSDISTS;
+			Mem_Set(&s->Buffer[s->Index], repeatValue, repeatCount);
+			s->Index += repeatCount;
+			s->State = INFLATE_STATE_DYNAMIC_LITSDISTS;
 			break;
 		}
 
 		case INFLATE_STATE_COMPRESSED_LIT: {
-			if (!state->AvailOut) return;
-			lit = Huffman_Decode(state, &state->Table.Lits);
+			if (!s->AvailOut) return;
+			lit = Huffman_Decode(s, &s->Table.Lits);
 
 			if (lit < 256) {
 				if (lit == -1) return;
-				*state->Output = (cc_uint8)lit;
-				state->Window[state->WindowIndex] = (cc_uint8)lit;
-				state->Output++; state->AvailOut--;
-				state->WindowIndex = (state->WindowIndex + 1) & INFLATE_WINDOW_MASK;
+				*s->Output = (cc_uint8)lit;
+				s->Window[s->WindowIndex] = (cc_uint8)lit;
+				s->Output++; s->AvailOut--;
+				s->WindowIndex = (s->WindowIndex + 1) & INFLATE_WINDOW_MASK;
 				break;
 			} else if (lit == 256) {
-				state->State = Inflate_NextBlockState(state);
+				s->State = Inflate_NextBlockState(s);
 				break;
 			} else {
-				state->TmpLit = lit - 257;
-				state->State  = INFLATE_STATE_COMPRESSED_LITREPEAT;
+				s->TmpLit = lit - 257;
+				s->State  = INFLATE_STATE_COMPRESSED_LITREPEAT;
 			}
 		}
 
 		case INFLATE_STATE_COMPRESSED_LITREPEAT: {
-			lenIdx = state->TmpLit;
+			lenIdx = s->TmpLit;
 			bits   = len_bits[lenIdx];
-			Inflate_EnsureBits(state, bits);
-			state->TmpLit = len_base[lenIdx] + Inflate_ReadBits(state, bits);
-			state->State  = INFLATE_STATE_COMPRESSED_DIST;
+			Inflate_EnsureBits(s, bits);
+			s->TmpLit = len_base[lenIdx] + Inflate_ReadBits(s, bits);
+			s->State  = INFLATE_STATE_COMPRESSED_DIST;
 		}
 
 		case INFLATE_STATE_COMPRESSED_DIST: {
-			state->TmpDist = Huffman_Decode(state, &state->TableDists);
-			if (state->TmpDist == -1) return;
-			state->State = INFLATE_STATE_COMPRESSED_DISTREPEAT;
+			s->TmpDist = Huffman_Decode(s, &s->TableDists);
+			if (s->TmpDist == -1) return;
+			s->State = INFLATE_STATE_COMPRESSED_DISTREPEAT;
 		}
 
 		case INFLATE_STATE_COMPRESSED_DISTREPEAT: {
-			distIdx = state->TmpDist;
+			distIdx = s->TmpDist;
 			bits    = dist_bits[distIdx];
-			Inflate_EnsureBits(state, bits);
-			state->TmpDist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
-			state->State   = INFLATE_STATE_COMPRESSED_DATA;
+			Inflate_EnsureBits(s, bits);
+			s->TmpDist = dist_base[distIdx] + Inflate_ReadBits(s, bits);
+			s->State   = INFLATE_STATE_COMPRESSED_DATA;
 		}
 
 		case INFLATE_STATE_COMPRESSED_DATA: {
-			if (!state->AvailOut) return;
-			len = state->TmpLit; dist = state->TmpDist;
-			len = min(len, state->AvailOut);
+			if (!s->AvailOut) return;
+			len = s->TmpLit; dist = s->TmpDist;
+			len = min(len, s->AvailOut);
 
 			/* TODO: Should we test outside of the loop, whether a masking will be required or not? */		
-			startIdx = (state->WindowIndex - dist) & INFLATE_WINDOW_MASK;
-			curIdx   = state->WindowIndex;
+			startIdx = (s->WindowIndex - dist) & INFLATE_WINDOW_MASK;
+			curIdx   = s->WindowIndex;
 			for (i = 0; i < len; i++) {
-				cc_uint8 value = state->Window[(startIdx + i) & INFLATE_WINDOW_MASK];
-				*state->Output = value;
-				state->Window[(curIdx + i) & INFLATE_WINDOW_MASK] = value;
-				state->Output++;
+				cc_uint8 value = s->Window[(startIdx + i) & INFLATE_WINDOW_MASK];
+				*s->Output = value;
+				s->Window[(curIdx + i) & INFLATE_WINDOW_MASK] = value;
+				s->Output++;
 			}
 
-			state->WindowIndex = (curIdx + len) & INFLATE_WINDOW_MASK;
-			state->TmpLit   -= len;
-			state->AvailOut -= len;
-			if (!state->TmpLit) { state->State = Inflate_NextCompressState(state); }
+			s->WindowIndex = (curIdx + len) & INFLATE_WINDOW_MASK;
+			s->TmpLit   -= len;
+			s->AvailOut -= len;
+			if (!s->TmpLit) { s->State = Inflate_NextCompressState(s); }
 			break;
 		}
 
 		case INFLATE_STATE_FASTCOMPRESSED: {
-			Inflate_InflateFast(state);
-			if (state->State == INFLATE_STATE_FASTCOMPRESSED) {
-				state->State = Inflate_NextCompressState(state);
+			Inflate_InflateFast(s);
+			if (s->State == INFLATE_STATE_FASTCOMPRESSED) {
+				s->State = Inflate_NextCompressState(s);
 			}
 			break;
 		}

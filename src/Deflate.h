@@ -71,7 +71,7 @@ struct InflateState {
 CC_API void Inflate_Init2(struct InflateState* state, struct Stream* source);
 /* Attempts to decompress as much of the currently pending data as possible. */
 /* NOTE: This is a low level call - usually you treat as a stream via Inflate_MakeStream. */
-void Inflate_Process(struct InflateState* state);
+void Inflate_Process(struct InflateState* s);
 /* Deompresses input data read from another stream using DEFLATE. Read only stream. */
 /* NOTE: This only uncompresses pure DEFLATE compressed data. */
 /* If data starts with a GZIP or ZLIB header, use GZipHeader_Read or ZLibHeader_Read to first skip it. */
