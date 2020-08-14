@@ -477,8 +477,6 @@ void CheckUpdateTask_Run(void) {
 	if (CheckUpdateTask.Base.working) return;
 
 	LWebTask_Reset(&CheckUpdateTask.Base);
-	CheckUpdateTask.devTimestamp = 0;
-	CheckUpdateTask.relTimestamp = 0;
 	String_InitArray(CheckUpdateTask.latestRelease, relVersionBuffer);
 
 	CheckUpdateTask.Base.identifier = id;
