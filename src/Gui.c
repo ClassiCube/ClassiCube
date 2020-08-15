@@ -180,6 +180,7 @@ static void Gui_AddCore(struct Screen* s, int priority) {
 	s->dirty = true;
 	s->VTABLE->Init(s);
 	s->VTABLE->ContextRecreated(s);
+	s->VTABLE->Layout(s);
 
 	/* for selecting active button etc */
 	for (i = 0; i < Pointers_Count; i++) {

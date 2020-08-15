@@ -1556,16 +1556,13 @@ static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
 
 static void LoadingScreen_Layout(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	if (!s->title.VTABLE) return;
-	Widget_Layout(&s->title);
-	Widget_Layout(&s->message);
+	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
+	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
 }
 
 static void LoadingScreen_ContextLost(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	Font_Free(&s->font);
-	if (!s->title.VTABLE) return;
-
 	Elem_Free(&s->title);
 	Elem_Free(&s->message);
 }
@@ -1632,9 +1629,8 @@ static void LoadingScreen_MapLoaded(void* screen) {
 
 static void LoadingScreen_Init(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-
-	TextWidget_Make(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
-	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
+	TextWidget_Init(&s->title);
+	TextWidget_Init(&s->message);
 
 	Gfx_SetFog(false);
 	Event_Register_(&WorldEvents.Loading,   s, LoadingScreen_MapLoading);
@@ -1792,6 +1788,13 @@ static struct Widget* disconnect_widgets[3] = {
 #define DISCONNECT_MAX_VERTICES (2 * TEXTWIDGET_MAX + BUTTONWIDGET_MAX)
 #define DISCONNECT_DELAY_SECS 5
 
+static void DisconnectScreen_Layout(void* screen) {
+	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
+	Widget_SetLocation(&s->title,     ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	Widget_SetLocation(&s->message,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
+	Widget_SetLocation(&s->reconnect, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  80);
+}
+
 static void DisconnectScreen_UpdateReconnect(struct DisconnectScreen* s) {
 	String msg; char msgBuffer[STRING_SIZE];
 	int elapsed, secsLeft;
@@ -1831,12 +1834,10 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
+	TextWidget_Init(&s->title);
+	TextWidget_Init(&s->message);
 
-	TextWidget_Make(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
-	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
-
-	ButtonWidget_Make(&s->reconnect, 300, NULL, 
-					ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 80);
+	ButtonWidget_Init(&s->reconnect, 300, NULL);
 	s->reconnect.disabled = !s->canReconnect;
 	s->maxVertices  = DISCONNECT_MAX_VERTICES;
 
@@ -1903,7 +1904,7 @@ static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Render,      Screen_BuildMesh,
 	Screen_InputDown,             Screen_TInput,           Screen_TKeyPress,             Screen_TText,
 	DisconnectScreen_PointerDown, Screen_TPointer,         DisconnectScreen_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,                DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
+	DisconnectScreen_Layout,      DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 void DisconnectScreen_Show(const String* title, const String* message) {
 	static const String kick = String_FromConst("Kicked ");
