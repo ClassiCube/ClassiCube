@@ -262,12 +262,18 @@ struct SignInTaskData SignInTask;
 static char userBuffer[STRING_SIZE];
 
 static void SignInTask_LogError(const String* str) {
+	static char errBuffer[128];
+	String err;
+
 	if (String_CaselessEqualsConst(str, "username") || String_CaselessEqualsConst(str, "password")) {
 		SignInTask.error = "&cWrong username or password";
 	} else if (String_CaselessEqualsConst(str, "verification")) {
 		SignInTask.error = "&cAccount verification required";
 	} else if (str->length) {
-		SignInTask.error = "&cUnknown error occurred";
+		String_InitArray_NT(err, errBuffer);
+		String_Format1(&err, "&c%s", str);
+		errBuffer[err.length] = '\0';
+		SignInTask.error = errBuffer;
 	}
 }
 
