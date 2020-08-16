@@ -48,14 +48,6 @@ static void Menu_Button(void* s, int i, struct ButtonWidget* btn, int width, Wid
 	((struct Screen*)s)->widgets[i] = (struct Widget*)btn;
 }
 
-static void Menu_Buttons(void* s, struct ButtonWidget* btns, int width, const struct SimpleButtonDesc* descs, int count) {
-	int i;
-	for (i = 0; i < count; i++) {
-		Menu_Button(s, i, &btns[i], width, descs[i].onClick,
-			ANCHOR_CENTRE, ANCHOR_CENTRE,  descs[i].x, descs[i].y);
-	}
-}
-
 static void Menu_InitButtons(struct ButtonWidget* btns, int width, const struct SimpleButtonDesc* descs, int count) {
 	int i;
 	for (i = 0; i < count; i++) {

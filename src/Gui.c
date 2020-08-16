@@ -143,9 +143,20 @@ static void OnContextRecreated(void* obj) {
 	}
 }
 
+static void OnResize(void* obj) {
+	struct Screen* s;
+	int i;
+
+	for (i = 0; i < Gui.ScreensCount; i++) {
+		s = Gui_Screens[i];
+		s->VTABLE->Layout(s);
+	}
+}
+
 void Gui_RefreshAll(void) { 
 	LoseAllScreens();
 	OnContextRecreated(NULL);
+	OnResize(NULL);
 }
 
 void Gui_RemoveAll(void) {
@@ -156,6 +167,7 @@ void Gui_RefreshChat(void) { Gui_Refresh((struct Screen*)Gui_Chat); }
 void Gui_Refresh(struct Screen* s) {
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->ContextRecreated(s);
+	s->VTABLE->Layout(s);
 }
 
 static void Gui_AddCore(struct Screen* s, int priority) {
@@ -268,17 +280,6 @@ void Gui_RenderGui(double delta) {
 
 		if (s->dirty) { s->VTABLE->BuildMesh(s); s->dirty = false; }
 		s->VTABLE->Render(s, delta);
-	}
-}
-
-void Gui_Layout(void) {
-	struct Screen* s;
-	int i;
-
-	for (i = 0; i < Gui.ScreensCount; i++) {
-		s = Gui_Screens[i];
-		s->dirty = true;
-		s->VTABLE->Layout(s);
 	}
 }
 
@@ -412,6 +413,8 @@ static void OnInit(void) {
 #ifdef CC_BUILD_TOUCH
 	Event_Register_(&InputEvents.TextChanged,    NULL, OnTextChanged);
 #endif
+
+	Event_Register_(&WindowEvents.Resized,       NULL, OnResize);
 	Gui_LoadOptions();
 	Gui_ShowDefault();
 }
