@@ -2054,7 +2054,10 @@ CC_NOINLINE static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* 
 	s->extHelp.lines = 0;
 }
 
-static void MenuOptionsScreen_RepositionExtHelp(struct MenuOptionsScreen* s) {
+static void MenuOptionsScreen_LayoutExtHelp(struct MenuOptionsScreen* s) {
+	Widget_SetLocation(&s->extHelp, ANCHOR_MIN, ANCHOR_CENTRE_MIN, 0, 100);
+	/* If use centre align above, then each line in extended help gets */
+	/* centered aligned separately - which is not the desired behaviour. */
 	s->extHelp.xOffset = WindowInfo.Width / 2 - s->extHelp.width / 2;
 	Widget_Layout(&s->extHelp);
 }
@@ -2082,7 +2085,7 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 	
 	s->extHelpDesc = desc;
 	TextGroupWidget_RedrawAll(&s->extHelp);
-	MenuOptionsScreen_RepositionExtHelp(s);
+	MenuOptionsScreen_LayoutExtHelp(s);
 }
 
 static void MenuOptionsScreen_FreeInput(struct MenuOptionsScreen* s) {
@@ -2168,10 +2171,6 @@ static void MenuOptionsScreen_InitButtons(struct MenuOptionsScreen* s, const str
 	}
 	s->numButtons = count;
 	Menu_InitBack(&s->done, backClick);
-
-	TextGroupWidget_Create(&s->extHelp, 5, s->extHelpTextures, MenuOptionsScreen_GetDesc);
-	s->extHelp.lines = 0;
-	Widget_SetLocation(&s->extHelp, ANCHOR_MIN, ANCHOR_CENTRE_MIN, 0, 100);
 }
 
 static void MenuOptionsScreen_OK(void* screen, void* widget) {
@@ -2257,14 +2256,17 @@ static void MenuOptionsScreen_Init(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	int i;
 
-	s->widgets = menuOpts_widgets;
+	s->widgets    = menuOpts_widgets;
+	s->numWidgets = MENUOPTS_MAX_OPTS + 1; /* always have back button */
 	/* The various menu options screens might have different number of widgets */
 	for (i = 0; i < MENUOPTS_MAX_OPTS; i++) { s->widgets[i] = NULL; }
 
 	s->activeI    = -1;
 	s->selectedI  = -1;
 	s->DoInit(s);
-	s->numWidgets = MENUOPTS_MAX_OPTS + 1; /* always have back button */
+
+	TextGroupWidget_Create(&s->extHelp, 5, s->extHelpTextures, MenuOptionsScreen_GetDesc);
+	s->extHelp.lines = 0;
 	Event_Register_(&UserEvents.HackPermissionsChanged, screen, MenuOptionsScreen_OnHacksChanged);
 }
 	
@@ -2296,7 +2298,7 @@ static void MenuOptionsScreen_Layout(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	Screen_Layout(s);
 	Menu_LayoutBack(&s->done);
-	MenuOptionsScreen_RepositionExtHelp(s);
+	MenuOptionsScreen_LayoutExtHelp(s);
 
 	if (s->activeI == -1) return;
 	Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 110);
