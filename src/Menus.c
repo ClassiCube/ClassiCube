@@ -1746,13 +1746,13 @@ void LoadLevelScreen_Show(void) {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------KeyBindingsScreen-----------------------------------------------------*
+*---------------------------------------------------KeyBindsScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-struct KeyBindingsScreen;
-typedef void (*InitKeyBindings)(struct KeyBindingsScreen* s);
+struct KeyBindsScreen;
+typedef void (*InitKeyBindings)(struct KeyBindsScreen* s);
 #define KEYBINDS_MAX_BTNS 12
 
-static struct KeyBindingsScreen {
+static struct KeyBindsScreen {
 	Screen_Body	
 	int curI, bindsCount;
 	const char* const* descs;
@@ -1765,37 +1765,39 @@ static struct KeyBindingsScreen {
 	struct TextWidget title, msg;
 	struct ButtonWidget back, left, right;
 	struct ButtonWidget buttons[KEYBINDS_MAX_BTNS];
-} KeyBindingsScreen_Instance;
+} KeyBindsScreen;
+#define KEYBINDS_MAX_VERTICES ((KEYBINDS_MAX_BTNS + 3) * BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
 
 static struct Widget* key_widgets[KEYBINDS_MAX_BTNS + 5] = {
-	NULL,NULL,NULL,NULL,NULL,NULL,                     NULL,NULL,NULL,NULL,NULL,NULL,
-	(struct Widget*)&KeyBindingsScreen_Instance.title, (struct Widget*)&KeyBindingsScreen_Instance.msg,
-	(struct Widget*)&KeyBindingsScreen_Instance.back,  (struct Widget*)&KeyBindingsScreen_Instance.left,
-	(struct Widget*)&KeyBindingsScreen_Instance.right
+	NULL,NULL,NULL,NULL,NULL,NULL,                  NULL,NULL,NULL,NULL,NULL,NULL,
+	(struct Widget*)&KeyBindsScreen.title, (struct Widget*)&KeyBindsScreen.msg,
+	(struct Widget*)&KeyBindsScreen.back,  (struct Widget*)&KeyBindsScreen.left,
+	(struct Widget*)&KeyBindsScreen.right
 };
 
-static void KeyBindingsScreen_Update(struct KeyBindingsScreen* s, int i) {
+static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 	String text; char textBuffer[STRING_SIZE];
 	String_InitArray(text, textBuffer);
 
 	String_Format2(&text, s->curI == i ? "> %c: %c <" : "%c: %c", 
 		s->descs[i], Input_Names[KeyBinds[s->binds[i]]]);
 	ButtonWidget_Set(&s->buttons[i], &text, &s->titleFont);
+	s->dirty = true;
 }
 
-static void KeyBindingsScreen_OnBindingClick(void* screen, void* widget) {
-	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
+static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
+	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	int old     = s->curI;
 	s->curI     = Menu_Index(s, widget);
 	s->closable = false;
 
-	KeyBindingsScreen_Update(s, s->curI);
+	KeyBindsScreen_Update(s, s->curI);
 	/* previously selected a different button for binding */
-	if (old >= 0) KeyBindingsScreen_Update(s, old);
+	if (old >= 0) KeyBindsScreen_Update(s, old);
 }
 
-static int KeyBindingsScreen_KeyDown(void* screen, int key) {
-	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
+static int KeyBindsScreen_KeyDown(void* screen, int key) {
+	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	KeyBind bind;
 	int idx;
 
@@ -1807,24 +1809,25 @@ static int KeyBindingsScreen_KeyDown(void* screen, int key) {
 	idx         = s->curI;
 	s->curI     = -1;
 	s->closable = true;
-	KeyBindingsScreen_Update(s, idx);
+	KeyBindsScreen_Update(s, idx);
 	return true;
 }
 
-static void KeyBindingsScreen_ContextLost(void* screen) {
-	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
+static void KeyBindsScreen_ContextLost(void* screen) {
+	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	Font_Free(&s->titleFont);
 	Screen_ContextLost(screen);
 }
 
-static void KeyBindingsScreen_ContextRecreated(void* screen) {
-	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
+static void KeyBindsScreen_ContextRecreated(void* screen) {
+	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	struct FontDesc textFont;
 	int i;
 
+	Screen_CreateVb(screen);
 	Menu_MakeTitleFont(&s->titleFont);
 	Menu_MakeBodyFont(&textFont);
-	for (i = 0; i < s->bindsCount; i++) { KeyBindingsScreen_Update(s, i); }
+	for (i = 0; i < s->bindsCount; i++) { KeyBindsScreen_Update(s, i); }
 
 	TextWidget_SetConst(&s->title, s->titleText, &s->titleFont);
 	TextWidget_SetConst(&s->msg,   s->msgText,   &textFont);
@@ -1836,10 +1839,8 @@ static void KeyBindingsScreen_ContextRecreated(void* screen) {
 	ButtonWidget_SetConst(&s->right, ">", &s->titleFont);
 }
 
-static void KeyBindingsScreen_BuildMesh(void* screen) { }
-
-static void KeyBindingsScreen_Layout(void* screen) {
-	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
+static void KeyBindsScreen_Layout(void* screen) {
+	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	int i, x, y, xDir, leftLen;
 	x = s->btnWidth / 2 + 5;
 	y = s->topY;
@@ -1861,15 +1862,16 @@ static void KeyBindingsScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  s->btnWidth + 35, s->arrowsY);
 }
 
-static void KeyBindingsScreen_Init(void* screen) {
-	struct KeyBindingsScreen* s = (struct KeyBindingsScreen*)screen;
+static void KeyBindsScreen_Init(void* screen) {
+	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	int i;
-	s->widgets    = key_widgets;
-	s->numWidgets = KEYBINDS_MAX_BTNS + 3;
-	s->curI       = -1;
+	s->widgets     = key_widgets;
+	s->numWidgets  = KEYBINDS_MAX_BTNS + 3;
+	s->curI        = -1;
+	s->maxVertices = KEYBINDS_MAX_VERTICES;
 
 	for (i = 0; i < s->bindsCount; i++) {
-		ButtonWidget_Init(&s->buttons[i], s->btnWidth, KeyBindingsScreen_OnBindingClick);
+		ButtonWidget_Init(&s->buttons[i], s->btnWidth, KeyBindsScreen_OnBindingClick);
 		s->widgets[i] = (struct Widget*)&s->buttons[i];
 	}
 	for (; i < KEYBINDS_MAX_BTNS; i++) { s->widgets[i] = NULL; }
@@ -1887,32 +1889,32 @@ static void KeyBindingsScreen_Init(void* screen) {
 	s->numWidgets += 2;
 }
 
-static const struct ScreenVTABLE KeyBindingsScreen_VTABLE = {
-	KeyBindingsScreen_Init,    Screen_NullUpdate, Screen_NullFunc,  
-	MenuScreen_Render,         KeyBindingsScreen_BuildMesh,
-	KeyBindingsScreen_KeyDown, Screen_TInput,     Screen_TKeyPress, Screen_TText,
-	Menu_PointerDown,          Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	KeyBindingsScreen_Layout,  KeyBindingsScreen_ContextLost, KeyBindingsScreen_ContextRecreated
+static const struct ScreenVTABLE KeyBindsScreen_VTABLE = {
+	KeyBindsScreen_Init,    Screen_NullUpdate, Screen_NullFunc,  
+	MenuScreen_Render2,     Screen_BuildMesh,
+	KeyBindsScreen_KeyDown, Screen_TInput,     Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,       Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
+	KeyBindsScreen_Layout,  KeyBindsScreen_ContextLost, KeyBindsScreen_ContextRecreated
 };
 
-static void KeyBindingsScreen_Reset(Widget_LeftClick left, Widget_LeftClick right, int btnWidth) {
-	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
+static void KeyBindsScreen_Reset(Widget_LeftClick left, Widget_LeftClick right, int btnWidth) {
+	struct KeyBindsScreen* s = &KeyBindsScreen;
 	s->leftPage  = left;
 	s->rightPage = right;
 	s->btnWidth  = btnWidth;
 	s->msgText   = "";
 }
-static void KeyBindingsScreen_SetLayout(int topY, int arrowsY, int leftLen) {
-	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
+static void KeyBindsScreen_SetLayout(int topY, int arrowsY, int leftLen) {
+	struct KeyBindsScreen* s = &KeyBindsScreen;
 	s->topY    = topY;
 	s->arrowsY = arrowsY;
 	s->leftLen = leftLen;
 }
-static void KeyBindingsScreen_Show(int bindsCount, const cc_uint8* binds, const char* const* descs, const char* title) {
-	struct KeyBindingsScreen* s = &KeyBindingsScreen_Instance;
+static void KeyBindsScreen_Show(int bindsCount, const cc_uint8* binds, const char* const* descs, const char* title) {
+	struct KeyBindsScreen* s = &KeyBindsScreen;
 	s->grabsInput = true;
 	s->closable   = true;
-	s->VTABLE     = &KeyBindingsScreen_VTABLE;
+	s->VTABLE     = &KeyBindsScreen_VTABLE;
 
 	s->titleText  = title;
 	s->bindsCount = bindsCount;
@@ -1923,20 +1925,20 @@ static void KeyBindingsScreen_Show(int bindsCount, const cc_uint8* binds, const 
 
 
 /*########################################################################################################################*
-*-----------------------------------------------ClassicKeyBindingsScreen--------------------------------------------------*
+*-----------------------------------------------ClassicKeyBindsScreen--------------------------------------------------*
 *#########################################################################################################################*/
 void ClassicKeyBindingsScreen_Show(void) {
 	static const cc_uint8 binds[10]    = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN };
 	static const char* const descs[10] = { "Forward", "Back", "Jump", "Chat", "Save loc", "Left", "Right", "Build", "Toggle fog", "Load loc" };
 	
 	if (Game_ClassicHacks) {
-		KeyBindingsScreen_Reset(NULL, Menu_SwitchKeysClassicHacks, 260);
+		KeyBindsScreen_Reset(NULL, Menu_SwitchKeysClassicHacks, 260);
 	} else {
-		KeyBindingsScreen_Reset(NULL,                        NULL, 300);
+		KeyBindsScreen_Reset(NULL,                        NULL, 300);
 	}
-	KeyBindingsScreen_SetLayout(-140, -40, 5);
-	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, 
-							Game_ClassicHacks ? "Normal controls" : "Controls");
+	KeyBindsScreen_SetLayout(-140, -40, 5);
+	KeyBindsScreen_Show(Array_Elems(binds), binds, descs, 
+						Game_ClassicHacks ? "Normal controls" : "Controls");
 }
 
 
@@ -1947,9 +1949,9 @@ void ClassicHacksKeyBindingsScreen_Show(void) {
 	static const cc_uint8 binds[6]    = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN };
 	static const char* const descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
 
-	KeyBindingsScreen_Reset(Menu_SwitchKeysClassic, NULL, 260);
-	KeyBindingsScreen_SetLayout(-90, -40, 3);
-	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, "Hacks controls");
+	KeyBindsScreen_Reset(Menu_SwitchKeysClassic, NULL, 260);
+	KeyBindsScreen_SetLayout(-90, -40, 3);
+	KeyBindsScreen_Show(Array_Elems(binds), binds, descs, "Hacks controls");
 }
 
 
@@ -1960,9 +1962,9 @@ void NormalKeyBindingsScreen_Show(void) {
 	static const cc_uint8 binds[12]    = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_PLAYER_LIST, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN, KEYBIND_SEND_CHAT };
 	static const char* const descs[12] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 	
-	KeyBindingsScreen_Reset(NULL, Menu_SwitchKeysHacks, 250);
-	KeyBindingsScreen_SetLayout(-140, 10, 6);
-	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, "Normal controls");
+	KeyBindsScreen_Reset(NULL, Menu_SwitchKeysHacks, 250);
+	KeyBindsScreen_SetLayout(-140, 10, 6);
+	KeyBindsScreen_Show(Array_Elems(binds), binds, descs, "Normal controls");
 }
 
 
@@ -1973,9 +1975,9 @@ void HacksKeyBindingsScreen_Show(void) {
 	static const cc_uint8 binds[8]    = { KEYBIND_SPEED, KEYBIND_NOCLIP, KEYBIND_HALF_SPEED, KEYBIND_ZOOM_SCROLL, KEYBIND_FLY, KEYBIND_FLY_UP, KEYBIND_FLY_DOWN, KEYBIND_THIRD_PERSON };
 	static const char* const descs[8] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
 	
-	KeyBindingsScreen_Reset(Menu_SwitchKeysNormal, Menu_SwitchKeysOther, 260);
-	KeyBindingsScreen_SetLayout(-40, 10, 4);
-	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, "Hacks controls");
+	KeyBindsScreen_Reset(Menu_SwitchKeysNormal, Menu_SwitchKeysOther, 260);
+	KeyBindsScreen_SetLayout(-40, 10, 4);
+	KeyBindsScreen_Show(Array_Elems(binds), binds, descs, "Hacks controls");
 }
 
 
@@ -1986,9 +1988,9 @@ void OtherKeyBindingsScreen_Show(void) {
 	static const cc_uint8 binds[12]     = { KEYBIND_EXT_INPUT, KEYBIND_HIDE_FPS, KEYBIND_HIDE_GUI, KEYBIND_HOTBAR_SWITCH, KEYBIND_DROP_BLOCK,KEYBIND_SCREENSHOT, KEYBIND_FULLSCREEN, KEYBIND_AXIS_LINES, KEYBIND_AUTOROTATE, KEYBIND_SMOOTH_CAMERA, KEYBIND_IDOVERLAY, KEYBIND_BREAK_LIQUIDS };
 	static const char* const descs[12]  = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
 	
-	KeyBindingsScreen_Reset(Menu_SwitchKeysHacks, Menu_SwitchKeysMouse, 260);
-	KeyBindingsScreen_SetLayout(-140, 10, 6);
-	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, "Other controls");
+	KeyBindsScreen_Reset(Menu_SwitchKeysHacks, Menu_SwitchKeysMouse, 260);
+	KeyBindsScreen_SetLayout(-140, 10, 6);
+	KeyBindsScreen_Show(Array_Elems(binds), binds, descs, "Other controls");
 }
 
 
@@ -1999,10 +2001,10 @@ void MouseKeyBindingsScreen_Show(void) {
 	static const cc_uint8 binds[3]    = { KEYBIND_DELETE_BLOCK, KEYBIND_PICK_BLOCK, KEYBIND_PLACE_BLOCK };
 	static const char* const descs[3] = { "Delete block", "Pick block", "Place block" };
 
-	KeyBindingsScreen_Reset(Menu_SwitchKeysOther, NULL, 260);
-	KeyBindingsScreen_SetLayout(-40, 10, -1);
-	KeyBindingsScreen_Instance.msgText = "&ePress escape to reset the binding";
-	KeyBindingsScreen_Show(Array_Elems(binds), binds, descs, "Mouse key bindings");
+	KeyBindsScreen_Reset(Menu_SwitchKeysOther, NULL, 260);
+	KeyBindsScreen_SetLayout(-40, 10, -1);
+	KeyBindsScreen.msgText = "&ePress escape to reset the binding";
+	KeyBindsScreen_Show(Array_Elems(binds), binds, descs, "Mouse key bindings");
 }
 
 
