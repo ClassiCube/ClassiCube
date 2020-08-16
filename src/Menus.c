@@ -37,7 +37,7 @@ struct MenuOptionDesc {
 	Widget_LeftClick OnClick;
 	Button_Get GetValue; Button_Set SetValue;
 };
-struct SimpleButtonDesc { int x, y; const char* title; Widget_LeftClick onClick; };
+struct SimpleButtonDesc { short x, y; const char* title; Widget_LeftClick onClick; };
 
 
 /*########################################################################################################################*
@@ -86,12 +86,6 @@ static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width,
 	MenuInputWidget_Create(input, width, text, desc);
 	Widget_SetLocation(input, horAnchor, verAnchor, x, y);
 	((struct Screen*)s)->widgets[i] = (struct Widget*)input;
-}
-
-static void Menu_MakeInput(struct MenuInputWidget* input, int width, const String* text, struct MenuInputDesc* desc, int horAnchor, int verAnchor, int x, int y) {
-	MenuInputWidget_Create(input, width, text, desc);
-	Widget_SetLocation(input, horAnchor, verAnchor, x, y);
-	
 }
 
 static void Menu_Back(void* s, int i, struct ButtonWidget* btn, Widget_LeftClick onClick) {
@@ -501,46 +495,59 @@ static void MenuScreen_Render2(void* screen, double delta) {
 /*########################################################################################################################*
 *-------------------------------------------------------PauseScreen-------------------------------------------------------*
 *#########################################################################################################################*/
+#define PAUSE_MAX_BTNS 6
 static struct PauseScreen {
 	Screen_Body
+	int descsCount;
 	const struct SimpleButtonDesc* descs;
-	struct ButtonWidget buttons[6], quit, back;
-} PauseScreen_Instance;
+	struct ButtonWidget btns[PAUSE_MAX_BTNS], quit, back;
+} PauseScreen;
+
+static struct Widget* pause_widgets[PAUSE_MAX_BTNS + 2] = {
+	NULL,NULL,NULL,NULL,NULL,NULL,
+	(struct Widget*)&PauseScreen.quit, (struct Widget*)&PauseScreen.back
+};
+#define PAUSE_MAX_VERTICES ((PAUSE_MAX_BTNS + 2) * BUTTONWIDGET_MAX)
 
 static void PauseScreen_Quit(void* a, void* b) { Window_Close(); }
-static void PauseScreen_Game(void* a, void* b) { Gui_Remove((struct Screen*)&PauseScreen_Instance); }
+static void PauseScreen_Game(void* a, void* b) { Gui_Remove((struct Screen*)&PauseScreen); }
 
 static void PauseScreen_CheckHacksAllowed(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	if (Gui.ClassicMenu) return;
-	s->buttons[4].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
+	s->btns[4].disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
+	s->dirty = true;
 }
 
 static void PauseScreen_ContextRecreated(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	struct FontDesc titleFont;
 
+	Screen_CreateVb(screen);
 	Menu_MakeTitleFont(&titleFont);
-	Menu_SetButtons(s->buttons, &titleFont, s->descs, s->numWidgets - 2);
+	Menu_SetButtons(s->btns, &titleFont, s->descs, s->descsCount);
 
 	if (!Gui.ClassicMenu) ButtonWidget_SetConst(&s->quit, "Quit game", &titleFont);
 	ButtonWidget_SetConst(&s->back, "Back to game", &titleFont);
 
 	if (!Server.IsSinglePlayer) {
-		s->buttons[1].disabled = true;
-		s->buttons[2].disabled = true;
+		s->btns[1].disabled = true;
+		s->btns[2].disabled = true;
 	}
 	PauseScreen_CheckHacksAllowed(s);
 	Font_Free(&titleFont);
 }
 
-static void PauseScreen_BuildMesh(void* screen) { }
+static void PauseScreen_Layout(void* screen) {
+	struct PauseScreen* s = (struct PauseScreen*)screen;
+	Menu_LayoutButtons(s->btns, s->descs, s->descsCount);
+	Widget_SetLocation(&s->quit, ANCHOR_MAX, ANCHOR_MAX, 5, 5);
+	Menu_LayoutBack(&s->back);
+}
 
 static void PauseScreen_Init(void* screen) {
-	static struct Widget* widgets[8];
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	int count, width;
-
+	int i, count;
 	static const struct SimpleButtonDesc classicDescs[5] = {
 		{    0, -100, "Options...",             Menu_SwitchClassicOptions },
 		{    0,  -50, "Generate new level...",  Menu_SwitchClassicGenLevel },
@@ -557,7 +564,9 @@ static void PauseScreen_Init(void* screen) {
 		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
 	};
 
-	s->widgets = widgets;
+	s->widgets     = pause_widgets;
+	s->numWidgets  = Array_Elems(pause_widgets);
+	s->maxVertices = PAUSE_MAX_VERTICES;
 	Event_Register_(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
 
 	if (Gui.ClassicMenu) {
@@ -569,13 +578,13 @@ static void PauseScreen_Init(void* screen) {
 		count    = 6;
 	}
 
-	s->numWidgets = count + 2;
-	width = Gui.ClassicMenu ? 400 : 300;
-	Menu_Buttons(s, s->buttons, width, s->descs, count);
+	s->descsCount = count;
+	for (i = 0; i < count; i++) { s->widgets[i] = (struct Widget*)&s->btns[i]; }
+	for (; i < PAUSE_MAX_BTNS; i++) { s->widgets[i] = NULL; }
 
-	Menu_Button(s, count,     &s->quit, 120, PauseScreen_Quit,
-			ANCHOR_MAX, ANCHOR_MAX, 5, 5);
-	Menu_Back(s,   count + 1, &s->back, PauseScreen_Game);
+	Menu_InitButtons(s->btns, Gui.ClassicMenu ? 400 : 300, s->descs, count);
+	ButtonWidget_Init(&s->quit, 120, PauseScreen_Quit);
+	Menu_InitBack(&s->back, PauseScreen_Game);
 }
 
 static void PauseScreen_Free(void* screen) {
@@ -584,14 +593,14 @@ static void PauseScreen_Free(void* screen) {
 }
 
 static const struct ScreenVTABLE PauseScreen_VTABLE = {
-	PauseScreen_Init,  Screen_NullUpdate, PauseScreen_Free, 
-	MenuScreen_Render, PauseScreen_BuildMesh,
-	Screen_InputDown,  Screen_TInput,     Screen_TKeyPress, Screen_TText,
-	Menu_PointerDown,  Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,     Screen_ContextLost, PauseScreen_ContextRecreated
+	PauseScreen_Init,   Screen_NullUpdate, PauseScreen_Free, 
+	MenuScreen_Render,  Screen_BuildMesh,
+	Screen_InputDown,   Screen_TInput,     Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,   Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
+	PauseScreen_Layout, Screen_ContextLost, PauseScreen_ContextRecreated
 };
 void PauseScreen_Show(void) {
-	struct PauseScreen* s = &PauseScreen_Instance;
+	struct PauseScreen* s = &PauseScreen;
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &PauseScreen_VTABLE;
