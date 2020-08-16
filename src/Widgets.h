@@ -198,7 +198,7 @@ struct MenuInputWidget {
 };
 #define MENUINPUTWIDGET_MAX 8
 
-CC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, struct MenuInputDesc* d);
+CC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, int width, const String* text, struct MenuInputDesc* d);
 /* Sets the font used, then redraws the input widget. */
 CC_NOINLINE void MenuInputWidget_SetFont(struct MenuInputWidget* w, struct FontDesc* font);
 

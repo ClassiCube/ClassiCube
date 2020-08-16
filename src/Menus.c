@@ -69,13 +69,13 @@ static void Menu_Label(void* s, int i, struct TextWidget* label, int horAnchor, 
 }
 
 static void Menu_Input(void* s, int i, struct MenuInputWidget* input, int width, const String* text, struct MenuInputDesc* desc, int horAnchor, int verAnchor, int x, int y) {
-	MenuInputWidget_Create(input, width, 30, text, desc);
+	MenuInputWidget_Create(input, width, text, desc);
 	Widget_SetLocation(input, horAnchor, verAnchor, x, y);
 	((struct Screen*)s)->widgets[i] = (struct Widget*)input;
 }
 
 static void Menu_MakeInput(struct MenuInputWidget* input, int width, const String* text, struct MenuInputDesc* desc, int horAnchor, int verAnchor, int x, int y) {
-	MenuInputWidget_Create(input, width, 30, text, desc);
+	MenuInputWidget_Create(input, width, text, desc);
 	Widget_SetLocation(input, horAnchor, verAnchor, x, y);
 	
 }
@@ -88,6 +88,14 @@ static void Menu_Back(void* s, int i, struct ButtonWidget* btn, Widget_LeftClick
 static void Menu_MakeBack(struct ButtonWidget* btn, Widget_LeftClick onClick) {
 	int width = Gui.ClassicMenu ? 400 : 200;
 	ButtonWidget_Make(btn, width, onClick, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
+}
+
+static void Menu_InitBack(struct ButtonWidget* btn, Widget_LeftClick onClick) {
+	ButtonWidget_Init(btn, Gui.ClassicMenu ? 400 : 200, onClick);
+}
+
+static void Menu_LayoutBack(struct ButtonWidget* btn) {
+	Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
 CC_NOINLINE static void Menu_MakeTitleFont(struct FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_STYLE_BOLD); }
@@ -718,10 +726,6 @@ static struct Widget* edithotkey_widgets[7] = {
 };
 #define EDITHOTKEY_MAX_VERTICES (MENUINPUTWIDGET_MAX + 6 * BUTTONWIDGET_MAX)
 
-static void EditHotkeyScreen_Make(struct ButtonWidget* btn, int x, int y, Widget_LeftClick onClick) {
-	ButtonWidget_Make(btn, 300, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
-}
-
 static void HotkeyListScreen_MakeFlags(int flags, String* str);
 static void EditHotkeyScreen_MakeFlags(int flags, String* str) {
 	if (flags == 0) String_AppendConst(str, " None");
@@ -900,6 +904,17 @@ static void EditHotkeyScreen_Update(void* screen, double delta) {
 	s->input.base.caretAccumulator += delta;
 }
 
+static void EditHotkeyScreen_Layout(void* screen) {
+	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
+	Widget_SetLocation(&s->btns[0], ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -150);
+	Widget_SetLocation(&s->btns[1], ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -100);
+	Widget_SetLocation(&s->btns[2], ANCHOR_CENTRE, ANCHOR_CENTRE, -100,   10);
+	Widget_SetLocation(&s->btns[3], ANCHOR_CENTRE, ANCHOR_CENTRE,    0,   80);
+	Widget_SetLocation(&s->btns[4], ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  130);
+	Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  -35);
+	Menu_LayoutBack(&s->cancel);
+}
+
 static void EditHotkeyScreen_Init(void* screen) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	struct MenuInputDesc desc;
@@ -911,19 +926,18 @@ static void EditHotkeyScreen_Init(void* screen) {
 	s->maxVertices = EDITHOTKEY_MAX_VERTICES;
 	MenuInput_String(desc);
 
-	EditHotkeyScreen_Make(&s->btns[0],    0, -150, EditHotkeyScreen_BaseKey);
-	EditHotkeyScreen_Make(&s->btns[1],    0, -100, EditHotkeyScreen_Modifiers);
-	EditHotkeyScreen_Make(&s->btns[2], -100,   10, EditHotkeyScreen_LeaveOpen);
-	EditHotkeyScreen_Make(&s->btns[3],    0,   80, EditHotkeyScreen_SaveChanges);
-	EditHotkeyScreen_Make(&s->btns[4],    0,  130, EditHotkeyScreen_RemoveHotkey);
+	ButtonWidget_Init(&s->btns[0], 300, EditHotkeyScreen_BaseKey);
+	ButtonWidget_Init(&s->btns[1], 300, EditHotkeyScreen_Modifiers);
+	ButtonWidget_Init(&s->btns[2], 300, EditHotkeyScreen_LeaveOpen);
+	ButtonWidget_Init(&s->btns[3], 300, EditHotkeyScreen_SaveChanges);
+	ButtonWidget_Init(&s->btns[4], 300, EditHotkeyScreen_RemoveHotkey);
 
 	if (s->origHotkey.Trigger) {
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, s->origHotkey.TextIndex);
 	} else { text = String_Empty; }
 
-	Menu_MakeInput(&s->input, 500, &text, &desc,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
-	Menu_MakeBack( &s->cancel, Menu_SwitchHotkeys);
+	MenuInputWidget_Create(&s->input, 500, &text, &desc);
+	Menu_InitBack(&s->cancel, Menu_SwitchHotkeys);
 	Window_OpenKeyboard();
 	Window_SetKeyboardText(&text);
 }
@@ -933,7 +947,7 @@ static const struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
 	EditHotkeyScreen_Render,  Screen_BuildMesh,
 	EditHotkeyScreen_KeyDown, Screen_TInput,     EditHotkeyScreen_KeyPress, EditHotkeyScreen_TextChanged,
 	Menu_PointerDown,         Screen_TPointer,   Menu_PointerMove,          Screen_TMouseScroll,
-	Screen_Layout,            EditHotkeyScreen_ContextLost, EditHotkeyScreen_ContextRecreated
+	EditHotkeyScreen_Layout,  EditHotkeyScreen_ContextLost, EditHotkeyScreen_ContextRecreated
 };
 void EditHotkeyScreen_Show(struct HotkeyData original) {
 	struct EditHotkeyScreen* s = &EditHotkeyScreen;
@@ -1101,6 +1115,15 @@ static void GenLevelScreen_Update(void* screen, double delta) {
 	if (s->selected) s->selected->base.caretAccumulator += delta;
 }
 
+static void GenLevelScreen_Layout(void* screen) {
+	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
+	Widget_SetLocation(&s->title,     ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -130);
+	Widget_SetLocation(&s->flatgrass, ANCHOR_CENTRE, ANCHOR_CENTRE, -120,  100);
+	Widget_SetLocation(&s->vanilla,   ANCHOR_CENTRE, ANCHOR_CENTRE,  120,  100);
+	Menu_LayoutBack(&s->cancel);
+	Screen_Layout(screen);
+}
+
 static void GenLevelScreen_Init(void* screen) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	s->widgets     = gen_widgets;
@@ -1113,13 +1136,10 @@ static void GenLevelScreen_Init(void* screen) {
 	GenLevelScreen_Make(s, 2,   0, World.Length);
 	GenLevelScreen_Make(s, 3,  40, 0);
 
-	TextWidget_Make(  &s->title,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -130);
-	ButtonWidget_Make(&s->flatgrass, 200, GenLevelScreen_Flatgrass,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -120,  100);
-	ButtonWidget_Make(&s->vanilla,   200, GenLevelScreen_Notchy,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,  120,  100);
-	Menu_MakeBack(    &s->cancel, Menu_SwitchPause);
+	TextWidget_Init(&s->title);
+	ButtonWidget_Init(&s->flatgrass, 200, GenLevelScreen_Flatgrass);
+	ButtonWidget_Init(&s->vanilla,   200, GenLevelScreen_Notchy);
+	Menu_InitBack(&s->cancel, Menu_SwitchPause);
 	Window_OpenKeyboard();
 }
 
@@ -1128,7 +1148,7 @@ static const struct ScreenVTABLE GenLevelScreen_VTABLE = {
 	MenuScreen_Render2,         Screen_BuildMesh,
 	GenLevelScreen_KeyDown,     Screen_TInput,     GenLevelScreen_KeyPress, GenLevelScreen_TextChanged,
 	GenLevelScreen_PointerDown, Screen_TPointer,   Menu_PointerMove,        Screen_TMouseScroll,
-	Screen_Layout,              GenLevelScreen_ContextLost, GenLevelScreen_ContextRecreated
+	GenLevelScreen_Layout,      GenLevelScreen_ContextLost, GenLevelScreen_ContextRecreated
 };
 void GenLevelScreen_Show(void) {	
 	struct GenLevelScreen* s = &GenLevelScreen;
@@ -1179,8 +1199,12 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 	Font_Free(&titleFont);
 }
 
-static void ClassicGenScreen_Make(struct ClassicGenScreen* s, int i, int y, Widget_LeftClick onClick) {
-	ButtonWidget_Make(&s->btns[i], 400, onClick, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
+static void ClassicGenScreen_Layout(void* screen) {
+	struct ClassicGenScreen* s = (struct ClassicGenScreen*)screen;
+	Widget_SetLocation(&s->btns[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -100);
+	Widget_SetLocation(&s->btns[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  -50);
+	Widget_SetLocation(&s->btns[2], ANCHOR_CENTRE, ANCHOR_CENTRE, 0,    0);
+	Menu_LayoutBack(&s->cancel);
 }
 
 static void ClassicGenScreen_Init(void* screen) {
@@ -1189,19 +1213,18 @@ static void ClassicGenScreen_Init(void* screen) {
 	s->numWidgets  = Array_Elems(classicgen_widgets);
 	s->maxVertices = CLASSICGEN_MAX_VERTICES;
 
-	ClassicGenScreen_Make(s, 0, -100, ClassicGenScreen_Small);
-	ClassicGenScreen_Make(s, 1,  -50, ClassicGenScreen_Medium);
-	ClassicGenScreen_Make(s, 2,    0, ClassicGenScreen_Huge);
-
-	Menu_MakeBack(&s->cancel, Menu_SwitchPause);
+	ButtonWidget_Init(&s->btns[0], 400, ClassicGenScreen_Small);
+	ButtonWidget_Init(&s->btns[1], 400, ClassicGenScreen_Medium);
+	ButtonWidget_Init(&s->btns[2], 400, ClassicGenScreen_Huge);
+	Menu_InitBack(&s->cancel, Menu_SwitchPause);
 }
 
 static const struct ScreenVTABLE ClassicGenScreen_VTABLE = {
-	ClassicGenScreen_Init, Screen_NullUpdate,  Screen_NullFunc,
-	MenuScreen_Render2,    Screen_BuildMesh,
-	Screen_InputDown,      Screen_TInput,      Screen_TKeyPress, Screen_TText,
-	Menu_PointerDown,      Screen_TPointer,    Menu_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,         Screen_ContextLost, ClassicGenScreen_ContextRecreated
+	ClassicGenScreen_Init,   Screen_NullUpdate,  Screen_NullFunc,
+	MenuScreen_Render2,      Screen_BuildMesh,
+	Screen_InputDown,        Screen_TInput,      Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,        Screen_TPointer,    Menu_PointerMove, Screen_TMouseScroll,
+	ClassicGenScreen_Layout, Screen_ContextLost, ClassicGenScreen_ContextRecreated
 };
 void ClassicGenScreen_Show(void) {
 	struct ClassicGenScreen* s = &ClassicGenScreen;
@@ -1433,6 +1456,25 @@ static void SaveLevelScreen_Update(void* screen, double delta) {
 	s->input.base.caretAccumulator += delta;
 }
 
+static void SaveLevelScreen_Layout(void* screen) {
+	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
+	Widget_SetLocation(&s->save,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  20);
+#ifdef CC_BUILD_WEB
+	Widget_SetLocation(&s->alt,    ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  70);
+#else
+	Widget_SetLocation(&s->alt,    ANCHOR_CENTRE, ANCHOR_CENTRE, -150, 120);
+	Widget_SetLocation(&s->mcEdit, ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 120);
+#endif
+
+	Menu_LayoutBack(&s->cancel);
+	Widget_SetLocation(&s->input,  ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -30);
+#ifdef CC_BUILD_WEB
+	Widget_SetLocation(&s->desc,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 115);
+#else
+	Widget_SetLocation(&s->desc,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  65);
+#endif
+}
+
 static void SaveLevelScreen_Init(void* screen) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
 	struct MenuInputDesc desc;
@@ -1442,29 +1484,18 @@ static void SaveLevelScreen_Init(void* screen) {
 	s->maxVertices = SAVE_MAX_VERTICES;
 	MenuInput_Path(desc);
 	
-	ButtonWidget_Make(&s->save, 300, SaveLevelScreen_Main,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  20);
+	ButtonWidget_Init(&s->save, 300, SaveLevelScreen_Main);
 #ifdef CC_BUILD_WEB
-	ButtonWidget_Make(&s->alt,  300, SaveLevelScreen_Alt,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  70);
+	ButtonWidget_Init(&s->alt,  300, SaveLevelScreen_Alt);
 	s->widgets[2] = NULL; /* null mcEdit widget */
 #else
-	ButtonWidget_Make(&s->alt,  200, SaveLevelScreen_Alt,
-		ANCHOR_CENTRE, ANCHOR_CENTRE, -150, 120);
-	TextWidget_Make(  &s->mcEdit,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,  110, 120);
+	ButtonWidget_Init(&s->alt,  200, SaveLevelScreen_Alt);
+	TextWidget_Init(&s->mcEdit);
 #endif
 
-	Menu_MakeBack(    &s->cancel, Menu_SwitchPause);
-	Menu_MakeInput(   &s->input, 500, &String_Empty, &desc,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  -30);
-#ifdef CC_BUILD_WEB
-	TextWidget_Make(  &s->desc,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  115);
-#else
-	TextWidget_Make(  &s->desc,
-		ANCHOR_CENTRE, ANCHOR_CENTRE,    0,  65);
-#endif
+	Menu_InitBack(&s->cancel, Menu_SwitchPause);
+	MenuInputWidget_Create(&s->input, 500, &String_Empty, &desc);
+	TextWidget_Init(&s->desc);
 	Window_OpenKeyboard();
 }
 
@@ -1473,7 +1504,7 @@ static const struct ScreenVTABLE SaveLevelScreen_VTABLE = {
 	SaveLevelScreen_Render,  Screen_BuildMesh,
 	SaveLevelScreen_KeyDown, Screen_TInput,    SaveLevelScreen_KeyPress, SaveLevelScreen_TextChanged,
 	Menu_PointerDown,        Screen_TPointer,  Menu_PointerMove,         Screen_TMouseScroll,
-	Screen_Layout,           SaveLevelScreen_ContextLost, SaveLevelScreen_ContextRecreated
+	SaveLevelScreen_Layout,  SaveLevelScreen_ContextLost, SaveLevelScreen_ContextRecreated
 };
 void SaveLevelScreen_Show(void) {
 	struct SaveLevelScreen* s = &SaveLevelScreen;

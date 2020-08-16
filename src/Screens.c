@@ -1948,7 +1948,7 @@ static struct Widget* touch_widgets[7] = {
 static const struct TouchBindDesc {
 	const char* text;
 	cc_uint8 bind, width;
-	cc_int16 xOffset, yOffset;
+	cc_int16 x, y;
 } touchDescs[7] = {
 	{ "<",    KEYBIND_LEFT,     40,  10, 50 },
 	{ ">",    KEYBIND_RIGHT,    40, 150, 50 },
@@ -2039,7 +2039,6 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 
 static void TouchScreen_Init(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	const struct TouchBindDesc* desc;
 	int i;
 
 	s->widgets     = touch_widgets;
@@ -2047,10 +2046,8 @@ static void TouchScreen_Init(void* screen) {
 	s->maxVertices = TOUCH_MAX_VERTICES;
 
 	for (i = 0; i < s->numWidgets; i++) {
-		desc = &touchDescs[i];
-		ButtonWidget_Make(&s->btns[i], desc->width, NULL, i < 4 ? ANCHOR_MIN : ANCHOR_MAX, 
-			ANCHOR_MAX, desc->xOffset, desc->yOffset);
-		s->binds[i] = desc->bind;
+		ButtonWidget_Init(&s->btns[i], touchDescs[i].width, NULL);
+		s->binds[i] = touchDescs[i].bind;
 	}
 
 	s->btns[5].MenuClick = TouchScreen_ModeClick;
@@ -2066,9 +2063,11 @@ static void TouchScreen_Layout(void* screen) {
 	height = Gui_HUD->hotbar.height;
 
 	for (i = 0; i < s->numWidgets; i++) {
-		s->btns[i].yOffset = height + Display_ScaleY(touchDescs[i].yOffset);
+		Widget_SetLocation(&s->btns[i], i < 4 ? ANCHOR_MIN : ANCHOR_MAX, 
+							ANCHOR_MAX, touchDescs[i].x, touchDescs[i].y);
+		s->btns[i].yOffset += height;
+		Widget_Layout(&s->btns[i]);
 	}
-	Screen_Layout(screen);
 }
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {

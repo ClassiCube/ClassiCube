@@ -1510,12 +1510,12 @@ static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
 	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove,
 	MenuInputWidget_BuildMesh, MenuInputWidget_Render2
 };
-void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, struct MenuInputDesc* desc) {
+void MenuInputWidget_Create(struct MenuInputWidget* w, int width, const String* text, struct MenuInputDesc* desc) {
 	InputWidget_Reset(&w->base);
 	w->base.VTABLE = &MenuInputWidget_VTABLE;
 
 	w->minWidth  = Display_ScaleX(width);
-	w->minHeight = Display_ScaleY(height);
+	w->minHeight = Display_ScaleY(30);
 	w->desc      = *desc;
 
 	w->base.convertPercents = false;
