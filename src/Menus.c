@@ -249,6 +249,20 @@ static struct Widget* list_widgets[10] = {
 #define LIST_MAX_VERTICES (8 * BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
 #define LISTSCREEN_EMPTY "-----"
 
+static void ListScreen_Layout(void* screen) {
+	struct ListScreen* s = (struct ListScreen*)screen;
+	int i;
+	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
+		Widget_SetLocation(&s->btns[i],
+			ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
+	}
+
+	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -220,    0);
+	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  220,    0);
+	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -155);
+	Widget_SetLocation(&s->page,  ANCHOR_CENTRE,    ANCHOR_MAX,    0,   75);
+}
+
 static STRING_REF String ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
 	static const String str = String_FromConst(LISTSCREEN_EMPTY);
 
@@ -386,18 +400,13 @@ static void ListScreen_Init(void* screen) {
 	s->maxVertices  = LIST_MAX_VERTICES;
 
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
-		ButtonWidget_Make(&s->btns[i], 300, s->EntryClick,
-					ANCHOR_CENTRE, ANCHOR_CENTRE,    0, (i - 2) * 50);
+		ButtonWidget_Init(&s->btns[i], 300, s->EntryClick);
 	}
 
-	ButtonWidget_Make(&s->left,  40, ListScreen_MoveBackwards,
-					ANCHOR_CENTRE, ANCHOR_CENTRE, -220,    0);
-	ButtonWidget_Make(&s->right, 40, ListScreen_MoveForwards,
-					ANCHOR_CENTRE, ANCHOR_CENTRE,  220,    0);
-	TextWidget_Make(&s->title, 
-					ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -155);
-	TextWidget_Make(&s->page,
-					ANCHOR_CENTRE,    ANCHOR_MAX,    0,   75);
+	ButtonWidget_Init(&s->left,  40, ListScreen_MoveBackwards);
+	ButtonWidget_Init(&s->right, 40, ListScreen_MoveForwards);
+	TextWidget_Init(&s->title);
+	TextWidget_Init(&s->page);
 	Menu_MakeBack(&s->done, s->DoneClick);
 	s->LoadEntries(s);
 }
@@ -438,7 +447,7 @@ static const struct ScreenVTABLE ListScreen_VTABLE = {
 	ListScreen_Render,  Screen_BuildMesh,
 	ListScreen_KeyDown, Screen_TInput,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,   Screen_TPointer,   Menu_PointerMove, ListScreen_MouseScroll,
-	Screen_Layout,      ListScreen_ContextLost,  ListScreen_ContextRecreated
+	ListScreen_Layout,  ListScreen_ContextLost,  ListScreen_ContextRecreated
 };
 void ListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;

@@ -252,7 +252,6 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	struct TextWidget* line2 = &s->line2;
 	int y;
 
-	Widget_Layout(&s->hotbar);
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
 	Font_ReducePadding(&s->font, 4);
 	
@@ -803,17 +802,6 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	return true;
 }
 
-static void ChatScreen_ChatUpdateLayout(struct ChatScreen* s) {
-	int yOffset = Gui_HUD->hotbar.height + 15;
-	Widget_SetLocation(&s->input.base,   ANCHOR_MIN, ANCHOR_MAX,  5, 5);
-	Widget_SetLocation(&s->altText,      ANCHOR_MIN, ANCHOR_MAX,  5, 5);
-	Widget_SetLocation(&s->status,       ANCHOR_MAX, ANCHOR_MIN,  0, 0);
-	Widget_SetLocation(&s->bottomRight,  ANCHOR_MAX, ANCHOR_MAX,  0, yOffset);
-	Widget_SetLocation(&s->chat,         ANCHOR_MIN, ANCHOR_MAX, 10, 0);
-	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, 0);
-	ChatScreen_UpdateChatYOffsets(s);
-}
-
 static void ChatScreen_Redraw(struct ChatScreen* s) {
 	TextGroupWidget_RedrawAll(&s->chat);
 	TextWidget_Set(&s->announcement, &Chat_Announcement, &s->announcementFont);
@@ -1070,7 +1058,6 @@ static void ChatScreen_ContextRecreated(void* screen) {
 	ChatScreen_ChatUpdateFont(s);
 
 	ChatScreen_Redraw(s);
-	ChatScreen_ChatUpdateLayout(s);
 	if (s->showingList) ChatScreen_RemakePlayerList(s);
 
 #ifdef CC_BUILD_TOUCH
@@ -1086,16 +1073,23 @@ static void ChatScreen_BuildMesh(void* screen) { }
 
 static void ChatScreen_Layout(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-
+	int yOffset = Gui_HUD->hotbar.height + 15; /* TODO: This should be DPI scaled?? */
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
-	ChatScreen_ChatUpdateLayout(s);
-	if (s->showingList) TabListOverlay_Reposition(&s->playerList);
 
+	Widget_SetLocation(&s->input.base,   ANCHOR_MIN, ANCHOR_MAX,  5, 5);
+	Widget_SetLocation(&s->altText,      ANCHOR_MIN, ANCHOR_MAX,  5, 5);
+	Widget_SetLocation(&s->status,       ANCHOR_MAX, ANCHOR_MIN,  0, 0);
+	Widget_SetLocation(&s->bottomRight,  ANCHOR_MAX, ANCHOR_MAX,  0, yOffset);
+	Widget_SetLocation(&s->chat,         ANCHOR_MIN, ANCHOR_MAX, 10, 0);
+	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, 0);
+	ChatScreen_UpdateChatYOffsets(s);
+
+	if (s->showingList) TabListOverlay_Reposition(&s->playerList);
 	s->announcement.yOffset = -WindowInfo.Height / 4;
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
-	Widget_Layout(&s->send);
-	Widget_Layout(&s->cancel);
+	Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MIN, 10, 10);
+	Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MIN, 10, 60);
 #endif
 }
 
@@ -1288,8 +1282,8 @@ static void ChatScreen_Init(void* screen) {
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
-	ButtonWidget_Make(&s->send,   100, NULL, ANCHOR_MAX, ANCHOR_MIN, 10, 10);
-	ButtonWidget_Make(&s->cancel, 100, NULL, ANCHOR_MAX, ANCHOR_MIN, 10, 60);
+	ButtonWidget_Init(&s->send,   100, NULL);
+	ButtonWidget_Init(&s->cancel, 100, NULL);
 #endif
 }
 
