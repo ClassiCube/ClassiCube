@@ -224,7 +224,15 @@ enum CustomModelAnimType {
 	CustomModelAnimType_SinRotate = 10,
 	CustomModelAnimType_SinRotateVelocity = 11,
 	CustomModelAnimType_SinTranslate = 12,
-	CustomModelAnimType_SinTranslateVelocity = 13
+	CustomModelAnimType_SinTranslateVelocity = 13,
+	CustomModelAnimType_SinSize = 14,
+	CustomModelAnimType_SinSizeVelocity = 15,
+	CustomModelAnimType_FlipRotate = 16,
+	CustomModelAnimType_FlipRotateVelocity = 17,
+	CustomModelAnimType_FlipTranslate = 18,
+	CustomModelAnimType_FlipTranslateVelocity = 19,
+	CustomModelAnimType_FlipSize = 20,
+	CustomModelAnimType_FlipSizeVelocity = 21
 };
 
 enum CustomModelAnimAxis {
