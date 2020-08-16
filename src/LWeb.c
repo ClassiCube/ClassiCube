@@ -266,12 +266,16 @@ static void SignInTask_LogError(const String* str) {
 	String err;
 
 	if (String_CaselessEqualsConst(str, "username") || String_CaselessEqualsConst(str, "password")) {
-		SignInTask.error = "&cWrong username or password";
+		SignInTask.error   = "&cWrong username or password";
 	} else if (String_CaselessEqualsConst(str, "verification")) {
-		SignInTask.error = "&cAccount verification required";
+		SignInTask.error   = "&cAccount verification required";
+	} else if (String_CaselessEqualsConst(str, "login_code")) {
+		SignInTask.error   = "&cLogin code required (Check your emails)";
+		SignInTask.needMfa = true;
 	} else if (str->length) {
 		String_InitArray_NT(err, errBuffer);
 		String_Format1(&err, "&c%s", str);
+
 		errBuffer[err.length] = '\0';
 		SignInTask.error = errBuffer;
 	}
@@ -294,20 +298,22 @@ static void SignInTask_Append(String* dst, const char* key, const String* value)
 	Http_UrlEncodeUtf8(dst, value);
 }
 
-void SignInTask_Run(const String* user, const String* pass) {
+void SignInTask_Run(const String* user, const String* pass, const String* mfaCode) {
 	static const String id  = String_FromConst("CC post login");
 	static const String url = String_FromConst("https://www.classicube.net/api/login");
-	String args; char argsBuffer[384];
+	String args; char argsBuffer[1024];
 	if (SignInTask.Base.working) return;
 
 	LWebTask_Reset(&SignInTask.Base);
 	String_InitArray(SignInTask.username, userBuffer);
-	SignInTask.error = NULL;
+	SignInTask.error   = NULL;
+	SignInTask.needMfa = false;
 
 	String_InitArray(args, argsBuffer);
-	SignInTask_Append(&args, "username=",  user);
-	SignInTask_Append(&args, "&password=", pass);
-	SignInTask_Append(&args, "&token=",    &GetTokenTask.token);
+	SignInTask_Append(&args, "username=",    user);
+	SignInTask_Append(&args, "&password=",   pass);
+	SignInTask_Append(&args, "&token=",      &GetTokenTask.token);
+	SignInTask_Append(&args, "&login_code=", mfaCode);
 
 	SignInTask.Base.identifier = id;
 	Http_AsyncPostData(&url, false, &id, args.buffer, args.length, &ccCookies);

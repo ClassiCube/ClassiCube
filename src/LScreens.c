@@ -611,9 +611,9 @@ void DirectConnectScreen_SetActive(void) {
 static struct MainScreen {
 	LScreen_Layout
 	struct LButton btnLogin, btnResume, btnDirect, btnSPlayer, btnOptions, btnRegister;
-	struct LInput iptUsername, iptPassword;
+	struct LInput iptUsername, iptPassword, iptMfaCode;
 	struct LLabel lblStatus, lblUpdate;
-	struct LWidget* _widgets[10];
+	struct LWidget* _widgets[11];
 	cc_bool signingIn;
 } MainScreen_Instance;
 
@@ -721,6 +721,9 @@ static void MainScreen_Init(struct LScreen* s_) {
 	LLabel_Init(s_,  &s->lblUpdate, "");
 	LButton_Init(s_, &s->btnOptions,  100, 35, "Options");
 	LButton_Init(s_, &s->btnRegister, 100, 35, "Register");
+
+	LInput_Init(s_, &s->iptMfaCode, 280, "&gLogin code..");
+	s->iptMfaCode.hidden = true;
 	
 	s->btnLogin.OnClick    = MainScreen_Login;
 	s->btnResume.OnClick   = MainScreen_Resume;
@@ -752,6 +755,9 @@ static void MainScreen_Free(struct LScreen* s_) {
 	struct MainScreen* s = (struct MainScreen*)s_;
 	/* status should reset when user goes to another menu */
 	s->lblStatus.text.length = 0;
+	/* reset MFA code too */
+	s->iptMfaCode.text.length = 0;
+	s->iptMfaCode.hidden      = true;
 }
 
 static void MainScreen_Layout(struct LScreen* s_) {
@@ -769,6 +775,8 @@ static void MainScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->lblUpdate,  ANCHOR_MAX, ANCHOR_MAX,  10,  45);
 	LWidget_SetLocation(&s->btnOptions, ANCHOR_MAX, ANCHOR_MAX,   6,   6);
 	LWidget_SetLocation(&s->btnRegister, ANCHOR_MIN, ANCHOR_MAX,  6,   6);
+
+	LWidget_SetLocation(&s->iptMfaCode, ANCHOR_CENTRE, ANCHOR_MAX, 0, 10);
 }
 
 static void MainScreen_HoverWidget(struct LScreen* s_, struct LWidget* w) {
@@ -838,7 +846,7 @@ static void MainScreen_TickGetToken(struct MainScreen* s) {
 	if (!GetTokenTask.Base.completed) return;
 
 	if (GetTokenTask.Base.success) {
-		SignInTask_Run(&s->iptUsername.text, &s->iptPassword.text);
+		SignInTask_Run(&s->iptUsername.text, &s->iptPassword.text, &s->iptMfaCode.text);
 	} else {
 		MainScreen_Error(&GetTokenTask.Base, "signing in");
 	}
@@ -848,6 +856,11 @@ static void MainScreen_TickSignIn(struct MainScreen* s) {
 	if (!SignInTask.Base.working)   return;
 	LWebTask_Tick(&SignInTask.Base);
 	if (!SignInTask.Base.completed) return;
+
+	if (SignInTask.needMfa) {
+		s->iptMfaCode.hidden = false;
+		LWidget_Redraw(&s->iptMfaCode);
+	}
 
 	if (SignInTask.error) {
 		LLabel_SetConst(&s->lblStatus, SignInTask.error);
