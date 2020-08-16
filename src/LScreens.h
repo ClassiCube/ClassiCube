@@ -37,6 +37,7 @@ struct LScreen { LScreen_Layout };
 void ChooseModeScreen_SetActive(cc_bool firstTime);
 void ColoursScreen_SetActive(void);
 void DirectConnectScreen_SetActive(void);
+void MFAScreen_SetActive(void);
 void MainScreen_SetActive(void);
 void ResourcesScreen_SetActive(void);
 void ServersScreen_SetActive(void);

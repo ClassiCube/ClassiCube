@@ -271,7 +271,7 @@ static void SignInTask_LogError(const String* str) {
 		SignInTask.error   = "&cAccount verification required";
 	} else if (String_CaselessEqualsConst(str, "login_code")) {
 		SignInTask.error   = "&cLogin code required (Check your emails)";
-		SignInTask.needMfa = true;
+		SignInTask.needMFA = true;
 	} else if (str->length) {
 		String_InitArray_NT(err, errBuffer);
 		String_Format1(&err, "&c%s", str);
@@ -307,7 +307,7 @@ void SignInTask_Run(const String* user, const String* pass, const String* mfaCod
 	LWebTask_Reset(&SignInTask.Base);
 	String_InitArray(SignInTask.username, userBuffer);
 	SignInTask.error   = NULL;
-	SignInTask.needMfa = false;
+	SignInTask.needMFA = false;
 
 	String_InitArray(args, argsBuffer);
 	SignInTask_Append(&args, "username=",    user);

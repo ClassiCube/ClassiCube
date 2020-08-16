@@ -66,7 +66,7 @@ extern struct SignInTaskData {
 	struct LWebTask Base;
 	String username;   /* Username to sign in as. Changed to case correct username. */
 	const char* error; /* If sign in fails, the reason as to why. */
-	cc_bool needMfa;   /* need login code for multifactor authentication */
+	cc_bool needMFA;   /* need login code for multifactor authentication */
 } SignInTask;
 void SignInTask_Run(const String* user, const String* pass, const String* mfaCode);
 
