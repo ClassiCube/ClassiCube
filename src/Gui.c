@@ -150,6 +150,7 @@ static void OnResize(void* obj) {
 	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->VTABLE->Layout(s);
+		s->dirty = true;
 	}
 }
 
@@ -168,6 +169,7 @@ void Gui_Refresh(struct Screen* s) {
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->ContextRecreated(s);
 	s->VTABLE->Layout(s);
+	s->dirty = true;
 }
 
 static void Gui_AddCore(struct Screen* s, int priority) {
