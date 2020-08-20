@@ -1406,8 +1406,8 @@ void Gfx_BindDynamicVb(GfxResourceID vb) {
 }
 
 void Gfx_DeleteDynamicVb(GfxResourceID* vb) {
-	cc_uintptr id = (cc_uintptr)(*vb);
-	if (id) Mem_Free((void*)id);
+	void* addr = (void*)(*vb);
+	if (addr) Mem_Free(addr);
 	*vb = 0;
 }
 

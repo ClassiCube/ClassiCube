@@ -1161,16 +1161,11 @@ void Window_Create(int width, int height) {
 	XSizeHints hints = { 0 };
 	Atom protocols[2];
 	struct GraphicsMode mode;
-	cc_uintptr addr;
 	int supported, x, y;
 
 	x = Display_CentreX(width);
 	y = Display_CentreY(height);
 	InitGraphicsMode(&mode);
-
-	/* Open a display connection to the X server, and obtain the screen and root window */
-	addr = (cc_uintptr)win_display;
-	Platform_Log3("Display: %x, Screen %i, Root window: %h", &addr, &win_screen, &win_rootWin);
 	RegisterAtoms();
 
 	win_eventMask = StructureNotifyMask /*| SubstructureNotifyMask*/ | ExposureMask |

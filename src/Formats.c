@@ -278,8 +278,8 @@ cc_result Fcm_Load(struct Stream* stream) {
 *---------------------------------------------------------NBTFile---------------------------------------------------------*
 *#########################################################################################################################*/
 enum NbtTagType { 
-	NBT_END, NBT_I8,  NBT_I16, NBT_I32,  NBT_I64,  NBT_F32, 
-	NBT_R64, NBT_I8S, NBT_STR, NBT_LIST, NBT_DICT, NBT_I32S
+	NBT_END, NBT_I8,  NBT_I16, NBT_I32,  NBT_I64, NBT_F32, 
+	NBT_R64, NBT_I8S, NBT_STR, NBT_LIST, NBT_DICT
 };
 
 #define NBT_SMALL_SIZE  STRING_SIZE
@@ -428,8 +428,7 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 		}
 		break;
 
-	case NBT_I32S: return NBT_ERR_INT32S;
-	default:       return NBT_ERR_UNKNOWN;
+	default: return NBT_ERR_UNKNOWN;
 	}
 
 	if (res) return res;
