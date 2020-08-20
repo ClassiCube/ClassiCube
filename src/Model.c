@@ -578,11 +578,29 @@ static float CustomModel_GetAnimationValue(
 		*/
 		case CustomModelAnimType_SinRotate:
 		case CustomModelAnimType_SinTranslate:
+		case CustomModelAnimType_SinSize:
 			return ( Math_SinF((float)Game.Time * anim->a + 2 * MATH_PI * anim->c) + anim->d ) * anim->b;
 
 		case CustomModelAnimType_SinRotateVelocity:
 		case CustomModelAnimType_SinTranslateVelocity:
+		case CustomModelAnimType_SinSizeVelocity:
 			return ( Math_SinF(e->Anim.WalkTime * anim->a + 2 * MATH_PI * anim->c) + anim->d ) * anim->b;
+
+		/*
+			a: speed
+			b: width
+			c: shift cycle
+			d: max value
+		*/
+		case CustomModelAnimType_FlipRotate:
+		case CustomModelAnimType_FlipTranslate:
+		case CustomModelAnimType_FlipSize:
+			return Math_Modf((float)Game.Time * anim->a + anim->c, anim->d) * anim->b;
+
+		case CustomModelAnimType_FlipRotateVelocity:
+		case CustomModelAnimType_FlipTranslateVelocity:
+		case CustomModelAnimType_FlipSizeVelocity:
+			return Math_Modf(e->Anim.WalkTime * anim->a + anim->c, anim->d) * anim->b;
 	}
 
 	return 0.0f;
@@ -621,32 +639,67 @@ static void CustomModel_DrawPart(
 		}
 
 		value = CustomModel_GetAnimationValue(anim, part, cm, e);
+	
+		if (
+			!modifiedVertices &&
+			(anim->type == CustomModelAnimType_SinTranslate ||
+				anim->type == CustomModelAnimType_SinTranslateVelocity ||
+				anim->type == CustomModelAnimType_SinSize ||
+				anim->type == CustomModelAnimType_SinSizeVelocity ||
+				anim->type == CustomModelAnimType_FlipTranslate ||
+				anim->type == CustomModelAnimType_FlipTranslateVelocity ||
+				anim->type == CustomModelAnimType_FlipSize ||
+				anim->type == CustomModelAnimType_FlipSizeVelocity)
+		) {
+			modifiedVertices = true;
+			Mem_Copy(
+				oldVertices,
+				&cm->model.vertices[part->modelPart.offset],
+				sizeof(struct ModelVertex) * MODEL_BOX_VERTICES
+			);
+		}
 		
 		if (
 			anim->type == CustomModelAnimType_SinTranslate ||
-			anim->type == CustomModelAnimType_SinTranslateVelocity
+			anim->type == CustomModelAnimType_SinTranslateVelocity ||
+			anim->type == CustomModelAnimType_FlipTranslate ||
+			anim->type == CustomModelAnimType_FlipTranslateVelocity
 		) {
-			if (!modifiedVertices) {
-				modifiedVertices = true;
-				Mem_Copy(
-					oldVertices,
-					&cm->model.vertices[part->modelPart.offset],
-					sizeof(struct ModelVertex) * MODEL_BOX_VERTICES
-				);
-			}
-
 			for (i = 0; i < MODEL_BOX_VERTICES; i++) {
+				struct ModelVertex* vertex = &cm->model.vertices[part->modelPart.offset + i];
 				switch (anim->axis) {
 					case CustomModelAnimAxis_X:
-						cm->model.vertices[part->modelPart.offset + i].X += value;
+						vertex->X += value;
 						break;
 
 					case CustomModelAnimAxis_Y:
-						cm->model.vertices[part->modelPart.offset + i].Y += value;
+						vertex->Y += value;
 						break;
 
 					case CustomModelAnimAxis_Z:
-						cm->model.vertices[part->modelPart.offset + i].Z += value;
+						vertex->Z += value;
+						break;
+				}
+			}
+		} else if (
+			anim->type == CustomModelAnimType_SinSize ||
+			anim->type == CustomModelAnimType_SinSizeVelocity ||
+			anim->type == CustomModelAnimType_FlipSize ||
+			anim->type == CustomModelAnimType_FlipSizeVelocity
+		) {
+			for (i = 0; i < MODEL_BOX_VERTICES; i++) {
+				struct ModelVertex* vertex = &cm->model.vertices[part->modelPart.offset + i];
+				switch (anim->axis) {
+					case CustomModelAnimAxis_X:
+						vertex->X = Math_Lerp(part->modelPart.rotX, vertex->X, value);
+						break;
+
+					case CustomModelAnimAxis_Y:
+						vertex->Y = Math_Lerp(part->modelPart.rotY, vertex->Y, value);
+						break;
+
+					case CustomModelAnimAxis_Z:
+						vertex->Z = Math_Lerp(part->modelPart.rotZ, vertex->Z, value);
 						break;
 				}
 			}

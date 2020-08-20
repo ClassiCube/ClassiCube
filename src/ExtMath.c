@@ -13,6 +13,7 @@ float Math_SqrtF(float x) { return sqrtf(x); /* MSVC intrinsic */ }
 #endif
 
 float Math_Mod1(float x)  { return x - (int)x; /* fmodf(x, 1); */ }
+float Math_Modf(float x, float y)  { return fmodf(x, y); }
 int   Math_AbsI(int x)    { return abs(x); /* MSVC intrinsic */ }
 
 double Math_Sin(double x) { return sin(x); }
