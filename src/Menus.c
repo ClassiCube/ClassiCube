@@ -3094,7 +3094,7 @@ static void TexIdsOverlay_Layout(void* screen) {
 	s->yOffset  = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, WindowInfo.Height);
 	s->tileSize = size;
 
-	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
+	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
 	s->title.yOffset = s->yOffset - 30; /* TODO: This is ugly */
 	Widget_Layout(&s->title);
 }
