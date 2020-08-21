@@ -252,7 +252,6 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	struct TextWidget* line2 = &s->line2;
 	int y;
 
-	Widget_Layout(&s->hotbar);
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
 	Font_ReducePadding(&s->font, 4);
 	
@@ -803,17 +802,6 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	return true;
 }
 
-static void ChatScreen_ChatUpdateLayout(struct ChatScreen* s) {
-	int yOffset = Gui_HUD->hotbar.height + 15;
-	Widget_SetLocation(&s->input.base,   ANCHOR_MIN, ANCHOR_MAX,  5, 5);
-	Widget_SetLocation(&s->altText,      ANCHOR_MIN, ANCHOR_MAX,  5, 5);
-	Widget_SetLocation(&s->status,       ANCHOR_MAX, ANCHOR_MIN,  0, 0);
-	Widget_SetLocation(&s->bottomRight,  ANCHOR_MAX, ANCHOR_MAX,  0, yOffset);
-	Widget_SetLocation(&s->chat,         ANCHOR_MIN, ANCHOR_MAX, 10, 0);
-	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, 0);
-	ChatScreen_UpdateChatYOffsets(s);
-}
-
 static void ChatScreen_Redraw(struct ChatScreen* s) {
 	TextGroupWidget_RedrawAll(&s->chat);
 	TextWidget_Set(&s->announcement, &Chat_Announcement, &s->announcementFont);
@@ -1070,7 +1058,6 @@ static void ChatScreen_ContextRecreated(void* screen) {
 	ChatScreen_ChatUpdateFont(s);
 
 	ChatScreen_Redraw(s);
-	ChatScreen_ChatUpdateLayout(s);
 	if (s->showingList) ChatScreen_RemakePlayerList(s);
 
 #ifdef CC_BUILD_TOUCH
@@ -1086,16 +1073,23 @@ static void ChatScreen_BuildMesh(void* screen) { }
 
 static void ChatScreen_Layout(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-
+	int yOffset = Gui_HUD->hotbar.height + 15; /* TODO: This should be DPI scaled?? */
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
-	ChatScreen_ChatUpdateLayout(s);
-	if (s->showingList) TabListOverlay_Reposition(&s->playerList);
 
+	Widget_SetLocation(&s->input.base,   ANCHOR_MIN, ANCHOR_MAX,  5, 5);
+	Widget_SetLocation(&s->altText,      ANCHOR_MIN, ANCHOR_MAX,  5, 5);
+	Widget_SetLocation(&s->status,       ANCHOR_MAX, ANCHOR_MIN,  0, 0);
+	Widget_SetLocation(&s->bottomRight,  ANCHOR_MAX, ANCHOR_MAX,  0, yOffset);
+	Widget_SetLocation(&s->chat,         ANCHOR_MIN, ANCHOR_MAX, 10, 0);
+	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, 0);
+	ChatScreen_UpdateChatYOffsets(s);
+
+	if (s->showingList) TabListOverlay_Reposition(&s->playerList);
 	s->announcement.yOffset = -WindowInfo.Height / 4;
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
-	Widget_Layout(&s->send);
-	Widget_Layout(&s->cancel);
+	Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MIN, 10, 10);
+	Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MIN, 10, 60);
 #endif
 }
 
@@ -1288,8 +1282,8 @@ static void ChatScreen_Init(void* screen) {
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
-	ButtonWidget_Make(&s->send,   100, NULL, ANCHOR_MAX, ANCHOR_MIN, 10, 10);
-	ButtonWidget_Make(&s->cancel, 100, NULL, ANCHOR_MAX, ANCHOR_MIN, 10, 60);
+	ButtonWidget_Init(&s->send,   100, NULL);
+	ButtonWidget_Init(&s->cancel, 100, NULL);
 #endif
 }
 
@@ -1556,16 +1550,13 @@ static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
 
 static void LoadingScreen_Layout(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	if (!s->title.VTABLE) return;
-	Widget_Layout(&s->title);
-	Widget_Layout(&s->message);
+	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
+	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
 }
 
 static void LoadingScreen_ContextLost(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	Font_Free(&s->font);
-	if (!s->title.VTABLE) return;
-
 	Elem_Free(&s->title);
 	Elem_Free(&s->message);
 }
@@ -1632,9 +1623,8 @@ static void LoadingScreen_MapLoaded(void* screen) {
 
 static void LoadingScreen_Init(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-
-	TextWidget_Make(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
-	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
+	TextWidget_Init(&s->title);
+	TextWidget_Init(&s->message);
 
 	Gfx_SetFog(false);
 	Event_Register_(&WorldEvents.Loading,   s, LoadingScreen_MapLoading);
@@ -1792,6 +1782,13 @@ static struct Widget* disconnect_widgets[3] = {
 #define DISCONNECT_MAX_VERTICES (2 * TEXTWIDGET_MAX + BUTTONWIDGET_MAX)
 #define DISCONNECT_DELAY_SECS 5
 
+static void DisconnectScreen_Layout(void* screen) {
+	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
+	Widget_SetLocation(&s->title,     ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	Widget_SetLocation(&s->message,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
+	Widget_SetLocation(&s->reconnect, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  80);
+}
+
 static void DisconnectScreen_UpdateReconnect(struct DisconnectScreen* s) {
 	String msg; char msgBuffer[STRING_SIZE];
 	int elapsed, secsLeft;
@@ -1831,12 +1828,10 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
+	TextWidget_Init(&s->title);
+	TextWidget_Init(&s->message);
 
-	TextWidget_Make(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
-	TextWidget_Make(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
-
-	ButtonWidget_Make(&s->reconnect, 300, NULL, 
-					ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 80);
+	ButtonWidget_Init(&s->reconnect, 300, NULL);
 	s->reconnect.disabled = !s->canReconnect;
 	s->maxVertices  = DISCONNECT_MAX_VERTICES;
 
@@ -1903,7 +1898,7 @@ static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Render,      Screen_BuildMesh,
 	Screen_InputDown,             Screen_TInput,           Screen_TKeyPress,             Screen_TText,
 	DisconnectScreen_PointerDown, Screen_TPointer,         DisconnectScreen_PointerMove, Screen_TMouseScroll,
-	Screen_Layout,                DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
+	DisconnectScreen_Layout,      DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 void DisconnectScreen_Show(const String* title, const String* message) {
 	static const String kick = String_FromConst("Kicked ");
@@ -1953,7 +1948,7 @@ static struct Widget* touch_widgets[7] = {
 static const struct TouchBindDesc {
 	const char* text;
 	cc_uint8 bind, width;
-	cc_int16 xOffset, yOffset;
+	cc_int16 x, y;
 } touchDescs[7] = {
 	{ "<",    KEYBIND_LEFT,     40,  10, 50 },
 	{ ">",    KEYBIND_RIGHT,    40, 150, 50 },
@@ -2044,7 +2039,6 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 
 static void TouchScreen_Init(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	const struct TouchBindDesc* desc;
 	int i;
 
 	s->widgets     = touch_widgets;
@@ -2052,10 +2046,8 @@ static void TouchScreen_Init(void* screen) {
 	s->maxVertices = TOUCH_MAX_VERTICES;
 
 	for (i = 0; i < s->numWidgets; i++) {
-		desc = &touchDescs[i];
-		ButtonWidget_Make(&s->btns[i], desc->width, NULL, i < 4 ? ANCHOR_MIN : ANCHOR_MAX, 
-			ANCHOR_MAX, desc->xOffset, desc->yOffset);
-		s->binds[i] = desc->bind;
+		ButtonWidget_Init(&s->btns[i], touchDescs[i].width, NULL);
+		s->binds[i] = touchDescs[i].bind;
 	}
 
 	s->btns[5].MenuClick = TouchScreen_ModeClick;
@@ -2071,9 +2063,11 @@ static void TouchScreen_Layout(void* screen) {
 	height = Gui_HUD->hotbar.height;
 
 	for (i = 0; i < s->numWidgets; i++) {
-		s->btns[i].yOffset = height + Display_ScaleY(touchDescs[i].yOffset);
+		Widget_SetLocation(&s->btns[i], i < 4 ? ANCHOR_MIN : ANCHOR_MAX, 
+							ANCHOR_MAX, touchDescs[i].x, touchDescs[i].y);
+		s->btns[i].yOffset += height;
+		Widget_Layout(&s->btns[i]);
 	}
-	Screen_Layout(screen);
 }
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {

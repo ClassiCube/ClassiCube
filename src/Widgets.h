@@ -20,6 +20,8 @@ struct TextWidget {
 /* Initialises a text widget. */
 CC_NOINLINE void TextWidget_Make(struct TextWidget* w, 
 								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
+/* Initialises a text widget. */
+CC_NOINLINE void TextWidget_Init(struct TextWidget* w);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const String* text, struct FontDesc* font);
 /* Shorthand for TextWidget_Set using String_FromReadonly */
@@ -42,6 +44,8 @@ struct ButtonWidget {
 /* Initialises a button widget. */
 CC_NOINLINE void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, 
 								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
+/* Initialises a button widget. */
+CC_NOINLINE void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void ButtonWidget_Set(struct ButtonWidget* w, const String* text, struct FontDesc* font);
 /* Shorthand for ButtonWidget_Set using String_FromReadonly */
@@ -194,7 +198,7 @@ struct MenuInputWidget {
 };
 #define MENUINPUTWIDGET_MAX 8
 
-CC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, struct MenuInputDesc* d);
+CC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, int width, const String* text, struct MenuInputDesc* d);
 /* Sets the font used, then redraws the input widget. */
 CC_NOINLINE void MenuInputWidget_SetFont(struct MenuInputWidget* w, struct FontDesc* font);
 

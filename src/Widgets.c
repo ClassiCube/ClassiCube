@@ -65,10 +65,14 @@ static const struct WidgetVTABLE TextWidget_VTABLE = {
 	TextWidget_BuildMesh, TextWidget_Render2
 };
 void TextWidget_Make(struct TextWidget* w, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
+	TextWidget_Init(w);
+	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
+}
+
+void TextWidget_Init(struct TextWidget* w) {
 	Widget_Reset(w);
 	w->VTABLE = &TextWidget_VTABLE;
 	w->col    = PACKEDCOL_WHITE;
-	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
 }
 
 void TextWidget_Set(struct TextWidget* w, const String* text, struct FontDesc* font) {
@@ -213,13 +217,17 @@ static const struct WidgetVTABLE ButtonWidget_VTABLE = {
 	ButtonWidget_BuildMesh, ButtonWidget_Render2
 };
 void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
+	ButtonWidget_Init(w, minWidth, onClick);
+	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
+}
+
+void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick) {
 	Widget_Reset(w);
 	w->VTABLE    = &ButtonWidget_VTABLE;
 	w->optName   = NULL;
 	w->minWidth  = Display_ScaleX(minWidth);
 	btnMinHeight = Display_ScaleY(40);
 	w->MenuClick = onClick;
-	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
 }
 
 void ButtonWidget_Set(struct ButtonWidget* w, const String* text, struct FontDesc* font) {
@@ -1502,12 +1510,12 @@ static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
 	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove,
 	MenuInputWidget_BuildMesh, MenuInputWidget_Render2
 };
-void MenuInputWidget_Create(struct MenuInputWidget* w, int width, int height, const String* text, struct MenuInputDesc* desc) {
+void MenuInputWidget_Create(struct MenuInputWidget* w, int width, const String* text, struct MenuInputDesc* desc) {
 	InputWidget_Reset(&w->base);
 	w->base.VTABLE = &MenuInputWidget_VTABLE;
 
 	w->minWidth  = Display_ScaleX(width);
-	w->minHeight = Display_ScaleY(height);
+	w->minHeight = Display_ScaleY(30);
 	w->desc      = *desc;
 
 	w->base.convertPercents = false;

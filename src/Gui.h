@@ -192,9 +192,7 @@ void Gui_RefreshAll(void);
 void Gui_RemoveAll(void);
 void Gui_RefreshChat(void);
 void Gui_Refresh(struct Screen* s);
-
 void Gui_RenderGui(double delta);
-void Gui_Layout(void);
 
 #define TEXTATLAS_MAX_WIDTHS 16
 struct TextAtlas {
