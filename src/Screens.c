@@ -1533,6 +1533,7 @@ static struct LoadingScreen {
 	struct FontDesc font;
 	float progress;
 	
+	int progX, progY, progWidth, progHeight;
 	struct TextWidget title, message;
 	String titleStr, messageStr;
 	const char* lastState;
@@ -1550,8 +1551,16 @@ static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
 
 static void LoadingScreen_Layout(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	int y;
 	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
 	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
+
+	s->progWidth  = Display_ScaleX(200);
+	s->progX      = Gui_CalcPos(ANCHOR_CENTRE, 0, s->progWidth, WindowInfo.Width);
+
+	y = Display_ScaleY(34);
+	s->progHeight = Display_ScaleY(4);
+	s->progY      = Gui_CalcPos(ANCHOR_CENTRE, y, s->progHeight, WindowInfo.Height);
 }
 
 static void LoadingScreen_ContextLost(void* screen) {
@@ -1631,14 +1640,11 @@ static void LoadingScreen_Init(void* screen) {
 	Event_Register_(&WorldEvents.MapLoaded, s, LoadingScreen_MapLoaded);
 }
 
-#define PROG_BAR_WIDTH 200
-#define PROG_BAR_HEIGHT 4
 static void LoadingScreen_Render(void* screen, double delta) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	PackedCol backCol = PackedCol_Make(128, 128, 128, 255);
 	PackedCol progCol = PackedCol_Make(128, 255, 128, 255);
-	int progWidth;
-	int x, y;
+	int filledWidth;
 
 	Gfx_SetTexturing(true);
 	LoadingScreen_DrawBackground();
@@ -1647,12 +1653,9 @@ static void LoadingScreen_Render(void* screen, double delta) {
 	Elem_Render(&s->message, delta);
 	Gfx_SetTexturing(false);
 
-	x = Gui_CalcPos(ANCHOR_CENTRE,  0, PROG_BAR_WIDTH,  WindowInfo.Width);
-	y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, WindowInfo.Height);
-	progWidth = (int)(PROG_BAR_WIDTH * s->progress);
-
-	Gfx_Draw2DFlat(x, y, PROG_BAR_WIDTH, PROG_BAR_HEIGHT, backCol);
-	Gfx_Draw2DFlat(x, y, progWidth,      PROG_BAR_HEIGHT, progCol);
+	filledWidth = (int)(s->progWidth * s->progress);
+	Gfx_Draw2DFlat(s->progX, s->progY, s->progWidth, s->progHeight, backCol);
+	Gfx_Draw2DFlat(s->progX, s->progY, filledWidth,  s->progHeight, progCol);
 }
 
 static void LoadingScreen_Free(void* screen) {
