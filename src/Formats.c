@@ -304,7 +304,7 @@ struct NbtTag {
 		struct { String text; char buffer[NBT_STRING_SIZE]; } str;
 	} value;
 	char _nameBuffer[NBT_STRING_SIZE];
-	cc_result err;
+	cc_result result;
 };
 
 static cc_uint8 NbtTag_U8(struct NbtTag* tag) {
@@ -433,11 +433,11 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 	}
 
 	if (res) return res;
-	tag.err = 0;
+	tag.result = 0;
 	callback(&tag);
 	/* NOTE: callback must set DataBig to NULL, if doesn't want it to be freed */
 	if (!NbtTag_IsSmall(&tag)) Mem_Free(tag.value.big);
-	return tag.err;
+	return tag.result;
 }
 #define IsTag(tag, tagName) (String_CaselessEqualsConst(&tag->name, tagName))
 
@@ -503,7 +503,7 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 
 	if (IsTag(tag, "UUID")) {
 		if (tag->dataSize != WORLD_UUID_LEN) {
-			tag->err = CW_ERR_UUID_LEN;
+			tag->result = CW_ERR_UUID_LEN;
 		} else {
 			Mem_Copy(World.Uuid, tag->value.small, WORLD_UUID_LEN);
 		}

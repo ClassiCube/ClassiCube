@@ -674,7 +674,7 @@ static struct HttpCacheEntry http_cache[HTTP_CACHE_ENTRIES];
 
 /* Splits up the components of a URL */
 static void HttpCache_MakeEntry(const String* url, struct HttpCacheEntry* entry, String* resource) {
-	String scheme, path, addr, name, port;
+	String scheme, path, addr, name, port, _resource;
 	/* URL is of form [scheme]://[server name]:[server port]/[resource] */
 	int idx = String_IndexOfConst(url, "://");
 
@@ -682,8 +682,10 @@ static void HttpCache_MakeEntry(const String* url, struct HttpCacheEntry* entry,
 	path   = idx == -1 ? *url         : String_UNSAFE_SubstringAt(url, idx + 3);
 	entry->Https = String_CaselessEqualsConst(&scheme, "https");
 
-	String_UNSAFE_Separate(&path, '/', &addr, resource);
+	String_UNSAFE_Separate(&path, '/', &addr, &_resource);
 	String_UNSAFE_Separate(&addr, ':', &name, &port);
+	/* Address may have unicode characters - need to percent encode them */
+	Http_UrlEncodeUtf8(resource, &_resource);
 
 	String_InitArray_NT(entry->Address, entry->_addressBuffer);
 	String_Copy(&entry->Address, &name);
@@ -766,8 +768,8 @@ static cc_result Http_StartRequest(struct HttpRequest* req, String* url, HINTERN
 	DWORD flags, bufferLen;
 	cc_result res;
 
+	String_InitArray_NT(path, pathBuffer);
 	HttpCache_MakeEntry(url, &entry, &path);
-	Mem_Copy(pathBuffer, path.buffer, path.length);
 	pathBuffer[path.length] = '\0';
 	if ((res = HttpCache_Lookup(&entry))) return res;
 
