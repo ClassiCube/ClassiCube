@@ -12,6 +12,7 @@ struct AABB;
 #define World_Unpack(idx, x, y, z) x = idx % World.Width; z = (idx / World.Width) % World.Length; y = (idx / World.Width) / World.Length;
 /* Packs an x,y,z into a single index */
 #define World_Pack(x, y, z) (((y) * World.Length + (z)) * World.Width + (x))
+#define WORLD_UUID_LEN 16
 
 CC_VAR extern struct _WorldData {
 	/* The blocks in the world. */
@@ -32,7 +33,7 @@ CC_VAR extern struct _WorldData {
 	/* Adds one Y coordinate to a packed index. */
 	int OneY;
 	/* Unique identifier for this world. */
-	cc_uint8 Uuid[16];
+	cc_uint8 Uuid[WORLD_UUID_LEN];
 
 #ifdef EXTENDED_BLOCKS
 	/* Masks access to World.Blocks/World.Blocks2 */

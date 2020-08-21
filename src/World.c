@@ -25,7 +25,7 @@ static void GenerateNewUuid(void) {
 		Random_Next(&rnd, Game_Username.buffer[i] + 3);
 	}
 
-	for (i = 0; i < 16; i++) {
+	for (i = 0; i < WORLD_UUID_LEN; i++) {
 		World.Uuid[i] = Random_Next(&rnd, 256);
 	}
 

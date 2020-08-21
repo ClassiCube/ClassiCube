@@ -259,7 +259,7 @@ cc_result Fcm_Load(struct Stream* stream) {
 
 	/* header[25] (4) date modified */
 	/* header[29] (4) date created */
-	Mem_Copy(&World.Uuid, &header[33], sizeof(World.Uuid));
+	Mem_Copy(&World.Uuid, &header[33], WORLD_UUID_LEN);
 	/* header[49] (26) layer index */
 	count = (int)Stream_GetU32_LE(&header[75]);
 
@@ -304,6 +304,7 @@ struct NbtTag {
 		struct { String text; char buffer[NBT_STRING_SIZE]; } str;
 	} value;
 	char _nameBuffer[NBT_STRING_SIZE];
+	cc_result err;
 };
 
 static cc_uint8 NbtTag_U8(struct NbtTag* tag) {
@@ -432,10 +433,11 @@ static cc_result Nbt_ReadTag(cc_uint8 typeId, cc_bool readTagName, struct Stream
 	}
 
 	if (res) return res;
+	tag.err = 0;
 	callback(&tag);
 	/* NOTE: callback must set DataBig to NULL, if doesn't want it to be freed */
 	if (!NbtTag_IsSmall(&tag)) Mem_Free(tag.value.big);
-	return 0;
+	return tag.err;
 }
 #define IsTag(tag, tagName) (String_CaselessEqualsConst(&tag->name, tagName))
 
@@ -500,8 +502,11 @@ static void Cw_Callback_1(struct NbtTag* tag) {
 	if (IsTag(tag, "Z")) { World.Length = NbtTag_U16(tag); return; }
 
 	if (IsTag(tag, "UUID")) {
-		if (tag->dataSize != sizeof(World.Uuid)) Logger_Abort("Map UUID must be 16 bytes");
-		Mem_Copy(World.Uuid, tag->value.small, sizeof(World.Uuid));
+		if (tag->dataSize != WORLD_UUID_LEN) {
+			tag->err = CW_ERR_UUID_LEN;
+		} else {
+			Mem_Copy(World.Uuid, tag->value.small, WORLD_UUID_LEN);
+		}
 		return;
 	}
 
@@ -1091,7 +1096,7 @@ cc_result Cw_Save(struct Stream* stream) {
 
 	Mem_Copy(tmp, cw_begin, sizeof(cw_begin));
 	{
-		Mem_Copy(&tmp[43], World.Uuid, sizeof(World.Uuid));
+		Mem_Copy(&tmp[43], World.Uuid, WORLD_UUID_LEN);
 		Stream_SetU16_BE(&tmp[63], World.Width);
 		Stream_SetU16_BE(&tmp[69], World.Height);
 		Stream_SetU16_BE(&tmp[75], World.Length);
