@@ -62,13 +62,10 @@ if __name__ == "__main__":
     </div>
 {% endif %}
 <div id="body">
-<style>
-/* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-#GameCanvas { display:block; box-sizing:border-box; border-width:0px !important; padding:0 !important; margin:0 auto; background-color: black; width:100%; height:auto; }
-</style>
 <div class="sec">
   <div class="row">
-    <canvas id="GameCanvas" oncontextmenu="event.preventDefault()" tabindex=-1 width="1000" height="562"></canvas>
+    <canvas id="canvas" style="display:block; box-sizing:border-box; border-width:0px; padding:0; margin:0 auto; background-color: black; width:100%; height:auto;"
+            oncontextmenu="event.preventDefault()" tabindex=-1 width="1000" height="562"></canvas>
     <span id="logmsg" style="font-size:18px;color:#F67;"></span>
   </div>
 </div>
@@ -85,7 +82,7 @@ if __name__ == "__main__":
   }
 
   function resizeGameCanvas() {
-    var cc_canv = $('canvas#GameCanvas');
+    var cc_canv = $('canvas#canvas');
     var dpi = window.devicePixelRatio;
     var aspect_ratio = 16/9;
 
@@ -118,7 +115,7 @@ if __name__ == "__main__":
       if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
       console.error(text);
     },
-    canvas: (function() { return document.getElementById('GameCanvas'); })(),
+    canvas: (function() { return document.getElementById('canvas'); })(),
     setStatus: function(text) {
                     console.log(text);
                     document.getElementById('logmsg').innerHTML = text;
@@ -130,9 +127,9 @@ if __name__ == "__main__":
     }
   };
   Module.setStatus('Downloading...');
-  window.onerror = function(event) {
+  window.onerror = function(msg) {
     // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
-    Module.setStatus('Exception thrown, see JavaScript console');
+    Module.setStatus('Exception thrown, see JavaScript console (' + msg + ')');
     Module.setStatus = function(text) {
       if (text) Module.printErr('[post-exception status] ' + text);
     };

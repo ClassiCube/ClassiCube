@@ -21,7 +21,8 @@ The play.html page is the trickiest part, because how to implement this is websi
 You are required to have this HTML code somewhere in the page:
 ```HTML
 <!-- the canvas *must not* have any border or padding, or mouse coords will be wrong -->
-<canvas id="canvas" style="display:block; border:0; padding:0; background-color: black;" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+<canvas id="canvas" style="display:block; border:0; padding:0; background-color: black;" 
+		oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
 <span id="logmsg"></span>
 
 <script type='text/javascript'>
@@ -70,7 +71,7 @@ You are required to have this HTML code somewhere in the page:
 </script>
 <script async type="text/javascript" src="/static/classisphere.js"></script>
 ```
-**To start in singleplayer instead, change `arguments` to just `arguments: [ {username} ],`**
+**To start in singleplayer instead, just use `arguments: [ {username} ],` instead**
 
 ##### Variables
 * {username} - the player's username
