@@ -20,11 +20,8 @@ The play.html page is the trickiest part, because how to implement this is websi
 
 You are required to have this HTML code somewhere in the page:
 ```HTML
-<style>
-/* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-#GameCanvas { display:block; border:0; padding:0; background-color: black; }
-</style>
-<canvas id="GameCanvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+<!-- the canvas *must not* have any border or padding, or mouse coords will be wrong -->
+<canvas id="canvas" style="display:block; border:0; padding:0; background-color: black;" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
 <span id="logmsg"></span>
 
 <script type='text/javascript'>
@@ -51,7 +48,7 @@ You are required to have this HTML code somewhere in the page:
       if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
       console.error(text);
     },
-    canvas: (function() { return document.getElementById('GameCanvas'); })(),
+    canvas: (function() { return document.getElementById('canvas'); })(),
     setStatus: function(text) {
       console.log(text);
       document.getElementById('logmsg').innerHTML = text;
@@ -63,9 +60,9 @@ You are required to have this HTML code somewhere in the page:
     }
   };
   Module.setStatus('Downloading...');
-  window.onerror = function(event) {
+  window.onerror = function(msg) {
     // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
-    Module.setStatus('Exception thrown, see JavaScript console');
+    Module.setStatus('Exception thrown, see JavaScript console (' + msg + ')');
     Module.setStatus = function(text) {
       if (text) Module.printErr('[post-exception status] ' + text);
     };
