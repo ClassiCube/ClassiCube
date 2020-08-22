@@ -236,7 +236,7 @@ void Lighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newB
 /*########################################################################################################################*
 *---------------------------------------------------Lighting heightmap----------------------------------------------------*
 *#########################################################################################################################*/
-static int Lighting_InitialHeightmapCoverage(int x1, int z1, int xCount, int zCount, cc_int32* skip) {
+static int Lighting_InitialHeightmapCoverage(int x1, int z1, int xCount, int zCount, int* skip) {
 	int elemsLeft = 0, index = 0, curRunCount = 0;
 	int x, z, hIndex, lightH;
 
@@ -303,7 +303,7 @@ for (y = World.Height - 1; y >= 0; y--) {\
 	}\
 }
 
-static cc_bool Lighting_CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, cc_int32* skip) {
+static cc_bool Lighting_CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, int* skip) {
 	int prevRunCount = 0, curRunCount, newRunCount, oldRunCount;
 	int lightOffset, offset;
 	int mapIndex, hIndex, baseIndex, index;
@@ -340,7 +340,7 @@ void Lighting_LightHint(int startX, int startZ) {
 	int x1 = max(startX, 0), x2 = min(World.Width,  startX + EXTCHUNK_SIZE);
 	int z1 = max(startZ, 0), z2 = min(World.Length, startZ + EXTCHUNK_SIZE);
 	int xCount = x2 - x1, zCount = z2 - z1;
-	cc_int32 skip[EXTCHUNK_SIZE * EXTCHUNK_SIZE];
+	int skip[EXTCHUNK_SIZE * EXTCHUNK_SIZE];
 
 	int elemsLeft = Lighting_InitialHeightmapCoverage(x1, z1, xCount, zCount, skip);
 	if (!Lighting_CalculateHeightmapCoverage(x1, z1, xCount, zCount, elemsLeft, skip)) {

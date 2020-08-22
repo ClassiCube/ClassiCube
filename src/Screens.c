@@ -1554,11 +1554,10 @@ static void LoadingScreen_Layout(void* screen) {
 	int y;
 	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
 	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
+	y = Display_ScaleY(34);
 
 	s->progWidth  = Display_ScaleX(200);
 	s->progX      = Gui_CalcPos(ANCHOR_CENTRE, 0, s->progWidth, WindowInfo.Width);
-
-	y = Display_ScaleY(34);
 	s->progHeight = Display_ScaleY(4);
 	s->progY      = Gui_CalcPos(ANCHOR_CENTRE, y, s->progHeight, WindowInfo.Height);
 }

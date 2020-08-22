@@ -710,6 +710,7 @@ static struct EditHotkeyScreen {
 	struct HotkeyData curHotkey, origHotkey;
 	int selectedI;
 	cc_bool supressNextPress;
+	int barX, barY[2], barWidth, barHeight;
 	struct FontDesc titleFont, textFont;
 	struct MenuInputWidget input;
 	struct ButtonWidget btns[5], cancel;
@@ -822,13 +823,12 @@ static void EditHotkeyScreen_RemoveHotkey(void* screen, void* b) {
 }
 
 static void EditHotkeyScreen_Render(void* screen, double delta) {
+	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	PackedCol grey = PackedCol_Make(150, 150, 150, 255);
-	int x, y;
-	MenuScreen_Render2(screen, delta);
 
-	x = WindowInfo.Width / 2; y = WindowInfo.Height / 2;
-	Gfx_Draw2DFlat(x - 250, y - 65, 500, 2, grey);
-	Gfx_Draw2DFlat(x - 250, y + 45, 500, 2, grey);
+	MenuScreen_Render2(screen, delta);
+	Gfx_Draw2DFlat(s->barX, s->barY[0], s->barWidth, s->barHeight, grey);
+	Gfx_Draw2DFlat(s->barX, s->barY[1], s->barWidth, s->barHeight, grey);
 }
 
 static int EditHotkeyScreen_KeyPress(void* screen, char keyChar) {
@@ -903,6 +903,15 @@ static void EditHotkeyScreen_Update(void* screen, double delta) {
 
 static void EditHotkeyScreen_Layout(void* screen) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
+	s->barWidth  = Display_ScaleX(500);
+	s->barX      = Gui_CalcPos(ANCHOR_CENTRE, 0, s->barWidth, WindowInfo.Width);
+	s->barHeight = Display_ScaleY(2);
+
+	s->barY[0] = Gui_CalcPos(ANCHOR_CENTRE, Display_ScaleY(-65), 
+					s->barHeight, WindowInfo.Height);
+	s->barY[1] = Gui_CalcPos(ANCHOR_CENTRE, Display_ScaleY( 45), 
+					s->barHeight, WindowInfo.Height);
+
 	Widget_SetLocation(&s->btns[0], ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -150);
 	Widget_SetLocation(&s->btns[1], ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -100);
 	Widget_SetLocation(&s->btns[2], ANCHOR_CENTRE, ANCHOR_CENTRE, -100,   10);

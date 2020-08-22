@@ -240,7 +240,7 @@ typedef cc_uintptr GfxResourceID;
 /* Contains the information to describe a 2D textured quad. */
 struct Texture {
 	GfxResourceID ID;
-	cc_int16 X, Y; cc_uint16 Width, Height;
+	short X, Y; cc_uint16 Width, Height;
 	TextureRec uv;
 };
 #endif

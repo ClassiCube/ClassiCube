@@ -183,8 +183,8 @@ static void NotchyGen_FillOblateSpheroid(int x, int y, int z, float radius, Bloc
 
 #define STACK_FAST 8192
 static void NotchyGen_FloodFill(int index, BlockRaw block) {
-	cc_int32* stack;
-	cc_int32 stack_default[STACK_FAST]; /* try to avoid malloc if we can */
+	int* stack;
+	int stack_default[STACK_FAST]; /* avoid allocating memory if possible */
 	int count = 0, limit = STACK_FAST;
 	int x, y, z;
 
