@@ -1531,7 +1531,8 @@ void InventoryScreen_Show(void) {
 static struct LoadingScreen {
 	Screen_Body
 	struct FontDesc font;
-	float progress;
+	float progress; 
+	int rows;
 	
 	int progX, progY, progWidth, progHeight;
 	struct TextWidget title, message;
@@ -1541,17 +1542,30 @@ static struct LoadingScreen {
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
 } LoadingScreen;
+#define LOADING_MAX_VERTICES (2 * TEXTWIDGET_MAX)
+#define LOADING_TILE_SIZE 64
+
+static struct Widget* loading_widgets[2] = {
+	(struct Widget*)&LoadingScreen.title, (struct Widget*)&LoadingScreen.message
+};
 
 static void LoadingScreen_SetTitle(struct LoadingScreen* s) {
 	TextWidget_Set(&s->title, &s->titleStr, &s->font);
+	s->dirty = true;
 }
 static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
 	TextWidget_Set(&s->message, &s->messageStr, &s->font);
+	s->dirty = true;
+}
+
+static void LoadingScreen_CalcMaxVertices(struct LoadingScreen* s) {
+	s->rows = Math_CeilDiv(WindowInfo.Height, LOADING_TILE_SIZE);
+	s->maxVertices = LOADING_MAX_VERTICES + s->rows * 4;
 }
 
 static void LoadingScreen_Layout(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	int y;
+	int oldRows, y;
 	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
 	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
 	y = Display_ScaleY(34);
@@ -1560,13 +1574,19 @@ static void LoadingScreen_Layout(void* screen) {
 	s->progX      = Gui_CalcPos(ANCHOR_CENTRE, 0, s->progWidth, WindowInfo.Width);
 	s->progHeight = Display_ScaleY(4);
 	s->progY      = Gui_CalcPos(ANCHOR_CENTRE, y, s->progHeight, WindowInfo.Height);
+
+	oldRows = s->rows;
+	LoadingScreen_CalcMaxVertices(s);
+	if (oldRows == s->rows) return;
+
+	Gfx_DeleteDynamicVb(&s->vb);
+	Screen_CreateVb(s);
 }
 
 static void LoadingScreen_ContextLost(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	Font_Free(&s->font);
-	Elem_Free(&s->title);
-	Elem_Free(&s->message);
+	Screen_ContextLost(screen);
 }
 
 static void LoadingScreen_ContextRecreated(void* screen) {
@@ -1574,51 +1594,34 @@ static void LoadingScreen_ContextRecreated(void* screen) {
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
 	LoadingScreen_SetTitle(s);
 	LoadingScreen_SetMessage(s);
+	Screen_CreateVb(s);
 }
 
-static void LoadingScreen_BuildMesh(void* screen) { }
-
-static void LoadingScreen_UpdateBackgroundVB(struct VertexTextured* vertices, int count, int atlasIndex, cc_bool* bound) {
-	if (!(*bound)) {
-		*bound = true;
-		Gfx_BindTexture(Atlas1D.TexIds[atlasIndex]);
-	}
-
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	/* TODO: Do we need to use a separate VB here? */
-	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
-}
-
-#define LOADING_TILE_SIZE 64
-static void LoadingScreen_DrawBackground(void) {
-	struct VertexTextured vertices[144];
-	struct VertexTextured* ptr = vertices;
-	PackedCol col = PackedCol_Make(64, 64, 64, 255);
-
+static void LoadingScreen_BuildMesh(void* screen) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	struct VertexTextured* data;
+	struct VertexTextured** ptr;
 	struct Texture tex;
 	TextureLoc loc;
-	int count = 0, atlasIndex, y;
-	cc_bool bound = false;
+	int atlasIndex, i;
 
-	loc    = Block_Tex(BLOCK_DIRT, FACE_YMAX);
-	tex.ID = 0;
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(s->vb, 
+										VERTEX_FORMAT_TEXTURED, s->maxVertices);
+	ptr  = &data;
+
+	loc       = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 	Tex_SetRect(tex, 0,0, WindowInfo.Width,LOADING_TILE_SIZE);
 	tex.uv    = Atlas1D_TexRec(loc, 1, &atlasIndex);
 	tex.uv.U2 = (float)WindowInfo.Width / LOADING_TILE_SIZE;
 	
-	for (y = 0; y < WindowInfo.Height; y += LOADING_TILE_SIZE) {
-		tex.Y = y;
-		Gfx_Make2DQuad(&tex, col, &ptr);
-		count += 4;
-
-		if (count < Array_Elems(vertices)) continue;
-		LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
-		count = 0;
-		ptr = vertices;
+	for (i = 0; i < s->rows; i++) {
+		tex.Y = i * LOADING_TILE_SIZE;
+		Gfx_Make2DQuad(&tex, PackedCol_Make(64, 64, 64, 255), ptr);
 	}
 
-	if (!count) return;
-	LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
+	Widget_BuildMesh(&s->title,   ptr);
+	Widget_BuildMesh(&s->message, ptr);
+	Gfx_UnlockDynamicVb(s->vb);
 }
 
 static void LoadingScreen_MapLoading(void* screen, float progress) {
@@ -1633,7 +1636,10 @@ static void LoadingScreen_Init(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	TextWidget_Init(&s->title);
 	TextWidget_Init(&s->message);
+	s->widgets     = loading_widgets;
+	s->numWidgets  = Array_Elems(loading_widgets);
 
+	LoadingScreen_CalcMaxVertices(s);
 	Gfx_SetFog(false);
 	Event_Register_(&WorldEvents.Loading,   s, LoadingScreen_MapLoading);
 	Event_Register_(&WorldEvents.MapLoaded, s, LoadingScreen_MapLoaded);
@@ -1641,20 +1647,31 @@ static void LoadingScreen_Init(void* screen) {
 
 static void LoadingScreen_Render(void* screen, double delta) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	PackedCol backCol = PackedCol_Make(128, 128, 128, 255);
-	PackedCol progCol = PackedCol_Make(128, 255, 128, 255);
-	int filledWidth;
+	int offset, filledWidth;
+	TextureLoc loc;
 
 	Gfx_SetTexturing(true);
-	LoadingScreen_DrawBackground();
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindDynamicVb(s->vb);
 
-	Elem_Render(&s->title,   delta);
-	Elem_Render(&s->message, delta);
+	/* Draw background dirt */
+	offset = 0;
+	if (s->rows) {
+		loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
+		Gfx_BindTexture(Atlas1D.TexIds[Atlas1D_Index(loc)]);
+		Gfx_DrawVb_IndexedTris(s->rows * 4);
+		offset = s->rows * 4;
+	}
+
+	offset = Widget_Render2(&s->title,   offset);
+	offset = Widget_Render2(&s->message, offset);
 	Gfx_SetTexturing(false);
 
 	filledWidth = (int)(s->progWidth * s->progress);
-	Gfx_Draw2DFlat(s->progX, s->progY, s->progWidth, s->progHeight, backCol);
-	Gfx_Draw2DFlat(s->progX, s->progY, filledWidth,  s->progHeight, progCol);
+	Gfx_Draw2DFlat(s->progX, s->progY, s->progWidth, 
+					s->progHeight, PackedCol_Make(128, 128, 128, 255));
+	Gfx_Draw2DFlat(s->progX, s->progY, filledWidth,  
+					s->progHeight, PackedCol_Make(128, 255, 128, 255));
 }
 
 static void LoadingScreen_Free(void* screen) {
