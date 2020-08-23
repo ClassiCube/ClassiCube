@@ -1712,6 +1712,11 @@ void LoadingScreen_Show(const String* title, const String* message) {
 /*########################################################################################################################*
 *--------------------------------------------------GeneratingMapScreen----------------------------------------------------*
 *#########################################################################################################################*/
+static void GeneratingScreen_AtlasChanged(void* obj) {
+	struct LoadingScreen* s = (struct LoadingScreen*)obj;
+	s->dirty = true; /* Dirt texture may have changed */
+}
+
 static void GeneratingScreen_Init(void* screen) {
 	Gen_Done = false;
 	LoadingScreen_Init(screen);
@@ -1725,6 +1730,11 @@ static void GeneratingScreen_Init(void* screen) {
 	} else {
 		Thread_Start(FlatgrassGen_Generate, true);
 	}
+	Event_Register_(&TextureEvents.AtlasChanged,   screen, GeneratingScreen_AtlasChanged);
+}
+static void GeneratingScreen_Free(void* screen) {
+	LoadingScreen_Free(screen);
+	Event_Unregister_(&TextureEvents.AtlasChanged, screen, GeneratingScreen_AtlasChanged);
 }
 
 static void GeneratingScreen_EndGeneration(void) {
@@ -1744,24 +1754,26 @@ static void GeneratingScreen_EndGeneration(void) {
 	LocalPlayer_MoveToSpawn();
 }
 
-static void GeneratingScreen_Render(void* screen, double delta) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	const volatile char* state;
-
-	LoadingScreen_Render(s, delta);
-	if (Gen_Done) { GeneratingScreen_EndGeneration(); return; }
-
-	state       = Gen_CurrentState;
-	s->progress = Gen_CurrentProgress;
+static void GeneratingScreen_Update(void* screen, double delta) {
+	struct LoadingScreen* s    = (struct LoadingScreen*)screen;
+	const char* state = (const char*)Gen_CurrentState;
 	if (state == s->lastState) return;
+	s->lastState = state;
 
 	s->messageStr.length = 0;
-	String_AppendConst(&s->messageStr, (const char*)state);
+	String_AppendConst(&s->messageStr, state);
 	LoadingScreen_SetMessage(s);
 }
 
+static void GeneratingScreen_Render(void* screen, double delta) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	s->progress = Gen_CurrentProgress;
+	LoadingScreen_Render(s, delta);
+	if (Gen_Done) GeneratingScreen_EndGeneration();
+}
+
 static const struct ScreenVTABLE GeneratingScreen_VTABLE = {
-	GeneratingScreen_Init,   Screen_NullUpdate, LoadingScreen_Free,
+	GeneratingScreen_Init,   GeneratingScreen_Update, GeneratingScreen_Free,
 	GeneratingScreen_Render, LoadingScreen_BuildMesh,
 	Screen_TInput,           Screen_TInput,     Screen_TKeyPress,   Screen_TText,
 	Screen_TPointer,         Screen_TPointer,   Screen_FPointer,    Screen_TMouseScroll,
