@@ -362,6 +362,8 @@ struct Widget* HUDScreen_GetHotbar(void) {
 #define LIST_COLUMN_PADDING 5
 #define LIST_BOUNDS_SIZE 10
 #define LIST_NAMES_PER_COLUMN 16
+typedef int (*TabListEntryCompare)(int x, int y);
+
 static struct TabListOverlay {
 	Screen_Body
 	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */
@@ -370,6 +372,7 @@ static struct TabListOverlay {
 	int namesCount, elementOffset;
 	struct TextWidget title;
 	struct FontDesc font;
+	TabListEntryCompare compare;
 	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
 	struct Texture textures[TABLIST_MAX_NAMES * 2];
 } TabListOverlay_Instance;
@@ -540,11 +543,10 @@ static int TabListOverlay_GroupCompare(int x, int y) {
 	return String_Compare(&xGroup, &yGroup);
 }
 
-static struct TabListOverlay* list_SortObj; /* TODO: Eliminate this monstrosity */
-static int (*list_SortCompare)(int x, int y);
 static void TabListOverlay_QuickSort(int left, int right) {
-	struct Texture* values = list_SortObj->textures; struct Texture value;
-	cc_uint16* keys = list_SortObj->ids; cc_uint16 key;
+	struct Texture* values = TabListOverlay_Instance.textures; struct Texture value;
+	cc_uint16* keys        = TabListOverlay_Instance.ids; cc_uint16 key;
+	TabListEntryCompare compareEntries = TabListOverlay_Instance.compare;
 
 	while (left < right) {
 		int i = left, j = right;
@@ -552,8 +554,8 @@ static void TabListOverlay_QuickSort(int left, int right) {
 
 		/* partition the list */
 		while (i <= j) {
-			while (list_SortCompare(pivot, keys[i]) > 0) i++;
-			while (list_SortCompare(pivot, keys[j]) < 0) j--;
+			while (compareEntries(pivot, keys[i]) > 0) i++;
+			while (compareEntries(pivot, keys[j]) < 0) j--;
 			QuickSort_Swap_KV_Maybe();
 		}
 		/* recurse into the smaller subset */
@@ -565,9 +567,8 @@ static void TabListOverlay_SortEntries(struct TabListOverlay* s) {
 	int i, id, count;
 	if (!s->namesCount) return;
 
-	list_SortObj = s;
 	if (s->classic) {
-		list_SortCompare = TabListOverlay_PlayerCompare;
+		TabListOverlay_Instance.compare = TabListOverlay_PlayerCompare;
 		TabListOverlay_QuickSort(0, s->namesCount - 1);
 		return;
 	}
@@ -578,11 +579,11 @@ static void TabListOverlay_SortEntries(struct TabListOverlay* s) {
 		if (s->ids[i] != GROUP_NAME_ID) continue;
 		TabListOverlay_DeleteAt(s, i);
 	}
-	list_SortCompare = TabListOverlay_GroupCompare;
+	TabListOverlay_Instance.compare = TabListOverlay_GroupCompare;
 	TabListOverlay_QuickSort(0, s->namesCount - 1);
 
 	/* Sort the entries in each group */
-	list_SortCompare = TabListOverlay_PlayerCompare;
+	TabListOverlay_Instance.compare = TabListOverlay_PlayerCompare;
 	for (i = 0; i < s->namesCount; ) {
 		id = s->ids[i];
 		TabListOverlay_AddGroup(s, id, &i);
