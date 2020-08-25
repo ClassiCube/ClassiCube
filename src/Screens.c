@@ -40,7 +40,7 @@ void Screen_NullFunc(void* screen) { }
 void Screen_NullUpdate(void* screen, double delta) { }
 int  Screen_InputDown(void* screen, int key) { return key < KEY_F1 || key > KEY_F24; }
 
-CC_NOINLINE static cc_bool IsOnlyHudActive(void) {
+CC_NOINLINE static cc_bool IsOnlyChatActive(void) {
 	struct Screen* s;
 	int i;
 
@@ -49,77 +49,6 @@ CC_NOINLINE static cc_bool IsOnlyHudActive(void) {
 		if (s->grabsInput && s != (struct Screen*)Gui_Chat) return false;
 	}
 	return true;
-}
-
-void Screen_RenderWidgets(void* screen, double delta) {
-	struct Screen* s = (struct Screen*)screen;
-	struct Widget** widgets = s->widgets;
-	int i;
-
-	for (i = 0; i < s->numWidgets; i++) {
-		if (!widgets[i]) continue;
-		Elem_Render(widgets[i], delta);
-	}
-}
-
-void Screen_Render2Widgets(void* screen, double delta) {
-	struct Screen* s = (struct Screen*)screen;
-	struct Widget** widgets = s->widgets;
-	int i, offset = 0;
-
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	Gfx_BindDynamicVb(s->vb);
-
-	for (i = 0; i < s->numWidgets; i++) {
-		if (!widgets[i]) continue;
-		offset = Widget_Render2(widgets[i], offset);
-	}
-}
-
-void Screen_Layout(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	struct Widget** widgets = s->widgets;
-	int i;
-
-	for (i = 0; i < s->numWidgets; i++) {
-		if (!widgets[i]) continue;
-		Widget_Layout(widgets[i]);
-	}
-}
-
-void Screen_ContextLost(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	struct Widget** widgets = s->widgets;
-	int i;
-	Gfx_DeleteDynamicVb(&s->vb);
-
-	for (i = 0; i < s->numWidgets; i++) {
-		if (!widgets[i]) continue;
-		Elem_Free(widgets[i]);
-	}
-}
-
-void Screen_CreateVb(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, s->maxVertices);
-}
-
-void Screen_BuildMesh(void* screen) {
-	struct Screen* s = (struct Screen*)screen;
-	struct Widget** widgets = s->widgets;
-	struct VertexTextured* data;
-	struct VertexTextured** ptr;
-	int i;
-
-	data = (struct VertexTextured*)Gfx_LockDynamicVb(s->vb, 
-										VERTEX_FORMAT_TEXTURED, s->maxVertices);
-	ptr  = &data;
-
-	for (i = 0; i < s->numWidgets; i++) {
-		if (!widgets[i]) continue;
-		Widget_BuildMesh(widgets[i], ptr);
-	}
-	Gfx_UnlockDynamicVb(s->vb);
 }
 
 
@@ -326,7 +255,7 @@ static void HUDScreen_Render(void* screen, double delta) {
 
 	if (Game_ClassicMode) {
 		Elem_Render(&s->line2, delta);
-	} else if (IsOnlyHudActive() && Gui.ShowFPS) {
+	} else if (IsOnlyChatActive() && Gui.ShowFPS) {
 		if (HUDScreen_HacksChanged(s)) { HUDScreen_UpdateHackState(s); }
 		HUDScreen_DrawPosition(s);
 		Elem_Render(&s->line2, delta);
@@ -362,18 +291,22 @@ struct Widget* HUDScreen_GetHotbar(void) {
 #define LIST_COLUMN_PADDING 5
 #define LIST_BOUNDS_SIZE 10
 #define LIST_NAMES_PER_COLUMN 16
-struct TabListOverlay {
+typedef int (*TabListEntryCompare)(int x, int y);
+
+static struct TabListOverlay {
+	Screen_Body
 	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */
 	cc_bool active;                /* Whether this widget is currently being moused over */
-	struct FontDesc* font;
-	int namesCount, elementOffset;
 	cc_bool classic;
+	int namesCount, elementOffset;
 	struct TextWidget title;
+	struct FontDesc font;
+	TabListEntryCompare compare;
 	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
 	struct Texture textures[TABLIST_MAX_NAMES * 2];
-};
+} TabListOverlay_Instance;
 
-static void TabListOverlay_DrawName(struct Texture* tex, struct TabListOverlay* t, const String* name) {
+static void TabListOverlay_DrawName(struct Texture* tex, struct TabListOverlay* s, const String* name) {
 	String tmp; char tmpBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 
@@ -384,144 +317,127 @@ static void TabListOverlay_DrawName(struct Texture* tex, struct TabListOverlay* 
 		tmp = *name;
 	}
 
-	DrawTextArgs_Make(&args, &tmp, t->font, !t->classic);
+	DrawTextArgs_Make(&args, &tmp, &s->font, !s->classic);
 	Drawer2D_MakeTextTexture(tex, &args);
-	Drawer2D_ReducePadding_Tex(tex, t->font->size, 3);
+	Drawer2D_ReducePadding_Tex(tex, s->font.size, 3);
 }
 
-/* Gets the name of the entry that contains the given coordinates. */
-static void TabListOverlay_GetNameAt(struct TabListOverlay* t, int x, int y, String* name) {
-	struct Texture tex;
-	String player;
-	int i;
-
-	for (i = 0; i < t->namesCount; i++) {
-		if (!t->textures[i].ID || t->ids[i] == GROUP_NAME_ID) continue;
-		tex = t->textures[i];
-		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
-
-		player = TabList_UNSAFE_GetPlayer(t->ids[i]);
-		String_AppendString(name, &player);
-		return;
-	}
-}
-
-static int TabListOverlay_GetColumnWidth(struct TabListOverlay* t, int column) {
+static int TabListOverlay_GetColumnWidth(struct TabListOverlay* s, int column) {
 	int i   = column * LIST_NAMES_PER_COLUMN;
-	int end = min(t->namesCount, i + LIST_NAMES_PER_COLUMN);
+	int end = min(s->namesCount, i + LIST_NAMES_PER_COLUMN);
 	int maxWidth = 0;
 
 	for (; i < end; i++) {
-		maxWidth = max(maxWidth, t->textures[i].Width);
+		maxWidth = max(maxWidth, s->textures[i].Width);
 	}
-	return maxWidth + LIST_COLUMN_PADDING + t->elementOffset;
+	return maxWidth + LIST_COLUMN_PADDING + s->elementOffset;
 }
 
-static int TabListOverlay_GetColumnHeight(struct TabListOverlay* t, int column) {
+static int TabListOverlay_GetColumnHeight(struct TabListOverlay* s, int column) {
 	int i   = column * LIST_NAMES_PER_COLUMN;
-	int end = min(t->namesCount, i + LIST_NAMES_PER_COLUMN);
+	int end = min(s->namesCount, i + LIST_NAMES_PER_COLUMN);
 	int height = 0;
 
 	for (; i < end; i++) {
-		height += t->textures[i].Height + 1;
+		height += s->textures[i].Height + 1;
 	}
 	return height;
 }
 
-static void TabListOverlay_SetColumnPos(struct TabListOverlay* t, int column, int x, int y) {
+static void TabListOverlay_SetColumnPos(struct TabListOverlay* s, int column, int x, int y) {
 	struct Texture tex;
 	int i   = column * LIST_NAMES_PER_COLUMN;
-	int end = min(t->namesCount, i + LIST_NAMES_PER_COLUMN);
+	int end = min(s->namesCount, i + LIST_NAMES_PER_COLUMN);
 
 	for (; i < end; i++) {
-		tex = t->textures[i];
+		tex = s->textures[i];
 		tex.X = x; tex.Y = y - 10;
 
 		y += tex.Height + 1;
 		/* offset player names a bit, compared to group name */
-		if (!t->classic && t->ids[i] != GROUP_NAME_ID) {
-			tex.X += t->elementOffset;
+		if (!s->classic && s->ids[i] != GROUP_NAME_ID) {
+			tex.X += s->elementOffset;
 		}
-		t->textures[i] = tex;
+		s->textures[i] = tex;
 	}
 }
 
-static void TabListOverlay_Reposition(void* widget) {
-	struct TabListOverlay* t = (struct TabListOverlay*)widget;
+static void TabListOverlay_Layout(void* screen) {
+	struct TabListOverlay* s = (struct TabListOverlay*)screen;
 	int i, x, y, width = 0, height = 0;
-	int columns = Math_CeilDiv(t->namesCount, LIST_NAMES_PER_COLUMN);
+	int columns = Math_CeilDiv(s->namesCount, LIST_NAMES_PER_COLUMN);
 
 	for (i = 0; i < columns; i++) {
-		width += TabListOverlay_GetColumnWidth(t, i);
-		y      = TabListOverlay_GetColumnHeight(t, i);
+		width += TabListOverlay_GetColumnWidth(s, i);
+		y      = TabListOverlay_GetColumnHeight(s, i);
 		height = max(height, y);
 	}
 	if (width < 480) width = 480;
 
-	t->width  = width  + LIST_BOUNDS_SIZE * 2;
-	t->height = height + LIST_BOUNDS_SIZE * 2;
+	s->width  = width  + LIST_BOUNDS_SIZE * 2;
+	s->height = height + LIST_BOUNDS_SIZE * 2;
 
-	y = WindowInfo.Height / 4 - t->height / 2;
+	y = WindowInfo.Height / 4 - s->height / 2;
 
-	t->x = Gui_CalcPos(ANCHOR_CENTRE,          0, t->width , WindowInfo.Width );
-	t->y = Gui_CalcPos(ANCHOR_CENTRE, -max(0, y), t->height, WindowInfo.Height);
+	s->x = Gui_CalcPos(ANCHOR_CENTRE,          0, s->width , WindowInfo.Width );
+	s->y = Gui_CalcPos(ANCHOR_CENTRE, -max(0, y), s->height, WindowInfo.Height);
 
-	x = t->x + LIST_BOUNDS_SIZE;
-	y = t->y + LIST_BOUNDS_SIZE;
+	x = s->x + LIST_BOUNDS_SIZE;
+	y = s->y + LIST_BOUNDS_SIZE;
 
 	for (i = 0; i < columns; i++) {
-		TabListOverlay_SetColumnPos(t, i, x, y);
-		x += TabListOverlay_GetColumnWidth(t, i);
+		TabListOverlay_SetColumnPos(s, i, x, y);
+		x += TabListOverlay_GetColumnWidth(s, i);
 	}
 }
 
-static void TabListOverlay_AddName(struct TabListOverlay* t, EntityID id, int index) {
+static void TabListOverlay_AddName(struct TabListOverlay* s, EntityID id, int index) {
 	String name;
 	/* insert at end of list */
-	if (index == -1) { index = t->namesCount; t->namesCount++; }
+	if (index == -1) { index = s->namesCount; s->namesCount++; }
 
 	name = TabList_UNSAFE_GetList(id);
-	t->ids[index] = id;
-	TabListOverlay_DrawName(&t->textures[index], t, &name);
+	s->ids[index] = id;
+	TabListOverlay_DrawName(&s->textures[index], s, &name);
 }
 
-static void TabListOverlay_DeleteAt(struct TabListOverlay* t, int i) {
-	Gfx_DeleteTexture(&t->textures[i].ID);
+static void TabListOverlay_DeleteAt(struct TabListOverlay* s, int i) {
+	Gfx_DeleteTexture(&s->textures[i].ID);
 
-	for (; i < t->namesCount - 1; i++) {
-		t->ids[i]      = t->ids[i + 1];
-		t->textures[i] = t->textures[i + 1];
+	for (; i < s->namesCount - 1; i++) {
+		s->ids[i]      = s->ids[i + 1];
+		s->textures[i] = s->textures[i + 1];
 	}
 
-	t->namesCount--;
-	t->ids[t->namesCount]         = 0;
-	t->textures[t->namesCount].ID = 0;
+	s->namesCount--;
+	s->ids[s->namesCount]         = 0;
+	s->textures[s->namesCount].ID = 0;
 }
 
-static void TabListOverlay_AddGroup(struct TabListOverlay* t, int id, int* index) {
+static void TabListOverlay_AddGroup(struct TabListOverlay* s, int id, int* index) {
 	String group;
 	int i;
 	group = TabList_UNSAFE_GetGroup(id);
 
-	for (i = Array_Elems(t->ids) - 1; i > (*index); i--) {
-		t->ids[i]      = t->ids[i - 1];
-		t->textures[i] = t->textures[i - 1];
+	for (i = Array_Elems(s->ids) - 1; i > (*index); i--) {
+		s->ids[i]      = s->ids[i - 1];
+		s->textures[i] = s->textures[i - 1];
 	}
 	
-	t->ids[*index] = GROUP_NAME_ID;
-	TabListOverlay_DrawName(&t->textures[*index], t, &group);
+	s->ids[*index] = GROUP_NAME_ID;
+	TabListOverlay_DrawName(&s->textures[*index], s, &group);
 
 	(*index)++;
-	t->namesCount++;
+	s->namesCount++;
 }
 
-static int TabListOverlay_GetGroupCount(struct TabListOverlay* t, int id, int i) {
+static int TabListOverlay_GetGroupCount(struct TabListOverlay* s, int id, int i) {
 	String group, curGroup;
 	int count;
 	group = TabList_UNSAFE_GetGroup(id);
 
-	for (count = 0; i < t->namesCount; i++, count++) {
-		curGroup = TabList_UNSAFE_GetGroup(t->ids[i]);
+	for (count = 0; i < s->namesCount; i++, count++) {
+		curGroup = TabList_UNSAFE_GetGroup(s->ids[i]);
 		if (!String_CaselessEquals(&group, &curGroup)) break;
 	}
 	return count;
@@ -556,11 +472,10 @@ static int TabListOverlay_GroupCompare(int x, int y) {
 	return String_Compare(&xGroup, &yGroup);
 }
 
-static struct TabListOverlay* list_SortObj;
-static int (*list_SortCompare)(int x, int y);
 static void TabListOverlay_QuickSort(int left, int right) {
-	struct Texture* values = list_SortObj->textures; struct Texture value;
-	cc_uint16* keys = list_SortObj->ids; cc_uint16 key;
+	struct Texture* values = TabListOverlay_Instance.textures; struct Texture value;
+	cc_uint16* keys        = TabListOverlay_Instance.ids; cc_uint16 key;
+	TabListEntryCompare compareEntries = TabListOverlay_Instance.compare;
 
 	while (left < right) {
 		int i = left, j = right;
@@ -568,8 +483,8 @@ static void TabListOverlay_QuickSort(int left, int right) {
 
 		/* partition the list */
 		while (i <= j) {
-			while (list_SortCompare(pivot, keys[i]) > 0) i++;
-			while (list_SortCompare(pivot, keys[j]) < 0) j--;
+			while (compareEntries(pivot, keys[i]) > 0) i++;
+			while (compareEntries(pivot, keys[j]) < 0) j--;
 			QuickSort_Swap_KV_Maybe();
 		}
 		/* recurse into the smaller subset */
@@ -577,136 +492,208 @@ static void TabListOverlay_QuickSort(int left, int right) {
 	}
 }
 
-static void TabListOverlay_SortEntries(struct TabListOverlay* t) {
+static void TabListOverlay_SortEntries(struct TabListOverlay* s) {
 	int i, id, count;
-	if (!t->namesCount) return;
+	if (!s->namesCount) return;
 
-	list_SortObj = t;
-	if (t->classic) {
-		list_SortCompare = TabListOverlay_PlayerCompare;
-		TabListOverlay_QuickSort(0, t->namesCount - 1);
+	if (s->classic) {
+		TabListOverlay_Instance.compare = TabListOverlay_PlayerCompare;
+		TabListOverlay_QuickSort(0, s->namesCount - 1);
 		return;
 	}
 
 	/* Sort the list by group */
 	/* Loop backwards, since DeleteAt() reduces NamesCount */
-	for (i = t->namesCount - 1; i >= 0; i--) {
-		if (t->ids[i] != GROUP_NAME_ID) continue;
-		TabListOverlay_DeleteAt(t, i);
+	for (i = s->namesCount - 1; i >= 0; i--) {
+		if (s->ids[i] != GROUP_NAME_ID) continue;
+		TabListOverlay_DeleteAt(s, i);
 	}
-	list_SortCompare = TabListOverlay_GroupCompare;
-	TabListOverlay_QuickSort(0, t->namesCount - 1);
+	TabListOverlay_Instance.compare = TabListOverlay_GroupCompare;
+	TabListOverlay_QuickSort(0, s->namesCount - 1);
 
 	/* Sort the entries in each group */
-	list_SortCompare = TabListOverlay_PlayerCompare;
-	for (i = 0; i < t->namesCount; ) {
-		id = t->ids[i];
-		TabListOverlay_AddGroup(t, id, &i);
+	TabListOverlay_Instance.compare = TabListOverlay_PlayerCompare;
+	for (i = 0; i < s->namesCount; ) {
+		id = s->ids[i];
+		TabListOverlay_AddGroup(s, id, &i);
 
-		count = TabListOverlay_GetGroupCount(t, id, i);
+		count = TabListOverlay_GetGroupCount(s, id, i);
 		TabListOverlay_QuickSort(i, i + (count - 1));
 		i += count;
 	}
 }
 
-static void TabListOverlay_SortAndReposition(struct TabListOverlay* t) {
-	TabListOverlay_SortEntries(t);
-	TabListOverlay_Reposition(t);
+static void TabListOverlay_SortAndLayout(struct TabListOverlay* s) {
+	TabListOverlay_SortEntries(s);
+	TabListOverlay_Layout(s);
 }
 
-/* Adds a new entry to this widget. */
-static void TabListOverlay_Add(struct TabListOverlay* t, int id) {
-	TabListOverlay_AddName(t, id, -1);
-	TabListOverlay_SortAndReposition(t);
+static void TabListOverlay_Add(void* obj, int id) {
+	struct TabListOverlay* s = (struct TabListOverlay*)obj;
+	TabListOverlay_AddName(s, id, -1);
+	TabListOverlay_SortAndLayout(s);
 }
 
-/* Updates an existing entry in the given widget. */
-static void TabListOverlay_Update(struct TabListOverlay* t, int id) {
+static void TabListOverlay_Update(void* obj, int id) {
+	struct TabListOverlay* s = (struct TabListOverlay*)obj;
 	struct Texture tex;
 	int i;
 
-	for (i = 0; i < t->namesCount; i++) {
-		if (t->ids[i] != id) continue;
-		tex = t->textures[i];
+	for (i = 0; i < s->namesCount; i++) {
+		if (s->ids[i] != id) continue;
+		tex = s->textures[i];
 
 		Gfx_DeleteTexture(&tex.ID);
-		TabListOverlay_AddName(t, id, i);
-		TabListOverlay_SortAndReposition(t);
+		TabListOverlay_AddName(s, id, i);
+		TabListOverlay_SortAndLayout(s);
 		return;
 	}
 }
 
-/* Removes the given entry from the given widget. */
-static void TabListOverlay_Remove(struct TabListOverlay* t, int id) {
+static void TabListOverlay_Remove(void* obj, int id) {
+	struct TabListOverlay* s = (struct TabListOverlay*)obj;
 	int i;
-	for (i = 0; i < t->namesCount; i++) {
-		if (t->ids[i] != id) continue;
+	for (i = 0; i < s->namesCount; i++) {
+		if (s->ids[i] != id) continue;
 
-		TabListOverlay_DeleteAt(t, i);
-		TabListOverlay_SortAndReposition(t);
+		TabListOverlay_DeleteAt(s, i);
+		TabListOverlay_SortAndLayout(s);
 		return;
 	}
 }
 
-static void TabListOverlay_Render(void* widget, double delta) {
-	struct TabListOverlay* t = (struct TabListOverlay*)widget;
-	struct TextWidget* title = &t->title;
+static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
+	struct TabListOverlay* s = (struct TabListOverlay*)screen;
+	String text; char textBuffer[STRING_SIZE * 4];
+	struct Texture tex;
+	String player;
+	int i;
+
+	if (!((struct Screen*)Gui_Chat)->grabsInput) return false;
+	String_InitArray(text, textBuffer);
+
+	for (i = 0; i < s->namesCount; i++) {
+		if (!s->textures[i].ID || s->ids[i] == GROUP_NAME_ID) continue;
+		tex = s->textures[i];
+		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
+
+		player = TabList_UNSAFE_GetPlayer(s->ids[i]);
+		String_Format1(&text, "%s ", &player);
+		ChatScreen_AppendInput(&text);
+		return true;
+	}
+	return false;
+}
+
+static int TabListOverlay_KeyUp(void* screen, int key) {
+	struct TabListOverlay* s = (struct TabListOverlay*)screen;
+	if (key != KeyBinds[KEYBIND_PLAYER_LIST]) return false;
+
+	Gui_Remove((struct Screen*)s);
+	return true;
+}
+
+static void TabListOverlay_ContextLost(void* screen) {
+	struct TabListOverlay* s = (struct TabListOverlay*)screen;
+	int i;
+	for (i = 0; i < s->namesCount; i++) {
+		Gfx_DeleteTexture(&s->textures[i].ID);
+	}
+
+	Elem_Free(&s->title);
+	Font_Free(&s->font);
+}
+
+static void TabListOverlay_ContextRecreated(void* screen) {
+	struct TabListOverlay* s = (struct TabListOverlay*)screen;
+	int size, id;
+
+	size = Drawer2D_BitmappedText ? 16 : 11;
+	Drawer2D_MakeFont(&s->font, size, FONT_STYLE_NORMAL);
+	s->namesCount = 0;
+
+	/* TODO: Just recreate instead of this? maybe */
+	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
+		if (!TabList.NameOffsets[id]) continue;
+		TabListOverlay_AddName(s, (EntityID)id, -1);
+	}
+	TabListOverlay_SortAndLayout(s); /* TODO: Not do layout here too */
+
+	TextWidget_SetConst(&s->title, "Connected players:", &s->font);
+}
+
+static void TabListOverlay_BuildMesh(void* screen) { }
+
+static void TabListOverlay_Render(void* screen, double delta) {
+	struct TabListOverlay* s = (struct TabListOverlay*)screen;
+	struct TextWidget* title = &s->title;
 	struct Screen* grabbed;
 	struct Texture tex;
 	int i, offset, height;
 	PackedCol topCol    = PackedCol_Make( 0,  0,  0, 180);
 	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
 
+	if (Game_HideGui || !IsOnlyChatActive()) return;
 	Gfx_SetTexturing(false);
 	offset = title->height + 10;
-	height = max(300, t->height + title->height);
-	Gfx_Draw2DGradient(t->x, t->y - offset, t->width, height, topCol, bottomCol);
+	height = max(300, s->height + title->height);
+	Gfx_Draw2DGradient(s->x, s->y - offset, s->width, height, topCol, bottomCol);
 
 	Gfx_SetTexturing(true);
-	title->yOffset = t->y - offset + 5;
+	title->yOffset = s->y - offset + 5;
 	Widget_Layout(title);
 	Elem_Render(title, delta);
 	grabbed = Gui_GetInputGrab();
 
-	for (i = 0; i < t->namesCount; i++) {
-		if (!t->textures[i].ID) continue;
-		tex = t->textures[i];
+	for (i = 0; i < s->namesCount; i++) {
+		if (!s->textures[i].ID) continue;
+		tex = s->textures[i];
 		
-		if (grabbed && t->ids[i] != GROUP_NAME_ID) {
+		if (grabbed && s->ids[i] != GROUP_NAME_ID) {
 			if (Gui_ContainsPointers(tex.X, tex.Y, tex.Width, tex.Height)) tex.X += 4;
 		}
 		Texture_Render(&tex);
 	}
+	Gfx_SetTexturing(false);
+
+	/* NOTE: Should usually be caught by KeyUp, but just in case. */
+	if (KeyBind_IsPressed(KEYBIND_PLAYER_LIST)) return;
+	Gui_Remove((struct Screen*)s);
 }
 
-static void TabListOverlay_Free(void* widget) {
-	struct TabListOverlay* t = (struct TabListOverlay*)widget;
-	int i;
-	for (i = 0; i < t->namesCount; i++) {
-		Gfx_DeleteTexture(&t->textures[i].ID);
-	}
-
-	Elem_TryFree(&t->title);
+static void TabListOverlay_Free(void* screen) {
+	struct TabListOverlay* s = (struct TabListOverlay*)screen;
+	s->active = false;
+	Event_Unregister_(&TabListEvents.Added,   s, TabListOverlay_Add);
+	Event_Unregister_(&TabListEvents.Changed, s, TabListOverlay_Update);
+	Event_Unregister_(&TabListEvents.Removed, s, TabListOverlay_Remove);
 }
 
-/* Creates and adds initial names to this widget. */
-static void TabListOverlay_Create(struct TabListOverlay* t, struct FontDesc* font, cc_bool classic) {
-	int id;
-	t->active     = false;
-	t->namesCount = 0;
-	t->font       = font;
-	t->classic    = classic;
-	t->elementOffset = classic ? 0 : 10;
+static void TabListOverlay_Init(void* screen) {
+	struct TabListOverlay* s = (struct TabListOverlay*)screen;
+	s->active        = true;
+	s->classic       = Gui.ClassicTabList || !Server.SupportsExtPlayerList;
+	s->elementOffset = s->classic ? 0 : 10;
+	TextWidget_Make(&s->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
 
-	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
-		if (!TabList.NameOffsets[id]) continue;
-		TabListOverlay_AddName(t, (EntityID)id, -1);
-	}
-
-	TextWidget_Make(&t->title,     ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
-	TextWidget_SetConst(&t->title, "Connected players:", t->font);
-	TabListOverlay_SortAndReposition(t);
+	Event_Register_(&TabListEvents.Added,   s, TabListOverlay_Add);
+	Event_Register_(&TabListEvents.Changed, s, TabListOverlay_Update);
+	Event_Register_(&TabListEvents.Removed, s, TabListOverlay_Remove);
 }
+
+static const struct ScreenVTABLE TabListOverlay_VTABLE = {
+	TabListOverlay_Init,        Screen_NullUpdate,     TabListOverlay_Free,
+	TabListOverlay_Render,      TabListOverlay_BuildMesh,
+	Screen_FInput,              TabListOverlay_KeyUp,  Screen_FKeyPress, Screen_FText,
+	TabListOverlay_PointerDown, Screen_FPointer,       Screen_FPointer,  Screen_FMouseScroll,
+	TabListOverlay_Layout, TabListOverlay_ContextLost, TabListOverlay_ContextRecreated
+};
+void TabListOverlay_Show(void) {
+	struct TabListOverlay* s  = &TabListOverlay_Instance;
+	s->VTABLE = &TabListOverlay_VTABLE;
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_TABLIST);
+}
+
 
 
 /*########################################################################################################################*
@@ -714,11 +701,6 @@ static void TabListOverlay_Create(struct TabListOverlay* t, struct FontDesc* fon
 *#########################################################################################################################*/
 static struct ChatScreen {
 	Screen_Body
-	/* player list state */
-	struct TabListOverlay playerList;
-	struct FontDesc playerFont;
-	cc_bool showingList;
-	/* chat state */
 	float chatAcc;
 	cc_bool suppressNextPress;
 	int chatIndex;
@@ -1008,26 +990,9 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 	}
 }
 
-static void ChatScreen_TabEntryAdded(void* screen, int id) {
-	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (s->showingList) TabListOverlay_Add(&s->playerList, id);
-}
-
-static void ChatScreen_TabEntryChanged(void* screen, int id) {
-	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (s->showingList) TabListOverlay_Update(&s->playerList, id);
-}
-
-static void ChatScreen_TabEntryRemoved(void* screen, int id) {
-	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (s->showingList) TabListOverlay_Remove(&s->playerList, id);
-}
-
 static void ChatScreen_ContextLost(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	Font_Free(&s->playerFont);
 	ChatScreen_FreeChatFonts(s);
-	if (s->showingList) TabListOverlay_Free(&s->playerList);
 
 	Elem_TryFree(&s->chat);
 	Elem_TryFree(&s->input.base);
@@ -1043,22 +1008,12 @@ static void ChatScreen_ContextLost(void* screen) {
 #endif
 }
 
-static void ChatScreen_RemakePlayerList(struct ChatScreen* s) {
-	cc_bool classic = Gui.ClassicTabList || !Server.SupportsExtPlayerList;
-	TabListOverlay_Create(&s->playerList, &s->playerFont, classic);
-	s->showingList  = true;
-	TabListOverlay_Reposition(&s->playerList);
-}
-
 static void ChatScreen_ContextRecreated(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	int size = Drawer2D_BitmappedText ? 16 : 11;
 	struct FontDesc font;
-	Drawer2D_MakeFont(&s->playerFont, size, FONT_STYLE_NORMAL);
 	ChatScreen_ChatUpdateFont(s);
-
 	ChatScreen_Redraw(s);
-	if (s->showingList) ChatScreen_RemakePlayerList(s);
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -1084,7 +1039,6 @@ static void ChatScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, 0);
 	ChatScreen_UpdateChatYOffsets(s);
 
-	if (s->showingList) TabListOverlay_Reposition(&s->playerList);
 	s->announcement.yOffset = -WindowInfo.Height / 4;
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -1123,8 +1077,8 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	cc_bool handlesList = playerListKey != KEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
 
 	if (key == playerListKey && handlesList) {
-		if (!s->showingList && !Server.IsSinglePlayer) {
-			ChatScreen_RemakePlayerList(s);
+		if (!TabListOverlay_Instance.active && !Server.IsSinglePlayer) {
+			TabListOverlay_Show();
 		}
 		return true;
 	}
@@ -1164,12 +1118,6 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 
 static int ChatScreen_KeyUp(void* screen, int key) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (key == KeyBinds[KEYBIND_PLAYER_LIST] && s->showingList) {
-		s->showingList = false;
-		TabListOverlay_Free(&s->playerList);
-		return true;
-	}
-
 	if (!s->grabsInput) return false;
 #ifdef CC_BUILD_WEB
 	/* See reason for this in HandleInputUp */
@@ -1199,22 +1147,7 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	int height, chatY;
 
-	if (!s->grabsInput) return false;
-
-	/* player clicks on name in tab list */
-	/* TODO: Move to TabListOverlay */
-	if (s->showingList) {
-		String_InitArray(text, textBuffer);
-		TabListOverlay_GetNameAt(&s->playerList, x, y, &text);
-
-		if (text.length) {
-			String_Append(&text, ' ');
-			ChatScreen_AppendInput(&text);
-			return true;
-		}
-	}
-
-	if (Game_HideGui) return false;
+	if (!s->grabsInput || Game_HideGui) return false;
 
 #ifdef CC_BUILD_TOUCH
 	if (Widget_Contains(&s->send, x, y)) {
@@ -1276,9 +1209,6 @@ static void ChatScreen_Init(void* screen) {
 
 	Event_Register_(&ChatEvents.ChatReceived,   s, ChatScreen_ChatReceived);
 	Event_Register_(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
-	Event_Register_(&TabListEvents.Added,       s, ChatScreen_TabEntryAdded);
-	Event_Register_(&TabListEvents.Changed,     s, ChatScreen_TabEntryChanged);
-	Event_Register_(&TabListEvents.Removed,     s, ChatScreen_TabEntryRemoved);
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -1297,7 +1227,7 @@ static void ChatScreen_Render(void* screen, double delta) {
 	}
 	if (Game_HideGui) return;
 
-	if (!s->showingList && !Gui_GetBlocksWorld()) {
+	if (!TabListOverlay_Instance.active && !Gui_GetBlocksWorld()) {
 		Gfx_SetTexturing(true);
 		ChatScreen_DrawCrosshairs();
 		Gfx_SetTexturing(false);
@@ -1308,28 +1238,13 @@ static void ChatScreen_Render(void* screen, double delta) {
 
 	Gfx_SetTexturing(true);
 	ChatScreen_DrawChat(s, delta);
-
-	if (s->showingList && IsOnlyHudActive()) {
-		s->playerList.active = s->grabsInput;
-		TabListOverlay_Render(&s->playerList, delta);
-		/* NOTE: Should usually be caught by KeyUp, but just in case. */
-		if (!KeyBind_IsPressed(KEYBIND_PLAYER_LIST)) {
-			s->showingList = false;
-			TabListOverlay_Free(&s->playerList);
-		}
-	}
 	Gfx_SetTexturing(false);
 }
 
 static void ChatScreen_Free(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	s->showingList = false;
-
 	Event_Unregister_(&ChatEvents.ChatReceived,   s, ChatScreen_ChatReceived);
 	Event_Unregister_(&ChatEvents.ColCodeChanged, s, ChatScreen_ColCodeChanged);
-	Event_Unregister_(&TabListEvents.Added,       s, ChatScreen_TabEntryAdded);
-	Event_Unregister_(&TabListEvents.Changed,     s, ChatScreen_TabEntryChanged);
-	Event_Unregister_(&TabListEvents.Removed,     s, ChatScreen_TabEntryRemoved);
 }
 
 static const struct ScreenVTABLE ChatScreen_VTABLE = {
@@ -1531,7 +1446,8 @@ void InventoryScreen_Show(void) {
 static struct LoadingScreen {
 	Screen_Body
 	struct FontDesc font;
-	float progress;
+	float progress; 
+	int rows;
 	
 	int progX, progY, progWidth, progHeight;
 	struct TextWidget title, message;
@@ -1541,17 +1457,30 @@ static struct LoadingScreen {
 	char _titleBuffer[STRING_SIZE];
 	char _messageBuffer[STRING_SIZE];
 } LoadingScreen;
+#define LOADING_MAX_VERTICES (2 * TEXTWIDGET_MAX)
+#define LOADING_TILE_SIZE 64
+
+static struct Widget* loading_widgets[2] = {
+	(struct Widget*)&LoadingScreen.title, (struct Widget*)&LoadingScreen.message
+};
 
 static void LoadingScreen_SetTitle(struct LoadingScreen* s) {
 	TextWidget_Set(&s->title, &s->titleStr, &s->font);
+	s->dirty = true;
 }
 static void LoadingScreen_SetMessage(struct LoadingScreen* s) {
 	TextWidget_Set(&s->message, &s->messageStr, &s->font);
+	s->dirty = true;
+}
+
+static void LoadingScreen_CalcMaxVertices(struct LoadingScreen* s) {
+	s->rows = Math_CeilDiv(WindowInfo.Height, LOADING_TILE_SIZE);
+	s->maxVertices = LOADING_MAX_VERTICES + s->rows * 4;
 }
 
 static void LoadingScreen_Layout(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	int y;
+	int oldRows, y;
 	Widget_SetLocation(&s->title,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
 	Widget_SetLocation(&s->message, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  17);
 	y = Display_ScaleY(34);
@@ -1560,13 +1489,19 @@ static void LoadingScreen_Layout(void* screen) {
 	s->progX      = Gui_CalcPos(ANCHOR_CENTRE, 0, s->progWidth, WindowInfo.Width);
 	s->progHeight = Display_ScaleY(4);
 	s->progY      = Gui_CalcPos(ANCHOR_CENTRE, y, s->progHeight, WindowInfo.Height);
+
+	oldRows = s->rows;
+	LoadingScreen_CalcMaxVertices(s);
+	if (oldRows == s->rows) return;
+
+	Gfx_DeleteDynamicVb(&s->vb);
+	Screen_CreateVb(s);
 }
 
 static void LoadingScreen_ContextLost(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	Font_Free(&s->font);
-	Elem_Free(&s->title);
-	Elem_Free(&s->message);
+	Screen_ContextLost(screen);
 }
 
 static void LoadingScreen_ContextRecreated(void* screen) {
@@ -1574,51 +1509,34 @@ static void LoadingScreen_ContextRecreated(void* screen) {
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
 	LoadingScreen_SetTitle(s);
 	LoadingScreen_SetMessage(s);
+	Screen_CreateVb(s);
 }
 
-static void LoadingScreen_BuildMesh(void* screen) { }
-
-static void LoadingScreen_UpdateBackgroundVB(struct VertexTextured* vertices, int count, int atlasIndex, cc_bool* bound) {
-	if (!(*bound)) {
-		*bound = true;
-		Gfx_BindTexture(Atlas1D.TexIds[atlasIndex]);
-	}
-
-	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
-	/* TODO: Do we need to use a separate VB here? */
-	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
-}
-
-#define LOADING_TILE_SIZE 64
-static void LoadingScreen_DrawBackground(void) {
-	struct VertexTextured vertices[144];
-	struct VertexTextured* ptr = vertices;
-	PackedCol col = PackedCol_Make(64, 64, 64, 255);
-
+static void LoadingScreen_BuildMesh(void* screen) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	struct VertexTextured* data;
+	struct VertexTextured** ptr;
 	struct Texture tex;
 	TextureLoc loc;
-	int count = 0, atlasIndex, y;
-	cc_bool bound = false;
+	int atlasIndex, i;
 
-	loc    = Block_Tex(BLOCK_DIRT, FACE_YMAX);
-	tex.ID = 0;
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(s->vb, 
+										VERTEX_FORMAT_TEXTURED, s->maxVertices);
+	ptr  = &data;
+
+	loc       = Block_Tex(BLOCK_DIRT, FACE_YMAX);
 	Tex_SetRect(tex, 0,0, WindowInfo.Width,LOADING_TILE_SIZE);
 	tex.uv    = Atlas1D_TexRec(loc, 1, &atlasIndex);
 	tex.uv.U2 = (float)WindowInfo.Width / LOADING_TILE_SIZE;
 	
-	for (y = 0; y < WindowInfo.Height; y += LOADING_TILE_SIZE) {
-		tex.Y = y;
-		Gfx_Make2DQuad(&tex, col, &ptr);
-		count += 4;
-
-		if (count < Array_Elems(vertices)) continue;
-		LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
-		count = 0;
-		ptr = vertices;
+	for (i = 0; i < s->rows; i++) {
+		tex.Y = i * LOADING_TILE_SIZE;
+		Gfx_Make2DQuad(&tex, PackedCol_Make(64, 64, 64, 255), ptr);
 	}
 
-	if (!count) return;
-	LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
+	Widget_BuildMesh(&s->title,   ptr);
+	Widget_BuildMesh(&s->message, ptr);
+	Gfx_UnlockDynamicVb(s->vb);
 }
 
 static void LoadingScreen_MapLoading(void* screen, float progress) {
@@ -1633,7 +1551,10 @@ static void LoadingScreen_Init(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
 	TextWidget_Init(&s->title);
 	TextWidget_Init(&s->message);
+	s->widgets     = loading_widgets;
+	s->numWidgets  = Array_Elems(loading_widgets);
 
+	LoadingScreen_CalcMaxVertices(s);
 	Gfx_SetFog(false);
 	Event_Register_(&WorldEvents.Loading,   s, LoadingScreen_MapLoading);
 	Event_Register_(&WorldEvents.MapLoaded, s, LoadingScreen_MapLoaded);
@@ -1641,20 +1562,31 @@ static void LoadingScreen_Init(void* screen) {
 
 static void LoadingScreen_Render(void* screen, double delta) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	PackedCol backCol = PackedCol_Make(128, 128, 128, 255);
-	PackedCol progCol = PackedCol_Make(128, 255, 128, 255);
-	int filledWidth;
+	int offset, filledWidth;
+	TextureLoc loc;
 
 	Gfx_SetTexturing(true);
-	LoadingScreen_DrawBackground();
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindDynamicVb(s->vb);
 
-	Elem_Render(&s->title,   delta);
-	Elem_Render(&s->message, delta);
+	/* Draw background dirt */
+	offset = 0;
+	if (s->rows) {
+		loc = Block_Tex(BLOCK_DIRT, FACE_YMAX);
+		Gfx_BindTexture(Atlas1D.TexIds[Atlas1D_Index(loc)]);
+		Gfx_DrawVb_IndexedTris(s->rows * 4);
+		offset = s->rows * 4;
+	}
+
+	offset = Widget_Render2(&s->title,   offset);
+	offset = Widget_Render2(&s->message, offset);
 	Gfx_SetTexturing(false);
 
 	filledWidth = (int)(s->progWidth * s->progress);
-	Gfx_Draw2DFlat(s->progX, s->progY, s->progWidth, s->progHeight, backCol);
-	Gfx_Draw2DFlat(s->progX, s->progY, filledWidth,  s->progHeight, progCol);
+	Gfx_Draw2DFlat(s->progX, s->progY, s->progWidth, 
+					s->progHeight, PackedCol_Make(128, 128, 128, 255));
+	Gfx_Draw2DFlat(s->progX, s->progY, filledWidth,  
+					s->progHeight, PackedCol_Make(128, 255, 128, 255));
 }
 
 static void LoadingScreen_Free(void* screen) {
@@ -1695,6 +1627,10 @@ void LoadingScreen_Show(const String* title, const String* message) {
 /*########################################################################################################################*
 *--------------------------------------------------GeneratingMapScreen----------------------------------------------------*
 *#########################################################################################################################*/
+static void GeneratingScreen_AtlasChanged(void* obj) {
+	LoadingScreen.dirty = true; /* Dirt texture may have changed */
+}
+
 static void GeneratingScreen_Init(void* screen) {
 	Gen_Done = false;
 	LoadingScreen_Init(screen);
@@ -1708,6 +1644,11 @@ static void GeneratingScreen_Init(void* screen) {
 	} else {
 		Thread_Start(FlatgrassGen_Generate, true);
 	}
+	Event_Register_(&TextureEvents.AtlasChanged,   NULL, GeneratingScreen_AtlasChanged);
+}
+static void GeneratingScreen_Free(void* screen) {
+	LoadingScreen_Free(screen);
+	Event_Unregister_(&TextureEvents.AtlasChanged, NULL, GeneratingScreen_AtlasChanged);
 }
 
 static void GeneratingScreen_EndGeneration(void) {
@@ -1727,24 +1668,26 @@ static void GeneratingScreen_EndGeneration(void) {
 	LocalPlayer_MoveToSpawn();
 }
 
-static void GeneratingScreen_Render(void* screen, double delta) {
-	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	const volatile char* state;
-
-	LoadingScreen_Render(s, delta);
-	if (Gen_Done) { GeneratingScreen_EndGeneration(); return; }
-
-	state       = Gen_CurrentState;
-	s->progress = Gen_CurrentProgress;
+static void GeneratingScreen_Update(void* screen, double delta) {
+	struct LoadingScreen* s    = (struct LoadingScreen*)screen;
+	const char* state = (const char*)Gen_CurrentState;
 	if (state == s->lastState) return;
+	s->lastState = state;
 
 	s->messageStr.length = 0;
-	String_AppendConst(&s->messageStr, (const char*)state);
+	String_AppendConst(&s->messageStr, state);
 	LoadingScreen_SetMessage(s);
 }
 
+static void GeneratingScreen_Render(void* screen, double delta) {
+	struct LoadingScreen* s = (struct LoadingScreen*)screen;
+	s->progress = Gen_CurrentProgress;
+	LoadingScreen_Render(s, delta);
+	if (Gen_Done) GeneratingScreen_EndGeneration();
+}
+
 static const struct ScreenVTABLE GeneratingScreen_VTABLE = {
-	GeneratingScreen_Init,   Screen_NullUpdate, LoadingScreen_Free,
+	GeneratingScreen_Init,   GeneratingScreen_Update, GeneratingScreen_Free,
 	GeneratingScreen_Render, LoadingScreen_BuildMesh,
 	Screen_TInput,           Screen_TInput,     Screen_TKeyPress,   Screen_TText,
 	Screen_TPointer,         Screen_TPointer,   Screen_FPointer,    Screen_TMouseScroll,

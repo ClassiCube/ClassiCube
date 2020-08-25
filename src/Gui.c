@@ -20,37 +20,6 @@ struct ChatScreen* Gui_Chat;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 static cc_uint8 priorities[GUI_MAX_SCREENS];
 
-void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
-	struct Widget* w = (struct Widget*)widget;
-	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
-	w->xOffset = Display_ScaleX(xOffset);
-	w->yOffset = Display_ScaleY(yOffset);
-	Widget_Layout(w);
-}
-
-void Widget_CalcPosition(void* widget) {
-	struct Widget* w = (struct Widget*)widget;
-	w->x = Gui_CalcPos(w->horAnchor, w->xOffset, w->width , WindowInfo.Width );
-	w->y = Gui_CalcPos(w->verAnchor, w->yOffset, w->height, WindowInfo.Height);
-}
-
-void Widget_Reset(void* widget) {
-	struct Widget* w = (struct Widget*)widget;
-	w->active   = false;
-	w->disabled = false;
-	w->x = 0; w->y = 0;
-	w->width = 0; w->height = 0;
-	w->horAnchor = ANCHOR_MIN;
-	w->verAnchor = ANCHOR_MIN;
-	w->xOffset = 0; w->yOffset = 0;
-	w->MenuClick = NULL;
-}
-
-int Widget_Contains(void* widget, int x, int y) {
-	struct Widget* w = (struct Widget*)widget;
-	return Gui_Contains(w->x, w->y, w->width, w->height, x, y);
-}
-
 
 /*########################################################################################################################*
 *----------------------------------------------------------Gui------------------------------------------------------------*
@@ -356,6 +325,116 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 	for (i = count - 1; i >= 0; i--) {
 		TextAtlas_Add(atlas, digits[i] - '0' , vertices);
 	}
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Widget base-------------------------------------------------------*
+*#########################################################################################################################*/
+void Widget_SetLocation(void* widget, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
+	struct Widget* w = (struct Widget*)widget;
+	w->horAnchor = horAnchor; w->verAnchor = verAnchor;
+	w->xOffset = Display_ScaleX(xOffset);
+	w->yOffset = Display_ScaleY(yOffset);
+	Widget_Layout(w);
+}
+
+void Widget_CalcPosition(void* widget) {
+	struct Widget* w = (struct Widget*)widget;
+	w->x = Gui_CalcPos(w->horAnchor, w->xOffset, w->width , WindowInfo.Width );
+	w->y = Gui_CalcPos(w->verAnchor, w->yOffset, w->height, WindowInfo.Height);
+}
+
+void Widget_Reset(void* widget) {
+	struct Widget* w = (struct Widget*)widget;
+	w->active   = false;
+	w->disabled = false;
+	w->x = 0; w->y = 0;
+	w->width = 0; w->height = 0;
+	w->horAnchor = ANCHOR_MIN;
+	w->verAnchor = ANCHOR_MIN;
+	w->xOffset = 0; w->yOffset = 0;
+	w->MenuClick = NULL;
+}
+
+int Widget_Contains(void* widget, int x, int y) {
+	struct Widget* w = (struct Widget*)widget;
+	return Gui_Contains(w->x, w->y, w->width, w->height, x, y);
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Screen base-------------------------------------------------------*
+*#########################################################################################################################*/
+void Screen_RenderWidgets(void* screen, double delta) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	int i;
+
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!widgets[i]) continue;
+		Elem_Render(widgets[i], delta);
+	}
+}
+
+void Screen_Render2Widgets(void* screen, double delta) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	int i, offset = 0;
+
+	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
+	Gfx_BindDynamicVb(s->vb);
+
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!widgets[i]) continue;
+		offset = Widget_Render2(widgets[i], offset);
+	}
+}
+
+void Screen_Layout(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	int i;
+
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!widgets[i]) continue;
+		Widget_Layout(widgets[i]);
+	}
+}
+
+void Screen_ContextLost(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	int i;
+	Gfx_DeleteDynamicVb(&s->vb);
+
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!widgets[i]) continue;
+		Elem_Free(widgets[i]);
+	}
+}
+
+void Screen_CreateVb(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, s->maxVertices);
+}
+
+void Screen_BuildMesh(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	struct VertexTextured* data;
+	struct VertexTextured** ptr;
+	int i;
+
+	data = (struct VertexTextured*)Gfx_LockDynamicVb(s->vb, 
+										VERTEX_FORMAT_TEXTURED, s->maxVertices);
+	ptr  = &data;
+
+	for (i = 0; i < s->numWidgets; i++) {
+		if (!widgets[i]) continue;
+		Widget_BuildMesh(widgets[i], ptr);
+	}
+	Gfx_UnlockDynamicVb(s->vb);
 }
 
 

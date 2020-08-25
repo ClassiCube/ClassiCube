@@ -94,6 +94,17 @@ struct ScreenVTABLE {
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Body };
+/* Calls Elem_Render on each widget in the screen. */
+void Screen_RenderWidgets(void* screen, double delta);
+/* Calls Widget_Render2 on each widget in the screen. */
+void Screen_Render2Widgets(void* screen, double delta);
+/* Calls Widget_Layout on each widget in the screen. */
+void Screen_Layout(void* screen);
+/* Calls Widget_Free on each widget in the screen. */
+/* Also deletes the screen's vb. */
+void Screen_ContextLost(void* screen);
+void Screen_CreateVb(void* screen);
+void Screen_BuildMesh(void* screen);
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {
@@ -152,6 +163,7 @@ enum GuiPriority {
 	GUI_PRIORITY_TEXIDS     = 30,
 	GUI_PRIORITY_TOUCH      = 25,
 	GUI_PRIORITY_INVENTORY  = 20,
+	GUI_PRIORITY_TABLIST    = 17,
 	GUI_PRIORITY_CHAT       = 15,
 	GUI_PRIORITY_HUD        = 10,
 	GUI_PRIORITY_LOADING    =  5
