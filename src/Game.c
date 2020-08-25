@@ -526,29 +526,35 @@ void Game_TakeScreenshot(void) {
 	String filename; char fileBuffer[STRING_SIZE];
 	String path;     char pathBuffer[FILENAME_SIZE];
 	struct DateTime now;
-	struct Stream stream;
 	cc_result res;
+#ifdef CC_BUILD_WEB
+	char str[NATIVE_STR_LEN];
+#else
+	struct Stream stream;
+#endif
 
 	Game_ScreenshotRequested = false;
-#ifdef CC_BUILD_WEB
-	/* TODO: Maybe use filename still? */
-	EM_ASM({
-		var canvas = Module['canvas'];
-		if (canvas.toBlob) {
-			canvas.toBlob(function(blob) { Module.saveBlob(blob, 'ClassiCube_Screenshot.png'); });
-		} else if (canvas.msToBlob) {
-			Module.saveBlob(canvas.msToBlob(), 'ClassiCube_Screenshot.png');
-		}
-	});
-#elif CC_BUILD_MINFILES
-	/* no screenshots for these systems */
-#else
 	if (!Utils_EnsureDirectory("screenshots")) return;
 	DateTime_CurrentLocal(&now);
 
 	String_InitArray(filename, fileBuffer);
 	String_Format3(&filename, "screenshot_%p4-%p2-%p2", &now.year, &now.month, &now.day);
 	String_Format3(&filename, "-%p2-%p2-%p2.png", &now.hour, &now.minute, &now.second);
+
+#ifdef CC_BUILD_WEB
+	Platform_ConvertString(str, &filename);
+	EM_ASM_({
+		var name   = UTF8ToString($0);
+		var canvas = Module['canvas'];
+		if (canvas.toBlob) {
+			canvas.toBlob(function(blob) { Module.saveBlob(blob, name); });
+		} else if (canvas.msToBlob) {
+			Module.saveBlob(canvas.msToBlob(), name);
+		}
+	}, str);
+#elif CC_BUILD_MINFILES
+	/* no screenshots for these systems */
+#else
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "screenshots/%s", &filename);
 

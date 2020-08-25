@@ -1294,7 +1294,7 @@ extern int unlink(const char* path);
 static void DownloadMap(const String* path) {
 	struct Stream s;
 	String file;
-	char str[600];
+	char str[NATIVE_STR_LEN];
 	cc_uint8* ptr = NULL;
 	cc_uint32 len;
 
