@@ -876,7 +876,7 @@ static cc_result Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* fie
 	return 0;
 }
 
-static cc_int32 Dat_I32(struct JFieldDesc* field) {
+static int Dat_I32(struct JFieldDesc* field) {
 	if (field->Type != JFIELD_I32) Logger_Abort("Field type must be Int32");
 	return field->Value.I32;
 }
