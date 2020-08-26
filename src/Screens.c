@@ -289,15 +289,13 @@ struct Widget* HUDScreen_GetHotbar(void) {
 *#########################################################################################################################*/
 #define GROUP_NAME_ID UInt16_MaxValue
 #define LIST_COLUMN_PADDING 5
-#define LIST_BOUNDS_SIZE 10
 #define LIST_NAMES_PER_COLUMN 16
 typedef int (*TabListEntryCompare)(int x, int y);
 
 static struct TabListOverlay {
 	Screen_Body
-	int x, y, width, height;       /* Top left corner, and dimensions, of this widget */
-	cc_bool active;                /* Whether this widget is currently being moused over */
-	cc_bool classic;
+		int x, y, width, height;
+	cc_bool active, classic;
 	int namesCount, elementOffset;
 	struct TextWidget title;
 	struct FontDesc font;
@@ -364,31 +362,39 @@ static void TabListOverlay_SetColumnPos(struct TabListOverlay* s, int column, in
 
 static void TabListOverlay_Layout(void* screen) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
+	int minWidth, minHeight, paddingX, paddingY;
 	int i, x, y, width = 0, height = 0;
 	int columns = Math_CeilDiv(s->namesCount, LIST_NAMES_PER_COLUMN);
 
 	for (i = 0; i < columns; i++) {
-		width += TabListOverlay_GetColumnWidth(s, i);
+		width += TabListOverlay_GetColumnWidth(s,  i);
 		y      = TabListOverlay_GetColumnHeight(s, i);
 		height = max(height, y);
 	}
-	if (width < 480) width = 480;
 
-	s->width  = width  + LIST_BOUNDS_SIZE * 2;
-	s->height = height + LIST_BOUNDS_SIZE * 2;
+	minWidth = Display_ScaleX(480);
+	width    = max(width, minWidth);
+	paddingX = Display_ScaleX(10);
+	paddingY = Display_ScaleY(10);
 
-	y = WindowInfo.Height / 4 - s->height / 2;
+	width  += paddingX * 2;
+	height += paddingY * 2;
 
-	s->x = Gui_CalcPos(ANCHOR_CENTRE,          0, s->width , WindowInfo.Width );
-	s->y = Gui_CalcPos(ANCHOR_CENTRE, -max(0, y), s->height, WindowInfo.Height);
+	y    = WindowInfo.Height / 4 - height / 2;
+	s->x = Gui_CalcPos(ANCHOR_CENTRE,          0, width , WindowInfo.Width );
+	s->y = Gui_CalcPos(ANCHOR_CENTRE, -max(0, y), height, WindowInfo.Height);
 
-	x = s->x + LIST_BOUNDS_SIZE;
-	y = s->y + LIST_BOUNDS_SIZE;
+	x = s->x + paddingX;
+	y = s->y + paddingY;
 
 	for (i = 0; i < columns; i++) {
 		TabListOverlay_SetColumnPos(s, i, x, y);
 		x += TabListOverlay_GetColumnWidth(s, i);
 	}
+
+	s->width  = width;
+	minHeight = Display_ScaleY(300);
+	s->height = max(minHeight, height + s->title.height);
 }
 
 static void TabListOverlay_AddName(struct TabListOverlay* s, EntityID id, int index) {
@@ -617,9 +623,9 @@ static void TabListOverlay_ContextRecreated(void* screen) {
 		if (!TabList.NameOffsets[id]) continue;
 		TabListOverlay_AddName(s, (EntityID)id, -1);
 	}
-	TabListOverlay_SortAndLayout(s); /* TODO: Not do layout here too */
 
 	TextWidget_SetConst(&s->title, "Connected players:", &s->font);
+	TabListOverlay_SortAndLayout(s); /* TODO: Not do layout here too */
 }
 
 static void TabListOverlay_BuildMesh(void* screen) { }
@@ -629,15 +635,14 @@ static void TabListOverlay_Render(void* screen, double delta) {
 	struct TextWidget* title = &s->title;
 	struct Screen* grabbed;
 	struct Texture tex;
-	int i, offset, height;
+	int i, offset;
 	PackedCol topCol    = PackedCol_Make( 0,  0,  0, 180);
 	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
 
 	if (Game_HideGui || !IsOnlyChatActive()) return;
 	Gfx_SetTexturing(false);
 	offset = title->height + 10;
-	height = max(300, s->height + title->height);
-	Gfx_Draw2DGradient(s->x, s->y - offset, s->width, height, topCol, bottomCol);
+	Gfx_Draw2DGradient(s->x, s->y - offset, s->width, s->height, topCol, bottomCol);
 
 	Gfx_SetTexturing(true);
 	title->yOffset = s->y - offset + 5;
