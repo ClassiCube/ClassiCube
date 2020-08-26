@@ -294,7 +294,7 @@ typedef int (*TabListEntryCompare)(int x, int y);
 
 static struct TabListOverlay {
 	Screen_Body
-		int x, y, width, height;
+	int x, y, width, height;
 	cc_bool active, classic;
 	int namesCount, elementOffset;
 	struct TextWidget title;
@@ -392,9 +392,13 @@ static void TabListOverlay_Layout(void* screen) {
 		x += TabListOverlay_GetColumnWidth(s, i);
 	}
 
+	s->y -= (s->title.height + paddingY);
 	s->width  = width;
 	minHeight = Display_ScaleY(300);
 	s->height = max(minHeight, height + s->title.height);
+
+	s->title.yOffset = s->y + paddingY / 2;
+	Widget_Layout(&s->title);
 }
 
 static void TabListOverlay_AddName(struct TabListOverlay* s, EntityID id, int index) {
@@ -635,18 +639,15 @@ static void TabListOverlay_Render(void* screen, double delta) {
 	struct TextWidget* title = &s->title;
 	struct Screen* grabbed;
 	struct Texture tex;
-	int i, offset;
+	int i;
 	PackedCol topCol    = PackedCol_Make( 0,  0,  0, 180);
 	PackedCol bottomCol = PackedCol_Make(50, 50, 50, 205);
 
 	if (Game_HideGui || !IsOnlyChatActive()) return;
 	Gfx_SetTexturing(false);
-	offset = title->height + 10;
-	Gfx_Draw2DGradient(s->x, s->y - offset, s->width, s->height, topCol, bottomCol);
+	Gfx_Draw2DGradient(s->x, s->y, s->width, s->height, topCol, bottomCol);
 
 	Gfx_SetTexturing(true);
-	title->yOffset = s->y - offset + 5;
-	Widget_Layout(title);
 	Elem_Render(title, delta);
 	grabbed = Gui_GetInputGrab();
 
