@@ -1010,7 +1010,6 @@ static void ChatScreen_ContextLost(void* screen) {
 
 static void ChatScreen_ContextRecreated(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int size = Drawer2D_BitmappedText ? 16 : 11;
 	struct FontDesc font;
 	ChatScreen_ChatUpdateFont(s);
 	ChatScreen_Redraw(s);
@@ -1937,7 +1936,6 @@ static void TouchScreen_ContextRecreated(void* screen) {
 }
 
 static void TouchScreen_Render(void* screen, double delta) {
-	struct TouchScreen* s = (struct TouchScreen*)screen;
 	if (Gui_GetInputGrab()) return;
 
 	Gfx_SetTexturing(true);

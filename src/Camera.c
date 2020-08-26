@@ -195,7 +195,6 @@ static Vec3 ThirdPersonCamera_GetPosition(float t) {
 }
 
 static cc_bool ThirdPersonCamera_Zoom(float amount) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
 	float* dist   = cam_isForwardThird ? &dist_forward : &dist_third;
 	float newDist = *dist - amount;
 

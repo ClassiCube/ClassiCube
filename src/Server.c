@@ -418,12 +418,11 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 		}
 
 		if (net_readCurrent + Protocol.Sizes[opcode] > readEnd) break;
-		lastOpcode = opcode;
-		lastPacket = Game.Time;
-
 		handler = Protocol.Handlers[opcode];
 		if (!handler) { DisconnectInvalidOpcode(opcode); return; }
 
+		lastOpcode = opcode;
+		lastPacket = Game.Time;
 		handler(net_readCurrent + 1); /* skip opcode */
 		net_readCurrent += Protocol.Sizes[opcode];
 	}

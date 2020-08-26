@@ -3422,7 +3422,6 @@ int Window_GetWindowState(void) {
 
 cc_result Window_EnterFullscreen(void) {
 	EmscriptenFullscreenStrategy strategy;
-	cc_result res;
 	strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
 	strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_HIDEF;
 	strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
@@ -3475,7 +3474,6 @@ void Window_FreeFramebuffer(struct Bitmap* bmp)  { }
 
 EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) { 
 	char buffer[800];
-	int len;
 	String str;
 
 	String_InitArray(str, buffer);
