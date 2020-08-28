@@ -447,7 +447,7 @@ static void Codebook_DecodeVectors(struct VorbisState* ctx, struct Codebook* c, 
 #define FLOOR_MAX_CLASSES 16
 #define FLOOR_MAX_VALUES (FLOOR_MAX_PARTITIONS * 8 + 2)
 struct Floor {
-	cc_uint8 partitions, multiplier; cc_int32 range, values;
+	cc_uint8 partitions, multiplier; int range, values;
 	cc_uint8 partitionClasses[FLOOR_MAX_PARTITIONS];
 	cc_uint8 classDimensions[FLOOR_MAX_CLASSES];
 	cc_uint8 classSubClasses[FLOOR_MAX_CLASSES];

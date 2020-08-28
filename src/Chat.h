@@ -36,11 +36,11 @@ extern double Chat_AnnouncementReceived;
 struct ChatCommand;
 /* Represents a client-side command/action. */
 struct ChatCommand {
-	const char* Name;      /* Full name of this command */
+	const char* name;         /* Full name of this command */
 	/* Function pointer for the actual action the command performs */
 	void (*Execute)(const String* args, int argsCount);
-	cc_bool SingleplayerOnly; /* Whether this command is only usable in singleplayer */
-	const char* Help[5];      /* Messages to show when a player uses /help on this command */
+	cc_bool singleplayerOnly; /* Whether this command is only usable in singleplayer */
+	const char* help[5];      /* Messages to show when a player uses /help on this command */
 	struct ChatCommand* next; /* Next command in linked-list of client commands */
 };
 /* Registers a client-side command, allowing it to be used with /client [cmd name] */

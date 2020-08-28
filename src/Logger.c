@@ -80,6 +80,8 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case WAV_ERR_DATA_TYPE:   return "Unsupported WAV audio format";
 	case WAV_ERR_NO_DATA:     return "No audio in WAV";
 
+	case ZIP_ERR_TOO_MANY_ENTRIES: return "Cannot load .zip files with over 1024 entries";
+
 	case PNG_ERR_INVALID_SIG:      return "Only PNG images supported";
 	case PNG_ERR_INVALID_HDR_SIZE: return "Invalid PNG header size";
 	case PNG_ERR_TOO_WIDE:         return "PNG image too wide";
