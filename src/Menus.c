@@ -1865,12 +1865,12 @@ static void KeyBindsScreen_Init(void* screen) {
 	TextWidget_Init(&s->msg);
 	Menu_InitBack(&s->back, Gui.ClassicMenu ? Menu_SwitchClassicOptions : Menu_SwitchOptions); 
 
-	if (!s->leftPage && !s->rightPage) return;
 	ButtonWidget_Init(&s->left,  40, s->leftPage);
 	ButtonWidget_Init(&s->right, 40, s->rightPage);
-
 	s->left.disabled  = !s->leftPage;
 	s->right.disabled = !s->rightPage;
+
+	if (!s->leftPage && !s->rightPage) return;
 	s->numWidgets += 2;
 }
 

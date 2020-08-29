@@ -1262,8 +1262,7 @@ int Window_GetWindowState(void) {
 		net_wm_state, 0, 256, false, xa_atom, &prop_type,
 		&prop_format, &items, &after, &data);
 
-	/* TODO: Check this works right */
-	if (data && items) {
+	if (data) {
 		for (i = 0; i < items; i++) {
 			Atom atom = data[i];
 
@@ -1273,11 +1272,11 @@ int Window_GetWindowState(void) {
 				fullscreen = true;
 			}
 		}
+		XFree(data);
 	}
-	if (data) XFree(data);
 
-	if (fullscreen)     return WINDOW_STATE_FULLSCREEN;
-	if (minimised)      return WINDOW_STATE_MINIMISED;
+	if (fullscreen) return WINDOW_STATE_FULLSCREEN;
+	if (minimised)  return WINDOW_STATE_MINIMISED;
 	return WINDOW_STATE_NORMAL;
 }
 
