@@ -249,17 +249,7 @@ static void Launcher_Init(void) {
 }
 
 static void Launcher_Free(void) {
-	Event_Unregister_(&WindowEvents.Resized,      NULL, OnResize);
-	Event_Unregister_(&WindowEvents.StateChanged, NULL, OnResize);
-	Event_Unregister_(&WindowEvents.Redraw,       NULL, ReqeustRedraw);
-	
-	Event_Unregister_(&InputEvents.Down,     NULL, OnInputDown);
-	Event_Unregister_(&InputEvents.Press,    NULL, OnKeyPress);
-	Event_Unregister_(&InputEvents.Wheel,    NULL, OnMouseWheel);
-	Event_Unregister_(&PointerEvents.Down,   NULL, OnPointerDown);
-	Event_Unregister_(&PointerEvents.Up,     NULL, OnPointerUp);
-	Event_Unregister_(&PointerEvents.Moved,  NULL, OnPointerMove);	
-
+	Event_UnregisterAll();
 	Flags_Free();
 	Font_Free(&logoFont);
 	Font_Free(&Launcher_TitleFont);

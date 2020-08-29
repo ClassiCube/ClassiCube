@@ -48,19 +48,19 @@ void Logger_DialogWarn(const String* msg) {
 const char* Logger_DialogTitle = "Error";
 Logger_DoWarn Logger_WarnFunc  = Logger_DialogWarn;
 
-void Logger_SimpleWarn(cc_result res, const char* place) {
+void Logger_SimpleWarn(cc_result res, const char* action) {
 	String msg; char msgBuffer[128];
 	String_InitArray(msg, msgBuffer);
 
-	String_Format2(&msg, "Error %h when %c", &res, place);
+	String_Format2(&msg, "Error %h when %c", &res, action);
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_SimpleWarn2(cc_result res, const char* place, const String* path) {
+void Logger_SimpleWarn2(cc_result res, const char* action, const String* path) {
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
-	String_Format3(&msg, "Error %h when %c '%s'", &res, place, path);
+	String_Format3(&msg, "Error %h when %c '%s'", &res, action, path);
 	Logger_WarnFunc(&msg);
 }
 
@@ -112,44 +112,44 @@ static void AppendErrorDesc(String* msg, cc_result res, Logger_DescribeError des
 	}
 }
 
-void Logger_SysWarn(cc_result res, const char* place, Logger_DescribeError describeErr) {
+void Logger_SysWarn(cc_result res, const char* action, Logger_DescribeError describeErr) {
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
 	String_Format2(&msg, res < 20000 ? "Error %i when %c" : "Error %h when %c",
-					&res, place);
+					&res, action);
 	AppendErrorDesc(&msg, res, describeErr);
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_SysWarn2(cc_result res, const char* place, const String* path, Logger_DescribeError describeErr) {
+void Logger_SysWarn2(cc_result res, const char* action, const String* path, Logger_DescribeError describeErr) {
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
 	String_Format3(&msg, res < 20000 ? "Error %i when %c '%s'" : "Error %h when %c '%s'",
-					&res, place, path);
+					&res, action, path);
 	AppendErrorDesc(&msg, res, describeErr);
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_DynamicLibWarn(const char* place, const String* path) {
+void Logger_DynamicLibWarn(const char* action, const String* path) {
 	String err; char errBuffer[128];
 	String msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 	String_InitArray(err, errBuffer);
 
-	String_Format2(&msg, "Error %c '%s'", place, path);
+	String_Format2(&msg, "Error %c '%s'", action, path);
 	if (DynamicLib_DescribeError(&err)) {
 		String_Format1(&msg, ":\n    %s", &err);
 	}
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_Warn(cc_result res, const char* place) {
-	Logger_SysWarn(res, place,  Platform_DescribeError);
+void Logger_Warn(cc_result res, const char* action) {
+	Logger_SysWarn(res, action,  Platform_DescribeError);
 }
-void Logger_Warn2(cc_result res, const char* place, const String* path) {
-	Logger_SysWarn2(res, place, path, Platform_DescribeError);
+void Logger_Warn2(cc_result res, const char* action, const String* path) {
+	Logger_SysWarn2(res, action, path, Platform_DescribeError);
 }
 
 
