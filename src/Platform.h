@@ -245,9 +245,11 @@ jobject JavaMakeString(JNIEnv* env, const String* str);
 /* Allocates a java byte array from the given block of memory. */
 jbyteArray JavaMakeBytes(JNIEnv* env, const cc_uint8* src, cc_uint32 len);
 /* Calls a method in the activity class that returns nothing. */
-void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args);
+void JavaCallVoid(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that returns a jint. */
-jint JavaCallInt(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
+jint JavaCallInt(JNIEnv*   env, const char* name, const char* sig, jvalue* args);
+/* Calls a method in the activity class that returns a jint. */
+jlong JavaCallLong(JNIEnv* env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that returns a jint. */
 jfloat JavaCallFloat(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that returns a jobject. */

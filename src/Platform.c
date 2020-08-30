@@ -1298,9 +1298,22 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 const char* const Updater_D3D9 = NULL;
 const char* const Updater_OGL  = NULL;
 
+#if defined CC_BUILD_WEB
+cc_result Updater_GetBuildTime(cc_uint64* t) { return ERR_NOT_SUPPORTED; }
+#else
+cc_result Updater_GetBuildTime(cc_uint64* t) {
+	JNIEnv* env;
+	JavaGetCurrentEnv(env);
+	
+	/* https://developer.android.com/reference/java/io/File#lastModified() */
+	/* lastModified is returned in milliseconds */
+	*t = JavaCallLong(env, "getApkUpdateTime", "()J", NULL) / 1000;
+	return 0;
+}
+#endif
+
 cc_bool Updater_Clean(void)   { return true; }
 cc_result Updater_Start(void) { return ERR_NOT_SUPPORTED; }
-cc_result Updater_GetBuildTime(cc_uint64* t)   { return ERR_NOT_SUPPORTED; }
 cc_result Updater_MarkExecutable(void)         { return 0; }
 cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
@@ -1898,6 +1911,11 @@ void JavaCallVoid(JNIEnv* env, const char* name, const char* sig, jvalue* args) 
 jint JavaCallInt(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
 	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
 	return (*env)->CallIntMethodA(env, App_Instance, method, args);
+}
+
+jlong JavaCallLong(JNIEnv* env, const char* name, const char* sig, jvalue* args) {
+	jmethodID method = (*env)->GetMethodID(env, App_Class, name, sig);
+	return (*env)->CallLongMethodA(env, App_Instance, method, args);
 }
 
 jfloat JavaCallFloat(JNIEnv* env, const char* name, const char* sig, jvalue* args) {

@@ -1,4 +1,5 @@
 package com.classicube;
+import java.io.File;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -14,6 +15,7 @@ import android.content.Context;
 import android.content.ClipboardManager;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.net.Uri;
@@ -389,6 +391,18 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	
 	public String getExternalAppDir() {
 		return getExternalFilesDir(null).getAbsolutePath();
+	}
+	
+	public long getApkUpdateTime() {
+		try {
+			//String name = getPackageName();
+			//ApplicationInfo info = getPackageManager().getApplicationInfo(name, 0);
+			ApplicationInfo info = getApplicationInfo();
+			File apkFile = new File(info.sourceDir);
+			return apkFile.lastModified();
+		} catch (Exception ex) {
+			return 0;
+		}
 	}
 
 	// ======================================
