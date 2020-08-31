@@ -685,7 +685,7 @@ static void HttpCache_MakeEntry(const String* url, struct HttpCacheEntry* entry,
 	String_UNSAFE_Separate(&path, '/', &addr, &_resource);
 	String_UNSAFE_Separate(&addr, ':', &name, &port);
 	/* Address may have unicode characters - need to percent encode them */
-	Http_UrlEncodeUtf8(resource, &_resource);
+	Http_UrlEncodeUrl(resource, &_resource);
 
 	String_InitArray_NT(entry->Address, entry->_addressBuffer);
 	String_Copy(&entry->Address, &name);
@@ -1099,6 +1099,22 @@ void Http_UrlEncodeUtf8(String* dst, const String* src) {
 	for (i = 0; i < src->length; i++) {
 		len = Convert_CP437ToUtf8(src->buffer[i], data);
 		Http_UrlEncode(dst, data, len);
+	}
+}
+
+void Http_UrlEncodeUrl(String* dst, const String* src) {
+	cc_uint8 data[4];
+	int i, len;
+
+	for (i = 0; i < src->length; i++) {
+		len = Convert_CP437ToUtf8(src->buffer[i], data);
+
+		/* '/' must not be URL encoded (it normally would be) */
+		if (src->buffer[i] == '/') {
+			String_Append(dst, '/');
+		} else {
+			Http_UrlEncode(dst, data, len);
+		}
 	}
 }
 

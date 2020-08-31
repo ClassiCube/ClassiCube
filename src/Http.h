@@ -60,6 +60,9 @@ void Http_AsyncGetDataEx(const String* url, cc_bool priority, const String* id, 
 void Http_UrlEncode(String* dst, const cc_uint8* data, int len);
 /* Converts characters to UTF8, then calls Http_URlEncode on them. */
 void Http_UrlEncodeUtf8(String* dst, const String* src);
+/* Converts characters to UTF8, then calls Http_URlEncode on them. */
+/* NOTE: '/' is NOT url encoded, whereas Http_UrlEncodeUtf8 url encodes them */
+void Http_UrlEncodeUrl(String* dst, const String* src);
 /* Outputs more detailed information about errors with http requests. */
 cc_bool Http_DescribeError(cc_result res, String* dst);
 
