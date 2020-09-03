@@ -290,6 +290,7 @@ struct Widget* HUDScreen_GetHotbar(void) {
 #define GROUP_NAME_ID UInt16_MaxValue
 #define LIST_COLUMN_PADDING 5
 #define LIST_NAMES_PER_COLUMN 16
+#define TABLIST_MAX_ENTRIES (TABLIST_MAX_NAMES * 2)
 typedef int (*TabListEntryCompare)(int x, int y);
 
 static struct TabListOverlay {
@@ -300,9 +301,10 @@ static struct TabListOverlay {
 	struct TextWidget title;
 	struct FontDesc font;
 	TabListEntryCompare compare;
-	cc_uint16 ids[TABLIST_MAX_NAMES * 2];
-	struct Texture textures[TABLIST_MAX_NAMES * 2];
+	cc_uint16 ids[TABLIST_MAX_ENTRIES];
+	struct Texture textures[TABLIST_MAX_ENTRIES];
 } TabListOverlay_Instance;
+#define TABLIST_MAX_VERTICES (TEXTWIDGET_MAX + 4 * TABLIST_MAX_ENTRIES)
 
 static void TabListOverlay_DrawName(struct Texture* tex, struct TabListOverlay* s, const String* name) {
 	String tmp; char tmpBuffer[STRING_SIZE];
@@ -1525,8 +1527,7 @@ static void LoadingScreen_BuildMesh(void* screen) {
 	TextureLoc loc;
 	int atlasIndex, i;
 
-	data = (struct VertexTextured*)Gfx_LockDynamicVb(s->vb, 
-										VERTEX_FORMAT_TEXTURED, s->maxVertices);
+	data = Screen_LockVb(s);
 	ptr  = &data;
 
 	loc       = Block_Tex(BLOCK_DIRT, FACE_YMAX);

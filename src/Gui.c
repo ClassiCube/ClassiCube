@@ -419,6 +419,12 @@ void Screen_CreateVb(void* screen) {
 	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, s->maxVertices);
 }
 
+struct VertexTextured* Screen_LockVb(void* screen) {
+	struct Screen* s = (struct Screen*)screen;
+	return (struct VertexTextured*)Gfx_LockDynamicVb(s->vb,
+										VERTEX_FORMAT_TEXTURED, s->maxVertices);
+}
+
 void Screen_BuildMesh(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
@@ -426,8 +432,7 @@ void Screen_BuildMesh(void* screen) {
 	struct VertexTextured** ptr;
 	int i;
 
-	data = (struct VertexTextured*)Gfx_LockDynamicVb(s->vb, 
-										VERTEX_FORMAT_TEXTURED, s->maxVertices);
+	data = Screen_LockVb(s);
 	ptr  = &data;
 
 	for (i = 0; i < s->numWidgets; i++) {

@@ -104,6 +104,7 @@ void Screen_Layout(void* screen);
 /* Also deletes the screen's vb. */
 void Screen_ContextLost(void* screen);
 void Screen_CreateVb(void* screen);
+struct VertexTextured* Screen_LockVb(void* screen);
 void Screen_BuildMesh(void* screen);
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);

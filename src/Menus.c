@@ -3192,8 +3192,7 @@ static void TexIdsOverlay_BuildMesh(void* screen) {
 	struct VertexTextured* data;
 	struct VertexTextured** ptr;
 
-	data = (struct VertexTextured*)Gfx_LockDynamicVb(s->vb, 
-										VERTEX_FORMAT_TEXTURED, s->maxVertices);
+	data = Screen_LockVb(s);
 	ptr  = &data;
 
 	Widget_BuildMesh(&s->title, ptr);
