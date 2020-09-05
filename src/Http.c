@@ -1054,24 +1054,19 @@ cc_bool Http_GetResult(int reqID, struct HttpRequest* item) {
 	return i >= 0;
 }
 
-cc_bool Http_GetCurrent(struct HttpRequest* request, int* progress) {
+cc_bool Http_GetCurrent(int* reqID, int* progress) {
 	Mutex_Lock(curRequestMutex);
 	{
-		*request  = http_curRequest;
+		*reqID    = http_curRequest.id;
 		*progress = http_curProgress;
 	}
 	Mutex_Unlock(curRequestMutex);
-	return request->id != 0;
+	return *reqID != 0;
 }
 
 int Http_CheckProgress(int reqID) {
 	int curReqID, progress;
-	Mutex_Lock(curRequestMutex);
-	{
-		curReqID = http_curRequest.id;
-		progress = http_curProgress;
-	}
-	Mutex_Unlock(curRequestMutex);
+	Http_GetCurrent(&curReqID, &progress);
 
 	if (reqID != curReqID) progress = HTTP_PROGRESS_NOT_WORKING_ON;
 	return progress;

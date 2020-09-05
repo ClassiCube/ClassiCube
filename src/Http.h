@@ -72,7 +72,7 @@ cc_bool Http_DescribeError(cc_result res, String* dst);
 /* (Data may still be non NULL even on error, e.g. on a http 404 error) */
 cc_bool Http_GetResult(int reqID, struct HttpRequest* item);
 /* Retrieves information about the request currently being processed. */
-cc_bool Http_GetCurrent(struct HttpRequest* request, int* progress);
+cc_bool Http_GetCurrent(int* reqID, int* progress);
 /* Retrieves information about the download progress of the given request. */
 /* NOTE: This may return HTTP_PROGRESS_NOT_WORKING_ON if download has finished. */
 /*   As such, this method should always be paired with a call to Http_GetResult. */

@@ -1098,13 +1098,13 @@ static void ResourcesScreen_SetStatus(const String* str) {
 	LWidget_Draw(w);
 }
 
-static void ResourcesScreen_UpdateStatus(struct HttpRequest* req) {
+static void ResourcesScreen_UpdateStatus(int reqID) {
 	String str; char strBuffer[STRING_SIZE];
 	const char* name;
 	struct LLabel* w = &ResourcesScreen_Instance.lblStatus;
 	int count;
 
-	name = Fetcher_RequestName(req->id);
+	name = Fetcher_RequestName(reqID);
 	if (!name) return;
 
 	String_InitArray(str, strBuffer);
@@ -1116,11 +1116,10 @@ static void ResourcesScreen_UpdateStatus(struct HttpRequest* req) {
 }
 
 static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
-	struct HttpRequest req;
-	int progress;
+	int reqID, progress;
 
-	if (!Http_GetCurrent(&req, &progress)) return;
-	ResourcesScreen_UpdateStatus(&req);
+	if (!Http_GetCurrent(&reqID, &progress)) return;
+	ResourcesScreen_UpdateStatus(reqID);
 	/* making request still, haven't started download yet */
 	if (progress < 0 || progress > 100) return;
 
