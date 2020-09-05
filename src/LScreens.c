@@ -1100,14 +1100,16 @@ static void ResourcesScreen_SetStatus(const String* str) {
 
 static void ResourcesScreen_UpdateStatus(struct HttpRequest* req) {
 	String str; char strBuffer[STRING_SIZE];
-	String id;
+	const char* name;
 	struct LLabel* w = &ResourcesScreen_Instance.lblStatus;
 	int count;
 
-	id = String_FromRawArray(req->id);
+	name = Fetcher_RequestName(req->id);
+	if (!name) return;
+
 	String_InitArray(str, strBuffer);
 	count = Fetcher_Downloaded + 1;
-	String_Format3(&str, "&eFetching %s.. (%i/%i)", &id, &count, &Resources_Count);
+	String_Format3(&str, "&eFetching %c.. (%i/%i)", name, &count, &Resources_Count);
 
 	if (String_Equals(&str, &w->text)) return;
 	ResourcesScreen_SetStatus(&str);

@@ -699,7 +699,7 @@ static cc_bool Collisions_DidSlide(struct CollisionsComp* comp, struct AABB* blo
 	float yDist = blockBB->Max.Y - entityBB->Min.Y;
 	struct AABB adjBB;
 
-	if (yDist > 0.0f && yDist <= comp->Entity->StepSize + 0.01f) {
+	if (yDist > 0.0f && yDist <= comp->StepSize + 0.01f) {
 		float blockBB_MinX = max(blockBB->Min.X, blockBB->Max.X - size->X / 2);
 		float blockBB_MaxX = min(blockBB->Max.X, blockBB->Min.X + size->X / 2);
 		float blockBB_MinZ = max(blockBB->Min.Z, blockBB->Max.Z - size->Z / 2);

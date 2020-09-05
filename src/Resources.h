@@ -25,6 +25,8 @@ extern cc_result Fetcher_Result;
 /* Whether a resource failed to download. */
 extern cc_bool Fetcher_Failed;
 
+/* Finds name of resource associated with given http request. */
+const char* Fetcher_RequestName(int reqID);
 /* Starts asynchronous download of missing resources. */
 void Fetcher_Run(void);
 /* Checks if any resources have finished downloading. */

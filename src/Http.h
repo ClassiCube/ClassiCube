@@ -45,8 +45,7 @@ int HttpRequest_NextID(void);
 
 /* Aschronously performs a http GET request to download a skin. */
 /* If url is a skin, downloads from there. (if not, downloads from SKIN_SERVER/[skinName].png) */
-/* ID of the request is set to skinName. */
-void Http_AsyncGetSkin(const String* skinName);
+void Http_AsyncGetSkin(const String* skinName, int reqID);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 void Http_AsyncGetData(const String* url, cc_bool priority, int reqID);
 /* Asynchronously performs a http HEAD request. (e.g. to get Content-Length header) */

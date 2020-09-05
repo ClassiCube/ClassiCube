@@ -110,6 +110,7 @@ void ShadowComponent_Draw(struct Entity* entity);
 struct CollisionsComp {
 	struct Entity* Entity;
 	cc_bool HitXMin, HitYMin, HitZMin, HitXMax, HitYMax, HitZMax, WasOn;
+	float StepSize;
 };
 cc_bool Collisions_HitHorizontal(struct CollisionsComp* comp);
 void Collisions_MoveAndWallSlide(struct CollisionsComp* comp);

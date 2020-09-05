@@ -1018,7 +1018,7 @@ static void Http_WorkerLoop(void) {
 #define SKIN_SERVER "http://classicube.s3.amazonaws.com/skin/"
 #endif
 
-void Http_AsyncGetSkin(const String* skinName) {
+void Http_AsyncGetSkin(const String* skinName, int reqID) {
 	String url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 
@@ -1027,7 +1027,7 @@ void Http_AsyncGetSkin(const String* skinName) {
 	} else {
 		String_Format1(&url, SKIN_SERVER "%s.png", skinName);
 	}
-	Http_AsyncGetData(&url, false, skinName);
+	Http_AsyncGetData(&url, false, reqID);
 }
 
 void Http_AsyncGetData(const String* url, cc_bool priority, int reqID) {
