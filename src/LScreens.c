@@ -1529,11 +1529,7 @@ static void UpdatesScreen_CheckTick(struct UpdatesScreen* s) {
 
 static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTask* task) {
 	String str; char strBuffer[STRING_SIZE];
-	struct HttpRequest item;
-	int progress;
-	if (!Http_GetCurrent(&item, &progress)) return;
-
-	if (item.id != task->reqID)       return;
+	int progress = Http_CheckProgress(task->reqID);
 	if (progress == s->buildProgress) return;
 
 	s->buildProgress = progress;

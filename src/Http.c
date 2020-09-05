@@ -99,7 +99,7 @@ static volatile cc_bool http_terminate;
 static struct RequestList pendingReqs;
 static struct RequestList processedReqs;
 static struct HttpRequest http_curRequest;
-static volatile int http_curProgress = HTTP_PROGRESS_NOTHING;
+static volatile int http_curProgress = HTTP_PROGRESS_NOT_WORKING_ON;
 
 #ifdef CC_BUILD_WEB
 static void Http_DownloadNextAsync(void);
@@ -219,7 +219,7 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 	Mutex_Lock(curRequestMutex);
 	{
 		http_curRequest.id = 0;
-		http_curProgress   = HTTP_PROGRESS_NOTHING;
+		http_curProgress   = HTTP_PROGRESS_NOT_WORKING_ON;
 	}
 	Mutex_Unlock(curRequestMutex);
 }
@@ -1062,6 +1062,19 @@ cc_bool Http_GetCurrent(struct HttpRequest* request, int* progress) {
 	}
 	Mutex_Unlock(curRequestMutex);
 	return request->id != 0;
+}
+
+int Http_CheckProgress(int reqID) {
+	int curReqID, progress;
+	Mutex_Lock(curRequestMutex);
+	{
+		curReqID = http_curRequest.id;
+		progress = http_curProgress;
+	}
+	Mutex_Unlock(curRequestMutex);
+
+	if (reqID != curReqID) progress = HTTP_PROGRESS_NOT_WORKING_ON;
+	return progress;
 }
 
 void Http_ClearPending(void) {

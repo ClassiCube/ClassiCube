@@ -850,22 +850,9 @@ static void ChatScreen_EnterChatInput(struct ChatScreen* s, cc_bool close) {
 }
 
 static void ChatScreen_UpdateTexpackStatus(struct ChatScreen* s) {
-	static const String texPack = String_FromConst("texturePack");
-	struct HttpRequest request;
-	int progress;
-	cc_bool hasRequest = Http_GetCurrent(&request, &progress);
-
-	/* Is terrain/texture pack currently being downloaded? */
-	if (!hasRequest || request.id != TexturePack_ReqID) {
-		if (s->status.textures[0].ID) {
-			Chat_Status[0].length = 0;
-			TextGroupWidget_Redraw(&s->status, 0);
-		}
-		s->lastDownloadStatus = Int32_MinValue;
-		return;
-	}
-
+	int progress = Http_CheckProgress(TexturePack_ReqID);
 	if (progress == s->lastDownloadStatus) return;
+
 	s->lastDownloadStatus = progress;
 	Chat_Status[0].length = 0;
 
@@ -1258,8 +1245,8 @@ static const struct ScreenVTABLE ChatScreen_VTABLE = {
 	ChatScreen_Layout, ChatScreen_ContextLost, ChatScreen_ContextRecreated
 };
 void ChatScreen_Show(void) {
-	struct ChatScreen* s   = &ChatScreen_Instance;
-	s->lastDownloadStatus = Int32_MinValue;
+	struct ChatScreen* s  = &ChatScreen_Instance;
+	s->lastDownloadStatus = HTTP_PROGRESS_NOT_WORKING_ON;
 
 	s->VTABLE = &ChatScreen_VTABLE;
 	Gui_Chat  = s;
