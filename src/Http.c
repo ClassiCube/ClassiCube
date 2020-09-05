@@ -312,7 +312,8 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 #include <emscripten/fetch.h>
 
 cc_bool Http_DescribeError(cc_result res, String* dst) { return false; }
-static void Http_AddHeader(const char* key, const String* value);
+/* web browsers do caching already, so don't need last modified/etags */
+static void Http_AddHeader(const char* key, const String* value) { }
 
 static void Http_UpdateProgress(emscripten_fetch_t* fetch) {
 	if (!fetch->totalBytes) return;
@@ -338,7 +339,7 @@ static void Http_FinishedAsync(emscripten_fetch_t* fetch) {
 	emscripten_fetch_close(fetch);
 
 	if (req->data) Platform_Log1("HTTP returned data: %i bytes", &req->size);
-	Http_FinishRequest(&http_curRequest);
+	Http_FinishRequest(req);
 	Http_WorkerSignal();
 }
 
@@ -410,23 +411,22 @@ static void Http_WorkerSignal(void) {
 #ifndef CC_BUILD_WEB
 static void* workerWaitable;
 static void* workerThread;
-static cc_uint32 bufferSize;
 
 /* Allocates initial data buffer to store response contents */
 static void Http_BufferInit(struct HttpRequest* req) {
 	http_curProgress = 0;
-	bufferSize = req->contentLength ? req->contentLength : 1;
-	req->data  = (cc_uint8*)Mem_Alloc(bufferSize, 1, "http get data");
-	req->size  = 0;
+	req->_capacity = req->contentLength ? req->contentLength : 1;
+	req->data      = (cc_uint8*)Mem_Alloc(req->_capacity, 1, "http data");
+	req->size      = 0;
 }
 
 /* Ensures data buffer has enough space left to append amount bytes, reallocates if not */
 static void Http_BufferEnsure(struct HttpRequest* req, cc_uint32 amount) {
 	cc_uint32 newSize = req->size + amount;
-	if (newSize <= bufferSize) return;
+	if (newSize <= req->_capacity) return;
 
-	bufferSize = newSize;
-	req->data  = (cc_uint8*)Mem_Realloc(req->data, newSize, 1, "http inc data");
+	req->_capacity = newSize;
+	req->data      = (cc_uint8*)Mem_Realloc(req->data, newSize, 1, "http data+");
 }
 
 /* Increases size and updates current progress */
@@ -554,14 +554,14 @@ static void Http_AddHeader(const char* key, const String* value) {
 }
 
 /* Processes a HTTP header downloaded from the server */
-static size_t Http_ProcessHeader(char *buffer, size_t size, size_t nitems, void* userdata) {
+static size_t Http_ProcessHeader(char* buffer, size_t size, size_t nitems, void* userdata) {
 	struct HttpRequest* req = (struct HttpRequest*)userdata;
-	String line = String_Init(buffer, nitems, nitems);
-
+	String line;
 	/* line usually has \r\n at end */
-	if (line.length && line.buffer[line.length - 1] == '\n') line.length--;
-	if (line.length && line.buffer[line.length - 1] == '\r') line.length--;
+	if (nitems && buffer[nitems - 1] == '\n') nitems--;
+	if (nitems && buffer[nitems - 1] == '\r') nitems--;
 
+	line = String_Init(buffer, nitems, nitems);
 	Http_ParseHeader(req, &line);
 	return nitems;
 }
@@ -570,7 +570,7 @@ static size_t Http_ProcessHeader(char *buffer, size_t size, size_t nitems, void*
 static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, void* userdata) {
 	struct HttpRequest* req = (struct HttpRequest*)userdata;
 
-	if (!bufferSize) Http_BufferInit(req);
+	if (!req->_capacity) Http_BufferInit(req);
 	Http_BufferEnsure(req, nitems);
 
 	Mem_Copy(&req->data[req->size], buffer, nitems);
@@ -623,7 +623,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 		_curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 	}
 
-	bufferSize = 0;
+	req->_capacity   = 0;
 	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = _curl_easy_perform(curl);
 	http_curProgress = 100;
@@ -658,6 +658,7 @@ static void Http_BackendFree(void) {
 #include <windows.h>
 #include <wininet.h>
 static HINTERNET hInternet;
+static HINTERNET curReq;
 
 /* caches connections to web servers */
 struct HttpCacheEntry {
@@ -749,7 +750,6 @@ static void Http_BackendInit(void) {
 	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
 }
 
-static HINTERNET curReq;
 static void Http_AddHeader(const char* key, const String* value) {
 	String tmp; char tmpBuffer[1024];
 	String_InitArray(tmp, tmpBuffer);
@@ -893,7 +893,7 @@ static void JNICALL java_HttpParseHeader(JNIEnv* env, jobject o, jstring header)
 /* Processes a chunk of data downloaded from the web server */
 static void JNICALL java_HttpAppendData(JNIEnv* env, jobject o, jbyteArray arr, jint len) {
 	struct HttpRequest* req = java_req;
-	if (!bufferSize) Http_BufferInit(req);
+	if (!req->_capacity) Http_BufferInit(req);
 
 	Http_BufferEnsure(req, len);
 	(*env)->GetByteArrayRegion(env, arr, 0, len, &req->data[req->size]);
@@ -947,7 +947,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	Http_AddHeader("User-Agent", &userAgent);
 	if (req->data && (res = Http_SetData(env, req))) return res;
 
-	bufferSize = 0;
+	req->_capacity   = 0;
 	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = JavaCallInt(env, "httpPerform", "()I", NULL);
 	http_curProgress = 100;
@@ -1008,7 +1008,7 @@ static void Http_WorkerInit(void) {
 static void Http_WorkerStart(void) {
 	workerThread = Thread_Start(WorkerLoop, false);
 }
-static void Http_WorkerSignal(void) { Waitable_Signal(&workerWaitable); }
+static void Http_WorkerSignal(void) { Waitable_Signal(workerWaitable); }
 
 static void Http_WorkerStop(void) { 
 	Thread_Join(workerThread);
