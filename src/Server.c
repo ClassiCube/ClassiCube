@@ -50,9 +50,8 @@ void Server_RetrieveTexturePack(const String* url) {
 }
 
 static void Server_CheckAsyncResources(void) {
-	static const String texPack = String_FromConst("texturePack");
 	struct HttpRequest item;
-	if (!Http_GetResult(&texPack, &item)) return;
+	if (!Http_GetResult(TexturePack_ReqID, &item)) return;
 
 	if (item.success) {
 		TexturePack_Apply(&item);

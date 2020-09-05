@@ -208,7 +208,7 @@ static void LWebTask_Reset(struct LWebTask* task) {
 void LWebTask_Tick(struct LWebTask* task) {
 	struct HttpRequest req;
 	if (task->completed) return;
-	if (!Http_GetResult(&task->identifier, &req)) return;
+	if (!Http_GetResult(task->reqID, &req)) return;
 
 	task->res    = req.result;
 	task->status = req.statusCode;
@@ -241,17 +241,18 @@ static void GetTokenTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void GetTokenTask_Run(void) {
-	static const String id  = String_FromConst("CC get token");
 	static const String url = String_FromConst("https://www.classicube.net/api/login");
 	static char tokenBuffer[STRING_SIZE];
+	int reqID;
 	if (GetTokenTask.Base.working) return;
 
 	LWebTask_Reset(&GetTokenTask.Base);
 	String_InitArray(GetTokenTask.token, tokenBuffer);
 
-	GetTokenTask.Base.identifier = id;
-	Http_AsyncGetDataEx(&url, false, &id, NULL, NULL, &ccCookies);
-	GetTokenTask.Base.Handle     = GetTokenTask_Handle;
+	reqID = HttpRequest_NextID();
+	GetTokenTask.Base.reqID  = reqID;
+	GetTokenTask.Base.Handle = GetTokenTask_Handle;
+	Http_AsyncGetDataEx(&url, false, reqID, NULL, NULL, &ccCookies);
 }
 
 
@@ -299,9 +300,9 @@ static void SignInTask_Append(String* dst, const char* key, const String* value)
 }
 
 void SignInTask_Run(const String* user, const String* pass, const String* mfaCode) {
-	static const String id  = String_FromConst("CC post login");
 	static const String url = String_FromConst("https://www.classicube.net/api/login");
 	String args; char argsBuffer[1024];
+	int reqID;
 	if (SignInTask.Base.working) return;
 
 	LWebTask_Reset(&SignInTask.Base);
@@ -315,9 +316,10 @@ void SignInTask_Run(const String* user, const String* pass, const String* mfaCod
 	SignInTask_Append(&args, "&token=",      &GetTokenTask.token);
 	SignInTask_Append(&args, "&login_code=", mfaCode);
 
-	SignInTask.Base.identifier = id;
-	Http_AsyncPostData(&url, false, &id, args.buffer, args.length, &ccCookies);
-	SignInTask.Base.Handle     = SignInTask_Handle;
+	reqID = HttpRequest_NextID();
+	SignInTask.Base.reqID  = reqID;
+	SignInTask.Base.Handle = SignInTask_Handle;
+	Http_AsyncPostData(&url, false, reqID, args.buffer, args.length, &ccCookies);
 }
 
 
@@ -381,8 +383,8 @@ static void FetchServerTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void FetchServerTask_Run(const String* hash) {
-	static const String id  = String_FromConst("CC fetch server");
 	String url; char urlBuffer[URL_MAX_SIZE];
+	int reqID;
 	if (FetchServerTask.Base.working) return;
 
 	LWebTask_Reset(&FetchServerTask.Base);
@@ -390,9 +392,10 @@ void FetchServerTask_Run(const String* hash) {
 	String_InitArray(url, urlBuffer);
 	String_Format1(&url, "https://www.classicube.net/api/server/%s", hash);
 
-	FetchServerTask.Base.identifier = id;
-	Http_AsyncGetDataEx(&url, false, &id, NULL, NULL, &ccCookies);
-	FetchServerTask.Base.Handle  = FetchServerTask_Handle;
+	reqID = HttpRequest_NextID();
+	FetchServerTask.Base.reqID  = reqID;
+	FetchServerTask.Base.Handle = FetchServerTask_Handle;
+	Http_AsyncGetDataEx(&url, false, reqID, NULL, NULL, &ccCookies);
 }
 
 
@@ -434,14 +437,15 @@ static void FetchServersTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void FetchServersTask_Run(void) {
-	static const String id  = String_FromConst("CC fetch servers");
 	static const String url = String_FromConst("https://www.classicube.net/api/servers");
+	int reqID;
 	if (FetchServersTask.Base.working) return;
 	LWebTask_Reset(&FetchServersTask.Base);
 
-	FetchServersTask.Base.identifier = id;
-	Http_AsyncGetDataEx(&url, false, &id, NULL, NULL, &ccCookies);
+	reqID = HttpRequest_NextID();
+	FetchServersTask.Base.reqID  = reqID;
 	FetchServersTask.Base.Handle = FetchServersTask_Handle;
+	Http_AsyncGetDataEx(&url, false, reqID, NULL, NULL, &ccCookies);
 }
 
 void FetchServersTask_ResetOrder(void) {
@@ -484,16 +488,17 @@ static void CheckUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void CheckUpdateTask_Run(void) {
-	static const String id  = String_FromConst("CC update check");
 	static const String url = String_FromConst("http://cs.classicube.net/c_client/builds.json");
+	int reqID;
 	if (CheckUpdateTask.Base.working) return;
 
 	LWebTask_Reset(&CheckUpdateTask.Base);
 	String_InitArray(CheckUpdateTask.latestRelease, relVersionBuffer);
 
-	CheckUpdateTask.Base.identifier = id;
-	Http_AsyncGetData(&url, false, &id);
-	CheckUpdateTask.Base.Handle     = CheckUpdateTask_Handle;
+	reqID = HttpRequest_NextID();
+	CheckUpdateTask.Base.reqID  = reqID;
+	CheckUpdateTask.Base.Handle = CheckUpdateTask_Handle;
+	Http_AsyncGetData(&url, false, reqID);
 }
 
 
@@ -520,16 +525,14 @@ static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
-	static char idBuffer[24];
-	static int idCounter;
 	String url; char urlBuffer[URL_MAX_SIZE];
+	int reqID;
 	String_InitArray(url, urlBuffer);
 
-	String_InitArray(FetchUpdateTask.Base.identifier, idBuffer);
-	String_Format1(&FetchUpdateTask.Base.identifier, "CC update fetch%i", &idCounter);
 	/* User may click another update button in the updates menu before original update finished downloading */
 	/* Hence must use a different ID for each update fetch, otherwise old update gets downloaded and applied */
-	idCounter++;
+	reqID = HttpRequest_NextID();
+	FetchUpdateTask.Base.reqID = reqID;
 
 	String_Format2(&url, "http://cs.classicube.net/c_client/%c/%c",
 		release ? "release"    : "latest",
@@ -537,10 +540,9 @@ void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
 	if (FetchUpdateTask.Base.working) return;
 
 	LWebTask_Reset(&FetchUpdateTask.Base);
-	FetchUpdateTask.timestamp = release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;
-
-	Http_AsyncGetData(&url, false, &FetchUpdateTask.Base.identifier);
+	FetchUpdateTask.timestamp   = release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;
 	FetchUpdateTask.Base.Handle = FetchUpdateTask_Handle;
+	Http_AsyncGetData(&url, false, reqID);
 }
 
 
@@ -589,9 +591,9 @@ static void FetchFlagsTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 static void FetchFlagsTask_DownloadNext(void) {
-	static const String id = String_FromConst("CC get flag");
 	String url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
+	int reqID;
 
 	if (FetchFlagsTask.Base.working)        return;
 	if (FetchFlagsTask.count == flagsCount) return;
@@ -600,9 +602,10 @@ static void FetchFlagsTask_DownloadNext(void) {
 	String_Format2(&url, "http://static.classicube.net/img/flags/%r%r.png",
 			&flags[FetchFlagsTask.count].country[0], &flags[FetchFlagsTask.count].country[1]);
 
-	FetchFlagsTask.Base.identifier = id;
-	Http_AsyncGetData(&url, false, &id);
+	reqID = HttpRequest_NextID();
+	FetchFlagsTask.Base.reqID  = reqID;
 	FetchFlagsTask.Base.Handle = FetchFlagsTask_Handle;
+	Http_AsyncGetData(&url, false, reqID);
 }
 
 static void FetchFlagsTask_Ensure(void) {

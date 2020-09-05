@@ -11,6 +11,9 @@ void HttpRequest_Free(struct HttpRequest* request) {
 	request->size = 0;
 }
 
+static int nextReqID;
+int HttpRequest_NextID(void) { return ++nextReqID; }
+
 /*########################################################################################################################*
 *----------------------------------------------------Http requests list---------------------------------------------------*
 *#########################################################################################################################*/
@@ -57,13 +60,11 @@ static void RequestList_RemoveAt(struct RequestList* list, int i) {
 }
 
 /* Finds index of request whose id matches the given id */
-static int RequestList_Find(struct RequestList* list, const String* id, struct HttpRequest* item) {
-	String reqID;
+static int RequestList_Find(struct RequestList* list, int id, struct HttpRequest* item) {
 	int i;
 
 	for (i = 0; i < list->count; i++) {
-		reqID = String_FromRawArray(list->entries[i].id);
-		if (!String_Equals(id, &reqID)) continue;
+		if (id != list->entries[i].id) continue;
 
 		*item = list->entries[i];
 		return i;
@@ -98,21 +99,21 @@ static volatile cc_bool http_terminate;
 static struct RequestList pendingReqs;
 static struct RequestList processedReqs;
 static struct HttpRequest http_curRequest;
-static volatile int http_curProgress = ASYNC_PROGRESS_NOTHING;
+static volatile int http_curProgress = HTTP_PROGRESS_NOTHING;
 
 #ifdef CC_BUILD_WEB
 static void Http_DownloadNextAsync(void);
 #endif
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
-static void Http_Add(const String* url, cc_bool priority, const String* id, cc_uint8 type, const String* lastModified, 
+static void Http_Add(const String* url, cc_bool priority, int reqID, cc_uint8 type, const String* lastModified,
 					const String* etag, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
 	struct HttpRequest req = { 0 };
 
 	String_CopyToRawArray(req.url, url);
 	Platform_Log2("Adding %s (type %b)", url, &type);
 
-	String_CopyToRawArray(req.id, id);
+	req.id = reqID;
 	req.requestType = type;
 	
 	if (lastModified) {
@@ -177,7 +178,7 @@ static void Http_BeginRequest(struct HttpRequest* req, String* url) {
 	Mutex_Lock(curRequestMutex);
 	{
 		http_curRequest  = *req;
-		http_curProgress = ASYNC_PROGRESS_MAKING_REQUEST;
+		http_curProgress = HTTP_PROGRESS_MAKING_REQUEST;
 	}
 	Mutex_Unlock(curRequestMutex);
 }
@@ -185,11 +186,10 @@ static void Http_BeginRequest(struct HttpRequest* req, String* url) {
 /* Adds given request to list of processed/completed requests */
 static void Http_CompleteRequest(struct HttpRequest* req) {
 	struct HttpRequest older;
-	String id = String_FromRawArray(req->id);
 	int index;
 	req->timeDownloaded = DateTime_CurrentUTC_MS();
 
-	index = RequestList_Find(&processedReqs, &id, &older);
+	index = RequestList_Find(&processedReqs, req->id, &older);
 	if (index >= 0) {
 		/* very rare case - priority item was inserted, then inserted again (so put before first item), */
 		/* and both items got downloaded before an external function removed them from the queue */
@@ -218,8 +218,8 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 
 	Mutex_Lock(curRequestMutex);
 	{
-		http_curRequest.id[0] = '\0';
-		http_curProgress = ASYNC_PROGRESS_NOTHING;
+		http_curRequest.id = 0;
+		http_curProgress   = HTTP_PROGRESS_NOTHING;
 	}
 	Mutex_Unlock(curRequestMutex);
 }
@@ -626,7 +626,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	}
 
 	bufferSize = 0;
-	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
+	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = _curl_easy_perform(curl);
 	http_curProgress = 100;
 
@@ -831,7 +831,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	HttpRequest_Free(req);
 	if (res) return res;
 
-	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
+	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = Http_ProcessHeaders(req, handle);
 	if (res) { InternetCloseHandle(handle); return res; }
 
@@ -950,7 +950,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	if (req->data && (res = Http_SetData(env, req))) return res;
 
 	bufferSize = 0;
-	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
+	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = JavaCallInt(env, "httpPerform", "()I", NULL);
 	http_curProgress = 100;
 	return res;
@@ -1030,24 +1030,24 @@ void Http_AsyncGetSkin(const String* skinName) {
 	Http_AsyncGetData(&url, false, skinName);
 }
 
-void Http_AsyncGetData(const String* url, cc_bool priority, const String* id) {
-	Http_Add(url, priority, id, REQUEST_TYPE_GET, NULL, NULL, NULL, 0, NULL);
+void Http_AsyncGetData(const String* url, cc_bool priority, int reqID) {
+	Http_Add(url, priority, reqID, REQUEST_TYPE_GET, NULL, NULL, NULL, 0, NULL);
 }
-void Http_AsyncGetHeaders(const String* url, cc_bool priority, const String* id) {
-	Http_Add(url, priority, id, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0, NULL);
+void Http_AsyncGetHeaders(const String* url, cc_bool priority, int reqID) {
+	Http_Add(url, priority, reqID, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0, NULL);
 }
-void Http_AsyncPostData(const String* url, cc_bool priority, const String* id, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
-	Http_Add(url, priority, id, REQUEST_TYPE_POST, NULL, NULL, data, size, cookies);
+void Http_AsyncPostData(const String* url, cc_bool priority, int reqID, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
+	Http_Add(url, priority, reqID, REQUEST_TYPE_POST, NULL, NULL, data, size, cookies);
 }
-void Http_AsyncGetDataEx(const String* url, cc_bool priority, const String* id, const String* lastModified, const String* etag, struct StringsBuffer* cookies) {
-	Http_Add(url, priority, id, REQUEST_TYPE_GET, lastModified, etag, NULL, 0, cookies);
+void Http_AsyncGetDataEx(const String* url, cc_bool priority, int reqID, const String* lastModified, const String* etag, struct StringsBuffer* cookies) {
+	Http_Add(url, priority, reqID, REQUEST_TYPE_GET, lastModified, etag, NULL, 0, cookies);
 }
 
-cc_bool Http_GetResult(const String* id, struct HttpRequest* item) {
+cc_bool Http_GetResult(int reqID, struct HttpRequest* item) {
 	int i;
 	Mutex_Lock(processedMutex);
 	{
-		i = RequestList_Find(&processedReqs, id, item);
+		i = RequestList_Find(&processedReqs, reqID, item);
 		if (i >= 0) RequestList_RemoveAt(&processedReqs, i);
 	}
 	Mutex_Unlock(processedMutex);
@@ -1061,7 +1061,7 @@ cc_bool Http_GetCurrent(struct HttpRequest* request, int* progress) {
 		*progress = http_curProgress;
 	}
 	Mutex_Unlock(curRequestMutex);
-	return request->id[0];
+	return request->id != 0;
 }
 
 void Http_ClearPending(void) {

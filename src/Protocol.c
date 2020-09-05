@@ -219,16 +219,8 @@ static void UpdateUserType(struct HacksComp* hacks, cc_uint8 value) {
 *#########################################################################################################################*/
 /* Partially based on information from http://files.worldofminecraft.com/texturing/ */
 /* NOTE: http://files.worldofminecraft.com/ has been down for quite a while, so support was removed on Oct 10, 2015 */
-
-static char wom_identifierBuffer[32];
-static String wom_identifier = String_FromArray(wom_identifierBuffer);
-static int wom_counter;
+static int wom_identifier;
 static cc_bool wom_sendId, wom_sentId;
-
-static void WoM_UpdateIdentifier(void) {
-	wom_identifier.length = 0;
-	String_Format1(&wom_identifier, "womenv_%i", &wom_counter);
-}
 
 static void WoM_CheckMotd(void) {
 	String url; char urlBuffer[STRING_SIZE];
@@ -248,9 +240,8 @@ static void WoM_CheckMotd(void) {
 
 	/* Ensure that if the user quickly changes to a different world, env settings from old world aren't
 	applied in the new world if the async 'get env request' didn't complete before the old world was unloaded */
-	wom_counter++;
-	WoM_UpdateIdentifier();
-	Http_AsyncGetData(&url, true, &wom_identifier);
+	wom_identifier = HttpRequest_NextID();
+	Http_AsyncGetData(&url, true, wom_identifier);
 	wom_sendId = true;
 }
 
@@ -303,14 +294,13 @@ static void WoM_ParseConfig(struct HttpRequest* item) {
 }
 
 static void WoM_Reset(void) {
-	wom_counter = 0;
-	WoM_UpdateIdentifier();
+	wom_identifier = HttpRequest_NextID();
 	wom_sendId = false; wom_sentId = false;
 }
 
 static void WoM_Tick(void) {
 	struct HttpRequest item;
-	if (!Http_GetResult(&wom_identifier, &item)) return;
+	if (!Http_GetResult(wom_identifier, &item)) return;
 	if (!item.success) return;
 
 	WoM_ParseConfig(&item);

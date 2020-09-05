@@ -19,6 +19,7 @@
 *#########################################################################################################################*/
 struct _Atlas2DData Atlas2D;
 struct _Atlas1DData Atlas1D;
+int TexturePack_ReqID;
 
 TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index) {
 	TextureRec rec;
@@ -398,7 +399,7 @@ void TexturePack_Apply(struct HttpRequest* item) {
 	usingDefault = false;
 }
 
-void TexturePack_DownloadAsync(const String* url, const String* id) {
+void TexturePack_DownloadAsync(const String* url) {
 	String etag = String_Empty;
 	String time = String_Empty;
 
@@ -408,7 +409,7 @@ void TexturePack_DownloadAsync(const String* url, const String* id) {
 		time = GetCachedLastModified(url);
 		etag = GetCachedETag(url);
 	}
-	Http_AsyncGetDataEx(url, true, id, &time, &etag, NULL);
+	Http_AsyncGetDataEx(url, true, TexturePack_ReqID, &time, &etag, NULL);
 }
 
 
@@ -445,6 +446,7 @@ static void OnInit(void) {
 	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
 	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 
+	TexturePack_ReqID = HttpRequest_NextID();
 	Options_Get(OPT_DEFAULT_TEX_PACK, &defTexPack, "default.zip");
 	TextureCache_Init();
 }

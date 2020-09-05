@@ -3367,11 +3367,12 @@ static struct TexPackOverlay {
 	Screen_Body
 	cc_bool deny, alwaysDeny;
 	cc_uint32 contentLength;
-	String url, identifier;
+	String url;
+	int reqID;
 	struct FontDesc textFont;
 	struct ButtonWidget btns[4];
 	struct TextWidget   lbls[4];
-	char _identifierBuffer[STRING_SIZE + 4];
+	char _urlBuffer[STRING_SIZE + 1];
 } TexPackOverlay;
 
 static struct Widget* texpack_widgets[8] = {
@@ -3446,7 +3447,7 @@ static void TexPackOverlay_UpdateLine3(struct TexPackOverlay* s) {
 static void TexPackOverlay_Update(void* screen, double delta) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
 	struct HttpRequest item;
-	if (!Http_GetResult(&s->identifier, &item)) return;
+	if (!Http_GetResult(s->reqID, &item)) return;
 
 	s->dirty         = true;
 	s->contentLength = item.contentLength;
@@ -3527,11 +3528,11 @@ void TexPackOverlay_Show(const String* url) {
 	s->closable   = true;
 	s->VTABLE     = &TexPackOverlay_VTABLE;
 	
-	String_InitArray(s->identifier, s->_identifierBuffer);
-	String_Format1(&s->identifier, "CL_%s", url);
-	s->url = String_UNSAFE_SubstringAt(&s->identifier, 3);
+	String_InitArray(s->url, s->_urlBuffer);
+	String_Copy(&s->url, url);
 
-	Http_AsyncGetHeaders(url, true, &s->identifier);
+	s->reqID = HttpRequest_NextID();
+	Http_AsyncGetHeaders(url, true, s->reqID);
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_TEXPACK);
 }
 

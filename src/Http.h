@@ -14,14 +14,14 @@ extern struct IGameComponent Http_Component;
 
 enum HttpRequestType { REQUEST_TYPE_GET, REQUEST_TYPE_HEAD, REQUEST_TYPE_POST };
 enum HttpProgress {
-	ASYNC_PROGRESS_NOTHING        = -3,
-	ASYNC_PROGRESS_MAKING_REQUEST = -2,
-	ASYNC_PROGRESS_FETCHING_DATA  = -1
+	HTTP_PROGRESS_NOTHING        = -3,
+	HTTP_PROGRESS_MAKING_REQUEST = -2,
+	HTTP_PROGRESS_FETCHING_DATA  = -1
 };
 
 struct HttpRequest {
 	char url[URL_MAX_SIZE]; /* URL data is downloaded from/uploaded to. */
-	char id[URL_MAX_SIZE];  /* Unique identifier for this request. */
+	int id;                 /* Unique identifier for this request. */
 	cc_uint64 _timeAdded;   /* Timestamp this request was added to requests queue. */
 	TimeMS timeDownloaded;  /* Time response contents were completely downloaded. */
 	int statusCode;         /* HTTP status code returned in the response. */
@@ -40,21 +40,23 @@ struct HttpRequest {
 
 /* Frees data from a HTTP request. */
 void HttpRequest_Free(struct HttpRequest* request);
+/* Returns next unique ID for http requests */
+int HttpRequest_NextID(void);
 
 /* Aschronously performs a http GET request to download a skin. */
 /* If url is a skin, downloads from there. (if not, downloads from SKIN_SERVER/[skinName].png) */
 /* ID of the request is set to skinName. */
 void Http_AsyncGetSkin(const String* skinName);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
-void Http_AsyncGetData(const String* url, cc_bool priority, const String* id);
+void Http_AsyncGetData(const String* url, cc_bool priority, int reqID);
 /* Asynchronously performs a http HEAD request. (e.g. to get Content-Length header) */
-void Http_AsyncGetHeaders(const String* url, cc_bool priority, const String* id);
+void Http_AsyncGetHeaders(const String* url, cc_bool priority, int reqID);
 /* Asynchronously performs a http POST request. (e.g. to submit data) */
 /* NOTE: You don't have to persist data, a copy is made of it. */
-void Http_AsyncPostData(const String* url, cc_bool priority, const String* id, const void* data, cc_uint32 size, struct StringsBuffer* cookies);
+void Http_AsyncPostData(const String* url, cc_bool priority, int reqID, const void* data, cc_uint32 size, struct StringsBuffer* cookies);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 /* Also sets the If-Modified-Since and If-None-Match headers. (if not NULL)  */
-void Http_AsyncGetDataEx(const String* url, cc_bool priority, const String* id, const String* lastModified, const String* etag, struct StringsBuffer* cookies);
+void Http_AsyncGetDataEx(const String* url, cc_bool priority, int reqID, const String* lastModified, const String* etag, struct StringsBuffer* cookies);
 
 /* Encodes data using % or URL encoding. */
 void Http_UrlEncode(String* dst, const cc_uint8* data, int len);
@@ -69,7 +71,7 @@ cc_bool Http_DescribeError(cc_result res, String* dst);
 /* Attempts to retrieve a fully completed request. */
 /* NOTE: You MUST check Success for whether it completed successfully. */
 /* (Data may still be non NULL even on error, e.g. on a http 404 error) */
-cc_bool Http_GetResult(const String* id, struct HttpRequest* item);
+cc_bool Http_GetResult(int reqID, struct HttpRequest* item);
 /* Retrieves information about the request currently being processed. */
 cc_bool Http_GetCurrent(struct HttpRequest* request, int* progress);
 /* Clears the list of pending requests. */
