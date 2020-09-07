@@ -747,17 +747,16 @@ void TabList_Set(EntityID id, const String* player, const String* list, const St
 	Event_RaiseInt(events, id);
 }
 
-static void TabList_Free(void) { StringsBuffer_Clear(&TabList._buffer); }
-static void TabList_Reset(void) {
+static void TabList_Clear(void) {
 	Mem_Set(TabList.NameOffsets, 0, sizeof(TabList.NameOffsets));
 	Mem_Set(TabList.GroupRanks,  0, sizeof(TabList.GroupRanks));
 	StringsBuffer_Clear(&TabList._buffer);
 }
 
 struct IGameComponent TabList_Component = {
-	NULL,         /* Init  */
-	TabList_Free, /* Free  */
-	TabList_Reset /* Reset */
+	NULL,          /* Init  */
+	TabList_Clear, /* Free  */
+	TabList_Clear  /* Reset */
 };
 
 

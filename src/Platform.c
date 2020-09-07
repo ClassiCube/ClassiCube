@@ -757,7 +757,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	gettimeofday(&tv, NULL);
 
 	/* absolute time for some silly reason */
-	ts.tv_sec = tv.tv_sec + milliseconds / 1000;
+	ts.tv_sec  = tv.tv_sec + milliseconds / 1000;
 	ts.tv_nsec = 1000 * (tv.tv_usec + 1000 * (milliseconds % 1000));
 	ts.tv_sec += ts.tv_nsec / NS_PER_SEC;
 	ts.tv_nsec %= NS_PER_SEC;
