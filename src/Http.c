@@ -275,7 +275,7 @@ static void Http_ParseHeader(struct HttpRequest* req, const String* line) {
 }
 
 /* Adds a http header to the request headers. */
-static void Http_AddHeader(const char* key, const String* value);
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const String* value);
 
 /* Adds all the appropriate headers for a request. */
 static void Http_SetRequestHeaders(struct HttpRequest* req) {
@@ -285,14 +285,14 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 
 	if (req->lastModified[0]) {
 		str = String_FromRawArray(req->lastModified);
-		Http_AddHeader("If-Modified-Since", &str);
+		Http_AddHeader(req, "If-Modified-Since", &str);
 	}
 	if (req->etag[0]) {
 		str = String_FromRawArray(req->etag);
-		Http_AddHeader("If-None-Match", &str);
+		Http_AddHeader(req, "If-None-Match", &str);
 	}
 
-	if (req->data) Http_AddHeader("Content-Type", &contentType);
+	if (req->data) Http_AddHeader(req, "Content-Type", &contentType);
 	if (!req->cookies || !req->cookies->count) return;
 
 	String_InitArray(cookies, cookiesBuffer);
@@ -301,7 +301,7 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 		str = StringsBuffer_UNSAFE_Get(req->cookies, i);
 		String_AppendString(&cookies, &str);
 	}
-	Http_AddHeader("Cookie", &cookies);
+	Http_AddHeader(req, "Cookie", &cookies);
 }
 
 /*########################################################################################################################*
@@ -313,7 +313,7 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 
 cc_bool Http_DescribeError(cc_result res, String* dst) { return false; }
 /* web browsers do caching already, so don't need last modified/etags */
-static void Http_AddHeader(const char* key, const String* value) { }
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const String* value) { }
 
 static void Http_UpdateProgress(emscripten_fetch_t* fetch) {
 	if (!fetch->totalBytes) return;
@@ -543,14 +543,13 @@ static void Http_BackendInit(void) {
 	curlSupported = true;
 }
 
-static struct curl_slist* headers_list;
-static void Http_AddHeader(const char* key, const String* value) {
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const String* value) {
 	String tmp; char tmpBuffer[1024];
 	String_InitArray_NT(tmp, tmpBuffer);
 	String_Format2(&tmp, "%c: %s", key, value);
 
 	tmp.buffer[tmp.length] = '\0';
-	headers_list = _curl_slist_append(headers_list, tmp.buffer);
+	req->meta = _curl_slist_append((struct curl_slist*)req->meta, tmp.buffer);
 }
 
 /* Processes a HTTP header downloaded from the server */
@@ -590,7 +589,7 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 	_curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
 }
 
-static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
+static cc_result Http_BackendDo(struct HttpRequest* req, String* url) {
 	char urlStr[NATIVE_STR_LEN];
 	void* post_data = req->data;
 	CURLcode res;
@@ -600,9 +599,9 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 		return ERR_NOT_SUPPORTED;
 	}
 
-	headers_list = NULL;
+	req->meta = NULL;
 	Http_SetRequestHeaders(req);
-	_curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers_list);
+	_curl_easy_setopt(curl, CURLOPT_HTTPHEADER, req->meta);
 
 	Http_SetCurlOpts(req);
 	Platform_ConvertString(urlStr, url);
@@ -628,7 +627,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	res = _curl_easy_perform(curl);
 	http_curProgress = 100;
 
-	_curl_slist_free_all(headers_list);
+	_curl_slist_free_all((struct curl_slist*)req->meta);
 	/* can free now that request has finished */
 	Mem_Free(post_data);
 	return res;
@@ -658,7 +657,6 @@ static void Http_BackendFree(void) {
 #include <windows.h>
 #include <wininet.h>
 static HINTERNET hInternet;
-static HINTERNET curReq;
 
 /* caches connections to web servers */
 struct HttpCacheEntry {
@@ -750,12 +748,13 @@ static void Http_BackendInit(void) {
 	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
 }
 
-static void Http_AddHeader(const char* key, const String* value) {
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const String* value) {
 	String tmp; char tmpBuffer[1024];
 	String_InitArray(tmp, tmpBuffer);
 
 	String_Format2(&tmp, "%c: %s\r\n", key, value);
-	HttpAddRequestHeadersA(curReq, tmp.buffer, tmp.length, HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
+	HttpAddRequestHeadersA((HINTERNET)req->meta, tmp.buffer, tmp.length, 
+							HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
 }
 
 /* Creates and sends a HTTP requst */
@@ -776,8 +775,8 @@ static cc_result Http_StartRequest(struct HttpRequest* req, String* url, HINTERN
 
 	*handle = HttpOpenRequestA(entry.Handle, verbs[req->requestType], 
 								pathBuffer, NULL, NULL, NULL, flags, 0);
-	curReq  = *handle;
-	if (!curReq) return GetLastError();
+	req->meta = *handle;
+	if (!req->meta) return GetLastError();
 
 	/* ignore revocation stuff */
 	bufferLen = sizeof(flags);
@@ -823,7 +822,7 @@ static cc_result Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 	return 0;
 }
 
-static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
+static cc_result Http_BackendDo(struct HttpRequest* req, String* url) {
 	HINTERNET handle;
 	cc_result res = Http_StartRequest(req, url, &handle);
 	HttpRequest_Free(req);
@@ -870,7 +869,7 @@ cc_bool Http_DescribeError(cc_result res, String* dst) {
 	return true;
 }
 
-static void Http_AddHeader(const char* key, const String* value) {
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const String* value) {
 	JNIEnv* env;
 	jvalue args[2];
 
@@ -934,7 +933,7 @@ static cc_result Http_SetData(JNIEnv* env, struct HttpRequest* req) {
 	return res;
 }
 
-static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
+static cc_result Http_BackendDo(struct HttpRequest* req, String* url) {
 	static const String userAgent = String_FromConst(GAME_APP_NAME);
 	JNIEnv* env;
 	jint res;
@@ -944,7 +943,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	java_req = req;
 
 	Http_SetRequestHeaders(req);
-	Http_AddHeader("User-Agent", &userAgent);
+	Http_AddHeader(req, "User-Agent", &userAgent);
 	if (req->data && (res = Http_SetData(env, req))) return res;
 
 	req->_capacity   = 0;
@@ -990,7 +989,7 @@ static void WorkerLoop(void) {
 		Http_BeginRequest(&request, &url);
 
 		beg = Stopwatch_Measure();
-		request.result = Http_SysDo(&request, &url);
+		request.result = Http_BackendDo(&request, &url);
 		end = Stopwatch_Measure();
 
 		elapsed = (int)Stopwatch_ElapsedMilliseconds(beg, end);
