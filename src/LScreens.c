@@ -264,11 +264,8 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 
 static void ChooseModeScreen_Show(struct LScreen* s_) {
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;	
-
 	s->lblHelp.hidden = !s->firstTime;
 	s->btnBack.hidden = s->firstTime;
-	s->seps[0].col    = Launcher_ButtonBorderCol;
-	s->seps[1].col    = Launcher_ButtonBorderCol;
 }
 
 static void ChooseModeScreen_Layout(struct LScreen* s_) {
@@ -1572,8 +1569,6 @@ static void UpdatesScreen_DevOpenGL(void* w, int x, int y) { UpdatesScreen_Get(f
 
 static void UpdatesScreen_Init(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
-	s->seps[0].col = Launcher_ButtonBorderCol;
-	s->seps[1].col = Launcher_ButtonBorderCol;
 	s->widgets = s->_widgets;
 
 	LLabel_Init(s_,  &s->lblYour, "Your build: (unknown)");
@@ -1606,8 +1601,6 @@ static void UpdatesScreen_Show(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;
 	cc_uint64 buildTime;
 	cc_result res;
-	s->seps[0].col = Launcher_ButtonBorderCol;
-	s->seps[1].col = Launcher_ButtonBorderCol;
 
 	/* Initially fill out with update check result from main menu */
 	if (CheckUpdateTask.Base.completed && CheckUpdateTask.Base.success) {

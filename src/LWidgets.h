@@ -109,7 +109,6 @@ CC_NOINLINE void LLabel_SetConst(struct LLabel* w, const char* text);
 /* Represents a coloured translucent line separator. */
 struct LLine {
 	LWidget_Layout
-	BitmapCol col;
 };
 CC_NOINLINE void LLine_Init(struct LScreen* s, struct LLine* w, int width);
 

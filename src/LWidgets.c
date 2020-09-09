@@ -618,9 +618,11 @@ void LLabel_SetConst(struct LLabel* w, const char* text) {
 /*########################################################################################################################*
 *-------------------------------------------------------BoxWidget---------------------------------------------------------*
 *#########################################################################################################################*/
+#define CLASSIC_LINE_COL BitmapCol_Make(128,128,128, 255)
 static void LLine_Draw(void* widget) {
 	struct LLine* w = (struct LLine*)widget;
-	Gradient_Blend(&Launcher_Framebuffer, w->col, 128, w->x, w->y, w->width, w->height);
+	BitmapCol col   = Launcher_ClassicBackground ? CLASSIC_LINE_COL : Launcher_ButtonBorderCol;
+	Gradient_Blend(&Launcher_Framebuffer, col, 128, w->x, w->y, w->width, w->height);
 }
 
 static const struct LWidgetVTABLE lline_VTABLE = {
