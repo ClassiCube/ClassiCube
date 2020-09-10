@@ -555,14 +555,15 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const Strin
 /* Processes a HTTP header downloaded from the server */
 static size_t Http_ProcessHeader(char* buffer, size_t size, size_t nitems, void* userdata) {
 	struct HttpRequest* req = (struct HttpRequest*)userdata;
+	size_t len = nitems;
 	String line;
 	/* line usually has \r\n at end */
-	if (nitems && buffer[nitems - 1] == '\n') nitems--;
-	if (nitems && buffer[nitems - 1] == '\r') nitems--;
+	if (len && buffer[len - 1] == '\n') len--;
+	if (len && buffer[len - 1] == '\r') len--;
 
-	line = String_Init(buffer, nitems, nitems);
+	line = String_Init(buffer, len, len);
 	Http_ParseHeader(req, &line);
-	return nitems;
+	return len;
 }
 
 /* Processes a chunk of data downloaded from the web server */
