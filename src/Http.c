@@ -563,7 +563,7 @@ static size_t Http_ProcessHeader(char* buffer, size_t size, size_t nitems, void*
 
 	line = String_Init(buffer, len, len);
 	Http_ParseHeader(req, &line);
-	return len;
+	return nitems;
 }
 
 /* Processes a chunk of data downloaded from the web server */
