@@ -80,7 +80,7 @@ struct Entity {
 	cc_bool ModelRestrictedScale; /* true to restrict model scale (needed for local player, giant model collisions are too costly) */
 	struct AABB ModelAABB;
 	Vec3 ModelScale, Size;
-	float StepSize;
+	int _skinReqID;
 	
 	cc_uint8 SkinType;
 	cc_uint8 SkinFetchState;

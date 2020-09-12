@@ -152,8 +152,7 @@ static char textureUrlBuffer[STRING_SIZE];
 String World_TextureUrl = String_FromArray(textureUrlBuffer);
 
 void World_ApplyTexturePack(const String* url) {
-	static const String texPack = String_FromConst("texturePack");
-	if (url->length) TexturePack_DownloadAsync(url, &texPack);
+	if (url->length) TexturePack_DownloadAsync(url);
 
 	if (String_Equals(url, &World_TextureUrl)) return;
 	String_Copy(&World_TextureUrl, url);

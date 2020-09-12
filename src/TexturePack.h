@@ -80,6 +80,8 @@ void TextureCache_Deny(const String* url);
 /* Clears the list of denied URLs, returning number removed. */
 int TextureCache_ClearDenied(void);
 
+/* ID of texture pack http request */
+extern int TexturePack_ReqID;
 /* Sets the filename of the default texture pack used. */
 void TexturePack_SetDefault(const String* texPack);
 /* If World_TextureUrl is empty, extracts user's default texture pack. */
@@ -87,7 +89,7 @@ void TexturePack_SetDefault(const String* texPack);
 void TexturePack_ExtractCurrent(cc_bool forceReload);
 /* Asynchronously downloads a texture pack. */
 /* NOTE: This does not load cached textures - use TexturePack_ExtractCurrent for that. */
-void TexturePack_DownloadAsync(const String* url, const String* id);
+void TexturePack_DownloadAsync(const String* url);
 /* Extracts a texture pack or terrain.png from given downloaded data. */
 /* Also updates cached data associated with the given URL. */
 void TexturePack_Apply(struct HttpRequest* item);

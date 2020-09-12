@@ -850,32 +850,15 @@ static void ChatScreen_EnterChatInput(struct ChatScreen* s, cc_bool close) {
 }
 
 static void ChatScreen_UpdateTexpackStatus(struct ChatScreen* s) {
-	static const String texPack = String_FromConst("texturePack");
-	struct HttpRequest request;
-	int progress;
-	cc_bool hasRequest;
-	String identifier;
-	
-	hasRequest = Http_GetCurrent(&request, &progress);
-	identifier = String_FromRawArray(request.id);	
-
-	/* Is terrain/texture pack currently being downloaded? */
-	if (!hasRequest || !String_Equals(&identifier, &texPack)) {
-		if (s->status.textures[0].ID) {
-			Chat_Status[0].length = 0;
-			TextGroupWidget_Redraw(&s->status, 0);
-		}
-		s->lastDownloadStatus = Int32_MinValue;
-		return;
-	}
-
+	int progress = Http_CheckProgress(TexturePack_ReqID);
 	if (progress == s->lastDownloadStatus) return;
+
 	s->lastDownloadStatus = progress;
 	Chat_Status[0].length = 0;
 
-	if (progress == ASYNC_PROGRESS_MAKING_REQUEST) {
+	if (progress == HTTP_PROGRESS_MAKING_REQUEST) {
 		String_AppendConst(&Chat_Status[0], "&eRetrieving texture pack..");
-	} else if (progress == ASYNC_PROGRESS_FETCHING_DATA) {
+	} else if (progress == HTTP_PROGRESS_FETCHING_DATA) {
 		String_AppendConst(&Chat_Status[0], "&eDownloading texture pack");
 	} else if (progress >= 0 && progress <= 100) {
 		String_Format1(&Chat_Status[0], "&eDownloading texture pack (&7%i&e%%)", &progress);
@@ -1262,8 +1245,8 @@ static const struct ScreenVTABLE ChatScreen_VTABLE = {
 	ChatScreen_Layout, ChatScreen_ContextLost, ChatScreen_ContextRecreated
 };
 void ChatScreen_Show(void) {
-	struct ChatScreen* s   = &ChatScreen_Instance;
-	s->lastDownloadStatus = Int32_MinValue;
+	struct ChatScreen* s  = &ChatScreen_Instance;
+	s->lastDownloadStatus = HTTP_PROGRESS_NOT_WORKING_ON;
 
 	s->VTABLE = &ChatScreen_VTABLE;
 	Gui_Chat  = s;

@@ -47,8 +47,8 @@ struct LWebTask {
 	cc_result res;     /* Error returned (e.g. for DNS failure) */
 	int status;        /* HTTP return code for the request */
 	
-	String identifier; /* Unique identifier for this web task. */
-	String url;        /* URL this task is downloading from/uploading to. */
+	int reqID;  /* Unique identifier for this web task. */
+	String url; /* URL this task is downloading from/uploading to. */
 	/* Called when task successfully downloaded/uploaded data. */
 	void (*Handle)(cc_uint8* data, cc_uint32 len);
 };

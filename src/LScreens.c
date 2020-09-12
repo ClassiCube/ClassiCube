@@ -1095,27 +1095,28 @@ static void ResourcesScreen_SetStatus(const String* str) {
 	LWidget_Draw(w);
 }
 
-static void ResourcesScreen_UpdateStatus(struct HttpRequest* req) {
+static void ResourcesScreen_UpdateStatus(int reqID) {
 	String str; char strBuffer[STRING_SIZE];
-	String id;
+	const char* name;
 	struct LLabel* w = &ResourcesScreen_Instance.lblStatus;
 	int count;
 
-	id = String_FromRawArray(req->id);
+	name = Fetcher_RequestName(reqID);
+	if (!name) return;
+
 	String_InitArray(str, strBuffer);
 	count = Fetcher_Downloaded + 1;
-	String_Format3(&str, "&eFetching %s.. (%i/%i)", &id, &count, &Resources_Count);
+	String_Format3(&str, "&eFetching %c.. (%i/%i)", name, &count, &Resources_Count);
 
 	if (String_Equals(&str, &w->text)) return;
 	ResourcesScreen_SetStatus(&str);
 }
 
 static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
-	struct HttpRequest req;
-	int progress;
+	int reqID, progress;
 
-	if (!Http_GetCurrent(&req, &progress)) return;
-	ResourcesScreen_UpdateStatus(&req);
+	if (!Http_GetCurrent(&reqID, &progress)) return;
+	ResourcesScreen_UpdateStatus(reqID);
 	/* making request still, haven't started download yet */
 	if (progress < 0 || progress > 100) return;
 
@@ -1524,13 +1525,7 @@ static void UpdatesScreen_CheckTick(struct UpdatesScreen* s) {
 
 static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTask* task) {
 	String str; char strBuffer[STRING_SIZE];
-	String identifier;
-	struct HttpRequest item;
-	int progress;
-	if (!Http_GetCurrent(&item, &progress)) return;
-
-	identifier = String_FromRawArray(item.id);
-	if (!String_Equals(&identifier, &task->identifier)) return;
+	int progress = Http_CheckProgress(task->reqID);
 	if (progress == s->buildProgress) return;
 
 	s->buildProgress = progress;

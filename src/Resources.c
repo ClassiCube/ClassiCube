@@ -26,6 +26,7 @@ static struct FileResource {
 	const char* url;
 	short size;
 	cc_bool downloaded;
+	int reqID;
 	/* downloaded archive */
 	cc_uint8* data; cc_uint32 len;
 } fileResources[4] = {
@@ -50,9 +51,10 @@ static struct ResourceTexture {
 	{ "animations.png" }, { "animations.txt" }
 };
 
-static const struct SoundResource {
+static struct SoundResource {
 	const char* name;
 	const char* hash;
+	int reqID;
 } soundResources[59] = {
 	{ "dig_cloth1",  "5fd568d724ba7d53911b6cccf5636f859d2662e8" }, { "dig_cloth2",  "56c1d0ac0de2265018b2c41cb571cc6631101484" },
 	{ "dig_cloth3",  "9c63f2a3681832dc32d206f6830360bfe94b5bfc" }, { "dig_cloth4",  "55da1856e77cfd31a7e8c3d358e1f856c5583198" },
@@ -92,6 +94,7 @@ static struct MusicResource {
 	const char* hash;
 	short size;
 	cc_bool downloaded;
+	int reqID;
 } musicResources[7] = {
 	{ "calm1.ogg", "50a59a4f56e4046701b758ddbb1c1587efa4cadf", 2472 },
 	{ "calm2.ogg", "74da65c99aa578486efa7b69983d3533e14c0d6e", 1931 },
@@ -710,18 +713,32 @@ cc_bool Fetcher_Working, Fetcher_Completed, Fetcher_Failed;
 int  Fetcher_StatusCode, Fetcher_Downloaded;
 cc_result Fetcher_Result;
 
-CC_NOINLINE static void Fetcher_DownloadAudio(const char* name, const char* hash) {
+CC_NOINLINE static void Fetcher_DownloadAudio(int reqID, const char* hash) {
 	String url; char urlBuffer[URL_MAX_SIZE];
-	String id = String_FromReadonly(name);
 
 	String_InitArray(url, urlBuffer);
 	String_Format3(&url, "http://resources.download.minecraft.net/%r%r/%c", 
 					&hash[0], &hash[1], hash);
-	Http_AsyncGetData(&url, false, &id);
+	Http_AsyncGetData(&url, false, reqID);
+}
+
+const char* Fetcher_RequestName(int reqID) {
+	int i;
+
+	for (i = 0; i < Array_Elems(fileResources); i++) {
+		if (reqID == fileResources[i].reqID)  return fileResources[i].name;
+	}
+	for (i = 0; i < Array_Elems(musicResources); i++) {
+		if (reqID == musicResources[i].reqID) return musicResources[i].name;
+	}
+	for (i = 0; i < Array_Elems(soundResources); i++) {
+		if (reqID == soundResources[i].reqID) return soundResources[i].name;
+	}
+	return NULL;
 }
 
 void Fetcher_Run(void) {
-	String id, url;
+	String url;
 	int i;
 	if (Fetcher_Working) return;
 
@@ -733,18 +750,22 @@ void Fetcher_Run(void) {
 	for (i = 0; i < Array_Elems(fileResources); i++) {
 		if (allTexturesExist) continue;
 
-		id  = String_FromReadonly(fileResources[i].name);
 		url = String_FromReadonly(fileResources[i].url);
-		Http_AsyncGetData(&url, false, &id);
+		fileResources[i].reqID = HttpRequest_NextID();
+		Http_AsyncGetData(&url, false, fileResources[i].reqID);
 	}
 
 	for (i = 0; i < Array_Elems(musicResources); i++) {
 		if (musicResources[i].downloaded) continue;
-		Fetcher_DownloadAudio(musicResources[i].name,  musicResources[i].hash);
+
+		musicResources[i].reqID = HttpRequest_NextID();
+		Fetcher_DownloadAudio(musicResources[i].reqID, musicResources[i].hash);
 	}
 	for (i = 0; i < Array_Elems(soundResources); i++) {
 		if (allSoundsExist) continue;
-		Fetcher_DownloadAudio(soundResources[i].name, soundResources[i].hash);
+
+		soundResources[i].reqID = HttpRequest_NextID();
+		Fetcher_DownloadAudio(soundResources[i].reqID, soundResources[i].hash);
 	}
 }
 
@@ -753,8 +774,8 @@ static void Fetcher_Finish(void) {
 	Fetcher_Working   = false;
 }
 
-CC_NOINLINE static cc_bool Fetcher_Get(const String* id, struct HttpRequest* req) {
-	if (!Http_GetResult(id, req)) return false;
+CC_NOINLINE static cc_bool Fetcher_Get(int reqID, struct HttpRequest* req) {
+	if (!Http_GetResult(reqID, req)) return false;
 
 	if (req->success) {
 		Fetcher_Downloaded++;
@@ -771,9 +792,8 @@ CC_NOINLINE static cc_bool Fetcher_Get(const String* id, struct HttpRequest* req
 }
 
 static void Fetcher_CheckFile(struct FileResource* file) {
-	String id = String_FromReadonly(file->name);
 	struct HttpRequest req;
-	if (!Fetcher_Get(&id, &req)) return;
+	if (!Fetcher_Get(file->reqID, &req)) return;
 	
 	file->downloaded = true;
 	file->data       = req.data;
@@ -782,9 +802,8 @@ static void Fetcher_CheckFile(struct FileResource* file) {
 }
 
 static void Fetcher_CheckMusic(struct MusicResource* music) {
-	String id = String_FromReadonly(music->name);
 	struct HttpRequest req;
-	if (!Fetcher_Get(&id, &req)) return;
+	if (!Fetcher_Get(music->reqID, &req)) return;
 
 	music->downloaded = true;
 	MusicPatcher_Save(music->name, &req);
@@ -792,9 +811,8 @@ static void Fetcher_CheckMusic(struct MusicResource* music) {
 }
 
 static void Fetcher_CheckSound(const struct SoundResource* sound) {
-	String id = String_FromReadonly(sound->name);
 	struct HttpRequest req;
-	if (!Fetcher_Get(&id, &req)) return;
+	if (!Fetcher_Get(sound->reqID, &req)) return;
 
 	SoundPatcher_Save(sound->name, &req);
 	HttpRequest_Free(&req);

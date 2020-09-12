@@ -73,7 +73,7 @@ void Entity_Init(struct Entity* e) {
 	Vec3_Set(e->ModelScale, 1,1,1);
 	e->uScale     = 1.0f;
 	e->vScale     = 1.0f;
-	e->StepSize   = 0.5f;
+	e->_skinReqID = 0;
 	e->SkinRaw[0] = '\0';
 	e->NameRaw[0] = '\0';
 	Entity_SetModel(e, &model);
@@ -457,7 +457,8 @@ static void Entity_CheckSkin(struct Entity* e) {
 	if (!e->SkinFetchState) {
 		first = Entity_FirstOtherWithSameSkinAndFetchedSkin(e);
 		if (!first) {
-			Http_AsyncGetSkin(&skin);
+			e->_skinReqID = HttpRequest_NextID();
+			Http_AsyncGetSkin(&skin, e->_skinReqID);
 			e->SkinFetchState = SKIN_FETCH_DOWNLOADING;
 		} else {
 			Entity_CopySkin(e, first);
@@ -466,7 +467,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 		}
 	}
 
-	if (!Http_GetResult(&skin, &item)) return;
+	if (!Http_GetResult(e->_skinReqID, &item)) return;
 	if (!item.success) { Entity_SetSkinAll(e, true); return; }
 
 	Stream_ReadonlyMemory(&mem, item.data, item.size);
@@ -826,7 +827,7 @@ static void LocalPlayer_Tick(struct Entity* e, double delta) {
 	Vec3 headingVelocity;
 
 	if (!World.Loaded) return;
-	e->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanSpeed ? 1.0f : 0.5f;
+	p->Collisions.StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanSpeed ? 1.0f : 0.5f;
 	p->OldVelocity = e->Velocity;
 	wasOnGround    = e->OnGround;
 

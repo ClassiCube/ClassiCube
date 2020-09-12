@@ -11,6 +11,9 @@ void HttpRequest_Free(struct HttpRequest* request) {
 	request->size = 0;
 }
 
+static int nextReqID;
+int HttpRequest_NextID(void) { return ++nextReqID; }
+
 /*########################################################################################################################*
 *----------------------------------------------------Http requests list---------------------------------------------------*
 *#########################################################################################################################*/
@@ -57,13 +60,11 @@ static void RequestList_RemoveAt(struct RequestList* list, int i) {
 }
 
 /* Finds index of request whose id matches the given id */
-static int RequestList_Find(struct RequestList* list, const String* id, struct HttpRequest* item) {
-	String reqID;
+static int RequestList_Find(struct RequestList* list, int id, struct HttpRequest* item) {
 	int i;
 
 	for (i = 0; i < list->count; i++) {
-		reqID = String_FromRawArray(list->entries[i].id);
-		if (!String_Equals(id, &reqID)) continue;
+		if (id != list->entries[i].id) continue;
 
 		*item = list->entries[i];
 		return i;
@@ -88,8 +89,6 @@ static void RequestList_Free(struct RequestList* list) {
 /*########################################################################################################################*
 *--------------------------------------------------Common downloader code-------------------------------------------------*
 *#########################################################################################################################*/
-static void* workerWaitable;
-static void* workerThread;
 static void* pendingMutex;
 static void* processedMutex;
 static void* curRequestMutex;
@@ -98,21 +97,22 @@ static volatile cc_bool http_terminate;
 static struct RequestList pendingReqs;
 static struct RequestList processedReqs;
 static struct HttpRequest http_curRequest;
-static volatile int http_curProgress = ASYNC_PROGRESS_NOTHING;
+static volatile int http_curProgress = HTTP_PROGRESS_NOT_WORKING_ON;
 
-#ifdef CC_BUILD_WEB
-static void Http_DownloadNextAsync(void);
-#endif
+static void Http_WorkerInit(void);
+static void Http_WorkerStart(void);
+static void Http_WorkerSignal(void);
+static void Http_WorkerStop(void);
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
-static void Http_Add(const String* url, cc_bool priority, const String* id, cc_uint8 type, const String* lastModified, 
+static void Http_Add(const String* url, cc_bool priority, int reqID, cc_uint8 type, const String* lastModified,
 					const String* etag, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
 	struct HttpRequest req = { 0 };
 
 	String_CopyToRawArray(req.url, url);
 	Platform_Log2("Adding %s (type %b)", url, &type);
 
-	String_CopyToRawArray(req.id, id);
+	req.id = reqID;
 	req.requestType = type;
 	
 	if (lastModified) {
@@ -139,12 +139,7 @@ static void Http_Add(const String* url, cc_bool priority, const String* id, cc_u
 		}
 	}
 	Mutex_Unlock(pendingMutex);
-
-#ifndef CC_BUILD_WEB
-	Waitable_Signal(workerWaitable);
-#else
-	Http_DownloadNextAsync();
-#endif
+	Http_WorkerSignal();
 }
 
 static const String urlRewrites[4] = {
@@ -177,27 +172,26 @@ static void Http_BeginRequest(struct HttpRequest* req, String* url) {
 	Mutex_Lock(curRequestMutex);
 	{
 		http_curRequest  = *req;
-		http_curProgress = ASYNC_PROGRESS_MAKING_REQUEST;
+		http_curProgress = HTTP_PROGRESS_MAKING_REQUEST;
 	}
 	Mutex_Unlock(curRequestMutex);
 }
 
 /* Adds given request to list of processed/completed requests */
 static void Http_CompleteRequest(struct HttpRequest* req) {
-	struct HttpRequest older;
-	String id = String_FromRawArray(req->id);
+	struct HttpRequest existing;
 	int index;
 	req->timeDownloaded = DateTime_CurrentUTC_MS();
 
-	index = RequestList_Find(&processedReqs, &id, &older);
+	index = RequestList_Find(&processedReqs, req->id, &existing);
 	if (index >= 0) {
 		/* very rare case - priority item was inserted, then inserted again (so put before first item), */
 		/* and both items got downloaded before an external function removed them from the queue */
-		if (older._timeAdded > req->_timeAdded) {
+		if (existing._timeAdded > req->_timeAdded) {
 			HttpRequest_Free(req);
 		} else {
-			/* normal case, replace older req */
-			HttpRequest_Free(&older);
+			/* normal case, replace older request */
+			HttpRequest_Free(&existing);
 			processedReqs.entries[index] = *req;
 		}
 	} else {
@@ -218,8 +212,8 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 
 	Mutex_Lock(curRequestMutex);
 	{
-		http_curRequest.id[0] = '\0';
-		http_curProgress = ASYNC_PROGRESS_NOTHING;
+		http_curRequest.id = 0;
+		http_curProgress   = HTTP_PROGRESS_NOT_WORKING_ON;
 	}
 	Mutex_Unlock(curRequestMutex);
 }
@@ -281,7 +275,7 @@ static void Http_ParseHeader(struct HttpRequest* req, const String* line) {
 }
 
 /* Adds a http header to the request headers. */
-static void Http_AddHeader(const char* key, const String* value);
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const String* value);
 
 /* Adds all the appropriate headers for a request. */
 static void Http_SetRequestHeaders(struct HttpRequest* req) {
@@ -291,14 +285,14 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 
 	if (req->lastModified[0]) {
 		str = String_FromRawArray(req->lastModified);
-		Http_AddHeader("If-Modified-Since", &str);
+		Http_AddHeader(req, "If-Modified-Since", &str);
 	}
 	if (req->etag[0]) {
 		str = String_FromRawArray(req->etag);
-		Http_AddHeader("If-None-Match", &str);
+		Http_AddHeader(req, "If-None-Match", &str);
 	}
 
-	if (req->data) Http_AddHeader("Content-Type", &contentType);
+	if (req->data) Http_AddHeader(req, "Content-Type", &contentType);
 	if (!req->cookies || !req->cookies->count) return;
 
 	String_InitArray(cookies, cookiesBuffer);
@@ -307,32 +301,19 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 		str = StringsBuffer_UNSAFE_Get(req->cookies, i);
 		String_AppendString(&cookies, &str);
 	}
-	Http_AddHeader("Cookie", &cookies);
+	Http_AddHeader(req, "Cookie", &cookies);
 }
 
 /*########################################################################################################################*
 *------------------------------------------------Emscripten implementation------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WEB
+#ifdef CC_BUILD_WEB
 /* Use fetch/XMLHttpRequest api for Emscripten */
 #include <emscripten/fetch.h>
 
-static void Http_SysInit(void) { }
-static void Http_SysFree(void) { }
-static void Http_DownloadAsync(struct HttpRequest* req);
 cc_bool Http_DescribeError(cc_result res, String* dst) { return false; }
-static void Http_AddHeader(const char* key, const String* value);
-
-static void Http_DownloadNextAsync(void) {
-	struct HttpRequest req;
-	if (http_terminate || !pendingReqs.count) return;
-	/* already working on a request currently */
-	if (http_curRequest.id[0]) return;
-
-	req = pendingReqs.entries[0];
-	RequestList_RemoveAt(&pendingReqs, 0);
-	Http_DownloadAsync(&req);
-}
+/* web browsers do caching already, so don't need last modified/etags */
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const String* value) { }
 
 static void Http_UpdateProgress(emscripten_fetch_t* fetch) {
 	if (!fetch->totalBytes) return;
@@ -358,8 +339,8 @@ static void Http_FinishedAsync(emscripten_fetch_t* fetch) {
 	emscripten_fetch_close(fetch);
 
 	if (req->data) Platform_Log1("HTTP returned data: %i bytes", &req->size);
-	Http_FinishRequest(&http_curRequest);
-	Http_DownloadNextAsync();
+	Http_FinishRequest(req);
+	Http_WorkerSignal();
 }
 
 static void Http_DownloadAsync(struct HttpRequest* req) {
@@ -406,29 +387,46 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	/* TODO: SET requestHeaders!!! */
 	emscripten_fetch(&attr, urlStr);
 }
+
+static void Http_WorkerInit(void)  { }
+static void Http_WorkerStart(void) { }
+static void Http_WorkerStop(void)  { }
+
+static void Http_WorkerSignal(void) {
+	struct HttpRequest req;
+	if (http_terminate || !pendingReqs.count) return;
+	/* already working on a request currently */
+	if (http_curRequest.id) return;
+
+	req = pendingReqs.entries[0];
+	RequestList_RemoveAt(&pendingReqs, 0);
+	Http_DownloadAsync(&req);
+}
 #endif
 
 
 /*########################################################################################################################*
-*--------------------------------------------------Native implementation--------------------------------------------------*
+*--------------------------------------------------Worker implementation--------------------------------------------------*
 *#########################################################################################################################*/
-static cc_uint32 bufferSize;
+#ifndef CC_BUILD_WEB
+static void* workerWaitable;
+static void* workerThread;
 
 /* Allocates initial data buffer to store response contents */
 static void Http_BufferInit(struct HttpRequest* req) {
 	http_curProgress = 0;
-	bufferSize = req->contentLength ? req->contentLength : 1;
-	req->data  = (cc_uint8*)Mem_Alloc(bufferSize, 1, "http get data");
-	req->size  = 0;
+	req->_capacity = req->contentLength ? req->contentLength : 1;
+	req->data      = (cc_uint8*)Mem_Alloc(req->_capacity, 1, "http data");
+	req->size      = 0;
 }
 
 /* Ensures data buffer has enough space left to append amount bytes, reallocates if not */
 static void Http_BufferEnsure(struct HttpRequest* req, cc_uint32 amount) {
 	cc_uint32 newSize = req->size + amount;
-	if (newSize <= bufferSize) return;
+	if (newSize <= req->_capacity) return;
 
-	bufferSize = newSize;
-	req->data  = (cc_uint8*)Mem_Realloc(req->data, newSize, 1, "http inc data");
+	req->_capacity = newSize;
+	req->data      = (cc_uint8*)Mem_Realloc(req->data, newSize, 1, "http data+");
 }
 
 /* Increases size and updates current progress */
@@ -532,7 +530,7 @@ cc_bool Http_DescribeError(cc_result res, String* dst) {
 	return true;
 }
 
-static void Http_SysInit(void) {
+static void Http_BackendInit(void) {
 	static const String msg = String_FromConst("Failed to init libcurl. All HTTP requests will therefore fail.");
 	CURLcode res;
 
@@ -545,25 +543,25 @@ static void Http_SysInit(void) {
 	curlSupported = true;
 }
 
-static struct curl_slist* headers_list;
-static void Http_AddHeader(const char* key, const String* value) {
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const String* value) {
 	String tmp; char tmpBuffer[1024];
 	String_InitArray_NT(tmp, tmpBuffer);
 	String_Format2(&tmp, "%c: %s", key, value);
 
 	tmp.buffer[tmp.length] = '\0';
-	headers_list = _curl_slist_append(headers_list, tmp.buffer);
+	req->meta = _curl_slist_append((struct curl_slist*)req->meta, tmp.buffer);
 }
 
 /* Processes a HTTP header downloaded from the server */
-static size_t Http_ProcessHeader(char *buffer, size_t size, size_t nitems, void* userdata) {
+static size_t Http_ProcessHeader(char* buffer, size_t size, size_t nitems, void* userdata) {
 	struct HttpRequest* req = (struct HttpRequest*)userdata;
-	String line = String_Init(buffer, nitems, nitems);
-
+	size_t len = nitems;
+	String line;
 	/* line usually has \r\n at end */
-	if (line.length && line.buffer[line.length - 1] == '\n') line.length--;
-	if (line.length && line.buffer[line.length - 1] == '\r') line.length--;
+	if (len && buffer[len - 1] == '\n') len--;
+	if (len && buffer[len - 1] == '\r') len--;
 
+	line = String_Init(buffer, len, len);
 	Http_ParseHeader(req, &line);
 	return nitems;
 }
@@ -572,7 +570,7 @@ static size_t Http_ProcessHeader(char *buffer, size_t size, size_t nitems, void*
 static size_t Http_ProcessData(char *buffer, size_t size, size_t nitems, void* userdata) {
 	struct HttpRequest* req = (struct HttpRequest*)userdata;
 
-	if (!bufferSize) Http_BufferInit(req);
+	if (!req->_capacity) Http_BufferInit(req);
 	Http_BufferEnsure(req, nitems);
 
 	Mem_Copy(&req->data[req->size], buffer, nitems);
@@ -592,7 +590,7 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 	_curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
 }
 
-static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
+static cc_result Http_BackendDo(struct HttpRequest* req, String* url) {
 	char urlStr[NATIVE_STR_LEN];
 	void* post_data = req->data;
 	CURLcode res;
@@ -602,9 +600,9 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 		return ERR_NOT_SUPPORTED;
 	}
 
-	headers_list = NULL;
+	req->meta = NULL;
 	Http_SetRequestHeaders(req);
-	_curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers_list);
+	_curl_easy_setopt(curl, CURLOPT_HTTPHEADER, req->meta);
 
 	Http_SetCurlOpts(req);
 	Platform_ConvertString(urlStr, url);
@@ -625,18 +623,18 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 		_curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 	}
 
-	bufferSize = 0;
-	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
+	req->_capacity   = 0;
+	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = _curl_easy_perform(curl);
 	http_curProgress = 100;
 
-	_curl_slist_free_all(headers_list);
+	_curl_slist_free_all((struct curl_slist*)req->meta);
 	/* can free now that request has finished */
 	Mem_Free(post_data);
 	return res;
 }
 
-static void Http_SysFree(void) {
+static void Http_BackendFree(void) {
 	if (!curlSupported) return;
 	_curl_easy_cleanup(curl);
 	_curl_global_cleanup();
@@ -745,19 +743,19 @@ cc_bool Http_DescribeError(cc_result res, String* dst) {
 	return true;
 }
 
-static void Http_SysInit(void) {
+static void Http_BackendInit(void) {
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
 	hInternet = InternetOpenA(GAME_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
 	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
 }
 
-static HINTERNET curReq;
-static void Http_AddHeader(const char* key, const String* value) {
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const String* value) {
 	String tmp; char tmpBuffer[1024];
 	String_InitArray(tmp, tmpBuffer);
 
 	String_Format2(&tmp, "%c: %s\r\n", key, value);
-	HttpAddRequestHeadersA(curReq, tmp.buffer, tmp.length, HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
+	HttpAddRequestHeadersA((HINTERNET)req->meta, tmp.buffer, tmp.length, 
+							HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
 }
 
 /* Creates and sends a HTTP requst */
@@ -778,8 +776,8 @@ static cc_result Http_StartRequest(struct HttpRequest* req, String* url, HINTERN
 
 	*handle = HttpOpenRequestA(entry.Handle, verbs[req->requestType], 
 								pathBuffer, NULL, NULL, NULL, flags, 0);
-	curReq  = *handle;
-	if (!curReq) return GetLastError();
+	req->meta = *handle;
+	if (!req->meta) return GetLastError();
 
 	/* ignore revocation stuff */
 	bufferLen = sizeof(flags);
@@ -825,13 +823,13 @@ static cc_result Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 	return 0;
 }
 
-static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
+static cc_result Http_BackendDo(struct HttpRequest* req, String* url) {
 	HINTERNET handle;
 	cc_result res = Http_StartRequest(req, url, &handle);
 	HttpRequest_Free(req);
 	if (res) return res;
 
-	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
+	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = Http_ProcessHeaders(req, handle);
 	if (res) { InternetCloseHandle(handle); return res; }
 
@@ -843,7 +841,7 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	return InternetCloseHandle(handle) ? 0 : GetLastError();
 }
 
-static void Http_SysFree(void) {
+static void Http_BackendFree(void) {
 	int i;
 	for (i = 0; i < HTTP_CACHE_ENTRIES; i++) {
 		if (!http_cache[i].Handle) continue;
@@ -872,7 +870,7 @@ cc_bool Http_DescribeError(cc_result res, String* dst) {
 	return true;
 }
 
-static void Http_AddHeader(const char* key, const String* value) {
+static void Http_AddHeader(struct HttpRequest* req, const char* key, const String* value) {
 	JNIEnv* env;
 	jvalue args[2];
 
@@ -895,7 +893,7 @@ static void JNICALL java_HttpParseHeader(JNIEnv* env, jobject o, jstring header)
 /* Processes a chunk of data downloaded from the web server */
 static void JNICALL java_HttpAppendData(JNIEnv* env, jobject o, jbyteArray arr, jint len) {
 	struct HttpRequest* req = java_req;
-	if (!bufferSize) Http_BufferInit(req);
+	if (!req->_capacity) Http_BufferInit(req);
 
 	Http_BufferEnsure(req, len);
 	(*env)->GetByteArrayRegion(env, arr, 0, len, &req->data[req->size]);
@@ -906,7 +904,7 @@ static const JNINativeMethod methods[2] = {
 	{ "httpParseHeader", "(Ljava/lang/String;)V", java_HttpParseHeader },
 	{ "httpAppendData",  "([BI)V",                java_HttpAppendData }
 };
-static void Http_SysInit(void) {
+static void Http_BackendInit(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	JavaRegisterNatives(env, methods);
@@ -936,7 +934,7 @@ static cc_result Http_SetData(JNIEnv* env, struct HttpRequest* req) {
 	return res;
 }
 
-static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
+static cc_result Http_BackendDo(struct HttpRequest* req, String* url) {
 	static const String userAgent = String_FromConst(GAME_APP_NAME);
 	JNIEnv* env;
 	jint res;
@@ -946,21 +944,20 @@ static cc_result Http_SysDo(struct HttpRequest* req, String* url) {
 	java_req = req;
 
 	Http_SetRequestHeaders(req);
-	Http_AddHeader("User-Agent", &userAgent);
+	Http_AddHeader(req, "User-Agent", &userAgent);
 	if (req->data && (res = Http_SetData(env, req))) return res;
 
-	bufferSize = 0;
-	http_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
+	req->_capacity   = 0;
+	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
 	res = JavaCallInt(env, "httpPerform", "()I", NULL);
 	http_curProgress = 100;
 	return res;
 }
 
-static void Http_SysFree(void) { }
+static void Http_BackendFree(void) { }
 #endif
 
-#ifndef CC_BUILD_WEB
-static void Http_WorkerLoop(void) {
+static void WorkerLoop(void) {
 	char urlBuffer[URL_MAX_SIZE]; String url;
 	struct HttpRequest request;
 	cc_bool hasRequest, stop;
@@ -993,7 +990,7 @@ static void Http_WorkerLoop(void) {
 		Http_BeginRequest(&request, &url);
 
 		beg = Stopwatch_Measure();
-		request.result = Http_SysDo(&request, &url);
+		request.result = Http_BackendDo(&request, &url);
 		end = Stopwatch_Measure();
 
 		elapsed = (int)Stopwatch_ElapsedMilliseconds(beg, end);
@@ -1001,6 +998,22 @@ static void Http_WorkerLoop(void) {
 					&request.result, &request.statusCode, &elapsed, &request.size);
 		Http_FinishRequest(&request);
 	}
+}
+
+static void Http_WorkerInit(void) {
+	Http_BackendInit();
+	workerWaitable = Waitable_Create();
+}
+
+static void Http_WorkerStart(void) {
+	workerThread = Thread_Start(WorkerLoop, false);
+}
+static void Http_WorkerSignal(void) { Waitable_Signal(workerWaitable); }
+
+static void Http_WorkerStop(void) { 
+	Thread_Join(workerThread);
+	Waitable_Free(workerWaitable);
+	Http_BackendFree();
 }
 #endif
 
@@ -1018,7 +1031,7 @@ static void Http_WorkerLoop(void) {
 #define SKIN_SERVER "http://classicube.s3.amazonaws.com/skin/"
 #endif
 
-void Http_AsyncGetSkin(const String* skinName) {
+void Http_AsyncGetSkin(const String* skinName, int reqID) {
 	String url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 
@@ -1027,41 +1040,49 @@ void Http_AsyncGetSkin(const String* skinName) {
 	} else {
 		String_Format1(&url, SKIN_SERVER "%s.png", skinName);
 	}
-	Http_AsyncGetData(&url, false, skinName);
+	Http_AsyncGetData(&url, false, reqID);
 }
 
-void Http_AsyncGetData(const String* url, cc_bool priority, const String* id) {
-	Http_Add(url, priority, id, REQUEST_TYPE_GET, NULL, NULL, NULL, 0, NULL);
+void Http_AsyncGetData(const String* url, cc_bool priority, int reqID) {
+	Http_Add(url, priority, reqID, REQUEST_TYPE_GET, NULL, NULL, NULL, 0, NULL);
 }
-void Http_AsyncGetHeaders(const String* url, cc_bool priority, const String* id) {
-	Http_Add(url, priority, id, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0, NULL);
+void Http_AsyncGetHeaders(const String* url, cc_bool priority, int reqID) {
+	Http_Add(url, priority, reqID, REQUEST_TYPE_HEAD, NULL, NULL, NULL, 0, NULL);
 }
-void Http_AsyncPostData(const String* url, cc_bool priority, const String* id, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
-	Http_Add(url, priority, id, REQUEST_TYPE_POST, NULL, NULL, data, size, cookies);
+void Http_AsyncPostData(const String* url, cc_bool priority, int reqID, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
+	Http_Add(url, priority, reqID, REQUEST_TYPE_POST, NULL, NULL, data, size, cookies);
 }
-void Http_AsyncGetDataEx(const String* url, cc_bool priority, const String* id, const String* lastModified, const String* etag, struct StringsBuffer* cookies) {
-	Http_Add(url, priority, id, REQUEST_TYPE_GET, lastModified, etag, NULL, 0, cookies);
+void Http_AsyncGetDataEx(const String* url, cc_bool priority, int reqID, const String* lastModified, const String* etag, struct StringsBuffer* cookies) {
+	Http_Add(url, priority, reqID, REQUEST_TYPE_GET, lastModified, etag, NULL, 0, cookies);
 }
 
-cc_bool Http_GetResult(const String* id, struct HttpRequest* item) {
+cc_bool Http_GetResult(int reqID, struct HttpRequest* item) {
 	int i;
 	Mutex_Lock(processedMutex);
 	{
-		i = RequestList_Find(&processedReqs, id, item);
+		i = RequestList_Find(&processedReqs, reqID, item);
 		if (i >= 0) RequestList_RemoveAt(&processedReqs, i);
 	}
 	Mutex_Unlock(processedMutex);
 	return i >= 0;
 }
 
-cc_bool Http_GetCurrent(struct HttpRequest* request, int* progress) {
+cc_bool Http_GetCurrent(int* reqID, int* progress) {
 	Mutex_Lock(curRequestMutex);
 	{
-		*request  = http_curRequest;
+		*reqID    = http_curRequest.id;
 		*progress = http_curProgress;
 	}
 	Mutex_Unlock(curRequestMutex);
-	return request->id[0];
+	return *reqID != 0;
+}
+
+int Http_CheckProgress(int reqID) {
+	int curReqID, progress;
+	Http_GetCurrent(&curReqID, &progress);
+
+	if (reqID != curReqID) progress = HTTP_PROGRESS_NOT_WORKING_ON;
+	return progress;
 }
 
 void Http_ClearPending(void) {
@@ -1070,7 +1091,7 @@ void Http_ClearPending(void) {
 		RequestList_Free(&pendingReqs);
 	}
 	Mutex_Unlock(pendingMutex);
-	Waitable_Signal(workerWaitable);
+	Http_WorkerSignal();
 }
 
 static cc_bool Http_UrlDirect(cc_uint8 c) {
@@ -1126,32 +1147,25 @@ static void OnInit(void) {
 #ifdef CC_BUILD_ANDROID
 	if (workerThread) return;
 #endif
+	Http_WorkerInit();
 	ScheduledTask_Add(30, Http_CleanCacheTask);
 	RequestList_Init(&pendingReqs);
 	RequestList_Init(&processedReqs);
-	Http_SysInit();
 
-	workerWaitable  = Waitable_Create();
 	pendingMutex    = Mutex_Create();
 	processedMutex  = Mutex_Create();
 	curRequestMutex = Mutex_Create();
-#ifndef CC_BUILD_WEB
-	workerThread    = Thread_Start(Http_WorkerLoop, false);
-#endif
+	Http_WorkerStart();
 }
 
 static void OnFree(void) {
 	http_terminate = true;
 	Http_ClearPending();
-#ifndef CC_BUILD_WEB
-	Thread_Join(workerThread);
-#endif
+	Http_WorkerStop();
 
 	RequestList_Free(&pendingReqs);
 	RequestList_Free(&processedReqs);
-	Http_SysFree();
 
-	Waitable_Free(workerWaitable);
 	Mutex_Free(pendingMutex);
 	Mutex_Free(processedMutex);
 	Mutex_Free(curRequestMutex);
