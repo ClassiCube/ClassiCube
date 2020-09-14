@@ -526,6 +526,14 @@ void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* pa
 		part->rotationOrigin.X, part->rotationOrigin.Y, part->rotationOrigin.Z);
 }
 
+/* C's % operator/fmod act differently on negatives vs positives,
+   but we want the function to be consistent on both so that the user can
+   specify direction using the "a" parameter in "Game.Time * anim->a".
+*/
+static float EuclidianMod(float x, float y) {
+	return x - Math_Floor(x / y) * y;
+}
+
 static struct ModelVertex oldVertices[MODEL_BOX_VERTICES];
 static float CustomModel_GetAnimationValue(
 	struct CustomModelAnim* anim,
@@ -595,12 +603,12 @@ static float CustomModel_GetAnimationValue(
 		case CustomModelAnimType_FlipRotate:
 		case CustomModelAnimType_FlipTranslate:
 		case CustomModelAnimType_FlipSize:
-			return Math_Modf((float)Game.Time * anim->a + anim->c, anim->d) * anim->b;
+			return EuclidianMod((float)Game.Time * anim->a + anim->c, anim->d) * anim->b;
 
 		case CustomModelAnimType_FlipRotateVelocity:
 		case CustomModelAnimType_FlipTranslateVelocity:
 		case CustomModelAnimType_FlipSizeVelocity:
-			return Math_Modf(e->Anim.WalkTime * anim->a + anim->c, anim->d) * anim->b;
+			return EuclidianMod(e->Anim.WalkTime * anim->a + anim->c, anim->d) * anim->b;
 	}
 
 	return 0.0f;
