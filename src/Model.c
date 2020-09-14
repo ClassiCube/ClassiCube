@@ -526,7 +526,7 @@ void CustomModel_BuildPart(struct CustomModel* cm, struct CustomModelPartDef* pa
 		part->rotationOrigin.X, part->rotationOrigin.Y, part->rotationOrigin.Z);
 }
 
-/* C's % operator/fmod act differently on negatives vs positives,
+/* fmodf behaves differently on negatives vs positives,
    but we want the function to be consistent on both so that the user can
    specify direction using the "a" parameter in "Game.Time * anim->a".
 */

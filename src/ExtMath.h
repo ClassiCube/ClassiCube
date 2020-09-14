@@ -26,7 +26,6 @@ float Math_SqrtF(float x);
 #endif
 
 float Math_Mod1(float x);
-float Math_Modf(float x, float y);
 int   Math_AbsI(int x);
 
 CC_API double Math_Sin(double x);

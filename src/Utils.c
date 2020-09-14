@@ -139,8 +139,8 @@ void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapac
 }
 
 cc_bool Utils_ParseIP(const String* ip, cc_uint8* data) {
-	String parts[4];
-	int count = String_UNSAFE_Split(ip, '.', parts, 4);
+	String parts[4 + 1];
+	int count = String_UNSAFE_Split(ip, '.', parts, 4 + 1);
 	if (count != 4) return false;
 
 	return
