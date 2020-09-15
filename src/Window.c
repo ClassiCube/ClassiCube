@@ -3033,10 +3033,16 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
-static cc_bool keyboardOpen;
+static cc_bool keyboardOpen, notifyResize;
 
-static void RefreshWindowBounds(void) {
-	emscripten_get_canvas_element_size("#canvas", &WindowInfo.Width, &WindowInfo.Height);
+static void UpdateWindowBounds(void) {
+	int width, height;
+	emscripten_get_canvas_element_size("#canvas", &width, &height);
+	if (width == WindowInfo.Width && height == WindowInfo.Height) return;
+
+	WindowInfo.Width  = width;
+	WindowInfo.Height = height;
+	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
 /* Browser only allows pointer lock requests in response to user input */
@@ -3142,15 +3148,15 @@ static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
 }
 
 static EM_BOOL OnResize(int type, const EmscriptenUiEvent* ev, void *data) {
-	RefreshWindowBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
+	UpdateWindowBounds();
+	notifyResize = true;
 	return true;
 }
 
 /* This is only raised when going into fullscreen */
 static EM_BOOL OnCanvasResize(int type, const void* reserved, void *data) {
-	RefreshWindowBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
+	UpdateWindowBounds();
+	notifyResize = true;
 	return false;
 }
 
@@ -3359,7 +3365,7 @@ void Window_Create(int width, int height) {
 	WindowInfo.Focused = true;
 	HookEvents();
 	/* let the webpage decide on bounds */
-	RefreshWindowBounds();
+	emscripten_get_canvas_element_size("#canvas", &WindowInfo.Width, &WindowInfo.Height);
 }
 
 void Window_SetTitle(const String* title) {
@@ -3434,8 +3440,7 @@ cc_result Window_ExitFullscreen(void) { return emscripten_exit_fullscreen(); }
 
 void Window_SetSize(int width, int height) {
 	emscripten_set_canvas_element_size("#canvas", width, height);
-	RefreshWindowBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
+	UpdateWindowBounds();
 }
 
 void Window_Close(void) {
@@ -3448,7 +3453,14 @@ void Window_Close(void) {
 	UnhookEvents();
 }
 
-void Window_ProcessEvents(void) { }
+void Window_ProcessEvents(void) {
+	if (!notifyResize) return;
+	notifyResize = false;
+
+	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) return;
+	EM_ASM( if (resizeGameCanvas) resizeGameCanvas(); );
+	UpdateWindowBounds();
+}
 
 /* Not needed because browser provides relative mouse and touch events */
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
