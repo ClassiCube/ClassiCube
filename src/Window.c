@@ -3420,7 +3420,7 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 void Window_Show(void) { }
 
 int Window_GetWindowState(void) {
-	EmscriptenFullscreenChangeEvent status;
+	EmscriptenFullscreenChangeEvent status = { 0 };
 	emscripten_get_fullscreen_status(&status);
 	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
