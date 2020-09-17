@@ -3033,7 +3033,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
-static cc_bool keyboardOpen, notifyResize;
+static cc_bool keyboardOpen, needResize, goingFullscreen;
 
 static void UpdateWindowBounds(void) {
 	int width, height;
@@ -3149,14 +3149,14 @@ static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
 
 static EM_BOOL OnResize(int type, const EmscriptenUiEvent* ev, void *data) {
 	UpdateWindowBounds();
-	notifyResize = true;
+	if (!goingFullscreen) needResize = true;
 	return true;
 }
 
 /* This is only raised when going into fullscreen */
 static EM_BOOL OnCanvasResize(int type, const void* reserved, void *data) {
 	UpdateWindowBounds();
-	notifyResize = true;
+	if (!goingFullscreen) needResize = true;
 	return false;
 }
 
@@ -3427,13 +3427,18 @@ int Window_GetWindowState(void) {
 
 cc_result Window_EnterFullscreen(void) {
 	EmscriptenFullscreenStrategy strategy;
+	int res;
 	strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
 	strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_HIDEF;
 	strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
 
 	strategy.canvasResizedCallback         = OnCanvasResize;
 	strategy.canvasResizedCallbackUserData = NULL;
-	return emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
+
+	goingFullscreen = true;
+	res = emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
+	goingFullscreen = false;
+	return res;
 	/* TODO: navigator.keyboard.lock(["Escape"] */
 }
 cc_result Window_ExitFullscreen(void) { return emscripten_exit_fullscreen(); }
@@ -3454,8 +3459,8 @@ void Window_Close(void) {
 }
 
 void Window_ProcessEvents(void) {
-	if (!notifyResize) return;
-	notifyResize = false;
+	if (!needResize) return;
+	needResize = false;
 
 	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) return;
 	EM_ASM( if (resizeGameCanvas) resizeGameCanvas(); );
