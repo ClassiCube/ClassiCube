@@ -549,7 +549,7 @@ static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const String
 	return NULL;
 }
 
-static void Soundboard_Init(struct Soundboard* board, const String* boardName, struct StringsBuffer* files) {
+static void Soundboard_Init(struct Soundboard* board, const String* boardName) {
 	String file, name;
 	struct SoundGroup* group;
 	struct Sound* snd;
@@ -557,8 +557,8 @@ static void Soundboard_Init(struct Soundboard* board, const String* boardName, s
 	int i, dotIndex;
 	board->inited = true;
 
-	for (i = 0; i < files->count; i++) {
-		file = StringsBuffer_UNSAFE_Get(files, i); 
+	for (i = 0; i < files.count; i++) {
+		file = StringsBuffer_UNSAFE_Get(&files, i); 
 		name = file;
 
 		/* dig_grass1.wav -> dig_grass1 */
@@ -740,8 +740,8 @@ static void Sounds_Init(void) {
 	static const String step = String_FromConst("step_");
 
 	if (digBoard.inited || stepBoard.inited) return;
-	Soundboard_Init(&digBoard,  &dig,  &files);
-	Soundboard_Init(&stepBoard, &step, &files);
+	Soundboard_Init(&digBoard,  &dig);
+	Soundboard_Init(&stepBoard, &step);
 }
 
 static void Sounds_Free(void) {

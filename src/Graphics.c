@@ -1057,17 +1057,11 @@ static cc_uint16 gl_indices[GFX_MAX_INDICES];
 #ifndef APIENTRY
 #define APIENTRY
 #endif
-
-typedef void (APIENTRY *FUNC_GLBINDBUFFER) (GLenum target, GLuint buffer);
-typedef void (APIENTRY *FUNC_GLDELETEBUFFERS) (GLsizei n, const GLuint *buffers);
-typedef void (APIENTRY *FUNC_GLGENBUFFERS) (GLsizei n, GLuint *buffers);
-typedef void (APIENTRY *FUNC_GLBUFFERDATA) (GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage);
-typedef void (APIENTRY *FUNC_GLBUFFERSUBDATA) (GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data);
-static FUNC_GLBINDBUFFER    _glBindBuffer;
-static FUNC_GLDELETEBUFFERS _glDeleteBuffers;
-static FUNC_GLGENBUFFERS    _glGenBuffers;
-static FUNC_GLBUFFERDATA    _glBufferData;
-static FUNC_GLBUFFERSUBDATA _glBufferSubData;
+static void (APIENTRY *_glBindBuffer)(GLenum target, GLuint buffer);
+static void (APIENTRY *_glDeleteBuffers)(GLsizei n, const GLuint *buffers);
+static void (APIENTRY *_glGenBuffers)(GLsizei n, GLuint *buffers);
+static void (APIENTRY *_glBufferData)(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage);
+static void (APIENTRY *_glBufferSubData)(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data);
 #endif
 
 #if defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
