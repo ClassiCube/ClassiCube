@@ -3033,10 +3033,16 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
-static cc_bool keyboardOpen;
+static cc_bool keyboardOpen, needResize, goingFullscreen;
 
-static void RefreshWindowBounds(void) {
-	emscripten_get_canvas_element_size("#canvas", &WindowInfo.Width, &WindowInfo.Height);
+static void UpdateWindowBounds(void) {
+	int width, height;
+	emscripten_get_canvas_element_size("#canvas", &width, &height);
+	if (width == WindowInfo.Width && height == WindowInfo.Height) return;
+
+	WindowInfo.Width  = width;
+	WindowInfo.Height = height;
+	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
 /* Browser only allows pointer lock requests in response to user input */
@@ -3142,15 +3148,15 @@ static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
 }
 
 static EM_BOOL OnResize(int type, const EmscriptenUiEvent* ev, void *data) {
-	RefreshWindowBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
+	UpdateWindowBounds();
+	if (!goingFullscreen) needResize = true;
 	return true;
 }
 
 /* This is only raised when going into fullscreen */
 static EM_BOOL OnCanvasResize(int type, const void* reserved, void *data) {
-	RefreshWindowBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
+	UpdateWindowBounds();
+	if (!goingFullscreen) needResize = true;
 	return false;
 }
 
@@ -3359,7 +3365,7 @@ void Window_Create(int width, int height) {
 	WindowInfo.Focused = true;
 	HookEvents();
 	/* let the webpage decide on bounds */
-	RefreshWindowBounds();
+	emscripten_get_canvas_element_size("#canvas", &WindowInfo.Width, &WindowInfo.Height);
 }
 
 void Window_SetTitle(const String* title) {
@@ -3414,28 +3420,32 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 void Window_Show(void) { }
 
 int Window_GetWindowState(void) {
-	EmscriptenFullscreenChangeEvent status;
+	EmscriptenFullscreenChangeEvent status = { 0 };
 	emscripten_get_fullscreen_status(&status);
 	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
 
 cc_result Window_EnterFullscreen(void) {
 	EmscriptenFullscreenStrategy strategy;
+	int res;
 	strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
 	strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_HIDEF;
 	strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
 
 	strategy.canvasResizedCallback         = OnCanvasResize;
 	strategy.canvasResizedCallbackUserData = NULL;
-	return emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
+
+	goingFullscreen = true;
+	res = emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
+	goingFullscreen = false;
+	return res;
 	/* TODO: navigator.keyboard.lock(["Escape"] */
 }
 cc_result Window_ExitFullscreen(void) { return emscripten_exit_fullscreen(); }
 
 void Window_SetSize(int width, int height) {
 	emscripten_set_canvas_element_size("#canvas", width, height);
-	RefreshWindowBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
+	UpdateWindowBounds();
 }
 
 void Window_Close(void) {
@@ -3448,7 +3458,14 @@ void Window_Close(void) {
 	UnhookEvents();
 }
 
-void Window_ProcessEvents(void) { }
+void Window_ProcessEvents(void) {
+	if (!needResize) return;
+	needResize = false;
+
+	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) return;
+	EM_ASM( if (resizeGameCanvas) resizeGameCanvas(); );
+	UpdateWindowBounds();
+}
 
 /* Not needed because browser provides relative mouse and touch events */
 static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
