@@ -58,6 +58,8 @@ struct ScrollbarWidget {
 	float scrollingAcc;
 	int dragOffset;
 	int draggingId;
+	int borderX, borderY;
+	int nubsWidth, offsets[3];
 };
 /* Resets state of the given scrollbar widget to default. */
 CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w);
@@ -78,10 +80,11 @@ CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
 /* A table of blocks. */
 struct TableWidget {
 	Widget_Body
-	int blocksCount, blocksPerRow, rowsCount;
+	int blocksCount, blocksPerRow;
+	int rowsTotal, rowsDisplayed;
 	int lastCreatedIndex;
 	struct FontDesc* font;
-	int selectedIndex, cellSize;
+	int selectedIndex, cellSizeX, cellSizeY;
 	float selBlockExpand;
 	GfxResourceID vb;
 	cc_bool pendingClose;
@@ -90,6 +93,7 @@ struct TableWidget {
 	struct ScrollbarWidget scroll;
 	struct Texture descTex;
 	int lastX, lastY;
+	int xPadding;
 };
 
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w);
