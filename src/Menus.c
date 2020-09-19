@@ -3568,9 +3568,9 @@ static void TouchMore_Chat(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
 	ChatScreen_OpenInput(&String_Empty);
 }
-static void TouchMore_Inv(void* s, void* w) {
+static void TouchMore_Take(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
-	InventoryScreen_Show();
+	Game_ScreenshotRequested = true;
 }
 static void TouchMore_Menu(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
@@ -3587,7 +3587,7 @@ static const struct SimpleButtonDesc touchMore_btns[8] = {
 	{ -160,    0, "Speed",      TouchMore_Speed  },
 	{ -160,   50, "Fly",        TouchMore_Fly    },
 	{ -160,  100, "Menu",       TouchMore_Menu   },
-	{  160,  -50, "Inventory",  TouchMore_Inv    },
+	{  160,  -50, "Screenshot", TouchMore_Take   },
 	{  160,    0, "Fullscreen", TouchMore_Screen },
 	{  160,   50, "Noclip",     TouchMore_Noclip },
 	{  160,  100, "Fog",        TouchMore_Fog    }

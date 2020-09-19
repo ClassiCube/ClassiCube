@@ -416,6 +416,10 @@ static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		x = (int)(w->x + w->slotXOffset + width * i);
 		y = w->y + (w->height / 2);
+
+#ifdef CC_BUILD_TOUCH
+		if (i == HOTBAR_MAX_INDEX && Input_TouchMode) continue;
+#endif
 		IsometricDrawer_DrawBatch(Inventory_Get(i), scale, x, y);
 	}
 	IsometricDrawer_EndBatch();
@@ -510,11 +514,15 @@ static int HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		cellX = (int)(w->x + width * i);
 		cellY = w->y;
+		if (!Gui_Contains(cellX, cellY, width, height, x, y)) continue;
 
-		if (Gui_Contains(cellX, cellY, width, height, x, y)) {
-			Inventory_SetSelectedIndex(i);
-			return true;
+#ifdef CC_BUILD_TOUCH
+		if (i == HOTBAR_MAX_INDEX && Input_TouchMode) {
+			InventoryScreen_Show(); return true;
 		}
+#endif
+		Inventory_SetSelectedIndex(i);
+		return true;
 	}
 	return false;
 }
