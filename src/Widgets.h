@@ -54,7 +54,7 @@ CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text,
 /* Clickable and draggable scrollbar. */
 struct ScrollbarWidget {
 	Widget_Body
-	int totalRows, topRow;
+	int topRow, rowsTotal, rowsVisible;
 	float scrollingAcc;
 	int dragOffset;
 	int draggingId;
@@ -81,7 +81,7 @@ CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
 struct TableWidget {
 	Widget_Body
 	int blocksCount, blocksPerRow;
-	int rowsTotal, rowsDisplayed;
+	int rowsTotal, rowsVisible;
 	int lastCreatedIndex;
 	struct FontDesc* font;
 	int selectedIndex, cellSizeX, cellSizeY;
@@ -92,8 +92,7 @@ struct TableWidget {
 	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;
 	struct Texture descTex;
-	int lastX, lastY;
-	int xPadding;
+	int lastX, lastY, paddingX;
 };
 
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w);

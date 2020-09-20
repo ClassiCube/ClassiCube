@@ -256,26 +256,25 @@ void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, struct Font
 /*########################################################################################################################*
 *-----------------------------------------------------ScrollbarWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-#define TABLE_MAX_ROWS_DISPLAYED 8
 #define SCROLL_BACK_COL  PackedCol_Make( 10,  10,  10, 220)
 #define SCROLL_BAR_COL   PackedCol_Make(100, 100, 100, 220)
 #define SCROLL_HOVER_COL PackedCol_Make(122, 122, 122, 220)
 
 static void ScrollbarWidget_ClampTopRow(struct ScrollbarWidget* w) {
-	int maxTop = w->totalRows - TABLE_MAX_ROWS_DISPLAYED;
+	int maxTop = w->rowsTotal - w->rowsVisible;
 	if (w->topRow >= maxTop) w->topRow = maxTop;
 	if (w->topRow < 0) w->topRow = 0;
 }
 
 static float ScrollbarWidget_GetScale(struct ScrollbarWidget* w) {
-	float rows = (float)w->totalRows;
+	float rows = (float)w->rowsTotal;
 	return (w->height - w->borderY * 2) / rows;
 }
 
 static void ScrollbarWidget_GetScrollbarCoords(struct ScrollbarWidget* w, int* y, int* height) {
 	float scale = ScrollbarWidget_GetScale(w);
 	*y = Math_Ceil(w->topRow * scale) + w->borderY;
-	*height = Math_Ceil(TABLE_MAX_ROWS_DISPLAYED * scale);
+	*height = Math_Ceil(w->rowsVisible * scale);
 	*height = min(*y + *height, w->height - w->borderY) - *y;
 }
 
@@ -318,9 +317,9 @@ static int ScrollbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	ScrollbarWidget_GetScrollbarCoords(w, &posY, &height);
 
 	if (y < posY) {
-		w->topRow -= TABLE_MAX_ROWS_DISPLAYED;
+		w->topRow -= w->rowsVisible;
 	} else if (y >= posY + height) {
-		w->topRow += TABLE_MAX_ROWS_DISPLAYED;
+		w->topRow += w->rowsVisible;
 	} else {
 		w->draggingId = id;
 		w->dragOffset = y - posY;
@@ -378,7 +377,8 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 	w->offsets[1] = Display_ScaleY(-1);
 	w->offsets[2] = Display_ScaleY(-1 + 4);
 
-	w->totalRows    = 0;
+	w->rowsTotal    = 0;
+	w->rowsVisible  = 0;
 	w->topRow       = 0;
 	w->scrollingAcc = 0.0f;
 	w->draggingId   = 0;
@@ -564,13 +564,13 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------TableWidget-------------------------------------------------------*
 *#########################################################################################################################*/
-static int Table_X(struct TableWidget* w) { return w->x - w->xPadding; }
+static int Table_X(struct TableWidget* w) { return w->x - w->paddingX; }
 static int Table_Y(struct TableWidget* w) { return w->y - 5 - 30; }
 static int Table_Width(struct TableWidget* w) {
-	return w->blocksPerRow * w->cellSizeX + w->xPadding * 2;
+	return w->blocksPerRow * w->cellSizeX + w->paddingX * 2;
 }
 static int Table_Height(struct TableWidget* w) {
-	return w->rowsDisplayed * w->cellSizeY + 10 + 40;
+	return w->rowsVisible * w->cellSizeY + 10 + 40;
 }
 
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
@@ -582,7 +582,7 @@ static cc_bool TableWidget_GetCoords(struct TableWidget* w, int i, int* cellX, i
 
 	*cellX = w->x + w->cellSizeX * x;
 	*cellY = w->y + w->cellSizeY * y + 3;
-	return y >= 0 && y < TABLE_MAX_ROWS_DISPLAYED;
+	return y >= 0 && y < w->rowsVisible;
 }
 
 static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
@@ -687,7 +687,7 @@ static void TableWidget_Render(void* widget, double delta) {
 	Gfx_Draw2DGradient(Table_X(w), Table_Y(w),
 		Table_Width(w), Table_Height(w), topBackCol, bottomBackCol);
 
-	if (w->rowsDisplayed < w->rowsTotal) {
+	if (w->rowsVisible < w->rowsTotal) {
 		Elem_Render(&w->scroll, delta);
 	}
 
@@ -696,6 +696,7 @@ static void TableWidget_Render(void* widget, double delta) {
 	if (w->selectedIndex != -1 && Game_ClassicMode && w->blocks[w->selectedIndex] != BLOCK_AIR) {
 		TableWidget_GetCoords(w, w->selectedIndex, &x, &y);
 
+		/* TODO: Need two size arguments, in case X/Y dpi differs */
 		off  = cellSizeX * 0.1f;
 		size = (int)(cellSizeX + off * 2);
 		Gfx_Draw2DGradient((int)(x - off), (int)(y - off),
@@ -745,24 +746,31 @@ void TableWidget_Recreate(struct TableWidget* w) {
 static void TableWidget_Reposition(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
 	float scale = Gui_GetInventoryScale();
-	int cellSize, rowsDisplayed;
+	int cellSize;
 
 	cellSize     = (int)(50 * Math_SqrtF(scale));
 	w->cellSizeX = Display_ScaleX(cellSize);
 	w->cellSizeY = Display_ScaleY(cellSize);
 
 	w->selBlockExpand = 25.0f * Math_SqrtF(scale);
-	w->rowsDisplayed  = min(TABLE_MAX_ROWS_DISPLAYED, w->rowsTotal);
+	w->rowsVisible    = min(8, w->rowsTotal); /* 8 rows max */
 
-	w->width  = w->cellSizeX * w->blocksPerRow;
-	w->height = w->cellSizeY * rowsDisplayed;
-	Widget_CalcPosition(w);
-	TableWidget_UpdateDescTexPos(w);
+	do {
+		w->width  = w->cellSizeX * w->blocksPerRow;
+		w->height = w->cellSizeY * w->rowsVisible;
+		Widget_CalcPosition(w);
+		TableWidget_UpdateDescTexPos(w);
+
+		/* Does the table fit on screen? */
+		if (Table_Y(w) >= 0) break;
+		w->rowsVisible--;
+	} while (w->rowsVisible > 1);
 
 	w->scroll.x = Table_X(w) + Table_Width(w);
 	w->scroll.y = Table_Y(w);
-	w->scroll.height    = Table_Height(w);
-	w->scroll.totalRows = w->rowsTotal;
+	w->scroll.height      = Table_Height(w);
+	w->scroll.rowsTotal   = w->rowsTotal;
+	w->scroll.rowsVisible = w->rowsVisible;
 }
 
 static void TableWidget_ScrollRelative(struct TableWidget* w, int delta) {
@@ -834,7 +842,7 @@ static int TableWidget_PointerMove(void* widget, int id, int x, int y) {
 	w->selectedIndex = -1;
 	cellSizeX = w->cellSizeX;
 	cellSizeY = w->cellSizeY;
-	maxHeight = cellSizeY * TABLE_MAX_ROWS_DISPLAYED;
+	maxHeight = cellSizeY * w->rowsVisible;
 
 	if (Gui_Contains(w->x, w->y + 3, w->width, maxHeight - 3 * 2, x, y)) {
 		for (i = 0; i < w->blocksCount; i++) {
@@ -882,7 +890,7 @@ void TableWidget_Create(struct TableWidget* w) {
 	w->horAnchor = ANCHOR_CENTRE;
 	w->verAnchor = ANCHOR_CENTRE;
 	w->lastX = -20; w->lastY = -20;
-	w->xPadding  = Display_ScaleX(15);
+	w->paddingX  = Display_ScaleX(15);
 }
 
 void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
@@ -896,7 +904,7 @@ void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
 	if (block == BLOCK_AIR) w->selectedIndex = -1;
 
 	w->scroll.topRow = w->selectedIndex / w->blocksPerRow;
-	w->scroll.topRow -= (TABLE_MAX_ROWS_DISPLAYED - 1);
+	w->scroll.topRow -= (w->rowsVisible - 1);
 	ScrollbarWidget_ClampTopRow(&w->scroll);
 	TableWidget_MoveCursorToSelected(w);
 	TableWidget_RecreateDescTex(w);
