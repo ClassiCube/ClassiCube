@@ -93,6 +93,7 @@ struct TableWidget {
 	struct ScrollbarWidget scroll;
 	struct Texture descTex;
 	int lastX, lastY, paddingX;
+	int paddingTopY, paddingMaxY;
 };
 
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w);

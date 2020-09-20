@@ -564,13 +564,13 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 /*########################################################################################################################*
 *-------------------------------------------------------TableWidget-------------------------------------------------------*
 *#########################################################################################################################*/
-static int Table_X(struct TableWidget* w) { return w->x - w->paddingX; }
-static int Table_Y(struct TableWidget* w) { return w->y - 5 - 30; }
+static int Table_X(struct TableWidget* w) { return w->x - w->paddingX;    }
+static int Table_Y(struct TableWidget* w) { return w->y - w->paddingTopY; }
 static int Table_Width(struct TableWidget* w) {
 	return w->blocksPerRow * w->cellSizeX + w->paddingX * 2;
 }
 static int Table_Height(struct TableWidget* w) {
-	return w->rowsVisible * w->cellSizeY + 10 + 40;
+	return w->rowsVisible  * w->cellSizeY + w->paddingTopY + w->paddingMaxY;
 }
 
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
@@ -890,7 +890,10 @@ void TableWidget_Create(struct TableWidget* w) {
 	w->horAnchor = ANCHOR_CENTRE;
 	w->verAnchor = ANCHOR_CENTRE;
 	w->lastX = -20; w->lastY = -20;
-	w->paddingX  = Display_ScaleX(15);
+
+	w->paddingX    = Display_ScaleX(15);
+	w->paddingTopY = Display_ScaleY(15 + 20);
+	w->paddingMaxY = Display_ScaleX(15);
 }
 
 void TableWidget_SetBlockTo(struct TableWidget* w, BlockID block) {
