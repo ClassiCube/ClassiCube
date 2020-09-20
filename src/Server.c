@@ -118,15 +118,8 @@ int Ping_AveragePingMS(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Singleplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-#define SP_HasDir(path) (String_IndexOf(&path, '/') >= 0 || String_IndexOf(&path, '\\') >= 0)
-static void SPConnection_BeginConnect(void) {
-	static const String logName = String_FromConst("Singleplayer");
-	String path;
-	RNGState rnd;
+static void SPConnection_ResetBlockPerms(void) {
 	int i, count;
-
-	Chat_SetLogName(&logName);
-	Game_UseCPEBlocks = Game_UseCPE;
 	count = Game_UseCPEBlocks ? BLOCK_CPE_COUNT : BLOCK_ORIGINAL_COUNT;
 
 	for (i = 1; i < count; i++) {
@@ -134,12 +127,21 @@ static void SPConnection_BeginConnect(void) {
 		Blocks.CanDelete[i] = true;
 	}
 	Event_RaiseVoid(&BlockEvents.PermissionsChanged);
+}
+
+#define SP_HasDir(path) (String_IndexOf(&path, '/') >= 0 || String_IndexOf(&path, '\\') >= 0)
+static void SPConnection_BeginConnect(void) {
+	static const String logName = String_FromConst("Singleplayer");
+	String path;
+	RNGState rnd;
+	Chat_SetLogName(&logName);
+	Game_UseCPEBlocks = Game_UseCPE;
+	SPConnection_ResetBlockPerms();
 
 	/* For when user drops a map file onto ClassiCube.exe */
 	path = Game_Username;
 	if (SP_HasDir(path) && File_Exists(&path)) {
-		Map_LoadFrom(&path);
-		return;
+		Map_LoadFrom(&path); return;
 	}
 
 	Random_SeedFromCurrentTime(&rnd);
@@ -491,10 +493,12 @@ static void OnNewMap(void) {
 }
 
 static void OnReset(void) {
-	if (Server.IsSinglePlayer) return;
-
-	net_writeFailed = false;
-	OnFree();
+	if (Server.IsSinglePlayer) {
+		SPConnection_ResetBlockPerms();
+	} else {
+		net_writeFailed = false;
+		OnFree();
+	}
 }
 
 static void OnInit(void) {
