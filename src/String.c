@@ -122,7 +122,7 @@ int String_Equals(const String* a, const String* b) {
 		if (a->buffer[i] != b->buffer[i]) return false;
 	}
 	return true;
-}
+} 
 
 int String_CaselessEquals(const String* a, const String* b) {
 	int i;

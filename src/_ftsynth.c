@@ -37,47 +37,6 @@
   /*************************************************************************/
   /*************************************************************************/
   /****                                                                 ****/
-  /****   EXPERIMENTAL OBLIQUING SUPPORT                                ****/
-  /****                                                                 ****/
-  /*************************************************************************/
-  /*************************************************************************/
-
-  /* documentation is in ftsynth.h */
-
-  FT_EXPORT_DEF( void )
-  FT_GlyphSlot_Oblique( FT_GlyphSlot  slot )
-  {
-    FT_Matrix    transform;
-    FT_Outline*  outline;
-
-
-    if ( !slot )
-      return;
-
-    outline = &slot->outline;
-
-    /* only oblique outline glyphs */
-    if ( slot->format != FT_GLYPH_FORMAT_OUTLINE )
-      return;
-
-    /* we don't touch the advance width */
-
-    /* For italic, simply apply a shear transform, with an angle */
-    /* of about 12 degrees.                                      */
-
-    transform.xx = 0x10000L;
-    transform.yx = 0x00000L;
-
-    transform.xy = 0x0366AL;
-    transform.yy = 0x10000L;
-
-    FT_Outline_Transform( outline, &transform );
-  }
-
-
-  /*************************************************************************/
-  /*************************************************************************/
-  /****                                                                 ****/
   /****   EXPERIMENTAL EMBOLDENING SUPPORT                              ****/
   /****                                                                 ****/
   /*************************************************************************/

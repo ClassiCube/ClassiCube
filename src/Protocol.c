@@ -1327,8 +1327,7 @@ static void CPE_SetSpawnPoint(cc_uint8* data) {
 		y = (int)Stream_GetU32_BE(&data[4]);
 		z = (int)Stream_GetU32_BE(&data[8]);
 		data += 12;
-	}
-	else {
+	} else {
 		x = (cc_int16)Stream_GetU16_BE(&data[0]);
 		y = (cc_int16)Stream_GetU16_BE(&data[2]);
 		z = (cc_int16)Stream_GetU16_BE(&data[4]);

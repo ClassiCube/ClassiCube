@@ -960,9 +960,7 @@ static String Font_DoLookup(const String* fontName, int style) {
 	if (!font_list.count) SysFonts_Init();
 	path = String_Empty;
 
-	if (style & FONT_STYLE_BOLD)   path = Font_LookupOf(fontName, 'B');
-	if (style & FONT_STYLE_ITALIC) path = Font_LookupOf(fontName, 'I');
-
+	if (style & FONT_STYLE_BOLD) path = Font_LookupOf(fontName, 'B');
 	return path.length ? path : Font_LookupOf(fontName, 'R');
 }
 
