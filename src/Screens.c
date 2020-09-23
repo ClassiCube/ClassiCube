@@ -1018,6 +1018,9 @@ static void ChatScreen_BuildMesh(void* screen) { }
 
 static void ChatScreen_Layout(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
+	/* See comment in ChatScreen_UpdateChatYOffsets */
+	HUDScreen_Layout(Gui_HUD);
+
 	int yOffset = Gui_HUD->hotbar.height + 15; /* TODO: This should be DPI scaled?? */
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
 
