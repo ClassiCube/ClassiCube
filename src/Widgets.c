@@ -384,20 +384,18 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 /*########################################################################################################################*
 *------------------------------------------------------HotbarWidget-------------------------------------------------------*
 *#########################################################################################################################*/
+#define HotbarWidget_TileX(w, idx) (int)(w->x + w->slotXOffset + w->slotWidth * (idx))
+
 static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 	PackedCol white = PACKEDCOL_WHITE;
 	GfxResourceID tex;
-	float width;
-	int i, x;
+	int x;
 	
 	tex = Gui.ClassicTexture ? Gui.GuiClassicTex : Gui.GuiTex;
 	w->backTex.ID = tex;
 	Texture_Render(&w->backTex);
 
-	i     = Inventory.SelectedIndex;
-	width = w->slotWidth;
-	x     = (int)(w->x + w->slotXOffset + width * i);
-
+	x = HotbarWidget_TileX(w, Inventory.SelectedIndex);
 	w->selTex.ID = tex;
 	w->selTex.X  = (int)(x - w->selWidth / 2);
 	Gfx_Draw2DTexture(&w->selTex, white);
@@ -406,15 +404,14 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {
 	/* TODO: Should hotbar use its own VB? */
 	struct VertexTextured vertices[INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES];
-	float width, scale;
+	float scale;
 	int i, x, y;
 
 	IsometricDrawer_BeginBatch(vertices, Models.Vb);
-	width = w->slotWidth;
 	scale = w->elemSize / 2.0f;
 
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
-		x = (int)(w->x + w->slotXOffset + width * i);
+		x = HotbarWidget_TileX(w, i);
 		y = w->y + (w->height / 2);
 
 #ifdef CC_BUILD_TOUCH
@@ -464,6 +461,13 @@ static void HotbarWidget_Render(void* widget, double delta) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
 	HotbarWidget_RenderHotbarOutline(w);
 	HotbarWidget_RenderHotbarBlocks(w);
+
+#ifdef CC_BUILD_TOUCH
+	if (!Input_TouchMode) return;
+	w->ellipsisTex.X = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.Width / 2;
+	w->ellipsisTex.Y = w->y + (w->height / 2) - w->ellipsisTex.Height / 2;
+	Texture_Render(&w->ellipsisTex);
+#endif
 }
 
 static int HotbarWidget_KeyDown(void* widget, int key) {
@@ -543,8 +547,17 @@ static int HotbarWidget_MouseScroll(void* widget, float delta) {
 	return true;
 }
 
+static void HotbarWidget_Free(void* widget) {
+#ifdef CC_BUILD_TOUCH
+	struct HotbarWidget* w = (struct HotbarWidget*)widget;
+	if (!Input_TouchMode) return;
+
+	Gfx_DeleteTexture(&w->ellipsisTex.ID);
+#endif
+}
+
 static const struct WidgetVTABLE HotbarWidget_VTABLE = {
-	HotbarWidget_Render,      Widget_NullFunc,    HotbarWidget_Reposition,
+	HotbarWidget_Render,      HotbarWidget_Free,  HotbarWidget_Reposition,
 	HotbarWidget_KeyDown,     HotbarWidget_KeyUp, HotbarWidget_MouseScroll,
 	HotbarWidget_PointerDown, Widget_Pointer,     Widget_PointerMove
 };
@@ -553,6 +566,17 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 	w->VTABLE    = &HotbarWidget_VTABLE;
 	w->horAnchor = ANCHOR_CENTRE;
 	w->verAnchor = ANCHOR_MAX;
+}
+
+void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font) {
+#ifdef CC_BUILD_TOUCH
+	static const String dots = String_FromConst("...");
+	struct DrawTextArgs args;
+	if (!Input_TouchMode) return;
+
+	DrawTextArgs_Make(&args, &dots, font, true);
+	Drawer2D_MakeTextTexture(&w->ellipsisTex, &args);
+#endif
 }
 
 
@@ -733,7 +757,7 @@ static void TableWidget_Free(void* widget) {
 }
 
 void TableWidget_Recreate(struct TableWidget* w) {
-	Elem_TryFree(w);
+	Elem_Free(w);
 	w->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, TABLE_MAX_VERTICES);
 	TableWidget_RecreateDescTex(w);
 }
@@ -757,7 +781,7 @@ static void TableWidget_Reposition(void* widget) {
 		TableWidget_UpdateDescTexPos(w);
 
 		/* Does the table fit on screen? */
-		if (Table_Y(w) >= 0) break;
+		if (Game_ClassicMode || Table_Y(w) >= 0) break;
 		w->rowsVisible--;
 	} while (w->rowsVisible > 1);
 

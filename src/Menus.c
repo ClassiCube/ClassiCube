@@ -154,7 +154,7 @@ static void Menu_Remove(void* screen, int i) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 
-	if (widgets[i]) { Elem_TryFree(widgets[i]); }
+	if (widgets[i]) { Elem_Free(widgets[i]); }
 	widgets[i] = NULL;
 }
 
@@ -2059,7 +2059,7 @@ CC_NOINLINE static void MenuOptionsScreen_Set(struct MenuOptionsScreen* s, int i
 }
 
 CC_NOINLINE static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* s) {
-	Elem_TryFree(&s->extHelp);
+	Elem_Free(&s->extHelp);
 	s->extHelp.lines = 0;
 }
 

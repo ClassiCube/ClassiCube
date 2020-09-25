@@ -231,8 +231,7 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 #define Elem_HandlesPointerUp(elem,   id, x, y) (elem)->VTABLE->HandlesPointerUp(elem,   id, x, y)
 #define Elem_HandlesPointerMove(elem, id, x, y) (elem)->VTABLE->HandlesPointerMove(elem, id, x, y)
 
-#define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices);
-#define Widget_Render2(widget, offset)     (widget)->VTABLE->Render2(widget, offset);
-#define Widget_Layout(widget) (widget)->VTABLE->Reposition(widget);
-#define Elem_TryFree(elem)    if ((elem)->VTABLE) { Elem_Free(elem); }
+#define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices)
+#define Widget_Render2(widget, offset)     (widget)->VTABLE->Render2(widget, offset)
+#define Widget_Layout(widget) (widget)->VTABLE->Reposition(widget)
 #endif

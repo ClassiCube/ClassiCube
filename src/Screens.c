@@ -168,6 +168,7 @@ static void HUDScreen_ContextLost(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	Font_Free(&s->font);
 	TextAtlas_Free(&s->posAtlas);
+	Elem_Free(&s->hotbar);
 	Elem_Free(&s->line1);
 	Elem_Free(&s->line2);
 }
@@ -182,6 +183,8 @@ static void HUDScreen_ContextRecreated(void* screen) {
 
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
 	Font_ReducePadding(&s->font, 4);
+	HotbarWidget_SetFont(&s->hotbar, &s->font);
+
 	HUDScreen_Update(s, 1.0);
 	TextAtlas_Make(&s->posAtlas, &chars, &s->font, &prefix);
 
@@ -1306,7 +1309,7 @@ static void InventoryScreen_OnBlockChanged(void* screen) {
 static void InventoryScreen_ContextLost(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	Font_Free(&s->font);
-	Elem_TryFree(&s->table);
+	Elem_Free(&s->table);
 }
 
 static void InventoryScreen_ContextRecreated(void* screen) {

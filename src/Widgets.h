@@ -69,10 +69,11 @@ struct HotbarWidget {
 	float slotXOffset, elemSize;
 	float scrollAcc;
 	cc_bool altHandled;
+	struct Texture ellipsisTex;
 };
 /* Resets state of the given hotbar widget to default. */
 CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
-
+CC_NOINLINE void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font);
 
 /* A table of blocks. */
 struct TableWidget {
