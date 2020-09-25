@@ -18,9 +18,6 @@ struct TextWidget {
 #define TEXTWIDGET_MAX 4
 
 /* Initialises a text widget. */
-CC_NOINLINE void TextWidget_Make(struct TextWidget* w, 
-								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
-/* Initialises a text widget. */
 CC_NOINLINE void TextWidget_Init(struct TextWidget* w);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const String* text, struct FontDesc* font);

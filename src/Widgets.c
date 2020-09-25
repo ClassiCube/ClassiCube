@@ -64,11 +64,6 @@ static const struct WidgetVTABLE TextWidget_VTABLE = {
 	Widget_Pointer,    Widget_Pointer,  Widget_PointerMove,
 	TextWidget_BuildMesh, TextWidget_Render2
 };
-void TextWidget_Make(struct TextWidget* w, cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset) {
-	TextWidget_Init(w);
-	Widget_SetLocation(w, horAnchor, verAnchor, xOffset, yOffset);
-}
-
 void TextWidget_Init(struct TextWidget* w) {
 	Widget_Reset(w);
 	w->VTABLE = &TextWidget_VTABLE;

@@ -3041,7 +3041,8 @@ static void NostalgiaScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
 
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), NostalgiaScreen_SwitchBack);
-	TextWidget_Make(&nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
+	TextWidget_Init(&nostalgia_desc);
+	Widget_SetLocation(&nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 	s->widgets[9] = (struct Widget*)&nostalgia_desc;
 }
 
