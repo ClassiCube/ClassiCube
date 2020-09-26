@@ -409,7 +409,9 @@ void TexturePack_DownloadAsync(const String* url) {
 		time = GetCachedLastModified(url);
 		etag = GetCachedETag(url);
 	}
-	Http_AsyncGetDataEx(url, true, TexturePack_ReqID, &time, &etag, NULL);
+
+	Http_TryCancel(TexturePack_ReqID);
+	TexturePack_ReqID = Http_AsyncGetDataEx(url, true, &time, &etag, NULL);
 }
 
 
@@ -446,7 +448,6 @@ static void OnInit(void) {
 	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
 	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 
-	TexturePack_ReqID = HttpRequest_NextID();
 	Options_Get(OPT_DEFAULT_TEX_PACK, &defTexPack, "default.zip");
 	TextureCache_Init();
 }

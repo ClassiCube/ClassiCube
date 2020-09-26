@@ -713,13 +713,13 @@ cc_bool Fetcher_Working, Fetcher_Completed, Fetcher_Failed;
 int  Fetcher_StatusCode, Fetcher_Downloaded;
 cc_result Fetcher_Result;
 
-CC_NOINLINE static void Fetcher_DownloadAudio(int reqID, const char* hash) {
+CC_NOINLINE static int Fetcher_DownloadAudio(const char* hash) {
 	String url; char urlBuffer[URL_MAX_SIZE];
 
 	String_InitArray(url, urlBuffer);
 	String_Format3(&url, "http://resources.download.minecraft.net/%r%r/%c", 
 					&hash[0], &hash[1], hash);
-	Http_AsyncGetData(&url, false, reqID);
+	return Http_AsyncGetData(&url, false);
 }
 
 const char* Fetcher_RequestName(int reqID) {
@@ -751,21 +751,16 @@ void Fetcher_Run(void) {
 		if (allTexturesExist) continue;
 
 		url = String_FromReadonly(fileResources[i].url);
-		fileResources[i].reqID = HttpRequest_NextID();
-		Http_AsyncGetData(&url, false, fileResources[i].reqID);
+		fileResources[i].reqID = Http_AsyncGetData(&url, false);
 	}
 
 	for (i = 0; i < Array_Elems(musicResources); i++) {
 		if (musicResources[i].downloaded) continue;
-
-		musicResources[i].reqID = HttpRequest_NextID();
-		Fetcher_DownloadAudio(musicResources[i].reqID, musicResources[i].hash);
+		musicResources[i].reqID = Fetcher_DownloadAudio(musicResources[i].hash);
 	}
 	for (i = 0; i < Array_Elems(soundResources); i++) {
 		if (allSoundsExist) continue;
-
-		soundResources[i].reqID = HttpRequest_NextID();
-		Fetcher_DownloadAudio(soundResources[i].reqID, soundResources[i].hash);
+		soundResources[i].reqID = Fetcher_DownloadAudio(soundResources[i].hash);
 	}
 }
 
