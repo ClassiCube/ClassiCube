@@ -13,6 +13,7 @@ extern struct IGameComponent Inventory_Component;
 #define INVENTORY_BLOCKS_PER_HOTBAR 9
 /* Number of hotbars that can be selected between */
 #define INVENTORY_HOTBARS 9
+#define HOTBAR_MAX_INDEX (INVENTORY_BLOCKS_PER_HOTBAR - 1)
 
 CC_VAR extern struct _InventoryData {
 	/* Stores the currently bound blocks for all hotbars. */

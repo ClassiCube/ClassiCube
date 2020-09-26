@@ -18,9 +18,6 @@ struct TextWidget {
 #define TEXTWIDGET_MAX 4
 
 /* Initialises a text widget. */
-CC_NOINLINE void TextWidget_Make(struct TextWidget* w, 
-								cc_uint8 horAnchor, cc_uint8 verAnchor, int xOffset, int yOffset);
-/* Initialises a text widget. */
 CC_NOINLINE void TextWidget_Init(struct TextWidget* w);
 /* Draws the given text into a texture, then updates the position and size of this widget. */
 CC_NOINLINE void TextWidget_Set(struct TextWidget* w, const String* text, struct FontDesc* font);
@@ -54,10 +51,12 @@ CC_NOINLINE void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text,
 /* Clickable and draggable scrollbar. */
 struct ScrollbarWidget {
 	Widget_Body
-	int totalRows, topRow;
+	int topRow, rowsTotal, rowsVisible;
 	float scrollingAcc;
 	int dragOffset;
 	int draggingId;
+	int borderX, borderY;
+	int nubsWidth, offsets[3];
 };
 /* Resets state of the given scrollbar widget to default. */
 CC_NOINLINE void ScrollbarWidget_Create(struct ScrollbarWidget* w);
@@ -70,18 +69,20 @@ struct HotbarWidget {
 	float slotXOffset, elemSize;
 	float scrollAcc;
 	cc_bool altHandled;
+	struct Texture ellipsisTex;
 };
 /* Resets state of the given hotbar widget to default. */
 CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
-
+CC_NOINLINE void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font);
 
 /* A table of blocks. */
 struct TableWidget {
 	Widget_Body
-	int blocksCount, blocksPerRow, rowsCount;
+	int blocksCount, blocksPerRow;
+	int rowsTotal, rowsVisible;
 	int lastCreatedIndex;
 	struct FontDesc* font;
-	int selectedIndex, cellSize;
+	int selectedIndex, cellSizeX, cellSizeY;
 	float selBlockExpand;
 	GfxResourceID vb;
 	cc_bool pendingClose;
@@ -89,7 +90,8 @@ struct TableWidget {
 	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;
 	struct Texture descTex;
-	int lastX, lastY;
+	int lastX, lastY, paddingX;
+	int paddingTopY, paddingMaxY;
 };
 
 CC_NOINLINE void TableWidget_Create(struct TableWidget* w);

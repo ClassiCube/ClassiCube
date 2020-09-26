@@ -47,8 +47,7 @@ struct LWebTask {
 	cc_result res;     /* Error returned (e.g. for DNS failure) */
 	int status;        /* HTTP return code for the request */
 	
-	int reqID;  /* Unique identifier for this web task. */
-	String url; /* URL this task is downloading from/uploading to. */
+	int reqID; /* Unique request identifier for this web task. */
 	/* Called when task successfully downloaded/uploaded data. */
 	void (*Handle)(cc_uint8* data, cc_uint32 len);
 };
@@ -65,7 +64,7 @@ void GetTokenTask_Run(void);
 extern struct SignInTaskData {
 	struct LWebTask Base;
 	String username;   /* Username to sign in as. Changed to case correct username. */
-	const char* error; /* If sign in fails, the reason as to why. */
+	const char* error; /* If sign in fails, the reason why. */
 	cc_bool needMFA;   /* need login code for multifactor authentication */
 } SignInTask;
 void SignInTask_Run(const String* user, const String* pass, const String* mfaCode);

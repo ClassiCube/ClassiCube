@@ -168,8 +168,9 @@ static void HUDScreen_ContextLost(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	Font_Free(&s->font);
 	TextAtlas_Free(&s->posAtlas);
-	Elem_TryFree(&s->line1);
-	Elem_TryFree(&s->line2);
+	Elem_Free(&s->hotbar);
+	Elem_Free(&s->line1);
+	Elem_Free(&s->line2);
 }
 
 static void HUDScreen_ContextRecreated(void* screen) {	
@@ -179,32 +180,16 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	struct HUDScreen* s      = (struct HUDScreen*)screen;
 	struct TextWidget* line1 = &s->line1;
 	struct TextWidget* line2 = &s->line2;
-	int y;
 
 	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
 	Font_ReducePadding(&s->font, 4);
-	
-	y = 2;
-	TextWidget_Make(line1, ANCHOR_MIN, ANCHOR_MIN, 2, y);
+	HotbarWidget_SetFont(&s->hotbar, &s->font);
+
 	HUDScreen_Update(s, 1.0);
-
-	y += line1->height;
 	TextAtlas_Make(&s->posAtlas, &chars, &s->font, &prefix);
-	s->posAtlas.tex.Y = y;
-
-	y += s->posAtlas.tex.Height;
-	TextWidget_Make(line2, ANCHOR_MIN, ANCHOR_MIN, 2, 0);
-	/* We can't use y in TextWidget_Make because that DPI scales it */
-	line2->yOffset = y;
 
 	if (Game_ClassicMode) {
-		/* Swap around so 0.30 version is at top */
-		line2->yOffset = 2;
-		line1->yOffset = s->posAtlas.tex.Y;
 		TextWidget_SetConst(line2, "0.30", &s->font);
-
-		Widget_Layout(line1);
-		Widget_Layout(line2);
 	} else {
 		HUDScreen_UpdateHackState(s);
 	}
@@ -214,7 +199,27 @@ static void HUDScreen_BuildMesh(void* screen) { }
 
 static void HUDScreen_Layout(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
+	struct TextWidget* line1 = &s->line1;
+	struct TextWidget* line2 = &s->line2;
+	int posY;
+
+	Widget_SetLocation(line1, ANCHOR_MIN, ANCHOR_MIN, 2, 2);
+	posY = line1->y + line1->height;
+	s->posAtlas.tex.Y = posY;
+	Widget_SetLocation(line2, ANCHOR_MIN, ANCHOR_MIN, 2, 0);
+
+	if (Game_ClassicMode) {
+		/* Swap around so 0.30 version is at top */
+		line2->yOffset = line1->yOffset;
+		line1->yOffset = posY;
+		Widget_Layout(line1);
+	} else {
+		/* We can't use y in TextWidget_Make because that DPI scales it */
+		line2->yOffset = posY + s->posAtlas.tex.Height;
+	}
+
 	Widget_Layout(&s->hotbar);
+	Widget_Layout(line2);
 }
 
 static int HUDScreen_KeyDown(void* screen, int key) {
@@ -242,6 +247,8 @@ static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
 static void HUDScreen_Init(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	HotbarWidget_Create(&s->hotbar);
+	TextWidget_Init(&s->line1);
+	TextWidget_Init(&s->line2);
 }
 
 static void HUDScreen_Render(void* screen, double delta) {
@@ -399,7 +406,8 @@ static void TabListOverlay_Layout(void* screen) {
 	minHeight = Display_ScaleY(300);
 	s->height = max(minHeight, height + s->title.height);
 
-	s->title.yOffset = s->y + paddingY / 2;
+	s->title.horAnchor = ANCHOR_CENTRE;
+	s->title.yOffset   = s->y + paddingY / 2;
 	Widget_Layout(&s->title);
 }
 
@@ -682,7 +690,7 @@ static void TabListOverlay_Init(void* screen) {
 	s->active        = true;
 	s->classic       = Gui.ClassicTabList || !Server.SupportsExtPlayerList;
 	s->elementOffset = s->classic ? 0 : 10;
-	TextWidget_Make(&s->title, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
+	TextWidget_Init(&s->title);
 
 	Event_Register_(&TabListEvents.Added,   s, TabListOverlay_Add);
 	Event_Register_(&TabListEvents.Changed, s, TabListOverlay_Update);
@@ -963,7 +971,7 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 	/* Destroy announcement texture before even rendering it at all, */
 	/* otherwise changing texture pack shows announcement for one frame */
 	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + 5) {
-		Elem_TryFree(&s->announcement);
+		Elem_Free(&s->announcement);
 	}
 	Elem_Render(&s->announcement, delta);
 
@@ -985,17 +993,18 @@ static void ChatScreen_ContextLost(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	ChatScreen_FreeChatFonts(s);
 
-	Elem_TryFree(&s->chat);
-	Elem_TryFree(&s->input.base);
-	Elem_TryFree(&s->altText);
-	Elem_TryFree(&s->status);
-	Elem_TryFree(&s->bottomRight);
-	Elem_TryFree(&s->clientStatus);
-	Elem_TryFree(&s->announcement);
+	Elem_Free(&s->chat);
+	Elem_Free(&s->input.base);
+	Elem_Free(&s->altText);
+	Elem_Free(&s->status);
+	Elem_Free(&s->bottomRight);
+	Elem_Free(&s->clientStatus);
+	Elem_Free(&s->announcement);
 
 #ifdef CC_BUILD_TOUCH
-	Elem_TryFree(&s->send);
-	Elem_TryFree(&s->cancel);
+	if (!Input_TouchMode) return;
+	Elem_Free(&s->send);
+	Elem_Free(&s->cancel);
 #endif
 }
 
@@ -1032,7 +1041,10 @@ static void ChatScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, 0);
 	ChatScreen_UpdateChatYOffsets(s);
 
+	Widget_SetLocation(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
 	s->announcement.yOffset = -WindowInfo.Height / 4;
+	Widget_Layout(&s->announcement);
+
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
 	Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MIN, 10, 10);
@@ -1191,7 +1203,7 @@ static void ChatScreen_Init(void* screen) {
 							s->chatTextures, ChatScreen_GetChat);
 	TextGroupWidget_Create(&s->clientStatus, CHAT_MAX_CLIENTSTATUS,
 							s->clientStatusTextures, ChatScreen_GetClientStatus);
-	TextWidget_Make(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
+	TextWidget_Init(&s->announcement);
 
 	s->status.collapsible[0]       = true; /* Texture pack download status */
 	s->clientStatus.collapsible[0] = true;
@@ -1300,7 +1312,7 @@ static void InventoryScreen_OnBlockChanged(void* screen) {
 static void InventoryScreen_ContextLost(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 	Font_Free(&s->font);
-	Elem_TryFree(&s->table);
+	Elem_Free(&s->table);
 }
 
 static void InventoryScreen_ContextRecreated(void* screen) {

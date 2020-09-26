@@ -154,7 +154,7 @@ static void Menu_Remove(void* screen, int i) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
 
-	if (widgets[i]) { Elem_TryFree(widgets[i]); }
+	if (widgets[i]) { Elem_Free(widgets[i]); }
 	widgets[i] = NULL;
 }
 
@@ -2059,7 +2059,7 @@ CC_NOINLINE static void MenuOptionsScreen_Set(struct MenuOptionsScreen* s, int i
 }
 
 CC_NOINLINE static void MenuOptionsScreen_FreeExtHelp(struct MenuOptionsScreen* s) {
-	Elem_TryFree(&s->extHelp);
+	Elem_Free(&s->extHelp);
 	s->extHelp.lines = 0;
 }
 
@@ -3041,7 +3041,8 @@ static void NostalgiaScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
 
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), NostalgiaScreen_SwitchBack);
-	TextWidget_Make(&nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
+	TextWidget_Init(&nostalgia_desc);
+	Widget_SetLocation(&nostalgia_desc, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 	s->widgets[9] = (struct Widget*)&nostalgia_desc;
 }
 
@@ -3568,9 +3569,9 @@ static void TouchMore_Chat(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
 	ChatScreen_OpenInput(&String_Empty);
 }
-static void TouchMore_Inv(void* s, void* w) {
+static void TouchMore_Take(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
-	InventoryScreen_Show();
+	Game_ScreenshotRequested = true;
 }
 static void TouchMore_Menu(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
@@ -3587,7 +3588,7 @@ static const struct SimpleButtonDesc touchMore_btns[8] = {
 	{ -160,    0, "Speed",      TouchMore_Speed  },
 	{ -160,   50, "Fly",        TouchMore_Fly    },
 	{ -160,  100, "Menu",       TouchMore_Menu   },
-	{  160,  -50, "Inventory",  TouchMore_Inv    },
+	{  160,  -50, "Screenshot", TouchMore_Take   },
 	{  160,    0, "Fullscreen", TouchMore_Screen },
 	{  160,   50, "Noclip",     TouchMore_Noclip },
 	{  160,  100, "Fog",        TouchMore_Fog    }
