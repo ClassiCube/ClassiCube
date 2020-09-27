@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 23
 
     defaultConfig {
         applicationId = 'com.classicube.android'
         minSdkVersion 13
-        targetSdkVersion 26
+        targetSdkVersion 23
         externalNativeBuild {
             cmake {
                 arguments '-DANDROID_STL=c++_static'

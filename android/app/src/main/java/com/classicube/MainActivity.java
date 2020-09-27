@@ -468,11 +468,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	
 	public String shareScreenshot(String path) {
 		try {
-			File file = new File(getExternalAppDir() + path);			
+			File file = new File(getExternalAppDir() + "/screenshots/" + path);			
 			Intent intent = new Intent();
 			
 			intent.setAction(Intent.ACTION_SEND);
-			intent.putExtra(Intent.EXTRA_TEXT, "Check out my app.");
 			intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
 			intent.setType("image/png");
 			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
