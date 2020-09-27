@@ -465,6 +465,23 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		// wait for dialog to be closed
 		// TODO: this fails because multiple dialog boxes show
 	}
+	
+	public String shareScreenshot(String path) {
+		try {
+			File file = new File(getExternalAppDir() + path);			
+			Intent intent = new Intent();
+			
+			intent.setAction(Intent.ACTION_SEND);
+			intent.putExtra(Intent.EXTRA_TEXT, "Check out my app.");
+			intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+			intent.setType("image/png");
+			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+			startActivity(Intent.createChooser(intent, "share via"));
+		} catch (Exception ex) {
+			return ex.toString();
+		}
+		return "";
+	}
 
 	// ======================================
 	// ---------------- HTTP ----------------

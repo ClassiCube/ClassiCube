@@ -258,5 +258,7 @@ jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* a
 void JavaCall_String_Void(const char* name, const String* value);
 /* Calls a method in the activity class that takes no arguments and returns a string. */
 void JavaCall_Void_String(const char* name, String* dst);
+/* Calls a method in the activity class that takes a string and returns a string. */
+void JavaCall_String_String(const char* name, const String* arg, String* dst);
 #endif
 #endif

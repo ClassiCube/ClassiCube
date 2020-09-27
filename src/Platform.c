@@ -1938,21 +1938,36 @@ void JavaCall_String_Void(const char* name, const String* value) {
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
 
-void JavaCall_Void_String(const char* name, String* dst) {
+static void ReturnString(JNIEnv* env, jobject obj, String* dst) {
 	const jchar* src;
 	jsize len;
+	if (!obj) return;
+
+	src = (*env)->GetStringChars(env,  obj, NULL);
+	len = (*env)->GetStringLength(env, obj);
+	String_AppendUtf16(dst, src, len * 2);
+	(*env)->ReleaseStringChars(env, obj, src);
+	(*env)->DeleteLocalRef(env,     obj);
+}
+
+void JavaCall_Void_String(const char* name, String* dst) {
 	JNIEnv* env;
 	jobject obj;
 	JavaGetCurrentEnv(env);
 
 	obj = JavaCallObject(env, name, "()Ljava/lang/String;", NULL);
-	if (!obj) return;
+	ReturnString(env, obj, dst);
+}
 
-	src = (*env)->GetStringChars(env, obj, NULL);
-	len = (*env)->GetStringLength(env, obj);
-	String_AppendUtf16(dst, src, len * 2);
+void JavaCall_String_String(const char* name, const String* arg, String* dst) {
+	JNIEnv* env;
+	jobject obj;
+	jvalue args[1];
+	JavaGetCurrentEnv(env);
 
-	(*env)->ReleaseStringChars(env, obj, src);
-	(*env)->DeleteLocalRef(env, obj);
+	args[0].l = JavaMakeString(env, arg);
+	obj       = JavaCallObject(env, name, "(Ljava/lang/String;)Ljava/lang/String;", args);
+	ReturnString(env, obj, dst);
+	(*env)->DeleteLocalRef(env, args[0].l);
 }
 #endif

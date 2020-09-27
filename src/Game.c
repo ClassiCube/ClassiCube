@@ -568,8 +568,16 @@ void Game_TakeScreenshot(void) {
 
 	res = stream.Close(&stream);
 	if (res) { Logger_Warn2(res, "closing", &path); return; }
-
 	Chat_Add1("&eTaken screenshot as: %s", &filename);
+
+#ifdef CC_BUILD_ANDROID
+	filename.length = 0;
+	JavaCall_String_String("shareScreenshot", &path, &filename);
+	if (!filename.length) return;
+	
+	Chat_AddRaw("&cError sharing screenshot");
+	Chat_Add1("  &c%s", &filename);
+#endif
 #endif
 }
 
