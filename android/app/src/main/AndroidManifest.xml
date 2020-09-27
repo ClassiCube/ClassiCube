@@ -10,13 +10,9 @@
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="18" />
 
   <application
-      android:allowBackup="false"
-      android:fullBackupContent="false"
       android:icon="@mipmap/ic_launcher"
       android:label="ClassiCube">
 
-    <!-- Our activity is the built-in NativeActivity framework class.
-         This will take care of integrating with our NDK code. -->
     <activity android:name="com.classicube.MainActivity"
               android:label="ClassiCube"
               android:configChanges="orientation|screenSize|keyboard|keyboardHidden">
