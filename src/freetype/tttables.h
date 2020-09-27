@@ -466,36 +466,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
-  /*    TT_PCLT                                                            */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A structure to model a TrueType `PCLT' table.  All fields comply   */
-  /*    to the OpenType specification.                                     */
-  /*                                                                       */
-  typedef struct  TT_PCLT_
-  {
-    FT_Fixed   Version;
-    FT_ULong   FontNumber;
-    FT_UShort  Pitch;
-    FT_UShort  xHeight;
-    FT_UShort  Style;
-    FT_UShort  TypeFamily;
-    FT_UShort  CapHeight;
-    FT_UShort  SymbolSet;
-    FT_Char    TypeFace[16];
-    FT_Char    CharacterComplement[8];
-    FT_Char    FileName[6];
-    FT_Char    StrokeWeight;
-    FT_Char    WidthType;
-    FT_Byte    SerifStyle;
-    FT_Byte    Reserved;
-
-  } TT_PCLT;
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Struct>                                                              */
   /*    TT_MaxProfile                                                      */
   /*                                                                       */
   /* <Description>                                                         */

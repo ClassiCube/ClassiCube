@@ -352,71 +352,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /***                                                                   ***/
   /***                                                                   ***/
-  /***             OPTIONAL TRUETYPE/OPENTYPE TABLES DEFINITIONS         ***/
-  /***                                                                   ***/
-  /***                                                                   ***/
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Struct>                                                              */
-  /*    TT_GaspRangeRec                                                    */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A tiny structure used to model a gasp range according to the       */
-  /*    TrueType specification.                                            */
-  /*                                                                       */
-  /* <Fields>                                                              */
-  /*    maxPPEM  :: The maximum ppem value to which `gaspFlag' applies.    */
-  /*                                                                       */
-  /*    gaspFlag :: A flag describing the grid-fitting and anti-aliasing   */
-  /*                modes to be used.                                      */
-  /*                                                                       */
-  typedef struct  TT_GaspRangeRec_
-  {
-    FT_UShort  maxPPEM;
-    FT_UShort  gaspFlag;
-
-  } TT_GaspRangeRec, *TT_GaspRange;
-
-
-#define TT_GASP_GRIDFIT  0x01
-#define TT_GASP_DOGRAY   0x02
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Struct>                                                              */
-  /*    TT_GaspRec                                                         */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    A structure modeling the TrueType `gasp' table used to specify     */
-  /*    grid-fitting and anti-aliasing behaviour.                          */
-  /*                                                                       */
-  /* <Fields>                                                              */
-  /*    version    :: The version number.                                  */
-  /*                                                                       */
-  /*    numRanges  :: The number of gasp ranges in table.                  */
-  /*                                                                       */
-  /*    gaspRanges :: An array of gasp ranges.                             */
-  /*                                                                       */
-  typedef struct  TT_Gasp_
-  {
-    FT_UShort     version;
-    FT_UShort     numRanges;
-    TT_GaspRange  gaspRanges;
-
-  } TT_GaspRec;
-
-
-  /*************************************************************************/
-  /*************************************************************************/
-  /*************************************************************************/
-  /***                                                                   ***/
-  /***                                                                   ***/
   /***                    EMBEDDED BITMAPS SUPPORT                       ***/
   /***                                                                   ***/
   /***                                                                   ***/
@@ -1146,12 +1081,6 @@ FT_BEGIN_HEADER
   /*                            (`hdmx' table).  This table is optional in */
   /*                            TrueType/OpenType fonts.                   */
   /*                                                                       */
-  /*    gasp                 :: The grid-fitting and scaling properties    */
-  /*                            table (`gasp').  This table is optional in */
-  /*                            TrueType/OpenType fonts.                   */
-  /*                                                                       */
-  /*    pclt                 :: The `pclt' SFNT table.                     */
-  /*                                                                       */
   /*    num_sbit_scales      :: The number of sbit scales for this font.   */
   /*                                                                       */
   /*    sbit_scales          :: Array of sbit scales embedded in this      */
@@ -1338,12 +1267,6 @@ FT_BEGIN_HEADER
     /* Optional TrueType/OpenType tables                                   */
     /*                                                                     */
     /***********************************************************************/
-
-    /* grid-fitting and scaling table */
-    TT_GaspRec            gasp;                 /* the `gasp' table */
-
-    /* PCL 5 table */
-    TT_PCLT               pclt;
 
     /* embedded bitmaps support */
     FT_ULong              num_sbit_scales;

@@ -1334,10 +1334,6 @@
     if ( sfnt->load_eblc )
       LOAD_( eblc );
 
-    /* consider the pclt and gasp tables as optional */
-    LOAD_( pclt );
-    LOAD_( gasp );
-
     face->root.num_glyphs = face->max_profile.numGlyphs;
 
     /* Bit 8 of the `fsSelection' field in the `OS/2' table denotes  */
@@ -1741,10 +1737,6 @@
       FT_FREE( face->vertical.short_metrics );
       face->vertical_info = 0;
     }
-
-    /* freeing the gasp table */
-    FT_FREE( face->gasp.gaspRanges );
-    face->gasp.numRanges = 0;
 
     /* freeing the name table */
     if ( sfnt )

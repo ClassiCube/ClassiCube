@@ -166,8 +166,8 @@
     tt_face_free_name,      /* TT_Free_Table_Func      free_name       */
 
     NULL,                   /* TT_Load_Table_Func      load_kern       */
-    tt_face_load_gasp,      /* TT_Load_Table_Func      load_gasp       */
-    tt_face_load_pclt,      /* TT_Load_Table_Func      load_init       */
+    NULL,                   /* TT_Load_Table_Func      load_gasp       */
+    NULL,                   /* TT_Load_Table_Func      load_init       */
 
     /* see `ttload.h' */
     PUT_EMBEDDED_BITMAPS( tt_face_load_bhed ),

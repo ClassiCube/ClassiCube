@@ -82,18 +82,8 @@ FT_BEGIN_HEADER
   tt_face_load_post( TT_Face    face,
                      FT_Stream  stream );
 
-
-  FT_LOCAL( FT_Error )
-  tt_face_load_pclt( TT_Face    face,
-                     FT_Stream  stream );
-
   FT_LOCAL( void )
   tt_face_free_name( TT_Face  face );
-
-
-  FT_LOCAL( FT_Error )
-  tt_face_load_gasp( TT_Face    face,
-                     FT_Stream  stream );
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
 
