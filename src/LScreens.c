@@ -1584,6 +1584,9 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 		LButton_Init(s_, &s->btnRel[1], 130, 35, "OpenGL");
 		LButton_Init(s_, &s->btnDev[1], 130, 35, "OpenGL");
 	}
+#ifdef CC_BUILD_ANDROID
+	LLabel_Init(s_, &s->lblInfo, "&eRedownload and reinstall to update");
+#endif
 
 	s->btnRel[0].OnClick = UpdatesScreen_RelD3D9;
 	s->btnRel[1].OnClick = UpdatesScreen_RelOpenGL;

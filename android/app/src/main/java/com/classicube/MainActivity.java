@@ -491,7 +491,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	byte[] readCache = new byte[8192];
 
 	public int httpInit(String url, String method) {
-		url = url.replace("http://", "https://");
 		try {
 			conn = (HttpURLConnection)new URL(url).openConnection();
 			conn.setDoInput(true);
