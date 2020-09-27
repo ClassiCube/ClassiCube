@@ -5,7 +5,7 @@ android {
 
     defaultConfig {
         applicationId = 'com.classicube.android'
-        minSdkVersion 14
+        minSdkVersion 13
         targetSdkVersion 28
         externalNativeBuild {
             cmake {
@@ -26,10 +26,4 @@ android {
             path 'CMakeLists.txt'
         }
     }
-}
-
-dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
 }
