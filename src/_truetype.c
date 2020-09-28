@@ -15,7 +15,7 @@
 /*                                                                         */
 /***************************************************************************/
 
-
+#ifndef __EMSCRIPTEN__
 #define FT_MAKE_OPTION_SINGLE_OBJECT
 #include "freetype/ft2build.h"
 
@@ -24,6 +24,6 @@
 #include "freetype/ttinterp.c"
 #include "freetype/ttobjs.c"     /* object manager      */
 #include "freetype/ttpload.c"    /* tables loader       */
-
+#endif
 
 /* END */

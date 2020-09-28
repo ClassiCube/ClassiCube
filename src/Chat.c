@@ -609,7 +609,10 @@ static void OnInit(void) {
 	Commands_Register(&TeleportCommand);
 	Commands_Register(&ClearDeniedCommand);
 
-#ifndef CC_BUILD_MINFILES
+#if defined CC_BUILD_MINFILES || defined CC_BUILD_ANDROID
+	/* Better to not log chat by default on android, */
+	/* since it's not easily visible to end users */
+#else
 	Chat_Logging = Options_GetBool(OPT_CHAT_LOGGING, true);
 #endif
 }

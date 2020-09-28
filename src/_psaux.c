@@ -15,7 +15,7 @@
 /*                                                                         */
 /***************************************************************************/
 
-
+#ifndef __EMSCRIPTEN__
 #define FT_MAKE_OPTION_SINGLE_OBJECT
 #include "freetype/ft2build.h"
 
@@ -35,6 +35,6 @@
 #include "freetype/psintrp.c"
 #include "freetype/psread.c"
 #include "freetype/psstack.c"
-
+#endif
 
 /* END */

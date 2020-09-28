@@ -15,7 +15,7 @@
 /*                                                                         */
 /***************************************************************************/
 
-
+#ifndef __EMSCRIPTEN__
 #define FT_MAKE_OPTION_SINGLE_OBJECT
 #include "freetype/ft2build.h"
 
@@ -25,5 +25,6 @@
 #include "freetype/cffparse.c"
 #include "freetype/cffload.c"
 #include "freetype/cffobjs.c"
+#endif
 
 /* END */

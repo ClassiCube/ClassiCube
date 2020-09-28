@@ -15,12 +15,12 @@
 /*                                                                         */
 /***************************************************************************/
 
-
+#ifndef __EMSCRIPTEN__
 #define FT_MAKE_OPTION_SINGLE_OBJECT
 #include "freetype/ft2build.h"
 
 #include "freetype/ftgrays.c"
 #include "freetype/ftsmooth.c"
-
+#endif
 
 /* END */

@@ -15,7 +15,7 @@
 /*                                                                         */
 /***************************************************************************/
 
-
+#ifndef __EMSCRIPTEN__
 #include "freetype/ft2build.h"
 #define  FT_MAKE_OPTION_SINGLE_OBJECT
 
@@ -30,6 +30,6 @@
 #include "freetype/ftstream.c"
 #include "freetype/fttrigon.c"
 #include "freetype/ftutil.c"
-
+#endif
 
 /* END */

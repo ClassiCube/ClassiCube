@@ -15,7 +15,7 @@
 /*                                                                         */
 /***************************************************************************/
 
-
+#ifndef __EMSCRIPTEN__
 #define FT_MAKE_OPTION_SINGLE_OBJECT
 #include "freetype/ft2build.h"
 
@@ -30,6 +30,6 @@
 #include "freetype/afranges.c"
 #include "freetype/afshaper.c"
 #include "freetype/afwarp.c"
-
+#endif
 
 /* END */
