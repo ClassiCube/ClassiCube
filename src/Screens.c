@@ -719,7 +719,7 @@ static struct ChatScreen {
 	Screen_Body
 	float chatAcc;
 	cc_bool suppressNextPress;
-	int chatIndex;
+	int chatIndex, paddingX, paddingY;
 	int lastDownloadStatus;
 	struct FontDesc chatFont, announcementFont;
 	struct TextWidget announcement;
@@ -939,7 +939,8 @@ static void ChatScreen_DrawChatBackground(struct ChatScreen* s) {
 
 	if (height > 0) {
 		PackedCol backCol = PackedCol_Make(0, 0, 0, 127);
-		Gfx_Draw2DFlat(x - 5, y - 5, width + 10, height + 10, backCol);
+		Gfx_Draw2DFlat( x - s->paddingX,          y - s->paddingY, 
+					width + s->paddingX * 2, height + s->paddingY * 2, backCol);
 	}
 }
 
@@ -1032,6 +1033,9 @@ static void ChatScreen_Layout(void* screen) {
 
 	int yOffset = Gui_HUD->hotbar.height + 15; /* TODO: This should be DPI scaled?? */
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
+
+	s->paddingX = Display_ScaleX(5);
+	s->paddingY = Display_ScaleY(5);
 
 	Widget_SetLocation(&s->input.base,   ANCHOR_MIN, ANCHOR_MAX,  5, 5);
 	Widget_SetLocation(&s->altText,      ANCHOR_MIN, ANCHOR_MAX,  5, 5);

@@ -16,3 +16,6 @@ And a big thanks to everyone else in the ClassiCube community (who I didn't ment
 who in the past have provided many suggestions and assisted in identifying bugs.
 
 * Portions of the FreeType project (https://www.freetype.org/) are used for text rendering
+  Some functionality has been removed compared to original FreeType source code.
+  Additionally, the base .c files have an #ifdef to disable compiling for emscripten
+  The source code of FreeType is otherwise unmodified.  
