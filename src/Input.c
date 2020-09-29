@@ -572,7 +572,10 @@ static void MouseStateRelease(int button) {
 void InputHandler_OnScreensChanged(void) {
 	input_lastClick = DateTime_CurrentUTC_MS();
 	input_pickingId = -1;
+	if (!Gui_GetInputGrab()) return;
 
+	/* If input is grabbed, then the mouse isn't used for picking blocks in world anymore. */
+	/* So release all mouse buttons, since game stops sending PlayerClick during grabbed input */
 	MouseStateChanged(MOUSE_LEFT,   false);
 	MouseStateChanged(MOUSE_RIGHT,  false);
 	MouseStateChanged(MOUSE_MIDDLE, false);
