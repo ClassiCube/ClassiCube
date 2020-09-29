@@ -3532,8 +3532,7 @@ void TexPackOverlay_Show(const String* url) {
 	String_InitArray(s->url, s->_urlBuffer);
 	String_Copy(&s->url, url);
 
-	s->reqID = HttpRequest_NextID();
-	Http_AsyncGetHeaders(url, true, s->reqID);
+	s->reqID = Http_AsyncGetHeaders(url, true);
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_TEXPACK);
 }
 

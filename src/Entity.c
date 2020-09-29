@@ -457,8 +457,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 	if (!e->SkinFetchState) {
 		first = Entity_FirstOtherWithSameSkinAndFetchedSkin(e);
 		if (!first) {
-			e->_skinReqID = HttpRequest_NextID();
-			Http_AsyncGetSkin(&skin, e->_skinReqID);
+			e->_skinReqID     = Http_AsyncGetSkin(&skin);
 			e->SkinFetchState = SKIN_FETCH_DOWNLOADING;
 		} else {
 			Entity_CopySkin(e, first);
