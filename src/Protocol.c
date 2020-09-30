@@ -74,7 +74,7 @@ static cc_bool cpe_twoWayPing, cpe_extTextures, cpe_extBlocks;
 #else
 #define ReadBlock(data, value)\
 if (cpe_extBlocks) {\
-	value = Stream_GetU16_BE(data); data += 2;\
+	value = Stream_GetU16_BE(data) % BLOCK_COUNT; data += 2;\
 } else { value = *data++; }
 #endif
 
