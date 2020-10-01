@@ -2500,3 +2500,58 @@ void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* fo
 	w->target    = target;
 	SpecialInputWidget_InitTabs(w);
 }
+
+
+/*########################################################################################################################*
+*----------------------------------------------------ThumbstickWidget-----------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_TOUCH
+static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
+	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+	struct Texture tex = { 0 };
+
+	tex.X     = w->x;     tex.Y      = w->y;
+	tex.Width = w->width; tex.Height = w->height;
+	tex.uv.U2 = 1;        tex.uv.V2  = 1;
+	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
+}
+
+static int ThumbstickWidget_Render2(void* widget, int offset) {
+	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+	if (Gui.TouchTex) {
+		Gfx_BindTexture(Gui.TouchTex);
+		Gfx_DrawVb_IndexedTris_Range(4, offset);
+	}
+	return offset + 4;
+}
+
+static const struct WidgetVTABLE ThumbstickWidget_VTABLE = {
+	NULL, Screen_NullFunc, Widget_CalcPosition,
+	Widget_Key,        Widget_Key,      Widget_MouseScroll,
+	Widget_Pointer,    Widget_Pointer,  Widget_PointerMove,
+	ThumbstickWidget_BuildMesh, ThumbstickWidget_Render2
+};
+void ThumbstickWidget_Init(struct ThumbstickWidget* w) {
+	Widget_Reset(w);
+	w->VTABLE = &ThumbstickWidget_VTABLE;
+	w->width  = Display_ScaleX(128);
+	w->height = Display_ScaleY(128);
+}
+
+void ThumbstickWidget_GetMovement(struct ThumbstickWidget* w, float* xMoving, float* zMoving) {
+	int i, dx, dy;
+	float len;
+
+	for (i = 0; i < INPUT_MAX_POINTERS; i++) {
+		if (!(w->active & (1 << i))) continue;
+
+		dx  = Pointers[i].x - (w->x + w->width  / 2);
+		dy  = Pointers[i].y - (w->y + w->height / 2);
+		len = Math_SqrtF(dx * dx + dy * dy);
+
+		if (!len) continue;
+		*xMoving += dx / len;
+		*zMoving += dy / len;
+	}
+}
+#endif
