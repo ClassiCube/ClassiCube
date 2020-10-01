@@ -781,15 +781,18 @@ void LocalPlayer_SetInterpPosition(float t) {
 static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct HacksComp* hacks = &p->Hacks;
+	struct LocalPlayerInput* input;
 
 	if (Gui_GetInputGrab()) {
 		p->Physics.Jumping = false; hacks->Speeding = false;
 		hacks->FlyingUp    = false; hacks->FlyingDown = false;
 	} else {
-		if (KeyBind_IsPressed(KEYBIND_FORWARD)) *zMoving -= 0.98f;
-		if (KeyBind_IsPressed(KEYBIND_BACK))    *zMoving += 0.98f;
-		if (KeyBind_IsPressed(KEYBIND_LEFT))    *xMoving -= 0.98f;
-		if (KeyBind_IsPressed(KEYBIND_RIGHT))   *xMoving += 0.98f;
+		/* keyboard input, touch, joystick, etc */
+		for (input = &p->input; input; input = input->next) {
+			input->GetMovement(xMoving, zMoving);
+		}
+		*xMoving *= 0.98f; 
+		*zMoving *= 0.98f;
 
 		p->Physics.Jumping  = KeyBind_IsPressed(KEYBIND_JUMP);
 		hacks->Speeding     = hacks->Enabled && KeyBind_IsPressed(KEYBIND_SPEED);
@@ -870,6 +873,13 @@ static void LocalPlayer_CheckJumpVelocity(void* obj) {
 	}
 }
 
+static void LocalPlayer_GetMovement(float* xMoving, float* zMoving) {
+	if (KeyBind_IsPressed(KEYBIND_FORWARD)) *zMoving -= 1;
+	if (KeyBind_IsPressed(KEYBIND_BACK))    *zMoving += 1;
+	if (KeyBind_IsPressed(KEYBIND_LEFT))    *xMoving -= 1;
+	if (KeyBind_IsPressed(KEYBIND_RIGHT))   *xMoving += 1;
+}
+
 static const struct EntityVTABLE localPlayer_VTABLE = {
 	LocalPlayer_Tick,        Player_Despawn,         LocalPlayer_SetLocation, Entity_GetCol,
 	LocalPlayer_RenderModel, LocalPlayer_RenderName
@@ -883,6 +893,7 @@ static void LocalPlayer_Init(void) {
 	Entity_SetSkin(&p->Base, &Game_Username);
 	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, LocalPlayer_CheckJumpVelocity);
 
+	p->input.GetMovement = LocalPlayer_GetMovement;
 	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(hacks);
 	PhysicsComp_Init(&p->Physics, &p->Base);
@@ -900,9 +911,9 @@ static void LocalPlayer_Init(void) {
 
 	hacks->SpeedMultiplier = Options_GetFloat(OPT_SPEED_FACTOR, 0.1f, 50.0f, 10.0f);
 	hacks->PushbackPlacing = Options_GetBool(OPT_PUSHBACK_PLACING, false);
-	hacks->NoclipSlide     = Options_GetBool(OPT_NOCLIP_SLIDE, false);
-	hacks->WOMStyleHacks   = Options_GetBool(OPT_WOM_STYLE_HACKS, false);
-	hacks->FullBlockStep   = Options_GetBool(OPT_FULL_BLOCK_STEP, false);
+	hacks->NoclipSlide     = Options_GetBool(OPT_NOCLIP_SLIDE,     false);
+	hacks->WOMStyleHacks   = Options_GetBool(OPT_WOM_STYLE_HACKS,  false);
+	hacks->FullBlockStep   = Options_GetBool(OPT_FULL_BLOCK_STEP,  false);
 	p->Physics.UserJumpVel = Options_GetFloat(OPT_JUMP_VELOCITY, 0.0f, 52.0f, 0.42f);
 	p->Physics.JumpVel     = p->Physics.UserJumpVel;
 	hackPermMsgs           = Options_GetBool(OPT_HACK_PERM_MSGS, true);

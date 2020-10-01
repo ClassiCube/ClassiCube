@@ -41,7 +41,7 @@ CC_VAR extern struct _GuiData {
 	/* Whether FPS counter (and other info) is shown in top left. */
 	cc_bool ShowFPS;
 	float RawHotbarScale, RawChatScale, RawInventoryScale;
-	GfxResourceID GuiTex, GuiClassicTex, IconsTex;
+	GfxResourceID GuiTex, GuiClassicTex, IconsTex, TouchTex;
 } Gui;
 
 float Gui_Scale(float value);
