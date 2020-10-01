@@ -304,7 +304,7 @@ static int ScrollbarWidget_PointerDown(void* widget, int id, int x, int y) {
 	int posY, height;
 
 	if (w->draggingId == id) return true;
-	if (x < w->x || x >= w->x + w->width) return false;
+	if (x < w->x || x >= w->x + w->width + w->padding) return false;
 	/* only intercept pointer that's dragging scrollbar */
 	if (w->draggingId) return false;
 
@@ -378,6 +378,13 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 	w->scrollingAcc = 0.0f;
 	w->draggingId   = 0;
 	w->dragOffset   = 0;
+
+#ifdef CC_BUILD_TOUCH
+	/* It's easy to accidentally touch a bit to the right of the */
+	/* scrollbar with your finger, so just add some padding */
+	if (!Input_TouchMode) return;
+	w->padding = Display_ScaleX(15);
+#endif
 }
 
 

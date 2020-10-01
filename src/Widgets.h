@@ -54,7 +54,7 @@ struct ScrollbarWidget {
 	int topRow, rowsTotal, rowsVisible;
 	float scrollingAcc;
 	int dragOffset;
-	int draggingId;
+	int draggingId, padding;
 	int borderX, borderY;
 	int nubsWidth, offsets[3];
 };
