@@ -48,7 +48,7 @@ CC_NOINLINE cc_bool Utils_ParseIP(const String* ip, cc_uint8* data);
 /* Converts blocks of 3 bytes into 4 ASCII characters. (pads if needed) */
 /* Returns the number of ASCII characters written. */
 /* NOTE: You MUST ensure that dst is appropriately sized. */
-int Convert_ToBase64(const cc_uint8* src, int len, char* dst);
+int Convert_ToBase64(const void* data, int len, char* dst);
 /* Converts blocks of 4 ASCII characters into 3 bytes. */
 /* Returns the number of bytes written. */
 /* NOTE: You MUST ensure that dst is appropriately sized. */

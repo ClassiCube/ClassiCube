@@ -3379,10 +3379,12 @@ static void* clipboard_obj;
 
 EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
 	String str; char strBuffer[512];
+	int len;
 	if (!clipboard_func) return;
 
 	String_InitArray(str, strBuffer);
-	String_AppendUtf8(&str, src, String_CalcLen(src, 2048));
+	len = String_CalcLen(src, 2048);
+	String_AppendUtf8(&str, (const cc_uint8*)src, len);
 
 	clipboard_func(&str, clipboard_obj);
 	clipboard_func = NULL;
@@ -3489,11 +3491,12 @@ void Window_DrawFramebuffer(Rect2D r)     { }
 void Window_FreeFramebuffer(struct Bitmap* bmp)  { }
 
 EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) { 
-	char buffer[800];
-	String str;
+	String str; char buffer[800];
+	int len;
 
 	String_InitArray(str, buffer);
-	String_AppendUtf8(&str, src, String_CalcLen(src, 800));
+	len = String_CalcLen(src, 800);
+	String_AppendUtf8(&str, (const cc_uint8*)src, len);
 	Event_RaiseString(&InputEvents.TextChanged, &str);
 }
 

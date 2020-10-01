@@ -154,8 +154,10 @@ static const char base64_table[64] = {
 	'g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v',
 	'w','x','y','z','0','1','2','3','4','5','6','7','8','9','+','/'
 };
-int Convert_ToBase64(const cc_uint8* src, int len, char* dst) {
+int Convert_ToBase64(const void* data, int len, char* dst) {
+	const cc_uint8* src = (const cc_uint8*)data;
 	char* beg = dst;
+
 	/* 3 bytes to 4 chars */
 	for (; len >= 3; len -= 3, src += 3) {
 		*dst++ = base64_table[                         (src[0] >> 2)];
