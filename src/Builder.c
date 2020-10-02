@@ -148,7 +148,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 	int yMax = min(World.Height, y1 + CHUNK_SIZE);
 	int zMax = min(World.Length, z1 + CHUNK_SIZE);
 
-	int cIndex, index, tileIdx, count;
+	int cIndex, index, tileIdx;
 	BlockID b;
 	int x, y, z, xx, yy, zz;
 
@@ -177,10 +177,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 
 				/* Sprites can't be stretched, nor can then be they hidden by other blocks. */
 				/* Note sprites are drawn using DrawSprite and not with any of the DrawXFace. */
-				if (Blocks.Draw[b] == DRAW_SPRITE) {
-					AddSpriteVertices(b);
-					continue;
-				}
+				if (Blocks.Draw[b] == DRAW_SPRITE) { AddSpriteVertices(b); continue; }
 
 				Builder_X = x; Builder_Y = y; Builder_Z = z;
 				Builder_FullBright = Blocks.FullBright[b];
@@ -192,9 +189,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					(x != 0 && (Blocks.Hidden[tileIdx + Builder_Chunk[cIndex - 1]] & (1 << FACE_XMIN)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
-					count = Builder_StretchZ(index, x, y, z, cIndex, b, FACE_XMIN);
-					AddVertices(b, FACE_XMIN);
-					Builder_Counts[index] = count;
+					Builder_Counts[index] = Builder_StretchZ(index, x, y, z, cIndex, b, FACE_XMIN);
 				}
 
 				index++;
@@ -203,9 +198,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					(x != World.MaxX && (Blocks.Hidden[tileIdx + Builder_Chunk[cIndex + 1]] & (1 << FACE_XMAX)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
-					count = Builder_StretchZ(index, x, y, z, cIndex, b, FACE_XMAX);
-					AddVertices(b, FACE_XMAX);
-					Builder_Counts[index] = count;
+					Builder_Counts[index] = Builder_StretchZ(index, x, y, z, cIndex, b, FACE_XMAX);
 				}
 
 				index++;
@@ -214,9 +207,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					(z != 0 && (Blocks.Hidden[tileIdx + Builder_Chunk[cIndex - EXTCHUNK_SIZE]] & (1 << FACE_ZMIN)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
-					count = Builder_StretchX(index, Builder_X, Builder_Y, Builder_Z, cIndex, b, FACE_ZMIN);
-					AddVertices(b, FACE_ZMIN);
-					Builder_Counts[index] = count;
+					Builder_Counts[index] = Builder_StretchX(index, Builder_X, Builder_Y, Builder_Z, cIndex, b, FACE_ZMIN);
 				}
 
 				index++;
@@ -225,9 +216,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					(z != World.MaxZ && (Blocks.Hidden[tileIdx + Builder_Chunk[cIndex + EXTCHUNK_SIZE]] & (1 << FACE_ZMAX)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
-					count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_ZMAX);
-					AddVertices(b, FACE_ZMAX);
-					Builder_Counts[index] = count;
+					Builder_Counts[index] = Builder_StretchX(index, x, y, z, cIndex, b, FACE_ZMAX);
 				}
 
 				index++;
@@ -235,9 +224,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					(Blocks.Hidden[tileIdx + Builder_Chunk[cIndex - EXTCHUNK_SIZE_2]] & (1 << FACE_YMIN)) != 0) {
 					Builder_Counts[index] = 0;
 				} else {
-					count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_YMIN);
-					AddVertices(b, FACE_YMIN);
-					Builder_Counts[index] = count;
+					Builder_Counts[index] = Builder_StretchX(index, x, y, z, cIndex, b, FACE_YMIN);
 				}
 
 				index++;
@@ -245,13 +232,9 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					(Blocks.Hidden[tileIdx + Builder_Chunk[cIndex + EXTCHUNK_SIZE_2]] & (1 << FACE_YMAX)) != 0) {
 					Builder_Counts[index] = 0;
 				} else if (b < BLOCK_WATER || b > BLOCK_STILL_LAVA) {
-					count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_YMAX);
-					AddVertices(b, FACE_YMAX);
-					Builder_Counts[index] = count;
+					Builder_Counts[index] = Builder_StretchX(index, x, y, z, cIndex, b, FACE_YMAX);
 				} else {
-					count = Builder_StretchXLiquid(index, x, y, z, cIndex, b);
-					if (count > 0) AddVertices(b, FACE_YMAX);
-					Builder_Counts[index] = count;
+					Builder_Counts[index] = Builder_StretchXLiquid(index, x, y, z, cIndex, b);
 				}
 			}
 		}
@@ -603,6 +586,7 @@ static int NormalBuilder_StretchXLiquid(int countIndex, int x, int y, int z, int
 		chunkIndex++;
 		countIndex += FACE_COUNT;
 	}
+	AddVertices(block, FACE_YMAX);
 	return count;
 }
 
@@ -620,6 +604,7 @@ static int NormalBuilder_StretchX(int countIndex, int x, int y, int z, int chunk
 		chunkIndex++;
 		countIndex += FACE_COUNT;
 	}
+	AddVertices(block, face);
 	return count;
 }
 
@@ -637,6 +622,7 @@ static int NormalBuilder_StretchZ(int countIndex, int x, int y, int z, int chunk
 		chunkIndex += EXTCHUNK_SIZE;
 		countIndex += CHUNK_SIZE * FACE_COUNT;
 	}
+	AddVertices(block, face);
 	return count;
 }
 
@@ -896,6 +882,7 @@ static int Adv_StretchXLiquid(int countIndex, int x, int y, int z, int chunkInde
 		chunkIndex++;
 		countIndex += FACE_COUNT;
 	}
+	AddVertices(block, FACE_YMAX);
 	return count;
 }
 
@@ -916,6 +903,7 @@ static int Adv_StretchX(int countIndex, int x, int y, int z, int chunkIndex, Blo
 		chunkIndex++;
 		countIndex += FACE_COUNT;
 	}
+	AddVertices(block, face);
 	return count;
 }
 
@@ -936,6 +924,7 @@ static int Adv_StretchZ(int countIndex, int x, int y, int z, int chunkIndex, Blo
 		chunkIndex += EXTCHUNK_SIZE;
 		countIndex += CHUNK_SIZE * FACE_COUNT;
 	}
+	AddVertices(block, face);
 	return count;
 }
 
