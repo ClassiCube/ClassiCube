@@ -183,7 +183,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	struct TextWidget* line2 = &s->line2;
 
 	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_NONE);
-	Font_ReducePadding(&s->font, 4);
+	Font_SetPadding(&s->font, 2);
 	HotbarWidget_SetFont(&s->hotbar, &s->font);
 
 	HUDScreen_Update(s, 1.0);
@@ -313,7 +313,7 @@ static struct TabListOverlay {
 } TabListOverlay_Instance;
 #define TABLIST_MAX_VERTICES (TEXTWIDGET_MAX + 4 * TABLIST_MAX_ENTRIES)
 
-static void TabListOverlay_DrawName(struct Texture* tex, struct TabListOverlay* s, const String* name) {
+static void TabListOverlay_DrawText(struct Texture* tex, struct TabListOverlay* s, const String* name) {
 	String tmp; char tmpBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 
@@ -326,7 +326,6 @@ static void TabListOverlay_DrawName(struct Texture* tex, struct TabListOverlay* 
 
 	DrawTextArgs_Make(&args, &tmp, &s->font, !s->classic);
 	Drawer2D_MakeTextTexture(tex, &args);
-	Drawer2D_ReducePadding_Tex(tex, s->font.size, 3);
 }
 
 static int TabListOverlay_GetColumnWidth(struct TabListOverlay* s, int column) {
@@ -418,7 +417,7 @@ static void TabListOverlay_AddName(struct TabListOverlay* s, EntityID id, int in
 
 	name = TabList_UNSAFE_GetList(id);
 	s->ids[index] = id;
-	TabListOverlay_DrawName(&s->textures[index], s, &name);
+	TabListOverlay_DrawText(&s->textures[index], s, &name);
 }
 
 static void TabListOverlay_DeleteAt(struct TabListOverlay* s, int i) {
@@ -445,7 +444,7 @@ static void TabListOverlay_AddGroup(struct TabListOverlay* s, int id, int* index
 	}
 	
 	s->ids[*index] = GROUP_NAME_ID;
-	TabListOverlay_DrawName(&s->textures[*index], s, &group);
+	TabListOverlay_DrawText(&s->textures[*index], s, &group);
 
 	(*index)++;
 	s->namesCount++;
@@ -632,13 +631,14 @@ static void TabListOverlay_ContextRecreated(void* screen) {
 	Drawer2D_MakeFont(&s->font, size, FONT_FLAGS_NONE);
 	s->namesCount = 0;
 
+	TextWidget_SetConst(&s->title, "Connected players:", &s->font);
+	Font_SetPadding(&s->font, 1);
+
 	/* TODO: Just recreate instead of this? maybe */
 	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
 		if (!TabList.NameOffsets[id]) continue;
 		TabListOverlay_AddName(s, (EntityID)id, -1);
 	}
-
-	TextWidget_SetConst(&s->title, "Connected players:", &s->font);
 	TabListOverlay_SortAndLayout(s); /* TODO: Not do layout here too */
 }
 

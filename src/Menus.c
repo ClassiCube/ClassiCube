@@ -3124,7 +3124,7 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 
 	Screen_CreateVb(screen);
 	Drawer2D_MakeFont(&textFont, 8, FONT_FLAGS_NONE);
-	Font_ReducePadding(&textFont, 4);
+	Font_SetPadding(&textFont, 1);
 	TextAtlas_Make(&s->idAtlas, &chars, &textFont, &prefix);
 	Font_Free(&textFont);
 	

@@ -96,8 +96,8 @@ cc_bool Drawer2D_SetFontBitmap(struct Bitmap* bmp);
 
 /* Gets the list of all supported system font names on this platform. */
 CC_API void Font_GetNames(struct StringsBuffer* buffer);
-/* Reduces padding for a bitmapped font. */
-void Font_ReducePadding(struct FontDesc* desc, int scale);
+/* Sets padding for a bitmapped font. */
+void Font_SetPadding(struct FontDesc* desc, int amount);
 /* Finds the path and face number of the given system font, with closest matching style */
 String Font_Lookup(const String* fontName, int flags);
 /* Allocates a new system font from the given arguments. */

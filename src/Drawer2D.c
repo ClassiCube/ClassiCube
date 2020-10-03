@@ -163,12 +163,9 @@ cc_bool Drawer2D_SetFontBitmap(struct Bitmap* bmp) {
 	return true;
 }
 
-void Font_ReducePadding(struct FontDesc* desc, int scale) {
-	int padding;
+void Font_SetPadding(struct FontDesc* desc, int amount) {
 	if (!Drawer2D_BitmappedText) return;
-
-	padding = (desc->height - desc->size) / scale;
-	desc->height -= padding * 2;
+	desc->height = desc->size + Display_ScaleY(amount) * 2;
 }
 
 /* Measures width of the given text when drawn with the given system font. */
