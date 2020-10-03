@@ -148,7 +148,8 @@ static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
 	TextWidget_Set(&s->line2, &status, &s->font);
 }
 
-static void HUDScreen_Update(struct HUDScreen* s, double delta) {
+static void HUDScreen_Update(void* screen, double delta) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
 	String status; char statusBuffer[STRING_SIZE * 2];
 
 	s->frames++;
@@ -253,7 +254,6 @@ static void HUDScreen_Init(void* screen) {
 
 static void HUDScreen_Render(void* screen, double delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	HUDScreen_Update(s, delta);
 	if (Game_HideGui) return;
 
 	/* TODO: If Game_ShowFps is off and not classic mode, we should just return here */
@@ -273,7 +273,7 @@ static void HUDScreen_Render(void* screen, double delta) {
 }
 
 static const struct ScreenVTABLE HUDScreen_VTABLE = {
-	HUDScreen_Init,        Screen_NullUpdate,   Screen_NullFunc,  
+	HUDScreen_Init,        HUDScreen_Update,    Screen_NullFunc,
 	HUDScreen_Render,      HUDScreen_BuildMesh,
 	HUDScreen_KeyDown,     HUDScreen_KeyUp,     Screen_FKeyPress, Screen_FText,
 	HUDscreen_PointerDown, Screen_FPointer,     Screen_FPointer,  Screen_FMouseScroll,
