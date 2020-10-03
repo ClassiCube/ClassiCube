@@ -53,7 +53,7 @@ static String font_candidates[11] = {
 /* adjusts height to be closer to system fonts */
 static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
 
-void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style) {
+void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags) {
 	int i;
 	cc_result res;
 
@@ -62,7 +62,7 @@ void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style) {
 		size = Display_ScaleY(size);
 		desc->handle = NULL;
 		desc->size   = size;
-		desc->style  = style;
+		desc->flags  = flags;
 		desc->height = Drawer2D_AdjHeight(size);
 	} else {
 		font_candidates[0] = Drawer2D_FontName;
@@ -70,7 +70,7 @@ void Drawer2D_MakeFont(struct FontDesc* desc, int size, int style) {
 		/* In case user's default font(s) are broken somehow */
 		/* (e.g. user deletes the file for the default font) */
 		for (i = 0; i < Array_Elems(font_candidates); i++) {
-			res = Font_Make(desc, &font_candidates[i], size, style);
+			res = Font_Make(desc, &font_candidates[i], size, flags);
 
 			if (res) {
 				Font_Free(desc);
@@ -91,7 +91,7 @@ static void CheckFont(void) {
 	i = font_candidates[0].length ? 0 : 1;
 
 	for (; i < Array_Elems(font_candidates); i++) {
-		path = Font_Lookup(&font_candidates[i], FONT_STYLE_NORMAL);
+		path = Font_Lookup(&font_candidates[i], FONT_FLAGS_NONE);
 		if (!path.length) continue;
 
 		String_Copy(&Drawer2D_FontName, &font_candidates[i]);
@@ -513,7 +513,7 @@ static void DrawBitmappedTextCore(struct Bitmap* bmp, struct DrawTextArgs* args,
 		x = begX;
 	}
 
-	if (!(args->font->style & FONT_FLAG_UNDERLINE)) return;
+	if (!(args->font->flags & FONT_FLAGS_UNDERLINE)) return;
 	/* scale up bottom row of a cell to drawn text font */
 	cellY = (8 - 1) * dstHeight / 8;
 	underlineY      = y + (cellY + yPadding);
@@ -955,25 +955,25 @@ static String Font_LookupOf(const String* fontName, const char type) {
 	return EntryList_UNSAFE_Get(&font_list, &name, '=');
 }
 
-static String Font_DoLookup(const String* fontName, int style) {
+static String Font_DoLookup(const String* fontName, int flags) {
 	String path;
 	if (!font_list.count) SysFonts_Init();
 	path = String_Empty;
 
-	if (style & FONT_STYLE_BOLD) path = Font_LookupOf(fontName, 'B');
+	if (flags & FONT_FLAGS_BOLD) path = Font_LookupOf(fontName, 'B');
 	return path.length ? path : Font_LookupOf(fontName, 'R');
 }
 
-String Font_Lookup(const String* fontName, int style) {
-	String path = Font_DoLookup(fontName, style);
+String Font_Lookup(const String* fontName, int flags) {
+	String path = Font_DoLookup(fontName, flags);
 	if (path.length) return path;
 
 	SysFonts_Update();
-	return Font_DoLookup(fontName, style);
+	return Font_DoLookup(fontName, flags);
 }
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
-cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int style) {
+cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int flags) {
 	struct SysFont* font;
 	String value, path, index;
 	int faceIndex, dpiX, dpiY;
@@ -981,10 +981,10 @@ cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int
 	FT_Error err;
 
 	desc->size   = size;
-	desc->style  = style;
+	desc->flags  = flags;
 	desc->handle = NULL;
 
-	value = Font_Lookup(fontName, style);
+	value = Font_Lookup(fontName, flags);
 	if (!value.length) return ERR_INVALID_ARGUMENT;
 	String_UNSAFE_Separate(&value, ',', &path, &index);
 	Convert_ParseInt(&index, &faceIndex);
@@ -1010,7 +1010,7 @@ cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int
 void Font_Free(struct FontDesc* desc) {
 	struct SysFont* font;
 	desc->size  = 0;
-	desc->style = 0;
+	desc->flags = 0;
 	/* NULL for fonts created by Drawer2D_MakeFont and bitmapped text mode is on */
 	if (!desc->handle) return;
 
@@ -1174,7 +1174,7 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 		x -= glyph->left; y -= offset;
 	}
 
-	if (args->font->style & FONT_FLAG_UNDERLINE) {
+	if (args->font->flags & FONT_FLAGS_UNDERLINE) {
 		int ul_pos   = FT_MulFix(face->underline_position,  face->size->metrics.y_scale);
 		int ul_thick = FT_MulFix(face->underline_thickness, face->size->metrics.y_scale);
 

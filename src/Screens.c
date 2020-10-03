@@ -182,7 +182,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	struct TextWidget* line1 = &s->line1;
 	struct TextWidget* line2 = &s->line2;
 
-	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_NONE);
 	Font_ReducePadding(&s->font, 4);
 	HotbarWidget_SetFont(&s->hotbar, &s->font);
 
@@ -629,7 +629,7 @@ static void TabListOverlay_ContextRecreated(void* screen) {
 	int size, id;
 
 	size = Drawer2D_BitmappedText ? 16 : 11;
-	Drawer2D_MakeFont(&s->font, size, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->font, size, FONT_FLAGS_NONE);
 	s->namesCount = 0;
 
 	/* TODO: Just recreate instead of this? maybe */
@@ -786,11 +786,11 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	/* don't recreate font if possible */
 	if (size == s->chatFont.size) return false;
 	ChatScreen_FreeChatFonts(s);
-	Drawer2D_MakeFont(&s->chatFont, size, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->chatFont, size, FONT_FLAGS_NONE);
 
 	size = (int)(16 * Gui_GetChatScale());
 	Math_Clamp(size, 8, 60);
-	Drawer2D_MakeFont(&s->announcementFont, size, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->announcementFont, size, FONT_FLAGS_NONE);
 
 	ChatInputWidget_SetFont(&s->input,        &s->chatFont);
 	TextGroupWidget_SetFont(&s->status,       &s->chatFont);
@@ -1017,7 +1017,7 @@ static void ChatScreen_ContextRecreated(void* screen) {
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
-	Drawer2D_MakeFont(&font, 16, FONT_STYLE_BOLD);
+	Drawer2D_MakeFont(&font, 16, FONT_FLAGS_BOLD);
 	ButtonWidget_SetConst(&s->send,   "Send",   &font);
 	ButtonWidget_SetConst(&s->cancel, "Cancel", &font);
 	Font_Free(&font);
@@ -1321,7 +1321,7 @@ static void InventoryScreen_ContextLost(void* screen) {
 
 static void InventoryScreen_ContextRecreated(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_NONE);
 	TableWidget_Recreate(&s->table);
 }
 
@@ -1515,7 +1515,7 @@ static void LoadingScreen_ContextLost(void* screen) {
 
 static void LoadingScreen_ContextRecreated(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_NONE);
 	LoadingScreen_SetTitle(s);
 	LoadingScreen_SetMessage(s);
 	Screen_CreateVb(s);
@@ -1772,8 +1772,8 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	Screen_CreateVb(screen);
 
-	Drawer2D_MakeFont(&s->titleFont,   16, FONT_STYLE_BOLD);
-	Drawer2D_MakeFont(&s->messageFont, 16, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->titleFont,   16, FONT_FLAGS_BOLD);
+	Drawer2D_MakeFont(&s->messageFont, 16, FONT_FLAGS_NONE);
 	TextWidget_Set(&s->title,   &s->titleStr,   &s->titleFont);
 	TextWidget_Set(&s->message, &s->messageStr, &s->messageFont);
 	DisconnectScreen_UpdateReconnect(s);
@@ -1934,7 +1934,7 @@ static void TouchScreen_ContextRecreated(void* screen) {
 	const struct TouchBindDesc* desc;
 	int i;
 	Screen_CreateVb(screen);
-	Drawer2D_MakeFont(&s->font, 16, FONT_STYLE_BOLD);
+	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_BOLD);
 
 	for (i = 0; i < s->numWidgets; i++) {
 		desc = &touchDescs[i];

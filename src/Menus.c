@@ -72,8 +72,8 @@ static void Menu_LayoutBack(struct ButtonWidget* btn) {
 	Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
 
-CC_NOINLINE static void Menu_MakeTitleFont(struct FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_STYLE_BOLD); }
-CC_NOINLINE static void Menu_MakeBodyFont(struct FontDesc* font)  { Drawer2D_MakeFont(font, 16, FONT_STYLE_NORMAL); }
+CC_NOINLINE static void Menu_MakeTitleFont(struct FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_FLAGS_BOLD); }
+CC_NOINLINE static void Menu_MakeBodyFont(struct FontDesc* font)  { Drawer2D_MakeFont(font, 16, FONT_FLAGS_NONE); }
 static void Menu_CloseKeyboard(void* s) { Window_CloseKeyboard(); }
 
 static void Menu_RenderBounds(void) {
@@ -1589,7 +1589,7 @@ static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget
 		ButtonWidget_Set(button, text, &s->font); return;
 	}
 
-	res = Font_Make(&font, text, 16, FONT_STYLE_NORMAL);
+	res = Font_Make(&font, text, 16, FONT_FLAGS_NONE);
 	if (!res) {
 		ButtonWidget_Set(button, text, &font);
 	} else {
@@ -3123,7 +3123,7 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	struct FontDesc textFont, titleFont;
 
 	Screen_CreateVb(screen);
-	Drawer2D_MakeFont(&textFont, 8, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&textFont, 8, FONT_FLAGS_NONE);
 	Font_ReducePadding(&textFont, 4);
 	TextAtlas_Make(&s->idAtlas, &chars, &textFont, &prefix);
 	Font_Free(&textFont);

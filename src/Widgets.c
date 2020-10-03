@@ -2145,9 +2145,9 @@ static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Textu
 			ul  = (bit.Len & TEXTGROUPWIDGET_URL);
 			args->text = String_UNSAFE_Substring(text, bit.LineBeg, bit.LineLen);
 
-			if (ul) args->font->style |= FONT_FLAG_UNDERLINE;
+			if (ul) args->font->flags |= FONT_FLAGS_UNDERLINE;
 			Drawer2D_DrawText(&bmp, args, x, 0);
-			if (ul) args->font->style &= ~FONT_FLAG_UNDERLINE;
+			if (ul) args->font->flags &= ~FONT_FLAGS_UNDERLINE;
 
 			x += partWidths[i];
 		}

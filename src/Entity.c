@@ -244,7 +244,7 @@ static void MakeNameTexture(struct Entity* e) {
 	Drawer2D_BitmappedText = true;
 	name = String_FromRawArray(e->NameRaw);
 
-	Drawer2D_MakeFont(&font, 24, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&font, 24, FONT_FLAGS_NONE);
 	DrawTextArgs_Make(&args, &name, &font, false);
 	width = Drawer2D_TextWidth(&args);
 

@@ -1263,7 +1263,7 @@ static void ServersScreen_Init(struct LScreen* s_) {
 
 static void ServersScreen_Show(struct LScreen* s_) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
-	Drawer2D_MakeFont(&s->rowFont, 11, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&s->rowFont, 11, FONT_FLAGS_NONE);
 
 	s->table.rowFont = &s->rowFont;
 	/* also resets hash and filter */

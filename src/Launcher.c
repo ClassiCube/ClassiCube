@@ -238,9 +238,9 @@ static void Launcher_Init(void) {
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
 	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 
-	Drawer2D_MakeFont(&Launcher_TitleFont, 16, FONT_STYLE_BOLD);
-	Drawer2D_MakeFont(&Launcher_TextFont,  14, FONT_STYLE_NORMAL);
-	Drawer2D_MakeFont(&Launcher_HintFont,  12, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&Launcher_TitleFont, 16, FONT_FLAGS_BOLD);
+	Drawer2D_MakeFont(&Launcher_TextFont,  14, FONT_FLAGS_NONE);
+	Drawer2D_MakeFont(&Launcher_HintFont,  12, FONT_FLAGS_NONE);
 	titleX = Display_ScaleX(4); titleY = Display_ScaleY(4);
 
 	Drawer2D_Cols['g'] = BitmapCol_Make(125, 125, 125, 255);
@@ -503,7 +503,7 @@ void Launcher_TryLoadTexturePack(void) {
 void Launcher_UpdateLogoFont(void) {
 	Font_Free(&logoFont);
 	Drawer2D_BitmappedText = UsingBitmappedFont();
-	Drawer2D_MakeFont(&logoFont, 32, FONT_STYLE_NORMAL);
+	Drawer2D_MakeFont(&logoFont, 32, FONT_FLAGS_NONE);
 	Drawer2D_BitmappedText = false;
 }
 
