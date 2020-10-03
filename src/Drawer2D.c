@@ -438,7 +438,7 @@ static void DrawBitmappedTextCore(struct Bitmap* bmp, struct DrawTextArgs* args,
 	String text  = args->text;
 	int i, point = args->font->size, count = 0;
 
-	int xPadding, yPadding;
+	int xPadding;
 	int srcX, srcY, dstX, dstY;
 	int fontX, fontY;
 	int srcWidth, dstWidth;
@@ -472,11 +472,11 @@ static void DrawBitmappedTextCore(struct Bitmap* bmp, struct DrawTextArgs* args,
 
 	dstHeight = point; begX = x;
 	/* adjust coords to make drawn text match GDI fonts */
+	y += (args->font->height - dstHeight) / 2;
 	xPadding  = Drawer2D_XPadding(point);
-	yPadding  = (args->font->height - dstHeight) / 2;
 
 	for (yy = 0; yy < dstHeight; yy++) {
-		dstY = y + (yy + yPadding);
+		dstY = y + yy;
 		if ((unsigned)dstY >= (unsigned)bmp->height) continue;
 
 		fontY  = 0 + yy * tileSize / dstHeight;
@@ -516,7 +516,7 @@ static void DrawBitmappedTextCore(struct Bitmap* bmp, struct DrawTextArgs* args,
 	if (!(args->font->flags & FONT_FLAGS_UNDERLINE)) return;
 	/* scale up bottom row of a cell to drawn text font */
 	cellY = (8 - 1) * dstHeight / 8;
-	underlineY      = y + (cellY + yPadding);
+	underlineY      = y + cellY;
 	underlineHeight = dstHeight - cellY;
 
 	for (i = 0; i < count; ) {
@@ -697,19 +697,18 @@ struct IGameComponent Drawer2D_Component = {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
 void Font_GetNames(struct StringsBuffer* buffer) { }
-String Font_Lookup(const String* fontName, int style) {
+String Font_Lookup(const String* fontName, int flags) {
 	String str = String_FromConst("-----"); return str;
 }
 
-cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int style) {
+cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int flags) {
 	desc->size   = size;
-	desc->style  = style;
+	desc->flags  = flags;
 	desc->height = 0;
 	return 0;
 }
 void Font_Free(struct FontDesc* desc) {
-	desc->size    = 0;
-	desc->style   = 0;	
+	desc->size   = 0;
 }
 
 void SysFonts_Register(const String* path) { }
@@ -1009,8 +1008,7 @@ cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int
 
 void Font_Free(struct FontDesc* desc) {
 	struct SysFont* font;
-	desc->size  = 0;
-	desc->flags = 0;
+	desc->size = 0;
 	/* NULL for fonts created by Drawer2D_MakeFont and bitmapped text mode is on */
 	if (!desc->handle) return;
 
