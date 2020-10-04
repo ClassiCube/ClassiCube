@@ -230,9 +230,12 @@ static void OnRawMovement(void* obj, float deltaX, float deltaY) {
 	Camera.Active->OnRawMovement(deltaX, deltaY);
 }
 
-static void Camera_CheckThirdPerson(void* obj) {
+static void OnHacksChanged(void* obj) {
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
+	/* Leave third person if not allowed anymore */
 	if (!h->CanUseThirdPerson || !h->Enabled) Camera_CycleActive();
+	/* Check if third person camers is allowed to be scrolled out */
+	if (Camera.Active->isThirdPerson) ThirdPersonCamera_Zoom(0);
 }
 
 void Camera_Init(void) {
@@ -242,7 +245,7 @@ void Camera_Init(void) {
 
 	Camera.Active = &cam_FirstPerson;
 	Event_Register_(&PointerEvents.RawMoved,            NULL, OnRawMovement);
-	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, Camera_CheckThirdPerson);
+	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, OnHacksChanged);
 
 #ifdef CC_BUILD_WIN
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 40);
