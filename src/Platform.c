@@ -175,12 +175,11 @@ void Platform_Log4(const char* format, const void* a1, const void* a2, const voi
 	String_InitArray(msg, msgBuffer);
 
 	String_Format4(&msg, format, a1, a2, a3, a4);
-	Platform_Log(&msg);
+	Platform_Log(msg.buffer, msg.length);
 }
 
 void Platform_LogConst(const char* message) {
-	String msg = String_FromReadonly(message);
-	Platform_Log(&msg);
+	Platform_Log(message, String_Length(message));
 }
 
 /* TODO: check this is actually accurate */
@@ -198,17 +197,23 @@ cc_uint64 Stopwatch_ElapsedMilliseconds(cc_uint64 beg, cc_uint64 end) {
 static HANDLE conHandle;
 static BOOL hasDebugger;
 
-void Platform_Log(const String* message) {
+void Platform_Log(const char* msg, int len) {
+	char tmp[2048 + 1];
 	DWORD wrote;
+
 	if (conHandle) {
-		WriteFile(conHandle, message->buffer, message->length, &wrote, NULL);
-		WriteFile(conHandle, "\n",            1,               &wrote, NULL);
+		WriteFile(conHandle, msg,  len, &wrote, NULL);
+		WriteFile(conHandle, "\n",   1, &wrote, NULL);
 	}
-	if (hasDebugger) {
-		/* TODO: This reads past the end of the buffer */
-		OutputDebugStringA(message->buffer);
-		OutputDebugStringA("\n");
-	}
+	if (!hasDebugger) return;
+
+	len = min(len, 2048);
+	Mem_Copy(tmp, msg, len);
+	tmp[len] = '\0';
+
+	/* TODO: This reads past the end of the buffer */
+	OutputDebugStringA(tmp);
+	OutputDebugStringA("\n");
 }
 
 #define FILETIME_EPOCH 50491123200000ULL
@@ -254,18 +259,18 @@ cc_uint64 Stopwatch_Measure(void) {
 /* log to android logcat */
 #ifdef CC_BUILD_ANDROID
 #include <android/log.h>
-void Platform_Log(const String* message) {
-	String tmp; char tmpBuffer[4001];
-	String_InitArray_NT(tmp, tmpBuffer);
+void Platform_Log(const char* msg, int len) {
+	char tmp[2048 + 1];
+	len = min(len, 2048);
 
-	String_Copy(&tmp, message);
-	tmp.buffer[tmp.length] = '\0';
-	__android_log_write(ANDROID_LOG_DEBUG, "ClassiCube", tmp.buffer);
+	Mem_Copy(tmp, msg, len);
+	tmp[len] = '\0';
+	__android_log_write(ANDROID_LOG_DEBUG, "ClassiCube", tmp);
 }
 #else
-void Platform_Log(const String* message) {
-	write(STDOUT_FILENO, message->buffer, message->length);
-	write(STDOUT_FILENO, "\n",            1);
+void Platform_Log(const char* msg, int len) {
+	write(STDOUT_FILENO, msg,  len);
+	write(STDOUT_FILENO, "\n",   1);
 }
 #endif
 

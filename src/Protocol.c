@@ -270,7 +270,7 @@ static void WoM_ParseConfig(struct HttpRequest* item) {
 	Stream_ReadonlyMemory(&mem, item->data, item->size);
 
 	while (!Stream_ReadLine(&mem, &line)) {
-		Platform_Log(&line);
+		Platform_Log(line.buffer, line.length);
 		if (!String_UNSAFE_Separate(&line, '=', &key, &value)) continue;
 
 		if (String_CaselessEqualsConst(&key, "environment.cloud")) {

@@ -120,7 +120,7 @@ void Mem_Set(void* dst, cc_uint8 value, cc_uint32 numBytes);
 void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes);
 
 /* Logs a debug message to console. */
-void Platform_Log(const String* message);
+void Platform_Log(const char* msg, int len);
 void Platform_LogConst(const char* message);
 void Platform_Log1(const char* format, const void* a1);
 void Platform_Log2(const char* format, const void* a1, const void* a2);

@@ -234,7 +234,7 @@ static void OnHacksChanged(void* obj) {
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
 	/* Leave third person if not allowed anymore */
 	if (!h->CanUseThirdPerson || !h->Enabled) Camera_CycleActive();
-	/* Check if third person camers is allowed to be scrolled out */
+	/* Check if third person camera is allowed to be scrolled out */
 	if (Camera.Active->isThirdPerson) ThirdPersonCamera_Zoom(0);
 }
 
