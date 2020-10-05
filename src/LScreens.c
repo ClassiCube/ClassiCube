@@ -657,6 +657,7 @@ void MFAScreen_SetActive(void) {
 	s->Init   = MFAScreen_Init;
 	s->Show   = MFAScreen_Show;
 	s->Layout = MFAScreen_Layout;
+	s->onEnterWidget = (struct LWidget*)&s->btnSignIn;
 	Launcher_SetScreen((struct LScreen*)s);
 }
 
