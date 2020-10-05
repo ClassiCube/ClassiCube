@@ -1,4 +1,5 @@
 #include "LScreens.h"
+#ifndef CC_BUILD_WEB
 #include "LWidgets.h"
 #include "LWeb.h"
 #include "Launcher.h"
@@ -13,8 +14,8 @@
 #include "Window.h"
 #include "Input.h"
 #include "Options.h"
+#include "Game.h"
 
-#ifndef CC_BUILD_WEB
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -918,6 +919,7 @@ static void MainScreen_TickSignIn(struct MainScreen* s) {
 			LInput_SetText(&s->iptUsername, &SignInTask.username);
 			LWidget_Redraw(&s->iptUsername);
 		}
+		String_Copy(&Game_Username, &SignInTask.username);
 
 		FetchServersTask_Run();
 		LLabel_SetConst(&s->lblStatus, "&eRetrieving servers list..");

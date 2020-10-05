@@ -1,4 +1,5 @@
 #include "LWidgets.h"
+#ifndef CC_BUILD_WEB
 #include "Gui.h"
 #include "Drawer2D.h"
 #include "Launcher.h"
@@ -10,7 +11,6 @@
 #include "LScreens.h"
 #include "Input.h"
 
-#ifndef CC_BUILD_WEB
 static int xBorder, xBorder2, xBorder3, xBorder4;
 static int yBorder, yBorder2, yBorder3, yBorder4;
 static int xInputOffset, yInputOffset, inputExpand;

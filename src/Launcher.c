@@ -1,4 +1,5 @@
 #include "Launcher.h"
+#ifndef CC_BUILD_WEB
 #include "LScreens.h"
 #include "LWidgets.h"
 #include "LWeb.h"
@@ -17,7 +18,6 @@
 #include "Logger.h"
 #include "Options.h"
 
-#ifndef CC_BUILD_WEB
 static struct LScreen* activeScreen;
 Rect2D Launcher_Dirty;
 struct Bitmap Launcher_Framebuffer;
@@ -117,7 +117,7 @@ CC_NOINLINE static void StartFromInfo(struct ServerInfo* info) {
 	String_InitArray(port, portBuffer);
 
 	String_AppendInt(&port, info->port);
-	Launcher_StartGame(&SignInTask.username, &info->mppass, &info->ip, &port, &info->name);
+	Launcher_StartGame(&Game_Username, &info->mppass, &info->ip, &port, &info->name);
 }
 
 cc_bool Launcher_ConnectToServer(const String* hash) {
