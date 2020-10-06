@@ -205,13 +205,11 @@ void Platform_Log(const char* msg, int len) {
 		WriteFile(conHandle, msg,  len, &wrote, NULL);
 		WriteFile(conHandle, "\n",   1, &wrote, NULL);
 	}
+
 	if (!hasDebugger) return;
-
 	len = min(len, 2048);
-	Mem_Copy(tmp, msg, len);
-	tmp[len] = '\0';
+	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
 
-	/* TODO: This reads past the end of the buffer */
 	OutputDebugStringA(tmp);
 	OutputDebugStringA("\n");
 }
@@ -263,8 +261,7 @@ void Platform_Log(const char* msg, int len) {
 	char tmp[2048 + 1];
 	len = min(len, 2048);
 
-	Mem_Copy(tmp, msg, len);
-	tmp[len] = '\0';
+	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
 	__android_log_write(ANDROID_LOG_DEBUG, "ClassiCube", tmp);
 }
 #else
