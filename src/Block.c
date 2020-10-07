@@ -684,16 +684,9 @@ static void OnReset(void) {
 	Block_RecalculateAllSpriteBB();
 
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
-		Blocks.CanPlace[block] = true;
+		Blocks.CanPlace[block]  = true;
 		Blocks.CanDelete[block] = true;
 	}
-
-	Blocks.CanPlace[BLOCK_AIR] = false;         Blocks.CanDelete[BLOCK_AIR] = false;
-	Blocks.CanPlace[BLOCK_LAVA] = false;        Blocks.CanDelete[BLOCK_LAVA] = false;
-	Blocks.CanPlace[BLOCK_WATER] = false;       Blocks.CanDelete[BLOCK_WATER] = false;
-	Blocks.CanPlace[BLOCK_STILL_LAVA] = false;  Blocks.CanDelete[BLOCK_STILL_LAVA] = false;
-	Blocks.CanPlace[BLOCK_STILL_WATER] = false; Blocks.CanDelete[BLOCK_STILL_WATER] = false;
-	Blocks.CanPlace[BLOCK_BEDROCK] = false;     Blocks.CanDelete[BLOCK_BEDROCK] = false;
 }
 
 static void OnAtlasChanged(void* obj) { Block_RecalculateAllSpriteBB(); }

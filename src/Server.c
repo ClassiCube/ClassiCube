@@ -118,17 +118,6 @@ int Ping_AveragePingMS(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Singleplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-static void SPConnection_ResetBlockPerms(void) {
-	int i, count;
-	count = Game_UseCPEBlocks ? BLOCK_CPE_COUNT : BLOCK_ORIGINAL_COUNT;
-
-	for (i = 1; i < count; i++) {
-		Blocks.CanPlace[i]  = true;
-		Blocks.CanDelete[i] = true;
-	}
-	Event_RaiseVoid(&BlockEvents.PermissionsChanged);
-}
-
 #define SP_HasDir(path) (String_IndexOf(&path, '/') >= 0 || String_IndexOf(&path, '\\') >= 0)
 static void SPConnection_BeginConnect(void) {
 	static const String logName = String_FromConst("Singleplayer");
@@ -136,7 +125,6 @@ static void SPConnection_BeginConnect(void) {
 	RNGState rnd;
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_UseCPE;
-	SPConnection_ResetBlockPerms();
 
 	/* For when user drops a map file onto ClassiCube.exe */
 	path = Game_Username;
@@ -300,6 +288,14 @@ static void MPConnection_BeginConnect(void) {
 	String title; char titleBuffer[STRING_SIZE];
 	cc_result res;
 	String_InitArray(title, titleBuffer);
+
+	/* Default block permissions (in case server supports SetBlockPermissions but doesn't send) */
+	Blocks.CanPlace[BLOCK_AIR] = false;         Blocks.CanDelete[BLOCK_AIR] = false;
+	Blocks.CanPlace[BLOCK_LAVA] = false;        Blocks.CanDelete[BLOCK_LAVA] = false;
+	Blocks.CanPlace[BLOCK_WATER] = false;       Blocks.CanDelete[BLOCK_WATER] = false;
+	Blocks.CanPlace[BLOCK_STILL_LAVA] = false;  Blocks.CanDelete[BLOCK_STILL_LAVA] = false;
+	Blocks.CanPlace[BLOCK_STILL_WATER] = false; Blocks.CanDelete[BLOCK_STILL_WATER] = false;
+	Blocks.CanPlace[BLOCK_BEDROCK] = false;     Blocks.CanDelete[BLOCK_BEDROCK] = false;
 	
 	res = Socket_Create(&net_socket);
 	if (res) { MPConnection_FailConnect(res); return; }
@@ -493,12 +489,9 @@ static void OnNewMap(void) {
 }
 
 static void OnReset(void) {
-	if (Server.IsSinglePlayer) {
-		SPConnection_ResetBlockPerms();
-	} else {
-		net_writeFailed = false;
-		OnFree();
-	}
+	if (Server.IsSinglePlayer) return;
+	net_writeFailed = false;
+	OnFree();
 }
 
 static void OnInit(void) {
