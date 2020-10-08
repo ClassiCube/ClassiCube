@@ -339,8 +339,9 @@ void Launcher_Run(void) {
 	Launcher_Free();
 
 	if (Launcher_ShouldUpdate) {
-		cc_result res = Updater_Start();
-		if (res) Logger_Warn(res, "running updater");
+		const char* action;
+		cc_result res = Updater_Start(&action);
+		if (res) Logger_Warn(res, action);
 	}
 
 #ifdef CC_BUILD_ANDROID

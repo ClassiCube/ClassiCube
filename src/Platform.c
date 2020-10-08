@@ -1237,18 +1237,22 @@ cc_bool Updater_Clean(void) {
 	return DeleteFile(UPDATE_TMP) || GetLastError() == ERROR_FILE_NOT_FOUND;
 }
 
-cc_result Updater_Start(void) {
+cc_result Updater_Start(const char** action) {
 	TCHAR path[NATIVE_STR_LEN + 1];
 	TCHAR args[2] = { 'a', '\0' }; /* don't actually care about arguments */
+	cc_result res;
 	int len = 0;
 
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
+	*action = "Getting executable path";
+	if ((res = Process_RawGetExePath(path, &len))) return res;
 	path[len] = '\0';
 
+	*action = "Moving executable to CC_prev.exe";
 	if (!MoveFileEx(path, UPDATE_TMP, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
+	*action = "Replacing executable";
 	if (!MoveFileEx(UPDATE_SRC, path, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
 
+	*action = "Restarting game";
 	return Process_RawStart(path, args);
 }
 
@@ -1315,7 +1319,7 @@ cc_result Updater_GetBuildTime(cc_uint64* t) {
 #endif
 
 cc_bool Updater_Clean(void)   { return true; }
-cc_result Updater_Start(void) { return ERR_NOT_SUPPORTED; }
+cc_result Updater_Start(const char** action) { *action = "Updating game"; return ERR_NOT_SUPPORTED; }
 cc_result Updater_MarkExecutable(void)         { return 0; }
 cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
 #elif defined CC_BUILD_POSIX
@@ -1344,21 +1348,25 @@ const char* const Updater_OGL = NULL;
 const char* const Updater_OGL = NULL;
 #endif
 
-cc_result Updater_Start(void) {
+cc_result Updater_Start(const char** action) {
 	char path[NATIVE_STR_LEN + 1];
 	char* argv[2];
+	cc_result res;
 	int len = 0;
 
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
+	*action = "Getting executable path";
+	if ((res = Process_RawGetExePath(path, &len))) return res;
 	path[len] = '\0';
 	
-	/* Because the process is only referenced by inocde, we can */
+	/* Because the process is only referenced by inode, we can */
 	/* just unlink current filename and rename updated file to it */
+	*action = "Deleting executable";
 	if (unlink(path) == -1) return errno;
+	*action = "Replacing executable";
 	if (rename(UPDATE_FILE, path) == -1) return errno;
 
 	argv[0] = path; argv[1] = NULL;
+	*action = "Restarting game";
 	return Process_RawStart(path, argv);
 }
 

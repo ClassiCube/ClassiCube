@@ -68,7 +68,8 @@ extern const char* const Updater_OGL;
 /* Attempts to clean up any leftover files from an update */
 cc_bool Updater_Clean(void);
 /* Starts the platform-specific method to update then start the game using the UPDATE_FILE file. */
-cc_result Updater_Start(void);
+/* If an error occurs, action indicates which part of the updating process failed. */
+cc_result Updater_Start(const char** action);
 /* Returns the last time the application was modified, as a unix timestamp. */
 cc_result Updater_GetBuildTime(cc_uint64* timestamp);
 /* Marks the UPDATE_FILE file as being executable. (Needed for some platforms) */
