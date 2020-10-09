@@ -41,7 +41,6 @@
 #endif
 
 struct _GameData Game;
-int     Game_Port;
 cc_bool Game_UseCPEBlocks;
 
 struct RayTracer Game_SelectedPos;
@@ -194,8 +193,6 @@ void Game_Reset(void) {
 }
 
 void Game_UpdateBlock(int x, int y, int z, BlockID block) {
-	struct ChunkInfo* chunk;
-	int cx = x >> 4, cy = y >> 4, cz = z >> 4;
 	BlockID old = World_GetBlock(x, y, z);
 	World_SetBlock(x, y, z, block);
 
@@ -203,11 +200,7 @@ void Game_UpdateBlock(int x, int y, int z, BlockID block) {
 		EnvRenderer_OnBlockChanged(x, y, z, old, block);
 	}
 	Lighting_OnBlockChanged(x, y, z, old, block);
-
-	/* Refresh the chunk the block was located in. */
-	chunk = MapRenderer_GetChunk(cx, cy, cz);
-	chunk->AllAir &= Blocks.Draw[block] == DRAW_GAS;
-	MapRenderer_RefreshChunk(cx, cy, cz);
+	MapRenderer_OnBlockChanged(x, y, z, block);
 }
 
 void Game_ChangeBlock(int x, int y, int z, BlockID block) {

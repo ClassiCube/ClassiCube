@@ -17,8 +17,8 @@ extern cc_int16* Lighting_Heightmap;
 *      CalcLight(x, maxY, z)                         */
 void Lighting_LightHint(int startX, int startZ);
 
-/* Called when a block is changed, to update the lighting information. */
-/* NOTE: Implementations ***MUST*** mark all chunks affected by this lighting changeas needing to be refreshed. */
+/* Called when a block is changed to update internal lighting state. */
+/* NOTE: Implementations ***MUST*** mark all chunks affected by this lighting change as needing to be refreshed. */
 void Lighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 void Lighting_Refresh(void);
 

@@ -64,9 +64,6 @@ struct ChunkInfo {
 	struct ChunkPartInfo* TranslucentParts;
 };
 
-/* Gets the chunk at the given chunk coordinates in the world. */
-/* NOTE: Does NOT check coordinates are within bounds. */
-struct ChunkInfo* MapRenderer_GetChunk(int cx, int cy, int cz);
 /* Renders the meshes of non-translucent blocks in visible chunks. */
 void MapRenderer_RenderNormal(double delta);
 /* Renders the meshes of translucent blocks in visible chunks. */
@@ -79,6 +76,8 @@ void MapRenderer_Update(double delta);
 /* Marks the given chunk as needing to be rebuilt/redrawn. */
 /* NOTE: Coordinates outside the map are simply ignored. */
 void MapRenderer_RefreshChunk(int cx, int cy, int cz);
+/* Called when a block is changed, to update internal state. */
+void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block);
 /* Deletes the vertex buffer associated with the given chunk. */
 /* NOTE: This method also adjusts internal state, so do not bypass this. */
 void MapRenderer_DeleteChunk(struct ChunkInfo* info);

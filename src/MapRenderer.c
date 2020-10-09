@@ -46,10 +46,6 @@ static cc_uint32* distances;
 /* Maximum number of chunk updates that can be performed in one frame. */
 static int maxChunkUpdates;
 
-struct ChunkInfo* MapRenderer_GetChunk(int cx, int cy, int cz) {
-	return &mapChunks[MapRenderer_Pack(cx, cy, cz)];
-}
-
 static void ChunkInfo_Reset(struct ChunkInfo* chunk, int x, int y, int z) {
 	chunk->CentreX = x + HALF_CHUNK_SIZE; chunk->CentreY = y + HALF_CHUNK_SIZE; 
 	chunk->CentreZ = z + HALF_CHUNK_SIZE;
@@ -636,6 +632,16 @@ void MapRenderer_RefreshChunk(int cx, int cy, int cz) {
 	if (info->AllAir) return; /* do not recreate chunks completely air */
 	info->Empty         = false;
 	info->PendingDelete = true;
+}
+
+void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block) {
+	int cx = x >> CHUNK_SHIFT, cy = y >> CHUNK_SHIFT, cz = z >> CHUNK_SHIFT;
+	struct ChunkInfo* chunk;
+
+	chunk = &mapChunks[MapRenderer_Pack(cx, cy, cz)];
+	chunk->AllAir &= Blocks.Draw[block] == DRAW_GAS;
+	/* TODO: Don't lookup twice, refresh directly using chunk pointer */
+	MapRenderer_RefreshChunk(cx, cy, cz);
 }
 
 void MapRenderer_DeleteChunk(struct ChunkInfo* info) {
