@@ -7,6 +7,8 @@
 */
 struct RayTracer;
 struct Camera;
+struct IGameComponent;
+extern struct IGameComponent Camera_Component;
 
 /* Shared data for cameras. */
 CC_VAR extern struct _CameraData {
@@ -65,8 +67,6 @@ struct Camera {
 	struct Camera* next;
 };
 
-/* Initialises the default cameras. */
-void Camera_Init(void);
 /* Switches to next camera in the list of cameras. */
 void Camera_CycleActive(void);
 /* Registers a camera for use. */
@@ -74,4 +74,5 @@ CC_API void Camera_Register(struct Camera* camera);
 /* Checks whether camera is still focused or not. */
 /* If focus changes, calls AcquireFocus or LoseFocus */
 void Camera_CheckFocus(void);
+void Camera_UpdateProjection(void);
 #endif

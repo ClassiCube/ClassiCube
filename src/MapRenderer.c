@@ -304,6 +304,80 @@ void MapRenderer_RenderTranslucent(double delta) {
 
 
 /*########################################################################################################################*
+*---------------------------------------------------Chunk functionality---------------------------------------------------*
+*#########################################################################################################################*/
+/* Deletes vertex buffer associated with the given chunk and updates internal state */
+static void DeleteChunk(struct ChunkInfo* info) {
+	struct ChunkPartInfo* ptr;
+	int i;
+#ifdef CC_BUILD_GL11
+	int j;
+#else
+	Gfx_DeleteVb(&info->Vb);
+#endif
+
+	info->Empty = false; info->AllAir = false;
+#ifdef OCCLUSION
+	info.OcclusionFlags = 0;
+	info.OccludedFlags = 0;
+#endif
+
+	if (info->NormalParts) {
+		ptr = info->NormalParts;
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+			if (ptr->Offset < 0) continue; 
+			normPartsCount[i]--;
+#ifdef CC_BUILD_GL11
+			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->Vbs[j]);
+#endif
+		}
+		info->NormalParts = NULL;
+	}
+
+	if (info->TranslucentParts) {
+		ptr = info->TranslucentParts;
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+			if (ptr->Offset < 0) continue;
+			tranPartsCount[i]--;
+#ifdef CC_BUILD_GL11
+			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->Vbs[j]);
+#endif
+		}
+		info->TranslucentParts = NULL;
+	}
+}
+
+/* Builds the mesh (hence vertex buffer) for the given chunk, and updates internal state */
+static void BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
+	struct ChunkPartInfo* ptr;
+	int i;
+
+	Game.ChunkUpdates++;
+	(*chunkUpdates)++;
+	info->PendingDelete = false;
+	Builder_MakeChunk(info);
+
+	if (!info->NormalParts && !info->TranslucentParts) {
+		info->Empty = true; return;
+	}
+	
+	if (info->NormalParts) {
+		ptr = info->NormalParts;
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+			if (ptr->Offset >= 0) normPartsCount[i]++;
+		}
+	}
+
+	if (info->TranslucentParts) {
+		ptr = info->TranslucentParts;
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+			if (ptr->Offset >= 0) tranPartsCount[i]++;
+		}
+	}
+}
+
+
+/*########################################################################################################################*
 *----------------------------------------------------Chunks mangagement---------------------------------------------------*
 *#########################################################################################################################*/
 static void FreeParts(void) {
@@ -390,7 +464,7 @@ static void DeleteChunks(void) {
 	if (!mapChunks) return;
 
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
-		MapRenderer_DeleteChunk(&mapChunks[i]);
+		DeleteChunk(&mapChunks[i]);
 	}
 	ResetPartCounts();
 }
@@ -478,13 +552,13 @@ static int UpdateChunksAndVisibility(int* chunkUpdates) {
 		
 		/* Auto unload chunks far away chunks */
 		if (!noData && distSqr >= buildDistSqr + 32 * 16) {
-			MapRenderer_DeleteChunk(info); continue;
+			DeleteChunk(info); continue;
 		}
 		noData |= info->PendingDelete;
 
 		if (noData && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
-			MapRenderer_DeleteChunk(info);
-			MapRenderer_BuildChunk(info, chunkUpdates);
+			DeleteChunk(info);
+			BuildChunk(info, chunkUpdates);
 		}
 
 		info->Visible = distSqr <= renderDistSqr &&
@@ -511,13 +585,13 @@ static int UpdateChunksStill(int* chunkUpdates) {
 
 		/* Auto unload chunks far away chunks */
 		if (!noData && distSqr >= buildDistSqr + 32 * 16) {
-			MapRenderer_DeleteChunk(info); continue;
+			DeleteChunk(info); continue;
 		}
 		noData |= info->PendingDelete;
 
 		if (noData && distSqr <= buildDistSqr && *chunkUpdates < chunksTarget) {
-			MapRenderer_DeleteChunk(info);
-			MapRenderer_BuildChunk(info, chunkUpdates);
+			DeleteChunk(info);
+			BuildChunk(info, chunkUpdates);
 
 			/* only need to update the visibility of chunks in range. */
 			info->Visible = distSqr <= renderDistSqr &&
@@ -642,74 +716,6 @@ void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block) {
 	chunk->AllAir &= Blocks.Draw[block] == DRAW_GAS;
 	/* TODO: Don't lookup twice, refresh directly using chunk pointer */
 	MapRenderer_RefreshChunk(cx, cy, cz);
-}
-
-void MapRenderer_DeleteChunk(struct ChunkInfo* info) {
-	struct ChunkPartInfo* ptr;
-	int i;
-#ifdef CC_BUILD_GL11
-	int j;
-#else
-	Gfx_DeleteVb(&info->Vb);
-#endif
-
-	info->Empty = false; info->AllAir = false;
-#ifdef OCCLUSION
-	info.OcclusionFlags = 0;
-	info.OccludedFlags = 0;
-#endif
-
-	if (info->NormalParts) {
-		ptr = info->NormalParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
-			if (ptr->Offset < 0) continue; 
-			normPartsCount[i]--;
-#ifdef CC_BUILD_GL11
-			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->Vbs[j]);
-#endif
-		}
-		info->NormalParts = NULL;
-	}
-
-	if (info->TranslucentParts) {
-		ptr = info->TranslucentParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
-			if (ptr->Offset < 0) continue;
-			tranPartsCount[i]--;
-#ifdef CC_BUILD_GL11
-			for (j = 0; j < CHUNKPART_MAX_VBS; j++) Gfx_DeleteVb(&ptr->Vbs[j]);
-#endif
-		}
-		info->TranslucentParts = NULL;
-	}
-}
-
-void MapRenderer_BuildChunk(struct ChunkInfo* info, int* chunkUpdates) {
-	struct ChunkPartInfo* ptr;
-	int i;
-
-	Game.ChunkUpdates++;
-	(*chunkUpdates)++;
-	info->PendingDelete = false;
-	Builder_MakeChunk(info);
-
-	if (!info->NormalParts && !info->TranslucentParts) {
-		info->Empty = true; return;
-	}
-	
-	if (info->NormalParts) {
-		ptr = info->NormalParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
-			if (ptr->Offset >= 0) normPartsCount[i]++;
-		}
-	}
-
-	if (info->TranslucentParts) {
-		ptr = info->TranslucentParts;
-		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
-			if (ptr->Offset >= 0) tranPartsCount[i]++;
-		}
-	}
 }
 
 static void OnEnvVariableChanged(void* obj, int envVar) {

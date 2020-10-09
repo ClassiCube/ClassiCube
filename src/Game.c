@@ -151,7 +151,7 @@ void Game_SetViewDistance(int distance) {
 	Game_ViewDistance = distance;
 
 	Event_RaiseVoid(&GfxEvents.ViewDistanceChanged);
-	Game_UpdateProjection();
+	Camera_UpdateProjection();
 }
 
 void Game_UserSetViewDistance(int distance) {
@@ -163,13 +163,7 @@ void Game_UserSetViewDistance(int distance) {
 void Game_SetFov(int fov) {
 	if (Game_Fov == fov) return;
 	Game_Fov = fov;
-	Game_UpdateProjection();
-}
-
-void Game_UpdateProjection(void) {
-	Camera.Active->GetProjection(&Gfx.Projection);
-	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
-	Event_RaiseVoid(&GfxEvents.ProjectionChanged);
+	Camera_UpdateProjection();
 }
 
 void Game_Disconnect(const String* title, const String* reason) {
@@ -267,7 +261,7 @@ void Game_UpdateDimensions(void) {
 static void Game_OnResize(void* obj) {
 	Game_UpdateDimensions();
 	Gfx_OnWindowResize();
-	Game_UpdateProjection();
+	Camera_UpdateProjection();
 }
 
 static void HandleOnNewMap(void* obj) {
@@ -385,6 +379,7 @@ static void Game_Load(void) {
 	Event_Register_(&WindowEvents.Closing,      NULL, Game_Free);
 
 	InputHandler_Init();
+	Game_AddComponent(&Camera_Component);
 	Game_AddComponent(&Gfx_Component);
 	Game_AddComponent(&Blocks_Component);
 	Game_AddComponent(&Drawer2D_Component);
@@ -408,8 +403,6 @@ static void Game_Load(void) {
 	Game_AddComponent(&EnvRenderer_Component);
 	Game_AddComponent(&Server_Component);
 	Game_AddComponent(&Protocol_Component);
-	Camera_Init();
-	Game_UpdateProjection();
 
 	Game_AddComponent(&Gui_Component);
 	Game_AddComponent(&Selections_Component);

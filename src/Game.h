@@ -56,7 +56,6 @@ void Game_CycleViewDistance(void);
 void Game_SetViewDistance(int distance);
 void Game_UserSetViewDistance(int distance);
 void Game_SetFov(int fov);
-void Game_UpdateProjection(void);
 void Game_Disconnect(const String* title, const String* reason);
 void Game_Reset(void);
 

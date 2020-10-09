@@ -78,13 +78,6 @@ void MapRenderer_Update(double delta);
 void MapRenderer_RefreshChunk(int cx, int cy, int cz);
 /* Called when a block is changed, to update internal state. */
 void MapRenderer_OnBlockChanged(int x, int y, int z, BlockID block);
-/* Deletes the vertex buffer associated with the given chunk. */
-/* NOTE: This method also adjusts internal state, so do not bypass this. */
-void MapRenderer_DeleteChunk(struct ChunkInfo* info);
-/* Builds the mesh (and hence vertex buffer) for the given chunk. */
-/* NOTE: This method also adjusts internal state, so do not bypass this. */
-void MapRenderer_BuildChunk(struct ChunkInfo* info, int* chunkUpdates);
-
 /* Deletes all chunks and resets internal state. */
 void MapRenderer_Refresh(void);
 #endif

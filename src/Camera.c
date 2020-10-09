@@ -238,25 +238,6 @@ static void OnHacksChanged(void* obj) {
 	if (Camera.Active->isThirdPerson) ThirdPersonCamera_Zoom(0);
 }
 
-void Camera_Init(void) {
-	Camera_Register(&cam_FirstPerson);
-	Camera_Register(&cam_ThirdPerson);
-	Camera_Register(&cam_ForwardThird);
-
-	Camera.Active = &cam_FirstPerson;
-	Event_Register_(&PointerEvents.RawMoved,            NULL, OnRawMovement);
-	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, OnHacksChanged);
-
-#ifdef CC_BUILD_WIN
-	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 40);
-#else
-	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 30);
-#endif
-	Camera.Clipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
-	Camera.Invert      = Options_GetBool(OPT_INVERT_MOUSE, false);
-	Camera.Mass        = Options_GetFloat(OPT_CAMERA_MASS, 1, 100, 20);
-}
-
 void Camera_CycleActive(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (Game_ClassicMode) return;
@@ -269,7 +250,7 @@ void Camera_CycleActive(void) {
 
 	/* reset rotation offset when changing cameras */
 	cam_rotOffset.X = 0.0f; cam_rotOffset.Y = 0.0f;
-	Game_UpdateProjection();
+	Camera_UpdateProjection();
 }
 
 static struct Camera* cams_head;
@@ -292,3 +273,34 @@ void Camera_CheckFocus(void) {
 		Camera.Active->LoseFocus();
 	}
 }
+
+void Camera_UpdateProjection(void) {
+	Camera.Active->GetProjection(&Gfx.Projection);
+	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
+	Event_RaiseVoid(&GfxEvents.ProjectionChanged);
+}
+
+static void OnInit(void) {
+	Camera_Register(&cam_FirstPerson);
+	Camera_Register(&cam_ThirdPerson);
+	Camera_Register(&cam_ForwardThird);
+
+	Camera.Active = &cam_FirstPerson;
+	Event_Register_(&PointerEvents.RawMoved,            NULL, OnRawMovement);
+	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, OnHacksChanged);
+
+#ifdef CC_BUILD_WIN
+	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 40);
+#else
+	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 30);
+#endif
+	Camera.Clipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
+	Camera.Invert      = Options_GetBool(OPT_INVERT_MOUSE, false);
+	Camera.Mass        = Options_GetFloat(OPT_CAMERA_MASS, 1, 100, 20);
+
+	Camera_UpdateProjection();
+}
+
+struct IGameComponent Camera_Component = {
+	OnInit /* Init  */
+};
