@@ -944,7 +944,7 @@ static void EditHotkeyScreen_Init(void* screen) {
 
 	MenuInputWidget_Create(&s->input, 500, &text, &desc);
 	Menu_InitBack(&s->cancel, Menu_SwitchHotkeys);
-	Window_OpenKeyboard();
+	Window_OpenKeyboard(KEYBOARD_TYPE_TEXT);
 	Window_SetKeyboardText(&text);
 }
 
@@ -1149,7 +1149,7 @@ static void GenLevelScreen_Init(void* screen) {
 	ButtonWidget_Init(&s->flatgrass, 200, GenLevelScreen_Flatgrass);
 	ButtonWidget_Init(&s->vanilla,   200, GenLevelScreen_Notchy);
 	Menu_InitBack(&s->cancel, Menu_SwitchPause);
-	Window_OpenKeyboard();
+	Window_OpenKeyboard(KEYBOARD_TYPE_NUMBER);
 }
 
 static const struct ScreenVTABLE GenLevelScreen_VTABLE = {
@@ -1505,7 +1505,7 @@ static void SaveLevelScreen_Init(void* screen) {
 	Menu_InitBack(&s->cancel, Menu_SwitchPause);
 	MenuInputWidget_Create(&s->input, 500, &String_Empty, &desc);
 	TextWidget_Init(&s->desc);
-	Window_OpenKeyboard();
+	Window_OpenKeyboard(KEYBOARD_TYPE_TEXT);
 }
 
 static const struct ScreenVTABLE SaveLevelScreen_VTABLE = {
@@ -2252,7 +2252,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	s->numWidgets = MENUOPTS_MAX_OPTS + 1 + 3;
 	MenuOptionsScreen_Layout(screen);
 	MenuOptionsScreen_RedrawInput(s);
-	Window_OpenKeyboard();
+	Window_OpenKeyboard(KEYBOARD_TYPE_TEXT);
 	Window_SetKeyboardText(&value);
 }
 

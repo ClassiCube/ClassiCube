@@ -422,7 +422,7 @@ static void LInput_Select(void* widget, cc_bool wasSelected) {
 	/* TODO: Only draw outer border */
 	if (wasSelected) return;
 	LWidget_Draw(widget);
-	Window_OpenKeyboard();
+	Window_OpenKeyboard(KEYBOARD_TYPE_TEXT);
 }
 
 static void LInput_Unselect(void* widget) {
