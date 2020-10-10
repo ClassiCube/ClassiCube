@@ -1117,14 +1117,17 @@ static cc_bool InputWidget_TryAppendChar(struct InputWidget* w, char c) {
 	return true;
 }
 
-void InputWidget_AppendText(struct InputWidget* w, const String* text) {
+static int InputWidget_DoAppendText(struct InputWidget* w, const String* text) {
 	int i, appended = 0;
 	for (i = 0; i < text->length; i++) {
 		if (InputWidget_TryAppendChar(w, text->buffer[i])) appended++;
 	}
+	return appended;
+}
 
-	if (!appended) return;
-	InputWidget_UpdateText(w);
+void InputWidget_AppendText(struct InputWidget* w, const String* text) {
+	int appended = InputWidget_DoAppendText(w, text);
+	if (appended) InputWidget_UpdateText(w);
 }
 
 void InputWidget_Append(struct InputWidget* w, char c) {
@@ -1258,10 +1261,8 @@ void InputWidget_UpdateText(struct InputWidget* w) {
 
 void InputWidget_SetText(struct InputWidget* w, const String* str) {
 	InputWidget_Clear(w);
-	InputWidget_AppendText(w, str);
-	/* If text is empty, InputWidget_UpdateText won't have been called */
-	/* TODO: InputWidet_UpdateText should probably always be called... */
-	if (!w->text.length) Window_SetKeyboardText(&w->text);
+	InputWidget_DoAppendText(w, str);
+	InputWidget_UpdateText(w);
 }
 
 static void InputWidget_Free(void* widget) {
