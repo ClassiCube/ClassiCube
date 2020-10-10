@@ -3856,24 +3856,22 @@ void Window_DrawFramebuffer(Rect2D r) {
 	ARect b;
 	int y, res, size;
 
-	Platform_LogConst("DRAW_RAW");
 	/* window not created yet */
 	if (!win_handle) return;
-
 	b.left = r.X; b.right  = r.X + r.Width;
 	b.top  = r.Y; b.bottom = r.Y + r.Height;
 
-	Platform_Log4("DIRTY: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom);
+	/* Platform_Log4("DIRTY: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom); */
 	res  = ANativeWindow_lock(win_handle, &buffer, &b);
 	if (res) Logger_Abort2(res, "Locking window pixels");
-	Platform_Log4("ADJUS: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom);
+	/* Platform_Log4("ADJUS: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom); */
 
 	int width  = ANativeWindow_getWidth(win_handle);
 	int height = ANativeWindow_getHeight(win_handle);
 	int format = ANativeWindow_getFormat(win_handle);
 
-	Platform_Log3("WIN SIZE: %i,%i  %i", &width, &height, &format);
-	Platform_Log4("BUF SIZE: %i,%i  %i/%i", &buffer.width, &buffer.height, &buffer.format, &buffer.stride);
+	/* Platform_Log3("WIN SIZE: %i,%i  %i", &width, &height, &format); */
+	/* Platform_Log4("BUF SIZE: %i,%i  %i/%i", &buffer.width, &buffer.height, &buffer.format, &buffer.stride); */
 
 	src  = (cc_uint32*)fb_bmp.scan0 + b.left;
 	dst  = (cc_uint32*)buffer.bits  + b.left;
