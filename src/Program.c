@@ -67,19 +67,18 @@ static void RunGame(void) {
 	Game_Run(width, height, &title);
 }
 
-/* Terminates the program due to an invalid command line argument */
-CC_NOINLINE static void ExitInvalidArg(const char* name, const String* arg) {
+/* Shows a warning dialog due to an invalid command line argument */
+CC_NOINLINE static void WarnInvalidArg(const char* name, const String* arg) {
 	String tmp; char tmpBuffer[256];
 	String_InitArray(tmp, tmpBuffer);
 	String_Format2(&tmp, "%c '%s'", name, arg);
 
 	Logger_DialogTitle = "Failed to start";
 	Logger_DialogWarn(&tmp);
-	Process_Exit(1);
 }
 
-/* Terminates the program due to insufficient command line arguments */
-CC_NOINLINE static void ExitMissingArgs(int argsCount, const String* args) {
+/* Shows a warning dialog due to insufficient command line arguments */
+CC_NOINLINE static void WarnMissingArgs(int argsCount, const String* args) {
 	String tmp; char tmpBuffer[256];
 	int i;
 	String_InitArray(tmp, tmpBuffer);
@@ -92,7 +91,6 @@ CC_NOINLINE static void ExitMissingArgs(int argsCount, const String* args) {
 
 	Logger_DialogTitle = "Failed to start";
 	Logger_DialogWarn(&tmp);
-	Process_Exit(1);
 }
 
 #ifdef CC_BUILD_ANDROID
@@ -128,7 +126,7 @@ static int Program_Run(int argc, char** argv) {
 		String_Copy(&Game_Username, &args[0]);
 		RunGame();		
 	} else if (argsCount < 4) {
-		ExitMissingArgs(argsCount, args);
+		WarnMissingArgs(argsCount, args);
 		return 1;
 	} else {
 		String_Copy(&Game_Username, &args[0]);
@@ -136,18 +134,16 @@ static int Program_Run(int argc, char** argv) {
 		String_Copy(&Server.IP,     &args[2]);
 
 		if (!Utils_ParseIP(&args[2], ip)) {
-			ExitInvalidArg("Invalid IP", &args[2]);
+			WarnInvalidArg("Invalid IP", &args[2]);
 			return 1;
 		}
 		if (!Convert_ParseUInt16(&args[3], &port)) {
-			ExitInvalidArg("Invalid port", &args[3]);
+			WarnInvalidArg("Invalid port", &args[3]);
 			return 1;
 		}
 		Server.Port = port;
 		RunGame();
 	}
-
-	Process_Exit(0);
 	return 0;
 }
 
@@ -180,7 +176,9 @@ int main(int argc, char** argv) {
 	Utils_EnsureDirectory("plugins");
 	Options_Load();
 
-	return Program_Run(argc, argv);
+	res = Program_Run(argc, argv);
+	Process_Exit(res);
+	return res;
 }
 
 /* ClassiCube is just a native library on android, */

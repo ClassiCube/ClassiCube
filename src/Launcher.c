@@ -261,38 +261,6 @@ static void Launcher_Free(void) {
 	Window_FreeFramebuffer(&Launcher_Framebuffer);
 }
 
-#ifdef CC_BUILD_ANDROID
-static cc_bool winCreated;
-static void OnWindowCreated(void* obj) { winCreated = true; }
-int Program_Run(int argc, char** argv);
-
-static void SwitchToGame() {
-	JNIEnv* env;
-	JavaGetCurrentEnv(env);
-
-	/* Reset components */
-	Platform_LogConst("undoing components");
-	Drawer2D_Component.Free();
-	//Http_Component.Free();
-
-	/* Force window to be destroyed and re-created */
-	/* (see comments in setupForGame for why this has to be done) */
-	JavaCallVoid(env, "setupForGame", "()V", NULL);
-	Event_Register_(&WindowEvents.Created, NULL, OnWindowCreated);
-	Platform_LogConst("Entering wait for window loop..");
-
-	/* Loop until window gets created async */
-	while (WindowInfo.Exists && !winCreated) {
-		Window_ProcessEvents();
-		Thread_Sleep(10);
-	}
-
-	Platform_LogConst("OK I'm starting the game..");
-	Event_Unregister_(&WindowEvents.Created, NULL, OnWindowCreated);
-	if (winCreated) Program_Run(0, NULL);
-}
-#endif
-
 void Launcher_Run(void) {
 	static const String title = String_FromConst(GAME_APP_TITLE);
 	Window_Create(640, 400);
@@ -338,15 +306,16 @@ void Launcher_Run(void) {
 	Options_SaveIfChanged();
 	Launcher_Free();
 
+#ifdef CC_BUILD_ANDROID
+	extern int Program_Run(int argc, char** argv);
+	if (Launcher_ShouldExit) Program_Run(0, NULL);
+#endif
 	if (Launcher_ShouldUpdate) {
 		const char* action;
 		cc_result res = Updater_Start(&action);
 		if (res) Logger_Warn(res, action);
 	}
 
-#ifdef CC_BUILD_ANDROID
-	if (Launcher_ShouldExit) SwitchToGame();
-#endif
 	if (WindowInfo.Exists) Window_Close();
 }
 
