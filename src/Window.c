@@ -3804,9 +3804,27 @@ void Clipboard_SetText(const String* value) {
 
 /* Always a fullscreen window */
 void Window_Show(void) { }
-int Window_GetWindowState(void) { return WINDOW_STATE_FULLSCREEN; }
-cc_result Window_EnterFullscreen(void) { return 0; }
-cc_result Window_ExitFullscreen(void)  { return 0; }
+cc_bool fullscreen; /* TODO: NOT TRACK IN OWN CODE */
+int Window_GetWindowState(void) { return fullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL; }
+
+cc_result Window_EnterFullscreen(void) {
+	JNIEnv* env;
+	JavaGetCurrentEnv(env);
+	JavaCallVoid(env, "enterFullscreen", "()V", NULL);
+
+	fullscreen = true;
+	return 0; 
+}
+
+cc_result Window_ExitFullscreen(void) {
+	JNIEnv* env;
+	JavaGetCurrentEnv(env);
+	JavaCallVoid(env, "exitFullscreen", "()V", NULL);
+
+	fullscreen = false;
+	return 0; 
+}
+
 void Window_SetSize(int width, int height) { }
 
 void Window_Close(void) {

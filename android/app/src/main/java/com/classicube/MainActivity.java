@@ -465,6 +465,22 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		// wait for dialog to be closed
 		// TODO: this fails because multiple dialog boxes show
 	}
+
+	public void enterFullscreen() {
+		runOnUiThread(new Runnable() {
+			public void run() {
+				curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE);
+			}
+		});
+    }
+
+    public void exitFullscreen() {
+		runOnUiThread(new Runnable() {
+			public void run() {
+				curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+			}
+		});
+    }
 	
 	public String shareScreenshot(String path) {
 		try {
