@@ -438,10 +438,14 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		getWindowManager().getDefaultDisplay().getMetrics(dm);
 		return dm;
 	}
-	
-	// map android 160 baseline dpi
-	public float getDpiX() { return getMetrics().xdpi / 160.0f; }
-	public float getDpiY() { return getMetrics().ydpi / 160.0f; }
+
+	// some devices return raw DPI values such as 159.37254 / 160.42015 which become 0.996 / 1.002
+	// so simply round off to two decimal places to produce more useful end result
+	float roundDpi(double x) { return Math.round(x * 100) / 100.0f; }
+
+		// map android 160 baseline dpi
+	public float getDpiX() { return roundDpi(getMetrics().xdpi / 160.0); }
+	public float getDpiY() { return roundDpi(getMetrics().ydpi / 160.0); }
 
 	final Semaphore dialogSem = new Semaphore(0, true);
 
