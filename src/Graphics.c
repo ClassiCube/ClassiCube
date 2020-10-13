@@ -1102,7 +1102,7 @@ cc_bool Gfx_TryRestoreContext(void) {
 }
 
 void Gfx_Free(void) {
-	FreeDefaultResources();
+	Gfx_FreeState();
 	GLContext_Free();
 }
 

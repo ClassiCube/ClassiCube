@@ -32,8 +32,8 @@ cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static char hashBuffer[STRING_SIZE];
 String Launcher_AutoHash = String_FromArray(hashBuffer);
 
-static cc_bool useBitmappedFont;
-static struct Bitmap dirtBmp, stoneBmp, fontBmp;
+static cc_bool useBitmappedFont, hasBitmappedFont;
+static struct Bitmap dirtBmp, stoneBmp;
 #define TILESIZE 48
 
 void Launcher_SetScreen(struct LScreen* screen) {
@@ -68,7 +68,7 @@ static CC_NOINLINE void InitFramebuffer(void) {
 }
 
 static cc_bool UsingBitmappedFont(void) {
-	return (useBitmappedFont || Launcher_ClassicBackground) && fontBmp.scan0;
+	return (useBitmappedFont || Launcher_ClassicBackground) && hasBitmappedFont;
 }
 
 
@@ -255,6 +255,7 @@ static void Launcher_Free(void) {
 	Font_Free(&Launcher_TitleFont);
 	Font_Free(&Launcher_TextFont);
 	Font_Free(&Launcher_HintFont);
+	hasBitmappedFont = false;
 
 	activeScreen->Free(activeScreen);
 	activeScreen = NULL;
@@ -415,16 +416,17 @@ static cc_result Launcher_ProcessZipEntry(const String* path, struct Stream* dat
 	cc_result res;
 
 	if (String_CaselessEqualsConst(path, "default.png")) {
-		if (fontBmp.scan0) return 0;
-		res = Png_Decode(&fontBmp, data);
+		if (hasBitmappedFont) return 0;
+		hasBitmappedFont = false;
+		res = Png_Decode(&bmp, data);
 
 		if (res) {
 			Logger_Warn(res, "decoding default.png"); return res;
-		} else if (Drawer2D_SetFontBitmap(&fontBmp)) {
+		} else if (Drawer2D_SetFontBitmap(&bmp)) {
 			useBitmappedFont = !Options_GetBool(OPT_USE_CHAT_FONT, false);
+			hasBitmappedFont = true;
 		} else {
-			Mem_Free(fontBmp.scan0);
-			fontBmp.scan0 = NULL;
+			Mem_Free(bmp.scan0);
 		}
 	} else if (String_CaselessEqualsConst(path, "terrain.png")) {
 		if (dirtBmp.scan0) return 0;
@@ -475,7 +477,7 @@ void Launcher_TryLoadTexturePack(void) {
 	}
 
 	/* user selected texture pack is missing some required .png files */
-	if (!fontBmp.scan0 || !dirtBmp.scan0) ExtractTexturePack(&defZipPath);
+	if (!hasBitmappedFont || !dirtBmp.scan0) ExtractTexturePack(&defZipPath);
 	Launcher_UpdateLogoFont();
 }
 
