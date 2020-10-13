@@ -308,7 +308,16 @@ void Launcher_Run(void) {
 
 #ifdef CC_BUILD_ANDROID
 	extern int Program_Run(int argc, char** argv);
-	if (Launcher_ShouldExit) Program_Run(0, NULL);
+	extern cc_bool Window_RemakeSurface(void);
+
+	if (Launcher_ShouldExit) {
+		Launcher_ShouldExit = false;
+		Http_Component.Free();
+
+		Program_Run(0, NULL);
+		Window_RemakeSurface();
+		Launcher_Run();
+	}
 #endif
 	if (Launcher_ShouldUpdate) {
 		const char* action;

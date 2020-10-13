@@ -114,6 +114,7 @@ GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 static void Atlas2D_Free(void) {
 	Mem_Free(Atlas2D.Bmp.scan0);
 	Atlas2D.Bmp.scan0 = NULL;
+	Atlas2D.RowsCount = 0;
 }
 
 static void Atlas1D_Free(void) {

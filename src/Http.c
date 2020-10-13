@@ -1145,9 +1145,6 @@ void Http_UrlEncodeUrl(String* dst, const String* src) {
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
-#ifdef CC_BUILD_ANDROID
-	if (workerThread) return;
-#endif
 	Http_WorkerInit();
 	ScheduledTask_Add(30, Http_CleanCacheTask);
 	RequestList_Init(&pendingReqs);

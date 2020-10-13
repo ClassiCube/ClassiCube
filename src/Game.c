@@ -670,33 +670,13 @@ static void Game_RunLoop(void) {
 #endif
 
 #ifdef CC_BUILD_ANDROID
-static cc_bool winCreated;
-static void OnWindowCreated(void* obj) { winCreated = true; }
-
+extern cc_bool Window_RemakeSurface(void);
 static cc_bool SwitchToGame() {
-	JNIEnv* env;
-	JavaGetCurrentEnv(env);
-
 	/* Reset components */
 	Platform_LogConst("undoing components");
 	Drawer2D_Component.Free();
 	//Http_Component.Free();
-
-	/* Force window to be destroyed and re-created */
-	/* (see comments in setupForGame for why this has to be done) */
-	JavaCallVoid(env, "setupForGame", "()V", NULL);
-	Event_Register_(&WindowEvents.Created, NULL, OnWindowCreated);
-	Platform_LogConst("Entering wait for window loop..");
-
-	/* Loop until window gets created async */
-	while (WindowInfo.Exists && !winCreated) {
-		Window_ProcessEvents();
-		Thread_Sleep(10);
-	}
-
-	Platform_LogConst("OK I'm starting the game..");
-	Event_Unregister_(&WindowEvents.Created, NULL, OnWindowCreated);
-	return winCreated;
+	return Window_RemakeSurface();
 }
 #endif
 
