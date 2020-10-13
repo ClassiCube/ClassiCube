@@ -644,11 +644,24 @@ void Waitable_Wait(void* handle) { }
 void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) { }
 #elif defined CC_BUILD_POSIX
 void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
+
+#ifdef CC_BUILD_ANDROID
+/* All threads using JNI must detach BEFORE they exit */
+/* (see https://developer.android.com/training/articles/perf-jni */
 static void* ExecThread(void* param) {
-	Thread_StartFunc func = (Thread_StartFunc)param;
-	func();
+	JNIEnv* env;
+	JavaGetCurrentEnv(env);
+
+	((Thread_StartFunc)param)();
+	(*VM_Ptr)->DetachCurrentThread(VM_Ptr);
 	return NULL;
 }
+#else
+static void* ExecThread(void* param) {
+	((Thread_StartFunc)param)(); 
+	return NULL;
+}
+#endif
 
 void* Thread_Start(Thread_StartFunc func, cc_bool detach) {
 	pthread_t* ptr = (pthread_t*)Mem_Alloc(1, sizeof(pthread_t), "thread");
