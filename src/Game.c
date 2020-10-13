@@ -636,6 +636,7 @@ void Game_Free(void* obj) {
 	Logger_WarnFunc = Logger_DialogWarn;
 	Gfx_Free();
 	Options_SaveIfChanged();
+	World_Reset();
 }
 
 #define Game_DoFrameBody() \

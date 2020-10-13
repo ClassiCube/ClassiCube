@@ -46,12 +46,12 @@ void World_Reset(void) {
 	World.Blocks = NULL;
 
 	World_SetDimensions(0, 0, 0);
+	World.Loaded = false;
 	Env_Reset();
 }
 
 void World_NewMap(void) {
 	World_Reset();
-	World.Loaded = false;
 	Event_RaiseVoid(&WorldEvents.NewMap);
 }
 
