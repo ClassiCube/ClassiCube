@@ -34,7 +34,7 @@ struct Bitmap;
 struct DynamicLibSym;
 /* The states the window can be in. */
 enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_FULLSCREEN };
-enum KeyboardType { KEYBOARD_TYPE_TEXT, KEYBOARD_TYPE_PASSWORD, KEYBOARD_TYPE_NUMBER };
+enum KeyboardType { KEYBOARD_TYPE_TEXT, KEYBOARD_TYPE_NUMBER, KEYBOARD_TYPE_PASSWORD };
 /* Can't name these structs Window/Display, because it conflicts with X11's Window/Display typedef */
 
 /* Data for the display monitor. */
@@ -130,7 +130,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp);
 
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */
-void Window_OpenKeyboard(int type);
+void Window_OpenKeyboard(const String* text, int type);
 /* Sets the text used for keyboard input. */
 /* NOTE: This is only used for mobile on-screen keyboard input with the web client, */
 /* because it is backed by a HTML input, rather than true keyboard input events. */

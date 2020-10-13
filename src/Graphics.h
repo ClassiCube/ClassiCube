@@ -191,7 +191,7 @@ void Gfx_BeginFrame(void);
 void Gfx_EndFrame(void);
 /* Sets whether to synchronise with monitor refresh to avoid tearing, and maximum frame rate. */
 /* NOTE: VSync setting may be unsupported or just ignored. */
-void Gfx_SetFpsLimit(cc_bool value, float minFrameMillis);
+void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMillis);
 /* Updates state when the window's dimensions have changed. */
 /* NOTE: This may require recreating the context depending on the backend. */
 void Gfx_OnWindowResize(void);

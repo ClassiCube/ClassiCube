@@ -401,9 +401,9 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	/* TODO: Do we still need to unlock it though? */
 }
 
-void Window_OpenKeyboard(int type) { SDL_StartTextInput(); }
+void Window_OpenKeyboard(const String* text, int type) { SDL_StartTextInput(); }
 void Window_SetKeyboardText(const String* text) { }
-void Window_CloseKeyboard(void)    { SDL_StopTextInput(); }
+void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
 
 void Window_EnableRawMouse(void) {
 	RegrabMouse();
@@ -934,9 +934,9 @@ static void InitRawMouse(void) {
 	rawMouseSupported = false;
 }
 
-void Window_OpenKeyboard(int type) { }
+void Window_OpenKeyboard(const String* text, int type) { }
 void Window_SetKeyboardText(const String* text) { }
-void Window_CloseKeyboard(void)    { }
+void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void) {
 	DefaultEnableRawMouse();
@@ -1818,9 +1818,9 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(int type) { }
+void Window_OpenKeyboard(const String* text, int type) { }
 void Window_SetKeyboardText(const String* text) { }
-void Window_CloseKeyboard(void)    { }
+void Window_CloseKeyboard(void) { }
 
 static cc_bool rawMouseInited, rawMouseSupported;
 static int xiOpcode;
@@ -2034,9 +2034,9 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 	}
 }
 
-void Window_OpenKeyboard(int type) { }
+void Window_OpenKeyboard(const String* text, int type) { }
 void Window_SetKeyboardText(const String* text) { }
-void Window_CloseKeyboard(void)    { }
+void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void) {
 	DefaultEnableRawMouse();
@@ -3500,9 +3500,11 @@ EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) {
 	Event_RaiseString(&InputEvents.TextChanged, &str);
 }
 
-void Window_OpenKeyboard(int type)  {
+void Window_OpenKeyboard(const String* text, int type) {
+	char str[NATIVE_STR_LEN];
 	if (!Input_TouchMode) return;
 	keyboardOpen = true;
+	Platform_ConvertString(str, text);
 	Platform_LogConst("OPEN SESAME");
 
 	EM_ASM_({
@@ -3510,6 +3512,7 @@ void Window_OpenKeyboard(int type)  {
 		if (!elem) {
 			elem = document.createElement('textarea');
 			elem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; opacity:0.3; resize:none; pointer-events:none;');
+			elem.value = UTF8ToString($0);
 
 			elem.addEventListener("input", 
 				function(ev) {
@@ -3521,7 +3524,7 @@ void Window_OpenKeyboard(int type)  {
 		}
 		elem.focus();
 		elem.click();
-	}, type);
+	}, str, type);
 }
 
 void Window_SetKeyboardText(const String* text) {
@@ -3930,7 +3933,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(int type) {
+void Window_OpenKeyboard(const String* text, int type) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	JavaCallVoid(env, "openKeyboard", "()V", NULL);

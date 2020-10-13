@@ -417,12 +417,13 @@ static void LInput_MoveCaretToCursor(struct LInput* w) {
 }
 
 static void LInput_Select(void* widget, cc_bool wasSelected) {
+	struct LInput* w = (struct LInput*)widget;
 	caretStart = DateTime_CurrentUTC_MS();
-	LInput_MoveCaretToCursor((struct LInput*)widget);
+	LInput_MoveCaretToCursor(w);
 	/* TODO: Only draw outer border */
 	if (wasSelected) return;
 	LWidget_Draw(widget);
-	Window_OpenKeyboard(KEYBOARD_TYPE_TEXT);
+	Window_OpenKeyboard(&w->text, KEYBOARD_TYPE_TEXT);
 }
 
 static void LInput_Unselect(void* widget) {

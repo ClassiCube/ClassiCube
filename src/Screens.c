@@ -1278,8 +1278,7 @@ void ChatScreen_OpenInput(const String* text) {
 	s->suppressNextPress = true;
 	s->grabsInput        = true;
 	Camera_CheckFocus();
-	Window_OpenKeyboard(KEYBOARD_TYPE_TEXT);
-	Window_SetKeyboardText(text);
+	Window_OpenKeyboard(text, KEYBOARD_TYPE_TEXT);
 
 	String_Copy(&s->input.base.text, text);
 	InputWidget_UpdateText(&s->input.base);

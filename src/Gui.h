@@ -67,8 +67,7 @@ struct ScreenVTABLE {
 	int  (*HandlesInputUp)(void* elem, int key);
 	/* Returns non-zero if a key character press is handled. */
 	int  (*HandlesKeyPress)(void* elem, char keyChar);
-	/* Returns non-zero if a key character press is handled. */
-	/* Currently only raised by on-screen keyboard in web client. */
+	/* Returns non-zero if on-screen keyboard text changed is handled. */
 	int  (*HandlesTextChanged)(void* elem, const String* str);
 	/* Returns non-zero if a pointer press is handled. */
 	int  (*HandlesPointerDown)(void* elem, int id, int x, int y);
