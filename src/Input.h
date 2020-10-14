@@ -5,6 +5,8 @@
    Raises events when keys are pressed etc, and implements base handlers for them.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
+struct IGameComponent;
+extern struct IGameComponent Input_Component;
 
 enum Key {
 	KEY_NONE, /* Unrecognised key */

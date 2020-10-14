@@ -378,7 +378,7 @@ static void Game_Load(void) {
 	Event_Register_(&WindowEvents.Resized,      NULL, Game_OnResize);
 	Event_Register_(&WindowEvents.Closing,      NULL, Game_Free);
 
-	InputHandler_Init();
+	Game_AddComponent(&Input_Component);
 	Game_AddComponent(&Camera_Component);
 	Game_AddComponent(&Gfx_Component);
 	Game_AddComponent(&Blocks_Component);

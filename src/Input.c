@@ -951,7 +951,15 @@ static void OnPointerDown(void* obj, int idx) {
 		s->dirty = true;
 #ifdef CC_BUILD_TOUCH
 		if (s->VTABLE->HandlesPointerDown(s, 1 << idx, x, y)) {
-			touches[idx].type = TOUCH_TYPE_GUI; return;
+			/* using &= ~TOUCH_TYPE_GUI instead of = TOUCH_TYPE_GUI is to handle */
+			/* one specific case - when clicking 'Quit game' in android version, */
+			/* it will call Game_Free, which will in turn call InputComponent.Free. */
+			/* That resets the type of all touches to 0 - however, since it is */
+			/* called DURING HandlesPointerDown, using = TOUCH_TYPE_GUI here would */
+			/* undo the resetting of type to 0 for one of the touches states, */
+			/* causing problems later with Input_AddTouch as it will assume that */
+			/* the aforementioned touches state is wrongly still in use */
+			touches[idx].type &= ~TOUCH_TYPE_GUI; return;
 		}
 #else
 		if (s->VTABLE->HandlesPointerDown(s, 1 << idx, x, y)) return;
@@ -1043,7 +1051,7 @@ static void OnInputUp(void* obj, int key) {
 }
 
 static void OnFocusChanged(void* obj) { if (!WindowInfo.Focused) Input_Clear(); }
-void InputHandler_Init(void) {
+static void OnInit(void) {
 	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
@@ -1056,3 +1064,16 @@ void InputHandler_Init(void) {
 	KeyBind_Init();
 	StoredHotkeys_LoadAll();
 }
+
+static void OnFree(void) {
+#ifdef CC_BUILD_TOUCH
+	int i;
+	for (i = 0; i < INPUT_MAX_POINTERS; i++) touches[i].type = 0;
+	Pointers_Count = 0;
+#endif
+}
+
+struct IGameComponent Input_Component = {
+	OnInit, /* Init  */
+	OnFree, /* Free  */
+};
