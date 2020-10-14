@@ -212,7 +212,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	
 	@Override
 	protected void onPause() {
-		detachSurface();
+		// can't use null.. TODO is there a better way?
+		setContentView(new View(this));
 		super.onPause();
 		pushCmd(CMD_APP_PAUSE); 
 	}
@@ -316,17 +317,16 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	final Semaphore winDestroyedSem = new Semaphore(0, true);
 	public void surfaceDestroyed(SurfaceHolder holder) {
 		Log.i("CC_WIN", "win destroyed " + holder.getSurface());
-		// per the android docs for SurfaceHolder.Callback
-		// "If you have a rendering thread that directly accesses the surface, you must ensure 
-		// that thread is no longer touching the Surface before returning from this function."
-		Log.i("CC_WIN", "cur holder " + holder);
-		Log.i("CC_WIN", "cur view" + curView.getHolder());
-		curView.getHolder().removeCallback(this); // or just holder??
+		Log.i("CC_WIN", "cur view " + curView);
+		holder.removeCallback(this);
 		
 		//08-02 21:03:02.967: E/BufferQueueProducer(1350): [SurfaceView - com.classicube.ClassiCube/com.classicube.MainActivity#0] disconnect: not connected (req=2)
 		//08-02 21:03:02.968: E/SurfaceFlinger(1350): Failed to find layer (SurfaceView - com.classicube.ClassiCube/com.classicube.MainActivity#0) in layer parent (no-parent).
 
 		pushCmd(CMD_WIN_DESTROYED);
+		// per the android docs for SurfaceHolder.Callback
+		// "If you have a rendering thread that directly accesses the surface, you must ensure
+		// that thread is no longer touching the Surface before returning from this function."
 		try {
 			winDestroyedSem.acquire();
 		} catch (InterruptedException e) { }
@@ -352,11 +352,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		curView.requestFocus();
 	}
 	
-	void detachSurface() {
-		// can't use null.. TODO is there a better way?
-		setContentView(new View(this));
-	}
-	
 	class LauncherView extends SurfaceView {
 		
 		public LauncherView(Context context) { super(context); }
@@ -376,7 +371,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		// So just destroy the current surface and make a new one
 		runOnUiThread(new Runnable() {
 			public void run() {
-				detachSurface();
 				attachSurface();
 			}
 		});
