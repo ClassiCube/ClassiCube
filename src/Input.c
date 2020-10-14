@@ -951,7 +951,7 @@ static void OnPointerDown(void* obj, int idx) {
 		s->dirty = true;
 #ifdef CC_BUILD_TOUCH
 		if (s->VTABLE->HandlesPointerDown(s, 1 << idx, x, y)) {
-			/* using &= ~TOUCH_TYPE_GUI instead of = TOUCH_TYPE_GUI is to handle */
+			/* using &= TOUCH_TYPE_GUI instead of = TOUCH_TYPE_GUI is to handle */
 			/* one specific case - when clicking 'Quit game' in android version, */
 			/* it will call Game_Free, which will in turn call InputComponent.Free. */
 			/* That resets the type of all touches to 0 - however, since it is */
@@ -959,7 +959,7 @@ static void OnPointerDown(void* obj, int idx) {
 			/* undo the resetting of type to 0 for one of the touches states, */
 			/* causing problems later with Input_AddTouch as it will assume that */
 			/* the aforementioned touches state is wrongly still in use */
-			touches[idx].type &= ~TOUCH_TYPE_GUI; return;
+			touches[idx].type &= TOUCH_TYPE_GUI; return;
 		}
 #else
 		if (s->VTABLE->HandlesPointerDown(s, 1 << idx, x, y)) return;
