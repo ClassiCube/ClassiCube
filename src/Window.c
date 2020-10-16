@@ -3465,7 +3465,7 @@ void Window_ProcessEvents(void) {
 	needResize = false;
 
 	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) return;
-	EM_ASM( if (resizeGameCanvas) resizeGameCanvas(); );
+	EM_ASM( if (typeof(resizeGameCanvas) === 'function') resizeGameCanvas(); );
 	UpdateWindowBounds();
 }
 
