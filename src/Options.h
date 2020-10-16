@@ -67,6 +67,7 @@
 #define OPT_CLASSIC_CHAT "nostalgia-classicchat"
 #define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
 #define OPT_CAMERA_MASS "cameramass"
+#define OPT_GRAB_CURSOR "win-grab-cursor"
 
 extern struct StringsBuffer Options;
 /* Frees any memory allocated in storing options. */

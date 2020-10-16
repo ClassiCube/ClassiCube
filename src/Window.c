@@ -6,6 +6,7 @@
 #include "Funcs.h"
 #include "ExtMath.h"
 #include "Bitmap.h"
+#include "Options.h"
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
@@ -981,6 +982,7 @@ static Atom net_wm_state_fullscreen;
 static Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
 static Atom xa_atom = 4;
 static long win_eventMask;
+static cc_bool grabCursor;
 
 static int MapNativeKey(KeySym key, unsigned int state) {
 	if (key >= XK_0 && key <= XK_9) { return '0' + (key - XK_0); }
@@ -1204,6 +1206,7 @@ void Window_Create(int width, int height) {
 	RefreshWindowBounds(width, height);
 	WindowInfo.Exists = true;
 	WindowInfo.Handle = (void*)win_handle;
+	grabCursor = Options_GetBool(OPT_GRAB_CURSOR, false);
 	
 	/* So right name appears in e.g. Ubuntu Unity launchbar */
 	XClassHint hint = { 0 };
@@ -1526,8 +1529,8 @@ void Cursor_SetPosition(int x, int y) {
 	XFlush(win_display); /* TODO: not sure if XFlush call is necessary */
 }
 
+static Cursor blankCursor;
 static void Cursor_DoSetVisible(cc_bool visible) {
-	static Cursor blankCursor;
 	if (visible) {
 		XUndefineCursor(win_display, win_handle);
 	} else {
@@ -1889,6 +1892,10 @@ void Window_EnableRawMouse(void) {
 	DefaultEnableRawMouse();
 	if (!rawMouseInited) InitRawMouse();
 	rawMouseInited = true;
+
+	if (!grabCursor) return;
+	XGrabPointer(win_display, win_handle, True, ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+		GrabModeAsync, GrabModeAsync, win_handle, blankCursor, CurrentTime);
 }
 
 void Window_UpdateRawMouse(void) {
@@ -1900,7 +1907,11 @@ void Window_UpdateRawMouse(void) {
 	}
 }
 
-void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
+void Window_DisableRawMouse(void) {
+	DefaultDisableRawMouse();
+	if (!grabCursor) return;
+	XUngrabPointer(win_display, CurrentTime);
+}
 
 
 /*########################################################################################################################*
