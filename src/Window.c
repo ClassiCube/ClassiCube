@@ -3511,15 +3511,18 @@ void Window_OpenKeyboard(const String* text, int type) {
 		var elem = window.cc_inputElem;
 		if (!elem) {
 			elem = document.createElement('textarea');
-			elem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; opacity:0.3; resize:none; pointer-events:none;');
+			elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px');
 			elem.value = UTF8ToString($0);
 
-			elem.addEventListener("input", 
+			elem.addEventListener('input', 
 				function(ev) {
 					ccall('Window_OnTextChanged', 'void', ['string'], [ev.target.value]);
 				}, false);
-
 			window.cc_inputElem = elem;
+
+			window.cc_divElem = document.createElement('div');
+			window.cc_divElem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; background-color: black; opacity:0.4; resize:none; pointer-events:none;');
+			document.body.appendChild(window.cc_divElem);
 			document.body.appendChild(elem);
 		}
 		elem.focus();
@@ -3547,7 +3550,9 @@ void Window_CloseKeyboard(void) {
 
 	EM_ASM({
 		if (!window.cc_inputElem) return;
+		document.body.removeChild(window.cc_divElem);
 		document.body.removeChild(window.cc_inputElem);
+		window.cc_divElem   = null;
 		window.cc_inputElem = null;
 	});
 }
