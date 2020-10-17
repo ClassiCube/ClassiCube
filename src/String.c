@@ -507,9 +507,20 @@ char Convert_CodepointToCP437(cc_codepoint cp) {
 	char c; Convert_TryCodepointToCP437(cp, &c); return c;
 }
 
+static cc_codepoint ReduceEmoji(cc_codepoint cp) {
+	if (cp == 0x1F31E) return 0x263C;
+	if (cp == 0x1F3B5) return 0x266B;
+	if (cp == 0x1F642) return 0x263A;
+
+	if (cp == 0x1F600 || cp == 0x1F601 || cp == 0x1F603) return 0x263A;
+	if (cp == 0x1F604 || cp == 0x1F606 || cp == 0x1F60A) return 0x263A;
+	return cp;
+}
+
 cc_bool Convert_TryCodepointToCP437(cc_codepoint cp, char* c) {
 	int i;
 	if (cp >= 0x20 && cp < 0x7F) { *c = (char)cp; return true; }
+	if (cp >= 0x1F000) cp = ReduceEmoji(cp);
 
 	for (i = 0; i < Array_Elems(controlChars); i++) {
 		if (controlChars[i] == cp) { *c = i; return true; }
