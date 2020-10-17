@@ -111,20 +111,19 @@ void Model_Render(struct Model* model, struct Entity* e) {
 
 void Model_SetupState(struct Model* model, struct Entity* e) {
 	PackedCol col;
-	cc_bool _64x64;
 	float yawDelta;
 
 	model->index = 0;
 	col = e->VTABLE->GetCol(e);
-
-	_64x64  = e->SkinType != SKIN_64x32;
-	/* only apply when using humanoid skins */
-	_64x64 &= model->usesHumanSkin || e->MobTextureId;
-
-	Models.uScale = e->uScale * 0.015625f;
-	Models.vScale = e->vScale * (_64x64 ? 0.015625f : 0.03125f);
-
 	Models.Cols[0] = col;
+
+	/* If a model forgets to call Model_ApplyTexture but still tries to draw,
+	/* then it is not using the model API properly. */
+	/* So set uScale/vScale to ridiculous defaults to make it obvious */
+	/* TODO: Remove setting this eventually */
+	Models.uScale = 100.0f;
+	Models.vScale = 100.0f;
+
 	if (!e->NoShade) {
 		Models.Cols[1] = PackedCol_Scale(col, PACKEDCOL_SHADE_YMIN);
 		Models.Cols[2] = PackedCol_Scale(col, PACKEDCOL_SHADE_Z);
