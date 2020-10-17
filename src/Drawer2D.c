@@ -1021,7 +1021,7 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	String text  = args->text;
 	int i, width = 0, charWidth;
 	FT_Error res;
-	Codepoint cp;
+	cc_unichar uc;
 
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
@@ -1032,8 +1032,8 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 		charWidth = font->widths[(cc_uint8)c];
 		/* need to calculate glyph width */
 		if (charWidth == UInt16_MaxValue) {
-			cp  = Convert_CP437ToUnicode(c);
-			res = FT_Load_Char(face, cp, 0);
+			uc  = Convert_CP437ToUnicode(c);
+			res = FT_Load_Char(face, uc, 0);
 
 			if (res) {
 				Platform_Log2("Error %i measuring width of %r", &res, &c);
@@ -1118,7 +1118,7 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 	FT_Bitmap* img;
 	int i, offset;
 	FT_Error res;
-	Codepoint cp;
+	cc_unichar uc;
 
 	if (shadow) {
 		glyphs = font->shadow_glyphs;
@@ -1142,8 +1142,8 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 
 		glyph = glyphs[(cc_uint8)c];
 		if (!glyph) {
-			cp  = Convert_CP437ToUnicode(c);
-			res = FT_Load_Char(face, cp, FT_LOAD_RENDER);
+			uc  = Convert_CP437ToUnicode(c);
+			res = FT_Load_Char(face, uc, FT_LOAD_RENDER);
 
 			if (res) {
 				Platform_Log2("Error %i drawing %r", &res, &text.buffer[i]);

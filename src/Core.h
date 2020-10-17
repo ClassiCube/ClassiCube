@@ -96,7 +96,7 @@ typedef uintptr_t cc_uintptr;
 #define CC_VAR
 #endif
 
-typedef cc_uint16 Codepoint;
+typedef cc_uint16 cc_unichar;
 typedef cc_uint8  cc_bool;
 #ifdef __APPLE__
 /* TODO: REMOVE THIS AWFUL AWFUL HACK */

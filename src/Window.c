@@ -544,7 +544,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_CHAR:
-		if (Convert_TryUnicodeToCP437((Codepoint)wParam, &keyChar)) {
+		if (Convert_TryUnicodeToCP437((cc_unichar)wParam, &keyChar)) {
 			Event_RaiseInt(&InputEvents.Press, keyChar);
 		}
 		break;
@@ -755,7 +755,7 @@ void Clipboard_GetText(String* value) {
 		/* ignore trailing NULL at end */
 		/* TODO: Verify it's always there */
 		if (unicode) {
-			String_AppendUtf16(value, (Codepoint*)src, size - 2);
+			String_AppendUtf16(value, (cc_unichar*)src, size - 2);
 		} else {
 			String_DecodeCP1252(value, (cc_uint8*)src,  size - 1);
 		}
@@ -767,7 +767,7 @@ void Clipboard_GetText(String* value) {
 }
 
 void Clipboard_SetText(const String* value) {
-	Codepoint* text;
+	cc_unichar* text;
 	HANDLE hGlobal;
 	int i;
 
@@ -781,7 +781,7 @@ void Clipboard_SetText(const String* value) {
 		hGlobal = GlobalAlloc(GMEM_MOVEABLE, (value->length + 1) * 2);
 		if (!hGlobal) { CloseClipboard(); return; }
 
-		text = (Codepoint*)GlobalLock(hGlobal);
+		text = (cc_unichar*)GlobalLock(hGlobal);
 		for (i = 0; i < value->length; i++, text++) {
 			*text = Convert_CP437ToUnicode(value->buffer[i]);
 		}
@@ -2003,7 +2003,7 @@ void Clipboard_GetText(String* value) {
 	if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF16, &outData))) {	
 		ptr = CFDataGetBytePtr(outData);
 		len = CFDataGetLength(outData);
-		if (ptr) String_AppendUtf16(value, (Codepoint*)ptr, len);
+		if (ptr) String_AppendUtf16(value, (cc_unichar*)ptr, len);
 	} else if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF8, &outData))) {
 		ptr = CFDataGetBytePtr(outData);
 		len = CFDataGetLength(outData);
@@ -3671,7 +3671,7 @@ static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {
 	int key = MapNativeKey(code);
 	Platform_Log2("KEY - PRESS %i,%i", &code, &key);
 
-	if (Convert_TryUnicodeToCP437((Codepoint)code, &keyChar)) {
+	if (Convert_TryUnicodeToCP437((cc_unichar)code, &keyChar)) {
 		Event_RaiseInt(&InputEvents.Press, keyChar);
 	}
 }

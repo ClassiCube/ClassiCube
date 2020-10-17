@@ -19,7 +19,7 @@
 #endif
 
 #ifdef UNICODE
-#define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, (Codepoint*)(src), (len) * 2)
+#define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, (cc_unichar*)(src), (len) * 2)
 #else
 #define Platform_DecodeString(dst, src, len) String_DecodeCP1252(dst, (cc_uint8*)(src), len)
 #endif

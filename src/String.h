@@ -163,24 +163,24 @@ NOTE: This is a low level API. Argument count and types are not checked at all. 
 CC_API void String_Format4(String* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
 /* Converts a code page 437 character to its unicode equivalent. */
-Codepoint Convert_CP437ToUnicode(char c);
+cc_unichar Convert_CP437ToUnicode(char c);
 /* Converts a unicode character to its code page 437 equivalent, or '?' if no match. */
-char Convert_UnicodeToCP437(Codepoint cp);
+char Convert_UnicodeToCP437(cc_unichar uc);
 /* Attempts to convert a unicode character to its code page 437 equivalent. */
-cc_bool Convert_TryUnicodeToCP437(Codepoint cp, char* c);
+cc_bool Convert_TryUnicodeToCP437(cc_unichar uc, char* c);
 /* Decodes a unicode character from UTF8, returning number of bytes read. */
 /* Returns 0 if not enough input data to read the character. */
-int Convert_Utf8ToUnicode(Codepoint* cp, const cc_uint8* data, cc_uint32 len);
+int Convert_Utf8ToUnicode(cc_unichar* uc, const cc_uint8* data, cc_uint32 len);
 /* Encodes a unicode character in UTF8, returning number of bytes written. */
 /* The number of bytes written is always either 1,2 or 3. */
-int Convert_UnicodeToUtf8(Codepoint cp, cc_uint8* data);
+int Convert_UnicodeToUtf8(cc_unichar uc, cc_uint8* data);
 /* Encodes a code page 437 character in UTF8, returning number of bytes written. */
 /* The number of bytes written is always either 1,2 or 3. */
 int Convert_CP437ToUtf8(char c, cc_uint8* data);
 
 /* Attempts to append all characters from UTF16 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_AppendUtf16(String* str, const Codepoint* chars, int numBytes);
+void String_AppendUtf16(String* str, const cc_unichar* chars, int numBytes);
 /* Attempts to append all characters from UTF8 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
 void String_AppendUtf8(String* str, const cc_uint8* chars, int numBytes);

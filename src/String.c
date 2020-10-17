@@ -470,14 +470,14 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 /*########################################################################################################################*
 *------------------------------------------------Character set conversions------------------------------------------------*
 *#########################################################################################################################*/
-static const Codepoint controlChars[32] = {
+static const cc_unichar controlChars[32] = {
 	0x0000, 0x263A, 0x263B, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022,
 	0x25D8, 0x25CB, 0x25D9, 0x2642, 0x2640, 0x266A, 0x266B, 0x263C,
 	0x25BA, 0x25C4, 0x2195, 0x203C, 0x00B6, 0x00A7, 0x25AC, 0x21A8,
 	0x2191, 0x2193, 0x2192, 0x2190, 0x221F, 0x2194, 0x25B2, 0x25BC
 };
 
-static const Codepoint extendedChars[129] = { 0x2302,
+static const cc_unichar extendedChars[129] = { 0x2302,
 	0x00C7, 0x00FC, 0x00E9, 0x00E2, 0x00E4, 0x00E0, 0x00E5, 0x00E7,
 	0x00EA, 0x00EB, 0x00E8, 0x00EF, 0x00EE, 0x00EC, 0x00C4, 0x00C5,
 	0x00C9, 0x00E6, 0x00C6, 0x00F4, 0x00F6, 0x00F2, 0x00FB, 0x00F9,
@@ -496,70 +496,70 @@ static const Codepoint extendedChars[129] = { 0x2302,
 	0x00B0, 0x2219, 0x00B7, 0x221A, 0x207F, 0x00B2, 0x25A0, 0x00A0
 };
 
-Codepoint Convert_CP437ToUnicode(char c) {
+cc_unichar Convert_CP437ToUnicode(char c) {
 	cc_uint8 raw = (cc_uint8)c;
 	if (raw < 0x20) return controlChars[raw];
 	if (raw < 0x7F) return raw;
 	return extendedChars[raw - 0x7F];
 }
 
-char Convert_UnicodeToCP437(Codepoint cp) {
-	char c; Convert_TryUnicodeToCP437(cp, &c); return c;
+char Convert_UnicodeToCP437(cc_unichar uc) {
+	char c; Convert_TryUnicodeToCP437(uc, &c); return c;
 }
 
-cc_bool Convert_TryUnicodeToCP437(Codepoint cp, char* c) {
+cc_bool Convert_TryUnicodeToCP437(cc_unichar uc, char* c) {
 	int i;
-	if (cp >= 0x20 && cp < 0x7F) { *c = (char)cp; return true; }
+	if (uc >= 0x20 && uc < 0x7F) { *c = (char)uc; return true; }
 
 	for (i = 0; i < Array_Elems(controlChars); i++) {
-		if (controlChars[i] == cp) { *c = i; return true; }
+		if (controlChars[i] == uc) { *c = i; return true; }
 	}
 	for (i = 0; i < Array_Elems(extendedChars); i++) {
-		if (extendedChars[i] == cp) { *c = i + 0x7F; return true; }
+		if (extendedChars[i] == uc) { *c = i + 0x7F; return true; }
 	}
 
 	*c = '?'; return false;
 }
 
-int Convert_Utf8ToUnicode(Codepoint* cp, const cc_uint8* data, cc_uint32 len) {
-	*cp = '\0';
+int Convert_Utf8ToUnicode(cc_unichar* uc, const cc_uint8* data, cc_uint32 len) {
+	*uc = '\0';
 	if (!len) return 0;
 
 	if (data[0] <= 0x7F) {
-		*cp = data[0];
+		*uc = data[0];
 		return 1;
 	} else if ((data[0] & 0xE0) == 0xC0) {
 		if (len < 2) return 0;
 
-		*cp = ((data[0] & 0x1F) << 6)  | ((data[1] & 0x3F));
+		*uc = ((data[0] & 0x1F) << 6)  | ((data[1] & 0x3F));
 		return 2;
 	} else if ((data[0] & 0xF0) == 0xE0) {
 		if (len < 3) return 0;
 
-		*cp = ((data[0] & 0x0F) << 12) | ((data[1] & 0x3F) << 6) 
+		*uc = ((data[0] & 0x0F) << 12) | ((data[1] & 0x3F) << 6) 
 			| ((data[2] & 0x3F));
 		return 3;
 	} else {
 		if (len < 4) return 0;
 
-		*cp = ((data[0] & 0x07) << 18) | ((data[1] & 0x3F) << 12) 
+		*uc = ((data[0] & 0x07) << 18) | ((data[1] & 0x3F) << 12) 
 			| ((data[2] & 0x3F) << 6)  | (data[3] & 0x3F);
 		return 4;
 	}
 }
 
-int Convert_UnicodeToUtf8(Codepoint cp, cc_uint8* data) {
-	if (cp <= 0x7F) {
-		data[0] = (cc_uint8)cp;
+int Convert_UnicodeToUtf8(cc_unichar uc, cc_uint8* data) {
+	if (uc <= 0x7F) {
+		data[0] = (cc_uint8)uc;
 		return 1;
-	} else if (cp <= 0x7FF) {
-		data[0] = 0xC0 | ((cp >> 6) & 0x1F);
-		data[1] = 0x80 | ((cp)      & 0x3F);
+	} else if (uc <= 0x7FF) {
+		data[0] = 0xC0 | ((uc >> 6) & 0x1F);
+		data[1] = 0x80 | ((uc)      & 0x3F);
 		return 2;
 	} else {
-		data[0] = 0xE0 | ((cp >> 12) & 0x0F);
-		data[1] = 0x80 | ((cp >>  6) & 0x3F);
-		data[2] = 0x80 | ((cp)       & 0x3F);
+		data[0] = 0xE0 | ((uc >> 12) & 0x0F);
+		data[1] = 0x80 | ((uc >>  6) & 0x3F);
+		data[2] = 0x80 | ((uc)       & 0x3F);
 		return 3;
 	}
 }
@@ -573,7 +573,7 @@ int Convert_CP437ToUtf8(char c, cc_uint8* data) {
 	return Convert_UnicodeToUtf8(Convert_CP437ToUnicode(c), data);
 }
 
-void String_AppendUtf16(String* value, const Codepoint* chars, int numBytes) {
+void String_AppendUtf16(String* value, const cc_unichar* chars, int numBytes) {
 	int i; char c;
 	
 	for (i = 0; i < (numBytes >> 1); i++) {
@@ -582,13 +582,13 @@ void String_AppendUtf16(String* value, const Codepoint* chars, int numBytes) {
 }
 
 void String_AppendUtf8(String* value, const cc_uint8* chars, int numBytes) {
-	int len; Codepoint cp; char c;
+	int len; cc_unichar uc; char c;
 
 	for (; numBytes > 0; numBytes -= len) {
-		len = Convert_Utf8ToUnicode(&cp, chars, numBytes);
+		len = Convert_Utf8ToUnicode(&uc, chars, numBytes);
 		if (!len) return;
 
-		if (Convert_TryUnicodeToCP437(cp, &c)) String_Append(value, c);
+		if (Convert_TryUnicodeToCP437(uc, &c)) String_Append(value, c);
 		chars += len;
 	}
 }

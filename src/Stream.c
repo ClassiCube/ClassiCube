@@ -442,7 +442,7 @@ cc_result Stream_ReadU32_BE(struct Stream* s, cc_uint32* value) {
 *#########################################################################################################################*/
 cc_result Stream_ReadLine(struct Stream* s, String* text) {
 	cc_bool readAny = false;
-	Codepoint cp;
+	cc_unichar uc;
 	cc_result res;
 
 	cc_uint8 tmp[8];
@@ -457,19 +457,19 @@ cc_result Stream_ReadLine(struct Stream* s, String* text) {
 		do {
 			if ((res = s->ReadU8(s, &tmp[len]))) break;
 			len++;
-		} while (!Convert_Utf8ToUnicode(&cp, tmp, len));
+		} while (!Convert_Utf8ToUnicode(&uc, tmp, len));
 
 		if (res == ERR_END_OF_STREAM) break;
 		if (res) return res;
 
 		readAny = true;
 		/* Handle \r\n or \n line endings */
-		if (cp == '\r') continue;
-		if (cp == '\n') return 0;
+		if (uc == '\r') continue;
+		if (uc == '\n') return 0;
 
 		/* ignore byte order mark */
-		if (cp == 0xFEFF) continue;
-		String_Append(text, Convert_UnicodeToCP437(cp));
+		if (uc == 0xFEFF) continue;
+		String_Append(text, Convert_UnicodeToCP437(uc));
 	}
 	return readAny ? 0 : ERR_END_OF_STREAM;
 }
