@@ -373,7 +373,8 @@ cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallbac
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 		
 		for (i = 0; i < MAX_PATH && src[i]; i++) {
-			String_Append(&path, Convert_UnicodeToCP437(src[i]));
+			/* TODO: UTF16 to codepoint conversion */
+			String_Append(&path, Convert_CodepointToCP437(src[i]));
 		}
 
 		if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {

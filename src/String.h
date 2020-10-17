@@ -164,16 +164,13 @@ CC_API void String_Format4(String* str, const char* format, const void* a1, cons
 
 /* Converts a code page 437 character to its unicode equivalent. */
 cc_unichar Convert_CP437ToUnicode(char c);
-/* Converts a unicode character to its code page 437 equivalent, or '?' if no match. */
-char Convert_UnicodeToCP437(cc_unichar uc);
-/* Attempts to convert a unicode character to its code page 437 equivalent. */
-cc_bool Convert_TryUnicodeToCP437(cc_unichar uc, char* c);
-/* Decodes a unicode character from UTF8, returning number of bytes read. */
+/* Converts a unicode codepoint to its code page 437 equivalent, or '?' if no match. */
+char Convert_CodepointToCP437(cc_codepoint cp);
+/* Attempts to convert a unicode codepoint to its code page 437 equivalent. */
+cc_bool Convert_TryCodepointToCP437(cc_codepoint cp, char* c);
+/* Decodes a unicode codepoint from UTF8, returning number of bytes read. */
 /* Returns 0 if not enough input data to read the character. */
-int Convert_Utf8ToUnicode(cc_unichar* uc, const cc_uint8* data, cc_uint32 len);
-/* Encodes a unicode character in UTF8, returning number of bytes written. */
-/* The number of bytes written is always either 1,2 or 3. */
-int Convert_UnicodeToUtf8(cc_unichar uc, cc_uint8* data);
+int Convert_Utf8ToCodepoint(cc_codepoint* cp, const cc_uint8* data, cc_uint32 len);
 /* Encodes a code page 437 character in UTF8, returning number of bytes written. */
 /* The number of bytes written is always either 1,2 or 3. */
 int Convert_CP437ToUtf8(char c, cc_uint8* data);

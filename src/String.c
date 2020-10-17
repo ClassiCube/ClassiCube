@@ -503,52 +503,53 @@ cc_unichar Convert_CP437ToUnicode(char c) {
 	return extendedChars[raw - 0x7F];
 }
 
-char Convert_UnicodeToCP437(cc_unichar uc) {
-	char c; Convert_TryUnicodeToCP437(uc, &c); return c;
+char Convert_CodepointToCP437(cc_codepoint cp) {
+	char c; Convert_TryCodepointToCP437(cp, &c); return c;
 }
 
-cc_bool Convert_TryUnicodeToCP437(cc_unichar uc, char* c) {
+cc_bool Convert_TryCodepointToCP437(cc_codepoint cp, char* c) {
 	int i;
-	if (uc >= 0x20 && uc < 0x7F) { *c = (char)uc; return true; }
+	if (cp >= 0x20 && cp < 0x7F) { *c = (char)cp; return true; }
 
 	for (i = 0; i < Array_Elems(controlChars); i++) {
-		if (controlChars[i] == uc) { *c = i; return true; }
+		if (controlChars[i] == cp) { *c = i; return true; }
 	}
 	for (i = 0; i < Array_Elems(extendedChars); i++) {
-		if (extendedChars[i] == uc) { *c = i + 0x7F; return true; }
+		if (extendedChars[i] == cp) { *c = i + 0x7F; return true; }
 	}
 
 	*c = '?'; return false;
 }
 
-int Convert_Utf8ToUnicode(cc_unichar* uc, const cc_uint8* data, cc_uint32 len) {
-	*uc = '\0';
+int Convert_Utf8ToCodepoint(cc_codepoint* cp, const cc_uint8* data, cc_uint32 len) {
+	*cp = '\0';
 	if (!len) return 0;
 
 	if (data[0] <= 0x7F) {
-		*uc = data[0];
+		*cp = data[0];
 		return 1;
 	} else if ((data[0] & 0xE0) == 0xC0) {
 		if (len < 2) return 0;
 
-		*uc = ((data[0] & 0x1F) << 6)  | ((data[1] & 0x3F));
+		*cp = ((data[0] & 0x1F) << 6)  | ((data[1] & 0x3F));
 		return 2;
 	} else if ((data[0] & 0xF0) == 0xE0) {
 		if (len < 3) return 0;
 
-		*uc = ((data[0] & 0x0F) << 12) | ((data[1] & 0x3F) << 6) 
+		*cp = ((data[0] & 0x0F) << 12) | ((data[1] & 0x3F) << 6) 
 			| ((data[2] & 0x3F));
 		return 3;
 	} else {
 		if (len < 4) return 0;
 
-		*uc = ((data[0] & 0x07) << 18) | ((data[1] & 0x3F) << 12) 
-			| ((data[2] & 0x3F) << 6)  | (data[3] & 0x3F);
+		*cp = ((data[0] & 0x07) << 18) | ((data[1] & 0x3F) << 12) 
+			| ((data[2] & 0x3F) << 6)  |  (data[3] & 0x3F);
 		return 4;
 	}
 }
 
-int Convert_UnicodeToUtf8(cc_unichar uc, cc_uint8* data) {
+/* Encodes a unicode character in UTF8, returning number of bytes written */
+static int Convert_UnicodeToUtf8(cc_unichar uc, cc_uint8* data) {
 	if (uc <= 0x7F) {
 		data[0] = (cc_uint8)uc;
 		return 1;
@@ -577,18 +578,19 @@ void String_AppendUtf16(String* value, const cc_unichar* chars, int numBytes) {
 	int i; char c;
 	
 	for (i = 0; i < (numBytes >> 1); i++) {
-		if (Convert_TryUnicodeToCP437(chars[i], &c)) String_Append(value, c);
+		/* TODO: UTF16 to codepoint conversion */
+		if (Convert_TryCodepointToCP437(chars[i], &c)) String_Append(value, c);
 	}
 }
 
 void String_AppendUtf8(String* value, const cc_uint8* chars, int numBytes) {
-	int len; cc_unichar uc; char c;
+	int len; cc_codepoint cp; char c;
 
 	for (; numBytes > 0; numBytes -= len) {
-		len = Convert_Utf8ToUnicode(&uc, chars, numBytes);
+		len = Convert_Utf8ToCodepoint(&cp, chars, numBytes);
 		if (!len) return;
 
-		if (Convert_TryUnicodeToCP437(uc, &c)) String_Append(value, c);
+		if (Convert_TryCodepointToCP437(cp, &c)) String_Append(value, c);
 		chars += len;
 	}
 }
@@ -597,7 +599,7 @@ void String_DecodeCP1252(String* value, const cc_uint8* chars, int numBytes) {
 	int i; char c;
 
 	for (i = 0; i < numBytes; i++) {
-		if (Convert_TryUnicodeToCP437(chars[i], &c)) String_Append(value, c);
+		if (Convert_TryCodepointToCP437(chars[i], &c)) String_Append(value, c);
 	}
 }
 

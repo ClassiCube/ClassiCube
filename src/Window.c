@@ -544,7 +544,8 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_CHAR:
-		if (Convert_TryUnicodeToCP437((cc_unichar)wParam, &keyChar)) {
+		/* TODO: Use WM_UNICHAR instead, as WM_CHAR is just utf16 */
+		if (Convert_TryCodepointToCP437((cc_unichar)wParam, &keyChar)) {
 			Event_RaiseInt(&InputEvents.Press, keyChar);
 		}
 		break;
@@ -1407,7 +1408,7 @@ void Window_ProcessEvents(void) {
 			/* TODO: Does this work for every non-english layout? works for latin keys (e.g. finnish) */
 			char raw; int i;
 			for (i = 0; i < status; i++) {
-				if (!Convert_TryUnicodeToCP437((cc_uint8)data[i], &raw)) continue;
+				if (!Convert_TryCodepointToCP437((cc_uint8)data[i], &raw)) continue;
 				Event_RaiseInt(&InputEvents.Press, raw);
 			}
 		} break;
@@ -2256,7 +2257,8 @@ static OSStatus Window_ProcessTextEvent(EventRef inEvent) {
 	if (res) Logger_Abort2(res, "Getting text chars");
 
 	for (i = 0; i < 16 && chars[i]; i++) {
-		if (Convert_TryUnicodeToCP437(chars[i], &keyChar)) {
+		/* TODO: UTF16 to codepoint conversion */
+		if (Convert_TryCodepointToCP437(chars[i], &keyChar)) {
 			Event_RaiseInt(&InputEvents.Press, keyChar);
 		}
 	}
@@ -3284,7 +3286,7 @@ static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* dat
 	/*   have these intercepted key presses in its text buffer) */
 	if (keyboardOpen) return false;
 
-	if (Convert_TryUnicodeToCP437(ev->charCode, &keyChar)) {
+	if (Convert_TryCodepointToCP437(ev->charCode, &keyChar)) {
 		Event_RaiseInt(&InputEvents.Press, keyChar);
 	}
 	return true;
@@ -3671,7 +3673,7 @@ static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {
 	int key = MapNativeKey(code);
 	Platform_Log2("KEY - PRESS %i,%i", &code, &key);
 
-	if (Convert_TryUnicodeToCP437((cc_unichar)code, &keyChar)) {
+	if (Convert_TryCodepointToCP437(code, &keyChar)) {
 		Event_RaiseInt(&InputEvents.Press, keyChar);
 	}
 }
