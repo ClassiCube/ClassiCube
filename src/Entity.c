@@ -360,7 +360,7 @@ static void Entity_SetSkinAll(struct Entity* source, cc_bool reset) {
 	int i;
 
 	skin = String_FromRawArray(source->SkinRaw);
-	if (Utils_IsUrlPrefix(&skin)) source->MobTextureId = source->TextureId;
+	source->MobTextureId = Utils_IsUrlPrefix(&skin) ? source->TextureId : 0;
 
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i]) continue;
