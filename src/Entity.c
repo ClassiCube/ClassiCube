@@ -135,7 +135,7 @@ static void Entity_SetBlockModel(struct Entity* e, const String* model) {
 }
 
 void Entity_SetModel(struct Entity* e, const String* model) {
-	String name, scale, skin;
+	String name, scale;
 	Vec3_Set(e->ModelScale, 1,1,1);
 	String_UNSAFE_Separate(model, '|', &name, &scale);
 
@@ -145,16 +145,12 @@ void Entity_SetModel(struct Entity* e, const String* model) {
 		Vec3_Set(e->ModelScale, 2,2,2);
 	}
 
-	e->ModelBlock   = BLOCK_AIR;
-	e->Model        = Model_Get(&name);
-	e->MobTextureId = 0;
+	e->ModelBlock = BLOCK_AIR;
+	e->Model      = Model_Get(&name);
 	if (!e->Model) Entity_SetBlockModel(e, &name);
 
 	Entity_ParseScale(e, &scale);
 	Entity_UpdateModelBounds(e);
-	
-	skin = String_FromRawArray(e->SkinRaw);
-	if (Utils_IsUrlPrefix(&skin)) e->MobTextureId = e->TextureId;
 }
 
 void Entity_UpdateModelBounds(struct Entity* e) {
@@ -342,16 +338,11 @@ static struct Entity* Entity_FirstOtherWithSameSkinAndFetchedSkin(struct Entity*
 
 /* Copies skin data from another entity */
 static void Entity_CopySkin(struct Entity* dst, struct Entity* src) {
-	String skin;
-	dst->TextureId = src->TextureId;	
-	dst->SkinType  = src->SkinType;
-	dst->uScale    = src->uScale;
-	dst->vScale    = src->vScale;
-
-	/* Custom mob textures */
-	dst->MobTextureId = 0;
-	skin = String_FromRawArray(dst->SkinRaw);
-	if (Utils_IsUrlPrefix(&skin)) dst->MobTextureId = dst->TextureId;
+	dst->TextureId    = src->TextureId;	
+	dst->SkinType     = src->SkinType;
+	dst->uScale       = src->uScale;
+	dst->vScale       = src->vScale;
+	dst->MobTextureId = src->MobTextureId;
 }
 
 /* Resets skin data for the given entity */
@@ -369,6 +360,8 @@ static void Entity_SetSkinAll(struct Entity* source, cc_bool reset) {
 	int i;
 
 	skin = String_FromRawArray(source->SkinRaw);
+	if (Utils_IsUrlPrefix(&skin)) source->MobTextureId = source->TextureId;
+
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (!Entities.List[i]) continue;
 
