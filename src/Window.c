@@ -18,7 +18,7 @@ int Display_ScaleY(int y) { return (int)(y * DisplayInfo.DpiY); }
 
 #ifndef CC_BUILD_WEB
 void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
-	String text; char textBuffer[2048];
+	cc_string text; char textBuffer[2048];
 	String_InitArray(text, textBuffer);
 
 	Clipboard_GetText(&text);
@@ -121,7 +121,7 @@ static void RefreshWindowBounds(void) {
 
 static void Window_SDLFail(const char* place) {
 	char strBuffer[256];
-	String str;
+	cc_string str;
 	String_InitArray_NT(str, strBuffer);
 
 	String_Format2(&str, "Error when %c: %c", place, SDL_GetError());
@@ -154,13 +154,13 @@ void Window_Create(int width, int height) {
 	WindowInfo.Handle = win_handle;
 }
 
-void Window_SetTitle(const String* title) {
+void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, title);
 	SDL_SetWindowTitle(win_handle, str);
 }
 
-void Clipboard_GetText(String* value) {
+void Clipboard_GetText(cc_string* value) {
 	char* ptr = SDL_GetClipboardText();
 	if (!ptr) return;
 
@@ -169,7 +169,7 @@ void Clipboard_GetText(String* value) {
 	SDL_free(ptr);
 }
 
-void Clipboard_SetText(const String* value) {
+void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, value);
 	SDL_SetClipboardText(str);
@@ -285,7 +285,7 @@ static void OnMouseEvent(const SDL_Event* e) {
 
 static void OnTextEvent(const SDL_Event* e) {
 	char buffer[SDL_TEXTINPUTEVENT_TEXT_SIZE];
-	String str;
+	cc_string str;
 	int i, len;
 
 	String_InitArray(str, buffer);
@@ -402,8 +402,8 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	/* TODO: Do we still need to unlock it though? */
 }
 
-void Window_OpenKeyboard(const String* text, int type) { SDL_StartTextInput(); }
-void Window_SetKeyboardText(const String* text) { }
+void Window_OpenKeyboard(const cc_string* text, int type) { SDL_StartTextInput(); }
+void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
 
 void Window_EnableRawMouse(void) {
@@ -722,13 +722,13 @@ void Window_Create(int width, int height) {
 	WindowInfo.Handle = win_handle;
 }
 
-void Window_SetTitle(const String* title) {
+void Window_SetTitle(const cc_string* title) {
 	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, title);
 	SetWindowText(win_handle, str);
 }
 
-void Clipboard_GetText(String* value) {
+void Clipboard_GetText(cc_string* value) {
 	cc_bool unicode;
 	HANDLE hGlobal;
 	LPVOID src;
@@ -767,7 +767,7 @@ void Clipboard_GetText(String* value) {
 	}
 }
 
-void Clipboard_SetText(const String* value) {
+void Clipboard_SetText(const cc_string* value) {
 	cc_unichar* text;
 	HANDLE hGlobal;
 	int i;
@@ -915,7 +915,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 static cc_bool rawMouseInited, rawMouseSupported;
 static void InitRawMouse(void) {
-	static const String user32 = String_FromConst("USER32.DLL");
+	static const cc_string user32 = String_FromConst("USER32.DLL");
 	void* lib;
 	RAWINPUTDEVICE rid;
 
@@ -936,8 +936,8 @@ static void InitRawMouse(void) {
 	rawMouseSupported = false;
 }
 
-void Window_OpenKeyboard(const String* text, int type) { }
-void Window_SetKeyboardText(const String* text) { }
+void Window_OpenKeyboard(const cc_string* text, int type) { }
+void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void) {
@@ -1217,7 +1217,7 @@ void Window_Create(int width, int height) {
 	ApplyIcon();
 }
 
-void Window_SetTitle(const String* title) {
+void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, title);
 	XStoreName(win_display, win_handle, str);
@@ -1225,10 +1225,10 @@ void Window_SetTitle(const String* title) {
 
 static char clipboard_copy_buffer[256];
 static char clipboard_paste_buffer[256];
-static String clipboard_copy_text  = String_FromArray(clipboard_copy_buffer);
-static String clipboard_paste_text = String_FromArray(clipboard_paste_buffer);
+static cc_string clipboard_copy_text  = String_FromArray(clipboard_copy_buffer);
+static cc_string clipboard_paste_text = String_FromArray(clipboard_paste_buffer);
 
-void Clipboard_GetText(String* value) {
+void Clipboard_GetText(cc_string* value) {
 	Window owner = XGetSelectionOwner(win_display, xa_clipboard);
 	int i;
 	if (!owner) return; /* no window owner */
@@ -1248,7 +1248,7 @@ void Clipboard_GetText(String* value) {
 	}
 }
 
-void Clipboard_SetText(const String* value) {
+void Clipboard_SetText(const cc_string* value) {
 	String_Copy(&clipboard_copy_text, value);
 	XSetSelectionOwner(win_display, xa_clipboard, win_handle, 0);
 }
@@ -1602,7 +1602,7 @@ struct X11Textbox {
 };
 
 static void X11Textbox_Measure(struct X11Textbox* t, XFontStruct* font) {
-	String str = String_FromReadonly(t->text), line;
+	cc_string str = String_FromReadonly(t->text), line;
 	XCharStruct overall;
 	int direction, ascent, descent, lines = 0;
 
@@ -1618,7 +1618,7 @@ static void X11Textbox_Measure(struct X11Textbox* t, XFontStruct* font) {
 }
 
 static void X11Textbox_Draw(struct X11Textbox* t, struct X11MessageBox* m) {
-	String str = String_FromReadonly(t->text), line;
+	cc_string str = String_FromReadonly(t->text), line;
 	int y = t->y + t->lineHeight - t->descent; /* TODO: is -descent even right? */
 
 	for (; str.length; y += t->lineHeight) {
@@ -1822,8 +1822,8 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(const String* text, int type) { }
-void Window_SetKeyboardText(const String* text) { }
+void Window_OpenKeyboard(const cc_string* text, int type) { }
+void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { }
 
 static cc_bool rawMouseInited, rawMouseSupported;
@@ -1983,7 +1983,7 @@ static PasteboardRef Window_GetPasteboard(void) {
 #define FMT_UTF8  CFSTR("public.utf8-plain-text")
 #define FMT_UTF16 CFSTR("public.utf16-plain-text")
 
-void Clipboard_GetText(String* value) {
+void Clipboard_GetText(cc_string* value) {
 	PasteboardRef pbRef;
 	ItemCount itemCount;
 	PasteboardItemID itemID;
@@ -2012,7 +2012,7 @@ void Clipboard_GetText(String* value) {
 	}
 }
 
-void Clipboard_SetText(const String* value) {
+void Clipboard_SetText(const cc_string* value) {
 	PasteboardRef pbRef;
 	CFDataRef cfData;
 	UInt8 str[800];
@@ -2046,8 +2046,8 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 	}
 }
 
-void Window_OpenKeyboard(const String* text, int type) { }
-void Window_SetKeyboardText(const String* text) { }
+void Window_OpenKeyboard(const cc_string* text, int type) { }
+void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { }
 
 void Window_EnableRawMouse(void) {
@@ -2415,7 +2415,7 @@ void Window_Create(int width, int height) {
 	ApplyIcon();
 }
 
-void Window_SetTitle(const String* title) {
+void Window_SetTitle(const cc_string* title) {
 	UInt8 str[NATIVE_STR_LEN];
 	CFStringRef titleCF;
 	int len;
@@ -2794,7 +2794,7 @@ void Window_Create(int width, int height) {
 	ApplyIcon();
 }
 
-void Window_SetTitle(const String* title) {
+void Window_SetTitle(const cc_string* title) {
 	UInt8 str[NATIVE_STR_LEN];
 	CFStringRef titleCF;
 	int len;
@@ -2854,7 +2854,7 @@ static int Window_MapMouse(int button) {
 static void ProcessKeyChars(id ev) {
 	char buffer[128];
 	const char* src;
-	String str;
+	cc_string str;
 	id chars;
 	int i, len, flags;
 
@@ -3381,7 +3381,7 @@ void Window_Create(int width, int height) {
 	emscripten_get_canvas_element_size("#canvas", &WindowInfo.Width, &WindowInfo.Height);
 }
 
-void Window_SetTitle(const String* title) {
+void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, title);
 	EM_ASM_({ document.title = UTF8ToString($0); }, str);
@@ -3391,7 +3391,7 @@ static RequestClipboardCallback clipboard_func;
 static void* clipboard_obj;
 
 EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
-	String str; char strBuffer[512];
+	cc_string str; char strBuffer[512];
 	int len;
 	if (!clipboard_func) return;
 
@@ -3403,8 +3403,8 @@ EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
 	clipboard_func = NULL;
 }
 
-void Clipboard_GetText(String* value) { }
-void Clipboard_SetText(const String* value) {
+void Clipboard_GetText(cc_string* value) { }
+void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, value);
 
@@ -3504,7 +3504,7 @@ void Window_DrawFramebuffer(Rect2D r)     { }
 void Window_FreeFramebuffer(struct Bitmap* bmp)  { }
 
 EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) { 
-	String str; char buffer[800];
+	cc_string str; char buffer[800];
 	int len;
 
 	String_InitArray(str, buffer);
@@ -3513,7 +3513,7 @@ EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) {
 	Event_RaiseString(&InputEvents.TextChanged, &str);
 }
 
-void Window_OpenKeyboard(const String* text, int type) {
+void Window_OpenKeyboard(const cc_string* text, int type) {
 	char str[NATIVE_STR_LEN];
 	if (!Input_TouchMode) return;
 	keyboardOpen = true;
@@ -3543,7 +3543,7 @@ void Window_OpenKeyboard(const String* text, int type) {
 	}, str, type);
 }
 
-void Window_SetKeyboardText(const String* text) {
+void Window_SetKeyboardText(const cc_string* text) {
 	char str[NATIVE_STR_LEN];
 	if (!Input_TouchMode) return;
 	Platform_ConvertString(str, text);
@@ -3834,15 +3834,15 @@ cc_bool Window_RemakeSurface(void) {
 	return winCreated;
 }
 
-void Window_SetTitle(const String* title) {
+void Window_SetTitle(const cc_string* title) {
 	/* TODO: Implement this somehow */
 	/* Maybe https://stackoverflow.com/questions/2198410/how-to-change-title-of-activity-in-android */
 }
 
-void Clipboard_GetText(String* value) {
+void Clipboard_GetText(cc_string* value) {
 	JavaCall_Void_String("getClipboardText", value);
 }
-void Clipboard_SetText(const String* value) {
+void Clipboard_SetText(const cc_string* value) {
 	JavaCall_String_Void("setClipboardText", value);
 }
 
@@ -3951,12 +3951,12 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(const String* text, int type) {
+void Window_OpenKeyboard(const cc_string* text, int type) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	JavaCallVoid(env, "openKeyboard", "()V", NULL);
 }
-void Window_SetKeyboardText(const String* text) { }
+void Window_SetKeyboardText(const cc_string* text) { }
 
 void Window_CloseKeyboard(void) {
 	JNIEnv* env;
@@ -4223,11 +4223,11 @@ static FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
 static cc_bool ctx_supports_vSync;
 
 void GLContext_Create(void) {
-	static const String ext_mesa = String_FromConst("GLX_MESA_swap_control");
-	static const String ext_sgi  = String_FromConst("GLX_SGI_swap_control");
+	static const cc_string ext_mesa = String_FromConst("GLX_MESA_swap_control");
+	static const cc_string ext_sgi  = String_FromConst("GLX_SGI_swap_control");
 
 	const char* raw_exts;
-	String exts;
+	cc_string exts;
 	ctx_handle = glXCreateContext(win_display, &win_visual, NULL, true);
 
 	if (!ctx_handle) {
@@ -4498,7 +4498,7 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	static const String glPath = String_FromConst("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
+	static const cc_string glPath = String_FromConst("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
 	static void* lib;
 	void* addr;
 
@@ -4580,7 +4580,7 @@ void GLContext_Free(void) {
 }
 
 void* GLContext_GetAddress(const char* function) {
-	static const String glPath = String_FromConst("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
+	static const cc_string glPath = String_FromConst("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
 	static void* lib;
 	void* addr;
 

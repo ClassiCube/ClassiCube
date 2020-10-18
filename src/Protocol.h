@@ -58,7 +58,7 @@ void Protocol_RemoveEntity(EntityID id);
 void Protocol_Tick(void);
 
 extern cc_bool cpe_needD3Fix;
-void Classic_SendChat(const String* text, cc_bool partial);
+void Classic_SendChat(const cc_string* text, cc_bool partial);
 void Classic_WritePosition(Vec3 pos, float yaw, float pitch);
 void Classic_WriteSetBlock(int x, int y, int z, cc_bool place, BlockID block);
 void Classic_SendLogin(void);

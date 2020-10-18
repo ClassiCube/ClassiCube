@@ -78,13 +78,13 @@ void Window_Init(void);
 /* Creates the window as the given size at centre of the screen. */
 void Window_Create(int width, int height);
 /* Sets the text of the titlebar above the window. */
-CC_API void Window_SetTitle(const String* title);
+CC_API void Window_SetTitle(const cc_string* title);
 
-typedef void (*RequestClipboardCallback)(String* value, void* obj);
+typedef void (*RequestClipboardCallback)(cc_string* value, void* obj);
 /* Gets the text currently on the clipboard. */
-CC_API void Clipboard_GetText(String* value);
+CC_API void Clipboard_GetText(cc_string* value);
 /* Sets the text currently on the clipboard. */
-CC_API void Clipboard_SetText(const String* value);
+CC_API void Clipboard_SetText(const cc_string* value);
 /* Calls a callback function when text is retrieved from the clipboard. */
 /* NOTE: On most platforms this just calls Clipboard_GetText. */
 /* With emscripten however, the callback is instead called when a 'paste' event arrives. */
@@ -130,13 +130,13 @@ void Window_FreeFramebuffer(struct Bitmap* bmp);
 
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */
-void Window_OpenKeyboard(const String* text, int type);
+void Window_OpenKeyboard(const cc_string* text, int type);
 /* Sets the text used for keyboard input. */
 /* NOTE: This is only used for mobile on-screen keyboard input with the web client, */
 /* because it is backed by a HTML input, rather than true keyboard input events. */
 /* As such, this is necessary to ensure the HTML input is consistent with */
 /* whatever text input widget is actually being displayed on screen. */
-void Window_SetKeyboardText(const String* text);
+void Window_SetKeyboardText(const cc_string* text);
 /* Hides/Removes the previously displayed on-screen keyboard. */
 void Window_CloseKeyboard(void);
 

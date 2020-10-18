@@ -120,14 +120,14 @@ void Block_ResetProps(BlockID block);
 
 /* Gets the name of the given block. */
 /* NOTE: Name points directly within underlying buffer, you MUST NOT persist this string. */
-CC_API STRING_REF String Block_UNSAFE_GetName(BlockID block);
+CC_API STRING_REF cc_string Block_UNSAFE_GetName(BlockID block);
 /* Sets the name of the given block. */
-void Block_SetName(BlockID block, const String* name);
+void Block_SetName(BlockID block, const cc_string* name);
 /* Finds the ID of the block whose name caselessly matches given name. */
-CC_API int Block_FindID(const String* name);
+CC_API int Block_FindID(const cc_string* name);
 /* Attempts to parse given name as a numerical block ID. */
 /* Falls back to Block_FindID if this fails. */
-CC_API int Block_Parse(const String* name);
+CC_API int Block_Parse(const cc_string* name);
 
 /* Calculates render min/max corners of this block. */
 /* Works by slightly offsetting collision min/max corners. */

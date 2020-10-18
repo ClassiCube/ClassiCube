@@ -39,7 +39,7 @@ static void Server_ResetState(void) {
 	Server.SupportsFullCP437       = false;
 }
 
-void Server_RetrieveTexturePack(const String* url) {
+void Server_RetrieveTexturePack(const cc_string* url) {
 	if (!Game_AllowServerTextures || TextureCache_HasDenied(url)) return;
 
 	if (!url->length || TextureCache_HasAccepted(url)) {
@@ -120,8 +120,8 @@ int Ping_AveragePingMS(void) {
 *#########################################################################################################################*/
 #define SP_HasDir(path) (String_IndexOf(&path, '/') >= 0 || String_IndexOf(&path, '\\') >= 0)
 static void SPConnection_BeginConnect(void) {
-	static const String logName = String_FromConst("Singleplayer");
-	String path;
+	static const cc_string logName = String_FromConst("Singleplayer");
+	cc_string path;
 	RNGState rnd;
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_UseCPE;
@@ -142,8 +142,8 @@ static void SPConnection_BeginConnect(void) {
 }
 
 static char sp_lastCol;
-static void SPConnection_AddPart(const String* text) {
-	String tmp; char tmpBuffer[STRING_SIZE * 2];
+static void SPConnection_AddPart(const cc_string* text) {
+	cc_string tmp; char tmpBuffer[STRING_SIZE * 2];
 	char col;
 	int i;
 	String_InitArray(tmp, tmpBuffer);
@@ -166,8 +166,8 @@ static void SPConnection_AddPart(const String* text) {
 	Chat_Add(&tmp);
 }
 
-static void SPConnection_SendChat(const String* text) {
-	String left, part;
+static void SPConnection_SendChat(const cc_string* text) {
+	cc_string left, part;
 	if (!text->length) return;
 
 	sp_lastCol = '\0';
@@ -245,8 +245,8 @@ static void MPConnection_FinishConnect(void) {
 }
 
 static void MPConnection_FailConnect(cc_result result) {
-	static const String reason = String_FromConst("You failed to connect to the server. It's probably down!");
-	String msg; char msgBuffer[STRING_SIZE * 2];
+	static const cc_string reason = String_FromConst("You failed to connect to the server. It's probably down!");
+	cc_string msg; char msgBuffer[STRING_SIZE * 2];
 
 	net_connecting = false;
 	String_InitArray(msg, msgBuffer);
@@ -285,7 +285,7 @@ static void MPConnection_TickConnect(void) {
 }
 
 static void MPConnection_BeginConnect(void) {
-	String title; char titleBuffer[STRING_SIZE];
+	cc_string title; char titleBuffer[STRING_SIZE];
 	cc_result res;
 	String_InitArray(title, titleBuffer);
 
@@ -324,8 +324,8 @@ static void MPConnection_SendBlock(int x, int y, int z, BlockID old, BlockID now
 	Net_SendPacket();
 }
 
-static void MPConnection_SendChat(const String* text) {
-	String left;
+static void MPConnection_SendChat(const cc_string* text) {
+	cc_string left;
 	if (!text->length || net_connecting) return;
 	left = *text;
 
@@ -342,8 +342,8 @@ static void MPConnection_SendPosition(Vec3 pos, float yaw, float pitch) {
 }
 
 static void MPConnection_CheckDisconnection(void) {
-	static const String title  = String_FromConst("Disconnected!");
-	static const String reason = String_FromConst("You've lost connection to the server");
+	static const cc_string title  = String_FromConst("Disconnected!");
+	static const cc_string reason = String_FromConst("You've lost connection to the server");
 	cc_result availRes, selectRes;
 	cc_uint32 pending = 0;
 	cc_bool poll_read;
@@ -358,8 +358,8 @@ static void MPConnection_CheckDisconnection(void) {
 }
 
 static void DisconnectInvalidOpcode(cc_uint8 opcode) {
-	static const String title = String_FromConst("Disconnected");
-	String tmp; char tmpBuffer[STRING_SIZE];
+	static const cc_string title = String_FromConst("Disconnected");
+	cc_string tmp; char tmpBuffer[STRING_SIZE];
 	String_InitArray(tmp, tmpBuffer);
 
 	String_Format2(&tmp, "Server sent invalid packet %b! (prev %b)", &opcode, &lastOpcode);
@@ -367,9 +367,9 @@ static void DisconnectInvalidOpcode(cc_uint8 opcode) {
 }
 
 static void MPConnection_Tick(struct ScheduledTask* task) {
-	static const String title_lost  = String_FromConst("&eLost connection to the server");
-	static const String reason_err  = String_FromConst("I/O error when reading packets");
-	String msg; char msgBuffer[STRING_SIZE * 2];
+	static const cc_string title_lost  = String_FromConst("&eLost connection to the server");
+	static const cc_string reason_err  = String_FromConst("I/O error when reading packets");
+	cc_string msg; char msgBuffer[STRING_SIZE * 2];
 	cc_uint32 pending;
 	cc_uint8* readEnd;
 	Net_Handler handler;

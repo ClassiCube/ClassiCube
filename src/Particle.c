@@ -591,7 +591,7 @@ static void OnBreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, Blo
 	Particles_BreakBlockEffect(coords, old, now);
 }
 
-static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
+static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* name) {
 	if (String_CaselessEqualsConst(name, "particles.png")) {
 		Game_UpdateTexture(&Particles_TexId, stream, name, NULL);
 	}

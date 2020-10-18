@@ -9,7 +9,7 @@
 /*########################################################################################################################*
 *----------------------------------------------------------Misc-----------------------------------------------------------*
 *#########################################################################################################################*/
-int Utils_ParseEnum(const String* text, int defValue, const char* const* names, int namesCount) {
+int Utils_ParseEnum(const cc_string* text, int defValue, const char* const* names, int namesCount) {
 	int i;
 	for (i = 0; i < namesCount; i++) {
 		if (String_CaselessEqualsConst(text, names[i])) return i;
@@ -17,13 +17,13 @@ int Utils_ParseEnum(const String* text, int defValue, const char* const* names, 
 	return defValue;
 }
 
-cc_bool Utils_IsUrlPrefix(const String* value) {
+cc_bool Utils_IsUrlPrefix(const cc_string* value) {
 	return String_IndexOfConst(value, "http://")  == 0
 		|| String_IndexOfConst(value, "https://") == 0;
 }
 
 cc_bool Utils_EnsureDirectory(const char* dirName) {
-	String dir = String_FromReadonly(dirName);
+	cc_string dir = String_FromReadonly(dirName);
 	cc_result res;
 	if (Directory_Exists(&dir)) return true;
 
@@ -32,7 +32,7 @@ cc_bool Utils_EnsureDirectory(const char* dirName) {
 	return res == 0;
 }
 
-void Utils_UNSAFE_GetFilename(STRING_REF String* path) {
+void Utils_UNSAFE_GetFilename(STRING_REF cc_string* path) {
 	char c;
 	int i;
 
@@ -44,7 +44,7 @@ void Utils_UNSAFE_GetFilename(STRING_REF String* path) {
 	}
 }
 
-void Utils_UNSAFE_TrimFirstDirectory(STRING_REF String* path) {
+void Utils_UNSAFE_TrimFirstDirectory(STRING_REF cc_string* path) {
 	char c;
 	int i;
 
@@ -138,8 +138,8 @@ void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapac
 	}
 }
 
-cc_bool Utils_ParseIP(const String* ip, cc_uint8* data) {
-	String parts[4 + 1];
+cc_bool Utils_ParseIP(const cc_string* ip, cc_uint8* data) {
+	cc_string parts[4 + 1];
 	int count = String_UNSAFE_Split(ip, '.', parts, 4 + 1);
 	if (count != 4) return false;
 
@@ -223,9 +223,9 @@ int Convert_FromBase64(const char* src, int len, cc_uint8* dst) {
 *--------------------------------------------------------EntryList--------------------------------------------------------*
 *#########################################################################################################################*/
 void EntryList_Load(struct StringsBuffer* list, const char* file, char separator, EntryList_Filter filter) {
-	String entry; char entryBuffer[768];
-	String path;  char pathBuffer[FILENAME_SIZE];
-	String key, value;
+	cc_string entry; char entryBuffer[768];
+	cc_string path;  char pathBuffer[FILENAME_SIZE];
+	cc_string key, value;
 
 	cc_uint8 buffer[2048];
 	struct Stream stream, buffered;
@@ -279,7 +279,7 @@ void EntryList_UNSAFE_Load(struct StringsBuffer* list, const char* file) {
 }
 
 void EntryList_Save(struct StringsBuffer* list, const char* file) {
-	String path, entry; char pathBuffer[FILENAME_SIZE];
+	cc_string path, entry; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
 	int i;
 	cc_result res;
@@ -300,7 +300,7 @@ void EntryList_Save(struct StringsBuffer* list, const char* file) {
 	if (res) { Logger_Warn2(res, "closing", &path); }
 }
 
-cc_bool EntryList_Remove(struct StringsBuffer* list, const String* key, char separator) {
+cc_bool EntryList_Remove(struct StringsBuffer* list, const cc_string* key, char separator) {
 	cc_bool found = false;
 	/* Have to use a for loop, because may be multiple entries with same key */
 	for (;;) {
@@ -313,8 +313,8 @@ cc_bool EntryList_Remove(struct StringsBuffer* list, const String* key, char sep
 	return found;
 }
 
-void EntryList_Set(struct StringsBuffer* list, const String* key, const String* value, char separator) {
-	String entry; char entryBuffer[1024];
+void EntryList_Set(struct StringsBuffer* list, const cc_string* key, const cc_string* value, char separator) {
+	cc_string entry; char entryBuffer[1024];
 	String_InitArray(entry, entryBuffer);
 
 	if (value->length) {
@@ -327,8 +327,8 @@ void EntryList_Set(struct StringsBuffer* list, const String* key, const String* 
 	StringsBuffer_Add(list, &entry);
 }
 
-String EntryList_UNSAFE_Get(struct StringsBuffer* list, const String* key, char separator) {
-	String curEntry, curKey, curValue;
+cc_string EntryList_UNSAFE_Get(struct StringsBuffer* list, const cc_string* key, char separator) {
+	cc_string curEntry, curKey, curValue;
 	int i;
 
 	for (i = 0; i < list->count; i++) {
@@ -340,8 +340,8 @@ String EntryList_UNSAFE_Get(struct StringsBuffer* list, const String* key, char 
 	return String_Empty;
 }
 
-int EntryList_Find(struct StringsBuffer* list, const String* key, char separator) {
-	String curEntry, curKey, curValue;
+int EntryList_Find(struct StringsBuffer* list, const cc_string* key, char separator) {
+	cc_string curEntry, curKey, curValue;
 	int i;
 
 	for (i = 0; i < list->count; i++) {

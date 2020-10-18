@@ -302,7 +302,7 @@ static const char* const keybindNames[KEYBIND_COUNT] = {
 cc_bool KeyBind_IsPressed(KeyBind binding) { return Input_Pressed[KeyBinds[binding]]; }
 
 static void KeyBind_Load(void) {
-	String name; char nameBuffer[STRING_SIZE + 1];
+	cc_string name; char nameBuffer[STRING_SIZE + 1];
 	int mapping;
 	int i;
 
@@ -318,8 +318,8 @@ static void KeyBind_Load(void) {
 }
 
 static void KeyBind_Save(void) {
-	String name; char nameBuffer[STRING_SIZE];
-	String value;
+	cc_string name; char nameBuffer[STRING_SIZE];
+	cc_string value;
 	int i;	
 
 	String_InitArray(name, nameBuffer);
@@ -389,7 +389,7 @@ static void Hotkeys_QuickSort(int left, int right) {
 	}
 }
 
-static void Hotkeys_AddNewHotkey(int trigger, cc_uint8 modifiers, const String* text, cc_bool more) {
+static void Hotkeys_AddNewHotkey(int trigger, cc_uint8 modifiers, const cc_string* text, cc_bool more) {
 	struct HotkeyData hKey;
 	hKey.Trigger = trigger;
 	hKey.Flags   = modifiers;
@@ -418,7 +418,7 @@ static void Hotkeys_RemoveText(int index) {
 }
 
 
-void Hotkeys_Add(int trigger, cc_uint8 modifiers, const String* text, cc_bool more) {
+void Hotkeys_Add(int trigger, cc_uint8 modifiers, const cc_string* text, cc_bool more) {
 	struct HotkeyData* hk = HotkeysList;
 	int i;
 
@@ -466,9 +466,9 @@ int Hotkeys_FindPartial(int key) {
 	return -1;
 }
 
-static const String prefix = String_FromConst("hotkey-");
-static void StoredHotkey_Parse(String* key, String* value) {
-	String strKey, strMods, strMore, strText;
+static const cc_string prefix = String_FromConst("hotkey-");
+static void StoredHotkey_Parse(cc_string* key, cc_string* value) {
+	cc_string strKey, strMods, strMore, strText;
 	int trigger;
 	cc_uint8 modifiers;
 	cc_bool more;
@@ -488,7 +488,7 @@ static void StoredHotkey_Parse(String* key, String* value) {
 }
 
 static void StoredHotkeys_LoadAll(void) {
-	String entry, key, value;
+	cc_string entry, key, value;
 	int i;
 
 	for (i = 0; i < Options.count; i++) {
@@ -501,7 +501,7 @@ static void StoredHotkeys_LoadAll(void) {
 }
 
 void StoredHotkeys_Load(int trigger, cc_uint8 modifiers) {
-	String key, value; char keyBuffer[STRING_SIZE];
+	cc_string key, value; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
 	String_Format2(&key, "hotkey-%c&%b", Input_Names[trigger], &modifiers);
@@ -512,16 +512,16 @@ void StoredHotkeys_Load(int trigger, cc_uint8 modifiers) {
 }
 
 void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers) {
-	String key; char keyBuffer[STRING_SIZE];
+	cc_string key; char keyBuffer[STRING_SIZE];
 	String_InitArray(key, keyBuffer);
 
 	String_Format2(&key, "hotkey-%c&%b", Input_Names[trigger], &modifiers);
 	Options_SetString(&key, NULL);
 }
 
-void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text) {
-	String key;   char keyBuffer[STRING_SIZE];
-	String value; char valueBuffer[STRING_SIZE * 2];
+void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const cc_string* text) {
+	cc_string key;   char keyBuffer[STRING_SIZE];
+	cc_string value; char valueBuffer[STRING_SIZE * 2];
 	String_InitArray(key, keyBuffer);
 	String_InitArray(value, valueBuffer);
 
@@ -892,7 +892,7 @@ static cc_bool HandleCoreKey(int key) {
 
 static void HandleHotkeyDown(int key) {
 	struct HotkeyData* hkey;
-	String text;
+	cc_string text;
 	int i = Hotkeys_FindPartial(key);
 
 	if (i == -1) return;

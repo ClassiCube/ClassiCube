@@ -127,10 +127,10 @@ struct ZipState {
 	/* Callback function to process the data in a .zip archive entry. */
 	/* Return non-zero to indicate an error and stop further processing. */
 	/* NOTE: data stream MAY NOT be seekable. (i.e. entry data might be compressed) */
-	cc_result (*ProcessEntry)(const String* path, struct Stream* data, struct ZipState* state);
+	cc_result (*ProcessEntry)(const cc_string* path, struct Stream* data, struct ZipState* state);
 	/* Predicate used to select which entries in a .zip archive get processed. */
 	/* NOTE: returning false entirely skips the entry. (avoids pointless seek to entry) */
-	cc_bool (*SelectEntry)(const String* path);
+	cc_bool (*SelectEntry)(const cc_string* path);
 	/* Generic object/pointer for ProcessEntry callback. */
 	void* obj;
 

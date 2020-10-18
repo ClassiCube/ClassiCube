@@ -139,7 +139,7 @@ void Model_RenderArm(struct Model* model, struct Entity* entity);
 CC_API void Model_DrawArmPart(struct ModelPart* part);
 
 /* Returns a pointer to the model whose name caselessly matches given name. */
-CC_API struct Model* Model_Get(const String* name);
+CC_API struct Model* Model_Get(const cc_string* name);
 /* Adds a model to the list of models. (e.g. "skeleton") */
 /* Models can be applied to entities to change their appearance. Use Entity_SetModel for that. */
 CC_API void Model_Register(struct Model* model);

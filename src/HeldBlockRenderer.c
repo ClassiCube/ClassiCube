@@ -21,7 +21,7 @@ static double held_time, held_period = 0.25;
 static BlockID held_lastBlock;
 
 static void HeldBlockRenderer_RenderModel(void) {
-	static const String block = String_FromConst("block");
+	static const cc_string block = String_FromConst("block");
 	struct Model* model;
 
 	Gfx_SetFaceCulling(true);

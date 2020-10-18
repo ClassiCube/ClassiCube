@@ -149,9 +149,9 @@ struct _EnvData Env;
 const char* const Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
 
 static char textureUrlBuffer[STRING_SIZE];
-String World_TextureUrl = String_FromArray(textureUrlBuffer);
+cc_string World_TextureUrl = String_FromArray(textureUrlBuffer);
 
-void World_ApplyTexturePack(const String* url) {
+void World_ApplyTexturePack(const cc_string* url) {
 	if (url->length) TexturePack_DownloadAsync(url);
 
 	if (String_Equals(url, &World_TextureUrl)) return;

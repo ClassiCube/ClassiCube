@@ -20,7 +20,7 @@ enum MsgType {
 	MSG_TYPE_CLIENTSTATUS_2 = 257  /* Tab list matching names */
 };
 
-extern String Chat_Status[4], Chat_BottomRight[3], Chat_ClientStatus[2], Chat_Announcement;
+extern cc_string Chat_Status[4], Chat_BottomRight[3], Chat_ClientStatus[2], Chat_Announcement;
 /* All chat messages received. */
 extern struct StringsBuffer Chat_Log;
 /* Time each chat message was received at. */
@@ -38,7 +38,7 @@ struct ChatCommand;
 struct ChatCommand {
 	const char* name;         /* Full name of this command */
 	/* Function pointer for the actual action the command performs */
-	void (*Execute)(const String* args, int argsCount);
+	void (*Execute)(const cc_string* args, int argsCount);
 	cc_bool singleplayerOnly; /* Whether this command is only usable in singleplayer */
 	const char* help[5];      /* Messages to show when a player uses /help on this command */
 	struct ChatCommand* next; /* Next command in linked-list of client commands */
@@ -48,20 +48,20 @@ CC_API void Commands_Register(struct ChatCommand* cmd);
 
 /* Sets the name of log file (no .txt, so e.g. just "singleplayer") */
 /* NOTE: This can only be set once. */
-void Chat_SetLogName(const String* name);
+void Chat_SetLogName(const cc_string* name);
 /* Disables chat logging and closes currently open chat log file. */
 void Chat_DisableLogging(void);
 /* Sends a chat message, raising ChatEvents.ChatSending event. */
 /* NOTE: If logUsage is true, can press 'up' in chat input menu later to retype this. */
 /* NOTE: /client is always interpreted as client-side commands. */
 /* In multiplayer this is sent to the server, in singleplayer just Chat_Add. */
-CC_API void Chat_Send(const String* text, cc_bool logUsage);
+CC_API void Chat_Send(const cc_string* text, cc_bool logUsage);
 /* Shorthand for Chat_AddOf(str, MSG_TYPE_NORMAL) */
-CC_API void Chat_Add(const String* text);
+CC_API void Chat_Add(const cc_string* text);
 /* Adds a chat message, raising ChatEvents.ChatReceived event. */
 /* MSG_TYPE_NORMAL is usually used for player chat and command messages. */
 /* Other message types are usually used for info/status messages. */
-CC_API void Chat_AddOf(const String* text, int msgType);
+CC_API void Chat_AddOf(const cc_string* text, int msgType);
 /* Shorthand for Chat_AddOf(String_FromReadonly(raw), MSG_TYPE_NORMAL) */
 void Chat_AddRaw(const char* raw);
 

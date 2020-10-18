@@ -18,9 +18,9 @@ cc_bool Drawer2D_BlackTextShadows;
 BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 
 static char fontNameBuffer[STRING_SIZE];
-String Drawer2D_FontName = String_FromArray(fontNameBuffer);
+cc_string Drawer2D_FontName = String_FromArray(fontNameBuffer);
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, struct FontDesc* font, cc_bool useShadow) {
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const cc_string* text, struct FontDesc* font, cc_bool useShadow) {
 	args->text = *text;
 	args->font = font;
 	args->useShadow = useShadow;
@@ -36,7 +36,7 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc
 /*########################################################################################################################*
 *-----------------------------------------------------Font functions------------------------------------------------------*
 *#########################################################################################################################*/
-static String font_candidates[11] = {
+static cc_string font_candidates[11] = {
 	String_FromConst(""), /* Filled in with Drawer2D_FontName */
 	String_FromConst("Arial"),           /* preferred font on all platforms */
 	String_FromConst("Liberation Sans"), /* nice looking fallbacks for linux */
@@ -85,7 +85,7 @@ void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags) {
 }
 
 static void CheckFont(void) {
-	String path;
+	cc_string path;
 	int i;
 	/* Try user's default font if set, otherwise try Arial */
 	i = font_candidates[0].length ? 0 : 1;
@@ -141,15 +141,15 @@ static void FreeFontBitmap(void) {
 cc_bool Drawer2D_SetFontBitmap(struct Bitmap* bmp) {
 	/* If not all of these cases are accounted for, end up overwriting memory after tileWidths */
 	if (bmp->width != bmp->height) {
-		static const String msg = String_FromConst("&cWidth of default.png must equal its height");
+		static const cc_string msg = String_FromConst("&cWidth of default.png must equal its height");
 		Logger_WarnFunc(&msg);
 		return false;
 	} else if (bmp->width < 16) {
-		static const String msg = String_FromConst("&cdefault.png must be at least 16 pixels wide");
+		static const cc_string msg = String_FromConst("&cdefault.png must be at least 16 pixels wide");
 		Logger_WarnFunc(&msg);
 		return false;
 	} else if (!Math_IsPowOf2(bmp->width)) {
-		static const String msg = String_FromConst("&cWidth of default.png must be a power of two");
+		static const cc_string msg = String_FromConst("&cWidth of default.png must be a power of two");
 		Logger_WarnFunc(&msg);
 		return false;
 	}
@@ -345,12 +345,12 @@ void Drawer2D_MakeTexture(struct Texture* tex, struct Bitmap* bmp, int width, in
 	tex->uv.V2 = (float)height / (float)bmp->height;
 }
 
-cc_bool Drawer2D_ValidColCodeAt(const String* text, int i) {
+cc_bool Drawer2D_ValidColCodeAt(const cc_string* text, int i) {
 	if (i >= text->length) return false;
 	return BitmapCol_A(Drawer2D_GetCol(text->buffer[i])) != 0;
 }
 
-cc_bool Drawer2D_IsEmptyText(const String* text) {
+cc_bool Drawer2D_IsEmptyText(const cc_string* text) {
 	int i;
 	if (!text->length) return true;
 	
@@ -362,7 +362,7 @@ cc_bool Drawer2D_IsEmptyText(const String* text) {
 	return true;
 }
 
-char Drawer2D_LastCol(const String* text, int start) {
+char Drawer2D_LastCol(const cc_string* text, int start) {
 	int i;
 	if (start >= text->length) start = text->length - 1;
 	
@@ -432,8 +432,8 @@ static void Drawer2D_Underline(struct Bitmap* bmp, int x, int y, int width, int 
 
 static void DrawBitmappedTextCore(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int y, cc_bool shadow) {
 	BitmapCol col;
-	String text  = args->text;
-	int i, point = args->font->size, count = 0;
+	cc_string text = args->text;
+	int i, point   = args->font->size, count = 0;
 
 	int xPadding;
 	int srcX, srcY, dstX, dstY;
@@ -540,7 +540,7 @@ static void DrawBitmappedText(struct Bitmap* bmp, struct DrawTextArgs* args, int
 static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
 	int i, point = args->font->size;
 	int xPadding, width;
-	String text;
+	cc_string text;
 
 	/* adjust coords to make drawn text match GDI fonts */
 	xPadding = Drawer2D_XPadding(point);
@@ -650,7 +650,7 @@ static void OnReset(void) {
 	}
 }
 
-static void OnFileChanged(void* obj, struct Stream* src, const String* name) {
+static void OnFileChanged(void* obj, struct Stream* src, const cc_string* name) {
 	struct Bitmap bmp;
 	cc_result res;
 	if (!String_CaselessEqualsConst(name, "default.png")) return;
@@ -694,11 +694,11 @@ struct IGameComponent Drawer2D_Component = {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
 void Font_GetNames(struct StringsBuffer* buffer) { }
-String Font_Lookup(const String* fontName, int flags) {
-	String str = String_FromConst("-----"); return str;
+cc_string Font_Lookup(const cc_string* fontName, int flags) {
+	cc_string str = String_FromConst("-----"); return str;
 }
 
-cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int flags) {
+cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
 	desc->size   = size;
 	desc->flags  = flags;
 	desc->height = 0;
@@ -708,7 +708,7 @@ void Font_Free(struct FontDesc* desc) {
 	desc->size   = 0;
 }
 
-void SysFonts_Register(const String* path) { }
+void SysFonts_Register(const cc_string* path) { }
 static int Font_SysTextWidth(struct DrawTextArgs* args) { return 0; }
 static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int x, int y, cc_bool shadow) { }
 #else
@@ -770,12 +770,12 @@ static void SysFont_Close(FT_Stream stream) {
 	SysFont_Free(font);
 }
 
-static cc_result SysFont_Init(const String* path, struct SysFont* font, FT_Open_Args* args) {
+static cc_result SysFont_Init(const cc_string* path, struct SysFont* font, FT_Open_Args* args) {
 	cc_file file;
 	cc_uint32 size;
 	cc_result res;
 #ifdef CC_BUILD_OSX
-	String filename;
+	cc_string filename;
 #endif
 
 	if ((res = File_Open(&file, path))) return res;
@@ -833,7 +833,7 @@ static void SysFonts_Update(void) {
 }
 
 static void SysFonts_Init(void) {
-	static const String cachePath = String_FromConst(FONT_CACHE_FILE);
+	static const cc_string cachePath = String_FromConst(FONT_CACHE_FILE);
 	FT_Error err;
 	ft_mem.alloc   = FT_AllocWrapper;
 	ft_mem.free    = FT_FreeWrapper;
@@ -851,10 +851,10 @@ static void SysFonts_Init(void) {
 	if (!font_list.count) SysFonts_Update();
 }
 
-static void SysFonts_Add(const String* path, FT_Face face, int index, char type, const char* defStyle) {
-	String key;   char keyBuffer[STRING_SIZE];
-	String value; char valueBuffer[FILENAME_SIZE];
-	String style = String_Empty;
+static void SysFonts_Add(const cc_string* path, FT_Face face, int index, char type, const char* defStyle) {
+	cc_string key;   char keyBuffer[STRING_SIZE];
+	cc_string value; char valueBuffer[FILENAME_SIZE];
+	cc_string style = String_Empty;
 
 	if (!face->family_name || !(face->face_flags & FT_FACE_FLAG_SCALABLE)) return;
 	/* don't want 'Arial Regular' or 'Arial Bold' */
@@ -878,7 +878,7 @@ static void SysFonts_Add(const String* path, FT_Face face, int index, char type,
 	fonts_changed = true;
 }
 
-static int SysFonts_DoRegister(const String* path, int faceIndex) {
+static int SysFonts_DoRegister(const cc_string* path, int faceIndex) {
 	struct SysFont font;
 	FT_Open_Args args;
 	FT_Error err;
@@ -905,9 +905,9 @@ static int SysFonts_DoRegister(const String* path, int faceIndex) {
 	return count;
 }
 
-void SysFonts_Register(const String* path) {
-	String entry, name, value;
-	String fontPath, index;
+void SysFonts_Register(const cc_string* path) {
+	cc_string entry, name, value;
+	cc_string fontPath, index;
 	int i, count;
 
 	/* if font is already known, skip it */
@@ -927,7 +927,7 @@ void SysFonts_Register(const String* path) {
 }
 
 void Font_GetNames(struct StringsBuffer* buffer) {
-	String entry, name, path;
+	cc_string entry, name, path;
 	int i;
 	if (!font_list.count) SysFonts_Init();
 	SysFonts_Update();
@@ -943,16 +943,16 @@ void Font_GetNames(struct StringsBuffer* buffer) {
 	}
 }
 
-static String Font_LookupOf(const String* fontName, const char type) {
-	String name; char nameBuffer[STRING_SIZE + 2];
+static cc_string Font_LookupOf(const cc_string* fontName, const char type) {
+	cc_string name; char nameBuffer[STRING_SIZE + 2];
 	String_InitArray(name, nameBuffer);
 
 	String_Format2(&name, "%s %r", fontName, &type);
 	return EntryList_UNSAFE_Get(&font_list, &name, '=');
 }
 
-static String Font_DoLookup(const String* fontName, int flags) {
-	String path;
+static cc_string Font_DoLookup(const cc_string* fontName, int flags) {
+	cc_string path;
 	if (!font_list.count) SysFonts_Init();
 	path = String_Empty;
 
@@ -960,8 +960,8 @@ static String Font_DoLookup(const String* fontName, int flags) {
 	return path.length ? path : Font_LookupOf(fontName, 'R');
 }
 
-String Font_Lookup(const String* fontName, int flags) {
-	String path = Font_DoLookup(fontName, flags);
+cc_string Font_Lookup(const cc_string* fontName, int flags) {
+	cc_string path = Font_DoLookup(fontName, flags);
 	if (path.length) return path;
 
 	SysFonts_Update();
@@ -969,9 +969,9 @@ String Font_Lookup(const String* fontName, int flags) {
 }
 
 #define TEXT_CEIL(x) (((x) + 63) >> 6)
-cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int flags) {
+cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
 	struct SysFont* font;
-	String value, path, index;
+	cc_string value, path, index;
 	int faceIndex, dpiX, dpiY;
 	FT_Open_Args args;
 	FT_Error err;
@@ -1017,8 +1017,8 @@ void Font_Free(struct FontDesc* desc) {
 
 static int Font_SysTextWidth(struct DrawTextArgs* args) {
 	struct SysFont* font = (struct SysFont*)args->font->handle;
-	FT_Face face = font->face;
-	String text  = args->text;
+	FT_Face face   = font->face;
+	cc_string text = args->text;
 	int i, width = 0, charWidth;
 	FT_Error res;
 	cc_unichar uc;
@@ -1108,8 +1108,8 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 	struct SysFont* font  = (struct SysFont*)args->font->handle;
 	FT_BitmapGlyph* glyphs = font->glyphs;
 
-	FT_Face face = font->face;
-	String text  = args->text;	
+	FT_Face face   = font->face;
+	cc_string text = args->text;
 	int descender, height, begX = x;
 	BitmapCol col;
 	

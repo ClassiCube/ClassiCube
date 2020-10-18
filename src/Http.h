@@ -44,30 +44,30 @@ void HttpRequest_Free(struct HttpRequest* request);
 
 /* Aschronously performs a http GET request to download a skin. */
 /* If url is a skin, downloads from there. (if not, downloads from SKIN_SERVER/[skinName].png) */
-int Http_AsyncGetSkin(const String* skinName);
+int Http_AsyncGetSkin(const cc_string* skinName);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
-int Http_AsyncGetData(const String* url, cc_bool priority);
+int Http_AsyncGetData(const cc_string* url, cc_bool priority);
 /* Asynchronously performs a http HEAD request. (e.g. to get Content-Length header) */
-int Http_AsyncGetHeaders(const String* url, cc_bool priority);
+int Http_AsyncGetHeaders(const cc_string* url, cc_bool priority);
 /* Asynchronously performs a http POST request. (e.g. to submit data) */
 /* NOTE: You don't have to persist data, a copy is made of it. */
-int Http_AsyncPostData(const String* url, cc_bool priority, const void* data, cc_uint32 size, struct StringsBuffer* cookies);
+int Http_AsyncPostData(const cc_string* url, cc_bool priority, const void* data, cc_uint32 size, struct StringsBuffer* cookies);
 /* Asynchronously performs a http GET request. (e.g. to download data) */
 /* Also sets the If-Modified-Since and If-None-Match headers. (if not NULL)  */
-int Http_AsyncGetDataEx(const String* url, cc_bool priority, const String* lastModified, const String* etag, struct StringsBuffer* cookies);
+int Http_AsyncGetDataEx(const cc_string* url, cc_bool priority, const cc_string* lastModified, const cc_string* etag, struct StringsBuffer* cookies);
 /* Attempts to remove given request from pending and finished request lists. */
 /* NOTE: Won't cancel the request if it is currently in progress. */
 void Http_TryCancel(int reqID);
 
 /* Encodes data using % or URL encoding. */
-void Http_UrlEncode(String* dst, const cc_uint8* data, int len);
+void Http_UrlEncode(cc_string* dst, const cc_uint8* data, int len);
 /* Converts characters to UTF8, then calls Http_URlEncode on them. */
-void Http_UrlEncodeUtf8(String* dst, const String* src);
+void Http_UrlEncodeUtf8(cc_string* dst, const cc_string* src);
 /* Converts characters to UTF8, then calls Http_URlEncode on them. */
 /* NOTE: '/' is NOT url encoded, whereas Http_UrlEncodeUtf8 url encodes them */
-void Http_UrlEncodeUrl(String* dst, const String* src);
+void Http_UrlEncodeUrl(cc_string* dst, const cc_string* src);
 /* Outputs more detailed information about errors with http requests. */
-cc_bool Http_DescribeError(cc_result res, String* dst);
+cc_bool Http_DescribeError(cc_result res, cc_string* dst);
 
 /* Attempts to retrieve a fully completed request. */
 /* NOTE: You MUST check Success for whether it completed successfully. */

@@ -128,7 +128,7 @@ void Event_RaiseFloat(struct Event_Float* handlers, float arg) {
 	}
 }
 
-void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const String* name) {
+void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const cc_string* name) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], stream, name);
@@ -149,7 +149,7 @@ void Event_RaiseMove(struct Event_PointerMove* handlers, int idx, int xDelta, in
 	}
 }
 
-void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType) {
+void Event_RaiseChat(struct Event_Chat* handlers, const cc_string* msg, int msgType) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], msg, msgType);
@@ -163,7 +163,7 @@ void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating) 
 	}
 }
 
-void Event_RaiseString(struct Event_String* handlers, const String* str) {
+void Event_RaiseString(struct Event_String* handlers, const cc_string* str) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], str);

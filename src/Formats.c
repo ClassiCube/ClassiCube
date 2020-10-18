@@ -39,9 +39,9 @@ static cc_result Map_SkipGZipHeader(struct Stream* stream) {
 	return 0;
 }
 
-IMapImporter Map_FindImporter(const String* path) {
-	static const String cw  = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
-	static const String fcm = String_FromConst(".fcm"), dat = String_FromConst(".dat");
+IMapImporter Map_FindImporter(const cc_string* path) {
+	static const cc_string cw  = String_FromConst(".cw"),  lvl = String_FromConst(".lvl");
+	static const cc_string fcm = String_FromConst(".fcm"), dat = String_FromConst(".dat");
 
 	if (String_CaselessEnds(path, &cw))  return Cw_Load;
 #ifndef CC_BUILD_WEB
@@ -53,7 +53,7 @@ IMapImporter Map_FindImporter(const String* path) {
 	return NULL;
 }
 
-void Map_LoadFrom(const String* path) {
+void Map_LoadFrom(const cc_string* path) {
 	IMapImporter importer;
 	struct Stream stream;
 	cc_result res;
@@ -290,7 +290,7 @@ struct NbtTag;
 struct NbtTag {
 	struct NbtTag* parent;
 	cc_uint8  type;
-	String    name;
+	cc_string name;
 	cc_uint32 dataSize; /* size of data for arrays */
 
 	union {
@@ -301,7 +301,7 @@ struct NbtTag {
 		float     f32;
 		cc_uint8  small[NBT_SMALL_SIZE];
 		cc_uint8* big; /* malloc for big byte arrays */
-		struct { String text; char buffer[NBT_STRING_SIZE]; } str;
+		struct { cc_string text; char buffer[NBT_STRING_SIZE]; } str;
 	} value;
 	char _nameBuffer[NBT_STRING_SIZE];
 	cc_result result;
@@ -334,12 +334,12 @@ static cc_uint8* NbtTag_U8_Array(struct NbtTag* tag, int minSize) {
 	return NbtTag_IsSmall(tag) ? tag->value.small : tag->value.big;
 }
 
-static String NbtTag_String(struct NbtTag* tag) {
+static cc_string NbtTag_String(struct NbtTag* tag) {
 	if (tag->type != NBT_STR) Logger_Abort("Expected String NBT tag");
 	return tag->value.str.text;
 }
 
-static cc_result Nbt_ReadString(struct Stream* stream, String* str) {
+static cc_result Nbt_ReadString(struct Stream* stream, cc_string* str) {
 	cc_uint8 buffer[NBT_STRING_SIZE * 4];
 	int len;
 	cc_result res;
@@ -558,7 +558,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 		if (IsTag(tag, "SideLevel")) { Env.EdgeHeight = NbtTag_I16(tag); return; }
 
 		if (IsTag(tag, "TextureURL")) {
-			String url = NbtTag_String(tag);
+			cc_string url = NbtTag_String(tag);
 			if (url.length) Server_RetrieveTexturePack(&url);
 			return;
 		}
@@ -580,7 +580,7 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 	}
 
 	if (IsTag(tag->parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
-		static const String blockStr = String_FromConst("Block");
+		static const cc_string blockStr = String_FromConst("Block");
 		if (!String_CaselessStarts(&tag->name, &blockStr)) return;	
 
 		/* hack for sprite draw (can't rely on order of tags when reading) */
@@ -625,7 +625,7 @@ static void Cw_Callback_5(struct NbtTag* tag) {
 		if (IsTag(tag, "Shape"))          { Blocks.SpriteOffset[id] = NbtTag_U8(tag); return; }
 
 		if (IsTag(tag, "Name")) {
-			String name = NbtTag_String(tag);
+			cc_string name = NbtTag_String(tag);
 			Block_SetName(id, &name);
 			return;
 		}
@@ -815,7 +815,7 @@ static cc_result Dat_ReadClassDesc(struct Stream* stream, struct JClassDesc* des
 
 static cc_result Dat_ReadFieldData(struct Stream* stream, struct JFieldDesc* field) {
 	cc_uint8 typeCode;
-	String fieldName;
+	cc_string fieldName;
 	cc_uint32 count;
 	struct JClassDesc arrayClassDesc;
 	cc_result res;
@@ -885,7 +885,7 @@ cc_result Dat_Load(struct Stream* stream) {
 	cc_uint8 header[10];
 	struct JClassDesc obj;
 	struct JFieldDesc* field;
-	String fieldName;
+	cc_string fieldName;
 	cc_result res;
 	int i;
 
@@ -938,7 +938,7 @@ cc_result Dat_Load(struct Stream* stream) {
 *#########################################################################################################################*/
 #define CW_META_RGB NBT_I16,0,1,'R',0,0,  NBT_I16,0,1,'G',0,0,  NBT_I16,0,1,'B',0,0,
 
-static int Cw_WriteEndString(cc_uint8* data, const String* text) {
+static int Cw_WriteEndString(cc_uint8* data, const cc_string* text) {
 	cc_uint8* cur = data + 2;
 	int i, wrote, len = 0;
 
@@ -1031,7 +1031,7 @@ NBT_END,
 
 static cc_result Cw_WriteBockDef(struct Stream* stream, int b) {
 	cc_uint8 tmp[512];
-	String name;
+	cc_string name;
 	int len;
 
 	cc_bool sprite = Blocks.Draw[b] == DRAW_SPRITE;

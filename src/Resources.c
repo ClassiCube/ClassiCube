@@ -113,7 +113,7 @@ int Resources_Count, Resources_Size;
 static cc_bool allSoundsExist, allTexturesExist;
 static int texturesFound;
 
-CC_NOINLINE static struct ResourceTexture* Resources_FindTex(const String* name) {
+CC_NOINLINE static struct ResourceTexture* Resources_FindTex(const cc_string* name) {
 	struct ResourceTexture* tex;
 	int i;
 
@@ -125,7 +125,7 @@ CC_NOINLINE static struct ResourceTexture* Resources_FindTex(const String* name)
 }
 
 static void Resources_CheckMusic(void) {
-	String path; char pathBuffer[FILENAME_SIZE];
+	cc_string path; char pathBuffer[FILENAME_SIZE];
 	int i;
 	String_InitArray(path, pathBuffer);
 
@@ -142,7 +142,7 @@ static void Resources_CheckMusic(void) {
 }
 
 static void Resources_CheckSounds(void) {
-	String path; char pathBuffer[FILENAME_SIZE];
+	cc_string path; char pathBuffer[FILENAME_SIZE];
 	int i;
 	String_InitArray(path, pathBuffer);
 
@@ -160,8 +160,8 @@ static void Resources_CheckSounds(void) {
 	allSoundsExist = true;
 }
 
-static cc_bool Resources_SelectZipEntry(const String* path) {
-	String name = *path;
+static cc_bool Resources_SelectZipEntry(const cc_string* path) {
+	cc_string name = *path;
 	Utils_UNSAFE_GetFilename(&name);
 
 	if (Resources_FindTex(&name)) texturesFound++;
@@ -169,7 +169,7 @@ static cc_bool Resources_SelectZipEntry(const String* path) {
 }
 
 static void Resources_CheckTextures(void) {
-	static const String path = String_FromConst("texpacks/default.zip");
+	static const cc_string path = String_FromConst("texpacks/default.zip");
 	struct Stream stream;
 	struct ZipState state;
 	cc_result res;
@@ -375,16 +375,16 @@ static cc_result ZipPatcher_WritePng(struct Stream* s, struct ResourceTexture* t
 "6 2 0 0 16 32 0"
 static struct Bitmap terrainBmp;
 
-static cc_bool ClassicPatcher_SelectEntry(const String* path) {
-	String name = *path;
+static cc_bool ClassicPatcher_SelectEntry(const cc_string* path) {
+	cc_string name = *path;
 	Utils_UNSAFE_GetFilename(&name);
 	return Resources_FindTex(&name) != NULL;
 }
 
-static cc_result ClassicPatcher_ProcessEntry(const String* path, struct Stream* data, struct ZipState* state) {
-	static const String guiClassicPng = String_FromConst("gui_classic.png");
+static cc_result ClassicPatcher_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipState* state) {
+	static const cc_string guiClassicPng = String_FromConst("gui_classic.png");
 	struct ResourceTexture* entry;
-	String name;
+	cc_string name;
 
 	/* terrain.png requires special patching */
 	if (String_CaselessEqualsConst(path, "terrain.png")) {
@@ -428,7 +428,7 @@ static const struct TilePatch { const char* name; cc_uint8 x1,y1, x2,y2; } moder
 	{ "assets/minecraft/textures/blocks/wool_colored_pink.png",  0,5 }
 };
 
-CC_NOINLINE static const struct TilePatch* ModernPatcher_GetTile(const String* path) {
+CC_NOINLINE static const struct TilePatch* ModernPatcher_GetTile(const cc_string* path) {
 	int i;
 	for (i = 0; i < Array_Elems(modern_tiles); i++) {
 		if (String_CaselessEqualsConst(path, modern_tiles[i].name)) return &modern_tiles[i];
@@ -453,7 +453,7 @@ static cc_result ModernPatcher_PatchTile(struct Stream* data, const struct TileP
 }
 
 
-static cc_bool ModernPatcher_SelectEntry(const String* path) {
+static cc_bool ModernPatcher_SelectEntry(const cc_string* path) {
 	return
 		String_CaselessEqualsConst(path, "assets/minecraft/textures/environment/snow.png") ||
 		String_CaselessEqualsConst(path, "assets/minecraft/textures/entity/chicken.png")   ||
@@ -462,7 +462,7 @@ static cc_bool ModernPatcher_SelectEntry(const String* path) {
 }
 
 static cc_result ModernPatcher_MakeAnimations(struct Stream* s, struct Stream* data) {
-	static const String animsPng = String_FromConst("animations.png");
+	static const cc_string animsPng = String_FromConst("animations.png");
 	struct ResourceTexture* entry;
 	BitmapCol pixels[512 * 16];
 	struct Bitmap anim, bmp;
@@ -481,10 +481,10 @@ static cc_result ModernPatcher_MakeAnimations(struct Stream* s, struct Stream* d
 	return ZipPatcher_WritePng(s, entry, &anim);
 }
 
-static cc_result ModernPatcher_ProcessEntry(const String* path, struct Stream* data, struct ZipState* state) {
+static cc_result ModernPatcher_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipState* state) {
 	struct ResourceTexture* entry;
 	const struct TilePatch* tile;
-	String name;
+	cc_string name;
 
 	if (String_CaselessEqualsConst(path, "assets/minecraft/textures/environment/snow.png")
 		|| String_CaselessEqualsConst(path, "assets/minecraft/textures/entity/chicken.png")) {
@@ -518,8 +518,8 @@ static cc_result ModernPatcher_ExtractFiles(struct Stream* s) {
 }
 
 static cc_result TexPatcher_NewFiles(struct Stream* s) {
-	static const String guiPng   = String_FromConst("gui.png");
-	static const String animsTxt = String_FromConst("animations.txt");
+	static const cc_string guiPng   = String_FromConst("gui.png");
+	static const cc_string animsTxt = String_FromConst("animations.txt");
 	struct ResourceTexture* entry;
 	cc_result res;
 
@@ -540,7 +540,7 @@ static void TexPatcher_PatchTile(struct Bitmap* src, int srcX, int srcY, int dst
 }
 
 static cc_result TexPatcher_Terrain(struct Stream* s) {
-	static const String terrainPng = String_FromConst("terrain.png");
+	static const cc_string terrainPng = String_FromConst("terrain.png");
 	struct ResourceTexture* entry;
 	struct Bitmap bmp;
 	struct Stream src;
@@ -583,7 +583,7 @@ static cc_result TexPatcher_WriteEntries(struct Stream* s) {
 }
 
 static void TexPatcher_MakeDefaultZip(void) {
-	static const String path = String_FromConst("texpacks/default.zip");
+	static const cc_string path = String_FromConst("texpacks/default.zip");
 	struct Stream s;
 	int i;
 	cc_result res;
@@ -672,7 +672,7 @@ static void SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
 }
 
 static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
-	String path; char pathBuffer[STRING_SIZE];
+	cc_string path; char pathBuffer[STRING_SIZE];
 	struct OggState ogg;
 	struct Stream src, dst;
 	struct VorbisState ctx = { 0 };
@@ -695,7 +695,7 @@ static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 }
 
 static void MusicPatcher_Save(const char* name, struct HttpRequest* req) {
-	String path; char pathBuffer[STRING_SIZE];
+	cc_string path; char pathBuffer[STRING_SIZE];
 	cc_result res;
 
 	String_InitArray(path, pathBuffer);
@@ -714,7 +714,7 @@ int  Fetcher_StatusCode, Fetcher_Downloaded;
 cc_result Fetcher_Result;
 
 CC_NOINLINE static int Fetcher_DownloadAudio(const char* hash) {
-	String url; char urlBuffer[URL_MAX_SIZE];
+	cc_string url; char urlBuffer[URL_MAX_SIZE];
 
 	String_InitArray(url, urlBuffer);
 	String_Format3(&url, "http://resources.download.minecraft.net/%r%r/%c", 
@@ -738,7 +738,7 @@ const char* Fetcher_RequestName(int reqID) {
 }
 
 void Fetcher_Run(void) {
-	String url;
+	cc_string url;
 	int i;
 	if (Fetcher_Working) return;
 

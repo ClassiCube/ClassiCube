@@ -198,7 +198,7 @@ void Gfx_OnWindowResize(void);
 /* Gets information about the user's GPU and current backend state. */
 /* Backend state may include depth buffer bits, free memory, etc. */
 /* NOTE: lines must be an array of at least GFX_APIINFO_LINES */
-void Gfx_GetApiInfo(String* lines);
+void Gfx_GetApiInfo(cc_string* lines);
 
 /* Raises ContextLost event and updates state for lost contexts. */
 void Gfx_LoseContext(const char* reason);

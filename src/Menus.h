@@ -34,9 +34,9 @@ void HacksSettingsScreen_Show(void);
 void EnvSettingsScreen_Show(void);
 void NostalgiaScreen_Show(void);
 
-void UrlWarningOverlay_Show(const String* url);
+void UrlWarningOverlay_Show(const cc_string* url);
 void TexIdsOverlay_Show(void);
-void TexPackOverlay_Show(const String* url);
+void TexPackOverlay_Show(const cc_string* url);
 #ifdef CC_BUILD_TOUCH
 void TouchMoreScreen_Show(void);
 #endif

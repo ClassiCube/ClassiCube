@@ -201,7 +201,7 @@ void LButton_SetConst(struct LButton* w, const char* text) {
 /*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-CC_NOINLINE static void LInput_GetText(struct LInput* w, String* text) {
+CC_NOINLINE static void LInput_GetText(struct LInput* w, cc_string* text) {
 	int i;
 	if (!w->password) { *text = w->text; return; }
 
@@ -289,7 +289,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 
 static void LInput_Draw(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
-	String text; char textBuffer[STRING_SIZE];
+	cc_string text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	int textWidth;
 
@@ -314,7 +314,7 @@ static void LInput_Draw(void* widget) {
 }
 
 static Rect2D LInput_MeasureCaret(struct LInput* w) {
-	String text; char textBuffer[STRING_SIZE];
+	cc_string text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	Rect2D r;
 
@@ -385,7 +385,7 @@ static void LInput_AdvanceCaretPos(struct LInput* w, cc_bool forwards) {
 }
 
 static void LInput_MoveCaretToCursor(struct LInput* w) {
-	String text; char textBuffer[STRING_SIZE];
+	cc_string text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	int i, charX, charWidth;
 	int x = Mouse_X, y = Mouse_Y;
@@ -433,7 +433,7 @@ static void LInput_Unselect(void* widget) {
 	Window_CloseKeyboard();
 }
 
-static void LInput_CopyFromClipboard(String* text, void* widget) {
+static void LInput_CopyFromClipboard(cc_string* text, void* widget) {
 	struct LInput* w = (struct LInput*)widget;
 	String_UNSAFE_TrimStart(text);
 	String_UNSAFE_TrimEnd(text);
@@ -493,8 +493,8 @@ void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hin
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
-void LInput_SetText(struct LInput* w, const String* text_) {
-	String text; char textBuffer[STRING_SIZE];
+void LInput_SetText(struct LInput* w, const cc_string* text_) {
+	cc_string text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	int textWidth;
 
@@ -527,7 +527,7 @@ void LInput_Append(struct LInput* w, char c) {
 	if (appended) LWidget_Redraw(w);
 }
 
-void LInput_AppendString(struct LInput* w, const String* str) {
+void LInput_AppendString(struct LInput* w, const cc_string* str) {
 	int i, appended = 0;
 	for (i = 0; i < str->length; i++) {
 		if (LInput_AppendRaw(w, str->buffer[i])) appended++;
@@ -600,7 +600,7 @@ void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* text) {
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
-void LLabel_SetText(struct LLabel* w, const String* text) {
+void LLabel_SetText(struct LLabel* w, const cc_string* text) {
 	struct DrawTextArgs args;
 	String_Copy(&w->text, text);
 
@@ -611,7 +611,7 @@ void LLabel_SetText(struct LLabel* w, const String* text) {
 }
 
 void LLabel_SetConst(struct LLabel* w, const char* text) {
-	String str = String_FromReadonly(text);
+	cc_string str = String_FromReadonly(text);
 	LLabel_SetText(w, &str);
 }
 
@@ -907,7 +907,7 @@ static void LTable_DrawHeaders(struct LTable* w) {
 
 /* Draws contents of the currently visible rows in the table */
 static void LTable_DrawRows(struct LTable* w) {
-	String str; char strBuffer[STRING_SIZE];
+	cc_string str; char strBuffer[STRING_SIZE];
 	struct ServerInfo* entry;
 	struct DrawTextArgs args;
 	int i, x, y, row, end;

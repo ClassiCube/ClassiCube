@@ -25,7 +25,7 @@ extern cc_bool Launcher_ShouldExit;
 /* Whether game should be updated on exit. */
 extern cc_bool Launcher_ShouldUpdate;
 /* (optional) Hash of the server the game should automatically try to connect to after signing in. */
-extern String Launcher_AutoHash;
+extern cc_string Launcher_AutoHash;
 
 /* Base colour of pixels before any widgets are drawn. */
 extern BitmapCol Launcher_BackgroundCol;
@@ -67,12 +67,12 @@ CC_NOINLINE void Launcher_MarkAllDirty(void);
 /* Sets currently active screen/menu, freeing old one. */
 void Launcher_SetScreen(struct LScreen* screen);
 /* Attempts to start the game by connecting to the given server. */
-cc_bool Launcher_ConnectToServer(const String* hash);
+cc_bool Launcher_ConnectToServer(const cc_string* hash);
 /* Launcher main loop. */
 void Launcher_Run(void);
 /* Starts the game from the given arguments. */
-cc_bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server);
+cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server);
 /* Prints information about a http error to dst. (for status widget) */
 /* If res is non-zero, also displays a dialog box on-screen. */
-void Launcher_DisplayHttpError(cc_result res, int status, const char* action, String* dst);
+void Launcher_DisplayHttpError(cc_result res, int status, const char* action, cc_string* dst);
 #endif

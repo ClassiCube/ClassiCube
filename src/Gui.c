@@ -258,7 +258,7 @@ void Gui_RenderGui(double delta) {
 /*########################################################################################################################*
 *-------------------------------------------------------TextAtlas---------------------------------------------------------*
 *#########################################################################################################################*/
-void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, struct FontDesc* font, const String* prefix) {
+void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct FontDesc* font, const cc_string* prefix) {
 	struct DrawTextArgs args; 
 	int width, height;
 	struct Bitmap bmp;
@@ -448,7 +448,7 @@ void Screen_BuildMesh(void* screen) {
 *#########################################################################################################################*/
 static void OnFontChanged(void* obj) { Gui_RefreshAll(); }
 
-static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
+static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* name) {
 	if (String_CaselessEqualsConst(name, "gui.png")) {
 		Game_UpdateTexture(&Gui.GuiTex, stream, name, NULL);
 	} else if (String_CaselessEqualsConst(name, "gui_classic.png")) {
@@ -469,7 +469,7 @@ static void OnKeyPress(void* obj, int keyChar) {
 }
 
 #ifdef CC_BUILD_TOUCH
-static void OnTextChanged(void* obj, const String* str) {
+static void OnTextChanged(void* obj, const cc_string* str) {
 	struct Screen* s;
 	int i;
 

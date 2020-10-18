@@ -6,9 +6,9 @@
 #include "Utils.h"
 
 #ifdef __cplusplus
-const String String_Empty = { NULL, 0, 0 };
+const cc_string String_Empty = { NULL, 0, 0 };
 #else
-const String String_Empty;
+const cc_string String_Empty;
 #endif
 
 int String_CalcLen(const char* raw, int capacity) {
@@ -23,29 +23,29 @@ int String_Length(const char* raw) {
 	return length;
 }
 
-String String_FromRaw(STRING_REF char* buffer, int capacity) {
+cc_string String_FromRaw(STRING_REF char* buffer, int capacity) {
 	return String_Init(buffer, String_CalcLen(buffer, capacity), capacity);
 }
 
-String String_FromReadonly(STRING_REF const char* buffer) {
+cc_string String_FromReadonly(STRING_REF const char* buffer) {
 	int len = String_Length(buffer);
 	return String_Init((char*)buffer, len, len);
 }
 
 
-void String_Copy(String* dst, const String* src) {
+void String_Copy(cc_string* dst, const cc_string* src) {
 	dst->length = 0;
 	String_AppendString(dst, src);
 }
 
-void String_CopyToRaw(char* dst, int capacity, const String* src) {
+void String_CopyToRaw(char* dst, int capacity, const cc_string* src) {
 	int i, len = min(capacity, src->length);
 	for (i = 0; i < len; i++) { dst[i] = src->buffer[i]; }
 	/* add \0 to mark end of used portion of buffer */
 	if (len < capacity) dst[len] = '\0';
 }
 
-String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int length) {
+cc_string String_UNSAFE_Substring(STRING_REF const cc_string* str, int offset, int length) {
 	if (offset < 0 || offset > str->length) {
 		Logger_Abort("Offset for substring out of range");
 	}
@@ -58,8 +58,8 @@ String String_UNSAFE_Substring(STRING_REF const String* str, int offset, int len
 	return String_Init(str->buffer + offset, length, length);
 }
 
-String String_UNSAFE_SubstringAt(STRING_REF const String* str, int offset) {
-	String sub;
+cc_string String_UNSAFE_SubstringAt(STRING_REF const cc_string* str, int offset) {
+	cc_string sub;
 	if (offset < 0 || offset > str->length) Logger_Abort("Sub offset out of range");
 
 	sub.buffer   = str->buffer + offset;
@@ -68,7 +68,7 @@ String String_UNSAFE_SubstringAt(STRING_REF const String* str, int offset) {
 	return sub;
 }
 
-int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int maxSubs) {
+int String_UNSAFE_Split(STRING_REF const cc_string* str, char c, cc_string* subs, int maxSubs) {
 	int beg = 0, end, count, i;
 
 	for (i = 0; i < maxSubs && beg <= str->length; i++) {
@@ -85,7 +85,7 @@ int String_UNSAFE_Split(STRING_REF const String* str, char c, String* subs, int 
 	return count;
 }
 
-void String_UNSAFE_SplitBy(STRING_REF String* str, char c, String* part) {
+void String_UNSAFE_SplitBy(STRING_REF cc_string* str, char c, cc_string* part) {
 	int idx = String_IndexOf(str, c);
 	if (idx == -1) {
 		*part = *str;
@@ -96,7 +96,7 @@ void String_UNSAFE_SplitBy(STRING_REF String* str, char c, String* part) {
 	}
 }
 
-int String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, String* value) {
+int String_UNSAFE_Separate(STRING_REF const cc_string* str, char c, cc_string* key, cc_string* value) {
 	int idx = String_IndexOf(str, c);
 	if (idx == -1) {
 		*key   = *str;
@@ -114,7 +114,7 @@ int String_UNSAFE_Separate(STRING_REF const String* str, char c, String* key, St
 }
 
 
-int String_Equals(const String* a, const String* b) {
+int String_Equals(const cc_string* a, const cc_string* b) {
 	int i;
 	if (a->length != b->length) return false;
 
@@ -124,7 +124,7 @@ int String_Equals(const String* a, const String* b) {
 	return true;
 } 
 
-int String_CaselessEquals(const String* a, const String* b) {
+int String_CaselessEquals(const cc_string* a, const cc_string* b) {
 	int i;
 	char aCur, bCur;
 	if (a->length != b->length) return false;
@@ -137,7 +137,7 @@ int String_CaselessEquals(const String* a, const String* b) {
 	return true;
 }
 
-int String_CaselessEqualsConst(const String* a, const char* b) {
+int String_CaselessEqualsConst(const cc_string* a, const char* b) {
 	int i;
 	char aCur, bCur;
 
@@ -151,12 +151,12 @@ int String_CaselessEqualsConst(const String* a, const char* b) {
 }
 
 
-void String_Append(String* str, char c) {
+void String_Append(cc_string* str, char c) {
 	if (str->length == str->capacity) return;
 	str->buffer[str->length++] = c;
 }
 
-void String_AppendBool(String* str, cc_bool value) {
+void String_AppendBool(cc_string* str, cc_bool value) {
 	String_AppendConst(str, value ? "True" : "False");
 }
 
@@ -168,7 +168,7 @@ int String_MakeUInt32(cc_uint32 num, char* digits) {
 	return len;
 }
 
-void String_AppendInt(String* str, int num) {
+void String_AppendInt(cc_string* str, int num) {
 	if (num < 0) {
 		num = -num;
 		String_Append(str, '-');
@@ -176,7 +176,7 @@ void String_AppendInt(String* str, int num) {
 	String_AppendUInt32(str, (cc_uint32)num);
 }
 
-void String_AppendUInt32(String* str, cc_uint32 num) {
+void String_AppendUInt32(cc_string* str, cc_uint32 num) {
 	char digits[STRING_INT_CHARS];
 	int i, count = String_MakeUInt32(num, digits);
 
@@ -185,7 +185,7 @@ void String_AppendUInt32(String* str, cc_uint32 num) {
 	}
 }
 
-void String_AppendPaddedInt(String* str, int num, int minDigits) {
+void String_AppendPaddedInt(cc_string* str, int num, int minDigits) {
 	char digits[STRING_INT_CHARS];
 	int i, count;
 	for (i = 0; i < minDigits; i++) { digits[i] = '0'; }
@@ -198,7 +198,7 @@ void String_AppendPaddedInt(String* str, int num, int minDigits) {
 	}
 }
 
-void String_AppendFloat(String* str, float num, int fracDigits) {
+void String_AppendFloat(cc_string* str, float num, int fracDigits) {
 	int i, whole, digit;
 	double frac;
 
@@ -221,7 +221,7 @@ void String_AppendFloat(String* str, float num, int fracDigits) {
 	}
 }
 
-void String_AppendHex(String* str, cc_uint8 value) {
+void String_AppendHex(cc_string* str, cc_uint8 value) {
 	/* 48 = index of 0, 55 = index of (A - 10) */
 	cc_uint8 hi = (value >> 4) & 0xF;
 	char c_hi  = hi < 10 ? (hi + 48) : (hi + 55);
@@ -232,7 +232,7 @@ void String_AppendHex(String* str, cc_uint8 value) {
 	String_Append(str, c_lo);
 }
 
-CC_NOINLINE static void String_Hex32(String* str, cc_uint32 value) {
+CC_NOINLINE static void String_Hex32(cc_string* str, cc_uint32 value) {
 	int shift;
 
 	for (shift = 24; shift >= 0; shift -= 8) {
@@ -241,7 +241,7 @@ CC_NOINLINE static void String_Hex32(String* str, cc_uint32 value) {
 	}
 }
 
-CC_NOINLINE static void String_Hex64(String* str, cc_uint64 value) {
+CC_NOINLINE static void String_Hex64(cc_string* str, cc_uint64 value) {
 	int shift;
 
 	for (shift = 56; shift >= 0; shift -= 8) {
@@ -250,20 +250,20 @@ CC_NOINLINE static void String_Hex64(String* str, cc_uint64 value) {
 	}
 }
 
-void String_AppendConst(String* str, const char* src) {
+void String_AppendConst(cc_string* str, const char* src) {
 	for (; *src; src++) {
 		String_Append(str, *src);
 	}
 }
 
-void String_AppendString(String* str, const String* src) {
+void String_AppendString(cc_string* str, const cc_string* src) {
 	int i;
 	for (i = 0; i < src->length; i++) {
 		String_Append(str, src->buffer[i]);
 	}
 }
 
-void String_AppendColorless(String* str, const String* src) {
+void String_AppendColorless(cc_string* str, const cc_string* src) {
 	char c;
 	int i;
 
@@ -275,7 +275,7 @@ void String_AppendColorless(String* str, const String* src) {
 }
 
 
-int String_IndexOfAt(const String* str, int offset, char c) {
+int String_IndexOfAt(const cc_string* str, int offset, char c) {
 	int i;
 	for (i = offset; i < str->length; i++) {
 		if (str->buffer[i] == c) return i;
@@ -283,7 +283,7 @@ int String_IndexOfAt(const String* str, int offset, char c) {
 	return -1;
 }
 
-int String_LastIndexOfAt(const String* str, int offset, char c) {
+int String_LastIndexOfAt(const cc_string* str, int offset, char c) {
 	int i;
 	for (i = (str->length - 1) - offset; i >= 0; i--) {
 		if (str->buffer[i] == c) return i;
@@ -291,7 +291,7 @@ int String_LastIndexOfAt(const String* str, int offset, char c) {
 	return -1;
 }
 
-void String_InsertAt(String* str, int offset, char c) {
+void String_InsertAt(cc_string* str, int offset, char c) {
 	int i;
 
 	if (offset < 0 || offset > str->length) {
@@ -308,7 +308,7 @@ void String_InsertAt(String* str, int offset, char c) {
 	str->length++;
 }
 
-void String_DeleteAt(String* str, int offset) {
+void String_DeleteAt(cc_string* str, int offset) {
 	int i;
 
 	if (offset < 0 || offset >= str->length) {
@@ -322,7 +322,7 @@ void String_DeleteAt(String* str, int offset) {
 	str->length--;
 }
 
-void String_UNSAFE_TrimStart(String* str) {
+void String_UNSAFE_TrimStart(cc_string* str) {
 	int i;
 	for (i = 0; i < str->length; i++) {
 		if (str->buffer[i] != ' ') break;
@@ -332,7 +332,7 @@ void String_UNSAFE_TrimStart(String* str) {
 	}
 }
 
-void String_UNSAFE_TrimEnd(String* str) {
+void String_UNSAFE_TrimEnd(cc_string* str) {
 	int i;
 	for (i = str->length - 1; i >= 0; i--) {
 		if (str->buffer[i] != ' ') break;
@@ -340,7 +340,7 @@ void String_UNSAFE_TrimEnd(String* str) {
 	}
 }
 
-int String_IndexOfConst(const String* str, const char* sub) {
+int String_IndexOfConst(const cc_string* str, const char* sub) {
 	int i, j;
 
 	for (i = 0; i < str->length; i++) {
@@ -353,7 +353,7 @@ int String_IndexOfConst(const String* str, const char* sub) {
 	return -1;
 }
 
-int String_CaselessContains(const String* str, const String* sub) {
+int String_CaselessContains(const cc_string* str, const cc_string* sub) {
 	char strCur, subCur;
 	int i, j;
 
@@ -369,7 +369,7 @@ int String_CaselessContains(const String* str, const String* sub) {
 	return false;
 }
 
-int String_CaselessStarts(const String* str, const String* sub) {
+int String_CaselessStarts(const cc_string* str, const cc_string* sub) {
 	char strCur, subCur;
 	int i;
 	if (str->length < sub->length) return false;
@@ -382,7 +382,7 @@ int String_CaselessStarts(const String* str, const String* sub) {
 	return true;
 }
 
-int String_CaselessEnds(const String* str, const String* sub) {
+int String_CaselessEnds(const cc_string* str, const cc_string* sub) {
 	char strCur, subCur;
 	int i, j = str->length - sub->length;	
 	if (j < 0) return false; /* sub longer than str */
@@ -395,7 +395,7 @@ int String_CaselessEnds(const String* str, const String* sub) {
 	return true;
 }
 
-int String_Compare(const String* a, const String* b) {
+int String_Compare(const cc_string* a, const cc_string* b) {
 	char aCur, bCur;
 	int i, minLen = min(a->length, b->length);
 
@@ -411,16 +411,16 @@ int String_Compare(const String* a, const String* b) {
 	return a->length - b->length;
 }
 
-void String_Format1(String* str, const char* format, const void* a1) {
+void String_Format1(cc_string* str, const char* format, const void* a1) {
 	String_Format4(str, format, a1, NULL, NULL, NULL);
 }
-void String_Format2(String* str, const char* format, const void* a1, const void* a2) {
+void String_Format2(cc_string* str, const char* format, const void* a1, const void* a2) {
 	String_Format4(str, format, a1, a2, NULL, NULL);
 }
-void String_Format3(String* str, const char* format, const void* a1, const void* a2, const void* a3) {
+void String_Format3(cc_string* str, const char* format, const void* a1, const void* a2, const void* a3) {
 	String_Format4(str, format, a1, a2, a3, NULL);
 }
-void String_Format4(String* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
+void String_Format4(cc_string* str, const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
 	const void* arg;
 	int i, j = 0, digits;
 
@@ -447,7 +447,7 @@ void String_Format4(String* str, const char* format, const void* a1, const void*
 		case 'c': 
 			String_AppendConst(str, (char*)arg);  break;
 		case 's': 
-			String_AppendString(str, (String*)arg);  break;
+			String_AppendString(str, (cc_string*)arg);  break;
 		case 'r':
 			String_Append(str, *((char*)arg)); break;
 		case 'x':
@@ -585,7 +585,7 @@ int Convert_CP437ToUtf8(char c, cc_uint8* data) {
 	return Convert_UnicodeToUtf8(Convert_CP437ToUnicode(c), data);
 }
 
-void String_AppendUtf16(String* value, const cc_unichar* chars, int numBytes) {
+void String_AppendUtf16(cc_string* value, const cc_unichar* chars, int numBytes) {
 	int i; char c;
 	
 	for (i = 0; i < (numBytes >> 1); i++) {
@@ -594,7 +594,7 @@ void String_AppendUtf16(String* value, const cc_unichar* chars, int numBytes) {
 	}
 }
 
-void String_AppendUtf8(String* value, const cc_uint8* chars, int numBytes) {
+void String_AppendUtf8(cc_string* value, const cc_uint8* chars, int numBytes) {
 	int len; cc_codepoint cp; char c;
 
 	for (; numBytes > 0; numBytes -= len) {
@@ -606,7 +606,7 @@ void String_AppendUtf8(String* value, const cc_uint8* chars, int numBytes) {
 	}
 }
 
-void String_DecodeCP1252(String* value, const cc_uint8* chars, int numBytes) {
+void String_DecodeCP1252(cc_string* value, const cc_uint8* chars, int numBytes) {
 	int i; char c;
 
 	for (i = 0; i < numBytes; i++) {
@@ -618,14 +618,14 @@ void String_DecodeCP1252(String* value, const cc_uint8* chars, int numBytes) {
 /*########################################################################################################################*
 *--------------------------------------------------Numerical conversions--------------------------------------------------*
 *#########################################################################################################################*/
-cc_bool Convert_ParseUInt8(const String* str, cc_uint8* value) {
+cc_bool Convert_ParseUInt8(const cc_string* str, cc_uint8* value) {
 	int tmp; 
 	*value = 0;
 	if (!Convert_ParseInt(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
 	*value = (cc_uint8)tmp; return true;
 }
 
-cc_bool Convert_ParseUInt16(const String* str, cc_uint16* value) {
+cc_bool Convert_ParseUInt16(const cc_string* str, cc_uint16* value) {
 	int tmp; 
 	*value = 0;
 	if (!Convert_ParseInt(str, &tmp) || tmp < 0 || tmp > UInt16_MaxValue) return false;
@@ -642,7 +642,7 @@ static int Convert_CompareDigits(const char* digits, const char* magnitude) {
 	return 0;
 }
 
-static cc_bool Convert_TryParseDigits(const String* str, cc_bool* negative, char* digits, int maxDigits) {
+static cc_bool Convert_TryParseDigits(const cc_string* str, cc_bool* negative, char* digits, int maxDigits) {
 	char* start = digits;
 	int offset = 0, i;
 
@@ -666,7 +666,7 @@ static cc_bool Convert_TryParseDigits(const String* str, cc_bool* negative, char
 }
 
 #define INT32_DIGITS 10
-cc_bool Convert_ParseInt(const String* str, int* value) {
+cc_bool Convert_ParseInt(const cc_string* str, int* value) {
 	cc_bool negative;
 	char digits[INT32_DIGITS];
 	int i, compare, sum = 0;
@@ -693,7 +693,7 @@ cc_bool Convert_ParseInt(const String* str, int* value) {
 }
 
 #define UINT64_DIGITS 20
-cc_bool Convert_ParseUInt64(const String* str, cc_uint64* value) {
+cc_bool Convert_ParseUInt64(const cc_string* str, cc_uint64* value) {
 	cc_bool negative;
 	char digits[UINT64_DIGITS];
 	int i, compare;
@@ -713,7 +713,7 @@ cc_bool Convert_ParseUInt64(const String* str, cc_uint64* value) {
 	return true;
 }
 
-cc_bool Convert_ParseFloat(const String* str, float* value) {
+cc_bool Convert_ParseFloat(const cc_string* str, float* value) {
 	int i = 0;
 	cc_bool negate = false;
 	double sum, whole, fract, divide = 10.0;
@@ -745,7 +745,7 @@ cc_bool Convert_ParseFloat(const String* str, float* value) {
 	return true;
 }
 
-cc_bool Convert_ParseBool(const String* str, cc_bool* value) {
+cc_bool Convert_ParseBool(const cc_string* str, cc_bool* value) {
 	if (String_CaselessEqualsConst(str, "True")) {
 		*value = true; return true;
 	}
@@ -783,7 +783,7 @@ void StringsBuffer_Clear(struct StringsBuffer* buffer) {
 	StringsBuffer_Init(buffer);
 }
 
-String StringsBuffer_UNSAFE_Get(struct StringsBuffer* buffer, int i) {
+cc_string StringsBuffer_UNSAFE_Get(struct StringsBuffer* buffer, int i) {
 	cc_uint32 flags, offset, len;
 	if (i < 0 || i >= buffer->count) Logger_Abort("Tried to get String past StringsBuffer end");
 
@@ -793,7 +793,7 @@ String StringsBuffer_UNSAFE_Get(struct StringsBuffer* buffer, int i) {
 	return String_Init(&buffer->textBuffer[offset], len, len);
 }
 
-void StringsBuffer_Add(struct StringsBuffer* buffer, const String* str) {
+void StringsBuffer_Add(struct StringsBuffer* buffer, const cc_string* str) {
 	int textOffset;
 	/* StringsBuffer hasn't been initialised yet, do it here */
 	if (!buffer->_flagsCapacity) StringsBuffer_Init(buffer);
@@ -858,7 +858,7 @@ static cc_bool WordWrap_IsWrapper(char c) {
 	return c == '\0' || c == ' ' || c == '-' || c == '>' || c == '<' || c == '/' || c == '\\';
 }
 
-void WordWrap_Do(STRING_REF String* text, String* lines, int numLines, int lineLen) {
+void WordWrap_Do(STRING_REF cc_string* text, cc_string* lines, int numLines, int lineLen) {
 	int i, lineStart, lineEnd;
 	for (i = 0; i < numLines; i++) { lines[i] = String_Empty; }
 
@@ -892,7 +892,7 @@ void WordWrap_Do(STRING_REF String* text, String* lines, int numLines, int lineL
 	}
 }
 
-void WordWrap_GetCoords(int index, const String* lines, int numLines, int* coordX, int* coordY) {
+void WordWrap_GetCoords(int index, const cc_string* lines, int numLines, int* coordX, int* coordY) {
 	int y, offset = 0, lineLen;
 	if (index == -1) index = Int32_MaxValue;
 	*coordX = -1; *coordY = 0;
@@ -910,7 +910,7 @@ void WordWrap_GetCoords(int index, const String* lines, int numLines, int* coord
 	if (*coordX == -1) *coordX = lines[*coordY].length;
 }
 
-int WordWrap_GetBackLength(const String* text, int index) {
+int WordWrap_GetBackLength(const cc_string* text, int index) {
 	int start = index;
 	if (index <= 0) return 0;
 	if (index >= text->length) Logger_Abort("WordWrap_GetBackLength - index past end of string");
@@ -923,7 +923,7 @@ int WordWrap_GetBackLength(const String* text, int index) {
 	return start - index;
 }
 
-int WordWrap_GetForwardLength(const String* text, int index) {
+int WordWrap_GetForwardLength(const cc_string* text, int index) {
 	int start = index, length = text->length;
 	if (index == -1) return 0;
 	if (index >= text->length) Logger_Abort("WordWrap_GetForwardLength - index past end of string");

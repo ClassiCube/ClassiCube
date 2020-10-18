@@ -30,7 +30,7 @@ static int titleX, titleY;
 
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
 static char hashBuffer[STRING_SIZE];
-String Launcher_AutoHash = String_FromArray(hashBuffer);
+cc_string Launcher_AutoHash = String_FromArray(hashBuffer);
 
 static cc_bool useBitmappedFont, hasBitmappedFont;
 static struct Bitmap dirtBmp, stoneBmp;
@@ -49,7 +49,7 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	Launcher_Redraw();
 }
 
-void Launcher_DisplayHttpError(cc_result res, int status, const char* action, String* dst) {
+void Launcher_DisplayHttpError(cc_result res, int status, const char* action, cc_string* dst) {
 	if (res) {
 		/* Non HTTP error - this is not good */
 		Logger_SysWarn(res, action, Http_DescribeError);
@@ -76,8 +76,8 @@ static cc_bool UsingBitmappedFont(void) {
 *--------------------------------------------------------Starter/Updater--------------------------------------------------*
 *#########################################################################################################################*/
 static TimeMS lastJoin;
-cc_bool Launcher_StartGame(const String* user, const String* mppass, const String* ip, const String* port, const String* server) {
-	String args; char argsBuffer[512];
+cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server) {
+	cc_string args; char argsBuffer[512];
 	TimeMS now;
 	cc_result res;
 	
@@ -113,16 +113,16 @@ cc_bool Launcher_StartGame(const String* user, const String* mppass, const Strin
 }
 
 CC_NOINLINE static void StartFromInfo(struct ServerInfo* info) {
-	String port; char portBuffer[STRING_INT_CHARS];
+	cc_string port; char portBuffer[STRING_INT_CHARS];
 	String_InitArray(port, portBuffer);
 
 	String_AppendInt(&port, info->port);
 	Launcher_StartGame(&Game_Username, &info->mppass, &info->ip, &port, &info->name);
 }
 
-cc_bool Launcher_ConnectToServer(const String* hash) {
+cc_bool Launcher_ConnectToServer(const cc_string* hash) {
 	struct ServerInfo* info;
-	String logMsg;
+	cc_string logMsg;
 	int i;
 	if (!hash->length) return false;
 
@@ -263,7 +263,7 @@ static void Launcher_Free(void) {
 }
 
 void Launcher_Run(void) {
-	static const String title = String_FromConst(GAME_APP_TITLE);
+	static const cc_string title = String_FromConst(GAME_APP_TITLE);
 	Window_Create(640, 400);
 	Window_SetTitle(&title);
 	Window_Show();
@@ -355,7 +355,7 @@ void Launcher_ResetSkin(void) {
 
 CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
 	cc_uint8 rgb[3];
-	String value;
+	cc_string value;
 	if (!Options_UNSAFE_Get(key, &value))    return;
 	if (!PackedCol_TryParseHex(&value, rgb)) return;
 
@@ -371,7 +371,7 @@ void Launcher_LoadSkin(void) {
 }
 
 CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
-	String value; char valueBuffer[8];
+	cc_string value; char valueBuffer[8];
 	/* Component order might be different to BitmapCol */
 	PackedCol tmp = PackedCol_Make(BitmapCol_R(col), BitmapCol_G(col), BitmapCol_B(col), 0);
 	
@@ -392,7 +392,7 @@ void Launcher_SaveSkin(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Background-----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_bool Launcher_SelectZipEntry(const String* path) {
+static cc_bool Launcher_SelectZipEntry(const cc_string* path) {
 	return
 		String_CaselessEqualsConst(path, "default.png") ||
 		String_CaselessEqualsConst(path, "terrain.png");
@@ -411,7 +411,7 @@ static void LoadTextures(struct Bitmap* bmp) {
 	Gradient_Tint(&stoneBmp, 96, 96, 0, 0, TILESIZE, TILESIZE);
 }
 
-static cc_result Launcher_ProcessZipEntry(const String* path, struct Stream* data, struct ZipState* s) {
+static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* data, struct ZipState* s) {
 	struct Bitmap bmp;
 	cc_result res;
 
@@ -441,7 +441,7 @@ static cc_result Launcher_ProcessZipEntry(const String* path, struct Stream* dat
 	return 0;
 }
 
-static void ExtractTexturePack(const String* path) {
+static void ExtractTexturePack(const cc_string* path) {
 	struct ZipState state;
 	struct Stream stream;
 	cc_result res;
@@ -460,9 +460,9 @@ static void ExtractTexturePack(const String* path) {
 }
 
 void Launcher_TryLoadTexturePack(void) {
-	static const String defZipPath = String_FromConst("texpacks/default.zip");
-	String path; char pathBuffer[FILENAME_SIZE];
-	String texPack;
+	static const cc_string defZipPath = String_FromConst("texpacks/default.zip");
+	cc_string path; char pathBuffer[FILENAME_SIZE];
+	cc_string texPack;
 
 	if (Options_UNSAFE_Get("nostalgia-classicbg", &texPack)) {
 		Launcher_ClassicBackground = Options_GetBool("nostalgia-classicbg", false);
@@ -516,8 +516,8 @@ void Launcher_ResetArea(int x, int y, int width, int height) {
 }
 
 void Launcher_ResetPixels(void) {
-	static const String title_fore = String_FromConst("&eClassi&fCube");
-	static const String title_back = String_FromConst("&0Classi&0Cube");
+	static const cc_string title_fore = String_FromConst("&eClassi&fCube");
+	static const cc_string title_back = String_FromConst("&0Classi&0Cube");
 	struct DrawTextArgs args;
 	int x;
 

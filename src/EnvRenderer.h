@@ -42,5 +42,5 @@ extern cc_bool EnvRenderer_Minimal;
 void EnvRenderer_SetMode(int flags);
 /* Calculates mode flags for the given mode. */
 /* mode can be: normal, normalfast, legacy, legacyfast */
-CC_NOINLINE int EnvRenderer_CalcFlags(const String* mode);
+CC_NOINLINE int EnvRenderer_CalcFlags(const cc_string* mode);
 #endif

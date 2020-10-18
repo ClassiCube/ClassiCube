@@ -19,8 +19,8 @@ CC_VAR extern struct _GameData {
 extern struct RayTracer Game_SelectedPos;
 extern cc_bool Game_UseCPEBlocks;
 
-extern String Game_Username;
-extern String Game_Mppass;
+extern cc_string Game_Username;
+extern cc_string Game_Mppass;
 
 #define DEFAULT_MAX_VIEWDIST 32768
 extern int Game_ViewDistance;
@@ -56,7 +56,7 @@ void Game_CycleViewDistance(void);
 void Game_SetViewDistance(int distance);
 void Game_UserSetViewDistance(int distance);
 void Game_SetFov(int fov);
-void Game_Disconnect(const String* title, const String* reason);
+void Game_Disconnect(const cc_string* title, const cc_string* reason);
 void Game_Reset(void);
 
 /* Sets the block in the map at the given coordinates, then updates state associated with the block. */
@@ -68,10 +68,10 @@ CC_API void Game_UpdateBlock(int x, int y, int z, BlockID block);
 CC_API void Game_ChangeBlock(int x, int y, int z, BlockID block);
 
 cc_bool Game_CanPick(BlockID block);
-cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, cc_uint8* skinType);
+cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, cc_uint8* skinType);
 /* Checks that the given bitmap can be loaded into a native gfx texture. */
 /* (must be power of two size and be <= Gfx_MaxTexWidth/Gfx_MaxHeight) */
-cc_bool Game_ValidateBitmap(const String* file, struct Bitmap* bmp);
+cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp);
 /* Updates Game_Width and Game_Height. */
 void Game_UpdateDimensions(void);
 /* Sets the strategy/method used to limit frames per second. */
@@ -79,7 +79,7 @@ void Game_UpdateDimensions(void);
 void Game_SetFpsLimit(int method);
 
 /* Runs the main game loop until the window is closed. */
-void Game_Run(int width, int height, const String* title);
+void Game_Run(int width, int height, const cc_string* title);
 
 /* Represents a game component. */
 struct IGameComponent;

@@ -54,7 +54,7 @@ void LWidget_CalcOffsets(void);
 
 struct LButton {
 	LWidget_Layout
-	String text;
+	cc_string text;
 	int _textWidth, _textHeight;
 };
 CC_NOINLINE void LButton_Init(struct LScreen* s, struct LButton* w, int width, int height, const char* text);
@@ -69,7 +69,7 @@ struct LInput {
 	/* Whether all characters should be rendered as *. */
 	cc_bool password;
 	/* Filter applied to text received from the clipboard. Can be NULL. */
-	void (*ClipboardFilter)(String* str);
+	void (*ClipboardFilter)(cc_string* str);
 	/* Callback invoked when the text is changed. Can be NULL. */
 	void (*TextChanged)(struct LInput* w);
 	/* Callback invoked whenever user attempts to append a character to the text. */
@@ -77,17 +77,17 @@ struct LInput {
 	/* Specifies the position that characters are inserted/deleted from. */
 	/* NOTE: -1 to insert/delete characters at end of the text. */
 	int caretPos;
-	String text;
+	cc_string text;
 	int _textHeight;
 	char _textBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hintText);
-CC_NOINLINE void LInput_SetText(struct LInput* w, const String* text);
+CC_NOINLINE void LInput_SetText(struct LInput* w, const cc_string* text);
 
 /* Appends a character to the currently entered text. */
 CC_NOINLINE void LInput_Append(struct LInput* w, char c);
 /* Appends a string to the currently entered text. */
-CC_NOINLINE void LInput_AppendString(struct LInput* w, const String* str);
+CC_NOINLINE void LInput_AppendString(struct LInput* w, const cc_string* str);
 /* Removes the character preceding the caret in the currently entered text. */
 CC_NOINLINE void LInput_Backspace(struct LInput* w);
 /* Removes the character at the caret in the currently entered text. */
@@ -99,11 +99,11 @@ CC_NOINLINE void LInput_Clear(struct LInput* w);
 struct LLabel {
 	LWidget_Layout
 	struct FontDesc* font;
-	String text;
+	cc_string text;
 	char _textBuffer[STRING_SIZE];
 };
 CC_NOINLINE void LLabel_Init(struct LScreen* s, struct LLabel* w, const char* text);
-CC_NOINLINE void LLabel_SetText(struct LLabel* w, const String* text);
+CC_NOINLINE void LLabel_SetText(struct LLabel* w, const cc_string* text);
 CC_NOINLINE void LLabel_SetConst(struct LLabel* w, const char* text);
 
 /* Represents a coloured translucent line separator. */
@@ -164,9 +164,9 @@ struct LTable {
 	int topRow;
 
 	/* Hash of the currently selected server. */
-	String* selectedHash;
+	cc_string* selectedHash;
 	/* Filter for which server names to show. */
-	String* filter;
+	cc_string* filter;
 	/* Callback when selected has has changed. */
 	void (*OnSelectedChanged)(void);
 

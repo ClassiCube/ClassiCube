@@ -49,13 +49,13 @@ cc_bool PackedCol_Unhex(const char* src, int* dst, int count) {
 	return true;
 }
 
-void PackedCol_ToHex(String* str, PackedCol value) {
+void PackedCol_ToHex(cc_string* str, PackedCol value) {
 	String_AppendHex(str, PackedCol_R(value));
 	String_AppendHex(str, PackedCol_G(value));
 	String_AppendHex(str, PackedCol_B(value));
 }
 
-cc_bool PackedCol_TryParseHex(const String* str, cc_uint8* rgb) {
+cc_bool PackedCol_TryParseHex(const cc_string* str, cc_uint8* rgb) {
 	int bits[6];
 	char* buffer = str->buffer;
 

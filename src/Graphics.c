@@ -336,7 +336,7 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 
 typedef IDirect3D9* (WINAPI *FP_Direct3DCreate9)(UINT SDKVersion);
 static void CreateD3D9(void) {
-	static const String path = String_FromConst("d3d9.dll");
+	static const cc_string path = String_FromConst("d3d9.dll");
 	FP_Direct3DCreate9 _direct3DCreate9;
 	void* lib = DynamicLib_Load2(&path);
 
@@ -986,7 +986,7 @@ static const int D3D9_DepthBufferBts(D3DFORMAT format) {
 	return 0;
 }
 
-void Gfx_GetApiInfo(String* lines) {
+void Gfx_GetApiInfo(cc_string* lines) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
 	int pointerSize = sizeof(void*) * 8;
 	int depthBits   = D3D9_DepthBufferBts(depthFormat);
@@ -1438,11 +1438,11 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return res;
 }
 
-void Gfx_GetApiInfo(String* lines) {
-	static const String memExt = String_FromConst("GL_NVX_gpu_memory_info");
+void Gfx_GetApiInfo(cc_string* lines) {
+	static const cc_string memExt = String_FromConst("GL_NVX_gpu_memory_info");
 	GLint totalKb, curKb, depthBits;
 	float total, cur;
-	String extensions;
+	cc_string extensions;
 	int pointerSize = sizeof(void*) * 8;
 
 	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
@@ -1542,7 +1542,7 @@ static struct GLShader {
 static struct GLShader* gfx_activeShader;
 
 /* Generates source code for a GLSL vertex shader, based on shader's flags */
-static void GenVertexShader(const struct GLShader* shader, String* dst) {
+static void GenVertexShader(const struct GLShader* shader, cc_string* dst) {
 	int uv = shader->features & FTR_TEXTURE_UV;
 	int tm = shader->features & FTR_TEX_MATRIX;
 
@@ -1564,7 +1564,7 @@ static void GenVertexShader(const struct GLShader* shader, String* dst) {
 }
 
 /* Generates source code for a GLSL fragment shader, based on shader's flags */
-static void GenFragmentShader(const struct GLShader* shader, String* dst) {
+static void GenFragmentShader(const struct GLShader* shader, cc_string* dst) {
 	int uv = shader->features & FTR_TEXTURE_UV;
 	int al = shader->features & FTR_ALPHA_TEST;
 	int fl = shader->features & FTR_LINEAR_FOG;
@@ -1597,7 +1597,7 @@ static void GenFragmentShader(const struct GLShader* shader, String* dst) {
 }
 
 /* Tries to compile GLSL shader code. */
-static GLint CompileShader(GLenum type, const String* src, GLuint* obj) {
+static GLint CompileShader(GLenum type, const cc_string* src, GLuint* obj) {
 	GLint temp, shader;
 	int len;
 
@@ -1631,7 +1631,7 @@ static void ShaderFailed(GLint shader) {
 
 /* Tries to compile vertex and fragment shaders, then link into an OpenGL program. */
 static void CompileProgram(struct GLShader* shader) {
-	char tmpBuffer[2048]; String tmp;
+	char tmpBuffer[2048]; cc_string tmp;
 	GLuint vs, fs, program;
 	GLint temp;
 
@@ -1986,7 +1986,7 @@ static void Gfx_RestoreState(void) {
 }
 
 cc_bool Gfx_WarnIfNecessary(void) {
-	String renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
+	cc_string renderer = String_FromReadonly((const char*)glGetString(GL_RENDERER));
 
 #ifdef CC_BUILD_GL11
 	Chat_AddRaw("&cYou are using the very outdated OpenGL backend.");
@@ -2098,8 +2098,8 @@ static void GL_CheckSupport(void) {
 		{ "glGenBuffersARB",    (void**)&_glGenBuffers }, { "glBufferDataARB",    (void**)&_glBufferData },
 		{ "glBufferSubDataARB", (void**)&_glBufferSubData }
 	};
-	static const String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
-	String extensions  = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
+	static const cc_string vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
+	cc_string extensions  = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
 	const GLubyte* ver = glGetString(GL_VERSION);
 
 	/* Version string is always: x.y. (and whatever afterwards) */

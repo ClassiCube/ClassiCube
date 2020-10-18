@@ -155,7 +155,7 @@ void Block_SetCustomDefined(BlockID block, cc_bool defined) {
 
 void Block_DefineCustom(BlockID block) {
 	PackedCol black = PackedCol_Make(0, 0, 0, 255);
-	String name     = Block_UNSAFE_GetName(block);
+	cc_string name  = Block_UNSAFE_GetName(block);
 	Blocks.Tinted[block] = Blocks.FogCol[block] != black && String_IndexOf(&name, '#') >= 0;
 
 	Block_SetDrawType(block, Blocks.Draw[block]);
@@ -209,9 +209,9 @@ void Block_SetDrawType(BlockID block, cc_uint8 draw) {
 "_Iron_Double slab_Slab_Brick_TNT_Bookshelf_Mossy rocks_Obsidian_Cobblestone slab_Rope_Sandstone_Snow_Fire_Light pink"\
 "_Forest green_Brown_Deep blue_Turquoise_Ice_Ceramic tile_Magma_Pillar_Crate_Stone brick"
 
-static const String Block_DefaultName(BlockID block) {
-	static const String names   = String_FromConst(BLOCK_RAW_NAMES);
-	static const String invalid = String_FromConst("Invalid");
+static const cc_string Block_DefaultName(BlockID block) {
+	static const cc_string names   = String_FromConst(BLOCK_RAW_NAMES);
+	static const cc_string invalid = String_FromConst("Invalid");
 	int i, beg = 0, end;
 
 	if (block >= BLOCK_CPE_COUNT) return invalid;
@@ -226,7 +226,7 @@ static const String Block_DefaultName(BlockID block) {
 }
 
 void Block_ResetProps(BlockID block) {
-	const String name = Block_DefaultName(block);
+	const cc_string name = Block_DefaultName(block);
 
 	Blocks.BlocksLight[block] = DefaultSet_BlocksLight(block);
 	Blocks.FullBright[block] = DefaultSet_FullBright(block);
@@ -264,16 +264,16 @@ void Block_ResetProps(BlockID block) {
 	}
 }
 
-STRING_REF String Block_UNSAFE_GetName(BlockID block) {
+STRING_REF cc_string Block_UNSAFE_GetName(BlockID block) {
 	return String_FromRaw(Block_NamePtr(block), STRING_SIZE);
 }
 
-void Block_SetName(BlockID block, const String* name) {
+void Block_SetName(BlockID block, const cc_string* name) {
 	String_CopyToRaw(Block_NamePtr(block), STRING_SIZE, name);
 }
 
-int Block_FindID(const String* name) {
-	String blockName;
+int Block_FindID(const cc_string* name) {
+	cc_string blockName;
 	int block;
 
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
@@ -283,7 +283,7 @@ int Block_FindID(const String* name) {
 	return -1;
 }
 
-int Block_Parse(const String* name) {
+int Block_Parse(const cc_string* name) {
 	int b;
 	if (Convert_ParseInt(name, &b) && b < BLOCK_COUNT) return b;
 	return Block_FindID(name);
@@ -527,7 +527,7 @@ void Block_UpdateCulling(BlockID block) {
 cc_bool AutoRotate_Enabled;
 
 /* replaces a portion of a string, appends otherwise */
-static void AutoRotate_Insert(String* str, int offset, const char* suffix) {
+static void AutoRotate_Insert(cc_string* str, int offset, const char* suffix) {
 	int i = str->length - offset;
 
 	for (; *suffix; suffix++, i++) {
@@ -539,14 +539,14 @@ static void AutoRotate_Insert(String* str, int offset, const char* suffix) {
 	}
 }
 /* finds proper rotated form of a block, based on the given name */
-static int FindRotated(String* name, int offset);
+static int FindRotated(cc_string* name, int offset);
 
-static int GetRotated(String* name, int offset) {
+static int GetRotated(cc_string* name, int offset) {
 	int rotated = FindRotated(name, offset);
 	return rotated == -1 ? Block_FindID(name) : rotated;
 }
 
-static int RotateCorner(String* name, int offset) {
+static int RotateCorner(cc_string* name, int offset) {
 	float x = Game_SelectedPos.Intersect.X - (float)Game_SelectedPos.TranslatedPos.X;
 	float z = Game_SelectedPos.Intersect.Z - (float)Game_SelectedPos.TranslatedPos.Z;
 
@@ -562,7 +562,7 @@ static int RotateCorner(String* name, int offset) {
 	return GetRotated(name, offset);
 }
 
-static int RotateVertical(String* name, int offset) {
+static int RotateVertical(cc_string* name, int offset) {
 	float y = Game_SelectedPos.Intersect.Y - (float)Game_SelectedPos.TranslatedPos.Y;
 
 	if (y >= 0.5f) {
@@ -573,7 +573,7 @@ static int RotateVertical(String* name, int offset) {
 	return GetRotated(name, offset);
 }
 
-static int RotateFence(String* name, int offset) {
+static int RotateFence(cc_string* name, int offset) {
 	float yaw;
 	/* Fence type blocks */
 	yaw = LocalPlayer_Instance.Base.Yaw;
@@ -587,7 +587,7 @@ static int RotateFence(String* name, int offset) {
 	return GetRotated(name, offset);
 }
 
-static int RotatePillar(String* name, int offset) {
+static int RotatePillar(cc_string* name, int offset) {
 	/* Thin pillar type blocks */
 	Face face = Game_SelectedPos.Closest;
 
@@ -601,7 +601,7 @@ static int RotatePillar(String* name, int offset) {
 	return GetRotated(name, offset);
 }
 
-static int RotateDirection(String* name, int offset) {
+static int RotateDirection(cc_string* name, int offset) {
 	float yaw;
 	yaw = LocalPlayer_Instance.Base.Yaw;
 	yaw = LocationUpdate_Clamp(yaw);
@@ -620,8 +620,8 @@ static int RotateDirection(String* name, int offset) {
 
 #define AR_EQ1(s, x)    (dir0 == x && dir1 == '\0')
 #define AR_EQ2(s, x, y) (dir0 == x && dir1 == y)
-static int FindRotated(String* name, int offset) {	
-	String dir;
+static int FindRotated(cc_string* name, int offset) {
+	cc_string dir;
 	char dir0, dir1;
 
 	int dirIndex = String_LastIndexOfAt(name, offset, '-');
@@ -654,8 +654,8 @@ static int FindRotated(String* name, int offset) {
 }
 
 BlockID AutoRotate_RotateBlock(BlockID block) {
-	String str; char strBuffer[STRING_SIZE * 2];
-	String name;
+	cc_string str; char strBuffer[STRING_SIZE * 2];
+	cc_string name;
 	int rotated;
 	
 	name = Block_UNSAFE_GetName(block);

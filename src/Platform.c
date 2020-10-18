@@ -93,7 +93,7 @@ void Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { memset(dst, valu
 void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
 
 CC_NOINLINE static void AbortOnAllocFailed(const char* place) {	
-	String log; char logBuffer[STRING_SIZE+20 + 1];
+	cc_string log; char logBuffer[STRING_SIZE+20 + 1];
 	String_InitArray_NT(log, logBuffer);
 
 	String_Format1(&log, "Out of memory! (when allocating %c)", place);
@@ -171,7 +171,7 @@ void Platform_Log3(const char* format, const void* a1, const void* a2, const voi
 }
 
 void Platform_Log4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
-	String msg; char msgBuffer[512];
+	cc_string msg; char msgBuffer[512];
 	String_InitArray(msg, msgBuffer);
 
 	String_Format4(&msg, format, a1, a2, a3, a4);
@@ -319,7 +319,7 @@ cc_uint64 Stopwatch_Measure(void) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-int Directory_Exists(const String* path) {
+int Directory_Exists(const cc_string* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
@@ -328,7 +328,7 @@ int Directory_Exists(const String* path) {
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-cc_result Directory_Create(const String* path) {
+cc_result Directory_Create(const cc_string* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	BOOL success;
 
@@ -337,7 +337,7 @@ cc_result Directory_Create(const String* path) {
 	return success ? 0 : GetLastError();
 }
 
-int File_Exists(const String* path) {
+int File_Exists(const cc_string* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
@@ -346,8 +346,8 @@ int File_Exists(const String* path) {
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
-cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
-	String path; char pathBuffer[MAX_PATH + 10];
+cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
+	cc_string path; char pathBuffer[MAX_PATH + 10];
 	TCHAR str[NATIVE_STR_LEN];
 	TCHAR* src;
 	WIN32_FIND_DATA entry;
@@ -390,20 +390,20 @@ cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallbac
 	return res == ERROR_NO_MORE_FILES ? 0 : GetLastError();
 }
 
-static cc_result File_Do(cc_file* file, const String* path, DWORD access, DWORD createMode) {
+static cc_result File_Do(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
 	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*file = CreateFile(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
-cc_result File_Open(cc_file* file, const String* path) {
+cc_result File_Open(cc_file* file, const cc_string* path) {
 	return File_Do(file, path, GENERIC_READ, OPEN_EXISTING);
 }
-cc_result File_Create(cc_file* file, const String* path) {
+cc_result File_Create(cc_file* file, const cc_string* path) {
 	return File_Do(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
-cc_result File_OpenOrCreate(cc_file* file, const String* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 	return File_Do(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 
@@ -437,14 +437,14 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 	return *len != INVALID_FILE_SIZE ? 0 : GetLastError();
 }
 #elif defined CC_BUILD_POSIX
-int Directory_Exists(const String* path) {
+int Directory_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	Platform_ConvertString(str, path);
 	return stat(str, &sb) == 0 && S_ISDIR(sb.st_mode);
 }
 
-cc_result Directory_Create(const String* path) {
+cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
@@ -452,15 +452,15 @@ cc_result Directory_Create(const String* path) {
 	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
-int File_Exists(const String* path) {
+int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
 	Platform_ConvertString(str, path);
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
-cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallback callback) {
-	String path; char pathBuffer[FILENAME_SIZE];
+cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
+	cc_string path; char pathBuffer[FILENAME_SIZE];
 	char str[NATIVE_STR_LEN];
 	DIR* dirPtr;
 	struct dirent* entry;
@@ -503,20 +503,20 @@ cc_result Directory_Enum(const String* dirPath, void* obj, Directory_EnumCallbac
 	return res;
 }
 
-static cc_result File_Do(cc_file* file, const String* path, int mode) {
+static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
 }
 
-cc_result File_Open(cc_file* file, const String* path) {
+cc_result File_Open(cc_file* file, const cc_string* path) {
 	return File_Do(file, path, O_RDONLY);
 }
-cc_result File_Create(cc_file* file, const String* path) {
+cc_result File_Create(cc_file* file, const cc_string* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT | O_TRUNC);
 }
-cc_result File_OpenOrCreate(cc_file* file, const String* path) {
+cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 
@@ -795,8 +795,8 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 #ifdef CC_BUILD_WEB
 void Platform_LoadSysFonts(void) { }
 #else
-static void FontDirCallback(const String* path, void* obj) {
-	static const String fonExt = String_FromConst(".fon");
+static void FontDirCallback(const cc_string* path, void* obj) {
+	static const cc_string fonExt = String_FromConst(".fon");
 	/* Completely skip windows .FON files */
 	if (String_CaselessEnds(path, &fonExt)) return;
 	SysFonts_Register(path);
@@ -809,7 +809,7 @@ void Platform_LoadSysFonts(void) {
 	TCHAR winTmp[FILENAME_SIZE];
 	UINT winLen;
 	/* System folder path may not be C:/Windows */
-	String dirs[1];
+	cc_string dirs[1];
 	String_InitArray(dirs[0], winFolder);
 
 	winLen = GetWindowsDirectory(winTmp, FILENAME_SIZE);
@@ -821,28 +821,28 @@ void Platform_LoadSysFonts(void) {
 	String_AppendConst(&dirs[0], "/fonts");
 	
 #elif defined CC_BUILD_ANDROID
-	static const String dirs[3] = {
+	static const cc_string dirs[3] = {
 		String_FromConst("/system/fonts"),
 		String_FromConst("/system/font"),
 		String_FromConst("/data/fonts"),
 	};
 #elif defined CC_BUILD_NETBSD
-	static const String dirs[3] = {
+	static const cc_string dirs[3] = {
 		String_FromConst("/usr/X11R7/lib/X11/fonts"),
 		String_FromConst("/usr/pkg/lib/X11/fonts"),
 		String_FromConst("/usr/pkg/share/fonts")
 	};
 #elif defined CC_BUILD_HAIKU
-	static const String dirs[1] = {
+	static const cc_string dirs[1] = {
 		String_FromConst("/system/data/fonts")
 	};
 #elif defined CC_BUILD_OSX
-	static const String dirs[2] = {
+	static const cc_string dirs[2] = {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
 	};
 #elif defined CC_BUILD_POSIX
-	static const String dirs[2] = {
+	static const cc_string dirs[2] = {
 		String_FromConst("/usr/share/fonts"),
 		String_FromConst("/usr/local/share/fonts")
 	};
@@ -887,7 +887,7 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-cc_result Socket_Connect(cc_socket s, const String* ip, int port) {
+cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
 	struct sockaddr addr;
 	cc_result res;
 
@@ -1029,8 +1029,8 @@ static cc_result Process_RawGetExePath(TCHAR* path, int* len) {
 	return *len ? 0 : GetLastError();
 }
 
-cc_result Process_StartGame(const String* args) {
-	String argv; char argvBuffer[NATIVE_STR_LEN];
+cc_result Process_StartGame(const cc_string* args) {
+	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
 	TCHAR raw[NATIVE_STR_LEN], path[NATIVE_STR_LEN + 1];
 	int len;
 
@@ -1045,31 +1045,31 @@ cc_result Process_StartGame(const String* args) {
 }
 void Process_Exit(cc_result code) { ExitProcess(code); }
 
-void Process_StartOpen(const String* args) {
+void Process_StartOpen(const cc_string* args) {
 	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, args);
 	ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
 }
 #elif defined CC_BUILD_WEB
-cc_result Process_StartGame(const String* args) { return ERR_NOT_SUPPORTED; }
+cc_result Process_StartGame(const cc_string* args) { return ERR_NOT_SUPPORTED; }
 void Process_Exit(cc_result code) { exit(code); }
 
-void Process_StartOpen(const String* args) {
+void Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, args);
 	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
 }
 #elif defined CC_BUILD_ANDROID
 static char gameArgsBuffer[512];
-static String gameArgs = String_FromArray(gameArgsBuffer);
+static cc_string gameArgs = String_FromArray(gameArgsBuffer);
 
-cc_result Process_StartGame(const String* args) {
+cc_result Process_StartGame(const cc_string* args) {
 	String_Copy(&gameArgs, args);
 	return 0; /* TODO: Is there a clean way of handling an error */
 }
 void Process_Exit(cc_result code) { exit(code); }
 
-void Process_StartOpen(const String* args) {
+void Process_StartOpen(const cc_string* args) {
 	JavaCall_String_Void("startOpen", args);
 }
 #elif defined CC_BUILD_POSIX
@@ -1090,7 +1090,7 @@ static cc_result Process_RawStart(const char* path, char** argv) {
 
 static cc_result Process_RawGetExePath(char* path, int* len);
 
-cc_result Process_StartGame(const String* args) {
+cc_result Process_StartGame(const cc_string* args) {
 	char path[NATIVE_STR_LEN], raw[NATIVE_STR_LEN];
 	int i, j, len = 0;
 	char* argv[15];
@@ -1120,7 +1120,7 @@ void Process_Exit(cc_result code) { exit(code); }
 
 /* Opening browser/starting shell is not really standardised */
 #if defined CC_BUILD_OSX
-void Process_StartOpen(const String* args) {
+void Process_StartOpen(const cc_string* args) {
 	UInt8 str[NATIVE_STR_LEN];
 	CFURLRef urlCF;
 	int len;
@@ -1131,7 +1131,7 @@ void Process_StartOpen(const String* args) {
 	CFRelease(urlCF);
 }
 #elif defined CC_BUILD_HAIKU
-void Process_StartOpen(const String* args) {
+void Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	char* cmd[3];
 	Platform_ConvertString(str, args);
@@ -1140,7 +1140,7 @@ void Process_StartOpen(const String* args) {
 	Process_RawStart("open", cmd);
 }
 #else
-void Process_StartOpen(const String* args) {
+void Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	char* cmd[3];
 	Platform_ConvertString(str, args);
@@ -1298,7 +1298,7 @@ cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 /* Don't need special execute permission on windows */
 cc_result Updater_MarkExecutable(void) { return 0; }
 cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
-	static const String path = String_FromConst(UPDATE_FILE);
+	static const cc_string path = String_FromConst(UPDATE_FILE);
 	cc_file file;
 	FILETIME ft;
 	cc_uint64 raw;
@@ -1418,9 +1418,9 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-const String DynamicLib_Ext = String_FromConst(".dll");
+const cc_string DynamicLib_Ext = String_FromConst(".dll");
 
-void* DynamicLib_Load2(const String* path) {
+void* DynamicLib_Load2(const cc_string* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	return LoadLibrary(str);
@@ -1430,21 +1430,21 @@ void* DynamicLib_Get2(void* lib, const char* name) {
 	return GetProcAddress((HMODULE)lib, name);
 }
 
-cc_bool DynamicLib_DescribeError(String* dst) {
+cc_bool DynamicLib_DescribeError(cc_string* dst) {
 	cc_result res = GetLastError();
 	Platform_DescribeError(res, dst);
 	String_Format1(dst, " (error %i)", &res);
 	return true;
 }
 #elif defined CC_BUILD_WEB
-void* DynamicLib_Load2(const String* path)         { return NULL; }
+void* DynamicLib_Load2(const cc_string* path)         { return NULL; }
 void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
-cc_bool DynamicLib_DescribeError(String* dst)      { return false; }
+cc_bool DynamicLib_DescribeError(cc_string* dst)      { return false; }
 #elif defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
 /* Really old mac OS versions don't have the dlopen/dlsym API */
-const String DynamicLib_Ext = String_FromConst(".dylib");
+const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
-void* DynamicLib_Load2(const String* path) {
+void* DynamicLib_Load2(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	return NSAddImage(str, NSADDIMAGE_OPTION_WITH_SEARCHING | 
@@ -1452,7 +1452,7 @@ void* DynamicLib_Load2(const String* path) {
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {
-	String tmp; char tmpBuffer[128];
+	cc_string tmp; char tmpBuffer[128];
 	NSSymbol sym;
 	String_InitArray_NT(tmp, tmpBuffer);
 
@@ -1466,7 +1466,7 @@ void* DynamicLib_Get2(void* lib, const char* name) {
 	return sym ? NSAddressOfSymbol(sym) : NULL;
 }
 
-cc_bool DynamicLib_DescribeError(String* dst) {
+cc_bool DynamicLib_DescribeError(cc_string* dst) {
 	NSLinkEditErrors err = 0;
 	const char* name = "";
 	const char* msg  = "";
@@ -1481,12 +1481,12 @@ cc_bool DynamicLib_DescribeError(String* dst) {
 /* TODO: Should we use .bundle instead of .dylib? */
 
 #ifdef CC_BUILD_OSX
-const String DynamicLib_Ext = String_FromConst(".dylib");
+const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 #else
-const String DynamicLib_Ext = String_FromConst(".so");
+const cc_string DynamicLib_Ext = String_FromConst(".so");
 #endif
 
-void* DynamicLib_Load2(const String* path) {
+void* DynamicLib_Load2(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	Platform_ConvertString(str, path);
 	return dlopen(str, RTLD_NOW);
@@ -1496,14 +1496,14 @@ void* DynamicLib_Get2(void* lib, const char* name) {
 	return dlsym(lib, name);
 }
 
-cc_bool DynamicLib_DescribeError(String* dst) {
+cc_bool DynamicLib_DescribeError(cc_string* dst) {
 	char* err = dlerror();
 	if (err) String_AppendConst(dst, err);
 	return err && err[0];
 }
 #endif
 
-cc_result DynamicLib_Load(const String* path, void** lib) {
+cc_result DynamicLib_Load(const cc_string* path, void** lib) {
 	*lib = DynamicLib_Load2(path);
 	return *lib == NULL;
 }
@@ -1530,7 +1530,7 @@ cc_bool DynamicLib_GetAll(void* lib, const struct DynamicLibSym* syms, int count
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-int Platform_ConvertString(void* data, const String* src) {
+int Platform_ConvertString(void* data, const cc_string* src) {
 	TCHAR* dst = (TCHAR*)data;
 	int i;
 	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
@@ -1554,7 +1554,7 @@ static void Platform_InitStopwatch(void) {
 
 typedef BOOL (WINAPI *FUNC_AttachConsole)(DWORD dwProcessId);
 static void AttachParentConsole(void) {
-	static const String kernel32 = String_FromConst("KERNEL32.DLL");
+	static const cc_string kernel32 = String_FromConst("KERNEL32.DLL");
 	FUNC_AttachConsole attach;
 	void* lib;
 
@@ -1588,7 +1588,7 @@ void Platform_Free(void) {
 	HeapDestroy(heap);
 }
 
-cc_result Platform_Encrypt(const String* key, const void* data, int len, String* dst) {
+cc_result Platform_Encrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
 	DATA_BLOB input, output;
 	int i;
 	input.cbData = len; input.pbData = (BYTE*)data;
@@ -1600,7 +1600,7 @@ cc_result Platform_Encrypt(const String* key, const void* data, int len, String*
 	LocalFree(output.pbData);
 	return 0;
 }
-cc_result Platform_Decrypt(const String* key, const void* data, int len, String* dst) {
+cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
 	DATA_BLOB input, output;
 	int i;
 	input.cbData = len; input.pbData = (BYTE*)data;
@@ -1613,7 +1613,7 @@ cc_result Platform_Decrypt(const String* key, const void* data, int len, String*
 	return 0;
 }
 
-cc_bool Platform_DescribeError(cc_result res, String* dst) {
+cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	TCHAR chars[NATIVE_STR_LEN];
 	res = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 					NULL, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, NATIVE_STR_LEN, NULL);
@@ -1623,7 +1623,7 @@ cc_bool Platform_DescribeError(cc_result res, String* dst) {
 	return true;
 }
 #elif defined CC_BUILD_POSIX
-int Platform_ConvertString(void* data, const String* src) {
+int Platform_ConvertString(void* data, const cc_string* src) {
 	cc_uint8* dst = (cc_uint8*)data;
 	cc_uint8* cur;
 	int i, len = 0;
@@ -1647,7 +1647,7 @@ static void Platform_InitPosix(void) {
 }
 void Platform_Free(void) { }
 
-cc_result Platform_Encrypt(const String* key, const void* data, int len, String* dst) {
+cc_result Platform_Encrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
 	/* TODO: Is there a similar API for macOS/Linux? */
 	/* Fallback to NOT SECURE XOR. Prevents simple reading from options.txt */
 	const cc_uint8* src = data;
@@ -1660,12 +1660,12 @@ cc_result Platform_Encrypt(const String* key, const void* data, int len, String*
 	}
 	return 0;
 }
-cc_result Platform_Decrypt(const String* key, const void* data, int len, String* dst) {
+cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
 	/* TODO: Is there a similar API for macOS/Linux? */
 	return Platform_Encrypt(key, data, len, dst);
 }
 
-cc_bool Platform_DescribeError(cc_result res, String* dst) {
+cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
 
@@ -1743,8 +1743,8 @@ void Platform_Init(void) { Platform_InitPosix(); }
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-static String Platform_NextArg(STRING_REF String* args) {
-	String arg;
+static cc_string Platform_NextArg(STRING_REF cc_string* args) {
+	cc_string arg;
 	int end;
 
 	/* get rid of leading spaces before arg */
@@ -1770,8 +1770,8 @@ static String Platform_NextArg(STRING_REF String* args) {
 	return arg;
 }
 
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
-	String cmdArgs = String_FromReadonly(GetCommandLineA());
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+	cc_string cmdArgs = String_FromReadonly(GetCommandLineA());
 	int i;
 	Platform_NextArg(&cmdArgs); /* skip exe path */
 
@@ -1798,7 +1798,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return SetCurrentDirectory(path) ? 0 : GetLastError();
 }
 #elif defined CC_BUILD_WEB
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
 	argc--; argv++; /* skip executable path argument */
 
@@ -1811,13 +1811,13 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return chdir("/classicube") == -1 ? errno : 0;
 }
 #elif defined CC_BUILD_ANDROID
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	if (!gameArgs.length) return 0;
 	return String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	String dir; char dirBuffer[FILENAME_SIZE + 1];
+	cc_string dir; char dirBuffer[FILENAME_SIZE + 1];
 	String_InitArray_NT(dir, dirBuffer);
 
 	JavaCall_Void_String("getExternalAppDir", &dir);
@@ -1826,14 +1826,14 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	return chdir(dir.buffer) == -1 ? errno : 0;
 }
 #elif defined CC_BUILD_POSIX
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, String* args) {
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
 	argc--; argv++; /* skip executable path argument */
 
 #ifdef CC_BUILD_OSX
 	if (argc) {
-		static const String psn = String_FromConst("-psn_0_");
-		String arg0 = String_FromReadonly(argv[0]);	
+		static const cc_string psn = String_FromConst("-psn_0_");
+		cc_string arg0 = String_FromReadonly(argv[0]);
 		if (String_CaselessStarts(&arg0, &psn)) { argc--; argv++; }
 	}
 #endif
@@ -1875,8 +1875,8 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	}
 
 #ifdef CC_BUILD_OSX
-	static const String bundle = String_FromConst(".app/Contents/MacOS/");
-	String raw = String_Init(path, len, 0);	
+	static const cc_string bundle = String_FromConst(".app/Contents/MacOS/");
+	cc_string raw = String_Init(path, len, 0);
 
 	if (String_CaselessEnds(&raw, &bundle)) {
 		len -= bundle.length;
@@ -1899,15 +1899,15 @@ jobject App_Instance;
 JavaVM* VM_Ptr;
 
 /* JNI helpers */
-String JavaGetString(JNIEnv* env, jstring str) {
-	String dst;
+cc_string JavaGetString(JNIEnv* env, jstring str) {
+	cc_string dst;
 	dst.buffer   = (*env)->GetStringUTFChars(env,  str, NULL);
 	dst.length   = (*env)->GetStringUTFLength(env, str);
 	dst.capacity = dst.length;
 	return dst;
 }
 
-jobject JavaMakeString(JNIEnv* env, const String* str) {
+jobject JavaMakeString(JNIEnv* env, const cc_string* str) {
 	cc_uint8 tmp[2048 + 4];
 	cc_uint8* cur;
 	int i, len = 0;
@@ -1952,7 +1952,7 @@ jobject JavaCallObject(JNIEnv* env, const char* name, const char* sig, jvalue* a
 	return (*env)->CallObjectMethodA(env, App_Instance, method, args);
 }
 
-void JavaCall_String_Void(const char* name, const String* value) {
+void JavaCall_String_Void(const char* name, const cc_string* value) {
 	JNIEnv* env;
 	jvalue args[1];
 	JavaGetCurrentEnv(env);
@@ -1962,7 +1962,7 @@ void JavaCall_String_Void(const char* name, const String* value) {
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
 
-static void ReturnString(JNIEnv* env, jobject obj, String* dst) {
+static void ReturnString(JNIEnv* env, jobject obj, cc_string* dst) {
 	const jchar* src;
 	jsize len;
 	if (!obj) return;
@@ -1974,7 +1974,7 @@ static void ReturnString(JNIEnv* env, jobject obj, String* dst) {
 	(*env)->DeleteLocalRef(env,     obj);
 }
 
-void JavaCall_Void_String(const char* name, String* dst) {
+void JavaCall_Void_String(const char* name, cc_string* dst) {
 	JNIEnv* env;
 	jobject obj;
 	JavaGetCurrentEnv(env);
@@ -1983,7 +1983,7 @@ void JavaCall_Void_String(const char* name, String* dst) {
 	ReturnString(env, obj, dst);
 }
 
-void JavaCall_String_String(const char* name, const String* arg, String* dst) {
+void JavaCall_String_String(const char* name, const cc_string* arg, cc_string* dst) {
 	JNIEnv* env;
 	jobject obj;
 	jvalue args[1];

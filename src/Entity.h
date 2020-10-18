@@ -109,7 +109,7 @@ void Entity_GetPickingBounds(struct Entity* e, struct AABB* bb);
 /* Gets the current collision bounds of the given entity. */
 void Entity_GetBounds(struct Entity* e, struct AABB* bb);
 /* Sets the model of the entity. (i.e its appearance) */
-CC_API void Entity_SetModel(struct Entity* e, const String* model);
+CC_API void Entity_SetModel(struct Entity* e, const cc_string* model);
 /* Updates cached Size and ModelAABB of the given entity. */
 /* NOTE: Only needed when manually changing Model or ModelScale. */
 /* Entity_SetModel already calls this method. */
@@ -122,9 +122,9 @@ cc_bool Entity_TouchesAnyLava(struct Entity* e);
 cc_bool Entity_TouchesAnyWater(struct Entity* e);
 
 /* Sets the nametag above the given entity's head */
-void Entity_SetName(struct Entity* e, const String* name);
+void Entity_SetName(struct Entity* e, const cc_string* name);
 /* Sets the skin name of the given entity. */
-void Entity_SetSkin(struct Entity* e, const String* skin);
+void Entity_SetSkin(struct Entity* e, const cc_string* skin);
 
 /* Global data for all entities */
 /* (Actual entities may point to NetPlayers_List or elsewhere) */
@@ -164,7 +164,7 @@ CC_VAR extern struct _TabListData {
 CC_API void TabList_Remove(EntityID id);
 /* Sets the data for the tab list entry with the given id. */
 /* Raises TabListEvents.Changed if replacing, TabListEvents.Added if a new entry. */
-CC_API void TabList_Set(EntityID id, const String* player, const String* list, const String* group, cc_uint8 rank);
+CC_API void TabList_Set(EntityID id, const cc_string* player, const cc_string* list, const cc_string* group, cc_uint8 rank);
 
 /* Raw unformatted name (for Tab name auto complete) */
 #define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 3);

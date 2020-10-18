@@ -185,9 +185,9 @@ static int anims_count;
 static cc_bool anims_validated, useLavaAnim, useWaterAnim, alwaysLavaAnim, alwaysWaterAnim;
 #define ANIM_MIN_ARGS 7
 
-static void Animations_ReadDescription(struct Stream* stream, const String* path) {
-	String line; char lineBuffer[STRING_SIZE * 2];
-	String parts[ANIM_MIN_ARGS];
+static void Animations_ReadDescription(struct Stream* stream, const cc_string* path) {
+	cc_string line; char lineBuffer[STRING_SIZE * 2];
+	cc_string parts[ANIM_MIN_ARGS];
 	int count;
 	struct AnimationData data = { 0 };
 	cc_uint8 tileX, tileY;
@@ -276,7 +276,7 @@ static void Animations_Apply(struct AnimationData* data) {
 }
 
 static cc_bool Animations_IsDefaultZip(void) {
-	String texPack;
+	cc_string texPack;
 	cc_bool optExists;
 	if (World_TextureUrl.length) return false;
 
@@ -359,7 +359,7 @@ static void OnPackChanged(void* obj) {
 	alwaysWaterAnim = false;
 }
 
-static void OnFileChanged(void* obj, struct Stream* stream, const String* name) {
+static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* name) {
 	cc_result res;
 	if (String_CaselessEqualsConst(name, "animations.png")) {
 		res = Png_Decode(&anims_bmp, stream);

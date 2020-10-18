@@ -87,7 +87,7 @@ if (cpe_extBlocks) {\
 } else { *data++ = (BlockRaw)value; }
 #endif
 
-static String UNSAFE_GetString(cc_uint8* data) {
+static cc_string UNSAFE_GetString(cc_uint8* data) {
 	int i, length = 0;
 	for (i = STRING_SIZE - 1; i >= 0; i--) {
 		char code = data[i];
@@ -103,7 +103,7 @@ static float GetFloat(cc_uint8* data) {
 	return raw.f;
 }
 
-static void ReadString(cc_uint8** ptr, String* str) {
+static void ReadString(cc_uint8** ptr, cc_string* str) {
 	int i, length = 0;
 	cc_uint8* data = *ptr;
 	for (i = STRING_SIZE - 1; i >= 0; i--) {
@@ -116,7 +116,7 @@ static void ReadString(cc_uint8** ptr, String* str) {
 	*ptr = data + STRING_SIZE;
 }
 
-static void WriteString(cc_uint8* data, const String* value) {
+static void WriteString(cc_uint8* data, const cc_string* value) {
 	int i, count = min(value->length, STRING_SIZE);
 	for (i = 0; i < count; i++) {
 		char c = value->buffer[i];
@@ -127,23 +127,23 @@ static void WriteString(cc_uint8* data, const String* value) {
 	for (; i < STRING_SIZE; i++) { data[i] = ' '; }
 }
 
-static void RemoveEndPlus(String* value) {
+static void RemoveEndPlus(cc_string* value) {
 	/* Workaround for MCDzienny (and others) use a '+' at the end to distinguish classicube.net accounts */
 	/* from minecraft.net accounts. Unfortunately they also send this ending + to the client. */
 	if (!value->length || value->buffer[value->length - 1] != '+') return;
 	value->length--;
 }
 
-static void AddTablistEntry(EntityID id, const String* playerName, const String* listName, const String* groupName, cc_uint8 groupRank) {
-	String rawName; char rawBuffer[STRING_SIZE];
+static void AddTablistEntry(EntityID id, const cc_string* playerName, const cc_string* listName, const cc_string* groupName, cc_uint8 groupRank) {
+	cc_string rawName; char rawBuffer[STRING_SIZE];
 	String_InitArray(rawName, rawBuffer);
 
 	String_AppendColorless(&rawName, playerName);
 	TabList_Set(id, &rawName, listName, groupName, groupRank);
 }
 
-static void CheckName(EntityID id, String* name, String* skin) {
-	String colorlessName; char colorlessBuffer[STRING_SIZE];
+static void CheckName(EntityID id, cc_string* name, cc_string* skin) {
+	cc_string colorlessName; char colorlessBuffer[STRING_SIZE];
 
 	RemoveEndPlus(name);
 	/* Server is only allowed to change our own name colours. */
@@ -158,7 +158,7 @@ static void CheckName(EntityID id, String* name, String* skin) {
 }
 
 static void Classic_ReadAbsoluteLocation(cc_uint8* data, EntityID id, cc_bool interpolate);
-static void AddEntity(cc_uint8* data, EntityID id, const String* name, const String* skin, cc_bool readPosition) {
+static void AddEntity(cc_uint8* data, EntityID id, const cc_string* name, const cc_string* skin, cc_bool readPosition) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	struct Entity* e;
 
@@ -223,8 +223,8 @@ static int wom_identifier;
 static cc_bool wom_sendId, wom_sentId;
 
 static void WoM_CheckMotd(void) {
-	String url; char urlBuffer[STRING_SIZE];
-	String motd, host;
+	cc_string url; char urlBuffer[STRING_SIZE];
+	cc_string motd, host;
 	int index;	
 
 	motd = Server.MOTD;
@@ -245,7 +245,7 @@ static void WoM_CheckMotd(void) {
 }
 
 static void WoM_CheckSendWomID(void) {
-	static const String msg = String_FromConst("/womid WoMClient-2.0.7");
+	static const cc_string msg = String_FromConst("/womid WoMClient-2.0.7");
 
 	if (wom_sendId && !wom_sentId) {
 		Chat_Send(&msg, false);
@@ -253,16 +253,16 @@ static void WoM_CheckSendWomID(void) {
 	}
 }
 
-static PackedCol WoM_ParseCol(const String* value, PackedCol defaultCol) {
+static PackedCol WoM_ParseCol(const cc_string* value, PackedCol defaultCol) {
 	int argb;
 	if (!Convert_ParseInt(value, &argb)) return defaultCol;
 	return PackedCol_Make(argb >> 16, argb >> 8, argb, 255);
 }
 
 static void WoM_ParseConfig(struct HttpRequest* item) {
-	String line; char lineBuffer[STRING_SIZE * 2];
+	cc_string line; char lineBuffer[STRING_SIZE * 2];
 	struct Stream mem;
-	String key, value;
+	cc_string key, value;
 	int waterLevel;
 	PackedCol col;
 
@@ -311,7 +311,7 @@ static void WoM_Tick(void) {
 *----------------------------------------------------Classic protocol-----------------------------------------------------*
 *#########################################################################################################################*/
 
-void Classic_SendChat(const String* text, cc_bool partial) {
+void Classic_SendChat(const cc_string* text, cc_bool partial) {
 	cc_uint8 data[66];
 	data[0] = OPCODE_MESSAGE;
 	{
@@ -398,8 +398,8 @@ static void Classic_Ping(cc_uint8* data) { }
 
 #define MAP_SIZE_LEN 4
 static void DisconnectInvalidMap(cc_result res) {
-	static const String title  = String_FromConst("Disconnected");
-	String tmp; char tmpBuffer[STRING_SIZE];
+	static const cc_string title  = String_FromConst("Disconnected");
+	cc_string tmp; char tmpBuffer[STRING_SIZE];
 	String_InitArray(tmp, tmpBuffer);
 
 	String_Format1(&tmp, "Server sent corrupted map data (error %h)", &res);
@@ -576,9 +576,9 @@ static void Classic_SetBlock(cc_uint8* data) {
 }
 
 static void Classic_AddEntity(cc_uint8* data) {
-	static const String group = String_FromConst("Players");
-	String name; char nameBuffer[STRING_SIZE];
-	String skin; char skinBuffer[STRING_SIZE];
+	static const cc_string group = String_FromConst("Players");
+	cc_string name; char nameBuffer[STRING_SIZE];
+	cc_string skin; char skinBuffer[STRING_SIZE];
 	EntityID id;
 	String_InitArray(name, nameBuffer);
 	String_InitArray(skin, skinBuffer);
@@ -645,9 +645,9 @@ static void Classic_RemoveEntity(cc_uint8* data) {
 }
 
 static void Classic_Message(cc_uint8* data) {
-	static const String detailMsg  = String_FromConst("^detail.user=");
-	static const String detailUser = String_FromConst("^detail.user");
-	String text; char textBuffer[STRING_SIZE + 2];
+	static const cc_string detailMsg  = String_FromConst("^detail.user=");
+	static const cc_string detailUser = String_FromConst("^detail.user");
+	cc_string text; char textBuffer[STRING_SIZE + 2];
 
 	cc_uint8 type = *data++;
 	String_InitArray(text, textBuffer);
@@ -669,8 +669,8 @@ static void Classic_Message(cc_uint8* data) {
 }
 
 static void Classic_Kick(cc_uint8* data) {
-	static const String title = String_FromConst("&eLost connection to the server");
-	String reason = UNSAFE_GetString(data);
+	static const cc_string title = String_FromConst("&eLost connection to the server");
+	cc_string reason = UNSAFE_GetString(data);
 	Game_Disconnect(&title, &reason);
 }
 
@@ -796,7 +796,7 @@ static void CPE_SendExtInfo(int extsCount) {
 	Server.SendData(data, 67);
 }
 
-static void CPE_SendExtEntry(const String* extName, int extVersion) {
+static void CPE_SendExtEntry(const cc_string* extName, int extVersion) {
 	cc_uint8 data[69];
 	data[0] = OPCODE_EXT_ENTRY;
 	{
@@ -818,7 +818,7 @@ static void CPE_WriteTwoWayPing(cc_bool serverToClient, int id) {
 
 static void CPE_SendCpeExtInfoReply(void) {
 	int count = Array_Elems(cpe_clientExtensions);
-	String name;
+	cc_string name;
 	int i, ver;
 
 	if (cpe_serverExtensionsCount) return;
@@ -865,9 +865,9 @@ static void CPE_SendCpeExtInfoReply(void) {
 }
 
 static void CPE_ExtInfo(cc_uint8* data) {
-	static const String d3Server = String_FromConst("D3 server");
-	String appName = UNSAFE_GetString(data);
-	cpe_needD3Fix  = String_CaselessStarts(&appName, &d3Server);
+	static const cc_string d3Server = String_FromConst("D3 server");
+	cc_string appName = UNSAFE_GetString(data);
+	cpe_needD3Fix     = String_CaselessStarts(&appName, &d3Server);
 	Chat_Add1("Server software: %s", &appName);
 
 	/* Workaround for old MCGalaxy that send ExtEntry sync but ExtInfo async. */
@@ -877,8 +877,8 @@ static void CPE_ExtInfo(cc_uint8* data) {
 }
 
 static void CPE_ExtEntry(cc_uint8* data) {
-	String ext  = UNSAFE_GetString(data);
-	int version = data[67];
+	cc_string ext = UNSAFE_GetString(data);
+	int version   = data[67];
 	Platform_Log2("cpe ext: %s, %i", &ext, &version);
 
 	cpe_serverExtensionsCount--;
@@ -976,7 +976,7 @@ static void CPE_HoldThis(cc_uint8* data) {
 
 static void CPE_SetTextHotkey(cc_uint8* data) {
 	/* First 64 bytes are label string */
-	String action     = UNSAFE_GetString(&data[64]);
+	cc_string action  = UNSAFE_GetString(&data[64]);
 	cc_uint32 keyCode = Stream_GetU32_BE(&data[128]);
 	cc_uint8 keyMods  = data[132];
 	int key;
@@ -999,10 +999,10 @@ static void CPE_SetTextHotkey(cc_uint8* data) {
 
 static void CPE_ExtAddPlayerName(cc_uint8* data) {
 	EntityID id = data[1]; /* 16 bit id */
-	String playerName = UNSAFE_GetString(&data[2]);
-	String listName   = UNSAFE_GetString(&data[66]);
-	String groupName  = UNSAFE_GetString(&data[130]);
-	cc_uint8 groupRank = data[194];
+	cc_string playerName = UNSAFE_GetString(&data[2]);
+	cc_string listName   = UNSAFE_GetString(&data[66]);
+	cc_string groupName  = UNSAFE_GetString(&data[130]);
+	cc_uint8 groupRank   = data[194];
 
 	RemoveEndPlus(&playerName);
 	RemoveEndPlus(&listName);
@@ -1013,7 +1013,7 @@ static void CPE_ExtAddPlayerName(cc_uint8* data) {
 }
 
 static void CPE_ExtAddEntity(cc_uint8* data) {
-	String name, skin;
+	cc_string name, skin;
 	EntityID id;
 
 	id   = data[0];
@@ -1087,8 +1087,8 @@ static void CPE_SetBlockPermission(cc_uint8* data) {
 
 static void CPE_ChangeModel(cc_uint8* data) {
 	struct Entity* e;
-	EntityID id  = data[0];
-	String model = UNSAFE_GetString(data + 1);
+	EntityID id     = data[0];
+	cc_string model = UNSAFE_GetString(data + 1);
 
 	e = Entities.List[id];
 	if (e) Entity_SetModel(e, &model);
@@ -1135,7 +1135,7 @@ static void CPE_HackControl(cc_uint8* data) {
 }
 
 static void CPE_ExtAddEntity2(cc_uint8* data) {
-	String name, skin;
+	cc_string name, skin;
 	EntityID id;
 
 	id   = data[0];
@@ -1201,7 +1201,7 @@ static void CPE_SetTextColor(cc_uint8* data) {
 }
 
 static void CPE_SetMapEnvUrl(cc_uint8* data) {
-	String url = UNSAFE_GetString(data);
+	cc_string url = UNSAFE_GetString(data);
 
 	if (!url.length || Utils_IsUrlPrefix(&url)) {
 		Server_RetrieveTexturePack(&url);
@@ -1396,7 +1396,7 @@ static void CPE_SpawnEffect(cc_uint8* data) {
 static void CPE_DefineModel(cc_uint8* data) {
 	cc_uint8 id = data[0];
 	struct CustomModel* cm = &custom_models[id];
-	String name;
+	cc_string name;
 	cc_uint8 flags;
 	cc_uint8 numParts;
 
@@ -1433,7 +1433,7 @@ static void CPE_DefineModel(cc_uint8* data) {
 	numParts   = data[114];
 
 	if (numParts > MAX_CUSTOM_MODEL_PARTS) {
-		String msg; char msgBuffer[256];
+		cc_string msg; char msgBuffer[256];
 		String_InitArray(msg, msgBuffer);
 
 		String_Format1(
@@ -1597,7 +1597,7 @@ static TextureLoc BlockDefs_Tex(cc_uint8** ptr) {
 }
 
 static BlockID BlockDefs_DefineBlockCommonStart(cc_uint8** ptr, cc_bool uniqueSideTexs) {
-	String name;
+	cc_string name;
 	BlockID block;
 	cc_bool didBlockLight;
 	float speedLog2;

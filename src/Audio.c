@@ -115,13 +115,13 @@ static void* audio_context;
 static cc_bool alInited;
 
 #if defined CC_BUILD_WIN
-static const String alLib = String_FromConst("openal32.dll");
+static const cc_string alLib = String_FromConst("openal32.dll");
 #elif defined CC_BUILD_OSX
-static const String alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL");
+static const cc_string alLib = String_FromConst("/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL");
 #elif defined CC_BUILD_BSD
-static const String alLib = String_FromConst("libopenal.so");
+static const cc_string alLib = String_FromConst("libopenal.so");
 #else
-static const String alLib = String_FromConst("libopenal.so.1");
+static const cc_string alLib = String_FromConst("libopenal.so.1");
 #endif
 
 #define QUOTE(x) #x
@@ -171,7 +171,7 @@ static void Audio_SysFree(void) {
 }
 
 static cc_bool Audio_SysInit(void) {
-	static const String msg = String_FromConst("Failed to init OpenAL. No audio will play.");
+	static const cc_string msg = String_FromConst("Failed to init OpenAL. No audio will play.");
 	cc_result res;
 	if (alInited) return true;
 
@@ -522,8 +522,8 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	}
 }
 
-static cc_result Sound_ReadWave(const String* filename, struct Sound* snd) {
-	String path; char pathBuffer[FILENAME_SIZE];
+static cc_result Sound_ReadWave(const cc_string* filename, struct Sound* snd) {
+	cc_string path; char pathBuffer[FILENAME_SIZE];
 	struct Stream stream;
 	cc_result res;
 
@@ -539,7 +539,7 @@ static cc_result Sound_ReadWave(const String* filename, struct Sound* snd) {
 	return stream.Close(&stream);
 }
 
-static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const String* name) {
+static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const cc_string* name) {
 	struct SoundGroup* groups = board->groups;
 	int i;
 
@@ -549,8 +549,8 @@ static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const String
 	return NULL;
 }
 
-static void Soundboard_Init(struct Soundboard* board, const String* boardName) {
-	String file, name;
+static void Soundboard_Init(struct Soundboard* board, const cc_string* boardName) {
+	cc_string file, name;
 	struct SoundGroup* group;
 	struct Sound* snd;
 	cc_result res;
@@ -736,8 +736,8 @@ static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
 }
 
 static void Sounds_Init(void) {
-	static const String dig  = String_FromConst("dig_");
-	static const String step = String_FromConst("step_");
+	static const cc_string dig  = String_FromConst("dig_");
+	static const cc_string step = String_FromConst("step_");
 
 	if (digBoard.inited || stepBoard.inited) return;
 	Soundboard_Init(&digBoard,  &dig);
@@ -854,12 +854,12 @@ cleanup:
 
 #define MUSIC_MAX_FILES 512
 static void Music_RunLoop(void) {
-	static const String ogg = String_FromConst(".ogg");
+	static const cc_string ogg = String_FromConst(".ogg");
 	char pathBuffer[FILENAME_SIZE];
-	String path;
+	cc_string path;
 
 	unsigned short musicFiles[MUSIC_MAX_FILES];
-	String file;
+	cc_string file;
 
 	RNGState rnd;
 	struct Stream stream;
@@ -949,14 +949,14 @@ static int Audio_LoadVolume(const char* volKey, const char* boolKey) {
 	return volume;
 }
 
-static void Audio_FilesCallback(const String* path, void* obj) {
-	String relPath = *path; 
+static void Audio_FilesCallback(const cc_string* path, void* obj) {
+	cc_string relPath = *path;
 	Utils_UNSAFE_TrimFirstDirectory(&relPath);
 	StringsBuffer_Add(&files, &relPath);
 }
 
 static void OnInit(void) {
-	static const String path = String_FromConst("audio");
+	static const cc_string path = String_FromConst("audio");
 	int volume;
 
 	Directory_Enum(&path, NULL, Audio_FilesCallback);

@@ -68,28 +68,28 @@ cc_bool Atlas_TryChange(struct Bitmap* bmp);
 TextureRec Atlas1D_TexRec(TextureLoc texLoc, int uCount, int* index);
 
 /* Whether the given URL is in list of accepted URLs. */
-cc_bool TextureCache_HasAccepted(const String* url);
+cc_bool TextureCache_HasAccepted(const cc_string* url);
 /* Whether the given URL is in list of denied URLs. */
-cc_bool TextureCache_HasDenied(const String* url);
+cc_bool TextureCache_HasDenied(const cc_string* url);
 /* Adds the given URL to list of accepted URLs, then saves it. */
 /* Accepted URLs are loaded without prompting the user. */
-void TextureCache_Accept(const String* url);
+void TextureCache_Accept(const cc_string* url);
 /* Adds the given URL to list of denied URLs, then saves it. */
 /* Denied URLs are never loaded. */
-void TextureCache_Deny(const String* url);
+void TextureCache_Deny(const cc_string* url);
 /* Clears the list of denied URLs, returning number removed. */
 int TextureCache_ClearDenied(void);
 
 /* ID of texture pack http request */
 extern int TexturePack_ReqID;
 /* Sets the filename of the default texture pack used. */
-void TexturePack_SetDefault(const String* texPack);
+void TexturePack_SetDefault(const cc_string* texPack);
 /* If World_TextureUrl is empty, extracts user's default texture pack. */
 /* Otherwise extracts the cached texture pack for that URL. */
 void TexturePack_ExtractCurrent(cc_bool forceReload);
 /* Asynchronously downloads a texture pack. */
 /* NOTE: This does not load cached textures - use TexturePack_ExtractCurrent for that. */
-void TexturePack_DownloadAsync(const String* url);
+void TexturePack_DownloadAsync(const cc_string* url);
 /* Extracts a texture pack or terrain.png from given downloaded data. */
 /* Also updates cached data associated with the given URL. */
 void TexturePack_Apply(struct HttpRequest* item);

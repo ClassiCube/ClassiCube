@@ -82,9 +82,9 @@ void Options_SaveIfChanged(void);
 
 /* Sets value to value of option directly in Options.Buffer if found, String_Empty if not. */
 /* Returns whether the option was actually found. */
-STRING_REF cc_bool Options_UNSAFE_Get(const char* keyRaw, String* value);
+STRING_REF cc_bool Options_UNSAFE_Get(const char* keyRaw, cc_string* value);
 /* Returns value of given option, or defalt value if not found. */
-CC_API void Options_Get(const char*        key, String* value, const char* defValue);
+CC_API void Options_Get(const char*        key, cc_string* value, const char* defValue);
 /* Returns value of given option as an integer, or defalt value if could not be converted. */
 CC_API int  Options_GetInt(const char*     key, int min, int max, int defValue);
 /* Returns value of given option as a bool, or defalt value if could not be converted. */
@@ -100,14 +100,14 @@ CC_API void Options_SetBool(const char* keyRaw, cc_bool value);
 /* Sets value of given option to given integer converted to a string. */
 CC_API void Options_SetInt(const char*  keyRaw,  int value);
 /* Sets value of given option to given string. */
-CC_API void Options_Set(const char*     keyRaw,  const String* value);
+CC_API void Options_Set(const char*     keyRaw,  const cc_string* value);
 /* Sets value of given option to given string. */
-CC_API void Options_SetString(const String* key, const String* value);
+CC_API void Options_SetString(const cc_string* key, const cc_string* value);
 
 /* Attempts to securely encode an option. */
 /* NOTE: Not all platforms support secure saving. DO NOT RELY ON THIS BEING SECURE! */
-void Options_SetSecure(const char* opt, const String* data, const String* key);
+void Options_SetSecure(const char* opt, const cc_string* data, const cc_string* key);
 /* Attempts to securely decode an option. */
 /* NOTE: Not all platforms support secure saving. DO NOT RELY ON THIS BEING SECURE! */
-void Options_GetSecure(const char* opt, String* data, const String* key);
+void Options_GetSecure(const char* opt, cc_string* data, const cc_string* key);
 #endif

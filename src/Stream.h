@@ -46,13 +46,13 @@ CC_API cc_result Stream_Write(struct Stream* s, const cc_uint8* buffer, cc_uint3
 void Stream_Init(struct Stream* s);
 
 /* Wrapper for File_Open() then Stream_FromFile() */
-CC_API cc_result Stream_OpenFile(struct Stream* s, const String* path);
+CC_API cc_result Stream_OpenFile(struct Stream* s, const cc_string* path);
 /* Wrapper for File_Create() then Stream_FromFile() */
-CC_API cc_result Stream_CreateFile(struct Stream* s, const String* path);
+CC_API cc_result Stream_CreateFile(struct Stream* s, const cc_string* path);
 /* Wrapper for File_OpenOrCreate, then File_Seek(END), then Stream_FromFile() */
-cc_result Stream_AppendFile(struct Stream* s, const String* path);
+cc_result Stream_AppendFile(struct Stream* s, const cc_string* path);
 /* Creates or overwrites a file, setting the contents to the given data. */
-cc_result Stream_WriteAllTo(const String* path, const cc_uint8* data, cc_uint32 length);
+cc_result Stream_WriteAllTo(const cc_string* path, const cc_uint8* data, cc_uint32 length);
 /* Wraps a file, allowing reading from/writing to/seeking in the file. */
 CC_API void Stream_FromFile(struct Stream* s, cc_file file);
 
@@ -91,7 +91,7 @@ cc_result Stream_ReadU32_BE(struct Stream* s, cc_uint32* value);
 
 /* Reads a line of UTF8 encoded character from the stream. */
 /* NOTE: Reads one byte at a time. May want to use Stream_ReadonlyBuffered. */
-CC_API cc_result Stream_ReadLine(struct Stream* s, String* text);
+CC_API cc_result Stream_ReadLine(struct Stream* s, cc_string* text);
 /* Writes a line of UTF8 encoded text to the stream. */
-CC_API cc_result Stream_WriteLine(struct Stream* s, String* text);
+CC_API cc_result Stream_WriteLine(struct Stream* s, cc_string* text);
 #endif

@@ -69,7 +69,7 @@ static PackedCol Entity_GetCol(struct Entity* e) {
 }
 
 void Entity_Init(struct Entity* e) {
-	static const String model = String_FromConst("humanoid");
+	static const cc_string model = String_FromConst("humanoid");
 	Vec3_Set(e->ModelScale, 1,1,1);
 	e->uScale     = 1.0f;
 	e->vScale     = 1.0f;
@@ -110,7 +110,7 @@ void Entity_GetBounds(struct Entity* e, struct AABB* bb) {
 	AABB_Make(bb, &e->Position, &e->Size);
 }
 
-static void Entity_ParseScale(struct Entity* e, const String* scale) {
+static void Entity_ParseScale(struct Entity* e, const cc_string* scale) {
 	float value;
 	if (!Convert_ParseFloat(scale, &value)) return;
 
@@ -121,8 +121,8 @@ static void Entity_ParseScale(struct Entity* e, const String* scale) {
 	Vec3_Set(e->ModelScale, value,value,value);
 }
 
-static void Entity_SetBlockModel(struct Entity* e, const String* model) {
-	static const String block = String_FromConst("block");
+static void Entity_SetBlockModel(struct Entity* e, const cc_string* model) {
+	static const cc_string block = String_FromConst("block");
 	int raw = Block_Parse(model);
 
 	if (raw == -1) {
@@ -134,8 +134,8 @@ static void Entity_SetBlockModel(struct Entity* e, const String* model) {
 	}
 }
 
-void Entity_SetModel(struct Entity* e, const String* model) {
-	String name, scale;
+void Entity_SetModel(struct Entity* e, const cc_string* model) {
+	cc_string name, scale;
 	Vec3_Set(e->ModelScale, 1,1,1);
 	String_UNSAFE_Separate(model, '|', &name, &scale);
 
@@ -224,7 +224,7 @@ cc_bool Entity_TouchesAnyWater(struct Entity* e) {
 #define NAME_OFFSET 3 /* offset of back layer of name above an entity */
 
 static void MakeNameTexture(struct Entity* e) {
-	String colorlessName; char colorlessBuffer[STRING_SIZE];
+	cc_string colorlessName; char colorlessBuffer[STRING_SIZE];
 	BitmapCol shadowCol = BitmapCol_Make(80, 80, 80, 255);
 	BitmapCol origWhiteCol;
 
@@ -233,7 +233,7 @@ static void MakeNameTexture(struct Entity* e) {
 	struct Bitmap bmp;
 	cc_bool bitmapped;
 	int width, height;
-	String name;
+	cc_string name;
 
 	/* Names are always drawn not using the system font */
 	bitmapped = Drawer2D_BitmappedText;
@@ -310,7 +310,7 @@ CC_NOINLINE static void DeleteNameTex(struct Entity* e) {
 	e->NameTex.X = 0; /* X is used as an 'empty name' flag */
 }
 
-void Entity_SetName(struct Entity* e, const String* name) {
+void Entity_SetName(struct Entity* e, const cc_string* name) {
 	DeleteNameTex(e);
 	String_CopyToRawArray(e->NameRaw, name);
 	/* name texture redraw deferred until necessary */
@@ -322,7 +322,7 @@ void Entity_SetName(struct Entity* e, const String* name) {
 *#########################################################################################################################*/
 static struct Entity* Entity_FirstOtherWithSameSkinAndFetchedSkin(struct Entity* except) {
 	struct Entity* e;
-	String skin, eSkin;
+	cc_string skin, eSkin;
 	int i;
 
 	skin = String_FromRawArray(except->SkinRaw);
@@ -356,7 +356,7 @@ static void Entity_ResetSkin(struct Entity* e) {
 /* Copies or resets skin data for all entity with same skin */
 static void Entity_SetSkinAll(struct Entity* source, cc_bool reset) {
 	struct Entity* e;
-	String skin, eSkin;
+	cc_string skin, eSkin;
 	int i;
 
 	skin = String_FromRawArray(source->SkinRaw);
@@ -435,7 +435,7 @@ static cc_result Entity_EnsurePow2(struct Entity* e, struct Bitmap* bmp) {
 
 static void Entity_CheckSkin(struct Entity* e) {
 	struct Entity* first;
-	String url, skin;
+	cc_string url, skin;
 
 	struct HttpRequest item;
 	struct Stream mem;
@@ -505,8 +505,8 @@ CC_NOINLINE static void DeleteSkin(struct Entity* e) {
 	e->SkinFetchState = 0;
 }
 
-void Entity_SetSkin(struct Entity* e, const String* skin) {
-	String tmp; char tmpBuffer[STRING_SIZE];
+void Entity_SetSkin(struct Entity* e, const cc_string* skin) {
+	cc_string tmp; char tmpBuffer[STRING_SIZE];
 	DeleteSkin(e);
 
 	if (Utils_IsUrlPrefix(skin)) {
@@ -710,8 +710,8 @@ void TabList_Remove(EntityID id) {
 	Event_RaiseInt(&TabListEvents.Removed, id);
 }
 
-void TabList_Set(EntityID id, const String* player, const String* list, const String* group, cc_uint8 rank) {
-	String oldPlayer, oldList, oldGroup;
+void TabList_Set(EntityID id, const cc_string* player, const cc_string* list, const cc_string* group, cc_uint8 rank) {
+	cc_string oldPlayer, oldList, oldGroup;
 	cc_uint8 oldRank;
 	struct Event_Int* events;
 	

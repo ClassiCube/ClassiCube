@@ -28,7 +28,7 @@ struct Event_Float {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_Entry_Callback)(void* obj, struct Stream* stream, const String* name);
+typedef void (*Event_Entry_Callback)(void* obj, struct Stream* stream, const cc_string* name);
 struct Event_Entry {
 	Event_Entry_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
@@ -46,7 +46,7 @@ struct Event_PointerMove {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_Chat_Callback)(void* obj, const String* msg, int msgType);
+typedef void (*Event_Chat_Callback)(void* obj, const cc_string* msg, int msgType);
 struct Event_Chat {
 	Event_Chat_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
@@ -58,7 +58,7 @@ struct Event_Input {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_String_Callback)(void* obj, const String* str);
+typedef void (*Event_String_Callback)(void* obj, const cc_string* str);
 struct Event_String {
 	Event_String_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
@@ -87,7 +87,7 @@ CC_API void Event_RaiseInt(struct Event_Int* handlers, int arg);
 CC_API void Event_RaiseFloat(struct Event_Float* handlers, float arg);
 
 /* Calls all registered callbacks for an event which has data stream and name arguments. */
-void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const String* name);
+void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const cc_string* name);
 /* Calls all registered callbacks for an event which takes block change arguments. */
 /* These are the coordinates/location of the change, block there before, block there now. */
 void Event_RaiseBlock(struct Event_Block* handlers, IVec3 coords, BlockID oldBlock, BlockID block);
@@ -95,12 +95,12 @@ void Event_RaiseBlock(struct Event_Block* handlers, IVec3 coords, BlockID oldBlo
 void Event_RaiseMove(struct Event_PointerMove* handlers, int idx, int xDelta, int yDelta);
 /* Calls all registered callbacks for an event which has chat message type and contents. */
 /* See MsgType enum in Chat.h for what types of messages there are. */
-void Event_RaiseChat(struct Event_Chat* handlers, const String* msg, int msgType);
+void Event_RaiseChat(struct Event_Chat* handlers, const cc_string* msg, int msgType);
 /* Calls all registered callbacks for an event which has keyboard key/mouse button. */
 /* repeating is whether the key/button was already pressed down. (i.e. user is holding down key) */
 void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating);
 /* Calls all registered callbacks for an event which has a string argument. */
-void Event_RaiseString(struct Event_String* handlers, const String* str);
+void Event_RaiseString(struct Event_String* handlers, const cc_string* str);
 /* Calls all registered callbacks for an event which has raw pointer movement arguments. */
 void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDelta);
 

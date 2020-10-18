@@ -29,7 +29,7 @@ CC_VAR extern struct _ServerConnectionData {
 	/* Sends a block update to the server. */
 	void (*SendBlock)(int x, int y, int z, BlockID old, BlockID now);
 	/* Sends a chat message to the server. */
-	void (*SendChat)(const String* text);
+	void (*SendChat)(const cc_string* text);
 	/* Sends a position update to the server. */
 	void (*SendPosition)(Vec3 pos, float yaw, float pitch);
 	/* Sends raw data to the server. */
@@ -37,12 +37,12 @@ CC_VAR extern struct _ServerConnectionData {
 	void (*SendData)(const cc_uint8* data, cc_uint32 len);
 
 	/* The current name of the server. (Shows as first line when loading) */
-	String Name;
+	cc_string Name;
 	/* The current MOTD of the server. (Shows as second line when loading) */
-	String MOTD;
+	cc_string MOTD;
 	/* The software name the client identifies itself as being to the server. */
 	/* By default this is GAME_APP_NAME. */
-	String AppName;
+	cc_string AppName;
 
 	/* Buffer to data to send to the server. */
 	cc_uint8* WriteBuffer;
@@ -61,13 +61,13 @@ CC_VAR extern struct _ServerConnectionData {
 	cc_bool SupportsFullCP437;
 
 	/* IP address of the server if multiplayer, empty string if singleplayer. */
-	String IP;
+	cc_string IP;
 	/* Port of the server if multiplayer, 0 if singleplayer. */
 	int Port;
 } Server;
 
 /* If user hasn't previously accepted url, displays a dialog asking to confirm downloading it. */
 /* Otherwise just calls World_ApplyTexturePack. */
-void Server_RetrieveTexturePack(const String* url);
+void Server_RetrieveTexturePack(const cc_string* url);
 void Net_SendPacket(void);
 #endif

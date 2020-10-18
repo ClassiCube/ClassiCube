@@ -24,16 +24,16 @@ struct DateTime {
 #define SECS_PER_HOUR (60 * 60)
 #define SECS_PER_DAY (60 * 60 * 24)
 
-CC_NOINLINE int Utils_ParseEnum(const String* text, int defValue, const char* const* names, int namesCount);
+CC_NOINLINE int Utils_ParseEnum(const cc_string* text, int defValue, const char* const* names, int namesCount);
 /* Returns whether value starts with http:// or https:// */
-cc_bool Utils_IsUrlPrefix(const String* value);
+cc_bool Utils_IsUrlPrefix(const cc_string* value);
 
 /* Creates the directory if it doesn't exist. (logs failure using Logger_Warn2) */
 cc_bool Utils_EnsureDirectory(const char* dirName);
 /* Gets the filename portion of a path. (e.g. "dir/file.txt" -> "file.txt") */
-void Utils_UNSAFE_GetFilename(STRING_REF String* path);
+void Utils_UNSAFE_GetFilename(STRING_REF cc_string* path);
 /* Gets rid of first directory in a path. (e.g. "dx/gl/aa.txt" -> "gl/aa.txt" */
-void Utils_UNSAFE_TrimFirstDirectory(STRING_REF String* path);
+void Utils_UNSAFE_TrimFirstDirectory(STRING_REF cc_string* path);
 int Utils_AccumulateWheelDelta(float* accumulator, float delta);
 #define Utils_AdjViewDist(value) ((int)(1.4142135f * (value)))
 
@@ -43,7 +43,7 @@ cc_uint32 Utils_CRC32(const cc_uint8* data, cc_uint32 length);
 /* NOTE: This cannot be just indexed by byte value - see Utils_CRC32 implementation. */
 extern const cc_uint32 Utils_Crc32Table[256];
 CC_NOINLINE void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapacity, int expandElems);
-CC_NOINLINE cc_bool Utils_ParseIP(const String* ip, cc_uint8* data);
+CC_NOINLINE cc_bool Utils_ParseIP(const cc_string* ip, cc_uint8* data);
 
 /* Converts blocks of 3 bytes into 4 ASCII characters. (pads if needed) */
 /* Returns the number of ASCII characters written. */
@@ -54,7 +54,7 @@ int Convert_ToBase64(const void* data, int len, char* dst);
 /* NOTE: You MUST ensure that dst is appropriately sized. */
 int Convert_FromBase64(const char* src, int len, cc_uint8* dst);
 
-typedef cc_bool (*EntryList_Filter)(const String* entry);
+typedef cc_bool (*EntryList_Filter)(const cc_string* entry);
 /* Loads the entries from disc. */
 /* NOTE: If separator is \0, does NOT check for duplicate keys when loading. */
 /* filter can be used to optionally skip loading some entries from the file. */
@@ -65,11 +65,11 @@ CC_NOINLINE void EntryList_UNSAFE_Load(struct StringsBuffer* list, const char* f
 /* Saves the entries in the given list to disc. */
 CC_NOINLINE void EntryList_Save(struct StringsBuffer* list, const char* file);
 /* Removes the entry whose key caselessly equals the given key. */
-CC_NOINLINE cc_bool EntryList_Remove(struct StringsBuffer* list, const String* key, char separator);
+CC_NOINLINE cc_bool EntryList_Remove(struct StringsBuffer* list, const cc_string* key, char separator);
 /* Replaces the entry whose key caselessly equals the given key, or adds a new entry. */
-CC_NOINLINE void EntryList_Set(struct StringsBuffer* list, const String* key, const String* value, char separator);
+CC_NOINLINE void EntryList_Set(struct StringsBuffer* list, const cc_string* key, const cc_string* value, char separator);
 /* Returns the value of the entry whose key caselessly equals the given key. */
-CC_NOINLINE STRING_REF String EntryList_UNSAFE_Get(struct StringsBuffer* list, const String* key, char separator);
+CC_NOINLINE STRING_REF cc_string EntryList_UNSAFE_Get(struct StringsBuffer* list, const cc_string* key, char separator);
 /* Finds the index of the entry whose key caselessly equals the given key. */
-CC_NOINLINE int EntryList_Find(struct StringsBuffer* list, const String* key, char separator);
+CC_NOINLINE int EntryList_Find(struct StringsBuffer* list, const cc_string* key, char separator);
 #endif

@@ -139,6 +139,13 @@ typedef cc_uint64 TimeMS;
 typedef struct Rect2D_  { int X, Y, Width, Height; } Rect2D;
 typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 
+typedef struct String_ {
+	char* buffer;       /* Pointer to characters, NOT NULL TERMINATED */
+	cc_uint16 length;   /* Number of characters used */
+	cc_uint16 capacity; /* Max number of characters  */
+} cc_string;
+typedef cc_string String;
+
 /*#define CC_BUILD_GL11*/
 #ifndef CC_BUILD_MANUAL
 #if defined _WIN32

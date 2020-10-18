@@ -68,7 +68,7 @@ struct ScreenVTABLE {
 	/* Returns non-zero if a key character press is handled. */
 	int  (*HandlesKeyPress)(void* elem, char keyChar);
 	/* Returns non-zero if on-screen keyboard text changed is handled. */
-	int  (*HandlesTextChanged)(void* elem, const String* str);
+	int  (*HandlesTextChanged)(void* elem, const cc_string* str);
 	/* Returns non-zero if a pointer press is handled. */
 	int  (*HandlesPointerDown)(void* elem, int id, int x, int y);
 	/* Returns non-zero if a pointer release is handled. */
@@ -214,7 +214,7 @@ struct TextAtlas {
 	short widths[TEXTATLAS_MAX_WIDTHS];
 	short offsets[TEXTATLAS_MAX_WIDTHS];
 };
-void TextAtlas_Make(struct TextAtlas* atlas, const String* chars, struct FontDesc* font, const String* prefix);
+void TextAtlas_Make(struct TextAtlas* atlas, const cc_string* chars, struct FontDesc* font, const cc_string* prefix);
 void TextAtlas_Free(struct TextAtlas* atlas);
 void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** vertices);
 void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured** vertices);

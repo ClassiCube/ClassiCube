@@ -316,7 +316,7 @@ static struct ColoursScreen {
 } ColoursScreen_Instance;
 
 CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, BitmapCol col) {
-	String tmp; char tmpBuffer[3];
+	cc_string tmp; char tmpBuffer[3];
 
 	String_InitArray(tmp, tmpBuffer);
 	String_AppendInt(&tmp, BitmapCol_R(col));
@@ -502,9 +502,9 @@ CC_NOINLINE static void DirectConnectScreen_SetStatus(const char* text) {
 }
 
 static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
-	String addr; char addrBuffer[STRING_SIZE];
-	String mppass; char mppassBuffer[STRING_SIZE];
-	String user, ip, port;
+	cc_string addr; char addrBuffer[STRING_SIZE];
+	cc_string mppass; char mppassBuffer[STRING_SIZE];
+	cc_string user, ip, port;
 	Options_Reload();
 
 	Options_UNSAFE_Get("launcher-dc-username", &user);
@@ -525,13 +525,13 @@ static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
 }
 
 static void DirectConnectScreen_StartClient(void* w, int x, int y) {
-	static const String loopbackIp = String_FromConst("127.0.0.1");
-	static const String defMppass  = String_FromConst("(none)");
-	const String* user   = &DirectConnectScreen_Instance.iptUsername.text;
-	const String* addr   = &DirectConnectScreen_Instance.iptAddress.text;
-	const String* mppass = &DirectConnectScreen_Instance.iptMppass.text;
+	static const cc_string loopbackIp = String_FromConst("127.0.0.1");
+	static const cc_string defMppass  = String_FromConst("(none)");
+	const cc_string* user   = &DirectConnectScreen_Instance.iptUsername.text;
+	const cc_string* addr   = &DirectConnectScreen_Instance.iptAddress.text;
+	const cc_string* mppass = &DirectConnectScreen_Instance.iptMppass.text;
 
-	String ip, port;
+	cc_string ip, port;
 	cc_uint8  raw_ip[4];
 	cc_uint16 raw_port;
 
@@ -676,7 +676,7 @@ static struct MainScreen {
 } MainScreen_Instance;
 
 struct ResumeInfo {
-	String user, ip, port, server, mppass;
+	cc_string user, ip, port, server, mppass;
 	char _userBuffer[STRING_SIZE], _serverBuffer[STRING_SIZE];
 	char _ipBuffer[16], _portBuffer[16], _mppassBuffer[STRING_SIZE];
 	cc_bool valid;
@@ -703,7 +703,7 @@ CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, cc_bool fu
 }
 
 CC_NOINLINE static void MainScreen_Error(struct LWebTask* task, const char* action) {
-	String str; char strBuffer[STRING_SIZE];
+	cc_string str; char strBuffer[STRING_SIZE];
 	struct MainScreen* s = &MainScreen_Instance;
 	String_InitArray(str, strBuffer);
 
@@ -715,8 +715,8 @@ CC_NOINLINE static void MainScreen_Error(struct LWebTask* task, const char* acti
 
 static void MainScreen_DoLogin(void) {
 	struct MainScreen* s = &MainScreen_Instance;
-	String* user = &s->iptUsername.text;
-	String* pass = &s->iptPassword.text;
+	cc_string* user = &s->iptUsername.text;
+	cc_string* pass = &s->iptPassword.text;
 
 	if (!user->length) {
 		LLabel_SetConst(&s->lblStatus, "&eUsername required");
@@ -739,7 +739,7 @@ static void MainScreen_DoLogin(void) {
 static void MainScreen_Login(void* w, int x, int y) { MainScreen_DoLogin(); }
 
 static void MainScreen_Register(void* w, int x, int y) {
-	static const String ccUrl = String_FromConst("https://www.classicube.net/acc/register/");
+	static const cc_string ccUrl = String_FromConst("https://www.classicube.net/acc/register/");
 	Process_StartOpen(&ccUrl);
 }
 
@@ -752,8 +752,8 @@ static void MainScreen_Resume(void* w, int x, int y) {
 }
 
 static void MainScreen_Singleplayer(void* w, int x, int y) {
-	static const String defUser = String_FromConst("Singleplayer");
-	const String* user = &MainScreen_Instance.iptUsername.text;
+	static const cc_string defUser = String_FromConst("Singleplayer");
+	const cc_string* user = &MainScreen_Instance.iptUsername.text;
 
 	if (!user->length) user = &defUser;
 	Launcher_StartGame(user, &String_Empty, &String_Empty, &String_Empty, &String_Empty);
@@ -762,7 +762,7 @@ static void MainScreen_Singleplayer(void* w, int x, int y) {
 static cc_bool MainScreen_PasswordFilter(char c) { return true; }
 
 static void MainScreen_Init(struct LScreen* s_) {
-	String user, pass; char passBuffer[STRING_SIZE];
+	cc_string user, pass; char passBuffer[STRING_SIZE];
 	struct MainScreen* s = (struct MainScreen*)s_;
 	s->widgets = s->_widgets;
 
@@ -830,7 +830,7 @@ static void MainScreen_Layout(struct LScreen* s_) {
 }
 
 static void MainScreen_HoverWidget(struct LScreen* s_, struct LWidget* w) {
-	String str; char strBuffer[STRING_SIZE];
+	cc_string str; char strBuffer[STRING_SIZE];
 	struct MainScreen* s = (struct MainScreen*)s_;
 	struct ResumeInfo info;
 	if (s->signingIn || w != (struct LWidget*)&s->btnResume) return;
@@ -859,9 +859,9 @@ static void MainScreen_UnhoverWidget(struct LScreen* s_, struct LWidget* w) {
 	LWidget_Redraw(&s->lblStatus);
 }
 
-CC_NOINLINE static cc_uint32 MainScreen_GetVersion(const String* version) {
+CC_NOINLINE static cc_uint32 MainScreen_GetVersion(const cc_string* version) {
 	cc_uint8 raw[4] = { 0, 0, 0, 0 };
-	String parts[4];
+	cc_string parts[4];
 	int i, count;
 	
 	/* 1.0.1 -> { 1, 0, 1, 0 } */
@@ -873,7 +873,7 @@ CC_NOINLINE static cc_uint32 MainScreen_GetVersion(const String* version) {
 }
 
 static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
-	static const String currentStr = String_FromConst(GAME_APP_VER);
+	static const cc_string currentStr = String_FromConst(GAME_APP_VER);
 	cc_uint32 latest, current;
 
 	if (!CheckUpdateTask.Base.working)   return;
@@ -1000,7 +1000,7 @@ static void ResourcesScreen_Download(void* w, int x, int y) {
 }
 
 static void ResourcesScreen_Next(void* w, int x, int y) {
-	static const String optionsTxt = String_FromConst("options.txt");
+	static const cc_string optionsTxt = String_FromConst("options.txt");
 	Http_ClearPending();
 
 	if (File_Exists(&optionsTxt)) {
@@ -1011,7 +1011,7 @@ static void ResourcesScreen_Next(void* w, int x, int y) {
 }
 
 static void ResourcesScreen_Init(struct LScreen* s_) {
-	String str; char buffer[STRING_SIZE];
+	cc_string str; char buffer[STRING_SIZE];
 	BitmapCol progressCol = BitmapCol_Make(0, 220, 0, 255);
 	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
 	float size;
@@ -1086,7 +1086,7 @@ static void ResourcesScreen_Draw(struct LScreen* s) {
 	LScreen_Draw(s);
 }
 
-static void ResourcesScreen_SetStatus(const String* str) {
+static void ResourcesScreen_SetStatus(const cc_string* str) {
 	struct LLabel* w = &ResourcesScreen_Instance.lblStatus;
 	ResourcesScreen_ResetArea(w->last.X, w->last.Y, 
 							  w->last.Width, w->last.Height);
@@ -1099,7 +1099,7 @@ static void ResourcesScreen_SetStatus(const String* str) {
 }
 
 static void ResourcesScreen_UpdateStatus(int reqID) {
-	String str; char strBuffer[STRING_SIZE];
+	cc_string str; char strBuffer[STRING_SIZE];
 	const char* name;
 	struct LLabel* w = &ResourcesScreen_Instance.lblStatus;
 	int count;
@@ -1129,7 +1129,7 @@ static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
 }
 
 static void ResourcesScreen_Error(struct ResourcesScreen* s) {
-	String str; char buffer[STRING_SIZE];
+	cc_string str; char buffer[STRING_SIZE];
 	String_InitArray(str, buffer);
 
 	Launcher_DisplayHttpError(Fetcher_Result, Fetcher_StatusCode, "downloading resources", &str);
@@ -1178,7 +1178,7 @@ static struct ServersScreen {
 
 static void ServersScreen_Connect(void* w, int x, int y) {
 	struct LTable* table = &ServersScreen_Instance.table;
-	String* hash         = &ServersScreen_Instance.iptHash.text;
+	cc_string* hash      = &ServersScreen_Instance.iptHash.text;
 
 	if (!hash->length && table->rowsCount) { 
 		hash = &LTable_Get(table->topRow)->hash; 
@@ -1196,7 +1196,7 @@ static void ServersScreen_Refresh(void* w, int x, int y) {
 	LWidget_Redraw(btn);
 }
 
-static void ServersScreen_HashFilter(String* str) {
+static void ServersScreen_HashFilter(cc_string* str) {
 	int lastIndex;
 	if (!str->length) return;
 
@@ -1439,7 +1439,7 @@ static struct UpdatesScreen {
 	cc_bool pendingFetch, release, d3d9;
 } UpdatesScreen_Instance;
 
-CC_NOINLINE static void UpdatesScreen_FormatTime(String* str, char* type, int delta, int unit) {
+CC_NOINLINE static void UpdatesScreen_FormatTime(cc_string* str, char* type, int delta, int unit) {
 	delta /= unit;
 	String_AppendInt(str, delta);
 	String_Append(str, ' ');
@@ -1450,7 +1450,7 @@ CC_NOINLINE static void UpdatesScreen_FormatTime(String* str, char* type, int de
 }
 
 static void UpdatesScreen_Format(struct LLabel* lbl, const char* prefix, cc_uint64 timestamp) {
-	String str; char buffer[STRING_SIZE];
+	cc_string str; char buffer[STRING_SIZE];
 	TimeMS now;
 	int delta;
 
@@ -1484,7 +1484,7 @@ static void UpdatesScreen_FormatBoth(struct UpdatesScreen* s) {
 }
 
 static void UpdatesScreen_DoFetch(struct UpdatesScreen* s) {
-	String str; char strBuffer[STRING_SIZE];
+	cc_string str; char strBuffer[STRING_SIZE];
 	cc_uint64 time;
 	
 	time = s->release ? CheckUpdateTask.relTimestamp : CheckUpdateTask.devTimestamp;
@@ -1527,7 +1527,7 @@ static void UpdatesScreen_CheckTick(struct UpdatesScreen* s) {
 }
 
 static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTask* task) {
-	String str; char strBuffer[STRING_SIZE];
+	cc_string str; char strBuffer[STRING_SIZE];
 	int progress = Http_CheckProgress(task->reqID);
 	if (progress == s->buildProgress) return;
 
@@ -1541,7 +1541,7 @@ static void UpdatesScreen_UpdateProgress(struct UpdatesScreen* s, struct LWebTas
 }
 
 static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
-	String str; char strBuffer[STRING_SIZE];
+	cc_string str; char strBuffer[STRING_SIZE];
 	if (!FetchUpdateTask.Base.working) return;
 
 	LWebTask_Tick(&FetchUpdateTask.Base);

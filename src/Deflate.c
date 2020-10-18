@@ -1122,7 +1122,7 @@ static cc_result Zip_ReadLocalFileHeader(struct ZipState* state, struct ZipEntry
 	cc_uint32 compressedSize, uncompressedSize;
 	int method, pathLen, extraLen;
 
-	String path; char pathBuffer[ZIP_MAXNAMELEN];
+	cc_string path; char pathBuffer[ZIP_MAXNAMELEN];
 	struct Stream portion, compStream;
 	struct InflateState inflate;
 	cc_result res;
@@ -1168,7 +1168,7 @@ static cc_result Zip_ReadCentralDirectory(struct ZipState* state) {
 	struct ZipEntry* entry;
 	cc_uint8 header[42];
 
-	String path; char pathBuffer[ZIP_MAXNAMELEN];
+	cc_string path; char pathBuffer[ZIP_MAXNAMELEN];
 	int pathLen, extraLen, commentLen;
 	cc_result res;
 	if ((res = Stream_Read(stream, header, sizeof(header)))) return res;
@@ -1214,8 +1214,8 @@ enum ZipSig {
 	ZIP_SIG_LOCALFILEHEADER = 0x04034b50
 };
 
-static cc_result Zip_DefaultProcessor(const String* path, struct Stream* data, struct ZipState* s) { return 0; }
-static cc_bool Zip_DefaultSelector(const String* path) { return true; }
+static cc_result Zip_DefaultProcessor(const cc_string* path, struct Stream* data, struct ZipState* s) { return 0; }
+static cc_bool Zip_DefaultSelector(const cc_string* path) { return true; }
 void Zip_Init(struct ZipState* state, struct Stream* input) {
 	state->input = input;
 	state->obj   = NULL;

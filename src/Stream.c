@@ -111,21 +111,21 @@ static cc_result Stream_FileLength(struct Stream* s, cc_uint32* length) {
 	return File_Length(s->Meta.File, length);
 }
 
-cc_result Stream_OpenFile(struct Stream* s, const String* path) {
+cc_result Stream_OpenFile(struct Stream* s, const cc_string* path) {
 	cc_file file;
 	cc_result res = File_Open(&file, path);
 	Stream_FromFile(s, file);
 	return res;
 }
 
-cc_result Stream_CreateFile(struct Stream* s, const String* path) {
+cc_result Stream_CreateFile(struct Stream* s, const cc_string* path) {
 	cc_file file;
 	cc_result res = File_Create(&file, path);
 	Stream_FromFile(s, file);
 	return res;
 }
 
-cc_result Stream_AppendFile(struct Stream* s, const String* path) {
+cc_result Stream_AppendFile(struct Stream* s, const cc_string* path) {
 	cc_file file;
 	cc_result res;
 	
@@ -135,7 +135,7 @@ cc_result Stream_AppendFile(struct Stream* s, const String* path) {
 	return res;
 }
 
-cc_result Stream_WriteAllTo(const String* path, const cc_uint8* data, cc_uint32 length) {
+cc_result Stream_WriteAllTo(const cc_string* path, const cc_uint8* data, cc_uint32 length) {
 	struct Stream stream;
 	cc_result res, closeRes;
 
@@ -440,7 +440,7 @@ cc_result Stream_ReadU32_BE(struct Stream* s, cc_uint32* value) {
 /*########################################################################################################################*
 *--------------------------------------------------Read/Write strings-----------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Stream_ReadLine(struct Stream* s, String* text) {
+cc_result Stream_ReadLine(struct Stream* s, cc_string* text) {
 	cc_bool readAny = false;
 	cc_codepoint cp;
 	cc_result res;
@@ -474,7 +474,7 @@ cc_result Stream_ReadLine(struct Stream* s, String* text) {
 	return readAny ? 0 : ERR_END_OF_STREAM;
 }
 
-cc_result Stream_WriteLine(struct Stream* s, String* text) {
+cc_result Stream_WriteLine(struct Stream* s, cc_string* text) {
 	cc_uint8 buffer[2048 + 10]; /* some space for newline */
 	const char* nl;
 	cc_uint8* cur;

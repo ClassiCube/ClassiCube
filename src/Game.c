@@ -60,8 +60,8 @@ cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 
 static char usernameBuffer[FILENAME_SIZE];
 static char mppassBuffer[STRING_SIZE];
-String Game_Username = String_FromArray(usernameBuffer);
-String Game_Mppass   = String_FromArray(mppassBuffer);
+cc_string Game_Username = String_FromArray(usernameBuffer);
+cc_string Game_Mppass   = String_FromArray(mppassBuffer);
 
 const char* const FpsLimit_Names[FPS_LIMIT_COUNT] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "Limit144FPS", "LimitNone",
@@ -166,7 +166,7 @@ void Game_SetFov(int fov) {
 	Camera_UpdateProjection();
 }
 
-void Game_Disconnect(const String* title, const String* reason) {
+void Game_Disconnect(const cc_string* title, const cc_string* reason) {
 	Event_RaiseVoid(&NetEvents.Disconnected);
 	Game_Reset();
 	DisconnectScreen_Show(title, reason);
@@ -209,7 +209,7 @@ cc_bool Game_CanPick(BlockID block) {
 	return Blocks.Collide[block] != COLLIDE_LIQUID || Game_BreakableLiquids;
 }
 
-cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const String* file, cc_uint8* skinType) {
+cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_string* file, cc_uint8* skinType) {
 	struct Bitmap bmp;
 	cc_bool success;
 	cc_result res;
@@ -228,7 +228,7 @@ cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const Strin
 	return success;
 }
 
-cc_bool Game_ValidateBitmap(const String* file, struct Bitmap* bmp) {
+cc_bool Game_ValidateBitmap(const cc_string* file, struct Bitmap* bmp) {
 	int maxWidth = Gfx.MaxTexWidth, maxHeight = Gfx.MaxTexHeight;
 	if (!bmp->scan0) {
 		Chat_Add1("&cError loading %s from the texture pack.", file);
@@ -288,8 +288,8 @@ static void HandleLowVRAMDetected(void* obj) {
 	Chat_AddRaw("&cOut of VRAM! Halving view distance..");
 }
 
-static void Game_WarnFunc(const String* msg) {
-	String str = *msg, line;
+static void Game_WarnFunc(const cc_string* msg) {
+	cc_string str = *msg, line;
 	while (str.length) {
 		String_UNSAFE_SplitBy(&str, '\n', &line);
 		Chat_Add1("&c%s", &line);
@@ -323,7 +323,7 @@ static void LoadOptions(void) {
 #ifdef CC_BUILD_MINFILES
 static void LoadPlugins(void) { }
 #else
-static void LoadPlugin(const String* path, void* obj) {
+static void LoadPlugin(const cc_string* path, void* obj) {
 	void* lib;
 	void* verSym;  /* EXPORT int Plugin_ApiVersion = GAME_API_VER; */
 	void* compSym; /* EXPORT struct IGameComponent Plugin_Component = { (whatever) } */
@@ -356,7 +356,7 @@ static void LoadPlugin(const String* path, void* obj) {
 }
 
 static void LoadPlugins(void) {
-	static const String dir = String_FromConst("plugins");
+	static const cc_string dir = String_FromConst("plugins");
 	cc_result res;
 
 	res = Directory_Enum(&dir, NULL, LoadPlugin);
@@ -509,8 +509,8 @@ static void PerformScheduledTasks(double time) {
 }
 
 void Game_TakeScreenshot(void) {
-	String filename; char fileBuffer[STRING_SIZE];
-	String path;     char pathBuffer[FILENAME_SIZE];
+	cc_string filename; char fileBuffer[STRING_SIZE];
+	cc_string path;     char pathBuffer[FILENAME_SIZE];
 	struct DateTime now;
 	cc_result res;
 #ifdef CC_BUILD_WEB
@@ -681,7 +681,7 @@ static cc_bool SwitchToGame() {
 }
 #endif
 
-void Game_Run(int width, int height, const String* title) {
+void Game_Run(int width, int height, const cc_string* title) {
 #ifdef CC_BUILD_ANDROID
 	/* Android won't let us change pixel surface to EGL surface */
 	/* So unfortunately have to completely recreate the surface */

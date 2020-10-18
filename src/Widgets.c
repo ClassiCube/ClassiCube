@@ -70,7 +70,7 @@ void TextWidget_Init(struct TextWidget* w) {
 	w->col    = PACKEDCOL_WHITE;
 }
 
-void TextWidget_Set(struct TextWidget* w, const String* text, struct FontDesc* font) {
+void TextWidget_Set(struct TextWidget* w, const cc_string* text, struct FontDesc* font) {
 	struct DrawTextArgs args;
 	Gfx_DeleteTexture(&w->tex.ID);
 
@@ -87,7 +87,7 @@ void TextWidget_Set(struct TextWidget* w, const String* text, struct FontDesc* f
 }
 
 void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc* font) {
-	String str = String_FromReadonly(text);
+	cc_string str = String_FromReadonly(text);
 	TextWidget_Set(w, &str, font);
 }
 
@@ -225,7 +225,7 @@ void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 	w->MenuClick = onClick;
 }
 
-void ButtonWidget_Set(struct ButtonWidget* w, const String* text, struct FontDesc* font) {
+void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct FontDesc* font) {
 	struct DrawTextArgs args;
 	Gfx_DeleteTexture(&w->tex.ID);
 
@@ -243,7 +243,7 @@ void ButtonWidget_Set(struct ButtonWidget* w, const String* text, struct FontDes
 }
 
 void ButtonWidget_SetConst(struct ButtonWidget* w, const char* text, struct FontDesc* font) {
-	String str = String_FromReadonly(text);
+	cc_string str = String_FromReadonly(text);
 	ButtonWidget_Set(w, &str, font);
 }
 
@@ -577,7 +577,7 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 
 void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font) {
 #ifdef CC_BUILD_TOUCH
-	static const String dots = String_FromConst("...");
+	static const cc_string dots = String_FromConst("...");
 	struct DrawTextArgs args;
 	if (!Input_TouchMode) return;
 
@@ -622,8 +622,8 @@ static void TableWidget_MoveCursorToSelected(struct TableWidget* w) {
 	Cursor_SetPosition(x, y);
 }
 
-static void TableWidget_MakeBlockDesc(String* desc, BlockID block) {
-	String name;
+static void TableWidget_MakeBlockDesc(cc_string* desc, BlockID block) {
+	cc_string name;
 	int block_ = block;
 	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
 	if (block == BLOCK_AIR) return;
@@ -654,7 +654,7 @@ static void TableWidget_RecreateDescTex(struct TableWidget* w) {
 }
 
 void TableWidget_MakeDescTex(struct TableWidget* w, BlockID block) {
-	String desc; char descBuffer[STRING_SIZE * 2];
+	cc_string desc; char descBuffer[STRING_SIZE * 2];
 	struct DrawTextArgs args;
 
 	Gfx_DeleteTexture(&w->descTex.ID);
@@ -962,8 +962,8 @@ static void InputWidget_Reset(struct InputWidget* w) {
 	w->OnTextChanged = NULL;
 }
 
-static void InputWidget_FormatLine(struct InputWidget* w, int i, String* line) {
-	String src = w->lines[i];
+static void InputWidget_FormatLine(struct InputWidget* w, int i, cc_string* line) {
+	cc_string src = w->lines[i];
 	if (!w->convertPercents) { String_AppendString(line, &src); return; }
 
 	for (i = 0; i < src.length; i++) {
@@ -974,7 +974,7 @@ static void InputWidget_FormatLine(struct InputWidget* w, int i, String* line) {
 }
 
 static void InputWidget_CalculateLineSizes(struct InputWidget* w) {
-	String line; char lineBuffer[STRING_SIZE];
+	cc_string line; char lineBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	int y;
 
@@ -995,7 +995,7 @@ static void InputWidget_CalculateLineSizes(struct InputWidget* w) {
 }
 
 static char InputWidget_GetLastCol(struct InputWidget* w, int x, int y) {
-	String line; char lineBuffer[STRING_SIZE];
+	cc_string line; char lineBuffer[STRING_SIZE];
 	char col;
 	String_InitArray(line, lineBuffer);
 
@@ -1011,9 +1011,9 @@ static char InputWidget_GetLastCol(struct InputWidget* w, int x, int y) {
 }
 
 static void InputWidget_UpdateCaret(struct InputWidget* w) {
-	static const String caret = String_FromConst("_");
+	static const cc_string caret = String_FromConst("_");
 	BitmapCol col;
-	String line; char lineBuffer[STRING_SIZE];
+	cc_string line; char lineBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
 	int maxChars, lineWidth;
 	char colCode;
@@ -1117,7 +1117,7 @@ static cc_bool InputWidget_TryAppendChar(struct InputWidget* w, char c) {
 	return true;
 }
 
-static int InputWidget_DoAppendText(struct InputWidget* w, const String* text) {
+static int InputWidget_DoAppendText(struct InputWidget* w, const cc_string* text) {
 	int i, appended = 0;
 	for (i = 0; i < text->length; i++) {
 		if (InputWidget_TryAppendChar(w, text->buffer[i])) appended++;
@@ -1125,7 +1125,7 @@ static int InputWidget_DoAppendText(struct InputWidget* w, const String* text) {
 	return appended;
 }
 
-void InputWidget_AppendText(struct InputWidget* w, const String* text) {
+void InputWidget_AppendText(struct InputWidget* w, const cc_string* text) {
 	int appended = InputWidget_DoAppendText(w, text);
 	if (appended) InputWidget_UpdateText(w);
 }
@@ -1224,7 +1224,7 @@ static void InputWidget_EndKey(struct InputWidget* w) {
 	InputWidget_UpdateCaret(w);
 }
 
-static void InputWidget_CopyFromClipboard(String* text, void* w) {
+static void InputWidget_CopyFromClipboard(cc_string* text, void* w) {
 	InputWidget_AppendText((struct InputWidget*)w, text);
 }
 
@@ -1259,7 +1259,7 @@ void InputWidget_UpdateText(struct InputWidget* w) {
 	if (w->OnTextChanged) w->OnTextChanged(w);
 }
 
-void InputWidget_SetText(struct InputWidget* w, const String* str) {
+void InputWidget_SetText(struct InputWidget* w, const cc_string* str) {
 	InputWidget_Clear(w);
 	InputWidget_DoAppendText(w, str);
 	InputWidget_UpdateText(w);
@@ -1303,7 +1303,7 @@ static int InputWidget_KeyDown(void* widget, int key) {
 static int InputWidget_KeyUp(void* widget, int key) { return true; }
 
 static int InputWidget_PointerDown(void* widget, int id, int x, int y) {
-	String line; char lineBuffer[STRING_SIZE];
+	cc_string line; char lineBuffer[STRING_SIZE];
 	struct InputWidget* w = (struct InputWidget*)widget;
 	struct DrawTextArgs args;
 	int cx, cy, offset = 0;
@@ -1345,7 +1345,7 @@ static int InputWidget_PointerDown(void* widget, int id, int x, int y) {
 /*########################################################################################################################*
 *-----------------------------------------------------MenuInputDesc-------------------------------------------------------*
 *#########################################################################################################################*/
-static void Hex_Range(struct MenuInputDesc* d, String* range) {
+static void Hex_Range(struct MenuInputDesc* d, cc_string* range) {
 	String_AppendConst(range, "&7(#000000 - #FFFFFF)");
 }
 
@@ -1353,16 +1353,16 @@ static cc_bool Hex_ValidChar(struct MenuInputDesc* d, char c) {
 	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 }
 
-static cc_bool Hex_ValidString(struct MenuInputDesc* d, const String* s) {
+static cc_bool Hex_ValidString(struct MenuInputDesc* d, const cc_string* s) {
 	return s->length <= 6;
 }
 
-static cc_bool Hex_ValidValue(struct MenuInputDesc* d, const String* s) {
+static cc_bool Hex_ValidValue(struct MenuInputDesc* d, const cc_string* s) {
 	cc_uint8 rgb[3];
 	return PackedCol_TryParseHex(s, rgb);
 }
 
-static void Hex_Default(struct MenuInputDesc* d, String* value) {
+static void Hex_Default(struct MenuInputDesc* d, cc_string* value) {
 	PackedCol_ToHex(value, d->meta.h.Default);
 }
 
@@ -1370,7 +1370,7 @@ const struct MenuInputVTABLE HexInput_VTABLE = {
 	Hex_Range, Hex_ValidChar, Hex_ValidString, Hex_ValidValue, Hex_Default
 };
 
-static void Int_Range(struct MenuInputDesc* d, String* range) {
+static void Int_Range(struct MenuInputDesc* d, cc_string* range) {
 	String_Format2(range, "&7(%i - %i)", &d->meta.i.Min, &d->meta.i.Max);
 }
 
@@ -1378,18 +1378,18 @@ static cc_bool Int_ValidChar(struct MenuInputDesc* d, char c) {
 	return (c >= '0' && c <= '9') || c == '-';
 }
 
-static cc_bool Int_ValidString(struct MenuInputDesc* d, const String* s) {
+static cc_bool Int_ValidString(struct MenuInputDesc* d, const cc_string* s) {
 	int value;
 	if (s->length == 1 && s->buffer[0] == '-') return true; /* input is just a minus sign */
 	return Convert_ParseInt(s, &value);
 }
 
-static cc_bool Int_ValidValue(struct MenuInputDesc* d, const String* s) {
+static cc_bool Int_ValidValue(struct MenuInputDesc* d, const cc_string* s) {
 	int value, min = d->meta.i.Min, max = d->meta.i.Max;
 	return Convert_ParseInt(s, &value) && min <= value && value <= max;
 }
 
-static void Int_Default(struct MenuInputDesc* d, String* value) {
+static void Int_Default(struct MenuInputDesc* d, cc_string* value) {
 	String_AppendInt(value, d->meta.i.Default);
 }
 
@@ -1397,16 +1397,16 @@ const struct MenuInputVTABLE IntInput_VTABLE = {
 	Int_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, Int_Default
 };
 
-static void Seed_Range(struct MenuInputDesc* d, String* range) {
+static void Seed_Range(struct MenuInputDesc* d, cc_string* range) {
 	String_AppendConst(range, "&7(an integer)");
 }
-static void Seed_NoDefault(struct MenuInputDesc* d, String* value) { }
+static void Seed_NoDefault(struct MenuInputDesc* d, cc_string* value) { }
 
 const struct MenuInputVTABLE SeedInput_VTABLE = {
 	Seed_Range, Int_ValidChar, Int_ValidString, Int_ValidValue, Seed_NoDefault
 };
 
-static void Float_Range(struct MenuInputDesc* d, String* range) {
+static void Float_Range(struct MenuInputDesc* d, cc_string* range) {
 	String_Format2(range, "&7(%f2 - %f2)", &d->meta.f.Min, &d->meta.f.Max);
 }
 
@@ -1414,18 +1414,18 @@ static cc_bool Float_ValidChar(struct MenuInputDesc* d, char c) {
 	return (c >= '0' && c <= '9') || c == '-' || c == '.' || c == ',';
 }
 
-static cc_bool Float_ValidString(struct MenuInputDesc* d, const String* s) {
+static cc_bool Float_ValidString(struct MenuInputDesc* d, const cc_string* s) {
 	float value;
 	if (s->length == 1 && Float_ValidChar(d, s->buffer[0])) return true;
 	return Convert_ParseFloat(s, &value);
 }
 
-static cc_bool Float_ValidValue(struct MenuInputDesc* d, const String* s) {
+static cc_bool Float_ValidValue(struct MenuInputDesc* d, const cc_string* s) {
 	float value, min = d->meta.f.Min, max = d->meta.f.Max;
 	return Convert_ParseFloat(s, &value) && min <= value && value <= max;
 }
 
-static void Float_Default(struct MenuInputDesc* d, String* value) {
+static void Float_Default(struct MenuInputDesc* d, cc_string* value) {
 	String_AppendFloat(value, d->meta.f.Default, 3);
 }
 
@@ -1433,7 +1433,7 @@ const struct MenuInputVTABLE FloatInput_VTABLE = {
 	Float_Range, Float_ValidChar, Float_ValidString, Float_ValidValue, Float_Default
 };
 
-static void Path_Range(struct MenuInputDesc* d, String* range) {
+static void Path_Range(struct MenuInputDesc* d, cc_string* range) {
 	String_AppendConst(range, "&7(Enter name)");
 }
 
@@ -1441,13 +1441,13 @@ static cc_bool Path_ValidChar(struct MenuInputDesc* d, char c) {
 	return !(c == '/' || c == '\\' || c == '?' || c == '*' || c == ':'
 		|| c == '<' || c == '>' || c == '|' || c == '"' || c == '.');
 }
-static cc_bool Path_ValidString(struct MenuInputDesc* d, const String* s) { return true; }
+static cc_bool Path_ValidString(struct MenuInputDesc* d, const cc_string* s) { return true; }
 
 const struct MenuInputVTABLE PathInput_VTABLE = {
 	Path_Range, Path_ValidChar, Path_ValidString, Path_ValidString, Seed_NoDefault
 };
 
-static void String_Range(struct MenuInputDesc* d, String* range) {
+static void String_Range(struct MenuInputDesc* d, cc_string* range) {
 	String_AppendConst(range, "&7(Enter text)");
 }
 
@@ -1455,7 +1455,7 @@ static cc_bool String_ValidChar(struct MenuInputDesc* d, char c) {
 	return c != '&';
 }
 
-static cc_bool String_ValidString(struct MenuInputDesc* d, const String* s) {
+static cc_bool String_ValidString(struct MenuInputDesc* d, const cc_string* s) {
 	return s->length <= STRING_SIZE;
 }
 
@@ -1493,7 +1493,7 @@ static int MenuInputWidget_Render2(void* widget, int offset) {
 }
 
 static void MenuInputWidget_RemakeTexture(void* widget) {
-	String range; char rangeBuffer[STRING_SIZE];
+	cc_string range; char rangeBuffer[STRING_SIZE];
 	struct MenuInputWidget* w = (struct MenuInputWidget*)widget;
 	PackedCol backCol = PackedCol_Make(30, 30, 30, 200);
 	struct MenuInputDesc* desc;
@@ -1568,7 +1568,7 @@ static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
 	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove,
 	MenuInputWidget_BuildMesh, MenuInputWidget_Render2
 };
-void MenuInputWidget_Create(struct MenuInputWidget* w, int width, const String* text, struct MenuInputDesc* desc) {
+void MenuInputWidget_Create(struct MenuInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* desc) {
 	InputWidget_Reset(&w->base);
 	w->base.VTABLE = &MenuInputWidget_VTABLE;
 
@@ -1599,10 +1599,10 @@ void MenuInputWidget_SetFont(struct MenuInputWidget* w, struct FontDesc* font) {
 /*########################################################################################################################*
 *-----------------------------------------------------ChatInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-static const String chatInputPrefix = String_FromConst("> ");
+static const cc_string chatInputPrefix = String_FromConst("> ");
 
 static void ChatInputWidget_RemakeTexture(void* widget) {
-	String line; char lineBuffer[STRING_SIZE + 2];
+	cc_string line; char lineBuffer[STRING_SIZE + 2];
 	struct InputWidget* w = (struct InputWidget*)widget;
 	struct DrawTextArgs args;
 	int width = 0, height = 0;
@@ -1681,7 +1681,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 static void ChatInputWidget_OnPressedEnter(void* widget) {
 	struct ChatInputWidget* w = (struct ChatInputWidget*)widget;
 	/* Don't want trailing spaces in output message */
-	String text = w->base.text;
+	cc_string text = w->base.text;
 	String_UNSAFE_TrimEnd(&text);
 	if (text.length) { Chat_Send(&text, true); }
 
@@ -1694,7 +1694,7 @@ static void ChatInputWidget_OnPressedEnter(void* widget) {
 
 static void ChatInputWidget_UpKey(struct InputWidget* w) {
 	struct ChatInputWidget* W = (struct ChatInputWidget*)w;
-	String prevInput;
+	cc_string prevInput;
 	int pos;
 
 	if (Key_IsActionPressed()) {
@@ -1724,7 +1724,7 @@ static void ChatInputWidget_UpKey(struct InputWidget* w) {
 
 static void ChatInputWidget_DownKey(struct InputWidget* w) {
 	struct ChatInputWidget* W = (struct ChatInputWidget*)w;
-	String prevInput;
+	cc_string prevInput;
 
 	if (Key_IsActionPressed()) {
 		if (w->caretPos == -1) return;
@@ -1757,9 +1757,9 @@ static cc_bool ChatInputWidget_IsNameChar(char c) {
 }
 
 static void ChatInputWidget_TabKey(struct InputWidget* w) {
-	String str; char strBuffer[STRING_SIZE];
+	cc_string str; char strBuffer[STRING_SIZE];
 	EntityID matches[TABLIST_MAX_NAMES];
-	String part, name;
+	cc_string part, name;
 	int beg, end, len;
 	int i, j, numMatches;
 	char* buffer;
@@ -2005,7 +2005,7 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 	int begs[TEXTGROUPWIDGET_MAX_LINES];
 	int ends[TEXTGROUPWIDGET_MAX_LINES];
 	struct Portion bit;
-	String line;
+	cc_string line;
 	int nextStart, i, total = 0, end;
 
 	for (i = 0; i < w->lines; i++) {
@@ -2038,7 +2038,7 @@ static int TextGroupWidget_Reduce(struct TextGroupWidget* w, char* chars, int ta
 	return (int)(portions - start);
 }
 
-static void TextGroupWidget_FormatUrl(String* text, const String* url) {
+static void TextGroupWidget_FormatUrl(cc_string* text, const cc_string* url) {
 	char* dst;
 	int i;
 	String_AppendColorless(text, url);
@@ -2053,12 +2053,12 @@ static void TextGroupWidget_FormatUrl(String* text, const String* url) {
 	}
 }
 
-static cc_bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, String* text, int index, int mouseX) {
+static cc_bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, cc_string* text, int index, int mouseX) {
 	char chars[TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN];
 	struct Portion portions[2 * (TEXTGROUPWIDGET_LEN / TEXTGROUPWIDGET_HTTP_LEN)];
 	struct Portion bit;
 	struct DrawTextArgs args = { 0 };
-	String line, url;
+	cc_string line, url;
 	int portionsCount;
 	int i, x, width;
 
@@ -2087,9 +2087,9 @@ static cc_bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, String* text, i
 	return false;
 }
 
-void TextGroupWidget_GetSelected(struct TextGroupWidget* w, String* text, int x, int y) {
+void TextGroupWidget_GetSelected(struct TextGroupWidget* w, cc_string* text, int x, int y) {
 	struct Texture tex;
-	String line;
+	cc_string line;
 	int i;
 
 	for (i = 0; i < w->lines; i++) {
@@ -2106,7 +2106,7 @@ void TextGroupWidget_GetSelected(struct TextGroupWidget* w, String* text, int x,
 }
 
 static cc_bool TextGroupWidget_MightHaveUrls(struct TextGroupWidget* w) {
-	String line;
+	cc_string line;
 	int i;
 
 	for (i = 0; i < w->lines; i++) {
@@ -2116,7 +2116,7 @@ static cc_bool TextGroupWidget_MightHaveUrls(struct TextGroupWidget* w) {
 	return false;
 }
 
-static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Texture* tex, struct DrawTextArgs* args, int index, const String* text) {
+static void TextGroupWidget_DrawAdvanced(struct TextGroupWidget* w, struct Texture* tex, struct DrawTextArgs* args, int index, const cc_string* text) {
 	char chars[TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN];
 	struct Portion portions[2 * (TEXTGROUPWIDGET_LEN / TEXTGROUPWIDGET_HTTP_LEN)];
 	struct Portion bit;
@@ -2163,7 +2163,7 @@ void TextGroupWidget_RedrawAll(struct TextGroupWidget* w) {
 }
 
 void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
-	String text;
+	cc_string text;
 	struct DrawTextArgs args;
 	struct Texture tex = { 0 };
 	Gfx_DeleteTexture(&w->textures[index].ID);
@@ -2188,7 +2188,7 @@ void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index) {
 }
 
 void TextGroupWidget_RedrawAllWithCol(struct TextGroupWidget* group, char col) {
-	String line;
+	cc_string line;
 	int i, j;
 
 	for (i = 0; i < group->lines; i++) {
@@ -2285,7 +2285,7 @@ static cc_bool SpecialInputWidget_IntersectsTitle(struct SpecialInputWidget* w, 
 
 static void SpecialInputWidget_IntersectsBody(struct SpecialInputWidget* w, int x, int y) {
 	struct SpecialInputTab e = w->tabs[w->selectedIndex];
-	String str;
+	cc_string str;
 	int i;
 
 	y -= w->titleHeight;
@@ -2302,7 +2302,7 @@ static void SpecialInputWidget_IntersectsBody(struct SpecialInputWidget* w, int 
 	InputWidget_AppendText(w->target, &str);
 }
 
-static void SpecialInputTab_Init(struct SpecialInputTab* tab, STRING_REF String* title, int itemsPerRow, int charsPerItem, STRING_REF String* contents) {
+static void SpecialInputTab_Init(struct SpecialInputTab* tab, STRING_REF cc_string* title, int itemsPerRow, int charsPerItem, STRING_REF cc_string* contents) {
 	tab->title      = *title;
 	tab->titleWidth = 0;
 	tab->contents   = *contents;
@@ -2311,15 +2311,15 @@ static void SpecialInputTab_Init(struct SpecialInputTab* tab, STRING_REF String*
 }
 
 static void SpecialInputWidget_InitTabs(struct SpecialInputWidget* w) {
-	static String title_cols = String_FromConst("Colours");
-	static String title_math = String_FromConst("Math");
-	static String tab_math   = String_FromConst("\x9F\xAB\xAC\xE0\xE1\xE2\xE3\xE4\xE5\xE6\xE7\xE8\xE9\xEA\xEB\xEC\xED\xEE\xEF\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xFB\xFC\xFD");
-	static String title_line = String_FromConst("Line/Box");
-	static String tab_line   = String_FromConst("\xB0\xB1\xB2\xB3\xB4\xB5\xB6\xB7\xB8\xB9\xBA\xBB\xBC\xBD\xBE\xBF\xC0\xC1\xC2\xC3\xC4\xC5\xC6\xC7\xC8\xC9\xCA\xCB\xCC\xCD\xCE\xCF\xD0\xD1\xD2\xD3\xD4\xD5\xD6\xD7\xD8\xD9\xDA\xDB\xDC\xDD\xDE\xDF\xFE");
-	static String title_letters = String_FromConst("Letters");
-	static String tab_letters   = String_FromConst("\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8A\x8B\x8C\x8D\x8E\x8F\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9A\xA0\xA1\xA2\xA3\xA4\xA5");
-	static String title_other = String_FromConst("Other");
-	static String tab_other   = String_FromConst("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F\x9B\x9C\x9D\x9E\xA6\xA7\xA8\xA9\xAA\xAD\xAE\xAF\xF9\xFA");
+	static cc_string title_cols = String_FromConst("Colours");
+	static cc_string title_math = String_FromConst("Math");
+	static cc_string tab_math   = String_FromConst("\x9F\xAB\xAC\xE0\xE1\xE2\xE3\xE4\xE5\xE6\xE7\xE8\xE9\xEA\xEB\xEC\xED\xEE\xEF\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xFB\xFC\xFD");
+	static cc_string title_line = String_FromConst("Line/Box");
+	static cc_string tab_line   = String_FromConst("\xB0\xB1\xB2\xB3\xB4\xB5\xB6\xB7\xB8\xB9\xBA\xBB\xBC\xBD\xBE\xBF\xC0\xC1\xC2\xC3\xC4\xC5\xC6\xC7\xC8\xC9\xCA\xCB\xCC\xCD\xCE\xCF\xD0\xD1\xD2\xD3\xD4\xD5\xD6\xD7\xD8\xD9\xDA\xDB\xDC\xDD\xDE\xDF\xFE");
+	static cc_string title_letters = String_FromConst("Letters");
+	static cc_string tab_letters   = String_FromConst("\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8A\x8B\x8C\x8D\x8E\x8F\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9A\xA0\xA1\xA2\xA3\xA4\xA5");
+	static cc_string title_other = String_FromConst("Other");
+	static cc_string tab_other   = String_FromConst("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F\x9B\x9C\x9D\x9E\xA6\xA7\xA8\xA9\xAA\xAD\xAE\xAF\xF9\xFA");
 
 	SpecialInputWidget_UpdateColString(w);
 	SpecialInputTab_Init(&w->tabs[0], &title_cols,    10, 4, &w->colString);

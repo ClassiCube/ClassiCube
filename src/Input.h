@@ -143,7 +143,7 @@ enum HotkeyModifiers {
 };
 
 /* Adds or updates a new hotkey. */
-void Hotkeys_Add(int trigger, cc_uint8 modifiers, const String* text, cc_bool more);
+void Hotkeys_Add(int trigger, cc_uint8 modifiers, const cc_string* text, cc_bool more);
 /* Removes the given hotkey. */
 cc_bool Hotkeys_Remove(int trigger, cc_uint8 modifiers);
 /* Returns the first hotkey which is bound to the given key and has its modifiers pressed. */
@@ -155,7 +155,7 @@ void StoredHotkeys_Load(int trigger, cc_uint8 modifiers);
 /* Removes the given hotkey from options. */
 void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers);
 /* Adds the given hotkey from options. */
-void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const String* text);
+void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const cc_string* text);
 
 cc_bool InputHandler_SetFOV(int fov);
 void InputHandler_PickBlocks(void);

@@ -9,12 +9,12 @@
 
 enum FONT_FLAGS { FONT_FLAGS_NONE = 0x00, FONT_FLAGS_BOLD = 0x01, FONT_FLAGS_UNDERLINE = 0x02 };
 struct FontDesc { void* handle; cc_uint16 size, flags; int height; };
-struct DrawTextArgs { String text; struct FontDesc* font; cc_bool useShadow; };
+struct DrawTextArgs { cc_string text; struct FontDesc* font; cc_bool useShadow; };
 struct Texture;
 struct IGameComponent;
 extern struct IGameComponent Drawer2D_Component;
 
-void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const String* text, struct FontDesc* font, cc_bool useShadow);
+void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const cc_string* text, struct FontDesc* font, cc_bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc_bool useShadow);
 /* Initialises the given font. When Drawer2D_BitmappedText is false, creates native font handle using Font_Make. */
 CC_API void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags);
@@ -28,7 +28,7 @@ extern cc_bool Drawer2D_BlackTextShadows;
 extern BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 #define Drawer2D_GetCol(c) Drawer2D_Cols[(cc_uint8)c]
 /* Name of default system font. */
-extern String Drawer2D_FontName;
+extern cc_string Drawer2D_FontName;
 
 /* Clamps the given rectangle to line inside the bitmap. */
 /* Returns false if rectangle is completely outside bitmap's rectangle. */
@@ -80,11 +80,11 @@ CC_API void Drawer2D_MakeTexture(struct Texture* tex, struct Bitmap* bmp, int wi
 
 /* Returns whether the given colour code is used/valid. */
 /* NOTE: This can change if the server defines custom colour codes. */
-cc_bool Drawer2D_ValidColCodeAt(const String* text, int i);
+cc_bool Drawer2D_ValidColCodeAt(const cc_string* text, int i);
 /* Whether text is empty or consists purely of valid colour codes. */
-cc_bool Drawer2D_IsEmptyText(const String* text);
+cc_bool Drawer2D_IsEmptyText(const cc_string* text);
 /* Returns the last valid colour code in the given input, or \0 if not found. */
-char Drawer2D_LastCol(const String* text, int start);
+char Drawer2D_LastCol(const cc_string* text, int start);
 /* Returns whether the colour code is f, F or \0. */
 cc_bool Drawer2D_IsWhiteCol(char c);
 
@@ -99,12 +99,12 @@ CC_API void Font_GetNames(struct StringsBuffer* buffer);
 /* Sets padding for a bitmapped font. */
 void Font_SetPadding(struct FontDesc* desc, int amount);
 /* Finds the path and face number of the given system font, with closest matching style */
-String Font_Lookup(const String* fontName, int flags);
+cc_string Font_Lookup(const cc_string* fontName, int flags);
 /* Allocates a new system font from the given arguments. */
-cc_result Font_Make(struct FontDesc* desc, const String* fontName, int size, int flags);
+cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags);
 /* Frees an allocated font. */
 CC_API void Font_Free(struct FontDesc* desc);
 /* Attempts to decode one or fonts from the given file. */
 /* NOTE: If this file has been decoded before (fontscache.txt), does nothing. */
-void SysFonts_Register(const String* path);
+void SysFonts_Register(const cc_string* path);
 #endif

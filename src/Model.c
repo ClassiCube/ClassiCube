@@ -427,7 +427,7 @@ static void MakeModel(struct Model* model) {
 	Models.Active = active;
 }
 
-struct Model* Model_Get(const String* name) {
+struct Model* Model_Get(const cc_string* name) {
 	struct Model* model;
 
 	for (model = models_head; model; model = model->next) {
@@ -464,7 +464,7 @@ void Model_Unregister(struct Model* model) {
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		struct Entity* e = Entities.List[i];
 		if (e && e->Model == model) {
-			String humanModelName = String_FromReadonly(Models.Human->name);
+			cc_string humanModelName = String_FromReadonly(Models.Human->name);
 			Entity_SetModel(e, &humanModelName);
 		}
 	}
@@ -474,7 +474,7 @@ void Model_RegisterTexture(struct ModelTex* tex) {
 	LinkedList_Append(tex, textures_head, textures_tail);
 }
 
-static void Models_TextureChanged(void* obj, struct Stream* stream, const String* name) {
+static void Models_TextureChanged(void* obj, struct Stream* stream, const cc_string* name) {
 	struct ModelTex* tex;
 
 	for (tex = textures_head; tex; tex = tex->next) {

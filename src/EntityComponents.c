@@ -171,8 +171,8 @@ cc_bool HacksComp_CanJumpHigher(struct HacksComp* hacks) {
 	return hacks->Enabled && hacks->CanSpeed;
 }
 
-static String HacksComp_UNSAFE_FlagValue(const char* flag, struct HacksComp* hacks) {
-	String* joined = &hacks->HacksFlags;
+static cc_string HacksComp_UNSAFE_FlagValue(const char* flag, struct HacksComp* hacks) {
+	cc_string* joined = &hacks->HacksFlags;
 	int beg, end;
 
 	beg = String_IndexOfConst(joined, flag);
@@ -186,7 +186,7 @@ static String HacksComp_UNSAFE_FlagValue(const char* flag, struct HacksComp* hac
 }
 
 static float HacksComp_ParseFlagFloat(const char* flagRaw, struct HacksComp* hacks) {
-	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
+	cc_string raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
 	float value;
 
 	if (!raw.length || Game_ClassicMode)   return 1.0f;
@@ -195,7 +195,7 @@ static float HacksComp_ParseFlagFloat(const char* flagRaw, struct HacksComp* hac
 }
 
 static int HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks) {
-	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
+	cc_string raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
 	int value;
 
 	if (!raw.length || Game_ClassicMode) return 1;
@@ -204,7 +204,7 @@ static int HacksComp_ParseFlagInt(const char* flagRaw, struct HacksComp* hacks) 
 }
 
 static void HacksComp_ParseFlag(struct HacksComp* hacks, const char* include, const char* exclude, cc_bool* target) {
-	String* joined = &hacks->HacksFlags;
+	cc_string* joined = &hacks->HacksFlags;
 	if (String_ContainsConst(joined, include)) {
 		*target = true;
 	} else if (String_ContainsConst(joined, exclude)) {
@@ -213,7 +213,7 @@ static void HacksComp_ParseFlag(struct HacksComp* hacks, const char* include, co
 }
 
 static void HacksComp_ParseAllFlag(struct HacksComp* hacks, const char* include, const char* exclude) {
-	String* joined = &hacks->HacksFlags;
+	cc_string* joined = &hacks->HacksFlags;
 	if (String_ContainsConst(joined, include)) {
 		HacksComp_SetAll(hacks, true);
 	} else if (String_ContainsConst(joined, exclude)) {

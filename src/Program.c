@@ -42,8 +42,8 @@ int main_imdct() {
 #endif
 
 static void RunGame(void) {
-	static const String defPath = String_FromConst("texpacks/default.zip");
-	String title; char titleBuffer[STRING_SIZE];
+	static const cc_string defPath = String_FromConst("texpacks/default.zip");
+	cc_string title; char titleBuffer[STRING_SIZE];
 	int width, height;
 
 #ifndef CC_BUILD_WEB
@@ -68,8 +68,8 @@ static void RunGame(void) {
 }
 
 /* Shows a warning dialog due to an invalid command line argument */
-CC_NOINLINE static void WarnInvalidArg(const char* name, const String* arg) {
-	String tmp; char tmpBuffer[256];
+CC_NOINLINE static void WarnInvalidArg(const char* name, const cc_string* arg) {
+	cc_string tmp; char tmpBuffer[256];
 	String_InitArray(tmp, tmpBuffer);
 	String_Format2(&tmp, "%c '%s'", name, arg);
 
@@ -78,8 +78,8 @@ CC_NOINLINE static void WarnInvalidArg(const char* name, const String* arg) {
 }
 
 /* Shows a warning dialog due to insufficient command line arguments */
-CC_NOINLINE static void WarnMissingArgs(int argsCount, const String* args) {
-	String tmp; char tmpBuffer[256];
+CC_NOINLINE static void WarnMissingArgs(int argsCount, const cc_string* args) {
+	cc_string tmp; char tmpBuffer[256];
 	int i;
 	String_InitArray(tmp, tmpBuffer);
 
@@ -98,15 +98,15 @@ int Program_Run(int argc, char** argv) {
 #else
 static int Program_Run(int argc, char** argv) {
 #endif
-	String args[GAME_MAX_CMDARGS];
+	cc_string args[GAME_MAX_CMDARGS];
 	cc_uint8 ip[4];
 	cc_uint16 port;
 
 	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
 #ifdef _MSC_VER
 	/* NOTE: Make sure to comment this out before pushing a commit */
-	//String rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565");
-	//String rawArgs = String_FromConst("UnknownShadow200"); 
+	//cc_string rawArgs = String_FromConst("UnknownShadow200 fffff 127.0.0.1 25565");
+	//cc_string rawArgs = String_FromConst("UnknownShadow200"); 
 	//argsCount = String_UNSAFE_Split(&rawArgs, ' ', args, 4);
 #endif
 

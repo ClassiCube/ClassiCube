@@ -804,7 +804,7 @@ void EnvRenderer_SetMode(int flags) {
 	OnContextRecreated(NULL);
 }
 
-int EnvRenderer_CalcFlags(const String* mode) {
+int EnvRenderer_CalcFlags(const cc_string* mode) {
 	if (String_CaselessEqualsConst(mode, "legacyfast")) return ENV_LEGACY | ENV_MINIMAL;
 	if (String_CaselessEqualsConst(mode, "legacy"))     return ENV_LEGACY;
 	if (String_CaselessEqualsConst(mode, "normal"))     return 0;
@@ -814,7 +814,7 @@ int EnvRenderer_CalcFlags(const String* mode) {
 }
 
 
-static void OnFileChanged(void* obj, struct Stream* src, const String* name) {
+static void OnFileChanged(void* obj, struct Stream* src, const cc_string* name) {
 	if (String_CaselessEqualsConst(name, "clouds.png")) {
 		Game_UpdateTexture(&clouds_tex, src, name, NULL);
 	} else if (String_CaselessEqualsConst(name, "skybox.png")) {
@@ -866,7 +866,7 @@ static void OnEnvVariableChanged(void* obj, int envVar) {
 *--------------------------------------------------EnvRenderer component--------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
-	String renderType;
+	cc_string renderType;
 	int flags;
 	Options_UNSAFE_Get(OPT_RENDER_TYPE, &renderType);
 
