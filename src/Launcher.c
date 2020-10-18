@@ -195,6 +195,10 @@ static void OnKeyPress(void* obj, int c) {
 	activeScreen->KeyPress(activeScreen, c);
 }
 
+static void OnTextChanged(void* obj, const cc_string* str) {
+	activeScreen->TextChanged(activeScreen, str);
+}
+
 static void OnMouseWheel(void* obj, float delta) {
 	activeScreen->MouseWheel(activeScreen, delta);
 }
@@ -232,9 +236,11 @@ static void Launcher_Init(void) {
 	Event_Register_(&WindowEvents.StateChanged, NULL, OnResize);
 	Event_Register_(&WindowEvents.Redraw,       NULL, ReqeustRedraw);
 
-	Event_Register_(&InputEvents.Down,    NULL, OnInputDown);
-	Event_Register_(&InputEvents.Press,   NULL, OnKeyPress);
-	Event_Register_(&InputEvents.Wheel,   NULL, OnMouseWheel);
+	Event_Register_(&InputEvents.Down,        NULL, OnInputDown);
+	Event_Register_(&InputEvents.Press,       NULL, OnKeyPress);
+	Event_Register_(&InputEvents.Wheel,       NULL, OnMouseWheel);
+	Event_Register_(&InputEvents.TextChanged, NULL, OnTextChanged);
+
 	Event_Register_(&PointerEvents.Down,  NULL, OnPointerDown);
 	Event_Register_(&PointerEvents.Up,    NULL, OnPointerUp);
 	Event_Register_(&PointerEvents.Moved, NULL, OnPointerMove);

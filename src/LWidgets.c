@@ -468,6 +468,11 @@ static void LInput_KeyChar(void* widget, char c) {
 	LInput_Append(w, c);
 }
 
+static void LInput_TextChanged(void* widget, const cc_string* str) {
+	struct LInput* w = (struct LInput*)widget;
+	LInput_SetText(w, str);
+}
+
 static cc_bool LInput_DefaultInputFilter(char c) {
 	return c >= ' ' && c <= '~' && c != '&';
 }
@@ -477,7 +482,8 @@ static const struct LWidgetVTABLE linput_VTABLE = {
 	LInput_KeyDown, LInput_KeyChar, /* Key    */
 	NULL, NULL,                     /* Hover  */
 	/* TODO: Don't redraw whole thing, just the outer border */
-	LInput_Select, LInput_Unselect  /* Select */
+	LInput_Select, LInput_Unselect, /* Select */
+	NULL, LInput_TextChanged        /* TextChanged */
 };
 void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hintText) {
 	w->VTABLE = &linput_VTABLE;

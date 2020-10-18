@@ -24,7 +24,7 @@ Or in other words, in a directory somewhere, you have a file named ```TestPlugin
 #include "src/GameStructs.h"
 
 static void TestPlugin_Init(void) {
-        String msg = String_FromConst("Hello world!");
+        cc_string msg = String_FromConst("Hello world!");
         Chat_Add(&msg);
 }
 

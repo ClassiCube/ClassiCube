@@ -121,6 +121,12 @@ static void LScreen_KeyPress(struct LScreen* s, char key) {
 	s->selectedWidget->VTABLE->KeyPress(s->selectedWidget, key);
 }
 
+static void LScreen_TextChanged(struct LScreen* s, const cc_string* str) {
+	if (!s->selectedWidget) return;
+	if (!s->selectedWidget->VTABLE->TextChanged) return;
+	s->selectedWidget->VTABLE->TextChanged(s->selectedWidget, str);
+}
+
 static void LScreen_MouseDown(struct LScreen* s, int btn) {
 	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
 	struct LWidget* prev = s->selectedWidget;
@@ -179,8 +185,9 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->MouseUp    = LScreen_MouseUp;
 	s->MouseMove  = LScreen_MouseMove;
 	s->MouseWheel = LScreen_MouseWheel;
-	s->HoverWidget    = LScreen_HoverWidget;
-	s->UnhoverWidget  = LScreen_UnhoverWidget;
+	s->HoverWidget   = LScreen_HoverWidget;
+	s->UnhoverWidget = LScreen_UnhoverWidget;
+	s->TextChanged   = LScreen_TextChanged;
 
 	/* reset all widgets mouse state */
 	for (i = 0; i < s->numWidgets; i++) { 
