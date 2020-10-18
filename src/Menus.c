@@ -2237,6 +2237,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	cc_string value; char valueBuffer[STRING_SIZE];
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct ButtonWidget* btn    = (struct ButtonWidget*)widget;
+	struct MenuInputDesc* desc;
 
 	MenuOptionsScreen_FreeExtHelp(s);
 	MenuOptionsScreen_FreeInput(s);
@@ -2244,15 +2245,19 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 
 	String_InitArray(value, valueBuffer);
 	btn->GetValue(&value);
+	desc = &s->descs[s->activeI];
 
-	MenuInputWidget_Create(&s->input, 400, &value, &s->descs[s->activeI]);
+	MenuInputWidget_Create(&s->input, 400, &value, desc);
 	ButtonWidget_Init(&s->ok,          40, MenuOptionsScreen_OK);
 	ButtonWidget_Init(&s->Default,    200, MenuOptionsScreen_Default);
 
 	s->numWidgets = MENUOPTS_MAX_OPTS + 1 + 3;
 	MenuOptionsScreen_Layout(screen);
 	MenuOptionsScreen_RedrawInput(s);
-	Window_OpenKeyboard(&value, KEYBOARD_TYPE_TEXT);
+
+	Window_OpenKeyboard(&value,
+		(desc->VTABLE == &IntInput_VTABLE || desc->VTABLE == &FloatInput_VTABLE)
+		? KEYBOARD_TYPE_NUMBER : KEYBOARD_TYPE_TEXT);
 }
 
 static void MenuOptionsScreen_OnHacksChanged(void* screen) {

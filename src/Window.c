@@ -3524,8 +3524,13 @@ void Window_OpenKeyboard(const cc_string* text, int type) {
 	EM_ASM_({
 		var elem = window.cc_inputElem;
 		if (!elem) {
-			elem = document.createElement('textarea');
-			elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px');
+			if ($1 == 1) {
+				elem = document.createElement('input');
+				elem.setAttribute('inputmode', 'decimal');
+			} else {
+				elem = document.createElement('textarea');
+			}
+			elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px; width: 100%');
 			elem.value = UTF8ToString($0);
 
 			elem.addEventListener('input', 
