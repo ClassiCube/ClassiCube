@@ -3684,6 +3684,14 @@ static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {
 	}
 }
 
+static void JNICALL java_processKeyText(JNIEnv* env, jobject o, jstring str) {
+	cc_string text = JavaGetString(env, str);
+	Platform_Log1("KEY - TEXT %s", &text);
+
+	Event_RaiseString(&InputEvents.TextChanged, &text);
+	(*env)->ReleaseStringUTFChars(env, str, text.buffer);
+}
+
 static void JNICALL java_processMouseDown(JNIEnv* env, jobject o, jint id, jint x, jint y) {
 	Platform_Log3("MOUSE %i - DOWN %i,%i", &id, &x, &y);
 	Input_AddTouch(id, x, y);
@@ -3773,10 +3781,11 @@ static void JNICALL java_onLowMemory(JNIEnv* env, jobject o) {
 	/* TODO: Low memory */
 }
 
-static const JNINativeMethod methods[18] = {
+static const JNINativeMethod methods[19] = {
 	{ "processKeyDown",   "(I)V", java_processKeyDown },
 	{ "processKeyUp",     "(I)V", java_processKeyUp },
 	{ "processKeyChar",   "(I)V", java_processKeyChar },
+	{ "processKeyText",   "(Ljava/lang/String;)V", java_processKeyText },
 
 	{ "processMouseDown", "(III)V", java_processMouseDown },
 	{ "processMouseUp",   "(III)V", java_processMouseUp },
@@ -3959,10 +3968,24 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 
 void Window_OpenKeyboard(const cc_string* text, int type) {
 	JNIEnv* env;
+	jvalue args[2];
 	JavaGetCurrentEnv(env);
-	JavaCallVoid(env, "openKeyboard", "()V", NULL);
+
+	args[0].l = JavaMakeString(env, text);
+	args[1].i = type;
+	JavaCallVoid(env, "openKeyboard", "(Ljava/lang/String;I)V", args);
+	(*env)->DeleteLocalRef(env, args[0].l);
 }
-void Window_SetKeyboardText(const cc_string* text) { }
+
+void Window_SetKeyboardText(const cc_string* text) {
+	JNIEnv* env;
+	jvalue args[1];
+	JavaGetCurrentEnv(env);
+
+	args[0].l = JavaMakeString(env, text);
+	JavaCallVoid(env, "setKeyboardText", "(Ljava/lang/String;)V", args);
+	(*env)->DeleteLocalRef(env, args[0].l);
+}
 
 void Window_CloseKeyboard(void) {
 	JNIEnv* env;
