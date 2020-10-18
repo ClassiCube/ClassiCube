@@ -1,10 +1,11 @@
 #ifndef CC_CHAT_H
 #define CC_CHAT_H
-#include "String.h"
+#include "Core.h"
 /* Manages sending, adding, and logging chat.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
+struct StringsBuffer;
 extern struct IGameComponent Chat_Component;
 
 enum MsgType {

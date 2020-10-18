@@ -1,6 +1,6 @@
 #ifndef CC_WINDOW_H
 #define CC_WINDOW_H
-#include "String.h"
+#include "Core.h"
 /* Abstracts creating and managing the native window.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3 | Based on OpenTK code
 */

@@ -1,6 +1,6 @@
 #ifndef CC_MAPFORMATS_H
 #define CC_MAPFORMATS_H
-#include "String.h"
+#include "Core.h"
 /* Imports/exports a world and associated metadata from/to a particular map file format.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */

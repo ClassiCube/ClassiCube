@@ -1,5 +1,6 @@
 #include "Launcher.h"
 #ifndef CC_BUILD_WEB
+#include "String.h"
 #include "LScreens.h"
 #include "LWidgets.h"
 #include "LWeb.h"

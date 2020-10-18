@@ -12,6 +12,7 @@ struct FontDesc { void* handle; cc_uint16 size, flags; int height; };
 struct DrawTextArgs { cc_string text; struct FontDesc* font; cc_bool useShadow; };
 struct Texture;
 struct IGameComponent;
+struct StringsBuffer;
 extern struct IGameComponent Drawer2D_Component;
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const cc_string* text, struct FontDesc* font, cc_bool useShadow);

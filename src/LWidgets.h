@@ -2,7 +2,6 @@
 #define CC_LWIDGETS_H
 #include "Bitmap.h"
 #include "Constants.h"
-#include "String.h"
 /* Describes and manages individual 2D GUI elements in the launcher.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */

@@ -1,4 +1,5 @@
 #include "Audio.h"
+#include "String.h"
 #include "Logger.h"
 #include "Event.h"
 #include "Block.h"

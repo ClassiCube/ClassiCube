@@ -1,6 +1,6 @@
 #ifndef CC_INPUT_H
 #define CC_INPUT_H
-#include "String.h"
+#include "Core.h"
 /* Manages keyboard, mouse, and touch state.
    Raises events when keys are pressed etc, and implements base handlers for them.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3

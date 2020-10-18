@@ -1,6 +1,6 @@
 #ifndef CC_PLATFORM_H
 #define CC_PLATFORM_H
-#include "String.h"
+#include "Core.h"
 /* Abstracts platform specific memory management, I/O, etc.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */

@@ -117,7 +117,7 @@ void Model_SetupState(struct Model* model, struct Entity* e) {
 	col = e->VTABLE->GetCol(e);
 	Models.Cols[0] = col;
 
-	/* If a model forgets to call Model_ApplyTexture but still tries to draw,
+	/* If a model forgets to call Model_ApplyTexture but still tries to draw, */
 	/* then it is not using the model API properly. */
 	/* So set uScale/vScale to ridiculous defaults to make it obvious */
 	/* TODO: Remove setting this eventually */

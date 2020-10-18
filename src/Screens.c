@@ -19,6 +19,7 @@
 #include "Block.h"
 #include "Menus.h"
 #include "World.h"
+#include "Utils.h"
 
 #define CHAT_MAX_STATUS Array_Elems(Chat_Status)
 #define CHAT_MAX_BOTTOMRIGHT Array_Elems(Chat_BottomRight)

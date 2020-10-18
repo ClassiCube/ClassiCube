@@ -1,6 +1,6 @@
 #ifndef CC_GAME_H
 #define CC_GAME_H
-#include "String.h"
+#include "Core.h"
 /* Represents the game and related structures.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */

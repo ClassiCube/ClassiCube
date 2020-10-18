@@ -1,4 +1,5 @@
 #include "Chat.h"
+#include "String.h"
 #include "Stream.h"
 #include "Platform.h"
 #include "Event.h"

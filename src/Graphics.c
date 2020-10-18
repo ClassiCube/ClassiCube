@@ -1,4 +1,5 @@
 #include "Graphics.h"
+#include "String.h"
 #include "Logger.h"
 #include "Platform.h"
 #include "Window.h"

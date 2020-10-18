@@ -1,5 +1,6 @@
 #include "LWidgets.h"
 #ifndef CC_BUILD_WEB
+#include "String.h"
 #include "Gui.h"
 #include "Drawer2D.h"
 #include "Launcher.h"
@@ -10,6 +11,7 @@
 #include "Platform.h"
 #include "LScreens.h"
 #include "Input.h"
+#include "Utils.h"
 
 static int xBorder, xBorder2, xBorder3, xBorder4;
 static int yBorder, yBorder2, yBorder3, yBorder4;

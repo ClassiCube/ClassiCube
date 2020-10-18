@@ -1,6 +1,5 @@
 #ifndef CC_TEXPACKS_H
 #define CC_TEXPACKS_H
-#include "String.h"
 #include "Bitmap.h"
 /* Contains everything relating to texture packs.
 	- Extracting the textures from a .zip archive

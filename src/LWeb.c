@@ -1,5 +1,6 @@
 #include "LWeb.h"
 #ifndef CC_BUILD_WEB
+#include "String.h"
 #include "Launcher.h"
 #include "Platform.h"
 #include "Stream.h"

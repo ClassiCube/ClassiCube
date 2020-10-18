@@ -1,4 +1,5 @@
 #include "TexturePack.h"
+#include "String.h"
 #include "Constants.h"
 #include "Stream.h"
 #include "World.h"

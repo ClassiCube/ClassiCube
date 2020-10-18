@@ -1,6 +1,5 @@
 #ifndef CC_EVENT_H
 #define CC_EVENT_H
-#include "String.h"
 #include "Vectors.h"
 /* Helper methods for using events, and contains all events.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3

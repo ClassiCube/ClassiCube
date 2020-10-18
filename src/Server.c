@@ -1,4 +1,5 @@
 #include "Server.h"
+#include "String.h"
 #include "BlockPhysics.h"
 #include "Game.h"
 #include "Drawer2D.h"

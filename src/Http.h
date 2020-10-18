@@ -1,13 +1,14 @@
 #ifndef CC_HTTP_H
 #define CC_HTTP_H
 #include "Constants.h"
-#include "Utils.h"
+#include "Core.h"
 /* Aysnchronously performs http GET, HEAD, and POST requests.
    Typically this is used to download skins, texture packs, etc.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 struct ScheduledTask;
+struct StringsBuffer;
 #define URL_MAX_SIZE (STRING_SIZE * 2)
 
 extern struct IGameComponent Http_Component;

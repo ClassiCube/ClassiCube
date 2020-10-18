@@ -1,6 +1,6 @@
 #ifndef CC_DEFLATE_H
 #define CC_DEFLATE_H
-#include "String.h"
+#include "Core.h"
 /* Decodes data compressed using DEFLATE in a streaming manner.
    Partially based off information from
 	https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way

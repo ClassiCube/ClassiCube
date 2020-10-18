@@ -1,7 +1,6 @@
 #ifndef CC_ENTITY_COMPONENTS_H
 #define CC_ENTITY_COMPONENTS_H
 #include "Vectors.h"
-#include "String.h"
 #include "Constants.h"
 /* Various components for entities.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3

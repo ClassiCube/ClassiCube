@@ -9,9 +9,6 @@
 */
 
 #define STRING_INT_CHARS 24
-/* Indicates that a reference to the buffer in a string argument is persisted after the function has completed.
-Thus it is **NOT SAFE** to allocate a string on the stack. */
-#define STRING_REF
 /* Converts a character from A-Z to a-z, otherwise is left untouched. */
 #define Char_MakeLower(c) if ((c) >= 'A' && (c) <= 'Z') { (c) += ' '; }
 

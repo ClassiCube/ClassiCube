@@ -1,4 +1,5 @@
 #include "Protocol.h"
+#include "String.h"
 #include "Deflate.h"
 #include "Server.h"
 #include "Stream.h"
@@ -26,6 +27,7 @@
 #include "Window.h"
 #include "Particle.h"
 #include "Picking.h"
+#include "Utils.h"
 
 #define QUOTE(x) #x
 #define STRINGIFY(val) QUOTE(val)

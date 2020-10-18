@@ -1,6 +1,5 @@
 #ifndef CC_PROTOCOL_H
 #define CC_PROTOCOL_H
-#include "String.h"
 #include "Vectors.h"
 /* Implements network protocols for original classic, CPE, and WoM textures.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3

@@ -145,6 +145,9 @@ typedef struct String_ {
 	cc_uint16 capacity; /* Max number of characters  */
 } cc_string;
 typedef cc_string String;
+/* Indicates that a reference to the buffer in a string argument is persisted after the function has completed.
+Thus it is **NOT SAFE** to allocate a string on the stack. */
+#define STRING_REF
 
 /*#define CC_BUILD_GL11*/
 #ifndef CC_BUILD_MANUAL

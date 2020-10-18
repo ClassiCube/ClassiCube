@@ -1,4 +1,5 @@
 #include "Deflate.h"
+#include "String.h"
 #include "Logger.h"
 #include "Funcs.h"
 #include "Platform.h"

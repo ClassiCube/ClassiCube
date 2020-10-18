@@ -1,6 +1,6 @@
 #ifndef CC_OPTIONS_H
 #define CC_OPTIONS_H
-#include "String.h"
+#include "Core.h"
 /* Manages loading and saving options.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */

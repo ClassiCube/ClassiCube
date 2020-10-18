@@ -1,4 +1,5 @@
 #include "Platform.h"
+#include "String.h"
 #include "Logger.h"
 #include "Stream.h"
 #include "ExtMath.h"

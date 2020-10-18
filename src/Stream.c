@@ -1,4 +1,5 @@
 #include "Stream.h"
+#include "String.h"
 #include "Platform.h"
 #include "Funcs.h"
 #include "Errors.h"

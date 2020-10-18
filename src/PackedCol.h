@@ -1,6 +1,6 @@
 #ifndef CC_PACKEDCOL_H
 #define CC_PACKEDCOL_H
-#include "String.h"
+#include "Core.h"
 /* Manipulates a packed 32 bit RGBA colour, in a format suitable for the native 3D graphics API.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */

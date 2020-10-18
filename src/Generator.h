@@ -1,6 +1,5 @@
 #ifndef CC_MAP_GEN_H
 #define CC_MAP_GEN_H
-#include "String.h"
 #include "ExtMath.h"
 #include "Vectors.h"
 /* Implements flatgrass map generator, and original classic vanilla map generation (with perlin noise)

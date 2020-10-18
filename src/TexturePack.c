@@ -1,4 +1,5 @@
 #include "TexturePack.h"
+#include "String.h"
 #include "Constants.h"
 #include "Stream.h"
 #include "World.h"
@@ -12,6 +13,7 @@
 #include "ExtMath.h"
 #include "Options.h"
 #include "Logger.h"
+#include "Utils.h"
 #include "Chat.h" /* TODO avoid this include */
 
 /*########################################################################################################################*

@@ -1,7 +1,6 @@
 #ifndef CC_LAUNCHER_H
 #define CC_LAUNCHER_H
 #include "Bitmap.h"
-#include "String.h"
 /* Implements the launcher part of the game.
 	Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */

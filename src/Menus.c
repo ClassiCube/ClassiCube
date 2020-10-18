@@ -29,6 +29,7 @@
 #include "Builder.h"
 #include "Logger.h"
 #include "Options.h"
+#include "Utils.h"
 
 /* Describes a menu option button */
 struct MenuOptionDesc {

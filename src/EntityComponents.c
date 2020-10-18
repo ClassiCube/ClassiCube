@@ -1,4 +1,5 @@
 #include "EntityComponents.h"
+#include "String.h"
 #include "ExtMath.h"
 #include "World.h"
 #include "Block.h"

@@ -1,6 +1,6 @@
 #ifndef CC_GUI_H
 #define CC_GUI_H
-#include "String.h"
+#include "Core.h"
 /* Describes and manages 2D GUI elements on screen.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */

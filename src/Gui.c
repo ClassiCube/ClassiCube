@@ -1,4 +1,5 @@
 #include "Gui.h"
+#include "String.h"
 #include "Window.h"
 #include "Game.h"
 #include "Graphics.h"

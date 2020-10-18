@@ -1,4 +1,5 @@
 #include "EnvRenderer.h"
+#include "String.h"
 #include "ExtMath.h"
 #include "World.h"
 #include "Funcs.h"

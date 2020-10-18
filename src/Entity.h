@@ -4,6 +4,7 @@
 #include "Physics.h"
 #include "Constants.h"
 #include "PackedCol.h"
+#include "String.h"
 /* Represents an in-game entity.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */

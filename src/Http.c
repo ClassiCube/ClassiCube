@@ -1,9 +1,11 @@
 #include "Http.h"
+#include "String.h"
 #include "Platform.h"
 #include "Funcs.h"
 #include "Logger.h"
 #include "Stream.h"
 #include "Game.h"
+#include "Utils.h"
 
 void HttpRequest_Free(struct HttpRequest* request) {
 	Mem_Free(request->data);

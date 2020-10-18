@@ -1,4 +1,5 @@
 #include "Logger.h"
+#include "String.h"
 #include "Platform.h"
 #include "Window.h"
 #include "Funcs.h"

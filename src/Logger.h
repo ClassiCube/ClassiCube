@@ -1,6 +1,6 @@
 #ifndef CC_LOGGER_H
 #define CC_LOGGER_H
-#include "String.h"
+#include "Core.h"
 /* Support methods for logging errors.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */

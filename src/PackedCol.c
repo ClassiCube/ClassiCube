@@ -1,4 +1,5 @@
 #include "PackedCol.h"
+#include "String.h"
 #include "ExtMath.h"
 
 PackedCol PackedCol_Scale(PackedCol a, float t) {

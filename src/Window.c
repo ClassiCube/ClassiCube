@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "String.h"
 #include "Platform.h"
 #include "Input.h"
 #include "Event.h"

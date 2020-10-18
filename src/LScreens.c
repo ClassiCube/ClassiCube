@@ -1,5 +1,6 @@
 #include "LScreens.h"
 #ifndef CC_BUILD_WEB
+#include "String.h"
 #include "LWidgets.h"
 #include "LWeb.h"
 #include "Launcher.h"
@@ -15,6 +16,7 @@
 #include "Input.h"
 #include "Options.h"
 #include "Game.h"
+#include "Utils.h"
 
 /*########################################################################################################################*
 *---------------------------------------------------------Screen base-----------------------------------------------------*
