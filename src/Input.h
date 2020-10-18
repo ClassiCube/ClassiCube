@@ -6,6 +6,7 @@
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
+struct StringsBuffer;
 extern struct IGameComponent Input_Component;
 
 enum Key {
@@ -159,6 +160,5 @@ void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const
 
 cc_bool InputHandler_SetFOV(int fov);
 void InputHandler_PickBlocks(void);
-void InputHandler_Init(void);
 void InputHandler_OnScreensChanged(void);
 #endif

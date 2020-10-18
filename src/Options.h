@@ -69,6 +69,7 @@
 #define OPT_CAMERA_MASS "cameramass"
 #define OPT_GRAB_CURSOR "win-grab-cursor"
 
+struct StringsBuffer;
 extern struct StringsBuffer Options;
 /* Frees any memory allocated in storing options. */
 void Options_Free(void);

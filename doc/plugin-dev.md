@@ -49,7 +49,7 @@ Here's the idea for a basic plugin that shows "Hello world" in chat when the gam
 #endif
 
 static void TestPlugin_Init(void) {
-        String msg = String_FromConst("Hello world!");
+        cc_string msg = String_FromConst("Hello world!");
         Chat_Add(&msg);
 }
 

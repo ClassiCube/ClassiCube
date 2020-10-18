@@ -139,12 +139,11 @@ typedef cc_uint64 TimeMS;
 typedef struct Rect2D_  { int X, Y, Width, Height; } Rect2D;
 typedef struct TextureRec_ { float U1, V1, U2, V2; } TextureRec;
 
-typedef struct String_ {
+typedef struct cc_string_ {
 	char* buffer;       /* Pointer to characters, NOT NULL TERMINATED */
 	cc_uint16 length;   /* Number of characters used */
 	cc_uint16 capacity; /* Max number of characters  */
 } cc_string;
-typedef cc_string String;
 /* Indicates that a reference to the buffer in a string argument is persisted after the function has completed.
 Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define STRING_REF
