@@ -22,6 +22,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
+import android.text.Selection;
 import android.text.SpannableStringBuilder;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -392,10 +393,18 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 
 			InputConnection ic = new BaseInputConnection(this, true) {
 				SpannableStringBuilder kbText = new SpannableStringBuilder(MainActivity.this.keyboardText);
+				boolean inited;
 				void updateText() { MainActivity.this.pushCmd(CMD_KEY_TEXT, kbText.toString()); }
 
 				@Override
-				public Editable getEditable() { return kbText; }
+				public Editable getEditable() {
+					if (!inited) {
+						// otherwise random crashes later with backspacing
+						Selection.setSelection(kbText, 0);
+						inited = true;
+					}
+					return kbText;
+				}
 
 				@Override
 				public boolean setComposingText(CharSequence text, int newCursorPosition) {
