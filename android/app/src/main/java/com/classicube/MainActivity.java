@@ -399,8 +399,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 				@Override
 				public Editable getEditable() {
 					if (!inited) {
-						// otherwise random crashes later with backspacing
-						Selection.setSelection(kbText, 0);
+						// needed to set selection, otherwise random crashes later with backspacing
+						// set selection to end, so backspacing after opening keyboard with text still works
+						Selection.setSelection(kbText, kbText.toString().length());
 						inited = true;
 					}
 					return kbText;
