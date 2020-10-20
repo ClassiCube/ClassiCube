@@ -20,6 +20,10 @@ import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.Selection;
+import android.text.SpannableStringBuilder;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -33,6 +37,10 @@ import android.view.WindowManager;
 import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.Window;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethod;
 import android.view.inputmethod.InputMethodManager;
 
 // implements InputQueue.Callback
@@ -42,7 +50,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	// ======================================
 	// -------------- COMMANDS --------------
 	// ======================================
-	class NativeCmdArgs { public int cmd, arg1, arg2, arg3; public Surface sur; }
+	class NativeCmdArgs { public int cmd, arg1, arg2, arg3; public String str; public Surface sur; }
 	Queue<NativeCmdArgs> nativeCmds = new ConcurrentLinkedQueue<NativeCmdArgs>();
 	Queue<NativeCmdArgs> freeCmds   = new ConcurrentLinkedQueue<NativeCmdArgs>();
 	
@@ -66,10 +74,17 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	
 	void pushCmd(int cmd, int a1, int a2, int a3) {
 		NativeCmdArgs args = getCmdArgs();
-		args.cmd  = cmd;
+		args.cmd = cmd;
 		args.arg1 = a1;
 		args.arg2 = a2;
 		args.arg3 = a3;
+		nativeCmds.add(args);
+	}
+
+	void pushCmd(int cmd, String text) {
+		NativeCmdArgs args = getCmdArgs();
+		args.cmd = cmd;
+		args.str = text;
 		nativeCmds.add(args);
 	}
 	
@@ -83,6 +98,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	final static int CMD_KEY_DOWN = 0;
 	final static int CMD_KEY_UP   = 1;
 	final static int CMD_KEY_CHAR = 2;
+	final static int CMD_KEY_TEXT = 19;
 	
 	final static int CMD_MOUSE_DOWN = 3;
 	final static int CMD_MOUSE_UP   = 4;
@@ -108,9 +124,11 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	// --------------- EVENTS ---------------
 	// ======================================
 	static boolean gameHooked;
+	InputMethodManager input;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		input = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 		Log.i("CC_WIN", "CREATE EVENT");
 		Window window = getWindow();
 		Log.i("CC_WIN", "GAME RUNNING?" + gameHooked);
@@ -248,6 +266,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 			case CMD_KEY_DOWN: processKeyDown(c.arg1); break;
 			case CMD_KEY_UP:   processKeyUp(c.arg1);   break;
 			case CMD_KEY_CHAR: processKeyChar(c.arg1); break;
+			case CMD_KEY_TEXT: processKeyText(c.str);  break;
 	
 			case CMD_MOUSE_DOWN: processMouseDown(c.arg1, c.arg2, c.arg3); break;
 			case CMD_MOUSE_UP:   processMouseUp(c.arg1,   c.arg2, c.arg3); break;
@@ -269,7 +288,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 			//case CMD_CONFIG_CHANGED: processOnConfigChanged(); break;
 			case CMD_LOW_MEMORY:	 processOnLowMemory();	 break;
 			}
-			
+
+			c.str = null;
 			c.sur = null; // don't keep a reference to it
 			freeCmds.add(c);
 		}
@@ -278,6 +298,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	native void processKeyDown(int code);
 	native void processKeyUp(int code);
 	native void processKeyChar(int code);
+	native void processKeyText(String str);
 	
 	native void processMouseDown(int id, int x, int y);
 	native void processMouseUp(int id, int x, int y);
@@ -351,14 +372,65 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		setContentView(curView);
 		curView.requestFocus();
 	}
-	
+
 	class LauncherView extends SurfaceView {
-		
-		public LauncherView(Context context) { super(context); }
-		
+		public LauncherView(Context context) {
+			super(context);
+			setFocusable(true);
+			setFocusableInTouchMode(true);
+		}
+
 		@Override
 		public boolean dispatchTouchEvent(MotionEvent ev) {
 			return MainActivity.this.handleTouchEvent(ev) || super.dispatchTouchEvent(ev);
+		}
+
+		@Override
+		public InputConnection onCreateInputConnection(EditorInfo attrs) {
+			attrs.actionLabel = null;
+			attrs.inputType   = MainActivity.this.getKeyboardType();
+			attrs.imeOptions  = EditorInfo.IME_ACTION_GO;
+
+			InputConnection ic = new BaseInputConnection(this, true) {
+				SpannableStringBuilder kbText = new SpannableStringBuilder(MainActivity.this.keyboardText);
+				boolean inited;
+				void updateText() { MainActivity.this.pushCmd(CMD_KEY_TEXT, kbText.toString()); }
+
+				@Override
+				public Editable getEditable() {
+					if (!inited) {
+						// needed to set selection, otherwise random crashes later with backspacing
+						// set selection to end, so backspacing after opening keyboard with text still works
+						Selection.setSelection(kbText, kbText.toString().length());
+						inited = true;
+					}
+					return kbText;
+				}
+
+				@Override
+				public boolean setComposingText(CharSequence text, int newCursorPosition) {
+					boolean success = super.setComposingText(text, newCursorPosition);
+					updateText();
+					return success;
+				}
+
+				@Override
+				public boolean deleteSurroundingText(int beforeLength, int afterLength) {
+					boolean success = super.deleteSurroundingText(beforeLength, afterLength);
+					updateText();
+					return success;
+				}
+
+				@Override
+				public boolean commitText(CharSequence text, int newCursorPosition) {
+					boolean success = super.commitText(text, newCursorPosition);
+					updateText();
+					return success;
+				}
+			};
+			//String text = MainActivity.this.keyboardText;
+			//if (text != null) ic.setComposingText(text, 0);
+			return ic;
 		}
 	}
 	
@@ -403,17 +475,43 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	// --------------- WINDOW ---------------
 	// ======================================
 	public void setWindowTitle(String str) { setTitle(str); }
-	
-	public void openKeyboard() {
-		InputMethodManager input = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-		View view = getWindow().getDecorView();
-		input.showSoftInput(view, 0);
+
+	volatile int keyboardType;
+	volatile String keyboardText = "";
+	public void openKeyboard(String text, int type) {
+		keyboardType = type;
+		keyboardText = text;
+		//runOnUiThread(new Runnable() {
+			//public void run() {
+				// Restart view so it uses the right INPUT_TYPE
+				if (curView != null) input.restartInput(curView);
+				if (curView != null) input.showSoftInput(curView, 0);
+			//}
+		//});
 	}
 
 	public void closeKeyboard() {
 		InputMethodManager input = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 		View view = getWindow().getDecorView();
 		input.hideSoftInputFromWindow(view.getWindowToken(), 0);
+		keyboardText = "";
+		//runOnUiThread(new Runnable() {
+			//public void run() {
+				if (curView != null) input.hideSoftInputFromWindow(curView.getWindowToken(), 0);
+			//}
+		//});
+	}
+
+	public void setKeyboardText(String text) {
+		keyboardText = text;
+		// Restart view because text changed externally
+		if (curView != null) input.restartInput(curView);
+	}
+
+	public int getKeyboardType() {
+		if (keyboardType == 2) return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD;
+		if (keyboardType == 1) return InputType.TYPE_CLASS_NUMBER;
+		return InputType.TYPE_CLASS_TEXT; /* TODO: This still adds a . after space */
 	}
 
 	public String getClipboardText() {
