@@ -3935,12 +3935,11 @@ void Window_DrawFramebuffer(Rect2D r) {
 	if (res) Logger_Abort2(res, "Locking window pixels");
 	/* Platform_Log4("ADJUS: %i,%i - %i,%i", &b.left, &b.top, &b.right, &b.bottom); */
 
-	int width  = ANativeWindow_getWidth(win_handle);
-	int height = ANativeWindow_getHeight(win_handle);
-	int format = ANativeWindow_getFormat(win_handle);
-
-	/* Platform_Log3("WIN SIZE: %i,%i  %i", &width, &height, &format); */
-	/* Platform_Log4("BUF SIZE: %i,%i  %i/%i", &buffer.width, &buffer.height, &buffer.format, &buffer.stride); */
+	/* In some rare cases, the returned locked region will be entire area of the surface */
+	/* This can cause a crash if the surface has been resized (i.e. device rotated), */
+	/* but the framebuffer has not been resized yet. So always constrain bounds. */
+	b.left = min(b.left, fb_bmp.width);  b.right  = min(b.right,  fb_bmp.width);
+	b.top  = min(b.top,  fb_bmp.height); b.bottom = min(b.bottom, fb_bmp.height);
 
 	src  = (cc_uint32*)fb_bmp.scan0 + b.left;
 	dst  = (cc_uint32*)buffer.bits  + b.left;
