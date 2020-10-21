@@ -477,7 +477,7 @@ static void CheckUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void CheckUpdateTask_Run(void) {
-	static const cc_string url = String_FromConst("http://cs.classicube.net/c_client/builds.json");
+	static const cc_string url = String_FromConst("http://cs.classicube.net/client/builds.json");
 	if (CheckUpdateTask.Base.working) return;
 
 	LWebTask_Reset(&CheckUpdateTask.Base);
@@ -514,7 +514,7 @@ void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
 	cc_string url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 
-	String_Format2(&url, "http://cs.classicube.net/c_client/%c/%c",
+	String_Format2(&url, "http://cs.classicube.net/client/%c/%c",
 		release ? "release"    : "latest",
 		d3d9    ? Updater_D3D9 : Updater_OGL);
 
