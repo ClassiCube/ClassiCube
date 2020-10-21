@@ -2516,9 +2516,15 @@ static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** ver
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
 
 	/* The 4 sides.. not done */
+	/* Side 1 */
+	tex.Width /= 2;
 	tex.uv.U1 = 0.75f;
-	tex.uv.U2 = 1.0f;
+	tex.uv.U2 = 1.00f;
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
+	/* Side 2 */
+	tex.X += tex.Width;
+	tex.uv.U1 = 1.00f;
+	tex.uv.U2 = 0.75f;
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
@@ -2552,9 +2558,14 @@ static int ThumbstickWidget_CalcDirs(struct ThumbstickWidget* w) {
 
 static int ThumbstickWidget_Render2(void* widget, int offset) {
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+	int flags = ThumbstickWidget_CalcDirs(w);
+
 	if (Gui.TouchTex) {
 		Gfx_BindTexture(Gui.TouchTex);
 		Gfx_DrawVb_IndexedTris_Range(4, offset);
+
+		if (flags & DIR_XMIN) Gfx_DrawVb_IndexedTris_Range(4, offset + 4);
+		if (flags & DIR_XMAX) Gfx_DrawVb_IndexedTris_Range(4, offset + 8);
 	}
 	return offset + 20;
 }

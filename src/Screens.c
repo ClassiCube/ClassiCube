@@ -2024,7 +2024,7 @@ static void TouchScreen_Layout(void* screen) {
 		Widget_Layout(&s->btns[i]);
 	}
 
-	Widget_SetLocation(&s->thumbstick, ANCHOR_MIN, ANCHOR_MAX, 30, 30);
+	Widget_SetLocation(&s->thumbstick, ANCHOR_MIN, ANCHOR_MAX, 30, 70);
 }
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {
