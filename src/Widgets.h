@@ -284,7 +284,7 @@ CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_b
 
 #ifdef CC_BUILD_TOUCH
 struct ThumbstickWidget { Widget_Body };
-#define THUMBSTICKWIDGET_MAX 4
+#define THUMBSTICKWIDGET_MAX (4 * 5)
 
 void ThumbstickWidget_Init(struct ThumbstickWidget* w);
 void ThumbstickWidget_GetMovement(struct ThumbstickWidget* w, float* xMoving, float* zMoving);

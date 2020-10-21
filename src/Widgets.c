@@ -2512,8 +2512,42 @@ static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** ver
 
 	tex.X     = w->x;     tex.Y      = w->y;
 	tex.Width = w->width; tex.Height = w->height;
-	tex.uv.U2 = 1;        tex.uv.V2  = 1;
+	tex.uv.U2 = 0.5f;     tex.uv.V2  = 1;
 	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
+
+	/* The 4 sides.. not done */
+	tex.uv.U1 = 0.75f;
+	tex.uv.U2 = 1.0f;
+	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
+	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
+	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
+	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
+}
+
+/* TODO: Replace with FACE_XMIN_BIT */
+#define DIR_XMIN (1 << FACE_XMIN)
+#define DIR_XMAX (1 << FACE_XMAX)
+#define DIR_YMIN (1 << FACE_YMIN)
+#define DIR_YMAX (1 << FACE_YMAX)
+
+static int ThumbstickWidget_CalcDirs(struct ThumbstickWidget* w) {
+	int i, dx, dy, dirs = 0;
+	double angle;
+
+	for (i = 0; i < INPUT_MAX_POINTERS; i++) {
+		if (!(w->active & (1 << i))) continue;
+
+		dx = Pointers[i].x - (w->x + w->width  / 2);
+		dy = Pointers[i].y - (w->y + w->height / 2);
+		angle = Math_Atan2(dx, dy) * MATH_RAD2DEG;
+
+		/* 4 quadrants diagonally, but slightly expanded for overlap*/
+		if (angle >=   30 && angle <= 150) dirs |= DIR_YMAX;
+		if (angle >=  -60 && angle <=  60) dirs |= DIR_XMAX;
+		if (angle >= -150 && angle <= -30) dirs |= DIR_YMIN;
+		if (angle <  -120 || angle >  120) dirs |= DIR_XMIN;
+	}
+	return dirs;
 }
 
 static int ThumbstickWidget_Render2(void* widget, int offset) {
@@ -2522,7 +2556,7 @@ static int ThumbstickWidget_Render2(void* widget, int offset) {
 		Gfx_BindTexture(Gui.TouchTex);
 		Gfx_DrawVb_IndexedTris_Range(4, offset);
 	}
-	return offset + 4;
+	return offset + 20;
 }
 
 static const struct WidgetVTABLE ThumbstickWidget_VTABLE = {
@@ -2539,19 +2573,10 @@ void ThumbstickWidget_Init(struct ThumbstickWidget* w) {
 }
 
 void ThumbstickWidget_GetMovement(struct ThumbstickWidget* w, float* xMoving, float* zMoving) {
-	int i, dx, dy;
-	float len;
-
-	for (i = 0; i < INPUT_MAX_POINTERS; i++) {
-		if (!(w->active & (1 << i))) continue;
-
-		dx  = Pointers[i].x - (w->x + w->width  / 2);
-		dy  = Pointers[i].y - (w->y + w->height / 2);
-		len = Math_SqrtF(dx * dx + dy * dy);
-
-		if (!len) continue;
-		*xMoving += dx / len;
-		*zMoving += dy / len;
-	}
+	int dirs = ThumbstickWidget_CalcDirs(w);
+	if (dirs & DIR_XMIN) *xMoving -= 1;
+	if (dirs & DIR_XMAX) *xMoving += 1;
+	if (dirs & DIR_YMIN) *zMoving -= 1;
+	if (dirs & DIR_YMAX) *zMoving += 1;
 }
 #endif
