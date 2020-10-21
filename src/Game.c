@@ -628,6 +628,7 @@ void Game_Free(void* obj) {
 	/* Set to false so components will always free managed textures too */
 	Gfx.ManagedTextures = false;
 	Event_UnregisterAll();
+	tasksCount = 0;
 
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Free) comp->Free();
