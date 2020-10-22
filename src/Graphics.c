@@ -348,6 +348,7 @@ static void CreateD3D9(void) {
 
 	_direct3DCreate9 = DynamicLib_Get2(lib, "Direct3DCreate9");
 	d3d = _direct3DCreate9(D3D_SDK_VERSION);
+	if (!d3d) Logger_Abort("Direct3DCreate9 returned NULL");
 }
 
 static void FindCompatibleViewFormat(void) {
