@@ -1147,6 +1147,7 @@ void Http_UrlEncodeUrl(cc_string* dst, const cc_string* src) {
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
+	http_terminate = false;
 	Http_WorkerInit();
 	ScheduledTask_Add(30, Http_CleanCacheTask);
 	RequestList_Init(&pendingReqs);
