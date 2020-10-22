@@ -1,6 +1,7 @@
 package com.classicube;
 import java.io.File;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
@@ -140,6 +142,14 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		// TODO: semaphore for destroyed and surfaceDestroyed
+
+		// avoid FileUriExposed exceptions when taking screenshots
+		try {
+			Method m = StrictMode.class.getMethod("disableDeathOnFileUriExposure");
+			m.invoke(null);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
    
 		Log.i("CC_WIN", "handing off to native..");
 		System.loadLibrary("classicube");	
