@@ -103,4 +103,5 @@ target_link_libraries(classicube
     android
     EGL
     GLESv2
-    log)
+    log
+    OpenSLES)

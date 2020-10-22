@@ -311,6 +311,88 @@ cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
 	_alGetSourcei(ctx->source, AL_SOURCE_STATE, &state);
 	*finished = state != AL_PLAYING; return 0;
 }
+#elif defined CC_BUILD_OPENSLES
+#include <SLES/OpenSLES.h>
+#include <SLES/OpenSLES_Android.h>
+static SLObjectItf slEngineObject;
+static SLEngineItf slEngineEngine;
+static SLObjectItf slOutputMixer;
+
+struct AudioContext {
+	struct AudioFormat format;
+	int count;
+};
+static struct AudioContext audioContexts[20];
+
+static void Audio_SysFree(void) {
+	if (slOutputMixer) {
+		(*slOutputMixer)->Destroy(slOutputMixer);
+		slOutputMixer  = NULL;
+	}
+	if (slEngineObject) {
+		(*slEngineObject)->Destroy(slEngineObject);
+		slEngineObject = NULL;
+		slEngineEngine = NULL;
+	}
+}
+
+static cc_bool Audio_SysInit(void) {
+	SLInterfaceID ids[1];
+	SLboolean req[1];
+	SLresult res;
+
+	if (slEngineObject) return true;
+	/* mixer doesn't use any effects */
+	ids[0] = SL_IID_NULL;
+	req[0] = SL_BOOLEAN_FALSE;
+	
+	res = slCreateEngine(&slEngineObject, 0, NULL, 0, NULL, NULL);
+	if (res) { Logger_SimpleWarn(res, "creating OpenSL ES engine"); return false; }
+
+	res = (*slEngineObject)->Realize(slEngineObject, SL_BOOLEAN_FALSE);
+	if (res) { Logger_SimpleWarn(res, "realising OpenSL ES engine"); return false; }
+
+	res = (*slEngineObject)->GetInterface(slEngineObject, SL_IID_ENGINE, &slEngineEngine);
+	if (res) { Logger_SimpleWarn(res, "initing OpenSL ES engine"); Audio_SysFree(); return false; }
+
+	res = (*slEngineEngine)->CreateOutputMix(slEngineEngine, &slOutputMixer, 1, ids, req);
+	if (res) { Logger_SimpleWarn(res, "creating OpenSL ES mixer"); Audio_SysFree(); return false; }
+
+	res =  (*slOutputMixer)->Realize(slOutputMixer, SL_BOOLEAN_FALSE);
+	if (res) { Logger_SimpleWarn(res, "realising OpenSL ES mixer"); Audio_SysFree(); return false; }
+
+	return true;
+}
+
+void Audio_Open(AudioHandle* handle, int buffers) { }
+
+static cc_result Audio_DoClose(AudioHandle handle) {
+	return 0;
+}
+
+cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
+	return 0;
+}
+
+cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
+	return 0;
+}
+
+cc_result Audio_Play(AudioHandle handle) {
+	return 0;
+}
+
+cc_result Audio_Stop(AudioHandle handle) {
+	return 0;
+}
+
+cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
+	return 0;
+}
+
+cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
+	return 0;
+}
 #elif defined CC_BUILD_WINMM
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
