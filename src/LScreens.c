@@ -981,34 +981,17 @@ void MainScreen_SetActive(void) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------ResourcesScreen---------------------------------------------------*
+*----------------------------------------------------CheckResourcesScreen-------------------------------------------------*
 *#########################################################################################################################*/
-static struct ResourcesScreen {
+static struct CheckResourcesScreen {
 	LScreen_Layout
 	struct LLabel  lblLine1, lblLine2, lblStatus;
-	struct LButton btnYes, btnNo, btnCancel;
-	struct LSlider sdrProgress;
-	int statusYOffset; /* gets changed when downloading resources */
-	struct LWidget* _widgets[7];
-} ResourcesScreen_Instance;
+	struct LButton btnYes, btnNo;
+	struct LWidget* _widgets[5];
+} CheckResourcesScreen_Instance;
 
-static void ResourcesScreen_Download(void* w, int x, int y) {
-	struct ResourcesScreen* s = &ResourcesScreen_Instance;
-	if (Fetcher_Working) return;
-
-	Fetcher_Run();
-	s->selectedWidget = NULL;
-
-	s->btnYes.hidden   = true;
-	s->btnNo.hidden    = true;
-	s->lblLine1.hidden = true;
-	s->lblLine2.hidden = true;
-	s->btnCancel.hidden   = false;
-	s->sdrProgress.hidden = false;
-	s->Draw((struct LScreen*)s);
-}
-
-static void ResourcesScreen_Next(void* w, int x, int y) {
+static void CheckResourcesScreen_Yes(void*  w, int x, int y) { FetchResourcesScreen_SetActive(); }
+static void CheckResourcesScreen_Next(void* w, int x, int y) {
 	static const cc_string optionsTxt = String_FromConst("options.txt");
 	Http_ClearPending();
 
@@ -1019,98 +1002,121 @@ static void ResourcesScreen_Next(void* w, int x, int y) {
 	}
 }
 
-static void ResourcesScreen_Init(struct LScreen* s_) {
+static void CheckResourcesScreen_Init(struct LScreen* s_) {
 	cc_string str; char buffer[STRING_SIZE];
-	BitmapCol progressCol = BitmapCol_Make(0, 220, 0, 255);
-	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
+	struct CheckResourcesScreen* s = (struct CheckResourcesScreen*)s_;
 	float size;
-
-	s->statusYOffset = 10;
 	s->widgets = s->_widgets;
 
 	LLabel_Init(s_, &s->lblLine1, "Some required resources weren't found");
 	LLabel_Init(s_, &s->lblLine2, "Okay to download?");
-	LLabel_Init(s_, &s->lblStatus, "");
-	
-	LButton_Init(s_, &s->btnYes, 70, 35, "Yes");
-	LButton_Init(s_, &s->btnNo,  70, 35, "No");
-
-	LButton_Init(s_, &s->btnCancel, 120, 35, "Cancel");
-	LSlider_Init(s_, &s->sdrProgress, 200, 12, progressCol);
-
-	s->btnCancel.hidden   = true;
-	s->sdrProgress.hidden = true;
-
-	/* TODO: Size 13 italic font?? does it matter?? */
 	String_InitArray(str, buffer);
 	size = Resources_Size / 1024.0f;
 
-	s->lblStatus.font = &Launcher_HintFont;
+	LLabel_Init(s_, &s->lblStatus, "");
 	String_Format1(&str, "&eDownload size: %f2 megabytes", &size);
-	LLabel_SetText(&s->lblStatus, &str);
+	s->lblStatus.font = &Launcher_HintFont;
+	LLabel_SetText( &s->lblStatus, &str);
 
-	s->btnYes.OnClick    = ResourcesScreen_Download;
-	s->btnNo.OnClick     = ResourcesScreen_Next;
-	s->btnCancel.OnClick = ResourcesScreen_Next;
+	LButton_Init(s_, &s->btnYes, 70, 35, "Yes");
+	LButton_Init(s_, &s->btnNo,  70, 35, "No");
+	s->btnYes.OnClick = CheckResourcesScreen_Yes;
+	s->btnNo.OnClick  = CheckResourcesScreen_Next;
 }
 
-static void ResourcesScreen_Show(struct LScreen* s_) {
-	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
-	s->statusYOffset = 10;
-}
-
-static void ResourcesScreen_Layout(struct LScreen* s_) {
-	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
+static void CheckResourcesScreen_Layout(struct LScreen* s_) {
+	struct CheckResourcesScreen* s = (struct CheckResourcesScreen*)s_;
 	
 	LWidget_SetLocation(&s->lblLine1,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -50);
 	LWidget_SetLocation(&s->lblLine2,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
-	LWidget_SetLocation(&s->lblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  s->statusYOffset);
+	LWidget_SetLocation(&s->lblStatus, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
 
 	LWidget_SetLocation(&s->btnYes, ANCHOR_CENTRE, ANCHOR_CENTRE, -70, 45);
 	LWidget_SetLocation(&s->btnNo,  ANCHOR_CENTRE, ANCHOR_CENTRE,  70, 45);
-
-	LWidget_SetLocation(&s->btnCancel,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 45);
-	LWidget_SetLocation(&s->sdrProgress, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 15);
 }
 
-CC_NOINLINE static void ResourcesScreen_ResetArea(int x, int y, int width, int height) {
+CC_NOINLINE static void CheckResourcesScreen_ResetArea(int x, int y, int width, int height) {
 	BitmapCol boxCol = BitmapCol_Make(120, 85, 151, 255);
 	Gradient_Noise(&Launcher_Framebuffer, boxCol, 4, x, y, width, height);
 	Launcher_MarkDirty(x, y, width, height);
 }
 
-static void ResourcesScreen_Draw(struct LScreen* s) {
-	BitmapCol backCol = BitmapCol_Make(12, 12, 12, 255);
+CC_NOINLINE static void CheckResourcesScreen_DrawBase(void) {
 	int x, y, width, height;
-
-	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
+	Drawer2D_Clear(&Launcher_Framebuffer, BitmapCol_Make(12, 12, 12, 255),
 					0, 0, WindowInfo.Width, WindowInfo.Height);
 	width  = Display_ScaleX(380);
 	height = Display_ScaleY(140);
 
 	x = Gui_CalcPos(ANCHOR_CENTRE, 0, width,  WindowInfo.Width);
 	y = Gui_CalcPos(ANCHOR_CENTRE, 0, height, WindowInfo.Height);
+	CheckResourcesScreen_ResetArea(x, y, width, height);
+}
 
-	ResourcesScreen_ResetArea(x, y, width, height);
+static void CheckResourcesScreen_Draw(struct LScreen* s) {
+	CheckResourcesScreen_DrawBase();
 	LScreen_Draw(s);
 }
 
-static void ResourcesScreen_SetStatus(const cc_string* str) {
-	struct LLabel* w = &ResourcesScreen_Instance.lblStatus;
-	ResourcesScreen_ResetArea(w->last.X, w->last.Y, 
-							  w->last.Width, w->last.Height);
-	LLabel_SetText(w, str);
+void CheckResourcesScreen_SetActive(void) {
+	struct CheckResourcesScreen* s = &CheckResourcesScreen_Instance;
+	LScreen_Reset((struct LScreen*)s);
+	s->Init   = CheckResourcesScreen_Init;
+	s->Draw   = CheckResourcesScreen_Draw;
+	s->Layout = CheckResourcesScreen_Layout;
+	s->onEnterWidget = (struct LWidget*)&s->btnYes;
+	Launcher_SetScreen((struct LScreen*)s);
+}
 
-	w->yOffset = -10;
-	ResourcesScreen_Instance.statusYOffset = w->yOffset;	
-	LWidget_CalcPosition(w);
+
+/*########################################################################################################################*
+*----------------------------------------------------FetchResourcesScreen-------------------------------------------------*
+*#########################################################################################################################*/
+static struct FetchResourcesScreen {
+	LScreen_Layout
+	struct LLabel  lblStatus;
+	struct LButton btnCancel;
+	struct LSlider sdrProgress;
+	struct LWidget* _widgets[3];
+} FetchResourcesScreen_Instance;
+
+static void FetchResourcesScreen_Init(struct LScreen* s_) {
+	struct FetchResourcesScreen* s = (struct FetchResourcesScreen*)s_;
+	s->widgets = s->_widgets;
+
+	LLabel_Init(s_,  &s->lblStatus, "");
+	LButton_Init(s_, &s->btnCancel,   120, 35, "Cancel");
+	LSlider_Init(s_, &s->sdrProgress, 200, 12, BitmapCol_Make(0, 220, 0, 255));
+
+	s->lblStatus.font = &Launcher_HintFont;
+	s->btnCancel.OnClick = CheckResourcesScreen_Next;
+}
+static void FetchResourcesScreen_Show(struct LScreen* s_) { if (!Fetcher_Working) Fetcher_Run(); }
+
+static void FetchResourcesScreen_Layout(struct LScreen* s_) {
+	struct FetchResourcesScreen* s = (struct FetchResourcesScreen*)s_;
+	LWidget_SetLocation(&s->lblStatus,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -10);
+	LWidget_SetLocation(&s->btnCancel,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  45);
+	LWidget_SetLocation(&s->sdrProgress, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  15);
+}
+
+static void FetchResourcesScreen_Draw(struct LScreen* s) {
+	CheckResourcesScreen_DrawBase();
+	LScreen_Draw(s);
+}
+
+static void FetchResourcesScreen_SetStatus(const cc_string* str) {
+	struct LLabel* w = &FetchResourcesScreen_Instance.lblStatus;
+	CheckResourcesScreen_ResetArea(w->last.X, w->last.Y,
+									w->last.Width, w->last.Height);
+	LLabel_SetText(w, str);
 	LWidget_Draw(w);
 }
 
-static void ResourcesScreen_UpdateStatus(int reqID) {
+static void FetchResourcesScreen_UpdateStatus(int reqID) {
 	cc_string str; char strBuffer[STRING_SIZE];
 	const char* name;
-	struct LLabel* w = &ResourcesScreen_Instance.lblStatus;
+	struct LLabel* w = &FetchResourcesScreen_Instance.lblStatus;
 	int count;
 
 	name = Fetcher_RequestName(reqID);
@@ -1121,14 +1127,14 @@ static void ResourcesScreen_UpdateStatus(int reqID) {
 	String_Format3(&str, "&eFetching %c.. (%i/%i)", name, &count, &Resources_Count);
 
 	if (String_Equals(&str, &w->text)) return;
-	ResourcesScreen_SetStatus(&str);
+	FetchResourcesScreen_SetStatus(&str);
 }
 
-static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
+static void FetchResourcesScreen_UpdateProgress(struct FetchResourcesScreen* s) {
 	int reqID, progress;
 
 	if (!Http_GetCurrent(&reqID, &progress)) return;
-	ResourcesScreen_UpdateStatus(reqID);
+	FetchResourcesScreen_UpdateStatus(reqID);
 	/* making request still, haven't started download yet */
 	if (progress < 0 || progress > 100) return;
 
@@ -1137,37 +1143,36 @@ static void ResourcesScreen_UpdateProgress(struct ResourcesScreen* s) {
 	LWidget_Draw(&s->sdrProgress);
 }
 
-static void ResourcesScreen_Error(struct ResourcesScreen* s) {
+static void FetchResourcesScreen_Error(struct FetchResourcesScreen* s) {
 	cc_string str; char buffer[STRING_SIZE];
 	String_InitArray(str, buffer);
 
 	Launcher_DisplayHttpError(Fetcher_Result, Fetcher_StatusCode, "downloading resources", &str);
-	ResourcesScreen_SetStatus(&str);
+	FetchResourcesScreen_SetStatus(&str);
 }
 
-static void ResourcesScreen_Tick(struct LScreen* s_) {
-	struct ResourcesScreen* s = (struct ResourcesScreen*)s_;
+static void FetchResourcesScreen_Tick(struct LScreen* s_) {
+	struct FetchResourcesScreen* s = (struct FetchResourcesScreen*)s_;
 	if (!Fetcher_Working) return;
 
-	ResourcesScreen_UpdateProgress(s);
+	FetchResourcesScreen_UpdateProgress(s);
 	Fetcher_Update();
 
 	if (!Fetcher_Completed) return;
-	if (Fetcher_Failed) { ResourcesScreen_Error(s); return; }
+	if (Fetcher_Failed) { FetchResourcesScreen_Error(s); return; }
 
 	Launcher_TryLoadTexturePack();
-	ResourcesScreen_Next(NULL, 0, 0);
+	CheckResourcesScreen_Next(NULL, 0, 0);
 }
 
-void ResourcesScreen_SetActive(void) {
-	struct ResourcesScreen* s = &ResourcesScreen_Instance;
+void FetchResourcesScreen_SetActive(void) {
+	struct FetchResourcesScreen* s = &FetchResourcesScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
-	s->Init   = ResourcesScreen_Init;
-	s->Show   = ResourcesScreen_Show;
-	s->Draw   = ResourcesScreen_Draw;
-	s->Tick   = ResourcesScreen_Tick;
-	s->Layout = ResourcesScreen_Layout;
-	s->onEnterWidget = (struct LWidget*)&s->btnYes;
+	s->Init   = FetchResourcesScreen_Init;
+	s->Show   = FetchResourcesScreen_Show;
+	s->Draw   = FetchResourcesScreen_Draw;
+	s->Tick   = FetchResourcesScreen_Tick;
+	s->Layout = FetchResourcesScreen_Layout;
 	Launcher_SetScreen((struct LScreen*)s);
 }
 

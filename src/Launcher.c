@@ -297,7 +297,7 @@ void Launcher_Run(void) {
 	CheckUpdateTask_Run();
 
 	if (Resources_Count) {
-		ResourcesScreen_SetActive();
+		CheckResourcesScreen_SetActive();
 	} else {
 		MainScreen_SetActive();
 	}
