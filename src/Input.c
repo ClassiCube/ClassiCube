@@ -142,7 +142,6 @@ void Input_RemoveTouch(long id, int x, int y) {
 
 		Pointer_SetPosition(i, x, y);
 		Pointer_SetPressed(i, false);
-		CheckBlockTap(i);
 
 		/* found the touch, remove it */
 		Pointer_SetPosition(i, -100000, -100000);
@@ -244,10 +243,6 @@ struct Pointer Pointers[INPUT_MAX_POINTERS];
 cc_bool Input_RawMode, Input_TouchMode;
 
 void Pointer_SetPressed(int idx, cc_bool pressed) {
-#ifdef CC_BUILD_TOUCH
-	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;
-#endif
-
 	if (pressed) {
 		Event_RaiseInt(&PointerEvents.Down, idx);
 	} else {
@@ -945,7 +940,11 @@ static void OnPointerMove(void* obj, int idx, int xDelta, int yDelta) {
 
 static void OnPointerDown(void* obj, int idx) {
 	struct Screen* s;
-	int i, x = Pointers[idx].x, y = Pointers[idx].y;
+	int i, x, y;
+#ifdef CC_BUILD_TOUCH
+	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;
+#endif
+	x = Pointers[idx].x; y = Pointers[idx].y;
 
 	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
@@ -970,7 +969,12 @@ static void OnPointerDown(void* obj, int idx) {
 
 static void OnPointerUp(void* obj, int idx) {
 	struct Screen* s;
-	int i, x = Pointers[idx].x, y = Pointers[idx].y;
+	int i, x, y;
+#ifdef CC_BUILD_TOUCH
+	CheckBlockTap(idx);
+	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;
+#endif
+	x = Pointers[idx].x; y = Pointers[idx].y;
 
 	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
