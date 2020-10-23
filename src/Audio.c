@@ -380,6 +380,7 @@ static SLObjectItf slOutputObject;
 struct AudioContext {
 	struct AudioFormat format;
 	int count;
+	cc_bool available[AUDIO_MAX_BUFFERS];
 	SLObjectItf bqPlayerObject;
 	SLPlayItf   bqPlayerPlayer;
 	SLBufferQueueItf bqPlayerQueue;
@@ -425,6 +426,10 @@ static void Backend_Free(void) {
 }
 
 void Audio_Init(struct AudioContext* ctx, int buffers) {
+	int i;
+	for (i = 0; i < buffers; i++) {
+		ctx->available[i] = true;
+	}
 	ctx->count = buffers;
 }
 
@@ -434,8 +439,21 @@ static cc_result Backend_Reset(struct AudioContext* ctx) {
 		(*bqPlayerObject)->Destroy(bqPlayerObject);
 		ctx->bqPlayerObject = NULL;
 		ctx->bqPlayerPlayer = NULL;
+		ctx->bqPlayerQueue  = NULL;
 	}
 	return 0;
+}
+
+static void OnBufferFinished(SLBufferQueueItf bq, void* context) {
+	struct AudioContext* ctx = (struct AudioContext*)context;
+	SLBufferQueueState state = { 0 };
+	unsigned int i;
+	
+	if ((*ctx->bqPlayerQueue)->GetState(ctx->bqPlayerQueue, &state)) return;
+	/* At this point, playIndex is for index of NEXT buffer (about to be played) */
+	/* So need to subtract 1 from it */
+	i = (state.playIndex - 1) % (unsigned int)ctx->count;
+	ctx->available[i] = true;
 }
 
 static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
@@ -454,7 +472,7 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 	fmt.samplesPerSec  = format->sampleRate * 1000;
 	fmt.bitsPerSample  = SL_PCMSAMPLEFORMAT_FIXED_16;
 	fmt.containerSize  = SL_PCMSAMPLEFORMAT_FIXED_16;
-	fmt.channelMask    = SL_SPEAKER_FRONT_CENTER;
+	fmt.channelMask    = 0;
 	fmt.endianness     = SL_BYTEORDER_LITTLEENDIAN;
 
 	input.locatorType  = SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE;
@@ -477,10 +495,12 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 	if ((res = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE)))                              return res;
 	if ((res = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY,        &ctx->bqPlayerPlayer))) return res;
 	if ((res = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE, &ctx->bqPlayerQueue)))  return res;
-	return 0;
+
+	return (*ctx->bqPlayerQueue)->RegisterCallback(ctx->bqPlayerQueue, OnBufferFinished, ctx);
 }
 
 cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uint32 size) {
+	ctx->available[idx] = false;
 	return (*ctx->bqPlayerQueue)->Enqueue(ctx->bqPlayerQueue, data, size);
 }
 
@@ -489,18 +509,26 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 }
 
 cc_result Audio_Stop(struct AudioContext* ctx) {
+	if (!ctx->bqPlayerPlayer) return 0;
 	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_STOPPED);
 }
 
 cc_result Audio_IsAvailable(struct AudioContext* ctx, int idx, cc_bool* available) {
-	/* TODO: This is completely WRONG! Might work for sounds but not music.. */
-	return Audio_IsFinished(ctx, available);
+	*available = ctx->available[idx];
+	return 0;
 }
 
 cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) {
 	SLBufferQueueState state = { 0 };
-	cc_result res = (*ctx->bqPlayerQueue)->GetState(ctx->bqPlayerQueue, &state);
-	*finished     = state.count == 0;
+	cc_result res;
+
+	if (ctx->bqPlayerQueue) {
+		res       = (*ctx->bqPlayerQueue)->GetState(ctx->bqPlayerQueue, &state);
+		*finished = state.count == 0;
+	} else {
+		res       = 0;
+		*finished = true;
+	}
 	return res;
 }
 #endif
