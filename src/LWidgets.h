@@ -67,8 +67,9 @@ struct LInput {
 	int minWidth;
 	/* Text displayed when the user has not entered anything in the text field. */
 	const char* hintText;
-	/* Whether all characters should be rendered as *. */
-	cc_bool password;
+	/* The type of this input (see KEYBOARD_TYPE_ enum in Window.h) */
+	/* If type is KEYBOARD_TYPE_PASSWORD, all characters are drawn as *. */
+	cc_uint8 type;
 	/* Filter applied to text received from the clipboard. Can be NULL. */
 	void (*ClipboardFilter)(cc_string* str);
 	/* Callback invoked when the text is changed. Can be NULL. */

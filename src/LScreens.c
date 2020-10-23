@@ -430,6 +430,7 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	
 	for (i = 0; i < 5 * 3; i++) {
 		LInput_Init(s_, &s->iptColours[i], 55, NULL);
+		s->iptColours[i].type        = KEYBOARD_TYPE_NUMBER;
 		s->iptColours[i].TextFilter  = ColoursScreen_InputFilter;
 		s->iptColours[i].TextChanged = ColoursScreen_TextChanged;
 	}
@@ -644,6 +645,7 @@ static void MFAScreen_Init(struct LScreen* s_) {
 
 	s->btnSignIn.OnClick = MFAScreen_SignIn;
 	s->btnCancel.OnClick = MFAScreen_Cancel;
+	s->iptCode.type      = KEYBOARD_TYPE_NUMBER;
 }
 
 static void MFAScreen_Show(struct LScreen* s_) {
@@ -799,7 +801,7 @@ static void MainScreen_Init(struct LScreen* s_) {
 	/* need to set text here for right size */
 	s->lblUpdate.font = &Launcher_HintFont;
 	LLabel_SetConst(&s->lblUpdate, "&eChecking..");
-	s->iptPassword.password   = true;
+	s->iptPassword.type       = KEYBOARD_TYPE_PASSWORD;
 	s->iptPassword.TextFilter = MainScreen_PasswordFilter;
 	
 	String_InitArray(pass, passBuffer);

@@ -205,7 +205,7 @@ void LButton_SetConst(struct LButton* w, const char* text) {
 *#########################################################################################################################*/
 CC_NOINLINE static void LInput_GetText(struct LInput* w, cc_string* text) {
 	int i;
-	if (!w->password) { *text = w->text; return; }
+	if (w->type != KEYBOARD_TYPE_PASSWORD) { *text = w->text; return; }
 
 	for (i = 0; i < w->text.length; i++) {
 		String_Append(text, '*');
@@ -425,7 +425,7 @@ static void LInput_Select(void* widget, cc_bool wasSelected) {
 	/* TODO: Only draw outer border */
 	if (wasSelected) return;
 	LWidget_Draw(widget);
-	Window_OpenKeyboard(&w->text, KEYBOARD_TYPE_TEXT);
+	Window_OpenKeyboard(&w->text, w->type);
 }
 
 static void LInput_Unselect(void* widget) {
