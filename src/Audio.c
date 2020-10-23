@@ -382,6 +382,7 @@ struct AudioContext {
 	int count;
 	SLObjectItf bqPlayerObject;
 	SLPlayItf   bqPlayerPlayer;
+	SLBufferQueueItf bqPlayerQueue;
 };
 
 static cc_bool Backend_Init(void) {
@@ -473,29 +474,36 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 	ctx->bqPlayerObject = bqPlayerObject;
 	if (res) return res;
 
-	if ((res = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE))) return res;
-	if ((res = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY, &ctx->bqPlayerPlayer))) return res;
+	if ((res = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE)))                              return res;
+	if ((res = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY,        &ctx->bqPlayerPlayer))) return res;
+	if ((res = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE, &ctx->bqPlayerQueue)))  return res;
 	return 0;
 }
 
 cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uint32 size) {
-	return 0;
+	return (*ctx->bqPlayerQueue)->Enqueue(ctx->bqPlayerQueue, data, size);
 }
 
 cc_result Audio_Play(struct AudioContext* ctx) {
-	return 0;
+	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_PLAYING);
 }
 
 cc_result Audio_Stop(struct AudioContext* ctx) {
-	return 0;
+	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_STOPPED);
 }
 
 cc_result Audio_IsCompleted(struct AudioContext* ctx, int idx, cc_bool* completed) {
+	*completed = false; /* TODO: Implement */
 	return 0;
 }
 
 cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) {
-	return 0;
+	SLuint32 state;
+	cc_result res = (*ctx->bqPlayerPlayer)->GetPlayState(ctx->bqPlayerPlayer, &state);
+
+	/* TODO: This needs a cleanup.... */
+	*finished = !res && Audio_AllCompleted(ctx, finished) && state == SL_PLAYSTATE_STOPPED;
+	return res;
 }
 #endif
 

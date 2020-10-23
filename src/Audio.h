@@ -31,11 +31,11 @@ void Audio_Init(struct AudioContext* ctx, int buffers);
 cc_result Audio_Close(struct AudioContext* ctx);
 /* Returns the format audio is played in. */
 struct AudioFormat* Audio_GetFormat(struct AudioContext* ctx);
-/* Sets the format audio to play is in. */
-/* NOTE: Changing the format can be expensive, depending on the platform. */
+/* Sets the format of the audio data to be played. */
+/* NOTE: Changing the format can be expensive, depending on the backend. */
 cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format);
 /* Sets the audio data in the given buffer. */
-/* NOTE: You should ensure Audio_IsCompleted returns true before calling this. */
+/* NOTE: You MUST ensure Audio_IsCompleted returns true before calling this. */
 cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uint32 size);
 /* Begins playing audio. Audio_BufferData must have been used before this. */
 cc_result Audio_Play(struct AudioContext* ctx);
