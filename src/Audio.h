@@ -41,8 +41,8 @@ cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uin
 cc_result Audio_Play(struct AudioContext* ctx);
 /* Immediately stops the currently playing audio. */
 cc_result Audio_Stop(struct AudioContext* ctx);
-/* Returns whether the given buffer has finished playing. */
-cc_result Audio_IsCompleted(struct AudioContext* ctx, int idx, cc_bool* completed);
+/* Returns whether the given buffer is available for playing data. */
+cc_result Audio_IsAvailable(struct AudioContext* ctx, int idx, cc_bool* available);
 /* Returns whether all buffers have finished playing. */
 cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished);
 #endif

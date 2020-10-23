@@ -57,7 +57,7 @@ static void Volume_Mix16(cc_int16* samples, int count, int volume) {
 /*########################################################################################################################*
 *------------------------------------------------Native implementation----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_result Audio_AllCompleted(struct AudioContext* ctx, cc_bool* finished);
+static cc_result Audio_AllAvailable(struct AudioContext* ctx, cc_bool* finished);
 #if defined CC_BUILD_OPENAL
 /*########################################################################################################################*
 *------------------------------------------------------OpenAL backend-----------------------------------------------------*
@@ -107,7 +107,7 @@ static ALenum    (APIENTRY *_alcGetError)(void* device);
 struct AudioContext {
 	ALuint source;
 	ALuint buffers[AUDIO_MAX_BUFFERS];
-	cc_bool completed[AUDIO_MAX_BUFFERS];
+	cc_bool available[AUDIO_MAX_BUFFERS];
 	struct AudioFormat format;
 	int count;
 	ALenum dataFormat;
@@ -188,7 +188,7 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->source = -1;
 
 	for (i = 0; i < buffers; i++) {
-		ctx->completed[i] = true;
+		ctx->available[i] = true;
 	}
 	ctx->count = buffers;
 }
@@ -227,7 +227,7 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uint32 size) {
 	ALuint buffer = ctx->buffers[idx];
 	ALenum err;
-	ctx->completed[idx] = false;
+	ctx->available[idx] = false;
 
 	_alBufferData(buffer, ctx->dataFormat, data, size, ctx->format.sampleRate);
 	if ((err = _alGetError())) return err;
@@ -246,7 +246,7 @@ cc_result Audio_Stop(struct AudioContext* ctx) {
 	return _alGetError();
 }
 
-cc_result Audio_IsCompleted(struct AudioContext* ctx, int idx, cc_bool* completed) {
+cc_result Audio_IsAvailable(struct AudioContext* ctx, int idx, cc_bool* available) {
 	ALint i, processed = 0;
 	ALuint buffer;
 	ALenum err;
@@ -259,10 +259,10 @@ cc_result Audio_IsCompleted(struct AudioContext* ctx, int idx, cc_bool* complete
 		if ((err = _alGetError())) return err;
 
 		for (i = 0; i < ctx->count; i++) {
-			if (ctx->buffers[i] == buffer) ctx->completed[i] = true;
+			if (ctx->buffers[i] == buffer) ctx->available[i] = true;
 		}
 	}
-	*completed = ctx->completed[idx]; return 0;
+	*available = ctx->available[idx]; return 0;
 }
 
 cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) {
@@ -270,7 +270,7 @@ cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) {
 	cc_result res;
 
 	if (ctx->source == -1) { *finished = true; return 0; }
-	res = Audio_AllCompleted(handle, finished);
+	res = Audio_AllAvailable(handle, finished);
 	if (res) return res;
 	
 	_alGetSourcei(ctx->source, AL_SOURCE_STATE, &state);
@@ -353,20 +353,20 @@ cc_result Audio_Stop(struct AudioContext* ctx) {
 	return waveOutReset(ctx->handle);
 }
 
-cc_result Audio_IsCompleted(struct AudioContext* ctx, int idx, cc_bool* completed) {
+cc_result Audio_IsAvailable(struct AudioContext* ctx, int idx, cc_bool* available) {
 	WAVEHDR* hdr = &ctx->headers[idx];
 
-	*completed = false;
+	*available = false;
 	if (!(hdr->dwFlags & WHDR_DONE)) return 0;
 	cc_result res = 0;
 
 	if (hdr->dwFlags & WHDR_PREPARED) {
 		res = waveOutUnprepareHeader(ctx->handle, hdr, sizeof(WAVEHDR));
 	}
-	*completed = true; return res;
+	*available = true; return res;
 }
 
-cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) { return Audio_AllCompleted(ctx, finished); }
+cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) { return Audio_AllAvailable(ctx, finished); }
 #elif defined CC_BUILD_OPENSLES
 /*########################################################################################################################*
 *----------------------------------------------------OpenSL ES backend----------------------------------------------------*
@@ -492,17 +492,15 @@ cc_result Audio_Stop(struct AudioContext* ctx) {
 	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_STOPPED);
 }
 
-cc_result Audio_IsCompleted(struct AudioContext* ctx, int idx, cc_bool* completed) {
-	*completed = false; /* TODO: Implement */
-	return 0;
+cc_result Audio_IsAvailable(struct AudioContext* ctx, int idx, cc_bool* available) {
+	/* TODO: This is completely WRONG! Might work for sounds but not music.. */
+	return Audio_IsFinished(ctx, available);
 }
 
 cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) {
-	SLuint32 state;
-	cc_result res = (*ctx->bqPlayerPlayer)->GetPlayState(ctx->bqPlayerPlayer, &state);
-
-	/* TODO: This needs a cleanup.... */
-	*finished = !res && Audio_AllCompleted(ctx, finished) && state == SL_PLAYSTATE_STOPPED;
+	SLBufferQueueState state = { 0 };
+	cc_result res = (*ctx->bqPlayerQueue)->GetState(ctx->bqPlayerQueue, &state);
+	*finished     = state.count == 0;
 	return res;
 }
 #endif
@@ -510,13 +508,13 @@ cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) {
 /*########################################################################################################################*
 *---------------------------------------------------Common backend code---------------------------------------------------*
 *#########################################################################################################################*/
-static cc_result Audio_AllCompleted(struct AudioContext* ctx, cc_bool* finished) {
+static cc_result Audio_AllAvailable(struct AudioContext* ctx, cc_bool* finished) {
 	cc_result res;
 	int i;
 	*finished = false;
 
 	for (i = 0; i < ctx->count; i++) {
-		res = Audio_IsCompleted(ctx, i, finished);
+		res = Audio_IsAvailable(ctx, i, finished);
 		if (res) return res;
 		if (!(*finished)) return 0;
 	}
@@ -900,8 +898,8 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	struct AudioFormat fmt;
 
 	int chunkSize, samplesPerSecond;
+	cc_bool available, finished;
 	cc_int16* data = NULL;
-	cc_bool completed;
 	int i, next;
 	cc_result res;
 
@@ -934,9 +932,9 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 		next = -1;
 		
 		for (i = 0; i < AUDIO_MAX_BUFFERS; i++) {
-			res = Audio_IsCompleted(&music_ctx, i, &completed);
+			res = Audio_IsAvailable(&music_ctx, i, &available);
 			if (res)       { music_pendingStop = true; break; }
-			if (completed) { next = i; break; }
+			if (available) { next = i; break; }
 		}
 
 		if (next == -1) { Thread_Sleep(10); continue; }
@@ -950,7 +948,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	if (music_pendingStop) Audio_Stop(&music_ctx);
 	/* Wait until the buffers finished playing */
 	for (;;) {
-		if (Audio_IsFinished(&music_ctx, &completed) || completed) break;
+		if (Audio_IsFinished(&music_ctx, &finished) || finished) break;
 		Thread_Sleep(10);
 	}
 
