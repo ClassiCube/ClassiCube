@@ -258,7 +258,7 @@ static void MakeNameTexture(struct Entity* e) {
 			origWhiteCol = Drawer2D_Cols['f'];
 
 			Drawer2D_Cols['f'] = shadowCol;
-			String_AppendColorless(&colorlessName, &name);
+			Drawer2D_WithoutCols(&colorlessName, &name);
 			args.text = colorlessName;
 			Drawer2D_DrawText(&bmp, &args, NAME_OFFSET, NAME_OFFSET);
 
@@ -799,7 +799,7 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 
 		if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
 			if (hacks->Noclip) {
-				/* need the { } because it's a macro */
+				/* need a { } block because it's a macro */
 				Vec3_Set(p->Base.Velocity, 0,0,0);
 			}
 			hacks->Noclip = KeyBind_IsPressed(KEYBIND_NOCLIP);

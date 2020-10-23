@@ -84,6 +84,9 @@ CC_API void Drawer2D_MakeTexture(struct Texture* tex, struct Bitmap* bmp, int wi
 cc_bool Drawer2D_ValidColCodeAt(const cc_string* text, int i);
 /* Whether text is empty or consists purely of valid colour codes. */
 cc_bool Drawer2D_IsEmptyText(const cc_string* text);
+/* Copies all characters from str into src, except for used colour codes */
+/* NOTE: Ampersands not followed by a used colour code are still copied */
+void Drawer2D_WithoutCols(cc_string* str, const cc_string* src);
 /* Returns the last valid colour code in the given input, or \0 if not found. */
 char Drawer2D_LastCol(const cc_string* text, int start);
 /* Returns whether the colour code is f, F or \0. */

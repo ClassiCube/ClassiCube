@@ -1,7 +1,7 @@
 #ifndef CC_CHAT_H
 #define CC_CHAT_H
 #include "Core.h"
-/* Manages sending, adding, and logging chat.
+/* Manages sending, adding, logging and handling chat.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
@@ -9,14 +9,14 @@ struct StringsBuffer;
 extern struct IGameComponent Chat_Component;
 
 enum MsgType {
-	MSG_TYPE_NORMAL = 0,
+	MSG_TYPE_NORMAL   = 0,
 	MSG_TYPE_STATUS_1 = 1,
 	MSG_TYPE_STATUS_2 = 2,
 	MSG_TYPE_STATUS_3 = 3,
 	MSG_TYPE_BOTTOMRIGHT_1 = 11,
 	MSG_TYPE_BOTTOMRIGHT_2 = 12,
 	MSG_TYPE_BOTTOMRIGHT_3 = 13,
-	MSG_TYPE_ANNOUNCEMENT = 100,
+	MSG_TYPE_ANNOUNCEMENT  = 100,
 	MSG_TYPE_CLIENTSTATUS_1 = 256, /* Cuboid messages */
 	MSG_TYPE_CLIENTSTATUS_2 = 257  /* Tab list matching names */
 };

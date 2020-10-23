@@ -363,6 +363,20 @@ cc_bool Drawer2D_IsEmptyText(const cc_string* text) {
 	return true;
 }
 
+void Drawer2D_WithoutCols(cc_string* str, const cc_string* src) {
+	char c;
+	int i;
+	for (i = 0; i < src->length; i++) {
+		c  = src->buffer[i];
+
+		if (c == '&' && Drawer2D_ValidColCodeAt(src, i + 1)) {
+			i++; /* skip colour code */
+		} else {
+			String_Append(str, c);
+		}	
+	}
+}
+
 char Drawer2D_LastCol(const cc_string* text, int start) {
 	int i;
 	if (start >= text->length) start = text->length - 1;

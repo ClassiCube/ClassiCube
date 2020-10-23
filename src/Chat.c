@@ -17,6 +17,7 @@
 #include "Utils.h"
 #include "TexturePack.h"
 #include "Options.h"
+#include "Drawer2D.h"
 
 static char msgs[10][STRING_SIZE];
 cc_string Chat_Status[4]       = { String_FromArray(msgs[0]), String_FromArray(msgs[1]), String_FromArray(msgs[2]), String_FromArray(msgs[3]) };
@@ -157,7 +158,7 @@ static void AppendChatLog(const cc_string* text) {
 	/* [HH:mm:ss] text */
 	String_InitArray(str, strBuffer);
 	String_Format3(&str, "[%p2:%p2:%p2] ", &now.hour, &now.minute, &now.second);
-	String_AppendColorless(&str, text);
+	Drawer2D_WithoutCols(&str, text);
 
 	res = Stream_WriteLine(&logStream, &str);
 	if (!res) return;
