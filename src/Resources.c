@@ -191,6 +191,9 @@ static void Resources_CheckTextures(void) {
 
 void Resources_CheckExistence(void) {
 	int i;
+	Resources_Count = 0;
+	Resources_Size  = 0;
+
 	Resources_CheckTextures();
 	Resources_CheckMusic();
 	Resources_CheckSounds();
@@ -740,7 +743,6 @@ const char* Fetcher_RequestName(int reqID) {
 void Fetcher_Run(void) {
 	cc_string url;
 	int i;
-	if (Fetcher_Working) return;
 
 	Fetcher_Failed     = false;
 	Fetcher_Downloaded = 0;

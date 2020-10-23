@@ -1003,25 +1003,28 @@ static void CheckResourcesScreen_Next(void* w, int x, int y) {
 }
 
 static void CheckResourcesScreen_Init(struct LScreen* s_) {
-	cc_string str; char buffer[STRING_SIZE];
 	struct CheckResourcesScreen* s = (struct CheckResourcesScreen*)s_;
-	float size;
 	s->widgets = s->_widgets;
 
 	LLabel_Init(s_, &s->lblLine1, "Some required resources weren't found");
 	LLabel_Init(s_, &s->lblLine2, "Okay to download?");
-	String_InitArray(str, buffer);
-	size = Resources_Size / 1024.0f;
-
 	LLabel_Init(s_, &s->lblStatus, "");
-	String_Format1(&str, "&eDownload size: %f2 megabytes", &size);
-	s->lblStatus.font = &Launcher_HintFont;
-	LLabel_SetText( &s->lblStatus, &str);
 
 	LButton_Init(s_, &s->btnYes, 70, 35, "Yes");
 	LButton_Init(s_, &s->btnNo,  70, 35, "No");
 	s->btnYes.OnClick = CheckResourcesScreen_Yes;
 	s->btnNo.OnClick  = CheckResourcesScreen_Next;
+}
+
+static void CheckResourcesScreen_Show(struct LScreen* s_) {
+	cc_string str; char buffer[STRING_SIZE];
+	struct CheckResourcesScreen* s = (struct CheckResourcesScreen*)s_;
+	float size = Resources_Size / 1024.0f;
+
+	String_InitArray(str, buffer);
+	String_Format1(&str, "&eDownload size: %f2 megabytes", &size);
+	s->lblStatus.font = &Launcher_HintFont;
+	LLabel_SetText(&s->lblStatus, &str);
 }
 
 static void CheckResourcesScreen_Layout(struct LScreen* s_) {
@@ -1062,6 +1065,7 @@ void CheckResourcesScreen_SetActive(void) {
 	struct CheckResourcesScreen* s = &CheckResourcesScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = CheckResourcesScreen_Init;
+	s->Show   = CheckResourcesScreen_Show;
 	s->Draw   = CheckResourcesScreen_Draw;
 	s->Layout = CheckResourcesScreen_Layout;
 	s->onEnterWidget = (struct LWidget*)&s->btnYes;
@@ -1091,7 +1095,7 @@ static void FetchResourcesScreen_Init(struct LScreen* s_) {
 	s->lblStatus.font = &Launcher_HintFont;
 	s->btnCancel.OnClick = CheckResourcesScreen_Next;
 }
-static void FetchResourcesScreen_Show(struct LScreen* s_) { if (!Fetcher_Working) Fetcher_Run(); }
+static void FetchResourcesScreen_Show(struct LScreen* s_) { Fetcher_Run(); }
 
 static void FetchResourcesScreen_Layout(struct LScreen* s_) {
 	struct FetchResourcesScreen* s = (struct FetchResourcesScreen*)s_;
