@@ -106,7 +106,7 @@ static int Menu_DoPointerDown(void* screen, int id, int x, int y) {
 	}
 	return -1;
 }
-static int Menu_PointerDown(void* screen, int id, int x, int y) {
+int Menu_PointerDown(void* screen, int id, int x, int y) {
 	Menu_DoPointerDown(screen, id, x, y); return true;
 }
 
@@ -131,7 +131,7 @@ static int Menu_DoPointerMove(void* screen, int id, int x, int y) {
 	return -1;
 }
 
-static int Menu_PointerMove(void* screen, int id, int x, int y) {
+int Menu_PointerMove(void* screen, int id, int x, int y) {
 	Menu_DoPointerMove(screen, id, x, y); return true;
 }
 

@@ -6,6 +6,8 @@
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct Screen;
+int Menu_PointerDown(void* screen, int id, int x, int y);
+int Menu_PointerMove(void* screen, int id, int x, int y);
 
 void PauseScreen_Show(void);
 void OptionsGroupScreen_Show(void);

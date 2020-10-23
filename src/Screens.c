@@ -1719,7 +1719,7 @@ static struct DisconnectScreen {
 	double initTime;
 	cc_bool canReconnect, lastActive;
 	int lastSecsLeft;
-	struct ButtonWidget reconnect;
+	struct ButtonWidget reconnect, quit;
 
 	struct FontDesc titleFont, messageFont;
 	struct TextWidget title, message;
@@ -1728,12 +1728,13 @@ static struct DisconnectScreen {
 	cc_string titleStr, messageStr;
 } DisconnectScreen;
 
-static struct Widget* disconnect_widgets[3] = {
+static struct Widget* disconnect_widgets[4] = {
 	(struct Widget*)&DisconnectScreen.title, 
 	(struct Widget*)&DisconnectScreen.message,
-	(struct Widget*)&DisconnectScreen.reconnect
+	(struct Widget*)&DisconnectScreen.reconnect,
+	(struct Widget*)&DisconnectScreen.quit
 };
-#define DISCONNECT_MAX_VERTICES (2 * TEXTWIDGET_MAX + BUTTONWIDGET_MAX)
+#define DISCONNECT_MAX_VERTICES (2 * TEXTWIDGET_MAX + 2 * BUTTONWIDGET_MAX)
 #define DISCONNECT_DELAY_SECS 5
 
 static void DisconnectScreen_Layout(void* screen) {
@@ -1741,6 +1742,7 @@ static void DisconnectScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->title,     ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 	Widget_SetLocation(&s->message,   ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  10);
 	Widget_SetLocation(&s->reconnect, ANCHOR_CENTRE, ANCHOR_CENTRE, 0,  80);
+	Widget_SetLocation(&s->quit,      ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 130);
 }
 
 static void DisconnectScreen_UpdateReconnect(struct DisconnectScreen* s) {
@@ -1754,11 +1756,11 @@ static void DisconnectScreen_UpdateReconnect(struct DisconnectScreen* s) {
 
 		if (secsLeft > 0) {
 			String_Format1(&msg, "Reconnect in %i", &secsLeft);
-		} else {
-			String_AppendConst(&msg, "Reconnect");
 		}
 		s->reconnect.disabled = secsLeft > 0;
 	}
+
+	if (!msg.length) String_AppendConst(&msg, "Reconnect");
 	ButtonWidget_Set(&s->reconnect, &msg, &s->titleFont);
 }
 
@@ -1777,15 +1779,25 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 	Drawer2D_MakeFont(&s->messageFont, 16, FONT_FLAGS_NONE);
 	TextWidget_Set(&s->title,   &s->titleStr,   &s->titleFont);
 	TextWidget_Set(&s->message, &s->messageStr, &s->messageFont);
+
 	DisconnectScreen_UpdateReconnect(s);
+	ButtonWidget_SetConst(&s->quit, "Quit game", &s->titleFont);
 }
+
+static void DisconnectScreen_OnReconnect(void* s, void* w) {
+	Gui_Remove((struct Screen*)s);
+	Gui_ShowDefault();
+	Server.BeginConnect();
+}
+static void DisconnectScreen_OnQuit(void* s, void* w) { Window_Close(); }
 
 static void DisconnectScreen_Init(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	TextWidget_Init(&s->title);
 	TextWidget_Init(&s->message);
 
-	ButtonWidget_Init(&s->reconnect, 300, NULL);
+	ButtonWidget_Init(&s->reconnect, 300, DisconnectScreen_OnReconnect);
+	ButtonWidget_Init(&s->quit,      300, DisconnectScreen_OnQuit);
 	s->reconnect.disabled = !s->canReconnect;
 	s->maxVertices  = DISCONNECT_MAX_VERTICES;
 
@@ -1795,7 +1807,7 @@ static void DisconnectScreen_Init(void* screen) {
 	s->initTime     = Game.Time;
 	s->lastSecsLeft = DISCONNECT_DELAY_SECS;
 	s->widgets      = disconnect_widgets;
-	s->numWidgets   = s->canReconnect ? 3 : 2;
+	s->numWidgets   = Array_Elems(disconnect_widgets);
 }
 
 static void DisconnectScreen_Update(void* screen, double delta) {
@@ -1827,32 +1839,12 @@ static void DisconnectScreen_Render(void* screen, double delta) {
 
 static void DisconnectScreen_Free(void* screen) { Game_SetFpsLimit(Game_FpsLimit); }
 
-static int DisconnectScreen_PointerDown(void* screen, int id, int x, int y) {
-	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	struct ButtonWidget* w     = &s->reconnect;
-
-	if (!w->disabled && Widget_Contains(w, x, y)) {
-		Gui_Remove((struct Screen*)s);
-		Gui_ShowDefault();
-		Server.BeginConnect();
-	}
-	return true;
-}
-
-static int DisconnectScreen_PointerMove(void* screen, int idx, int x, int y) {
-	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	struct ButtonWidget* w     = &s->reconnect;
-
-	w->active = !w->disabled && Widget_Contains(w, x, y);
-	return true;
-}
-
 static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
-	DisconnectScreen_Init,        DisconnectScreen_Update, DisconnectScreen_Free,
-	DisconnectScreen_Render,      Screen_BuildMesh,
-	Screen_InputDown,             Screen_TInput,           Screen_TKeyPress,             Screen_TText,
-	DisconnectScreen_PointerDown, Screen_TPointer,         DisconnectScreen_PointerMove, Screen_TMouseScroll,
-	DisconnectScreen_Layout,      DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
+	DisconnectScreen_Init,   DisconnectScreen_Update, DisconnectScreen_Free,
+	DisconnectScreen_Render, Screen_BuildMesh,
+	Screen_InputDown,        Screen_TInput,           Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,        Screen_TPointer,         Menu_PointerMove, Screen_TMouseScroll,
+	DisconnectScreen_Layout, DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
 	static const cc_string kick = String_FromConst("Kicked ");

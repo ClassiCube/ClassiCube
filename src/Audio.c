@@ -1045,7 +1045,7 @@ static void OnInit(void) {
 	Directory_Enum(&path, NULL, Audio_FilesCallback);
 	music_waitable = Waitable_Create();
 
-	/* music is delayed between 2 - 7 minutes */
+	/* music is delayed between 2 - 7 minutes by default */
 	music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
 	music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
 
