@@ -501,6 +501,11 @@ void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hin
 	s->widgets[s->numWidgets++] = (struct LWidget*)w;
 }
 
+/* If caret position is now beyond end of text, resets to -1 */
+static CC_INLINE void LInput_ClampCaret(struct LInput* w) {
+	if (w->caretPos >= w->text.length) w->caretPos = -1;
+}
+
 void LInput_SetText(struct LInput* w, const cc_string* text_) {
 	cc_string text; char textBuffer[STRING_SIZE];
 	struct DrawTextArgs args;
@@ -514,6 +519,7 @@ void LInput_SetText(struct LInput* w, const cc_string* text_) {
 	textWidth      = Drawer2D_TextWidth(&args);
 	w->width       = max(w->minWidth, textWidth + inputExpand);
 	w->_textHeight = Drawer2D_TextHeight(&args);
+	LInput_ClampCaret(w);
 }
 
 static CC_NOINLINE cc_bool LInput_AppendRaw(struct LInput* w, char c) {
@@ -557,7 +563,7 @@ void LInput_Backspace(struct LInput* w) {
 	}
 
 	if (w->TextChanged) w->TextChanged(w);
-	if (w->caretPos >= w->text.length) w->caretPos = -1;
+	LInput_ClampCaret(w);
 	LWidget_Redraw(w);
 }
 
@@ -568,7 +574,7 @@ void LInput_Delete(struct LInput* w) {
 	if (w->caretPos == -1) w->caretPos = 0;
 
 	if (w->TextChanged) w->TextChanged(w);
-	if (w->caretPos >= w->text.length) w->caretPos = -1;
+	LInput_ClampCaret(w);
 	LWidget_Redraw(w);
 }
 
