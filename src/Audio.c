@@ -510,6 +510,9 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 
 cc_result Audio_Stop(struct AudioContext* ctx) {
 	if (!ctx->bqPlayerPlayer) return 0;
+
+	/* According to OpenSL ES spec, Clear can never fail anyways */
+	(*ctx->bqPlayerQueue)->Clear(ctx->bqPlayerQueue);
 	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_STOPPED);
 }
 
