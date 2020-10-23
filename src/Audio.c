@@ -57,7 +57,7 @@ static void Volume_Mix16(cc_int16* samples, int count, int volume) {
 /*########################################################################################################################*
 *------------------------------------------------Native implementation----------------------------------------------------*
 *#########################################################################################################################*/
-static cc_result Audio_AllCompleted(AudioHandle handle, cc_bool* finished);
+static cc_result Audio_AllCompleted(struct AudioContext* ctx, cc_bool* finished);
 #if defined CC_BUILD_OPENAL
 /*########################################################################################################################*
 *------------------------------------------------------OpenAL backend-----------------------------------------------------*
@@ -112,8 +112,6 @@ struct AudioContext {
 	int count;
 	ALenum dataFormat;
 };
-static struct AudioContext audioContexts[20];
-
 static void* audio_device;
 static void* audio_context;
 
@@ -184,7 +182,7 @@ static void Backend_Free(void) {
 	audio_device  = NULL;
 }
 
-static void Backend_Setup(struct AudioContext* ctx, int buffers) {
+void Audio_Init(struct AudioContext* ctx, int buffers) {
 	int i;
 	_alDistanceModel(AL_NONE);
 	ctx->source = -1;
@@ -192,6 +190,7 @@ static void Backend_Setup(struct AudioContext* ctx, int buffers) {
 	for (i = 0; i < buffers; i++) {
 		ctx->completed[i] = true;
 	}
+	ctx->count = buffers;
 }
 
 static cc_result Backend_Reset(struct AudioContext* ctx) {
@@ -225,33 +224,29 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 	return 0;
 }
 
-cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
-	struct AudioContext* ctx = &audioContexts[handle];
+cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uint32 size) {
 	ALuint buffer = ctx->buffers[idx];
 	ALenum err;
 	ctx->completed[idx] = false;
 
-	_alBufferData(buffer, ctx->dataFormat, data, dataSize, ctx->format.sampleRate);
+	_alBufferData(buffer, ctx->dataFormat, data, size, ctx->format.sampleRate);
 	if ((err = _alGetError())) return err;
 	_alSourceQueueBuffers(ctx->source, 1, &buffer);
 	if ((err = _alGetError())) return err;
 	return 0;
 }
 
-cc_result Audio_Play(AudioHandle handle) {
-	struct AudioContext* ctx = &audioContexts[handle];
+cc_result Audio_Play(struct AudioContext* ctx) {
 	_alSourcePlay(ctx->source);
 	return _alGetError();
 }
 
-cc_result Audio_Stop(AudioHandle handle) {
-	struct AudioContext* ctx = &audioContexts[handle];
+cc_result Audio_Stop(struct AudioContext* ctx) {
 	_alSourceStop(ctx->source);
 	return _alGetError();
 }
 
-cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
-	struct AudioContext* ctx = &audioContexts[handle];
+cc_result Audio_IsCompleted(struct AudioContext* ctx, int idx, cc_bool* completed) {
 	ALint i, processed = 0;
 	ALuint buffer;
 	ALenum err;
@@ -270,8 +265,7 @@ cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
 	*completed = ctx->completed[idx]; return 0;
 }
 
-cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
-	struct AudioContext* ctx = &audioContexts[handle];
+cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) {
 	ALint state = 0;
 	cc_result res;
 
@@ -304,15 +298,15 @@ struct AudioContext {
 	struct AudioFormat format;
 	int count;
 };
-static struct AudioContext audioContexts[20];
 static cc_bool Backend_Init(void) { return true; }
 static void Backend_Free(void) { }
 
-static void Backend_Setup(struct AudioContext* ctx, int buffers) {
+void Audio_Init(struct AudioContext* ctx, int buffers) {
 	int i;
 	for (i = 0; i < buffers; i++) {
 		ctx->headers[i].dwFlags = WHDR_DONE;
 	}
+	ctx->count = buffers;
 }
 
 static cc_result Backend_Reset(struct AudioContext* ctx) {
@@ -338,8 +332,7 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 	return waveOutOpen(&ctx->handle, WAVE_MAPPER, &fmt, 0, 0, CALLBACK_NULL);
 }
 
-cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
-	struct AudioContext* ctx = &audioContexts[handle];
+cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uint32 dataSize) {
 	WAVEHDR* hdr = &ctx->headers[idx];
 	cc_result res;
 
@@ -353,16 +346,14 @@ cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 da
 	return 0;
 }
 
-cc_result Audio_Play(AudioHandle handle) { return 0; }
+cc_result Audio_Play(struct AudioContext* ctx) { return 0; }
 
-cc_result Audio_Stop(AudioHandle handle) {
-	struct AudioContext* ctx = &audioContexts[handle];
+cc_result Audio_Stop(struct AudioContext* ctx) {
 	if (!ctx->handle) return 0;
 	return waveOutReset(ctx->handle);
 }
 
-cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
-	struct AudioContext* ctx = &audioContexts[handle];
+cc_result Audio_IsCompleted(struct AudioContext* ctx, int idx, cc_bool* completed) {
 	WAVEHDR* hdr = &ctx->headers[idx];
 
 	*completed = false;
@@ -375,7 +366,7 @@ cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
 	*completed = true; return res;
 }
 
-cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) { return Audio_AllCompleted(handle, finished); }
+cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) { return Audio_AllCompleted(ctx, finished); }
 #elif defined CC_BUILD_OPENSLES
 /*########################################################################################################################*
 *----------------------------------------------------OpenSL ES backend----------------------------------------------------*
@@ -392,7 +383,6 @@ struct AudioContext {
 	SLObjectItf bqPlayerObject;
 	SLPlayItf   bqPlayerPlayer;
 };
-static struct AudioContext audioContexts[20];
 
 static cc_bool Backend_Init(void) {
 	SLInterfaceID ids[1];
@@ -433,7 +423,8 @@ static void Backend_Free(void) {
 	}
 }
 
-static void Backend_Setup(struct AudioContext* ctx, int buffers) {
+void Audio_Init(struct AudioContext* ctx, int buffers) {
+	ctx->count = buffers;
 }
 
 static cc_result Backend_Reset(struct AudioContext* ctx) {
@@ -487,23 +478,23 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 	return 0;
 }
 
-cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize) {
+cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uint32 size) {
 	return 0;
 }
 
-cc_result Audio_Play(AudioHandle handle) {
+cc_result Audio_Play(struct AudioContext* ctx) {
 	return 0;
 }
 
-cc_result Audio_Stop(AudioHandle handle) {
+cc_result Audio_Stop(struct AudioContext* ctx) {
 	return 0;
 }
 
-cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed) {
+cc_result Audio_IsCompleted(struct AudioContext* ctx, int idx, cc_bool* completed) {
 	return 0;
 }
 
-cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
+cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) {
 	return 0;
 }
 #endif
@@ -511,14 +502,13 @@ cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished) {
 /*########################################################################################################################*
 *---------------------------------------------------Common backend code---------------------------------------------------*
 *#########################################################################################################################*/
-static cc_result Audio_AllCompleted(AudioHandle handle, cc_bool* finished) {
-	struct AudioContext* ctx = &audioContexts[handle];
+static cc_result Audio_AllCompleted(struct AudioContext* ctx, cc_bool* finished) {
 	cc_result res;
 	int i;
 	*finished = false;
 
 	for (i = 0; i < ctx->count; i++) {
-		res = Audio_IsCompleted(handle, i, finished);
+		res = Audio_IsCompleted(ctx, i, finished);
 		if (res) return res;
 		if (!(*finished)) return 0;
 	}
@@ -527,29 +517,10 @@ static cc_result Audio_AllCompleted(AudioHandle handle, cc_bool* finished) {
 	return 0;
 }
 
-void Audio_Open(AudioHandle* handle, int buffers) {
-	struct AudioContext* ctx;
-	int i;
+struct AudioFormat* Audio_GetFormat(struct AudioContext* ctx) { return &ctx->format; }
 
-	for (i = 0; i < Array_Elems(audioContexts); i++) {
-		ctx = &audioContexts[i];
-		if (ctx->count) continue;
-		ctx->count = buffers;
-
-		Backend_Setup(ctx, buffers);
-		*handle = i;
-		return;
-	}
-	Logger_Abort("No free audio contexts");
-}
-
-struct AudioFormat* Audio_GetFormat(AudioHandle handle) {
-	return &audioContexts[handle].format;
-}
-
-cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
-	struct AudioContext* ctx = &audioContexts[handle];
-	struct AudioFormat*  cur = &ctx->format;
+cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
+	struct AudioFormat* cur = &ctx->format;
 	cc_result res;
 
 	if (AudioFormat_Eq(cur, format)) return 0;
@@ -559,12 +530,10 @@ cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format) {
 	return Backend_SetFormat(ctx, format);
 }
 
-cc_result Audio_Close(AudioHandle handle) {
-	struct AudioContext* ctx;
+cc_result Audio_Close(struct AudioContext* ctx) {
 	cc_bool finished;
-	Audio_Stop(handle);
-	Audio_IsFinished(handle, &finished); /* unqueue buffers */
-	ctx = &audioContexts[handle];
+	Audio_Stop(ctx);
+	Audio_IsFinished(ctx, &finished); /* unqueue buffers */
 
 	ctx->count             = 0;
 	ctx->format.channels   = 0;
@@ -723,14 +692,30 @@ static struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 ty
 /*########################################################################################################################*
 *--------------------------------------------------------Sounds-----------------------------------------------------------*
 *#########################################################################################################################*/
-struct SoundOutput { AudioHandle handle; void* buffer; cc_uint32 capacity; };
-#define AUDIO_MAX_HANDLES 6
-#define HANDLE_INV -1
-#define SOUND_INV { HANDLE_INV, NULL, 0 }
-
+struct SoundOutput { struct AudioContext* ctx; void* buffer; cc_uint32 capacity; };
 static struct Soundboard digBoard, stepBoard;
-static struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES]   = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
-static struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES] = { SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV, SOUND_INV };
+#define AUDIO_MAX_HANDLES 6
+
+static struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES];
+static struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES];
+static struct AudioContext soundContexts[AUDIO_MAX_HANDLES * 2];
+
+static struct AudioContext* Sounds_Open(void) {
+	struct AudioContext* ctx;
+	int i;
+
+	for (i = 0; i < Array_Elems(soundContexts); i++) {
+		ctx = &soundContexts[i];
+		if (ctx->count) continue;
+
+		Audio_Init(ctx, 1);
+		return ctx;
+	}
+
+	/* Should never happen */
+	Logger_Abort("No free audio contexts");
+	return NULL;
+}
 
 CC_NOINLINE static void Sounds_Fail(cc_result res) {
 	Logger_SimpleWarn(res, "playing sounds");
@@ -742,7 +727,7 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 	void* data = snd->data;
 	void* tmp;
 	cc_result res;
-	if ((res = Audio_SetFormat(output->handle, fmt))) { Sounds_Fail(res); return; }
+	if ((res = Audio_SetFormat(output->ctx, fmt))) { Sounds_Fail(res); return; }
 	
 	/* copy to temp buffer to apply volume */
 	if (volume < 100) {
@@ -765,8 +750,8 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 		Volume_Mix16((cc_int16*)data, snd->size / 2, volume);
 	}
 
-	if ((res = Audio_BufferData(output->handle, 0, data, snd->size))) { Sounds_Fail(res); return; }
-	if ((res = Audio_Play(output->handle)))                           { Sounds_Fail(res); return; }
+	if ((res = Audio_BufferData(output->ctx, 0, data, snd->size))) { Sounds_Fail(res); return; }
+	if ((res = Audio_Play(output->ctx)))                           { Sounds_Fail(res); return; }
 }
 
 static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
@@ -801,16 +786,16 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	/* Try to play on fresh device, or device with same data format */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		output = &outputs[i];
-		if (output->handle == HANDLE_INV) {
-			Audio_Open(&output->handle, 1);
+		if (!output->ctx) {
+			output->ctx = Sounds_Open();
 		} else {
-			res = Audio_IsFinished(output->handle, &finished);
+			res = Audio_IsFinished(output->ctx, &finished);
 
 			if (res) { Sounds_Fail(res); return; }
 			if (!finished) continue;
 		}
 
-		l = Audio_GetFormat(output->handle);
+		l = Audio_GetFormat(output->ctx);
 		if (!l->channels || AudioFormat_Eq(l, &fmt)) {
 			Sounds_PlayRaw(output, snd, &fmt, volume); return;
 		}
@@ -819,7 +804,7 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	/* Try again with all devices, even if need to recreate one (expensive) */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		output = &outputs[i];
-		res = Audio_IsFinished(output->handle, &finished);
+		res = Audio_IsFinished(output->ctx, &finished);
 
 		if (res) { Sounds_Fail(res); return; }
 		if (!finished) continue;
@@ -839,10 +824,10 @@ static void Audio_PlayBlockSound(void* obj, IVec3 coords, BlockID old, BlockID n
 static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
 	int i;
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		if (outputs[i].handle == HANDLE_INV) continue;
+		if (!outputs[i].ctx) continue;
 
-		Audio_Close(outputs[i].handle);
-		outputs[i].handle = HANDLE_INV;
+		Audio_Close(outputs[i].ctx);
+		outputs[i].ctx = NULL;
 
 		Mem_Free(outputs[i].buffer);
 		outputs[i].buffer   = NULL;
@@ -877,7 +862,7 @@ void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
 /*########################################################################################################################*
 *--------------------------------------------------------Music------------------------------------------------------------*
 *#########################################################################################################################*/
-static AudioHandle music_out;
+static struct AudioContext music_ctx;
 static void* music_thread;
 static void* music_waitable;
 static volatile cc_bool music_pendingStop, music_joining;
@@ -896,7 +881,7 @@ static cc_result Music_Buffer(int i, cc_int16* data, int maxSamples, struct Vorb
 	}
 	if (Audio_MusicVolume < 100) { Volume_Mix16(data, samples, Audio_MusicVolume); }
 
-	res2 = Audio_BufferData(music_out, i, data, samples * 2);
+	res2 = Audio_BufferData(&music_ctx, i, data, samples * 2);
 	if (res2) { music_pendingStop = true; return res2; }
 	return res;
 }
@@ -918,7 +903,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	
 	fmt.channels   = vorbis.channels;
 	fmt.sampleRate = vorbis.sampleRate;
-	if ((res = Audio_SetFormat(music_out, &fmt))) goto cleanup;
+	if ((res = Audio_SetFormat(&music_ctx, &fmt))) goto cleanup;
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples */
 	/* so we may end up decoding slightly over a second of audio */
@@ -934,14 +919,14 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	}
 	if (music_pendingStop) goto cleanup;
 
-	res = Audio_Play(music_out);
+	res = Audio_Play(&music_ctx);
 	if (res) goto cleanup;
 
 	for (;;) {
 		next = -1;
 		
 		for (i = 0; i < AUDIO_MAX_BUFFERS; i++) {
-			res = Audio_IsCompleted(music_out, i, &completed);
+			res = Audio_IsCompleted(&music_ctx, i, &completed);
 			if (res)       { music_pendingStop = true; break; }
 			if (completed) { next = i; break; }
 		}
@@ -954,10 +939,10 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 		if (res) break;
 	}
 
-	if (music_pendingStop) Audio_Stop(music_out);
+	if (music_pendingStop) Audio_Stop(&music_ctx);
 	/* Wait until the buffers finished playing */
 	for (;;) {
-		if (Audio_IsFinished(music_out, &completed) || completed) break;
+		if (Audio_IsFinished(&music_ctx, &completed) || completed) break;
 		Thread_Sleep(10);
 	}
 
@@ -988,7 +973,7 @@ static void Music_RunLoop(void) {
 	}
 
 	Random_SeedFromCurrentTime(&rnd);
-	Audio_Open(&music_out, AUDIO_MAX_BUFFERS);
+	Audio_Init(&music_ctx, AUDIO_MAX_BUFFERS);
 
 	while (!music_pendingStop && count) {
 		idx  = Random_Next(&rnd, count);
@@ -1019,7 +1004,7 @@ static void Music_RunLoop(void) {
 		Chat_AddRaw("&cDisabling music");
 		Audio_MusicVolume = 0;
 	}
-	Audio_Close(music_out);
+	Audio_Close(&music_ctx);
 
 	if (music_joining) return;
 	Thread_Detach(music_thread);
