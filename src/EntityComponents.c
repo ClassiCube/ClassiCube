@@ -243,10 +243,11 @@ void HacksComp_RecheckFlags(struct HacksComp* hacks) {
 
 void HacksComp_Update(struct HacksComp* hacks) {
 	if (!hacks->CanFly || !hacks->Enabled) {
-		hacks->Flying = false; hacks->FlyingDown = false; hacks->FlyingUp = false;
+		HacksComp_SetFlying(hacks, false); 
+		hacks->FlyingDown = false; hacks->FlyingUp = false;
 	}
 	if (!hacks->CanNoclip || !hacks->Enabled) {
-		hacks->Noclip = false;
+		HacksComp_SetNoclip(hacks, false);
 	}
 	if (!hacks->CanSpeed || !hacks->Enabled) {
 		hacks->Speeding = false; hacks->HalfSpeeding = false;
@@ -255,6 +256,18 @@ void HacksComp_Update(struct HacksComp* hacks) {
 	hacks->CanDoubleJump  = hacks->Enabled     && hacks->CanSpeed;
 	hacks->CanSeeAllNames = hacks->CanAnyHacks && hacks->IsOp;
 	Event_RaiseVoid(&UserEvents.HackPermissionsChanged);
+}
+
+void HacksComp_SetFlying(struct HacksComp* hacks, cc_bool flying) {
+	if (hacks->Flying == flying) return;
+	hacks->Flying = flying;
+	Event_RaiseVoid(&UserEvents.HacksStateChanged);
+}
+
+void HacksComp_SetNoclip(struct HacksComp* hacks, cc_bool noclip) {
+	if (hacks->Noclip == noclip) return;
+	hacks->Noclip = noclip;
+	Event_RaiseVoid(&UserEvents.HacksStateChanged);
 }
 
 

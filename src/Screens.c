@@ -63,7 +63,7 @@ static struct HUDScreen {
 	struct TextAtlas posAtlas;
 	double accumulator;
 	int frames, fps;
-	cc_bool speed, halfSpeed, noclip, fly, canSpeed;
+	cc_bool speed, halfSpeed, canSpeed, hacksChanged;
 	int lastFov;
 	struct HotbarWidget hotbar;
 } HUDScreen_Instance;
@@ -121,10 +121,10 @@ static void HUDScreen_DrawPosition(struct HUDScreen* s) {
 	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
 }
 
-static cc_bool HUDScreen_HacksChanged(struct HUDScreen* s) {
+static cc_bool HUDScreen_HasHacksChanged(struct HUDScreen* s) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	return hacks->Speeding != s->speed || hacks->HalfSpeeding != s->halfSpeed || hacks->Flying != s->fly
-		|| hacks->Noclip != s->noclip  || Game_Fov != s->lastFov || hacks->CanSpeed != s->canSpeed;
+	return hacks->Speeding != s->speed   || hacks->HalfSpeeding != s->halfSpeed
+			|| Game_Fov    != s->lastFov || hacks->CanSpeed != s->canSpeed || s->hacksChanged;
 }
 
 static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
@@ -133,8 +133,9 @@ static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
 	cc_bool speeding;
 
 	hacks = &LocalPlayer_Instance.Hacks;
-	s->speed = hacks->Speeding; s->halfSpeed = hacks->HalfSpeeding; s->fly = hacks->Flying;
-	s->noclip = hacks->Noclip;  s->lastFov = Game_Fov; s->canSpeed = hacks->CanSpeed;
+	s->speed   = hacks->Speeding; s->halfSpeed = hacks->HalfSpeeding;
+	s->lastFov = Game_Fov;         s->canSpeed = hacks->CanSpeed;
+	s->hacksChanged = false;
 
 	String_InitArray(status, statusBuffer);
 	if (Game_Fov != Game_DefaultFov) {
@@ -246,11 +247,16 @@ static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
 	return false;
 }
 
+static void HUDScreen_HacksChanged(void* obj) {
+	((struct HUDScreen*)obj)->hacksChanged = true;
+}
+
 static void HUDScreen_Init(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	HotbarWidget_Create(&s->hotbar);
 	TextWidget_Init(&s->line1);
 	TextWidget_Init(&s->line2);
+	Event_Register_(&UserEvents.HacksStateChanged, screen, HUDScreen_HacksChanged);
 }
 
 static void HUDScreen_Render(void* screen, double delta) {
@@ -264,7 +270,7 @@ static void HUDScreen_Render(void* screen, double delta) {
 	if (Game_ClassicMode) {
 		Elem_Render(&s->line2, delta);
 	} else if (IsOnlyChatActive() && Gui.ShowFPS) {
-		if (HUDScreen_HacksChanged(s)) { HUDScreen_UpdateHackState(s); }
+		if (HUDScreen_HasHacksChanged(s)) HUDScreen_UpdateHackState(s);
 		HUDScreen_DrawPosition(s);
 		Elem_Render(&s->line2, delta);
 	}
@@ -273,8 +279,12 @@ static void HUDScreen_Render(void* screen, double delta) {
 	Gfx_SetTexturing(false);
 }
 
+static void HUDScreen_Free(void* screen) {
+	Event_Unregister_(&UserEvents.HacksStateChanged, screen, HUDScreen_HacksChanged);
+}
+
 static const struct ScreenVTABLE HUDScreen_VTABLE = {
-	HUDScreen_Init,        HUDScreen_Update,    Screen_NullFunc,
+	HUDScreen_Init,        HUDScreen_Update,    HUDScreen_Free,
 	HUDScreen_Render,      HUDScreen_BuildMesh,
 	HUDScreen_KeyDown,     HUDScreen_KeyUp,     Screen_FKeyPress, Screen_FText,
 	HUDscreen_PointerDown, Screen_FPointer,     Screen_FPointer,  Screen_FMouseScroll,
@@ -1895,6 +1905,7 @@ static const struct TouchBindDesc {
 	const char* text;
 	cc_uint8 bind, width;
 	cc_int16 x, y;
+	MenuClick OnClick;
 } touchDescs[TOUCH_NUM_BTNS] = {
 	{ "Jump", KEYBIND_JUMP,    100,  50, 90 },
 	{ "",     KEYBIND_COUNT,   100,  50, 50 },
@@ -1997,12 +2008,9 @@ static void TouchScreen_Init(void* screen) {
 	s->maxVertices = TOUCH_MAX_VERTICES;
 
 	for (i = 0; i < TOUCH_NUM_BTNS; i++) {
-		ButtonWidget_Init(&s->btns[i], touchDescs[i].width, NULL);
+		ButtonWidget_Init(&s->btns[i], touchDescs[i].width, touchDescs[i].OnClick);
 		s->binds[i] = touchDescs[i].bind;
 	}
-
-	s->btns[1].MenuClick = TouchScreen_ModeClick;
-	s->btns[2].MenuClick = TouchScreen_MoreClick;
 
 	ThumbstickWidget_Init(&s->thumbstick);
 	touchInput.GetMovement = TouchScreen_GetMovement;

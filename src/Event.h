@@ -135,6 +135,7 @@ CC_VAR extern struct _UserEventsList {
 	struct Event_Block BlockChanged;           /* User changes a block */
 	struct Event_Void  HackPermissionsChanged; /* Hack permissions of the player changes */
 	struct Event_Void  HeldBlockChanged;       /* Held block in hotbar changes */
+	struct Event_Void  HacksStateChanged;      /* Hack states changed (e.g. stops flying) */
 } UserEvents;
 
 CC_VAR extern struct _BlockEventsList {

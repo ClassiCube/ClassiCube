@@ -784,7 +784,7 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 	struct LocalPlayerInput* input;
 
 	if (Gui_GetInputGrab()) {
-		p->Physics.Jumping = false; hacks->Speeding = false;
+		p->Physics.Jumping = false; hacks->Speeding   = false;
 		hacks->FlyingUp    = false; hacks->FlyingDown = false;
 	} else {
 		/* keyboard input, touch, joystick, etc */
@@ -805,7 +805,7 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 				/* need a { } block because it's a macro */
 				Vec3_Set(p->Base.Velocity, 0,0,0);
 			}
-			hacks->Noclip = KeyBind_IsPressed(KEYBIND_NOCLIP);
+			HacksComp_SetNoclip(hacks, KeyBind_IsPressed(KEYBIND_NOCLIP));
 		}
 	}
 }
@@ -1026,7 +1026,7 @@ static cc_bool LocalPlayer_HandleSetSpawn(void) {
 static cc_bool LocalPlayer_HandleFly(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
-		p->Hacks.Flying = !p->Hacks.Flying;
+		HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
 		return true;
 	} else if (!p->_warnedFly) {
 		p->_warnedFly = true;
@@ -1041,7 +1041,7 @@ static cc_bool LocalPlayer_HandleNoClip(void) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
 		if (p->Hacks.Noclip) p->Base.Velocity.Y = 0;
 
-		p->Hacks.Noclip = !p->Hacks.Noclip;
+		HacksComp_SetNoclip(&p->Hacks, !p->Hacks.Noclip);
 		return true;
 	} else if (!p->_warnedNoclip) {
 		p->_warnedNoclip = true;
