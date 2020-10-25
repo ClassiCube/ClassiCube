@@ -906,12 +906,13 @@ static void MainScreen_TickGetToken(struct MainScreen* s) {
 	LWebTask_Tick(&GetTokenTask.Base);
 	if (!GetTokenTask.Base.completed) return;
 
-	if (GetTokenTask.Base.success) {
-		SignInTask_Run(&s->iptUsername.text, &s->iptPassword.text, 
-						&MFAScreen_Instance.iptCode.text);
-	} else {
+	if (!GetTokenTask.Base.success) {
 		MainScreen_Error(&GetTokenTask.Base, "signing in");
+		return;
 	}
+
+	SignInTask_Run(&s->iptUsername.text, &s->iptPassword.text, 
+					&MFAScreen_Instance.iptCode.text);
 }
 
 static void MainScreen_TickSignIn(struct MainScreen* s) {
@@ -945,16 +946,17 @@ static void MainScreen_TickFetchServers(struct MainScreen* s) {
 	LWebTask_Tick(&FetchServersTask.Base);
 	if (!FetchServersTask.Base.completed) return;
 
-	if (FetchServersTask.Base.success) {
-		s->signingIn = false;
-		if (Launcher_AutoHash.length) {
-			Launcher_ConnectToServer(&Launcher_AutoHash);
-			Launcher_AutoHash.length = 0;
-		} else {
-			ServersScreen_SetActive();
-		}
-	} else {
+	if (!FetchServersTask.Base.success) {
 		MainScreen_Error(&FetchServersTask.Base, "retrieving servers list");
+		return;
+	}
+
+	s->signingIn = false;
+	if (Launcher_AutoHash.length) {
+		Launcher_ConnectToServer(&Launcher_AutoHash);
+		Launcher_AutoHash.length = 0;
+	} else {
+		ServersScreen_SetActive();
 	}
 }
 

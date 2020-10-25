@@ -57,7 +57,8 @@ void LWebTask_DisplayError(struct LWebTask* task, const char* action, cc_string*
 
 extern struct GetTokenTaskData {
 	struct LWebTask Base;
-	cc_string token; /* Random CSRF token for logging in. */
+	cc_string token;    /* Random CSRF token for logging in. */
+	cc_string username; /* Username if session is already logged in. */
 } GetTokenTask;
 void GetTokenTask_Run(void);
 

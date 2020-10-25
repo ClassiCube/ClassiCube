@@ -233,8 +233,11 @@ static struct StringsBuffer ccCookies;
 struct GetTokenTaskData GetTokenTask;
 
 static void GetTokenTask_OnValue(struct JsonContext* ctx, const cc_string* str) {
-	if (!String_CaselessEqualsConst(&ctx->curKey, "token")) return;
-	String_Copy(&GetTokenTask.token, str);
+	if (String_CaselessEqualsConst(&ctx->curKey, "token")) {
+		String_Copy(&GetTokenTask.token, str);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "username")) {
+		String_Copy(&GetTokenTask.username, str);
+	}
 }
 
 static void GetTokenTask_Handle(cc_uint8* data, cc_uint32 len) {
@@ -244,10 +247,12 @@ static void GetTokenTask_Handle(cc_uint8* data, cc_uint32 len) {
 void GetTokenTask_Run(void) {
 	static const cc_string url = String_FromConst("https://www.classicube.net/api/login");
 	static char tokenBuffer[STRING_SIZE];
+	static char userBuffer[STRING_SIZE];
 	if (GetTokenTask.Base.working) return;
 
 	LWebTask_Reset(&GetTokenTask.Base);
-	String_InitArray(GetTokenTask.token, tokenBuffer);
+	String_InitArray(GetTokenTask.token,    tokenBuffer);
+	String_InitArray(GetTokenTask.username, userBuffer);
 
 	GetTokenTask.Base.Handle = GetTokenTask_Handle;
 	GetTokenTask.Base.reqID  = Http_AsyncGetDataEx(&url, false, NULL, NULL, &ccCookies);
@@ -258,7 +263,6 @@ void GetTokenTask_Run(void) {
 *--------------------------------------------------------SignInTask-------------------------------------------------------*
 *#########################################################################################################################*/
 struct SignInTaskData SignInTask;
-static char userBuffer[STRING_SIZE];
 
 static void SignInTask_LogError(const cc_string* str) {
 	static char errBuffer[128];
@@ -299,6 +303,7 @@ static void SignInTask_Append(cc_string* dst, const char* key, const cc_string* 
 
 void SignInTask_Run(const cc_string* user, const cc_string* pass, const cc_string* mfaCode) {
 	static const cc_string url = String_FromConst("https://www.classicube.net/api/login");
+	static char userBuffer[STRING_SIZE];
 	cc_string args; char argsBuffer[1024];
 	if (SignInTask.Base.working) return;
 
