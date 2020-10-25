@@ -901,6 +901,19 @@ static void MainScreen_TickCheckUpdates(struct MainScreen* s) {
 	LWidget_Redraw(&s->lblUpdate);
 }
 
+static void MainScreen_LoginPhase2(struct MainScreen* s, const cc_string* user) {
+	/* website returns case correct username */
+	if (!String_Equals(&s->iptUsername.text, user)) {
+		LInput_SetText(&s->iptUsername, user);
+		LWidget_Redraw(&s->iptUsername);
+	}
+	String_Copy(&Game_Username, user);
+
+	FetchServersTask_Run();
+	LLabel_SetConst(&s->lblStatus, "&eRetrieving servers list..");
+	LWidget_Redraw(&s->lblStatus);
+}
+
 static void MainScreen_TickGetToken(struct MainScreen* s) {
 	if (!GetTokenTask.Base.working)   return;
 	LWebTask_Tick(&GetTokenTask.Base);
@@ -911,8 +924,13 @@ static void MainScreen_TickGetToken(struct MainScreen* s) {
 		return;
 	}
 
-	SignInTask_Run(&s->iptUsername.text, &s->iptPassword.text, 
-					&MFAScreen_Instance.iptCode.text);
+	if (String_CaselessEquals(&GetTokenTask.username, &s->iptUsername.text)) {
+		/* Already logged in, go straight to fetching servers */
+		MainScreen_LoginPhase2(s, &GetTokenTask.username);
+	} else {
+		SignInTask_Run(&s->iptUsername.text, &s->iptPassword.text,
+						&MFAScreen_Instance.iptCode.text);
+	}
 }
 
 static void MainScreen_TickSignIn(struct MainScreen* s) {
@@ -926,16 +944,7 @@ static void MainScreen_TickSignIn(struct MainScreen* s) {
 		LLabel_SetConst(&s->lblStatus, SignInTask.error);
 		LWidget_Redraw(&s->lblStatus);
 	} else if (SignInTask.Base.success) {
-		/* website returns case correct username */
-		if (!String_Equals(&s->iptUsername.text, &SignInTask.username)) {
-			LInput_SetText(&s->iptUsername, &SignInTask.username);
-			LWidget_Redraw(&s->iptUsername);
-		}
-		String_Copy(&Game_Username, &SignInTask.username);
-
-		FetchServersTask_Run();
-		LLabel_SetConst(&s->lblStatus, "&eRetrieving servers list..");
-		LWidget_Redraw(&s->lblStatus);
+		MainScreen_LoginPhase2(s, &SignInTask.username);
 	} else {
 		MainScreen_Error(&SignInTask.Base, "signing in");
 	}
