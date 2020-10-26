@@ -2506,35 +2506,41 @@ void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* fo
 *----------------------------------------------------ThumbstickWidget-----------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_TOUCH
-static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
+#define DIR_YMAX (1 << 0)
+#define DIR_YMIN (1 << 1)
+#define DIR_XMAX (1 << 2)
+#define DIR_XMIN (1 << 3)
+
+static void ThumbstickWidget_BuildGroup(void* widget, struct Texture* tex, struct VertexTextured** vertices) {
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
-	struct Texture tex = { 0 };
+	float tmp;
+	tex->X = w->x;
 
-	tex.X     = w->x;     tex.Y      = w->y;
-	tex.Width = w->width; tex.Height = w->height;
-	tex.uv.U2 = 0.5f;     tex.uv.V2  = 1;
-	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
+	tex->Y = w->y + w->height / 2;
+	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
-	/* The 4 sides.. not done */
-	/* Side 1 */
-	tex.Width /= 2;
-	tex.uv.U1 = 0.75f;
-	tex.uv.U2 = 1.00f;
-	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
-	/* Side 2 */
-	tex.X += tex.Width;
-	tex.uv.U1 = 1.00f;
-	tex.uv.U2 = 0.75f;
-	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
-	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
-	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, vertices);
+	tex->Y = w->y;
+	tmp    = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
+	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+
+	/* TODO: The two X sides */
+	tex->X += w->width;
+	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 }
 
-/* TODO: Replace with FACE_XMIN_BIT */
-#define DIR_XMIN (1 << FACE_XMIN)
-#define DIR_XMAX (1 << FACE_XMAX)
-#define DIR_YMIN (1 << FACE_YMIN)
-#define DIR_YMAX (1 << FACE_YMAX)
+static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
+	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+	struct Texture tex;
+
+	tex.Width = w->width; tex.Height = w->height / 2;
+	tex.uv.U1 = 0.0f;     tex.uv.U2  = 1.0f;
+
+	tex.uv.V1 = 0.0f; tex.uv.V2 = 0.5f;
+	ThumbstickWidget_BuildGroup(widget, &tex, vertices);
+	tex.uv.V1 = 0.5f; tex.uv.V2 = 1.0f;
+	ThumbstickWidget_BuildGroup(widget, &tex, vertices);
+}
 
 static int ThumbstickWidget_CalcDirs(struct ThumbstickWidget* w) {
 	int i, dx, dy, dirs = 0;
@@ -2558,16 +2564,16 @@ static int ThumbstickWidget_CalcDirs(struct ThumbstickWidget* w) {
 
 static int ThumbstickWidget_Render2(void* widget, int offset) {
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
-	int flags = ThumbstickWidget_CalcDirs(w);
+	int i, base, flags = ThumbstickWidget_CalcDirs(w);
 
 	if (Gui.TouchTex) {
 		Gfx_BindTexture(Gui.TouchTex);
-		Gfx_DrawVb_IndexedTris_Range(4, offset);
-
-		if (flags & DIR_XMIN) Gfx_DrawVb_IndexedTris_Range(4, offset + 4);
-		if (flags & DIR_XMAX) Gfx_DrawVb_IndexedTris_Range(4, offset + 8);
+		for (i = 0; i < 4; i++) {
+			base = (flags & (1 << i)) ? 0 : THUMBSTICKWIDGET_PER;
+			Gfx_DrawVb_IndexedTris_Range(4, offset + base + (i * 4));
+		}
 	}
-	return offset + 20;
+	return offset + THUMBSTICKWIDGET_MAX;
 }
 
 static const struct WidgetVTABLE ThumbstickWidget_VTABLE = {

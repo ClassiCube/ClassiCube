@@ -1955,7 +1955,7 @@ static void TouchScreen_HacksChanged(void* screen) {
 	/* must destroy graphics resources BEFORE that */
 	Screen_ContextLost(s);
 	TouchScreen_InitButtons(s);
-	Gui_Refresh(s);
+	Gui_Refresh((struct Screen*)s);
 }
 
 static void TouchScreen_ContextLost(void* screen) {
@@ -2068,7 +2068,7 @@ static void TouchScreen_Layout(void* screen) {
 		Widget_Layout(&s->btns[i]);
 	}
 
-	Widget_SetLocation(&s->thumbstick, ANCHOR_MIN, ANCHOR_MAX, 30, 70);
+	Widget_SetLocation(&s->thumbstick, ANCHOR_MIN, ANCHOR_MAX, 30, 50);
 }
 
 static void TouchScreen_Free(void* s) {
