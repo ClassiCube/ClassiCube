@@ -2511,11 +2511,23 @@ void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* fo
 #define DIR_XMAX (1 << 2)
 #define DIR_XMIN (1 << 3)
 
+static void ThumbstickWidget_Rotate(void* widget, struct VertexTextured** vertices, int offset) {
+	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+	struct VertexTextured* ptr;
+	int i, x, y;
+
+	ptr = *vertices - 4;
+	for (i = 0; i < 4; i++) {
+		int x = ptr[i].X - w->x;
+		int y = ptr[i].Y - w->y;
+		ptr[i].X = -y + w->x + offset;
+		ptr[i].Y =  x + w->y;
+	}
+}
+
 static void ThumbstickWidget_BuildGroup(void* widget, struct Texture* tex, struct VertexTextured** vertices) {
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
 	float tmp;
-	tex->X = w->x;
-
 	tex->Y = w->y + w->height / 2;
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
@@ -2524,15 +2536,19 @@ static void ThumbstickWidget_BuildGroup(void* widget, struct Texture* tex, struc
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
 	/* TODO: The two X sides */
-	tex->X += w->width;
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+	ThumbstickWidget_Rotate(widget, vertices, w->width);
+
+	tmp    = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+	ThumbstickWidget_Rotate(widget, vertices, w->width / 2);
 }
 
 static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
 	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
 	struct Texture tex;
 
+	tex.X     = w->x;
 	tex.Width = w->width; tex.Height = w->height / 2;
 	tex.uv.U1 = 0.0f;     tex.uv.U2  = 1.0f;
 
