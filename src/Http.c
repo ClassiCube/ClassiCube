@@ -1129,13 +1129,15 @@ void Http_UrlEncodeUtf8(cc_string* dst, const cc_string* src) {
 void Http_UrlEncodeUrl(cc_string* dst, const cc_string* src) {
 	cc_uint8 data[4];
 	int i, len;
+	char c;
 
 	for (i = 0; i < src->length; i++) {
-		len = Convert_CP437ToUtf8(src->buffer[i], data);
+		c   = src->buffer[i];
+		len = Convert_CP437ToUtf8(c, data);
 
-		/* '/' must not be URL encoded (it normally would be) */
-		if (src->buffer[i] == '/') {
-			String_Append(dst, '/');
+		/* URL path/query must not be URL encoded (it normally would be) */
+		if (c == '/' || c == '?' || c == '=') {
+			String_Append(dst, c);
 		} else {
 			Http_UrlEncode(dst, data, len);
 		}
