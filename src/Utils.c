@@ -227,6 +227,7 @@ void EntryList_Load(struct StringsBuffer* list, const char* file, char separator
 	cc_string entry; char entryBuffer[768];
 	cc_string path;  char pathBuffer[FILENAME_SIZE];
 	cc_string key, value;
+	int lineLen;
 
 	cc_uint8 buffer[2048];
 	struct Stream stream, buffered;
@@ -258,8 +259,9 @@ void EntryList_Load(struct StringsBuffer* list, const char* file, char separator
 		/* Sometimes file becomes corrupted and replaced with NULL */
 		/* If don't prevent this here, client aborts in StringsBuffer_Add */
 		if (entry.length > STRINGSBUFFER_LEN_MASK) {
+			lineLen      = entry.length;
 			entry.length = 0;
-			String_Format1(&entry, "Skipping extremely long line in %c, file may have been corrupted", file);
+			String_Format2(&entry, "Skipping very long (%i characters) line in %c, file may be corrupted", &lineLen, file);
 			Logger_WarnFunc(&entry); continue;
 		}
 
