@@ -1665,9 +1665,7 @@ static void BlockDefs_DefineBlock(cc_uint8* data) {
 
 	BlockDefs_DefineBlockCommonEnd(data, shape, block);
 	/* Update sprite BoundingBox if necessary */
-	if (Blocks.Draw[block] == DRAW_SPRITE) {
-		Block_RecalculateBB(block);
-	}
+	if (Blocks.Draw[block] == DRAW_SPRITE) Block_RecalculateBB(block);
 }
 
 static void BlockDefs_UndefineBlock(cc_uint8* data) {
@@ -1686,6 +1684,8 @@ static void BlockDefs_UndefineBlock(cc_uint8* data) {
 
 	Block_SetCustomDefined(block, false);
 	Event_RaiseVoid(&BlockEvents.BlockDefChanged);
+	/* Update sprite BoundingBox if necessary */
+	if (Blocks.Draw[block] == DRAW_SPRITE) Block_RecalculateBB(block);
 }
 
 static void BlockDefs_DefineBlockExt(cc_uint8* data) {
