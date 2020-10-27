@@ -481,6 +481,17 @@ static void Gfx_RestoreState(void) {
 	D3D9_RestoreRenderStates();
 }
 
+static cc_bool D3D9_CheckResult(cc_result res, const char* func) {
+	if (!res) return true;
+
+	if (res == D3DERR_OUTOFVIDEOMEMORY || res == E_OUTOFMEMORY) {
+		Event_RaiseVoid(&GfxEvents.LowVRAMDetected);
+	} else {
+		Logger_Abort2(res, func);
+	}
+	return false;
+}
+
 
 /*########################################################################################################################*
 *---------------------------------------------------------Textures--------------------------------------------------------*
@@ -545,6 +556,7 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, struct Bitm
 
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
+	IDirect3DTexture9* sys;
 	cc_result res;
 	int mipmapsLevels = CalcMipmapsLevels(bmp->width, bmp->height);
 	int levels = 1 + (mipmaps ? mipmapsLevels : 0);
@@ -555,24 +567,29 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_bool managedPool, cc_bool
 	if (Gfx.LostContext) return 0;
 
 	if (managedPool) {
-		res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
-			0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, NULL);
-		if (res) Logger_Abort2(res, "D3D9_CreateTexture");
+		for (;;) {
+			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
+								0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, NULL);
+			if (D3D9_CheckResult(res, "D3D9_CreateTexture failed")) break;
+		}
 
 		D3D9_SetTextureData(tex, bmp, 0);
 		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, bmp->width, false);
 	} else {
-		IDirect3DTexture9* sys;
-		res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
-			0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &sys, NULL);
-		if (res) Logger_Abort2(res, "D3D9_CreateTexture - SystemMem");
+		for (;;) {
+			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
+								0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &sys, NULL);
+			if (D3D9_CheckResult(res, "D3D9_CreateSysTexture failed")) break;
+		}
 
 		D3D9_SetTextureData(sys, bmp, 0);
 		if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, bmp->width, false);
 
-		res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
-			0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, NULL);
-		if (res) Logger_Abort2(res, "D3D9_CreateTexture - GPU");
+		for (;;) {
+			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
+								0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, NULL);
+			if (D3D9_CheckResult(res, "D3D9_CreateGPUTexture failed")) break;
+		}
 
 		res = IDirect3DDevice9_UpdateTexture(device, (IDirect3DBaseTexture9*)sys, (IDirect3DBaseTexture9*)tex);
 		if (res) Logger_Abort2(res, "D3D9_CreateTexture - Update");
@@ -755,11 +772,8 @@ static IDirect3DVertexBuffer9* D3D9_AllocVertexBuffer(VertexFormat fmt, int coun
 
 	for (;;) {
 		res = IDirect3DDevice9_CreateVertexBuffer(device, size, usage,
-			d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
-		if (!res) break;
-
-		if (res != D3DERR_OUTOFVIDEOMEMORY) Logger_Abort2(res, "D3D9_CreateVb");
-		Event_RaiseVoid(&GfxEvents.LowVRAMDetected);
+					d3d9_formatMappings[fmt], D3DPOOL_DEFAULT, &vbuffer, NULL);
+		if (D3D9_CheckResult(res, "D3D9_CreateVb failed")) break;
 	}
 	return vbuffer;
 }
