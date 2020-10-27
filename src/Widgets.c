@@ -2500,3 +2500,116 @@ void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* fo
 	w->target    = target;
 	SpecialInputWidget_InitTabs(w);
 }
+
+
+/*########################################################################################################################*
+*----------------------------------------------------ThumbstickWidget-----------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_TOUCH
+#define DIR_YMAX (1 << 0)
+#define DIR_YMIN (1 << 1)
+#define DIR_XMAX (1 << 2)
+#define DIR_XMIN (1 << 3)
+
+static void ThumbstickWidget_Rotate(void* widget, struct VertexTextured** vertices, int offset) {
+	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+	struct VertexTextured* ptr;
+	int i, x, y;
+
+	ptr = *vertices - 4;
+	for (i = 0; i < 4; i++) {
+		int x = ptr[i].X - w->x;
+		int y = ptr[i].Y - w->y;
+		ptr[i].X = -y + w->x + offset;
+		ptr[i].Y =  x + w->y;
+	}
+}
+
+static void ThumbstickWidget_BuildGroup(void* widget, struct Texture* tex, struct VertexTextured** vertices) {
+	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+	float tmp;
+	tex->Y = w->y + w->height / 2;
+	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+
+	tex->Y = w->y;
+	tmp    = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
+	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+
+	/* TODO: The two X sides */
+	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+	ThumbstickWidget_Rotate(widget, vertices, w->width);
+
+	tmp    = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
+	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
+	ThumbstickWidget_Rotate(widget, vertices, w->width / 2);
+}
+
+static void ThumbstickWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
+	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+	struct Texture tex;
+
+	tex.X     = w->x;
+	tex.Width = w->width; tex.Height = w->height / 2;
+	tex.uv.U1 = 0.0f;     tex.uv.U2  = 1.0f;
+
+	tex.uv.V1 = 0.0f; tex.uv.V2 = 0.5f;
+	ThumbstickWidget_BuildGroup(widget, &tex, vertices);
+	tex.uv.V1 = 0.5f; tex.uv.V2 = 1.0f;
+	ThumbstickWidget_BuildGroup(widget, &tex, vertices);
+}
+
+static int ThumbstickWidget_CalcDirs(struct ThumbstickWidget* w) {
+	int i, dx, dy, dirs = 0;
+	double angle;
+
+	for (i = 0; i < INPUT_MAX_POINTERS; i++) {
+		if (!(w->active & (1 << i))) continue;
+
+		dx = Pointers[i].x - (w->x + w->width  / 2);
+		dy = Pointers[i].y - (w->y + w->height / 2);
+		angle = Math_Atan2(dx, dy) * MATH_RAD2DEG;
+
+		/* 4 quadrants diagonally, but slightly expanded for overlap*/
+		if (angle >=   30 && angle <= 150) dirs |= DIR_YMAX;
+		if (angle >=  -60 && angle <=  60) dirs |= DIR_XMAX;
+		if (angle >= -150 && angle <= -30) dirs |= DIR_YMIN;
+		if (angle <  -120 || angle >  120) dirs |= DIR_XMIN;
+	}
+	return dirs;
+}
+
+static int ThumbstickWidget_Render2(void* widget, int offset) {
+	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+	int i, base, flags = ThumbstickWidget_CalcDirs(w);
+
+	if (Gui.TouchTex) {
+		Gfx_BindTexture(Gui.TouchTex);
+		for (i = 0; i < 4; i++) {
+			base = (flags & (1 << i)) ? 0 : THUMBSTICKWIDGET_PER;
+			Gfx_DrawVb_IndexedTris_Range(4, offset + base + (i * 4));
+		}
+	}
+	return offset + THUMBSTICKWIDGET_MAX;
+}
+
+static const struct WidgetVTABLE ThumbstickWidget_VTABLE = {
+	NULL, Screen_NullFunc, Widget_CalcPosition,
+	Widget_Key,        Widget_Key,      Widget_MouseScroll,
+	Widget_Pointer,    Widget_Pointer,  Widget_PointerMove,
+	ThumbstickWidget_BuildMesh, ThumbstickWidget_Render2
+};
+void ThumbstickWidget_Init(struct ThumbstickWidget* w) {
+	Widget_Reset(w);
+	w->VTABLE = &ThumbstickWidget_VTABLE;
+	w->width  = Display_ScaleX(128);
+	w->height = Display_ScaleY(128);
+}
+
+void ThumbstickWidget_GetMovement(struct ThumbstickWidget* w, float* xMoving, float* zMoving) {
+	int dirs = ThumbstickWidget_CalcDirs(w);
+	if (dirs & DIR_XMIN) *xMoving -= 1;
+	if (dirs & DIR_XMAX) *xMoving += 1;
+	if (dirs & DIR_YMIN) *zMoving -= 1;
+	if (dirs & DIR_YMAX) *zMoving += 1;
+}
+#endif

@@ -22,6 +22,7 @@ double Math_Exp(double x) { return exp(x); }
 
 float Math_SinF(float x) { return (float)Math_Sin(x); }
 float Math_CosF(float x) { return (float)Math_Cos(x); }
+double Math_Atan2(double x, double y) { return atan2(y, x); }
 
 int Math_Floor(float value) {
 	int valueI = (int)value;

@@ -63,7 +63,7 @@ static struct HUDScreen {
 	struct TextAtlas posAtlas;
 	double accumulator;
 	int frames, fps;
-	cc_bool speed, halfSpeed, noclip, fly, canSpeed;
+	cc_bool speed, halfSpeed, canSpeed, hacksChanged;
 	int lastFov;
 	struct HotbarWidget hotbar;
 } HUDScreen_Instance;
@@ -121,10 +121,10 @@ static void HUDScreen_DrawPosition(struct HUDScreen* s) {
 	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
 }
 
-static cc_bool HUDScreen_HacksChanged(struct HUDScreen* s) {
+static cc_bool HUDScreen_HasHacksChanged(struct HUDScreen* s) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	return hacks->Speeding != s->speed || hacks->HalfSpeeding != s->halfSpeed || hacks->Flying != s->fly
-		|| hacks->Noclip != s->noclip  || Game_Fov != s->lastFov || hacks->CanSpeed != s->canSpeed;
+	return hacks->Speeding != s->speed   || hacks->HalfSpeeding != s->halfSpeed
+			|| Game_Fov    != s->lastFov || hacks->CanSpeed != s->canSpeed || s->hacksChanged;
 }
 
 static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
@@ -133,8 +133,9 @@ static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
 	cc_bool speeding;
 
 	hacks = &LocalPlayer_Instance.Hacks;
-	s->speed = hacks->Speeding; s->halfSpeed = hacks->HalfSpeeding; s->fly = hacks->Flying;
-	s->noclip = hacks->Noclip;  s->lastFov = Game_Fov; s->canSpeed = hacks->CanSpeed;
+	s->speed   = hacks->Speeding; s->halfSpeed = hacks->HalfSpeeding;
+	s->lastFov = Game_Fov;         s->canSpeed = hacks->CanSpeed;
+	s->hacksChanged = false;
 
 	String_InitArray(status, statusBuffer);
 	if (Game_Fov != Game_DefaultFov) {
@@ -246,11 +247,16 @@ static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
 	return false;
 }
 
+static void HUDScreen_HacksChanged(void* obj) {
+	((struct HUDScreen*)obj)->hacksChanged = true;
+}
+
 static void HUDScreen_Init(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	HotbarWidget_Create(&s->hotbar);
 	TextWidget_Init(&s->line1);
 	TextWidget_Init(&s->line2);
+	Event_Register_(&UserEvents.HacksStateChanged, screen, HUDScreen_HacksChanged);
 }
 
 static void HUDScreen_Render(void* screen, double delta) {
@@ -264,7 +270,7 @@ static void HUDScreen_Render(void* screen, double delta) {
 	if (Game_ClassicMode) {
 		Elem_Render(&s->line2, delta);
 	} else if (IsOnlyChatActive() && Gui.ShowFPS) {
-		if (HUDScreen_HacksChanged(s)) { HUDScreen_UpdateHackState(s); }
+		if (HUDScreen_HasHacksChanged(s)) HUDScreen_UpdateHackState(s);
 		HUDScreen_DrawPosition(s);
 		Elem_Render(&s->line2, delta);
 	}
@@ -273,8 +279,12 @@ static void HUDScreen_Render(void* screen, double delta) {
 	Gfx_SetTexturing(false);
 }
 
+static void HUDScreen_Free(void* screen) {
+	Event_Unregister_(&UserEvents.HacksStateChanged, screen, HUDScreen_HacksChanged);
+}
+
 static const struct ScreenVTABLE HUDScreen_VTABLE = {
-	HUDScreen_Init,        HUDScreen_Update,    Screen_NullFunc,
+	HUDScreen_Init,        HUDScreen_Update,    HUDScreen_Free,
 	HUDScreen_Render,      HUDScreen_BuildMesh,
 	HUDScreen_KeyDown,     HUDScreen_KeyUp,     Screen_FKeyPress, Screen_FText,
 	HUDscreen_PointerDown, Screen_FPointer,     Screen_FPointer,  Screen_FMouseScroll,
@@ -1876,34 +1886,77 @@ void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
 *--------------------------------------------------------TouchScreen------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_TOUCH
-static struct TouchScreen {
-	Screen_Body
-	cc_uint8 binds[7];
-	struct FontDesc font;
-	struct ButtonWidget btns[7];
-} TouchScreen;
-
-static struct Widget* touch_widgets[7] = {
-	(struct Widget*)&TouchScreen.btns[0], (struct Widget*)&TouchScreen.btns[1],
-	(struct Widget*)&TouchScreen.btns[2], (struct Widget*)&TouchScreen.btns[3],
-	(struct Widget*)&TouchScreen.btns[4], (struct Widget*)&TouchScreen.btns[5],
-	(struct Widget*)&TouchScreen.btns[6],
-};
-#define TOUCH_MAX_VERTICES (7 * BUTTONWIDGET_MAX)
-
-static const struct TouchBindDesc {
+#define TOUCH_MAX_BTNS 4
+struct TouchBindDesc {
 	const char* text;
 	cc_uint8 bind, width;
 	cc_int16 x, y;
-} touchDescs[7] = {
-	{ "<",    KEYBIND_LEFT,     40,  10, 50 },
-	{ ">",    KEYBIND_RIGHT,    40, 150, 50 },
-	{ "^",    KEYBIND_FORWARD,  40,  80, 90 },
-	{ "\\/",  KEYBIND_BACK,     40,  80, 10 },
-	{ "Jump", KEYBIND_JUMP,    100,  50, 90 },
-	{ "",     KEYBIND_COUNT,   100,  50, 50 },
-	{ "More", KEYBIND_COUNT,   100,  50, 10 },
+	Widget_LeftClick OnClick;
 };
+
+static struct TouchScreen {
+	Screen_Body
+	const struct TouchBindDesc* descs;
+	int numDescs;
+	struct FontDesc font;
+	struct ThumbstickWidget thumbstick;
+	struct ButtonWidget btns[TOUCH_MAX_BTNS];
+} TouchScreen;
+
+static struct Widget* touch_widgets[1 + TOUCH_MAX_BTNS] = {
+	(struct Widget*)&TouchScreen.thumbstick, (struct Widget*)&TouchScreen.btns[0],
+	(struct Widget*)&TouchScreen.btns[1],    (struct Widget*)&TouchScreen.btns[2],
+	(struct Widget*)&TouchScreen.btns[3]
+};
+#define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
+
+static void TouchScreen_UpdateModeText(void* screen);
+static void TouchScreen_ModeClick(void* s, void* w) { 
+	Input_Placing = !Input_Placing; 
+	TouchScreen_UpdateModeText(s);
+}
+static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreScreen_Show(); }
+
+static const struct TouchBindDesc normDescs[3] = {
+	{ "Jump", KEYBIND_JUMP,     100,  50,  90, NULL                  },
+	{ "",     KEYBIND_COUNT,    100,  50,  50, TouchScreen_ModeClick },
+	{ "More", KEYBIND_COUNT,    100,  50,  10, TouchScreen_MoreClick },
+};
+static const struct TouchBindDesc hackDescs[4] = {
+	{ "Up",   KEYBIND_FLY_UP,   100,  50, 130, NULL                  },
+	{ "Down", KEYBIND_FLY_DOWN, 100,  50,  90, NULL                  },
+	{ "",     KEYBIND_COUNT,    100,  50,  50, TouchScreen_ModeClick },
+	{ "More", KEYBIND_COUNT,    100,  50,  10, TouchScreen_MoreClick },
+};
+
+static void TouchScreen_InitButtons(struct TouchScreen* s) {
+	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	const struct TouchBindDesc* desc;
+	int i;
+
+	if (hacks->Flying || hacks->Noclip) {
+		s->descs    = hackDescs;
+		s->numDescs = Array_Elems(hackDescs);
+	} else {
+		s->descs    = normDescs;
+		s->numDescs = Array_Elems(normDescs);
+	}
+	s->numWidgets = 1 + s->numDescs;
+
+	for (i = 0; i < s->numDescs; i++) {
+		desc = &s->descs[i];
+		ButtonWidget_Init(&s->btns[i], desc->width, desc->OnClick);
+	}
+}
+
+static void TouchScreen_HacksChanged(void* screen) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	/* InitButtons changes number of widgets, hence */
+	/* must destroy graphics resources BEFORE that */
+	Screen_ContextLost(s);
+	TouchScreen_InitButtons(s);
+	Gui_Refresh((struct Screen*)s);
+}
 
 static void TouchScreen_ContextLost(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
@@ -1913,14 +1966,9 @@ static void TouchScreen_ContextLost(void* screen) {
 
 static void TouchScreen_UpdateModeText(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	ButtonWidget_SetConst(&s->btns[5], Input_Placing ? "Place" : "Delete", &s->font);
+	ButtonWidget_SetConst(&s->btns[s->numDescs - 2], 
+							Input_Placing ? "Place" : "Delete", &s->font);
 }
-
-static void TouchScreen_ModeClick(void* s, void* w) { 
-	Input_Placing = !Input_Placing; 
-	TouchScreen_UpdateModeText(s);
-}
-static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreScreen_Show(); }
 
 static void TouchScreen_ContextRecreated(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
@@ -1929,8 +1977,8 @@ static void TouchScreen_ContextRecreated(void* screen) {
 	Screen_CreateVb(screen);
 	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_BOLD);
 
-	for (i = 0; i < s->numWidgets; i++) {
-		desc = &touchDescs[i];
+	for (i = 0; i < s->numDescs; i++) {
+		desc = &s->descs[i];
 		ButtonWidget_SetConst(&s->btns[i], desc->text, &s->font);
 	}
 	TouchScreen_UpdateModeText(s);
@@ -1951,11 +1999,15 @@ static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	//Chat_Add1("POINTER DOWN: %i", &id);
 	if (Gui_GetInputGrab()) return false;
 
-	for (i = 0; i < s->numWidgets; i++) {
+	if (Widget_Contains(&s->thumbstick, x, y)) {
+		s->thumbstick.active |= id; return true;
+	}
+
+	for (i = 0; i < s->numDescs; i++) {
 		if (!Widget_Contains(&s->btns[i], x, y)) continue;
 
-		if (s->binds[i] < KEYBIND_COUNT) {
-			Input_SetPressed(KeyBinds[s->binds[i]], true);
+		if (s->descs[i].bind < KEYBIND_COUNT) {
+			Input_SetPressed(KeyBinds[s->descs[i].bind], true);
 		} else {
 			s->btns[i].MenuClick(screen, &s->btns[i]);
 		}
@@ -1969,12 +2021,13 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	int i;
 	//Chat_Add1("POINTER UP: %i", &id);
+	s->thumbstick.active &= ~id;
 
-	for (i = 0; i < s->numWidgets; i++) {
+	for (i = 0; i < s->numDescs; i++) {
 		if (!(s->btns[i].active & id)) continue;
 
-		if (s->binds[i] < KEYBIND_COUNT) {
-			Input_SetPressed(KeyBinds[s->binds[i]], false);
+		if (s->descs[i].bind < KEYBIND_COUNT) {
+			Input_SetPressed(KeyBinds[s->descs[i].bind], false);
 		}
 		s->btns[i].active &= ~id;
 		return true;
@@ -1982,41 +2035,48 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	return false;
 }
 
+static void TouchScreen_GetMovement(float* xMoving, float* zMoving) {
+	ThumbstickWidget_GetMovement(&TouchScreen.thumbstick, xMoving, zMoving);
+}
+
+struct LocalPlayerInput touchInput;
 static void TouchScreen_Init(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	int i;
 
 	s->widgets     = touch_widgets;
-	s->numWidgets  = Array_Elems(touch_widgets);
 	s->maxVertices = TOUCH_MAX_VERTICES;
+	Event_Register_(&UserEvents.HacksStateChanged, screen, TouchScreen_HacksChanged);
 
-	for (i = 0; i < s->numWidgets; i++) {
-		ButtonWidget_Init(&s->btns[i], touchDescs[i].width, NULL);
-		s->binds[i] = touchDescs[i].bind;
-	}
-
-	s->btns[5].MenuClick = TouchScreen_ModeClick;
-	s->btns[6].MenuClick = TouchScreen_MoreClick;
+	TouchScreen_InitButtons(s);
+	ThumbstickWidget_Init(&s->thumbstick);
+	touchInput.GetMovement = TouchScreen_GetMovement;
+	LocalPlayer_Instance.input.next = &touchInput;
 }
 
 static void TouchScreen_Layout(void* screen) {
-	struct TouchScreen* s;
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	const struct TouchBindDesc* desc;
 	int i, height;
 
-	s = (struct TouchScreen*)screen;
 	HUDScreen_Layout(Gui_HUD);
 	height = Gui_HUD->hotbar.height;
 
-	for (i = 0; i < s->numWidgets; i++) {
-		Widget_SetLocation(&s->btns[i], i < 4 ? ANCHOR_MIN : ANCHOR_MAX, 
-							ANCHOR_MAX, touchDescs[i].x, touchDescs[i].y);
+	for (i = 0; i < s->numDescs; i++) {
+		desc = &s->descs[i];
+		Widget_SetLocation(&s->btns[i], ANCHOR_MAX, ANCHOR_MAX, desc->x, desc->y);
 		s->btns[i].yOffset += height;
 		Widget_Layout(&s->btns[i]);
 	}
+
+	Widget_SetLocation(&s->thumbstick, ANCHOR_MIN, ANCHOR_MAX, 30, 50);
+}
+
+static void TouchScreen_Free(void* s) {
+	Event_Unregister_(&UserEvents.HacksStateChanged, s, TouchScreen_HacksChanged);
 }
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {
-	TouchScreen_Init,        Screen_NullUpdate,     Screen_NullFunc,
+	TouchScreen_Init,        Screen_NullUpdate,     TouchScreen_Free,
 	TouchScreen_Render,      Screen_BuildMesh,
 	Screen_FInput,           Screen_FInput,         Screen_FKeyPress, Screen_FText,
 	TouchScreen_PointerDown, TouchScreen_PointerUp, Screen_FPointer,  Screen_FMouseScroll,
