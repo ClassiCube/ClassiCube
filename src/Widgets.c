@@ -2535,7 +2535,6 @@ static void ThumbstickWidget_BuildGroup(void* widget, struct Texture* tex, struc
 	tmp    = tex->uv.V1; tex->uv.V1 = tex->uv.V2; tex->uv.V2 = tmp;
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 
-	/* TODO: The two X sides */
 	Gfx_Make2DQuad(tex, PACKEDCOL_WHITE, vertices);
 	ThumbstickWidget_Rotate(widget, vertices, w->width);
 

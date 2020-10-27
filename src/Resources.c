@@ -16,11 +16,6 @@
 /*########################################################################################################################*
 *--------------------------------------------------------Resources list---------------------------------------------------*
 *#########################################################################################################################*/
-#define FLAG_CLASSIC 0x01 /* file depends on classic.jar */
-#define FLAG_MODERN  0x02 /* file depends on modern jar */
-#define FLAG_GUI     0x04 /* file depends on patched gui.png */
-#define FLAG_TERRAIN 0x08 /* file depends on patched terrain.png */
-
 static struct FileResource {
 	const char* name;
 	const char* url;
@@ -33,14 +28,18 @@ static struct FileResource {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar",  291 },
 	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     4621 },
 	{ "terrain.png patch", "http://static.classicube.net/terrain-patch2.png",  7 },
+#ifdef CC_BUILD_ANDROID
+	{ "new textures",      "http://static.classicube.net/default.zip",        87 }
+#else
 	{ "gui.png patch",     "http://static.classicube.net/gui.png",            21 }
+#endif
 };
 
 static struct ResourceTexture {
 	const char* filename;
 	/* zip data */
 	cc_uint32 size, offset, crc32;
-} textureResources[20] = {
+} textureResources[] = {
 	/* classic jar files */
 	{ "char.png"     }, { "clouds.png"      }, { "default.png" }, { "particles.png" },
 	{ "rain.png"     }, { "gui_classic.png" }, { "icons.png"   }, { "terrain.png"   },
@@ -48,7 +47,10 @@ static struct ResourceTexture {
 	{ "skeleton.png" }, { "spider.png"      }, { "zombie.png"  }, /* "arrows.png", "sign.png" */
 	/* other files */
 	{ "snow.png"     }, { "chicken.png"     }, { "gui.png"     },
-	{ "animations.png" }, { "animations.txt" }
+	{ "animations.png" }, { "animations.txt" },
+#ifdef CC_BUILD_ANDROID
+	{ "touch.png" }
+#endif
 };
 
 static struct SoundResource {
@@ -520,6 +522,37 @@ static cc_result ModernPatcher_ExtractFiles(struct Stream* s) {
 	return Zip_Extract(&zip);
 }
 
+#ifdef CC_BUILD_ANDROID
+/* Android has both a gui.png and a touch.png */
+/* TODO: Unify both android and desktop platforms to both just extract from default.zip */
+static cc_bool TexPatcher_SelectEntry(const cc_string* path) {
+	return String_CaselessEqualsConst(path, "gui.png") || String_CaselessEqualsConst(path, "touch.png");
+}
+static cc_result TexPatcher_ProcessEntry(const cc_string* path, struct Stream* data, struct ZipState* state) {
+	struct ResourceTexture* entry = Resources_FindTex(path);
+	return ZipPatcher_WriteZipEntry(data, entry, state);
+}
+
+static cc_result TexPactcher_ExtractGui(struct Stream* s) {
+	struct ZipState zip;
+	struct Stream src;
+
+	Stream_ReadonlyMemory(&src, fileResources[3].data, fileResources[3].len);
+	Zip_Init(&zip, &src);
+
+	zip.obj = s;
+	zip.SelectEntry  = TexPatcher_SelectEntry;
+	zip.ProcessEntry = TexPatcher_ProcessEntry;
+	return Zip_Extract(&zip);
+}
+#else
+static cc_result TexPactcher_ExtractGui(struct Stream* s) {
+	static const cc_string guiPng = String_FromConst("gui.png");
+	struct ResourceTexture* entry = Resources_FindTex(&guiPng);
+	return ZipPatcher_WriteData(s, entry, fileResources[3].data, fileResources[3].len);
+}
+#endif
+
 static cc_result TexPatcher_NewFiles(struct Stream* s) {
 	static const cc_string guiPng   = String_FromConst("gui.png");
 	static const cc_string animsTxt = String_FromConst("animations.txt");
@@ -532,10 +565,7 @@ static cc_result TexPatcher_NewFiles(struct Stream* s) {
 	if (res) return res;
 
 	/* make ClassiCube gui.png */
-	entry = Resources_FindTex(&guiPng);
-	res   = ZipPatcher_WriteData(s, entry, fileResources[3].data, fileResources[3].len);
-
-	return res;
+	return TexPactcher_ExtractGui(s);
 }
 
 static void TexPatcher_PatchTile(struct Bitmap* src, int srcX, int srcY, int dstX, int dstY) {
