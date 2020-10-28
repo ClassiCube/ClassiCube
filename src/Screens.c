@@ -2058,6 +2058,7 @@ static void TouchScreen_Layout(void* screen) {
 	const struct TouchBindDesc* desc;
 	int i, height;
 
+	/* Need to align these relative to the hotbar */
 	HUDScreen_Layout(Gui_HUD);
 	height = Gui_HUD->hotbar.height;
 
@@ -2068,7 +2069,9 @@ static void TouchScreen_Layout(void* screen) {
 		Widget_Layout(&s->btns[i]);
 	}
 
-	Widget_SetLocation(&s->thumbstick, ANCHOR_MIN, ANCHOR_MAX, 30, 50);
+	Widget_SetLocation(&s->thumbstick, ANCHOR_MIN, ANCHOR_MAX, 30, 5);
+	s->thumbstick.yOffset += height;
+	Widget_Layout(&s->thumbstick);
 }
 
 static void TouchScreen_Free(void* s) {
