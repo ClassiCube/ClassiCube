@@ -3174,12 +3174,9 @@ static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
 	return true;
 }
 
-#include "Chat.h"
 static EM_BOOL OnResize(int type, const EmscriptenUiEvent* ev, void *data) {
-	Chat_AddRaw("FS BABY");
-	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) SetFullscreenBounds();
 	UpdateWindowBounds();
-	if (!goingFullscreen) needResize = true;
+	needResize = true;
 	return true;
 }
 
@@ -3548,8 +3545,11 @@ void Window_ProcessEvents(void) {
 	if (!needResize) return;
 	needResize = false;
 
-	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) return;
-	EM_ASM( if (typeof(resizeGameCanvas) === 'function') resizeGameCanvas(); );
+	if (goingFullscreen || Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) {
+		SetFullscreenBounds();
+	} else {
+		EM_ASM( if (typeof(resizeGameCanvas) == = 'function') resizeGameCanvas(); );
+	}
 	UpdateWindowBounds();
 }
 
