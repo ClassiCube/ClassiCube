@@ -3048,6 +3048,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
 static cc_bool keyboardOpen, needResize, goingFullscreen;
+static int restoreWidth, restoreHeight;
 
 static int GetCanvasWidth(void)  { return EM_ASM_INT_V({ return Module['canvas'].width  }); }
 static int GetCanvasHeight(void) { return EM_ASM_INT_V({ return Module['canvas'].height }); }
@@ -3168,13 +3169,6 @@ static EM_BOOL OnResize(int type, const EmscriptenUiEvent* ev, void *data) {
 	UpdateWindowBounds();
 	if (!goingFullscreen) needResize = true;
 	return true;
-}
-
-/* This is only raised when going into fullscreen */
-static EM_BOOL OnCanvasResize(int type, const void* reserved, void *data) {
-	UpdateWindowBounds();
-	if (!goingFullscreen) needResize = true;
-	return false;
 }
 
 static const char* OnBeforeUnload(int type, const void* ev, void *data) {
@@ -3302,11 +3296,13 @@ static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* dat
 #define EMSCRIPTEN_EVENT_TARGET_WINDOW "#window"
 #endif
 
+static EM_BOOL OnFullscreenChange(int type, const EmscriptenFullscreenChangeEvent* ev, void *data);
 static void HookEvents(void) {
 	emscripten_set_wheel_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnMouseWheel);
 	emscripten_set_mousedown_callback("#canvas",                  NULL, 0, OnMouseButton);
 	emscripten_set_mouseup_callback("#canvas",                    NULL, 0, OnMouseButton);
 	emscripten_set_mousemove_callback("#canvas",                  NULL, 0, OnMouseMove);
+	emscripten_set_fullscreenchange_callback("#canvas",           NULL, 0, OnFullscreenChange);
 
 	emscripten_set_focus_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnFocus);
 	emscripten_set_blur_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,   NULL, 0, OnFocus);
@@ -3445,18 +3441,51 @@ int Window_GetWindowState(void) {
 	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
 
+static EM_BOOL OnFullscreenChange(int type, const EmscriptenFullscreenChangeEvent* ev, void *data) {
+	if (!restoreWidth || !restoreHeight || goingFullscreen || ev->isFullscreen) return false;
+
+	emscripten_set_canvas_element_size("#canvas", restoreWidth, restoreHeight);
+	restoreWidth  = 0;
+	restoreHeight = 0;
+
+	EM_ASM({ var cvs = Module['canvas']; cvs.style.width = ""; cvs.style.height = ""; });
+	UpdateWindowBounds();
+	return false;
+}
+
 cc_result Window_EnterFullscreen(void) {
-	EmscriptenFullscreenStrategy strategy;
 	int res;
-	strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
-	strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_HIDEF;
-	strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
-
-	strategy.canvasResizedCallback         = OnCanvasResize;
-	strategy.canvasResizedCallbackUserData = NULL;
-
 	goingFullscreen = true;
-	res = emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
+	restoreWidth    = GetCanvasWidth();
+	restoreHeight   = GetCanvasHeight();
+
+	res = EM_ASM_INT_V({
+		var target = Module['canvas'];
+		target.style.width  = '100%';
+		target.style.height = '100%';
+		
+		var dpiScale  = window.devicePixelRatio || 1;
+		var newWidth  = (screen.width  * dpiScale)|0;
+		var newHeight = (screen.height * dpiScale)|0;
+		__set_canvas_element_size(target, newWidth, newHeight);
+		
+		if (target.requestFullscreen) {
+			target.requestFullscreen();
+		} else if (target.msRequestFullscreen) {
+			target.msRequestFullscreen();
+		} else if (target.mozRequestFullScreen) {
+			target.mozRequestFullScreen();
+		} else if (target.mozRequestFullscreen) {
+			target.mozRequestFullscreen();
+		} else if (target.webkitRequestFullscreen) {
+			target.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+		} else {
+			return -1;
+		}
+		return 0;
+	});
+
+	UpdateWindowBounds();
 	goingFullscreen = false;
 	return res;
 	/* TODO: navigator.keyboard.lock(["Escape"] */
@@ -3478,7 +3507,33 @@ void Window_Close(void) {
 	UnhookEvents();
 }
 
+#include "Chat.h"
+static void LogStuff(void) {
+	char buffer[256]; cc_string str = String_FromArray(buffer);
+	int width, height;
+	double css_width, css_height;
+
+	width  = GetCanvasWidth();
+	height = GetCanvasHeight();
+	String_Format2(&str, "Size: %ix%i", &width, &height);
+	Chat_AddOf(&str, MSG_TYPE_STATUS_1);
+	str.length = 0;
+
+	emscripten_get_element_css_size("#canvas", &css_width, &css_height);
+	width  = (int)(css_width * DisplayInfo.DpiX);
+	height = (int)(css_height * DisplayInfo.DpiY);
+	String_Format2(&str, "CSS: %ix%i", &width, &height);
+	Chat_AddOf(&str, MSG_TYPE_STATUS_2);
+	str.length = 0;
+
+	width  = EM_ASM_INT_V({ return screen.width; });
+	height = EM_ASM_INT_V({ return screen.height; });
+	String_Format2(&str, "Dims: %ix%i", &width, &height);
+	Chat_AddOf(&str, MSG_TYPE_STATUS_3);
+}
+
 void Window_ProcessEvents(void) {
+	LogStuff();
 	if (!needResize) return;
 	needResize = false;
 
