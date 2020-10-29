@@ -3049,9 +3049,12 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 #include <emscripten/key_codes.h>
 static cc_bool keyboardOpen, needResize, goingFullscreen;
 
+static int GetCanvasWidth(void)  { return EM_ASM_INT_V({ return Module['canvas'].width  }); }
+static int GetCanvasHeight(void) { return EM_ASM_INT_V({ return Module['canvas'].height }); }
+
 static void UpdateWindowBounds(void) {
-	int width, height;
-	emscripten_get_canvas_element_size("#canvas", &width, &height);
+	int width  = GetCanvasWidth();
+	int height = GetCanvasHeight();
 	if (width == WindowInfo.Width && height == WindowInfo.Height) return;
 
 	WindowInfo.Width  = width;
@@ -3378,8 +3381,9 @@ void Window_Create(int width, int height) {
 	WindowInfo.Exists  = true;
 	WindowInfo.Focused = true;
 	HookEvents();
-	/* let the webpage decide on bounds */
-	emscripten_get_canvas_element_size("#canvas", &WindowInfo.Width, &WindowInfo.Height);
+	/* Let the webpage decide on initial bounds */
+	WindowInfo.Width  = GetCanvasWidth();
+	WindowInfo.Height = GetCanvasHeight();
 }
 
 void Window_SetTitle(const cc_string* title) {
