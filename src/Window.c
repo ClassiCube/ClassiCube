@@ -3050,8 +3050,11 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 static cc_bool keyboardOpen, needResize, goingFullscreen;
 static int restoreWidth, restoreHeight;
 
+static int RawDpiScale(int x)    { return (int)(x * emscripten_get_device_pixel_ratio()); }
 static int GetCanvasWidth(void)  { return EM_ASM_INT_V({ return Module['canvas'].width  }); }
 static int GetCanvasHeight(void) { return EM_ASM_INT_V({ return Module['canvas'].height }); }
+static int GetScreenWidth(void)  { return RawDpiScale(EM_ASM_INT_V({ return screen.width;  })); }
+static int GetScreenHeight(void) { return RawDpiScale(EM_ASM_INT_V({ return screen.height; })); }
 
 static void UpdateWindowBounds(void) {
 	int width  = GetCanvasWidth();
@@ -3061,6 +3064,12 @@ static void UpdateWindowBounds(void) {
 	WindowInfo.Width  = width;
 	WindowInfo.Height = height;
 	Event_RaiseVoid(&WindowEvents.Resized);
+}
+
+static void SetFullscreenBounds(void) {
+	int width  = GetScreenWidth();
+	int height = GetScreenHeight();
+	emscripten_set_canvas_element_size("#canvas", width, height);
 }
 
 /* Browser only allows pointer lock requests in response to user input */
@@ -3165,7 +3174,10 @@ static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
 	return true;
 }
 
+#include "Chat.h"
 static EM_BOOL OnResize(int type, const EmscriptenUiEvent* ev, void *data) {
+	Chat_AddRaw("FS BABY");
+	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) SetFullscreenBounds();
 	UpdateWindowBounds();
 	if (!goingFullscreen) needResize = true;
 	return true;
@@ -3341,8 +3353,8 @@ static void UnhookEvents(void) {
 }
 
 void Window_Init(void) {
-	DisplayInfo.Width  = EM_ASM_INT_V({ return screen.width; });
-	DisplayInfo.Height = EM_ASM_INT_V({ return screen.height; });
+	DisplayInfo.Width  = GetScreenWidth();
+	DisplayInfo.Height = GetScreenHeight();
 	DisplayInfo.Depth  = 24;
 
 	DisplayInfo.DpiX = emscripten_get_device_pixel_ratio();
@@ -3441,14 +3453,16 @@ int Window_GetWindowState(void) {
 	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
 
-static EM_BOOL OnFullscreenChange(int type, const EmscriptenFullscreenChangeEvent* ev, void *data) {
-	if (!restoreWidth || !restoreHeight || goingFullscreen || ev->isFullscreen) return false;
-
+static void RestoreWindowBounds(void) {
 	emscripten_set_canvas_element_size("#canvas", restoreWidth, restoreHeight);
 	restoreWidth  = 0;
 	restoreHeight = 0;
-
 	EM_ASM({ var cvs = Module['canvas']; cvs.style.width = ""; cvs.style.height = ""; });
+}
+
+static EM_BOOL OnFullscreenChange(int type, const EmscriptenFullscreenChangeEvent* ev, void *data) {
+	if (!restoreWidth || !restoreHeight || goingFullscreen || ev->isFullscreen) return false;
+	RestoreWindowBounds();
 	UpdateWindowBounds();
 	return false;
 }
@@ -3458,16 +3472,12 @@ cc_result Window_EnterFullscreen(void) {
 	goingFullscreen = true;
 	restoreWidth    = GetCanvasWidth();
 	restoreHeight   = GetCanvasHeight();
+	SetFullscreenBounds();
 
 	res = EM_ASM_INT_V({
 		var target = Module['canvas'];
 		target.style.width  = '100%';
 		target.style.height = '100%';
-		
-		var dpiScale  = window.devicePixelRatio || 1;
-		var newWidth  = (screen.width  * dpiScale)|0;
-		var newHeight = (screen.height * dpiScale)|0;
-		__set_canvas_element_size(target, newWidth, newHeight);
 		
 		if (target.requestFullscreen) {
 			target.requestFullscreen();
@@ -3485,6 +3495,7 @@ cc_result Window_EnterFullscreen(void) {
 		return 0;
 	});
 
+	if (res) RestoreWindowBounds();
 	UpdateWindowBounds();
 	goingFullscreen = false;
 	return res;
@@ -3526,8 +3537,8 @@ static void LogStuff(void) {
 	Chat_AddOf(&str, MSG_TYPE_STATUS_2);
 	str.length = 0;
 
-	width  = EM_ASM_INT_V({ return screen.width; });
-	height = EM_ASM_INT_V({ return screen.height; });
+	width  = GetScreenWidth();
+	height = GetScreenHeight();
 	String_Format2(&str, "Dims: %ix%i", &width, &height);
 	Chat_AddOf(&str, MSG_TYPE_STATUS_3);
 }
