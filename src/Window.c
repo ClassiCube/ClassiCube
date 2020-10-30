@@ -3389,6 +3389,22 @@ void Window_Create(int width, int height) {
 	/* Let the webpage decide on initial bounds */
 	WindowInfo.Width  = GetCanvasWidth();
 	WindowInfo.Height = GetCanvasHeight();
+
+	/* Create wrapper div if necessary */
+	EM_ASM({
+		var agent  = navigator.userAgent;	
+		var canvas = Module['canvas'];
+		window.cc_container = document.body;
+
+		if (/Android/i.test(agent) && /Chrome/i.test(agent)) {
+			var wrapper = document.createElement("div");
+			wrapper.id  = 'canvas_wrapper';
+
+			canvas.parentNode.insertBefore(wrapper, canvas);
+			wrapper.appendChild(canvas);
+			window.cc_container = wrapper;
+		}
+	});
 }
 
 void Window_SetTitle(const cc_string* title) {
@@ -3471,10 +3487,13 @@ cc_result Window_EnterFullscreen(void) {
 	restoreHeight   = GetCanvasHeight();
 	SetFullscreenBounds();
 
+	/* For chrome on android, need to fullscreen div surrounding canvas */
+	/* to get input to work in fullscreen (instead of the actual canvas) */
 	res = EM_ASM_INT_V({
 		var target = Module['canvas'];
 		target.style.width  = '100%';
 		target.style.height = '100%';
+		target    = document.getElementById('canvas_wrapper') || target;
 		
 		if (target.requestFullscreen) {
 			target.requestFullscreen();
@@ -3498,7 +3517,12 @@ cc_result Window_EnterFullscreen(void) {
 	return res;
 	/* TODO: navigator.keyboard.lock(["Escape"] */
 }
-cc_result Window_ExitFullscreen(void) { return emscripten_exit_fullscreen(); }
+
+cc_result Window_ExitFullscreen(void) {
+	emscripten_exit_fullscreen();
+	UpdateWindowBounds();
+	return 0;
+}
 
 void Window_SetSize(int width, int height) {
 	emscripten_set_canvas_element_size("#canvas", width, height);
@@ -3548,7 +3572,7 @@ void Window_ProcessEvents(void) {
 	if (goingFullscreen || Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) {
 		SetFullscreenBounds();
 	} else {
-		EM_ASM( if (typeof(resizeGameCanvas) == = 'function') resizeGameCanvas(); );
+		EM_ASM( if (typeof(resizeGameCanvas) === 'function') resizeGameCanvas(); );
 	}
 	UpdateWindowBounds();
 }
@@ -3611,8 +3635,9 @@ void Window_OpenKeyboard(const cc_string* text, int type) {
 
 			window.cc_divElem = document.createElement('div');
 			window.cc_divElem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; background-color: black; opacity:0.4; resize:none; pointer-events:none;');
-			document.body.appendChild(window.cc_divElem);
-			document.body.appendChild(elem);
+			
+			window.cc_container.appendChild(window.cc_divElem);
+			window.cc_container.appendChild(elem);
 		}
 		elem.focus();
 		elem.click();
@@ -3639,8 +3664,8 @@ void Window_CloseKeyboard(void) {
 
 	EM_ASM({
 		if (!window.cc_inputElem) return;
-		document.body.removeChild(window.cc_divElem);
-		document.body.removeChild(window.cc_inputElem);
+		window.cc_container.removeChild(window.cc_divElem);
+		window.cc_container.removeChild(window.cc_inputElem);
 		window.cc_divElem   = null;
 		window.cc_inputElem = null;
 	});
