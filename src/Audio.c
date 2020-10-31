@@ -12,10 +12,13 @@
 #include "Stream.h"
 #include "Utils.h"
 #include "Options.h"
+#ifdef CC_BUILD_ANDROID
+/* TODO: Refactor maybe to not rely on checking WinInfo.Handle != NULL */
+#include "Window.h"
+#endif
 
 int Audio_SoundsVolume, Audio_MusicVolume;
 
-/* TODO: Fix for android */
 #if defined CC_BUILD_NOAUDIO
 /* Can't use mojang's sounds or music assets, so just stub everything out */
 static void OnInit(void) { }
@@ -960,6 +963,10 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	if (res) goto cleanup;
 
 	for (;;) {
+#if 0
+		/* Don't play music while in the background on Android */
+		if (!WindowInfo.Handle && !music_pendingStop) { Thread_Sleep(10); continue; }
+#endif
 		next = -1;
 		
 		for (i = 0; i < AUDIO_MAX_BUFFERS; i++) {
@@ -968,8 +975,8 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 			if (available) { next = i; break; }
 		}
 
-		if (next == -1) { Thread_Sleep(10); continue; }
 		if (music_pendingStop) break;
+		if (next == -1) { Thread_Sleep(10); continue; }
 
 		res = Music_Buffer(next, &data[chunkSize * next], samplesPerSecond, &vorbis);
 		/* need to specially handle last bit of audio */

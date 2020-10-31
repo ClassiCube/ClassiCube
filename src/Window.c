@@ -3759,7 +3759,8 @@ static void JNICALL java_processMouseMove(JNIEnv* env, jobject o, jint id, jint 
 
 static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface) {
 	Platform_LogConst("WIN - CREATED");
-	win_handle = ANativeWindow_fromSurface(env, surface);
+	win_handle        = ANativeWindow_fromSurface(env, surface);
+	WindowInfo.Handle = win_handle;
 	RefreshWindowBounds();
 	/* TODO: Restore context */
 	Event_RaiseVoid(&WindowEvents.Created);
@@ -3770,7 +3771,8 @@ static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 	Platform_LogConst("WIN - DESTROYED");
 	if (win_handle) ANativeWindow_release(win_handle);
 
-	win_handle = NULL;
+	win_handle        = NULL;
+	WindowInfo.Handle = NULL;
 	/* eglSwapBuffers might return EGL_BAD_SURFACE, EGL_BAD_ALLOC, or some other error */
 	/* Instead the context is lost here in a consistent manner */
 	if (Gfx.Created) Gfx_LoseContext("surface lost");
