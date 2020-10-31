@@ -6,6 +6,7 @@
 */
 struct IGameComponent;
 extern struct IGameComponent Audio_Component; 
+struct AudioContext;
 
 /* Volume sounds are played at, from 0-100. */
 /* NOTE: Use Audio_SetSounds, don't change this directly. */
@@ -23,26 +24,25 @@ void Audio_PlayStepSound(cc_uint8 type);
 /* Information about a source of audio. */
 struct AudioFormat { cc_uint16 channels; int sampleRate; };
 #define AudioFormat_Eq(a, b) ((a)->channels == (b)->channels && (a)->sampleRate == (b)->sampleRate)
-typedef int AudioHandle;
 
-/* Acquires an audio context. */
-void Audio_Open(AudioHandle* handle, int buffers);
+/* Initialises an audio context. */
+void Audio_Init(struct AudioContext* ctx, int buffers);
 /* Stops playing audio, unqueues buffers, then frees the audio context. */
-cc_result Audio_Close(AudioHandle handle);
+cc_result Audio_Close(struct AudioContext* ctx);
 /* Returns the format audio is played in. */
-struct AudioFormat* Audio_GetFormat(AudioHandle handle);
-/* Sets the format audio to play is in. */
-/* NOTE: Changing the format can be expensive, depending on the platform. */
-cc_result Audio_SetFormat(AudioHandle handle, struct AudioFormat* format);
+struct AudioFormat* Audio_GetFormat(struct AudioContext* ctx);
+/* Sets the format of the audio data to be played. */
+/* NOTE: Changing the format can be expensive, depending on the backend. */
+cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format);
 /* Sets the audio data in the given buffer. */
-/* NOTE: You should ensure Audio_IsCompleted returns true before calling this. */
-cc_result Audio_BufferData(AudioHandle handle, int idx, void* data, cc_uint32 dataSize);
+/* NOTE: You MUST ensure Audio_IsCompleted returns true before calling this. */
+cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uint32 size);
 /* Begins playing audio. Audio_BufferData must have been used before this. */
-cc_result Audio_Play(AudioHandle handle);
+cc_result Audio_Play(struct AudioContext* ctx);
 /* Immediately stops the currently playing audio. */
-cc_result Audio_Stop(AudioHandle handle);
-/* Returns whether the given buffer has finished playing. */
-cc_result Audio_IsCompleted(AudioHandle handle, int idx, cc_bool* completed);
+cc_result Audio_Stop(struct AudioContext* ctx);
+/* Returns whether the given buffer is available for playing data. */
+cc_result Audio_IsAvailable(struct AudioContext* ctx, int idx, cc_bool* available);
 /* Returns whether all buffers have finished playing. */
-cc_result Audio_IsFinished(AudioHandle handle, cc_bool* finished);
+cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished);
 #endif
