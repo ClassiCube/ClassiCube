@@ -633,5 +633,8 @@ void Flags_Free(void) {
 	for (i = 0; i < FetchFlagsTask.count; i++) {
 		Mem_Free(flags[i].bmp.scan0);
 	}
+
+    flagsCount = 0;
+    FetchFlagsTask.count = 0;
 }
 #endif
