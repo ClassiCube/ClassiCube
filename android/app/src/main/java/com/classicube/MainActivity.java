@@ -442,6 +442,25 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 					updateText();
 					return success;
 				}
+
+				@Override
+				public boolean sendKeyEvent(KeyEvent ev) {
+					if (ev.getAction() != KeyEvent.ACTION_DOWN) return super.sendKeyEvent(ev);
+
+					// enter maps to \n but that should not be intercepted
+					int code = ev.getKeyCode();
+					if (code == KeyEvent.KEYCODE_ENTER) return super.sendKeyEvent(ev);
+
+					int uni  = ev.getUnicodeChar();
+					if (uni == 0) return super.sendKeyEvent(ev);
+
+					int start   = Selection.getSelectionStart(kbText);
+					String text = String.valueOf((char)uni);
+					kbText.insert(start, text);
+					updateText();
+					return false;
+				}
+
 			};
 			//String text = MainActivity.this.keyboardText;
 			//if (text != null) ic.setComposingText(text, 0);
