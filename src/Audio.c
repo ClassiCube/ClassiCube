@@ -270,7 +270,7 @@ cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) {
 	cc_result res;
 
 	if (ctx->source == -1) { *finished = true; return 0; }
-	res = Audio_AllAvailable(handle, finished);
+	res = Audio_AllAvailable(ctx, finished);
 	if (res) return res;
 	
 	_alGetSourcei(ctx->source, AL_SOURCE_STATE, &state);
@@ -607,7 +607,7 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	cc_result res;
 	int bitsPerSample;
 
-	if ((res = Stream_Read(stream, tmp, 12))) return res;
+	if ((res = Stream_Read(stream, tmp, 12)))  return res;
 	fourCC = Stream_GetU32_BE(tmp + 0);
 	if (fourCC != WAV_FourCC('R','I','F','F')) return WAV_ERR_STREAM_HDR;
 	/* tmp[4] (4) file size */
