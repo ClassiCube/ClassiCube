@@ -275,7 +275,6 @@ static void MPConnection_TickConnect(void) {
 	now = Game.Time;
 
 	if (poll_write) {
-		Socket_SetBlocking(net_socket, true);
 		MPConnection_FinishConnect();
 	} else if (now > net_connectTimeout) {
 		MPConnection_FailConnect(0);
@@ -391,6 +390,11 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 	if (!res && pending) {
 		/* NOTE: Always using a read call that is a multiple of 4096 (appears to?) improve read performance */	
 		res = Socket_Read(net_socket, net_readCurrent, 4096 * 4, &pending);
+		/* Ignore errors for 'no data available for non-blocking read' */
+		if (res) {
+			if (res == ReturnCode_SocketInProgess)  return;
+			if (res == ReturnCode_SocketWouldBlock) return;
+		}
 		readEnd += pending;
 	}
 
@@ -447,10 +451,19 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 static void MPConnection_SendData(const cc_uint8* data, cc_uint32 len) {
 	cc_uint32 wrote;
 	cc_result res;
+	int tries = 0;
 	if (Server.Disconnected) return;
 
 	while (len) {
 		res = Socket_Write(net_socket, data, len, &wrote);
+		/* If sending would block (send buffer full), retry for a bit up to 10 seconds */
+		/* TODO: Avoid doing this and manually buffer data when this happens */
+		if (res && tries < 1000 && (res == ReturnCode_SocketInProgess || res == ReturnCode_SocketWouldBlock)) {
+			Thread_Sleep(10);
+			tries++;
+			continue;
+		}
+
 		/* NOTE: Not immediately disconnecting here, as otherwise we sometimes miss out on kick messages */
 		if (res || !wrote) { net_writeFailed = true; return; }
 		data += wrote; len -= wrote;

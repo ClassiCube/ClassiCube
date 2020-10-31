@@ -205,6 +205,11 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	}
 	
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		// Ignore volume keys
+		if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) return false;
+		if (keyCode == KeyEvent.KEYCODE_VOLUME_MUTE) return false;
+		if (keyCode == KeyEvent.KEYCODE_VOLUME_UP)   return false;
+		
 		// TODO: not always handle (use Window_MapKey)
 		pushCmd(CMD_KEY_DOWN, keyCode);
 		

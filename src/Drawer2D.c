@@ -866,6 +866,15 @@ static void SysFonts_Init(void) {
 	if (!font_list.count) SysFonts_Update();
 }
 
+/* Some language-specific fonts don't support English letters */
+/* and show entirely as '[]' - better off ignoring such fonts */
+static cc_bool SysFonts_SkipFont(FT_Face face) {
+	if (!face->charmap) return false;
+
+	return FT_Get_Char_Index(face, 'a') == 0 && FT_Get_Char_Index(face, 'z') == 0
+		&& FT_Get_Char_Index(face, 'A') == 0 && FT_Get_Char_Index(face, 'Z') == 0;
+}
+
 static void SysFonts_Add(const cc_string* path, FT_Face face, int index, char type, const char* defStyle) {
 	cc_string key;   char keyBuffer[STRING_SIZE];
 	cc_string value; char valueBuffer[FILENAME_SIZE];
@@ -877,6 +886,7 @@ static void SysFonts_Add(const cc_string* path, FT_Face face, int index, char ty
 		style = String_FromReadonly(face->style_name);
 		if (String_CaselessEqualsConst(&style, defStyle)) style.length = 0;
 	}
+	if (SysFonts_SkipFont(face)) type = 'X';
 
 	String_InitArray(key, keyBuffer);
 	if (style.length) {
