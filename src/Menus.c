@@ -1588,8 +1588,8 @@ static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget
 	if (String_CaselessEqualsConst(text, LISTSCREEN_EMPTY)) {
 		ButtonWidget_Set(button, text, &s->font); return;
 	}
-
 	res = Font_Make(&font, text, 16, FONT_FLAGS_NONE);
+
 	if (!res) {
 		ButtonWidget_Set(button, text, &font);
 	} else {
