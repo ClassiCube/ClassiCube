@@ -3539,33 +3539,7 @@ void Window_Close(void) {
 	UnhookEvents();
 }
 
-#include "Chat.h"
-static void LogStuff(void) {
-	char buffer[256]; cc_string str = String_FromArray(buffer);
-	int width, height;
-	double css_width, css_height;
-
-	width  = GetCanvasWidth();
-	height = GetCanvasHeight();
-	String_Format2(&str, "Size: %ix%i", &width, &height);
-	Chat_AddOf(&str, MSG_TYPE_STATUS_1);
-	str.length = 0;
-
-	emscripten_get_element_css_size("#canvas", &css_width, &css_height);
-	width  = (int)(css_width * DisplayInfo.DpiX);
-	height = (int)(css_height * DisplayInfo.DpiY);
-	String_Format2(&str, "CSS: %ix%i", &width, &height);
-	Chat_AddOf(&str, MSG_TYPE_STATUS_2);
-	str.length = 0;
-
-	width  = GetScreenWidth();
-	height = GetScreenHeight();
-	String_Format2(&str, "Dims: %ix%i", &width, &height);
-	Chat_AddOf(&str, MSG_TYPE_STATUS_3);
-}
-
 void Window_ProcessEvents(void) {
-	LogStuff();
 	if (!needResize) return;
 	needResize = false;
 

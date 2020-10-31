@@ -14,6 +14,9 @@
 #elif defined CC_BUILD_COCOA
 #define GAME_APP_NAME  "ClassiCube 1.2.0 alpha"
 #define GAME_APP_TITLE "ClassiCube 1.2.0 alpha"
+#elif defined CC_BUILD_ANDROID
+#define GAME_APP_NAME  "ClassiCube 1.2.0 android alpha"
+#define GAME_APP_TITLE "ClassiCube 1.2.0 android alpha"
 #else
 #define GAME_APP_NAME  "ClassiCube 1.2.0"
 #define GAME_APP_TITLE "ClassiCube 1.2.0"
