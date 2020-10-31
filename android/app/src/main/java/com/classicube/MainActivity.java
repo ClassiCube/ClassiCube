@@ -446,19 +446,23 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 				@Override
 				public boolean sendKeyEvent(KeyEvent ev) {
 					if (ev.getAction() != KeyEvent.ACTION_DOWN) return super.sendKeyEvent(ev);
+					int code  = ev.getKeyCode();
+					int start = Selection.getSelectionStart(kbText);
+					int uni   = ev.getUnicodeChar();
 
-					// enter maps to \n but that should not be intercepted
-					int code = ev.getKeyCode();
-					if (code == KeyEvent.KEYCODE_ENTER) return super.sendKeyEvent(ev);
-
-					int uni  = ev.getUnicodeChar();
-					if (uni == 0) return super.sendKeyEvent(ev);
-
-					int start   = Selection.getSelectionStart(kbText);
-					String text = String.valueOf((char)uni);
-					kbText.insert(start, text);
-					updateText();
-					return false;
+					if (code == KeyEvent.KEYCODE_ENTER) {
+						// enter maps to \n but that should not be intercepted
+					} else if (code == KeyEvent.KEYCODE_DEL) {
+						if (start <= 0) return false;
+						kbText.delete(start - 1, start);
+						updateText();
+						return false;
+					} else if (uni != 0) {
+						kbText.insert(start, String.valueOf((char)uni));
+						updateText();
+						return false;
+					}
+					return super.sendKeyEvent(ev);
 				}
 
 			};
