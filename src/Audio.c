@@ -920,6 +920,11 @@ static cc_result Music_Buffer(int i, cc_int16* data, int maxSamples, struct Vorb
 		samples += Vorbis_OutputFrame(ctx, cur);
 	}
 	if (Audio_MusicVolume < 100) { Volume_Mix16(data, samples, Audio_MusicVolume); }
+	#ifdef CC_BUILD_ANDROID
+    /* Don't play music while in the background on Android */
+    /* TODO: Not use such a terrible approach */
+    if (!WindowInfo.Handle) { int i; for (i = 0; i < samples; i++) data[i] = 0; }
+    #endif
 
 	res2 = Audio_BufferData(&music_ctx, i, data, samples * 2);
 	if (res2) { music_pendingStop = true; return res2; }
@@ -963,10 +968,6 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	if (res) goto cleanup;
 
 	for (;;) {
-#if 0
-		/* Don't play music while in the background on Android */
-		if (!WindowInfo.Handle && !music_pendingStop) { Thread_Sleep(10); continue; }
-#endif
 		next = -1;
 		
 		for (i = 0; i < AUDIO_MAX_BUFFERS; i++) {
