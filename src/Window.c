@@ -3047,10 +3047,13 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
-static cc_bool keyboardOpen, needResize, goingFullscreen;
+static cc_bool keyboardOpen, needResize;
 
+static int RawDpiScale(int x)    { return (int)(x * emscripten_get_device_pixel_ratio()); }
 static int GetCanvasWidth(void)  { return EM_ASM_INT_V({ return Module['canvas'].width  }); }
 static int GetCanvasHeight(void) { return EM_ASM_INT_V({ return Module['canvas'].height }); }
+static int GetScreenWidth(void)  { return RawDpiScale(EM_ASM_INT_V({ return screen.width;  })); }
+static int GetScreenHeight(void) { return RawDpiScale(EM_ASM_INT_V({ return screen.height; })); }
 
 static void UpdateWindowBounds(void) {
 	int width  = GetCanvasWidth();
@@ -3060,6 +3063,12 @@ static void UpdateWindowBounds(void) {
 	WindowInfo.Width  = width;
 	WindowInfo.Height = height;
 	Event_RaiseVoid(&WindowEvents.Resized);
+}
+
+static void SetFullscreenBounds(void) {
+	int width  = GetScreenWidth();
+	int height = GetScreenHeight();
+	emscripten_set_canvas_element_size("#canvas", width, height);
 }
 
 /* Browser only allows pointer lock requests in response to user input */
@@ -3165,15 +3174,16 @@ static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
 }
 
 static EM_BOOL OnResize(int type, const EmscriptenUiEvent* ev, void *data) {
-	UpdateWindowBounds();
-	if (!goingFullscreen) needResize = true;
+	UpdateWindowBounds(); needResize = true;
 	return true;
 }
-
 /* This is only raised when going into fullscreen */
 static EM_BOOL OnCanvasResize(int type, const void* reserved, void *data) {
-	UpdateWindowBounds();
-	if (!goingFullscreen) needResize = true;
+	UpdateWindowBounds(); needResize = true;
+	return false;
+}
+static EM_BOOL OnFullscreenChange(int type, const EmscriptenFullscreenChangeEvent* ev, void *data) {
+	UpdateWindowBounds(); needResize = true;
 	return false;
 }
 
@@ -3307,6 +3317,7 @@ static void HookEvents(void) {
 	emscripten_set_mousedown_callback("#canvas",                  NULL, 0, OnMouseButton);
 	emscripten_set_mouseup_callback("#canvas",                    NULL, 0, OnMouseButton);
 	emscripten_set_mousemove_callback("#canvas",                  NULL, 0, OnMouseMove);
+	emscripten_set_fullscreenchange_callback("#canvas",           NULL, 0, OnFullscreenChange);
 
 	emscripten_set_focus_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnFocus);
 	emscripten_set_blur_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,   NULL, 0, OnFocus);
@@ -3345,8 +3356,8 @@ static void UnhookEvents(void) {
 }
 
 void Window_Init(void) {
-	DisplayInfo.Width  = EM_ASM_INT_V({ return screen.width; });
-	DisplayInfo.Height = EM_ASM_INT_V({ return screen.height; });
+	DisplayInfo.Width  = GetScreenWidth();
+	DisplayInfo.Height = GetScreenHeight();
 	DisplayInfo.Depth  = 24;
 
 	DisplayInfo.DpiX = emscripten_get_device_pixel_ratio();
@@ -3384,6 +3395,22 @@ void Window_Create(int width, int height) {
 	/* Let the webpage decide on initial bounds */
 	WindowInfo.Width  = GetCanvasWidth();
 	WindowInfo.Height = GetCanvasHeight();
+
+	/* Create wrapper div if necessary */
+	EM_ASM({
+		var agent  = navigator.userAgent;	
+		var canvas = Module['canvas'];
+		window.cc_container = document.body;
+
+		if (/Android/i.test(agent) && /Chrome/i.test(agent)) {
+			var wrapper = document.createElement("div");
+			wrapper.id  = 'canvas_wrapper';
+
+			canvas.parentNode.insertBefore(wrapper, canvas);
+			wrapper.appendChild(canvas);
+			window.cc_container = wrapper;
+		}
+	});
 }
 
 void Window_SetTitle(const cc_string* title) {
@@ -3447,6 +3474,7 @@ int Window_GetWindowState(void) {
 
 cc_result Window_EnterFullscreen(void) {
 	EmscriptenFullscreenStrategy strategy;
+	const char* target;
 	int res;
 	strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
 	strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_HIDEF;
@@ -3455,13 +3483,27 @@ cc_result Window_EnterFullscreen(void) {
 	strategy.canvasResizedCallback         = OnCanvasResize;
 	strategy.canvasResizedCallbackUserData = NULL;
 
-	goingFullscreen = true;
-	res = emscripten_request_fullscreen_strategy("#canvas", 1, &strategy);
-	goingFullscreen = false;
-	return res;
+	/* For chrome on android, need to make container div fullscreen instead */
+	res    = EM_ASM_INT_V({ return document.getElementById('canvas_wrapper') ? 1 : 0; });
+	target = res ? "canvas_wrapper" : "#canvas";
+	if ((res = emscripten_request_fullscreen_strategy(target, 1, &strategy))) return res;
+
+	/* emscripten sets css size to screen's base width/height, */
+	/*  except that becomes wrong when device rotates. */
+	/* Better to just set CSS width/height to always be 100% */
+	EM_ASM({
+		var canvas = Module['canvas'];
+		canvas.style.width  = '100%';
+		canvas.style.height = '100%';
+	});
 	/* TODO: navigator.keyboard.lock(["Escape"] */
 }
-cc_result Window_ExitFullscreen(void) { return emscripten_exit_fullscreen(); }
+
+cc_result Window_ExitFullscreen(void) {
+	emscripten_exit_fullscreen();
+	UpdateWindowBounds();
+	return 0;
+}
 
 void Window_SetSize(int width, int height) {
 	emscripten_set_canvas_element_size("#canvas", width, height);
@@ -3482,8 +3524,11 @@ void Window_ProcessEvents(void) {
 	if (!needResize) return;
 	needResize = false;
 
-	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) return;
-	EM_ASM( if (typeof(resizeGameCanvas) === 'function') resizeGameCanvas(); );
+	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) {
+		SetFullscreenBounds();
+	} else {
+		EM_ASM( if (typeof(resizeGameCanvas) === 'function') resizeGameCanvas(); );
+	}
 	UpdateWindowBounds();
 }
 
@@ -3545,8 +3590,9 @@ void Window_OpenKeyboard(const cc_string* text, int type) {
 
 			window.cc_divElem = document.createElement('div');
 			window.cc_divElem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; background-color: black; opacity:0.4; resize:none; pointer-events:none;');
-			document.body.appendChild(window.cc_divElem);
-			document.body.appendChild(elem);
+			
+			window.cc_container.appendChild(window.cc_divElem);
+			window.cc_container.appendChild(elem);
 		}
 		elem.focus();
 		elem.click();
@@ -3573,8 +3619,8 @@ void Window_CloseKeyboard(void) {
 
 	EM_ASM({
 		if (!window.cc_inputElem) return;
-		document.body.removeChild(window.cc_divElem);
-		document.body.removeChild(window.cc_inputElem);
+		window.cc_container.removeChild(window.cc_divElem);
+		window.cc_container.removeChild(window.cc_inputElem);
 		window.cc_divElem   = null;
 		window.cc_inputElem = null;
 	});
