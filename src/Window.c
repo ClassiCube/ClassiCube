@@ -3047,8 +3047,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
-static cc_bool keyboardOpen, needResize, goingFullscreen;
-static int restoreWidth, restoreHeight;
+static cc_bool keyboardOpen, needResize;
 
 static int RawDpiScale(int x)    { return (int)(x * emscripten_get_device_pixel_ratio()); }
 static int GetCanvasWidth(void)  { return EM_ASM_INT_V({ return Module['canvas'].width  }); }
@@ -3175,9 +3174,17 @@ static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
 }
 
 static EM_BOOL OnResize(int type, const EmscriptenUiEvent* ev, void *data) {
-	UpdateWindowBounds();
-	needResize = true;
+	UpdateWindowBounds(); needResize = true;
 	return true;
+}
+/* This is only raised when going into fullscreen */
+static EM_BOOL OnCanvasResize(int type, const void* reserved, void *data) {
+	UpdateWindowBounds(); needResize = true;
+	return false;
+}
+static EM_BOOL OnFullscreenChange(int type, const EmscriptenFullscreenChangeEvent* ev, void *data) {
+	UpdateWindowBounds(); needResize = true;
+	return false;
 }
 
 static const char* OnBeforeUnload(int type, const void* ev, void *data) {
@@ -3305,7 +3312,6 @@ static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* dat
 #define EMSCRIPTEN_EVENT_TARGET_WINDOW "#window"
 #endif
 
-static EM_BOOL OnFullscreenChange(int type, const EmscriptenFullscreenChangeEvent* ev, void *data);
 static void HookEvents(void) {
 	emscripten_set_wheel_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnMouseWheel);
 	emscripten_set_mousedown_callback("#canvas",                  NULL, 0, OnMouseButton);
@@ -3466,55 +3472,30 @@ int Window_GetWindowState(void) {
 	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
 
-static void RestoreWindowBounds(void) {
-	emscripten_set_canvas_element_size("#canvas", restoreWidth, restoreHeight);
-	restoreWidth  = 0;
-	restoreHeight = 0;
-	EM_ASM({ var cvs = Module['canvas']; cvs.style.width = ""; cvs.style.height = ""; });
-}
-
-static EM_BOOL OnFullscreenChange(int type, const EmscriptenFullscreenChangeEvent* ev, void *data) {
-	if (!restoreWidth || !restoreHeight || goingFullscreen || ev->isFullscreen) return false;
-	RestoreWindowBounds();
-	UpdateWindowBounds();
-	return false;
-}
-
 cc_result Window_EnterFullscreen(void) {
+	EmscriptenFullscreenStrategy strategy;
+	const char* target;
 	int res;
-	goingFullscreen = true;
-	restoreWidth    = GetCanvasWidth();
-	restoreHeight   = GetCanvasHeight();
-	SetFullscreenBounds();
+	strategy.scaleMode                 = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
+	strategy.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_HIDEF;
+	strategy.filteringMode             = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
 
-	/* For chrome on android, need to fullscreen div surrounding canvas */
-	/* to get input to work in fullscreen (instead of the actual canvas) */
-	res = EM_ASM_INT_V({
-		var target = Module['canvas'];
-		target.style.width  = '100%';
-		target.style.height = '100%';
-		target    = document.getElementById('canvas_wrapper') || target;
-		
-		if (target.requestFullscreen) {
-			target.requestFullscreen();
-		} else if (target.msRequestFullscreen) {
-			target.msRequestFullscreen();
-		} else if (target.mozRequestFullScreen) {
-			target.mozRequestFullScreen();
-		} else if (target.mozRequestFullscreen) {
-			target.mozRequestFullscreen();
-		} else if (target.webkitRequestFullscreen) {
-			target.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-		} else {
-			return -1;
-		}
-		return 0;
+	strategy.canvasResizedCallback         = OnCanvasResize;
+	strategy.canvasResizedCallbackUserData = NULL;
+
+	/* For chrome on android, need to make container div fullscreen instead */
+	res    = EM_ASM_INT_V({ return document.getElementById('canvas_wrapper') ? 1 : 0; });
+	target = res ? "canvas_wrapper" : "#canvas";
+	if ((res = emscripten_request_fullscreen_strategy(target, 1, &strategy))) return res;
+
+	/* emscripten sets css size to screen's base width/height, */
+	/*  except that becomes wrong when device rotates. */
+	/* Better to just set CSS width/height to always be 100% */
+	EM_ASM({
+		var canvas = Module['canvas'];
+		canvas.style.width  = '100%';
+		canvas.style.height = '100%';
 	});
-
-	if (res) RestoreWindowBounds();
-	UpdateWindowBounds();
-	goingFullscreen = false;
-	return res;
 	/* TODO: navigator.keyboard.lock(["Escape"] */
 }
 
@@ -3543,7 +3524,7 @@ void Window_ProcessEvents(void) {
 	if (!needResize) return;
 	needResize = false;
 
-	if (goingFullscreen || Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) {
+	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) {
 		SetFullscreenBounds();
 	} else {
 		EM_ASM( if (typeof(resizeGameCanvas) === 'function') resizeGameCanvas(); );
