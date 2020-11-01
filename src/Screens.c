@@ -795,7 +795,7 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	Math_Clamp(size, 8, 60);
 
 	/* don't recreate font if possible */
-	if (size == s->chatFont.size) return false;
+	if (Display_ScaleY(size) == s->chatFont.size) return false;
 	ChatScreen_FreeChatFonts(s);
 	Drawer2D_MakeFont(&s->chatFont, size, FONT_FLAGS_NONE);
 
