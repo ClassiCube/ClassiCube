@@ -344,18 +344,16 @@ static struct ChatCommand HelpCommand = {
 };
 
 static void GpuInfoCommand_Execute(const cc_string* args, int argsCount) {
-	char linesBuffer[GFX_APIINFO_LINES][STRING_SIZE];
-	cc_string lines[GFX_APIINFO_LINES];
+	char buffer[7 * STRING_SIZE];
+	cc_string str, line;
 	int i;
 
-	for (i = 0; i < GFX_APIINFO_LINES; i++) {
-		String_InitArray(lines[i], linesBuffer[i]);
-	}
-	Gfx_GetApiInfo(lines);
+	String_InitArray(str, buffer);
+	Gfx_GetApiInfo(&str);
 	
-	for (i = 0; i < GFX_APIINFO_LINES; i++) {
-		if (!lines[i].length) continue;
-		Chat_Add1("&a%s", &lines[i]);
+	while (str.length) {
+		String_UNSAFE_SplitBy(&str, '\n', &line);
+		if (line.length) Chat_Add1("&a%s", &line);
 	}
 }
 

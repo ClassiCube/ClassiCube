@@ -48,7 +48,6 @@ CC_VAR extern struct _GfxData {
 	struct Matrix View, Projection;
 } Gfx;
 
-#define GFX_APIINFO_LINES 7
 extern GfxResourceID Gfx_defaultIb;
 extern GfxResourceID Gfx_quadVb, Gfx_texVb;
 
@@ -197,8 +196,8 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMillis);
 void Gfx_OnWindowResize(void);
 /* Gets information about the user's GPU and current backend state. */
 /* Backend state may include depth buffer bits, free memory, etc. */
-/* NOTE: lines must be an array of at least GFX_APIINFO_LINES */
-void Gfx_GetApiInfo(cc_string* lines);
+/* NOTE: Each line is separated by \n. */
+void Gfx_GetApiInfo(cc_string* info);
 
 /* Raises ContextLost event and updates state for lost contexts. */
 void Gfx_LoseContext(const char* reason);
