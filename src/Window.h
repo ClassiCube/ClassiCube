@@ -174,5 +174,7 @@ cc_bool GLContext_SwapBuffers(void);
 /* Sets whether synchronisation with the monitor is enabled. */
 /* NOTE: The implementation may choose to still ignore this. */
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs);
+/* Gets OpenGL context specific graphics information. */
+void GLContext_GetApiInfo(cc_string* info);
 #endif
 #endif

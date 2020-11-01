@@ -1482,7 +1482,8 @@ void Gfx_GetApiInfo(cc_string* info) {
 	String_Format1(info, "GL version: %c\n", glGetString(GL_VERSION));
 	AppendVRAMStats(info);
 	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
-	String_Format1(info, "Depth buffer bits: %i",        &depthBits);
+	String_Format1(info, "Depth buffer bits: %i\n",      &depthBits);
+	GLContext_GetApiInfo(info);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {

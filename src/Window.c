@@ -4105,6 +4105,7 @@ cc_bool GLContext_SwapBuffers(void) {
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	SDL_GL_SetSwapInterval(vsync);
 }
+void GLContext_GetApiInfo(cc_string* info) { }
 
 
 /*########################################################################################################################*
@@ -4208,6 +4209,7 @@ cc_bool GLContext_SwapBuffers(void) {
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	eglSwapInterval(ctx_display, vsync);
 }
+void GLContext_GetApiInfo(cc_string* info) { }
 
 
 /*########################################################################################################################*
@@ -4290,6 +4292,7 @@ cc_bool GLContext_SwapBuffers(void) {
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	if (ctx_supports_vSync) wglSwapIntervalEXT(vsync);
 }
+void GLContext_GetApiInfo(cc_string* info) { }
 
 
 /*########################################################################################################################*
@@ -4367,6 +4370,7 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	}
 	if (res) Platform_Log1("Set VSync failed, error: %i", &res);
 }
+void GLContext_GetApiInfo(cc_string* info) { }
 
 static void GetAttribs(struct GraphicsMode* mode, int* attribs, int depth) {
 	int i = 0;
@@ -4597,6 +4601,7 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	int value = vsync ? 1 : 0;
 	aglSetInteger(ctx_handle, AGL_SWAP_INTERVAL, &value);
 }
+void GLContext_GetApiInfo(cc_string* info) { }
 
 
 /*########################################################################################################################*
@@ -4678,6 +4683,7 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	int value = vsync ? 1 : 0;
 	objc_msgSend(ctxHandle, sel_registerName("setValues:forParameter:"), &value, NSOpenGLContextParameterSwapInterval);
 }
+void GLContext_GetApiInfo(cc_string* info) { }
 
 
 /*########################################################################################################################*
@@ -4726,6 +4732,22 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	} else {
 		emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, (int)minFrameMs);
 	}
+}
+
+void GLContext_GetApiInfo(cc_string* info) { 
+	char buffer[NATIVE_STR_LEN];
+	int len;
+
+	EM_ASM_({
+		var dbg = GLctx.getExtension('WEBGL_debug_renderer_info');
+		var str = dbg ? GLctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : '';
+		stringToUTF8(str, $0, $1);
+	}, buffer, NATIVE_STR_LEN);
+
+	len = String_CalcLen(buffer, NATIVE_STR_LEN);
+	if (!len) return;
+	String_AppendConst(info, "GPU: ");
+	String_AppendUtf8(info, (const cc_uint8*)buffer, len);
 }
 #endif
 #endif
