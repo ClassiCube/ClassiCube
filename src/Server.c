@@ -502,12 +502,6 @@ static void OnNewMap(void) {
 	}
 }
 
-static void OnReset(void) {
-	if (Server.IsSinglePlayer) return;
-	net_writeFailed = false;
-	OnClose();
-}
-
 static void OnInit(void) {
 	String_InitArray(Server.Name,    nameBuffer);
 	String_InitArray(Server.MOTD,    motdBuffer);
@@ -521,6 +515,12 @@ static void OnInit(void) {
 
 	ScheduledTask_Add(GAME_NET_TICKS, Server.Tick);
 	String_AppendConst(&Server.AppName, GAME_APP_NAME);
+}
+
+static void OnReset(void) {
+	if (Server.IsSinglePlayer) return;
+	net_writeFailed = false;
+	OnClose();
 }
 
 static void OnFree(void) {

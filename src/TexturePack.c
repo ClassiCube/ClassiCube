@@ -466,12 +466,20 @@ static void OnInit(void) {
 	TextureCache_Init();
 }
 
+static void OnReset(void) {
+	if (!TexturePack_Url.length) return;
+	TexturePack_Url.length = 0;
+	TexturePack_ExtractCurrent(false);
+}
+
 static void OnFree(void) {
 	OnContextLost(NULL);
 	Atlas2D_Free();
+	TexturePack_Url.length = 0;
 }
 
 struct IGameComponent Textures_Component = {
 	OnInit, /* Init  */
-	OnFree  /* Free  */
+	OnFree, /* Free  */
+	OnReset /* Reset */
 };

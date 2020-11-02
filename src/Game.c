@@ -176,11 +176,6 @@ void Game_Reset(void) {
 	struct IGameComponent* comp;
 	World_NewMap();
 
-	if (TexturePack_Url.length) {
-		TexturePack_Url.length = 0;
-		TexturePack_ExtractCurrent(false);
-	}
-
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Reset) comp->Reset();
 	}
@@ -378,6 +373,7 @@ static void Game_Load(void) {
 	Event_Register_(&WindowEvents.Resized,      NULL, Game_OnResize);
 	Event_Register_(&WindowEvents.Closing,      NULL, Game_Free);
 
+	Game_AddComponent(&Textures_Component);
 	Game_AddComponent(&Input_Component);
 	Game_AddComponent(&Camera_Component);
 	Game_AddComponent(&Gfx_Component);
@@ -395,7 +391,6 @@ static void Game_Load(void) {
 
 	Game_AddComponent(&Animations_Component);
 	Game_AddComponent(&Inventory_Component);
-	Game_AddComponent(&Textures_Component);
 	World_Reset();
 
 	Game_AddComponent(&Builder_Component);
