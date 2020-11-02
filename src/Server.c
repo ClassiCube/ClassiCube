@@ -524,6 +524,7 @@ static void OnInit(void) {
 }
 
 static void OnFree(void) {
+	Server.IP.length = 0;
 	if (Server.IsSinglePlayer) {
 		Physics_Free();
 	} else {
