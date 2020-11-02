@@ -176,8 +176,8 @@ void Game_Reset(void) {
 	struct IGameComponent* comp;
 	World_NewMap();
 
-	if (World_TextureUrl.length) {
-		World_TextureUrl.length = 0;
+	if (TexturePack_Url.length) {
+		TexturePack_Url.length = 0;
 		TexturePack_ExtractCurrent(false);
 	}
 

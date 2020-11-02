@@ -346,8 +346,6 @@ static struct ChatCommand HelpCommand = {
 static void GpuInfoCommand_Execute(const cc_string* args, int argsCount) {
 	char buffer[7 * STRING_SIZE];
 	cc_string str, line;
-	int i;
-
 	String_InitArray(str, buffer);
 	Gfx_GetApiInfo(&str);
 	

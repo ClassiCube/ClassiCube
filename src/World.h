@@ -44,7 +44,6 @@ CC_VAR extern struct _WorldData {
 	/* NOTE: Blocks may still be NULL. (e.g. error during loading) */
 	cc_bool Loaded;
 } World;
-extern cc_string World_TextureUrl;
 
 /* Frees the blocks array, sets dimensions to 0, resets environment to default. */
 void World_Reset(void);
@@ -129,10 +128,6 @@ extern const char* const Weather_Names[3];
 #define ENV_DEFAULT_SUN_COL    PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
 #define ENV_DEFAULT_SHADOW_COL PackedCol_Make(0x9B, 0x9B, 0x9B, 0xFF)
 
-/* If url is empty, extracts default texture pack. */
-/* Else tries extracting cached texture pack for the given URL, */
-/* then asynchronously downloads the texture pack from the given URL. */
-CC_API void World_ApplyTexturePack(const cc_string* url);
 /* Resets all environment settings to default. */
 /* NOTE: Unlike Env_Set functions, DOES NOT raise EnvVarChanged event. */
 CC_API void Env_Reset(void);

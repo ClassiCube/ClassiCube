@@ -148,17 +148,6 @@ if (src != dst) { dst = src; Event_RaiseInt(&WorldEvents.EnvVarChanged, var); }
 struct _EnvData Env;
 const char* const Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
 
-static char textureUrlBuffer[STRING_SIZE];
-cc_string World_TextureUrl = String_FromArray(textureUrlBuffer);
-
-void World_ApplyTexturePack(const cc_string* url) {
-	if (url->length) TexturePack_DownloadAsync(url);
-
-	if (String_Equals(url, &World_TextureUrl)) return;
-	String_Copy(&World_TextureUrl, url);
-	TexturePack_ExtractCurrent(false);
-}
-
 void Env_Reset(void) {
 	Env.EdgeHeight   = -1;
 	Env.SidesOffset  = -2;

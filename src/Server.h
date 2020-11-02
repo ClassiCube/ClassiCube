@@ -67,7 +67,7 @@ CC_VAR extern struct _ServerConnectionData {
 } Server;
 
 /* If user hasn't previously accepted url, displays a dialog asking to confirm downloading it. */
-/* Otherwise just calls World_ApplyTexturePack. */
+/* Otherwise just calls TexturePack_Extract. */
 void Server_RetrieveTexturePack(const cc_string* url);
 void Net_SendPacket(void);
 #endif

@@ -44,7 +44,7 @@ void Server_RetrieveTexturePack(const cc_string* url) {
 	if (!Game_AllowServerTextures || TextureCache_HasDenied(url)) return;
 
 	if (!url->length || TextureCache_HasAccepted(url)) {
-		World_ApplyTexturePack(url);
+		TexturePack_Extract(url);
 	} else {
 		TexPackOverlay_Show(url);
 	}
