@@ -404,7 +404,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		public InputConnection onCreateInputConnection(EditorInfo attrs) {
 			attrs.actionLabel = null;
 			attrs.inputType   = MainActivity.this.getKeyboardType();
-			attrs.imeOptions  = EditorInfo.IME_ACTION_GO;
+			attrs.imeOptions  = EditorInfo.IME_ACTION_GO | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
 
 			InputConnection ic = new BaseInputConnection(this, true) {
 				SpannableStringBuilder kbText = new SpannableStringBuilder(MainActivity.this.keyboardText);
