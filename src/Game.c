@@ -687,6 +687,7 @@ void Game_Run(int width, int height, const cc_string* title) {
 	/* Android won't let us change pixel surface to EGL surface */
 	/* So unfortunately have to completely recreate the surface */
 	if (!SwitchToGame()) return;
+	Window_EnterFullscreen();
 #endif
 
 	Window_Create(width, height);
