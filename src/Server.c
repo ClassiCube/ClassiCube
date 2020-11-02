@@ -232,7 +232,7 @@ static cc_bool net_connecting;
 static double net_connectTimeout;
 #define NET_TIMEOUT_SECS 15
 
-static void OnFree(void);
+static void OnClose(void);
 static void MPConnection_FinishConnect(void) {
 	net_connecting = false;
 	Event_RaiseVoid(&NetEvents.Connected);
@@ -260,7 +260,7 @@ static void MPConnection_FailConnect(cc_result result) {
 
 	String_Format2(&msg, "Failed to connect to %s:%i", &Server.IP, &Server.Port);
 	Game_Disconnect(&msg, &reason);
-	OnFree();
+	OnClose();
 }
 
 static void MPConnection_TickConnect(void) {
@@ -505,7 +505,7 @@ static void OnNewMap(void) {
 static void OnReset(void) {
 	if (Server.IsSinglePlayer) return;
 	net_writeFailed = false;
-	OnFree();
+	OnClose();
 }
 
 static void OnInit(void) {
@@ -525,6 +525,10 @@ static void OnInit(void) {
 
 static void OnFree(void) {
 	Server.IP.length = 0;
+	OnClose();
+}
+
+static void OnClose(void) {
 	if (Server.IsSinglePlayer) {
 		Physics_Free();
 	} else {
