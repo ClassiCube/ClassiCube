@@ -3520,7 +3520,33 @@ void Window_Close(void) {
 	UnhookEvents();
 }
 
+#include "Chat.h"
+static void LogStuff(void) {
+	char buffer[256]; cc_string str = String_FromArray(buffer);
+	int width, height;
+	double css_width, css_height;
+
+	width  = GetCanvasWidth();
+	height = GetCanvasHeight();
+	String_Format2(&str, "Size: %ix%i", &width, &height);
+	Chat_AddOf(&str, MSG_TYPE_STATUS_1);
+	str.length = 0;
+
+	width  = EM_ASM_INT_V({ return window.innerHeight; });
+	height = EM_ASM_INT_V({ return window.outerHeight; });
+	String_Format2(&str, "I:%i O:%i", &width, &height);
+	Chat_AddOf(&str, MSG_TYPE_STATUS_2);
+	str.length = 0;
+
+	width  = GetScreenWidth();
+	height = GetScreenHeight();
+	String_Format2(&str, "Dims: %ix%i", &width, &height);
+	Chat_AddOf(&str, MSG_TYPE_STATUS_3);
+}
+
+int Window_Debug;
 void Window_ProcessEvents(void) {
+	if (Window_Debug) LogStuff();
 	if (!needResize) return;
 	needResize = false;
 

@@ -590,6 +590,14 @@ void Chat_Send(const cc_string* text, cc_bool logUsage) {
 	Event_RaiseChat(&ChatEvents.ChatSending, text, 0);
 	if (logUsage) StringsBuffer_Add(&Chat_InputLog, text);
 
+#ifdef CC_BUILD_WEB
+	if (String_CaselessEqualsConst(text, "/client debug")) {
+		Chat_AddRaw("DEBUG CANNON ENGAGED");
+		extern int Window_Debug;
+		Window_Debug = true;
+	}
+#endif
+
 	if (Commands_IsCommandPrefix(text)) {
 		Commands_Execute(text);
 	} else {
