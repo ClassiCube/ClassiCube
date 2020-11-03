@@ -3513,9 +3513,12 @@ void Window_SetSize(int width, int height) {
 void Window_Close(void) {
 	WindowInfo.Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
+	/* If the game is closed while in fullscreen, the last rendered frame stays
+	/* shown in fullscreen, but the game can't be interacted with anymore */
+	Window_ExitFullscreen();
+
 	/* Don't want cursor stuck on the dead 0,0 canvas */
 	Window_DisableRawMouse();
-
 	Window_SetSize(0, 0);
 	UnhookEvents();
 }
@@ -3529,18 +3532,18 @@ static void LogStuff(void) {
 	width  = GetCanvasWidth();
 	height = GetCanvasHeight();
 	String_Format2(&str, "Size: %ix%i", &width, &height);
-	Chat_AddOf(&str, MSG_TYPE_STATUS_1);
+	Chat_AddOf(&str, MSG_TYPE_CLIENTSTATUS_1);
 	str.length = 0;
 
 	width  = EM_ASM_INT_V({ return window.innerHeight; });
 	height = EM_ASM_INT_V({ return window.outerHeight; });
 	String_Format2(&str, "I:%i O:%i", &width, &height);
-	Chat_AddOf(&str, MSG_TYPE_STATUS_2);
+	Chat_AddOf(&str, MSG_TYPE_CLIENTSTATUS_2);
 	str.length = 0;
 
 	width  = GetScreenWidth();
 	height = GetScreenHeight();
-	String_Format2(&str, "Dims: %ix%i", &width, &height);
+	String_Format2(&str, "Dims: %ix%i          |", &width, &height);
 	Chat_AddOf(&str, MSG_TYPE_STATUS_3);
 }
 
@@ -3549,6 +3552,7 @@ void Window_ProcessEvents(void) {
 	if (Window_Debug) LogStuff();
 	if (!needResize) return;
 	needResize = false;
+	if (!WindowInfo.Exists) return;
 
 	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) {
 		SetFullscreenBounds();
