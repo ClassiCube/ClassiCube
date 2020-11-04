@@ -83,3 +83,16 @@ You are required to have this HTML code somewhere in the page:
 
 The links below show implementing a simple website that hosts the web client
 * [Flask (python webserver)](hosting-flask.md)
+
+### iOS / Android support
+
+The webclient is compatible with Android / iOS devices and will show a touch based UI to these devices.
+
+However, due to the limited screen size available on such devices, you should consider serving a webpage consisting of just the `<canvas>` to these devices - no header, footer or anything else.
+
+Additionally, you will likely want to ensure zooming is disabled, viewport width is same as the device's width, and that 'add to device homescreen' is fully supported. You can accomplish that by adding these three HTML tags to the page:
+```HTML
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+```

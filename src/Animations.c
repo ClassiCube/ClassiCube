@@ -2,7 +2,6 @@
 #include "String.h"
 #include "Constants.h"
 #include "Stream.h"
-#include "World.h"
 #include "Graphics.h"
 #include "Event.h"
 #include "Game.h"
@@ -279,7 +278,7 @@ static void Animations_Apply(struct AnimationData* data) {
 static cc_bool Animations_IsDefaultZip(void) {
 	cc_string texPack;
 	cc_bool optExists;
-	if (World_TextureUrl.length) return false;
+	if (TexturePack_Url.length) return false;
 
 	optExists = Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &texPack);
 	return !optExists || String_CaselessEqualsConst(&texPack, "default.zip");

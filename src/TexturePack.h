@@ -49,6 +49,7 @@ CC_VAR extern struct _Atlas1DData {
 	/* Textures for each 1D atlas. Only Atlas1D_Count of these are valid. */
 	GfxResourceID TexIds[ATLAS1D_MAX_ATLASES];
 } Atlas1D;
+extern cc_string TexturePack_Url;
 
 #define Atlas2D_TileX(texLoc) ((texLoc) &  ATLAS2D_MASK)  /* texLoc % ATLAS2D_TILES_PER_ROW */
 #define Atlas2D_TileY(texLoc) ((texLoc) >> ATLAS2D_SHIFT) /* texLoc / ATLAS2D_TILES_PER_ROW */
@@ -83,13 +84,14 @@ int TextureCache_ClearDenied(void);
 extern int TexturePack_ReqID;
 /* Sets the filename of the default texture pack used. */
 void TexturePack_SetDefault(const cc_string* texPack);
-/* If World_TextureUrl is empty, extracts user's default texture pack. */
+/* If TexturePack_Url is empty, extracts user's default texture pack. */
 /* Otherwise extracts the cached texture pack for that URL. */
 void TexturePack_ExtractCurrent(cc_bool forceReload);
-/* Asynchronously downloads a texture pack. */
-/* NOTE: This does not load cached textures - use TexturePack_ExtractCurrent for that. */
-void TexturePack_DownloadAsync(const cc_string* url);
 /* Extracts a texture pack or terrain.png from given downloaded data. */
 /* Also updates cached data associated with the given URL. */
 void TexturePack_Apply(struct HttpRequest* item);
+/* If url is empty, extracts default texture pack. */
+/* Else tries extracting cached texture pack for the given URL, */
+/* then asynchronously downloads the texture pack from the given URL. */
+CC_API void TexturePack_Extract(const cc_string* url);
 #endif

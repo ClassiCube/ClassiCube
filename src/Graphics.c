@@ -1002,7 +1002,7 @@ static const int D3D9_DepthBufferBts(D3DFORMAT format) {
 	return 0;
 }
 
-void Gfx_GetApiInfo(cc_string* lines) {
+void Gfx_GetApiInfo(cc_string* info) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
 	int pointerSize = sizeof(void*) * 8;
 	int depthBits   = D3D9_DepthBufferBts(depthFormat);
@@ -1011,12 +1011,12 @@ void Gfx_GetApiInfo(cc_string* lines) {
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
 	curMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 
-	String_Format1(&lines[0], "-- Using Direct3D9 (%i bit) --", &pointerSize);
-	String_Format1(&lines[1], "Adapter: %c",         adapter.Description);
-	String_Format1(&lines[2], "Processing mode: %c", D3D9_StrFlags());
-	String_Format2(&lines[3], "Video memory: %f2 MB total, %f2 free", &totalMem, &curMem);
-	String_Format2(&lines[4], "Max texture size: (%i x %i)", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
-	String_Format1(&lines[5], "Depth buffer bits: %i", &depthBits);
+	String_Format1(info, "-- Using Direct3D9 (%i bit) --\n", &pointerSize);
+	String_Format1(info, "Adapter: %c\n",         adapter.Description);
+	String_Format1(info, "Processing mode: %c\n", D3D9_StrFlags());
+	String_Format2(info, "Video memory: %f2 MB total, %f2 free\n", &totalMem, &curMem);
+	String_Format2(info, "Max texture size: (%i x %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	String_Format1(info, "Depth buffer bits: %i", &depthBits);
 }
 
 void Gfx_OnWindowResize(void) { Gfx_LoseContext(" (resizing window)"); }
@@ -1454,32 +1454,36 @@ cc_result Gfx_TakeScreenshot(struct Stream* output) {
 	return res;
 }
 
-void Gfx_GetApiInfo(cc_string* lines) {
+static void AppendVRAMStats(cc_string* info) {
 	static const cc_string memExt = String_FromConst("GL_NVX_gpu_memory_info");
-	GLint totalKb, curKb, depthBits;
+	GLint totalKb, curKb;
 	float total, cur;
-	cc_string extensions;
-	int pointerSize = sizeof(void*) * 8;
-
-	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
-	String_Format1(&lines[0], "-- Using OpenGL (%i bit) --", &pointerSize);
-	String_Format1(&lines[1], "Vendor: %c",     glGetString(GL_VENDOR));
-	String_Format1(&lines[2], "Renderer: %c",   glGetString(GL_RENDERER));
-	String_Format1(&lines[3], "GL version: %c", glGetString(GL_VERSION));
-	/* Memory usage line goes here */
-	String_Format2(&lines[5], "Max texture size: (%i, %i)", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
-	String_Format1(&lines[6], "Depth buffer bits: %i",      &depthBits);
 
 	/* NOTE: glGetString returns UTF8, but I just treat it as code page 437 */
-	extensions = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
-	if (!String_CaselessContains(&extensions, &memExt)) return;
+	cc_string exts = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
+	if (!String_CaselessContains(&exts, &memExt)) return;
 
 	glGetIntegerv(0x9048, &totalKb);
 	glGetIntegerv(0x9049, &curKb);
 	if (totalKb <= 0 || curKb <= 0) return;
 
 	total = totalKb / 1024.0f; cur = curKb / 1024.0f;
-	String_Format2(&lines[4], "Video memory: %f2 MB total, %f2 free", &total, &cur);
+	String_Format2(info, "Video memory: %f2 MB total, %f2 free\n", &total, &cur);
+}
+
+void Gfx_GetApiInfo(cc_string* info) {
+	GLint depthBits;
+	int pointerSize = sizeof(void*) * 8;
+
+	glGetIntegerv(GL_DEPTH_BITS, &depthBits);
+	String_Format1(info, "-- Using OpenGL (%i bit) --\n", &pointerSize);
+	String_Format1(info, "Vendor: %c\n",     glGetString(GL_VENDOR));
+	String_Format1(info, "Renderer: %c\n",   glGetString(GL_RENDERER));
+	String_Format1(info, "GL version: %c\n", glGetString(GL_VERSION));
+	AppendVRAMStats(info);
+	String_Format2(info, "Max texture size: (%i, %i)\n", &Gfx.MaxTexWidth, &Gfx.MaxTexHeight);
+	String_Format1(info, "Depth buffer bits: %i\n",      &depthBits);
+	GLContext_GetApiInfo(info);
 }
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {

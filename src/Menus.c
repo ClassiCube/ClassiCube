@@ -1538,7 +1538,7 @@ static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	if (!File_Exists(&path)) return;
 	
 	TexturePack_SetDefault(&relPath);
-	World_TextureUrl.length = 0;
+	TexturePack_Url.length = 0;
 	TexturePack_ExtractCurrent(true);
 }
 
@@ -2701,8 +2701,8 @@ static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 
 void ChatOptionsScreen_Show(void) {
 	static struct MenuInputDesc descs[5];
-	MenuInput_Float(descs[0], 0.25f, 4.00f,  1);
-	MenuInput_Int(descs[1],       0,    30, 10);
+	MenuInput_Float(descs[0], 0.25f, 4.00f, 1);
+	MenuInput_Int(descs[1],       0,    30, Gui.DefaultLines);
 	MenuOptionsScreen_Show(descs, NULL, 0, ChatOptionsScreen_InitWidgets);
 }
 
@@ -3392,7 +3392,7 @@ static cc_bool TexPackOverlay_IsAlways(void* screen, void* w) { return Menu_Inde
 
 static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
-	World_ApplyTexturePack(&s->url);
+	TexturePack_Extract(&s->url);
 	if (TexPackOverlay_IsAlways(s, widget)) TextureCache_Accept(&s->url);
 	Gui_Remove((struct Screen*)s);
 }

@@ -344,18 +344,14 @@ static struct ChatCommand HelpCommand = {
 };
 
 static void GpuInfoCommand_Execute(const cc_string* args, int argsCount) {
-	char linesBuffer[GFX_APIINFO_LINES][STRING_SIZE];
-	cc_string lines[GFX_APIINFO_LINES];
-	int i;
-
-	for (i = 0; i < GFX_APIINFO_LINES; i++) {
-		String_InitArray(lines[i], linesBuffer[i]);
-	}
-	Gfx_GetApiInfo(lines);
+	char buffer[7 * STRING_SIZE];
+	cc_string str, line;
+	String_InitArray(str, buffer);
+	Gfx_GetApiInfo(&str);
 	
-	for (i = 0; i < GFX_APIINFO_LINES; i++) {
-		if (!lines[i].length) continue;
-		Chat_Add1("&a%s", &lines[i]);
+	while (str.length) {
+		String_UNSAFE_SplitBy(&str, '\n', &line);
+		if (line.length) Chat_Add1("&a%s", &line);
 	}
 }
 
@@ -621,11 +617,7 @@ static void OnInit(void) {
 #endif
 }
 
-static void OnReset(void) {
-	CloseLogFile();
-	ResetLogFile();
-
-	/* reset CPE messages */
+static void ClearCPEMessages(void) {
 	Chat_AddOf(&String_Empty, MSG_TYPE_ANNOUNCEMENT);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_1);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_2);
@@ -635,8 +627,15 @@ static void OnReset(void) {
 	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_3);
 }
 
+static void OnReset(void) {
+	CloseLogFile();
+	ResetLogFile();
+	ClearCPEMessages();
+}
+
 static void OnFree(void) {
 	CloseLogFile();
+	ClearCPEMessages();
 	cmds_head = NULL;
 
 	if (Chat_LogTime != defaultLogTimes) Mem_Free(Chat_LogTime);

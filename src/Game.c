@@ -176,11 +176,6 @@ void Game_Reset(void) {
 	struct IGameComponent* comp;
 	World_NewMap();
 
-	if (World_TextureUrl.length) {
-		World_TextureUrl.length = 0;
-		TexturePack_ExtractCurrent(false);
-	}
-
 	for (comp = comps_head; comp; comp = comp->next) {
 		if (comp->Reset) comp->Reset();
 	}
@@ -378,6 +373,7 @@ static void Game_Load(void) {
 	Event_Register_(&WindowEvents.Resized,      NULL, Game_OnResize);
 	Event_Register_(&WindowEvents.Closing,      NULL, Game_Free);
 
+	Game_AddComponent(&Textures_Component);
 	Game_AddComponent(&Input_Component);
 	Game_AddComponent(&Camera_Component);
 	Game_AddComponent(&Gfx_Component);
@@ -395,7 +391,6 @@ static void Game_Load(void) {
 
 	Game_AddComponent(&Animations_Component);
 	Game_AddComponent(&Inventory_Component);
-	Game_AddComponent(&Textures_Component);
 	World_Reset();
 
 	Game_AddComponent(&Builder_Component);
@@ -687,6 +682,7 @@ void Game_Run(int width, int height, const cc_string* title) {
 	/* Android won't let us change pixel surface to EGL surface */
 	/* So unfortunately have to completely recreate the surface */
 	if (!SwitchToGame()) return;
+	Window_EnterFullscreen();
 #endif
 
 	Window_Create(width, height);

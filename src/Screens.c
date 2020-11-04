@@ -795,7 +795,8 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	Math_Clamp(size, 8, 60);
 
 	/* don't recreate font if possible */
-	if (size == s->chatFont.size) return false;
+	/* TODO: Add function for this, don't use Display_ScaleY (Drawer2D_SameFontSize ??) */
+	if (Display_ScaleY(size) == s->chatFont.size) return false;
 	ChatScreen_FreeChatFonts(s);
 	Drawer2D_MakeFont(&s->chatFont, size, FONT_FLAGS_NONE);
 
@@ -1039,11 +1040,8 @@ static void ChatScreen_BuildMesh(void* screen) { }
 
 static void ChatScreen_Layout(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int yOffset;
 	/* See comment in ChatScreen_UpdateChatYOffsets */
 	HUDScreen_Layout(Gui_HUD);
-
-	yOffset = Gui_HUD->hotbar.height + 15; /* TODO: This should be DPI scaled?? */
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
 
 	s->paddingX = Display_ScaleX(5);
@@ -1052,10 +1050,14 @@ static void ChatScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->input.base,   ANCHOR_MIN, ANCHOR_MAX,  5, 5);
 	Widget_SetLocation(&s->altText,      ANCHOR_MIN, ANCHOR_MAX,  5, 5);
 	Widget_SetLocation(&s->status,       ANCHOR_MAX, ANCHOR_MIN,  0, 0);
-	Widget_SetLocation(&s->bottomRight,  ANCHOR_MAX, ANCHOR_MAX,  0, yOffset);
+	Widget_SetLocation(&s->bottomRight,  ANCHOR_MAX, ANCHOR_MAX,  0, 0);
 	Widget_SetLocation(&s->chat,         ANCHOR_MIN, ANCHOR_MAX, 10, 0);
 	Widget_SetLocation(&s->clientStatus, ANCHOR_MIN, ANCHOR_MAX, 10, 0);
 	ChatScreen_UpdateChatYOffsets(s);
+
+	/* Can't use Widget_SetLocation because it DPI scales input */
+	s->bottomRight.yOffset = Gui_HUD->hotbar.height + Display_ScaleY(15);
+	Widget_Layout(&s->bottomRight);
 
 	Widget_SetLocation(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
 	s->announcement.yOffset = -WindowInfo.Height / 4;

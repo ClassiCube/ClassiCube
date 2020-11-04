@@ -280,7 +280,9 @@ static void UpdateCache(struct HttpRequest* req) {
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
 *#########################################################################################################################*/
 static char defTexPackBuffer[STRING_SIZE];
+static char textureUrlBuffer[STRING_SIZE];
 static cc_string defTexPack = String_FromArray(defTexPackBuffer);
+cc_string TexturePack_Url   = String_FromArray(textureUrlBuffer);
 static const cc_string defaultZip = String_FromConst("default.zip");
 
 void TexturePack_SetDefault(const cc_string* texPack) {
@@ -369,7 +371,7 @@ static void ExtractDefault(void) {
 
 static cc_bool usingDefault;
 void TexturePack_ExtractCurrent(cc_bool forceReload) {
-	cc_string url = World_TextureUrl;
+	cc_string url = TexturePack_Url;
 	struct Stream stream;
 	cc_result res;
 
@@ -395,14 +397,15 @@ void TexturePack_Apply(struct HttpRequest* item) {
 	url = String_FromRawArray(item->url);
 	UpdateCache(item);
 	/* Took too long to download and is no longer active texture pack */
-	if (!String_Equals(&World_TextureUrl, &url)) return;
+	if (!String_Equals(&TexturePack_Url, &url)) return;
 
 	Stream_ReadonlyMemory(&mem, item->data, item->size);
 	ExtractFrom(&mem, &url);
 	usingDefault = false;
 }
 
-void TexturePack_DownloadAsync(const cc_string* url) {
+/* Asynchronously downloads the given texture pack */
+static void DownloadAsync(const cc_string* url) {
 	cc_string etag = String_Empty;
 	cc_string time = String_Empty;
 
@@ -415,6 +418,14 @@ void TexturePack_DownloadAsync(const cc_string* url) {
 
 	Http_TryCancel(TexturePack_ReqID);
 	TexturePack_ReqID = Http_AsyncGetDataEx(url, true, &time, &etag, NULL);
+}
+
+void TexturePack_Extract(const cc_string* url) {
+	if (url->length) DownloadAsync(url);
+
+	if (String_Equals(url, &TexturePack_Url)) return;
+	String_Copy(&TexturePack_Url, url);
+	TexturePack_ExtractCurrent(false);
 }
 
 
@@ -455,12 +466,20 @@ static void OnInit(void) {
 	TextureCache_Init();
 }
 
+static void OnReset(void) {
+	if (!TexturePack_Url.length) return;
+	TexturePack_Url.length = 0;
+	TexturePack_ExtractCurrent(false);
+}
+
 static void OnFree(void) {
 	OnContextLost(NULL);
 	Atlas2D_Free();
+	TexturePack_Url.length = 0;
 }
 
 struct IGameComponent Textures_Component = {
 	OnInit, /* Init  */
-	OnFree  /* Free  */
+	OnFree, /* Free  */
+	OnReset /* Reset */
 };

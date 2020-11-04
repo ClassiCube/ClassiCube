@@ -1136,7 +1136,7 @@ cc_result Cw_Save(struct Stream* stream) {
 		tmp[273] = (BlockRaw)Env.EdgeBlock;
 		Stream_SetU16_BE(&tmp[286], Env.EdgeHeight);
 	}
-	len = Cw_WriteEndString(&tmp[301], &World_TextureUrl);
+	len = Cw_WriteEndString(&tmp[301], &TexturePack_Url);
 	if ((res = Stream_Write(stream, tmp, sizeof(cw_meta_cpe) + len))) return res;
 
 	if ((res = Stream_Write(stream, cw_meta_defs, sizeof(cw_meta_defs)))) return res;

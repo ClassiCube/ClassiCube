@@ -323,6 +323,7 @@ void Launcher_Run(void) {
 		Http_Component.Free();
 
 		Program_Run(0, NULL);
+		Window_ExitFullscreen();
 		Window_RemakeSurface();
 		Launcher_Run();
 	}

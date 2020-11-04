@@ -42,6 +42,7 @@ CC_VAR extern struct _GuiData {
 	cc_bool ShowFPS;
 	float RawHotbarScale, RawChatScale, RawInventoryScale;
 	GfxResourceID GuiTex, GuiClassicTex, IconsTex, TouchTex;
+	int DefaultLines;
 } Gui;
 
 float Gui_Scale(float value);

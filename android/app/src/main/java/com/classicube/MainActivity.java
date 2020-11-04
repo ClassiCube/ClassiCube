@@ -404,7 +404,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		public InputConnection onCreateInputConnection(EditorInfo attrs) {
 			attrs.actionLabel = null;
 			attrs.inputType   = MainActivity.this.getKeyboardType();
-			attrs.imeOptions  = EditorInfo.IME_ACTION_GO;
+			attrs.imeOptions  = EditorInfo.IME_ACTION_GO | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
 
 			InputConnection ic = new BaseInputConnection(this, true) {
 				SpannableStringBuilder kbText = new SpannableStringBuilder(MainActivity.this.keyboardText);
@@ -442,6 +442,29 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 					updateText();
 					return success;
 				}
+
+				@Override
+				public boolean sendKeyEvent(KeyEvent ev) {
+					if (ev.getAction() != KeyEvent.ACTION_DOWN) return super.sendKeyEvent(ev);
+					int code  = ev.getKeyCode();
+					int start = Selection.getSelectionStart(kbText);
+					int uni   = ev.getUnicodeChar();
+
+					if (code == KeyEvent.KEYCODE_ENTER) {
+						// enter maps to \n but that should not be intercepted
+					} else if (code == KeyEvent.KEYCODE_DEL) {
+						if (start <= 0) return false;
+						kbText.delete(start - 1, start);
+						updateText();
+						return false;
+					} else if (uni != 0) {
+						kbText.insert(start, String.valueOf((char)uni));
+						updateText();
+						return false;
+					}
+					return super.sendKeyEvent(ev);
+				}
+
 			};
 			//String text = MainActivity.this.keyboardText;
 			//if (text != null) ic.setComposingText(text, 0);
