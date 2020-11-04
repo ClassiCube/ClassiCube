@@ -617,11 +617,7 @@ static void OnInit(void) {
 #endif
 }
 
-static void OnReset(void) {
-	CloseLogFile();
-	ResetLogFile();
-
-	/* reset CPE messages */
+static void ClearCPEMessages(void) {
 	Chat_AddOf(&String_Empty, MSG_TYPE_ANNOUNCEMENT);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_1);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_2);
@@ -631,8 +627,15 @@ static void OnReset(void) {
 	Chat_AddOf(&String_Empty, MSG_TYPE_BOTTOMRIGHT_3);
 }
 
+static void OnReset(void) {
+	CloseLogFile();
+	ResetLogFile();
+	ClearCPEMessages();
+}
+
 static void OnFree(void) {
 	CloseLogFile();
+	ClearCPEMessages();
 	cmds_head = NULL;
 
 	if (Chat_LogTime != defaultLogTimes) Mem_Free(Chat_LogTime);
