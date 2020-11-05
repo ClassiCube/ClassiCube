@@ -238,9 +238,9 @@ extern JavaVM* VM_Ptr;
 #define JavaMakeConst(env, str) (*env)->NewStringUTF(env, str);
 #define JavaRegisterNatives(env, methods) (*env)->RegisterNatives(env, App_Class, methods, Array_Elems(methods));
 
-/* Allocates a string from the given java string. */
+/* Creates a string from the given java string. buffer must be at least NATIVE_STR_LEN long. */
 /* NOTE: Don't forget to call env->ReleaseStringUTFChars. Only works with ASCII strings. */
-cc_string JavaGetString(JNIEnv* env, jstring str);
+cc_string JavaGetString(JNIEnv* env, jstring str, char* buffer);
 /* Allocates a java string from the given string. */
 jobject JavaMakeString(JNIEnv* env, const cc_string* str);
 /* Allocates a java byte array from the given block of memory. */

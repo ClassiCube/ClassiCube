@@ -851,6 +851,7 @@ static void Http_BackendFree(void) {
 struct HttpRequest* java_req;
 
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
+	char buffer[NATIVE_STR_LEN];
 	cc_string err;
 	JNIEnv* env;
 	jvalue args[1];
@@ -861,9 +862,8 @@ cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
 	obj       = JavaCallObject(env, "httpDescribeError", "(I)Ljava/lang/String;", args);
 	if (!obj) return false;
 
-	err = JavaGetString(env, obj);
+	err = JavaGetString(env, obj, buffer);
 	String_AppendString(dst, &err);
-	(*env)->ReleaseStringUTFChars(env, obj, err.buffer);
 	(*env)->DeleteLocalRef(env, obj);
 	return true;
 }
@@ -883,9 +883,9 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
 
 /* Processes a HTTP header downloaded from the server */
 static void JNICALL java_HttpParseHeader(JNIEnv* env, jobject o, jstring header) {
-	cc_string line = JavaGetString(env, header);
+	char buffer[NATIVE_STR_LEN];
+	cc_string line = JavaGetString(env, header, buffer);
 	Http_ParseHeader(java_req, &line);
-	(*env)->ReleaseStringUTFChars(env, header, line.buffer);
 }
 
 /* Processes a chunk of data downloaded from the web server */

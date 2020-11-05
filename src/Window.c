@@ -3739,11 +3739,10 @@ static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {
 }
 
 static void JNICALL java_processKeyText(JNIEnv* env, jobject o, jstring str) {
-	cc_string text = JavaGetString(env, str);
+	char buffer[NATIVE_STR_LEN];
+	cc_string text = JavaGetString(env, str, buffer);
 	Platform_Log1("KEY - TEXT %s", &text);
-
 	Event_RaiseString(&InputEvents.TextChanged, &text);
-	(*env)->ReleaseStringUTFChars(env, str, text.buffer);
 }
 
 static void JNICALL java_processMouseDown(JNIEnv* env, jobject o, jint id, jint x, jint y) {

@@ -1900,11 +1900,18 @@ jobject App_Instance;
 JavaVM* VM_Ptr;
 
 /* JNI helpers */
-cc_string JavaGetString(JNIEnv* env, jstring str) {
+cc_string JavaGetString(JNIEnv* env, jstring str, char* buffer) {
+	const char* src; int len;
 	cc_string dst;
-	dst.buffer   = (*env)->GetStringUTFChars(env,  str, NULL);
-	dst.length   = (*env)->GetStringUTFLength(env, str);
-	dst.capacity = dst.length;
+	src = (*env)->GetStringUTFChars(env, str, NULL);
+	len = (*env)->GetStringUTFLength(env, str);
+
+	dst.buffer   = buffer;
+	dst.length   = 0;
+	dst.capacity = NATIVE_STR_LEN;
+	String_AppendUtf8(&dst, (const cc_uint8*)src, len);
+
+	(*env)->ReleaseStringUTFChars(env, str, src);
 	return dst;
 }
 
