@@ -1642,7 +1642,7 @@ static void UpdatesScreen_Show(struct LScreen* s_) {
 	s->pendingFetch = false;
 
 	res = Updater_GetBuildTime(&buildTime);
-	if (res) { Logger_Warn(res, "getting build time"); return; }
+	if (res) { Logger_SysWarn(res, "getting build time"); return; }
 	UpdatesScreen_Format(&s->lblYour, "Your build: ", buildTime);
 }
 

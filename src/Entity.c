@@ -434,6 +434,19 @@ static cc_result Entity_EnsurePow2(struct Entity* e, struct Bitmap* bmp) {
 	return 0;
 }
 
+static void LogInvalidPng(const cc_uint8* data, int size) {
+	cc_string str; char buffer[STRING_SIZE];
+	int i;
+	String_InitArray(str, buffer);
+
+	String_AppendConst(&str, "  &c(expected \x89\x50\x4E\x47\x0D\x0A\x1A\x0A, but got ");
+	for (i = 0; i < min(size, 8); i++) {
+		String_Append(&str, data[i]);
+	}
+	String_AppendConst(&str, ")");
+	Chat_Add(&str);
+}
+
 static void Entity_CheckSkin(struct Entity* e) {
 	struct Entity* first;
 	cc_string url, skin;
@@ -483,7 +496,8 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 failed:
 	url = String_FromRawArray(item.url);
-	Logger_Warn2(res, "decoding", &url);
+	Logger_SysWarn2(res, "decoding", &url);
+	if (res == PNG_ERR_INVALID_SIG) LogInvalidPng(item.data, item.size);
 	Mem_Free(bmp.scan0);
 }
 

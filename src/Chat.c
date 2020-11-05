@@ -75,7 +75,7 @@ static void CloseLogFile(void) {
 	if (!logStream.Meta.File) return;
 
 	res = logStream.Close(&logStream);
-	if (res) { Logger_Warn2(res, "closing", &logPath); }
+	if (res) { Logger_SysWarn2(res, "closing", &logPath); }
 }
 
 /* Whether the given character is an allowed in a log filename */
@@ -127,7 +127,7 @@ static void OpenChatLog(struct DateTime* now) {
 		res = Stream_AppendFile(&logStream, &logPath);
 		if (res && res != ReturnCode_FileShareViolation) {
 			Chat_DisableLogging();
-			Logger_Warn2(res, "appending to", &logPath);
+			Logger_SysWarn2(res, "appending to", &logPath);
 			return;
 		}
 
@@ -163,7 +163,7 @@ static void AppendChatLog(const cc_string* text) {
 	res = Stream_WriteLine(&logStream, &str);
 	if (!res) return;
 	Chat_DisableLogging();
-	Logger_Warn2(res, "writing to", &logPath);
+	Logger_SysWarn2(res, "writing to", &logPath);
 }
 #endif
 

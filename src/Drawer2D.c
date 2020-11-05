@@ -75,7 +75,7 @@ void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags) {
 
 			if (res) {
 				Font_Free(desc);
-				Logger_Warn2(res, "creating font", &font_candidates[i]);
+				Logger_SysWarn2(res, "creating font", &font_candidates[i]);
 			} else {
 				if (i) String_Copy(&Drawer2D_FontName, &font_candidates[i]);
 				return;
@@ -671,7 +671,7 @@ static void OnFileChanged(void* obj, struct Stream* src, const cc_string* name) 
 	if (!String_CaselessEqualsConst(name, "default.png")) return;
 
 	if ((res = Png_Decode(&bmp, src))) {
-		Logger_Warn2(res, "decoding", name);
+		Logger_SysWarn2(res, "decoding", name);
 		Mem_Free(bmp.scan0);
 	} else if (Drawer2D_SetFontBitmap(&bmp)) {
 		Event_RaiseVoid(&ChatEvents.FontChanged);

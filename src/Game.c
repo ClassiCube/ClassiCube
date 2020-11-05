@@ -100,10 +100,10 @@ void Game_ToggleFullscreen(void) {
 
 	if (state == WINDOW_STATE_FULLSCREEN) {
 		res = Window_ExitFullscreen();
-		if (res) Logger_Warn(res, "leaving fullscreen");
+		if (res) Logger_SysWarn(res, "leaving fullscreen");
 	} else {
 		res = Window_EnterFullscreen();
-		if (res) Logger_Warn(res, "going fullscreen");
+		if (res) Logger_SysWarn(res, "going fullscreen");
 	}
 }
 
@@ -210,7 +210,7 @@ cc_bool Game_UpdateTexture(GfxResourceID* texId, struct Stream* src, const cc_st
 	cc_result res;
 	
 	res = Png_Decode(&bmp, src);
-	if (res) { Logger_Warn2(res, "decoding", file); }
+	if (res) { Logger_SysWarn2(res, "decoding", file); }
 
 	success = !res && Game_ValidateBitmap(file, &bmp);
 	if (success) {
@@ -355,7 +355,7 @@ static void LoadPlugins(void) {
 	cc_result res;
 
 	res = Directory_Enum(&dir, NULL, LoadPlugin);
-	if (res) Logger_Warn(res, "enumerating plugins directory");
+	if (res) Logger_SysWarn(res, "enumerating plugins directory");
 }
 #endif
 
@@ -540,15 +540,15 @@ void Game_TakeScreenshot(void) {
 	String_Format1(&path, "screenshots/%s", &filename);
 
 	res = Stream_CreateFile(&stream, &path);
-	if (res) { Logger_Warn2(res, "creating", &path); return; }
+	if (res) { Logger_SysWarn2(res, "creating", &path); return; }
 
 	res = Gfx_TakeScreenshot(&stream);
 	if (res) { 
-		Logger_Warn2(res, "saving to", &path); stream.Close(&stream); return;
+		Logger_SysWarn2(res, "saving to", &path); stream.Close(&stream); return;
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_Warn2(res, "closing", &path); return; }
+	if (res) { Logger_SysWarn2(res, "closing", &path); return; }
 	Chat_Add1("&eTaken screenshot as: %s", &filename);
 
 #ifdef CC_BUILD_ANDROID

@@ -933,7 +933,7 @@ static void InitRawMouse(void) {
 	rid.hwndTarget  = win_handle;
 
 	if (_registerRawInput(&rid, 1, sizeof(rid))) return;
-	Logger_Warn(GetLastError(), "initing raw mouse");
+	Logger_SysWarn(GetLastError(), "initing raw mouse");
 	rawMouseSupported = false;
 }
 

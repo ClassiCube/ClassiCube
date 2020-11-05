@@ -1574,7 +1574,7 @@ void Platform_Init(void) {
 	heap = GetProcessHeap();
 	
 	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (res) Logger_Warn(res, "starting WSA");
+	if (res) Logger_SysWarn(res, "starting WSA");
 
 	hasDebugger = IsDebuggerPresent();
 	/* For when user runs from command prompt */

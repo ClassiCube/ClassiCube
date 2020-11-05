@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
 	Window_Init();
 	
 	res = Platform_SetDefaultCurrentDirectory(argc, argv);
-	if (res) Logger_Warn(res, "setting current directory");
+	if (res) Logger_SysWarn(res, "setting current directory");
 #ifdef CC_TEST_VORBIS
 	main_imdct();
 #endif

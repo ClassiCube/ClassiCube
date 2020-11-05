@@ -502,13 +502,13 @@ static void FetchUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 	cc_result res;
 
 	res = Stream_WriteAllTo(&path, data, len);
-	if (res) { Logger_Warn(res, "saving update"); return; }
+	if (res) { Logger_SysWarn(res, "saving update"); return; }
 
 	res = Updater_SetNewBuildTime(FetchUpdateTask.timestamp);
-	if (res) Logger_Warn(res, "setting update time");
+	if (res) Logger_SysWarn(res, "setting update time");
 
 	res = Updater_MarkExecutable();
-	if (res) Logger_Warn(res, "making update executable");
+	if (res) Logger_SysWarn(res, "making update executable");
 
 #ifdef CC_BUILD_WIN
 	Options_SetBool("update-dirty", true);
@@ -552,7 +552,7 @@ static void FetchFlagsTask_Scale(struct Bitmap* bmp) {
 
 	Bitmap_TryAllocate(&scaled, width, height);
 	if (!scaled.scan0) {
-		Logger_Warn(ERR_OUT_OF_MEMORY, "resizing flags bitmap"); return;
+		Logger_SysWarn(ERR_OUT_OF_MEMORY, "resizing flags bitmap"); return;
 	}
 
 	Bitmap_Scale(&scaled, bmp, 0, 0, bmp->width, bmp->height);
@@ -567,7 +567,7 @@ static void FetchFlagsTask_Handle(cc_uint8* data, cc_uint32 len) {
 
 	Stream_ReadonlyMemory(&s, data, len);
 	res = Png_Decode(&flags[FetchFlagsTask.count].bmp, &s);
-	if (res) Logger_Warn(res, "decoding flag");
+	if (res) Logger_SysWarn(res, "decoding flag");
 
 	FetchFlagsTask_Scale(&flags[FetchFlagsTask.count].bmp);
 	FetchFlagsTask.count++;

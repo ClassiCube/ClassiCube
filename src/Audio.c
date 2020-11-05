@@ -706,7 +706,7 @@ static void Soundboard_Init(struct Soundboard* board, const cc_string* boardName
 		res = Sound_ReadWave(&file, snd);
 
 		if (res) {
-			Logger_Warn2(res, "decoding", &file);
+			Logger_SysWarn2(res, "decoding", &file);
 			Mem_Free(snd->data);
 			snd->data = NULL;
 			snd->size = 0;
@@ -1029,7 +1029,7 @@ static void Music_RunLoop(void) {
 		Platform_Log1("playing music file: %s", &file);
 
 		res = Stream_OpenFile(&stream, &path);
-		if (res) { Logger_Warn2(res, "opening", &path); break; }
+		if (res) { Logger_SysWarn2(res, "opening", &path); break; }
 
 		res = Music_PlayOgg(&stream);
 		if (res) { 
@@ -1038,7 +1038,7 @@ static void Music_RunLoop(void) {
 		}
 
 		res = stream.Close(&stream);
-		if (res) { Logger_Warn2(res, "closing", &path); break; }
+		if (res) { Logger_SysWarn2(res, "closing", &path); break; }
 
 		if (music_pendingStop) break;
 		delay = Random_Range(&rnd, music_minDelay, music_maxDelay);

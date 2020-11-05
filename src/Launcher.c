@@ -53,7 +53,7 @@ void Launcher_SetScreen(struct LScreen* screen) {
 void Launcher_DisplayHttpError(cc_result res, int status, const char* action, cc_string* dst) {
 	if (res) {
 		/* Non HTTP error - this is not good */
-		Logger_SysWarn(res, action, Http_DescribeError);
+		Logger_Warn(res, action, Http_DescribeError);
 		String_Format2(dst, "&cError %i when %c", &res, action);
 	} else if (status != 200) {
 		String_Format2(dst, "&c%i error when %c", &status, action);
@@ -103,7 +103,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 	if (mppass->length) String_Format3(&args, " %s %s %s", mppass, ip, port);
 
 	res = Process_StartGame(&args);
-	if (res) { Logger_Warn(res, "starting game"); return false; }
+	if (res) { Logger_SysWarn(res, "starting game"); return false; }
 
 #ifdef CC_BUILD_ANDROID
 	Launcher_ShouldExit = true;
@@ -331,7 +331,7 @@ void Launcher_Run(void) {
 	if (Launcher_ShouldUpdate) {
 		const char* action;
 		cc_result res = Updater_Start(&action);
-		if (res) Logger_Warn(res, action);
+		if (res) Logger_SysWarn(res, action);
 	}
 
 	if (WindowInfo.Exists) Window_Close();
@@ -429,7 +429,7 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 		res = Png_Decode(&bmp, data);
 
 		if (res) {
-			Logger_Warn(res, "decoding default.png"); return res;
+			Logger_SysWarn(res, "decoding default.png"); return res;
 		} else if (Drawer2D_SetFontBitmap(&bmp)) {
 			useBitmappedFont = !Options_GetBool(OPT_USE_CHAT_FONT, false);
 			hasBitmappedFont = true;
@@ -441,7 +441,7 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 		res = Png_Decode(&bmp, data);
 
 		if (res) {
-			Logger_Warn(res, "decoding terrain.png"); return res;
+			Logger_SysWarn(res, "decoding terrain.png"); return res;
 		} else {
 			LoadTextures(&bmp);
 		}
@@ -456,14 +456,14 @@ static void ExtractTexturePack(const cc_string* path) {
 
 	res = Stream_OpenFile(&stream, path);
 	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Logger_Warn(res, "opening texture pack"); return; }
+	if (res) { Logger_SysWarn(res, "opening texture pack"); return; }
 
 	Zip_Init(&state, &stream);
 	state.SelectEntry  = Launcher_SelectZipEntry;
 	state.ProcessEntry = Launcher_ProcessZipEntry;
 	res = Zip_Extract(&state);
 
-	if (res) { Logger_Warn(res, "extracting texture pack"); }
+	if (res) { Logger_SysWarn(res, "extracting texture pack"); }
 	stream.Close(&stream);
 }
 

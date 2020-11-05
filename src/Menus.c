@@ -1337,7 +1337,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_string* 
 	cc_result res;
 
 	res = Stream_CreateFile(&stream, path);
-	if (res) { Logger_Warn2(res, "creating", path); return; }
+	if (res) { Logger_SysWarn2(res, "creating", path); return; }
 	GZip_MakeStream(&compStream, &state, &stream);
 
 #ifdef CC_BUILD_WEB
@@ -1352,16 +1352,16 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_string* 
 
 	if (res) {
 		stream.Close(&stream);
-		Logger_Warn2(res, "encoding", path); return;
+		Logger_SysWarn2(res, "encoding", path); return;
 	}
 
 	if ((res = compStream.Close(&compStream))) {
 		stream.Close(&stream);
-		Logger_Warn2(res, "closing", path); return;
+		Logger_SysWarn2(res, "closing", path); return;
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_Warn2(res, "closing", path); return; }
+	if (res) { Logger_SysWarn2(res, "closing", path); return; }
 
 #ifdef CC_BUILD_WEB
 	if (String_CaselessEnds(path, &cw)) {

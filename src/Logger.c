@@ -49,22 +49,6 @@ void Logger_DialogWarn(const cc_string* msg) {
 const char* Logger_DialogTitle = "Error";
 Logger_DoWarn Logger_WarnFunc  = Logger_DialogWarn;
 
-void Logger_SimpleWarn(cc_result res, const char* action) {
-	cc_string msg; char msgBuffer[128];
-	String_InitArray(msg, msgBuffer);
-
-	String_Format2(&msg, "Error %h when %c", &res, action);
-	Logger_WarnFunc(&msg);
-}
-
-void Logger_SimpleWarn2(cc_result res, const char* action, const cc_string* path) {
-	cc_string msg; char msgBuffer[256];
-	String_InitArray(msg, msgBuffer);
-
-	String_Format3(&msg, "Error %h when %c '%s'", &res, action, path);
-	Logger_WarnFunc(&msg);
-}
-
 /* Returns a description for some ClassiCube specific error codes */
 static const char* GetCCErrorDesc(cc_result res) {
 	switch (res) {
@@ -113,23 +97,39 @@ static void AppendErrorDesc(cc_string* msg, cc_result res, Logger_DescribeError 
 	}
 }
 
-void Logger_SysWarn(cc_result res, const char* action, Logger_DescribeError describeErr) {
+void Logger_FormatWarn(cc_string* msg, cc_result res, const char* action, Logger_DescribeError describeErr) {
+	String_Format2(msg, res < 20000 ? "Error %i when %c" : "Error %h when %c",
+					&res, action);
+	AppendErrorDesc(msg, res, describeErr);
+}
+
+void Logger_FormatWarn2(cc_string* msg, cc_result res, const char* action, const cc_string* path, Logger_DescribeError describeErr) {
+	String_Format3(msg, res < 20000 ? "Error %i when %c '%s'" : "Error %h when %c '%s'",
+					&res, action, path);
+	AppendErrorDesc(msg, res, describeErr);
+}
+
+static cc_bool DescribeSimple(cc_result res, cc_string* dst) { return false; }
+void Logger_SimpleWarn(cc_result res, const char* action) {
+	Logger_Warn(res, action, DescribeSimple);
+}
+void Logger_SimpleWarn2(cc_result res, const char* action, const cc_string* path) {
+	Logger_Warn2(res, action, path, DescribeSimple);
+}
+
+void Logger_Warn(cc_result res, const char* action, Logger_DescribeError describeErr) {
 	cc_string msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
-	String_Format2(&msg, res < 20000 ? "Error %i when %c" : "Error %h when %c",
-					&res, action);
-	AppendErrorDesc(&msg, res, describeErr);
+	Logger_FormatWarn(&msg, res, action, describeErr);
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_SysWarn2(cc_result res, const char* action, const cc_string* path, Logger_DescribeError describeErr) {
+void Logger_Warn2(cc_result res, const char* action, const cc_string* path, Logger_DescribeError describeErr) {
 	cc_string msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
-	String_Format3(&msg, res < 20000 ? "Error %i when %c '%s'" : "Error %h when %c '%s'",
-					&res, action, path);
-	AppendErrorDesc(&msg, res, describeErr);
+	Logger_FormatWarn2(&msg, res, action, path, describeErr);
 	Logger_WarnFunc(&msg);
 }
 
@@ -146,11 +146,11 @@ void Logger_DynamicLibWarn(const char* action, const cc_string* path) {
 	Logger_WarnFunc(&msg);
 }
 
-void Logger_Warn(cc_result res, const char* action) {
-	Logger_SysWarn(res, action,  Platform_DescribeError);
+void Logger_SysWarn(cc_result res, const char* action) {
+	Logger_Warn(res, action,  Platform_DescribeError);
 }
-void Logger_Warn2(cc_result res, const char* action, const cc_string* path) {
-	Logger_SysWarn2(res, action, path, Platform_DescribeError);
+void Logger_SysWarn2(cc_result res, const char* action, const cc_string* path) {
+	Logger_Warn2(res, action, path, Platform_DescribeError);
 }
 
 

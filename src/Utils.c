@@ -29,7 +29,7 @@ cc_bool Utils_EnsureDirectory(const char* dirName) {
 	if (Directory_Exists(&dir)) return true;
 
 	res = Directory_Create(&dir);
-	if (res) { Logger_Warn2(res, "creating directory", &dir); }
+	if (res) { Logger_SysWarn2(res, "creating directory", &dir); }
 	return res == 0;
 }
 
@@ -238,7 +238,7 @@ void EntryList_Load(struct StringsBuffer* list, const char* file, char separator
 	
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Logger_Warn2(res, "opening", &path); return; }
+	if (res) { Logger_SysWarn2(res, "opening", &path); return; }
 
 	/* ReadLine reads single byte at a time */
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
@@ -247,7 +247,7 @@ void EntryList_Load(struct StringsBuffer* list, const char* file, char separator
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &entry);
 		if (res == ERR_END_OF_STREAM) break;
-		if (res) { Logger_Warn2(res, "reading from", &path); break; }
+		if (res) { Logger_SysWarn2(res, "reading from", &path); break; }
 		
 		/* whitespace lines are ignored (e.g. if user manually edits file) */
 		String_UNSAFE_TrimStart(&entry);
@@ -274,7 +274,7 @@ void EntryList_Load(struct StringsBuffer* list, const char* file, char separator
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_Warn2(res, "closing", &path); }
+	if (res) { Logger_SysWarn2(res, "closing", &path); }
 }
 
 void EntryList_UNSAFE_Load(struct StringsBuffer* list, const char* file) { 
@@ -291,16 +291,16 @@ void EntryList_Save(struct StringsBuffer* list, const char* file) {
 	String_AppendConst(&path, file);
 	
 	res = Stream_CreateFile(&stream, &path);
-	if (res) { Logger_Warn2(res, "creating", &path); return; }
+	if (res) { Logger_SysWarn2(res, "creating", &path); return; }
 
 	for (i = 0; i < list->count; i++) {
 		entry = StringsBuffer_UNSAFE_Get(list, i);
 		res   = Stream_WriteLine(&stream, &entry);
-		if (res) { Logger_Warn2(res, "writing to", &path); break; }
+		if (res) { Logger_SysWarn2(res, "writing to", &path); break; }
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_Warn2(res, "closing", &path); }
+	if (res) { Logger_SysWarn2(res, "closing", &path); }
 }
 
 cc_bool EntryList_Remove(struct StringsBuffer* list, const cc_string* key, char separator) {

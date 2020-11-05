@@ -218,7 +218,7 @@ static cc_bool OpenCachedData(const cc_string* url, struct Stream* stream) {
 	res = Stream_OpenFile(stream, &path);
 
 	if (res == ReturnCode_FileNotFound) return false;
-	if (res) { Logger_Warn2(res, "opening cache for", url); return false; }
+	if (res) { Logger_SysWarn2(res, "opening cache for", url); return false; }
 	return true;
 }
 
@@ -272,7 +272,7 @@ static void UpdateCache(struct HttpRequest* req) {
 	String_InitArray(path, pathBuffer);
 	MakeCachePath(&path, &url);
 	res = Stream_WriteAllTo(&path, req->data, req->size);
-	if (res) { Logger_Warn2(res, "caching", &url); }
+	if (res) { Logger_SysWarn2(res, "caching", &url); }
 }
 
 
@@ -325,10 +325,10 @@ static void ExtractFrom(struct Stream* stream, const cc_string* path) {
 
 	if (String_ContainsConst(path, ".zip")) {
 		res = ExtractZip(stream);
-		if (res) Logger_Warn2(res, "extracting", path);
+		if (res) Logger_SysWarn2(res, "extracting", path);
 	} else {
 		res = ExtractPng(stream);
-		if (res) Logger_Warn2(res, "decoding", path);
+		if (res) Logger_SysWarn2(res, "decoding", path);
 	}
 }
 
@@ -350,11 +350,11 @@ static void ExtractFromFile(const cc_string* filename) {
 	String_Format1(&path, "texpacks/%s", filename);
 
 	res = Stream_OpenFile(&stream, &path);
-	if (res) { Logger_Warn2(res, "opening", &path); return; }
+	if (res) { Logger_SysWarn2(res, "opening", &path); return; }
 	ExtractFrom(&stream, &path);
 
 	res = stream.Close(&stream);
-	if (res) { Logger_Warn2(res, "closing", &path); }
+	if (res) { Logger_SysWarn2(res, "closing", &path); }
 
 #ifdef CC_BUILD_WEB
 	Platform_SetDefaultCurrentDirectory(0, NULL);
@@ -386,7 +386,7 @@ void TexturePack_ExtractCurrent(cc_bool forceReload) {
 		usingDefault = false;
 
 		res = stream.Close(&stream);
-		if (res) Logger_Warn2(res, "closing cache for", &url);
+		if (res) Logger_SysWarn2(res, "closing cache for", &url);
 	}
 }
 
@@ -440,7 +440,7 @@ static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* nam
 	res = Png_Decode(&bmp, stream);
 
 	if (res) {
-		Logger_Warn2(res, "decoding", name);
+		Logger_SysWarn2(res, "decoding", name);
 		Mem_Free(bmp.scan0);
 	} else if (!Atlas_TryChange(&bmp)) {
 		Mem_Free(bmp.scan0);

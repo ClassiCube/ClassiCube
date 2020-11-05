@@ -203,7 +203,7 @@ static void Animations_ReadDescription(struct Stream* stream, const cc_string* p
 	for (;;) {
 		res = Stream_ReadLine(&buffered, &line);
 		if (res == ERR_END_OF_STREAM) break;
-		if (res) { Logger_Warn2(res, "reading from", path); break; }
+		if (res) { Logger_SysWarn2(res, "reading from", path); break; }
 
 		if (!line.length || line.buffer[0] == '#') continue;
 		count = String_UNSAFE_Split(&line, ' ', parts, ANIM_MIN_ARGS);
@@ -365,7 +365,7 @@ static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* nam
 		res = Png_Decode(&anims_bmp, stream);
 		if (!res) return;
 
-		Logger_Warn2(res, "decoding", name);
+		Logger_SysWarn2(res, "decoding", name);
 		Mem_Free(anims_bmp.scan0);
 		anims_bmp.scan0 = NULL;
 	} else if (String_CaselessEqualsConst(name, "animations.txt")) {

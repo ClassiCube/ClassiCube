@@ -179,13 +179,13 @@ static void Resources_CheckTextures(void) {
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
 
-	if (res) { Logger_Warn(res, "checking default.zip"); return; }
+	if (res) { Logger_SysWarn(res, "checking default.zip"); return; }
 	Zip_Init(&state, &stream);
 	state.SelectEntry = Resources_SelectZipEntry;
 
 	res = Zip_Extract(&state);
 	stream.Close(&stream);
-	if (res) Logger_Warn(res, "inspecting default.zip");
+	if (res) Logger_SysWarn(res, "inspecting default.zip");
 
 	/* if somehow have say "gui.png", "GUI.png" */
 	allTexturesExist = texturesFound >= Array_Elems(textureResources);
@@ -623,13 +623,13 @@ static void TexPatcher_MakeDefaultZip(void) {
 
 	res = Stream_CreateFile(&s, &path);
 	if (res) {
-		Logger_Warn(res, "creating default.zip");
+		Logger_SysWarn(res, "creating default.zip");
 	} else {
 		res = TexPatcher_WriteEntries(&s);
-		if (res) Logger_Warn(res, "making default.zip");
+		if (res) Logger_SysWarn(res, "making default.zip");
 
 		res = s.Close(&s);
-		if (res) Logger_Warn(res, "closing default.zip");
+		if (res) Logger_SysWarn(res, "closing default.zip");
 	}
 
 	for (i = 0; i < Array_Elems(fileResources); i++) {
@@ -649,7 +649,7 @@ static void TexPatcher_MakeDefaultZip(void) {
 static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, cc_uint32 len) {
 	cc_uint8 header[WAV_HDR_SIZE];
 	cc_result res = s->Seek(s, 0);
-	if (res) { Logger_Warn(res, "seeking to .wav start"); return; }
+	if (res) { Logger_SysWarn(res, "seeking to .wav start"); return; }
 
 	Stream_SetU32_BE(header +  0, WAV_FourCC('R','I','F','F'));
 	Stream_SetU32_LE(header +  4, len - 8);
@@ -667,7 +667,7 @@ static void SoundPatcher_FixupHeader(struct Stream* s, struct VorbisState* ctx, 
 	Stream_SetU32_LE(header + 40, len - WAV_HDR_SIZE);
 
 	res = Stream_Write(s, header, WAV_HDR_SIZE);
-	if (res) Logger_Warn(res, "fixing .wav header");
+	if (res) Logger_SysWarn(res, "fixing .wav header");
 }
 
 /* Decodes all samples, then produces a .WAV file from them */
@@ -679,13 +679,13 @@ static void SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
 
 	/* ctx is all 0, so reuse here for empty header */
 	res = Stream_Write(s, (const cc_uint8*)ctx, WAV_HDR_SIZE);
-	if (res) { Logger_Warn(res, "writing .wav header"); return; }
+	if (res) { Logger_SysWarn(res, "writing .wav header"); return; }
 
 	res = Vorbis_DecodeHeaders(ctx);
-	if (res) { Logger_Warn(res, "decoding .ogg header"); return; }
+	if (res) { Logger_SysWarn(res, "decoding .ogg header"); return; }
 
 	samples = (cc_int16*)Mem_TryAlloc(ctx->blockSizes[1] * ctx->channels, 2);
-	if (!samples) { Logger_Warn(ERR_OUT_OF_MEMORY, "allocating .ogg samples"); return; }
+	if (!samples) { Logger_SysWarn(ERR_OUT_OF_MEMORY, "allocating .ogg samples"); return; }
 
 	for (;;) {
 		res = Vorbis_DecodeFrame(ctx);
@@ -693,13 +693,13 @@ static void SoundPatcher_WriteWav(struct Stream* s, struct VorbisState* ctx) {
 			/* reached end of samples, so done */
 			SoundPatcher_FixupHeader(s, ctx, len); break;
 		}
-		if (res) { Logger_Warn(res, "decoding .ogg"); break; }
+		if (res) { Logger_SysWarn(res, "decoding .ogg"); break; }
 
 		count = Vorbis_OutputFrame(ctx, samples);
 		len  += count * 2;
 		/* TODO: Do we need to account for big endian */
 		res = Stream_Write(s, samples, count * 2);
-		if (res) { Logger_Warn(res, "writing samples"); break; }
+		if (res) { Logger_SysWarn(res, "writing samples"); break; }
 	}
 	Mem_Free(samples);
 }
@@ -716,14 +716,14 @@ static void SoundPatcher_Save(const char* name, struct HttpRequest* req) {
 	String_Format1(&path, "audio/%c.wav", name);
 
 	res = Stream_CreateFile(&dst, &path);
-	if (res) { Logger_Warn(res, "creating .wav file"); return; }
+	if (res) { Logger_SysWarn(res, "creating .wav file"); return; }
 
 	Ogg_Init(&ogg, &src);
 	ctx.source = &ogg;
 	SoundPatcher_WriteWav(&dst, &ctx);
 
 	res = dst.Close(&dst);
-	if (res) Logger_Warn(res, "closing .wav file");
+	if (res) Logger_SysWarn(res, "closing .wav file");
 	Vorbis_Free(&ctx);
 }
 
@@ -735,7 +735,7 @@ static void MusicPatcher_Save(const char* name, struct HttpRequest* req) {
 	String_Format1(&path, "audio/%c", name);
 
 	res = Stream_WriteAllTo(&path, req->data, req->size);
-	if (res) Logger_Warn(res, "saving music file");
+	if (res) Logger_SysWarn(res, "saving music file");
 }
 
 

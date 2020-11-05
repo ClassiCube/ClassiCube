@@ -61,16 +61,16 @@ void Map_LoadFrom(const cc_string* path) {
 	Game_Reset();
 	
 	res = Stream_OpenFile(&stream, path);
-	if (res) { Logger_Warn2(res, "opening", path); return; }
+	if (res) { Logger_SysWarn2(res, "opening", path); return; }
 
 	importer = Map_FindImporter(path);
 	if ((res = importer(&stream))) {
 		World_Reset();
-		Logger_Warn2(res, "decoding", path);
+		Logger_SysWarn2(res, "decoding", path);
 	}
 
 	res = stream.Close(&stream);
-	if (res) { Logger_Warn2(res, "closing", path); }
+	if (res) { Logger_SysWarn2(res, "closing", path); }
 
 	World_SetNewMap(World.Blocks, World.Width, World.Height, World.Length);
 	LocalPlayer_MoveToSpawn();
