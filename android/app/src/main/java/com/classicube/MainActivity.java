@@ -447,8 +447,11 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 				public boolean sendKeyEvent(KeyEvent ev) {
 					if (ev.getAction() != KeyEvent.ACTION_DOWN) return super.sendKeyEvent(ev);
 					int code  = ev.getKeyCode();
-					int start = Selection.getSelectionStart(kbText);
 					int uni   = ev.getUnicodeChar();
+
+					// start is -1 sometimes, and trying to insert/delete there crashes
+					int start = Selection.getSelectionStart(kbText);
+					if (start == -1) start = kbText.toString().length();
 
 					if (code == KeyEvent.KEYCODE_ENTER) {
 						// enter maps to \n but that should not be intercepted
