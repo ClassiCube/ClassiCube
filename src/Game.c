@@ -600,8 +600,12 @@ static void Game_RenderFrame(double delta) {
 	Gfx_Clear();
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	UpdateViewMatrix();
+
+	Gfx_PrepProjection(&Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
-	Gfx_LoadMatrix(MATRIX_VIEW,       &Gfx.View);
+	Gfx_PrepProjection(&Gfx.Projection);
+
+	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 
 	if (!Gui_GetBlocksWorld()) {
 		Game_Render3D(delta, t);
