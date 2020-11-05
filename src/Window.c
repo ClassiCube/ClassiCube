@@ -12,8 +12,8 @@
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
 
-int Display_ScaleX(int x) { return (int)(x * DisplayInfo.DpiX); }
-int Display_ScaleY(int y) { return (int)(y * DisplayInfo.DpiY); }
+int Display_ScaleX(int x) { return (int)(x * DisplayInfo.ScaleX); }
+int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
 #define Display_CentreX(width)  (DisplayInfo.X + (DisplayInfo.Width  - width)  / 2)
 #define Display_CentreY(height) (DisplayInfo.Y + (DisplayInfo.Height - height) / 2)
 
@@ -138,8 +138,8 @@ void Window_Init(void) {
 	DisplayInfo.Width  = mode.w;
 	DisplayInfo.Height = mode.h;
 	DisplayInfo.Depth  = SDL_BITSPERPIXEL(mode.format);
-	DisplayInfo.DpiX   = 1;
-	DisplayInfo.DpiY   = 1;
+	DisplayInfo.ScaleX = 1;
+	DisplayInfo.ScaleY = 1;
 }
 
 void Window_Create(int width, int height) {
@@ -676,8 +676,8 @@ void Window_Init(void) {
 	DisplayInfo.Width  = GetSystemMetrics(SM_CXSCREEN);
 	DisplayInfo.Height = GetSystemMetrics(SM_CYSCREEN);
 	DisplayInfo.Depth  = GetDeviceCaps(hdc, BITSPIXEL);
-	DisplayInfo.DpiX   = GetDeviceCaps(hdc, LOGPIXELSX) / 96.0f;
-	DisplayInfo.DpiY   = GetDeviceCaps(hdc, LOGPIXELSY) / 96.0f;
+	DisplayInfo.ScaleX = GetDeviceCaps(hdc, LOGPIXELSX) / 96.0f;
+	DisplayInfo.ScaleY = GetDeviceCaps(hdc, LOGPIXELSY) / 96.0f;
 	ReleaseDC(NULL, hdc);
 }
 
@@ -1143,8 +1143,8 @@ void Window_Init(void) {
 	DisplayInfo.Width  = DisplayWidth(display,  screen);
 	DisplayInfo.Height = DisplayHeight(display, screen);
 	DisplayInfo.Depth  = DefaultDepth(display,  screen);
-	DisplayInfo.DpiX   = 1;
-	DisplayInfo.DpiY   = 1;
+	DisplayInfo.ScaleX = 1;
+	DisplayInfo.ScaleY = 1;
 }
 
 #ifdef CC_BUILD_ICON
@@ -1932,8 +1932,8 @@ static void Window_CommonInit(void) {
 	DisplayInfo.Width  = (int)bounds.size.width;
 	DisplayInfo.Height = (int)bounds.size.height;
 	DisplayInfo.Depth  = CGDisplayBitsPerPixel(display);
-	DisplayInfo.DpiX   = 1;
-	DisplayInfo.DpiY   = 1;
+	DisplayInfo.ScaleX = 1;
+	DisplayInfo.ScaleY = 1;
 }
 
 static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
@@ -3360,8 +3360,8 @@ void Window_Init(void) {
 	DisplayInfo.Height = GetScreenHeight();
 	DisplayInfo.Depth  = 24;
 
-	DisplayInfo.DpiX = emscripten_get_device_pixel_ratio();
-	DisplayInfo.DpiY = DisplayInfo.DpiX;
+	DisplayInfo.ScaleX = emscripten_get_device_pixel_ratio();
+	DisplayInfo.ScaleY = DisplayInfo.ScaleX;
 
 	/* Copy text, but only if user isn't selecting something else on the webpage */
 	/* (don't check window.clipboardData here, that's handled in Clipboard_SetText instead) */
@@ -3870,9 +3870,9 @@ void Window_Init(void) {
 
 	WindowInfo.SoftKeyboard = true;
 	Input_TouchMode         = true;
-	DisplayInfo.Depth = 32;
-	DisplayInfo.DpiX  = JavaCallFloat(env, "getDpiX", "()F", NULL);
-	DisplayInfo.DpiY  = JavaCallFloat(env, "getDpiY", "()F", NULL);
+	DisplayInfo.Depth  = 32;
+	DisplayInfo.ScaleX = JavaCallFloat(env, "getDpiX", "()F", NULL);
+	DisplayInfo.ScaleY = JavaCallFloat(env, "getDpiY", "()F", NULL);
 }
 
 void Window_Create(int width, int height) {

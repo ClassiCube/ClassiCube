@@ -43,10 +43,11 @@ CC_VAR extern struct _DisplayData {
 	/* NOTE: Only 24 or 32 bits per pixel are officially supported. */
 	/* Support for other values of bits per pixel is platform dependent. */
 	int Depth;
-	/* Scale based on number of physical dots per inch of the display. (horizontally and vertically) */
+	/* Scale usually based on number of physical dots per inch of the display. (horizontally and vertically) */
+	/* NOTE: This may just be the display scaling set in user's settings, not actual DPI. */
 	/* NOTE: Usually 1 for compatibility, even if the display's DPI is really higher. */
 	/* GUI elements must be scaled by this to look correct. */
-	float DpiX, DpiY;
+	float ScaleX, ScaleY;
 	/* Position of this display. (may be non-zero in multi-monitor setup. Platform dependent) */
 	int X, Y;
 	/* Size/Dimensions of this display in pixels. */

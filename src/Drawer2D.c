@@ -1017,8 +1017,8 @@ cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, 
 	desc->handle = font;
 
 	/* TODO: Use 72 instead of 96 dpi for mobile devices */
-	dpiX = (int)(DisplayInfo.DpiX * 96);
-	dpiY = (int)(DisplayInfo.DpiY * 96);
+	dpiX = (int)(DisplayInfo.ScaleX * 96);
+	dpiY = (int)(DisplayInfo.ScaleY * 96);
 
 	if ((err = FT_New_Face(ft_lib, &args, faceIndex, &font->face)))     return err;
 	if ((err = FT_Set_Char_Size(font->face, size * 64, 0, dpiX, dpiY))) return err;
