@@ -3164,7 +3164,9 @@ static EM_BOOL OnTouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) 
 		RescaleXY(t->canvasX, t->canvasY, &x, &y);
 		Input_RemoveTouch(t->identifier, x, y);
 	}
-	return true;
+	/* Don't intercept touchend events while keyboard is open, that way */
+	/* user can still touch to move the caret position in input textbox. */
+	return !keyboardOpen;
 }
 
 static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
