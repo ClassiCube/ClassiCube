@@ -434,17 +434,20 @@ static cc_result Entity_EnsurePow2(struct Entity* e, struct Bitmap* bmp) {
 	return 0;
 }
 
-static void LogInvalidPng(const cc_uint8* data, int size) {
-	cc_string str; char buffer[STRING_SIZE];
+static void LogInvalidSkin(cc_result res, const cc_string* url, const cc_uint8* data, int size) {
+	cc_string msg; char msgBuffer[256];
 	int i;
-	String_InitArray(str, buffer);
+	String_InitArray(msg, msgBuffer);
 
-	String_AppendConst(&str, "  &c(expected \x89\x50\x4E\x47\x0D\x0A\x1A\x0A, but got ");
+	Logger_FormatWarn2(&msg, res, "decoding", url, Platform_DescribeError);
+	if (res != PNG_ERR_INVALID_SIG) { Logger_WarnFunc(&msg); return; }
+
+	String_AppendConst(&msg, " (got ");
 	for (i = 0; i < min(size, 8); i++) {
-		String_Append(&str, data[i]);
+		String_Append(&msg, data[i]);
 	}
-	String_AppendConst(&str, ")");
-	Chat_Add(&str);
+	String_AppendConst(&msg, ")");
+	Logger_WarnFunc(&msg);
 }
 
 static void Entity_CheckSkin(struct Entity* e) {
@@ -496,8 +499,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 failed:
 	url = String_FromRawArray(item.url);
-	Logger_SysWarn2(res, "decoding", &url);
-	if (res == PNG_ERR_INVALID_SIG) LogInvalidPng(item.data, item.size);
+	LogInvalidSkin(res, &url, item.data, item.size);
 	Mem_Free(bmp.scan0);
 }
 
