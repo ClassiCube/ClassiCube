@@ -1065,8 +1065,13 @@ static void ChatScreen_Layout(void* screen) {
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
-	Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MIN, 10, 10);
-	Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MIN, 10, 60);
+	if (WindowInfo._preferBottom) {
+		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MAX, 10, 60);
+		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MAX, 10, 10);
+	} else {
+		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MIN, 10, 10);
+		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MIN, 10, 60);
+	}
 #endif
 }
 

@@ -72,6 +72,7 @@ CC_VAR extern struct _WinData {
 	cc_bool Focused;
 	/* Whether the platform only supports on-screen keyboard. */
 	cc_bool SoftKeyboard;
+	cc_bool _preferBottom;
 } WindowInfo;
 
 /* Initialises state for window. Also sets Display_ members. */
