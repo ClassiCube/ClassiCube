@@ -38,6 +38,7 @@ static struct Bitmap dirtBmp, stoneBmp;
 #define TILESIZE 48
 
 void Launcher_SetScreen(struct LScreen* screen) {
+	Window_CloseKeyboard();
 	if (activeScreen) activeScreen->Free(activeScreen);
 	activeScreen = screen;
 	if (!screen->numWidgets) screen->Init(screen);
