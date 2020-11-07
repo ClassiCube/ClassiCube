@@ -17,6 +17,7 @@
 cc_bool Drawer2D_BitmappedText;
 cc_bool Drawer2D_BlackTextShadows;
 BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
+#define Font_IsBitmap(font) (!(font)->handle)
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const cc_string* text, struct FontDesc* font, cc_bool useShadow) {
 	args->text = *text;
@@ -154,7 +155,7 @@ cc_bool Drawer2D_SetFontBitmap(struct Bitmap* bmp) {
 }
 
 void Font_SetPadding(struct FontDesc* desc, int amount) {
-	if (!Drawer2D_BitmappedText) return;
+	if (!Font_IsBitmap(desc)) return;
 	desc->height = desc->size + Display_ScaleY(amount) * 2;
 }
 
@@ -569,7 +570,7 @@ static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
 
 void Drawer2D_DrawText(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int y) {
 	if (Drawer2D_IsEmptyText(&args->text)) return;
-	if (Drawer2D_BitmappedText) { DrawBitmappedText(bmp, args, x, y); return; }
+	if (Font_IsBitmap(args->font)) { DrawBitmappedText(bmp, args, x, y); return; }
 
 	if (args->useShadow) { Font_SysTextDraw(args, bmp, x, y, true); }
 	Font_SysTextDraw(args, bmp, x, y, false);
@@ -577,7 +578,7 @@ void Drawer2D_DrawText(struct Bitmap* bmp, struct DrawTextArgs* args, int x, int
 
 int Drawer2D_TextWidth(struct DrawTextArgs* args) {
 	if (Drawer2D_IsEmptyText(&args->text)) return 0;
-	if (Drawer2D_BitmappedText) return MeasureBitmappedWidth(args);
+	if (Font_IsBitmap(args->font)) return MeasureBitmappedWidth(args);
 	return Font_SysTextWidth(args);
 }
 
@@ -587,7 +588,7 @@ int Drawer2D_TextHeight(struct DrawTextArgs* args) {
 
 int Drawer2D_FontHeight(const struct FontDesc* font, cc_bool useShadow) {
 	int height = font->height;
-	if (Drawer2D_BitmappedText) {
+	if (Font_IsBitmap(font)) {
 		if (useShadow) { height += Drawer2D_ShadowOffset(font->size); }
 	} else {
 		if (useShadow) height += 2;
@@ -1036,8 +1037,7 @@ cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, 
 void Font_Free(struct FontDesc* desc) {
 	struct SysFont* font;
 	desc->size = 0;
-	/* NULL for fonts created by Drawer2D_MakeFont and bitmapped text mode is on */
-	if (!desc->handle) return;
+	if (Font_IsBitmap(desc)) return;
 
 	font = (struct SysFont*)desc->handle;
 	FT_Done_Face(font->face);
