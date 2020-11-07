@@ -406,7 +406,7 @@ static void Entity_ClearHat(struct Bitmap* bmp, cc_uint8 skinType) {
 }
 
 /* Ensures skin is a power of two size, resizing if needed. */
-static cc_result Entity_EnsurePow2(struct Entity* e, struct Bitmap* bmp) {
+static cc_result EnsurePow2Skin(struct Entity* e, struct Bitmap* bmp) {
 	struct Bitmap scaled;
 	cc_uint32 stride;
 	int width, height;
@@ -434,6 +434,25 @@ static cc_result Entity_EnsurePow2(struct Entity* e, struct Bitmap* bmp) {
 	return 0;
 }
 
+static cc_result ApplySkin(struct Entity* e, struct Bitmap* bmp, struct Stream* src, cc_string* skin) {
+	cc_result res;
+	if ((res = Png_Decode(bmp, src))) return res;
+
+	Gfx_DeleteTexture(&e->TextureId);
+	Entity_SetSkinAll(e, true);
+	if ((res = EnsurePow2Skin(e, bmp))) return res;
+	e->SkinType = Utils_CalcSkinType(bmp);
+
+	if (bmp->width > Gfx.MaxTexWidth || bmp->height > Gfx.MaxTexHeight) {
+		Chat_Add1("&cSkin %s is too large", skin);
+	} else {
+		if (e->Model->usesHumanSkin) Entity_ClearHat(bmp, e->SkinType);
+		e->TextureId = Gfx_CreateTexture(bmp, true, false);
+		Entity_SetSkinAll(e, false);
+	}
+	return 0;
+}
+
 static void LogInvalidSkin(cc_result res, const cc_string* url, const cc_uint8* data, int size) {
 	cc_string msg; char msgBuffer[256];
 	int i;
@@ -453,7 +472,6 @@ static void LogInvalidSkin(cc_result res, const cc_string* url, const cc_uint8* 
 static void Entity_CheckSkin(struct Entity* e) {
 	struct Entity* first;
 	cc_string url, skin;
-
 	struct HttpRequest item;
 	struct Stream mem;
 	struct Bitmap bmp;
@@ -480,27 +498,13 @@ static void Entity_CheckSkin(struct Entity* e) {
 	if (!item.success) { Entity_SetSkinAll(e, true); return; }
 
 	Stream_ReadonlyMemory(&mem, item.data, item.size);
-	if ((res = Png_Decode(&bmp, &mem))) goto failed;
-
-	Gfx_DeleteTexture(&e->TextureId);
-	Entity_SetSkinAll(e, true);
-	if ((res = Entity_EnsurePow2(e, &bmp))) goto failed;
-	e->SkinType = Utils_CalcSkinType(&bmp);
-
-	if (bmp.width > Gfx.MaxTexWidth || bmp.height > Gfx.MaxTexHeight) {
-		Chat_Add1("&cSkin %s is too large", &skin);
-	} else {
-		if (e->Model->usesHumanSkin) Entity_ClearHat(&bmp, e->SkinType);
-		e->TextureId = Gfx_CreateTexture(&bmp, true, false);
-		Entity_SetSkinAll(e, false);
+	if ((res = ApplySkin(e, &bmp, &mem, &skin))) {
+		url = String_FromRawArray(item.url);
+		LogInvalidSkin(res, &url, item.data, item.size);
 	}
-	Mem_Free(bmp.scan0);
-	return;
 
-failed:
-	url = String_FromRawArray(item.url);
-	LogInvalidSkin(res, &url, item.data, item.size);
 	Mem_Free(bmp.scan0);
+	Mem_Free(item.data);
 }
 
 /* Returns true if no other entities are sharing this skin texture */
