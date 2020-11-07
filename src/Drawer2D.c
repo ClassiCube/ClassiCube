@@ -834,22 +834,11 @@ static void* FT_ReallocWrapper(FT_Memory memory, long cur_size, long new_size, v
 	return Mem_TryRealloc(block, new_size, 1);
 }
 
-static cc_bool updatedSysFonts;
 #define FONT_CACHE_FILE "fontscache.txt"
-
-/* Updates fonts list cache with system's list of fonts */
-/* This should be avoided due to overhead potential */
-static void SysFonts_Update(void) {
-	if (updatedSysFonts) return;
-	updatedSysFonts = true;
-
-	Platform_LoadSysFonts();
-	if (fonts_changed) EntryList_Save(&font_list, FONT_CACHE_FILE);
-}
-
-static void SysFonts_Init(void) {
-	static const cc_string cachePath = String_FromConst(FONT_CACHE_FILE);
+static void SysFonts_InitLibrary(void) {
 	FT_Error err;
+	if (ft_lib) return;
+
 	ft_mem.alloc   = FT_AllocWrapper;
 	ft_mem.free    = FT_FreeWrapper;
 	ft_mem.realloc = FT_ReallocWrapper;
@@ -857,7 +846,22 @@ static void SysFonts_Init(void) {
 	err = FT_New_Library(&ft_mem, &ft_lib);
 	if (err) Logger_Abort2(err, "Failed to init freetype");
 	FT_Add_Default_Modules(ft_lib);
+}
 
+/* Updates fonts list cache with system's list of fonts */
+/* This should be avoided due to overhead potential */
+static void SysFonts_Update(void) {
+	static cc_bool updatedFonts;
+	if (updatedFonts) return;
+	updatedFonts = true;
+
+	SysFonts_InitLibrary();
+	Platform_LoadSysFonts();
+	if (fonts_changed) EntryList_Save(&font_list, FONT_CACHE_FILE);
+}
+
+static void SysFonts_Load(void) {
+	static const cc_string cachePath = String_FromConst(FONT_CACHE_FILE);
 	if (!File_Exists(&cachePath)) {
 		Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
 	}
@@ -954,7 +958,7 @@ void SysFonts_Register(const cc_string* path) {
 void Font_GetNames(struct StringsBuffer* buffer) {
 	cc_string entry, name, path;
 	int i;
-	if (!font_list.count) SysFonts_Init();
+	if (!font_list.count) SysFonts_Load();
 	SysFonts_Update();
 
 	for (i = 0; i < font_list.count; i++) {
@@ -978,7 +982,7 @@ static cc_string Font_LookupOf(const cc_string* fontName, const char type) {
 
 static cc_string Font_DoLookup(const cc_string* fontName, int flags) {
 	cc_string path;
-	if (!font_list.count) SysFonts_Init();
+	if (!font_list.count) SysFonts_Load();
 	path = String_Empty;
 
 	if (flags & FONT_FLAGS_BOLD) path = Font_LookupOf(fontName, 'B');
@@ -1013,6 +1017,7 @@ cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, 
 	font = (struct SysFont*)Mem_TryAlloc(1, sizeof(struct SysFont));
 	if (!font) return ERR_OUT_OF_MEMORY;
 
+	SysFonts_InitLibrary();
 	if ((err = SysFont_Init(&path, font, &args))) { Mem_Free(font); return err; }
 	desc->handle = font;
 

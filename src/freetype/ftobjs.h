@@ -734,11 +734,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
 
 
-  /* This hook is used by the TrueType debugger.  It must be set to an */
-  /* alternate truetype bytecode interpreter function.                 */
-#define FT_DEBUG_HOOK_TRUETYPE  0
-
-
   /*************************************************************************/
   /*                                                                       */
   /* <Struct>                                                              */
@@ -804,19 +799,12 @@ FT_BEGIN_HEADER
   {
     FT_Memory          memory;           /* library's memory manager */
 
-    FT_Int             version_major;
-    FT_Int             version_minor;
-    FT_Int             version_patch;
-
     FT_UInt            num_modules;
     FT_Module          modules[FT_MAX_MODULES];  /* module objects  */
 
     FT_ListRec         renderers;        /* list of renderers        */
     FT_Renderer        cur_renderer;     /* current outline renderer */
     FT_Module          auto_hinter;
-
-    FT_DebugHook_Func  debug_hooks[4];
-
     FT_Int             refcount;
 
   } FT_LibraryRec;

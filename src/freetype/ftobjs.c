@@ -3397,21 +3397,11 @@
     if ( !memory || !alibrary )
       return FT_THROW( Invalid_Argument );
 
-#ifdef FT_DEBUG_LEVEL_ERROR
-    /* init debugging support */
-    ft_debug_init();
-#endif
-
     /* first of all, allocate the library object */
     if ( FT_NEW( library ) )
       return error;
 
     library->memory = memory;
-
-    library->version_major = FREETYPE_MAJOR;
-    library->version_minor = FREETYPE_MINOR;
-    library->version_patch = FREETYPE_PATCH;
-
     library->refcount = 1;
 
     /* That's ok now */
@@ -3521,20 +3511,6 @@
 
   Exit:
     return FT_Err_Ok;
-  }
-
-
-  /* documentation is in ftmodapi.h */
-
-  FT_EXPORT_DEF( void )
-  FT_Set_Debug_Hook( FT_Library         library,
-                     FT_UInt            hook_index,
-                     FT_DebugHook_Func  debug_hook )
-  {
-    if ( library && debug_hook &&
-         hook_index <
-           ( sizeof ( library->debug_hooks ) / sizeof ( void* ) ) )
-      library->debug_hooks[hook_index] = debug_hook;
   }
 
 

@@ -243,10 +243,6 @@ FT_BEGIN_HEADER
 
 #endif /* FT_DEBUG_LEVEL_ERROR */
 
-
-  FT_BASE( void )
-  ft_debug_init( void );
-
 FT_END_HEADER
 
 #endif /* FTDEBUG_H_ */

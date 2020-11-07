@@ -334,44 +334,6 @@ FT_BEGIN_HEADER
   FT_EXPORT( FT_Error )
   FT_Done_Library( FT_Library  library );
 
-  /* */
-
-  typedef void
-  (*FT_DebugHook_Func)( void*  arg );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* <Function>                                                            */
-  /*    FT_Set_Debug_Hook                                                  */
-  /*                                                                       */
-  /* <Description>                                                         */
-  /*    Set a debug hook function for debugging the interpreter of a font  */
-  /*    format.                                                            */
-  /*                                                                       */
-  /* <InOut>                                                               */
-  /*    library    :: A handle to the library object.                      */
-  /*                                                                       */
-  /* <Input>                                                               */
-  /*    hook_index :: The index of the debug hook.  You should use the     */
-  /*                  values defined in `ftobjs.h', e.g.,                  */
-  /*                  `FT_DEBUG_HOOK_TRUETYPE'.                            */
-  /*                                                                       */
-  /*    debug_hook :: The function used to debug the interpreter.          */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    Currently, four debug hook slots are available, but only two (for  */
-  /*    the TrueType and the Type~1 interpreter) are defined.              */
-  /*                                                                       */
-  /*    Since the internal headers of FreeType are no longer installed,    */
-  /*    the symbol `FT_DEBUG_HOOK_TRUETYPE' isn't available publicly.      */
-  /*    This is a bug and will be fixed in a forthcoming release.          */
-  /*                                                                       */
-  FT_EXPORT( void )
-  FT_Set_Debug_Hook( FT_Library         library,
-                     FT_UInt            hook_index,
-                     FT_DebugHook_Func  debug_hook );
-
 
   /*************************************************************************/
   /*                                                                       */
