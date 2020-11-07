@@ -20,7 +20,7 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc
 
 /* Sets default system font name and raises ChatEvents.FontChanged */
 void Drawer2D_SetDefaultFont(const cc_string* fontName);
-/* Initialises the given font. When Drawer2D_BitmappedText is false, creates native font handle using Font_Make. */
+/* Initialises the given font. When Drawer2D_BitmappedText is false, creates a system font using Font_MakeDefault. */
 CC_API void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags);
 
 /* Whether text should be drawn and measured using the currently set font bitmap. */ 
@@ -110,6 +110,9 @@ void Font_SetPadding(struct FontDesc* desc, int amount);
 cc_string Font_Lookup(const cc_string* fontName, int flags);
 /* Allocates a new system font from the given arguments. */
 cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags);
+/* Allocates a new system font from the given arguments using default system font. */
+/* NOTE: Unlike Font_Make, this may fallback onto other system fonts (e.g. Arial, Roboto, etc) */
+void Font_MakeDefault(struct FontDesc* desc, int size, int flags);
 /* Frees an allocated font. */
 CC_API void Font_Free(struct FontDesc* desc);
 /* Attempts to decode one or fonts from the given file. */

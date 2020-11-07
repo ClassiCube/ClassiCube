@@ -40,9 +40,6 @@ struct HttpRequest {
 	struct StringsBuffer* cookies;  /* Cookie list sent in requests. May be modified by the response. */
 };
 
-/* Frees data from a HTTP request. */
-void HttpRequest_Free(struct HttpRequest* request);
-
 /* Aschronously performs a http GET request to download a skin. */
 /* If url is a skin, downloads from there. (if not, downloads from SKIN_SERVER/[skinName].png) */
 int Http_AsyncGetSkin(const cc_string* skinName);
@@ -62,11 +59,8 @@ void Http_TryCancel(int reqID);
 
 /* Encodes data using % or URL encoding. */
 void Http_UrlEncode(cc_string* dst, const cc_uint8* data, int len);
-/* Converts characters to UTF8, then calls Http_URlEncode on them. */
+/* Converts characters to UTF8, then calls Http_UrlEncode on them. */
 void Http_UrlEncodeUtf8(cc_string* dst, const cc_string* src);
-/* Converts characters to UTF8, then calls Http_URlEncode on them. */
-/* NOTE: '/' is NOT url encoded, whereas Http_UrlEncodeUtf8 url encodes them */
-void Http_UrlEncodeUrl(cc_string* dst, const cc_string* src);
 /* Outputs more detailed information about errors with http requests. */
 cc_bool Http_DescribeError(cc_result res, cc_string* dst);
 

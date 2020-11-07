@@ -59,36 +59,14 @@ void Drawer2D_SetDefaultFont(const cc_string* fontName) {
 static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
 
 void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags) {
-	cc_string* font;
-	cc_result res;
-	int i;
+	if (!Drawer2D_BitmappedText) { Font_MakeDefault(desc, size, flags); return; }
 
-	if (Drawer2D_BitmappedText) {
-		/* TODO: Scale X and Y independently */
-		size = Display_ScaleY(size);
-		desc->handle = NULL;
-		desc->size   = size;
-		desc->flags  = flags;
-		desc->height = Drawer2D_AdjHeight(size);
-		return;
-	}
-
-	for (i = 0; i < Array_Elems(font_candidates); i++) {
-		font = &font_candidates[i];
-		if (!font->length) continue;
-		res  = Font_Make(desc, &font_candidates[i], size, flags);
-
-		if (res == ERR_INVALID_ARGUMENT) {
-			/* Fon't doesn't exist in list, skip over it */
-		} else if (res) {
-			Font_Free(desc);
-			Logger_SysWarn2(res, "creating font", font);
-		} else {
-			if (i) String_Copy(&font_candidates[0], font);
-			return;
-		}
-	}
-	Logger_Abort2(res, "Failed to init default font");
+	/* TODO: Scale X and Y independently */
+	size = Display_ScaleY(size);
+	desc->handle = NULL;
+	desc->size   = size;
+	desc->flags  = flags;
+	desc->height = Drawer2D_AdjHeight(size);
 }
 
 static struct Bitmap fontBitmap;
@@ -706,6 +684,8 @@ cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, 
 	desc->height = 0;
 	return 0;
 }
+void Font_MakeDefault(struct FontDesc* desc, int size, int flags) { Font_Make(desc, NULL, size, flags); }
+
 void Font_Free(struct FontDesc* desc) {
 	desc->size   = 0;
 }
@@ -1032,6 +1012,29 @@ cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, 
 	/* height of any text when drawn with the given system font */
 	desc->height = TEXT_CEIL(font->face->size->metrics.height);
 	return 0;
+}
+
+void Font_MakeDefault(struct FontDesc* desc, int size, int flags) {
+	cc_string* font;
+	cc_result res;
+	int i;
+
+	for (i = 0; i < Array_Elems(font_candidates); i++) {
+		font = &font_candidates[i];
+		if (!font->length) continue;
+		res  = Font_Make(desc, &font_candidates[i], size, flags);
+
+		if (res == ERR_INVALID_ARGUMENT) {
+			/* Fon't doesn't exist in list, skip over it */
+		} else if (res) {
+			Font_Free(desc);
+			Logger_SysWarn2(res, "creating font", font);
+		} else {
+			if (i) String_Copy(&font_candidates[0], font);
+			return;
+		}
+	}
+	Logger_Abort2(res, "Failed to init default font");
 }
 
 void Font_Free(struct FontDesc* desc) {

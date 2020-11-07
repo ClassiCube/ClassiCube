@@ -7,7 +7,8 @@
 #include "Game.h"
 #include "Utils.h"
 
-void HttpRequest_Free(struct HttpRequest* request) {
+/* Frees data from a HTTP request. */
+static void HttpRequest_Free(struct HttpRequest* request) {
 	Mem_Free(request->data);
 	request->data = NULL;
 	request->size = 0;
@@ -219,7 +220,7 @@ static void Http_CleanCacheTask(struct ScheduledTask* task) {
 			item = &processedReqs.entries[i];
 			if (item->timeDownloaded + (10 * 1000) >= now) continue;
 
-			HttpRequest_Free(item);
+			Mem_Free(item->data);
 			RequestList_RemoveAt(&processedReqs, i);
 		}
 	}
@@ -586,11 +587,7 @@ static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
 	char urlStr[NATIVE_STR_LEN];
 	void* post_data = req->data;
 	CURLcode res;
-
-	if (!curlSupported) {
-		HttpRequest_Free(req);
-		return ERR_NOT_SUPPORTED;
-	}
+	if (!curlSupported) return ERR_NOT_SUPPORTED;
 
 	req->meta = NULL;
 	Http_SetRequestHeaders(req);
@@ -665,6 +662,25 @@ struct HttpCacheEntry {
 #define HTTP_CACHE_ENTRIES 10
 static struct HttpCacheEntry http_cache[HTTP_CACHE_ENTRIES];
 
+/* Converts characters to UTF8, then calls Http_URlEncode on them. */
+static void HttpCache_UrlEncodeUrl(cc_string* dst, const cc_string* src) {
+	cc_uint8 data[4];
+	int i, len;
+	char c;
+
+	for (i = 0; i < src->length; i++) {
+		c   = src->buffer[i];
+		len = Convert_CP437ToUtf8(c, data);
+
+		/* URL path/query must not be URL encoded (it normally would be) */
+		if (c == '/' || c == '?' || c == '=') {
+			String_Append(dst, c);
+		} else {
+			Http_UrlEncode(dst, data, len);
+		}
+	}
+}
+
 /* Splits up the components of a URL */
 static void HttpCache_MakeEntry(const cc_string* url, struct HttpCacheEntry* entry, cc_string* resource) {
 	cc_string scheme, path, addr, name, port, _resource;
@@ -678,7 +694,7 @@ static void HttpCache_MakeEntry(const cc_string* url, struct HttpCacheEntry* ent
 	String_UNSAFE_Separate(&path, '/', &addr, &_resource);
 	String_UNSAFE_Separate(&addr, ':', &name, &port);
 	/* Address may have unicode characters - need to percent encode them */
-	Http_UrlEncodeUrl(resource, &_resource);
+	HttpCache_UrlEncodeUrl(resource, &_resource);
 
 	String_InitArray_NT(entry->Address, entry->_addressBuffer);
 	String_Copy(&entry->Address, &name);
@@ -1132,24 +1148,6 @@ void Http_UrlEncodeUtf8(cc_string* dst, const cc_string* src) {
 	for (i = 0; i < src->length; i++) {
 		len = Convert_CP437ToUtf8(src->buffer[i], data);
 		Http_UrlEncode(dst, data, len);
-	}
-}
-
-void Http_UrlEncodeUrl(cc_string* dst, const cc_string* src) {
-	cc_uint8 data[4];
-	int i, len;
-	char c;
-
-	for (i = 0; i < src->length; i++) {
-		c   = src->buffer[i];
-		len = Convert_CP437ToUtf8(c, data);
-
-		/* URL path/query must not be URL encoded (it normally would be) */
-		if (c == '/' || c == '?' || c == '=') {
-			String_Append(dst, c);
-		} else {
-			Http_UrlEncode(dst, data, len);
-		}
 	}
 }
 
