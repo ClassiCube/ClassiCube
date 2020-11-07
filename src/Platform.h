@@ -101,8 +101,8 @@ cc_bool DynamicLib_GetAll(void* lib, const struct DynamicLibSym* syms, int count
 
 
 #define _CRTDBG_MAP_ALLOC
-#include <string.h>
 #include <crtdbg.h>
+#include <stdlib.h>
 
 /* Allocates a block of memory, with undetermined contents. Returns NULL on allocation failure. */
 #define Mem_TryAlloc(numElems, elemsSize) malloc(numElems * elemsSize)
