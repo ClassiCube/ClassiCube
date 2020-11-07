@@ -389,6 +389,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	}
 
 	class LauncherView extends SurfaceView {
+		SpannableStringBuilder kbText;
+
 		public LauncherView(Context context) {
 			super(context);
 			setFocusable(true);
@@ -406,8 +408,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 			attrs.inputType   = MainActivity.this.getKeyboardType();
 			attrs.imeOptions  = EditorInfo.IME_ACTION_GO | EditorInfo.IME_FLAG_NO_EXTRACT_UI;
 
+			kbText = new SpannableStringBuilder(MainActivity.this.keyboardText);
+
 			InputConnection ic = new BaseInputConnection(this, true) {
-				SpannableStringBuilder kbText = new SpannableStringBuilder(MainActivity.this.keyboardText);
 				boolean inited;
 				void updateText() { MainActivity.this.pushCmd(CMD_KEY_TEXT, kbText.toString()); }
 
@@ -546,7 +549,20 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	public void setKeyboardText(String text) {
 		keyboardText = text;
 		// Restart view because text changed externally
-		if (curView != null) input.restartInput(curView);
+		if (curView == null) return;
+
+		// Try to avoid restarting input if possible
+		if (curView.kbText != null) {
+			String curText = curView.kbText.toString();
+			if (text.equals(curText)) return;
+		}
+
+		// Have to restart input because text changed externally
+		// NOTE: Doing this still has issues, like changing keyboard tab back to default one,
+		//   and one user has a problem where it also resets letters to uppercase
+		// TODO: Consider just doing kbText.replace instead
+		// (see https://chromium.googlesource.com/chromium/src/+/d1421a5faf9dc2d3b3cad10640576b24a092d9ba/content/public/android/java/src/org/chromium/content/browser/input/AdapterInputConnection.java)
+		input.restartInput(curView);
 	}
 
 	public int getKeyboardType() {
