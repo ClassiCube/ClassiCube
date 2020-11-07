@@ -54,20 +54,6 @@ void Drawer2D_SetDefaultFont(const cc_string* fontName) {
 	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
-const cc_string* Drawer2D_UNSAFE_GetDefaultFont(void) {
-	cc_string* font, path;
-	int i;
-
-	for (i = 0; i < Array_Elems(font_candidates); i++) {
-		font = &font_candidates[i];
-		if (!font->length) continue;
-
-		path = Font_Lookup(font, FONT_FLAGS_NONE);
-		if (path.length) return font;
-	}
-	return &String_Empty;
-}
-
 /* adjusts height to be closer to system fonts */
 static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
 
@@ -709,10 +695,9 @@ struct IGameComponent Drawer2D_Component = {
 *------------------------------------------------------System fonts-------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
+const cc_string* Font_UNSAFE_GetDefault(void) { return &font_candidates[0]; }
 void Font_GetNames(struct StringsBuffer* buffer) { }
-cc_string Font_Lookup(const cc_string* fontName, int flags) {
-	return String_Empty;
-}
+cc_string Font_Lookup(const cc_string* fontName, int flags) { return String_Empty; }
 
 cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {
 	desc->size   = size;
@@ -954,6 +939,20 @@ void SysFonts_Register(const cc_string* path) {
 	for (i = 1; i < count; i++) {
 		SysFonts_DoRegister(path, i);
 	}
+}
+
+const cc_string* Font_UNSAFE_GetDefault(void) {
+	cc_string* font, path;
+	int i;
+
+	for (i = 0; i < Array_Elems(font_candidates); i++) {
+		font = &font_candidates[i];
+		if (!font->length) continue;
+
+		path = Font_Lookup(font, FONT_FLAGS_NONE);
+		if (path.length) return font;
+	}
+	return &String_Empty;
 }
 
 void Font_GetNames(struct StringsBuffer* buffer) {

@@ -1601,7 +1601,7 @@ static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget
 static void FontListScreen_LoadEntries(struct ListScreen* s) {
 	Font_GetNames(&s->entries);
 	ListScreen_Sort(s);
-	ListScreen_Select(s, Drawer2D_UNSAFE_GetDefaultFont());
+	ListScreen_Select(s, Font_UNSAFE_GetDefault());
 }
 
 void FontListScreen_Show(void) {

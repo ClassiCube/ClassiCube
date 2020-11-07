@@ -20,8 +20,6 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc
 
 /* Sets default system font name and raises ChatEvents.FontChanged */
 void Drawer2D_SetDefaultFont(const cc_string* fontName);
-/* Gets the name of the default system font. */
-const cc_string* Drawer2D_UNSAFE_GetDefaultFont(void);
 /* Initialises the given font. When Drawer2D_BitmappedText is false, creates native font handle using Font_Make. */
 CC_API void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags);
 
@@ -101,8 +99,11 @@ void Drawer2D_ReducePadding_Height(int* height, int point, int scale);
 /* The bitmap must be square and consist of a 16x16 tile layout. */
 cc_bool Drawer2D_SetFontBitmap(struct Bitmap* bmp);
 
+/* Gets the name of the default system font used. */
+const cc_string* Font_UNSAFE_GetDefault(void);
 /* Gets the list of all supported system font names on this platform. */
 CC_API void Font_GetNames(struct StringsBuffer* buffer);
+
 /* Sets padding for a bitmapped font. */
 void Font_SetPadding(struct FontDesc* desc, int amount);
 /* Finds the path and face number of the given system font, with closest matching style */
