@@ -305,7 +305,7 @@ static void WoM_Tick(void) {
 	if (!item.success) return;
 
 	WoM_ParseConfig(&item);
-	HttpRequest_Free(&item);
+	Mem_Free(item.data);
 }
 
 

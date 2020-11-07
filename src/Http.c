@@ -77,7 +77,7 @@ static void RequestList_TryFree(struct RequestList* list, int id) {
 	int i = RequestList_Find(list, id, &req);
 	if (i < 0) return;
 
-	HttpRequest_Free(&req);
+	Mem_Free(req.data);
 	RequestList_RemoveAt(list, i);
 }
 
@@ -609,7 +609,7 @@ static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
 
 		/* per curl docs, we must persist POST data until request finishes */
 		req->data = NULL;
-		HttpRequest_Free(req);
+		req->size = 0;
 	} else {
 		/* Undo POST/HEAD state */
 		_curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);

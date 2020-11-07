@@ -812,8 +812,6 @@ CC_NOINLINE static cc_bool Fetcher_Get(int reqID, struct HttpRequest* req) {
 	Fetcher_Failed     = true;
 	Fetcher_Result     = req->result;
 	Fetcher_StatusCode = req->statusCode;
-
-	HttpRequest_Free(req);
 	Fetcher_Finish();
 	return false;
 }
@@ -834,7 +832,7 @@ static void Fetcher_CheckMusic(struct MusicResource* music) {
 
 	music->downloaded = true;
 	MusicPatcher_Save(music->name, &req);
-	HttpRequest_Free(&req);
+	Mem_Free(req.data);
 }
 
 static void Fetcher_CheckSound(const struct SoundResource* sound) {
@@ -842,7 +840,7 @@ static void Fetcher_CheckSound(const struct SoundResource* sound) {
 	if (!Fetcher_Get(sound->reqID, &req)) return;
 
 	SoundPatcher_Save(sound->name, &req);
-	HttpRequest_Free(&req);
+	Mem_Free(req.data);
 }
 
 /* TODO: Implement this.. */

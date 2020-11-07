@@ -56,7 +56,7 @@ static void Server_CheckAsyncResources(void) {
 
 	if (item.success) {
 		TexturePack_Apply(&item);
-		HttpRequest_Free(&item);
+		Mem_Free(item.data);
 	} else if (item.result) {
 		Logger_Warn(item.result, "trying to download texture pack", Http_DescribeError);
 	} else {

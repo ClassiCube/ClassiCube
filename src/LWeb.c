@@ -217,8 +217,10 @@ void LWebTask_Tick(struct LWebTask* task) {
 	task->working   = false;
 	task->completed = true;
 	task->success   = req.success;
-	if (task->success) task->Handle((cc_uint8*)req.data, req.size);
-	HttpRequest_Free(&req);
+
+	if (!req.success) return;
+	task->Handle((cc_uint8*)req.data, req.size);
+	Mem_Free(req.data);
 }
 
 void LWebTask_DisplayError(struct LWebTask* task, const char* action, cc_string* dst) {

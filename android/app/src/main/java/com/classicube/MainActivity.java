@@ -603,7 +603,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	public void enterFullscreen() {
 		runOnUiThread(new Runnable() {
 			public void run() {
-				curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE);
+				curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 			}
 		});
     }
