@@ -99,21 +99,26 @@ struct DynamicLibSym { const char* name; void** symAddr; };
 /* Returns true if all symbols were successfully retrieved */
 cc_bool DynamicLib_GetAll(void* lib, const struct DynamicLibSym* syms, int count);
 
-/* Allocates a block of memory, with undetermined contents. Returns NULL on allocation failure. */
-CC_API void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize);
-/* Allocates a block of memory, with contents of all 0. Returns NULL on allocation failure. */
-CC_API void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize);
-/* Reallocates a block of memory, with undetermined contents. Returns NULL on reallocation failure. */
-CC_API void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize);
 
-/* Allocates a block of memory, with undetermined contents. Exits process on allocation failure. */
-CC_API void* Mem_Alloc(cc_uint32 numElems, cc_uint32 elemsSize, const char* place);
+#define _CRTDBG_MAP_ALLOC
+#include <string.h>
+#include <crtdbg.h>
+
+/* Allocates a block of memory, with undetermined contents. Returns NULL on allocation failure. */
+#define Mem_TryAlloc(numElems, elemsSize) malloc(numElems * elemsSize)
 /* Allocates a block of memory, with contents of all 0. Exits process on allocation failure. */
-CC_API void* Mem_AllocCleared(cc_uint32 numElems, cc_uint32 elemsSize, const char* place);
+#define Mem_TryAllocCleared(numElems, elemsSize) calloc(numElems, elemsSize)
 /* Reallocates a block of memory, with undetermined contents. Exits process on reallocation failure. */
-CC_API void* Mem_Realloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char* place);
+#define Mem_TryRealloc(mem, numElems, elemsSize) realloc(mem, numElems * elemsSize)
+
+/* Allocates a block of memory, with undetermined contents. Returns NULL on allocation failure. */
+#define Mem_Alloc(numElems, elemsSize, place) malloc(numElems * elemsSize)
+/* Allocates a block of memory, with contents of all 0. Exits process on allocation failure. */
+#define Mem_AllocCleared(numElems, elemsSize, place) calloc(numElems, elemsSize)
+/* Reallocates a block of memory, with undetermined contents. Exits process on reallocation failure. */
+#define Mem_Realloc(mem, numElems, elemsSize, place) realloc(mem, numElems * elemsSize)
 /* Frees an allocated a block of memory. Does nothing when passed NULL. */
-CC_API void  Mem_Free(void* mem);
+#define Mem_Free(mem) free(mem)
 /* Sets the contents of a block of memory to the given value. */
 void Mem_Set(void* dst, cc_uint8 value, cc_uint32 numBytes);
 /* Copies a block of memory to another block of memory. */
