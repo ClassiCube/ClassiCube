@@ -886,12 +886,6 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 *#########################################################################################################################*/
 static D3DTRANSFORMSTATETYPE matrix_modes[3] = { D3DTS_PROJECTION, D3DTS_VIEW, D3DTS_TEXTURE0 };
 
-void Gfx_PrepProjection(struct Matrix* matrix) {
-	/* Adjust the projection matrix to produce reversed Z values. */
-	matrix->Row2.Z = -matrix->Row2.Z - 1;
-	matrix->Row3.Z = -matrix->Row3.Z;
-}
-
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	if (type == MATRIX_TEXTURE) {
 		matrix->Row2.X = matrix->Row3.X; /* NOTE: this hack fixes the texture movements. */
@@ -920,6 +914,9 @@ void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 }
 void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix) {
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
+	/* Adjust the projection matrix to produce reversed Z values. */
+	matrix->Row2.Z = -matrix->Row2.Z - 1.0f;
+	matrix->Row3.Z = -matrix->Row3.Z;
 }
 
 

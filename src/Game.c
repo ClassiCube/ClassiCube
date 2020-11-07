@@ -601,9 +601,7 @@ static void Game_RenderFrame(double delta) {
 	Camera.CurrentPos = Camera.Active->GetPosition(t);
 	UpdateViewMatrix();
 
-	Gfx_PrepProjection(&Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
-	Gfx_PrepProjection(&Gfx.Projection);
 
 	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 
