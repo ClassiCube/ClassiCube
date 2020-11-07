@@ -115,6 +115,11 @@ int Ping_AveragePingMS(void) {
 	return totalMs / measures;
 }
 
+static void Ping_Reset(void) {
+	Mem_Set(ping_entries, 0, sizeof(ping_entries));
+	ping_head = 0;
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------Singleplayer connection-------------------------------------------------*
@@ -532,7 +537,9 @@ static void OnClose(void) {
 	if (Server.IsSinglePlayer) {
 		Physics_Free();
 	} else {
+		Ping_Reset();
 		if (Server.Disconnected) return;
+
 		Socket_Close(net_socket);
 		Server.Disconnected = true;
 	}
