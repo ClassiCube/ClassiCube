@@ -17,6 +17,11 @@ extern struct IGameComponent Drawer2D_Component;
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const cc_string* text, struct FontDesc* font, cc_bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc_bool useShadow);
+
+/* Sets default system font name and raises ChatEvents.FontChanged */
+void Drawer2D_SetDefaultFont(const cc_string* fontName);
+/* Gets the name of the default system font. */
+const cc_string* Drawer2D_UNSAFE_GetDefaultFont(void);
 /* Initialises the given font. When Drawer2D_BitmappedText is false, creates native font handle using Font_Make. */
 CC_API void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags);
 
@@ -28,10 +33,8 @@ extern cc_bool Drawer2D_BlackTextShadows;
 /* List of all colours. (An A of 0 means the colour is not used) */
 extern BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 #define Drawer2D_GetCol(c) Drawer2D_Cols[(cc_uint8)c]
-/* Name of default system font. */
-extern cc_string Drawer2D_FontName;
 
-/* Clamps the given rectangle to line inside the bitmap. */
+/* Clamps the given rectangle to lie inside the bitmap. */
 /* Returns false if rectangle is completely outside bitmap's rectangle. */
 cc_bool Drawer2D_Clamp(struct Bitmap* bmp, int* x, int* y, int* width, int* height);
 

@@ -18,9 +18,6 @@ cc_bool Drawer2D_BitmappedText;
 cc_bool Drawer2D_BlackTextShadows;
 BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 
-static char fontNameBuffer[STRING_SIZE];
-cc_string Drawer2D_FontName = String_FromArray(fontNameBuffer);
-
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const cc_string* text, struct FontDesc* font, cc_bool useShadow) {
 	args->text = *text;
 	args->font = font;
@@ -37,8 +34,9 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc
 /*########################################################################################################################*
 *-----------------------------------------------------Font functions------------------------------------------------------*
 *#########################################################################################################################*/
+static char defaultBuffer[STRING_SIZE];
 static cc_string font_candidates[11] = {
-	String_FromConst(""), /* Filled in with Drawer2D_FontName */
+	String_FromArray(defaultBuffer),     /* Filled in with user's default font */
 	String_FromConst("Arial"),           /* preferred font on all platforms */
 	String_FromConst("Liberation Sans"), /* nice looking fallbacks for linux */
 	String_FromConst("Nimbus Sans"),
@@ -51,12 +49,32 @@ static cc_string font_candidates[11] = {
 	String_FromConst("Geneva") /* for ancient macOS versions */
 };
 
+void Drawer2D_SetDefaultFont(const cc_string* fontName) {
+	String_Copy(&font_candidates[0], fontName);
+	Event_RaiseVoid(&ChatEvents.FontChanged);
+}
+
+const cc_string* Drawer2D_UNSAFE_GetDefaultFont(void) {
+	cc_string* font, path;
+	int i;
+
+	for (i = 0; i < Array_Elems(font_candidates); i++) {
+		font = &font_candidates[i];
+		if (!font->length) continue;
+
+		path = Font_Lookup(font, FONT_FLAGS_NONE);
+		if (path.length) return font;
+	}
+	return &String_Empty;
+}
+
 /* adjusts height to be closer to system fonts */
 static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
 
 void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags) {
-	int i;
+	cc_string* font;
 	cc_result res;
+	int i;
 
 	if (Drawer2D_BitmappedText) {
 		/* TODO: Scale X and Y independently */
@@ -65,40 +83,25 @@ void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags) {
 		desc->size   = size;
 		desc->flags  = flags;
 		desc->height = Drawer2D_AdjHeight(size);
-	} else {
-		font_candidates[0] = Drawer2D_FontName;
-
-		/* In case user's default font(s) are broken somehow */
-		/* (e.g. user deletes the file for the default font) */
-		for (i = 0; i < Array_Elems(font_candidates); i++) {
-			res = Font_Make(desc, &font_candidates[i], size, flags);
-
-			if (res) {
-				Font_Free(desc);
-				Logger_SysWarn2(res, "creating font", &font_candidates[i]);
-			} else {
-				if (i) String_Copy(&Drawer2D_FontName, &font_candidates[i]);
-				return;
-			}
-		}
-		Logger_Abort2(res, "Failed to make system font");
-	}
-}
-
-static void CheckFont(void) {
-	cc_string path;
-	int i;
-	/* Try user's default font if set, otherwise try Arial */
-	i = font_candidates[0].length ? 0 : 1;
-
-	for (; i < Array_Elems(font_candidates); i++) {
-		path = Font_Lookup(&font_candidates[i], FONT_FLAGS_NONE);
-		if (!path.length) continue;
-
-		String_Copy(&Drawer2D_FontName, &font_candidates[i]);
 		return;
 	}
-	Logger_Abort("Unable to init default font");
+
+	for (i = 0; i < Array_Elems(font_candidates); i++) {
+		font = &font_candidates[i];
+		if (!font->length) continue;
+		res  = Font_Make(desc, &font_candidates[i], size, flags);
+
+		if (res == ERR_INVALID_ARGUMENT) {
+			/* Fon't doesn't exist in list, skip over it */
+		} else if (res) {
+			Font_Free(desc);
+			Logger_SysWarn2(res, "creating font", font);
+		} else {
+			if (i) String_Copy(&font_candidates[0], font);
+			return;
+		}
+	}
+	Logger_Abort2(res, "Failed to init default font");
 }
 
 static struct Bitmap fontBitmap;
@@ -685,10 +688,8 @@ static void OnInit(void) {
 	Drawer2D_BitmappedText    = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
 	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
 
-	Options_UNSAFE_Get(OPT_FONT_NAME, &font_candidates[0]);
+	Options_Get(OPT_FONT_NAME, &font_candidates[0], "");
 	if (Game_ClassicMode) font_candidates[0].length = 0;
-
-	CheckFont();
 	Event_Register_(&TextureEvents.FileChanged, NULL, OnFileChanged);
 }
 
@@ -705,12 +706,12 @@ struct IGameComponent Drawer2D_Component = {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------Drawer2D component----------------------------------------------------*
+*------------------------------------------------------System fonts-------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
 void Font_GetNames(struct StringsBuffer* buffer) { }
 cc_string Font_Lookup(const cc_string* fontName, int flags) {
-	cc_string str = String_FromConst("-----"); return str;
+	return String_Empty;
 }
 
 cc_result Font_Make(struct FontDesc* desc, const cc_string* fontName, int size, int flags) {

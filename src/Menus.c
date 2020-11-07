@@ -1573,12 +1573,11 @@ void TexturePackScreen_Show(void) {
 *#########################################################################################################################*/
 static void FontListScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = (struct ListScreen*)screen;
-	cc_string fontName = ListScreen_UNSAFE_GetCur(s, widget);
-
+	cc_string fontName   = ListScreen_UNSAFE_GetCur(s, widget);
 	if (String_CaselessEqualsConst(&fontName, LISTSCREEN_EMPTY)) return;
-	String_Copy(&Drawer2D_FontName, &fontName);
-	Options_Set(OPT_FONT_NAME,      &fontName);
-	Event_RaiseVoid(&ChatEvents.FontChanged);
+
+	Options_Set(OPT_FONT_NAME, &fontName);
+	Drawer2D_SetDefaultFont(&fontName);
 }
 
 static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const cc_string* text) {
@@ -1602,7 +1601,7 @@ static void FontListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget
 static void FontListScreen_LoadEntries(struct ListScreen* s) {
 	Font_GetNames(&s->entries);
 	ListScreen_Sort(s);
-	ListScreen_Select(s, &Drawer2D_FontName);
+	ListScreen_Select(s, Drawer2D_UNSAFE_GetDefaultFont());
 }
 
 void FontListScreen_Show(void) {
