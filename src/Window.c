@@ -8,6 +8,7 @@
 #include "ExtMath.h"
 #include "Bitmap.h"
 #include "Options.h"
+#include "Errors.h"
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
@@ -3494,7 +3495,10 @@ cc_result Window_EnterFullscreen(void) {
 	/* For chrome on android, need to make container div fullscreen instead */
 	res    = EM_ASM_INT_V({ return document.getElementById('canvas_wrapper') ? 1 : 0; });
 	target = res ? "canvas_wrapper" : "#canvas";
-	if ((res = emscripten_request_fullscreen_strategy(target, 1, &strategy))) return res;
+
+	res = emscripten_request_fullscreen_strategy(target, 1, &strategy);
+	if (res == EMSCRIPTEN_RESULT_NOT_SUPPORTED) res = ERR_NOT_SUPPORTED;
+	if (res) return res;
 
 	/* emscripten sets css size to screen's base width/height, */
 	/*  except that becomes wrong when device rotates. */
@@ -3521,7 +3525,7 @@ void Window_SetSize(int width, int height) {
 void Window_Close(void) {
 	WindowInfo.Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
-	/* If the game is closed while in fullscreen, the last rendered frame stays
+	/* If the game is closed while in fullscreen, the last rendered frame stays */
 	/* shown in fullscreen, but the game can't be interacted with anymore */
 	Window_ExitFullscreen();
 
@@ -4751,7 +4755,7 @@ void GLContext_GetApiInfo(cc_string* info) {
 
 	EM_ASM_({
 		var dbg = GLctx.getExtension('WEBGL_debug_renderer_info');
-		var str = dbg ? GLctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : '';
+		var str = dbg ? GLctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "";
 		stringToUTF8(str, $0, $1);
 	}, buffer, NATIVE_STR_LEN);
 
