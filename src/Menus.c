@@ -3542,58 +3542,138 @@ void TexPackOverlay_Show(const cc_string* url) {
 
 #ifdef CC_BUILD_TOUCH
 /*########################################################################################################################*
-*-----------------------------------------------------TouchMoreScreen-----------------------------------------------------*
+*---------------------------------------------------TouchControlsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-static struct TouchMoreScreen {
+#define TOUCHCTRLS_BTNS 6
+static struct TouchCtrlsScreen {
 	Screen_Body
-	struct ButtonWidget btns[8];
-} TouchMoreScreen;
+	struct ButtonWidget btns[TOUCHCTRLS_BTNS];
+} TouchCtrlsScreen;
 
-static struct Widget* touchMore_widgets[8] = {
-	(struct Widget*)&TouchMoreScreen.btns[0], (struct Widget*)&TouchMoreScreen.btns[1],
-	(struct Widget*)&TouchMoreScreen.btns[2], (struct Widget*)&TouchMoreScreen.btns[3],
-	(struct Widget*)&TouchMoreScreen.btns[4], (struct Widget*)&TouchMoreScreen.btns[5],
-	(struct Widget*)&TouchMoreScreen.btns[6], (struct Widget*)&TouchMoreScreen.btns[7]
+static struct Widget* touchCtrls_widgets[TOUCHCTRLS_BTNS] = {
+	(struct Widget*)&TouchCtrlsScreen.btns[0], (struct Widget*)&TouchCtrlsScreen.btns[1],
+	(struct Widget*)&TouchCtrlsScreen.btns[2], (struct Widget*)&TouchCtrlsScreen.btns[3],
+	(struct Widget*)&TouchCtrlsScreen.btns[4], (struct Widget*)&TouchCtrlsScreen.btns[5]
 };
-#define TOUCHMORE_MAX_VERTICES (8 * BUTTONWIDGET_MAX)
+#define TOUCHCTRLS_MAX_VERTICES (TOUCHCTRLS_BTNS * BUTTONWIDGET_MAX)
 
-static void TouchMore_Toggle(KeyBind bind) {
+static void TouchCtrls_Toggle(KeyBind bind) {
 	int key = KeyBinds[bind];
-	Gui_Remove((struct Screen*)&TouchMoreScreen);
+	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
 	Input_SetPressed(key, !Input_Pressed[key]);
 }
 
-static void TouchMore_Speed(void*  s, void* w) { TouchMore_Toggle(KEYBIND_SPEED); }
-static void TouchMore_Fly(void*    s, void* w) { TouchMore_Toggle(KEYBIND_FLY); }
-static void TouchMore_Noclip(void* s, void* w) { TouchMore_Toggle(KEYBIND_NOCLIP); }
+static void TouchCtrls_Speed(void*  s, void* w) { TouchCtrls_Toggle(KEYBIND_SPEED); }
+static void TouchCtrls_Fly(void*    s, void* w) { TouchCtrls_Toggle(KEYBIND_FLY); }
+static void TouchCtrls_Noclip(void* s, void* w) { TouchCtrls_Toggle(KEYBIND_NOCLIP); }
 
-static void TouchMore_Chat(void* s, void* w) {
-	Gui_Remove((struct Screen*)&TouchMoreScreen);
+static void TouchCtrls_Chat(void* s, void* w) {
+	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
 	ChatScreen_OpenInput(&String_Empty);
 }
+static void TouchCtrls_Take(void* s, void* w) {
+	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
+	Game_ScreenshotRequested = true;
+}
+static void TouchCtrls_Menu(void* s, void* w) {
+	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
+	PauseScreen_Show();
+}
+static void TouchCtrls_Screen(void* s, void* w) {
+	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
+	Game_ToggleFullscreen();
+}
+static void TouchCtrls_Fog(void* s, void* w) { Game_CycleViewDistance(); }
+
+static const struct SimpleButtonDesc touchCtrls_btns[8] = {
+	{ -120,  -50, "Chat",               TouchCtrls_Chat   },
+	{  120,  -50, "Fog",                TouchCtrls_Fog    },
+	{ -120,    0, "Tap: Place",         TouchCtrls_Speed  },
+	{  120,    0, "Hold: Delete",       TouchCtrls_Screen },
+	{    0,   50, "Sensitivity: 30",    TouchCtrls_Fly    },
+	{    0,  100, "On-screen controls", TouchCtrls_Menu   }
+};
+
+static void TouchCtrlsScreen_ContextRecreated(void* screen) {
+	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
+	struct FontDesc titleFont;
+	Menu_MakeTitleFont(&titleFont);
+	Screen_CreateVb(screen);
+
+	Menu_SetButtons(s->btns, &titleFont, touchCtrls_btns, TOUCHCTRLS_BTNS);
+	Font_Free(&titleFont);
+}
+
+static void TouchCtrlsScreen_Layout(void* screen) {
+	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
+	Menu_LayoutButtons(s->btns, touchCtrls_btns, TOUCHCTRLS_BTNS);
+}
+
+static void TouchCtrlsScreen_Init(void* screen) {
+	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
+	s->widgets     = touchCtrls_widgets;
+	s->numWidgets  = Array_Elems(touchCtrls_widgets);
+	s->maxVertices = TOUCHCTRLS_MAX_VERTICES;
+
+	Menu_InitButtons(s->btns,     200, touchCtrls_btns,     4);
+	Menu_InitButtons(s->btns + 4, 400, touchCtrls_btns + 4, 2);
+	/* TODO: Close button */
+}
+
+static const struct ScreenVTABLE TouchCtrlsScreen_VTABLE = {
+	TouchCtrlsScreen_Init,   Screen_NullUpdate, Screen_NullFunc,
+	MenuScreen_Render2,      Screen_BuildMesh,
+	Screen_InputDown,        Screen_TInput,     Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,        Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
+	TouchCtrlsScreen_Layout, Screen_ContextLost, TouchCtrlsScreen_ContextRecreated
+};
+void TouchCtrlsScreen_Show(void) {
+	struct TouchCtrlsScreen* s = &TouchCtrlsScreen;
+	s->grabsInput = true;
+	s->closable   = true;
+	s->VTABLE     = &TouchCtrlsScreen_VTABLE;
+
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_TOUCHMORE);
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------TouchMoreScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+#define TOUCHMORE_BTNS 4
+static struct TouchMoreScreen {
+	Screen_Body
+	struct ButtonWidget btns[TOUCHMORE_BTNS];
+} TouchMoreScreen;
+
+static struct Widget* touchMore_widgets[TOUCHMORE_BTNS] = {
+	(struct Widget*)&TouchMoreScreen.btns[0], (struct Widget*)&TouchMoreScreen.btns[1],
+	(struct Widget*)&TouchMoreScreen.btns[2], (struct Widget*)&TouchMoreScreen.btns[3]
+};
+#define TOUCHMORE_MAX_VERTICES (TOUCHMORE_BTNS * BUTTONWIDGET_MAX)
+
 static void TouchMore_Take(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
 	Game_ScreenshotRequested = true;
-}
-static void TouchMore_Menu(void* s, void* w) {
-	Gui_Remove((struct Screen*)&TouchMoreScreen);
-	PauseScreen_Show();
 }
 static void TouchMore_Screen(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
 	Game_ToggleFullscreen();
 }
-static void TouchMore_Fog(void* s, void* w) { Game_CycleViewDistance(); }
+static void TouchMore_Ctrls(void* s, void* w) {
+	Gui_Remove((struct Screen*)&TouchMoreScreen);
+	TouchCtrlsScreen_Show();
+}
+static void TouchMore_Menu(void* s, void* w) {
+	Gui_Remove((struct Screen*)&TouchMoreScreen);
+	PauseScreen_Show();
+}
 
-static const struct SimpleButtonDesc touchMore_btns[8] = {
-	{ -160,  -50, "Chat",       TouchMore_Chat   },
-	{ -160,    0, "Speed",      TouchMore_Speed  },
-	{ -160,   50, "Fly",        TouchMore_Fly    },
-	{ -160,  100, "Menu",       TouchMore_Menu   },
-	{  160,  -50, "Screenshot", TouchMore_Take   },
-	{  160,    0, "Fullscreen", TouchMore_Screen },
-	{  160,   50, "Noclip",     TouchMore_Noclip },
-	{  160,  100, "Fog",        TouchMore_Fog    }
+static const struct SimpleButtonDesc touchMore_btns[TOUCHMORE_BTNS] = {
+	{ 0,  -50, "Screenshot", TouchMore_Take   },
+	{ 0,    0, "Fullscreen", TouchMore_Screen },
+	{ 0,   50, "Controls",   TouchMore_Ctrls  },
+	{ 0,  100, "Main menu",  TouchMore_Menu   }
 };
 
 static void TouchMoreScreen_ContextRecreated(void* screen) {
@@ -3602,13 +3682,13 @@ static void TouchMoreScreen_ContextRecreated(void* screen) {
 	Menu_MakeTitleFont(&titleFont);
 	Screen_CreateVb(screen);
 
-	Menu_SetButtons(s->btns, &titleFont, touchMore_btns, 8);
+	Menu_SetButtons(s->btns, &titleFont, touchMore_btns, TOUCHMORE_BTNS);
 	Font_Free(&titleFont);
 }
 
 static void TouchMoreScreen_Layout(void* screen) {
 	struct TouchMoreScreen* s = (struct TouchMoreScreen*)screen;
-	Menu_LayoutButtons(s->btns, touchMore_btns, 8);
+	Menu_LayoutButtons(s->btns, touchMore_btns, TOUCHMORE_BTNS);
 }
 
 static void TouchMoreScreen_Init(void* screen) {
@@ -3617,7 +3697,7 @@ static void TouchMoreScreen_Init(void* screen) {
 	s->numWidgets  = Array_Elems(touchMore_widgets);
 	s->maxVertices = TOUCHMORE_MAX_VERTICES;
 
-	Menu_InitButtons(s->btns, 300, touchMore_btns, 8);
+	Menu_InitButtons(s->btns, 400, touchMore_btns, TOUCHMORE_BTNS);
 	/* TODO: Close button */
 }
 
