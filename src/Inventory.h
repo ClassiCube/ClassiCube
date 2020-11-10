@@ -16,7 +16,7 @@ extern struct IGameComponent Inventory_Component;
 #ifdef CC_BUILD_TOUCH
 #define HOTBAR_MAX_INDEX (INVENTORY_BLOCKS_PER_HOTBAR - 1) // Non touch, so regular hotbar
 #elseif
-#define HOTBAR_MAX_INDEX (INVENTORY_BLOCKS_PER_HOTBAR + 1) // 
+#define HOTBAR_MAX_INDEX (INVENTORY_BLOCKS_PER_HOTBAR + 1) // Extra slot for inventory
 #endif
 
 CC_VAR extern struct _InventoryData {
