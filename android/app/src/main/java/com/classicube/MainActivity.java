@@ -125,16 +125,21 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	// ======================================
 	// --------------- EVENTS ---------------
 	// ======================================
-	static boolean gameHooked;
+	static boolean gameRunning;
 	InputMethodManager input;
+
+	void startGameAsync() {
+		Log.i("CC_WIN", "handing off to native..");
+		System.loadLibrary("classicube");
+		runGameAsync();
+	}
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		input = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 		Log.i("CC_WIN", "CREATE EVENT");
 		Window window = getWindow();
-		Log.i("CC_WIN", "GAME RUNNING?" + gameHooked);
-		gameHooked = true;
+		Log.i("CC_WIN", "GAME RUNNING?" + gameRunning);
 		//window.takeSurface(this);
 		//window.takeInputQueue(this);
 		// TODO: Should this be RGBA_8888??
@@ -150,10 +155,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-   
-		Log.i("CC_WIN", "handing off to native..");
-		System.loadLibrary("classicube");	
-		runGameAsync();
+
+		if (!gameRunning) startGameAsync();
+		gameRunning = true;
 		super.onCreate(savedInstanceState);
 	}
 
@@ -568,7 +572,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	public int getKeyboardType() {
 		if (keyboardType == 2) return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD;
 		if (keyboardType == 1) return InputType.TYPE_CLASS_NUMBER;
-		return InputType.TYPE_CLASS_TEXT; /* TODO: This still adds a . after space */
+		return InputType.TYPE_CLASS_TEXT;
 	}
 
 	public String getClipboardText() {
@@ -619,7 +623,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	public void enterFullscreen() {
 		runOnUiThread(new Runnable() {
 			public void run() {
-				curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+				if (curView != null) curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 			}
 		});
     }
@@ -627,7 +631,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
     public void exitFullscreen() {
 		runOnUiThread(new Runnable() {
 			public void run() {
-				curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
+				if (curView != null) curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
 			}
 		});
     }
