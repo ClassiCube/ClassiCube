@@ -3509,6 +3509,7 @@ cc_result Window_EnterFullscreen(void) {
 		canvas.style.height = '100%';
 	});
 	/* TODO: navigator.keyboard.lock(["Escape"] */
+	return 0;
 }
 
 cc_result Window_ExitFullscreen(void) {

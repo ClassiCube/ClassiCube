@@ -1998,6 +1998,7 @@ void MouseKeyBindingsScreen_Show(void) {
 typedef void (*MenuInputDone)(const cc_string* value, cc_bool valid);
 static struct MenuInputOverlay {
 	Screen_Body
+	cc_bool screenMode;
 	struct FontDesc textFont;
 	struct ButtonWidget ok, Default;
 	struct TextInputWidget input;
@@ -2044,11 +2045,13 @@ static int MenuInputOverlay_KeyDown(void* screen, int key) {
 }
 
 static int MenuInputOverlay_PointerDown(void* screen, int id, int x, int y) {
-	return Menu_DoPointerDown(screen, id, x, y) >= 0;
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
+	return Menu_DoPointerDown(screen, id, x, y) >= 0 || s->screenMode;
 }
 
 static int MenuInputOverlay_PointerMove(void* screen, int id, int x, int y) {
-	return Menu_DoPointerMove(screen, id, x, y) >= 0;
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
+	return Menu_DoPointerMove(screen, id, x, y) >= 0 || s->screenMode;
 }
 
 static void MenuInputOverlay_OK(void* screen, void* widget) {
@@ -2086,6 +2089,9 @@ static void MenuInputOverlay_Update(void* screen, double delta) {
 }
 
 static void MenuInputOverlay_Render(void* screen, double delta) {
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
+	if (s->screenMode) Menu_RenderBounds();
+
 	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
@@ -2132,12 +2138,13 @@ static const struct ScreenVTABLE MenuInputOverlay_VTABLE = {
 	MenuInputOverlay_PointerDown, Screen_TPointer,  MenuInputOverlay_PointerMove, Screen_TMouseScroll,
 	MenuInputOverlay_Layout,      MenuInputOverlay_ContextLost, MenuInputOverlay_ContextRecreated
 };
-void MenuInputOverlay_Show(struct MenuInputDesc* desc, const cc_string* value, MenuInputDone onDone) {
+void MenuInputOverlay_Show(struct MenuInputDesc* desc, const cc_string* value, MenuInputDone onDone, cc_bool screenMode) {
 	struct MenuInputOverlay* s = &MenuInputOverlay;
 	s->grabsInput = true;
 	s->closable   = true;
 	s->desc       = desc;
 	s->onDone     = onDone;
+	s->screenMode = screenMode;
 	s->VTABLE     = &MenuInputOverlay_VTABLE;
 
 	String_InitArray(s->value, s->valueBuffer);
@@ -2331,7 +2338,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	String_InitArray(value, valueBuffer);
 	btn->GetValue(&value);
 	desc = &s->descs[s->activeI];
-	MenuInputOverlay_Show(desc, &value, MenuOptionsScreen_OnDone);
+	MenuInputOverlay_Show(desc, &value, MenuOptionsScreen_OnDone, false);
 }
 
 static void MenuOptionsScreen_OnHacksChanged(void* screen) {
@@ -3632,10 +3639,23 @@ static struct Widget* touchCtrls_widgets[1 + TOUCHCTRLS_BTNS] = {
 static void TouchCtrls_UpdateTapText(void* screen) {
 	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
 	ButtonWidget_SetConst(&s->btns[2], Input_TapPlace  ? "Tap: Place"  : "Tap: Delete",  &s->font);
+	s->dirty = true;
 }
 static void TouchCtrls_UpdateHoldText(void* screen) {
 	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
 	ButtonWidget_SetConst(&s->btns[3], Input_HoldPlace ? "Hold: Place" : "Hold: Delete", &s->font);
+	s->dirty = true;
+}
+
+static void TouchCtrls_UpdateSensitivity(void* screen) {
+	cc_string value; char valueBuffer[STRING_SIZE];
+	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
+	String_InitArray(value, valueBuffer);
+
+	String_AppendConst(&value, "Sensitivity: ");
+	MiscOptionsScreen_GetSensitivity(&value);
+	ButtonWidget_Set(&s->btns[4], &value, &s->font);
+	s->dirty = true;
 }
 
 static void TouchCtrls_Chat(void* s, void* w) {
@@ -3654,13 +3674,29 @@ static void TouchCtrls_Hold(void* s, void* w) {
 	TouchCtrls_UpdateHoldText(s);
 }
 
+static void TouchCtrls_OnDone(const cc_string* value, cc_bool valid) {
+	if (!valid) return;
+	MiscOptionsScreen_SetSensitivity(value);
+	TouchCtrls_UpdateSensitivity(&TouchCtrlsScreen);
+}
+
+static void TouchCtrls_Sensitivity(void* s, void* w) {
+	static struct MenuInputDesc desc;
+	cc_string value; char valueBuffer[STRING_SIZE];
+	String_InitArray(value, valueBuffer);
+
+	MenuInput_Int(desc, 1, 200, 30);
+	MiscOptionsScreen_GetSensitivity(&value);
+	MenuInputOverlay_Show(&desc, &value, TouchCtrls_OnDone, true);
+}
+
 static const struct SimpleButtonDesc touchCtrls_btns[8] = {
-	{ -120,  -50, "Chat",               TouchCtrls_Chat },
-	{  120,  -50, "Fog",                TouchCtrls_Fog  },
-	{ -120,    0, "Tap: Place",         TouchCtrls_Tap  },
-	{  120,    0, "Hold: Delete",       TouchCtrls_Hold },
-	{    0,   50, "Sensitivity: 30",    NULL    },
-	{    0,  100, "On-screen controls", NULL   }
+	{ -120,  -50, "Chat", TouchCtrls_Chat },
+	{  120,  -50, "Fog",  TouchCtrls_Fog  },
+	{ -120,    0, "",     TouchCtrls_Tap  },
+	{  120,    0, "",     TouchCtrls_Hold },
+	{    0,   50, "",     TouchCtrls_Sensitivity },
+	{    0,  100, "On-screen controls", NULL }
 };
 
 static void TouchCtrlsScreen_ContextLost(void* screen) {
@@ -3675,6 +3711,10 @@ static void TouchCtrlsScreen_ContextRecreated(void* screen) {
 	Screen_CreateVb(screen);
 	Menu_SetButtons(s->btns, &s->font, touchCtrls_btns, TOUCHCTRLS_BTNS);
 	ButtonWidget_SetConst(&s->back, "Done", &s->font);
+
+	TouchCtrls_UpdateTapText(s);
+	TouchCtrls_UpdateHoldText(s);
+	TouchCtrls_UpdateSensitivity(s);
 }
 
 static void TouchCtrlsScreen_Layout(void* screen) {
