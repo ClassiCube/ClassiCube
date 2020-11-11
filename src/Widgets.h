@@ -192,7 +192,7 @@ extern const struct MenuInputVTABLE StringInput_VTABLE;
 #define MenuInput_Enum(v, names, count) v.VTABLE = NULL; v.meta.e.Names = names; v.meta.e.Count = count;
 #define MenuInput_String(v) v.VTABLE = &StringInput_VTABLE;
 
-struct MenuInputWidget {
+struct TextInputWidget {
 	struct InputWidget base;
 	int minWidth, minHeight;
 	struct MenuInputDesc desc;
@@ -200,9 +200,9 @@ struct MenuInputWidget {
 };
 #define MENUINPUTWIDGET_MAX 8
 
-CC_NOINLINE void MenuInputWidget_Create(struct MenuInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
+CC_NOINLINE void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* d);
 /* Sets the font used, then redraws the input widget. */
-CC_NOINLINE void MenuInputWidget_SetFont(struct MenuInputWidget* w, struct FontDesc* font);
+CC_NOINLINE void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font);
 
 
 struct ChatInputWidget {

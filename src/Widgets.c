@@ -1465,7 +1465,7 @@ const struct MenuInputVTABLE StringInput_VTABLE = {
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------MenuInputWidget-----------------------------------------------------*
+*-----------------------------------------------------TextInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
 static void MenuInputWidget_Render(void* widget, double delta) {
 	struct InputWidget* w = (struct InputWidget*)widget;
@@ -1494,7 +1494,7 @@ static int MenuInputWidget_Render2(void* widget, int offset) {
 
 static void MenuInputWidget_RemakeTexture(void* widget) {
 	cc_string range; char rangeBuffer[STRING_SIZE];
-	struct MenuInputWidget* w = (struct MenuInputWidget*)widget;
+	struct TextInputWidget* w = (struct TextInputWidget*)widget;
 	PackedCol backCol = PackedCol_Make(30, 30, 30, 200);
 	struct MenuInputDesc* desc;
 	struct DrawTextArgs args;
@@ -1548,7 +1548,7 @@ static cc_bool MenuInputWidget_AllowedChar(void* widget, char c) {
 	cc_bool valid;
 
 	if (c == '&') return false;
-	desc = &((struct MenuInputWidget*)w)->desc;
+	desc = &((struct TextInputWidget*)w)->desc;
 
 	if (!desc->VTABLE->IsValidChar(desc, c)) return false;
 	maxChars = w->GetMaxLines() * INPUTWIDGET_LEN;
@@ -1568,7 +1568,7 @@ static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
 	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove,
 	MenuInputWidget_BuildMesh, MenuInputWidget_Render2
 };
-void MenuInputWidget_Create(struct MenuInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* desc) {
+void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* desc) {
 	InputWidget_Reset(&w->base);
 	w->base.VTABLE = &MenuInputWidget_VTABLE;
 
@@ -1589,7 +1589,7 @@ void MenuInputWidget_Create(struct MenuInputWidget* w, int width, const cc_strin
 	String_Copy(&w->base.text, text);
 }
 
-void MenuInputWidget_SetFont(struct MenuInputWidget* w, struct FontDesc* font) {
+void TextInputWidget_SetFont(struct TextInputWidget* w, struct FontDesc* font) {
 	w->base.font       = font;
 	w->base.lineHeight = Drawer2D_FontHeight(font, false);
 	InputWidget_UpdateText(&w->base);
