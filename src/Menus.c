@@ -3548,6 +3548,7 @@ void TexPackOverlay_Show(const cc_string* url) {
 static struct TouchCtrlsScreen {
 	Screen_Body
 	struct ButtonWidget btns[TOUCHCTRLS_BTNS];
+	struct FontDesc font;
 } TouchCtrlsScreen;
 
 static struct Widget* touchCtrls_widgets[TOUCHCTRLS_BTNS] = {
@@ -3557,51 +3558,50 @@ static struct Widget* touchCtrls_widgets[TOUCHCTRLS_BTNS] = {
 };
 #define TOUCHCTRLS_MAX_VERTICES (TOUCHCTRLS_BTNS * BUTTONWIDGET_MAX)
 
-static void TouchCtrls_Toggle(KeyBind bind) {
-	int key = KeyBinds[bind];
-	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
-	Input_SetPressed(key, !Input_Pressed[key]);
+static void TouchCtrls_UpdateTapText(void* screen) {
+	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
+	ButtonWidget_SetConst(&s->btns[2], Input_TapPlace  ? "Tap: Place"  : "Tap: Delete",  &s->font);
 }
-
-static void TouchCtrls_Speed(void*  s, void* w) { TouchCtrls_Toggle(KEYBIND_SPEED); }
-static void TouchCtrls_Fly(void*    s, void* w) { TouchCtrls_Toggle(KEYBIND_FLY); }
-static void TouchCtrls_Noclip(void* s, void* w) { TouchCtrls_Toggle(KEYBIND_NOCLIP); }
+static void TouchCtrls_UpdateHoldText(void* screen) {
+	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
+	ButtonWidget_SetConst(&s->btns[3], Input_HoldPlace ? "Hold: Place" : "Hold: Delete", &s->font);
+}
 
 static void TouchCtrls_Chat(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
 	ChatScreen_OpenInput(&String_Empty);
 }
-static void TouchCtrls_Take(void* s, void* w) {
-	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
-	Game_ScreenshotRequested = true;
-}
-static void TouchCtrls_Menu(void* s, void* w) {
-	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
-	PauseScreen_Show();
-}
-static void TouchCtrls_Screen(void* s, void* w) {
-	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
-	Game_ToggleFullscreen();
-}
 static void TouchCtrls_Fog(void* s, void* w) { Game_CycleViewDistance(); }
 
+static void TouchCtrls_Tap(void* s, void* w) {
+	Input_TapPlace = !Input_TapPlace;
+	TouchCtrls_UpdateTapText(s);
+}
+static void TouchCtrls_Hold(void* s, void* w) {
+	Input_HoldPlace = !Input_HoldPlace;
+	TouchCtrls_UpdateHoldText(s);
+}
+
 static const struct SimpleButtonDesc touchCtrls_btns[8] = {
-	{ -120,  -50, "Chat",               TouchCtrls_Chat   },
-	{  120,  -50, "Fog",                TouchCtrls_Fog    },
-	{ -120,    0, "Tap: Place",         TouchCtrls_Speed  },
-	{  120,    0, "Hold: Delete",       TouchCtrls_Screen },
-	{    0,   50, "Sensitivity: 30",    TouchCtrls_Fly    },
-	{    0,  100, "On-screen controls", TouchCtrls_Menu   }
+	{ -120,  -50, "Chat",               TouchCtrls_Chat },
+	{  120,  -50, "Fog",                TouchCtrls_Fog  },
+	{ -120,    0, "Tap: Place",         TouchCtrls_Tap  },
+	{  120,    0, "Hold: Delete",       TouchCtrls_Hold },
+	{    0,   50, "Sensitivity: 30",    NULL    },
+	{    0,  100, "On-screen controls", NULL   }
 };
+
+static void TouchCtrlsScreen_ContextLost(void* screen) {
+	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
+	Font_Free(&s->font);
+	Screen_ContextLost(screen);
+}
 
 static void TouchCtrlsScreen_ContextRecreated(void* screen) {
 	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
-	struct FontDesc titleFont;
-	Menu_MakeTitleFont(&titleFont);
+	Menu_MakeTitleFont(&s->font);
 	Screen_CreateVb(screen);
-
-	Menu_SetButtons(s->btns, &titleFont, touchCtrls_btns, TOUCHCTRLS_BTNS);
-	Font_Free(&titleFont);
+	Menu_SetButtons(s->btns, &s->font, touchCtrls_btns, TOUCHCTRLS_BTNS);
 }
 
 static void TouchCtrlsScreen_Layout(void* screen) {
@@ -3625,7 +3625,7 @@ static const struct ScreenVTABLE TouchCtrlsScreen_VTABLE = {
 	MenuScreen_Render2,      Screen_BuildMesh,
 	Screen_InputDown,        Screen_TInput,     Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,        Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
-	TouchCtrlsScreen_Layout, Screen_ContextLost, TouchCtrlsScreen_ContextRecreated
+	TouchCtrlsScreen_Layout, TouchCtrlsScreen_ContextLost, TouchCtrlsScreen_ContextRecreated
 };
 void TouchCtrlsScreen_Show(void) {
 	struct TouchCtrlsScreen* s = &TouchCtrlsScreen;

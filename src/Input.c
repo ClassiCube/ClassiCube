@@ -46,7 +46,7 @@ static struct TouchPointer {
 	TimeMS start;
 } touches[INPUT_MAX_POINTERS];
 int Pointers_Count;
-cc_bool Input_Placing;
+cc_bool Input_TapPlace = true, Input_HoldPlace = false;
 
 /* Touch fingers are initially are all type, meaning they could */
 /* trigger menu clicks, camera movement, or place/delete blocks */
@@ -125,7 +125,7 @@ static void CheckBlockTap(int i) {
 	if (DateTime_CurrentUTC_MS() > touches[i].start + 250) return;
 	if (touches[i].type != TOUCH_TYPE_ALL) return;
 
-	btn = Input_Placing ? MOUSE_RIGHT : MOUSE_LEFT;
+	btn = Input_TapPlace ? MOUSE_RIGHT : MOUSE_LEFT;
 	pressed = input_buttonsDown[btn];
 	MouseStatePress(btn);
 
@@ -741,8 +741,8 @@ void InputHandler_PickBlocks(void) {
 	
 #ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode) {
-		left   = !Input_Placing && AnyBlockTouches();
-		right  = Input_Placing  && AnyBlockTouches();
+		left   = !Input_HoldPlace && AnyBlockTouches();
+		right  = Input_HoldPlace  && AnyBlockTouches();
 		middle = false;
 	}
 #endif

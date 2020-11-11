@@ -80,7 +80,7 @@ extern cc_bool Input_TouchMode;
 #ifdef CC_BUILD_TOUCH
 #define INPUT_MAX_POINTERS 32
 extern int Pointers_Count;
-extern cc_bool Input_Placing;
+extern cc_bool Input_TapPlace, Input_HoldPlace;
 
 void Input_AddTouch(long id,    int x, int y);
 void Input_UpdateTouch(long id, int x, int y);

@@ -1893,7 +1893,7 @@ void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
 *--------------------------------------------------------TouchScreen------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_TOUCH
-#define TOUCH_MAX_BTNS 4
+#define TOUCH_MAX_BTNS 3
 struct TouchBindDesc {
 	const char* text;
 	cc_uint8 bind, width;
@@ -1912,28 +1912,20 @@ static struct TouchScreen {
 
 static struct Widget* touch_widgets[1 + TOUCH_MAX_BTNS] = {
 	(struct Widget*)&TouchScreen.thumbstick, (struct Widget*)&TouchScreen.btns[0],
-	(struct Widget*)&TouchScreen.btns[1],    (struct Widget*)&TouchScreen.btns[2],
-	(struct Widget*)&TouchScreen.btns[3]
+	(struct Widget*)&TouchScreen.btns[1],    (struct Widget*)&TouchScreen.btns[2]
 };
 #define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
 
-static void TouchScreen_UpdateModeText(void* screen);
-static void TouchScreen_ModeClick(void* s, void* w) { 
-	Input_Placing = !Input_Placing; 
-	TouchScreen_UpdateModeText(s);
-}
 static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreScreen_Show(); }
 
-static const struct TouchBindDesc normDescs[3] = {
-	{ "Jump", KEYBIND_JUMP,     100,  50,  90, NULL                  },
-	{ "",     KEYBIND_COUNT,    100,  50,  50, TouchScreen_ModeClick },
-	{ "More", KEYBIND_COUNT,    100,  50,  10, TouchScreen_MoreClick },
+static const struct TouchBindDesc normDescs[2] = {
+	{ "More", KEYBIND_COUNT,    100,  50,  90, TouchScreen_MoreClick },
+	{ "Jump", KEYBIND_JUMP,     100,  50,  10, NULL                  }
 };
-static const struct TouchBindDesc hackDescs[4] = {
-	{ "Up",   KEYBIND_FLY_UP,   100,  50, 130, NULL                  },
-	{ "Down", KEYBIND_FLY_DOWN, 100,  50,  90, NULL                  },
-	{ "",     KEYBIND_COUNT,    100,  50,  50, TouchScreen_ModeClick },
-	{ "More", KEYBIND_COUNT,    100,  50,  10, TouchScreen_MoreClick },
+static const struct TouchBindDesc hackDescs[3] = {
+	{ "More", KEYBIND_COUNT,    100,  50, 130, TouchScreen_MoreClick },
+	{ "Up",   KEYBIND_FLY_UP,   100,  50,  50, NULL                  },
+	{ "Down", KEYBIND_FLY_DOWN, 100,  50,  10, NULL                  }
 };
 
 static void TouchScreen_InitButtons(struct TouchScreen* s) {
@@ -1971,12 +1963,6 @@ static void TouchScreen_ContextLost(void* screen) {
 	Screen_ContextLost(screen);
 }
 
-static void TouchScreen_UpdateModeText(void* screen) {
-	struct TouchScreen* s = (struct TouchScreen*)screen;
-	ButtonWidget_SetConst(&s->btns[s->numDescs - 2], 
-							Input_Placing ? "Place" : "Delete", &s->font);
-}
-
 static void TouchScreen_ContextRecreated(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	const struct TouchBindDesc* desc;
@@ -1988,8 +1974,6 @@ static void TouchScreen_ContextRecreated(void* screen) {
 		desc = &s->descs[i];
 		ButtonWidget_SetConst(&s->btns[i], desc->text, &s->font);
 	}
-	TouchScreen_UpdateModeText(s);
-	/* TODO: this is pretty nasty hacky. rewrite! */
 }
 
 static void TouchScreen_Render(void* screen, double delta) {
