@@ -182,7 +182,7 @@ static int IndexOfScreen(struct Screen* s) {
 	return -1;
 }
 
-static void Gui_RemoveCore(struct Screen* s) {
+void Gui_RemoveCore(struct Screen* s) {
 	int i = IndexOfScreen(s);
 	if (i == -1) return;
 

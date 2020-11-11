@@ -1993,10 +1993,10 @@ void MouseKeyBindingsScreen_Show(void) {
 
 
 /*########################################################################################################################*
-*---------------------------------------------------MenuInputScreen-------------------------------------------------------*
+*--------------------------------------------------MenuInputOverlay-------------------------------------------------------*
 *#########################################################################################################################*/
-typedef void (*MenuInputDone)(cc_string* value, cc_bool valid);
-static struct MenuInputScreen {
+typedef void (*MenuInputDone)(const cc_string* value, cc_bool valid);
+static struct MenuInputOverlay {
 	Screen_Body
 	struct FontDesc textFont;
 	struct ButtonWidget ok, Default;
@@ -2004,101 +2004,120 @@ static struct MenuInputScreen {
 	struct MenuInputDesc* desc;
 	MenuInputDone onDone;
 	cc_string value; char valueBuffer[STRING_SIZE];
-} MenuInputScreen;
+} MenuInputOverlay;
 
 static struct Widget* menuInput_widgets[3] = {
-	(struct Widget*)&MenuInputScreen.ok,   (struct Widget*)&MenuInputScreen.Default, 
-	(struct Widget*)&MenuInputScreen.input
+	(struct Widget*)&MenuInputOverlay.ok,   (struct Widget*)&MenuInputOverlay.Default, 
+	(struct Widget*)&MenuInputOverlay.input
 };
 #define MENUINPUT_MAX_VERTICES (2 * BUTTONWIDGET_MAX + MENUINPUTWIDGET_MAX)
 
-static void MenuInputScreen_EnterInput(struct MenuInputScreen* s) {
+static void MenuInputOverlay_EnterInput(struct MenuInputOverlay* s) {
 	cc_string text = s->input.base.text;
 	cc_bool valid  = s->desc->VTABLE->IsValidValue(s->desc, &text);
-
-	Gui_Remove((struct Screen*)&MenuInputScreen);
+	Gui_Remove((struct Screen*)&MenuInputOverlay);
 	s->onDone(&text, valid);
 }
 
-static int MenuInputScreen_KeyPress(void* screen, char keyChar) {
-	struct MenuInputScreen* s = (struct MenuInputScreen*)screen;
+static int MenuInputOverlay_KeyPress(void* screen, char keyChar) {
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	InputWidget_Append(&s->input.base, keyChar);
 	return true;
 }
 
-static int MenuInputScreen_TextChanged(void* screen, const cc_string* str) {
+static int MenuInputOverlay_TextChanged(void* screen, const cc_string* str) {
 #ifdef CC_BUILD_TOUCH
-	struct MenuInputScreen* s = (struct MenuInputScreen*)screen;
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	InputWidget_SetText(&s->input.base, str);
 #endif
 	return true;
 }
 
-static int MenuInputScreen_KeyDown(void* screen, int key) {
-	struct MenuInputScreen* s = (struct MenuInputScreen*)screen;
+static int MenuInputOverlay_KeyDown(void* screen, int key) {
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	if (Elem_HandlesKeyDown(&s->input.base, key)) return true;
 
 	if (key == KEY_ENTER || key == KEY_KP_ENTER) {
-		MenuInputScreen_EnterInput(s); return true;
+		MenuInputOverlay_EnterInput(s); return true;
 	}
 	return Screen_InputDown(screen, key);
 }
 
-static void MenuInputScreen_OK(void* screen, void* widget) {
-	struct MenuInputScreen* s = (struct MenuInputScreen*)screen;
-	MenuInputScreen_EnterInput(s);
+static int MenuInputOverlay_PointerDown(void* screen, int id, int x, int y) {
+	return Menu_DoPointerDown(screen, id, x, y) >= 0;
 }
 
-static void MenuInputScreen_Default(void* screen, void* widget) {
+static int MenuInputOverlay_PointerMove(void* screen, int id, int x, int y) {
+	return Menu_DoPointerMove(screen, id, x, y) >= 0;
+}
+
+static void MenuInputOverlay_OK(void* screen, void* widget) {
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
+	MenuInputOverlay_EnterInput(s);
+}
+
+static void MenuInputOverlay_Default(void* screen, void* widget) {
 	cc_string value; char valueBuffer[STRING_SIZE];
-	struct MenuInputScreen* s = (struct MenuInputScreen*)screen;
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 
 	String_InitArray(value, valueBuffer);
 	s->desc->VTABLE->GetDefault(s->desc, &value);
 	InputWidget_SetText(&s->input.base, &value);
 }
 
-static void MenuInputScreen_Init(void* screen) {
-	struct MenuInputScreen* s = (struct MenuInputScreen*)screen;
+static void MenuInputOverlay_Init(void* screen) {
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	s->widgets     = menuInput_widgets;
 	s->numWidgets  = Array_Elems(menuInput_widgets);
 	s->maxVertices = MENUINPUT_MAX_VERTICES;
 
 	TextInputWidget_Create(&s->input, 400, &s->value, s->desc);
-	ButtonWidget_Init(&s->ok,          40, MenuInputScreen_OK);
-	ButtonWidget_Init(&s->Default,    200, MenuInputScreen_Default);
+	ButtonWidget_Init(&s->ok,          40, MenuInputOverlay_OK);
+	ButtonWidget_Init(&s->Default,    200, MenuInputOverlay_Default);
 
 	Window_OpenKeyboard(&s->value,
 		(s->desc->VTABLE == &IntInput_VTABLE || s->desc->VTABLE == &FloatInput_VTABLE)
 		? KEYBOARD_TYPE_NUMBER : KEYBOARD_TYPE_TEXT);
 }
 
-static void MenuInputScreen_Free(void* screen) {
-	struct MenuInputScreen* s = (struct MenuInputScreen*)screen;
+static void MenuInputOverlay_Update(void* screen, double delta) {
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
+	s->input.base.caretAccumulator += delta;
+}
+
+static void MenuInputOverlay_Render(void* screen, double delta) {
+	Gfx_SetTexturing(true);
+	Screen_Render2Widgets(screen, delta);
+	Gfx_SetTexturing(false);
+}
+
+static void MenuInputOverlay_Free(void* screen) {
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	Elem_Free(&s->input.base);
 	Elem_Free(&s->ok);
 	Elem_Free(&s->Default);
 	Window_CloseKeyboard();
 }
 
-static void MenuInputScreen_Layout(void* screen) {
-	struct MenuInputScreen* s = (struct MenuInputScreen*)screen;
+static void MenuInputOverlay_Layout(void* screen) {
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 110);
 	Widget_SetLocation(&s->ok,      ANCHOR_CENTRE, ANCHOR_CENTRE, 240, 110);
 	Widget_SetLocation(&s->Default, ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 150);
 }
 
-static void MenuInputScreen_ContextLost(void* screen) {
-	struct MenuInputScreen* s = (struct MenuInputScreen*)screen;
+static void MenuInputOverlay_ContextLost(void* screen) {
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	Font_Free(&s->textFont);
 	Screen_ContextLost(s);
 }
 
-static void MenuInputScreen_ContextRecreated(void* screen) {
-	struct MenuInputScreen* s = (struct MenuInputScreen*)screen;
+static void MenuInputOverlay_ContextRecreated(void* screen) {
+	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	struct FontDesc font;
 	Menu_MakeTitleFont(&font);
 	Menu_MakeBodyFont(&s->textFont);
+	Screen_CreateVb(s);
 
 	TextInputWidget_SetFont(&s->input, &s->textFont);
 	ButtonWidget_SetConst(&s->ok,      "OK",            &font);
@@ -2106,20 +2125,20 @@ static void MenuInputScreen_ContextRecreated(void* screen) {
 	Font_Free(&font);
 }
 
-static const struct ScreenVTABLE MenuInputScreen_VTABLE = {
-	MenuInputScreen_Init,    Screen_NullUpdate, MenuInputScreen_Free, 
-	MenuScreen_Render2,      Screen_BuildMesh,
-	MenuInputScreen_KeyDown, Screen_TInput,     MenuInputScreen_KeyPress, MenuInputScreen_TextChanged,
-	Menu_PointerDown,        Screen_TPointer,   Screen_TPointer, Screen_TMouseScroll,
-	MenuInputScreen_Layout,  MenuInputScreen_ContextLost, MenuInputScreen_ContextRecreated
+static const struct ScreenVTABLE MenuInputOverlay_VTABLE = {
+	MenuInputOverlay_Init,        MenuInputOverlay_Update, MenuInputOverlay_Free,
+	MenuInputOverlay_Render,      Screen_BuildMesh,
+	MenuInputOverlay_KeyDown,     Screen_TInput,    MenuInputOverlay_KeyPress,    MenuInputOverlay_TextChanged,
+	MenuInputOverlay_PointerDown, Screen_TPointer,  MenuInputOverlay_PointerMove, Screen_TMouseScroll,
+	MenuInputOverlay_Layout,      MenuInputOverlay_ContextLost, MenuInputOverlay_ContextRecreated
 };
-void MenuInputScreen_Show(struct MenuInputDesc* desc, const cc_string* value, MenuInputDone onDone) {
-	struct MenuInputScreen* s = &MenuInputScreen;
+void MenuInputOverlay_Show(struct MenuInputDesc* desc, const cc_string* value, MenuInputDone onDone) {
+	struct MenuInputOverlay* s = &MenuInputOverlay;
 	s->grabsInput = true;
 	s->closable   = true;
 	s->desc       = desc;
 	s->onDone     = onDone;
-	s->VTABLE     = &MenuInputScreen_VTABLE;
+	s->VTABLE     = &MenuInputOverlay_VTABLE;
 
 	String_InitArray(s->value, s->valueBuffer);
 	String_Copy(&s->value, value);
@@ -2143,18 +2162,15 @@ static struct MenuOptionsScreen {
 	InitMenuOptions DoInit, DoRecreateExtra, OnHacksChanged;
 	int numButtons, numCore;
 	struct FontDesc titleFont, textFont;
-	struct ButtonWidget ok, Default;
-	struct TextInputWidget input;
 	struct TextGroupWidget extHelp;
 	struct Texture extHelpTextures[5]; /* max lines is 5 */
 	struct ButtonWidget buttons[MENUOPTS_MAX_OPTS], done;
 	const char* extHelpDesc;
 } MenuOptionsScreen_Instance;
 
-static struct Widget* menuOpts_widgets[MENUOPTS_MAX_OPTS + 4] = {
+static struct Widget* menuOpts_widgets[MENUOPTS_MAX_OPTS + 1] = {
 	NULL,NULL,NULL,NULL,NULL,  NULL,NULL,NULL,NULL,NULL,
-	(struct Widget*)&MenuOptionsScreen_Instance.done,    (struct Widget*)&MenuOptionsScreen_Instance.ok,
-	(struct Widget*)&MenuOptionsScreen_Instance.Default, (struct Widget*)&MenuOptionsScreen_Instance.input
+	(struct Widget*)&MenuOptionsScreen_Instance.done
 };
 
 static void Menu_GetBool(cc_string* raw, cc_bool v) {
@@ -2231,60 +2247,11 @@ static void MenuOptionsScreen_SelectExtHelp(struct MenuOptionsScreen* s, int idx
 	MenuOptionsScreen_LayoutExtHelp(s);
 }
 
-static void MenuOptionsScreen_FreeInput(struct MenuOptionsScreen* s) {
-	if (s->activeI == -1) return;
-	Elem_Free(&s->input.base);
-	Elem_Free(&s->ok);
-	Elem_Free(&s->Default);
-
-	s->numWidgets = MENUOPTS_MAX_OPTS + 1;
-	Window_CloseKeyboard();
-}
-
-static void MenuOptionsScreen_RedrawInput(struct MenuOptionsScreen* s) {
-	if (s->activeI == -1) return;
-	TextInputWidget_SetFont(&s->input, &s->textFont);
-	ButtonWidget_SetConst(&s->ok,      "OK",            &s->titleFont);
-	ButtonWidget_SetConst(&s->Default, "Default value", &s->titleFont);
-}
-
-static void MenuOptionsScreen_EnterInput(struct MenuOptionsScreen* s) {
-	struct MenuInputDesc* desc = &s->input.desc;
-	cc_string text = s->input.base.text;
-
-	if (desc->VTABLE->IsValidValue(desc, &text)) {
-		MenuOptionsScreen_Set(s, s->activeI, &text);
-	}
-
+static void MenuOptionsScreen_OnDone(const cc_string* value, cc_bool valid) {
+	struct MenuOptionsScreen* s = &MenuOptionsScreen_Instance;
+	if (valid) MenuOptionsScreen_Set(s, s->activeI, value);
 	MenuOptionsScreen_SelectExtHelp(s, s->activeI);
-	MenuOptionsScreen_FreeInput(s);
 	s->activeI = -1;
-}
-
-static int MenuOptionsScreen_KeyPress(void* screen, char keyChar) {
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	if (s->activeI >= 0) InputWidget_Append(&s->input.base, keyChar);
-	return true;
-}
-
-static int MenuOptionsScreen_TextChanged(void* screen, const cc_string* str) {
-#ifdef CC_BUILD_TOUCH
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	if (s->activeI >= 0) InputWidget_SetText(&s->input.base, str);
-#endif
-	return true;
-}
-
-static int MenuOptionsScreen_KeyDown(void* screen, int key) {
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	if (s->activeI >= 0) {
-		if (Elem_HandlesKeyDown(&s->input.base, key)) return true;
-
-		if (key == KEY_ENTER || key == KEY_KP_ENTER) {
-			MenuOptionsScreen_EnterInput(s); return true;
-		}
-	}
-	return Screen_InputDown(s, key);
 }
 
 static int MenuOptionsScreen_PointerMove(void* screen, int id, int x, int y) {
@@ -2314,21 +2281,6 @@ static void MenuOptionsScreen_InitButtons(struct MenuOptionsScreen* s, const str
 	}
 	s->numButtons = count;
 	Menu_InitBack(&s->done, backClick);
-}
-
-static void MenuOptionsScreen_OK(void* screen, void* widget) {
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	MenuOptionsScreen_EnterInput(s);
-}
-
-static void MenuOptionsScreen_Default(void* screen, void* widget) {
-	cc_string value; char valueBuffer[STRING_SIZE];
-	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	struct MenuInputDesc* desc  = &s->descs[s->activeI];
-
-	String_InitArray(value, valueBuffer);
-	desc->VTABLE->GetDefault(desc, &value);
-	InputWidget_SetText(&s->input.base, &value);
 }
 
 static void MenuOptionsScreen_Bool(void* screen, void* widget) {
@@ -2374,24 +2326,12 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	struct MenuInputDesc* desc;
 
 	MenuOptionsScreen_FreeExtHelp(s);
-	MenuOptionsScreen_FreeInput(s);
 	s->activeI = Menu_Index(s, btn);
 
 	String_InitArray(value, valueBuffer);
 	btn->GetValue(&value);
 	desc = &s->descs[s->activeI];
-
-	TextInputWidget_Create(&s->input, 400, &value, desc);
-	ButtonWidget_Init(&s->ok,          40, MenuOptionsScreen_OK);
-	ButtonWidget_Init(&s->Default,    200, MenuOptionsScreen_Default);
-
-	s->numWidgets = MENUOPTS_MAX_OPTS + 1 + 3;
-	MenuOptionsScreen_Layout(screen);
-	MenuOptionsScreen_RedrawInput(s);
-
-	Window_OpenKeyboard(&value,
-		(desc->VTABLE == &IntInput_VTABLE || desc->VTABLE == &FloatInput_VTABLE)
-		? KEYBOARD_TYPE_NUMBER : KEYBOARD_TYPE_TEXT);
+	MenuInputOverlay_Show(desc, &value, MenuOptionsScreen_OnDone);
 }
 
 static void MenuOptionsScreen_OnHacksChanged(void* screen) {
@@ -2438,7 +2378,7 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 static void MenuOptionsScreen_Free(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	Event_Unregister_(&UserEvents.HackPermissionsChanged, screen, MenuOptionsScreen_OnHacksChanged);
-	if (s->activeI >= 0) Window_CloseKeyboard();
+	Gui_RemoveCore((struct Screen*)&MenuInputOverlay);
 }
 
 static void MenuOptionsScreen_Layout(void* screen) {
@@ -2446,11 +2386,6 @@ static void MenuOptionsScreen_Layout(void* screen) {
 	Screen_Layout(s);
 	Menu_LayoutBack(&s->done);
 	MenuOptionsScreen_LayoutExtHelp(s);
-
-	if (s->activeI == -1) return;
-	Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 110);
-	Widget_SetLocation(&s->ok,      ANCHOR_CENTRE, ANCHOR_CENTRE, 240, 110);
-	Widget_SetLocation(&s->Default, ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 150);
 }
 
 static void MenuOptionsScreen_ContextLost(void* screen) {
@@ -2475,16 +2410,15 @@ static void MenuOptionsScreen_ContextRecreated(void* screen) {
 	if (s->DoRecreateExtra) s->DoRecreateExtra(s);
 	TextGroupWidget_SetFont(&s->extHelp, &s->textFont);
 	TextGroupWidget_RedrawAll(&s->extHelp); /* TODO: SetFont should redrawall implicitly */
-	MenuOptionsScreen_RedrawInput(s);
 }
 
 static void MenuOptionsScreen_BuildMesh(void* screen) { }
 
 static const struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
-	MenuOptionsScreen_Init,    Screen_NullUpdate, MenuOptionsScreen_Free, 
-	MenuOptionsScreen_Render,  MenuOptionsScreen_BuildMesh,
-	MenuOptionsScreen_KeyDown, Screen_TInput,     MenuOptionsScreen_KeyPress,    MenuOptionsScreen_TextChanged,
-	Menu_PointerDown,          Screen_TPointer,   MenuOptionsScreen_PointerMove, Screen_TMouseScroll,
+	MenuOptionsScreen_Init,   Screen_NullUpdate, MenuOptionsScreen_Free, 
+	MenuOptionsScreen_Render, MenuOptionsScreen_BuildMesh,
+	Screen_InputDown,         Screen_TInput,     Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,         Screen_TPointer,   MenuOptionsScreen_PointerMove, Screen_TMouseScroll,
 	MenuOptionsScreen_Layout, MenuOptionsScreen_ContextLost, MenuOptionsScreen_ContextRecreated
 };
 void MenuOptionsScreen_Show(struct MenuInputDesc* descs, const char** descriptions, int descsCount, InitMenuOptions init) {
