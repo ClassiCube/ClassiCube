@@ -1670,6 +1670,11 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
 	int len;
 
+	/* For unrecognised error codes, strerror_r might return messages
+	/*  such as 'No error information', which is not very useful */
+	/* (could check errno here but quicker just to skip entirely) */
+	if (res >= 1000) return false;
+
 	len = strerror_r(res, chars, NATIVE_STR_LEN);
 	if (len == -1) return false;
 
