@@ -161,4 +161,15 @@ void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const
 cc_bool InputHandler_SetFOV(int fov);
 void InputHandler_PickBlocks(void);
 void InputHandler_OnScreensChanged(void);
+
+/* Enumeration of on-screen buttons for touch GUI */
+#define ONSCREEN_BTN_CHAT      (1 << 0)
+#define ONSCREEN_BTN_LIST      (1 << 1)
+#define ONSCREEN_BTN_SPAWN     (1 << 2)
+#define ONSCREEN_BTN_SETSPAWN  (1 << 3)
+#define ONSCREEN_BTN_FLY       (1 << 4)
+#define ONSCREEN_BTN_NOCLIP    (1 << 5)
+#define ONSCREEN_BTN_SPEED     (1 << 6)
+#define ONSCREEN_BTN_HALFSPEED (1 << 7)
+#define ONSCREEN_MAX_BTNS 8
 #endif

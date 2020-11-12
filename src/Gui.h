@@ -43,6 +43,8 @@ CC_VAR extern struct _GuiData {
 	float RawHotbarScale, RawChatScale, RawInventoryScale;
 	GfxResourceID GuiTex, GuiClassicTex, IconsTex, TouchTex;
 	int DefaultLines;
+	/* (internal) Bitmask of on-screen buttons, see Input.h */
+	int _onscreenButtons;
 } Gui;
 
 float Gui_Scale(float value);

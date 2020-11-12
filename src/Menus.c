@@ -3621,6 +3621,90 @@ void TexPackOverlay_Show(const cc_string* url) {
 *---------------------------------------------------TouchControlsScreen---------------------------------------------------*
 *#########################################################################################################################*/
 #define TOUCHCTRLS_BTNS 6
+static struct TouchOnscreenScreen {
+	Screen_Body
+	struct ButtonWidget back;
+	struct ButtonWidget btns[ONSCREEN_MAX_BTNS];
+	struct FontDesc font;
+} TouchOnscreenScreen;
+
+static struct Widget* touchOnscreen_widgets[1 + ONSCREEN_MAX_BTNS] = {
+	(struct Widget*)&TouchOnscreenScreen.back,    (struct Widget*)&TouchOnscreenScreen.btns[0], 
+	(struct Widget*)&TouchOnscreenScreen.btns[1], (struct Widget*)&TouchOnscreenScreen.btns[2], 
+	(struct Widget*)&TouchOnscreenScreen.btns[3], (struct Widget*)&TouchOnscreenScreen.btns[4], 
+	(struct Widget*)&TouchOnscreenScreen.btns[5], (struct Widget*)&TouchOnscreenScreen.btns[6],
+	(struct Widget*)&TouchOnscreenScreen.btns[7]
+};
+#define TOUCHONSCREEN_MAX_VERTICES (BUTTONWIDGET_MAX + ONSCREEN_MAX_BTNS * BUTTONWIDGET_MAX)
+
+static void TouchOnscreen_Any(void* s, void* w) {
+	int index = Menu_Index(s, w) - 1;
+	Gui._onscreenButtons |= (1 << index);
+}
+static void TouchOnscreen_More(void* s, void* w) { TouchCtrlsScreen_Show(); }
+
+static const struct SimpleButtonDesc touchOnscreen_btns[ONSCREEN_MAX_BTNS] = {
+	{ -120,  -50, "Chat",       TouchOnscreen_Any },
+	{  120,  -50, "Tablist",    TouchOnscreen_Any },
+	{ -120,    0, "Spawn",      TouchOnscreen_Any },
+	{  120,    0, "Set spawn",  TouchOnscreen_Any },
+	{ -120,   50, "Fly",        TouchOnscreen_Any },
+	{  120,   50, "Noclip",     TouchOnscreen_Any },
+	{ -120,  100, "Speed",      TouchOnscreen_Any },
+	{  120,  100, "Half speed", TouchOnscreen_Any }
+};
+
+static void TouchOnscreenScreen_ContextLost(void* screen) {
+	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
+	Font_Free(&s->font);
+	Screen_ContextLost(screen);
+}
+
+static void TouchOnscreenScreen_ContextRecreated(void* screen) {
+	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
+	Menu_MakeTitleFont(&s->font);
+	Screen_CreateVb(screen);
+	Menu_SetButtons(s->btns, &s->font, touchOnscreen_btns, ONSCREEN_MAX_BTNS);
+	ButtonWidget_SetConst(&s->back, "Done", &s->font);
+}
+
+static void TouchOnscreenScreen_Layout(void* screen) {
+	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
+	Menu_LayoutButtons(s->btns, touchOnscreen_btns, ONSCREEN_MAX_BTNS);
+	Menu_LayoutBack(&s->back);
+}
+
+static void TouchOnscreenScreen_Init(void* screen) {
+	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
+	s->widgets     = touchOnscreen_widgets;
+	s->numWidgets  = Array_Elems(touchOnscreen_widgets);
+	s->maxVertices = TOUCHONSCREEN_MAX_VERTICES;
+
+	Menu_InitButtons(s->btns, 200, touchOnscreen_btns, ONSCREEN_MAX_BTNS);
+	Menu_InitBack(&s->back, TouchOnscreen_More);
+}
+
+static const struct ScreenVTABLE TouchOnscreenScreen_VTABLE = {
+	TouchOnscreenScreen_Init,   Screen_NullUpdate, Screen_NullFunc,
+	MenuScreen_Render2,         Screen_BuildMesh,
+	Screen_InputDown,           Screen_TInput,     Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,           Screen_TPointer,   Menu_PointerMove, Screen_TMouseScroll,
+	TouchOnscreenScreen_Layout, TouchOnscreenScreen_ContextLost, TouchOnscreenScreen_ContextRecreated
+};
+void TouchOnscreenScreen_Show(void) {
+	struct TouchOnscreenScreen* s = &TouchOnscreenScreen;
+	s->grabsInput = true;
+	s->closable   = true;
+	s->VTABLE     = &TouchOnscreenScreen_VTABLE;
+
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_TOUCHMORE);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------TouchControlsScreen---------------------------------------------------*
+*#########################################################################################################################*/
+#define TOUCHCTRLS_BTNS 6
 static struct TouchCtrlsScreen {
 	Screen_Body
 	struct ButtonWidget back;
@@ -3662,8 +3746,9 @@ static void TouchCtrls_Chat(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
 	ChatScreen_OpenInput(&String_Empty);
 }
-static void TouchCtrls_Fog(void*  s, void* w) { Game_CycleViewDistance(); }
-static void TouchCtrls_More(void* s, void* w) { TouchMoreScreen_Show(); }
+static void TouchCtrls_Fog(void* s,      void* w) { Game_CycleViewDistance(); }
+static void TouchCtrls_More(void* s,     void* w) { TouchMoreScreen_Show(); }
+static void TouchCtrls_Onscreen(void* s, void* w) { TouchOnscreenScreen_Show(); }
 
 static void TouchCtrls_Tap(void* s, void* w) {
 	Input_TapPlace = !Input_TapPlace;
@@ -3696,7 +3781,7 @@ static const struct SimpleButtonDesc touchCtrls_btns[8] = {
 	{ -120,    0, "",     TouchCtrls_Tap  },
 	{  120,    0, "",     TouchCtrls_Hold },
 	{    0,   50, "",     TouchCtrls_Sensitivity },
-	{    0,  100, "On-screen controls", NULL }
+	{    0,  100, "On-screen controls", TouchCtrls_Onscreen }
 };
 
 static void TouchCtrlsScreen_ContextLost(void* screen) {

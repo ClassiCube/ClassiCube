@@ -42,5 +42,6 @@ void TexPackOverlay_Show(const cc_string* url);
 #ifdef CC_BUILD_TOUCH
 void TouchCtrlsScreen_Show(void);
 void TouchMoreScreen_Show(void);
+void TouchOnscreenScreen_Show(void);
 #endif
 #endif
