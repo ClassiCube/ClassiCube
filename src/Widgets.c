@@ -1467,19 +1467,19 @@ const struct MenuInputVTABLE StringInput_VTABLE = {
 /*########################################################################################################################*
 *-----------------------------------------------------TextInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
-static void MenuInputWidget_Render(void* widget, double delta) {
+static void TextInputWidget_Render(void* widget, double delta) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Texture_Render(&w->inputTex);
 	InputWidget_RenderCaret(w, delta);
 }
 
-static void MenuInputWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
+static void TextInputWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_Make2DQuad(&w->inputTex, PACKEDCOL_WHITE, vertices);
 	Gfx_Make2DQuad(&w->caretTex, w->caretCol,     vertices);
 }
 
-static int MenuInputWidget_Render2(void* widget, int offset) {
+static int TextInputWidget_Render2(void* widget, int offset) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	Gfx_BindTexture(w->inputTex.ID);
 	Gfx_DrawVb_IndexedTris_Range(4, offset);
@@ -1492,7 +1492,7 @@ static int MenuInputWidget_Render2(void* widget, int offset) {
 	return offset + 4;
 }
 
-static void MenuInputWidget_RemakeTexture(void* widget) {
+static void TextInputWidget_RemakeTexture(void* widget) {
 	cc_string range; char rangeBuffer[STRING_SIZE];
 	struct TextInputWidget* w = (struct TextInputWidget*)widget;
 	PackedCol backCol = PackedCol_Make(30, 30, 30, 200);
@@ -1541,7 +1541,7 @@ static void MenuInputWidget_RemakeTexture(void* widget) {
 	tex->X = w->base.x; tex->Y = w->base.y;
 }
 
-static cc_bool MenuInputWidget_AllowedChar(void* widget, char c) {
+static cc_bool TextInputWidget_AllowedChar(void* widget, char c) {
 	struct InputWidget* w = (struct InputWidget*)widget;
 	struct MenuInputDesc* desc;
 	int maxChars;
@@ -1561,16 +1561,16 @@ static cc_bool MenuInputWidget_AllowedChar(void* widget, char c) {
 	return valid;
 }
 
-static int MenuInputWidget_GetMaxLines(void) { return 1; }
-static const struct WidgetVTABLE MenuInputWidget_VTABLE = {
-	MenuInputWidget_Render,  InputWidget_Free,  InputWidget_Reposition,
+static int TextInputWidget_GetMaxLines(void) { return 1; }
+static const struct WidgetVTABLE TextInputWidget_VTABLE = {
+	TextInputWidget_Render,  InputWidget_Free,  InputWidget_Reposition,
 	InputWidget_KeyDown,     InputWidget_KeyUp, Widget_MouseScroll,
 	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove,
-	MenuInputWidget_BuildMesh, MenuInputWidget_Render2
+	TextInputWidget_BuildMesh, TextInputWidget_Render2
 };
 void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* desc) {
 	InputWidget_Reset(&w->base);
-	w->base.VTABLE = &MenuInputWidget_VTABLE;
+	w->base.VTABLE = &TextInputWidget_VTABLE;
 
 	w->minWidth  = Display_ScaleX(width);
 	w->minHeight = Display_ScaleY(30);
@@ -1580,10 +1580,10 @@ void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_strin
 	w->base.padding         = 3;
 	w->base.showCaret       = true;
 
-	w->base.GetMaxLines    = MenuInputWidget_GetMaxLines;
-	w->base.RemakeTexture  = MenuInputWidget_RemakeTexture;
+	w->base.GetMaxLines    = TextInputWidget_GetMaxLines;
+	w->base.RemakeTexture  = TextInputWidget_RemakeTexture;
 	w->base.OnPressedEnter = InputWidget_OnPressedEnter;
-	w->base.AllowedChar    = MenuInputWidget_AllowedChar;
+	w->base.AllowedChar    = TextInputWidget_AllowedChar;
 
 	String_InitArray(w->base.text, w->_textBuffer);
 	String_Copy(&w->base.text, text);

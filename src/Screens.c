@@ -1911,21 +1911,25 @@ static struct TouchScreen {
 } TouchScreen;
 
 static struct Widget* touch_widgets[1 + TOUCH_MAX_BTNS] = {
-	(struct Widget*)&TouchScreen.thumbstick, (struct Widget*)&TouchScreen.btns[0],
-	(struct Widget*)&TouchScreen.btns[1],    (struct Widget*)&TouchScreen.btns[2]
+	NULL,NULL,NULL, (struct Widget*)&TouchScreen.thumbstick
 };
 #define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
 
 static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreScreen_Show(); }
+static void TouchScreen_BindClick(void* screen, void* widget) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	int i = Screen_Index(screen, widget);
+	Input_SetPressed(KeyBinds[s->descs[i].bind], true);
+}
 
 static const struct TouchBindDesc normDescs[2] = {
 	{ "More", KEYBIND_COUNT,    100,  50,  90, TouchScreen_MoreClick },
-	{ "Jump", KEYBIND_JUMP,     100,  50,  10, NULL                  }
+	{ "Jump", KEYBIND_JUMP,     100,  50,  10, TouchScreen_BindClick }
 };
 static const struct TouchBindDesc hackDescs[3] = {
 	{ "More", KEYBIND_COUNT,    100,  50, 130, TouchScreen_MoreClick },
-	{ "Up",   KEYBIND_FLY_UP,   100,  50,  50, NULL                  },
-	{ "Down", KEYBIND_FLY_DOWN, 100,  50,  10, NULL                  }
+	{ "Up",   KEYBIND_FLY_UP,   100,  50,  50, TouchScreen_BindClick },
+	{ "Down", KEYBIND_FLY_DOWN, 100,  50,  10, TouchScreen_BindClick }
 };
 
 static void TouchScreen_InitButtons(struct TouchScreen* s) {
@@ -1940,12 +1944,13 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 		s->descs    = normDescs;
 		s->numDescs = Array_Elems(normDescs);
 	}
-	s->numWidgets = 1 + s->numDescs;
 
 	for (i = 0; i < s->numDescs; i++) {
+		s->widgets[i] = (struct Widget*)&s->btns[i];
 		desc = &s->descs[i];
 		ButtonWidget_Init(&s->btns[i], desc->width, desc->OnClick);
 	}
+	for (; i < TOUCH_MAX_BTNS; i++) s->widgets[i] = NULL;
 }
 
 static void TouchScreen_HacksChanged(void* screen) {
@@ -1990,22 +1995,9 @@ static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	//Chat_Add1("POINTER DOWN: %i", &id);
 	if (Gui_GetInputGrab()) return false;
 
-	if (Widget_Contains(&s->thumbstick, x, y)) {
-		s->thumbstick.active |= id; return true;
-	}
-
-	for (i = 0; i < s->numDescs; i++) {
-		if (!Widget_Contains(&s->btns[i], x, y)) continue;
-
-		if (s->descs[i].bind < KEYBIND_COUNT) {
-			Input_SetPressed(KeyBinds[s->descs[i].bind], true);
-		} else {
-			s->btns[i].MenuClick(screen, &s->btns[i]);
-		}
-		s->btns[i].active |= id;
-		return true;
-	}
-	return false;
+	i = Screen_DoPointerDown(screen, id, x, y);
+	if (i >= 0) s->widgets[i]->active |= id;
+	return i >= 0;
 }
 
 static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
@@ -2035,6 +2027,7 @@ static void TouchScreen_Init(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 
 	s->widgets     = touch_widgets;
+	s->numWidgets  = Array_Elems(touch_widgets);
 	s->maxVertices = TOUCH_MAX_VERTICES;
 	Event_Register_(&UserEvents.HacksStateChanged, screen, TouchScreen_HacksChanged);
 

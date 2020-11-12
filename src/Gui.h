@@ -108,6 +108,8 @@ void Screen_ContextLost(void* screen);
 void Screen_CreateVb(void* screen);
 struct VertexTextured* Screen_LockVb(void* screen);
 void Screen_BuildMesh(void* screen);
+int Screen_DoPointerDown(void* screen, int id, int x, int y);
+int Screen_Index(void* screen, void* w);
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {

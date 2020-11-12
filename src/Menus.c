@@ -86,28 +86,8 @@ static void Menu_RenderBounds(void) {
 	Gfx_Draw2DGradient(0, 0, WindowInfo.Width, WindowInfo.Height, topCol, bottomCol);
 }
 
-static int Menu_DoPointerDown(void* screen, int id, int x, int y) {
-	struct Screen* s = (struct Screen*)screen;
-	struct Widget** widgets = s->widgets;
-	int i, count = s->numWidgets;
-
-	/* iterate backwards (because last elements rendered are shown over others) */
-	for (i = count - 1; i >= 0; i--) {
-		struct Widget* w = widgets[i];
-		if (!w || !Widget_Contains(w, x, y)) continue;
-		if (w->disabled) return i;
-
-		if (w->MenuClick) {
-			w->MenuClick(s, w);
-		} else {
-			Elem_HandlesPointerDown(w, id, x, y);
-		}
-		return i;
-	}
-	return -1;
-}
 int Menu_PointerDown(void* screen, int id, int x, int y) {
-	Menu_DoPointerDown(screen, id, x, y); return true;
+	Screen_DoPointerDown(screen, id, x, y); return true;
 }
 
 static int Menu_DoPointerMove(void* screen, int id, int x, int y) {
@@ -139,18 +119,6 @@ int Menu_PointerMove(void* screen, int id, int x, int y) {
 /*########################################################################################################################*
 *------------------------------------------------------Menu utilities-----------------------------------------------------*
 *#########################################################################################################################*/
-static int Menu_Index(void* screen, void* widget) {
-	struct Screen* s = (struct Screen*)screen;
-	struct Widget** widgets = s->widgets;
-	int i;
-
-	struct Widget* w = (struct Widget*)widget;
-	for (i = 0; i < s->numWidgets; i++) {
-		if (widgets[i] == w) return i;
-	}
-	return -1;
-}
-
 static void Menu_Remove(void* screen, int i) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;
@@ -339,7 +307,7 @@ CC_NOINLINE static void ListScreen_Sort(struct ListScreen* s) {
 }
 
 static cc_string ListScreen_UNSAFE_GetCur(struct ListScreen* s, void* widget) {
-	int i = Menu_Index(s, widget);
+	int i = Screen_Index(s, widget);
 	return ListScreen_UNSAFE_Get(s, s->currentIndex + i);
 }
 
@@ -1073,7 +1041,7 @@ static int GenLevelScreen_TextChanged(void* screen, const cc_string* str) {
 
 static int GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
-	int i = Menu_DoPointerDown(screen, id, x, y);
+	int i = Screen_DoPointerDown(screen, id, x, y);
 	if (i == -1 || i >= 4) return true;
 
 	if (s->selected) s->selected->base.showCaret = false;
@@ -1772,7 +1740,7 @@ static void KeyBindsScreen_Update(struct KeyBindsScreen* s, int i) {
 static void KeyBindsScreen_OnBindingClick(void* screen, void* widget) {
 	struct KeyBindsScreen* s = (struct KeyBindsScreen*)screen;
 	int old     = s->curI;
-	s->curI     = Menu_Index(s, widget);
+	s->curI     = Screen_Index(s, widget);
 	s->closable = false;
 
 	KeyBindsScreen_Update(s, s->curI);
@@ -2046,7 +2014,7 @@ static int MenuInputOverlay_KeyDown(void* screen, int key) {
 
 static int MenuInputOverlay_PointerDown(void* screen, int id, int x, int y) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
-	return Menu_DoPointerDown(screen, id, x, y) >= 0 || s->screenMode;
+	return Screen_DoPointerDown(screen, id, x, y) >= 0 || s->screenMode;
 }
 
 static int MenuInputOverlay_PointerMove(void* screen, int id, int x, int y) {
@@ -2301,7 +2269,7 @@ static void MenuOptionsScreen_Bool(void* screen, void* widget) {
 
 	isOn  = String_CaselessEqualsConst(&value, "ON");
 	value = String_FromReadonly(isOn ? "OFF" : "ON");
-	MenuOptionsScreen_Set(s, Menu_Index(s, btn), &value);
+	MenuOptionsScreen_Set(s, Screen_Index(s, btn), &value);
 }
 
 static void MenuOptionsScreen_Enum(void* screen, void* widget) {
@@ -2313,7 +2281,7 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 	const char* const* names;
 	int raw, count;
 	
-	index = Menu_Index(s, btn);
+	index = Screen_Index(s, btn);
 	String_InitArray(value, valueBuffer);
 	btn->GetValue(&value);
 
@@ -2333,7 +2301,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	struct MenuInputDesc* desc;
 
 	MenuOptionsScreen_FreeExtHelp(s);
-	s->activeI = Menu_Index(s, btn);
+	s->activeI = Screen_Index(s, btn);
 
 	String_InitArray(value, valueBuffer);
 	btn->GetValue(&value);
@@ -3463,7 +3431,7 @@ static struct Widget* texpack_widgets[8] = {
 };
 #define TEXPACK_MAX_VERTICES (4 * TEXTWIDGET_MAX + 4 * BUTTONWIDGET_MAX)
 
-static cc_bool TexPackOverlay_IsAlways(void* screen, void* w) { return Menu_Index(screen, w) >= 6; }
+static cc_bool TexPackOverlay_IsAlways(void* screen, void* w) { return Screen_Index(screen, w) >= 6; }
 
 static void TexPackOverlay_YesClick(void* screen, void* widget) {
 	struct TexPackOverlay* s = (struct TexPackOverlay*)screen;
@@ -3638,8 +3606,13 @@ static struct Widget* touchOnscreen_widgets[1 + ONSCREEN_MAX_BTNS] = {
 #define TOUCHONSCREEN_MAX_VERTICES (BUTTONWIDGET_MAX + ONSCREEN_MAX_BTNS * BUTTONWIDGET_MAX)
 
 static void TouchOnscreen_Any(void* s, void* w) {
-	int index = Menu_Index(s, w) - 1;
-	Gui._onscreenButtons |= (1 << index);
+	int bit = 1 << (Screen_Index(s, w) - 1);
+	if (Gui._onscreenButtons & bit) {
+		Gui._onscreenButtons &= ~bit;
+	} else {
+		Gui._onscreenButtons |= bit;
+	}
+	Options_SetInt(OPT_TOUCH_BUTTONS, Gui._onscreenButtons);
 }
 static void TouchOnscreen_More(void* s, void* w) { TouchCtrlsScreen_Show(); }
 
