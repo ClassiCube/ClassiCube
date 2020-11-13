@@ -1935,8 +1935,9 @@ static void TouchScreen_NoclipClick(void* s,   void* w) { LocalPlayer_HandleNocl
 static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreScreen_Show(); }
 static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	int i = Screen_Index(screen, widget) - ONSCREEN_MAX_BTNS;
-	Input_SetPressed(KeyBinds[s->descs[i].bind], true);
+	int i   = Screen_Index(screen, widget) - ONSCREEN_MAX_BTNS;
+	int key = KeyBinds[s->descs[i].bind];
+	Input_SetPressed(key, !Input_Pressed[key]);
 }
 
 static const struct TouchButtonDesc onscreenDescs[8] = {
@@ -1992,14 +1993,15 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 	}
 }
 
-static void TouchScreen_HacksChanged(void* screen) {
-	struct TouchScreen* s = (struct TouchScreen*)screen;
+void TouchScreen_Refresh(void) {
+	struct TouchScreen* s = &TouchScreen;
 	/* InitButtons changes number of widgets, hence */
 	/* must destroy graphics resources BEFORE that */
 	Screen_ContextLost(s);
 	TouchScreen_InitButtons(s);
 	Gui_Refresh((struct Screen*)s);
 }
+static void TouchScreen_HacksChanged(void* s) { TouchScreen_Refresh(); }
 
 static void TouchScreen_ContextLost(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;

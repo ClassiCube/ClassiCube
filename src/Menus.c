@@ -3613,6 +3613,7 @@ static void TouchOnscreen_Any(void* s, void* w) {
 		Gui._onscreenButtons |= bit;
 	}
 	Options_SetInt(OPT_TOUCH_BUTTONS, Gui._onscreenButtons);
+	TouchScreen_Refresh();
 }
 static void TouchOnscreen_More(void* s, void* w) { TouchCtrlsScreen_Show(); }
 
@@ -3738,7 +3739,8 @@ static void TouchCtrls_OnDone(const cc_string* value, cc_bool valid) {
 	TouchCtrls_UpdateSensitivity(&TouchCtrlsScreen);
 }
 
-static void TouchCtrls_Sensitivity(void* s, void* w) {
+static void TouchCtrls_Sensitivity(void* screen, void* w) {
+	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
 	static struct MenuInputDesc desc;
 	cc_string value; char valueBuffer[STRING_SIZE];
 	String_InitArray(value, valueBuffer);
@@ -3746,6 +3748,9 @@ static void TouchCtrls_Sensitivity(void* s, void* w) {
 	MenuInput_Int(desc, 1, 200, 30);
 	MiscOptionsScreen_GetSensitivity(&value);
 	MenuInputOverlay_Show(&desc, &value, TouchCtrls_OnDone, true);
+	/* Fix Sensitivity button getting stuck as 'active' */
+	/* (input overlay swallows subsequent pointer events) */
+	s->btns[4].active = 0;
 }
 
 static const struct SimpleButtonDesc touchCtrls_btns[8] = {
