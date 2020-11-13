@@ -1925,6 +1925,13 @@ static void TouchScreen_OnscreenClick(void* screen, void* widget) {
 	Input_SetPressed(KeyBinds[s->onscreenDescs[i]->bind], true);
 }
 
+static void TouchScreen_ChatClick(void* s,     void* w) { ChatScreen_OpenInput(&String_Empty); }
+static void TouchScreen_TabClick(void* s,      void* w) { TabListOverlay_Show(); }
+static void TouchScreen_RespawnClick(void* s,  void* w) { LocalPlayer_HandleRespawn(); }
+static void TouchScreen_SetSpawnClick(void* s, void* w) { LocalPlayer_HandleSetSpawn(); }
+static void TouchScreen_FlyClick(void* s,      void* w) { LocalPlayer_HandleFly(); }
+static void TouchScreen_NoclipClick(void* s,   void* w) { LocalPlayer_HandleNoclip(); }
+
 static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreScreen_Show(); }
 static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
@@ -1933,12 +1940,12 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 }
 
 static const struct TouchButtonDesc onscreenDescs[8] = {
-	{ "Chat",      KEYBIND_CHAT,        0,0,0, TouchScreen_OnscreenClick },
-	{ "Tablist",   KEYBIND_PLAYER_LIST, 0,0,0, TouchScreen_OnscreenClick },
-	{ "Respawn",   KEYBIND_RESPAWN,     0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanRespawn },
-	{ "Set spawn", KEYBIND_SET_SPAWN,   0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanRespawn },
-	{ "Fly",       KEYBIND_FLY,         0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanFly     },
-	{ "Noclip",    KEYBIND_NOCLIP,      0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanNoclip  },
+	{ "Chat",      0,0,0,0, TouchScreen_ChatClick },
+	{ "Tablist",   0,0,0,0, TouchScreen_TabClick },
+	{ "Respawn",   0,0,0,0, TouchScreen_RespawnClick,  &LocalPlayer_Instance.Hacks.CanRespawn },
+	{ "Set spawn", 0,0,0,0, TouchScreen_SetSpawnClick, &LocalPlayer_Instance.Hacks.CanRespawn },
+	{ "Fly",       0,0,0,0, TouchScreen_FlyClick,      &LocalPlayer_Instance.Hacks.CanFly     },
+	{ "Noclip",    0,0,0,0, TouchScreen_NoclipClick,   &LocalPlayer_Instance.Hacks.CanNoclip  },
 	{ "Speed",     KEYBIND_SPEED,       0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed   },
 	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed   }
 };

@@ -902,6 +902,21 @@ static void HandleHotkeyDown(int key) {
 	}
 }
 
+static cc_bool HandleLocalPlayerKey(int key) {
+	if (key == KeyBinds[KEYBIND_RESPAWN]) {
+		return LocalPlayer_HandleRespawn();
+	} else if (key == KeyBinds[KEYBIND_SET_SPAWN]) {
+		return LocalPlayer_HandleSetSpawn();
+	} else if (key == KeyBinds[KEYBIND_FLY]) {
+		return LocalPlayer_HandleFly();
+	} else if (key == KeyBinds[KEYBIND_NOCLIP]) {
+		return LocalPlayer_HandleNoclip();
+	} else if (key == KeyBinds[KEYBIND_JUMP]) {
+		return LocalPlayer_HandleJump();
+	}
+	return false;
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Base handlers-------------------------------------------------------*
@@ -1024,7 +1039,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 	if (was) return;
 	if (HandleBlockKey(key)) {
 	} else if (HandleCoreKey(key)) {
-	} else if (LocalPlayer_HandlesKey(key)) {
+	} else if (HandleLocalPlayerKey(key)) {
 	} else { HandleHotkeyDown(key); }
 }
 

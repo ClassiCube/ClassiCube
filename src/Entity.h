@@ -210,9 +210,12 @@ float LocalPlayer_JumpHeight(void);
 void LocalPlayer_SetInterpPosition(float t);
 void LocalPlayer_ResetJumpVelocity(void);
 cc_bool LocalPlayer_CheckCanZoom(void);
-/* Returns whether local player handles a key being pressed. */
-/* e.g. for respawn, toggle fly, etc. */
-cc_bool LocalPlayer_HandlesKey(int key);
 /* Moves local player back to spawn point. */
 void LocalPlayer_MoveToSpawn(void);
+
+cc_bool LocalPlayer_HandleRespawn(void);
+cc_bool LocalPlayer_HandleSetSpawn(void);
+cc_bool LocalPlayer_HandleFly(void);
+cc_bool LocalPlayer_HandleNoclip(void);
+cc_bool LocalPlayer_HandleJump(void);
 #endif
