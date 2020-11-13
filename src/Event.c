@@ -68,9 +68,9 @@ void Event_UnregisterAll(void) {
 	GfxEvents.ContextLost.Count         = 0;
 	GfxEvents.ContextRecreated.Count    = 0;
 
-	UserEvents.BlockChanged.Count           = 0;
-	UserEvents.HackPermissionsChanged.Count = 0;
-	UserEvents.HeldBlockChanged.Count       = 0;
+	UserEvents.BlockChanged.Count     = 0;
+	UserEvents.HackPermsChanged.Count = 0;
+	UserEvents.HeldBlockChanged.Count = 0;
 
 	BlockEvents.PermissionsChanged.Count = 0;
 	BlockEvents.BlockDefChanged.Count    = 0;

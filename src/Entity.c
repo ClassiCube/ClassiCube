@@ -911,7 +911,7 @@ static void LocalPlayer_Init(void) {
 	Entity_Init(&p->Base);
 	Entity_SetName(&p->Base, &Game_Username);
 	Entity_SetSkin(&p->Base, &Game_Username);
-	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, LocalPlayer_CheckJumpVelocity);
+	Event_Register_(&UserEvents.HackPermsChanged, NULL, LocalPlayer_CheckJumpVelocity);
 
 	p->input.GetMovement = LocalPlayer_GetMovement;
 	p->Collisions.Entity = &p->Base;

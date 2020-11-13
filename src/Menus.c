@@ -503,7 +503,7 @@ static void PauseScreen_Init(void* screen) {
 	s->widgets     = pause_widgets;
 	s->numWidgets  = Array_Elems(pause_widgets);
 	s->maxVertices = PAUSE_MAX_VERTICES;
-	Event_Register_(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
+	Event_Register_(&UserEvents.HackPermsChanged, s, PauseScreen_CheckHacksAllowed);
 
 	if (Gui.ClassicMenu) {
 		s->descs = classicDescs; /*400*/
@@ -525,7 +525,7 @@ static void PauseScreen_Init(void* screen) {
 
 static void PauseScreen_Free(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	Event_Unregister_(&UserEvents.HackPermissionsChanged, s, PauseScreen_CheckHacksAllowed);
+	Event_Unregister_(&UserEvents.HackPermsChanged, s, PauseScreen_CheckHacksAllowed);
 }
 
 static const struct ScreenVTABLE PauseScreen_VTABLE = {
@@ -628,7 +628,7 @@ static void OptionsGroupScreen_Layout(void* screen) {
 static void OptionsGroupScreen_Init(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
 
-	Event_Register_(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
+	Event_Register_(&UserEvents.HackPermsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
 	s->widgets     = optGroups_widgets;
 	s->numWidgets  = Array_Elems(optGroups_widgets);
 	s->selectedI   = -1;
@@ -641,7 +641,7 @@ static void OptionsGroupScreen_Init(void* screen) {
 
 static void OptionsGroupScreen_Free(void* screen) {
 	struct OptionsGroupScreen* s = (struct OptionsGroupScreen*)screen;
-	Event_Unregister_(&UserEvents.HackPermissionsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
+	Event_Unregister_(&UserEvents.HackPermsChanged, s, OptionsGroupScreen_CheckHacksAllowed);
 }
 
 static int OptionsGroupScreen_PointerMove(void* screen, int id, int x, int y) {
@@ -2329,7 +2329,7 @@ static void MenuOptionsScreen_Init(void* screen) {
 
 	TextGroupWidget_Create(&s->extHelp, 5, s->extHelpTextures, MenuOptionsScreen_GetDesc);
 	s->extHelp.lines = 0;
-	Event_Register_(&UserEvents.HackPermissionsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	Event_Register_(&UserEvents.HackPermsChanged, screen, MenuOptionsScreen_OnHacksChanged);
 }
 	
 #define EXTHELP_PAD 5 /* padding around extended help box */
@@ -2352,7 +2352,7 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 
 static void MenuOptionsScreen_Free(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
-	Event_Unregister_(&UserEvents.HackPermissionsChanged, screen, MenuOptionsScreen_OnHacksChanged);
+	Event_Unregister_(&UserEvents.HackPermsChanged, screen, MenuOptionsScreen_OnHacksChanged);
 	Gui_RemoveCore((struct Screen*)&MenuInputOverlay);
 }
 

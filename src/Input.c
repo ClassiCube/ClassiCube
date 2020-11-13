@@ -1064,8 +1064,8 @@ static void OnInit(void) {
 	Event_Register_(&InputEvents.Up,      NULL, OnInputUp);
 	Event_Register_(&InputEvents.Wheel,   NULL, OnMouseWheel);
 
-	Event_Register_(&WindowEvents.FocusChanged,         NULL, OnFocusChanged);
-	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, InputHandler_CheckZoomFov);
+	Event_Register_(&WindowEvents.FocusChanged,   NULL, OnFocusChanged);
+	Event_Register_(&UserEvents.HackPermsChanged, NULL, InputHandler_CheckZoomFov);
 	KeyBind_Init();
 	StoredHotkeys_LoadAll();
 }

@@ -1934,13 +1934,13 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 
 static const struct TouchButtonDesc onscreenDescs[8] = {
 	{ "Chat",      KEYBIND_CHAT,        0,0,0, TouchScreen_OnscreenClick },
-	{ "List",      KEYBIND_PLAYER_LIST, 0,0,0, TouchScreen_OnscreenClick },
-	{ "Respawn",   KEYBIND_RESPAWN,     0,0,0, TouchScreen_OnscreenClick },
-	{ "Set spawn", KEYBIND_SET_SPAWN,   0,0,0, TouchScreen_OnscreenClick },
-	{ "Fly",       KEYBIND_FLY,         0,0,0, TouchScreen_OnscreenClick },
-	{ "Noclip",    KEYBIND_NOCLIP,      0,0,0, TouchScreen_OnscreenClick },
-	{ "Speed",     KEYBIND_SPEED,       0,0,0, TouchScreen_OnscreenClick },
-	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0,0, TouchScreen_OnscreenClick }
+	{ "Tablist",   KEYBIND_PLAYER_LIST, 0,0,0, TouchScreen_OnscreenClick },
+	{ "Respawn",   KEYBIND_RESPAWN,     0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanRespawn },
+	{ "Set spawn", KEYBIND_SET_SPAWN,   0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanRespawn },
+	{ "Fly",       KEYBIND_FLY,         0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanFly     },
+	{ "Noclip",    KEYBIND_NOCLIP,      0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanNoclip  },
+	{ "Speed",     KEYBIND_SPEED,       0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed   },
+	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed   }
 };
 static const struct TouchButtonDesc normDescs[2] = {
 	{ "More", KEYBIND_COUNT,    100,  50,  90, TouchScreen_MoreClick },
@@ -1956,7 +1956,7 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	const struct TouchButtonDesc* desc;
 	int i, j;
-	for (; i < TOUCH_MAX_BTNS; i++) s->widgets[i] = NULL;
+	for (i = 0; i < TOUCH_MAX_BTNS; i++) s->widgets[i] = NULL;
 
 	for (i = 0, j = 0; i < ONSCREEN_MAX_BTNS; i++) {
 		if (!(Gui._onscreenButtons & (1 << i))) continue;
@@ -2032,7 +2032,7 @@ static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	if (Gui_GetInputGrab()) return false;
 
 	i = Screen_DoPointerDown(screen, id, x, y);
-	if (i >= 0) s->widgets[i]->active |= id;
+	if (i >= ONSCREEN_MAX_BTNS) s->widgets[i]->active |= id;
 	return i >= 0;
 }
 
@@ -2091,6 +2091,7 @@ static void TouchScreen_Init(void* screen) {
 	s->numWidgets  = Array_Elems(touch_widgets);
 	s->maxVertices = TOUCH_MAX_VERTICES;
 	Event_Register_(&UserEvents.HacksStateChanged, screen, TouchScreen_HacksChanged);
+	Event_Register_(&UserEvents.HackPermsChanged,  screen, TouchScreen_HacksChanged);
 
 	TouchScreen_InitButtons(s);
 	ThumbstickWidget_Init(&s->thumbstick);
@@ -2100,6 +2101,7 @@ static void TouchScreen_Init(void* screen) {
 
 static void TouchScreen_Free(void* s) {
 	Event_Unregister_(&UserEvents.HacksStateChanged, s, TouchScreen_HacksChanged);
+	Event_Unregister_(&UserEvents.HackPermsChanged,  s, TouchScreen_HacksChanged);
 }
 
 static const struct ScreenVTABLE TouchScreen_VTABLE = {
