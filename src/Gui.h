@@ -43,6 +43,8 @@ CC_VAR extern struct _GuiData {
 	float RawHotbarScale, RawChatScale, RawInventoryScale;
 	GfxResourceID GuiTex, GuiClassicTex, IconsTex, TouchTex;
 	int DefaultLines;
+	/* (internal) Bitmask of on-screen buttons, see Input.h */
+	int _onscreenButtons;
 } Gui;
 
 float Gui_Scale(float value);
@@ -106,6 +108,8 @@ void Screen_ContextLost(void* screen);
 void Screen_CreateVb(void* screen);
 struct VertexTextured* Screen_LockVb(void* screen);
 void Screen_BuildMesh(void* screen);
+int Screen_DoPointerDown(void* screen, int id, int x, int y);
+int Screen_Index(void* screen, void* w);
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {
@@ -157,6 +161,7 @@ int Widget_Contains(void* widget, int x, int y);
 enum GuiPriority {
 	GUI_PRIORITY_DISCONNECT = 60,
 	GUI_PRIORITY_OLDLOADING = 55,
+	GUI_PRIORITY_MENUINPUT  = 57,
 	GUI_PRIORITY_MENU       = 50,
 	GUI_PRIORITY_TOUCHMORE  = 45,
 	GUI_PRIORITY_URLWARNING = 40,
@@ -188,6 +193,9 @@ int Gui_ContainsPointers(int x, int y, int width, int height);
 /* Shows HUD and Status screens. */
 void Gui_ShowDefault(void);
 
+/* (internal) Removes the screen from the screens list. */
+/* NOTE: This does NOT perform the usual 'screens changed' behaviour. */
+void Gui_RemoveCore(struct Screen* s);
 /* Removes the screen from the screens list. */
 CC_API void Gui_Remove(struct Screen* screen);
 /* Inserts a screen into the screen lists with the given priority. */

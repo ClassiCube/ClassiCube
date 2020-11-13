@@ -77,7 +77,7 @@ void Gui_ShowDefault(void) {
 #endif
 }
 
-static void Gui_LoadOptions(void) {
+static void LoadOptions(void) {
 	Gui.DefaultLines    = Game_ClassicMode ? 10 : 12;
 	Gui.Chatlines       = Options_GetInt(OPT_CHATLINES, 0, 30, Gui.DefaultLines);
 	Gui.ClickableChat   = Options_GetBool(OPT_CLICKABLE_CHAT,   true) && !Game_ClassicMode;
@@ -182,7 +182,7 @@ static int IndexOfScreen(struct Screen* s) {
 	return -1;
 }
 
-static void Gui_RemoveCore(struct Screen* s) {
+void Gui_RemoveCore(struct Screen* s) {
 	int i = IndexOfScreen(s);
 	if (i == -1) return;
 
@@ -444,6 +444,39 @@ void Screen_BuildMesh(void* screen) {
 	Gfx_UnlockDynamicVb(s->vb);
 }
 
+int Screen_DoPointerDown(void* screen, int id, int x, int y) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	int i, count = s->numWidgets;
+
+	/* iterate backwards (because last elements rendered are shown over others) */
+	for (i = count - 1; i >= 0; i--) {
+		struct Widget* w = widgets[i];
+		if (!w || !Widget_Contains(w, x, y)) continue;
+		if (w->disabled) return i;
+
+		if (w->MenuClick) {
+			w->MenuClick(s, w);
+		} else {
+			Elem_HandlesPointerDown(w, id, x, y);
+		}
+		return i;
+	}
+	return -1;
+}
+
+int Screen_Index(void* screen, void* widget) {
+	struct Screen* s = (struct Screen*)screen;
+	struct Widget** widgets = s->widgets;
+	int i;
+
+	struct Widget* w = (struct Widget*)widget;
+	for (i = 0; i < s->numWidgets; i++) {
+		if (widgets[i] == w) return i;
+	}
+	return -1;
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------Gui component------------------------------------------------------*
@@ -501,12 +534,14 @@ static void OnInit(void) {
 	Event_Register_(&GfxEvents.ContextLost,      NULL, OnContextLost);
 	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 	Event_Register_(&InputEvents.Press,          NULL, OnKeyPress);
+	Event_Register_(&WindowEvents.Resized,       NULL, OnResize);
+
 #ifdef CC_BUILD_TOUCH
 	Event_Register_(&InputEvents.TextChanged,    NULL, OnTextChanged);
+	Gui._onscreenButtons = Options_GetInt(OPT_TOUCH_BUTTONS, 0, Int32_MaxValue, 0);
 #endif
 
-	Event_Register_(&WindowEvents.Resized,       NULL, OnResize);
-	Gui_LoadOptions();
+	LoadOptions();
 	Gui_ShowDefault();
 }
 

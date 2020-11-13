@@ -70,7 +70,7 @@ cc_bool HacksComp_CanJumpHigher(struct HacksComp* hacks);
 /* e.g. +ophax allows all hacks if op, -push disables entity pushing */
 void HacksComp_RecheckFlags(struct HacksComp* hacks);
 /* Updates state based on permissions (e.g. Flying set to false if CanFly is false) */
-/* Raises UserEvents.HackPermissionsChanged */
+/* Raises UserEvents.HackPermsChanged */
 void HacksComp_Update(struct HacksComp* hacks);
 void HacksComp_SetFlying(struct HacksComp* hacks, cc_bool flying);
 void HacksComp_SetNoclip(struct HacksComp* hacks, cc_bool noclip);

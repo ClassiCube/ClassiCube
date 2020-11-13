@@ -68,6 +68,7 @@
 #define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
 #define OPT_CAMERA_MASS "cameramass"
 #define OPT_GRAB_CURSOR "win-grab-cursor"
+#define OPT_TOUCH_BUTTONS "gui-touchbuttons"
 
 struct StringsBuffer;
 extern struct StringsBuffer Options;

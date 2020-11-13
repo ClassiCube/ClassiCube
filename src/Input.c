@@ -46,7 +46,7 @@ static struct TouchPointer {
 	TimeMS start;
 } touches[INPUT_MAX_POINTERS];
 int Pointers_Count;
-cc_bool Input_Placing;
+cc_bool Input_TapPlace = true, Input_HoldPlace = false;
 
 /* Touch fingers are initially are all type, meaning they could */
 /* trigger menu clicks, camera movement, or place/delete blocks */
@@ -125,7 +125,7 @@ static void CheckBlockTap(int i) {
 	if (DateTime_CurrentUTC_MS() > touches[i].start + 250) return;
 	if (touches[i].type != TOUCH_TYPE_ALL) return;
 
-	btn = Input_Placing ? MOUSE_RIGHT : MOUSE_LEFT;
+	btn = Input_TapPlace ? MOUSE_RIGHT : MOUSE_LEFT;
 	pressed = input_buttonsDown[btn];
 	MouseStatePress(btn);
 
@@ -741,8 +741,8 @@ void InputHandler_PickBlocks(void) {
 	
 #ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode) {
-		left   = !Input_Placing && AnyBlockTouches();
-		right  = Input_Placing  && AnyBlockTouches();
+		left   = !Input_HoldPlace && AnyBlockTouches();
+		right  = Input_HoldPlace  && AnyBlockTouches();
 		middle = false;
 	}
 #endif
@@ -902,6 +902,21 @@ static void HandleHotkeyDown(int key) {
 	}
 }
 
+static cc_bool HandleLocalPlayerKey(int key) {
+	if (key == KeyBinds[KEYBIND_RESPAWN]) {
+		return LocalPlayer_HandleRespawn();
+	} else if (key == KeyBinds[KEYBIND_SET_SPAWN]) {
+		return LocalPlayer_HandleSetSpawn();
+	} else if (key == KeyBinds[KEYBIND_FLY]) {
+		return LocalPlayer_HandleFly();
+	} else if (key == KeyBinds[KEYBIND_NOCLIP]) {
+		return LocalPlayer_HandleNoclip();
+	} else if (key == KeyBinds[KEYBIND_JUMP]) {
+		return LocalPlayer_HandleJump();
+	}
+	return false;
+}
+
 
 /*########################################################################################################################*
 *-----------------------------------------------------Base handlers-------------------------------------------------------*
@@ -1024,7 +1039,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 	if (was) return;
 	if (HandleBlockKey(key)) {
 	} else if (HandleCoreKey(key)) {
-	} else if (LocalPlayer_HandlesKey(key)) {
+	} else if (HandleLocalPlayerKey(key)) {
 	} else { HandleHotkeyDown(key); }
 }
 
@@ -1064,8 +1079,8 @@ static void OnInit(void) {
 	Event_Register_(&InputEvents.Up,      NULL, OnInputUp);
 	Event_Register_(&InputEvents.Wheel,   NULL, OnMouseWheel);
 
-	Event_Register_(&WindowEvents.FocusChanged,         NULL, OnFocusChanged);
-	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, InputHandler_CheckZoomFov);
+	Event_Register_(&WindowEvents.FocusChanged,   NULL, OnFocusChanged);
+	Event_Register_(&UserEvents.HackPermsChanged, NULL, InputHandler_CheckZoomFov);
 	KeyBind_Init();
 	StoredHotkeys_LoadAll();
 }

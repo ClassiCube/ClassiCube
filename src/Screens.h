@@ -32,6 +32,7 @@ void GeneratingScreen_Show(void);
 void ChatScreen_Show(void);
 void DisconnectScreen_Show(const cc_string* title, const cc_string* message);
 #ifdef CC_BUILD_TOUCH
+void TouchScreen_Refresh(void);
 void TouchScreen_Show(void);
 #endif
 

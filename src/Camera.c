@@ -286,8 +286,8 @@ static void OnInit(void) {
 	Camera_Register(&cam_ForwardThird);
 
 	Camera.Active = &cam_FirstPerson;
-	Event_Register_(&PointerEvents.RawMoved,            NULL, OnRawMovement);
-	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, OnHacksChanged);
+	Event_Register_(&PointerEvents.RawMoved,      NULL, OnRawMovement);
+	Event_Register_(&UserEvents.HackPermsChanged, NULL, OnHacksChanged);
 
 #ifdef CC_BUILD_WIN
 	Camera.Sensitivity = Options_GetInt(OPT_SENSITIVITY, 1, 200, 40);

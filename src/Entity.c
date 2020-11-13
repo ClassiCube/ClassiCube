@@ -911,7 +911,7 @@ static void LocalPlayer_Init(void) {
 	Entity_Init(&p->Base);
 	Entity_SetName(&p->Base, &Game_Username);
 	Entity_SetSkin(&p->Base, &Game_Username);
-	Event_Register_(&UserEvents.HackPermissionsChanged, NULL, LocalPlayer_CheckJumpVelocity);
+	Event_Register_(&UserEvents.HackPermsChanged, NULL, LocalPlayer_CheckJumpVelocity);
 
 	p->input.GetMovement = LocalPlayer_GetMovement;
 	p->Collisions.Entity = &p->Base;
@@ -1007,7 +1007,7 @@ static void LocalPlayer_DoRespawn(void) {
 	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
 }
 
-static cc_bool LocalPlayer_HandleRespawn(void) {
+cc_bool LocalPlayer_HandleRespawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanRespawn) {
 		LocalPlayer_DoRespawn();
@@ -1019,7 +1019,7 @@ static cc_bool LocalPlayer_HandleRespawn(void) {
 	return false;
 }
 
-static cc_bool LocalPlayer_HandleSetSpawn(void) {
+cc_bool LocalPlayer_HandleSetSpawn(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanRespawn) {
 
@@ -1043,7 +1043,7 @@ static cc_bool LocalPlayer_HandleSetSpawn(void) {
 	return LocalPlayer_HandleRespawn();
 }
 
-static cc_bool LocalPlayer_HandleFly(void) {
+cc_bool LocalPlayer_HandleFly(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanFly && p->Hacks.Enabled) {
 		HacksComp_SetFlying(&p->Hacks, !p->Hacks.Flying);
@@ -1055,7 +1055,7 @@ static cc_bool LocalPlayer_HandleFly(void) {
 	return false;
 }
 
-static cc_bool LocalPlayer_HandleNoClip(void) {
+cc_bool LocalPlayer_HandleNoclip(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
 	if (p->Hacks.CanNoclip && p->Hacks.Enabled) {
 		if (p->Hacks.WOMStyleHacks) return true; /* don't handle this here */
@@ -1070,32 +1070,13 @@ static cc_bool LocalPlayer_HandleNoClip(void) {
 	return false;
 }
 
-cc_bool LocalPlayer_CheckCanZoom(void) {
+cc_bool LocalPlayer_HandleJump(void) {
 	struct LocalPlayer* p = &LocalPlayer_Instance;
-	if (p->Hacks.CanFly) return true;
-
-	if (!p->_warnedZoom) {
-		p->_warnedZoom = true;
-		if (hackPermMsgs) Chat_AddRaw("&cCannot zoom camera out as flying is currently disabled");
-	}
-	return false;
-}
-
-cc_bool LocalPlayer_HandlesKey(int key) {
-	struct LocalPlayer* p = &LocalPlayer_Instance;
-	struct HacksComp* hacks = &p->Hacks;
+	struct HacksComp* hacks     = &p->Hacks;
 	struct PhysicsComp* physics = &p->Physics;
 	int maxJumps;
 
-	if (key == KeyBinds[KEYBIND_RESPAWN]) {
-		return LocalPlayer_HandleRespawn();
-	} else if (key == KeyBinds[KEYBIND_SET_SPAWN]) {
-		return LocalPlayer_HandleSetSpawn();
-	} else if (key == KeyBinds[KEYBIND_FLY]) {
-		return LocalPlayer_HandleFly();
-	} else if (key == KeyBinds[KEYBIND_NOCLIP]) {
-		return LocalPlayer_HandleNoClip();
-	} else if (key == KeyBinds[KEYBIND_JUMP] && !p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
+	if (!p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
 		maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
 		maxJumps = max(maxJumps, hacks->MaxJumps - 1);
 
@@ -1104,6 +1085,17 @@ cc_bool LocalPlayer_HandlesKey(int key) {
 			physics->MultiJumps++;
 		}
 		return true;
+	}
+	return false;
+}
+
+cc_bool LocalPlayer_CheckCanZoom(void) {
+	struct LocalPlayer* p = &LocalPlayer_Instance;
+	if (p->Hacks.CanFly) return true;
+
+	if (!p->_warnedZoom) {
+		p->_warnedZoom = true;
+		if (hackPermMsgs) Chat_AddRaw("&cCannot zoom camera out as flying is currently disabled");
 	}
 	return false;
 }

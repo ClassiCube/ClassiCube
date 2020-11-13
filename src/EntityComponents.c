@@ -255,7 +255,7 @@ void HacksComp_Update(struct HacksComp* hacks) {
 
 	hacks->CanDoubleJump  = hacks->Enabled     && hacks->CanSpeed;
 	hacks->CanSeeAllNames = hacks->CanAnyHacks && hacks->IsOp;
-	Event_RaiseVoid(&UserEvents.HackPermissionsChanged);
+	Event_RaiseVoid(&UserEvents.HackPermsChanged);
 }
 
 void HacksComp_SetFlying(struct HacksComp* hacks, cc_bool flying) {
