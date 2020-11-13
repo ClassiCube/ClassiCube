@@ -119,7 +119,7 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	PackedCol normCol     = PackedCol_Make(224, 224, 224, 255);
 	PackedCol activeCol   = PackedCol_Make(255, 255, 160, 255);
 	PackedCol disabledCol = PackedCol_Make(160, 160, 160, 255);
-	PackedCol col, white  = PACKEDCOL_WHITE;
+	PackedCol col;
 
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
 	struct Texture back;	
@@ -143,11 +143,11 @@ static void ButtonWidget_Render(void* widget, double delta) {
 
 		back.Width = (w->width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-		Gfx_Draw2DTexture(&back, white);
+		Gfx_Draw2DTexture(&back, w->col);
 
 		back.X += (w->width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-		Gfx_Draw2DTexture(&back, white);
+		Gfx_Draw2DTexture(&back, w->col);
 	}
 
 	if (!w->tex.ID) return;
@@ -173,7 +173,7 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 	/* TODO: Does this 400 need to take DPI into account */
 	if (w->width >= 400) {
 		/* Button can be drawn normally */
-		Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
+		Gfx_Make2DQuad(&back, w->col, vertices);
 		*vertices += 4; /* always use up 8 vertices for body */
 	} else {
 		/* Split button down the middle */
@@ -181,11 +181,11 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 
 		back.Width = (w->width / 2);
 		back.uv.U1 = 0.0f; back.uv.U2 = BUTTON_uWIDTH * scale;
-		Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
+		Gfx_Make2DQuad(&back, w->col, vertices);
 
 		back.X += (w->width / 2);
 		back.uv.U1 = BUTTON_uWIDTH * (1.0f - scale); back.uv.U2 = BUTTON_uWIDTH;
-		Gfx_Make2DQuad(&back, PACKEDCOL_WHITE, vertices);
+		Gfx_Make2DQuad(&back, w->col, vertices);
 	}
 
 	col = w->disabled ? disabledCol : (w->active ? activeCol : normCol);
@@ -219,6 +219,7 @@ void ButtonWidget_Make(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick onClick) {
 	Widget_Reset(w);
 	w->VTABLE    = &ButtonWidget_VTABLE;
+	w->col       = PACKEDCOL_WHITE;
 	w->optName   = NULL;
 	w->minWidth  = Display_ScaleX(minWidth);
 	btnMinHeight = Display_ScaleY(40);

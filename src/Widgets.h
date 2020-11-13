@@ -31,6 +31,7 @@ typedef void (*Button_Set)(const cc_string* raw);
 struct ButtonWidget {
 	Widget_Body
 	struct Texture tex;
+	PackedCol col;
 	int minWidth;
 	const char* optName;
 	Button_Get GetValue;

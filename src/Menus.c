@@ -3605,6 +3605,16 @@ static struct Widget* touchOnscreen_widgets[1 + ONSCREEN_MAX_BTNS] = {
 };
 #define TOUCHONSCREEN_MAX_VERTICES (BUTTONWIDGET_MAX + ONSCREEN_MAX_BTNS * BUTTONWIDGET_MAX)
 
+static void TouchOnscreen_UpdateColors(void* screen) {
+	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
+	PackedCol grey = PackedCol_Make(0x7F, 0x7F, 0x7F, 0xFF);
+	int i;
+
+	for (i = 0; i < ONSCREEN_MAX_BTNS; i++) {
+		s->btns[i].col = (Gui._onscreenButtons & (1 << i)) ? PACKEDCOL_WHITE : grey;
+	}
+}
+
 static void TouchOnscreen_Any(void* s, void* w) {
 	int bit = 1 << (Screen_Index(s, w) - 1);
 	if (Gui._onscreenButtons & bit) {
@@ -3612,7 +3622,9 @@ static void TouchOnscreen_Any(void* s, void* w) {
 	} else {
 		Gui._onscreenButtons |= bit;
 	}
+
 	Options_SetInt(OPT_TOUCH_BUTTONS, Gui._onscreenButtons);
+	TouchOnscreen_UpdateColors(s);
 	TouchScreen_Refresh();
 }
 static void TouchOnscreen_More(void* s, void* w) { TouchCtrlsScreen_Show(); }
@@ -3655,6 +3667,7 @@ static void TouchOnscreenScreen_Init(void* screen) {
 	s->maxVertices = TOUCHONSCREEN_MAX_VERTICES;
 
 	Menu_InitButtons(s->btns, 200, touchOnscreen_btns, ONSCREEN_MAX_BTNS);
+	TouchOnscreen_UpdateColors(screen);
 	Menu_InitBack(&s->back, TouchOnscreen_More);
 }
 
