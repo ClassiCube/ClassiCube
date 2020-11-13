@@ -1893,40 +1893,60 @@ void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
 *--------------------------------------------------------TouchScreen------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_TOUCH
-#define TOUCH_MAX_BTNS 3
-struct TouchBindDesc {
+#define TOUCH_MAX_BTNS (ONSCREEN_MAX_BTNS + 3)
+struct TouchButtonDesc {
 	const char* text;
 	cc_uint8 bind, width;
 	cc_int16 x, y;
 	Widget_LeftClick OnClick;
+	cc_bool* enabled;
 };
 
 static struct TouchScreen {
 	Screen_Body
-	const struct TouchBindDesc* descs;
-	int numDescs;
+	const struct TouchButtonDesc* descs;
+	int numOnscreen, numBtns;
 	struct FontDesc font;
 	struct ThumbstickWidget thumbstick;
-	struct ButtonWidget btns[TOUCH_MAX_BTNS];
+	const struct TouchButtonDesc* onscreenDescs[ONSCREEN_MAX_BTNS];
+	struct ButtonWidget onscreen[ONSCREEN_MAX_BTNS];
+	struct ButtonWidget btns[3];
 } TouchScreen;
 
 static struct Widget* touch_widgets[1 + TOUCH_MAX_BTNS] = {
+	NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,
 	NULL,NULL,NULL, (struct Widget*)&TouchScreen.thumbstick
 };
 #define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
 
+static void TouchScreen_OnscreenClick(void* screen, void* widget) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	int i = Screen_Index(screen, widget);
+	Input_SetPressed(KeyBinds[s->onscreenDescs[i]->bind], true);
+}
+
 static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreScreen_Show(); }
 static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	int i = Screen_Index(screen, widget);
+	int i = Screen_Index(screen, widget) - ONSCREEN_MAX_BTNS;
 	Input_SetPressed(KeyBinds[s->descs[i].bind], true);
 }
 
-static const struct TouchBindDesc normDescs[2] = {
+static const struct TouchButtonDesc onscreenDescs[8] = {
+	{ "Chat",      KEYBIND_CHAT,        0,0,0, TouchScreen_OnscreenClick },
+	{ "List",      KEYBIND_PLAYER_LIST, 0,0,0, TouchScreen_OnscreenClick },
+	{ "Respawn",   KEYBIND_RESPAWN,     0,0,0, TouchScreen_OnscreenClick },
+	{ "Set spawn", KEYBIND_SET_SPAWN,   0,0,0, TouchScreen_OnscreenClick },
+	{ "Fly",       KEYBIND_FLY,         0,0,0, TouchScreen_OnscreenClick },
+	{ "Noclip",    KEYBIND_NOCLIP,      0,0,0, TouchScreen_OnscreenClick },
+	{ "Speed",     KEYBIND_SPEED,       0,0,0, TouchScreen_OnscreenClick },
+	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0,0, TouchScreen_OnscreenClick }
+};
+static const struct TouchButtonDesc normDescs[2] = {
 	{ "More", KEYBIND_COUNT,    100,  50,  90, TouchScreen_MoreClick },
 	{ "Jump", KEYBIND_JUMP,     100,  50,  10, TouchScreen_BindClick }
 };
-static const struct TouchBindDesc hackDescs[3] = {
+static const struct TouchButtonDesc hackDescs[3] = {
 	{ "More", KEYBIND_COUNT,    100,  50, 130, TouchScreen_MoreClick },
 	{ "Up",   KEYBIND_FLY_UP,   100,  50,  50, TouchScreen_BindClick },
 	{ "Down", KEYBIND_FLY_DOWN, 100,  50,  10, TouchScreen_BindClick }
@@ -1934,23 +1954,35 @@ static const struct TouchBindDesc hackDescs[3] = {
 
 static void TouchScreen_InitButtons(struct TouchScreen* s) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	const struct TouchBindDesc* desc;
-	int i;
+	const struct TouchButtonDesc* desc;
+	int i, j;
+	for (; i < TOUCH_MAX_BTNS; i++) s->widgets[i] = NULL;
 
-	if (hacks->Flying || hacks->Noclip) {
-		s->descs    = hackDescs;
-		s->numDescs = Array_Elems(hackDescs);
-	} else {
-		s->descs    = normDescs;
-		s->numDescs = Array_Elems(normDescs);
+	for (i = 0, j = 0; i < ONSCREEN_MAX_BTNS; i++) {
+		if (!(Gui._onscreenButtons & (1 << i))) continue;
+		desc = &onscreenDescs[i];
+
+		ButtonWidget_Init(&s->onscreen[j], 100, desc->OnClick);
+		if (desc->enabled) s->onscreen[j].disabled = !(*desc->enabled);
+		s->onscreenDescs[j] = desc;
+		s->widgets[j]       = (struct Widget*)&s->onscreen[j];
+		j++;
 	}
 
-	for (i = 0; i < s->numDescs; i++) {
-		s->widgets[i] = (struct Widget*)&s->btns[i];
+	s->numOnscreen = j;
+	if (hacks->Flying || hacks->Noclip) {
+		s->descs   = hackDescs;
+		s->numBtns = Array_Elems(hackDescs);
+	} else {
+		s->descs   = normDescs;
+		s->numBtns = Array_Elems(normDescs);
+	}
+
+	for (i = 0; i < s->numBtns; i++) {
+		s->widgets[i + ONSCREEN_MAX_BTNS] = (struct Widget*)&s->btns[i];
 		desc = &s->descs[i];
 		ButtonWidget_Init(&s->btns[i], desc->width, desc->OnClick);
 	}
-	for (; i < TOUCH_MAX_BTNS; i++) s->widgets[i] = NULL;
 }
 
 static void TouchScreen_HacksChanged(void* screen) {
@@ -1970,12 +2002,16 @@ static void TouchScreen_ContextLost(void* screen) {
 
 static void TouchScreen_ContextRecreated(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
-	const struct TouchBindDesc* desc;
+	const struct TouchButtonDesc* desc;
 	int i;
 	Screen_CreateVb(screen);
 	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_BOLD);
 
-	for (i = 0; i < s->numDescs; i++) {
+	for (i = 0; i < s->numOnscreen; i++) {
+		desc = s->onscreenDescs[i];
+		ButtonWidget_SetConst(&s->onscreen[i], desc->text, &s->font);
+	}
+	for (i = 0; i < s->numBtns; i++) {
 		desc = &s->descs[i];
 		ButtonWidget_SetConst(&s->btns[i], desc->text, &s->font);
 	}
@@ -2006,7 +2042,7 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	//Chat_Add1("POINTER UP: %i", &id);
 	s->thumbstick.active &= ~id;
 
-	for (i = 0; i < s->numDescs; i++) {
+	for (i = 0; i < s->numBtns; i++) {
 		if (!(s->btns[i].active & id)) continue;
 
 		if (s->descs[i].bind < KEYBIND_COUNT) {
@@ -2018,11 +2054,36 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	return false;
 }
 
+static void TouchScreen_Layout(void* screen) {
+	struct TouchScreen* s = (struct TouchScreen*)screen;
+	const struct TouchButtonDesc* desc;
+	int i, height;
+
+	for (i = 0; i < s->numOnscreen; i++) {
+		Widget_SetLocation(&s->onscreen[i], ANCHOR_MAX, ANCHOR_MIN, 10, 10 + i * 40);
+	}
+
+	/* Need to align these relative to the hotbar */
+	HUDScreen_Layout(Gui_HUD);
+	height = Gui_HUD->hotbar.height;
+
+	for (i = 0; i < s->numBtns; i++) {
+		desc = &s->descs[i];
+		Widget_SetLocation(&s->btns[i], ANCHOR_MAX, ANCHOR_MAX, desc->x, desc->y);
+		s->btns[i].yOffset += height;
+		Widget_Layout(&s->btns[i]);
+	}
+
+	Widget_SetLocation(&s->thumbstick, ANCHOR_MIN, ANCHOR_MAX, 30, 5);
+	s->thumbstick.yOffset += height;
+	Widget_Layout(&s->thumbstick);
+}
+
+struct LocalPlayerInput touchInput;
 static void TouchScreen_GetMovement(float* xMoving, float* zMoving) {
 	ThumbstickWidget_GetMovement(&TouchScreen.thumbstick, xMoving, zMoving);
 }
 
-struct LocalPlayerInput touchInput;
 static void TouchScreen_Init(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 
@@ -2035,27 +2096,6 @@ static void TouchScreen_Init(void* screen) {
 	ThumbstickWidget_Init(&s->thumbstick);
 	touchInput.GetMovement = TouchScreen_GetMovement;
 	LocalPlayer_Instance.input.next = &touchInput;
-}
-
-static void TouchScreen_Layout(void* screen) {
-	struct TouchScreen* s = (struct TouchScreen*)screen;
-	const struct TouchBindDesc* desc;
-	int i, height;
-
-	/* Need to align these relative to the hotbar */
-	HUDScreen_Layout(Gui_HUD);
-	height = Gui_HUD->hotbar.height;
-
-	for (i = 0; i < s->numDescs; i++) {
-		desc = &s->descs[i];
-		Widget_SetLocation(&s->btns[i], ANCHOR_MAX, ANCHOR_MAX, desc->x, desc->y);
-		s->btns[i].yOffset += height;
-		Widget_Layout(&s->btns[i]);
-	}
-
-	Widget_SetLocation(&s->thumbstick, ANCHOR_MIN, ANCHOR_MAX, 30, 5);
-	s->thumbstick.yOffset += height;
-	Widget_Layout(&s->thumbstick);
 }
 
 static void TouchScreen_Free(void* s) {
