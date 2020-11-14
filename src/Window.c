@@ -969,6 +969,12 @@ void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 #include <X11/XKBlib.h>
 #include <X11/extensions/XInput2.h>
 
+#ifdef X_HAVE_UTF8_STRING
+#define CC_BUILD_XIM
+/* XIM support based off details described in */
+/* https://tedyin.com/posts/a-brief-intro-to-linux-input-method-framework/ */
+#endif
+
 #define _NET_WM_STATE_REMOVE 0
 #define _NET_WM_STATE_ADD    1
 #define _NET_WM_STATE_TOGGLE 2
@@ -977,6 +983,10 @@ static Display* win_display;
 static int win_screen;
 static Window win_rootWin, win_handle;
 static XVisualInfo win_visual;
+#ifdef CC_BUILD_XIM
+static XIM win_xim;
+static XIC win_xic;
+#endif
  
 static Atom wm_destroy, net_wm_state, net_wm_ping;
 static Atom net_wm_state_minimized;
@@ -1188,6 +1198,12 @@ void Window_Create(int width, int height) {
 		CWColormap | CWEventMask | CWBackPixel | CWBorderPixel, &attributes);
 	if (!win_handle) Logger_Abort("XCreateWindow failed");
 
+#ifdef CC_BUILD_XIM
+	win_xim = XOpenIM(win_display, NULL, NULL, NULL);
+	win_xic = XCreateIC(win_xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+						XNClientWindow, win_handle, NULL);
+#endif
+
 	/* Set hints to try to force WM to create window at requested x,y */
 	/* Without this, some WMs will instead place the window whereever */
 	hints.base_width  = width;
@@ -1376,6 +1392,7 @@ void Window_ProcessEvents(void) {
 	XEvent e;
 	while (WindowInfo.Exists) {
 		if (!XCheckIfEvent(win_display, &e, FilterEvent, (XPointer)win_handle)) break;
+		if (XFilterEvent(&e, None) == True) continue;
 
 		switch (e.type) {
 		case GenericEvent:
@@ -1404,15 +1421,28 @@ void Window_ProcessEvents(void) {
 		case KeyPress:
 		{
 			Window_ToggleKey(&e.xkey, true);
-			char data[16];
-			int status = XLookupString(&e.xkey, data, Array_Elems(data), NULL, NULL);
+			char data[64], c;
+			int i, status;
+#ifdef CC_BUILD_XIM
+			cc_codepoint cp;
+			char* chars = data;
 
-			/* TODO: Does this work for every non-english layout? works for latin keys (e.g. finnish) */
-			char raw; int i;
-			for (i = 0; i < status; i++) {
-				if (!Convert_TryCodepointToCP437((cc_uint8)data[i], &raw)) continue;
-				Event_RaiseInt(&InputEvents.Press, raw);
+			status = Xutf8LookupString(win_xic, &e.xkey, data, Array_Elems(data), NULL, NULL);
+			for (; status > 0; status -= i) {
+				i = Convert_Utf8ToCodepoint(&cp, chars, status);
+				if (!i) break;
+
+				if (Convert_TryCodepointToCP437(cp, &c)) Event_RaiseInt(&InputEvents.Press, c);
+				chars += i;
 			}
+#else
+			/* This only really works for latin keys (e.g. so some finnish keys still work) */
+			status = XLookupString(&e.xkey, data, Array_Elems(data), NULL, NULL);
+			for (i = 0; i < status; i++) {
+				if (!Convert_TryCodepointToCP437((cc_uint8)data[i], &c)) continue;
+				Event_RaiseInt(&InputEvents.Press, c);
+			}
+#endif
 		} break;
 
 		case KeyRelease:
