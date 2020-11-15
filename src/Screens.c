@@ -1649,7 +1649,7 @@ static const struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_Init,   Screen_NullUpdate, LoadingScreen_Free, 
 	LoadingScreen_Render, LoadingScreen_BuildMesh,
 	Screen_TInput,        Screen_TInput,     Screen_TKeyPress,   Screen_TText,
-	Screen_TPointer,      Screen_TPointer,   Screen_TPointer,    Screen_TMouseScroll,
+	Screen_TPointer,      Screen_FPointer,   Screen_TPointer,    Screen_TMouseScroll,
 	LoadingScreen_Layout, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void LoadingScreen_Show(const cc_string* title, const cc_string* message) {
@@ -1724,7 +1724,7 @@ static const struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	GeneratingScreen_Init,   GeneratingScreen_Update, GeneratingScreen_Free,
 	GeneratingScreen_Render, LoadingScreen_BuildMesh,
 	Screen_TInput,           Screen_TInput,     Screen_TKeyPress,   Screen_TText,
-	Screen_TPointer,         Screen_TPointer,   Screen_FPointer,    Screen_TMouseScroll,
+	Screen_TPointer,         Screen_FPointer,   Screen_FPointer,    Screen_TMouseScroll,
 	LoadingScreen_Layout, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void GeneratingScreen_Show(void) {
@@ -1868,7 +1868,7 @@ static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,   DisconnectScreen_Update, DisconnectScreen_Free,
 	DisconnectScreen_Render, Screen_BuildMesh,
 	Screen_InputDown,        Screen_TInput,           Screen_TKeyPress, Screen_TText,
-	Menu_PointerDown,        Screen_TPointer,         Menu_PointerMove, Screen_TMouseScroll,
+	Menu_PointerDown,        Screen_FPointer,         Menu_PointerMove, Screen_TMouseScroll,
 	DisconnectScreen_Layout, DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
