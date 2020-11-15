@@ -63,7 +63,8 @@ static struct HUDScreen {
 	struct TextAtlas posAtlas;
 	double accumulator;
 	int frames, fps;
-	cc_bool speed, halfSpeed, canSpeed, hacksChanged;
+	cc_bool hacksChanged;
+	float lastSpeed;
 	int lastFov;
 	struct HotbarWidget hotbar;
 } HUDScreen_Instance;
@@ -121,30 +122,37 @@ static void HUDScreen_DrawPosition(struct HUDScreen* s) {
 	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
 }
 
+static float HUDScreen_CalcHacksSpeed(void) {
+	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	float speed = 0;
+	if (!hacks->CanSpeed) return 0;
+
+	if (hacks->HalfSpeeding) speed += hacks->SpeedMultiplier / 2;
+	if (hacks->Speeding)     speed += hacks->SpeedMultiplier;
+	return speed;
+}
+
 static cc_bool HUDScreen_HasHacksChanged(struct HUDScreen* s) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	return hacks->Speeding != s->speed   || hacks->HalfSpeeding != s->halfSpeed
-			|| Game_Fov    != s->lastFov || hacks->CanSpeed != s->canSpeed || s->hacksChanged;
+	float speed = HUDScreen_CalcHacksSpeed();
+	return speed != s->lastSpeed || Game_Fov != s->lastFov || s->hacksChanged;
 }
 
 static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
 	cc_string status; char statusBuffer[STRING_SIZE * 2];
-	struct HacksComp* hacks;
-	cc_bool speeding;
+	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	float speed = HUDScreen_CalcHacksSpeed();
 
-	hacks = &LocalPlayer_Instance.Hacks;
-	s->speed   = hacks->Speeding; s->halfSpeed = hacks->HalfSpeeding;
-	s->lastFov = Game_Fov;         s->canSpeed = hacks->CanSpeed;
+	s->lastSpeed = speed; s->lastFov = Game_Fov;
 	s->hacksChanged = false;
 
 	String_InitArray(status, statusBuffer);
 	if (Game_Fov != Game_DefaultFov) {
 		String_Format1(&status, "Zoom fov %i  ", &Game_Fov);
 	}
-	speeding = (hacks->Speeding || hacks->HalfSpeeding) && hacks->CanSpeed;
 
 	if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
-	if (speeding)      String_AppendConst(&status, "Speed ON   ");
+	if (speed)         String_Format1(&status, "Speed %f1x   ", &speed);
 	if (hacks->Noclip) String_AppendConst(&status, "Noclip ON   ");
 
 	TextWidget_Set(&s->line2, &status, &s->font);
@@ -1947,8 +1955,8 @@ static const struct TouchButtonDesc onscreenDescs[8] = {
 	{ "Set spawn", 0,0,0,0, TouchScreen_SetSpawnClick, &LocalPlayer_Instance.Hacks.CanRespawn },
 	{ "Fly",       0,0,0,0, TouchScreen_FlyClick,      &LocalPlayer_Instance.Hacks.CanFly     },
 	{ "Noclip",    0,0,0,0, TouchScreen_NoclipClick,   &LocalPlayer_Instance.Hacks.CanNoclip  },
-	{ "Speed",     KEYBIND_SPEED,       0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed   },
-	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed   }
+	{ "Speed",     KEYBIND_SPEED,       0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed },
+	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed }
 };
 static const struct TouchButtonDesc normDescs[2] = {
 	{ "More", KEYBIND_COUNT,    100,  50,  90, TouchScreen_MoreClick },
