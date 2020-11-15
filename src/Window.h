@@ -33,7 +33,7 @@
 struct Bitmap;
 struct DynamicLibSym;
 /* The states the window can be in. */
-enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_MINIMISED, WINDOW_STATE_FULLSCREEN };
+enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_FULLSCREEN, WINDOW_STATE_MINIMISED };
 enum KeyboardType { KEYBOARD_TYPE_TEXT, KEYBOARD_TYPE_NUMBER, KEYBOARD_TYPE_PASSWORD };
 /* Can't name these structs Window/Display, because it conflicts with X11's Window/Display typedef */
 

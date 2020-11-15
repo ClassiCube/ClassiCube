@@ -3959,18 +3959,17 @@ void Clipboard_SetText(const cc_string* value) {
 	JavaCall_String_Void("setClipboardText", value);
 }
 
-
-/* Always a fullscreen window */
-void Window_Show(void) { }
-cc_bool fullscreen; /* TODO: NOT TRACK IN OWN CODE */
-int Window_GetWindowState(void) { return fullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL; }
+void Window_Show(void) { } /* Window already visible */
+int Window_GetWindowState(void) { 
+	JNIEnv* env;
+	JavaGetCurrentEnv(env);
+	return JavaCallInt(env, "getWindowState", "()I", NULL);
+}
 
 cc_result Window_EnterFullscreen(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	JavaCallVoid(env, "enterFullscreen", "()V", NULL);
-
-	fullscreen = true;
 	return 0; 
 }
 
@@ -3978,8 +3977,6 @@ cc_result Window_ExitFullscreen(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	JavaCallVoid(env, "exitFullscreen", "()V", NULL);
-
-	fullscreen = false;
 	return 0; 
 }
 

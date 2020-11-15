@@ -343,7 +343,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	
 	// ======================================
 	// --------------- VIEWS ----------------
-	// ======================================		
+	// ======================================
+	volatile boolean fullscreen;
+
 	public void surfaceCreated(SurfaceHolder holder) {
 		Log.i("CC_WIN", "win created " + holder.getSurface());
 		pushCmd(CMD_WIN_CREATED, holder.getSurface());
@@ -620,7 +622,12 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		// TODO: this fails because multiple dialog boxes show
 	}
 
+	public int getWindowState() {
+		return fullscreen ? 1 : 0;
+	}
+
 	public void enterFullscreen() {
+		fullscreen = true;
 		runOnUiThread(new Runnable() {
 			public void run() {
 				if (curView != null) curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
@@ -629,6 +636,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
     }
 
     public void exitFullscreen() {
+		fullscreen = false;
 		runOnUiThread(new Runnable() {
 			public void run() {
 				if (curView != null) curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
