@@ -392,6 +392,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		
 		setContentView(curView);
 		curView.requestFocus();
+		if (fullscreen) goFullscreen();
 	}
 
 	class LauncherView extends SurfaceView {
@@ -626,11 +627,15 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		return fullscreen ? 1 : 0;
 	}
 
+	void goFullscreen() {
+		curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+	}
+
 	public void enterFullscreen() {
 		fullscreen = true;
 		runOnUiThread(new Runnable() {
 			public void run() {
-				if (curView != null) curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+				if (curView != null) goFullscreen();
 			}
 		});
     }
