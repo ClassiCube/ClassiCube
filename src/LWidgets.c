@@ -471,6 +471,7 @@ static void LInput_KeyChar(void* widget, char c) {
 static void LInput_TextChanged(void* widget, const cc_string* str) {
 	struct LInput* w = (struct LInput*)widget;
 	LInput_SetText(w, str);
+	if (w->TextChanged) w->TextChanged(w);
 }
 
 static cc_bool LInput_DefaultInputFilter(char c) {

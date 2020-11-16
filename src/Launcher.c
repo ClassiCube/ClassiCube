@@ -37,9 +37,13 @@ static cc_bool useBitmappedFont, hasBitmappedFont;
 static struct Bitmap dirtBmp, stoneBmp;
 #define TILESIZE 48
 
-void Launcher_SetScreen(struct LScreen* screen) {
+static void CloseActiveScreen(void) {
 	Window_CloseKeyboard();
 	if (activeScreen) activeScreen->Free(activeScreen);
+}
+
+void Launcher_SetScreen(struct LScreen* screen) {
+	CloseActiveScreen();
 	activeScreen = screen;
 	if (!screen->numWidgets) screen->Init(screen);
 
@@ -265,7 +269,7 @@ static void Launcher_Free(void) {
 	Font_Free(&Launcher_HintFont);
 	hasBitmappedFont = false;
 
-	activeScreen->Free(activeScreen);
+	CloseActiveScreen();
 	activeScreen = NULL;
 	Window_FreeFramebuffer(&Launcher_Framebuffer);
 }
