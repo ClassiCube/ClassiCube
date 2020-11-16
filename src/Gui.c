@@ -111,6 +111,7 @@ static void OnContextRecreated(void* obj) {
 	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->VTABLE->ContextRecreated(s);
+		s->dirty = true;
 	}
 }
 
