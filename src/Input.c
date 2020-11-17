@@ -65,7 +65,11 @@ static void MouseStateRelease(int button);
 static cc_bool AnyBlockTouches(void) {
 	int i;
 	for (i = 0; i < Pointers_Count; i++) {
-		if (touches[i].type & TOUCH_TYPE_BLOCKS) return true;
+		if (!(touches[i].type & TOUCH_TYPE_BLOCKS)) continue;
+
+		/* Touch might be an 'all' type - limit it to only 'block' type */
+		touches[i].type = TOUCH_TYPE_BLOCKS;
+		return true;
 	}
 	return false;
 }
