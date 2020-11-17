@@ -1073,7 +1073,7 @@ static void ChatScreen_Layout(void* screen) {
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
-	if (WindowInfo._preferBottom) {
+	if (WindowInfo.SoftKeyboard == SOFT_KEYBOARD_SHIFT) {
 		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MAX, 10, 60);
 		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MAX, 10, 10);
 	} else {

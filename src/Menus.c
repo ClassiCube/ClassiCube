@@ -2043,8 +2043,12 @@ static void MenuInputOverlay_Init(void* screen) {
 	s->maxVertices = MENUINPUT_MAX_VERTICES;
 
 	TextInputWidget_Create(&s->input, 400, &s->value, s->desc);
-	ButtonWidget_Init(&s->ok,          40, MenuInputOverlay_OK);
 	ButtonWidget_Init(&s->Default,    200, MenuInputOverlay_Default);
+#ifdef CC_BUILD_TOUCH
+	ButtonWidget_Init(&s->ok, Input_TouchMode ? 200 : 40, MenuInputOverlay_OK);
+#else
+	ButtonWidget_Init(&s->ok,          40, MenuInputOverlay_OK);
+#endif
 
 	Window_OpenKeyboard(&s->value,
 		(s->desc->VTABLE == &IntInput_VTABLE || s->desc->VTABLE == &FloatInput_VTABLE)
@@ -2078,6 +2082,19 @@ static void MenuInputOverlay_Layout(void* screen) {
 	Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 110);
 	Widget_SetLocation(&s->ok,      ANCHOR_CENTRE, ANCHOR_CENTRE, 240, 110);
 	Widget_SetLocation(&s->Default, ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 150);
+
+#ifdef CC_BUILD_TOUCH
+	if (!Input_TouchMode) return;
+	if (WindowInfo.SoftKeyboard == SOFT_KEYBOARD_SHIFT) {
+		Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_MAX,    0, 65);
+		Widget_SetLocation(&s->ok,      ANCHOR_CENTRE, ANCHOR_MAX,  120, 25);
+		Widget_SetLocation(&s->Default, ANCHOR_CENTRE, ANCHOR_MAX, -120, 25);
+	} else {
+		Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 110);
+		Widget_SetLocation(&s->ok,      ANCHOR_CENTRE, ANCHOR_CENTRE,  120, 150);
+		Widget_SetLocation(&s->Default, ANCHOR_CENTRE, ANCHOR_CENTRE, -120, 150);
+	}
+#endif
 }
 
 static void MenuInputOverlay_ContextLost(void* screen) {
@@ -2306,7 +2323,7 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 	String_InitArray(value, valueBuffer);
 	btn->GetValue(&value);
 	desc = &s->descs[s->activeI];
-	MenuInputOverlay_Show(desc, &value, MenuOptionsScreen_OnDone, false);
+	MenuInputOverlay_Show(desc, &value, MenuOptionsScreen_OnDone, Input_TouchMode);
 }
 
 static void MenuOptionsScreen_OnHacksChanged(void* screen) {

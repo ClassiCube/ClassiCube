@@ -35,6 +35,7 @@ struct DynamicLibSym;
 /* The states the window can be in. */
 enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_FULLSCREEN, WINDOW_STATE_MINIMISED };
 enum KeyboardType { KEYBOARD_TYPE_TEXT, KEYBOARD_TYPE_NUMBER, KEYBOARD_TYPE_PASSWORD };
+enum SoftKeyboard { SOFT_KEYBOARD_NONE, SOFT_KEYBOARD_RESIZE, SOFT_KEYBOARD_SHIFT };
 /* Can't name these structs Window/Display, because it conflicts with X11's Window/Display typedef */
 
 /* Data for the display monitor. */
@@ -70,9 +71,8 @@ CC_VAR extern struct _WinData {
 	cc_bool Exists;
 	/* Whether the user is interacting with the window. */
 	cc_bool Focused;
-	/* Whether the platform only supports on-screen keyboard. */
-	cc_bool SoftKeyboard;
-	cc_bool _preferBottom;
+	/* The type of on-screen keyboard this platform supports. (usually SOFT_KEYBOARD_NONE) */
+	cc_uint8 SoftKeyboard;
 } WindowInfo;
 
 /* Initialises state for window. Also sets Display_ members. */

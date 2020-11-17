@@ -3424,7 +3424,8 @@ void Window_Init(void) {
 	/*  as the chat/send butons are positioned at the top of the canvas - they */
 	/*  get pushed offscreen and can't be used at all anymore. So handle this */
 	/*  case specially by positioning them at the bottom instead for iOS. */
-	WindowInfo._preferBottom = EM_ASM_INT_V({ return /iPhone|iPad|iPod/i.test(navigator.userAgent); });
+	WindowInfo.SoftKeyboard = EM_ASM_INT_V({ return /iPhone|iPad|iPod/i.test(navigator.userAgent); }) 
+								? SOFT_KEYBOARD_SHIFT : SOFT_KEYBOARD_RESIZE;
 }
 
 void Window_Create(int width, int height) {
@@ -3911,7 +3912,7 @@ void Window_Init(void) {
 	JavaGetCurrentEnv(env);
 	JavaRegisterNatives(env, methods);
 
-	WindowInfo.SoftKeyboard = true;
+	WindowInfo.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
 	Input_TouchMode         = true;
 	DisplayInfo.Depth  = 32;
 	DisplayInfo.ScaleX = JavaCallFloat(env, "getDpiX", "()F", NULL);
