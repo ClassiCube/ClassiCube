@@ -67,8 +67,8 @@ static cc_bool AnyBlockTouches(void) {
 	for (i = 0; i < Pointers_Count; i++) {
 		if (!(touches[i].type & TOUCH_TYPE_BLOCKS)) continue;
 
-		/* Touch might be an 'all' type - limit it to only 'block' type */
-		touches[i].type = TOUCH_TYPE_BLOCKS;
+		/* Touch might be an 'all' type - remove 'gui' type */
+		touches[i].type &= TOUCH_TYPE_BLOCKS | TOUCH_TYPE_CAMERA;
 		return true;
 	}
 	return false;
@@ -114,7 +114,7 @@ void Input_UpdateTouch(long id, int x, int y) {
 				/* Allow a little bit of leeway because though, because devices */
 				/* might still report a few pixels of movement depending on how */
 				/* user is holding the finger down on the touch surface */
-				touches[i].type = TOUCH_TYPE_CAMERA;
+				if (touches[i].type == TOUCH_TYPE_ALL) touches[i].type = TOUCH_TYPE_CAMERA;
 			}
 			Event_RaiseRawMove(&PointerEvents.RawMoved, x - Pointers[i].x, y - Pointers[i].y);
 		}
