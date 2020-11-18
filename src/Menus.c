@@ -2042,13 +2042,9 @@ static void MenuInputOverlay_Init(void* screen) {
 	s->numWidgets  = Array_Elems(menuInput_widgets);
 	s->maxVertices = MENUINPUT_MAX_VERTICES;
 
-	TextInputWidget_Create(&s->input, 400, &s->value, s->desc);
-	ButtonWidget_Init(&s->Default,    200, MenuInputOverlay_Default);
-#ifdef CC_BUILD_TOUCH
+	TextInputWidget_Create(&s->input,           400, &s->value, s->desc);
+	ButtonWidget_Init(&s->Default,              200, MenuInputOverlay_Default);
 	ButtonWidget_Init(&s->ok, Input_TouchMode ? 200 : 40, MenuInputOverlay_OK);
-#else
-	ButtonWidget_Init(&s->ok,          40, MenuInputOverlay_OK);
-#endif
 
 	Window_OpenKeyboard(&s->value,
 		(s->desc->VTABLE == &IntInput_VTABLE || s->desc->VTABLE == &FloatInput_VTABLE)
@@ -2079,22 +2075,19 @@ static void MenuInputOverlay_Free(void* screen) {
 
 static void MenuInputOverlay_Layout(void* screen) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
-	Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 110);
-	Widget_SetLocation(&s->ok,      ANCHOR_CENTRE, ANCHOR_CENTRE, 240, 110);
-	Widget_SetLocation(&s->Default, ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 150);
-
-#ifdef CC_BUILD_TOUCH
-	if (!Input_TouchMode) return;
-	if (WindowInfo.SoftKeyboard == SOFT_KEYBOARD_SHIFT) {
-		Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_MAX,    0, 65);
-		Widget_SetLocation(&s->ok,      ANCHOR_CENTRE, ANCHOR_MAX,  120, 25);
-		Widget_SetLocation(&s->Default, ANCHOR_CENTRE, ANCHOR_MAX, -120, 25);
+	if (!Input_TouchMode) {
+		Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 110);
+		Widget_SetLocation(&s->ok,      ANCHOR_CENTRE, ANCHOR_CENTRE,  240, 110);
+		Widget_SetLocation(&s->Default, ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 150);
+	} else if (WindowInfo.SoftKeyboard == SOFT_KEYBOARD_SHIFT) {
+		Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_MAX,       0,  65);
+		Widget_SetLocation(&s->ok,      ANCHOR_CENTRE, ANCHOR_MAX,     120,  25);
+		Widget_SetLocation(&s->Default, ANCHOR_CENTRE, ANCHOR_MAX,    -120,  25);
 	} else {
 		Widget_SetLocation(&s->input,   ANCHOR_CENTRE, ANCHOR_CENTRE,    0, 110);
 		Widget_SetLocation(&s->ok,      ANCHOR_CENTRE, ANCHOR_CENTRE,  120, 150);
 		Widget_SetLocation(&s->Default, ANCHOR_CENTRE, ANCHOR_CENTRE, -120, 150);
 	}
-#endif
 }
 
 static void MenuInputOverlay_ContextLost(void* screen) {

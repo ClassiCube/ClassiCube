@@ -380,12 +380,10 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 	w->draggingId   = 0;
 	w->dragOffset   = 0;
 
-#ifdef CC_BUILD_TOUCH
 	/* It's easy to accidentally touch a bit to the right of the */
 	/* scrollbar with your finger, so just add some padding */
 	if (!Input_TouchMode) return;
 	w->padding = Display_ScaleX(15);
-#endif
 }
 
 

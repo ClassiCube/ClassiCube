@@ -47,6 +47,7 @@ static struct TouchPointer {
 } touches[INPUT_MAX_POINTERS];
 int Pointers_Count;
 cc_bool Input_TapPlace = true, Input_HoldPlace = false;
+cc_bool Input_TouchMode;
 
 /* Touch fingers are initially are all type, meaning they could */
 /* trigger menu clicks, camera movement, or place/delete blocks */
@@ -244,7 +245,7 @@ void Input_Clear(void) {
 *#########################################################################################################################*/
 int Mouse_X, Mouse_Y;
 struct Pointer Pointers[INPUT_MAX_POINTERS];
-cc_bool Input_RawMode, Input_TouchMode;
+cc_bool Input_RawMode;
 
 void Pointer_SetPressed(int idx, cc_bool pressed) {
 	if (pressed) {

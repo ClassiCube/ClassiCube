@@ -74,13 +74,13 @@ void Input_Clear(void);
 
 /* Whether raw mouse/touch input is currently being listened for. */
 extern cc_bool Input_RawMode;
-/* Whether touch input is being used. */
-extern cc_bool Input_TouchMode;
 
 #ifdef CC_BUILD_TOUCH
 #define INPUT_MAX_POINTERS 32
 extern int Pointers_Count;
 extern cc_bool Input_TapPlace, Input_HoldPlace;
+/* Whether touch input is being used. */
+extern cc_bool Input_TouchMode;
 
 void Input_AddTouch(long id,    int x, int y);
 void Input_UpdateTouch(long id, int x, int y);
@@ -88,6 +88,7 @@ void Input_RemoveTouch(long id, int x, int y);
 #else
 #define INPUT_MAX_POINTERS 1
 #define Pointers_Count 1
+#define Input_TouchMode false
 #endif
 
 /* Data for mouse and touch */
