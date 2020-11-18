@@ -235,9 +235,12 @@ static void MakeNameTexture(struct Entity* e) {
 	int width, height;
 	cc_string name;
 
-	/* Names are always drawn not using the system font */
-	name = String_FromRawArray(e->NameRaw);
+	/* Names are always drawn using default.png font */
 	Drawer2D_MakeBitmappedFont(&font, 24, FONT_FLAGS_NONE);
+	/* Don't want DPI scaling or padding */
+	font.size = 24; font.height = 24;
+
+	name = String_FromRawArray(e->NameRaw);
 	DrawTextArgs_Make(&args, &name, &font, false);
 	width = Drawer2D_TextWidth(&args);
 
