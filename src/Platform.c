@@ -1614,14 +1614,21 @@ cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_s
 	return 0;
 }
 
-cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
+cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib) {
 	TCHAR chars[NATIVE_STR_LEN];
-	res = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-					NULL, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, NATIVE_STR_LEN, NULL);
+	DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+	if (lib) flags |= FORMAT_MESSAGE_FROM_HMODULE;
+
+	res = FormatMessage(flags, lib, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
+						chars, NATIVE_STR_LEN, NULL);
 	if (!res) return false;
 
 	Platform_DecodeString(dst, chars, res);
 	return true;
+}
+
+cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
+	return Platform_DescribeErrorExt(res, dst, NULL);
 }
 #elif defined CC_BUILD_POSIX
 int Platform_ConvertString(void* data, const cc_string* src) {

@@ -54,6 +54,7 @@ cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_s
 /* NOTE: This is for general functions like file I/O. If a more specific 
 describe exists (e.g. Http_DescribeError), that should be preferred. */
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst);
+cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib);
 
 /* Starts the game with the given arguments. */
 CC_API cc_result Process_StartGame(const cc_string* args);

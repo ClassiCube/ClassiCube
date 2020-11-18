@@ -640,13 +640,6 @@ static void Http_BackendFree(void) {
 #define UNICODE
 #define _UNICODE
 #endif
-
-#ifdef UNICODE
-#define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, (cc_unichar*)(src), (len) * 2)
-#else
-#define Platform_DecodeString(dst, src, len) String_DecodeCP1252(dst, (cc_uint8*)(src), len)
-#endif
-
 #include <windows.h>
 #include <wininet.h>
 static HINTERNET hInternet;
@@ -745,13 +738,7 @@ static cc_result HttpCache_Lookup(struct HttpCacheEntry* e) {
 }
 
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
-	TCHAR chars[600];
-	res = FormatMessage(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-					 GetModuleHandle(TEXT("wininet.dll")), res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), chars, 600, NULL);
-	if (!res) return false;
-
-	Platform_DecodeString(dst, chars, res);
-	return true;
+	return Platform_DescribeErrorExt(res, dst, GetModuleHandle(TEXT("wininet.dll")));
 }
 
 static void Http_BackendInit(void) {
