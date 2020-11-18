@@ -232,16 +232,12 @@ static void MakeNameTexture(struct Entity* e) {
 	struct DrawTextArgs args;
 	struct FontDesc font;
 	struct Bitmap bmp;
-	cc_bool bitmapped;
 	int width, height;
 	cc_string name;
 
 	/* Names are always drawn not using the system font */
-	bitmapped = Drawer2D_BitmappedText;
-	Drawer2D_BitmappedText = true;
 	name = String_FromRawArray(e->NameRaw);
-
-	Drawer2D_MakeFont(&font, 24, FONT_FLAGS_NONE);
+	Drawer2D_MakeBitmappedFont(&font, 24, FONT_FLAGS_NONE);
 	DrawTextArgs_Make(&args, &name, &font, false);
 	width = Drawer2D_TextWidth(&args);
 
@@ -269,7 +265,6 @@ static void MakeNameTexture(struct Entity* e) {
 		Drawer2D_MakeTexture(&e->NameTex, &bmp, width, height);
 		Mem_Free(bmp.scan0);
 	}
-	Drawer2D_BitmappedText = bitmapped;
 }
 
 static void DrawName(struct Entity* e) {

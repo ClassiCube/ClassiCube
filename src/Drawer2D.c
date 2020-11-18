@@ -57,16 +57,21 @@ void Drawer2D_SetDefaultFont(const cc_string* fontName) {
 
 /* adjusts height to be closer to system fonts */
 static int Drawer2D_AdjHeight(int point) { return Math_CeilDiv(point * 3, 2); }
-
-void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags) {
-	if (!Drawer2D_BitmappedText) { Font_MakeDefault(desc, size, flags); return; }
-
+void Drawer2D_MakeBitmappedFont(struct FontDesc* desc, int size, int flags) {
 	/* TODO: Scale X and Y independently */
 	size = Display_ScaleY(size);
 	desc->handle = NULL;
 	desc->size   = size;
 	desc->flags  = flags;
 	desc->height = Drawer2D_AdjHeight(size);
+}
+
+void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags) {
+	if (Drawer2D_BitmappedText) {
+		Drawer2D_MakeBitmappedFont(desc, size, flags);
+	} else {
+		Font_MakeDefault(desc, size, flags);
+	}
 }
 
 static struct Bitmap fontBitmap;
