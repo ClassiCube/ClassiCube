@@ -79,6 +79,7 @@ struct Entity {
 	struct Model* Model;
 	BlockID ModelBlock; /* BlockID, if model name was originally a valid block. */
 	cc_bool ModelRestrictedScale; /* true to restrict model scale (needed for local player, giant model collisions are too costly) */
+	cc_bool ShouldRender;
 	struct AABB ModelAABB;
 	Vec3 ModelScale, Size;
 	int _skinReqID;
@@ -178,7 +179,6 @@ CC_API void TabList_Set(EntityID id, const cc_string* player, const cc_string* l
 struct NetPlayer {
 	struct Entity Base;
 	struct NetInterpComp Interp;
-	cc_bool ShouldRender;
 };
 CC_API void NetPlayer_Init(struct NetPlayer* player);
 extern struct NetPlayer NetPlayers_List[ENTITIES_SELF_ID];

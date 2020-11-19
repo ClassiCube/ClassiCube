@@ -689,7 +689,7 @@ void Entities_DrawShadows(void) {
 
 	if (Entities.ShadowsMode == SHADOW_MODE_CIRCLE_ALL) {	
 		for (i = 0; i < ENTITIES_SELF_ID; i++) {
-			if (!Entities.List[i]) continue;
+			if (!Entities.List[i] || !Entities.List[i]->ShouldRender) continue;
 			ShadowComponent_Draw(Entities.List[i]);
 		}
 	}
@@ -1132,15 +1132,15 @@ static void NetPlayer_RenderModel(struct Entity* e, double deltaTime, float t) {
 	InterpComp_LerpAngles((struct InterpComp*)(&p->Interp), e, t);
 
 	AnimatedComp_GetCurrent(e, t);
-	p->ShouldRender = Model_ShouldRender(e);
-	if (p->ShouldRender) Model_Render(e->Model, e);
+	p->Base.ShouldRender = Model_ShouldRender(e);
+	if (p->Base.ShouldRender) Model_Render(e->Model, e);
 }
 
 static void NetPlayer_RenderName(struct Entity* e) {
 	struct NetPlayer* p = (struct NetPlayer*)e;
 	float distance;
 	int threshold;
-	if (!p->ShouldRender) return;
+	if (!p->Base.ShouldRender) return;
 
 	distance  = Model_RenderDistance(e);
 	threshold = Entities.NamesMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
