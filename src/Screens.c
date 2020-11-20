@@ -1181,9 +1181,20 @@ static int ChatScreen_MouseScroll(void* screen, float delta) {
 static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 	cc_string text; char textBuffer[STRING_SIZE * 4];
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int height, chatY;
+	int height, chatY, i;
+	if (Game_HideGui) return false;
 
-	if (!s->grabsInput || Game_HideGui) return false;
+	if (!s->grabsInput) {
+		if (!Input_TouchMode) return false;
+		String_InitArray(text, textBuffer);
+
+		/* Should be able to click on links with touch */
+		i = TextGroupWidget_GetSelected(&s->chat, &text, x, y);
+		if (!Utils_IsUrlPrefix(&text)) return false;
+
+		if (Chat_LogTime[s->chatIndex + i] + 10 < Game.Time) return false;
+		UrlWarningOverlay_Show(&text); return true;
+	}
 
 #ifdef CC_BUILD_TOUCH
 	if (Widget_Contains(&s->send, x, y)) {

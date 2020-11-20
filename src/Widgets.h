@@ -246,7 +246,7 @@ CC_NOINLINE void TextGroupWidget_ShiftDown(struct TextGroupWidget* w);
 /* Returns height of lines, except for the first 0 or more empty lines. */
 CC_NOINLINE int  TextGroupWidget_UsedHeight(struct TextGroupWidget* w);
 /* Returns either the URL or the line underneath the given coordinates. */
-CC_NOINLINE void TextGroupWidget_GetSelected(struct TextGroupWidget* w, cc_string* text, int mouseX, int mouseY);
+CC_NOINLINE int  TextGroupWidget_GetSelected(struct TextGroupWidget* w, cc_string* text, int mouseX, int mouseY);
 /* Redraws the given line, updating the texture and Y position of other lines. */
 CC_NOINLINE void TextGroupWidget_Redraw(struct TextGroupWidget* w, int index);
 /* Calls TextGroupWidget_Redraw for all lines */

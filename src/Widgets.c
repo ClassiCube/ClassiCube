@@ -2086,7 +2086,7 @@ static cc_bool TextGroupWidget_GetUrl(struct TextGroupWidget* w, cc_string* text
 	return false;
 }
 
-void TextGroupWidget_GetSelected(struct TextGroupWidget* w, cc_string* text, int x, int y) {
+int TextGroupWidget_GetSelected(struct TextGroupWidget* w, cc_string* text, int x, int y) {
 	struct Texture tex;
 	cc_string line;
 	int i;
@@ -2100,8 +2100,9 @@ void TextGroupWidget_GetSelected(struct TextGroupWidget* w, cc_string* text, int
 			line = TextGroupWidget_UNSAFE_Get(w, i);
 			String_AppendString(text, &line);
 		}
-		return;
+		return i;
 	}
+	return -1;
 }
 
 static cc_bool TextGroupWidget_MightHaveUrls(struct TextGroupWidget* w) {
