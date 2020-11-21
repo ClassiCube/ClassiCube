@@ -277,6 +277,9 @@ static void Launcher_Free(void) {
 void Launcher_Run(void) {
 	static const cc_string title = String_FromConst(GAME_APP_TITLE);
 	Window_Create(640, 400);
+#ifdef CC_BUILD_ANDROID
+	Window_EnterFullscreen();
+#endif
 	Window_SetTitle(&title);
 	Window_Show();
 	LWidget_CalcOffsets();

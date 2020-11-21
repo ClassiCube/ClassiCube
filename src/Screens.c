@@ -245,13 +245,9 @@ static int HUDScreen_KeyUp(void* screen, int key) {
 
 static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-#ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode || Gui_GetInputGrab()) {
 		return Elem_HandlesPointerDown(&s->hotbar, id, x, y);
 	}
-#else
-	if (Gui_GetInputGrab()) return Elem_HandlesPointerDown(&s->hotbar, id, x, y);
-#endif
 	return false;
 }
 

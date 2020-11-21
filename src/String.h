@@ -27,7 +27,7 @@ int String_Length(const char* raw);
 /* Constructs a string from a (maybe null terminated) buffer. */
 CC_NOINLINE cc_string String_FromRaw(STRING_REF char* buffer, int capacity);
 /* Constructs a string from a null-terminated constant readonly buffer. */
-CC_NOINLINE cc_string String_FromReadonly(STRING_REF const char* buffer);
+CC_API cc_string String_FromReadonly(STRING_REF const char* buffer);
 
 /* Constructs a string from a compile time string constant */
 #define String_FromConst(text) { text, (sizeof(text) - 1), (sizeof(text) - 1)}
@@ -142,6 +142,21 @@ CC_API int String_CaselessEnds(const cc_string* str, const cc_string* sub);
 /* -X if a.buffer[i] < b.buffer[i], X if a.buffer[i] > b.buffer[i] */
 /* else returns 0. NOTE: The return value is not just in -1,0,1! */
 CC_API int String_Compare(const cc_string* a, const cc_string* b);
+
+/* String_Format is provided for formatting strings (similiar to printf)
+Supported specifiers for string formatting:
+  TYPE  |  ARGUMENT |        EXAMPLE 
+%b      | cc_uint8  | format(%b, 46) = "46"
+%i      | int       | format(%i, -5) = "-5"
+%f[0-9] | float     | format(%f2, 321.3519) = "321.35"
+%p[0-9] | int       | format(%p3, 5) = "005"
+%t      | cc_bool   | format(%t, 1) = "true"
+%c      | char*     | format(%c, "ABCD") = "ABCD"
+%s      | cc_string | format(%s, {"ABCD", 2, 4}) = "AB"
+%r      | char      | format(%r, 47) = "\"
+%x      | cc_uintptr| format(%x, 31) = "000000000000002F"
+%h      | cc_uint32 | format(%h, 11) = "0000000B" 
+*/
 
 /* See String_Format4 */
 CC_API void String_Format1(cc_string* str, const char* format, const void* a1);

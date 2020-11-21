@@ -39,26 +39,3 @@ For example, consider the function ```String Substring_UNSAFE(STRING_REF const S
 The *input string* is not modified at all. However, the characters of the *returned string* points to the characters of the *input string*, so modifying the characters in the *input string* also modifies the *returned string*.
 
 In general, use of ```const String*``` is preferred when possible, and ```STRING_REF``` as little as possible.
-
-#### String formatting
-An API is provided for formatting strings similiar to printf in C or String.Format in C#.
-The functions for formatting strings are in String.h:
-```
-void String_Format1(str, format, a1);
-void String_Format2(str, format, a1, a2);
-void String_Format3(str, format, a1, a2, a3);
-void String_Format4(str, format, a1, a2, a3, a4);
-```
-#### Formatting specifiers
-| Specifier | Type | Example |
-| ------------- |-------------| -----|
-| ```%b```      | uint8_t | ```%b``` of ```46``` = ```46``` |
-| ```%i```      | int | ```%i``` of ```-5``` = ```-5``` |
-| ```%f[0-9]``` | float |  ```%f2``` of ```321.3519``` = ```321.35``` |
-| ```%p[0-9]``` | int | ```%p3``` of ```5``` = ```005``` |
-| ```%t```      | Boolean | ```%t``` of ```1``` = ```true``` |
-| ```%c```      | char* | ```%c``` of ```"ABCD"``` = ```ABCD``` |
-| ```%s```      | String |  ```%s``` of ```{"ABCD", 2, 4}``` = ```AB``` |
-| ```%r```      | char | ```%r``` of ```47``` = ```\``` |
-| ```%x```      | uintptr_t | ```%x``` of ```31``` = ```2F``` |
-| ```%h```      | uint32_t | ```%h``` of ```11``` = ```B``` | 
