@@ -3147,13 +3147,13 @@ static void RescaleXY(int srcX, int srcY, int* dstX, int* dstY) {
 }
 
 static EM_BOOL OnMouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
-	int x, y;
+	int x, y, buttons = ev->buttons;
 	/* Set before position change, in case mouse buttons changed when outside window */
-	Input_SetPressed(KEY_LMOUSE, (ev->buttons & 0x01) != 0);
-	Input_SetPressed(KEY_RMOUSE, (ev->buttons & 0x02) != 0);
-	Input_SetPressed(KEY_MMOUSE, (ev->buttons & 0x04) != 0);
+	Input_SetPressed(KEY_LMOUSE, (buttons & 0x01) != 0);
+	Input_SetPressed(KEY_RMOUSE, (buttons & 0x02) != 0);
+	Input_SetPressed(KEY_MMOUSE, (buttons & 0x04) != 0);
 
-	RescaleXY(ev->canvasX, ev->canvasY, &x, &y);
+	RescaleXY(ev->targetX, ev->targetY, &x, &y);
 	Pointer_SetPosition(0, x, y);
 	if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, ev->movementX, ev->movementY);
 	return true;
