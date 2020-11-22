@@ -1911,7 +1911,7 @@ void ClassicHacksKeyBindingsScreen_Show(void) {
 *-----------------------------------------------NormalKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
 void NormalKeyBindingsScreen_Show(void) {
-	static const cc_uint8 binds[12]    = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_PLAYER_LIST, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN, KEYBIND_SEND_CHAT };
+	static const cc_uint8 binds[12]    = { KEYBIND_FORWARD, KEYBIND_BACK, KEYBIND_JUMP, KEYBIND_CHAT, KEYBIND_SET_SPAWN, KEYBIND_TABLIST, KEYBIND_LEFT, KEYBIND_RIGHT, KEYBIND_INVENTORY, KEYBIND_FOG, KEYBIND_RESPAWN, KEYBIND_SEND_CHAT };
 	static const char* const descs[12] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 	
 	KeyBindsScreen_Reset(NULL, Menu_SwitchKeysHacks, 250);

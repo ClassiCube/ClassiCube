@@ -621,7 +621,7 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 
 static int TabListOverlay_KeyUp(void* screen, int key) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
-	if (key != KeyBinds[KEYBIND_PLAYER_LIST]) return false;
+	if (key != KeyBinds[KEYBIND_TABLIST] || Input_TouchMode) return false;
 
 	Gui_Remove((struct Screen*)s);
 	return true;
@@ -688,7 +688,7 @@ static void TabListOverlay_Render(void* screen, double delta) {
 	Gfx_SetTexturing(false);
 
 	/* NOTE: Should usually be caught by KeyUp, but just in case. */
-	if (KeyBind_IsPressed(KEYBIND_PLAYER_LIST)) return;
+	if (KeyBind_IsPressed(KEYBIND_TABLIST) || Input_TouchMode) return;
 	Gui_Remove((struct Screen*)s);
 }
 
@@ -1105,7 +1105,7 @@ static int ChatScreen_TextChanged(void* screen, const cc_string* str) {
 static int ChatScreen_KeyDown(void* screen, int key) {
 	static const cc_string slash = String_FromConst("/");
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	int playerListKey   = KeyBinds[KEYBIND_PLAYER_LIST];
+	int playerListKey   = KeyBinds[KEYBIND_TABLIST];
 	cc_bool handlesList = playerListKey != KEY_TAB || !Gui.TabAutocomplete || !s->grabsInput;
 
 	if (key == playerListKey && handlesList) {
@@ -1942,13 +1942,20 @@ static void TouchScreen_OnscreenClick(void* screen, void* widget) {
 }
 
 static void TouchScreen_ChatClick(void* s,     void* w) { ChatScreen_OpenInput(&String_Empty); }
-static void TouchScreen_TabClick(void* s,      void* w) { TabListOverlay_Show(); }
 static void TouchScreen_RespawnClick(void* s,  void* w) { LocalPlayer_HandleRespawn(); }
 static void TouchScreen_SetSpawnClick(void* s, void* w) { LocalPlayer_HandleSetSpawn(); }
 static void TouchScreen_FlyClick(void* s,      void* w) { LocalPlayer_HandleFly(); }
 static void TouchScreen_NoclipClick(void* s,   void* w) { LocalPlayer_HandleNoclip(); }
+static void TouchScreen_MoreClick(void* s,     void* w) { TouchMoreScreen_Show(); }
 
-static void TouchScreen_MoreClick(void* s, void* w) { TouchMoreScreen_Show(); }
+static void TouchScreen_TabClick(void* s, void* w) {
+	if (TabListOverlay_Instance.active) {
+		Gui_Remove((struct Screen*)&TabListOverlay_Instance);
+	} else {
+		TabListOverlay_Show();
+	}
+}
+
 static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	int i   = Screen_Index(screen, widget) - ONSCREEN_MAX_BTNS;
