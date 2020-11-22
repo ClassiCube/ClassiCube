@@ -1911,7 +1911,7 @@ void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
 #define TOUCH_MAX_BTNS (ONSCREEN_MAX_BTNS + 3)
 struct TouchButtonDesc {
 	const char* text;
-	cc_uint8 bind, width;
+	cc_uint8 bind;
 	cc_int16 x, y;
 	Widget_LeftClick OnClick;
 	cc_bool* enabled;
@@ -1963,23 +1963,23 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 }
 
 static const struct TouchButtonDesc onscreenDescs[8] = {
-	{ "Chat",      0,0,0,0, TouchScreen_ChatClick },
-	{ "Tablist",   0,0,0,0, TouchScreen_TabClick },
-	{ "Respawn",   0,0,0,0, TouchScreen_RespawnClick,  &LocalPlayer_Instance.Hacks.CanRespawn },
-	{ "Set spawn", 0,0,0,0, TouchScreen_SetSpawnClick, &LocalPlayer_Instance.Hacks.CanRespawn },
-	{ "Fly",       0,0,0,0, TouchScreen_FlyClick,      &LocalPlayer_Instance.Hacks.CanFly     },
-	{ "Noclip",    0,0,0,0, TouchScreen_NoclipClick,   &LocalPlayer_Instance.Hacks.CanNoclip  },
-	{ "Speed",     KEYBIND_SPEED,       0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed },
-	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed }
+	{ "Chat",      0,0,0, TouchScreen_ChatClick },
+	{ "Tablist",   0,0,0, TouchScreen_TabClick },
+	{ "Respawn",   0,0,0, TouchScreen_RespawnClick,  &LocalPlayer_Instance.Hacks.CanRespawn },
+	{ "Set spawn", 0,0,0, TouchScreen_SetSpawnClick, &LocalPlayer_Instance.Hacks.CanRespawn },
+	{ "Fly",       0,0,0, TouchScreen_FlyClick,      &LocalPlayer_Instance.Hacks.CanFly     },
+	{ "Noclip",    0,0,0, TouchScreen_NoclipClick,   &LocalPlayer_Instance.Hacks.CanNoclip  },
+	{ "Speed",     KEYBIND_SPEED,       0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed },
+	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed }
 };
 static const struct TouchButtonDesc normDescs[2] = {
-	{ "More", KEYBIND_COUNT,    100,  50,  90, TouchScreen_MoreClick },
-	{ "Jump", KEYBIND_JUMP,     100,  50,  10, TouchScreen_BindClick }
+	{ "...",  KEYBIND_COUNT,     0,   0, TouchScreen_MoreClick },
+	{ "\x1E", KEYBIND_JUMP,     50,  20, TouchScreen_BindClick }
 };
 static const struct TouchButtonDesc hackDescs[3] = {
-	{ "More", KEYBIND_COUNT,    100,  50, 130, TouchScreen_MoreClick },
-	{ "Up",   KEYBIND_FLY_UP,   100,  50,  50, TouchScreen_BindClick },
-	{ "Down", KEYBIND_FLY_DOWN, 100,  50,  10, TouchScreen_BindClick }
+	{ "...",   KEYBIND_COUNT,    0,   0, TouchScreen_MoreClick },
+	{ "\x1E", KEYBIND_FLY_UP,   50,  60, TouchScreen_BindClick },
+	{ "\x1F", KEYBIND_FLY_DOWN, 50,  20, TouchScreen_BindClick }
 };
 
 static void TouchScreen_InitButtons(struct TouchScreen* s) {
@@ -2011,7 +2011,8 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 	for (i = 0; i < s->numBtns; i++) {
 		s->widgets[i + ONSCREEN_MAX_BTNS] = (struct Widget*)&s->btns[i];
 		desc = &s->descs[i];
-		ButtonWidget_Init(&s->btns[i], desc->width, desc->OnClick);
+		ButtonWidget_Init(&s->btns[i], 40, desc->OnClick);
+		s->btns[i].col = PackedCol_Make(255, 255, 255, 220);
 	}
 }
 
@@ -2093,12 +2094,13 @@ static void TouchScreen_Layout(void* screen) {
 	for (i = 0; i < s->numOnscreen; i++) {
 		Widget_SetLocation(&s->onscreen[i], ANCHOR_MAX, ANCHOR_MIN, 10, 10 + i * 40);
 	}
+	Widget_SetLocation(&s->btns[0], ANCHOR_CENTRE, ANCHOR_MIN, 0, 10);
 
 	/* Need to align these relative to the hotbar */
 	HUDScreen_Layout(Gui_HUD);
 	height = Gui_HUD->hotbar.height;
 
-	for (i = 0; i < s->numBtns; i++) {
+	for (i = 1; i < s->numBtns; i++) {
 		desc = &s->descs[i];
 		Widget_SetLocation(&s->btns[i], ANCHOR_MAX, ANCHOR_MAX, desc->x, desc->y);
 		s->btns[i].yOffset += height;
