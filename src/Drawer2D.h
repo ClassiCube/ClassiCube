@@ -7,7 +7,7 @@
 	Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
-enum FONT_FLAGS { FONT_FLAGS_NONE = 0x00, FONT_FLAGS_BOLD = 0x01, FONT_FLAGS_UNDERLINE = 0x02 };
+enum FONT_FLAGS { FONT_FLAGS_NONE = 0x00, FONT_FLAGS_BOLD = 0x01, FONT_FLAGS_UNDERLINE = 0x02, FONT_FLAGS_NOPADDING = 0x04 };
 struct FontDesc { void* handle; cc_uint16 size, flags; int height; };
 struct DrawTextArgs { cc_string text; struct FontDesc* font; cc_bool useShadow; };
 struct Texture;

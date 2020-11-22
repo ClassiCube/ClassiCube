@@ -543,9 +543,9 @@ static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
 		width += Drawer2D_Width(point, c) + xPadding;
 	}
 
-	/* TODO: this should be uncommented */
+	/* TODO: this should be always done? */
 	/* Remove padding at end */
-	/*if (width) width -= xPadding; */
+	if (width && (args->font->flags & FONT_FLAGS_NOPADDING)) width -= xPadding;
 
 	if (args->useShadow) { width += Drawer2D_ShadowOffset(point); }
 	return width;

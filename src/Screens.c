@@ -2037,7 +2037,7 @@ static void TouchScreen_ContextRecreated(void* screen) {
 	const struct TouchButtonDesc* desc;
 	int i;
 	Screen_CreateVb(screen);
-	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_BOLD);
+	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_BOLD | FONT_FLAGS_NOPADDING);
 
 	for (i = 0; i < s->numOnscreen; i++) {
 		desc = s->onscreenDescs[i];
