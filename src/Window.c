@@ -3168,7 +3168,7 @@ static EM_BOOL OnTouchStart(int type, const EmscriptenTouchEvent* ev, void* data
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
 		
-		RescaleXY(t->canvasX, t->canvasY, &x, &y);
+		RescaleXY(t->targetX, t->targetY, &x, &y);
 		Input_AddTouch(t->identifier, x, y);
 	}
 	return true;
@@ -3181,7 +3181,7 @@ static EM_BOOL OnTouchMove(int type, const EmscriptenTouchEvent* ev, void* data)
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
 		
-		RescaleXY(t->canvasX, t->canvasY, &x, &y);
+		RescaleXY(t->targetX, t->targetY, &x, &y);
 		Input_UpdateTouch(t->identifier, x, y);
 	}
 	return true;
@@ -3194,7 +3194,7 @@ static EM_BOOL OnTouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) 
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
 		
-		RescaleXY(t->canvasX, t->canvasY, &x, &y);
+		RescaleXY(t->targetX, t->targetY, &x, &y);
 		Input_RemoveTouch(t->identifier, x, y);
 	}
 	/* Don't intercept touchend events while keyboard is open, that way */
