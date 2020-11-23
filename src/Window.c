@@ -266,7 +266,7 @@ static int MapNativeKey(SDL_Keycode k) {
 static void OnKeyEvent(const SDL_Event* e) {
 	cc_bool pressed = e->key.state == SDL_PRESSED;
 	int key = MapNativeKey(e->key.keysym.sym);
-	if (key) Input_SetPressed(key, pressed);
+	if (key) Input_Set(key, pressed);
 }
 
 static void OnMouseEvent(const SDL_Event* e) {
@@ -280,7 +280,7 @@ static void OnMouseEvent(const SDL_Event* e) {
 		case SDL_BUTTON_X2:     btn = KEY_XBUTTON2; break;
 		default: return;
 	}
-	Input_SetPressed(btn, pressed);
+	Input_Set(btn, pressed);
 }
 
 static void OnTextEvent(const SDL_Event* e) {
@@ -552,9 +552,9 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_MOUSEMOVE:
 		/* Set before position change, in case mouse buttons changed when outside window */
-		Input_SetPressed(KEY_LMOUSE, (wParam & 0x01) != 0);
-		Input_SetPressed(KEY_RMOUSE, (wParam & 0x02) != 0);
-		Input_SetPressed(KEY_MMOUSE, (wParam & 0x10) != 0);
+		Input_Set(KEY_LMOUSE, wParam & 0x01);
+		Input_Set(KEY_RMOUSE, wParam & 0x02);
+		Input_Set(KEY_MMOUSE, wParam & 0x10);
 		/* TODO: do we need to set XBUTTON1/XBUTTON2 here */
 		Pointer_SetPosition(0, LOWORD(lParam), HIWORD(lParam));
 		break;
@@ -565,23 +565,23 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		return 0;
 
 	case WM_LBUTTONDOWN:
-		Input_SetPressed(KEY_LMOUSE, true); break;
+		Input_SetPressed(KEY_LMOUSE); break;
 	case WM_MBUTTONDOWN:
-		Input_SetPressed(KEY_MMOUSE, true); break;
+		Input_SetPressed(KEY_MMOUSE); break;
 	case WM_RBUTTONDOWN:
-		Input_SetPressed(KEY_RMOUSE, true); break;
+		Input_SetPressed(KEY_RMOUSE); break;
 	case WM_XBUTTONDOWN:
-		Input_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, true);
+		Input_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2);
 		break;
 
 	case WM_LBUTTONUP:
-		Input_SetPressed(KEY_LMOUSE, false); break;
+		Input_SetReleased(KEY_LMOUSE); break;
 	case WM_MBUTTONUP:
-		Input_SetPressed(KEY_MMOUSE, false); break;
+		Input_SetReleased(KEY_MMOUSE); break;
 	case WM_RBUTTONUP:
-		Input_SetPressed(KEY_RMOUSE, false); break;
+		Input_SetReleased(KEY_RMOUSE); break;
 	case WM_XBUTTONUP:
-		Input_SetPressed(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2, false);
+		Input_SetReleased(HIWORD(wParam) == 1 ? KEY_XBUTTON1 : KEY_XBUTTON2);
 		break;
 
 	case WM_INPUT:
@@ -631,12 +631,12 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			rShiftDown = ((USHORT)GetKeyState(VK_RSHIFT)) >> 15;
 
 			if (!pressed || lShiftDown != rShiftDown) {
-				Input_SetPressed(KEY_LSHIFT, lShiftDown);
-				Input_SetPressed(KEY_RSHIFT, rShiftDown);
+				Input_Set(KEY_LSHIFT, lShiftDown);
+				Input_Set(KEY_RSHIFT, rShiftDown);
 			}
 		} else {
 			key = MapNativeKey(wParam, lParam);
-			if (key) Input_SetPressed(key, pressed);
+			if (key) Input_Set(key, pressed);
 			else Platform_Log1("Unknown key: %x", &wParam);
 		}
 		return 0;
@@ -1357,7 +1357,7 @@ static void Window_ToggleKey(XKeyEvent* ev, cc_bool pressed) {
 	if (!key) key = MapNativeKey(keysym2, ev->state);
 
 	if (key) {
-		Input_SetPressed(key, pressed);
+		Input_Set(key, pressed);
 	} else {
 		Platform_Log2("Unknown key: (%x, %x)", &keysym1, &keysym2);
 	}
@@ -1461,14 +1461,14 @@ void Window_ProcessEvents(void) {
 
 		case ButtonPress:
 			btn = MapNativeMouse(e.xbutton.button);
-			if (btn) Input_SetPressed(btn, true);
+			if (btn) Input_SetPressed(btn);
 			else if (e.xbutton.button == 4) Mouse_ScrollWheel(+1);
 			else if (e.xbutton.button == 5) Mouse_ScrollWheel(-1);
 			break;
 
 		case ButtonRelease:
 			btn = MapNativeMouse(e.xbutton.button);
-			if (btn) Input_SetPressed(btn, false);
+			if (btn) Input_SetReleased(btn);
 			break;
 
 		case MotionNotify:
@@ -2135,7 +2135,7 @@ static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
 
 			key = MapNativeKey(code);
 			if (key) {
-				Input_SetPressed(key, kind != kEventRawKeyUp);
+				Input_Set(key, kind != kEventRawKeyUp);
 			} else {
 				Platform_Log1("Ignoring unknown key %i", &code);
 			}
@@ -2146,11 +2146,11 @@ static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
 									NULL, sizeof(UInt32), NULL, &code);
 			if (res) Logger_Abort2(res, "Getting key modifiers");
 			
-			Input_SetPressed(KEY_LCTRL,    (code & 0x1000) != 0);
-			Input_SetPressed(KEY_LALT,     (code & 0x0800) != 0);
-			Input_SetPressed(KEY_LSHIFT,   (code & 0x0200) != 0);
-			Input_SetPressed(KEY_LWIN,     (code & 0x0100) != 0);			
-			Input_SetPressed(KEY_CAPSLOCK, (code & 0x0400) != 0);
+			Input_Set(KEY_LCTRL,    code & 0x1000);
+			Input_Set(KEY_LALT,     code & 0x0800);
+			Input_Set(KEY_LSHIFT,   code & 0x0200);
+			Input_Set(KEY_LWIN,     code & 0x0100);			
+			Input_Set(KEY_CAPSLOCK, code & 0x0400);
 			return eventNotHandledErr;
 	}
 	return eventNotHandledErr;
@@ -2241,11 +2241,11 @@ static OSStatus Window_ProcessMouseEvent(EventRef inEvent) {
 			
 			switch (button) {
 				case kEventMouseButtonPrimary:
-					Input_SetPressed(KEY_LMOUSE, down); break;
+					Input_Set(KEY_LMOUSE, down); break;
 				case kEventMouseButtonSecondary:
-					Input_SetPressed(KEY_RMOUSE, down); break;
+					Input_Set(KEY_RMOUSE, down); break;
 				case kEventMouseButtonTertiary:
-					Input_SetPressed(KEY_MMOUSE, down); break;
+					Input_Set(KEY_MMOUSE, down); break;
 			}		
 			return eventNotHandledErr;
 			
@@ -2735,7 +2735,7 @@ static Class Window_MakeClass(void) {
 /*   This causes the game to get stuck with left mouse down after user finishes resizing */
 /* So work arond that by always releasing left mouse when a live resize is finished */
 static void DidEndLiveResize(id self, SEL cmd) {
-	Input_SetPressed(KEY_LMOUSE, false);
+	Input_SetReleased(KEY_LMOUSE);
 }
 
 static void View_DrawRect(id self, SEL cmd, CGRect r);
@@ -2932,40 +2932,40 @@ void Window_ProcessEvents(void) {
 		case  3: /* NSRightMouseDown */
 		case 25: /* NSOtherMouseDown */
 			key = MapNativeMouse((int)objc_msgSend(ev, selButton));
-			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key, true);
+			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key);
 			break;
 
 		case  2: /* NSLeftMouseUp  */
 		case  4: /* NSRightMouseUp */
 		case 26: /* NSOtherMouseUp */
 			key = MapNativeMouse((int)objc_msgSend(ev, selButton));
-			if (key) Input_SetPressed(key, false);
+			if (key) Input_SetReleased(key);
 			break;
 
 		case 10: /* NSKeyDown */
 			key = MapNativeKey((int)objc_msgSend(ev, selKeycode));
-			if (key) Input_SetPressed(key, true);
+			if (key) Input_SetPressed(key);
 			// TODO: Test works properly with other languages
 			ProcessKeyChars(ev);
 			break;
 
 		case 11: /* NSKeyUp */
 			key = MapNativeKey((int)objc_msgSend(ev, selKeycode));
-			if (key) Input_SetPressed(key, false);
+			if (key) Input_SetReleased(key);
 			break;
 
 		case 12: /* NSFlagsChanged */
 			key = (int)objc_msgSend(ev, selModifiers);
 			/* TODO: Figure out how to only get modifiers that changed */
-			Input_SetPressed(KEY_LCTRL,    (key & 0x000001) != 0);
-			Input_SetPressed(KEY_LSHIFT,   (key & 0x000002) != 0);
-			Input_SetPressed(KEY_RSHIFT,   (key & 0x000004) != 0);
-			Input_SetPressed(KEY_LWIN,     (key & 0x000008) != 0);
-			Input_SetPressed(KEY_RWIN,     (key & 0x000010) != 0);
-			Input_SetPressed(KEY_LALT,     (key & 0x000020) != 0);
-			Input_SetPressed(KEY_RALT,     (key & 0x000040) != 0);
-			Input_SetPressed(KEY_RCTRL,    (key & 0x002000) != 0);
-			Input_SetPressed(KEY_CAPSLOCK, (key & 0x010000) != 0);
+			Input_Set(KEY_LCTRL,    key & 0x000001);
+			Input_Set(KEY_LSHIFT,   key & 0x000002);
+			Input_Set(KEY_RSHIFT,   key & 0x000004);
+			Input_Set(KEY_LWIN,     key & 0x000008);
+			Input_Set(KEY_RWIN,     key & 0x000010);
+			Input_Set(KEY_LALT,     key & 0x000020);
+			Input_Set(KEY_RALT,     key & 0x000040);
+			Input_Set(KEY_RCTRL,    key & 0x002000);
+			Input_Set(KEY_CAPSLOCK, key & 0x010000);
 			break;
 
 		case 22: /* NSScrollWheel */
@@ -3124,9 +3124,9 @@ static EM_BOOL OnMouseWheel(int type, const EmscriptenWheelEvent* ev, void* data
 static EM_BOOL OnMouseButton(int type, const EmscriptenMouseEvent* ev, void* data) {
 	cc_bool down = type == EMSCRIPTEN_EVENT_MOUSEDOWN;
 	switch (ev->button) {
-		case 0: Input_SetPressed(KEY_LMOUSE, down); break;
-		case 1: Input_SetPressed(KEY_MMOUSE, down); break;
-		case 2: Input_SetPressed(KEY_RMOUSE, down); break;
+		case 0: Input_Set(KEY_LMOUSE, down); break;
+		case 1: Input_Set(KEY_MMOUSE, down); break;
+		case 2: Input_Set(KEY_RMOUSE, down); break;
 	}
 
 	DeferredEnableRawMouse();
@@ -3151,9 +3151,9 @@ static void RescaleXY(int srcX, int srcY, int* dstX, int* dstY) {
 static EM_BOOL OnMouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
 	int x, y, buttons = ev->buttons;
 	/* Set before position change, in case mouse buttons changed when outside window */
-	Input_SetPressed(KEY_LMOUSE, (buttons & 0x01) != 0);
-	Input_SetPressed(KEY_RMOUSE, (buttons & 0x02) != 0);
-	Input_SetPressed(KEY_MMOUSE, (buttons & 0x04) != 0);
+	Input_Set(KEY_LMOUSE, buttons & 0x01);
+	Input_Set(KEY_RMOUSE, buttons & 0x02);
+	Input_Set(KEY_MMOUSE, buttons & 0x04);
 
 	RescaleXY(ev->targetX, ev->targetY, &x, &y);
 	Pointer_SetPosition(0, x, y);
@@ -3303,7 +3303,7 @@ static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 		}
 	}
 
-	if (key) Input_SetPressed(key, type == EMSCRIPTEN_EVENT_KEYDOWN);
+	if (key) Input_Set(key, type == EMSCRIPTEN_EVENT_KEYDOWN);
 	DeferredEnableRawMouse();
 
 	if (!key) return false;
@@ -3765,13 +3765,13 @@ static int MapNativeKey(int code) {
 static void JNICALL java_processKeyDown(JNIEnv* env, jobject o, jint code) {
 	int key = MapNativeKey(code);
 	Platform_Log2("KEY - DOWN %i,%i", &code, &key);
-	if (key) Input_SetPressed(key, true);
+	if (key) Input_SetPressed(key);
 }
 
 static void JNICALL java_processKeyUp(JNIEnv* env, jobject o, jint code) {
 	int key = MapNativeKey(code);
 	Platform_Log2("KEY - UP %i,%i", &code, &key);
-	if (key) Input_SetPressed(key, false);
+	if (key) Input_SetReleased(key);
 }
 
 static void JNICALL java_processKeyChar(JNIEnv* env, jobject o, jint code) {

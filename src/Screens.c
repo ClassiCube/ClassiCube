@@ -1938,7 +1938,7 @@ static void TouchScreen_OnscreenClick(void* screen, void* widget) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	int i   = Screen_Index(screen, widget);
 	int key = KeyBinds[s->onscreenDescs[i]->bind];
-	Input_SetPressed(KeyBinds[s->onscreenDescs[i]->bind], !Input_Pressed[key]);
+	Input_Set(KeyBinds[s->onscreenDescs[i]->bind], !Input_Pressed[key]);
 }
 
 static void TouchScreen_ChatClick(void* s,     void* w) { ChatScreen_OpenInput(&String_Empty); }
@@ -1959,7 +1959,7 @@ static void TouchScreen_TabClick(void* s, void* w) {
 static void TouchScreen_BindClick(void* screen, void* widget) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	int i   = Screen_Index(screen, widget) - ONSCREEN_MAX_BTNS;
-	Input_SetPressed(KeyBinds[s->descs[i].bind], true);
+	Input_Set(KeyBinds[s->descs[i].bind], true);
 }
 
 static const struct TouchButtonDesc onscreenDescs[8] = {
@@ -2078,7 +2078,7 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 		if (!(s->btns[i].active & id)) continue;
 
 		if (s->descs[i].bind < KEYBIND_COUNT) {
-			Input_SetPressed(KeyBinds[s->descs[i].bind], false);
+			Input_Set(KeyBinds[s->descs[i].bind], false);
 		}
 		s->btns[i].active &= ~id;
 		return true;

@@ -62,14 +62,15 @@ extern const char* const Input_Names[INPUT_COUNT];
 #define Key_IsActionPressed() Key_IsControlPressed()
 #endif
 
-/* Pressed state of each keyboard button. Use Input_SetPressed to change. */
+/* Pressed state of each keyboard button. Use Input_Set to change. */
 extern cc_bool Input_Pressed[INPUT_COUNT];
-/* Sets the pressed state of a keyboard button. */
-/* Raises InputEvents.Up   if not pressed, but was pressed before. */
-/* Raises InputEvents.Down if pressed (repeating is whether it was pressed before) */
-void Input_SetPressed(int key, cc_bool pressed);
-/* Resets all keyboard buttons to released state. */
-/* Raises InputEvents.Up for each previously pressed button. */
+/* Sets Input_Pressed[key] to true and raises InputEvents.Down */
+void Input_SetPressed(int key);
+/* Sets Input_Pressed[key] to false and raises InputEvents.Up */
+void Input_SetReleased(int key);
+/* Calls either Input_SetPressed or Input_SetReleased */
+void Input_Set(int key, int pressed);
+/* Resets all keyboard buttons to released state. (Input_SetReleased) */
 void Input_Clear(void);
 
 /* Whether raw mouse/touch input is currently being listened for. */

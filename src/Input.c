@@ -217,25 +217,36 @@ const char* const Input_Names[INPUT_COUNT] = {
 	"XBUTTON1", "XBUTTON2, "MMOUSE"
 };*/
 
-void Input_SetPressed(int key, cc_bool pressed) {
+void Input_SetPressed(int key) {
 	cc_bool wasPressed = Input_Pressed[key];
-	Input_Pressed[key] = pressed;
-
-	if (pressed) {
-		Event_RaiseInput(&InputEvents.Down, key, wasPressed);
-	} else if (wasPressed) {
-		Event_RaiseInt(&InputEvents.Up, key);
-	}
+	Input_Pressed[key] = true;
+	Event_RaiseInput(&InputEvents.Down, key, wasPressed);
 
 	/* don't allow multiple left mouse down events */
-	if (key != KEY_LMOUSE || pressed == wasPressed) return;
-	Pointer_SetPressed(0, pressed);
+	if (key != KEY_LMOUSE || wasPressed) return;
+	Pointer_SetPressed(0, true);
+}
+
+void Input_SetReleased(int key) {
+	if (!Input_Pressed[key]) return;
+	Input_Pressed[key] = false;
+
+	Event_RaiseInt(&InputEvents.Up, key);
+	if (key == KEY_LMOUSE) Pointer_SetPressed(0, false);
+}
+
+void Input_Set(int key, int pressed) {
+	if (pressed) {
+		Input_SetPressed(key);
+	} else {
+		Input_SetReleased(key);
+	}
 }
 
 void Input_Clear(void) {
 	int i;
 	for (i = 0; i < INPUT_COUNT; i++) {
-		if (Input_Pressed[i]) Input_SetPressed(i, false);
+		if (Input_Pressed[i]) Input_SetReleased(i);
 	}
 }
 
