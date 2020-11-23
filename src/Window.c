@@ -271,18 +271,16 @@ static void OnKeyEvent(const SDL_Event* e) {
 
 static void OnMouseEvent(const SDL_Event* e) {
 	cc_bool pressed = e->button.state == SDL_PRESSED;
+	int btn;
 	switch (e->button.button) {
-		case SDL_BUTTON_LEFT:
-			Input_SetPressed(KEY_LMOUSE, pressed); break;
-		case SDL_BUTTON_MIDDLE:
-			Input_SetPressed(KEY_MMOUSE, pressed); break;
-		case SDL_BUTTON_RIGHT:
-			Input_SetPressed(KEY_RMOUSE, pressed); break;
-		case SDL_BUTTON_X1:
-			Input_SetPressed(KEY_XBUTTON1, pressed); break;
-		case SDL_BUTTON_X2:
-			Input_SetPressed(KEY_XBUTTON2, pressed); break;
+		case SDL_BUTTON_LEFT:   btn = KEY_LMOUSE; break;
+		case SDL_BUTTON_MIDDLE: btn = KEY_MMOUSE; break;
+		case SDL_BUTTON_RIGHT:  btn = KEY_RMOUSE; break;
+		case SDL_BUTTON_X1:     btn = KEY_XBUTTON1; break;
+		case SDL_BUTTON_X2:     btn = KEY_XBUTTON2; break;
+		default: return;
 	}
+	Input_SetPressed(btn, pressed);
 }
 
 static void OnTextEvent(const SDL_Event* e) {
@@ -1342,6 +1340,15 @@ void Window_Close(void) {
 	XFlush(win_display);
 }
 
+static int MapNativeMouse(int button) {
+	if (button == 1) return KEY_LMOUSE;
+	if (button == 2) return KEY_MMOUSE;
+	if (button == 3) return KEY_RMOUSE;
+	if (button == 8) return KEY_XBUTTON1;
+	if (button == 9) return KEY_XBUTTON2;
+	return 0;
+}
+
 static void Window_ToggleKey(XKeyEvent* ev, cc_bool pressed) {
 	KeySym keysym1 = XLookupKeysym(ev, 0);
 	KeySym keysym2 = XLookupKeysym(ev, 1);
@@ -1390,6 +1397,8 @@ static void HandleGenericEvent(XEvent* e);
 
 void Window_ProcessEvents(void) {
 	XEvent e;
+	int i, btn, status;
+
 	while (WindowInfo.Exists) {
 		if (!XCheckIfEvent(win_display, &e, FilterEvent, (XPointer)win_handle)) break;
 		if (XFilterEvent(&e, None) == True) continue;
@@ -1422,7 +1431,6 @@ void Window_ProcessEvents(void) {
 		{
 			Window_ToggleKey(&e.xkey, true);
 			char data[64], c;
-			int i, status;
 #ifdef CC_BUILD_XIM
 			cc_codepoint cp;
 			char* chars = data;
@@ -1452,21 +1460,15 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case ButtonPress:
-			if (e.xbutton.button == 1)      Input_SetPressed(KEY_LMOUSE, true);
-			else if (e.xbutton.button == 2) Input_SetPressed(KEY_MMOUSE, true);
-			else if (e.xbutton.button == 3) Input_SetPressed(KEY_RMOUSE, true);
+			btn = MapNativeMouse(e.xbutton.button);
+			if (btn) Input_SetPressed(btn, true);
 			else if (e.xbutton.button == 4) Mouse_ScrollWheel(+1);
 			else if (e.xbutton.button == 5) Mouse_ScrollWheel(-1);
-			else if (e.xbutton.button == 8) Input_SetPressed(KEY_XBUTTON1,  true);
-			else if (e.xbutton.button == 9) Input_SetPressed(KEY_XBUTTON2,  true);
 			break;
 
 		case ButtonRelease:
-			if (e.xbutton.button == 1)      Input_SetPressed(KEY_LMOUSE, false);
-			else if (e.xbutton.button == 2) Input_SetPressed(KEY_MMOUSE, false);
-			else if (e.xbutton.button == 3) Input_SetPressed(KEY_RMOUSE, false);
-			else if (e.xbutton.button == 8) Input_SetPressed(KEY_XBUTTON1,  false);
-			else if (e.xbutton.button == 9) Input_SetPressed(KEY_XBUTTON2,  false);
+			btn = MapNativeMouse(e.xbutton.button);
+			if (btn) Input_SetPressed(btn, false);
 			break;
 
 		case MotionNotify:
@@ -2876,7 +2878,7 @@ void Window_Close(void) {
 	objc_msgSend(winHandle, sel_registerName("close"));
 }
 
-static int Window_MapMouse(int button) {
+static int MapNativeMouse(int button) {
 	if (button == 0) return KEY_LMOUSE;
 	if (button == 1) return KEY_RMOUSE;
 	if (button == 2) return KEY_MMOUSE;
@@ -2929,14 +2931,14 @@ void Window_ProcessEvents(void) {
 		case  1: /* NSLeftMouseDown  */
 		case  3: /* NSRightMouseDown */
 		case 25: /* NSOtherMouseDown */
-			key = Window_MapMouse((int)objc_msgSend(ev, selButton));
+			key = MapNativeMouse((int)objc_msgSend(ev, selButton));
 			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key, true);
 			break;
 
 		case  2: /* NSLeftMouseUp  */
 		case  4: /* NSRightMouseUp */
 		case 26: /* NSOtherMouseUp */
-			key = Window_MapMouse((int)objc_msgSend(ev, selButton));
+			key = MapNativeMouse((int)objc_msgSend(ev, selButton));
 			if (key) Input_SetPressed(key, false);
 			break;
 
