@@ -2808,6 +2808,11 @@ static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 
 	s->numCore = 7;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
+#ifdef CC_BUILD_WEB
+	/* TODO: Support system fonts in webclient */
+	s->buttons[5].disabled = true;
+	s->buttons[6].disabled = true;
+#endif
 }
 
 void GuiOptionsScreen_Show(void) {
