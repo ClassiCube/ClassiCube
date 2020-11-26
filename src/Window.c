@@ -3315,11 +3315,17 @@ static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	if (Key_IsAltPressed() || Key_IsWinPressed()) return true;
 	if (Key_IsControlPressed() && key != 'C' && key != 'V') return true;
 
+	/* Space needs special handling, as intercepting prevents the key press event */
+	/* But on mobile Safari, space (on external keyboard) still scrolls the page */
+	/*   Desktop - Space is never intercepted */
+	/*   Mobile  - Space is intercepted when keyboard is NOT open */
+	if (key == KEY_SPACE) return Input_TouchMode && !keyboardOpen;
+
 	/* Must not intercept KeyDown for regular keys, otherwise KeyPress doesn't get raised. */
 	/* However, do want to prevent browser's behaviour on F11, F5, home etc. */
 	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
 	return (key >= KEY_F1  && key <= KEY_F24)  || (key >= KEY_UP    && key <= KEY_RIGHT) ||
-		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK && key != KEY_SPACE);
+		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK);
 }
 
 static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
