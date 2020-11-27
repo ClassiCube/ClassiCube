@@ -7,6 +7,7 @@
 #include "Game.h"
 #include "Utils.h"
 
+static cc_bool httpsOnly;
 /* Frees data from a HTTP request. */
 static void HttpRequest_Free(struct HttpRequest* request) {
 	Mem_Free(request->data);
@@ -118,6 +119,7 @@ static void Http_WorkerStop(void);
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
 static int Http_Add(const cc_string* url, cc_bool priority, cc_uint8 type, const cc_string* lastModified,
 					const cc_string* etag, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
+	static const cc_string http = String_FromConst("http://");
 	struct HttpRequest req = { 0 };
 
 	String_CopyToRawArray(req.url, url);
@@ -125,6 +127,12 @@ static int Http_Add(const cc_string* url, cc_bool priority, cc_uint8 type, const
 
 	req.id = ++nextReqID;
 	req.requestType = type;
+
+	/* Change http:// to https:// if required */
+	if (httpsOnly) {
+		cc_string url_ = String_FromRawArray(req.url);
+		if (String_CaselessStarts(&url_, &http)) String_InsertAt(&url_, 4, 's');
+	}
 	
 	if (lastModified) {
 		String_CopyToRawArray(req.lastModified, lastModified);
@@ -170,7 +178,6 @@ static void Http_GetUrl(struct HttpRequest* req, cc_string* dst) {
 		String_Format2(dst, "%s%s", &urlRewrites[i + 1], &part);
 		return;
 	}
-
 	String_Copy(dst, &url);
 }
 
@@ -299,6 +306,7 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
 /* Use fetch/XMLHttpRequest api for Emscripten */
+#include <emscripten/emscripten.h>
 #include <emscripten/fetch.h>
 
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) { return false; }
@@ -378,7 +386,10 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	emscripten_fetch(&attr, urlStr);
 }
 
-static void Http_WorkerInit(void)  { }
+static void Http_WorkerInit(void) {
+	/* If this webpage is https://, browsers deny any http:// downloading */
+	httpsOnly = EM_ASM_INT_V({ return location.protocol === 'https:'; });
+}
 static void Http_WorkerStart(void) { }
 static void Http_WorkerStop(void)  { }
 
@@ -1022,15 +1033,8 @@ static void Http_WorkerStop(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Http public api------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WEB
-/* Access to XMLHttpRequest at 'http://static.classicube.net' from origin 'http://www.classicube.net' has been blocked by CORS policy: */
-/* No 'Access-Control-Allow-Origin' header is present on the requested resource. */
+/* Skins were moved to use Amazon S3, so link directly to avoid a pointless redirect */
 #define SKIN_SERVER "http://classicube.s3.amazonaws.com/skin/"
-#else
-/* Prefer static.classicube.net to avoid a pointless redirect */
-/* Skins were moved to use Amazon S3, so link directly to them */
-#define SKIN_SERVER "http://classicube.s3.amazonaws.com/skin/"
-#endif
 
 int Http_AsyncGetSkin(const cc_string* skinName) {
 	cc_string url; char urlBuffer[URL_MAX_SIZE];
