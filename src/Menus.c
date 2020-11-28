@@ -3603,35 +3603,38 @@ void TexPackOverlay_Show(const cc_string* url) {
 /*########################################################################################################################*
 *---------------------------------------------------TouchControlsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-#define TOUCHCTRLS_BTNS 6
+#define ONSCREEN_PAGE_BTNS 8
 static struct TouchOnscreenScreen {
 	Screen_Body
-	struct ButtonWidget back;
-	struct ButtonWidget btns[ONSCREEN_MAX_BTNS];
+	int offset;
+	struct ButtonWidget back, left, right;
+	struct ButtonWidget btns[ONSCREEN_PAGE_BTNS];
+	const struct SimpleButtonDesc* btnDescs;
 	struct FontDesc font;
 } TouchOnscreenScreen;
 
-static struct Widget* touchOnscreen_widgets[1 + ONSCREEN_MAX_BTNS] = {
-	(struct Widget*)&TouchOnscreenScreen.back,    (struct Widget*)&TouchOnscreenScreen.btns[0], 
+static struct Widget* touchOnscreen_widgets[3 + ONSCREEN_PAGE_BTNS] = {
+	(struct Widget*)&TouchOnscreenScreen.back,    (struct Widget*)&TouchOnscreenScreen.left,
+	(struct Widget*)&TouchOnscreenScreen.right,   (struct Widget*)&TouchOnscreenScreen.btns[0], 
 	(struct Widget*)&TouchOnscreenScreen.btns[1], (struct Widget*)&TouchOnscreenScreen.btns[2], 
 	(struct Widget*)&TouchOnscreenScreen.btns[3], (struct Widget*)&TouchOnscreenScreen.btns[4], 
 	(struct Widget*)&TouchOnscreenScreen.btns[5], (struct Widget*)&TouchOnscreenScreen.btns[6],
 	(struct Widget*)&TouchOnscreenScreen.btns[7]
 };
-#define TOUCHONSCREEN_MAX_VERTICES (BUTTONWIDGET_MAX + ONSCREEN_MAX_BTNS * BUTTONWIDGET_MAX)
+#define TOUCHONSCREEN_MAX_VERTICES ((3 + ONSCREEN_PAGE_BTNS) * BUTTONWIDGET_MAX)
 
-static void TouchOnscreen_UpdateColors(void* screen) {
-	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
+static void TouchOnscreen_UpdateColors(struct TouchOnscreenScreen* s) {
 	PackedCol grey = PackedCol_Make(0x7F, 0x7F, 0x7F, 0xFF);
-	int i;
+	int i, j;
 
-	for (i = 0; i < ONSCREEN_MAX_BTNS; i++) {
-		s->btns[i].col = (Gui._onscreenButtons & (1 << i)) ? PACKEDCOL_WHITE : grey;
+	for (i = 0, j = s->offset; i < ONSCREEN_PAGE_BTNS; i++, j++) {
+		s->btns[i].col = (Gui._onscreenButtons & (1 << j)) ? PACKEDCOL_WHITE : grey;
 	}
 }
 
-static void TouchOnscreen_Any(void* s, void* w) {
-	int bit = 1 << (Screen_Index(s, w) - 1);
+static void TouchOnscreen_Any(void* screen, void* w) {
+	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
+	int bit = 1 << (Screen_Index(s, w) - 3 + s->offset);
 	if (Gui._onscreenButtons & bit) {
 		Gui._onscreenButtons &= ~bit;
 	} else {
@@ -3644,16 +3647,41 @@ static void TouchOnscreen_Any(void* s, void* w) {
 }
 static void TouchOnscreen_More(void* s, void* w) { TouchCtrlsScreen_Show(); }
 
-static const struct SimpleButtonDesc touchOnscreen_btns[ONSCREEN_MAX_BTNS] = {
-	{ -120,  -50, "Chat",       TouchOnscreen_Any },
-	{  120,  -50, "Tablist",    TouchOnscreen_Any },
-	{ -120,    0, "Spawn",      TouchOnscreen_Any },
-	{  120,    0, "Set spawn",  TouchOnscreen_Any },
-	{ -120,   50, "Fly",        TouchOnscreen_Any },
-	{  120,   50, "Noclip",     TouchOnscreen_Any },
-	{ -120,  100, "Speed",      TouchOnscreen_Any },
-	{  120,  100, "Half speed", TouchOnscreen_Any }
+static const struct SimpleButtonDesc touchOnscreen_page1[ONSCREEN_PAGE_BTNS] = {
+	{ -120,  -50, "Chat",       TouchOnscreen_Any }, {  120,  -50, "Tablist",    TouchOnscreen_Any },
+	{ -120,    0, "Spawn",      TouchOnscreen_Any }, {  120,    0, "Set spawn",  TouchOnscreen_Any },
+	{ -120,   50, "Fly",        TouchOnscreen_Any }, {  120,   50, "Noclip",     TouchOnscreen_Any },
+	{ -120,  100, "Speed",      TouchOnscreen_Any }, {  120,  100, "Half speed", TouchOnscreen_Any }
 };
+static const struct SimpleButtonDesc touchOnscreen_page2[ONSCREEN_PAGE_BTNS] = {
+	{ -120,  -50, "---",        TouchOnscreen_Any }, {  120,  -50, "---",        TouchOnscreen_Any },
+	{ -120,    0, "---",        TouchOnscreen_Any }, {  120,    0, "---",        TouchOnscreen_Any },
+	{ -120,   50, "---",        TouchOnscreen_Any }, {  120,   50, "---",        TouchOnscreen_Any },
+	{ -120,  100, "---",        TouchOnscreen_Any }, {  120,  100, "---",        TouchOnscreen_Any }
+};
+
+static void TouchOnscreen_SetPage(struct TouchOnscreenScreen* s, cc_bool page1) {
+	s->offset   = page1 ? 0 : ONSCREEN_PAGE_BTNS;
+	s->btnDescs = page1 ? touchOnscreen_page1 : touchOnscreen_page2;
+	Menu_InitButtons(s->btns, 200, s->btnDescs, ONSCREEN_PAGE_BTNS);
+
+	s->left.disabled  =  page1;
+	s->right.disabled = !page1;
+}
+
+static void TouchOnscreen_Left(void* screen, void* b) {
+	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
+	TouchOnscreen_SetPage(s, true);
+	Gui_Refresh((struct Screen*)s);
+	TouchOnscreen_UpdateColors(s);
+}
+
+static void TouchOnscreen_Right(void* screen, void* b) {
+	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
+	TouchOnscreen_SetPage(s, false);
+	Gui_Refresh((struct Screen*)s);
+	TouchOnscreen_UpdateColors(s);
+}
 
 static void TouchOnscreenScreen_ContextLost(void* screen) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
@@ -3665,14 +3693,18 @@ static void TouchOnscreenScreen_ContextRecreated(void* screen) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
 	Menu_MakeTitleFont(&s->font);
 	Screen_CreateVb(screen);
-	Menu_SetButtons(s->btns, &s->font, touchOnscreen_btns, ONSCREEN_MAX_BTNS);
-	ButtonWidget_SetConst(&s->back, "Done", &s->font);
+	Menu_SetButtons(s->btns, &s->font, s->btnDescs, ONSCREEN_PAGE_BTNS);
+	ButtonWidget_SetConst(&s->back,  "Done", &s->font);
+	ButtonWidget_SetConst(&s->left,  "<",    &s->font);
+	ButtonWidget_SetConst(&s->right, ">",    &s->font);
 }
 
 static void TouchOnscreenScreen_Layout(void* screen) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	Menu_LayoutButtons(s->btns, touchOnscreen_btns, ONSCREEN_MAX_BTNS);
+	Menu_LayoutButtons(s->btns, s->btnDescs, ONSCREEN_PAGE_BTNS);
 	Menu_LayoutBack(&s->back);
+	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -260,    0);
+	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  260,    0);
 }
 
 static void TouchOnscreenScreen_Init(void* screen) {
@@ -3681,9 +3713,11 @@ static void TouchOnscreenScreen_Init(void* screen) {
 	s->numWidgets  = Array_Elems(touchOnscreen_widgets);
 	s->maxVertices = TOUCHONSCREEN_MAX_VERTICES;
 
-	Menu_InitButtons(s->btns, 200, touchOnscreen_btns, ONSCREEN_MAX_BTNS);
+	TouchOnscreen_SetPage(s, true);
 	TouchOnscreen_UpdateColors(screen);
 	Menu_InitBack(&s->back, TouchOnscreen_More);
+	ButtonWidget_Init(&s->left,  40, TouchOnscreen_Left);
+	ButtonWidget_Init(&s->right, 40, TouchOnscreen_Right);
 }
 
 static const struct ScreenVTABLE TouchOnscreenScreen_VTABLE = {
