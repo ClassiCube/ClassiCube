@@ -173,5 +173,6 @@ void InputHandler_OnScreensChanged(void);
 #define ONSCREEN_BTN_NOCLIP    (1 << 5)
 #define ONSCREEN_BTN_SPEED     (1 << 6)
 #define ONSCREEN_BTN_HALFSPEED (1 << 7)
-#define ONSCREEN_MAX_BTNS 8
+#define ONSCREEN_BTN_CAMERA    (1 << 8)
+#define ONSCREEN_MAX_BTNS 9
 #endif

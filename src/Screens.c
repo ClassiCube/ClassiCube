@@ -1930,6 +1930,7 @@ static struct TouchScreen {
 
 static struct Widget* touch_widgets[1 + TOUCH_MAX_BTNS] = {
 	NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,
+	NULL,
 	NULL,NULL,NULL, (struct Widget*)&TouchScreen.thumbstick
 };
 #define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
@@ -1938,7 +1939,7 @@ static void TouchScreen_OnscreenClick(void* screen, void* widget) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	int i   = Screen_Index(screen, widget);
 	int key = KeyBinds[s->onscreenDescs[i]->bind];
-	Input_Set(KeyBinds[s->onscreenDescs[i]->bind], !Input_Pressed[key]);
+	Input_Set(key, !Input_Pressed[key]);
 }
 
 static void TouchScreen_ChatClick(void* s,     void* w) { ChatScreen_OpenInput(&String_Empty); }
@@ -1946,6 +1947,7 @@ static void TouchScreen_RespawnClick(void* s,  void* w) { LocalPlayer_HandleResp
 static void TouchScreen_SetSpawnClick(void* s, void* w) { LocalPlayer_HandleSetSpawn(); }
 static void TouchScreen_FlyClick(void* s,      void* w) { LocalPlayer_HandleFly(); }
 static void TouchScreen_NoclipClick(void* s,   void* w) { LocalPlayer_HandleNoclip(); }
+static void TouchScreen_CameraClick(void* s,   void* w) { Camera_CycleActive(); }
 static void TouchScreen_MoreClick(void* s,     void* w) { TouchMoreScreen_Show(); }
 
 static void TouchScreen_TabClick(void* s, void* w) {
@@ -1962,7 +1964,7 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 	Input_Set(KeyBinds[s->descs[i].bind], true);
 }
 
-static const struct TouchButtonDesc onscreenDescs[8] = {
+static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
 	{ "Chat",      0,0,0, TouchScreen_ChatClick },
 	{ "Tablist",   0,0,0, TouchScreen_TabClick },
 	{ "Respawn",   0,0,0, TouchScreen_RespawnClick,  &LocalPlayer_Instance.Hacks.CanRespawn },
@@ -1970,7 +1972,8 @@ static const struct TouchButtonDesc onscreenDescs[8] = {
 	{ "Fly",       0,0,0, TouchScreen_FlyClick,      &LocalPlayer_Instance.Hacks.CanFly     },
 	{ "Noclip",    0,0,0, TouchScreen_NoclipClick,   &LocalPlayer_Instance.Hacks.CanNoclip  },
 	{ "Speed",     KEYBIND_SPEED,       0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed },
-	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed }
+	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed },
+	{ "Camera",    0,0,0, TouchScreen_CameraClick,   &LocalPlayer_Instance.Hacks.CanUseThirdPerson }
 };
 static const struct TouchButtonDesc normDescs[2] = {
 	{ "...",  KEYBIND_COUNT,     0,   0, TouchScreen_MoreClick },
