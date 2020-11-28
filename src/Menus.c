@@ -186,18 +186,18 @@ static struct ListScreen {
 	void (*LoadEntries)(struct ListScreen* s);
 	void (*UpdateEntry)(struct ListScreen* s, struct ButtonWidget* btn, const cc_string* text);
 	const char* titleText;
-	struct TextWidget title, page;
+	struct TextWidget title;
 	struct StringsBuffer entries;
 } ListScreen;
 
-static struct Widget* list_widgets[10] = {
+static struct Widget* list_widgets[9] = {
 	(struct Widget*)&ListScreen.btns[0], (struct Widget*)&ListScreen.btns[1],
 	(struct Widget*)&ListScreen.btns[2], (struct Widget*)&ListScreen.btns[3],
 	(struct Widget*)&ListScreen.btns[4], (struct Widget*)&ListScreen.left,
 	(struct Widget*)&ListScreen.right,   (struct Widget*)&ListScreen.title,   
-	(struct Widget*)&ListScreen.page,    (struct Widget*)&ListScreen.done
+	(struct Widget*)&ListScreen.done
 };
-#define LIST_MAX_VERTICES (8 * BUTTONWIDGET_MAX + 2 * TEXTWIDGET_MAX)
+#define LIST_MAX_VERTICES (8 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX)
 #define LISTSCREEN_EMPTY "-----"
 
 static void ListScreen_Layout(void* screen) {
@@ -212,7 +212,6 @@ static void ListScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -220,    0);
 	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  220,    0);
 	Widget_SetLocation(&s->title, ANCHOR_CENTRE, ANCHOR_CENTRE,    0, -155);
-	Widget_SetLocation(&s->page,  ANCHOR_CENTRE,    ANCHOR_MAX,    0,   75);
 }
 
 static STRING_REF cc_string ListScreen_UNSAFE_Get(struct ListScreen* s, int index) {
@@ -224,22 +223,27 @@ static STRING_REF cc_string ListScreen_UNSAFE_Get(struct ListScreen* s, int inde
 	return str;
 }
 
-static void ListScreen_UpdatePage(struct ListScreen* s) {
-	cc_string page; char pageBuffer[STRING_SIZE];
-	int end, num, pages;
+static void ListScreen_UpdateTitle(struct ListScreen* s) {
+	cc_string str; char strBuffer[STRING_SIZE];
+	int num, pages;
+	String_InitArray(str, strBuffer);
+	String_AppendConst(&str, s->titleText);
 
-	end = s->entries.count - LIST_SCREEN_ITEMS;
+	if (!Game_ClassicMode) {
+		num   = (s->currentIndex / LIST_SCREEN_ITEMS) + 1;
+		pages = Math_CeilDiv(s->entries.count, LIST_SCREEN_ITEMS);
+
+		if (pages == 0) pages = 1;
+		String_Format2(&str, " &7(page %i/%i)", &num, &pages);
+	}
+	TextWidget_Set(&s->title, &str, &s->font);
+}
+
+static void ListScreen_UpdatePage(struct ListScreen* s) {
+	int end = s->entries.count - LIST_SCREEN_ITEMS;
 	s->left.disabled  = s->currentIndex <= 0;
 	s->right.disabled = s->currentIndex >= end;
-
-	if (Game_ClassicMode) return;
-	num   = (s->currentIndex / LIST_SCREEN_ITEMS) + 1;
-	pages = Math_CeilDiv(s->entries.count, LIST_SCREEN_ITEMS);
-	if (pages == 0) pages = 1;
-
-	String_InitArray(page, pageBuffer);
-	String_Format2(&page, "&7Page %i of %i", &num, &pages);
-	TextWidget_Set(&s->page, &page, &s->font);
+	ListScreen_UpdateTitle(s);
 }
 
 static void ListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const cc_string* text) {
@@ -358,7 +362,6 @@ static void ListScreen_Init(void* screen) {
 	ButtonWidget_Init(&s->left,  40, ListScreen_MoveBackwards);
 	ButtonWidget_Init(&s->right, 40, ListScreen_MoveForwards);
 	TextWidget_Init(&s->title);
-	TextWidget_Init(&s->page);
 	Menu_InitBack(&s->done, s->DoneClick);
 	s->LoadEntries(s);
 }
@@ -387,10 +390,9 @@ static void ListScreen_ContextRecreated(void* screen) {
 	Menu_MakeTitleFont(&s->font);
 	ListScreen_RedrawEntries(s);
 
-	ButtonWidget_SetConst(&s->left,  "<",          &s->font);
-	ButtonWidget_SetConst(&s->right, ">",          &s->font);
-	TextWidget_SetConst(&s->title,   s->titleText, &s->font);
-	ButtonWidget_SetConst(&s->done, "Done",        &s->font);
+	ButtonWidget_SetConst(&s->left,  "<",   &s->font);
+	ButtonWidget_SetConst(&s->right, ">",   &s->font);
+	ButtonWidget_SetConst(&s->done, "Done", &s->font);
 	ListScreen_UpdatePage(s);
 }
 
@@ -1527,7 +1529,7 @@ static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
 
 void TexturePackScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
-	s->titleText   = "Select a texture pack zip";
+	s->titleText   = "Select a texture pack";
 	s->LoadEntries = TexturePackScreen_LoadEntries;
 	s->EntryClick  = TexturePackScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;
