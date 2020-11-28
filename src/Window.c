@@ -3171,7 +3171,9 @@ static EM_BOOL OnTouchStart(int type, const EmscriptenTouchEvent* ev, void* data
 		RescaleXY(t->targetX, t->targetY, &x, &y);
 		Input_AddTouch(t->identifier, x, y);
 	}
-	return true;
+	/* Don't intercept touchstart events while keyboard is open, that way */
+	/* user can still touch to move the caret position in input textbox. */
+	return !keyboardOpen;
 }
 
 static EM_BOOL OnTouchMove(int type, const EmscriptenTouchEvent* ev, void* data) {
@@ -3197,9 +3199,7 @@ static EM_BOOL OnTouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) 
 		RescaleXY(t->targetX, t->targetY, &x, &y);
 		Input_RemoveTouch(t->identifier, x, y);
 	}
-	/* Don't intercept touchend events while keyboard is open, that way */
-	/* user can still touch to move the caret position in input textbox. */
-	return !keyboardOpen;
+	return true;
 }
 
 static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
