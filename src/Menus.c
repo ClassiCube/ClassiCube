@@ -1492,16 +1492,11 @@ void SaveLevelScreen_Show(void) {
 *---------------------------------------------------TexturePackScreen-----------------------------------------------------*
 *#########################################################################################################################*/
 static void TexturePackScreen_EntryClick(void* screen, void* widget) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
 	struct ListScreen* s = (struct ListScreen*)screen;
-	cc_string relPath;
-	
-	relPath = ListScreen_UNSAFE_GetCur(s, widget);
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "texpacks/%s", &relPath);
-	if (!File_Exists(&path)) return;
-	
-	TexturePack_SetDefault(&relPath);
+	cc_string file = ListScreen_UNSAFE_GetCur(s, widget);
+	if (String_CaselessEqualsConst(&file, LISTSCREEN_EMPTY)) return;
+
+	TexturePack_SetDefault(&file);
 	TexturePack_Url.length = 0;
 	TexturePack_ExtractCurrent(true);
 }

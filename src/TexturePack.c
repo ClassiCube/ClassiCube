@@ -337,17 +337,14 @@ static void ExtractFromFile(const cc_string* filename) {
 	struct Stream stream;
 	cc_result res;
 
-	/* TODO: This is an ugly hack to load textures from memory. */
-	/* We need to mount /classicube to IndexedDB, but texpacks folder */
-	/* should be read from memory. I don't know how to do that, */
-	/* since mounting /classicube/texpacks to memory doesn't work.. */
-#ifdef CC_BUILD_WEB
-	extern int chdir(const char* path);
-	chdir("/");
-#endif
-
 	String_InitArray(path, pathBuffer);
+#ifdef CC_BUILD_WEB
+	/* texpacks/default.zip must be read from memory */
+	/* instead of the default filesystem */
+	String_Format1(&path, "/texpacks/%s", filename);
+#else
 	String_Format1(&path, "texpacks/%s", filename);
+#endif
 
 	res = Stream_OpenFile(&stream, &path);
 	if (res) { Logger_SysWarn2(res, "opening", &path); return; }
@@ -355,10 +352,6 @@ static void ExtractFromFile(const cc_string* filename) {
 
 	res = stream.Close(&stream);
 	if (res) { Logger_SysWarn2(res, "closing", &path); }
-
-#ifdef CC_BUILD_WEB
-	Platform_SetDefaultCurrentDirectory(0, NULL);
-#endif
 }
 
 static void ExtractDefault(void) {
