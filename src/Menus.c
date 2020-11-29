@@ -175,26 +175,27 @@ struct ListScreen;
 static struct ListScreen {
 	Screen_Body
 	struct ButtonWidget btns[LIST_SCREEN_ITEMS];
-	struct ButtonWidget left, right, done;
+	struct ButtonWidget left, right, done, upload;
 	struct FontDesc font;
 	float wheelAcc;
 	int currentIndex;
 	Widget_LeftClick EntryClick, DoneClick;
 	void (*LoadEntries)(struct ListScreen* s);
 	void (*UpdateEntry)(struct ListScreen* s, struct ButtonWidget* btn, const cc_string* text);
+	void (*UploadFunc) (struct ListScreen* s, const cc_string* text);
 	const char* titleText;
 	struct TextWidget title;
 	struct StringsBuffer entries;
 } ListScreen;
 
-static struct Widget* list_widgets[9] = {
+static struct Widget* list_widgets[10] = {
 	(struct Widget*)&ListScreen.btns[0], (struct Widget*)&ListScreen.btns[1],
 	(struct Widget*)&ListScreen.btns[2], (struct Widget*)&ListScreen.btns[3],
 	(struct Widget*)&ListScreen.btns[4], (struct Widget*)&ListScreen.left,
 	(struct Widget*)&ListScreen.right,   (struct Widget*)&ListScreen.title,   
-	(struct Widget*)&ListScreen.done
+	(struct Widget*)&ListScreen.done,    NULL
 };
-#define LIST_MAX_VERTICES (8 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX)
+#define LIST_MAX_VERTICES (9 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX)
 #define LISTSCREEN_EMPTY "-----"
 
 static void ListScreen_Layout(void* screen) {
@@ -204,7 +205,13 @@ static void ListScreen_Layout(void* screen) {
 		Widget_SetLocation(&s->btns[i],
 			ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
 	}
-	Menu_LayoutBack(&s->done);
+
+	if (s->UploadFunc) {
+		Widget_SetLocation(&s->done,   ANCHOR_CENTRE_MIN, ANCHOR_MAX, -150, 25);
+		Widget_SetLocation(&s->upload, ANCHOR_CENTRE_MAX, ANCHOR_MAX, -150, 25);
+	} else {
+		Menu_LayoutBack(&s->done);
+	}
 
 	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -220,    0);
 	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  220,    0);
@@ -355,11 +362,20 @@ static void ListScreen_Init(void* screen) {
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
 		ButtonWidget_Init(&s->btns[i], 300, s->EntryClick);
 	}
+	if (Game_ClassicMode) s->UploadFunc = NULL;
+
+	if (s->UploadFunc) {
+		ButtonWidget_Init(&s->done,   140, s->DoneClick);
+		ButtonWidget_Init(&s->upload, 140, NULL);
+		s->widgets[9] = (struct Widget*)&s->upload;
+	} else {
+		Menu_InitBack(&s->done, s->DoneClick);
+		s->widgets[9] = NULL;
+	}
 
 	ButtonWidget_Init(&s->left,  40, ListScreen_MoveBackwards);
 	ButtonWidget_Init(&s->right, 40, ListScreen_MoveForwards);
 	TextWidget_Init(&s->title);
-	Menu_InitBack(&s->done, s->DoneClick);
 	s->LoadEntries(s);
 }
 
@@ -391,6 +407,9 @@ static void ListScreen_ContextRecreated(void* screen) {
 	ButtonWidget_SetConst(&s->right, ">",   &s->font);
 	ButtonWidget_SetConst(&s->done, "Done", &s->font);
 	ListScreen_UpdatePage(s);
+
+	if (!s->UploadFunc) return;
+	ButtonWidget_SetConst(&s->upload, "Upload", &s->font);
 }
 
 static const struct ScreenVTABLE ListScreen_VTABLE = {
@@ -1521,6 +1540,7 @@ static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
 void TexturePackScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Select a texture pack";
+	s->UploadFunc  = NULL;
 	s->LoadEntries = TexturePackScreen_LoadEntries;
 	s->EntryClick  = TexturePackScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;
@@ -1568,6 +1588,7 @@ static void FontListScreen_LoadEntries(struct ListScreen* s) {
 void FontListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Select a font";
+	s->UploadFunc  = NULL;
 	s->LoadEntries = FontListScreen_LoadEntries;
 	s->EntryClick  = FontListScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchGui;
@@ -1640,6 +1661,7 @@ static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
 void HotkeyListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Modify hotkeys";
+	s->UploadFunc  = NULL;
 	s->LoadEntries = HotkeyListScreen_LoadEntries;
 	s->EntryClick  = HotkeyListScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;
@@ -1679,9 +1701,14 @@ static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {
 	ListScreen_Sort(s);
 }
 
+static void LoadLevelScreen_UploadFunc(struct ListScreen* s, const cc_string* text) {
+
+}
+
 void LoadLevelScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Select a level";
+	s->UploadFunc  = LoadLevelScreen_UploadFunc;
 	s->LoadEntries = LoadLevelScreen_LoadEntries;
 	s->EntryClick  = LoadLevelScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;
