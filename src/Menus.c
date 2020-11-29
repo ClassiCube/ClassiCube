@@ -1239,7 +1239,7 @@ static void SaveLevelScreen_UpdateSave(struct SaveLevelScreen* s) {
 
 static void SaveLevelScreen_UpdateAlt(struct SaveLevelScreen* s) {
 #ifdef CC_BUILD_WEB
-	ButtonWidget_SetConst(&s->alt, "Download (WIP)", &s->titleFont);
+	ButtonWidget_SetConst(&s->alt, "Download", &s->titleFont);
 #else
 	ButtonWidget_SetConst(&s->alt,
 		s->alt.optName ? "&cOverwrite existing?" : "Save schematic", &s->titleFont);
@@ -1267,7 +1267,7 @@ static void DownloadMap(const cc_string* path) {
 	Platform_ConvertString(strPath, path);
 
 	/* maps/aaa.schematic -> aaa.cw */
-	file = String_UNSAFE_SubstringAt(path, 5);
+	file = *path; Utils_UNSAFE_GetFilename(&file);
 	file.length = String_LastIndexOf(&file, '.');
 	String_AppendConst(&file, ".cw");
 	Platform_ConvertString(strFile, &file);
@@ -1339,7 +1339,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_string* 
 	PauseScreen_Show();
 }
 
-static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {
+static void SaveLevelScreen_Save(void* screen, void* widget, const char* fmt) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
@@ -1351,7 +1351,7 @@ static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {
 		return;
 	}
 	String_InitArray(path, pathBuffer);
-	String_Format2(&path, "maps/%s%c", &file, ext);
+	String_Format1(&path, fmt, &file);
 
 	if (File_Exists(&path) && !btn->optName) {
 		btn->optName = "";
@@ -1362,8 +1362,13 @@ static void SaveLevelScreen_Save(void* screen, void* widget, const char* ext) {
 		SaveLevelScreen_SaveMap(s, &path);
 	}
 }
-static void SaveLevelScreen_Main(void* a, void* b) { SaveLevelScreen_Save(a, b, ".cw"); }
-static void SaveLevelScreen_Alt(void* a, void* b)  { SaveLevelScreen_Save(a, b, ".schematic"); }
+static void SaveLevelScreen_Main(void* a, void* b) { SaveLevelScreen_Save(a, b, "maps/%s.cw"); }
+#ifdef CC_BUILD_WEB
+/* Use absolute path so data is written to memory filesystem instead of default filesystem */
+static void SaveLevelScreen_Alt(void* a, void* b)  { SaveLevelScreen_Save(a, b, "/%s.tmpmap"); }
+#else
+static void SaveLevelScreen_Alt(void* a, void* b)  { SaveLevelScreen_Save(a, b, "maps/%s.schematic"); }
+#endif
 
 static void SaveLevelScreen_Render(void* screen, double delta) {
 	PackedCol grey = PackedCol_Make(150, 150, 150, 255);
