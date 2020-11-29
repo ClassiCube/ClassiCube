@@ -1259,44 +1259,38 @@ static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
 
 #ifdef CC_BUILD_WEB
 #include <emscripten.h>
-extern int unlink(const char* path);
-
 static void DownloadMap(const cc_string* path) {
-	struct Stream s;
+	char strPath[NATIVE_STR_LEN];
+	char strFile[NATIVE_STR_LEN];
 	cc_string file;
-	char str[NATIVE_STR_LEN];
-	cc_uint8* ptr = NULL;
-	cc_uint32 len;
-
-	if (Stream_OpenFile(&s, path))         return;
-	if (File_Length(s.Meta.File, &len))    goto finished;
-	ptr = Mem_TryAlloc(len, 1);
-	if (!ptr || Stream_Read(&s, ptr, len)) goto finished;
+	cc_result res;
+	Platform_ConvertString(strPath, path);
 
 	/* maps/aaa.schematic -> aaa.cw */
 	file = String_UNSAFE_SubstringAt(path, 5);
 	file.length = String_LastIndexOf(&file, '.');
 	String_AppendConst(&file, ".cw");
-	Platform_ConvertString(str, &file);
+	Platform_ConvertString(strFile, &file);
 
-	EM_ASM_({
-		var data = HEAPU8.subarray($1, $1 + $2);
-		var blob = new Blob([data], { type: 'application/octet-stream' });
-		var name = UTF8ToString($0);
-		Module.saveBlob(blob, name);
-	}, str, ptr, len);
+	res = EM_ASM_({
+		try {
+			var name = UTF8ToString($0);
+			var data = FS.readFile(name);
+			var blob = new Blob([data], { type: 'application/octet-stream' });
+			Module.saveBlob(blob, UTF8ToString($1));
+			FS.unlink(name);
+			return 0;
+		} catch (e) {
+			if (!(e instanceof FS.ErrnoError)) abort(e);
+			return -e.errno;
+		}
+	}, strPath, strFile);
 
-	Chat_Add1("&eDownloaded map: %s", &file);
-finished:
-	s.Close(&s);
-	/* TODO: Don't free ptr until download is saved?? */
-	/* TODO: Make save map dialog prettier */
-	Mem_Free(ptr);
-
-	/* Cleanup the schematic file left behind */
-	Platform_ConvertString(str, path);
-	/* TODO: This doesn't seem to work properly */
-	unlink(str);
+	if (res) {
+		Logger_SysWarn2(res, "Downloading map", &file);
+	} else {
+		Chat_Add1("&eDownloaded map: %s", &file);
+	}
 }
 #endif
 
