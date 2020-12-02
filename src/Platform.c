@@ -120,20 +120,26 @@ void* Mem_Realloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char
 	return ptr;
 }
 
+static cc_uint32 CalcMemSize(cc_uint32 numElems, cc_uint32 elemsSize) {
+	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
+	if (numBytes < numElems) return 0; /* TODO: Use proper overflow checking */
+	return numBytes;
+}
+
 #if defined CC_BUILD_WIN
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	return HeapAlloc(heap, 0, numBytes);
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? HeapAlloc(heap, 0, size) : NULL;
 }
 
 void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	return HeapAlloc(heap, HEAP_ZERO_MEMORY, numBytes);
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? HeapAlloc(heap, HEAP_ZERO_MEMORY, size) : NULL;
 }
 
 void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	return HeapReAlloc(heap, 0, mem, numBytes);
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? HeapReAlloc(heap, 0, mem, size) : NULL;
 }
 
 void Mem_Free(void* mem) {
@@ -141,15 +147,17 @@ void Mem_Free(void* mem) {
 }
 #elif defined CC_BUILD_POSIX
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return malloc(numElems * elemsSize); /* TODO: avoid overflow here */
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? malloc(size) : NULL;
 }
 
 void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	return calloc(numElems, elemsSize); /* TODO: avoid overflow here */
+	return calloc(numElems, elemsSize);
 }
 
 void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	return realloc(mem, numElems * elemsSize); /* TODO: avoid overflow here */
+	cc_uint32 size = CalcMemSize(numElems, elemsSize);
+	return size ? realloc(mem, size) : NULL;
 }
 
 void Mem_Free(void* mem) {
