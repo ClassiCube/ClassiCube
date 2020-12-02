@@ -1359,7 +1359,7 @@ static void Window_ToggleKey(XKeyEvent* ev, cc_bool pressed) {
 	if (key) {
 		Input_Set(key, pressed);
 	} else {
-		Platform_Log2("Unknown key: (%x, %x)", &keysym1, &keysym2);
+		Platform_Log3("Unknown key %i (%x, %x)", &ev->keycode, &keysym1, &keysym2);
 	}
 }
 
