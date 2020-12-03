@@ -3319,11 +3319,9 @@ static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	if (Key_IsAltPressed() || Key_IsWinPressed()) return true;
 	if (Key_IsControlPressed() && key != 'C' && key != 'V') return true;
 
-	/* Space needs special handling, as intercepting prevents the key press event */
-	/* But on mobile Safari, space (on external keyboard) still scrolls the page */
-	/*   Desktop - Space is never intercepted */
-	/*   Mobile  - Space is intercepted when keyboard is NOT open */
-	if (key == KEY_SPACE) return Input_TouchMode && !keyboardOpen;
+	/* Space needs special handling, as intercepting this prevents the ' ' key press event */
+	/* But on Safari, space scrolls the page - so need to intercept when keyboard is NOT open */
+	if (key == KEY_SPACE) return !keyboardOpen;
 
 	/* Must not intercept KeyDown for regular keys, otherwise KeyPress doesn't get raised. */
 	/* However, do want to prevent browser's behaviour on F11, F5, home etc. */
@@ -3343,7 +3341,7 @@ static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* dat
 	/* - This causes problems such as attempting to backspace all text later to */
 	/*   not actually backspace everything. (because the HTML text input does not */
 	/*   have these intercepted key presses in its text buffer) */
-	if (keyboardOpen) return false;
+	if (Input_TouchMode && keyboardOpen) return false;
 
 	if (Convert_TryCodepointToCP437(ev->charCode, &keyChar)) {
 		Event_RaiseInt(&InputEvents.Press, keyChar);
@@ -3625,8 +3623,8 @@ EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) {
 
 void Window_OpenKeyboard(const cc_string* text, int type) {
 	char str[NATIVE_STR_LEN];
-	if (!Input_TouchMode) return;
 	keyboardOpen = true;
+	if (!Input_TouchMode) return;
 	Platform_ConvertString(str, text);
 	Platform_LogConst("OPEN SESAME");
 
@@ -3674,8 +3672,8 @@ void Window_SetKeyboardText(const cc_string* text) {
 }
 
 void Window_CloseKeyboard(void) {
-	if (!Input_TouchMode) return;
 	keyboardOpen = false;
+	if (!Input_TouchMode) return;
 
 	EM_ASM({
 		if (!window.cc_inputElem) return;
