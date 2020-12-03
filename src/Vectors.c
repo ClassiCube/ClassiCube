@@ -2,6 +2,7 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Constants.h"
+#include "Core.h"
 
 void Vec3_Lerp(Vec3* result, const Vec3* a, const Vec3* b, float blend) {
 	result->X = blend * (b->X - a->X) + a->X;
@@ -271,10 +272,19 @@ void FrustumCulling_CalcFrustumEquations(struct Matrix* projection, struct Matri
 	frustum33 = clip[15] - clip[13];
 	FrustumCulling_Normalise(&frustum30, &frustum31, &frustum32, &frustum33);
 
-	/* Extract the FAR plane */
+	/* Extract the FAR plane (Different for each graphics backend) */
+#if defined(CC_BUILD_GL)
 	frustum40 = clip[3]  - clip[2];
 	frustum41 = clip[7]  - clip[6];
 	frustum42 = clip[11] - clip[10];
 	frustum43 = clip[15] - clip[14];
+#elif defined(CC_BUILD_D3D9)
+	frustum40 = clip[2];
+	frustum41 = clip[6];
+	frustum42 = clip[10];
+	frustum43 = clip[14];
+#else
+#error "Vectors.c: No graphics backend chosen."
+#endif
 	FrustumCulling_Normalise(&frustum40, &frustum41, &frustum42, &frustum43);
 }
