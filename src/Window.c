@@ -1349,7 +1349,7 @@ static int MapNativeMouse(int button) {
 	return 0;
 }
 
-static int TryGetKey(XKeyEvent* ev, cc_bool pressed) {
+static int TryGetKey(XKeyEvent* ev) {
 	KeySym keysym1 = XLookupKeysym(ev, 0);
 	KeySym keysym2 = XLookupKeysym(ev, 1);
 
