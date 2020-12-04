@@ -3549,7 +3549,12 @@ cc_result Window_EnterFullscreen(void) {
 		canvas.style.width  = '100%';
 		canvas.style.height = '100%';
 	});
-	/* TODO: navigator.keyboard.lock(["Escape"] */
+
+	/* By default, pressing Escape will immediately exit fullscreen - which is */
+	/*   quite annoying given that it is also the Menu key. Some browsers allow */
+	/*   'locking' the Escape key, so that you have to hold down Escape to exit. */
+	/* NOTE: This ONLY works when the webpage is a https:// one */
+	EM_ASM({ try { navigator.keyboard.lock(["Escape"]); } catch { } });
 	return 0;
 }
 
