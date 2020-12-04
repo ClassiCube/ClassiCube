@@ -1349,18 +1349,16 @@ static int MapNativeMouse(int button) {
 	return 0;
 }
 
-static void Window_ToggleKey(XKeyEvent* ev, cc_bool pressed) {
+static int TryGetKey(XKeyEvent* ev, cc_bool pressed) {
 	KeySym keysym1 = XLookupKeysym(ev, 0);
 	KeySym keysym2 = XLookupKeysym(ev, 1);
 
 	int key = MapNativeKey(keysym1, ev->state);
 	if (!key) key = MapNativeKey(keysym2, ev->state);
+	if (key) return key;
 
-	if (key) {
-		Input_Set(key, pressed);
-	} else {
-		Platform_Log3("Unknown key %i (%x, %x)", &ev->keycode, &keysym1, &keysym2);
-	}
+	Platform_Log3("Unknown key %i (%x, %x)", &ev->keycode, &keysym1, &keysym2);
+	return 0;
 }
 
 static Atom Window_GetSelectionProperty(XEvent* e) {
@@ -1397,7 +1395,7 @@ static void HandleGenericEvent(XEvent* e);
 
 void Window_ProcessEvents(void) {
 	XEvent e;
-	int i, btn, status;
+	int i, btn, key, status;
 
 	while (WindowInfo.Exists) {
 		if (!XCheckIfEvent(win_display, &e, FilterEvent, (XPointer)win_handle)) break;
@@ -1429,8 +1427,10 @@ void Window_ProcessEvents(void) {
 
 		case KeyPress:
 		{
-			Window_ToggleKey(&e.xkey, true);
 			char data[64], c;
+			key = TryGetKey(&e.xkey);
+			if (key) Input_SetPressed(key);
+			
 #ifdef CC_BUILD_XIM
 			cc_codepoint cp;
 			char* chars = data;
@@ -1454,9 +1454,8 @@ void Window_ProcessEvents(void) {
 		} break;
 
 		case KeyRelease:
-			/* TODO: raise KeyPress event. Use code from */
-			/* http://anonsvn.mono-project.com/viewvc/trunk/mcs/class/Managed.Windows.Forms/System.Windows.Forms/X11Keyboard.cs?view=markup */
-			Window_ToggleKey(&e.xkey, false);
+			key = TryGetKey(&e.xkey);
+			if (key) Input_SetReleased(key);
 			break;
 
 		case ButtonPress:
@@ -2917,6 +2916,15 @@ static cc_bool GetMouseCoords(int* x, int* y) {
 	return *x >= 0 && *y >= 0 && *x < WindowInfo.Width && *y < WindowInfo.Height;
 }
 
+static int TryGetKey(id ev) {
+	int code = (int)objc_msgSend(ev, selKeycode);
+	int key  = MapNativeKey(code);
+	if (key) return key;
+
+	Platform_Log1("Unknown key %i", &code);
+	return 0;
+}
+
 void Window_ProcessEvents(void) {
 	id ev;
 	int key, type, steps, x, y;
@@ -2943,14 +2951,14 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case 10: /* NSKeyDown */
-			key = MapNativeKey((int)objc_msgSend(ev, selKeycode));
+			key = TryGetKey(ev);
 			if (key) Input_SetPressed(key);
 			// TODO: Test works properly with other languages
 			ProcessKeyChars(ev);
 			break;
 
 		case 11: /* NSKeyUp */
-			key = MapNativeKey((int)objc_msgSend(ev, selKeycode));
+			key = TryGetKey(ev);
 			if (key) Input_SetReleased(key);
 			break;
 
