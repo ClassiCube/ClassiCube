@@ -2,6 +2,7 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Constants.h"
+#include "Core.h"
 
 void Vec3_Lerp(Vec3* result, const Vec3* a, const Vec3* b, float blend) {
 	result->X = blend * (b->X - a->X) + a->X;
@@ -182,21 +183,16 @@ void Matrix_Orthographic(struct Matrix* result, float left, float right, float t
 static double Tan_Simple(double x) { return Math_Sin(x) / Math_Cos(x); }
 void Matrix_PerspectiveFieldOfView(struct Matrix* result, float fovy, float aspect, float zNear, float zFar) {
 	float c = zNear * (float)Tan_Simple(0.5f * fovy);
-	Matrix_PerspectiveOffCenter(result, -c * aspect, c * aspect, -c, c, zNear, zFar);
-}
+	float zDelta = zNear - zFar;
 
-void Matrix_PerspectiveOffCenter(struct Matrix* result, float left, float right, float bottom, float top, float zNear, float zFar) {
-	/* Transposed, source https://msdn.microsoft.com/en-us/library/dd373537(v=vs.85).aspx */
 	*result = Matrix_Identity;
 	result->Row3.W = 0.0f;
 
-	result->Row0.X = (2.0f * zNear) / (right - left);
-	result->Row1.Y = (2.0f * zNear) / (top - bottom);
-	result->Row3.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	result->Row0.X = zNear / (c * aspect);
+	result->Row1.Y = zNear / c;
+	result->Row3.Z = (2.0f * zFar * zNear) / zDelta;
 
-	result->Row2.X = (right + left) / (right - left);
-	result->Row2.Y = (top + bottom) / (top - bottom);
-	result->Row2.Z = -(zFar + zNear) / (zFar - zNear);
+	result->Row2.Z = (zFar + zNear) / zDelta;
 	result->Row2.W = -1.0f;
 }
 
@@ -276,10 +272,19 @@ void FrustumCulling_CalcFrustumEquations(struct Matrix* projection, struct Matri
 	frustum33 = clip[15] - clip[13];
 	FrustumCulling_Normalise(&frustum30, &frustum31, &frustum32, &frustum33);
 
-	/* Extract the FAR plane */
+	/* Extract the FAR plane (Different for each graphics backend) */
+#if defined(CC_BUILD_GL)
 	frustum40 = clip[3]  - clip[2];
 	frustum41 = clip[7]  - clip[6];
 	frustum42 = clip[11] - clip[10];
 	frustum43 = clip[15] - clip[14];
+#elif defined(CC_BUILD_D3D9)
+	frustum40 = clip[2];
+	frustum41 = clip[6];
+	frustum42 = clip[10];
+	frustum43 = clip[14];
+#else
+#error "Vectors.c: No graphics backend chosen."
+#endif
 	FrustumCulling_Normalise(&frustum40, &frustum41, &frustum42, &frustum43);
 }

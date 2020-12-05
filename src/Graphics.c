@@ -372,7 +372,11 @@ static void FindCompatibleDepthFormat(void) {
 	for (i = 0; i < Array_Elems(formats); i++) {
 		depthFormat = formats[i];
 		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, viewFormat, viewFormat, depthFormat);
-		if (!res) return;
+		if (!res) {
+			/* With reversed z depth, the near Z plane can be set much lower with more depth buffer bits. */
+			Gfx.MinZNear = i > 3 ? 0.05f : 0.001953125f;
+			return;
+		}
 	}
 	Logger_Abort("Failed to create depth buffer. Graphics drivers may not be installed.");
 }
@@ -427,7 +431,6 @@ void Gfx_Create(void) {
 	FindCompatibleViewFormat();
 	FindCompatibleDepthFormat();
 
-	Gfx.MinZNear        = 0.05f;
 	customMipmapsLevels = true;
 	Gfx.ManagedTextures = true;
 	Gfx.Created         = true;
@@ -477,7 +480,7 @@ static void Gfx_RestoreState(void) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHAREF,  127);
 	IDirect3DDevice9_SetRenderState(device, D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA);
 	IDirect3DDevice9_SetRenderState(device, D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-	IDirect3DDevice9_SetRenderState(device, D3DRS_ZFUNC,     D3DCMP_LESSEQUAL);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_ZFUNC,     D3DCMP_GREATEREQUAL);
 	D3D9_RestoreRenderStates();
 }
 
@@ -911,6 +914,9 @@ void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 }
 void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix) {
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
+	/* Adjust the projection matrix to produce reversed Z values. */
+	matrix->Row2.Z = -matrix->Row2.Z - 1.0f;
+	matrix->Row3.Z = -matrix->Row3.Z;
 }
 
 
@@ -966,7 +972,7 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_Clear(void) {
 	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
-	cc_result res = IDirect3DDevice9_Clear(device, 0, NULL, flags, gfx_clearCol, 1.0f, 0);
+	cc_result res = IDirect3DDevice9_Clear(device, 0, NULL, flags, gfx_clearCol, 0.0f, 0);
 	if (res) Logger_Abort2(res, "D3D9_Clear");
 }
 
@@ -1808,6 +1814,7 @@ void Gfx_SetFogMode(FogFunc func) {
 void Gfx_SetTexturing(cc_bool enabled) { }
 void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; SwitchProgram(); }
 
+void Gfx_PrepProjection(struct Matrix* matrix) { }
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	if (type == MATRIX_VIEW || type == MATRIX_PROJECTION) {
 		if (type == MATRIX_VIEW)       _view = *matrix;
@@ -1982,6 +1989,7 @@ void Gfx_SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 static GLenum matrix_modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 static int lastMatrix;
 
+void Gfx_PrepProjection(struct Matrix* matrix) { }
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
 	glLoadMatrixf((float*)matrix);
