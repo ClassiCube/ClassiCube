@@ -141,13 +141,16 @@ static void Png_Reconstruct(cc_uint8 type, cc_uint8 bytesPerPixel, cc_uint8* lin
 	}
 }
 
+#include <intrin.h>
+#define SIMD_LOAD(addr) _mm_loadu_si128((__m128i *)(addr))
+#define SIMD_STORE(addr, val) _mm_storeu_si128((__m128i *)(addr), val)
+#define SIMD_SHUFFLE(val, mask) _mm_shuffle_epi8(val, mask)
+#define SIMD_OR(arg1, arg2) _mm_or_si128(arg1, arg2)
 #define Bitmap_Set(dst, r,g,b,a) dst = BitmapCol_Make(r, g, b, a);
 
 #define PNG_Do_Grayscale(dstI, src, scale)  rgb = (src) * scale; Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
 #define PNG_Do_Grayscale_8(dstI, srcI)      rgb = src[srcI];     Bitmap_Set(dst[dstI], rgb, rgb, rgb, 255);
 #define PNG_Do_Grayscale_A__8(dstI, srcI)   rgb = src[srcI];     Bitmap_Set(dst[dstI], rgb, rgb, rgb, src[srcI + 1]);
-#define PNG_Do_RGB__8(dstI, srcI)           Bitmap_Set(dst[dstI], src[srcI], src[srcI + 1], src[srcI + 2], 255);
-#define PNG_Do_RGB_A__8(dstI, srcI)         Bitmap_Set(dst[dstI], src[srcI], src[srcI + 1], src[srcI + 2], src[srcI + 3]);
 
 #define PNG_Mask_1(i) (7 - (i & 7))
 #define PNG_Mask_2(i) ((3 - (i & 3)) * 2)
@@ -193,14 +196,37 @@ static void Png_Expand_GRAYSCALE_16(int width, BitmapCol* palette, cc_uint8* src
 	}
 }
 
+static void ins_Expand_RGB_8(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
+	__m128i mask = _mm_set_epi8(0xFF,0x09,0x0A,0x0B, 0xFF,0x06,0x07,0x08,
+								0xFF,0x03,0x04,0x05, 0xFF,0x00,0x01,0x02);
+	__m128i alpha= _mm_set_epi8(0xFF,0x00,0x00,0x00, 0xFF,0x00,0x00,0x00,
+								0xFF,0x00,0x00,0x00, 0xFF,0x00,0x00,0x00);
+
+	for (; width >= 16; src += 48, dst += 16, width -= 16) {
+		__m128i src0 = SIMD_LOAD(src +  0);
+		__m128i src1 = SIMD_LOAD(src + 12);
+		__m128i src2 = SIMD_LOAD(src + 24);
+		__m128i src3 = SIMD_LOAD(src + 36);
+
+		SIMD_STORE(dst +  0, SIMD_OR(SIMD_SHUFFLE(src0, mask), alpha));
+		SIMD_STORE(dst +  4, SIMD_OR(SIMD_SHUFFLE(src1, mask), alpha));
+		SIMD_STORE(dst +  8, SIMD_OR(SIMD_SHUFFLE(src2, mask), alpha));
+		SIMD_STORE(dst + 12, SIMD_OR(SIMD_SHUFFLE(src3, mask), alpha));
+	}
+	for (; width > 0; src += 3, dst++, width--) {
+		Bitmap_Set(*dst, src[0], src[1], src[2], 255);
+	}
+}
+
+#define Do_RGB_8(D, S) Bitmap_Set(dst[D], src[S], src[S + 1], src[S + 2], 255);
 static void Png_Expand_RGB_8(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
 	int i, j;
 
 	for (i = 0, j = 0; i < (width & ~0x03); i += 4, j += 12) {
-		PNG_Do_RGB__8(i    , j    ); PNG_Do_RGB__8(i + 1, j + 3);
-		PNG_Do_RGB__8(i + 2, j + 6); PNG_Do_RGB__8(i + 3, j + 9);
+		Do_RGB_8(i    , j    ); Do_RGB_8(i + 1, j + 3);
+		Do_RGB_8(i + 2, j + 6); Do_RGB_8(i + 3, j + 9);
 	}
-	for (; i < width; i++, j += 3) { PNG_Do_RGB__8(i, j); }
+	for (; i < width; i++, j += 3) { Do_RGB_8(i, j); }
 }
 
 static void Png_Expand_RGB_16(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
@@ -259,14 +285,35 @@ static void Png_Expand_GRAYSCALE_A_16(int width, BitmapCol* palette, cc_uint8* s
 	}
 }
 
+static void ins_Expand_RGB_A_8(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
+	__m128i mask = _mm_set_epi8(0x0F,0x0C,0x0D,0x0E, 0x0B,0x08,0x09,0x0A,
+								0x07,0x04,0x05,0x06, 0x03,0x00,0x01,0x02);
+
+	for (; width >= 16; src += 64, dst += 16, width -= 16) {
+		__m128i src0 = SIMD_LOAD(src +  0);
+		__m128i src1 = SIMD_LOAD(src + 16);
+		__m128i src2 = SIMD_LOAD(src + 32);
+		__m128i src3 = SIMD_LOAD(src + 48);
+
+		SIMD_STORE(dst +  0, SIMD_SHUFFLE(src0, mask));
+		SIMD_STORE(dst +  4, SIMD_SHUFFLE(src1, mask));
+		SIMD_STORE(dst +  8, SIMD_SHUFFLE(src2, mask));
+		SIMD_STORE(dst + 12, SIMD_SHUFFLE(src3, mask));
+	}
+	for (; width > 0; src += 4, dst++, width--) {
+		Bitmap_Set(*dst, src[0], src[1], src[2], src[3]);
+	}
+}
+
+#define Do_RGBA_8(D, S) Bitmap_Set(dst[D], src[S], src[S + 1], src[S + 2], src[S + 3]);
 static void Png_Expand_RGB_A_8(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
 	int i, j;
 
 	for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 16) {
-		PNG_Do_RGB_A__8(i    , j    ); PNG_Do_RGB_A__8(i + 1, j + 4 );
-		PNG_Do_RGB_A__8(i + 2, j + 8); PNG_Do_RGB_A__8(i + 3, j + 12);
+		Do_RGBA_8(i    , j    ); Do_RGBA_8(i + 1, j + 4 );
+		Do_RGBA_8(i + 2, j + 8); Do_RGBA_8(i + 3, j + 12);
 	}
-	for (; i < width; i++, j += 4) { PNG_Do_RGB_A__8(i, j); }
+	for (; i < width; i++, j += 4) { Do_RGBA_8(i, j); }
 }
 
 static void Png_Expand_RGB_A_16(int width, BitmapCol* palette, cc_uint8* src, BitmapCol* dst) {
@@ -290,7 +337,7 @@ static Png_RowExpander Png_GetExpander(cc_uint8 col, cc_uint8 bitsPerSample) {
 
 	case PNG_COL_RGB:
 		switch (bitsPerSample) {
-		case 8:  return Png_Expand_RGB_8;
+		case 8:  return ins_Expand_RGB_8;
 		case 16: return Png_Expand_RGB_16;
 		}
 		return NULL;
@@ -313,7 +360,7 @@ static Png_RowExpander Png_GetExpander(cc_uint8 col, cc_uint8 bitsPerSample) {
 
 	case PNG_COL_RGB_A:
 		switch (bitsPerSample) {
-		case 8:  return Png_Expand_RGB_A_8;
+		case 8:  return ins_Expand_RGB_A_8;
 		case 16: return Png_Expand_RGB_A_16;
 		}
 		return NULL;
