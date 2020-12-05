@@ -123,6 +123,7 @@ CC_API void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const s
 
 void Matrix_Orthographic(struct Matrix* result, float left, float right, float top, float bottom, float zNear, float zFar);
 void Matrix_PerspectiveFieldOfView(struct Matrix* result, float fovy, float aspect, float zNear, float zFar);
+void Matrix_PerspectiveOffCenter(struct Matrix* result, float left, float right, float bottom, float top, float zNear, float zFar);
 void Matrix_LookRot(struct Matrix* result, Vec3 pos, Vec2 rot);
 
 cc_bool FrustumCulling_SphereInFrustum(float x, float y, float z, float radius);

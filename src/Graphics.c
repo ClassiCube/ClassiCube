@@ -372,11 +372,7 @@ static void FindCompatibleDepthFormat(void) {
 	for (i = 0; i < Array_Elems(formats); i++) {
 		depthFormat = formats[i];
 		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, viewFormat, viewFormat, depthFormat);
-		if (!res) {
-			/* With reversed z depth, the near Z plane can be set much lower with more depth buffer bits. */
-			Gfx.MinZNear = i > 3 ? 0.05f : 0.001953125f;
-			return;
-		}
+		if (!res) return;
 	}
 	Logger_Abort("Failed to create depth buffer. Graphics drivers may not be installed.");
 }
@@ -391,6 +387,18 @@ static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* a
 	args->PresentationInterval   = gfx_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 	args->SwapEffect = D3DSWAPEFFECT_DISCARD;
 	args->Windowed   = true;
+}
+
+static const int D3D9_DepthBufferBits(void) {
+	switch (depthFormat) {
+	case D3DFMT_D32:     return 32;
+	case D3DFMT_D24X8:   return 24;
+	case D3DFMT_D24S8:   return 24;
+	case D3DFMT_D24X4S4: return 24;
+	case D3DFMT_D16:     return 16;
+	case D3DFMT_D15S1:   return 15;
+	}
+	return 0;
 }
 
 static cc_bool deviceCreated;
@@ -430,6 +438,8 @@ void Gfx_Create(void) {
 	CreateD3D9();
 	FindCompatibleViewFormat();
 	FindCompatibleDepthFormat();
+	/* With reversed z depth, near Z plane can be much closer with sufficient depth buffer precision */
+	Gfx.MinZNear = D3D9_DepthBufferBits() < 24 ? 0.05f : 0.001953125f;
 
 	customMipmapsLevels = true;
 	Gfx.ManagedTextures = true;
@@ -996,22 +1006,10 @@ static const char* D3D9_StrFlags(void) {
 	return "(none)";
 }
 
-static const int D3D9_DepthBufferBts(D3DFORMAT format) {
-	switch (format) {
-	case D3DFMT_D32:     return 32;
-	case D3DFMT_D24X8:   return 24;
-	case D3DFMT_D24S8:   return 24;
-	case D3DFMT_D24X4S4: return 24;
-	case D3DFMT_D16:     return 16;
-	case D3DFMT_D15S1:   return 15;
-	}
-	return 0;
-}
-
 void Gfx_GetApiInfo(cc_string* info) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
 	int pointerSize = sizeof(void*) * 8;
-	int depthBits   = D3D9_DepthBufferBts(depthFormat);
+	int depthBits   = D3D9_DepthBufferBits();
 	float curMem;
 
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
@@ -1814,7 +1812,6 @@ void Gfx_SetFogMode(FogFunc func) {
 void Gfx_SetTexturing(cc_bool enabled) { }
 void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; SwitchProgram(); }
 
-void Gfx_PrepProjection(struct Matrix* matrix) { }
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	if (type == MATRIX_VIEW || type == MATRIX_PROJECTION) {
 		if (type == MATRIX_VIEW)       _view = *matrix;
@@ -1989,7 +1986,6 @@ void Gfx_SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 static GLenum matrix_modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 static int lastMatrix;
 
-void Gfx_PrepProjection(struct Matrix* matrix) { }
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
 	glLoadMatrixf((float*)matrix);
