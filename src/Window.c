@@ -1111,6 +1111,23 @@ static int MapNativeKey(KeySym key, unsigned int state) {
 	return KEY_NONE;
 }
 
+/* NOTE: This may not be entirely accurate, because user can configure keycode mappings */
+static const cc_uint8 keycodeMap[136] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, KEY_ESCAPE, '1', '2', '3', '4', '5', '6',
+	'7', '8', '9', '0', KEY_MINUS, KEY_EQUALS, KEY_BACKSPACE, KEY_TAB, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
+	'O',  'P', KEY_LBRACKET, KEY_RBRACKET, KEY_ENTER, KEY_LCTRL, 'A', 'S', 'D', 'F', 'G', 'H',  'J', 'K', 'L', KEY_SEMICOLON,
+	KEY_QUOTE, KEY_TILDE, KEY_LSHIFT, KEY_BACKSLASH, 'Z', 'X', 'C', 'V', 'B', 'N', 'M', KEY_PERIOD, KEY_COMMA, KEY_SLASH, KEY_RSHIFT, KEY_KP_MULTIPLY,
+	KEY_LALT, KEY_SPACE, KEY_CAPSLOCK, KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10, KEY_NUMLOCK, KEY_SCROLLLOCK, KEY_KP7,
+	KEY_KP8, KEY_KP9, KEY_KP_MINUS, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP_PLUS, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP0, KEY_KP_DECIMAL, 0, 0, 0, KEY_F11,
+	KEY_F12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	KEY_RALT, KEY_RCTRL, KEY_HOME, KEY_UP, KEY_PAGEUP, KEY_LEFT, KEY_RIGHT, KEY_END, KEY_DOWN, KEY_PAGEDOWN, KEY_INSERT, KEY_DELETE, 0, 0, 0, 0,
+	0, 0, 0, KEY_PAUSE, 0, 0, 0, 0, 0, KEY_LWIN, 0, KEY_RWIN
+};
+
+static int MapNativeKeycode(unsigned int keycode) {
+	return keycode < Array_Elems(keycodeMap) ? keycodeMap[keycode] : 0;
+}
+
 static void RegisterAtoms(void) {
 	Display* display = win_display;
 	wm_destroy = XInternAtom(display, "WM_DELETE_WINDOW", true);
@@ -1358,7 +1375,9 @@ static int TryGetKey(XKeyEvent* ev) {
 	if (key) return key;
 
 	Platform_Log3("Unknown key %i (%x, %x)", &ev->keycode, &keysym1, &keysym2);
-	return 0;
+	/* The user may be using a keyboard layout such as cryllic - */
+	/*   fallback to trying to conver the raw scancodes instead */
+	return MapNativeKeycode(ev->keycode);
 }
 
 static Atom Window_GetSelectionProperty(XEvent* e) {
