@@ -27,7 +27,7 @@ static void Camera_OnRawMovement(float deltaX, float deltaY) {
 static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
 	float fovy = Game_Fov * MATH_DEG2RAD;
 	float aspectRatio = (float)Game.Width / (float)Game.Height;
-	Gfx_CalcPerspectiveMatrix(fovy, aspectRatio, Gfx.MinZNear, (float)Game_ViewDistance, proj);
+	Gfx_CalcPerspectiveMatrix(fovy, aspectRatio, (float)Game_ViewDistance, proj);
 }
 
 static void PerspectiveCamera_GetView(struct Matrix* mat) {

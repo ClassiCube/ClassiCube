@@ -29,6 +29,8 @@ static const int strideSizes[2] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTUR
 static int curStride, curFormat = -1;
 /* Whether mipmaps must be created for all dimensions down to 1x1 or not */
 static cc_bool customMipmapsLevels;
+#define ORTHO_NEAR -10000.0f
+#define ORTHO_FAR   10000.0f
 
 static cc_bool gfx_vsync, gfx_fogEnabled;
 static float gfx_minFrameMs;
@@ -312,6 +314,7 @@ static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
 static DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 static D3DFORMAT viewFormat, depthFormat;
+static int depthBits;
 static float totalMem;
 
 static void D3D9_RestoreRenderStates(void);
@@ -438,8 +441,7 @@ void Gfx_Create(void) {
 	CreateD3D9();
 	FindCompatibleViewFormat();
 	FindCompatibleDepthFormat();
-	/* With reversed z depth, near Z plane can be much closer with sufficient depth buffer precision */
-	Gfx.MinZNear = D3D9_DepthBufferBits() < 24 ? 0.05f : 0.001953125f;
+	depthBits = D3D9_DepthBufferBits();
 
 	customMipmapsLevels = true;
 	Gfx.ManagedTextures = true;
@@ -915,16 +917,19 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 	IDirect3DDevice9_SetTransform(device, matrix_modes[type], (const D3DMATRIX*)&Matrix_Identity);
 }
 
-#define d3d9_zN -10000.0f
-#define d3d9_zF  10000.0f
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
-	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, d3d9_zN, d3d9_zF);
-	matrix->Row2.Z = 1.0f    / (d3d9_zN - d3d9_zF);
-	matrix->Row3.Z = d3d9_zN / (d3d9_zN - d3d9_zF);
+	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, ORTHO_NEAR, ORTHO_FAR);
+	matrix->Row2.Z = 1.0f       / (ORTHO_NEAR - ORTHO_FAR);
+	matrix->Row3.Z = ORTHO_NEAR / (ORTHO_NEAR - ORTHO_FAR);
 }
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix) {
+void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
+	/* With reversed z depth, near Z plane can be much closer (with sufficient depth buffer precision) */
+	/*   This reduces clipping with high FOV without sacrificing depth precision for faraway objects */
+	/*   However for low FOV, don't reduce near Z in order to gain a bit more depth precision */
+	float zNear = (depthBits < 24 || fov <= 70) ? 0.05f : 0.001953125f;
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
-	/* Adjust the projection matrix to produce reversed Z values. */
+
+	/* Adjust the projection matrix to produce reversed Z values */
 	matrix->Row2.Z = -matrix->Row2.Z - 1.0f;
 	matrix->Row3.Z = -matrix->Row3.Z;
 }
@@ -1009,7 +1014,6 @@ static const char* D3D9_StrFlags(void) {
 void Gfx_GetApiInfo(cc_string* info) {
 	D3DADAPTER_IDENTIFIER9 adapter = { 0 };
 	int pointerSize = sizeof(void*) * 8;
-	int depthBits   = D3D9_DepthBufferBits();
 	float curMem;
 
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
@@ -1108,7 +1112,6 @@ static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 static void GL_CheckSupport(void);
 void Gfx_Create(void) {
 	GLContext_Create();
-	Gfx.MinZNear = 0.1f;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx.MaxTexWidth);
 	Gfx.MaxTexHeight = Gfx.MaxTexWidth;
 	Gfx.Created      = true;
@@ -1268,9 +1271,10 @@ void Gfx_SetDepthWrite(cc_bool enabled) { glDepthMask(enabled); }
 void Gfx_SetDepthTest(cc_bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
 
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
-	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, -10000.0f, 10000.0f);
+	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, ORTHO_NEAR, ORTHO_FAR);
 }
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix) {
+void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
+	float zNear = 0.1f;
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 

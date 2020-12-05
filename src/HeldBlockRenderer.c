@@ -95,8 +95,7 @@ static void SetBaseOffset(void) {
 static void OnProjectionChanged(void* obj) {
 	float fov = 70.0f * MATH_DEG2RAD;
 	float aspectRatio = (float)Game.Width / (float)Game.Height;
-	float zNear = Gfx.MinZNear;
-	Gfx_CalcPerspectiveMatrix(fov, aspectRatio, zNear, (float)Game_ViewDistance, &held_blockProjection);
+	Gfx_CalcPerspectiveMatrix(fov, aspectRatio, (float)Game_ViewDistance, &held_blockProjection);
 }
 
 /* Based off incredible gifs from (Thanks goodlyay!)

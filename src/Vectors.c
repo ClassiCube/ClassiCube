@@ -183,20 +183,17 @@ void Matrix_Orthographic(struct Matrix* result, float left, float right, float t
 static double Tan_Simple(double x) { return Math_Sin(x) / Math_Cos(x); }
 void Matrix_PerspectiveFieldOfView(struct Matrix* result, float fovy, float aspect, float zNear, float zFar) {
 	float c = zNear * (float)Tan_Simple(0.5f * fovy);
-	Matrix_PerspectiveOffCenter(result, -c * aspect, c * aspect, -c, c, zNear, zFar);
-}
 
-void Matrix_PerspectiveOffCenter(struct Matrix* result, float left, float right, float bottom, float top, float zNear, float zFar) {
 	/* Transposed, source https://msdn.microsoft.com/en-us/library/dd373537(v=vs.85).aspx */
+	/* For a FOV based perspective matrix, left/right/top/bottom are calculated as: */
+	/*   left = -c * aspect, right = c * aspect, bottom = -c, top = c */
+	/* Calculations are simplified because of left/right and top/bottom symmetry */
 	*result = Matrix_Identity;
 	result->Row3.W = 0.0f;
 
-	result->Row0.X = (2.0f * zNear) / (right - left);
-	result->Row1.Y = (2.0f * zNear) / (top - bottom);
+	result->Row0.X =  zNear / (c * aspect);
+	result->Row1.Y =  zNear / c;
 	result->Row3.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
-
-	result->Row2.X = (right + left) / (right - left);
-	result->Row2.Y = (top + bottom) / (top - bottom);
 	result->Row2.Z = -(zFar + zNear) / (zFar - zNear);
 	result->Row2.W = -1.0f;
 }

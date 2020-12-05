@@ -35,7 +35,7 @@ void Gfx_Free(void);
 CC_VAR extern struct _GfxData {
 	/* Maximum dimensions textures can be created up to. (usually 1024 to 16384) */
 	int MaxTexWidth, MaxTexHeight;
-	float MinZNear;
+	float _unused;
 	/* Whether context graphics has been lost (all creation/render calls fail) */
 	cc_bool LostContext;
 	/* Whether some textures are created with mipmaps. */
@@ -177,7 +177,7 @@ CC_API void Gfx_LoadIdentityMatrix(MatrixType type);
 /* Calculates an orthographic matrix suitable with this backend. (usually for 2D) */
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix);
 /* Calculates a projection matrix suitable with this backend. (usually for 3D) */
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, struct Matrix* matrix);
+void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix);
 
 /* Outputs a .png screenshot of the backbuffer. */
 cc_result Gfx_TakeScreenshot(struct Stream* output);
