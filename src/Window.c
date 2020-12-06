@@ -3511,13 +3511,10 @@ static void* clipboard_obj;
 
 EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
 	cc_string str; char strBuffer[512];
-	int len;
 	if (!clipboard_func) return;
 
 	String_InitArray(str, strBuffer);
-	len = String_CalcLen(src, 2048);
-	String_AppendUtf8(&str, (const cc_uint8*)src, len);
-
+	Platform_DecodeString(&str, src, String_CalcLen(src, 2048));
 	clipboard_func(&str, clipboard_obj);
 	clipboard_func = NULL;
 }
@@ -3649,17 +3646,59 @@ static void ShowDialogCore(const char* title, const char* msg) {
 	EM_ASM_({ alert(UTF8ToString($0) + "\n\n" + UTF8ToString($1)); }, title, msg);
 }
 
+static OpenFileDialogCallback uploadCallback;
+EMSCRIPTEN_KEEPALIVE void Window_OnFileUploaded(const char* src) { 
+	cc_string file; char buffer[FILENAME_SIZE];
+	String_InitArray(file, buffer);
+
+	Platform_DecodeString(&file, src, String_Length(src));
+	uploadCallback(&file);
+	uploadCallback = NULL;
+}
+
+cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callback) {
+	uploadCallback = callback;
+	EM_ASM_({
+		var elem = window.cc_uploadElem;
+		if (!elem) {
+			elem = document.createElement('input');
+			elem.setAttribute('type', 'file');
+			elem.setAttribute('style', 'display: none');
+			elem.accept = UTF8ToString($0);
+
+			elem.addEventListener('change', 
+				function(ev) {
+					var files = ev.target.files;
+					for (var i = 0; i < files.length; i++) {
+						var reader = new FileReader();
+						var name   = files[i].name;
+
+						reader.onload = function(e) { 
+							var data = new Uint8Array(e.target.result);
+							FS.createDataFile('/', name, data, true, true, true);
+							ccall('Window_OnFileUploaded', 'void', ['string'], ['/' + name]);
+						};
+						reader.readAsArrayBuffer(files[i]);
+					}
+				}, false);
+			window.cc_uploadElem = elem;
+			window.cc_container.appendChild(elem);
+		}
+		elem.focus();
+		elem.click();
+	}, filter);
+	return ERR_NOT_SUPPORTED;
+}
+
 void Window_AllocFramebuffer(struct Bitmap* bmp) { }
 void Window_DrawFramebuffer(Rect2D r)     { }
 void Window_FreeFramebuffer(struct Bitmap* bmp)  { }
 
 EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) { 
 	cc_string str; char buffer[800];
-	int len;
-
 	String_InitArray(str, buffer);
-	len = String_CalcLen(src, 800);
-	String_AppendUtf8(&str, (const cc_uint8*)src, len);
+
+	Platform_DecodeString(&str, src, String_CalcLen(src, 3200));
 	Event_RaiseString(&InputEvents.TextChanged, &str);
 }
 

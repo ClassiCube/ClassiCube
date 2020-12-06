@@ -19,12 +19,6 @@
 #define _UNICODE
 #endif
 
-#ifdef UNICODE
-#define Platform_DecodeString(dst, src, len) String_AppendUtf16(dst, (cc_unichar*)(src), (len) * 2)
-#else
-#define Platform_DecodeString(dst, src, len) String_DecodeCP1252(dst, (cc_uint8*)(src), len)
-#endif
-
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -59,9 +53,7 @@ const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 #include <signal.h>
 #include <stdio.h>
 
-#define Platform_DecodeString(dst, src, len) String_AppendUtf8(dst, (cc_uint8*)(src), len)
 #define Socket__Error() errno
-
 static char* defaultDirectory;
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
@@ -1551,6 +1543,14 @@ int Platform_EncodeString(void* data, const cc_string* src) {
 	return src->length * 2;
 }
 
+void Platform_DecodeString(cc_string* dst, const void* data, int len) {
+#ifdef UNICODE
+	String_AppendUtf16(dst, (const cc_unichar*)data, len * 2);
+#else
+	String_DecodeCP1252(dst, (const cc_uint8*)data, len);
+#endif
+}
+
 static void Platform_InitStopwatch(void) {
 	LARGE_INTEGER freq;
 	sw_highRes = QueryPerformanceFrequency(&freq);
@@ -1651,6 +1651,10 @@ int Platform_EncodeString(void* data, const cc_string* src) {
 	}
 	dst[len] = '\0';
 	return len;
+}
+
+void Platform_DecodeString(cc_string* dst, const void* data, int len) {
+	String_AppendUtf8(dst, (const cc_uint8*)data, len);
 }
 
 static void Platform_InitPosix(void) {
