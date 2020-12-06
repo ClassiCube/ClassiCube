@@ -3677,14 +3677,16 @@ cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callb
 							var data = new Uint8Array(e.target.result);
 							FS.createDataFile('/', name, data, true, true, true);
 							ccall('Window_OnFileUploaded', 'void', ['string'], ['/' + name]);
+							FS.unlink('/' + name);
 						};
 						reader.readAsArrayBuffer(files[i]);
 					}
+					window.cc_container.removeChild(window.cc_uploadElem);
+					window.cc_uploadElem = null;
 				}, false);
 			window.cc_uploadElem = elem;
 			window.cc_container.appendChild(elem);
 		}
-		elem.focus();
 		elem.click();
 	}, filter);
 	return ERR_NOT_SUPPORTED;
