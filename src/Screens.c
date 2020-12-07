@@ -192,7 +192,7 @@ static void HUDScreen_ContextRecreated(void* screen) {
 	struct TextWidget* line1 = &s->line1;
 	struct TextWidget* line2 = &s->line2;
 
-	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_NONE);
+	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_PADDING);
 	Font_SetPadding(&s->font, 2);
 	HotbarWidget_SetFont(&s->hotbar, &s->font);
 
@@ -643,7 +643,7 @@ static void TabListOverlay_ContextRecreated(void* screen) {
 	int size, id;
 
 	size = Drawer2D_BitmappedText ? 16 : 11;
-	Drawer2D_MakeFont(&s->font, size, FONT_FLAGS_NONE);
+	Drawer2D_MakeFont(&s->font, size, FONT_FLAGS_PADDING);
 	s->namesCount = 0;
 
 	TextWidget_SetConst(&s->title, "Connected players:", &s->font);
@@ -802,7 +802,7 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	/* TODO: Add function for this, don't use Display_ScaleY (Drawer2D_SameFontSize ??) */
 	if (Display_ScaleY(size) == s->chatFont.size) return false;
 	ChatScreen_FreeChatFonts(s);
-	Drawer2D_MakeFont(&s->chatFont, size, FONT_FLAGS_NONE);
+	Drawer2D_MakeFont(&s->chatFont, size, FONT_FLAGS_PADDING);
 
 	size = (int)(16 * Gui_GetChatScale());
 	Math_Clamp(size, 8, 60);
@@ -2040,7 +2040,7 @@ static void TouchScreen_ContextRecreated(void* screen) {
 	const struct TouchButtonDesc* desc;
 	int i;
 	Screen_CreateVb(screen);
-	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_BOLD | FONT_FLAGS_NOPADDING);
+	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_BOLD);
 
 	for (i = 0; i < s->numOnscreen; i++) {
 		desc = s->onscreenDescs[i];
