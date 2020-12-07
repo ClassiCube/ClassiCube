@@ -49,7 +49,14 @@ CC_VAR extern struct _Atlas1DData {
 	/* Textures for each 1D atlas. Only Atlas1D_Count of these are valid. */
 	GfxResourceID TexIds[ATLAS1D_MAX_ATLASES];
 } Atlas1D;
+
 extern cc_string TexturePack_Url;
+#ifdef CC_BUILD_WEB
+/* texpacks must be read from memory instead of the normal filesystem */
+#define TEXPACKS_DIR "/texpacks"
+#else
+#define TEXPACKS_DIR "texpacks"
+#endif
 
 #define Atlas2D_TileX(texLoc) ((texLoc) &  ATLAS2D_MASK)  /* texLoc % ATLAS2D_TILES_PER_ROW */
 #define Atlas2D_TileY(texLoc) ((texLoc) >> ATLAS2D_SHIFT) /* texLoc / ATLAS2D_TILES_PER_ROW */

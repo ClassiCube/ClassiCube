@@ -1526,20 +1526,49 @@ static void TexturePackScreen_FilterFiles(const cc_string* path, void* obj) {
 	cc_string relPath = *path;
 	if (!String_CaselessEnds(path, &zip)) return;
 
+#ifdef CC_BUILD_WEB
+	/* Web client texture pack dir starts with /, so need to get rid of that */
+	if (relPath.buffer[0] == '/') { relPath.buffer++; relPath.length--; }
+#endif
+
 	Utils_UNSAFE_TrimFirstDirectory(&relPath);
 	StringsBuffer_Add((struct StringsBuffer*)obj, &relPath);
 }
 
 static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
-	static const cc_string path = String_FromConst("texpacks");
+	static const cc_string path = String_FromConst(TEXPACKS_DIR);
 	Directory_Enum(&path, &s->entries, TexturePackScreen_FilterFiles);
 	ListScreen_Sort(s);
+}
+
+#ifdef CC_BUILD_WEB
+#include <emscripten.h>
+static void TexturePackScreen_UploadCallback(const cc_string* path) {
+	char str[NATIVE_STR_LEN];
+	Platform_EncodeString(str, path);
+
+	/* Move from temp into texpacks folder */
+	/* TODO: This is pretty awful and should be rewritten */
+	EM_ASM_({ 
+		var name = UTF8ToString($0);;
+		var data = FS.readFile(name);
+		FS.writeFile('/texpacks/' + name.substring(1), data);
+	}, str);
+	TexturePackScreen_Show();
+	TexturePack_SetDefault(path);
+	TexturePack_ExtractCurrent(true);
+}
+#else
+static void TexturePackScreen_UploadCallback(const cc_string* path) { /* TODO implement */ }
+#endif
+static void TexturePackScreen_UploadFunc(void* s, void* w) {
+	Window_OpenFileDialog(".zip", TexturePackScreen_UploadCallback);
 }
 
 void TexturePackScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Select a texture pack";
-	s->UploadClick = NULL;
+	s->UploadClick = TexturePackScreen_UploadFunc;
 	s->LoadEntries = TexturePackScreen_LoadEntries;
 	s->EntryClick  = TexturePackScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;
@@ -1701,7 +1730,6 @@ static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {
 }
 
 static void LoadLevelScreen_UploadCallback(const cc_string* path) { Map_LoadFrom(path); }
-
 static void LoadLevelScreen_UploadFunc(void* s, void* w) {
 	Window_OpenFileDialog(".cw", LoadLevelScreen_UploadCallback);
 }
