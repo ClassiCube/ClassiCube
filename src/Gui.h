@@ -52,6 +52,9 @@ float Gui_GetHotbarScale(void);
 float Gui_GetInventoryScale(void);
 float Gui_GetChatScale(void);
 
+CC_NOINLINE void Gui_MakeTitleFont(struct FontDesc* font);
+CC_NOINLINE void Gui_MakeBodyFont(struct FontDesc* font);
+
 /* Functions for a Screen instance. */
 struct ScreenVTABLE {
 	/* Initialises persistent state. */

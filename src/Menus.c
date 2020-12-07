@@ -72,9 +72,6 @@ static void Menu_InitBack(struct ButtonWidget* btn, Widget_LeftClick onClick) {
 static void Menu_LayoutBack(struct ButtonWidget* btn) {
 	Widget_SetLocation(btn, ANCHOR_CENTRE, ANCHOR_MAX, 0, 25);
 }
-
-CC_NOINLINE static void Menu_MakeTitleFont(struct FontDesc* font) { Drawer2D_MakeFont(font, 16, FONT_FLAGS_BOLD); }
-CC_NOINLINE static void Menu_MakeBodyFont(struct FontDesc* font)  { Drawer2D_MakeFont(font, 16, FONT_FLAGS_NONE); }
 static void Menu_CloseKeyboard(void* s) { Window_CloseKeyboard(); }
 
 static void Menu_RenderBounds(void) {
@@ -387,7 +384,7 @@ static void ListScreen_ContextLost(void* screen) {
 static void ListScreen_ContextRecreated(void* screen) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	Screen_CreateVb(screen);
-	Menu_MakeTitleFont(&s->font);
+	Gui_MakeTitleFont(&s->font);
 	ListScreen_RedrawEntries(s);
 
 	ButtonWidget_SetConst(&s->left,  "<",   &s->font);
@@ -462,7 +459,7 @@ static void PauseScreen_ContextRecreated(void* screen) {
 	struct FontDesc titleFont;
 
 	Screen_CreateVb(screen);
-	Menu_MakeTitleFont(&titleFont);
+	Gui_MakeTitleFont(&titleFont);
 	Menu_SetButtons(s->btns, &titleFont, s->descs, s->descsCount);
 
 	if (!Gui.ClassicMenu) ButtonWidget_SetConst(&s->quit, "Quit game", &titleFont);
@@ -609,8 +606,8 @@ static void OptionsGroupScreen_ContextRecreated(void* screen) {
 	struct FontDesc titleFont;
 	Screen_CreateVb(screen);
 
-	Menu_MakeTitleFont(&titleFont);
-	Menu_MakeBodyFont(&s->textFont);
+	Gui_MakeTitleFont(&titleFont);
+	Gui_MakeBodyFont(&s->textFont);
 
 	Menu_SetButtons(s->btns, &titleFont, optsGroup_btns, 8);
 	ButtonWidget_SetConst(&s->done, "Done", &titleFont);
@@ -853,8 +850,8 @@ static void EditHotkeyScreen_ContextRecreated(void* screen) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
 	cc_bool existed = s->origHotkey.Trigger != KEY_NONE;
 
-	Menu_MakeTitleFont(&s->titleFont);
-	Menu_MakeBodyFont(&s->textFont);
+	Gui_MakeTitleFont(&s->titleFont);
+	Gui_MakeBodyFont(&s->textFont);
 	Screen_CreateVb(screen);
 
 	EditHotkeyScreen_UpdateBaseKey(s);
@@ -1062,8 +1059,8 @@ static void GenLevelScreen_ContextLost(void* screen) {
 static void GenLevelScreen_ContextRecreated(void* screen) {
 	struct GenLevelScreen* s  = (struct GenLevelScreen*)screen;
 	struct FontDesc titleFont;
-	Menu_MakeTitleFont(&titleFont);
-	Menu_MakeBodyFont(&s->textFont);
+	Gui_MakeTitleFont(&titleFont);
+	Gui_MakeBodyFont(&s->textFont);
 	Screen_CreateVb(screen);
 
 	TextInputWidget_SetFont(&s->inputs[0], &s->textFont);
@@ -1170,7 +1167,7 @@ static void ClassicGenScreen_ContextRecreated(void* screen) {
 	struct FontDesc titleFont;
 	Screen_CreateVb(screen);
 
-	Menu_MakeTitleFont(&titleFont);
+	Gui_MakeTitleFont(&titleFont);
 	ButtonWidget_SetConst(&s->btns[0], "Small",  &titleFont);
 	ButtonWidget_SetConst(&s->btns[1], "Normal", &titleFont);
 	ButtonWidget_SetConst(&s->btns[2], "Huge",   &titleFont);
@@ -1415,8 +1412,8 @@ static void SaveLevelScreen_ContextLost(void* screen) {
 
 static void SaveLevelScreen_ContextRecreated(void* screen) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
-	Menu_MakeTitleFont(&s->titleFont);
-	Menu_MakeBodyFont(&s->textFont);
+	Gui_MakeTitleFont(&s->titleFont);
+	Gui_MakeBodyFont(&s->textFont);
 
 	Screen_CreateVb(screen);
 	SaveLevelScreen_UpdateSave(s);
@@ -1773,8 +1770,8 @@ static void KeyBindsScreen_ContextRecreated(void* screen) {
 	int i;
 
 	Screen_CreateVb(screen);
-	Menu_MakeTitleFont(&s->titleFont);
-	Menu_MakeBodyFont(&textFont);
+	Gui_MakeTitleFont(&s->titleFont);
+	Gui_MakeBodyFont(&textFont);
 	for (i = 0; i < s->bindsCount; i++) { KeyBindsScreen_Update(s, i); }
 
 	TextWidget_SetConst(&s->title, s->titleText, &s->titleFont);
@@ -2095,8 +2092,8 @@ static void MenuInputOverlay_ContextLost(void* screen) {
 static void MenuInputOverlay_ContextRecreated(void* screen) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
 	struct FontDesc font;
-	Menu_MakeTitleFont(&font);
-	Menu_MakeBodyFont(&s->textFont);
+	Gui_MakeTitleFont(&font);
+	Gui_MakeBodyFont(&s->textFont);
 	Screen_CreateVb(s);
 
 	TextInputWidget_SetFont(&s->input, &s->textFont);
@@ -2380,8 +2377,8 @@ static void MenuOptionsScreen_ContextLost(void* screen) {
 static void MenuOptionsScreen_ContextRecreated(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	int i;
-	Menu_MakeTitleFont(&s->titleFont);
-	Menu_MakeBodyFont(&s->textFont);
+	Gui_MakeTitleFont(&s->titleFont);
+	Gui_MakeBodyFont(&s->textFont);
 
 	for (i = 0; i < s->numButtons; i++) { 
 		if (s->widgets[i]) MenuOptionsScreen_Update(s, i); 
@@ -3186,7 +3183,7 @@ static void TexIdsOverlay_ContextRecreated(void* screen) {
 	TextAtlas_Make(&s->idAtlas, &chars, &textFont, &prefix);
 	Font_Free(&textFont);
 	
-	Menu_MakeTitleFont(&titleFont);
+	Gui_MakeTitleFont(&titleFont);
 	TextWidget_SetConst(&s->title, "Texture ID reference sheet", &titleFont);
 	Font_Free(&titleFont);
 }
@@ -3369,8 +3366,8 @@ static void UrlWarningOverlay_ContextRecreated(void* screen) {
 	struct FontDesc titleFont, textFont;
 	Screen_CreateVb(screen);
 
-	Menu_MakeTitleFont(&titleFont);
-	Menu_MakeBodyFont(&textFont);
+	Gui_MakeTitleFont(&titleFont);
+	Gui_MakeBodyFont(&textFont);
 
 	TextWidget_SetConst(&s->lbls[0], "&eAre you sure you want to open this link?", &titleFont);
 	TextWidget_Set(&s->lbls[1],      &s->url,                                      &textFont);
@@ -3524,8 +3521,8 @@ static void TexPackOverlay_ContextRecreated(void* screen) {
 	struct FontDesc titleFont;
 	Screen_CreateVb(screen);
 
-	Menu_MakeTitleFont(&titleFont);
-	Menu_MakeBodyFont(&s->textFont);
+	Gui_MakeTitleFont(&titleFont);
+	Gui_MakeBodyFont(&s->textFont);
 
 	TextWidget_SetConst(&s->lbls[0], s->deny  ? "&eYou might be missing out." 
 		: "Do you want to download the server's texture pack?", &titleFont);
@@ -3687,7 +3684,7 @@ static void TouchOnscreenScreen_ContextLost(void* screen) {
 
 static void TouchOnscreenScreen_ContextRecreated(void* screen) {
 	struct TouchOnscreenScreen* s = (struct TouchOnscreenScreen*)screen;
-	Menu_MakeTitleFont(&s->font);
+	Gui_MakeTitleFont(&s->font);
 	Screen_CreateVb(screen);
 	Menu_SetButtons(s->btns, &s->font, s->btnDescs, ONSCREEN_PAGE_BTNS);
 	ButtonWidget_SetConst(&s->back,  "Done", &s->font);
@@ -3828,7 +3825,7 @@ static void TouchCtrlsScreen_ContextLost(void* screen) {
 
 static void TouchCtrlsScreen_ContextRecreated(void* screen) {
 	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
-	Menu_MakeTitleFont(&s->font);
+	Gui_MakeTitleFont(&s->font);
 	Screen_CreateVb(screen);
 	Menu_SetButtons(s->btns, &s->font, touchCtrls_btns, TOUCHCTRLS_BTNS);
 	ButtonWidget_SetConst(&s->back, "Done", &s->font);
@@ -3916,7 +3913,7 @@ static const struct SimpleButtonDesc touchMore_btns[TOUCHMORE_BTNS] = {
 static void TouchMoreScreen_ContextRecreated(void* screen) {
 	struct TouchMoreScreen* s = (struct TouchMoreScreen*)screen;
 	struct FontDesc titleFont;
-	Menu_MakeTitleFont(&titleFont);
+	Gui_MakeTitleFont(&titleFont);
 	Screen_CreateVb(screen);
 
 	Menu_SetButtons(s->btns, &titleFont, touchMore_btns, TOUCHMORE_BTNS);

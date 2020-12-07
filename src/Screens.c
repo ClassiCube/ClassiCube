@@ -1033,7 +1033,7 @@ static void ChatScreen_ContextRecreated(void* screen) {
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
-	Drawer2D_MakeFont(&font, 16, FONT_FLAGS_BOLD);
+	Gui_MakeTitleFont(&font);
 	ButtonWidget_SetConst(&s->send,   "Send",   &font);
 	ButtonWidget_SetConst(&s->cancel, "Cancel", &font);
 	Font_Free(&font);
@@ -1354,7 +1354,7 @@ static void InventoryScreen_ContextLost(void* screen) {
 
 static void InventoryScreen_ContextRecreated(void* screen) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_NONE);
+	Gui_MakeBodyFont(&s->font);
 	TableWidget_Recreate(&s->table);
 }
 
@@ -1548,7 +1548,7 @@ static void LoadingScreen_ContextLost(void* screen) {
 
 static void LoadingScreen_ContextRecreated(void* screen) {
 	struct LoadingScreen* s = (struct LoadingScreen*)screen;
-	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_NONE);
+	Gui_MakeBodyFont(&s->font);
 	LoadingScreen_SetTitle(s);
 	LoadingScreen_SetMessage(s);
 	Screen_CreateVb(s);
@@ -1807,8 +1807,8 @@ static void DisconnectScreen_ContextRecreated(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
 	Screen_CreateVb(screen);
 
-	Drawer2D_MakeFont(&s->titleFont,   16, FONT_FLAGS_BOLD);
-	Drawer2D_MakeFont(&s->messageFont, 16, FONT_FLAGS_NONE);
+	Gui_MakeTitleFont(&s->titleFont);
+	Gui_MakeBodyFont(&s->messageFont);
 	TextWidget_Set(&s->title,   &s->titleStr,   &s->titleFont);
 	TextWidget_Set(&s->message, &s->messageStr, &s->messageFont);
 
@@ -2040,7 +2040,7 @@ static void TouchScreen_ContextRecreated(void* screen) {
 	const struct TouchButtonDesc* desc;
 	int i;
 	Screen_CreateVb(screen);
-	Drawer2D_MakeFont(&s->font, 16, FONT_FLAGS_BOLD);
+	Gui_MakeTitleFont(&s->font);
 
 	for (i = 0; i < s->numOnscreen; i++) {
 		desc = s->onscreenDescs[i];
