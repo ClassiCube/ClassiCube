@@ -439,7 +439,6 @@ void Window_DisableRawMouse(void) {
 /* Hence the actual minimum supported OS is Windows 2000. This just avoids redeclaring structs. */
 #endif
 #include <windows.h>
-#include <commdlg.h>
 
 #define CC_WIN_STYLE WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
 #define CC_WIN_CLASSNAME TEXT("ClassiCube_Window")

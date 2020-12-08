@@ -1558,12 +1558,13 @@ static void TexturePackScreen_UploadCallback(const cc_string* path) {
 	TexturePack_SetDefault(path);
 	TexturePack_ExtractCurrent(true);
 }
-#else
-static void TexturePackScreen_UploadCallback(const cc_string* path) { /* TODO implement */ }
-#endif
+
 static void TexturePackScreen_UploadFunc(void* s, void* w) {
 	Window_OpenFileDialog(".zip", TexturePackScreen_UploadCallback);
 }
+#else
+#define TexturePackScreen_UploadFunc NULL
+#endif
 
 void TexturePackScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
@@ -1729,10 +1730,14 @@ static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {
 	ListScreen_Sort(s);
 }
 
+#ifdef CC_BUILD_WEB
 static void LoadLevelScreen_UploadCallback(const cc_string* path) { Map_LoadFrom(path); }
 static void LoadLevelScreen_UploadFunc(void* s, void* w) {
 	Window_OpenFileDialog(".cw", LoadLevelScreen_UploadCallback);
 }
+#else
+#define LoadLevelScreen_UploadFunc NULL
+#endif
 
 void LoadLevelScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
