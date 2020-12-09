@@ -82,6 +82,7 @@ double Math_FastLog(double x) {
 	/* so log(x) = exp*log(2) + log(mantissa) */
 
 	/* now need to work out log(mantissa) */
+	return 0;
 }
 
 double Math_FastExp(double x) {
@@ -91,6 +92,7 @@ double Math_FastExp(double x) {
 	/* so exp(x) = 2^k           * exp(f) */
 
 	/* now need to work out exp(f) */
+	return 0;
 }
 
 
