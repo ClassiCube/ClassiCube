@@ -338,13 +338,7 @@ static void ExtractFromFile(const cc_string* filename) {
 	cc_result res;
 
 	String_InitArray(path, pathBuffer);
-#ifdef CC_BUILD_WEB
-	/* texpacks/default.zip must be read from memory */
-	/* instead of the default filesystem */
-	String_Format1(&path, "/texpacks/%s", filename);
-#else
-	String_Format1(&path, "texpacks/%s", filename);
-#endif
+	String_Format1(&path, TEXPACKS_DIR "/%s", filename);
 
 	res = Stream_OpenFile(&stream, &path);
 	if (res) { Logger_SysWarn2(res, "opening", &path); return; }

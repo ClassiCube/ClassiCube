@@ -64,7 +64,9 @@ void Map_LoadFrom(const cc_string* path) {
 	if (res) { Logger_SysWarn2(res, "opening", path); return; }
 
 	importer = Map_FindImporter(path);
-	if ((res = importer(&stream))) {
+	if (!importer) {
+		Logger_SysWarn2(ERR_NOT_SUPPORTED, "decoding", path);
+	} else if ((res = importer(&stream))) {
 		World_Reset();
 		Logger_SysWarn2(res, "decoding", path);
 	}

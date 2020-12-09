@@ -523,7 +523,7 @@ void Game_TakeScreenshot(void) {
 	String_Format3(&filename, "-%p2-%p2-%p2.png", &now.hour, &now.minute, &now.second);
 
 #ifdef CC_BUILD_WEB
-	Platform_ConvertString(str, &filename);
+	Platform_EncodeString(str, &filename);
 	EM_ASM_({
 		var name   = UTF8ToString($0);
 		var canvas = Module['canvas'];

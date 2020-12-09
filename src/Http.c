@@ -380,7 +380,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 
 	String_InitArray(url, urlBuffer);
 	Http_BeginRequest(req, &url);
-	Platform_ConvertString(urlStr, &url);
+	Platform_EncodeString(urlStr, &url);
 
 	/* TODO: SET requestHeaders!!! */
 	emscripten_fetch(&attr, urlStr);
@@ -605,7 +605,7 @@ static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
 	_curl_easy_setopt(curl, CURLOPT_HTTPHEADER, req->meta);
 
 	Http_SetCurlOpts(req);
-	Platform_ConvertString(urlStr, url);
+	Platform_EncodeString(urlStr, url);
 	_curl_easy_setopt(curl, CURLOPT_URL, urlStr);
 
 	if (req->requestType == REQUEST_TYPE_HEAD) {

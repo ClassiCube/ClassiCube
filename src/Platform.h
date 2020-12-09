@@ -33,7 +33,9 @@ extern const cc_result ReturnCode_SocketWouldBlock;
 /* Encodes a string in platform specific format. (e.g. unicode on windows, UTF8 on linux) */
 /* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. */
 /* Returns the number of bytes written, excluding trailing NULL terminator. */
-CC_API int Platform_ConvertString(void* data, const cc_string* src);
+int Platform_EncodeString(void* data, const cc_string* src);
+/* Attempts to append all characters from the platform specific encoded data to the given string. */
+void Platform_DecodeString(cc_string* dst, const void* data, int len);
 
 /* Initialises the platform specific state. */
 void Platform_Init(void);

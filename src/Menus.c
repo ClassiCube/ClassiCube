@@ -175,11 +175,11 @@ struct ListScreen;
 static struct ListScreen {
 	Screen_Body
 	struct ButtonWidget btns[LIST_SCREEN_ITEMS];
-	struct ButtonWidget left, right, done;
+	struct ButtonWidget left, right, done, upload;
 	struct FontDesc font;
 	float wheelAcc;
 	int currentIndex;
-	Widget_LeftClick EntryClick, DoneClick;
+	Widget_LeftClick EntryClick, DoneClick, UploadClick;
 	void (*LoadEntries)(struct ListScreen* s);
 	void (*UpdateEntry)(struct ListScreen* s, struct ButtonWidget* btn, const cc_string* text);
 	const char* titleText;
@@ -187,14 +187,14 @@ static struct ListScreen {
 	struct StringsBuffer entries;
 } ListScreen;
 
-static struct Widget* list_widgets[9] = {
+static struct Widget* list_widgets[10] = {
 	(struct Widget*)&ListScreen.btns[0], (struct Widget*)&ListScreen.btns[1],
 	(struct Widget*)&ListScreen.btns[2], (struct Widget*)&ListScreen.btns[3],
 	(struct Widget*)&ListScreen.btns[4], (struct Widget*)&ListScreen.left,
 	(struct Widget*)&ListScreen.right,   (struct Widget*)&ListScreen.title,   
-	(struct Widget*)&ListScreen.done
+	(struct Widget*)&ListScreen.done,    NULL
 };
-#define LIST_MAX_VERTICES (8 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX)
+#define LIST_MAX_VERTICES (9 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX)
 #define LISTSCREEN_EMPTY "-----"
 
 static void ListScreen_Layout(void* screen) {
@@ -204,7 +204,13 @@ static void ListScreen_Layout(void* screen) {
 		Widget_SetLocation(&s->btns[i],
 			ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
 	}
-	Menu_LayoutBack(&s->done);
+
+	if (s->UploadClick) {
+		Widget_SetLocation(&s->done,   ANCHOR_CENTRE_MIN, ANCHOR_MAX, -150, 25);
+		Widget_SetLocation(&s->upload, ANCHOR_CENTRE_MAX, ANCHOR_MAX, -150, 25);
+	} else {
+		Menu_LayoutBack(&s->done);
+	}
 
 	Widget_SetLocation(&s->left,  ANCHOR_CENTRE, ANCHOR_CENTRE, -220,    0);
 	Widget_SetLocation(&s->right, ANCHOR_CENTRE, ANCHOR_CENTRE,  220,    0);
@@ -355,11 +361,20 @@ static void ListScreen_Init(void* screen) {
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { 
 		ButtonWidget_Init(&s->btns[i], 300, s->EntryClick);
 	}
+	if (Game_ClassicMode) s->UploadClick = NULL;
+
+	if (s->UploadClick) {
+		ButtonWidget_Init(&s->done,   140, s->DoneClick);
+		ButtonWidget_Init(&s->upload, 140, s->UploadClick);
+		s->widgets[9] = (struct Widget*)&s->upload;
+	} else {
+		Menu_InitBack(&s->done, s->DoneClick);
+		s->widgets[9] = NULL;
+	}
 
 	ButtonWidget_Init(&s->left,  40, ListScreen_MoveBackwards);
 	ButtonWidget_Init(&s->right, 40, ListScreen_MoveForwards);
 	TextWidget_Init(&s->title);
-	Menu_InitBack(&s->done, s->DoneClick);
 	s->LoadEntries(s);
 }
 
@@ -391,6 +406,9 @@ static void ListScreen_ContextRecreated(void* screen) {
 	ButtonWidget_SetConst(&s->right, ">",   &s->font);
 	ButtonWidget_SetConst(&s->done, "Done", &s->font);
 	ListScreen_UpdatePage(s);
+
+	if (!s->UploadClick) return;
+	ButtonWidget_SetConst(&s->upload, "Upload", &s->font);
 }
 
 static const struct ScreenVTABLE ListScreen_VTABLE = {
@@ -1261,13 +1279,13 @@ static void DownloadMap(const cc_string* path) {
 	char strFile[NATIVE_STR_LEN];
 	cc_string file;
 	cc_result res;
-	Platform_ConvertString(strPath, path);
+	Platform_EncodeString(strPath, path);
 
 	/* maps/aaa.schematic -> aaa.cw */
 	file = *path; Utils_UNSAFE_GetFilename(&file);
 	file.length = String_LastIndexOf(&file, '.');
 	String_AppendConst(&file, ".cw");
-	Platform_ConvertString(strFile, &file);
+	Platform_EncodeString(strFile, &file);
 
 	res = EM_ASM_({
 		try {
@@ -1508,19 +1526,50 @@ static void TexturePackScreen_FilterFiles(const cc_string* path, void* obj) {
 	cc_string relPath = *path;
 	if (!String_CaselessEnds(path, &zip)) return;
 
+#ifdef CC_BUILD_WEB
+	/* Web client texture pack dir starts with /, so need to get rid of that */
+	if (relPath.buffer[0] == '/') { relPath.buffer++; relPath.length--; }
+#endif
+
 	Utils_UNSAFE_TrimFirstDirectory(&relPath);
 	StringsBuffer_Add((struct StringsBuffer*)obj, &relPath);
 }
 
 static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
-	static const cc_string path = String_FromConst("texpacks");
+	static const cc_string path = String_FromConst(TEXPACKS_DIR);
 	Directory_Enum(&path, &s->entries, TexturePackScreen_FilterFiles);
 	ListScreen_Sort(s);
 }
 
+#ifdef CC_BUILD_WEB
+#include <emscripten.h>
+static void TexturePackScreen_UploadCallback(const cc_string* path) {
+	char str[NATIVE_STR_LEN];
+	Platform_EncodeString(str, path);
+
+	/* Move from temp into texpacks folder */
+	/* TODO: This is pretty awful and should be rewritten */
+	EM_ASM_({ 
+		var name = UTF8ToString($0);;
+		var data = FS.readFile(name);
+		FS.writeFile('/texpacks/' + name.substring(1), data);
+	}, str);
+	TexturePackScreen_Show();
+	TexturePack_SetDefault(path);
+	TexturePack_ExtractCurrent(true);
+}
+
+static void TexturePackScreen_UploadFunc(void* s, void* w) {
+	Window_OpenFileDialog(".zip", TexturePackScreen_UploadCallback);
+}
+#else
+#define TexturePackScreen_UploadFunc NULL
+#endif
+
 void TexturePackScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Select a texture pack";
+	s->UploadClick = TexturePackScreen_UploadFunc;
 	s->LoadEntries = TexturePackScreen_LoadEntries;
 	s->EntryClick  = TexturePackScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;
@@ -1568,6 +1617,7 @@ static void FontListScreen_LoadEntries(struct ListScreen* s) {
 void FontListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Select a font";
+	s->UploadClick = NULL;
 	s->LoadEntries = FontListScreen_LoadEntries;
 	s->EntryClick  = FontListScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchGui;
@@ -1640,6 +1690,7 @@ static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
 void HotkeyListScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Modify hotkeys";
+	s->UploadClick = NULL;
 	s->LoadEntries = HotkeyListScreen_LoadEntries;
 	s->EntryClick  = HotkeyListScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;
@@ -1679,9 +1730,19 @@ static void LoadLevelScreen_LoadEntries(struct ListScreen* s) {
 	ListScreen_Sort(s);
 }
 
+#ifdef CC_BUILD_WEB
+static void LoadLevelScreen_UploadCallback(const cc_string* path) { Map_LoadFrom(path); }
+static void LoadLevelScreen_UploadFunc(void* s, void* w) {
+	Window_OpenFileDialog(".cw", LoadLevelScreen_UploadCallback);
+}
+#else
+#define LoadLevelScreen_UploadFunc NULL
+#endif
+
 void LoadLevelScreen_Show(void) {
 	struct ListScreen* s = &ListScreen;
 	s->titleText   = "Select a level";
+	s->UploadClick = LoadLevelScreen_UploadFunc;
 	s->LoadEntries = LoadLevelScreen_LoadEntries;
 	s->EntryClick  = LoadLevelScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;

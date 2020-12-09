@@ -120,6 +120,10 @@ void Cursor_SetVisible(cc_bool visible);
 
 /* Shows a dialog box window. */
 CC_API void Window_ShowDialog(const char* title, const char* msg);
+typedef void (*OpenFileDialogCallback)(const cc_string* path);
+/* Shows an 'load file' dialog window. */
+cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callback);
+
 /* Allocates a framebuffer that can be drawn/transferred to the window. */
 /* NOTE: Do NOT free bmp->Scan0, use Window_FreeFramebuffer. */
 /* NOTE: This MUST be called whenever the window is resized. */
