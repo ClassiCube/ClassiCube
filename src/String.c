@@ -291,6 +291,22 @@ int String_LastIndexOfAt(const cc_string* str, int offset, char c) {
 	return -1;
 }
 
+int String_NthIndexOfFromRight(const cc_string* str, char c, int number) {
+	int nth = 1;
+	int i;
+	for (i = (str->length - 1); i >= 0; i--) {
+		if (str->buffer[i] == c) {
+			if (number == nth) {
+				return i;
+			}
+			else {
+				nth++;
+			}
+		}
+	}
+	return -1;
+}
+
 void String_InsertAt(cc_string* str, int offset, char c) {
 	int i;
 

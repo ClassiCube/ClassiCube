@@ -667,6 +667,202 @@ BlockID AutoRotate_RotateBlock(BlockID block) {
 	return rotated == -1 ? block : (BlockID)rotated;
 }
 
+static int FindAutoRotateType(cc_string* dir) {
+	char dir0, dir1;
+
+	dir0 = dir->length > 1 ? dir->buffer[1] : '\0'; Char_MakeLower(dir0);
+	dir1 = dir->length > 2 ? dir->buffer[2] : '\0'; Char_MakeLower(dir1);
+	if (AR_EQ2(dir, 'n', 'w') || AR_EQ2(dir, 'n', 'e') || AR_EQ2(dir, 's', 'w') || AR_EQ2(dir, 's', 'e')) {
+		return 0; /* corner */
+	}
+	else if (AR_EQ1(dir, 'u') || AR_EQ1(dir, 'd')) {
+		return 1; /* up/down */
+	}
+	else if (AR_EQ1(dir, 'n') || AR_EQ1(dir, 'w') || AR_EQ1(dir, 's') || AR_EQ1(dir, 'e')) {
+		return 2; /* directional */
+	}
+	else if (AR_EQ2(dir, 'u', 'd') || AR_EQ2(dir, 'w', 'e') || AR_EQ2(dir, 'n', 's')) {
+		return 3; /* pillar */
+	}
+	return -1;
+}
+
+static int IsBlockVisibleInInventory(int blockID) {
+	int i;
+	for (i = 0; i < Array_Elems(Inventory.Map); i++ ) {
+		if (Inventory.Map[i] == blockID) { return 1; }
+	}
+	return 0;
+}
+
+static int Block_FindIDNonHidden(const cc_string* name) {
+	cc_string blockName;
+	int block;
+
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
+		blockName = Block_UNSAFE_GetName(block);
+		if (String_CaselessEquals(&blockName, name) && ( IsBlockVisibleInInventory(block) > 0)) {
+			return block;
+		}
+	}
+	return -1;
+}
+
+static int Swap1AtIndexAndFind(cc_string* blockName, int index, char c) {
+	/* +1 to skip over the dash */
+	blockName->buffer[index+1] = c;
+	return Block_FindIDNonHidden(blockName);
+}
+static int Swap2AtIndexAndFind(cc_string* blockName, int index, char c, char c2) {
+	/* +1 to skip over the dash */
+	blockName->buffer[index + 1] = c;
+	blockName->buffer[index + 2] = c2;
+	return Block_FindIDNonHidden(blockName);
+}
+
+static int FindMatchingCorner(cc_string* blockName, int rotIndex) {
+	int blockID = -1;
+	blockID = Swap2AtIndexAndFind(blockName, rotIndex, 'N', 'E');
+	if (blockID != -1) { return blockID; }
+	blockID = Swap2AtIndexAndFind(blockName, rotIndex, 'N', 'W');
+	if (blockID != -1) { return blockID; }
+	blockID = Swap2AtIndexAndFind(blockName, rotIndex, 'S', 'W');
+	if (blockID != -1) { return blockID; }
+	blockID = Swap2AtIndexAndFind(blockName, rotIndex, 'S', 'E');
+	if (blockID != -1) { return blockID; }
+	return -1;
+}
+static int FindMatchingUpDown(cc_string* blockName, int upDownIndex) {
+	int blockID = -1;
+	blockID = Swap1AtIndexAndFind(blockName, upDownIndex, 'D');
+	if (blockID != -1) { return blockID; }
+	blockID = Swap1AtIndexAndFind(blockName, upDownIndex, 'U');
+	if (blockID != -1) { return blockID; }
+	return -1;
+}
+static int FindMatchingDirection(cc_string* blockName, int rotIndex) {
+	int blockID = -1;
+	blockID = Swap1AtIndexAndFind(blockName, rotIndex, 'N');
+	if (blockID != -1) { return blockID; }
+	blockID = Swap1AtIndexAndFind(blockName, rotIndex, 'E');
+	if (blockID != -1) { return blockID; }
+	blockID = Swap1AtIndexAndFind(blockName, rotIndex, 'S');
+	if (blockID != -1) { return blockID; }
+	blockID = Swap1AtIndexAndFind(blockName, rotIndex, 'W');
+	if (blockID != -1) { return blockID; }
+	return -1;
+}
+static int FindMatchingPillar(cc_string* blockName, int rotIndex) {
+	int blockID = -1;
+	blockID = Swap2AtIndexAndFind(blockName, rotIndex, 'U', 'D');
+	if (blockID != -1) { return blockID; }
+	blockID = Swap2AtIndexAndFind(blockName, rotIndex, 'W', 'E');
+	if (blockID != -1) { return blockID; }
+	blockID = Swap2AtIndexAndFind(blockName, rotIndex, 'N', 'S');
+	if (blockID != -1) { return blockID; }
+	return -1;
+}
+
+BlockID AutoRotate_PickBlock(BlockID block) {
+	cc_string blockName; char strBuffer[STRING_SIZE * 2];
+	cc_string name;
+	int rotated;
+
+	/* copy name to blockName so modifying it doesn't ruin the original */
+	name = Block_UNSAFE_GetName(block);
+	String_InitArray(blockName, strBuffer);
+	String_AppendString(&blockName, &name);
+
+	int dirType = -1;
+	int dirType2 = -1;
+
+	/* index of rightmost group separated by dashes */
+	int dirIndex = String_LastIndexOfAt(&blockName, 0, '-');
+
+	/* not an autorotate block */
+	if (dirIndex == -1) { return block; }
+
+	cc_string dir;
+	dir = String_UNSAFE_SubstringAt(&blockName, dirIndex);
+
+	dirType = FindAutoRotateType(&dir);
+
+	/* index of next rightmost group separated by dashes */
+	int dirIndex2 = String_NthIndexOfFromRight(&blockName, '-', 2);
+
+	if (dirIndex2 != -1) {
+		cc_string dir2;
+		dir2 = String_UNSAFE_SubstringAt(&blockName, dirIndex2);
+		/* chop off the rightmost group by subtracting its length */
+		dir2.length -= dir.length;
+
+		dirType2 = FindAutoRotateType(&dir2);
+	}
+
+	/* the second-rightmost group is automatically invalid if neither group uses up/down */
+	if (!(dirType == 1 || dirType2 == 1)) {
+		dirType2 = -1;
+		dirIndex2 = -1;
+	}
+
+	int upDownIndex = -1;
+	int rotIndex = dirIndex;
+	int rotType = dirType;
+	if (dirType == 1) {
+		upDownIndex = dirIndex;
+		rotIndex = dirIndex2;
+		rotType = dirType2;
+	}
+	else if (dirType2 == 1) {
+		upDownIndex = dirIndex2;
+	}
+
+	int result;
+	if (upDownIndex != -1 && rotIndex != -1) { /* it uses up/down and another type of rotation */
+		if (rotType == 0) {
+			blockName.buffer[upDownIndex + 1] = 'D';
+			result = FindMatchingCorner(&blockName, rotIndex);
+			if (result != -1) { return (BlockID)result; }
+			blockName.buffer[upDownIndex + 1] = 'U';
+			result = FindMatchingCorner(&blockName, rotIndex);
+			if (result != -1) { return (BlockID)result; }
+		} else if (rotType == 2) {
+			blockName.buffer[upDownIndex + 1] = 'D';
+			result = FindMatchingDirection(&blockName, rotIndex);
+			if (result != -1) { return (BlockID)result; }
+			blockName.buffer[upDownIndex + 1] = 'U';
+			result = FindMatchingDirection(&blockName, rotIndex);
+			if (result != -1) { return (BlockID)result; }
+		}
+		else if (rotType == 3) {
+			blockName.buffer[upDownIndex + 1] = 'D';
+			result = FindMatchingPillar(&blockName, rotIndex);
+			if (result != -1) { return (BlockID)result; }
+			blockName.buffer[upDownIndex + 1] = 'U';
+			result = FindMatchingPillar(&blockName, rotIndex);
+			if (result != -1) { return (BlockID)result; }
+		}
+	}  else if (upDownIndex == -1 ) { /* just one autorotate group and it's not up/down */
+		if (rotType == 0) {
+			result = FindMatchingCorner(&blockName, rotIndex);
+			if (result != -1) { return (BlockID)result; }
+		}
+		else if (rotType == 2) {
+			result = FindMatchingDirection(&blockName, rotIndex);
+			if (result != -1) { return (BlockID)result; }
+		}
+		else if (rotType == 3) {
+			result = FindMatchingPillar(&blockName, rotIndex);
+			if (result != -1) { return (BlockID)result; }
+		}
+	} else if (rotIndex == -1) { /* only up/down autorotate */
+		result = FindMatchingUpDown(&blockName, upDownIndex);
+		if (result != -1) { return (BlockID)result; }
+	}
+
+	return block;
+}
+
 
 /*########################################################################################################################*
 *----------------------------------------------------Blocks component-----------------------------------------------------*
