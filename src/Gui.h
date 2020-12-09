@@ -108,7 +108,7 @@ void Screen_Layout(void* screen);
 /* Calls Widget_Free on each widget in the screen. */
 /* Also deletes the screen's vb. */
 void Screen_ContextLost(void* screen);
-void Screen_CreateVb(void* screen);
+void Screen_UpdateVb(void* screen);
 struct VertexTextured* Screen_LockVb(void* screen);
 void Screen_BuildMesh(void* screen);
 int Screen_DoPointerDown(void* screen, int id, int x, int y);

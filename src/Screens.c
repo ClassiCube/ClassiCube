@@ -1535,9 +1535,7 @@ static void LoadingScreen_Layout(void* screen) {
 	oldRows = s->rows;
 	LoadingScreen_CalcMaxVertices(s);
 	if (oldRows == s->rows) return;
-
-	Gfx_DeleteDynamicVb(&s->vb);
-	Screen_CreateVb(s);
+	Screen_UpdateVb(s);
 }
 
 static void LoadingScreen_ContextLost(void* screen) {
@@ -1551,7 +1549,7 @@ static void LoadingScreen_ContextRecreated(void* screen) {
 	Gui_MakeBodyFont(&s->font);
 	LoadingScreen_SetTitle(s);
 	LoadingScreen_SetMessage(s);
-	Screen_CreateVb(s);
+	Screen_UpdateVb(s);
 }
 
 static void LoadingScreen_BuildMesh(void* screen) {
@@ -1805,7 +1803,7 @@ static void DisconnectScreen_ContextLost(void* screen) {
 
 static void DisconnectScreen_ContextRecreated(void* screen) {
 	struct DisconnectScreen* s = (struct DisconnectScreen*)screen;
-	Screen_CreateVb(screen);
+	Screen_UpdateVb(screen);
 
 	Gui_MakeTitleFont(&s->titleFont);
 	Gui_MakeBodyFont(&s->messageFont);
@@ -2039,7 +2037,7 @@ static void TouchScreen_ContextRecreated(void* screen) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	const struct TouchButtonDesc* desc;
 	int i;
-	Screen_CreateVb(screen);
+	Screen_UpdateVb(screen);
 	Gui_MakeTitleFont(&s->font);
 
 	for (i = 0; i < s->numOnscreen; i++) {

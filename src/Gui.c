@@ -420,8 +420,9 @@ void Screen_ContextLost(void* screen) {
 	}
 }
 
-void Screen_CreateVb(void* screen) {
+void Screen_UpdateVb(void* screen) {
 	struct Screen* s = (struct Screen*)screen;
+	Gfx_DeleteDynamicVb(&s->vb);
 	s->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, s->maxVertices);
 }
 
