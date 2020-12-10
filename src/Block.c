@@ -720,7 +720,6 @@ static void GetAutoRotateTypes(cc_string* blockName, int* dirType, int* dirType2
 
 cc_bool AutoRotate_BlocksShareGroup(BlockID block, BlockID blockOther) {
 	cc_string blockName; cc_string blockNameOther;
-	char strBuffer[STRING_SIZE]; char strBufferOther[STRING_SIZE];
 	int suffixIndex; int suffixIndexOther;
 	int dirType; int dirType2;
 	int dirTypeOther; int dirTypeOther2;
