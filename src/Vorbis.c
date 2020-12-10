@@ -519,7 +519,7 @@ static cc_result Floor_DecodeSetup(struct VorbisState* ctx, struct Floor* f) {
 	static const short ranges[4] = { 256, 128, 84, 64 };
 	int i, j, idx, maxClass;
 	int rangeBits, classNum;
-	cc_int16 xlist_sorted[FLOOR_MAX_VALUES];
+	static cc_int16 xlist_sorted[FLOOR_MAX_VALUES];
 
 	f->partitions = Vorbis_ReadBits(ctx, 5);
 	maxClass = -1;
