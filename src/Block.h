@@ -156,7 +156,6 @@ extern cc_bool AutoRotate_Enabled;
 /* Attempts to find the rotated block based on the user's orientation and offset on selected block. */
 /* If no rotated block is found, returns given block. */
 BlockID AutoRotate_RotateBlock(BlockID block);
-/* Attempts to pick a single consistent block from the auto-rotate set that the given block is part of */
-/* If no rotated block is found, returns given block. */
-BlockID AutoRotate_PickBlock(BlockID block);
+/* Returns non 0 if both blocks belong to the same autorotate group */
+cc_bool AutoRotate_BlocksShareGroup(BlockID block, BlockID blockOther);
 #endif

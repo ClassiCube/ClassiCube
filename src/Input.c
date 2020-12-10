@@ -738,7 +738,6 @@ static void DoPickBlock(void) {
 
 	cur = World_GetBlock(pos.X, pos.Y, pos.Z);
 	if (Blocks.Draw[cur] == DRAW_GAS) return;
-	if (AutoRotate_Enabled) { cur = AutoRotate_PickBlock(cur); }
 	if (!(Blocks.CanPlace[cur] || Blocks.CanDelete[cur])) return;
 	Inventory_PickBlock(cur);
 }

@@ -46,15 +46,26 @@ void Inventory_PickBlock(BlockID block) {
 	int i;
 	if (!Inventory_CheckChangeSelected() || Inventory_SelectedBlock == block) return;
 
-	/* Is the currently selected block an empty slot? */
-	if (Inventory_SelectedBlock == BLOCK_AIR) {
-		Inventory_SetSelectedBlock(block); return;
-	}
-
 	/* Try to replace same block */
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		if (Inventory_Get(i) != block) continue;
 		Inventory_SetSelectedIndex(i); return;
+	}
+
+	if (AutoRotate_Enabled) {
+		/* Try to replace existing autorotate variant */
+		for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
+			if (AutoRotate_BlocksShareGroup(Inventory_Get(i), block)) {
+				Inventory_SetSelectedIndex(i);
+				Inventory_SetSelectedBlock(block);
+				return;
+			}
+		}
+	}
+
+	/* Is the currently selected block an empty slot? */
+	if (Inventory_SelectedBlock == BLOCK_AIR) {
+		Inventory_SetSelectedBlock(block); return;
 	}
 
 	/* Try to replace empty slots */
