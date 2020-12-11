@@ -56,6 +56,7 @@ CC_API void World_SetNewMap(BlockRaw* blocks, int width, int height, int length)
 /* Sets the various dimension and max coordinate related variables. */
 /* NOTE: This is an internal API. Use World_SetNewMap instead. */
 CC_NOINLINE void World_SetDimensions(int width, int height, int length);
+void World_OutOfMemory(void);
 
 #ifdef EXTENDED_BLOCKS
 /* Sets World.Blocks2 and updates internal state for more than 256 blocks. */

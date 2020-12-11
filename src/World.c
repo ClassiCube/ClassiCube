@@ -96,17 +96,19 @@ void World_SetMapUpper(BlockRaw* blocks) {
 }
 #endif
 
+void World_OutOfMemory(void) {
+	Window_ShowDialog("Out of memory", "Not enough free memory to load the map.\nTry joining a different map.");
+	World_Reset();
+}
+
 
 #ifdef EXTENDED_BLOCKS
 static CC_NOINLINE void LazyInitUpper(int i, BlockID block) {
 	BlockRaw* data = (BlockRaw*)Mem_TryAllocCleared(World.Volume, 1);
-	if (data) {
-		World_SetMapUpper(data);
-		World.Blocks2[i] = (BlockRaw)(block >> 8);
-	} else {
-		Window_ShowDialog("Out of memory", "Not enough free memory to load the map.\nTry joining a different map.");
-		World_Reset();
-	}
+	if (!data) { World_OutOfMemory(); return; }
+
+	World_SetMapUpper(data);
+	World.Blocks2[i] = (BlockRaw)(block >> 8);
 }
 
 void World_SetBlock(int x, int y, int z, BlockID block) {

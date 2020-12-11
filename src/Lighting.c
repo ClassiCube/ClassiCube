@@ -358,8 +358,12 @@ static void OnReset(void) {
 }
 
 static void OnNewMapLoaded(void) {
-	Lighting_Heightmap = (cc_int16*)Mem_Alloc(World.Width * World.Length, 2, "lighting heightmap");
-	Lighting_Refresh();
+	Lighting_Heightmap = (cc_int16*)Mem_TryAlloc(World.Width * World.Length, 2);
+	if (Lighting_Heightmap) {
+		Lighting_Refresh();
+	} else {
+		World_OutOfMemory();
+	}
 }
 
 struct IGameComponent Lighting_Component = {
