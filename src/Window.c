@@ -3599,6 +3599,8 @@ cc_result Window_ExitFullscreen(void) {
 
 void Window_SetSize(int width, int height) {
 	emscripten_set_canvas_element_size("#canvas", width, height);
+	/* CSS size is in CSS units not pixel units */
+	emscripten_set_element_css_size("#canvas", width / DisplayInfo.ScaleX, height / DisplayInfo.ScaleY);
 	UpdateWindowBounds();
 }
 
