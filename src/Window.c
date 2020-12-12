@@ -3587,7 +3587,7 @@ cc_result Window_EnterFullscreen(void) {
 	/*   quite annoying given that it is also the Menu key. Some browsers allow */
 	/*   'locking' the Escape key, so that you have to hold down Escape to exit. */
 	/* NOTE: This ONLY works when the webpage is a https:// one */
-	EM_ASM({ try { navigator.keyboard.lock(["Escape"]); } catch { } });
+	EM_ASM({ try { navigator.keyboard.lock(["Escape"]); } catch (ex) { } });
 	return 0;
 }
 
