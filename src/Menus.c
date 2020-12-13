@@ -3767,11 +3767,11 @@ static void TouchOnscreenScreen_Init(void* screen) {
 	s->numWidgets  = Array_Elems(touchOnscreen_widgets);
 	s->maxVertices = TOUCHONSCREEN_MAX_VERTICES;
 
-	TouchOnscreen_SetPage(s, true);
 	TouchOnscreen_UpdateColors(screen);
 	Menu_InitBack(&s->back, TouchOnscreen_More);
 	ButtonWidget_Init(&s->left,  40, TouchOnscreen_Left);
 	ButtonWidget_Init(&s->right, 40, TouchOnscreen_Right);
+	TouchOnscreen_SetPage(s, true);
 }
 
 static const struct ScreenVTABLE TouchOnscreenScreen_VTABLE = {
@@ -3957,7 +3957,7 @@ static void TouchMore_Game(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
 }
 static void TouchMore_Chat(void* s, void* w) {
-	Gui_Remove((struct Screen*)&TouchCtrlsScreen);
+	Gui_Remove((struct Screen*)&TouchMoreScreen);
 	ChatScreen_OpenInput(&String_Empty);
 }
 static void TouchMore_Fog(void* s, void* w) { Game_CycleViewDistance(); }
