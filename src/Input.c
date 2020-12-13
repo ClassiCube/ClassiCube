@@ -33,6 +33,8 @@ static float input_fovIndex = -1.0f;
 static cc_bool suppressEscape;
 #endif
 enum MouseButton_ { MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE };
+/* Raises PointerEvents.Up or PointerEvents.Down */
+static void Pointer_SetPressed(int idx, cc_bool pressed);
 
 
 /*########################################################################################################################*

@@ -94,11 +94,9 @@ void Input_RemoveTouch(long id, int x, int y);
 
 /* Data for mouse and touch */
 extern struct Pointer { int x, y; } Pointers[INPUT_MAX_POINTERS];
-/* X and Y coordinates of the mouse. Use Mouse_SetPosition to change. */
+/* (OBSOLETE) X and Y coordinates of the mouse. Use Mouse_SetPosition to change. */
 extern int Mouse_X, Mouse_Y;
 
-/* Raises PointerEvents.Up or PointerEvents.Down. */
-void Pointer_SetPressed(int idx, cc_bool pressed);
 /* Raises InputEvents.Wheel with the given wheel delta. */
 void Mouse_ScrollWheel(float delta);
 /* Sets X and Y position of the given pointer, always raising PointerEvents.Moved. */
