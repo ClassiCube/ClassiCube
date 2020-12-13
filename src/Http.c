@@ -373,7 +373,9 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 		attr.requestHeaders = headers;
 	}
 
-	attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+	/* If EMSCRIPTEN_FETCH_REPLACE is not specified, then skins/texture packs */
+	/* won't download in FireFox private browsing (because no IndexedDB there) */
+	attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_REPLACE;
 	attr.onsuccess  = Http_FinishedAsync;
 	attr.onerror    = Http_FinishedAsync;
 	attr.onprogress = Http_UpdateProgress;
