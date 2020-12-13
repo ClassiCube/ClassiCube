@@ -113,8 +113,6 @@ CC_API int String_IndexOfAt(const cc_string* str, int offset, char c);
 #define String_LastIndexOf(str, c) String_LastIndexOfAt(str, 0, c)
 /* Returns last index of the given character in the given string, -1 if not found. */
 CC_API int String_LastIndexOfAt(const cc_string* str, int offset, char c);
-/* Returns nth index of the given character in the given string, starting from the right. -1 if not found. */
-CC_API int String_NthIndexOfFromRight(const cc_string* str, char c, int number);
 /* Inserts the given character into the given string. Exits process if this fails. */
 /* e.g. inserting 'd' at offset '1' into "abc" produces "adbc" */
 CC_API void String_InsertAt(cc_string* str, int offset, char c);

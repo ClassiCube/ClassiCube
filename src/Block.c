@@ -684,57 +684,37 @@ BlockID AutoRotate_RotateBlock(BlockID block) {
 	return rotated == -1 ? block : (BlockID)rotated;
 }
 
-static void GetAutoRotateTypes(cc_string* blockName, int* dirType, int* dirType2, int* suffixIndex) {
-	*dirType = -1;
-	*dirType2 = -1;
-	*suffixIndex = -1;
-
-	/* index of rightmost group separated by dashes */
-	int dirIndex = String_LastIndexOfAt(blockName, 0, '-');
-
-	/* not an autorotate block */
-	if (dirIndex == -1) { return; }
-	*suffixIndex = dirIndex;
-
+static void GetAutoRotateTypes(cc_string* name, int* dirTypes) {
+	int dirIndex, i;
 	cc_string dir;
-	dir = String_UNSAFE_SubstringAt(blockName, dirIndex);
+	dirTypes[0] = -1;
+	dirTypes[1] = -1;
 
-	*dirType = AR_CalcGroup(&dir);
+	for (i = 0; i < 2; i++) {
+		/* index of rightmost group separated by dashes */
+		dirIndex = String_LastIndexOf(name, '-');
+		if (dirIndex == -1) return;
 
-	/* index of next rightmost group separated by dashes */
-	int dirIndex2 = String_NthIndexOfFromRight(blockName, '-', 2);
-
-	if (dirIndex2 != -1) {
-		*suffixIndex = dirIndex2;
-		cc_string dir2;
-		dir2 = String_UNSAFE_SubstringAt(blockName, dirIndex2);
-		/* chop off the rightmost group by subtracting its length */
-		dir2.length -= dir.length;
-
-		*dirType2 = AR_CalcGroup(&dir2);
+		dir = String_UNSAFE_SubstringAt(name, dirIndex);
+		dirTypes[i]  = AR_CalcGroup(&dir);
+		name->length = dirIndex;
 	}
 }
 
-cc_bool AutoRotate_BlocksShareGroup(BlockID block, BlockID blockOther) {
-	cc_string blockName; cc_string blockNameOther;
-	int suffixIndex; int suffixIndexOther;
-	int dirType; int dirType2;
-	int dirTypeOther; int dirTypeOther2;
+cc_bool AutoRotate_BlocksShareGroup(BlockID block, BlockID other) {
+	cc_string bName, oName;
+	int bDirTypes[2], oDirTypes[2];
 
-	blockName = Block_UNSAFE_GetName(block);
-	GetAutoRotateTypes(&blockName, &dirType, &dirType2, &suffixIndex);
-	if (suffixIndex == -1) { return 0; }
+	bName = Block_UNSAFE_GetName(block);
+	GetAutoRotateTypes(&bName, bDirTypes);
+	if (bDirTypes[0] == -1) return false;
 
-	blockNameOther = Block_UNSAFE_GetName(blockOther);
-	GetAutoRotateTypes(&blockNameOther, &dirTypeOther, &dirTypeOther2, &suffixIndexOther);
-	if (suffixIndexOther == -1) { return 0; }
+	oName = Block_UNSAFE_GetName(other);
+	GetAutoRotateTypes(&oName, oDirTypes);
+	if (oDirTypes[0] == -1) return false;
 
-	if (dirType == dirTypeOther && dirType2 == dirTypeOther2) {
-		blockName.length += suffixIndex - blockName.length;
-		blockNameOther.length += suffixIndexOther - blockNameOther.length;
-		if (String_CaselessEquals(&blockName, &blockNameOther)) { return 1; }
-	}
-	return 0;
+	return bDirTypes[0] == oDirTypes[0] && bDirTypes[1] == oDirTypes[1] 
+		&& String_CaselessEquals(&bName, &oName);
 }
 
 /*########################################################################################################################*
