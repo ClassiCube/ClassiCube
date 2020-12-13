@@ -3864,10 +3864,10 @@ static void TouchCtrls_Sensitivity(void* screen, void* w) {
 }
 
 static const struct SimpleButtonDesc touchCtrls_btns[4] = {
-	{ -120,  -50, "",     TouchCtrls_Tap  },
-	{  120,  -50, "",     TouchCtrls_Hold },
-	{    0,   50, "",     TouchCtrls_Sensitivity },
-	{    0,  100, "On-screen controls", TouchCtrls_Onscreen }
+	{ -102,  -50, "",     TouchCtrls_Tap  },
+	{  102,  -50, "",     TouchCtrls_Hold },
+	{    0,    0, "",     TouchCtrls_Sensitivity },
+	{    0,   50, "On-screen controls", TouchCtrls_Onscreen }
 };
 
 static void TouchCtrlsScreen_ContextLost(void* screen) {
@@ -3900,7 +3900,7 @@ static void TouchCtrlsScreen_Init(void* screen) {
 	s->numWidgets  = Array_Elems(touchCtrls_widgets);
 	s->maxVertices = TOUCHCTRLS_MAX_VERTICES;
 
-	Menu_InitButtons(s->btns,     200, touchCtrls_btns,     2);
+	Menu_InitButtons(s->btns,     195, touchCtrls_btns,     2);
 	Menu_InitButtons(s->btns + 2, 400, touchCtrls_btns + 2, 2);
 	Menu_InitBack(&s->back, TouchCtrls_More);
 }
