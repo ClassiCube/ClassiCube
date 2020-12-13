@@ -526,6 +526,30 @@ void Block_UpdateCulling(BlockID block) {
 *#########################################################################################################################*/
 cc_bool AutoRotate_Enabled;
 
+#define AR_GROUP_CORNERS 0
+#define AR_GROUP_VERTICAL 1
+#define AR_GROUP_DIRECTION 2
+#define AR_GROUP_PILLAR  3
+
+#define AR_EQ1(x)    (dir0 == x && dir1 == '\0')
+#define AR_EQ2(x, y) (dir0 == x && dir1 == y)
+static int AR_CalcGroup(const cc_string* dir) {
+	char dir0, dir1;
+	dir0 = dir->length > 1 ? dir->buffer[1] : '\0'; Char_MakeLower(dir0);
+	dir1 = dir->length > 2 ? dir->buffer[2] : '\0'; Char_MakeLower(dir1);
+
+	if (AR_EQ2('n','w') || AR_EQ2('n','e') || AR_EQ2('s','w') || AR_EQ2('s','e')) {
+		return AR_GROUP_CORNERS;
+	} else if (AR_EQ1('u') || AR_EQ1('d')) {
+		return AR_GROUP_VERTICAL;
+	} else if (AR_EQ1('n') || AR_EQ1('w') || AR_EQ1('s') || AR_EQ1('e')) {
+		return AR_GROUP_DIRECTION;
+	} else if (AR_EQ2('u','d') || AR_EQ2('w','e') || AR_EQ2('n','s')) {
+		return AR_GROUP_PILLAR;
+	}
+	return -1;
+}
+
 /* replaces a portion of a string, appends otherwise */
 static void AutoRotate_Insert(cc_string* str, int offset, const char* suffix) {
 	int i = str->length - offset;
@@ -618,31 +642,24 @@ static int RotateDirection(cc_string* name, int offset) {
 	return GetRotated(name, offset);
 }
 
-#define AR_EQ1(s, x)    (dir0 == x && dir1 == '\0')
-#define AR_EQ2(s, x, y) (dir0 == x && dir1 == y)
 static int FindRotated(cc_string* name, int offset) {
 	cc_string dir;
-	char dir0, dir1;
-
+	int group;
 	int dirIndex = String_LastIndexOfAt(name, offset, '-');
 	if (dirIndex == -1) return -1; /* not a directional block */
 
 	dir = String_UNSAFE_SubstringAt(name, dirIndex);
 	dir.length -= offset;
 	if (dir.length > 3) return -1;
+
 	offset += dir.length;
+	group = AR_CalcGroup(&dir);
 
-	/* e.g. -D or -ns */
-	dir0 = dir.length > 1 ? dir.buffer[1] : '\0'; Char_MakeLower(dir0);
-	dir1 = dir.length > 2 ? dir.buffer[2] : '\0'; Char_MakeLower(dir1);
+	if (group == AR_GROUP_CORNERS) return RotateCorner(name, offset);
+	if (group == AR_GROUP_VERTICAL) return RotateVertical(name, offset);
+	if (group == AR_GROUP_DIRECTION) return RotateDirection(name, offset);
 
-	if (AR_EQ2(dir, 'n','w') || AR_EQ2(dir, 'n','e') || AR_EQ2(dir, 's','w') || AR_EQ2(dir, 's','e')) {
-		return RotateCorner(name, offset);
-	} else if (AR_EQ1(dir, 'u') || AR_EQ1(dir, 'd')) {
-		return RotateVertical(name, offset);
-	} else if (AR_EQ1(dir, 'n') || AR_EQ1(dir, 'w') || AR_EQ1(dir, 's') || AR_EQ1(dir, 'e')) {
-		return RotateDirection(name, offset);
-	} else if (AR_EQ2(dir, 'u','d') || AR_EQ2(dir, 'w','e') || AR_EQ2(dir, 'n','s')) {
+	if (group == AR_GROUP_PILLAR) {
 		AutoRotate_Insert(name, offset, "-UD");
 		if (Block_FindID(name) == -1) {
 			return RotateFence(name, offset);
@@ -667,26 +684,6 @@ BlockID AutoRotate_RotateBlock(BlockID block) {
 	return rotated == -1 ? block : (BlockID)rotated;
 }
 
-static int FindAutoRotateType(cc_string* dir) {
-	char dir0, dir1;
-
-	dir0 = dir->length > 1 ? dir->buffer[1] : '\0'; Char_MakeLower(dir0);
-	dir1 = dir->length > 2 ? dir->buffer[2] : '\0'; Char_MakeLower(dir1);
-	if (AR_EQ2(dir, 'n', 'w') || AR_EQ2(dir, 'n', 'e') || AR_EQ2(dir, 's', 'w') || AR_EQ2(dir, 's', 'e')) {
-		return 0; /* corner */
-	}
-	else if (AR_EQ1(dir, 'u') || AR_EQ1(dir, 'd')) {
-		return 1; /* up/down */
-	}
-	else if (AR_EQ1(dir, 'n') || AR_EQ1(dir, 'w') || AR_EQ1(dir, 's') || AR_EQ1(dir, 'e')) {
-		return 2; /* directional */
-	}
-	else if (AR_EQ2(dir, 'u', 'd') || AR_EQ2(dir, 'w', 'e') || AR_EQ2(dir, 'n', 's')) {
-		return 3; /* pillar */
-	}
-	return -1;
-}
-
 static void GetAutoRotateTypes(cc_string* blockName, int* dirType, int* dirType2, int* suffixIndex) {
 	*dirType = -1;
 	*dirType2 = -1;
@@ -702,7 +699,7 @@ static void GetAutoRotateTypes(cc_string* blockName, int* dirType, int* dirType2
 	cc_string dir;
 	dir = String_UNSAFE_SubstringAt(blockName, dirIndex);
 
-	*dirType = FindAutoRotateType(&dir);
+	*dirType = AR_CalcGroup(&dir);
 
 	/* index of next rightmost group separated by dashes */
 	int dirIndex2 = String_NthIndexOfFromRight(blockName, '-', 2);
@@ -714,7 +711,7 @@ static void GetAutoRotateTypes(cc_string* blockName, int* dirType, int* dirType2
 		/* chop off the rightmost group by subtracting its length */
 		dir2.length -= dir.length;
 
-		*dirType2 = FindAutoRotateType(&dir2);
+		*dirType2 = AR_CalcGroup(&dir2);
 	}
 }
 
