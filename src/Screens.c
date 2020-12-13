@@ -1909,8 +1909,7 @@ void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
 #define TOUCH_MAX_BTNS (ONSCREEN_MAX_BTNS + 3)
 struct TouchButtonDesc {
 	const char* text;
-	cc_uint8 bind;
-	cc_int16 x, y;
+	cc_uint8 bind, x, y, size;
 	Widget_LeftClick OnClick;
 	cc_bool* enabled;
 };
@@ -1963,24 +1962,24 @@ static void TouchScreen_BindClick(void* screen, void* widget) {
 }
 
 static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
-	{ "Chat",      0,0,0, TouchScreen_ChatClick },
-	{ "Tablist",   0,0,0, TouchScreen_TabClick },
-	{ "Respawn",   0,0,0, TouchScreen_RespawnClick,  &LocalPlayer_Instance.Hacks.CanRespawn },
-	{ "Set spawn", 0,0,0, TouchScreen_SetSpawnClick, &LocalPlayer_Instance.Hacks.CanRespawn },
-	{ "Fly",       0,0,0, TouchScreen_FlyClick,      &LocalPlayer_Instance.Hacks.CanFly     },
-	{ "Noclip",    0,0,0, TouchScreen_NoclipClick,   &LocalPlayer_Instance.Hacks.CanNoclip  },
-	{ "Speed",     KEYBIND_SPEED,       0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed },
-	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed },
-	{ "Camera",    0,0,0, TouchScreen_CameraClick,   &LocalPlayer_Instance.Hacks.CanUseThirdPerson }
+	{ "Chat",      0,0,0,0, TouchScreen_ChatClick },
+	{ "Tablist",   0,0,0,0, TouchScreen_TabClick },
+	{ "Respawn",   0,0,0,0, TouchScreen_RespawnClick,  &LocalPlayer_Instance.Hacks.CanRespawn },
+	{ "Set spawn", 0,0,0,0, TouchScreen_SetSpawnClick, &LocalPlayer_Instance.Hacks.CanRespawn },
+	{ "Fly",       0,0,0,0, TouchScreen_FlyClick,      &LocalPlayer_Instance.Hacks.CanFly     },
+	{ "Noclip",    0,0,0,0, TouchScreen_NoclipClick,   &LocalPlayer_Instance.Hacks.CanNoclip  },
+	{ "Speed",     KEYBIND_SPEED,       0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed },
+	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed },
+	{ "Camera",    0,0,0,0, TouchScreen_CameraClick,   &LocalPlayer_Instance.Hacks.CanUseThirdPerson }
 };
 static const struct TouchButtonDesc normDescs[2] = {
-	{ "...",  KEYBIND_COUNT,     0,   0, TouchScreen_MoreClick },
-	{ "\x1E", KEYBIND_JUMP,     50,  20, TouchScreen_BindClick }
+	{ "...",  KEYBIND_COUNT,     0,   0, 40, TouchScreen_MoreClick },
+	{ "\x1E", KEYBIND_JUMP,     50,  10, 60, TouchScreen_BindClick }
 };
 static const struct TouchButtonDesc hackDescs[3] = {
-	{ "...",   KEYBIND_COUNT,    0,   0, TouchScreen_MoreClick },
-	{ "\x1E", KEYBIND_FLY_UP,   50,  60, TouchScreen_BindClick },
-	{ "\x1F", KEYBIND_FLY_DOWN, 50,  20, TouchScreen_BindClick }
+	{ "...",   KEYBIND_COUNT,    0,   0, 40, TouchScreen_MoreClick },
+	{ "\x1E", KEYBIND_FLY_UP,   50,  70, 60, TouchScreen_BindClick },
+	{ "\x1F", KEYBIND_FLY_DOWN, 50,  10, 60, TouchScreen_BindClick }
 };
 
 static void TouchScreen_InitButtons(struct TouchScreen* s) {
@@ -2012,7 +2011,9 @@ static void TouchScreen_InitButtons(struct TouchScreen* s) {
 	for (i = 0; i < s->numBtns; i++) {
 		s->widgets[i + ONSCREEN_MAX_BTNS] = (struct Widget*)&s->btns[i];
 		desc = &s->descs[i];
-		ButtonWidget_Init(&s->btns[i], 40, desc->OnClick);
+		ButtonWidget_Init(&s->btns[i], desc->size, desc->OnClick);
+
+		s->btns[i].minHeight = Display_ScaleY(desc->size);
 		s->btns[i].col = PackedCol_Make(255, 255, 255, 220);
 	}
 }

@@ -100,7 +100,6 @@ void TextWidget_SetConst(struct TextWidget* w, const char* text, struct FontDesc
 static struct Texture btnShadowTex   = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,66, 200,86)  };
 static struct Texture btnSelectedTex = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,86, 200,106) };
 static struct Texture btnDisabledTex = { 0, Tex_Rect(0,0, 0,0), Widget_UV(0,46, 200,66)  };
-static int btnMinHeight;
 
 static void ButtonWidget_Free(void* widget) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
@@ -222,7 +221,7 @@ void ButtonWidget_Init(struct ButtonWidget* w, int minWidth, Widget_LeftClick on
 	w->col       = PACKEDCOL_WHITE;
 	w->optName   = NULL;
 	w->minWidth  = Display_ScaleX(minWidth);
-	btnMinHeight = Display_ScaleY(40);
+	w->minHeight = Display_ScaleY(40);
 	w->MenuClick = onClick;
 }
 
@@ -239,7 +238,7 @@ void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct Font
 	}
 
 	w->width  = max(w->tex.Width,  w->minWidth);
-	w->height = max(w->tex.Height, btnMinHeight);
+	w->height = max(w->tex.Height, w->minHeight);
 	Widget_Layout(w);
 }
 

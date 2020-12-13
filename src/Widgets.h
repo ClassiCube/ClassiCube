@@ -32,7 +32,7 @@ struct ButtonWidget {
 	Widget_Body
 	struct Texture tex;
 	PackedCol col;
-	int minWidth;
+	int minWidth, minHeight;
 	const char* optName;
 	Button_Get GetValue;
 	Button_Set SetValue;
