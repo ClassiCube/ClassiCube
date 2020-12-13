@@ -552,9 +552,9 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_MOUSEMOVE:
 		/* Set before position change, in case mouse buttons changed when outside window */
-		Input_Set(KEY_LMOUSE, wParam & 0x01);
-		Input_Set(KEY_RMOUSE, wParam & 0x02);
-		Input_Set(KEY_MMOUSE, wParam & 0x10);
+		Input_SetNonRepeatable(KEY_LMOUSE, wParam & 0x01);
+		Input_SetNonRepeatable(KEY_RMOUSE, wParam & 0x02);
+		Input_SetNonRepeatable(KEY_MMOUSE, wParam & 0x10);
 		/* TODO: do we need to set XBUTTON1/XBUTTON2 here */
 		Pointer_SetPosition(0, LOWORD(lParam), HIWORD(lParam));
 		break;
@@ -3168,7 +3168,7 @@ static EM_BOOL OnMouseButton(int type, const EmscriptenMouseEvent* ev, void* dat
 	DeferredEnableRawMouse();
 	return true;
 }
-
+ 
 /* input coordinates are CSS pixels, remap to internal pixels */
 static void RescaleXY(int srcX, int srcY, int* dstX, int* dstY) {
 	double css_width, css_height;
@@ -3187,9 +3187,9 @@ static void RescaleXY(int srcX, int srcY, int* dstX, int* dstY) {
 static EM_BOOL OnMouseMove(int type, const EmscriptenMouseEvent* ev, void* data) {
 	int x, y, buttons = ev->buttons;
 	/* Set before position change, in case mouse buttons changed when outside window */
-	Input_Set(KEY_LMOUSE, buttons & 0x01);
-	Input_Set(KEY_RMOUSE, buttons & 0x02);
-	Input_Set(KEY_MMOUSE, buttons & 0x04);
+	Input_SetNonRepeatable(KEY_LMOUSE, buttons & 0x01);
+	Input_SetNonRepeatable(KEY_RMOUSE, buttons & 0x02);
+	Input_SetNonRepeatable(KEY_MMOUSE, buttons & 0x04);
 
 	RescaleXY(ev->targetX, ev->targetY, &x, &y);
 	Pointer_SetPosition(0, x, y);

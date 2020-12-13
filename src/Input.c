@@ -245,6 +245,15 @@ void Input_Set(int key, int pressed) {
 	}
 }
 
+void Input_SetNonRepeatable(int key, int pressed) {
+	if (pressed) {
+		if (Input_Pressed[key]) return;
+		Input_SetPressed(key);
+	} else {
+		Input_SetReleased(key);
+	}
+}
+
 void Input_Clear(void) {
 	int i;
 	for (i = 0; i < INPUT_COUNT; i++) {

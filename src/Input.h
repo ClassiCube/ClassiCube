@@ -70,6 +70,7 @@ void Input_SetPressed(int key);
 void Input_SetReleased(int key);
 /* Calls either Input_SetPressed or Input_SetReleased */
 void Input_Set(int key, int pressed);
+void Input_SetNonRepeatable(int key, int pressed);
 /* Resets all keyboard buttons to released state. (Input_SetReleased) */
 void Input_Clear(void);
 
