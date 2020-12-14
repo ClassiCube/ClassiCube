@@ -79,6 +79,8 @@ static const char* GetCCErrorDesc(cc_result res) {
 	case NBT_ERR_UNKNOWN:   return "Unknown NBT tag type";
 	case CW_ERR_ROOT_TAG:   return "Invalid root NBT tag";
 	case CW_ERR_STRING_LEN: return "NBT string too long";
+
+	case ERR_DOWNLOAD_INVALID: return "Website denied download or doesn't exist";
 	}
 	return NULL;
 }

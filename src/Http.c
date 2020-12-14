@@ -325,7 +325,7 @@ static void OnFinishedAsync(void* data, int len, int status) {
 	req->contentLength = len;
 
 	/* Usually because of denied by CORS */
-	if (!status) req->result = ERR_INVALID_ARGUMENT;
+	if (!status && !data) req->result = ERR_DOWNLOAD_INVALID;
 
 	if (req->data) Platform_Log1("HTTP returned data: %i bytes", &req->size);
 	Http_FinishRequest(req);
