@@ -306,6 +306,7 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
 #include <emscripten/emscripten.h>
+#include "Errors.h"
 
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) { return false; }
 /* web browsers do caching already, so don't need last modified/etags */
@@ -323,6 +324,9 @@ static void OnFinishedAsync(void* data, int len, int status) {
 	req->statusCode    = status;
 	req->contentLength = len;
 
+	/* Usually because of denied by CORS */
+	if (!status) req->result = ERR_INVALID_ARGUMENT;
+
 	if (req->data) Platform_Log1("HTTP returned data: %i bytes", &req->size);
 	Http_FinishRequest(req);
 	Http_WorkerSignal();
@@ -331,7 +335,6 @@ static void OnFinishedAsync(void* data, int len, int status) {
 static void Http_DownloadAsync(struct HttpRequest* req) {
 	char urlBuffer[URL_MAX_SIZE]; cc_string url;
 	char urlStr[NATIVE_STR_LEN];
-	const char* method = req->requestType == REQUEST_TYPE_HEAD ? "HEAD" : "GET";
 
 	String_InitArray(url, urlBuffer);
 	Http_BeginRequest(req, &url);
@@ -339,8 +342,8 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 
 	EM_ASM_({
 		var url       = UTF8ToString($0);
-		var reqMethod = UTF8ToString($1);
-
+		var reqMethod = $1 == 1 ? 'HEAD' : 'GET';
+		
 		var onFinished = function(data, len, status) { 
 			Module['dynCall_viii']($2, data, len, status);
 		};
@@ -356,15 +359,15 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 			var src  = new Uint8Array(xhr.response);
 			var len  = src.byteLength;
 			var data = _malloc(len);
-			HEAPU8.set(src, _malloc(len));
+			HEAPU8.set(src, data);
 			onFinished(data, len || e.total, xhr.status);
 		};
-		xhr.onerror    = function(e) { onFinished(NULL, 0, xhr.status); };
-		xhr.ontimeout  = function(e) { onFinished(NULL, 0, xhr.status); };
+		xhr.onerror    = function(e) { onFinished(0, 0, xhr.status); };
+		xhr.ontimeout  = function(e) { onFinished(0, 0, xhr.status); };
 		xhr.onprogress = function(e) { onProgress(e.loaded, e.total);   };
 
-		try { xhr.send(); } catch (e) { onFinished(NULL, 0, 0); }
-	}, urlStr, method, OnFinishedAsync, OnUpdateProgress);
+		try { xhr.send(); } catch (e) { onFinished(0, 0, 0); }
+	}, urlStr, req->requestType, OnFinishedAsync, OnUpdateProgress);
 }
 
 static void Http_WorkerInit(void) {
