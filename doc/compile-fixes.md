@@ -65,24 +65,3 @@ and change to
 ```
 eventHandler.target.addEventListener(eventHandler.eventTypeString, jsEventHandler, { useCapture: eventHandler.useCapture, passive: false });
 ```
-
-#### Texture pack confirm dialog always shows *Download size: Determining*..
-Unfortunately emscripten doesn't store content-length for HEAD http requests. This can be fixed.
-
-First you need to find at what offset emscripten stores content-length. Look for something like:
-```
-xhr.onprogress = function(e) {
-...
-      Fetch.setu64(fetch + 32, e.total);
-```
-then look for
-```
-xhr.onload = function(e) {
-...
-```
-and finally change that to
-```
-xhr.onload = function(e) { 
-    Fetch.setu64(fetch + 32, e.total);
-...
-```

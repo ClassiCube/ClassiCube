@@ -354,17 +354,26 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 		var xhr = new XMLHttpRequest();
 		xhr.open(reqMethod, url);
 		xhr.responseType = 'arraybuffer';
+
+		var getContentLength = function(e) {
+			if (e.total) return e.total;
+
+			try {
+				var len = xhr.getResponseHeader('Content-Length');
+				return parseInt(len, 10);
+			} catch (ex) { return 0; }
+		};
 		
 		xhr.onload = function(e) {
 			var src  = new Uint8Array(xhr.response);
 			var len  = src.byteLength;
 			var data = _malloc(len);
 			HEAPU8.set(src, data);
-			onFinished(data, len || e.total, xhr.status);
+			onFinished(data, len || getContentLength(e), xhr.status);
 		};
-		xhr.onerror    = function(e) { onFinished(0, 0, xhr.status); };
-		xhr.ontimeout  = function(e) { onFinished(0, 0, xhr.status); };
-		xhr.onprogress = function(e) { onProgress(e.loaded, e.total);   };
+		xhr.onerror    = function(e) { onFinished(0, 0, xhr.status);  };
+		xhr.ontimeout  = function(e) { onFinished(0, 0, xhr.status);  };
+		xhr.onprogress = function(e) { onProgress(e.loaded, e.total); };
 
 		try { xhr.send(); } catch (e) { onFinished(0, 0, 0); }
 	}, urlStr, req->requestType, OnFinishedAsync, OnUpdateProgress);
