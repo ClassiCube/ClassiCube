@@ -305,36 +305,27 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 *------------------------------------------------Emscripten implementation------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_WEB
-/* Use fetch/XMLHttpRequest api for Emscripten */
 #include <emscripten/emscripten.h>
-#include <emscripten/fetch.h>
+#include "Errors.h"
 
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) { return false; }
 /* web browsers do caching already, so don't need last modified/etags */
 static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_string* value) { }
 
-static void Http_UpdateProgress(emscripten_fetch_t* fetch) {
-	if (!fetch->totalBytes) return;
-	http_curProgress = (int)(100.0f * fetch->dataOffset / fetch->totalBytes);
+static void OnUpdateProgress(int read, int total) {
+	if (!total) return;
+	http_curProgress = (int)(100.0f * read / total);
 }
 
-static void Http_FinishedAsync(emscripten_fetch_t* fetch) {
+static void OnFinishedAsync(void* data, int len, int status) {
 	struct HttpRequest* req = &http_curRequest;
-	req->data          = (cc_uint8*)fetch->data;
-	req->size          = fetch->numBytes;
-	req->statusCode    = fetch->status;
-	req->contentLength = fetch->totalBytes;
+	req->data          = data;
+	req->size          = len;
+	req->statusCode    = status;
+	req->contentLength = len;
 
-	/* Remove error handler to avoid potential infinite recurison */
-	/*   Sometimes calling emscripten_fetch_close calls fetch->__attributes.onerror */
-	/*   But attr.onerror is actually Http_FinishedAsync, so this will end up doing */
-	/*     Http_FinishedAsync --> emscripten_fetch_close --> Http_FinishedAsync ..  */
-	/*   .. and eventually the browser kills it from too much recursion */
-	fetch->__attributes.onerror = NULL;
-
-	/* data needs to persist beyond closing of fetch data */
-	fetch->data = NULL;
-	emscripten_fetch_close(fetch);
+	/* Usually because of denied by CORS */
+	if (!status && !data) req->result = ERR_DOWNLOAD_INVALID;
 
 	if (req->data) Platform_Log1("HTTP returned data: %i bytes", &req->size);
 	Http_FinishRequest(req);
@@ -342,50 +333,50 @@ static void Http_FinishedAsync(emscripten_fetch_t* fetch) {
 }
 
 static void Http_DownloadAsync(struct HttpRequest* req) {
-	emscripten_fetch_attr_t attr;
-	emscripten_fetch_attr_init(&attr);
-
 	char urlBuffer[URL_MAX_SIZE]; cc_string url;
 	char urlStr[NATIVE_STR_LEN];
-
-	switch (req->requestType) {
-	case REQUEST_TYPE_GET:  Mem_Copy(attr.requestMethod, "GET",  4); break;
-	case REQUEST_TYPE_HEAD: Mem_Copy(attr.requestMethod, "HEAD", 5); break;
-	case REQUEST_TYPE_POST: Mem_Copy(attr.requestMethod, "POST", 5); break;
-	}
-
-	if (req->requestType == REQUEST_TYPE_POST) {
-		attr.requestData     = (const char*)req->data;
-		attr.requestDataSize = req->size;
-	}
-
-	/* Can't use this for all URLs, because cache-control isn't in allowed CORS headers */
-	/* For example, if you try this with dropbox, you'll get a '404' with */
-	/*   Access to XMLHttpRequest at 'https://dl.dropbox.com/s/a/a.zip' from */
-	/*   origin 'http://www.classicube.net' has been blocked by CORS policy: */
-	/*   Response to preflight request doesn't pass access control check: */
-	/*   Redirect is not allowed for a preflight request. */
-	/* printed to console. But this is still used for skins, that way when users change */
-	/* their skins, the change shows up instantly. But 99% of the time we'll get a 304 */
-	/* response and can avoid downloading the whole skin over and over. */
-	if (req->url[0] == '/') {
-		static const char* const headers[3] = { "cache-control", "max-age=0", NULL };
-		attr.requestHeaders = headers;
-	}
-
-	/* If EMSCRIPTEN_FETCH_REPLACE is not specified, then skins/texture packs */
-	/* won't download in FireFox private browsing (because no IndexedDB there) */
-	attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_REPLACE;
-	attr.onsuccess  = Http_FinishedAsync;
-	attr.onerror    = Http_FinishedAsync;
-	attr.onprogress = Http_UpdateProgress;
 
 	String_InitArray(url, urlBuffer);
 	Http_BeginRequest(req, &url);
 	Platform_EncodeString(urlStr, &url);
 
-	/* TODO: SET requestHeaders!!! */
-	emscripten_fetch(&attr, urlStr);
+	EM_ASM_({
+		var url       = UTF8ToString($0);
+		var reqMethod = $1 == 1 ? 'HEAD' : 'GET';
+		
+		var onFinished = function(data, len, status) { 
+			Module['dynCall_viii']($2, data, len, status);
+		};
+		var onProgress = function(read, total) { 
+			Module['dynCall_vii']($3, read, total);
+		};
+		
+		var xhr = new XMLHttpRequest();
+		xhr.open(reqMethod, url);
+		xhr.responseType = 'arraybuffer';
+
+		var getContentLength = function(e) {
+			if (e.total) return e.total;
+
+			try {
+				var len = xhr.getResponseHeader('Content-Length');
+				return parseInt(len, 10);
+			} catch (ex) { return 0; }
+		};
+		
+		xhr.onload = function(e) {
+			var src  = new Uint8Array(xhr.response);
+			var len  = src.byteLength;
+			var data = _malloc(len);
+			HEAPU8.set(src, data);
+			onFinished(data, len || getContentLength(e), xhr.status);
+		};
+		xhr.onerror    = function(e) { onFinished(0, 0, xhr.status);  };
+		xhr.ontimeout  = function(e) { onFinished(0, 0, xhr.status);  };
+		xhr.onprogress = function(e) { onProgress(e.loaded, e.total); };
+
+		try { xhr.send(); } catch (e) { onFinished(0, 0, 0); }
+	}, urlStr, req->requestType, OnFinishedAsync, OnUpdateProgress);
 }
 
 static void Http_WorkerInit(void) {
