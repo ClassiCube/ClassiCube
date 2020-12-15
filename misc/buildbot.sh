@@ -85,11 +85,9 @@ build_mac64() {
 build_web() {
   echo "Building web.."
   rm cc.js
-  $WEB_CC *.c -O1 -o cc.js -s FETCH=1 -s WASM=0 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 --preload-file texpacks/default.zip -w
+  $WEB_CC *.c -O1 -o cc.js -s WASM=0 -s LEGACY_VM_SUPPORT=1 -s ALLOW_MEMORY_GROWTH=1 -s ABORTING_MALLOC=0 --preload-file texpacks/default.zip -w
   # so game loads textures from classicube.net/static/default.zip
   sed -i 's#cc.data#/static/default.zip#g' cc.js
-  # fix texture pack overlay always showing 'Download size: Determining..."
-  sed -i 's#xhr.onload = function(e) {#xhr.onload = function(e) { Fetch.setu64(fetch + 32, e.total);#g' cc.js
   # fix mouse wheel scrolling page not being properly prevented
   # "[Intervention] Unable to preventDefault inside passive event listener due to target being treated as passive."
   sed -i 's#eventHandler.useCapture);#{ useCapture: eventHandler.useCapture, passive: false });#g' cc.js
