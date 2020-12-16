@@ -176,7 +176,7 @@ static cc_uint32 Huffman_ReverseBits(cc_uint32 n, cc_uint8 bits) {
 }
 
 /* Builds a huffman tree, based on input lengths of each codeword */
-static void Huffman_Build(struct HuffmanTable* table, const cc_uint8* bitLens, int count) {
+static cc_result Huffman_Build(struct HuffmanTable* table, const cc_uint8* bitLens, int count) {
 	int bl_count[INFLATE_MAX_BITS], bl_offsets[INFLATE_MAX_BITS];
 	int code, offset, value;
 	int i, j;
@@ -195,9 +195,8 @@ static void Huffman_Build(struct HuffmanTable* table, const cc_uint8* bitLens, i
 	/* Ensure huffman tree actually makes sense */
 	bl_count[0] = 0;
 	for (i = 1; i < INFLATE_MAX_BITS; i++) {
-		if (bl_count[i] > (1 << i)) {
-			Logger_Abort("Too many huffman codes for bit length");
-		}
+		/* Check if too many huffman codes for bit length */
+		if (bl_count[i] > (1 << i)) return INF_ERR_NUM_CODES;
 	}
 
 	/* Compute the codewords for the huffman tree.
@@ -255,6 +254,7 @@ static void Huffman_Build(struct HuffmanTable* table, const cc_uint8* bitLens, i
 		}
 		bl_offsets[len]++;
 	}
+	return 0;
 }
 
 /* Attempts to read the next huffman encoded value from the bitstream, using given table */
@@ -465,6 +465,7 @@ void Inflate_Process(struct InflateState* s) {
 	cc_uint32 len, dist, nlen;
 	cc_uint32 i, bits;
 	cc_uint32 blockHeader;
+	cc_result res;
 
 	/* len/dist table variables */
 	cc_uint32 distIdx, lenIdx;
@@ -490,8 +491,8 @@ void Inflate_Process(struct InflateState* s) {
 			} break;
 
 			case 1: { /* Fixed/static huffman compressed */
-				Huffman_Build(&s->Table.Lits, fixed_lits,  INFLATE_MAX_LITS);
-				Huffman_Build(&s->TableDists, fixed_dists, INFLATE_MAX_DISTS);
+				(void)Huffman_Build(&s->Table.Lits, fixed_lits,  INFLATE_MAX_LITS);
+				(void)Huffman_Build(&s->TableDists, fixed_dists, INFLATE_MAX_DISTS);
 				s->State = Inflate_NextCompressState(s);
 			} break;
 
@@ -574,7 +575,8 @@ void Inflate_Process(struct InflateState* s) {
 
 			s->Index = 0;
 			s->State = INFLATE_STATE_DYNAMIC_LITSDISTS;
-			Huffman_Build(&s->Table.CodeLens, s->Buffer, INFLATE_MAX_CODELENS);
+			res = Huffman_Build(&s->Table.CodeLens, s->Buffer, INFLATE_MAX_CODELENS);
+			if (res) { Inflate_Fail(s, res); return; }
 		}
 
 		case INFLATE_STATE_DYNAMIC_LITSDISTS: {
@@ -595,8 +597,11 @@ void Inflate_Process(struct InflateState* s) {
 			if (s->Index == count) {
 				s->Index = 0;
 				s->State = Inflate_NextCompressState(s);
-				Huffman_Build(&s->Table.Lits, s->Buffer, s->NumLits);
-				Huffman_Build(&s->TableDists, &s->Buffer[s->NumLits], s->NumDists);
+
+				res = Huffman_Build(&s->Table.Lits, s->Buffer, s->NumLits);
+				if (res) { Inflate_Fail(s, res); return; }
+				res = Huffman_Build(&s->TableDists, s->Buffer + s->NumLits, s->NumDists);
+				if (res) { Inflate_Fail(s, res); return; }
 			}
 			break;
 		}
@@ -983,7 +988,8 @@ static void Deflate_BuildTable(const cc_uint8* lens, int count, cc_uint16* codew
 	int i, j, offset, codeword;
 	struct HuffmanTable table;
 
-	Huffman_Build(&table, lens, count);
+	/* NOTE: Can ignore since lens table is not user controlled */
+	(void)Huffman_Build(&table, lens, count);
 	for (i = 0; i < INFLATE_MAX_BITS; i++) {
 		if (!table.EndCodewords[i]) continue;
 		count = table.EndCodewords[i] - table.FirstCodewords[i];
