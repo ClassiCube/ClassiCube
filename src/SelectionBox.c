@@ -144,8 +144,8 @@ static void Selections_ContextLost(void* obj) {
 
 static void Selections_ContextRecreated(void* obj) {
 	if (!selections_used) return;
-	selections_VB     = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
-	selections_LineVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
+	Gfx_RecreateDynamicVb(&selections_VB,     VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
+	Gfx_RecreateDynamicVb(&selections_LineVB, VERTEX_FORMAT_COLOURED, SELECTIONS_MAX_VERTICES);
 }
 
 static void Selections_QuickSort(int left, int right) {

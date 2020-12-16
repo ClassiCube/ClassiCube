@@ -109,7 +109,7 @@ static void OnContextLost(void* obj) {
 }
 
 static void OnContextRecreated(void* obj) {
-	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, PICKEDPOS_NUM_VERTICES);
+	Gfx_RecreateDynamicVb(&pickedPos_vb, VERTEX_FORMAT_COLOURED, PICKEDPOS_NUM_VERTICES);
 }
 
 static void OnInit(void) {

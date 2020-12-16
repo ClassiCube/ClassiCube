@@ -32,7 +32,7 @@ void AxisLinesRenderer_Render(void) {
 	if (!AxisLinesRenderer_Enabled) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
 	if (!axisLines_vb) {
-		axisLines_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
+		Gfx_RecreateDynamicVb(&axisLines_vb, VERTEX_FORMAT_COLOURED, AXISLINES_NUM_VERTICES);
 	}
 
 	Gfx_SetTexturing(false);

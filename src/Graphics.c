@@ -70,8 +70,8 @@ static void InitDefaultResources(void) {
 	MakeIndices(indices, GFX_MAX_INDICES);
 	Gfx_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
 
-	Gfx_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_COLOURED, 4);
-	Gfx_texVb  = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, 4);
+	Gfx_RecreateDynamicVb(&Gfx_quadVb, VERTEX_FORMAT_COLOURED, 4);
+	Gfx_RecreateDynamicVb(&Gfx_texVb,  VERTEX_FORMAT_TEXTURED, 4);
 }
 
 static void FreeDefaultResources(void) {
@@ -108,14 +108,25 @@ void Gfx_RecreateContext(void) {
 }
 
 
+void Gfx_RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices) {
+	Gfx_DeleteDynamicVb(vb);
+	*vb = Gfx_CreateDynamicVb(fmt, maxVertices);
+}
+
+void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps) {
+	Gfx_DeleteTexture(tex);
+	*tex = Gfx_CreateTexture(bmp, managedPool, mipmaps);
+}
+
+void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
+	Gfx_DeleteVb(vb);
+	*vb = Gfx_CreateVb(fmt, count);
+	return Gfx_LockVb(*vb, fmt, count);
+}
+
 void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount) {
 	Gfx_SetDynamicVbData(vb, vertices, vCount);
 	Gfx_DrawVb_IndexedTris(vCount);
-}
-
-void* Gfx_CreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count) {
-	*vb = Gfx_CreateVb(fmt, count);
-	return Gfx_LockVb(*vb, fmt, count);
 }
 
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol col) {

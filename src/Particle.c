@@ -585,7 +585,7 @@ static void OnContextLost(void* obj) {
 	Gfx_DeleteTexture(&Particles_TexId);
 }
 static void OnContextRecreated(void* obj) {
-	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
+	Gfx_RecreateDynamicVb(&Particles_VB, VERTEX_FORMAT_TEXTURED, PARTICLES_MAX * 4);
 }
 static void OnBreakBlockEffect_Handler(void* obj, IVec3 coords, BlockID old, BlockID now) {
 	Particles_BreakBlockEffect(coords, old, now);

@@ -194,7 +194,7 @@ static void UpdateClouds(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	clouds_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	data = (struct VertexTextured*)Gfx_CreateAndLockVb(&clouds_vb,
+	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&clouds_vb,
 										VERTEX_FORMAT_TEXTURED, clouds_vertices);
 	DrawCloudsY(x1, z1, x2, z2, Env.CloudsHeight, data);
 	Gfx_UnlockVb(clouds_vb);
@@ -266,7 +266,7 @@ static void UpdateSky(void) {
 	z1 = -extent; z2 = World.Length + extent;
 	sky_vertices = CalcNumVertices(x2 - x1, z2 - z1);
 
-	data   = (struct VertexColoured*)Gfx_CreateAndLockVb(&sky_vb,
+	data   = (struct VertexColoured*)Gfx_RecreateAndLockVb(&sky_vb,
 										VERTEX_FORMAT_COLOURED, sky_vertices);
 	height = max((World.Height + 2), Env.CloudsHeight) + 6;
 	DrawSkyY(x1, z1, x2, z2, height, data);
@@ -340,7 +340,7 @@ static void UpdateSkybox(void) {
 	if (Gfx.LostContext)     return;
 	if (EnvRenderer_Minimal) return;
 
-	data = (struct VertexTextured*)Gfx_CreateAndLockVb(&skybox_vb,
+	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&skybox_vb,
 										VERTEX_FORMAT_TEXTURED, SKYBOX_COUNT);
 	Mem_Copy(data, vertices, sizeof(vertices));
 	for (i = 0; i < SKYBOX_COUNT; i++) { data[i].Col = Env.SkyboxCol; }
@@ -691,7 +691,7 @@ static void UpdateMapSides(void) {
 	sides_vertices +=     CalcNumVertices(World.Width, World.Length);  /* YQuads beneath map */
 	sides_vertices += 2 * CalcNumVertices(World.Width,  Math_AbsI(y)); /* ZQuads */
 	sides_vertices += 2 * CalcNumVertices(World.Length, Math_AbsI(y)); /* XQuads */
-	data = (struct VertexTextured*)Gfx_CreateAndLockVb(&sides_vb,
+	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&sides_vb,
 										VERTEX_FORMAT_TEXTURED, sides_vertices);
 
 	sides_fullBright = Blocks.FullBright[block];
@@ -737,7 +737,7 @@ static void UpdateMapEdges(void) {
 		r = rects[i];
 		edges_vertices += CalcNumVertices(r.Width, r.Height); /* YPlanes outside */
 	}
-	data = (struct VertexTextured*)Gfx_CreateAndLockVb(&edges_vb,
+	data = (struct VertexTextured*)Gfx_RecreateAndLockVb(&edges_vb,
 										VERTEX_FORMAT_TEXTURED, edges_vertices);
 
 	edges_fullBright = Blocks.FullBright[block];
@@ -789,7 +789,7 @@ static void UpdateAll(void) {
 	Gfx_DeleteDynamicVb(&weather_vb);
 	if (Gfx.LostContext) return;
 	/* TODO: Don't allocate unless used? */
-	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
+	Gfx_RecreateDynamicVb(&weather_vb, VERTEX_FORMAT_TEXTURED, WEATHER_VERTS_COUNT);
 	/* TODO: Don't need to do this on every new map */
 	UpdateBorderTextures();
 }

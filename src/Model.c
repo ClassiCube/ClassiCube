@@ -805,12 +805,10 @@ static void CheckMaxVertices(void) {
 	/* hack to undo plugins setting a smaller vertices buffer */
 	if (Models.MaxVertices < Array_Elems(defaultVertices)) {
 		Platform_LogConst("CheckMaxVertices found smaller buffer, resetting Models.Vb");
-		Gfx_DeleteDynamicVb(&Models.Vb);
-
 		Models.Vertices    = defaultVertices;
 		Models.MaxVertices = Array_Elems(defaultVertices);
 
-		Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
+		Gfx_RecreateDynamicVb(&Models.Vb, VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
 	}
 }
 
@@ -2161,7 +2159,7 @@ static void OnContextLost(void* obj) {
 }
 
 static void OnContextRecreated(void* obj) {
-	Models.Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
+	Gfx_RecreateDynamicVb(&Models.Vb, VERTEX_FORMAT_TEXTURED, Models.MaxVertices);
 }
 
 static void OnInit(void) {

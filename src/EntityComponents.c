@@ -594,7 +594,7 @@ static void ShadowComponent_MakeTex(void) {
 			row[x] = dist < sh_half * sh_half ? col : 0;
 		}
 	}
-	ShadowComponent_ShadowTex = Gfx_CreateTexture(&bmp, false, false);
+	Gfx_RecreateTexture(&ShadowComponent_ShadowTex, &bmp, false, false);
 }
 
 void ShadowComponent_Draw(struct Entity* e) {

@@ -55,6 +55,10 @@ extern GfxResourceID Gfx_quadVb, Gfx_texVb;
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
 
+void Gfx_RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices);
+void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_bool managedPool, cc_bool mipmaps);
+void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
+
 /* Creates a new texture. (and also generates mipmaps if mipmaps) */
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures
 use mipmapping may be either a per-texture or global state depending on the backend. */
@@ -209,8 +213,6 @@ cc_bool Gfx_TryRestoreContext(void);
 /* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer. */
 /* NOTE: This replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
 void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount);
-/* Shorthand for Gfx_CreateVb followed by Gfx_LockVb */
-void* Gfx_CreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
 
 /* Renders a 2D flat coloured rectangle. */
 void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol col);

@@ -763,7 +763,7 @@ static void TableWidget_Free(void* widget) {
 
 void TableWidget_Recreate(struct TableWidget* w) {
 	Elem_Free(w);
-	w->vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_TEXTURED, TABLE_MAX_VERTICES);
+	Gfx_RecreateDynamicVb(&w->vb, VERTEX_FORMAT_TEXTURED, TABLE_MAX_VERTICES);
 	TableWidget_RecreateDescTex(w);
 }
 
