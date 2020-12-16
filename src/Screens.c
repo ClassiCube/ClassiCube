@@ -459,6 +459,7 @@ static void TabListOverlay_AddGroup(struct TabListOverlay* s, int id, int* index
 	}
 	
 	s->ids[*index] = GROUP_NAME_ID;
+	s->textures[*index].ID = 0; /* TODO: TEMP HACK! */
 	TabListOverlay_DrawText(&s->textures[*index], s, &group);
 
 	(*index)++;
@@ -570,14 +571,12 @@ static void TabListOverlay_Add(void* obj, int id) {
 
 static void TabListOverlay_Update(void* obj, int id) {
 	struct TabListOverlay* s = (struct TabListOverlay*)obj;
-	struct Texture tex;
 	int i;
 
 	for (i = 0; i < s->namesCount; i++) {
 		if (s->ids[i] != id) continue;
-		tex = s->textures[i];
+		Gfx_DeleteTexture(&s->textures[i].ID);
 
-		Gfx_DeleteTexture(&tex.ID);
 		TabListOverlay_AddName(s, id, i);
 		TabListOverlay_SortAndLayout(s);
 		return;
