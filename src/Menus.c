@@ -3794,7 +3794,7 @@ void TouchOnscreenScreen_Show(void) {
 /*########################################################################################################################*
 *---------------------------------------------------TouchControlsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-#define TOUCHCTRLS_BTNS 4
+#define TOUCHCTRLS_BTNS 5
 static struct TouchCtrlsScreen {
 	Screen_Body
 	struct ButtonWidget back;
@@ -3805,7 +3805,7 @@ static struct TouchCtrlsScreen {
 static struct Widget* touchCtrls_widgets[1 + TOUCHCTRLS_BTNS] = {
 	(struct Widget*)&TouchCtrlsScreen.back,    (struct Widget*)&TouchCtrlsScreen.btns[0], 
 	(struct Widget*)&TouchCtrlsScreen.btns[1], (struct Widget*)&TouchCtrlsScreen.btns[2], 
-	(struct Widget*)&TouchCtrlsScreen.btns[3]
+	(struct Widget*)&TouchCtrlsScreen.btns[3], (struct Widget*)&TouchCtrlsScreen.btns[4]
 };
 #define TOUCHCTRLS_MAX_VERTICES (BUTTONWIDGET_MAX + TOUCHCTRLS_BTNS * BUTTONWIDGET_MAX)
 
@@ -3831,6 +3831,17 @@ static void TouchCtrls_UpdateSensitivity(void* screen) {
 	s->dirty = true;
 }
 
+static void TouchCtrls_UpdateScale(void* screen) {
+	cc_string value; char valueBuffer[STRING_SIZE];
+	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
+	String_InitArray(value, valueBuffer);
+
+	String_AppendConst(&value, "Scale: ");
+	String_AppendFloat(&value, Gui.RawTouchScale, 1);
+	ButtonWidget_Set(&s->btns[3], &value, &s->font);
+	s->dirty = true;
+}
+
 static void TouchCtrls_More(void* s,     void* w) { TouchMoreScreen_Show(); }
 static void TouchCtrls_Onscreen(void* s, void* w) { TouchOnscreenScreen_Show(); }
 
@@ -3843,7 +3854,7 @@ static void TouchCtrls_Hold(void* s, void* w) {
 	TouchCtrls_UpdateHoldText(s);
 }
 
-static void TouchCtrls_OnDone(const cc_string* value, cc_bool valid) {
+static void TouchCtrls_SensitivityDone(const cc_string* value, cc_bool valid) {
 	if (!valid) return;
 	MiscOptionsScreen_SetSensitivity(value);
 	TouchCtrls_UpdateSensitivity(&TouchCtrlsScreen);
@@ -3857,16 +3868,35 @@ static void TouchCtrls_Sensitivity(void* screen, void* w) {
 
 	MenuInput_Int(desc, 1, 200, 30);
 	MiscOptionsScreen_GetSensitivity(&value);
-	MenuInputOverlay_Show(&desc, &value, TouchCtrls_OnDone, true);
+	MenuInputOverlay_Show(&desc, &value, TouchCtrls_SensitivityDone, true);
 	/* Fix Sensitivity button getting stuck as 'active' */
 	/* (input overlay swallows subsequent pointer events) */
 	s->btns[2].active = 0;
 }
 
-static const struct SimpleButtonDesc touchCtrls_btns[4] = {
+static void TouchCtrls_ScaleDone(const cc_string* value, cc_bool valid) {
+	if (!valid) return;
+	ChatOptionsScreen_SetScale(value, &Gui.RawTouchScale, OPT_TOUCH_SCALE);
+	TouchCtrls_UpdateScale(&TouchCtrlsScreen);
+}
+
+static void TouchCtrls_Scale(void* screen, void* w) {
+	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
+	static struct MenuInputDesc desc;
+	cc_string value; char valueBuffer[STRING_SIZE];
+	String_InitArray(value, valueBuffer);
+
+	MenuInput_Float(desc, 0.25f, 5.0f, 1.0f);
+	String_AppendFloat(&value, Gui.RawTouchScale, 1);
+	MenuInputOverlay_Show(&desc, &value, TouchCtrls_ScaleDone, true);
+	s->btns[3].active = 0;
+}
+
+static const struct SimpleButtonDesc touchCtrls_btns[5] = {
 	{ -102,  -50, "",     TouchCtrls_Tap  },
 	{  102,  -50, "",     TouchCtrls_Hold },
-	{    0,    0, "",     TouchCtrls_Sensitivity },
+	{ -102,    0, "",     TouchCtrls_Sensitivity },
+	{  102,    0, "",     TouchCtrls_Scale },
 	{    0,   50, "On-screen controls", TouchCtrls_Onscreen }
 };
 
@@ -3886,6 +3916,7 @@ static void TouchCtrlsScreen_ContextRecreated(void* screen) {
 	TouchCtrls_UpdateTapText(s);
 	TouchCtrls_UpdateHoldText(s);
 	TouchCtrls_UpdateSensitivity(s);
+	TouchCtrls_UpdateScale(s);
 }
 
 static void TouchCtrlsScreen_Layout(void* screen) {
@@ -3900,9 +3931,10 @@ static void TouchCtrlsScreen_Init(void* screen) {
 	s->numWidgets  = Array_Elems(touchCtrls_widgets);
 	s->maxVertices = TOUCHCTRLS_MAX_VERTICES;
 
-	Menu_InitButtons(s->btns,     195, touchCtrls_btns,     2);
-	Menu_InitButtons(s->btns + 2, 400, touchCtrls_btns + 2, 2);
+	Menu_InitButtons(s->btns,     195, touchCtrls_btns,     4);
+	Menu_InitButtons(s->btns + 4, 400, touchCtrls_btns + 4, 1);
 	Menu_InitBack(&s->back, TouchCtrls_More);
+	s->btns[3].disabled = true;
 }
 
 static const struct ScreenVTABLE TouchCtrlsScreen_VTABLE = {

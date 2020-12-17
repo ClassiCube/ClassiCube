@@ -95,6 +95,7 @@ static void LoadOptions(void) {
 	Gui.RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
 	Gui.RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
 	Gui.RawChatScale      = Options_GetFloat(OPT_CHAT_SCALE,      0.25f, 5.0f, 1.0f);
+	Gui.RawTouchScale     = Options_GetFloat(OPT_TOUCH_SCALE,     0.25f, 5.0f, 1.0f);
 }
 
 static void LoseAllScreens(void) {

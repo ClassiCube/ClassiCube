@@ -45,6 +45,7 @@ CC_VAR extern struct _GuiData {
 	int DefaultLines;
 	/* (internal) Bitmask of on-screen buttons, see Input.h */
 	int _onscreenButtons;
+	float RawTouchScale;
 } Gui;
 
 float Gui_Scale(float value);
