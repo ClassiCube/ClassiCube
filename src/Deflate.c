@@ -328,8 +328,12 @@ static int Huffman_UNSAFE_Decode_Slow(struct InflateState* state, struct Huffman
 		}
 	}
 
-	Logger_Abort("DEFLATE - Invalid huffman code");
-	return -1;
+	Inflate_Fail(state, INF_ERR_INVALID_CODE);
+	/* Need to exit the fast decode loop */
+	/* TODO: This means a few garbage bytes can get written */
+	/* to the output, but it probably doesn't matter */
+	state->AvailIn = 0;
+	return 0;
 }
 
 void Inflate_Init2(struct InflateState* state, struct Stream* source) {
