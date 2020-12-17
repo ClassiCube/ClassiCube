@@ -3934,7 +3934,6 @@ static void TouchCtrlsScreen_Init(void* screen) {
 	Menu_InitButtons(s->btns,     195, touchCtrls_btns,     4);
 	Menu_InitButtons(s->btns + 4, 400, touchCtrls_btns + 4, 1);
 	Menu_InitBack(&s->back, TouchCtrls_More);
-	s->btns[3].disabled = true;
 }
 
 static const struct ScreenVTABLE TouchCtrlsScreen_VTABLE = {

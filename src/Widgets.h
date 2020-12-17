@@ -68,7 +68,7 @@ struct HotbarWidget {
 	struct Texture selTex, backTex;
 	float slotWidth, selWidth;
 	float slotXOffset, elemSize;
-	float scrollAcc;
+	float scrollAcc, scale;
 	cc_bool altHandled;
 	struct Texture ellipsisTex;
 };
@@ -87,6 +87,7 @@ struct TableWidget {
 	float selBlockExpand;
 	GfxResourceID vb;
 	cc_bool pendingClose;
+	float scale;
 
 	BlockID blocks[BLOCK_COUNT];
 	struct ScrollbarWidget scroll;
@@ -284,7 +285,7 @@ CC_NOINLINE void SpecialInputWidget_UpdateCols(struct SpecialInputWidget* w);
 CC_NOINLINE void SpecialInputWidget_SetActive(struct SpecialInputWidget* w, cc_bool active);
 
 #ifdef CC_BUILD_TOUCH
-struct ThumbstickWidget { Widget_Body };
+struct ThumbstickWidget { Widget_Body; float scale; };
 #define THUMBSTICKWIDGET_PER (4 * 4)
 #define THUMBSTICKWIDGET_MAX (THUMBSTICKWIDGET_PER * 2)
 

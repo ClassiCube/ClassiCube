@@ -108,8 +108,10 @@ static void ButtonWidget_Free(void* widget) {
 
 static void ButtonWidget_Reposition(void* widget) {
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
+	w->width  = max(w->tex.Width,  w->minWidth);
+	w->height = max(w->tex.Height, w->minHeight);
+
 	Widget_CalcPosition(w);
-	
 	w->tex.X = w->x + (w->width  / 2 - w->tex.Width  / 2);
 	w->tex.Y = w->y + (w->height / 2 - w->tex.Height / 2);
 }
@@ -236,9 +238,6 @@ void ButtonWidget_Set(struct ButtonWidget* w, const cc_string* text, struct Font
 		DrawTextArgs_Make(&args, text, font, true);
 		Drawer2D_MakeTextTexture(&w->tex, &args);
 	}
-
-	w->width  = max(w->tex.Width,  w->minWidth);
-	w->height = max(w->tex.Height, w->minHeight);
 	Widget_Layout(w);
 }
 
@@ -440,9 +439,8 @@ static int HotbarWidget_ScrolledIndex(struct HotbarWidget* w, float delta, int i
 
 static void HotbarWidget_Reposition(void* widget) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
-	float scale  = Gui_GetHotbarScale();
-	float scaleX = scale * DisplayInfo.ScaleX;
-	float scaleY = scale * DisplayInfo.ScaleY;
+	float scaleX = w->scale * DisplayInfo.ScaleX;
+	float scaleY = w->scale * DisplayInfo.ScaleY;
 	int y;
 
 	w->width  = (int)(182 * scaleX);
@@ -571,6 +569,7 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 	w->VTABLE    = &HotbarWidget_VTABLE;
 	w->horAnchor = ANCHOR_CENTRE;
 	w->verAnchor = ANCHOR_MAX;
+	w->scale     = 1;
 }
 
 void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font) {
@@ -769,7 +768,7 @@ void TableWidget_Recreate(struct TableWidget* w) {
 
 static void TableWidget_Reposition(void* widget) {
 	struct TableWidget* w = (struct TableWidget*)widget;
-	float scale = Gui_GetInventoryScale();
+	float scale = w->scale;
 	int cellSize;
 
 	cellSize     = (int)(50 * Math_SqrtF(scale));
@@ -914,6 +913,7 @@ void TableWidget_Create(struct TableWidget* w) {
 	w->horAnchor = ANCHOR_CENTRE;
 	w->verAnchor = ANCHOR_CENTRE;
 	w->lastX = -20; w->lastY = -20;
+	w->scale = 1;
 
 	w->paddingX    = Display_ScaleX(15);
 	w->paddingTopY = Display_ScaleY(15 + 20);
@@ -2590,8 +2590,15 @@ static int ThumbstickWidget_Render2(void* widget, int offset) {
 	return offset + THUMBSTICKWIDGET_MAX;
 }
 
+static void ThumbstickWidget_Reposition(void* widget) {
+	struct ThumbstickWidget* w = (struct ThumbstickWidget*)widget;
+	w->width  = Display_ScaleX(128 * w->scale);
+	w->height = Display_ScaleY(128 * w->scale);
+	Widget_CalcPosition(w);
+}
+
 static const struct WidgetVTABLE ThumbstickWidget_VTABLE = {
-	NULL, Screen_NullFunc, Widget_CalcPosition,
+	NULL, Screen_NullFunc, ThumbstickWidget_Reposition,
 	Widget_Key,        Widget_Key,      Widget_MouseScroll,
 	Widget_Pointer,    Widget_Pointer,  Widget_PointerMove,
 	ThumbstickWidget_BuildMesh, ThumbstickWidget_Render2
@@ -2599,8 +2606,7 @@ static const struct WidgetVTABLE ThumbstickWidget_VTABLE = {
 void ThumbstickWidget_Init(struct ThumbstickWidget* w) {
 	Widget_Reset(w);
 	w->VTABLE = &ThumbstickWidget_VTABLE;
-	w->width  = Display_ScaleX(128);
-	w->height = Display_ScaleY(128);
+	w->scale  = 1;
 }
 
 void ThumbstickWidget_GetMovement(struct ThumbstickWidget* w, float* xMoving, float* zMoving) {
