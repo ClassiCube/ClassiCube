@@ -27,6 +27,7 @@
 
 #define Socket__Error() WSAGetLastError()
 static HANDLE heap;
+static void Platform_DecodeString(cc_string* dst, const void* data, int len);
 
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
@@ -490,7 +491,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
 
 		len = String_Length(src);
-		Platform_DecodeString(&path, src, len);
+		String_AppendUtf8(&path, src, len);
 
 		/* TODO: fallback to stat when this fails */
 		if (entry->d_type == DT_DIR) {
@@ -1546,7 +1547,8 @@ int Platform_EncodeString(void* data, const cc_string* src) {
 	return src->length * 2;
 }
 
-void Platform_DecodeString(cc_string* dst, const void* data, int len) {
+/* Attempts to append all characters from the platform specific encoded data to the given string. */
+static void Platform_DecodeString(cc_string* dst, const void* data, int len) {
 #ifdef UNICODE
 	String_AppendUtf16(dst, (const cc_unichar*)data, len * 2);
 #else
@@ -1656,10 +1658,6 @@ int Platform_EncodeString(void* data, const cc_string* src) {
 	return len;
 }
 
-void Platform_DecodeString(cc_string* dst, const void* data, int len) {
-	String_AppendUtf8(dst, (const cc_uint8*)data, len);
-}
-
 static void Platform_InitPosix(void) {
 	signal(SIGCHLD, SIG_IGN);
 	/* So writing to closed socket doesn't raise SIGPIPE */
@@ -1701,7 +1699,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	if (len == -1) return false;
 
 	len = String_CalcLen(chars, NATIVE_STR_LEN);
-	Platform_DecodeString(dst, chars, len);
+	String_AppendUtf8(dst, chars, len);
 	return true;
 }
 
@@ -1936,7 +1934,7 @@ cc_string JavaGetString(JNIEnv* env, jstring str, char* buffer) {
 	dst.buffer   = buffer;
 	dst.length   = 0;
 	dst.capacity = NATIVE_STR_LEN;
-	String_AppendUtf8(&dst, (const cc_uint8*)src, len);
+	String_AppendUtf8(&dst, src, len);
 
 	(*env)->ReleaseStringUTFChars(env, str, src);
 	return dst;

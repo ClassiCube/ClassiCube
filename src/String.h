@@ -186,10 +186,10 @@ int Convert_CP437ToUtf8(char c, cc_uint8* data);
 void String_AppendUtf16(cc_string* str, const cc_unichar* chars, int numBytes);
 /* Attempts to append all characters from UTF8 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_AppendUtf8(cc_string* str, const cc_uint8* chars, int numBytes);
+void String_AppendUtf8(cc_string* str, const void* data, int numBytes);
 /* Attempts to append all characters from CP-1252 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_DecodeCP1252(cc_string* str, const cc_uint8* chars, int numBytes);
+void String_DecodeCP1252(cc_string* str, const void* data, int numBytes);
 
 /* Attempts to convert the given string into an unsigned 8 bit integer. */
 CC_API cc_bool Convert_ParseUInt8(const cc_string*  str, cc_uint8* value);

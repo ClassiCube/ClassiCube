@@ -34,8 +34,6 @@ extern const cc_result ReturnCode_SocketWouldBlock;
 /* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. */
 /* Returns the number of bytes written, excluding trailing NULL terminator. */
 int Platform_EncodeString(void* data, const cc_string* src);
-/* Attempts to append all characters from the platform specific encoded data to the given string. */
-void Platform_DecodeString(cc_string* dst, const void* data, int len);
 
 /* Initialises the platform specific state. */
 void Platform_Init(void);

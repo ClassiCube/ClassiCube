@@ -594,7 +594,8 @@ void String_AppendUtf16(cc_string* value, const cc_unichar* chars, int numBytes)
 	}
 }
 
-void String_AppendUtf8(cc_string* value, const cc_uint8* chars, int numBytes) {
+void String_AppendUtf8(cc_string* value, const void* data, int numBytes) {
+	const cc_uint8* chars = (const cc_uint8*)data;
 	int len; cc_codepoint cp; char c;
 
 	for (; numBytes > 0; numBytes -= len) {
@@ -606,7 +607,8 @@ void String_AppendUtf8(cc_string* value, const cc_uint8* chars, int numBytes) {
 	}
 }
 
-void String_DecodeCP1252(cc_string* value, const cc_uint8* chars, int numBytes) {
+void String_DecodeCP1252(cc_string* value, const void* data, int numBytes) {
+	const cc_uint8* chars = (const cc_uint8*)data;
 	int i; char c;
 
 	for (i = 0; i < numBytes; i++) {

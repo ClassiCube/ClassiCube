@@ -2069,7 +2069,7 @@ void Clipboard_GetText(cc_string* value) {
 	} else if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF8, &outData))) {
 		ptr = CFDataGetBytePtr(outData);
 		len = CFDataGetLength(outData);
-		if (ptr) String_AppendUtf8(value, (cc_uint8*)ptr, len);
+		if (ptr) String_AppendUtf8(value, ptr, len);
 	}
 }
 
@@ -3513,7 +3513,7 @@ EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
 	if (!clipboard_func) return;
 
 	String_InitArray(str, strBuffer);
-	Platform_DecodeString(&str, src, String_CalcLen(src, 2048));
+	String_AppendUtf8(&str, src, String_CalcLen(src, 2048));
 	clipboard_func(&str, clipboard_obj);
 	clipboard_func = NULL;
 }
@@ -3652,7 +3652,7 @@ EMSCRIPTEN_KEEPALIVE void Window_OnFileUploaded(const char* src) {
 	cc_string file; char buffer[FILENAME_SIZE];
 	String_InitArray(file, buffer);
 
-	Platform_DecodeString(&file, src, String_Length(src));
+	String_AppendUtf8(&file, src, String_Length(src));
 	uploadCallback(&file);
 	uploadCallback = NULL;
 }
@@ -3701,7 +3701,7 @@ EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) {
 	cc_string str; char buffer[800];
 	String_InitArray(str, buffer);
 
-	Platform_DecodeString(&str, src, String_CalcLen(src, 3200));
+	String_AppendUtf8(&str, src, String_CalcLen(src, 3200));
 	Event_RaiseString(&InputEvents.TextChanged, &str);
 }
 
@@ -4887,7 +4887,7 @@ void GLContext_GetApiInfo(cc_string* info) {
 	len = String_CalcLen(buffer, NATIVE_STR_LEN);
 	if (!len) return;
 	String_AppendConst(info, "GPU: ");
-	String_AppendUtf8(info, (const cc_uint8*)buffer, len);
+	String_AppendUtf8(info, buffer, len);
 }
 #endif
 #endif
