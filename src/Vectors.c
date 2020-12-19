@@ -20,16 +20,16 @@ void Vec3_Normalize(Vec3* result, const Vec3* a) {
 
 void Vec3_Transform(Vec3* result, const Vec3* a, const struct Matrix* mat) {
 	/* a could be pointing to result - can't directly assign X/Y/Z therefore */
-	float x = a->X * mat->Row0.X + a->Y * mat->Row1.X + a->Z * mat->Row2.X + mat->Row3.X;
-	float y = a->X * mat->Row0.Y + a->Y * mat->Row1.Y + a->Z * mat->Row2.Y + mat->Row3.Y;
-	float z = a->X * mat->Row0.Z + a->Y * mat->Row1.Z + a->Z * mat->Row2.Z + mat->Row3.Z;
+	float x = a->X * mat->Row0.X + a->Y * mat->Row1.X + a->Z * mat->Row2.X + mat->row4.X;
+	float y = a->X * mat->Row0.Y + a->Y * mat->Row1.Y + a->Z * mat->Row2.Y + mat->row4.Y;
+	float z = a->X * mat->Row0.Z + a->Y * mat->Row1.Z + a->Z * mat->Row2.Z + mat->row4.Z;
 	result->X = x; result->Y = y; result->Z = z;
 }
 
 void Vec3_TransformY(Vec3* result, float y, const struct Matrix* mat) {
-	result->X = y * mat->Row1.X + mat->Row3.X;
-	result->Y = y * mat->Row1.Y + mat->Row3.Y;
-	result->Z = y * mat->Row1.Z + mat->Row3.Z;
+	result->X = y * mat->Row1.X + mat->row4.X;
+	result->Y = y * mat->Row1.Y + mat->row4.Y;
+	result->Z = y * mat->Row1.Z + mat->row4.Z;
 }
 
 Vec3 Vec3_RotateX(Vec3 v, float angle) {
@@ -125,7 +125,7 @@ void Matrix_RotateZ(struct Matrix* result, float angle) {
 
 void Matrix_Translate(struct Matrix* result, float x, float y, float z) {
 	*result = Matrix_Identity;
-	result->Row3.X = x; result->Row3.Y = y; result->Row3.Z = z;
+	result->row4.X = x; result->row4.Y = y; result->row4.Z = z;
 }
 
 void Matrix_Scale(struct Matrix* result, float x, float y, float z) {
@@ -139,12 +139,12 @@ void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct M
 		lM11 = left->Row0.X, lM12 = left->Row0.Y, lM13 = left->Row0.Z, lM14 = left->Row0.W,
 		lM21 = left->Row1.X, lM22 = left->Row1.Y, lM23 = left->Row1.Z, lM24 = left->Row1.W,
 		lM31 = left->Row2.X, lM32 = left->Row2.Y, lM33 = left->Row2.Z, lM34 = left->Row2.W,
-		lM41 = left->Row3.X, lM42 = left->Row3.Y, lM43 = left->Row3.Z, lM44 = left->Row3.W,
+		lM41 = left->row4.X, lM42 = left->row4.Y, lM43 = left->row4.Z, lM44 = left->row4.W,
 
 		rM11 = right->Row0.X, rM12 = right->Row0.Y, rM13 = right->Row0.Z, rM14 = right->Row0.W,
 		rM21 = right->Row1.X, rM22 = right->Row1.Y, rM23 = right->Row1.Z, rM24 = right->Row1.W,
 		rM31 = right->Row2.X, rM32 = right->Row2.Y, rM33 = right->Row2.Z, rM34 = right->Row2.W,
-		rM41 = right->Row3.X, rM42 = right->Row3.Y, rM43 = right->Row3.Z, rM44 = right->Row3.W;
+		rM41 = right->row4.X, rM42 = right->row4.Y, rM43 = right->row4.Z, rM44 = right->row4.W;
 
 	result->Row0.X = (((lM11 * rM11) + (lM12 * rM21)) + (lM13 * rM31)) + (lM14 * rM41);
 	result->Row0.Y = (((lM11 * rM12) + (lM12 * rM22)) + (lM13 * rM32)) + (lM14 * rM42);
@@ -161,10 +161,10 @@ void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct M
 	result->Row2.Z = (((lM31 * rM13) + (lM32 * rM23)) + (lM33 * rM33)) + (lM34 * rM43);
 	result->Row2.W = (((lM31 * rM14) + (lM32 * rM24)) + (lM33 * rM34)) + (lM34 * rM44);
 
-	result->Row3.X = (((lM41 * rM11) + (lM42 * rM21)) + (lM43 * rM31)) + (lM44 * rM41);
-	result->Row3.Y = (((lM41 * rM12) + (lM42 * rM22)) + (lM43 * rM32)) + (lM44 * rM42);
-	result->Row3.Z = (((lM41 * rM13) + (lM42 * rM23)) + (lM43 * rM33)) + (lM44 * rM43);
-	result->Row3.W = (((lM41 * rM14) + (lM42 * rM24)) + (lM43 * rM34)) + (lM44 * rM44);
+	result->row4.X = (((lM41 * rM11) + (lM42 * rM21)) + (lM43 * rM31)) + (lM44 * rM41);
+	result->row4.Y = (((lM41 * rM12) + (lM42 * rM22)) + (lM43 * rM32)) + (lM44 * rM42);
+	result->row4.Z = (((lM41 * rM13) + (lM42 * rM23)) + (lM43 * rM33)) + (lM44 * rM43);
+	result->row4.W = (((lM41 * rM14) + (lM42 * rM24)) + (lM43 * rM34)) + (lM44 * rM44);
 }
 
 void Matrix_Orthographic(struct Matrix* result, float left, float right, float top, float bottom, float zNear, float zFar) {
@@ -175,9 +175,9 @@ void Matrix_Orthographic(struct Matrix* result, float left, float right, float t
 	result->Row1.Y =  2.0f / (top - bottom);
 	result->Row2.Z = -2.0f / (zFar - zNear);
 
-	result->Row3.X = -(right + left) / (right - left);
-	result->Row3.Y = -(top + bottom) / (top - bottom);
-	result->Row3.Z = -(zFar + zNear) / (zFar - zNear);
+	result->row4.X = -(right + left) / (right - left);
+	result->row4.Y = -(top + bottom) / (top - bottom);
+	result->row4.Z = -(zFar + zNear) / (zFar - zNear);
 }
 
 static double Tan_Simple(double x) { return Math_Sin(x) / Math_Cos(x); }
@@ -189,11 +189,11 @@ void Matrix_PerspectiveFieldOfView(struct Matrix* result, float fovy, float aspe
 	/*   left = -c * aspect, right = c * aspect, bottom = -c, top = c */
 	/* Calculations are simplified because of left/right and top/bottom symmetry */
 	*result = Matrix_Identity;
-	result->Row3.W = 0.0f;
+	result->row4.W = 0.0f;
 
 	result->Row0.X =  zNear / (c * aspect);
 	result->Row1.Y =  zNear / c;
-	result->Row3.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
+	result->row4.Z = -(2.0f * zFar * zNear) / (zFar - zNear);
 	result->Row2.Z = -(zFar + zNear) / (zFar - zNear);
 	result->Row2.W = -1.0f;
 }

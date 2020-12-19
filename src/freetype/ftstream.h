@@ -292,13 +292,9 @@ FT_BEGIN_HEADER
 #define FT_READ_CHAR( var )       FT_READ_MACRO( FT_Stream_ReadChar, FT_Char, var )
 #define FT_READ_SHORT( var )      FT_READ_MACRO( FT_Stream_ReadUShort, FT_Short, var )
 #define FT_READ_USHORT( var )     FT_READ_MACRO( FT_Stream_ReadUShort, FT_UShort, var )
-#define FT_READ_OFF3( var )       FT_READ_MACRO( FT_Stream_ReadUOffset, FT_Long, var )
-#define FT_READ_UOFF3( var )      FT_READ_MACRO( FT_Stream_ReadUOffset, FT_ULong, var )
 #define FT_READ_LONG( var )       FT_READ_MACRO( FT_Stream_ReadULong, FT_Long, var )
 #define FT_READ_ULONG( var )      FT_READ_MACRO( FT_Stream_ReadULong, FT_ULong, var )
 
-#define FT_READ_SHORT_LE( var )   FT_READ_MACRO( FT_Stream_ReadUShortLE, FT_Short, var )
-#define FT_READ_USHORT_LE( var )  FT_READ_MACRO( FT_Stream_ReadUShortLE, FT_UShort, var )
 #define FT_READ_LONG_LE( var )    FT_READ_MACRO( FT_Stream_ReadULongLE, FT_Long, var )
 #define FT_READ_ULONG_LE( var )   FT_READ_MACRO( FT_Stream_ReadULongLE, FT_ULong, var )
 
@@ -407,10 +403,6 @@ FT_BEGIN_HEADER
   FT_BASE( FT_ULong )
   FT_Stream_GetULong( FT_Stream  stream );
 
-  /* read a 16-bit little-endian unsigned integer from an entered frame */
-  FT_BASE( FT_UShort )
-  FT_Stream_GetUShortLE( FT_Stream  stream );
-
 
   /* read a byte from a stream */
   FT_BASE( FT_Char )
@@ -422,20 +414,10 @@ FT_BEGIN_HEADER
   FT_Stream_ReadUShort( FT_Stream  stream,
                         FT_Error*  error );
 
-  /* read a 24-bit big-endian unsigned integer from a stream */
-  FT_BASE( FT_ULong )
-  FT_Stream_ReadUOffset( FT_Stream  stream,
-                         FT_Error*  error );
-
   /* read a 32-bit big-endian integer from a stream */
   FT_BASE( FT_ULong )
   FT_Stream_ReadULong( FT_Stream  stream,
                        FT_Error*  error );
-
-  /* read a 16-bit little-endian unsigned integer from a stream */
-  FT_BASE( FT_UShort )
-  FT_Stream_ReadUShortLE( FT_Stream  stream,
-                          FT_Error*  error );
 
   /* read a 32-bit little-endian unsigned integer from a stream */
   FT_BASE( FT_ULong )

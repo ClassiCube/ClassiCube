@@ -355,25 +355,6 @@
   }
 
 
-  FT_BASE_DEF( FT_UShort )
-  FT_Stream_GetUShortLE( FT_Stream  stream )
-  {
-    FT_Byte*   p;
-    FT_UShort  result;
-
-
-    FT_ASSERT( stream && stream->cursor );
-
-    result         = 0;
-    p              = stream->cursor;
-    if ( p + 1 < stream->limit )
-      result       = FT_NEXT_USHORT_LE( p );
-    stream->cursor = p;
-
-    return result;
-  }
-
-
   FT_BASE_DEF( FT_ULong )
   FT_Stream_GetULong( FT_Stream  stream )
   {
@@ -467,96 +448,6 @@
   Fail:
     *error = FT_THROW( Invalid_Stream_Operation );
     FT_ERROR(( "FT_Stream_ReadUShort:"
-               " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
-               stream->pos, stream->size ));
-
-    return 0;
-  }
-
-
-  FT_BASE_DEF( FT_UShort )
-  FT_Stream_ReadUShortLE( FT_Stream  stream,
-                          FT_Error*  error )
-  {
-    FT_Byte    reads[2];
-    FT_Byte*   p      = 0;
-    FT_UShort  result = 0;
-
-
-    FT_ASSERT( stream );
-
-    *error = FT_Err_Ok;
-
-    if ( stream->pos + 1 < stream->size )
-    {
-      if ( stream->read )
-      {
-        if ( stream->read( stream, stream->pos, reads, 2L ) != 2L )
-          goto Fail;
-
-        p = reads;
-      }
-      else
-        p = stream->base + stream->pos;
-
-      if ( p )
-        result = FT_NEXT_USHORT_LE( p );
-    }
-    else
-      goto Fail;
-
-    stream->pos += 2;
-
-    return result;
-
-  Fail:
-    *error = FT_THROW( Invalid_Stream_Operation );
-    FT_ERROR(( "FT_Stream_ReadUShortLE:"
-               " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
-               stream->pos, stream->size ));
-
-    return 0;
-  }
-
-
-  FT_BASE_DEF( FT_ULong )
-  FT_Stream_ReadUOffset( FT_Stream  stream,
-                         FT_Error*  error )
-  {
-    FT_Byte   reads[3];
-    FT_Byte*  p      = 0;
-    FT_ULong  result = 0;
-
-
-    FT_ASSERT( stream );
-
-    *error = FT_Err_Ok;
-
-    if ( stream->pos + 2 < stream->size )
-    {
-      if ( stream->read )
-      {
-        if (stream->read( stream, stream->pos, reads, 3L ) != 3L )
-          goto Fail;
-
-        p = reads;
-      }
-      else
-        p = stream->base + stream->pos;
-
-      if ( p )
-        result = FT_NEXT_UOFF3( p );
-    }
-    else
-      goto Fail;
-
-    stream->pos += 3;
-
-    return result;
-
-  Fail:
-    *error = FT_THROW( Invalid_Stream_Operation );
-    FT_ERROR(( "FT_Stream_ReadUOffset:"
                " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                stream->pos, stream->size ));
 

@@ -911,7 +911,7 @@ static D3DTRANSFORMSTATETYPE matrix_modes[3] = { D3DTS_PROJECTION, D3DTS_VIEW, D
 
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
 	if (type == MATRIX_TEXTURE) {
-		matrix->Row2.X = matrix->Row3.X; /* NOTE: this hack fixes the texture movements. */
+		matrix->Row2.X = matrix->row4.X; /* NOTE: this hack fixes the texture movements. */
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
 	}
 
@@ -931,7 +931,7 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	Matrix_Orthographic(matrix, 0.0f, width, 0.0f, height, ORTHO_NEAR, ORTHO_FAR);
 	matrix->Row2.Z = 1.0f       / (ORTHO_NEAR - ORTHO_FAR);
-	matrix->Row3.Z = ORTHO_NEAR / (ORTHO_NEAR - ORTHO_FAR);
+	matrix->row4.Z = ORTHO_NEAR / (ORTHO_NEAR - ORTHO_FAR);
 }
 
 void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
@@ -943,7 +943,7 @@ void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matri
 
 	/* Adjust the projection matrix to produce reversed Z values */
 	matrix->Row2.Z = -matrix->Row2.Z - 1.0f;
-	matrix->Row3.Z = -matrix->Row3.Z;
+	matrix->row4.Z = -matrix->row4.Z;
 }
 
 

@@ -138,7 +138,7 @@ void EnvRenderer_RenderClouds(void) {
 	if (!clouds_vb || Env.CloudsHeight < -2000) return;
 	offset = (float)(Game.Time / 2048.0f * 0.6f * Env.CloudsSpeed);
 
-	m = Matrix_Identity; m.Row3.X = offset; /* translate X axis */
+	m = Matrix_Identity; m.row4.X = offset; /* translate X axis */
 	Gfx_LoadMatrix(MATRIX_TEXTURE, &m);
 
 	Gfx_SetAlphaTest(true);
@@ -223,8 +223,8 @@ void EnvRenderer_RenderSky(void) {
 		m  = Gfx.View;
 		dy = skyY - normY; 
 		/* inlined Y translation matrix multiply */
-		m.Row3.X += dy * m.Row1.X; m.Row3.Y += dy * m.Row1.Y;
-		m.Row3.Z += dy * m.Row1.Z; m.Row3.W += dy * m.Row1.W;
+		m.row4.X += dy * m.Row1.X; m.row4.Y += dy * m.Row1.Y;
+		m.row4.Z += dy * m.Row1.Z; m.row4.W += dy * m.Row1.W;
 
 		Gfx_LoadMatrix(MATRIX_VIEW, &m);
 		Gfx_DrawVb_IndexedTris(sky_vertices);
