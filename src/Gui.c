@@ -119,7 +119,8 @@ static void OnContextRecreated(void* obj) {
 	}
 }
 
-static void OnResize(void* obj) {
+static void OnResize(void* obj) { Gui_LayoutAll(); }
+void Gui_LayoutAll(void) {
 	struct Screen* s;
 	int i;
 
@@ -140,7 +141,6 @@ void Gui_RemoveAll(void) {
 	while (Gui.ScreensCount) Gui_Remove(Gui_Screens[0]);
 }
 
-void Gui_RefreshChat(void) { Gui_Refresh((struct Screen*)Gui_Chat); }
 void Gui_Refresh(struct Screen* s) {
 	s->VTABLE->ContextLost(s);
 	s->VTABLE->ContextRecreated(s);

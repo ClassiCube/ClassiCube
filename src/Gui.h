@@ -213,9 +213,9 @@ struct Screen* Gui_GetBlocksWorld(void);
 /* Returns highest priority screen that is closable. */
 struct Screen* Gui_GetClosable(void);
 
+void Gui_LayoutAll(void);
 void Gui_RefreshAll(void);
 void Gui_RemoveAll(void);
-void Gui_RefreshChat(void);
 void Gui_Refresh(struct Screen* s);
 void Gui_RenderGui(double delta);
 

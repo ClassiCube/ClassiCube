@@ -2762,7 +2762,7 @@ void GraphicsOptionsScreen_Show(void) {
 static void ChatOptionsScreen_SetScale(const cc_string* v, float* target, const char* optKey) {
 	*target = Menu_Float(v);
 	Options_Set(optKey, v);
-	Gui_RefreshChat();
+	Gui_LayoutAll();
 }
 
 static void ChatOptionsScreen_GetChatScale(cc_string* v) { String_AppendFloat(v, Gui.RawChatScale, 1); }
