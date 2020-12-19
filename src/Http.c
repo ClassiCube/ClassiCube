@@ -760,7 +760,7 @@ static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_st
 							HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
 }
 
-/* Creates and sends a HTTP requst */
+/* Creates and sends a HTTP request */
 static cc_result Http_StartRequest(struct HttpRequest* req, cc_string* url, HINTERNET* handle) {
 	static const char* verbs[3] = { "GET", "HEAD", "POST" };
 	struct HttpCacheEntry entry;
