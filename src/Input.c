@@ -792,7 +792,7 @@ void InputHandler_PickBlocks(void) {
 
 
 /*########################################################################################################################*
-*------------------------------------------------------Key helpers--------------------------------------------------------*
+*-----------------------------------------------------Input helpers-------------------------------------------------------*
 *#########################################################################################################################*/
 static cc_bool InputHandler_IsShutdown(int key) {
 	if (key == KEY_F4 && Key_IsAltPressed()) return true;
@@ -823,15 +823,19 @@ cc_bool InputHandler_SetFOV(int fov) {
 	return true;
 }
 
-static cc_bool InputHandler_DoFovZoom(float deltaPrecise) {
+cc_bool Input_HandleMouseWheel(float delta) {
 	struct HacksComp* h;
+	cc_bool hotbar;
+
+	hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
+	if (!hotbar && Camera.Active->Zoom(delta))   return true;
 	if (!KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) return false;
 
 	h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanUseThirdPerson) return false;
 
 	if (input_fovIndex == -1.0f) input_fovIndex = (float)Game_ZoomFov;
-	input_fovIndex -= deltaPrecise * 5.0f;
+	input_fovIndex -= delta * 5.0f;
 
 	Math_Clamp(input_fovIndex, 1.0f, Game_DefaultFov);
 	return InputHandler_SetFOV((int)input_fovIndex);
@@ -951,22 +955,12 @@ static cc_bool HandleLocalPlayerKey(int key) {
 static void OnMouseWheel(void* obj, float delta) {
 	struct Screen* s;
 	int i;
-	struct Widget* widget;
-	cc_bool hotbar;
 	
 	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->dirty = true;
 		if (s->VTABLE->HandlesMouseScroll(s, delta)) return;
 	}
-
-	hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
-	if (!hotbar && Camera.Active->Zoom(delta)) return;
-	if (InputHandler_DoFovZoom(delta) || !Inventory.CanChangeSelected) return;
-
-	widget = HUDScreen_GetHotbar();
-	Elem_HandlesMouseScroll(widget, delta);
-	((struct Screen*)Gui_Chat)->dirty = true;
 }
 
 static void OnPointerMove(void* obj, int idx, int xDelta, int yDelta) {

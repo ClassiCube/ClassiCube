@@ -179,11 +179,6 @@ enum GuiPriority {
 	GUI_PRIORITY_LOADING    =  5
 };
 
-struct HUDScreen;
-struct ChatScreen;
-extern struct HUDScreen*  Gui_HUD;
-extern struct ChatScreen* Gui_Chat;
-
 #define GUI_MAX_SCREENS 10
 extern struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 

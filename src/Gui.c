@@ -16,8 +16,6 @@
 #include "Funcs.h"
 
 struct _GuiData Gui;
-struct HUDScreen*  Gui_HUD;
-struct ChatScreen* Gui_Chat;
 struct Screen* Gui_Screens[GUI_MAX_SCREENS];
 static cc_uint8 priorities[GUI_MAX_SCREENS];
 

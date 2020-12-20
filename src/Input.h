@@ -160,6 +160,7 @@ void StoredHotkeys_Remove(int trigger, cc_uint8 modifiers);
 void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const cc_string* text);
 
 cc_bool InputHandler_SetFOV(int fov);
+cc_bool Input_HandleMouseWheel(float delta);
 void InputHandler_PickBlocks(void);
 void InputHandler_OnScreensChanged(void);
 

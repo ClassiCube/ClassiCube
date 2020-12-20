@@ -2430,7 +2430,6 @@ static void SpecialInputWidget_Make(struct SpecialInputWidget* w, struct Special
 
 void SpecialInputWidget_Redraw(struct SpecialInputWidget* w) {
 	SpecialInputWidget_Make(w, &w->tabs[w->selectedIndex]);
-	w->width = w->tex.Width;
 	w->pendingRedraw = false;
 	Widget_Layout(w);
 }
@@ -2447,6 +2446,7 @@ static void SpecialInputWidget_Free(void* widget) {
 
 static void SpecialInputWidget_Reposition(void* widget) {
 	struct SpecialInputWidget* w = (struct SpecialInputWidget*)widget;
+	w->width  = w->tex.Width;
 	w->height = w->active ? w->tex.Height : 0;
 	Widget_CalcPosition(w);
 	w->tex.X = w->x; w->tex.Y = w->y;

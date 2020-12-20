@@ -41,6 +41,12 @@ void Screen_NullFunc(void* screen) { }
 void Screen_NullUpdate(void* screen, double delta) { }
 int  Screen_InputDown(void* screen, int key) { return key < KEY_F1 || key > KEY_F24; }
 
+/* TODO: Remove these */
+struct HUDScreen;
+struct ChatScreen;
+static struct HUDScreen*  Gui_HUD;
+static struct ChatScreen* Gui_Chat;
+
 CC_NOINLINE static cc_bool IsOnlyChatActive(void) {
 	struct Screen* s;
 	int i;
@@ -252,6 +258,17 @@ static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
 	return false;
 }
 
+static int HUDscreen_MouseScroll(void* screen, float delta) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	/* The default scrolling behaviour (e.g. camera, zoom) needs to be checked */
+	/*   BEFORE the hotbar is scrolled, but AFTER chat (maybe) handles scrolling. */
+	/* Therefore need to check the default behaviour here, hacky as that may be. */
+	if (Input_HandleMouseWheel(delta)) return false;
+
+	if (!Inventory.CanChangeSelected)  return false;
+	return Elem_HandlesMouseScroll(&s->hotbar, delta);
+}
+
 static void HUDScreen_HacksChanged(void* obj) {
 	((struct HUDScreen*)obj)->hacksChanged = true;
 }
@@ -292,7 +309,7 @@ static const struct ScreenVTABLE HUDScreen_VTABLE = {
 	HUDScreen_Init,        HUDScreen_Update,    HUDScreen_Free,
 	HUDScreen_Render,      HUDScreen_BuildMesh,
 	HUDScreen_KeyDown,     HUDScreen_KeyUp,     Screen_FKeyPress, Screen_FText,
-	HUDscreen_PointerDown, Screen_FPointer,     Screen_FPointer,  Screen_FMouseScroll,
+	HUDscreen_PointerDown, Screen_FPointer,     Screen_FPointer,  HUDscreen_MouseScroll,
 	HUDScreen_Layout,      HUDScreen_ContextLost, HUDScreen_ContextRecreated
 };
 void HUDScreen_Show(void) {
@@ -300,10 +317,6 @@ void HUDScreen_Show(void) {
 	s->VTABLE = &HUDScreen_VTABLE;
 	Gui_HUD   = s;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_HUD);
-}
-
-struct Widget* HUDScreen_GetHotbar(void) {
-	return (struct Widget*)&HUDScreen_Instance.hotbar;
 }
 
 
