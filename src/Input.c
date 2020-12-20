@@ -1053,7 +1053,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 		/* closes the pause screen. Hence why the next KeyUp must be supressed. */
 		suppressEscape = true;
 #endif
-		PauseScreen_Show(); return;
+		Gui_ShowPauseMenu(); return;
 	}
 
 	/* These should not be triggered multiple times when holding down */

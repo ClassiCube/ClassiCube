@@ -139,7 +139,7 @@ static PackedCol Menu_HexCol(const cc_string* str) {
 }
 
 static void Menu_SwitchOptions(void* a, void* b)        { OptionsGroupScreen_Show(); }
-static void Menu_SwitchPause(void* a, void* b)          { PauseScreen_Show(); }
+static void Menu_SwitchPause(void* a, void* b)          { Gui_ShowPauseMenu(); }
 static void Menu_SwitchClassicOptions(void* a, void* b) { ClassicOptionsScreen_Show(); }
 
 static void Menu_SwitchKeysClassic(void* a, void* b)      { ClassicKeyBindingsScreen_Show(); }
@@ -446,7 +446,7 @@ static void MenuScreen_Render2(void* screen, double delta) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------PauseScreen-------------------------------------------------------*
+*-----------------------------------------------------PauseScreenBase-----------------------------------------------------*
 *#########################################################################################################################*/
 #define PAUSE_MAX_BTNS 6
 static struct PauseScreen {
@@ -455,15 +455,44 @@ static struct PauseScreen {
 	const struct SimpleButtonDesc* descs;
 	struct ButtonWidget btns[PAUSE_MAX_BTNS], quit, back;
 } PauseScreen;
-
-static struct Widget* pause_widgets[PAUSE_MAX_BTNS + 2] = {
-	NULL,NULL,NULL,NULL,NULL,NULL,
-	(struct Widget*)&PauseScreen.quit, (struct Widget*)&PauseScreen.back
-};
 #define PAUSE_MAX_VERTICES ((PAUSE_MAX_BTNS + 2) * BUTTONWIDGET_MAX)
 
-static void PauseScreen_Quit(void* a, void* b) { Window_Close(); }
-static void PauseScreen_Game(void* a, void* b) { Gui_Remove((struct Screen*)&PauseScreen); }
+static void PauseScreenBase_Quit(void* a, void* b) { Window_Close(); }
+static void PauseScreenBase_Game(void* a, void* b) { Gui_Remove((struct Screen*)&PauseScreen); }
+
+static void PauseScreenBase_ContextRecreated(struct PauseScreen* s, struct FontDesc* titleFont) {
+	Screen_UpdateVb(s);
+	Gui_MakeTitleFont(titleFont);
+	Menu_SetButtons(s->btns, titleFont, s->descs, s->descsCount);
+	ButtonWidget_SetConst(&s->back, "Back to game", titleFont);
+
+	if (Server.IsSinglePlayer) return;
+	s->btns[1].disabled = true;
+	s->btns[2].disabled = true;
+}
+
+static void PauseScreenBase_Layout(void* screen) {
+	struct PauseScreen* s = (struct PauseScreen*)screen;
+	Menu_LayoutButtons(s->btns, s->descs, s->descsCount);
+	Menu_LayoutBack(&s->back);
+}
+
+static void PauseScreenBase_Init(struct PauseScreen* s, int width) {
+	s->maxVertices = PAUSE_MAX_VERTICES;
+	Menu_InitButtons(s->btns, width, s->descs, s->descsCount);
+	Menu_InitBack(&s->back, PauseScreenBase_Game);
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------PauseScreen-------------------------------------------------------*
+*#########################################################################################################################*/
+static struct Widget* pause_widgets[6 + 2] = {
+	(struct Widget*)&PauseScreen.btns[0], (struct Widget*)&PauseScreen.btns[1],
+	(struct Widget*)&PauseScreen.btns[2], (struct Widget*)&PauseScreen.btns[3],
+	(struct Widget*)&PauseScreen.btns[4], (struct Widget*)&PauseScreen.btns[5],
+	(struct Widget*)&PauseScreen.quit,    (struct Widget*)&PauseScreen.back
+};
 
 static void PauseScreen_CheckHacksAllowed(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
@@ -475,40 +504,22 @@ static void PauseScreen_CheckHacksAllowed(void* screen) {
 static void PauseScreen_ContextRecreated(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
 	struct FontDesc titleFont;
+	PauseScreenBase_ContextRecreated(s, &titleFont);
 
-	Screen_UpdateVb(screen);
-	Gui_MakeTitleFont(&titleFont);
-	Menu_SetButtons(s->btns, &titleFont, s->descs, s->descsCount);
-
-	if (!Gui.ClassicMenu) ButtonWidget_SetConst(&s->quit, "Quit game", &titleFont);
-	ButtonWidget_SetConst(&s->back, "Back to game", &titleFont);
-
-	if (!Server.IsSinglePlayer) {
-		s->btns[1].disabled = true;
-		s->btns[2].disabled = true;
-	}
+	ButtonWidget_SetConst(&s->quit, "Quit game", &titleFont);
 	PauseScreen_CheckHacksAllowed(s);
 	Font_Free(&titleFont);
 }
 
 static void PauseScreen_Layout(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	Menu_LayoutButtons(s->btns, s->descs, s->descsCount);
+	PauseScreenBase_Layout(screen);
 	Widget_SetLocation(&s->quit, ANCHOR_MAX, ANCHOR_MAX, 5, 5);
-	Menu_LayoutBack(&s->back);
 }
 
 static void PauseScreen_Init(void* screen) {
 	struct PauseScreen* s = (struct PauseScreen*)screen;
-	int i, count;
-	static const struct SimpleButtonDesc classicDescs[5] = {
-		{    0, -100, "Options...",             Menu_SwitchClassicOptions },
-		{    0,  -50, "Generate new level...",  Menu_SwitchClassicGenLevel },
-		{    0,    0, "Load level...",          Menu_SwitchLoadLevel },
-		{    0,   50, "Save level...",          Menu_SwitchSaveLevel },
-		{    0,  150, "Nostalgia options...",   Menu_SwitchNostalgia }
-	};
-	static const struct SimpleButtonDesc modernDescs[6] = {
+	static const struct SimpleButtonDesc descs[6] = {
 		{ -160,  -50, "Options...",             Menu_SwitchOptions   },
 		{  160,  -50, "Generate new level...",  Menu_SwitchGenLevel  },
 		{  160,    0, "Load level...",          Menu_SwitchLoadLevel },
@@ -516,33 +527,18 @@ static void PauseScreen_Init(void* screen) {
 		{ -160,    0, "Change texture pack...", Menu_SwitchTexPacks  },
 		{ -160,   50, "Hotkeys...",             Menu_SwitchHotkeys   }
 	};
-
 	s->widgets     = pause_widgets;
 	s->numWidgets  = Array_Elems(pause_widgets);
-	s->maxVertices = PAUSE_MAX_VERTICES;
 	Event_Register_(&UserEvents.HackPermsChanged, s, PauseScreen_CheckHacksAllowed);
 
-	if (Gui.ClassicMenu) {
-		s->descs = classicDescs; /*400*/
-		/* Don't show nostalgia options in classic mode */
-		count    = Game_ClassicMode ? 4 : 5;
-	} else {
-		s->descs = modernDescs; /*300*/
-		count    = 6;
-	}
-
-	s->descsCount = count;
-	for (i = 0; i < count; i++) { s->widgets[i] = (struct Widget*)&s->btns[i]; }
-	for (; i < PAUSE_MAX_BTNS; i++) { s->widgets[i] = NULL; }
-
-	Menu_InitButtons(s->btns, Gui.ClassicMenu ? 400 : 300, s->descs, count);
-	ButtonWidget_Init(&s->quit, 120, PauseScreen_Quit);
-	Menu_InitBack(&s->back, PauseScreen_Game);
+	s->descs      = descs;
+	s->descsCount = Array_Elems(descs);
+	ButtonWidget_Init(&s->quit, 120, PauseScreenBase_Quit);
+	PauseScreenBase_Init(s, 300);
 }
 
 static void PauseScreen_Free(void* screen) {
-	struct PauseScreen* s = (struct PauseScreen*)screen;
-	Event_Unregister_(&UserEvents.HackPermsChanged, s, PauseScreen_CheckHacksAllowed);
+	Event_Unregister_(&UserEvents.HackPermsChanged, screen, PauseScreen_CheckHacksAllowed);
 }
 
 static const struct ScreenVTABLE PauseScreen_VTABLE = {
@@ -557,6 +553,57 @@ void PauseScreen_Show(void) {
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &PauseScreen_VTABLE;
+	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------ClassicPauseScreen---------------------------------------------------*
+*#########################################################################################################################*/
+static struct Widget* classicPause_widgets[5 + 1] = {
+	(struct Widget*)&PauseScreen.btns[0], (struct Widget*)&PauseScreen.btns[1],
+	(struct Widget*)&PauseScreen.btns[2], (struct Widget*)&PauseScreen.btns[3],
+	NULL, (struct Widget*)&PauseScreen.back
+};
+
+static void ClassicPauseScreen_ContextRecreated(void* screen) {
+	struct PauseScreen* s = (struct PauseScreen*)screen;
+	struct FontDesc titleFont;
+	PauseScreenBase_ContextRecreated(s, &titleFont);
+	Font_Free(&titleFont);
+}
+
+static void ClassicPauseScreen_Init(void* screen) {
+	struct PauseScreen* s = (struct PauseScreen*)screen;
+	static const struct SimpleButtonDesc descs[5] = {
+		{    0, -100, "Options...",             Menu_SwitchClassicOptions },
+		{    0,  -50, "Generate new level...",  Menu_SwitchClassicGenLevel },
+		{    0,    0, "Load level...",          Menu_SwitchLoadLevel },
+		{    0,   50, "Save level...",          Menu_SwitchSaveLevel },
+		{    0,  150, "Nostalgia options...",   Menu_SwitchNostalgia }
+	};
+	s->widgets    = classicPause_widgets;
+	s->numWidgets = Array_Elems(classicPause_widgets);
+	s->descs      = descs;
+
+	/* Don't show nostalgia options in classic mode */
+	s->descsCount = Game_ClassicMode ? 4    : 5;
+	s->widgets[4] = Game_ClassicMode ? NULL : (struct Widget*)&s->btns[4];
+	PauseScreenBase_Init(s, 400);
+}
+
+static const struct ScreenVTABLE ClassicPauseScreen_VTABLE = {
+	ClassicPauseScreen_Init, Screen_NullUpdate, Screen_NullFunc, 
+	MenuScreen_Render2,      Screen_BuildMesh,
+	Screen_InputDown,        Screen_TInput,     Screen_TKeyPress, Screen_TText,
+	Menu_PointerDown,        Screen_FPointer,   Menu_PointerMove, Screen_TMouseScroll,
+	PauseScreenBase_Layout,  Screen_ContextLost, ClassicPauseScreen_ContextRecreated
+};
+void ClassicPauseScreen_Show(void) {
+	struct PauseScreen* s = &PauseScreen;
+	s->grabsInput = true;
+	s->closable   = true;
+	s->VTABLE     = &ClassicPauseScreen_VTABLE;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
@@ -1351,7 +1398,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_string* 
 #else
 	Chat_Add1("&eSaved map to: %s", path);
 #endif
-	PauseScreen_Show();
+	Gui_ShowPauseMenu();
 }
 
 static void SaveLevelScreen_Save(void* screen, void* widget, const char* fmt) {
@@ -3982,7 +4029,7 @@ static void TouchMore_Screen(void* s, void* w) {
 static void TouchMore_Ctrls(void* s, void* w) { TouchCtrlsScreen_Show(); }
 static void TouchMore_Menu(void* s, void* w) {
 	Gui_Remove((struct Screen*)&TouchMoreScreen);
-	PauseScreen_Show();
+	Gui_ShowPauseMenu();
 }
 static void TouchMore_Game(void* s, void* w) { 
 	Gui_Remove((struct Screen*)&TouchMoreScreen);

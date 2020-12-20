@@ -13,6 +13,7 @@
 #include "Platform.h"
 #include "Bitmap.h"
 #include "Options.h"
+#include "Menus.h"
 #include "Funcs.h"
 
 struct _GuiData Gui;
@@ -243,6 +244,14 @@ struct Screen* Gui_GetClosable(void) {
 		if (Gui_Screens[i]->closable) return Gui_Screens[i];
 	}
 	return NULL;
+}
+
+void Gui_ShowPauseMenu(void) {
+	if (Gui.ClassicMenu) {
+		ClassicPauseScreen_Show();
+	} else {
+		PauseScreen_Show();
+	}
 }
 
 void Gui_RenderGui(double delta) {

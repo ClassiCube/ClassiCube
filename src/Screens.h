@@ -5,7 +5,6 @@
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 struct Screen;
-struct Widget;
 
 /* These always return false */
 int Screen_FInput(void* s, int key);

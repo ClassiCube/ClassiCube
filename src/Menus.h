@@ -12,6 +12,7 @@ int Menu_PointerMove(void* screen, int id, int x, int y);
 void PauseScreen_Show(void);
 void OptionsGroupScreen_Show(void);
 void ClassicOptionsScreen_Show(void);
+void ClassicPauseScreen_Show(void);
 
 void ClassicKeyBindingsScreen_Show(void);
 void ClassicHacksKeyBindingsScreen_Show(void);

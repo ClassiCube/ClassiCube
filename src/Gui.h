@@ -207,6 +207,7 @@ CC_API struct Screen* Gui_GetInputGrab(void);
 struct Screen* Gui_GetBlocksWorld(void);
 /* Returns highest priority screen that is closable. */
 struct Screen* Gui_GetClosable(void);
+void Gui_ShowPauseMenu(void);
 
 void Gui_LayoutAll(void);
 void Gui_RefreshAll(void);
