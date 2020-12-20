@@ -1928,7 +1928,7 @@ static struct TouchScreen {
 } TouchScreen;
 
 static struct Widget* touch_widgets[ONSCREEN_MAX_BTNS + TOUCH_EXTRA_BTNS + 2] = {
-	NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL, NULL,
+	NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,
 	NULL,NULL, (struct Widget*)&TouchScreen.thumbstick, (struct Widget*)&TouchScreen.more
 };
 #define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
@@ -1971,7 +1971,10 @@ static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
 	{ "Noclip",    0,0,0, TouchScreen_NoclipClick,   &LocalPlayer_Instance.Hacks.CanNoclip  },
 	{ "Speed",     KEYBIND_SPEED,       0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed },
 	{ "\xabSpeed", KEYBIND_HALF_SPEED,  0,0, TouchScreen_OnscreenClick, &LocalPlayer_Instance.Hacks.CanSpeed },
-	{ "Camera",    0,0,0, TouchScreen_CameraClick,   &LocalPlayer_Instance.Hacks.CanUseThirdPerson }
+	{ "Camera",    0,0,0, TouchScreen_CameraClick,   &LocalPlayer_Instance.Hacks.CanUseThirdPerson },
+	{ "Delete",    KEYBIND_DELETE_BLOCK, 0,0, TouchScreen_OnscreenClick },
+	{ "Pick",      KEYBIND_PICK_BLOCK,   0,0, TouchScreen_OnscreenClick },
+	{ "Place",     KEYBIND_PLACE_BLOCK,  0,0, TouchScreen_OnscreenClick }
 };
 static const struct TouchButtonDesc normDescs[1] = {
 	{ "\x1E", KEYBIND_JUMP,     50,  10, TouchScreen_BindClick }

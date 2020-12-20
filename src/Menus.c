@@ -3708,8 +3708,8 @@ static const struct SimpleButtonDesc touchOnscreen_page1[ONSCREEN_PAGE_BTNS] = {
 	{ -120,  100, "Speed",      TouchOnscreen_Any }, {  120,  100, "Half speed", TouchOnscreen_Any }
 };
 static const struct SimpleButtonDesc touchOnscreen_page2[ONSCREEN_PAGE_BTNS] = {
-	{ -120,  -50, "3rd person", TouchOnscreen_Any }, {  120,  -50, "---",        TouchOnscreen_Any },
-	{ -120,    0, "---",        TouchOnscreen_Any }, {  120,    0, "---",        TouchOnscreen_Any },
+	{ -120,  -50, "3rd person", TouchOnscreen_Any }, {  120,  -50, "Delete",     TouchOnscreen_Any },
+	{ -120,    0, "Pick",       TouchOnscreen_Any }, {  120,    0, "Place",      TouchOnscreen_Any },
 	{ -120,   50, "---",        TouchOnscreen_Any }, {  120,   50, "---",        TouchOnscreen_Any },
 	{ -120,  100, "---",        TouchOnscreen_Any }, {  120,  100, "---",        TouchOnscreen_Any }
 };
