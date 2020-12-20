@@ -414,6 +414,27 @@ static struct ChatCommand RenderTypeCommand = {
 	}
 };
 
+static void Unproject(float x, float y, float z) {
+	struct Matrix mvp, inv;
+	struct Vec4 output;
+	Vec3 input;
+	Matrix_Mul(&mvp, &Gfx.View, &Gfx.Projection);
+	Matrix_Invert(&inv, &mvp);
+
+	input.X = x;
+	input.Y = y;
+	input.Z = z;
+	input.Y = Game.Height - input.Y - 1;
+
+	input.X = (2 * input.X) / Game.Width  - 1;
+	input.Y = (2 * input.Y) / Game.Height - 1;
+	input.Z = (2 * input.Z) - 1;
+
+	Vec4_Transform(&output, &input, &inv);
+	output.X /= output.W; output.Y /= output.W; output.Z /= output.W;
+	Chat_Add3("VEC: %f3, %f3, %f3", &output.X, &output.Y, &output.Z);
+}
+
 static void ResolutionCommand_Execute(const cc_string* args, int argsCount) {
 	int width, height;
 	if (argsCount < 2) {
@@ -424,24 +445,9 @@ static void ResolutionCommand_Execute(const cc_string* args, int argsCount) {
 	} else if (width <= 0 || height <= 0) {
 		Chat_AddRaw("&e/client: &cWidth and height must be above 0.");
 	} else {
-		struct Matrix mvp, inv;
-		struct Vec4 output;
-		Vec3 input;
-		Matrix_Mul(&mvp, &Gfx.View, &Gfx.Projection);
-		Matrix_Invert(&inv, &mvp);
-
-		input.X = width;
-		input.Y = height;
-		input.Z = 0;
-		input.Y = Game.Height - input.Y - 1;
-
-		input.X = (2 * input.X) /  Game.Width - 1;
-		input.Y = (2 * input.Y) / Game.Height - 1;
-		input.Z =  2 * input.Z - 1;
-
-		Vec4_Transform(&output, &input, &inv);
-		output.X /= output.W; output.Y /= output.W; output.Z /= output.W;
-		Chat_Add3("VEC: %f3, %f3, %f3", &output.X, &output.Y, &output.Z);
+		Unproject(width, height, 0);
+		Unproject(width, height, 1);
+		Chat_AddRaw("----");
 	}
 }
 
