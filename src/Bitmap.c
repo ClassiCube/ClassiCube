@@ -85,13 +85,7 @@ typedef void (*Png_RowExpander)(int width, BitmapCol* palette, cc_uint8* src, Bi
 static const cc_uint8 pngSig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 cc_bool Png_Detect(const cc_uint8* data, cc_uint32 len) {
-	int i;
-	if (len < PNG_SIG_SIZE) return false;
-
-	for (i = 0; i < PNG_SIG_SIZE; i++) {
-		if (data[i] != pngSig[i]) return false;
-	}
-	return true;
+	return len >= PNG_SIG_SIZE && Mem_Equal(data, pngSig, PNG_SIG_SIZE);
 }
 
 static void Png_Reconstruct(cc_uint8 type, cc_uint8 bytesPerPixel, cc_uint8* line, cc_uint8* prior, cc_uint32 lineLen) {

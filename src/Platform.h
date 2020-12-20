@@ -120,6 +120,8 @@ void Mem_Set(void* dst, cc_uint8 value, cc_uint32 numBytes);
 /* Copies a block of memory to another block of memory. */
 /* NOTE: These blocks MUST NOT overlap. */
 void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes);
+/* Returns non-zero if the two given blocks of memory have equal contents. */
+int Mem_Equal(const void* a, const void* b, cc_uint32 numBytes);
 
 /* Logs a debug message to console. */
 void Platform_Log(const char* msg, int len);

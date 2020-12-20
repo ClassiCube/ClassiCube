@@ -86,6 +86,16 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 void Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { memset(dst, value, numBytes); }
 void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
 
+int Mem_Equal(void* a, void* b, cc_uint32 numBytes) {
+	const cc_uint8* src = (const cc_uint8*)a;
+	const cc_uint8* dst = (const cc_uint8*)b;
+
+	while (numBytes--) { 
+		if (*src++ != *dst++) return false; 
+	}
+	return true;
+}
+
 CC_NOINLINE static void AbortOnAllocFailed(const char* place) {	
 	cc_string log; char logBuffer[STRING_SIZE+20 + 1];
 	String_InitArray_NT(log, logBuffer);

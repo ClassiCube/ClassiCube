@@ -115,13 +115,7 @@ int String_UNSAFE_Separate(STRING_REF const cc_string* str, char c, cc_string* k
 
 
 int String_Equals(const cc_string* a, const cc_string* b) {
-	int i;
-	if (a->length != b->length) return false;
-
-	for (i = 0; i < a->length; i++) {
-		if (a->buffer[i] != b->buffer[i]) return false;
-	}
-	return true;
+	return a->length == b->length && Mem_Equal(a->buffer, b->buffer, a->length);
 } 
 
 int String_CaselessEquals(const cc_string* a, const cc_string* b) {
