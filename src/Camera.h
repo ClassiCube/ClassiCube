@@ -32,6 +32,8 @@ CC_VAR extern struct _CameraData {
 	struct Camera* Active;
 	/* The mass (i.e. smoothness) of the smooth camera. */
 	float Mass;
+	/* Field of view of the camera */
+	int Fov, DefaultFov, ZoomFov;
 } Camera;
 
 struct Camera {
@@ -75,4 +77,5 @@ CC_API void Camera_Register(struct Camera* camera);
 /* If focus changes, calls AcquireFocus or LoseFocus */
 void Camera_CheckFocus(void);
 void Camera_UpdateProjection(void);
+void Camera_SetFov(int fov);
 #endif

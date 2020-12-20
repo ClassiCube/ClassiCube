@@ -141,7 +141,7 @@ static float HUDScreen_CalcHacksSpeed(void) {
 static cc_bool HUDScreen_HasHacksChanged(struct HUDScreen* s) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	float speed = HUDScreen_CalcHacksSpeed();
-	return speed != s->lastSpeed || Game_Fov != s->lastFov || s->hacksChanged;
+	return speed != s->lastSpeed || Camera.Fov != s->lastFov || s->hacksChanged;
 }
 
 static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
@@ -149,12 +149,12 @@ static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	float speed = HUDScreen_CalcHacksSpeed();
 
-	s->lastSpeed = speed; s->lastFov = Game_Fov;
+	s->lastSpeed = speed; s->lastFov = Camera.Fov;
 	s->hacksChanged = false;
 
 	String_InitArray(status, statusBuffer);
-	if (Game_Fov != Game_DefaultFov) {
-		String_Format1(&status, "Zoom fov %i  ", &Game_Fov);
+	if (Camera.Fov != Camera.DefaultFov) {
+		String_Format1(&status, "Zoom fov %i  ", &Camera.Fov);
 	}
 
 	if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");

@@ -26,8 +26,6 @@ extern cc_string Game_Mppass;
 extern int Game_ViewDistance;
 extern int Game_MaxViewDistance;
 extern int Game_UserViewDistance;
-extern int Game_Fov;
-extern int Game_DefaultFov, Game_ZoomFov;
 
 extern int     Game_FpsLimit;
 extern cc_bool Game_SimpleArmsAnim;
@@ -55,7 +53,6 @@ void Game_CycleViewDistance(void);
 
 void Game_SetViewDistance(int distance);
 void Game_UserSetViewDistance(int distance);
-void Game_SetFov(int fov);
 void Game_Disconnect(const cc_string* title, const cc_string* reason);
 void Game_Reset(void);
 

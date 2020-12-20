@@ -1508,7 +1508,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
-	gfx_vsync = vsync;
+	gfx_vsync      = vsync;
 	GLContext_SetFpsLimit(vsync, minFrameMs);
 }
 

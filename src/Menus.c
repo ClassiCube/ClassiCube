@@ -563,7 +563,7 @@ void PauseScreen_Show(void) {
 static struct Widget* classicPause_widgets[5 + 1] = {
 	(struct Widget*)&PauseScreen.btns[0], (struct Widget*)&PauseScreen.btns[1],
 	(struct Widget*)&PauseScreen.btns[2], (struct Widget*)&PauseScreen.btns[3],
-	NULL, (struct Widget*)&PauseScreen.back
+	(struct Widget*)&PauseScreen.btns[4], (struct Widget*)&PauseScreen.back
 };
 
 static void ClassicPauseScreen_ContextRecreated(void* screen) {
@@ -2983,14 +2983,14 @@ static void HacksSettingsScreen_SetSlide(const cc_string* v) {
 	LocalPlayer_Instance.Hacks.NoclipSlide = Menu_SetBool(v, OPT_NOCLIP_SLIDE);
 }
 
-static void HacksSettingsScreen_GetFOV(cc_string* v) { String_AppendInt(v, Game_Fov); }
+static void HacksSettingsScreen_GetFOV(cc_string* v) { String_AppendInt(v, Camera.Fov); }
 static void HacksSettingsScreen_SetFOV(const cc_string* v) {
 	int fov = Menu_Int(v);
-	if (Game_ZoomFov > fov) Game_ZoomFov = fov;
-	Game_DefaultFov = fov;
+	if (Camera.ZoomFov > fov) Camera.ZoomFov = fov;
+	Camera.DefaultFov = fov;
 
 	Options_Set(OPT_FIELD_OF_VIEW, v);
-	Game_SetFov(fov);
+	Camera_SetFov(fov);
 }
 
 static void HacksSettingsScreen_CheckHacksAllowed(struct MenuOptionsScreen* s) {

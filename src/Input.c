@@ -818,8 +818,8 @@ cc_bool InputHandler_SetFOV(int fov) {
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanUseThirdPerson) return false;
 
-	Game_ZoomFov = fov;
-	Game_SetFov(fov);
+	Camera.ZoomFov = fov;
+	Camera_SetFov(fov);
 	return true;
 }
 
@@ -834,16 +834,16 @@ cc_bool Input_HandleMouseWheel(float delta) {
 	h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanUseThirdPerson) return false;
 
-	if (input_fovIndex == -1.0f) input_fovIndex = (float)Game_ZoomFov;
+	if (input_fovIndex == -1.0f) input_fovIndex = (float)Camera.ZoomFov;
 	input_fovIndex -= delta * 5.0f;
 
-	Math_Clamp(input_fovIndex, 1.0f, Game_DefaultFov);
+	Math_Clamp(input_fovIndex, 1.0f, Camera.DefaultFov);
 	return InputHandler_SetFOV((int)input_fovIndex);
 }
 
 static void InputHandler_CheckZoomFov(void* obj) {
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
-	if (!h->Enabled || !h->CanUseThirdPerson) Game_SetFov(Game_DefaultFov);
+	if (!h->Enabled || !h->CanUseThirdPerson) Camera_SetFov(Camera.DefaultFov);
 }
 
 static cc_bool HandleBlockKey(int key) {
@@ -1068,7 +1068,7 @@ static void OnInputUp(void* obj, int key) {
 	struct Screen* s;
 	int i;
 
-	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) Game_SetFov(Game_DefaultFov);
+	if (key == KeyBinds[KEYBIND_ZOOM_SCROLL]) Camera_SetFov(Camera.DefaultFov);
 #ifdef CC_BUILD_WEB
 	/* When closing menus (which reacquires mouse focus) in key down, */
 	/* this still leaves the cursor visible. But if this is instead */

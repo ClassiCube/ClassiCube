@@ -25,7 +25,7 @@ static void Camera_OnRawMovement(float deltaX, float deltaY) {
 *--------------------------------------------------Perspective camera-----------------------------------------------------*
 *#########################################################################################################################*/
 static void PerspectiveCamera_GetProjection(struct Matrix* proj) {
-	float fovy = Game_Fov * MATH_DEG2RAD;
+	float fovy = Camera.Fov * MATH_DEG2RAD;
 	float aspectRatio = (float)Game.Width / (float)Game.Height;
 	Gfx_CalcPerspectiveMatrix(fovy, aspectRatio, (float)Game_ViewDistance, proj);
 }
@@ -274,6 +274,12 @@ void Camera_CheckFocus(void) {
 	}
 }
 
+void Camera_SetFov(int fov) {
+	if (Camera.Fov == fov) return;
+	Camera.Fov = fov;
+	Camera_UpdateProjection();
+}
+
 void Camera_UpdateProjection(void) {
 	Camera.Active->GetProjection(&Gfx.Projection);
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
@@ -298,6 +304,9 @@ static void OnInit(void) {
 	Camera.Invert      = Options_GetBool(OPT_INVERT_MOUSE, false);
 	Camera.Mass        = Options_GetFloat(OPT_CAMERA_MASS, 1, 100, 20);
 
+	Camera.DefaultFov  = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 179, 70);
+	Camera.Fov         = Camera.DefaultFov;
+	Camera.ZoomFov     = Camera.DefaultFov;
 	Camera_UpdateProjection();
 }
 

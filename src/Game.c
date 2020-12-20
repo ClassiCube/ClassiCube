@@ -46,7 +46,6 @@ cc_bool Game_UseCPEBlocks;
 struct RayTracer Game_SelectedPos;
 int Game_ViewDistance = 512, Game_UserViewDistance = 512;
 int Game_MaxViewDistance = DEFAULT_MAX_VIEWDIST;
-int Game_Fov = 70, Game_DefaultFov, Game_ZoomFov;
 
 int     Game_FpsLimit, Game_Vertices;
 cc_bool Game_SimpleArmsAnim;
@@ -158,12 +157,6 @@ void Game_UserSetViewDistance(int distance) {
 	Game_UserViewDistance = distance;
 	Options_SetInt(OPT_VIEW_DISTANCE, distance);
 	Game_SetViewDistance(distance);
-}
-
-void Game_SetFov(int fov) {
-	if (Game_Fov == fov) return;
-	Game_Fov = fov;
-	Camera_UpdateProjection();
 }
 
 void Game_Disconnect(const cc_string* title, const cc_string* reason) {
@@ -300,10 +293,6 @@ static void LoadOptions(void) {
 
 	Game_ViewDistance     = Options_GetInt(OPT_VIEW_DISTANCE, 8, 4096, 512);
 	Game_UserViewDistance = Game_ViewDistance;
-
-	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 179, 70);
-	Game_Fov        = Game_DefaultFov;
-	Game_ZoomFov    = Game_DefaultFov;
 	Game_BreakableLiquids = !Game_ClassicMode && Options_GetBool(OPT_MODIFIABLE_LIQUIDS, false);
 	Game_AllowServerTextures = Options_GetBool(OPT_SERVER_TEXTURES, true);
 	/* TODO: Do we need to support option to skip SSL */
@@ -588,7 +577,7 @@ static void Game_RenderFrame(double delta) {
 	if (!WindowInfo.Focused && !Gui_GetInputGrab()) Gui_ShowPauseMenu();
 
 	if (KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL) && !Gui_GetInputGrab()) {
-		InputHandler_SetFOV(Game_ZoomFov);
+		InputHandler_SetFOV(Camera.ZoomFov);
 	}
 
 	PerformScheduledTasks(delta);
