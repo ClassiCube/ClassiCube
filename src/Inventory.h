@@ -44,6 +44,7 @@ cc_bool Inventory_CheckChangeSelected(void);
 void Inventory_SetSelectedIndex(int index);
 /* Attempts to set the currently active hotbar. */
 void Inventory_SetHotbarIndex(int index);
+void Inventory_SwitchHotbar(void);
 /* Attempts to set the block for the selected index in the current hotbar. */
 /* NOTE: If another slot is already this block, the selected index is instead changed. */
 void Inventory_SetSelectedBlock(BlockID block);

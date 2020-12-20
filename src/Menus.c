@@ -3702,16 +3702,16 @@ static void TouchOnscreen_Any(void* screen, void* w) {
 static void TouchOnscreen_More(void* s, void* w) { TouchCtrlsScreen_Show(); }
 
 static const struct SimpleButtonDesc touchOnscreen_page1[ONSCREEN_PAGE_BTNS] = {
-	{ -120,  -50, "Chat",       TouchOnscreen_Any }, {  120,  -50, "Tablist",    TouchOnscreen_Any },
-	{ -120,    0, "Spawn",      TouchOnscreen_Any }, {  120,    0, "Set spawn",  TouchOnscreen_Any },
-	{ -120,   50, "Fly",        TouchOnscreen_Any }, {  120,   50, "Noclip",     TouchOnscreen_Any },
-	{ -120,  100, "Speed",      TouchOnscreen_Any }, {  120,  100, "Half speed", TouchOnscreen_Any }
+	{ -120,  -50, "Chat",  TouchOnscreen_Any }, {  120,  -50, "Tablist",    TouchOnscreen_Any },
+	{ -120,    0, "Spawn", TouchOnscreen_Any }, {  120,    0, "Set spawn",  TouchOnscreen_Any },
+	{ -120,   50, "Fly",   TouchOnscreen_Any }, {  120,   50, "Noclip",     TouchOnscreen_Any },
+	{ -120,  100, "Speed", TouchOnscreen_Any }, {  120,  100, "Half speed", TouchOnscreen_Any }
 };
 static const struct SimpleButtonDesc touchOnscreen_page2[ONSCREEN_PAGE_BTNS] = {
-	{ -120,  -50, "3rd person", TouchOnscreen_Any }, {  120,  -50, "Delete",     TouchOnscreen_Any },
-	{ -120,    0, "Pick",       TouchOnscreen_Any }, {  120,    0, "Place",      TouchOnscreen_Any },
-	{ -120,   50, "---",        TouchOnscreen_Any }, {  120,   50, "---",        TouchOnscreen_Any },
-	{ -120,  100, "---",        TouchOnscreen_Any }, {  120,  100, "---",        TouchOnscreen_Any }
+	{ -120,  -50, "Third person",  TouchOnscreen_Any }, {  120,  -50, "Delete", TouchOnscreen_Any },
+	{ -120,    0, "Pick",          TouchOnscreen_Any }, {  120,    0, "Place",  TouchOnscreen_Any },
+	{ -120,   50, "Switch hotbar", TouchOnscreen_Any }, {  120,   50, "---",    TouchOnscreen_Any },
+	{ -120,  100, "---",           TouchOnscreen_Any }, {  120,  100, "---",    TouchOnscreen_Any }
 };
 
 static void TouchOnscreen_SetPage(struct TouchOnscreenScreen* s, cc_bool page1) {

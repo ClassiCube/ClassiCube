@@ -176,5 +176,6 @@ void InputHandler_OnScreensChanged(void);
 #define ONSCREEN_BTN_DELETE    (1 << 9)
 #define ONSCREEN_BTN_PICK      (1 << 10)
 #define ONSCREEN_BTN_PLACE     (1 << 11)
-#define ONSCREEN_MAX_BTNS 12
+#define ONSCREEN_BTN_SWITCH    (1 << 12)
+#define ONSCREEN_MAX_BTNS 13
 #endif

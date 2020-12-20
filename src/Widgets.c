@@ -491,8 +491,6 @@ static int HotbarWidget_KeyDown(void* widget, int key) {
 
 static int HotbarWidget_KeyUp(void* widget, int key) {
 	struct HotbarWidget* w = (struct HotbarWidget*)widget;
-	int index;
-
 	/* Need to handle these cases:
 	     a) user presses alt then number
 	     b) user presses alt
@@ -500,12 +498,8 @@ static int HotbarWidget_KeyUp(void* widget, int key) {
 	if (key != KeyBinds[KEYBIND_HOTBAR_SWITCH]) return false;
 	if (w->altHandled) { w->altHandled = false; return true; } /* handled already */
 
-	/* Don't switch hotbar when alt+tab */
-	if (!WindowInfo.Focused) return true;
-
-	/* Alternate between first and second row */
-	index = Inventory.Offset == 0 ? 1 : 0;
-	Inventory_SetHotbarIndex(index);
+	/* Don't switch hotbar when alt+tabbing to another window */
+	if (WindowInfo.Focused) Inventory_SwitchHotbar();
 	return true;
 }
 

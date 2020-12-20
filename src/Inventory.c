@@ -27,6 +27,11 @@ void Inventory_SetHotbarIndex(int index) {
 	Event_RaiseVoid(&UserEvents.HeldBlockChanged);
 }
 
+void Inventory_SwitchHotbar(void) {
+	int index = Inventory.Offset == 0 ? 1 : 0;
+	Inventory_SetHotbarIndex(index);
+}
+
 void Inventory_SetSelectedBlock(BlockID block) {
 	int i;
 	if (!Inventory_CheckChangeSelected()) return;

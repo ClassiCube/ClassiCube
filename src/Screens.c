@@ -1928,7 +1928,7 @@ static struct TouchScreen {
 } TouchScreen;
 
 static struct Widget* touch_widgets[ONSCREEN_MAX_BTNS + TOUCH_EXTRA_BTNS + 2] = {
-	NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL,
+	NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL, NULL,NULL,NULL,NULL, NULL,
 	NULL,NULL, (struct Widget*)&TouchScreen.thumbstick, (struct Widget*)&TouchScreen.more
 };
 #define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
@@ -1947,6 +1947,7 @@ static void TouchScreen_FlyClick(void* s,      void* w) { LocalPlayer_HandleFly(
 static void TouchScreen_NoclipClick(void* s,   void* w) { LocalPlayer_HandleNoclip(); }
 static void TouchScreen_CameraClick(void* s,   void* w) { Camera_CycleActive(); }
 static void TouchScreen_MoreClick(void* s,     void* w) { TouchMoreScreen_Show(); }
+static void TouchScreen_SwitchClick(void* s,   void* w) { Inventory_SwitchHotbar(); }
 
 static void TouchScreen_TabClick(void* s, void* w) {
 	if (TabListOverlay_Instance.active) {
@@ -1974,7 +1975,8 @@ static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
 	{ "Camera",    0,0,0, TouchScreen_CameraClick,   &LocalPlayer_Instance.Hacks.CanUseThirdPerson },
 	{ "Delete",    KEYBIND_DELETE_BLOCK, 0,0, TouchScreen_OnscreenClick },
 	{ "Pick",      KEYBIND_PICK_BLOCK,   0,0, TouchScreen_OnscreenClick },
-	{ "Place",     KEYBIND_PLACE_BLOCK,  0,0, TouchScreen_OnscreenClick }
+	{ "Place",     KEYBIND_PLACE_BLOCK,  0,0, TouchScreen_OnscreenClick },
+	{ "Hotbar",    0,0,0, TouchScreen_SwitchClick }
 };
 static const struct TouchButtonDesc normDescs[1] = {
 	{ "\x1E", KEYBIND_JUMP,     50,  10, TouchScreen_BindClick }
