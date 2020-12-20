@@ -223,8 +223,8 @@ void EnvRenderer_RenderSky(void) {
 		m  = Gfx.View;
 		dy = skyY - normY; 
 		/* inlined Y translation matrix multiply */
-		m.row4.X += dy * m.Row1.X; m.row4.Y += dy * m.Row1.Y;
-		m.row4.Z += dy * m.Row1.Z; m.row4.W += dy * m.Row1.W;
+		m.row4.X += dy * m.row2.X; m.row4.Y += dy * m.row2.Y;
+		m.row4.Z += dy * m.row2.Z; m.row4.W += dy * m.row2.W;
 
 		Gfx_LoadMatrix(MATRIX_VIEW, &m);
 		Gfx_DrawVb_IndexedTris(sky_vertices);

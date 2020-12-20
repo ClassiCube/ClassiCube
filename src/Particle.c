@@ -30,8 +30,8 @@ void Particle_DoRender(const Vec2* size, const Vec3* pos, const TextureRec* rec,
 	centre = *pos; centre.Y += sY;
 	view   = &Gfx.View;
 	
-	aX = view->Row0.X * sX; aY = view->Row1.X * sX; aZ = view->row3.X * sX; /* right * size.X * 0.5f */
-	bX = view->Row0.Y * sY; bY = view->Row1.Y * sY; bZ = view->row3.Y * sY; /* up    * size.Y * 0.5f */
+	aX = view->Row0.X * sX; aY = view->row2.X * sX; aZ = view->row3.X * sX; /* right * size.X * 0.5f */
+	bX = view->Row0.Y * sY; bY = view->row2.Y * sY; bZ = view->row3.Y * sY; /* up    * size.Y * 0.5f */
 
 	v->X = centre.X - aX - bX; v->Y = centre.Y - aY - bY; v->Z = centre.Z - aZ - bZ; v->Col = col; v->U = rec->U1; v->V = rec->V2; v++;
 	v->X = centre.X - aX + bX; v->Y = centre.Y - aY + bY; v->Z = centre.Z - aZ + bZ; v->Col = col; v->U = rec->U1; v->V = rec->V1; v++;

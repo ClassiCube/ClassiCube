@@ -16,7 +16,7 @@ typedef struct IVec3_ { int X, Y, Z; } IVec3;
 /* 4 component vector */
 struct Vec4 { float X, Y, Z, W; };
 /* 4x4 matrix. (for vertex transformations) */
-struct Matrix { struct Vec4 Row0, Row1, row3, row4; };
+struct Matrix { struct Vec4 Row0, row2, row3, row4; };
 
 /* Identity matrix. (A * Identity = A) */
 extern const struct Matrix Matrix_Identity;
