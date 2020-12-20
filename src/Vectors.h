@@ -81,6 +81,7 @@ void Vec3_Normalize(Vec3* result, const Vec3* a);
 
 /* Transforms a vector by the given matrix. */
 void Vec3_Transform(Vec3* result, const Vec3* a, const struct Matrix* mat);
+void Vec4_Transform(struct Vec4* result, const Vec3* a, const struct Matrix* mat);
 /* Same as Vec3_Transform, but faster since X and Z are assumed as 0. */
 void Vec3_TransformY(Vec3* result, float y, const struct Matrix* mat);
 
@@ -120,6 +121,7 @@ CC_API void Matrix_Scale(struct Matrix* result, float x, float y, float z);
 /* Multiplies two matrices together. */
 /* NOTE: result can be the same pointer as left or right. */
 CC_API void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct Matrix* right);
+void Matrix_Invert(struct Matrix* dst, const struct Matrix* m);
 
 void Matrix_Orthographic(struct Matrix* result, float left, float right, float top, float bottom, float zNear, float zFar);
 void Matrix_PerspectiveFieldOfView(struct Matrix* result, float fovy, float aspect, float zNear, float zFar);

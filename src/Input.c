@@ -24,6 +24,7 @@
 #include "Protocol.h"
 #include "AxisLinesRenderer.h"
 #include "Picking.h"
+#include "Graphics.h"
 
 static cc_bool input_buttonsDown[3];
 static int input_pickingId = -1;
@@ -872,9 +873,7 @@ static cc_bool HandleNonClassicKey(int key) {
 			"  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 			"  &eAxis lines no longer show");
 	} else if (key == KeyBinds[KEYBIND_AUTOROTATE]) {
-		InputHandler_Toggle(key, &AutoRotate_Enabled,
-			"  &eAuto rotate is &aenabled",
-			"  &eAuto rotate is &cdisabled");
+
 	} else if (key == KeyBinds[KEYBIND_THIRD_PERSON]) {
 		Camera_CycleActive();
 	} else if (key == KeyBinds[KEYBIND_DROP_BLOCK]) {

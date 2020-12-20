@@ -424,10 +424,24 @@ static void ResolutionCommand_Execute(const cc_string* args, int argsCount) {
 	} else if (width <= 0 || height <= 0) {
 		Chat_AddRaw("&e/client: &cWidth and height must be above 0.");
 	} else {
-		Window_SetSize(width, height);
-		/* Window_Create uses these, but scales by DPI. Hence DPI unscale them here. */
-		Options_SetInt(OPT_WINDOW_WIDTH,  (int)(width  / DisplayInfo.ScaleX));
-		Options_SetInt(OPT_WINDOW_HEIGHT, (int)(height / DisplayInfo.ScaleY));
+		struct Matrix mvp, inv;
+		struct Vec4 output;
+		Vec3 input;
+		Matrix_Mul(&mvp, &Gfx.View, &Gfx.Projection);
+		Matrix_Invert(&inv, &mvp);
+
+		input.X = width;
+		input.Y = height;
+		input.Z = 0;
+		input.Y = Game.Height - input.Y - 1;
+
+		input.X = (2 * input.X) /  Game.Width - 1;
+		input.Y = (2 * input.Y) / Game.Height - 1;
+		input.Z =  2 * input.Z - 1;
+
+		Vec4_Transform(&output, &input, &inv);
+		output.X /= output.W; output.Y /= output.W; output.Z /= output.W;
+		Chat_Add3("VEC: %f3, %f3, %f3", &output.X, &output.Y, &output.Z);
 	}
 }
 
@@ -440,15 +454,11 @@ static struct ChatCommand ResolutionCommand = {
 };
 
 static void ModelCommand_Execute(const cc_string* args, int argsCount) {
-	if (argsCount) {
-		Entity_SetModel(&LocalPlayer_Instance.Base, &args[0]);
-	} else {
-		Chat_AddRaw("&e/client model: &cYou didn't specify a model name.");
-	}
+
 }
 
 static struct ChatCommand ModelCommand = {
-	"Model", ModelCommand_Execute, true,
+	"Model", ModelCommand_Execute, false,
 	{
 		"&a/client model [name]",
 		"&bnames: &echibi, chicken, creeper, human, pig, sheep",

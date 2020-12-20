@@ -26,6 +26,15 @@ void Vec3_Transform(Vec3* result, const Vec3* a, const struct Matrix* mat) {
 	result->X = x; result->Y = y; result->Z = z;
 }
 
+void Vec4_Transform(struct Vec4* result, const Vec3* a, const struct Matrix* mat) {
+	/* a could be pointing to result - therefore can't directly assign X/Y/Z */
+	float x = a->X * mat->row1.X + a->Y * mat->row2.X + a->Z * mat->row3.X + mat->row4.X;
+	float y = a->X * mat->row1.Y + a->Y * mat->row2.Y + a->Z * mat->row3.Y + mat->row4.Y;
+	float z = a->X * mat->row1.Z + a->Y * mat->row2.Z + a->Z * mat->row3.Z + mat->row4.Z;
+	float w = a->X * mat->row1.W + a->Y * mat->row2.W + a->Z * mat->row3.W + mat->row4.W;
+	result->X = x; result->Y = y; result->Z = z; result->W = w;
+}
+
 void Vec3_TransformY(Vec3* result, float y, const struct Matrix* mat) {
 	result->X = y * mat->row2.X + mat->row4.X;
 	result->Y = y * mat->row2.Y + mat->row4.Y;
@@ -165,6 +174,59 @@ void Matrix_Mul(struct Matrix* result, const struct Matrix* left, const struct M
 	result->row4.Y = (((lM41 * rM12) + (lM42 * rM22)) + (lM43 * rM32)) + (lM44 * rM42);
 	result->row4.Z = (((lM41 * rM13) + (lM42 * rM23)) + (lM43 * rM33)) + (lM44 * rM43);
 	result->row4.W = (((lM41 * rM14) + (lM42 * rM24)) + (lM43 * rM34)) + (lM44 * rM44);
+}
+
+void Matrix_Invert(struct Matrix* dst, const struct Matrix* m) {
+	/* https://stackoverflow.com/questions/1148309/inverting-a-4x4-matrix */
+	/* https://stackoverflow.com/questions/18244678/3d-ray-picking-use-mouse-coordinates-when-mouse-isnt-locked */
+	/* https://dondi.lmu.build/share/cg/unproject-explained.pdf */
+	/* Have to use double for precision reasons */
+	double det;
+	double A23_23 = m->row3.Z * m->row4.W - m->row3.W * m->row4.Z;
+	double A13_23 = m->row3.Y * m->row4.W - m->row3.W * m->row4.Y;
+	double A12_23 = m->row3.Y * m->row4.Z - m->row3.Z * m->row4.Y;
+	double A03_23 = m->row3.X * m->row4.W - m->row3.W * m->row4.X;
+	double A02_23 = m->row3.X * m->row4.Z - m->row3.Z * m->row4.X;
+	double A01_23 = m->row3.X * m->row4.Y - m->row3.Y * m->row4.X;
+	double A23_13 = m->row2.Z * m->row4.W - m->row2.W * m->row4.Z;
+	double A13_13 = m->row2.Y * m->row4.W - m->row2.W * m->row4.Y;
+	double A12_13 = m->row2.Y * m->row4.Z - m->row2.Z * m->row4.Y;
+	double A23_12 = m->row2.Z * m->row3.W - m->row2.W * m->row3.Z;
+	double A13_12 = m->row2.Y * m->row3.W - m->row2.W * m->row3.Y;
+	double A12_12 = m->row2.Y * m->row3.Z - m->row2.Z * m->row3.Y;
+	double A03_13 = m->row2.X * m->row4.W - m->row2.W * m->row4.X;
+	double A02_13 = m->row2.X * m->row4.Z - m->row2.Z * m->row4.X;
+	double A03_12 = m->row2.X * m->row3.W - m->row2.W * m->row3.X;
+	double A02_12 = m->row2.X * m->row3.Z - m->row2.Z * m->row3.X;
+	double A01_13 = m->row2.X * m->row4.Y - m->row2.Y * m->row4.X;
+	double A01_12 = m->row2.X * m->row3.Y - m->row2.Y * m->row3.X;
+
+	det = 
+		  m->row1.X * (m->row2.Y * A23_23 - m->row2.Z * A13_23 + m->row2.W * A12_23)
+		- m->row1.Y * (m->row2.X * A23_23 - m->row2.Z * A03_23 + m->row2.W * A02_23)
+		+ m->row1.Z * (m->row2.X * A13_23 - m->row2.Y * A03_23 + m->row2.W * A01_23)
+		- m->row1.W * (m->row2.X * A12_23 - m->row2.Y * A02_23 + m->row2.Z * A01_23);
+	det = 1.0 / det;
+
+	dst->row1.X = (float)(det *  (m->row2.Y * A23_23 - m->row2.Z * A13_23 + m->row2.W * A12_23));
+	dst->row1.Y = (float)(det * -(m->row1.Y * A23_23 - m->row1.Z * A13_23 + m->row1.W * A12_23));
+	dst->row1.Z = (float)(det *  (m->row1.Y * A23_13 - m->row1.Z * A13_13 + m->row1.W * A12_13));
+	dst->row1.W = (float)(det * -(m->row1.Y * A23_12 - m->row1.Z * A13_12 + m->row1.W * A12_12));
+
+	dst->row2.X = (float)(det * -(m->row2.X * A23_23 - m->row2.Z * A03_23 + m->row2.W * A02_23));
+	dst->row2.Y = (float)(det *  (m->row1.X * A23_23 - m->row1.Z * A03_23 + m->row1.W * A02_23));
+	dst->row2.Z = (float)(det * -(m->row1.X * A23_13 - m->row1.Z * A03_13 + m->row1.W * A02_13));
+	dst->row2.W = (float)(det *  (m->row1.X * A23_12 - m->row1.Z * A03_12 + m->row1.W * A02_12));
+
+	dst->row3.X = (float)(det *  (m->row2.X * A13_23 - m->row2.Y * A03_23 + m->row2.W * A01_23));
+	dst->row3.Y = (float)(det * -(m->row1.X * A13_23 - m->row1.Y * A03_23 + m->row1.W * A01_23));
+	dst->row3.Z = (float)(det *  (m->row1.X * A13_13 - m->row1.Y * A03_13 + m->row1.W * A01_13));
+	dst->row3.W = (float)(det * -(m->row1.X * A13_12 - m->row1.Y * A03_12 + m->row1.W * A01_12));
+
+	dst->row4.X = (float)(det * -(m->row2.X * A12_23 - m->row2.Y * A02_23 + m->row2.Z * A01_23));
+	dst->row4.Y = (float)(det *  (m->row1.X * A12_23 - m->row1.Y * A02_23 + m->row1.Z * A01_23));
+	dst->row4.Z = (float)(det * -(m->row1.X * A12_13 - m->row1.Y * A02_13 + m->row1.Z * A01_13));
+	dst->row4.W = (float)(det *  (m->row1.X * A12_12 - m->row1.Y * A02_12 + m->row1.Z * A01_12));
 }
 
 void Matrix_Orthographic(struct Matrix* result, float left, float right, float top, float bottom, float zNear, float zFar) {
