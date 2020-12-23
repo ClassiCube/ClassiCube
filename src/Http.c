@@ -6,8 +6,9 @@
 #include "Stream.h"
 #include "Game.h"
 #include "Utils.h"
+#include "Options.h"
 
-static cc_bool httpsOnly;
+static cc_bool httpsOnly, httpOnly;
 /* Frees data from a HTTP request. */
 static void HttpRequest_Free(struct HttpRequest* request) {
 	Mem_Free(request->data);
@@ -119,7 +120,8 @@ static void Http_WorkerStop(void);
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
 static int Http_Add(const cc_string* url, cc_bool priority, cc_uint8 type, const cc_string* lastModified,
 					const cc_string* etag, const void* data, cc_uint32 size, struct StringsBuffer* cookies) {
-	static const cc_string http = String_FromConst("http://");
+	static const cc_string https = String_FromConst("https://");
+	static const cc_string http  = String_FromConst("http://");
 	struct HttpRequest req = { 0 };
 
 	String_CopyToRawArray(req.url, url);
@@ -132,6 +134,11 @@ static int Http_Add(const cc_string* url, cc_bool priority, cc_uint8 type, const
 	if (httpsOnly) {
 		cc_string url_ = String_FromRawArray(req.url);
 		if (String_CaselessStarts(&url_, &http)) String_InsertAt(&url_, 4, 's');
+	}
+	/* Change https:// to http:// if required */
+	if (httpOnly) {
+		cc_string url_ = String_FromRawArray(req.url);
+		if (String_CaselessStarts(&url_, &https)) String_DeleteAt(&url_, 4);
 	}
 	
 	if (lastModified) {
@@ -1141,6 +1148,8 @@ void Http_UrlEncodeUtf8(cc_string* dst, const cc_string* src) {
 *#########################################################################################################################*/
 static void OnInit(void) {
 	http_terminate = false;
+	httpOnly = Options_GetBool(OPT_HTTP_ONLY, false);
+
 	Http_WorkerInit();
 	ScheduledTask_Add(30, Http_CleanCacheTask);
 	RequestList_Init(&pendingReqs);

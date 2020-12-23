@@ -70,6 +70,7 @@
 #define OPT_GRAB_CURSOR "win-grab-cursor"
 #define OPT_TOUCH_BUTTONS "gui-touchbuttons"
 #define OPT_TOUCH_SCALE "gui-touchscale"
+#define OPT_HTTP_ONLY "http-no-https"
 
 struct StringsBuffer;
 extern struct StringsBuffer Options;
