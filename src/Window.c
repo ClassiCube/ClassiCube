@@ -3463,7 +3463,12 @@ void Window_Init(void) {
 		});
 	);
 
-	Input_TouchMode = EM_ASM_INT_V({ return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent); });
+	/* iOS 13 on iPad doesn't identify itself as iPad by default anymore */
+	/*   https://stackoverflow.com/questions/57765958/how-to-detect-ipad-and-ipad-os-version-in-ios-13-and-up */
+	Input_TouchMode = EM_ASM_INT_V({ 
+		return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
+		(navigator.maxTouchPoints && navigator.maxTouchPoints > 2); 
+	});
 	Pointers_Count  = Input_TouchMode ? 0 : 1;
 
 	/* iOS shifts the whole webpage up when opening chat, which causes problems */
