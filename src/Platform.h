@@ -162,9 +162,9 @@ cc_result File_Open(cc_file* file, const cc_string* path);
 /* Attempts to open an existing or create a new file for reading and writing. */
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path);
 /* Attempts to read data from the file. */
-cc_result File_Read(cc_file file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead);
+cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead);
 /* Attempts to write data to the file. */
-cc_result File_Write(cc_file file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote);
+cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote);
 /* Attempts to close the given file. */
 cc_result File_Close(cc_file file);
 /* Attempts to seek to a position in the given file. */

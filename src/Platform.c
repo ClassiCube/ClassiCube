@@ -422,12 +422,12 @@ cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 	return File_Do(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 
-cc_result File_Read(cc_file file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
+cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
 	BOOL success = ReadFile(file, data, count, bytesRead, NULL);
 	return success ? 0 : GetLastError();
 }
 
-cc_result File_Write(cc_file file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
+cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
 	BOOL success = WriteFile(file, data, count, bytesWrote, NULL);
 	return success ? 0 : GetLastError();
 }
@@ -535,12 +535,12 @@ cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 
-cc_result File_Read(cc_file file, cc_uint8* data, cc_uint32 count, cc_uint32* bytesRead) {
+cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
 	*bytesRead = read(file, data, count);
 	return *bytesRead == -1 ? errno : 0;
 }
 
-cc_result File_Write(cc_file file, const cc_uint8* data, cc_uint32 count, cc_uint32* bytesWrote) {
+cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
 	*bytesWrote = write(file, data, count);
 	return *bytesWrote == -1 ? errno : 0;
 }

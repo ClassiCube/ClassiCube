@@ -247,7 +247,7 @@ static void GetTokenTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void GetTokenTask_Run(void) {
-	static const cc_string url = String_FromConst("https://www.classicube.net/api/login");
+	static const cc_string url = String_FromConst(SERVICES_SERVER "/login");
 	static char tokenBuffer[STRING_SIZE];
 	static char userBuffer[STRING_SIZE];
 	if (GetTokenTask.Base.working) return;
@@ -304,7 +304,7 @@ static void SignInTask_Append(cc_string* dst, const char* key, const cc_string* 
 }
 
 void SignInTask_Run(const cc_string* user, const cc_string* pass, const cc_string* mfaCode) {
-	static const cc_string url = String_FromConst("https://www.classicube.net/api/login");
+	static const cc_string url = String_FromConst(SERVICES_SERVER "/login");
 	static char userBuffer[STRING_SIZE];
 	cc_string args; char argsBuffer[1024];
 	if (SignInTask.Base.working) return;
@@ -391,7 +391,7 @@ void FetchServerTask_Run(const cc_string* hash) {
 	LWebTask_Reset(&FetchServerTask.Base);
 	ServerInfo_Init(&FetchServerTask.server);
 	String_InitArray(url, urlBuffer);
-	String_Format1(&url, "https://www.classicube.net/api/server/%s", hash);
+	String_Format1(&url, SERVICES_SERVER "/server/%s", hash);
 
 	FetchServerTask.Base.Handle = FetchServerTask_Handle;
 	FetchServerTask.Base.reqID  = Http_AsyncGetDataEx(&url, false, NULL, NULL, &ccCookies);
@@ -436,7 +436,7 @@ static void FetchServersTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void FetchServersTask_Run(void) {
-	static const cc_string url = String_FromConst("https://www.classicube.net/api/servers");
+	static const cc_string url = String_FromConst(SERVICES_SERVER "/servers");
 	if (FetchServersTask.Base.working) return;
 	LWebTask_Reset(&FetchServersTask.Base);
 
@@ -484,7 +484,7 @@ static void CheckUpdateTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void CheckUpdateTask_Run(void) {
-	static const cc_string url = String_FromConst("http://cs.classicube.net/client/builds.json");
+	static const cc_string url = String_FromConst(UPDATES_SERVER "/builds.json");
 	if (CheckUpdateTask.Base.working) return;
 
 	LWebTask_Reset(&CheckUpdateTask.Base);
@@ -521,7 +521,7 @@ void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
 	cc_string url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
 
-	String_Format2(&url, "http://cs.classicube.net/client/%c/%c",
+	String_Format2(&url, UPDATES_SERVER "/%c/%c",
 		release ? "release"    : "latest",
 		d3d9    ? Updater_D3D9 : Updater_OGL);
 

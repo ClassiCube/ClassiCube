@@ -1033,9 +1033,6 @@ static void Http_WorkerStop(void) {
 /*########################################################################################################################*
 *----------------------------------------------------Http public api------------------------------------------------------*
 *#########################################################################################################################*/
-/* Skins were moved to use Amazon S3, so link directly to avoid a pointless redirect */
-#define SKIN_SERVER "http://classicube.s3.amazonaws.com/skin/"
-
 int Http_AsyncGetSkin(const cc_string* skinName) {
 	cc_string url; char urlBuffer[URL_MAX_SIZE];
 	String_InitArray(url, urlBuffer);
@@ -1043,7 +1040,7 @@ int Http_AsyncGetSkin(const cc_string* skinName) {
 	if (Utils_IsUrlPrefix(skinName)) {
 		String_Copy(&url, skinName);
 	} else {
-		String_Format1(&url, SKIN_SERVER "%s.png", skinName);
+		String_Format1(&url, SKINS_SERVER "%s.png", skinName);
 	}
 	return Http_AsyncGetData(&url, false);
 }
