@@ -1159,6 +1159,36 @@ static void RefreshWindowBounds(int width, int height) {
 	}
 }
 
+typedef int (*X11_ErrorHandler)(Display* dpy, XErrorEvent* ev);
+typedef int (*X11_IOErrorHandler)(Display* dpy);
+static X11_ErrorHandler   realXErrorHandler;
+static X11_IOErrorHandler realXIOErrorHandler;
+
+static void LogXErrorCore(const char* msg) {
+	char traceBuffer[2048];
+	cc_string trace;
+	Platform_LogConst(msg);
+
+	String_InitArray(trace, traceBuffer);
+	Logger_Backtrace(&trace, NULL);
+	Platform_Log(traceBuffer, trace.length);
+}
+
+static int LogXError(Display* dpy, XErrorEvent* ev) {
+	LogXErrorCore("== unhandled X11 error ==");
+	return realXErrorHandler(dpy, ev);
+}
+
+static int LogXIOError(Display* dpy) {
+	LogXErrorCore("== unhandled XIO error ==");
+	return realXIOErrorHandler(dpy);
+}
+
+static void HookXErrors(void) {
+	realXErrorHandler   = XSetErrorHandler(LogXError);
+	realXIOErrorHandler = XSetIOErrorHandler(LogXIOError);
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
@@ -1167,8 +1197,10 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
 void Window_Init(void) {
 	Display* display = XOpenDisplay(NULL);
 	int screen;
+
 	if (!display) Logger_Abort("Failed to open display");
 	screen = DefaultScreen(display);
+	HookXErrors();
 
 	win_display = display;
 	win_screen  = screen;
