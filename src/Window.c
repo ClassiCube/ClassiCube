@@ -1922,6 +1922,29 @@ void Window_CloseKeyboard(void) { }
 static cc_bool rawMouseInited, rawMouseSupported;
 static int xiOpcode;
 
+static void AdjustMovementDelta(double* dx, double* dy) {
+	/* Despite the assumption that XI_RawMotion is relative,     */
+	/*  unfortunately there's a few buggy corner cases out there */
+	/*  where absolute coordinates are provided instead.         */
+	/* The ugly code belows tries to detect these corner cases.  */
+	static double lastX, lastY;
+	static int valid, fails;
+	double deltaX, deltaY;
+
+	if (valid > 0) return;
+	/* The default window resolution is 854 x 480, so if there's */
+	/*  a delta less than half of that, then it's almost certain */
+	/*  that the provided coordinates are relative.*/
+	if (*dx < 300 || *dy < 200) { valid = true; return; }
+
+	if (fails++ < 20) return;
+	if (!valid) { valid = -1; Platform_LogConst("Buggy mouse detected, trying to workaround.."); }
+	/* Checked over 20 times now, but no relative coordinates,   */
+	/*  so revert to calculating delta from absolute coordinates.*/
+	deltaX = *dx - lastX; lastX = *dx; *dx = deltaX;
+	deltaY = *dy - lastY; lastY = *dy; *dy = deltaY;
+}
+
 static void HandleGenericEvent(XEvent* e) {
 	const double* values;
 	XIRawEvent* ev;
@@ -1938,6 +1961,7 @@ static void HandleGenericEvent(XEvent* e) {
 		dx = XIMaskIsSet(ev->valuators.mask, 0) ? *values++ : 0;
 		dy = XIMaskIsSet(ev->valuators.mask, 1) ? *values++ : 0;
 
+		AdjustMovementDelta(&dx, &dy);
 		/* Using 0.5f here makes the sensitivity about same as normal cursor movement */
 		Event_RaiseRawMove(&PointerEvents.RawMoved, dx * 0.5f, dy * 0.5f);
 	}
