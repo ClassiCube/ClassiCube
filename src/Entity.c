@@ -802,7 +802,8 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 	struct LocalPlayerInput* input;
 
 	if (Gui_GetInputGrab()) {
-		p->Physics.Jumping = false; hacks->Speeding   = false;
+		/* TODO: Don't always turn these off anytime a screen is opened, only do it on InputUp */
+		p->Physics.Jumping = false; hacks->Speeding   = false; hacks->HalfSpeeding = false;
 		hacks->FlyingUp    = false; hacks->FlyingDown = false;
 	} else {
 		/* keyboard input, touch, joystick, etc */
