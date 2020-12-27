@@ -30,9 +30,9 @@ CC_NOINLINE static int LScreen_IndexOf(struct LScreen* s, void* w) {
 	return -1;
 }
 
-CC_NOINLINE static struct LWidget* LScreen_WidgetAt(struct LScreen* s, int x, int y) {
+CC_NOINLINE static struct LWidget* LScreen_WidgetAt(struct LScreen* s, int idx) {
 	struct LWidget* w;
-	int i = 0;
+	int i = 0, x = Pointers[idx].x, y = Pointers[idx].y;
 
 	for (i = 0; i < s->numWidgets; i++) {
 		w = s->widgets[i];
@@ -103,11 +103,11 @@ static void LScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 		if (was) return;
 
 		if (s->selectedWidget && s->selectedWidget->OnClick) {
-			s->selectedWidget->OnClick(s->selectedWidget, Mouse_X, Mouse_Y);
+			s->selectedWidget->OnClick(s->selectedWidget, 0);
 		} else if (s->hoveredWidget && s->hoveredWidget->OnClick) {
-			s->hoveredWidget->OnClick(s->hoveredWidget,   Mouse_X, Mouse_Y);
+			s->hoveredWidget->OnClick(s->hoveredWidget,   0);
 		} else if (s->onEnterWidget) {
-			s->onEnterWidget->OnClick(s->onEnterWidget,   Mouse_X, Mouse_Y);
+			s->onEnterWidget->OnClick(s->onEnterWidget,   0);
 		}
 	} else if (s->selectedWidget) {
 		if (!s->selectedWidget->VTABLE->KeyDown) return;
@@ -127,28 +127,28 @@ static void LScreen_TextChanged(struct LScreen* s, const cc_string* str) {
 	s->selectedWidget->VTABLE->TextChanged(s->selectedWidget, str);
 }
 
-static void LScreen_MouseDown(struct LScreen* s, int btn) {
-	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
+static void LScreen_MouseDown(struct LScreen* s, int idx) {
+	struct LWidget* over = LScreen_WidgetAt(s, idx);
 	struct LWidget* prev = s->selectedWidget;
 
 	if (prev && over != prev) LScreen_UnselectWidget(s, prev);
 	if (over) LScreen_SelectWidget(s, over, over == prev);
 }
 
-static void LScreen_MouseUp(struct LScreen* s, int btn) {
-	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
+static void LScreen_MouseUp(struct LScreen* s, int idx) {
+	struct LWidget* over = LScreen_WidgetAt(s, idx);
 	struct LWidget* prev = s->selectedWidget;
 
 	/* if user moves mouse away, it doesn't count */
 	if (over != prev) {
 		LScreen_UnselectWidget(s, prev);
 	} else if (over && over->OnClick) {
-		over->OnClick(over, Mouse_X, Mouse_Y);
+		over->OnClick(over, idx);
 	}
 }
 
-static void LScreen_MouseMove(struct LScreen* s, int deltaX, int deltaY) {
-	struct LWidget* over = LScreen_WidgetAt(s, Mouse_X, Mouse_Y);
+static void LScreen_MouseMove(struct LScreen* s, int idx, int deltaX, int deltaY) {
+	struct LWidget* over = LScreen_WidgetAt(s, idx);
 	struct LWidget* prev = s->hoveredWidget;
 	cc_bool overSame = prev == over;
 
@@ -200,12 +200,12 @@ CC_NOINLINE static void LScreen_Reset(struct LScreen* s) {
 	s->selectedWidget = NULL;
 }
 
-static void SwitchToChooseMode(void* w, int x, int y) { ChooseModeScreen_SetActive(false); }
-static void SwitchToColours(void* w, int x, int y) { ColoursScreen_SetActive(); }
-static void SwitchToDirectConnect(void* w, int x, int y) { DirectConnectScreen_SetActive(); }
-static void SwitchToMain(void* w, int x, int y) { MainScreen_SetActive(); }
-static void SwitchToSettings(void* w, int x, int y) { SettingsScreen_SetActive(); }
-static void SwitchToUpdates(void* w, int x, int y) { UpdatesScreen_SetActive(); }
+static void SwitchToChooseMode(void* w, int idx) { ChooseModeScreen_SetActive(false); }
+static void SwitchToColours(void* w, int idx) { ColoursScreen_SetActive(); }
+static void SwitchToDirectConnect(void* w, int idx) { DirectConnectScreen_SetActive(); }
+static void SwitchToMain(void* w, int idx) { MainScreen_SetActive(); }
+static void SwitchToSettings(void* w, int idx) { SettingsScreen_SetActive(); }
+static void SwitchToUpdates(void* w, int idx) { UpdatesScreen_SetActive(); }
 
 
 /*########################################################################################################################*
@@ -237,9 +237,9 @@ CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) 
 	MainScreen_SetActive();
 }
 
-static void UseModeEnhanced(void* w, int x, int y)   { ChooseMode_Click(false, false); }
-static void UseModeClassicHax(void* w, int x, int y) { ChooseMode_Click(true,  true);  }
-static void UseModeClassic(void* w, int x, int y)    { ChooseMode_Click(true,  false); }
+static void UseModeEnhanced(void* w, int idx)   { ChooseMode_Click(false, false); }
+static void UseModeClassicHax(void* w, int idx) { ChooseMode_Click(true,  true);  }
+static void UseModeClassic(void* w, int idx)    { ChooseMode_Click(true,  false); }
 
 static void ChooseModeScreen_Init(struct LScreen* s_) {
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
@@ -412,7 +412,7 @@ static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 	}
 }
 
-static void ColoursScreen_ResetAll(void* w, int x, int y) {
+static void ColoursScreen_ResetAll(void* w, int idx) {
 	Launcher_ResetSkin();
 	Launcher_SaveSkin();
 	ColoursScreen_UpdateAll(&ColoursScreen_Instance);
@@ -534,7 +534,7 @@ static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
 	LInput_SetText(&s->iptMppass,   &mppass);
 }
 
-static void DirectConnectScreen_StartClient(void* w, int x, int y) {
+static void DirectConnectScreen_StartClient(void* w, int idx) {
 	static const cc_string loopbackIp = String_FromConst("127.0.0.1");
 	static const cc_string defMppass  = String_FromConst("(none)");
 	const cc_string* user   = &DirectConnectScreen_Instance.iptUsername.text;
@@ -625,11 +625,11 @@ static struct MFAScreen {
 } MFAScreen_Instance;
 
 static void MainScreen_DoLogin(void);
-static void MFAScreen_SignIn(void* w, int x, int y) { 
+static void MFAScreen_SignIn(void* w, int idx) {
 	MainScreen_SetActive();
 	MainScreen_DoLogin();
 }
-static void MFAScreen_Cancel(void* w, int x, int y) {
+static void MFAScreen_Cancel(void* w, int idx) {
 	MFAScreen_Instance.iptCode.text.length = 0;
 	MainScreen_SetActive();
 }
@@ -747,14 +747,14 @@ static void MainScreen_DoLogin(void) {
 	LWidget_Redraw(&s->lblStatus);
 	s->signingIn = true;
 }
-static void MainScreen_Login(void* w, int x, int y) { MainScreen_DoLogin(); }
+static void MainScreen_Login(void* w, int idx) { MainScreen_DoLogin(); }
 
-static void MainScreen_Register(void* w, int x, int y) {
+static void MainScreen_Register(void* w, int idx) {
 	static const cc_string ccUrl = String_FromConst("https://www.classicube.net/acc/register/");
 	Process_StartOpen(&ccUrl);
 }
 
-static void MainScreen_Resume(void* w, int x, int y) {
+static void MainScreen_Resume(void* w, int idx) {
 	struct ResumeInfo info;
 	MainScreen_GetResume(&info, true);
 
@@ -762,7 +762,7 @@ static void MainScreen_Resume(void* w, int x, int y) {
 	Launcher_StartGame(&info.user, &info.mppass, &info.ip, &info.port, &info.server);
 }
 
-static void MainScreen_Singleplayer(void* w, int x, int y) {
+static void MainScreen_Singleplayer(void* w, int idx) {
 	static const cc_string defUser = String_FromConst("Singleplayer");
 	const cc_string* user = &MainScreen_Instance.iptUsername.text;
 
@@ -1003,8 +1003,8 @@ static struct CheckResourcesScreen {
 	struct LWidget* _widgets[5];
 } CheckResourcesScreen_Instance;
 
-static void CheckResourcesScreen_Yes(void*  w, int x, int y) { FetchResourcesScreen_SetActive(); }
-static void CheckResourcesScreen_Next(void* w, int x, int y) {
+static void CheckResourcesScreen_Yes(void*  w, int idx) { FetchResourcesScreen_SetActive(); }
+static void CheckResourcesScreen_Next(void* w, int idx) {
 	static const cc_string optionsTxt = String_FromConst("options.txt");
 	Http_ClearPending();
 
@@ -1179,7 +1179,7 @@ static void FetchResourcesScreen_Tick(struct LScreen* s_) {
 	if (Fetcher_Failed) { FetchResourcesScreen_Error(s); return; }
 
 	Launcher_TryLoadTexturePack();
-	CheckResourcesScreen_Next(NULL, 0, 0);
+	CheckResourcesScreen_Next(NULL, 0);
 }
 
 void FetchResourcesScreen_SetActive(void) {
@@ -1207,7 +1207,7 @@ static struct ServersScreen {
 	float tableAcc;
 } ServersScreen_Instance;
 
-static void ServersScreen_Connect(void* w, int x, int y) {
+static void ServersScreen_Connect(void* w, int idx) {
 	struct LTable* table = &ServersScreen_Instance.table;
 	cc_string* hash      = &ServersScreen_Instance.iptHash.text;
 
@@ -1217,7 +1217,7 @@ static void ServersScreen_Connect(void* w, int x, int y) {
 	Launcher_ConnectToServer(hash);
 }
 
-static void ServersScreen_Refresh(void* w, int x, int y) {
+static void ServersScreen_Refresh(void* w, int idx) {
 	struct LButton* btn;
 	if (FetchServersTask.Base.working) return;
 
@@ -1370,10 +1370,10 @@ static void ServersScreen_KeyDown(struct LScreen* s_, int key, cc_bool was) {
 	}
 }
 
-static void ServersScreen_MouseUp(struct LScreen* s_, int btn) {
+static void ServersScreen_MouseUp(struct LScreen* s_, int idx) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
 	s->table.VTABLE->OnUnselect(&s->table);
-	LScreen_MouseUp(s_, btn);
+	LScreen_MouseUp(s_, idx);
 }
 
 void ServersScreen_SetActive(void) {
@@ -1591,10 +1591,10 @@ static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
 	}
 }
 
-static void UpdatesScreen_RelD3D9(void* w, int x, int y)   { UpdatesScreen_Get(true,  true);  }
-static void UpdatesScreen_RelOpenGL(void* w, int x, int y) { UpdatesScreen_Get(true,  false); }
-static void UpdatesScreen_DevD3D9(void* w, int x, int y)   { UpdatesScreen_Get(false, true);  }
-static void UpdatesScreen_DevOpenGL(void* w, int x, int y) { UpdatesScreen_Get(false, false); }
+static void UpdatesScreen_RelD3D9(void* w, int idx)   { UpdatesScreen_Get(true,  true);  }
+static void UpdatesScreen_RelOpenGL(void* w, int idx) { UpdatesScreen_Get(true,  false); }
+static void UpdatesScreen_DevD3D9(void* w, int idx)   { UpdatesScreen_Get(false, true);  }
+static void UpdatesScreen_DevOpenGL(void* w, int idx) { UpdatesScreen_Get(false, false); }
 
 static void UpdatesScreen_Init(struct LScreen* s_) {
 	struct UpdatesScreen* s = (struct UpdatesScreen*)s_;

@@ -42,7 +42,7 @@ struct LWidgetVTABLE {
 	cc_bool tabSelectable;         /* Whether this widget gets selected when pressing tab */ \
 	cc_uint8 horAnchor, verAnchor; /* Specifies the reference point for when this widget is resized */ \
 	int xOffset, yOffset;          /* Offset from the reference point */ \
-	void (*OnClick)(void* widget, int x, int y); /* Called when widget is clicked */ \
+	void (*OnClick)(void* widget, int idx); /* Called when widget is clicked */ \
 	Rect2D last;                  /* Widget's last drawn area */
 
 /* Represents an individual 2D gui component in the launcher. */

@@ -43,6 +43,7 @@ static void CloseActiveScreen(void) {
 }
 
 void Launcher_SetScreen(struct LScreen* screen) {
+	int i;
 	CloseActiveScreen();
 	activeScreen = screen;
 	if (!screen->numWidgets) screen->Init(screen);
@@ -50,7 +51,9 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	screen->Show(screen);
 	screen->Layout(screen);
 	/* for hovering over active button etc */
-	screen->MouseMove(screen, 0, 0);
+	for (i = 0; i < Pointers_Count; i++) {
+		screen->MouseMove(screen, i, 0, 0);
+	}
 
 	Launcher_Redraw();
 }
@@ -209,16 +212,16 @@ static void OnMouseWheel(void* obj, float delta) {
 }
 
 static void OnPointerDown(void* obj, int idx) {
-	activeScreen->MouseDown(activeScreen, 0);
+	activeScreen->MouseDown(activeScreen, idx);
 }
 
 static void OnPointerUp(void* obj, int idx) {
-	activeScreen->MouseUp(activeScreen, 0);
+	activeScreen->MouseUp(activeScreen, idx);
 }
 
 static void OnPointerMove(void* obj, int idx, int deltaX, int deltaY) {
 	if (!activeScreen) return;
-	activeScreen->MouseMove(activeScreen, deltaX, deltaY);
+	activeScreen->MouseMove(activeScreen, idx, deltaX, deltaY);
 }
 
 
