@@ -97,7 +97,6 @@ void Event_UnregisterAll(void) {
 	InputEvents.Up.Count    = 0;
 	InputEvents.Wheel.Count = 0;
 	InputEvents.TextChanged.Count = 0;
-	InputEvents.BindChanged.Count = 0;
 
 	PointerEvents.Moved.Count = 0;
 	PointerEvents.Down.Count  = 0;
@@ -168,12 +167,5 @@ void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDel
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], xDelta, yDelta);
-	}
-}
-
-void Event_RaiseBind(struct Event_Bind* handlers, int binding, int pressed) {
-	int i;
-	for (i = 0; i < handlers->Count; i++) {
-		handlers->Handlers[i](handlers->Objs[i], binding, pressed);
 	}
 }

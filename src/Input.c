@@ -345,9 +345,7 @@ void KeyBind_Set(KeyBind binding, int key) {
 	String_Format1(&name, "key-%c", keybindNames[binding]);
 	value = String_FromReadonly(Input_Names[key]);
 	Options_SetString(&name, &value);
-
 	KeyBinds[binding] = key;
-	Event_RaiseBind(&InputEvents.BindChanged, binding, KeyBind_IsPressed(binding));
 }
 
 /* Initialises and loads key bindings from options */

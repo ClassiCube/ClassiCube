@@ -688,10 +688,6 @@ static void TabListOverlay_Render(void* screen, double delta) {
 		Texture_Render(&tex);
 	}
 	Gfx_SetTexturing(false);
-
-	/* NOTE: Should usually be caught by KeyUp, but just in case. */
-	if (KeyBind_IsPressed(KEYBIND_TABLIST) || Input_TouchMode) return;
-	Gui_Remove((struct Screen*)s);
 }
 
 static void TabListOverlay_Free(void* screen) {

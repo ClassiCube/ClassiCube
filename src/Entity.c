@@ -803,30 +803,46 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 
 	if (Gui.InputGrab) {
 		/* TODO: Don't always turn these off anytime a screen is opened, only do it on InputUp */
-		p->Physics.Jumping = false; hacks->Speeding   = false; hacks->HalfSpeeding = false;
-		hacks->FlyingUp    = false; hacks->FlyingDown = false;
-	} else {
-		/* keyboard input, touch, joystick, etc */
-		for (input = &p->input; input; input = input->next) {
-			input->GetMovement(xMoving, zMoving);
-		}
-		*xMoving *= 0.98f; 
-		*zMoving *= 0.98f;
-
-		p->Physics.Jumping  = KeyBind_IsPressed(KEYBIND_JUMP);
-		hacks->Speeding     = hacks->Enabled && KeyBind_IsPressed(KEYBIND_SPEED);
-		hacks->HalfSpeeding = hacks->Enabled && KeyBind_IsPressed(KEYBIND_HALF_SPEED);
-		hacks->FlyingUp     = KeyBind_IsPressed(KEYBIND_FLY_UP);
-		hacks->FlyingDown   = KeyBind_IsPressed(KEYBIND_FLY_DOWN);
-
-		if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
-			if (hacks->Noclip) {
-				/* need a { } block because it's a macro */
-				Vec3_Set(p->Base.Velocity, 0,0,0);
-			}
-			HacksComp_SetNoclip(hacks, KeyBind_IsPressed(KEYBIND_NOCLIP));
-		}
+		p->Physics.Jumping = false; hacks->FlyingUp = false; hacks->FlyingDown = false;
+		return;
 	}
+
+	/* keyboard input, touch, joystick, etc */
+	for (input = &p->input; input; input = input->next) {
+		input->GetMovement(xMoving, zMoving);
+	}
+	*xMoving *= 0.98f; 
+	*zMoving *= 0.98f;
+
+	p->Physics.Jumping = KeyBind_IsPressed(KEYBIND_JUMP);
+	hacks->FlyingUp    = KeyBind_IsPressed(KEYBIND_FLY_UP);
+	hacks->FlyingDown  = KeyBind_IsPressed(KEYBIND_FLY_DOWN);
+
+	if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
+		if (hacks->Noclip) {
+			/* need a { } block because it's a macro */
+			Vec3_Set(p->Base.Velocity, 0,0,0);
+		}
+		HacksComp_SetNoclip(hacks, KeyBind_IsPressed(KEYBIND_NOCLIP));
+	}
+}
+
+static void LocalPlayer_InputSet(int key, cc_bool pressed) {
+	struct LocalPlayer* p   = &LocalPlayer_Instance;
+	struct HacksComp* hacks = &p->Hacks;
+
+	if (pressed && !hacks->Enabled) return;
+	if (key == KeyBinds[KEYBIND_SPEED])      hacks->Speeding     = pressed;
+	if (key == KeyBinds[KEYBIND_HALF_SPEED]) hacks->HalfSpeeding = pressed;
+}
+
+static void LocalPlayer_InputDown(void* obj, int key) {
+	/* e.g. pressing Shift in chat input shouldn't turn on speeding */
+	if (!Gui.InputGrab) LocalPlayer_InputSet(key, true);
+}
+
+static void LocalPlayer_InputUp(void* obj, int key) {
+	LocalPlayer_InputSet(key, false);
 }
 
 static void LocalPlayer_SetLocation(struct Entity* e, struct LocationUpdate* update, cc_bool interpolate) {
@@ -1165,6 +1181,8 @@ void NetPlayer_Init(struct NetPlayer* p) {
 static void Entities_Init(void) {
 	Event_Register_(&GfxEvents.ContextLost,  NULL, Entities_ContextLost);
 	Event_Register_(&ChatEvents.FontChanged, NULL, Entities_ChatFontChanged);
+	Event_Register_(&InputEvents.Down,       NULL, LocalPlayer_InputDown);
+	Event_Register_(&InputEvents.Up,         NULL, LocalPlayer_InputUp);
 
 	Entities.NamesMode = Options_GetEnum(OPT_NAMES_MODE, NAME_MODE_HOVERED,
 		NameMode_Names, Array_Elems(NameMode_Names));

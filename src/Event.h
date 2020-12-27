@@ -63,12 +63,6 @@ struct Event_RawMove {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_Bind_Callback)(void* obj, int binding, int pressed);
-struct Event_Bind {
-	Event_Bind_Callback Handlers[EVENT_MAX_CALLBACKS];
-	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
-};
-
 /* Registers a callback function for the given event. */
 /* NOTE: Trying to register a callback twice or over EVENT_MAX_CALLBACKS callbacks will terminate the game. */
 CC_API void Event_Register(struct Event_Void* handlers,   void* obj, Event_Void_Callback handler);
@@ -100,8 +94,6 @@ void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating);
 void Event_RaiseString(struct Event_String* handlers, const cc_string* str);
 /* Calls all registered callbacks for an event which has raw pointer movement arguments. */
 void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDelta);
-/* Calls all registered callbacks for an event which has key binding arguments. */
-void Event_RaiseBind(struct Event_Bind* handlers, int binding, int pressed);
 
 void Event_UnregisterAll(void);
 /* NOTE: Event_UnregisterAll must be updated if events lists are changed */
@@ -172,7 +164,6 @@ CC_VAR extern struct _InputEventsList {
 	struct Event_Int    Up;    /* Key or button is released. Arg is a member of Key enumeration */
 	struct Event_Float  Wheel; /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
 	struct Event_String TextChanged; /* Text in the on-screen input keyboard changed (for Mobile) */
-	struct Event_Bind   BindChanged; /* Key binding changed. Arg is a member of KeyBind enumeration*/
 } InputEvents;
 
 CC_VAR extern struct _PointerEventsList {
