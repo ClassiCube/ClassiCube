@@ -170,7 +170,7 @@ static void LButton_Draw(void* widget) {
 	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 }
 
-static void LButton_Hover(void* w, int idx, int x, int y, cc_bool wasOver) {
+static void LButton_Hover(void* w, int idx, cc_bool wasOver) {
 	/* only need to redraw when changing from unhovered to hovered */	
 	if (!wasOver) LWidget_Draw(w); 
 }
@@ -994,9 +994,10 @@ static void LTable_KeyDown(void* widget, int key, cc_bool was) {
 	LTable_SetSelectedTo(w, index);
 }
 
-static void LTable_MouseMove(void* widget, int idx, int deltaX, int deltaY, cc_bool wasOver) {
+static void LTable_MouseMove(void* widget, int idx, cc_bool wasOver) {
 	struct LTable* w = (struct LTable*)widget;
-	int x = Pointers[idx].x - w->x, y = Pointers[idx].y - w->y, col;
+	int x = Pointers[idx].x - w->x, y = Pointers[idx].y - w->y;
+	int i, col, width, maxW;
 
 	if (w->draggingScrollbar) {
 		float scale = w->height / (float)w->rowsCount;
@@ -1008,11 +1009,16 @@ static void LTable_MouseMove(void* widget, int idx, int deltaX, int deltaY, cc_b
 		LTable_ClampTopRow(w);
 		LWidget_Draw(w);
 	} else if (w->draggingColumn >= 0) {
-		if (!deltaX || x >= w->x + w->width - cellMinWidth) return;
-		col = w->draggingColumn;
+		col   = w->draggingColumn;
+		width = x - w->dragXStart;
 
-		w->columns[col].width += deltaX;
-		Math_Clamp(w->columns[col].width, cellMinWidth, w->width - cellMinWidth);
+		/* Ensure this column doesn't expand past right side of table */
+		maxW = w->width;
+		for (i = 0; i < col; i++) maxW -= w->columns[i].width;
+
+		Math_Clamp(width, cellMinWidth, maxW - cellMinWidth);
+		if (width == w->columns[col].width) return;
+		w->columns[col].width = width;
 		LWidget_Draw(w);
 	}
 }
@@ -1042,6 +1048,7 @@ static void LTable_HeadersClick(struct LTable* w, int idx) {
 		/* clicked on gridline, begin dragging */
 		if (mouseX >= (x - dragPad) && mouseX < (x + dragPad) && w->columns[i].interactable) {
 			w->draggingColumn = i - 1;
+			w->dragXStart = (mouseX - w->x) - w->columns[i - 1].width;
 			return;
 		}
 

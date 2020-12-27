@@ -166,7 +166,7 @@ static void LScreen_MouseMove(struct LScreen* s, int idx, int deltaX, int deltaY
 		s->HoverWidget(s, over);
 
 		if (!over->VTABLE->MouseMove) return;
-		over->VTABLE->MouseMove(over, idx, deltaX, deltaY, overSame);
+		over->VTABLE->MouseMove(over, idx, overSame);
 	}
 }
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }

@@ -18,7 +18,7 @@ struct LWidgetVTABLE {
 	/* Called when key is pressed and this widget is selected. */
 	void (*KeyPress)(void* widget, char c);
 	/* Called when mouse hovers/moves over this widget. */
-	void (*MouseMove)(void* widget, int idx, int deltaX, int deltaY, cc_bool wasOver);
+	void (*MouseMove)(void* widget, int idx, cc_bool wasOver);
 	/* Called when mouse moves away from this widget. */
 	void (*MouseLeft)(void* widget);
 	/* Called when mouse clicks on this widget. */
@@ -174,6 +174,7 @@ struct LTable {
 
 	/* Index of table column currently being dragged. */
 	int draggingColumn;
+	int dragXStart; /* X coordinate column drag started at */
 	cc_bool draggingScrollbar; /* Is scrollbar is currently being dragged */
 	int dragYOffset;    /* Offset of mouse for scrollbar dragging */
 
