@@ -128,26 +128,16 @@ static void HUDScreen_DrawPosition(struct HUDScreen* s) {
 	Gfx_UpdateDynamicVb_IndexedTris(Models.Vb, vertices, count);
 }
 
-static float HUDScreen_CalcHacksSpeed(void) {
-	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	float speed = 0;
-	if (!hacks->CanSpeed) return 0;
-
-	if (hacks->HalfSpeeding) speed += hacks->SpeedMultiplier / 2;
-	if (hacks->Speeding)     speed += hacks->SpeedMultiplier;
-	return speed;
-}
-
 static cc_bool HUDScreen_HasHacksChanged(struct HUDScreen* s) {
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	float speed = HUDScreen_CalcHacksSpeed();
+	float speed = HacksComp_CalcSpeedFactor(hacks, hacks->CanSpeed);
 	return speed != s->lastSpeed || Camera.Fov != s->lastFov || s->hacksChanged;
 }
 
 static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
 	cc_string status; char statusBuffer[STRING_SIZE * 2];
 	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	float speed = HUDScreen_CalcHacksSpeed();
+	float speed = HacksComp_CalcSpeedFactor(hacks, hacks->CanSpeed);
 
 	s->lastSpeed = speed; s->lastFov = Camera.Fov;
 	s->hacksChanged = false;

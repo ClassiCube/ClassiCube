@@ -36,6 +36,7 @@ void TiltComp_GetCurrent(struct TiltComp* anim, float t);
 /* Entity component that performs management of hack states */
 struct HacksComp {
 	cc_bool IsOp;
+	cc_bool Floating; /* true if NoClip or Flying */
 	/* Speed player move at, relative to normal speed, when the 'speeding' key binding is held down */
 	float SpeedMultiplier;
 	/* Whether blocks that the player places that intersect themselves, should cause the player to
@@ -56,10 +57,10 @@ struct HacksComp {
 	/* Whether the player should slide after letting go of movement buttons in noclip */
 	cc_bool NoclipSlide;
 	/* Whether the player has allowed the usage of fast double jumping abilities */
-	cc_bool WOMStyleHacks;
+	cc_bool WOMStyleHacks; 
 
 	cc_bool Noclip, Flying, FlyingUp, FlyingDown, Speeding, HalfSpeeding;
-	cc_bool Floating; /* true if NoClip or Flying */
+	float MaxHorSpeed;
 	cc_string HacksFlags;
 	char __HacksFlagsBuffer[STRING_SIZE * 2];	
 };
@@ -74,6 +75,7 @@ void HacksComp_RecheckFlags(struct HacksComp* hacks);
 void HacksComp_Update(struct HacksComp* hacks);
 void HacksComp_SetFlying(struct HacksComp* hacks, cc_bool flying);
 void HacksComp_SetNoclip(struct HacksComp* hacks, cc_bool noclip);
+float HacksComp_CalcSpeedFactor(struct HacksComp* hacks, cc_bool canSpeed);
 
 /* Represents a position and orientation state */
 struct InterpState { Vec3 Pos; float Pitch, Yaw, RotX, RotZ; };

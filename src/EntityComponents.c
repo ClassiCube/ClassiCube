@@ -160,10 +160,11 @@ void HacksComp_Init(struct HacksComp* hacks) {
 	hacks->IsOp           = true;
 	hacks->CanSeeAllNames = true;
 	hacks->CanDoubleJump  = true;
-	hacks->BaseHorSpeed = 1.0f;
-	hacks->MaxJumps = 1;
-	hacks->NoclipSlide = true;
-	hacks->CanBePushed = true;
+	hacks->BaseHorSpeed   = 1.0f;
+	hacks->MaxHorSpeed    = 1.0f;
+	hacks->MaxJumps       = 1;
+	hacks->NoclipSlide    = true;
+	hacks->CanBePushed    = true;
 
 	String_InitArray(hacks->HacksFlags, hacks->__HacksFlagsBuffer);
 }
@@ -237,6 +238,7 @@ void HacksComp_RecheckFlags(struct HacksComp* hacks) {
 
 	if (hacks->IsOp) HacksComp_ParseAllFlag(hacks, "+ophax", "-ophax");
 	hacks->BaseHorSpeed = HacksComp_ParseFlagFloat("horspeed=", hacks);
+	hacks->MaxHorSpeed  = HacksComp_ParseFlagFloat("maxspeed=", hacks);
 	hacks->MaxJumps     = HacksComp_ParseFlagInt("jumps=",      hacks);
 	HacksComp_Update(hacks);
 }
@@ -268,6 +270,15 @@ void HacksComp_SetNoclip(struct HacksComp* hacks, cc_bool noclip) {
 	if (hacks->Noclip == noclip) return;
 	hacks->Noclip = noclip;
 	Event_RaiseVoid(&UserEvents.HacksStateChanged);
+}
+
+float HacksComp_CalcSpeedFactor(struct HacksComp* hacks, cc_bool canSpeed) {
+	float speed = 0;
+	if (!canSpeed) return 0;
+
+	if (hacks->HalfSpeeding) speed += hacks->SpeedMultiplier / 2;
+	if (hacks->Speeding)     speed += hacks->SpeedMultiplier;
+	return speed;
 }
 
 
@@ -1072,11 +1083,10 @@ static float PhysicsComp_LowestModifier(struct PhysicsComp* comp, struct AABB* b
 	return modifier;
 }
 
-static float PhysicsComp_GetSpeed(struct HacksComp* hacks, float speedMul) {
-	float factor = hacks->Floating ? speedMul : 1.0f, speed = factor;
-	if (hacks->Speeding     && hacks->CanSpeed) speed += factor * hacks->SpeedMultiplier;
-	if (hacks->HalfSpeeding && hacks->CanSpeed) speed += factor * hacks->SpeedMultiplier / 2;
-	return hacks->CanSpeed ? speed : min(speed, 1.0f);
+static float PhysicsComp_GetSpeed(struct HacksComp* hacks, float speedMul, cc_bool canSpeed) {
+	float factor = hacks->Floating ? speedMul : 1.0f;
+	float speed  = factor * (1 + HacksComp_CalcSpeedFactor(hacks, canSpeed));
+	return hacks->CanSpeed ? speed : min(speed, hacks->MaxHorSpeed);
 }
 
 static float PhysicsComp_GetBaseSpeed(struct PhysicsComp* comp) {
@@ -1105,8 +1115,8 @@ void PhysicsComp_PhysicsTick(struct PhysicsComp* comp, Vec3 vel) {
 
 	if (hacks->Noclip) entity->OnGround = false;
 	baseSpeed = PhysicsComp_GetBaseSpeed(comp);
-	verSpeed  = baseSpeed * (PhysicsComp_GetSpeed(hacks, 8.0f) / 5.0f);
-	horSpeed  = baseSpeed * PhysicsComp_GetSpeed(hacks, 8.0f / 5.0f) * hacks->BaseHorSpeed;
+	verSpeed  = baseSpeed * (PhysicsComp_GetSpeed(hacks, 8.0f, hacks->CanSpeed) / 5.0f);
+	horSpeed  = baseSpeed * PhysicsComp_GetSpeed(hacks,  8.0f / 5.0f, true) * hacks->BaseHorSpeed;
 	/* previously horSpeed used to be multiplied by factor of 0.02 in last case */
 	/* it's now multiplied by 0.1, so need to divide by 5 so user speed modifier comes out same */
 
