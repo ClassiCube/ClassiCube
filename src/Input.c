@@ -337,24 +337,16 @@ static void KeyBind_Load(void) {
 	}
 }
 
-static void KeyBind_Save(void) {
+void KeyBind_Set(KeyBind binding, int key) {
 	cc_string name; char nameBuffer[STRING_SIZE];
 	cc_string value;
-	int i;	
-
 	String_InitArray(name, nameBuffer);
-	for (i = 0; i < KEYBIND_COUNT; i++) {
-		name.length = 0; 
-		String_Format1(&name, "key-%c", keybindNames[i]);
 
-		value = String_FromReadonly(Input_Names[KeyBinds[i]]);
-		Options_SetString(&name, &value);
-	}
-}
+	String_Format1(&name, "key-%c", keybindNames[binding]);
+	value = String_FromReadonly(Input_Names[key]);
+	Options_SetString(&name, &value);
 
-void KeyBind_Set(KeyBind binding, int key) {
 	KeyBinds[binding] = key;
-	KeyBind_Save();
 	Event_RaiseBind(&InputEvents.BindChanged, binding, KeyBind_IsPressed(binding));
 }
 
