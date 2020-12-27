@@ -1292,8 +1292,6 @@ static int InputWidget_KeyDown(void* widget, int key) {
 	return true;
 }
 
-static int InputWidget_KeyUp(void* widget, int key) { return true; }
-
 static int InputWidget_PointerDown(void* widget, int id, int x, int y) {
 	cc_string line; char lineBuffer[STRING_SIZE];
 	struct InputWidget* w = (struct InputWidget*)widget;
@@ -1555,9 +1553,9 @@ static cc_bool TextInputWidget_AllowedChar(void* widget, char c) {
 
 static int TextInputWidget_GetMaxLines(void) { return 1; }
 static const struct WidgetVTABLE TextInputWidget_VTABLE = {
-	TextInputWidget_Render,  InputWidget_Free,  InputWidget_Reposition,
-	InputWidget_KeyDown,     InputWidget_KeyUp, Widget_MouseScroll,
-	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove,
+	TextInputWidget_Render,  InputWidget_Free, InputWidget_Reposition,
+	InputWidget_KeyDown,     Widget_Key,       Widget_MouseScroll,
+	InputWidget_PointerDown, Widget_Pointer,   Widget_PointerMove,
 	TextInputWidget_BuildMesh, TextInputWidget_Render2
 };
 void TextInputWidget_Create(struct TextInputWidget* w, int width, const cc_string* text, struct MenuInputDesc* desc) {
@@ -1818,9 +1816,9 @@ static int ChatInputWidget_GetMaxLines(void) {
 }
 
 static const struct WidgetVTABLE ChatInputWidget_VTABLE = {
-	ChatInputWidget_Render,  InputWidget_Free,  InputWidget_Reposition,
-	ChatInputWidget_KeyDown, InputWidget_KeyUp, Widget_MouseScroll,
-	InputWidget_PointerDown, Widget_Pointer,    Widget_PointerMove
+	ChatInputWidget_Render,  InputWidget_Free, InputWidget_Reposition,
+	ChatInputWidget_KeyDown, Widget_Key,       Widget_MouseScroll,
+	InputWidget_PointerDown, Widget_Pointer,   Widget_PointerMove
 };
 void ChatInputWidget_Create(struct ChatInputWidget* w) {
 	InputWidget_Reset(&w->base);

@@ -46,6 +46,7 @@ struct ChatScreen;
 static struct HUDScreen*  Gui_HUD;
 static struct ChatScreen* Gui_Chat;
 
+static cc_bool InventoryScreen_IsHotbarActive(void);
 CC_NOINLINE static cc_bool IsOnlyChatActive(void) {
 	struct Screen* s;
 	int i;
@@ -234,9 +235,10 @@ static int HUDScreen_KeyDown(void* screen, int key) {
 	return Elem_HandlesKeyDown(&s->hotbar, key);
 }
 
-static int HUDScreen_KeyUp(void* screen, int key) {
+static void HUDScreen_KeyUp(void* screen, int key) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	return Elem_HandlesKeyUp(&s->hotbar, key);
+	if (!InventoryScreen_IsHotbarActive()) return;
+	Elem_HandlesKeyUp(&s->hotbar, key);
 }
 
 static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
@@ -621,12 +623,10 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 	return false;
 }
 
-static int TabListOverlay_KeyUp(void* screen, int key) {
+static void TabListOverlay_KeyUp(void* screen, int key) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
-	if (key != KeyBinds[KEYBIND_TABLIST] || Input_TouchMode) return false;
-
+	if (key != KeyBinds[KEYBIND_TABLIST] || Input_TouchMode) return;
 	Gui_Remove((struct Screen*)s);
-	return true;
 }
 
 static void TabListOverlay_ContextLost(void* screen) {
@@ -1150,20 +1150,20 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	return true;
 }
 
-static int ChatScreen_KeyUp(void* screen, int key) {
+static void ChatScreen_KeyUp(void* screen, int key) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (!s->grabsInput) return false;
+	if (!s->grabsInput || (struct Screen*)s != Gui_GetInputGrab()) return;
+
 #ifdef CC_BUILD_WEB
 	/* See reason for this in HandleInputUp */
 	if (key == KEY_ESCAPE) ChatScreen_EnterChatInput(s, true);
 #endif
 
 	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
-		if (!WindowInfo.Focused) return true;
+		if (!WindowInfo.Focused) return;
 		SpecialInputWidget_SetActive(&s->altText, !s->altText.active);
 		ChatScreen_UpdateChatYOffsets(s);
 	}
-	return true;
 }
 
 static int ChatScreen_MouseScroll(void* screen, float delta) {
@@ -1425,13 +1425,15 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 	return true;
 }
 
-static int InventoryScreen_KeyUp(void* screen, int key) {
-	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+static cc_bool InventoryScreen_IsHotbarActive(void) {
+	struct Screen* grabbed = Gui_GetInputGrab();
+	/* Only toggle hotbar when inventory or no grab screen is open */
+	return !grabbed || grabbed == (struct Screen*)&InventoryScreen_Instance;
+}
 
-	if (key == KeyBinds[KEYBIND_INVENTORY]) {
-		s->releasedInv = true; return true;
-	}
-	return Elem_HandlesKeyUp(&Gui_HUD->hotbar, key);
+static void InventoryScreen_KeyUp(void* screen, int key) {
+	struct InventoryScreen* s = (struct InventoryScreen*)screen;
+	if (key == KeyBinds[KEYBIND_INVENTORY]) s->releasedInv = true;
 }
 
 static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
@@ -1656,7 +1658,7 @@ CC_NOINLINE static void LoadingScreen_ShowCommon(const cc_string* title, const c
 static const struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_Init,   Screen_NullUpdate, LoadingScreen_Free, 
 	LoadingScreen_Render, LoadingScreen_BuildMesh,
-	Screen_TInput,        Screen_TInput,     Screen_TKeyPress,   Screen_TText,
+	Screen_TInput,        Screen_InputUp,    Screen_TKeyPress,   Screen_TText,
 	Screen_TPointer,      Screen_FPointer,   Screen_TPointer,    Screen_TMouseScroll,
 	LoadingScreen_Layout, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
@@ -1731,7 +1733,7 @@ static void GeneratingScreen_Render(void* screen, double delta) {
 static const struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	GeneratingScreen_Init,   GeneratingScreen_Update, GeneratingScreen_Free,
 	GeneratingScreen_Render, LoadingScreen_BuildMesh,
-	Screen_TInput,           Screen_TInput,     Screen_TKeyPress,   Screen_TText,
+	Screen_TInput,           Screen_InputUp,    Screen_TKeyPress,   Screen_TText,
 	Screen_TPointer,         Screen_FPointer,   Screen_FPointer,    Screen_TMouseScroll,
 	LoadingScreen_Layout, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
@@ -1875,7 +1877,7 @@ static void DisconnectScreen_Free(void* screen) { Game_SetFpsLimit(Game_FpsLimit
 static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,   DisconnectScreen_Update, DisconnectScreen_Free,
 	DisconnectScreen_Render, Screen_BuildMesh,
-	Screen_InputDown,        Screen_TInput,           Screen_TKeyPress, Screen_TText,
+	Screen_InputDown,        Screen_InputUp,          Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,        Screen_FPointer,         Menu_PointerMove, Screen_TMouseScroll,
 	DisconnectScreen_Layout, DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
@@ -2157,7 +2159,7 @@ static void TouchScreen_Free(void* s) {
 static const struct ScreenVTABLE TouchScreen_VTABLE = {
 	TouchScreen_Init,        Screen_NullUpdate,     TouchScreen_Free,
 	TouchScreen_Render,      Screen_BuildMesh,
-	Screen_FInput,           Screen_FInput,         Screen_FKeyPress, Screen_FText,
+	Screen_FInput,           Screen_InputUp,        Screen_FKeyPress, Screen_FText,
 	TouchScreen_PointerDown, TouchScreen_PointerUp, Screen_FPointer,  Screen_FMouseScroll,
 	TouchScreen_Layout,      TouchScreen_ContextLost, TouchScreen_ContextRecreated
 };

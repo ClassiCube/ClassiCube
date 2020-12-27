@@ -70,8 +70,8 @@ struct ScreenVTABLE {
 	void (*BuildMesh)(void* elem);
 	/* Returns non-zero if an input press is handled. */
 	int  (*HandlesInputDown)(void* elem, int key);
-	/* Returns non-zero if an input release is handled. */
-	int  (*HandlesInputUp)(void* elem, int key);
+	/* Called when an input key or buttonm is released */
+	void (*OnInputUp)(void* elem, int key);
 	/* Returns non-zero if a key character press is handled. */
 	int  (*HandlesKeyPress)(void* elem, char keyChar);
 	/* Returns non-zero if on-screen keyboard text changed is handled. */
@@ -121,6 +121,9 @@ void Screen_ContextLost(void* screen);
 /* Default input down implementation for a screen */
 /*  (returns true if key is NOT a function key) */
 int  Screen_InputDown(void* screen, int key);
+/* Default input up implementation for a screen */
+/*  (does nothing) */
+void Screen_InputUp(void*   screen, int key);
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {

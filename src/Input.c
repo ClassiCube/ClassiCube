@@ -1082,7 +1082,7 @@ static void OnInputUp(void* obj, int key) {
 	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->dirty = true;
-		if (s->VTABLE->HandlesInputUp(s, key)) return;
+		s->VTABLE->OnInputUp(s, key);
 	}
 
 	if (Gui_GetInputGrab()) return;
