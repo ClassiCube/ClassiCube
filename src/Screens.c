@@ -39,7 +39,6 @@ int Screen_TPointer(void* s, int id, int x, int y) { return true; }
 
 void Screen_NullFunc(void* screen) { }
 void Screen_NullUpdate(void* screen, double delta) { }
-int  Screen_InputDown(void* screen, int key) { return key < KEY_F1 || key > KEY_F24; }
 
 /* TODO: Remove these */
 struct HUDScreen;

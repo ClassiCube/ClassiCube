@@ -104,16 +104,23 @@ struct Screen { Screen_Body };
 void Screen_RenderWidgets(void* screen, double delta);
 /* Calls Widget_Render2 on each widget in the screen. */
 void Screen_Render2Widgets(void* screen, double delta);
-/* Calls Widget_Layout on each widget in the screen. */
-void Screen_Layout(void* screen);
-/* Calls Widget_Free on each widget in the screen. */
-/* Also deletes the screen's vb. */
-void Screen_ContextLost(void* screen);
 void Screen_UpdateVb(void* screen);
 struct VertexTextured* Screen_LockVb(void* screen);
-void Screen_BuildMesh(void* screen);
 int Screen_DoPointerDown(void* screen, int id, int x, int y);
 int Screen_Index(void* screen, void* w);
+
+/* Default mesh building implementation for a screen */
+/*  (Locks vb, calls Widget_BuildMesh on each widget, then unlocks vb) */
+void Screen_BuildMesh(void* screen);
+/* Default layout implementation for a screen */
+/*  (Calls Widget_Layout on each widget) */
+void Screen_Layout(void* screen);
+/* Default context lost implementation for a screen */
+/*  (Deletes vb, then calls Elem_Free on each widget) */
+void Screen_ContextLost(void* screen);
+/* Default input down implementation for a screen */
+/*  (returns true if key is NOT a function key) */
+int  Screen_InputDown(void* screen, int key);
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {
