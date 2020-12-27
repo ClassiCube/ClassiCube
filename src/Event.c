@@ -97,6 +97,7 @@ void Event_UnregisterAll(void) {
 	InputEvents.Up.Count    = 0;
 	InputEvents.Wheel.Count = 0;
 	InputEvents.TextChanged.Count = 0;
+	InputEvents.BindChanged.Count = 0;
 
 	PointerEvents.Moved.Count = 0;
 	PointerEvents.Down.Count  = 0;

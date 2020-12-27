@@ -170,7 +170,7 @@ static void LButton_Draw(void* widget) {
 	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 }
 
-static void LButton_Hover(void* w, int x, int y, cc_bool wasOver) {
+static void LButton_Hover(void* w, int idx, int x, int y, cc_bool wasOver) {
 	/* only need to redraw when changing from unhovered to hovered */	
 	if (!wasOver) LWidget_Draw(w); 
 }
@@ -386,11 +386,11 @@ static void LInput_AdvanceCaretPos(struct LInput* w, cc_bool forwards) {
 	LWidget_Redraw(w);
 }
 
-static void LInput_MoveCaretToCursor(struct LInput* w) {
+static void LInput_MoveCaretToCursor(struct LInput* w, int idx) {
 	cc_string text; char textBuffer[STRING_SIZE];
+	int x = Pointers[idx].x, y = Pointers[idx].y;
 	struct DrawTextArgs args;
 	int i, charX, charWidth;
-	int x = Mouse_X, y = Mouse_Y;
 
 	/* Input widget may have been selected by pressing tab */
 	/* In which case cursor is completely outside, so ignore */
@@ -418,17 +418,17 @@ static void LInput_MoveCaretToCursor(struct LInput* w) {
 	}
 }
 
-static void LInput_Select(void* widget, cc_bool wasSelected) {
+static void LInput_Select(void* widget, int idx, cc_bool wasSelected) {
 	struct LInput* w = (struct LInput*)widget;
 	caretStart = DateTime_CurrentUTC_MS();
-	LInput_MoveCaretToCursor(w);
+	LInput_MoveCaretToCursor(w, idx);
 	/* TODO: Only draw outer border */
 	if (wasSelected) return;
 	LWidget_Draw(widget);
 	Window_OpenKeyboard(&w->text, w->type);
 }
 
-static void LInput_Unselect(void* widget) {
+static void LInput_Unselect(void* widget, int idx) {
 	caretStart = 0;
 	/* TODO: Only draw outer border */
 	LWidget_Draw(widget);
@@ -994,13 +994,13 @@ static void LTable_KeyDown(void* widget, int key, cc_bool was) {
 	LTable_SetSelectedTo(w, index);
 }
 
-static void LTable_MouseMove(void* widget, int deltaX, int deltaY, cc_bool wasOver) {
+static void LTable_MouseMove(void* widget, int idx, int deltaX, int deltaY, cc_bool wasOver) {
 	struct LTable* w = (struct LTable*)widget;
-	int x = Mouse_X - w->x, y = Mouse_Y - w->y, col;
+	int x = Pointers[idx].x - w->x, y = Pointers[idx].y - w->y, col;
 
 	if (w->draggingScrollbar) {
 		float scale = w->height / (float)w->rowsCount;
-		int row     = (int)((y - w->mouseOffset) / scale);
+		int row     = (int)((y - w->dragYOffset) / scale);
 		/* avoid expensive redraw when possible */
 		if (w->topRow == row) return;
 
@@ -1017,8 +1017,8 @@ static void LTable_MouseMove(void* widget, int deltaX, int deltaY, cc_bool wasOv
 	}
 }
 
-static void LTable_RowsClick(struct LTable* w) {
-	int mouseY = Mouse_Y - w->rowsBegY;
+static void LTable_RowsClick(struct LTable* w, int idx) {
+	int mouseY = Pointers[idx].y - w->rowsBegY;
 	int row    = w->topRow + mouseY / w->rowHeight;
 	TimeMS now;
 
@@ -1035,8 +1035,8 @@ static void LTable_RowsClick(struct LTable* w) {
 }
 
 /* Handles clicking on column headers (either resizes a column or sort rows) */
-static void LTable_HeadersClick(struct LTable* w) {
-	int x, i, mouseX = Mouse_X;
+static void LTable_HeadersClick(struct LTable* w, int idx) {
+	int x, i, mouseX = Pointers[idx].x;
 
 	for (i = 0, x = w->x; i < w->numColumns; i++) {
 		/* clicked on gridline, begin dragging */
@@ -1063,8 +1063,8 @@ static void LTable_HeadersClick(struct LTable* w) {
 }
 
 /* Handles clicking on the scrollbar on right edge of table */
-static void LTable_ScrollbarClick(struct LTable* w) {
-	int y, height, mouseY = Mouse_Y - w->y;
+static void LTable_ScrollbarClick(struct LTable* w, int idx) {
+	int y, height, mouseY = Pointers[idx].y - w->y;
 	LTable_GetScrollbarCoords(w, &y, &height);
 
 	if (mouseY < y) {
@@ -1072,24 +1072,24 @@ static void LTable_ScrollbarClick(struct LTable* w) {
 	} else if (mouseY >= y + height) {
 		w->topRow += w->visibleRows;
 	} else {
-		w->mouseOffset = mouseY - y;
+		w->dragYOffset = mouseY - y;
 	}
 
 	w->draggingScrollbar = true;
 	LTable_ClampTopRow(w);
 }
 
-static void LTable_MouseDown(void* widget, cc_bool wasSelected) {
+static void LTable_MouseDown(void* widget, int idx, cc_bool wasSelected) {
 	struct LTable* w = (struct LTable*)widget;
 
-	if (Mouse_X >= WindowInfo.Width - scrollbarWidth) {
-		LTable_ScrollbarClick(w);
+	if (Pointers[idx].x >= WindowInfo.Width - scrollbarWidth) {
+		LTable_ScrollbarClick(w, idx);
 		w->_lastRow = -1;
-	} else if (Mouse_Y < w->rowsBegY) {
-		LTable_HeadersClick(w);
+	} else if (Pointers[idx].y < w->rowsBegY) {
+		LTable_HeadersClick(w, idx);
 		w->_lastRow = -1;
 	} else {
-		LTable_RowsClick(w);
+		LTable_RowsClick(w, idx);
 	}
 	LWidget_Draw(w);
 }
@@ -1103,11 +1103,11 @@ static void LTable_MouseWheel(void* widget, float delta) {
 }
 
 /* Stops an in-progress dragging of resizing column. */
-static void LTable_StopDragging(void* widget) {
+static void LTable_StopDragging(void* widget, int idx) {
 	struct LTable* w = (struct LTable*)widget;
 	w->draggingColumn    = -1;
 	w->draggingScrollbar = false;
-	w->mouseOffset       = 0;
+	w->dragYOffset       = 0;
 }
 
 void LTable_Reposition(struct LTable* w) {
@@ -1152,7 +1152,7 @@ void LTable_Init(struct LTable* w, struct FontDesc* rowFont) {
 }
 
 void LTable_Reset(struct LTable* w) {
-	LTable_StopDragging(w);
+	LTable_StopDragging(w, 0);
 	LTable_Reposition(w);
 
 	w->topRow    = 0;

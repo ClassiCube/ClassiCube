@@ -358,6 +358,7 @@ static void KeyBind_Save(void) {
 void KeyBind_Set(KeyBind binding, int key) {
 	KeyBinds[binding] = key;
 	KeyBind_Save();
+	Event_RaiseInt(&InputEvents.BindChanged, binding);
 }
 
 /* Initialises and loads key bindings from options */

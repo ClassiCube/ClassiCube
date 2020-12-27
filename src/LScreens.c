@@ -59,18 +59,18 @@ static void LScreen_Tick(struct LScreen* s) {
 static void LScreen_HoverWidget(struct LScreen* s,   struct LWidget* w) { }
 static void LScreen_UnhoverWidget(struct LScreen* s, struct LWidget* w) { }
 
-CC_NOINLINE static void LScreen_SelectWidget(struct LScreen* s, struct LWidget* w, cc_bool was) {
+CC_NOINLINE static void LScreen_SelectWidget(struct LScreen* s, int idx, struct LWidget* w, cc_bool was) {
 	if (!w) return;
 	w->selected       = true;
 	s->selectedWidget = w;
-	if (w->VTABLE->OnSelect) w->VTABLE->OnSelect(w, was);
+	if (w->VTABLE->OnSelect) w->VTABLE->OnSelect(w, idx, was);
 }
 
-CC_NOINLINE static void LScreen_UnselectWidget(struct LScreen* s, struct LWidget* w) {
+CC_NOINLINE static void LScreen_UnselectWidget(struct LScreen* s, int idx, struct LWidget* w) {
 	if (!w) return;
 	w->selected       = false;
 	s->selectedWidget = NULL;
-	if (w->VTABLE->OnUnselect) w->VTABLE->OnUnselect(w);
+	if (w->VTABLE->OnUnselect) w->VTABLE->OnUnselect(w, idx);
 }
 
 static void LScreen_HandleTab(struct LScreen* s) {
@@ -89,8 +89,8 @@ static void LScreen_HandleTab(struct LScreen* s) {
 		w = s->widgets[i];
 		if (w->hidden || !w->tabSelectable) continue;
 
-		LScreen_UnselectWidget(s, s->selectedWidget);
-		LScreen_SelectWidget(s, w, false);
+		LScreen_UnselectWidget(s, 0, s->selectedWidget);
+		LScreen_SelectWidget(s, 0, w, false);
 		return;
 	}
 }
@@ -131,8 +131,8 @@ static void LScreen_MouseDown(struct LScreen* s, int idx) {
 	struct LWidget* over = LScreen_WidgetAt(s, idx);
 	struct LWidget* prev = s->selectedWidget;
 
-	if (prev && over != prev) LScreen_UnselectWidget(s, prev);
-	if (over) LScreen_SelectWidget(s, over, over == prev);
+	if (prev && over != prev) LScreen_UnselectWidget(s, idx, prev);
+	if (over) LScreen_SelectWidget(s, idx, over, over == prev);
 }
 
 static void LScreen_MouseUp(struct LScreen* s, int idx) {
@@ -141,7 +141,7 @@ static void LScreen_MouseUp(struct LScreen* s, int idx) {
 
 	/* if user moves mouse away, it doesn't count */
 	if (over != prev) {
-		LScreen_UnselectWidget(s, prev);
+		LScreen_UnselectWidget(s, idx, prev);
 	} else if (over && over->OnClick) {
 		over->OnClick(over, idx);
 	}
@@ -166,7 +166,7 @@ static void LScreen_MouseMove(struct LScreen* s, int idx, int deltaX, int deltaY
 		s->HoverWidget(s, over);
 
 		if (!over->VTABLE->MouseMove) return;
-		over->VTABLE->MouseMove(over, deltaX, deltaY, overSame);
+		over->VTABLE->MouseMove(over, idx, deltaX, deltaY, overSame);
 	}
 }
 static void LScreen_MouseWheel(struct LScreen* s, float delta) { }
@@ -1307,7 +1307,7 @@ static void ServersScreen_Show(struct LScreen* s_) {
 	/* This is so typing on keyboard by default searchs server list */
 	/* But don't do that when it would cause on-screen keyboard to show */
 	if (WindowInfo.SoftKeyboard) return;
-	LScreen_SelectWidget(s_, (struct LWidget*)&s->iptSearch, false);
+	LScreen_SelectWidget(s_, 0, (struct LWidget*)&s->iptSearch, false);
 }
 
 static void ServersScreen_Tick(struct LScreen* s_) {
@@ -1372,7 +1372,7 @@ static void ServersScreen_KeyDown(struct LScreen* s_, int key, cc_bool was) {
 
 static void ServersScreen_MouseUp(struct LScreen* s_, int idx) {
 	struct ServersScreen* s = (struct ServersScreen*)s_;
-	s->table.VTABLE->OnUnselect(&s->table);
+	s->table.VTABLE->OnUnselect(&s->table, idx);
 	LScreen_MouseUp(s_, idx);
 }
 
