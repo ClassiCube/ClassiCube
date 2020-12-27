@@ -828,15 +828,14 @@ static void LocalPlayer_HandleInput(float* xMoving, float* zMoving) {
 }
 
 static void LocalPlayer_InputSet(int key, cc_bool pressed) {
-	struct LocalPlayer* p   = &LocalPlayer_Instance;
-	struct HacksComp* hacks = &p->Hacks;
+	struct HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 
 	if (pressed && !hacks->Enabled) return;
 	if (key == KeyBinds[KEYBIND_SPEED])      hacks->Speeding     = pressed;
 	if (key == KeyBinds[KEYBIND_HALF_SPEED]) hacks->HalfSpeeding = pressed;
 }
 
-static void LocalPlayer_InputDown(void* obj, int key) {
+static void LocalPlayer_InputDown(void* obj, int key, cc_bool was) {
 	/* e.g. pressing Shift in chat input shouldn't turn on speeding */
 	if (!Gui.InputGrab) LocalPlayer_InputSet(key, true);
 }
