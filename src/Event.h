@@ -39,12 +39,6 @@ struct Event_Block {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
-typedef void (*Event_PointerMove_Callback)(void* obj, int idx, int xDelta, int yDelta);
-struct Event_PointerMove {
-	Event_PointerMove_Callback Handlers[EVENT_MAX_CALLBACKS];
-	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
-};
-
 typedef void (*Event_Chat_Callback)(void* obj, const cc_string* msg, int msgType);
 struct Event_Chat {
 	Event_Chat_Callback Handlers[EVENT_MAX_CALLBACKS];
@@ -69,6 +63,12 @@ struct Event_RawMove {
 	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
 };
 
+typedef void (*Event_Bind_Callback)(void* obj, int binding, int pressed);
+struct Event_Bind {
+	Event_Bind_Callback Handlers[EVENT_MAX_CALLBACKS];
+	void* Objs[EVENT_MAX_CALLBACKS]; int Count;
+};
+
 /* Registers a callback function for the given event. */
 /* NOTE: Trying to register a callback twice or over EVENT_MAX_CALLBACKS callbacks will terminate the game. */
 CC_API void Event_Register(struct Event_Void* handlers,   void* obj, Event_Void_Callback handler);
@@ -90,8 +90,6 @@ void Event_RaiseEntry(struct Event_Entry* handlers, struct Stream* stream, const
 /* Calls all registered callbacks for an event which takes block change arguments. */
 /* These are the coordinates/location of the change, block there before, block there now. */
 void Event_RaiseBlock(struct Event_Block* handlers, IVec3 coords, BlockID oldBlock, BlockID block);
-/* Calls all registered callbacks for an event which has pointer movement arguments. */
-void Event_RaiseMove(struct Event_PointerMove* handlers, int idx, int xDelta, int yDelta);
 /* Calls all registered callbacks for an event which has chat message type and contents. */
 /* See MsgType enum in Chat.h for what types of messages there are. */
 void Event_RaiseChat(struct Event_Chat* handlers, const cc_string* msg, int msgType);
@@ -102,6 +100,8 @@ void Event_RaiseInput(struct Event_Input* handlers, int key, cc_bool repeating);
 void Event_RaiseString(struct Event_String* handlers, const cc_string* str);
 /* Calls all registered callbacks for an event which has raw pointer movement arguments. */
 void Event_RaiseRawMove(struct Event_RawMove* handlers, float xDelta, float yDelta);
+/* Calls all registered callbacks for an event which has key binding arguments. */
+void Event_RaiseBind(struct Event_Bind* handlers, int binding, int pressed);
 
 void Event_UnregisterAll(void);
 /* NOTE: Event_UnregisterAll must be updated if events lists are changed */
@@ -172,14 +172,14 @@ CC_VAR extern struct _InputEventsList {
 	struct Event_Int    Up;    /* Key or button is released. Arg is a member of Key enumeration */
 	struct Event_Float  Wheel; /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
 	struct Event_String TextChanged; /* Text in the on-screen input keyboard changed (for Mobile) */
-	struct Event_Int    BindChanged; /* Key binding changed. Arg is a member of KeyBind enumeration*/
+	struct Event_Bind   BindChanged; /* Key binding changed. Arg is a member of KeyBind enumeration*/
 } InputEvents;
 
 CC_VAR extern struct _PointerEventsList {
-	struct Event_PointerMove Moved; /* Pointer position changed (Arg is delta from last position) */
-	struct Event_Int         Down;  /* Left mouse or touch is pressed (Arg is index) */
-	struct Event_Int         Up;    /* Left mouse or touch is released (Arg is index) */
-	struct Event_RawMove RawMoved;  /* Raw pointer position changed (Arg is delta) */
+	struct Event_Int        Moved; /* Pointer position changed (Arg is index) */
+	struct Event_Int         Down; /* Left mouse or touch is pressed (Arg is index) */
+	struct Event_Int         Up;   /* Left mouse or touch is released (Arg is index) */
+	struct Event_RawMove RawMoved; /* Raw pointer position changed (Arg is delta) */
 } PointerEvents;
 
 CC_VAR extern struct _NetEventsList {

@@ -21,7 +21,7 @@ typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	void (*KeyPress)(struct LScreen* s,    char c);  \
 	void (*MouseDown)(struct LScreen* s,   int idx); \
 	void (*MouseUp)(struct LScreen* s,     int idx); \
-	void (*MouseMove)(struct LScreen* s,   int idx, int deltaX, int deltaY); \
+	void (*MouseMove)(struct LScreen* s,   int idx); \
 	void (*MouseWheel)(struct LScreen* s,  float delta); \
 	void (*TextChanged)(struct LScreen* s, const cc_string* str); \
 	LWidget_Func HoverWidget;    /* Called when mouse is moved over a given widget. */ \

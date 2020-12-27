@@ -147,7 +147,7 @@ static void LScreen_MouseUp(struct LScreen* s, int idx) {
 	}
 }
 
-static void LScreen_MouseMove(struct LScreen* s, int idx, int deltaX, int deltaY) {
+static void LScreen_MouseMove(struct LScreen* s, int idx) {
 	struct LWidget* over = LScreen_WidgetAt(s, idx);
 	struct LWidget* prev = s->hoveredWidget;
 	cc_bool overSame = prev == over;

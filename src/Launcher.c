@@ -52,7 +52,7 @@ void Launcher_SetScreen(struct LScreen* screen) {
 	screen->Layout(screen);
 	/* for hovering over active button etc */
 	for (i = 0; i < Pointers_Count; i++) {
-		screen->MouseMove(screen, i, 0, 0);
+		screen->MouseMove(screen, i);
 	}
 
 	Launcher_Redraw();
@@ -219,9 +219,9 @@ static void OnPointerUp(void* obj, int idx) {
 	activeScreen->MouseUp(activeScreen, idx);
 }
 
-static void OnPointerMove(void* obj, int idx, int deltaX, int deltaY) {
+static void OnPointerMove(void* obj, int idx) {
 	if (!activeScreen) return;
-	activeScreen->MouseMove(activeScreen, idx, deltaX, deltaY);
+	activeScreen->MouseMove(activeScreen, idx);
 }
 
 

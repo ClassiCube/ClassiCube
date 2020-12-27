@@ -265,7 +265,6 @@ void Input_Clear(void) {
 /*########################################################################################################################*
 *----------------------------------------------------------Mouse----------------------------------------------------------*
 *#########################################################################################################################*/
-int Mouse_X, Mouse_Y;
 struct Pointer Pointers[INPUT_MAX_POINTERS];
 cc_bool Input_RawMode;
 
@@ -282,8 +281,6 @@ void Mouse_ScrollWheel(float delta) {
 }
 
 void Pointer_SetPosition(int idx, int x, int y) {
-	int deltaX = x - Mouse_X, deltaY = y - Mouse_Y;
-	Mouse_X = x; Mouse_Y = y;
 	if (x == Pointers[idx].x && y == Pointers[idx].y) return;
 	/* TODO: reset to -1, -1 when pointer is removed */
 	Pointers[idx].x = x; Pointers[idx].y = y;
@@ -291,7 +288,7 @@ void Pointer_SetPosition(int idx, int x, int y) {
 #ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;
 #endif
-	Event_RaiseMove(&PointerEvents.Moved, idx, deltaX, deltaY);
+	Event_RaiseInt(&PointerEvents.Moved, idx);
 }
 
 
@@ -358,7 +355,7 @@ static void KeyBind_Save(void) {
 void KeyBind_Set(KeyBind binding, int key) {
 	KeyBinds[binding] = key;
 	KeyBind_Save();
-	Event_RaiseInt(&InputEvents.BindChanged, binding);
+	Event_RaiseBind(&InputEvents.BindChanged, binding, KeyBind_IsPressed(binding));
 }
 
 /* Initialises and loads key bindings from options */
@@ -964,7 +961,7 @@ static void OnMouseWheel(void* obj, float delta) {
 	}
 }
 
-static void OnPointerMove(void* obj, int idx, int xDelta, int yDelta) {
+static void OnPointerMove(void* obj, int idx) {
 	struct Screen* s;
 	int i, x = Pointers[idx].x, y = Pointers[idx].y;
 
