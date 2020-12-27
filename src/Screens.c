@@ -243,7 +243,7 @@ static void HUDScreen_KeyUp(void* screen, int key) {
 
 static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	if (Input_TouchMode || Gui_GetInputGrab()) {
+	if (Input_TouchMode || Gui.InputGrab) {
 		return Elem_HandlesPointerDown(&s->hotbar, id, x, y);
 	}
 	return false;
@@ -676,7 +676,7 @@ static void TabListOverlay_Render(void* screen, double delta) {
 
 	Gfx_SetTexturing(true);
 	Elem_Render(title, delta);
-	grabbed = Gui_GetInputGrab();
+	grabbed = Gui.InputGrab;
 
 	for (i = 0; i < s->namesCount; i++) {
 		if (!s->textures[i].ID) continue;
@@ -858,7 +858,7 @@ static void ChatScreen_EnterChatInput(struct ChatScreen* s, cc_bool close) {
 	int defaultIndex;
 
 	s->grabsInput = false;
-	Camera_CheckFocus();
+	Gui_UpdateInputGrab();
 	Window_CloseKeyboard();
 	if (close) InputWidget_Clear(&s->input.base);
 
@@ -1152,7 +1152,7 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 
 static void ChatScreen_KeyUp(void* screen, int key) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	if (!s->grabsInput || (struct Screen*)s != Gui_GetInputGrab()) return;
+	if (!s->grabsInput || (struct Screen*)s != Gui.InputGrab) return;
 
 #ifdef CC_BUILD_WEB
 	/* See reason for this in HandleInputUp */
@@ -1312,7 +1312,7 @@ void ChatScreen_OpenInput(const cc_string* text) {
 	struct ChatScreen* s = &ChatScreen_Instance;
 	s->suppressNextPress = true;
 	s->grabsInput        = true;
-	Camera_CheckFocus();
+	Gui_UpdateInputGrab();
 	Window_OpenKeyboard(text, KEYBOARD_TYPE_TEXT);
 
 	String_Copy(&s->input.base.text, text);
@@ -1426,7 +1426,7 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 }
 
 static cc_bool InventoryScreen_IsHotbarActive(void) {
-	struct Screen* grabbed = Gui_GetInputGrab();
+	struct Screen* grabbed = Gui.InputGrab;
 	/* Only toggle hotbar when inventory or no grab screen is open */
 	return !grabbed || grabbed == (struct Screen*)&InventoryScreen_Instance;
 }
@@ -2059,8 +2059,7 @@ static void TouchScreen_ContextRecreated(void* screen) {
 }
 
 static void TouchScreen_Render(void* screen, double delta) {
-	if (Gui_GetInputGrab()) return;
-
+	if (Gui.InputGrab) return;
 	Gfx_SetTexturing(true);
 	Screen_Render2Widgets(screen, delta);
 	Gfx_SetTexturing(false);
@@ -2070,7 +2069,7 @@ static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	int i;
 	//Chat_Add1("POINTER DOWN: %i", &id);
-	if (Gui_GetInputGrab()) return false;
+	if (Gui.InputGrab) return false;
 
 	i = Screen_DoPointerDown(screen, id, x, y);
 	if (i >= ONSCREEN_MAX_BTNS) s->widgets[i]->active |= id;

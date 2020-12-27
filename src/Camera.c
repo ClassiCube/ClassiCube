@@ -99,7 +99,7 @@ static void PerspectiveCamera_UpdateMouseRotation(double delta) {
 }
 
 static void PerspectiveCamera_UpdateMouse(double delta) {
-	if (!Gui_GetInputGrab() && WindowInfo.Focused) Window_UpdateRawMouse();
+	if (!Gui.InputGrab && WindowInfo.Focused) Window_UpdateRawMouse();
 
 	PerspectiveCamera_UpdateMouseRotation(delta);
 	cam_deltaX = 0; cam_deltaY = 0;
@@ -263,7 +263,7 @@ void Camera_Register(struct Camera* cam) {
 
 static cc_bool cam_focussed;
 void Camera_CheckFocus(void) {
-	cc_bool focus = Gui_GetInputGrab() == NULL;
+	cc_bool focus = Gui.InputGrab == NULL;
 	if (focus == cam_focussed) return;
 	cam_focussed = focus;
 

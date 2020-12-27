@@ -46,6 +46,8 @@ CC_VAR extern struct _GuiData {
 	/* (internal) Bitmask of on-screen buttons, see Input.h */
 	int _onscreenButtons;
 	float RawTouchScale;
+	/* The highest priority screen that has grabbed input. */
+	struct Screen* InputGrab;
 } Gui;
 
 float Gui_Scale(float value);
@@ -217,6 +219,7 @@ CC_API struct Screen* Gui_GetInputGrab(void);
 struct Screen* Gui_GetBlocksWorld(void);
 /* Returns highest priority screen that is closable. */
 struct Screen* Gui_GetClosable(void);
+void Gui_UpdateInputGrab(void);
 void Gui_ShowPauseMenu(void);
 
 void Gui_LayoutAll(void);

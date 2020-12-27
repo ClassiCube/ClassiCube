@@ -201,7 +201,7 @@ void Gui_RemoveCore(struct Screen* s) {
 }
 
 CC_NOINLINE static void Gui_OnScreensChanged(void) {
-	Camera_CheckFocus();
+	Gui_UpdateInputGrab();
 	InputHandler_OnScreensChanged();
 }
 
@@ -244,6 +244,11 @@ struct Screen* Gui_GetClosable(void) {
 		if (Gui_Screens[i]->closable) return Gui_Screens[i];
 	}
 	return NULL;
+}
+
+void Gui_UpdateInputGrab(void) {
+	Gui.InputGrab = Gui_GetInputGrab();
+	Camera_CheckFocus();
 }
 
 void Gui_ShowPauseMenu(void) {

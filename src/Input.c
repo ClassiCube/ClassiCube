@@ -595,7 +595,7 @@ static void MouseStateRelease(int button) {
 void InputHandler_OnScreensChanged(void) {
 	input_lastClick = DateTime_CurrentUTC_MS();
 	input_pickingId = -1;
-	if (!Gui_GetInputGrab()) return;
+	if (!Gui.InputGrab) return;
 
 	/* If input is grabbed, then the mouse isn't used for picking blocks in world anymore. */
 	/* So release all mouse buttons, since game stops sending PlayerClick during grabbed input */
@@ -760,7 +760,7 @@ void InputHandler_PickBlocks(void) {
 
 	if (delta < 250) return; /* 4 times per second */
 	input_lastClick = now;
-	if (Gui_GetInputGrab()) return;
+	if (Gui.InputGrab) return;
 
 	left   = KeyBind_IsPressed(KEYBIND_DELETE_BLOCK);
 	middle = KeyBind_IsPressed(KEYBIND_PICK_BLOCK);
@@ -847,7 +847,7 @@ static void InputHandler_CheckZoomFov(void* obj) {
 }
 
 static cc_bool HandleBlockKey(int key) {
-	if (Gui_GetInputGrab()) return false;
+	if (Gui.InputGrab) return false;
 
 	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) {
 		MouseStatePress(MOUSE_LEFT);
@@ -928,7 +928,7 @@ static void HandleHotkeyDown(int key) {
 
 	if (!hkey->StaysOpen) {
 		Chat_Send(&text, false);
-	} else if (!Gui_GetInputGrab()) {
+	} else if (!Gui.InputGrab) {
 		ChatScreen_OpenInput(&text);
 	}
 }
@@ -1044,7 +1044,7 @@ static void OnInputDown(void* obj, int key, cc_bool was) {
 		if (s->VTABLE->HandlesInputDown(s, key)) return;
 	}
 
-	if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !Gui_GetInputGrab()) {
+	if ((key == KEY_ESCAPE || key == KEY_PAUSE) && !Gui.InputGrab) {
 #ifdef CC_BUILD_WEB
 		/* Can't do this in KeyUp, because pressing escape without having */
 		/* explicitly disabled mouse lock means a KeyUp event isn't sent. */
@@ -1085,7 +1085,7 @@ static void OnInputUp(void* obj, int key) {
 		s->VTABLE->OnInputUp(s, key);
 	}
 
-	if (Gui_GetInputGrab()) return;
+	if (Gui.InputGrab) return;
 	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) MouseStateRelease(MOUSE_LEFT);
 	if (key == KeyBinds[KEYBIND_PLACE_BLOCK])  MouseStateRelease(MOUSE_RIGHT);
 	if (key == KeyBinds[KEYBIND_PICK_BLOCK])   MouseStateRelease(MOUSE_MIDDLE);
