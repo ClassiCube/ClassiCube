@@ -661,6 +661,11 @@ static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
 static cc_bool gfx_alphaTesting, gfx_alphaBlending;
 static cc_bool gfx_depthTesting, gfx_depthWriting;
 
+/* NOTE: Although SetRenderState is okay to call on a lost device, it's also possible */
+/*   the context is lost because the device was never created to begin with!          */
+/* In that case, device will be NULL, so calling SetRenderState will crash the game.  */
+/*  (see Gfx_Create, TryCreateDevice, Gfx_TryRestoreContext)                          */
+
 void Gfx_SetFaceCulling(cc_bool enabled) {
 	D3DCULL mode = enabled ? D3DCULL_CW : D3DCULL_NONE;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_CULLMODE, mode);
@@ -669,12 +674,16 @@ void Gfx_SetFaceCulling(cc_bool enabled) {
 void Gfx_SetFog(cc_bool enabled) {
 	if (gfx_fogEnabled == enabled) return;
 	gfx_fogEnabled = enabled;
+
+	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, enabled);
 }
 
 void Gfx_SetFogCol(PackedCol col) {
 	if (col == gfx_fogCol) return;
 	gfx_fogCol = col;
+
+	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR, gfx_fogCol);
 }
 
@@ -684,6 +693,7 @@ void Gfx_SetFogDensity(float value) {
 	gfx_fogDensity = value;
 
 	raw.f = value;
+	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGDENSITY, raw.u);
 }
 
@@ -693,6 +703,7 @@ void Gfx_SetFogEnd(float value) {
 	gfx_fogEnd = value;
 
 	raw.f = value;
+	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGEND, raw.u);
 }
 
@@ -702,39 +713,48 @@ void Gfx_SetFogMode(FogFunc func) {
 	if (mode == gfx_fogMode) return;
 
 	gfx_fogMode = mode;
+	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGTABLEMODE, mode);
 }
 
 void Gfx_SetAlphaTest(cc_bool enabled) {
 	if (gfx_alphaTesting == enabled) return;
 	gfx_alphaTesting = enabled;
+
+	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHATESTENABLE, enabled);
 }
 
 void Gfx_SetAlphaBlending(cc_bool enabled) {
 	if (gfx_alphaBlending == enabled) return;
 	gfx_alphaBlending = enabled;
+
+	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, enabled);
 }
 
 void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 	D3DTEXTUREOP op = enabled ? D3DTOP_MODULATE : D3DTOP_SELECTARG1;
+	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, op);
 }
 
 void Gfx_ClearCol(PackedCol col) { gfx_clearCol = col; }
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	DWORD channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
+	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_COLORWRITEENABLE, channels);
 }
 
 void Gfx_SetDepthTest(cc_bool enabled) {
 	gfx_depthTesting = enabled;
+	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ZENABLE, enabled);
 }
 
 void Gfx_SetDepthWrite(cc_bool enabled) {
 	gfx_depthWriting = enabled;
+	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ZWRITEENABLE, enabled);
 }
 
