@@ -65,7 +65,9 @@ const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #if defined CC_BUILD_DARWIN
 #include <mach/mach_time.h>
 #include <mach-o/dyld.h>
+#if defined CC_BUILD_MACOS
 #include <ApplicationServices/ApplicationServices.h>
+#endif
 #elif defined CC_BUILD_SOLARIS
 #include <sys/filio.h>
 #elif defined CC_BUILD_BSD
@@ -1138,7 +1140,7 @@ cc_result Process_StartGame(const cc_string* args) {
 void Process_Exit(cc_result code) { exit(code); }
 
 /* Opening browser/starting shell is not really standardised */
-#if defined CC_BUILD_DARWIN
+#if defined CC_BUILD_MACOS
 void Process_StartOpen(const cc_string* args) {
 	UInt8 str[NATIVE_STR_LEN];
 	CFURLRef urlCF;
@@ -1728,15 +1730,23 @@ static void Platform_InitStopwatch(void) {
 	sw_freqDiv = (cc_uint64)tb.denom * 1000;
 }
 
-void Platform_Init(void) {
+#if defined CC_BUILD_MACOS
+static void Platform_InitSpecific(void) {
 	ProcessSerialNumber psn; /* TODO: kCurrentProcess */
-	Platform_InitPosix();
-	Platform_InitStopwatch();
-	
 	/* NOTE: Call as soon as possible, otherwise can't click on dialog boxes. */
 	GetCurrentProcess(&psn);
 	/* NOTE: TransformProcessType is macOS 10.3 or later */
 	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
+}
+#else
+/* Always foreground process on iOS */
+static void Platform_InitSpecific(void) { }
+#endif
+
+void Platform_Init(void) {
+	Platform_InitPosix();
+	Platform_InitStopwatch();
+	Platform_InitSpecific();
 }
 #elif defined CC_BUILD_WEB
 void Platform_Init(void) {

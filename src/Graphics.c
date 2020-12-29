@@ -1075,7 +1075,9 @@ void Gfx_OnWindowResize(void) { Gfx_LoseContext(" (resizing window)"); }
 #if defined CC_BUILD_WIN
 #include <windows.h>
 #include <GL/gl.h>
-#elif defined CC_BUILD_DARWIN
+#elif defined CC_BUILD_IOS
+#include <OpenGLES/ES2/gl.h>
+#elif defined CC_BUILD_MACOS
 #include <OpenGL/gl.h>
 #elif defined CC_BUILD_GLES
 #include <GLES2/gl2.h>

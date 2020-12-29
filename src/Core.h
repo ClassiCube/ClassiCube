@@ -182,10 +182,16 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_DARWIN
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
-#ifdef __x86_64__
+#if defined __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__
+#define CC_BUILD_GLES
+#define CC_BUILD_GLMODERN
+#define CC_BUILD_IOS
+#elif defined __x86_64__
 #define CC_BUILD_COCOA
+#define CC_BUILD_MACOS
 #else
 #define CC_BUILD_CARBON
+#define CC_BUILD_MACOS
 #endif
 #define CC_BUILD_CURL
 #define CC_BUILD_OPENAL
