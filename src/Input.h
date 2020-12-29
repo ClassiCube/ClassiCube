@@ -55,7 +55,7 @@ extern const char* const Input_Names[INPUT_COUNT];
 #define Key_IsControlPressed() (Input_Pressed[KEY_LCTRL]  || Input_Pressed[KEY_RCTRL])
 #define Key_IsShiftPressed()   (Input_Pressed[KEY_LSHIFT] || Input_Pressed[KEY_RSHIFT])
 
-#ifdef CC_BUILD_OSX
+#ifdef CC_BUILD_DARWIN
 /* macOS uses CMD instead of CTRL for clipboard and stuff */
 #define Key_IsActionPressed() Key_IsWinPressed()
 #else

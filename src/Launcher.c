@@ -187,7 +187,7 @@ static cc_bool IsShutdown(int key) {
 	if (key == KEY_F4 && Key_IsAltPressed()) return true;
 
 	/* On macOS, Cmd+Q should also end the process */
-#ifdef CC_BUILD_OSX
+#ifdef CC_BUILD_DARWIN
 	return key == 'Q' && Key_IsWinPressed();
 #else
 	return false;

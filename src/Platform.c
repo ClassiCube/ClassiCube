@@ -62,7 +62,7 @@ const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 #endif
 /* Platform specific include files (Try to share for UNIX-ish) */
-#if defined CC_BUILD_OSX
+#if defined CC_BUILD_DARWIN
 #include <mach/mach_time.h>
 #include <mach-o/dyld.h>
 #include <ApplicationServices/ApplicationServices.h>
@@ -316,7 +316,7 @@ cc_uint64 Stopwatch_Measure(void) {
 	/* time is a milliseconds double */
 	return (cc_uint64)(emscripten_get_now() * 1000);
 }
-#elif defined CC_BUILD_OSX
+#elif defined CC_BUILD_DARWIN
 cc_uint64 Stopwatch_Measure(void) { return mach_absolute_time(); }
 #elif defined CC_BUILD_SOLARIS
 cc_uint64 Stopwatch_Measure(void) { return gethrtime(); }
@@ -855,7 +855,7 @@ void Platform_LoadSysFonts(void) {
 	static const cc_string dirs[1] = {
 		String_FromConst("/system/data/fonts")
 	};
-#elif defined CC_BUILD_OSX
+#elif defined CC_BUILD_DARWIN
 	static const cc_string dirs[2] = {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
@@ -987,7 +987,7 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 
 	*success = set.fd_count != 0; return 0;
 }
-#elif defined CC_BUILD_OSX
+#elif defined CC_BUILD_DARWIN
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
 cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
@@ -1138,7 +1138,7 @@ cc_result Process_StartGame(const cc_string* args) {
 void Process_Exit(cc_result code) { exit(code); }
 
 /* Opening browser/starting shell is not really standardised */
-#if defined CC_BUILD_OSX
+#if defined CC_BUILD_DARWIN
 void Process_StartOpen(const cc_string* args) {
 	UInt8 str[NATIVE_STR_LEN];
 	CFURLRef urlCF;
@@ -1171,7 +1171,7 @@ void Process_StartOpen(const cc_string* args) {
 #endif
 
 /* Retrieving exe path is completely OS dependant */
-#if defined CC_BUILD_OSX
+#if defined CC_BUILD_DARWIN
 static cc_result Process_RawGetExePath(char* path, int* len) {
 	Mem_Set(path, '\0', NATIVE_STR_LEN);
 	cc_uint32 size = NATIVE_STR_LEN;
@@ -1369,7 +1369,7 @@ const char* const Updater_OGL = "ClassiCube.rpi";
 #else
 const char* const Updater_OGL = NULL;
 #endif
-#elif defined CC_BUILD_OSX
+#elif defined CC_BUILD_DARWIN
 #if __x86_64__
 const char* const Updater_OGL = "ClassiCube.64.osx";
 #elif __i386__
@@ -1499,7 +1499,7 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 #include <dlfcn.h>
 /* TODO: Should we use .bundle instead of .dylib? */
 
-#ifdef CC_BUILD_OSX
+#ifdef CC_BUILD_DARWIN
 const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 #else
 const cc_string DynamicLib_Ext = String_FromConst(".so");
@@ -1717,7 +1717,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return true;
 }
 
-#if defined CC_BUILD_OSX
+#if defined CC_BUILD_DARWIN
 static void Platform_InitStopwatch(void) {
 	mach_timebase_info_data_t tb = { 0 };
 	mach_timebase_info(&tb);
@@ -1870,7 +1870,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	int i, count;
 	argc--; argv++; /* skip executable path argument */
 
-#ifdef CC_BUILD_OSX
+#ifdef CC_BUILD_DARWIN
 	if (argc) {
 		static const cc_string psn = String_FromConst("-psn_0_");
 		cc_string arg0 = String_FromReadonly(argv[0]);
@@ -1914,7 +1914,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 		if (path[i] == '/') break;
 	}
 
-#ifdef CC_BUILD_OSX
+#ifdef CC_BUILD_DARWIN
 	static const cc_string bundle = String_FromConst(".app/Contents/MacOS/");
 	cc_string raw = String_Init(path, len, 0);
 

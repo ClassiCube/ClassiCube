@@ -179,7 +179,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_EGL
 #endif
 #elif defined __APPLE__
-#define CC_BUILD_OSX
+#define CC_BUILD_DARWIN
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #ifdef __x86_64__

@@ -716,7 +716,7 @@ struct SysFont {
 	cc_uint16 widths[256]; /* cached width of each character glyph */
 	FT_BitmapGlyph glyphs[256];        /* cached glyphs */
 	FT_BitmapGlyph shadow_glyphs[256]; /* cached glyphs (for back layer shadow) */
-#ifdef CC_BUILD_OSX
+#ifdef CC_BUILD_DARWIN
 	char filename[FILENAME_SIZE + 1];
 #endif
 };
@@ -760,7 +760,7 @@ static cc_result SysFont_Init(const cc_string* path, struct SysFont* font, FT_Op
 	cc_file file;
 	cc_uint32 size;
 	cc_result res;
-#ifdef CC_BUILD_OSX
+#ifdef CC_BUILD_DARWIN
 	cc_string filename;
 #endif
 
@@ -787,7 +787,7 @@ static cc_result SysFont_Init(const cc_string* path, struct SysFont* font, FT_Op
 	Stream_ReadonlyBuffered(&font->src, &font->file, font->buffer, sizeof(font->buffer));
 
 	/* For OSX font suitcase files */
-#ifdef CC_BUILD_OSX
+#ifdef CC_BUILD_DARWIN
 	String_InitArray_NT(filename, font->filename);
 	String_Copy(&filename, path);
 	font->filename[filename.length] = '\0';

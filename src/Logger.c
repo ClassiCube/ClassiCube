@@ -29,7 +29,7 @@
 #include <signal.h>
 #include <sys/ucontext.h>
 #endif
-#ifdef CC_BUILD_OSX
+#ifdef CC_BUILD_DARWIN
 /* Need this to detect macOS < 10.4, and switch to NS* api instead if so */
 #include <AvailabilityMacros.h>
 #endif
@@ -308,7 +308,7 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	_Unwind_Backtrace(UnwindFrame, trace);
 	String_AppendConst(trace, _NL);
 }
-#elif defined CC_BUILD_OSX
+#elif defined CC_BUILD_DARWIN
 /* backtrace is only available on macOS since 10.5 */
 void Logger_Backtrace(cc_string* trace, void* ctx) {
 	void* addrs[40];
@@ -430,7 +430,7 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#error "Unknown CPU architecture"
 #endif
 }
-#elif defined CC_BUILD_OSX && __DARWIN_UNIX03
+#elif defined CC_BUILD_DARWIN && __DARWIN_UNIX03
 /* See /usr/include/mach/i386/_structs.h (macOS 10.5+) */
 static void PrintRegisters(cc_string* str, void* ctx) {
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
@@ -440,6 +440,12 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 #elif defined __x86_64__
 	#define REG_GET(reg, ign) &r->__ss.__r##reg
 	Dump_X64()
+#elif defined __arm__
+	#define REG_GNUM(num)     &r->__ss.__r[num]
+	#define REG_GET(reg, ign) &r->__ss.__ ## reg
+	#define REG_GET_FP()      &r->__ss.__r[11]
+	#define REG_GET_IP()      &r->__ss.__pc
+	Dump_ARM32()
 #elif defined __ppc__
 	#define REG_GNUM(num)     &r->__ss.__r##num
 	#define REG_GET_PC()      &r->__ss.__srr0
@@ -450,7 +456,7 @@ static void PrintRegisters(cc_string* str, void* ctx) {
 	#error "Unknown CPU architecture"
 #endif
 }
-#elif defined CC_BUILD_OSX
+#elif defined CC_BUILD_DARWIN
 /* See /usr/include/mach/i386/thread_status.h (macOS 10.4) */
 static void PrintRegisters(cc_string* str, void* ctx) {
 	mcontext_t r = ((ucontext_t*)ctx)->uc_mcontext;
@@ -653,7 +659,7 @@ static void DumpMisc(void* ctx) {
 
 	close(fd);
 }
-#elif defined CC_BUILD_OSX
+#elif defined CC_BUILD_DARWIN
 #include <mach-o/dyld.h>
 
 static void DumpMisc(void* ctx) {
