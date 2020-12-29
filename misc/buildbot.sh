@@ -18,11 +18,11 @@
 
 # paths, change these as needed
 SOURCE_DIR=~/client
-WEB_CC=~/emsdk/upstream/emscripten/emcc
-MAC32_CC=~/osx/target/bin/o32-clang
-MAC64_CC=~/osx/target/bin/o64-clang
-WIN32_CC=i686-w64-mingw32-gcc
-WIN64_CC=x86_64-w64-mingw32-gcc
+WEB_CC="~/emsdk/emscripten/1.38.31/emcc"
+MAC32_CC="~/osx/target/bin/o32-clang"
+MAC64_CC="~/osx/target/bin/o64-clang"
+WIN32_CC="i686-w64-mingw32-gcc"
+WIN64_CC="x86_64-w64-mingw32-gcc"
 
 # to simplify stuff
 ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -Qn -w"
@@ -30,7 +30,7 @@ WIN32_FLAGS="-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN"
 WIN64_FLAGS="-mwindows -nostartfiles -Wl,-emain_real -DCC_NOMAIN"
 NIX32_FLAGS="-no-pie -fno-pie -m32 -fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
 NIX64_FLAGS="-no-pie -fno-pie -m64 -fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
-RPI32_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
+RPI32_FLAGS="-I ~/rpi/include -L ~/rpi/lib -fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
 MACOS_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
 
 # I cloned https://github.com/raspberrypi/tools to get prebuilt cross compilers
@@ -74,7 +74,7 @@ build_mac32() {
   echo "Building mac32.."
   cp $SOURCE_DIR/misc/CCicon_mac32 $SOURCE_DIR/src/CCicon_mac32.o
   rm cc-osx32
-  $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenGL
+  $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenGL -lgcc_s.1
 }
 
 build_mac64() {
@@ -99,7 +99,7 @@ build_rpi() {
   echo "Building rpi.."
   cp $SOURCE_DIR/misc/CCicon_rpi $SOURCE_DIR/src/CCicon_rpi.o
   rm cc-rpi
-  $RPI_CC *.c $ALL_FLAGS $LINUX_FLAGS CCicon_rpi.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -DCC_BUILD_RPI -I ~/rpi/include -L ~/rpi/lib -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
+  $RPI_CC *.c $ALL_FLAGS $RPI32_FLAGS CCicon_rpi.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -DCC_BUILD_RPI -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
 }
 
 # -----------------------------
@@ -120,4 +120,4 @@ build_web
 build_rpi
 
 cd ~
-python notify.py
+python3 notify.py
