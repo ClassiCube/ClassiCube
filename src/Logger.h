@@ -8,7 +8,7 @@
 typedef cc_bool (*Logger_DescribeError)(cc_result res, cc_string* dst);
 typedef void (*Logger_DoWarn)(const cc_string* msg);
 /* Informs the user about a non-fatal error. */
-/* By default this shows a message box, but changes to in-game chat when game is running. */
+/*  By default this shows a message box, but changes to in-game chat when game is running. */
 extern Logger_DoWarn Logger_WarnFunc;
 /* The title shown for warning dialogs. */
 extern const char* Logger_DialogTitle;

@@ -1026,13 +1026,13 @@ static void LTable_MouseMove(void* widget, int idx, cc_bool wasOver) {
 static void LTable_RowsClick(struct LTable* w, int idx) {
 	int mouseY = Pointers[idx].y - w->rowsBegY;
 	int row    = w->topRow + mouseY / w->rowHeight;
-	TimeMS now;
+	cc_uint64 now;
 
 	LTable_SetSelectedTo(w, row);
-	now = DateTime_CurrentUTC_MS();
+	now = Stopwatch_Measure();
 
 	/* double click on row to join */
-	if (w->_lastClick + 1000 >= now && row == w->_lastRow) {
+	if (Stopwatch_ElapsedMS(w->_lastClick, now) < 1000 && row == w->_lastRow) {
 		Launcher_ConnectToServer(&LTable_Get(row)->hash);
 	}
 

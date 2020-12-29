@@ -180,7 +180,7 @@ struct LTable {
 
 	float _wheelAcc; /* mouse wheel accumulator */
 	int _lastRow;    /* last clicked row (for doubleclick join) */
-	TimeMS _lastClick; /* time of last mouse click on a row */
+	cc_uint64 _lastClick; /* timestamp of last mouse click on a row */
 };
 /* Gets the current ith row */
 #define LTable_Get(row) (&FetchServersTask.servers[FetchServersTask.servers[row]._order])

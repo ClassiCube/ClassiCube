@@ -22,6 +22,7 @@
 #include "Protocol.h"
 #include "Inventory.h"
 #include "Platform.h"
+#include "Input.h"
 
 static char nameBuffer[STRING_SIZE];
 static char motdBuffer[STRING_SIZE];

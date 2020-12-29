@@ -1005,7 +1005,7 @@ static void WorkerLoop(void) {
 		request.result = Http_BackendDo(&request, &url);
 		end = Stopwatch_Measure();
 
-		elapsed = Stopwatch_ElapsedMilliseconds(beg, end);
+		elapsed = Stopwatch_ElapsedMS(beg, end);
 		Platform_Log4("HTTP: result %i (http %i) in %i ms (%i bytes)",
 					&request.result, &request.statusCode, &elapsed, &request.size);
 		Http_FinishRequest(&request);

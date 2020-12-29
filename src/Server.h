@@ -1,13 +1,10 @@
 #ifndef CC_SERVERCONNECTION_H
 #define CC_SERVERCONNECTION_H
-#include "Input.h"
 #include "Vectors.h"
 /* Represents a connection to either a multiplayer or an internal singleplayer server.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
 
-struct RayTracer;
-struct Stream;
 struct IGameComponent;
 struct ScheduledTask;
 extern struct IGameComponent Server_Component;

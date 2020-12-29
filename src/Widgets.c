@@ -17,6 +17,7 @@
 #include "Logger.h"
 #include "Bitmap.h"
 #include "Block.h"
+#include "Input.h"
 
 #define Widget_UV(u1,v1, u2,v2) Tex_UV(u1/256.0f,v1/256.0f, u2/256.0f,v2/256.0f)
 static void Widget_NullFunc(void* widget) { }

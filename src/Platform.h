@@ -141,7 +141,7 @@ CC_API cc_uint64 Stopwatch_Measure(void);
 /* Returns total elapsed microseconds between two stopwatch measurements. */
 CC_API cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end);
 /* Returns total elapsed milliseconds between two stopwatch measurements. */
-int Stopwatch_ElapsedMilliseconds(cc_uint64 beg, cc_uint64 end);
+int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end);
 
 /* Returns non-zero if the given directory exists. */
 CC_API int Directory_Exists(const cc_string* path);
@@ -206,6 +206,7 @@ CC_API void  Waitable_Wait(void* handle);
 /* Blocks the calling thread until the waitable gets signalled, or milliseconds delay passes. */
 CC_API void  Waitable_WaitFor(void* handle, cc_uint32 milliseconds);
 
+/* Calls SysFonts_Register on each font that is available on this platform. */
 void Platform_LoadSysFonts(void);
 
 /* Allocates a new socket. */

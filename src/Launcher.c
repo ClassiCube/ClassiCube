@@ -84,14 +84,14 @@ static cc_bool UsingBitmappedFont(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------Starter/Updater--------------------------------------------------*
 *#########################################################################################################################*/
-static TimeMS lastJoin;
+static cc_uint64 lastJoin;
 cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const cc_string* ip, const cc_string* port, const cc_string* server) {
 	cc_string args; char argsBuffer[512];
 	TimeMS now;
 	cc_result res;
 	
-	now = DateTime_CurrentUTC_MS();
-	if (lastJoin + 1000 > now) return false;
+	now = Stopwatch_Measure();
+	if (Stopwatch_ElapsedMS(lastJoin, now) < 1000) return false;
 	lastJoin = now;
 
 	/* Save resume info */

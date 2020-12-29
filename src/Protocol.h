@@ -4,6 +4,7 @@
 /* Implements network protocols for original classic, CPE, and WoM textures.
    Copyright 2014-2020 ClassiCube | Licensed under BSD-3
 */
+struct RayTracer;
 
 enum OPCODE_ {
 	OPCODE_HANDSHAKE,             OPCODE_PING,

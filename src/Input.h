@@ -9,7 +9,7 @@ struct IGameComponent;
 struct StringsBuffer;
 extern struct IGameComponent Input_Component;
 
-enum Key {
+enum InputButtons {
 	KEY_NONE, /* Unrecognised key */
 
 	KEY_F1, KEY_F2, KEY_F3, KEY_F4, KEY_F5, KEY_F6, KEY_F7, KEY_F8, KEY_F9, KEY_F10,
@@ -47,7 +47,7 @@ enum Key {
 	INPUT_COUNT
 };
 
-/* Simple names for each keyboard button. */
+/* Simple names for each input button. */
 extern const char* const Input_Names[INPUT_COUNT];
 
 #define Key_IsWinPressed()     (Input_Pressed[KEY_LWIN]   || Input_Pressed[KEY_RWIN])
@@ -62,7 +62,7 @@ extern const char* const Input_Names[INPUT_COUNT];
 #define Key_IsActionPressed() Key_IsControlPressed()
 #endif
 
-/* Pressed state of each keyboard button. Use Input_Set to change. */
+/* Pressed state of each input button. Use Input_Set to change. */
 extern cc_bool Input_Pressed[INPUT_COUNT];
 /* Sets Input_Pressed[key] to true and raises InputEvents.Down */
 void Input_SetPressed(int key);
@@ -71,7 +71,7 @@ void Input_SetReleased(int key);
 /* Calls either Input_SetPressed or Input_SetReleased */
 void Input_Set(int key, int pressed);
 void Input_SetNonRepeatable(int key, int pressed);
-/* Resets all keyboard buttons to released state. (Input_SetReleased) */
+/* Resets all input buttons to released state. (Input_SetReleased) */
 void Input_Clear(void);
 
 /* Whether raw mouse/touch input is currently being listened for. */
