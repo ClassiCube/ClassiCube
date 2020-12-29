@@ -300,7 +300,7 @@ static const struct ScreenVTABLE HUDScreen_VTABLE = {
 	HUDScreen_Init,        HUDScreen_Update,    HUDScreen_Free,
 	HUDScreen_Render,      HUDScreen_BuildMesh,
 	HUDScreen_KeyDown,     HUDScreen_KeyUp,     Screen_FKeyPress, Screen_FText,
-	HUDscreen_PointerDown, Screen_FPointer,     Screen_FPointer,  HUDscreen_MouseScroll,
+	HUDscreen_PointerDown, Screen_PointerUp,    Screen_FPointer,  HUDscreen_MouseScroll,
 	HUDScreen_Layout,      HUDScreen_ContextLost, HUDScreen_ContextRecreated
 };
 void HUDScreen_Show(void) {
@@ -714,7 +714,7 @@ static const struct ScreenVTABLE TabListOverlay_VTABLE = {
 	TabListOverlay_Init,        Screen_NullUpdate,     TabListOverlay_Free,
 	TabListOverlay_Render,      TabListOverlay_BuildMesh,
 	Screen_FInput,              TabListOverlay_KeyUp,  Screen_FKeyPress, Screen_FText,
-	TabListOverlay_PointerDown, Screen_FPointer,       Screen_FPointer,  Screen_FMouseScroll,
+	TabListOverlay_PointerDown, Screen_PointerUp,      Screen_FPointer,  Screen_FMouseScroll,
 	TabListOverlay_Layout, TabListOverlay_ContextLost, TabListOverlay_ContextRecreated
 };
 void TabListOverlay_Show(void) {
@@ -1292,7 +1292,7 @@ static const struct ScreenVTABLE ChatScreen_VTABLE = {
 	ChatScreen_Init,        Screen_NullUpdate, ChatScreen_Free,    
 	ChatScreen_Render,      ChatScreen_BuildMesh,
 	ChatScreen_KeyDown,     ChatScreen_KeyUp,  ChatScreen_KeyPress, ChatScreen_TextChanged,
-	ChatScreen_PointerDown, Screen_FPointer,   Screen_FPointer,     ChatScreen_MouseScroll,
+	ChatScreen_PointerDown, Screen_PointerUp,  Screen_FPointer,     ChatScreen_MouseScroll,
 	ChatScreen_Layout, ChatScreen_ContextLost, ChatScreen_ContextRecreated
 };
 void ChatScreen_Show(void) {
@@ -1448,9 +1448,9 @@ static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 	return true;
 }
 
-static int InventoryScreen_PointerUp(void* screen, int id, int x, int y) {
+static void InventoryScreen_PointerUp(void* screen, int id, int x, int y) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	return Elem_HandlesPointerUp(&s->table, id, x, y);
+	Elem_HandlesPointerUp(&s->table, id, x, y);
 }
 
 static int InventoryScreen_PointerMove(void* screen, int id, int x, int y) {
@@ -1655,7 +1655,7 @@ static const struct ScreenVTABLE LoadingScreen_VTABLE = {
 	LoadingScreen_Init,   Screen_NullUpdate, LoadingScreen_Free, 
 	LoadingScreen_Render, LoadingScreen_BuildMesh,
 	Screen_TInput,        Screen_InputUp,    Screen_TKeyPress,   Screen_TText,
-	Screen_TPointer,      Screen_FPointer,   Screen_TPointer,    Screen_TMouseScroll,
+	Screen_TPointer,      Screen_PointerUp,  Screen_TPointer,    Screen_TMouseScroll,
 	LoadingScreen_Layout, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void LoadingScreen_Show(const cc_string* title, const cc_string* message) {
@@ -1730,7 +1730,7 @@ static const struct ScreenVTABLE GeneratingScreen_VTABLE = {
 	GeneratingScreen_Init,   GeneratingScreen_Update, GeneratingScreen_Free,
 	GeneratingScreen_Render, LoadingScreen_BuildMesh,
 	Screen_TInput,           Screen_InputUp,    Screen_TKeyPress,   Screen_TText,
-	Screen_TPointer,         Screen_FPointer,   Screen_FPointer,    Screen_TMouseScroll,
+	Screen_TPointer,         Screen_PointerUp,  Screen_FPointer,    Screen_TMouseScroll,
 	LoadingScreen_Layout, LoadingScreen_ContextLost, LoadingScreen_ContextRecreated
 };
 void GeneratingScreen_Show(void) {
@@ -1874,7 +1874,7 @@ static const struct ScreenVTABLE DisconnectScreen_VTABLE = {
 	DisconnectScreen_Init,   DisconnectScreen_Update, DisconnectScreen_Free,
 	DisconnectScreen_Render, Screen_BuildMesh,
 	Screen_InputDown,        Screen_InputUp,          Screen_TKeyPress, Screen_TText,
-	Menu_PointerDown,        Screen_FPointer,         Menu_PointerMove, Screen_TMouseScroll,
+	Menu_PointerDown,        Screen_PointerUp,        Menu_PointerMove, Screen_TMouseScroll,
 	DisconnectScreen_Layout, DisconnectScreen_ContextLost, DisconnectScreen_ContextRecreated
 };
 void DisconnectScreen_Show(const cc_string* title, const cc_string* message) {
@@ -2081,7 +2081,7 @@ static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	return i >= 0;
 }
 
-static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
+static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
 	int i;
 	//Chat_Add1("POINTER UP: %i", &id);
@@ -2095,9 +2095,8 @@ static int TouchScreen_PointerUp(void* screen, int id, int x, int y) {
 			Input_Set(KeyBinds[s->descs[i].bind], false);
 		}
 		s->btns[i].active &= ~id;
-		return true;
+		return;
 	}
-	return false;
 }
 
 static void TouchScreen_Layout(void* screen) {

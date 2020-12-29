@@ -1003,7 +1003,7 @@ static void OnPointerUp(void* obj, int idx) {
 	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->dirty = true;
-		if (s->VTABLE->HandlesPointerUp(s, 1 << idx, x, y)) return;
+		s->VTABLE->OnPointerUp(s, 1 << idx, x, y);
 	}
 }
 

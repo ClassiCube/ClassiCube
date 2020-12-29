@@ -72,7 +72,7 @@ struct ScreenVTABLE {
 	void (*BuildMesh)(void* elem);
 	/* Returns non-zero if an input press is handled. */
 	int  (*HandlesInputDown)(void* elem, int key);
-	/* Called when an input key or buttonm is released */
+	/* Called when an input key or button is released */
 	void (*OnInputUp)(void* elem, int key);
 	/* Returns non-zero if a key character press is handled. */
 	int  (*HandlesKeyPress)(void* elem, char keyChar);
@@ -80,8 +80,8 @@ struct ScreenVTABLE {
 	int  (*HandlesTextChanged)(void* elem, const cc_string* str);
 	/* Returns non-zero if a pointer press is handled. */
 	int  (*HandlesPointerDown)(void* elem, int id, int x, int y);
-	/* Returns non-zero if a pointer release is handled. */
-	int  (*HandlesPointerUp)(void* elem,   int id, int x, int y);
+	/* Called when a pointer is released. */
+	void (*OnPointerUp)(void* elem,   int id, int x, int y);
 	/* Returns non-zero if a pointer movement is handled. */
 	int  (*HandlesPointerMove)(void* elem, int id, int x, int y);
 	/* Returns non-zero if a mouse wheel scroll is handled. */
@@ -126,6 +126,9 @@ int  Screen_InputDown(void* screen, int key);
 /* Default input up implementation for a screen */
 /*  (does nothing) */
 void Screen_InputUp(void*   screen, int key);
+/* Default pointer release implementation for a screen */
+/*  (does nothing) */
+void Screen_PointerUp(void* s, int id, int x, int y);
 
 typedef void (*Widget_LeftClick)(void* screen, void* widget);
 struct WidgetVTABLE {
