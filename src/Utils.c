@@ -317,7 +317,7 @@ cc_bool EntryList_Remove(struct StringsBuffer* list, const cc_string* key, char 
 }
 
 void EntryList_Set(struct StringsBuffer* list, const cc_string* key, const cc_string* value, char separator) {
-	cc_string entry; char entryBuffer[1024];
+	cc_string entry; char entryBuffer[3072];
 	String_InitArray(entry, entryBuffer);
 
 	if (value->length) {
