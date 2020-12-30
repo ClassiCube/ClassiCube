@@ -224,7 +224,7 @@ int Convert_FromBase64(const char* src, int len, cc_uint8* dst) {
 *--------------------------------------------------------EntryList--------------------------------------------------------*
 *#########################################################################################################################*/
 void EntryList_Load(struct StringsBuffer* list, const char* file, char separator, EntryList_Filter filter) {
-	cc_string entry; char entryBuffer[768];
+	cc_string entry; char entryBuffer[1024];
 	cc_string path;
 	cc_string key, value;
 	int lineLen, maxLen;
