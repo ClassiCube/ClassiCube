@@ -225,16 +225,16 @@ int Convert_FromBase64(const char* src, int len, cc_uint8* dst) {
 *#########################################################################################################################*/
 void EntryList_Load(struct StringsBuffer* list, const char* file, char separator, EntryList_Filter filter) {
 	cc_string entry; char entryBuffer[768];
-	cc_string path;  char pathBuffer[FILENAME_SIZE];
+	cc_string path;
 	cc_string key, value;
-	int lineLen;
+	int lineLen, maxLen;
 
 	cc_uint8 buffer[2048];
 	struct Stream stream, buffered;
 	cc_result res;
 
-	String_InitArray(path, pathBuffer);
-	String_AppendConst(&path, file);
+	path   = String_FromReadonly(file);
+	maxLen = list->_lenMask ? list->_lenMask : STRINGSBUFFER_DEF_LEN_MASK;
 	
 	res = Stream_OpenFile(&stream, &path);
 	if (res == ReturnCode_FileNotFound) return;
@@ -258,7 +258,7 @@ void EntryList_Load(struct StringsBuffer* list, const char* file, char separator
 
 		/* Sometimes file becomes corrupted and replaced with NULL */
 		/* If don't prevent this here, client aborts in StringsBuffer_Add */
-		if (entry.length > STRINGSBUFFER_LEN_MASK) {
+		if (entry.length > maxLen) {
 			lineLen      = entry.length;
 			entry.length = 0;
 			String_Format2(&entry, "Skipping very long (%i characters) line in %c, file may be corrupted", &lineLen, file);

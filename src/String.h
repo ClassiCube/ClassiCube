@@ -207,7 +207,8 @@ CC_API cc_bool Convert_ParseBool(const cc_string*   str, cc_bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256
-#define STRINGSBUFFER_LEN_MASK  0x1FFUL
+#define STRINGSBUFFER_DEF_LEN_SHIFT 9
+#define STRINGSBUFFER_DEF_LEN_MASK  0x1FFUL
 
 struct StringsBuffer {
 	char*      textBuffer;  /* Raw characters of all entries */
@@ -223,6 +224,8 @@ struct StringsBuffer {
 	int _lenMask;
 };
 
+/* Sets the number of bits in an entry's flags that are used to store its length. */
+/*  (e.g. if bits is 9, then the maximum length of an entry is 2^9-1 = 511) */
 void StringsBuffer_SetLengthBits(struct StringsBuffer* buffer, int bits);
 /* Resets counts to 0, and frees any allocated memory. */
 CC_NOINLINE void StringsBuffer_Clear(struct StringsBuffer* buffer);

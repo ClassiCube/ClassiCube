@@ -924,7 +924,7 @@ static void MainScreen_TickGetToken(struct MainScreen* s) {
 		return;
 	}
 
-	if (String_CaselessEquals(&GetTokenTask.username, &s->iptUsername.text)) {
+	if (!GetTokenTask.error && String_CaselessEquals(&GetTokenTask.username, &s->iptUsername.text)) {
 		/* Already logged in, go straight to fetching servers */
 		MainScreen_LoginPhase2(s, &GetTokenTask.username);
 	} else {

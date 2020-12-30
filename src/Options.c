@@ -33,6 +33,8 @@ static cc_bool Options_LoadFilter(const cc_string* entry) {
 }
 
 void Options_Load(void) {
+	/* Increase from max 512 to 2048 per entry */
+	StringsBuffer_SetLengthBits(&Options, 11);
 	EntryList_Load(&Options, "options-default.txt", '=', NULL);
 	EntryList_Load(&Options, "options.txt",         '=', NULL);
 }

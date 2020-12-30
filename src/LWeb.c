@@ -9,6 +9,8 @@
 #include "Options.h"
 #include "PackedCol.h"
 #include "Errors.h"
+#include "Game.h"
+#include "Utils.h"
 
 /*########################################################################################################################*
 *----------------------------------------------------------JSON-----------------------------------------------------------*
@@ -239,6 +241,8 @@ static void GetTokenTask_OnValue(struct JsonContext* ctx, const cc_string* str) 
 		String_Copy(&GetTokenTask.token, str);
 	} else if (String_CaselessEqualsConst(&ctx->curKey, "username")) {
 		String_Copy(&GetTokenTask.username, str);
+	} else if (String_CaselessEqualsConst(&ctx->curKey, "errors")) {
+		if (str->length) GetTokenTask.error = true;
 	}
 }
 
@@ -255,6 +259,7 @@ void GetTokenTask_Run(void) {
 	LWebTask_Reset(&GetTokenTask.Base);
 	String_InitArray(GetTokenTask.token,    tokenBuffer);
 	String_InitArray(GetTokenTask.username, userBuffer);
+	GetTokenTask.error = false;
 
 	GetTokenTask.Base.Handle = GetTokenTask_Handle;
 	GetTokenTask.Base.reqID  = Http_AsyncGetDataEx(&url, false, NULL, NULL, &ccCookies);
@@ -416,6 +421,7 @@ static void FetchServersTask_Handle(cc_uint8* data, cc_uint32 len) {
 	int count;
 	Mem_Free(FetchServersTask.servers);
 	Mem_Free(FetchServersTask.orders);
+	Session_Save();
 
 	FetchServersTask.numServers = 0;
 	FetchServersTask.servers    = NULL;
@@ -533,7 +539,7 @@ void FetchUpdateTask_Run(cc_bool release, cc_bool d3d9) {
 
 
 /*########################################################################################################################*
-*-----------------------------------------------------FetchFlagsTask-----------------------------------------------------*
+*-----------------------------------------------------FetchFlagsTask------------------------------------------------------*
 *#########################################################################################################################*/
 struct FetchFlagsData FetchFlagsTask;
 static int flagsCount, flagsCapacity;
@@ -638,5 +644,33 @@ void Flags_Free(void) {
 
     flagsCount = 0;
     FetchFlagsTask.count = 0;
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Session cache------------------------------------------------------*
+*#########################################################################################################################*/
+static cc_string sessionKey = String_FromConst("session");
+static cc_bool loadedSession;
+
+void Session_Load(void) {
+	cc_string session; char buffer[3072];
+	if (loadedSession) return;
+	loadedSession = true;
+	/* Increase from max 512 to 2048 per entry */
+	StringsBuffer_SetLengthBits(&ccCookies, 11);
+
+	String_InitArray(session, buffer);
+	Options_GetSecure(LOPT_SESSION, &session, &Game_Username);
+	if (!session.length) return;
+	EntryList_Set(&ccCookies, &sessionKey, &session, '=');
+}
+
+void Session_Save(void) {
+#ifdef CC_BUILD_WIN
+	cc_string session = EntryList_UNSAFE_Get(&ccCookies, &sessionKey, '=');
+	if (!session.length) return;
+	Options_SetSecure(LOPT_SESSION, &session, &Game_Username);
+#endif
 }
 #endif

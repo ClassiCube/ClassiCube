@@ -72,6 +72,8 @@
 #define OPT_TOUCH_SCALE "gui-touchscale"
 #define OPT_HTTP_ONLY "http-no-https"
 
+#define LOPT_SESSION "launcher-session"
+
 struct StringsBuffer;
 extern struct StringsBuffer Options;
 /* Frees any memory allocated in storing options. */

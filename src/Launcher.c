@@ -299,6 +299,8 @@ void Launcher_Run(void) {
 	Drawer2D_BlackTextShadows = true;
 	InitFramebuffer();
 
+	Options_UNSAFE_Get("launcher-cc-username", &Game_Username);
+	Session_Load();
 	Launcher_LoadSkin();
 	Launcher_Init();
 	Launcher_TryLoadTexturePack();

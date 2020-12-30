@@ -59,6 +59,7 @@ extern struct GetTokenTaskData {
 	struct LWebTask Base;
 	cc_string token;    /* Random CSRF token for logging in. */
 	cc_string username; /* Username if session is already logged in. */
+	cc_bool   error;    /* Whether a signin error occurred */
 } GetTokenTask;
 void GetTokenTask_Run(void);
 
@@ -118,4 +119,7 @@ void FetchFlagsTask_Add(const struct ServerInfo* server);
 struct Bitmap* Flags_Get(const struct ServerInfo* server);
 /* Frees all flag bitmaps. */
 void Flags_Free(void);
+
+void Session_Load(void);
+void Session_Save(void);
 #endif

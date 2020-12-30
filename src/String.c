@@ -756,7 +756,6 @@ cc_bool Convert_ParseBool(const cc_string* str, cc_bool* value) {
 *------------------------------------------------------StringsBuffer------------------------------------------------------*
 *#########################################################################################################################*/
 #define STRINGSBUFFER_BUFFER_EXPAND_SIZE 8192
-#define STRINGSBUFFER_DEFAULT_LEN_SHIFT 9
 
 #define StringsBuffer_GetOffset(raw)  ((raw) >> buffer->_lenShift)
 #define StringsBuffer_GetLength(raw)  ((raw)  & buffer->_lenMask)
@@ -771,7 +770,7 @@ CC_NOINLINE static void StringsBuffer_Init(struct StringsBuffer* buffer) {
 	buffer->_flagsCapacity = STRINGSBUFFER_FLAGS_DEF_ELEMS;
 
 	if (buffer->_lenShift) return;
-	StringsBuffer_SetLengthBits(buffer, STRINGSBUFFER_DEFAULT_LEN_SHIFT);
+	StringsBuffer_SetLengthBits(buffer, STRINGSBUFFER_DEF_LEN_SHIFT);
 }
 
 void StringsBuffer_SetLengthBits(struct StringsBuffer* buffer, int bits) {
