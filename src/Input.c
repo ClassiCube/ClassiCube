@@ -503,7 +503,7 @@ static void StoredHotkeys_LoadAll(void) {
 	int i;
 
 	for (i = 0; i < Options.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&Options, i);
+		StringsBuffer_UNSAFE_GetRaw(&Options, i, &entry);
 		String_UNSAFE_Separate(&entry, '=', &key, &value);
 
 		if (!String_CaselessStarts(&key, &prefix)) continue;

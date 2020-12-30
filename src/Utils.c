@@ -294,8 +294,8 @@ void EntryList_Save(struct StringsBuffer* list, const char* file) {
 	if (res) { Logger_SysWarn2(res, "creating", &path); return; }
 
 	for (i = 0; i < list->count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(list, i);
-		res   = Stream_WriteLine(&stream, &entry);
+		StringsBuffer_UNSAFE_GetRaw(list, i, &entry);
+		res = Stream_WriteLine(&stream, &entry);
 		if (res) { Logger_SysWarn2(res, "writing to", &path); break; }
 	}
 
@@ -335,7 +335,7 @@ cc_string EntryList_UNSAFE_Get(struct StringsBuffer* list, const cc_string* key,
 	int i;
 
 	for (i = 0; i < list->count; i++) {
-		curEntry = StringsBuffer_UNSAFE_Get(list, i);
+		StringsBuffer_UNSAFE_GetRaw(list, i, &curEntry);
 		String_UNSAFE_Separate(&curEntry, separator, &curKey, &curValue);
 
 		if (String_CaselessEquals(key, &curKey)) return curValue;
@@ -348,7 +348,7 @@ int EntryList_Find(struct StringsBuffer* list, const cc_string* key, char separa
 	int i;
 
 	for (i = 0; i < list->count; i++) {
-		curEntry = StringsBuffer_UNSAFE_Get(list, i);
+		StringsBuffer_UNSAFE_GetRaw(list, i, &curEntry);
 		String_UNSAFE_Separate(&curEntry, separator, &curKey, &curValue);
 
 		if (String_CaselessEquals(key, &curKey)) return i;

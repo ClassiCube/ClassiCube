@@ -207,7 +207,6 @@ CC_API cc_bool Convert_ParseBool(const cc_string*   str, cc_bool* value);
 
 #define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256
-#define STRINGSBUFFER_LEN_SHIFT 9
 #define STRINGSBUFFER_LEN_MASK  0x1FFUL
 
 struct StringsBuffer {
@@ -218,13 +217,19 @@ struct StringsBuffer {
 	int      _textCapacity, _flagsCapacity;
 	char     _defaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
 	cc_uint32 _defaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
+	/* Value to shift a flags value by to retrieve the offset */
+	int _lenShift;
+	/* Value to mask a flags value with to retrieve the length */
+	int _lenMask;
 };
 
+void StringsBuffer_SetLengthBits(struct StringsBuffer* buffer, int bits);
 /* Resets counts to 0, and frees any allocated memory. */
-CC_API void StringsBuffer_Clear(struct StringsBuffer* buffer);
+CC_NOINLINE void StringsBuffer_Clear(struct StringsBuffer* buffer);
 /* UNSAFE: Returns a direct pointer to the i'th string in the given buffer. */
 /* You MUST NOT change the characters of this string. Copy to another string if necessary.*/
 CC_API STRING_REF cc_string StringsBuffer_UNSAFE_Get(struct StringsBuffer* buffer, int i);
+STRING_REF void StringsBuffer_UNSAFE_GetRaw(struct StringsBuffer* buffer, int i, cc_string* dst);
 /* Adds a given string to the end of the given buffer. */
 CC_API void StringsBuffer_Add(struct StringsBuffer* buffer, const cc_string* str);
 /* Removes the i'th string from the given buffer, shifting following strings downwards. */

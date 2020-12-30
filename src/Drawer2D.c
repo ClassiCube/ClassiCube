@@ -912,7 +912,7 @@ void SysFonts_Register(const cc_string* path) {
 
 	/* if font is already known, skip it */
 	for (i = 0; i < font_list.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&font_list, i);
+		StringsBuffer_UNSAFE_GetRaw(&font_list, i, &entry);
 		String_UNSAFE_Separate(&entry, '=', &name, &value);
 
 		String_UNSAFE_Separate(&value, ',', &fontPath, &index);
@@ -947,7 +947,7 @@ void Font_GetNames(struct StringsBuffer* buffer) {
 	SysFonts_Update();
 
 	for (i = 0; i < font_list.count; i++) {
-		entry = StringsBuffer_UNSAFE_Get(&font_list, i);
+		StringsBuffer_UNSAFE_GetRaw(&font_list, i, &entry);
 		String_UNSAFE_Separate(&entry, '=', &name, &path);
 
 		/* only want Regular fonts here */

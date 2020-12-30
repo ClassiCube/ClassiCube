@@ -756,9 +756,11 @@ cc_bool Convert_ParseBool(const cc_string* str, cc_bool* value) {
 *------------------------------------------------------StringsBuffer------------------------------------------------------*
 *#########################################################################################################################*/
 #define STRINGSBUFFER_BUFFER_EXPAND_SIZE 8192
-#define StringsBuffer_GetOffset(raw)  ((raw) >> STRINGSBUFFER_LEN_SHIFT)
-#define StringsBuffer_GetLength(raw)  ((raw)  & STRINGSBUFFER_LEN_MASK)
-#define StringsBuffer_PackOffset(off) ((off) << STRINGSBUFFER_LEN_SHIFT)
+#define STRINGSBUFFER_DEFAULT_LEN_SHIFT 9
+
+#define StringsBuffer_GetOffset(raw)  ((raw) >> buffer->_lenShift)
+#define StringsBuffer_GetLength(raw)  ((raw)  & buffer->_lenMask)
+#define StringsBuffer_PackOffset(off) ((off) << buffer->_lenShift)
 
 CC_NOINLINE static void StringsBuffer_Init(struct StringsBuffer* buffer) {
 	buffer->count       = 0;
@@ -767,6 +769,14 @@ CC_NOINLINE static void StringsBuffer_Init(struct StringsBuffer* buffer) {
 	buffer->flagsBuffer    = buffer->_defaultFlags;
 	buffer->_textCapacity  = STRINGSBUFFER_BUFFER_DEF_SIZE;
 	buffer->_flagsCapacity = STRINGSBUFFER_FLAGS_DEF_ELEMS;
+
+	if (buffer->_lenShift) return;
+	StringsBuffer_SetLengthBits(buffer, STRINGSBUFFER_DEFAULT_LEN_SHIFT);
+}
+
+void StringsBuffer_SetLengthBits(struct StringsBuffer* buffer, int bits) {
+	buffer->_lenShift = bits;
+	buffer->_lenMask  = (1 << bits) - 1;
 }
 
 void StringsBuffer_Clear(struct StringsBuffer* buffer) {
@@ -792,6 +802,13 @@ cc_string StringsBuffer_UNSAFE_Get(struct StringsBuffer* buffer, int i) {
 	return String_Init(&buffer->textBuffer[offset], len, len);
 }
 
+void StringsBuffer_UNSAFE_GetRaw(struct StringsBuffer* buffer, int i, cc_string* dst) {
+	cc_uint32 flags = buffer->flagsBuffer[i];
+	dst->buffer     = buffer->textBuffer + StringsBuffer_GetOffset(flags);
+	dst->length     = StringsBuffer_GetLength(flags);
+	dst->capacity   = 0;
+}
+
 void StringsBuffer_Add(struct StringsBuffer* buffer, const cc_string* str) {
 	int textOffset;
 	/* StringsBuffer hasn't been initialised yet, do it here */
@@ -802,7 +819,7 @@ void StringsBuffer_Add(struct StringsBuffer* buffer, const cc_string* str) {
 					4, STRINGSBUFFER_FLAGS_DEF_ELEMS, 512);
 	}
 
-	if (str->length > STRINGSBUFFER_LEN_MASK) {
+	if (str->length > buffer->_lenMask) {
 		Logger_Abort("String too big to insert into StringsBuffer");
 	}
 
