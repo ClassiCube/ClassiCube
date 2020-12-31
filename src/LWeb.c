@@ -667,7 +667,7 @@ void Session_Load(void) {
 }
 
 void Session_Save(void) {
-#ifdef CC_BUILD_WIN
+#if defined CC_BUILD_WIN || defined CC_BUILD_LINUX
 	cc_string session = EntryList_UNSAFE_Get(&ccCookies, &sessionKey, '=');
 	if (!session.length) return;
 	Options_SetSecure(LOPT_SESSION, &session, &Game_Username);

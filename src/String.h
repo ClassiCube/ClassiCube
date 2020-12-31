@@ -98,6 +98,8 @@ CC_API void String_AppendPaddedInt(cc_string* str, int num, int minDigits);
 CC_API void String_AppendFloat(cc_string* str, float num, int fracDigits); /* TODO: Need to account for , or . for decimal */
 /* Attempts to append characters. src MUST be null-terminated. */
 CC_API void String_AppendConst(cc_string* str, const char* src);
+/* Attempts to append characters. */
+void String_AppendAll(cc_string* str, const void* data, int len);
 /* Attempts to append characters of a string. */
 CC_API void String_AppendString(cc_string* str, const cc_string* src);
 /* Attempts to append characters of a string, skipping any colour codes. */

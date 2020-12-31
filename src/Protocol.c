@@ -115,7 +115,7 @@ static void ReadString(cc_uint8** ptr, cc_string* str) {
 		length = i + 1; break;
 	}
 
-	for (i = 0; i < length; i++) { String_Append(str, data[i]); }
+	String_AppendAll(str, data, length);
 	*ptr = data + STRING_SIZE;
 }
 

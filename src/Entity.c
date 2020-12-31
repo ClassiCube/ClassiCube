@@ -460,9 +460,7 @@ static void LogInvalidSkin(cc_result res, const cc_string* url, const cc_uint8* 
 	if (res != PNG_ERR_INVALID_SIG) { Logger_WarnFunc(&msg); return; }
 
 	String_AppendConst(&msg, " (got ");
-	for (i = 0; i < min(size, 8); i++) {
-		String_Append(&msg, data[i]);
-	}
+	String_AppendAll(  &msg, data, min(size, 8));
 	String_AppendConst(&msg, ")");
 	Logger_WarnFunc(&msg);
 }

@@ -1618,31 +1618,6 @@ void Platform_Free(void) {
 	HeapDestroy(heap);
 }
 
-cc_result Platform_Encrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
-	DATA_BLOB input, output;
-	int i;
-	input.cbData = len; input.pbData = (BYTE*)data;
-	if (!CryptProtectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
-
-	for (i = 0; i < output.cbData; i++) {
-		String_Append(dst, output.pbData[i]);
-	}
-	LocalFree(output.pbData);
-	return 0;
-}
-cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
-	DATA_BLOB input, output;
-	int i;
-	input.cbData = len; input.pbData = (BYTE*)data;
-	if (!CryptUnprotectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
-
-	for (i = 0; i < output.cbData; i++) {
-		String_Append(dst, output.pbData[i]);
-	}
-	LocalFree(output.pbData);
-	return 0;
-}
-
 cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib) {
 	TCHAR chars[NATIVE_STR_LEN];
 	DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
@@ -1683,24 +1658,6 @@ static void Platform_InitPosix(void) {
 	sw_freqDiv = 1000;
 }
 void Platform_Free(void) { }
-
-cc_result Platform_Encrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
-	/* TODO: Is there a similar API for macOS/Linux? */
-	/* Fallback to NOT SECURE XOR. Prevents simple reading from options.txt */
-	const cc_uint8* src = data;
-	cc_uint8 c;
-	int i;
-
-	for (i = 0; i < len; i++) {
-		c = (cc_uint8)(src[i] ^ key->buffer[i % key->length] ^ 0x43);
-		String_Append(dst, c);
-	}
-	return 0;
-}
-cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
-	/* TODO: Is there a similar API for macOS/Linux? */
-	return Platform_Encrypt(key, data, len, dst);
-}
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	char chars[NATIVE_STR_LEN];
@@ -1790,7 +1747,159 @@ void Platform_Init(void) { Platform_InitPosix(); }
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------Platform---------------------------------------------------------*
+*-------------------------------------------------------Encryption--------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_WIN
+cc_result Platform_Encrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
+	DATA_BLOB input, output;
+	int i;
+	input.cbData = len; input.pbData = (BYTE*)data;
+	if (!CryptProtectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
+
+	for (i = 0; i < output.cbData; i++) {
+		String_Append(dst, output.pbData[i]);
+	}
+	LocalFree(output.pbData);
+	return 0;
+}
+cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
+	DATA_BLOB input, output;
+	int i;
+	input.cbData = len; input.pbData = (BYTE*)data;
+	if (!CryptUnprotectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
+
+	for (i = 0; i < output.cbData; i++) {
+		String_Append(dst, output.pbData[i]);
+	}
+	LocalFree(output.pbData);
+	return 0;
+}
+#elif defined CC_BUILD_LINUX
+/* Encrypts data using XTEA block cipher, with /var/lib/dbus/machine-id as the key */
+
+static void EncipherBlock(cc_uint32* v, const cc_uint32* key, cc_string* dst) {
+	cc_uint32 v0 = v[0], v1 = v[1], sum = 0, delta = 0x9E3779B9;
+	int i;
+
+    for (i = 0; i < 12; i++) {
+        v0  += (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
+        sum += delta;
+        v1  += (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
+    }
+    v[0] = v0; v[1] = v1;
+	String_AppendAll(dst, v, 8);
+}
+
+static void DecipherBlock(cc_uint32* v, const cc_uint32* key) {
+	cc_uint32 v0 = v[0], v1 = v[1], delta = 0x9E3779B9, sum = delta * 12;
+	int i;
+
+    for (i = 0; i < 12; i++) {
+        v1  -= (((v0 << 4) ^ (v0 >> 5)) + v0) ^ (sum + key[(sum>>11) & 3]);
+        sum -= delta;
+        v0  -= (((v1 << 4) ^ (v1 >> 5)) + v1) ^ (sum + key[sum & 3]);
+    }
+    v[0] = v0; v[1] = v1;
+}
+
+#define ENC1 0xCC005EC0
+#define ENC2 0x0DA4A0DE 
+#define ENC3 0xC0DED000
+#define MACHINEID_LEN 32
+#define ENC_SIZE 8 /* 2 32 bit ints per block */
+
+/* "b3c5a0d9" --> 0xB3C5A0D9 */
+static void DecodeMachineID(char* tmp, cc_uint8* key) {
+	int hex[MACHINEID_LEN], i;
+	PackedCol_Unhex(tmp, hex, MACHINEID_LEN);
+
+	for (i = 0; i < MACHINEID_LEN / 2; i++) {
+		key[i] = (hex[i * 2] << 4) | hex[i * 2 + 1];
+	}
+}
+
+static void GetMachineID(cc_uint32* key) {
+	const cc_string idFile = String_FromConst("/var/lib/dbus/machine-id");
+	char tmp[MACHINEID_LEN];
+	struct Stream s;
+	int i;
+
+	for (i = 0; i < 4; i++) key[i] = 0;
+	if (Stream_OpenFile(&s, &idFile)) return;
+
+	if (!Stream_Read(&s, tmp, MACHINEID_LEN)) {
+		DecodeMachineID(tmp, (cc_uint8*)key);
+	}
+	s.Close(&s);
+}
+
+cc_result Platform_Encrypt(const cc_string* key_, const void* data, int len, cc_string* dst) {
+	const cc_uint8* src = (const cc_uint8*)data;
+	cc_uint32 header[4], key[4];
+	header[0] = ENC1; header[1] = ENC2;
+	header[2] = ENC3; header[3] = len;
+
+	GetMachineID(key);
+	EncipherBlock(header + 0, key, dst);
+	EncipherBlock(header + 2, key, dst);
+
+	for (; len > 0; len -= ENC_SIZE, src += ENC_SIZE) {
+		header[0] = 0; header[1] = 0;
+		Mem_Copy(header, src, min(len, ENC_SIZE));
+		EncipherBlock(header, key, dst);
+	}
+	return 0;
+}
+cc_result Platform_Decrypt(const cc_string* key__, const void* data, int len, cc_string* dst) {
+	const cc_uint8* src = (const cc_uint8*)data;
+	cc_uint32 header[4], key[4];
+	int dataLen;
+	/* Total size must be >= header size */
+	if (len < 16) return ERR_END_OF_STREAM;
+
+	GetMachineID(key);
+	Mem_Copy(header, src, 16);
+	DecipherBlock(header + 0, key);
+	DecipherBlock(header + 2, key);
+
+	if (header[0] != ENC1 || header[1] != ENC2 || header[2] != ENC3) return ERR_INVALID_ARGUMENT;
+	len -= 16; src += 16;
+
+	if (header[3] > len) return ERR_INVALID_ARGUMENT;
+	dataLen = header[3];
+
+	for (; dataLen > 0; len -= ENC_SIZE, src += ENC_SIZE, dataLen -= ENC_SIZE) {
+		header[0] = 0; header[1] = 0;
+		Mem_Copy(header, src, min(len, ENC_SIZE));
+
+		DecipherBlock(header, key);
+		String_AppendAll(dst, header, min(dataLen, ENC_SIZE));
+	}
+	return 0;
+}
+#elif defined CC_BUILD_POSIX
+cc_result Platform_Encrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
+	/* TODO: Is there a similar API for macOS/Linux? */
+	/* Fallback to NOT SECURE XOR. Prevents simple reading from options.txt */
+	const cc_uint8* src = data;
+	cc_uint8 c;
+	int i;
+
+	for (i = 0; i < len; i++) {
+		c = (cc_uint8)(src[i] ^ key->buffer[i % key->length] ^ 0x43);
+		String_Append(dst, c);
+	}
+	return 0;
+}
+cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
+	/* TODO: Is there a similar API for macOS/Linux? */
+	return Platform_Encrypt(key, data, len, dst);
+}
+#endif
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
 static cc_string Platform_NextArg(STRING_REF cc_string* args) {

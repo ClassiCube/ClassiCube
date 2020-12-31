@@ -250,6 +250,12 @@ void String_AppendConst(cc_string* str, const char* src) {
 	}
 }
 
+void String_AppendAll(cc_string* str, const void* data, int len) {
+	const char* src = (const char*)data;
+	int i;
+	for (i = 0; i < len; i++) String_Append(str, src[i]);
+}
+
 void String_AppendString(cc_string* str, const cc_string* src) {
 	int i;
 	for (i = 0; i < src->length; i++) {
