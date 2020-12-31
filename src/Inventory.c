@@ -145,7 +145,7 @@ static void OnInit(void) {
 	
 	inv[0] = BLOCK_STONE;  inv[1] = BLOCK_COBBLE; inv[2] = BLOCK_BRICK;
 	inv[3] = BLOCK_DIRT;   inv[4] = BLOCK_WOOD;   inv[5] = BLOCK_LOG;
-	inv[6] = BLOCK_LEAVES; inv[7] = BLOCK_GRASS;  inv[8] = BLOCK_SLAB;
+	inv[6] = BLOCK_LEAVES; inv[7] = BLOCK_GLASS;  inv[8] = BLOCK_SLAB;
 }
 
 struct IGameComponent Inventory_Component = {

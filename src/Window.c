@@ -4416,7 +4416,6 @@ static HGLRC ctx_handle;
 static HDC ctx_DC;
 typedef BOOL (WINAPI *FP_SWAPINTERVAL)(int interval);
 static FP_SWAPINTERVAL wglSwapIntervalEXT;
-static cc_bool ctx_supports_vSync;
 
 static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
 	PIXELFORMATDESCRIPTOR pfd = { 0 };
@@ -4464,7 +4463,6 @@ void GLContext_Create(void) {
 
 	ctx_DC = wglGetCurrentDC();
 	wglSwapIntervalEXT = (FP_SWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
-	ctx_supports_vSync = wglSwapIntervalEXT != NULL;
 }
 
 void GLContext_Update(void) { }
@@ -4486,7 +4484,8 @@ cc_bool GLContext_SwapBuffers(void) {
 }
 
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	if (ctx_supports_vSync) wglSwapIntervalEXT(vsync);
+	if (!wglSwapIntervalEXT) return;
+	wglSwapIntervalEXT(vsync);
 }
 void GLContext_GetApiInfo(cc_string* info) { }
 
@@ -4501,7 +4500,6 @@ typedef int  (*FP_SWAPINTERVAL)(int interval);
 typedef Bool (*FP_QUERYRENDERER)(int attribute, unsigned int* value);
 static FP_SWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
 static FP_QUERYRENDERER queryRendererMESA;
-static cc_bool ctx_supports_vSync;
 
 void GLContext_Create(void) {
 	static const cc_string vsync_mesa = String_FromConst("GLX_MESA_swap_control");
@@ -4531,13 +4529,11 @@ void GLContext_Create(void) {
 	exts = String_FromReadonly(raw_exts);
 
 	if (String_CaselessContains(&exts, &vsync_mesa)) {
-		swapIntervalMESA = (FP_SWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalMESA");
+		swapIntervalMESA  = (FP_SWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalMESA");
 	}
 	if (String_CaselessContains(&exts, &vsync_sgi)) {
-		swapIntervalSGI  = (FP_SWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalSGI");
+		swapIntervalSGI   = (FP_SWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalSGI");
 	}
-	ctx_supports_vSync = swapIntervalMESA || swapIntervalSGI;
-
 	if (String_CaselessContains(&exts, &info_mesa)) {
 		queryRendererMESA = (FP_QUERYRENDERER)GLContext_GetAddress("glXQueryCurrentRendererIntegerMESA");
 	}
@@ -4563,12 +4559,10 @@ cc_bool GLContext_SwapBuffers(void) {
 }
 
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	int res;
-	if (!ctx_supports_vSync) return;
-
+	int res = 0;
 	if (swapIntervalMESA) {
 		res = swapIntervalMESA(vsync);
-	} else {
+	} else if (swapIntervalSGI) {
 		res = swapIntervalSGI(vsync);
 	}
 	if (res) Platform_Log1("Set VSync failed, error: %i", &res);
