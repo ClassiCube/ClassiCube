@@ -351,6 +351,7 @@ void Game_Free(void* obj);
 static void Game_Load(void) {
 	struct IGameComponent* comp;
 	Game_UpdateDimensions();
+	Game_SetFpsLimit(Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT));
 	Gfx_Create();
 	Logger_WarnFunc = Game_WarnFunc;
 	LoadOptions();
@@ -403,10 +404,6 @@ static void Game_Load(void) {
 
 	TexturePack_ExtractCurrent(false);
 	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
-
-	/* set vsync after because it causes a context loss depending on backend */
-	Gfx_SetFpsLimit(true, 0);
-	Game_SetFpsLimit(Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT));
 
 	if (Gfx_WarnIfNecessary()) EnvRenderer_SetMode(EnvRenderer_Minimal | ENV_LEGACY);
 	Server.BeginConnect();

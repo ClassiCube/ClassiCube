@@ -1009,7 +1009,7 @@ void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	if (gfx_vsync == vsync) return;
 
 	gfx_vsync = vsync;
-	Gfx_LoseContext(" (toggling VSync)");
+	if (device) Gfx_LoseContext(" (toggling VSync)");
 }
 
 void Gfx_BeginFrame(void) { 
@@ -1143,6 +1143,10 @@ typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
 
+static void GL_UpdateVsync(void) {
+	GLContext_SetFpsLimit(gfx_vsync, gfx_minFrameMs);
+}
+
 static void GL_CheckSupport(void);
 void Gfx_Create(void) {
 	GLContext_Create();
@@ -1152,6 +1156,7 @@ void Gfx_Create(void) {
 
 	GL_CheckSupport();
 	Gfx_RestoreState();
+	GL_UpdateVsync();
 }
 
 cc_bool Gfx_TryRestoreContext(void) {
@@ -1531,7 +1536,7 @@ void Gfx_GetApiInfo(cc_string* info) {
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
 	gfx_vsync      = vsync;
-	GLContext_SetFpsLimit(vsync, minFrameMs);
+	if (Gfx.Created) GL_UpdateVsync();
 }
 
 void Gfx_BeginFrame(void) { frameStart = Stopwatch_Measure(); }
