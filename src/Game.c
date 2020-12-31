@@ -643,6 +643,9 @@ static void Game_DoFrame(void) {
 static void Game_RunLoop(void) {
 	lastRender = Stopwatch_Measure();
 	emscripten_set_main_loop(Game_DoFrame, 0, false);
+	/* The Game_SetFpsLimit call back in Game_Load does nothing because no main loop yet */
+	/*  Now thats there's a main loop, Game_SetFpsLimit will actually do something */
+	Game_SetFpsLimit(Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT));
 }
 #else
 static void Game_RunLoop(void) {
