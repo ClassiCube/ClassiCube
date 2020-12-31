@@ -987,7 +987,6 @@ void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 #define _NET_WM_STATE_TOGGLE 2
 
 static Display* win_display;
-static int win_screen;
 static Window win_rootWin, win_handle;
 static XVisualInfo win_visual;
 #ifdef CC_BUILD_XIM
@@ -1203,7 +1202,6 @@ void Window_Init(void) {
 	HookXErrors();
 
 	win_display = display;
-	win_screen  = screen;
 	win_rootWin = RootWindow(display, screen);
 
 	/* TODO: Use Xinerama and XRandR for querying these */
@@ -4320,9 +4318,10 @@ static EGLint ctx_numConfig;
 static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	XVisualInfo info;
 	cc_result res;
+	int screen = DefaultScreen(win_display);
 
-	res = XMatchVisualInfo(win_display, win_screen, 24, TrueColor, &info) ||
-		  XMatchVisualInfo(win_display, win_screen, 32, TrueColor, &info);
+	res = XMatchVisualInfo(win_display, screen, 24, TrueColor, &info) ||
+		  XMatchVisualInfo(win_display, screen, 32, TrueColor, &info);
 
 	if (!res) Logger_Abort("Selecting visual");
 	return info;
@@ -4525,7 +4524,7 @@ void GLContext_Create(void) {
 
 	/* GLX may return non-null function pointers that don't actually work */
 	/* So we need to manually check the extensions string for support */
-	raw_exts = glXQueryExtensionsString(win_display, win_screen);
+	raw_exts = glXQueryExtensionsString(win_display, DefaultScreen(win_display));
 	exts = String_FromReadonly(raw_exts);
 
 	if (String_CaselessContains(&exts, &ext_mesa)) {
@@ -4591,7 +4590,7 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	int major, minor;
 	XVisualInfo* visual = NULL;
 
-	int fbcount;
+	int fbcount, screen;
 	GLXFBConfig* fbconfigs;
 	XVisualInfo info;
 
@@ -4599,10 +4598,11 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	if (!glXQueryVersion(win_display, &major, &minor)) {
 		Logger_Abort("glXQueryVersion failed");
 	}
+	screen = DefaultScreen(win_display);
 
 	if (major >= 1 && minor >= 3) {
 		/* ChooseFBConfig returns an array of GLXFBConfig opaque structures */
-		fbconfigs = glXChooseFBConfig(win_display, win_screen, attribs, &fbcount);
+		fbconfigs = glXChooseFBConfig(win_display, screen, attribs, &fbcount);
 		if (fbconfigs && fbcount) {
 			/* Use the first GLXFBConfig from the fbconfigs array (best match) */
 			visual = glXGetVisualFromFBConfig(win_display, *fbconfigs);
@@ -4612,12 +4612,12 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 
 	if (!visual) {
 		Platform_LogConst("Falling back to glXChooseVisual.");
-		visual = glXChooseVisual(win_display, win_screen, attribs);
+		visual = glXChooseVisual(win_display, screen, attribs);
 	}
 	/* Some really old devices will only supply 16 bit depths */
 	if (!visual) {
 		GetAttribs(mode, attribs, 16);
-		visual = glXChooseVisual(win_display, win_screen, attribs);
+		visual = glXChooseVisual(win_display, screen, attribs);
 	}
 	if (!visual) Logger_Abort("Requested GraphicsMode not available.");
 
