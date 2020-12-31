@@ -325,6 +325,7 @@ static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
 static DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 static D3DFORMAT viewFormat, depthFormat;
+static int cachedWidth, cachedHeight;
 static int depthBits;
 static float totalMem;
 
@@ -391,10 +392,10 @@ static void FindCompatibleDepthFormat(void) {
 	Logger_Abort("Failed to create depth buffer. Graphics drivers may not be installed.");
 }
 
-static void D3D9_FillPresentArgs(int width, int height, D3DPRESENT_PARAMETERS* args) {
+static void D3D9_FillPresentArgs(D3DPRESENT_PARAMETERS* args) {
 	args->AutoDepthStencilFormat = depthFormat;
-	args->BackBufferWidth  = width;
-	args->BackBufferHeight = height;
+	args->BackBufferWidth  = Game.Width;
+	args->BackBufferHeight = Game.Height;
 	args->BackBufferFormat = viewFormat;
 	args->BackBufferCount  = 1;
 	args->EnableAutoDepthStencil = true;
@@ -415,13 +416,18 @@ static const int D3D9_DepthBufferBits(void) {
 	return 0;
 }
 
+static void D3D9_UpdateCachedDimensions(void) {
+	cachedWidth  = Game.Width;
+	cachedHeight = Game.Height;
+}
+
 static cc_bool deviceCreated;
 static void TryCreateDevice(void) {
 	cc_result res;
 	D3DCAPS9 caps;
 	HWND winHandle = (HWND)WindowInfo.Handle;
 	D3DPRESENT_PARAMETERS args = { 0 };
-	D3D9_FillPresentArgs(Game.Width, Game.Height, &args);
+	D3D9_FillPresentArgs(&args);
 
 	/* Try to create a device with as much hardware usage as possible. */
 	res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
@@ -442,6 +448,7 @@ static void TryCreateDevice(void) {
 	res = IDirect3DDevice9_GetDeviceCaps(device, &caps);
 	if (res) Logger_Abort2(res, "Getting Direct3D9 capabilities");
 
+	D3D9_UpdateCachedDimensions();
 	deviceCreated    = true;
 	Gfx.MaxTexWidth  = caps.MaxTextureWidth;
 	Gfx.MaxTexHeight = caps.MaxTextureHeight;
@@ -472,11 +479,12 @@ cc_bool Gfx_TryRestoreContext(void) {
 	res = IDirect3DDevice9_TestCooperativeLevel(device);
 	if (res && res != D3DERR_DEVICENOTRESET) return false;
 
-	D3D9_FillPresentArgs(Game.Width, Game.Height, &args);
+	D3D9_FillPresentArgs(&args);
 	res = IDirect3DDevice9_Reset(device, &args);
 	if (res == D3DERR_DEVICELOST) return false;
 
 	if (res) Logger_Abort2(res, "Error recreating D3D9 context");
+	D3D9_UpdateCachedDimensions();
 	return true;
 }
 
@@ -486,7 +494,12 @@ void Gfx_Free(void) {
 	D3D9_FreeResource(&d3d);
 }
 
-static void Gfx_FreeState(void) { FreeDefaultResources(); }
+static void Gfx_FreeState(void) { 
+	FreeDefaultResources();
+	cachedWidth  = 0;
+	cachedHeight = 0;
+}
+
 static void Gfx_RestoreState(void) {
 	Gfx_SetFaceCulling(false);
 	InitDefaultResources();
@@ -1059,7 +1072,11 @@ void Gfx_GetApiInfo(cc_string* info) {
 	String_Format1(info, "Depth buffer bits: %i", &depthBits);
 }
 
-void Gfx_OnWindowResize(void) { Gfx_LoseContext(" (resizing window)"); }
+void Gfx_OnWindowResize(void) {
+	if (Game.Width == cachedWidth && Game.Height == cachedHeight) return;
+	/* Only resize when necessary */
+	Gfx_LoseContext(" (resizing window)"); 
+}
 #endif
 
 
