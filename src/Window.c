@@ -4414,8 +4414,8 @@ void GLContext_GetApiInfo(cc_string* info) { }
 #elif defined CC_BUILD_WINGUI
 static HGLRC ctx_handle;
 static HDC ctx_DC;
-typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
-static FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
+typedef BOOL (WINAPI *FP_SWAPINTERVAL)(int interval);
+static FP_SWAPINTERVAL wglSwapIntervalEXT;
 static cc_bool ctx_supports_vSync;
 
 static void GLContext_SelectGraphicsMode(struct GraphicsMode* mode) {
@@ -4463,7 +4463,7 @@ void GLContext_Create(void) {
 	}
 
 	ctx_DC = wglGetCurrentDC();
-	wglSwapIntervalEXT = (FN_WGLSWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
+	wglSwapIntervalEXT = (FP_SWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
 	ctx_supports_vSync = wglSwapIntervalEXT != NULL;
 }
 
@@ -4497,13 +4497,16 @@ void GLContext_GetApiInfo(cc_string* info) { }
 #elif defined CC_BUILD_X11
 #include <GL/glx.h>
 static GLXContext ctx_handle;
-typedef int (*FN_GLXSWAPINTERVAL)(int interval);
-static FN_GLXSWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
+typedef int  (*FP_SWAPINTERVAL)(int interval);
+typedef Bool (*FP_QUERYRENDERER)(int attribute, unsigned int* value);
+static FP_SWAPINTERVAL swapIntervalMESA, swapIntervalSGI;
+static FP_QUERYRENDERER queryRendererMESA;
 static cc_bool ctx_supports_vSync;
 
 void GLContext_Create(void) {
-	static const cc_string ext_mesa = String_FromConst("GLX_MESA_swap_control");
-	static const cc_string ext_sgi  = String_FromConst("GLX_SGI_swap_control");
+	static const cc_string vsync_mesa = String_FromConst("GLX_MESA_swap_control");
+	static const cc_string vsync_sgi  = String_FromConst("GLX_SGI_swap_control");
+	static const cc_string info_mesa  = String_FromConst("GLX_MESA_query_renderer");
 
 	const char* raw_exts;
 	cc_string exts;
@@ -4527,13 +4530,17 @@ void GLContext_Create(void) {
 	raw_exts = glXQueryExtensionsString(win_display, DefaultScreen(win_display));
 	exts = String_FromReadonly(raw_exts);
 
-	if (String_CaselessContains(&exts, &ext_mesa)) {
-		swapIntervalMESA = (FN_GLXSWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalMESA");
+	if (String_CaselessContains(&exts, &vsync_mesa)) {
+		swapIntervalMESA = (FP_SWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalMESA");
 	}
-	if (String_CaselessContains(&exts, &ext_sgi)) {
-		swapIntervalSGI  = (FN_GLXSWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalSGI");
+	if (String_CaselessContains(&exts, &vsync_sgi)) {
+		swapIntervalSGI  = (FP_SWAPINTERVAL)GLContext_GetAddress("glXSwapIntervalSGI");
 	}
 	ctx_supports_vSync = swapIntervalMESA || swapIntervalSGI;
+
+	if (String_CaselessContains(&exts, &info_mesa)) {
+		queryRendererMESA = (FP_QUERYRENDERER)GLContext_GetAddress("glXQueryCurrentRendererIntegerMESA");
+	}
 }
 
 void GLContext_Update(void) { }
@@ -4566,7 +4573,16 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	}
 	if (res) Platform_Log1("Set VSync failed, error: %i", &res);
 }
-void GLContext_GetApiInfo(cc_string* info) { }
+
+void GLContext_GetApiInfo(cc_string* info) {
+	unsigned int vram, acc;
+	if (!queryRendererMESA) return;
+
+	queryRendererMESA(0x8186, &acc);
+	queryRendererMESA(0x8187, &vram);
+	String_Format2(info, "VRAM: %i MB, %c", &vram,
+		acc ? "HW accelerated" : "no HW acceleration");
+}
 
 static void GetAttribs(struct GraphicsMode* mode, int* attribs, int depth) {
 	int i = 0;
