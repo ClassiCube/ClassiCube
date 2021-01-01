@@ -955,7 +955,7 @@ static void OnPointerMove(void* obj, int idx) {
 
 static void OnPointerDown(void* obj, int idx) {
 	struct Screen* s;
-	int i, x, y;
+	int i, x, y, mask;
 #ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode && !(touches[idx].type & TOUCH_TYPE_GUI)) return;
 #endif
@@ -964,20 +964,22 @@ static void OnPointerDown(void* obj, int idx) {
 	for (i = 0; i < Gui.ScreensCount; i++) {
 		s = Gui_Screens[i];
 		s->dirty = true;
+		mask = s->VTABLE->HandlesPointerDown(s, 1 << idx, x, y);
+
 #ifdef CC_BUILD_TOUCH
-		if (s->VTABLE->HandlesPointerDown(s, 1 << idx, x, y)) {
-			/* using &= TOUCH_TYPE_GUI instead of = TOUCH_TYPE_GUI is to handle */
-			/* one specific case - when clicking 'Quit game' in android version, */
-			/* it will call Game_Free, which will in turn call InputComponent.Free. */
+		if (mask) {
+			/* Using &= mask instead of = mask is to handle one specific case */
+			/*  - when clicking 'Quit game' in android version, it will call  */
+			/*  Game_Free, which will in turn call InputComponent.Free.       */
 			/* That resets the type of all touches to 0 - however, since it is */
-			/* called DURING HandlesPointerDown, using = TOUCH_TYPE_GUI here would */
-			/* undo the resetting of type to 0 for one of the touches states, */
-			/* causing problems later with Input_AddTouch as it will assume that */
-			/* the aforementioned touches state is wrongly still in use */
-			touches[idx].type &= TOUCH_TYPE_GUI; return;
+			/*  called DURING HandlesPointerDown, using = mask here would undo */
+			/*  the resetting of type to 0 for one of the touches states,      */
+			/*  causing problems later with Input_AddTouch as it will assume that */
+			/*  the aforementioned touches state is wrongly still in use */
+			touches[idx].type &= mask; return;
 		}
 #else
-		if (s->VTABLE->HandlesPointerDown(s, 1 << idx, x, y)) return;
+		if (mask) return;
 #endif
 	}
 }

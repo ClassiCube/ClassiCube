@@ -2078,8 +2078,11 @@ static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	if (Gui.InputGrab) return false;
 
 	i = Screen_DoPointerDown(screen, id, x, y);
-	if (i >= ONSCREEN_MAX_BTNS) s->widgets[i]->active |= id;
-	return i >= 0;
+	if (i < ONSCREEN_MAX_BTNS) return i >= 0;
+
+	/* Clicking on jump or fly buttons should still move camera */
+	s->widgets[i]->active |= id;
+	return TOUCH_TYPE_GUI | TOUCH_TYPE_CAMERA;
 }
 
 static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
