@@ -172,8 +172,6 @@ int main(int argc, char** argv) {
 	String_InitArray(Server.IP, ipBuffer);
 
 	Utils_EnsureDirectory("maps");
-	Utils_EnsureDirectory("texpacks");
-	Utils_EnsureDirectory("texturecache");
 	Utils_EnsureDirectory("plugins");
 	Options_Load();
 

@@ -450,6 +450,8 @@ static void OnInit(void) {
 	Event_Register_(&GfxEvents.ContextRecreated, NULL, OnContextRecreated);
 
 	Options_Get(OPT_DEFAULT_TEX_PACK, &defTexPack, "default.zip");
+	Utils_EnsureDirectory("texpacks");
+	Utils_EnsureDirectory("texturecache");
 	TextureCache_Init();
 }
 

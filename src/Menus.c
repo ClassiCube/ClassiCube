@@ -431,13 +431,6 @@ void ListScreen_Show(void) {
 /*########################################################################################################################*
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
-static void MenuScreen_Render(void* screen, double delta) {
-	Menu_RenderBounds();
-	Gfx_SetTexturing(true);
-	Screen_RenderWidgets(screen, delta);
-	Gfx_SetTexturing(false);
-}
-
 static void MenuScreen_Render2(void* screen, double delta) {
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
@@ -2424,19 +2417,21 @@ static void MenuOptionsScreen_Input(void* screen, void* widget) {
 static void MenuOptionsScreen_OnHacksChanged(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	if (s->OnHacksChanged) s->OnHacksChanged(s);
+	s->dirty = true;
 }
 
 static void MenuOptionsScreen_Init(void* screen) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	int i;
 
-	s->widgets    = menuOpts_widgets;
-	s->numWidgets = MENUOPTS_MAX_OPTS + 1; /* always have back button */
+	s->widgets     = menuOpts_widgets;
+	s->numWidgets  = MENUOPTS_MAX_OPTS + 1; /* always have back button */
 	/* The various menu options screens might have different number of widgets */
 	for (i = 0; i < MENUOPTS_MAX_OPTS; i++) { s->widgets[i] = NULL; }
+	s->maxVertices = BUTTONWIDGET_MAX;
 
-	s->activeI    = -1;
-	s->selectedI  = -1;
+	s->activeI     = -1;
+	s->selectedI   = -1;
 	s->DoInit(s);
 
 	TextGroupWidget_Create(&s->extHelp, 5, s->extHelpTextures, MenuOptionsScreen_GetDesc);
@@ -2450,7 +2445,7 @@ static void MenuOptionsScreen_Render(void* screen, double delta) {
 	struct TextGroupWidget* w;
 	PackedCol tableCol = PackedCol_Make(20, 20, 20, 200);
 
-	MenuScreen_Render(s, delta);
+	MenuScreen_Render2(s, delta);
 	if (!s->extHelp.lines) return;
 
 	w = &s->extHelp;
@@ -2488,6 +2483,7 @@ static void MenuOptionsScreen_ContextRecreated(void* screen) {
 	int i;
 	Gui_MakeTitleFont(&s->titleFont);
 	Gui_MakeBodyFont(&s->textFont);
+	Screen_UpdateVb(screen);
 
 	for (i = 0; i < s->numButtons; i++) { 
 		if (s->widgets[i]) MenuOptionsScreen_Update(s, i); 
@@ -2499,11 +2495,9 @@ static void MenuOptionsScreen_ContextRecreated(void* screen) {
 	TextGroupWidget_RedrawAll(&s->extHelp); /* TODO: SetFont should redrawall implicitly */
 }
 
-static void MenuOptionsScreen_BuildMesh(void* screen) { }
-
 static const struct ScreenVTABLE MenuOptionsScreen_VTABLE = {
 	MenuOptionsScreen_Init,   Screen_NullUpdate, MenuOptionsScreen_Free, 
-	MenuOptionsScreen_Render, MenuOptionsScreen_BuildMesh,
+	MenuOptionsScreen_Render, Screen_BuildMesh,
 	Screen_InputDown,         Screen_InputUp,    Screen_TKeyPress, Screen_TText,
 	Menu_PointerDown,         Screen_PointerUp,  MenuOptionsScreen_PointerMove, Screen_TMouseScroll,
 	MenuOptionsScreen_Layout, MenuOptionsScreen_ContextLost, MenuOptionsScreen_ContextRecreated
@@ -2607,6 +2601,7 @@ static void ClassicOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ClassicOptionsScreen_GetHacks,   ClassicOptionsScreen_SetHacks }
 	};
 	s->numCore         = 9 + 1;
+	s->maxVertices    += 9 * BUTTONWIDGET_MAX + BUTTONWIDGET_MAX;
 	s->DoRecreateExtra = ClassicOptionsScreen_RecreateExtra;
 
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchPause);
@@ -2689,7 +2684,8 @@ static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			EnvSettingsScreen_GetEdgeHeight,   EnvSettingsScreen_SetEdgeHeight }
 	};
 
-	s->numCore = 10;
+	s->numCore      = 10;
+	s->maxVertices += 10 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
@@ -2767,7 +2763,8 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps }
 	};
 
-	s->numCore = 7;
+	s->numCore      = 7;
+	s->maxVertices += 7 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
@@ -2845,7 +2842,8 @@ static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			ChatOptionsScreen_GetClickable, ChatOptionsScreen_SetClickable }
 	};
 
-	s->numCore = 4;
+	s->numCore      = 4;
+	s->maxVertices += 4 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 
 	/* If MINFILES is defined, chat logging code is not even included at all */
@@ -2908,7 +2906,8 @@ static void GuiOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			NULL,                          NULL }
 	};
 
-	s->numCore = 7;
+	s->numCore      = 7;
+	s->maxVertices += 7 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 #ifdef CC_BUILD_WEB
 	/* TODO: Support system fonts in webclient */
@@ -3030,6 +3029,7 @@ static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 			HacksSettingsScreen_GetFOV,      HacksSettingsScreen_SetFOV },
 	};
 	s->numCore        = 10;
+	s->maxVertices   += 10 * BUTTONWIDGET_MAX;
 	s->OnHacksChanged = HacksSettingsScreen_CheckHacksAllowed;
 
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
@@ -3114,7 +3114,8 @@ static void MiscSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ 1,   50, "Mouse sensitivity",   MenuOptionsScreen_Input,
 			MiscOptionsScreen_GetSensitivity, MiscOptionsScreen_SetSensitivity }
 	};
-	s->numCore = 8;
+	s->numCore      = 8;
+	s->maxVertices += 8 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 
 	/* Disable certain options */
@@ -3202,6 +3203,7 @@ static void NostalgiaScreen_InitWidgets(struct MenuOptionsScreen* s) {
             NostalgiaScreen_GetClassicChat, NostalgiaScreen_SetClassicChat },
 	};
 	s->numCore         = 9 + 1;
+	s->maxVertices    += 9 * BUTTONWIDGET_MAX + TEXTWIDGET_MAX;
 	s->DoRecreateExtra = NostalgiaScreen_RecreateExtra;
 
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), NostalgiaScreen_SwitchBack);
