@@ -2073,6 +2073,7 @@ static void TouchScreen_Render(void* screen, double delta) {
 
 static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct TouchScreen* s = (struct TouchScreen*)screen;
+	struct Widget* w;
 	int i;
 	//Chat_Add1("POINTER DOWN: %i", &id);
 	if (Gui.InputGrab) return false;
@@ -2080,9 +2081,15 @@ static int TouchScreen_PointerDown(void* screen, int id, int x, int y) {
 	i = Screen_DoPointerDown(screen, id, x, y);
 	if (i < ONSCREEN_MAX_BTNS) return i >= 0;
 
+	/* Clicking on other buttons then */
+	w = s->widgets[i];
+	w->active |= id;
+
 	/* Clicking on jump or fly buttons should still move camera */
-	s->widgets[i]->active |= id;
-	return TOUCH_TYPE_GUI | TOUCH_TYPE_CAMERA;
+	for (i = 0; i < s->numBtns; i++) {
+		if (w == (struct Widget*)&s->btns[i]) return TOUCH_TYPE_GUI | TOUCH_TYPE_CAMERA;
+	}
+	return TOUCH_TYPE_GUI;
 }
 
 static void TouchScreen_PointerUp(void* screen, int id, int x, int y) {
