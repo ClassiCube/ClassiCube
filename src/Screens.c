@@ -236,10 +236,10 @@ static int HUDScreen_KeyDown(void* screen, int key) {
 	return Elem_HandlesKeyDown(&s->hotbar, key);
 }
 
-static void HUDScreen_KeyUp(void* screen, int key) {
+static void HUDScreen_InputUp(void* screen, int key) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	if (!InventoryScreen_IsHotbarActive()) return;
-	Elem_HandlesKeyUp(&s->hotbar, key);
+	Elem_OnInputUp(&s->hotbar, key);
 }
 
 static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
@@ -300,7 +300,7 @@ static void HUDScreen_Free(void* screen) {
 static const struct ScreenVTABLE HUDScreen_VTABLE = {
 	HUDScreen_Init,        HUDScreen_Update,    HUDScreen_Free,
 	HUDScreen_Render,      HUDScreen_BuildMesh,
-	HUDScreen_KeyDown,     HUDScreen_KeyUp,     Screen_FKeyPress, Screen_FText,
+	HUDScreen_KeyDown,     HUDScreen_InputUp,   Screen_FKeyPress, Screen_FText,
 	HUDscreen_PointerDown, Screen_PointerUp,    Screen_FPointer,  HUDscreen_MouseScroll,
 	HUDScreen_Layout,      HUDScreen_ContextLost, HUDScreen_ContextRecreated
 };
@@ -619,7 +619,7 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 		player = TabList_UNSAFE_GetPlayer(s->ids[i]);
 		String_Format1(&text, "%s ", &player);
 		ChatScreen_AppendInput(&text);
-		return true;
+		return TOUCH_TYPE_GUI;
 	}
 	return false;
 }
@@ -1188,15 +1188,15 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 		if (!Utils_IsUrlPrefix(&text)) return false;
 
 		if (Chat_LogTime[s->chatIndex + i] + 10 < Game.Time) return false;
-		UrlWarningOverlay_Show(&text); return true;
+		UrlWarningOverlay_Show(&text); return TOUCH_TYPE_GUI;
 	}
 
 #ifdef CC_BUILD_TOUCH
 	if (Widget_Contains(&s->send, x, y)) {
-		ChatScreen_EnterChatInput(s, false); return true;
+		ChatScreen_EnterChatInput(s, false); return TOUCH_TYPE_GUI;
 	}
 	if (Widget_Contains(&s->cancel, x, y)) {
-		ChatScreen_EnterChatInput(s, true); return true;
+		ChatScreen_EnterChatInput(s, true); return TOUCH_TYPE_GUI;
 	}
 #endif
 
@@ -1204,10 +1204,10 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 		if (s->altText.active && Widget_Contains(&s->altText, x, y)) {
 			Elem_HandlesPointerDown(&s->altText, id, x, y);
 			ChatScreen_UpdateChatYOffsets(s);
-			return true;
+			return TOUCH_TYPE_GUI;
 		}
 		Elem_HandlesPointerDown(&s->input.base, id, x, y);
-		return true;
+		return TOUCH_TYPE_GUI;
 	}
 
 	height = TextGroupWidget_UsedHeight(&s->chat);
@@ -1223,7 +1223,7 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 	} else if (Gui.ClickableChat) {
 		ChatScreen_AppendInput(&text);
 	}
-	return true;
+	return TOUCH_TYPE_GUI;
 }
 
 static void ChatScreen_Init(void* screen) {
@@ -1438,20 +1438,20 @@ static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct TableWidget* table = &s->table;
 	cc_bool handled, hotbar;
 
-	if (table->scroll.draggingId == id) return true;
-	if (HUDscreen_PointerDown(Gui_HUD, id, x, y)) return true;
+	if (table->scroll.draggingId == id) return TOUCH_TYPE_GUI;
+	if (HUDscreen_PointerDown(Gui_HUD, id, x, y)) return TOUCH_TYPE_GUI;
 	handled = Elem_HandlesPointerDown(table, id, x, y);
 
 	if (!handled || table->pendingClose) {
 		hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
 		if (!hotbar) Gui_Remove((struct Screen*)s);
 	}
-	return true;
+	return TOUCH_TYPE_GUI;
 }
 
 static void InventoryScreen_PointerUp(void* screen, int id, int x, int y) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
-	Elem_HandlesPointerUp(&s->table, id, x, y);
+	Elem_OnPointerUp(&s->table, id, x, y);
 }
 
 static int InventoryScreen_PointerMove(void* screen, int id, int x, int y) {

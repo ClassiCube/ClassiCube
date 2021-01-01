@@ -51,15 +51,6 @@ int Pointers_Count;
 cc_bool Input_TapPlace = true, Input_HoldPlace = false;
 cc_bool Input_TouchMode;
 
-/* Touch fingers are initially are all type, meaning they could */
-/* trigger menu clicks, camera movement, or place/delete blocks */
-/* But for example, after clicking on a menu button, you wouldn't */
-/* want moving that finger anymore to move the camera */
-#define TOUCH_TYPE_GUI    1
-#define TOUCH_TYPE_CAMERA 2
-#define TOUCH_TYPE_BLOCKS 4
-#define TOUCH_TYPE_ALL (TOUCH_TYPE_GUI | TOUCH_TYPE_CAMERA | TOUCH_TYPE_BLOCKS)
-
 static void DoDeleteBlock(void);
 static void DoPlaceBlock(void);
 static void MouseStatePress(int button);

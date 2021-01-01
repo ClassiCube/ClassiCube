@@ -453,7 +453,6 @@ static cc_result ApplySkin(struct Entity* e, struct Bitmap* bmp, struct Stream* 
 
 static void LogInvalidSkin(cc_result res, const cc_string* url, const cc_uint8* data, int size) {
 	cc_string msg; char msgBuffer[256];
-	int i;
 	String_InitArray(msg, msgBuffer);
 
 	Logger_FormatWarn2(&msg, res, "decoding", url, Platform_DescribeError);

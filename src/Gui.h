@@ -140,14 +140,14 @@ struct WidgetVTABLE {
 	void (*Reposition)(void* elem);
 	/* Returns non-zero if an input press is handled. */
 	int (*HandlesKeyDown)(void* elem, int key);
-	/* Returns non-zero if an input release is handled. */
-	int (*HandlesKeyUp)(void* elem, int key);
+	/* Called when an input key or button is released. */
+	void (*OnInputUp)(void* elem, int key);
 	/* Returns non-zero if a mouse wheel scroll is handled. */
 	int (*HandlesMouseScroll)(void* elem, float delta);
 	/* Returns non-zero if a pointer press is handled. */
 	int (*HandlesPointerDown)(void* elem, int id, int x, int y);
-	/* Returns non-zero if a pointer release is handled. */
-	int (*HandlesPointerUp)(void* elem,   int id, int x, int y);
+	/* Called when a pointer is released. */
+	void (*OnPointerUp)(void* elem, int id, int x, int y);
 	/* Returns non-zero if a pointer movement is handled. */
 	int (*HandlesPointerMove)(void* elem, int id, int x, int y);
 	/* Builds the mesh of vertices for this widget. */
@@ -248,11 +248,11 @@ void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured*
 #define Elem_Free(elem)          (elem)->VTABLE->Free(elem)
 #define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress(elem, key)
 #define Elem_HandlesKeyDown(elem, key)  (elem)->VTABLE->HandlesKeyDown(elem, key)
-#define Elem_HandlesKeyUp(elem, key)    (elem)->VTABLE->HandlesKeyUp(elem, key)
+#define Elem_OnInputUp(elem,      key)  (elem)->VTABLE->OnInputUp(elem, key)
 
 #define Elem_HandlesMouseScroll(elem, delta)    (elem)->VTABLE->HandlesMouseScroll(elem, delta)
 #define Elem_HandlesPointerDown(elem, id, x, y) (elem)->VTABLE->HandlesPointerDown(elem, id, x, y)
-#define Elem_HandlesPointerUp(elem,   id, x, y) (elem)->VTABLE->HandlesPointerUp(elem,   id, x, y)
+#define Elem_OnPointerUp(elem,        id, x, y) (elem)->VTABLE->OnPointerUp(elem,        id, x, y)
 #define Elem_HandlesPointerMove(elem, id, x, y) (elem)->VTABLE->HandlesPointerMove(elem, id, x, y)
 
 #define Widget_BuildMesh(widget, vertices) (widget)->VTABLE->BuildMesh(widget, vertices)

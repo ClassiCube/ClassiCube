@@ -85,7 +85,7 @@ static void Menu_RenderBounds(void) {
 }
 
 int Menu_PointerDown(void* screen, int id, int x, int y) {
-	Screen_DoPointerDown(screen, id, x, y); return true;
+	Screen_DoPointerDown(screen, id, x, y); return TOUCH_TYPE_GUI;
 }
 
 static int Menu_DoPointerMove(void* screen, int id, int x, int y) {
@@ -1100,13 +1100,13 @@ static int GenLevelScreen_TextChanged(void* screen, const cc_string* str) {
 static int GenLevelScreen_PointerDown(void* screen, int id, int x, int y) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
 	int i = Screen_DoPointerDown(screen, id, x, y);
-	if (i == -1 || i >= 4) return true;
+	if (i == -1 || i >= 4) return TOUCH_TYPE_GUI;
 
 	if (s->selected) s->selected->base.showCaret = false;
 	s->selected = (struct TextInputWidget*)&s->inputs[i];
 	s->selected->base.showCaret = true;
 	Window_SetKeyboardText(&s->inputs[i].base.text);
-	return true;
+	return TOUCH_TYPE_GUI;
 }
 
 static void GenLevelScreen_ContextLost(void* screen) {
