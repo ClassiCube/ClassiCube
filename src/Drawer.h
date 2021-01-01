@@ -3,7 +3,7 @@
 #include "PackedCol.h"
 #include "Vectors.h"
 /* Draws the vertices for a cuboid region.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct VertexTextured;
 

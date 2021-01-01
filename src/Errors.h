@@ -1,7 +1,7 @@
 #ifndef CC_ERRORS_H
 #define CC_ERRORS_H
 /* Represents list of internal errors.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 
 /* NOTE: When changing these, remember to keep Logger.c up to date! */

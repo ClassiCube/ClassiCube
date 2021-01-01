@@ -1173,7 +1173,7 @@ static double PhysicsComp_YPosAt(int t, float u) {
 	/* x(t, u) = Σv(t, u) from 0 to t (since we work in discrete timesteps) */
 	/* plugging into Wolfram Alpha gives 1 equation as */
 	/* (0.98^t) * (-49u - 196) - 4t + 50u + 196 */
-	double a = Math_Exp(-0.0202027 * t); /* ~0.98^t */
+	double a = Math_Exp(-0.0202127 * t); /* ~0.98^t */
 	return a * (-49 * u - 196) - 4 * t + 50 * u + 196;
 }
 
