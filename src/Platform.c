@@ -586,14 +586,12 @@ static DWORD WINAPI ExecThread(void* param) {
 	return 0;
 }
 
-void* Thread_Start(Thread_StartFunc func, cc_bool detach) {
+void* Thread_Start(Thread_StartFunc func) {
 	DWORD threadID;
 	void* handle = CreateThread(NULL, 0, ExecThread, (void*)func, 0, &threadID);
 	if (!handle) {
 		Logger_Abort2(GetLastError(), "Creating thread");
 	}
-
-	if (detach) Thread_Detach(handle);
 	return handle;
 }
 
@@ -646,7 +644,7 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 #elif defined CC_BUILD_WEB
 /* No real threading support with emscripten backend */
 void Thread_Sleep(cc_uint32 milliseconds) { }
-void* Thread_Start(Thread_StartFunc func, cc_bool detach) { func(); return NULL; }
+void* Thread_Start(Thread_StartFunc func) { func(); return NULL; }
 void Thread_Detach(void* handle) { }
 void Thread_Join(void* handle) { }
 
@@ -681,12 +679,10 @@ static void* ExecThread(void* param) {
 }
 #endif
 
-void* Thread_Start(Thread_StartFunc func, cc_bool detach) {
+void* Thread_Start(Thread_StartFunc func) {
 	pthread_t* ptr = (pthread_t*)Mem_Alloc(1, sizeof(pthread_t), "thread");
 	int res = pthread_create(ptr, NULL, ExecThread, (void*)func);
 	if (res) Logger_Abort2(res, "Creating thread");
-
-	if (detach) Thread_Detach(ptr);
 	return ptr;
 }
 

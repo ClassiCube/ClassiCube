@@ -1019,7 +1019,7 @@ static void Http_WorkerInit(void) {
 }
 
 static void Http_WorkerStart(void) {
-	workerThread = Thread_Start(WorkerLoop, false);
+	workerThread = Thread_Start(WorkerLoop);
 }
 static void Http_WorkerSignal(void) { Waitable_Signal(workerWaitable); }
 

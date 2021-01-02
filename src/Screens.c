@@ -1673,6 +1673,7 @@ static void GeneratingScreen_AtlasChanged(void* obj) {
 }
 
 static void GeneratingScreen_Init(void* screen) {
+	void* thread;
 	Gen_Done = false;
 	LoadingScreen_Init(screen);
 
@@ -1681,9 +1682,11 @@ static void GeneratingScreen_Init(void* screen) {
 		Window_ShowDialog("Out of memory", "Not enough free memory to generate a map that large.\nTry a smaller size.");
 		Gen_Done = true;
 	} else if (Gen_Vanilla) {
-		Thread_Start(NotchyGen_Generate, true);
+		thread = Thread_Start(NotchyGen_Generate);
+		Thread_Detach(thread);
 	} else {
-		Thread_Start(FlatgrassGen_Generate, true);
+		thread = Thread_Start(FlatgrassGen_Generate);
+		Thread_Detach(thread);
 	}
 	Event_Register_(&TextureEvents.AtlasChanged,   NULL, GeneratingScreen_AtlasChanged);
 }

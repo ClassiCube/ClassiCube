@@ -192,10 +192,13 @@ static void android_main(void) {
 }
 
 static void JNICALL java_runGameAsync(JNIEnv* env, jobject instance) {
+	void* thread;
 	App_Instance = (*env)->NewGlobalRef(env, instance);
 	/* TODO: Do we actually need to remove that global ref later? */
+
 	Platform_LogConst("Running game async!");
-	Thread_Start(android_main, true);
+	thread = Thread_Start(android_main);
+	Thread_Detach(thread);
 }
 
 static const JNINativeMethod methods[1] = {

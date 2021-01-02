@@ -177,13 +177,14 @@ cc_result File_Length(cc_file file, cc_uint32* len);
 /* Blocks the current thread for the given number of milliseconds. */
 CC_API void Thread_Sleep(cc_uint32 milliseconds);
 typedef void (*Thread_StartFunc)(void);
-/* Starts a new thread, optionally immediately detaching it. (See Thread_Detach) */
-CC_API void* Thread_Start(Thread_StartFunc func, cc_bool detach);
+/* Starts a new thread and then runs the given function in that thread. */
+/* NOTE: Threads must either be detached or joined, otherwise data leaks. */
+CC_API void* Thread_Start(Thread_StartFunc func);
 /* Frees the platform specific persistent data associated with the thread. */
-/* NOTE: You must either detach or join threads, as this data otherwise leaks. */
+/* NOTE: Once a thread has been detached, Thread_Join can no longer be used. */
 CC_API void Thread_Detach(void* handle);
 /* Blocks the current thread, until the given thread has finished. */
-/* NOTE: Once a thread has been detached, you can no longer use this method. */
+/* NOTE: This cannot be used on a thread that has been detached. */
 CC_API void Thread_Join(void* handle);
 
 /* Allocates a new mutex. (used to synchronise access to a shared resource) */
