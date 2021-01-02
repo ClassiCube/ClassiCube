@@ -590,7 +590,7 @@ static void FetchFlagsTask_DownloadNext(void) {
 	if (FetchFlagsTask.count == flagsCount) return;
 
 	LWebTask_Reset(&FetchFlagsTask.Base);
-	String_Format2(&url, "http://static.classicube.net/img/flags/%r%r.png",
+	String_Format2(&url, RESOURCE_SERVER "/img/flags/%r%r.png",
 			&flags[FetchFlagsTask.count].country[0], &flags[FetchFlagsTask.count].country[1]);
 
 	FetchFlagsTask.Base.Handle = FetchFlagsTask_Handle;

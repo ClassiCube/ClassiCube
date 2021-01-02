@@ -66,6 +66,7 @@ static cc_result Audio_AllAvailable(struct AudioContext* ctx, cc_bool* finished)
 *------------------------------------------------------OpenAL backend-----------------------------------------------------*
 *#########################################################################################################################*/
 /* Simpler to just include subset of OpenAL actually use here instead of including */
+/* === BEGIN OPENAL HEADERS === */
 #if defined _WIN32
 #define APIENTRY __cdecl
 #else
@@ -105,7 +106,7 @@ static void      (APIENTRY *_alcDestroyContext)(void* context);
 static void*     (APIENTRY *_alcOpenDevice)(const char* devicename);
 static ALboolean (APIENTRY *_alcCloseDevice)(void* device);
 static ALenum    (APIENTRY *_alcGetError)(void* device);
-/* End of OpenAL headers */
+/* === END OPENAL HEADERS === */
 
 struct AudioContext {
 	ALuint source;

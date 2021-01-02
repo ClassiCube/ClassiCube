@@ -75,19 +75,19 @@ typedef unsigned __INTPTR_TYPE__ cc_uintptr;
 #define CC_BIG_ENDIAN
 #endif
 
-/* Unrecognised compiler, so just go with sensible defaults */
+/* Unrecognised compiler, so just go with some sensible default typdefs */
+/* Don't use <stdint.h>, as good chance such a compiler doesn't support it */
 #ifndef CC_HAS_TYPES
-#include <stdint.h>
-typedef int8_t  cc_int8;
-typedef int16_t cc_int16;
-typedef int32_t cc_int32;
-typedef int64_t cc_int64;
+typedef signed char  cc_int8;
+typedef signed short cc_int16;
+typedef signed int   cc_int32;
+typedef signed long long cc_int64;
 
-typedef uint8_t   cc_uint8;
-typedef uint16_t  cc_uint16;
-typedef uint32_t  cc_uint32;
-typedef uint64_t  cc_uint64;
-typedef uintptr_t cc_uintptr;
+typedef unsigned char  cc_uint8;
+typedef unsigned short cc_uint16;
+typedef unsigned int   cc_uint32;
+typedef unsigned long long cc_uint64;
+typedef unsigned long  cc_uintptr;
 #endif
 #ifndef CC_HAS_MISC
 #define CC_INLINE

@@ -750,8 +750,8 @@ static void MainScreen_DoLogin(void) {
 static void MainScreen_Login(void* w, int idx) { MainScreen_DoLogin(); }
 
 static void MainScreen_Register(void* w, int idx) {
-	static const cc_string ccUrl = String_FromConst("https://www.classicube.net/acc/register/");
-	Process_StartOpen(&ccUrl);
+	static const cc_string regUrl = String_FromConst(REGISTERNEW_URL);
+	Process_StartOpen(&regUrl);
 }
 
 static void MainScreen_Resume(void* w, int idx) {
@@ -1585,7 +1585,7 @@ static void UpdatesScreen_FetchTick(struct UpdatesScreen* s) {
 		LLabel_SetText(&s->lblStatus, &str);
 		LWidget_Redraw(&s->lblStatus);
 	} else {
-		/* WebTask handles saving of ClassiCube.update for us */
+		/* FetchUpdateTask handles saving the updated file for us */
 		Launcher_ShouldExit   = true;
 		Launcher_ShouldUpdate = true;
 	}

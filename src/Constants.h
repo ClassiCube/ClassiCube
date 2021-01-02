@@ -74,4 +74,6 @@ enum SKIN_TYPE { SKIN_64x32, SKIN_64x64, SKIN_64x64_SLIM, SKIN_INVALID = 0xF0 };
 #define SKINS_SERVER    "http://classicube.s3.amazonaws.com/skin/"
 #define UPDATES_SERVER  "http://cs.classicube.net/client"
 #define SERVICES_SERVER "https://www.classicube.net/api"
+#define RESOURCE_SERVER "http://static.classicube.net"
+#define REGISTERNEW_URL "https://www.classicube.net/acc/register/"
 #endif

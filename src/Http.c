@@ -442,6 +442,7 @@ static void Http_BufferExpanded(struct HttpRequest* req, cc_uint32 read) {
 *#########################################################################################################################*/
 #include "Errors.h"
 #include <stddef.h>
+/* === BEGIN CURL HEADERS === */
 typedef void CURL;
 struct curl_slist;
 typedef int CURLcode;
@@ -480,7 +481,7 @@ static void     (APIENTRY *_curl_easy_cleanup)(CURL* c);
 static void     (APIENTRY *_curl_slist_free_all)(struct curl_slist* l);
 static struct curl_slist* (APIENTRY *_curl_slist_append)(struct curl_slist* l, const char* v);
 static const char* (APIENTRY *_curl_easy_strerror)(CURLcode res);
-/* End of curl headers */
+/* === END CURL HEADERS === */
 
 #if defined CC_BUILD_WIN
 static const cc_string curlLib = String_FromConst("libcurl.dll");

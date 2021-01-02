@@ -2196,7 +2196,7 @@ static void GL_CheckSupport(void) {
 		GLContext_GetAll(arbVboFuncs,  Array_Elems(arbVboFuncs));
 	} else {
 		Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
-			"Compile the game with CC_BUILD_GL11, or ask on the classicube forums for it");
+			"Compile the game with CC_BUILD_GL11, or ask on the ClassiCube forums for it");
 	}
 	customMipmapsLevels = true;
 }
