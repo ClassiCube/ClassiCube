@@ -2720,6 +2720,9 @@ static void GraphicsOptionsScreen_SetSmooth(const cc_string* v) {
 	MapRenderer_Refresh();
 }
 
+static void GraphicsOptionsScreen_GetCamera(cc_string* v) { Menu_GetBool(v, Camera.Smooth); }
+static void GraphicsOptionsScreen_SetCamera(const cc_string* v) { Camera.Smooth = Menu_SetBool(v, OPT_CAMERA_SMOOTH); }
+
 static void GraphicsOptionsScreen_GetNames(cc_string* v) { String_AppendConst(v, NameMode_Names[Entities.NamesMode]); }
 static void GraphicsOptionsScreen_SetNames(const cc_string* v) {
 	Entities.NamesMode = Utils_ParseEnum(v, 0, NameMode_Names, NAME_MODE_COUNT);
@@ -2745,7 +2748,7 @@ static void GraphicsOptionsScreen_SetCameraMass(const cc_string* c) {
 }
 
 static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
-	static const struct MenuOptionDesc buttons[7] = {
+	static const struct MenuOptionDesc buttons[8] = {
 		{ -1, -100, "Camera Mass",       MenuOptionsScreen_Input,
 			GraphicsOptionsScreen_GetCameraMass, GraphicsOptionsScreen_SetCameraMass },
 		{ -1, -50,  "FPS mode",          MenuOptionsScreen_Enum,
@@ -2755,16 +2758,18 @@ static void GraphicsOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ -1,  50,  "Advanced lighting", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetSmooth,     GraphicsOptionsScreen_SetSmooth },
 
-		{ 1, -50, "Names",   MenuOptionsScreen_Enum,
+		{ 1, -100, "Smooth camera", MenuOptionsScreen_Bool,
+			GraphicsOptionsScreen_GetCamera,   GraphicsOptionsScreen_SetCamera },
+		{ 1, -50,  "Names",   MenuOptionsScreen_Enum,
 			GraphicsOptionsScreen_GetNames,   GraphicsOptionsScreen_SetNames },
-		{ 1,   0, "Shadows", MenuOptionsScreen_Enum,
+		{ 1,   0,  "Shadows", MenuOptionsScreen_Enum,
 			GraphicsOptionsScreen_GetShadows, GraphicsOptionsScreen_SetShadows },
-		{ 1,  50, "Mipmaps", MenuOptionsScreen_Bool,
+		{ 1,  50,  "Mipmaps", MenuOptionsScreen_Bool,
 			GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps }
 	};
 
-	s->numCore      = 7;
-	s->maxVertices += 7 * BUTTONWIDGET_MAX;
+	s->numCore      = 8;
+	s->maxVertices += 8 * BUTTONWIDGET_MAX;
 	MenuOptionsScreen_InitButtons(s, buttons, Array_Elems(buttons), Menu_SwitchOptions);
 }
 
@@ -2779,13 +2784,13 @@ void GraphicsOptionsScreen_Show(void) {
 		"&eNoLimit: &fRenders as many frames as possible each second.\n" \
 		"&cNoLimit is pointless - it wastefully renders frames that you don't even see!";
 	extDescs[3] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
-	extDescs[4] = \
+	extDescs[5] = \
 		"&eNone: &fNo names of players are drawn.\n" \
 		"&eHovered: &fName of the targeted player is drawn see-through.\n" \
 		"&eAll: &fNames of all other players are drawn normally.\n" \
 		"&eAllHovered: &fAll names of players are drawn see-through.\n" \
 		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
-	extDescs[5] = \
+	extDescs[6] = \
 		"&eNone: &fNo entity shadows are drawn.\n" \
 		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.\n" \
 		"&eCircle: &fA circular shadow is shown across the blocks you are above.\n" \
@@ -2794,8 +2799,8 @@ void GraphicsOptionsScreen_Show(void) {
 	MenuInput_Float(descs[0], 1, 100, 20);
 	MenuInput_Enum(descs[1], FpsLimit_Names, FPS_LIMIT_COUNT);
 	MenuInput_Int(descs[2],  8, 4096, 512);
-	MenuInput_Enum(descs[4], NameMode_Names,   NAME_MODE_COUNT);
-	MenuInput_Enum(descs[5], ShadowMode_Names, SHADOW_MODE_COUNT);
+	MenuInput_Enum(descs[5], NameMode_Names,   NAME_MODE_COUNT);
+	MenuInput_Enum(descs[6], ShadowMode_Names, SHADOW_MODE_COUNT);
 
 	MenuOptionsScreen_Show(descs, extDescs, Array_Elems(extDescs), GraphicsOptionsScreen_InitWidgets);
 }

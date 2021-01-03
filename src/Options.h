@@ -67,6 +67,7 @@
 #define OPT_CLASSIC_CHAT "nostalgia-classicchat"
 #define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
 #define OPT_CAMERA_MASS "cameramass"
+#define OPT_CAMERA_SMOOTH "camera-smooth"
 #define OPT_GRAB_CURSOR "win-grab-cursor"
 #define OPT_TOUCH_BUTTONS "gui-touchbuttons"
 #define OPT_TOUCH_SCALE "gui-touchscale"

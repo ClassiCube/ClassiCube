@@ -303,6 +303,7 @@ static void OnInit(void) {
 	Camera.Clipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
 	Camera.Invert      = Options_GetBool(OPT_INVERT_MOUSE, false);
 	Camera.Mass        = Options_GetFloat(OPT_CAMERA_MASS, 1, 100, 20);
+	Camera.Smooth      = Options_GetBool(OPT_CAMERA_SMOOTH, false);
 
 	Camera.DefaultFov  = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 179, 70);
 	Camera.Fov         = Camera.DefaultFov;
