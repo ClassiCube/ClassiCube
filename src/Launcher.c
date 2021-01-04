@@ -96,11 +96,11 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 
 	/* Save resume info */
 	if (server->length) {
-		Options_Set("launcher-server",   server);
-		Options_Set("launcher-username", user);
-		Options_Set("launcher-ip",       ip);
-		Options_Set("launcher-port",     port);
-		Options_SetSecure("launcher-mppass", mppass, user);
+		Options_Set(ROPT_SERVER, server);
+		Options_Set(ROPT_USER,   user);
+		Options_Set(ROPT_IP,     ip);
+		Options_Set(ROPT_PORT,   port);
+		Options_SetSecure(ROPT_MPPASS, mppass, user);
 	}
 	/* Save options BEFORE starting new game process */
 	/* Otherwise can get 'file already in use' errors on startup */
@@ -299,7 +299,7 @@ void Launcher_Run(void) {
 	Drawer2D_BlackTextShadows = true;
 	InitFramebuffer();
 
-	Options_Get("launcher-cc-username", &Game_Username, "");
+	Options_Get(LOPT_USERNAME, &Game_Username, "");
 	Session_Load();
 	Launcher_LoadSkin();
 	Launcher_Init();

@@ -694,19 +694,19 @@ struct ResumeInfo {
 };
 
 CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, cc_bool full) {
-	String_InitArray(info->server,   info->_serverBuffer);
-	Options_Get("launcher-server",   &info->server, "");
-	String_InitArray(info->user,     info->_userBuffer);
-	Options_Get("launcher-username", &info->user, "");
+	String_InitArray(info->server, info->_serverBuffer);
+	Options_Get(ROPT_SERVER,       &info->server, "");
+	String_InitArray(info->user,   info->_userBuffer);
+	Options_Get(ROPT_USER,         &info->user, "");
 
 	String_InitArray(info->ip,   info->_ipBuffer);
-	Options_Get("launcher-ip",   &info->ip, "");
+	Options_Get(ROPT_IP,         &info->ip, "");
 	String_InitArray(info->port, info->_portBuffer);
-	Options_Get("launcher-port", &info->port, "");
+	Options_Get(ROPT_PORT,       &info->port, "");
 
 	if (!full) return;
 	String_InitArray(info->mppass, info->_mppassBuffer);
-	Options_GetSecure("launcher-mppass", &info->mppass, &info->user);
+	Options_GetSecure(ROPT_MPPASS, &info->mppass, &info->user);
 
 	info->valid = 
 		info->user.length && info->mppass.length &&
@@ -739,8 +739,8 @@ static void MainScreen_DoLogin(void) {
 	}
 
 	if (GetTokenTask.Base.working) return;
-	Options_Set("launcher-cc-username", user);
-	Options_SetSecure("launcher-cc-password", pass, user);
+	Options_Set(LOPT_USERNAME, user);
+	Options_SetSecure(LOPT_PASSWORD, pass, user);
 
 	GetTokenTask_Run();
 	LLabel_SetConst(&s->lblStatus, "&eSigning in..");
@@ -805,8 +805,8 @@ static void MainScreen_Init(struct LScreen* s_) {
 	s->iptPassword.TextFilter = MainScreen_PasswordFilter;
 	
 	String_InitArray(pass, passBuffer);
-	Options_UNSAFE_Get("launcher-cc-username", &user);
-	Options_GetSecure("launcher-cc-password", &pass, &user);
+	Options_UNSAFE_Get(LOPT_USERNAME, &user);
+	Options_GetSecure(LOPT_PASSWORD, &pass, &user);
 
 	LInput_SetText(&s->iptUsername, &user);
 	LInput_SetText(&s->iptPassword, &pass);
