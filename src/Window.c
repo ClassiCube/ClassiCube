@@ -3222,17 +3222,16 @@ static EM_BOOL OnMouseButton(int type, const EmscriptenMouseEvent* ev, void* dat
 }
  
 /* input coordinates are CSS pixels, remap to internal pixels */
-static void RescaleXY(int srcX, int srcY, int* dstX, int* dstY) {
+static void RescaleXY(int* x, int* y) {
 	double css_width, css_height;
 	emscripten_get_element_css_size("#canvas", &css_width, &css_height);
 
 	if (css_width && css_height) {
-		*dstX = (int)(srcX * WindowInfo.Width  / css_width );
-		*dstY = (int)(srcY * WindowInfo.Height / css_height);
+		*x = (int)(*x * WindowInfo.Width  / css_width );
+		*y = (int)(*y * WindowInfo.Height / css_height);
 	} else {
-		/* If css width or height is 0, something is bogus */
-		/* It's still better to avoid divsision by 0 anyways */
-		*dstX = srcX; *dstY = srcY;
+		/* If css width or height is 0, something is bogus    */
+		/* Better to avoid divsision by 0 in that case though */
 	}
 }
 
@@ -3243,10 +3242,21 @@ static EM_BOOL OnMouseMove(int type, const EmscriptenMouseEvent* ev, void* data)
 	Input_SetNonRepeatable(KEY_RMOUSE, buttons & 0x02);
 	Input_SetNonRepeatable(KEY_MMOUSE, buttons & 0x04);
 
-	RescaleXY(ev->targetX, ev->targetY, &x, &y);
+	x = ev->targetX; y = ev->targetY;
+	RescaleXY(&x, &y);
 	Pointer_SetPosition(0, x, y);
 	if (Input_RawMode) Event_RaiseRawMove(&PointerEvents.RawMoved, ev->movementX, ev->movementY);
 	return true;
+}
+
+/* TODO: Also query mouse coordinates globally and reuse adjustXY here */
+/* Adjust from document coordinates to element coordinates */
+static void AdjustXY(int* x, int* y) {
+	EM_ASM_({
+		var canvasRect = Module['canvas'].getBoundingClientRect();
+		HEAP32[$0 >> 2] = HEAP32[$0 >> 2] - canvasRect.left;
+		HEAP32[$1 >> 2] = HEAP32[$1 >> 2] - canvasRect.top;
+	}, x, y);
 }
 
 static EM_BOOL OnTouchStart(int type, const EmscriptenTouchEvent* ev, void* data) {
@@ -3255,8 +3265,10 @@ static EM_BOOL OnTouchStart(int type, const EmscriptenTouchEvent* ev, void* data
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
-		
-		RescaleXY(t->targetX, t->targetY, &x, &y);
+		x = t->targetX; y = t->targetY;
+
+		AdjustXY( &x, &y);
+		RescaleXY(&x, &y);
 		Input_AddTouch(t->identifier, x, y);
 	}
 	/* Don't intercept touchstart events while keyboard is open, that way */
@@ -3270,8 +3282,10 @@ static EM_BOOL OnTouchMove(int type, const EmscriptenTouchEvent* ev, void* data)
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
-		
-		RescaleXY(t->targetX, t->targetY, &x, &y);
+		x = t->targetX; y = t->targetY;
+
+		AdjustXY( &x, &y);
+		RescaleXY(&x, &y);
 		Input_UpdateTouch(t->identifier, x, y);
 	}
 	/* Don't intercept touchmove events while keyboard is open, that way */
@@ -3285,8 +3299,10 @@ static EM_BOOL OnTouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) 
 	for (i = 0; i < ev->numTouches; ++i) {
 		t = &ev->touches[i];
 		if (!t->isChanged) continue;
-		
-		RescaleXY(t->targetX, t->targetY, &x, &y);
+		x = t->targetX; y = t->targetY;
+
+		AdjustXY( &x, &y);
+		RescaleXY(&x, &y);
 		Input_RemoveTouch(t->identifier, x, y);
 	}
 	/* Don't intercept touchend events while keyboard is open, that way */
