@@ -365,7 +365,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	cc_string path; char pathBuffer[MAX_PATH + 10];
 	WCHAR str[NATIVE_STR_LEN];
 	WCHAR* src;
-	WIN32_FIND_DATA entry;
+	WIN32_FIND_DATAW entry;
 	HANDLE find;
 	cc_result res;	
 	int i;
@@ -626,7 +626,7 @@ void Mutex_Lock(void* handle)   { EnterCriticalSection((CRITICAL_SECTION*)handle
 void Mutex_Unlock(void* handle) { LeaveCriticalSection((CRITICAL_SECTION*)handle); }
 
 void* Waitable_Create(void) {
-	void* handle = CreateEvent(NULL, false, false, NULL);
+	void* handle = CreateEventA(NULL, false, false, NULL);
 	if (!handle) {
 		Logger_Abort2(GetLastError(), "Creating waitable");
 	}
