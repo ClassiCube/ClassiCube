@@ -167,8 +167,8 @@ static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, cons
 	module = String_FromReadonly(modName);
 	Utils_UNSAFE_GetFilename(&module);
 	String_Format2(str, "0x%x - %s", &addr, &module);
-
-	if (symName) {
+	
+	if (symName && symName[0]) {
 		offset = (int)(addr - symAddr);
 		String_Format2(str, "(%c+%i)" _NL, symName, &offset);
 	} else {
