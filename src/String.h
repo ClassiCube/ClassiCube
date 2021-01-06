@@ -185,7 +185,7 @@ int Convert_CP437ToUtf8(char c, cc_uint8* data);
 
 /* Attempts to append all characters from UTF16 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
-void String_AppendUtf16(cc_string* str, const cc_unichar* chars, int numBytes);
+void String_AppendUtf16(cc_string* str, const void* data, int numBytes);
 /* Attempts to append all characters from UTF8 encoded data to the given string. */
 /* Characters not in code page 437 are omitted. */
 void String_AppendUtf8(cc_string* str, const void* data, int numBytes);

@@ -27,8 +27,6 @@
 
 #define Socket__Error() WSAGetLastError()
 static HANDLE heap;
-static void Platform_DecodeString(cc_string* dst, const void* data, int len);
-
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
 const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
@@ -337,36 +335,36 @@ cc_uint64 Stopwatch_Measure(void) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
 int Directory_Exists(const cc_string* path) {
-	TCHAR str[NATIVE_STR_LEN];
+	WCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
 	Platform_EncodeUtf16(str, path);
-	attribs = GetFileAttributes(str);
+	attribs = GetFileAttributesW(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 cc_result Directory_Create(const cc_string* path) {
-	TCHAR str[NATIVE_STR_LEN];
+	WCHAR str[NATIVE_STR_LEN];
 	BOOL success;
 
 	Platform_EncodeUtf16(str, path);
-	success = CreateDirectory(str, NULL);
+	success = CreateDirectoryW(str, NULL);
 	return success ? 0 : GetLastError();
 }
 
 int File_Exists(const cc_string* path) {
-	TCHAR str[NATIVE_STR_LEN];
+	WCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
 	Platform_EncodeUtf16(str, path);
-	attribs = GetFileAttributes(str);
+	attribs = GetFileAttributesW(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[MAX_PATH + 10];
-	TCHAR str[NATIVE_STR_LEN];
-	TCHAR* src;
+	WCHAR str[NATIVE_STR_LEN];
+	WCHAR* src;
 	WIN32_FIND_DATA entry;
 	HANDLE find;
 	cc_result res;	
@@ -377,7 +375,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	String_Format1(&path, "%s\\*", dirPath);
 	Platform_EncodeUtf16(str, &path);
 	
-	find = FindFirstFile(str, &entry);
+	find = FindFirstFileW(str, &entry);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
 
 	do {
@@ -400,28 +398,36 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		} else {
 			callback(&path, obj);
 		}
-	}  while (FindNextFile(find, &entry));
+	}  while (FindNextFileW(find, &entry));
 
 	res = GetLastError(); /* return code from FindNextFile */
 	FindClose(find);
 	return res == ERROR_NO_MORE_FILES ? 0 : GetLastError();
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
-	TCHAR str[NATIVE_STR_LEN];
+static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
+	WCHAR str[NATIVE_STR_LEN];
+	cc_result res;
 	Platform_EncodeUtf16(str, path);
-	*file = CreateFile(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+
+	*file = CreateFileW(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
+	if (*file && *file != INVALID_HANDLE_VALUE) return 0;
+	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
+
+	/* Windows 98 does not support W API functions */
+	Platform_EncodeAnsi(str, path);
+	*file = CreateFileA((LPCSTR)str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, GENERIC_READ, OPEN_EXISTING);
+	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
 }
 cc_result File_Create(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
+	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
 }
 cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return File_Do(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
+	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
 }
 
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
@@ -823,15 +829,15 @@ void Platform_LoadSysFonts(void) {
 	int i;
 #if defined CC_BUILD_WIN
 	char winFolder[FILENAME_SIZE];
-	TCHAR winTmp[FILENAME_SIZE];
+	WCHAR winTmp[FILENAME_SIZE];
 	UINT winLen;
 	/* System folder path may not be C:/Windows */
 	cc_string dirs[1];
 	String_InitArray(dirs[0], winFolder);
 
-	winLen = GetWindowsDirectory(winTmp, FILENAME_SIZE);
+	winLen = GetWindowsDirectoryW(winTmp, FILENAME_SIZE);
 	if (winLen) {
-		Platform_DecodeString(&dirs[0], winTmp, winLen);
+		String_AppendUtf16(&dirs[0], winTmp, winLen * 2);
 	} else {
 		String_AppendConst(&dirs[0], "C:/Windows");
 	}
@@ -1026,13 +1032,13 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-static cc_result Process_RawStart(const TCHAR* path, TCHAR* args) {
-	STARTUPINFO si = { 0 };
+static cc_result Process_RawStart(const WCHAR* path, WCHAR* args) {
+	STARTUPINFOW si = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 	BOOL ok;
 
-	si.cb = sizeof(STARTUPINFO);
-	ok = CreateProcess(path, args, NULL, NULL, false, 0, NULL, NULL, &si, &pi);
+	si.cb = sizeof(STARTUPINFOW);
+	ok = CreateProcessW(path, args, NULL, NULL, false, 0, NULL, NULL, &si, &pi);
 	if (!ok) return GetLastError();
 
 	/* Don't leak memory for proess return code */
@@ -1041,14 +1047,14 @@ static cc_result Process_RawStart(const TCHAR* path, TCHAR* args) {
 	return 0;
 }
 
-static cc_result Process_RawGetExePath(TCHAR* path, int* len) {
-	*len = GetModuleFileName(NULL, path, NATIVE_STR_LEN);
+static cc_result Process_RawGetExePath(WCHAR* path, int* len) {
+	*len = GetModuleFileNameW(NULL, path, NATIVE_STR_LEN);
 	return *len ? 0 : GetLastError();
 }
 
 cc_result Process_StartGame(const cc_string* args) {
 	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
-	TCHAR raw[NATIVE_STR_LEN], path[NATIVE_STR_LEN + 1];
+	WCHAR raw[NATIVE_STR_LEN], path[NATIVE_STR_LEN + 1];
 	int len;
 
 	cc_result res = Process_RawGetExePath(path, &len);
@@ -1063,9 +1069,9 @@ cc_result Process_StartGame(const cc_string* args) {
 void Process_Exit(cc_result code) { ExitProcess(code); }
 
 void Process_StartOpen(const cc_string* args) {
-	TCHAR str[NATIVE_STR_LEN];
+	WCHAR str[NATIVE_STR_LEN];
 	Platform_EncodeUtf16(str, args);
-	ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
+	ShellExecuteW(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
 }
 #elif defined CC_BUILD_WEB
 cc_result Process_StartGame(const cc_string* args) { return ERR_NOT_SUPPORTED; }
@@ -1269,8 +1275,8 @@ cc_bool Updater_Clean(void) {
 }
 
 cc_result Updater_Start(const char** action) {
-	TCHAR path[NATIVE_STR_LEN + 1];
-	TCHAR args[2] = { 'a', '\0' }; /* don't actually care about arguments */
+	WCHAR path[NATIVE_STR_LEN + 1];
+	WCHAR args[2] = { 'a', '\0' }; /* don't actually care about arguments */
 	cc_result res;
 	int len = 0;
 
@@ -1279,16 +1285,16 @@ cc_result Updater_Start(const char** action) {
 	path[len] = '\0';
 
 	*action = "Moving executable to CC_prev.exe";
-	if (!MoveFileEx(path, UPDATE_TMP, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
+	if (!MoveFileExW(path, UPDATE_TMP, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
 	*action = "Replacing executable";
-	if (!MoveFileEx(UPDATE_SRC, path, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
+	if (!MoveFileExW(UPDATE_SRC, path, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
 
 	*action = "Restarting game";
 	return Process_RawStart(path, args);
 }
 
 cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
-	TCHAR path[NATIVE_STR_LEN + 1];
+	WCHAR path[NATIVE_STR_LEN + 1];
 	cc_file file;
 	FILETIME ft;
 	cc_uint64 raw;
@@ -1298,7 +1304,7 @@ cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
 	if (res) return res;
 	path[len] = '\0';
 
-	file = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+	file = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 	if (file == INVALID_HANDLE_VALUE) return GetLastError();
 
 	if (GetFileTime(file, NULL, NULL, &ft)) {
@@ -1438,9 +1444,9 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 const cc_string DynamicLib_Ext = String_FromConst(".dll");
 
 void* DynamicLib_Load2(const cc_string* path) {
-	TCHAR str[NATIVE_STR_LEN];
+	WCHAR str[NATIVE_STR_LEN];
 	Platform_EncodeUtf16(str, path);
-	return LoadLibrary(str);
+	return LoadLibraryW(str);
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {
@@ -1548,7 +1554,7 @@ cc_bool DynamicLib_GetAll(void* lib, const struct DynamicLibSym* syms, int count
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
 int Platform_EncodeUtf16(void* data, const cc_string* src) {
-	TCHAR* dst = (TCHAR*)data;
+	WCHAR* dst = (WCHAR*)data;
 	int i;
 	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
 
@@ -1559,13 +1565,13 @@ int Platform_EncodeUtf16(void* data, const cc_string* src) {
 	return src->length * 2;
 }
 
-/* Attempts to append all characters from the platform specific encoded data to the given string. */
-static void Platform_DecodeString(cc_string* dst, const void* data, int len) {
-#ifdef UNICODE
-	String_AppendUtf16(dst, (const cc_unichar*)data, len * 2);
-#else
-	String_DecodeCP1252(dst, (const cc_uint8*)data, len);
-#endif
+int Platform_EncodeAnsi(void* data, const cc_string* src) {
+	char* dst = (char*)data;
+	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
+
+	Mem_Copy(dst, src->buffer, src->length);
+	dst[src->length] = '\0';
+	return src->length;
 }
 
 static void Platform_InitStopwatch(void) {
@@ -1615,15 +1621,15 @@ void Platform_Free(void) {
 }
 
 cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib) {
-	TCHAR chars[NATIVE_STR_LEN];
+	WCHAR chars[NATIVE_STR_LEN];
 	DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
 	if (lib) flags |= FORMAT_MESSAGE_FROM_HMODULE;
 
-	res = FormatMessage(flags, lib, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
-						chars, NATIVE_STR_LEN, NULL);
+	res = FormatMessageW(flags, lib, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
+						 chars, NATIVE_STR_LEN, NULL);
 	if (!res) return false;
 
-	Platform_DecodeString(dst, chars, res);
+	String_AppendUtf16(dst, chars, res * 2);
 	return true;
 }
 
@@ -1939,7 +1945,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	TCHAR path[NATIVE_STR_LEN + 1];
+	WCHAR path[NATIVE_STR_LEN + 1];
 	int i, len;
 	cc_result res = Process_RawGetExePath(path, &len);
 	if (res) return res;
@@ -1950,7 +1956,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	}
 
 	path[len] = '\0';
-	return SetCurrentDirectory(path) ? 0 : GetLastError();
+	return SetCurrentDirectoryW(path) ? 0 : GetLastError();
 }
 #elif defined CC_BUILD_WEB
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {

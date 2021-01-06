@@ -34,6 +34,9 @@ extern const cc_result ReturnCode_SocketWouldBlock;
 /* Encodes a string in UTF16 format, also null terminating the string. */
 /* Returns the number of bytes written, excluding trailing NULL terminator. */
 int Platform_EncodeUtf16(void* data, const cc_string* src);
+/* Encodes a string in ansi format, also null terminating the string. */
+/* Returns the number of bytes written, excluding trailing NULL terminator. */
+int Platform_EncodeAnsi(void* data, const cc_string* src);
 #else
 /* Encodes a string in UTF8 format, also null terminating the string. */
 /* Returns the number of bytes written, excluding trailing NULL terminator. */

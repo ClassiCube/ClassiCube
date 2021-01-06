@@ -742,9 +742,9 @@ void Window_Create(int width, int height) {
 }
 
 void Window_SetTitle(const cc_string* title) {
-	TCHAR str[NATIVE_STR_LEN];
+	WCHAR str[NATIVE_STR_LEN];
 	Platform_EncodeUtf16(str, title);
-	SetWindowText(win_handle, str);
+	SetWindowTextW(win_handle, str);
 }
 
 void Clipboard_GetText(cc_string* value) {
@@ -775,9 +775,9 @@ void Clipboard_GetText(cc_string* value) {
 		/* ignore trailing NULL at end */
 		/* TODO: Verify it's always there */
 		if (unicode) {
-			String_AppendUtf16(value, (cc_unichar*)src, size - 2);
+			String_AppendUtf16(value,  src, size - 2);
 		} else {
-			String_DecodeCP1252(value, (cc_uint8*)src,  size - 1);
+			String_DecodeCP1252(value, src, size - 1);
 		}
 
 		GlobalUnlock(hGlobal);
@@ -2136,7 +2136,7 @@ void Clipboard_GetText(cc_string* value) {
 	if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF16, &outData))) {	
 		ptr = CFDataGetBytePtr(outData);
 		len = CFDataGetLength(outData);
-		if (ptr) String_AppendUtf16(value, (cc_unichar*)ptr, len);
+		if (ptr) String_AppendUtf16(value, ptr, len);
 	} else if (!(err = PasteboardCopyItemFlavorData(pbRef, itemID, FMT_UTF8, &outData))) {
 		ptr = CFDataGetBytePtr(outData);
 		len = CFDataGetLength(outData);

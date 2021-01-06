@@ -585,7 +585,8 @@ int Convert_CP437ToUtf8(char c, cc_uint8* data) {
 	return Convert_UnicodeToUtf8(Convert_CP437ToUnicode(c), data);
 }
 
-void String_AppendUtf16(cc_string* value, const cc_unichar* chars, int numBytes) {
+void String_AppendUtf16(cc_string* value, const void* data, int numBytes) {
+	const cc_unichar* chars = (const cc_unichar*)data;
 	int i; char c;
 	
 	for (i = 0; i < (numBytes >> 1); i++) {
