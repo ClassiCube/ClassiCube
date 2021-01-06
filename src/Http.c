@@ -345,7 +345,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 
 	String_InitArray(url, urlBuffer);
 	Http_BeginRequest(req, &url);
-	Platform_EncodeString(urlStr, &url);
+	Platform_EncodeUtf8(urlStr, &url);
 
 	EM_ASM_({
 		var url       = UTF8ToString($0);
@@ -606,7 +606,7 @@ static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
 	_curl_easy_setopt(curl, CURLOPT_HTTPHEADER, req->meta);
 
 	Http_SetCurlOpts(req);
-	Platform_EncodeString(urlStr, url);
+	Platform_EncodeUtf8(urlStr, url);
 	_curl_easy_setopt(curl, CURLOPT_URL, urlStr);
 
 	if (req->requestType == REQUEST_TYPE_HEAD) {

@@ -158,7 +158,7 @@ void Window_Create(int width, int height) {
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, title);
+	Platform_EncodeUtf8(str, title);
 	SDL_SetWindowTitle(win_handle, str);
 }
 
@@ -173,7 +173,7 @@ void Clipboard_GetText(cc_string* value) {
 
 void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, value);
+	Platform_EncodeUtf8(str, value);
 	SDL_SetClipboardText(str);
 }
 
@@ -743,7 +743,7 @@ void Window_Create(int width, int height) {
 
 void Window_SetTitle(const cc_string* title) {
 	TCHAR str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, title);
+	Platform_EncodeUtf16(str, title);
 	SetWindowText(win_handle, str);
 }
 
@@ -1310,7 +1310,7 @@ void Window_Create(int width, int height) {
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, title);
+	Platform_EncodeUtf8(str, title);
 	XStoreName(win_display, win_handle, str);
 }
 
@@ -1611,7 +1611,7 @@ void Window_ProcessEvents(void) {
 			if (e.xselectionrequest.selection == xa_clipboard && e.xselectionrequest.target == xa_utf8_string && clipboard_copy_text.length) {
 				reply.xselection.property = Window_GetSelectionProperty(&e);
 				char str[800];
-				int len = Platform_EncodeString(str, &clipboard_copy_text);
+				int len = Platform_EncodeUtf8(str, &clipboard_copy_text);
 
 				XChangeProperty(win_display, reply.xselection.requestor, reply.xselection.property, xa_utf8_string, 8,
 					PropModeReplace, (unsigned char*)str, len);
@@ -2156,7 +2156,7 @@ void Clipboard_SetText(const cc_string* value) {
 	if (err) Logger_Abort2(err, "Clearing Pasteboard");
 	PasteboardSynchronize(pbRef);
 
-	len    = Platform_EncodeString(str, value);
+	len    = Platform_EncodeUtf8(str, value);
 	cfData = CFDataCreate(NULL, str, len);
 	if (!cfData) Logger_Abort("CFDataCreate() returned null pointer");
 
@@ -2553,7 +2553,7 @@ void Window_SetTitle(const cc_string* title) {
 	int len;
 	
 	/* TODO: This leaks memory, old title isn't released */
-	len     = Platform_EncodeString(str, title);
+	len     = Platform_EncodeUtf8(str, title);
 	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
 	SetWindowTitleWithCFString(win_handle, titleCF);
 }
@@ -2932,7 +2932,7 @@ void Window_SetTitle(const cc_string* title) {
 	int len;
 
 	/* TODO: This leaks memory, old title isn't released */
-	len = Platform_EncodeString(str, title);
+	len = Platform_EncodeUtf8(str, title);
 	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
 	objc_msgSend(winHandle, sel_registerName("setTitle:"), titleCF);
 }
@@ -3593,7 +3593,7 @@ void Window_Create(int width, int height) {
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, title);
+	Platform_EncodeUtf8(str, title);
 	EM_ASM_({ document.title = UTF8ToString($0); }, str);
 }
 
@@ -3613,7 +3613,7 @@ EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
 void Clipboard_GetText(cc_string* value) { }
 void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, value);
+	Platform_EncodeUtf8(str, value);
 
 	/* For IE11, use window.clipboardData to set the clipboard */
 	/* For other browsers, instead use the window.copy events */
@@ -3801,7 +3801,7 @@ void Window_OpenKeyboard(const cc_string* text, int type) {
 	char str[NATIVE_STR_LEN];
 	keyboardOpen = true;
 	if (!Input_TouchMode) return;
-	Platform_EncodeString(str, text);
+	Platform_EncodeUtf8(str, text);
 	Platform_LogConst("OPEN SESAME");
 
 	EM_ASM_({
@@ -3836,7 +3836,7 @@ void Window_OpenKeyboard(const cc_string* text, int type) {
 void Window_SetKeyboardText(const cc_string* text) {
 	char str[NATIVE_STR_LEN];
 	if (!Input_TouchMode) return;
-	Platform_EncodeString(str, text);
+	Platform_EncodeUtf8(str, text);
 
 	EM_ASM_({
 		if (!window.cc_inputElem) return;

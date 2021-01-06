@@ -340,7 +340,7 @@ int Directory_Exists(const cc_string* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf16(str, path);
 	attribs = GetFileAttributes(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
@@ -349,7 +349,7 @@ cc_result Directory_Create(const cc_string* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	BOOL success;
 
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf16(str, path);
 	success = CreateDirectory(str, NULL);
 	return success ? 0 : GetLastError();
 }
@@ -358,7 +358,7 @@ int File_Exists(const cc_string* path) {
 	TCHAR str[NATIVE_STR_LEN];
 	DWORD attribs;
 
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf16(str, path);
 	attribs = GetFileAttributes(str);
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
@@ -375,7 +375,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	/* Need to append \* to search for files in directory */
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "%s\\*", dirPath);
-	Platform_EncodeString(str, &path);
+	Platform_EncodeUtf16(str, &path);
 	
 	find = FindFirstFile(str, &entry);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
@@ -409,7 +409,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 
 static cc_result File_Do(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
 	TCHAR str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf16(str, path);
 	*file = CreateFile(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
@@ -457,13 +457,13 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 int Directory_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf8(str, path);
 	return stat(str, &sb) == 0 && S_ISDIR(sb.st_mode);
 }
 
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf8(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
 	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
@@ -472,7 +472,7 @@ cc_result Directory_Create(const cc_string* path) {
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	struct stat sb;
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf8(str, path);
 	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
 }
 
@@ -484,7 +484,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	char* src;
 	int len, res;
 
-	Platform_EncodeString(str, dirPath);
+	Platform_EncodeUtf8(str, dirPath);
 	dirPtr = opendir(str);
 	if (!dirPtr) return errno;
 
@@ -522,7 +522,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf8(str, path);
 	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	return *file == -1 ? errno : 0;
 }
@@ -1057,14 +1057,14 @@ cc_result Process_StartGame(const cc_string* args) {
 
 	String_InitArray(argv, argvBuffer);
 	String_Format1(&argv, "ClassiCube.exe %s", args);
-	Platform_EncodeString(raw, &argv);
+	Platform_EncodeUtf16(raw, &argv);
 	return Process_RawStart(path, raw);
 }
 void Process_Exit(cc_result code) { ExitProcess(code); }
 
 void Process_StartOpen(const cc_string* args) {
 	TCHAR str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, args);
+	Platform_EncodeUtf16(str, args);
 	ShellExecute(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
 }
 #elif defined CC_BUILD_WEB
@@ -1073,7 +1073,7 @@ void Process_Exit(cc_result code) { exit(code); }
 
 void Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, args);
+	Platform_EncodeUtf8(str, args);
 	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
 }
 #elif defined CC_BUILD_ANDROID
@@ -1116,7 +1116,7 @@ cc_result Process_StartGame(const cc_string* args) {
 	if (res) return res;
 	path[len] = '\0';
 
-	Platform_EncodeString(raw, args);
+	Platform_EncodeUtf8(raw, args);
 	argv[0] = path; argv[1] = raw;
 
 	/* need to null-terminate multiple arguments */
@@ -1142,7 +1142,7 @@ void Process_StartOpen(const cc_string* args) {
 	CFURLRef urlCF;
 	int len;
 	
-	len   = Platform_EncodeString(str, args);
+	len   = Platform_EncodeUtf8(str, args);
 	urlCF = CFURLCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, NULL);
 	LSOpenCFURLRef(urlCF, NULL);
 	CFRelease(urlCF);
@@ -1151,7 +1151,7 @@ void Process_StartOpen(const cc_string* args) {
 void Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	char* cmd[3];
-	Platform_EncodeString(str, args);
+	Platform_EncodeUtf8(str, args);
 
 	cmd[0] = "open"; cmd[1] = str; cmd[2] = NULL;
 	Process_RawStart("open", cmd);
@@ -1160,7 +1160,7 @@ void Process_StartOpen(const cc_string* args) {
 void Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	char* cmd[3];
-	Platform_EncodeString(str, args);
+	Platform_EncodeUtf8(str, args);
 
 	/* TODO: Can xdg-open be used on original Solaris, or is it just an OpenIndiana thing */
 	cmd[0] = "xdg-open"; cmd[1] = str; cmd[2] = NULL;
@@ -1439,7 +1439,7 @@ const cc_string DynamicLib_Ext = String_FromConst(".dll");
 
 void* DynamicLib_Load2(const cc_string* path) {
 	TCHAR str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf16(str, path);
 	return LoadLibrary(str);
 }
 
@@ -1463,7 +1463,7 @@ const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
 void* DynamicLib_Load2(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf8(str, path);
 	return NSAddImage(str, NSADDIMAGE_OPTION_WITH_SEARCHING | 
 							NSADDIMAGE_OPTION_RETURN_ON_ERROR);
 }
@@ -1505,7 +1505,7 @@ const cc_string DynamicLib_Ext = String_FromConst(".so");
 
 void* DynamicLib_Load2(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf8(str, path);
 	return dlopen(str, RTLD_NOW);
 }
 
@@ -1547,7 +1547,7 @@ cc_bool DynamicLib_GetAll(void* lib, const struct DynamicLibSym* syms, int count
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-int Platform_EncodeString(void* data, const cc_string* src) {
+int Platform_EncodeUtf16(void* data, const cc_string* src) {
 	TCHAR* dst = (TCHAR*)data;
 	int i;
 	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
@@ -1631,7 +1631,7 @@ cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
 	return Platform_DescribeErrorExt(res, dst, NULL);
 }
 #elif defined CC_BUILD_POSIX
-int Platform_EncodeString(void* data, const cc_string* src) {
+int Platform_EncodeUtf8(void* data, const cc_string* src) {
 	cc_uint8* dst = (cc_uint8*)data;
 	cc_uint8* cur;
 	int i, len = 0;

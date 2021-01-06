@@ -1320,13 +1320,13 @@ static void DownloadMap(const cc_string* path) {
 	char strFile[NATIVE_STR_LEN];
 	cc_string file;
 	cc_result res;
-	Platform_EncodeString(strPath, path);
+	Platform_EncodeUtf8(strPath, path);
 
 	/* maps/aaa.schematic -> aaa.cw */
 	file = *path; Utils_UNSAFE_GetFilename(&file);
 	file.length = String_LastIndexOf(&file, '.');
 	String_AppendConst(&file, ".cw");
-	Platform_EncodeString(strFile, &file);
+	Platform_EncodeUtf8(strFile, &file);
 
 	res = EM_ASM_({
 		try {
@@ -1586,7 +1586,7 @@ static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
 #include <emscripten.h>
 static void TexturePackScreen_UploadCallback(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	Platform_EncodeString(str, path);
+	Platform_EncodeUtf8(str, path);
 
 	/* Move from temp into texpacks folder */
 	/* TODO: This is pretty awful and should be rewritten */

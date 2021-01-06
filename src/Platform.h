@@ -30,10 +30,15 @@ extern const cc_result ReturnCode_FileNotFound;
 extern const cc_result ReturnCode_SocketInProgess;
 extern const cc_result ReturnCode_SocketWouldBlock;
 
-/* Encodes a string in platform specific format. (e.g. unicode on windows, UTF8 on linux) */
-/* NOTE: Only useful for platform specific function calls - do NOT try to interpret the data. */
+#ifdef CC_BUILD_WIN
+/* Encodes a string in UTF16 format, also null terminating the string. */
 /* Returns the number of bytes written, excluding trailing NULL terminator. */
-int Platform_EncodeString(void* data, const cc_string* src);
+int Platform_EncodeUtf16(void* data, const cc_string* src);
+#else
+/* Encodes a string in UTF8 format, also null terminating the string. */
+/* Returns the number of bytes written, excluding trailing NULL terminator. */
+int Platform_EncodeUtf8(void* data, const cc_string* src);
+#endif
 
 /* Initialises the platform specific state. */
 void Platform_Init(void);
