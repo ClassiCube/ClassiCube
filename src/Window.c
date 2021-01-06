@@ -462,6 +462,7 @@ static HDC win_DC;
 static cc_bool suppress_resize;
 static int win_totalWidth, win_totalHeight; /* Size of window including titlebar and borders */
 static int windowX, windowY;
+static cc_bool is_ansiWindow;
 
 static const cc_uint8 key_map[14 * 16] = {
 	0, 0, 0, 0, 0, 0, 0, 0, KEY_BACKSPACE, KEY_TAB, 0, 0, 0, KEY_ENTER, 0, 0,
@@ -663,7 +664,8 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		if (win_DC) ReleaseDC(win_handle, win_DC);
 		break;
 	}
-	return DefWindowProc(handle, message, wParam, lParam);
+	return is_ansiWindow ? DefWindowProcA(handle, message, wParam, lParam)
+						 : DefWindowProcW(handle, message, wParam, lParam);
 }
 
 
@@ -680,24 +682,12 @@ void Window_Init(void) {
 	ReleaseDC(NULL, hdc);
 }
 
-void Window_Create(int width, int height) {
+static ATOM DoRegisterClass(void) {
 	ATOM atom;
-	RECT r;
-
-	win_instance = GetModuleHandle(NULL);
-	/* TODO: UngroupFromTaskbar(); */
-	width  = Display_ScaleX(width);
-	height = Display_ScaleY(height);
-
-	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
-	r.left = Display_CentreX(width);  r.right  = r.left + width;
-	r.top  = Display_CentreY(height); r.bottom = r.top  + height;
-	AdjustWindowRect(&r, CC_WIN_STYLE, false);
-
-	WNDCLASSEX wc = { 0 };
-	wc.cbSize    = sizeof(WNDCLASSEX);
-	wc.style     = CS_OWNDC;
-	wc.hInstance = win_instance;
+	WNDCLASSEXW wc = { 0 };
+	wc.cbSize     = sizeof(WNDCLASSEXW);
+	wc.style      = CS_OWNDC;
+	wc.hInstance  = win_instance;
 	wc.lpfnWndProc   = Window_Procedure;
 	wc.lpszClassName = CC_WIN_CLASSNAME;
 
@@ -707,13 +697,42 @@ void Window_Create(int width, int height) {
 			GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
-	atom = RegisterClassEx(&wc);
-	if (!atom) Logger_Abort2(GetLastError(), "Failed to register window class");
+	if ((atom = RegisterClassExW(&wc))) return atom;
+	/* Windows 98 does not support W API functions */
+	return RegisterClassExA((const WNDCLASSEXA*)&wc);
+}
 
-	win_handle = CreateWindowEx(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
-		r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL);
+static void DoCreateWindow(ATOM atom, int width, int height) {
+	cc_result res;
+	RECT r;
+	/* Calculate final window rectangle after window decorations are added (titlebar, borders etc) */
+	r.left = Display_CentreX(width);  r.right  = r.left + width;
+	r.top  = Display_CentreY(height); r.bottom = r.top  + height;
+	AdjustWindowRect(&r, CC_WIN_STYLE, false);
 
-	if (!win_handle) Logger_Abort2(GetLastError(), "Failed to create window");
+	if ((win_handle = CreateWindowExW(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
+		r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return;
+	res = GetLastError();
+
+	/* Windows 98 does not support W API functions */
+	if (res == ERROR_CALL_NOT_IMPLEMENTED) {
+		is_ansiWindow   = true;
+		if ((win_handle = CreateWindowExA(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
+			r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return;
+		res = GetLastError();
+	}
+	Logger_Abort2(res, "Failed to create window");
+}
+
+void Window_Create(int width, int height) {
+	ATOM atom;
+	win_instance = GetModuleHandle(NULL);
+	/* TODO: UngroupFromTaskbar(); */
+	width  = Display_ScaleX(width);
+	height = Display_ScaleY(height);
+
+	atom = DoRegisterClass();
+	DoCreateWindow(atom, width, height);
 	RefreshWindowBounds();
 
 	win_DC = GetDC(win_handle);
