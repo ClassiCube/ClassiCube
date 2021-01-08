@@ -5,7 +5,7 @@
 /* Implements flatgrass map generator, and original classic vanilla map generation (with perlin noise)
    Based on: https://github.com/UnknownShadow200/ClassiCube/wiki/Minecraft-Classic-map-generation-algorithm
    Thanks to Jerralish for originally reverse engineering classic's algorithm, then preparing a high level overview of the algorithm.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 
 extern volatile float Gen_CurrentProgress;

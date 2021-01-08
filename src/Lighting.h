@@ -3,7 +3,7 @@
 #include "PackedCol.h"
 /* Manages lighting of blocks in the world.
 BasicLighting: Uses a simple heightmap, where each block is either in sun or shadow.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 extern struct IGameComponent Lighting_Component;

@@ -3,7 +3,7 @@
 #include "Bitmap.h"
 #include "Constants.h"
 /* Describes and manages individual 2D GUI elements in the launcher.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct LScreen;
 struct FontDesc;

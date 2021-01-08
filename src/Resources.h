@@ -2,7 +2,7 @@
 #define CC_RESOURCES_H
 #include "Core.h"
 /* Implements checking, fetching, and patching the default game assets.
-	Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+	Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 
 /* Number of resources that need to be downloaded. */

@@ -2,7 +2,7 @@
 #define CC_LAUNCHER_H
 #include "Bitmap.h"
 /* Implements the launcher part of the game.
-	Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+	Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct LScreen;
 struct FontDesc;

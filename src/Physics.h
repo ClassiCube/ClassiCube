@@ -5,7 +5,7 @@
    - An axis aligned bounding box, and various methods related to them.
    - Various methods for intersecting geometry.
    - Calculates all possible blocks that a moving entity can intersect with.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct Entity;
 

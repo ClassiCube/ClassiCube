@@ -918,8 +918,6 @@ cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
 	Stream_SetU16_BE( (cc_uint8*)&addr.sa_data[0], port);
 	Utils_ParseIP(ip, (cc_uint8*)&addr.sa_data[2]);
 
-	WSAStringToAddress()
-
 	res = connect(s, &addr, sizeof(addr));
 	return res == -1 ? Socket__Error() : 0;
 }

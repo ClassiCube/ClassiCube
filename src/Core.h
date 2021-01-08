@@ -1,7 +1,7 @@
 #ifndef CC_CORE_H
 #define CC_CORE_H
 /* Core fixed-size integer types, automatic platform detection, and common small structs.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 
 #if _MSC_VER

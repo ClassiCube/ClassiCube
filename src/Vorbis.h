@@ -2,7 +2,7 @@
 #define CC_VORBIS_H
 #include "Core.h"
 /* Decodes ogg vorbis audio
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct Stream;
 #define VORBIS_MAX_CHANS 8

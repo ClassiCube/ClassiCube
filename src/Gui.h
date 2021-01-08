@@ -2,7 +2,7 @@
 #define CC_GUI_H
 #include "Core.h"
 /* Describes and manages 2D GUI elements on screen.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 
 enum GuiAnchor {

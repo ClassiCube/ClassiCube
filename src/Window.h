@@ -2,7 +2,7 @@
 #define CC_WINDOW_H
 #include "Core.h"
 /* Abstracts creating and managing the native window.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3 | Based on OpenTK code
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3 | Based on OpenTK code
 */
 
 /*

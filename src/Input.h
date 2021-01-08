@@ -3,7 +3,7 @@
 #include "Core.h"
 /* Manages keyboard, mouse, and touch state.
    Raises events when keys are pressed etc, and implements base handlers for them.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 struct StringsBuffer;

@@ -2,7 +2,7 @@
 #define CC_PLATFORM_H
 #include "Core.h"
 /* Abstracts platform specific memory management, I/O, etc.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct DateTime;
 

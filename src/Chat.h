@@ -2,7 +2,7 @@
 #define CC_CHAT_H
 #include "Core.h"
 /* Manages sending, adding, logging and handling chat.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 struct IGameComponent;
 struct StringsBuffer;

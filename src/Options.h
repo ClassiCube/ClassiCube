@@ -2,7 +2,7 @@
 #define CC_OPTIONS_H
 #include "Core.h"
 /* Manages loading and saving options.
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 
 #define OPT_USE_MUSIC "usemusic"

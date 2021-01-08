@@ -972,7 +972,9 @@ static void EditHotkeyScreen_Init(void* screen) {
 
 	TextInputWidget_Create(&s->input, 500, &text, &desc);
 	Menu_InitBack(&s->cancel, Menu_SwitchHotkeys);
+
 	OpenKeyboardArgs_Init(&args, &text, KEYBOARD_TYPE_TEXT);
+	args.placeholder = "Hotkey text";
 	Window_OpenKeyboard(&args);
 }
 
@@ -1535,7 +1537,9 @@ static void SaveLevelScreen_Init(void* screen) {
 	Menu_InitBack(&s->cancel, Menu_SwitchPause);
 	TextInputWidget_Create(&s->input, 500, &String_Empty, &desc);
 	TextWidget_Init(&s->desc);
+
 	OpenKeyboardArgs_Init(&args, &String_Empty, KEYBOARD_TYPE_TEXT);
+	args.placeholder = "Map name";
 	Window_OpenKeyboard(&args);
 }
 

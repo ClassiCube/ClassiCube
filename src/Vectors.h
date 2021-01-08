@@ -4,7 +4,7 @@
 #include "Constants.h"
 /* Represents 2 and 3 component vectors, and 4 x 4 matrix.
    Frustum culling sourced from http://www.crownandcutlass.com/features/technicaldetails/frustum.html
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 
 /* 2 component vector (2D vector) */

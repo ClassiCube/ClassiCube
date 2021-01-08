@@ -5,7 +5,7 @@
 	- Extracting the textures from a .zip archive
 	- Caching terrain atlases and texture packs to avoid redundant downloads
 	- Terrain atlas (including breaking it down into multiple 1D atlases)
-   Copyright 2014-2020 ClassiCube | Licensed under BSD-3 
+   Copyright 2014-2021 ClassiCube | Licensed under BSD-3 
 */
 
 struct Stream;
