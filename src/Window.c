@@ -81,6 +81,12 @@ void Window_ShowDialog(const char* title, const char* msg) {
 	if (!visible) Cursor_SetVisible(false);
 }
 
+void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type) {
+	args->text = text;
+	args->type = type;
+	args->placeholder = "";
+}
+
 
 struct GraphicsMode { int R, G, B, A, IsIndexed; };
 /* Creates a GraphicsMode compatible with the default display device */
@@ -402,7 +408,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	/* TODO: Do we still need to unlock it though? */
 }
 
-void Window_OpenKeyboard(const cc_string* text, int type) { SDL_StartTextInput(); }
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { SDL_StartTextInput(); }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { SDL_StopTextInput(); }
 
@@ -698,7 +704,7 @@ static ATOM DoRegisterClass(void) {
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
 	if ((atom = RegisterClassExW(&wc))) return atom;
-	/* Windows 98 does not support W API functions */
+	/* Windows 9x does not support W API functions */
 	return RegisterClassExA((const WNDCLASSEXA*)&wc);
 }
 
@@ -714,7 +720,7 @@ static void DoCreateWindow(ATOM atom, int width, int height) {
 		r.left, r.top, Rect_Width(r), Rect_Height(r), NULL, NULL, win_instance, NULL))) return;
 	res = GetLastError();
 
-	/* Windows 98 does not support W API functions */
+	/* Windows 9x does not support W API functions */
 	if (res == ERROR_CALL_NOT_IMPLEMENTED) {
 		is_ansiWindow   = true;
 		if ((win_handle = CreateWindowExA(0, MAKEINTATOM(atom), NULL, CC_WIN_STYLE,
@@ -922,6 +928,7 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	BITMAPINFO hdr = { 0 };
 	if (!draw_DC) draw_DC = CreateCompatibleDC(win_DC);
 	
+	/* sizeof(BITMAPINFO) does not work on Windows 9x */
 	hdr.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	hdr.bmiHeader.biWidth    =  bmp->width;
 	hdr.bmiHeader.biHeight   = -bmp->height;
@@ -965,7 +972,7 @@ static void InitRawMouse(void) {
 	rawMouseSupported = false;
 }
 
-void Window_OpenKeyboard(const cc_string* text, int type) { }
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { }
 
@@ -1933,7 +1940,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(const cc_string* text, int type) { }
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { }
 
@@ -2179,7 +2186,7 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 	}
 }
 
-void Window_OpenKeyboard(const cc_string* text, int type) { }
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
 void Window_SetKeyboardText(const cc_string* text) { }
 void Window_CloseKeyboard(void) { }
 
@@ -3798,11 +3805,11 @@ EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) {
 	Event_RaiseString(&InputEvents.TextChanged, &str);
 }
 
-void Window_OpenKeyboard(const cc_string* text, int type) {
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
 	char str[NATIVE_STR_LEN];
 	keyboardOpen = true;
 	if (!Input_TouchMode) return;
-	Platform_EncodeUtf8(str, text);
+	Platform_EncodeUtf8(str, args->text);
 	Platform_LogConst("OPEN SESAME");
 
 	EM_ASM_({
@@ -3831,7 +3838,7 @@ void Window_OpenKeyboard(const cc_string* text, int type) {
 		}
 		elem.focus();
 		elem.click();
-	}, str, type);
+	}, str, args->type);
 }
 
 void Window_SetKeyboardText(const cc_string* text) {
@@ -4248,13 +4255,13 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(const cc_string* text, int type) {
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
 	JNIEnv* env;
 	jvalue args[2];
 	JavaGetCurrentEnv(env);
 
-	args[0].l = JavaMakeString(env, text);
-	args[1].i = type;
+	args[0].l = JavaMakeString(env, args->text);
+	args[1].i = args->type;
 	JavaCallVoid(env, "openKeyboard", "(Ljava/lang/String;I)V", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 }

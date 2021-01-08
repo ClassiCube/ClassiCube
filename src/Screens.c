@@ -1307,10 +1307,13 @@ void ChatScreen_Show(void) {
 
 void ChatScreen_OpenInput(const cc_string* text) {
 	struct ChatScreen* s = &ChatScreen_Instance;
+	struct OpenKeyboardArgs args;
 	s->suppressNextPress = true;
 	s->grabsInput        = true;
+
 	Gui_UpdateInputGrab();
-	Window_OpenKeyboard(text, KEYBOARD_TYPE_TEXT);
+	OpenKeyboardArgs_Init(&args, text, KEYBOARD_TYPE_TEXT);
+	Window_OpenKeyboard(&args);
 
 	String_Copy(&s->input.base.text, text);
 	InputWidget_UpdateText(&s->input.base);

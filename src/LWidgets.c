@@ -420,12 +420,15 @@ static void LInput_MoveCaretToCursor(struct LInput* w, int idx) {
 
 static void LInput_Select(void* widget, int idx, cc_bool wasSelected) {
 	struct LInput* w = (struct LInput*)widget;
+	struct OpenKeyboardArgs args;
 	caretStart = DateTime_CurrentUTC_MS();
 	LInput_MoveCaretToCursor(w, idx);
 	/* TODO: Only draw outer border */
 	if (wasSelected) return;
+
 	LWidget_Draw(widget);
-	Window_OpenKeyboard(&w->text, w->type);
+	OpenKeyboardArgs_Init(&args, &w->text, w->type);
+	Window_OpenKeyboard(&args);
 }
 
 static void LInput_Unselect(void* widget, int idx) {

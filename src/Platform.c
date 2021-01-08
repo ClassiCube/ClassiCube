@@ -414,7 +414,7 @@ static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWOR
 	if (*file && *file != INVALID_HANDLE_VALUE) return 0;
 	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
-	/* Windows 98 does not support W API functions */
+	/* Windows 9x does not support W API functions */
 	Platform_EncodeAnsi(str, path);
 	*file = CreateFileA((LPCSTR)str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
@@ -917,6 +917,8 @@ cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
 	addr.sa_family = AF_INET;
 	Stream_SetU16_BE( (cc_uint8*)&addr.sa_data[0], port);
 	Utils_ParseIP(ip, (cc_uint8*)&addr.sa_data[2]);
+
+	WSAStringToAddress()
 
 	res = connect(s, &addr, sizeof(addr));
 	return res == -1 ? Socket__Error() : 0;

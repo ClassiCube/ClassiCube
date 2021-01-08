@@ -950,6 +950,7 @@ static void EditHotkeyScreen_Layout(void* screen) {
 
 static void EditHotkeyScreen_Init(void* screen) {
 	struct EditHotkeyScreen* s = (struct EditHotkeyScreen*)screen;
+	struct OpenKeyboardArgs args;
 	struct MenuInputDesc desc;
 	cc_string text;
 
@@ -971,7 +972,8 @@ static void EditHotkeyScreen_Init(void* screen) {
 
 	TextInputWidget_Create(&s->input, 500, &text, &desc);
 	Menu_InitBack(&s->cancel, Menu_SwitchHotkeys);
-	Window_OpenKeyboard(&text, KEYBOARD_TYPE_TEXT);
+	OpenKeyboardArgs_Init(&args, &text, KEYBOARD_TYPE_TEXT);
+	Window_OpenKeyboard(&args);
 }
 
 static const struct ScreenVTABLE EditHotkeyScreen_VTABLE = {
@@ -1161,6 +1163,7 @@ static void GenLevelScreen_Layout(void* screen) {
 
 static void GenLevelScreen_Init(void* screen) {
 	struct GenLevelScreen* s = (struct GenLevelScreen*)screen;
+	struct OpenKeyboardArgs args;
 	s->widgets     = gen_widgets;
 	s->numWidgets  = Array_Elems(gen_widgets);
 	s->selected    = NULL;
@@ -1175,7 +1178,8 @@ static void GenLevelScreen_Init(void* screen) {
 	ButtonWidget_Init(&s->flatgrass, 200, GenLevelScreen_Flatgrass);
 	ButtonWidget_Init(&s->vanilla,   200, GenLevelScreen_Notchy);
 	Menu_InitBack(&s->cancel, Menu_SwitchPause);
-	Window_OpenKeyboard(&String_Empty, KEYBOARD_TYPE_NUMBER);
+	OpenKeyboardArgs_Init(&args, &String_Empty, KEYBOARD_TYPE_NUMBER);
+	Window_OpenKeyboard(&args);
 }
 
 static const struct ScreenVTABLE GenLevelScreen_VTABLE = {
@@ -1511,6 +1515,7 @@ static void SaveLevelScreen_Layout(void* screen) {
 
 static void SaveLevelScreen_Init(void* screen) {
 	struct SaveLevelScreen* s = (struct SaveLevelScreen*)screen;
+	struct OpenKeyboardArgs args;
 	struct MenuInputDesc desc;
 	
 	s->widgets     = save_widgets;
@@ -1530,7 +1535,8 @@ static void SaveLevelScreen_Init(void* screen) {
 	Menu_InitBack(&s->cancel, Menu_SwitchPause);
 	TextInputWidget_Create(&s->input, 500, &String_Empty, &desc);
 	TextWidget_Init(&s->desc);
-	Window_OpenKeyboard(&String_Empty, KEYBOARD_TYPE_TEXT);
+	OpenKeyboardArgs_Init(&args, &String_Empty, KEYBOARD_TYPE_TEXT);
+	Window_OpenKeyboard(&args);
 }
 
 static const struct ScreenVTABLE SaveLevelScreen_VTABLE = {
@@ -2133,6 +2139,7 @@ static void MenuInputOverlay_Default(void* screen, void* widget) {
 
 static void MenuInputOverlay_Init(void* screen) {
 	struct MenuInputOverlay* s = (struct MenuInputOverlay*)screen;
+	struct OpenKeyboardArgs args;
 	s->widgets     = menuInput_widgets;
 	s->numWidgets  = Array_Elems(menuInput_widgets);
 	s->maxVertices = MENUINPUT_MAX_VERTICES;
@@ -2141,9 +2148,10 @@ static void MenuInputOverlay_Init(void* screen) {
 	ButtonWidget_Init(&s->Default,              200, MenuInputOverlay_Default);
 	ButtonWidget_Init(&s->ok, Input_TouchMode ? 200 : 40, MenuInputOverlay_OK);
 
-	Window_OpenKeyboard(&s->value,
+	OpenKeyboardArgs_Init(&args, &s->value,
 		(s->desc->VTABLE == &IntInput_VTABLE || s->desc->VTABLE == &FloatInput_VTABLE)
 		? KEYBOARD_TYPE_NUMBER : KEYBOARD_TYPE_TEXT);
+	Window_OpenKeyboard(&args);
 }
 
 static void MenuInputOverlay_Update(void* screen, double delta) {

@@ -100,9 +100,9 @@ CC_API cc_bool DynamicLib_DescribeError(cc_string* dst);
 extern const cc_string DynamicLib_Ext;
 CC_API cc_result DynamicLib_Load(const cc_string* path, void** lib); /* OBSOLETE */
 CC_API cc_result DynamicLib_Get(void* lib, const char* name, void** symbol); /* OBSOLETE */
-/* Represents a name, and a pointer to variable that will hold the loaded symbol */
-/* static int (APIENTRY *_myGetError)(void); --- (for example) */
-/* static struct DynamicLibSym sym = { "myGetError", (void**)&_myGetError }; */
+/* Contains a name and a pointer to variable that will hold the loaded symbol */
+/*  static int (APIENTRY *_myGetError)(void); --- (for example) */
+/*  static struct DynamicLibSym sym = { "myGetError", (void**)&_myGetError }; */
 struct DynamicLibSym { const char* name; void** symAddr; };
 /* Loads all symbols using DynamicLib_Get2 in the given list */
 /* Returns true if all symbols were successfully retrieved */

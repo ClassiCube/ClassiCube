@@ -33,10 +33,10 @@
 struct Bitmap;
 struct DynamicLibSym;
 /* The states the window can be in. */
-enum WindowState { WINDOW_STATE_NORMAL, WINDOW_STATE_FULLSCREEN, WINDOW_STATE_MINIMISED };
+enum WindowState  { WINDOW_STATE_NORMAL, WINDOW_STATE_FULLSCREEN, WINDOW_STATE_MINIMISED };
 enum KeyboardType { KEYBOARD_TYPE_TEXT, KEYBOARD_TYPE_NUMBER, KEYBOARD_TYPE_PASSWORD };
 enum SoftKeyboard { SOFT_KEYBOARD_NONE, SOFT_KEYBOARD_RESIZE, SOFT_KEYBOARD_SHIFT };
-/* Can't name these structs Window/Display, because it conflicts with X11's Window/Display typedef */
+/* (can't name these structs Window/Display, as that conflicts with X11's Window/Display typedef) */
 
 /* Data for the display monitor. */
 CC_VAR extern struct _DisplayData {
@@ -114,8 +114,8 @@ void Window_ProcessEvents(void);
 /* NOTE: This should be avoided because it is unsupported on some platforms. */
 void Cursor_SetPosition(int x, int y);
 /* Sets whether the cursor is visible when over this window. */
-/* NOTE: You MUST BE VERY CAREFUL with this! OS typically uses a counter for visibility,
-so setting invisible multiple times means you must then set visible multiple times. */
+/* NOTE: You MUST BE VERY CAREFUL with this! OS typically uses a counter for visibility, */
+/*  so setting invisible multiple times means you must then set visible multiple times. */
 void Cursor_SetVisible(cc_bool visible);
 
 /* Shows a dialog box window. */
@@ -134,14 +134,16 @@ void Window_DrawFramebuffer(Rect2D r);
 /* Frees the previously allocated framebuffer. */
 void Window_FreeFramebuffer(struct Bitmap* bmp);
 
+struct OpenKeyboardArgs { const cc_string* text; int type; const char* placeholder; };
+void OpenKeyboardArgs_Init(struct OpenKeyboardArgs* args, STRING_REF const cc_string* text, int type);
 /* Displays on-screen keyboard for platforms that lack physical keyboard input. */
 /* NOTE: On desktop platforms, this won't do anything. */
-void Window_OpenKeyboard(const cc_string* text, int type);
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* args);
 /* Sets the text used for keyboard input. */
 /* NOTE: This is only used for mobile on-screen keyboard input with the web client, */
-/* because it is backed by a HTML input, rather than true keyboard input events. */
+/*  because it is backed by a HTML input, rather than true keyboard input events. */
 /* As such, this is necessary to ensure the HTML input is consistent with */
-/* whatever text input widget is actually being displayed on screen. */
+/*  whatever text input widget is actually being displayed on screen. */
 void Window_SetKeyboardText(const cc_string* text);
 /* Hides/Removes the previously displayed on-screen keyboard. */
 void Window_CloseKeyboard(void);
