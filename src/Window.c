@@ -701,7 +701,7 @@ static ATOM DoRegisterClass(void) {
 			GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON), 0);
 	wc.hIconSm = (HICON)LoadImage(win_instance, MAKEINTRESOURCE(1), IMAGE_ICON,
 			GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
 
 	if ((atom = RegisterClassExW(&wc))) return atom;
 	/* Windows 9x does not support W API functions */
@@ -3822,6 +3822,7 @@ void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
 				elem = document.createElement('textarea');
 			}
 			elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px; width: 100%');
+			elem.setAttribute('placeholder', UTF8ToString($2));
 			elem.value = UTF8ToString($0);
 
 			elem.addEventListener('input', 
@@ -3838,7 +3839,7 @@ void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
 		}
 		elem.focus();
 		elem.click();
-	}, str, args->type);
+	}, str, args->type, args->placeholder);
 }
 
 void Window_SetKeyboardText(const cc_string* text) {
