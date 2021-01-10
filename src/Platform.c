@@ -1776,8 +1776,8 @@ cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_s
 	LocalFree(output.pbData);
 	return 0;
 }
-#elif defined CC_BUILD_LINUX
-/* Encrypts data using XTEA block cipher, with /var/lib/dbus/machine-id as the key */
+#elif defined CC_BUILD_LINUX || defined CC_BUILD_MACOS
+/* Encrypts data using XTEA block cipher, with OS specific method to get machine-specific key */
 
 static void EncipherBlock(cc_uint32* v, const cc_uint32* key, cc_string* dst) {
 	cc_uint32 v0 = v[0], v1 = v[1], sum = 0, delta = 0x9E3779B9;
@@ -1820,6 +1820,8 @@ static void DecodeMachineID(char* tmp, cc_uint8* key) {
 	}
 }
 
+#if defined CC_BUILD_LINUX
+/* Read /var/lib/dbus/machine-id for the key */
 static void GetMachineID(cc_uint32* key) {
 	const cc_string idFile = String_FromConst("/var/lib/dbus/machine-id");
 	char tmp[MACHINEID_LEN];
@@ -1834,6 +1836,32 @@ static void GetMachineID(cc_uint32* key) {
 	}
 	s.Close(&s);
 }
+#elif defined CC_BUILD_MACOS
+static void GetMachineID(cc_uint32* key) {
+	io_registry_entry_t registry;
+	CFStringRef uuid;
+	char tmp[MACHINEID_LEN] = { 0 };
+	const char* src;
+	struct Stream s;
+	int i;
+
+	for (i = 0; i < 4; i++) key[i] = 0;
+
+	registry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
+	if (!registry) return;
+
+	uuid = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
+	if (uuid && (src = CFStringGetCStringPtr(uuid, kCFStringEncodingUTF8))) {
+		for (i = 0; *src && i < MACHINEID_LEN; src++) {
+			if (*src == '-') continue;
+			tmp[i++] = *src;
+		}
+		DecodeMachineID(tmp, (cc_uint8*)key);	
+	}
+	CFRelease(uuid);
+	IOObjectRelease(registry);
+}
+#endif
 
 cc_result Platform_Encrypt(const cc_string* key_, const void* data, int len, cc_string* dst) {
 	const cc_uint8* src = (const cc_uint8*)data;

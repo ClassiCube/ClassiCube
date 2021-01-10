@@ -74,14 +74,14 @@ build_mac32() {
   echo "Building mac32.."
   cp $SOURCE_DIR/misc/CCicon_mac32 $SOURCE_DIR/src/CCicon_mac32.o
   rm cc-osx32
-  $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenGL -lgcc_s.1
+  $MAC32_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac32.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx32 -framework Carbon -framework AGL -framework OpenGL -framework IOKit -lgcc_s.1
 }
 
 build_mac64() {
   echo "Building mac64.."
   cp $SOURCE_DIR/misc/CCicon_mac64 $SOURCE_DIR/src/CCicon_mac64.o
   rm cc-osx64
-  $MAC64_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenGL -lobjc
+  $MAC64_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 }
 
 build_web() {
