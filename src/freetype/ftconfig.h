@@ -121,14 +121,10 @@ FT_BEGIN_HEADER
   /*   providing a new configuration file.                                 */
   /*                                                                       */
 #if defined( __APPLE__ ) || ( defined( __MWERKS__ ) && defined( macintosh ) )
-  /* no Carbon frameworks for 64bit 10.4.x */
-  /* AvailabilityMacros.h is available since Mac OS X 10.2,        */
-  /* so guess the system version by maximum errno before inclusion */
-#include <errno.h>
-#ifdef ECANCELED /* defined since 10.2 */
-#include "AvailabilityMacros.h"
-#endif
+  /* don't enable mac support on iPhone/iPad */
+#ifndef __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__
 #define FT_MACINTOSH 1
+#endif
 
 #elif defined( __SC__ ) || defined( __MRC__ )
   /* Classic MacOS compilers */

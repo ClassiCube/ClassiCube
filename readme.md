@@ -128,6 +128,17 @@ NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TOD
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 
+#### Android
+
+Use Android Studio or run gradlew in android folder (TODO explain more detailed)
+
+#### iOS
+
+```clang *.c interop_ios.m -framework UIKit -framework OpenGLES -framework Foundation -lobjc```
+
+iOS version is unfinished because of lack of access to suitable devices for me to test with
+
+
 ##### Other
 
 You'll have to write the necessary code. You should read portability.md in doc folder.

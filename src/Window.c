@@ -28,11 +28,20 @@ void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
 }
 #endif
 
+#ifdef CC_BUILD_IOS
+/* iOS implements some functions in external interop_ios.m file */
+#define CC_MAYBE_OBJC extern
+#else
+/* All other platforms implement internally in this file */
+#define CC_MAYBE_OBJC static
+#endif
+
+
 static int cursorPrevX, cursorPrevY;
 static cc_bool cursorVisible = true;
 /* Gets the position of the cursor in screen or window coordinates. */
-static void Cursor_GetRawPos(int* x, int* y);
-static void Cursor_DoSetVisible(cc_bool visible);
+CC_MAYBE_OBJC void Cursor_GetRawPos(int* x, int* y);
+CC_MAYBE_OBJC void Cursor_DoSetVisible(cc_bool visible);
 
 void Cursor_SetVisible(cc_bool visible) {
 	if (cursorVisible == visible) return;
@@ -71,7 +80,7 @@ static void DefaultDisableRawMouse(void) {
 }
 
 /* The actual windowing system specific method to display a message box */
-static void ShowDialogCore(const char* title, const char* msg);
+CC_MAYBE_OBJC void ShowDialogCore(const char* title, const char* msg);
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* Ensure cursor is visible while showing message box */
 	cc_bool visible = cursorVisible;
