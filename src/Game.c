@@ -342,6 +342,7 @@ static void LoadPlugins(void) {
 	static const cc_string dir = String_FromConst("plugins");
 	cc_result res;
 
+	Utils_EnsureDirectory("plugins");
 	res = Directory_Enum(&dir, NULL, LoadPlugin);
 	if (res) Logger_SysWarn(res, "enumerating plugins directory");
 }
@@ -355,6 +356,7 @@ static void Game_Load(void) {
 	Gfx_Create();
 	Logger_WarnFunc = Game_WarnFunc;
 	LoadOptions();
+	Utils_EnsureDirectory("maps");
 
 	Event_Register_(&WorldEvents.NewMap,        NULL, HandleOnNewMap);
 	Event_Register_(&WorldEvents.MapLoaded,     NULL, HandleOnNewMapLoaded);
@@ -362,6 +364,7 @@ static void Game_Load(void) {
 	Event_Register_(&WindowEvents.Resized,      NULL, Game_OnResize);
 	Event_Register_(&WindowEvents.Closing,      NULL, Game_Free);
 
+	Game_AddComponent(&World_Component);
 	Game_AddComponent(&Textures_Component);
 	Game_AddComponent(&Input_Component);
 	Game_AddComponent(&Camera_Component);
@@ -372,7 +375,6 @@ static void Game_Load(void) {
 	Game_AddComponent(&Chat_Component);
 	Game_AddComponent(&Particles_Component);
 	Game_AddComponent(&TabList_Component);
-
 	Game_AddComponent(&Models_Component);
 	Game_AddComponent(&Entities_Component);
 	Game_AddComponent(&Http_Component);
@@ -380,8 +382,6 @@ static void Game_Load(void) {
 
 	Game_AddComponent(&Animations_Component);
 	Game_AddComponent(&Inventory_Component);
-	World_Reset();
-
 	Game_AddComponent(&Builder_Component);
 	Game_AddComponent(&MapRenderer_Component);
 	Game_AddComponent(&EnvRenderer_Component);
@@ -392,7 +392,6 @@ static void Game_Load(void) {
 	Game_AddComponent(&Selections_Component);
 	Game_AddComponent(&HeldBlockRenderer_Component);
 	/* Gfx_SetDepthWrite(true) */
-
 	Game_AddComponent(&PickedPosRenderer_Component);
 	Game_AddComponent(&Audio_Component);
 	Game_AddComponent(&AxisLinesRenderer_Component);
@@ -619,7 +618,6 @@ void Game_Free(void* obj) {
 	Logger_WarnFunc = Logger_DialogWarn;
 	Gfx_Free();
 	Options_SaveIfChanged();
-	World_Reset();
 }
 
 #define Game_DoFrameBody() \

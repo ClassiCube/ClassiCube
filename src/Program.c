@@ -170,9 +170,6 @@ int main(int argc, char** argv) {
 #endif
 	Platform_LogConst("Starting " GAME_APP_NAME " ..");
 	String_InitArray(Server.IP, ipBuffer);
-
-	Utils_EnsureDirectory("maps");
-	Utils_EnsureDirectory("plugins");
 	Options_Load();
 
 	res = Program_Run(argc, argv);
