@@ -832,13 +832,11 @@ static void SysFonts_Update(void) {
 }
 
 static void SysFonts_Load(void) {
-	static const cc_string cachePath = String_FromConst(FONT_CACHE_FILE);
-	if (!File_Exists(&cachePath)) {
-		Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
-	}
-
 	EntryList_UNSAFE_Load(&font_list, FONT_CACHE_FILE);
-	if (!font_list.count) SysFonts_Update();
+	if (font_list.count) return;
+	
+	Window_ShowDialog("One time load", "Initialising font cache, this can take several seconds.");
+	SysFonts_Update();
 }
 
 /* Some language-specific fonts don't support English letters */

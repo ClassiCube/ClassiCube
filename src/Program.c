@@ -148,13 +148,13 @@ static int Program_Run(int argc, char** argv) {
 	return 0;
 }
 
-/* NOTE: This is used when compiling with MingW without linking to startup files. */
-/* The final code produced for "main" is our "main" combined with crt's main. (mingw-w64-crt/crt/gccmain.c) */
-/* This immediately crashes the game on startup. */
+/* NOTE: main_real is used for when compiling with MingW without linking to startup files. */
+/*  Normally, the final code produced for "main" is our "main" combined with crt's main */
+/*  (mingw-w64-crt/crt/gccmain.c)) - alas this immediately crashes the game on startup. */
 /* Using main_real instead and setting main_real as the entrypoint fixes the crash. */
 #ifdef CC_NOMAIN
 int main_real(int argc, char** argv) {
-#else
+#else 
 int main(int argc, char** argv) {
 #endif
 	static char ipBuffer[STRING_SIZE];
@@ -178,10 +178,10 @@ int main(int argc, char** argv) {
 }
 
 /* ClassiCube is just a native library on android, */
-/* unlike other platforms where it is the executable. */
+/*  unlike other platforms where it is the executable. */
 /* As such, we have to hook into the java-side activity, */
-/* which in its onCreate() calls runGameAsync to */
-/* actually run the game on a separate thread. */
+/*  which in its onCreate() calls runGameAsync to */
+/*  actually run the game on a separate thread. */
 #ifdef CC_BUILD_ANDROID
 static void android_main(void) {
 	Platform_LogConst("Main loop started!");

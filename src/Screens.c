@@ -205,6 +205,13 @@ static void HUDScreen_ContextRecreated(void* screen) {
 
 static void HUDScreen_BuildMesh(void* screen) { }
 
+static int HUDScreen_LayoutHotbar(void) {
+	struct HUDScreen* s = &HUDScreen_Instance;
+	s->hotbar.scale     = Gui_GetHotbarScale();
+	Widget_Layout(&s->hotbar);
+	return s->hotbar.height;
+}
+
 static void HUDScreen_Layout(void* screen) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	struct TextWidget* line1 = &s->line1;
@@ -226,8 +233,7 @@ static void HUDScreen_Layout(void* screen) {
 		line2->yOffset = posY + s->posAtlas.tex.Height;
 	}
 
-	s->hotbar.scale = Gui_GetHotbarScale();
-	Widget_Layout(&s->hotbar);
+	HUDScreen_LayoutHotbar();
 	Widget_Layout(line2);
 }
 
@@ -753,11 +759,8 @@ static struct ChatScreen {
 
 static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 	int pad, y;
-
 	/* Determining chat Y requires us to know hotbar's position */
-	/* But HUD is lower priority, so it gets laid out AFTER chat */
-	/* Hence use this hack to resize HUD first */
-	HUDScreen_Layout(Gui_HUD);
+	HUDScreen_LayoutHotbar();
 		
 	y = min(s->input.base.y, Gui_HUD->hotbar.y);
 	y -= s->input.base.yOffset; /* add some padding */
@@ -1043,8 +1046,6 @@ static void ChatScreen_BuildMesh(void* screen) { }
 
 static void ChatScreen_Layout(void* screen) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
-	/* See comment in ChatScreen_UpdateChatYOffsets */
-	HUDScreen_Layout(Gui_HUD);
 	if (ChatScreen_ChatUpdateFont(s)) ChatScreen_Redraw(s);
 
 	s->paddingX = Display_ScaleX(5);
@@ -1059,7 +1060,7 @@ static void ChatScreen_Layout(void* screen) {
 	ChatScreen_UpdateChatYOffsets(s);
 
 	/* Can't use Widget_SetLocation because it DPI scales input */
-	s->bottomRight.yOffset = Gui_HUD->hotbar.height + Display_ScaleY(15);
+	s->bottomRight.yOffset = HUDScreen_LayoutHotbar() + Display_ScaleY(15);
 	Widget_Layout(&s->bottomRight);
 
 	Widget_SetLocation(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
@@ -2127,10 +2128,8 @@ static void TouchScreen_Layout(void* screen) {
 		Widget_SetLocation(&s->onscreen[i], ANCHOR_MAX, ANCHOR_MIN, 10, 10 + i * 40);
 	}
 	Widget_SetLocation(&s->more, ANCHOR_CENTRE, ANCHOR_MIN, 0, 10);
-
 	/* Need to align these relative to the hotbar */
-	HUDScreen_Layout(Gui_HUD);
-	height = Gui_HUD->hotbar.height;
+	height = HUDScreen_LayoutHotbar();
 
 	for (i = 0; i < s->numBtns; i++) {
 		desc = &s->descs[i];
