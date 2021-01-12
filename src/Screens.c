@@ -775,7 +775,7 @@ static void ChatScreen_UpdateChatYOffsets(struct ChatScreen* s) {
 }
 
 static void ChatScreen_OnInputTextChanged(void* elem) {
-	ChatScreen_UpdateChatYOffsets(Gui_Chat);
+	ChatScreen_UpdateChatYOffsets(&ChatScreen_Instance);
 }
 
 static cc_string ChatScreen_GetChat(int i) {
@@ -1422,7 +1422,7 @@ static int InventoryScreen_KeyDown(void* screen, int key) {
 		Gui_Remove((struct Screen*)s);
 	} else if (Elem_HandlesKeyDown(table, key)) {
 	} else {
-		return Elem_HandlesKeyDown(&Gui_HUD->hotbar, key);
+		return Elem_HandlesKeyDown(&HUDScreen_Instance.hotbar, key);
 	}
 	return true;
 }

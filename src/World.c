@@ -283,12 +283,12 @@ float Respawn_HighestSolidY(struct AABB* bb) {
 }
 
 Vec3 Respawn_FindSpawnPosition(float x, float z, Vec3 modelSize) {
-	Vec3 spawn = Vec3_Create3(x, 0.0f, z);
+	Vec3 spawn;
 	struct AABB bb;
 	float highestY;
 	int y;
 
-	spawn.Y = World.Height + ENTITY_ADJUSTMENT;
+	Vec3_Set(spawn, x, World.Height + ENTITY_ADJUSTMENT, z);
 	AABB_Make(&bb, &spawn, &modelSize);
 	spawn.Y = 0.0f;
 	

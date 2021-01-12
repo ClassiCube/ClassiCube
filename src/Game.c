@@ -497,9 +497,7 @@ void Game_TakeScreenshot(void) {
 #else
 	struct Stream stream;
 #endif
-
 	Game_ScreenshotRequested = false;
-	if (!Utils_EnsureDirectory("screenshots")) return;
 	DateTime_CurrentLocal(&now);
 
 	String_InitArray(filename, fileBuffer);
@@ -520,6 +518,7 @@ void Game_TakeScreenshot(void) {
 #elif CC_BUILD_MINFILES
 	/* no screenshots for these systems */
 #else
+	if (!Utils_EnsureDirectory("screenshots")) return;
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "screenshots/%s", &filename);
 
