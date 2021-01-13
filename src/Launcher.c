@@ -76,10 +76,6 @@ static CC_NOINLINE void InitFramebuffer(void) {
 	Window_AllocFramebuffer(&Launcher_Framebuffer);
 }
 
-static cc_bool UsingBitmappedFont(void) {
-	return (useBitmappedFont || Launcher_ClassicBackground) && hasBitmappedFont;
-}
-
 
 /*########################################################################################################################*
 *--------------------------------------------------------Starter/Updater--------------------------------------------------*
@@ -504,7 +500,7 @@ void Launcher_TryLoadTexturePack(void) {
 
 void Launcher_UpdateLogoFont(void) {
 	Font_Free(&logoFont);
-	Drawer2D_BitmappedText = UsingBitmappedFont();
+	Drawer2D_BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && hasBitmappedFont;
 	Drawer2D_MakeFont(&logoFont, 32, FONT_FLAGS_NONE);
 	Drawer2D_BitmappedText = false;
 }
@@ -554,7 +550,6 @@ void Launcher_ResetPixels(void) {
 		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
 	}
 
-	Drawer2D_BitmappedText = UsingBitmappedFont();
 	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);
 	x = WindowInfo.Width / 2 - Drawer2D_TextWidth(&args) / 2;
 
@@ -562,8 +557,6 @@ void Launcher_ResetPixels(void) {
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x + titleX, titleY);
 	args.text = title_fore;
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, x, 0);
-
-	Drawer2D_BitmappedText = false;
 	Launcher_MarkAllDirty();
 }
 

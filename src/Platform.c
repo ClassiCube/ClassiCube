@@ -31,6 +31,7 @@ const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
 const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
+const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
 #elif defined CC_BUILD_POSIX
 /* POSIX can be shared between Linux/BSD/macOS */
 #include <errno.h>
@@ -58,6 +59,7 @@ const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used ap
 const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
+const cc_result ReturnCode_DirectoryExists  = EEXIST;
 #endif
 /* Platform specific include files (Try to share for UNIX-ish) */
 #if defined CC_BUILD_DARWIN
@@ -334,15 +336,6 @@ cc_uint64 Stopwatch_Measure(void) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-int Directory_Exists(const cc_string* path) {
-	WCHAR str[NATIVE_STR_LEN];
-	DWORD attribs;
-
-	Platform_EncodeUtf16(str, path);
-	attribs = GetFileAttributesW(str);
-	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
-}
-
 cc_result Directory_Create(const cc_string* path) {
 	WCHAR str[NATIVE_STR_LEN];
 	BOOL success;
@@ -460,13 +453,6 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 	return *len != INVALID_FILE_SIZE ? 0 : GetLastError();
 }
 #elif defined CC_BUILD_POSIX
-int Directory_Exists(const cc_string* path) {
-	char str[NATIVE_STR_LEN];
-	struct stat sb;
-	Platform_EncodeUtf8(str, path);
-	return stat(str, &sb) == 0 && S_ISDIR(sb.st_mode);
-}
-
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, path);

@@ -29,6 +29,7 @@ extern const cc_result ReturnCode_FileShareViolation;
 extern const cc_result ReturnCode_FileNotFound;
 extern const cc_result ReturnCode_SocketInProgess;
 extern const cc_result ReturnCode_SocketWouldBlock;
+extern const cc_result ReturnCode_DirectoryExists;
 
 #ifdef CC_BUILD_WIN
 /* Encodes a string in UTF16 format, also null terminating the string. */
@@ -151,8 +152,6 @@ CC_API cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end);
 /* Returns total elapsed milliseconds between two stopwatch measurements. */
 int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end);
 
-/* Returns non-zero if the given directory exists. */
-CC_API int Directory_Exists(const cc_string* path);
 /* Attempts to create a new directory. */
 CC_API cc_result Directory_Create(const cc_string* path);
 /* Callback function invoked for each file found. */

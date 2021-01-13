@@ -25,12 +25,11 @@ cc_bool Utils_IsUrlPrefix(const cc_string* value) {
 
 cc_bool Utils_EnsureDirectory(const char* dirName) {
 	cc_string dir = String_FromReadonly(dirName);
-	cc_result res;
-	if (Directory_Exists(&dir)) return true;
+	cc_result res = Directory_Create(&dir);
 
-	res = Directory_Create(&dir);
-	if (res) { Logger_SysWarn2(res, "creating directory", &dir); }
-	return res == 0;
+	if (!res || res == ReturnCode_DirectoryExists) return true;
+	Logger_SysWarn2(res, "creating directory", &dir);
+	return false;
 }
 
 void Utils_UNSAFE_GetFilename(STRING_REF cc_string* path) {

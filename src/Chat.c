@@ -122,10 +122,8 @@ static cc_bool CreateLogsDirectory(void) {
 	/*       --> Utils_EnsureDirectory --> Logger_SysWarn2 --> Chat_Add --> AppendChatLog -> OpenChatLog */
 	/*            --> Utils_EnsureDirectory --> Logger_SysWarn2 --> Chat_Add --> AppendChatLog ... */
 	/* and so on, until eventually the stack overflows */
-	if (Directory_Exists(&dir)) return true;
-
 	res = Directory_Create(&dir);
-	if (!res) return true;
+	if (!res || res == ReturnCode_DirectoryExists) return true;
 
 	Chat_DisableLogging();
 	Logger_SysWarn2(res, "creating directory", &dir); 
