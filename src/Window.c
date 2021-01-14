@@ -3539,6 +3539,7 @@ static void UnhookEvents(void) {
 }
 
 void Window_Init(void) {
+	int is_ios, droid;
 	DisplayInfo.Width  = GetScreenWidth();
 	DisplayInfo.Height = GetScreenHeight();
 	DisplayInfo.Depth  = 24;
@@ -3567,20 +3568,21 @@ void Window_Init(void) {
 		});
 	);
 
+	droid  = EM_ASM_INT_V({ return /Android/i.test(navigator.userAgent); });
 	/* iOS 13 on iPad doesn't identify itself as iPad by default anymore */
-	/*   https://stackoverflow.com/questions/57765958/how-to-detect-ipad-and-ipad-os-version-in-ios-13-and-up */
-	Input_TouchMode = EM_ASM_INT_V({ 
-		return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
+	/*  https://stackoverflow.com/questions/57765958/how-to-detect-ipad-and-ipad-os-version-in-ios-13-and-up */
+	is_ios = EM_ASM_INT_V({
+		return /iPhone|iPad|iPod/i.test(navigator.userAgent) || 
 		(navigator.platform === 'MacIntel' && navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
 	});
+	Input_TouchMode = is_ios || droid;
 	Pointers_Count  = Input_TouchMode ? 0 : 1;
 
 	/* iOS shifts the whole webpage up when opening chat, which causes problems */
 	/*  as the chat/send butons are positioned at the top of the canvas - they */
 	/*  get pushed offscreen and can't be used at all anymore. So handle this */
 	/*  case specially by positioning them at the bottom instead for iOS. */
-	WindowInfo.SoftKeyboard = EM_ASM_INT_V({ return /iPhone|iPad|iPod/i.test(navigator.userAgent); }) 
-								? SOFT_KEYBOARD_SHIFT : SOFT_KEYBOARD_RESIZE;
+	WindowInfo.SoftKeyboard = is_ios ? SOFT_KEYBOARD_SHIFT : SOFT_KEYBOARD_RESIZE;
 }
 
 void Window_Create(int width, int height) {
