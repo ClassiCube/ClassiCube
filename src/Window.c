@@ -2478,7 +2478,7 @@ static void HookEvents(void) {
 	/* The documentation for 'RunApplicationEventLoop' states that it installs */
 	/* the standard application event handler which lets the menubar work. */
 	/* However, we cannot use that since the event loop is managed by us instead. */
-	/* Unfortunately, there is no proper API to duplicate that behaviour, so reply */
+	/* Unfortunately, there is no proper API to duplicate that behaviour, so rely */
 	/* on the undocumented GetMenuBarEventTarget to achieve similar behaviour. */
 	/* TODO: This is wrong for PowerPC. But at least it doesn't crash or anything. */
 #define _RTLD_DEFAULT ((void*)-2)
@@ -3583,6 +3583,10 @@ void Window_Init(void) {
 	/*  get pushed offscreen and can't be used at all anymore. So handle this */
 	/*  case specially by positioning them at the bottom instead for iOS. */
 	WindowInfo.SoftKeyboard = is_ios ? SOFT_KEYBOARD_SHIFT : SOFT_KEYBOARD_RESIZE;
+
+	/* Let the webpage know it needs to force a mobile layout */
+	if (!Input_TouchMode) return;
+	EM_ASM( if (typeof(forceTouchLayout) === 'function') forceTouchLayout(); );
 }
 
 void Window_Create(int width, int height) {
