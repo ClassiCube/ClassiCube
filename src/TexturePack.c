@@ -341,9 +341,11 @@ static void ExtractFromFile(const cc_string* filename) {
 	String_Format1(&path, TEXPACKS_DIR "/%s", filename);
 
 	res = Stream_OpenFile(&stream, &path);
-	if (res) { Logger_SysWarn2(res, "opening", &path); return; }
-	ExtractFrom(&stream, &path);
+	if (res) {
+		Logger_SysWarn2(res, "opening", &path); return; 
+	}
 
+	ExtractFrom(&stream, &path);
 	res = stream.Close(&stream);
 	if (res) { Logger_SysWarn2(res, "closing", &path); }
 }

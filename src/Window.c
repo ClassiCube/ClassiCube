@@ -1228,7 +1228,7 @@ static void HookXErrors(void) {
 /*########################################################################################################################*
 *--------------------------------------------------Public implementation--------------------------------------------------*
 *#########################################################################################################################*/
-static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode);
+static XVisualInfo GLContext_SelectVisual(void);
 void Window_Init(void) {
 	Display* display = XOpenDisplay(NULL);
 	int screen;
@@ -1265,19 +1265,17 @@ void Window_Create(int width, int height) {
 	XSetWindowAttributes attributes = { 0 };
 	XSizeHints hints = { 0 };
 	Atom protocols[2];
-	struct GraphicsMode mode;
 	int supported, x, y;
 
 	x = Display_CentreX(width);
 	y = Display_CentreY(height);
-	InitGraphicsMode(&mode);
 	RegisterAtoms();
 
 	win_eventMask = StructureNotifyMask /*| SubstructureNotifyMask*/ | ExposureMask |
 		KeyReleaseMask  | KeyPressMask    | KeymapStateMask   | PointerMotionMask |
 		FocusChangeMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask |
 		LeaveWindowMask | PropertyChangeMask;
-	win_visual = GLContext_SelectVisual(&mode);
+	win_visual = GLContext_SelectVisual();
 
 	Platform_LogConst("Opening render window... ");
 	attributes.colormap   = XCreateColormap(win_display, win_rootWin, win_visual.visual, AllocNone);
@@ -4374,7 +4372,7 @@ static EGLConfig ctx_config;
 static EGLint ctx_numConfig;
 
 #ifdef CC_BUILD_X11
-static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
+static XVisualInfo GLContext_SelectVisual(void) {
 	XVisualInfo info;
 	cc_result res;
 	int screen = DefaultScreen(win_display);
@@ -4654,7 +4652,7 @@ static void GetAttribs(struct GraphicsMode* mode, int* attribs, int depth) {
 	attribs[i++] = 0;
 }
 
-static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
+static XVisualInfo GLContext_SelectVisual(void) {
 	int attribs[20];
 	int major, minor;
 	XVisualInfo* visual = NULL;
@@ -4662,8 +4660,10 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	int fbcount, screen;
 	GLXFBConfig* fbconfigs;
 	XVisualInfo info;
+	struct GraphicsMode mode;
 
-	GetAttribs(mode, attribs, GLCONTEXT_DEFAULT_DEPTH);
+	InitGraphicsMode(&mode);
+	GetAttribs(&mode, attribs, GLCONTEXT_DEFAULT_DEPTH);
 	if (!glXQueryVersion(win_display, &major, &minor)) {
 		Logger_Abort("glXQueryVersion failed");
 	}
@@ -4685,7 +4685,7 @@ static XVisualInfo GLContext_SelectVisual(struct GraphicsMode* mode) {
 	}
 	/* Some really old devices will only supply 16 bit depths */
 	if (!visual) {
-		GetAttribs(mode, attribs, 16);
+		GetAttribs(&mode, attribs, 16);
 		visual = glXChooseVisual(win_display, screen, attribs);
 	}
 	if (!visual) Logger_Abort("Requested GraphicsMode not available.");
