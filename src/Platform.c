@@ -338,11 +338,14 @@ cc_uint64 Stopwatch_Measure(void) {
 #if defined CC_BUILD_WIN
 cc_result Directory_Create(const cc_string* path) {
 	WCHAR str[NATIVE_STR_LEN];
-	BOOL success;
+	cc_result res;
 
 	Platform_EncodeUtf16(str, path);
-	success = CreateDirectoryW(str, NULL);
-	return success ? 0 : GetLastError();
+	if (CreateDirectoryW(str, NULL)) return 0;
+	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
+
+	Platform_Utf16ToAnsi(str);
+	return CreateDirectoryA((LPCSTR)str, NULL) ? 0 : GetLastError();
 }
 
 int File_Exists(const cc_string* path) {
@@ -408,7 +411,7 @@ static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWOR
 	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
 	/* Windows 9x does not support W API functions */
-	Platform_EncodeAnsi(str, path);
+	Platform_Utf16ToAnsi(str);
 	*file = CreateFileA((LPCSTR)str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
 	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
@@ -1018,16 +1021,23 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-static cc_result Process_RawStart(const WCHAR* path, WCHAR* args) {
+static cc_result Process_RawStart(WCHAR* path, WCHAR* args) {
 	STARTUPINFOW si = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
-	BOOL ok;
-
+	cc_result res;
 	si.cb = sizeof(STARTUPINFOW);
-	ok = CreateProcessW(path, args, NULL, NULL, false, 0, NULL, NULL, &si, &pi);
-	if (!ok) return GetLastError();
 
-	/* Don't leak memory for proess return code */
+	if (CreateProcessW(path, args, NULL, NULL, 
+			false, 0, NULL, NULL, &si, &pi)) goto success;
+	//if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
+
+	//Platform_Utf16ToAnsi(path);
+	//if (CreateProcessA((LPCSTR)path, args, NULL, NULL, 
+	//		false, 0, NULL, NULL, &si, &pi)) goto success;
+	return GetLastError();
+
+success:
+	/* Don't leak memory for process return code */
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
 	return 0;
@@ -1551,13 +1561,12 @@ int Platform_EncodeUtf16(void* data, const cc_string* src) {
 	return src->length * 2;
 }
 
-int Platform_EncodeAnsi(void* data, const cc_string* src) {
-	char* dst = (char*)data;
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
+void Platform_Utf16ToAnsi(void* data) {
+	WCHAR* src = (WCHAR*)data;
+	char* dst  = (char*)data;
 
-	Mem_Copy(dst, src->buffer, src->length);
-	dst[src->length] = '\0';
-	return src->length;
+	while (*src) { *dst++ = *src++; }
+	*dst = '\0';
 }
 
 static void Platform_InitStopwatch(void) {

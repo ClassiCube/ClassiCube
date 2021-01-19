@@ -344,7 +344,7 @@ static void ExtractFromFile(const cc_string* filename) {
 	if (res) {
 		/* Game shows a dialog if default.zip is missing */
 		Game_DefaultZipMissing |= res == ReturnCode_FileNotFound
-				&& String_CaselessEquals(filename, &defaultZip);
+					&& String_CaselessEquals(filename, &defaultZip);
 		Logger_SysWarn2(res, "opening", &path); return; 
 	}
 

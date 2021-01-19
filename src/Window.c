@@ -674,7 +674,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 
 	case WM_DESTROY:
 		WindowInfo.Exists = false;
-		UnregisterClass(CC_WIN_CLASSNAME, win_instance);
+		UnregisterClassW(CC_WIN_CLASSNAME, win_instance);
 
 		if (win_DC) ReleaseDC(win_handle, win_DC);
 		break;
@@ -837,7 +837,7 @@ void Window_Show(void) {
 }
 
 int Window_GetWindowState(void) {
-	DWORD s = GetWindowLong(win_handle, GWL_STYLE);
+	DWORD s = GetWindowLongW(win_handle, GWL_STYLE);
 
 	if ((s & WS_MINIMIZE))                   return WINDOW_STATE_MINIMISED;
 	if ((s & WS_MAXIMIZE) && (s & WS_POPUP)) return WINDOW_STATE_FULLSCREEN;
@@ -851,7 +851,7 @@ static void ToggleFullscreen(cc_bool fullscreen, UINT finalShow) {
 	suppress_resize = true;
 	{
 		ShowWindow(win_handle, SW_RESTORE); /* reset maximised state */
-		SetWindowLong(win_handle, GWL_STYLE, style);
+		SetWindowLongW(win_handle, GWL_STYLE, style);
 		SetWindowPos(win_handle, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 		ShowWindow(win_handle, finalShow); 
 		Window_ProcessEvents();
@@ -881,7 +881,7 @@ cc_result Window_ExitFullscreen(void) {
 
 
 void Window_SetSize(int width, int height) {
-	DWORD style = GetWindowLong(win_handle, GWL_STYLE);
+	DWORD style = GetWindowLongW(win_handle, GWL_STYLE);
 	RECT rect   = { 0, 0, width, height };
 	AdjustWindowRect(&rect, style, false);
 
@@ -890,15 +890,21 @@ void Window_SetSize(int width, int height) {
 }
 
 void Window_Close(void) {
-	PostMessage(win_handle, WM_CLOSE, 0, 0);
+	PostMessageW(win_handle, WM_CLOSE, 0, 0);
 }
 
 void Window_ProcessEvents(void) {
 	HWND foreground;
 	MSG msg;
-	while (PeekMessage(&msg, NULL, 0, 0, 1)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+
+	if (is_ansiWindow) {
+		while (PeekMessageA(&msg, NULL, 0, 0, 1)) {
+			TranslateMessage(&msg); DispatchMessageA(&msg);
+		}
+	} else {
+		while (PeekMessageW(&msg, NULL, 0, 0, 1)) {
+			TranslateMessage(&msg); DispatchMessageW(&msg);
+		}
 	}
 
 	foreground = GetForegroundWindow();
