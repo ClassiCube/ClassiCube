@@ -54,7 +54,7 @@ cc_bool Game_ClassicMode, Game_ClassicHacks;
 cc_bool Game_AllowCustomBlocks, Game_UseCPE;
 cc_bool Game_AllowServerTextures;
 
-cc_bool Game_ViewBobbing, Game_HideGui;
+cc_bool Game_ViewBobbing, Game_HideGui, Game_DefaultZipMissing;
 cc_bool Game_BreakableLiquids, Game_ScreenshotRequested;
 
 static char usernameBuffer[FILENAME_SIZE];
@@ -401,9 +401,14 @@ static void Game_Load(void) {
 		if (comp->Init) comp->Init();
 	}
 
+	Game_DefaultZipMissing = false;
 	TexturePack_ExtractCurrent(false);
-	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
+	if (Game_DefaultZipMissing) {
+		Window_ShowDialog("Missing file",
+			"default.zip is missing, try downloading resources first.\n\nThe game will still run, but without any textures");
+	}
 
+	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
 	if (Gfx_WarnIfNecessary()) EnvRenderer_SetMode(EnvRenderer_Minimal | ENV_LEGACY);
 	Server.BeginConnect();
 }

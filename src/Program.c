@@ -43,19 +43,9 @@ int main_imdct() {
 #endif
 
 static void RunGame(void) {
-	static const cc_string defPath = String_FromConst("texpacks/default.zip");
 	cc_string title; char titleBuffer[STRING_SIZE];
-	int width, height;
-
-#ifndef CC_BUILD_WEB
-	if (!File_Exists(&defPath)) {
-		Window_ShowDialog("Missing file",
-			"default.zip is missing, try downloading resources first.\n\nThe game will still run, but without any textures");
-	}
-#endif
-
-	width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, DisplayInfo.Width,  0);
-	height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, DisplayInfo.Height, 0);
+	int width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, DisplayInfo.Width,  0);
+	int height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, DisplayInfo.Height, 0);
 
 	/* No custom resolution has been set */
 	if (width == 0 || height == 0) {
