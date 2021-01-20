@@ -133,14 +133,10 @@ static int clouds_vertices;
 
 void EnvRenderer_RenderClouds(void) {
 	float offset;
-	struct Matrix m;
-
 	if (!clouds_vb || Env.CloudsHeight < -2000) return;
 	offset = (float)(Game.Time / 2048.0f * 0.6f * Env.CloudsSpeed);
 
-	m = Matrix_Identity; m.row4.X = offset; /* translate X axis */
-	Gfx_LoadMatrix(MATRIX_TEXTURE, &m);
-
+	Gfx_EnableTextureOffset(offset, 0);
 	Gfx_SetAlphaTest(true);
 	Gfx_SetTexturing(true);
 	Gfx_BindTexture(clouds_tex);
@@ -149,8 +145,7 @@ void EnvRenderer_RenderClouds(void) {
 	Gfx_DrawVb_IndexedTris(clouds_vertices);
 	Gfx_SetAlphaTest(false);
 	Gfx_SetTexturing(false);
-
-	Gfx_LoadIdentityMatrix(MATRIX_TEXTURE);
+	Gfx_DisableTextureOffset();
 }
 
 static void DrawCloudsY(int x1, int z1, int x2, int z2, int y, struct VertexTextured* v) {

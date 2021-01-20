@@ -18,7 +18,7 @@ typedef enum FogFunc_ {
 	FOG_LINEAR, FOG_EXP, FOG_EXP2
 } FogFunc;
 typedef enum MatrixType_ {
-	MATRIX_PROJECTION, MATRIX_VIEW, MATRIX_TEXTURE
+	MATRIX_PROJECTION, MATRIX_VIEW
 } MatrixType;
 
 #define SIZEOF_VERTEX_COLOURED 16
@@ -178,6 +178,8 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex);
 CC_API void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix);
 /* Loads the identity matrix over the currently active matrix. */
 CC_API void Gfx_LoadIdentityMatrix(MatrixType type);
+CC_API void Gfx_EnableTextureOffset(float x, float y);
+CC_API void Gfx_DisableTextureOffset(void);
 /* Calculates an orthographic matrix suitable with this backend. (usually for 2D) */
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix);
 /* Calculates a projection matrix suitable with this backend. (usually for 3D) */

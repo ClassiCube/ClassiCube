@@ -87,12 +87,7 @@ Vec3 Vec3_GetDirVector(float yawRad, float pitchRad) {
 }*/
 
 
-const struct Matrix Matrix_Identity = {
-	1.0f, 0.0f, 0.0f, 0.0f,
-	0.0f, 1.0f, 0.0f, 0.0f,
-	0.0f, 0.0f, 1.0f, 0.0f,
-	0.0f, 0.0f, 0.0f, 1.0f
-};
+const struct Matrix Matrix_Identity = Matrix_IdentityValue;
 
 /* Transposed, source https://open.gl/transformations */
 

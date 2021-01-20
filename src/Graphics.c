@@ -940,25 +940,31 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 /*########################################################################################################################*
 *---------------------------------------------------------Matrices--------------------------------------------------------*
 *#########################################################################################################################*/
-static D3DTRANSFORMSTATETYPE matrix_modes[3] = { D3DTS_PROJECTION, D3DTS_VIEW, D3DTS_TEXTURE0 };
+static D3DTRANSFORMSTATETYPE matrix_modes[2] = { D3DTS_PROJECTION, D3DTS_VIEW };
 
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
-	if (type == MATRIX_TEXTURE) {
-		matrix->row3.X = matrix->row4.X; /* NOTE: this hack fixes the texture movements. */
-		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
-	}
-
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetTransform(device, matrix_modes[type], (const D3DMATRIX*)matrix);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
-	if (type == MATRIX_TEXTURE) {
-		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
-	}
-
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetTransform(device, matrix_modes[type], (const D3DMATRIX*)&Matrix_Identity);
+}
+
+static struct Matrix texMatrix = Matrix_IdentityValue;
+void Gfx_EnableTextureOffset(float x, float y) {
+	texMatrix.row3.X = x; texMatrix.row3.Y = y;
+	if (Gfx.LostContext) return;
+
+	IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
+	IDirect3DDevice9_SetTransform(device, D3DTS_TEXTURE0, (const D3DMATRIX*)&texMatrix);
+}
+
+void Gfx_DisableTextureOffset(void) {
+	if (Gfx.LostContext) return;
+	IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
+	IDirect3DDevice9_SetTransform(device, D3DTS_TEXTURE0, (const D3DMATRIX*)&Matrix_Identity);
 }
 
 void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
@@ -1577,22 +1583,23 @@ void Gfx_OnWindowResize(void) {
 #ifdef CC_BUILD_GLMODERN
 #define FTR_TEXTURE_UV (1 << 0)
 #define FTR_ALPHA_TEST (1 << 1)
-#define FTR_TEX_MATRIX (1 << 2)
+#define FTR_TEX_OFFSET (1 << 2)
 #define FTR_LINEAR_FOG (1 << 3)
 #define FTR_DENSIT_FOG (1 << 4)
 #define FTR_HASANY_FOG (FTR_LINEAR_FOG | FTR_DENSIT_FOG)
 #define FTR_FS_MEDIUMP (1 << 7)
 
 #define UNI_MVP_MATRIX (1 << 0)
-#define UNI_TEX_MATRIX (1 << 1)
+#define UNI_TEX_OFFSET (1 << 1)
 #define UNI_FOG_COL    (1 << 2)
 #define UNI_FOG_END    (1 << 3)
 #define UNI_FOG_DENS   (1 << 4)
 #define UNI_MASK_ALL   0x1F
 
 /* cached uniforms (cached for multiple programs */
-static struct Matrix _view, _proj, _tex, _mvp;
+static struct Matrix _view, _proj, _mvp;
 static cc_bool gfx_alphaTest, gfx_texTransform;
+static float _texX, _texY;
 
 /* shader programs (emulate fixed function) */
 static struct GLShader {
@@ -1606,29 +1613,29 @@ static struct GLShader {
 	{ 0              | FTR_ALPHA_TEST },
 	{ FTR_TEXTURE_UV },
 	{ FTR_TEXTURE_UV | FTR_ALPHA_TEST },
-	{ FTR_TEXTURE_UV | FTR_TEX_MATRIX },
-	{ FTR_TEXTURE_UV | FTR_TEX_MATRIX | FTR_ALPHA_TEST },
+	{ FTR_TEXTURE_UV | FTR_TEX_OFFSET },
+	{ FTR_TEXTURE_UV | FTR_TEX_OFFSET | FTR_ALPHA_TEST },
 	/* linear fog */
 	{ FTR_LINEAR_FOG | 0              },
 	{ FTR_LINEAR_FOG | 0              | FTR_ALPHA_TEST },
 	{ FTR_LINEAR_FOG | FTR_TEXTURE_UV },
 	{ FTR_LINEAR_FOG | FTR_TEXTURE_UV | FTR_ALPHA_TEST },
-	{ FTR_LINEAR_FOG | FTR_TEXTURE_UV | FTR_TEX_MATRIX },
-	{ FTR_LINEAR_FOG | FTR_TEXTURE_UV | FTR_TEX_MATRIX | FTR_ALPHA_TEST },
+	{ FTR_LINEAR_FOG | FTR_TEXTURE_UV | FTR_TEX_OFFSET },
+	{ FTR_LINEAR_FOG | FTR_TEXTURE_UV | FTR_TEX_OFFSET | FTR_ALPHA_TEST },
 	/* density fog */
 	{ FTR_DENSIT_FOG | 0              },
 	{ FTR_DENSIT_FOG | 0              | FTR_ALPHA_TEST },
 	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV },
 	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV | FTR_ALPHA_TEST },
-	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV | FTR_TEX_MATRIX },
-	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV | FTR_TEX_MATRIX | FTR_ALPHA_TEST },
+	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV | FTR_TEX_OFFSET },
+	{ FTR_DENSIT_FOG | FTR_TEXTURE_UV | FTR_TEX_OFFSET | FTR_ALPHA_TEST },
 };
 static struct GLShader* gfx_activeShader;
 
 /* Generates source code for a GLSL vertex shader, based on shader's flags */
 static void GenVertexShader(const struct GLShader* shader, cc_string* dst) {
 	int uv = shader->features & FTR_TEXTURE_UV;
-	int tm = shader->features & FTR_TEX_MATRIX;
+	int tm = shader->features & FTR_TEX_OFFSET;
 
 	String_AppendConst(dst,         "attribute vec3 in_pos;\n");
 	String_AppendConst(dst,         "attribute vec4 in_col;\n");
@@ -1636,14 +1643,13 @@ static void GenVertexShader(const struct GLShader* shader, cc_string* dst) {
 	String_AppendConst(dst,         "varying vec4 out_col;\n");
 	if (uv) String_AppendConst(dst, "varying vec2 out_uv;\n");
 	String_AppendConst(dst,         "uniform mat4 mvp;\n");
-	if (tm) String_AppendConst(dst, "uniform mat4 texMatrix;\n");
+	if (tm) String_AppendConst(dst, "uniform vec2 texOffset;\n");
 
 	String_AppendConst(dst,         "void main() {\n");
 	String_AppendConst(dst,         "  gl_Position = mvp * vec4(in_pos, 1.0);\n");
 	String_AppendConst(dst,         "  out_col = in_col;\n");
 	if (uv) String_AppendConst(dst, "  out_uv  = in_uv;\n");
-	/* TODO: Fix this dirty hack for clouds */
-	if (tm) String_AppendConst(dst, "  out_uv = (texMatrix * vec4(out_uv,0.0,1.0)).xy;\n");
+	if (tm) String_AppendConst(dst, "  out_uv  = out_uv + texOffset;\n");
 	String_AppendConst(dst,         "}");
 }
 
@@ -1762,7 +1768,7 @@ static void CompileProgram(struct GLShader* shader) {
 		glDeleteShader(fs);
 
 		shader->locations[0] = glGetUniformLocation(program, "mvp");
-		shader->locations[1] = glGetUniformLocation(program, "texMatrix");
+		shader->locations[1] = glGetUniformLocation(program, "texOffset");
 		shader->locations[2] = glGetUniformLocation(program, "fogCol");
 		shader->locations[3] = glGetUniformLocation(program, "fogEnd");
 		shader->locations[4] = glGetUniformLocation(program, "fogDensity");
@@ -1796,9 +1802,9 @@ static void ReloadUniforms(void) {
 		glUniformMatrix4fv(s->locations[0], 1, false, (float*)&_mvp);
 		s->uniforms &= ~UNI_MVP_MATRIX;
 	}
-	if ((s->uniforms & UNI_TEX_MATRIX) && (s->features & FTR_TEX_MATRIX)) {
-		glUniformMatrix4fv(s->locations[1], 1, false, (float*)&_tex);
-		s->uniforms &= ~UNI_TEX_MATRIX;
+	if ((s->uniforms & UNI_TEX_OFFSET) && (s->features & FTR_TEX_OFFSET)) {
+		glUniform2f(s->locations[1], _texX, _texY);
+		s->uniforms &= ~UNI_TEX_OFFSET;
 	}
 	if ((s->uniforms & UNI_FOG_COL) && (s->features & FTR_HASANY_FOG)) {
 		glUniform3f(s->locations[2], PackedCol_R(gfx_fogCol) / 255.0f, PackedCol_G(gfx_fogCol) / 255.0f, 
@@ -1873,27 +1879,27 @@ void Gfx_SetTexturing(cc_bool enabled) { }
 void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; SwitchProgram(); }
 
 void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
-	if (type == MATRIX_VIEW || type == MATRIX_PROJECTION) {
-		if (type == MATRIX_VIEW)       _view = *matrix;
-		if (type == MATRIX_PROJECTION) _proj = *matrix;
+	if (type == MATRIX_VIEW)       _view = *matrix;
+	if (type == MATRIX_PROJECTION) _proj = *matrix;
 
-		Matrix_Mul(&_mvp, &_view, &_proj);
-		DirtyUniform(UNI_MVP_MATRIX);
-		ReloadUniforms();
-	} else {
-		_tex = *matrix;
-		gfx_texTransform = true;
-		DirtyUniform(UNI_TEX_MATRIX);
-		SwitchProgram();
-	}
+	Matrix_Mul(&_mvp, &_view, &_proj);
+	DirtyUniform(UNI_MVP_MATRIX);
+	ReloadUniforms();
 }
 void Gfx_LoadIdentityMatrix(MatrixType type) {
-	if (type == MATRIX_VIEW || type == MATRIX_PROJECTION) {
-		Gfx_LoadMatrix(type, &Matrix_Identity);
-	} else {
-		gfx_texTransform = false;
-		SwitchProgram();
-	}
+	Gfx_LoadMatrix(type, &Matrix_Identity);
+}
+
+void Gfx_EnableTextureOffset(float x, float y) {
+	_texX = x; _texY = y;
+	gfx_texTransform = true;
+	DirtyUniform(UNI_TEX_OFFSET);
+	SwitchProgram();
+}
+
+void Gfx_DisableTextureOffset(void) {
+	gfx_texTransform = false;
+	SwitchProgram();
 }
 
 static void GL_CheckSupport(void) {
@@ -2055,6 +2061,14 @@ void Gfx_LoadIdentityMatrix(MatrixType type) {
 	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
 	glLoadIdentity();
 }
+
+static struct Matrix texMatrix = Matrix_IdentityValue;
+void Gfx_EnableTextureOffset(float x, float y) {
+	texMatrix.row4.X = x; texMatrix.row4.Y = y;
+	Gfx_LoadMatrix(2, &texMatrix);
+}
+
+void Gfx_DisableTextureOffset(void) { Gfx_LoadIdentityMatrix(2); }
 
 static void Gfx_FreeState(void) { FreeDefaultResources(); }
 static void Gfx_RestoreState(void) {
