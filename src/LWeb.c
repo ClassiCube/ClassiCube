@@ -200,6 +200,9 @@ static void Json_Handle(cc_uint8* data, cc_uint32 len,
 /*########################################################################################################################*
 *--------------------------------------------------------Web task---------------------------------------------------------*
 *#########################################################################################################################*/
+static char servicesBuffer[FILENAME_SIZE];
+static cc_string servicesServer = String_FromArray(servicesBuffer);
+
 static void LWebTask_Reset(struct LWebTask* task) {
 	task->completed = false;
 	task->working   = true;
@@ -229,6 +232,10 @@ void LWebTask_DisplayError(struct LWebTask* task, const char* action, cc_string*
 	Launcher_DisplayHttpError(task->res, task->status, action, dst);
 }
 
+void LWebTasks_Init(void) {
+	Options_Get(SOPT_SERVICES, &servicesServer, SERVICES_SERVER);
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------GetTokenTask------------------------------------------------------*
@@ -251,12 +258,15 @@ static void GetTokenTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void GetTokenTask_Run(void) {
-	static const cc_string url = String_FromConst(SERVICES_SERVER "/login");
+	cc_string url; char urlBuffer[URL_MAX_SIZE];
 	static char tokenBuffer[STRING_SIZE];
 	static char userBuffer[STRING_SIZE];
 	if (GetTokenTask.Base.working) return;
 
 	LWebTask_Reset(&GetTokenTask.Base);
+	String_InitArray(url, urlBuffer);
+	String_Format1(&url, "%s/login", &servicesServer);
+
 	String_InitArray(GetTokenTask.token,    tokenBuffer);
 	String_InitArray(GetTokenTask.username, userBuffer);
 	GetTokenTask.error = false;
@@ -309,12 +319,15 @@ static void SignInTask_Append(cc_string* dst, const char* key, const cc_string* 
 }
 
 void SignInTask_Run(const cc_string* user, const cc_string* pass, const cc_string* mfaCode) {
-	static const cc_string url = String_FromConst(SERVICES_SERVER "/login");
+	cc_string url; char urlBuffer[URL_MAX_SIZE];
 	static char userBuffer[STRING_SIZE];
 	cc_string args; char argsBuffer[1024];
 	if (SignInTask.Base.working) return;
 
 	LWebTask_Reset(&SignInTask.Base);
+	String_InitArray(url, urlBuffer);
+	String_Format1(&url, "%s/login", &servicesServer);
+
 	String_InitArray(SignInTask.username, userBuffer);
 	SignInTask.error   = NULL;
 	SignInTask.needMFA = false;
@@ -396,7 +409,7 @@ void FetchServerTask_Run(const cc_string* hash) {
 	LWebTask_Reset(&FetchServerTask.Base);
 	ServerInfo_Init(&FetchServerTask.server);
 	String_InitArray(url, urlBuffer);
-	String_Format1(&url, SERVICES_SERVER "/server/%s", hash);
+	String_Format2(&url, "%s/server/%s", &servicesServer, hash);
 
 	FetchServerTask.Base.Handle = FetchServerTask_Handle;
 	FetchServerTask.Base.reqID  = Http_AsyncGetDataEx(&url, false, NULL, NULL, &ccCookies);
@@ -442,9 +455,12 @@ static void FetchServersTask_Handle(cc_uint8* data, cc_uint32 len) {
 }
 
 void FetchServersTask_Run(void) {
-	static const cc_string url = String_FromConst(SERVICES_SERVER "/servers");
+	cc_string url; char urlBuffer[URL_MAX_SIZE];
 	if (FetchServersTask.Base.working) return;
+
 	LWebTask_Reset(&FetchServersTask.Base);
+	String_InitArray(url, urlBuffer);
+	String_Format1(&url, "%s/servers", &servicesServer);
 
 	FetchServersTask.Base.Handle = FetchServersTask_Handle;
 	FetchServersTask.Base.reqID  = Http_AsyncGetDataEx(&url, false, NULL, NULL, &ccCookies);

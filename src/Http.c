@@ -1041,7 +1041,7 @@ int Http_AsyncGetSkin(const cc_string* skinName) {
 	if (Utils_IsUrlPrefix(skinName)) {
 		String_Copy(&url, skinName);
 	} else {
-		String_Format1(&url, SKINS_SERVER "%s.png", skinName);
+		String_Format1(&url, SKINS_SERVER "/%s.png", skinName);
 	}
 	return Http_AsyncGetData(&url, false);
 }

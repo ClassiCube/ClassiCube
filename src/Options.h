@@ -83,6 +83,8 @@
 #define ROPT_PORT   "launcher-port"
 #define ROPT_MPPASS "launcher-mppass"
 
+#define SOPT_SERVICES "server-services"
+
 struct StringsBuffer;
 extern struct StringsBuffer Options;
 /* Frees any memory allocated in storing options. */

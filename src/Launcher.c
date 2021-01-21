@@ -296,6 +296,7 @@ void Launcher_Run(void) {
 	InitFramebuffer();
 
 	Options_Get(LOPT_USERNAME, &Game_Username, "");
+	LWebTasks_Init();
 	Session_Load();
 	Launcher_LoadSkin();
 	Launcher_Init();

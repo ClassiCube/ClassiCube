@@ -693,6 +693,7 @@ cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream,
 	if ((res = Stream_Write(stream, tmp, 16))) return res;
 
 	/* Come back to fixup size of data in data chunk */
+	/* TODO: Position instead of Length */
 	if ((res = stream->Length(stream, &stream_end)))   return res;
 	if ((res = stream->Seek(stream, stream_beg + 33))) return res;
 

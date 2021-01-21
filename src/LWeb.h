@@ -53,6 +53,7 @@ struct LWebTask {
 };
 void LWebTask_Tick(struct LWebTask* task);
 void LWebTask_DisplayError(struct LWebTask* task, const char* action, cc_string* dst);
+void LWebTasks_Init(void);
 
 
 extern struct GetTokenTaskData {
