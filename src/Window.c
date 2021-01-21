@@ -1042,8 +1042,11 @@ static Atom net_wm_state_fullscreen;
 
 static Atom xa_clipboard, xa_targets, xa_utf8_string, xa_data_sel;
 static Atom xa_atom = 4;
-static long win_eventMask;
 static cc_bool grabCursor;
+static long win_eventMask = StructureNotifyMask | /* SubstructureNotifyMask | */ 
+	ExposureMask      | KeyReleaseMask  | KeyPressMask    | KeymapStateMask   | 
+	PointerMotionMask | FocusChangeMask | ButtonPressMask | ButtonReleaseMask | 
+	EnterWindowMask   | LeaveWindowMask | PropertyChangeMask;
 
 static int MapNativeKey(KeySym key, unsigned int state) {
 	if (key >= XK_0 && key <= XK_9) { return '0' + (key - XK_0); }
@@ -1276,11 +1279,6 @@ void Window_Create(int width, int height) {
 	x = Display_CentreX(width);
 	y = Display_CentreY(height);
 	RegisterAtoms();
-
-	win_eventMask = StructureNotifyMask /*| SubstructureNotifyMask*/ | ExposureMask |
-		KeyReleaseMask  | KeyPressMask    | KeymapStateMask   | PointerMotionMask |
-		FocusChangeMask | ButtonPressMask | ButtonReleaseMask | EnterWindowMask |
-		LeaveWindowMask | PropertyChangeMask;
 	win_visual = GLContext_SelectVisual();
 
 	Platform_LogConst("Opening render window... ");
@@ -1493,6 +1491,8 @@ static void HandleGenericEvent(XEvent* e);
 
 void Window_ProcessEvents(void) {
 	XEvent e;
+	Window focus;
+	int focusRevert;
 	int i, btn, key, status;
 
 	while (WindowInfo.Exists) {
@@ -1521,6 +1521,20 @@ void Window_ProcessEvents(void) {
 
 		case Expose:
 			if (e.xexpose.count == 0) Event_RaiseVoid(&WindowEvents.Redraw);
+			break;
+
+		case LeaveNotify:
+			XGetInputFocus(win_display, &focus, &focusRevert);
+			if (focus == PointerRoot) {
+				WindowInfo.Focused = false; Event_RaiseVoid(&WindowEvents.FocusChanged);
+			}
+			break;
+
+		case EnterNotify:
+			XGetInputFocus(win_display, &focus, &focusRevert);
+			if (focus == PointerRoot) {
+				WindowInfo.Focused = true; Event_RaiseVoid(&WindowEvents.FocusChanged);
+			}
 			break;
 
 		case KeyPress:
