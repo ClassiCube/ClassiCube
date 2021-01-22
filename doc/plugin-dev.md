@@ -61,8 +61,8 @@ All plugins require this boilerplate, so feel free to copy and paste it.
 
 ---
 
-### Writing plugins in other languages
-When writing plugins with C++, game headers must be surroundined with `extern "C"`, i.e.
+### Writing plugins in C++
+When including game headers, they must be surrounded with `extern "C"`, i.e.
 ```C
 extern "C" {
 #include "src/Chat.h"
@@ -70,6 +70,15 @@ extern "C" {
 }
 ```
 Otherwise you will get obscure `Undefined reference` errors when compiling.
+
+Exported plugin functions must be surrounded with `extern "C"`, i.e.
+```C
+extern "C" {
+EXPORT int Plugin_ApiVersion = 1;
+EXPORT struct IGameComponent Plugin_Component = { TestPlugin_Init };
+}
+```
+Otherwise your plugin will not load. (you'll see `error getting plugin version` in-game)
 
 ---
 
