@@ -4326,7 +4326,6 @@ void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 #ifdef CC_BUILD_GL
 /* OpenGL contexts are heavily tied to the window, so for simplicitly are also included here */
 /* SDL and EGL are platform agnostic, other OpenGL context backends are tied to one windowing system. */
-#define GLCONTEXT_DEFAULT_DEPTH 24
 #define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 
 void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
@@ -4894,61 +4893,8 @@ void GLContext_GetApiInfo(cc_string* info) { }
 *--------------------------------------------------------NSOpenGL---------------------------------------------------------*
 *#########################################################################################################################*/
 #elif defined CC_BUILD_COCOA
-#define NSOpenGLPFADoubleBuffer 5
-#define NSOpenGLPFAColorSize    8
-#define NSOpenGLPFADepthSize    12
-#define NSOpenGLPFAFullScreen   54
-#define NSOpenGLContextParameterSwapInterval 222
-
-static id ctxHandle;
-static id MakePixelFormat(struct GraphicsMode* mode, cc_bool fullscreen) {
-	id fmt;
-	uint32_t attribs[7] = {
-		NSOpenGLPFAColorSize,    0,
-		NSOpenGLPFADepthSize,    GLCONTEXT_DEFAULT_DEPTH,
-		NSOpenGLPFADoubleBuffer, 0, 0
-	};
-
-	attribs[1] = mode->R + mode->G + mode->B + mode->A;
-	attribs[5] = fullscreen ? NSOpenGLPFAFullScreen : 0;
-	fmt = objc_msgSend((id)objc_getClass("NSOpenGLPixelFormat"), sel_registerName("alloc"));
-	return objc_msgSend(fmt, sel_registerName("initWithAttributes:"), attribs);
-}
-
-void GLContext_Create(void) {
-	struct GraphicsMode mode;
-	id view, fmt;
-
-	InitGraphicsMode(&mode);
-	fmt = MakePixelFormat(&mode, true);
-	if (!fmt) {
-		Platform_LogConst("Failed to create full screen pixel format.");
-		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
-		fmt = MakePixelFormat(&mode, false);
-	}
-	if (!fmt) Logger_Abort("Choosing pixel format");
-
-	ctxHandle = objc_msgSend((id)objc_getClass("NSOpenGLContext"), sel_registerName("alloc"));
-	ctxHandle = objc_msgSend(ctxHandle, sel_registerName("initWithFormat:shareContext:"), fmt, NULL);
-	if (!ctxHandle) Logger_Abort("Failed to create OpenGL context");
-
-	objc_msgSend(ctxHandle, sel_registerName("setView:"), viewHandle);
-	objc_msgSend(fmt,       sel_registerName("release"));
-	objc_msgSend(ctxHandle, sel_registerName("makeCurrentContext"));
-	objc_msgSend(ctxHandle, selUpdate);
-}
-
-void GLContext_Update(void) {
-	// TODO: Why does this crash on resizing
-	objc_msgSend(ctxHandle, selUpdate);
-}
+/* NOTE: Mostly implemented in interop_cocoa.m */
 cc_bool GLContext_TryRestore(void) { return true; }
-
-void GLContext_Free(void) { 
-	objc_msgSend((id)objc_getClass("NSOpenGLContext"), sel_registerName("clearCurrentContext"));
-	objc_msgSend(ctxHandle, sel_registerName("clearDrawable"));
-	objc_msgSend(ctxHandle, sel_registerName("release"));
-}
 
 void* GLContext_GetAddress(const char* function) {
 	static const cc_string glPath = String_FromConst("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
@@ -4960,15 +4906,6 @@ void* GLContext_GetAddress(const char* function) {
 	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
 }
 
-cc_bool GLContext_SwapBuffers(void) {
-	objc_msgSend(ctxHandle, selFlushBuffer);
-	return true;
-}
-
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	int value = vsync ? 1 : 0;
-	objc_msgSend(ctxHandle, sel_registerName("setValues:forParameter:"), &value, NSOpenGLContextParameterSwapInterval);
-}
 void GLContext_GetApiInfo(cc_string* info) { }
 
 

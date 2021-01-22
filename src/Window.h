@@ -159,6 +159,7 @@ void Window_UpdateRawMouse(void);
 void Window_DisableRawMouse(void);
 
 #ifdef CC_BUILD_GL
+#define GLCONTEXT_DEFAULT_DEPTH 24
 /* Creates an OpenGL context, then makes it the active context. */
 /* NOTE: You MUST have created the window beforehand, as the GL context is attached to the window. */
 void GLContext_Create(void);

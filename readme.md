@@ -84,7 +84,7 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ##### Using gcc/clang (64 bit)
 
-```cc *.c -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
+```cc *.c interop_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
 
 ### Compiling - other desktop OSes
 

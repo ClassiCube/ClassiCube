@@ -81,7 +81,7 @@ build_mac64() {
   echo "Building mac64.."
   cp $SOURCE_DIR/misc/CCicon_mac64 $SOURCE_DIR/src/CCicon_mac64.o
   rm cc-osx64
-  $MAC64_CC *.c $ALL_FLAGS $MACOS_FLAGS CCicon_mac64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
+  $MAC64_CC *.c interop_cocoa.m $ALL_FLAGS $MACOS_FLAGS CCicon_mac64.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-osx64 -framework Cocoa -framework OpenGL -framework IOKit -lobjc
 }
 
 build_web() {
