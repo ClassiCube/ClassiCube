@@ -1,4 +1,5 @@
 #include "Logger.h"
+#include "ExtMath.h"
 #include "Platform.h"
 #include "Window.h"
 #include "Input.h"
@@ -6,9 +7,6 @@
 #include "Bitmap.h"
 #include "String.h"
 #include <Cocoa/Cocoa.h>
-#include <OpenGL/OpenGL.h>
-#include <objc/message.h>
-#include <objc/runtime.h>
 
 /*########################################################################################################################*
 *-------------------------------------------------------Cocoa window------------------------------------------------------*
@@ -41,93 +39,83 @@ static void RefreshWindowBounds(void) {
 	WindowInfo.Height = (int)view.size.height;
 }
 
-static void OnDidResize(id self, SEL cmd, id notification) {
+@interface CCWindow : NSWindow { }
+@end
+@implementation CCWindow
+/* If this isn't overriden, an annoying beep sound plays anytime a key is pressed */
+- (void)keyDown:(NSEvent *)event { }
+@end
+
+@interface CCWindowDelegate : NSObject { }
+@end
+@implementation CCWindowDelegate
+- (void)windowDidResize:(NSNotification *)notification {
 	RefreshWindowBounds();
 	Event_RaiseVoid(&WindowEvents.Resized);
 }
 
-static void OnDidMove(id self, SEL cmd, id notification) {
+- (void)windowDidMove:(NSNotification *)notification {
 	RefreshWindowBounds();
 	GLContext_Update();
 }
 
-static void OnDidBecomeKey(id self, SEL cmd, id notification) {
+- (void)windowDidBecomeKey:(NSNotification *)notification {
 	WindowInfo.Focused = true;
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
-static void OnDidResignKey(id self, SEL cmd, id notification) {
+- (void)windowDidResignKey:(NSNotification *)notification {
 	WindowInfo.Focused = false;
 	Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
-static void OnDidMiniaturize(id self, SEL cmd, id notification) {
+- (void)windowDidMiniaturize:(NSNotification *)notification {
 	Event_RaiseVoid(&WindowEvents.StateChanged);
 }
 
-static void OnDidDeminiaturize(id self, SEL cmd, id notification) {
+- (void)windowDidDeminiaturize:(NSNotification *)notification {
 	Event_RaiseVoid(&WindowEvents.StateChanged);
 }
 
-static void OnWillClose(id self, SEL cmd, id notification) {
+- (void)windowWillClose:(NSNotification *)notification {
 	WindowInfo.Exists = false;
 	Event_RaiseVoid(&WindowEvents.Closing);
 }
+@end
 
-/* If this isn't overriden, an annoying beep sound plays anytime a key is pressed */
-static void OnKeyDown(id self, SEL cmd, id ev) { }
 
-static Class Window_MakeClass(void) {
-	Class c = objc_allocateClassPair(objc_getClass("NSWindow"), "ClassiCube_Window", 0);
+static void DoDrawFramebuffer(CGRect dirty);
+@interface CCView : NSView { }
+@end
+@implementation CCView
 
-	class_addMethod(c, sel_registerName("windowDidResize:"),        OnDidResize,        "v@:@");
-	class_addMethod(c, sel_registerName("windowDidMove:"),          OnDidMove,          "v@:@");
-	class_addMethod(c, sel_registerName("windowDidBecomeKey:"),     OnDidBecomeKey,     "v@:@");
-	class_addMethod(c, sel_registerName("windowDidResignKey:"),     OnDidResignKey,     "v@:@");
-	class_addMethod(c, sel_registerName("windowDidMiniaturize:"),   OnDidMiniaturize,   "v@:@");
-	class_addMethod(c, sel_registerName("windowDidDeminiaturize:"), OnDidDeminiaturize, "v@:@");
-	class_addMethod(c, sel_registerName("windowWillClose:"),        OnWillClose,        "v@:@");
-	class_addMethod(c, sel_registerName("keyDown:"),                OnKeyDown,          "v@:@");
+- (void)drawRect:(CGRect)dirty { DoDrawFramebuffer(dirty); }
 
-	objc_registerClassPair(c);
-	return c;
-}
-
-/* When the user users left mouse to drag reisze window, this enters 'live resize' mode */
-/*   Although the game receives a left mouse down event, it does NOT receive a left mouse up */
-/*   This causes the game to get stuck with left mouse down after user finishes resizing */
-/* So work arond that by always releasing left mouse when a live resize is finished */
-static void DidEndLiveResize(id self, SEL cmd) {
+- (void)viewDidEndLiveResize {
+	/* When the user users left mouse to drag reisze window, this enters 'live resize' mode */
+	/*   Although the game receives a left mouse down event, it does NOT receive a left mouse up */
+	/*   This causes the game to get stuck with left mouse down after user finishes resizing */
+	/* So work arond that by always releasing left mouse when a live resize is finished */
 	Input_SetReleased(KEY_LMOUSE);
 }
+@end
 
-static void View_DrawRect(id self, SEL cmd, CGRect r);
+
 static void MakeContentView(void) {
 	CGRect rect;
-	id view;
-	Class c;
+	NSView* view;
 
 	view = [winHandle contentView];
 	rect = [view frame];
-	
-	c = objc_allocateClassPair(objc_getClass("NSView"), "ClassiCube_View", 0);
-	// TODO: test rect is actually correct in View_DrawRect on both 32 and 64 bit
-#ifdef __i386__
-	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=ff}{NSSize=ff}}");
-#else
-	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=dd}{NSSize=dd}}");
-#endif
-	class_addMethod(c, sel_registerName("viewDidEndLiveResize"), DidEndLiveResize, "v@:");
-	objc_registerClassPair(c);
 
-	viewHandle = [c alloc];
+	viewHandle = [CCView alloc];
 	[viewHandle initWithFrame:rect];
 	[winHandle setContentView:viewHandle];
 }
 
 void Window_Init(void) {
 	appHandle = [NSApplication sharedApplication];
-	[appHandle activateIgnoringOtherApps:true];
+	[appHandle activateIgnoringOtherApps:YES];
 	Window_CommonInit();
 }
 
@@ -164,7 +152,7 @@ static void ApplyIcon(void) { }
 
 #define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
 void Window_Create(int width, int height) {
-	Class winClass;
+	CCWindowDelegate* del;
 	CGRect rect;
 
 	/* Technically the coordinates for the origin are at bottom left corner */
@@ -174,12 +162,12 @@ void Window_Create(int width, int height) {
 	rect.size.width  = width; 
 	rect.size.height = height;
 
-	winClass  = Window_MakeClass();
-	winHandle = [winClass alloc];
+	winHandle = [CCWindow alloc];
 	[winHandle initWithContentRect:rect styleMask:WIN_MASK backing:0 defer:false];
 	
 	Window_CommonCreate();
-	[winHandle setDelegate:winHandle];
+	del = [CCWindowDelegate alloc];
+	[winHandle setDelegate:del];
 	RefreshWindowBounds();
 	MakeContentView();
 	ApplyIcon();
@@ -228,7 +216,7 @@ void Window_SetSize(int width, int height) {
 	rect.origin.y    += WindowInfo.Height - height;
 	rect.size.width  += width  - WindowInfo.Width;
 	rect.size.height += height - WindowInfo.Height;
-	[winHandle setFrame:rect display:true];
+	[winHandle setFrame:rect display:YES];
 }
 
 void Window_Close(void) { 
@@ -246,7 +234,7 @@ static void ProcessKeyChars(id ev) {
 	char buffer[128];
 	const char* src;
 	cc_string str;
-	id chars;
+	NSString* chars;
 	int i, len, flags;
 
 	/* Ignore text input while cmd is held down */
@@ -289,7 +277,7 @@ void Window_ProcessEvents(void) {
 	CGFloat dx, dy;
 
 	for (;;) {
-		ev = [appHandle nextEventMatchingMask:0xFFFFFFFFU untilDate:NULL inMode:NSDefaultRunLoopMode dequeue:true];
+		ev = [appHandle nextEventMatchingMask:0xFFFFFFFFU untilDate:Nil inMode:NSDefaultRunLoopMode dequeue:YES];
 		if (!ev) break;
 		type = [ev type];
 
@@ -388,13 +376,13 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
 	fb_bmp = *bmp;
 }
 
-static void View_DrawRect(id self, SEL cmd, CGRect r_) {
+static void DoDrawFramebuffer(CGRect dirty) {
 	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 	CGContextRef context = NULL;
 	CGDataProviderRef provider;
+	NSGraphicsContext* nsContext;
 	CGImageRef image;
 	CGRect rect;
-	id nsContext;
 
 	/* Unfortunately CGImageRef is immutable, so changing the */
 	/* underlying data doesn't change what shows when drawing. */
@@ -466,7 +454,7 @@ void GLContext_Create(void) {
 	if (!fmt) Logger_Abort("Choosing pixel format");
 
 	ctxHandle = [NSOpenGLContext alloc];
-	ctxHandle = [ctxHandle initWithFormat:fmt shareContext:NULL];
+	ctxHandle = [ctxHandle initWithFormat:fmt shareContext:Nil];
 	if (!ctxHandle) Logger_Abort("Failed to create OpenGL context");
 
 	[ctxHandle setView:viewHandle];

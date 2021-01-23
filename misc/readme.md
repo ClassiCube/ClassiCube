@@ -21,5 +21,3 @@ TODO: Explain how to compile your own icon for all the platforms
 ## Other files
 
 Info.plist is the Info.plist you would use when creating an Application Bundle for macOS.
-
-Window.m was the original basis code for the Cocoa window backend.
