@@ -277,7 +277,7 @@ void Window_ProcessEvents(void) {
 	CGFloat dx, dy;
 
 	for (;;) {
-		ev = [appHandle nextEventMatchingMask:0xFFFFFFFFU untilDate:Nil inMode:NSDefaultRunLoopMode dequeue:YES];
+		ev = [appHandle nextEventMatchingMask:NSAnyEventMask untilDate:Nil inMode:NSDefaultRunLoopMode dequeue:YES];
 		if (!ev) break;
 		type = [ev type];
 
