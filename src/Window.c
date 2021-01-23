@@ -3065,7 +3065,7 @@ void Window_ProcessEvents(void) {
 	CGFloat dx, dy;
 
 	for (;;) {
-		ev = objc_msgSend(appHandle, selNextEvent, 0xFFFFFFFFU, NULL, NSDefaultRunLoopMode, true);
+		ev = objc_msgSend(appHandle, selNextEvent, ~0UL, NULL, NSDefaultRunLoopMode, true);
 		if (!ev) break;
 		type = (int)objc_msgSend(ev, selType);
 
