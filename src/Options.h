@@ -72,6 +72,7 @@
 #define OPT_TOUCH_BUTTONS "gui-touchbuttons"
 #define OPT_TOUCH_SCALE "gui-touchscale"
 #define OPT_HTTP_ONLY "http-no-https"
+#define OPT_RAW_INPUT "win-raw-input"
 
 #define LOPT_SESSION  "launcher-session"
 #define LOPT_USERNAME "launcher-cc-username"

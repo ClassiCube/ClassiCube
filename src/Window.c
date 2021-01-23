@@ -975,7 +975,9 @@ static void InitRawMouse(void) {
 		_getRawInputData  = (FUNC_GetRawInputData) DynamicLib_Get2(lib, "GetRawInputData");
 		rawMouseSupported = _registerRawInput && _getRawInputData;
 	}
-	if (!rawMouseSupported) { Platform_LogConst("Raw input unsupported!"); return; }
+
+	rawMouseSupported &= Options_GetBool(OPT_RAW_INPUT, true);
+	if (!rawMouseSupported) { Platform_LogConst("## Raw input unsupported!"); return; }
 
 	rid.usUsagePage = 1; /* HID_USAGE_PAGE_GENERIC; */
 	rid.usUsage     = 2; /* HID_USAGE_GENERIC_MOUSE; */
