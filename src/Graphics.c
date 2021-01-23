@@ -973,13 +973,18 @@ void Gfx_CalcOrthoMatrix(float width, float height, struct Matrix* matrix) {
 	matrix->row4.Z = ORTHO_NEAR / (ORTHO_NEAR - ORTHO_FAR);
 }
 
-void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
+static float CalcZNear(float fov) {
 	/* With reversed z depth, near Z plane can be much closer (with sufficient depth buffer precision) */
 	/*   This reduces clipping with high FOV without sacrificing depth precision for faraway objects */
 	/*   However for low FOV, don't reduce near Z in order to gain a bit more depth precision */
-	float zNear = (depthBits < 24 || fov <= 70 * MATH_DEG2RAD) ? 0.05f : 0.001953125f;
-	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
+	if (depthBits < 24 || fov <= 70 * MATH_DEG2RAD) return 0.05f;
+	if (fov <= 100 * MATH_DEG2RAD) return 0.025f;
+	if (fov <= 150 * MATH_DEG2RAD) return 0.0125f;
+	return 0.00390625f;
+}
 
+void Gfx_CalcPerspectiveMatrix(float fov, float aspect, float zFar, struct Matrix* matrix) {
+	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, CalcZNear(fov), zFar);
 	/* Adjust the projection matrix to produce reversed Z values */
 	matrix->row3.Z = -matrix->row3.Z - 1.0f;
 	matrix->row4.Z = -matrix->row4.Z;
