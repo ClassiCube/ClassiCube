@@ -1041,19 +1041,40 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-static cc_result Process_RawStart(WCHAR* path, WCHAR* args) {
-	STARTUPINFOW si = { 0 };
+static cc_result Process_RawGetExePath(WCHAR* path, int* len) {
+	*len = GetModuleFileNameW(NULL, path, NATIVE_STR_LEN);
+	return *len ? 0 : GetLastError();
+}
+
+cc_result Process_StartGame(const cc_string* args) {
+	WCHAR path[NATIVE_STR_LEN + 1], raw[NATIVE_STR_LEN];
+	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
+	STARTUPINFOW si        = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 	cc_result res;
+	int len;
+
+	Process_RawGetExePath(path, &len);
+	path[len] = '\0';
 	si.cb = sizeof(STARTUPINFOW);
+	
+	String_InitArray(argv, argvBuffer);
+	/* Game doesn't actually care about argv[0] */
+	String_Format1(&argv, "cc %s", args);
+	String_UNSAFE_TrimEnd(&argv);
+	Platform_EncodeUtf16(raw, &argv);
 
-	if (CreateProcessW(path, args, NULL, NULL, 
+	if (CreateProcessW(path, raw, NULL, NULL, 
 			false, 0, NULL, NULL, &si, &pi)) goto success;
-	//if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
+	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
-	//Platform_Utf16ToAnsi(path);
-	//if (CreateProcessA((LPCSTR)path, args, NULL, NULL, 
-	//		false, 0, NULL, NULL, &si, &pi)) goto success;
+	/* Windows 9x does not support W API functions */
+	len = GetModuleFileNameA(NULL, (LPSTR)path, NATIVE_STR_LEN);
+	((char*)path)[len] = '\0';
+	Platform_Utf16ToAnsi(raw);
+
+	if (CreateProcessA((LPCSTR)path, (LPSTR)raw, NULL, NULL,
+			false, 0, NULL, NULL, &si, &pi)) goto success;
 	return GetLastError();
 
 success:
@@ -1063,27 +1084,7 @@ success:
 	return 0;
 }
 
-static cc_result Process_RawGetExePath(WCHAR* path, int* len) {
-	*len = GetModuleFileNameW(NULL, path, NATIVE_STR_LEN);
-	return *len ? 0 : GetLastError();
-}
-
-cc_result Process_StartGame(const cc_string* args) {
-	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
-	WCHAR raw[NATIVE_STR_LEN], path[NATIVE_STR_LEN + 1];
-	int len;
-
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-	path[len] = '\0';
-
-	String_InitArray(argv, argvBuffer);
-	String_Format1(&argv, "ClassiCube.exe %s", args);
-	Platform_EncodeUtf16(raw, &argv);
-	return Process_RawStart(path, raw);
-}
 void Process_Exit(cc_result code) { ExitProcess(code); }
-
 void Process_StartOpen(const cc_string* args) {
 	WCHAR str[NATIVE_STR_LEN];
 	Platform_EncodeUtf16(str, args);
@@ -1292,7 +1293,6 @@ cc_bool Updater_Clean(void) {
 
 cc_result Updater_Start(const char** action) {
 	WCHAR path[NATIVE_STR_LEN + 1];
-	WCHAR args[2] = { 'a', '\0' }; /* don't actually care about arguments */
 	cc_result res;
 	int len = 0;
 
@@ -1306,7 +1306,7 @@ cc_result Updater_Start(const char** action) {
 	if (!MoveFileExW(UPDATE_SRC, path, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
 
 	*action = "Restarting game";
-	return Process_RawStart(path, args);
+	return Process_StartGame(&String_Empty);
 }
 
 cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
