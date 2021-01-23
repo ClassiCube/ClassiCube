@@ -9,6 +9,7 @@
 
 struct StringsBuffer Options;
 static struct StringsBuffer changedOpts;
+cc_result Options_LoadResult;
 
 void Options_Free(void) {
 	StringsBuffer_Clear(&Options);
@@ -35,8 +36,8 @@ static cc_bool Options_LoadFilter(const cc_string* entry) {
 void Options_Load(void) {
 	/* Increase from max 512 to 2048 per entry */
 	StringsBuffer_SetLengthBits(&Options, 11);
-	EntryList_Load(&Options, "options-default.txt", '=', NULL);
-	EntryList_Load(&Options, "options.txt",         '=', NULL);
+	Options_LoadResult = EntryList_Load(&Options, "options-default.txt", '=', NULL);
+	Options_LoadResult = EntryList_Load(&Options, "options.txt",         '=', NULL);
 }
 
 void Options_Reload(void) {
@@ -52,7 +53,7 @@ void Options_Reload(void) {
 		StringsBuffer_Remove(&Options, i);
 	}
 	/* Load only options which have not changed */
-	EntryList_Load(&Options, "options.txt", '=', Options_LoadFilter);
+	Options_LoadResult = EntryList_Load(&Options, "options.txt", '=', Options_LoadFilter);
 }
 
 static void SaveOptions(void) {

@@ -87,6 +87,7 @@
 
 struct StringsBuffer;
 extern struct StringsBuffer Options;
+extern cc_result Options_LoadResult;
 /* Frees any memory allocated in storing options. */
 void Options_Free(void);
 

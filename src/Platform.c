@@ -357,48 +357,68 @@ int File_Exists(const cc_string* path) {
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
+static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* file, DWORD attribs,
+									void* obj, Directory_EnumCallback callback) {
+	cc_string path; char pathBuffer[MAX_PATH + 10];
+	/* ignore . and .. entry */
+	if (file->length == 1 && file->buffer[0] == '.') return 0;
+	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return 0;
+
+	String_InitArray(path, pathBuffer);
+	String_Format2(&path, "%s/%s", dirPath, file);
+
+	if (attribs & FILE_ATTRIBUTE_DIRECTORY) return Directory_Enum(&path, obj, callback);
+	callback(&path, obj);
+	return 0;
+}
+
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[MAX_PATH + 10];
 	WCHAR str[NATIVE_STR_LEN];
-	WCHAR* src;
-	WIN32_FIND_DATAW entry;
+	WIN32_FIND_DATAW eW;
+	WIN32_FIND_DATAA eA;
+	int i, ansi = false;
 	HANDLE find;
 	cc_result res;	
-	int i;
 
 	/* Need to append \* to search for files in directory */
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "%s\\*", dirPath);
 	Platform_EncodeUtf16(str, &path);
 	
-	find = FindFirstFileW(str, &entry);
-	if (find == INVALID_HANDLE_VALUE) return GetLastError();
+	find = FindFirstFileW(str, &eW);
+	if (!find || find == INVALID_HANDLE_VALUE) {
+		if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
+		ansi = true;
 
-	do {
-		path.length = 0;
-		String_Format1(&path, "%s/", dirPath);
+		/* Windows 9x does not support W API functions */
+		Platform_Utf16ToAnsi(str);
+		find = FindFirstFileA((LPCSTR)str, &eA);
+		if (find == INVALID_HANDLE_VALUE) return GetLastError();
+	}
 
-		/* ignore . and .. entry */
-		src = entry.cFileName;
-		if (src[0] == '.' && src[1] == '\0') continue;
-		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
-		
-		for (i = 0; i < MAX_PATH && src[i]; i++) {
-			/* TODO: UTF16 to codepoint conversion */
-			String_Append(&path, Convert_CodepointToCP437(src[i]));
-		}
-
-		if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) { FindClose(find); return res; }
-		} else {
-			callback(&path, obj);
-		}
-	}  while (FindNextFileW(find, &entry));
+	if (ansi) {
+		do {
+			path.length = 0;
+			for (i = 0; i < MAX_PATH && eA.cFileName[i]; i++) {
+				String_Append(&path, Convert_CodepointToCP437(eA.cFileName[i]));
+			}
+			if ((res = Directory_EnumCore(dirPath, &path, eA.dwFileAttributes, obj, callback))) return res;
+		} while (FindNextFileA(find, &eA));
+	} else {
+		do {
+			path.length = 0;
+			for (i = 0; i < MAX_PATH && eW.cFileName[i]; i++) {
+				/* TODO: UTF16 to codepoint conversion */
+				String_Append(&path, Convert_CodepointToCP437(eW.cFileName[i]));
+			}
+			if ((res = Directory_EnumCore(dirPath, &path, eW.dwFileAttributes, obj, callback))) return res;
+		} while (FindNextFileW(find, &eW));
+	}
 
 	res = GetLastError(); /* return code from FindNextFile */
 	FindClose(find);
-	return res == ERROR_NO_MORE_FILES ? 0 : GetLastError();
+	return res == ERROR_NO_MORE_FILES ? 0 : res;
 }
 
 static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
@@ -1565,7 +1585,7 @@ void Platform_Utf16ToAnsi(void* data) {
 	WCHAR* src = (WCHAR*)data;
 	char* dst  = (char*)data;
 
-	while (*src) { *dst++ = *src++; }
+	while (*src) { *dst++ = (char)(*src++); }
 	*dst = '\0';
 }
 

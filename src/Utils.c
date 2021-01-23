@@ -222,7 +222,7 @@ int Convert_FromBase64(const char* src, int len, cc_uint8* dst) {
 /*########################################################################################################################*
 *--------------------------------------------------------EntryList--------------------------------------------------------*
 *#########################################################################################################################*/
-void EntryList_Load(struct StringsBuffer* list, const char* file, char separator, EntryList_Filter filter) {
+cc_result EntryList_Load(struct StringsBuffer* list, const char* file, char separator, EntryList_Filter filter) {
 	cc_string entry; char entryBuffer[1024];
 	cc_string path;
 	cc_string key, value;
@@ -236,8 +236,8 @@ void EntryList_Load(struct StringsBuffer* list, const char* file, char separator
 	maxLen = list->_lenMask ? list->_lenMask : STRINGSBUFFER_DEF_LEN_MASK;
 	
 	res = Stream_OpenFile(&stream, &path);
-	if (res == ReturnCode_FileNotFound) return;
-	if (res) { Logger_SysWarn2(res, "opening", &path); return; }
+	if (res == ReturnCode_FileNotFound) return res;
+	if (res) { Logger_SysWarn2(res, "opening", &path); return res; }
 
 	/* ReadLine reads single byte at a time */
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
@@ -274,10 +274,11 @@ void EntryList_Load(struct StringsBuffer* list, const char* file, char separator
 
 	res = stream.Close(&stream);
 	if (res) { Logger_SysWarn2(res, "closing", &path); }
+	return res;
 }
 
-void EntryList_UNSAFE_Load(struct StringsBuffer* list, const char* file) { 
-	EntryList_Load(list, file, '\0', NULL); 
+cc_result EntryList_UNSAFE_Load(struct StringsBuffer* list, const char* file) { 
+	return EntryList_Load(list, file, '\0', NULL); 
 }
 
 void EntryList_Save(struct StringsBuffer* list, const char* file) {
