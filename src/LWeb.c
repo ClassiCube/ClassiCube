@@ -109,43 +109,47 @@ static void Json_ConsumeObject(struct JsonContext* ctx) {
 	char keyBuffer[STRING_SIZE];
 	cc_string value, oldKey = ctx->curKey;
 	int token;
+	ctx->depth++;
 	ctx->OnNewObject(ctx);
 
 	while (true) {
 		token = Json_ConsumeToken(ctx);
 		if (token == ',') continue;
-		if (token == '}') return;
+		if (token == '}') break;
 
-		if (token != '"') { ctx->failed = true; return; }
+		if (token != '"') { ctx->failed = true; break; }
 		String_InitArray(ctx->curKey, keyBuffer);
 		Json_ConsumeString(ctx, &ctx->curKey);
 
 		token = Json_ConsumeToken(ctx);
-		if (token != ':') { ctx->failed = true; return; }
+		if (token != ':') { ctx->failed = true; break; }
 
 		token = Json_ConsumeToken(ctx);
-		if (token == TOKEN_NONE) { ctx->failed = true; return; }
+		if (token == TOKEN_NONE) { ctx->failed = true; break; }
 
 		value = Json_ConsumeValue(token, ctx);
 		ctx->OnValue(ctx, &value);
 		ctx->curKey = oldKey;
 	}
+	ctx->depth--;
 }
 
 static void Json_ConsumeArray(struct JsonContext* ctx) {
 	cc_string value;
 	int token;
+	ctx->depth++;
 	ctx->OnNewArray(ctx);
 
 	while (true) {
 		token = Json_ConsumeToken(ctx);
 		if (token == ',') continue;
-		if (token == ']') return;
+		if (token == ']') break;
 
-		if (token == TOKEN_NONE) { ctx->failed = true; return; }
+		if (token == TOKEN_NONE) { ctx->failed = true; break; }
 		value = Json_ConsumeValue(token, ctx);
 		ctx->OnValue(ctx, &value);
 	}
+	ctx->depth--;
 }
 
 static cc_string Json_ConsumeValue(int token, struct JsonContext* ctx) {
@@ -169,6 +173,7 @@ void Json_Init(struct JsonContext* ctx, STRING_REF char* str, int len) {
 	ctx->left   = len;
 	ctx->failed = false;
 	ctx->curKey = String_Empty;
+	ctx->depth  = 0;
 
 	ctx->OnNewArray  = Json_NullOnNew;
 	ctx->OnNewObject = Json_NullOnNew;
@@ -421,12 +426,19 @@ void FetchServerTask_Run(const cc_string* hash) {
 *#########################################################################################################################*/
 struct FetchServersData FetchServersTask;
 static void FetchServersTask_Count(struct JsonContext* ctx) {
+	/* JSON is expected in this format: */
+	/*  { "servers" :      (depth = 1)  */
+	/*    [                (depth = 2)  */
+	/*	     { server1 },  (depth = 3)  */
+	/*		 { server2 },  (depth = 3)  */
+	/*          ...                     */
+	if (ctx->depth != 3) return;
 	FetchServersTask.numServers++;
 }
 
 static void FetchServersTask_Next(struct JsonContext* ctx) {
+	if (ctx->depth != 3) return;
 	curServer++;
-	if (curServer < FetchServersTask.servers) return;
 	ServerInfo_Init(curServer);
 }
 
@@ -440,8 +452,7 @@ static void FetchServersTask_Handle(cc_uint8* data, cc_uint32 len) {
 	FetchServersTask.servers    = NULL;
 	FetchServersTask.orders     = NULL;
 
-	/* -1 because servers is surrounded by a { */
-	FetchServersTask.numServers = -1;
+	FetchServersTask.numServers = 0;
 	Json_Handle(data, len, NULL, NULL, FetchServersTask_Count);
 	count = FetchServersTask.numServers;
 
@@ -449,8 +460,7 @@ static void FetchServersTask_Handle(cc_uint8* data, cc_uint32 len) {
 	FetchServersTask.servers = (struct ServerInfo*)Mem_Alloc(count, sizeof(struct ServerInfo), "servers list");
 	FetchServersTask.orders  = (cc_uint16*)Mem_Alloc(count, 2, "servers order");
 
-	/* -2 because servers is surrounded by a { */
-	curServer = FetchServersTask.servers - 2;
+	curServer = FetchServersTask.servers - 1;
 	Json_Handle(data, len, ServerInfo_Parse, NULL, FetchServersTask_Next);
 }
 
