@@ -4291,13 +4291,13 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* kArgs) {
 	JNIEnv* env;
 	jvalue args[2];
 	JavaGetCurrentEnv(env);
 
-	args[0].l = JavaMakeString(env, args->text);
-	args[1].i = args->type;
+	args[0].l = JavaMakeString(env, kArgs->text);
+	args[1].i = kArgs->type;
 	JavaCallVoid(env, "openKeyboard", "(Ljava/lang/String;I)V", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
