@@ -3391,7 +3391,7 @@ static const char* OnBeforeUnload(int type, const void* ev, void *data) {
 	return NULL;
 }
 
-static int MapNativeKey(int k) {
+static int MapNativeKey(int k, int l) {
 	if (k >= '0' && k <= '9') return k;
 	if (k >= 'A' && k <= 'Z') return k;
 	if (k >= DOM_VK_F1      && k <= DOM_VK_F24)     { return KEY_F1  + (k - DOM_VK_F1); }
@@ -3400,10 +3400,10 @@ static int MapNativeKey(int k) {
 	switch (k) {
 	case DOM_VK_BACK_SPACE: return KEY_BACKSPACE;
 	case DOM_VK_TAB:        return KEY_TAB;
-	case DOM_VK_RETURN:     return KEY_ENTER;
-	case DOM_VK_SHIFT:      return KEY_LSHIFT;
-	case DOM_VK_CONTROL:    return KEY_LCTRL;
-	case DOM_VK_ALT:        return KEY_LALT;
+	case DOM_VK_RETURN:     return l == DOM_KEY_LOCATION_NUMPAD ? KEY_KP_ENTER : KEY_ENTER;
+	case DOM_VK_SHIFT:      return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RSHIFT : KEY_LSHIFT;
+	case DOM_VK_CONTROL:    return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RCTRL  : KEY_LCTRL;
+	case DOM_VK_ALT:        return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RALT   : KEY_LALT;
 	case DOM_VK_PAUSE:      return KEY_PAUSE;
 	case DOM_VK_CAPS_LOCK:  return KEY_CAPSLOCK;
 	case DOM_VK_ESCAPE:     return KEY_ESCAPE;
@@ -3423,7 +3423,7 @@ static int MapNativeKey(int k) {
 
 	case DOM_VK_SEMICOLON:   return KEY_SEMICOLON;
 	case DOM_VK_EQUALS:      return KEY_EQUALS;
-	case DOM_VK_WIN:         return KEY_LWIN;
+	case DOM_VK_WIN:         return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RWIN : KEY_LWIN;
 	case DOM_VK_MULTIPLY:    return KEY_KP_MULTIPLY;
 	case DOM_VK_ADD:         return KEY_KP_PLUS;
 	case DOM_VK_SUBTRACT:    return KEY_KP_MINUS;
@@ -3450,29 +3450,14 @@ static int MapNativeKey(int k) {
 	return KEY_NONE;
 }
 
-static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev, void* data) {
-	int key = MapNativeKey(ev->keyCode);
-
-	if (ev->location == DOM_KEY_LOCATION_RIGHT) {
-		switch (key) {
-		case KEY_LALT:   key = KEY_RALT; break;
-		case KEY_LCTRL:  key = KEY_RCTRL; break;
-		case KEY_LSHIFT: key = KEY_RSHIFT; break;
-		case KEY_LWIN:   key = KEY_RWIN; break;
-		}
-	}
-	else if (ev->location == DOM_KEY_LOCATION_NUMPAD) {
-		switch (key) {
-		case KEY_ENTER: key = KEY_KP_ENTER; break;
-		}
-	}
-
-	if (key) Input_Set(key, type == EMSCRIPTEN_EVENT_KEYDOWN);
+static EM_BOOL OnKeyDown(int type, const EmscriptenKeyboardEvent* ev, void* data) {
+	int key = MapNativeKey(ev->keyCode, ev->location);
+	/* iOS safari still sends backspace key events, don't intercept those */
+	if (key == KEY_BACKSPACE && Input_TouchMode && keyboardOpen) return false;
+	
+	if (key) Input_SetPressed(key);
 	DeferredEnableRawMouse();
-
 	if (!key) return false;
-	/* KeyUp always intercepted */
-	if (type != EMSCRIPTEN_EVENT_KEYDOWN) return true;
 
 	/* If holding down Ctrl or Alt, keys aren't going to generate a KeyPress event anyways. */
 	/* This intercepts Ctrl+S etc. Ctrl+C and Ctrl+V are not intercepted for clipboard. */
@@ -3482,15 +3467,19 @@ static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	/* Space needs special handling, as intercepting this prevents the ' ' key press event */
 	/* But on Safari, space scrolls the page - so need to intercept when keyboard is NOT open */
 	if (key == KEY_SPACE) return !keyboardOpen;
-	
-	/* iOS safari still sends backspace key events, don't intercept those */
-	if (key == KEY_BACKSPACE && keyboardOpen) return false;
 
 	/* Must not intercept KeyDown for regular keys, otherwise KeyPress doesn't get raised. */
 	/* However, do want to prevent browser's behaviour on F11, F5, home etc. */
 	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
 	return (key >= KEY_F1  && key <= KEY_F24)  || (key >= KEY_UP    && key <= KEY_RIGHT) ||
 		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK);
+}
+
+static EM_BOOL OnKeyUp(int type, const EmscriptenKeyboardEvent* ev, void* data) {
+	int key = MapNativeKey(ev->keyCode, ev->location);
+	if (key) Input_SetReleased(key);
+	DeferredEnableRawMouse();
+	return key != KEY_NONE;
 }
 
 static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
@@ -3530,8 +3519,8 @@ static void HookEvents(void) {
 	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnResize);
 	emscripten_set_beforeunload_callback(                          NULL,    OnBeforeUnload);
 
-	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnKey);
-	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,    NULL, 0, OnKey);
+	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnKeyDown);
+	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,    NULL, 0, OnKeyUp);
 	emscripten_set_keypress_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnKeyPress);
 
 	emscripten_set_touchstart_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnTouchStart);
