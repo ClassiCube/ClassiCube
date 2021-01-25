@@ -28,6 +28,13 @@ cp ~/client/src/cc-droid-arm_64 lib/arm64-v8a/libclassicube.so
 cp ~/client/src/cc-droid-x86_32 lib/x86/libclassicube.so
 cp ~/client/src/cc-droid-x86_64 lib/x86_64/libclassicube.so
 
+# The following commands are for manually building an .apk, see
+# https://spin.atomicobject.com/2011/08/22/building-android-application-bundles-apks-by-hand/
+# https://github.com/cnlohr/rawdrawandroid/blob/master/Makefile
+# https://stackoverflow.com/questions/41132753/how-can-i-build-an-android-apk-without-gradle-on-the-command-line
+# https://github.com/skanti/Android-Manual-Build-Command-Line/blob/master/hello-jni/Makefile
+# https://github.com/skanti/Android-Manual-Build-Command-Line/blob/master/hello-jni/CMakeLists.txt
+
 # compile interop java file into its multiple .class files
 javac java/com/classicube/MainActivity.java -d ./obj -classpath $SDK_ROOT/android.jar
 # compile the multiple .class files into one .dex file

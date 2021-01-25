@@ -3482,6 +3482,9 @@ static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	/* Space needs special handling, as intercepting this prevents the ' ' key press event */
 	/* But on Safari, space scrolls the page - so need to intercept when keyboard is NOT open */
 	if (key == KEY_SPACE) return !keyboardOpen;
+	
+	/* iOS safari still sends backspace key events, don't intercept those */
+	if (key == KEY_BACKSPACE && keyboardOpen) return false;
 
 	/* Must not intercept KeyDown for regular keys, otherwise KeyPress doesn't get raised. */
 	/* However, do want to prevent browser's behaviour on F11, F5, home etc. */
