@@ -5,10 +5,11 @@ TOOLS_ROOT="/home/buildbot/android/sdk/build-tools/26.0.0"
 SDK_ROOT="/home/buildbot/android/sdk/platforms/android-26"
 
 cd /home/buildbot/client/src
-$NDK_ROOT/i686-linux-android26-clang *.c $FLAGS $LIBS -o cc-droid-x86_32
-$NDK_ROOT/aarch64-linux-android26-clang *.c $FLAGS $LIBS -o cc-droid-arm_64
-$NDK_ROOT/x86_64-linux-android26-clang *.c $FLAGS $LIBS -o cc-droid-x86_64
-$NDK_ROOT/armv7a-linux-androideabi26-clang *.c $FLAGS $LIBS -o cc-droid-arm_32
+$NDK_ROOT/armv7a-linux-androideabi16-clang *.c $FLAGS $LIBS -o cc-droid-arm_32
+$NDK_ROOT/aarch64-linux-android21-clang *.c $FLAGS $LIBS -o cc-droid-arm_64
+$NDK_ROOT/i686-linux-android16-clang *.c $FLAGS $LIBS -o cc-droid-x86_32
+$NDK_ROOT/x86_64-linux-android21-clang *.c $FLAGS $LIBS -o cc-droid-x86_64
+
 
 cd ../android/app/src/main
 # remove old java temp files
