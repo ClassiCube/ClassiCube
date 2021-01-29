@@ -1,15 +1,15 @@
 FLAGS="-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic"
-LIBS="-lGLESv2 -lEGL -lOpenSLES -lm -landroid -llog"
+LIBS="-lGLESv2 -lEGL -lm -landroid -llog"
 NDK_ROOT="/home/buildbot/android/android-ndk-r22/toolchains/llvm/prebuilt/linux-x86_64/bin"
 TOOLS_ROOT="/home/buildbot/android/sdk/build-tools/26.0.0"
 SDK_ROOT="/home/buildbot/android/sdk/platforms/android-26"
 
 cd /home/buildbot/client/src
+$NDK_ROOT/armv7a-linux-androideabi16-clang *.c $FLAGS -march=armv5 $LIBS -o cc-droid-arm_16
 $NDK_ROOT/armv7a-linux-androideabi16-clang *.c $FLAGS $LIBS -o cc-droid-arm_32
 $NDK_ROOT/aarch64-linux-android21-clang *.c $FLAGS $LIBS -o cc-droid-arm_64
 $NDK_ROOT/i686-linux-android16-clang *.c $FLAGS $LIBS -o cc-droid-x86_32
 $NDK_ROOT/x86_64-linux-android21-clang *.c $FLAGS $LIBS -o cc-droid-x86_64
-
 
 cd ../android/app/src/main
 # remove old java temp files
@@ -20,10 +20,12 @@ rm classes.dex
 # copy required native libraries
 rm -rf lib
 mkdir lib
+mkdir lib/armeabi
 mkdir lib/armeabi-v7a
 mkdir lib/arm64-v8a
 mkdir lib/x86
 mkdir lib/x86_64
+cp ~/client/src/cc-droid-arm_16 lib/armeabi/libclassicube.so
 cp ~/client/src/cc-droid-arm_32 lib/armeabi-v7a/libclassicube.so
 cp ~/client/src/cc-droid-arm_64 lib/arm64-v8a/libclassicube.so
 cp ~/client/src/cc-droid-x86_32 lib/x86/libclassicube.so
@@ -44,7 +46,7 @@ $TOOLS_ROOT/dx --dex --output=obj/classes.dex ./obj
 $TOOLS_ROOT/aapt package -f -M AndroidManifest.xml -S res -F obj/cc-unsigned.apk -I $SDK_ROOT/android.jar
 # and add all the required files
 cp obj/classes.dex classes.dex
-$TOOLS_ROOT/aapt add -f obj/cc-unsigned.apk classes.dex lib/armeabi-v7a/libclassicube.so lib/arm64-v8a/libclassicube.so lib/x86/libclassicube.so lib/x86_64/libclassicube.so
+$TOOLS_ROOT/aapt add -f obj/cc-unsigned.apk classes.dex lib/armeabi/libclassicube.so lib/armeabi-v7a/libclassicube.so lib/arm64-v8a/libclassicube.so lib/x86/libclassicube.so lib/x86_64/libclassicube.so
 # sign the apk with debug key (https://stackoverflow.com/questions/16711233/)
 cp obj/cc-unsigned.apk obj/cc-signed.apk
 jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore debug.keystore -storepass android -keypass android obj/cc-signed.apk androiddebugkey
