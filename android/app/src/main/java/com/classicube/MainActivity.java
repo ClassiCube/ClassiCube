@@ -134,7 +134,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 			System.loadLibrary("classicube");
 		} catch (UnsatisfiedLinkError ex) {
 			ex.printStackTrace();
-			showAlert("Failed to start", "Cannot load libclassicube.so: " + ex.getMessage());
+			showAlert("Failed to start", ex.getMessage());
 			return;
 		}
 		
