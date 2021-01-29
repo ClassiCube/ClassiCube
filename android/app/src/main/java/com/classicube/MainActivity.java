@@ -130,7 +130,15 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 
 	void startGameAsync() {
 		Log.i("CC_WIN", "handing off to native..");
-		System.loadLibrary("classicube");
+		try {
+			System.loadLibrary("classicube");
+		} catch (UnsatisfiedLinkError ex) {
+			ex.printStackTrace();
+			showAlert("Failed to start", "Cannot load libclassicube.so: " + ex.getMessage());
+			return;
+		}
+		
+		gameRunning = true;
 		runGameAsync();
 	}
 	
@@ -157,7 +165,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		}
 
 		if (!gameRunning) startGameAsync();
-		gameRunning = true;
 		super.onCreate(savedInstanceState);
 	}
 
