@@ -399,7 +399,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		
 		setContentView(curView);
 		curView.requestFocus();
-		if (fullscreen) goFullscreen();
+		if (fullscreen) setUIVisibility(FULLSCREEN_FLAGS);
 	}
 
 	class LauncherView extends SurfaceView {
@@ -630,29 +630,30 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		// TODO: this fails because multiple dialog boxes show
 	}
 
-	public int getWindowState() {
-		return fullscreen ? 1 : 0;
-	}
-
-	void goFullscreen() {
-		curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+	public int getWindowState() { return fullscreen ? 1 : 0; }
+	final static int FULLSCREEN_FLAGS = View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+	
+	void setUIVisibility(int flags) {
+		if (curView == null) return;
+		try {
+			curView.setSystemUiVisibility(flags);
+		} catch (NoSuchMethodError ex) {
+			// Not available on API < 11 (Android 3.0)
+			ex.printStackTrace();
+		}
 	}
 
 	public void enterFullscreen() {
 		fullscreen = true;
 		runOnUiThread(new Runnable() {
-			public void run() {
-				if (curView != null) goFullscreen();
-			}
+			public void run() { setUIVisibility(FULLSCREEN_FLAGS); }
 		});
     }
 
     public void exitFullscreen() {
 		fullscreen = false;
 		runOnUiThread(new Runnable() {
-			public void run() {
-				if (curView != null) curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-			}
+			public void run() { setUIVisibility(View.SYSTEM_UI_FLAG_VISIBLE); }
 		});
     }
 	
