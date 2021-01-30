@@ -711,16 +711,17 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		int len;
 		try {
 			conn.connect();
-			Map<String, List<String>> all = conn.getHeaderFields();
-
-			for (Map.Entry<String, List<String>> h : all.entrySet()) {
-				String key = h.getKey();
-				for (String value : h.getValue()) {
-					if (key == null) {
-						httpParseHeader(value);
-					} else {
-						httpParseHeader(key + ":" + value);
-					}
+			
+			// Legitimate webservers aren't going to reply with over 200 headers
+			for (int i = 0; i < 200; i++) {
+				String key = conn.getHeaderFieldKey(i);
+				String val = conn.getHeaderField(i);
+				if (key == null && val == null) break;
+				
+				if (key == null) {
+					httpParseHeader(val);
+				} else {
+					httpParseHeader(key + ":" + val);
 				}
 			}
 
