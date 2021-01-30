@@ -1,4 +1,4 @@
-ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, OSX, Linux, BSD, Solaris, Haiku, and in a browser.
+ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that works on Windows, macOS, Linux, Android, BSD, Solaris, Haiku, and in a browser.
 **It is not affiliated with (or supported by) Mojang AB, Minecraft, or Microsoft in any way.**
 
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
@@ -15,8 +15,9 @@ It **does not** work with 'modern/premium' Minecraft servers.
 
 #### Requirements
 * Windows: 98 or later.
-* macOS: macOS 10.5 or later. (Can be compiled to work with 10.3/10.4 though)
+* macOS: 10.5 or later. (Can be compiled to work with 10.3/10.4 though)
 * Linux: libcurl and libopenal.
+* Android: 2.3 or later.
 
 **Note:** When running from within VirtualBox, disable Mouse Integration, otherwise the camera will not work properly.
 

@@ -613,7 +613,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		//final Activity activity = this;
 		runOnUiThread(new Runnable() {
 			public void run() {
-				AlertDialog.Builder dlg = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_HOLO_DARK);
+				AlertDialog.Builder dlg = new AlertDialog.Builder(MainActivity.this);
 				dlg.setTitle(title);
 				dlg.setMessage(message);
 				dlg.setPositiveButton("Close", new DialogInterface.OnClickListener() {
@@ -711,6 +711,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		int len;
 		try {
 			conn.connect();
+			httpParseHeader("HTTP/1.1 " + conn.getResponseCode() + " MSG");
 			
 			// Legitimate webservers aren't going to reply with over 200 headers
 			for (int i = 0; i < 200; i++) {
