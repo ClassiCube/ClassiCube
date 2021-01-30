@@ -1363,10 +1363,7 @@ cc_result Updater_GetBuildTime(cc_uint64* t) { return ERR_NOT_SUPPORTED; }
 cc_result Updater_GetBuildTime(cc_uint64* t) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
-	
-	/* https://developer.android.com/reference/java/io/File#lastModified() */
-	/* lastModified is returned in milliseconds */
-	*t = JavaCallLong(env, "getApkUpdateTime", "()J", NULL) / 1000;
+	*t = JavaCallLong(env, "getApkUpdateTime", "()J", NULL);
 	return 0;
 }
 #endif

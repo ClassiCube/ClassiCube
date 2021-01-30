@@ -523,7 +523,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 			//ApplicationInfo info = getPackageManager().getApplicationInfo(name, 0);
 			ApplicationInfo info = getApplicationInfo();
 			File apkFile = new File(info.sourceDir);
-			return apkFile.lastModified();
+			
+			// https://developer.android.com/reference/java/io/File#lastModified()
+			//  lastModified is returned in milliseconds
+			return apkFile.lastModified() / 1000;
 		} catch (Exception ex) {
 			return 0;
 		}
@@ -711,6 +714,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		int len;
 		try {
 			conn.connect();
+			// Some implementations also provide this as getHeaderField(0), but some don't
 			httpParseHeader("HTTP/1.1 " + conn.getResponseCode() + " MSG");
 			
 			// Legitimate webservers aren't going to reply with over 200 headers
