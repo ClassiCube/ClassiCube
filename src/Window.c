@@ -4680,12 +4680,11 @@ static XVisualInfo GLContext_SelectVisual(void) {
 
 	InitGraphicsMode(&mode);
 	GetAttribs(&mode, attribs, GLCONTEXT_DEFAULT_DEPTH);
-	if (!glXQueryVersion(win_display, &major, &minor)) {
-		Logger_Abort("glXQueryVersion failed");
-	}
 	screen = DefaultScreen(win_display);
 
-	if (major >= 1 && minor >= 3) {
+	if (!glXQueryVersion(win_display, &major, &minor)) {
+		Platform_LogConst("glXQueryVersion failed");
+	} else if (major >= 1 && minor >= 3) {
 		/* ChooseFBConfig returns an array of GLXFBConfig opaque structures */
 		fbconfigs = glXChooseFBConfig(win_display, screen, attribs, &fbcount);
 		if (fbconfigs && fbcount) {
