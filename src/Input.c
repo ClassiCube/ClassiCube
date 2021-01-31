@@ -215,6 +215,12 @@ void Input_SetPressed(int key) {
 	Input_Pressed[key] = true;
 	Event_RaiseInput(&InputEvents.Down, key, wasPressed);
 
+#ifndef CC_BUILD_WEB
+	/* Webclient needs special handling for clipboard copy/paste */
+	if (key == 'C' && Key_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY,  0);
+	if (key == 'V' && Key_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
+#endif
+
 	/* don't allow multiple left mouse down events */
 	if (key != KEY_LMOUSE || wasPressed) return;
 	Pointer_SetPressed(0, true);

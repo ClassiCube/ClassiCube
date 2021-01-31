@@ -82,15 +82,14 @@ void Window_Create(int width, int height);
 /* Sets the text of the titlebar above the window. */
 CC_API void Window_SetTitle(const cc_string* title);
 
-typedef void (*RequestClipboardCallback)(cc_string* value, void* obj);
 /* Gets the text currently on the clipboard. */
+/* NOTE: On most platforms this function can be called at any time. */
+/* In web backend, can only be called during INPUT_CLIPBOARD_PASTE event. */
 CC_API void Clipboard_GetText(cc_string* value);
 /* Sets the text currently on the clipboard. */
+/* NOTE: On most platforms this function can be called at any time. */
+/* In web backend, can only be called during INPUT_CLIPBOARD_COPY event. */
 CC_API void Clipboard_SetText(const cc_string* value);
-/* Calls a callback function when text is retrieved from the clipboard. */
-/* NOTE: On most platforms this just calls Clipboard_GetText. */
-/* With emscripten however, the callback is instead called when a 'paste' event arrives. */
-void Clipboard_RequestText(RequestClipboardCallback callback, void* obj);
 
 /* Makes the window visible and focussed on screen. */
 void Window_Show(void);

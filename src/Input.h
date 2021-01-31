@@ -44,7 +44,10 @@ enum InputButtons {
 
 	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
 	KEY_XBUTTON1, KEY_XBUTTON2, KEY_LMOUSE, KEY_RMOUSE, KEY_MMOUSE,
-	INPUT_COUNT
+	INPUT_COUNT,
+
+	INPUT_CLIPBOARD_COPY  = 1001,
+	INPUT_CLIPBOARD_PASTE = 1002
 };
 
 /* Simple names for each input button. */

@@ -18,16 +18,6 @@ int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
 #define Display_CentreX(width)  (DisplayInfo.X + (DisplayInfo.Width  - width)  / 2)
 #define Display_CentreY(height) (DisplayInfo.Y + (DisplayInfo.Height - height) / 2)
 
-#ifndef CC_BUILD_WEB
-void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
-	cc_string text; char textBuffer[2048];
-	String_InitArray(text, textBuffer);
-
-	Clipboard_GetText(&text);
-	callback(&text, obj);
-}
-#endif
-
 #ifdef CC_BUILD_IOS
 /* iOS implements some functions in external interop_ios.m file */
 #define CC_MAYBE_OBJC extern
@@ -3560,23 +3550,32 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = DisplayInfo.ScaleX;
 
 	/* Copy text, but only if user isn't selecting something else on the webpage */
-	/* (don't check window.clipboardData here, that's handled in Clipboard_SetText instead) */
 	EM_ASM(window.addEventListener('copy', 
 		function(e) {
 			if (window.getSelection && window.getSelection().toString()) return;
-			if (window.cc_copyText) {
-				if (e.clipboardData) { e.clipboardData.setData('text/plain', window.cc_copyText); }
+			ccall('Window_ReqClipboardText', 'void');
+			if (!window.cc_copyText) return;
+
+			if (window.clipboardData) {
+				window.clipboardData.setData('Text', window.cc_copyText);
+			} else if (e.clipboardData) {
+				e.clipboardData.setData('text/plain', window.cc_copyText);
 				e.preventDefault();
-				window.cc_copyText = null;
-			}	
+			}
+			window.cc_copyText = null;
 		});
 	);
 
-	/* Paste text (window.clipboardData is handled in Clipboard_RequestText instead) */
+	/* Paste text */
 	EM_ASM(window.addEventListener('paste',
 		function(e) {
-			var contents = e.clipboardData ? e.clipboardData.getData('text/plain') : "";
-			ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
+			if (window.clipboardData) {
+				var contents = window.clipboardData.getData('Text');
+				ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
+			} else if (e.clipboardData) {
+				var contents = e.clipboardData.getData('text/plain');
+				ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
+			}
 		});
 	);
 
@@ -3632,46 +3631,23 @@ void Window_SetTitle(const cc_string* title) {
 	EM_ASM_({ document.title = UTF8ToString($0); }, str);
 }
 
-static RequestClipboardCallback clipboard_func;
-static void* clipboard_obj;
-
-EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
-	cc_string str; char strBuffer[512];
-	if (!clipboard_func) return;
-
-	String_InitArray(str, strBuffer);
-	String_AppendUtf8(&str, src, String_CalcLen(src, 2048));
-	clipboard_func(&str, clipboard_obj);
-	clipboard_func = NULL;
+static char pasteBuffer[512];
+static cc_string pasteStr;
+EMSCRIPTEN_KEEPALIVE void Window_ReqClipboardText(void) {
+	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY, 0);
 }
 
-void Clipboard_GetText(cc_string* value) { }
+EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
+	String_InitArray(pasteStr, pasteBuffer);
+	String_AppendUtf8(&pasteStr, src, String_CalcLen(src, 2048));
+	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
+}
+
+void Clipboard_GetText(cc_string* value) { String_Copy(value, &pasteStr); }
 void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, value);
-
-	/* For IE11, use window.clipboardData to set the clipboard */
-	/* For other browsers, instead use the window.copy events */
-	EM_ASM_({ 
-		if (window.clipboardData) {
-			if (window.getSelection && window.getSelection().toString()) return;
-			window.clipboardData.setData('Text', UTF8ToString($0));
-		} else {
-			window.cc_copyText = UTF8ToString($0);
-		}
-	}, str);
-}
-
-void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
-	clipboard_func = callback;
-	clipboard_obj  = obj;
-
-	/* For IE11, use window.clipboardData to get the clipboard */
-	EM_ASM_({
-		if (!window.clipboardData) return;
-		var contents = window.clipboardData.getData('Text');
-		ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
-	});
+	EM_ASM_({ window.cc_copyText = UTF8ToString($0); }, str);
 }
 
 void Window_Show(void) { }
