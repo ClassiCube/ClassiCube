@@ -3556,15 +3556,14 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = DisplayInfo.ScaleX;
 
 	/* Copy text, but only if user isn't selecting something else on the webpage */
+	/* (don't check window.clipboardData here, that's handled in Clipboard_SetText instead) */
 	EM_ASM(window.addEventListener('copy', 
 		function(e) {
 			if (window.getSelection && window.getSelection().toString()) return;
-			ccall('Window_ReqClipboardText', 'void');
+			ccall('Window_RequestClipboardText', 'void');
 			if (!window.cc_copyText) return;
 
-			if (window.clipboardData) {
-				window.clipboardData.setData('Text', window.cc_copyText);
-			} else if (e.clipboardData) {
+			if (e.clipboardData) {
 				e.clipboardData.setData('text/plain', window.cc_copyText);
 				e.preventDefault();
 			}
@@ -3572,13 +3571,10 @@ void Window_Init(void) {
 		});
 	);
 
-	/* Paste text */
+	/* Paste text (window.clipboardData is handled in Clipboard_GetText instead) */
 	EM_ASM(window.addEventListener('paste',
 		function(e) {
-			if (window.clipboardData) {
-				var contents = window.clipboardData.getData('Text');
-				ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
-			} else if (e.clipboardData) {
+			if (e.clipboardData) {
 				var contents = e.clipboardData.getData('text/plain');
 				ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
 			}
@@ -3639,21 +3635,45 @@ void Window_SetTitle(const cc_string* title) {
 
 static char pasteBuffer[512];
 static cc_string pasteStr;
-EMSCRIPTEN_KEEPALIVE void Window_ReqClipboardText(void) {
+EMSCRIPTEN_KEEPALIVE void Window_RequestClipboardText(void) {
 	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY, 0);
 }
 
-EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
+EMSCRIPTEN_KEEPALIVE void Window_StoreClipboardText(char* src) {
 	String_InitArray(pasteStr, pasteBuffer);
 	String_AppendUtf8(&pasteStr, src, String_CalcLen(src, 2048));
+}
+
+EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
+	Window_StoreClipboardText(src);
 	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
 }
 
-void Clipboard_GetText(cc_string* value) { String_Copy(value, &pasteStr); }
+void Clipboard_GetText(cc_string* value) {
+	/* For IE11, use window.clipboardData to get the clipboard */
+	EM_ASM_({ 
+		if (window.clipboardData) {
+			var contents = window.clipboardData.getData('Text');
+			ccall('Window_StoreClipboardText', 'void', ['string'], [contents]);
+		} 
+	});	
+	String_Copy(value, &pasteStr);
+	pasteStr.length = 0;
+}
 void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, value);
-	EM_ASM_({ window.cc_copyText = UTF8ToString($0); }, str);
+
+	/* For IE11, use window.clipboardData to set the clipboard */
+	/* For other browsers, instead use the window.copy events */
+	EM_ASM_({ 
+		if (window.clipboardData) {
+			if (window.getSelection && window.getSelection().toString()) return;
+			window.clipboardData.setData('Text', UTF8ToString($0));
+		} else {
+			window.cc_copyText = UTF8ToString($0);
+		}
+	}, str);
 }
 
 void Window_Show(void) { }
