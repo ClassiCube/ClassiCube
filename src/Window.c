@@ -3451,8 +3451,10 @@ static EM_BOOL OnKeyDown(int type, const EmscriptenKeyboardEvent* ev, void* data
 
 	/* If holding down Ctrl or Alt, keys aren't going to generate a KeyPress event anyways. */
 	/* This intercepts Ctrl+S etc. Ctrl+C and Ctrl+V are not intercepted for clipboard. */
-	if (Key_IsAltPressed() || Key_IsWinPressed()) return true;
-	if (Key_IsControlPressed() && key != 'C' && key != 'V') return true;
+	/*  NOTE: macOS uses Win (Command) key instead of Ctrl, have to account for that too */
+	if (Key_IsAltPressed())     return true;
+	if (Key_IsWinPressed())     return key != 'C' && key != 'V';
+	if (Key_IsControlPressed()) return key != 'C' && key != 'V';
 
 	/* Space needs special handling, as intercepting this prevents the ' ' key press event */
 	/* But on Safari, space scrolls the page - so need to intercept when keyboard is NOT open */
@@ -3484,6 +3486,10 @@ static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* dat
 	/*   not actually backspace everything. (because the HTML text input does not */
 	/*   have these intercepted key presses in its text buffer) */
 	if (Input_TouchMode && keyboardOpen) return false;
+
+	/* Safari on macOS still sends a keypress event, which must not be cancelled */
+	/*  (otherwise copy/paste doesn't work, as it uses Win+C / Win+V) */
+	if (ev->metaKey) return false;
 
 	if (Convert_TryCodepointToCP437(ev->charCode, &keyChar)) {
 		Event_RaiseInt(&InputEvents.Press, keyChar);
