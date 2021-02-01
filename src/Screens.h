@@ -32,6 +32,7 @@ void DisconnectScreen_Show(const cc_string* title, const cc_string* message);
 #ifdef CC_BUILD_TOUCH
 void TouchScreen_Refresh(void);
 void TouchScreen_Show(void);
+void TouchScreen_Remove(void);
 #endif
 
 /* Opens chat input for the HUD with the given initial text. */

@@ -164,6 +164,7 @@ CC_VAR extern struct _InputEventsList {
 	struct Event_Int    Up;    /* Key or button is released. Arg is a member of Key enumeration */
 	struct Event_Float  Wheel; /* Mouse wheel is moved/scrolled (Arg is wheel delta) */
 	struct Event_String TextChanged; /* Text in the on-screen input keyboard changed (for Mobile) */
+	struct Event_Void   ModeChanged; /* Input_TouchMode has changed */
 } InputEvents;
 
 CC_VAR extern struct _PointerEventsList {

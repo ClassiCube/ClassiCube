@@ -71,12 +71,22 @@ int Gui_ContainsPointers(int x, int y, int width, int height) {
 	return false;
 }
 
+#ifdef CC_BUILD_TOUCH
+static void UpdateTouchMenu(void) {
+	if (Input_TouchMode) {
+		TouchScreen_Show();
+	} else {
+		TouchScreen_Remove();
+	}
+}
+#else
+static void UpdateTouchMenu(void) { }
+#endif
+
 void Gui_ShowDefault(void) {
 	HUDScreen_Show();
 	ChatScreen_Show();
-#ifdef CC_BUILD_TOUCH
-	TouchScreen_Show();
-#endif
+	UpdateTouchMenu();
 }
 
 static void LoadOptions(void) {
@@ -536,6 +546,7 @@ static void OnTextChanged(void* obj, const cc_string* str) {
 		if (s->VTABLE->HandlesTextChanged(s, str)) return;
 	}
 }
+static void OnModeChanged(void* obj) { UpdateTouchMenu(); }
 #endif
 
 static void OnContextLost(void* obj) {
@@ -559,6 +570,7 @@ static void OnInit(void) {
 
 #ifdef CC_BUILD_TOUCH
 	Event_Register_(&InputEvents.TextChanged,    NULL, OnTextChanged);
+	Event_Register_(&InputEvents.ModeChanged,    NULL, OnModeChanged);
 	Gui._onscreenButtons = Options_GetInt(OPT_TOUCH_BUTTONS, 0, Int32_MaxValue, 0);
 #endif
 

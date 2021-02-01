@@ -2186,8 +2186,8 @@ static const struct ScreenVTABLE TouchScreen_VTABLE = {
 void TouchScreen_Show(void) {
 	struct TouchScreen* s = &TouchScreen;
 	s->VTABLE = &TouchScreen_VTABLE;
-
-	if (!Input_TouchMode) return;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_TOUCH);
 }
+
+void TouchScreen_Remove(void) { Gui_Remove((struct Screen*)&TouchScreen); }
 #endif

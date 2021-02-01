@@ -78,10 +78,13 @@ void Input_SetTouchMode(cc_bool enabled) {
 	ClearTouches();
 	Input_TouchMode = enabled;
 	Pointers_Count  = enabled ? 0 : 1;
+	Event_RaiseVoid(&InputEvents.ModeChanged);
 }
 
 void Input_AddTouch(long id, int x, int y) {
 	int i;
+	if (!Input_TouchMode) Input_SetTouchMode(true);
+
 	for (i = 0; i < INPUT_MAX_POINTERS; i++) {
 		if (touches[i].type) continue;
 
@@ -232,6 +235,11 @@ void Input_SetPressed(int key) {
 
 	/* don't allow multiple left mouse down events */
 	if (key != KEY_LMOUSE || wasPressed) return;
+
+#ifdef CC_BUILD_TOUCH
+	/* If touch mode, disable it since using mouse now */
+	if (Input_TouchMode) Input_SetTouchMode(false);
+#endif
 	Pointer_SetPressed(0, true);
 }
 
