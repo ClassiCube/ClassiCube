@@ -3452,9 +3452,9 @@ static EM_BOOL OnKeyDown(int type, const EmscriptenKeyboardEvent* ev, void* data
 	/* If holding down Ctrl or Alt, keys aren't going to generate a KeyPress event anyways. */
 	/* This intercepts Ctrl+S etc. Ctrl+C and Ctrl+V are not intercepted for clipboard. */
 	/*  NOTE: macOS uses Win (Command) key instead of Ctrl, have to account for that too */
-	if (Key_IsAltPressed())     return true;
-	if (Key_IsWinPressed())     return key != 'C' && key != 'V';
-	if (Key_IsControlPressed()) return key != 'C' && key != 'V';
+	if (Key_IsAltPressed())  return true;
+	if (Key_IsWinPressed())  return key != 'C' && key != 'V';
+	if (Key_IsCtrlPressed()) return key != 'C' && key != 'V';
 
 	/* Space needs special handling, as intercepting this prevents the ' ' key press event */
 	/* But on Safari, space scrolls the page - so need to intercept when keyboard is NOT open */
@@ -3588,8 +3588,7 @@ void Window_Init(void) {
 		return /iPhone|iPad|iPod/i.test(navigator.userAgent) || 
 		(navigator.platform === 'MacIntel' && navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
 	});
-	Input_TouchMode = is_ios || droid;
-	Pointers_Count  = Input_TouchMode ? 0 : 1;
+	Input_SetTouchMode(is_ios || droid);
 
 	/* iOS shifts the whole webpage up when opening chat, which causes problems */
 	/*  as the chat/send butons are positioned at the top of the canvas - they */
@@ -4137,7 +4136,8 @@ void Window_Init(void) {
 	JavaRegisterNatives(env, methods);
 
 	WindowInfo.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
-	Input_TouchMode         = true;
+	Input_SetTouchMode(true);
+
 	DisplayInfo.Depth  = 32;
 	DisplayInfo.ScaleX = JavaCallFloat(env, "getDpiX", "()F", NULL);
 	DisplayInfo.ScaleY = JavaCallFloat(env, "getDpiY", "()F", NULL);

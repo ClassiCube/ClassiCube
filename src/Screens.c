@@ -1448,7 +1448,7 @@ static int InventoryScreen_PointerDown(void* screen, int id, int x, int y) {
 	handled = Elem_HandlesPointerDown(table, id, x, y);
 
 	if (!handled || table->pendingClose) {
-		hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
+		hotbar = Key_IsCtrlPressed() || Key_IsShiftPressed();
 		if (!hotbar) Gui_Remove((struct Screen*)s);
 	}
 	return TOUCH_TYPE_GUI;
@@ -1467,7 +1467,7 @@ static int InventoryScreen_PointerMove(void* screen, int id, int x, int y) {
 static int InventoryScreen_MouseScroll(void* screen, float delta) {
 	struct InventoryScreen* s = (struct InventoryScreen*)screen;
 
-	cc_bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
+	cc_bool hotbar = Key_IsAltPressed() || Key_IsCtrlPressed() || Key_IsShiftPressed();
 	if (hotbar) return false;
 	return Elem_HandlesMouseScroll(&s->table, delta);
 }
