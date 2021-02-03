@@ -2943,7 +2943,7 @@ void Window_Create(int width, int height) {
 	rect.size.height = height;
 
 	winClass  = Window_MakeClass();
-	winHandle = objc_msgSend(winClass, sel_registerName("alloc"));
+	winHandle = objc_msgSend(winClass, sel_registerName("alloc")); // todo buffered mode
 	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
 	
 	Window_CommonCreate();
@@ -3317,9 +3317,7 @@ static EM_BOOL OnTouchStart(int type, const EmscriptenTouchEvent* ev, void* data
 		RescaleXY(&x, &y);
 		Input_AddTouch(t->identifier, x, y);
 	}
-	/* Don't intercept touchstart events while keyboard is open, that way */
-	/* user can still touch to move the caret position in input textbox. */
-	return !keyboardOpen;
+	return true;
 }
 
 static EM_BOOL OnTouchMove(int type, const EmscriptenTouchEvent* ev, void* data) {
@@ -3334,9 +3332,7 @@ static EM_BOOL OnTouchMove(int type, const EmscriptenTouchEvent* ev, void* data)
 		RescaleXY(&x, &y);
 		Input_UpdateTouch(t->identifier, x, y);
 	}
-	/* Don't intercept touchmove events while keyboard is open, that way */
-	/* user can still touch to move the caret position in input textbox. */
-	return !keyboardOpen;
+	return true;
 }
 
 static EM_BOOL OnTouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) {
@@ -3351,9 +3347,7 @@ static EM_BOOL OnTouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) 
 		RescaleXY(&x, &y);
 		Input_RemoveTouch(t->identifier, x, y);
 	}
-	/* Don't intercept touchend events while keyboard is open, that way */
-	/* user can still touch to move the caret position in input textbox. */
-	return !keyboardOpen;
+	return true;
 }
 
 static EM_BOOL OnFocus(int type, const EmscriptenFocusEvent* ev, void* data) {
@@ -3852,6 +3846,12 @@ void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
 			elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px; width: 100%');
 			elem.setAttribute('placeholder', UTF8ToString($2));
 			elem.value = UTF8ToString($0);
+			
+			elem.addEventListener('touchstart', function(ev) { ev.stopPropagation(); }, false);
+			elem.addEventListener('touchmove',  function(ev) { ev.stopPropagation(); }, false);
+			elem.addEventListener('touchend',   function(ev) { ev.stopPropagation(); }, false);
+			elem.addEventListener('mousedown',  function(ev) { ev.stopPropagation(); }, false);
+			elem.addEventListener('mousemove',  function(ev) { ev.stopPropagation(); }, false);
 
 			elem.addEventListener('input', 
 				function(ev) {
