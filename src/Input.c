@@ -68,6 +68,18 @@ static cc_bool AnyBlockTouches(void) {
 	return false;
 }
 
+static void ClearTouches(void) {
+	int i;
+	for (i = 0; i < INPUT_MAX_POINTERS; i++) touches[i].type = 0;
+	Pointers_Count  = 0;
+}
+
+void Input_SetTouchMode(cc_bool enabled) {
+	ClearTouches();
+	Input_TouchMode = enabled;
+	Pointers_Count  = enabled ? 0 : 1;
+}
+
 void Input_AddTouch(long id, int x, int y) {
 	int i;
 	for (i = 0; i < INPUT_MAX_POINTERS; i++) {
@@ -214,6 +226,9 @@ void Input_SetPressed(int key) {
 	cc_bool wasPressed = Input_Pressed[key];
 	Input_Pressed[key] = true;
 	Event_RaiseInput(&InputEvents.Down, key, wasPressed);
+
+	if (key == 'C' && Key_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY,  0);
+	if (key == 'V' && Key_IsActionPressed()) Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
 
 	/* don't allow multiple left mouse down events */
 	if (key != KEY_LMOUSE || wasPressed) return;
@@ -456,9 +471,9 @@ int Hotkeys_FindPartial(int key) {
 	struct HotkeyData hk;
 	int i, modifiers = 0;
 
-	if (Key_IsControlPressed()) modifiers |= HOTKEY_MOD_CTRL;
-	if (Key_IsShiftPressed())   modifiers |= HOTKEY_MOD_SHIFT;
-	if (Key_IsAltPressed())     modifiers |= HOTKEY_MOD_ALT;
+	if (Key_IsCtrlPressed())  modifiers |= HOTKEY_MOD_CTRL;
+	if (Key_IsShiftPressed()) modifiers |= HOTKEY_MOD_SHIFT;
+	if (Key_IsAltPressed())   modifiers |= HOTKEY_MOD_ALT;
 
 	for (i = 0; i < HotkeysText.count; i++) {
 		hk = HotkeysList[i];
@@ -806,7 +821,7 @@ cc_bool Input_HandleMouseWheel(float delta) {
 	struct HacksComp* h;
 	cc_bool hotbar;
 
-	hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
+	hotbar = Key_IsAltPressed() || Key_IsCtrlPressed() || Key_IsShiftPressed();
 	if (!hotbar && Camera.Active->Zoom(delta))   return true;
 	if (!KeyBind_IsPressed(KEYBIND_ZOOM_SCROLL)) return false;
 
@@ -1089,9 +1104,7 @@ static void OnInit(void) {
 
 static void OnFree(void) {
 #ifdef CC_BUILD_TOUCH
-	int i;
-	for (i = 0; i < INPUT_MAX_POINTERS; i++) touches[i].type = 0;
-	Pointers_Count = 0;
+	ClearTouches();
 #endif
 }
 

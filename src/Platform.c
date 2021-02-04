@@ -357,48 +357,68 @@ int File_Exists(const cc_string* path) {
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
+static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* file, DWORD attribs,
+									void* obj, Directory_EnumCallback callback) {
+	cc_string path; char pathBuffer[MAX_PATH + 10];
+	/* ignore . and .. entry */
+	if (file->length == 1 && file->buffer[0] == '.') return 0;
+	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return 0;
+
+	String_InitArray(path, pathBuffer);
+	String_Format2(&path, "%s/%s", dirPath, file);
+
+	if (attribs & FILE_ATTRIBUTE_DIRECTORY) return Directory_Enum(&path, obj, callback);
+	callback(&path, obj);
+	return 0;
+}
+
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
 	cc_string path; char pathBuffer[MAX_PATH + 10];
 	WCHAR str[NATIVE_STR_LEN];
-	WCHAR* src;
-	WIN32_FIND_DATAW entry;
+	WIN32_FIND_DATAW eW;
+	WIN32_FIND_DATAA eA;
+	int i, ansi = false;
 	HANDLE find;
 	cc_result res;	
-	int i;
 
 	/* Need to append \* to search for files in directory */
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "%s\\*", dirPath);
 	Platform_EncodeUtf16(str, &path);
 	
-	find = FindFirstFileW(str, &entry);
-	if (find == INVALID_HANDLE_VALUE) return GetLastError();
+	find = FindFirstFileW(str, &eW);
+	if (!find || find == INVALID_HANDLE_VALUE) {
+		if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
+		ansi = true;
 
-	do {
-		path.length = 0;
-		String_Format1(&path, "%s/", dirPath);
+		/* Windows 9x does not support W API functions */
+		Platform_Utf16ToAnsi(str);
+		find = FindFirstFileA((LPCSTR)str, &eA);
+		if (find == INVALID_HANDLE_VALUE) return GetLastError();
+	}
 
-		/* ignore . and .. entry */
-		src = entry.cFileName;
-		if (src[0] == '.' && src[1] == '\0') continue;
-		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
-		
-		for (i = 0; i < MAX_PATH && src[i]; i++) {
-			/* TODO: UTF16 to codepoint conversion */
-			String_Append(&path, Convert_CodepointToCP437(src[i]));
-		}
-
-		if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) { FindClose(find); return res; }
-		} else {
-			callback(&path, obj);
-		}
-	}  while (FindNextFileW(find, &entry));
+	if (ansi) {
+		do {
+			path.length = 0;
+			for (i = 0; i < MAX_PATH && eA.cFileName[i]; i++) {
+				String_Append(&path, Convert_CodepointToCP437(eA.cFileName[i]));
+			}
+			if ((res = Directory_EnumCore(dirPath, &path, eA.dwFileAttributes, obj, callback))) return res;
+		} while (FindNextFileA(find, &eA));
+	} else {
+		do {
+			path.length = 0;
+			for (i = 0; i < MAX_PATH && eW.cFileName[i]; i++) {
+				/* TODO: UTF16 to codepoint conversion */
+				String_Append(&path, Convert_CodepointToCP437(eW.cFileName[i]));
+			}
+			if ((res = Directory_EnumCore(dirPath, &path, eW.dwFileAttributes, obj, callback))) return res;
+		} while (FindNextFileW(find, &eW));
+	}
 
 	res = GetLastError(); /* return code from FindNextFile */
 	FindClose(find);
-	return res == ERROR_NO_MORE_FILES ? 0 : GetLastError();
+	return res == ERROR_NO_MORE_FILES ? 0 : res;
 }
 
 static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
@@ -1021,19 +1041,40 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-static cc_result Process_RawStart(WCHAR* path, WCHAR* args) {
-	STARTUPINFOW si = { 0 };
+static cc_result Process_RawGetExePath(WCHAR* path, int* len) {
+	*len = GetModuleFileNameW(NULL, path, NATIVE_STR_LEN);
+	return *len ? 0 : GetLastError();
+}
+
+cc_result Process_StartGame(const cc_string* args) {
+	WCHAR path[NATIVE_STR_LEN + 1], raw[NATIVE_STR_LEN];
+	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
+	STARTUPINFOW si        = { 0 };
 	PROCESS_INFORMATION pi = { 0 };
 	cc_result res;
+	int len;
+
+	Process_RawGetExePath(path, &len);
+	path[len] = '\0';
 	si.cb = sizeof(STARTUPINFOW);
+	
+	String_InitArray(argv, argvBuffer);
+	/* Game doesn't actually care about argv[0] */
+	String_Format1(&argv, "cc %s", args);
+	String_UNSAFE_TrimEnd(&argv);
+	Platform_EncodeUtf16(raw, &argv);
 
-	if (CreateProcessW(path, args, NULL, NULL, 
+	if (CreateProcessW(path, raw, NULL, NULL, 
 			false, 0, NULL, NULL, &si, &pi)) goto success;
-	//if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
+	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
 
-	//Platform_Utf16ToAnsi(path);
-	//if (CreateProcessA((LPCSTR)path, args, NULL, NULL, 
-	//		false, 0, NULL, NULL, &si, &pi)) goto success;
+	/* Windows 9x does not support W API functions */
+	len = GetModuleFileNameA(NULL, (LPSTR)path, NATIVE_STR_LEN);
+	((char*)path)[len] = '\0';
+	Platform_Utf16ToAnsi(raw);
+
+	if (CreateProcessA((LPCSTR)path, (LPSTR)raw, NULL, NULL,
+			false, 0, NULL, NULL, &si, &pi)) goto success;
 	return GetLastError();
 
 success:
@@ -1043,27 +1084,7 @@ success:
 	return 0;
 }
 
-static cc_result Process_RawGetExePath(WCHAR* path, int* len) {
-	*len = GetModuleFileNameW(NULL, path, NATIVE_STR_LEN);
-	return *len ? 0 : GetLastError();
-}
-
-cc_result Process_StartGame(const cc_string* args) {
-	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
-	WCHAR raw[NATIVE_STR_LEN], path[NATIVE_STR_LEN + 1];
-	int len;
-
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-	path[len] = '\0';
-
-	String_InitArray(argv, argvBuffer);
-	String_Format1(&argv, "ClassiCube.exe %s", args);
-	Platform_EncodeUtf16(raw, &argv);
-	return Process_RawStart(path, raw);
-}
 void Process_Exit(cc_result code) { ExitProcess(code); }
-
 void Process_StartOpen(const cc_string* args) {
 	WCHAR str[NATIVE_STR_LEN];
 	Platform_EncodeUtf16(str, args);
@@ -1272,7 +1293,6 @@ cc_bool Updater_Clean(void) {
 
 cc_result Updater_Start(const char** action) {
 	WCHAR path[NATIVE_STR_LEN + 1];
-	WCHAR args[2] = { 'a', '\0' }; /* don't actually care about arguments */
 	cc_result res;
 	int len = 0;
 
@@ -1286,7 +1306,7 @@ cc_result Updater_Start(const char** action) {
 	if (!MoveFileExW(UPDATE_SRC, path, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
 
 	*action = "Restarting game";
-	return Process_RawStart(path, args);
+	return Process_StartGame(&String_Empty);
 }
 
 cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
@@ -1343,10 +1363,7 @@ cc_result Updater_GetBuildTime(cc_uint64* t) { return ERR_NOT_SUPPORTED; }
 cc_result Updater_GetBuildTime(cc_uint64* t) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
-	
-	/* https://developer.android.com/reference/java/io/File#lastModified() */
-	/* lastModified is returned in milliseconds */
-	*t = JavaCallLong(env, "getApkUpdateTime", "()J", NULL) / 1000;
+	*t = JavaCallLong(env, "getApkUpdateTime", "()J", NULL);
 	return 0;
 }
 #endif
@@ -1565,7 +1582,7 @@ void Platform_Utf16ToAnsi(void* data) {
 	WCHAR* src = (WCHAR*)data;
 	char* dst  = (char*)data;
 
-	while (*src) { *dst++ = *src++; }
+	while (*src) { *dst++ = (char)(*src++); }
 	*dst = '\0';
 }
 

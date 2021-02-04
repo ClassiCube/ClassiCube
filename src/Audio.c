@@ -17,6 +17,8 @@
 #include "Window.h"
 #endif
 
+#define QUOTE(x) #x
+#define DefineDynFunc(sym) { QUOTE(sym), (void**)&_ ## sym }
 int Audio_SoundsVolume, Audio_MusicVolume;
 
 #if defined CC_BUILD_NOAUDIO
@@ -129,20 +131,18 @@ static const cc_string alLib = String_FromConst("libopenal.so");
 static const cc_string alLib = String_FromConst("libopenal.so.1");
 #endif
 
-#define QUOTE(x) #x
-#define DefineALFunc(sym) { QUOTE(sym), (void**)&_ ## sym }
 static cc_bool LoadALFuncs(void) {
 	static const struct DynamicLibSym funcs[18] = {
-		DefineALFunc(alcCreateContext),  DefineALFunc(alcMakeContextCurrent),
-		DefineALFunc(alcDestroyContext), DefineALFunc(alcOpenDevice),
-		DefineALFunc(alcCloseDevice),    DefineALFunc(alcGetError),
+		DefineDynFunc(alcCreateContext),  DefineDynFunc(alcMakeContextCurrent),
+		DefineDynFunc(alcDestroyContext), DefineDynFunc(alcOpenDevice),
+		DefineDynFunc(alcCloseDevice),    DefineDynFunc(alcGetError),
 
-		DefineALFunc(alGetError),        DefineALFunc(alGenSources),
-		DefineALFunc(alDeleteSources),   DefineALFunc(alGetSourcei),
-		DefineALFunc(alSourcePlay),      DefineALFunc(alSourceStop),
-		DefineALFunc(alSourceQueueBuffers), DefineALFunc(alSourceUnqueueBuffers),
-		DefineALFunc(alGenBuffers),      DefineALFunc(alDeleteBuffers),
-		DefineALFunc(alBufferData),      DefineALFunc(alDistanceModel)
+		DefineDynFunc(alGetError),        DefineDynFunc(alGenSources),
+		DefineDynFunc(alDeleteSources),   DefineDynFunc(alGetSourcei),
+		DefineDynFunc(alSourcePlay),      DefineDynFunc(alSourceStop),
+		DefineDynFunc(alSourceQueueBuffers), DefineDynFunc(alSourceUnqueueBuffers),
+		DefineDynFunc(alGenBuffers),      DefineDynFunc(alDeleteBuffers),
+		DefineDynFunc(alBufferData),      DefineDynFunc(alDistanceModel)
 	};
 
 	void* lib = DynamicLib_Load2(&alLib);
@@ -390,22 +390,51 @@ struct AudioContext {
 	SLBufferQueueItf bqPlayerQueue;
 };
 
+static SLresult (SLAPIENTRY *_slCreateEngine)(
+	SLObjectItf             *pEngine,
+	SLuint32                numOptions,
+	const SLEngineOption    *pEngineOptions,
+	SLuint32                numInterfaces,
+	const SLInterfaceID     *pInterfaceIds,
+	const SLboolean         *pInterfaceRequired
+);
+static SLInterfaceID* _SL_IID_NULL;
+static SLInterfaceID* _SL_IID_PLAY;
+static SLInterfaceID* _SL_IID_ENGINE;
+static SLInterfaceID* _SL_IID_BUFFERQUEUE;
+static const cc_string slLib = String_FromConst("libOpenSLES.so");
+
+static cc_bool LoadSLFuncs(void) {
+	static const struct DynamicLibSym funcs[5] = {
+		DefineDynFunc(slCreateEngine), DefineDynFunc(SL_IID_NULL),
+		DefineDynFunc(SL_IID_PLAY),    DefineDynFunc(SL_IID_ENGINE),
+		DefineDynFunc(SL_IID_BUFFERQUEUE)
+	};
+
+	void* lib = DynamicLib_Load2(&slLib);
+	if (!lib) { Logger_DynamicLibWarn("loading", &slLib); return false; }
+	return DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
+}
+
 static cc_bool Backend_Init(void) {
+	static const cc_string msg = String_FromConst("Failed to init OpenSLES. No audio will play.");
 	SLInterfaceID ids[1];
 	SLboolean req[1];
 	SLresult res;
 
 	if (slEngineObject) return true;
-	/* mixer doesn't use any effects */
-	ids[0] = SL_IID_NULL; req[0] = SL_BOOLEAN_FALSE;
+	if (!LoadSLFuncs()) { Logger_WarnFunc(&msg); return false; }
 	
-	res = slCreateEngine(&slEngineObject, 0, NULL, 0, NULL, NULL);
+	/* mixer doesn't use any effects */
+	ids[0] = *_SL_IID_NULL; req[0] = SL_BOOLEAN_FALSE;
+	
+	res = _slCreateEngine(&slEngineObject, 0, NULL, 0, NULL, NULL);
 	if (res) { Logger_SimpleWarn(res, "creating OpenSL ES engine"); return false; }
 
 	res = (*slEngineObject)->Realize(slEngineObject, SL_BOOLEAN_FALSE);
 	if (res) { Logger_SimpleWarn(res, "realising OpenSL ES engine"); return false; }
 
-	res = (*slEngineObject)->GetInterface(slEngineObject, SL_IID_ENGINE, &slEngineEngine);
+	res = (*slEngineObject)->GetInterface(slEngineObject, *_SL_IID_ENGINE, &slEngineEngine);
 	if (res) { Logger_SimpleWarn(res, "initing OpenSL ES engine"); return false; }
 
 	res = (*slEngineEngine)->CreateOutputMix(slEngineEngine, &slOutputObject, 1, ids, req);
@@ -489,16 +518,16 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 	dst.pLocator = &output;
 	dst.pFormat  = NULL;
 
-	ids[0] = SL_IID_BUFFERQUEUE; req[0] = SL_BOOLEAN_TRUE;
-	ids[1] = SL_IID_PLAY;        req[1] = SL_BOOLEAN_TRUE;
+	ids[0] = *_SL_IID_BUFFERQUEUE; req[0] = SL_BOOLEAN_TRUE;
+	ids[1] = *_SL_IID_PLAY;        req[1] = SL_BOOLEAN_TRUE;
 
 	res = (*slEngineEngine)->CreateAudioPlayer(slEngineEngine, &bqPlayerObject, &src, &dst, 2, ids, req);
 	ctx->bqPlayerObject = bqPlayerObject;
 	if (res) return res;
 
-	if ((res = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE)))                              return res;
-	if ((res = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY,        &ctx->bqPlayerPlayer))) return res;
-	if ((res = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_BUFFERQUEUE, &ctx->bqPlayerQueue)))  return res;
+	if ((res = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE)))                                return res;
+	if ((res = (*bqPlayerObject)->GetInterface(bqPlayerObject, *_SL_IID_PLAY,        &ctx->bqPlayerPlayer))) return res;
+	if ((res = (*bqPlayerObject)->GetInterface(bqPlayerObject, *_SL_IID_BUFFERQUEUE, &ctx->bqPlayerQueue)))  return res;
 
 	return (*ctx->bqPlayerQueue)->RegisterCallback(ctx->bqPlayerQueue, OnBufferFinished, ctx);
 }

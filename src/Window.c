@@ -15,16 +15,8 @@ struct _WinData WindowInfo;
 
 int Display_ScaleX(int x) { return (int)(x * DisplayInfo.ScaleX); }
 int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
-
-#ifndef CC_BUILD_WEB
-void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
-	cc_string text; char textBuffer[2048];
-	String_InitArray(text, textBuffer);
-
-	Clipboard_GetText(&text);
-	callback(&text, obj);
-}
-#endif
+#define Display_CentreX(width)  (DisplayInfo.X + (DisplayInfo.Width  - width)  / 2)
+#define Display_CentreY(height) (DisplayInfo.Y + (DisplayInfo.Height - height) / 2)
 
 #if defined CC_BUILD_IOS
 /* iOS implements these functions in external interop_ios.m file */
@@ -982,7 +974,9 @@ static void InitRawMouse(void) {
 		_getRawInputData  = (FUNC_GetRawInputData) DynamicLib_Get2(lib, "GetRawInputData");
 		rawMouseSupported = _registerRawInput && _getRawInputData;
 	}
-	if (!rawMouseSupported) { Platform_LogConst("Raw input unsupported!"); return; }
+
+	rawMouseSupported &= Options_GetBool(OPT_RAW_INPUT, true);
+	if (!rawMouseSupported) { Platform_LogConst("## Raw input unsupported!"); return; }
 
 	rid.usUsagePage = 1; /* HID_USAGE_PAGE_GENERIC; */
 	rid.usUsage     = 2; /* HID_USAGE_GENERIC_MOUSE; */
@@ -2920,7 +2914,7 @@ static const char* OnBeforeUnload(int type, const void* ev, void *data) {
 	return NULL;
 }
 
-static int MapNativeKey(int k) {
+static int MapNativeKey(int k, int l) {
 	if (k >= '0' && k <= '9') return k;
 	if (k >= 'A' && k <= 'Z') return k;
 	if (k >= DOM_VK_F1      && k <= DOM_VK_F24)     { return KEY_F1  + (k - DOM_VK_F1); }
@@ -2929,10 +2923,10 @@ static int MapNativeKey(int k) {
 	switch (k) {
 	case DOM_VK_BACK_SPACE: return KEY_BACKSPACE;
 	case DOM_VK_TAB:        return KEY_TAB;
-	case DOM_VK_RETURN:     return KEY_ENTER;
-	case DOM_VK_SHIFT:      return KEY_LSHIFT;
-	case DOM_VK_CONTROL:    return KEY_LCTRL;
-	case DOM_VK_ALT:        return KEY_LALT;
+	case DOM_VK_RETURN:     return l == DOM_KEY_LOCATION_NUMPAD ? KEY_KP_ENTER : KEY_ENTER;
+	case DOM_VK_SHIFT:      return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RSHIFT : KEY_LSHIFT;
+	case DOM_VK_CONTROL:    return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RCTRL  : KEY_LCTRL;
+	case DOM_VK_ALT:        return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RALT   : KEY_LALT;
 	case DOM_VK_PAUSE:      return KEY_PAUSE;
 	case DOM_VK_CAPS_LOCK:  return KEY_CAPSLOCK;
 	case DOM_VK_ESCAPE:     return KEY_ESCAPE;
@@ -2952,7 +2946,7 @@ static int MapNativeKey(int k) {
 
 	case DOM_VK_SEMICOLON:   return KEY_SEMICOLON;
 	case DOM_VK_EQUALS:      return KEY_EQUALS;
-	case DOM_VK_WIN:         return KEY_LWIN;
+	case DOM_VK_WIN:         return l == DOM_KEY_LOCATION_RIGHT  ? KEY_RWIN : KEY_LWIN;
 	case DOM_VK_MULTIPLY:    return KEY_KP_MULTIPLY;
 	case DOM_VK_ADD:         return KEY_KP_PLUS;
 	case DOM_VK_SUBTRACT:    return KEY_KP_MINUS;
@@ -2979,34 +2973,21 @@ static int MapNativeKey(int k) {
 	return KEY_NONE;
 }
 
-static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev, void* data) {
-	int key = MapNativeKey(ev->keyCode);
-
-	if (ev->location == DOM_KEY_LOCATION_RIGHT) {
-		switch (key) {
-		case KEY_LALT:   key = KEY_RALT; break;
-		case KEY_LCTRL:  key = KEY_RCTRL; break;
-		case KEY_LSHIFT: key = KEY_RSHIFT; break;
-		case KEY_LWIN:   key = KEY_RWIN; break;
-		}
-	}
-	else if (ev->location == DOM_KEY_LOCATION_NUMPAD) {
-		switch (key) {
-		case KEY_ENTER: key = KEY_KP_ENTER; break;
-		}
-	}
-
-	if (key) Input_Set(key, type == EMSCRIPTEN_EVENT_KEYDOWN);
+static EM_BOOL OnKeyDown(int type, const EmscriptenKeyboardEvent* ev, void* data) {
+	int key = MapNativeKey(ev->keyCode, ev->location);
+	/* iOS safari still sends backspace key events, don't intercept those */
+	if (key == KEY_BACKSPACE && Input_TouchMode && keyboardOpen) return false;
+	
+	if (key) Input_SetPressed(key);
 	DeferredEnableRawMouse();
-
 	if (!key) return false;
-	/* KeyUp always intercepted */
-	if (type != EMSCRIPTEN_EVENT_KEYDOWN) return true;
 
 	/* If holding down Ctrl or Alt, keys aren't going to generate a KeyPress event anyways. */
 	/* This intercepts Ctrl+S etc. Ctrl+C and Ctrl+V are not intercepted for clipboard. */
-	if (Key_IsAltPressed() || Key_IsWinPressed()) return true;
-	if (Key_IsControlPressed() && key != 'C' && key != 'V') return true;
+	/*  NOTE: macOS uses Win (Command) key instead of Ctrl, have to account for that too */
+	if (Key_IsAltPressed())  return true;
+	if (Key_IsWinPressed())  return key != 'C' && key != 'V';
+	if (Key_IsCtrlPressed()) return key != 'C' && key != 'V';
 
 	/* Space needs special handling, as intercepting this prevents the ' ' key press event */
 	/* But on Safari, space scrolls the page - so need to intercept when keyboard is NOT open */
@@ -3017,6 +2998,13 @@ static EM_BOOL OnKey(int type, const EmscriptenKeyboardEvent* ev, void* data) {
 	/* e.g. not preventing F11 means browser makes page fullscreen instead of just canvas */
 	return (key >= KEY_F1  && key <= KEY_F24)  || (key >= KEY_UP    && key <= KEY_RIGHT) ||
 		(key >= KEY_INSERT && key <= KEY_MENU) || (key >= KEY_ENTER && key <= KEY_NUMLOCK);
+}
+
+static EM_BOOL OnKeyUp(int type, const EmscriptenKeyboardEvent* ev, void* data) {
+	int key = MapNativeKey(ev->keyCode, ev->location);
+	if (key) Input_SetReleased(key);
+	DeferredEnableRawMouse();
+	return key != KEY_NONE;
 }
 
 static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* data) {
@@ -3031,6 +3019,10 @@ static EM_BOOL OnKeyPress(int type, const EmscriptenKeyboardEvent* ev, void* dat
 	/*   not actually backspace everything. (because the HTML text input does not */
 	/*   have these intercepted key presses in its text buffer) */
 	if (Input_TouchMode && keyboardOpen) return false;
+
+	/* Safari on macOS still sends a keypress event, which must not be cancelled */
+	/*  (otherwise copy/paste doesn't work, as it uses Win+C / Win+V) */
+	if (ev->metaKey) return false;
 
 	if (Convert_TryCodepointToCP437(ev->charCode, &keyChar)) {
 		Event_RaiseInt(&InputEvents.Press, keyChar);
@@ -3056,8 +3048,8 @@ static void HookEvents(void) {
 	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnResize);
 	emscripten_set_beforeunload_callback(                          NULL,    OnBeforeUnload);
 
-	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnKey);
-	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,    NULL, 0, OnKey);
+	emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnKeyDown);
+	emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,    NULL, 0, OnKeyUp);
 	emscripten_set_keypress_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, OnKeyPress);
 
 	emscripten_set_touchstart_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW,  NULL, 0, OnTouchStart);
@@ -3101,19 +3093,24 @@ void Window_Init(void) {
 	EM_ASM(window.addEventListener('copy', 
 		function(e) {
 			if (window.getSelection && window.getSelection().toString()) return;
-			if (window.cc_copyText) {
-				if (e.clipboardData) { e.clipboardData.setData('text/plain', window.cc_copyText); }
+			ccall('Window_RequestClipboardText', 'void');
+			if (!window.cc_copyText) return;
+
+			if (e.clipboardData) {
+				e.clipboardData.setData('text/plain', window.cc_copyText);
 				e.preventDefault();
-				window.cc_copyText = null;
-			}	
+			}
+			window.cc_copyText = null;
 		});
 	);
 
-	/* Paste text (window.clipboardData is handled in Clipboard_RequestText instead) */
+	/* Paste text (window.clipboardData is handled in Clipboard_GetText instead) */
 	EM_ASM(window.addEventListener('paste',
 		function(e) {
-			var contents = e.clipboardData ? e.clipboardData.getData('text/plain') : "";
-			ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
+			if (e.clipboardData) {
+				var contents = e.clipboardData.getData('text/plain');
+				ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
+			}
 		});
 	);
 
@@ -3124,8 +3121,7 @@ void Window_Init(void) {
 		return /iPhone|iPad|iPod/i.test(navigator.userAgent) || 
 		(navigator.platform === 'MacIntel' && navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
 	});
-	Input_TouchMode = is_ios || droid;
-	Pointers_Count  = Input_TouchMode ? 0 : 1;
+	Input_SetTouchMode(is_ios || droid);
 
 	/* iOS shifts the whole webpage up when opening chat, which causes problems */
 	/*  as the chat/send butons are positioned at the top of the canvas - they */
@@ -3169,20 +3165,33 @@ void Window_SetTitle(const cc_string* title) {
 	EM_ASM_({ document.title = UTF8ToString($0); }, str);
 }
 
-static RequestClipboardCallback clipboard_func;
-static void* clipboard_obj;
-
-EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
-	cc_string str; char strBuffer[512];
-	if (!clipboard_func) return;
-
-	String_InitArray(str, strBuffer);
-	String_AppendUtf8(&str, src, String_CalcLen(src, 2048));
-	clipboard_func(&str, clipboard_obj);
-	clipboard_func = NULL;
+static char pasteBuffer[512];
+static cc_string pasteStr;
+EMSCRIPTEN_KEEPALIVE void Window_RequestClipboardText(void) {
+	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_COPY, 0);
 }
 
-void Clipboard_GetText(cc_string* value) { }
+EMSCRIPTEN_KEEPALIVE void Window_StoreClipboardText(char* src) {
+	String_InitArray(pasteStr, pasteBuffer);
+	String_AppendUtf8(&pasteStr, src, String_CalcLen(src, 2048));
+}
+
+EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
+	Window_StoreClipboardText(src);
+	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
+}
+
+void Clipboard_GetText(cc_string* value) {
+	/* For IE11, use window.clipboardData to get the clipboard */
+	EM_ASM_({ 
+		if (window.clipboardData) {
+			var contents = window.clipboardData.getData('Text');
+			ccall('Window_StoreClipboardText', 'void', ['string'], [contents]);
+		} 
+	});	
+	String_Copy(value, &pasteStr);
+	pasteStr.length = 0;
+}
 void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, value);
@@ -3197,18 +3206,6 @@ void Clipboard_SetText(const cc_string* value) {
 			window.cc_copyText = UTF8ToString($0);
 		}
 	}, str);
-}
-
-void Clipboard_RequestText(RequestClipboardCallback callback, void* obj) {
-	clipboard_func = callback;
-	clipboard_obj  = obj;
-
-	/* For IE11, use window.clipboardData to get the clipboard */
-	EM_ASM_({
-		if (!window.clipboardData) return;
-		var contents = window.clipboardData.getData('Text');
-		ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
-	});
 }
 
 void Window_Show(void) { }
@@ -3672,7 +3669,8 @@ void Window_Init(void) {
 	JavaRegisterNatives(env, methods);
 
 	WindowInfo.SoftKeyboard = SOFT_KEYBOARD_RESIZE;
-	Input_TouchMode         = true;
+	Input_SetTouchMode(true);
+
 	DisplayInfo.Depth  = 32;
 	DisplayInfo.ScaleX = JavaCallFloat(env, "getDpiX", "()F", NULL);
 	DisplayInfo.ScaleY = JavaCallFloat(env, "getDpiY", "()F", NULL);
@@ -3820,13 +3818,13 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* kArgs) {
 	JNIEnv* env;
 	jvalue args[2];
 	JavaGetCurrentEnv(env);
 
-	args[0].l = JavaMakeString(env, args->text);
-	args[1].i = args->type;
+	args[0].l = JavaMakeString(env, kArgs->text);
+	args[1].i = kArgs->type;
 	JavaCallVoid(env, "openKeyboard", "(Ljava/lang/String;I)V", args);
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
@@ -4214,12 +4212,11 @@ static XVisualInfo GLContext_SelectVisual(void) {
 
 	InitGraphicsMode(&mode);
 	GetAttribs(&mode, attribs, GLCONTEXT_DEFAULT_DEPTH);
-	if (!glXQueryVersion(win_display, &major, &minor)) {
-		Logger_Abort("glXQueryVersion failed");
-	}
 	screen = DefaultScreen(win_display);
 
-	if (major >= 1 && minor >= 3) {
+	if (!glXQueryVersion(win_display, &major, &minor)) {
+		Platform_LogConst("glXQueryVersion failed");
+	} else if (major >= 1 && minor >= 3) {
 		/* ChooseFBConfig returns an array of GLXFBConfig opaque structures */
 		fbconfigs = glXChooseFBConfig(win_display, screen, attribs, &fbcount);
 		if (fbconfigs && fbcount) {

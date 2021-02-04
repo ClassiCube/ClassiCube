@@ -1005,10 +1005,8 @@ static struct CheckResourcesScreen {
 
 static void CheckResourcesScreen_Yes(void*  w, int idx) { FetchResourcesScreen_SetActive(); }
 static void CheckResourcesScreen_Next(void* w, int idx) {
-	static const cc_string optionsTxt = String_FromConst("options.txt");
 	Http_ClearPending();
-
-	if (File_Exists(&optionsTxt)) {
+	if (Options_LoadResult != ReturnCode_FileNotFound) {
 		MainScreen_SetActive();
 	} else {
 		ChooseModeScreen_SetActive(true);

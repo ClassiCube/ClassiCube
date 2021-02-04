@@ -59,10 +59,10 @@ typedef cc_bool (*EntryList_Filter)(const cc_string* entry);
 /* Loads the entries from disc. */
 /* NOTE: If separator is \0, does NOT check for duplicate keys when loading. */
 /* filter can be used to optionally skip loading some entries from the file. */
-CC_NOINLINE void EntryList_Load(struct StringsBuffer* list, const char* file, char separator, EntryList_Filter filter);
+CC_NOINLINE cc_result EntryList_Load(struct StringsBuffer* list, const char* file, char separator, EntryList_Filter filter);
 /* Shortcut for EntryList_Load with separator of \0 and filter of NULL */
 /* NOTE: Does NOT check for duplicate keys */
-CC_NOINLINE void EntryList_UNSAFE_Load(struct StringsBuffer* list, const char* file);
+CC_NOINLINE cc_result EntryList_UNSAFE_Load(struct StringsBuffer* list, const char* file);
 /* Saves the entries in the given list to disc. */
 CC_NOINLINE void EntryList_Save(struct StringsBuffer* list, const char* file);
 /* Removes the entry whose key caselessly equals the given key. */
