@@ -36,7 +36,7 @@ void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc
 *-----------------------------------------------------Font functions------------------------------------------------------*
 *#########################################################################################################################*/
 static char defaultBuffer[STRING_SIZE];
-static cc_string font_candidates[11] = {
+static cc_string font_candidates[12] = {
 	String_FromArray(defaultBuffer),     /* Filled in with user's default font */
 	String_FromConst("Arial"),           /* preferred font on all platforms */
 	String_FromConst("Liberation Sans"), /* nice looking fallbacks for linux */
@@ -45,9 +45,10 @@ static cc_string font_candidates[11] = {
 	String_FromConst("Cantarell"),
 	String_FromConst("DejaVu Sans Book"), 
 	String_FromConst("Century Schoolbook L Roman"), /* commonly available on linux */
-	String_FromConst("Slate For OnePlus"), /* android 10, some devices */
-	String_FromConst("Roboto"), /* android (broken on some android 10 devices) */
-	String_FromConst("Geneva") /* for ancient macOS versions */
+	String_FromConst("Slate For OnePlus"), /* Android 10, some devices */
+	String_FromConst("Roboto"), /* Android (broken on some Android 10 devices) */
+	String_FromConst("Geneva"), /* for ancient macOS versions */
+	String_FromConst("Droid Sans") /* for old Android versions */
 };
 
 void Drawer2D_SetDefaultFont(const cc_string* fontName) {

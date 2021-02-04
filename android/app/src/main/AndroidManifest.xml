@@ -8,16 +8,12 @@
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="18" />
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="18" />
+  <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="26"/>
+  
+  <application android:icon="@mipmap/ccicon" android:label="ClassiCube">
 
-  <application
-      android:icon="@mipmap/ic_launcher"
-      android:label="ClassiCube">
-
-    <activity android:name="com.classicube.MainActivity"
-              android:label="ClassiCube"
+    <activity android:name="com.classicube.MainActivity" android:label="ClassiCube"
               android:configChanges="orientation|screenSize|keyboard|keyboardHidden">
-      <!-- Tell NativeActivity the name of our .so -->
-      <meta-data android:name="android.app.lib_name" android:value="classicube" />
 
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />

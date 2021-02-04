@@ -438,13 +438,16 @@ static void LInput_Unselect(void* widget, int idx) {
 	Window_CloseKeyboard();
 }
 
-static void LInput_CopyFromClipboard(cc_string* text, void* widget) {
-	struct LInput* w = (struct LInput*)widget;
-	String_UNSAFE_TrimStart(text);
-	String_UNSAFE_TrimEnd(text);
+static void LInput_CopyFromClipboard(struct LInput* w) {
+	cc_string text; char textBuffer[2048];
+	String_InitArray(text, textBuffer);
 
-	if (w->ClipboardFilter) w->ClipboardFilter(text);
-	LInput_AppendString(w, text);
+	Clipboard_GetText(&text);
+	String_UNSAFE_TrimStart(&text);
+	String_UNSAFE_TrimEnd(&text);
+
+	if (w->ClipboardFilter) w->ClipboardFilter(&text);
+	LInput_AppendString(w, &text);
 }
 
 static void LInput_KeyDown(void* widget, int key, cc_bool was) {
@@ -453,10 +456,10 @@ static void LInput_KeyDown(void* widget, int key, cc_bool was) {
 		LInput_Backspace(w);
 	} else if (key == KEY_DELETE) {
 		LInput_Delete(w);
-	} else if (key == 'C' && Key_IsActionPressed()) {
+	} else if (key == INPUT_CLIPBOARD_COPY) {
 		if (w->text.length) Clipboard_SetText(&w->text);
-	} else if (key == 'V' && Key_IsActionPressed()) {
-		Clipboard_RequestText(LInput_CopyFromClipboard, w);
+	} else if (key == INPUT_CLIPBOARD_PASTE) {
+		LInput_CopyFromClipboard(w);
 	} else if (key == KEY_ESCAPE) {
 		LInput_Clear(w);
 	} else if (key == KEY_LEFT) {

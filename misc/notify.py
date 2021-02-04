@@ -17,22 +17,23 @@ def notify_webhook(body):
 			"content" : body
 		}
 		r = requests.post(WEBHOOK_URL, json=webhook_data)
-		print("BuildNotify response: " + r.text)
+		print("Webhook response: " + r.text)
 	except Exception as e:
-		print("BuildNotify failed: %s" % (e))
+		print("Webhook failed: %s" % (e))
 
 def build_exists(file):
 	return os.path.exists('client/src/' + file)
 
 builds = {
-	'Win32' : build_exists('cc-w32-d3d.exe'),
-	'Win64' : build_exists('cc-w64-d3d.exe'),
-	'Mac32' : build_exists('cc-osx32'),
-	'Mac64' : build_exists('cc-osx64'),
-	'Nix32' : build_exists('cc-nix32'),
-	'Nix64' : build_exists('cc-nix64'),
-	'Rpi'   : build_exists('cc-rpi'),
-	'Web'   : build_exists('cc.js'),
+	'Windows32' : build_exists('cc-w32-d3d.exe'),
+	'Windows64' : build_exists('cc-w64-d3d.exe'),
+	'macOS32'   : build_exists('cc-osx32'),
+	'macOS64'   : build_exists('cc-osx64'),
+	'Linux32'   : build_exists('cc-nix32'),
+	'Linux64'   : build_exists('cc-nix64'),
+	'RPi'       : build_exists('cc-rpi'),
+	'Web'       : build_exists('cc.js'),
+	'Android'   : build_exists('cc.apk'),
 	'Win-ogl32' : build_exists('cc-w32-ogl.exe'),
 	'Win-ogl64' : build_exists('cc-w64-ogl.exe'),
 }
@@ -48,17 +49,19 @@ def check_build(key):
 			failed.append(key)
 	else:
 		if not builds[key_32] and not builds[key_64]:
-			failed.append(key + '32/64')
+			failed.append(key + ' 32/64')
 		elif not builds[key_32]:
-			failed.append(key_32)
+			failed.append(key + ' 32')
 		elif not builds[key_64]:
-			failed.append(key_64)
+			failed.append(key + ' 64')
 
-check_build('Win')
-check_build('Mac')
-check_build('Nix')
-check_build('Rpi')
+check_build('Windows')
+check_build('macOS')
+check_build('Linux')
+check_build('RPi')
 check_build('Web')
+check_build('Android')
+check_build('Win-ogl')
 
 if len(failed):
-    notify_webhook('<@%s>, failed to compile for: %s' % (TARGET_USER, ', '.join(failed)))
+	notify_webhook('<@%s>, failed to compile for: %s' % (TARGET_USER, ', '.join(failed)))

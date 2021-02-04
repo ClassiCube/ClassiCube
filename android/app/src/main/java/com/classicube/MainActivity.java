@@ -130,7 +130,15 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 
 	void startGameAsync() {
 		Log.i("CC_WIN", "handing off to native..");
-		System.loadLibrary("classicube");
+		try {
+			System.loadLibrary("classicube");
+		} catch (UnsatisfiedLinkError ex) {
+			ex.printStackTrace();
+			showAlert("Failed to start", ex.getMessage());
+			return;
+		}
+		
+		gameRunning = true;
 		runGameAsync();
 	}
 	
@@ -157,7 +165,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		}
 
 		if (!gameRunning) startGameAsync();
-		gameRunning = true;
 		super.onCreate(savedInstanceState);
 	}
 
@@ -392,7 +399,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		
 		setContentView(curView);
 		curView.requestFocus();
-		if (fullscreen) goFullscreen();
+		if (fullscreen) setUIVisibility(FULLSCREEN_FLAGS);
 	}
 
 	class LauncherView extends SurfaceView {
@@ -516,7 +523,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 			//ApplicationInfo info = getPackageManager().getApplicationInfo(name, 0);
 			ApplicationInfo info = getApplicationInfo();
 			File apkFile = new File(info.sourceDir);
-			return apkFile.lastModified();
+			
+			// https://developer.android.com/reference/java/io/File#lastModified()
+			//  lastModified is returned in milliseconds
+			return apkFile.lastModified() / 1000;
 		} catch (Exception ex) {
 			return 0;
 		}
@@ -606,7 +616,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		//final Activity activity = this;
 		runOnUiThread(new Runnable() {
 			public void run() {
-				AlertDialog.Builder dlg = new AlertDialog.Builder(MainActivity.this, AlertDialog.THEME_HOLO_DARK);
+				AlertDialog.Builder dlg = new AlertDialog.Builder(MainActivity.this);
 				dlg.setTitle(title);
 				dlg.setMessage(message);
 				dlg.setPositiveButton("Close", new DialogInterface.OnClickListener() {
@@ -623,29 +633,30 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		// TODO: this fails because multiple dialog boxes show
 	}
 
-	public int getWindowState() {
-		return fullscreen ? 1 : 0;
-	}
-
-	void goFullscreen() {
-		curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+	public int getWindowState() { return fullscreen ? 1 : 0; }
+	final static int FULLSCREEN_FLAGS = View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+	
+	void setUIVisibility(int flags) {
+		if (curView == null) return;
+		try {
+			curView.setSystemUiVisibility(flags);
+		} catch (NoSuchMethodError ex) {
+			// Not available on API < 11 (Android 3.0)
+			ex.printStackTrace();
+		}
 	}
 
 	public void enterFullscreen() {
 		fullscreen = true;
 		runOnUiThread(new Runnable() {
-			public void run() {
-				if (curView != null) goFullscreen();
-			}
+			public void run() { setUIVisibility(FULLSCREEN_FLAGS); }
 		});
     }
 
     public void exitFullscreen() {
 		fullscreen = false;
 		runOnUiThread(new Runnable() {
-			public void run() {
-				if (curView != null) curView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
-			}
+			public void run() { setUIVisibility(View.SYSTEM_UI_FLAG_VISIBLE); }
 		});
     }
 	
@@ -703,16 +714,19 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		int len;
 		try {
 			conn.connect();
-			Map<String, List<String>> all = conn.getHeaderFields();
-
-			for (Map.Entry<String, List<String>> h : all.entrySet()) {
-				String key = h.getKey();
-				for (String value : h.getValue()) {
-					if (key == null) {
-						httpParseHeader(value);
-					} else {
-						httpParseHeader(key + ":" + value);
-					}
+			// Some implementations also provide this as getHeaderField(0), but some don't
+			httpParseHeader("HTTP/1.1 " + conn.getResponseCode() + " MSG");
+			
+			// Legitimate webservers aren't going to reply with over 200 headers
+			for (int i = 0; i < 200; i++) {
+				String key = conn.getHeaderFieldKey(i);
+				String val = conn.getHeaderField(i);
+				if (key == null && val == null) break;
+				
+				if (key == null) {
+					httpParseHeader(val);
+				} else {
+					httpParseHeader(key + ":" + val);
 				}
 			}
 

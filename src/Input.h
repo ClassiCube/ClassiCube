@@ -44,22 +44,25 @@ enum InputButtons {
 
 	/* NOTE: RMOUSE must be before MMOUSE for PlayerClick compatibility */
 	KEY_XBUTTON1, KEY_XBUTTON2, KEY_LMOUSE, KEY_RMOUSE, KEY_MMOUSE,
-	INPUT_COUNT
+	INPUT_COUNT,
+
+	INPUT_CLIPBOARD_COPY  = 1001,
+	INPUT_CLIPBOARD_PASTE = 1002
 };
 
 /* Simple names for each input button. */
 extern const char* const Input_Names[INPUT_COUNT];
 
-#define Key_IsWinPressed()     (Input_Pressed[KEY_LWIN]   || Input_Pressed[KEY_RWIN])
-#define Key_IsAltPressed()     (Input_Pressed[KEY_LALT]   || Input_Pressed[KEY_RALT])
-#define Key_IsControlPressed() (Input_Pressed[KEY_LCTRL]  || Input_Pressed[KEY_RCTRL])
-#define Key_IsShiftPressed()   (Input_Pressed[KEY_LSHIFT] || Input_Pressed[KEY_RSHIFT])
+#define Key_IsWinPressed()   (Input_Pressed[KEY_LWIN]   || Input_Pressed[KEY_RWIN])
+#define Key_IsAltPressed()   (Input_Pressed[KEY_LALT]   || Input_Pressed[KEY_RALT])
+#define Key_IsCtrlPressed()  (Input_Pressed[KEY_LCTRL]  || Input_Pressed[KEY_RCTRL])
+#define Key_IsShiftPressed() (Input_Pressed[KEY_LSHIFT] || Input_Pressed[KEY_RSHIFT])
 
 #ifdef CC_BUILD_DARWIN
 /* macOS uses CMD instead of CTRL for clipboard and stuff */
 #define Key_IsActionPressed() Key_IsWinPressed()
 #else
-#define Key_IsActionPressed() Key_IsControlPressed()
+#define Key_IsActionPressed() Key_IsCtrlPressed()
 #endif
 
 /* Pressed state of each input button. Use Input_Set to change. */
@@ -83,6 +86,7 @@ extern int Pointers_Count;
 extern cc_bool Input_TapPlace, Input_HoldPlace;
 /* Whether touch input is being used. */
 extern cc_bool Input_TouchMode;
+void Input_SetTouchMode(cc_bool enabled);
 
 void Input_AddTouch(long id,    int x, int y);
 void Input_UpdateTouch(long id, int x, int y);
