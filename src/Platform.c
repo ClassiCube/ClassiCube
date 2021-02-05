@@ -1869,7 +1869,7 @@ static void GetMachineID(cc_uint32* key) {
 		}
 		DecodeMachineID(tmp, (cc_uint8*)key);	
 	}
-	CFRelease(uuid);
+	if (uuid) CFRelease(uuid);
 	IOObjectRelease(registry);
 }
 #endif
