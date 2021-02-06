@@ -1225,8 +1225,8 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 	char* str;
 
 	/* NOTE: OpenBSD doesn't seem to let us get executable's location, so fallback to argv[0] */
-	/* See OpenBSD sysctl manpage for why argv array is so large */
-	/*... The buffer pointed to by oldp is filled with an array of char pointers followed by the strings themselves... */
+	/* See OpenBSD sysctl manpage for why argv array is so large: */
+	/* "... The buffer pointed to by oldp is filled with an array of char pointers followed by the strings themselves..." */
 	mib[2] = getpid();
 	size   = 100 * sizeof(char*);
 	if (sysctl(mib, 4, argv, &size, NULL, 0) == -1) return errno;
@@ -1844,7 +1844,6 @@ static cc_result GetMachineID(cc_uint32* key) {
 	char tmp[MACHINEID_LEN];
 	struct Stream s;
 	cc_result res;
-	int i;
 
 	if ((res = Stream_OpenFile(&s, &idFile))) return res;
 	res = Stream_Read(&s, tmp, MACHINEID_LEN);
@@ -1872,6 +1871,39 @@ static cc_result GetMachineID(cc_uint32* key) {
 	if (uuid) CFRelease(uuid);
 	IOObjectRelease(registry);
 	return src ? 0 : ERR_NOT_SUPPORTED;
+}
+#elif defined CC_BUILD_FREEBSD
+/* Use kern.hostuuid sysctl for the key */
+/* Possible alternatives: kenv("smbios.system.uuid"), /etc/hostid */
+static cc_result GetMachineID(cc_uint32* key) {
+	static int mib[2] = { CTL_KERN, KERN_HOSTUUID };
+	char buf[128];
+	size_t size = 128;
+
+	if (sysctl(mib, 2, buf, &size, NULL, 0) == -1) return errno;
+	DecodeMachineID(buf, size, key);
+	return 0;
+}
+#elif defined CC_BUILD_OPENBSD
+/* Use hw.uuid sysctl for the key */
+static cc_result GetMachineID(cc_uint32* key) {
+	static int mib[2] = { CTL_HW, HW_UUID };
+	char buf[128];
+	size_t size = 128;
+
+	if (sysctl(mib, 2, buf, &size, NULL, 0) == -1) return errno;
+	DecodeMachineID(buf, size, key);
+	return 0;
+}
+#elif defined CC_BUILD_NETBSD
+/* Use hw.uuid for the key */
+static cc_result GetMachineID(cc_uint32* key) {
+	char buf[128];
+	size_t size = 128;
+
+	if (sysctlbyname("machdep.dmi.system-uuid", buf, &size, NULL, 0) == -1) return errno;
+	DecodeMachineID(buf, size, key);
+	return 0;
 }
 #else
 static cc_result GetMachineID(cc_uint32* key) { return ERR_NOT_SUPPORTED; }
