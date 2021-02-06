@@ -1821,13 +1821,19 @@ static void DecipherBlock(cc_uint32* v, const cc_uint32* key) {
 #define MACHINEID_LEN 32
 #define ENC_SIZE 8 /* 2 32 bit ints per block */
 
-/* "b3c5a0d9" --> 0xB3C5A0D9 */
-static void DecodeMachineID(char* tmp, cc_uint8* key) {
-	int hex[MACHINEID_LEN], i;
-	PackedCol_Unhex(tmp, hex, MACHINEID_LEN);
+/* "b3 c5a-0d9" --> 0xB3C5A0D9 */
+static void DecodeMachineID(char* tmp, int len, cc_uint32* key) {
+	int hex[MACHINEID_LEN] = { 0 }, i, j, c;
+	cc_uint8* dst = (cc_uint8*)key;
+
+	/* Get each valid hex character */
+	for (i = 0, j = 0; i < len && j < MACHINEID_LEN; i++) {
+		c = PackedCol_DeHex(tmp[i]);
+		if (c != -1) hex[j++] = c;
+	}
 
 	for (i = 0; i < MACHINEID_LEN / 2; i++) {
-		key[i] = (hex[i * 2] << 4) | hex[i * 2 + 1];
+		dst[i] = (hex[i * 2] << 4) | hex[i * 2 + 1];
 	}
 }
 
@@ -1843,32 +1849,28 @@ static void GetMachineID(cc_uint32* key) {
 	if (Stream_OpenFile(&s, &idFile)) return;
 
 	if (!Stream_Read(&s, tmp, MACHINEID_LEN)) {
-		DecodeMachineID(tmp, (cc_uint8*)key);
+		DecodeMachineID(tmp, MACHINEID_LEN, key);
 	}
-	s.Close(&s);
+	(void)s.Close(&s);
 }
 #elif defined CC_BUILD_MACOS
 static void GetMachineID(cc_uint32* key) {
 	io_registry_entry_t registry;
-	CFStringRef uuid;
-	char tmp[MACHINEID_LEN] = { 0 };
+	CFStringRef uuid = NULL;
 	const char* src;
 	struct Stream s;
 	int i;
 
 	for (i = 0; i < 4; i++) key[i] = 0;
-
 	registry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
 	if (!registry) return;
 
+#ifdef kIOPlatformUUIDKey
 	uuid = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
 	if (uuid && (src = CFStringGetCStringPtr(uuid, kCFStringEncodingUTF8))) {
-		for (i = 0; *src && i < MACHINEID_LEN; src++) {
-			if (*src == '-') continue;
-			tmp[i++] = *src;
-		}
-		DecodeMachineID(tmp, (cc_uint8*)key);	
+		DecodeMachineID(src, String_Length(src), key);	
 	}
+#endif
 	if (uuid) CFRelease(uuid);
 	IOObjectRelease(registry);
 }

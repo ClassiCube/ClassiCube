@@ -30,7 +30,7 @@ void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, P
 	*yMin  = PackedCol_Scale(normal, PACKEDCOL_SHADE_YMIN);
 }
 
-static int PackedCol_DeHex(char hex) {
+int PackedCol_DeHex(char hex) {
 	if (hex >= '0' && hex <= '9') {
 		return (hex - '0');
 	} else if (hex >= 'a' && hex <= 'f') {
