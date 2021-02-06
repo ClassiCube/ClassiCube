@@ -687,7 +687,7 @@ void Session_Load(void) {
 	StringsBuffer_SetLengthBits(&ccCookies, 11);
 
 	String_InitArray(session, buffer);
-	Options_GetSecure(LOPT_SESSION, &session, &Game_Username);
+	Options_GetSecure(LOPT_SESSION, &session);
 	if (!session.length) return;
 	EntryList_Set(&ccCookies, &sessionKey, &session, '=');
 }
@@ -696,7 +696,7 @@ void Session_Save(void) {
 #if defined CC_BUILD_WIN || defined CC_BUILD_LINUX || defined CC_BUILD_MACOS
 	cc_string session = EntryList_UNSAFE_Get(&ccCookies, &sessionKey, '=');
 	if (!session.length) return;
-	Options_SetSecure(LOPT_SESSION, &session, &Game_Username);
+	Options_SetSecure(LOPT_SESSION, &session);
 #endif
 }
 #endif

@@ -165,30 +165,34 @@ void Options_SetString(const cc_string* key, const cc_string* value) {
 	StringsBuffer_Add(&changedOpts, key);
 }
 
-void Options_SetSecure(const char* opt, const cc_string* src, const cc_string* key) {
+void Options_SetSecure(const char* opt, const cc_string* src) {
 	char data[2000], encData[1500+1];
 	cc_string tmp, enc;
+	cc_result res;
+	if (!src->length) return;
 
 	String_InitArray(enc, encData);
-	if (!src->length || !key->length) return;
-	if (Platform_Encrypt(key, src->buffer, src->length, &enc)) return;
-	if (enc.length > 1500) Logger_Abort("too large to base64");
+	res = Platform_Encrypt(src->buffer, src->length, &enc);
+	if (res) { Platform_Log2("Error %h encrypting option %c", &res, opt); return; }
 
+	if (enc.length > 1500) Logger_Abort("too large to base64");
 	tmp.buffer   = data;
 	tmp.length   = Convert_ToBase64(enc.buffer, enc.length, data);
 	tmp.capacity = tmp.length;
 	Options_Set(opt, &tmp);
 }
 
-void Options_GetSecure(const char* opt, cc_string* dst, const cc_string* key) {
+void Options_GetSecure(const char* opt, cc_string* dst) {
 	cc_uint8 data[1500];
 	int dataLen;
 	cc_string raw;
+	cc_result res;
 
 	Options_UNSAFE_Get(opt, &raw);
-	if (!raw.length || !key->length) return;
+	if (!raw.length) return;
 	if (raw.length > 2000) Logger_Abort("too large to base64");
 
 	dataLen = Convert_FromBase64(raw.buffer, raw.length, data);
-	Platform_Decrypt(key, data, dataLen, dst);
+	res = Platform_Decrypt(data, dataLen, dst);
+	if (res) Platform_Log2("Error %h decrypting option %c", &res, opt);
 }

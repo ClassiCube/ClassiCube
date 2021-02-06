@@ -1763,7 +1763,7 @@ void Platform_Init(void) { Platform_InitPosix(); }
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
-cc_result Platform_Encrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
+cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	DATA_BLOB input, output;
 	int i;
 	input.cbData = len; input.pbData = (BYTE*)data;
@@ -1775,7 +1775,7 @@ cc_result Platform_Encrypt(const cc_string* key, const void* data, int len, cc_s
 	LocalFree(output.pbData);
 	return 0;
 }
-cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
+cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	DATA_BLOB input, output;
 	int i;
 	input.cbData = len; input.pbData = (BYTE*)data;
@@ -1787,7 +1787,7 @@ cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_s
 	LocalFree(output.pbData);
 	return 0;
 }
-#elif defined CC_BUILD_LINUX || defined CC_BUILD_MACOS
+#elif defined CC_BUILD_POSIX
 /* Encrypts data using XTEA block cipher, with OS specific method to get machine-specific key */
 
 static void EncipherBlock(cc_uint32* v, const cc_uint32* key, cc_string* dst) {
@@ -1839,31 +1839,29 @@ static void DecodeMachineID(char* tmp, int len, cc_uint32* key) {
 
 #if defined CC_BUILD_LINUX
 /* Read /var/lib/dbus/machine-id for the key */
-static void GetMachineID(cc_uint32* key) {
+static cc_result GetMachineID(cc_uint32* key) {
 	const cc_string idFile = String_FromConst("/var/lib/dbus/machine-id");
 	char tmp[MACHINEID_LEN];
 	struct Stream s;
+	cc_result res;
 	int i;
 
-	for (i = 0; i < 4; i++) key[i] = 0;
-	if (Stream_OpenFile(&s, &idFile)) return;
+	if ((res = Stream_OpenFile(&s, &idFile))) return res;
+	res = Stream_Read(&s, tmp, MACHINEID_LEN);
+	if (!res) DecodeMachineID(tmp, MACHINEID_LEN, key);
 
-	if (!Stream_Read(&s, tmp, MACHINEID_LEN)) {
-		DecodeMachineID(tmp, MACHINEID_LEN, key);
-	}
 	(void)s.Close(&s);
+	return res;
 }
 #elif defined CC_BUILD_MACOS
-static void GetMachineID(cc_uint32* key) {
+/* Read kIOPlatformUUIDKey from I/O registry for the key */
+static cc_result GetMachineID(cc_uint32* key) {
 	io_registry_entry_t registry;
 	CFStringRef uuid = NULL;
-	const char* src;
-	struct Stream s;
-	int i;
+	const char* src  = NULL;
 
-	for (i = 0; i < 4; i++) key[i] = 0;
 	registry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
-	if (!registry) return;
+	if (!registry) return ERR_NOT_SUPPORTED;
 
 #ifdef kIOPlatformUUIDKey
 	uuid = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
@@ -1873,16 +1871,20 @@ static void GetMachineID(cc_uint32* key) {
 #endif
 	if (uuid) CFRelease(uuid);
 	IOObjectRelease(registry);
+	return src ? 0 : ERR_NOT_SUPPORTED;
 }
+#else
+static cc_result GetMachineID(cc_uint32* key) { return ERR_NOT_SUPPORTED; }
 #endif
 
-cc_result Platform_Encrypt(const cc_string* key_, const void* data, int len, cc_string* dst) {
+cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	const cc_uint8* src = (const cc_uint8*)data;
 	cc_uint32 header[4], key[4];
+	cc_result res;
+	if ((res = GetMachineID(key))) return res;
+
 	header[0] = ENC1; header[1] = ENC2;
 	header[2] = ENC3; header[3] = len;
-
-	GetMachineID(key);
 	EncipherBlock(header + 0, key, dst);
 	EncipherBlock(header + 2, key, dst);
 
@@ -1893,14 +1895,16 @@ cc_result Platform_Encrypt(const cc_string* key_, const void* data, int len, cc_
 	}
 	return 0;
 }
-cc_result Platform_Decrypt(const cc_string* key__, const void* data, int len, cc_string* dst) {
+cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	const cc_uint8* src = (const cc_uint8*)data;
 	cc_uint32 header[4], key[4];
+	cc_result res;
 	int dataLen;
+
 	/* Total size must be >= header size */
 	if (len < 16) return ERR_END_OF_STREAM;
+	if ((res = GetMachineID(key))) return res;
 
-	GetMachineID(key);
 	Mem_Copy(header, src, 16);
 	DecipherBlock(header + 0, key);
 	DecipherBlock(header + 2, key);
@@ -1919,24 +1923,6 @@ cc_result Platform_Decrypt(const cc_string* key__, const void* data, int len, cc
 		String_AppendAll(dst, header, min(dataLen, ENC_SIZE));
 	}
 	return 0;
-}
-#elif defined CC_BUILD_POSIX
-cc_result Platform_Encrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
-	/* TODO: Is there a similar API for macOS/Linux? */
-	/* Fallback to NOT SECURE XOR. Prevents simple reading from options.txt */
-	const cc_uint8* src = data;
-	cc_uint8 c;
-	int i;
-
-	for (i = 0; i < len; i++) {
-		c = (cc_uint8)(src[i] ^ key->buffer[i % key->length] ^ 0x43);
-		String_Append(dst, c);
-	}
-	return 0;
-}
-cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_string* dst) {
-	/* TODO: Is there a similar API for macOS/Linux? */
-	return Platform_Encrypt(key, data, len, dst);
 }
 #endif
 

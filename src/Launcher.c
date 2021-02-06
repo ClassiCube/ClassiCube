@@ -96,7 +96,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 		Options_Set(ROPT_USER,   user);
 		Options_Set(ROPT_IP,     ip);
 		Options_Set(ROPT_PORT,   port);
-		Options_SetSecure(ROPT_MPPASS, mppass, user);
+		Options_SetSecure(ROPT_MPPASS, mppass);
 	}
 	/* Save options BEFORE starting new game process */
 	/* Otherwise can get 'file already in use' errors on startup */

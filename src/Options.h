@@ -124,9 +124,9 @@ CC_API void Options_Set(const char*     keyRaw,  const cc_string* value);
 CC_API void Options_SetString(const cc_string* key, const cc_string* value);
 
 /* Attempts to securely encode an option. */
-/* NOTE: Not all platforms support secure saving. DO NOT RELY ON THIS BEING SECURE! */
-void Options_SetSecure(const char* opt, const cc_string* data, const cc_string* key);
+/* NOTE: Not all platforms support secure saving. */
+void Options_SetSecure(const char* opt, const cc_string* data);
 /* Attempts to securely decode an option. */
-/* NOTE: Not all platforms support secure saving. DO NOT RELY ON THIS BEING SECURE! */
-void Options_GetSecure(const char* opt, cc_string* data, const cc_string* key);
+/* NOTE: Not all platforms support secure saving. */
+void Options_GetSecure(const char* opt, cc_string* data);
 #endif

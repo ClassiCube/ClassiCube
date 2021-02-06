@@ -53,11 +53,9 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv);
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args);
 
 /* Encrypts data in a platform-specific manner. (may not be supported) */
-/* NOTE: THIS IS NOT SECURE! Some platforms just use a simple xor obfuscation. */
-cc_result Platform_Encrypt(const cc_string* key, const void* data, int len, cc_string* dst);
+cc_result Platform_Encrypt(const void* data, int len, cc_string* dst);
 /* Decrypts data in a platform-specific manner. (may not be supported) */
-/* NOTE: THIS IS NOT SECURE! Some platforms just use a simple xor obfuscation. */
-cc_result Platform_Decrypt(const cc_string* key, const void* data, int len, cc_string* dst);
+cc_result Platform_Decrypt(const void* data, int len, cc_string* dst);
 /* Outputs more detailed information about errors with operating system functions. */
 /* NOTE: This is for general functions like file I/O. If a more specific 
 describe exists (e.g. Http_DescribeError), that should be preferred. */

@@ -522,7 +522,7 @@ static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
 	Options_UNSAFE_Get("launcher-dc-port",     &port);
 	
 	String_InitArray(mppass, mppassBuffer);
-	Options_GetSecure("launcher-dc-mppass", &mppass, &user);
+	Options_GetSecure("launcher-dc-mppass", &mppass);
 	String_InitArray(addr, addrBuffer);
 	String_Format2(&addr, "%s:%s", &ip, &port);
 
@@ -568,7 +568,7 @@ static void DirectConnectScreen_StartClient(void* w, int idx) {
 	Options_Set("launcher-dc-username", user);
 	Options_Set("launcher-dc-ip",       &ip);
 	Options_Set("launcher-dc-port",     &port);
-	Options_SetSecure("launcher-dc-mppass", mppass, user);
+	Options_SetSecure("launcher-dc-mppass", mppass);
 
 	DirectConnectScreen_SetStatus("");
 	Launcher_StartGame(user, mppass, &ip, &port, &String_Empty);
@@ -706,7 +706,7 @@ CC_NOINLINE static void MainScreen_GetResume(struct ResumeInfo* info, cc_bool fu
 
 	if (!full) return;
 	String_InitArray(info->mppass, info->_mppassBuffer);
-	Options_GetSecure(ROPT_MPPASS, &info->mppass, &info->user);
+	Options_GetSecure(ROPT_MPPASS, &info->mppass);
 
 	info->valid = 
 		info->user.length && info->mppass.length &&
@@ -740,7 +740,7 @@ static void MainScreen_DoLogin(void) {
 
 	if (GetTokenTask.Base.working) return;
 	Options_Set(LOPT_USERNAME, user);
-	Options_SetSecure(LOPT_PASSWORD, pass, user);
+	Options_SetSecure(LOPT_PASSWORD, pass);
 
 	GetTokenTask_Run();
 	LLabel_SetConst(&s->lblStatus, "&eSigning in..");
@@ -806,7 +806,7 @@ static void MainScreen_Init(struct LScreen* s_) {
 	
 	String_InitArray(pass, passBuffer);
 	Options_UNSAFE_Get(LOPT_USERNAME, &user);
-	Options_GetSecure(LOPT_PASSWORD, &pass, &user);
+	Options_GetSecure(LOPT_PASSWORD, &pass);
 
 	LInput_SetText(&s->iptUsername, &user);
 	LInput_SetText(&s->iptPassword, &pass);
