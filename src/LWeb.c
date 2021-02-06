@@ -693,10 +693,8 @@ void Session_Load(void) {
 }
 
 void Session_Save(void) {
-#if defined CC_BUILD_WIN || defined CC_BUILD_LINUX || defined CC_BUILD_MACOS
 	cc_string session = EntryList_UNSAFE_Get(&ccCookies, &sessionKey, '=');
 	if (!session.length) return;
 	Options_SetSecure(LOPT_SESSION, &session);
-#endif
 }
 #endif

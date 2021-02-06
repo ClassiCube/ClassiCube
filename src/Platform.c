@@ -1905,6 +1905,17 @@ static cc_result GetMachineID(cc_uint32* key) {
 	DecodeMachineID(buf, size, key);
 	return 0;
 }
+#elif defined CC_BUILD_SOLARIS
+/* Use SI_HW_SERIAL for the key */
+/* TODO: Should be using SMBIOS UUID for this (search it in illomos source) */
+/* NOTE: Got a '0' for serial number when running in a VM */
+static cc_result GetMachineID(cc_uint32* key) {
+	char host[HW_HOSTID_LEN] = { 0 };
+	if (sysinfo(SI_HW_SERIAL, host, sizeof(host)) == -1) return errno;
+
+	DecodeMachineID(host, HW_HOSTID_LEN, key);
+	return 0;
+}
 #else
 static cc_result GetMachineID(cc_uint32* key) { return ERR_NOT_SUPPORTED; }
 #endif
