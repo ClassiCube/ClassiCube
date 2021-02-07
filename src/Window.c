@@ -18,20 +18,29 @@ int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
 #define Display_CentreX(width)  (DisplayInfo.X + (DisplayInfo.Width  - width)  / 2)
 #define Display_CentreY(height) (DisplayInfo.Y + (DisplayInfo.Height - height) / 2)
 
-#ifdef CC_BUILD_IOS
-/* iOS implements some functions in external interop_ios.m file */
-#define CC_MAYBE_OBJC extern
+#if defined CC_BUILD_IOS
+/* iOS implements these functions in external interop_ios.m file */
+#define CC_MAYBE_OBJC1 extern
+#define CC_MAYBE_OBJC2 extern
+#define CC_OBJC_VISIBLE
+#elif defined CC_BUILD_COCOA
+/* Cocoa implements some functions in external interop_cocoa.m file */
+#define CC_MAYBE_OBJC1 extern
+#define CC_MAYBE_OBJC2 static
+#define CC_OBJC_VISIBLE
 #else
 /* All other platforms implement internally in this file */
-#define CC_MAYBE_OBJC static
+#define CC_MAYBE_OBJC1 static
+#define CC_MAYBE_OBJC2 static
+#define CC_OBJC_VISIBLE static
 #endif
 
 
 static int cursorPrevX, cursorPrevY;
 static cc_bool cursorVisible = true;
 /* Gets the position of the cursor in screen or window coordinates. */
-CC_MAYBE_OBJC void Cursor_GetRawPos(int* x, int* y);
-CC_MAYBE_OBJC void Cursor_DoSetVisible(cc_bool visible);
+CC_MAYBE_OBJC1 void Cursor_GetRawPos(int* x, int* y);
+CC_MAYBE_OBJC2 void Cursor_DoSetVisible(cc_bool visible);
 
 void Cursor_SetVisible(cc_bool visible) {
 	if (cursorVisible == visible) return;
@@ -70,7 +79,7 @@ static void DefaultDisableRawMouse(void) {
 }
 
 /* The actual windowing system specific method to display a message box */
-CC_MAYBE_OBJC void ShowDialogCore(const char* title, const char* msg);
+CC_MAYBE_OBJC1 void ShowDialogCore(const char* title, const char* msg);
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* Ensure cursor is visible while showing message box */
 	cc_bool visible = cursorVisible;
@@ -2079,9 +2088,9 @@ void Window_DisableRawMouse(void) {
 *#########################################################################################################################*/
 #elif defined CC_BUILD_CARBON || defined CC_BUILD_COCOA
 #include <ApplicationServices/ApplicationServices.h>
-static int windowX, windowY;
+CC_OBJC_VISIBLE int windowX, windowY;
 
-static void Window_CommonInit(void) {
+CC_OBJC_VISIBLE void Window_CommonInit(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
 	CGRect bounds = CGDisplayBounds(display);
 
@@ -2099,7 +2108,7 @@ static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, l
 	return 0;
 }
 
-static void Window_CommonCreate(void) {
+CC_OBJC_VISIBLE void Window_CommonCreate(void) {
 	WindowInfo.Exists = true;
 	/* for quit buttons in dock and menubar */
 	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
@@ -2117,7 +2126,7 @@ static const cc_uint8 key_map[8 * 16] = {
 	KEY_F5, KEY_F6, KEY_F7, KEY_F3, KEY_F8, KEY_F9, 0, KEY_F11, 0, KEY_F13, 0, KEY_F14, 0, KEY_F10, 0, KEY_F12,
 	'U', KEY_F15, KEY_INSERT, KEY_HOME, KEY_PAGEUP, KEY_DELETE, KEY_F4, KEY_END, KEY_F2, KEY_PAGEDOWN, KEY_F1, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, 0,
 };
-static int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+CC_OBJC_VISIBLE int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 /* TODO: Check these.. */
 /*   case 0x37: return KEY_LWIN; */
 /*   case 0x38: return KEY_LSHIFT; */
@@ -2727,483 +2736,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 *-------------------------------------------------------Cocoa window------------------------------------------------------*
 *#########################################################################################################################*/
 #elif defined CC_BUILD_COCOA
-#include <objc/message.h>
-#include <objc/runtime.h>
-static id appHandle, winHandle, viewHandle;
-extern void* NSDefaultRunLoopMode;
-
-static SEL selFrame, selDeltaX, selDeltaY;
-static SEL selNextEvent, selType, selSendEvent;
-static SEL selButton, selKeycode, selModifiers;
-static SEL selCharacters, selUtf8String, selMouseLoc;
-static SEL selCurrentContext, selGraphicsPort;
-static SEL selSetNeedsDisplay, selDisplayIfNeeded;
-static SEL selUpdate, selFlushBuffer;
-
-static void RegisterSelectors(void) {
-	selFrame  = sel_registerName("frame");
-	selDeltaX = sel_registerName("deltaX");
-	selDeltaY = sel_registerName("deltaY");
-
-	selNextEvent = sel_registerName("nextEventMatchingMask:untilDate:inMode:dequeue:");
-	selType      = sel_registerName("type");
-	selSendEvent = sel_registerName("sendEvent:");
-
-	selButton    = sel_registerName("buttonNumber");
-	selKeycode   = sel_registerName("keyCode");
-	selModifiers = sel_registerName("modifierFlags");
-
-	selCharacters = sel_registerName("characters");
-	selUtf8String = sel_registerName("UTF8String");
-	selMouseLoc   = sel_registerName("mouseLocation");
-
-	selCurrentContext  = sel_registerName("currentContext");
-	selGraphicsPort    = sel_registerName("graphicsPort");
-	selSetNeedsDisplay = sel_registerName("setNeedsDisplayInRect:");
-	selDisplayIfNeeded = sel_registerName("displayIfNeeded");
-
-	selUpdate      = sel_registerName("update");
-	selFlushBuffer = sel_registerName("flushBuffer");
-}
-
-static CC_INLINE CGFloat Send_CGFloat(id receiver, SEL sel) {
-	/* Sometimes we have to use fpret and sometimes we don't. See this for more details: */
-	/* http://www.sealiesoftware.com/blog/archive/2008/11/16/objc_explain_objc_msgSend_fpret.html */
-	/* return type is void*, but we cannot cast a void* to a float or double */
-
-#ifdef __i386__
-	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend_fpret)(receiver, sel);
-#else
-	return ((CGFloat(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
-#endif
-}
-
-static CC_INLINE CGPoint Send_CGPoint(id receiver, SEL sel) {
-	/* on x86 and x86_64 CGPoint fits the requirements for 'struct returned in registers' */
-	return ((CGPoint(*)(id, SEL))(void *)objc_msgSend)(receiver, sel);
-}
-
-static void RefreshWindowBounds(void) {
-	CGRect win, view;
-	int viewY;
-
-	win  = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle,  selFrame);
-	view = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(viewHandle, selFrame);
-
-	/* For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen. */
-	/* To get window's real Y screen position, first need to find Y of top. (win.y + win.height) */
-	/* Then just subtract from screen height to make relative to top instead of bottom of the screen. */
-	/* Of course this is only half the story, since we're really after Y position of the content. */
-	/* To work out top Y of view relative to window, it's just win.height - (view.y + view.height) */
-	viewY   = (int)win.size.height  - ((int)view.origin.y + (int)view.size.height);
-	windowX = (int)win.origin.x     + (int)view.origin.x;
-	windowY = DisplayInfo.Height - ((int)win.origin.y  + (int)win.size.height) + viewY;
-
-	WindowInfo.Width  = (int)view.size.width;
-	WindowInfo.Height = (int)view.size.height;
-}
-
-static void OnDidResize(id self, SEL cmd, id notification) {
-	RefreshWindowBounds();
-	Event_RaiseVoid(&WindowEvents.Resized);
-}
-
-static void OnDidMove(id self, SEL cmd, id notification) {
-	RefreshWindowBounds();
-	GLContext_Update();
-}
-
-static void OnDidBecomeKey(id self, SEL cmd, id notification) {
-	WindowInfo.Focused = true;
-	Event_RaiseVoid(&WindowEvents.FocusChanged);
-}
-
-static void OnDidResignKey(id self, SEL cmd, id notification) {
-	WindowInfo.Focused = false;
-	Event_RaiseVoid(&WindowEvents.FocusChanged);
-}
-
-static void OnDidMiniaturize(id self, SEL cmd, id notification) {
-	Event_RaiseVoid(&WindowEvents.StateChanged);
-}
-
-static void OnDidDeminiaturize(id self, SEL cmd, id notification) {
-	Event_RaiseVoid(&WindowEvents.StateChanged);
-}
-
-static void OnWillClose(id self, SEL cmd, id notification) {
-	WindowInfo.Exists = false;
-	Event_RaiseVoid(&WindowEvents.Closing);
-}
-
-/* If this isn't overriden, an annoying beep sound plays anytime a key is pressed */
-static void OnKeyDown(id self, SEL cmd, id ev) { }
-
-static Class Window_MakeClass(void) {
-	Class c = objc_allocateClassPair(objc_getClass("NSWindow"), "ClassiCube_Window", 0);
-
-	class_addMethod(c, sel_registerName("windowDidResize:"),        OnDidResize,        "v@:@");
-	class_addMethod(c, sel_registerName("windowDidMove:"),          OnDidMove,          "v@:@");
-	class_addMethod(c, sel_registerName("windowDidBecomeKey:"),     OnDidBecomeKey,     "v@:@");
-	class_addMethod(c, sel_registerName("windowDidResignKey:"),     OnDidResignKey,     "v@:@");
-	class_addMethod(c, sel_registerName("windowDidMiniaturize:"),   OnDidMiniaturize,   "v@:@");
-	class_addMethod(c, sel_registerName("windowDidDeminiaturize:"), OnDidDeminiaturize, "v@:@");
-	class_addMethod(c, sel_registerName("windowWillClose:"),        OnWillClose,        "v@:@");
-	class_addMethod(c, sel_registerName("keyDown:"),                OnKeyDown,          "v@:@");
-
-	objc_registerClassPair(c);
-	return c;
-}
-
-/* When the user users left mouse to drag reisze window, this enters 'live resize' mode */
-/*   Although the game receives a left mouse down event, it does NOT receive a left mouse up */
-/*   This causes the game to get stuck with left mouse down after user finishes resizing */
-/* So work arond that by always releasing left mouse when a live resize is finished */
-static void DidEndLiveResize(id self, SEL cmd) {
-	Input_SetReleased(KEY_LMOUSE);
-}
-
-static void View_DrawRect(id self, SEL cmd, CGRect r);
-static void MakeContentView(void) {
-	CGRect rect;
-	id view;
-	Class c;
-
-	view = objc_msgSend(winHandle, sel_registerName("contentView"));
-	rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(view, selFrame);
-	
-	c = objc_allocateClassPair(objc_getClass("NSView"), "ClassiCube_View", 0);
-	// TODO: test rect is actually correct in View_DrawRect on both 32 and 64 bit
-#ifdef __i386__
-	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=ff}{NSSize=ff}}");
-#else
-	class_addMethod(c, sel_registerName("drawRect:"), View_DrawRect, "v@:{NSRect={NSPoint=dd}{NSSize=dd}}");
-#endif
-	class_addMethod(c, sel_registerName("viewDidEndLiveResize"), DidEndLiveResize, "v@:");
-	objc_registerClassPair(c);
-
-	viewHandle = objc_msgSend(c, sel_registerName("alloc"));
-	objc_msgSend(viewHandle, sel_registerName("initWithFrame:"),  rect);
-	objc_msgSend(winHandle,  sel_registerName("setContentView:"), viewHandle);
-}
-
-void Window_Init(void) {
-	appHandle = objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
-	objc_msgSend(appHandle, sel_registerName("activateIgnoringOtherApps:"), true);
-	Window_CommonInit();
-	RegisterSelectors();
-}
-
-#ifdef CC_BUILD_ICON
-extern const int CCIcon_Data[];
-extern const int CCIcon_Width, CCIcon_Height;
-
-static void ApplyIcon(void) {
-	CGColorSpaceRef colSpace;
-	CGDataProviderRef provider;
-	CGImageRef image;
-	CGSize size;
-	void* img;
-
-	colSpace = CGColorSpaceCreateDeviceRGB();
-	provider = CGDataProviderCreateWithData(NULL, CCIcon_Data,
-					Bitmap_DataSize(CCIcon_Width, CCIcon_Height), NULL);
-	image    = CGImageCreate(CCIcon_Width, CCIcon_Height, 8, 32, CCIcon_Width * 4, colSpace,
-					kCGBitmapByteOrder32Little | kCGImageAlphaLast, provider, NULL, 0, 0);
-
-	size.width = 0; size.height = 0;
-	img = objc_msgSend((id)objc_getClass("NSImage"), sel_registerName("alloc"));
-	objc_msgSend(img, sel_registerName("initWithCGImage:size:"), image, size);
-	objc_msgSend(appHandle, sel_registerName("setApplicationIconImage:"), img);
-
-	/* TODO need to release NSImage here */
-	CGImageRelease(image);
-	CGDataProviderRelease(provider);
-	CGColorSpaceRelease(colSpace);
-}
-#else
-static void ApplyIcon(void) { }
-#endif
-
-#define NSTitledWindowMask         (1 << 0)
-#define NSClosableWindowMask       (1 << 1)
-#define NSMiniaturizableWindowMask (1 << 2)
-#define NSResizableWindowMask      (1 << 3)
-#define NSFullScreenWindowMask     (1 << 14)
-
-void Window_Create(int width, int height) {
-	Class winClass;
-	CGRect rect;
-
-	/* Technically the coordinates for the origin are at bottom left corner */
-	/* But since the window is in centre of the screen, don't need to care here */
-	rect.origin.x    = Display_CentreX(width);  
-	rect.origin.y    = Display_CentreY(height);
-	rect.size.width  = width; 
-	rect.size.height = height;
-
-	winClass  = Window_MakeClass();
-	winHandle = objc_msgSend(winClass, sel_registerName("alloc"));
-	objc_msgSend(winHandle, sel_registerName("initWithContentRect:styleMask:backing:defer:"), rect, (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask), 0, false);
-	
-	Window_CommonCreate();
-	objc_msgSend(winHandle, sel_registerName("setDelegate:"), winHandle);
-	RefreshWindowBounds();
-	MakeContentView();
-	ApplyIcon();
-}
-
-void Window_SetTitle(const cc_string* title) {
-	UInt8 str[NATIVE_STR_LEN];
-	CFStringRef titleCF;
-	int len;
-
-	/* TODO: This leaks memory, old title isn't released */
-	len = Platform_EncodeUtf8(str, title);
-	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
-	objc_msgSend(winHandle, sel_registerName("setTitle:"), titleCF);
-}
-
-void Window_Show(void) { 
-	objc_msgSend(winHandle, sel_registerName("makeKeyAndOrderFront:"), appHandle);
-	RefreshWindowBounds(); // TODO: even necessary?
-}
-
-int Window_GetWindowState(void) {
-	int flags;
-
-	flags = (int)objc_msgSend(winHandle, sel_registerName("styleMask"));
-	if (flags & NSFullScreenWindowMask) return WINDOW_STATE_FULLSCREEN;
-	     
-	flags = (int)objc_msgSend(winHandle, sel_registerName("isMiniaturized"));
-	return flags ? WINDOW_STATE_MINIMISED : WINDOW_STATE_NORMAL;
-}
-
-// TODO: Only works on 10.7+
-cc_result Window_EnterFullscreen(void) {
-	objc_msgSend(winHandle, sel_registerName("toggleFullScreen:"), appHandle);
-	return 0;
-}
-cc_result Window_ExitFullscreen(void) {
-	objc_msgSend(winHandle, sel_registerName("toggleFullScreen:"), appHandle);
-	return 0;
-}
-
-void Window_SetSize(int width, int height) {
-	/* Can't use setContentSize:, because that resizes from the bottom left corner. */
-	CGRect rect = ((CGRect(*)(id, SEL))(void *)objc_msgSend_stret)(winHandle, selFrame);
-
-	rect.origin.y    += WindowInfo.Height - height;
-	rect.size.width  += width  - WindowInfo.Width;
-	rect.size.height += height - WindowInfo.Height;
-	objc_msgSend(winHandle, sel_registerName("setFrame:display:"), rect, true);
-}
-
-void Window_Close(void) { 
-	objc_msgSend(winHandle, sel_registerName("close"));
-}
-
-static int MapNativeMouse(int button) {
-	if (button == 0) return KEY_LMOUSE;
-	if (button == 1) return KEY_RMOUSE;
-	if (button == 2) return KEY_MMOUSE;
-	return 0;
-}
-
-static void ProcessKeyChars(id ev) {
-	char buffer[128];
-	const char* src;
-	cc_string str;
-	id chars;
-	int i, len, flags;
-
-	/* Ignore text input while cmd is held down */
-	/* e.g. so Cmd + V to paste doesn't leave behind 'v' */
-	flags = (int)objc_msgSend(ev, selModifiers);
-	if (flags & 0x000008) return;
-	if (flags & 0x000010) return;
-
-	chars = objc_msgSend(ev,    selCharacters);
-	src   = objc_msgSend(chars, selUtf8String);
-	len   = String_Length(src);
-	String_InitArray(str, buffer);
-
-	String_AppendUtf8(&str, src, len);
-	for (i = 0; i < str.length; i++) {
-		Event_RaiseInt(&InputEvents.Press, str.buffer[i]);
-	}
-}
-
-static cc_bool GetMouseCoords(int* x, int* y) {
-	CGPoint loc = Send_CGPoint((id)objc_getClass("NSEvent"), selMouseLoc);
-	*x = (int)loc.x                        - windowX;	
-	*y = (DisplayInfo.Height - (int)loc.y) - windowY;
-	// TODO: this seems to be off by 1
-	return *x >= 0 && *y >= 0 && *x < WindowInfo.Width && *y < WindowInfo.Height;
-}
-
-static int TryGetKey(id ev) {
-	int code = (int)objc_msgSend(ev, selKeycode);
-	int key  = MapNativeKey(code);
-	if (key) return key;
-
-	Platform_Log1("Unknown key %i", &code);
-	return 0;
-}
-
-void Window_ProcessEvents(void) {
-	id ev;
-	int key, type, steps, x, y;
-	CGFloat dx, dy;
-
-	for (;;) {
-		ev = objc_msgSend(appHandle, selNextEvent, ~0UL, NULL, NSDefaultRunLoopMode, true);
-		if (!ev) break;
-		type = (int)objc_msgSend(ev, selType);
-
-		switch (type) {
-		case  1: /* NSLeftMouseDown  */
-		case  3: /* NSRightMouseDown */
-		case 25: /* NSOtherMouseDown */
-			key = MapNativeMouse((int)objc_msgSend(ev, selButton));
-			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key);
-			break;
-
-		case  2: /* NSLeftMouseUp  */
-		case  4: /* NSRightMouseUp */
-		case 26: /* NSOtherMouseUp */
-			key = MapNativeMouse((int)objc_msgSend(ev, selButton));
-			if (key) Input_SetReleased(key);
-			break;
-
-		case 10: /* NSKeyDown */
-			key = TryGetKey(ev);
-			if (key) Input_SetPressed(key);
-			// TODO: Test works properly with other languages
-			ProcessKeyChars(ev);
-			break;
-
-		case 11: /* NSKeyUp */
-			key = TryGetKey(ev);
-			if (key) Input_SetReleased(key);
-			break;
-
-		case 12: /* NSFlagsChanged */
-			key = (int)objc_msgSend(ev, selModifiers);
-			/* TODO: Figure out how to only get modifiers that changed */
-			Input_Set(KEY_LCTRL,    key & 0x000001);
-			Input_Set(KEY_LSHIFT,   key & 0x000002);
-			Input_Set(KEY_RSHIFT,   key & 0x000004);
-			Input_Set(KEY_LWIN,     key & 0x000008);
-			Input_Set(KEY_RWIN,     key & 0x000010);
-			Input_Set(KEY_LALT,     key & 0x000020);
-			Input_Set(KEY_RALT,     key & 0x000040);
-			Input_Set(KEY_RCTRL,    key & 0x002000);
-			Input_Set(KEY_CAPSLOCK, key & 0x010000);
-			break;
-
-		case 22: /* NSScrollWheel */
-			dy    = Send_CGFloat(ev, selDeltaY);
-			/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175 */
-			/* delta is in 'line height' units, but I don't know how to map that to actual units. */
-			/* All I know is that scrolling by '1 wheel notch' produces a delta of around 0.1, and that */
-			/* sometimes I'll see it go all the way up to 5-6 with a larger wheel scroll. */
-			/* So mulitplying by 10 doesn't really seem a good idea, instead I just round outwards. */
-			/* TODO: Figure out if there's a better way than this. */
-			steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
-			Mouse_ScrollWheel(steps);
-			break;
-
-		case  5: /* NSMouseMoved */
-		case  6: /* NSLeftMouseDragged */
-		case  7: /* NSRightMouseDragged */
-		case 27: /* NSOtherMouseDragged */
-			if (GetMouseCoords(&x, &y)) Pointer_SetPosition(0, x, y);
-
-			if (Input_RawMode) {
-				dx = Send_CGFloat(ev, selDeltaX);
-				dy = Send_CGFloat(ev, selDeltaY);
-				Event_RaiseRawMove(&PointerEvents.RawMoved, dx, dy);
-			}
-			break;
-		}
-		objc_msgSend(appHandle, selSendEvent, ev);
-	}
-}
-
-static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
-static void ShowDialogCore(const char* title, const char* msg) {
-	CFStringRef titleCF, msgCF;
-	id alert;
-	
-	alert   = objc_msgSend((id)objc_getClass("NSAlert"), sel_registerName("alloc"));
-	alert   = objc_msgSend(alert, sel_registerName("init"));
-	titleCF = CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII);
-	msgCF   = CFStringCreateWithCString(NULL, msg,   kCFStringEncodingASCII);
-	
-	objc_msgSend(alert, sel_registerName("setMessageText:"),     titleCF);
-	objc_msgSend(alert, sel_registerName("setInformativeText:"), msgCF);
-	objc_msgSend(alert, sel_registerName("addButtonWithTitle:"), CFSTR("OK"));
-	
-	objc_msgSend(alert, sel_registerName("runModal"));
-	CFRelease(titleCF);
-	CFRelease(msgCF);
-}
-
-static struct Bitmap fb_bmp;
-void Window_AllocFramebuffer(struct Bitmap* bmp) {
-	bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
-	fb_bmp = *bmp;
-}
-
-static void View_DrawRect(id self, SEL cmd, CGRect r_) {
-	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	CGContextRef context = NULL;
-	CGDataProviderRef provider;
-	CGImageRef image;
-	CGRect rect;
-	id nsContext;
-
-	/* Unfortunately CGImageRef is immutable, so changing the */
-	/* underlying data doesn't change what shows when drawing. */
-	/* TODO: Find a better way of doing this in cocoa.. */
-	if (!fb_bmp.scan0) return;
-	nsContext = objc_msgSend((id)objc_getClass("NSGraphicsContext"), selCurrentContext);
-	context   = objc_msgSend(nsContext, selGraphicsPort);
-
-	/* TODO: Only update changed bit.. */
-	rect.origin.x = 0; rect.origin.y = 0;
-	rect.size.width  = WindowInfo.Width;
-	rect.size.height = WindowInfo.Height;
-
-	/* TODO: REPLACE THIS AWFUL HACK */
-	provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
-		Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
-	image = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
-		kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
-
-	CGContextDrawImage(context, rect, image);
-	CGContextSynchronize(context);
-
-	CGImageRelease(image);
-	CGDataProviderRelease(provider);
-	CGColorSpaceRelease(colorSpace);
-}
-
-void Window_DrawFramebuffer(Rect2D r) {
-	CGRect rect;
-	rect.origin.x    = r.X; 
-	rect.origin.y    = WindowInfo.Height - r.Y - r.Height;
-	rect.size.width  = r.Width;
-	rect.size.height = r.Height;
-
-	objc_msgSend(viewHandle, selSetNeedsDisplay, rect);
-	objc_msgSend(viewHandle, selDisplayIfNeeded);
-}
-
-void Window_FreeFramebuffer(struct Bitmap* bmp) {
-	Mem_Free(bmp->scan0);
-}
+/* NOTE: Mostly implemented in interop_cocoa.m */
 #endif
 
 
@@ -4322,7 +3855,6 @@ void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
 #ifdef CC_BUILD_GL
 /* OpenGL contexts are heavily tied to the window, so for simplicitly are also included here */
 /* SDL and EGL are platform agnostic, other OpenGL context backends are tied to one windowing system. */
-#define GLCONTEXT_DEFAULT_DEPTH 24
 #define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
 
 void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
@@ -4889,61 +4421,8 @@ void GLContext_GetApiInfo(cc_string* info) { }
 *--------------------------------------------------------NSOpenGL---------------------------------------------------------*
 *#########################################################################################################################*/
 #elif defined CC_BUILD_COCOA
-#define NSOpenGLPFADoubleBuffer 5
-#define NSOpenGLPFAColorSize    8
-#define NSOpenGLPFADepthSize    12
-#define NSOpenGLPFAFullScreen   54
-#define NSOpenGLContextParameterSwapInterval 222
-
-static id ctxHandle;
-static id MakePixelFormat(struct GraphicsMode* mode, cc_bool fullscreen) {
-	id fmt;
-	uint32_t attribs[7] = {
-		NSOpenGLPFAColorSize,    0,
-		NSOpenGLPFADepthSize,    GLCONTEXT_DEFAULT_DEPTH,
-		NSOpenGLPFADoubleBuffer, 0, 0
-	};
-
-	attribs[1] = mode->R + mode->G + mode->B + mode->A;
-	attribs[5] = fullscreen ? NSOpenGLPFAFullScreen : 0;
-	fmt = objc_msgSend((id)objc_getClass("NSOpenGLPixelFormat"), sel_registerName("alloc"));
-	return objc_msgSend(fmt, sel_registerName("initWithAttributes:"), attribs);
-}
-
-void GLContext_Create(void) {
-	struct GraphicsMode mode;
-	id view, fmt;
-
-	InitGraphicsMode(&mode);
-	fmt = MakePixelFormat(&mode, true);
-	if (!fmt) {
-		Platform_LogConst("Failed to create full screen pixel format.");
-		Platform_LogConst("Trying again to create a non-fullscreen pixel format.");
-		fmt = MakePixelFormat(&mode, false);
-	}
-	if (!fmt) Logger_Abort("Choosing pixel format");
-
-	ctxHandle = objc_msgSend((id)objc_getClass("NSOpenGLContext"), sel_registerName("alloc"));
-	ctxHandle = objc_msgSend(ctxHandle, sel_registerName("initWithFormat:shareContext:"), fmt, NULL);
-	if (!ctxHandle) Logger_Abort("Failed to create OpenGL context");
-
-	objc_msgSend(ctxHandle, sel_registerName("setView:"), viewHandle);
-	objc_msgSend(fmt,       sel_registerName("release"));
-	objc_msgSend(ctxHandle, sel_registerName("makeCurrentContext"));
-	objc_msgSend(ctxHandle, selUpdate);
-}
-
-void GLContext_Update(void) {
-	// TODO: Why does this crash on resizing
-	objc_msgSend(ctxHandle, selUpdate);
-}
+/* NOTE: Mostly implemented in interop_cocoa.m */
 cc_bool GLContext_TryRestore(void) { return true; }
-
-void GLContext_Free(void) { 
-	objc_msgSend((id)objc_getClass("NSOpenGLContext"), sel_registerName("clearCurrentContext"));
-	objc_msgSend(ctxHandle, sel_registerName("clearDrawable"));
-	objc_msgSend(ctxHandle, sel_registerName("release"));
-}
 
 void* GLContext_GetAddress(const char* function) {
 	static const cc_string glPath = String_FromConst("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
@@ -4955,15 +4434,6 @@ void* GLContext_GetAddress(const char* function) {
 	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
 }
 
-cc_bool GLContext_SwapBuffers(void) {
-	objc_msgSend(ctxHandle, selFlushBuffer);
-	return true;
-}
-
-void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
-	int value = vsync ? 1 : 0;
-	objc_msgSend(ctxHandle, sel_registerName("setValues:forParameter:"), &value, NSOpenGLContextParameterSwapInterval);
-}
 void GLContext_GetApiInfo(cc_string* info) { }
 
 

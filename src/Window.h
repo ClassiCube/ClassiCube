@@ -59,6 +59,8 @@ CC_VAR extern struct _DisplayData {
 int Display_ScaleX(int x);
 /* Scales the given Y coordinate from 96 dpi to current display dpi. */
 int Display_ScaleY(int y);
+#define Display_CentreX(width)  (DisplayInfo.X + (DisplayInfo.Width  - width)  / 2)
+#define Display_CentreY(height) (DisplayInfo.Y + (DisplayInfo.Height - height) / 2)
 
 /* Data for the game/launcher window. */
 CC_VAR extern struct _WinData {
@@ -158,6 +160,7 @@ void Window_UpdateRawMouse(void);
 void Window_DisableRawMouse(void);
 
 #ifdef CC_BUILD_GL
+#define GLCONTEXT_DEFAULT_DEPTH 24
 /* Creates an OpenGL context, then makes it the active context. */
 /* NOTE: You MUST have created the window beforehand, as the GL context is attached to the window. */
 void GLContext_Create(void);
