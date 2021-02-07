@@ -17,7 +17,7 @@ typedef unsigned __int64 cc_uint64;
 #ifdef _WIN64
 typedef unsigned __int64 cc_uintptr;
 #else
-typedef unsigned int     cc_uintptr;
+typedef unsigned __int32 cc_uintptr;
 #endif
 
 #define CC_INLINE inline
