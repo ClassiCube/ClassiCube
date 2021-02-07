@@ -171,8 +171,11 @@ void StoredHotkeys_Add(int trigger, cc_uint8 modifiers, cc_bool moreInput, const
 
 cc_bool InputHandler_SetFOV(int fov);
 cc_bool Input_HandleMouseWheel(float delta);
-void InputHandler_PickBlocks(void);
+void InputHandler_Tick(void);
 void InputHandler_OnScreensChanged(void);
+void InputHandler_DeleteBlock(void);
+void InputHandler_PlaceBlock(void);
+void InputHandler_PickBlock(void);
 
 /* Enumeration of on-screen buttons for touch GUI */
 #define ONSCREEN_BTN_CHAT      (1 << 0)

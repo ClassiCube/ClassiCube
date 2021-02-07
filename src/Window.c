@@ -15,8 +15,6 @@ struct _WinData WindowInfo;
 
 int Display_ScaleX(int x) { return (int)(x * DisplayInfo.ScaleX); }
 int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
-#define Display_CentreX(width)  (DisplayInfo.X + (DisplayInfo.Width  - width)  / 2)
-#define Display_CentreY(height) (DisplayInfo.Y + (DisplayInfo.Height - height) / 2)
 
 #if defined CC_BUILD_IOS
 /* iOS implements these functions in external interop_ios.m file */

@@ -473,7 +473,7 @@ static void Game_Render3D(double delta, float t) {
 
 	Selections_Render();
 	Entities_RenderHoveredNames();
-	InputHandler_PickBlocks();
+	InputHandler_Tick();
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }
 

@@ -1942,13 +1942,6 @@ static struct Widget* touch_widgets[ONSCREEN_MAX_BTNS + TOUCH_EXTRA_BTNS + 2] = 
 };
 #define TOUCH_MAX_VERTICES (THUMBSTICKWIDGET_MAX + TOUCH_MAX_BTNS * BUTTONWIDGET_MAX)
 
-static void TouchScreen_OnscreenClick(void* screen, void* widget) {
-	struct TouchScreen* s = (struct TouchScreen*)screen;
-	int i   = Screen_Index(screen, widget);
-	int key = KeyBinds[s->onscreenDescs[i]->bind];
-	Input_Set(key, !Input_Pressed[key]);
-}
-
 static void TouchScreen_ChatClick(void* s,     void* w) { ChatScreen_OpenInput(&String_Empty); }
 static void TouchScreen_RespawnClick(void* s,  void* w) { LocalPlayer_HandleRespawn(); }
 static void TouchScreen_SetSpawnClick(void* s, void* w) { LocalPlayer_HandleSetSpawn(); }
@@ -1957,6 +1950,9 @@ static void TouchScreen_NoclipClick(void* s,   void* w) { LocalPlayer_HandleNocl
 static void TouchScreen_CameraClick(void* s,   void* w) { Camera_CycleActive(); }
 static void TouchScreen_MoreClick(void* s,     void* w) { TouchMoreScreen_Show(); }
 static void TouchScreen_SwitchClick(void* s,   void* w) { Inventory_SwitchHotbar(); }
+static void TouchScreen_DeleteClick(void* s,   void* w) { InputHandler_DeleteBlock(); } /* TODO: also Send CPEClick packet */
+static void TouchScreen_PlaceClick(void* s,    void* w) { InputHandler_PlaceBlock(); }
+static void TouchScreen_PickClick(void* s,     void* w) { InputHandler_PickBlock(); }
 
 static void TouchScreen_TabClick(void* s, void* w) {
 	if (TabListOverlay_Instance.active) {
@@ -1991,9 +1987,9 @@ static const struct TouchButtonDesc onscreenDescs[ONSCREEN_MAX_BTNS] = {
 	{ "Speed",     0,0,0, TouchScreen_SpeedClick,    &LocalPlayer_Instance.Hacks.CanSpeed   },
 	{ "\xabSpeed", 0,0,0, TouchScreen_HalfClick,     &LocalPlayer_Instance.Hacks.CanSpeed   },
 	{ "Camera",    0,0,0, TouchScreen_CameraClick,   &LocalPlayer_Instance.Hacks.CanUseThirdPerson },
-	{ "Delete",    KEYBIND_DELETE_BLOCK, 0,0, TouchScreen_OnscreenClick },
-	{ "Pick",      KEYBIND_PICK_BLOCK,   0,0, TouchScreen_OnscreenClick },
-	{ "Place",     KEYBIND_PLACE_BLOCK,  0,0, TouchScreen_OnscreenClick },
+	{ "Delete",    0,0,0, TouchScreen_DeleteClick },
+	{ "Pick",      0,0,0, TouchScreen_PickClick },
+	{ "Place",     0,0,0, TouchScreen_PlaceClick },
 	{ "Hotbar",    0,0,0, TouchScreen_SwitchClick }
 };
 static const struct TouchButtonDesc normDescs[1] = {
