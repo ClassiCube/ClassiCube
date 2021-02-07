@@ -1864,7 +1864,7 @@ static cc_result GetMachineID(cc_uint32* key) {
 
 #ifdef kIOPlatformUUIDKey
 	uuid = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
-	if (uuid && CFStringGetCString(uuid, tmp, sizeof(tmp), kCFStringEncodingUTF8))) {
+	if (uuid && CFStringGetCString(uuid, tmp, sizeof(tmp), kCFStringEncodingUTF8)) {
 		DecodeMachineID(tmp, String_Length(tmp), key);	
 	}
 #endif
