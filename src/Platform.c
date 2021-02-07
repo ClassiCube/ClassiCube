@@ -1857,20 +1857,20 @@ static cc_result GetMachineID(cc_uint32* key) {
 static cc_result GetMachineID(cc_uint32* key) {
 	io_registry_entry_t registry;
 	CFStringRef uuid = NULL;
-	const char* src  = NULL;
+	char tmp[256] = { 0 };
 
 	registry = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
 	if (!registry) return ERR_NOT_SUPPORTED;
 
 #ifdef kIOPlatformUUIDKey
 	uuid = IORegistryEntryCreateCFProperty(registry, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
-	if (uuid && (src = CFStringGetCStringPtr(uuid, kCFStringEncodingUTF8))) {
-		DecodeMachineID(src, String_Length(src), key);	
+	if (uuid && CFStringGetCString(uuid, tmp, sizeof(tmp), kCFStringEncodingUTF8))) {
+		DecodeMachineID(tmp, String_Length(tmp), key);	
 	}
 #endif
 	if (uuid) CFRelease(uuid);
 	IOObjectRelease(registry);
-	return src ? 0 : ERR_NOT_SUPPORTED;
+	return tmp[0] ? 0 : ERR_NOT_SUPPORTED;
 }
 #elif defined CC_BUILD_FREEBSD
 /* Use kern.hostuuid sysctl for the key */
