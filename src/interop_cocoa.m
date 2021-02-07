@@ -189,11 +189,13 @@ void Window_Show(void) {
 	RefreshWindowBounds(); // TODO: even necessary?
 }
 
+/* NOTE: Only defined since macOS 10.7 SDK */
+#define _NSFullScreenWindowMask (1 << 14)
 int Window_GetWindowState(void) {
 	int flags;
 
 	flags = [winHandle styleMask];
-	if (flags & NSFullScreenWindowMask) return WINDOW_STATE_FULLSCREEN;
+	if (flags & _NSFullScreenWindowMask) return WINDOW_STATE_FULLSCREEN;
 	     
 	flags = [winHandle isMiniaturized];
 	return flags ? WINDOW_STATE_MINIMISED : WINDOW_STATE_NORMAL;
@@ -481,5 +483,5 @@ cc_bool GLContext_SwapBuffers(void) {
 
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	int value = vsync ? 1 : 0;
-	[ctxHandle setValues:&value forParameter: NSOpenGLContextParameterSwapInterval];
+	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
