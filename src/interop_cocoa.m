@@ -113,7 +113,9 @@ static void MakeContentView(void) {
 	[winHandle setContentView:viewHandle];
 }
 
+static NSAutoreleasePool* pool;
 void Window_Init(void) {
+	pool = [[NSAutoreleasePool alloc] init];
 	appHandle = [NSApplication sharedApplication];
 	[appHandle activateIgnoringOtherApps:YES];
 	Window_CommonInit();
@@ -277,6 +279,9 @@ void Window_ProcessEvents(void) {
 	NSEvent* ev;
 	int key, type, steps, x, y;
 	CGFloat dx, dy;
+	
+	[pool release];
+	pool = [[NSAutoreleasePool alloc] init];
 
 	for (;;) {
 		ev = [appHandle nextEventMatchingMask:NSAnyEventMask untilDate:Nil inMode:NSDefaultRunLoopMode dequeue:YES];
