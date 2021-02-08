@@ -51,8 +51,6 @@ int Pointers_Count;
 cc_bool Input_TapPlace = true, Input_HoldPlace = false;
 cc_bool Input_TouchMode;
 
-static void DoDeleteBlock(void);
-static void DoPlaceBlock(void);
 static void MouseStatePress(int button);
 static void MouseStateRelease(int button);
 
@@ -92,7 +90,7 @@ void Input_AddTouch(long id, int x, int y) {
 
 		touches[i].start = DateTime_CurrentUTC_MS();
 		/* Also set last click time, otherwise quickly tapping */
-		/* sometimes triggers a 'delete' in InputHandler_PickBlocks, */
+		/* sometimes triggers a 'delete' in InputHandler_Tick, */
 		/* and then another 'delete' in CheckBlockTap. */
 		input_lastClick  = touches[i].start;
 
@@ -139,9 +137,11 @@ static void CheckBlockTap(int i) {
 	pressed = input_buttonsDown[btn];
 	MouseStatePress(btn);
 
-	if (btn == MOUSE_LEFT) { DoDeleteBlock(); }
-	else { DoPlaceBlock(); }
-
+	if (btn == MOUSE_LEFT) { 
+		InputHandler_DeleteBlock();
+	} else { 
+		InputHandler_PlaceBlock();
+	}
 	if (!pressed) MouseStateRelease(btn);
 }
 
@@ -700,7 +700,7 @@ static cc_bool CheckIsFree(BlockID block) {
 	return true;
 }
 
-static void DoDeleteBlock(void) {
+void InputHandler_DeleteBlock(void) {
 	IVec3 pos;
 	BlockID old;
 	/* always play delete animations, even if we aren't deleting a block */
@@ -716,7 +716,7 @@ static void DoDeleteBlock(void) {
 	Event_RaiseBlock(&UserEvents.BlockChanged, pos, old, BLOCK_AIR);
 }
 
-static void DoPlaceBlock(void) {
+void InputHandler_PlaceBlock(void) {
 	IVec3 pos;
 	BlockID old, block;
 	pos = Game_SelectedPos.TranslatedPos;
@@ -735,7 +735,7 @@ static void DoPlaceBlock(void) {
 	Event_RaiseBlock(&UserEvents.BlockChanged, pos, old, block);
 }
 
-static void DoPickBlock(void) {
+void InputHandler_PickBlock(void) {
 	IVec3 pos;
 	BlockID cur;
 	pos = Game_SelectedPos.pos;
@@ -747,7 +747,7 @@ static void DoPickBlock(void) {
 	Inventory_PickBlock(cur);
 }
 
-void InputHandler_PickBlocks(void) {
+void InputHandler_Tick(void) {
 	cc_bool left, middle, right;
 	TimeMS now = DateTime_CurrentUTC_MS();
 	int delta  = (int)(now - input_lastClick);
@@ -776,11 +776,11 @@ void InputHandler_PickBlocks(void) {
 	}
 
 	if (left) {
-		DoDeleteBlock();
+		InputHandler_DeleteBlock();
 	} else if (right) {
-		DoPlaceBlock();
+		InputHandler_PlaceBlock();
 	} else if (middle) {
-		DoPickBlock();
+		InputHandler_PickBlock();
 	}
 }
 
@@ -845,13 +845,13 @@ static cc_bool HandleBlockKey(int key) {
 
 	if (key == KeyBinds[KEYBIND_DELETE_BLOCK]) {
 		MouseStatePress(MOUSE_LEFT);
-		DoDeleteBlock();
+		InputHandler_DeleteBlock();
 	} else if (key == KeyBinds[KEYBIND_PLACE_BLOCK]) {
 		MouseStatePress(MOUSE_RIGHT);
-		DoPlaceBlock();
+		InputHandler_PlaceBlock();
 	} else if (key == KeyBinds[KEYBIND_PICK_BLOCK]) {
 		MouseStatePress(MOUSE_MIDDLE);
-		DoPickBlock();
+		InputHandler_PickBlock();
 	} else {
 		return false;
 	}

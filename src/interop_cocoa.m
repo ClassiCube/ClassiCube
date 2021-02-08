@@ -20,7 +20,7 @@ extern void Window_CommonInit(void);
 extern int MapNativeKey(UInt32 key);
 
 static void RefreshWindowBounds(void) {
-	CGRect win, view;
+	NSRect win, view;
 	int viewY;
 
 	win  = [winHandle frame];
@@ -31,9 +31,9 @@ static void RefreshWindowBounds(void) {
 	/* Then just subtract from screen height to make relative to top instead of bottom of the screen. */
 	/* Of course this is only half the story, since we're really after Y position of the content. */
 	/* To work out top Y of view relative to window, it's just win.height - (view.y + view.height) */
-	viewY   = (int)win.size.height  - ((int)view.origin.y + (int)view.size.height);
-	windowX = (int)win.origin.x     + (int)view.origin.x;
-	windowY = DisplayInfo.Height - ((int)win.origin.y  + (int)win.size.height) + viewY;
+	viewY   = (int)win.size.height - ((int)view.origin.y + (int)view.size.height);
+	windowX = (int)win.origin.x    + (int)view.origin.x;
+	windowY = DisplayInfo.Height   - ((int)win.origin.y  + (int)win.size.height) + viewY;
 
 	WindowInfo.Width  = (int)view.size.width;
 	WindowInfo.Height = (int)view.size.height;
@@ -102,7 +102,7 @@ static void DoDrawFramebuffer(CGRect dirty);
 
 
 static void MakeContentView(void) {
-	CGRect rect;
+	NSRect rect;
 	NSView* view;
 
 	view = [winHandle contentView];
@@ -113,7 +113,9 @@ static void MakeContentView(void) {
 	[winHandle setContentView:viewHandle];
 }
 
+static NSAutoreleasePool* pool;
 void Window_Init(void) {
+	pool = [[NSAutoreleasePool alloc] init];
 	appHandle = [NSApplication sharedApplication];
 	[appHandle activateIgnoringOtherApps:YES];
 	Window_CommonInit();
@@ -153,7 +155,7 @@ static void ApplyIcon(void) { }
 #define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
 void Window_Create(int width, int height) {
 	CCWindowDelegate* del;
-	CGRect rect;
+	NSRect rect;
 
 	/* Technically the coordinates for the origin are at bottom left corner */
 	/* But since the window is in centre of the screen, don't need to care here */
@@ -163,7 +165,8 @@ void Window_Create(int width, int height) {
 	rect.size.height = height;
 
 	winHandle = [CCWindow alloc];
-	[winHandle initWithContentRect:rect styleMask:WIN_MASK backing:0 defer:false];
+	[winHandle initWithContentRect:rect styleMask:WIN_MASK backing:NSBackingStoreBuffered defer:false];
+	[winHandle setAcceptsMouseMovedEvents:YES];
 	
 	Window_CommonCreate();
 	del = [CCWindowDelegate alloc];
@@ -213,7 +216,7 @@ cc_result Window_ExitFullscreen(void) {
 
 void Window_SetSize(int width, int height) {
 	/* Can't use setContentSize:, because that resizes from the bottom left corner. */
-	CGRect rect = [winHandle frame];
+	NSRect rect = [winHandle frame];
 
 	rect.origin.y    += WindowInfo.Height - height;
 	rect.size.width  += width  - WindowInfo.Width;
@@ -257,7 +260,7 @@ static void ProcessKeyChars(id ev) {
 }
 
 static cc_bool GetMouseCoords(int* x, int* y) {
-	CGPoint loc = [NSEvent mouseLocation];
+	NSPoint loc = [NSEvent mouseLocation];
 	*x = (int)loc.x                        - windowX;	
 	*y = (DisplayInfo.Height - (int)loc.y) - windowY;
 	// TODO: this seems to be off by 1
@@ -277,6 +280,9 @@ void Window_ProcessEvents(void) {
 	NSEvent* ev;
 	int key, type, steps, x, y;
 	CGFloat dx, dy;
+	
+	[pool release];
+	pool = [[NSAutoreleasePool alloc] init];
 
 	for (;;) {
 		ev = [appHandle nextEventMatchingMask:NSAnyEventMask untilDate:Nil inMode:NSDefaultRunLoopMode dequeue:YES];
@@ -413,7 +419,7 @@ static void DoDrawFramebuffer(CGRect dirty) {
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
-	CGRect rect;
+	NSRect rect;
 	rect.origin.x    = r.X; 
 	rect.origin.y    = WindowInfo.Height - r.Y - r.Height;
 	rect.size.width  = r.Width;
