@@ -165,7 +165,8 @@ void Window_Create(int width, int height) {
 	rect.size.height = height;
 
 	winHandle = [CCWindow alloc];
-	[winHandle initWithContentRect:rect styleMask:WIN_MASK backing:0 defer:false];
+	[winHandle initWithContentRect:rect styleMask:WIN_MASK backing:NSBackingStoreBuffered defer:false];
+	[winHandle setAcceptsMouseMovedEvents:YES];
 	
 	Window_CommonCreate();
 	del = [CCWindowDelegate alloc];
