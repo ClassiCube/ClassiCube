@@ -81,11 +81,15 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ##### Using gcc/clang (32 bit)
 
-```cc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL -framework IOKit```
+```gcc *.c -o ClassiCube -framework Carbon -framework AGL -framework OpenGL -framework IOKit```
+
+Add ```-DCC_BUILD_GL11``` like so for older GPUs, like those Macs stuck with integrated RAGE series graphics:
+
+```gcc *.c -DCC_BUILD_GL11 -o ClassiCube -framework Carbon -framework AGL -framework OpenGL -framework IOKit```
 
 ##### Using gcc/clang (64 bit)
 
-```cc *.c interop_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
+```gcc *.c interop_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
 
 ### Compiling - other desktop OSes
 
