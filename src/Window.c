@@ -2529,6 +2529,11 @@ extern CGContextRef CGWindowContextCreate(CGSConnectionID conn, CGSWindowID win,
 static CGSConnectionID conn;
 static CGSWindowID winId;
 
+#ifndef kCGBitmapByteOrder32Host
+/* Undefined in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways */
+#define kCGBitmapByteOrder32Host 0
+#endif
+
 #ifdef CC_BUILD_ICON
 extern const int CCIcon_Data[];
 extern const int CCIcon_Width, CCIcon_Height;
@@ -2542,7 +2547,7 @@ static void ApplyIcon(void) {
 	provider = CGDataProviderCreateWithData(NULL, CCIcon_Data,
 					Bitmap_DataSize(CCIcon_Width, CCIcon_Height), NULL);
 	image    = CGImageCreate(CCIcon_Width, CCIcon_Height, 8, 32, CCIcon_Width * 4, colSpace,
-					kCGBitmapByteOrder32Little | kCGImageAlphaLast, provider, NULL, 0, 0);
+					kCGBitmapByteOrder32Host | kCGImageAlphaLast, provider, NULL, 0, 0);
 
 	SetApplicationDockTileImage(image);
 	CGImageRelease(image);
@@ -2707,13 +2712,8 @@ void Window_DrawFramebuffer(Rect2D r) {
 
 	provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
 		Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
-#ifdef CC_BIG_ENDIAN
 	image    = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
-				kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
-#else
-	image    = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
-				kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
-#endif
+				kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
 
 	CGContextDrawImage(context, rect, image);
 	CGContextSynchronize(context);

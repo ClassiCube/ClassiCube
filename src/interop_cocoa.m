@@ -19,6 +19,11 @@ extern void Window_CommonCreate(void);
 extern void Window_CommonInit(void);
 extern int MapNativeKey(UInt32 key);
 
+#ifndef kCGBitmapByteOrder32Host
+/* Undefined in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways */
+#define kCGBitmapByteOrder32Host 0
+#endif
+
 static void RefreshWindowBounds(void) {
 	NSRect win, view;
 	int viewY;
@@ -136,7 +141,7 @@ static void ApplyIcon(void) {
 	provider = CGDataProviderCreateWithData(NULL, CCIcon_Data,
 					Bitmap_DataSize(CCIcon_Width, CCIcon_Height), NULL);
 	image    = CGImageCreate(CCIcon_Width, CCIcon_Height, 8, 32, CCIcon_Width * 4, colSpace,
-					kCGBitmapByteOrder32Little | kCGImageAlphaLast, provider, NULL, 0, 0);
+					kCGBitmapByteOrder32Host | kCGImageAlphaLast, provider, NULL, 0, 0);
 
 	size.width = 0; size.height = 0;
 	img = [NSImage alloc];
@@ -408,7 +413,7 @@ static void DoDrawFramebuffer(CGRect dirty) {
 	provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
 		Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
 	image = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
-		kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
+		kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
 
 	CGContextDrawImage(context, rect, image);
 	CGContextSynchronize(context);
