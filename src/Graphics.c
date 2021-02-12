@@ -323,7 +323,7 @@ static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ 
 
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
-static DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+static DWORD createFlags;
 static D3DFORMAT viewFormat, depthFormat;
 static int cachedWidth, cachedHeight;
 static int depthBits;
@@ -430,6 +430,7 @@ static void TryCreateDevice(void) {
 	D3D9_FillPresentArgs(&args);
 
 	/* Try to create a device with as much hardware usage as possible. */
+	createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 	res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
 	/* Another running fullscreen application might prevent creating device */
 	if (res == D3DERR_DEVICELOST) { Gfx.LostContext = true; return; }
@@ -443,6 +444,9 @@ static void TryCreateDevice(void) {
 		createFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 		res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
 	}
+
+	/* Not enough memory? Try again later in a bit */
+	if (res == D3DERR_OUTOFVIDEOMEMORY) { Gfx.LostContext = true; return; }
 
 	if (res) Logger_Abort2(res, "Creating Direct3D9 device");
 	res = IDirect3DDevice9_GetDeviceCaps(device, &caps);
