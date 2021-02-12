@@ -161,6 +161,8 @@ void Input_RemoveTouch(long id, int x, int y) {
 		return;
 	}
 }
+#else
+static void ClearTouches(void) { }
 #endif
 
 
@@ -265,6 +267,8 @@ void Input_Clear(void) {
 	for (i = 0; i < INPUT_COUNT; i++) {
 		if (Input_Pressed[i]) Input_SetReleased(i);
 	}
+	/* TODO: Properly release instead of just clearing */
+	ClearTouches();
 }
 
 
@@ -1103,9 +1107,7 @@ static void OnInit(void) {
 }
 
 static void OnFree(void) {
-#ifdef CC_BUILD_TOUCH
 	ClearTouches();
-#endif
 }
 
 struct IGameComponent Input_Component = {
