@@ -1,3 +1,4 @@
+#!/bin/bash
 # This is similar to buildbot.sh but builds plugins for the game instead
 # Some variables must be set before invoking this script. See buildtestplugin.sh
 cd $ROOT

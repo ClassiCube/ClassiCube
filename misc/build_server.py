@@ -39,8 +39,6 @@ class Handler(SimpleHTTPRequestHandler):
 			self.serve_exe('client/release/' + release_files[self.path])
 		elif self.path == '/rebuild':
 			self.serve_script('build.sh', 'Rebuild client (%s)')
-		elif self.path == '/rebuild_android':
-			self.serve_script('build_android.sh', 'Rebuild android (%s)')
 		elif self.path == '/release':
 			self.serve_script('build_release.sh', 'Package release (%s)')
 		else:
