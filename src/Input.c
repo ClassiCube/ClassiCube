@@ -78,8 +78,38 @@ void Input_SetTouchMode(cc_bool enabled) {
 	Pointers_Count  = enabled ? 0 : 1;
 }
 
+static cc_bool MovedFromBeg(int i, int x, int y) {
+	return Math_AbsI(x - touches[i].begX) > Display_ScaleX(5) ||
+		   Math_AbsI(y - touches[i].begY) > Display_ScaleY(5);
+}
+
+static cc_bool TryUpdateTouch(long id, int x, int y) {
+	int i;
+	for (i = 0; i < Pointers_Count; i++) {
+		if (touches[i].id != id || !touches[i].type) continue;
+
+		if (Input_RawMode && (touches[i].type & TOUCH_TYPE_CAMERA)) {
+			/* If the pointer hasn't been locked to gui or block yet, moving a bit */
+			/* should cause the pointer to get locked to camera movement. */
+			if (touches[i].type == TOUCH_TYPE_ALL && MovedFromBeg(i, x, y)) {
+				/* Allow a little bit of leeway because though, because devices */
+				/* might still report a few pixels of movement depending on how */
+				/* user is holding the finger down on the touch surface */
+				if (touches[i].type == TOUCH_TYPE_ALL) touches[i].type = TOUCH_TYPE_CAMERA;
+			}
+			Event_RaiseRawMove(&PointerEvents.RawMoved, x - Pointers[i].x, y - Pointers[i].y);
+		}
+		Pointer_SetPosition(i, x, y);
+		return true;
+	}
+	return false;
+}
+
 void Input_AddTouch(long id, int x, int y) {
 	int i;
+	/* Check if already existing pointer with same ID */
+	if (TryUpdateTouch(id, x, y)) return;
+
 	for (i = 0; i < INPUT_MAX_POINTERS; i++) {
 		if (touches[i].type) continue;
 
@@ -100,32 +130,7 @@ void Input_AddTouch(long id, int x, int y) {
 		return;
 	}
 }
-
-static cc_bool MovedFromBeg(int i, int x, int y) {
-	return Math_AbsI(x - touches[i].begX) > Display_ScaleX(5) ||
-		   Math_AbsI(y - touches[i].begY) > Display_ScaleY(5);
-}
-
-void Input_UpdateTouch(long id, int x, int y) {
-	int i;
-	for (i = 0; i < Pointers_Count; i++) {
-		if (touches[i].id != id || !touches[i].type) continue;
-		
-		if (Input_RawMode && (touches[i].type & TOUCH_TYPE_CAMERA)) {
-			/* If the pointer hasn't been locked to gui or block yet, moving a bit */
-			/* should cause the pointer to get locked to camera movement. */
-			if (touches[i].type == TOUCH_TYPE_ALL && MovedFromBeg(i, x, y)) {
-				/* Allow a little bit of leeway because though, because devices */
-				/* might still report a few pixels of movement depending on how */
-				/* user is holding the finger down on the touch surface */
-				if (touches[i].type == TOUCH_TYPE_ALL) touches[i].type = TOUCH_TYPE_CAMERA;
-			}
-			Event_RaiseRawMove(&PointerEvents.RawMoved, x - Pointers[i].x, y - Pointers[i].y);
-		}
-		Pointer_SetPosition(i, x, y);
-		return;
-	}
-}
+void Input_UpdateTouch(long id, int x, int y) { TryUpdateTouch(id, x, y); }
 
 /* Quickly tapping should trigger a block place/delete */
 static void CheckBlockTap(int i) {
