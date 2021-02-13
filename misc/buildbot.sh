@@ -21,6 +21,7 @@ ROOT_DIR=~/client # can be changed
 ALL_FLAGS="-O1 -s -fno-stack-protector -fno-math-errno -Qn -w"
 
 # ----------------------------- compile windows
+#   I installed gcc-mingw-w64-i686 and gcc-mingw-w64-x86-64 packages
 WIN32_CC="i686-w64-mingw32-gcc"
 WIN64_CC="x86_64-w64-mingw32-gcc"
 WIN32_FLAGS="-mwindows -nostartfiles -Wl,-e_main_real -DCC_NOMAIN"
@@ -45,6 +46,7 @@ build_win64() {
 }
 
 # ----------------------------- compile linux
+#   I installed gcc and gcc-multilib packages
 NIX32_FLAGS="-no-pie -fno-pie -m32 -fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
 NIX64_FLAGS="-no-pie -fno-pie -m64 -fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
 
@@ -63,8 +65,8 @@ build_nix64() {
 }
 
 # ----------------------------- compile macOS
-MAC32_CC="~/osx/target/bin/o32-clang"
-MAC64_CC="~/osx/target/bin/o64-clang"
+MAC32_CC="/home/buildbot/osx/target/bin/o32-clang"
+MAC64_CC="/home/buildbot/osx/target/bin/o64-clang"
 MACOS_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
 
 build_mac32() {
@@ -82,7 +84,8 @@ build_mac64() {
 }
 
 # ----------------------------- compile web
-WEB_CC="~/emsdk/emscripten/1.38.31/emcc"
+#   I installed emscripten per https://emscripten.org/docs/getting_started/downloads.html
+WEB_CC="/home/buildbot/emsdk/emscripten/1.38.31/emcc"
 
 build_web() {
   echo "Building web.."
@@ -99,13 +102,13 @@ build_web() {
 #   I cloned https://github.com/raspberrypi/tools to get prebuilt cross compilers
 #   Then I copied across various files/folders from /usr/include and /usr/lib from a real Raspberry pi as needed
 RPI_CC=~/rpi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-gcc-4.8.3
-RPI_FLAGS="-I ~/rpi/include -L ~/rpi/lib -fvisibility=hidden -rdynamic -DCC_BUILD_ICON"
+RPI_FLAGS="-fvisibility=hidden -rdynamic -DCC_BUILD_ICON -DCC_BUILD_RPI"
 
 build_rpi() {
   echo "Building rpi.."
   cp $ROOT_DIR/misc/CCicon_rpi $ROOT_DIR/src/CCicon_rpi.o
   rm cc-rpi
-  $RPI_CC *.c $ALL_FLAGS $RPI_FLAGS CCicon_rpi.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -DCC_BUILD_RPI -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
+  $RPI_CC *.c $ALL_FLAGS $RPI_FLAGS -I ~/rpi/include -L ~/rpi/lib CCicon_rpi.o -DCC_COMMIT_SHA=\"$LATEST\" -o cc-rpi -lGLESv2 -lEGL -lX11 -lXi -lm -lpthread -ldl -lrt -Wl,-rpath-link ~/rpi/lib
 }
 
 # ----------------------------- compile android
@@ -166,7 +169,7 @@ echo $PWD
 git pull https://github.com/UnknownShadow200/ClassiCube.git
 git fetch --all
 git reset --hard origin/master
-LATEST=`git rev-parse --short HEAD`
+LATEST=$(git rev-parse --short HEAD)
 
 build_win32
 build_win64
