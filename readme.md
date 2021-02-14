@@ -31,10 +31,13 @@ Run ClassiCube.exe, then click Singleplayer at the main menu.
 **Multiplayer**
 Run ClassiCube.exe. You can connect to LAN/locally hosted servers, ~~minecraft.net servers,~~ and classicube.net servers through the launcher.
 
-###### *Stuck on OpenGL 1.1?*
-Compile the game yourself with the following flag described below. For compiling the game, see the corresponding command for your operating system. 
+###### *Stuck with OpenGL 1.1 due to old graphics hardware?*
+Compile the game yourself with the following flag described below. For compiling the game, see the corresponding command for BSD, macOS (32 bit or 64 bit), or Linux operating systems. 
 
-*If you are need to use the OpenGL 1.1 software renderer due to a non upgradable, older GPU, such as an ATI RAGE series card in an older laptop or PowerPC Mac with an integrated RAGE chip, add `-DCC_BUILD_GL11` as a compilation flag **before the optimize flag**.
+*If you need to use the OpenGL 1.1 hardware renderer due to a non upgradable, older GPU, such as an ATI RAGE series card in an older laptop or PowerPC Mac with an integrated ATI or nVidia chip, add `-DCC_BUILD_GL11` as a compilation flag **before the optimize flag**. The game **will not run** without this flag on older GPUs under the above operating systems.
+
+###### *Windows specific*
+*If you are stuck using the built-in OpenGL 1.1 software renderer, you can use the MESA software renderer from [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) for slightly better performance. Typically though, this occurs because you have not installed GPU drivers.*
 
 ### Compiling - Windows
 
