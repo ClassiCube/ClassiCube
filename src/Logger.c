@@ -845,7 +845,8 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 	cc_string msg; char msgBuffer[3070 + 1];
 	String_InitArray_NT(msg, msgBuffer);
 
-	String_Format1(&msg, "ClassiCube crashed." _NL "Reason: %c" _NL, raw_msg);
+	String_AppendConst(&msg, "ClassiCube crashed." _NL);
+	if (raw_msg) String_Format1(&msg, "Reason: %c" _NL, raw_msg);
 	#ifdef CC_COMMIT_SHA
 	String_AppendConst(&msg, "Commit SHA: " CC_COMMIT_SHA _NL);
 	#endif
