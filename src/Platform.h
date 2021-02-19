@@ -253,7 +253,7 @@ cc_string JavaGetString(JNIEnv* env, jstring str, char* buffer);
 /* Allocates a java string from the given string. */
 jobject JavaMakeString(JNIEnv* env, const cc_string* str);
 /* Allocates a java byte array from the given block of memory. */
-jbyteArray JavaMakeBytes(JNIEnv* env, const cc_uint8* src, cc_uint32 len);
+jbyteArray JavaMakeBytes(JNIEnv* env, const void* src, cc_uint32 len);
 /* Calls a method in the activity class that returns nothing. */
 void JavaCallVoid(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that returns a jint. */

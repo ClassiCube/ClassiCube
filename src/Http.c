@@ -909,7 +909,7 @@ static void JNICALL java_HttpAppendData(JNIEnv* env, jobject o, jbyteArray arr, 
 	if (!req->_capacity) Http_BufferInit(req);
 
 	Http_BufferEnsure(req, len);
-	(*env)->GetByteArrayRegion(env, arr, 0, len, &req->data[req->size]);
+	(*env)->GetByteArrayRegion(env, arr, 0, len, (jbyte*)(&req->data[req->size]));
 	Http_BufferExpanded(req, len);
 }
 

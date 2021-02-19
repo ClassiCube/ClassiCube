@@ -2158,7 +2158,7 @@ jobject JavaMakeString(JNIEnv* env, const cc_string* str) {
 	return (*env)->NewStringUTF(env, (const char*)tmp);
 }
 
-jbyteArray JavaMakeBytes(JNIEnv* env, const cc_uint8* src, cc_uint32 len) {
+jbyteArray JavaMakeBytes(JNIEnv* env, const void* src, cc_uint32 len) {
 	if (!len) return NULL;
 	jbyteArray arr = (*env)->NewByteArray(env, len);
 	(*env)->SetByteArrayRegion(env, arr, 0, len, src);

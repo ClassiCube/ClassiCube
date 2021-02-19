@@ -160,7 +160,7 @@ build_android() {
   cp obj/cc-unsigned.apk obj/cc-signed.apk
   jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore debug.keystore -storepass android -keypass android obj/cc-signed.apk androiddebugkey
   # create aligned .apk file
-  $TOOLS_ROOT/zipalign -f -v 4 obj/cc-signed.apk $ROOT_DIR/src/cc.apk
+  $TOOLS_ROOT/zipalign -f 4 obj/cc-signed.apk $ROOT_DIR/src/cc.apk
 }
 
 # ----------------------------- driver
