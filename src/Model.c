@@ -2116,10 +2116,10 @@ static void SkinnedCubeModel_Register(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------HoldModel-------------------------------------------------------*
 *#########################################################################################################################*/
-static struct Model* blockModel;
-
 static void RecalcProperties(struct Entity* e) {
-	BlockID block = (BlockID)((e->ModelScale.X - 0.9999f) * 1000);
+	// Calculate block ID based on the X scale of the model
+	// E.g, hold|1.0001 = stone (ID = 1), hold|1.0041 = gold (ID = 41) etc.
+	BlockID block = (BlockID)((e->ModelScale.X - 0.99999f) * 10000);
 
 	if (block > 0) {
 		// Change the block that the player is holding
@@ -2134,21 +2134,19 @@ static void DrawBlockTransform(struct Entity* e, float dispX, float dispY, float
 	static Vec3 pos;
 	static struct Matrix m, temp;
 
-	if (block_model) {
-		pos = e->Position;
-		pos.Y += e->Anim.BobbingModel;
+	pos = e->Position;
+	pos.Y += e->Anim.BobbingModel;
 
-		Entity_GetTransform(e, pos, e->ModelScale, &m);
-		Matrix_Mul(&m, &m, &Gfx.View);
-		Matrix_Translate(&temp, dispX, dispY, dispZ);
-		Matrix_Mul(&m, &temp, &m);
-		Matrix_Scale(&temp, scale / 1.5f, scale / 1.5f, scale / 1.5f);
-		Matrix_Mul(&m, &temp, &m);
+	Entity_GetTransform(e, pos, e->ModelScale, &m);
+	Matrix_Mul(&m, &m, &Gfx.View);
+	Matrix_Translate(&temp, dispX, dispY, dispZ);
+	Matrix_Mul(&m, &temp, &m);
+	Matrix_Scale(&temp, scale / 1.5f, scale / 1.5f, scale / 1.5f);
+	Matrix_Mul(&m, &temp, &m);
 
-		Model_SetupState(block_model, e);
-		Gfx_LoadMatrix(MATRIX_VIEW, &m);
-		block_model->Draw(e);
-	}
+	Model_SetupState(&block_model, e);
+	Gfx_LoadMatrix(MATRIX_VIEW, &m);
+	block_model.Draw(e);
 }
 
 static void HoldModel_Draw(struct Entity* e) {
