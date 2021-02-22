@@ -1916,6 +1916,15 @@ static cc_result GetMachineID(cc_uint32* key) {
 	DecodeMachineID(host, HW_HOSTID_LEN, key);
 	return 0;
 }
+#elif defined CC_BUILD_ANDROID
+static cc_result GetMachineID(cc_uint32* key) {
+	cc_string dir; char dirBuffer[STRING_SIZE];
+	String_InitArray(dir, dirBuffer);
+
+	JavaCall_Void_String("getUUID", &dir);
+	DecodeMachineID(dirBuffer, dir.length, key);
+	return 0;
+}
 #else
 static cc_result GetMachineID(cc_uint32* key) { return ERR_NOT_SUPPORTED; }
 #endif

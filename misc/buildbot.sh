@@ -133,7 +133,7 @@ build_android() {
   rm classes.dex
   # copy required native libraries
   rm -rf lib
-  mkdir lib lib/armeabi lib/armeabi-v7a lib/arm64-v8alib/x86 lib/x86_64
+  mkdir lib lib/armeabi lib/armeabi-v7a lib/arm64-v8a lib/x86 lib/x86_64
   cp $ROOT_DIR/src/cc-droid-arm_16 lib/armeabi/libclassicube.so
   cp $ROOT_DIR/src/cc-droid-arm_32 lib/armeabi-v7a/libclassicube.so
   cp $ROOT_DIR/src/cc-droid-arm_64 lib/arm64-v8a/libclassicube.so

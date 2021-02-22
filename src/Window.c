@@ -3543,18 +3543,18 @@ static void JNICALL java_processKeyText(JNIEnv* env, jobject o, jstring str) {
 	Event_RaiseString(&InputEvents.TextChanged, &text);
 }
 
-static void JNICALL java_processMouseDown(JNIEnv* env, jobject o, jint id, jint x, jint y) {
-	Platform_Log3("MOUSE %i - DOWN %i,%i", &id, &x, &y);
+static void JNICALL java_processPointerDown(JNIEnv* env, jobject o, jint id, jint x, jint y, jint isMouse) {
+	Platform_Log4("POINTER %i (%i) - DOWN %i,%i", &id, &isMouse, &x, &y);
 	Input_AddTouch(id, x, y);
 }
 
-static void JNICALL java_processMouseUp(JNIEnv* env, jobject o, jint id, jint x, jint y) {
-	Platform_Log3("MOUSE %i - UP   %i,%i", &id, &x, &y);
+static void JNICALL java_processPointerUp(JNIEnv* env, jobject o, jint id, jint x, jint y, jint isMouse) {
+	Platform_Log4("POINTER %i (%i) - UP   %i,%i", &id, &isMouse, &x, &y);
 	Input_RemoveTouch(id, x, y);
 }
 
-static void JNICALL java_processMouseMove(JNIEnv* env, jobject o, jint id, jint x, jint y) {
-	Platform_Log3("MOUSE %i - MOVE %i,%i", &id, &x, &y);
+static void JNICALL java_processPointerMove(JNIEnv* env, jobject o, jint id, jint x, jint y, jint isMouse) {
+	Platform_Log4("POINTER %i (%i) - MOVE %i,%i", &id, &isMouse, &x, &y);
 	Input_UpdateTouch(id, x, y);
 }
 
@@ -3640,9 +3640,9 @@ static const JNINativeMethod methods[19] = {
 	{ "processKeyChar",   "(I)V", java_processKeyChar },
 	{ "processKeyText",   "(Ljava/lang/String;)V", java_processKeyText },
 
-	{ "processMouseDown", "(III)V", java_processMouseDown },
-	{ "processMouseUp",   "(III)V", java_processMouseUp },
-	{ "processMouseMove", "(III)V", java_processMouseMove },
+	{ "processPointerDown", "(IIII)V", java_processPointerDown },
+	{ "processPointerUp",   "(IIII)V", java_processPointerUp },
+	{ "processPointerMove", "(IIII)V", java_processPointerMove },
 
 	{ "processSurfaceCreated",      "(Landroid/view/Surface;)V",  java_processSurfaceCreated },
 	{ "processSurfaceDestroyed",    "()V",                        java_processSurfaceDestroyed },

@@ -22,6 +22,7 @@ import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.provider.Settings.Secure;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Selection;
@@ -102,9 +103,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	final static int CMD_KEY_CHAR = 2;
 	final static int CMD_KEY_TEXT = 19;
 	
-	final static int CMD_MOUSE_DOWN = 3;
-	final static int CMD_MOUSE_UP   = 4;
-	final static int CMD_MOUSE_MOVE = 5;
+	final static int CMD_POINTER_DOWN = 3;
+	final static int CMD_POINTER_UP   = 4;
+	final static int CMD_POINTER_MOVE = 5;
 	
 	final static int CMD_WIN_CREATED   = 6;
 	final static int CMD_WIN_DESTROYED = 7;
@@ -112,15 +113,15 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	final static int CMD_WIN_REDRAW	= 9;
 
 	final static int CMD_APP_START   = 10;
-	final static int CMD_APP_STOP	= 11;
+	final static int CMD_APP_STOP    = 11;
 	final static int CMD_APP_RESUME  = 12;
 	final static int CMD_APP_PAUSE   = 13;
 	final static int CMD_APP_DESTROY = 14;
 
-	final static int CMD_GOT_FOCUS	  = 15;
-	final static int CMD_LOST_FOCUS	 = 16;
+	final static int CMD_GOT_FOCUS   = 15;
+	final static int CMD_LOST_FOCUS  = 16;
 	final static int CMD_CONFIG_CHANGED = 17;
-	final static int CMD_LOW_MEMORY	 = 18;
+	final static int CMD_LOW_MEMORY  = 18;
 	
 	// ======================================
 	// --------------- EVENTS ---------------
@@ -199,17 +200,17 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		switch (event.getActionMasked()) {
 		case MotionEvent.ACTION_DOWN:
 		case MotionEvent.ACTION_POINTER_DOWN:
-			pushTouch(CMD_MOUSE_DOWN, event, event.getActionIndex());
+			pushTouch(CMD_POINTER_DOWN, event, event.getActionIndex());
 			break;
 			
 		case MotionEvent.ACTION_UP:
 		case MotionEvent.ACTION_POINTER_UP:
-			pushTouch(CMD_MOUSE_UP, event, event.getActionIndex());
+			pushTouch(CMD_POINTER_UP, event, event.getActionIndex());
 			break;
 			
 		case MotionEvent.ACTION_MOVE:
 			for (int i = 0; i < event.getPointerCount(); i++) {
-				pushTouch(CMD_MOUSE_MOVE, event, i);
+				pushTouch(CMD_POINTER_MOVE, event, i);
 			}
 		}
 		return true;
@@ -294,9 +295,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 			case CMD_KEY_CHAR: processKeyChar(c.arg1); break;
 			case CMD_KEY_TEXT: processKeyText(c.str);  break;
 	
-			case CMD_MOUSE_DOWN: processMouseDown(c.arg1, c.arg2, c.arg3); break;
-			case CMD_MOUSE_UP:   processMouseUp(c.arg1,   c.arg2, c.arg3); break;
-			case CMD_MOUSE_MOVE: processMouseMove(c.arg1, c.arg2, c.arg3); break;
+			case CMD_POINTER_DOWN: processPointerDown(c.arg1, c.arg2, c.arg3, 0); break;
+			case CMD_POINTER_UP:   processPointerUp(  c.arg1, c.arg2, c.arg3, 0); break;
+			case CMD_POINTER_MOVE: processPointerMove(c.arg1, c.arg2, c.arg3, 0); break;
 	
 			case CMD_WIN_CREATED:   processSurfaceCreated(c.sur);   break;
 			case CMD_WIN_DESTROYED: processSurfaceDestroyed();	  break;
@@ -326,9 +327,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	native void processKeyChar(int code);
 	native void processKeyText(String str);
 	
-	native void processMouseDown(int id, int x, int y);
-	native void processMouseUp(int id, int x, int y);
-	native void processMouseMove(int id, int x, int y);
+	native void processPointerDown(int id, int x, int y, int isMouse);
+	native void processPointerUp(  int id, int x, int y, int isMouse);
+	native void processPointerMove(int id, int x, int y, int isMouse);
 
 	native void processSurfaceCreated(Surface sur);
 	native void processSurfaceDestroyed();
@@ -515,6 +516,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	
 	public String getExternalAppDir() {
 		return getExternalFilesDir(null).getAbsolutePath();
+	}
+	
+	public String getUUID() {
+		return Secure.getString(getApplicationContext().getContentResolver(), Secure.ANDROID_ID);
 	}
 	
 	public long getApkUpdateTime() {
