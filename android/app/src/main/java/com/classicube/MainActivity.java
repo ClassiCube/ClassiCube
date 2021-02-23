@@ -53,15 +53,13 @@ import android.view.inputmethod.InputMethodManager;
 // When using Android functionality, always aim to add a comment with the API level that the functionality 
 //   was added in, as this will make things easier if the minimum required API level is ever changed again
 
-// SurfaceHolder.Callback2 - API level 9
 // implements InputQueue.Callback
-public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
-	CCView curView;
+public class MainActivity extends Activity {
 	
 	// ======================================
 	// -------------- COMMANDS --------------
 	// ======================================
-	//  The UI thread (which receives events) is separate from the game thread (which processes events)
+	//  The main thread (which receives events) is separate from the game thread (which processes events)
 	//  Therefore pushing/pulling events must be thread-safe, which is achieved through ConcurrentLinkedQueue
 	//  Additionally, a cache is used (freeCmds) to avoid constantly allocating NativeCmdArgs instances
 	class NativeCmdArgs { public int cmd, arg1, arg2, arg3, arg4; public String str; public Surface sur; }
@@ -111,12 +109,12 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	}
 	
 	final static int CMD_KEY_DOWN = 0;
-	final static int CMD_KEY_UP   = 1;
-	final static int CMD_KEY_CHAR = 2;
-	final static int CMD_KEY_TEXT = 19;
 	
 	final static int CMD_POINTER_DOWN = 3;
 	final static int CMD_POINTER_UP   = 4;
+	final static int CMD_KEY_UP   = 1;
+	final static int CMD_KEY_CHAR = 2;
+	final static int CMD_KEY_TEXT = 19;
 	final static int CMD_POINTER_MOVE = 5;
 	
 	final static int CMD_WIN_CREATED   = 6;
@@ -155,11 +153,23 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		runGameAsync();
 	}
 	
+	void HACK_avoidFileUriExposedErrors() {
+		// StrictMode - API level 9
+		// disableDeathOnFileUriExposure - API level 24 ?????
+		try {
+			Method m = StrictMode.class.getMethod("disableDeathOnFileUriExposure");
+			m.invoke(null);
+		}  catch (NoClassDefFoundError ex) {
+			ex.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// requestWindowFeature - API level 1
 		// setSoftInputMode, SOFT_INPUT_STATE_UNSPECIFIED, SOFT_INPUT_ADJUST_RESIZE - API level 3
-		// disableDeathOnFileUriExposure - API level 24 ?????
 		input = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 		Log.i("CC_WIN", "CREATE EVENT");
 		Window window = getWindow();
@@ -172,13 +182,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		// TODO: semaphore for destroyed and surfaceDestroyed
 
-		// avoid FileUriExposed exceptions when taking screenshots
-		try {
-			Method m = StrictMode.class.getMethod("disableDeathOnFileUriExposure");
-			m.invoke(null);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+		// avoid FileUriExposed exception when taking screenshots on recent Android versions
+		HACK_avoidFileUriExposedErrors();
 
 		if (!gameRunning) startGameAsync();
 		super.onCreate(savedInstanceState);
@@ -372,54 +377,71 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2 {
 	// --------------- VIEWS ----------------
 	// ======================================
 	volatile boolean fullscreen;
-
-	public void surfaceCreated(SurfaceHolder holder) {
-		// getSurface - API level 1
-		Log.i("CC_WIN", "win created " + holder.getSurface());
-		pushCmd(CMD_WIN_CREATED, holder.getSurface());
-	}
-	
-	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-		// getSurface - API level 1
-		Log.i("CC_WIN", "win changed " + holder.getSurface());
-		pushCmd(CMD_WIN_RESIZED, holder.getSurface());
-	}
-	
 	final Semaphore winDestroyedSem = new Semaphore(0, true);
-	public void surfaceDestroyed(SurfaceHolder holder) {
-		// getSurface, removeCallback - API level 1
-		Log.i("CC_WIN", "win destroyed " + holder.getSurface());
-		Log.i("CC_WIN", "cur view " + curView);
-		holder.removeCallback(this);
+	SurfaceHolder.Callback callback;
+	CCView curView;
+	
+	// SurfaceHolder.Callback - API level 1
+	class CCSurfaceCallback implements SurfaceHolder.Callback {
+		public void surfaceCreated(SurfaceHolder holder) {
+			// getSurface - API level 1
+			Log.i("CC_WIN", "win created " + holder.getSurface());
+			MainActivity.this.pushCmd(CMD_WIN_CREATED, holder.getSurface());
+		}
 		
-		//08-02 21:03:02.967: E/BufferQueueProducer(1350): [SurfaceView - com.classicube.ClassiCube/com.classicube.MainActivity#0] disconnect: not connected (req=2)
-		//08-02 21:03:02.968: E/SurfaceFlinger(1350): Failed to find layer (SurfaceView - com.classicube.ClassiCube/com.classicube.MainActivity#0) in layer parent (no-parent).
-
-		pushCmd(CMD_WIN_DESTROYED);
-		// per the android docs for SurfaceHolder.Callback
-		// "If you have a rendering thread that directly accesses the surface, you must ensure
-		// that thread is no longer touching the Surface before returning from this function."
-		try {
-			winDestroyedSem.acquire();
-		} catch (InterruptedException e) { }
+		public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+			// getSurface - API level 1
+			Log.i("CC_WIN", "win changed " + holder.getSurface());
+			MainActivity.this.pushCmd(CMD_WIN_RESIZED, holder.getSurface());
+		}
+		
+		public void surfaceDestroyed(SurfaceHolder holder) {
+			// getSurface, removeCallback - API level 1
+			Log.i("CC_WIN", "win destroyed " + holder.getSurface());
+			Log.i("CC_WIN", "cur view " + curView);
+			holder.removeCallback(this);
+			
+			//08-02 21:03:02.967: E/BufferQueueProducer(1350): [SurfaceView - com.classicube.ClassiCube/com.classicube.MainActivity#0] disconnect: not connected (req=2)
+			//08-02 21:03:02.968: E/SurfaceFlinger(1350): Failed to find layer (SurfaceView - com.classicube.ClassiCube/com.classicube.MainActivity#0) in layer parent (no-parent).
+	
+			MainActivity.this.pushCmd(CMD_WIN_DESTROYED);
+			// per the android docs for SurfaceHolder.Callback
+			// "If you have a rendering thread that directly accesses the surface, you must ensure
+			// that thread is no longer touching the Surface before returning from this function."
+			try {
+				winDestroyedSem.acquire();
+			} catch (InterruptedException e) { }
+		}
 	}
 	
-	// Game calls this on its thread to notify the main thread
+	// SurfaceHolder.Callback2 - API level 9
+	class CCSurfaceCallback2 extends CCSurfaceCallback implements SurfaceHolder.Callback2 {
+		public void surfaceRedrawNeeded(SurfaceHolder holder) {
+			// getSurface - API level 1
+			Log.i("CC_WIN", "win dirty " + holder.getSurface());
+			MainActivity.this.pushCmd(CMD_WIN_REDRAW);
+		}
+	}
+	
+	// Called by the game thread to notify the main thread
 	// that it is safe to destroy the window surface now
-	public void processedSurfaceDestroyed() {
-		winDestroyedSem.release();
-	}
+	public void processedSurfaceDestroyed() { winDestroyedSem.release(); }
 	
-	public void surfaceRedrawNeeded(SurfaceHolder holder) {
-		// getSurface - API level 1
-		Log.i("CC_WIN", "win dirty " + holder.getSurface());
-		pushCmd(CMD_WIN_REDRAW);
+	void createSurfaceCallback() {
+		if (callback != null) return;
+		try {
+			callback = new CCSurfaceCallback2(); 
+		} catch (NoClassDefFoundError ex) {
+			ex.printStackTrace();
+			callback = new CCSurfaceCallback();
+		}
 	}
-	
+	 
 	void attachSurface() {
 		// setContentView, requestFocus, getHolder, addCallback, RGBX_8888 - API level 1
+		createSurfaceCallback();
 		curView = new CCView(this);
-		curView.getHolder().addCallback(this);
+		curView.getHolder().addCallback(callback);
 		curView.getHolder().setFormat(PixelFormat.RGBX_8888);
 		
 		setContentView(curView);
