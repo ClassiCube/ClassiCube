@@ -1746,6 +1746,26 @@ void Platform_Init(void) {
 		}
 	});
 
+	/* It appears that using the preload to write to a mounted FS does
+	 * not work; even if we mount during preload, due to the fact
+	 * that they happen in parallel.
+	 *
+	 * So we preload the file into /texpacks and symlink it onto the
+	 * mountpoint. However, the symlink does not survive a reload
+	 * intact so we must refresh it. If the user uploads their own
+	 * "default.zip" the upload routine will delete the symlink and
+	 * so we shouldn't delete that.
+	 */
+
+	struct stat st;
+	if (lstat("/classicube/texpacks/default.zip", &st) < 0 ||
+		st.st_size < 1024) {
+	    (void) unlink("/classicube/texpacks/default.zip");
+	    (void) mkdir("/classicube/texpacks", 0770);
+	    if (symlink("/texpacks/default.zip", "/classicube/texpacks/default.zip") < 0)
+		perror("Linking default.zip");
+	}
+
 	if (!tmp[0]) return;
 	Chat_Add1("&cError preloading IndexedDB: %c", tmp);
 	Chat_AddRaw("&cPreviously saved settings/maps will be lost");
