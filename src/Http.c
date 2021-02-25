@@ -497,17 +497,15 @@ static const cc_string curlLib = String_FromConst("libcurl.so.4");
 static const cc_string curlAlt = String_FromConst("libcurl.so.3");
 #endif
 
-#define QUOTE(x) #x
-#define DefineCurlFunc(sym) { QUOTE(sym), (void**)&_ ## sym }
 static cc_bool LoadCurlFuncs(void) {
 	static const struct DynamicLibSym funcs[8] = {
-		DefineCurlFunc(curl_global_init),    DefineCurlFunc(curl_global_cleanup),
-		DefineCurlFunc(curl_easy_init),      DefineCurlFunc(curl_easy_perform),
-		DefineCurlFunc(curl_easy_setopt),    DefineCurlFunc(curl_easy_cleanup),
-		DefineCurlFunc(curl_slist_free_all), DefineCurlFunc(curl_slist_append)
+		DynamicLib_Sym(curl_global_init),    DynamicLib_Sym(curl_global_cleanup),
+		DynamicLib_Sym(curl_easy_init),      DynamicLib_Sym(curl_easy_perform),
+		DynamicLib_Sym(curl_easy_setopt),    DynamicLib_Sym(curl_easy_cleanup),
+		DynamicLib_Sym(curl_slist_free_all), DynamicLib_Sym(curl_slist_append)
 	};
 	/* Non-essential function missing in older curl versions */
-	static const struct DynamicLibSym optFuncs[1] = { DefineCurlFunc(curl_easy_strerror) };
+	static const struct DynamicLibSym optFuncs[1] = { DynamicLib_Sym(curl_easy_strerror) };
 
 	void* lib = DynamicLib_Load2(&curlLib);
 	if (!lib) { 

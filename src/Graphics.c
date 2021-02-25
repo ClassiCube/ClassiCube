@@ -2196,18 +2196,18 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 
 static void GL_CheckSupport(void) {
 	static const struct DynamicLibSym coreVboFuncs[5] = {
-		{ "glBindBuffer",    (void**)&_glBindBuffer }, { "glDeleteBuffers", (void**)&_glDeleteBuffers },
-		{ "glGenBuffers",    (void**)&_glGenBuffers }, { "glBufferData",    (void**)&_glBufferData },
-		{ "glBufferSubData", (void**)&_glBufferSubData }
+		DynamicLib_Sym2("glBindBuffer",    glBindBuffer), DynamicLib_Sym2("glDeleteBuffers", glDeleteBuffers),
+		DynamicLib_Sym2("glGenBuffers",    glGenBuffers), DynamicLib_Sym2("glBufferData",    glBufferData),
+		DynamicLib_Sym2("glBufferSubData", glBufferSubData)
 	};
 	static const struct DynamicLibSym arbVboFuncs[5] = {
-		{ "glBindBufferARB",    (void**)&_glBindBuffer }, { "glDeleteBuffersARB", (void**)&_glDeleteBuffers },
-		{ "glGenBuffersARB",    (void**)&_glGenBuffers }, { "glBufferDataARB",    (void**)&_glBufferData },
-		{ "glBufferSubDataARB", (void**)&_glBufferSubData }
+		DynamicLib_Sym2("glBindBufferARB",    glBindBuffer), DynamicLib_Sym2("glDeleteBuffersARB", glDeleteBuffers),
+		DynamicLib_Sym2("glGenBuffersARB",    glGenBuffers), DynamicLib_Sym2("glBufferDataARB",    glBufferData),
+		DynamicLib_Sym2("glBufferSubDataARB", glBufferSubData)
 	};
 	static const cc_string vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
-	cc_string extensions  = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
-	const GLubyte* ver = glGetString(GL_VERSION);
+	cc_string extensions = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
+	const GLubyte* ver   = glGetString(GL_VERSION);
 
 	/* Version string is always: x.y. (and whatever afterwards) */
 	int major = ver[0] - '0', minor = ver[2] - '0';

@@ -96,6 +96,10 @@ CC_API cc_bool DynamicLib_DescribeError(cc_string* dst);
 
 /* The default file extension used for dynamic libraries on this platform. */
 extern const cc_string DynamicLib_Ext;
+#define DYNAMICLIB_QUOTE(x) #x
+#define DynamicLib_Sym(sym) { DYNAMICLIB_QUOTE(sym), (void**)&_ ## sym }
+#define DynamicLib_Sym2(name, sym) { name,           (void**)&_ ## sym }
+
 CC_API cc_result DynamicLib_Load(const cc_string* path, void** lib); /* OBSOLETE */
 CC_API cc_result DynamicLib_Get(void* lib, const char* name, void** symbol); /* OBSOLETE */
 /* Contains a name and a pointer to variable that will hold the loaded symbol */

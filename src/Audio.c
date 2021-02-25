@@ -16,9 +16,6 @@
 /* TODO: Refactor maybe to not rely on checking WinInfo.Handle != NULL */
 #include "Window.h"
 #endif
-
-#define QUOTE(x) #x
-#define DefineDynFunc(sym) { QUOTE(sym), (void**)&_ ## sym }
 int Audio_SoundsVolume, Audio_MusicVolume;
 
 #if defined CC_BUILD_NOAUDIO
@@ -133,16 +130,16 @@ static const cc_string alLib = String_FromConst("libopenal.so.1");
 
 static cc_bool LoadALFuncs(void) {
 	static const struct DynamicLibSym funcs[18] = {
-		DefineDynFunc(alcCreateContext),  DefineDynFunc(alcMakeContextCurrent),
-		DefineDynFunc(alcDestroyContext), DefineDynFunc(alcOpenDevice),
-		DefineDynFunc(alcCloseDevice),    DefineDynFunc(alcGetError),
+		DynamicLib_Sym(alcCreateContext),  DynamicLib_Sym(alcMakeContextCurrent),
+		DynamicLib_Sym(alcDestroyContext), DynamicLib_Sym(alcOpenDevice),
+		DynamicLib_Sym(alcCloseDevice),    DynamicLib_Sym(alcGetError),
 
-		DefineDynFunc(alGetError),        DefineDynFunc(alGenSources),
-		DefineDynFunc(alDeleteSources),   DefineDynFunc(alGetSourcei),
-		DefineDynFunc(alSourcePlay),      DefineDynFunc(alSourceStop),
-		DefineDynFunc(alSourceQueueBuffers), DefineDynFunc(alSourceUnqueueBuffers),
-		DefineDynFunc(alGenBuffers),      DefineDynFunc(alDeleteBuffers),
-		DefineDynFunc(alBufferData),      DefineDynFunc(alDistanceModel)
+		DynamicLib_Sym(alGetError),        DynamicLib_Sym(alGenSources),
+		DynamicLib_Sym(alDeleteSources),   DynamicLib_Sym(alGetSourcei),
+		DynamicLib_Sym(alSourcePlay),      DynamicLib_Sym(alSourceStop),
+		DynamicLib_Sym(alSourceQueueBuffers), DynamicLib_Sym(alSourceUnqueueBuffers),
+		DynamicLib_Sym(alGenBuffers),      DynamicLib_Sym(alDeleteBuffers),
+		DynamicLib_Sym(alBufferData),      DynamicLib_Sym(alDistanceModel)
 	};
 
 	void* lib = DynamicLib_Load2(&alLib);
@@ -406,9 +403,9 @@ static const cc_string slLib = String_FromConst("libOpenSLES.so");
 
 static cc_bool LoadSLFuncs(void) {
 	static const struct DynamicLibSym funcs[5] = {
-		DefineDynFunc(slCreateEngine), DefineDynFunc(SL_IID_NULL),
-		DefineDynFunc(SL_IID_PLAY),    DefineDynFunc(SL_IID_ENGINE),
-		DefineDynFunc(SL_IID_BUFFERQUEUE)
+		DynamicLib_Sym(slCreateEngine), DynamicLib_Sym(SL_IID_NULL),
+		DynamicLib_Sym(SL_IID_PLAY),    DynamicLib_Sym(SL_IID_ENGINE),
+		DynamicLib_Sym(SL_IID_BUFFERQUEUE)
 	};
 
 	void* lib = DynamicLib_Load2(&slLib);
