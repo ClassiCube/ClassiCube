@@ -2118,8 +2118,8 @@ static void SkinnedCubeModel_Register(void) {
 *#########################################################################################################################*/
 static void RecalcProperties(struct Entity* e) {
 	// Calculate block ID based on the X scale of the model
-	// E.g, hold|1.0001 = stone (ID = 1), hold|1.0041 = gold (ID = 41) etc.
-	BlockID block = (BlockID)((e->ModelScale.X - 0.99999f) * 10000);
+	// E.g, hold|1.001 = stone (ID = 1), hold|1.041 = gold (ID = 41) etc.
+	BlockID block = (BlockID)((e->ModelScale.X - 0.9999f) * 1000);
 
 	if (block > 0) {
 		// Change the block that the player is holding
@@ -2127,6 +2127,7 @@ static void RecalcProperties(struct Entity* e) {
 		else e->ModelBlock = BLOCK_AIR;
 
 		Vec3_Set(e->ModelScale, 1, 1, 1);
+		Entity_UpdateModelBounds(e); // Adjust size/modelAABB after changing model scale
 	}
 }
 
@@ -2168,11 +2169,18 @@ static void HoldModel_Draw(struct Entity* e) {
 }
 
 static struct Model hold_model;
+
+static float HoldModel_GetEyeY(struct Entity* e) {
+	RecalcProperties(e);
+	return HumanModel_GetEyeY(e);
+}
+
 static void HoldModel_Register(void) {
 	hold_model = human_model;
 	hold_model.name = "hold";
 	hold_model.MakeParts = Model_NoParts;
 	hold_model.Draw = HoldModel_Draw;
+	hold_model.GetEyeY = HoldModel_GetEyeY;
 	Model_Register(&hold_model);
 }
 
