@@ -133,7 +133,7 @@ The generated javascript file has some issues. [See here for how to fix](doc/com
 
 #### Android
 
-Use Android Studio or run gradlew in android folder (TODO explain more detailed)
+Use Android Studio or run gradlew in android folder, or download downloadable client **Note: Download Client is currently in alpha, so bug's are very likley to occur** (TODO explain more detailed)
 
 #### iOS
 
