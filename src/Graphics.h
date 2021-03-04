@@ -175,7 +175,7 @@ CC_API void Gfx_DrawVb_IndexedTris(int verticesCount);
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex);
 
 /* Loads the given matrix over the currently active matrix. */
-CC_API void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix);
+CC_API void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix);
 /* Loads the identity matrix over the currently active matrix. */
 CC_API void Gfx_LoadIdentityMatrix(MatrixType type);
 CC_API void Gfx_EnableTextureOffset(float x, float y);

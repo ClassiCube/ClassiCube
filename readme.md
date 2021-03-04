@@ -4,7 +4,7 @@ ClassiCube is a custom Minecraft Classic and ClassiCube client written in C that
 ![screenshot_n](http://i.imgur.com/FCiwl27.png)
 
 
-You can grab the latest stable binaries [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
+You can download the game [from here](https://www.classicube.net/download/) and the very latest builds [from here](https://www.classicube.net/nightlies/).
 
 #### What ClassiCube is
 * A complete re-implementation of Minecraft Classic, with optional additions.

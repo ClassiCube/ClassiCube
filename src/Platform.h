@@ -221,7 +221,7 @@ void Platform_LoadSysFonts(void);
 /* Allocates a new socket. */
 CC_API cc_result Socket_Create(cc_socket* s);
 /* Returns how much data is available to be read from the given socket. */
-CC_API cc_result Socket_Available(cc_socket s, cc_uint32* available);
+CC_API cc_result Socket_Available(cc_socket s, int* available);
 /* Sets whether operations on the given socket block the calling thread. */
 /* e.g. if blocking is on, calling Connect() blocks until a response is received. */
 CC_API cc_result Socket_SetBlocking(cc_socket s, cc_bool blocking);

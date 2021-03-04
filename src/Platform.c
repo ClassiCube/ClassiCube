@@ -902,7 +902,7 @@ static cc_result Socket_ioctl(cc_socket s, cc_uint32 cmd, int* data) {
 #endif
 }
 
-cc_result Socket_Available(cc_socket s, cc_uint32* available) {
+cc_result Socket_Available(cc_socket s, int* available) {
 	return Socket_ioctl(s, FIONREAD, available);
 }
 cc_result Socket_SetBlocking(cc_socket s, cc_bool blocking) {

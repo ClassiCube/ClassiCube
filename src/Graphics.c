@@ -946,7 +946,7 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 *#########################################################################################################################*/
 static D3DTRANSFORMSTATETYPE matrix_modes[2] = { D3DTS_PROJECTION, D3DTS_VIEW };
 
-void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
+void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (Gfx.LostContext) return;
 	IDirect3DDevice9_SetTransform(device, matrix_modes[type], (const D3DMATRIX*)matrix);
 }
@@ -1887,7 +1887,7 @@ void Gfx_SetFogMode(FogFunc func) {
 void Gfx_SetTexturing(cc_bool enabled) { }
 void Gfx_SetAlphaTest(cc_bool enabled) { gfx_alphaTest = enabled; SwitchProgram(); }
 
-void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
+void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type == MATRIX_VIEW)       _view = *matrix;
 	if (type == MATRIX_PROJECTION) _proj = *matrix;
 
@@ -2061,9 +2061,9 @@ void Gfx_SetAlphaTest(cc_bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 static GLenum matrix_modes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 static int lastMatrix;
 
-void Gfx_LoadMatrix(MatrixType type, struct Matrix* matrix) {
+void Gfx_LoadMatrix(MatrixType type, const struct Matrix* matrix) {
 	if (type != lastMatrix) { lastMatrix = type; glMatrixMode(matrix_modes[type]); }
-	glLoadMatrixf((float*)matrix);
+	glLoadMatrixf((const float*)matrix);
 }
 
 void Gfx_LoadIdentityMatrix(MatrixType type) {
