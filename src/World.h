@@ -44,6 +44,8 @@ CC_VAR extern struct _WorldData {
 	/* Whether the world has finished loading/generating. */
 	/* NOTE: Blocks may still be NULL. (e.g. error during loading) */
 	cc_bool Loaded;
+	/* Point in time the current world was last saved at */
+	double LastSave;
 } World;
 
 /* Frees the blocks array, sets dimensions to 0, resets environment to default. */

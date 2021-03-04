@@ -649,6 +649,11 @@ static void Game_RunLoop(void) {
 	/*  Now thats there's a main loop, Game_SetFpsLimit will actually do something */
 	Game_SetFpsLimit(Options_GetEnum(OPT_FPS_LIMIT, 0, FpsLimit_Names, FPS_LIMIT_COUNT));
 }
+
+cc_bool Game_ShouldClose(void) {
+	/* Running in multiplayer or map was saved within last 5 seconds */
+	return !Server.IsSinglePlayer || (World.LastSave + 5 >= Game.Time);
+}
 #else
 static void Game_RunLoop(void) {
 	cc_uint64 lastRender, render; 

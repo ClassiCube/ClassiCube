@@ -46,7 +46,8 @@ void World_Reset(void) {
 	World.Blocks = NULL;
 
 	World_SetDimensions(0, 0, 0);
-	World.Loaded = false;
+	World.Loaded   = false;
+	World.LastSave = -200;
 	Env_Reset();
 }
 

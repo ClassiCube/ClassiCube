@@ -78,6 +78,8 @@ void Game_SetFpsLimit(int method);
 
 /* Runs the main game loop until the window is closed. */
 void Game_Run(int width, int height, const cc_string* title);
+/* Whether the game should be allowed to automatically close */
+cc_bool Game_ShouldClose(void);
 
 /* Represents a game component. */
 struct IGameComponent;

@@ -2745,6 +2745,7 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 #include <emscripten/emscripten.h>
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
+#include "Game.h"
 static cc_bool keyboardOpen, needResize;
 
 static int RawDpiScale(int x)    { return (int)(x * emscripten_get_device_pixel_ratio()); }
@@ -2908,6 +2909,12 @@ static EM_BOOL OnFullscreenChange(int type, const EmscriptenFullscreenChangeEven
 }
 
 static const char* OnBeforeUnload(int type, const void* ev, void *data) {
+	if (!Game_ShouldClose()) {
+		/* Exit pointer lock, otherwise when you press Ctrl+W, the */
+		/*  cursor remains invisible in the confirmation dialog */
+		emscripten_exit_pointerlock();
+		return "You have unsaved changes. Are you sure you want to quit?";
+	}
 	Window_Close();
 	return NULL;
 }

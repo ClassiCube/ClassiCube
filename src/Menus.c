@@ -1398,6 +1398,7 @@ static void SaveLevelScreen_SaveMap(struct SaveLevelScreen* s, const cc_string* 
 #else
 	Chat_Add1("&eSaved map to: %s", path);
 #endif
+	World.LastSave = Game.Time;
 	Gui_ShowPauseMenu();
 }
 
