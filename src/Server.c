@@ -391,7 +391,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 	pending = 0;
 	res     = Socket_Available(net_socket, &pending);
-	readEnd = net_readCurrent;
+	readEnd = net_readCurrent; /* todo change to int remaining instead */
 
 	if (!res && pending) {
 		/* NOTE: Always using a read call that is a multiple of 4096 (appears to?) improve read performance */	

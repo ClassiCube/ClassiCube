@@ -944,12 +944,12 @@ static void HumanModel_MakeParts(void) {
 		BoxDesc_Rot(0,12,0),
 	};
 
-	static struct BoxDesc lArm = {
+	static const struct BoxDesc lArm = {
 		BoxDesc_Tex(40,16),
 		BoxDesc_Box(-4,12,-2, -8,24,2),
 		BoxDesc_Rot(-5,22,0),
 	};
-	static struct BoxDesc rArm = {
+	static const struct BoxDesc rArm = {
 		BoxDesc_Tex(40,16),
 		BoxDesc_Box(4,12,-2, 8,24,2),
 		BoxDesc_Rot(5,22,0),
@@ -965,7 +965,7 @@ static void HumanModel_MakeParts(void) {
 		BoxDesc_Rot(0,12,0),
 	};
 
-	static struct BoxDesc lArm64 = {
+	static const struct BoxDesc lArm64 = {
 		BoxDesc_Tex(32,48),
 		BoxDesc_Box(-8,12,-2, -4,24,2),
 		BoxDesc_Rot(-5,22,0),
@@ -975,13 +975,13 @@ static void HumanModel_MakeParts(void) {
 		BoxDesc_Box(-4,0,-2, 0,12,2),
 		BoxDesc_Rot(0,12,0),
 	};
-	static struct BoxDesc lArmL = {
+	static const struct BoxDesc lArmL = {
 		BoxDesc_Tex(48,48),
 		BoxDesc_Dims(-8,12,-2, -4,24,2),
 		BoxDesc_Bounds(-8.5f,11.5f,-2.5f, -3.5f,24.5f,2.5f),
 		BoxDesc_Rot(-5,22,0),
 	};
-	static struct BoxDesc rArmL = {
+	static const struct BoxDesc rArmL = {
 		BoxDesc_Tex(40,32),
 		BoxDesc_Dims(4,12,-2, 8,24,2),
 		BoxDesc_Bounds(3.5f,11.5f,-2.5f, 8.5f,24.5f,2.5f),
@@ -1000,6 +1000,30 @@ static void HumanModel_MakeParts(void) {
 		BoxDesc_Rot(0,12,0),
 	};
 
+	/* Thin arms - make sure to keep in sync with lArm64/rArm/lArmL/rArmL */
+	static const struct BoxDesc thin_lArm = {
+		BoxDesc_Tex(32,48),
+		BoxDesc_Box(-7,12,-2, -4,24,2),
+		BoxDesc_Rot(-5,22,0),
+	};
+	static const struct BoxDesc thin_rArm = {
+		BoxDesc_Tex(40,16),
+		BoxDesc_Box(4,12,-2, 7,24,2),
+		BoxDesc_Rot(5,22,0),
+	};
+	static const struct BoxDesc thin_lArmL = {
+		BoxDesc_Tex(48,48),
+		BoxDesc_Dims(-7,12,-2, -4,24,2),
+		BoxDesc_Bounds(-7.5f,11.5f,-2.5f, -3.5f,24.5f,2.5f),
+		BoxDesc_Rot(-5,22,0),
+	};
+	static const struct BoxDesc thin_rArmL = {
+		BoxDesc_Tex(40,32),
+		BoxDesc_Dims(4,12,-2, 7,24,2),
+		BoxDesc_Bounds(3.5f,11.5f,-2.5f, 7.5f,24.5f,2.5f),
+		BoxDesc_Rot(5,22,0),
+	};
+
 	struct ModelLimbs* set     = &human_set.limbs[0];
 	struct ModelLimbs* set64   = &human_set.limbs[1];
 	struct ModelLimbs* setSlim = &human_set.limbs[2];
@@ -1014,33 +1038,29 @@ static void HumanModel_MakeParts(void) {
 	BoxDesc_BuildBox(&set->leftArm,  &lArm);
 	BoxDesc_BuildBox(&set->rightArm, &rArm);
 
-	/* 64x64 arms */
+	/* 64x64 arms and legs */
 	BoxDesc_BuildBox(&set64->leftLeg, &lLeg64);
 	set64->rightLeg = set->rightLeg;
 	BoxDesc_BuildBox(&set64->leftArm, &lArm64);
 	set64->rightArm = set->rightArm;
 
-	lArm64.sizeX -= 1; lArm64.x1 += 1.0f/16.0f;
-	rArm.sizeX   -= 1; rArm.x2   -= 1.0f/16.0f;
-
+	/* Thin arms and legs */
 	setSlim->leftLeg  = set64->leftLeg;
 	setSlim->rightLeg = set64->rightLeg;
-	BoxDesc_BuildBox(&setSlim->leftArm,  &lArm64);
-	BoxDesc_BuildBox(&setSlim->rightArm, &rArm);
+	BoxDesc_BuildBox(&setSlim->leftArm,  &thin_lArm);
+	BoxDesc_BuildBox(&setSlim->rightArm, &thin_rArm);
 
-	/* 64x64 legs */
+	/* 64x64 arm and leg layers */
 	BoxDesc_BuildBox(&set64->leftLegLayer,  &lLegL);
 	BoxDesc_BuildBox(&set64->rightLegLayer, &rLegL);
 	BoxDesc_BuildBox(&set64->leftArmLayer,  &lArmL);
 	BoxDesc_BuildBox(&set64->rightArmLayer, &rArmL);
 
-	lArmL.sizeX -= 1; lArmL.x1 += 1.0f/16.0f;
-	rArmL.sizeX -= 1; rArmL.x2 -= 1.0f/16.0f;
-
+	/* Thin arm and leg layers */
 	setSlim->leftLegLayer  = set64->leftLegLayer;
 	setSlim->rightLegLayer = set64->rightLegLayer;
-	BoxDesc_BuildBox(&setSlim->leftArmLayer,  &lArmL);
-	BoxDesc_BuildBox(&setSlim->rightArmLayer, &rArmL);
+	BoxDesc_BuildBox(&setSlim->leftArmLayer,  &thin_lArmL);
+	BoxDesc_BuildBox(&setSlim->rightArmLayer, &thin_rArmL);
 }
 
 static void HumanModel_Draw(struct Entity* e) {
