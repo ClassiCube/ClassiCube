@@ -167,7 +167,11 @@ static cc_bool RayTrace(struct RayTracer* t, const Vec3* origin, const Vec3* dir
 	if (origin->X != origin->X || origin->Y != origin->Y || origin->Z != origin->Z) return false;
 
 	IVec3_Floor(&pOrigin, origin);
-	insideMap = World_Contains(pOrigin.X, pOrigin.Y, pOrigin.Z);
+	/* This used to be World_Contains(pOrigin.X, pOrigin.Y, pOrigin.Z), however */
+	/*  this caused a bug when you were above the map (but still inside the map */
+	/*  horizontally) - if borders height was > map height, you would wrongly */
+	/*  pick blocks on the INSIDE of the map borders instead of OUTSIDE them */
+	insideMap = World_ContainsXZ(pOrigin.X, pOrigin.Z) && pOrigin.Y >= 0;
 	reachSq   = reach * reach;
 		
 	for (i = 0; i < 25000; i++) {
