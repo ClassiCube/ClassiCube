@@ -747,7 +747,7 @@ static struct ChatScreen {
 	struct TextGroupWidget status, bottomRight, chat, clientStatus;
 	struct SpecialInputWidget altText;
 #ifdef CC_BUILD_TOUCH
-	struct ButtonWidget send, cancel;
+	struct ButtonWidget send, cancel, more;
 #endif
 
 	struct Texture statusTextures[CHAT_MAX_STATUS];
@@ -1002,6 +1002,7 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 
 #ifdef CC_BUILD_TOUCH
 		if (!Input_TouchMode) return;
+		Elem_Render(&s->more,   delta);
 		Elem_Render(&s->send,   delta);
 		Elem_Render(&s->cancel, delta);
 #endif
@@ -1022,6 +1023,7 @@ static void ChatScreen_ContextLost(void* screen) {
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
+	Elem_Free(&s->more);
 	Elem_Free(&s->send);
 	Elem_Free(&s->cancel);
 #endif
@@ -1036,6 +1038,7 @@ static void ChatScreen_ContextRecreated(void* screen) {
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
 	Gui_MakeTitleFont(&font);
+	ButtonWidget_SetConst(&s->more,   "More",   &font);
 	ButtonWidget_SetConst(&s->send,   "Send",   &font);
 	ButtonWidget_SetConst(&s->cancel, "Cancel", &font);
 	Font_Free(&font);
@@ -1070,11 +1073,13 @@ static void ChatScreen_Layout(void* screen) {
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
 	if (WindowInfo.SoftKeyboard == SOFT_KEYBOARD_SHIFT) {
-		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MAX, 10, 60);
-		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MAX, 10, 10);
+		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MAX, 10,  60);
+		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MAX, 10,  10);
+		Widget_SetLocation(&s->more,   ANCHOR_MAX, ANCHOR_MAX, 10, 110);
 	} else {
-		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MIN, 10, 10);
-		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MIN, 10, 60);
+		Widget_SetLocation(&s->send,   ANCHOR_MAX, ANCHOR_MIN, 10,  10);
+		Widget_SetLocation(&s->cancel, ANCHOR_MAX, ANCHOR_MIN, 10,  60);
+		Widget_SetLocation(&s->more,   ANCHOR_MAX, ANCHOR_MIN, 10, 110);
 	}
 #endif
 }
@@ -1148,6 +1153,11 @@ static int ChatScreen_KeyDown(void* screen, int key) {
 	return true;
 }
 
+static void ChatScreen_ToggleAltInput(struct ChatScreen* s) {
+	SpecialInputWidget_SetActive(&s->altText, !s->altText.active);
+	ChatScreen_UpdateChatYOffsets(s);
+}
+
 static void ChatScreen_KeyUp(void* screen, int key) {
 	struct ChatScreen* s = (struct ChatScreen*)screen;
 	if (!s->grabsInput || (struct Screen*)s != Gui.InputGrab) return;
@@ -1159,8 +1169,7 @@ static void ChatScreen_KeyUp(void* screen, int key) {
 
 	if (Server.SupportsFullCP437 && key == KeyBinds[KEYBIND_EXT_INPUT]) {
 		if (!WindowInfo.Focused) return;
-		SpecialInputWidget_SetActive(&s->altText, !s->altText.active);
-		ChatScreen_UpdateChatYOffsets(s);
+		ChatScreen_ToggleAltInput(s);
 	}
 }
 
@@ -1198,6 +1207,9 @@ static int ChatScreen_PointerDown(void* screen, int id, int x, int y) {
 	}
 	if (Widget_Contains(&s->cancel, x, y)) {
 		ChatScreen_EnterChatInput(s, true); return TOUCH_TYPE_GUI;
+	}
+	if (Widget_Contains(&s->more, x, y)) {
+		ChatScreen_ToggleAltInput(s); return TOUCH_TYPE_GUI;
 	}
 #endif
 
@@ -1257,6 +1269,7 @@ static void ChatScreen_Init(void* screen) {
 	if (!Input_TouchMode) return;
 	ButtonWidget_Init(&s->send,   100, NULL);
 	ButtonWidget_Init(&s->cancel, 100, NULL);
+	ButtonWidget_Init(&s->more,   100, NULL);
 #endif
 }
 
