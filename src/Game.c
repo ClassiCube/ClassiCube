@@ -651,8 +651,12 @@ static void Game_RunLoop(void) {
 }
 
 cc_bool Game_ShouldClose(void) {
-	/* Running in multiplayer or map was saved within last 5 seconds */
-	return !Server.IsSinglePlayer || (World.LastSave + 5 >= Game.Time);
+	if (Server.IsSinglePlayer) {
+		/* Close if map was saved within last 5 seconds */
+		return World.LastSave + 5 >= Game.Time;
+	}
+	/* Intercept Ctrl+W or Cmd+W for multiplayer */
+	return !(Key_IsCtrlPressed() || Key_IsWinPressed());
 }
 #else
 static void Game_RunLoop(void) {
