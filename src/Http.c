@@ -319,12 +319,12 @@ cc_bool Http_DescribeError(cc_result res, cc_string* dst) { return false; }
 /* web browsers do caching already, so don't need last modified/etags */
 static void Http_AddHeader(struct HttpRequest* req, const char* key, const cc_string* value) { }
 
-static void OnUpdateProgress(int read, int total) {
+EMSCRIPTEN_KEEPALIVE void Http_OnUpdateProgress(int read, int total) {
 	if (!total) return;
 	http_curProgress = (int)(100.0f * read / total);
 }
 
-static void OnFinishedAsync(void* data, int len, int status) {
+EMSCRIPTEN_KEEPALIVE void Http_OnFinishedAsync(void* data, int len, int status) {
 	struct HttpRequest* req = &http_curRequest;
 	req->data          = data;
 	req->size          = len;
@@ -347,17 +347,14 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 	Http_BeginRequest(req, &url);
 	Platform_EncodeUtf8(urlStr, &url);
 
+	/* onFinished = FUNC(data, len, status) */
+	/* onProgress = FUNC(read, total) */
 	EM_ASM_({
-		var url       = UTF8ToString($0);
-		var reqMethod = $1 == 1 ? 'HEAD' : 'GET';
-		
-		var onFinished = function(data, len, status) { 
-			Module['dynCall_viii']($2, data, len, status);
-		};
-		var onProgress = function(read, total) { 
-			Module['dynCall_vii']($3, read, total);
-		};
-		
+		var url        = UTF8ToString($0);
+		var reqMethod  = $1 == 1 ? 'HEAD' : 'GET';	
+		var onFinished = Module["_Http_OnFinishedAsync"];
+		var onProgress = Module["_Http_OnUpdateProgress"];
+
 		var xhr = new XMLHttpRequest();
 		xhr.open(reqMethod, url);
 		xhr.responseType = 'arraybuffer';
@@ -383,7 +380,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 		xhr.onprogress = function(e) { onProgress(e.loaded, e.total); };
 
 		try { xhr.send(); } catch (e) { onFinished(0, 0, 0); }
-	}, urlStr, req->requestType, OnFinishedAsync, OnUpdateProgress);
+	}, urlStr, req->requestType, Http_OnFinishedAsync, Http_OnUpdateProgress);
 }
 
 static void Http_WorkerInit(void) {
