@@ -655,8 +655,11 @@ cc_bool Game_ShouldClose(void) {
 		/* Close if map was saved within last 5 seconds */
 		return World.LastSave + 5 >= Game.Time;
 	}
-	/* Intercept Ctrl+W or Cmd+W for multiplayer */
-	return !(Key_IsCtrlPressed() || Key_IsWinPressed());
+
+	/* Try to intercept Ctrl+W or Cmd+W for multiplayer */
+	if (Key_IsCtrlPressed() || Key_IsWinPressed()) return false;
+	/* Also try to intercept mouse back button (Mouse4) */
+	return !Input_Pressed[KEY_XBUTTON1];
 }
 #else
 static void Game_RunLoop(void) {

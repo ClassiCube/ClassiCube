@@ -2793,6 +2793,8 @@ static EM_BOOL OnMouseButton(int type, const EmscriptenMouseEvent* ev, void* dat
 		case 0: Input_Set(KEY_LMOUSE, down); break;
 		case 1: Input_Set(KEY_MMOUSE, down); break;
 		case 2: Input_Set(KEY_RMOUSE, down); break;
+		case 3: Input_Set(KEY_XBUTTON1, down); break;
+		case 4: Input_Set(KEY_XBUTTON2, down); break;
 	}
 
 	DeferredEnableRawMouse();
