@@ -380,7 +380,7 @@ static void Http_DownloadAsync(struct HttpRequest* req) {
 		xhr.onprogress = function(e) { onProgress(e.loaded, e.total); };
 
 		try { xhr.send(); } catch (e) { onFinished(0, 0, 0); }
-	}, urlStr, req->requestType, Http_OnFinishedAsync, Http_OnUpdateProgress);
+	}, urlStr, req->requestType);
 }
 
 static void Http_WorkerInit(void) {

@@ -408,10 +408,11 @@ void Particles_Render(float t) {
 	Gfx_SetTexturing(false);
 }
 
-void Particles_Tick(struct ScheduledTask* task) {
-	Terrain_Tick(task->interval);
-	Rain_Tick(task->interval);
-	Custom_Tick(task->interval);
+static void Particles_Tick(struct ScheduledTask* task) {
+	double delta = task->interval;
+	Terrain_Tick(delta);
+	Rain_Tick(delta);
+	Custom_Tick(delta);
 }
 
 void Particles_BreakBlockEffect(IVec3 coords, BlockID old, BlockID now) {

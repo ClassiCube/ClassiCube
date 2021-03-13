@@ -590,7 +590,6 @@ static void Game_RenderFrame(double delta) {
 	UpdateViewMatrix();
 
 	Gfx_LoadMatrix(MATRIX_PROJECTION, &Gfx.Projection);
-
 	Gfx_LoadMatrix(MATRIX_VIEW, &Gfx.View);
 
 	if (!Gui_GetBlocksWorld()) {
