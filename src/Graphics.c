@@ -1695,23 +1695,19 @@ static void GenFragmentShader(const struct GLShader* shader, cc_string* dst) {
 	String_AppendConst(dst,         "}");
 }
 
-/* Tries to compile GLSL shader code. */
-static GLint CompileShader(GLenum type, const cc_string* src, GLuint* obj) {
-	GLint temp, shader;
-	int len;
+/* Tries to compile GLSL shader code */
+static GLint CompileShader(GLint shader, const cc_string* src) {
+	const char* str = src->buffer;
+	int len = src->length;
+	GLint temp;
 
-	shader = glCreateShader(type);
-	*obj   = shader;
-	if (!shader) return false;
-	len = src->length;
-
-	glShaderSource(shader, 1, &src->buffer, &len);
+	glShaderSource(shader, 1, &str, &len);
 	glCompileShader(shader);
 	glGetShaderiv(shader, _GL_COMPILE_STATUS, &temp);
 	return temp;
 }
 
-/* Logs information then aborts program. */
+/* Logs information then aborts program */
 static void ShaderFailed(GLint shader) {
 	char logInfo[2048];
 	GLint temp;
@@ -1728,27 +1724,32 @@ static void ShaderFailed(GLint shader) {
 	Logger_Abort("Failed to compile shader");
 }
 
-/* Tries to compile vertex and fragment shaders, then link into an OpenGL program. */
+/* Tries to compile vertex and fragment shaders, then link into an OpenGL program */
 static void CompileProgram(struct GLShader* shader) {
 	char tmpBuffer[2048]; cc_string tmp;
 	GLuint vs, fs, program;
 	GLint temp;
 
+	vs = glCreateShader(_GL_VERTEX_SHADER);
+	if (!vs) { Platform_LogConst("Failed to create vertex shader"); return; }
+	
 	String_InitArray(tmp, tmpBuffer);
 	GenVertexShader(shader, &tmp);
-	if (!CompileShader(_GL_VERTEX_SHADER,   &tmp, &vs)) ShaderFailed(vs);
+	if (!CompileShader(vs, &tmp)) ShaderFailed(vs);
+
+	fs = glCreateShader(_GL_FRAGMENT_SHADER);
+	if (!fs) { Platform_LogConst("Failed to create fragment shader"); glDeleteShader(vs); return; }
 
 	tmp.length = 0;
 	GenFragmentShader(shader, &tmp);
-	if (!CompileShader(_GL_FRAGMENT_SHADER, &tmp, &fs)) {
+	if (!CompileShader(fs, &tmp)) {
 		/* Sometimes fails 'highp precision is not supported in fragment shader' */
 		/* So try compiling shader again without highp precision */
-		glDeleteShader(fs);
 		shader->features |= FTR_FS_MEDIUMP;
 
 		tmp.length = 0;
 		GenFragmentShader(shader, &tmp);
-		if (!CompileShader(_GL_FRAGMENT_SHADER, &tmp, &fs)) ShaderFailed(fs);
+		if (!CompileShader(fs, &tmp)) ShaderFailed(fs);
 	}
 
 
