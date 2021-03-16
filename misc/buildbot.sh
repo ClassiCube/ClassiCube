@@ -112,7 +112,7 @@ build_rpi() {
 }
 
 # ----------------------------- compile android
-DROID_FLAGS="-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic"
+DROID_FLAGS="-fPIC -shared -s -O1 -fvisibility=hidden -rdynamic -funwind-tables"
 DROID_LIBS="-lGLESv2 -lEGL -lm -landroid -llog"
 NDK_ROOT="/home/buildbot/android/android-ndk-r22/toolchains/llvm/prebuilt/linux-x86_64/bin"
 TOOLS_ROOT="/home/buildbot/android/sdk/build-tools/26.0.0"
