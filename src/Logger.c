@@ -33,6 +33,8 @@
 /* Need this to detect macOS < 10.4, and switch to NS* api instead if so */
 #include <AvailabilityMacros.h>
 #endif
+/* Only show up to 40 frames in backtrace */
+#define MAX_BACKTRACE_FRAMES 40
 
 
 /*########################################################################################################################*
@@ -157,7 +159,7 @@ void Logger_SysWarn2(cc_result res, const char* action, const cc_string* path) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------Backtracing-------------------------------------------------------*
+*------------------------------------------------------Frame dumping------------------------------------------------------*
 *#########################################################################################################################*/
 static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, const char* symName, const char* modName) {
 	cc_string module;
@@ -177,10 +179,77 @@ static void PrintFrame(cc_string* str, cc_uintptr addr, cc_uintptr symAddr, cons
 }
 
 #if defined CC_BUILD_WEB
+/* No stack frames for web */
+#elif defined CC_BUILD_WIN
+struct SymbolAndName { IMAGEHLP_SYMBOL symbol; char name[256]; };
+static void DumpFrame(HANDLE process, cc_string* trace, cc_uintptr addr) {
+	char strBuffer[512]; cc_string str;
+	String_InitArray(str, strBuffer);
+
+	struct SymbolAndName s = { 0 };
+	s.symbol.MaxNameLength = 255;
+	s.symbol.SizeOfStruct  = sizeof(IMAGEHLP_SYMBOL);
+	SymGetSymFromAddr(process, addr, NULL, &s.symbol);
+
+	IMAGEHLP_MODULE m = { 0 };
+	m.SizeOfStruct    = sizeof(IMAGEHLP_MODULE);
+	SymGetModuleInfo(process, addr, &m);
+
+	PrintFrame(&str, addr, s.symbol.Address, s.symbol.Name, m.ModuleName);
+	String_AppendString(trace, &str);
+
+	/* This function only works for .pdb debug info */
+	/* This function is also missing on Windows98 + KernelEX */
+#if _MSC_VER
+	IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
+	line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
+	if (SymGetLineFromAddr(process, addr, &lineOffset, &line)) {
+		String_Format2(&str, "  line %i in %c\r\n", &line.LineNumber, line.FileName);
+	}
+#endif
+	Logger_Log(&str);
+}
+#elif defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
+/* dladdr does not exist prior to macOS tiger */
+static void DumpFrame(cc_string* trace, void* addr) {
+	cc_string str; char strBuffer[384];
+	String_InitArray(str, strBuffer);
+	/* alas NSModuleForSymbol doesn't work with raw addresses */
+
+	PrintFrame(&str, (cc_uintptr)addr, 0, NULL, NULL);
+	String_AppendString(trace, &str);
+	Logger_Log(&str);
+}
+#elif defined CC_BUILD_POSIX
+/* need to define __USE_GNU for dladdr */
+#ifndef __USE_GNU
+#define __USE_GNU
+#endif
+#include <dlfcn.h>
+#undef __USE_GNU
+
+static void DumpFrame(cc_string* trace, void* addr) {
+	cc_string str; char strBuffer[384];
+	Dl_info s;
+
+	String_InitArray(str, strBuffer);
+	s.dli_sname = NULL;
+	s.dli_fname = NULL;
+	dladdr(addr, &s);
+
+	PrintFrame(&str, (cc_uintptr)addr, (cc_uintptr)s.dli_saddr, s.dli_sname, s.dli_fname);
+	String_AppendString(trace, &str);
+	Logger_Log(&str);
+}
+#endif
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------Backtracing-------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_WEB
 void Logger_Backtrace(cc_string* trace, void* ctx) { }
 #elif defined CC_BUILD_WIN
-struct SymbolAndName { IMAGEHLP_SYMBOL Symbol; char Name[256]; };
-
 static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 	STACKFRAME frame = { 0 };
 	HANDLE process, thread;
@@ -218,81 +287,20 @@ static int GetFrames(CONTEXT* ctx, cc_uintptr* addrs, int max) {
 }
 
 void Logger_Backtrace(cc_string* trace, void* ctx) {
-	char strBuffer[512]; cc_string str;
-	cc_uintptr addrs[40];
+	cc_uintptr addrs[MAX_BACKTRACE_FRAMES];
 	int i, frames;
 	HANDLE process;
-	cc_uintptr addr;
 
 	process = GetCurrentProcess();
 	SymInitialize(process, NULL, TRUE);
-	frames  = GetFrames((CONTEXT*)ctx, addrs, 40);
+	frames  = GetFrames((CONTEXT*)ctx, addrs, MAX_BACKTRACE_FRAMES);
 
 	for (i = 0; i < frames; i++) {
-		addr = addrs[i];
-		String_InitArray(str, strBuffer);
-
-		struct SymbolAndName s = { 0 };
-		s.Symbol.MaxNameLength = 255;
-		s.Symbol.SizeOfStruct  = sizeof(IMAGEHLP_SYMBOL);
-		SymGetSymFromAddr(process, addr, NULL, &s.Symbol);
-
-		IMAGEHLP_MODULE m = { 0 };
-		m.SizeOfStruct = sizeof(IMAGEHLP_MODULE);
-		SymGetModuleInfo(process, addr, &m);
-
-		PrintFrame(&str, addr, s.Symbol.Address, s.Symbol.Name, m.ModuleName);
-		String_AppendString(trace, &str);
-
-/* This function only works for .pdb debug info */
-/* This function is also missing on Windows98 + KernelEX */
-#if _MSC_VER
-		IMAGEHLP_LINE line = { 0 }; DWORD lineOffset;
-		line.SizeOfStruct = sizeof(IMAGEHLP_LINE);
-		if (SymGetLineFromAddr(process, addr, &lineOffset, &line)) {
-			String_Format2(&str, "  line %i in %c\r\n", &line.LineNumber, line.FileName);
-		}
-#endif
-		Logger_Log(&str);
+		DumpFrame(process, trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
 }
-#elif defined CC_BUILD_POSIX
-#ifndef __USE_GNU
-/* need to define __USE_GNU for dladdr */
-#define __USE_GNU
-#endif
-
-#if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
-static void DumpFrame(cc_string* trace, void* addr) {
-	cc_string str; char strBuffer[384];
-	String_InitArray(str, strBuffer);
-	/* alas NSModuleForSymbol doesn't work with raw addresses */
-
-	PrintFrame(&str, (cc_uintptr)addr, 0, NULL, NULL);
-	String_AppendString(trace, &str);
-	Logger_Log(&str);
-}
-#else
-#include <dlfcn.h>
-#undef __USE_GNU
-
-static void DumpFrame(cc_string* trace, void* addr) {
-	cc_string str; char strBuffer[384];
-	Dl_info s;
-
-	String_InitArray(str, strBuffer);
-	s.dli_sname = NULL;
-	s.dli_fname = NULL;
-	dladdr(addr, &s);
-
-	PrintFrame(&str, (cc_uintptr)addr, (cc_uintptr)s.dli_saddr, s.dli_sname, s.dli_fname);
-	String_AppendString(trace, &str);
-	Logger_Log(&str);
-}
-#endif
-
-#if defined CC_BUILD_ANDROID
+#elif defined CC_BUILD_ANDROID
 /* android's bionic libc doesn't provide backtrace (execinfo.h) */
 #include <unwind.h>
 
@@ -311,23 +319,23 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 #elif defined CC_BUILD_DARWIN
 /* backtrace is only available on macOS since 10.5 */
 void Logger_Backtrace(cc_string* trace, void* ctx) {
-	void* addrs[40];
+	void* addrs[MAX_BACKTRACE_FRAMES];
 	unsigned i, frames;
 	/* See lldb/tools/debugserver/source/MacOSX/stack_logging.h */
-	/* backtrace uses this internally too, and exists since macOS 10.1 */
+	/*  backtrace uses this internally too, and exists since macOS 10.1 */
 	extern void thread_stack_pcs(void** buffer, unsigned max, unsigned* nb);
 
-	thread_stack_pcs(addrs, 40, &frames);
+	thread_stack_pcs(addrs, MAX_BACKTRACE_FRAMES, &frames);
 	for (i = 1; i < frames; i++) { /* 1 to skip thread_stack_pcs frame */
 		DumpFrame(trace, addrs[i]);
 	}
 	String_AppendConst(trace, _NL);
 }
-#else
+#elif defined CC_BUILD_POSIX
 #include <execinfo.h>
 void Logger_Backtrace(cc_string* trace, void* ctx) {
-	void* addrs[40];
-	int i, frames = backtrace(addrs, 40);
+	void* addrs[MAX_BACKTRACE_FRAMES];
+	int i, frames = backtrace(addrs, MAX_BACKTRACE_FRAMES);
 
 	for (i = 0; i < frames; i++) {
 		DumpFrame(trace, addrs[i]);
@@ -335,7 +343,6 @@ void Logger_Backtrace(cc_string* trace, void* ctx) {
 	String_AppendConst(trace, _NL);
 }
 #endif
-#endif /* CC_BUILD_POSIX */
 static void DumpBacktrace(cc_string* str, void* ctx) {
 	static const cc_string backtrace = String_FromConst("-- backtrace --" _NL);
 	Logger_Log(&backtrace);
