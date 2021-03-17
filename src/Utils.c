@@ -241,9 +241,10 @@ cc_result EntryList_Load(struct StringsBuffer* list, const char* file, char sepa
 
 	/* ReadLine reads single byte at a time */
 	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
-	String_InitArray(entry, entryBuffer);
-
 	for (;;) {
+		/* Must be re-initialised each time as String_UNSAFE_TrimStart adjusts entry.buffer */
+		String_InitArray(entry, entryBuffer);
+
 		res = Stream_ReadLine(&buffered, &entry);
 		if (res == ERR_END_OF_STREAM) break;
 		if (res) { Logger_SysWarn2(res, "reading from", &path); break; }
