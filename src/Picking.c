@@ -249,7 +249,7 @@ void Picking_CalcPickedBlock(const Vec3* origin, const Vec3* dir, float reach, s
 void Picking_ClipCameraPos(const Vec3* origin, const Vec3* dir, float reach, struct RayTracer* t) {
 	cc_bool noClip = (!Camera.Clipping || LocalPlayer_Instance.Hacks.Noclip)
 						&& LocalPlayer_Instance.Hacks.CanNoclip;
-	if (noClip || !RayTrace(t, origin, dir, reach, ClipCamera)) {
+	if (noClip || !World.Loaded || !RayTrace(t, origin, dir, reach, ClipCamera)) {
 		RayTracer_SetInvalid(t);
 		Vec3_Mul1(&t->Intersect, dir, reach);           /* intersect = dir * reach */
 		Vec3_Add(&t->Intersect, origin, &t->Intersect); /* intersect = origin + dir * reach */
