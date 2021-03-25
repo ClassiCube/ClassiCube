@@ -740,9 +740,8 @@ void InputHandler_PlaceBlock(void) {
 	if (Blocks.Draw[block] == DRAW_GAS && Blocks.Draw[old] != DRAW_GAS) return;
 
 	/* undeletable non-solid blocks can't be replaced with other blocks */
-	if ((Blocks.Collide[old] == COLLIDE_GAS || Blocks.Collide[old] == COLLIDE_LIQUID
-	    || Blocks.Collide[old] == COLLIDE_LIQUID_LAVA || Blocks.Collide[old] == COLLIDE_LIQUID_WATER)
-	    && !Blocks.CanDelete[old]) return;
+	if ((Blocks.Collide[old] == COLLIDE_GAS || Blocks.Collide[old] == COLLIDE_LIQUID)
+	   && !Blocks.CanDelete[old]) return;
 
 	if (!CheckIsFree(block)) return;
 
