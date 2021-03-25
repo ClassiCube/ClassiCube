@@ -738,6 +738,12 @@ void InputHandler_PlaceBlock(void) {
 	if (Game_CanPick(old) || !Blocks.CanPlace[block]) return;
 	/* air-ish blocks can only replace over other air-ish blocks */
 	if (Blocks.Draw[block] == DRAW_GAS && Blocks.Draw[old] != DRAW_GAS) return;
+
+	/* undeletable non-solid blocks can't be replaced with other blocks */
+	if ((Blocks.Collide[old] == COLLIDE_GAS || Blocks.Collide[old] == COLLIDE_LIQUID
+	    || Blocks.Collide[old] == COLLIDE_LIQUID_LAVA || Blocks.Collide[old] == COLLIDE_LIQUID_WATER)
+	    && !Blocks.CanDelete[old]) return;
+
 	if (!CheckIsFree(block)) return;
 
 	Game_ChangeBlock(pos.X, pos.Y, pos.Z, block);
