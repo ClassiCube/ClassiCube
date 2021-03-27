@@ -1596,17 +1596,18 @@ static void Platform_InitStopwatch(void) {
 	} else { sw_freqDiv = 10; }
 }
 
-typedef BOOL (WINAPI *FUNC_AttachConsole)(DWORD dwProcessId);
-static void AttachParentConsole(void) {
-	static const cc_string kernel32 = String_FromConst("KERNEL32.DLL");
-	FUNC_AttachConsole attach;
-	void* lib;
+static BOOL (WINAPI *_AttachConsole)(DWORD processId);
+static BOOL (WINAPI *_IsDebuggerPresent)(void);
 
-	/* NOTE: Need to dynamically load, not supported on Windows 2000 */
-	if ((lib = DynamicLib_Load2(&kernel32))) {
-		attach = (FUNC_AttachConsole)DynamicLib_Get2(lib, "AttachConsole");
-		if (attach) attach((DWORD)-1); /* ATTACH_PARENT_PROCESS */
-	}
+static void LoadKernelFuncs(void) {
+	static const struct DynamicLibSym funcs[2] = {
+		DynamicLib_Sym(AttachConsole), DynamicLib_Sym(IsDebuggerPresent)
+	};
+	static const cc_string kernel32 = String_FromConst("KERNEL32.DLL");
+
+	void* lib = DynamicLib_Load2(&kernel32);
+	if (!lib) { Logger_DynamicLibWarn("loading", &kernel32); return; }
+	DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
 }
 
 void Platform_Init(void) {
@@ -1619,9 +1620,10 @@ void Platform_Init(void) {
 	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (res) Logger_SysWarn(res, "starting WSA");
 
-	hasDebugger = IsDebuggerPresent();
+	LoadKernelFuncs();
+	if (_IsDebuggerPresent) hasDebugger = _IsDebuggerPresent();
 	/* For when user runs from command prompt */
-	AttachParentConsole();
+	if (_AttachConsole) _AttachConsole(-1); /* ATTACH_PARENT_PROCESS */
 
 	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (conHandle == INVALID_HANDLE_VALUE) conHandle = NULL;

@@ -145,7 +145,7 @@ public class MainActivity extends Activity {
 			System.loadLibrary("classicube");
 		} catch (UnsatisfiedLinkError ex) {
 			ex.printStackTrace();
-			showAlert("Failed to start", ex.getMessage());
+			showAlertAsync("Failed to start", ex.getMessage());
 			return;
 		}
 		
@@ -679,7 +679,7 @@ public class MainActivity extends Activity {
 
 	final Semaphore dialogSem = new Semaphore(0, true);
 
-	public void showAlert(final String title, final String message) {
+	void showAlertAsync(final String title, final String message) {
 		//final Activity activity = this;
 		// setTitle, setMessage, setPositiveButton, setCancelable, create, show - API level 1
 		runOnUiThread(new Runnable() {
@@ -696,7 +696,11 @@ public class MainActivity extends Activity {
 				dlg.create().show();
 			}
 		});
+	}
 
+	
+	public void showAlert(final String title, final String message) {
+		showAlertAsync(title, message);
 		// wait for dialog to be closed
 		// TODO: this fails because multiple dialog boxes show
 	}
