@@ -1763,11 +1763,28 @@ void Platform_Init(void) { Platform_InitPosix(); }
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
 #if defined CC_BUILD_WIN
+static BOOL (WINAPI *_CryptProtectData  )(DATA_BLOB* dataIn, PCWSTR dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
+static BOOL (WINAPI *_CryptUnprotectData)(DATA_BLOB* dataIn, PWSTR* dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
+
+static void LoadCryptFuncs(void) {
+	static const struct DynamicLibSym funcs[2] = {
+		DynamicLib_Sym(CryptProtectData), DynamicLib_Sym(CryptUnprotectData)
+	};
+	static const cc_string crypt32 = String_FromConst("CRYPT32.DLL");
+
+	void* lib = DynamicLib_Load2(&crypt32);
+	if (!lib) { Logger_DynamicLibWarn("loading", &crypt32); return; }
+	DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
+}
+
 cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
 	DATA_BLOB input, output;
 	int i;
 	input.cbData = len; input.pbData = (BYTE*)data;
-	if (!CryptProtectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
+
+	if (!_CryptProtectData) LoadCryptFuncs();
+	if (!_CryptProtectData) return ERR_NOT_SUPPORTED;
+	if (!_CryptProtectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
 
 	for (i = 0; i < output.cbData; i++) {
 		String_Append(dst, output.pbData[i]);
@@ -1779,7 +1796,10 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	DATA_BLOB input, output;
 	int i;
 	input.cbData = len; input.pbData = (BYTE*)data;
-	if (!CryptUnprotectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
+
+	if (!_CryptUnprotectData) LoadCryptFuncs();
+	if (!_CryptUnprotectData) return ERR_NOT_SUPPORTED;
+	if (!_CryptUnprotectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
 
 	for (i = 0; i < output.cbData; i++) {
 		String_Append(dst, output.pbData[i]);
