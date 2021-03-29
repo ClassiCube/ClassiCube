@@ -3773,6 +3773,8 @@ static void ShowDialogCore(const char* title, const char* msg) {
 
 	Platform_LogConst(title);
 	Platform_LogConst(msg);
+	/* in case surface destroyed message has arrived */
+	Window_ProcessEvents();
 
 	args[0].l = JavaMakeConst(env, title);
 	args[1].l = JavaMakeConst(env, msg);

@@ -268,7 +268,9 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onStop() { 
 		super.onStop();
-		pushCmd(CMD_APP_STOP); 
+		pushCmd(CMD_APP_STOP);
+		// In case game thread is blocked on showing dialog
+		releaseDialogSem();
 	}
 	
 	@Override
@@ -281,7 +283,7 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onPause() {
 		// setContentView - API level 1
-		// can't use null.. TODO is there a better way?
+		// Can't use null.. TODO is there a better way?
 		setContentView(new View(this));
 		super.onPause();
 		pushCmd(CMD_APP_PAUSE); 
@@ -405,6 +407,9 @@ public class MainActivity extends Activity {
 			//08-02 21:03:02.968: E/SurfaceFlinger(1350): Failed to find layer (SurfaceView - com.classicube.ClassiCube/com.classicube.MainActivity#0) in layer parent (no-parent).
 	
 			MainActivity.this.pushCmd(CMD_WIN_DESTROYED);
+			// In case game thread is blocked showing a dialog on main thread
+			releaseDialogSem();
+			
 			// per the android docs for SurfaceHolder.Callback
 			// "If you have a rendering thread that directly accesses the surface, you must ensure
 			// that thread is no longer touching the Surface before returning from this function."
@@ -678,6 +683,12 @@ public class MainActivity extends Activity {
 	public float getDpiY() { return getMetrics().density; }
 
 	final Semaphore dialogSem = new Semaphore(0, true);
+	
+	void releaseDialogSem() {
+		// Only release when no free permits (otherwise showAlert doesn't block when called)
+		if (dialogSem.availablePermits() > 0) return;
+		dialogSem.release();
+	}
 
 	void showAlertAsync(final String title, final String message) {
 		//final Activity activity = this;
@@ -687,10 +698,9 @@ public class MainActivity extends Activity {
 				AlertDialog.Builder dlg = new AlertDialog.Builder(MainActivity.this);
 				dlg.setTitle(title);
 				dlg.setMessage(message);
+				
 				dlg.setPositiveButton("Close", new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int id) {
-						dialogSem.release();
-					}
+					public void onClick(DialogInterface dialog, int id) { releaseDialogSem(); }
 				});
 				dlg.setCancelable(false);
 				dlg.create().show();
@@ -701,8 +711,9 @@ public class MainActivity extends Activity {
 	
 	public void showAlert(final String title, final String message) {
 		showAlertAsync(title, message);
-		// wait for dialog to be closed
-		// TODO: this fails because multiple dialog boxes show
+		try {
+			dialogSem.acquire(); // Block game thread
+		} catch (InterruptedException e) { }
 	}
 
 	public int getWindowState() { return fullscreen ? 1 : 0; }
