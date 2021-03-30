@@ -742,13 +742,7 @@ void __attribute__((optimize("O0"))) Logger_Abort2(cc_result result, const char*
 void Logger_Abort2(cc_result result, const char* raw_msg) {
 #endif
 	CONTEXT ctx;
-#ifndef _M_IX86
-	/* This method is guaranteed to exist on 64 bit windows.  */
-	/* NOTE: This is missing in 32 bit Windows 2000 however,  */
-	/*  so an alternative is provided for MinGW below so that */
-	/*  the game can cross-compiled for Windows 98 / 2000 */
-	RtlCaptureContext(&ctx);
-#elif __GNUC__
+#if _M_IX86 && __GNUC__
 	/* Stack frame layout on x86: */
 	/*  [ebp] is previous frame's EBP */
 	/*  [ebp+4] is previous frame's EIP (return address) */
@@ -765,6 +759,12 @@ void Logger_Abort2(cc_result result, const char* raw_msg) {
 		: "eax", "memory"
 	);
 	ctx.ContextFlags = CONTEXT_CONTROL;
+#else
+	/* This method is guaranteed to exist on 64 bit windows.  */
+	/* NOTE: This is missing in 32 bit Windows 2000 however,  */
+	/*  so an alternative is provided for MinGW above so that */
+	/*  the game can be cross-compiled for Windows 98 / 2000  */
+	RtlCaptureContext(&ctx);
 #endif
 	AbortCommon(result, raw_msg, &ctx);
 }
