@@ -69,31 +69,35 @@ static struct HUDScreen {
 	struct TextWidget line1, line2;
 	struct TextAtlas posAtlas;
 	double accumulator;
-	int frames, fps;
+	int frames;
 	cc_bool hacksChanged;
 	float lastSpeed;
 	int lastFov;
 	struct HotbarWidget hotbar;
 } HUDScreen_Instance;
 
-static void HUDScreen_MakeText(struct HUDScreen* s, cc_string* status) {
+static void HUDScreen_UpdateLine1(struct HUDScreen* s) {
+	cc_string status; char statusBuffer[STRING_SIZE * 2];
 	int indices, ping;
-	s->fps = (int)(s->frames / s->accumulator);
-	String_Format1(status, "%i fps, ", &s->fps);
+	int fps = (int)(s->frames / s->accumulator);
+
+	String_InitArray(status, statusBuffer);
+	String_Format1(&status, "%i fps, ", &fps);
 
 	if (Game_ClassicMode) {
-		String_Format1(status, "%i chunk updates", &Game.ChunkUpdates);
+		String_Format1(&status, "%i chunk updates", &Game.ChunkUpdates);
 	} else {
 		if (Game.ChunkUpdates) {
-			String_Format1(status, "%i chunks/s, ", &Game.ChunkUpdates);
+			String_Format1(&status, "%i chunks/s, ", &Game.ChunkUpdates);
 		}
 
 		indices = ICOUNT(Game_Vertices);
-		String_Format1(status, "%i vertices", &indices);
+		String_Format1(&status, "%i vertices", &indices);
 
 		ping = Ping_AveragePingMS();
-		if (ping) String_Format1(status, ", ping %i ms", &ping);
+		if (ping) String_Format1(&status, ", ping %i ms", &ping);
 	}
+	TextWidget_Set(&s->line1, &status, &s->font);
 }
 
 static void HUDScreen_DrawPosition(struct HUDScreen* s) {
@@ -157,18 +161,13 @@ static void HUDScreen_UpdateHackState(struct HUDScreen* s) {
 
 static void HUDScreen_Update(void* screen, double delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
-	cc_string status; char statusBuffer[STRING_SIZE * 2];
-
 	s->frames++;
 	s->accumulator += delta;
 	if (s->accumulator < 1.0) return;
 
-	String_InitArray(status, statusBuffer);
-	HUDScreen_MakeText(s, &status);
-
-	TextWidget_Set(&s->line1, &status, &s->font);
+	if (Gui.ShowFPS) HUDScreen_UpdateLine1(s);
 	s->accumulator = 0.0;
-	s->frames = 0;
+	s->frames      = 0;
 	Game.ChunkUpdates = 0;
 }
 

@@ -2789,6 +2789,7 @@ static EM_BOOL OnMouseWheel(int type, const EmscriptenWheelEvent* ev, void* data
 
 static EM_BOOL OnMouseButton(int type, const EmscriptenMouseEvent* ev, void* data) {
 	cc_bool down = type == EMSCRIPTEN_EVENT_MOUSEDOWN;
+	/* https://stackoverflow.com/questions/60895686/how-to-get-mouse-buttons-4-5-browser-back-browser-forward-working-in-firef */
 	switch (ev->button) {
 		case 0: Input_Set(KEY_LMOUSE, down); break;
 		case 1: Input_Set(KEY_MMOUSE, down); break;
