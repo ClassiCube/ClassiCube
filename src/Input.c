@@ -739,9 +739,8 @@ void InputHandler_PlaceBlock(void) {
 	/* air-ish blocks can only replace over other air-ish blocks */
 	if (Blocks.Draw[block] == DRAW_GAS && Blocks.Draw[old] != DRAW_GAS) return;
 
-	/* undeletable non-solid blocks can't be replaced with other blocks */
-	if ((Blocks.Collide[old] == COLLIDE_GAS || Blocks.Collide[old] == COLLIDE_LIQUID)
-	   && !Blocks.CanDelete[old]) return;
+	/* undeletable gas blocks can't be replaced with other blocks */
+	if (Blocks.Collide[old] == COLLIDE_GAS && !Blocks.CanDelete[old]) return;
 
 	if (!CheckIsFree(block)) return;
 
