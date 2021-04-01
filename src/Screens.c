@@ -83,6 +83,8 @@ static void HUDScreen_UpdateLine1(struct HUDScreen* s) {
 
 	String_InitArray(status, statusBuffer);
 	String_Format1(&status, "%i fps, ", &fps);
+	/* Don't remake texture when FPS isn't being shown */
+	if (!Gui.ShowFPS && s->line1.tex.ID) return;
 
 	if (Game_ClassicMode) {
 		String_Format1(&status, "%i chunk updates", &Game.ChunkUpdates);
@@ -165,7 +167,7 @@ static void HUDScreen_Update(void* screen, double delta) {
 	s->accumulator += delta;
 	if (s->accumulator < 1.0) return;
 
-	if (Gui.ShowFPS) HUDScreen_UpdateLine1(s);
+	HUDScreen_UpdateLine1(s);
 	s->accumulator = 0.0;
 	s->frames      = 0;
 	Game.ChunkUpdates = 0;
