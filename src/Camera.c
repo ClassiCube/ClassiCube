@@ -176,9 +176,16 @@ static Vec2 ThirdPersonCamera_GetOrientation(void) {
 	return v;
 }
 
+static float ThirdPersonCamera_GetZoom(void) {
+	float dist = cam_isForwardThird ? dist_forward : dist_third;
+	/* Don't allow zooming out when -fly */
+	if (dist > DEF_ZOOM && !LocalPlayer_CheckCanZoom()) dist = DEF_ZOOM;
+	return dist;
+}
+
 static Vec3 ThirdPersonCamera_GetPosition(float t) {
 	struct Entity* p = &LocalPlayer_Instance.Base;
-	float dist = cam_isForwardThird ? dist_forward : dist_third;
+	float dist = ThirdPersonCamera_GetZoom();
 	Vec3 target, dir;
 	Vec2 rot;
 
@@ -197,9 +204,6 @@ static Vec3 ThirdPersonCamera_GetPosition(float t) {
 static cc_bool ThirdPersonCamera_Zoom(float amount) {
 	float* dist   = cam_isForwardThird ? &dist_forward : &dist_third;
 	float newDist = *dist - amount;
-
-	/* Don't allow zooming out when -fly */
-	if (newDist > DEF_ZOOM && !LocalPlayer_CheckCanZoom()) newDist = DEF_ZOOM;
 
 	*dist = max(newDist, 2.0f); 
 	return true;
@@ -234,8 +238,6 @@ static void OnHacksChanged(void* obj) {
 	struct HacksComp* h = &LocalPlayer_Instance.Hacks;
 	/* Leave third person if not allowed anymore */
 	if (!h->CanUseThirdPerson || !h->Enabled) Camera_CycleActive();
-	/* Check if third person camera is allowed to be scrolled out */
-	if (Camera.Active->isThirdPerson) ThirdPersonCamera_Zoom(0);
 }
 
 void Camera_CycleActive(void) {
