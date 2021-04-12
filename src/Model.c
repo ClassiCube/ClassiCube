@@ -757,8 +757,8 @@ static void CustomModel_Draw(struct Entity* e) {
 	int partIndex;
 
 	Model_ApplyTexture(e);
-	Models.uScale = 1.0f / cm->uScale;
-	Models.vScale = 1.0f / cm->vScale;
+	Models.uScale = e->uScale / cm->uScale;
+	Models.vScale = e->vScale / cm->vScale;
 
 	for (partIndex = 0; partIndex < cm->numParts; partIndex++) {
 		CustomModel_DrawPart(&cm->parts[partIndex], cm, e);
