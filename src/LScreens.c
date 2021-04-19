@@ -1298,8 +1298,9 @@ static void ServersScreen_Show(struct LScreen* s_) {
 	Drawer2D_MakeFont(&s->rowFont, 11, FONT_FLAGS_NONE);
 
 	s->table.rowFont = &s->rowFont;
-	/* also resets hash and filter */
 	LTable_Reset(&s->table);
+	LInput_ClearText(&s->iptHash);
+	LInput_ClearText(&s->iptSearch);
 
 	ServersScreen_ReloadServers(s);
 	/* This is so typing on keyboard by default searchs server list */

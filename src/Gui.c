@@ -385,17 +385,6 @@ int Widget_Contains(void* widget, int x, int y) {
 /*########################################################################################################################*
 *-------------------------------------------------------Screen base-------------------------------------------------------*
 *#########################################################################################################################*/
-void Screen_RenderWidgets(void* screen, double delta) {
-	struct Screen* s = (struct Screen*)screen;
-	struct Widget** widgets = s->widgets;
-	int i;
-
-	for (i = 0; i < s->numWidgets; i++) {
-		if (!widgets[i]) continue;
-		Elem_Render(widgets[i], delta);
-	}
-}
-
 void Screen_Render2Widgets(void* screen, double delta) {
 	struct Screen* s = (struct Screen*)screen;
 	struct Widget** widgets = s->widgets;

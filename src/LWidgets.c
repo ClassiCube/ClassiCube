@@ -529,6 +529,11 @@ void LInput_SetText(struct LInput* w, const cc_string* text_) {
 	LInput_ClampCaret(w);
 }
 
+void LInput_ClearText(struct LInput* w) {
+	w->text.length = 0;
+	w->caretPos    = -1;
+}
+
 static CC_NOINLINE cc_bool LInput_AppendRaw(struct LInput* w, char c) {
 	if (w->TextFilter(c) && w->text.length < w->text.capacity) {
 		if (w->caretPos == -1) {
@@ -587,10 +592,9 @@ void LInput_Delete(struct LInput* w) {
 
 void LInput_Clear(struct LInput* w) {
 	if (!w->text.length) return;
-	w->text.length = 0;
+	LInput_ClearText(w);
 
 	if (w->TextChanged) w->TextChanged(w);
-	w->caretPos = -1;
 	LWidget_Redraw(w);
 }
 
@@ -1172,9 +1176,6 @@ void LTable_Reset(struct LTable* w) {
 	w->rowsCount = 0;
 	sortingCol   = -1;
 	w->_wheelAcc = 0.0f;
-
-	w->selectedHash->length = 0;
-	w->filter->length       = 0;
 }
 
 void LTable_ApplyFilter(struct LTable* w) {

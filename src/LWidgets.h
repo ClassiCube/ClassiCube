@@ -85,6 +85,7 @@ struct LInput {
 };
 CC_NOINLINE void LInput_Init(struct LScreen* s, struct LInput* w, int width, const char* hintText);
 CC_NOINLINE void LInput_SetText(struct LInput* w, const cc_string* text);
+CC_NOINLINE void LInput_ClearText(struct LInput* w);
 
 /* Appends a character to the currently entered text. */
 CC_NOINLINE void LInput_Append(struct LInput* w, char c);

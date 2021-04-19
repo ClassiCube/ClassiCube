@@ -102,8 +102,6 @@ struct ScreenVTABLE {
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 struct Screen { Screen_Body };
-/* Calls Elem_Render on each widget in the screen. */
-void Screen_RenderWidgets(void* screen, double delta);
 /* Calls Widget_Render2 on each widget in the screen. */
 void Screen_Render2Widgets(void* screen, double delta);
 void Screen_UpdateVb(void* screen);
