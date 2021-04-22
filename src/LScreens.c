@@ -751,7 +751,8 @@ static void MainScreen_Login(void* w, int idx) { MainScreen_DoLogin(); }
 
 static void MainScreen_Register(void* w, int idx) {
 	static const cc_string regUrl = String_FromConst(REGISTERNEW_URL);
-	Process_StartOpen(&regUrl);
+	cc_result res = Process_StartOpen(&regUrl);
+	if (res) Logger_SimpleWarn(res, "opening register webpage in browser");
 }
 
 static void MainScreen_Resume(void* w, int idx) {

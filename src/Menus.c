@@ -3480,7 +3480,8 @@ static struct Widget* urlwarning_widgets[6] = {
 
 static void UrlWarningOverlay_OpenUrl(void* screen, void* b) {
 	struct UrlWarningOverlay* s = (struct UrlWarningOverlay*)screen;
-	Process_StartOpen(&s->url);
+	cc_result res = Process_StartOpen(&s->url);
+	if (res) Logger_SimpleWarn2(res, "opening url in browser", &s->url);
 	Gui_Remove((struct Screen*)s);
 }
 

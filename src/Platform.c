@@ -1085,19 +1085,24 @@ success:
 }
 
 void Process_Exit(cc_result code) { ExitProcess(code); }
-void Process_StartOpen(const cc_string* args) {
+cc_result Process_StartOpen(const cc_string* args) {
 	WCHAR str[NATIVE_STR_LEN];
+	cc_uintptr res;
 	Platform_EncodeUtf16(str, args);
-	ShellExecuteW(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
+
+	res = ShellExecuteW(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
+	/* MSDN: "If the function succeeds, it returns a value greater than 32. If the function fails, it returns an error value that indicates the cause of the failure" */
+	return res > 32 ? 0 : (cc_result)res;
 }
 #elif defined CC_BUILD_WEB
 cc_result Process_StartGame(const cc_string* args) { return ERR_NOT_SUPPORTED; }
 void Process_Exit(cc_result code) { exit(code); }
 
-void Process_StartOpen(const cc_string* args) {
+cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, args);
 	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
+	return 0;
 }
 #elif defined CC_BUILD_ANDROID
 static char gameArgsBuffer[512];
@@ -1109,8 +1114,9 @@ cc_result Process_StartGame(const cc_string* args) {
 }
 void Process_Exit(cc_result code) { exit(code); }
 
-void Process_StartOpen(const cc_string* args) {
+cc_result Process_StartOpen(const cc_string* args) {
 	JavaCall_String_Void("startOpen", args);
+	return 0;
 }
 #elif defined CC_BUILD_POSIX
 static cc_result Process_RawStart(const char* path, char** argv) {
@@ -1160,7 +1166,7 @@ void Process_Exit(cc_result code) { exit(code); }
 
 /* Opening browser/starting shell is not really standardised */
 #if defined CC_BUILD_MACOS
-void Process_StartOpen(const cc_string* args) {
+cc_result Process_StartOpen(const cc_string* args) {
 	UInt8 str[NATIVE_STR_LEN];
 	CFURLRef urlCF;
 	int len;
@@ -1169,18 +1175,20 @@ void Process_StartOpen(const cc_string* args) {
 	urlCF = CFURLCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, NULL);
 	LSOpenCFURLRef(urlCF, NULL);
 	CFRelease(urlCF);
+	return 0;
 }
 #elif defined CC_BUILD_HAIKU
-void Process_StartOpen(const cc_string* args) {
+cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	char* cmd[3];
 	Platform_EncodeUtf8(str, args);
 
 	cmd[0] = "open"; cmd[1] = str; cmd[2] = NULL;
 	Process_RawStart("open", cmd);
+	return 0;
 }
 #else
-void Process_StartOpen(const cc_string* args) {
+cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	char* cmd[3];
 	Platform_EncodeUtf8(str, args);
@@ -1188,6 +1196,7 @@ void Process_StartOpen(const cc_string* args) {
 	/* TODO: Can xdg-open be used on original Solaris, or is it just an OpenIndiana thing */
 	cmd[0] = "xdg-open"; cmd[1] = str; cmd[2] = NULL;
 	Process_RawStart("xdg-open", cmd);
+	return 0;
 }
 #endif
 

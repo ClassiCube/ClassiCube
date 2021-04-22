@@ -68,7 +68,7 @@ CC_API cc_result Process_StartGame(const cc_string* args);
 CC_API void Process_Exit(cc_result code);
 /* Starts the platform-specific program to open the given url or filename. */
 /* For example, provide a http:// url to open a website in the user's web browser. */
-CC_API void Process_StartOpen(const cc_string* args);
+CC_API cc_result Process_StartOpen(const cc_string* args);
 
 extern const char* const Updater_D3D9;
 extern const char* const Updater_OGL;
