@@ -2746,17 +2746,19 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 #include <emscripten/html5.h>
 #include <emscripten/key_codes.h>
 #include "Game.h"
-static cc_bool keyboardOpen, needResize;
+extern int interop_CanvasWidth(void); 
+extern int interop_CanvasHeight(void);
+extern int interop_ScreenWidth(void);
+extern int interop_ScreenHeight(void);
 
+static cc_bool keyboardOpen, needResize;
 static int RawDpiScale(int x)    { return (int)(x * emscripten_get_device_pixel_ratio()); }
-static int GetCanvasWidth(void)  { return EM_ASM_INT_V({ return Module['canvas'].width  }); }
-static int GetCanvasHeight(void) { return EM_ASM_INT_V({ return Module['canvas'].height }); }
-static int GetScreenWidth(void)  { return RawDpiScale(EM_ASM_INT_V({ return screen.width;  })); }
-static int GetScreenHeight(void) { return RawDpiScale(EM_ASM_INT_V({ return screen.height; })); }
+static int GetScreenWidth(void)  { return RawDpiScale(interop_ScreenWidth()); }
+static int GetScreenHeight(void) { return RawDpiScale(interop_ScreenHeight()); }
 
 static void UpdateWindowBounds(void) {
-	int width  = GetCanvasWidth();
-	int height = GetCanvasHeight();
+	int width  = interop_CanvasWidth();
+	int height = interop_CanvasHeight();
 	if (width == WindowInfo.Width && height == WindowInfo.Height) return;
 
 	WindowInfo.Width  = width;
@@ -2830,15 +2832,8 @@ static EM_BOOL OnMouseMove(int type, const EmscriptenMouseEvent* ev, void* data)
 	return true;
 }
 
-/* TODO: Also query mouse coordinates globally and reuse adjustXY here */
-/* Adjust from document coordinates to element coordinates */
-static void AdjustXY(int* x, int* y) {
-	EM_ASM_({
-		var canvasRect = Module['canvas'].getBoundingClientRect();
-		HEAP32[$0 >> 2] = HEAP32[$0 >> 2] - canvasRect.left;
-		HEAP32[$1 >> 2] = HEAP32[$1 >> 2] - canvasRect.top;
-	}, x, y);
-}
+/* TODO: Also query mouse coordinates globally (in OnMouseMove) and reuse interop_AdjustXY here */
+extern void interop_AdjustXY(int* x, int* y);
 
 static EM_BOOL OnTouchStart(int type, const EmscriptenTouchEvent* ev, void* data) {
 	const EmscriptenTouchPoint* t;
@@ -2848,7 +2843,7 @@ static EM_BOOL OnTouchStart(int type, const EmscriptenTouchEvent* ev, void* data
 		if (!t->isChanged) continue;
 		x = t->targetX; y = t->targetY;
 
-		AdjustXY( &x, &y);
+		interop_AdjustXY(&x, &y);
 		RescaleXY(&x, &y);
 		Input_AddTouch(t->identifier, x, y);
 	}
@@ -2865,7 +2860,7 @@ static EM_BOOL OnTouchMove(int type, const EmscriptenTouchEvent* ev, void* data)
 		if (!t->isChanged) continue;
 		x = t->targetX; y = t->targetY;
 
-		AdjustXY( &x, &y);
+		interop_AdjustXY(&x, &y);
 		RescaleXY(&x, &y);
 		Input_UpdateTouch(t->identifier, x, y);
 	}
@@ -2882,7 +2877,7 @@ static EM_BOOL OnTouchEnd(int type, const EmscriptenTouchEvent* ev, void* data) 
 		if (!t->isChanged) continue;
 		x = t->targetX; y = t->targetY;
 
-		AdjustXY( &x, &y);
+		interop_AdjustXY(&x, &y);
 		RescaleXY(&x, &y);
 		Input_RemoveTouch(t->identifier, x, y);
 	}
@@ -3087,6 +3082,10 @@ static void UnhookEvents(void) {
 	emscripten_set_touchcancel_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, 0, NULL);
 }
 
+extern int interop_IsAndroid(void);
+extern int interop_IsIOS(void);
+extern void interop_InitClipboardListeners(void);
+extern void interop_ForceTouchPageLayout(void);
 void Window_Init(void) {
 	int is_ios, droid;
 	DisplayInfo.Width  = GetScreenWidth();
@@ -3095,40 +3094,10 @@ void Window_Init(void) {
 
 	DisplayInfo.ScaleX = emscripten_get_device_pixel_ratio();
 	DisplayInfo.ScaleY = DisplayInfo.ScaleX;
+	interop_AddClipboardListeners();
 
-	/* Copy text, but only if user isn't selecting something else on the webpage */
-	/* (don't check window.clipboardData here, that's handled in Clipboard_SetText instead) */
-	EM_ASM(window.addEventListener('copy', 
-		function(e) {
-			if (window.getSelection && window.getSelection().toString()) return;
-			ccall('Window_RequestClipboardText', 'void');
-			if (!window.cc_copyText) return;
-
-			if (e.clipboardData) {
-				e.clipboardData.setData('text/plain', window.cc_copyText);
-				e.preventDefault();
-			}
-			window.cc_copyText = null;
-		});
-	);
-
-	/* Paste text (window.clipboardData is handled in Clipboard_GetText instead) */
-	EM_ASM(window.addEventListener('paste',
-		function(e) {
-			if (e.clipboardData) {
-				var contents = e.clipboardData.getData('text/plain');
-				ccall('Window_GotClipboardText', 'void', ['string'], [contents]);
-			}
-		});
-	);
-
-	droid  = EM_ASM_INT_V({ return /Android/i.test(navigator.userAgent); });
-	/* iOS 13 on iPad doesn't identify itself as iPad by default anymore */
-	/*  https://stackoverflow.com/questions/57765958/how-to-detect-ipad-and-ipad-os-version-in-ios-13-and-up */
-	is_ios = EM_ASM_INT_V({
-		return /iPhone|iPad|iPod/i.test(navigator.userAgent) || 
-		(navigator.platform === 'MacIntel' && navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
-	});
+	droid  = interop_IsAndroid();
+	is_ios = interop_IsIOS();
 	Input_SetTouchMode(is_ios || droid);
 
 	/* iOS shifts the whole webpage up when opening chat, which causes problems */
@@ -3139,38 +3108,25 @@ void Window_Init(void) {
 
 	/* Let the webpage know it needs to force a mobile layout */
 	if (!Input_TouchMode) return;
-	EM_ASM( if (typeof(forceTouchLayout) === 'function') forceTouchLayout(); );
+	interop_ForceTouchPageLayout();
 }
 
+extern void interop_InitContainer(void);
 void Window_Create(int width, int height) {
 	WindowInfo.Exists  = true;
 	WindowInfo.Focused = true;
 	HookEvents();
 	/* Let the webpage decide on initial bounds */
-	WindowInfo.Width  = GetCanvasWidth();
-	WindowInfo.Height = GetCanvasHeight();
-
-	/* Create wrapper div if necessary */
-	EM_ASM({
-		var agent  = navigator.userAgent;	
-		var canvas = Module['canvas'];
-		window.cc_container = document.body;
-
-		if (/Android/i.test(agent) && /Chrome/i.test(agent)) {
-			var wrapper = document.createElement("div");
-			wrapper.id  = 'canvas_wrapper';
-
-			canvas.parentNode.insertBefore(wrapper, canvas);
-			wrapper.appendChild(canvas);
-			window.cc_container = wrapper;
-		}
-	});
+	WindowInfo.Width  = interop_CanvasWidth();
+	WindowInfo.Height = interop_CanvasHeight();
+	interop_InitContainer();
 }
 
+extern void interop_SetPageTitle(const char* title);
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, title);
-	EM_ASM_({ document.title = UTF8ToString($0); }, str);
+	interop_SetPageTitle(str);
 }
 
 static char pasteBuffer[512];
@@ -3189,31 +3145,20 @@ EMSCRIPTEN_KEEPALIVE void Window_GotClipboardText(char* src) {
 	Event_RaiseInput(&InputEvents.Down, INPUT_CLIPBOARD_PASTE, 0);
 }
 
+extern void interop_TryGetClipboardText(void);
 void Clipboard_GetText(cc_string* value) {
-	/* For IE11, use window.clipboardData to get the clipboard */
-	EM_ASM_({ 
-		if (window.clipboardData) {
-			var contents = window.clipboardData.getData('Text');
-			ccall('Window_StoreClipboardText', 'void', ['string'], [contents]);
-		} 
-	});	
+	/* Window_StoreClipboardText may or may not be called by this */
+	interop_TryGetClipboardText();
+	
 	String_Copy(value, &pasteStr);
 	pasteStr.length = 0;
 }
+
+extern void interop_TrySetClipboardText(const char* text);
 void Clipboard_SetText(const cc_string* value) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, value);
-
-	/* For IE11, use window.clipboardData to set the clipboard */
-	/* For other browsers, instead use the window.copy events */
-	EM_ASM_({ 
-		if (window.clipboardData) {
-			if (window.getSelection && window.getSelection().toString()) return;
-			window.clipboardData.setData('Text', UTF8ToString($0));
-		} else {
-			window.cc_copyText = UTF8ToString($0);
-		}
-	}, str);
+	interop_TrySetClipboardText(str);
 }
 
 void Window_Show(void) { }
@@ -3224,6 +3169,8 @@ int Window_GetWindowState(void) {
 	return status.isFullscreen ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_NORMAL;
 }
 
+extern int interop_GetContainerID(void);
+extern void interop_EnterFullscreen(void);
 cc_result Window_EnterFullscreen(void) {
 	EmscriptenFullscreenStrategy strategy;
 	const char* target;
@@ -3235,28 +3182,15 @@ cc_result Window_EnterFullscreen(void) {
 	strategy.canvasResizedCallback         = OnCanvasResize;
 	strategy.canvasResizedCallbackUserData = NULL;
 
-	/* For chrome on android, need to make container div fullscreen instead */
-	res    = EM_ASM_INT_V({ return document.getElementById('canvas_wrapper') ? 1 : 0; });
+	/* TODO: Return container element ID instead of hardcoding here */
+	res    = interop_GetContainerID();
 	target = res ? "canvas_wrapper" : "#canvas";
 
 	res = emscripten_request_fullscreen_strategy(target, 1, &strategy);
 	if (res == EMSCRIPTEN_RESULT_NOT_SUPPORTED) res = ERR_NOT_SUPPORTED;
 	if (res) return res;
 
-	/* emscripten sets css size to screen's base width/height, */
-	/*  except that becomes wrong when device rotates. */
-	/* Better to just set CSS width/height to always be 100% */
-	EM_ASM({
-		var canvas = Module['canvas'];
-		canvas.style.width  = '100%';
-		canvas.style.height = '100%';
-	});
-
-	/* By default, pressing Escape will immediately exit fullscreen - which is */
-	/*   quite annoying given that it is also the Menu key. Some browsers allow */
-	/*   'locking' the Escape key, so that you have to hold down Escape to exit. */
-	/* NOTE: This ONLY works when the webpage is a https:// one */
-	EM_ASM({ try { navigator.keyboard.lock(["Escape"]); } catch (ex) { } });
+	interop_EnterFullscreen();
 	return 0;
 }
 
@@ -3286,6 +3220,7 @@ void Window_Close(void) {
 	UnhookEvents();
 }
 
+extern void interop_RequestCanvasResize(void);
 void Window_ProcessEvents(void) {
 	if (!needResize) return;
 	needResize = false;
@@ -3294,7 +3229,8 @@ void Window_ProcessEvents(void) {
 	if (Window_GetWindowState() == WINDOW_STATE_FULLSCREEN) {
 		SetFullscreenBounds();
 	} else {
-		EM_ASM( if (typeof(resizeGameCanvas) === 'function') resizeGameCanvas(); );
+		/* Webpage can adjust canvas size if it wants to */
+		interop_RequestCanvasResize();
 	}
 	UpdateWindowBounds();
 }
@@ -3304,16 +3240,14 @@ static void Cursor_GetRawPos(int* x, int* y) { *x = 0; *y = 0; }
 /* Not allowed to move cursor from javascript */
 void Cursor_SetPosition(int x, int y) { }
 
+extern void interop_SetCursorVisible(int visible);
 static void Cursor_DoSetVisible(cc_bool visible) {
-	if (visible) {
-		EM_ASM(Module['canvas'].style['cursor'] = 'default'; );
-	} else {
-		EM_ASM(Module['canvas'].style['cursor'] = 'none'; );
-	}
+	interop_SetCursorVisible(visible);
 }
 
-static void ShowDialogCore(const char* title, const char* msg) {
-	EM_ASM_({ alert(UTF8ToString($0) + "\n\n" + UTF8ToString($1)); }, title, msg);
+extern void interop_ShowDialog(const char* title, const char* msg);
+static void ShowDialogCore(const char* title, const char* msg) { 
+	interop_ShowDialog(title, msg); 
 }
 
 static OpenFileDialogCallback uploadCallback;
@@ -3326,45 +3260,21 @@ EMSCRIPTEN_KEEPALIVE void Window_OnFileUploaded(const char* src) {
 	uploadCallback = NULL;
 }
 
+extern void interop_OpenFileDialog(const char* filter);
 cc_result Window_OpenFileDialog(const char* filter, OpenFileDialogCallback callback) {
 	uploadCallback = callback;
-	EM_ASM_({
-		var elem = window.cc_uploadElem;
-		if (!elem) {
-			elem = document.createElement('input');
-			elem.setAttribute('type', 'file');
-			elem.setAttribute('style', 'display: none');
-			elem.accept = UTF8ToString($0);
-
-			elem.addEventListener('change', 
-				function(ev) {
-					var files = ev.target.files;
-					for (var i = 0; i < files.length; i++) {
-						var reader = new FileReader();
-						var name   = files[i].name;
-
-						reader.onload = function(e) { 
-							var data = new Uint8Array(e.target.result);
-							FS.createDataFile('/', name, data, true, true, true);
-							ccall('Window_OnFileUploaded', 'void', ['string'], ['/' + name]);
-							FS.unlink('/' + name);
-						};
-						reader.readAsArrayBuffer(files[i]);
-					}
-					window.cc_container.removeChild(window.cc_uploadElem);
-					window.cc_uploadElem = null;
-				}, false);
-			window.cc_uploadElem = elem;
-			window.cc_container.appendChild(elem);
-		}
-		elem.click();
-	}, filter);
+	/* Calls Window_OnFileUploaded on success */
+	interop_OpenFileDialog(filter);
 	return ERR_NOT_SUPPORTED;
 }
 
 void Window_AllocFramebuffer(struct Bitmap* bmp) { }
 void Window_DrawFramebuffer(Rect2D r)     { }
 void Window_FreeFramebuffer(struct Bitmap* bmp)  { }
+
+extern void interop_OpenKeyboard(const char* text, int type, const char* placeholder);
+extern void interop_SetKeyboardText(const char* text);
+extern void interop_CloseKeyboard(void);
 
 EMSCRIPTEN_KEEPALIVE void Window_OnTextChanged(const char* src) { 
 	cc_string str; char buffer[800];
@@ -3378,64 +3288,24 @@ void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) {
 	char str[NATIVE_STR_LEN];
 	keyboardOpen = true;
 	if (!Input_TouchMode) return;
+
 	Platform_EncodeUtf8(str, args->text);
 	Platform_LogConst("OPEN SESAME");
-
-	EM_ASM_({
-		var elem = window.cc_inputElem;
-		if (!elem) {
-			if ($1 == 1) {
-				elem = document.createElement('input');
-				elem.setAttribute('inputmode', 'decimal');
-			} else {
-				elem = document.createElement('textarea');
-			}
-			elem.setAttribute('style', 'position:absolute; left:0; bottom:0; margin: 0px; width: 100%');
-			elem.setAttribute('placeholder', UTF8ToString($2));
-			elem.value = UTF8ToString($0);
-
-			elem.addEventListener('input', 
-				function(ev) {
-					ccall('Window_OnTextChanged', 'void', ['string'], [ev.target.value]);
-				}, false);
-			window.cc_inputElem = elem;
-
-			window.cc_divElem = document.createElement('div');
-			window.cc_divElem.setAttribute('style', 'position:absolute; left:0; top:0; width:100%; height:100%; background-color: black; opacity:0.4; resize:none; pointer-events:none;');
-			
-			window.cc_container.appendChild(window.cc_divElem);
-			window.cc_container.appendChild(elem);
-		}
-		elem.focus();
-		elem.click();
-	}, str, args->type, args->placeholder);
+	interop_OpenKeyboard(str, args->type, args->placeholder);
 }
 
 void Window_SetKeyboardText(const cc_string* text) {
 	char str[NATIVE_STR_LEN];
 	if (!Input_TouchMode) return;
+
 	Platform_EncodeUtf8(str, text);
-
-	EM_ASM_({
-		if (!window.cc_inputElem) return;
-		var str = UTF8ToString($0);
-
-		if (str == window.cc_inputElem.value) return;
-		window.cc_inputElem.value = str;
-	}, str);
+	interop_SetKeyboardText(str);
 }
 
 void Window_CloseKeyboard(void) {
 	keyboardOpen = false;
 	if (!Input_TouchMode) return;
-
-	EM_ASM({
-		if (!window.cc_inputElem) return;
-		window.cc_container.removeChild(window.cc_divElem);
-		window.cc_container.removeChild(window.cc_inputElem);
-		window.cc_divElem   = null;
-		window.cc_inputElem = null;
-	});
+	interop_CloseKeyboard();
 }
 
 void Window_EnableRawMouse(void) {
@@ -4497,15 +4367,11 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	}
 }
 
+extern void interop_GetGpuRenderer(char buffer, int len);
 void GLContext_GetApiInfo(cc_string* info) { 
 	char buffer[NATIVE_STR_LEN];
 	int len;
-
-	EM_ASM_({
-		var dbg = GLctx.getExtension('WEBGL_debug_renderer_info');
-		var str = dbg ? GLctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "";
-		stringToUTF8(str, $0, $1);
-	}, buffer, NATIVE_STR_LEN);
+	interop_GetGpuRenderer(buffer, NATIVE_STR_LEN);
 
 	len = String_CalcLen(buffer, NATIVE_STR_LEN);
 	if (!len) return;

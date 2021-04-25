@@ -510,16 +510,9 @@ void Game_TakeScreenshot(void) {
 	String_Format3(&filename, "-%p2-%p2-%p2.png", &now.hour, &now.minute, &now.second);
 
 #ifdef CC_BUILD_WEB
+	extern void interop_TakeScreenshot(const char* path);
 	Platform_EncodeUtf8(str, &filename);
-	EM_ASM_({
-		var name   = UTF8ToString($0);
-		var canvas = Module['canvas'];
-		if (canvas.toBlob) {
-			canvas.toBlob(function(blob) { Module.saveBlob(blob, name); });
-		} else if (canvas.msToBlob) {
-			Module.saveBlob(canvas.msToBlob(), name);
-		}
-	}, str);
+	interop_TakeScreenshot(str);
 #elif CC_BUILD_MINFILES
 	/* no screenshots for these systems */
 #else
