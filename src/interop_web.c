@@ -130,7 +130,7 @@ void interop_SyncFS(void) {
 	EM_ASM( FS.syncfs(false, function(err) { if (err) console.log(err); }); );
 }
 
-void interop_OpenTab(const char* url) {
+int interop_OpenTab(const char* url) {
 	EM_ASM_({ window.open(UTF8ToString($0)); }, url);
 	return 0;
 }
@@ -369,7 +369,7 @@ void interop_OpenFileDialog(const char* filter) {
 /*########################################################################################################################*
 *--------------------------------------------------------GLContext--------------------------------------------------------*
 *#########################################################################################################################*/
-void interop_GetGpuRenderer(char buffer, int len) { 
+void interop_GetGpuRenderer(char* buffer, int len) { 
 	EM_ASM_({
 		var dbg = GLctx.getExtension('WEBGL_debug_renderer_info');
 		var str = dbg ? GLctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "";

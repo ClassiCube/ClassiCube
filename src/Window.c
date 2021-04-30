@@ -3084,7 +3084,7 @@ static void UnhookEvents(void) {
 
 extern int interop_IsAndroid(void);
 extern int interop_IsIOS(void);
-extern void interop_InitClipboardListeners(void);
+extern void interop_AddClipboardListeners(void);
 extern void interop_ForceTouchPageLayout(void);
 void Window_Init(void) {
 	int is_ios, droid;

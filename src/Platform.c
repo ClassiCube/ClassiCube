@@ -1099,12 +1099,11 @@ cc_result Process_StartOpen(const cc_string* args) {
 cc_result Process_StartGame(const cc_string* args) { return ERR_NOT_SUPPORTED; }
 void Process_Exit(cc_result code) { exit(code); }
 
-extern void interop_OpenTab(const char* url);
+extern int interop_OpenTab(const char* url);
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, args);
-	interop_OpenTab(str);
-	return 0;
+	return interop_OpenTab(str);
 }
 #elif defined CC_BUILD_ANDROID
 static char gameArgsBuffer[512];
