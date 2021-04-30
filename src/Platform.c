@@ -1731,6 +1731,12 @@ void Platform_Init(void) {
 	Platform_InitSpecific();
 }
 #elif defined CC_BUILD_WEB
+EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {
+	/* no pointer showing more than 128 characters in chat */
+	cc_string str = String_FromRaw(msg, 128);
+	Logger_WarnFunc(&str);
+}
+
 extern void interop_InitModule(void);
 extern void interop_GetIndexedDBError(char* buffer);
 void Platform_Init(void) {

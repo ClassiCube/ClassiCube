@@ -127,7 +127,14 @@ void interop_GetIndexedDBError(char* buffer) {
 }
 
 void interop_SyncFS(void) {
-	EM_ASM( FS.syncfs(false, function(err) { if (err) console.log(err); }); );
+	EM_ASM({
+		FS.syncfs(false, function(err) { 
+			if (!err) return;
+			console.log(err);
+			ccall('Platform_LogError', 'void', ['string'], ['&cError saving IndexedDB:']);
+			ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
+		}); 
+	});
 }
 
 int interop_OpenTab(const char* url) {
