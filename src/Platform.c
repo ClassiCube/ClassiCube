@@ -566,9 +566,10 @@ cc_result File_Close(cc_file file) {
 #ifndef CC_BUILD_WEB
 	return close(file) == -1 ? errno : 0;
 #else
-	int ret = close(file) == -1 ? errno : 0;
-	EM_ASM( FS.syncfs(false, function(err) { if (err) console.log(err); }); );
-	return ret;
+	extern void interop_SyncFS(void);
+	int res = close(file) == -1 ? errno : 0; 
+	interop_SyncFS(); 
+	return res;
 #endif
 }
 
@@ -1098,11 +1099,11 @@ cc_result Process_StartOpen(const cc_string* args) {
 cc_result Process_StartGame(const cc_string* args) { return ERR_NOT_SUPPORTED; }
 void Process_Exit(cc_result code) { exit(code); }
 
+extern int interop_OpenTab(const char* url);
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, args);
-	EM_ASM_({ window.open(UTF8ToString($0)); }, str);
-	return 0;
+	return interop_OpenTab(str);
 }
 #elif defined CC_BUILD_ANDROID
 static char gameArgsBuffer[512];
@@ -1730,35 +1731,18 @@ void Platform_Init(void) {
 	Platform_InitSpecific();
 }
 #elif defined CC_BUILD_WEB
+extern void interop_InitModule(void);
+extern void interop_GetIndexedDBError(char* buffer);
 void Platform_Init(void) {
 	char tmp[64+1] = { 0 };
-	EM_ASM( Module['websocket']['subprotocol'] = 'ClassiCube'; );
+	interop_InitModule();
+	
 	/* Check if an error occurred when pre-loading IndexedDB */
-	EM_ASM_({ if (window.cc_idbErr) stringToUTF8(window.cc_idbErr, $0, 64); }, tmp);
-
-	EM_ASM({
-		Module.saveBlob = function(blob, name) {
-			if (window.navigator.msSaveBlob) {
-				window.navigator.msSaveBlob(blob, name); return;
-			}
-			var url  = window.URL.createObjectURL(blob);
-			var elem = document.createElement('a');
-
-			elem.href     = url;
-			elem.download = name;
-			elem.style.display = 'none';
-
-			document.body.appendChild(elem);
-			elem.click();
-			document.body.removeChild(elem);
-			window.URL.revokeObjectURL(url);
-		}
-	});
-
+	interop_GetIndexedDBError(tmp);
 	if (!tmp[0]) return;
+	
 	Chat_Add1("&cError preloading IndexedDB: %c", tmp);
 	Chat_AddRaw("&cPreviously saved settings/maps will be lost");
-
 	/* NOTE: You must pre-load IndexedDB before main() */
 	/* (because pre-loading only works asynchronously) */
 	/* If you don't, you'll get errors later trying to sync local to remote */

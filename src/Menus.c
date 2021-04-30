@@ -1320,7 +1320,7 @@ static void SaveLevelScreen_RemoveOverwrites(struct SaveLevelScreen* s) {
 }
 
 #ifdef CC_BUILD_WEB
-#include <emscripten.h>
+extern int interop_DownloadMap(const char* path, const char* filename);
 static void DownloadMap(const cc_string* path) {
 	char strPath[NATIVE_STR_LEN];
 	char strFile[NATIVE_STR_LEN];
@@ -1333,21 +1333,8 @@ static void DownloadMap(const cc_string* path) {
 	file.length = String_LastIndexOf(&file, '.');
 	String_AppendConst(&file, ".cw");
 	Platform_EncodeUtf8(strFile, &file);
-
-	res = EM_ASM_({
-		try {
-			var name = UTF8ToString($0);
-			var data = FS.readFile(name);
-			var blob = new Blob([data], { type: 'application/octet-stream' });
-			Module.saveBlob(blob, UTF8ToString($1));
-			FS.unlink(name);
-			return 0;
-		} catch (e) {
-			if (!(e instanceof FS.ErrnoError)) abort(e);
-			return -e.errno;
-		}
-	}, strPath, strFile);
-
+	
+	res = interop_DownloadMap(strPath, strFile);
 	if (res) {
 		Logger_SysWarn2(res, "Downloading map", &file);
 	} else {
@@ -1594,18 +1581,12 @@ static void TexturePackScreen_LoadEntries(struct ListScreen* s) {
 }
 
 #ifdef CC_BUILD_WEB
-#include <emscripten.h>
+extern void interop_UploadTexPack(const char* path);
 static void TexturePackScreen_UploadCallback(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, path);
 
-	/* Move from temp into texpacks folder */
-	/* TODO: This is pretty awful and should be rewritten */
-	EM_ASM_({ 
-		var name = UTF8ToString($0);;
-		var data = FS.readFile(name);
-		FS.writeFile('/texpacks/' + name.substring(1), data);
-	}, str);
+	interop_UploadTexPack(str);
 	TexturePackScreen_Show();
 	TexturePack_SetDefault(path);
 	TexturePack_ExtractCurrent(true);
