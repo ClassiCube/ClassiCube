@@ -4367,7 +4367,7 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	}
 }
 
-extern void interop_GetGpuRenderer(char buffer, int len);
+extern void interop_GetGpuRenderer(char* buffer, int len);
 void GLContext_GetApiInfo(cc_string* info) { 
 	char buffer[NATIVE_STR_LEN];
 	int len;
