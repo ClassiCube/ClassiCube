@@ -756,7 +756,11 @@ void Window_Create(int width, int height) {
 void Window_SetTitle(const cc_string* title) {
 	WCHAR str[NATIVE_STR_LEN];
 	Platform_EncodeUtf16(str, title);
-	SetWindowTextW(win_handle, str);
+	if (SetWindowTextW(win_handle, str)) return;
+
+	/* Windows 9x does not support W API functions */
+	Platform_Utf16ToAnsi(str);
+	SetWindowTextA(win_handle, (const char*)str);
 }
 
 void Clipboard_GetText(cc_string* value) {
