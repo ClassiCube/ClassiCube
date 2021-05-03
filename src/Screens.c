@@ -331,7 +331,7 @@ typedef int (*TabListEntryCompare)(int x, int y);
 static struct TabListOverlay {
 	Screen_Body
 	int x, y, width, height;
-	cc_bool active, classic;
+	cc_bool active, classic, staysOpen;
 	int namesCount, elementOffset;
 	struct TextWidget title;
 	struct FontDesc font;
@@ -633,7 +633,7 @@ static int TabListOverlay_PointerDown(void* screen, int id, int x, int y) {
 
 static void TabListOverlay_KeyUp(void* screen, int key) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
-	if (key != KeyBinds[KEYBIND_TABLIST] || Input_TouchMode) return;
+	if (key != KeyBinds[KEYBIND_TABLIST] || s->staysOpen) return;
 	Gui_Remove((struct Screen*)s);
 }
 
@@ -727,7 +727,8 @@ static const struct ScreenVTABLE TabListOverlay_VTABLE = {
 };
 void TabListOverlay_Show(void) {
 	struct TabListOverlay* s  = &TabListOverlay_Instance;
-	s->VTABLE = &TabListOverlay_VTABLE;
+	s->VTABLE    = &TabListOverlay_VTABLE;
+	s->staysOpen = false;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_TABLIST);
 }
 
@@ -1973,6 +1974,7 @@ static void TouchScreen_TabClick(void* s, void* w) {
 		Gui_Remove((struct Screen*)&TabListOverlay_Instance);
 	} else {
 		TabListOverlay_Show();
+		TabListOverlay_Instance.staysOpen = true;
 	}
 }
 
