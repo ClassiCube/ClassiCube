@@ -164,13 +164,13 @@ int interop_IsIOS(void) {
 }
 
 void interop_InitContainer(void) {
-	/* Create wrapper div if necessary */
+	/* Create wrapper div if necessary (so input textbox shows in fullscreen on android)*/
 	EM_ASM({
 		var agent  = navigator.userAgent;	
 		var canvas = Module['canvas'];
 		window.cc_container = document.body;
 
-		if (/Android/i.test(agent) && /Chrome/i.test(agent)) {
+		if (/Android/i.test(agent)) {
 			var wrapper = document.createElement("div");
 			wrapper.id  = 'canvas_wrapper';
 
