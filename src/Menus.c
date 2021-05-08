@@ -186,7 +186,6 @@ static struct ListScreen {
 	const char* titleText;
 	struct TextWidget title;
 	struct StringsBuffer entries;
-	int (*Compare)(const cc_string* a, const cc_string* b);
 } ListScreen;
 
 static struct Widget* list_widgets[10] = {
@@ -301,8 +300,8 @@ static void ListScreen_QuickSort(int left, int right) {
 
 		/* partition the list */
 		while (i <= j) {
-			while ((strI = StringsBuffer_UNSAFE_Get(buffer, i), ListScreen.Compare(&pivot, &strI)) > 0) i++;
-			while ((strJ = StringsBuffer_UNSAFE_Get(buffer, j), ListScreen.Compare(&pivot, &strJ)) < 0) j--;
+			while ((strI = StringsBuffer_UNSAFE_Get(buffer, i), String_Compare(&pivot, &strI)) > 0) i++;
+			while ((strJ = StringsBuffer_UNSAFE_Get(buffer, j), String_Compare(&pivot, &strJ)) < 0) j--;
 			QuickSort_Swap_Maybe();
 		}
 		/* recurse into the smaller subset */
@@ -426,7 +425,6 @@ void ListScreen_Show(void) {
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &ListScreen_VTABLE;
-	s->Compare    = String_Compare;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
@@ -1664,8 +1662,6 @@ void FontListScreen_Show(void) {
 *---------------------------------------------------HotkeyListScreen------------------------------------------------------*
 *#########################################################################################################################*/
 /* TODO: Hotkey added event for CPE */
-#define HOTKEYLIST_NEW "New hotkey..."
-
 static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	struct HotkeyData h, original = { 0 };
@@ -1674,7 +1670,7 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	int i, flags = 0;
 
 	text = ListScreen_UNSAFE_GetCur(s, widget);
-	if (String_CaselessEqualsConst(&text, HOTKEYLIST_NEW)) {
+	if (!text.length) {
 		EditHotkeyScreen_Show(original); return;
 	}
 
@@ -1698,17 +1694,7 @@ static void HotkeyListScreen_MakeFlags(int flags, cc_string* str) {
 	if (flags & HOTKEY_MOD_ALT)   String_AppendConst(str, " Alt");
 }
 
-static int HotkeyListScreen_Compare(const cc_string* a, const cc_string* b) {
-	cc_string strA = *a, strB = *b;
-	/* The 'add new hotkey' should always be first entry */
-	if (String_CaselessEqualsConst(a, HOTKEYLIST_NEW)) strA = String_Empty;
-	if (String_CaselessEqualsConst(b, HOTKEYLIST_NEW)) strB = String_Empty;
-
-	return String_Compare(&strA, &strB);
-}
-
 static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
-	static const cc_string addNew = String_FromConst(HOTKEYLIST_NEW);
 	cc_string text; char textBuffer[STRING_SIZE];
 	struct HotkeyData hKey;
 	int i;
@@ -1726,9 +1712,17 @@ static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
 		StringsBuffer_Add(&s->entries, &text);
 	}
 
-	StringsBuffer_Add(&s->entries, &addNew);
-	s->Compare = HotkeyListScreen_Compare;
+	/* Placeholder for 'add new hotkey' */
+	StringsBuffer_Add(&s->entries, &String_Empty);
 	ListScreen_Sort(s);
+}
+
+static void HotkeyListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* button, const cc_string* text) {
+	if (text->length) {
+		ButtonWidget_Set(button, text, &s->font);
+	} else {
+		ButtonWidget_SetConst(button, "New hotkey...", &s->font);
+	}
 }
 
 void HotkeyListScreen_Show(void) {
@@ -1738,7 +1732,7 @@ void HotkeyListScreen_Show(void) {
 	s->LoadEntries = HotkeyListScreen_LoadEntries;
 	s->EntryClick  = HotkeyListScreen_EntryClick;
 	s->DoneClick   = Menu_SwitchPause;
-	s->UpdateEntry = ListScreen_UpdateEntry;
+	s->UpdateEntry = HotkeyListScreen_UpdateEntry;
 	ListScreen_Show();
 }
 
