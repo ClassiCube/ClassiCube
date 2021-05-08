@@ -62,25 +62,21 @@ static void RequestList_RemoveAt(struct RequestList* list, int i) {
 }
 
 /* Finds index of request whose id matches the given id */
-static int RequestList_Find(struct RequestList* list, int id, struct HttpRequest* item) {
+static int RequestList_Find(struct RequestList* list, int id) {
 	int i;
-
 	for (i = 0; i < list->count; i++) {
 		if (id != list->entries[i].id) continue;
-
-		*item = list->entries[i];
 		return i;
 	}
 	return -1;
 }
 
-/* Tries to remove and free given request. */
+/* Tries to remove and free given request */
 static void RequestList_TryFree(struct RequestList* list, int id) {
-	struct HttpRequest req;
-	int i = RequestList_Find(list, id, &req);
+	int i = RequestList_Find(list, id);
 	if (i < 0) return;
 
-	Mem_Free(req.data);
+	Mem_Free(list->entries[i].data);
 	RequestList_RemoveAt(list, i);
 }
 
@@ -1026,7 +1022,8 @@ cc_bool Http_GetResult(int reqID, struct HttpRequest* item) {
 	int i;
 	Mutex_Lock(processedMutex);
 	{
-		i = RequestList_Find(&processedReqs, reqID, item);
+		i = RequestList_Find(&processedReqs, reqID);
+		if (i >= 0) *item = processedReqs.entries[i];
 		if (i >= 0) RequestList_RemoveAt(&processedReqs, i);
 	}
 	Mutex_Unlock(processedMutex);

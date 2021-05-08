@@ -51,22 +51,6 @@ void Server_RetrieveTexturePack(const cc_string* url) {
 	}
 }
 
-static void Server_CheckAsyncResources(void) {
-	struct HttpRequest item;
-	if (!Http_GetResult(TexturePack_ReqID, &item)) return;
-
-	if (item.success) {
-		TexturePack_Apply(&item);
-		Mem_Free(item.data);
-	} else if (item.result) {
-		Logger_Warn(item.result, "trying to download texture pack", Http_DescribeError);
-	} else {
-		int status = item.statusCode;
-		if (status == 200 || status == 304) return;
-		Chat_Add1("&c%i error when trying to download texture pack", &status);
-	}
-}
-
 
 /*########################################################################################################################*
 *--------------------------------------------------------PingList---------------------------------------------------------*
@@ -199,7 +183,7 @@ static void SPConnection_Tick(struct ScheduledTask* task) {
 	if (Server.Disconnected) return;
 	if ((ticks % 3) == 0) { /* 60 -> 20 ticks a second */
 		Physics_Tick();
-		Server_CheckAsyncResources();
+		TexturePack_CheckPending();
 	}
 	ticks++;
 }
@@ -446,7 +430,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */
 	if ((ticks % 3) == 0) {
-		Server_CheckAsyncResources();
+		TexturePack_CheckPending();
 		Protocol_Tick();
 		/* Have any packets been written? */
 		if (Server.WriteBuffer != net_writeBuffer) Net_SendPacket();

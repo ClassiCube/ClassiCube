@@ -382,7 +382,8 @@ void TexturePack_ExtractCurrent(cc_bool forceReload) {
 	}
 }
 
-void TexturePack_Apply(struct HttpRequest* item) {
+/* Extracts and updates cache for the downloaded texture pack */
+static void ApplyDownloaded(struct HttpRequest* item) {
 	struct Stream mem;
 	cc_string url;
 
@@ -394,6 +395,22 @@ void TexturePack_Apply(struct HttpRequest* item) {
 	Stream_ReadonlyMemory(&mem, item->data, item->size);
 	ExtractFrom(&mem, &url);
 	usingDefault = false;
+}
+
+void TexturePack_CheckPending(void) {
+	struct HttpRequest item;
+	if (!Http_GetResult(TexturePack_ReqID, &item)) return;
+
+	if (item.success) {
+		ApplyDownloaded(&item);
+		Mem_Free(item.data);
+	} else if (item.result) {
+		Logger_Warn(item.result, "trying to download texture pack", Http_DescribeError);
+	} else {
+		int status = item.statusCode;
+		if (status == 200 || status == 304) return;
+		Chat_Add1("&c%i error when trying to download texture pack", &status);
+	}
 }
 
 /* Asynchronously downloads the given texture pack */
