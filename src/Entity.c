@@ -451,11 +451,11 @@ static cc_result ApplySkin(struct Entity* e, struct Bitmap* bmp, struct Stream* 
 	return 0;
 }
 
-static void LogInvalidSkin(cc_result res, const cc_string* url, const cc_uint8* data, int size) {
+static void LogInvalidSkin(cc_result res, const cc_string* skin, const cc_uint8* data, int size) {
 	cc_string msg; char msgBuffer[256];
 	String_InitArray(msg, msgBuffer);
 
-	Logger_FormatWarn2(&msg, res, "decoding", url, Platform_DescribeError);
+	Logger_FormatWarn2(&msg, res, "decoding skin", skin, Platform_DescribeError);
 	if (res != PNG_ERR_INVALID_SIG) { Logger_WarnFunc(&msg); return; }
 
 	String_AppendConst(&msg, " (got ");
@@ -466,10 +466,10 @@ static void LogInvalidSkin(cc_result res, const cc_string* url, const cc_uint8* 
 
 static void Entity_CheckSkin(struct Entity* e) {
 	struct Entity* first;
-	cc_string url, skin;
 	struct HttpRequest item;
 	struct Stream mem;
 	struct Bitmap bmp;
+	cc_string skin;
 	cc_result res;
 
 	/* Don't check skin if don't have to */
@@ -494,8 +494,7 @@ static void Entity_CheckSkin(struct Entity* e) {
 
 	Stream_ReadonlyMemory(&mem, item.data, item.size);
 	if ((res = ApplySkin(e, &bmp, &mem, &skin))) {
-		url = String_FromRawArray(item.url);
-		LogInvalidSkin(res, &url, item.data, item.size);
+		LogInvalidSkin(res, &skin, item.data, item.size);
 	}
 
 	Mem_Free(bmp.scan0);

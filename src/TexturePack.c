@@ -44,7 +44,7 @@ static void Atlas_Convert2DTo1D(void) {
 	int atlasX, atlasY;
 	int tile = 0, i, y;
 
-	Platform_Log2("Loaded new atlas: %i bmps, %i per bmp", &atlasesCount, &tilesPerAtlas);
+	Platform_Log2("Loaded terrain atlas: %i bmps, %i per bmp", &atlasesCount, &tilesPerAtlas);
 	Bitmap_Allocate(&atlas1D, tileSize, tilesPerAtlas * tileSize);
 	
 	for (i = 0; i < atlasesCount; i++) {
