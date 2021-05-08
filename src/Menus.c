@@ -186,6 +186,7 @@ static struct ListScreen {
 	const char* titleText;
 	struct TextWidget title;
 	struct StringsBuffer entries;
+	int (*Compare)(const cc_string* a, const cc_string* b);
 } ListScreen;
 
 static struct Widget* list_widgets[10] = {
@@ -257,9 +258,10 @@ static void ListScreen_UpdateEntry(struct ListScreen* s, struct ButtonWidget* bu
 static void ListScreen_RedrawEntries(struct ListScreen* s) {
 	cc_string str;
 	int i;
-
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
 		str = ListScreen_UNSAFE_Get(s, s->currentIndex + i);
+		
+		s->btns[i].disabled = String_CaselessEqualsConst(&str, LISTSCREEN_EMPTY);
 		s->UpdateEntry(s, &s->btns[i], &str);
 	}
 }
@@ -299,8 +301,8 @@ static void ListScreen_QuickSort(int left, int right) {
 
 		/* partition the list */
 		while (i <= j) {
-			while ((strI = StringsBuffer_UNSAFE_Get(buffer, i), String_Compare(&pivot, &strI)) > 0) i++;
-			while ((strJ = StringsBuffer_UNSAFE_Get(buffer, j), String_Compare(&pivot, &strJ)) < 0) j--;
+			while ((strI = StringsBuffer_UNSAFE_Get(buffer, i), ListScreen.Compare(&pivot, &strI)) > 0) i++;
+			while ((strJ = StringsBuffer_UNSAFE_Get(buffer, j), ListScreen.Compare(&pivot, &strJ)) < 0) j--;
 			QuickSort_Swap_Maybe();
 		}
 		/* recurse into the smaller subset */
@@ -424,6 +426,7 @@ void ListScreen_Show(void) {
 	s->grabsInput = true;
 	s->closable   = true;
 	s->VTABLE     = &ListScreen_VTABLE;
+	s->Compare    = String_Compare;
 	Gui_Add((struct Screen*)s, GUI_PRIORITY_MENU);
 }
 
@@ -1553,7 +1556,6 @@ void SaveLevelScreen_Show(void) {
 static void TexturePackScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	cc_string file = ListScreen_UNSAFE_GetCur(s, widget);
-	if (String_CaselessEqualsConst(&file, LISTSCREEN_EMPTY)) return;
 
 	TexturePack_SetDefault(&file);
 	TexturePack_Url.length = 0;
@@ -1617,7 +1619,6 @@ void TexturePackScreen_Show(void) {
 static void FontListScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	cc_string fontName   = ListScreen_UNSAFE_GetCur(s, widget);
-	if (String_CaselessEqualsConst(&fontName, LISTSCREEN_EMPTY)) return;
 
 	Options_Set(OPT_FONT_NAME, &fontName);
 	Drawer2D_SetDefaultFont(&fontName);
@@ -1663,6 +1664,8 @@ void FontListScreen_Show(void) {
 *---------------------------------------------------HotkeyListScreen------------------------------------------------------*
 *#########################################################################################################################*/
 /* TODO: Hotkey added event for CPE */
+#define HOTKEYLIST_NEW "New hotkey..."
+
 static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	struct ListScreen* s = (struct ListScreen*)screen;
 	struct HotkeyData h, original = { 0 };
@@ -1671,9 +1674,8 @@ static void HotkeyListScreen_EntryClick(void* screen, void* widget) {
 	int i, flags = 0;
 
 	text = ListScreen_UNSAFE_GetCur(s, widget);
-	if (String_CaselessEqualsConst(&text, LISTSCREEN_EMPTY)) {
-		EditHotkeyScreen_Show(original); 
-		return;
+	if (String_CaselessEqualsConst(&text, HOTKEYLIST_NEW)) {
+		EditHotkeyScreen_Show(original); return;
 	}
 
 	String_UNSAFE_Separate(&text, '+', &key, &value);
@@ -1696,8 +1698,17 @@ static void HotkeyListScreen_MakeFlags(int flags, cc_string* str) {
 	if (flags & HOTKEY_MOD_ALT)   String_AppendConst(str, " Alt");
 }
 
+static int HotkeyListScreen_Compare(const cc_string* a, const cc_string* b) {
+	cc_string strA = *a, strB = *b;
+	/* The 'add new hotkey' should always be first entry */
+	if (String_CaselessEqualsConst(a, HOTKEYLIST_NEW)) strA = String_Empty;
+	if (String_CaselessEqualsConst(b, HOTKEYLIST_NEW)) strB = String_Empty;
+
+	return String_Compare(&strA, &strB);
+}
+
 static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
-	static const cc_string empty = String_FromConst(LISTSCREEN_EMPTY);
+	static const cc_string addNew = String_FromConst(HOTKEYLIST_NEW);
 	cc_string text; char textBuffer[STRING_SIZE];
 	struct HotkeyData hKey;
 	int i;
@@ -1715,9 +1726,9 @@ static void HotkeyListScreen_LoadEntries(struct ListScreen* s) {
 		StringsBuffer_Add(&s->entries, &text);
 	}
 
-	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
-		StringsBuffer_Add(&s->entries, &empty);
-	}
+	StringsBuffer_Add(&s->entries, &addNew);
+	s->Compare = HotkeyListScreen_Compare;
+	ListScreen_Sort(s);
 }
 
 void HotkeyListScreen_Show(void) {
@@ -1738,11 +1749,8 @@ void HotkeyListScreen_Show(void) {
 static void LoadLevelScreen_EntryClick(void* screen, void* widget) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	struct ListScreen* s = (struct ListScreen*)screen;
-	cc_string relPath;
 
-	relPath = ListScreen_UNSAFE_GetCur(s, widget);
-	if (String_CaselessEqualsConst(&relPath, LISTSCREEN_EMPTY)) return;
-
+	cc_string relPath = ListScreen_UNSAFE_GetCur(s, widget);
 	String_InitArray(path, pathBuffer);
 	String_Format1(&path, "maps/%s", &relPath);
 	Map_LoadFrom(&path);
