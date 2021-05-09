@@ -171,15 +171,24 @@ git fetch --all
 git reset --hard origin/master
 LATEST=$(git rev-parse --short HEAD)
 
-build_win32
-build_win64
-build_nix32
-build_nix64
-build_mac32
-build_mac64
-build_web
-build_rpi
-build_android
+function run_timed() {
+  beg=`date +%s`
+  $1
+  end=`date +%s`
+
+  runtime=$((end-beg))
+  echo "Compiling took $runtime"
+}
+
+run_timed build_win32
+run_timed build_win64
+run_timed build_nix32
+run_timed build_nix64
+run_timed build_mac32
+run_timed build_mac64
+run_timed build_web
+run_timed build_rpi
+run_timed build_android
 
 cd ~
 python3 notify.py
