@@ -131,7 +131,7 @@ void interop_SyncFS(void) {
 		FS.syncfs(false, function(err) { 
 			if (!err) return;
 			console.log(err);
-			ccall('Platform_LogError', 'void', ['string'], ['&cError saving IndexedDB:']);
+			ccall('Platform_LogError', 'void', ['string'], ['&cError saving files to IndexedDB:']);
 			ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
 		}); 
 	});

@@ -1113,6 +1113,9 @@ static void OnInit(void) {
 	Event_Register_(&UserEvents.HackPermsChanged, NULL, InputHandler_CheckZoomFov);
 	KeyBind_Init();
 	StoredHotkeys_LoadAll();
+	/* Fix issue with Android where if you double click in server list to join, a touch */
+	/*  pointer is stuck down when the game loads (so you instantly start deleting blocks) */
+	ClearTouches();
 }
 
 static void OnFree(void) {

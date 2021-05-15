@@ -502,6 +502,7 @@ public class MainActivity extends Activity {
 
 				@Override
 				public boolean deleteSurroundingText(int beforeLength, int afterLength) {
+					
 					boolean success = super.deleteSurroundingText(beforeLength, afterLength);
 					updateText();
 					return success;
