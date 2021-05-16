@@ -21,7 +21,8 @@ Or in other words, in a directory somewhere, you have a file named ```TestPlugin
 ### Basic plugin
 ```C
 #include "src/Chat.h"
-#include "src/GameStructs.h"
+#include "src/Game.h"
+#include "src/String.h"
 
 static void TestPlugin_Init(void) {
         cc_string msg = String_FromConst("Hello world!");
@@ -35,9 +36,6 @@ Here's the idea for a basic plugin that shows "Hello world" in chat when the gam
 
 ### Basic plugin boilerplate
 ```C
-#include "src/Chat.h"
-#include "src/Game.h"
-
 #ifdef CC_BUILD_WIN
     #define CC_API __declspec(dllimport)
     #define CC_VAR __declspec(dllimport)
@@ -47,6 +45,10 @@ Here's the idea for a basic plugin that shows "Hello world" in chat when the gam
     #define CC_VAR
     #define EXPORT __attribute__((visibility("default")))
 #endif
+
+#include "src/Chat.h"
+#include "src/Game.h"
+#include "src/String.h"
 
 static void TestPlugin_Init(void) {
         cc_string msg = String_FromConst("Hello world!");
@@ -67,6 +69,7 @@ When including game headers, they must be surrounded with `extern "C"`, i.e.
 extern "C" {
 #include "src/Chat.h"
 #include "src/Game.h"
+#include "src/String.h"
 }
 ```
 Otherwise you will get obscure `Undefined reference` errors when compiling.
