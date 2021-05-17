@@ -923,10 +923,11 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
 	struct sockaddr addr;
 	cc_result res;
-
 	addr.sa_family = AF_INET;
+
 	Stream_SetU16_BE( (cc_uint8*)&addr.sa_data[0], port);
-	Utils_ParseIP(ip, (cc_uint8*)&addr.sa_data[2]);
+	if (!Utils_ParseIP(ip, (cc_uint8*)&addr.sa_data[2])) 
+		return ERR_INVALID_ARGUMENT;
 
 	res = connect(s, &addr, sizeof(addr));
 	return res == -1 ? Socket__Error() : 0;

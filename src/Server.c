@@ -23,6 +23,7 @@
 #include "Inventory.h"
 #include "Platform.h"
 #include "Input.h"
+#include "Errors.h"
 
 static char nameBuffer[STRING_SIZE];
 static char motdBuffer[STRING_SIZE];
@@ -235,22 +236,26 @@ static void MPConnection_FinishConnect(void) {
 	lastPacket = Game.Time;
 }
 
+static void MPConnection_Fail(const cc_string* reason) {
+	cc_string msg; char msgBuffer[STRING_SIZE * 2];
+	String_InitArray(msg, msgBuffer);
+	net_connecting = false;
+
+	String_Format2(&msg, "Failed to connect to %s:%i", &Server.IP, &Server.Port);
+	Game_Disconnect(&msg, reason);
+	OnClose();
+}
+
 static void MPConnection_FailConnect(cc_result result) {
 	static const cc_string reason = String_FromConst("You failed to connect to the server. It's probably down!");
 	cc_string msg; char msgBuffer[STRING_SIZE * 2];
-
-	net_connecting = false;
 	String_InitArray(msg, msgBuffer);
 
 	if (result) {
 		String_Format3(&msg, "Error connecting to %s:%i: %i" _NL, &Server.IP, &Server.Port, &result);
 		Logger_Log(&msg);
-		msg.length = 0;
 	}
-
-	String_Format2(&msg, "Failed to connect to %s:%i", &Server.IP, &Server.Port);
-	Game_Disconnect(&msg, &reason);
-	OnClose();
+	MPConnection_Fail(&reason);
 }
 
 static void MPConnection_TickConnect(void) {
@@ -294,9 +299,12 @@ static void MPConnection_BeginConnect(void) {
 	Socket_SetBlocking(net_socket, false);
 	net_connecting     = true;
 	net_connectTimeout = Game.Time + NET_TIMEOUT_SECS;
-
 	res = Socket_Connect(net_socket, &Server.IP, Server.Port);
-	if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
+
+	if (res == ERR_INVALID_ARGUMENT) {
+		static const cc_string reason = String_FromConst("Invalid IP address");
+		MPConnection_Fail(&reason);
+	} else if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
 		MPConnection_FailConnect(res);
 	} else {
 		String_Format2(&title, "Connecting to %s:%i..", &Server.IP, &Server.Port);
