@@ -17,8 +17,6 @@ int   Math_AbsI(int x)    { return abs(x); /* MSVC intrinsic */ }
 
 double Math_Sin(double x) { return sin(x); }
 double Math_Cos(double x) { return cos(x); }
-double Math_Log(double x) { return log(x); }
-double Math_Exp(double x) { return exp(x); }
 
 float Math_SinF(float x) { return (float)Math_Sin(x); }
 float Math_CosF(float x) { return (float)Math_Cos(x); }
@@ -76,23 +74,23 @@ cc_bool Math_IsPowOf2(int value) {
 	return value != 0 && (value & (value - 1)) == 0;
 }
 
-double Math_FastLog(double x) {
+double Math_Log(double x) {
 	/* x = 2^exp * mantissa */
-	/* so log(x) = log(2^exp) + log(mantissa) */
-	/* so log(x) = exp*log(2) + log(mantissa) */
-
+	/*  so log(x) = log(2^exp) + log(mantissa) */
+	/*  so log(x) = exp*log(2) + log(mantissa) */
 	/* now need to work out log(mantissa) */
-	return 0;
+
+	return log(x);
 }
 
-double Math_FastExp(double x) {
+double Math_Exp(double x) {
 	/* let x = k*log(2) + f, where k is integer */
-	/* so exp(x) = exp(k*log(2)) * exp(f) */
-	/* so exp(x) = exp(log(2^k)) * exp(f) */
-	/* so exp(x) = 2^k           * exp(f) */
-
+	/*  so exp(x) = exp(k*log(2)) * exp(f) */
+	/*  so exp(x) = exp(log(2^k)) * exp(f) */
+	/*  so exp(x) = 2^k           * exp(f) */
 	/* now need to work out exp(f) */
-	return 0;
+
+	return exp(x);
 }
 
 

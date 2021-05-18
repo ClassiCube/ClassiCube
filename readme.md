@@ -169,9 +169,9 @@ Further information (e.g. style) for the game's source code can be found in the 
 
 ## Open source technologies
 
-* curl - HTTP/HTTPS for linux and macOS
-* FreeType - Font handling for all platforms
-* GCC - Compiles client for linux
-* MinGW-w64 - Compiles client for windows
-* Clang - Compiles client for macOS
-* Emscripten - Compiles client for web
+* [curl](https://curl.se/) - HTTP/HTTPS for linux and macOS
+* [FreeType](https://www.freetype.org/) - Font handling for all platforms
+* [GCC](https://gcc.gnu.org/) - Compiles client for linux
+* [MinGW-w64](http://mingw-w64.org/doku.php) - Compiles client for windows
+* [Clang](https://clang.llvm.org/) - Compiles client for macOS
+* [Emscripten](https://emscripten.org/) - Compiles client for web

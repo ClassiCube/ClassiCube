@@ -1092,8 +1092,9 @@ cc_result Process_StartOpen(const cc_string* args) {
 	cc_uintptr res;
 	Platform_EncodeUtf16(str, args);
 
-	res = ShellExecuteW(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
-	/* MSDN: "If the function succeeds, it returns a value greater than 32. If the function fails, it returns an error value that indicates the cause of the failure" */
+	res = (cc_uintptr)ShellExecuteW(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
+	/* MSDN: "If the function succeeds, it returns a value greater than 32. If the function fails, */
+	/*  it returns an error value that indicates the cause of the failure" */
 	return res > 32 ? 0 : (cc_result)res;
 }
 #elif defined CC_BUILD_WEB
