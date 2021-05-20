@@ -2864,9 +2864,9 @@ void ChatOptionsScreen_Show(void) {
 /*########################################################################################################################*
 *----------------------------------------------------GuiOptionsScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-static void GuiOptionsScreen_GetShadows(cc_string* v) { Menu_GetBool(v, Drawer2D_BlackTextShadows); }
+static void GuiOptionsScreen_GetShadows(cc_string* v) { Menu_GetBool(v, Drawer2D.BlackTextShadows); }
 static void GuiOptionsScreen_SetShadows(const cc_string* v) {
-	Drawer2D_BlackTextShadows = Menu_SetBool(v, OPT_BLACK_TEXT);
+	Drawer2D.BlackTextShadows = Menu_SetBool(v, OPT_BLACK_TEXT);
 	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 
@@ -2882,9 +2882,9 @@ static void GuiOptionsScreen_SetInventory(const cc_string* v) { ChatOptionsScree
 static void GuiOptionsScreen_GetTabAuto(cc_string* v) { Menu_GetBool(v, Gui.TabAutocomplete); }
 static void GuiOptionsScreen_SetTabAuto(const cc_string* v) { Gui.TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
 
-static void GuiOptionsScreen_GetUseFont(cc_string* v) { Menu_GetBool(v, !Drawer2D_BitmappedText); }
+static void GuiOptionsScreen_GetUseFont(cc_string* v) { Menu_GetBool(v, !Drawer2D.BitmappedText); }
 static void GuiOptionsScreen_SetUseFont(const cc_string* v) {
-	Drawer2D_BitmappedText = !Menu_SetBool(v, OPT_USE_CHAT_FONT);
+	Drawer2D.BitmappedText = !Menu_SetBool(v, OPT_USE_CHAT_FONT);
 	Event_RaiseVoid(&ChatEvents.FontChanged);
 }
 

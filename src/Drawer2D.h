@@ -15,6 +15,17 @@ struct IGameComponent;
 struct StringsBuffer;
 extern struct IGameComponent Drawer2D_Component;
 
+CC_VAR extern struct _Drawer2DData {
+	/* Whether text should be drawn and measured using the currently set font bitmap. */
+	/* If false, then text is instead draw using platform/system fonts. */
+	cc_bool BitmappedText;
+	/* Whether the shadows behind text (that uses shadows) is fully black. */
+	cc_bool BlackTextShadows;
+	/* List of all colours. (An A of 0 means the colour is not used) */
+	BitmapCol Colors[DRAWER2D_MAX_COLS];
+} Drawer2D;
+
+#define Drawer2D_GetCol(c) Drawer2D.Colors[(cc_uint8)c]
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const cc_string* text, struct FontDesc* font, cc_bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc_bool useShadow);
 
@@ -24,15 +35,6 @@ void Drawer2D_SetDefaultFont(const cc_string* fontName);
 void Drawer2D_MakeBitmappedFont(struct FontDesc* desc, int size, int flags);
 /* Initialises the given font. Uses Drawer2D_MakeBitmappedFont or Font_MakeDefault depending on Drawer2D_BitmappedText. */
 CC_API void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags);
-
-/* Whether text should be drawn and measured using the currently set font bitmap. */ 
-/* If false, then text is instead draw using platform/system fonts. */
-extern cc_bool Drawer2D_BitmappedText;
-/* Whether the shadows behind text (that uses shadows) is fully black. */
-extern cc_bool Drawer2D_BlackTextShadows;
-/* List of all colours. (An A of 0 means the colour is not used) */
-extern BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
-#define Drawer2D_GetCol(c) Drawer2D_Cols[(cc_uint8)c]
 
 /* Clamps the given rectangle to lie inside the bitmap. */
 /* Returns false if rectangle is completely outside bitmap's rectangle. */

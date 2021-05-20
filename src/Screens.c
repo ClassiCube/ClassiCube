@@ -652,7 +652,7 @@ static void TabListOverlay_ContextRecreated(void* screen) {
 	struct TabListOverlay* s = (struct TabListOverlay*)screen;
 	int size, id;
 
-	size = Drawer2D_BitmappedText ? 16 : 11;
+	size = Drawer2D.BitmappedText ? 16 : 11;
 	Drawer2D_MakeFont(&s->font, size, FONT_FLAGS_PADDING);
 	s->namesCount = 0;
 

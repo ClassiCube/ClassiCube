@@ -254,7 +254,7 @@ static void Launcher_Init(void) {
 	Drawer2D_MakeFont(&Launcher_HintFont,  12, FONT_FLAGS_NONE);
 	titleX = Display_ScaleX(4); titleY = Display_ScaleY(4);
 
-	Drawer2D_Cols['g'] = BitmapCol_Make(125, 125, 125, 255);
+	Drawer2D.Colors['g'] = BitmapCol_Make(125, 125, 125, 255);
 	Utils_EnsureDirectory("texpacks");
 	Utils_EnsureDirectory("audio");
 }
@@ -291,8 +291,8 @@ void Launcher_Run(void) {
 #endif
 
 	Drawer2D_Component.Init();
-	Drawer2D_BitmappedText    = false;
-	Drawer2D_BlackTextShadows = true;
+	Drawer2D.BitmappedText    = false;
+	Drawer2D.BlackTextShadows = true;
 	InitFramebuffer();
 
 	Options_Get(LOPT_USERNAME, &Game_Username, "");
@@ -501,9 +501,9 @@ void Launcher_TryLoadTexturePack(void) {
 
 void Launcher_UpdateLogoFont(void) {
 	Font_Free(&logoFont);
-	Drawer2D_BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && hasBitmappedFont;
+	Drawer2D.BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && hasBitmappedFont;
 	Drawer2D_MakeFont(&logoFont, 32, FONT_FLAGS_NONE);
-	Drawer2D_BitmappedText = false;
+	Drawer2D.BitmappedText = false;
 }
 
 /* Fills the given area using pixels from the source bitmap, by repeatedly tiling the bitmap. */

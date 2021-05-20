@@ -1202,7 +1202,7 @@ static void CPE_SetTextColor(cc_uint8* data) {
 	if (code == '\0' || code == ' ' || code == 0xFF) return;
 	if (code == '%'  || code == '&') return;
 
-	Drawer2D_Cols[code] = c;
+	Drawer2D.Colors[code] = c;
 	Event_RaiseInt(&ChatEvents.ColCodeChanged, code);
 }
 

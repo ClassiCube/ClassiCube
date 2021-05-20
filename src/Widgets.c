@@ -2255,7 +2255,7 @@ static void SpecialInputWidget_UpdateColString(struct SpecialInputWidget* w) {
 
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
 		if (i >= 'A' && i <= 'F')           continue;
-		if (!BitmapCol_A(Drawer2D_Cols[i])) continue;
+		if (!BitmapCol_A(Drawer2D.Colors[i])) continue;
 
 		String_Append(&w->colString, '&'); String_Append(&w->colString, (char)i);
 		String_Append(&w->colString, '%'); String_Append(&w->colString, (char)i);

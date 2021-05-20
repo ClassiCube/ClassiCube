@@ -14,9 +14,7 @@
 #include "Window.h"
 #include "Options.h"
 
-cc_bool Drawer2D_BitmappedText;
-cc_bool Drawer2D_BlackTextShadows;
-BitmapCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
+struct _Drawer2DData Drawer2D;
 #define Font_IsBitmap(font) (!(font)->handle)
 
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const cc_string* text, struct FontDesc* font, cc_bool useShadow) {
@@ -68,7 +66,7 @@ void Drawer2D_MakeBitmappedFont(struct FontDesc* desc, int size, int flags) {
 }
 
 void Drawer2D_MakeFont(struct FontDesc* desc, int size, int flags) {
-	if (Drawer2D_BitmappedText) {
+	if (Drawer2D.BitmappedText) {
 		Drawer2D_MakeBitmappedFont(desc, size, flags);
 	} else {
 		Font_MakeDefault(desc, size, flags);
@@ -368,7 +366,7 @@ cc_bool Drawer2D_IsWhiteCol(char c) { return c == '\0' || c == 'f' || c == 'F'; 
 /* Divides R/G/B by 4 */
 #define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
 CC_NOINLINE static BitmapCol GetShadowCol(BitmapCol c) {
-	if (Drawer2D_BlackTextShadows) return BITMAPCOL_BLACK;
+	if (Drawer2D.BlackTextShadows) return BITMAPCOL_BLACK;
 
 	/* Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb */
 	/* Shift right 2:  00aa_aaaa|aarr_rrrr|rrgg_gggg|ggbb_bbbb */
@@ -387,7 +385,7 @@ static int Drawer2D_Width(int point, char c) {
 void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale) {
 	int padding;
 	float vAdj;
-	if (!Drawer2D_BitmappedText) return;
+	if (!Drawer2D.BitmappedText) return;
 
 	padding = (tex->Height - point) / scale;
 	vAdj    = (float)padding / Math_NextPowOf2(tex->Height);
@@ -397,7 +395,7 @@ void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale) {
 
 void Drawer2D_ReducePadding_Height(int* height, int point, int scale) {
 	int padding;
-	if (!Drawer2D_BitmappedText) return;
+	if (!Drawer2D.BitmappedText) return;
 
 	padding = (*height - point) / scale;
 	*height -= padding * 2;
@@ -438,7 +436,7 @@ static void DrawBitmappedTextCore(struct Bitmap* bmp, struct DrawTextArgs* args,
 	BitmapCol cols[256];
 	cc_uint16 dstWidths[256];
 
-	col = Drawer2D_Cols['f'];
+	col = Drawer2D.Colors['f'];
 	if (shadow) col = GetShadowCol(col);
 
 	for (i = 0; i < text.length; i++) {
@@ -616,7 +614,7 @@ void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args,
 *---------------------------------------------------Drawer2D component----------------------------------------------------*
 *#########################################################################################################################*/
 static void InitHexEncodedCol(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
-	Drawer2D_Cols[i] = BitmapCol_Make(
+	Drawer2D.Colors[i] = BitmapCol_Make(
 		lo * ((hex >> 2) & 1) + hi * (hex >> 3),
 		lo * ((hex >> 1) & 1) + hi * (hex >> 3),
 		lo * ((hex >> 0) & 1) + hi * (hex >> 3),
@@ -626,7 +624,7 @@ static void InitHexEncodedCol(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
 static void OnReset(void) {
 	int i;	
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
-		Drawer2D_Cols[i] = 0;
+		Drawer2D.Colors[i] = 0;
 	}
 
 	for (i = 0; i <= 9; i++) {
@@ -655,8 +653,8 @@ static void OnFileChanged(void* obj, struct Stream* src, const cc_string* name) 
 
 static void OnInit(void) {
 	OnReset();
-	Drawer2D_BitmappedText    = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
-	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
+	Drawer2D.BitmappedText    = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
+	Drawer2D.BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
 
 	Options_Get(OPT_FONT_NAME, &font_candidates[0], "");
 	if (Game_ClassicMode) font_candidates[0].length = 0;
@@ -1164,7 +1162,7 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 	height    = args->font->height;
 	descender = TEXT_CEIL(face->size->metrics.descender);
 
-	col = Drawer2D_Cols['f'];
+	col = Drawer2D.Colors['f'];
 	if (shadow) col = GetShadowCol(col);
 
 	for (i = 0; i < text.length; i++) {

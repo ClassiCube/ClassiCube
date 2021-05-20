@@ -162,11 +162,11 @@ static void LButton_Draw(void* widget) {
 	LButton_DrawBorder(w);
 	LButton_DrawHighlight(w);
 
-	if (!w->hovered) Drawer2D_Cols['f'] = Drawer2D_Cols['7'];
+	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['7'];
 	Drawer2D_DrawText(&Launcher_Framebuffer, &args, 
 					  w->x + xOffset / 2, w->y + yOffset / 2);
 
-	if (!w->hovered) Drawer2D_Cols['f'] = Drawer2D_Cols['F'];
+	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
 	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 }
 
@@ -310,9 +310,9 @@ static void LInput_Draw(void* widget) {
 		w->width - xBorder4, w->height - yBorder4);
 	LInput_BlendBoxTop(w);
 
-	Drawer2D_Cols['f'] = Drawer2D_Cols['0'];
+	Drawer2D.Colors['f'] = Drawer2D.Colors['0'];
 	LInput_DrawText(w, &args);
-	Drawer2D_Cols['f'] = Drawer2D_Cols['F'];
+	Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
 }
 
 static Rect2D LInput_MeasureCaret(struct LInput* w) {

@@ -254,14 +254,14 @@ static void MakeNameTexture(struct Entity* e) {
 
 		Bitmap_AllocateClearedPow2(&bmp, width, height);
 		{
-			origWhiteCol = Drawer2D_Cols['f'];
+			origWhiteCol = Drawer2D.Colors['f'];
 
-			Drawer2D_Cols['f'] = shadowCol;
+			Drawer2D.Colors['f'] = shadowCol;
 			Drawer2D_WithoutCols(&colorlessName, &name);
 			args.text = colorlessName;
 			Drawer2D_DrawText(&bmp, &args, NAME_OFFSET, NAME_OFFSET);
 
-			Drawer2D_Cols['f'] = origWhiteCol;
+			Drawer2D.Colors['f'] = origWhiteCol;
 			args.text = name;
 			Drawer2D_DrawText(&bmp, &args, 0, 0);
 		}
