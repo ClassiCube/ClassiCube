@@ -9,7 +9,6 @@
 
 #if defined CC_BUILD_WEB
 /* Can't see native CPU state with javascript */
-#undef CC_BUILD_POSIX
 #elif defined CC_BUILD_WIN
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE

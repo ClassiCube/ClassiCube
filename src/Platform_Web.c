@@ -359,8 +359,39 @@ cc_bool DynamicLib_DescribeError(cc_string* dst)   { return false; }
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
+int Platform_EncodeUtf8(void* data, const cc_string* src) {
+	cc_uint8* dst = (cc_uint8*)data;
+	cc_uint8* cur;
+	int i, len = 0;
+	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
+
+	for (i = 0; i < src->length; i++) {
+		cur = dst + len;
+		len += Convert_CP437ToUtf8(src->buffer[i], cur);
+	}
+	dst[len] = '\0';
+	return len;
+}
+
+cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
+	char chars[NATIVE_STR_LEN];
+	int len;
+
+	/* For unrecognised error codes, strerror_r might return messages */
+	/*  such as 'No error information', which is not very useful */
+	/* (could check errno here but quicker just to skip entirely) */
+	if (res >= 1000) return false;
+
+	len = strerror_r(res, chars, NATIVE_STR_LEN);
+	if (len == -1) return false;
+
+	len = String_CalcLen(chars, NATIVE_STR_LEN);
+	String_AppendUtf8(dst, chars, len);
+	return true;
+}
+
 EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {
-	/* no pointer showing more than 128 characters in chat */
+	/* no point showing more than 128 characters in chat */
 	cc_string str = String_FromRaw(msg, 128);
 	Logger_WarnFunc(&str);
 }
@@ -382,6 +413,7 @@ void Platform_Init(void) {
 	/* If you don't, you'll get errors later trying to sync local to remote */
 	/* See doc/hosting-webclient.md for example preloading IndexedDB code */
 }
+void Platform_Free(void) { }
 
 
 /*########################################################################################################################*
