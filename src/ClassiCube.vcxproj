@@ -249,6 +249,7 @@
     <ClInclude Include="Widgets.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="World.h" />
+    <ClInclude Include="_PlatformBase.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animations.c" />
@@ -280,6 +281,9 @@
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="Model.c" />
     <ClCompile Include="Menus.c" />
+    <ClCompile Include="Platform_Posix.c" />
+    <ClCompile Include="Platform_Web.c" />
+    <ClCompile Include="Platform_WinApi.c" />
     <ClCompile Include="Protocol.c" />
     <ClCompile Include="Physics.c" />
     <ClCompile Include="IsometricDrawer.c" />
@@ -293,7 +297,6 @@
     <ClCompile Include="BlockPhysics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="Picking.c" />
-    <ClCompile Include="Platform.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Resources.c" />
     <ClCompile Include="Screens.c" />

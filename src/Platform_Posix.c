@@ -1,6 +1,7 @@
-#include "Platform.h"
-#include "String.h"
-#include "Logger.h"
+#include "Core.h"
+#if defined CC_BUILD_POSIX
+
+#include "_PlatformBase.h"
 #include "Stream.h"
 #include "ExtMath.h"
 #include "Drawer2D.h"
@@ -9,30 +10,6 @@
 #include "Utils.h"
 #include "Errors.h"
 
-#if defined CC_BUILD_WIN
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#ifndef UNICODE
-#define UNICODE
-#define _UNICODE
-#endif
-
-#include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <shellapi.h>
-#include <wincrypt.h>
-
-#define Socket__Error() WSAGetLastError()
-static HANDLE heap;
-const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
-const cc_result ReturnCode_FileNotFound     = ERROR_FILE_NOT_FOUND;
-const cc_result ReturnCode_SocketInProgess  = WSAEINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
-const cc_result ReturnCode_DirectoryExists  = ERROR_ALREADY_EXISTS;
-#elif defined CC_BUILD_POSIX
 /* POSIX can be shared between Linux/BSD/macOS */
 #include <errno.h>
 #include <time.h>
@@ -60,7 +37,7 @@ const cc_result ReturnCode_FileNotFound     = ENOENT;
 const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
 const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
-#endif
+
 /* Platform specific include files (Try to share for UNIX-ish) */
 #if defined CC_BUILD_DARWIN
 #include <mach/mach_time.h>
@@ -76,9 +53,6 @@ const cc_result ReturnCode_DirectoryExists  = EEXIST;
 /* TODO: Use load_image/resume_thread instead of fork */
 /* Otherwise opening browser never works because fork fails */
 #include <kernel/image.h>
-#elif defined CC_BUILD_WEB
-#include <emscripten.h>
-#include "Chat.h"
 #endif
 
 
@@ -88,70 +62,6 @@ const cc_result ReturnCode_DirectoryExists  = EEXIST;
 void Mem_Set(void*  dst, cc_uint8 value,  cc_uint32 numBytes) { memset(dst, value, numBytes); }
 void Mem_Copy(void* dst, const void* src, cc_uint32 numBytes) { memcpy(dst, src,   numBytes); }
 
-int Mem_Equal(const void* a, const void* b, cc_uint32 numBytes) {
-	const cc_uint8* src = (const cc_uint8*)a;
-	const cc_uint8* dst = (const cc_uint8*)b;
-
-	while (numBytes--) { 
-		if (*src++ != *dst++) return false; 
-	}
-	return true;
-}
-
-CC_NOINLINE static void AbortOnAllocFailed(const char* place) {	
-	cc_string log; char logBuffer[STRING_SIZE+20 + 1];
-	String_InitArray_NT(log, logBuffer);
-
-	String_Format1(&log, "Out of memory! (when allocating %c)", place);
-	log.buffer[log.length] = '\0';
-	Logger_Abort(log.buffer);
-}
-
-void* Mem_Alloc(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
-	void* ptr = Mem_TryAlloc(numElems, elemsSize);
-	if (!ptr) AbortOnAllocFailed(place);
-	return ptr;
-}
-
-void* Mem_AllocCleared(cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
-	void* ptr = Mem_TryAllocCleared(numElems, elemsSize);
-	if (!ptr) AbortOnAllocFailed(place);
-	return ptr;
-}
-
-void* Mem_Realloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize, const char* place) {
-	void* ptr = Mem_TryRealloc(mem, numElems, elemsSize);
-	if (!ptr) AbortOnAllocFailed(place);
-	return ptr;
-}
-
-static CC_NOINLINE cc_uint32 CalcMemSize(cc_uint32 numElems, cc_uint32 elemsSize) {
-	if (!numElems) return 1; /* treat 0 size as 1 byte */
-	cc_uint32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	if (numBytes < numElems) return 0; /* TODO: Use proper overflow checking */
-	return numBytes;
-}
-
-#if defined CC_BUILD_WIN
-void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? HeapAlloc(heap, 0, size) : NULL;
-}
-
-void* Mem_TryAllocCleared(cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? HeapAlloc(heap, HEAP_ZERO_MEMORY, size) : NULL;
-}
-
-void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
-	cc_uint32 size = CalcMemSize(numElems, elemsSize);
-	return size ? HeapReAlloc(heap, 0, mem, size) : NULL;
-}
-
-void Mem_Free(void* mem) {
-	if (mem) HeapFree(heap, 0, mem);
-}
-#elif defined CC_BUILD_POSIX
 void* Mem_TryAlloc(cc_uint32 numElems, cc_uint32 elemsSize) {
 	cc_uint32 size = CalcMemSize(numElems, elemsSize);
 	return size ? malloc(size) : NULL;
@@ -169,34 +79,11 @@ void* Mem_TryRealloc(void* mem, cc_uint32 numElems, cc_uint32 elemsSize) {
 void Mem_Free(void* mem) {
 	if (mem) free(mem);
 }
-#endif
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Logging/Time-------------------------------------------------------*
 *#########################################################################################################################*/
-void Platform_Log1(const char* format, const void* a1) {
-	Platform_Log4(format, a1, NULL, NULL, NULL);
-}
-void Platform_Log2(const char* format, const void* a1, const void* a2) {
-	Platform_Log4(format, a1, a2, NULL, NULL);
-}
-void Platform_Log3(const char* format, const void* a1, const void* a2, const void* a3) {
-	Platform_Log4(format, a1, a2, a3, NULL);
-}
-
-void Platform_Log4(const char* format, const void* a1, const void* a2, const void* a3, const void* a4) {
-	cc_string msg; char msgBuffer[512];
-	String_InitArray(msg, msgBuffer);
-
-	String_Format4(&msg, format, a1, a2, a3, a4);
-	Platform_Log(msg.buffer, msg.length);
-}
-
-void Platform_LogConst(const char* message) {
-	Platform_Log(message, String_Length(message));
-}
-
 /* TODO: check this is actually accurate */
 static cc_uint64 sw_freqMul = 1, sw_freqDiv = 1;
 cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
@@ -204,73 +91,6 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	return ((end - beg) * sw_freqMul) / sw_freqDiv;
 }
 
-int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end) {
-	cc_uint64 raw = Stopwatch_ElapsedMicroseconds(beg, end);
-	if (raw > Int32_MaxValue) return Int32_MaxValue / 1000;
-	return (int)raw / 1000;
-}
-
-#if defined CC_BUILD_WIN
-static HANDLE conHandle;
-static BOOL hasDebugger;
-
-void Platform_Log(const char* msg, int len) {
-	char tmp[2048 + 1];
-	DWORD wrote;
-
-	if (conHandle) {
-		WriteFile(conHandle, msg,  len, &wrote, NULL);
-		WriteFile(conHandle, "\n",   1, &wrote, NULL);
-	}
-
-	if (!hasDebugger) return;
-	len = min(len, 2048);
-	Mem_Copy(tmp, msg, len); tmp[len] = '\0';
-
-	OutputDebugStringA(tmp);
-	OutputDebugStringA("\n");
-}
-
-#define FILETIME_EPOCH 50491123200000ULL
-#define FILETIME_UNIX_EPOCH 11644473600LL
-#define FileTime_TotalMS(time)  ((time / 10000)    + FILETIME_EPOCH)
-#define FileTime_UnixTime(time) ((time / 10000000) - FILETIME_UNIX_EPOCH)
-TimeMS DateTime_CurrentUTC_MS(void) {
-	FILETIME ft; 
-	cc_uint64 raw;
-	
-	GetSystemTimeAsFileTime(&ft);
-	/* in 100 nanosecond units, since Jan 1 1601 */
-	raw = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
-	return FileTime_TotalMS(raw);
-}
-
-void DateTime_CurrentLocal(struct DateTime* t) {
-	SYSTEMTIME localTime;
-	GetLocalTime(&localTime);
-
-	t->year   = localTime.wYear;
-	t->month  = localTime.wMonth;
-	t->day    = localTime.wDay;
-	t->hour   = localTime.wHour;
-	t->minute = localTime.wMinute;
-	t->second = localTime.wSecond;
-}
-
-static cc_bool sw_highRes;
-cc_uint64 Stopwatch_Measure(void) {
-	LARGE_INTEGER t;
-	FILETIME ft;
-
-	if (sw_highRes) {
-		QueryPerformanceCounter(&t);
-		return (cc_uint64)t.QuadPart;
-	} else {		
-		GetSystemTimeAsFileTime(&ft);
-		return (cc_uint64)ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
-	}
-}
-#elif defined CC_BUILD_POSIX
 /* log to android logcat */
 #ifdef CC_BUILD_ANDROID
 #include <android/log.h>
@@ -310,19 +130,13 @@ void DateTime_CurrentLocal(struct DateTime* t) {
 }
 
 #define NS_PER_SEC 1000000000ULL
-#endif
 /* clock_gettime is optional, see http://pubs.opengroup.org/onlinepubs/009696899/functions/clock_getres.html */
 /* "... These functions are part of the Timers option and need not be available on all implementations..." */
-#if defined CC_BUILD_WEB
-cc_uint64 Stopwatch_Measure(void) {
-	/* time is a milliseconds double */
-	return (cc_uint64)(emscripten_get_now() * 1000);
-}
-#elif defined CC_BUILD_DARWIN
+#if defined CC_BUILD_DARWIN
 cc_uint64 Stopwatch_Measure(void) { return mach_absolute_time(); }
 #elif defined CC_BUILD_SOLARIS
 cc_uint64 Stopwatch_Measure(void) { return gethrtime(); }
-#elif defined CC_BUILD_POSIX
+#else
 cc_uint64 Stopwatch_Measure(void) {
 	struct timespec t;
 	/* TODO: CLOCK_MONOTONIC_RAW ?? */
@@ -335,147 +149,6 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-cc_result Directory_Create(const cc_string* path) {
-	WCHAR str[NATIVE_STR_LEN];
-	cc_result res;
-
-	Platform_EncodeUtf16(str, path);
-	if (CreateDirectoryW(str, NULL)) return 0;
-	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
-
-	Platform_Utf16ToAnsi(str);
-	return CreateDirectoryA((LPCSTR)str, NULL) ? 0 : GetLastError();
-}
-
-int File_Exists(const cc_string* path) {
-	WCHAR str[NATIVE_STR_LEN];
-	DWORD attribs;
-
-	Platform_EncodeUtf16(str, path);
-	attribs = GetFileAttributesW(str);
-	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
-}
-
-static cc_result Directory_EnumCore(const cc_string* dirPath, const cc_string* file, DWORD attribs,
-									void* obj, Directory_EnumCallback callback) {
-	cc_string path; char pathBuffer[MAX_PATH + 10];
-	/* ignore . and .. entry */
-	if (file->length == 1 && file->buffer[0] == '.') return 0;
-	if (file->length == 2 && file->buffer[0] == '.' && file->buffer[1] == '.') return 0;
-
-	String_InitArray(path, pathBuffer);
-	String_Format2(&path, "%s/%s", dirPath, file);
-
-	if (attribs & FILE_ATTRIBUTE_DIRECTORY) return Directory_Enum(&path, obj, callback);
-	callback(&path, obj);
-	return 0;
-}
-
-cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
-	cc_string path; char pathBuffer[MAX_PATH + 10];
-	WCHAR str[NATIVE_STR_LEN];
-	WIN32_FIND_DATAW eW;
-	WIN32_FIND_DATAA eA;
-	int i, ansi = false;
-	HANDLE find;
-	cc_result res;	
-
-	/* Need to append \* to search for files in directory */
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "%s\\*", dirPath);
-	Platform_EncodeUtf16(str, &path);
-	
-	find = FindFirstFileW(str, &eW);
-	if (!find || find == INVALID_HANDLE_VALUE) {
-		if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
-		ansi = true;
-
-		/* Windows 9x does not support W API functions */
-		Platform_Utf16ToAnsi(str);
-		find = FindFirstFileA((LPCSTR)str, &eA);
-		if (find == INVALID_HANDLE_VALUE) return GetLastError();
-	}
-
-	if (ansi) {
-		do {
-			path.length = 0;
-			for (i = 0; i < MAX_PATH && eA.cFileName[i]; i++) {
-				String_Append(&path, Convert_CodepointToCP437(eA.cFileName[i]));
-			}
-			if ((res = Directory_EnumCore(dirPath, &path, eA.dwFileAttributes, obj, callback))) return res;
-		} while (FindNextFileA(find, &eA));
-	} else {
-		do {
-			path.length = 0;
-			for (i = 0; i < MAX_PATH && eW.cFileName[i]; i++) {
-				/* TODO: UTF16 to codepoint conversion */
-				String_Append(&path, Convert_CodepointToCP437(eW.cFileName[i]));
-			}
-			if ((res = Directory_EnumCore(dirPath, &path, eW.dwFileAttributes, obj, callback))) return res;
-		} while (FindNextFileW(find, &eW));
-	}
-
-	res = GetLastError(); /* return code from FindNextFile */
-	FindClose(find);
-	return res == ERROR_NO_MORE_FILES ? 0 : res;
-}
-
-static cc_result DoFile(cc_file* file, const cc_string* path, DWORD access, DWORD createMode) {
-	WCHAR str[NATIVE_STR_LEN];
-	cc_result res;
-	Platform_EncodeUtf16(str, path);
-
-	*file = CreateFileW(str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
-	if (*file && *file != INVALID_HANDLE_VALUE) return 0;
-	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
-
-	/* Windows 9x does not support W API functions */
-	Platform_Utf16ToAnsi(str);
-	*file = CreateFileA((LPCSTR)str, access, FILE_SHARE_READ, NULL, createMode, 0, NULL);
-	return *file != INVALID_HANDLE_VALUE ? 0 : GetLastError();
-}
-
-cc_result File_Open(cc_file* file, const cc_string* path) {
-	return DoFile(file, path, GENERIC_READ, OPEN_EXISTING);
-}
-cc_result File_Create(cc_file* file, const cc_string* path) {
-	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, CREATE_ALWAYS);
-}
-cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
-	return DoFile(file, path, GENERIC_WRITE | GENERIC_READ, OPEN_ALWAYS);
-}
-
-cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	BOOL success = ReadFile(file, data, count, bytesRead, NULL);
-	return success ? 0 : GetLastError();
-}
-
-cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	BOOL success = WriteFile(file, data, count, bytesWrote, NULL);
-	return success ? 0 : GetLastError();
-}
-
-cc_result File_Close(cc_file file) {
-	return CloseHandle(file) ? 0 : GetLastError();
-}
-
-cc_result File_Seek(cc_file file, int offset, int seekType) {
-	static cc_uint8 modes[3] = { FILE_BEGIN, FILE_CURRENT, FILE_END };
-	DWORD pos = SetFilePointer(file, offset, NULL, modes[seekType]);
-	return pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
-}
-
-cc_result File_Position(cc_file file, cc_uint32* pos) {
-	*pos = SetFilePointer(file, 0, NULL, FILE_CURRENT);
-	return *pos != INVALID_SET_FILE_POINTER ? 0 : GetLastError();
-}
-
-cc_result File_Length(cc_file file, cc_uint32* len) {
-	*len = GetFileSize(file, NULL);
-	return *len != INVALID_FILE_SIZE ? 0 : GetLastError();
-}
-#elif defined CC_BUILD_POSIX
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, path);
@@ -563,14 +236,7 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 cc_result File_Close(cc_file file) {
-#ifndef CC_BUILD_WEB
 	return close(file) == -1 ? errno : 0;
-#else
-	extern void interop_SyncFS(void);
-	int res = close(file) == -1 ? errno : 0; 
-	interop_SyncFS(); 
-	return res;
-#endif
 }
 
 cc_result File_Seek(cc_file file, int offset, int seekType) {
@@ -588,93 +254,11 @@ cc_result File_Length(cc_file file, cc_uint32* len) {
 	if (fstat(file, &st) == -1) { *len = -1; return errno; }
 	*len = st.st_size; return 0;
 }
-#endif
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------Threading--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-void Thread_Sleep(cc_uint32 milliseconds) { Sleep(milliseconds); }
-static DWORD WINAPI ExecThread(void* param) {
-	Thread_StartFunc func = (Thread_StartFunc)param;
-	func();
-	return 0;
-}
-
-void* Thread_Start(Thread_StartFunc func) {
-	DWORD threadID;
-	void* handle = CreateThread(NULL, 0, ExecThread, (void*)func, 0, &threadID);
-	if (!handle) {
-		Logger_Abort2(GetLastError(), "Creating thread");
-	}
-	return handle;
-}
-
-void Thread_Detach(void* handle) {
-	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing thread handle");
-	}
-}
-
-void Thread_Join(void* handle) {
-	WaitForSingleObject((HANDLE)handle, INFINITE);
-	Thread_Detach(handle);
-}
-
-void* Mutex_Create(void) {
-	CRITICAL_SECTION* ptr = (CRITICAL_SECTION*)Mem_Alloc(1, sizeof(CRITICAL_SECTION), "mutex");
-	InitializeCriticalSection(ptr);
-	return ptr;
-}
-
-void Mutex_Free(void* handle)   { 
-	DeleteCriticalSection((CRITICAL_SECTION*)handle); 
-	Mem_Free(handle);
-}
-void Mutex_Lock(void* handle)   { EnterCriticalSection((CRITICAL_SECTION*)handle); }
-void Mutex_Unlock(void* handle) { LeaveCriticalSection((CRITICAL_SECTION*)handle); }
-
-void* Waitable_Create(void) {
-	void* handle = CreateEventA(NULL, false, false, NULL);
-	if (!handle) {
-		Logger_Abort2(GetLastError(), "Creating waitable");
-	}
-	return handle;
-}
-
-void Waitable_Free(void* handle) {
-	if (!CloseHandle((HANDLE)handle)) {
-		Logger_Abort2(GetLastError(), "Freeing waitable");
-	}
-}
-
-void Waitable_Signal(void* handle) { SetEvent((HANDLE)handle); }
-void Waitable_Wait(void* handle) {
-	WaitForSingleObject((HANDLE)handle, INFINITE);
-}
-
-void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
-	WaitForSingleObject((HANDLE)handle, milliseconds);
-}
-#elif defined CC_BUILD_WEB
-/* No real threading support with emscripten backend */
-void Thread_Sleep(cc_uint32 milliseconds) { }
-void* Thread_Start(Thread_StartFunc func) { func(); return NULL; }
-void Thread_Detach(void* handle) { }
-void Thread_Join(void* handle) { }
-
-void* Mutex_Create(void) { return NULL; }
-void Mutex_Free(void* handle) { }
-void Mutex_Lock(void* handle) { }
-void Mutex_Unlock(void* handle) { }
-
-void* Waitable_Create(void) { return NULL; }
-void Waitable_Free(void* handle) { }
-void Waitable_Signal(void* handle) { }
-void Waitable_Wait(void* handle) { }
-void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) { }
-#elif defined CC_BUILD_POSIX
 void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
 
 #ifdef CC_BUILD_ANDROID
@@ -819,41 +403,18 @@ void Waitable_WaitFor(void* handle, cc_uint32 milliseconds) {
 	ptr->signalled = false;
 	Mutex_Unlock(&ptr->mutex);
 }
-#endif
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------Font/Text--------------------------------------------------------*
 *#########################################################################################################################*/
-#ifdef CC_BUILD_WEB
-void Platform_LoadSysFonts(void) { }
-#else
 static void FontDirCallback(const cc_string* path, void* obj) {
-	static const cc_string fonExt = String_FromConst(".fon");
-	/* Completely skip windows .FON files */
-	if (String_CaselessEnds(path, &fonExt)) return;
 	SysFonts_Register(path);
 }
 
 void Platform_LoadSysFonts(void) { 
 	int i;
-#if defined CC_BUILD_WIN
-	char winFolder[FILENAME_SIZE];
-	WCHAR winTmp[FILENAME_SIZE];
-	UINT winLen;
-	/* System folder path may not be C:/Windows */
-	cc_string dirs[1];
-	String_InitArray(dirs[0], winFolder);
-
-	winLen = GetWindowsDirectoryW(winTmp, FILENAME_SIZE);
-	if (winLen) {
-		String_AppendUtf16(&dirs[0], winTmp, winLen * 2);
-	} else {
-		String_AppendConst(&dirs[0], "C:/Windows");
-	}
-	String_AppendConst(&dirs[0], "/fonts");
-	
-#elif defined CC_BUILD_ANDROID
+#if defined CC_BUILD_ANDROID
 	static const cc_string dirs[3] = {
 		String_FromConst("/system/fonts"),
 		String_FromConst("/system/font"),
@@ -874,7 +435,7 @@ void Platform_LoadSysFonts(void) {
 		String_FromConst("/System/Library/Fonts"),
 		String_FromConst("/Library/Fonts")
 	};
-#elif defined CC_BUILD_POSIX
+#else
 	static const cc_string dirs[2] = {
 		String_FromConst("/usr/share/fonts"),
 		String_FromConst("/usr/local/share/fonts")
@@ -884,7 +445,6 @@ void Platform_LoadSysFonts(void) {
 		Directory_Enum(&dirs[i], NULL, FontDirCallback);
 	}
 }
-#endif
 
 
 /*########################################################################################################################*
@@ -892,27 +452,19 @@ void Platform_LoadSysFonts(void) {
 *#########################################################################################################################*/
 cc_result Socket_Create(cc_socket* s) {
 	*s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	return *s == -1 ? Socket__Error() : 0;
+	return *s == -1 ? errno : 0;
 }
 
 static cc_result Socket_ioctl(cc_socket s, cc_uint32 cmd, int* data) {
-#if defined CC_BUILD_WIN
-	return ioctlsocket(s, cmd, data);
-#else
 	return ioctl(s, cmd, data);
-#endif
 }
 
 cc_result Socket_Available(cc_socket s, int* available) {
-	return Socket_ioctl(s, FIONREAD, available);
+	return ioctl(s, FIONREAD, available);
 }
 cc_result Socket_SetBlocking(cc_socket s, cc_bool blocking) {
-#if defined CC_BUILD_WEB
-	return ERR_NOT_SUPPORTED; /* sockets always async */
-#else
 	int blocking_raw = blocking ? 0 : -1;
-	return Socket_ioctl(s, FIONBIO, &blocking_raw);
-#endif
+	return ioctl(s, FIONBIO, &blocking_raw);
 }
 
 cc_result Socket_GetError(cc_socket s, cc_result* result) {
@@ -930,79 +482,34 @@ cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
 		return ERR_INVALID_ARGUMENT;
 
 	res = connect(s, &addr, sizeof(addr));
-	return res == -1 ? Socket__Error() : 0;
+	return res == -1 ? errno : 0;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-#ifdef CC_BUILD_WEB
-	/* recv only reads one WebSocket frame at most, hence call it multiple times */
-	int recvCount = 0, pending;
-	*modified = 0;
-
-	while (count && !Socket_Available(s, &pending) && pending) {
-		recvCount = recv(s, data, count, 0);
-		if (recvCount == -1) return Socket__Error();
-
-		*modified += recvCount;
-		data      += recvCount; count -= recvCount;
-	}
-	return 0;
-#else
 	int recvCount = recv(s, data, count, 0);
 	if (recvCount != -1) { *modified = recvCount; return 0; }
-	*modified = 0; return Socket__Error();
-#endif
+	*modified = 0; return errno;
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	int sentCount = send(s, data, count, 0);
 	if (sentCount != -1) { *modified = sentCount; return 0; }
-	*modified = 0; return Socket__Error();
+	*modified = 0; return errno;
 }
 
 cc_result Socket_Close(cc_socket s) {
 	cc_result res = 0;
 	cc_result res1, res2;
 
-#if defined CC_BUILD_WEB
-	res1 = 0;
-#elif defined CC_BUILD_WIN
-	res1 = shutdown(s, SD_BOTH);
-#else
 	res1 = shutdown(s, SHUT_RDWR);
-#endif
-	if (res1 == -1) res = Socket__Error();
+	if (res1 == -1) res = errno;
 
-#if defined CC_BUILD_WIN
-	res2 = closesocket(s);
-#else
 	res2 = close(s);
-#endif
-	if (res2 == -1) res = Socket__Error();
+	if (res2 == -1) res = errno;
 	return res;
 }
 
-/* Alas, a simple cross-platform select() is not good enough */
-#if defined CC_BUILD_WIN
-cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	fd_set set;
-	struct timeval time = { 0 };
-	int selectCount;
-
-	set.fd_count    = 1;
-	set.fd_array[0] = s;
-
-	if (mode == SOCKET_POLL_READ) {
-		selectCount = select(1, &set, NULL, NULL, &time);
-	} else {
-		selectCount = select(1, NULL, &set, NULL, &time);
-	}
-
-	if (selectCount == -1) { *success = false; return Socket__Error(); }
-
-	*success = set.fd_count != 0; return 0;
-}
-#elif defined CC_BUILD_DARWIN
+#if defined CC_BUILD_DARWIN
 /* poll is broken on old OSX apparently https://daniel.haxx.se/docs/poll-vs-select.html */
 cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	fd_set set;
@@ -1018,7 +525,7 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 		selectCount = select(s + 1, NULL, &set, NULL, &time);
 	}
 
-	if (selectCount == -1) { *success = false; return Socket__Error(); }
+	if (selectCount == -1) { *success = false; return errno; }
 	*success = FD_ISSET(s, &set) != 0; return 0;
 }
 #else
@@ -1029,7 +536,7 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 
 	pfd.fd     = s;
 	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
-	if (poll(&pfd, 1, 0) == -1) { *success = false; return Socket__Error(); }
+	if (poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
 	
 	/* to match select, closed socket still counts as readable */
 	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
@@ -1042,72 +549,7 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 /*########################################################################################################################*
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-static cc_result Process_RawGetExePath(WCHAR* path, int* len) {
-	*len = GetModuleFileNameW(NULL, path, NATIVE_STR_LEN);
-	return *len ? 0 : GetLastError();
-}
-
-cc_result Process_StartGame(const cc_string* args) {
-	WCHAR path[NATIVE_STR_LEN + 1], raw[NATIVE_STR_LEN];
-	cc_string argv; char argvBuffer[NATIVE_STR_LEN];
-	STARTUPINFOW si        = { 0 };
-	PROCESS_INFORMATION pi = { 0 };
-	cc_result res;
-	int len;
-
-	Process_RawGetExePath(path, &len);
-	path[len] = '\0';
-	si.cb = sizeof(STARTUPINFOW);
-	
-	String_InitArray(argv, argvBuffer);
-	/* Game doesn't actually care about argv[0] */
-	String_Format1(&argv, "cc %s", args);
-	String_UNSAFE_TrimEnd(&argv);
-	Platform_EncodeUtf16(raw, &argv);
-
-	if (CreateProcessW(path, raw, NULL, NULL, 
-			false, 0, NULL, NULL, &si, &pi)) goto success;
-	if ((res = GetLastError()) != ERROR_CALL_NOT_IMPLEMENTED) return res;
-
-	/* Windows 9x does not support W API functions */
-	len = GetModuleFileNameA(NULL, (LPSTR)path, NATIVE_STR_LEN);
-	((char*)path)[len] = '\0';
-	Platform_Utf16ToAnsi(raw);
-
-	if (CreateProcessA((LPCSTR)path, (LPSTR)raw, NULL, NULL,
-			false, 0, NULL, NULL, &si, &pi)) goto success;
-	return GetLastError();
-
-success:
-	/* Don't leak memory for process return code */
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
-	return 0;
-}
-
-void Process_Exit(cc_result code) { ExitProcess(code); }
-cc_result Process_StartOpen(const cc_string* args) {
-	WCHAR str[NATIVE_STR_LEN];
-	cc_uintptr res;
-	Platform_EncodeUtf16(str, args);
-
-	res = (cc_uintptr)ShellExecuteW(NULL, NULL, str, NULL, NULL, SW_SHOWNORMAL);
-	/* MSDN: "If the function succeeds, it returns a value greater than 32. If the function fails, */
-	/*  it returns an error value that indicates the cause of the failure" */
-	return res > 32 ? 0 : (cc_result)res;
-}
-#elif defined CC_BUILD_WEB
-cc_result Process_StartGame(const cc_string* args) { return ERR_NOT_SUPPORTED; }
-void Process_Exit(cc_result code) { exit(code); }
-
-extern int interop_OpenTab(const char* url);
-cc_result Process_StartOpen(const cc_string* args) {
-	char str[NATIVE_STR_LEN];
-	Platform_EncodeUtf8(str, args);
-	return interop_OpenTab(str);
-}
-#elif defined CC_BUILD_ANDROID
+#if defined CC_BUILD_ANDROID
 static char gameArgsBuffer[512];
 static cc_string gameArgs = String_FromArray(gameArgsBuffer);
 
@@ -1115,13 +557,7 @@ cc_result Process_StartGame(const cc_string* args) {
 	String_Copy(&gameArgs, args);
 	return 0; /* TODO: Is there a clean way of handling an error */
 }
-void Process_Exit(cc_result code) { exit(code); }
-
-cc_result Process_StartOpen(const cc_string* args) {
-	JavaCall_String_Void("startOpen", args);
-	return 0;
-}
-#elif defined CC_BUILD_POSIX
+#else
 static cc_result Process_RawStart(const char* path, char** argv) {
 	pid_t pid = fork();
 	if (pid == -1) return errno;
@@ -1164,11 +600,16 @@ cc_result Process_StartGame(const cc_string* args) {
 	argv[j] = NULL;
 	return Process_RawStart(path, argv);
 }
-
+#endif
 void Process_Exit(cc_result code) { exit(code); }
 
 /* Opening browser/starting shell is not really standardised */
-#if defined CC_BUILD_MACOS
+#if defined CC_BUILD_ANDROID
+cc_result Process_StartOpen(const cc_string* args) {
+	JavaCall_String_Void("startOpen", args);
+	return 0;
+}
+#elif defined CC_BUILD_MACOS
 cc_result Process_StartOpen(const cc_string* args) {
 	UInt8 str[NATIVE_STR_LEN];
 	CFURLRef urlCF;
@@ -1281,113 +722,29 @@ static cc_result Process_RawGetExePath(char* path, int* len) {
 	return 0;
 }
 #endif
-#endif /* CC_BUILD_POSIX */
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------Updater----------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-#define UPDATE_TMP TEXT("CC_prev.exe")
-#define UPDATE_SRC TEXT(UPDATE_FILE)
-
-#if _WIN64
-const char* const Updater_D3D9 = "ClassiCube.64.exe";
-const char* const Updater_OGL  = "ClassiCube.64-opengl.exe";
-#else
-const char* const Updater_D3D9 = "ClassiCube.exe";
-const char* const Updater_OGL  = "ClassiCube.opengl.exe";
-#endif
-
-cc_bool Updater_Clean(void) {
-	return DeleteFile(UPDATE_TMP) || GetLastError() == ERROR_FILE_NOT_FOUND;
-}
-
-cc_result Updater_Start(const char** action) {
-	WCHAR path[NATIVE_STR_LEN + 1];
-	cc_result res;
-	int len = 0;
-
-	*action = "Getting executable path";
-	if ((res = Process_RawGetExePath(path, &len))) return res;
-	path[len] = '\0';
-
-	*action = "Moving executable to CC_prev.exe";
-	if (!MoveFileExW(path, UPDATE_TMP, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
-	*action = "Replacing executable";
-	if (!MoveFileExW(UPDATE_SRC, path, MOVEFILE_REPLACE_EXISTING)) return GetLastError();
-
-	*action = "Restarting game";
-	return Process_StartGame(&String_Empty);
-}
-
-cc_result Updater_GetBuildTime(cc_uint64* timestamp) {
-	WCHAR path[NATIVE_STR_LEN + 1];
-	cc_file file;
-	FILETIME ft;
-	cc_uint64 raw;
-	int len = 0;
-
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-	path[len] = '\0';
-
-	file = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-	if (file == INVALID_HANDLE_VALUE) return GetLastError();
-
-	if (GetFileTime(file, NULL, NULL, &ft)) {
-		raw        = ft.dwLowDateTime | ((cc_uint64)ft.dwHighDateTime << 32);
-		*timestamp = FileTime_UnixTime(raw);
-	} else {
-		res = GetLastError();
-	}
-
-	File_Close(file);
-	return res;
-}
-
-/* Don't need special execute permission on windows */
-cc_result Updater_MarkExecutable(void) { return 0; }
-cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
-	static const cc_string path = String_FromConst(UPDATE_FILE);
-	cc_file file;
-	FILETIME ft;
-	cc_uint64 raw;
-	cc_result res = File_OpenOrCreate(&file, &path);
-	if (res) return res;
-
-	raw = 10000000 * (timestamp + FILETIME_UNIX_EPOCH);
-	ft.dwLowDateTime  = (cc_uint32)raw;
-	ft.dwHighDateTime = (cc_uint32)(raw >> 32);
-
-	if (!SetFileTime(file, NULL, NULL, &ft)) res = GetLastError();
-	File_Close(file);
-	return res;
-}
-
-#elif defined CC_BUILD_WEB || defined CC_BUILD_ANDROID
 const char* const Updater_D3D9 = NULL;
-const char* const Updater_OGL  = NULL;
+cc_bool Updater_Clean(void) { return true; }
 
-#if defined CC_BUILD_WEB
-cc_result Updater_GetBuildTime(cc_uint64* t) { return ERR_NOT_SUPPORTED; }
-#else
+#if defined CC_BUILD_ANDROID
+const char* const Updater_OGL = NULL;
+
 cc_result Updater_GetBuildTime(cc_uint64* t) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	*t = JavaCallLong(env, "getApkUpdateTime", "()J", NULL);
 	return 0;
 }
-#endif
 
-cc_bool Updater_Clean(void)   { return true; }
-cc_result Updater_Start(const char** action) { *action = "Updating game"; return ERR_NOT_SUPPORTED; }
+cc_result Updater_Start(const char** action)   { *action = "Updating game"; return ERR_NOT_SUPPORTED; }
 cc_result Updater_MarkExecutable(void)         { return 0; }
 cc_result Updater_SetNewBuildTime(cc_uint64 t) { return ERR_NOT_SUPPORTED; }
-#elif defined CC_BUILD_POSIX
-cc_bool Updater_Clean(void) { return true; }
+#else
 
-const char* const Updater_D3D9 = NULL;
 #if defined CC_BUILD_LINUX
 #if __x86_64__
 const char* const Updater_OGL = "ClassiCube";
@@ -1465,30 +822,7 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 /*########################################################################################################################*
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-const cc_string DynamicLib_Ext = String_FromConst(".dll");
-
-void* DynamicLib_Load2(const cc_string* path) {
-	WCHAR str[NATIVE_STR_LEN];
-	Platform_EncodeUtf16(str, path);
-	return LoadLibraryW(str);
-}
-
-void* DynamicLib_Get2(void* lib, const char* name) {
-	return GetProcAddress((HMODULE)lib, name);
-}
-
-cc_bool DynamicLib_DescribeError(cc_string* dst) {
-	cc_result res = GetLastError();
-	Platform_DescribeError(res, dst);
-	String_Format1(dst, " (error %i)", &res);
-	return true;
-}
-#elif defined CC_BUILD_WEB
-void* DynamicLib_Load2(const cc_string* path)         { return NULL; }
-void* DynamicLib_Get2(void* lib, const char* name) { return NULL; }
-cc_bool DynamicLib_DescribeError(cc_string* dst)      { return false; }
-#elif defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
+#if defined MAC_OS_X_VERSION_MIN_REQUIRED && (MAC_OS_X_VERSION_MIN_REQUIRED < 1040)
 /* Really old mac OS versions don't have the dlopen/dlsym API */
 const cc_string DynamicLib_Ext = String_FromConst(".dylib");
 
@@ -1524,7 +858,7 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 	String_Format4(dst, "%c in %c (%i, sys %i)", msg, name, &err, &errNum);
 	return true;
 }
-#elif defined CC_BUILD_POSIX
+#else
 #include <dlfcn.h>
 /* TODO: Should we use .bundle instead of .dylib? */
 
@@ -1551,118 +885,10 @@ cc_bool DynamicLib_DescribeError(cc_string* dst) {
 }
 #endif
 
-cc_result DynamicLib_Load(const cc_string* path, void** lib) {
-	*lib = DynamicLib_Load2(path);
-	return *lib == NULL;
-}
-cc_result DynamicLib_Get(void* lib, const char* name, void** symbol) {
-	*symbol = DynamicLib_Get2(lib, name);
-	return *symbol == NULL;
-}
-
-
-cc_bool DynamicLib_GetAll(void* lib, const struct DynamicLibSym* syms, int count) {
-	int i, loaded = 0;
-	void* addr;
-
-	for (i = 0; i < count; i++) {
-		addr = DynamicLib_Get2(lib, syms[i].name);
-		if (addr) loaded++;
-		*syms[i].symAddr = addr;
-	}
-	return loaded == count;
-}
-
 
 /*########################################################################################################################*
 *--------------------------------------------------------Platform---------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-int Platform_EncodeUtf16(void* data, const cc_string* src) {
-	WCHAR* dst = (WCHAR*)data;
-	int i;
-	if (src->length > FILENAME_SIZE) Logger_Abort("String too long to expand");
-
-	for (i = 0; i < src->length; i++) {
-		*dst++ = Convert_CP437ToUnicode(src->buffer[i]);
-	}
-	*dst = '\0';
-	return src->length * 2;
-}
-
-void Platform_Utf16ToAnsi(void* data) {
-	WCHAR* src = (WCHAR*)data;
-	char* dst  = (char*)data;
-
-	while (*src) { *dst++ = (char)(*src++); }
-	*dst = '\0';
-}
-
-static void Platform_InitStopwatch(void) {
-	LARGE_INTEGER freq;
-	sw_highRes = QueryPerformanceFrequency(&freq);
-
-	if (sw_highRes) {
-		sw_freqMul = 1000 * 1000;
-		sw_freqDiv = freq.QuadPart;
-	} else { sw_freqDiv = 10; }
-}
-
-static BOOL (WINAPI *_AttachConsole)(DWORD processId);
-static BOOL (WINAPI *_IsDebuggerPresent)(void);
-
-static void LoadKernelFuncs(void) {
-	static const struct DynamicLibSym funcs[2] = {
-		DynamicLib_Sym(AttachConsole), DynamicLib_Sym(IsDebuggerPresent)
-	};
-	static const cc_string kernel32 = String_FromConst("KERNEL32.DLL");
-
-	void* lib = DynamicLib_Load2(&kernel32);
-	if (!lib) { Logger_DynamicLibWarn("loading", &kernel32); return; }
-	DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
-}
-
-void Platform_Init(void) {
-	WSADATA wsaData;
-	cc_result res;
-
-	Platform_InitStopwatch();
-	heap = GetProcessHeap();
-	
-	res = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (res) Logger_SysWarn(res, "starting WSA");
-
-	LoadKernelFuncs();
-	if (_IsDebuggerPresent) hasDebugger = _IsDebuggerPresent();
-	/* For when user runs from command prompt */
-	if (_AttachConsole) _AttachConsole(-1); /* ATTACH_PARENT_PROCESS */
-
-	conHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (conHandle == INVALID_HANDLE_VALUE) conHandle = NULL;
-}
-
-void Platform_Free(void) {
-	WSACleanup();
-	HeapDestroy(heap);
-}
-
-cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib) {
-	WCHAR chars[NATIVE_STR_LEN];
-	DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
-	if (lib) flags |= FORMAT_MESSAGE_FROM_HMODULE;
-
-	res = FormatMessageW(flags, lib, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
-						 chars, NATIVE_STR_LEN, NULL);
-	if (!res) return false;
-
-	String_AppendUtf16(dst, chars, res * 2);
-	return true;
-}
-
-cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
-	return Platform_DescribeErrorExt(res, dst, NULL);
-}
-#elif defined CC_BUILD_POSIX
 int Platform_EncodeUtf8(void* data, const cc_string* src) {
 	cc_uint8* dst = (cc_uint8*)data;
 	cc_uint8* cur;
@@ -1732,85 +958,14 @@ void Platform_Init(void) {
 	Platform_InitStopwatch();
 	Platform_InitSpecific();
 }
-#elif defined CC_BUILD_WEB
-EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {
-	/* no pointer showing more than 128 characters in chat */
-	cc_string str = String_FromRaw(msg, 128);
-	Logger_WarnFunc(&str);
-}
-
-extern void interop_InitModule(void);
-extern void interop_GetIndexedDBError(char* buffer);
-void Platform_Init(void) {
-	char tmp[64+1] = { 0 };
-	interop_InitModule();
-	
-	/* Check if an error occurred when pre-loading IndexedDB */
-	interop_GetIndexedDBError(tmp);
-	if (!tmp[0]) return;
-	
-	Chat_Add1("&cError preloading IndexedDB: %c", tmp);
-	Chat_AddRaw("&cPreviously saved settings/maps will be lost");
-	/* NOTE: You must pre-load IndexedDB before main() */
-	/* (because pre-loading only works asynchronously) */
-	/* If you don't, you'll get errors later trying to sync local to remote */
-	/* See doc/hosting-webclient.md for example preloading IndexedDB code */
-}
 #else
 void Platform_Init(void) { Platform_InitPosix(); }
 #endif
-#endif /* CC_BUILD_POSIX */
 
 
 /*########################################################################################################################*
 *-------------------------------------------------------Encryption--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-static BOOL (WINAPI *_CryptProtectData  )(DATA_BLOB* dataIn, PCWSTR dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
-static BOOL (WINAPI *_CryptUnprotectData)(DATA_BLOB* dataIn, PWSTR* dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
-
-static void LoadCryptFuncs(void) {
-	static const struct DynamicLibSym funcs[2] = {
-		DynamicLib_Sym(CryptProtectData), DynamicLib_Sym(CryptUnprotectData)
-	};
-	static const cc_string crypt32 = String_FromConst("CRYPT32.DLL");
-
-	void* lib = DynamicLib_Load2(&crypt32);
-	if (!lib) { Logger_DynamicLibWarn("loading", &crypt32); return; }
-	DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
-}
-
-cc_result Platform_Encrypt(const void* data, int len, cc_string* dst) {
-	DATA_BLOB input, output;
-	int i;
-	input.cbData = len; input.pbData = (BYTE*)data;
-
-	if (!_CryptProtectData) LoadCryptFuncs();
-	if (!_CryptProtectData) return ERR_NOT_SUPPORTED;
-	if (!_CryptProtectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
-
-	for (i = 0; i < output.cbData; i++) {
-		String_Append(dst, output.pbData[i]);
-	}
-	LocalFree(output.pbData);
-	return 0;
-}
-cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
-	DATA_BLOB input, output;
-	int i;
-	input.cbData = len; input.pbData = (BYTE*)data;
-
-	if (!_CryptUnprotectData) LoadCryptFuncs();
-	if (!_CryptUnprotectData) return ERR_NOT_SUPPORTED;
-	if (!_CryptUnprotectData(&input, NULL, NULL, NULL, NULL, 0, &output)) return GetLastError();
-
-	for (i = 0; i < output.cbData; i++) {
-		String_Append(dst, output.pbData[i]);
-	}
-	LocalFree(output.pbData);
-	return 0;
-}
-#elif defined CC_BUILD_POSIX
 /* Encrypts data using XTEA block cipher, with OS specific method to get machine-specific key */
 
 static void EncipherBlock(cc_uint32* v, const cc_uint32* key, cc_string* dst) {
@@ -1999,81 +1154,12 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 	}
 	return 0;
 }
-#endif
 
 
 /*########################################################################################################################*
 *-----------------------------------------------------Configuration-------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_WIN
-static cc_string Platform_NextArg(STRING_REF cc_string* args) {
-	cc_string arg;
-	int end;
-
-	/* get rid of leading spaces before arg */
-	while (args->length && args->buffer[0] == ' ') {
-		*args = String_UNSAFE_SubstringAt(args, 1);
-	}
-
-	if (args->length && args->buffer[0] == '"') {
-		/* "xy za" is used for arg with spaces */
-		*args = String_UNSAFE_SubstringAt(args, 1);
-		end = String_IndexOf(args, '"');
-	} else {
-		end = String_IndexOf(args, ' ');
-	}
-
-	if (end == -1) {
-		arg   = *args;
-		args->length = 0;
-	} else {
-		arg   = String_UNSAFE_Substring(args, 0, end);
-		*args = String_UNSAFE_SubstringAt(args, end + 1);
-	}
-	return arg;
-}
-
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	cc_string cmdArgs = String_FromReadonly(GetCommandLineA());
-	int i;
-	Platform_NextArg(&cmdArgs); /* skip exe path */
-
-	for (i = 0; i < GAME_MAX_CMDARGS; i++) {
-		args[i] = Platform_NextArg(&cmdArgs);
-
-		if (!args[i].length) break;
-	}
-	return i;
-}
-
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	WCHAR path[NATIVE_STR_LEN + 1];
-	int i, len;
-	cc_result res = Process_RawGetExePath(path, &len);
-	if (res) return res;
-
-	/* Get rid of filename at end of directory */
-	for (i = len - 1; i >= 0; i--, len--) {
-		if (path[i] == '/' || path[i] == '\\') break;
-	}
-
-	path[len] = '\0';
-	return SetCurrentDirectoryW(path) ? 0 : GetLastError();
-}
-#elif defined CC_BUILD_WEB
-int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	int i, count;
-	argc--; argv++; /* skip executable path argument */
-
-	count = min(argc, GAME_MAX_CMDARGS);
-	for (i = 0; i < count; i++) { args[i] = String_FromReadonly(argv[i]); }
-	return count;
-}
-
-cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return chdir("/classicube") == -1 ? errno : 0;
-}
-#elif defined CC_BUILD_ANDROID
+#if defined CC_BUILD_ANDROID
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	if (!gameArgs.length) return 0;
 	return String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
@@ -2088,7 +1174,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	Platform_Log1("EXTERNAL DIR: %s|", &dir);
 	return chdir(dir.buffer) == -1 ? errno : 0;
 }
-#elif defined CC_BUILD_POSIX
+#else
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;
 	argc--; argv++; /* skip executable path argument */
@@ -2264,4 +1350,5 @@ void JavaCall_String_String(const char* name, const cc_string* arg, cc_string* d
 	ReturnString(env, obj, dst);
 	(*env)->DeleteLocalRef(env, args[0].l);
 }
+#endif
 #endif
