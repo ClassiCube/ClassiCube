@@ -134,19 +134,19 @@ mergeInto(LibraryManager.library, {
           recv_queue: [],
           socket: null,
         };  
-        this.sockets.push(sock);
+        SOCKETS.sockets.push(sock);
       
-        return (this.sockets.length - 1) | 0;
+        return (SOCKETS.sockets.length - 1) | 0;
       },
       connect:function(fd, addr, port) {
-        var sock = this.sockets[fd];
-        if (!sock) return this.EBADF;
+        var sock = SOCKETS.sockets[fd];
+        if (!sock) return SOCKETS.EBADF;
       
         // early out if we're already connected / in the middle of connecting
         var ws = sock.socket;
         if (ws) {
-          if (ws.readyState === ws.CONNECTING) return this.EALREADY;
-          return this.EISCONN;
+          if (ws.readyState === ws.CONNECTING) return SOCKETS.EALREADY;
+          return SOCKETS.EISCONN;
         }
         
         // create the actual websocket object and connect
@@ -156,7 +156,7 @@ mergeInto(LibraryManager.library, {
           ws = new WebSocket(url, 'ClassiCube');
           ws.binaryType = 'arraybuffer';
         } catch (e) {
-          return this.EHOSTUNREACH;
+          return SOCKETS.EHOSTUNREACH;
         }
         sock.socket = ws;
         
@@ -183,14 +183,14 @@ mergeInto(LibraryManager.library, {
         ws.onerror = function(error) {
           // The WebSocket spec only allows a 'simple event' to be thrown on error,
           // so we only really know as much as ECONNREFUSED.
-          sock.error = -this.ECONNREFUSED; // Used in getsockopt for SOL_SOCKET/SO_ERROR test.
+          sock.error = -SOCKETS.ECONNREFUSED; // Used in getsockopt for SOL_SOCKET/SO_ERROR test.
         };
         // always "fail" in non-blocking mode
-        return this.EINPROGRESS;
+        return SOCKETS.EINPROGRESS;
       },
       poll:function(fd) {
-        var sock = this.sockets[fd];
-        if (!sock) return this.EBADF;
+        var sock = SOCKETS.sockets[fd];
+        if (!sock) return SOCKETS.EBADF;
             
         var ws   = sock.socket;
         if (!ws) return 0;
@@ -201,20 +201,20 @@ mergeInto(LibraryManager.library, {
         return mask;
       },
       getPending:function(fd) {
-        var sock = this.sockets[fd];
-        if (!sock) return this.EBADF;
+        var sock = SOCKETS.sockets[fd];
+        if (!sock) return SOCKETS.EBADF;
 
         return sock.recv_queue.length;
       },
       getError:function(fd) {
-        var sock = this.sockets[fd];
-        if (!sock) return this.EBADF;
+        var sock = SOCKETS.sockets[fd];
+        if (!sock) return SOCKETS.EBADF;
 
         return sock.error || 0;
       },
       close:function(fd) {
-        var sock = this.sockets[fd];
-        if (!sock) return this.EBADF;
+        var sock = SOCKETS.sockets[fd];
+        if (!sock) return SOCKETS.EBADF;
       
         try {
           sock.socket.close();
@@ -224,14 +224,14 @@ mergeInto(LibraryManager.library, {
         return 0;
       },
       send:function(fd, src, length) {
-        var sock = this.sockets[fd];
-        if (!sock) return this.EBADF;
+        var sock = SOCKETS.sockets[fd];
+        if (!sock) return SOCKETS.EBADF;
       
         var ws = sock.socket;
         if (!ws || ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED) {
-          return this.ENOTCONN;
+          return SOCKETS.ENOTCONN;
         } else if (ws.readyState === ws.CONNECTING) {
-          return this.EAGAIN;
+          return SOCKETS.EAGAIN;
         }
         var data = HEAP8.slice(src, src + length);
         
@@ -239,22 +239,22 @@ mergeInto(LibraryManager.library, {
           ws.send(data);
           return length;
         } catch (e) {
-          return this.EINVAL;
+          return SOCKETS.EINVAL;
         }
       },
       recv:function(fd, dst, length) {
-        var sock = this.sockets[fd];
-        if (!sock) return this.EBADF;
+        var sock = SOCKETS.sockets[fd];
+        if (!sock) return SOCKETS.EBADF;
       
         var packet = sock.recv_queue.shift();
         if (!packet) {
           var ws = sock.socket;
         
           if (!ws || ws.readyState == ws.CLOSING || ws.readyState == ws.CLOSED) {
-            return this.ENOTCONN;
+            return SOCKETS.ENOTCONN;
           } else {
             // socket is in a valid state but truly has nothing available
-            return this.EAGAIN;
+            return SOCKETS.EAGAIN;
           }
         }
         

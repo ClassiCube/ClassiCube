@@ -127,7 +127,7 @@ NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TOD
 
 #### Web
 
-```emcc *.c -s ALLOW_MEMORY_GROWTH=1 --preload-file texpacks/default.zip```
+```emcc *.c -s ALLOW_MEMORY_GROWTH=1 --js-library interop_web.js --preload-file texpacks/default.zip```
 
 The generated javascript file has some issues. [See here for how to fix](doc/compile-fixes.md#webclient-patches)
 
