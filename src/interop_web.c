@@ -1,4 +1,8 @@
 #include "Core.h"
+/* Copyright 2010 The Emscripten Authors. All rights reserved. */
+/* Emscripten is available under two separate licenses, the MIT license and the */
+/* University of Illinois/NCSA Open Source License. Both these licenses can be */
+/* found in the LICENSE file. */
 
 #ifdef CC_BUILD_WEB
 #include <emscripten/emscripten.h>
@@ -140,6 +144,207 @@ void interop_SyncFS(void) {
 int interop_OpenTab(const char* url) {
 	EM_ASM_({ window.open(UTF8ToString($0)); }, url);
 	return 0;
+}
+
+void interop_Log(const char* msg, int len) {
+	EM_ASM_({ Module.print(UTF8ArrayToString(HEAPU8, $0, $1)); }, msg, len);
+}
+
+void interop_InitSockets(void) {
+	EM_ASM({
+		window.SOCKETS = {
+		  EBADF:-8,EISCONN:-30,ENOTCONN:-53,EAGAIN:-6,EWOULDBLOCK:-6,EHOSTUNREACH:-23,EINPROGRESS:-26,EALREADY:-7,ECONNRESET:-15,EINVAL:-28,ECONNREFUSED:-14,
+		  sockets = [],
+		  
+		  createSocket:function() {
+		    var sock = {
+		      error: null, // Used in getsockopt for SOL_SOCKET/SO_ERROR test
+		      recv_queue: [],
+		      socket: null,
+		    };  
+		    sockets.push(sock);
+			
+		    return (sockets.length - 1) | 0;
+		  },
+		  connect:function(fd, addr, port) {
+			var sock = sockets[fd];
+			if (!sock) return EBADF;
+			
+		    // early out if we're already connected / in the middle of connecting
+		    var ws = sock.socket;
+		    if (ws) {
+		      if (ws.readyState === ws.CONNECTING) return EALREADY;
+		      return EISCONN;
+		    }
+		    
+		    // create the actual websocket object and connect
+		    try {
+		      var parts = addr.split('/');
+		      var url = 'ws://' + parts[0] + ":" + port + "/" + parts.slice(1).join('/');
+		      ws = new WebSocket(url, 'ClassiCube');
+		      ws.binaryType = 'arraybuffer';
+		    } catch (e) {
+		      return EHOSTUNREACH;
+		    }
+		    sock.socket = ws;
+		    
+		    ws.onopen  = function() {};
+		    ws.onclose = function() {};
+		    ws.onmessage = function(event) {
+		      var data = event.data;
+		      if (typeof data === 'string') {
+		        var encoder = new TextEncoder(); // should be utf-8
+		        data = encoder.encode(data); // make a typed array from the string
+		      } else {
+		        assert(data.byteLength !== undefined); // must receive an ArrayBuffer
+		        if (data.byteLength == 0) {
+		          // An empty ArrayBuffer will emit a pseudo disconnect event
+		          // as recv/recvmsg will return zero which indicates that a socket
+		          // has performed a shutdown although the connection has not been disconnected yet.
+		          return;
+		        } else {
+		          data = new Uint8Array(data); // make a typed array view on the array buffer
+		        }
+		      }
+		      sock.recv_queue.push(data);
+		    };
+		    ws.onerror = function(error) {
+		      // The WebSocket spec only allows a 'simple event' to be thrown on error,
+		      // so we only really know as much as ECONNREFUSED.
+		      sock.error = -ECONNREFUSED; // Used in getsockopt for SOL_SOCKET/SO_ERROR test.
+		    };
+		    // always "fail" in non-blocking mode
+		    return EINPROGRESS;
+		  },
+		  poll:function(fd) {
+			var sock = sockets[fd];
+			if (!sock) return EBADF;
+				    
+		    var ws   = sock.socket;
+			if (!ws) return 0;
+			var mask = 0;
+
+		    if (sock.recv_queue.length || (ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED)) mask |= 1;
+		    if (ws.readyState === ws.OPEN) mask |= 2;
+		    return mask;
+		  },
+		  getPending:function(fd) {
+			var sock = sockets[fd];
+			if (!sock) return EBADF;
+			
+		    var bytes = 0;
+		    if (sock.recv_queue.length) {
+		      bytes = sock.recv_queue[0].data.length;
+		    }
+		    return bytes;
+		  },
+		  getError:function(fd) {
+			var sock = sockets[fd];
+			if (!sock) return EBADF;
+			
+		    return sock.error || 0;
+		  },
+		  close:function(fd) {
+			var sock = sockets[fd];
+			if (!sock) return EBADF;
+			
+		    try {
+		      sock.socket.close();
+		    } catch (e) {
+		    }
+		    delete sock.socket;
+		    return 0;
+		  },
+		  send:function(fd, src, length) {
+			var sock = sockets[fd];
+			if (!sock) return EBADF;
+			
+		    var ws = sock.socket;
+		    if (!ws || ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED) {
+		      return ENOTCONN;
+		    } else if (ws.readyState === ws.CONNECTING) {
+		      return EAGAIN;
+		    }
+		    var data = HEAP8.slice(src, src + length);
+		    
+		    try {
+		      ws.send(data);
+		      return length;
+		    } catch (e) {
+		      return EINVAL;
+		    }
+		  },
+		  recv:function(fd, dst, length) {
+			var sock = sockets[fd];
+			if (!sock) return EBADF;
+			
+		    var packet = sock.recv_queue.shift();
+		    if (!packet) {
+		      var ws = sock.socket;
+		    
+		      if (!ws || ws.readyState == = ws.CLOSING || ws.readyState == = ws.CLOSED) {
+		        return ENOTCONN;
+		      } else {
+		        // socket is in a valid state but truly has nothing available
+		        return EAGAIN;
+		      }
+		    }
+		    
+		    // packet will be an ArrayBuffer if it's unadulterated, but if it's
+		    // requeued TCP data it'll be an ArrayBufferView
+		    var packetLength = packet.byteLength || packet.length;
+		    var packetOffset = packet.byteOffset || 0;
+		    var packetBuffer = packet.buffer || packet;
+		    var bytesRead = Math.min(length, packetLength);
+		    var msg = new Uint8Array(packetBuffer, packetOffset, bytesRead);
+		    
+		    // push back any unread data for TCP connections
+		    if (bytesRead < packetLength) {
+		      var bytesRemaining = packetLength - bytesRead;
+		      packet = new Uint8Array(packetBuffer, packetOffset + bytesRead, bytesRemaining);
+		      sock.recv_queue.unshift(packet);
+		    }
+			
+		    HEAPU8.set(msg.buffer, dst);
+		    return msg.buffer.byteLength;
+		  }
+		};
+	});
+}
+
+int interop_SocketCreate(void) {
+	return EM_ASM_INT_V({ return SOCKETS.createSocket(); });
+}
+
+int interop_SocketConnect(int sock, const char* addr, int port) {
+	return EM_ASM_INT({
+		var str = UTF8ToString($1);
+		return SOCKETS.connect($0, str, $2);
+	}, sock, addr, port);
+}
+
+int interop_SocketClose(int sock) {
+	return EM_ASM_INT({ return SOCKETS.close($0); }, sock);
+}
+
+int interop_SocketSend(int sock, const void* data, int len) {
+	return EM_ASM_INT({ return SOCKETS.send($0, $1, $2); }, sock, data, len);
+}
+
+int interop_SocketRecv(int sock, void* data, int len) {
+	return EM_ASM_INT({ return SOCKETS.recv($0, $1, $2); }, sock, data, len);
+}
+
+int interop_SocketGetPending(int sock) {
+	return EM_ASM_INT({ return SOCKETS.getPending($0); }, sock);
+}
+
+int interop_SocketGetError(int sock) {
+	return EM_ASM_INT({ return SOCKETS.getError($0); }, sock);
+}
+
+int interop_SocketPoll(int sock) {
+	return EM_ASM_INT({ return SOCKETS.poll($0); }, sock);
 }
 
 

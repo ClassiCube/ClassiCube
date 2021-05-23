@@ -10,7 +10,6 @@
 #include "Utils.h"
 #include "Errors.h"
 
-/* POSIX can be shared between Linux/BSD/macOS */
 #include <errno.h>
 #include <time.h>
 #include <stdlib.h>
@@ -18,15 +17,9 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <utime.h>
-#include <signal.h>
 #include <stdio.h>
 
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
@@ -73,9 +66,9 @@ cc_uint64 Stopwatch_ElapsedMicroseconds(cc_uint64 beg, cc_uint64 end) {
 	return ((end - beg) * sw_freqMul) / sw_freqDiv;
 }
 
+extern void interop_Log(const char* msg, int len);
 void Platform_Log(const char* msg, int len) {
-	write(STDOUT_FILENO, msg,  len);
-	write(STDOUT_FILENO, "\n",   1);
+	interop_Log(msg, len);
 }
 
 #define UnixTime_TotalMS(time) ((cc_uint64)time.tv_sec * 1000 + UNIX_EPOCH + (time.tv_usec / 1000))
@@ -248,76 +241,98 @@ void Platform_LoadSysFonts(void) { }
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+extern int interop_SocketCreate(void);
+extern int interop_SocketConnect(int sock, const char* addr, int port);
+extern int interop_SocketClose(int sock);
+extern int interop_SocketSend(int sock, const void* data, int len);
+extern int interop_SocketRecv(int sock, void* data, int len);
+extern int interop_SocketGetPending(int sock);
+extern int interop_SocketGetError(int sock);
+extern int interop_SocketPoll(int sock);
+
 cc_result Socket_Create(cc_socket* s) {
-	*s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	return *s == -1 ? errno : 0;
+	*s = interop_SocketCreate();
+	return 0;
 }
 
 cc_result Socket_Available(cc_socket s, int* available) {
-	return ioctl(s, FIONREAD, available);
+	int res = interop_SocketGetPending(s);
+	/* returned result is negative for error */
+
+	if (res >= 0) {
+		*available = res; return 0;
+	} else {
+		*available = 0; return -res;
+	}
 }
 cc_result Socket_SetBlocking(cc_socket s, cc_bool blocking) {
 	return ERR_NOT_SUPPORTED; /* sockets always async */
 }
 
 cc_result Socket_GetError(cc_socket s, cc_result* result) {
-	socklen_t resultSize = sizeof(cc_result);
-	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
+	int res = interop_SocketGetError(s);
+	/* returned result is negative for error */
+
+	if (res >= 0) {
+		*result = res; return 0;
+	} else {
+		*result = 0; return -res;
+	}
 }
 
 cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
-	struct sockaddr addr;
-	cc_result res;
-	addr.sa_family = AF_INET;
-
-	Stream_SetU16_BE( (cc_uint8*)&addr.sa_data[0], port);
-	if (!Utils_ParseIP(ip, (cc_uint8*)&addr.sa_data[2])) 
-		return ERR_INVALID_ARGUMENT;
-
-	res = connect(s, &addr, sizeof(addr));
-	return res == -1 ? errno : 0;
+	char addr[NATIVE_STR_LEN];
+	Platform_EncodeUtf8(addr, ip);
+	return interop_SocketConnect(s, addr, port);
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	/* recv only reads one WebSocket frame at most, hence call it multiple times */
-	int recvCount = 0, pending;
-	*modified = 0;
+	int res; *modified = 0;
 
-	while (count && !Socket_Available(s, &pending) && pending) {
-		recvCount = recv(s, data, count, 0);
-		if (recvCount == -1) return errno;
+	while (count) {
+		res = interop_SocketRecv(s, data, count);
+		/* returned result is negative for error */
 
-		*modified += recvCount;
-		data      += recvCount; count -= recvCount;
+		if (res >= 0) {
+			*modified += res;
+			data      += res; count -= res;
+		} else {
+			/* EAGAIN when no data available */
+			if (res == -EAGAIN) break;
+			return -res;
+		}
 	}
 	return 0;
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int sentCount = send(s, data, count, 0);
-	if (sentCount != -1) { *modified = sentCount; return 0; }
-	*modified = 0; return errno;
+	int res = interop_SocketSend(s, data, count);
+	/* returned result is negative for error */
+
+	if (res >= 0) {
+		*modified = res; return 0;
+	} else {
+		*modified = 0; return -res;
+	}
 }
 
 cc_result Socket_Close(cc_socket s) {
-	cc_result res = close(s);
-	if (res == -1) res = errno;
-	return res;
+	/* returned result is negative for error */
+	return -interop_SocketClose(s);
 }
 
-#include <poll.h>
 cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	struct pollfd pfd;
-	int flags;
+	int res = interop_SocketPoll(s), flags;
+	/* returned result is negative for error */
 
-	pfd.fd     = s;
-	pfd.events = mode == SOCKET_POLL_READ ? POLLIN : POLLOUT;
-	if (poll(&pfd, 1, 0) == -1) { *success = false; return errno; }
-	
-	/* to match select, closed socket still counts as readable */
-	flags    = mode == SOCKET_POLL_READ ? (POLLIN | POLLHUP) : POLLOUT;
-	*success = (pfd.revents & flags) != 0;
-	return 0;
+	if (res >= 0) {
+		flags    = mode == SOCKET_POLL_READ ? 0x01 : 0x02;
+		*success = (res & flags) != 0;
+		return 0;
+	} else {
+		*success = false; return -res;
+	}
 }
 
 
@@ -397,10 +412,13 @@ EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {
 }
 
 extern void interop_InitModule(void);
+extern void interop_InitSockets(void);
 extern void interop_GetIndexedDBError(char* buffer);
+
 void Platform_Init(void) {
 	char tmp[64+1] = { 0 };
 	interop_InitModule();
+	interop_InitSockets();
 	
 	/* Check if an error occurred when pre-loading IndexedDB */
 	interop_GetIndexedDBError(tmp);
