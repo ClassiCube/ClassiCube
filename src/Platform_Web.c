@@ -282,10 +282,14 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 
 cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
 	char addr[NATIVE_STR_LEN];
+	int res;
 	Platform_EncodeUtf8(addr, ip);
-
 	/* returned result is negative for error */
-	return -interop_SocketConnect(s, addr, port);
+	res = -interop_SocketConnect(s, addr, port);
+
+	/* error returned when invalid address provided */
+	if (res == EHOSTUNREACH) return ERR_INVALID_ARGUMENT;
+	return res;
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
@@ -293,8 +297,8 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 	int res; *modified = 0;
 
 	while (count) {
-		res = interop_SocketRecv(s, data, count);
 		/* returned result is negative for error */
+		res = interop_SocketRecv(s, data, count);
 
 		if (res >= 0) {
 			*modified += res;
@@ -309,8 +313,8 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 }
 
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
-	int res = interop_SocketSend(s, data, count);
 	/* returned result is negative for error */
+	int res = interop_SocketSend(s, data, count);
 
 	if (res >= 0) {
 		*modified = res; return 0;
@@ -325,8 +329,8 @@ cc_result Socket_Close(cc_socket s) {
 }
 
 cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
-	int res = interop_SocketPoll(s), flags;
 	/* returned result is negative for error */
+	int res = interop_SocketPoll(s), flags;
 
 	if (res >= 0) {
 		flags    = mode == SOCKET_POLL_READ ? 0x01 : 0x02;
@@ -391,19 +395,18 @@ int Platform_EncodeUtf8(void* data, const cc_string* src) {
 }
 
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst) {
-	char chars[NATIVE_STR_LEN];
+	char* str;
 	int len;
 
-	/* For unrecognised error codes, strerror_r might return messages */
+	/* For unrecognised error codes, strerror might return messages */
 	/*  such as 'No error information', which is not very useful */
-	/* (could check errno here but quicker just to skip entirely) */
 	if (res >= 1000) return false;
 
-	len = strerror_r(res, chars, NATIVE_STR_LEN);
-	if (len == -1) return false;
+	str = strerror(res);
+	if (!str) return false;
 
-	len = String_CalcLen(chars, NATIVE_STR_LEN);
-	String_AppendUtf8(dst, chars, len);
+	len = String_CalcLen(str, NATIVE_STR_LEN);
+	String_AppendUtf8(dst, str, len);
 	return true;
 }
 

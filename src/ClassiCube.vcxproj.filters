@@ -545,8 +545,5 @@
     <ClCompile Include="Platform_Posix.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="interop_web.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

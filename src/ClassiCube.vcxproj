@@ -272,7 +272,6 @@
     <ClCompile Include="Graphics.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
-    <ClCompile Include="interop_web.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="Launcher.c" />
     <ClCompile Include="LScreens.c" />
