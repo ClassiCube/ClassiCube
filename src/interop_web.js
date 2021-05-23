@@ -203,17 +203,13 @@ mergeInto(LibraryManager.library, {
       getPending:function(fd) {
         var sock = this.sockets[fd];
         if (!sock) return this.EBADF;
-      
-        var bytes = 0;
-        if (sock.recv_queue.length) {
-          bytes = sock.recv_queue[0].data.length;
-        }
-        return bytes;
+
+        return sock.recv_queue.length;
       },
       getError:function(fd) {
         var sock = this.sockets[fd];
         if (!sock) return this.EBADF;
-      
+
         return sock.error || 0;
       },
       close:function(fd) {
@@ -277,8 +273,8 @@ mergeInto(LibraryManager.library, {
           sock.recv_queue.unshift(packet);
         }
       
-        HEAPU8.set(msg.buffer, dst);
-        return msg.buffer.byteLength;
+        HEAPU8.set(msg, dst);
+        return msg.byteLength;
       }
     };
   },

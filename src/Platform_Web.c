@@ -283,7 +283,9 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
 	char addr[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(addr, ip);
-	return interop_SocketConnect(s, addr, port);
+
+	/* returned result is negative for error */
+	return -interop_SocketConnect(s, addr, port);
 }
 
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
