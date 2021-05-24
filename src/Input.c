@@ -69,13 +69,12 @@ static cc_bool AnyBlockTouches(void) {
 static void ClearTouches(void) {
 	int i;
 	for (i = 0; i < INPUT_MAX_POINTERS; i++) touches[i].type = 0;
-	Pointers_Count  = 0;
+	Pointers_Count = Input_TouchMode ? 0 : 1;
 }
 
 void Input_SetTouchMode(cc_bool enabled) {
-	ClearTouches();
 	Input_TouchMode = enabled;
-	Pointers_Count  = enabled ? 0 : 1;
+	ClearTouches();
 }
 
 static cc_bool MovedFromBeg(int i, int x, int y) {
