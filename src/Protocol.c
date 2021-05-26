@@ -468,7 +468,10 @@ static void Classic_StartLoading(void) {
 }
 
 static void Classic_LevelInit(cc_uint8* data) {
-	if (!map_begunLoading) Classic_StartLoading();
+	/* in case server is buggy and sends LevelInit multiple times */
+	if (map_begunLoading) return;
+
+	Classic_StartLoading();
 	if (!cpe_fastMap) return;
 
 	/* Fast map puts volume in header, and uses raw DEFLATE without GZIP header/footer */
