@@ -125,7 +125,7 @@ mergeInto(LibraryManager.library, {
   },
   interop_InitSockets: function() {
     window.SOCKETS = {
-      EBADF:-8,EISCONN:-30,ENOTCONN:-53,EAGAIN:-6,EWOULDBLOCK:-6,EHOSTUNREACH:-23,EINPROGRESS:-26,EALREADY:-7,ECONNRESET:-15,EINVAL:-28,ECONNREFUSED:-14,
+      EBADF:-8,EISCONN:-30,ENOTCONN:-53,EAGAIN:-6,EHOSTUNREACH:-23,EINPROGRESS:-26,EALREADY:-7,ECONNRESET:-15,EINVAL:-28,ECONNREFUSED:-14,
       sockets: [],
       
       createSocket:function() {

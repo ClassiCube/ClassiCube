@@ -22,10 +22,17 @@
 #include <sys/time.h>
 #include <stdio.h>
 
+/* Unfortunately, errno constants are different in some older emscripten versions */
+/*  (linux errno compared to WASI errno) */
+/* So just use the same numbers as interop_web.js (otherwise connecting always fail) */
+#define _EINPROGRESS  26
+#define _EAGAIN        6 /* same as EWOULDBLOCK */
+#define _EHOSTUNREACH 23
+
 const cc_result ReturnCode_FileShareViolation = 1000000000; /* TODO: not used apparently */
 const cc_result ReturnCode_FileNotFound     = ENOENT;
-const cc_result ReturnCode_SocketInProgess  = EINPROGRESS;
-const cc_result ReturnCode_SocketWouldBlock = EWOULDBLOCK;
+const cc_result ReturnCode_SocketInProgess  = _EINPROGRESS;
+const cc_result ReturnCode_SocketWouldBlock = _EAGAIN;
 const cc_result ReturnCode_DirectoryExists  = EEXIST;
 #include <emscripten.h>
 #include "Chat.h"
@@ -288,7 +295,7 @@ cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
 	res = -interop_SocketConnect(s, addr, port);
 
 	/* error returned when invalid address provided */
-	if (res == EHOSTUNREACH) return ERR_INVALID_ARGUMENT;
+	if (res == _EHOSTUNREACH) return ERR_INVALID_ARGUMENT;
 	return res;
 }
 
@@ -305,7 +312,7 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 			data      += res; count -= res;
 		} else {
 			/* EAGAIN when no data available */
-			if (res == -EAGAIN) break;
+			if (res == -_EAGAIN) break;
 			return -res;
 		}
 	}
