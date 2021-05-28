@@ -233,7 +233,12 @@ mergeInto(LibraryManager.library, {
         } else if (ws.readyState === ws.CONNECTING) {
           return SOCKETS.EAGAIN;
         }
-        var data = HEAP8.slice(src, src + length);
+        
+        // var data = HEAP8.slice(src, src + length); unsupported in IE11
+        var data = new Uint8Array(length);
+        for (var i = 0; i < length; i++) {  
+          data[i] = HEAP8[src + i];
+        }
         
         try {
           ws.send(data);
