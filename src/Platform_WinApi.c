@@ -592,19 +592,34 @@ cc_result Updater_SetNewBuildTime(cc_uint64 timestamp) {
 *-------------------------------------------------------Dynamic lib-------------------------------------------------------*
 *#########################################################################################################################*/
 const cc_string DynamicLib_Ext = String_FromConst(".dll");
+static cc_result dynamicErr;
 
 void* DynamicLib_Load2(const cc_string* path) {
 	WCHAR str[NATIVE_STR_LEN];
+	void* lib;
 	Platform_EncodeUtf16(str, path);
-	return LoadLibraryW(str);
+
+	if ((lib = LoadLibraryW(str))) return lib;
+	dynamicErr = GetLastError();
+	if (dynamicErr != ERROR_CALL_NOT_IMPLEMENTED) return NULL;
+
+	/* Windows 9x only supports A variants */
+	Platform_Utf16ToAnsi(str);
+	lib = LoadLibraryA((char*)str);
+	if (!lib) dynamicErr = GetLastError();
+	return lib;
 }
 
 void* DynamicLib_Get2(void* lib, const char* name) {
-	return GetProcAddress((HMODULE)lib, name);
+	void* addr = GetProcAddress((HMODULE)lib, name);
+	if (!addr) dynamicErr = GetLastError();
+	return addr;
 }
 
 cc_bool DynamicLib_DescribeError(cc_string* dst) {
-	cc_result res = GetLastError();
+	cc_result res = dynamicErr;
+	dynamicErr = 0; /* Reset error (match posix behaviour) */
+
 	Platform_DescribeError(res, dst);
 	String_Format1(dst, " (error %i)", &res);
 	return true;
