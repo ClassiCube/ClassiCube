@@ -303,7 +303,7 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 	/* recv only reads one WebSocket frame at most, hence call it multiple times */
 	int res; *modified = 0;
 
-	while (count) {
+	while (count && interop_SocketGetPending(s) > 0) {
 		/* returned result is negative for error */
 		res = interop_SocketRecv(s, data, count);
 
