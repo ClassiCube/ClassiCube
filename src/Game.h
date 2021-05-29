@@ -27,6 +27,7 @@ extern int Game_ViewDistance;
 extern int Game_MaxViewDistance;
 extern int Game_UserViewDistance;
 
+/* Strategy used to limit FPS (see FpsLimitMethod enum) */
 extern int     Game_FpsLimit;
 extern cc_bool Game_SimpleArmsAnim;
 extern int     Game_Vertices;
@@ -40,6 +41,7 @@ extern cc_bool Game_AllowServerTextures;
 
 extern cc_bool Game_ViewBobbing;
 extern cc_bool Game_BreakableLiquids;
+/* Whether a screenshot should be taken at the end of this frame */
 extern cc_bool Game_ScreenshotRequested;
 extern cc_bool Game_HideGui;
 extern cc_bool Game_DefaultZipMissing;

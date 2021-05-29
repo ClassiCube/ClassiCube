@@ -813,13 +813,14 @@ void Logger_Abort2(cc_result result, const char* raw_msg) {
 /*########################################################################################################################*
 *----------------------------------------------------------Common---------------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_MINFILES
+void Logger_Log(const cc_string* msg) { Platform_Log(msg); }
+static void LogCrashHeader(void) { }
+static void CloseLogFile(void)   { }
+#else
 static struct Stream logStream;
 static cc_bool logOpen;
 
-#ifdef CC_BUILD_MINFILES
-void Logger_Log(const cc_string* msg) { }
-static void LogCrashHeader(void)   { }
-#else
 void Logger_Log(const cc_string* msg) {
 	static const cc_string path = String_FromConst("client.log");
 	if (!logOpen) {
@@ -844,6 +845,10 @@ static void LogCrashHeader(void) {
 	String_Format3(&msg, "Crash time: %p2/%p2/%p4 ", &now.day,  &now.month,  &now.year);
 	String_Format3(&msg, "%p2:%p2:%p2" _NL,          &now.hour, &now.minute, &now.second);
 	Logger_Log(&msg);
+}
+
+static void CloseLogFile(void) { 
+	if (logStream.Meta.File) logStream.Close(&logStream);
 }
 #endif
 
@@ -870,7 +875,7 @@ static void AbortCommon(cc_result result, const char* raw_msg, void* ctx) {
 	if (ctx) DumpRegisters(ctx);
 	DumpBacktrace(&msg, ctx);
 	DumpMisc(ctx);
-	if (logStream.Meta.File) logStream.Close(&logStream);
+	CloseLogFile();
 
 	msg.buffer[msg.length] = '\0';
 	Window_ShowDialog("We're sorry", msg.buffer);

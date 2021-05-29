@@ -8,8 +8,11 @@
    Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
 
+/* Progress between 0 and 1 for the current step */
 extern volatile float Gen_CurrentProgress;
+/* Name of the current step being performed */
 extern volatile const char* Gen_CurrentState;
+/* Whether map generation has completed */
 extern volatile cc_bool Gen_Done;
 extern int Gen_Seed;
 extern cc_bool Gen_Vanilla;
