@@ -814,7 +814,9 @@ void Logger_Abort2(cc_result result, const char* raw_msg) {
 *----------------------------------------------------------Common---------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_MINFILES
-void Logger_Log(const cc_string* msg) { Platform_Log(msg); }
+void Logger_Log(const cc_string* msg) {
+	Platform_Log(msg->buffer, msg->length);
+}
 static void LogCrashHeader(void) { }
 static void CloseLogFile(void)   { }
 #else
