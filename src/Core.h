@@ -235,7 +235,6 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_SDL
 #elif defined __EMSCRIPTEN__
 #define CC_BUILD_WEB
-#define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #define CC_BUILD_GLMODERN
 #define CC_BUILD_GLES

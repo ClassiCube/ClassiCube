@@ -312,6 +312,9 @@
     <ClInclude Include="Animations.h">
       <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
+    <ClInclude Include="_PlatformBase.h">
+      <Filter>Header Files\Platform</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -431,9 +434,6 @@
     <ClCompile Include="Vorbis.c">
       <Filter>Source Files\Audio</Filter>
     </ClCompile>
-    <ClCompile Include="Platform.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Model.c">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
@@ -535,6 +535,15 @@
     </ClCompile>
     <ClCompile Include="Animations.c">
       <Filter>Source Files\TexturePack</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_WinApi.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_Web.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform_Posix.c">
+      <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
