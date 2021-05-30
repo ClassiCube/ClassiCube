@@ -121,7 +121,7 @@ static int Program_Run(int argc, char** argv) {
 	} else {
 		String_Copy(&Game_Username, &args[0]);
 		String_Copy(&Game_Mppass,   &args[1]);
-		String_Copy(&Server.IP,     &args[2]);
+		String_Copy(&Server.Address,&args[2]);
 
 		if (!Convert_ParseUInt16(&args[3], &port)) {
 			WarnInvalidArg("Invalid port", &args[3]);
@@ -154,7 +154,7 @@ int main(int argc, char** argv) {
 	main_imdct();
 #endif
 	Platform_LogConst("Starting " GAME_APP_NAME " ..");
-	String_InitArray(Server.IP, ipBuffer);
+	String_InitArray(Server.Address, ipBuffer);
 	Options_Load();
 
 	res = Program_Run(argc, argv);

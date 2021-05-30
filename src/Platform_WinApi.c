@@ -373,16 +373,6 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Socket_Create(cc_socket* s) {
-	int blockingMode = -1; /* non-blocking mode */
-
-	*s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (*s == -1) return WSAGetLastError();
-
-	ioctlsocket(*s, FIONBIO, &blockingMode);
-	return 0;
-}
-
 cc_result Socket_Available(cc_socket s, int* available) {
 	return ioctlsocket(s, FIONREAD, available);
 }
@@ -392,16 +382,39 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
-	struct sockaddr addr;
+static int Socket_ParseAddress(struct sockaddr* dst, const cc_string* address) {
+	WCHAR str[NATIVE_STR_LEN];
+	DWORD size;
+	Platform_EncodeUtf16(str, address);
+
+	size = sizeof(SOCKADDR_IN);
+	if (!WSAStringToAddressW(str, AF_INET, NULL, dst, &size)) return true;
+
+	size = sizeof(SOCKADDR_IN6);
+	if (!WSAStringToAddressW(str, AF_INET6, NULL, dst, &size)) return true;
+
+	return false;
+}
+
+int Socket_ValidAddress(const cc_string* address) {
+	SOCKADDR_IN6 addr;
+	return Socket_ParseAddress(&addr, address);
+}
+
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
+	int blockingMode = -1; /* non-blocking mode */
+	SOCKADDR_IN6 addr;
 	cc_result res;
-	addr.sa_family = AF_INET;
 
-	Stream_SetU16_BE( (cc_uint8*)&addr.sa_data[0], port);
-	if (!Utils_ParseIP(ip, (cc_uint8*)&addr.sa_data[2])) 
-		return ERR_INVALID_ARGUMENT;
+	*s = -1;
+	if (!Socket_ParseAddress(&addr, address)) return ERR_INVALID_ARGUMENT;
+	Stream_SetU16_BE((cc_uint8*)&addr.sin6_port, port);
 
-	res = connect(s, &addr, sizeof(addr));
+	*s = socket(addr.sin6_family, SOCK_STREAM, IPPROTO_TCP);
+	if (*s == -1) return WSAGetLastError();
+	ioctlsocket(*s, FIONBIO, &blockingMode);
+
+	res = connect(*s, &addr, sizeof(addr));
 	return res == -1 ? WSAGetLastError() : 0;
 }
 

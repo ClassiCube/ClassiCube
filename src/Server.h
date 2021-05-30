@@ -57,8 +57,8 @@ CC_VAR extern struct _ServerConnectionData {
 	/* Whether the server supports all of code page 437, not just ASCII. */
 	cc_bool SupportsFullCP437;
 
-	/* IP address of the server if multiplayer, empty string if singleplayer. */
-	cc_string IP;
+	/* Address of the server if multiplayer, empty string if singleplayer. */
+	cc_string Address;
 	/* Port of the server if multiplayer, 0 if singleplayer. */
 	int Port;
 } Server;
