@@ -450,16 +450,6 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Socket_Create(cc_socket* s) {
-	int blockingMode = -1; /* non-blocking mode */
-
-	*s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (*s == -1) return errno;
-
-	ioctl(*s, FIONBIO, &blockingMode);
-	return 0;
-}
-
 cc_result Socket_Available(cc_socket s, int* available) {
 	return ioctl(s, FIONREAD, available);
 }
@@ -469,16 +459,44 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
-	struct sockaddr addr;
-	cc_result res;
-	addr.sa_family = AF_INET;
+static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
+	struct sockaddr_in*  addr4 = (struct sockaddr_in* )dst;
+	struct sockaddr_in6* addr6 = (struct sockaddr_in6*)dst;
+	char str[NATIVE_STR_LEN];
+	Platform_EncodeUtf8(str, address);
 
-	Stream_SetU16_BE( (cc_uint8*)&addr.sa_data[0], port);
-	if (!Utils_ParseIP(ip, (cc_uint8*)&addr.sa_data[2])) 
+	if (inet_pton(AF_INET,  str, &addr4->sin_addr) > 0) {
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		return AF_INET;
+	}
+	if (inet_pton(AF_INET6, str, &addr6->sin6_addr) > 0) {
+		addr6->sin6_family = AF_INET6;
+		addr6->sin6_port   = htons(port);
+		return AF_INET6;
+	}
+	return 0;
+}
+
+int Socket_ValidAddress(const cc_string* address) {
+	struct sockaddr_in6 addr;
+	return Socket_ParseAddress(&addr, address, 0);
+}
+
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
+	int family, blocking_raw = -1; /* non-blocking mode */
+	struct sockaddr_in6 addr;
+	cc_result res;
+
+	*s = -1;
+	if (!(family = Socket_ParseAddress(&addr, address, port)))
 		return ERR_INVALID_ARGUMENT;
 
-	res = connect(s, &addr, sizeof(addr));
+	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
+	if (*s == -1) return errno;
+	ioctl(*s, FIONBIO, &blocking_raw);
+
+	res = connect(*s, &addr, sizeof(addr));
 	return res == -1 ? errno : 0;
 }
 
