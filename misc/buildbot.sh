@@ -171,7 +171,7 @@ git fetch --all
 git reset --hard origin/master
 LATEST=$(git rev-parse --short HEAD)
 
-function run_timed() {
+run_timed() {
   beg=`date +%s`
   $1
   end=`date +%s`
