@@ -296,7 +296,6 @@ static void MPConnection_BeginConnect(void) {
 	if (res) { MPConnection_FailConnect(res); return; }
 	Server.Disconnected = false;
 
-	Socket_SetBlocking(net_socket, false);
 	net_connecting     = true;
 	net_connectTimeout = Game.Time + NET_TIMEOUT_SECS;
 	res = Socket_Connect(net_socket, &Server.IP, Server.Port);

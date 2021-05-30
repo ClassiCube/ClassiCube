@@ -272,9 +272,6 @@ cc_result Socket_Available(cc_socket s, int* available) {
 		*available = 0; return -res;
 	}
 }
-cc_result Socket_SetBlocking(cc_socket s, cc_bool blocking) {
-	return ERR_NOT_SUPPORTED; /* sockets always async */
-}
 
 cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	int res = interop_SocketGetError(s);

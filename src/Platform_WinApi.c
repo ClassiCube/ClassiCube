@@ -374,16 +374,17 @@ void Platform_LoadSysFonts(void) {
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 cc_result Socket_Create(cc_socket* s) {
+	int blockingMode = -1; /* non-blocking mode */
+
 	*s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	return *s == -1 ? WSAGetLastError() : 0;
+	if (*s == -1) return WSAGetLastError();
+
+	ioctlsocket(*s, FIONBIO, &blockingMode);
+	return 0;
 }
 
 cc_result Socket_Available(cc_socket s, int* available) {
 	return ioctlsocket(s, FIONREAD, available);
-}
-cc_result Socket_SetBlocking(cc_socket s, cc_bool blocking) {
-	int blocking_raw = blocking ? 0 : -1;
-	return ioctlsocket(s, FIONBIO, &blocking_raw);
 }
 
 cc_result Socket_GetError(cc_socket s, cc_result* result) {

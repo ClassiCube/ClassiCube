@@ -451,20 +451,17 @@ void Platform_LoadSysFonts(void) {
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 cc_result Socket_Create(cc_socket* s) {
-	*s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	return *s == -1 ? errno : 0;
-}
+	int blockingMode = -1; /* non-blocking mode */
 
-static cc_result Socket_ioctl(cc_socket s, cc_uint32 cmd, int* data) {
-	return ioctl(s, cmd, data);
+	*s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (*s == -1) return errno;
+
+	ioctl(*s, FIONBIO, &blockingMode);
+	return 0;
 }
 
 cc_result Socket_Available(cc_socket s, int* available) {
 	return ioctl(s, FIONREAD, available);
-}
-cc_result Socket_SetBlocking(cc_socket s, cc_bool blocking) {
-	int blocking_raw = blocking ? 0 : -1;
-	return ioctl(s, FIONBIO, &blocking_raw);
 }
 
 cc_result Socket_GetError(cc_socket s, cc_result* result) {

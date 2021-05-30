@@ -90,7 +90,6 @@ int Program_Run(int argc, char** argv) {
 static int Program_Run(int argc, char** argv) {
 #endif
 	cc_string args[GAME_MAX_CMDARGS];
-	cc_uint8 ip[4];
 	cc_uint16 port;
 
 	int argsCount = Platform_GetCommandLineArgs(argc, argv, args);
