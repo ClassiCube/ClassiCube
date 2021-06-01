@@ -30,8 +30,9 @@ static struct FontDesc logoFont;
 static int titleX, titleY;
 
 cc_bool Launcher_ShouldExit, Launcher_ShouldUpdate;
-static char hashBuffer[STRING_SIZE];
+static char hashBuffer[STRING_SIZE], userBuffer[STRING_SIZE];
 cc_string Launcher_AutoHash = String_FromArray(hashBuffer);
+cc_string Launcher_Username = String_FromArray(userBuffer);
 
 static cc_bool useBitmappedFont, hasBitmappedFont;
 static struct Bitmap dirtBmp, stoneBmp;
@@ -122,7 +123,7 @@ CC_NOINLINE static void StartFromInfo(struct ServerInfo* info) {
 	String_InitArray(port, portBuffer);
 
 	String_AppendInt(&port, info->port);
-	Launcher_StartGame(&Game_Username, &info->mppass, &info->ip, &port, &info->name);
+	Launcher_StartGame(&Launcher_Username, &info->mppass, &info->ip, &port, &info->name);
 }
 
 cc_bool Launcher_ConnectToServer(const cc_string* hash) {
@@ -295,7 +296,7 @@ void Launcher_Run(void) {
 	Drawer2D.BlackTextShadows = true;
 	InitFramebuffer();
 
-	Options_Get(LOPT_USERNAME, &Game_Username, "");
+	Options_Get(LOPT_USERNAME, &Launcher_Username, "");
 	LWebTasks_Init();
 	Session_Load();
 	Launcher_LoadSkin();

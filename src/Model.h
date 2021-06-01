@@ -266,7 +266,8 @@ struct CustomModelPart {
 struct CustomModel {
 	struct Model model;
 	char name[STRING_SIZE + 1];
-	
+	cc_bool registered, defined;
+
 	float nameY;
 	float eyeY;
 	Vec3 collisionBounds;
@@ -278,9 +279,6 @@ struct CustomModel {
 	cc_uint8 numParts;
 	cc_uint8 curPartIndex;
 	struct CustomModelPart parts[MAX_CUSTOM_MODEL_PARTS];
-
-	cc_bool registered;
-	cc_bool defined;
 };
 
 extern struct CustomModel custom_models[MAX_CUSTOM_MODELS];

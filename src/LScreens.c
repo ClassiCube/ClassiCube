@@ -15,7 +15,6 @@
 #include "Window.h"
 #include "Input.h"
 #include "Options.h"
-#include "Game.h"
 #include "Utils.h"
 
 /*########################################################################################################################*
@@ -908,7 +907,7 @@ static void MainScreen_LoginPhase2(struct MainScreen* s, const cc_string* user) 
 		LInput_SetText(&s->iptUsername, user);
 		LWidget_Redraw(&s->iptUsername);
 	}
-	String_Copy(&Game_Username, user);
+	String_Copy(&Launcher_Username, user);
 
 	FetchServersTask_Run();
 	LLabel_SetConst(&s->lblStatus, "&eRetrieving servers list..");

@@ -25,6 +25,8 @@ extern cc_bool Launcher_ShouldExit;
 extern cc_bool Launcher_ShouldUpdate;
 /* (optional) Hash of the server the game should automatically try to connect to after signing in. */
 extern cc_string Launcher_AutoHash;
+/* The username of currently active user */
+extern cc_string Launcher_Username;
 
 /* Base colour of pixels before any widgets are drawn. */
 extern BitmapCol Launcher_BackgroundCol;
