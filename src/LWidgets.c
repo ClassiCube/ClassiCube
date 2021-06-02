@@ -733,27 +733,27 @@ void LSlider_Init(struct LScreen* s, struct LSlider* w, int width, int height, B
 /*########################################################################################################################*
 *------------------------------------------------------TableWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
+static void FlagColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
 	struct Bitmap* bmp = Flags_Get(row);
 	if (!bmp) return;
-	Drawer2D_BmpCopy(&Launcher_Framebuffer, x + flagXOffset, y + flagYOffset, bmp);
+	Drawer2D_BmpCopy(&Launcher_Framebuffer, cell->x + flagXOffset, cell->y + flagYOffset, bmp);
 }
 
-static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
+static void NameColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
 	args->text = row->name;
 }
 static int NameColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return String_Compare(&b->name, &a->name);
 }
 
-static void PlayersColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
+static void PlayersColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
 	String_Format2(&args->text, "%i/%i", &row->players, &row->maxPlayers);
 }
 static int PlayersColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return b->players - a->players;
 }
 
-static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
+static void UptimeColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
 	int uptime = row->uptime;
 	char unit  = 's';
 
@@ -770,8 +770,11 @@ static int UptimeColumn_Sort(const struct ServerInfo* a, const struct ServerInfo
 	return b->uptime - a->uptime;
 }
 
-static void SoftwareColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y) {
-	args->text = row->software;
+static void SoftwareColumn_Draw(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell) {
+	/* last column, so adjust to fit size of table */
+	int leftover = cell->table->width - cell->x;
+	cell->width  = max(cell->width, leftover);
+	args->text   = row->software;
 }
 static int SoftwareColumn_Sort(const struct ServerInfo* a, const struct ServerInfo* b) {
 	return String_Compare(&b->software, &a->software);
@@ -935,10 +938,12 @@ static void LTable_DrawRows(struct LTable* w) {
 	cc_string str; char strBuffer[STRING_SIZE];
 	struct ServerInfo* entry;
 	struct DrawTextArgs args;
+	struct LTableCell cell;
 	int i, x, y, row, end;
 
 	String_InitArray(str, strBuffer);
 	DrawTextArgs_Make(&args, &str, w->rowFont, true);
+	cell.table = w;
 	y   = w->rowsBegY;
 	end = w->topRow + w->visibleRows;
 
@@ -950,13 +955,14 @@ static void LTable_DrawRows(struct LTable* w) {
 		entry = LTable_Get(row);
 
 		for (i = 0; i < w->numColumns; i++) {
-			args.text = str;
-			w->columns[i].DrawRow(entry, &args, x, y);
+			args.text  = str; cell.x = x; cell.y = y;
+			cell.width = w->columns[i].width;
+			w->columns[i].DrawRow(entry, &args, &cell);
 
 			if (args.text.length) {
 				Drawer2D_DrawClippedText(&Launcher_Framebuffer, &args, 
 										x + cellXOffset, y + rowYOffset, 
-										w->columns[i].width - cellXPadding);
+										cell.width - cellXPadding);
 			}
 
 			x += w->columns[i].width;

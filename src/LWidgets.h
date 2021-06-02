@@ -125,6 +125,7 @@ CC_NOINLINE void LSlider_Init(struct LScreen* s, struct LSlider* w, int width, i
 
 struct ServerInfo;
 struct DrawTextArgs;
+struct LTableCell;
 
 struct LTableColumn {
 	/* Name of this column. */
@@ -134,7 +135,7 @@ struct LTableColumn {
 	/* Draws the value of this column for the given row. */
 	/* If args.Text is changed to something, that text gets drawn afterwards. */
 	/* Most of the time that's all you need to do. */
-	void (*DrawRow)(struct ServerInfo* row, struct DrawTextArgs* args, int x, int y);
+	void (*DrawRow)(struct ServerInfo* row, struct DrawTextArgs* args, struct LTableCell* cell);
 	/* Returns sort order of two rows, based on value of this column in both rows. */
 	int (*SortOrder)(const struct ServerInfo* a, const struct ServerInfo* b);
 	/* Whether a vertical gridline (and padding) appears after this. */
@@ -183,6 +184,8 @@ struct LTable {
 	int _lastRow;    /* last clicked row (for doubleclick join) */
 	cc_uint64 _lastClick; /* timestamp of last mouse click on a row */
 };
+
+struct LTableCell { struct LTable* table; int x, y, width; };
 /* Gets the current ith row */
 #define LTable_Get(row) (&FetchServersTask.servers[FetchServersTask.servers[row]._order])
 
