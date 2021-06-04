@@ -404,7 +404,6 @@ static void LoadWinsockFuncs(void) {
 
 	static const cc_string winsock32 = String_FromConst("WS2_32.DLL");
 	LoadDynamicFuncs(&winsock32, funcs, Array_Elems(funcs));
-	_WSAStringToAddressW = NULL;
 }
 
 cc_result Socket_Available(cc_socket s, int* available) {
