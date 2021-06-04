@@ -479,13 +479,13 @@ static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
 }
 
 int Socket_ValidAddress(const cc_string* address) {
-	struct sockaddr_in6 addr;
+	struct sockaddr_storage addr;
 	return Socket_ParseAddress(&addr, address, 0);
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	int family, blocking_raw = -1; /* non-blocking mode */
-	struct sockaddr_in6 addr;
+	struct sockaddr_storage addr;
 	cc_result res;
 
 	*s = -1;
