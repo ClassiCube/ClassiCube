@@ -381,6 +381,22 @@ void Platform_LoadSysFonts(void) {
 *#########################################################################################################################*/
 static INT (WSAAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID lpProtocolInfo, LPVOID address, LPINT addressLength);
 
+static int FallbackParseAddress(SOCKADDR_IN* dst, const cc_string* ip, int port) {
+	cc_uint8* addr;
+	cc_string parts[4 + 1];
+	/* +1 in case user tries '1.1.1.1.1' */
+	if (String_UNSAFE_Split(ip, '.', parts, 4 + 1) != 4) return 0;
+	addr = (cc_uint8*)&dst->sin_addr;
+
+	if (!Convert_ParseUInt8(&parts[0], &addr[0]) || !Convert_ParseUInt8(&parts[1], &addr[1]) ||
+		!Convert_ParseUInt8(&parts[2], &addr[2]) || !Convert_ParseUInt8(&parts[3], &addr[3]))
+		return 0;
+
+	dst->sin_family = AF_INET;
+	dst->sin_port   = htons(port);
+	return AF_INET;
+}
+
 static void LoadWinsockFuncs(void) {
 	static const struct DynamicLibSym funcs[1] = {
 		DynamicLib_Sym(WSAStringToAddressW)
@@ -388,6 +404,7 @@ static void LoadWinsockFuncs(void) {
 
 	static const cc_string winsock32 = String_FromConst("WS2_32.DLL");
 	LoadDynamicFuncs(&winsock32, funcs, Array_Elems(funcs));
+	_WSAStringToAddressW = NULL;
 }
 
 cc_result Socket_Available(cc_socket s, int* available) {
@@ -405,6 +422,10 @@ static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
 	WCHAR str[NATIVE_STR_LEN];
 	DWORD size;
 	Platform_EncodeUtf16(str, address);
+
+	/* Fallback for older OS versions which lack WSAStringToAddressW */
+	if (!_WSAStringToAddressW)
+		return FallbackParseAddress(addr4, address, port);
 
 	size = sizeof(*addr4);
 	if (!_WSAStringToAddressW(str, AF_INET, NULL, (SOCKADDR*)addr4, &size)) {
