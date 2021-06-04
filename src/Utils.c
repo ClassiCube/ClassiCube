@@ -138,16 +138,6 @@ void Utils_Resize(void** buffer, int* capacity, cc_uint32 elemSize, int defCapac
 	}
 }
 
-cc_bool Utils_ParseIP(const cc_string* ip, cc_uint8* data) {
-	cc_string parts[4 + 1];
-	int count = String_UNSAFE_Split(ip, '.', parts, 4 + 1);
-	if (count != 4) return false;
-
-	return
-		Convert_ParseUInt8(&parts[0], &data[0]) && Convert_ParseUInt8(&parts[1], &data[1]) &&
-		Convert_ParseUInt8(&parts[2], &data[2]) && Convert_ParseUInt8(&parts[3], &data[3]);
-}
-
 static const char base64_table[64] = {
 	'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P',
 	'Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f',

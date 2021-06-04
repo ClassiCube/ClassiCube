@@ -450,16 +450,6 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-cc_result Socket_Create(cc_socket* s) {
-	int blockingMode = -1; /* non-blocking mode */
-
-	*s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (*s == -1) return errno;
-
-	ioctl(*s, FIONBIO, &blockingMode);
-	return 0;
-}
-
 cc_result Socket_Available(cc_socket s, int* available) {
 	return ioctl(s, FIONREAD, available);
 }
@@ -469,16 +459,47 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
-	struct sockaddr addr;
-	cc_result res;
-	addr.sa_family = AF_INET;
+static int ParseAddress(void* dst, const cc_string* address, int port, int* addrSize) {
+	struct sockaddr_in*  addr4 = (struct sockaddr_in* )dst;
+	struct sockaddr_in6* addr6 = (struct sockaddr_in6*)dst;
+	char str[NATIVE_STR_LEN];
+	Platform_EncodeUtf8(str, address);
 
-	Stream_SetU16_BE( (cc_uint8*)&addr.sa_data[0], port);
-	if (!Utils_ParseIP(ip, (cc_uint8*)&addr.sa_data[2])) 
+	if (inet_pton(AF_INET,  str, &addr4->sin_addr) > 0) {
+		addr4->sin_family = AF_INET;
+		addr4->sin_port   = htons(port);
+		*addrSize         = sizeof(struct sockaddr_in);
+		return AF_INET;
+	}
+	if (inet_pton(AF_INET6, str, &addr6->sin6_addr) > 0) {
+		addr6->sin6_family = AF_INET6;
+		addr6->sin6_port   = htons(port);
+		*addrSize          = sizeof(struct sockaddr_in6);
+		return AF_INET6;
+	}
+	return 0;
+}
+
+int Socket_ValidAddress(const cc_string* address) {
+	struct sockaddr_storage addr;
+	int addrSize;
+	return ParseAddress(&addr, address, 0, &addrSize);
+}
+
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
+	int family, addrSize, blocking_raw = -1; /* non-blocking mode */
+	struct sockaddr_storage addr;
+	cc_result res;
+
+	*s = -1;
+	if (!(family = ParseAddress(&addr, address, port, &addrSize)))
 		return ERR_INVALID_ARGUMENT;
 
-	res = connect(s, &addr, sizeof(addr));
+	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
+	if (*s == -1) return errno;
+	ioctl(*s, FIONBIO, &blocking_raw);
+
+	res = connect(*s, &addr, addrSize);
 	return res == -1 ? errno : 0;
 }
 
@@ -1177,6 +1198,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	argc--; argv++; /* skip executable path argument */
 
 #ifdef CC_BUILD_DARWIN
+	/* Sometimes a "-psn_0_[number]" argument is added before actual args */
 	if (argc) {
 		static const cc_string psn = String_FromConst("-psn_0_");
 		cc_string arg0 = String_FromReadonly(argv[0]);
@@ -1186,6 +1208,7 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 
 	count = min(argc, GAME_MAX_CMDARGS);
 	for (i = 0; i < count; i++) {
+		/* -d[directory] argument to change directory data is stored in */
 		if (argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2]) {
 			--count;
 			continue;
@@ -1224,6 +1247,7 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	static const cc_string bundle = String_FromConst(".app/Contents/MacOS/");
 	cc_string raw = String_Init(path, len, 0);
 
+	/* If running from within a bundle, set data folder to folder containing bundle */
 	if (String_CaselessEnds(&raw, &bundle)) {
 		len -= bundle.length;
 

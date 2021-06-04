@@ -257,11 +257,6 @@ extern int interop_SocketGetPending(int sock);
 extern int interop_SocketGetError(int sock);
 extern int interop_SocketPoll(int sock);
 
-cc_result Socket_Create(cc_socket* s) {
-	*s = interop_SocketCreate();
-	return 0;
-}
-
 cc_result Socket_Available(cc_socket s, int* available) {
 	int res = interop_SocketGetPending(s);
 	/* returned result is negative for error */
@@ -283,13 +278,16 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 		*result = 0; return -res;
 	}
 }
+int Socket_ValidAddress(const cc_string* address) { return true; }
 
-cc_result Socket_Connect(cc_socket s, const cc_string* ip, int port) {
+cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	char addr[NATIVE_STR_LEN];
 	int res;
-	Platform_EncodeUtf8(addr, ip);
+	Platform_EncodeUtf8(addr, address);
+
+	*s  = interop_SocketCreate();
 	/* returned result is negative for error */
-	res = -interop_SocketConnect(s, addr, port);
+	res = -interop_SocketConnect(*s, addr, port);
 
 	/* error returned when invalid address provided */
 	if (res == _EHOSTUNREACH) return ERR_INVALID_ARGUMENT;

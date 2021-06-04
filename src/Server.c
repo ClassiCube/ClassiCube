@@ -241,7 +241,7 @@ static void MPConnection_Fail(const cc_string* reason) {
 	String_InitArray(msg, msgBuffer);
 	net_connecting = false;
 
-	String_Format2(&msg, "Failed to connect to %s:%i", &Server.IP, &Server.Port);
+	String_Format2(&msg, "Failed to connect to %s:%i", &Server.Address, &Server.Port);
 	Game_Disconnect(&msg, reason);
 	OnClose();
 }
@@ -252,7 +252,7 @@ static void MPConnection_FailConnect(cc_result result) {
 	String_InitArray(msg, msgBuffer);
 
 	if (result) {
-		String_Format3(&msg, "Error connecting to %s:%i: %i" _NL, &Server.IP, &Server.Port, &result);
+		String_Format3(&msg, "Error connecting to %s:%i: %i" _NL, &Server.Address, &Server.Port, &result);
 		Logger_Log(&msg);
 	}
 	MPConnection_Fail(&reason);
@@ -292,21 +292,18 @@ static void MPConnection_BeginConnect(void) {
 	Blocks.CanPlace[BLOCK_STILL_WATER] = false; Blocks.CanDelete[BLOCK_STILL_WATER] = false;
 	Blocks.CanPlace[BLOCK_BEDROCK] = false;     Blocks.CanDelete[BLOCK_BEDROCK] = false;
 	
-	res = Socket_Create(&net_socket);
-	if (res) { MPConnection_FailConnect(res); return; }
-	Server.Disconnected = false;
-
-	net_connecting     = true;
-	net_connectTimeout = Game.Time + NET_TIMEOUT_SECS;
-	res = Socket_Connect(net_socket, &Server.IP, Server.Port);
-
+	res = Socket_Connect(&net_socket, &Server.Address, Server.Port);
 	if (res == ERR_INVALID_ARGUMENT) {
 		static const cc_string reason = String_FromConst("Invalid IP address");
 		MPConnection_Fail(&reason);
 	} else if (res && res != ReturnCode_SocketInProgess && res != ReturnCode_SocketWouldBlock) {
 		MPConnection_FailConnect(res);
 	} else {
-		String_Format2(&title, "Connecting to %s:%i..", &Server.IP, &Server.Port);
+		Server.Disconnected = false;
+		net_connecting      = true;
+		net_connectTimeout  = Game.Time + NET_TIMEOUT_SECS;
+
+		String_Format2(&title, "Connecting to %s:%i..", &Server.Address, &Server.Port);
 		LoadingScreen_Show(&title, &String_Empty);
 	}
 }
@@ -397,7 +394,7 @@ static void MPConnection_Tick(struct ScheduledTask* task) {
 
 	if (res) {
 		String_InitArray(msg, msgBuffer);
-		String_Format3(&msg, "Error reading from %s:%i: %i" _NL, &Server.IP, &Server.Port, &res);
+		String_Format3(&msg, "Error reading from %s:%i: %i" _NL, &Server.Address, &Server.Port, &res);
 
 		Logger_Log(&msg);
 		Game_Disconnect(&title_lost, &reason_err);
@@ -504,7 +501,7 @@ static void OnInit(void) {
 	String_InitArray(Server.MOTD,    motdBuffer);
 	String_InitArray(Server.AppName, appBuffer);
 
-	if (!Server.IP.length) {
+	if (!Server.Address.length) {
 		SPConnection_Init();
 	} else {
 		MPConnection_Init();
@@ -527,7 +524,7 @@ static void OnReset(void) {
 }
 
 static void OnFree(void) {
-	Server.IP.length = 0;
+	Server.Address.length = 0;
 	OnClose();
 }
 
