@@ -459,6 +459,32 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
+static int ParseHost(void* dst, const char* host, int port, int* addrSize) {
+	struct addrinfo hints = { 0 };
+	struct addrinfo* result;
+	struct addrinfo* cur;
+	int family = 0, res;
+
+	hints.ai_family   = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+
+	res = getaddrinfo(host, NULL, &hints, &result);
+	if (res) return 0;
+
+	for (cur = result; cur; cur = cur->ai_next) {
+		if (cur->ai_family != AF_INET) continue;
+		family = AF_INET;
+
+		Mem_Copy(dst, cur->ai_addr, cur->ai_addrlen);
+		*addrSize = cur->ai_addrlen;
+		break;
+	}
+
+	freeaddrinfo(result);
+	return family;
+}
+
 static int ParseAddress(void* dst, const cc_string* address, int port, int* addrSize) {
 	struct sockaddr_in*  addr4 = (struct sockaddr_in* )dst;
 	struct sockaddr_in6* addr6 = (struct sockaddr_in6*)dst;
@@ -477,7 +503,7 @@ static int ParseAddress(void* dst, const cc_string* address, int port, int* addr
 		*addrSize          = sizeof(struct sockaddr_in6);
 		return AF_INET6;
 	}
-	return 0;
+	return ParseHost(dst, str, port, addrSize);
 }
 
 int Socket_ValidAddress(const cc_string* address) {

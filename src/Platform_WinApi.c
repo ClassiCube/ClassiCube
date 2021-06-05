@@ -379,7 +379,55 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-static INT (WSAAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID lpProtocolInfo, LPVOID address, LPINT addressLength);
+static INT (WSAAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength);
+static INT (WSAAPI *_getaddrinfo)(PCSTR nodeName, PCSTR serviceName, const ADDRINFOA* hints, ADDRINFOA** result);
+static void (WSAAPI *_freeaddrinfo)(ADDRINFOA* addrInfo);
+
+static void LoadWinsockFuncs(void) {
+	static const struct DynamicLibSym funcs[] = {
+		DynamicLib_Sym(WSAStringToAddressW), DynamicLib_Sym(getaddrinfo),
+		DynamicLib_Sym(freeaddrinfo),
+	};
+
+	static const cc_string winsock32 = String_FromConst("WS2_32.DLL");
+	LoadDynamicFuncs(&winsock32, funcs, Array_Elems(funcs));
+}
+
+cc_result Socket_Available(cc_socket s, int* available) {
+	return ioctlsocket(s, FIONREAD, available);
+}
+
+cc_result Socket_GetError(cc_socket s, cc_result* result) {
+	socklen_t resultSize = sizeof(cc_result);
+	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
+}
+
+static int ParseHost(void* dst, WCHAR* host, int port) {
+	ADDRINFOA hints = { 0 };
+	ADDRINFOA* result;
+	ADDRINFOA* cur;
+	int family = 0, res;
+
+	hints.ai_family   = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+
+	Platform_Utf16ToAnsi(host);
+	res = _getaddrinfo((char*)host, NULL, &hints, &result);
+	if (res) return 0;
+
+	for (cur = result; cur; cur = cur->ai_next) {
+		if (cur->ai_family != AF_INET) continue;
+		family = AF_INET;
+
+		Mem_Copy(dst, cur->ai_addr, cur->ai_addrlen);
+		((SOCKADDR_IN*)dst)->sin_port = htons(port);
+		break;
+	}
+
+	_freeaddrinfo(result);
+	return family;
+}
 
 static int FallbackParseAddress(SOCKADDR_IN* dst, const cc_string* ip, int port) {
 	cc_uint8* addr;
@@ -395,24 +443,6 @@ static int FallbackParseAddress(SOCKADDR_IN* dst, const cc_string* ip, int port)
 	dst->sin_family = AF_INET;
 	dst->sin_port   = htons(port);
 	return AF_INET;
-}
-
-static void LoadWinsockFuncs(void) {
-	static const struct DynamicLibSym funcs[1] = {
-		DynamicLib_Sym(WSAStringToAddressW)
-	};
-
-	static const cc_string winsock32 = String_FromConst("WS2_32.DLL");
-	LoadDynamicFuncs(&winsock32, funcs, Array_Elems(funcs));
-}
-
-cc_result Socket_Available(cc_socket s, int* available) {
-	return ioctlsocket(s, FIONREAD, available);
-}
-
-cc_result Socket_GetError(cc_socket s, cc_result* result) {
-	socklen_t resultSize = sizeof(cc_result);
-	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
 static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
@@ -436,7 +466,9 @@ static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
 		addr6->sin6_port = htons(port);
 		return AF_INET6;
 	}
-	return 0;
+
+	if (!_getaddrinfo) return 0;
+	return ParseHost(dst, str, port);
 }
 
 int Socket_ValidAddress(const cc_string* address) {
@@ -720,7 +752,7 @@ static BOOL (WINAPI *_AttachConsole)(DWORD processId);
 static BOOL (WINAPI *_IsDebuggerPresent)(void);
 
 static void LoadKernelFuncs(void) {
-	static const struct DynamicLibSym funcs[2] = {
+	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_Sym(AttachConsole), DynamicLib_Sym(IsDebuggerPresent)
 	};
 
@@ -778,7 +810,7 @@ static BOOL (WINAPI *_CryptProtectData  )(DATA_BLOB* dataIn, PCWSTR dataDescr, P
 static BOOL (WINAPI *_CryptUnprotectData)(DATA_BLOB* dataIn, PWSTR* dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
 
 static void LoadCryptFuncs(void) {
-	static const struct DynamicLibSym funcs[2] = {
+	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_Sym(CryptProtectData), DynamicLib_Sym(CryptUnprotectData)
 	};
 
