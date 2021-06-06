@@ -379,31 +379,39 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-static INT (WSAAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID lpProtocolInfo, LPVOID address, LPINT addressLength);
+static INT (WSAAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength);
 
-static int FallbackParseAddress(SOCKADDR_IN* dst, const cc_string* ip, int port) {
-	cc_uint8* addr;
-	cc_string parts[4 + 1];
-	/* +1 in case user tries '1.1.1.1.1' */
-	if (String_UNSAFE_Split(ip, '.', parts, 4 + 1) != 4) return 0;
-	addr = (cc_uint8*)&dst->sin_addr;
+static INT WSAAPI FallbackParseAddress(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength) {
+	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)address;
+	cc_uint8*    addr  = (cc_uint8*)&addr4->sin_addr;
+	cc_string ip, parts[4 + 1];
+	WCHAR tmp[NATIVE_STR_LEN];
+
+	Mem_Copy(tmp, addressString, sizeof(tmp));
+	Platform_Utf16ToAnsi(tmp);
+	ip = String_FromReadonly((char*)tmp);
+
+	/* 4+1 in case user tries '1.1.1.1.1' */
+	if (String_UNSAFE_Split(&ip, '.', parts, 4 + 1) != 4)
+		return ERR_INVALID_ARGUMENT;
 
 	if (!Convert_ParseUInt8(&parts[0], &addr[0]) || !Convert_ParseUInt8(&parts[1], &addr[1]) ||
 		!Convert_ParseUInt8(&parts[2], &addr[2]) || !Convert_ParseUInt8(&parts[3], &addr[3]))
-		return 0;
+		return ERR_INVALID_ARGUMENT;
 
-	dst->sin_family = AF_INET;
-	dst->sin_port   = htons(port);
-	return AF_INET;
+	addr4->sin_family = AF_INET;
+	return 0;
 }
 
 static void LoadWinsockFuncs(void) {
-	static const struct DynamicLibSym funcs[1] = {
+	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_Sym(WSAStringToAddressW)
 	};
 
 	static const cc_string winsock32 = String_FromConst("WS2_32.DLL");
 	LoadDynamicFuncs(&winsock32, funcs, Array_Elems(funcs));
+	/* Fallback for older OS versions which lack WSAStringToAddressW */
+	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
 }
 
 cc_result Socket_Available(cc_socket s, int* available) {
@@ -411,8 +419,25 @@ cc_result Socket_Available(cc_socket s, int* available) {
 }
 
 cc_result Socket_GetError(cc_socket s, cc_result* result) {
-	socklen_t resultSize = sizeof(cc_result);
+	int resultSize = sizeof(cc_result);
 	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
+}
+
+static int ParseHost(void* dst, WCHAR* host, int port) {
+	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)dst;
+	struct hostent* res;
+
+	Platform_Utf16ToAnsi(host);
+	res = gethostbyname((char*)host);
+	if (!res || res->h_addrtype != AF_INET) return 0;
+
+	/* Must have at least one IPv4 address */
+	if (!res->h_addr_list[0]) return 0;
+
+	addr4->sin_family = AF_INET;
+	addr4->sin_port   = htons(port);
+	addr4->sin_addr   = *(IN_ADDR*)res->h_addr_list[0];
+	return AF_INET;
 }
 
 static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
@@ -422,12 +447,8 @@ static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
 	DWORD size;
 	Platform_EncodeUtf16(str, address);
 
-	/* Fallback for older OS versions which lack WSAStringToAddressW */
-	if (!_WSAStringToAddressW)
-		return FallbackParseAddress(addr4, address, port);
-
 	size = sizeof(*addr4);
-	if (!_WSAStringToAddressW(str, AF_INET, NULL, (SOCKADDR*)addr4, &size)) {
+	if (!_WSAStringToAddressW(str, AF_INET, NULL, addr4, &size)) {
 		addr4->sin_port  = htons(port);
 		return AF_INET;
 	}
@@ -436,7 +457,7 @@ static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
 		addr6->sin6_port = htons(port);
 		return AF_INET6;
 	}
-	return 0;
+	return ParseHost(dst, str, port);
 }
 
 int Socket_ValidAddress(const cc_string* address) {
@@ -720,7 +741,7 @@ static BOOL (WINAPI *_AttachConsole)(DWORD processId);
 static BOOL (WINAPI *_IsDebuggerPresent)(void);
 
 static void LoadKernelFuncs(void) {
-	static const struct DynamicLibSym funcs[2] = {
+	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_Sym(AttachConsole), DynamicLib_Sym(IsDebuggerPresent)
 	};
 
@@ -778,7 +799,7 @@ static BOOL (WINAPI *_CryptProtectData  )(DATA_BLOB* dataIn, PCWSTR dataDescr, P
 static BOOL (WINAPI *_CryptUnprotectData)(DATA_BLOB* dataIn, PWSTR* dataDescr, PVOID entropy, PVOID reserved, PVOID promptStruct, DWORD flags, DATA_BLOB* dataOut);
 
 static void LoadCryptFuncs(void) {
-	static const struct DynamicLibSym funcs[2] = {
+	static const struct DynamicLibSym funcs[] = {
 		DynamicLib_Sym(CryptProtectData), DynamicLib_Sym(CryptUnprotectData)
 	};
 

@@ -29,6 +29,7 @@
 #include <utime.h>
 #include <signal.h>
 #include <stdio.h>
+#include <netdb.h>
 
 #define Socket__Error() errno
 static char* defaultDirectory;
@@ -450,6 +451,13 @@ void Platform_LoadSysFonts(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+union SocketAddress {
+	struct sockaddr_storage total;
+	struct sockaddr raw;
+	struct sockaddr_in  v4;
+	struct sockaddr_in6 v6;
+};
+
 cc_result Socket_Available(cc_socket s, int* available) {
 	return ioctl(s, FIONREAD, available);
 }
@@ -459,47 +467,69 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
-static int ParseAddress(void* dst, const cc_string* address, int port, int* addrSize) {
-	struct sockaddr_in*  addr4 = (struct sockaddr_in* )dst;
-	struct sockaddr_in6* addr6 = (struct sockaddr_in6*)dst;
+static int ParseHost(union SocketAddress* addr, const char* host) {
+	struct addrinfo hints = { 0 };
+	struct addrinfo* result;
+	struct addrinfo* cur;
+	int family = 0, res;
+
+	hints.ai_family   = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+
+	res = getaddrinfo(host, NULL, &hints, &result);
+	if (res) return 0;
+
+	for (cur = result; cur; cur = cur->ai_next) {
+		if (cur->ai_family != AF_INET) continue;
+		family = AF_INET;
+
+		Mem_Copy(addr, cur->ai_addr, cur->ai_addrlen);
+		break;
+	}
+
+	freeaddrinfo(result);
+	return family;
+}
+
+static int ParseAddress(union SocketAddress* addr, const cc_string* address) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, address);
 
-	if (inet_pton(AF_INET,  str, &addr4->sin_addr) > 0) {
-		addr4->sin_family = AF_INET;
-		addr4->sin_port   = htons(port);
-		*addrSize         = sizeof(struct sockaddr_in);
-		return AF_INET;
-	}
-	if (inet_pton(AF_INET6, str, &addr6->sin6_addr) > 0) {
-		addr6->sin6_family = AF_INET6;
-		addr6->sin6_port   = htons(port);
-		*addrSize          = sizeof(struct sockaddr_in6);
-		return AF_INET6;
-	}
-	return 0;
+	if (inet_pton(AF_INET,  str, &addr->v4.sin_addr)  > 0) return AF_INET;
+	if (inet_pton(AF_INET6, str, &addr->v6.sin6_addr) > 0) return AF_INET6;
+	return ParseHost(addr, str);
 }
 
 int Socket_ValidAddress(const cc_string* address) {
-	struct sockaddr_storage addr;
-	int addrSize;
-	return ParseAddress(&addr, address, 0, &addrSize);
+	union SocketAddress addr;
+	return ParseAddress(&addr, address);
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	int family, addrSize, blocking_raw = -1; /* non-blocking mode */
-	struct sockaddr_storage addr;
+	union SocketAddress addr;
 	cc_result res;
 
 	*s = -1;
-	if (!(family = ParseAddress(&addr, address, port, &addrSize)))
+	if (!(family = ParseAddress(&addr, address)))
 		return ERR_INVALID_ARGUMENT;
 
 	*s = socket(family, SOCK_STREAM, IPPROTO_TCP);
 	if (*s == -1) return errno;
 	ioctl(*s, FIONBIO, &blocking_raw);
 
-	res = connect(*s, &addr, addrSize);
+	if (family == AF_INET6) {
+		addr.v6.sin6_family = AF_INET6;
+		addr.v6.sin6_port   = htons(port);
+		addrSize = sizeof(addr.v6);
+	} else if (family == AF_INET) {
+		addr.v4.sin_family  = AF_INET;
+		addr.v4.sin_port    = htons(port);
+		addrSize = sizeof(addr.v4);
+	}
+
+	res = connect(*s, &addr.raw, addrSize);
 	return res == -1 ? errno : 0;
 }
 

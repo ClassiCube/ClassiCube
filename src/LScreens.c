@@ -534,8 +534,7 @@ static void DirectConnectScreen_Load(struct DirectConnectScreen* s) {
 }
 
 static void DirectConnectScreen_StartClient(void* w, int idx) {
-	static const cc_string loopbackIp = String_FromConst("127.0.0.1");
-	static const cc_string defMppass  = String_FromConst("(none)");
+	static const cc_string defMppass = String_FromConst("(none)");
 	const cc_string* user   = &DirectConnectScreen_Instance.iptUsername.text;
 	const cc_string* addr   = &DirectConnectScreen_Instance.iptAddress.text;
 	const cc_string* mppass = &DirectConnectScreen_Instance.iptMppass.text;
@@ -550,7 +549,6 @@ static void DirectConnectScreen_StartClient(void* w, int idx) {
 
 	ip   = String_UNSAFE_Substring(addr, 0, index);
 	port = String_UNSAFE_SubstringAt(addr, index + 1);
-	if (String_CaselessEqualsConst(&ip, "localhost")) ip = loopbackIp;
 
 	if (!user->length) {
 		DirectConnectScreen_SetStatus("&eUsername required"); return;
