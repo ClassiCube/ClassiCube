@@ -380,17 +380,38 @@ void Platform_LoadSysFonts(void) {
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
 static INT (WSAAPI *_WSAStringToAddressW)(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength);
-static INT (WSAAPI *_getaddrinfo)(PCSTR nodeName, PCSTR serviceName, const ADDRINFOA* hints, ADDRINFOA** result);
-static void (WSAAPI *_freeaddrinfo)(ADDRINFOA* addrInfo);
+
+static INT WSAAPI FallbackParseAddress(LPWSTR addressString, INT addressFamily, LPVOID protocolInfo, LPVOID address, LPINT addressLength) {
+	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)address;
+	cc_uint8*    addr  = (cc_uint8*)&addr4->sin_addr;
+	cc_string ip, parts[4 + 1];
+	WCHAR tmp[NATIVE_STR_LEN];
+
+	Mem_Copy(tmp, addressString, sizeof(tmp));
+	Platform_Utf16ToAnsi(tmp);
+	ip = String_FromReadonly((char*)tmp);
+
+	/* 4+1 in case user tries '1.1.1.1.1' */
+	if (String_UNSAFE_Split(&ip, '.', parts, 4 + 1) != 4)
+		return ERR_INVALID_ARGUMENT;
+
+	if (!Convert_ParseUInt8(&parts[0], &addr[0]) || !Convert_ParseUInt8(&parts[1], &addr[1]) ||
+		!Convert_ParseUInt8(&parts[2], &addr[2]) || !Convert_ParseUInt8(&parts[3], &addr[3]))
+		return ERR_INVALID_ARGUMENT;
+
+	addr4->sin_family = AF_INET;
+	return 0;
+}
 
 static void LoadWinsockFuncs(void) {
 	static const struct DynamicLibSym funcs[] = {
-		DynamicLib_Sym(WSAStringToAddressW), DynamicLib_Sym(getaddrinfo),
-		DynamicLib_Sym(freeaddrinfo),
+		DynamicLib_Sym(WSAStringToAddressW)
 	};
 
 	static const cc_string winsock32 = String_FromConst("WS2_32.DLL");
 	LoadDynamicFuncs(&winsock32, funcs, Array_Elems(funcs));
+	/* Fallback for older OS versions which lack WSAStringToAddressW */
+	if (!_WSAStringToAddressW) _WSAStringToAddressW = FallbackParseAddress;
 }
 
 cc_result Socket_Available(cc_socket s, int* available) {
@@ -398,50 +419,24 @@ cc_result Socket_Available(cc_socket s, int* available) {
 }
 
 cc_result Socket_GetError(cc_socket s, cc_result* result) {
-	socklen_t resultSize = sizeof(cc_result);
+	int resultSize = sizeof(cc_result);
 	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
 static int ParseHost(void* dst, WCHAR* host, int port) {
-	ADDRINFOA hints = { 0 };
-	ADDRINFOA* result;
-	ADDRINFOA* cur;
-	int family = 0, res;
-
-	hints.ai_family   = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
+	SOCKADDR_IN* addr4 = (SOCKADDR_IN*)dst;
+	struct hostent* res;
 
 	Platform_Utf16ToAnsi(host);
-	res = _getaddrinfo((char*)host, NULL, &hints, &result);
-	if (res) return 0;
+	res = gethostbyname((char*)host);
+	if (!res || res->h_addrtype != AF_INET) return 0;
 
-	for (cur = result; cur; cur = cur->ai_next) {
-		if (cur->ai_family != AF_INET) continue;
-		family = AF_INET;
+	/* Must have at least one IPv4 address */
+	if (!res->h_addr_list[0]) return 0;
 
-		Mem_Copy(dst, cur->ai_addr, cur->ai_addrlen);
-		((SOCKADDR_IN*)dst)->sin_port = htons(port);
-		break;
-	}
-
-	_freeaddrinfo(result);
-	return family;
-}
-
-static int FallbackParseAddress(SOCKADDR_IN* dst, const cc_string* ip, int port) {
-	cc_uint8* addr;
-	cc_string parts[4 + 1];
-	/* +1 in case user tries '1.1.1.1.1' */
-	if (String_UNSAFE_Split(ip, '.', parts, 4 + 1) != 4) return 0;
-	addr = (cc_uint8*)&dst->sin_addr;
-
-	if (!Convert_ParseUInt8(&parts[0], &addr[0]) || !Convert_ParseUInt8(&parts[1], &addr[1]) ||
-		!Convert_ParseUInt8(&parts[2], &addr[2]) || !Convert_ParseUInt8(&parts[3], &addr[3]))
-		return 0;
-
-	dst->sin_family = AF_INET;
-	dst->sin_port   = htons(port);
+	addr4->sin_family = AF_INET;
+	addr4->sin_port   = htons(port);
+	addr4->sin_addr   = *(IN_ADDR*)res->h_addr_list[0];
 	return AF_INET;
 }
 
@@ -452,12 +447,8 @@ static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
 	DWORD size;
 	Platform_EncodeUtf16(str, address);
 
-	/* Fallback for older OS versions which lack WSAStringToAddressW */
-	if (!_WSAStringToAddressW)
-		return FallbackParseAddress(addr4, address, port);
-
 	size = sizeof(*addr4);
-	if (!_WSAStringToAddressW(str, AF_INET, NULL, (SOCKADDR*)addr4, &size)) {
+	if (!_WSAStringToAddressW(str, AF_INET, NULL, addr4, &size)) {
 		addr4->sin_port  = htons(port);
 		return AF_INET;
 	}
@@ -466,8 +457,6 @@ static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
 		addr6->sin6_port = htons(port);
 		return AF_INET6;
 	}
-
-	if (!_getaddrinfo) return 0;
 	return ParseHost(dst, str, port);
 }
 
