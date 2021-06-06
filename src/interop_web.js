@@ -21,7 +21,7 @@ mergeInto(LibraryManager.library, {
       elem.click();
       document.body.removeChild(elem);
       window.URL.revokeObjectURL(url);
-    }
+    };
   },
   interop_TakeScreenshot: function(path) {
     var name   = UTF8ToString(path);
@@ -105,6 +105,27 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
 //---------------------------------------------------------Platform-------------------------------------------------------
 //########################################################################################################################
+  interop_OpenTab: function(url) {
+    window.open(UTF8ToString(url));
+    return 0;
+  },
+  interop_Log: function(msg, len) {
+    Module.print(UTF8ArrayToString(HEAPU8, msg, len));
+  },
+  interop_GetLocalTime: function(time) {
+    var date = new Date();
+    HEAP32[(time|0 +  0)>>2] = date.getFullYear();
+    HEAP32[(time|0 +  4)>>2] = date.getMonth() + 1|0;
+    HEAP32[(time|0 +  8)>>2] = date.getDay();
+    HEAP32[(time|0 + 12)>>2] = date.getHours();
+    HEAP32[(time|0 + 16)>>2] = date.getMinutes();
+    HEAP32[(time|0 + 20)>>2] = date.getSeconds();
+  },
+
+
+//########################################################################################################################
+//--------------------------------------------------------Filesystem------------------------------------------------------
+//########################################################################################################################
   interop_GetIndexedDBError: function(buffer) {
     if (window.cc_idbErr) stringToUTF8(window.cc_idbErr, buffer, 64);
   },
@@ -116,14 +137,18 @@ mergeInto(LibraryManager.library, {
       ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
     }); 
   },
-  interop_OpenTab: function(url) {
-    window.open(UTF8ToString(url));
-    return 0;
+  interop_FileExists: function (raw) {
+    var path = UTF8ToString(raw);
+    try {
+      var lookup = FS.lookupPath(path, { follow: true });
+      if (!lookup.node) return false;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return false;
+    }
+    return true;
   },
-  interop_Log: function(msg, len) {
-    Module.print(UTF8ArrayToString(HEAPU8, msg, len));
-  },
-
+  
 
 //########################################################################################################################
 //---------------------------------------------------------Sockets--------------------------------------------------------
@@ -195,8 +220,6 @@ mergeInto(LibraryManager.library, {
     // always "fail" in non-blocking mode
     return SOCKETS.EINPROGRESS;
   },
-  interop_SocketClose: function(sock) {
-    return SOCKETS.close(sock);
   interop_SocketClose: function(sockFD) {
     var sock = SOCKETS.sockets[sockFD];
     if (!sock) return SOCKETS.EBADF;
@@ -295,8 +318,8 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
 //----------------------------------------------------------Window--------------------------------------------------------
 //########################################################################################################################
-  interop_CanvasWidth: function()  { return Module['canvas'].width  },
-  interop_CanvasHeight: function() { return Module['canvas'].height },
+  interop_CanvasWidth: function()  { return Module['canvas'].width;  },
+  interop_CanvasHeight: function() { return Module['canvas'].height; },
   interop_ScreenWidth: function()  { return screen.width;  },
   interop_ScreenHeight: function() { return screen.height; },
 

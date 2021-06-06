@@ -11,7 +11,6 @@
 #include "Errors.h"
 
 #include <errno.h>
-#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -23,7 +22,7 @@
 #include <stdio.h>
 
 /* Unfortunately, errno constants are different in some older emscripten versions */
-/*  (linux errno compared to WASI errno) */
+/*  (linux errno numbers compared to WASI errno numbers) */
 /* So just use the same numbers as interop_web.js (otherwise connecting always fail) */
 #define _EINPROGRESS  26
 #define _EAGAIN        6 /* same as EWOULDBLOCK */
@@ -85,18 +84,9 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 	return UnixTime_TotalMS(cur);
 }
 
+extern void interop_GetLocalTime(struct DateTime* t);
 void DateTime_CurrentLocal(struct DateTime* t) {
-	struct timeval cur; 
-	struct tm loc_time;
-	gettimeofday(&cur, NULL);
-	localtime_r(&cur.tv_sec, &loc_time);
-
-	t->year   = loc_time.tm_year + 1900;
-	t->month  = loc_time.tm_mon  + 1;
-	t->day    = loc_time.tm_mday;
-	t->hour   = loc_time.tm_hour;
-	t->minute = loc_time.tm_min;
-	t->second = loc_time.tm_sec;
+	interop_GetLocalTime(t);
 }
 
 cc_uint64 Stopwatch_Measure(void) {
@@ -116,11 +106,11 @@ cc_result Directory_Create(const cc_string* path) {
 	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
 }
 
+extern int interop_FileExists(const char* path);
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	struct stat sb;
 	Platform_EncodeUtf8(str, path);
-	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
+	return interop_FileExists(str);
 }
 
 cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
@@ -248,15 +238,7 @@ void Platform_LoadSysFonts(void) { }
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-extern int interop_SocketCreate(void);
-extern int interop_SocketConnect(int sock, const char* addr, int port);
-extern int interop_SocketClose(int sock);
-extern int interop_SocketSend(int sock, const void* data, int len);
-extern int interop_SocketRecv(int sock, void* data, int len);
 extern int interop_SocketGetPending(int sock);
-extern int interop_SocketGetError(int sock);
-extern int interop_SocketPoll(int sock);
-
 cc_result Socket_Available(cc_socket s, int* available) {
 	int res = interop_SocketGetPending(s);
 	/* returned result is negative for error */
@@ -268,6 +250,7 @@ cc_result Socket_Available(cc_socket s, int* available) {
 	}
 }
 
+extern int interop_SocketGetError(int sock);
 cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	int res = interop_SocketGetError(s);
 	/* returned result is negative for error */
@@ -280,6 +263,8 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 }
 int Socket_ValidAddress(const cc_string* address) { return true; }
 
+extern int interop_SocketCreate(void);
+extern int interop_SocketConnect(int sock, const char* addr, int port);
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	char addr[NATIVE_STR_LEN];
 	int res;
@@ -294,6 +279,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	return res;
 }
 
+extern int interop_SocketRecv(int sock, void* data, int len);
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	/* recv only reads one WebSocket frame at most, hence call it multiple times */
 	int res; *modified = 0;
@@ -314,6 +300,7 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 	return 0;
 }
 
+extern int interop_SocketSend(int sock, const void* data, int len);
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	/* returned result is negative for error */
 	int res = interop_SocketSend(s, data, count);
@@ -325,11 +312,13 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	}
 }
 
+extern int interop_SocketClose(int sock);
 cc_result Socket_Close(cc_socket s) {
 	/* returned result is negative for error */
 	return -interop_SocketClose(s);
 }
 
+extern int interop_SocketPoll(int sock);
 cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	/* returned result is negative for error */
 	int res = interop_SocketPoll(s), flags;
