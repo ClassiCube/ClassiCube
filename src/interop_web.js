@@ -123,190 +123,172 @@ mergeInto(LibraryManager.library, {
   interop_Log: function(msg, len) {
     Module.print(UTF8ArrayToString(HEAPU8, msg, len));
   },
+
+
+//########################################################################################################################
+//---------------------------------------------------------Sockets--------------------------------------------------------
+//########################################################################################################################
   interop_InitSockets: function() {
     window.SOCKETS = {
       EBADF:-8,EISCONN:-30,ENOTCONN:-53,EAGAIN:-6,EHOSTUNREACH:-23,EINPROGRESS:-26,EALREADY:-7,ECONNRESET:-15,EINVAL:-28,ECONNREFUSED:-14,
       sockets: [],
-      
-      createSocket:function() {
-        var sock = {
-          error: null, // Used in getsockopt for SOL_SOCKET/SO_ERROR test
-          recv_queue: [],
-          socket: null,
-        };  
-        SOCKETS.sockets.push(sock);
-      
-        return (SOCKETS.sockets.length - 1) | 0;
-      },
-      connect:function(fd, addr, port) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-      
-        // early out if we're already connected / in the middle of connecting
-        var ws = sock.socket;
-        if (ws) {
-          if (ws.readyState === ws.CONNECTING) return SOCKETS.EALREADY;
-          return SOCKETS.EISCONN;
-        }
-        
-        // create the actual websocket object and connect
-        try {
-          var parts = addr.split('/');
-          var url = 'ws://' + parts[0] + ":" + port + "/" + parts.slice(1).join('/');
-          ws = new WebSocket(url, 'ClassiCube');
-          ws.binaryType = 'arraybuffer';
-        } catch (e) {
-          return SOCKETS.EHOSTUNREACH;
-        }
-        sock.socket = ws;
-        
-        ws.onopen  = function() {};
-        ws.onclose = function() {};
-        ws.onmessage = function(event) {
-          var data = event.data;
-          if (typeof data === 'string') {
-            var encoder = new TextEncoder(); // should be utf-8
-            data = encoder.encode(data); // make a typed array from the string
-          } else {
-            assert(data.byteLength !== undefined); // must receive an ArrayBuffer
-            if (data.byteLength == 0) {
-              // An empty ArrayBuffer will emit a pseudo disconnect event
-              // as recv/recvmsg will return zero which indicates that a socket
-              // has performed a shutdown although the connection has not been disconnected yet.
-              return;
-            } else {
-              data = new Uint8Array(data); // make a typed array view on the array buffer
-            }
-          }
-          sock.recv_queue.push(data);
-        };
-        ws.onerror = function(error) {
-          // The WebSocket spec only allows a 'simple event' to be thrown on error,
-          // so we only really know as much as ECONNREFUSED.
-          sock.error = -SOCKETS.ECONNREFUSED; // Used in getsockopt for SOL_SOCKET/SO_ERROR test.
-        };
-        // always "fail" in non-blocking mode
-        return SOCKETS.EINPROGRESS;
-      },
-      poll:function(fd) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-            
-        var ws   = sock.socket;
-        if (!ws) return 0;
-        var mask = 0;
-
-        if (sock.recv_queue.length || (ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED)) mask |= 1;
-        if (ws.readyState === ws.OPEN) mask |= 2;
-        return mask;
-      },
-      getPending:function(fd) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-
-        return sock.recv_queue.length;
-      },
-      getError:function(fd) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-
-        return sock.error || 0;
-      },
-      close:function(fd) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-      
-        try {
-          sock.socket.close();
-        } catch (e) {
-        }
-        delete sock.socket;
-        return 0;
-      },
-      send:function(fd, src, length) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-      
-        var ws = sock.socket;
-        if (!ws || ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED) {
-          return SOCKETS.ENOTCONN;
-        } else if (ws.readyState === ws.CONNECTING) {
-          return SOCKETS.EAGAIN;
-        }
-        
-        // var data = HEAP8.slice(src, src + length); unsupported in IE11
-        var data = new Uint8Array(length);
-        for (var i = 0; i < length; i++) {  
-          data[i] = HEAP8[src + i];
-        }
-        
-        try {
-          ws.send(data);
-          return length;
-        } catch (e) {
-          return SOCKETS.EINVAL;
-        }
-      },
-      recv:function(fd, dst, length) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-      
-        var packet = sock.recv_queue.shift();
-        if (!packet) {
-          var ws = sock.socket;
-        
-          if (!ws || ws.readyState == ws.CLOSING || ws.readyState == ws.CLOSED) {
-            return SOCKETS.ENOTCONN;
-          } else {
-            // socket is in a valid state but truly has nothing available
-            return SOCKETS.EAGAIN;
-          }
-        }
-        
-        // packet will be an ArrayBuffer if it's unadulterated, but if it's
-        // requeued TCP data it'll be an ArrayBufferView
-        var packetLength = packet.byteLength || packet.length;
-        var packetOffset = packet.byteOffset || 0;
-        var packetBuffer = packet.buffer || packet;
-        var bytesRead = Math.min(length, packetLength);
-        var msg = new Uint8Array(packetBuffer, packetOffset, bytesRead);
-        
-        // push back any unread data for TCP connections
-        if (bytesRead < packetLength) {
-          var bytesRemaining = packetLength - bytesRead;
-          packet = new Uint8Array(packetBuffer, packetOffset + bytesRead, bytesRemaining);
-          sock.recv_queue.unshift(packet);
-        }
-      
-        HEAPU8.set(msg, dst);
-        return msg.byteLength;
-      }
     };
   },
   interop_SocketCreate: function() {
-    return SOCKETS.createSocket();
+    var sock = {
+      error: null, // Used by interop_SocketGetError
+      recv_queue: [],
+      socket: null,
+    };
+
+    SOCKETS.sockets.push(sock);
+    return (SOCKETS.sockets.length - 1) | 0;
   },
-  interop_SocketConnect: function(sock, addr, port) {
-    var str = UTF8ToString(addr);
-    return SOCKETS.connect(sock, str, port);
+  interop_SocketConnect: function(sockFD, raw, port) {
+    var addr = UTF8ToString(raw);
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    // already connecting or connected
+    var ws = sock.socket;
+    if (ws) {
+      if (ws.readyState === ws.CONNECTING) return SOCKETS.EALREADY;
+      return SOCKETS.EISCONN;
+    }
+
+    // create the actual websocket object and connect
+    try {
+      var parts = addr.split('/');
+      var url = 'ws://' + parts[0] + ":" + port + "/" + parts.slice(1).join('/');
+      ws = new WebSocket(url, 'ClassiCube');
+      ws.binaryType = 'arraybuffer';
+    } catch (e) {
+      return SOCKETS.EHOSTUNREACH;
+    }
+    sock.socket = ws;
+
+    ws.onopen  = function() {};
+    ws.onclose = function() {};
+    ws.onmessage = function(event) {
+      var data = event.data;
+      if (typeof data === 'string') {
+        var encoder = new TextEncoder(); // should be utf-8
+        data = encoder.encode(data); // make a typed array from the string
+      } else {
+        assert(data.byteLength !== undefined); // must receive an ArrayBuffer
+        if (data.byteLength == 0) {
+          // An empty ArrayBuffer will emit a pseudo disconnect event
+          // as recv/recvmsg will return zero which indicates that a socket
+          // has performed a shutdown although the connection has not been disconnected yet.
+          return;
+        } else {
+          data = new Uint8Array(data); // make a typed array view on the array buffer
+        }
+      }
+      sock.recv_queue.push(data);
+    };
+    ws.onerror = function(error) {
+      // The WebSocket spec only allows a 'simple event' to be thrown on error,
+      // so we only really know as much as ECONNREFUSED.
+      sock.error = -SOCKETS.ECONNREFUSED; // Used by interop_SocketGetError
+    };
+    // always "fail" in non-blocking mode
+    return SOCKETS.EINPROGRESS;
   },
   interop_SocketClose: function(sock) {
     return SOCKETS.close(sock);
+  interop_SocketClose: function(sockFD) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    try {
+      sock.socket.close();
+    } catch (e) {
+    }
+    delete sock.socket;
+    return 0;
   },
-  interop_SocketSend: function(sock, data, len) {
-    return SOCKETS.send(sock, data, len);
+  interop_SocketSend: function(sockFD, src, length) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    var ws = sock.socket;
+    if (!ws || ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED) {
+      return SOCKETS.ENOTCONN;
+    } else if (ws.readyState === ws.CONNECTING) {
+      return SOCKETS.EAGAIN;
+    }
+
+    // var data = HEAP8.slice(src, src + length); unsupported in IE11
+    var data = new Uint8Array(length);
+    for (var i = 0; i < length; i++) {  
+      data[i] = HEAP8[src + i];
+    }
+
+    try {
+      ws.send(data);
+      return length;
+    } catch (e) {
+      return SOCKETS.EINVAL;
+    }
   },
-  interop_SocketRecv: function(sock, data, len) {
-    return SOCKETS.recv(sock, data, len);
+  interop_SocketRecv: function(sockFD, dst, length) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    var packet = sock.recv_queue.shift();
+    if (!packet) {
+      var ws = sock.socket;
+
+      if (!ws || ws.readyState == ws.CLOSING || ws.readyState == ws.CLOSED) {
+        return SOCKETS.ENOTCONN;
+      } else {
+        // socket is in a valid state but truly has nothing available
+        return SOCKETS.EAGAIN;
+      }
+    }
+
+    // packet will be an ArrayBuffer if it's unadulterated, but if it's
+    // requeued TCP data it'll be an ArrayBufferView
+    var packetLength = packet.byteLength || packet.length;
+    var packetOffset = packet.byteOffset || 0;
+    var packetBuffer = packet.buffer || packet;
+    var bytesRead = Math.min(length, packetLength);
+    var msg = new Uint8Array(packetBuffer, packetOffset, bytesRead);
+
+    // push back any unread data for TCP connections
+    if (bytesRead < packetLength) {
+      var bytesRemaining = packetLength - bytesRead;
+      packet = new Uint8Array(packetBuffer, packetOffset + bytesRead, bytesRemaining);
+      sock.recv_queue.unshift(packet);
+    }
+
+    HEAPU8.set(msg, dst);
+    return msg.byteLength;
   },
-  interop_SocketGetPending: function(sock) {
-    return SOCKETS.getPending(sock);
+  interop_SocketGetPending: function(sockFD) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    return sock.recv_queue.length;
   },
-  interop_SocketGetError: function(sock) {
-    return SOCKETS.getError(sock);
+  interop_SocketGetError: function(sockFD) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    return sock.error || 0;
   },
-  interop_SocketPoll: function(sock) {
-    return SOCKETS.poll(sock);
+  interop_SocketPoll: function(sockFD) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    var ws   = sock.socket;
+    if (!ws) return 0;
+    var mask = 0;
+
+    if (sock.recv_queue.length || (ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED)) mask |= 1;
+    if (ws.readyState === ws.OPEN) mask |= 2;
+    return mask;
   },
 
 
