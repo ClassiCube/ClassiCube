@@ -129,13 +129,49 @@ mergeInto(LibraryManager.library, {
   interop_GetIndexedDBError: function(buffer) {
     if (window.cc_idbErr) stringToUTF8(window.cc_idbErr, buffer, 64);
   },
-  interop_SyncFS: function() {
-    FS.syncfs(false, function(err) { 
+  interop_SaveNode: function (path) {
+    var callback = function(err) { 
       if (!err) return;
       console.log(err);
-      ccall('Platform_LogError', 'void', ['string'], ['&cError saving files to IndexedDB:']);
+      ccall('Platform_LogError', 'void', ['string'], ['&cError saving ' + path]);
       ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
-    }); 
+    }; 
+
+    var stat, node, entry;
+    try {
+      var lookup = FS.lookupPath(path);
+      node = lookup.node;
+      stat = FS.stat(path);
+    } catch (err) {
+      return callback(err);
+    }
+  
+    if (FS.isDir(stat.mode)) {
+      entry = { timestamp: stat.mtime, mode: stat.mode };
+    } else {
+      // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
+      // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
+      node.contents = MEMFS.getFileDataAsTypedArray(node);
+      entry = { timestamp: stat.mtime, mode: stat.mode, contents: node.contents };
+    }
+    
+    IDBFS.getDB('/classicube', function(err, db) {
+      if (err) return callback(err);
+      var transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
+      var store = transaction.objectStore(IDBFS.DB_STORE_NAME);
+      
+      transaction.onerror = function(e) {
+        callback(this.error);
+        e.preventDefault();
+      };
+      
+      var req = store.put(entry, node.path);
+      req.onsuccess = function()  { callback(null); };
+      req.onerror   = function(e) {
+        callback(this.error);
+        e.preventDefault();
+      };
+    });
   },
   interop_DirectorySetWorking: function (raw) {
     var path = UTF8ToString(raw);
@@ -151,6 +187,7 @@ mergeInto(LibraryManager.library, {
     var path = UTF8ToString(raw);
     try {
       FS.mkdir(path, mode, 0);
+      interop_SaveNode(path);
       return 0;
     } catch (e) {
       if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
@@ -232,6 +269,8 @@ mergeInto(LibraryManager.library, {
     try {
       var stream = FS.getStream(fd);
       FS.close(stream);
+      // save writable files to IndexedDB
+      if (stream.isWrite.get()) interop_SaveNode(stream.path);
       return 0;
     } catch (e) {
       if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);

@@ -189,12 +189,9 @@ cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32*
 }
 
 extern int interop_FileClose(int fd);
-extern void interop_SyncFS(void);
 cc_result File_Close(cc_file file) {
 	/* returned result is negative for error */
-	int res = -interop_FileClose(file);
-	interop_SyncFS(); 
-	return res;
+	return -interop_FileClose(file);
 }
 
 extern int interop_FileSeek(int fd, int offset, int whence);
@@ -258,6 +255,9 @@ void Platform_LoadSysFonts(void) { }
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
+extern void interop_InitSockets(void);
+int Socket_ValidAddress(const cc_string* address) { return true; }
+
 extern int interop_SocketGetPending(int sock);
 cc_result Socket_Available(cc_socket s, int* available) {
 	int res = interop_SocketGetPending(s);
@@ -281,7 +281,6 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 		*result = 0; return -res;
 	}
 }
-int Socket_ValidAddress(const cc_string* address) { return true; }
 
 extern int interop_SocketCreate(void);
 extern int interop_SocketConnect(int sock, const char* addr, int port);
@@ -428,7 +427,6 @@ EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {
 }
 
 extern void interop_InitModule(void);
-extern void interop_InitSockets(void);
 extern void interop_GetIndexedDBError(char* buffer);
 
 void Platform_Init(void) {
