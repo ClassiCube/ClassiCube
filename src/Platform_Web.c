@@ -14,10 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <dirent.h>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/time.h>
 #include <stdio.h>
 
@@ -98,12 +96,15 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+extern int interop_DirectoryCreate(const char* path, int perms);
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
-	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
+
+	/* returned result is negative for error */
+	return -interop_DirectoryCreate(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 extern int interop_FileExists(const char* path);
@@ -113,55 +114,44 @@ int File_Exists(const cc_string* path) {
 	return interop_FileExists(str);
 }
 
-cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
+static void* enum_obj;
+static Directory_EnumCallback enum_callback;
+EMSCRIPTEN_KEEPALIVE void Directory_IterCallback(const char* src) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
-	DIR* dirPtr;
-	struct dirent* entry;
-	char* src;
-	int len, res;
 
-	Platform_EncodeUtf8(str, dirPath);
-	dirPtr = opendir(str);
-	if (!dirPtr) return errno;
+	/* ignore . and .. entry */
+	if (src[0] == '.' && src[1] == '\0') return;
+	if (src[0] == '.' && src[1] == '.' && src[2] == '\0') return;
 
-	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
-	/* errno is sometimes leftover from previous calls, so always reset it before readdir gets called */
-	errno = 0;
 	String_InitArray(path, pathBuffer);
-
-	while ((entry = readdir(dirPtr))) {
-		path.length = 0;
-		String_Format1(&path, "%s/", dirPath);
-
-		/* ignore . and .. entry */
-		src = entry->d_name;
-		if (src[0] == '.' && src[1] == '\0') continue;
-		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
-
-		len = String_Length(src);
-		String_AppendUtf8(&path, src, len);
-
-		/* TODO: fallback to stat when this fails */
-		if (entry->d_type == DT_DIR) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) { closedir(dirPtr); return res; }
-		} else {
-			callback(&path, obj);
-		}
-		errno = 0;
-	}
-
-	res = errno; /* return code from readdir */
-	closedir(dirPtr);
-	return res;
+	String_AppendUtf8(&path, src, String_Length(src));
+	enum_callback(&path, enum_obj);
 }
 
-static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
+extern int interop_DirectoryIter(const char* path);
+cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, path);
-	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-	return *file == -1 ? errno : 0;
+
+	enum_obj      = obj;
+	enum_callback = callback;
+	/* returned result is negative for error */
+	return -interop_DirectoryIter(str);
+}
+
+extern int interop_FileCreate(const char* path, int mode, int perms);
+static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
+	char str[NATIVE_STR_LEN];
+	int res;
+	Platform_EncodeUtf8(str, path);
+	res = interop_FileCreate(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+
+	/* returned result is negative for error */
+	if (res >= 0) {
+		*file = res; return 0;
+	} else {
+		*file = -1; return -res;
+	}
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
@@ -174,37 +164,67 @@ cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 
+extern int interop_FileRead(int fd, void* data, int count);
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	*bytesRead = read(file, data, count);
-	return *bytesRead == -1 ? errno : 0;
+	int res = interop_FileRead(file, data, count);
+
+	/* returned result is negative for error */
+	if (res >= 0) {
+		*bytesRead = res; return 0;
+	} else {
+		*bytesRead = -1;   return -res;
+	}
 }
 
+extern int interop_FileWrite(int fd, const void* data, int count);
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	*bytesWrote = write(file, data, count);
-	return *bytesWrote == -1 ? errno : 0;
+	int res = interop_FileWrite(file, data, count);
+
+	/* returned result is negative for error */
+	if (res >= 0) {
+		*bytesWrote = res; return 0;
+	} else {
+		*bytesWrote = -1;  return -res;
+	}
 }
 
+extern int interop_FileClose(int fd);
 extern void interop_SyncFS(void);
-cc_result File_Close(cc_file file) {	
-	int res = close(file) == -1 ? errno : 0; 
+cc_result File_Close(cc_file file) {
+	/* returned result is negative for error */
+	int res = -interop_FileClose(file);
 	interop_SyncFS(); 
 	return res;
 }
 
+extern int interop_FileSeek(int fd, int offset, int whence);
 cc_result File_Seek(cc_file file, int offset, int seekType) {
 	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
-	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
+	/* returned result is negative for error */
+	int res = interop_FileSeek(file, offset, modes[seekType]);
+	/* FileSeek returns current position, discard that */
+	return res >= 0 ? 0 : -res;
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	*pos = lseek(file, 0, SEEK_CUR);
-	return *pos == -1 ? errno : 0;
+	int res = interop_FileSeek(file, 0, SEEK_CUR);
+	/* returned result is negative for error */
+	if (res >= 0) {
+		*pos = res; return 0;
+	} else {
+		*pos = -1;  return -res;
+	}
 }
 
+extern int interop_FileLength(int fd);
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	struct stat st;
-	if (fstat(file, &st) == -1) { *len = -1; return errno; }
-	*len = st.st_size; return 0;
+	int res = interop_FileLength(file);
+	/* returned result is negative for error */
+	if (res >= 0) {
+		*len = res; return 0;
+	} else {
+		*len = -1;  return -res;
+	}
 }
 
 
@@ -449,7 +469,9 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return count;
 }
 
+extern int interop_DirectorySetWorking(const char* path);
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return chdir("/classicube") == -1 ? errno : 0;
+	/* returned result is negative for error */
+	return -interop_DirectorySetWorking("/classicube");
 }
 #endif

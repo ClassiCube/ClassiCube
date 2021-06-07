@@ -137,6 +137,39 @@ mergeInto(LibraryManager.library, {
       ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
     }); 
   },
+  interop_DirectorySetWorking: function (raw) {
+    var path = UTF8ToString(raw);
+    try {
+      FS.chdir(path);
+      return 0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_DirectoryCreate: function(raw, mode) {
+    var path = UTF8ToString(raw);
+    try {
+      FS.mkdir(path, mode, 0);
+      return 0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_DirectoryIter: function(raw) {
+    var path = UTF8ToString(raw);
+    try {
+      var entries = FS.readdir(path);	  
+      for (var i = 0; i < entries.length; i++) {
+        ccall('Directory_IterCallback', 'void', ['string'], [entries[i]]);
+      }
+      return 0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
   interop_FileExists: function (raw) {
     var path = UTF8ToString(raw);
     try {
@@ -147,6 +180,63 @@ mergeInto(LibraryManager.library, {
       return false;
     }
     return true;
+  },
+  interop_FileCreate: function(raw, flags, mode) {
+    var path = UTF8ToString(raw);
+    try {
+      var stream = FS.open(path, flags, mode);
+      return stream.fd|0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_FileRead: function(fd, dst, count) {
+    try {
+      var stream = FS.getStream(fd);
+      return FS.read(stream, HEAP8, dst, count)|0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_FileWrite: function(fd, src, count) {
+    try {
+      var stream = FS.getStream(fd);
+      return FS.write(stream, HEAP8, src, count)|0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_FileSeek: function(fd, offset, whence) {
+    try {
+      var stream = FS.getStream(fd);
+      return FS.llseek(stream, offset, whence)|0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_FileLength: function(fd) {
+    try {
+      var stream = FS.getStream(fd);
+      var attrs  = stream.node.node_ops.getattr(stream.node);
+      return attrs.size|0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_FileClose: function(fd) {
+    try {
+      var stream = FS.getStream(fd);
+      FS.close(stream);
+      return 0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
   },
   
 
