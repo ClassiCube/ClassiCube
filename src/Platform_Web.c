@@ -96,6 +96,7 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+extern void interop_InitFilesystem(void);
 extern int interop_DirectoryCreate(const char* path, int perms);
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
@@ -427,19 +428,11 @@ EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {
 }
 
 extern void interop_InitModule(void);
-extern void interop_GetIndexedDBError(char* buffer);
-
 void Platform_Init(void) {
-	char tmp[64+1] = { 0 };
+	interop_InitFilesystem();
 	interop_InitModule();
 	interop_InitSockets();
 	
-	/* Check if an error occurred when pre-loading IndexedDB */
-	interop_GetIndexedDBError(tmp);
-	if (!tmp[0]) return;
-	
-	Chat_Add1("&cError preloading IndexedDB: %c", tmp);
-	Chat_AddRaw("&cPreviously saved settings/maps will be lost");
 	/* NOTE: You must pre-load IndexedDB before main() */
 	/* (because pre-loading only works asynchronously) */
 	/* If you don't, you'll get errors later trying to sync local to remote */

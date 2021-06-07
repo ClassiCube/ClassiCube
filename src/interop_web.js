@@ -126,52 +126,58 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
 //--------------------------------------------------------Filesystem------------------------------------------------------
 //########################################################################################################################
-  interop_GetIndexedDBError: function(buffer) {
-    if (window.cc_idbErr) stringToUTF8(window.cc_idbErr, buffer, 64);
-  },
-  interop_SaveNode: function (path) {
-    var callback = function(err) { 
-      if (!err) return;
-      console.log(err);
-      ccall('Platform_LogError', 'void', ['string'], ['&cError saving ' + path]);
-      ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
-    }; 
+  interop_InitFilesystem: function(buffer) {
+    // if interop_SaveNode is directly defined as a function, it is wrongly optimised 
+    // out when compilingas the function is not directly referenced by any C code	
+    Module.saveNode = function(path) {
+      var callback = function(err) { 
+        if (!err) return;
+        console.log(err);
+        ccall('Platform_LogError', 'void', ['string'], ['&cError saving ' + path]);
+        ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
+      }; 
+      
+      var stat, node, entry;
+      try {
+        var lookup = FS.lookupPath(path);
+        path = lookup.path;
+        node = lookup.node;
+        stat = node.node_ops.getattr(node);
+      } catch (err) {
+        return callback(err);
+      }
+      
+      if (FS.isDir(stat.mode)) {
+        entry = { timestamp: stat.mtime, mode: stat.mode };
+      } else {
+        // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
+        // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
+        node.contents = MEMFS.getFileDataAsTypedArray(node);
+        entry = { timestamp: stat.mtime, mode: stat.mode, contents: node.contents };
+      }
+      
+      IDBFS.getDB('/classicube', function(err, db) {
+        if (err) return callback(err);
+        var transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
+        var store = transaction.objectStore(IDBFS.DB_STORE_NAME);
+        
+        transaction.onerror = function(e) {
+          callback(this.error);
+          e.preventDefault();
+        };
+        
+        var req = store.put(entry, path);
+        req.onsuccess = function()  { callback(null); };
+        req.onerror   = function(e) {
+          callback(this.error);
+          e.preventDefault();
+        };
+      });
+    };
 
-    var stat, node, entry;
-    try {
-      var lookup = FS.lookupPath(path);
-      node = lookup.node;
-      stat = FS.stat(path);
-    } catch (err) {
-      return callback(err);
-    }
-  
-    if (FS.isDir(stat.mode)) {
-      entry = { timestamp: stat.mtime, mode: stat.mode };
-    } else {
-      // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
-      // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
-      node.contents = MEMFS.getFileDataAsTypedArray(node);
-      entry = { timestamp: stat.mtime, mode: stat.mode, contents: node.contents };
-    }
-    
-    IDBFS.getDB('/classicube', function(err, db) {
-      if (err) return callback(err);
-      var transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
-      var store = transaction.objectStore(IDBFS.DB_STORE_NAME);
-      
-      transaction.onerror = function(e) {
-        callback(this.error);
-        e.preventDefault();
-      };
-      
-      var req = store.put(entry, node.path);
-      req.onsuccess = function()  { callback(null); };
-      req.onerror   = function(e) {
-        callback(this.error);
-        e.preventDefault();
-      };
-    });
+    if (!window.cc_idbErr) return;
+    ccall('Platform_LogError', 'void', ['string'], ['&cError preloading IndexedDB:' + window.cc_idbErr]);
+    ccall('Platform_LogError', 'void', ['string'], ['&cPreviously saved settings/maps will be lost']);
   },
   interop_DirectorySetWorking: function (raw) {
     var path = UTF8ToString(raw);
@@ -187,7 +193,7 @@ mergeInto(LibraryManager.library, {
     var path = UTF8ToString(raw);
     try {
       FS.mkdir(path, mode, 0);
-      interop_SaveNode(path);
+      Module.saveNode(path);
       return 0;
     } catch (e) {
       if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
@@ -269,8 +275,8 @@ mergeInto(LibraryManager.library, {
     try {
       var stream = FS.getStream(fd);
       FS.close(stream);
-      // save writable files to IndexedDB
-      if (stream.isWrite.get()) interop_SaveNode(stream.path);
+      // save writable files to IndexedDB (check for O_RDWR)
+      if ((stream.flags & 3) == 2) Module.saveNode(stream.path);
       return 0;
     } catch (e) {
       if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
