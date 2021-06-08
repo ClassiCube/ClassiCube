@@ -429,8 +429,8 @@ EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {
 
 extern void interop_InitModule(void);
 void Platform_Init(void) {
-	interop_InitFilesystem();
 	interop_InitModule();
+	interop_InitFilesystem();
 	interop_InitSockets();
 	
 	/* NOTE: You must pre-load IndexedDB before main() */

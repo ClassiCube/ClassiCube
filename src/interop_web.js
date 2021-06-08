@@ -6,6 +6,10 @@
 mergeInto(LibraryManager.library, {
   
   interop_InitModule: function() {
+    // these are required for older versions of emscripten, but the compiler removes
+    // this by default as no syscalls are used by the C platform code anymore
+    window.ERRNO_CODES={EPERM:1,ENOENT:2,EIO:5,ENXIO:6,EBADF:9,EAGAIN:11,EWOULDBLOCK:11,ENOMEM:12,EEXIST:17,ENODEV:19,ENOTDIR:20,EISDIR:21,EINVAL:22,EBADFD:77,ENOTEMPTY:39};
+  
     Module.saveBlob = function(blob, name) {
       if (window.navigator.msSaveBlob) {
         window.navigator.msSaveBlob(blob, name); return;
@@ -176,8 +180,8 @@ mergeInto(LibraryManager.library, {
     };
 
     if (!window.cc_idbErr) return;
-    ccall('Platform_LogError', 'void', ['string'], ['&cError preloading IndexedDB:' + window.cc_idbErr]);
-    ccall('Platform_LogError', 'void', ['string'], ['&cPreviously saved settings/maps will be lost']);
+    var msg = 'Error preloading IndexedDB:' + window.cc_idbErr + '\n\nPreviously saved settings/maps will be lost';
+    ccall('Platform_LogError', 'void', ['string'], [msg]);
   },
   interop_DirectorySetWorking: function (raw) {
     var path = UTF8ToString(raw);
