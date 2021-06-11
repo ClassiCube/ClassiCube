@@ -105,7 +105,6 @@ static void HUDScreen_UpdateLine1(struct HUDScreen* s) {
 static void HUDScreen_DrawPosition(struct HUDScreen* s) {
 	struct VertexTextured vertices[4 * 64];
 	struct VertexTextured* ptr = vertices;
-	PackedCol col = PACKEDCOL_WHITE;
 
 	struct TextAtlas* atlas = &s->posAtlas;
 	struct Texture tex;
@@ -115,7 +114,7 @@ static void HUDScreen_DrawPosition(struct HUDScreen* s) {
 	/* Make "Position: " prefix */
 	tex = atlas->tex; 
 	tex.X = 2; tex.Width = atlas->offset;
-	Gfx_Make2DQuad(&tex, col, &ptr);
+	Gfx_Make2DQuad(&tex, PACKEDCOL_WHITE, &ptr);
 
 	IVec3_Floor(&pos, &LocalPlayer_Instance.Base.Position);
 	atlas->curX = atlas->offset + 2;

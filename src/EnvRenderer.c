@@ -664,7 +664,7 @@ static void DrawBorderY(int x1, int z1, int x2, int z2, float y, PackedCol col, 
 static void UpdateMapSides(void) {
 	Rect2D rects[4], r;
 	BlockID block;
-	PackedCol col, white = PACKEDCOL_WHITE;
+	PackedCol col;
 	int y, y1, y2;
 	int i;
 	struct VertexTextured* data;
@@ -690,7 +690,7 @@ static void UpdateMapSides(void) {
 										VERTEX_FORMAT_TEXTURED, sides_vertices);
 
 	sides_fullBright = Blocks.FullBright[block];
-	col = sides_fullBright ? white : Env.ShadowCol;
+	col = sides_fullBright ? PACKEDCOL_WHITE : Env.ShadowCol;
 	Block_Tint(col, block)
 
 	for (i = 0; i < 4; i++) {
@@ -715,7 +715,7 @@ static void UpdateMapSides(void) {
 static void UpdateMapEdges(void) {
 	Rect2D rects[4], r;
 	BlockID block;
-	PackedCol col, white = PACKEDCOL_WHITE;
+	PackedCol col;
 	float y;
 	int i;
 	struct VertexTextured* data;
@@ -736,7 +736,7 @@ static void UpdateMapEdges(void) {
 										VERTEX_FORMAT_TEXTURED, edges_vertices);
 
 	edges_fullBright = Blocks.FullBright[block];
-	col = edges_fullBright ? white : Env.SunCol;
+	col = edges_fullBright ? PACKEDCOL_WHITE : Env.SunCol;
 	Block_Tint(col, block)
 
 	y = (float)Env.EdgeHeight;

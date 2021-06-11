@@ -322,15 +322,14 @@ void TextAtlas_Free(struct TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->tex.ID)
 
 void TextAtlas_Add(struct TextAtlas* atlas, int charI, struct VertexTextured** vertices) {
 	struct Texture part = atlas->tex;
-	int width       = atlas->widths[charI];
-	PackedCol white = PACKEDCOL_WHITE;
+	int width = atlas->widths[charI];
 
 	part.X  = atlas->curX; part.Width = width;
 	part.uv.U1 = atlas->offsets[charI] * atlas->uScale;
 	part.uv.U2 = part.uv.U1 + width    * atlas->uScale;
 
 	atlas->curX += width;	
-	Gfx_Make2DQuad(&part, white, vertices);
+	Gfx_Make2DQuad(&part, PACKEDCOL_WHITE, vertices);
 }
 
 void TextAtlas_AddInt(struct TextAtlas* atlas, int value, struct VertexTextured** vertices) {

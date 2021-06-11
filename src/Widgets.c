@@ -392,7 +392,6 @@ void ScrollbarWidget_Create(struct ScrollbarWidget* w) {
 #define HotbarWidget_TileX(w, idx) (int)(w->x + w->slotXOffset + w->slotWidth * (idx))
 
 static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
-	PackedCol white = PACKEDCOL_WHITE;
 	GfxResourceID tex;
 	int x;
 	
@@ -403,7 +402,7 @@ static void HotbarWidget_RenderHotbarOutline(struct HotbarWidget* w) {
 	x = HotbarWidget_TileX(w, Inventory.SelectedIndex);
 	w->selTex.ID = tex;
 	w->selTex.X  = (int)(x - w->selWidth / 2);
-	Gfx_Draw2DTexture(&w->selTex, white);
+	Gfx_Draw2DTexture(&w->selTex, PACKEDCOL_WHITE);
 }
 
 static void HotbarWidget_RenderHotbarBlocks(struct HotbarWidget* w) {

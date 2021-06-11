@@ -298,9 +298,8 @@ static CC_NOINLINE int CalcMipmapsLevels(int width, int height) {
 }
 
 void Texture_Render(const struct Texture* tex) {
-	PackedCol white = PACKEDCOL_WHITE;
 	Gfx_BindTexture(tex->ID);
-	Gfx_Draw2DTexture(tex, white);
+	Gfx_Draw2DTexture(tex, PACKEDCOL_WHITE);
 }
 
 void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeCol) {

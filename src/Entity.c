@@ -272,8 +272,6 @@ static void MakeNameTexture(struct Entity* e) {
 
 static void DrawName(struct Entity* e) {
 	struct VertexTextured vertices[4];
-	PackedCol col = PACKEDCOL_WHITE;
-
 	struct Model* model;
 	struct Matrix mat;
 	Vec3 pos;
@@ -298,7 +296,7 @@ static void DrawName(struct Entity* e) {
 		size.X *= scale * 0.2f; size.Y *= scale * 0.2f;
 	}
 
-	Particle_DoRender(&size, &pos, &e->NameTex.uv, col, vertices);
+	Particle_DoRender(&size, &pos, &e->NameTex.uv, PACKEDCOL_WHITE, vertices);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
 	Gfx_UpdateDynamicVb_IndexedTris(Gfx_texVb, vertices, 4);
 }
