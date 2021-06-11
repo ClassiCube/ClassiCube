@@ -35,7 +35,7 @@ static int Builder_Offsets[FACE_COUNT] = { -1,1, -EXTCHUNK_SIZE,EXTCHUNK_SIZE, -
 static int (*Builder_StretchXLiquid)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block);
 static int (*Builder_StretchX)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face);
 static int (*Builder_StretchZ)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face);
-static void (*Builder_RenderBlock)(int countsIndex);
+static void (*Builder_RenderBlock)(int countsIndex, int x, int y, int z);
 static void (*Builder_PreStretchTiles)(void);
 static void (*Builder_PostStretchTiles)(void);
 
@@ -207,7 +207,7 @@ static void Builder_Stretch(int x1, int y1, int z1) {
 					(z != 0 && (Blocks.Hidden[tileIdx + Builder_Chunk[cIndex - EXTCHUNK_SIZE]] & (1 << FACE_ZMIN)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
-					Builder_Counts[index] = Builder_StretchX(index, Builder_X, Builder_Y, Builder_Z, cIndex, b, FACE_ZMIN);
+					Builder_Counts[index] = Builder_StretchX(index, x, y, z, cIndex, b, FACE_ZMIN);
 				}
 
 				index++;
@@ -392,9 +392,8 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 				if (Blocks.Draw[Builder_Block] == DRAW_GAS) continue;
 
 				index = Builder_PackCount(xx, yy, zz);
-				Builder_X = x; Builder_Y = y; Builder_Z = z;
 				Builder_ChunkIndex = cIndex;
-				Builder_RenderBlock(index);
+				Builder_RenderBlock(index, x, y, z);
 			}
 		}
 	}
@@ -466,7 +465,7 @@ static void DefaultPostStretchTiles(void) {
 }
 
 static RNGState spriteRng;
-static void Builder_DrawSprite(void) {
+static void Builder_DrawSprite(int x, int y, int z) {
 	struct Builder1DPart* part;
 	struct VertexTextured v;
 	PackedCol white = PACKEDCOL_WHITE;
@@ -480,7 +479,7 @@ static void Builder_DrawSprite(void) {
 	float valX, valY, valZ;
 	float x1,y1,z1, x2,y2,z2;
 	
-	X  = (float)Builder_X; Y = (float)Builder_Y; Z = (float)Builder_Z;
+	X  = (float)x; Y = (float)y; Z = (float)z;
 	x1 = X + 2.50f/16.0f; y1 = Y;        z1 = Z + 2.50f/16.0f;
 	x2 = X + 13.5f/16.0f; y2 = Y + 1.0f; z2 = Z + 13.5f/16.0f;
 
@@ -492,7 +491,7 @@ static void Builder_DrawSprite(void) {
 
 	offsetType = Blocks.SpriteOffset[Builder_Block];
 	if (offsetType >= 6 && offsetType <= 7) {
-		Random_Seed(&spriteRng, (Builder_X + 1217 * Builder_Z) & 0x7fffffff);
+		Random_Seed(&spriteRng, (x + 1217 * z) & 0x7fffffff);
 		valX = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
 		valY = Random_Range(&spriteRng, 0,  3 + 1) / 16.0f;
 		valZ = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
@@ -503,7 +502,7 @@ static void Builder_DrawSprite(void) {
 	}
 	
 	part  = &Builder_Parts[Atlas1D_Index(loc)];
-	v.Col = Builder_FullBright ? white : Lighting_Col_Sprite_Fast(Builder_X, Builder_Y, Builder_Z);
+	v.Col = Builder_FullBright ? white : Lighting_Col_Sprite_Fast(x, y, z);
 	Block_Tint(v.Col, Builder_Block);
 
 	/* Draw Z axis */
@@ -626,7 +625,7 @@ static int NormalBuilder_StretchZ(int countIndex, int x, int y, int z, int chunk
 	return count;
 }
 
-static void NormalBuilder_RenderBlock(int index) {	
+static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {	
 	/* counters */
 	int count_XMin, count_XMax, count_ZMin;
 	int count_ZMax, count_YMin, count_YMax;
@@ -646,7 +645,7 @@ static void NormalBuilder_RenderBlock(int index) {
 	if (Blocks.Draw[Builder_Block] == DRAW_SPRITE) {
 		Builder_FullBright = Blocks.FullBright[Builder_Block];
 		Builder_Tinted     = Blocks.Tinted[Builder_Block];
-		Builder_DrawSprite();
+		Builder_DrawSprite(x, y, z);
 		return;
 	}
 
@@ -668,8 +667,8 @@ static void NormalBuilder_RenderBlock(int index) {
 	Drawer.MaxBB = Blocks.MaxBB[Builder_Block]; Drawer.MaxBB.Y = 1.0f - Drawer.MaxBB.Y;
 
 	min = Blocks.RenderMinBB[Builder_Block]; max = Blocks.RenderMaxBB[Builder_Block];
-	Drawer.X1 = Builder_X + min.X; Drawer.Y1 = Builder_Y + min.Y; Drawer.Z1 = Builder_Z + min.Z;
-	Drawer.X2 = Builder_X + max.X; Drawer.Y2 = Builder_Y + max.Y; Drawer.Z2 = Builder_Z + max.Z;
+	Drawer.X1 = x + min.X; Drawer.Y1 = y + min.Y; Drawer.Z1 = z + min.Z;
+	Drawer.X2 = x + max.X; Drawer.Y2 = y + max.Y; Drawer.Z2 = z + max.Z;
 
 	Drawer.Tinted  = Blocks.Tinted[Builder_Block];
 	Drawer.TintCol = Blocks.FogCol[Builder_Block];
@@ -680,7 +679,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
-			Builder_X >= offset ? Lighting_Col_XSide_Fast(Builder_X - offset, Builder_Y, Builder_Z) : Env.SunXSide;
+			x >= offset ? Lighting_Col_XSide_Fast(x - offset, y, z) : Env.SunXSide;
 		Drawer_XMin(count_XMin, col, loc, &part->fVertices[FACE_XMIN]);
 	}
 
@@ -690,7 +689,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
-			Builder_X <= (World.MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Env.SunXSide;
+			x <= (World.MaxX - offset) ? Lighting_Col_XSide_Fast(x + offset, y, z) : Env.SunXSide;
 		Drawer_XMax(count_XMax, col, loc, &part->fVertices[FACE_XMAX]);
 	}
 
@@ -700,7 +699,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
-			Builder_Z >= offset ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z - offset) : Env.SunZSide;
+			z >= offset ? Lighting_Col_ZSide_Fast(x, y, z - offset) : Env.SunZSide;
 		Drawer_ZMin(count_ZMin, col, loc, &part->fVertices[FACE_ZMIN]);
 	}
 
@@ -710,7 +709,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? white :
-			Builder_Z <= (World.MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Env.SunZSide;
+			z <= (World.MaxZ - offset) ? Lighting_Col_ZSide_Fast(x, y, z + offset) : Env.SunZSide;
 		Drawer_ZMax(count_ZMax, col, loc, &part->fVertices[FACE_ZMAX]);
 	}
 
@@ -719,7 +718,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		offset = (lightFlags >> FACE_YMIN) & 1;
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
-		col = fullBright ? white : Lighting_Col_YMin_Fast(Builder_X, Builder_Y - offset, Builder_Z);
+		col = fullBright ? white : Lighting_Col_YMin_Fast(x, y - offset, z);
 		Drawer_YMin(count_YMin, col, loc, &part->fVertices[FACE_YMIN]);
 	}
 
@@ -728,7 +727,7 @@ static void NormalBuilder_RenderBlock(int index) {
 		offset = (lightFlags >> FACE_YMAX) & 1;
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
-		col = fullBright ? white : Lighting_Col_YMax_Fast(Builder_X, (Builder_Y + 1) - offset, Builder_Z);
+		col = fullBright ? white : Lighting_Col_YMax_Fast(x, (y + 1) - offset, z);
 		Drawer_YMax(count_YMax, col, loc, &part->fVertices[FACE_YMAX]);
 	}
 }
@@ -1183,7 +1182,7 @@ static void Adv_DrawYMax(int count) {
 	part->fVertices[FACE_YMAX] = vertices;
 }
 
-static void Adv_RenderBlock(int index) {
+static void Adv_RenderBlock(int index, int x, int y, int z) {
 	Vec3 min, max;
 	int count_XMin, count_XMax, count_ZMin;
 	int count_ZMax, count_YMin, count_YMax;
@@ -1191,7 +1190,7 @@ static void Adv_RenderBlock(int index) {
 	if (Blocks.Draw[Builder_Block] == DRAW_SPRITE) {
 		Builder_FullBright = Blocks.FullBright[Builder_Block];
 		Builder_Tinted     = Blocks.Tinted[Builder_Block];
-		Builder_DrawSprite();
+		Builder_DrawSprite(x, y, z);
 		return;
 	}
 
@@ -1211,8 +1210,8 @@ static void Adv_RenderBlock(int index) {
 	Builder_Tinted = Blocks.Tinted[Builder_Block];
 
 	min = Blocks.RenderMinBB[Builder_Block]; max = Blocks.RenderMaxBB[Builder_Block];
-	adv_x1 = Builder_X + min.X; adv_y1 = Builder_Y + min.Y; adv_z1 = Builder_Z + min.Z;
-	adv_x2 = Builder_X + max.X; adv_y2 = Builder_Y + max.Y; adv_z2 = Builder_Z + max.Z;
+	adv_x1 = x + min.X; adv_y1 = y + min.Y; adv_z1 = z + min.Z;
+	adv_x2 = x + max.X; adv_y2 = y + max.Y; adv_z2 = z + max.Z;
 
 	adv_minBB = Blocks.MinBB[Builder_Block]; adv_maxBB = Blocks.MaxBB[Builder_Block];
 	adv_minBB.Y = 1.0f - adv_minBB.Y; adv_maxBB.Y = 1.0f - adv_maxBB.Y;

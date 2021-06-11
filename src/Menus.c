@@ -2837,7 +2837,7 @@ static void ChatOptionsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 		{ -1, 50, "Chat lines",         MenuOptionsScreen_Input,
 			ChatOptionsScreen_GetChatlines, ChatOptionsScreen_SetChatlines },
 
-		{  1,  0, "Log to disc",        MenuOptionsScreen_Bool,
+		{  1,  0, "Log to disk",        MenuOptionsScreen_Bool,
 			ChatOptionsScreen_GetLogging,   ChatOptionsScreen_SetLogging },
 		{  1, 50, "Clickable chat",     MenuOptionsScreen_Bool,
 			ChatOptionsScreen_GetClickable, ChatOptionsScreen_SetClickable }
