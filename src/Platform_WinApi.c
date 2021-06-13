@@ -420,7 +420,7 @@ cc_result Socket_Available(cc_socket s, int* available) {
 
 cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	int resultSize = sizeof(cc_result);
-	return getsockopt(s, SOL_SOCKET, SO_ERROR, result, &resultSize);
+	return getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)result, &resultSize);
 }
 
 static int ParseHost(void* dst, WCHAR* host, int port) {
@@ -444,7 +444,7 @@ static int Socket_ParseAddress(void* dst, const cc_string* address, int port) {
 	SOCKADDR_IN*  addr4 =  (SOCKADDR_IN*)dst;
 	SOCKADDR_IN6* addr6 = (SOCKADDR_IN6*)dst;
 	WCHAR str[NATIVE_STR_LEN];
-	DWORD size;
+	INT size;
 	Platform_EncodeUtf16(str, address);
 
 	size = sizeof(*addr4);
