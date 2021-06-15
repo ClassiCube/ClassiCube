@@ -25,7 +25,13 @@ cc_string Chat_BottomRight[3]  = { String_FromArray(msgs[4]), String_FromArray(m
 cc_string Chat_ClientStatus[2] = { String_FromArray(msgs[7]), String_FromArray(msgs[8]) };
 
 cc_string Chat_Announcement = String_FromArray(msgs[9]);
+cc_string Chat_BigAnnouncement = String_FromArray(msgs[10]);
+cc_string Chat_SmallAnnouncement = String_FromArray(msgs[11]);
+
 double Chat_AnnouncementReceived;
+double Chat_BigAnnouncementReceived;
+double Chat_SmallAnnouncementReceived;
+
 struct StringsBuffer Chat_Log, Chat_InputLog;
 cc_bool Chat_Logging;
 
@@ -225,6 +231,12 @@ void Chat_AddOf(const cc_string* text, int msgType) {
 	} else if (msgType == MSG_TYPE_ANNOUNCEMENT) {
 		String_Copy(&Chat_Announcement, text);
 		Chat_AnnouncementReceived = Game.Time;
+	} else if (msgType == MSG_TYPE_BIGANNOUNCEMENT) {
+		String_Copy(&Chat_BigAnnouncement, text);
+		Chat_BigAnnouncementReceived = Game.Time;
+	} else if (msgType == MSG_TYPE_SMALLANNOUNCEMENT) {
+		String_Copy(&Chat_SmallAnnouncement, text);
+		Chat_SmallAnnouncementReceived = Game.Time;
 	} else if (msgType >= MSG_TYPE_CLIENTSTATUS_1 && msgType <= MSG_TYPE_CLIENTSTATUS_2) {
 		String_Copy(&Chat_ClientStatus[msgType - MSG_TYPE_CLIENTSTATUS_1], text);
 	}
@@ -641,6 +653,8 @@ static void OnInit(void) {
 
 static void ClearCPEMessages(void) {
 	Chat_AddOf(&String_Empty, MSG_TYPE_ANNOUNCEMENT);
+	Chat_AddOf(&String_Empty, MSG_TYPE_BIGANNOUNCEMENT);
+	Chat_AddOf(&String_Empty, MSG_TYPE_SMALLANNOUNCEMENT);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_1);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_2);
 	Chat_AddOf(&String_Empty, MSG_TYPE_STATUS_3);

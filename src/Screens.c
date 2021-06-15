@@ -742,8 +742,8 @@ static struct ChatScreen {
 	cc_bool suppressNextPress;
 	int chatIndex, paddingX, paddingY;
 	int lastDownloadStatus;
-	struct FontDesc chatFont, announcementFont;
-	struct TextWidget announcement;
+	struct FontDesc chatFont, announcementFont, bigAnnouncementFont, smallAnnouncementFont;
+	struct TextWidget announcement, bigAnnouncement, smallAnnouncement;
 	struct ChatInputWidget input;
 	struct TextGroupWidget status, bottomRight, chat, clientStatus;
 	struct SpecialInputWidget altText;
@@ -795,6 +795,8 @@ static cc_string ChatScreen_GetClientStatus(int i) { return Chat_ClientStatus[i]
 static void ChatScreen_FreeChatFonts(struct ChatScreen* s) {
 	Font_Free(&s->chatFont);
 	Font_Free(&s->announcementFont);
+	Font_Free(&s->bigAnnouncementFont);
+	Font_Free(&s->smallAnnouncementFont);
 }
 
 static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
@@ -810,6 +812,8 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 	size = (int)(16 * Gui_GetChatScale());
 	Math_Clamp(size, 8, 60);
 	Drawer2D_MakeFont(&s->announcementFont, size, FONT_FLAGS_NONE);
+	Drawer2D_MakeFont(&s->bigAnnouncementFont, size * 1.33, FONT_FLAGS_NONE);
+	Drawer2D_MakeFont(&s->smallAnnouncementFont, size * 0.67, FONT_FLAGS_NONE);
 
 	ChatInputWidget_SetFont(&s->input,        &s->chatFont);
 	TextGroupWidget_SetFont(&s->status,       &s->chatFont);
@@ -822,6 +826,8 @@ static cc_bool ChatScreen_ChatUpdateFont(struct ChatScreen* s) {
 static void ChatScreen_Redraw(struct ChatScreen* s) {
 	TextGroupWidget_RedrawAll(&s->chat);
 	TextWidget_Set(&s->announcement, &Chat_Announcement, &s->announcementFont);
+	TextWidget_Set(&s->bigAnnouncement, &Chat_BigAnnouncement, &s->bigAnnouncementFont);
+	TextWidget_Set(&s->smallAnnouncement, &Chat_SmallAnnouncement, &s->smallAnnouncementFont);
 	TextGroupWidget_RedrawAll(&s->status);
 	TextGroupWidget_RedrawAll(&s->bottomRight);
 	TextGroupWidget_RedrawAll(&s->clientStatus);
@@ -927,6 +933,10 @@ static void ChatScreen_ChatReceived(void* screen, const cc_string* msg, int type
 		TextGroupWidget_Redraw(&s->bottomRight, 2 - (type - MSG_TYPE_BOTTOMRIGHT_1));
 	} else if (type == MSG_TYPE_ANNOUNCEMENT) {
 		TextWidget_Set(&s->announcement, msg, &s->announcementFont);
+	} else if (type == MSG_TYPE_BIGANNOUNCEMENT) {
+		TextWidget_Set(&s->bigAnnouncement, msg, &s->bigAnnouncementFont);
+	} else if (type == MSG_TYPE_SMALLANNOUNCEMENT) {
+		TextWidget_Set(&s->smallAnnouncement, msg, &s->smallAnnouncementFont);
 	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_2) {
 		TextGroupWidget_Redraw(&s->clientStatus, type - MSG_TYPE_CLIENTSTATUS_1);
 		ChatScreen_UpdateChatYOffsets(s);
@@ -993,7 +1003,18 @@ static void ChatScreen_DrawChat(struct ChatScreen* s, double delta) {
 	if (s->announcement.tex.ID && now > Chat_AnnouncementReceived + 5) {
 		Elem_Free(&s->announcement);
 	}
+
+	if (s->bigAnnouncement.tex.ID && now > Chat_BigAnnouncementReceived + 5) {
+		Elem_Free(&s->bigAnnouncement);
+	}
+
+	if (s->smallAnnouncement.tex.ID && now > Chat_SmallAnnouncementReceived + 5) {
+		Elem_Free(&s->smallAnnouncement);
+	}
+
 	Elem_Render(&s->announcement, delta);
+	Elem_Render(&s->bigAnnouncement, delta);
+	Elem_Render(&s->smallAnnouncement, delta);
 
 	if (s->grabsInput) {
 		Elem_Render(&s->input.base, delta);
@@ -1021,6 +1042,8 @@ static void ChatScreen_ContextLost(void* screen) {
 	Elem_Free(&s->bottomRight);
 	Elem_Free(&s->clientStatus);
 	Elem_Free(&s->announcement);
+	Elem_Free(&s->bigAnnouncement);
+	Elem_Free(&s->smallAnnouncement);
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -1070,6 +1093,14 @@ static void ChatScreen_Layout(void* screen) {
 	Widget_SetLocation(&s->announcement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
 	s->announcement.yOffset = -WindowInfo.Height / 4;
 	Widget_Layout(&s->announcement);
+
+	Widget_SetLocation(&s->bigAnnouncement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
+	s->bigAnnouncement.yOffset = -WindowInfo.Height / 16;
+	Widget_Layout(&s->bigAnnouncement);
+
+	Widget_SetLocation(&s->smallAnnouncement, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 0);
+	s->smallAnnouncement.yOffset = WindowInfo.Height / 20;
+	Widget_Layout(&s->smallAnnouncement);
 
 #ifdef CC_BUILD_TOUCH
 	if (!Input_TouchMode) return;
@@ -1255,6 +1286,8 @@ static void ChatScreen_Init(void* screen) {
 	TextGroupWidget_Create(&s->clientStatus, CHAT_MAX_CLIENTSTATUS,
 							s->clientStatusTextures, ChatScreen_GetClientStatus);
 	TextWidget_Init(&s->announcement);
+	TextWidget_Init(&s->bigAnnouncement);
+	TextWidget_Init(&s->smallAnnouncement);
 
 	s->status.collapsible[0]       = true; /* Texture pack download status */
 	s->clientStatus.collapsible[0] = true;

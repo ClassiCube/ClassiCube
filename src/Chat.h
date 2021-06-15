@@ -17,11 +17,13 @@ enum MsgType {
 	MSG_TYPE_BOTTOMRIGHT_2 = 12,
 	MSG_TYPE_BOTTOMRIGHT_3 = 13,
 	MSG_TYPE_ANNOUNCEMENT  = 100,
+	MSG_TYPE_BIGANNOUNCEMENT = 150,
+	MSG_TYPE_SMALLANNOUNCEMENT = 200,
 	MSG_TYPE_CLIENTSTATUS_1 = 256, /* Cuboid messages */
 	MSG_TYPE_CLIENTSTATUS_2 = 257  /* Tab list matching names */
 };
 
-extern cc_string Chat_Status[4], Chat_BottomRight[3], Chat_ClientStatus[2], Chat_Announcement;
+extern cc_string Chat_Status[4], Chat_BottomRight[3], Chat_ClientStatus[2], Chat_Announcement, Chat_BigAnnouncement, Chat_SmallAnnouncement;
 /* All chat messages received. */
 extern struct StringsBuffer Chat_Log;
 /* Time each chat message was received at. */
@@ -31,8 +33,10 @@ extern struct StringsBuffer Chat_InputLog;
 /* Whether chat messages are logged to disc. */
 extern cc_bool Chat_Logging;
 
-/* Time at which last announcement message was received. */
+/* Times at which last announcement messages were received. */
 extern double Chat_AnnouncementReceived;
+extern double Chat_BigAnnouncementReceived;
+extern double Chat_SmallAnnouncementReceived;
 
 struct ChatCommand;
 /* Represents a client-side command/action. */
