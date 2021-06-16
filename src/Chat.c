@@ -19,7 +19,7 @@
 #include "Options.h"
 #include "Drawer2D.h"
 
-static char msgs[10][STRING_SIZE];
+static char msgs[12][STRING_SIZE];
 cc_string Chat_Status[4]       = { String_FromArray(msgs[0]), String_FromArray(msgs[1]), String_FromArray(msgs[2]), String_FromArray(msgs[3]) };
 cc_string Chat_BottomRight[3]  = { String_FromArray(msgs[4]), String_FromArray(msgs[5]), String_FromArray(msgs[6]) };
 cc_string Chat_ClientStatus[2] = { String_FromArray(msgs[7]), String_FromArray(msgs[8]) };
