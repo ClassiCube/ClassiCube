@@ -501,7 +501,7 @@ static void Builder_DrawSprite(int x, int y, int z) {
 	
 	bright = Blocks.FullBright[Builder_Block];
 	part   = &Builder_Parts[Atlas1D_Index(loc)];
-	v.Col  = bright ? PACKEDCOL_WHITE : Lighting_Col_Sprite_Fast(x, y, z);
+	v.Col  = bright ? PACKEDCOL_WHITE : Lighting_Color_Sprite_Fast(x, y, z);
 	Block_Tint(v.Col, Builder_Block);
 
 	/* Draw Z axis */
@@ -544,17 +544,17 @@ static PackedCol Normal_LightCol(int x, int y, int z, Face face, BlockID block) 
 
 	switch (face) {
 	case FACE_XMIN:
-		return x < offset                ? Env.SunXSide : Lighting_Col_XSide_Fast(x - offset, y, z);
+		return x < offset                ? Env.SunXSide : Lighting_Color_XSide_Fast(x - offset, y, z);
 	case FACE_XMAX:
-		return x > (World.MaxX - offset) ? Env.SunXSide : Lighting_Col_XSide_Fast(x + offset, y, z);
+		return x > (World.MaxX - offset) ? Env.SunXSide : Lighting_Color_XSide_Fast(x + offset, y, z);
 	case FACE_ZMIN:
-		return z < offset                ? Env.SunZSide : Lighting_Col_ZSide_Fast(x, y, z - offset);
+		return z < offset                ? Env.SunZSide : Lighting_Color_ZSide_Fast(x, y, z - offset);
 	case FACE_ZMAX:
-		return z > (World.MaxZ - offset) ? Env.SunZSide : Lighting_Col_ZSide_Fast(x, y, z + offset);
+		return z > (World.MaxZ - offset) ? Env.SunZSide : Lighting_Color_ZSide_Fast(x, y, z + offset);
 	case FACE_YMIN:
-		return y <= 0                    ? Env.SunYMin  : Lighting_Col_YMin_Fast(x, y - offset, z);
+		return y <= 0                    ? Env.SunYMin  : Lighting_Color_YMin_Fast(x, y - offset, z);
 	case FACE_YMAX:
-		return y >= World.MaxY           ? Env.SunCol   : Lighting_Col_YMax_Fast(x, (y + 1) - offset, z);
+		return y >= World.MaxY           ? Env.SunCol   : Lighting_Color_YMax_Fast(x, (y + 1) - offset, z);
 	}
 	return 0; /* should never happen */
 }
@@ -674,7 +674,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? PACKEDCOL_WHITE :
-			x >= offset ? Lighting_Col_XSide_Fast(x - offset, y, z) : Env.SunXSide;
+			x >= offset ? Lighting_Color_XSide_Fast(x - offset, y, z) : Env.SunXSide;
 		Drawer_XMin(count_XMin, col, loc, &part->fVertices[FACE_XMIN]);
 	}
 
@@ -684,7 +684,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? PACKEDCOL_WHITE :
-			x <= (World.MaxX - offset) ? Lighting_Col_XSide_Fast(x + offset, y, z) : Env.SunXSide;
+			x <= (World.MaxX - offset) ? Lighting_Color_XSide_Fast(x + offset, y, z) : Env.SunXSide;
 		Drawer_XMax(count_XMax, col, loc, &part->fVertices[FACE_XMAX]);
 	}
 
@@ -694,7 +694,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? PACKEDCOL_WHITE :
-			z >= offset ? Lighting_Col_ZSide_Fast(x, y, z - offset) : Env.SunZSide;
+			z >= offset ? Lighting_Color_ZSide_Fast(x, y, z - offset) : Env.SunZSide;
 		Drawer_ZMin(count_ZMin, col, loc, &part->fVertices[FACE_ZMIN]);
 	}
 
@@ -704,7 +704,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
 		col = fullBright ? PACKEDCOL_WHITE :
-			z <= (World.MaxZ - offset) ? Lighting_Col_ZSide_Fast(x, y, z + offset) : Env.SunZSide;
+			z <= (World.MaxZ - offset) ? Lighting_Color_ZSide_Fast(x, y, z + offset) : Env.SunZSide;
 		Drawer_ZMax(count_ZMax, col, loc, &part->fVertices[FACE_ZMAX]);
 	}
 
@@ -713,7 +713,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 		offset = (lightFlags >> FACE_YMIN) & 1;
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
-		col = fullBright ? PACKEDCOL_WHITE : Lighting_Col_YMin_Fast(x, y - offset, z);
+		col = fullBright ? PACKEDCOL_WHITE : Lighting_Color_YMin_Fast(x, y - offset, z);
 		Drawer_YMin(count_YMin, col, loc, &part->fVertices[FACE_YMIN]);
 	}
 
@@ -722,7 +722,7 @@ static void NormalBuilder_RenderBlock(int index, int x, int y, int z) {
 		offset = (lightFlags >> FACE_YMAX) & 1;
 		part   = &Builder_Parts[baseOffset + Atlas1D_Index(loc)];
 
-		col = fullBright ? PACKEDCOL_WHITE : Lighting_Col_YMax_Fast(x, (y + 1) - offset, z);
+		col = fullBright ? PACKEDCOL_WHITE : Lighting_Color_YMax_Fast(x, (y + 1) - offset, z);
 		Drawer_YMax(count_YMax, col, loc, &part->fVertices[FACE_YMAX]);
 	}
 }

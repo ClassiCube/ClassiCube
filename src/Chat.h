@@ -23,7 +23,8 @@ enum MsgType {
 	MSG_TYPE_CLIENTSTATUS_2 = 257  /* Tab list matching names */
 };
 
-extern cc_string Chat_Status[4], Chat_BottomRight[3], Chat_ClientStatus[2], Chat_Announcement, Chat_BigAnnouncement, Chat_SmallAnnouncement;
+extern cc_string Chat_Status[4], Chat_BottomRight[3], Chat_ClientStatus[2];
+extern cc_string Chat_Announcement, Chat_BigAnnouncement, Chat_SmallAnnouncement;
 /* All chat messages received. */
 extern struct StringsBuffer Chat_Log;
 /* Time each chat message was received at. */

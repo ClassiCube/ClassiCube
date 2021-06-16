@@ -25,16 +25,14 @@ void Lighting_Refresh(void);
 /* Returns whether the block at the given coordinates is fully in sunlight. */
 /* NOTE: Does ***NOT*** check that the coordinates are inside the map. */
 cc_bool Lighting_IsLit(int x, int y, int z);
-/* Returns the light colour of the block at the given coordinates. */
-/* NOTE: Does ***NOT*** check that the coordinates are inside the map. */
-PackedCol Lighting_Col(int x, int y, int z);
-/* Returns the light colour of the block at the given coordinates. */
-/* NOTE: Does ***NOT*** check that the coordinates are inside the map. */
-PackedCol Lighting_Col_XSide(int x, int y, int z);
+/* Returns the light colour at the given coordinates. */
+PackedCol Lighting_Color(int x, int y, int z);
+/* Returns the light colour at the given coordinates. */
+PackedCol Lighting_Color_XSide(int x, int y, int z);
 
-PackedCol Lighting_Col_Sprite_Fast(int x, int y, int z);
-PackedCol Lighting_Col_YMax_Fast(int x, int y, int z);
-PackedCol Lighting_Col_YMin_Fast(int x, int y, int z);
-PackedCol Lighting_Col_XSide_Fast(int x, int y, int z);
-PackedCol Lighting_Col_ZSide_Fast(int x, int y, int z);
+PackedCol Lighting_Color_Sprite_Fast(int x, int y, int z);
+PackedCol Lighting_Color_YMax_Fast(int x, int y, int z);
+PackedCol Lighting_Color_YMin_Fast(int x, int y, int z);
+PackedCol Lighting_Color_XSide_Fast(int x, int y, int z);
+PackedCol Lighting_Color_ZSide_Fast(int x, int y, int z);
 #endif
