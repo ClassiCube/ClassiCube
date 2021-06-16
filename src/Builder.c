@@ -23,7 +23,6 @@ int Builder_SidesLevel, Builder_EdgeLevel;
 static BlockID* Builder_Chunk;
 static cc_uint8* Builder_Counts;
 static int* Builder_BitFlags;
-static cc_bool Builder_UseBitFlags;
 static int Builder_X, Builder_Y, Builder_Z;
 static BlockID Builder_Block;
 static int Builder_ChunkIndex;
@@ -35,8 +34,8 @@ static int (*Builder_StretchXLiquid)(int countIndex, int x, int y, int z, int ch
 static int (*Builder_StretchX)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face);
 static int (*Builder_StretchZ)(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, Face face);
 static void (*Builder_RenderBlock)(int countsIndex, int x, int y, int z);
-static void (*Builder_PreStretchTiles)(void);
-static void (*Builder_PostStretchTiles)(void);
+static void (*Builder_PrePrepareChunk)(void);
+static void (*Builder_PostPrepareChunk)(void);
 
 /* Contains state for vertices for a portion of a chunk mesh (vertices that are in a 1D atlas) */
 struct Builder1DPart {
@@ -142,7 +141,7 @@ static void SetPartInfo(struct Builder1DPart* part, int* offset, struct ChunkPar
 }
 
 
-static void Builder_Stretch(int x1, int y1, int z1) {
+static void PrepareChunk(int x1, int y1, int z1) {
 	int xMax = min(World.Width,  x1 + CHUNK_SIZE);
 	int yMax = min(World.Height, y1 + CHUNK_SIZE);
 	int zMax = min(World.Length, z1 + CHUNK_SIZE);
@@ -342,7 +341,7 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 	Builder_Chunk  = chunk;
 	Builder_Counts = counts;
 	Builder_BitFlags = bitFlags;
-	Builder_PreStretchTiles();
+	Builder_PrePrepareChunk();
 	
 	onBorder = 
 		x1 == 0 || y1 == 0 || z1 == 0   || x1 + CHUNK_SIZE >= World.Width ||
@@ -366,7 +365,7 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 	zMax = min(World.Length, z1 + CHUNK_SIZE);
 
 	Builder_ChunkEndX = xMax; Builder_ChunkEndZ = zMax;
-	Builder_Stretch(x1, y1, z1);
+	PrepareChunk(x1, y1, z1);
 
 	totalVerts = Builder_TotalVerticesCount();
 	if (!totalVerts) return false;
@@ -380,7 +379,8 @@ static cc_bool BuildChunk(int x1, int y1, int z1, struct ChunkInfo* info) {
 	Builder_Vertices = (struct VertexTextured*)Gfx_LockVb(0, 
 													VERTEX_FORMAT_TEXTURED, totalVerts + 1);
 #endif
-	Builder_PostStretchTiles();
+	Builder_PostPrepareChunk();
+	/* now render the chunk */
 
 	for (y = y1, yy = 0; y < yMax; y++, yy++) {
 		for (z = z1, zz = 0; z < zMax; z++, zz++) {
@@ -448,11 +448,11 @@ static cc_bool Builder_OccludedLiquid(int chunkIndex) {
 		&& Blocks.Draw[Builder_Chunk[chunkIndex + EXTCHUNK_SIZE]] != DRAW_GAS;
 }
 
-static void DefaultPreStretchTiles(void) {
+static void DefaultPrePrepateChunk(void) {
 	Mem_Set(Builder_Parts, 0, sizeof(Builder_Parts));
 }
 
-static void DefaultPostStretchTiles(void) {
+static void DefaultPostStretchChunk(void) {
 	int i, j, offset;
 	offset = 0;
 	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
@@ -733,9 +733,8 @@ static void Builder_SetDefault(void) {
 	Builder_StretchZ       = NULL;
 	Builder_RenderBlock    = NULL;
 
-	Builder_UseBitFlags      = false;
-	Builder_PreStretchTiles  = DefaultPreStretchTiles;
-	Builder_PostStretchTiles = DefaultPostStretchTiles;
+	Builder_PrePrepareChunk  = DefaultPrePrepateChunk;
+	Builder_PostPrepareChunk = DefaultPostStretchChunk;
 }
 
 static void NormalBuilder_SetActive(void) {
@@ -751,7 +750,7 @@ static void NormalBuilder_SetActive(void) {
 *-------------------------------------------------Advanced mesh builder---------------------------------------------------*
 *#########################################################################################################################*/
 static Vec3 adv_minBB, adv_maxBB;
-static int adv_initBitFlags, adv_lightFlags, adv_baseOffset;
+static int adv_initBitFlags, adv_baseOffset;
 static int* adv_bitFlags;
 static float adv_x1, adv_y1, adv_z1, adv_x2, adv_y2, adv_z2;
 static PackedCol adv_lerp[5], adv_lerpX[5], adv_lerpZ[5], adv_lerpY[5];
@@ -773,7 +772,7 @@ enum ADV_MASK {
 };
 
 static int Adv_Lit(int x, int y, int z, int cIndex) {
-	int flags, offset, lightHeight;
+	int flags, offset, lightHeight, lightFlags;
 	BlockID block;
 	if (y < 0 || y >= World.Height) return 7; /* all faces lit */
 
@@ -784,18 +783,18 @@ static int Adv_Lit(int x, int y, int z, int cIndex) {
 
 	flags = 0;
 	block = Builder_Chunk[cIndex];
-	lightHeight    = Lighting_Heightmap[Lighting_Pack(x, z)];
-	adv_lightFlags = Blocks.LightOffset[block];
+	lightHeight = Lighting_Heightmap[Lighting_Pack(x, z)];
+	lightFlags  = Blocks.LightOffset[block];
 
 	/* Use fact Light(Y.YMin) == Light((Y-1).YMax) */
-	offset = (adv_lightFlags >> FACE_YMIN) & 1;
+	offset = (lightFlags >> FACE_YMIN) & 1;
 	flags |= ((y - offset) > lightHeight ? 1 : 0);
 
 	/* Light is same for all the horizontal faces */
 	flags |= (y > lightHeight ? 2 : 0);
 
 	/* Use fact Light((Y+1).YMin) == Light(Y.YMax) */
-	offset = (adv_lightFlags >> FACE_YMAX) & 1;
+	offset = (lightFlags >> FACE_YMAX) & 1;
 	flags |= ((y - offset) >= lightHeight ? 4 : 0);
 
 	/* Dynamic lighting */
@@ -1199,7 +1198,6 @@ static void Adv_RenderBlock(int index, int x, int y, int z) {
 
 	Builder_FullBright = Blocks.FullBright[Builder_Block];
 	adv_baseOffset = (Blocks.Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
-	adv_lightFlags = Blocks.LightOffset[Builder_Block];
 	adv_tinted     = Blocks.Tinted[Builder_Block];
 
 	min = Blocks.RenderMinBB[Builder_Block]; max = Blocks.RenderMaxBB[Builder_Block];
@@ -1217,9 +1215,9 @@ static void Adv_RenderBlock(int index, int x, int y, int z) {
 	if (count_YMax) Adv_DrawYMax(count_YMax);
 }
 
-static void Adv_PreStretchTiles(void) {
+static void Adv_PrePrepareChunk(void) {
 	int i;
-	DefaultPreStretchTiles();
+	DefaultPrePrepateChunk();
 	adv_bitFlags = Builder_BitFlags;
 
 	for (i = 0; i <= 4; i++) {
@@ -1236,7 +1234,7 @@ static void AdvBuilder_SetActive(void) {
 	Builder_StretchX        = Adv_StretchX;
 	Builder_StretchZ        = Adv_StretchZ;
 	Builder_RenderBlock     = Adv_RenderBlock;
-	Builder_PreStretchTiles = Adv_PreStretchTiles;
+	Builder_PrePrepareChunk = Adv_PrePrepareChunk;
 }
 
 
