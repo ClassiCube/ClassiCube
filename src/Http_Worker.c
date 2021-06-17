@@ -4,7 +4,6 @@
 static void* workerWaitable;
 static void* workerThread;
 static void* pendingMutex;
-static volatile cc_bool http_terminate;
 static struct RequestList pendingReqs;
 
 static void* curRequestMutex;
@@ -79,14 +78,11 @@ static void Http_ParseHeader(struct HttpRequest* req, const cc_string* line) {
 
 	if (String_CaselessEqualsConst(&name, "ETag")) {
 		String_CopyToRawArray(req->etag, &value);
-	}
-	else if (String_CaselessEqualsConst(&name, "Content-Length")) {
+	} else if (String_CaselessEqualsConst(&name, "Content-Length")) {
 		Convert_ParseInt(&value, &req->contentLength);
-	}
-	else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
+	} else if (String_CaselessEqualsConst(&name, "Last-Modified")) {
 		String_CopyToRawArray(req->lastModified, &value);
-	}
-	else if (req->cookies && String_CaselessEqualsConst(&name, "Set-Cookie")) {
+	} else if (req->cookies && String_CaselessEqualsConst(&name, "Set-Cookie")) {
 		Http_ParseCookie(req, &value);
 	}
 }
@@ -177,7 +173,6 @@ void Http_ClearPending(void) {
 		RequestList_Free(&pendingReqs);
 	}
 	Mutex_Unlock(pendingMutex);
-	Http_SignalWorker();
 }
 
 void Http_TryCancel(int reqID) {
@@ -391,12 +386,6 @@ static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
 	Mem_Free(post_data);
 	return res;
 }
-
-static void Http_BackendFree(void) {
-	if (!curlSupported) return;
-	_curl_easy_cleanup(curl);
-	_curl_global_cleanup();
-}
 #elif defined CC_BUILD_WININET
 /*########################################################################################################################*
 *-----------------------------------------------------WinINet backend-----------------------------------------------------*
@@ -607,15 +596,6 @@ static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
 
 	return InternetCloseHandle(handle) ? 0 : GetLastError();
 }
-
-static void Http_BackendFree(void) {
-	int i;
-	for (i = 0; i < HTTP_CACHE_ENTRIES; i++) {
-		if (!http_cache[i].Handle) continue;
-		InternetCloseHandle(http_cache[i].Handle);
-	}
-	InternetCloseHandle(hInternet);
-}
 #elif defined CC_BUILD_ANDROID
 /*########################################################################################################################*
 *-----------------------------------------------------Android backend-----------------------------------------------------*
@@ -723,8 +703,6 @@ static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
 	http_curProgress = 100;
 	return res;
 }
-
-static void Http_BackendFree(void) { }
 #endif
 
 static void ClearCurrentRequest(void) {
@@ -739,7 +717,7 @@ static void ClearCurrentRequest(void) {
 static void WorkerLoop(void) {
 	char urlBuffer[URL_MAX_SIZE]; cc_string url;
 	struct HttpRequest request;
-	cc_bool hasRequest, stop;
+	cc_bool hasRequest;
 	cc_uint64 beg, end;
 	int elapsed;
 
@@ -748,16 +726,14 @@ static void WorkerLoop(void) {
 
 		Mutex_Lock(pendingMutex);
 		{
-			stop = http_terminate;
-			if (!stop && pendingReqs.count) {
-				request = pendingReqs.entries[0];
+			if (pendingReqs.count) {
+				request    = pendingReqs.entries[0];
 				hasRequest = true;
 				RequestList_RemoveAt(&pendingReqs, 0);
 			}
 		}
 		Mutex_Unlock(pendingMutex);
 
-		if (stop) return;
 		/* Block until another thread submits a request to do */
 		if (!hasRequest) {
 			Platform_LogConst("Going back to sleep...");
@@ -786,11 +762,11 @@ static void WorkerLoop(void) {
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
 static void OnInit(void) {
-	http_terminate = false;
 	httpOnly = Options_GetBool(OPT_HTTP_ONLY, false);
-	Http_BackendInit();
 	ScheduledTask_Add(30, Http_CleanCacheTask);
-	
+	if (workerThread) return;
+
+	Http_BackendInit();
 	workerWaitable = Waitable_Create();
 	RequestList_Init(&pendingReqs);
 	RequestList_Init(&processedReqs);
@@ -801,25 +777,9 @@ static void OnInit(void) {
 	workerThread    = Thread_Start(WorkerLoop);
 }
 
-static void OnFree(void) {
-	http_terminate = true;
-	Http_ClearPending();
-
-	Thread_Join(workerThread);
-	Waitable_Free(workerWaitable);
-	Http_BackendFree();
-
-	RequestList_Free(&pendingReqs);
-	RequestList_Free(&processedReqs);
-
-	Mutex_Free(pendingMutex);
-	Mutex_Free(processedMutex);
-	Mutex_Free(curRequestMutex);
-}
-
 struct IGameComponent Http_Component = {
 	OnInit,           /* Init  */
-	OnFree,           /* Free  */
+	Http_ClearPending,/* Free  */
 	Http_ClearPending /* Reset */
 };
 #endif
