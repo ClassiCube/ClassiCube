@@ -5,6 +5,7 @@
 #include "Errors.h"
 extern void interop_DownloadAsync(const char* url, int method, int reqID);
 extern int interop_IsHttpsOnly(void);
+static struct RequestList pendingReqs;
 
 
 /*########################################################################################################################*

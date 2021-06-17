@@ -3,6 +3,13 @@
 #include "_HttpBase.h"
 static void* workerWaitable;
 static void* workerThread;
+static void* pendingMutex;
+static volatile cc_bool http_terminate;
+static struct RequestList pendingReqs;
+
+static void* curRequestMutex;
+static struct HttpRequest http_curRequest;
+static volatile int http_curProgress = HTTP_PROGRESS_NOT_WORKING_ON;
 
 /* Allocates initial data buffer to store response contents */
 static void Http_BufferInit(struct HttpRequest* req) {
@@ -114,7 +121,7 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 	Http_AddHeader(req, "Cookie", &cookies);
 }
 
-static void Http_WorkerSignal(void);
+static void Http_SignalWorker(void) { Waitable_Signal(workerWaitable); }
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed */
 static void Http_BackendAdd(struct HttpRequest* req, cc_bool priority) {
@@ -127,7 +134,7 @@ static void Http_BackendAdd(struct HttpRequest* req, cc_bool priority) {
 		}
 	}
 	Mutex_Unlock(pendingMutex);
-	Http_WorkerSignal();
+	Http_SignalWorker();
 }
 
 
@@ -170,7 +177,7 @@ void Http_ClearPending(void) {
 		RequestList_Free(&pendingReqs);
 	}
 	Mutex_Unlock(pendingMutex);
-	Http_WorkerSignal();
+	Http_SignalWorker();
 }
 
 void Http_TryCancel(int reqID) {
@@ -720,6 +727,15 @@ static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
 static void Http_BackendFree(void) { }
 #endif
 
+static void ClearCurrentRequest(void) {
+	Mutex_Lock(curRequestMutex);
+	{
+		http_curRequest.id = 0;
+		http_curProgress   = HTTP_PROGRESS_NOT_WORKING_ON;
+	}
+	Mutex_Unlock(curRequestMutex);
+}
+
 static void WorkerLoop(void) {
 	char urlBuffer[URL_MAX_SIZE]; cc_string url;
 	struct HttpRequest request;
@@ -759,24 +775,10 @@ static void WorkerLoop(void) {
 		elapsed = Stopwatch_ElapsedMS(beg, end);
 		Platform_Log4("HTTP: result %i (http %i) in %i ms (%i bytes)",
 					&request.result, &request.statusCode, &elapsed, &request.size);
+
 		Http_FinishRequest(&request);
+		ClearCurrentRequest();
 	}
-}
-
-static void Http_WorkerInit(void) {
-	Http_BackendInit();
-	workerWaitable = Waitable_Create();
-}
-
-static void Http_WorkerStart(void) {
-	workerThread = Thread_Start(WorkerLoop);
-}
-static void Http_WorkerSignal(void) { Waitable_Signal(workerWaitable); }
-
-static void Http_WorkerStop(void) { 
-	Thread_Join(workerThread);
-	Waitable_Free(workerWaitable);
-	Http_BackendFree();
 }
 
 
@@ -786,22 +788,26 @@ static void Http_WorkerStop(void) {
 static void OnInit(void) {
 	http_terminate = false;
 	httpOnly = Options_GetBool(OPT_HTTP_ONLY, false);
-
-	Http_WorkerInit();
+	Http_BackendInit();
 	ScheduledTask_Add(30, Http_CleanCacheTask);
+	
+	workerWaitable = Waitable_Create();
 	RequestList_Init(&pendingReqs);
 	RequestList_Init(&processedReqs);
 
 	pendingMutex    = Mutex_Create();
 	processedMutex  = Mutex_Create();
 	curRequestMutex = Mutex_Create();
-	Http_WorkerStart();
+	workerThread    = Thread_Start(WorkerLoop);
 }
 
 static void OnFree(void) {
 	http_terminate = true;
 	Http_ClearPending();
-	Http_WorkerStop();
+
+	Thread_Join(workerThread);
+	Waitable_Free(workerWaitable);
+	Http_BackendFree();
 
 	RequestList_Free(&pendingReqs);
 	RequestList_Free(&processedReqs);
