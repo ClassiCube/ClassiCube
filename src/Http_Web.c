@@ -10,6 +10,27 @@ extern int interop_IsHttpsOnly(void);
 /*########################################################################################################################*
 *----------------------------------------------------Http public api------------------------------------------------------*
 *#########################################################################################################################*/
+cc_bool Http_GetResult(int reqID, struct HttpRequest* item) {
+	int i = RequestList_Find(&processedReqs, reqID);
+
+	if (i >= 0) *item = processedReqs.entries[i];
+	if (i >= 0) RequestList_RemoveAt(&processedReqs, i);
+	return i >= 0;
+}
+
+cc_bool Http_GetCurrent(int* reqID, int* progress) {
+	/* TODO: Stubbed as this isn't required at the moment */
+	*progress = 0;
+	return 0;
+}
+
+int Http_CheckProgress(int reqID) {
+	int idx = RequestList_Find(&pendingReqs, reqID);
+	if (idx == -1) return HTTP_PROGRESS_NOT_WORKING_ON;
+
+	return pendingReqs.entries[idx].progress;
+}
+
 void Http_ClearPending(void) {
 	RequestList_Free(&pendingReqs);
 }
@@ -26,44 +47,47 @@ void Http_TryCancel(int reqID) {
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) { return false; }
 
 EMSCRIPTEN_KEEPALIVE void Http_OnUpdateProgress(int reqID, int read, int total) {
-	if (!total) return;
-	http_curProgress = (int)(100.0f * read / total);
+	int idx = RequestList_Find(&pendingReqs, reqID);
+	if (idx == -1 || !total) return;
+
+	pendingReqs.entries[idx].progress = (int)(100.0f * read / total);
 }
 
 EMSCRIPTEN_KEEPALIVE void Http_OnFinishedAsync(int reqID, void* data, int len, int status) {
-	struct HttpRequest* req = &http_curRequest;
+	struct HttpRequest* req;
+	int idx = RequestList_Find(&pendingReqs, reqID);
+
+	/* Shouldn't ever happen, but log a warning anyways */
+	if (idx == -1) {
+		Mem_Free(data); Platform_Log1("Ignoring invalid request (%i)", &reqID); return;
+	}
+
+	req = &pendingReqs.entries[idx];
 	req->data          = data;
 	req->size          = len;
 	req->statusCode    = status;
 	req->contentLength = len;
 
-	/* Usually because of denied by CORS */
+	/* Usually this happens when denied by CORS */
 	if (!status && !data) req->result = ERR_DOWNLOAD_INVALID;
 
 	if (req->data) Platform_Log1("HTTP returned data: %i bytes", &req->size);
 	Http_FinishRequest(req);
-	Http_WorkerSignal();
+	RequestList_RemoveAt(&pendingReqs, idx);
 }
 
-static void Http_DownloadAsync(struct HttpRequest* req) {
+/* Adds a req to the list of pending requests, waking up worker thread if needed */
+static void Http_BackendAdd(struct HttpRequest* req, cc_bool priority) {
 	char urlBuffer[URL_MAX_SIZE]; cc_string url;
 	char urlStr[NATIVE_STR_LEN];
-
 	String_InitArray(url, urlBuffer);
-	Http_BeginRequest(req, &url);
+
+	RequestList_Append(&pendingReqs, req);
+	Http_GetUrl(req, &url);
+	Platform_Log2("Fetching %s (type %b)", &url, &req->requestType);
+
 	Platform_EncodeUtf8(urlStr, &url);
 	interop_DownloadAsync(urlStr, req->requestType, req->id);
-}
-
-static void Http_WorkerSignal(void) {
-	struct HttpRequest req;
-	if (http_terminate || !pendingReqs.count) return;
-	/* already working on a request currently */
-	if (http_curRequest.id) return;
-
-	req = pendingReqs.entries[0];
-	RequestList_RemoveAt(&pendingReqs, 0);
-	Http_DownloadAsync(&req);
 }
 
 

@@ -63,7 +63,7 @@ mergeInto(LibraryManager.library, {
       var len  = src.byteLength;
       var data = _malloc(len);
       HEAPU8.set(src, data);
-      onFinished(data, len || getContentLength(e), xhr.status);
+      onFinished(reqID, data, len || getContentLength(e), xhr.status);
     };
     xhr.onerror    = function(e) { onFinished(reqID, 0, 0, xhr.status);  };
     xhr.ontimeout  = function(e) { onFinished(reqID, 0, 0, xhr.status);  };
