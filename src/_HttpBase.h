@@ -107,8 +107,7 @@ static struct RequestList processedReqs;
 static struct HttpRequest http_curRequest;
 static volatile int http_curProgress = HTTP_PROGRESS_NOT_WORKING_ON;
 static int nextReqID;
-
-static void Http_WorkerSignal(void);
+static void Http_BackendAdd(struct HttpRequest* req, cc_bool priority);
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
 static int Http_Add(const cc_string* url, cc_bool priority, cc_uint8 type, const cc_string* lastModified,
@@ -146,18 +145,10 @@ static int Http_Add(const cc_string* url, cc_bool priority, cc_uint8 type, const
 		Mem_Copy(req.data, data, size);
 		req.size = size;
 	}
-	req.cookies = cookies;
+	req.cookies  = cookies;
+	req.progress = HTTP_PROGRESS_NOT_WORKING_ON;
 
-	Mutex_Lock(pendingMutex);
-	{	
-		if (priority) {
-			RequestList_Prepend(&pendingReqs, &req);
-		} else {
-			RequestList_Append(&pendingReqs,  &req);
-		}
-	}
-	Mutex_Unlock(pendingMutex);
-	Http_WorkerSignal();
+	Http_BackendAdd(&req, priority);
 	return req.id;
 }
 
@@ -181,19 +172,6 @@ static void Http_GetUrl(struct HttpRequest* req, cc_string* dst) {
 	String_Copy(dst, &url);
 }
 
-
-/* Sets up state to begin a http request */
-static void Http_BeginRequest(struct HttpRequest* req, cc_string* url) {
-	Http_GetUrl(req, url);
-	Platform_Log2("Fetching %s (type %b)", url, &req->requestType);
-
-	Mutex_Lock(curRequestMutex);
-	{
-		http_curRequest  = *req;
-		http_curProgress = HTTP_PROGRESS_MAKING_REQUEST;
-	}
-	Mutex_Unlock(curRequestMutex);
-}
 
 /* Updates state after a completed http request */
 static void Http_FinishRequest(struct HttpRequest* req) {
@@ -261,36 +239,6 @@ int Http_AsyncPostData(const cc_string* url, cc_bool priority, const void* data,
 }
 int Http_AsyncGetDataEx(const cc_string* url, cc_bool priority, const cc_string* lastModified, const cc_string* etag, struct StringsBuffer* cookies) {
 	return Http_Add(url, priority, REQUEST_TYPE_GET, lastModified, etag, NULL, 0, cookies);
-}
-
-cc_bool Http_GetResult(int reqID, struct HttpRequest* item) {
-	int i;
-	Mutex_Lock(processedMutex);
-	{
-		i = RequestList_Find(&processedReqs, reqID);
-		if (i >= 0) *item = processedReqs.entries[i];
-		if (i >= 0) RequestList_RemoveAt(&processedReqs, i);
-	}
-	Mutex_Unlock(processedMutex);
-	return i >= 0;
-}
-
-cc_bool Http_GetCurrent(int* reqID, int* progress) {
-	Mutex_Lock(curRequestMutex);
-	{
-		*reqID    = http_curRequest.id;
-		*progress = http_curProgress;
-	}
-	Mutex_Unlock(curRequestMutex);
-	return *reqID != 0;
-}
-
-int Http_CheckProgress(int reqID) {
-	int curReqID, progress;
-	Http_GetCurrent(&curReqID, &progress);
-
-	if (reqID != curReqID) progress = HTTP_PROGRESS_NOT_WORKING_ON;
-	return progress;
 }
 
 static cc_bool Http_UrlDirect(cc_uint8 c) {
