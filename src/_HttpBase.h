@@ -97,15 +97,8 @@ static void RequestList_Free(struct RequestList* list) {
 /*########################################################################################################################*
 *--------------------------------------------------Common downloader code-------------------------------------------------*
 *#########################################################################################################################*/
-static void* pendingMutex;
 static void* processedMutex;
-static void* curRequestMutex;
-static volatile cc_bool http_terminate;
-
-static struct RequestList pendingReqs;
 static struct RequestList processedReqs;
-static struct HttpRequest http_curRequest;
-static volatile int http_curProgress = HTTP_PROGRESS_NOT_WORKING_ON;
 static int nextReqID;
 static void Http_BackendAdd(struct HttpRequest* req, cc_bool priority);
 
@@ -184,13 +177,6 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 		RequestList_Append(&processedReqs, req);
 	}
 	Mutex_Unlock(processedMutex);
-
-	Mutex_Lock(curRequestMutex);
-	{
-		http_curRequest.id = 0;
-		http_curProgress   = HTTP_PROGRESS_NOT_WORKING_ON;
-	}
-	Mutex_Unlock(curRequestMutex);
 }
 
 /* Deletes cached responses that are over 10 seconds old */
