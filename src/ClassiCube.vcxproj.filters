@@ -315,6 +315,9 @@
     <ClInclude Include="_PlatformBase.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
+    <ClInclude Include="_HttpBase.h">
+      <Filter>Header Files\Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -515,9 +518,6 @@
     <ClCompile Include="Logger.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="Http.c">
-      <Filter>Source Files\Network</Filter>
-    </ClCompile>
     <ClCompile Include="Server.c">
       <Filter>Source Files\Network</Filter>
     </ClCompile>
@@ -544,6 +544,12 @@
     </ClCompile>
     <ClCompile Include="Platform_Posix.c">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Http_Web.c">
+      <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Http_Worker.c">
+      <Filter>Source Files\Network</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
