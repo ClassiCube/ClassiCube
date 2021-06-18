@@ -156,7 +156,7 @@ int Stopwatch_ElapsedMS(cc_uint64 beg, cc_uint64 end);
 /* Attempts to create a new directory. */
 CC_API cc_result Directory_Create(const cc_string* path);
 /* Callback function invoked for each file found. */
-typedef void Directory_EnumCallback(const cc_string* filename, void* obj);
+typedef void (*Directory_EnumCallback)(const cc_string* filename, void* obj);
 /* Invokes a callback function on all filenames in the given directory (and its sub-directories) */
 CC_API cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback);
 /* Returns non-zero if the given file exists. */
