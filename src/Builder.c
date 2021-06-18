@@ -772,7 +772,7 @@ enum ADV_MASK {
 };
 
 static int Adv_Lit(int x, int y, int z, int cIndex) {
-	int flags, offset, lightHeight, lightFlags;
+	int flags, offset, lightFlags;
 	BlockID block;
 	if (y < 0 || y >= World.Height) return 7; /* all faces lit */
 
@@ -783,19 +783,18 @@ static int Adv_Lit(int x, int y, int z, int cIndex) {
 
 	flags = 0;
 	block = Builder_Chunk[cIndex];
-	lightHeight = Lighting_Heightmap[Lighting_Pack(x, z)];
-	lightFlags  = Blocks.LightOffset[block];
+	lightFlags = Blocks.LightOffset[block];
 
 	/* Use fact Light(Y.YMin) == Light((Y-1).YMax) */
 	offset = (lightFlags >> FACE_YMIN) & 1;
-	flags |= ((y - offset) > lightHeight ? 1 : 0);
+	flags |= Lighting_IsLit_Fast(x, y - offset, z) ? 1 : 0;
 
 	/* Light is same for all the horizontal faces */
-	flags |= (y > lightHeight ? 2 : 0);
+	flags |= Lighting_IsLit_Fast(x, y, z) ? 2 : 0;
 
 	/* Use fact Light((Y+1).YMin) == Light(Y.YMax) */
 	offset = (lightFlags >> FACE_YMAX) & 1;
-	flags |= ((y - offset) >= lightHeight ? 4 : 0);
+	flags |= Lighting_IsLit_Fast(x, (y + 1) - offset, z) ? 4 : 0;
 
 	/* Dynamic lighting */
 	if (Blocks.FullBright[block])                       flags |= 5;

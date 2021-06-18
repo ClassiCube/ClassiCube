@@ -9,8 +9,6 @@ struct IGameComponent;
 extern struct IGameComponent Lighting_Component;
 
 #define Lighting_Pack(x, z) ((x) + World.Width * (z))
-extern cc_int16* Lighting_Heightmap;
-
 /* Equivalent to (but far more optimised form of)
 * for x = startX; x < startX + 18; x++
 *   for z = startZ; z < startZ + 18; z++
@@ -30,6 +28,11 @@ PackedCol Lighting_Color(int x, int y, int z);
 /* Returns the light colour at the given coordinates. */
 PackedCol Lighting_Color_XSide(int x, int y, int z);
 
+/* _Fast functions assume Lighting_LightHint has already been called */
+/* and performed the necessary calculations for the given x/z coords */
+/* _Fast functions also do NOT check coordinates are inside the map */
+
+cc_bool Lighting_IsLit_Fast(int x, int y, int z);
 PackedCol Lighting_Color_Sprite_Fast(int x, int y, int z);
 PackedCol Lighting_Color_YMax_Fast(int x, int y, int z);
 PackedCol Lighting_Color_YMin_Fast(int x, int y, int z);
