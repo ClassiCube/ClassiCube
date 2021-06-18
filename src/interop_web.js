@@ -120,7 +120,7 @@ mergeInto(LibraryManager.library, {
     var date = new Date();
     HEAP32[(time|0 +  0)>>2] = date.getFullYear();
     HEAP32[(time|0 +  4)>>2] = date.getMonth() + 1|0;
-    HEAP32[(time|0 +  8)>>2] = date.getDay();
+    HEAP32[(time|0 +  8)>>2] = date.getDate();
     HEAP32[(time|0 + 12)>>2] = date.getHours();
     HEAP32[(time|0 + 16)>>2] = date.getMinutes();
     HEAP32[(time|0 + 20)>>2] = date.getSeconds();
