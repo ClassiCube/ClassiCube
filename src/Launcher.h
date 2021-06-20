@@ -7,9 +7,6 @@
 struct LScreen;
 struct FontDesc;
 
-/* The area/region of the window that needs to be redrawn and presented to the screen. */
-/* If width is 0, means no area needs to be redrawn. */
-extern Rect2D Launcher_Dirty;
 /* Contains the pixels that are drawn to the window. */
 extern struct Bitmap Launcher_Framebuffer;
 /* Whether to use stone tile background like minecraft.net. */

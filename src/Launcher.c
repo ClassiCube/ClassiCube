@@ -20,8 +20,11 @@
 #include "Options.h"
 #include "LBackend.h"
 
+/* The area/region of the window that needs to be redrawn and presented to the screen. */
+/* If width is 0, means no area needs to be redrawn. */
+static Rect2D dirty_rect;
+
 static struct LScreen* activeScreen;
-Rect2D Launcher_Dirty;
 struct Bitmap Launcher_Framebuffer;
 cc_bool Launcher_ClassicBackground;
 struct FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
@@ -230,9 +233,9 @@ static void Launcher_Display(void) {
 		pendingRedraw = false;
 	}
 
-	Window_DrawFramebuffer(Launcher_Dirty);
-	Launcher_Dirty.X = 0; Launcher_Dirty.Width   = 0;
-	Launcher_Dirty.Y = 0; Launcher_Dirty.Height  = 0;
+	Window_DrawFramebuffer(dirty_rect);
+	dirty_rect.X = 0; dirty_rect.Width   = 0;
+	dirty_rect.Y = 0; dirty_rect.Height  = 0;
 }
 
 static void Launcher_Init(void) {
@@ -318,7 +321,7 @@ void Launcher_Run(void) {
 		if (!WindowInfo.Exists || Launcher_ShouldExit) break;
 
 		activeScreen->Tick(activeScreen);
-		if (Launcher_Dirty.Width) Launcher_Display();
+		if (dirty_rect.Width) Launcher_Display();
 		Thread_Sleep(10);
 	}
 
@@ -532,23 +535,23 @@ void Launcher_MarkDirty(int x, int y, int width, int height) {
 	if (!Drawer2D_Clamp(&Launcher_Framebuffer, &x, &y, &width, &height)) return;
 
 	/* union with existing dirty area */
-	if (Launcher_Dirty.Width) {
-		x1 = min(x, Launcher_Dirty.X);
-		y1 = min(y, Launcher_Dirty.Y);
+	if (dirty_rect.Width) {
+		x1 = min(x, dirty_rect.X);
+		y1 = min(y, dirty_rect.Y);
 
-		x2 = max(x +  width, Launcher_Dirty.X + Launcher_Dirty.Width);
-		y2 = max(y + height, Launcher_Dirty.Y + Launcher_Dirty.Height);
+		x2 = max(x +  width, dirty_rect.X + dirty_rect.Width);
+		y2 = max(y + height, dirty_rect.Y + dirty_rect.Height);
 
 		x = x1; width  = x2 - x1;
 		y = y1; height = y2 - y1;
 	}
 
-	Launcher_Dirty.X = x; Launcher_Dirty.Width  = width;
-	Launcher_Dirty.Y = y; Launcher_Dirty.Height = height;
+	dirty_rect.X = x; dirty_rect.Width  = width;
+	dirty_rect.Y = y; dirty_rect.Height = height;
 }
 
 void Launcher_MarkAllDirty(void) {
-	Launcher_Dirty.X = 0; Launcher_Dirty.Width  = Launcher_Framebuffer.width;
-	Launcher_Dirty.Y = 0; Launcher_Dirty.Height = Launcher_Framebuffer.height;
+	dirty_rect.X = 0; dirty_rect.Width  = Launcher_Framebuffer.width;
+	dirty_rect.Y = 0; dirty_rect.Height = Launcher_Framebuffer.height;
 }
 #endif

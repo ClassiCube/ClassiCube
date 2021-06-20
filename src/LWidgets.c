@@ -14,7 +14,7 @@
 #include "Utils.h"
 #include "LBackend.h"
 
-static int xInputOffset, yInputOffset, inputExpand;
+static int xInputOffset, inputExpand;
 static int caretOffset, caretWidth, caretHeight;
 static int scrollbarWidth, dragPad, gridlineWidth, gridlineHeight;
 static int hdrYOffset, hdrYPadding, rowYOffset, rowYPadding;
@@ -23,7 +23,6 @@ static int flagXOffset, flagYOffset;
 
 void LWidget_CalcOffsets(void) {
 	xInputOffset = Display_ScaleX(5);
-	yInputOffset = Display_ScaleY(2);
 	inputExpand  = Display_ScaleX(20);
 
 	caretOffset  = Display_ScaleY(5);
@@ -130,12 +129,23 @@ CC_NOINLINE static void LInput_GetText(struct LInput* w, cc_string* text) {
 	}
 }
 
+CC_NOINLINE static void LInput_UpdateDimensions(struct LInput* w, const cc_string* text) {
+	struct DrawTextArgs args;
+	int textWidth;
+	DrawTextArgs_Make(&args, text, &Launcher_TextFont, false);
+
+	textWidth      = Drawer2D_TextWidth(&args);
+	w->width       = max(w->minWidth, textWidth + inputExpand);
+	w->_textHeight = Drawer2D_TextHeight(&args);
+}
+
 static void LInput_Draw(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
 	cc_string text; char textBuffer[STRING_SIZE];
 
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
+	LInput_UpdateDimensions(w, &text);
 	LBackend_DrawInput(w, &text);
 }
 
@@ -339,17 +349,11 @@ static CC_INLINE void LInput_ClampCaret(struct LInput* w) {
 
 void LInput_SetText(struct LInput* w, const cc_string* text_) {
 	cc_string text; char textBuffer[STRING_SIZE];
-	struct DrawTextArgs args;
-	int textWidth;
-
 	String_Copy(&w->text, text_);
 	String_InitArray(text, textBuffer);
-	LInput_GetText(w, &text);
-	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
 
-	textWidth      = Drawer2D_TextWidth(&args);
-	w->width       = max(w->minWidth, textWidth + inputExpand);
-	w->_textHeight = Drawer2D_TextHeight(&args);
+	LInput_GetText(w, &text);
+	LInput_UpdateDimensions(w, &text);
 	LInput_ClampCaret(w);
 }
 

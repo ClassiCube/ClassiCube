@@ -79,7 +79,7 @@ void LBackend_ResetPixels(void) {
 *#########################################################################################################################*/
 static int xBorder, xBorder2, xBorder3, xBorder4;
 static int yBorder, yBorder2, yBorder3, yBorder4;
-static int xInputOffset, yInputOffset, inputExpand;
+static int xInputOffset, yInputOffset;
 
 void LBackend_CalcOffsets(void) {
 	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
@@ -87,7 +87,6 @@ void LBackend_CalcOffsets(void) {
 
 	xInputOffset = Display_ScaleX(5);
 	yInputOffset = Display_ScaleY(2);
-	inputExpand  = Display_ScaleX(20);
 }
 
 
@@ -260,12 +259,7 @@ static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
 
 void LBackend_DrawInput(struct LInput* w, const cc_string* text) {
 	struct DrawTextArgs args;
-	int textWidth;
 	DrawTextArgs_Make(&args, text, &Launcher_TextFont, false);
-
-	textWidth      = Drawer2D_TextWidth(&args);
-	w->width       = max(w->minWidth, textWidth + inputExpand);
-	w->_textHeight = Drawer2D_TextHeight(&args);
 
 	LInput_DrawOuterBorder(w);
 	LInput_DrawInnerBorder(w);
