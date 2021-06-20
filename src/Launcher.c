@@ -18,6 +18,7 @@
 #include "Funcs.h"
 #include "Logger.h"
 #include "Options.h"
+#include "LBackend.h"
 
 static struct LScreen* activeScreen;
 Rect2D Launcher_Dirty;
@@ -35,8 +36,6 @@ cc_string Launcher_AutoHash = String_FromArray(hashBuffer);
 cc_string Launcher_Username = String_FromArray(userBuffer);
 
 static cc_bool useBitmappedFont, hasBitmappedFont;
-static struct Bitmap dirtBmp, stoneBmp;
-#define TILESIZE 48
 
 static void CloseActiveScreen(void) {
 	Window_CloseKeyboard();
@@ -283,6 +282,7 @@ void Launcher_Run(void) {
 	Window_SetTitle(&title);
 	Window_Show();
 	LWidget_CalcOffsets();
+	LBackend_CalcOffsets();
 
 #ifdef CC_BUILD_WIN
 	/* clean leftover exe from updating */
@@ -417,19 +417,6 @@ static cc_bool Launcher_SelectZipEntry(const cc_string* path) {
 		String_CaselessEqualsConst(path, "terrain.png");
 }
 
-static void LoadTextures(struct Bitmap* bmp) {
-	int tileSize = bmp->width / 16;
-	Bitmap_Allocate(&dirtBmp,  TILESIZE, TILESIZE);
-	Bitmap_Allocate(&stoneBmp, TILESIZE, TILESIZE);
-
-	/* Precompute the scaled background */
-	Bitmap_Scale(&dirtBmp,  bmp, 2 * tileSize, 0, tileSize, tileSize);
-	Bitmap_Scale(&stoneBmp, bmp, 1 * tileSize, 0, tileSize, tileSize);
-
-	Gradient_Tint(&dirtBmp, 128, 64, 0, 0, TILESIZE, TILESIZE);
-	Gradient_Tint(&stoneBmp, 96, 96, 0, 0, TILESIZE, TILESIZE);
-}
-
 static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* data, struct ZipState* s) {
 	struct Bitmap bmp;
 	cc_result res;
@@ -448,13 +435,13 @@ static cc_result Launcher_ProcessZipEntry(const cc_string* path, struct Stream* 
 			Mem_Free(bmp.scan0);
 		}
 	} else if (String_CaselessEqualsConst(path, "terrain.png")) {
-		if (dirtBmp.scan0) return 0;
+		if (LBackend_HasTextures()) return 0;
 		res = Png_Decode(&bmp, data);
 
 		if (res) {
 			Logger_SysWarn(res, "decoding terrain.png"); return res;
 		} else {
-			LoadTextures(&bmp);
+			LBackend_LoadTextures(&bmp);
 		}
 	}
 	return 0;
@@ -479,7 +466,7 @@ static void ExtractTexturePack(const cc_string* path) {
 }
 
 void Launcher_TryLoadTexturePack(void) {
-	static const cc_string defZipPath = String_FromConst("texpacks/default.zip");
+	static const cc_string defZip = String_FromConst("texpacks/default.zip");
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_string texPack;
 
@@ -496,7 +483,7 @@ void Launcher_TryLoadTexturePack(void) {
 	}
 
 	/* user selected texture pack is missing some required .png files */
-	if (!hasBitmappedFont || !dirtBmp.scan0) ExtractTexturePack(&defZipPath);
+	if (!hasBitmappedFont || !LBackend_HasTextures()) ExtractTexturePack(&defZip);
 	Launcher_UpdateLogoFont();
 }
 
@@ -507,30 +494,8 @@ void Launcher_UpdateLogoFont(void) {
 	Drawer2D.BitmappedText = false;
 }
 
-/* Fills the given area using pixels from the source bitmap, by repeatedly tiling the bitmap. */
-CC_NOINLINE static void ClearTile(int x, int y, int width, int height, struct Bitmap* src) {
-	struct Bitmap* dst = &Launcher_Framebuffer;
-	BitmapCol* dstRow;
-	BitmapCol* srcRow;
-	int xx, yy;
-	if (!Drawer2D_Clamp(dst, &x, &y, &width, &height)) return;
-
-	for (yy = 0; yy < height; yy++) {
-		srcRow = Bitmap_GetRow(src, (y + yy) % TILESIZE);
-		dstRow = Bitmap_GetRow(dst, y + yy) + x;
-
-		for (xx = 0; xx < width; xx++) {
-			dstRow[xx] = srcRow[(x + xx) % TILESIZE];
-		}
-	}
-}
-
 void Launcher_ResetArea(int x, int y, int width, int height) {
-	if (Launcher_ClassicBackground && dirtBmp.scan0) {
-		ClearTile(x, y, width, height, &stoneBmp);
-	} else {
-		Gradient_Noise(&Launcher_Framebuffer, Launcher_BackgroundCol, 6, x, y, width, height);
-	}
+	LBackend_ResetArea(x, y, width, height);
 	Launcher_MarkDirty(x, y, width, height);
 }
 
@@ -545,13 +510,7 @@ void Launcher_ResetPixels(void) {
 		return;
 	}
 
-	if (Launcher_ClassicBackground && dirtBmp.scan0) {
-		ClearTile(0,        0, WindowInfo.Width,                     TILESIZE, &dirtBmp);
-		ClearTile(0, TILESIZE, WindowInfo.Width, WindowInfo.Height - TILESIZE, &stoneBmp);
-	} else {
-		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
-	}
-
+	LBackend_ResetPixels();
 	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);
 	x = WindowInfo.Width / 2 - Drawer2D_TextWidth(&args) / 2;
 

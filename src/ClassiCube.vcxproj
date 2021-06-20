@@ -188,6 +188,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Animations.h" />
+    <ClInclude Include="LBackend.h" />
     <ClInclude Include="Http.h" />
     <ClInclude Include="Audio.h" />
     <ClInclude Include="AxisLinesRenderer.h" />
@@ -274,6 +275,7 @@
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="Launcher.c" />
+    <ClCompile Include="LBackend.c" />
     <ClCompile Include="LScreens.c" />
     <ClCompile Include="LWeb.c" />
     <ClCompile Include="LWidgets.c" />

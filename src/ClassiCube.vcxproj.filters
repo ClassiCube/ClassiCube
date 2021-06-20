@@ -315,6 +315,9 @@
     <ClInclude Include="_PlatformBase.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
+    <ClInclude Include="LBackend.h">
+      <Filter>Header Files\Launcher</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -544,6 +547,9 @@
     </ClCompile>
     <ClCompile Include="Platform_Posix.c">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="LBackend.c">
+      <Filter>Source Files\Launcher</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
