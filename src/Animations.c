@@ -471,7 +471,7 @@ static void Animations_Tick(struct ScheduledTask* task) {
 	if (useLavaAnim)  LavaAnimation_Tick();
 	if (useWaterAnim) WaterAnimation_Tick();
 	FireAnimation_Tick(fire_data_1, 20);
-	/* FireAnimation_Tick(fire_data_1, 20); */ /* put the proper ID here */
+	/* FireAnimation_Tick(fire_data_2, 20); */ /* put the proper ID here */
 #endif
 
 	if (!anims_count) return;
