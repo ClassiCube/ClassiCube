@@ -163,6 +163,82 @@ static void WaterAnimation_Tick(void) {
 	Bitmap_Init(bmp, size, size, pixels);
 	Animations_Update(WATER_TEX_LOC, &bmp, size);
 }
+
+#define FIRE_WIDTH 16
+#define FIRE_HEIGHT 20
+
+static float front_buffer[FIRE_HEIGHT][FIRE_WIDTH];
+static float back_buffer[FIRE_HEIGHT][FIRE_WIDTH];
+static float mote_neighbor_decay_base = 18.0f;
+static float mote_decay_amp = 1.06f;
+
+#include <math.h>
+BitmapCol make_fire_colour(float v) {
+	v *= 1.8f;
+	Math_Clamp(v, 0.0f, 1.0f);
+
+	float R, G, B, A;
+	R = v * 155 + 100;
+	G = v * v * 255;
+	B = pow(v, 10) * 255;
+	A = 255;
+
+	if (v < .5) A = 0;
+	return BitmapCol_Make(R, G, B, A);
+}
+
+float fire_life(void) {
+	return Random_Float(&L_rnd) * Random_Float(&L_rnd) * Random_Float(&L_rnd) * 4.0 
+		+ Random_Float(&L_rnd) * 0.1 + 0.2;
+}
+
+float fire_convolute(int x, int y) {
+	float mote_decay = mote_neighbor_decay_base * mote_decay_amp;
+	mote_decay += (1 * 2 + 1) * (1 + 1);
+
+	float new_mote = front_buffer[(y + 1) % FIRE_HEIGHT][x] * mote_neighbor_decay_base;
+	int u, v;
+
+	for (u = x - 1; u <= x + 1; u++) {
+		for (v = y; v <= y + 1; v++) {
+			if ((u >= 0 && u < FIRE_WIDTH) && (v >= 0 && v < FIRE_HEIGHT))
+				new_mote += front_buffer[v][u];
+		}
+	}
+	return new_mote / mote_decay;
+}
+
+static void FireAnimation_Tick(void) {
+	BitmapCol pixels[16 * 16];
+	int size = 16;
+	struct Bitmap bmp;
+	int x, y;
+
+	for (x = 0; x < FIRE_WIDTH; x++) {
+		for (y = 0; y < FIRE_HEIGHT; y++) {
+			if (y == FIRE_HEIGHT - 1) {
+				back_buffer[y][x] = fire_life();
+			} else {
+				back_buffer[y][x] = fire_convolute(x, y);
+			}
+		}
+	}
+
+	for (y = 0; y < 16; y++) {
+		for (x = 0; x < 16; x++) {
+			float v = front_buffer[y][x];
+			pixels[y*16 + x] = make_fire_colour(v);
+		}
+	}
+
+	float tmp[FIRE_HEIGHT][FIRE_WIDTH];
+	Mem_Copy(tmp,          back_buffer,  sizeof(tmp));
+	Mem_Copy(back_buffer,  front_buffer, sizeof(tmp));
+	Mem_Copy(front_buffer, tmp,          sizeof(tmp));
+
+	Bitmap_Init(bmp, size, size, pixels);
+	Animations_Update(20, &bmp, size);
+}
 #endif
 
 
@@ -331,6 +407,7 @@ static void Animations_Tick(struct ScheduledTask* task) {
 #ifndef CC_BUILD_WEB
 	if (useLavaAnim)  LavaAnimation_Tick();
 	if (useWaterAnim) WaterAnimation_Tick();
+	FireAnimation_Tick();
 #endif
 
 	if (!anims_count) return;
