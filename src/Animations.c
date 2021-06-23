@@ -194,7 +194,7 @@ static float fire_kernel_move_intensity = 18.0f;
 static float fire_kernel_magnitude_amp  = 1.06f;
 
 #include <math.h>
-BitmapCol make_fire_colour(float v) {
+static BitmapCol make_fire_colour(float v) {
 	v *= 1.8f;
 	Math_Clamp(v, 0.0f, 1.0f);
 
@@ -209,7 +209,7 @@ BitmapCol make_fire_colour(float v) {
 }
 
 /* Creates some random noise that's biased more towards lower numbers */
-float fire_life(void) {
+static float fire_life(void) {
 	return
 		Random_Float(&L_rnd) * Random_Float(&L_rnd) * Random_Float(&L_rnd)
 		* 4.0 + Random_Float(&L_rnd) * 0.1 + 0.2;
