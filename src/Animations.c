@@ -233,25 +233,22 @@ float fire_life(void) {
 float fire_convolute(float target_fire[], int x, int y) {
 	float kernel_magnitude = fire_kernel_move_intensity * fire_kernel_magnitude_amp;
 	kernel_magnitude += (1 * 2 + 1) * (1 + 1);
-
-	/* This modulo can never wrap around to the top of the texture as the bottom
-	// row is ignored and filled with noise
-	// This also means the bounds check below for going off of the bottom
-	// of the texture can never occur either, so we don't bother */
 	
-	/* Afterthought: I suppose since we never reach a state where we can
-	// attempt to read past the bottom, the modulo isn't nessicary.
+	/* Since we never reach a state where we can attempt to read past
+	// the bottom, the modulo present in the original isn't nessicary.
 	// We also never read above ourselves either, so the vertical
-	// bounds check is entirely redundant.
+	// bounds check is entirely redundant. And since we only ever look one
+	// down, the vertical loop is *also* redundant. Hilarious.
 	// original offset expr: ((y + 1) % FIRE_HEIGHT) * FIRE_WIDTH + x */
 	float new_mote = target_fire[(y + 1) * FIRE_WIDTH + x];
 	new_mote *= fire_kernel_move_intensity;
 	int u, v;
-
+	
 	for (u = x - 1; u <= x + 1; u++) {
-		for (v = y; v <= y + 1; v++) {
-			if (u >= 0 && u < FIRE_WIDTH)
-				new_mote += target_fire[v * FIRE_WIDTH + u];
+		if (u >= 0 && u < FIRE_WIDTH)
+		{
+			new_mote += target_fire[y       * FIRE_WIDTH + u];
+			new_mote += target_fire[(y + 1) * FIRE_WIDTH + u];	
 		}
 	}
 	return new_mote / kernel_magnitude;
