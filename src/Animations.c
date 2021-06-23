@@ -240,7 +240,9 @@ float fire_convolute(float target_fire[], int x, int y) {
 	// of the texture can never occur either, so we don't bother */
 	
 	/* Afterthought: I suppose since we never reach a state where we can
-	// attempt to read past the bottom, the modulo isn't nessicary
+	// attempt to read past the bottom, the modulo isn't nessicary.
+	// We also never read above ourselves either, so the vertical
+	// bounds check is entirely redundant.
 	// original offset expr: ((y + 1) % FIRE_HEIGHT) * FIRE_WIDTH + x */
 	float new_mote = target_fire[(y + 1) * FIRE_WIDTH + x];
 	new_mote *= fire_kernel_move_intensity;
@@ -248,7 +250,7 @@ float fire_convolute(float target_fire[], int x, int y) {
 
 	for (u = x - 1; u <= x + 1; u++) {
 		for (v = y; v <= y + 1; v++) {
-			if ((u >= 0 && u < FIRE_WIDTH) && v >= 0)
+			if (u >= 0 && u < FIRE_WIDTH)
 				new_mote += target_fire[v * FIRE_WIDTH + u];
 		}
 	}
