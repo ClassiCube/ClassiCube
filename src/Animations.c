@@ -238,8 +238,8 @@ static float F_Life(struct F_ProcData* fire) {
 
 	https://en.wikipedia.org/wiki/Kernel_(image_processing)
 */
-float F_ApplyConvolution(struct F_ProcData fire, int x, int y) {
-	float[] targetFire = fire->data;
+float F_ApplyConvolution(struct F_ProcData* fire, int x, int y) {
+	float* targetFire = fire->data;
 	float kernelMagnitude = F_kernelMoveIntensity * F_kernelMagnitudeAmp;
 	      kernelMagnitude += (1 * 2 + 1) * (1 + 1);
 	
@@ -267,7 +267,7 @@ float F_ApplyConvolution(struct F_ProcData fire, int x, int y) {
 // how it works yet, so ill just do the brute-force method you can
 // swap here */
 static void F_MiddlemanCopy(struct F_ProcData* fire, int y) {
-	float[] targetFire = fire->data;
+	float* targetFire = fire->data;
 	int x;
 	for (x = 0; x < FIRE_WIDTH; ++x) {
 		targetFire[y * FIRE_WIDTH + x] = F_middleman[x];
@@ -281,7 +281,7 @@ static void FireAnimation_Tick(struct F_ProcData* fire, int textureIndex) {
 	const int bitmap_c = bitmap_w * bitmap_h;
 	BitmapCol pixels[bitmap_c];
 	struct Bitmap bmp;
-	float[] targetFire;
+	float* targetFire;
 	int x, y, i;
 
 	if (!fire->hasInited) {
