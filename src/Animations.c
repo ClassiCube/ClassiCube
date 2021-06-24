@@ -164,80 +164,167 @@ static void WaterAnimation_Tick(void) {
 	Animations_Update(WATER_TEX_LOC, &bmp, size);
 }
 
-#define FIRE_WIDTH 16
+/*
+	Fire created with research by ConstaChymic (constachugga).
+	http://catsofwar.com
+*/
+/*###########################################################################*
+ *---------------------------Fire animation(s)-------------------------------*
+ *###########################################################################*/
+/* These are NOT the same as the fire's final texture width and height.
+// Fire has a "gutter" area at the bottom where the noise is generated.
+// It (+3 other wind-up pixels) is cut-off during texture copying, on purpose.
+// The noise is ugly */
+#define FIRE_WIDTH  16
 #define FIRE_HEIGHT 20
+#define FIRE_COUNT (FIRE_WIDTH * FIRE_HEIGHT)
 
-static float front_buffer[FIRE_HEIGHT][FIRE_WIDTH];
-static float back_buffer[FIRE_HEIGHT][FIRE_WIDTH];
-static float mote_neighbor_decay_base = 18.0f;
-static float mote_decay_amp = 1.06f;
+/* Since theres two fire animations, and they both should have their own
+// random generators, give 'em their own structures*/
+struct F_ProcData {
+	cc_bool hasInited;
+	RNGState rnd;
+	float data[FIRE_COUNT];
+};
+
+/* Minecraft defines two different fire textures that are generated
+// one after the other, and stored below each other */
+static struct F_ProcData F_texUpper = { 0 };
+static struct F_ProcData F_texLower = { 0 };
+
+/* since our convolution matrix never reads pixels above itself, we can
+// cheese the algorithm and write our finished rows back into the working
+// buffer directly, only requiring a 1-point-high strip to store what we're
+// working on currently. */
+static float F_middleman[FIRE_WIDTH];
+
+static float F_kernelMoveIntensity = 18.0f;
+static float F_kernelMagnitudeAmp  = 1.06f;
+
+/* Todo: this should have a random seed offset argument */
+static void F_Init(struct F_ProcData* fire) {
+	int i;
+	Random_SeedFromCurrentTime(&(fire->rnd));
+	
+	for (i = 0; i < FIRE_COUNT; ++i) {
+		fire->data[i] = 0.0f;
+	}
+
+	fire->hasInited = true;
+}
+
+/* Creates some random noise that's biased more towards lower numbers */
+static float F_Life(struct F_ProcData* fire) {
+	RNGState* rand = &(fire->rnd);
+	return (
+		Random_Float(rand) * Random_Float(rand) *
+		Random_Float(rand) * 4.0 +
+		Random_Float(rand) * 0.1 + 0.2
+	);
+}
+
+/*
+	Fire is driven by a simple convolution matrix, with this kernel:
+	{
+		{ 0,  0,  0 },
+		{ 1,  1,  1 },
+		{ 1,  19, 1 }
+	}
+	It is applied to every point in the fire's data buffer,
+	ignoring any reads outside of the image bounds, and at the end
+	it is divided by the sum of all of the kernel's elements multiplied by 1.06.
+	The reason the pixel below is marked as so strong is because it is
+	contributing to the one we're currently on, "moving" it upwards.
+
+	https://en.wikipedia.org/wiki/Kernel_(image_processing)
+*/
+float F_ApplyConvolution(struct F_ProcData* fire, int x, int y) {
+	float* targetFire = fire->data;
+	float kernelMagnitude = F_kernelMoveIntensity * F_kernelMagnitudeAmp;
+	      kernelMagnitude += (1 * 2 + 1) * (1 + 1);
+	
+	/* Since we never reach a state where we can attempt to read past
+	// the bottom, the modulo present in the original isn't nessicary.
+	// We also never read above ourselves either, so the vertical
+	// bounds check is entirely redundant. And since we only ever look one
+	// down, the vertical loop is *also* redundant. Hilarious.
+	// original offset expr: ((y + 1) % FIRE_HEIGHT) * FIRE_WIDTH + x */
+	float newMote = targetFire[(y + 1) * FIRE_WIDTH + x];
+	      newMote *= F_kernelMoveIntensity;
+	
+	int u;
+	for (u = x - 1; u <= x + 1; u++) {
+		if (u >= 0 && u < FIRE_WIDTH) {
+			newMote += targetFire[y       * FIRE_WIDTH + u]
+			         + targetFire[(y + 1) * FIRE_WIDTH + u];
+		}
+	}
+	return newMote / kernelMagnitude;
+}
+
+/* Replace me with a simple memcpy?
+// You seem to have a different one I haven't looked into
+// how it works yet, so ill just do the brute-force method you can
+// swap here */
+static void F_MiddlemanCopy(struct F_ProcData* fire, int y) {
+	float* targetFire = fire->data;
+	int x;
+	for (x = 0; x < FIRE_WIDTH; ++x) {
+		targetFire[y * FIRE_WIDTH + x] = F_middleman[x];
+	}
+}
 
 #include <math.h>
-BitmapCol make_fire_colour(float v) {
-	v *= 1.8f;
-	Math_Clamp(v, 0.0f, 1.0f);
-
-	float R, G, B, A;
-	R = v * 155 + 100;
-	G = v * v * 255;
-	B = pow(v, 10) * 255;
-	A = 255;
-
-	if (v < .5) A = 0;
-	return BitmapCol_Make(R, G, B, A);
-}
-
-float fire_life(void) {
-	return Random_Float(&L_rnd) * Random_Float(&L_rnd) * Random_Float(&L_rnd) * 4.0 
-		+ Random_Float(&L_rnd) * 0.1 + 0.2;
-}
-
-float fire_convolute(int x, int y) {
-	float mote_decay = mote_neighbor_decay_base * mote_decay_amp;
-	mote_decay += (1 * 2 + 1) * (1 + 1);
-
-	float new_mote = front_buffer[(y + 1) % FIRE_HEIGHT][x] * mote_neighbor_decay_base;
-	int u, v;
-
-	for (u = x - 1; u <= x + 1; u++) {
-		for (v = y; v <= y + 1; v++) {
-			if ((u >= 0 && u < FIRE_WIDTH) && (v >= 0 && v < FIRE_HEIGHT))
-				new_mote += front_buffer[v][u];
-		}
-	}
-	return new_mote / mote_decay;
-}
-
-static void FireAnimation_Tick(void) {
-	BitmapCol pixels[16 * 16];
-	int size = 16;
+static void FireAnimation_Tick(struct F_ProcData* fire, int textureIndex) {
+	const int bitmap_w = 16;
+	const int bitmap_h = 16;
+	const int bitmap_c = bitmap_w * bitmap_h;
+	BitmapCol pixels[bitmap_c];
 	struct Bitmap bmp;
-	int x, y;
+	float* targetFire;
+	int x, y, i;
 
-	for (x = 0; x < FIRE_WIDTH; x++) {
-		for (y = 0; y < FIRE_HEIGHT; y++) {
-			if (y == FIRE_HEIGHT - 1) {
-				back_buffer[y][x] = fire_life();
-			} else {
-				back_buffer[y][x] = fire_convolute(x, y);
-			}
-		}
+	if (!fire->hasInited) {
+		F_Init(fire);
 	}
 
-	for (y = 0; y < 16; y++) {
-		for (x = 0; x < 16; x++) {
-			float v = front_buffer[y][x];
-			pixels[y*16 + x] = make_fire_colour(v);
+	targetFire = fire->data;
+
+	/* Apply the convolution matrix to (almost) every point in the fire texture,
+	// effectively moving each point upwards one and blurring outwards some.
+	// Fun fact: you can simulate fire in gimp. It's just very tedious. */
+	for (y = 0; y < FIRE_HEIGHT - 1; y++) {
+		for (x = 0; x < FIRE_WIDTH; x++) {
+			F_middleman[y * FIRE_HEIGHT + x] = F_ApplyConvolution(fire, x, y);
 		}
+		F_MiddlemanCopy(fire, y);
 	}
 
-	float tmp[FIRE_HEIGHT][FIRE_WIDTH];
-	Mem_Copy(tmp,          back_buffer,  sizeof(tmp));
-	Mem_Copy(back_buffer,  front_buffer, sizeof(tmp));
-	Mem_Copy(front_buffer, tmp,          sizeof(tmp));
+	/* Finally fill the bottom row of the texture with noise.
+	// This will keep the flame alive, so to speak */
+	for (x = 0, y = FIRE_HEIGHT - 1; x < FIRE_WIDTH; ++x) {
+		targetFire[y * FIRE_WIDTH + x] = F_Life(fire);
+	}
 
-	Bitmap_Init(bmp, size, size, pixels);
-	Animations_Update(20, &bmp, size);
+	/* We don't need to do an XY loop here since we're copying pixels
+	// sequentially anyways */
+	for (i = 0; i < bitmap_c; i++) {
+		float mote = targetFire[i] * 1.8f;
+		Math_Clamp(mote, 0.0f, 1.0f);
+		
+		float R, G, B, A;
+		R = mote * 155 + 100;
+		G = mote * mote * 255;
+		B = pow(mote, 10) * 255;
+		A = 255;
+
+		if (mote < .5) A = 0;
+		
+		pixels[i] = BitmapCol_Make(R, G, B, A);
+	}
+
+	Bitmap_Init(bmp, bitmap_w, bitmap_h, pixels);
+	Animations_Update(textureIndex, &bmp, bitmap_w);
 }
 #endif
 
@@ -407,7 +494,8 @@ static void Animations_Tick(struct ScheduledTask* task) {
 #ifndef CC_BUILD_WEB
 	if (useLavaAnim)  LavaAnimation_Tick();
 	if (useWaterAnim) WaterAnimation_Tick();
-	FireAnimation_Tick();
+	FireAnimation_Tick(&F_texUpper, 20);
+	/* FireAnimation_Tick(&F_texLower, 20); */ /* put the proper ID here */
 #endif
 
 	if (!anims_count) return;
