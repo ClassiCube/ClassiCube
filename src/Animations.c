@@ -29,7 +29,6 @@ static float L_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
 static float L_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 static float L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 static RNGState L_rnd;
-static cc_bool  L_rndInited;
 
 static void LavaAnimation_Tick(void) {
 	BitmapCol pixels[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
@@ -42,11 +41,6 @@ static void LavaAnimation_Tick(void) {
 	size  = min(Atlas2D.TileSize, LIQUID_ANIM_MAX);
 	mask  = size - 1;
 	shift = Math_Log2(size);
-
-	if (!L_rndInited) {
-		Random_SeedFromCurrentTime(&L_rnd);
-		L_rndInited = true;
-	}
 	
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
@@ -110,7 +104,6 @@ static float W_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
 static float W_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 static float W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 static RNGState W_rnd;
-static cc_bool  W_rndInited;
 
 static void WaterAnimation_Tick(void) {
 	BitmapCol pixels[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
@@ -123,11 +116,6 @@ static void WaterAnimation_Tick(void) {
 	size  = min(Atlas2D.TileSize, LIQUID_ANIM_MAX);
 	mask  = size - 1;
 	shift = Math_Log2(size);
-
-	if (!W_rndInited) {
-		Random_SeedFromCurrentTime(&W_rnd);
-		W_rndInited = true;
-	}
 	
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
@@ -164,16 +152,25 @@ static void WaterAnimation_Tick(void) {
 	Animations_Update(WATER_TEX_LOC, &bmp, size);
 }
 
-#define FIRE_WIDTH 16
-#define FIRE_HEIGHT 20
+
+/*########################################################################################################################*
+*----------------------------------------------------Lava animation-------------------------------------------------------*
+*#########################################################################################################################*/
+#define FIRE_SIZE   16
+#define FIRE_WIDTH  FIRE_SIZE
+#define FIRE_HEIGHT (FIRE_SIZE + 4)
 
 static float front_buffer[FIRE_HEIGHT][FIRE_WIDTH];
 static float back_buffer[FIRE_HEIGHT][FIRE_WIDTH];
+static RNGState F_rnd;
+
+#define FIRE_DECAY_BASE 18.0f
+#define FIRE_DECAY_AMP 1.06f
 static float mote_neighbor_decay_base = 18.0f;
 static float mote_decay_amp = 1.06f;
 
 #include <math.h>
-BitmapCol make_fire_colour(float v) {
+static BitmapCol Fire_Color(float v) {
 	v *= 1.8f;
 	Math_Clamp(v, 0.0f, 1.0f);
 
@@ -187,47 +184,47 @@ BitmapCol make_fire_colour(float v) {
 	return BitmapCol_Make(R, G, B, A);
 }
 
-float fire_life(void) {
-	return Random_Float(&L_rnd) * Random_Float(&L_rnd) * Random_Float(&L_rnd) * 4.0 
-		+ Random_Float(&L_rnd) * 0.1 + 0.2;
+static float Fire_Life(void) {
+	return Random_Float(&F_rnd) * Random_Float(&F_rnd) * Random_Float(&F_rnd) * 4.0 
+		+ Random_Float(&F_rnd) * 0.1 + 0.2;
 }
 
-float fire_convolute(int x, int y) {
-	float mote_decay = mote_neighbor_decay_base * mote_decay_amp;
+static float Fire_Convolute(int x, int y) {
+	float mote_decay = FIRE_DECAY_BASE * FIRE_DECAY_AMP;
 	mote_decay += (1 * 2 + 1) * (1 + 1);
 
-	float new_mote = front_buffer[(y + 1) % FIRE_HEIGHT][x] * mote_neighbor_decay_base;
+	float heat = front_buffer[(y + 1) % FIRE_HEIGHT][x] * FIRE_DECAY_BASE;
 	int u, v;
 
 	for (u = x - 1; u <= x + 1; u++) {
 		for (v = y; v <= y + 1; v++) {
 			if ((u >= 0 && u < FIRE_WIDTH) && (v >= 0 && v < FIRE_HEIGHT))
-				new_mote += front_buffer[v][u];
+				heat += front_buffer[v][u];
 		}
 	}
-	return new_mote / mote_decay;
+	return heat / mote_decay;
 }
 
 static void FireAnimation_Tick(void) {
-	BitmapCol pixels[16 * 16];
-	int size = 16;
+	BitmapCol pixels[FIRE_SIZE * FIRE_SIZE];
 	struct Bitmap bmp;
 	int x, y;
 
 	for (x = 0; x < FIRE_WIDTH; x++) {
 		for (y = 0; y < FIRE_HEIGHT; y++) {
 			if (y == FIRE_HEIGHT - 1) {
-				back_buffer[y][x] = fire_life();
+				/* base layer is an infinite ignition source */
+				back_buffer[y][x] = Fire_Life();
 			} else {
-				back_buffer[y][x] = fire_convolute(x, y);
+				back_buffer[y][x] = Fire_Convolute(x, y);
 			}
 		}
 	}
 
-	for (y = 0; y < 16; y++) {
-		for (x = 0; x < 16; x++) {
+	for (y = 0; y < FIRE_SIZE; y++) {
+		for (x = 0; x < FIRE_SIZE; x++) {
 			float v = front_buffer[y][x];
-			pixels[y*16 + x] = make_fire_colour(v);
+			pixels[y*FIRE_SIZE + x] = Fire_Color(v);
 		}
 	}
 
@@ -236,8 +233,8 @@ static void FireAnimation_Tick(void) {
 	Mem_Copy(back_buffer,  front_buffer, sizeof(tmp));
 	Mem_Copy(front_buffer, tmp,          sizeof(tmp));
 
-	Bitmap_Init(bmp, size, size, pixels);
-	Animations_Update(20, &bmp, size);
+	Bitmap_Init(bmp, FIRE_SIZE, FIRE_SIZE, pixels);
+	Animations_Update(20, &bmp, FIRE_SIZE);
 }
 #endif
 
@@ -457,6 +454,10 @@ static void OnFileChanged(void* obj, struct Stream* stream, const cc_string* nam
 }
 
 static void OnInit(void) {
+	Random_SeedFromCurrentTime(&L_rnd);
+	Random_SeedFromCurrentTime(&W_rnd);
+	Random_SeedFromCurrentTime(&F_rnd);
+
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
 	Event_Register_(&TextureEvents.PackChanged, NULL, OnPackChanged);
 	Event_Register_(&TextureEvents.FileChanged, NULL, OnFileChanged);

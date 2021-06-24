@@ -11,6 +11,7 @@
 * FabTheZen - suggestions about how to improve user experience, testing.
 * Cheesse - multiple suggestions, testing ClassicalSharp on AMD graphics cards.
 * Hemsindor - testing ClassicalSharp on OSX.
+* ConstaChugga - documenting procedural fire animation
 
 And a big thanks to everyone else in the ClassiCube community (who I didn't mention here),
 who in the past have provided many suggestions and assisted in identifying bugs.
