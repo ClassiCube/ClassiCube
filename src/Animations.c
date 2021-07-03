@@ -154,20 +154,21 @@ static void WaterAnimation_Tick(void) {
 
 
 /*########################################################################################################################*
-*----------------------------------------------------Lava animation-------------------------------------------------------*
+*----------------------------------------------------Fire animation-------------------------------------------------------*
 *#########################################################################################################################*/
+/* Based off the notes in https://github.com/UnknownShadow200/ClassiCube/issues/861
+   Fire animation documented by ConstaChugga, big thanks!
+*/
 #define FIRE_SIZE   16
 #define FIRE_WIDTH  FIRE_SIZE
 #define FIRE_HEIGHT (FIRE_SIZE + 4)
 
-static float front_buffer[FIRE_HEIGHT][FIRE_WIDTH];
-static float back_buffer[FIRE_HEIGHT][FIRE_WIDTH];
+static float front_buffer[FIRE_WIDTH * FIRE_HEIGHT];
+static float back_buffer[FIRE_WIDTH * FIRE_HEIGHT];
 static RNGState F_rnd;
 
 #define FIRE_DECAY_BASE 18.0f
 #define FIRE_DECAY_AMP 1.06f
-static float mote_neighbor_decay_base = 18.0f;
-static float mote_decay_amp = 1.06f;
 
 #include <math.h>
 static BitmapCol Fire_Color(float v) {
@@ -193,13 +194,15 @@ static float Fire_Convolute(int x, int y) {
 	float mote_decay = FIRE_DECAY_BASE * FIRE_DECAY_AMP;
 	mote_decay += (1 * 2 + 1) * (1 + 1);
 
-	float heat = front_buffer[(y + 1) % FIRE_HEIGHT][x] * FIRE_DECAY_BASE;
+	/* bounds check on Y can be eliminated, since Fire_Convolute */
+	/*  is never executed on the bottom/highest row of fire */
+	float heat = front_buffer[(y + 1)*FIRE_SIZE+x] * FIRE_DECAY_BASE;
 	int u, v;
 
 	for (u = x - 1; u <= x + 1; u++) {
 		for (v = y; v <= y + 1; v++) {
-			if ((u >= 0 && u < FIRE_WIDTH) && (v >= 0 && v < FIRE_HEIGHT))
-				heat += front_buffer[v][u];
+			if (u >= 0 && u < FIRE_WIDTH)
+				heat += front_buffer[v*FIRE_SIZE+u];
 		}
 	}
 	return heat / mote_decay;
@@ -208,27 +211,25 @@ static float Fire_Convolute(int x, int y) {
 static void FireAnimation_Tick(void) {
 	BitmapCol pixels[FIRE_SIZE * FIRE_SIZE];
 	struct Bitmap bmp;
-	int x, y;
+	int i, x, y;
 
 	for (x = 0; x < FIRE_WIDTH; x++) {
 		for (y = 0; y < FIRE_HEIGHT; y++) {
 			if (y == FIRE_HEIGHT - 1) {
 				/* base layer is an infinite ignition source */
-				back_buffer[y][x] = Fire_Life();
+				back_buffer[y*FIRE_SIZE+x] = Fire_Life();
 			} else {
-				back_buffer[y][x] = Fire_Convolute(x, y);
+				back_buffer[y*FIRE_SIZE+x] = Fire_Convolute(x, y);
 			}
 		}
 	}
 
-	for (y = 0; y < FIRE_SIZE; y++) {
-		for (x = 0; x < FIRE_SIZE; x++) {
-			float v = front_buffer[y][x];
-			pixels[y*FIRE_SIZE + x] = Fire_Color(v);
-		}
+	for (i = 0; i < FIRE_SIZE * FIRE_SIZE; i++) {
+		float v = front_buffer[i];
+		pixels[i] = Fire_Color(v);
 	}
 
-	float tmp[FIRE_HEIGHT][FIRE_WIDTH];
+	float tmp[FIRE_HEIGHT * FIRE_WIDTH];
 	Mem_Copy(tmp,          back_buffer,  sizeof(tmp));
 	Mem_Copy(back_buffer,  front_buffer, sizeof(tmp));
 	Mem_Copy(front_buffer, tmp,          sizeof(tmp));
