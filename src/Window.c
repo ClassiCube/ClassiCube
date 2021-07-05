@@ -1340,6 +1340,7 @@ static char clipboard_copy_buffer[256];
 static char clipboard_paste_buffer[256];
 static cc_string clipboard_copy_text  = String_FromArray(clipboard_copy_buffer);
 static cc_string clipboard_paste_text = String_FromArray(clipboard_paste_buffer);
+static cc_bool clipboard_paste_received;
 
 void Clipboard_GetText(cc_string* value) {
 	Window owner = XGetSelectionOwner(win_display, xa_clipboard);
@@ -1347,12 +1348,13 @@ void Clipboard_GetText(cc_string* value) {
 	if (!owner) return; /* no window owner */
 
 	XConvertSelection(win_display, xa_clipboard, xa_utf8_string, xa_data_sel, win_handle, 0);
+	clipboard_paste_received    = false;
 	clipboard_paste_text.length = 0;
 
 	/* wait up to 1 second for SelectionNotify event to arrive */
 	for (i = 0; i < 100; i++) {
 		Window_ProcessEvents();
-		if (clipboard_paste_text.length) {
+		if (clipboard_paste_received) {
 			String_AppendString(value, &clipboard_paste_text);
 			return;
 		} else {
@@ -1614,8 +1616,6 @@ void Window_ProcessEvents(void) {
 			break;
 
 		case SelectionNotify:
-			clipboard_paste_text.length = 0;
-
 			if (e.xselection.selection == xa_clipboard && e.xselection.target == xa_utf8_string && e.xselection.property == xa_data_sel) {
 				Atom prop_type;
 				int prop_format;
@@ -1627,6 +1627,7 @@ void Window_ProcessEvents(void) {
 				XDeleteProperty(win_display, win_handle, xa_data_sel);
 
 				if (data && items && prop_type == xa_utf8_string) {
+					clipboard_paste_received    = true;
 					clipboard_paste_text.length = 0;
 					String_AppendUtf8(&clipboard_paste_text, data, items);
 				}
