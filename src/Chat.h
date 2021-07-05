@@ -58,8 +58,8 @@ void Chat_SetLogName(const cc_string* name);
 /* Disables chat logging and closes currently open chat log file. */
 void Chat_DisableLogging(void);
 /* Sends a chat message, raising ChatEvents.ChatSending event. */
-/* NOTE: If logUsage is true, can press 'up' in chat input menu later to retype this. */
-/* NOTE: /client is always interpreted as client-side commands. */
+/*  NOTE: If logUsage is true, can press 'up' in chat input menu later to retype this. */
+/*  NOTE: /client is always interpreted as client-side commands. */
 /* In multiplayer this is sent to the server, in singleplayer just Chat_Add. */
 CC_API void Chat_Send(const cc_string* text, cc_bool logUsage);
 /* Shorthand for Chat_AddOf(str, MSG_TYPE_NORMAL) */

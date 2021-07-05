@@ -169,11 +169,11 @@ CC_API void TabList_Remove(EntityID id);
 CC_API void TabList_Set(EntityID id, const cc_string* player, const cc_string* list, const cc_string* group, cc_uint8 rank);
 
 /* Raw unformatted name (for Tab name auto complete) */
-#define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 3);
+#define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 3)
 /* Formatted name for display in tab list. */
-#define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 2);
+#define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 2)
 /* Name of the group this entry is in (e.g. rank name, map name) */
-#define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 1);
+#define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList._buffer, TabList.NameOffsets[id] - 1)
 
 /* Represents another entity in multiplayer */
 struct NetPlayer {
