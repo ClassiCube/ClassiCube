@@ -318,6 +318,9 @@
     <ClInclude Include="LBackend.h">
       <Filter>Header Files\Launcher</Filter>
     </ClInclude>
+    <ClInclude Include="_GraphicsBase.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -533,9 +536,6 @@
     <ClCompile Include="Input.c">
       <Filter>Source Files\Game</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="Animations.c">
       <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
@@ -550,6 +550,12 @@
     </ClCompile>
     <ClCompile Include="LBackend.c">
       <Filter>Source Files\Launcher</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics_D3D9.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics_GL.c">
+      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
