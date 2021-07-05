@@ -1,6 +1,9 @@
 #include "Core.h"
 #ifdef CC_BUILD_D3D9
 #include "_GraphicsBase.h"
+#include "Errors.h"
+#include "Logger.h"
+#include "Window.h"
 
 /* Avoid pointless includes */
 #define WIN32_LEAN_AND_MEAN
@@ -14,6 +17,8 @@
 
 /* https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dfvf-texcoordsizen */
 static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 };
+/* Current format and size of vertices */
+static int gfx_stride, gfx_format = -1;
 
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
@@ -201,7 +206,7 @@ static void Gfx_FreeState(void) {
 static void Gfx_RestoreState(void) {
 	Gfx_SetFaceCulling(false);
 	InitDefaultResources();
-	curFormat = -1;
+	gfx_format = -1;
 
 	IDirect3DDevice9_SetRenderState(device, D3DRS_COLORVERTEX,       false);
 	IDirect3DDevice9_SetRenderState(device, D3DRS_LIGHTING,          false);
@@ -371,6 +376,8 @@ void Gfx_DisableMipmaps(void) {
 static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
 static cc_bool gfx_alphaTesting, gfx_alphaBlending;
 static cc_bool gfx_depthTesting, gfx_depthWriting;
+static PackedCol gfx_clearCol, gfx_fogCol;
+static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
 
 /* NOTE: Although SetRenderState is okay to call on a lost device, it's also possible */
 /*   the context is lost because the device was never created to begin with!          */
@@ -561,7 +568,7 @@ GfxResourceID Gfx_CreateVb(VertexFormat fmt, int count) {
 
 void Gfx_BindVb(GfxResourceID vb) {
 	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
-	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, curStride);
+	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, gfx_stride);
 	if (res) Logger_Abort2(res, "D3D9_BindVb");
 }
 
@@ -579,12 +586,12 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
 	cc_result res;
-	if (fmt == curFormat) return;
-	curFormat = fmt;
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
 
 	res = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[fmt]);
 	if (res) Logger_Abort2(res, "D3D9_SetVertexFormat");
-	curStride = strideSizes[fmt];
+	gfx_stride = strideSizes[fmt];
 }
 
 void Gfx_DrawVb_Lines(int verticesCount) {
@@ -626,11 +633,11 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	int size = vCount * curStride;
+	int size = vCount * gfx_stride;
 	IDirect3DVertexBuffer9* buffer = (IDirect3DVertexBuffer9*)vb;
 	D3D9_SetVbData(buffer, vertices, size, D3DLOCK_DISCARD);
 
-	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, curStride);
+	cc_result res = IDirect3DDevice9_SetStreamSource(device, 0, buffer, 0, gfx_stride);
 	if (res) Logger_Abort2(res, "D3D9_SetDynamicVbData - Bind");
 }
 

@@ -1,16 +1,11 @@
 #include "Graphics.h"
 #include "String.h"
-#include "Logger.h"
 #include "Platform.h"
-#include "Window.h"
 #include "Funcs.h"
-#include "Chat.h"
 #include "Game.h"
 #include "ExtMath.h"
 #include "Event.h"
 #include "Block.h"
-#include "ExtMath.h"
-#include "Errors.h"
 #include "Options.h"
 #include "Bitmap.h"
 
@@ -19,8 +14,6 @@ GfxResourceID Gfx_defaultIb;
 GfxResourceID Gfx_quadVb, Gfx_texVb;
 
 static const int strideSizes[2] = { SIZEOF_VERTEX_COLOURED, SIZEOF_VERTEX_TEXTURED };
-/* Current format and size of vertices */
-static int curStride, curFormat = -1;
 /* Whether mipmaps must be created for all dimensions down to 1x1 or not */
 static cc_bool customMipmapsLevels;
 #define ORTHO_NEAR -10000.0f
@@ -31,18 +24,15 @@ static float gfx_minFrameMs;
 static cc_uint64 frameStart;
 cc_bool Gfx_GetFog(void) { return gfx_fogEnabled; }
 
-/* Initialises/Restores render state. */
+/* Initialises/Restores render state */
 CC_NOINLINE static void Gfx_RestoreState(void);
-/* Destroys render state, but can be restored later. */
+/* Destroys render state, but can be restored later */
 CC_NOINLINE static void Gfx_FreeState(void);
-
-static PackedCol gfx_clearCol, gfx_fogCol;
-static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f; 
 
 /*########################################################################################################################*
 *------------------------------------------------------Generic/Common-----------------------------------------------------*
 *#########################################################################################################################*/
-/* Fills out indices array with {0,1,2} {2,3,0}, {4,5,6} {6,7,4} etc. */
+/* Fills out indices array with {0,1,2} {2,3,0}, {4,5,6} {6,7,4} etc */
 static void MakeIndices(cc_uint16* indices, int iCount) {
 	int element = 0, i;
 
@@ -77,7 +67,7 @@ static void FreeDefaultResources(void) {
 static void LimitFPS(void) {
 	/* Can't use Thread_Sleep on the web. (spinwaits instead of sleeping) */
 	/* However this is not a problem, because GLContext_SetVsync */
-	/* gets the browser to automatically handle the timing instead. */
+	/*  gets the browser to automatically handle the timing instead */
 #ifndef CC_BUILD_WEB
 	cc_uint64 frameEnd = Stopwatch_Measure();
 	float elapsedMs = Stopwatch_ElapsedMicroseconds(frameStart, frameEnd) / 1000.0f;

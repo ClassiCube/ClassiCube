@@ -1,6 +1,10 @@
 #include "Core.h"
 #ifdef CC_BUILD_GL
 #include "_GraphicsBase.h"
+#include "Chat.h"
+#include "Errors.h"
+#include "Logger.h"
+#include "Window.h"
 /* The OpenGL backend is a bit of a mess, since it's really 3 backends in one:
  * - OpenGL 1.1 (completely lacking GPU, fallbacks to say Windows built-in software rasteriser)
  * - OpenGL 1.5 or OpenGL 1.2 + GL_ARB_vertex_buffer_object (default desktop backend)
@@ -82,6 +86,8 @@ typedef void (*GL_SetupVBFunc)(void);
 typedef void (*GL_SetupVBRangeFunc)(int startVertex);
 static GL_SetupVBFunc gfx_setupVBFunc;
 static GL_SetupVBRangeFunc gfx_setupVBRangeFunc;
+/* Current format and size of vertices */
+static int gfx_stride, gfx_format = -1;
 
 static void GL_UpdateVsync(void) {
 	GLContext_SetFpsLimit(gfx_vsync, gfx_minFrameMs);
@@ -227,7 +233,10 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
+static PackedCol gfx_clearCol, gfx_fogCol;
+static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
 static int gfx_fogMode  = -1;
+
 void Gfx_SetFaceCulling(cc_bool enabled)   { gl_Toggle(GL_CULL_FACE); }
 void Gfx_SetAlphaBlending(cc_bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaArgBlend(cc_bool enabled) { }
@@ -318,7 +327,7 @@ void Gfx_UnlockVb(GfxResourceID vb) {
 #else
 static void UpdateDisplayList(GLuint list, void* vertices, VertexFormat fmt, int count) {
 	/* We need to restore client state afer building the list */
-	int realFormat = curFormat;
+	int realFormat = gfx_format;
 	void* dyn_data = dynamicListData;
 	Gfx_SetVertexFormat(fmt);
 	dynamicListData = vertices;
@@ -388,7 +397,7 @@ void Gfx_UnlockDynamicVb(GfxResourceID vb) {
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
-	cc_uint32 size = vCount * curStride;
+	cc_uint32 size = vCount * gfx_stride;
 	_glBindBuffer(_GL_ARRAY_BUFFER, (GLuint)vb);
 	_glBufferSubData(_GL_ARRAY_BUFFER, 0, size, vertices);
 }
@@ -413,7 +422,7 @@ void  Gfx_UnlockDynamicVb(GfxResourceID vb) { Gfx_BindDynamicVb(vb); }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, int vCount) {
 	Gfx_BindDynamicVb(vb);
-	Mem_Copy((void*)vb, vertices, vCount * curStride);
+	Mem_Copy((void*)vb, vertices, vCount * gfx_stride);
 }
 #endif
 
@@ -752,7 +761,7 @@ static void SwitchProgram(void) {
 		if (gfx_fogMode >= 1) index += 6; /* exp fog */
 	}
 
-	if (curFormat == VERTEX_FORMAT_TEXTURED) index += 2;
+	if (gfx_format == VERTEX_FORMAT_TEXTURED) index += 2;
 	if (gfx_texTransform) index += 2;
 	if (gfx_alphaTest)    index += 1;
 
@@ -841,7 +850,7 @@ static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-	curFormat = -1;
+	gfx_format = -1;
 
 	DirtyUniform(UNI_MASK_ALL);
 	GL_ClearCol(gfx_clearCol);
@@ -875,9 +884,9 @@ static void GL_SetupVbTextured_Range(int startVertex) {
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == curFormat) return;
-	curFormat = fmt;
-	curStride = strideSizes[fmt];
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		glEnableVertexAttribArray(2);
@@ -993,7 +1002,7 @@ static void Gfx_RestoreState(void) {
 	InitDefaultResources();
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
-	curFormat = -1;
+	gfx_format = -1;
 
 	glHint(GL_FOG_HINT, GL_NICEST);
 	glAlphaFunc(GL_GREATER, 0.5f);
@@ -1058,9 +1067,9 @@ static void GL_SetupVbTextured_Range(int startVertex) {
 }
 
 void Gfx_SetVertexFormat(VertexFormat fmt) {
-	if (fmt == curFormat) return;
-	curFormat = fmt;
-	curStride = strideSizes[fmt];
+	if (fmt == gfx_format) return;
+	gfx_format = fmt;
+	gfx_stride = strideSizes[fmt];
 
 	if (fmt == VERTEX_FORMAT_TEXTURED) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
