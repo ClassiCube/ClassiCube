@@ -10,38 +10,6 @@
 #include "Server.h"
 #include "Options.h"
 
-/*#define CC_TEST_VORBIS*/
-#ifdef CC_TEST_VORBIS
-#include "ExtMath.h"
-#include "Vorbis.h"
-
-#define VORBIS_N 1024
-#define VORBIS_N2 (VORBIS_N / 2)
-int main_imdct() {
-	float in[VORBIS_N2], out[VORBIS_N], out2[VORBIS_N];
-	double delta[VORBIS_N];
-
-	RngState rng;
-	Random_Seed(&rng, 2342334);
-	struct imdct_state imdct;
-	imdct_init(&imdct, VORBIS_N);
-
-	for (int ii = 0; ii < VORBIS_N2; ii++) {
-		in[ii] = Random_Float(&rng);
-	}
-
-	imdct_slow(in, out, VORBIS_N2);
-	imdct_calc(in, out2, &imdct);
-
-	double sum = 0;
-	for (int ii = 0; ii < VORBIS_N; ii++) {
-		delta[ii] = out2[ii] - out[ii];
-		sum += delta[ii];
-	}
-	int fff = 0;
-}
-#endif
-
 static void RunGame(void) {
 	cc_string title; char titleBuffer[STRING_SIZE];
 	int width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, DisplayInfo.Width,  0);
@@ -150,9 +118,6 @@ int main(int argc, char** argv) {
 	
 	res = Platform_SetDefaultCurrentDirectory(argc, argv);
 	if (res) Logger_SysWarn(res, "setting current directory");
-#ifdef CC_TEST_VORBIS
-	main_imdct();
-#endif
 	Platform_LogConst("Starting " GAME_APP_NAME " ..");
 	String_InitArray(Server.Address, ipBuffer);
 	Options_Load();
