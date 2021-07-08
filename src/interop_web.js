@@ -132,7 +132,7 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
   interop_InitFilesystem: function(buffer) {
     // if interop_SaveNode is directly defined as a function, it is wrongly optimised 
-    // out when compilingas the function is not directly referenced by any C code	
+    // out when compiling as the function is not directly referenced by any C code
     Module.saveNode = function(path) {
       var callback = function(err) { 
         if (!err) return;
@@ -147,23 +147,30 @@ mergeInto(LibraryManager.library, {
         path = lookup.path;
         node = lookup.node;
         stat = node.node_ops.getattr(node);
+      
+        if (FS.isDir(stat.mode)) {
+          entry = { timestamp: stat.mtime, mode: stat.mode };
+        } else {
+          // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
+          // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
+          node.contents = MEMFS.getFileDataAsTypedArray(node);
+          entry = { timestamp: stat.mtime, mode: stat.mode, contents: node.contents };
+        }
       } catch (err) {
         return callback(err);
       }
       
-      if (FS.isDir(stat.mode)) {
-        entry = { timestamp: stat.mtime, mode: stat.mode };
-      } else {
-        // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
-        // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
-        node.contents = MEMFS.getFileDataAsTypedArray(node);
-        entry = { timestamp: stat.mtime, mode: stat.mode, contents: node.contents };
-      }
-      
       IDBFS.getDB('/classicube', function(err, db) {
         if (err) return callback(err);
-        var transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
-        var store = transaction.objectStore(IDBFS.DB_STORE_NAME);
+        var transaction, store;
+        
+        // can still throw errors here
+        try {
+          transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
+          store = transaction.objectStore(IDBFS.DB_STORE_NAME);
+        } catch (err) {
+          return callback(err);
+        }
         
         transaction.onerror = function(e) {
           callback(this.error);
