@@ -135,7 +135,12 @@ int main(int argc, char** argv) {
 #ifdef CC_BUILD_ANDROID
 static void android_main(void) {
 	Platform_LogConst("Main loop started!");
-	main(0, NULL); 
+	/* Android client is always built with CC_NOMAIN, because a user who */
+	/*  compiled a custom version of the client ran into an issue where  */
+	/*  the game would wrongly call main in /system/bin/app_process64    */
+	/*  instead of the main located just above here. (see issue #864)    */
+	/* So use main_real instead to avoid the issue altogether */
+	main_real(0, NULL); 
 }
 
 static void JNICALL java_runGameAsync(JNIEnv* env, jobject instance) {
