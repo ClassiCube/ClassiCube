@@ -166,7 +166,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_EGL
 #define CC_BUILD_TOUCH
 #define CC_BUILD_OPENSLES
-#defube CC_NOMAIN
+#define CC_NOMAIN
 #elif defined __linux__
 #define CC_BUILD_LINUX
 #define CC_BUILD_POSIX
