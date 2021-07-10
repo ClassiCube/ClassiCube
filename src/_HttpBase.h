@@ -33,21 +33,24 @@ static void RequestList_EnsureSpace(struct RequestList* list) {
 				sizeof(struct HttpRequest), HTTP_DEF_ELEMS, 10);
 }
 
-/* Adds another request to end (for normal priority request) */
-static void RequestList_Append(struct RequestList* list, struct HttpRequest* item) {
-	RequestList_EnsureSpace(list);
-	list->entries[list->count++] = *item;
-}
-
-/* Inserts a request at start (for high priority request) */
-static void RequestList_Prepend(struct RequestList* list, struct HttpRequest* item) {
+/* Adds a request to the list */
+static void RequestList_Append(struct RequestList* list, struct HttpRequest* item, cc_bool atFront) {
 	int i;
 	RequestList_EnsureSpace(list);
-	
-	for (i = list->count; i > 0; i--) {
-		list->entries[i] = list->entries[i - 1];
+
+	if (atFront) {
+		/* Shift all requests right one place */
+		for (i = list->count; i > 0; i--) {
+			list->entries[i] = list->entries[i - 1];
+		}
+		/* Insert new request at start */
+		i = 0;
+	} else {
+		/* Insert new request at end */
+		i = list->count;
 	}
-	list->entries[0] = *item;
+
+	list->entries[i] = *item;
 	list->count++;
 }
 
@@ -174,7 +177,7 @@ static void Http_FinishRequest(struct HttpRequest* req) {
 	Mutex_Lock(processedMutex);
 	{
 		req->timeDownloaded = DateTime_CurrentUTC_MS();
-		RequestList_Append(&processedReqs, req);
+		RequestList_Append(&processedReqs, req, false);
 	}
 	Mutex_Unlock(processedMutex);
 }

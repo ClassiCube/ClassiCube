@@ -123,11 +123,7 @@ static void Http_SignalWorker(void) { Waitable_Signal(workerWaitable); }
 static void Http_BackendAdd(struct HttpRequest* req, cc_bool priority) {
 	Mutex_Lock(pendingMutex);
 	{	
-		if (priority) {
-			RequestList_Prepend(&pendingReqs, req);
-		} else {
-			RequestList_Append(&pendingReqs,  req);
-		}
+		RequestList_Append(&pendingReqs, req, priority);
 	}
 	Mutex_Unlock(pendingMutex);
 	Http_SignalWorker();
