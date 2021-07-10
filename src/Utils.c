@@ -173,6 +173,7 @@ int Convert_ToBase64(const void* data, int len, char* dst) {
 	return (int)(dst - beg);
 }
 
+/* Maps a base 64 character back into a 6 bit integer */
 CC_NOINLINE static int DecodeBase64(char c) {
 	if (c >= 'A' && c <= 'Z') return (c - 'A');
 	if (c >= 'a' && c <= 'z') return (c - 'a') + 26;

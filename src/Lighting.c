@@ -8,7 +8,7 @@
 #include "Event.h"
 #include "Game.h"
 
-cc_int16* Lighting_Heightmap;
+static cc_int16* light_heightmap;
 #define HEIGHT_UNCALCULATED Int16_MaxValue
 
 #define Lighting_CalcBody(get_block)\
@@ -17,7 +17,7 @@ for (y = maxY; y >= 0; y--, i -= World.OneY) {\
 \
 	if (Blocks.BlocksLight[block]) {\
 		offset = (Blocks.LightOffset[block] >> FACE_YMAX) & 1;\
-		Lighting_Heightmap[hIndex] = y - offset;\
+		light_heightmap[hIndex] = y - offset;\
 		return y - offset;\
 	}\
 }
@@ -37,19 +37,23 @@ static int Lighting_CalcHeightAt(int x, int maxY, int z, int hIndex) {
 	}
 #endif
 
-	Lighting_Heightmap[hIndex] = -10;
+	light_heightmap[hIndex] = -10;
 	return -10;
 }
 
 static int Lighting_GetLightHeight(int x, int z) {
 	int hIndex = Lighting_Pack(x, z);
-	int lightH = Lighting_Heightmap[hIndex];
+	int lightH = light_heightmap[hIndex];
 	return lightH == HEIGHT_UNCALCULATED ? Lighting_CalcHeightAt(x, World.Height - 1, z, hIndex) : lightH;
 }
 
 /* Outside colour is same as sunlight colour, so we reuse when possible */
 cc_bool Lighting_IsLit(int x, int y, int z) {
 	return y > Lighting_GetLightHeight(x, z);
+}
+
+cc_bool Lighting_IsLit_Fast(int x, int y, int z) {
+	return y > light_heightmap[Lighting_Pack(x, z)];
 }
 
 PackedCol Lighting_Color(int x, int y, int z) {
@@ -63,29 +67,29 @@ PackedCol Lighting_Color_XSide(int x, int y, int z) {
 }
 
 PackedCol Lighting_Color_Sprite_Fast(int x, int y, int z) {
-	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
+	return y > light_heightmap[Lighting_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
 }
 
 PackedCol Lighting_Color_YMax_Fast(int x, int y, int z) {
-	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
+	return y > light_heightmap[Lighting_Pack(x, z)] ? Env.SunCol : Env.ShadowCol;
 }
 
 PackedCol Lighting_Color_YMin_Fast(int x, int y, int z) {
-	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env.SunYMin : Env.ShadowYMin;
+	return y > light_heightmap[Lighting_Pack(x, z)] ? Env.SunYMin : Env.ShadowYMin;
 }
 
 PackedCol Lighting_Color_XSide_Fast(int x, int y, int z) {
-	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env.SunXSide : Env.ShadowXSide;
+	return y > light_heightmap[Lighting_Pack(x, z)] ? Env.SunXSide : Env.ShadowXSide;
 }
 
 PackedCol Lighting_Color_ZSide_Fast(int x, int y, int z) {
-	return y > Lighting_Heightmap[Lighting_Pack(x, z)] ? Env.SunZSide : Env.ShadowZSide;
+	return y > light_heightmap[Lighting_Pack(x, z)] ? Env.SunZSide : Env.ShadowZSide;
 }
 
 void Lighting_Refresh(void) {
 	int i;
 	for (i = 0; i < World.Width * World.Length; i++) {
-		Lighting_Heightmap[i] = HEIGHT_UNCALCULATED;
+		light_heightmap[i] = HEIGHT_UNCALCULATED;
 	}
 }
 
@@ -108,7 +112,7 @@ static void Lighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, Block
 
 	if ((y - newOffset) >= lightH) {
 		if (nowBlocks) {
-			Lighting_Heightmap[index] = y - newOffset;
+			light_heightmap[index] = y - newOffset;
 		} else {
 			/* Part of the column is now visible to light, we don't know how exactly how high it should be though. */
 			/* However, we know that if the old block was above or equal to light height, then the new light height must be <= old block.y */
@@ -121,7 +125,7 @@ static void Lighting_UpdateLighting(int x, int y, int z, BlockID oldBlock, Block
 		if (Blocks.BlocksLight[above]) return;
 
 		if (nowBlocks) {
-			Lighting_Heightmap[index] = y - newOffset;
+			light_heightmap[index] = y - newOffset;
 		} else {
 			Lighting_CalcHeightAt(x, y - 1, z, index);
 		}
@@ -222,7 +226,7 @@ static void Lighting_RefreshAffected(int x, int y, int z, BlockID block, int old
 
 void Lighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
 	int hIndex = Lighting_Pack(x, z);
-	int lightH = Lighting_Heightmap[hIndex];
+	int lightH = light_heightmap[hIndex];
 	int newHeight;
 
 	/* Since light wasn't checked to begin with, means column never had meshes for any of its chunks built. */
@@ -230,7 +234,7 @@ void Lighting_OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newB
 	if (lightH == HEIGHT_UNCALCULATED) return;
 
 	Lighting_UpdateLighting(x, y, z, oldBlock, newBlock, hIndex, lightH);
-	newHeight = Lighting_Heightmap[hIndex] + 1;
+	newHeight = light_heightmap[hIndex] + 1;
 	Lighting_RefreshAffected(x, y, z, newBlock, lightH + 1, newHeight);
 }
 
@@ -245,7 +249,7 @@ static int Lighting_InitialHeightmapCoverage(int x1, int z1, int xCount, int zCo
 	for (z = 0; z < zCount; z++) {
 		hIndex = Lighting_Pack(x1, z1 + z);
 		for (x = 0; x < xCount; x++) {
-			lightH = Lighting_Heightmap[hIndex++];
+			lightH = light_heightmap[hIndex++];
 
 			skip[index] = 0;
 			if (lightH == HEIGHT_UNCALCULATED) {
@@ -277,7 +281,7 @@ for (y = World.Height - 1; y >= 0; y--) {\
 \
 			if (x < xCount && Blocks.BlocksLight[get_block]) {\
 				lightOffset = (Blocks.LightOffset[get_block] >> FACE_YMAX) & 1;\
-				Lighting_Heightmap[hIndex + x] = (cc_int16)(y - lightOffset);\
+				light_heightmap[hIndex + x] = (cc_int16)(y - lightOffset);\
 				elemsLeft--;\
 				skip[index] = 0;\
 \
@@ -329,10 +333,10 @@ static void Lighting_FinishHeightmapCoverage(int x1, int z1, int xCount, int zCo
 	for (z = 0; z < zCount; z++) {
 		hIndex = Lighting_Pack(x1, z1 + z);
 		for (x = 0; x < xCount; x++, hIndex++) {
-			lightH = Lighting_Heightmap[hIndex];
+			lightH = light_heightmap[hIndex];
 
 			if (lightH == HEIGHT_UNCALCULATED) {
-				Lighting_Heightmap[hIndex] = -10;
+				light_heightmap[hIndex] = -10;
 			}
 		}
 	}
@@ -355,13 +359,13 @@ void Lighting_LightHint(int startX, int startZ) {
 *---------------------------------------------------Lighting component----------------------------------------------------*
 *#########################################################################################################################*/
 static void OnReset(void) {
-	Mem_Free(Lighting_Heightmap);
-	Lighting_Heightmap = NULL;
+	Mem_Free(light_heightmap);
+	light_heightmap = NULL;
 }
 
 static void OnNewMapLoaded(void) {
-	Lighting_Heightmap = (cc_int16*)Mem_TryAlloc(World.Width * World.Length, 2);
-	if (Lighting_Heightmap) {
+	light_heightmap = (cc_int16*)Mem_TryAlloc(World.Width * World.Length, 2);
+	if (light_heightmap) {
 		Lighting_Refresh();
 	} else {
 		World_OutOfMemory();

@@ -188,6 +188,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Animations.h" />
+    <ClInclude Include="LBackend.h" />
     <ClInclude Include="Http.h" />
     <ClInclude Include="Audio.h" />
     <ClInclude Include="AxisLinesRenderer.h" />
@@ -250,10 +251,14 @@
     <ClInclude Include="Window.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="_HttpBase.h" />
+    <ClInclude Include="_GraphicsBase.h" />
     <ClInclude Include="_PlatformBase.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animations.c" />
+    <ClCompile Include="Graphics_D3D9.c" />
+    <ClCompile Include="Graphics_GL.c" />
+    <ClCompile Include="Http.c" />
     <ClCompile Include="Audio.c" />
     <ClCompile Include="Camera.c" />
     <ClCompile Include="AxisLinesRenderer.c" />
@@ -269,13 +274,13 @@
     <ClCompile Include="ExtMath.c" />
     <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
-    <ClCompile Include="Graphics.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="Http_Web.c" />
     <ClCompile Include="Http_Worker.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="Launcher.c" />
+    <ClCompile Include="LBackend.c" />
     <ClCompile Include="LScreens.c" />
     <ClCompile Include="LWeb.c" />
     <ClCompile Include="LWidgets.c" />

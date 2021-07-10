@@ -12,10 +12,9 @@
 #include "LScreens.h"
 #include "Input.h"
 #include "Utils.h"
+#include "LBackend.h"
 
-static int xBorder, xBorder2, xBorder3, xBorder4;
-static int yBorder, yBorder2, yBorder3, yBorder4;
-static int xInputOffset, yInputOffset, inputExpand;
+static int xInputOffset, inputExpand;
 static int caretOffset, caretWidth, caretHeight;
 static int scrollbarWidth, dragPad, gridlineWidth, gridlineHeight;
 static int hdrYOffset, hdrYPadding, rowYOffset, rowYPadding;
@@ -23,11 +22,7 @@ static int cellXOffset, cellXPadding, cellMinWidth;
 static int flagXOffset, flagYOffset;
 
 void LWidget_CalcOffsets(void) {
-	xBorder = Display_ScaleX(1); xBorder2 = xBorder * 2; xBorder3 = xBorder * 3; xBorder4 = xBorder * 4;
-	yBorder = Display_ScaleY(1); yBorder2 = yBorder * 2; yBorder3 = yBorder * 3; yBorder4 = yBorder * 4;
-
 	xInputOffset = Display_ScaleX(5);
-	yInputOffset = Display_ScaleY(2);
 	inputExpand  = Display_ScaleX(20);
 
 	caretOffset  = Display_ScaleY(5);
@@ -84,89 +79,11 @@ void LWidget_Redraw(void* widget) {
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
 *#########################################################################################################################*/
-static BitmapCol LButton_Expand(BitmapCol a, int amount) {
-	int r, g, b;
-	r = BitmapCol_R(a) + amount; Math_Clamp(r, 0, 255);
-	g = BitmapCol_G(a) + amount; Math_Clamp(g, 0, 255);
-	b = BitmapCol_B(a) + amount; Math_Clamp(b, 0, 255);
-	return BitmapCol_Make(r, g, b, 255);
-}
-
-static void LButton_DrawBackground(struct LButton* w) {
-	BitmapCol activeCol   = BitmapCol_Make(126, 136, 191, 255);
-	BitmapCol inactiveCol = BitmapCol_Make(111, 111, 111, 255);
-	BitmapCol col;
-
-	if (Launcher_ClassicBackground) {
-		col = w->hovered ? activeCol : inactiveCol;
-		Gradient_Noise(&Launcher_Framebuffer, col, 8,
-						w->x + xBorder,      w->y + yBorder,
-						w->width - xBorder2, w->height - yBorder2);
-	} else {
-		col = w->hovered ? Launcher_ButtonForeActiveCol : Launcher_ButtonForeCol;
-		Gradient_Vertical(&Launcher_Framebuffer, LButton_Expand(col, 8), LButton_Expand(col, -8),
-						  w->x + xBorder,      w->y + yBorder,
-						  w->width - xBorder2, w->height - yBorder2);
-	}
-}
-
-static void LButton_DrawBorder(struct LButton* w) {
-	BitmapCol black   = BitmapCol_Make(0, 0, 0, 255);
-	BitmapCol backCol = Launcher_ClassicBackground ? black : Launcher_ButtonBorderCol;
-
-	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
-					w->x + xBorder,            w->y,
-					w->width - xBorder2,       yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
-					w->x + xBorder,            w->y + w->height - yBorder,
-					w->width - xBorder2,       yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
-					w->x,                      w->y + yBorder,
-					xBorder,                   w->height - yBorder2);
-	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
-					w->x + w->width - xBorder, w->y + yBorder,
-					xBorder,                   w->height - yBorder2);
-}
-
-static void LButton_DrawHighlight(struct LButton* w) {
-	BitmapCol activeCol   = BitmapCol_Make(189, 198, 255, 255);
-	BitmapCol inactiveCol = BitmapCol_Make(168, 168, 168, 255);
-	BitmapCol highlightCol;
-
-	if (Launcher_ClassicBackground) {
-		highlightCol = w->hovered ? activeCol : inactiveCol;
-		Drawer2D_Clear(&Launcher_Framebuffer, highlightCol,
-						w->x + xBorder2,     w->y + yBorder,
-						w->width - xBorder4, yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, highlightCol, 
-						w->x + xBorder,       w->y + yBorder2,
-						xBorder,              w->height - yBorder4);
-	} else if (!w->hovered) {
-		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_ButtonHighlightCol, 
-						w->x + xBorder2,      w->y + yBorder,
-						w->width - xBorder4,  yBorder);
-	}
-}
-
 static void LButton_Draw(void* widget) {
 	struct LButton* w = (struct LButton*)widget;
-	struct DrawTextArgs args;
-	int xOffset, yOffset;
 	if (w->hidden) return;
 
-	xOffset = w->width  - w->_textWidth;
-	yOffset = w->height - w->_textHeight;
-	DrawTextArgs_Make(&args, &w->text, &Launcher_TitleFont, true);
-
-	LButton_DrawBackground(w);
-	LButton_DrawBorder(w);
-	LButton_DrawHighlight(w);
-
-	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['7'];
-	Drawer2D_DrawText(&Launcher_Framebuffer, &args, 
-					  w->x + xOffset / 2, w->y + yOffset / 2);
-
-	if (!w->hovered) Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
+	LBackend_DrawButton(w);
 	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
 }
 
@@ -212,107 +129,24 @@ CC_NOINLINE static void LInput_GetText(struct LInput* w, cc_string* text) {
 	}
 }
 
-static void LInput_DrawOuterBorder(struct LInput* w) {
-	BitmapCol col = BitmapCol_Make(97, 81, 110, 255);
+CC_NOINLINE static void LInput_UpdateDimensions(struct LInput* w, const cc_string* text) {
+	struct DrawTextArgs args;
+	int textWidth;
+	DrawTextArgs_Make(&args, text, &Launcher_TextFont, false);
 
-	if (w->selected) {
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x,                      w->y, 
-			w->width,                  yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x,                      w->y + w->height - yBorder,
-			w->width,                  yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x,                      w->y, 
-			xBorder,                   w->height);
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x + w->width - xBorder, w->y, 
-			xBorder,                   w->height);
-	} else {
-		Launcher_ResetArea(w->x,                      w->y, 
-						   w->width,                  yBorder);
-		Launcher_ResetArea(w->x,                      w->y + w->height - yBorder,
-						   w->width,                  yBorder);
-		Launcher_ResetArea(w->x,                      w->y, 
-						   xBorder,                   w->height);
-		Launcher_ResetArea(w->x + w->width - xBorder, w->y,
-						   xBorder,                   w->height);
-	}
-}
-
-static void LInput_DrawInnerBorder(struct LInput* w) {
-	BitmapCol col = BitmapCol_Make(165, 142, 168, 255);
-
-	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->x + xBorder,             w->y + yBorder,
-		w->width - xBorder2,        yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->x + xBorder,             w->y + w->height - yBorder2,
-		w->width - xBorder2,        yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->x + xBorder,             w->y + yBorder,
-		xBorder,                    w->height - yBorder2);
-	Drawer2D_Clear(&Launcher_Framebuffer, col,
-		w->x + w->width - xBorder2, w->y + yBorder,
-		xBorder,                    w->height - yBorder2);
-}
-
-static void LInput_BlendBoxTop(struct LInput* w) {
-	BitmapCol col = BitmapCol_Make(0, 0, 0, 255);
-
-	Gradient_Blend(&Launcher_Framebuffer, col, 75,
-		w->x + xBorder,      w->y + yBorder, 
-		w->width - xBorder2, yBorder);
-	Gradient_Blend(&Launcher_Framebuffer, col, 50,
-		w->x + xBorder,      w->y + yBorder2,
-		w->width - xBorder2, yBorder);
-	Gradient_Blend(&Launcher_Framebuffer, col, 25,
-		w->x + xBorder,      w->y + yBorder3, 
-		w->width - xBorder2, yBorder);
-}
-
-static void LInput_DrawText(struct LInput* w, struct DrawTextArgs* args) {
-	int y, hintHeight;
-
-	if (w->text.length || !w->hintText) {
-		y = w->y + (w->height - w->_textHeight) / 2;
-		Drawer2D_DrawText(&Launcher_Framebuffer, args, 
-							w->x + xInputOffset, y + yInputOffset);
-	} else {
-		args->text = String_FromReadonly(w->hintText);
-		args->font = &Launcher_HintFont;
-
-		hintHeight = Drawer2D_TextHeight(args);
-		y = w->y + (w->height - hintHeight) / 2;
-		Drawer2D_DrawText(&Launcher_Framebuffer, args, 
-							w->x + xInputOffset, y);
-	}
+	textWidth      = Drawer2D_TextWidth(&args);
+	w->width       = max(w->minWidth, textWidth + inputExpand);
+	w->_textHeight = Drawer2D_TextHeight(&args);
 }
 
 static void LInput_Draw(void* widget) {
 	struct LInput* w = (struct LInput*)widget;
 	cc_string text; char textBuffer[STRING_SIZE];
-	struct DrawTextArgs args;
-	int textWidth;
 
 	String_InitArray(text, textBuffer);
 	LInput_GetText(w, &text);
-	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, false);
-
-	textWidth      = Drawer2D_TextWidth(&args);
-	w->width       = max(w->minWidth, textWidth + inputExpand);
-	w->_textHeight = Drawer2D_TextHeight(&args);
-
-	LInput_DrawOuterBorder(w);
-	LInput_DrawInnerBorder(w);
-	Drawer2D_Clear(&Launcher_Framebuffer, BITMAPCOL_WHITE,
-		w->x + xBorder2,     w->y + yBorder2,
-		w->width - xBorder4, w->height - yBorder4);
-	LInput_BlendBoxTop(w);
-
-	Drawer2D.Colors['f'] = Drawer2D.Colors['0'];
-	LInput_DrawText(w, &args);
-	Drawer2D.Colors['f'] = Drawer2D.Colors['F'];
+	LInput_UpdateDimensions(w, &text);
+	LBackend_DrawInput(w, &text);
 }
 
 static Rect2D LInput_MeasureCaret(struct LInput* w) {
@@ -515,17 +349,11 @@ static CC_INLINE void LInput_ClampCaret(struct LInput* w) {
 
 void LInput_SetText(struct LInput* w, const cc_string* text_) {
 	cc_string text; char textBuffer[STRING_SIZE];
-	struct DrawTextArgs args;
-	int textWidth;
-
 	String_Copy(&w->text, text_);
 	String_InitArray(text, textBuffer);
-	LInput_GetText(w, &text);
-	DrawTextArgs_Make(&args, &text, &Launcher_TextFont, true);
 
-	textWidth      = Drawer2D_TextWidth(&args);
-	w->width       = max(w->minWidth, textWidth + inputExpand);
-	w->_textHeight = Drawer2D_TextHeight(&args);
+	LInput_GetText(w, &text);
+	LInput_UpdateDimensions(w, &text);
 	LInput_ClampCaret(w);
 }
 
@@ -604,10 +432,7 @@ void LInput_Clear(struct LInput* w) {
 *#########################################################################################################################*/
 static void LLabel_Draw(void* widget) {
 	struct LLabel* w = (struct LLabel*)widget;
-	struct DrawTextArgs args;
-
-	DrawTextArgs_Make(&args, &w->text, w->font, true);
-	Drawer2D_DrawText(&Launcher_Framebuffer, &args, w->x, w->y);
+	LBackend_DrawLabel(w);
 }
 
 static const struct LWidgetVTABLE llabel_VTABLE = {
@@ -642,13 +467,11 @@ void LLabel_SetConst(struct LLabel* w, const char* text) {
 
 
 /*########################################################################################################################*
-*-------------------------------------------------------BoxWidget---------------------------------------------------------*
+*-------------------------------------------------------LineWidget--------------------------------------------------------*
 *#########################################################################################################################*/
-#define CLASSIC_LINE_COL BitmapCol_Make(128,128,128, 255)
 static void LLine_Draw(void* widget) {
 	struct LLine* w = (struct LLine*)widget;
-	BitmapCol col   = Launcher_ClassicBackground ? CLASSIC_LINE_COL : Launcher_ButtonBorderCol;
-	Gradient_Blend(&Launcher_Framebuffer, col, 128, w->x, w->y, w->width, w->height);
+	LBackend_DrawLine(w);
 }
 
 static const struct LWidgetVTABLE lline_VTABLE = {
@@ -668,50 +491,9 @@ void LLine_Init(struct LScreen* s, struct LLine* w, int width) {
 /*########################################################################################################################*
 *------------------------------------------------------SliderWidget-------------------------------------------------------*
 *#########################################################################################################################*/
-static void LSlider_DrawBoxBounds(struct LSlider* w) {
-	BitmapCol boundsTop    = BitmapCol_Make(119, 100, 132, 255);
-	BitmapCol boundsBottom = BitmapCol_Make(150, 130, 165, 255);
-
-	/* TODO: Check these are actually right */
-	Drawer2D_Clear(&Launcher_Framebuffer, boundsTop,
-				  w->x,     w->y,
-				  w->width, yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, boundsBottom,
-				  w->x,	    w->y + w->height - yBorder,
-				  w->width, yBorder);
-
-	Gradient_Vertical(&Launcher_Framebuffer, boundsTop, boundsBottom,
-					 w->x,                      w->y,
-					 xBorder,                   w->height);
-	Gradient_Vertical(&Launcher_Framebuffer, boundsTop, boundsBottom,
-					 w->x + w->width - xBorder, w->y,
-					 xBorder,				    w->height);
-}
-
-static void LSlider_DrawBox(struct LSlider* w) {
-	BitmapCol progTop    = BitmapCol_Make(220, 204, 233, 255);
-	BitmapCol progBottom = BitmapCol_Make(207, 181, 216, 255);
-	int halfHeight = (w->height - yBorder2) / 2;
-
-	Gradient_Vertical(&Launcher_Framebuffer, progTop, progBottom,
-					  w->x + xBorder,	   w->y + yBorder, 
-					  w->width - xBorder2, halfHeight);
-	Gradient_Vertical(&Launcher_Framebuffer, progBottom, progTop,
-					  w->x + xBorder,	   w->y + yBorder + halfHeight, 
-		              w->width - xBorder2, halfHeight);
-}
-
 static void LSlider_Draw(void* widget) {
 	struct LSlider* w = (struct LSlider*)widget;
-	int curWidth;
-
-	LSlider_DrawBoxBounds(w);
-	LSlider_DrawBox(w);
-
-	curWidth = (int)((w->width - xBorder2) * w->value / w->maxValue);
-	Drawer2D_Clear(&Launcher_Framebuffer, w->col,
-				   w->x + xBorder, w->y + yBorder, 
-				   curWidth,       w->height - yBorder2);
+	LBackend_DrawSlider(w);
 }
 
 static const struct LWidgetVTABLE lslider_VTABLE = {

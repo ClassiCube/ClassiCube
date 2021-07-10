@@ -973,19 +973,6 @@ static cc_result Mapping_DecodeSetup(struct VorbisState* ctx, struct Mapping* m)
 *------------------------------------------------------imdct impl---------------------------------------------------------*
 *#########################################################################################################################*/
 #define PI MATH_PI
-void imdct_slow(float* in, float* out, int N) {
-	double sum;
-	int i, k;
-
-	for (i = 0; i < 2 * N; i++) {
-		sum = 0;
-		for (k = 0; k < N; k++) {
-			sum += in[k] * Math_Cos((PI / N) * (i + 0.5 + N * 0.5) * (k + 0.5));
-		}
-		out[i] = sum;
-	}
-}
-
 static cc_uint32 Vorbis_ReverseBits(cc_uint32 v) {
 	v = ((v >> 1) & 0x55555555) | ((v & 0x55555555) << 1);
 	v = ((v >> 2) & 0x33333333) | ((v & 0x33333333) << 2);

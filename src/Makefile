@@ -19,7 +19,7 @@ ifeq ($(PLAT),web)
 CC=emcc
 OEXT=.html
 CFLAGS=-g
-LDFLAGS=-s WASM=1 -s NO_EXIT_RUNTIME=1 -s FETCH=1 --preload-file texpacks/default.zip@texpacks/default.zip
+LDFLAGS=-s WASM=1 -s NO_EXIT_RUNTIME=1 --preload-file texpacks/default.zip@texpacks/default.zip
 endif
 
 ifeq ($(PLAT),mingw)

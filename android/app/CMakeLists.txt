@@ -48,7 +48,7 @@ add_library(classicube SHARED
         ../../src/Protocol.c
         ../../src/World.c
         ../../src/PickedPosRenderer.c
-        ../../src/Platform.c
+        ../../src/Platform_Posix.c
         ../../src/LScreens.c
         ../../src/_truetype.c
         ../../src/_ftglyph.c
@@ -96,6 +96,7 @@ add_library(classicube SHARED
         ../../src/SelectionBox.c
         ../../src/EnvRenderer.c
         ../../src/Animations.c
+        ../../src/LBackend.c
         )
 
 # add lib dependencies

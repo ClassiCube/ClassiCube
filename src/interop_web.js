@@ -6,6 +6,10 @@
 mergeInto(LibraryManager.library, {
   
   interop_InitModule: function() {
+    // these are required for older versions of emscripten, but the compiler removes
+    // this by default as no syscalls are used by the C platform code anymore
+    window.ERRNO_CODES={EPERM:1,ENOENT:2,EIO:5,ENXIO:6,EBADF:9,EAGAIN:11,EWOULDBLOCK:11,ENOMEM:12,EEXIST:17,ENODEV:19,ENOTDIR:20,EISDIR:21,EINVAL:22,EBADFD:77,ENOTEMPTY:39};
+  
     Module.saveBlob = function(blob, name) {
       if (window.navigator.msSaveBlob) {
         window.navigator.msSaveBlob(blob, name); return;
@@ -21,7 +25,7 @@ mergeInto(LibraryManager.library, {
       elem.click();
       document.body.removeChild(elem);
       window.URL.revokeObjectURL(url);
-    }
+    };
   },
   interop_TakeScreenshot: function(path) {
     var name   = UTF8ToString(path);
@@ -105,17 +109,6 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
 //---------------------------------------------------------Platform-------------------------------------------------------
 //########################################################################################################################
-  interop_GetIndexedDBError: function(buffer) {
-    if (window.cc_idbErr) stringToUTF8(window.cc_idbErr, buffer, 64);
-  },
-  interop_SyncFS: function() {
-    FS.syncfs(false, function(err) { 
-      if (!err) return;
-      console.log(err);
-      ccall('Platform_LogError', 'void', ['string'], ['&cError saving files to IndexedDB:']);
-      ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
-    }); 
-  },
   interop_OpenTab: function(url) {
     window.open(UTF8ToString(url));
     return 0;
@@ -123,198 +116,356 @@ mergeInto(LibraryManager.library, {
   interop_Log: function(msg, len) {
     Module.print(UTF8ArrayToString(HEAPU8, msg, len));
   },
+  interop_GetLocalTime: function(time) {
+    var date = new Date();
+    HEAP32[(time|0 +  0)>>2] = date.getFullYear();
+    HEAP32[(time|0 +  4)>>2] = date.getMonth() + 1|0;
+    HEAP32[(time|0 +  8)>>2] = date.getDate();
+    HEAP32[(time|0 + 12)>>2] = date.getHours();
+    HEAP32[(time|0 + 16)>>2] = date.getMinutes();
+    HEAP32[(time|0 + 20)>>2] = date.getSeconds();
+  },
+
+
+//########################################################################################################################
+//--------------------------------------------------------Filesystem------------------------------------------------------
+//########################################################################################################################
+  interop_InitFilesystem: function(buffer) {
+    // if interop_SaveNode is directly defined as a function, it is wrongly optimised 
+    // out when compiling as the function is not directly referenced by any C code
+    Module.saveNode = function(path) {
+      var callback = function(err) { 
+        if (!err) return;
+        console.log(err);
+        ccall('Platform_LogError', 'void', ['string'], ['&cError saving ' + path]);
+        ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
+      }; 
+      
+      var stat, node, entry;
+      try {
+        var lookup = FS.lookupPath(path);
+        path = lookup.path;
+        node = lookup.node;
+        stat = node.node_ops.getattr(node);
+      
+        if (FS.isDir(stat.mode)) {
+          entry = { timestamp: stat.mtime, mode: stat.mode };
+        } else {
+          // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
+          // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
+          node.contents = MEMFS.getFileDataAsTypedArray(node);
+          entry = { timestamp: stat.mtime, mode: stat.mode, contents: node.contents };
+        }
+      } catch (err) {
+        return callback(err);
+      }
+      
+      IDBFS.getDB('/classicube', function(err, db) {
+        if (err) return callback(err);
+        var transaction, store;
+        
+        // can still throw errors here
+        try {
+          transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
+          store = transaction.objectStore(IDBFS.DB_STORE_NAME);
+        } catch (err) {
+          return callback(err);
+        }
+        
+        transaction.onerror = function(e) {
+          callback(this.error);
+          e.preventDefault();
+        };
+        
+        var req = store.put(entry, path);
+        req.onsuccess = function()  { callback(null); };
+        req.onerror   = function(e) {
+          callback(this.error);
+          e.preventDefault();
+        };
+      });
+    };
+
+    if (!window.cc_idbErr) return;
+    var msg = 'Error preloading IndexedDB:' + window.cc_idbErr + '\n\nPreviously saved settings/maps will be lost';
+    ccall('Platform_LogError', 'void', ['string'], [msg]);
+  },
+  interop_DirectorySetWorking: function (raw) {
+    var path = UTF8ToString(raw);
+    try {
+      FS.chdir(path);
+      return 0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_DirectoryCreate: function(raw, mode) {
+    var path = UTF8ToString(raw);
+    try {
+      FS.mkdir(path, mode, 0);
+      Module.saveNode(path);
+      return 0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_DirectoryIter: function(raw) {
+    var path = UTF8ToString(raw);
+    try {
+      var entries = FS.readdir(path);	  
+      for (var i = 0; i < entries.length; i++) {
+        ccall('Directory_IterCallback', 'void', ['string'], [entries[i]]);
+      }
+      return 0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_FileExists: function (raw) {
+    var path = UTF8ToString(raw);
+    try {
+      var lookup = FS.lookupPath(path, { follow: true });
+      if (!lookup.node) return false;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return false;
+    }
+    return true;
+  },
+  interop_FileCreate: function(raw, flags, mode) {
+    var path = UTF8ToString(raw);
+    try {
+      var stream = FS.open(path, flags, mode);
+      return stream.fd|0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_FileRead: function(fd, dst, count) {
+    try {
+      var stream = FS.getStream(fd);
+      return FS.read(stream, HEAP8, dst, count)|0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_FileWrite: function(fd, src, count) {
+    try {
+      var stream = FS.getStream(fd);
+      return FS.write(stream, HEAP8, src, count)|0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_FileSeek: function(fd, offset, whence) {
+    try {
+      var stream = FS.getStream(fd);
+      return FS.llseek(stream, offset, whence)|0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_FileLength: function(fd) {
+    try {
+      var stream = FS.getStream(fd);
+      var attrs  = stream.node.node_ops.getattr(stream.node);
+      return attrs.size|0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  interop_FileClose: function(fd) {
+    try {
+      var stream = FS.getStream(fd);
+      FS.close(stream);
+      // save writable files to IndexedDB (check for O_RDWR)
+      if ((stream.flags & 3) == 2) Module.saveNode(stream.path);
+      return 0;
+    } catch (e) {
+      if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
+      return -e.errno;
+    }
+  },
+  
+
+//########################################################################################################################
+//---------------------------------------------------------Sockets--------------------------------------------------------
+//########################################################################################################################
   interop_InitSockets: function() {
     window.SOCKETS = {
       EBADF:-8,EISCONN:-30,ENOTCONN:-53,EAGAIN:-6,EHOSTUNREACH:-23,EINPROGRESS:-26,EALREADY:-7,ECONNRESET:-15,EINVAL:-28,ECONNREFUSED:-14,
       sockets: [],
-      
-      createSocket:function() {
-        var sock = {
-          error: null, // Used in getsockopt for SOL_SOCKET/SO_ERROR test
-          recv_queue: [],
-          socket: null,
-        };  
-        SOCKETS.sockets.push(sock);
-      
-        return (SOCKETS.sockets.length - 1) | 0;
-      },
-      connect:function(fd, addr, port) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-      
-        // early out if we're already connected / in the middle of connecting
-        var ws = sock.socket;
-        if (ws) {
-          if (ws.readyState === ws.CONNECTING) return SOCKETS.EALREADY;
-          return SOCKETS.EISCONN;
-        }
-        
-        // create the actual websocket object and connect
-        try {
-          var parts = addr.split('/');
-          var url = 'ws://' + parts[0] + ":" + port + "/" + parts.slice(1).join('/');
-          ws = new WebSocket(url, 'ClassiCube');
-          ws.binaryType = 'arraybuffer';
-        } catch (e) {
-          return SOCKETS.EHOSTUNREACH;
-        }
-        sock.socket = ws;
-        
-        ws.onopen  = function() {};
-        ws.onclose = function() {};
-        ws.onmessage = function(event) {
-          var data = event.data;
-          if (typeof data === 'string') {
-            var encoder = new TextEncoder(); // should be utf-8
-            data = encoder.encode(data); // make a typed array from the string
-          } else {
-            assert(data.byteLength !== undefined); // must receive an ArrayBuffer
-            if (data.byteLength == 0) {
-              // An empty ArrayBuffer will emit a pseudo disconnect event
-              // as recv/recvmsg will return zero which indicates that a socket
-              // has performed a shutdown although the connection has not been disconnected yet.
-              return;
-            } else {
-              data = new Uint8Array(data); // make a typed array view on the array buffer
-            }
-          }
-          sock.recv_queue.push(data);
-        };
-        ws.onerror = function(error) {
-          // The WebSocket spec only allows a 'simple event' to be thrown on error,
-          // so we only really know as much as ECONNREFUSED.
-          sock.error = -SOCKETS.ECONNREFUSED; // Used in getsockopt for SOL_SOCKET/SO_ERROR test.
-        };
-        // always "fail" in non-blocking mode
-        return SOCKETS.EINPROGRESS;
-      },
-      poll:function(fd) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-            
-        var ws   = sock.socket;
-        if (!ws) return 0;
-        var mask = 0;
-
-        if (sock.recv_queue.length || (ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED)) mask |= 1;
-        if (ws.readyState === ws.OPEN) mask |= 2;
-        return mask;
-      },
-      getPending:function(fd) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-
-        return sock.recv_queue.length;
-      },
-      getError:function(fd) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-
-        return sock.error || 0;
-      },
-      close:function(fd) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-      
-        try {
-          sock.socket.close();
-        } catch (e) {
-        }
-        delete sock.socket;
-        return 0;
-      },
-      send:function(fd, src, length) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-      
-        var ws = sock.socket;
-        if (!ws || ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED) {
-          return SOCKETS.ENOTCONN;
-        } else if (ws.readyState === ws.CONNECTING) {
-          return SOCKETS.EAGAIN;
-        }
-        
-        // var data = HEAP8.slice(src, src + length); unsupported in IE11
-        var data = new Uint8Array(length);
-        for (var i = 0; i < length; i++) {  
-          data[i] = HEAP8[src + i];
-        }
-        
-        try {
-          ws.send(data);
-          return length;
-        } catch (e) {
-          return SOCKETS.EINVAL;
-        }
-      },
-      recv:function(fd, dst, length) {
-        var sock = SOCKETS.sockets[fd];
-        if (!sock) return SOCKETS.EBADF;
-      
-        var packet = sock.recv_queue.shift();
-        if (!packet) {
-          var ws = sock.socket;
-        
-          if (!ws || ws.readyState == ws.CLOSING || ws.readyState == ws.CLOSED) {
-            return SOCKETS.ENOTCONN;
-          } else {
-            // socket is in a valid state but truly has nothing available
-            return SOCKETS.EAGAIN;
-          }
-        }
-        
-        // packet will be an ArrayBuffer if it's unadulterated, but if it's
-        // requeued TCP data it'll be an ArrayBufferView
-        var packetLength = packet.byteLength || packet.length;
-        var packetOffset = packet.byteOffset || 0;
-        var packetBuffer = packet.buffer || packet;
-        var bytesRead = Math.min(length, packetLength);
-        var msg = new Uint8Array(packetBuffer, packetOffset, bytesRead);
-        
-        // push back any unread data for TCP connections
-        if (bytesRead < packetLength) {
-          var bytesRemaining = packetLength - bytesRead;
-          packet = new Uint8Array(packetBuffer, packetOffset + bytesRead, bytesRemaining);
-          sock.recv_queue.unshift(packet);
-        }
-      
-        HEAPU8.set(msg, dst);
-        return msg.byteLength;
-      }
     };
   },
   interop_SocketCreate: function() {
-    return SOCKETS.createSocket();
+    var sock = {
+      error: null, // Used by interop_SocketGetError
+      recv_queue: [],
+      socket: null,
+    };
+
+    SOCKETS.sockets.push(sock);
+    return (SOCKETS.sockets.length - 1) | 0;
   },
-  interop_SocketConnect: function(sock, addr, port) {
-    var str = UTF8ToString(addr);
-    return SOCKETS.connect(sock, str, port);
+  interop_SocketConnect: function(sockFD, raw, port) {
+    var addr = UTF8ToString(raw);
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    // already connecting or connected
+    var ws = sock.socket;
+    if (ws) {
+      if (ws.readyState === ws.CONNECTING) return SOCKETS.EALREADY;
+      return SOCKETS.EISCONN;
+    }
+
+    // create the actual websocket object and connect
+    try {
+      var parts = addr.split('/');
+      var url = 'ws://' + parts[0] + ":" + port + "/" + parts.slice(1).join('/');
+      ws = new WebSocket(url, 'ClassiCube');
+      ws.binaryType = 'arraybuffer';
+    } catch (e) {
+      return SOCKETS.EHOSTUNREACH;
+    }
+    sock.socket = ws;
+
+    ws.onopen  = function() {};
+    ws.onclose = function() {};
+    ws.onmessage = function(event) {
+      var data = event.data;
+      if (typeof data === 'string') {
+        var encoder = new TextEncoder(); // should be utf-8
+        data = encoder.encode(data); // make a typed array from the string
+      } else {
+        assert(data.byteLength !== undefined); // must receive an ArrayBuffer
+        if (data.byteLength == 0) {
+          // An empty ArrayBuffer will emit a pseudo disconnect event
+          // as recv/recvmsg will return zero which indicates that a socket
+          // has performed a shutdown although the connection has not been disconnected yet.
+          return;
+        } else {
+          data = new Uint8Array(data); // make a typed array view on the array buffer
+        }
+      }
+      sock.recv_queue.push(data);
+    };
+    ws.onerror = function(error) {
+      // The WebSocket spec only allows a 'simple event' to be thrown on error,
+      // so we only really know as much as ECONNREFUSED.
+      sock.error = -SOCKETS.ECONNREFUSED; // Used by interop_SocketGetError
+    };
+    // always "fail" in non-blocking mode
+    return SOCKETS.EINPROGRESS;
   },
-  interop_SocketClose: function(sock) {
-    return SOCKETS.close(sock);
+  interop_SocketClose: function(sockFD) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    try {
+      sock.socket.close();
+    } catch (e) {
+    }
+    delete sock.socket;
+    return 0;
   },
-  interop_SocketSend: function(sock, data, len) {
-    return SOCKETS.send(sock, data, len);
+  interop_SocketSend: function(sockFD, src, length) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    var ws = sock.socket;
+    if (!ws || ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED) {
+      return SOCKETS.ENOTCONN;
+    } else if (ws.readyState === ws.CONNECTING) {
+      return SOCKETS.EAGAIN;
+    }
+
+    // var data = HEAP8.slice(src, src + length); unsupported in IE11
+    var data = new Uint8Array(length);
+    for (var i = 0; i < length; i++) {  
+      data[i] = HEAP8[src + i];
+    }
+
+    try {
+      ws.send(data);
+      return length;
+    } catch (e) {
+      return SOCKETS.EINVAL;
+    }
   },
-  interop_SocketRecv: function(sock, data, len) {
-    return SOCKETS.recv(sock, data, len);
+  interop_SocketRecv: function(sockFD, dst, length) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    var packet = sock.recv_queue.shift();
+    if (!packet) {
+      var ws = sock.socket;
+
+      if (!ws || ws.readyState == ws.CLOSING || ws.readyState == ws.CLOSED) {
+        return SOCKETS.ENOTCONN;
+      } else {
+        // socket is in a valid state but truly has nothing available
+        return SOCKETS.EAGAIN;
+      }
+    }
+
+    // packet will be an ArrayBuffer if it's unadulterated, but if it's
+    // requeued TCP data it'll be an ArrayBufferView
+    var packetLength = packet.byteLength || packet.length;
+    var packetOffset = packet.byteOffset || 0;
+    var packetBuffer = packet.buffer || packet;
+    var bytesRead = Math.min(length, packetLength);
+    var msg = new Uint8Array(packetBuffer, packetOffset, bytesRead);
+
+    // push back any unread data for TCP connections
+    if (bytesRead < packetLength) {
+      var bytesRemaining = packetLength - bytesRead;
+      packet = new Uint8Array(packetBuffer, packetOffset + bytesRead, bytesRemaining);
+      sock.recv_queue.unshift(packet);
+    }
+
+    HEAPU8.set(msg, dst);
+    return msg.byteLength;
   },
-  interop_SocketGetPending: function(sock) {
-    return SOCKETS.getPending(sock);
+  interop_SocketGetPending: function(sockFD) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    return sock.recv_queue.length;
   },
-  interop_SocketGetError: function(sock) {
-    return SOCKETS.getError(sock);
+  interop_SocketGetError: function(sockFD) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    return sock.error || 0;
   },
-  interop_SocketPoll: function(sock) {
-    return SOCKETS.poll(sock);
+  interop_SocketPoll: function(sockFD) {
+    var sock = SOCKETS.sockets[sockFD];
+    if (!sock) return SOCKETS.EBADF;
+
+    var ws   = sock.socket;
+    if (!ws) return 0;
+    var mask = 0;
+
+    if (sock.recv_queue.length || (ws.readyState === ws.CLOSING || ws.readyState === ws.CLOSED)) mask |= 1;
+    if (ws.readyState === ws.OPEN) mask |= 2;
+    return mask;
   },
 
 
 //########################################################################################################################
 //----------------------------------------------------------Window--------------------------------------------------------
 //########################################################################################################################
-  interop_CanvasWidth: function()  { return Module['canvas'].width  },
-  interop_CanvasHeight: function() { return Module['canvas'].height },
+  interop_CanvasWidth: function()  { return Module['canvas'].width;  },
+  interop_CanvasHeight: function() { return Module['canvas'].height; },
   interop_ScreenWidth: function()  { return screen.width;  },
   interop_ScreenHeight: function() { return screen.height; },
 

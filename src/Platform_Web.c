@@ -11,19 +11,16 @@
 #include "Errors.h"
 
 #include <errno.h>
-#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <dirent.h>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/time.h>
 #include <stdio.h>
 
 /* Unfortunately, errno constants are different in some older emscripten versions */
-/*  (linux errno compared to WASI errno) */
+/*  (linux errno numbers compared to WASI errno numbers) */
 /* So just use the same numbers as interop_web.js (otherwise connecting always fail) */
 #define _EINPROGRESS  26
 #define _EAGAIN        6 /* same as EWOULDBLOCK */
@@ -85,18 +82,9 @@ TimeMS DateTime_CurrentUTC_MS(void) {
 	return UnixTime_TotalMS(cur);
 }
 
+extern void interop_GetLocalTime(struct DateTime* t);
 void DateTime_CurrentLocal(struct DateTime* t) {
-	struct timeval cur; 
-	struct tm loc_time;
-	gettimeofday(&cur, NULL);
-	localtime_r(&cur.tv_sec, &loc_time);
-
-	t->year   = loc_time.tm_year + 1900;
-	t->month  = loc_time.tm_mon  + 1;
-	t->day    = loc_time.tm_mday;
-	t->hour   = loc_time.tm_hour;
-	t->minute = loc_time.tm_min;
-	t->second = loc_time.tm_sec;
+	interop_GetLocalTime(t);
 }
 
 cc_uint64 Stopwatch_Measure(void) {
@@ -108,70 +96,63 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
+extern void interop_InitFilesystem(void);
+extern int interop_DirectoryCreate(const char* path, int perms);
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
 	Platform_EncodeUtf8(str, path);
 	/* read/write/search permissions for owner and group, and with read/search permissions for others. */
 	/* TODO: Is the default mode in all cases */
-	return mkdir(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1 ? errno : 0;
+
+	/* returned result is negative for error */
+	return -interop_DirectoryCreate(str, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
+extern int interop_FileExists(const char* path);
 int File_Exists(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
-	struct stat sb;
 	Platform_EncodeUtf8(str, path);
-	return stat(str, &sb) == 0 && S_ISREG(sb.st_mode);
+	return interop_FileExists(str);
 }
 
-cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCallback callback) {
+static void* enum_obj;
+static Directory_EnumCallback enum_callback;
+EMSCRIPTEN_KEEPALIVE void Directory_IterCallback(const char* src) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
-	char str[NATIVE_STR_LEN];
-	DIR* dirPtr;
-	struct dirent* entry;
-	char* src;
-	int len, res;
 
-	Platform_EncodeUtf8(str, dirPath);
-	dirPtr = opendir(str);
-	if (!dirPtr) return errno;
+	/* ignore . and .. entry */
+	if (src[0] == '.' && src[1] == '\0') return;
+	if (src[0] == '.' && src[1] == '.' && src[2] == '\0') return;
 
-	/* POSIX docs: "When the end of the directory is encountered, a null pointer is returned and errno is not changed." */
-	/* errno is sometimes leftover from previous calls, so always reset it before readdir gets called */
-	errno = 0;
 	String_InitArray(path, pathBuffer);
-
-	while ((entry = readdir(dirPtr))) {
-		path.length = 0;
-		String_Format1(&path, "%s/", dirPath);
-
-		/* ignore . and .. entry */
-		src = entry->d_name;
-		if (src[0] == '.' && src[1] == '\0') continue;
-		if (src[0] == '.' && src[1] == '.' && src[2] == '\0') continue;
-
-		len = String_Length(src);
-		String_AppendUtf8(&path, src, len);
-
-		/* TODO: fallback to stat when this fails */
-		if (entry->d_type == DT_DIR) {
-			res = Directory_Enum(&path, obj, callback);
-			if (res) { closedir(dirPtr); return res; }
-		} else {
-			callback(&path, obj);
-		}
-		errno = 0;
-	}
-
-	res = errno; /* return code from readdir */
-	closedir(dirPtr);
-	return res;
+	String_AppendUtf8(&path, src, String_Length(src));
+	enum_callback(&path, enum_obj);
 }
 
+extern int interop_DirectoryIter(const char* path);
+cc_result Directory_Enum(const cc_string* path, void* obj, Directory_EnumCallback callback) {
+	char str[NATIVE_STR_LEN];
+	Platform_EncodeUtf8(str, path);
+
+	enum_obj      = obj;
+	enum_callback = callback;
+	/* returned result is negative for error */
+	return -interop_DirectoryIter(str);
+}
+
+extern int interop_FileCreate(const char* path, int mode, int perms);
 static cc_result File_Do(cc_file* file, const cc_string* path, int mode) {
 	char str[NATIVE_STR_LEN];
+	int res;
 	Platform_EncodeUtf8(str, path);
-	*file = open(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-	return *file == -1 ? errno : 0;
+	res = interop_FileCreate(str, mode, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+
+	/* returned result is negative for error */
+	if (res >= 0) {
+		*file = res; return 0;
+	} else {
+		*file = -1; return -res;
+	}
 }
 
 cc_result File_Open(cc_file* file, const cc_string* path) {
@@ -184,37 +165,64 @@ cc_result File_OpenOrCreate(cc_file* file, const cc_string* path) {
 	return File_Do(file, path, O_RDWR | O_CREAT);
 }
 
+extern int interop_FileRead(int fd, void* data, int count);
 cc_result File_Read(cc_file file, void* data, cc_uint32 count, cc_uint32* bytesRead) {
-	*bytesRead = read(file, data, count);
-	return *bytesRead == -1 ? errno : 0;
+	int res = interop_FileRead(file, data, count);
+
+	/* returned result is negative for error */
+	if (res >= 0) {
+		*bytesRead = res; return 0;
+	} else {
+		*bytesRead = -1;   return -res;
+	}
 }
 
+extern int interop_FileWrite(int fd, const void* data, int count);
 cc_result File_Write(cc_file file, const void* data, cc_uint32 count, cc_uint32* bytesWrote) {
-	*bytesWrote = write(file, data, count);
-	return *bytesWrote == -1 ? errno : 0;
+	int res = interop_FileWrite(file, data, count);
+
+	/* returned result is negative for error */
+	if (res >= 0) {
+		*bytesWrote = res; return 0;
+	} else {
+		*bytesWrote = -1;  return -res;
+	}
 }
 
-extern void interop_SyncFS(void);
-cc_result File_Close(cc_file file) {	
-	int res = close(file) == -1 ? errno : 0; 
-	interop_SyncFS(); 
-	return res;
+extern int interop_FileClose(int fd);
+cc_result File_Close(cc_file file) {
+	/* returned result is negative for error */
+	return -interop_FileClose(file);
 }
 
+extern int interop_FileSeek(int fd, int offset, int whence);
 cc_result File_Seek(cc_file file, int offset, int seekType) {
 	static cc_uint8 modes[3] = { SEEK_SET, SEEK_CUR, SEEK_END };
-	return lseek(file, offset, modes[seekType]) == -1 ? errno : 0;
+	/* returned result is negative for error */
+	int res = interop_FileSeek(file, offset, modes[seekType]);
+	/* FileSeek returns current position, discard that */
+	return res >= 0 ? 0 : -res;
 }
 
 cc_result File_Position(cc_file file, cc_uint32* pos) {
-	*pos = lseek(file, 0, SEEK_CUR);
-	return *pos == -1 ? errno : 0;
+	int res = interop_FileSeek(file, 0, SEEK_CUR);
+	/* returned result is negative for error */
+	if (res >= 0) {
+		*pos = res; return 0;
+	} else {
+		*pos = -1;  return -res;
+	}
 }
 
+extern int interop_FileLength(int fd);
 cc_result File_Length(cc_file file, cc_uint32* len) {
-	struct stat st;
-	if (fstat(file, &st) == -1) { *len = -1; return errno; }
-	*len = st.st_size; return 0;
+	int res = interop_FileLength(file);
+	/* returned result is negative for error */
+	if (res >= 0) {
+		*len = res; return 0;
+	} else {
+		*len = -1;  return -res;
+	}
 }
 
 
@@ -248,15 +256,10 @@ void Platform_LoadSysFonts(void) { }
 /*########################################################################################################################*
 *---------------------------------------------------------Socket----------------------------------------------------------*
 *#########################################################################################################################*/
-extern int interop_SocketCreate(void);
-extern int interop_SocketConnect(int sock, const char* addr, int port);
-extern int interop_SocketClose(int sock);
-extern int interop_SocketSend(int sock, const void* data, int len);
-extern int interop_SocketRecv(int sock, void* data, int len);
-extern int interop_SocketGetPending(int sock);
-extern int interop_SocketGetError(int sock);
-extern int interop_SocketPoll(int sock);
+extern void interop_InitSockets(void);
+int Socket_ValidAddress(const cc_string* address) { return true; }
 
+extern int interop_SocketGetPending(int sock);
 cc_result Socket_Available(cc_socket s, int* available) {
 	int res = interop_SocketGetPending(s);
 	/* returned result is negative for error */
@@ -268,6 +271,7 @@ cc_result Socket_Available(cc_socket s, int* available) {
 	}
 }
 
+extern int interop_SocketGetError(int sock);
 cc_result Socket_GetError(cc_socket s, cc_result* result) {
 	int res = interop_SocketGetError(s);
 	/* returned result is negative for error */
@@ -278,8 +282,9 @@ cc_result Socket_GetError(cc_socket s, cc_result* result) {
 		*result = 0; return -res;
 	}
 }
-int Socket_ValidAddress(const cc_string* address) { return true; }
 
+extern int interop_SocketCreate(void);
+extern int interop_SocketConnect(int sock, const char* addr, int port);
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	char addr[NATIVE_STR_LEN];
 	int res;
@@ -294,6 +299,7 @@ cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
 	return res;
 }
 
+extern int interop_SocketRecv(int sock, void* data, int len);
 cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	/* recv only reads one WebSocket frame at most, hence call it multiple times */
 	int res; *modified = 0;
@@ -314,6 +320,7 @@ cc_result Socket_Read(cc_socket s, cc_uint8* data, cc_uint32 count, cc_uint32* m
 	return 0;
 }
 
+extern int interop_SocketSend(int sock, const void* data, int len);
 cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_uint32* modified) {
 	/* returned result is negative for error */
 	int res = interop_SocketSend(s, data, count);
@@ -325,11 +332,13 @@ cc_result Socket_Write(cc_socket s, const cc_uint8* data, cc_uint32 count, cc_ui
 	}
 }
 
+extern int interop_SocketClose(int sock);
 cc_result Socket_Close(cc_socket s) {
 	/* returned result is negative for error */
 	return -interop_SocketClose(s);
 }
 
+extern int interop_SocketPoll(int sock);
 cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 	/* returned result is negative for error */
 	int res = interop_SocketPoll(s), flags;
@@ -419,20 +428,11 @@ EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {
 }
 
 extern void interop_InitModule(void);
-extern void interop_InitSockets(void);
-extern void interop_GetIndexedDBError(char* buffer);
-
 void Platform_Init(void) {
-	char tmp[64+1] = { 0 };
 	interop_InitModule();
+	interop_InitFilesystem();
 	interop_InitSockets();
 	
-	/* Check if an error occurred when pre-loading IndexedDB */
-	interop_GetIndexedDBError(tmp);
-	if (!tmp[0]) return;
-	
-	Chat_Add1("&cError preloading IndexedDB: %c", tmp);
-	Chat_AddRaw("&cPreviously saved settings/maps will be lost");
 	/* NOTE: You must pre-load IndexedDB before main() */
 	/* (because pre-loading only works asynchronously) */
 	/* If you don't, you'll get errors later trying to sync local to remote */
@@ -460,7 +460,9 @@ int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* arg
 	return count;
 }
 
+extern int interop_DirectorySetWorking(const char* path);
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
-	return chdir("/classicube") == -1 ? errno : 0;
+	/* returned result is negative for error */
+	return -interop_DirectorySetWorking("/classicube");
 }
 #endif
