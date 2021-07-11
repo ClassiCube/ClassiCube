@@ -41,7 +41,7 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
 //-----------------------------------------------------------Http---------------------------------------------------------
 //########################################################################################################################
-  interop_DownloadAsync: function(urlStr, method) {
+  interop_DownloadAsync: function(urlStr, method, reqID) {
     // onFinished = FUNC(data, len, status)
     // onProgress = FUNC(read, total)
     var url        = UTF8ToString(urlStr);
@@ -67,13 +67,13 @@ mergeInto(LibraryManager.library, {
       var len  = src.byteLength;
       var data = _malloc(len);
       HEAPU8.set(src, data);
-      onFinished(data, len || getContentLength(e), xhr.status);
+      onFinished(reqID, data, len || getContentLength(e), xhr.status);
     };
-    xhr.onerror    = function(e) { onFinished(0, 0, xhr.status);  };
-    xhr.ontimeout  = function(e) { onFinished(0, 0, xhr.status);  };
-    xhr.onprogress = function(e) { onProgress(e.loaded, e.total); };
+    xhr.onerror    = function(e) { onFinished(reqID, 0, 0, xhr.status);  };
+    xhr.ontimeout  = function(e) { onFinished(reqID, 0, 0, xhr.status);  };
+    xhr.onprogress = function(e) { onProgress(reqID, e.loaded, e.total); };
 
-    try { xhr.send(); } catch (e) { onFinished(0, 0, 0); }
+    try { xhr.send(); } catch (e) { onFinished(reqID, 0, 0, 0); }
   },
   interop_IsHttpsOnly : function() {
     // If this webpage is https://, browsers deny any http:// downloading
