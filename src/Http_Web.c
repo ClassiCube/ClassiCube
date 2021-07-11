@@ -49,7 +49,7 @@ void Http_TryCancel(int reqID) {
 *#########################################################################################################################*/
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) { return false; }
 
-#define HTTP_MAX_CONCURRENCY 8
+#define HTTP_MAX_CONCURRENCY 6
 static void Http_StartNextDownload(void) {
 	char urlBuffer[URL_MAX_SIZE]; cc_string url;
 	char urlStr[NATIVE_STR_LEN];
