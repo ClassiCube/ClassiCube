@@ -759,30 +759,12 @@ static struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 ty
 /*########################################################################################################################*
 *--------------------------------------------------------Sounds-----------------------------------------------------------*
 *#########################################################################################################################*/
-struct SoundOutput { struct AudioContext* ctx; void* buffer; cc_uint32 capacity; };
+struct SoundOutput { struct AudioContext ctx; void* buffer; cc_uint32 capacity; };
 static struct Soundboard digBoard, stepBoard;
 #define AUDIO_MAX_HANDLES 6
 
 static struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES];
 static struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES];
-static struct AudioContext soundContexts[AUDIO_MAX_HANDLES * 2];
-
-static struct AudioContext* Sounds_Open(void) {
-	struct AudioContext* ctx;
-	int i;
-
-	for (i = 0; i < Array_Elems(soundContexts); i++) {
-		ctx = &soundContexts[i];
-		if (ctx->count) continue;
-
-		Audio_Init(ctx, 1);
-		return ctx;
-	}
-
-	/* Should never happen */
-	Logger_Abort("No free audio contexts");
-	return NULL;
-}
 
 CC_NOINLINE static void Sounds_Fail(cc_result res) {
 	Logger_SimpleWarn(res, "playing sounds");
@@ -794,7 +776,7 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 	void* data = snd->data;
 	void* tmp;
 	cc_result res;
-	if ((res = Audio_SetFormat(output->ctx, fmt))) { Sounds_Fail(res); return; }
+	if ((res = Audio_SetFormat(&output->ctx, fmt))) { Sounds_Fail(res); return; }
 	
 	/* copy to temp buffer to apply volume */
 	if (volume < 100) {
@@ -817,8 +799,8 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 		Volume_Mix16((cc_int16*)data, snd->size / 2, volume);
 	}
 
-	if ((res = Audio_BufferData(output->ctx, 0, data, snd->size))) { Sounds_Fail(res); return; }
-	if ((res = Audio_Play(output->ctx)))                           { Sounds_Fail(res); return; }
+	if ((res = Audio_BufferData(&output->ctx, 0, data, snd->size))) { Sounds_Fail(res); return; }
+	if ((res = Audio_Play(&output->ctx)))                           { Sounds_Fail(res); return; }
 }
 
 static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
@@ -853,16 +835,16 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	/* Try to play on fresh device, or device with same data format */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		output = &outputs[i];
-		if (!output->ctx) {
-			output->ctx = Sounds_Open();
+		if (!output->ctx.count) {
+			Audio_Init(&output->ctx, 1);
 		} else {
-			res = Audio_IsFinished(output->ctx, &finished);
+			res = Audio_IsFinished(&output->ctx, &finished);
 
 			if (res) { Sounds_Fail(res); return; }
 			if (!finished) continue;
 		}
 
-		l = Audio_GetFormat(output->ctx);
+		l = Audio_GetFormat(&output->ctx);
 		if (!l->channels || AudioFormat_Eq(l, &fmt)) {
 			Sounds_PlayRaw(output, snd, &fmt, volume); return;
 		}
@@ -871,7 +853,7 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	/* Try again with all devices, even if need to recreate one (expensive) */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		output = &outputs[i];
-		res = Audio_IsFinished(output->ctx, &finished);
+		res = Audio_IsFinished(&output->ctx, &finished);
 
 		if (res) { Sounds_Fail(res); return; }
 		if (!finished) continue;
@@ -891,10 +873,10 @@ static void Audio_PlayBlockSound(void* obj, IVec3 coords, BlockID old, BlockID n
 static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
 	int i;
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		if (!outputs[i].ctx) continue;
+		if (!outputs[i].ctx.count) continue;
 
-		Audio_Close(outputs[i].ctx);
-		outputs[i].ctx = NULL;
+		Audio_Close(&outputs[i].ctx);
+		outputs[i].ctx.count = 0;
 
 		Mem_Free(outputs[i].buffer);
 		outputs[i].buffer   = NULL;
