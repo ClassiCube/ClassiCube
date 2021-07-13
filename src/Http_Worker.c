@@ -757,7 +757,7 @@ static void WorkerLoop(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
-static void OnInit(void) {
+static void Http_Init(void) {
 	httpOnly = Options_GetBool(OPT_HTTP_ONLY, false);
 	ScheduledTask_Add(30, Http_CleanCacheTask);
 	if (workerThread) return;
@@ -772,10 +772,4 @@ static void OnInit(void) {
 	curRequestMutex = Mutex_Create();
 	workerThread    = Thread_Start(WorkerLoop);
 }
-
-struct IGameComponent Http_Component = {
-	OnInit,           /* Init  */
-	Http_ClearPending,/* Free  */
-	Http_ClearPending /* Reset */
-};
 #endif

@@ -286,9 +286,9 @@ void Texture_Render(const struct Texture* tex) {
 	Gfx_Draw2DTexture(tex, PACKEDCOL_WHITE);
 }
 
-void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeCol) {
+void Texture_RenderShaded(const struct Texture* tex, PackedCol shadeColor) {
 	Gfx_BindTexture(tex->ID);
-	Gfx_Draw2DTexture(tex, shadeCol);
+	Gfx_Draw2DTexture(tex, shadeColor);
 }
 
 

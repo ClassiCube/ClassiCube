@@ -258,3 +258,15 @@ void Http_UrlEncodeUtf8(cc_string* dst, const cc_string* src) {
 		Http_UrlEncode(dst, data, len);
 	}
 }
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------Http component------------------------------------------------------*
+*#########################################################################################################################*/
+static void Http_Init(void);
+
+struct IGameComponent Http_Component = {
+	Http_Init,        /* Init  */
+	Http_ClearPending,/* Free  */
+	Http_ClearPending /* Reset */
+};

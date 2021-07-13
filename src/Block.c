@@ -36,12 +36,12 @@ static float DefaultSet_FogDensity(BlockID b) {
 	return 0.0f;
 }
 
-static PackedCol DefaultSet_FogColour(BlockID b) {
-	PackedCol colWater = PackedCol_Make(  5,   5,  51, 255);
-	PackedCol colLava  = PackedCol_Make(153,  25,   0, 255);
+static PackedCol DefaultSet_FogColor(BlockID b) {
+	PackedCol colorWater = PackedCol_Make(  5,   5,  51, 255);
+	PackedCol colorLava  = PackedCol_Make(153,  25,   0, 255);
 
-	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER) return colWater;
-	if (b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA)  return colLava;
+	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER) return colorWater;
+	if (b == BLOCK_LAVA  || b == BLOCK_STILL_LAVA)  return colorLava;
 	return 0;
 }
 
@@ -230,7 +230,7 @@ void Block_ResetProps(BlockID block) {
 
 	Blocks.BlocksLight[block] = DefaultSet_BlocksLight(block);
 	Blocks.FullBright[block] = DefaultSet_FullBright(block);
-	Blocks.FogCol[block] = DefaultSet_FogColour(block);
+	Blocks.FogCol[block] = DefaultSet_FogColor(block);
 	Blocks.FogDensity[block] = DefaultSet_FogDensity(block);
 	Block_SetCollide(block, DefaultSet_Collide(block));
 	Blocks.DigSounds[block] = DefaultSet_DigSound(block);

@@ -376,7 +376,7 @@ void Gfx_DisableMipmaps(void) {
 static D3DFOGMODE gfx_fogMode = D3DFOG_NONE;
 static cc_bool gfx_alphaTesting, gfx_alphaBlending;
 static cc_bool gfx_depthTesting, gfx_depthWriting;
-static PackedCol gfx_clearCol, gfx_fogCol;
+static PackedCol gfx_clearColor, gfx_fogColor;
 static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
 
 /* NOTE: Although SetRenderState is okay to call on a lost device, it's also possible */
@@ -398,11 +398,11 @@ void Gfx_SetFog(cc_bool enabled) {
 }
 
 void Gfx_SetFogCol(PackedCol col) {
-	if (col == gfx_fogCol) return;
-	gfx_fogCol = col;
+	if (col == gfx_fogColor) return;
+	gfx_fogColor = col;
 
 	if (Gfx.LostContext) return;
-	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR, gfx_fogCol);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR, gfx_fogColor);
 }
 
 void Gfx_SetFogDensity(float value) {
@@ -457,7 +457,7 @@ void Gfx_SetAlphaArgBlend(cc_bool enabled) {
 	IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_ALPHAOP, op);
 }
 
-void Gfx_ClearCol(PackedCol col) { gfx_clearCol = col; }
+void Gfx_ClearCol(PackedCol col) { gfx_clearColor = col; }
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
 	DWORD channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
 	if (Gfx.LostContext) return;
@@ -482,7 +482,7 @@ static void D3D9_RestoreRenderStates(void) {
 	IDirect3DDevice9_SetRenderState(device, D3DRS_ALPHABLENDENABLE, gfx_alphaBlending);
 
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGENABLE, gfx_fogEnabled);
-	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR,  gfx_fogCol);
+	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGCOLOR,  gfx_fogColor);
 	raw.f = gfx_fogDensity;
 	IDirect3DDevice9_SetRenderState(device, D3DRS_FOGDENSITY, raw.u);
 	raw.f = gfx_fogEnd;
@@ -748,7 +748,7 @@ void Gfx_BeginFrame(void) {
 
 void Gfx_Clear(void) {
 	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
-	cc_result res = IDirect3DDevice9_Clear(device, 0, NULL, flags, gfx_clearCol, 0.0f, 0);
+	cc_result res = IDirect3DDevice9_Clear(device, 0, NULL, flags, gfx_clearColor, 0.0f, 0);
 	if (res) Logger_Abort2(res, "D3D9_Clear");
 }
 

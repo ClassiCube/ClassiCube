@@ -19,7 +19,7 @@ void AxisLinesRenderer_Render(void) {
 		1,2,2, 1,2,4, 3,2,4, 3,2,2, /* Z arrow */
 		1,2,3, 1,4,3, 3,4,1, 3,2,1, /* Y arrow */
 	};
-	static const PackedCol cols[3] = {
+	static const PackedCol colors[3] = {
 		PackedCol_Make(255,   0,   0, 255), /* Red   */
 		PackedCol_Make(  0,   0, 255, 255), /* Blue  */
 		PackedCol_Make(  0, 255,   0, 255), /* Green */
@@ -51,7 +51,7 @@ void AxisLinesRenderer_Render(void) {
 		v->X   = coords[indices[i*3 + 0]].X;
 		v->Y   = coords[indices[i*3 + 1]].Y;
 		v->Z   = coords[indices[i*3 + 2]].Z;
-		v->Col = cols[i >> 2];
+		v->Col = colors[i >> 2];
 	}
 
 	Gfx_SetVertexFormat(VERTEX_FORMAT_COLOURED);

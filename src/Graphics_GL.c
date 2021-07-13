@@ -233,7 +233,7 @@ void Gfx_DisableMipmaps(void) { }
 /*########################################################################################################################*
 *-----------------------------------------------------State management----------------------------------------------------*
 *#########################################################################################################################*/
-static PackedCol gfx_clearCol, gfx_fogCol;
+static PackedCol gfx_clearColor, gfx_fogColor;
 static float gfx_fogEnd = -1.0f, gfx_fogDensity = -1.0f;
 static int gfx_fogMode  = -1;
 
@@ -246,9 +246,9 @@ static void GL_ClearCol(PackedCol col) {
 				 PackedCol_B(col) / 255.0f, PackedCol_A(col) / 255.0f);
 }
 void Gfx_ClearCol(PackedCol col) {
-	if (col == gfx_clearCol) return;
+	if (col == gfx_clearColor) return;
 	GL_ClearCol(col);
-	gfx_clearCol = col;
+	gfx_clearColor = col;
 }
 
 void Gfx_SetColWriteMask(cc_bool r, cc_bool g, cc_bool b, cc_bool a) {
@@ -734,8 +734,8 @@ static void ReloadUniforms(void) {
 		s->uniforms &= ~UNI_TEX_OFFSET;
 	}
 	if ((s->uniforms & UNI_FOG_COL) && (s->features & FTR_HASANY_FOG)) {
-		glUniform3f(s->locations[2], PackedCol_R(gfx_fogCol) / 255.0f, PackedCol_G(gfx_fogCol) / 255.0f, 
-									 PackedCol_B(gfx_fogCol) / 255.0f);
+		glUniform3f(s->locations[2], PackedCol_R(gfx_fogColor) / 255.0f, PackedCol_G(gfx_fogColor) / 255.0f,
+									 PackedCol_B(gfx_fogColor) / 255.0f);
 		s->uniforms &= ~UNI_FOG_COL;
 	}
 	if ((s->uniforms & UNI_FOG_END) && (s->features & FTR_LINEAR_FOG)) {
@@ -776,8 +776,8 @@ static void SwitchProgram(void) {
 
 void Gfx_SetFog(cc_bool enabled) { gfx_fogEnabled = enabled; SwitchProgram(); }
 void Gfx_SetFogCol(PackedCol col) {
-	if (col == gfx_fogCol) return;
-	gfx_fogCol = col;
+	if (col == gfx_fogColor) return;
+	gfx_fogColor = col;
 	DirtyUniform(UNI_FOG_COL);
 	ReloadUniforms();
 }
@@ -853,7 +853,7 @@ static void Gfx_RestoreState(void) {
 	gfx_format = -1;
 
 	DirtyUniform(UNI_MASK_ALL);
-	GL_ClearCol(gfx_clearCol);
+	GL_ClearCol(gfx_clearColor);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LEQUAL);
 }
@@ -944,13 +944,13 @@ void Gfx_SetFog(cc_bool enabled) {
 
 void Gfx_SetFogCol(PackedCol col) {
 	float rgba[4];
-	if (col == gfx_fogCol) return;
+	if (col == gfx_fogColor) return;
 
 	rgba[0] = PackedCol_R(col) / 255.0f; rgba[1] = PackedCol_G(col) / 255.0f;
 	rgba[2] = PackedCol_B(col) / 255.0f; rgba[3] = PackedCol_A(col) / 255.0f;
 
 	glFogfv(GL_FOG_COLOR, rgba);
-	gfx_fogCol = col;
+	gfx_fogColor = col;
 }
 
 void Gfx_SetFogDensity(float value) {

@@ -225,26 +225,26 @@ void Env_SetSkyboxVerSpeed(float speed) {
 	Env_Set(speed, Env.SkyboxVerSpeed, ENV_VAR_SKYBOX_VER_SPEED);
 }
 
-void Env_SetSkyCol(PackedCol col) {
-	Env_Set(col, Env.SkyCol, ENV_VAR_SKY_COL);
+void Env_SetSkyCol(PackedCol color) {
+	Env_Set(color, Env.SkyCol, ENV_VAR_SKY_COL);
 }
-void Env_SetFogCol(PackedCol col) {
-	Env_Set(col, Env.FogCol, ENV_VAR_FOG_COL);
+void Env_SetFogCol(PackedCol color) {
+	Env_Set(color, Env.FogCol, ENV_VAR_FOG_COL);
 }
-void Env_SetCloudsCol(PackedCol col) {
-	Env_Set(col, Env.CloudsCol, ENV_VAR_CLOUDS_COL);
+void Env_SetCloudsCol(PackedCol color) {
+	Env_Set(color, Env.CloudsCol, ENV_VAR_CLOUDS_COL);
 }
-void Env_SetSkyboxCol(PackedCol col) {
-	Env_Set(col, Env.SkyboxCol, ENV_VAR_SKYBOX_COL);
+void Env_SetSkyboxCol(PackedCol color) {
+	Env_Set(color, Env.SkyboxCol, ENV_VAR_SKYBOX_COL);
 }
 
-void Env_SetSunCol(PackedCol col) {
-	PackedCol_GetShaded(col, &Env.SunXSide, &Env.SunZSide, &Env.SunYMin);
-	Env_Set(col, Env.SunCol, ENV_VAR_SUN_COL);
+void Env_SetSunCol(PackedCol color) {
+	PackedCol_GetShaded(color, &Env.SunXSide, &Env.SunZSide, &Env.SunYMin);
+	Env_Set(color, Env.SunCol, ENV_VAR_SUN_COL);
 }
-void Env_SetShadowCol(PackedCol col) {
-	PackedCol_GetShaded(col, &Env.ShadowXSide, &Env.ShadowZSide, &Env.ShadowYMin);
-	Env_Set(col, Env.ShadowCol, ENV_VAR_SHADOW_COL);
+void Env_SetShadowCol(PackedCol color) {
+	PackedCol_GetShaded(color, &Env.ShadowXSide, &Env.ShadowZSide, &Env.ShadowYMin);
+	Env_Set(color, Env.ShadowCol, ENV_VAR_SHADOW_COL);
 }
 
 

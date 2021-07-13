@@ -256,9 +256,9 @@ static void WoM_CheckSendWomID(void) {
 	}
 }
 
-static PackedCol WoM_ParseCol(const cc_string* value, PackedCol defaultCol) {
+static PackedCol WoM_ParseCol(const cc_string* value, PackedCol defaultColor) {
 	int argb;
-	if (!Convert_ParseInt(value, &argb)) return defaultCol;
+	if (!Convert_ParseInt(value, &argb)) return defaultColor;
 	return PackedCol_Make(argb >> 16, argb >> 8, argb, 255);
 }
 

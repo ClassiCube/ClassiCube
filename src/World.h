@@ -168,20 +168,20 @@ CC_API void Env_SetSkyboxHorSpeed(float speed);
 CC_API void Env_SetSkyboxVerSpeed(float speed);
 
 /* Sets colour of the sky above clouds. (default #99CCFF) */
-CC_API void Env_SetSkyCol(PackedCol col);
+CC_API void Env_SetSkyCol(PackedCol color);
 /* Sets base colour of the horizon fog. (default #FFFFFF) */
 /* Actual fog colour is blended between sky and fog colours, based on view distance. */
-CC_API void Env_SetFogCol(PackedCol col);
+CC_API void Env_SetFogCol(PackedCol color);
 /* Sets colour of clouds. (default #FFFFFF) */
-CC_API void Env_SetCloudsCol(PackedCol col);
+CC_API void Env_SetCloudsCol(PackedCol color);
 /* Sets colour of the skybox. (default #FFFFFF) */
-CC_API void Env_SetSkyboxCol(PackedCol col);
+CC_API void Env_SetSkyboxCol(PackedCol color);
 /* Sets colour of sunlight. (default #FFFFFF) */
 /* This is the colour used for lighting when not underground. */
-CC_API void Env_SetSunCol(PackedCol col);
+CC_API void Env_SetSunCol(PackedCol color);
 /* Sets colour of shadow. (default #9B9B9B) */
 /* This is the colour used for lighting when underground. */
-CC_API void Env_SetShadowCol(PackedCol col);
+CC_API void Env_SetShadowCol(PackedCol color);
 
 #define RESPAWN_NOT_FOUND -100000.0f
 /* Finds the highest Y coordinate of any solid block that intersects the given bounding box */

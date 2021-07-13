@@ -112,7 +112,7 @@ static void Http_BackendAdd(struct HttpRequest* req, cc_bool priority) {
 /*########################################################################################################################*
 *-----------------------------------------------------Http component------------------------------------------------------*
 *#########################################################################################################################*/
-static void OnInit(void) {
+static void Http_Init(void) {
 	ScheduledTask_Add(30, Http_CleanCacheTask);
 	/* If this webpage is https://, browsers deny any http:// downloading */
 	httpsOnly = interop_IsHttpsOnly();
@@ -121,17 +121,4 @@ static void OnInit(void) {
 	RequestList_Init(&workingReqs);
 	RequestList_Init(&processedReqs);
 }
-
-static void OnFree(void) {
-	Http_ClearPending();
-	RequestList_Free(&queuedReqs);
-	RequestList_Free(&workingReqs);
-	RequestList_Free(&processedReqs);
-}
-
-struct IGameComponent Http_Component = {
-	OnInit,           /* Init  */
-	OnFree,           /* Free  */
-	Http_ClearPending /* Reset */
-};
 #endif
