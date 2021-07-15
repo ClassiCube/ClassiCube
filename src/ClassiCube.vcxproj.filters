@@ -324,6 +324,9 @@
     <ClInclude Include="_HttpBase.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
+    <ClInclude Include="_WindowBase.h">
+      <Filter>Header Files\Platform</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
