@@ -2,6 +2,7 @@
 #include "Input.h"
 #include "Event.h"
 #include "Logger.h"
+#include "Platform.h"
 
 struct _DisplayData DisplayInfo;
 struct _WinData WindowInfo;
@@ -9,18 +10,13 @@ struct _WinData WindowInfo;
 int Display_ScaleX(int x) { return (int)(x * DisplayInfo.ScaleX); }
 int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
 
-#if defined CC_BUILD_IOS
-/* iOS implements these functions in external interop_ios.m file */
-#define CC_MAYBE_OBJC1 extern
-#define CC_MAYBE_OBJC2 extern
-#define CC_OBJC_VISIBLE
-#elif defined CC_BUILD_COCOA
+#if defined CC_BUILD_COCOA
 /* Cocoa implements some functions in external interop_cocoa.m file */
 #define CC_MAYBE_OBJC1 extern
 #define CC_MAYBE_OBJC2 static
 #define CC_OBJC_VISIBLE
 #else
-/* All other platforms implement internally in this file */
+/* All other platforms implement in the file including this .h file */
 #define CC_MAYBE_OBJC1 static
 #define CC_MAYBE_OBJC2 static
 #define CC_OBJC_VISIBLE static
@@ -112,3 +108,107 @@ static void InitGraphicsMode(struct GraphicsMode* m) {
 		Logger_Abort2(bpp, "Unsupported bits per pixel"); break;
 	}
 }
+
+#ifdef CC_BUILD_GL
+/* OpenGL contexts are heavily tied to the window, so for simplicitly are also included here */
+/* EGL is window system agnostic, other OpenGL context backends are tied to one windowing system. */
+#define GLContext_IsInvalidAddress(ptr) (ptr == (void*)0 || ptr == (void*)1 || ptr == (void*)-1 || ptr == (void*)2)
+
+void GLContext_GetAll(const struct DynamicLibSym* syms, int count) {
+	int i;
+	for (i = 0; i < count; i++) {
+		*syms[i].symAddr = GLContext_GetAddress(syms[i].name);
+	}
+}
+
+/*########################################################################################################################*
+*-------------------------------------------------------EGL OpenGL--------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_EGL
+#include <EGL/egl.h>
+static EGLDisplay ctx_display;
+static EGLContext ctx_context;
+static EGLSurface ctx_surface;
+static EGLConfig ctx_config;
+static EGLint ctx_numConfig;
+
+static void GLContext_InitSurface(void) {
+	if (!win_handle) return; /* window not created or lost */
+	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
+
+	if (!ctx_surface) return;
+	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
+}
+
+static void GLContext_FreeSurface(void) {
+	if (!ctx_surface) return;
+	eglMakeCurrent(ctx_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+	eglDestroySurface(ctx_display, ctx_surface);
+	ctx_surface = NULL;
+}
+
+void GLContext_Create(void) {
+	static EGLint contextAttribs[3] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+	static EGLint attribs[19] = {
+		EGL_RED_SIZE,  0, EGL_GREEN_SIZE,  0,
+		EGL_BLUE_SIZE, 0, EGL_ALPHA_SIZE,  0,
+		EGL_DEPTH_SIZE,        GLCONTEXT_DEFAULT_DEPTH,
+		EGL_STENCIL_SIZE,      0,
+		EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+		EGL_RENDERABLE_TYPE,   EGL_OPENGL_ES2_BIT,
+		EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
+		EGL_NONE
+	};
+
+	struct GraphicsMode mode;
+	InitGraphicsMode(&mode);
+	attribs[1] = mode.R; attribs[3] = mode.G;
+	attribs[5] = mode.B; attribs[7] = mode.A;
+
+	ctx_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	eglInitialize(ctx_display, NULL, NULL);
+	eglBindAPI(EGL_OPENGL_ES_API);
+	eglChooseConfig(ctx_display, attribs, &ctx_config, 1, &ctx_numConfig);
+
+	ctx_context = eglCreateContext(ctx_display, ctx_config, EGL_NO_CONTEXT, contextAttribs);
+	GLContext_InitSurface();
+}
+
+void GLContext_Update(void) {
+	GLContext_FreeSurface();
+	GLContext_InitSurface();
+}
+
+cc_bool GLContext_TryRestore(void) {
+	GLContext_FreeSurface();
+	GLContext_InitSurface();
+	return ctx_surface != NULL;
+}
+
+void GLContext_Free(void) {
+	GLContext_FreeSurface();
+	eglDestroyContext(ctx_display, ctx_context);
+	eglTerminate(ctx_display);
+}
+
+void* GLContext_GetAddress(const char* function) {
+	return eglGetProcAddress(function);
+}
+
+cc_bool GLContext_SwapBuffers(void) {
+	EGLint err;
+	if (!ctx_surface) return false;
+	if (eglSwapBuffers(ctx_display, ctx_surface)) return true;
+
+	err = eglGetError();
+	/* TODO: figure out what errors need to be handled here */
+	Logger_Abort2(err, "Failed to swap buffers");
+	return false;
+}
+
+void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
+	eglSwapInterval(ctx_display, vsync);
+}
+void GLContext_GetApiInfo(cc_string* info) { }
+#endif
+#endif

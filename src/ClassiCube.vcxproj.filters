@@ -566,5 +566,20 @@
     <ClCompile Include="Http_Worker.c">
       <Filter>Source Files\Network</Filter>
     </ClCompile>
+    <ClCompile Include="Window_SDL.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Web.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Android.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_X11.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Win.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
