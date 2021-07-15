@@ -320,7 +320,7 @@ void Drawer2D_MakeTexture(struct Texture* tex, struct Bitmap* bmp, int width, in
 
 cc_bool Drawer2D_ValidColCodeAt(const cc_string* text, int i) {
 	if (i >= text->length) return false;
-	return BitmapCol_A(Drawer2D_GetCol(text->buffer[i])) != 0;
+	return BitmapCol_A(Drawer2D_GetColor(text->buffer[i])) != 0;
 }
 
 cc_bool Drawer2D_IsEmptyText(const cc_string* text) {
@@ -365,7 +365,7 @@ cc_bool Drawer2D_IsWhiteCol(char c) { return c == '\0' || c == 'f' || c == 'F'; 
 
 /* Divides R/G/B by 4 */
 #define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
-CC_NOINLINE static BitmapCol GetShadowCol(BitmapCol c) {
+CC_NOINLINE static BitmapCol GetShadowColor(BitmapCol c) {
 	if (Drawer2D.BlackTextShadows) return BITMAPCOL_BLACK;
 
 	/* Initial layout: aaaa_aaaa|rrrr_rrrr|gggg_gggg|bbbb_bbbb */
@@ -437,14 +437,14 @@ static void DrawBitmappedTextCore(struct Bitmap* bmp, struct DrawTextArgs* args,
 	cc_uint16 dstWidths[256];
 
 	col = Drawer2D.Colors['f'];
-	if (shadow) col = GetShadowCol(col);
+	if (shadow) col = GetShadowColor(col);
 
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
-			col = Drawer2D_GetCol(text.buffer[i + 1]);
+			col = Drawer2D_GetColor(text.buffer[i + 1]);
 
-			if (shadow) col = GetShadowCol(col);
+			if (shadow) col = GetShadowColor(col);
 			i++; continue; /* skip over the colour code */
 		}
 
@@ -623,7 +623,7 @@ static void InitHexEncodedCol(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
 
 static void OnReset(void) {
 	int i;	
-	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
+	for (i = 0; i < DRAWER2D_MAX_COLORS; i++) {
 		Drawer2D.Colors[i] = 0;
 	}
 
@@ -1163,14 +1163,14 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 	descender = TEXT_CEIL(face->size->metrics.descender);
 
 	col = Drawer2D.Colors['f'];
-	if (shadow) col = GetShadowCol(col);
+	if (shadow) col = GetShadowColor(col);
 
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
-			col = Drawer2D_GetCol(text.buffer[i + 1]);
+			col = Drawer2D_GetColor(text.buffer[i + 1]);
 
-			if (shadow) col = GetShadowCol(col);
+			if (shadow) col = GetShadowColor(col);
 			i++; continue; /* skip over the colour code */
 		}
 

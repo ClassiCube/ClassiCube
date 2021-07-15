@@ -62,7 +62,7 @@ enum FACE_CONSTS {
 };
 
 enum SKIN_TYPE { SKIN_64x32, SKIN_64x64, SKIN_64x64_SLIM, SKIN_INVALID = 0xF0 };
-#define DRAWER2D_MAX_COLS 256
+#define DRAWER2D_MAX_COLORS 256
 
 #define UInt8_MaxValue  ((cc_uint8)255)
 #define Int16_MaxValue  ((cc_int16)32767)

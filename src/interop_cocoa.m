@@ -182,14 +182,13 @@ void Window_Create(int width, int height) {
 }
 
 void Window_SetTitle(const cc_string* title) {
-	UInt8 str[NATIVE_STR_LEN];
-	CFStringRef titleCF;
-	int len;
+	char buffer[NATIVE_STR_LEN];
+	NSString* str;
+	Platform_EncodeUtf8(buffer, title);
 
-	/* TODO: This leaks memory, old title isn't released */
-	len = Platform_EncodeUtf8(str, title);
-	titleCF = CFStringCreateWithBytes(kCFAllocatorDefault, str, len, kCFStringEncodingUTF8, false);
-	[winHandle setTitle:titleCF];
+	str = [[NSString alloc] initWithUTF8String:buffer];
+	[winHandle setTitle:str];
+	[str release];
 }
 
 void Window_Show(void) { 

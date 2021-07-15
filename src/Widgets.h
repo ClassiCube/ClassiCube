@@ -276,7 +276,7 @@ struct SpecialInputWidget {
 	int titleHeight;
 	struct SpecialInputTab tabs[5];
 	cc_string colString;
-	char _colBuffer[DRAWER2D_MAX_COLS * 4];
+	char _colBuffer[DRAWER2D_MAX_COLORS * 4];
 };
 
 CC_NOINLINE void SpecialInputWidget_Create(struct SpecialInputWidget* w, struct FontDesc* font, struct InputWidget* target);

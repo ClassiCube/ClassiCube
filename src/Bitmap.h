@@ -25,15 +25,15 @@ typedef cc_uint32 BitmapCol;
 #define BITMAPCOL_B_MASK (0xFFU << BITMAPCOL_B_SHIFT)
 #define BITMAPCOL_A_MASK (0xFFU << BITMAPCOL_A_SHIFT)
 
-#define BitmapCol_R(col) ((cc_uint8)(col >> BITMAPCOL_R_SHIFT))
-#define BitmapCol_G(col) ((cc_uint8)(col >> BITMAPCOL_G_SHIFT))
-#define BitmapCol_B(col) ((cc_uint8)(col >> BITMAPCOL_B_SHIFT))
-#define BitmapCol_A(col) ((cc_uint8)(col >> BITMAPCOL_A_SHIFT))
+#define BitmapCol_R(color) ((cc_uint8)(color >> BITMAPCOL_R_SHIFT))
+#define BitmapCol_G(color) ((cc_uint8)(color >> BITMAPCOL_G_SHIFT))
+#define BitmapCol_B(color) ((cc_uint8)(color >> BITMAPCOL_B_SHIFT))
+#define BitmapCol_A(color) ((cc_uint8)(color >> BITMAPCOL_A_SHIFT))
 
-#define BitmapCol_R_Bits(col) ((cc_uint8)(col) << BITMAPCOL_R_SHIFT)
-#define BitmapCol_G_Bits(col) ((cc_uint8)(col) << BITMAPCOL_G_SHIFT)
-#define BitmapCol_B_Bits(col) ((cc_uint8)(col) << BITMAPCOL_B_SHIFT)
-#define BitmapCol_A_Bits(col) ((cc_uint8)(col) << BITMAPCOL_A_SHIFT)
+#define BitmapCol_R_Bits(color) ((cc_uint8)(color) << BITMAPCOL_R_SHIFT)
+#define BitmapCol_G_Bits(color) ((cc_uint8)(color) << BITMAPCOL_G_SHIFT)
+#define BitmapCol_B_Bits(color) ((cc_uint8)(color) << BITMAPCOL_B_SHIFT)
+#define BitmapCol_A_Bits(color) ((cc_uint8)(color) << BITMAPCOL_A_SHIFT)
 
 #define BitmapCol_Make(r, g, b, a) (BitmapCol_R_Bits(r) | BitmapCol_G_Bits(g) | BitmapCol_B_Bits(b) | BitmapCol_A_Bits(a))
 #define BITMAPCOL_RGB_MASK (BITMAPCOL_R_MASK | BITMAPCOL_G_MASK | BITMAPCOL_B_MASK)

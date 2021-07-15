@@ -22,10 +22,10 @@ CC_VAR extern struct _Drawer2DData {
 	/* Whether the shadows behind text (that uses shadows) is fully black. */
 	cc_bool BlackTextShadows;
 	/* List of all colours. (An A of 0 means the colour is not used) */
-	BitmapCol Colors[DRAWER2D_MAX_COLS];
+	BitmapCol Colors[DRAWER2D_MAX_COLORS];
 } Drawer2D;
 
-#define Drawer2D_GetCol(c) Drawer2D.Colors[(cc_uint8)c]
+#define Drawer2D_GetColor(c) Drawer2D.Colors[(cc_uint8)c]
 void DrawTextArgs_Make(struct DrawTextArgs* args, STRING_REF const cc_string* text, struct FontDesc* font, cc_bool useShadow);
 void DrawTextArgs_MakeEmpty(struct DrawTextArgs* args, struct FontDesc* font, cc_bool useShadow);
 

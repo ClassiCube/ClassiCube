@@ -1046,7 +1046,7 @@ static void InputWidget_UpdateCaret(struct InputWidget* w) {
 	colCode = InputWidget_GetLastCol(w, w->caretX, w->caretY);
 
 	if (colCode) {
-		col = Drawer2D_GetCol(colCode);
+		col = Drawer2D_GetColor(colCode);
 		/* Component order might be different to BitmapCol */
 		w->caretCol = PackedCol_Make(BitmapCol_R(col), BitmapCol_G(col), 
 									 BitmapCol_B(col), BitmapCol_A(col));
@@ -2252,7 +2252,7 @@ static void SpecialInputWidget_UpdateColString(struct SpecialInputWidget* w) {
 	int i;
 	String_InitArray(w->colString, w->_colBuffer);
 
-	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
+	for (i = 0; i < DRAWER2D_MAX_COLORS; i++) {
 		if (i >= 'A' && i <= 'F')           continue;
 		if (!BitmapCol_A(Drawer2D.Colors[i])) continue;
 
