@@ -1,17 +1,22 @@
 #include "Core.h"
-/*########################################################################################################################*
-*---------------------------------------------------Carbon/Cocoa window---------------------------------------------------*
-*#########################################################################################################################*/
-#if defined CC_BUILD_CARBON || defined CC_BUILD_COCOA
+#if defined CC_BUILD_CARBON && !defined CC_BUILD_SDL
 #include "_WindowBase.h"
 #include "String.h"
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"
 #include <ApplicationServices/ApplicationServices.h>
-CC_OBJC_VISIBLE int windowX, windowY;
+#include <Carbon/Carbon.h>
 
-CC_OBJC_VISIBLE void Window_CommonInit(void) {
+static int windowX, windowY;
+static WindowRef win_handle;
+static cc_bool win_fullscreen, showingDialog;
+
+/*########################################################################################################################*
+*------------------------------------------------=---Shared with Cocoa----------------------------------------------------*
+*#########################################################################################################################*/
+/* NOTE: If code here is changed, don't forget to update corresponding code in interop_cocoa.m */
+static void Window_CommonInit(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
 	CGRect bounds = CGDisplayBounds(display);
 
@@ -29,8 +34,7 @@ static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, l
 	return 0;
 }
 
-CC_OBJC_VISIBLE void Window_CommonCreate(void) {
-	WindowInfo.Exists = true;
+static void Window_CommonCreate(void) {
 	/* for quit buttons in dock and menubar */
 	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
 		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
@@ -47,7 +51,7 @@ static const cc_uint8 key_map[8 * 16] = {
 	KEY_F5, KEY_F6, KEY_F7, KEY_F3, KEY_F8, KEY_F9, 0, KEY_F11, 0, KEY_F13, 0, KEY_F14, 0, KEY_F10, 0, KEY_F12,
 	'U', KEY_F15, KEY_INSERT, KEY_HOME, KEY_PAGEUP, KEY_DELETE, KEY_F4, KEY_END, KEY_F2, KEY_PAGEDOWN, KEY_F1, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, 0,
 };
-CC_OBJC_VISIBLE int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+static int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
 /* TODO: Check these.. */
 /*   case 0x37: return KEY_LWIN; */
 /*   case 0x38: return KEY_LSHIFT; */
@@ -74,10 +78,6 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 	}
 }
 
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { }
-
 void Window_EnableRawMouse(void) {
 	DefaultEnableRawMouse();
 	CGAssociateMouseAndMouseCursorPosition(0);
@@ -91,28 +91,8 @@ void Window_DisableRawMouse(void) {
 
 
 /*########################################################################################################################*
-*------------------------------------------------------Carbon window------------------------------------------------------*
+*---------------------------------------------------------General---------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_CARBON
-#include <Carbon/Carbon.h>
-
-static WindowRef win_handle;
-static cc_bool win_fullscreen, showingDialog;
-
-/* fullscreen is tied to OpenGL context unfortunately */
-static cc_result GLContext_UnsetFullscreen(void);
-static cc_result GLContext_SetFullscreen(void);
-
-static void RefreshWindowBounds(void) {
-	Rect r;
-	if (win_fullscreen) return;
-	
-	/* TODO: kWindowContentRgn ??? */
-	GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
-	windowX = r.left; WindowInfo.Width  = r.right  - r.left;
-	windowY = r.top;  WindowInfo.Height = r.bottom - r.top;
-}
-
 /* NOTE: All Pasteboard functions are OSX 10.3 or later */
 static PasteboardRef Window_GetPasteboard(void) {
 	PasteboardRef pbRef;
@@ -172,6 +152,24 @@ void Clipboard_SetText(const cc_string* value) {
 	if (!cfData) Logger_Abort("CFDataCreate() returned null pointer");
 
 	PasteboardPutItemFlavor(pbRef, 1, FMT_UTF8, cfData, 0);
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------------Wwindow--------------------------------------------------------*
+*#########################################################################################################################*/
+/* fullscreen is tied to OpenGL context unfortunately */
+static cc_result GLContext_UnsetFullscreen(void);
+static cc_result GLContext_SetFullscreen(void);
+
+static void RefreshWindowBounds(void) {
+	Rect r;
+	if (win_fullscreen) return;
+	
+	/* TODO: kWindowContentRgn ??? */
+	GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
+	windowX = r.left; WindowInfo.Width  = r.right  - r.left;
+	windowY = r.top;  WindowInfo.Height = r.bottom - r.top;
 }
 
 static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {
@@ -502,6 +500,7 @@ void Window_Create(int width, int height) {
 	/* TODO: Use BringWindowToFront instead.. (look in the file which has RepositionWindow in it) !!!! */
 	HookEvents();
 	Window_CommonCreate();
+	WindowInfo.Exists = true;
 	WindowInfo.Handle = win_handle;
 
 	conn  = _CGSDefaultConnection();
@@ -652,21 +651,15 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	CGColorSpaceRelease(colorSpace);
 }
 
-
-/*########################################################################################################################*
-*-------------------------------------------------------Cocoa window------------------------------------------------------*
-*#########################################################################################################################*/
-#elif defined CC_BUILD_COCOA
-/* NOTE: Mostly implemented in interop_cocoa.m */
-#endif
-#endif
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
+void Window_SetKeyboardText(const cc_string* text) { }
+void Window_CloseKeyboard(void) { }
 
 
-#ifdef CC_BUILD_GL
 /*########################################################################################################################*
 *-------------------------------------------------------AGL OpenGL--------------------------------------------------------*
 *#########################################################################################################################*/
-#if defined CC_BUILD_CARBON
+#if defined CC_BUILD_GL && !defined CC_BUILD_EGL
 #include <AGL/agl.h>
 
 static AGLContext ctx_handle;
@@ -834,26 +827,6 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	int value = vsync ? 1 : 0;
 	aglSetInteger(ctx_handle, AGL_SWAP_INTERVAL, &value);
 }
-void GLContext_GetApiInfo(cc_string* info) { }
-
-
-/*########################################################################################################################*
-*--------------------------------------------------------NSOpenGL---------------------------------------------------------*
-*#########################################################################################################################*/
-#elif defined CC_BUILD_COCOA
-/* NOTE: Mostly implemented in interop_cocoa.m */
-cc_bool GLContext_TryRestore(void) { return true; }
-
-void* GLContext_GetAddress(const char* function) {
-	static const cc_string glPath = String_FromConst("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
-	static void* lib;
-	void* addr;
-
-	if (!lib) lib = DynamicLib_Load2(&glPath);
-	addr = DynamicLib_Get2(lib, function);
-	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
-}
-
 void GLContext_GetApiInfo(cc_string* info) { }
 #endif
 #endif

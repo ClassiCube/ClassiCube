@@ -581,5 +581,8 @@
     <ClCompile Include="Window_Win.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
+    <ClCompile Include="Window_Carbon.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

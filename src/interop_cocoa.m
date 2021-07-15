@@ -1,49 +1,96 @@
-#include "Logger.h"
+#include "_WindowBase.h"
 #include "ExtMath.h"
-#include "Platform.h"
-#include "Window.h"
-#include "Input.h"
-#include "Event.h"
 #include "Bitmap.h"
 #include "String.h"
 #include <Cocoa/Cocoa.h>
+#include <ApplicationServices/ApplicationServices.h>
 
-/*########################################################################################################################*
-*-------------------------------------------------------Cocoa window------------------------------------------------------*
-*#########################################################################################################################*/
+static int windowX, windowY;
 static NSApplication* appHandle;
 static NSWindow* winHandle;
 static NSView* viewHandle;
-extern int windowX, windowY;
-extern void Window_CommonCreate(void);
-extern void Window_CommonInit(void);
-extern int MapNativeKey(UInt32 key);
 
-#ifndef kCGBitmapByteOrder32Host
-/* Undefined in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways */
-#define kCGBitmapByteOrder32Host 0
-#endif
+/*########################################################################################################################*
+*---------------------------------------------------Shared with Carbon----------------------------------------------------*
+*#########################################################################################################################*/
+/* NOTE: If code here is changed, don't forget to update corresponding code in Window_Carbon.c */
+static void Window_CommonInit(void) {
+	CGDirectDisplayID display = CGMainDisplayID();
+	CGRect bounds = CGDisplayBounds(display);
 
-static void RefreshWindowBounds(void) {
-	NSRect win, view;
-	int viewY;
-
-	win  = [winHandle frame];
-	view = [viewHandle frame];
-
-	/* For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen. */
-	/* To get window's real Y screen position, first need to find Y of top. (win.y + win.height) */
-	/* Then just subtract from screen height to make relative to top instead of bottom of the screen. */
-	/* Of course this is only half the story, since we're really after Y position of the content. */
-	/* To work out top Y of view relative to window, it's just win.height - (view.y + view.height) */
-	viewY   = (int)win.size.height - ((int)view.origin.y + (int)view.size.height);
-	windowX = (int)win.origin.x    + (int)view.origin.x;
-	windowY = DisplayInfo.Height   - ((int)win.origin.y  + (int)win.size.height) + viewY;
-
-	WindowInfo.Width  = (int)view.size.width;
-	WindowInfo.Height = (int)view.size.height;
+	DisplayInfo.X      = (int)bounds.origin.x;
+	DisplayInfo.Y      = (int)bounds.origin.y;
+	DisplayInfo.Width  = (int)bounds.size.width;
+	DisplayInfo.Height = (int)bounds.size.height;
+	DisplayInfo.Depth  = CGDisplayBitsPerPixel(display);
+	DisplayInfo.ScaleX = 1;
+	DisplayInfo.ScaleY = 1;
 }
 
+static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, long handlerRefcon) {
+	Window_Close();
+	return 0;
+}
+
+static void Window_CommonCreate(void) {
+	/* for quit buttons in dock and menubar */
+	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
+		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
+}
+
+/* Sourced from https://www.meandmark.com/keycodes.html */
+static const cc_uint8 key_map[8 * 16] = {
+	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
+	'Y', 'T', '1', '2', '3', '4', '6', '5', KEY_EQUALS, '9', '7', KEY_MINUS, '8', '0', KEY_RBRACKET, 'O',
+	'U', KEY_LBRACKET, 'I', 'P', KEY_ENTER, 'L', 'J', KEY_QUOTE, 'K', KEY_SEMICOLON, KEY_BACKSLASH, KEY_COMMA, KEY_SLASH, 'N', 'M', KEY_PERIOD,
+	KEY_TAB, KEY_SPACE, KEY_TILDE, KEY_BACKSPACE, 0, KEY_ESCAPE, 0, 0, 0, KEY_CAPSLOCK, 0, 0, 0, 0, 0, 0,
+	0, KEY_KP_DECIMAL, 0, KEY_KP_MULTIPLY, 0, KEY_KP_PLUS, 0, KEY_NUMLOCK, 0, 0, 0, KEY_KP_DIVIDE, KEY_KP_ENTER, 0, KEY_KP_MINUS, 0,
+	0, KEY_KP_ENTER, KEY_KP0, KEY_KP1, KEY_KP2, KEY_KP3, KEY_KP4, KEY_KP5, KEY_KP6, KEY_KP7, 0, KEY_KP8, KEY_KP9, 'N', 'M', KEY_PERIOD,
+	KEY_F5, KEY_F6, KEY_F7, KEY_F3, KEY_F8, KEY_F9, 0, KEY_F11, 0, KEY_F13, 0, KEY_F14, 0, KEY_F10, 0, KEY_F12,
+	'U', KEY_F15, KEY_INSERT, KEY_HOME, KEY_PAGEUP, KEY_DELETE, KEY_F4, KEY_END, KEY_F2, KEY_PAGEDOWN, KEY_F1, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, 0,
+};
+static int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
+/* TODO: Check these.. */
+/*   case 0x37: return KEY_LWIN; */
+/*   case 0x38: return KEY_LSHIFT; */
+/*   case 0x3A: return KEY_LALT; */
+/*   case 0x3B: return Key_ControlLeft; */
+
+/* TODO: Verify these differences from OpenTK */
+/*Backspace = 51,  (0x33, KEY_DELETE according to that link)*/
+/*Return = 52,     (0x34, ??? according to that link)*/
+/*Menu = 110,      (0x6E, ??? according to that link)*/
+
+void Cursor_SetPosition(int x, int y) {
+	CGPoint point;
+	point.x = x + windowX;
+	point.y = y + windowY;
+	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+}
+
+static void Cursor_DoSetVisible(cc_bool visible) {
+	if (visible) {
+		CGDisplayShowCursor(CGMainDisplayID());
+	} else {
+		CGDisplayHideCursor(CGMainDisplayID());
+	}
+}
+
+void Window_EnableRawMouse(void) {
+	DefaultEnableRawMouse();
+	CGAssociateMouseAndMouseCursorPosition(0);
+}
+
+void Window_UpdateRawMouse(void) { CentreMousePosition(); }
+void Window_DisableRawMouse(void) {
+	CGAssociateMouseAndMouseCursorPosition(1);
+	DefaultDisableRawMouse();
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------------General---------------------------------------------------------*
+*#########################################################################################################################*/
 void Clipboard_GetText(cc_string* value) {
 	NSPasteboard* pasteboard;
 	const char* src;
@@ -72,6 +119,34 @@ void Clipboard_SetText(const cc_string* value) {
 	[pasteboard setString:str forType:NSStringPboardType];
 }
 
+
+/*########################################################################################################################*
+*----------------------------------------------------------Wwindow--------------------------------------------------------*
+*#########################################################################################################################*/
+#ifndef kCGBitmapByteOrder32Host
+/* Undefined in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways */
+#define kCGBitmapByteOrder32Host 0
+#endif
+
+static void RefreshWindowBounds(void) {
+	NSRect win, view;
+	int viewY;
+
+	win  = [winHandle frame];
+	view = [viewHandle frame];
+
+	/* For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen. */
+	/* To get window's real Y screen position, first need to find Y of top. (win.y + win.height) */
+	/* Then just subtract from screen height to make relative to top instead of bottom of the screen. */
+	/* Of course this is only half the story, since we're really after Y position of the content. */
+	/* To work out top Y of view relative to window, it's just win.height - (view.y + view.height) */
+	viewY   = (int)win.size.height - ((int)view.origin.y + (int)view.size.height);
+	windowX = (int)win.origin.x    + (int)view.origin.x;
+	windowY = DisplayInfo.Height   - ((int)win.origin.y  + (int)win.size.height) + viewY;
+
+	WindowInfo.Width  = (int)view.size.width;
+	WindowInfo.Height = (int)view.size.height;
+}
 
 @interface CCWindow : NSWindow { }
 @end
@@ -203,6 +278,8 @@ void Window_Create(int width, int height) {
 	[winHandle setAcceptsMouseMovedEvents:YES];
 	
 	Window_CommonCreate();
+	WindowInfo.Exists = true;
+
 	del = [CCWindowDelegate alloc];
 	[winHandle setDelegate:del];
 	RefreshWindowBounds();
@@ -466,10 +543,15 @@ void Window_FreeFramebuffer(struct Bitmap* bmp) {
 	Mem_Free(bmp->scan0);
 }
 
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
+void Window_SetKeyboardText(const cc_string* text) { }
+void Window_CloseKeyboard(void) { }
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------NSOpenGL---------------------------------------------------------*
 *#########################################################################################################################*/
+#if defined CC_BUILD_GL && !defined CC_BUILD_EGL
 static NSOpenGLContext* ctxHandle;
 
 static NSOpenGLPixelFormat* MakePixelFormat(cc_bool fullscreen) {
@@ -508,11 +590,22 @@ void GLContext_Update(void) {
 	// TODO: Why does this crash on resizing
 	[ctxHandle update];
 }
+cc_bool GLContext_TryRestore(void) { return true; }
 
 void GLContext_Free(void) { 
 	[NSOpenGLContext clearCurrentContext];
 	[ctxHandle clearDrawable];
 	[ctxHandle release];
+}
+
+void* GLContext_GetAddress(const char* function) {
+	static const cc_string glPath = String_FromConst("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
+	static void* lib;
+	void* addr;
+
+	if (!lib) lib = DynamicLib_Load2(&glPath);
+	addr = DynamicLib_Get2(lib, function);
+	return GLContext_IsInvalidAddress(addr) ? NULL : addr;
 }
 
 cc_bool GLContext_SwapBuffers(void) {
@@ -524,3 +617,6 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	int value = vsync ? 1 : 0;
 	[ctxHandle setValues:&value forParameter: NSOpenGLCPSwapInterval];
 }
+
+void GLContext_GetApiInfo(cc_string* info) { }
+#endif

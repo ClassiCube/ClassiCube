@@ -10,24 +10,11 @@ struct _WinData WindowInfo;
 int Display_ScaleX(int x) { return (int)(x * DisplayInfo.ScaleX); }
 int Display_ScaleY(int y) { return (int)(y * DisplayInfo.ScaleY); }
 
-#if defined CC_BUILD_COCOA
-/* Cocoa implements some functions in external interop_cocoa.m file */
-#define CC_MAYBE_OBJC1 extern
-#define CC_MAYBE_OBJC2 static
-#define CC_OBJC_VISIBLE
-#else
-/* All other platforms implement in the file including this .h file */
-#define CC_MAYBE_OBJC1 static
-#define CC_MAYBE_OBJC2 static
-#define CC_OBJC_VISIBLE static
-#endif
-
-
 static int cursorPrevX, cursorPrevY;
 static cc_bool cursorVisible = true;
 /* Gets the position of the cursor in screen or window coordinates. */
-CC_MAYBE_OBJC1 void Cursor_GetRawPos(int* x, int* y);
-CC_MAYBE_OBJC2 void Cursor_DoSetVisible(cc_bool visible);
+static void Cursor_GetRawPos(int* x, int* y);
+static void Cursor_DoSetVisible(cc_bool visible);
 
 void Cursor_SetVisible(cc_bool visible) {
 	if (cursorVisible == visible) return;
@@ -66,7 +53,7 @@ static void DefaultDisableRawMouse(void) {
 }
 
 /* The actual windowing system specific method to display a message box */
-CC_MAYBE_OBJC1 void ShowDialogCore(const char* title, const char* msg);
+static void ShowDialogCore(const char* title, const char* msg);
 void Window_ShowDialog(const char* title, const char* msg) {
 	/* Ensure cursor is visible while showing message box */
 	cc_bool visible = cursorVisible;
