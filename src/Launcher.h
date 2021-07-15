@@ -26,15 +26,15 @@ extern cc_string Launcher_AutoHash;
 extern cc_string Launcher_Username;
 
 /* Base colour of pixels before any widgets are drawn. */
-extern BitmapCol Launcher_BackgroundCol;
+extern BitmapCol Launcher_BackgroundColor;
 /* Colour of pixels on the 4 line borders around buttons. */
-extern BitmapCol Launcher_ButtonBorderCol;
+extern BitmapCol Launcher_ButtonBorderColor;
 /* Colour of button when user has mouse over it. */
-extern BitmapCol Launcher_ButtonForeActiveCol;
+extern BitmapCol Launcher_ButtonForeActiveColor;
 /* Colour of button when user does not have mouse over it. */
-extern BitmapCol Launcher_ButtonForeCol;
+extern BitmapCol Launcher_ButtonForeColor;
 /* Colour of line at top of buttons to give them a less flat look.*/
-extern BitmapCol Launcher_ButtonHighlightCol;
+extern BitmapCol Launcher_ButtonHighlightColor;
 
 /* Resets colours to default. */
 void Launcher_ResetSkin(void);

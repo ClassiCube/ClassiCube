@@ -7,7 +7,7 @@
 void Clipboard_GetText(cc_string* value) {
 	const char* raw;
 	NSString* str;
-        int len;
+	int len;
 
 	str = [UIPasteboard generalPasteboard].string;
 	if (!str) return;

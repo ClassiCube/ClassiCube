@@ -44,6 +44,35 @@ static void RefreshWindowBounds(void) {
 	WindowInfo.Height = (int)view.size.height;
 }
 
+void Clipboard_GetText(cc_string* value) {
+	NSPasteboard* pasteboard;
+	const char* src;
+	NSString* str;
+	int len;
+
+	pasteboard = [NSPasteboard generalPasteboard];
+	str        = [pasteboard stringForType:NSStringPboardType];
+
+	if (!str) return;
+	src = [str UTF8String];
+	len = String_Length(src);
+	String_AppendUtf8(value, src, len);
+}
+
+void Clipboard_SetText(const cc_string* value) {
+	NSPasteboard* pasteboard;
+	char raw[NATIVE_STR_LEN];
+	NSString* str;
+
+	Platform_EncodeUtf8(raw, value);
+	str        = [[NSString alloc] initWithUTF8String:raw];
+	pasteboard = [NSPasteboard generalPasteboard];
+
+	[pasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
+	[pasteboard setString:str forType:NSStringPboardType];
+}
+
+
 @interface CCWindow : NSWindow { }
 @end
 @implementation CCWindow
@@ -182,11 +211,11 @@ void Window_Create(int width, int height) {
 }
 
 void Window_SetTitle(const cc_string* title) {
-	char buffer[NATIVE_STR_LEN];
+	char raw[NATIVE_STR_LEN];
 	NSString* str;
-	Platform_EncodeUtf8(buffer, title);
+	Platform_EncodeUtf8(raw, title);
 
-	str = [[NSString alloc] initWithUTF8String:buffer];
+	str = [[NSString alloc] initWithUTF8String:raw];
 	[winHandle setTitle:str];
 	[str release];
 }

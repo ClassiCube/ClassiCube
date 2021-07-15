@@ -2141,6 +2141,60 @@ CC_OBJC_VISIBLE int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map)
 /*Return = 52,     (0x34, ??? according to that link)*/
 /*Menu = 110,      (0x6E, ??? according to that link)*/
 
+void Cursor_SetPosition(int x, int y) {
+	CGPoint point;
+	point.x = x + windowX;
+	point.y = y + windowY;
+	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
+}
+
+static void Cursor_DoSetVisible(cc_bool visible) {
+	if (visible) {
+		CGDisplayShowCursor(CGMainDisplayID());
+	} else {
+		CGDisplayHideCursor(CGMainDisplayID());
+	}
+}
+
+void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
+void Window_SetKeyboardText(const cc_string* text) { }
+void Window_CloseKeyboard(void) { }
+
+void Window_EnableRawMouse(void) {
+	DefaultEnableRawMouse();
+	CGAssociateMouseAndMouseCursorPosition(0);
+}
+
+void Window_UpdateRawMouse(void) { CentreMousePosition(); }
+void Window_DisableRawMouse(void) {
+	CGAssociateMouseAndMouseCursorPosition(1);
+	DefaultDisableRawMouse();
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Carbon window------------------------------------------------------*
+*#########################################################################################################################*/
+#if defined CC_BUILD_CARBON
+#include <Carbon/Carbon.h>
+
+static WindowRef win_handle;
+static cc_bool win_fullscreen, showingDialog;
+
+/* fullscreen is tied to OpenGL context unfortunately */
+static cc_result GLContext_UnsetFullscreen(void);
+static cc_result GLContext_SetFullscreen(void);
+
+static void RefreshWindowBounds(void) {
+	Rect r;
+	if (win_fullscreen) return;
+	
+	/* TODO: kWindowContentRgn ??? */
+	GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
+	windowX = r.left; WindowInfo.Width  = r.right  - r.left;
+	windowY = r.top;  WindowInfo.Height = r.bottom - r.top;
+}
+
 /* NOTE: All Pasteboard functions are OSX 10.3 or later */
 static PasteboardRef Window_GetPasteboard(void) {
 	PasteboardRef pbRef;
@@ -2200,60 +2254,6 @@ void Clipboard_SetText(const cc_string* value) {
 	if (!cfData) Logger_Abort("CFDataCreate() returned null pointer");
 
 	PasteboardPutItemFlavor(pbRef, 1, FMT_UTF8, cfData, 0);
-}
-
-void Cursor_SetPosition(int x, int y) {
-	CGPoint point;
-	point.x = x + windowX;
-	point.y = y + windowY;
-	CGDisplayMoveCursorToPoint(CGMainDisplayID(), point);
-}
-
-static void Cursor_DoSetVisible(cc_bool visible) {
-	if (visible) {
-		CGDisplayShowCursor(CGMainDisplayID());
-	} else {
-		CGDisplayHideCursor(CGMainDisplayID());
-	}
-}
-
-void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
-void Window_SetKeyboardText(const cc_string* text) { }
-void Window_CloseKeyboard(void) { }
-
-void Window_EnableRawMouse(void) {
-	DefaultEnableRawMouse();
-	CGAssociateMouseAndMouseCursorPosition(0);
-}
-
-void Window_UpdateRawMouse(void) { CentreMousePosition(); }
-void Window_DisableRawMouse(void) {
-	CGAssociateMouseAndMouseCursorPosition(1);
-	DefaultDisableRawMouse();
-}
-
-
-/*########################################################################################################################*
-*------------------------------------------------------Carbon window------------------------------------------------------*
-*#########################################################################################################################*/
-#if defined CC_BUILD_CARBON
-#include <Carbon/Carbon.h>
-
-static WindowRef win_handle;
-static cc_bool win_fullscreen, showingDialog;
-
-/* fullscreen is tied to OpenGL context unfortunately */
-static cc_result GLContext_UnsetFullscreen(void);
-static cc_result GLContext_SetFullscreen(void);
-
-static void RefreshWindowBounds(void) {
-	Rect r;
-	if (win_fullscreen) return;
-	
-	/* TODO: kWindowContentRgn ??? */
-	GetWindowBounds(win_handle, kWindowGlobalPortRgn, &r);
-	windowX = r.left; WindowInfo.Width  = r.right  - r.left;
-	windowY = r.top;  WindowInfo.Height = r.bottom - r.top;
 }
 
 static OSStatus Window_ProcessKeyboardEvent(EventRef inEvent) {

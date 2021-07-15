@@ -676,14 +676,14 @@ static void LTable_DrawGridlines(struct LTable* w) {
 	if (Launcher_ClassicBackground) return;
 
 	x = w->x;
-	Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
+	Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundColor,
 				   x, w->y + w->hdrHeight, w->width, gridlineHeight);
 
 	for (i = 0; i < w->numColumns; i++) {
 		x += w->columns[i].width;
 		if (!w->columns[i].hasGridline) continue;
 			
-		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundCol,
+		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundColor,
 					   x, w->y, gridlineWidth, w->height);
 		x += gridlineWidth;
 	}
@@ -757,8 +757,8 @@ static void LTable_DrawRows(struct LTable* w) {
 static void LTable_DrawScrollbar(struct LTable* w) {
 	BitmapCol classicBack   = BitmapCol_Make( 80,  80,  80, 255);
 	BitmapCol classicScroll = BitmapCol_Make(160, 160, 160, 255);
-	BitmapCol backCol   = Launcher_ClassicBackground ? classicBack   : Launcher_ButtonBorderCol;
-	BitmapCol scrollCol = Launcher_ClassicBackground ? classicScroll : Launcher_ButtonForeActiveCol;
+	BitmapCol backCol   = Launcher_ClassicBackground ? classicBack   : Launcher_ButtonBorderColor;
+	BitmapCol scrollCol = Launcher_ClassicBackground ? classicScroll : Launcher_ButtonForeActiveColor;
 
 	int x, y, height;
 	x = w->x + w->width - scrollbarWidth;

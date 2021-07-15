@@ -340,11 +340,11 @@ CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, Bit
 }
 
 CC_NOINLINE static void ColoursScreen_UpdateAll(struct ColoursScreen* s) {
-	ColoursScreen_Update(s,  0, Launcher_BackgroundCol);
-	ColoursScreen_Update(s,  3, Launcher_ButtonBorderCol);
-	ColoursScreen_Update(s,  6, Launcher_ButtonHighlightCol);
-	ColoursScreen_Update(s,  9, Launcher_ButtonForeCol);
-	ColoursScreen_Update(s, 12, Launcher_ButtonForeActiveCol);
+	ColoursScreen_Update(s,  0, Launcher_BackgroundColor);
+	ColoursScreen_Update(s,  3, Launcher_ButtonBorderColor);
+	ColoursScreen_Update(s,  6, Launcher_ButtonHighlightColor);
+	ColoursScreen_Update(s,  9, Launcher_ButtonForeColor);
+	ColoursScreen_Update(s, 12, Launcher_ButtonForeActiveColor);
 }
 
 static void ColoursScreen_TextChanged(struct LInput* w) {
@@ -353,11 +353,11 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 	BitmapCol* col;
 	cc_uint8 r, g, b;
 
-	if (index < 3)       col = &Launcher_BackgroundCol;
-	else if (index < 6)  col = &Launcher_ButtonBorderCol;
-	else if (index < 9)  col = &Launcher_ButtonHighlightCol;
-	else if (index < 12) col = &Launcher_ButtonForeCol;
-	else                 col = &Launcher_ButtonForeActiveCol;
+	if (index < 3)       col = &Launcher_BackgroundColor;
+	else if (index < 6)  col = &Launcher_ButtonBorderColor;
+	else if (index < 9)  col = &Launcher_ButtonHighlightColor;
+	else if (index < 12) col = &Launcher_ButtonForeColor;
+	else                 col = &Launcher_ButtonForeActiveColor;
 
 	/* if index of G input, changes to index of R input */
 	index = (index / 3) * 3;

@@ -355,24 +355,24 @@ void Launcher_Run(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Colours/Skin----------------------------------------------------*
 *#########################################################################################################################*/
-#define DEFAULT_BACKGROUND_COL         BitmapCol_Make(153, 127, 172, 255)
-#define DEFAULT_BUTTON_BORDER_COL      BitmapCol_Make( 97,  81, 110, 255)
-#define DEFAULT_BUTTON_FORE_ACTIVE_COL BitmapCol_Make(189, 168, 206, 255)
-#define DEFAULT_BUTTON_FORE_COL        BitmapCol_Make(141, 114, 165, 255)
-#define DEFAULT_BUTTON_HIGHLIGHT_COL   BitmapCol_Make(162, 131, 186, 255)
+#define DEFAULT_BACKGROUND_COLOR         BitmapCol_Make(153, 127, 172, 255)
+#define DEFAULT_BUTTON_BORDER_COLOR      BitmapCol_Make( 97,  81, 110, 255)
+#define DEFAULT_BUTTON_FORE_ACTIVE_COLOR BitmapCol_Make(189, 168, 206, 255)
+#define DEFAULT_BUTTON_FORE_COLOR        BitmapCol_Make(141, 114, 165, 255)
+#define DEFAULT_BUTTON_HIGHLIGHT_COLOR   BitmapCol_Make(162, 131, 186, 255)
 
-BitmapCol Launcher_BackgroundCol       = DEFAULT_BACKGROUND_COL;
-BitmapCol Launcher_ButtonBorderCol     = DEFAULT_BUTTON_BORDER_COL;
-BitmapCol Launcher_ButtonForeActiveCol = DEFAULT_BUTTON_FORE_ACTIVE_COL;
-BitmapCol Launcher_ButtonForeCol       = DEFAULT_BUTTON_FORE_COL;
-BitmapCol Launcher_ButtonHighlightCol  = DEFAULT_BUTTON_HIGHLIGHT_COL;
+BitmapCol Launcher_BackgroundColor       = DEFAULT_BACKGROUND_COLOR;
+BitmapCol Launcher_ButtonBorderColor     = DEFAULT_BUTTON_BORDER_COLOR;
+BitmapCol Launcher_ButtonForeActiveColor = DEFAULT_BUTTON_FORE_ACTIVE_COLOR;
+BitmapCol Launcher_ButtonForeColor       = DEFAULT_BUTTON_FORE_COLOR;
+BitmapCol Launcher_ButtonHighlightColor  = DEFAULT_BUTTON_HIGHLIGHT_COLOR;
 
 void Launcher_ResetSkin(void) {
-	Launcher_BackgroundCol       = DEFAULT_BACKGROUND_COL;
-	Launcher_ButtonBorderCol     = DEFAULT_BUTTON_BORDER_COL;
-	Launcher_ButtonForeActiveCol = DEFAULT_BUTTON_FORE_ACTIVE_COL;
-	Launcher_ButtonForeCol       = DEFAULT_BUTTON_FORE_COL;
-	Launcher_ButtonHighlightCol  = DEFAULT_BUTTON_HIGHLIGHT_COL;
+	Launcher_BackgroundColor       = DEFAULT_BACKGROUND_COLOR;
+	Launcher_ButtonBorderColor     = DEFAULT_BUTTON_BORDER_COLOR;
+	Launcher_ButtonForeActiveColor = DEFAULT_BUTTON_FORE_ACTIVE_COLOR;
+	Launcher_ButtonForeColor       = DEFAULT_BUTTON_FORE_COLOR;
+	Launcher_ButtonHighlightColor  = DEFAULT_BUTTON_HIGHLIGHT_COLOR;
 }
 
 CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
@@ -385,11 +385,11 @@ CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
 }
 
 void Launcher_LoadSkin(void) {
-	Launcher_GetCol("launcher-back-col",                   &Launcher_BackgroundCol);
-	Launcher_GetCol("launcher-btn-border-col",             &Launcher_ButtonBorderCol);
-	Launcher_GetCol("launcher-btn-fore-active-col",        &Launcher_ButtonForeActiveCol);
-	Launcher_GetCol("launcher-btn-fore-inactive-col",      &Launcher_ButtonForeCol);
-	Launcher_GetCol("launcher-btn-highlight-inactive-col", &Launcher_ButtonHighlightCol);
+	Launcher_GetCol("launcher-back-col",                   &Launcher_BackgroundColor);
+	Launcher_GetCol("launcher-btn-border-col",             &Launcher_ButtonBorderColor);
+	Launcher_GetCol("launcher-btn-fore-active-col",        &Launcher_ButtonForeActiveColor);
+	Launcher_GetCol("launcher-btn-fore-inactive-col",      &Launcher_ButtonForeColor);
+	Launcher_GetCol("launcher-btn-highlight-inactive-col", &Launcher_ButtonHighlightColor);
 }
 
 CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
@@ -403,11 +403,11 @@ CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
 }
 
 void Launcher_SaveSkin(void) {
-	Launcher_SetCol("launcher-back-col",                   Launcher_BackgroundCol);
-	Launcher_SetCol("launcher-btn-border-col",             Launcher_ButtonBorderCol);
-	Launcher_SetCol("launcher-btn-fore-active-col",        Launcher_ButtonForeActiveCol);
-	Launcher_SetCol("launcher-btn-fore-inactive-col",      Launcher_ButtonForeCol);
-	Launcher_SetCol("launcher-btn-highlight-inactive-col", Launcher_ButtonHighlightCol);
+	Launcher_SetCol("launcher-back-col",                   Launcher_BackgroundColor);
+	Launcher_SetCol("launcher-btn-border-col",             Launcher_ButtonBorderColor);
+	Launcher_SetCol("launcher-btn-fore-active-col",        Launcher_ButtonForeActiveColor);
+	Launcher_SetCol("launcher-btn-fore-inactive-col",      Launcher_ButtonForeColor);
+	Launcher_SetCol("launcher-btn-highlight-inactive-col", Launcher_ButtonHighlightColor);
 }
 
 
