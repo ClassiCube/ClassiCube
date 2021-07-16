@@ -1,5 +1,6 @@
 #include "_WindowBase.h"
 #include "ExtMath.h"
+#include "Funcs.h"
 #include "Bitmap.h"
 #include "String.h"
 #include <Cocoa/Cocoa.h>
@@ -119,6 +120,14 @@ void Clipboard_SetText(const cc_string* value) {
 	[pasteboard setString:str forType:NSStringPboardType];
 }
 
+static NSAutoreleasePool* pool;
+void Window_Init(void) {
+	pool = [[NSAutoreleasePool alloc] init];
+	appHandle = [NSApplication sharedApplication];
+	[appHandle activateIgnoringOtherApps:YES];
+	Window_CommonInit();
+}
+
 
 /*########################################################################################################################*
 *----------------------------------------------------------Wwindow--------------------------------------------------------*
@@ -209,7 +218,6 @@ static void DoDrawFramebuffer(CGRect dirty);
 }
 @end
 
-
 static void MakeContentView(void) {
 	NSRect rect;
 	NSView* view;
@@ -220,14 +228,6 @@ static void MakeContentView(void) {
 	viewHandle = [CCView alloc];
 	[viewHandle initWithFrame:rect];
 	[winHandle setContentView:viewHandle];
-}
-
-static NSAutoreleasePool* pool;
-void Window_Init(void) {
-	pool = [[NSAutoreleasePool alloc] init];
-	appHandle = [NSApplication sharedApplication];
-	[appHandle activateIgnoringOtherApps:YES];
-	Window_CommonInit();
 }
 
 #ifdef CC_BUILD_ICON
@@ -279,6 +279,7 @@ void Window_Create(int width, int height) {
 	
 	Window_CommonCreate();
 	WindowInfo.Exists = true;
+	WindowInfo.Handle = winHandle;
 
 	del = [CCWindowDelegate alloc];
 	[winHandle setDelegate:del];
@@ -391,6 +392,7 @@ void Window_ProcessEvents(void) {
 	int key, type, steps, x, y;
 	CGFloat dx, dy;
 	
+	// https://wiki.freepascal.org/Cocoa_Internals/Application 
 	[pool release];
 	pool = [[NSAutoreleasePool alloc] init];
 

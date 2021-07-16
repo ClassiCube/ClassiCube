@@ -120,8 +120,9 @@ static EGLConfig ctx_config;
 static EGLint ctx_numConfig;
 
 static void GLContext_InitSurface(void) {
-	if (!win_handle) return; /* window not created or lost */
-	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, win_handle, NULL);
+	void* window = WindowInfo.Handle;
+	if (!window) return; /* window not created or lost */
+	ctx_surface = eglCreateWindowSurface(ctx_display, ctx_config, window, NULL);
 
 	if (!ctx_surface) return;
 	eglMakeCurrent(ctx_display, ctx_surface, ctx_surface, ctx_context);
