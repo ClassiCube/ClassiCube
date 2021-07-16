@@ -324,6 +324,9 @@
     <ClInclude Include="_HttpBase.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
+    <ClInclude Include="_WindowBase.h">
+      <Filter>Header Files\Platform</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="String.c">
@@ -500,9 +503,6 @@
     <ClCompile Include="_truetype.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="Window.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Launcher.c">
       <Filter>Source Files\Launcher</Filter>
     </ClCompile>
@@ -562,6 +562,24 @@
     </ClCompile>
     <ClCompile Include="Http_Worker.c">
       <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_SDL.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Web.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Android.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_X11.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Win.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Window_Carbon.c">
+      <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -253,6 +253,7 @@
     <ClInclude Include="_GraphicsBase.h" />
     <ClInclude Include="_HttpBase.h" />
     <ClInclude Include="_PlatformBase.h" />
+    <ClInclude Include="_WindowBase.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animations.c" />
@@ -316,7 +317,12 @@
     <ClCompile Include="Vorbis.c" />
     <ClCompile Include="Widgets.c" />
     <ClCompile Include="Logger.c" />
-    <ClCompile Include="Window.c" />
+    <ClCompile Include="Window_Android.c" />
+    <ClCompile Include="Window_Carbon.c" />
+    <ClCompile Include="Window_SDL.c" />
+    <ClCompile Include="Window_Web.c" />
+    <ClCompile Include="Window_Win.c" />
+    <ClCompile Include="Window_X11.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="_autofit.c" />
     <ClCompile Include="_cff.c" />

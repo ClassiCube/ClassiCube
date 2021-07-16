@@ -120,6 +120,7 @@ SDK_ROOT="/home/buildbot/android/sdk/platforms/android-26"
   
 build_android() {
   echo "Building android.."
+  rm cc.apk cc-droid-arm_16 cc-droid-arm_32 cc-droid-arm_64 cc-droid-x86_32 cc-droid-x86_64
   $NDK_ROOT/armv7a-linux-androideabi16-clang *.c $DROID_FLAGS -march=armv5 $DROID_LIBS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-droid-arm_16
   $NDK_ROOT/armv7a-linux-androideabi16-clang *.c $DROID_FLAGS $DROID_LIBS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-droid-arm_32
   $NDK_ROOT/aarch64-linux-android21-clang *.c $DROID_FLAGS $DROID_LIBS -DCC_COMMIT_SHA=\"$LATEST\" -o cc-droid-arm_64
