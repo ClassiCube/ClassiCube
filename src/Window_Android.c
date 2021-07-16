@@ -5,6 +5,7 @@
 #include "Funcs.h"
 #include "Bitmap.h"
 #include "Errors.h"
+#include "Graphics.h"
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <android/keycodes.h>
@@ -126,7 +127,6 @@ static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject s
 	Event_RaiseVoid(&WindowEvents.Created);
 }
 
-#include "Graphics.h"
 static void JNICALL java_processSurfaceDestroyed(JNIEnv* env, jobject o) {
 	Platform_LogConst("WIN - DESTROYED");
 	if (win_handle) ANativeWindow_release(win_handle);

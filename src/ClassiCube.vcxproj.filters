@@ -503,9 +503,6 @@
     <ClCompile Include="_truetype.c">
       <Filter>Source Files\Freetype</Filter>
     </ClCompile>
-    <ClCompile Include="Window.c">
-      <Filter>Source Files\Platform</Filter>
-    </ClCompile>
     <ClCompile Include="Launcher.c">
       <Filter>Source Files\Launcher</Filter>
     </ClCompile>

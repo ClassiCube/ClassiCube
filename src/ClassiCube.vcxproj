@@ -317,7 +317,6 @@
     <ClCompile Include="Vorbis.c" />
     <ClCompile Include="Widgets.c" />
     <ClCompile Include="Logger.c" />
-    <ClCompile Include="Window.c" />
     <ClCompile Include="Window_Android.c" />
     <ClCompile Include="Window_Carbon.c" />
     <ClCompile Include="Window_SDL.c" />
