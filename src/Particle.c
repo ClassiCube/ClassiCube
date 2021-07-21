@@ -524,7 +524,7 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 	struct CustomParticle* p;
 	struct CustomParticleEffect* e = &Particles_CustomEffects[effectID];
 	int i, count = e->particleCount;
-	Vec3 offset;
+	Vec3 offset, delta;
 	float d;
 
 	for (i = 0; i < count; i++) {
@@ -535,7 +535,7 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 		offset.X = Random_Float(&rnd) - 0.5f;
 		offset.Y = Random_Float(&rnd) - 0.5f;
 		offset.Z = Random_Float(&rnd) - 0.5f;
-		Vec3_Normalize(&offset, &offset);
+		Vec3_Normalise(&offset);
 
 		/* See https://karthikkaranth.me/blog/generating-random-points-in-a-sphere/ */
 		/* 'Using normally distributed random numbers' */
@@ -548,19 +548,12 @@ void Particles_CustomEffect(int effectID, float x, float y, float z, float origi
 		p->base.lastPos.Z = z + offset.Z * d;
 		
 		Vec3 origin = { originX, originY, originZ };
-		if (Vec3_Equals(&origin, &p->base.lastPos)) {
-			p->base.velocity.X = 0;
-			p->base.velocity.Y = 0;
-			p->base.velocity.Z = 0;
-		}
-		else {
-			Vec3 diff;
-			Vec3_Sub(&diff, &p->base.lastPos, &origin);
-			Vec3_Normalize(&diff, &diff);
-			p->base.velocity.X = diff.X * e->speed;
-			p->base.velocity.Y = diff.Y * e->speed;
-			p->base.velocity.Z = diff.Z * e->speed;
-		}
+		Vec3_Sub(&delta, &p->base.lastPos, &origin);
+		Vec3_Normalise(&delta);
+
+		p->base.velocity.X = delta.X * e->speed;
+		p->base.velocity.Y = delta.Y * e->speed;
+		p->base.velocity.Z = delta.Z * e->speed;
 
 		p->base.nextPos  = p->base.lastPos;
 		p->base.lifetime = e->baseLifetime + (e->baseLifetime * e->lifetimeVariation) * ((Random_Float(&rnd) - 0.5f) * 2);

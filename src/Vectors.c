@@ -10,12 +10,16 @@ void Vec3_Lerp(Vec3* result, const Vec3* a, const Vec3* b, float blend) {
 	result->Z = blend * (b->Z - a->Z) + a->Z;
 }
 
-void Vec3_Normalize(Vec3* result, const Vec3* a) {
-	float lenSquared = a->X * a->X + a->Y * a->Y + a->Z * a->Z;
-	float scale = 1.0f / Math_SqrtF(lenSquared);
-	result->X = a->X * scale;
-	result->Y = a->Y * scale;
-	result->Z = a->Z * scale;
+void Vec3_Normalise(Vec3* v) {
+	float scale, lenSquared;
+	lenSquared = v->X * v->X + v->Y * v->Y + v->Z * v->Z;
+	/* handle zero vector */
+	if (!lenSquared) return;
+
+	scale = 1.0f / Math_SqrtF(lenSquared);
+	v->X  = v->X * scale;
+	v->Y  = v->Y * scale;
+	v->Z  = v->Z * scale;
 }
 
 void Vec3_Transform(Vec3* result, const Vec3* a, const struct Matrix* mat) {

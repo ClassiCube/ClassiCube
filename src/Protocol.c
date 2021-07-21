@@ -1355,6 +1355,9 @@ static void CalcVelocity(float* vel, cc_uint8* src, cc_uint8 mode) {
 
 	if (mode == 0) *vel += value;
 	if (mode == 1) *vel = value;
+
+	if (*vel < -1024) *vel = -1024;
+	if (*vel > +1024) *vel = +1024;
 }
 
 static void CPE_VelocityControl(cc_uint8* data) {

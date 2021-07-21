@@ -1223,7 +1223,7 @@ void PhysicsComp_DoEntityPush(struct Entity* entity) {
 		dist = dir.X * dir.X + dir.Z * dir.Z;
 		if (dist < 0.002f || dist > 1.0f) continue; /* TODO: range needs to be lower? */
 
-		Vec3_Normalize(&dir, &dir);
+		Vec3_Normalise(&dir);
 		pushStrength = (1 - dist) / 32.0f; /* TODO: should be 24/25 */
 		/* entity.Velocity -= dir * pushStrength */
 		Vec3_Mul1By(&dir, pushStrength);
