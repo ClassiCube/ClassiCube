@@ -915,7 +915,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
 }
 
-void Gfx_BindVb_T2fC4b(GfxResourceID vb) {
+void Gfx_BindVb_Textured(GfxResourceID vb) {
 	Gfx_BindVb(vb);
 	GL_SetupVbTextured();
 }
@@ -1030,6 +1030,81 @@ cc_bool Gfx_WarnIfNecessary(void) {
 
 
 /*########################################################################################################################*
+*-------------------------------------------------------Compatibility-----------------------------------------------------*
+*#########################################################################################################################*/
+#ifdef CC_BUILD_GL11
+static void GL_CheckSupport(void) { MakeIndices(gl_indices, GFX_MAX_INDICES); }
+#else
+/* fake vertex buffer objects with client side pointers */
+typedef struct fake_buffer { cc_uint8* data; } fake_buffer;
+static fake_buffer* cur_ib;
+static fake_buffer* cur_vb;
+#define fake_GetBuffer(target) (target == _GL_ELEMENT_ARRAY_BUFFER ? &cur_ib : &cur_vb);
+
+static void APIENTRY fake_glBindBuffer(GLenum target, GLuint src) {
+	fake_buffer** buffer = fake_GetBuffer(target);
+	*buffer = (fake_buffer*)src;
+}
+
+static void APIENTRY fake_glDeleteBuffers(GLsizei n, const GLuint *buffers) {
+	Mem_Free((void*)buffers[0]);
+}
+
+static void APIENTRY fake_glGenBuffers(GLsizei n, GLuint *buffers) {
+	fake_buffer* buffer = (fake_buffer*)Mem_TryAlloc(1, sizeof(fake_buffer));
+	buffer->data = NULL;
+	buffers[0]   = (GLuint)buffer;
+}
+
+static void APIENTRY fake_glBufferData(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage) {
+	fake_buffer* buffer = *fake_GetBuffer(target);
+	Mem_Free(buffer->data);
+
+	buffer->data = Mem_TryAlloc(size, 1);
+	if (data) Mem_Copy(buffer->data, data, size);
+}
+static void APIENTRY fake_glBufferSubData(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data) {
+	fake_buffer* buffer = *fake_GetBuffer(target);
+	Mem_Copy(buffer->data, data, size);
+}
+
+static void GL_CheckSupport(void) {
+	static const struct DynamicLibSym coreVboFuncs[5] = {
+		DynamicLib_Sym2("glBindBuffer",    glBindBuffer), DynamicLib_Sym2("glDeleteBuffers", glDeleteBuffers),
+		DynamicLib_Sym2("glGenBuffers",    glGenBuffers), DynamicLib_Sym2("glBufferData",    glBufferData),
+		DynamicLib_Sym2("glBufferSubData", glBufferSubData)
+	};
+	static const struct DynamicLibSym arbVboFuncs[5] = {
+		DynamicLib_Sym2("glBindBufferARB",    glBindBuffer), DynamicLib_Sym2("glDeleteBuffersARB", glDeleteBuffers),
+		DynamicLib_Sym2("glGenBuffersARB",    glGenBuffers), DynamicLib_Sym2("glBufferDataARB",    glBufferData),
+		DynamicLib_Sym2("glBufferSubDataARB", glBufferSubData)
+	};
+	static const cc_string vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
+	cc_string extensions = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
+	const GLubyte* ver   = glGetString(GL_VERSION);
+
+	/* Version string is always: x.y. (and whatever afterwards) */
+	int major = ver[0] - '0', minor = ver[2] - '0';
+
+	/* Supported in core since 1.5 */
+	if (major > 1 || (major == 1 && minor >= 5)) {
+		GLContext_GetAll(coreVboFuncs, Array_Elems(coreVboFuncs));
+	} else if (String_CaselessContains(&extensions, &vboExt)) {
+		GLContext_GetAll(arbVboFuncs,  Array_Elems(arbVboFuncs));
+	} else {
+		Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
+			"Compile the game with CC_BUILD_GL11, or ask on the ClassiCube forums for it");
+
+		_glBindBuffer = fake_glBindBuffer; _glDeleteBuffers = fake_glDeleteBuffers;
+		_glGenBuffers = fake_glGenBuffers; _glBufferData    = fake_glBufferData;
+		_glBufferSubData = fake_glBufferSubData;
+	}
+	customMipmapsLevels = true;
+}
+#endif
+
+
+/*########################################################################################################################*
 *----------------------------------------------------------Drawing--------------------------------------------------------*
 *#########################################################################################################################*/
 #ifdef CC_BUILD_GL11
@@ -1104,9 +1179,7 @@ void Gfx_DrawVb_IndexedTris(int verticesCount) {
 }
 
 #ifdef CC_BUILD_GL11
-void Gfx_DrawIndexedTris_T2fC4b(int list, int ignored) { glCallList(list); }
-
-static void GL_CheckSupport(void) { MakeIndices(gl_indices, GFX_MAX_INDICES); }
+void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) { glCallList(activeList); }
 #else
 void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	cc_uint32 offset = startVertex * SIZEOF_VERTEX_TEXTURED;
@@ -1114,77 +1187,6 @@ void Gfx_DrawIndexedTris_T2fC4b(int verticesCount, int startVertex) {
 	glColorPointer(4, GL_UNSIGNED_BYTE, SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 12));
 	glTexCoordPointer(2, GL_FLOAT,      SIZEOF_VERTEX_TEXTURED, (void*)(VB_PTR + offset + 16));
 	glDrawElements(GL_TRIANGLES,        ICOUNT(verticesCount),   GL_UNSIGNED_SHORT, IB_PTR);
-}
-
-
-/*########################################################################################################################*
-*-------------------------------------------------------Compatibility-----------------------------------------------------*
-*#########################################################################################################################*/
-/* fake vertex buffer objects with client side pointers */
-typedef struct fake_buffer { cc_uint8* data; } fake_buffer;
-static fake_buffer* cur_ib;
-static fake_buffer* cur_vb;
-#define fake_GetBuffer(target) (target == _GL_ELEMENT_ARRAY_BUFFER ? &cur_ib : &cur_vb);
-
-static void APIENTRY fake_glBindBuffer(GLenum target, GLuint src) {
-	fake_buffer** buffer = fake_GetBuffer(target);
-	*buffer = (fake_buffer*)src;
-}
-
-static void APIENTRY fake_glDeleteBuffers(GLsizei n, const GLuint *buffers) {
-	Mem_Free((void*)buffers[0]);
-}
-
-static void APIENTRY fake_glGenBuffers(GLsizei n, GLuint *buffers) {
-	fake_buffer* buffer = (fake_buffer*)Mem_TryAlloc(1, sizeof(fake_buffer));
-	buffer->data = NULL;
-	buffers[0]   = (GLuint)buffer;
-}
-
-static void APIENTRY fake_glBufferData(GLenum target, cc_uintptr size, const GLvoid* data, GLenum usage) {
-	fake_buffer* buffer = *fake_GetBuffer(target);
-	Mem_Free(buffer->data);
-
-	buffer->data = Mem_TryAlloc(size, 1);
-	if (data) Mem_Copy(buffer->data, data, size);
-}
-static void APIENTRY fake_glBufferSubData(GLenum target, cc_uintptr offset, cc_uintptr size, const GLvoid* data) {
-	fake_buffer* buffer = *fake_GetBuffer(target);
-	Mem_Copy(buffer->data, data, size);
-}
-
-static void GL_CheckSupport(void) {
-	static const struct DynamicLibSym coreVboFuncs[5] = {
-		DynamicLib_Sym2("glBindBuffer",    glBindBuffer), DynamicLib_Sym2("glDeleteBuffers", glDeleteBuffers),
-		DynamicLib_Sym2("glGenBuffers",    glGenBuffers), DynamicLib_Sym2("glBufferData",    glBufferData),
-		DynamicLib_Sym2("glBufferSubData", glBufferSubData)
-	};
-	static const struct DynamicLibSym arbVboFuncs[5] = {
-		DynamicLib_Sym2("glBindBufferARB",    glBindBuffer), DynamicLib_Sym2("glDeleteBuffersARB", glDeleteBuffers),
-		DynamicLib_Sym2("glGenBuffersARB",    glGenBuffers), DynamicLib_Sym2("glBufferDataARB",    glBufferData),
-		DynamicLib_Sym2("glBufferSubDataARB", glBufferSubData)
-	};
-	static const cc_string vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
-	cc_string extensions = String_FromReadonly((const char*)glGetString(GL_EXTENSIONS));
-	const GLubyte* ver   = glGetString(GL_VERSION);
-
-	/* Version string is always: x.y. (and whatever afterwards) */
-	int major = ver[0] - '0', minor = ver[2] - '0';
-
-	/* Supported in core since 1.5 */
-	if (major > 1 || (major == 1 && minor >= 5)) {
-		GLContext_GetAll(coreVboFuncs, Array_Elems(coreVboFuncs));
-	} else if (String_CaselessContains(&extensions, &vboExt)) {
-		GLContext_GetAll(arbVboFuncs,  Array_Elems(arbVboFuncs));
-	} else {
-		Logger_Abort("Only OpenGL 1.1 supported.\n\n" \
-			"Compile the game with CC_BUILD_GL11, or ask on the ClassiCube forums for it");
-
-		_glBindBuffer = fake_glBindBuffer; _glDeleteBuffers = fake_glDeleteBuffers;
-		_glGenBuffers = fake_glGenBuffers; _glBufferData    = fake_glBufferData;
-		_glBufferSubData = fake_glBufferSubData;
-	}
-	customMipmapsLevels = true;
 }
 #endif /* !CC_BUILD_GL11 */
 #endif /* !CC_BUILD_GLMODERN */

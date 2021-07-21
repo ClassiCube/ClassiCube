@@ -138,10 +138,10 @@ CC_API void  Gfx_UnlockVb(GfxResourceID vb);
 GfxResourceID Gfx_CreateVb2(void* vertices, VertexFormat fmt, int count);
 #endif
 #ifdef CC_BUILD_GLMODERN
-/* Special case Gfx_BindVb for map renderer */
-void Gfx_BindVb_T2fC4b(GfxResourceID vb);
+/* Special case Gfx_BindVb for use with Gfx_DrawIndexedTris_T2fC4b */
+void Gfx_BindVb_Textured(GfxResourceID vb);
 #else
-#define Gfx_BindVb_T2fC4b Gfx_BindVb
+#define Gfx_BindVb_Textured Gfx_BindVb
 #endif
 
 /* Creates a new dynamic vertex buffer, whose contents can be updated later. */

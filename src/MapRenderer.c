@@ -95,7 +95,7 @@ static void CheckWeather(double delta) {
 }
 
 #ifdef CC_BUILD_GL11
-#define DrawFace(face, ign)    Gfx_DrawIndexedTris_T2fC4b(part.Vbs[face], 0);
+#define DrawFace(face, ign)    Gfx_BindVb(part.Vbs[face]); Gfx_DrawIndexedTris_T2fC4b(0, 0);
 #define DrawFaces(f1, f2, ign) DrawFace(f1, ign); DrawFace(f2, ign);
 #else
 #define DrawFace(face, offset)    Gfx_DrawIndexedTris_T2fC4b(part.Counts[face], offset);
@@ -132,7 +132,7 @@ static void RenderNormalBatch(int batch) {
 		hasNormParts[batch] = true;
 
 #ifndef CC_BUILD_GL11
-		Gfx_BindVb_T2fC4b(info->Vb);
+		Gfx_BindVb_Textured(info->Vb);
 #endif
 
 		offset  = part.Offset + part.SpriteCount;
@@ -236,7 +236,7 @@ static void RenderTranslucentBatch(int batch) {
 		hasTranParts[batch] = true;
 
 #ifndef CC_BUILD_GL11
-		Gfx_BindVb_T2fC4b(info->Vb);
+		Gfx_BindVb_Textured(info->Vb);
 #endif
 
 		offset  = part.Offset;
