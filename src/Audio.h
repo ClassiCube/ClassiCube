@@ -27,8 +27,8 @@ struct AudioFormat { cc_uint16 channels; int sampleRate; };
 
 /* Initialises an audio context. */
 void Audio_Init(struct AudioContext* ctx, int buffers);
-/* Stops playing audio, unqueues buffers, then frees the audio context. */
-cc_result Audio_Close(struct AudioContext* ctx);
+/* Stops playing audio, and then frees the audio context. */
+void Audio_Close(struct AudioContext* ctx);
 /* Returns the format audio is played in. */
 struct AudioFormat* Audio_GetFormat(struct AudioContext* ctx);
 /* Sets the format of the audio data to be played. */
@@ -40,7 +40,7 @@ cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uin
 /* Begins playing audio. Audio_BufferData must have been used before this. */
 cc_result Audio_Play(struct AudioContext* ctx);
 /* Immediately stops the currently playing audio. */
-cc_result Audio_Stop(struct AudioContext* ctx);
+void Audio_Stop(struct AudioContext* ctx);
 /* Returns whether the given buffer is available for playing data. */
 cc_result Audio_IsAvailable(struct AudioContext* ctx, int idx, cc_bool* available);
 /* Returns whether all buffers have finished playing. */

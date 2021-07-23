@@ -242,9 +242,9 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 	return _alGetError();
 }
 
-cc_result Audio_Stop(struct AudioContext* ctx) {
+void Audio_Stop(struct AudioContext* ctx) {
 	_alSourceStop(ctx->source);
-	return _alGetError();
+	_alGetError();
 }
 
 cc_result Audio_IsAvailable(struct AudioContext* ctx, int idx, cc_bool* available) {
@@ -349,9 +349,8 @@ cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uin
 
 cc_result Audio_Play(struct AudioContext* ctx) { return 0; }
 
-cc_result Audio_Stop(struct AudioContext* ctx) {
-	if (!ctx->handle) return 0;
-	return waveOutReset(ctx->handle);
+void Audio_Stop(struct AudioContext* ctx) {
+	if (ctx->handle) waveOutReset(ctx->handle);
 }
 
 cc_result Audio_IsAvailable(struct AudioContext* ctx, int idx, cc_bool* available) {
@@ -538,12 +537,11 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_PLAYING);
 }
 
-cc_result Audio_Stop(struct AudioContext* ctx) {
-	if (!ctx->bqPlayerPlayer) return 0;
+void Audio_Stop(struct AudioContext* ctx) {
+	if (!ctx->bqPlayerPlayer) return;
 
-	/* According to OpenSL ES spec, Clear can never fail anyways */
 	(*ctx->bqPlayerQueue)->Clear(ctx->bqPlayerQueue);
-	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_STOPPED);
+	(*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_STOPPED);
 }
 
 cc_result Audio_IsAvailable(struct AudioContext* ctx, int idx, cc_bool* available) {
@@ -597,7 +595,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) 
 	return Backend_SetFormat(ctx, format);
 }
 
-cc_result Audio_Close(struct AudioContext* ctx) {
+void Audio_Close(struct AudioContext* ctx) {
 	cc_bool finished;
 	Audio_Stop(ctx);
 	Audio_IsFinished(ctx, &finished); /* unqueue buffers */
@@ -605,7 +603,7 @@ cc_result Audio_Close(struct AudioContext* ctx) {
 	ctx->count             = 0;
 	ctx->format.channels   = 0;
 	ctx->format.sampleRate = 0;
-	return Backend_Reset(ctx);
+	Backend_Reset(ctx);
 }
 
 
@@ -874,9 +872,7 @@ static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
 	int i;
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
 		if (!outputs[i].ctx.count) continue;
-
 		Audio_Close(&outputs[i].ctx);
-		outputs[i].ctx.count = 0;
 
 		Mem_Free(outputs[i].buffer);
 		outputs[i].buffer   = NULL;

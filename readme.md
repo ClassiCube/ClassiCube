@@ -39,7 +39,7 @@ Otherwise, you will have to [compile the game yourself](#using-visual-studio-com
 ### Compiling - Windows
 
 ##### Using Visual Studio
-Open ClassiCube.sln and compile it.
+Open ClassiCube.sln *(File -> Open -> Project/Solution)* and compile it *(Build -> Build Solution)*.
 
 If you get a ```The Windows SDK version 5.1 was not found``` compilation error, [see here for how to fix](doc/compile-fixes.md#visual-studio-unsupported-platform-toolset)
 
