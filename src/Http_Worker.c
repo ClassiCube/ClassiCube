@@ -386,17 +386,51 @@ static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
 /*########################################################################################################################*
 *-----------------------------------------------------WinINet backend-----------------------------------------------------*
 *#########################################################################################################################*/
-#define WIN32_LEAN_AND_MEAN
-#define NOSERVICE
-#define NOMCX
-#define NOIME
-#ifndef UNICODE
-#define UNICODE
-#define _UNICODE
-#endif
-#include <windows.h>
-#include <wininet.h>
-static HINTERNET hInternet;
+/* === BEGIN WINDOWS HEADERS === */
+typedef unsigned long  DWORD;
+typedef int            BOOL;
+typedef unsigned short WORD;
+typedef void*          PVOID;
+typedef const char*    PCSTR;
+typedef cc_uintptr     DWORD_PTR;
+
+#define WINAPI     _stdcall
+#define WINBASEAPI __declspec(dllimport)
+WINBASEAPI DWORD WINAPI GetLastError(void);
+/* === BEGIN wininet.h === */
+#define INETAPI    __declspec(dllimport)
+typedef PVOID HINTERNET;
+typedef WORD INTERNET_PORT;
+
+#define INTERNET_OPEN_TYPE_PRECONFIG  0   // use registry configuration
+#define INTERNET_OPEN_TYPE_DIRECT     1   // direct to net
+#define INTERNET_SERVICE_HTTP         3
+
+#define HTTP_ADDREQ_FLAG_ADD         0x20000000
+#define HTTP_ADDREQ_FLAG_REPLACE     0x80000000
+
+#define INTERNET_FLAG_RELOAD         0x80000000
+#define INTERNET_FLAG_NO_CACHE_WRITE 0x04000000
+#define INTERNET_FLAG_SECURE         0x00800000
+#define INTERNET_FLAG_NO_COOKIES     0x00080000
+#define INTERNET_FLAG_NO_UI          0x00000200
+
+#define SECURITY_FLAG_IGNORE_REVOCATION 0x00000080
+#define HTTP_QUERY_RAW_HEADERS          21
+#define INTERNET_OPTION_SECURITY_FLAGS  31
+
+INETAPI BOOL WINAPI InternetCloseHandle(HINTERNET hInternet);
+INETAPI HINTERNET WINAPI InternetConnectA(HINTERNET hInternet, PCSTR serverName, INTERNET_PORT serverPort, PCSTR userName, PCSTR password, DWORD service, DWORD flags, DWORD_PTR context);
+INETAPI HINTERNET WINAPI InternetOpenA(PCSTR agent, DWORD accessType, PCSTR lpszProxy, PCSTR proxyBypass, DWORD flags);
+INETAPI BOOL WINAPI InternetQueryOptionW(HINTERNET hInternet, DWORD option, PVOID buffer, DWORD* bufferLength);
+INETAPI BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD option, PVOID buffer, DWORD bufferLength);
+INETAPI BOOL WINAPI InternetQueryDataAvailable(HINTERNET hFile, DWORD* numBytesAvailable, DWORD flags, DWORD_PTR context);
+INETAPI BOOL WINAPI InternetReadFile(HINTERNET hFile, PVOID buffer, DWORD numBytesToRead, DWORD* numBytesRead);
+INETAPI BOOL WINAPI HttpQueryInfoA(HINTERNET hRequest, DWORD infoLevel, PVOID buffer, DWORD* bufferLength, DWORD* index);
+INETAPI BOOL WINAPI HttpAddRequestHeadersA(HINTERNET hRequest, PCSTR headers, DWORD headersLength, DWORD modifiers);
+INETAPI HINTERNET WINAPI HttpOpenRequestA(HINTERNET hConnect, PCSTR verb, PCSTR objectName, PCSTR version, PCSTR referrer, PCSTR* acceptTypes, DWORD flags, DWORD_PTR context);
+INETAPI BOOL WINAPI HttpSendRequestA(HINTERNET hRequest, PCSTR headers, DWORD headersLength, PVOID optional, DWORD optionalLength);
+/* === END WINDOWS HEADERS === */
 
 /* caches connections to web servers */
 struct HttpCacheEntry {
@@ -408,6 +442,7 @@ struct HttpCacheEntry {
 };
 #define HTTP_CACHE_ENTRIES 10
 static struct HttpCacheEntry http_cache[HTTP_CACHE_ENTRIES];
+static HINTERNET hInternet;
 
 /* Converts characters to UTF8, then calls Http_URlEncode on them. */
 static void HttpCache_UrlEncodeUrl(cc_string* dst, const cc_string* src) {
@@ -492,7 +527,7 @@ static cc_result HttpCache_Lookup(struct HttpCacheEntry* e) {
 }
 
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
-	return Platform_DescribeErrorExt(res, dst, GetModuleHandle(TEXT("wininet.dll")));
+	return Platform_DescribeErrorExt(res, dst, "wininet.dll");
 }
 
 static void Http_BackendInit(void) {
@@ -533,9 +568,9 @@ static cc_result Http_StartRequest(struct HttpRequest* req, cc_string* url, HINT
 
 	/* ignore revocation stuff */
 	bufferLen = sizeof(flags);
-	InternetQueryOption(*handle, INTERNET_OPTION_SECURITY_FLAGS, (void*)&bufferLen, &flags);
+	InternetQueryOptionW(*handle, INTERNET_OPTION_SECURITY_FLAGS, (void*)&bufferLen, &flags);
 	flags |= SECURITY_FLAG_IGNORE_REVOCATION;
-	InternetSetOption(*handle, INTERNET_OPTION_SECURITY_FLAGS, &flags, sizeof(flags));
+	InternetSetOptionW(*handle, INTERNET_OPTION_SECURITY_FLAGS, &flags, sizeof(flags));
 
 	Http_SetRequestHeaders(req);
 	return HttpSendRequestA(*handle, NULL, 0, req->data, req->size) ? 0 : GetLastError();

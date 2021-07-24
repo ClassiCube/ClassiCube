@@ -774,10 +774,13 @@ void Platform_Free(void) {
 	HeapDestroy(heap);
 }
 
-cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib) {
+cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, const char* file) {
 	WCHAR chars[NATIVE_STR_LEN];
 	DWORD flags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
-	if (lib) flags |= FORMAT_MESSAGE_FROM_HMODULE;
+	void* lib   = NULL;
+	
+	if (file) lib = GetModuleHandleA(file);
+	if (lib)  flags |= FORMAT_MESSAGE_FROM_HMODULE;
 
 	res = FormatMessageW(flags, lib, res, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), 
 						 chars, NATIVE_STR_LEN, NULL);

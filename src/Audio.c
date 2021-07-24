@@ -281,7 +281,7 @@ cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) {
 /*########################################################################################################################*
 *------------------------------------------------------WinMM backend------------------------------------------------------*
 *#########################################################################################################################*/
-/* == BEGIN WINDOWS TYPEDEFS == */
+/* === BEGIN WINDOWS HEADERS === */
 typedef unsigned long  DWORD;
 typedef unsigned short WORD;
 typedef unsigned int   UINT;
@@ -291,12 +291,12 @@ typedef char*          LPSTR;
 
 #define WINAPI __stdcall
 #define DECLSPEC_IMPORT __declspec(dllimport)
-/* == BEGIN mmsyscom.h == */
+/* === BEGIN mmsyscom.h === */
 #define CALLBACK_NULL  0x00000000l
 typedef UINT           MMRESULT;
 #define WINMMAPI       DECLSPEC_IMPORT
 
-/* == BEGIN mmeapi.h == */
+/* === BEGIN mmeapi.h === */
 typedef struct WAVEHDR_ {
 	LPSTR       lpData;
 	DWORD       dwBufferLength;
@@ -324,13 +324,13 @@ typedef void* HWAVEOUT;
 #define WHDR_DONE       0x00000001
 #define WHDR_PREPARED   0x00000002
 
-WINMMAPI MMRESULT WINAPI waveOutOpen(HWAVEOUT* phwo, UINT uDeviceID, const WAVEFORMATEX* pwfx, DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD fdwOpen);
+WINMMAPI MMRESULT WINAPI waveOutOpen(HWAVEOUT* phwo, UINT deviceID, const WAVEFORMATEX* fmt, DWORD_PTR callback, DWORD_PTR instance, DWORD flags);
 WINMMAPI MMRESULT WINAPI waveOutClose(HWAVEOUT hwo);
-WINMMAPI MMRESULT WINAPI waveOutPrepareHeader(HWAVEOUT hwo, WAVEHDR* pwh, UINT cbwh);
-WINMMAPI MMRESULT WINAPI waveOutUnprepareHeader(HWAVEOUT hwo, WAVEHDR* pwh, UINT cbwh);
-WINMMAPI MMRESULT WINAPI waveOutWrite(HWAVEOUT hwo, WAVEHDR* pwh, UINT cbwh);
+WINMMAPI MMRESULT WINAPI waveOutPrepareHeader(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
+WINMMAPI MMRESULT WINAPI waveOutUnprepareHeader(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
+WINMMAPI MMRESULT WINAPI waveOutWrite(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
 WINMMAPI MMRESULT WINAPI waveOutReset(HWAVEOUT hwo);
-/* == END WINDOWS HEADERS == */
+/* === END WINDOWS HEADERS === */
 
 struct AudioContext {
 	HWAVEOUT handle;

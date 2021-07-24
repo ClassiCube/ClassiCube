@@ -37,6 +37,7 @@ extern const cc_result ReturnCode_DirectoryExists;
 int Platform_EncodeUtf16(void* data, const cc_string* src);
 /* Converts a null terminated WCHAR* to char* in-place */
 void Platform_Utf16ToAnsi(void* data);
+cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, const char* file);
 #else
 /* Encodes a string in UTF8 format, also null terminating the string. */
 /* Returns the number of bytes written, excluding trailing NULL terminator. */
@@ -60,7 +61,6 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst);
 /* NOTE: This is for general functions like file I/O. If a more specific 
 describe exists (e.g. Http_DescribeError), that should be preferred. */
 cc_bool Platform_DescribeError(cc_result res, cc_string* dst);
-cc_bool Platform_DescribeErrorExt(cc_result res, cc_string* dst, void* lib);
 
 /* Starts the game with the given arguments. */
 CC_API cc_result Process_StartGame(const cc_string* args);
