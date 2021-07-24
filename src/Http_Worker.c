@@ -386,19 +386,18 @@ static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
 /*########################################################################################################################*
 *-----------------------------------------------------WinINet backend-----------------------------------------------------*
 *#########################################################################################################################*/
-/* === BEGIN WINDOWS HEADERS === */
-typedef unsigned long  DWORD;
-typedef int            BOOL;
-typedef unsigned short WORD;
-typedef void*          PVOID;
-typedef const char*    PCSTR;
-typedef cc_uintptr     DWORD_PTR;
+#define WIN32_LEAN_AND_MEAN
+#define NOSERVICE
+#define NOMCX
+#define NOIME
+#ifndef UNICODE
+#define UNICODE
+#define _UNICODE
+#endif
+#include <windows.h>
 
-#define WINAPI     _stdcall
-#define WINBASEAPI __declspec(dllimport)
-WINBASEAPI DWORD WINAPI GetLastError(void);
 /* === BEGIN wininet.h === */
-#define INETAPI    __declspec(dllimport)
+#define INETAPI DECLSPEC_IMPORT
 typedef PVOID HINTERNET;
 typedef WORD INTERNET_PORT;
 
@@ -430,7 +429,7 @@ INETAPI BOOL WINAPI HttpQueryInfoA(HINTERNET hRequest, DWORD infoLevel, PVOID bu
 INETAPI BOOL WINAPI HttpAddRequestHeadersA(HINTERNET hRequest, PCSTR headers, DWORD headersLength, DWORD modifiers);
 INETAPI HINTERNET WINAPI HttpOpenRequestA(HINTERNET hConnect, PCSTR verb, PCSTR objectName, PCSTR version, PCSTR referrer, PCSTR* acceptTypes, DWORD flags, DWORD_PTR context);
 INETAPI BOOL WINAPI HttpSendRequestA(HINTERNET hRequest, PCSTR headers, DWORD headersLength, PVOID optional, DWORD optionalLength);
-/* === END WINDOWS HEADERS === */
+/* === END wininet.h === */
 
 /* caches connections to web servers */
 struct HttpCacheEntry {

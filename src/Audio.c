@@ -281,21 +281,20 @@ cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished) {
 /*########################################################################################################################*
 *------------------------------------------------------WinMM backend------------------------------------------------------*
 *#########################################################################################################################*/
-/* === BEGIN WINDOWS HEADERS === */
-typedef unsigned long  DWORD;
-typedef unsigned short WORD;
-typedef unsigned int   UINT;
-typedef char           CHAR;
-typedef cc_uintptr     DWORD_PTR;
-typedef char*          LPSTR;
+#define WIN32_LEAN_AND_MEAN
+#define NOSERVICE
+#define NOMCX
+#define NOIME
+#ifndef UNICODE
+#define UNICODE
+#define _UNICODE
+#endif
+#include <windows.h>
 
-#define WINAPI __stdcall
-#define DECLSPEC_IMPORT __declspec(dllimport)
 /* === BEGIN mmsyscom.h === */
 #define CALLBACK_NULL  0x00000000l
 typedef UINT           MMRESULT;
 #define WINMMAPI       DECLSPEC_IMPORT
-
 /* === BEGIN mmeapi.h === */
 typedef struct WAVEHDR_ {
 	LPSTR       lpData;
@@ -330,7 +329,7 @@ WINMMAPI MMRESULT WINAPI waveOutPrepareHeader(HWAVEOUT hwo, WAVEHDR* hdr, UINT h
 WINMMAPI MMRESULT WINAPI waveOutUnprepareHeader(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
 WINMMAPI MMRESULT WINAPI waveOutWrite(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
 WINMMAPI MMRESULT WINAPI waveOutReset(HWAVEOUT hwo);
-/* === END WINDOWS HEADERS === */
+/* === END mmeapi.h === */
 
 struct AudioContext {
 	HWAVEOUT handle;
