@@ -36,7 +36,7 @@ If you're on Windows, you should first try using the MESA software renderer from
 
 Otherwise, you will have to [compile the game yourself](#using-visual-studio-command-line). Don't forget to add `-DCC_BUILD_GL11` to the compilation command line so that the compiled game supports OpenGL 1.1.
 
-### Compiling - Windows
+## Compiling - Windows
 
 ##### Using Visual Studio
 Open ClassiCube.sln *(File -> Open -> Project/Solution)* and compile it *(Build -> Build Solution)*.
@@ -62,7 +62,16 @@ I am assuming you used the installer from http://www.mingw.org/
 3. Navigate to directory with game's source code
 4. Enter `gcc *.c -o ClassiCube.exe -mwindows -lws2_32 -lwininet -lwinmm -limagehlp -lcrypt32 -ld3d9`
 
-### Compiling - Linux
+##### Using TCC
+I am assuming you used `tcc-0.9.27-win64-bin.zip` from https://bellard.org/tcc/
+1. Extract the .zip file
+2. In `ExtMath.C`, change `fabsf` to `fabs` and `sqrtf` to `sqrtf`
+3. In TCC's `include/math.h`, remove the inline definition for `fabs` at around line 217
+4. In TCC's `lib/kernel32.def`, add missing `RtlCaptureContext`
+5. Add missing include files from `winapi-full-for-0.9.27.zip` as required
+6. ???
+
+## Compiling - Linux
 
 ##### Using gcc/clang
 
@@ -79,7 +88,7 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ```gcc *.c -o ClassiCube -DCC_BUILD_RPI -lm -lpthread -lX11 -lEGL -lGLESv2 -ldl```
 
-### Compiling - macOS
+## Compiling - macOS
 
 ##### Using gcc/clang (32 bit)
 
@@ -89,7 +98,7 @@ Although the regular linux compiliation flags will work fine, to take full advan
 
 ```cc *.c interop_cocoa.m -o ClassiCube -framework Cocoa -framework OpenGL -framework IOKit -lobjc```
 
-### Compiling - other desktop OSes
+## Compiling - other desktop OSes
 
 #### FreeBSD
 
@@ -123,7 +132,7 @@ Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed.
 
 NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
 
-### Compiling - other
+## Compiling - other
 
 #### Web
 
@@ -146,15 +155,15 @@ iOS version is unfinished because of lack of access to suitable devices for me t
 
 You'll have to write the necessary code. You should read portability.md in doc folder.
 
-### Known compilation errors
-
-[Fixes for compilation errors when using musl or old glibc for C standard library](doc/compile-fixes.md#common-compilation-errors)
-
-### Documentation
+## Documentation
 
 Functions and variables in .h files are mostly documented.
 
 Further information (e.g. style) for the game's source code can be found in the doc and misc folders.
+
+#### Known compilation errors
+
+[Fixes for compilation errors when using musl or old glibc for C standard library](doc/compile-fixes.md#common-compilation-errors)
 
 #### Tips
 * Press escape (after joining a world) or pause to switch to the pause menu.

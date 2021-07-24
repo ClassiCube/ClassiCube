@@ -19,12 +19,17 @@
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <wincrypt.h>
 
 /* === BEGIN shellapi.h === */
 #define SHELLAPI DECLSPEC_IMPORT
-SHELLAPI HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR lpOperation, LPCWSTR lpFile, LPCWSTR lpParameters, LPCWSTR lpDirectory, INT nShowCmd);
+SHELLAPI HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR operation, LPCWSTR file, LPCWSTR parameters, LPCWSTR directory, INT showCmd);
 /* === END shellapi.h === */
+/* === BEGIN wincrypt.h === */
+typedef struct _CRYPTOAPI_BLOB {
+	DWORD cbData;
+	BYTE* pbData;
+} DATA_BLOB;
+/* === END wincrypt.h === */
 
 static HANDLE heap;
 const cc_result ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
