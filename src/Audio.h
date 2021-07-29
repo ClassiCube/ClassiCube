@@ -34,13 +34,16 @@ struct AudioFormat* Audio_GetFormat(struct AudioContext* ctx);
 /* Sets the format of the audio data to be played. */
 /* NOTE: Changing the format can be expensive, depending on the backend. */
 cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format);
-/* Sets the audio data in the given buffer. */
-/* NOTE: You MUST ensure Audio_IsCompleted returns true before calling this. */
-cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uint32 size);
-/* Begins playing audio. Audio_BufferData must have been used before this. */
+/* Queues the given audio data for playing. */
+/* NOTE: You MUST ensure Audio_Poll indicates a buffer is free before calling this. */
+/* NOTE: Some backends directly read from the data - therefore you MUST NOT modify it */
+cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size);
+/* Begins playing audio. Audio_QueueData must have been used before this. */
 cc_result Audio_Play(struct AudioContext* ctx);
-/* Returns whether the given buffer is available for playing data. */
-cc_result Audio_IsAvailable(struct AudioContext* ctx, int idx, cc_bool* available);
-/* Returns whether all buffers have finished playing. */
-cc_result Audio_IsFinished(struct AudioContext* ctx, cc_bool* finished);
+/* Returns whether more audio data is currently able to be queued. */
+cc_result Audio_PollQueue(struct AudioContext* ctx, int idx, cc_bool* available);
+/* Polls the audio context and then potentially unqueues buffer */
+/* Returns the number of buffers being played or queued */
+/* (e.g. if inUse is 0, no audio buffers are being played or queued) */
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
 #endif
