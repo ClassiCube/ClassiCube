@@ -242,7 +242,9 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 	return _alGetError();
 }
 
-void Audio_Stop(struct AudioContext* ctx) {
+static void Backend_Stop(struct AudioContext* ctx) {
+	if (ctx->source == -1) return;
+
 	_alSourceStop(ctx->source);
 	_alGetError();
 }
@@ -387,7 +389,7 @@ cc_result Audio_BufferData(struct AudioContext* ctx, int idx, void* data, cc_uin
 
 cc_result Audio_Play(struct AudioContext* ctx) { return 0; }
 
-void Audio_Stop(struct AudioContext* ctx) {
+static void Backend_Stop(struct AudioContext* ctx) {
 	if (ctx->handle) waveOutReset(ctx->handle);
 }
 
@@ -575,7 +577,7 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_PLAYING);
 }
 
-void Audio_Stop(struct AudioContext* ctx) {
+static void Backend_Stop(struct AudioContext* ctx) {
 	if (!ctx->bqPlayerPlayer) return;
 
 	(*ctx->bqPlayerQueue)->Clear(ctx->bqPlayerQueue);
@@ -635,7 +637,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) 
 
 void Audio_Close(struct AudioContext* ctx) {
 	cc_bool finished;
-	Audio_Stop(ctx);
+	Backend_Stop(ctx);
 	Audio_IsFinished(ctx, &finished); /* unqueue buffers */
 
 	ctx->count             = 0;
@@ -812,7 +814,6 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 	void* data = snd->data;
 	void* tmp;
 	cc_result res;
-	if ((res = Audio_SetFormat(&output->ctx, fmt))) { Sounds_Fail(res); return; }
 	
 	/* copy to temp buffer to apply volume */
 	if (volume < 100) {
@@ -835,6 +836,7 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 		Volume_Mix16((cc_int16*)data, snd->size / 2, volume);
 	}
 
+	if ((res = Audio_SetFormat(&output->ctx, fmt)))                 { Sounds_Fail(res); return; }
 	if ((res = Audio_BufferData(&output->ctx, 0, data, snd->size))) { Sounds_Fail(res); return; }
 	if ((res = Audio_Play(&output->ctx)))                           { Sounds_Fail(res); return; }
 }
@@ -1027,9 +1029,8 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 		if (res) break;
 	}
 
-	if (music_pendingStop) Audio_Stop(&music_ctx);
 	/* Wait until the buffers finished playing */
-	for (;;) {
+	while (!music_pendingStop) {
 		if (Audio_IsFinished(&music_ctx, &finished) || finished) break;
 		Thread_Sleep(10);
 	}
