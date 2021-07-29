@@ -217,11 +217,13 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 	ALenum err;
 	ctx->dataFormat = GetALFormat(format->channels);
 	
-	_alGenSources(1, &ctx->source);
-	if ((err = _alGetError())) return err;
+	if (ctx->source == -1) {
+		_alGenSources(1, &ctx->source);
+		if ((err = _alGetError())) return err;
 
-	_alGenBuffers(ctx->count, ctx->buffers);
-	if ((err = _alGetError())) return err;
+		_alGenBuffers(ctx->count, ctx->buffers);
+		if ((err = _alGetError())) return err;
+	}
 	return 0;
 }
 
@@ -362,6 +364,8 @@ static cc_result Backend_Reset(struct AudioContext* ctx) {
 static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
 	WAVEFORMATEX fmt;
 	int sampleSize = format->channels * 2; /* 16 bits per sample / 8 */
+	cc_result res;
+	if ((res = Backend_Reset(ctx))) return res;
 
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
 	fmt.nChannels       = format->channels;
@@ -535,6 +539,7 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 	SLDataSource src;
 	SLDataSink dst;
 	cc_result res;
+	Backend_Reset(ctx);
 
 	fmt.formatType     = SL_DATAFORMAT_PCM;
 	fmt.numChannels    = format->channels;
@@ -626,12 +631,9 @@ struct AudioFormat* Audio_GetFormat(struct AudioContext* ctx) { return &ctx->for
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
 	struct AudioFormat* cur = &ctx->format;
-	cc_result res;
-
 	if (AudioFormat_Eq(cur, format)) return 0;
-	if ((res = Backend_Reset(ctx)))  return res;
-
 	ctx->format = *format;
+
 	return Backend_SetFormat(ctx, format);
 }
 
