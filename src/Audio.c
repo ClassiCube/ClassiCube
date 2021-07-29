@@ -109,9 +109,9 @@ static ALenum    (APIENTRY *_alcGetError)(void* device);
 struct AudioContext {
 	ALuint source;
 	ALuint buffers[AUDIO_MAX_BUFFERS];
-	cc_bool available[AUDIO_MAX_BUFFERS];
+	ALuint freeIDs[AUDIO_MAX_BUFFERS];
 	struct AudioFormat format;
-	int count;
+	int count, free;
 	ALenum dataFormat;
 };
 static void* audio_device;
@@ -182,19 +182,25 @@ static void Backend_Free(void) {
 	audio_device  = NULL;
 }
 
-void Audio_Init(struct AudioContext* ctx, int buffers) {
+static void ClearFree(struct AudioContext* ctx) {
 	int i;
-	_alDistanceModel(AL_NONE);
-	ctx->source = -1;
-
-	for (i = 0; i < buffers; i++) {
-		ctx->available[i] = true;
+	for (i = 0; i < AUDIO_MAX_BUFFERS; i++) {
+		ctx->freeIDs[i] = 0;
 	}
-	ctx->count = buffers;
+	ctx->free = 0;
+}
+
+void Audio_Init(struct AudioContext* ctx, int buffers) {
+	_alDistanceModel(AL_NONE);
+	ClearFree(ctx);
+
+	ctx->source = 0;
+	ctx->count  = buffers;
 }
 
 static cc_result Backend_Reset(struct AudioContext* ctx) {
 	ALenum err;
+	ClearFree(ctx);
 	if (!ctx->source) return 0;
 
 	_alDeleteSources(1, &ctx->source);
@@ -213,7 +219,7 @@ static ALenum GetALFormat(int channels) {
 }
 
 static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
-	ALenum err;
+	ALenum i, err;
 	ctx->dataFormat = GetALFormat(format->channels);
 	
 	if (!ctx->source) {
@@ -222,14 +228,21 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 
 		_alGenBuffers(ctx->count, ctx->buffers);
 		if ((err = _alGetError())) return err;
+
+		for (i = 0; i < ctx->count; i++) {
+			ctx->freeIDs[i] = ctx->buffers[i];
+		}
+		ctx->free = ctx->count;
 	}
 	return 0;
 }
 
-cc_result Audio_QueueData(struct AudioContext* ctx, int idx, void* data, cc_uint32 size) {
-	ALuint buffer = ctx->buffers[idx];
+cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) {
+	ALuint buffer;
 	ALenum err;
-	ctx->available[idx] = false;
+	
+	if (!ctx->free) return ERR_INVALID_ARGUMENT;
+	buffer = ctx->freeIDs[--ctx->free];
 
 	_alBufferData(buffer, ctx->dataFormat, data, size, ctx->format.sampleRate);
 	if ((err = _alGetError())) return err;
@@ -250,11 +263,12 @@ static void Backend_Stop(struct AudioContext* ctx) {
 	_alGetError();
 }
 
-cc_result Audio_PollQueue(struct AudioContext* ctx, int idx, cc_bool* available) {
-	ALint i, processed = 0;
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+	ALint processed = 0;
 	ALuint buffer;
 	ALenum err;
 
+	*inUse = 0;
 	_alGetSourcei(ctx->source, AL_BUFFERS_PROCESSED, &processed);
 	if ((err = _alGetError())) return err;
 
@@ -262,23 +276,9 @@ cc_result Audio_PollQueue(struct AudioContext* ctx, int idx, cc_bool* available)
 		_alSourceUnqueueBuffers(ctx->source, 1, &buffer);
 		if ((err = _alGetError())) return err;
 
-		for (i = 0; i < ctx->count; i++) {
-			if (ctx->buffers[i] == buffer) ctx->available[i] = true;
-		}
+		ctx->freeIDs[ctx->free++] = buffer;
 	}
-	*available = ctx->available[idx]; return 0;
-}
-
-cc_result Audio_Poll(struct AudioContext* ctx, cc_bool* finished) {
-	ALint state = 0;
-	cc_result res;
-
-	if (ctx->source == -1) { *finished = true; return 0; }
-	res = Audio_PollQueue(ctx, finished);
-	if (res) return res;
-	
-	_alGetSourcei(ctx->source, AL_SOURCE_STATE, &state);
-	*finished = state != AL_PLAYING; return 0;
+	*inUse = ctx->count - ctx->free; return 0;
 }
 #elif defined CC_BUILD_WINMM
 /*########################################################################################################################*
@@ -922,7 +922,7 @@ static void* music_waitable;
 static volatile cc_bool music_pendingStop, music_joining;
 static int music_minDelay, music_maxDelay;
 
-static cc_result Music_Buffer(int i, cc_int16* data, int maxSamples, struct VorbisState* ctx) {
+static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState* ctx) {
 	int samples = 0;
 	cc_int16* cur;
 	cc_result res = 0, res2;
@@ -952,7 +952,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 
 	int chunkSize, samplesPerSecond;
 	cc_int16* data = NULL;
-	int inUse, i, next;
+	int inUse, i, cur;
 	cc_result res;
 
 	Ogg_Init(&ogg, source);
@@ -968,38 +968,43 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	chunkSize        = fmt.channels * (fmt.sampleRate + vorbis.blockSizes[1]);
 	samplesPerSecond = fmt.channels * fmt.sampleRate;
 
+	cur  = 0;
 	data = (cc_int16*)Mem_TryAlloc(chunkSize * AUDIO_MAX_BUFFERS, 2);
 	if (!data) { res = ERR_OUT_OF_MEMORY; goto cleanup; }
 
 	/* fill up with some samples before playing */
 	for (i = 0; i < AUDIO_MAX_BUFFERS && !res; i++) {
-		res = Music_Buffer(i, &data[chunkSize * i], samplesPerSecond, &vorbis);
+		res = Music_Buffer(&data[chunkSize * cur], samplesPerSecond, &vorbis);
+		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
 	}
 	if (music_pendingStop) goto cleanup;
 
 	res  = Audio_Play(&music_ctx);
 	if (res) goto cleanup;
 
-	for (next = 0; ;) {
+	while (!music_pendingStop) {
 		res = Audio_Poll(&music_ctx, &inUse);
 		if (res) { music_pendingStop = true; break; }
-		if (music_pendingStop) break;
 
 		if (inUse >= AUDIO_MAX_BUFFERS) {
 			Thread_Sleep(10); continue;
 		}
 
-		res  = Music_Buffer(next, &data[chunkSize * next], samplesPerSecond, &vorbis);
-		next = (next + 1) % AUDIO_MAX_BUFFERS;
+		res = Music_Buffer(&data[chunkSize * cur], samplesPerSecond, &vorbis);
+		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
 
 		/* need to specially handle last bit of audio */
 		if (res) break;
 	}
 
-	/* Wait until the buffers finished playing */
-	while (!music_pendingStop) {
-		if (Audio_Poll(&music_ctx, &inUse) || inUse > 0) break;
-		Thread_Sleep(10);
+	if (music_pendingStop) {
+		Audio_Close(&music_ctx);
+	} else {
+		/* Wait until the buffers finished playing */
+		while (!music_pendingStop) {
+			if (Audio_Poll(&music_ctx, &inUse) || inUse > 0) break;
+			Thread_Sleep(10);
+		}
 	}
 
 cleanup:
