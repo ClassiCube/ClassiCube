@@ -30,9 +30,9 @@ add_library(classicube SHARED
         ../../src/Utils.c
         ../../src/Camera.c
         ../../src/Game.c
-        ../../src/Window.c
+        ../../src/Window_Android.c
         ../../src/_ftbase.c
-        ../../src/Graphics.c
+        ../../src/Graphics_GL.c
         ../../src/_type1cid.c
         ../../src/Deflate.c
         ../../src/_cff.c
@@ -71,7 +71,7 @@ add_library(classicube SHARED
         ../../src/Bitmap.c
         ../../src/EntityComponents.c
         ../../src/_pshinter.c
-        ../../src/Http.c
+        ../../src/Http_Worker.c
         ../../src/MapRenderer.c
         ../../src/Audio.c
         ../../src/_ftinit.c
