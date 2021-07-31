@@ -568,6 +568,10 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) 
 	return (*ctx->bqPlayerQueue)->Enqueue(ctx->bqPlayerQueue, data, size);
 }
 
+static cc_result Audio_Pause(struct AudioContext* ctx) {
+	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_PAUSED);
+}
+
 cc_result Audio_Play(struct AudioContext* ctx) {
 	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_PLAYING);
 }
@@ -934,11 +938,6 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 		samples += Vorbis_OutputFrame(ctx, cur);
 	}
 	if (Audio_MusicVolume < 100) { Volume_Mix16(data, samples, Audio_MusicVolume); }
-	#ifdef CC_BUILD_ANDROID
-    /* Don't play music while in the background on Android */
-    /* TODO: Not use such a terrible approach */
-    if (!WindowInfo.Handle) { int i; for (i = 0; i < samples; i++) data[i] = 0; }
-    #endif
 
 	res2 = Audio_QueueData(&music_ctx, data, samples * 2);
 	if (res2) { music_pendingStop = true; return res2; }
@@ -963,8 +962,8 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	fmt.sampleRate = vorbis.sampleRate;
 	if ((res = Audio_SetFormat(&music_ctx, &fmt))) goto cleanup;
 
-	/* largest possible vorbis frame decodes to blocksize1 * channels samples */
-	/* so we may end up decoding slightly over a second of audio */
+	/* largest possible vorbis frame decodes to blocksize1 * channels samples, */
+	/*  so can end up decoding slightly over a second of audio */
 	chunkSize        = fmt.channels * (fmt.sampleRate + vorbis.blockSizes[1]);
 	samplesPerSecond = fmt.channels * fmt.sampleRate;
 
@@ -983,6 +982,18 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	if (res) goto cleanup;
 
 	while (!music_pendingStop) {
+#ifdef CC_BUILD_ANDROID
+		/* Don't play music while in the background on Android */
+    	/* TODO: Not use such a terrible approach */
+    	if (!WindowInfo.Handle) {
+    		Audio_Pause(&music_ctx);
+    		while (!WindowInfo.Handle && !music_pendingStop) {
+    			Thread_Sleep(10); continue;
+    		}
+    		Audio_Play(&music_ctx);
+    	}
+#endif
+
 		res = Audio_Poll(&music_ctx, &inUse);
 		if (res) { music_pendingStop = true; break; }
 
@@ -998,10 +1009,13 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	}
 
 	if (music_pendingStop) {
+		/* must close audio context, as otherwise some of the audio */
+		/*  context's internal audio buffers may have a reference */
+		/*  to the `data` buffer which will be freed after this */
 		Audio_Close(&music_ctx);
 	} else {
 		/* Wait until the buffers finished playing */
-		while (!music_pendingStop) {
+		for (;;) {
 			if (Audio_Poll(&music_ctx, &inUse) || inUse > 0) break;
 			Thread_Sleep(10);
 		}

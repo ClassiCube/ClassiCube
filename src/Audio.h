@@ -40,8 +40,6 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format);
 cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size);
 /* Begins playing audio. Audio_QueueData must have been used before this. */
 cc_result Audio_Play(struct AudioContext* ctx);
-/* Returns whether more audio data is currently able to be queued. */
-cc_result Audio_PollQueue(struct AudioContext* ctx, int idx, cc_bool* available);
 /* Polls the audio context and then potentially unqueues buffer */
 /* Returns the number of buffers being played or queued */
 /* (e.g. if inUse is 0, no audio buffers are being played or queued) */
