@@ -2070,11 +2070,14 @@ static struct Widget* menuInput_widgets[3] = {
 };
 #define MENUINPUT_MAX_VERTICES (2 * BUTTONWIDGET_MAX + MENUINPUTWIDGET_MAX)
 
-static void MenuInputOverlay_EnterInput(struct MenuInputOverlay* s) {
-	cc_string text = s->input.base.text;
-	cc_bool valid  = s->desc->VTABLE->IsValidValue(s->desc, &text);
+static void MenuInputOverlay_Close(struct MenuInputOverlay* s, cc_bool valid) {
 	Gui_Remove((struct Screen*)&MenuInputOverlay);
-	s->onDone(&text, valid);
+	s->onDone(&s->input.base.text, valid);
+}
+
+static void MenuInputOverlay_EnterInput(struct MenuInputOverlay* s) {
+	cc_bool valid = s->desc->VTABLE->IsValidValue(s->desc, &s->input.base.text);
+	MenuInputOverlay_Close(s, valid);
 }
 
 static int MenuInputOverlay_KeyPress(void* screen, char keyChar) {
@@ -2393,6 +2396,14 @@ static void MenuOptionsScreen_Enum(void* screen, void* widget) {
 	raw   = (Utils_ParseEnum(&value, 0, names, count) + 1) % count;
 	value = String_FromReadonly(names[raw]);
 	MenuOptionsScreen_Set(s, index, &value);
+}
+
+static void MenuInputOverlay_CheckStillValid(struct MenuOptionsScreen* s) {
+	if (s->activeI == -1) return;
+	if (!s->widgets[s->activeI]->disabled) return;
+
+	/* source button is disabled now, so close open input overlay */
+	MenuInputOverlay_Close(&MenuInputOverlay, false);
 }
 
 static void MenuOptionsScreen_Input(void* screen, void* widget) {
@@ -3003,6 +3014,7 @@ static void HacksSettingsScreen_CheckHacksAllowed(struct MenuOptionsScreen* s) {
 	widgets[4]->disabled = disabled || !p->Hacks.CanSpeed;
 	widgets[5]->disabled = disabled || !p->Hacks.CanSpeed;
 	widgets[7]->disabled = disabled || !p->Hacks.CanPushbackBlocks;
+	MenuInputOverlay_CheckStillValid(s);
 }
 
 static void HacksSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {

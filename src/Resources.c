@@ -187,7 +187,7 @@ static void Resources_CheckTextures(void) {
 	stream.Close(&stream);
 	if (res) Logger_SysWarn(res, "inspecting default.zip");
 
-	/* if somehow have say "gui.png", "GUI.png" */
+	/* >= in case somehow have say "gui.png", "GUI.png" */
 	allTexturesExist = texturesFound >= Array_Elems(textureResources);
 }
 
