@@ -283,6 +283,8 @@ void Window_Create(int width, int height) {
 	XSizeHints hints = { 0 };
 	Atom protocols[2];
 	int supported, x, y;
+	Window focus;
+	int focusRevert;
 
 	x = Display_CentreX(width);
 	y = Display_CentreY(height);
@@ -333,6 +335,10 @@ void Window_Create(int width, int height) {
 	hint.res_class  = GAME_APP_TITLE;
 	XSetClassHint(win_display, win_handle, &hint);
 	ApplyIcon();
+
+	/* Check for focus initially, in case WM doesn't send a FocusIn event */
+	XGetInputFocus(win_display, &focus, &focusRevert);
+	if (focus == win_handle) WindowInfo.Focused = true;
 }
 
 void Window_SetTitle(const cc_string* title) {
@@ -556,8 +562,9 @@ void Window_ProcessEvents(void) {
 #ifdef CC_BUILD_XIM
 			cc_codepoint cp;
 			char* chars = data;
+			Status status_type;
 
-			status = Xutf8LookupString(win_xic, &e.xkey, data, Array_Elems(data), NULL, NULL);
+			status = Xutf8LookupString(win_xic, &e.xkey, data, Array_Elems(data), NULL, &status_type);
 			for (; status > 0; status -= i) {
 				i = Convert_Utf8ToCodepoint(&cp, chars, status);
 				if (!i) break;
