@@ -366,11 +366,11 @@ const struct LauncherTheme Launcher_ModernTheme = {
 
 const struct LauncherTheme Launcher_ClassicTheme = {
 	true,
-	BitmapCol_Make(153, 127, 172, 255), /* background WIP */
-	BitmapCol_Make( 97,  81, 110, 255), /* button border WIP */
+	BitmapCol_Make( 50,  50,  50, 255), /* background */
+	BitmapCol_Make(  0,   0,   0, 255), /* button border */
 	BitmapCol_Make(126, 136, 191, 255), /* active button */
 	BitmapCol_Make(111, 111, 111, 255), /* button foreground */
-	BitmapCol_Make(162, 131, 186, 255), /* button highlight WIP */
+	BitmapCol_Make(168, 168, 168, 255), /* button highlight */
 };
 
 CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {

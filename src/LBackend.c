@@ -89,6 +89,21 @@ void LBackend_CalcOffsets(void) {
 	yInputOffset = Display_ScaleY(2);
 }
 
+static void DrawBoxBounds(BitmapCol col, int x, int y, int width, int height) {
+	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+		x,                   y, 
+		width,               yBorder);
+	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+		x,                   y + height - yBorder,
+		width,               yBorder);
+	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+		x,                   y, 
+		xBorder,             height);
+	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+		x + width - xBorder, y, 
+		xBorder,             height);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
@@ -118,9 +133,7 @@ static void LButton_DrawBackground(struct LButton* w) {
 }
 
 static void LButton_DrawBorder(struct LButton* w) {
-	BitmapCol black   = BitmapCol_Make(0, 0, 0, 255);
-	BitmapCol backCol = Launcher_Theme.ClassicBackground ? black : Launcher_Theme.ButtonBorderColor;
-
+	BitmapCol backCol = Launcher_Theme.ButtonBorderColor;
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
 					w->x + xBorder,            w->y,
 					w->width - xBorder2,       yBorder);
@@ -136,20 +149,20 @@ static void LButton_DrawBorder(struct LButton* w) {
 }
 
 static void LButton_DrawHighlight(struct LButton* w) {
-	BitmapCol activeCol   = BitmapCol_Make(189, 198, 255, 255);
-	BitmapCol inactiveCol = BitmapCol_Make(168, 168, 168, 255);
-	BitmapCol highlightCol;
+	BitmapCol activeCol = BitmapCol_Make(189, 198, 255, 255);
+	BitmapCol col = Launcher_Theme.ButtonHighlightColor;
 
 	if (Launcher_Theme.ClassicBackground) {
-		highlightCol = w->hovered ? activeCol : inactiveCol;
-		Drawer2D_Clear(&Launcher_Framebuffer, highlightCol,
+		if (w->hovered) col = activeCol;
+
+		Drawer2D_Clear(&Launcher_Framebuffer, col,
 						w->x + xBorder2,     w->y + yBorder,
 						w->width - xBorder4, yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, highlightCol, 
+		Drawer2D_Clear(&Launcher_Framebuffer, col, 
 						w->x + xBorder,       w->y + yBorder2,
 						xBorder,              w->height - yBorder4);
 	} else if (!w->hovered) {
-		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_Theme.ButtonHighlightColor,
+		Drawer2D_Clear(&Launcher_Framebuffer, col,
 						w->x + xBorder2,      w->y + yBorder,
 						w->width - xBorder4,  yBorder);
 	}
@@ -246,7 +259,7 @@ void LBackend_DrawCheckbox(struct LCheckbox* w) {
 		int y = w->y + w->height / 2 - size / 2;
 		DrawIndexed(size, x, y, &Launcher_Framebuffer);
 	}
-	/*drawer.DrawRectBounds(black, 1, w->X, Y, Width - 1, Height - 1);*/
+	DrawBoxBounds(black, w->x, w->y, w->width, w->height);
 }
 
 
@@ -257,18 +270,7 @@ static void LInput_DrawOuterBorder(struct LInput* w) {
 	BitmapCol col = BitmapCol_Make(97, 81, 110, 255);
 
 	if (w->selected) {
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x,                      w->y, 
-			w->width,                  yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x,                      w->y + w->height - yBorder,
-			w->width,                  yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x,                      w->y, 
-			xBorder,                   w->height);
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x + w->width - xBorder, w->y, 
-			xBorder,                   w->height);
+		DrawBoxBounds(col, w->x, w->y, w->width, w->height);
 	} else {
 		Launcher_ResetArea(w->x,                      w->y, 
 						   w->width,                  yBorder);
