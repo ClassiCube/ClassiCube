@@ -6,6 +6,7 @@
 */
 struct Bitmap;
 struct LButton;
+struct LCheckbox;
 struct LInput;
 struct LLabel;
 struct LLine;
