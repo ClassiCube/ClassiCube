@@ -1016,7 +1016,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	} else {
 		/* Wait until the buffers finished playing */
 		for (;;) {
-			if (Audio_Poll(&music_ctx, &inUse) || inUse > 0) break;
+			if (Audio_Poll(&music_ctx, &inUse) || inUse == 0) break;
 			Thread_Sleep(10);
 		}
 	}
