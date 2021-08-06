@@ -215,9 +215,9 @@ static struct ChooseModeScreen {
 	LScreen_Layout
 	struct LLine seps[2];
 	struct LButton btnEnhanced, btnClassicHax, btnClassic, btnBack;
-	struct LLabel  lblTitle, lblHelp, lblEnhanced[2], lblClassicHax[2], lblClassic[2];
+	struct LLabel  lblHelp, lblEnhanced[2], lblClassicHax[2], lblClassic[2];
 	cc_bool firstTime;
-	struct LWidget* _widgets[14];
+	struct LWidget* _widgets[13];
 } ChooseModeScreen_Instance;
 
 CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) {
@@ -243,7 +243,6 @@ static void UseModeClassic(void* w, int idx)    { ChooseMode_Click(true,  false)
 static void ChooseModeScreen_Init(struct LScreen* s_) {
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
 	s->widgets = s->_widgets;
-	LLabel_Init(s_,  &s->lblTitle, "");
 	LLine_Init(s_,   &s->seps[0], 490);
 	LLine_Init(s_,   &s->seps[1], 490);
 
@@ -266,9 +265,6 @@ static void ChooseModeScreen_Init(struct LScreen* s_) {
 	s->btnClassicHax.OnClick = UseModeClassicHax;
 	s->btnClassic.OnClick    = UseModeClassic;
 	s->btnBack.OnClick       = SwitchToSettings;
-
-	s->lblTitle.font = &Launcher_TitleFont;
-	LLabel_SetConst(&s->lblTitle, "Choose game mode");
 }
 
 static void ChooseModeScreen_Show(struct LScreen* s_) {
@@ -279,21 +275,20 @@ static void ChooseModeScreen_Show(struct LScreen* s_) {
 
 static void ChooseModeScreen_Layout(struct LScreen* s_) {
 	struct ChooseModeScreen* s = (struct ChooseModeScreen*)s_;
-	LWidget_SetLocation(&s->lblTitle, ANCHOR_CENTRE, ANCHOR_CENTRE, 10, -135);
-	LWidget_SetLocation(&s->seps[0],  ANCHOR_CENTRE, ANCHOR_CENTRE, -5,  -35);
-	LWidget_SetLocation(&s->seps[1],  ANCHOR_CENTRE, ANCHOR_CENTRE, -5,   35);
+	LWidget_SetLocation(&s->seps[0],  ANCHOR_CENTRE, ANCHOR_CENTRE, -5,  -85);
+	LWidget_SetLocation(&s->seps[1],  ANCHOR_CENTRE, ANCHOR_CENTRE, -5,  -15);
 
-	LWidget_SetLocation(&s->btnEnhanced,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, -72);
-	LWidget_SetLocation(&s->lblEnhanced[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -72 - 12);
-	LWidget_SetLocation(&s->lblEnhanced[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -72 + 12);
+	LWidget_SetLocation(&s->btnEnhanced,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, -120);
+	LWidget_SetLocation(&s->lblEnhanced[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -120 - 12);
+	LWidget_SetLocation(&s->lblEnhanced[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -120 + 12);
 
-	LWidget_SetLocation(&s->btnClassicHax,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, 0);
-	LWidget_SetLocation(&s->lblClassicHax[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 0 - 12);
-	LWidget_SetLocation(&s->lblClassicHax[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 0 + 12);
+	LWidget_SetLocation(&s->btnClassicHax,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, -50);
+	LWidget_SetLocation(&s->lblClassicHax[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -50 - 12);
+	LWidget_SetLocation(&s->lblClassicHax[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, -50 + 12);
 
-	LWidget_SetLocation(&s->btnClassic,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, 72);
-	LWidget_SetLocation(&s->lblClassic[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 72 - 12);
-	LWidget_SetLocation(&s->lblClassic[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 72 + 12);
+	LWidget_SetLocation(&s->btnClassic,    ANCHOR_CENTRE_MIN, ANCHOR_CENTRE, -250, 20);
+	LWidget_SetLocation(&s->lblClassic[0], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 20 - 12);
+	LWidget_SetLocation(&s->lblClassic[1], ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -85, 20 + 12);
 
 	LWidget_SetLocation(&s->lblHelp, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 160);
 	LWidget_SetLocation(&s->btnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
@@ -306,6 +301,9 @@ void ChooseModeScreen_SetActive(cc_bool firstTime) {
 	s->Show      = ChooseModeScreen_Show;
 	s->Layout    = ChooseModeScreen_Layout;
 	s->firstTime = firstTime;
+
+	s->title_fore    = "&fChoose mode";
+	s->title_back    = "&0Choose mode";
 	s->onEnterWidget = (struct LWidget*)&s->btnEnhanced;
 	Launcher_SetScreen((struct LScreen*)s);
 }
@@ -494,6 +492,9 @@ void ColoursScreen_SetActive(void) {
 	s->Layout     = ColoursScreen_Layout;
 	s->KeyDown    = ColoursScreen_KeyDown;
 	s->MouseWheel = ColoursScreen_MouseWheel;
+
+	s->title_fore = "&fCustom theme";
+	s->title_back = "&0Custom theme";
 	Launcher_SetScreen((struct LScreen*)s);
 }
 
@@ -609,6 +610,9 @@ void DirectConnectScreen_SetActive(void) {
 	LScreen_Reset((struct LScreen*)s);
 	s->Init          = DirectConnectScreen_Init;
 	s->Layout        = DirectConnectScreen_Layout;
+
+	s->title_fore    = "&fDirect connect";
+	s->title_back    = "&0Direct connect";
 	s->onEnterWidget = (struct LWidget*)&s->btnConnect;
 	Launcher_SetScreen((struct LScreen*)s);
 }
@@ -670,6 +674,9 @@ void MFAScreen_SetActive(void) {
 	s->Init   = MFAScreen_Init;
 	s->Show   = MFAScreen_Show;
 	s->Layout = MFAScreen_Layout;
+
+	s->title_fore    = "&fEnter login code";
+	s->title_back    = "&0Enter login code";
 	s->onEnterWidget = (struct LWidget*)&s->btnSignIn;
 	Launcher_SetScreen((struct LScreen*)s);
 }
@@ -988,6 +995,9 @@ void MainScreen_SetActive(void) {
 	s->Free   = MainScreen_Free;
 	s->Tick   = MainScreen_Tick;
 	s->Layout = MainScreen_Layout;
+
+	s->title_fore    = "&fClassiCube";
+	s->title_back    = "&0ClassiCube";
 	s->HoverWidget   = MainScreen_HoverWidget;
 	s->UnhoverWidget = MainScreen_UnhoverWidget;
 	s->onEnterWidget = (struct LWidget*)&s->btnLogin;
@@ -1380,7 +1390,6 @@ static void ServersScreen_MouseUp(struct LScreen* s_, int idx) {
 void ServersScreen_SetActive(void) {
 	struct ServersScreen* s = &ServersScreen_Instance;
 	LScreen_Reset((struct LScreen*)s);
-	s->hidesTitlebar = true;
 	s->tableAcc = 0.0f;
 
 	s->Init       = ServersScreen_Init;
@@ -1453,6 +1462,9 @@ void SettingsScreen_SetActive(void) {
 	s->Init   = SettingsScreen_Init;
 	s->Show   = SettingsScreen_Show;
 	s->Layout = SettingsScreen_Layout;
+
+	s->title_fore = "&fOptions";
+	s->title_back = "&0Options";
 	Launcher_SetScreen((struct LScreen*)s);
 }
 
@@ -1507,6 +1519,9 @@ void ThemesScreen_SetActive(void) {
 	LScreen_Reset((struct LScreen*)s);
 	s->Init   = ThemesScreen_Init;
 	s->Layout = ThemesScreen_Layout;
+
+	s->title_fore = "&fSelect theme";
+	s->title_back = "&0Select theme";
 	Launcher_SetScreen((struct LScreen*)s);
 }
 
@@ -1756,6 +1771,9 @@ void UpdatesScreen_SetActive(void) {
 	s->Tick   = UpdatesScreen_Tick;
 	s->Free   = UpdatesScreen_Free;
 	s->Layout = UpdatesScreen_Layout;
+
+	s->title_fore = "&fUpdate game";
+	s->title_back = "&0Update game";
 	Launcher_SetScreen((struct LScreen*)s);
 }
 #endif

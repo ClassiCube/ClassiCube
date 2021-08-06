@@ -8,7 +8,7 @@ struct LWidget;
 struct LScreen;
 
 typedef void (*LScreen_Func)(struct LScreen* s);
-typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
+typedef void(*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 
 #define LScreen_Layout \
 	LScreen_Func Init;   /* Initialises widgets and other data. Only called once. */ \
@@ -31,7 +31,9 @@ typedef void (*LWidget_Func)(struct LScreen* s, struct LWidget* w);
 	struct LWidget* selectedWidget; /* Widget mouse last clicked on. */ \
 	int numWidgets;           /* Number of widgets actually used. */ \
 	struct LWidget** widgets; /* Array of pointers to all widgets in the screen. */ \
-	cc_bool hidesTitlebar;    /* Whether titlebar in window is hidden. */
+	cc_bool hidesTitlebar;    /* Whether titlebar in window is hidden. */ \
+	const char* title_fore;   /* Foreground titlebar text */ \
+	const char* title_back;   /* Background titlebar text */
 
 struct LScreen { LScreen_Layout };
 	

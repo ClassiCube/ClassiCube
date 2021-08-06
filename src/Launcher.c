@@ -363,7 +363,6 @@ const struct LauncherTheme Launcher_ModernTheme = {
 	BitmapCol_Make(141, 114, 165, 255), /* button foreground */
 	BitmapCol_Make(162, 131, 186, 255), /* button highlight */
 };
-
 const struct LauncherTheme Launcher_ClassicTheme = {
 	true,
 	BitmapCol_Make( 50,  50,  50, 255), /* background */
@@ -503,15 +502,16 @@ void Launcher_ResetArea(int x, int y, int width, int height) {
 }
 
 void Launcher_ResetPixels(void) {
-	static const cc_string title_fore = String_FromConst("&eClassi&fCube");
-	static const cc_string title_back = String_FromConst("&0Classi&0Cube");
+	cc_string title_fore, title_back;
 	struct DrawTextArgs args;
 	int x;
 
-	if (activeScreen && activeScreen->hidesTitlebar) {
+	if (activeScreen && !activeScreen->title_fore) {
 		Launcher_ResetArea(0, 0, WindowInfo.Width, WindowInfo.Height);
 		return;
 	}
+	title_fore = String_FromReadonly(activeScreen->title_fore);
+	title_back = String_FromReadonly(activeScreen->title_back);
 
 	LBackend_ResetPixels();
 	DrawTextArgs_Make(&args, &title_fore, &logoFont, false);

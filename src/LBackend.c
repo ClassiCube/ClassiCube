@@ -225,17 +225,18 @@ static PackedCol checkbox_palette[] = {
 };
 
 static void DrawIndexed(int size, int x, int y, struct Bitmap* bmp) {
-	BitmapCol* row;
+	BitmapCol* row, col;
 	int i, xx, yy;
 
 	for (i = 0, yy = 0; yy < size; yy++) {
 		if ((y + yy) < 0) { i += size; continue; }
 		if ((y + yy) >= bmp->height) break;
-		int* row = Bitmap_GetRow(bmp, y + yy);
+		row = Bitmap_GetRow(bmp, y + yy);
 
 		for (xx = 0; xx < size; xx++) {
-			int col = checkbox_palette[checkbox_indices[i++]];
+			col = checkbox_palette[checkbox_indices[i++]];
 			if (col == 0) continue; /* transparent pixel */
+
 			if ((x + xx) < 0 || (x + xx) >= bmp->width) continue;
 			row[x + xx] = col;
 		}
