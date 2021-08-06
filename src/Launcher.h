@@ -9,8 +9,6 @@ struct FontDesc;
 
 /* Contains the pixels that are drawn to the window. */
 extern struct Bitmap Launcher_Framebuffer;
-/* Whether to use stone tile background like minecraft.net. */
-extern cc_bool Launcher_ClassicBackground;
 /* Default font for buttons and labels. */
 extern struct FontDesc Launcher_TitleFont, Launcher_TextFont;
 /* Default font for input widget hints. */
@@ -25,24 +23,34 @@ extern cc_string Launcher_AutoHash;
 /* The username of currently active user */
 extern cc_string Launcher_Username;
 
-/* Base colour of pixels before any widgets are drawn. */
-extern BitmapCol Launcher_BackgroundColor;
-/* Colour of pixels on the 4 line borders around buttons. */
-extern BitmapCol Launcher_ButtonBorderColor;
-/* Colour of button when user has mouse over it. */
-extern BitmapCol Launcher_ButtonForeActiveColor;
-/* Colour of button when user does not have mouse over it. */
-extern BitmapCol Launcher_ButtonForeColor;
-/* Colour of line at top of buttons to give them a less flat look.*/
-extern BitmapCol Launcher_ButtonHighlightColor;
+struct LauncherTheme {
+	/* Whether to use stone tile background like minecraft.net. */
+	cc_bool ClassicBackground;
+	/* Base colour of pixels before any widgets are drawn. */
+	BitmapCol BackgroundColor;
+	/* Colour of pixels on the 4 line borders around buttons. */
+	BitmapCol ButtonBorderColor;
+	/* Colour of button when user has mouse over it. */
+	BitmapCol ButtonForeActiveColor;
+	/* Colour of button when user does not have mouse over it. */
+	BitmapCol ButtonForeColor;
+	/* Colour of line at top of buttons to give them a less flat look.*/
+	BitmapCol ButtonHighlightColor;
+};
+/* Currently active theme */
+extern struct LauncherTheme Launcher_Theme;
+/* Modern / enhanced theme */
+extern const struct LauncherTheme Launcher_ModernTheme;
+/* Minecraft Classic theme */
+extern const struct LauncherTheme Launcher_ClassicTheme;
 
 /* Resets colours to default. */
-void Launcher_ResetSkin(void);
+void Launcher_ResetTheme(void);
 /* Loads colours from options. */
-void Launcher_LoadSkin(void);
+void Launcher_LoadTheme(void);
 /* Saves the colours to options. */
 /* NOTE: Does not save options file itself. */
-void Launcher_SaveSkin(void);
+void Launcher_SaveTheme(void);
 
 /* Updates logo font. */
 void Launcher_UpdateLogoFont(void);

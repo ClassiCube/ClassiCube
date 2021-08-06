@@ -220,7 +220,7 @@ static struct ChooseModeScreen {
 } ChooseModeScreen_Instance;
 
 CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) {
-	Launcher_ClassicBackground = classic;
+	Launcher_Theme.ClassicBackground = classic;
 	Options_SetBool(OPT_CLASSIC_MODE, classic);
 	if (classic) Options_SetBool(OPT_CLASSIC_HACKS, classicHacks);
 
@@ -340,11 +340,11 @@ CC_NOINLINE static void ColoursScreen_Update(struct ColoursScreen* s, int i, Bit
 }
 
 CC_NOINLINE static void ColoursScreen_UpdateAll(struct ColoursScreen* s) {
-	ColoursScreen_Update(s,  0, Launcher_BackgroundColor);
-	ColoursScreen_Update(s,  3, Launcher_ButtonBorderColor);
-	ColoursScreen_Update(s,  6, Launcher_ButtonHighlightColor);
-	ColoursScreen_Update(s,  9, Launcher_ButtonForeColor);
-	ColoursScreen_Update(s, 12, Launcher_ButtonForeActiveColor);
+	ColoursScreen_Update(s,  0, Launcher_Theme.BackgroundColor);
+	ColoursScreen_Update(s,  3, Launcher_Theme.ButtonBorderColor);
+	ColoursScreen_Update(s,  6, Launcher_Theme.ButtonHighlightColor);
+	ColoursScreen_Update(s,  9, Launcher_Theme.ButtonForeColor);
+	ColoursScreen_Update(s, 12, Launcher_Theme.ButtonForeActiveColor);
 }
 
 static void ColoursScreen_TextChanged(struct LInput* w) {
@@ -353,11 +353,11 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 	BitmapCol* col;
 	cc_uint8 r, g, b;
 
-	if (index < 3)       col = &Launcher_BackgroundColor;
-	else if (index < 6)  col = &Launcher_ButtonBorderColor;
-	else if (index < 9)  col = &Launcher_ButtonHighlightColor;
-	else if (index < 12) col = &Launcher_ButtonForeColor;
-	else                 col = &Launcher_ButtonForeActiveColor;
+	if (index < 3)       col = &Launcher_Theme.BackgroundColor;
+	else if (index < 6)  col = &Launcher_Theme.ButtonBorderColor;
+	else if (index < 9)  col = &Launcher_Theme.ButtonHighlightColor;
+	else if (index < 12) col = &Launcher_Theme.ButtonForeColor;
+	else                 col = &Launcher_Theme.ButtonForeActiveColor;
 
 	/* if index of G input, changes to index of R input */
 	index = (index / 3) * 3;
@@ -366,7 +366,7 @@ static void ColoursScreen_TextChanged(struct LInput* w) {
 	if (!Convert_ParseUInt8(&s->iptColours[index + 2].text, &b)) return;
 
 	*col = BitmapCol_Make(r, g, b, 255);
-	Launcher_SaveSkin();
+	Launcher_SaveTheme();
 	Launcher_Redraw();
 }
 
@@ -412,8 +412,8 @@ static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 }
 
 static void ColoursScreen_ResetAll(void* w, int idx) {
-	Launcher_ResetSkin();
-	Launcher_SaveSkin();
+	Launcher_ResetTheme();
+	Launcher_SaveTheme();
 	ColoursScreen_UpdateAll(&ColoursScreen_Instance);
 	Launcher_Redraw();
 }
@@ -1424,8 +1424,8 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 
 static void SettingsScreen_Show(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
-	s->btnColours.hidden = Launcher_ClassicBackground;
-	s->lblColours.hidden = Launcher_ClassicBackground;
+	s->btnColours.hidden = Launcher_Theme.ClassicBackground;
+	s->lblColours.hidden = Launcher_Theme.ClassicBackground;
 }
 
 static void SettingsScreen_Layout(struct LScreen* s_) {

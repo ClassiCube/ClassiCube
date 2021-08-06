@@ -57,15 +57,15 @@ CC_NOINLINE static void ClearTile(int x, int y, int width, int height, struct Bi
 }
 
 void LBackend_ResetArea(int x, int y, int width, int height) {
-	if (Launcher_ClassicBackground && dirtBmp.scan0) {
+	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
 		ClearTile(x, y, width, height, &stoneBmp);
 	} else {
-		Gradient_Noise(&Launcher_Framebuffer, Launcher_BackgroundColor, 6, x, y, width, height);
+		Gradient_Noise(&Launcher_Framebuffer, Launcher_Theme.BackgroundColor, 6, x, y, width, height);
 	}
 }
 
 void LBackend_ResetPixels(void) {
-	if (Launcher_ClassicBackground && dirtBmp.scan0) {
+	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
 		ClearTile(0,        0, WindowInfo.Width,                     TILESIZE, &dirtBmp);
 		ClearTile(0, TILESIZE, WindowInfo.Width, WindowInfo.Height - TILESIZE, &stoneBmp);
 	} else {
@@ -106,13 +106,13 @@ static void LButton_DrawBackground(struct LButton* w) {
 	BitmapCol inactiveCol = BitmapCol_Make(111, 111, 111, 255);
 	BitmapCol col;
 
-	if (Launcher_ClassicBackground) {
+	if (Launcher_Theme.ClassicBackground) {
 		col = w->hovered ? activeCol : inactiveCol;
 		Gradient_Noise(&Launcher_Framebuffer, col, 8,
 						w->x + xBorder,      w->y + yBorder,
 						w->width - xBorder2, w->height - yBorder2);
 	} else {
-		col = w->hovered ? Launcher_ButtonForeActiveColor : Launcher_ButtonForeColor;
+		col = w->hovered ? Launcher_Theme.ButtonForeActiveColor : Launcher_Theme.ButtonForeColor;
 		Gradient_Vertical(&Launcher_Framebuffer, LButton_Expand(col, 8), LButton_Expand(col, -8),
 						  w->x + xBorder,      w->y + yBorder,
 						  w->width - xBorder2, w->height - yBorder2);
@@ -121,7 +121,7 @@ static void LButton_DrawBackground(struct LButton* w) {
 
 static void LButton_DrawBorder(struct LButton* w) {
 	BitmapCol black   = BitmapCol_Make(0, 0, 0, 255);
-	BitmapCol backCol = Launcher_ClassicBackground ? black : Launcher_ButtonBorderColor;
+	BitmapCol backCol = Launcher_Theme.ClassicBackground ? black : Launcher_Theme.ButtonBorderColor;
 
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
 					w->x + xBorder,            w->y,
@@ -142,7 +142,7 @@ static void LButton_DrawHighlight(struct LButton* w) {
 	BitmapCol inactiveCol = BitmapCol_Make(168, 168, 168, 255);
 	BitmapCol highlightCol;
 
-	if (Launcher_ClassicBackground) {
+	if (Launcher_Theme.ClassicBackground) {
 		highlightCol = w->hovered ? activeCol : inactiveCol;
 		Drawer2D_Clear(&Launcher_Framebuffer, highlightCol,
 						w->x + xBorder2,     w->y + yBorder,
@@ -151,7 +151,7 @@ static void LButton_DrawHighlight(struct LButton* w) {
 						w->x + xBorder,       w->y + yBorder2,
 						xBorder,              w->height - yBorder4);
 	} else if (!w->hovered) {
-		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_ButtonHighlightColor, 
+		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_Theme.ButtonHighlightColor,
 						w->x + xBorder2,      w->y + yBorder,
 						w->width - xBorder4,  yBorder);
 	}
@@ -289,7 +289,7 @@ void LBackend_DrawLabel(struct LLabel* w) {
 *#########################################################################################################################*/
 #define CLASSIC_LINE_COL BitmapCol_Make(128,128,128, 255)
 void LBackend_DrawLine(struct LLine* w) {
-	BitmapCol col = Launcher_ClassicBackground ? CLASSIC_LINE_COL : Launcher_ButtonBorderColor;
+	BitmapCol col = Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COL : Launcher_Theme.ButtonBorderColor;
 	Gradient_Blend(&Launcher_Framebuffer, col, 128, w->x, w->y, w->width, w->height);
 }
 
