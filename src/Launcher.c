@@ -373,14 +373,6 @@ const struct LauncherTheme Launcher_ClassicTheme = {
 	BitmapCol_Make(162, 131, 186, 255), /* button highlight WIP */
 };
 
-static cc_bool IsClassicMode(void) {
-	return Options_GetBool(OPT_CLASSIC_MODE, false);
-}
-
-void Launcher_ResetTheme(void) {
-	Launcher_Theme = IsClassicMode() ? Launcher_ClassicTheme : Launcher_ModernTheme;
-}
-
 CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
 	cc_uint8 rgb[3];
 	cc_string value;
@@ -391,18 +383,18 @@ CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
 }
 
 void Launcher_LoadTheme(void) {
-	cc_string classicBG;
-	Launcher_ResetTheme();
-	if (IsClassicMode()) return;
+	if (Options_GetBool(OPT_CLASSIC_MODE, false)) {
+		Launcher_Theme = Launcher_ClassicTheme;
+		return;
+	}
+	Launcher_Theme = Launcher_ModernTheme;
+	Launcher_Theme.ClassicBackground = Options_GetBool("nostalgia-classicbg", false);
 
 	Launcher_GetCol("launcher-back-col",                   &Launcher_Theme.BackgroundColor);
 	Launcher_GetCol("launcher-btn-border-col",             &Launcher_Theme.ButtonBorderColor);
 	Launcher_GetCol("launcher-btn-fore-active-col",        &Launcher_Theme.ButtonForeActiveColor);
 	Launcher_GetCol("launcher-btn-fore-inactive-col",      &Launcher_Theme.ButtonForeColor);
 	Launcher_GetCol("launcher-btn-highlight-inactive-col", &Launcher_Theme.ButtonHighlightColor);
-
-	if (!Options_UNSAFE_Get("nostalgia-classicbg", &classicBG)) return;
-	Launcher_Theme.ClassicBackground = Options_GetBool("nostalgia-classicbg", false);
 }
 
 CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
@@ -421,6 +413,7 @@ void Launcher_SaveTheme(void) {
 	Launcher_SetCol("launcher-btn-fore-active-col",        Launcher_Theme.ButtonForeActiveColor);
 	Launcher_SetCol("launcher-btn-fore-inactive-col",      Launcher_Theme.ButtonForeColor);
 	Launcher_SetCol("launcher-btn-highlight-inactive-col", Launcher_Theme.ButtonHighlightColor);
+	Options_SetBool("nostalgia-classicbg",                 Launcher_Theme.ClassicBackground);
 }
 
 

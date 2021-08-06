@@ -204,7 +204,8 @@ static void SwitchToColours(void* w, int idx) { ColoursScreen_SetActive(); }
 static void SwitchToDirectConnect(void* w, int idx) { DirectConnectScreen_SetActive(); }
 static void SwitchToMain(void* w, int idx) { MainScreen_SetActive(); }
 static void SwitchToSettings(void* w, int idx) { SettingsScreen_SetActive(); }
-static void SwitchToUpdates(void* w, int idx) { UpdatesScreen_SetActive(); }
+static void SwitchToThemes(void* w, int idx)   { ThemesScreen_SetActive(); }
+static void SwitchToUpdates(void* w, int idx)  { UpdatesScreen_SetActive(); }
 
 
 /*########################################################################################################################*
@@ -411,7 +412,7 @@ static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 }
 
 static void ColoursScreen_ResetAll(void* w, int idx) {
-	Launcher_ResetTheme();
+	Launcher_Theme = Launcher_ModernTheme;
 	Launcher_SaveTheme();
 	ColoursScreen_UpdateAll(&ColoursScreen_Instance);
 	Launcher_Redraw();
@@ -447,7 +448,7 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	LButton_Init(s_, &s->btnBack,    80,  35, "Back");
 
 	s->btnDefault.OnClick = ColoursScreen_ResetAll;
-	s->btnBack.OnClick    = SwitchToSettings;
+	s->btnBack.OnClick    = SwitchToThemes;
 }
 
 static void ColoursScreen_Show(struct LScreen* s_) {
@@ -1410,21 +1411,21 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	LButton_Init(s_, &s->btnMode, 110, 35, "Mode");
 	LLabel_Init(s_,  &s->lblMode, "&eChange the enabled features");
 
-	LButton_Init(s_, &s->btnColours, 110, 35, "Colours");
+	LButton_Init(s_, &s->btnColours, 110, 35, "Theme");
 	LLabel_Init(s_,  &s->lblColours, "&eChange how the launcher looks");
 
 	LButton_Init(s_, &s->btnBack, 80, 35, "Back");
 
 	s->btnMode.OnClick    = SwitchToChooseMode;
 	s->btnUpdates.OnClick = SwitchToUpdates;
-	s->btnColours.OnClick = SwitchToColours;
+	s->btnColours.OnClick = SwitchToThemes;
 	s->btnBack.OnClick    = SwitchToMain;
 }
 
 static void SettingsScreen_Show(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
-	s->btnColours.hidden = Launcher_Theme.ClassicBackground;
-	s->lblColours.hidden = Launcher_Theme.ClassicBackground;
+	s->btnColours.hidden = Options_GetBool(OPT_CLASSIC_MODE, false);
+	s->lblColours.hidden = s->btnColours.hidden;
 }
 
 static void SettingsScreen_Layout(struct LScreen* s_) {
@@ -1447,6 +1448,60 @@ void SettingsScreen_SetActive(void) {
 	s->Init   = SettingsScreen_Init;
 	s->Show   = SettingsScreen_Show;
 	s->Layout = SettingsScreen_Layout;
+	Launcher_SetScreen((struct LScreen*)s);
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------------ThemesScreen----------------------------------------------------*
+*#########################################################################################################################*/
+static struct ThemesScreen {
+	LScreen_Layout
+	struct LButton btnModern, btnClassic, btnCustom, btnBack;
+	struct LWidget* _widgets[4];
+} ThemesScreen_Instance;
+
+static void ThemesScreen_Set(const struct LauncherTheme* theme) {
+	Launcher_Theme = *theme;
+	Launcher_SaveTheme();
+	Launcher_Redraw();
+}
+
+static void ThemesScreen_Modern(void* w, int idx) {
+	ThemesScreen_Set(&Launcher_ModernTheme);
+}
+static void ThemesScreen_Classic(void* w, int idx) {
+	ThemesScreen_Set(&Launcher_ClassicTheme);
+}
+
+static void ThemesScreen_Init(struct LScreen* s_) {
+	struct ThemesScreen* s = (struct ThemesScreen*)s_;
+	s->widgets = s->_widgets;
+
+	LButton_Init(s_, &s->btnModern,  200, 35, "Modern");
+	LButton_Init(s_, &s->btnClassic, 200, 35, "Classic");
+	LButton_Init(s_, &s->btnCustom,  200, 35, "Custom");
+	LButton_Init(s_, &s->btnBack,     80, 35, "Back");
+
+	s->btnModern.OnClick  = ThemesScreen_Modern;
+	s->btnClassic.OnClick = ThemesScreen_Classic;
+	s->btnCustom.OnClick  = SwitchToColours;
+	s->btnBack.OnClick    = SwitchToSettings;
+}
+
+static void ThemesScreen_Layout(struct LScreen* s_) {
+	struct ThemesScreen* s = (struct ThemesScreen*)s_;
+	LWidget_SetLocation(&s->btnModern,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
+	LWidget_SetLocation(&s->btnClassic, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -70);
+	LWidget_SetLocation(&s->btnCustom,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -20);
+	LWidget_SetLocation(&s->btnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
+}
+
+void ThemesScreen_SetActive(void) {
+	struct ThemesScreen* s = &ThemesScreen_Instance;
+	LScreen_Reset((struct LScreen*)s);
+	s->Init   = ThemesScreen_Init;
+	s->Layout = ThemesScreen_Layout;
 	Launcher_SetScreen((struct LScreen*)s);
 }
 

@@ -44,11 +44,9 @@ extern const struct LauncherTheme Launcher_ModernTheme;
 /* Minecraft Classic theme */
 extern const struct LauncherTheme Launcher_ClassicTheme;
 
-/* Resets colours to default. */
-void Launcher_ResetTheme(void);
-/* Loads colours from options. */
+/* Loads theme from options. */
 void Launcher_LoadTheme(void);
-/* Saves the colours to options. */
+/* Saves the theme to options. */
 /* NOTE: Does not save options file itself. */
 void Launcher_SaveTheme(void);
 

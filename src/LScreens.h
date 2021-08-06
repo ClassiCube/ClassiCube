@@ -44,5 +44,6 @@ void CheckResourcesScreen_SetActive(void);
 void FetchResourcesScreen_SetActive(void);
 void ServersScreen_SetActive(void);
 void SettingsScreen_SetActive(void);
+void ThemesScreen_SetActive(void);
 void UpdatesScreen_SetActive(void);
 #endif
