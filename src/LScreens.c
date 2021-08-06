@@ -220,11 +220,9 @@ static struct ChooseModeScreen {
 } ChooseModeScreen_Instance;
 
 CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) {
-	Launcher_Theme.ClassicBackground = classic;
 	Options_SetBool(OPT_CLASSIC_MODE, classic);
 	if (classic) Options_SetBool(OPT_CLASSIC_HACKS, classicHacks);
 
-	Options_SetBool("nostalgia-classicbg", classic);
 	Options_SetBool(OPT_CUSTOM_BLOCKS,   !classic);
 	Options_SetBool(OPT_CPE,             !classic);
 	Options_SetBool(OPT_SERVER_TEXTURES, !classic);
@@ -232,6 +230,7 @@ CC_NOINLINE static void ChooseMode_Click(cc_bool classic, cc_bool classicHacks) 
 	Options_SetBool(OPT_CLASSIC_OPTIONS, classic);
 
 	Options_SaveIfChanged();
+	Launcher_LoadTheme();
 	Launcher_UpdateLogoFont();
 	MainScreen_SetActive();
 }

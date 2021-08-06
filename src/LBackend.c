@@ -102,17 +102,15 @@ static BitmapCol LButton_Expand(BitmapCol a, int amount) {
 }
 
 static void LButton_DrawBackground(struct LButton* w) {
-	BitmapCol activeCol   = BitmapCol_Make(126, 136, 191, 255);
-	BitmapCol inactiveCol = BitmapCol_Make(111, 111, 111, 255);
-	BitmapCol col;
+	BitmapCol col = w->hovered ? Launcher_Theme.ButtonForeActiveColor 
+								: Launcher_Theme.ButtonForeColor;
 
 	if (Launcher_Theme.ClassicBackground) {
-		col = w->hovered ? activeCol : inactiveCol;
 		Gradient_Noise(&Launcher_Framebuffer, col, 8,
 						w->x + xBorder,      w->y + yBorder,
 						w->width - xBorder2, w->height - yBorder2);
 	} else {
-		col = w->hovered ? Launcher_Theme.ButtonForeActiveColor : Launcher_Theme.ButtonForeColor;
+		
 		Gradient_Vertical(&Launcher_Framebuffer, LButton_Expand(col, 8), LButton_Expand(col, -8),
 						  w->x + xBorder,      w->y + yBorder,
 						  w->width - xBorder2, w->height - yBorder2);

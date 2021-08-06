@@ -359,13 +359,26 @@ const struct LauncherTheme Launcher_ModernTheme = {
 	false,
 	BitmapCol_Make(153, 127, 172, 255), /* background */
 	BitmapCol_Make( 97,  81, 110, 255), /* button border */
-	BitmapCol_Make(189, 168, 206, 255), /* button foreground */
+	BitmapCol_Make(189, 168, 206, 255), /* active button */
 	BitmapCol_Make(141, 114, 165, 255), /* button foreground */
 	BitmapCol_Make(162, 131, 186, 255), /* button highlight */
 };
 
+const struct LauncherTheme Launcher_ClassicTheme = {
+	true,
+	BitmapCol_Make(153, 127, 172, 255), /* background WIP */
+	BitmapCol_Make( 97,  81, 110, 255), /* button border WIP */
+	BitmapCol_Make(126, 136, 191, 255), /* active button */
+	BitmapCol_Make(111, 111, 111, 255), /* button foreground */
+	BitmapCol_Make(162, 131, 186, 255), /* button highlight WIP */
+};
+
+static cc_bool IsClassicMode(void) {
+	return Options_GetBool(OPT_CLASSIC_MODE, false);
+}
+
 void Launcher_ResetTheme(void) {
-	Launcher_Theme = Launcher_ModernTheme;
+	Launcher_Theme = IsClassicMode() ? Launcher_ClassicTheme : Launcher_ModernTheme;
 }
 
 CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
@@ -378,12 +391,18 @@ CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
 }
 
 void Launcher_LoadTheme(void) {
+	cc_string classicBG;
 	Launcher_ResetTheme();
+	if (IsClassicMode()) return;
+
 	Launcher_GetCol("launcher-back-col",                   &Launcher_Theme.BackgroundColor);
 	Launcher_GetCol("launcher-btn-border-col",             &Launcher_Theme.ButtonBorderColor);
 	Launcher_GetCol("launcher-btn-fore-active-col",        &Launcher_Theme.ButtonForeActiveColor);
 	Launcher_GetCol("launcher-btn-fore-inactive-col",      &Launcher_Theme.ButtonForeColor);
 	Launcher_GetCol("launcher-btn-highlight-inactive-col", &Launcher_Theme.ButtonHighlightColor);
+
+	if (!Options_UNSAFE_Get("nostalgia-classicbg", &classicBG)) return;
+	Launcher_Theme.ClassicBackground = Options_GetBool("nostalgia-classicbg", false);
 }
 
 CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
@@ -466,12 +485,6 @@ void Launcher_TryLoadTexturePack(void) {
 	static const cc_string defZip = String_FromConst("texpacks/default.zip");
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_string texPack;
-
-	if (Options_UNSAFE_Get("nostalgia-classicbg", &texPack)) {
-		Launcher_Theme.ClassicBackground = Options_GetBool("nostalgia-classicbg", false);
-	} else {
-		Launcher_Theme.ClassicBackground = Options_GetBool(OPT_CLASSIC_MODE,      false);
-	}
 
 	if (Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &texPack)) {
 		String_InitArray(path, pathBuffer);
