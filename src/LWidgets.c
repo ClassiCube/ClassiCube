@@ -118,6 +118,30 @@ void LButton_SetConst(struct LButton* w, const char* text) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------CheckboxWidget------------------------------------------------------*
+*#########################################################################################################################*/
+static void LCheckbox_Draw(void* widget) {
+	struct LCheckbox* w = (struct LCheckbox*)widget;
+	LBackend_DrawCheckbox(w);
+	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
+}
+
+static const struct LWidgetVTABLE lcheckbox_VTABLE = {
+	LCheckbox_Draw, NULL,
+	NULL, NULL, /* Key    */
+	NULL, NULL, /* Hover  */
+	NULL, NULL  /* Select */
+};
+void LCheckbox_Init(struct LScreen* s, struct LCheckbox* w) {
+	w->VTABLE = &lcheckbox_VTABLE;
+	w->tabSelectable = true;
+	w->width  = Display_ScaleX(24);
+	w->height = Display_ScaleY(24);
+	s->widgets[s->numWidgets++] = (struct LWidget*)w;
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 CC_NOINLINE static void LInput_GetText(struct LInput* w, cc_string* text) {
@@ -618,7 +642,7 @@ static void LTable_SetSelectedTo(struct LTable* w, int index) {
 static void LTable_DrawHeaderBackground(struct LTable* w) {
 	BitmapCol gridCol = BitmapCol_Make(20, 20, 10, 255);
 
-	if (!Launcher_ClassicBackground) {
+	if (!Launcher_Theme.ClassicBackground) {
 		Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
 						w->x, w->y, w->width, w->hdrHeight);
 	} else {
@@ -642,7 +666,7 @@ static BitmapCol LTable_RowCol(struct LTable* w, struct ServerInfo* row) {
 			return selectedCol;
 		}
 	}
-	return Launcher_ClassicBackground ? 0 : gridCol;
+	return Launcher_Theme.ClassicBackground ? 0 : gridCol;
 }
 
 /* Draws background behind each row in the table */
@@ -673,17 +697,17 @@ static void LTable_DrawRowsBackground(struct LTable* w) {
 /* Draws a gridline below column headers and gridlines after each column */
 static void LTable_DrawGridlines(struct LTable* w) {
 	int i, x;
-	if (Launcher_ClassicBackground) return;
+	if (Launcher_Theme.ClassicBackground) return;
 
 	x = w->x;
-	Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundColor,
+	Drawer2D_Clear(&Launcher_Framebuffer, Launcher_Theme.BackgroundColor,
 				   x, w->y + w->hdrHeight, w->width, gridlineHeight);
 
 	for (i = 0; i < w->numColumns; i++) {
 		x += w->columns[i].width;
 		if (!w->columns[i].hasGridline) continue;
 			
-		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_BackgroundColor,
+		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_Theme.BackgroundColor,
 					   x, w->y, gridlineWidth, w->height);
 		x += gridlineWidth;
 	}
@@ -757,8 +781,8 @@ static void LTable_DrawRows(struct LTable* w) {
 static void LTable_DrawScrollbar(struct LTable* w) {
 	BitmapCol classicBack   = BitmapCol_Make( 80,  80,  80, 255);
 	BitmapCol classicScroll = BitmapCol_Make(160, 160, 160, 255);
-	BitmapCol backCol   = Launcher_ClassicBackground ? classicBack   : Launcher_ButtonBorderColor;
-	BitmapCol scrollCol = Launcher_ClassicBackground ? classicScroll : Launcher_ButtonForeActiveColor;
+	BitmapCol backCol   = Launcher_Theme.ClassicBackground ? classicBack   : Launcher_Theme.ButtonBorderColor;
+	BitmapCol scrollCol = Launcher_Theme.ClassicBackground ? classicScroll : Launcher_Theme.ButtonForeActiveColor;
 
 	int x, y, height;
 	x = w->x + w->width - scrollbarWidth;

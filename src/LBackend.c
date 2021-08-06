@@ -57,15 +57,15 @@ CC_NOINLINE static void ClearTile(int x, int y, int width, int height, struct Bi
 }
 
 void LBackend_ResetArea(int x, int y, int width, int height) {
-	if (Launcher_ClassicBackground && dirtBmp.scan0) {
+	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
 		ClearTile(x, y, width, height, &stoneBmp);
 	} else {
-		Gradient_Noise(&Launcher_Framebuffer, Launcher_BackgroundColor, 6, x, y, width, height);
+		Gradient_Noise(&Launcher_Framebuffer, Launcher_Theme.BackgroundColor, 6, x, y, width, height);
 	}
 }
 
 void LBackend_ResetPixels(void) {
-	if (Launcher_ClassicBackground && dirtBmp.scan0) {
+	if (Launcher_Theme.ClassicBackground && dirtBmp.scan0) {
 		ClearTile(0,        0, WindowInfo.Width,                     TILESIZE, &dirtBmp);
 		ClearTile(0, TILESIZE, WindowInfo.Width, WindowInfo.Height - TILESIZE, &stoneBmp);
 	} else {
@@ -89,6 +89,21 @@ void LBackend_CalcOffsets(void) {
 	yInputOffset = Display_ScaleY(2);
 }
 
+static void DrawBoxBounds(BitmapCol col, int x, int y, int width, int height) {
+	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+		x,                   y, 
+		width,               yBorder);
+	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+		x,                   y + height - yBorder,
+		width,               yBorder);
+	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+		x,                   y, 
+		xBorder,             height);
+	Drawer2D_Clear(&Launcher_Framebuffer, col, 
+		x + width - xBorder, y, 
+		xBorder,             height);
+}
+
 
 /*########################################################################################################################*
 *------------------------------------------------------ButtonWidget-------------------------------------------------------*
@@ -102,17 +117,15 @@ static BitmapCol LButton_Expand(BitmapCol a, int amount) {
 }
 
 static void LButton_DrawBackground(struct LButton* w) {
-	BitmapCol activeCol   = BitmapCol_Make(126, 136, 191, 255);
-	BitmapCol inactiveCol = BitmapCol_Make(111, 111, 111, 255);
-	BitmapCol col;
+	BitmapCol col = w->hovered ? Launcher_Theme.ButtonForeActiveColor 
+								: Launcher_Theme.ButtonForeColor;
 
-	if (Launcher_ClassicBackground) {
-		col = w->hovered ? activeCol : inactiveCol;
+	if (Launcher_Theme.ClassicBackground) {
 		Gradient_Noise(&Launcher_Framebuffer, col, 8,
 						w->x + xBorder,      w->y + yBorder,
 						w->width - xBorder2, w->height - yBorder2);
 	} else {
-		col = w->hovered ? Launcher_ButtonForeActiveColor : Launcher_ButtonForeColor;
+		
 		Gradient_Vertical(&Launcher_Framebuffer, LButton_Expand(col, 8), LButton_Expand(col, -8),
 						  w->x + xBorder,      w->y + yBorder,
 						  w->width - xBorder2, w->height - yBorder2);
@@ -120,9 +133,7 @@ static void LButton_DrawBackground(struct LButton* w) {
 }
 
 static void LButton_DrawBorder(struct LButton* w) {
-	BitmapCol black   = BitmapCol_Make(0, 0, 0, 255);
-	BitmapCol backCol = Launcher_ClassicBackground ? black : Launcher_ButtonBorderColor;
-
+	BitmapCol backCol = Launcher_Theme.ButtonBorderColor;
 	Drawer2D_Clear(&Launcher_Framebuffer, backCol, 
 					w->x + xBorder,            w->y,
 					w->width - xBorder2,       yBorder);
@@ -138,20 +149,20 @@ static void LButton_DrawBorder(struct LButton* w) {
 }
 
 static void LButton_DrawHighlight(struct LButton* w) {
-	BitmapCol activeCol   = BitmapCol_Make(189, 198, 255, 255);
-	BitmapCol inactiveCol = BitmapCol_Make(168, 168, 168, 255);
-	BitmapCol highlightCol;
+	BitmapCol activeCol = BitmapCol_Make(189, 198, 255, 255);
+	BitmapCol col = Launcher_Theme.ButtonHighlightColor;
 
-	if (Launcher_ClassicBackground) {
-		highlightCol = w->hovered ? activeCol : inactiveCol;
-		Drawer2D_Clear(&Launcher_Framebuffer, highlightCol,
+	if (Launcher_Theme.ClassicBackground) {
+		if (w->hovered) col = activeCol;
+
+		Drawer2D_Clear(&Launcher_Framebuffer, col,
 						w->x + xBorder2,     w->y + yBorder,
 						w->width - xBorder4, yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, highlightCol, 
+		Drawer2D_Clear(&Launcher_Framebuffer, col, 
 						w->x + xBorder,       w->y + yBorder2,
 						xBorder,              w->height - yBorder4);
 	} else if (!w->hovered) {
-		Drawer2D_Clear(&Launcher_Framebuffer, Launcher_ButtonHighlightColor, 
+		Drawer2D_Clear(&Launcher_Framebuffer, col,
 						w->x + xBorder2,      w->y + yBorder,
 						w->width - xBorder4,  yBorder);
 	}
@@ -178,24 +189,88 @@ void LBackend_DrawButton(struct LButton* w) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------CheckboxWidget------------------------------------------------------*
+*#########################################################################################################################*/
+/* Based off checkbox from original ClassiCube Launcher */
+static const cc_uint8 checkbox_indices[] = {
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x06, 0x07, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x06, 0x09, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x06, 0x0B, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0D, 0x0E, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x0F, 0x06, 0x10, 0x00, 0x11, 0x06, 0x12, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x13, 0x14, 0x15, 0x00, 0x16, 0x17, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x18, 0x06, 0x19, 0x06, 0x1A, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x1B, 0x06, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x1D, 0x06, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+static PackedCol checkbox_palette[] = {
+	PackedCol_Make(  0,   0,   0,   0), PackedCol_Make(144, 144, 144, 255),
+	PackedCol_Make( 61,  61,  61, 255), PackedCol_Make( 94,  94,  94, 255),
+	PackedCol_Make(197, 196, 197, 255), PackedCol_Make( 57,  57,  57, 255),
+	PackedCol_Make( 33,  33,  33, 255), PackedCol_Make(177, 177, 177, 255),
+	PackedCol_Make(189, 189, 189, 255), PackedCol_Make( 67,  67,  67, 255),
+	PackedCol_Make(108, 108, 108, 255), PackedCol_Make(171, 171, 171, 255),
+	PackedCol_Make(220, 220, 220, 255), PackedCol_Make( 43,  43,  43, 255),
+	PackedCol_Make( 63,  63,  63, 255), PackedCol_Make(100, 100, 100, 255),
+	PackedCol_Make(192, 192, 192, 255), PackedCol_Make(132, 132, 132, 255),
+	PackedCol_Make(175, 175, 175, 255), PackedCol_Make(217, 217, 217, 255),
+	PackedCol_Make( 42,  42,  42, 255), PackedCol_Make( 86,  86,  86, 255),
+	PackedCol_Make( 56,  56,  56, 255), PackedCol_Make( 76,  76,  76, 255),
+	PackedCol_Make(139, 139, 139, 255), PackedCol_Make(130, 130, 130, 255),
+	PackedCol_Make(181, 181, 181, 255), PackedCol_Make( 62,  62,  62, 255),
+	PackedCol_Make( 75,  75,  75, 255), PackedCol_Make(184, 184, 184, 255),
+};
+
+static void DrawIndexed(int size, int x, int y, struct Bitmap* bmp) {
+	BitmapCol* row;
+	int i, xx, yy;
+
+	for (i = 0, yy = 0; yy < size; yy++) {
+		if ((y + yy) < 0) { i += size; continue; }
+		if ((y + yy) >= bmp->height) break;
+		int* row = Bitmap_GetRow(bmp, y + yy);
+
+		for (xx = 0; xx < size; xx++) {
+			int col = checkbox_palette[checkbox_indices[i++]];
+			if (col == 0) continue; /* transparent pixel */
+			if ((x + xx) < 0 || (x + xx) >= bmp->width) continue;
+			row[x + xx] = col;
+		}
+	}
+}
+
+void LBackend_DrawCheckbox(struct LCheckbox* w) {
+	PackedCol boxTop    = PackedCol_Make(255, 255, 255, 255);
+	PackedCol boxBottom = PackedCol_Make(240, 240, 240, 255);
+	PackedCol black = PackedCol_Make(0, 0, 0, 255);
+	int height      = w->height / 2;
+
+	Gradient_Vertical(&Launcher_Framebuffer, boxTop, boxBottom,
+						w->x, w->y,          w->width, height);
+	Gradient_Vertical(&Launcher_Framebuffer, boxBottom, boxTop,
+						w->x, w->y + height, w->width, height);
+
+	if (w->value) {
+		const int size = 12;
+		int x = w->x + w->width  / 2 - size / 2;
+		int y = w->y + w->height / 2 - size / 2;
+		DrawIndexed(size, x, y, &Launcher_Framebuffer);
+	}
+	DrawBoxBounds(black, w->x, w->y, w->width, w->height);
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 static void LInput_DrawOuterBorder(struct LInput* w) {
 	BitmapCol col = BitmapCol_Make(97, 81, 110, 255);
 
 	if (w->selected) {
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x,                      w->y, 
-			w->width,                  yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x,                      w->y + w->height - yBorder,
-			w->width,                  yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x,                      w->y, 
-			xBorder,                   w->height);
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
-			w->x + w->width - xBorder, w->y, 
-			xBorder,                   w->height);
+		DrawBoxBounds(col, w->x, w->y, w->width, w->height);
 	} else {
 		Launcher_ResetArea(w->x,                      w->y, 
 						   w->width,                  yBorder);
@@ -289,7 +364,7 @@ void LBackend_DrawLabel(struct LLabel* w) {
 *#########################################################################################################################*/
 #define CLASSIC_LINE_COL BitmapCol_Make(128,128,128, 255)
 void LBackend_DrawLine(struct LLine* w) {
-	BitmapCol col = Launcher_ClassicBackground ? CLASSIC_LINE_COL : Launcher_ButtonBorderColor;
+	BitmapCol col = Launcher_Theme.ClassicBackground ? CLASSIC_LINE_COL : Launcher_Theme.ButtonBorderColor;
 	Gradient_Blend(&Launcher_Framebuffer, col, 128, w->x, w->y, w->width, w->height);
 }
 

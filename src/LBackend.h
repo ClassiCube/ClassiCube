@@ -22,6 +22,7 @@ void LBackend_ResetPixels(void);
 
 void LBackend_CalcOffsets(void);
 void LBackend_DrawButton(struct LButton* w);
+void LBackend_DrawCheckbox(struct LCheckbox* w);
 void LBackend_DrawInput(struct LInput* w, const cc_string* text);
 void LBackend_DrawLabel(struct LLabel* w);
 void LBackend_DrawLine(struct LLine* w);

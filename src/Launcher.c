@@ -26,7 +26,6 @@ static Rect2D dirty_rect;
 
 static struct LScreen* activeScreen;
 struct Bitmap Launcher_Framebuffer;
-cc_bool Launcher_ClassicBackground;
 struct FontDesc Launcher_TitleFont, Launcher_TextFont, Launcher_HintFont;
 
 static cc_bool pendingRedraw;
@@ -302,7 +301,7 @@ void Launcher_Run(void) {
 	Options_Get(LOPT_USERNAME, &Launcher_Username, "");
 	LWebTasks_Init();
 	Session_Load();
-	Launcher_LoadSkin();
+	Launcher_LoadTheme();
 	Launcher_Init();
 	Launcher_TryLoadTexturePack();
 
@@ -355,25 +354,24 @@ void Launcher_Run(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Colours/Skin----------------------------------------------------*
 *#########################################################################################################################*/
-#define DEFAULT_BACKGROUND_COLOR         BitmapCol_Make(153, 127, 172, 255)
-#define DEFAULT_BUTTON_BORDER_COLOR      BitmapCol_Make( 97,  81, 110, 255)
-#define DEFAULT_BUTTON_FORE_ACTIVE_COLOR BitmapCol_Make(189, 168, 206, 255)
-#define DEFAULT_BUTTON_FORE_COLOR        BitmapCol_Make(141, 114, 165, 255)
-#define DEFAULT_BUTTON_HIGHLIGHT_COLOR   BitmapCol_Make(162, 131, 186, 255)
+struct LauncherTheme Launcher_Theme;
+const struct LauncherTheme Launcher_ModernTheme = {
+	false,
+	BitmapCol_Make(153, 127, 172, 255), /* background */
+	BitmapCol_Make( 97,  81, 110, 255), /* button border */
+	BitmapCol_Make(189, 168, 206, 255), /* active button */
+	BitmapCol_Make(141, 114, 165, 255), /* button foreground */
+	BitmapCol_Make(162, 131, 186, 255), /* button highlight */
+};
 
-BitmapCol Launcher_BackgroundColor       = DEFAULT_BACKGROUND_COLOR;
-BitmapCol Launcher_ButtonBorderColor     = DEFAULT_BUTTON_BORDER_COLOR;
-BitmapCol Launcher_ButtonForeActiveColor = DEFAULT_BUTTON_FORE_ACTIVE_COLOR;
-BitmapCol Launcher_ButtonForeColor       = DEFAULT_BUTTON_FORE_COLOR;
-BitmapCol Launcher_ButtonHighlightColor  = DEFAULT_BUTTON_HIGHLIGHT_COLOR;
-
-void Launcher_ResetSkin(void) {
-	Launcher_BackgroundColor       = DEFAULT_BACKGROUND_COLOR;
-	Launcher_ButtonBorderColor     = DEFAULT_BUTTON_BORDER_COLOR;
-	Launcher_ButtonForeActiveColor = DEFAULT_BUTTON_FORE_ACTIVE_COLOR;
-	Launcher_ButtonForeColor       = DEFAULT_BUTTON_FORE_COLOR;
-	Launcher_ButtonHighlightColor  = DEFAULT_BUTTON_HIGHLIGHT_COLOR;
-}
+const struct LauncherTheme Launcher_ClassicTheme = {
+	true,
+	BitmapCol_Make( 50,  50,  50, 255), /* background */
+	BitmapCol_Make(  0,   0,   0, 255), /* button border */
+	BitmapCol_Make(126, 136, 191, 255), /* active button */
+	BitmapCol_Make(111, 111, 111, 255), /* button foreground */
+	BitmapCol_Make(168, 168, 168, 255), /* button highlight */
+};
 
 CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
 	cc_uint8 rgb[3];
@@ -384,12 +382,19 @@ CC_NOINLINE static void Launcher_GetCol(const char* key, BitmapCol* col) {
 	*col = BitmapCol_Make(rgb[0], rgb[1], rgb[2], 255);
 }
 
-void Launcher_LoadSkin(void) {
-	Launcher_GetCol("launcher-back-col",                   &Launcher_BackgroundColor);
-	Launcher_GetCol("launcher-btn-border-col",             &Launcher_ButtonBorderColor);
-	Launcher_GetCol("launcher-btn-fore-active-col",        &Launcher_ButtonForeActiveColor);
-	Launcher_GetCol("launcher-btn-fore-inactive-col",      &Launcher_ButtonForeColor);
-	Launcher_GetCol("launcher-btn-highlight-inactive-col", &Launcher_ButtonHighlightColor);
+void Launcher_LoadTheme(void) {
+	if (Options_GetBool(OPT_CLASSIC_MODE, false)) {
+		Launcher_Theme = Launcher_ClassicTheme;
+		return;
+	}
+	Launcher_Theme = Launcher_ModernTheme;
+	Launcher_Theme.ClassicBackground = Options_GetBool("nostalgia-classicbg", false);
+
+	Launcher_GetCol("launcher-back-col",                   &Launcher_Theme.BackgroundColor);
+	Launcher_GetCol("launcher-btn-border-col",             &Launcher_Theme.ButtonBorderColor);
+	Launcher_GetCol("launcher-btn-fore-active-col",        &Launcher_Theme.ButtonForeActiveColor);
+	Launcher_GetCol("launcher-btn-fore-inactive-col",      &Launcher_Theme.ButtonForeColor);
+	Launcher_GetCol("launcher-btn-highlight-inactive-col", &Launcher_Theme.ButtonHighlightColor);
 }
 
 CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
@@ -402,12 +407,13 @@ CC_NOINLINE static void Launcher_SetCol(const char* key, BitmapCol col) {
 	Options_Set(key, &value);
 }
 
-void Launcher_SaveSkin(void) {
-	Launcher_SetCol("launcher-back-col",                   Launcher_BackgroundColor);
-	Launcher_SetCol("launcher-btn-border-col",             Launcher_ButtonBorderColor);
-	Launcher_SetCol("launcher-btn-fore-active-col",        Launcher_ButtonForeActiveColor);
-	Launcher_SetCol("launcher-btn-fore-inactive-col",      Launcher_ButtonForeColor);
-	Launcher_SetCol("launcher-btn-highlight-inactive-col", Launcher_ButtonHighlightColor);
+void Launcher_SaveTheme(void) {
+	Launcher_SetCol("launcher-back-col",                   Launcher_Theme.BackgroundColor);
+	Launcher_SetCol("launcher-btn-border-col",             Launcher_Theme.ButtonBorderColor);
+	Launcher_SetCol("launcher-btn-fore-active-col",        Launcher_Theme.ButtonForeActiveColor);
+	Launcher_SetCol("launcher-btn-fore-inactive-col",      Launcher_Theme.ButtonForeColor);
+	Launcher_SetCol("launcher-btn-highlight-inactive-col", Launcher_Theme.ButtonHighlightColor);
+	Options_SetBool("nostalgia-classicbg",                 Launcher_Theme.ClassicBackground);
 }
 
 
@@ -473,12 +479,6 @@ void Launcher_TryLoadTexturePack(void) {
 	cc_string path; char pathBuffer[FILENAME_SIZE];
 	cc_string texPack;
 
-	if (Options_UNSAFE_Get("nostalgia-classicbg", &texPack)) {
-		Launcher_ClassicBackground = Options_GetBool("nostalgia-classicbg", false);
-	} else {
-		Launcher_ClassicBackground = Options_GetBool(OPT_CLASSIC_MODE,      false);
-	}
-
 	if (Options_UNSAFE_Get(OPT_DEFAULT_TEX_PACK, &texPack)) {
 		String_InitArray(path, pathBuffer);
 		String_Format1(&path, "texpacks/%s", &texPack);
@@ -492,7 +492,7 @@ void Launcher_TryLoadTexturePack(void) {
 
 void Launcher_UpdateLogoFont(void) {
 	Font_Free(&logoFont);
-	Drawer2D.BitmappedText = (useBitmappedFont || Launcher_ClassicBackground) && hasBitmappedFont;
+	Drawer2D.BitmappedText = (useBitmappedFont || Launcher_Theme.ClassicBackground) && hasBitmappedFont;
 	Drawer2D_MakeFont(&logoFont, 32, FONT_FLAGS_NONE);
 	Drawer2D.BitmappedText = false;
 }
