@@ -316,10 +316,11 @@ void ChooseModeScreen_SetActive(cc_bool firstTime) {
 *#########################################################################################################################*/
 static struct ColoursScreen {
 	LScreen_Layout
-	struct LButton btnDefault, btnBack;
-	struct LLabel lblNames[5], lblRGB[3];
+	struct LButton btnBack;
+	struct LLabel lblNames[5], lblRGB[3], lblClassic;
 	struct LInput iptColours[5 * 3];
-	struct LWidget* _widgets[25];
+	struct LCheckbox cbClassic;
+	struct LWidget* _widgets[26];
 	float colourAcc;
 } ColoursScreen_Instance;
 
@@ -411,10 +412,12 @@ static void ColoursScreen_KeyDown(struct LScreen* s, int key, cc_bool was) {
 	}
 }
 
-static void ColoursScreen_ResetAll(void* w, int idx) {
-	Launcher_Theme = Launcher_ModernTheme;
+static void ColoursScreen_ToggleBG(void* w, int idx) {
+	struct LCheckbox* cb = (struct LCheckbox*)w;
+	Launcher_Theme.ClassicBackground = !Launcher_Theme.ClassicBackground;
+	cb->value = Launcher_Theme.ClassicBackground;
+
 	Launcher_SaveTheme();
-	ColoursScreen_UpdateAll(&ColoursScreen_Instance);
 	Launcher_Redraw();
 }
 
@@ -443,17 +446,18 @@ static void ColoursScreen_Init(struct LScreen* s_) {
 	LLabel_Init(s_, &s->lblRGB[0], "Red");
 	LLabel_Init(s_, &s->lblRGB[1], "Green");
 	LLabel_Init(s_, &s->lblRGB[2], "Blue");
+	LButton_Init(s_, &s->btnBack, 80, 35, "Back");
 
-	LButton_Init(s_, &s->btnDefault, 160, 35, "Default colours");
-	LButton_Init(s_, &s->btnBack,    80,  35, "Back");
-
-	s->btnDefault.OnClick = ColoursScreen_ResetAll;
-	s->btnBack.OnClick    = SwitchToThemes;
+	LLabel_Init(s_,    &s->lblClassic, "Classic style");
+	LCheckbox_Init(s_, &s->cbClassic);
+	s->cbClassic.OnClick = ColoursScreen_ToggleBG;
+	s->btnBack.OnClick   = SwitchToThemes;
 }
 
 static void ColoursScreen_Show(struct LScreen* s_) {
 	struct ColoursScreen* s = (struct ColoursScreen*)s_;
-	s->colourAcc = 0;
+	s->colourAcc       = 0;
+	s->cbClassic.value = Launcher_Theme.ClassicBackground;
 	ColoursScreen_UpdateAll(s);
 }
 
@@ -477,8 +481,9 @@ static void ColoursScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->lblRGB[1], ANCHOR_CENTRE, ANCHOR_CENTRE,  95, -130);
 	LWidget_SetLocation(&s->lblRGB[2], ANCHOR_CENTRE, ANCHOR_CENTRE, 160, -130);
 
-	LWidget_SetLocation(&s->btnDefault, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 120);
-	LWidget_SetLocation(&s->btnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
+	LWidget_SetLocation(&s->cbClassic,  ANCHOR_CENTRE, ANCHOR_CENTRE, -75, 130);
+	LWidget_SetLocation(&s->lblClassic, ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 130);
+	LWidget_SetLocation(&s->btnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE,   0, 170);
 }
 
 void ColoursScreen_SetActive(void) {
@@ -1493,7 +1498,7 @@ static void ThemesScreen_Layout(struct LScreen* s_) {
 	struct ThemesScreen* s = (struct ThemesScreen*)s_;
 	LWidget_SetLocation(&s->btnModern,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
 	LWidget_SetLocation(&s->btnClassic, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -70);
-	LWidget_SetLocation(&s->btnCustom,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -20);
+	LWidget_SetLocation(&s->btnCustom,  ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 120);
 	LWidget_SetLocation(&s->btnBack,    ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
 }
 

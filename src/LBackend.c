@@ -176,6 +176,81 @@ void LBackend_DrawButton(struct LButton* w) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------CheckboxWidget------------------------------------------------------*
+*#########################################################################################################################*/
+/* Based off checkbox from original ClassiCube Launcher */
+static const cc_uint8 checkbox_indices[] = {
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x06, 0x07, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x06, 0x09, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0A, 0x06, 0x0B, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0D, 0x0E, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x0F, 0x06, 0x10, 0x00, 0x11, 0x06, 0x12, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x13, 0x14, 0x15, 0x00, 0x16, 0x17, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x18, 0x06, 0x19, 0x06, 0x1A, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x1B, 0x06, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x1D, 0x06, 0x1A, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+static PackedCol checkbox_palette[] = {
+	PackedCol_Make(  0,   0,   0,   0), PackedCol_Make(144, 144, 144, 255),
+	PackedCol_Make( 61,  61,  61, 255), PackedCol_Make( 94,  94,  94, 255),
+	PackedCol_Make(197, 196, 197, 255), PackedCol_Make( 57,  57,  57, 255),
+	PackedCol_Make( 33,  33,  33, 255), PackedCol_Make(177, 177, 177, 255),
+	PackedCol_Make(189, 189, 189, 255), PackedCol_Make( 67,  67,  67, 255),
+	PackedCol_Make(108, 108, 108, 255), PackedCol_Make(171, 171, 171, 255),
+	PackedCol_Make(220, 220, 220, 255), PackedCol_Make( 43,  43,  43, 255),
+	PackedCol_Make( 63,  63,  63, 255), PackedCol_Make(100, 100, 100, 255),
+	PackedCol_Make(192, 192, 192, 255), PackedCol_Make(132, 132, 132, 255),
+	PackedCol_Make(175, 175, 175, 255), PackedCol_Make(217, 217, 217, 255),
+	PackedCol_Make( 42,  42,  42, 255), PackedCol_Make( 86,  86,  86, 255),
+	PackedCol_Make( 56,  56,  56, 255), PackedCol_Make( 76,  76,  76, 255),
+	PackedCol_Make(139, 139, 139, 255), PackedCol_Make(130, 130, 130, 255),
+	PackedCol_Make(181, 181, 181, 255), PackedCol_Make( 62,  62,  62, 255),
+	PackedCol_Make( 75,  75,  75, 255), PackedCol_Make(184, 184, 184, 255),
+};
+
+static void DrawIndexed(int size, int x, int y, struct Bitmap* bmp) {
+	BitmapCol* row;
+	int i, xx, yy;
+
+	for (i = 0, yy = 0; yy < size; yy++) {
+		if ((y + yy) < 0) { i += size; continue; }
+		if ((y + yy) >= bmp->height) break;
+		int* row = Bitmap_GetRow(bmp, y + yy);
+
+		for (xx = 0; xx < size; xx++) {
+			int col = checkbox_palette[checkbox_indices[i++]];
+			if (col == 0) continue; /* transparent pixel */
+			if ((x + xx) < 0 || (x + xx) >= bmp->width) continue;
+			row[x + xx] = col;
+		}
+	}
+}
+
+void LBackend_DrawCheckbox(struct LCheckbox* w) {
+	PackedCol boxTop    = PackedCol_Make(255, 255, 255, 255);
+	PackedCol boxBottom = PackedCol_Make(240, 240, 240, 255);
+	PackedCol black = PackedCol_Make(0, 0, 0, 255);
+	int height      = w->height / 2;
+
+	Gradient_Vertical(&Launcher_Framebuffer, boxTop, boxBottom,
+						w->x, w->y,          w->width, height);
+	Gradient_Vertical(&Launcher_Framebuffer, boxBottom, boxTop,
+						w->x, w->y + height, w->width, height);
+
+	if (w->value) {
+		const int size = 12;
+		int x = w->x + w->width  / 2 - size / 2;
+		int y = w->y + w->height / 2 - size / 2;
+		DrawIndexed(size, x, y, &Launcher_Framebuffer);
+	}
+	/*drawer.DrawRectBounds(black, 1, w->X, Y, Width - 1, Height - 1);*/
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 static void LInput_DrawOuterBorder(struct LInput* w) {

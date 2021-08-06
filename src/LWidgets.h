@@ -61,6 +61,12 @@ struct LButton {
 CC_NOINLINE void LButton_Init(struct LScreen* s, struct LButton* w, int width, int height, const char* text);
 CC_NOINLINE void LButton_SetConst(struct LButton* w, const char* text);
 
+struct LCheckbox {
+	LWidget_Layout
+	cc_bool value;
+};
+CC_NOINLINE void LCheckbox_Init(struct LScreen* s, struct LCheckbox* w);
+
 struct LInput;
 struct LInput {
 	LWidget_Layout

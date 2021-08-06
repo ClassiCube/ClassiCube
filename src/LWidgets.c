@@ -118,6 +118,30 @@ void LButton_SetConst(struct LButton* w, const char* text) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------CheckboxWidget------------------------------------------------------*
+*#########################################################################################################################*/
+static void LCheckbox_Draw(void* widget) {
+	struct LCheckbox* w = (struct LCheckbox*)widget;
+	LBackend_DrawCheckbox(w);
+	Launcher_MarkDirty(w->x, w->y, w->width, w->height);
+}
+
+static const struct LWidgetVTABLE lcheckbox_VTABLE = {
+	LCheckbox_Draw, NULL,
+	NULL, NULL, /* Key    */
+	NULL, NULL, /* Hover  */
+	NULL, NULL  /* Select */
+};
+void LCheckbox_Init(struct LScreen* s, struct LCheckbox* w) {
+	w->VTABLE = &lcheckbox_VTABLE;
+	w->tabSelectable = true;
+	w->width  = Display_ScaleX(24);
+	w->height = Display_ScaleY(24);
+	s->widgets[s->numWidgets++] = (struct LWidget*)w;
+}
+
+
+/*########################################################################################################################*
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 CC_NOINLINE static void LInput_GetText(struct LInput* w, cc_string* text) {
