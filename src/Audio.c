@@ -112,6 +112,7 @@ struct AudioContext {
 	ALuint freeIDs[AUDIO_MAX_BUFFERS];
 	int count, free, channels, sampleRate;
 	ALenum dataFormat;
+	cc_uint32 _tmpSize; void* _tmpData;
 };
 static void* audio_device;
 static void* audio_context;
@@ -337,6 +338,7 @@ struct AudioContext {
 	HWAVEOUT handle;
 	WAVEHDR headers[AUDIO_MAX_BUFFERS];
 	int count, channels, sampleRate;
+	cc_uint32 _tmpSize; void* _tmpData;
 };
 static cc_bool AudioBackend_Init(void) { return true; }
 static void AudioBackend_Free(void) { }
@@ -434,6 +436,7 @@ struct AudioContext {
 	SLObjectItf bqPlayerObject;
 	SLPlayItf   bqPlayerPlayer;
 	SLBufferQueueItf bqPlayerQueue;
+	cc_uint32 _tmpSize; void* _tmpData;
 };
 
 static SLresult (SLAPIENTRY *_slCreateEngine)(
@@ -614,18 +617,48 @@ void Audio_Close(struct AudioContext* ctx) {
 	ctx->count      = 0;
 	ctx->channels   = 0;
 	ctx->sampleRate = 0;
+
+	Mem_Free(ctx->_tmpData);
+	ctx->_tmpData = NULL;
+	ctx->_tmpSize = 0;
 	AudioBackend_Reset(ctx);
+}
+
+cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
+	cc_result res;
+	void* data = snd->data;
+	void* tmp;
+	
+	/* copy to temp buffer to apply volume */
+	if (volume < 100) {
+		if (ctx->_tmpSize < snd->size) {
+			/* TODO: check if we can realloc NULL without a problem */
+			if (ctx->_tmpData) {
+				tmp = Mem_TryRealloc(ctx->_tmpData, snd->size, 1);
+			} else {
+				tmp = Mem_TryAlloc(snd->size, 1);
+			}
+
+			if (!tmp) return ERR_OUT_OF_MEMORY;
+			ctx->_tmpData = tmp;
+			ctx->_tmpSize = snd->size;
+		}
+
+		data = ctx->_tmpData;
+		Mem_Copy(data, snd->data, snd->size);
+		Volume_Mix16((cc_int16*)data, snd->size / 2, volume);
+	}
+
+	if ((res = Audio_SetFormat(ctx, snd->channels, snd->sampleRate))) return res;
+	if ((res = Audio_QueueData(ctx, data, snd->size))) return res;
+	if ((res = Audio_Play(ctx))) return res;
+	return 0;
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------Soundboard---------------------------------------------------------*
 *#########################################################################################################################*/
-struct Sound {
-	int channels, sampleRate;
-	cc_uint8* data; cc_uint32 size;
-};
-
 #define AUDIO_MAX_SOUNDS 10
 struct SoundGroup {
 	int count;
@@ -768,12 +801,11 @@ static const struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_ui
 /*########################################################################################################################*
 *--------------------------------------------------------Sounds-----------------------------------------------------------*
 *#########################################################################################################################*/
-struct SoundOutput { struct AudioContext ctx; void* buffer; cc_uint32 capacity; };
 static struct Soundboard digBoard, stepBoard;
 #define AUDIO_MAX_HANDLES 6
 
-static struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES];
-static struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES];
+static struct AudioContext monoOutputs[AUDIO_MAX_HANDLES];
+static struct AudioContext stereoOutputs[AUDIO_MAX_HANDLES];
 
 CC_NOINLINE static void Sounds_Fail(cc_result res) {
 	Logger_SimpleWarn(res, "playing sounds");
@@ -781,42 +813,11 @@ CC_NOINLINE static void Sounds_Fail(cc_result res) {
 	Audio_SetSounds(0);
 }
 
-static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, int volume) {
-	void* data = snd->data;
-	void* tmp;
-	cc_result res;
-	
-	/* copy to temp buffer to apply volume */
-	if (volume < 100) {
-		/* TODO: Don't need a per sound temp buffer, just a global one */
-		if (output->capacity < snd->size) {
-			/* TODO: check if we can realloc NULL without a problem */
-			if (output->buffer) {
-				tmp = Mem_TryRealloc(output->buffer, snd->size, 1);
-			} else {
-				tmp = Mem_TryAlloc(snd->size, 1);
-			}
-
-			if (!tmp) { Sounds_Fail(ERR_OUT_OF_MEMORY); return; }
-			output->buffer   = tmp;
-			output->capacity = snd->size;
-		}
-		data = output->buffer;
-
-		Mem_Copy(data, snd->data, snd->size);
-		Volume_Mix16((cc_int16*)data, snd->size / 2, volume);
-	}
-
-	if ((res = Audio_SetFormat(&output->ctx, snd->channels, snd->sampleRate))) { Sounds_Fail(res); return; }
-	if ((res = Audio_QueueData(&output->ctx, data, snd->size))) { Sounds_Fail(res); return; }
-	if ((res = Audio_Play(&output->ctx)))                       { Sounds_Fail(res); return; }
-}
-
 static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	const struct Sound* snd_;
 	struct Sound snd;
-	struct SoundOutput* outputs;
-	struct SoundOutput* output;
+	struct AudioContext* outputs;
+	struct AudioContext* ctx;
 	int chans, freq;
 	int inUse, i, volume;
 	cc_result res;
@@ -845,32 +846,37 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 
 	/* Try to play on fresh device, or device with same data format */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		output = &outputs[i];
-		if (!output->ctx.count) {
-			Audio_Init(&output->ctx, 1);
+		ctx = &outputs[i];
+		if (!ctx->count) {
+			Audio_Init(ctx, 1);
 		} else {
-			res = Audio_Poll(&output->ctx, &inUse);
+			res = Audio_Poll(ctx, &inUse);
 
 			if (res) { Sounds_Fail(res); return; }
 			if (inUse > 0) continue;
 		}
 		
-		chans =   Audio_GetChannels(&output->ctx);
-		freq  = Audio_GetSampleRate(&output->ctx);
+		chans =   Audio_GetChannels(ctx);
+		freq  = Audio_GetSampleRate(ctx);
 		if (!chans || (chans == snd.channels && freq == snd.sampleRate)) {
-			Sounds_PlayRaw(output, &snd, volume); return;
+
+			res = Audio_PlaySound(ctx, &snd, volume);
+			if (res) Sounds_Fail(res);
+			return;
 		}
 	}
 
 	/* Try again with all devices, even if need to recreate one (expensive) */
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		output = &outputs[i];
-		res = Audio_Poll(&output->ctx, &inUse);
+		ctx = &outputs[i];
+		res = Audio_Poll(ctx, &inUse);
 
 		if (res) { Sounds_Fail(res); return; }
 		if (inUse > 0) continue;
 
-		Sounds_PlayRaw(output, &snd, volume); return;
+		res = Audio_PlaySound(ctx, &snd, volume);
+		if (res) Sounds_Fail(res);
+		return;
 	}
 }
 
@@ -882,15 +888,11 @@ static void Audio_PlayBlockSound(void* obj, IVec3 coords, BlockID old, BlockID n
 	}
 }
 
-static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
+static void Sounds_FreeOutputs(struct AudioContext* outputs) {
 	int i;
 	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		if (!outputs[i].ctx.count) continue;
-		Audio_Close(&outputs[i].ctx);
-
-		Mem_Free(outputs[i].buffer);
-		outputs[i].buffer   = NULL;
-		outputs[i].capacity = 0;
+		if (!outputs[i].count) continue;
+		Audio_Close(&outputs[i]);
 	}
 }
 

@@ -8,6 +8,11 @@ struct IGameComponent;
 extern struct IGameComponent Audio_Component; 
 struct AudioContext;
 
+struct Sound {
+	int channels, sampleRate;
+	cc_uint8* data; cc_uint32 size;
+};
+
 /* Volume sounds are played at, from 0-100. */
 /* NOTE: Use Audio_SetSounds, don't change this directly. */
 extern int Audio_SoundsVolume;
@@ -28,7 +33,7 @@ void Audio_Close(struct AudioContext* ctx);
 /* Returns number of channels of the format audio is played in. */
 int Audio_GetChannels(struct AudioContext* ctx);
 /* Returns number of channels of the format audio is played in. */
-int Audio_GetSampeRate(struct AudioContext* ctx);
+int Audio_GetSampleRate(struct AudioContext* ctx);
 /* Sets the format of the audio data to be played. */
 /* NOTE: Changing the format can be expensive, depending on the backend. */
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate);
@@ -42,4 +47,6 @@ cc_result Audio_Play(struct AudioContext* ctx);
 /* Returns the number of buffers being played or queued */
 /* (e.g. if inUse is 0, no audio buffers are being played or queued) */
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
+
+cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume);
 #endif
