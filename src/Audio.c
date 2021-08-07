@@ -160,7 +160,7 @@ static cc_result CreateALContext(void) {
 	return _alcGetError(audio_device);
 }
 
-static cc_bool Backend_Init(void) {
+static cc_bool AudioBackend_Init(void) {
 	static const cc_string msg = String_FromConst("Failed to init OpenAL. No audio will play.");
 	cc_result res;
 	if (audio_device) return true;
@@ -171,7 +171,7 @@ static cc_bool Backend_Init(void) {
 	return true;
 }
 
-static void Backend_Free(void) {
+static void AudioBackend_Free(void) {
 	if (!audio_device) return;
 	_alcMakeContextCurrent(NULL);
 
@@ -198,7 +198,7 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count  = buffers;
 }
 
-static cc_result Backend_Reset(struct AudioContext* ctx) {
+static cc_result AudioBackend_Reset(struct AudioContext* ctx) {
 	ALenum err;
 	ClearFree(ctx);
 	if (!ctx->source) return 0;
@@ -218,7 +218,7 @@ static ALenum GetALFormat(int channels) {
 	Logger_Abort("Unsupported audio format"); return 0;
 }
 
-static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
+static cc_result AudioBackend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
 	ALenum i, err;
 	ctx->dataFormat = GetALFormat(format->channels);
 	
@@ -256,7 +256,7 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 	return _alGetError();
 }
 
-static void Backend_Stop(struct AudioContext* ctx) {
+static void AudioBackend_Stop(struct AudioContext* ctx) {
 	if (ctx->source == -1) return;
 
 	_alSourceStop(ctx->source);
@@ -340,8 +340,8 @@ struct AudioContext {
 	struct AudioFormat format;
 	int count;
 };
-static cc_bool Backend_Init(void) { return true; }
-static void Backend_Free(void) { }
+static cc_bool AudioBackend_Init(void) { return true; }
+static void AudioBackend_Free(void) { }
 
 void Audio_Init(struct AudioContext* ctx, int buffers) {
 	int i;
@@ -351,7 +351,7 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count = buffers;
 }
 
-static cc_result Backend_Reset(struct AudioContext* ctx) {
+static cc_result AudioBackend_Reset(struct AudioContext* ctx) {
 	cc_result res;
 	if (!ctx->handle) return 0;
 
@@ -360,11 +360,11 @@ static cc_result Backend_Reset(struct AudioContext* ctx) {
 	return res;
 }
 
-static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
+static cc_result AudioBackend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
 	WAVEFORMATEX fmt;
 	cc_result res;
 	int sampleSize = format->channels * 2; /* 16 bits per sample / 8 */
-	if ((res = Backend_Reset(ctx))) return res;
+	if ((res = AudioBackend_Reset(ctx))) return res;
 
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
 	fmt.nChannels       = format->channels;
@@ -400,7 +400,7 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSi
 
 cc_result Audio_Play(struct AudioContext* ctx) { return 0; }
 
-static void Backend_Stop(struct AudioContext* ctx) {
+static void AudioBackend_Stop(struct AudioContext* ctx) {
 	if (ctx->handle) waveOutReset(ctx->handle);
 }
 
@@ -465,7 +465,7 @@ static cc_bool LoadSLFuncs(void) {
 	return DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
 }
 
-static cc_bool Backend_Init(void) {
+static cc_bool AudioBackend_Init(void) {
 	static const cc_string msg = String_FromConst("Failed to init OpenSLES. No audio will play.");
 	SLInterfaceID ids[1];
 	SLboolean req[1];
@@ -495,7 +495,7 @@ static cc_bool Backend_Init(void) {
 	return true;
 }
 
-static void Backend_Free(void) {
+static void AudioBackend_Free(void) {
 	if (slOutputObject) {
 		(*slOutputObject)->Destroy(slOutputObject);
 		slOutputObject = NULL;
@@ -511,7 +511,7 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count = buffers;
 }
 
-static void Backend_Reset(struct AudioContext* ctx) {
+static void AudioBackend_Reset(struct AudioContext* ctx) {
 	SLObjectItf bqPlayerObject = ctx->bqPlayerObject;
 	if (!bqPlayerObject) return;
 
@@ -521,7 +521,7 @@ static void Backend_Reset(struct AudioContext* ctx) {
 	ctx->bqPlayerQueue  = NULL;
 }
 
-static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
+static cc_result AudioBackend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
 	SLDataLocator_AndroidSimpleBufferQueue input;
 	SLDataLocator_OutputMix output;
 	SLObjectItf bqPlayerObject;
@@ -531,7 +531,7 @@ static cc_result Backend_SetFormat(struct AudioContext* ctx, struct AudioFormat*
 	SLDataSource src;
 	SLDataSink dst;
 	cc_result res;
-	Backend_Reset(ctx);
+	AudioBackend_Reset(ctx);
 
 	fmt.formatType     = SL_DATAFORMAT_PCM;
 	fmt.numChannels    = format->channels;
@@ -576,7 +576,7 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_PLAYING);
 }
 
-static void Backend_Stop(struct AudioContext* ctx) {
+static void AudioBackend_Stop(struct AudioContext* ctx) {
 	if (!ctx->bqPlayerPlayer) return;
 
 	(*ctx->bqPlayerQueue)->Clear(ctx->bqPlayerQueue);
@@ -605,18 +605,18 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) 
 	if (AudioFormat_Eq(cur, format)) return 0;
 	ctx->format = *format;
 
-	return Backend_SetFormat(ctx, format);
+	return AudioBackend_SetFormat(ctx, format);
 }
 
 void Audio_Close(struct AudioContext* ctx) {
 	int inUse;
-	Backend_Stop(ctx);
+	AudioBackend_Stop(ctx);
 	Audio_Poll(ctx, &inUse); /* unqueue buffers */
 
 	ctx->count             = 0;
 	ctx->format.channels   = 0;
 	ctx->format.sampleRate = 0;
-	Backend_Reset(ctx);
+	AudioBackend_Reset(ctx);
 }
 
 
@@ -827,9 +827,13 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 
 	if (type == SOUND_NONE || !Audio_SoundsVolume) return;
 	snd = Soundboard_PickRandom(board, type);
-
 	if (!snd) return;
-	if (!Backend_Init()) { Backend_Free(); Audio_SoundsVolume = 0; return; }
+
+	if (!AudioBackend_Init()) { 
+		AudioBackend_Free(); 
+		Audio_SoundsVolume = 0; 
+		return; 
+	}
 
 	fmt     = snd->format;
 	volume  = Audio_SoundsVolume;
@@ -1088,7 +1092,11 @@ static void Music_RunLoop(void) {
 
 static void Music_Init(void) {
 	if (music_thread) return;
-	if (!Backend_Init()) { Backend_Free(); Audio_MusicVolume = 0; return; }
+	if (!AudioBackend_Init()) {
+		AudioBackend_Free(); 
+		Audio_MusicVolume = 0;
+		return; 
+	}
 
 	music_joining     = false;
 	music_pendingStop = false;
@@ -1152,7 +1160,7 @@ static void OnFree(void) {
 	Music_Free();
 	Sounds_Free();
 	Waitable_Free(music_waitable);
-	Backend_Free();
+	AudioBackend_Free();
 }
 #endif
 

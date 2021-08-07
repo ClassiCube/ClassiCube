@@ -120,7 +120,7 @@ static void Http_SetRequestHeaders(struct HttpRequest* req) {
 static void Http_SignalWorker(void) { Waitable_Signal(workerWaitable); }
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed */
-static void Http_BackendAdd(struct HttpRequest* req, cc_bool priority) {
+static void HttpBackend_Add(struct HttpRequest* req, cc_bool priority) {
 	Mutex_Lock(pendingMutex);
 	{	
 		RequestList_Append(&pendingReqs, req, priority);
@@ -283,7 +283,7 @@ cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
 	return true;
 }
 
-static void Http_BackendInit(void) {
+static void HttpBackend_Init(void) {
 	static const cc_string msg = String_FromConst("Failed to init libcurl. All HTTP requests will therefore fail.");
 	CURLcode res;
 
@@ -343,7 +343,7 @@ static void Http_SetCurlOpts(struct HttpRequest* req) {
 	_curl_easy_setopt(curl, CURLOPT_WRITEDATA,      req);
 }
 
-static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
+static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	char urlStr[NATIVE_STR_LEN];
 	void* post_data = req->data;
 	CURLcode res;
@@ -529,7 +529,7 @@ cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
 	return Platform_DescribeErrorExt(res, dst, "wininet.dll");
 }
 
-static void Http_BackendInit(void) {
+static void HttpBackend_Init(void) {
 	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
 	hInternet = InternetOpenA(GAME_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
 	if (!hInternet) Logger_Abort2(GetLastError(), "Failed to init WinINet");
@@ -609,7 +609,7 @@ static cc_result Http_DownloadData(struct HttpRequest* req, HINTERNET handle) {
 	return 0;
 }
 
-static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
+static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	HINTERNET handle;
 	cc_result res = Http_StartRequest(req, url, &handle);
 	HttpRequest_Free(req);
@@ -684,7 +684,7 @@ static const JNINativeMethod methods[2] = {
 	{ "httpParseHeader", "(Ljava/lang/String;)V", java_HttpParseHeader },
 	{ "httpAppendData",  "([BI)V",                java_HttpAppendData }
 };
-static void Http_BackendInit(void) {
+static void HttpBackend_Init(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	JavaRegisterNatives(env, methods);
@@ -714,7 +714,7 @@ static cc_result Http_SetData(JNIEnv* env, struct HttpRequest* req) {
 	return res;
 }
 
-static cc_result Http_BackendDo(struct HttpRequest* req, cc_string* url) {
+static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 	static const cc_string userAgent = String_FromConst(GAME_APP_NAME);
 	JNIEnv* env;
 	jint res;
@@ -775,7 +775,7 @@ static void WorkerLoop(void) {
 		Http_BeginRequest(&request, &url);
 
 		beg = Stopwatch_Measure();
-		request.result = Http_BackendDo(&request, &url);
+		request.result = HttpBackend_Do(&request, &url);
 		end = Stopwatch_Measure();
 
 		elapsed = Stopwatch_ElapsedMS(beg, end);
@@ -796,7 +796,7 @@ static void Http_Init(void) {
 	ScheduledTask_Add(30, Http_CleanCacheTask);
 	if (workerThread) return;
 
-	Http_BackendInit();
+	HttpBackend_Init();
 	workerWaitable = Waitable_Create();
 	RequestList_Init(&pendingReqs);
 	RequestList_Init(&processedReqs);

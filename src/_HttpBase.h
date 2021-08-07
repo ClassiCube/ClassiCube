@@ -103,7 +103,7 @@ static void RequestList_Free(struct RequestList* list) {
 static void* processedMutex;
 static struct RequestList processedReqs;
 static int nextReqID;
-static void Http_BackendAdd(struct HttpRequest* req, cc_bool priority);
+static void HttpBackend_Add(struct HttpRequest* req, cc_bool priority);
 
 /* Adds a req to the list of pending requests, waking up worker thread if needed. */
 static int Http_Add(const cc_string* url, cc_bool priority, cc_uint8 type, const cc_string* lastModified,
@@ -144,7 +144,7 @@ static int Http_Add(const cc_string* url, cc_bool priority, cc_uint8 type, const
 	req.cookies  = cookies;
 	req.progress = HTTP_PROGRESS_NOT_WORKING_ON;
 
-	Http_BackendAdd(&req, priority);
+	HttpBackend_Add(&req, priority);
 	return req.id;
 }
 
