@@ -110,8 +110,7 @@ struct AudioContext {
 	ALuint source;
 	ALuint buffers[AUDIO_MAX_BUFFERS];
 	ALuint freeIDs[AUDIO_MAX_BUFFERS];
-	struct AudioFormat format;
-	int count, free;
+	int count, free, channels, sampleRate;
 	ALenum dataFormat;
 };
 static void* audio_device;
@@ -218,9 +217,9 @@ static ALenum GetALFormat(int channels) {
 	Logger_Abort("Unsupported audio format"); return 0;
 }
 
-static cc_result AudioBackend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
+static cc_result AudioBackend_UpdateFormat(struct AudioContext* ctx) {
 	ALenum i, err;
-	ctx->dataFormat = GetALFormat(format->channels);
+	ctx->dataFormat = GetALFormat(ctx->channels);
 	
 	if (!ctx->source) {
 		_alGenSources(1, &ctx->source);
@@ -337,8 +336,7 @@ WINMMAPI MMRESULT WINAPI waveOutReset(HWAVEOUT hwo);
 struct AudioContext {
 	HWAVEOUT handle;
 	WAVEHDR headers[AUDIO_MAX_BUFFERS];
-	struct AudioFormat format;
-	int count;
+	int count, channels, sampleRate;
 };
 static cc_bool AudioBackend_Init(void) { return true; }
 static void AudioBackend_Free(void) { }
@@ -360,16 +358,16 @@ static cc_result AudioBackend_Reset(struct AudioContext* ctx) {
 	return res;
 }
 
-static cc_result AudioBackend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
+static cc_result AudioBackend_UpdateFormat(struct AudioContext* ctx) {
 	WAVEFORMATEX fmt;
 	cc_result res;
-	int sampleSize = format->channels * 2; /* 16 bits per sample / 8 */
+	int sampleSize = ctx->channels * 2; /* 16 bits per sample / 8 */
 	if ((res = AudioBackend_Reset(ctx))) return res;
 
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
-	fmt.nChannels       = format->channels;
-	fmt.nSamplesPerSec  = format->sampleRate;
-	fmt.nAvgBytesPerSec = format->sampleRate * sampleSize;
+	fmt.nChannels       = ctx->channels;
+	fmt.nSamplesPerSec  = ctx->sampleRate;
+	fmt.nAvgBytesPerSec = ctx->sampleRate * sampleSize;
 	fmt.nBlockAlign     = sampleSize;
 	fmt.wBitsPerSample  = 16;
 	fmt.cbSize          = 0;
@@ -432,8 +430,7 @@ static SLEngineItf slEngineEngine;
 static SLObjectItf slOutputObject;
 
 struct AudioContext {
-	struct AudioFormat format;
-	int count;
+	int count, channels, sampleRate;
 	SLObjectItf bqPlayerObject;
 	SLPlayItf   bqPlayerPlayer;
 	SLBufferQueueItf bqPlayerQueue;
@@ -521,7 +518,7 @@ static void AudioBackend_Reset(struct AudioContext* ctx) {
 	ctx->bqPlayerQueue  = NULL;
 }
 
-static cc_result AudioBackend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
+static cc_result AudioBackend_UpdateFormat(struct AudioContext* ctx) {
 	SLDataLocator_AndroidSimpleBufferQueue input;
 	SLDataLocator_OutputMix output;
 	SLObjectItf bqPlayerObject;
@@ -534,8 +531,8 @@ static cc_result AudioBackend_SetFormat(struct AudioContext* ctx, struct AudioFo
 	AudioBackend_Reset(ctx);
 
 	fmt.formatType     = SL_DATAFORMAT_PCM;
-	fmt.numChannels    = format->channels;
-	fmt.samplesPerSec  = format->sampleRate * 1000;
+	fmt.numChannels    = ctx->channels;
+	fmt.samplesPerSec  = ctx->sampleRate * 1000;
 	fmt.bitsPerSample  = SL_PCMSAMPLEFORMAT_FIXED_16;
 	fmt.containerSize  = SL_PCMSAMPLEFORMAT_FIXED_16;
 	fmt.channelMask    = 0;
@@ -598,14 +595,15 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 /*########################################################################################################################*
 *---------------------------------------------------Common backend code---------------------------------------------------*
 *#########################################################################################################################*/
-struct AudioFormat* Audio_GetFormat(struct AudioContext* ctx) { return &ctx->format; }
+int Audio_GetChannels(struct AudioContext* ctx)   { return ctx->channels; }
+int Audio_GetSampleRate(struct AudioContext* ctx) { return ctx->sampleRate; }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
-	struct AudioFormat* cur = &ctx->format;
-	if (AudioFormat_Eq(cur, format)) return 0;
-	ctx->format = *format;
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
 
-	return AudioBackend_SetFormat(ctx, format);
+	ctx->channels   = channels;
+	ctx->sampleRate = sampleRate;
+	return AudioBackend_UpdateFormat(ctx);
 }
 
 void Audio_Close(struct AudioContext* ctx) {
@@ -613,9 +611,9 @@ void Audio_Close(struct AudioContext* ctx) {
 	AudioBackend_Stop(ctx);
 	Audio_Poll(ctx, &inUse); /* unqueue buffers */
 
-	ctx->count             = 0;
-	ctx->format.channels   = 0;
-	ctx->format.sampleRate = 0;
+	ctx->count      = 0;
+	ctx->channels   = 0;
+	ctx->sampleRate = 0;
 	AudioBackend_Reset(ctx);
 }
 
@@ -624,7 +622,7 @@ void Audio_Close(struct AudioContext* ctx) {
 *------------------------------------------------------Soundboard---------------------------------------------------------*
 *#########################################################################################################################*/
 struct Sound {
-	struct AudioFormat format;
+	int channels, sampleRate;
 	cc_uint8* data; cc_uint32 size;
 };
 
@@ -664,8 +662,8 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if ((res = Stream_Read(stream, tmp, sizeof(tmp)))) return res;
 			if (Stream_GetU16_LE(tmp + 0) != 1) return WAV_ERR_DATA_TYPE;
 
-			snd->format.channels   = Stream_GetU16_LE(tmp + 2);
-			snd->format.sampleRate = Stream_GetU32_LE(tmp + 4);
+			snd->channels   = Stream_GetU16_LE(tmp + 2);
+			snd->sampleRate = Stream_GetU32_LE(tmp + 4);
 			/* tmp[8] (6) alignment data and stuff */
 
 			bitsPerSample = Stream_GetU16_LE(tmp + 14);
@@ -752,7 +750,7 @@ static void Soundboard_Init(struct Soundboard* board, const cc_string* boardName
 	}
 }
 
-static struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 type) {
+static const struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 type) {
 	struct SoundGroup* group;
 	int idx;
 
@@ -783,7 +781,7 @@ CC_NOINLINE static void Sounds_Fail(cc_result res) {
 	Audio_SetSounds(0);
 }
 
-static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, int volume) {
+static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, int volume) {
 	void* data = snd->data;
 	void* tmp;
 	cc_result res;
@@ -809,25 +807,23 @@ static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct
 		Volume_Mix16((cc_int16*)data, snd->size / 2, volume);
 	}
 
-	if ((res = Audio_SetFormat(&output->ctx, fmt)))             { Sounds_Fail(res); return; }
+	if ((res = Audio_SetFormat(&output->ctx, snd->channels, snd->sampleRate))) { Sounds_Fail(res); return; }
 	if ((res = Audio_QueueData(&output->ctx, data, snd->size))) { Sounds_Fail(res); return; }
 	if ((res = Audio_Play(&output->ctx)))                       { Sounds_Fail(res); return; }
 }
 
 static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
-	struct Sound* snd;
-	struct AudioFormat  fmt;
+	const struct Sound* snd_;
+	struct Sound snd;
 	struct SoundOutput* outputs;
 	struct SoundOutput* output;
-	struct AudioFormat* l;
-
-	int inUse;
-	int i, volume;
+	int chans, freq;
+	int inUse, i, volume;
 	cc_result res;
 
 	if (type == SOUND_NONE || !Audio_SoundsVolume) return;
-	snd = Soundboard_PickRandom(board, type);
-	if (!snd) return;
+	snd_ = Soundboard_PickRandom(board, type);
+	if (!snd_) return;
 
 	if (!AudioBackend_Init()) { 
 		AudioBackend_Free(); 
@@ -835,16 +831,16 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 		return; 
 	}
 
-	fmt     = snd->format;
+	snd     = *snd_;
 	volume  = Audio_SoundsVolume;
-	outputs = fmt.channels == 1 ? monoOutputs : stereoOutputs;
+	outputs = snd.channels == 1 ? monoOutputs : stereoOutputs;
 
 	if (board == &digBoard) {
-		if (type == SOUND_METAL) fmt.sampleRate = (fmt.sampleRate * 6) / 5;
-		else fmt.sampleRate = (fmt.sampleRate * 4) / 5;
+		if (type == SOUND_METAL) snd.sampleRate = (snd.sampleRate * 6) / 5;
+		else snd.sampleRate = (snd.sampleRate * 4) / 5;
 	} else {
 		volume /= 2;
-		if (type == SOUND_METAL) fmt.sampleRate = (fmt.sampleRate * 7) / 5;
+		if (type == SOUND_METAL) snd.sampleRate = (snd.sampleRate * 7) / 5;
 	}
 
 	/* Try to play on fresh device, or device with same data format */
@@ -858,10 +854,11 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 			if (res) { Sounds_Fail(res); return; }
 			if (inUse > 0) continue;
 		}
-
-		l = Audio_GetFormat(&output->ctx);
-		if (!l->channels || AudioFormat_Eq(l, &fmt)) {
-			Sounds_PlayRaw(output, snd, &fmt, volume); return;
+		
+		chans =   Audio_GetChannels(&output->ctx);
+		freq  = Audio_GetSampleRate(&output->ctx);
+		if (!chans || (chans == snd.channels && freq == snd.sampleRate)) {
+			Sounds_PlayRaw(output, &snd, volume); return;
 		}
 	}
 
@@ -873,7 +870,7 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 		if (res) { Sounds_Fail(res); return; }
 		if (inUse > 0) continue;
 
-		Sounds_PlayRaw(output, snd, &fmt, volume); return;
+		Sounds_PlayRaw(output, &snd, volume); return;
 	}
 }
 
@@ -951,7 +948,7 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 static cc_result Music_PlayOgg(struct Stream* source) {
 	struct OggState ogg;
 	struct VorbisState vorbis = { 0 };
-	struct AudioFormat fmt;
+	int channels, sampleRate;
 
 	int chunkSize, samplesPerSecond;
 	cc_int16* data = NULL;
@@ -962,14 +959,14 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	vorbis.source = &ogg;
 	if ((res = Vorbis_DecodeHeaders(&vorbis))) goto cleanup;
 	
-	fmt.channels   = vorbis.channels;
-	fmt.sampleRate = vorbis.sampleRate;
-	if ((res = Audio_SetFormat(&music_ctx, &fmt))) goto cleanup;
+	channels   = vorbis.channels;
+	sampleRate = vorbis.sampleRate;
+	if ((res = Audio_SetFormat(&music_ctx, channels, sampleRate))) goto cleanup;
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples, */
 	/*  so can end up decoding slightly over a second of audio */
-	chunkSize        = fmt.channels * (fmt.sampleRate + vorbis.blockSizes[1]);
-	samplesPerSecond = fmt.channels * fmt.sampleRate;
+	chunkSize        = channels * (sampleRate + vorbis.blockSizes[1]);
+	samplesPerSecond = channels * sampleRate;
 
 	cur  = 0;
 	data = (cc_int16*)Mem_TryAlloc(chunkSize * AUDIO_MAX_BUFFERS, 2);

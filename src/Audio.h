@@ -19,21 +19,19 @@ void Audio_SetMusic(int volume);
 void Audio_SetSounds(int volume);
 void Audio_PlayDigSound(cc_uint8 type);
 void Audio_PlayStepSound(cc_uint8 type);
-
 #define AUDIO_MAX_BUFFERS 4
-/* Information about a source of audio. */
-struct AudioFormat { int channels, sampleRate; };
-#define AudioFormat_Eq(a, b) ((a)->channels == (b)->channels && (a)->sampleRate == (b)->sampleRate)
 
 /* Initialises an audio context. */
 void Audio_Init(struct AudioContext* ctx, int buffers);
 /* Stops any playing audio and then frees the audio context. */
 void Audio_Close(struct AudioContext* ctx);
-/* Returns the format audio is played in. */
-struct AudioFormat* Audio_GetFormat(struct AudioContext* ctx);
+/* Returns number of channels of the format audio is played in. */
+int Audio_GetChannels(struct AudioContext* ctx);
+/* Returns number of channels of the format audio is played in. */
+int Audio_GetSampeRate(struct AudioContext* ctx);
 /* Sets the format of the audio data to be played. */
 /* NOTE: Changing the format can be expensive, depending on the backend. */
-cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format);
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate);
 /* Queues the given audio data for playing. */
 /* NOTE: You MUST ensure Audio_Poll indicates a buffer is free before calling this. */
 /* NOTE: Some backends directly read from the data - therefore you MUST NOT modify it */
