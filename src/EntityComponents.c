@@ -149,7 +149,9 @@ static void HacksComp_SetAll(struct HacksComp* hacks, cc_bool allowed) {
 	hacks->CanAnyHacks = allowed; hacks->CanFly            = allowed;
 	hacks->CanNoclip   = allowed; hacks->CanRespawn        = allowed;
 	hacks->CanSpeed    = allowed; hacks->CanPushbackBlocks = allowed;
+
 	hacks->CanUseThirdPerson = allowed;
+	hacks->CanSeeAllNames    = allowed && hacks->IsOp;
 }
 
 void HacksComp_Init(struct HacksComp* hacks) {
@@ -235,6 +237,7 @@ void HacksComp_RecheckFlags(struct HacksComp* hacks) {
 	HacksComp_ParseFlag(hacks, "+respawn",     "-respawn",     &hacks->CanRespawn);
 	HacksComp_ParseFlag(hacks, "+push",        "-push",        &hacks->CanBePushed);
 	HacksComp_ParseFlag(hacks, "+thirdperson", "-thirdperson", &hacks->CanUseThirdPerson);
+	HacksComp_ParseFlag(hacks, "+names",       "-names",       &hacks->CanSeeAllNames);
 
 	if (hacks->IsOp) HacksComp_ParseAllFlag(hacks, "+ophax", "-ophax");
 	hacks->BaseHorSpeed = HacksComp_ParseFlagFloat("horspeed=", hacks);
@@ -255,8 +258,7 @@ void HacksComp_Update(struct HacksComp* hacks) {
 		hacks->Speeding = false; hacks->HalfSpeeding = false;
 	}
 
-	hacks->CanDoubleJump  = hacks->Enabled     && hacks->CanSpeed;
-	hacks->CanSeeAllNames = hacks->CanAnyHacks && hacks->IsOp;
+	hacks->CanDoubleJump = hacks->Enabled && hacks->CanSpeed;
 	Event_RaiseVoid(&UserEvents.HackPermsChanged);
 }
 
