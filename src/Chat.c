@@ -488,10 +488,15 @@ static IVec3 cuboid_mark1, cuboid_mark2;
 static cc_bool cuboid_persist, cuboid_hooked, cuboid_hasMark1;
 static const cc_string cuboid_msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
 
-static cc_bool CuboidCommand_ParseBlock(const cc_string* args, int argsCount) {
+static cc_bool CuboidCommand_ParseArgs(const cc_string* args, int argsCount) {
 	int block;
 	if (!argsCount) return true;
-	if (String_CaselessEqualsConst(&args[0], "yes")) { cuboid_persist = true; return true; }
+
+	if (String_CaselessEqualsConst(&args[argsCount - 1], "yes")) { 
+		cuboid_persist = true; 
+		/* special case "/cuboid yes" */
+		if (argsCount == 1) return true;
+	}
 
 	block = Block_Parse(&args[0]);
 	if (block == -1) {
@@ -563,11 +568,7 @@ static void CuboidCommand_Execute(const cc_string* args, int argsCount) {
 	cuboid_block    = -1;
 	cuboid_hasMark1 = false;
 	cuboid_persist  = false;
-
-	if (!CuboidCommand_ParseBlock(args, argsCount)) return;
-	if (argsCount > 1 && String_CaselessEqualsConst(&args[0], "yes")) {
-		cuboid_persist = true;
-	}
+	if (!CuboidCommand_ParseArgs(args, argsCount)) return;
 
 	Chat_AddOf(&cuboid_msg, MSG_TYPE_CLIENTSTATUS_1);
 	Event_Register_(&UserEvents.BlockChanged, NULL, CuboidCommand_BlockChanged);
