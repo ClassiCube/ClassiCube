@@ -59,6 +59,7 @@ static int GetVolume(const char* volKey, const char* boolKey) {
 	int volume = Options_GetInt(volKey, 0, 100, 0);
 	if (volume) return volume;
 
+	/* backwards compatibility */
 	volume = Options_GetBool(boolKey, false) ? 100 : 0;
 	Options_Set(boolKey, NULL);
 	return volume;
@@ -720,17 +721,12 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	}
 }
 
-static cc_result Sound_ReadWave(const cc_string* filename, struct Sound* snd) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
+static cc_result Sound_ReadWave(const cc_string* path, struct Sound* snd) {
 	struct Stream stream;
 	cc_result res;
 
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "audio/%s", filename);
-
-	res = Stream_OpenFile(&stream, &path);
+	res = Stream_OpenFile(&stream, path);
 	if (res) return res;
-
 	res = Sound_ReadWaveData(&stream, snd);
 	if (res) { stream.Close(&stream); return res; }
 
@@ -750,12 +746,12 @@ static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const cc_str
 static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName, const cc_string* file) {
 	struct SoundGroup* group;
 	struct Sound* snd;
-	cc_string name;
+	cc_string name = *file;
 	cc_result res;
 	int dotIndex;
+	Utils_UNSAFE_TrimFirstDirectory(&name);
 
 	/* dig_grass1.wav -> dig_grass1 */
-	name     = *file;
 	dotIndex = String_LastIndexOf(&name, '.');
 	if (dotIndex >= 0) name.length = dotIndex;
 	if (!String_CaselessStarts(&name, boardName)) return;
@@ -902,11 +898,8 @@ static void Sounds_FreeOutputs(struct AudioContext* outputs) {
 static void Sounds_LoadFile(const cc_string* path, void* obj) {
 	static const cc_string dig  = String_FromConst("dig_");
 	static const cc_string step = String_FromConst("step_");
-	cc_string file = *path;
-
-	Utils_UNSAFE_TrimFirstDirectory(&file);
-	Soundboard_Load(&digBoard,  &dig,  &file);
-	Soundboard_Load(&stepBoard, &step, &file);
+	Soundboard_Load(&digBoard,  &dig,  path);
+	Soundboard_Load(&stepBoard, &step, path);
 }
 
 static cc_bool sounds_loaded;
@@ -927,12 +920,6 @@ static void Sounds_Init(void) {
 	Event_Register_(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
 static void Sounds_Free(void) { Sounds_Stop(); }
-
-void Audio_SetSounds(int volume) {
-	if (volume) Sounds_Start();
-	else        Sounds_Stop();
-	Audio_SoundsVolume = volume;
-}
 
 void Audio_PlayDigSound(cc_uint8 type)  { Sounds_Play(type, &digBoard); }
 void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
@@ -1143,16 +1130,22 @@ static void Music_Free(void) {
 	Waitable_Free(music_waitable);
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------General----------------------------------------------------------*
+*#########################################################################################################################*/
+void Audio_SetSounds(int volume) {
+	Audio_SoundsVolume = volume;
+	if (volume) Sounds_Start();
+	else        Sounds_Stop();
+}
+
 void Audio_SetMusic(int volume) {
 	Audio_MusicVolume = volume;
 	if (volume) Music_Start();
 	else        Music_Stop();
 }
 
-
-/*########################################################################################################################*
-*--------------------------------------------------------General----------------------------------------------------------*
-*#########################################################################################################################*/
 static void OnInit(void) {
 	Sounds_Init();
 	Music_Init();
