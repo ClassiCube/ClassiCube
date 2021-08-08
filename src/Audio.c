@@ -36,7 +36,7 @@ void Audio_PlayStepSound(cc_uint8 type) { }
 static struct StringsBuffer files;
 static const cc_string audio_dir = String_FromConst("audio");
 
-static void Volume_Mix16(cc_int16* samples, int count, int volume) {
+static void ApplyVolume(cc_int16* samples, int count, int volume) {
 	int i;
 
 	for (i = 0; i < (count & ~0x07); i += 8, samples += 8) {
@@ -54,6 +54,15 @@ static void Volume_Mix16(cc_int16* samples, int count, int volume) {
 	for (; i < count; i++, samples++) {
 		samples[0] = (samples[0] * volume / 100);
 	}
+}
+
+static int LoadVolume(const char* volKey, const char* boolKey) {
+	int volume = Options_GetInt(volKey, 0, 100, 0);
+	if (volume) return volume;
+
+	volume = Options_GetBool(boolKey, false) ? 100 : 0;
+	Options_Set(boolKey, NULL);
+	return volume;
 }
 
 
@@ -647,7 +656,7 @@ cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volum
 
 		data = ctx->_tmpData;
 		Mem_Copy(data, snd->data, snd->size);
-		Volume_Mix16((cc_int16*)data, snd->size / 2, volume);
+		ApplyVolume((cc_int16*)data, snd->size / 2, volume);
 	}
 
 	if ((res = Audio_SetFormat(ctx, snd->channels, snd->sampleRate))) return res;
@@ -885,6 +894,8 @@ static void Audio_PlayBlockSound(void* obj, IVec3 coords, BlockID old, BlockID n
 	if (now == BLOCK_AIR) {
 		Audio_PlayDigSound(Blocks.DigSounds[old]);
 	} else if (!Game_ClassicMode) {
+		/* use StepSounds instead when placing, as don't want */
+		/*  to play glass break sound when placing glass */
 		Audio_PlayDigSound(Blocks.StepSounds[now]);
 	}
 }
@@ -897,7 +908,7 @@ static void Sounds_FreeOutputs(struct AudioContext* outputs) {
 	}
 }
 
-static void Sounds_Init(void) {
+static void Sounds_Start(void) {
 	static const cc_string dig  = String_FromConst("dig_");
 	static const cc_string step = String_FromConst("step_");
 
@@ -906,14 +917,29 @@ static void Sounds_Init(void) {
 	Soundboard_Init(&stepBoard, &step);
 }
 
-static void Sounds_Free(void) {
+static void Sounds_Stop(void) {
 	Sounds_FreeOutputs(monoOutputs);
 	Sounds_FreeOutputs(stereoOutputs);
 }
 
+static void Audio_FilesCallback(const cc_string* path, void* obj) {
+	cc_string relPath = *path;
+	Utils_UNSAFE_TrimFirstDirectory(&relPath);
+	StringsBuffer_Add(&files, &relPath);
+}
+
+static void Sounds_Init(void) {
+	int volume;
+	Directory_Enum(&audio_dir, NULL, Audio_FilesCallback);
+	volume = LoadVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
+	Audio_SetSounds(volume);
+	Event_Register_(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
+}
+static void Sounds_Free(void) { Sounds_Stop(); }
+
 void Audio_SetSounds(int volume) {
-	if (volume) Sounds_Init();
-	else        Sounds_Free();
+	if (volume) Sounds_Start();
+	else        Sounds_Stop();
 	Audio_SoundsVolume = volume;
 }
 
@@ -927,7 +953,7 @@ void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
 static struct AudioContext music_ctx;
 static void* music_thread;
 static void* music_waitable;
-static volatile cc_bool music_pendingStop, music_joining;
+static volatile cc_bool music_stopping, music_joining;
 static int music_minDelay, music_maxDelay;
 
 static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState* ctx) {
@@ -941,10 +967,10 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 		cur = &data[samples];
 		samples += Vorbis_OutputFrame(ctx, cur);
 	}
-	if (Audio_MusicVolume < 100) { Volume_Mix16(data, samples, Audio_MusicVolume); }
+	if (Audio_MusicVolume < 100) { ApplyVolume(data, samples, Audio_MusicVolume); }
 
 	res2 = Audio_QueueData(&music_ctx, data, samples * 2);
-	if (res2) { music_pendingStop = true; return res2; }
+	if (res2) { music_stopping = true; return res2; }
 	return res;
 }
 
@@ -980,18 +1006,18 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 		res = Music_Buffer(&data[chunkSize * cur], samplesPerSecond, &vorbis);
 		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
 	}
-	if (music_pendingStop) goto cleanup;
+	if (music_stopping) goto cleanup;
 
 	res  = Audio_Play(&music_ctx);
 	if (res) goto cleanup;
 
-	while (!music_pendingStop) {
+	while (!music_stopping) {
 #ifdef CC_BUILD_ANDROID
 		/* Don't play music while in the background on Android */
     	/* TODO: Not use such a terrible approach */
     	if (!WindowInfo.Handle) {
     		Audio_Pause(&music_ctx);
-    		while (!WindowInfo.Handle && !music_pendingStop) {
+    		while (!WindowInfo.Handle && !music_stopping) {
     			Thread_Sleep(10); continue;
     		}
     		Audio_Play(&music_ctx);
@@ -999,7 +1025,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 #endif
 
 		res = Audio_Poll(&music_ctx, &inUse);
-		if (res) { music_pendingStop = true; break; }
+		if (res) { music_stopping = true; break; }
 
 		if (inUse >= AUDIO_MAX_BUFFERS) {
 			Thread_Sleep(10); continue;
@@ -1012,7 +1038,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 		if (res) break;
 	}
 
-	if (music_pendingStop) {
+	if (music_stopping) {
 		/* must close audio context, as otherwise some of the audio */
 		/*  context's internal audio buffers may have a reference */
 		/*  to the `data` buffer which will be freed after this */
@@ -1054,7 +1080,7 @@ static void Music_RunLoop(void) {
 	Random_SeedFromCurrentTime(&rnd);
 	Audio_Init(&music_ctx, AUDIO_MAX_BUFFERS);
 
-	while (!music_pendingStop && FILES.count) {
+	while (!music_stopping && FILES.count) {
 		idx  = Random_Next(&rnd, FILES.count);
 		path = StringsBuffer_UNSAFE_Get(&FILES, idx);
 		Platform_Log1("playing music file: %s", &path);
@@ -1071,7 +1097,7 @@ static void Music_RunLoop(void) {
 		res = stream.Close(&stream);
 		if (res) { Logger_SysWarn2(res, "closing", &path); break; }
 
-		if (music_pendingStop) break;
+		if (music_stopping) break;
 		delay = Random_Range(&rnd, music_minDelay, music_maxDelay);
 		Waitable_WaitFor(music_waitable, delay);
 	}
@@ -1088,7 +1114,7 @@ static void Music_RunLoop(void) {
 	music_thread = NULL;
 }
 
-static void Music_Init(void) {
+static void Music_Start(void) {
 	if (music_thread) return;
 	if (!AudioBackend_Init()) {
 		AudioBackend_Free(); 
@@ -1096,68 +1122,54 @@ static void Music_Init(void) {
 		return; 
 	}
 
-	music_joining     = false;
-	music_pendingStop = false;
-
-	music_thread = Thread_Start(Music_RunLoop);
+	music_joining  = false;
+	music_stopping = false;
+	music_thread   = Thread_Start(Music_RunLoop);
 }
 
-static void Music_Free(void) {
-	music_joining     = true;
-	music_pendingStop = true;
+static void Music_Stop(void) {
+	music_joining  = true;
+	music_stopping = true;
 	Waitable_Signal(music_waitable);
 	
 	if (music_thread) Thread_Join(music_thread);
 	music_thread = NULL;
 }
 
+static void Music_Init(void) {
+	int volume;
+	/* music is delayed between 2 - 7 minutes by default */
+	music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
+	music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
+
+	music_waitable = Waitable_Create();
+	volume         = LoadVolume(OPT_MUSIC_VOLUME, OPT_USE_MUSIC);
+	Audio_SetMusic(volume);
+}
+
+static void Music_Free(void) {
+	Music_Stop();
+	Waitable_Free(music_waitable);
+}
+
 void Audio_SetMusic(int volume) {
 	Audio_MusicVolume = volume;
-	if (volume) Music_Init();
-	else        Music_Free();
+	if (volume) Music_Start();
+	else        Music_Stop();
 }
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------General----------------------------------------------------------*
 *#########################################################################################################################*/
-static int Audio_LoadVolume(const char* volKey, const char* boolKey) {
-	int volume = Options_GetInt(volKey, 0, 100, 0);
-	if (volume) return volume;
-
-	volume = Options_GetBool(boolKey, false) ? 100 : 0;
-	Options_Set(boolKey, NULL);
-	return volume;
-}
-
-static void Audio_FilesCallback(const cc_string* path, void* obj) {
-	cc_string relPath = *path;
-	Utils_UNSAFE_TrimFirstDirectory(&relPath);
-	StringsBuffer_Add(&files, &relPath);
-}
-
 static void OnInit(void) {
-	static const cc_string path = String_FromConst("audio");
-	int volume;
-
-	Directory_Enum(&path, NULL, Audio_FilesCallback);
-	music_waitable = Waitable_Create();
-
-	/* music is delayed between 2 - 7 minutes by default */
-	music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
-	music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
-
-	volume = Audio_LoadVolume(OPT_MUSIC_VOLUME, OPT_USE_MUSIC);
-	Audio_SetMusic(volume);
-	volume = Audio_LoadVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
-	Audio_SetSounds(volume);
-	Event_Register_(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
+	Sounds_Init();
+	Music_Init();
 }
 
 static void OnFree(void) {
-	Music_Free();
 	Sounds_Free();
-	Waitable_Free(music_waitable);
+	Music_Free();
 	AudioBackend_Free();
 }
 #endif
