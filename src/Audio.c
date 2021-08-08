@@ -33,7 +33,6 @@ void Audio_SetSounds(int volume) {
 void Audio_PlayDigSound(cc_uint8 type) { }
 void Audio_PlayStepSound(cc_uint8 type) { }
 #else
-static struct StringsBuffer files;
 static const cc_string audio_dir = String_FromConst("audio");
 
 static void ApplyVolume(cc_int16* samples, int count, int volume) {
@@ -56,7 +55,7 @@ static void ApplyVolume(cc_int16* samples, int count, int volume) {
 	}
 }
 
-static int LoadVolume(const char* volKey, const char* boolKey) {
+static int GetVolume(const char* volKey, const char* boolKey) {
 	int volume = Options_GetInt(volKey, 0, 100, 0);
 	if (volume) return volume;
 
@@ -674,11 +673,7 @@ struct SoundGroup {
 	int count;
 	struct Sound sounds[AUDIO_MAX_SOUNDS];
 };
-
-struct Soundboard {
-	RNGState rnd; cc_bool inited;
-	struct SoundGroup groups[SOUND_COUNT];
-};
+struct Soundboard { struct SoundGroup groups[SOUND_COUNT]; };
 
 #define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
 #define WAV_FMT_SIZE 16
@@ -752,47 +747,43 @@ static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const cc_str
 	return NULL;
 }
 
-static void Soundboard_Init(struct Soundboard* board, const cc_string* boardName) {
-	cc_string file, name;
+static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName, const cc_string* file) {
 	struct SoundGroup* group;
 	struct Sound* snd;
+	cc_string name;
 	cc_result res;
-	int i, dotIndex;
-	board->inited = true;
+	int dotIndex;
 
-	for (i = 0; i < files.count; i++) {
-		file = StringsBuffer_UNSAFE_Get(&files, i); 
-		name = file;
+	/* dig_grass1.wav -> dig_grass1 */
+	name     = *file;
+	dotIndex = String_LastIndexOf(&name, '.');
+	if (dotIndex >= 0) name.length = dotIndex;
+	if (!String_CaselessStarts(&name, boardName)) return;
 
-		/* dig_grass1.wav -> dig_grass1 */
-		dotIndex = String_LastIndexOf(&name, '.');
-		if (dotIndex >= 0) name.length = dotIndex;
-		if (!String_CaselessStarts(&name, boardName)) continue;
+	/* Convert dig_grass1 to grass */
+	name = String_UNSAFE_SubstringAt(&name, boardName->length);
+	name = String_UNSAFE_Substring(&name, 0, name.length - 1);
 
-		/* Convert dig_grass1 to grass */
-		name = String_UNSAFE_SubstringAt(&name, boardName->length);
-		name = String_UNSAFE_Substring(&name, 0, name.length - 1);
-
-		group = Soundboard_Find(board, &name);
-		if (!group) {
-			Chat_Add1("&cUnknown sound group '%s'", &name); continue;
-		}
-		if (group->count == Array_Elems(group->sounds)) {
-			Chat_AddRaw("&cCannot have more than 10 sounds in a group"); continue;
-		}
-
-		snd = &group->sounds[group->count];
-		res = Sound_ReadWave(&file, snd);
-
-		if (res) {
-			Logger_SysWarn2(res, "decoding", &file);
-			Mem_Free(snd->data);
-			snd->data = NULL;
-			snd->size = 0;
-		} else { group->count++; }
+	group = Soundboard_Find(board, &name);
+	if (!group) {
+		Chat_Add1("&cUnknown sound group '%s'", &name); return;
 	}
+	if (group->count == Array_Elems(group->sounds)) {
+		Chat_AddRaw("&cCannot have more than 10 sounds in a group"); return;
+	}
+
+	snd = &group->sounds[group->count];
+	res = Sound_ReadWave(file, snd);
+
+	if (res) {
+		Logger_SysWarn2(res, "decoding", file);
+		Mem_Free(snd->data);
+		snd->data = NULL;
+		snd->size = 0;
+	} else { group->count++; }
 }
 
+static RNGState sounds_rnd;
 static const struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 type) {
 	struct SoundGroup* group;
 	int idx;
@@ -803,7 +794,7 @@ static const struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_ui
 	group = &board->groups[type];
 	if (!group->count) return NULL;
 
-	idx = Random_Next(&board->rnd, group->count);
+	idx = Random_Next(&sounds_rnd, group->count);
 	return &group->sounds[idx];
 }
 
@@ -908,13 +899,21 @@ static void Sounds_FreeOutputs(struct AudioContext* outputs) {
 	}
 }
 
-static void Sounds_Start(void) {
+static void Sounds_LoadFile(const cc_string* path, void* obj) {
 	static const cc_string dig  = String_FromConst("dig_");
 	static const cc_string step = String_FromConst("step_");
+	cc_string file = *path;
 
-	if (digBoard.inited || stepBoard.inited) return;
-	Soundboard_Init(&digBoard,  &dig);
-	Soundboard_Init(&stepBoard, &step);
+	Utils_UNSAFE_TrimFirstDirectory(&file);
+	Soundboard_Load(&digBoard,  &dig,  &file);
+	Soundboard_Load(&stepBoard, &step, &file);
+}
+
+static cc_bool sounds_loaded;
+static void Sounds_Start(void) {
+	if (sounds_loaded) return;
+	sounds_loaded = true;
+	Directory_Enum(&audio_dir, NULL, Sounds_LoadFile);
 }
 
 static void Sounds_Stop(void) {
@@ -922,16 +921,8 @@ static void Sounds_Stop(void) {
 	Sounds_FreeOutputs(stereoOutputs);
 }
 
-static void Audio_FilesCallback(const cc_string* path, void* obj) {
-	cc_string relPath = *path;
-	Utils_UNSAFE_TrimFirstDirectory(&relPath);
-	StringsBuffer_Add(&files, &relPath);
-}
-
 static void Sounds_Init(void) {
-	int volume;
-	Directory_Enum(&audio_dir, NULL, Audio_FilesCallback);
-	volume = LoadVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
+	int volume = GetVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
 	Audio_SetSounds(volume);
 	Event_Register_(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
@@ -1058,31 +1049,31 @@ cleanup:
 }
 
 static void Music_AddFile(const cc_string* path, void* obj) {
-	struct StringsBuffer* FILES = (struct StringsBuffer*)obj;
+	struct StringsBuffer* files = (struct StringsBuffer*)obj;
 	static const cc_string ogg  = String_FromConst(".ogg");
 
 	if (!String_CaselessEnds(path, &ogg)) return;
-	StringsBuffer_Add(FILES, path);
+	StringsBuffer_Add(files, path);
 }
 
 static void Music_RunLoop(void) {
-	struct StringsBuffer FILES;
+	struct StringsBuffer files;
 	cc_string path;
 	RNGState rnd;
 	struct Stream stream;
 	int idx, delay;
 	cc_result res = 0;
 
-	StringsBuffer_SetLengthBits(&FILES, STRINGSBUFFER_DEF_LEN_SHIFT);
-	StringsBuffer_Init(&FILES);
-	Directory_Enum(&audio_dir, &FILES, Music_AddFile);
+	StringsBuffer_SetLengthBits(&files, STRINGSBUFFER_DEF_LEN_SHIFT);
+	StringsBuffer_Init(&files);
+	Directory_Enum(&audio_dir, &files, Music_AddFile);
 
 	Random_SeedFromCurrentTime(&rnd);
 	Audio_Init(&music_ctx, AUDIO_MAX_BUFFERS);
 
-	while (!music_stopping && FILES.count) {
-		idx  = Random_Next(&rnd, FILES.count);
-		path = StringsBuffer_UNSAFE_Get(&FILES, idx);
+	while (!music_stopping && files.count) {
+		idx  = Random_Next(&rnd, files.count);
+		path = StringsBuffer_UNSAFE_Get(&files, idx);
 		Platform_Log1("playing music file: %s", &path);
 
 		res = Stream_OpenFile(&stream, &path);
@@ -1107,7 +1098,7 @@ static void Music_RunLoop(void) {
 		Audio_MusicVolume = 0;
 	}
 	Audio_Close(&music_ctx);
-	StringsBuffer_Clear(&FILES);
+	StringsBuffer_Clear(&files);
 
 	if (music_joining) return;
 	Thread_Detach(music_thread);
@@ -1143,7 +1134,7 @@ static void Music_Init(void) {
 	music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
 
 	music_waitable = Waitable_Create();
-	volume         = LoadVolume(OPT_MUSIC_VOLUME, OPT_USE_MUSIC);
+	volume         = GetVolume(OPT_MUSIC_VOLUME, OPT_USE_MUSIC);
 	Audio_SetMusic(volume);
 }
 
