@@ -17,22 +17,6 @@
 #include "Window.h"
 #endif
 int Audio_SoundsVolume, Audio_MusicVolume;
-
-#if defined CC_BUILD_NOAUDIO
-/* Can't use mojang's sounds or music assets, so just stub everything out */
-static void OnInit(void) { }
-static void OnFree(void) { }
-
-void Audio_SetMusic(int volume) {
-	if (volume) Chat_AddRaw("&cMusic is not supported currently");
-}
-void Audio_SetSounds(int volume) {
-	if (volume) Chat_AddRaw("&cSounds are not supported currently");
-}
-
-void Audio_PlayDigSound(cc_uint8 type) { }
-void Audio_PlayStepSound(cc_uint8 type) { }
-#else
 static const cc_string audio_dir = String_FromConst("audio");
 
 static void ApplyVolume(cc_int16* samples, int count, int volume) {
@@ -66,9 +50,6 @@ static int GetVolume(const char* volKey, const char* boolKey) {
 }
 
 
-/*########################################################################################################################*
-*------------------------------------------------Native implementation----------------------------------------------------*
-*#########################################################################################################################*/
 #if defined CC_BUILD_OPENAL
 /*########################################################################################################################*
 *------------------------------------------------------OpenAL backend-----------------------------------------------------*
@@ -126,6 +107,7 @@ struct AudioContext {
 };
 static void* audio_device;
 static void* audio_context;
+#define AUDIO_HAS_BACKEND
 
 #if defined CC_BUILD_WIN
 static const cc_string alLib = String_FromConst("openal32.dll");
@@ -352,6 +334,7 @@ struct AudioContext {
 };
 static cc_bool AudioBackend_Init(void) { return true; }
 static void AudioBackend_Free(void) { }
+#define AUDIO_HAS_BACKEND
 
 void Audio_Init(struct AudioContext* ctx, int buffers) {
 	int i;
@@ -440,6 +423,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 static SLObjectItf slEngineObject;
 static SLEngineItf slEngineEngine;
 static SLObjectItf slOutputObject;
+#define AUDIO_HAS_BACKEND
 
 struct AudioContext {
 	int count, channels, sampleRate;
@@ -608,6 +592,9 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 /*########################################################################################################################*
 *---------------------------------------------------Common backend code---------------------------------------------------*
 *#########################################################################################################################*/
+#ifndef AUDIO_HAS_BACKEND
+static void AudioBackend_Free(void) { }
+#else
 int Audio_GetChannels(struct AudioContext* ctx)   { return ctx->channels; }
 int Audio_GetSampleRate(struct AudioContext* ctx) { return ctx->sampleRate; }
 
@@ -664,17 +651,37 @@ cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volum
 	if ((res = Audio_Play(ctx))) return res;
 	return 0;
 }
+#endif
 
 
 /*########################################################################################################################*
-*------------------------------------------------------Soundboard---------------------------------------------------------*
+*--------------------------------------------------------Sounds-----------------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_NOSOUNDS
+/* Can't use mojang's sound assets, so just stub everything out */
+static void Sounds_Init(void) { }
+static void Sounds_Free(void) { }
+static void Sounds_Stop(void) { }
+static void Sounds_Start(void) {
+	Chat_AddRaw("&cSounds are not supported currently");
+	Audio_SoundsVolume = 0;
+}
+
+void Audio_PlayDigSound(cc_uint8 type)  { }
+void Audio_PlayStepSound(cc_uint8 type) { }
+#else
 #define AUDIO_MAX_SOUNDS 10
+#define SOUND_MAX_CONTEXTS 8
+
 struct SoundGroup {
 	int count;
 	struct Sound sounds[AUDIO_MAX_SOUNDS];
 };
 struct Soundboard { struct SoundGroup groups[SOUND_COUNT]; };
+
+static struct Soundboard digBoard, stepBoard;
+static struct AudioContext sound_contexts[SOUND_MAX_CONTEXTS];
+static RNGState sounds_rnd;
 
 #define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
 #define WAV_FMT_SIZE 16
@@ -779,7 +786,6 @@ static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName
 	} else { group->count++; }
 }
 
-static RNGState sounds_rnd;
 static const struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 type) {
 	struct SoundGroup* group;
 	int idx;
@@ -795,15 +801,6 @@ static const struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_ui
 }
 
 
-/*########################################################################################################################*
-*--------------------------------------------------------Sounds-----------------------------------------------------------*
-*#########################################################################################################################*/
-static struct Soundboard digBoard, stepBoard;
-#define AUDIO_MAX_HANDLES 6
-
-static struct AudioContext monoOutputs[AUDIO_MAX_HANDLES];
-static struct AudioContext stereoOutputs[AUDIO_MAX_HANDLES];
-
 CC_NOINLINE static void Sounds_Fail(cc_result res) {
 	Logger_SimpleWarn(res, "playing sounds");
 	Chat_AddRaw("&cDisabling sounds");
@@ -813,7 +810,6 @@ CC_NOINLINE static void Sounds_Fail(cc_result res) {
 static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	const struct Sound* snd_;
 	struct Sound snd;
-	struct AudioContext* outputs;
 	struct AudioContext* ctx;
 	int chans, freq;
 	int inUse, i, volume;
@@ -829,9 +825,8 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 		return; 
 	}
 
-	snd     = *snd_;
-	volume  = Audio_SoundsVolume;
-	outputs = snd.channels == 1 ? monoOutputs : stereoOutputs;
+	snd    = *snd_;
+	volume = Audio_SoundsVolume;
 
 	if (board == &digBoard) {
 		if (type == SOUND_METAL) snd.sampleRate = (snd.sampleRate * 6) / 5;
@@ -842,8 +837,8 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	}
 
 	/* Try to play on fresh device, or device with same data format */
-	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		ctx = &outputs[i];
+	for (i = 0; i < SOUND_MAX_CONTEXTS; i++) {
+		ctx = &sound_contexts[i];
 		if (!ctx->count) {
 			Audio_Init(ctx, 1);
 		} else {
@@ -863,9 +858,9 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 		}
 	}
 
-	/* Try again with all devices, even if need to recreate one (expensive) */
-	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		ctx = &outputs[i];
+	/* Try again with all contexts, even if need to recreate one (expensive) */
+	for (i = 0; i < SOUND_MAX_CONTEXTS; i++) {
+		ctx = &sound_contexts[i];
 		res = Audio_Poll(ctx, &inUse);
 
 		if (res) { Sounds_Fail(res); return; }
@@ -887,14 +882,6 @@ static void Audio_PlayBlockSound(void* obj, IVec3 coords, BlockID old, BlockID n
 	}
 }
 
-static void Sounds_FreeOutputs(struct AudioContext* outputs) {
-	int i;
-	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		if (!outputs[i].count) continue;
-		Audio_Close(&outputs[i]);
-	}
-}
-
 static void Sounds_LoadFile(const cc_string* path, void* obj) {
 	static const cc_string dig  = String_FromConst("dig_");
 	static const cc_string step = String_FromConst("step_");
@@ -910,8 +897,11 @@ static void Sounds_Start(void) {
 }
 
 static void Sounds_Stop(void) {
-	Sounds_FreeOutputs(monoOutputs);
-	Sounds_FreeOutputs(stereoOutputs);
+	int i;
+	for (i = 0; i < SOUND_MAX_CONTEXTS; i++) {
+		if (!sound_contexts[i].count) continue;
+		Audio_Close(&sound_contexts[i]);
+	}
 }
 
 static void Sounds_Init(void) {
@@ -923,11 +913,22 @@ static void Sounds_Free(void) { Sounds_Stop(); }
 
 void Audio_PlayDigSound(cc_uint8 type)  { Sounds_Play(type, &digBoard); }
 void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
+#endif
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------Music------------------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_NOMUSIC
+/* Can't use mojang's music assets, so just stub everything out */
+static void Music_Init(void) { }
+static void Music_Free(void) { }
+static void Music_Stop(void) { }
+static void Music_Start(void) {
+	Chat_AddRaw("&cMusic is not supported currently");
+	Audio_MusicVolume = 0;
+}
+#else
 static struct AudioContext music_ctx;
 static void* music_thread;
 static void* music_waitable;
@@ -1129,6 +1130,7 @@ static void Music_Free(void) {
 	Music_Stop();
 	Waitable_Free(music_waitable);
 }
+#endif
 
 
 /*########################################################################################################################*
@@ -1156,7 +1158,6 @@ static void OnFree(void) {
 	Music_Free();
 	AudioBackend_Free();
 }
-#endif
 
 struct IGameComponent Audio_Component = {
 	OnInit, /* Init  */
