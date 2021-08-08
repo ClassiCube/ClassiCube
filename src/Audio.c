@@ -34,6 +34,7 @@ void Audio_PlayDigSound(cc_uint8 type) { }
 void Audio_PlayStepSound(cc_uint8 type) { }
 #else
 static struct StringsBuffer files;
+static const cc_string audio_dir = String_FromConst("audio");
 
 static void Volume_Mix16(cc_int16* samples, int count, int volume) {
 	int i;
@@ -1030,36 +1031,33 @@ cleanup:
 	return res == ERR_END_OF_STREAM ? 0 : res;
 }
 
-#define MUSIC_MAX_FILES 512
+static void Music_AddFile(const cc_string* path, void* obj) {
+	struct StringsBuffer* FILES = (struct StringsBuffer*)obj;
+	static const cc_string ogg  = String_FromConst(".ogg");
+
+	if (!String_CaselessEnds(path, &ogg)) return;
+	StringsBuffer_Add(FILES, path);
+}
+
 static void Music_RunLoop(void) {
-	static const cc_string ogg = String_FromConst(".ogg");
-	char pathBuffer[FILENAME_SIZE];
+	struct StringsBuffer FILES;
 	cc_string path;
-
-	unsigned short musicFiles[MUSIC_MAX_FILES];
-	cc_string file;
-
 	RNGState rnd;
 	struct Stream stream;
-	int i, count = 0, idx, delay;
+	int idx, delay;
 	cc_result res = 0;
 
-	for (i = 0; i < files.count && count < MUSIC_MAX_FILES; i++) {
-		file = StringsBuffer_UNSAFE_Get(&files, i);
-		if (!String_CaselessEnds(&file, &ogg)) continue;
-		musicFiles[count++] = i;
-	}
+	StringsBuffer_SetLengthBits(&FILES, STRINGSBUFFER_DEF_LEN_SHIFT);
+	StringsBuffer_Init(&FILES);
+	Directory_Enum(&audio_dir, &FILES, Music_AddFile);
 
 	Random_SeedFromCurrentTime(&rnd);
 	Audio_Init(&music_ctx, AUDIO_MAX_BUFFERS);
 
-	while (!music_pendingStop && count) {
-		idx  = Random_Next(&rnd, count);
-		file = StringsBuffer_UNSAFE_Get(&files, musicFiles[idx]);
-		
-		String_InitArray(path, pathBuffer);
-		String_Format1(&path, "audio/%s", &file);
-		Platform_Log1("playing music file: %s", &file);
+	while (!music_pendingStop && FILES.count) {
+		idx  = Random_Next(&rnd, FILES.count);
+		path = StringsBuffer_UNSAFE_Get(&FILES, idx);
+		Platform_Log1("playing music file: %s", &path);
 
 		res = Stream_OpenFile(&stream, &path);
 		if (res) { Logger_SysWarn2(res, "opening", &path); break; }
@@ -1083,6 +1081,7 @@ static void Music_RunLoop(void) {
 		Audio_MusicVolume = 0;
 	}
 	Audio_Close(&music_ctx);
+	StringsBuffer_Clear(&FILES);
 
 	if (music_joining) return;
 	Thread_Detach(music_thread);
