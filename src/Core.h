@@ -240,7 +240,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_GLES
 #define CC_BUILD_TOUCH
 #define CC_BUILD_NOSOUNDS
-#defome CC_BUILD_NOMUSIC
+#define CC_BUILD_NOMUSIC
 #define CC_BUILD_MINFILES
 #endif
 #endif
