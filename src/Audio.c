@@ -236,7 +236,7 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) 
 	if (!ctx->free) return ERR_INVALID_ARGUMENT;
 	buffer = ctx->freeIDs[--ctx->free];
 
-	_alBufferData(buffer, ctx->dataFormat, data, size, ctx->format.sampleRate);
+	_alBufferData(buffer, ctx->dataFormat, data, size, ctx->sampleRate);
 	if ((err = _alGetError())) return err;
 	_alSourceQueueBuffers(ctx->source, 1, &buffer);
 	if ((err = _alGetError())) return err;
