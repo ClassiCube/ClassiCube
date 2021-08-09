@@ -226,18 +226,20 @@ struct StringsBuffer {
 	int _lenMask;
 };
 
-/* Sets the number of bits in an entry's flags that are used to store its length. */
+/* Resets counts to 0 and other state to default */
+void StringsBuffer_Init(struct StringsBuffer* buffer);
+/* Sets the number of bits in an entry's flags that are used to store its length */
 /*  (e.g. if bits is 9, then the maximum length of an entry is 2^9-1 = 511) */
 void StringsBuffer_SetLengthBits(struct StringsBuffer* buffer, int bits);
-/* Resets counts to 0, and frees any allocated memory. */
+/* Frees any allocated memory and then called StringsBuffer_Init */
 CC_NOINLINE void StringsBuffer_Clear(struct StringsBuffer* buffer);
-/* UNSAFE: Returns a direct pointer to the i'th string in the given buffer. */
+/* UNSAFE: Returns a direct pointer to the i'th string in the given buffer */
 /* You MUST NOT change the characters of this string. Copy to another string if necessary.*/
 CC_API STRING_REF cc_string StringsBuffer_UNSAFE_Get(struct StringsBuffer* buffer, int i);
 STRING_REF void StringsBuffer_UNSAFE_GetRaw(struct StringsBuffer* buffer, int i, cc_string* dst);
-/* Adds a given string to the end of the given buffer. */
+/* Adds the given string to the end of the given buffer */
 CC_API void StringsBuffer_Add(struct StringsBuffer* buffer, const cc_string* str);
-/* Removes the i'th string from the given buffer, shifting following strings downwards. */
+/* Removes the i'th string from the given buffer, shifting following strings downwards */
 CC_API void StringsBuffer_Remove(struct StringsBuffer* buffer, int index);
 
 /* Performs line wrapping on the given string. */

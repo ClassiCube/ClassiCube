@@ -768,7 +768,7 @@ cc_bool Convert_ParseBool(const cc_string* str, cc_bool* value) {
 #define StringsBuffer_GetLength(raw)  ((raw)  & buffer->_lenMask)
 #define StringsBuffer_PackOffset(off) ((off) << buffer->_lenShift)
 
-CC_NOINLINE static void StringsBuffer_Init(struct StringsBuffer* buffer) {
+void StringsBuffer_Init(struct StringsBuffer* buffer) {
 	buffer->count       = 0;
 	buffer->totalLength = 0;
 	buffer->textBuffer     = buffer->_defaultBuffer;

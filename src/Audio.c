@@ -17,25 +17,9 @@
 #include "Window.h"
 #endif
 int Audio_SoundsVolume, Audio_MusicVolume;
+static const cc_string audio_dir = String_FromConst("audio");
 
-#if defined CC_BUILD_NOAUDIO
-/* Can't use mojang's sounds or music assets, so just stub everything out */
-static void OnInit(void) { }
-static void OnFree(void) { }
-
-void Audio_SetMusic(int volume) {
-	if (volume) Chat_AddRaw("&cMusic is not supported currently");
-}
-void Audio_SetSounds(int volume) {
-	if (volume) Chat_AddRaw("&cSounds are not supported currently");
-}
-
-void Audio_PlayDigSound(cc_uint8 type) { }
-void Audio_PlayStepSound(cc_uint8 type) { }
-#else
-static struct StringsBuffer files;
-
-static void Volume_Mix16(cc_int16* samples, int count, int volume) {
+static void ApplyVolume(cc_int16* samples, int count, int volume) {
 	int i;
 
 	for (i = 0; i < (count & ~0x07); i += 8, samples += 8) {
@@ -55,10 +39,17 @@ static void Volume_Mix16(cc_int16* samples, int count, int volume) {
 	}
 }
 
+static int GetVolume(const char* volKey, const char* boolKey) {
+	int volume = Options_GetInt(volKey, 0, 100, 0);
+	if (volume) return volume;
 
-/*########################################################################################################################*
-*------------------------------------------------Native implementation----------------------------------------------------*
-*#########################################################################################################################*/
+	/* backwards compatibility */
+	volume = Options_GetBool(boolKey, false) ? 100 : 0;
+	Options_Set(boolKey, NULL);
+	return volume;
+}
+
+
 #if defined CC_BUILD_OPENAL
 /*########################################################################################################################*
 *------------------------------------------------------OpenAL backend-----------------------------------------------------*
@@ -110,12 +101,13 @@ struct AudioContext {
 	ALuint source;
 	ALuint buffers[AUDIO_MAX_BUFFERS];
 	ALuint freeIDs[AUDIO_MAX_BUFFERS];
-	struct AudioFormat format;
-	int count, free;
+	int count, free, channels, sampleRate;
 	ALenum dataFormat;
+	cc_uint32 _tmpSize; void* _tmpData;
 };
 static void* audio_device;
 static void* audio_context;
+#define AUDIO_HAS_BACKEND
 
 #if defined CC_BUILD_WIN
 static const cc_string alLib = String_FromConst("openal32.dll");
@@ -218,9 +210,9 @@ static ALenum GetALFormat(int channels) {
 	Logger_Abort("Unsupported audio format"); return 0;
 }
 
-static cc_result AudioBackend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
+static cc_result AudioBackend_UpdateFormat(struct AudioContext* ctx) {
 	ALenum i, err;
-	ctx->dataFormat = GetALFormat(format->channels);
+	ctx->dataFormat = GetALFormat(ctx->channels);
 	
 	if (!ctx->source) {
 		_alGenSources(1, &ctx->source);
@@ -244,7 +236,7 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) 
 	if (!ctx->free) return ERR_INVALID_ARGUMENT;
 	buffer = ctx->freeIDs[--ctx->free];
 
-	_alBufferData(buffer, ctx->dataFormat, data, size, ctx->format.sampleRate);
+	_alBufferData(buffer, ctx->dataFormat, data, size, ctx->sampleRate);
 	if ((err = _alGetError())) return err;
 	_alSourceQueueBuffers(ctx->source, 1, &buffer);
 	if ((err = _alGetError())) return err;
@@ -337,11 +329,12 @@ WINMMAPI MMRESULT WINAPI waveOutReset(HWAVEOUT hwo);
 struct AudioContext {
 	HWAVEOUT handle;
 	WAVEHDR headers[AUDIO_MAX_BUFFERS];
-	struct AudioFormat format;
-	int count;
+	int count, channels, sampleRate;
+	cc_uint32 _tmpSize; void* _tmpData;
 };
 static cc_bool AudioBackend_Init(void) { return true; }
 static void AudioBackend_Free(void) { }
+#define AUDIO_HAS_BACKEND
 
 void Audio_Init(struct AudioContext* ctx, int buffers) {
 	int i;
@@ -360,16 +353,16 @@ static cc_result AudioBackend_Reset(struct AudioContext* ctx) {
 	return res;
 }
 
-static cc_result AudioBackend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
+static cc_result AudioBackend_UpdateFormat(struct AudioContext* ctx) {
 	WAVEFORMATEX fmt;
 	cc_result res;
-	int sampleSize = format->channels * 2; /* 16 bits per sample / 8 */
+	int sampleSize = ctx->channels * 2; /* 16 bits per sample / 8 */
 	if ((res = AudioBackend_Reset(ctx))) return res;
 
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
-	fmt.nChannels       = format->channels;
-	fmt.nSamplesPerSec  = format->sampleRate;
-	fmt.nAvgBytesPerSec = format->sampleRate * sampleSize;
+	fmt.nChannels       = ctx->channels;
+	fmt.nSamplesPerSec  = ctx->sampleRate;
+	fmt.nAvgBytesPerSec = ctx->sampleRate * sampleSize;
 	fmt.nBlockAlign     = sampleSize;
 	fmt.wBitsPerSample  = 16;
 	fmt.cbSize          = 0;
@@ -430,13 +423,14 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 static SLObjectItf slEngineObject;
 static SLEngineItf slEngineEngine;
 static SLObjectItf slOutputObject;
+#define AUDIO_HAS_BACKEND
 
 struct AudioContext {
-	struct AudioFormat format;
-	int count;
+	int count, channels, sampleRate;
 	SLObjectItf bqPlayerObject;
 	SLPlayItf   bqPlayerPlayer;
 	SLBufferQueueItf bqPlayerQueue;
+	cc_uint32 _tmpSize; void* _tmpData;
 };
 
 static SLresult (SLAPIENTRY *_slCreateEngine)(
@@ -521,7 +515,7 @@ static void AudioBackend_Reset(struct AudioContext* ctx) {
 	ctx->bqPlayerQueue  = NULL;
 }
 
-static cc_result AudioBackend_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
+static cc_result AudioBackend_UpdateFormat(struct AudioContext* ctx) {
 	SLDataLocator_AndroidSimpleBufferQueue input;
 	SLDataLocator_OutputMix output;
 	SLObjectItf bqPlayerObject;
@@ -534,8 +528,8 @@ static cc_result AudioBackend_SetFormat(struct AudioContext* ctx, struct AudioFo
 	AudioBackend_Reset(ctx);
 
 	fmt.formatType     = SL_DATAFORMAT_PCM;
-	fmt.numChannels    = format->channels;
-	fmt.samplesPerSec  = format->sampleRate * 1000;
+	fmt.numChannels    = ctx->channels;
+	fmt.samplesPerSec  = ctx->sampleRate * 1000;
 	fmt.bitsPerSample  = SL_PCMSAMPLEFORMAT_FIXED_16;
 	fmt.containerSize  = SL_PCMSAMPLEFORMAT_FIXED_16;
 	fmt.channelMask    = 0;
@@ -598,14 +592,18 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 /*########################################################################################################################*
 *---------------------------------------------------Common backend code---------------------------------------------------*
 *#########################################################################################################################*/
-struct AudioFormat* Audio_GetFormat(struct AudioContext* ctx) { return &ctx->format; }
+#ifndef AUDIO_HAS_BACKEND
+static void AudioBackend_Free(void) { }
+#else
+int Audio_GetChannels(struct AudioContext* ctx)   { return ctx->channels; }
+int Audio_GetSampleRate(struct AudioContext* ctx) { return ctx->sampleRate; }
 
-cc_result Audio_SetFormat(struct AudioContext* ctx, struct AudioFormat* format) {
-	struct AudioFormat* cur = &ctx->format;
-	if (AudioFormat_Eq(cur, format)) return 0;
-	ctx->format = *format;
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
 
-	return AudioBackend_SetFormat(ctx, format);
+	ctx->channels   = channels;
+	ctx->sampleRate = sampleRate;
+	return AudioBackend_UpdateFormat(ctx);
 }
 
 void Audio_Close(struct AudioContext* ctx) {
@@ -613,31 +611,77 @@ void Audio_Close(struct AudioContext* ctx) {
 	AudioBackend_Stop(ctx);
 	Audio_Poll(ctx, &inUse); /* unqueue buffers */
 
-	ctx->count             = 0;
-	ctx->format.channels   = 0;
-	ctx->format.sampleRate = 0;
+	ctx->count      = 0;
+	ctx->channels   = 0;
+	ctx->sampleRate = 0;
+
+	Mem_Free(ctx->_tmpData);
+	ctx->_tmpData = NULL;
+	ctx->_tmpSize = 0;
 	AudioBackend_Reset(ctx);
 }
 
+cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
+	cc_result res;
+	void* data = snd->data;
+	void* tmp;
+	
+	/* copy to temp buffer to apply volume */
+	if (volume < 100) {
+		if (ctx->_tmpSize < snd->size) {
+			/* TODO: check if we can realloc NULL without a problem */
+			if (ctx->_tmpData) {
+				tmp = Mem_TryRealloc(ctx->_tmpData, snd->size, 1);
+			} else {
+				tmp = Mem_TryAlloc(snd->size, 1);
+			}
+
+			if (!tmp) return ERR_OUT_OF_MEMORY;
+			ctx->_tmpData = tmp;
+			ctx->_tmpSize = snd->size;
+		}
+
+		data = ctx->_tmpData;
+		Mem_Copy(data, snd->data, snd->size);
+		ApplyVolume((cc_int16*)data, snd->size / 2, volume);
+	}
+
+	if ((res = Audio_SetFormat(ctx, snd->channels, snd->sampleRate))) return res;
+	if ((res = Audio_QueueData(ctx, data, snd->size))) return res;
+	if ((res = Audio_Play(ctx))) return res;
+	return 0;
+}
+#endif
+
 
 /*########################################################################################################################*
-*------------------------------------------------------Soundboard---------------------------------------------------------*
+*--------------------------------------------------------Sounds-----------------------------------------------------------*
 *#########################################################################################################################*/
-struct Sound {
-	struct AudioFormat format;
-	cc_uint8* data; cc_uint32 size;
-};
+#ifdef CC_BUILD_NOSOUNDS
+/* Can't use mojang's sound assets, so just stub everything out */
+static void Sounds_Init(void) { }
+static void Sounds_Free(void) { }
+static void Sounds_Stop(void) { }
+static void Sounds_Start(void) {
+	Chat_AddRaw("&cSounds are not supported currently");
+	Audio_SoundsVolume = 0;
+}
 
+void Audio_PlayDigSound(cc_uint8 type)  { }
+void Audio_PlayStepSound(cc_uint8 type) { }
+#else
 #define AUDIO_MAX_SOUNDS 10
+#define SOUND_MAX_CONTEXTS 8
+
 struct SoundGroup {
 	int count;
 	struct Sound sounds[AUDIO_MAX_SOUNDS];
 };
+struct Soundboard { struct SoundGroup groups[SOUND_COUNT]; };
 
-struct Soundboard {
-	RNGState rnd; cc_bool inited;
-	struct SoundGroup groups[SOUND_COUNT];
-};
+static struct Soundboard digBoard, stepBoard;
+static struct AudioContext sound_contexts[SOUND_MAX_CONTEXTS];
+static RNGState sounds_rnd;
 
 #define WAV_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
 #define WAV_FMT_SIZE 16
@@ -664,8 +708,8 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if ((res = Stream_Read(stream, tmp, sizeof(tmp)))) return res;
 			if (Stream_GetU16_LE(tmp + 0) != 1) return WAV_ERR_DATA_TYPE;
 
-			snd->format.channels   = Stream_GetU16_LE(tmp + 2);
-			snd->format.sampleRate = Stream_GetU32_LE(tmp + 4);
+			snd->channels   = Stream_GetU16_LE(tmp + 2);
+			snd->sampleRate = Stream_GetU32_LE(tmp + 4);
 			/* tmp[8] (6) alignment data and stuff */
 
 			bitsPerSample = Stream_GetU16_LE(tmp + 14);
@@ -684,17 +728,12 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 	}
 }
 
-static cc_result Sound_ReadWave(const cc_string* filename, struct Sound* snd) {
-	cc_string path; char pathBuffer[FILENAME_SIZE];
+static cc_result Sound_ReadWave(const cc_string* path, struct Sound* snd) {
 	struct Stream stream;
 	cc_result res;
 
-	String_InitArray(path, pathBuffer);
-	String_Format1(&path, "audio/%s", filename);
-
-	res = Stream_OpenFile(&stream, &path);
+	res = Stream_OpenFile(&stream, path);
 	if (res) return res;
-
 	res = Sound_ReadWaveData(&stream, snd);
 	if (res) { stream.Close(&stream); return res; }
 
@@ -711,48 +750,43 @@ static struct SoundGroup* Soundboard_Find(struct Soundboard* board, const cc_str
 	return NULL;
 }
 
-static void Soundboard_Init(struct Soundboard* board, const cc_string* boardName) {
-	cc_string file, name;
+static void Soundboard_Load(struct Soundboard* board, const cc_string* boardName, const cc_string* file) {
 	struct SoundGroup* group;
 	struct Sound* snd;
+	cc_string name = *file;
 	cc_result res;
-	int i, dotIndex;
-	board->inited = true;
+	int dotIndex;
+	Utils_UNSAFE_TrimFirstDirectory(&name);
 
-	for (i = 0; i < files.count; i++) {
-		file = StringsBuffer_UNSAFE_Get(&files, i); 
-		name = file;
+	/* dig_grass1.wav -> dig_grass1 */
+	dotIndex = String_LastIndexOf(&name, '.');
+	if (dotIndex >= 0) name.length = dotIndex;
+	if (!String_CaselessStarts(&name, boardName)) return;
 
-		/* dig_grass1.wav -> dig_grass1 */
-		dotIndex = String_LastIndexOf(&name, '.');
-		if (dotIndex >= 0) name.length = dotIndex;
-		if (!String_CaselessStarts(&name, boardName)) continue;
+	/* Convert dig_grass1 to grass */
+	name = String_UNSAFE_SubstringAt(&name, boardName->length);
+	name = String_UNSAFE_Substring(&name, 0, name.length - 1);
 
-		/* Convert dig_grass1 to grass */
-		name = String_UNSAFE_SubstringAt(&name, boardName->length);
-		name = String_UNSAFE_Substring(&name, 0, name.length - 1);
-
-		group = Soundboard_Find(board, &name);
-		if (!group) {
-			Chat_Add1("&cUnknown sound group '%s'", &name); continue;
-		}
-		if (group->count == Array_Elems(group->sounds)) {
-			Chat_AddRaw("&cCannot have more than 10 sounds in a group"); continue;
-		}
-
-		snd = &group->sounds[group->count];
-		res = Sound_ReadWave(&file, snd);
-
-		if (res) {
-			Logger_SysWarn2(res, "decoding", &file);
-			Mem_Free(snd->data);
-			snd->data = NULL;
-			snd->size = 0;
-		} else { group->count++; }
+	group = Soundboard_Find(board, &name);
+	if (!group) {
+		Chat_Add1("&cUnknown sound group '%s'", &name); return;
 	}
+	if (group->count == Array_Elems(group->sounds)) {
+		Chat_AddRaw("&cCannot have more than 10 sounds in a group"); return;
+	}
+
+	snd = &group->sounds[group->count];
+	res = Sound_ReadWave(file, snd);
+
+	if (res) {
+		Logger_SysWarn2(res, "decoding", file);
+		Mem_Free(snd->data);
+		snd->data = NULL;
+		snd->size = 0;
+	} else { group->count++; }
 }
 
-static struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 type) {
+static const struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 type) {
 	struct SoundGroup* group;
 	int idx;
 
@@ -762,20 +796,10 @@ static struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_uint8 ty
 	group = &board->groups[type];
 	if (!group->count) return NULL;
 
-	idx = Random_Next(&board->rnd, group->count);
+	idx = Random_Next(&sounds_rnd, group->count);
 	return &group->sounds[idx];
 }
 
-
-/*########################################################################################################################*
-*--------------------------------------------------------Sounds-----------------------------------------------------------*
-*#########################################################################################################################*/
-struct SoundOutput { struct AudioContext ctx; void* buffer; cc_uint32 capacity; };
-static struct Soundboard digBoard, stepBoard;
-#define AUDIO_MAX_HANDLES 6
-
-static struct SoundOutput monoOutputs[AUDIO_MAX_HANDLES];
-static struct SoundOutput stereoOutputs[AUDIO_MAX_HANDLES];
 
 CC_NOINLINE static void Sounds_Fail(cc_result res) {
 	Logger_SimpleWarn(res, "playing sounds");
@@ -783,51 +807,17 @@ CC_NOINLINE static void Sounds_Fail(cc_result res) {
 	Audio_SetSounds(0);
 }
 
-static void Sounds_PlayRaw(struct SoundOutput* output, struct Sound* snd, struct AudioFormat* fmt, int volume) {
-	void* data = snd->data;
-	void* tmp;
-	cc_result res;
-	
-	/* copy to temp buffer to apply volume */
-	if (volume < 100) {
-		/* TODO: Don't need a per sound temp buffer, just a global one */
-		if (output->capacity < snd->size) {
-			/* TODO: check if we can realloc NULL without a problem */
-			if (output->buffer) {
-				tmp = Mem_TryRealloc(output->buffer, snd->size, 1);
-			} else {
-				tmp = Mem_TryAlloc(snd->size, 1);
-			}
-
-			if (!tmp) { Sounds_Fail(ERR_OUT_OF_MEMORY); return; }
-			output->buffer   = tmp;
-			output->capacity = snd->size;
-		}
-		data = output->buffer;
-
-		Mem_Copy(data, snd->data, snd->size);
-		Volume_Mix16((cc_int16*)data, snd->size / 2, volume);
-	}
-
-	if ((res = Audio_SetFormat(&output->ctx, fmt)))             { Sounds_Fail(res); return; }
-	if ((res = Audio_QueueData(&output->ctx, data, snd->size))) { Sounds_Fail(res); return; }
-	if ((res = Audio_Play(&output->ctx)))                       { Sounds_Fail(res); return; }
-}
-
 static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
-	struct Sound* snd;
-	struct AudioFormat  fmt;
-	struct SoundOutput* outputs;
-	struct SoundOutput* output;
-	struct AudioFormat* l;
-
-	int inUse;
-	int i, volume;
+	const struct Sound* snd_;
+	struct Sound snd;
+	struct AudioContext* ctx;
+	int chans, freq;
+	int inUse, i, volume;
 	cc_result res;
 
 	if (type == SOUND_NONE || !Audio_SoundsVolume) return;
-	snd = Soundboard_PickRandom(board, type);
-	if (!snd) return;
+	snd_ = Soundboard_PickRandom(board, type);
+	if (!snd_) return;
 
 	if (!AudioBackend_Init()) { 
 		AudioBackend_Free(); 
@@ -835,45 +825,50 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 		return; 
 	}
 
-	fmt     = snd->format;
-	volume  = Audio_SoundsVolume;
-	outputs = fmt.channels == 1 ? monoOutputs : stereoOutputs;
+	snd    = *snd_;
+	volume = Audio_SoundsVolume;
 
 	if (board == &digBoard) {
-		if (type == SOUND_METAL) fmt.sampleRate = (fmt.sampleRate * 6) / 5;
-		else fmt.sampleRate = (fmt.sampleRate * 4) / 5;
+		if (type == SOUND_METAL) snd.sampleRate = (snd.sampleRate * 6) / 5;
+		else snd.sampleRate = (snd.sampleRate * 4) / 5;
 	} else {
 		volume /= 2;
-		if (type == SOUND_METAL) fmt.sampleRate = (fmt.sampleRate * 7) / 5;
+		if (type == SOUND_METAL) snd.sampleRate = (snd.sampleRate * 7) / 5;
 	}
 
 	/* Try to play on fresh device, or device with same data format */
-	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		output = &outputs[i];
-		if (!output->ctx.count) {
-			Audio_Init(&output->ctx, 1);
+	for (i = 0; i < SOUND_MAX_CONTEXTS; i++) {
+		ctx = &sound_contexts[i];
+		if (!ctx->count) {
+			Audio_Init(ctx, 1);
 		} else {
-			res = Audio_Poll(&output->ctx, &inUse);
+			res = Audio_Poll(ctx, &inUse);
 
 			if (res) { Sounds_Fail(res); return; }
 			if (inUse > 0) continue;
 		}
+		
+		chans =   Audio_GetChannels(ctx);
+		freq  = Audio_GetSampleRate(ctx);
+		if (!chans || (chans == snd.channels && freq == snd.sampleRate)) {
 
-		l = Audio_GetFormat(&output->ctx);
-		if (!l->channels || AudioFormat_Eq(l, &fmt)) {
-			Sounds_PlayRaw(output, snd, &fmt, volume); return;
+			res = Audio_PlaySound(ctx, &snd, volume);
+			if (res) Sounds_Fail(res);
+			return;
 		}
 	}
 
-	/* Try again with all devices, even if need to recreate one (expensive) */
-	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		output = &outputs[i];
-		res = Audio_Poll(&output->ctx, &inUse);
+	/* Try again with all contexts, even if need to recreate one (expensive) */
+	for (i = 0; i < SOUND_MAX_CONTEXTS; i++) {
+		ctx = &sound_contexts[i];
+		res = Audio_Poll(ctx, &inUse);
 
 		if (res) { Sounds_Fail(res); return; }
 		if (inUse > 0) continue;
 
-		Sounds_PlayRaw(output, snd, &fmt, volume); return;
+		res = Audio_PlaySound(ctx, &snd, volume);
+		if (res) Sounds_Fail(res);
+		return;
 	}
 }
 
@@ -881,53 +876,63 @@ static void Audio_PlayBlockSound(void* obj, IVec3 coords, BlockID old, BlockID n
 	if (now == BLOCK_AIR) {
 		Audio_PlayDigSound(Blocks.DigSounds[old]);
 	} else if (!Game_ClassicMode) {
+		/* use StepSounds instead when placing, as don't want */
+		/*  to play glass break sound when placing glass */
 		Audio_PlayDigSound(Blocks.StepSounds[now]);
 	}
 }
 
-static void Sounds_FreeOutputs(struct SoundOutput* outputs) {
-	int i;
-	for (i = 0; i < AUDIO_MAX_HANDLES; i++) {
-		if (!outputs[i].ctx.count) continue;
-		Audio_Close(&outputs[i].ctx);
+static void Sounds_LoadFile(const cc_string* path, void* obj) {
+	static const cc_string dig  = String_FromConst("dig_");
+	static const cc_string step = String_FromConst("step_");
+	Soundboard_Load(&digBoard,  &dig,  path);
+	Soundboard_Load(&stepBoard, &step, path);
+}
 
-		Mem_Free(outputs[i].buffer);
-		outputs[i].buffer   = NULL;
-		outputs[i].capacity = 0;
+static cc_bool sounds_loaded;
+static void Sounds_Start(void) {
+	if (sounds_loaded) return;
+	sounds_loaded = true;
+	Directory_Enum(&audio_dir, NULL, Sounds_LoadFile);
+}
+
+static void Sounds_Stop(void) {
+	int i;
+	for (i = 0; i < SOUND_MAX_CONTEXTS; i++) {
+		if (!sound_contexts[i].count) continue;
+		Audio_Close(&sound_contexts[i]);
 	}
 }
 
 static void Sounds_Init(void) {
-	static const cc_string dig  = String_FromConst("dig_");
-	static const cc_string step = String_FromConst("step_");
-
-	if (digBoard.inited || stepBoard.inited) return;
-	Soundboard_Init(&digBoard,  &dig);
-	Soundboard_Init(&stepBoard, &step);
+	int volume = GetVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
+	Audio_SetSounds(volume);
+	Event_Register_(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
 }
-
-static void Sounds_Free(void) {
-	Sounds_FreeOutputs(monoOutputs);
-	Sounds_FreeOutputs(stereoOutputs);
-}
-
-void Audio_SetSounds(int volume) {
-	if (volume) Sounds_Init();
-	else        Sounds_Free();
-	Audio_SoundsVolume = volume;
-}
+static void Sounds_Free(void) { Sounds_Stop(); }
 
 void Audio_PlayDigSound(cc_uint8 type)  { Sounds_Play(type, &digBoard); }
 void Audio_PlayStepSound(cc_uint8 type) { Sounds_Play(type, &stepBoard); }
+#endif
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------Music------------------------------------------------------------*
 *#########################################################################################################################*/
+#ifdef CC_BUILD_NOMUSIC
+/* Can't use mojang's music assets, so just stub everything out */
+static void Music_Init(void) { }
+static void Music_Free(void) { }
+static void Music_Stop(void) { }
+static void Music_Start(void) {
+	Chat_AddRaw("&cMusic is not supported currently");
+	Audio_MusicVolume = 0;
+}
+#else
 static struct AudioContext music_ctx;
 static void* music_thread;
 static void* music_waitable;
-static volatile cc_bool music_pendingStop, music_joining;
+static volatile cc_bool music_stopping, music_joining;
 static int music_minDelay, music_maxDelay;
 
 static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState* ctx) {
@@ -941,17 +946,17 @@ static cc_result Music_Buffer(cc_int16* data, int maxSamples, struct VorbisState
 		cur = &data[samples];
 		samples += Vorbis_OutputFrame(ctx, cur);
 	}
-	if (Audio_MusicVolume < 100) { Volume_Mix16(data, samples, Audio_MusicVolume); }
+	if (Audio_MusicVolume < 100) { ApplyVolume(data, samples, Audio_MusicVolume); }
 
 	res2 = Audio_QueueData(&music_ctx, data, samples * 2);
-	if (res2) { music_pendingStop = true; return res2; }
+	if (res2) { music_stopping = true; return res2; }
 	return res;
 }
 
 static cc_result Music_PlayOgg(struct Stream* source) {
 	struct OggState ogg;
 	struct VorbisState vorbis = { 0 };
-	struct AudioFormat fmt;
+	int channels, sampleRate;
 
 	int chunkSize, samplesPerSecond;
 	cc_int16* data = NULL;
@@ -962,14 +967,14 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 	vorbis.source = &ogg;
 	if ((res = Vorbis_DecodeHeaders(&vorbis))) goto cleanup;
 	
-	fmt.channels   = vorbis.channels;
-	fmt.sampleRate = vorbis.sampleRate;
-	if ((res = Audio_SetFormat(&music_ctx, &fmt))) goto cleanup;
+	channels   = vorbis.channels;
+	sampleRate = vorbis.sampleRate;
+	if ((res = Audio_SetFormat(&music_ctx, channels, sampleRate))) goto cleanup;
 
 	/* largest possible vorbis frame decodes to blocksize1 * channels samples, */
 	/*  so can end up decoding slightly over a second of audio */
-	chunkSize        = fmt.channels * (fmt.sampleRate + vorbis.blockSizes[1]);
-	samplesPerSecond = fmt.channels * fmt.sampleRate;
+	chunkSize        = channels * (sampleRate + vorbis.blockSizes[1]);
+	samplesPerSecond = channels * sampleRate;
 
 	cur  = 0;
 	data = (cc_int16*)Mem_TryAlloc(chunkSize * AUDIO_MAX_BUFFERS, 2);
@@ -980,18 +985,18 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 		res = Music_Buffer(&data[chunkSize * cur], samplesPerSecond, &vorbis);
 		cur = (cur + 1) % AUDIO_MAX_BUFFERS;
 	}
-	if (music_pendingStop) goto cleanup;
+	if (music_stopping) goto cleanup;
 
 	res  = Audio_Play(&music_ctx);
 	if (res) goto cleanup;
 
-	while (!music_pendingStop) {
+	while (!music_stopping) {
 #ifdef CC_BUILD_ANDROID
 		/* Don't play music while in the background on Android */
     	/* TODO: Not use such a terrible approach */
     	if (!WindowInfo.Handle) {
     		Audio_Pause(&music_ctx);
-    		while (!WindowInfo.Handle && !music_pendingStop) {
+    		while (!WindowInfo.Handle && !music_stopping) {
     			Thread_Sleep(10); continue;
     		}
     		Audio_Play(&music_ctx);
@@ -999,7 +1004,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 #endif
 
 		res = Audio_Poll(&music_ctx, &inUse);
-		if (res) { music_pendingStop = true; break; }
+		if (res) { music_stopping = true; break; }
 
 		if (inUse >= AUDIO_MAX_BUFFERS) {
 			Thread_Sleep(10); continue;
@@ -1012,7 +1017,7 @@ static cc_result Music_PlayOgg(struct Stream* source) {
 		if (res) break;
 	}
 
-	if (music_pendingStop) {
+	if (music_stopping) {
 		/* must close audio context, as otherwise some of the audio */
 		/*  context's internal audio buffers may have a reference */
 		/*  to the `data` buffer which will be freed after this */
@@ -1031,36 +1036,33 @@ cleanup:
 	return res == ERR_END_OF_STREAM ? 0 : res;
 }
 
-#define MUSIC_MAX_FILES 512
+static void Music_AddFile(const cc_string* path, void* obj) {
+	struct StringsBuffer* files = (struct StringsBuffer*)obj;
+	static const cc_string ogg  = String_FromConst(".ogg");
+
+	if (!String_CaselessEnds(path, &ogg)) return;
+	StringsBuffer_Add(files, path);
+}
+
 static void Music_RunLoop(void) {
-	static const cc_string ogg = String_FromConst(".ogg");
-	char pathBuffer[FILENAME_SIZE];
+	struct StringsBuffer files;
 	cc_string path;
-
-	unsigned short musicFiles[MUSIC_MAX_FILES];
-	cc_string file;
-
 	RNGState rnd;
 	struct Stream stream;
-	int i, count = 0, idx, delay;
+	int idx, delay;
 	cc_result res = 0;
 
-	for (i = 0; i < files.count && count < MUSIC_MAX_FILES; i++) {
-		file = StringsBuffer_UNSAFE_Get(&files, i);
-		if (!String_CaselessEnds(&file, &ogg)) continue;
-		musicFiles[count++] = i;
-	}
+	StringsBuffer_SetLengthBits(&files, STRINGSBUFFER_DEF_LEN_SHIFT);
+	StringsBuffer_Init(&files);
+	Directory_Enum(&audio_dir, &files, Music_AddFile);
 
 	Random_SeedFromCurrentTime(&rnd);
 	Audio_Init(&music_ctx, AUDIO_MAX_BUFFERS);
 
-	while (!music_pendingStop && count) {
-		idx  = Random_Next(&rnd, count);
-		file = StringsBuffer_UNSAFE_Get(&files, musicFiles[idx]);
-		
-		String_InitArray(path, pathBuffer);
-		String_Format1(&path, "audio/%s", &file);
-		Platform_Log1("playing music file: %s", &file);
+	while (!music_stopping && files.count) {
+		idx  = Random_Next(&rnd, files.count);
+		path = StringsBuffer_UNSAFE_Get(&files, idx);
+		Platform_Log1("playing music file: %s", &path);
 
 		res = Stream_OpenFile(&stream, &path);
 		if (res) { Logger_SysWarn2(res, "opening", &path); break; }
@@ -1074,7 +1076,7 @@ static void Music_RunLoop(void) {
 		res = stream.Close(&stream);
 		if (res) { Logger_SysWarn2(res, "closing", &path); break; }
 
-		if (music_pendingStop) break;
+		if (music_stopping) break;
 		delay = Random_Range(&rnd, music_minDelay, music_maxDelay);
 		Waitable_WaitFor(music_waitable, delay);
 	}
@@ -1084,13 +1086,14 @@ static void Music_RunLoop(void) {
 		Audio_MusicVolume = 0;
 	}
 	Audio_Close(&music_ctx);
+	StringsBuffer_Clear(&files);
 
 	if (music_joining) return;
 	Thread_Detach(music_thread);
 	music_thread = NULL;
 }
 
-static void Music_Init(void) {
+static void Music_Start(void) {
 	if (music_thread) return;
 	if (!AudioBackend_Init()) {
 		AudioBackend_Free(); 
@@ -1098,71 +1101,63 @@ static void Music_Init(void) {
 		return; 
 	}
 
-	music_joining     = false;
-	music_pendingStop = false;
-
-	music_thread = Thread_Start(Music_RunLoop);
+	music_joining  = false;
+	music_stopping = false;
+	music_thread   = Thread_Start(Music_RunLoop);
 }
 
-static void Music_Free(void) {
-	music_joining     = true;
-	music_pendingStop = true;
+static void Music_Stop(void) {
+	music_joining  = true;
+	music_stopping = true;
 	Waitable_Signal(music_waitable);
 	
 	if (music_thread) Thread_Join(music_thread);
 	music_thread = NULL;
 }
 
-void Audio_SetMusic(int volume) {
-	Audio_MusicVolume = volume;
-	if (volume) Music_Init();
-	else        Music_Free();
+static void Music_Init(void) {
+	int volume;
+	/* music is delayed between 2 - 7 minutes by default */
+	music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
+	music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
+
+	music_waitable = Waitable_Create();
+	volume         = GetVolume(OPT_MUSIC_VOLUME, OPT_USE_MUSIC);
+	Audio_SetMusic(volume);
 }
+
+static void Music_Free(void) {
+	Music_Stop();
+	Waitable_Free(music_waitable);
+}
+#endif
 
 
 /*########################################################################################################################*
 *--------------------------------------------------------General----------------------------------------------------------*
 *#########################################################################################################################*/
-static int Audio_LoadVolume(const char* volKey, const char* boolKey) {
-	int volume = Options_GetInt(volKey, 0, 100, 0);
-	if (volume) return volume;
-
-	volume = Options_GetBool(boolKey, false) ? 100 : 0;
-	Options_Set(boolKey, NULL);
-	return volume;
+void Audio_SetSounds(int volume) {
+	Audio_SoundsVolume = volume;
+	if (volume) Sounds_Start();
+	else        Sounds_Stop();
 }
 
-static void Audio_FilesCallback(const cc_string* path, void* obj) {
-	cc_string relPath = *path;
-	Utils_UNSAFE_TrimFirstDirectory(&relPath);
-	StringsBuffer_Add(&files, &relPath);
+void Audio_SetMusic(int volume) {
+	Audio_MusicVolume = volume;
+	if (volume) Music_Start();
+	else        Music_Stop();
 }
 
 static void OnInit(void) {
-	static const cc_string path = String_FromConst("audio");
-	int volume;
-
-	Directory_Enum(&path, NULL, Audio_FilesCallback);
-	music_waitable = Waitable_Create();
-
-	/* music is delayed between 2 - 7 minutes by default */
-	music_minDelay = Options_GetInt(OPT_MIN_MUSIC_DELAY, 0, 3600, 120) * MILLIS_PER_SEC;
-	music_maxDelay = Options_GetInt(OPT_MAX_MUSIC_DELAY, 0, 3600, 420) * MILLIS_PER_SEC;
-
-	volume = Audio_LoadVolume(OPT_MUSIC_VOLUME, OPT_USE_MUSIC);
-	Audio_SetMusic(volume);
-	volume = Audio_LoadVolume(OPT_SOUND_VOLUME, OPT_USE_SOUND);
-	Audio_SetSounds(volume);
-	Event_Register_(&UserEvents.BlockChanged, NULL, Audio_PlayBlockSound);
+	Sounds_Init();
+	Music_Init();
 }
 
 static void OnFree(void) {
-	Music_Free();
 	Sounds_Free();
-	Waitable_Free(music_waitable);
+	Music_Free();
 	AudioBackend_Free();
 }
-#endif
 
 struct IGameComponent Audio_Component = {
 	OnInit, /* Init  */
