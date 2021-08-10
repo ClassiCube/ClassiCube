@@ -272,6 +272,11 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	}
 	*inUse = ctx->count - ctx->free; return 0;
 }
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
+	/* Channels/Sample rate is per buffer, not a per source property */
+	return true;
+}
 #elif defined CC_BUILD_WINMM
 /*########################################################################################################################*
 *------------------------------------------------------WinMM backend------------------------------------------------------*
@@ -413,6 +418,10 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	}
 
 	*inUse = count; return res;
+}
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
+	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
 }
 #elif defined CC_BUILD_OPENSLES
 /*########################################################################################################################*
@@ -587,6 +596,10 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	*inUse  = state.count;
 	return res;
 }
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
+	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
+}
 #endif
 
 /*########################################################################################################################*
@@ -595,9 +608,6 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 #ifndef AUDIO_HAS_BACKEND
 static void AudioBackend_Free(void) { }
 #else
-int Audio_GetChannels(struct AudioContext* ctx)   { return ctx->channels; }
-int Audio_GetSampleRate(struct AudioContext* ctx) { return ctx->sampleRate; }
-
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
 	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
 
@@ -811,7 +821,6 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	const struct Sound* snd_;
 	struct Sound snd;
 	struct AudioContext* ctx;
-	int chans, freq;
 	int inUse, i, volume;
 	cc_result res;
 
@@ -836,26 +845,18 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 		if (type == SOUND_METAL) snd.sampleRate = (snd.sampleRate * 7) / 5;
 	}
 
-	/* Try to play on fresh device, or device with same data format */
+	/* Try to play on a context that doesn't need to be recreated */
 	for (i = 0; i < SOUND_MAX_CONTEXTS; i++) {
 		ctx = &sound_contexts[i];
-		if (!ctx->count) {
-			Audio_Init(ctx, 1);
-		} else {
-			res = Audio_Poll(ctx, &inUse);
+		res = Audio_Poll(ctx, &inUse);
 
-			if (res) { Sounds_Fail(res); return; }
-			if (inUse > 0) continue;
-		}
-		
-		chans =   Audio_GetChannels(ctx);
-		freq  = Audio_GetSampleRate(ctx);
-		if (!chans || (chans == snd.channels && freq == snd.sampleRate)) {
+		if (res) { Sounds_Fail(res); return; }
+		if (inUse > 0) continue;
+		if (!Audio_FastPlay(ctx, snd.channels, snd.sampleRate)) continue;
 
-			res = Audio_PlaySound(ctx, &snd, volume);
-			if (res) Sounds_Fail(res);
-			return;
-		}
+		res = Audio_PlaySound(ctx, &snd, volume);
+		if (res) Sounds_Fail(res);
+		return;
 	}
 
 	/* Try again with all contexts, even if need to recreate one (expensive) */
@@ -891,6 +892,11 @@ static void Sounds_LoadFile(const cc_string* path, void* obj) {
 
 static cc_bool sounds_loaded;
 static void Sounds_Start(void) {
+	int i;
+	for (i = 0; i < SOUND_MAX_CONTEXTS; i++) {
+		Audio_Init(&sound_contexts[i], 1);
+	}
+
 	if (sounds_loaded) return;
 	sounds_loaded = true;
 	Directory_Enum(&audio_dir, NULL, Sounds_LoadFile);
@@ -899,7 +905,6 @@ static void Sounds_Start(void) {
 static void Sounds_Stop(void) {
 	int i;
 	for (i = 0; i < SOUND_MAX_CONTEXTS; i++) {
-		if (!sound_contexts[i].count) continue;
 		Audio_Close(&sound_contexts[i]);
 	}
 }

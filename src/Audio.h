@@ -30,10 +30,6 @@ void Audio_PlayStepSound(cc_uint8 type);
 void Audio_Init(struct AudioContext* ctx, int buffers);
 /* Stops any playing audio and then frees the audio context. */
 void Audio_Close(struct AudioContext* ctx);
-/* Returns number of channels of the format audio is played in. */
-int Audio_GetChannels(struct AudioContext* ctx);
-/* Returns number of channels of the format audio is played in. */
-int Audio_GetSampleRate(struct AudioContext* ctx);
 /* Sets the format of the audio data to be played. */
 /* NOTE: Changing the format can be expensive, depending on the backend. */
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate);
@@ -48,5 +44,9 @@ cc_result Audio_Play(struct AudioContext* ctx);
 /* (e.g. if inUse is 0, no audio buffers are being played or queued) */
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
 
+/* Plays the given audio data at the given volume */
 cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume);
+/* Whether the given audio context can play audio data in the given format */
+/*  without recreating the underlying audio device */
+cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate);
 #endif
