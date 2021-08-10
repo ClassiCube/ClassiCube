@@ -5,35 +5,35 @@
 
 mergeInto(LibraryManager.library, {
   
+  interop_SaveBlob: function(blob, name) {
+    if (window.navigator.msSaveBlob) {
+      window.navigator.msSaveBlob(blob, name); return;
+    }
+    var url  = window.URL.createObjectURL(blob);
+    var elem = document.createElement('a');
+
+    elem.href     = url;
+    elem.download = name;
+    elem.style.display = 'none';
+
+    document.body.appendChild(elem);
+    elem.click();
+    document.body.removeChild(elem);
+    window.URL.revokeObjectURL(url);
+  },
   interop_InitModule: function() {
     // these are required for older versions of emscripten, but the compiler removes
     // this by default as no syscalls are used by the C platform code anymore
     window.ERRNO_CODES={EPERM:1,ENOENT:2,EIO:5,ENXIO:6,EBADF:9,EAGAIN:11,EWOULDBLOCK:11,ENOMEM:12,EEXIST:17,ENODEV:19,ENOTDIR:20,EISDIR:21,EINVAL:22,EBADFD:77,ENOTEMPTY:39};
-  
-    Module.saveBlob = function(blob, name) {
-      if (window.navigator.msSaveBlob) {
-        window.navigator.msSaveBlob(blob, name); return;
-      }
-      var url  = window.URL.createObjectURL(blob);
-      var elem = document.createElement('a');
-
-      elem.href     = url;
-      elem.download = name;
-      elem.style.display = 'none';
-
-      document.body.appendChild(elem);
-      elem.click();
-      document.body.removeChild(elem);
-      window.URL.revokeObjectURL(url);
-    };
   },
+  interop_InitModule__deps: ['interop_SaveBlob'],
   interop_TakeScreenshot: function(path) {
     var name   = UTF8ToString(path);
     var canvas = Module['canvas'];
     if (canvas.toBlob) {
-      canvas.toBlob(function(blob) { Module.saveBlob(blob, name); });
+      canvas.toBlob(function(blob) { _interop_SaveBlob(blob, name); });
     } else if (canvas.msToBlob) {
-      Module.saveBlob(canvas.msToBlob(), name);
+      _interop_SaveBlob(canvas.msToBlob(), name);
     }
   },
   
@@ -89,7 +89,7 @@ mergeInto(LibraryManager.library, {
       var name = UTF8ToString(path);
       var data = FS.readFile(name);
       var blob = new Blob([data], { type: 'application/octet-stream' });
-      Module.saveBlob(blob, UTF8ToString(filename));
+      _interop_SaveBlob(blob, UTF8ToString(filename));
       FS.unlink(name);
       return 0;
     } catch (e) {
@@ -97,6 +97,7 @@ mergeInto(LibraryManager.library, {
       return -e.errno;
     }
   },
+  interop_DownloadMap__deps: ['interop_SaveBlob'],
   interop_UploadTexPack: function(path) {
     // Move from temp into texpacks folder
     // TODO: This is pretty awful and should be rewritten
@@ -130,66 +131,64 @@ mergeInto(LibraryManager.library, {
 //########################################################################################################################
 //--------------------------------------------------------Filesystem------------------------------------------------------
 //########################################################################################################################
-  interop_InitFilesystem: function(buffer) {
-    // if interop_SaveNode is directly defined as a function, it is wrongly optimised 
-    // out when compiling as the function is not directly referenced by any C code
-    Module.saveNode = function(path) {
-      var callback = function(err) { 
-        if (!err) return;
-        console.log(err);
-        ccall('Platform_LogError', 'void', ['string'], ['&cError saving ' + path]);
-        ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
-      }; 
+  interop_SaveNode: function(path) {
+    var callback = function(err) { 
+      if (!err) return;
+      console.log(err);
+      ccall('Platform_LogError', 'void', ['string'], ['&cError saving ' + path]);
+      ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
+    }; 
+    
+    var stat, node, entry;
+    try {
+      var lookup = FS.lookupPath(path);
+      path = lookup.path;
+      node = lookup.node;
+      stat = node.node_ops.getattr(node);
+    
+      if (FS.isDir(stat.mode)) {
+        entry = { timestamp: stat.mtime, mode: stat.mode };
+      } else {
+        // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
+        // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
+        node.contents = MEMFS.getFileDataAsTypedArray(node);
+        entry = { timestamp: stat.mtime, mode: stat.mode, contents: node.contents };
+      }
+    } catch (err) {
+      return callback(err);
+    }
+    
+    IDBFS.getDB('/classicube', function(err, db) {
+      if (err) return callback(err);
+      var transaction, store;
       
-      var stat, node, entry;
+      // can still throw errors here
       try {
-        var lookup = FS.lookupPath(path);
-        path = lookup.path;
-        node = lookup.node;
-        stat = node.node_ops.getattr(node);
-      
-        if (FS.isDir(stat.mode)) {
-          entry = { timestamp: stat.mtime, mode: stat.mode };
-        } else {
-          // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
-          // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
-          node.contents = MEMFS.getFileDataAsTypedArray(node);
-          entry = { timestamp: stat.mtime, mode: stat.mode, contents: node.contents };
-        }
+        transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
+        store = transaction.objectStore(IDBFS.DB_STORE_NAME);
       } catch (err) {
         return callback(err);
       }
       
-      IDBFS.getDB('/classicube', function(err, db) {
-        if (err) return callback(err);
-        var transaction, store;
-        
-        // can still throw errors here
-        try {
-          transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
-          store = transaction.objectStore(IDBFS.DB_STORE_NAME);
-        } catch (err) {
-          return callback(err);
-        }
-        
-        transaction.onerror = function(e) {
-          callback(this.error);
-          e.preventDefault();
-        };
-        
-        var req = store.put(entry, path);
-        req.onsuccess = function()  { callback(null); };
-        req.onerror   = function(e) {
-          callback(this.error);
-          e.preventDefault();
-        };
-      });
-    };
-
+      transaction.onerror = function(e) {
+        callback(this.error);
+        e.preventDefault();
+      };
+      
+      var req = store.put(entry, path);
+      req.onsuccess = function()  { callback(null); };
+      req.onerror   = function(e) {
+        callback(this.error);
+        e.preventDefault();
+      };
+    });
+  },
+  interop_InitFilesystem: function(buffer) {
     if (!window.cc_idbErr) return;
     var msg = 'Error preloading IndexedDB:' + window.cc_idbErr + '\n\nPreviously saved settings/maps will be lost';
     ccall('Platform_LogError', 'void', ['string'], [msg]);
   },
+  interop_InitFilesystem__deps: ['interop_SaveNode'],
   interop_DirectorySetWorking: function (raw) {
     var path = UTF8ToString(raw);
     try {
@@ -204,13 +203,14 @@ mergeInto(LibraryManager.library, {
     var path = UTF8ToString(raw);
     try {
       FS.mkdir(path, mode, 0);
-      Module.saveNode(path);
+      _interop_SaveNode(path);
       return 0;
     } catch (e) {
       if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
       return -e.errno;
     }
   },
+  interop_DirectoryCreate__deps: ['interop_SaveNode'],
   interop_DirectoryIter: function(raw) {
     var path = UTF8ToString(raw);
     try {
@@ -287,13 +287,14 @@ mergeInto(LibraryManager.library, {
       var stream = FS.getStream(fd);
       FS.close(stream);
       // save writable files to IndexedDB (check for O_RDWR)
-      if ((stream.flags & 3) == 2) Module.saveNode(stream.path);
+      if ((stream.flags & 3) == 2) _interop_SaveNode(stream.path);
       return 0;
     } catch (e) {
       if (typeof FS === 'undefined' || !(e instanceof FS.ErrnoError)) abort(e);
       return -e.errno;
     }
   },
+  interop_FileClose__deps: ['interop_SaveNode'],
   
 
 //########################################################################################################################
