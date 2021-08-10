@@ -101,8 +101,8 @@ struct AudioContext {
 	ALuint source;
 	ALuint buffers[AUDIO_MAX_BUFFERS];
 	ALuint freeIDs[AUDIO_MAX_BUFFERS];
-	int count, free, channels, sampleRate;
-	ALenum dataFormat;
+	int count, free, sampleRate;
+	ALenum channels;
 	cc_uint32 _tmpSize; void* _tmpData;
 };
 static void* audio_device;
@@ -190,30 +190,17 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count  = buffers;
 }
 
-static cc_result AudioBackend_Reset(struct AudioContext* ctx) {
-	ALenum err;
+static void AudioBackend_Reset(struct AudioContext* ctx) {
 	ClearFree(ctx);
-	if (!ctx->source) return 0;
+	if (!ctx->source) return;
 
 	_alDeleteSources(1, &ctx->source);
-	ctx->source = 0;
-	if ((err = _alGetError())) return err;
-
 	_alDeleteBuffers(ctx->count, ctx->buffers);
-	if ((err = _alGetError())) return err;
-	return 0;
+	ctx->source = 0;
 }
 
-static ALenum GetALFormat(int channels) {
-	if (channels == 1) return AL_FORMAT_MONO16;
-	if (channels == 2) return AL_FORMAT_STEREO16;
-	Logger_Abort("Unsupported audio format"); return 0;
-}
-
-static cc_result AudioBackend_UpdateFormat(struct AudioContext* ctx) {
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
 	ALenum i, err;
-	ctx->dataFormat = GetALFormat(ctx->channels);
-	
 	if (!ctx->source) {
 		_alGenSources(1, &ctx->source);
 		if ((err = _alGetError())) return err;
@@ -226,6 +213,15 @@ static cc_result AudioBackend_UpdateFormat(struct AudioContext* ctx) {
 		}
 		ctx->free = ctx->count;
 	}
+	ctx->sampleRate = sampleRate;
+
+	if (channels == 1) {
+		ctx->channels = AL_FORMAT_MONO16;
+	} else if (channels == 2) {
+		ctx->channels = AL_FORMAT_STEREO16;
+	} else {
+		return ERR_INVALID_ARGUMENT;
+	}
 	return 0;
 }
 
@@ -236,7 +232,7 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) 
 	if (!ctx->free) return ERR_INVALID_ARGUMENT;
 	buffer = ctx->freeIDs[--ctx->free];
 
-	_alBufferData(buffer, ctx->dataFormat, data, size, ctx->sampleRate);
+	_alBufferData(buffer, ctx->channels, data, size, ctx->sampleRate);
 	if ((err = _alGetError())) return err;
 	_alSourceQueueBuffers(ctx->source, 1, &buffer);
 	if ((err = _alGetError())) return err;
@@ -261,6 +257,8 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	ALenum err;
 
 	*inUse = 0;
+	if (!ctx->source) return 0;
+
 	_alGetSourcei(ctx->source, AL_BUFFERS_PROCESSED, &processed);
 	if ((err = _alGetError())) return err;
 
@@ -358,16 +356,22 @@ static cc_result AudioBackend_Reset(struct AudioContext* ctx) {
 	return res;
 }
 
-static cc_result AudioBackend_UpdateFormat(struct AudioContext* ctx) {
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
 	WAVEFORMATEX fmt;
 	cc_result res;
-	int sampleSize = ctx->channels * 2; /* 16 bits per sample / 8 */
+	int sampleSize;
+
+	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
+	ctx->channels   = channels;
+	ctx->sampleRate = sampleRate;
+	
+	sampleSize = channels * 2; /* 16 bits per sample / 8 */
 	if ((res = AudioBackend_Reset(ctx))) return res;
 
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
-	fmt.nChannels       = ctx->channels;
-	fmt.nSamplesPerSec  = ctx->sampleRate;
-	fmt.nAvgBytesPerSec = ctx->sampleRate * sampleSize;
+	fmt.nChannels       = channels;
+	fmt.nSamplesPerSec  = sampleRate;
+	fmt.nAvgBytesPerSec = sampleRate * sampleSize;
 	fmt.nBlockAlign     = sampleSize;
 	fmt.wBitsPerSample  = 16;
 	fmt.cbSize          = 0;
@@ -524,7 +528,7 @@ static void AudioBackend_Reset(struct AudioContext* ctx) {
 	ctx->bqPlayerQueue  = NULL;
 }
 
-static cc_result AudioBackend_UpdateFormat(struct AudioContext* ctx) {
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
 	SLDataLocator_AndroidSimpleBufferQueue input;
 	SLDataLocator_OutputMix output;
 	SLObjectItf bqPlayerObject;
@@ -534,11 +538,15 @@ static cc_result AudioBackend_UpdateFormat(struct AudioContext* ctx) {
 	SLDataSource src;
 	SLDataSink dst;
 	cc_result res;
+
+	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
+	ctx->channels   = channels;
+	ctx->sampleRate = sampleRate;
 	AudioBackend_Reset(ctx);
 
 	fmt.formatType     = SL_DATAFORMAT_PCM;
-	fmt.numChannels    = ctx->channels;
-	fmt.samplesPerSec  = ctx->sampleRate * 1000;
+	fmt.numChannels    = channels;
+	fmt.samplesPerSec  = sampleRate * 1000;
 	fmt.bitsPerSample  = SL_PCMSAMPLEFORMAT_FIXED_16;
 	fmt.containerSize  = SL_PCMSAMPLEFORMAT_FIXED_16;
 	fmt.channelMask    = 0;
@@ -608,14 +616,6 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
 #ifndef AUDIO_HAS_BACKEND
 static void AudioBackend_Free(void) { }
 #else
-cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
-	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
-
-	ctx->channels   = channels;
-	ctx->sampleRate = sampleRate;
-	return AudioBackend_UpdateFormat(ctx);
-}
-
 void Audio_Close(struct AudioContext* ctx) {
 	int inUse;
 	AudioBackend_Stop(ctx);
@@ -828,12 +828,6 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	snd_ = Soundboard_PickRandom(board, type);
 	if (!snd_) return;
 
-	if (!AudioBackend_Init()) { 
-		AudioBackend_Free(); 
-		Audio_SoundsVolume = 0; 
-		return; 
-	}
-
 	snd    = *snd_;
 	volume = Audio_SoundsVolume;
 
@@ -893,6 +887,12 @@ static void Sounds_LoadFile(const cc_string* path, void* obj) {
 static cc_bool sounds_loaded;
 static void Sounds_Start(void) {
 	int i;
+	if (!AudioBackend_Init()) { 
+		AudioBackend_Free(); 
+		Audio_SoundsVolume = 0; 
+		return; 
+	}
+
 	for (i = 0; i < SOUND_MAX_CONTEXTS; i++) {
 		Audio_Init(&sound_contexts[i], 1);
 	}
