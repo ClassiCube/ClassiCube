@@ -49,6 +49,10 @@ static int GetVolume(const char* volKey, const char* boolKey) {
 	return volume;
 }
 
+static void AudioWarn(cc_result res, const char* action) {
+	Logger_Warn(res, action, Audio_DescribeError);
+}
+
 
 #if defined CC_BUILD_OPENAL
 /*########################################################################################################################*
@@ -68,6 +72,12 @@ static int GetVolume(const char* volKey, const char* boolKey) {
 #define AL_BUFFERS_PROCESSED 0x1016
 #define AL_FORMAT_MONO16     0x1101
 #define AL_FORMAT_STEREO16   0x1103
+
+#define AL_INVALID_NAME      0xA001
+#define AL_INVALID_ENUM      0xA002
+#define AL_INVALID_VALUE     0xA003
+#define AL_INVALID_OPERATION 0xA004
+#define AL_OUT_OF_MEMORY     0xA005
 
 typedef char ALboolean;
 typedef int ALint;
@@ -159,7 +169,7 @@ static cc_bool AudioBackend_Init(void) {
 	if (!LoadALFuncs()) { Logger_WarnFunc(&msg); return false; }
 
 	res = CreateALContext();
-	if (res) { Logger_SimpleWarn(res, "initing OpenAL"); return false; }
+	if (res) { AudioWarn(res, "initing OpenAL"); return false; }
 	return true;
 }
 
@@ -275,6 +285,25 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
 }
+
+static const char* GetError(cc_result res) {
+	switch (res) {
+	case AL_ERR_INIT_CONTEXT:  return "Failed to init OpenAL context";
+	case AL_ERR_INIT_DEVICE:   return "Failed to init OpenAL device";
+	case AL_INVALID_NAME:      return "Invalid parameter name";
+	case AL_INVALID_ENUM:      return "Invalid parameter";
+	case AL_INVALID_VALUE:     return "Invalid parameter value";
+	case AL_INVALID_OPERATION: return "Invalid operation";
+	case AL_OUT_OF_MEMORY:     return "OpenAL out of memory";
+	}
+	return NULL;
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	const char* err = GetError(res);
+	if (err) String_AppendConst(dst, err);
+	return err != NULL;
+}
 #elif defined CC_BUILD_WINMM
 /*########################################################################################################################*
 *------------------------------------------------------WinMM backend------------------------------------------------------*
@@ -327,6 +356,7 @@ WINMMAPI MMRESULT WINAPI waveOutPrepareHeader(HWAVEOUT hwo, WAVEHDR* hdr, UINT h
 WINMMAPI MMRESULT WINAPI waveOutUnprepareHeader(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
 WINMMAPI MMRESULT WINAPI waveOutWrite(HWAVEOUT hwo, WAVEHDR* hdr, UINT hdrSize);
 WINMMAPI MMRESULT WINAPI waveOutReset(HWAVEOUT hwo);
+WINMMAPI MMRESULT WINAPI waveOutGetErrorTextA(MMRESULT err, LPSTR text, UINT textLen);
 /* === END mmeapi.h === */
 
 struct AudioContext {
@@ -427,6 +457,15 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
 }
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	char buffer[NATIVE_STR_LEN] = { 0 };
+	waveOutGetErrorTextA(res, buffer, NATIVE_STR_LEN);
+
+	if (!buffer[0]) return false;
+	String_AppendConst(dst, buffer);
+	return true;
+}
 #elif defined CC_BUILD_OPENSLES
 /*########################################################################################################################*
 *----------------------------------------------------OpenSL ES backend----------------------------------------------------*
@@ -485,19 +524,19 @@ static cc_bool AudioBackend_Init(void) {
 	ids[0] = *_SL_IID_NULL; req[0] = SL_BOOLEAN_FALSE;
 	
 	res = _slCreateEngine(&slEngineObject, 0, NULL, 0, NULL, NULL);
-	if (res) { Logger_SimpleWarn(res, "creating OpenSL ES engine"); return false; }
+	if (res) { AudioWarn(res, "creating OpenSL ES engine"); return false; }
 
 	res = (*slEngineObject)->Realize(slEngineObject, SL_BOOLEAN_FALSE);
-	if (res) { Logger_SimpleWarn(res, "realising OpenSL ES engine"); return false; }
+	if (res) { AudioWarn(res, "realising OpenSL ES engine"); return false; }
 
 	res = (*slEngineObject)->GetInterface(slEngineObject, *_SL_IID_ENGINE, &slEngineEngine);
-	if (res) { Logger_SimpleWarn(res, "initing OpenSL ES engine"); return false; }
+	if (res) { AudioWarn(res, "initing OpenSL ES engine"); return false; }
 
 	res = (*slEngineEngine)->CreateOutputMix(slEngineEngine, &slOutputObject, 1, ids, req);
-	if (res) { Logger_SimpleWarn(res, "creating OpenSL ES mixer"); return false; }
+	if (res) { AudioWarn(res, "creating OpenSL ES mixer"); return false; }
 
 	res = (*slOutputObject)->Realize(slOutputObject, SL_BOOLEAN_FALSE);
-	if (res) { Logger_SimpleWarn(res, "realising OpenSL ES mixer"); return false; }
+	if (res) { AudioWarn(res, "realising OpenSL ES mixer"); return false; }
 
 	return true;
 }
@@ -607,6 +646,34 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 
 cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
+}
+
+static const char* GetError(cc_result res) {
+	switch (res) {
+	case SL_RESULT_PRECONDITIONS_VIOLATED: return "Preconditions violated";
+	case SL_RESULT_PARAMETER_INVALID:   return "Invalid parameter";
+	case SL_RESULT_MEMORY_FAILURE:      return "Memory failure";
+	case SL_RESULT_RESOURCE_ERROR:      return "Resource error";
+	case SL_RESULT_RESOURCE_LOST:       return "Resource lost";
+	case SL_RESULT_IO_ERROR:            return "I/O error";
+	case SL_RESULT_BUFFER_INSUFFICIENT: return "Insufficient buffer";
+	case SL_RESULT_CONTENT_CORRUPTED:   return "Content corrupted";
+	case SL_RESULT_CONTENT_UNSUPPORTED: return "Content unsupported";
+	case SL_RESULT_CONTENT_NOT_FOUND:   return "Content not found";
+	case SL_RESULT_PERMISSION_DENIED:   return "Permission denied";
+	case SL_RESULT_FEATURE_UNSUPPORTED: return "Feature unsupported";
+	case SL_RESULT_INTERNAL_ERROR:      return "Internal error";
+	case SL_RESULT_UNKNOWN_ERROR:       return "Unknown error";
+	case SL_RESULT_OPERATION_ABORTED:   return "Operation aborted";
+	case SL_RESULT_CONTROL_LOST:        return "Control lost";
+	}
+	return NULL;
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	const char* err = GetError(res);
+	if (err) String_AppendConst(dst, err);
+	return err != NULL;
 }
 #endif
 
@@ -812,7 +879,7 @@ static const struct Sound* Soundboard_PickRandom(struct Soundboard* board, cc_ui
 
 
 CC_NOINLINE static void Sounds_Fail(cc_result res) {
-	Logger_SimpleWarn(res, "playing sounds");
+	AudioWarn(res, "playing sounds");
 	Chat_AddRaw("&cDisabling sounds");
 	Audio_SetSounds(0);
 }

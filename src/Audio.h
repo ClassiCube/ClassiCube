@@ -46,7 +46,9 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
 
 /* Plays the given audio data at the given volume */
 cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume);
-/* Whether the given audio context can play audio data in the given format */
+/* Whether the given audio context can play audio data in the given format, */
 /*  without recreating the underlying audio device */
 cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate);
+/* Outputs more detailed information about errors with audio. */
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst);
 #endif
