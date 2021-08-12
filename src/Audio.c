@@ -220,7 +220,7 @@ void Audio_Close(struct AudioContext* ctx) {
 		Audio_Reset(ctx);
 		_alGetError();
 	}
-	ClearFree(ctx->source);
+	ClearFree(ctx);
 	AudioBase_Clear(ctx);
 }
 
