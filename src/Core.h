@@ -239,7 +239,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_GLMODERN
 #define CC_BUILD_GLES
 #define CC_BUILD_TOUCH
-#define CC_BUILD_NOSOUNDS
+#define CC_BUILD_WEBAUDIO
 #define CC_BUILD_NOMUSIC
 #define CC_BUILD_MINFILES
 #endif

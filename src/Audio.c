@@ -717,6 +717,67 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	if (err) String_AppendConst(dst, err);
 	return err != NULL;
 }
+#elif defined CC_BUILD_WEBAUDIO
+/*########################################################################################################################*
+*-----------------------------------------------------WebAudio backend----------------------------------------------------*
+*#########################################################################################################################*/
+struct AudioContext { int contextID; };
+extern int  interop_InitAudio(void);
+extern int  interop_AudioCreate(void);
+extern void interop_AudioClose(int contextID);
+extern int  interop_AudioPlay(int contextID, const char* name);
+extern int  interop_AudioDescribe(int res, char* buffer, int bufferLen);
+
+static cc_bool AudioBackend_Init(void) {
+	cc_result res = interop_InitAudio();
+	if (res) { AudioWarn(res, "initing WebAudio context"); return false; }
+
+	InitFakeSounds();
+	return true;
+}
+
+void Audio_Init(struct AudioContext* ctx, int buffers) {
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+	if (ctx->contextID) interop_AudioClose(ctx->contextID);
+	ctx->contextID = 0;
+}
+
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Audio_Play(struct AudioContext* ctx) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+	return ERR_NOT_SUPPORTED;
+}
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
+	/* Channels/Sample rate is per buffer, not a per source property */
+	return true;
+}
+
+cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
+	if (!ctx->contextID) 
+		ctx->contextID = interop_AudioCreate();
+	return interop_AudioPlay(ctx->contextID, snd->data);
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	char buffer[NATIVE_STR_LEN];
+	int len = interop_AudioDescribe(res, buffer, NATIVE_STR_LEN);
+
+	String_AppendUtf8(dst, buffer, len);
+	return len > 0;
+}
 #endif
 
 /*########################################################################################################################*
@@ -989,6 +1050,12 @@ static void Sounds_LoadFile(const cc_string* path, void* obj) {
 	Soundboard_Load(&stepBoard, &step, path);
 }
 
+/* TODO this is a pretty terrible solution */
+#ifdef CC_BUILD_WEBAUDIO
+static void InitWebSounds(void) {
+}
+#endif
+
 static cc_bool sounds_loaded;
 static void Sounds_Start(void) {
 	int i;
@@ -1004,7 +1071,11 @@ static void Sounds_Start(void) {
 
 	if (sounds_loaded) return;
 	sounds_loaded = true;
+#ifdef CC_BUILD_WEBAUDIO
+	InitWebSounds();
+#else
 	Directory_Enum(&audio_dir, NULL, Sounds_LoadFile);
+#endif
 }
 
 static void Sounds_Stop(void) {

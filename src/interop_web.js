@@ -660,5 +660,85 @@ mergeInto(LibraryManager.library, {
     var dbg = GLctx.getExtension('WEBGL_debug_renderer_info');
     var str = dbg ? GLctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "";
     stringToUTF8(str, buffer, len);
-  }
+  },
+  
+
+//########################################################################################################################
+//---------------------------------------------------------Sockets--------------------------------------------------------
+//########################################################################################################################
+  interop_AudioLog: function(err) {
+    console.log(err);
+    window.AUDIO.errors.push(''+err);
+    return window.AUDIO.errors.length|0;
+  },
+  interop_InitAudio: function() {
+    window.AUDIO = window.AUDIO || {
+      context: null,
+      sources: [],
+      buffers: {},
+      errors: [],
+      seen: {},
+    };
+    if (window.AUDIO.context) return 0;
+
+    // TODO error handling everywhere
+    try {
+      if (window.AudioContext) {
+        AUDIO.context = new window.AudioContext();
+      } else {
+        AUDIO.context = new window.webkitAudioContext();
+      }
+    } catch (err) {
+      return _interop_AudioLog(err)
+    }
+    return 0;
+  },
+  interop_InitAudio__deps: ['interop_AudioLog'],
+  interop_AudioCreate: function() {
+    var source = AUDIO.context.createBufferSource();
+    AUDIO.sources.push(source);
+    return AUDIO.sources.length|0; 
+    // NOTE: 0 is used by Audio.c for "no source"
+  },
+  interop_AudioClose: function(ctxID) {
+    var source = AUDIO.sources[ctxID - 1|0];
+    source.stop();
+    AUDIO.sources[ctxID - 1|0] = null;
+  },
+  interop_AudioPlay: function(ctxID, name) {
+    var source = AUDIO.sources[ctxID - 1|0];
+    var name_  = UTF8ToString(name);
+    
+    // have we already downloaded or are downloading this file?
+    if (!AUDIO.seen.hasOwnProperty(name_)) {
+      Audio.seen[name_] = true;
+      _interop_AudioDownload(name_);
+      return 0;
+    }
+    
+    source.buffer = AUDIO.buffers[name_];
+    source.connect(audioCtx.destination);
+    source.start();
+    return 0;
+  },
+  interop_AudioPlay__deps: ['interop_AudioDownload'],
+  interop_AudioDownload: function(name) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'static/' + name + '.wav', true);   
+    xhr.responseType = 'arraybuffer';
+    
+    xhr.onload = function() {
+      var data = xhr.response;
+      AUDIO.context.decodeAudioData(data, function(buffer) {
+          AUDIO.buffers[name] = buffer;
+        });
+    };
+    xhr.send();
+  },
+  interop_AudioDescribe: function(errCode, buffer, bufferLen) {
+    if (errCode > AUDIO.errors.length) return 0;
+    
+    var str = AUDIO.errors[errCode - 1];
+    return stringToUTF8(str, buffer, bufferLen);
+  },
 });
