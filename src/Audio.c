@@ -49,10 +49,13 @@ static int GetVolume(const char* volKey, const char* boolKey) {
 	return volume;
 }
 
+/* Common/Base methods */
 static void AudioWarn(cc_result res, const char* action) {
 	Logger_Warn(res, action, Audio_DescribeError);
 }
-static void AudioContext_Clear(struct AudioContext* ctx);
+static void AudioBase_Clear(struct AudioContext* ctx);
+static void* AudioBase_AdjustSound(struct AudioContext* ctx, struct Sound* snd, int volume);
+static cc_result AudioBase_PlaySound(struct AudioContext* ctx, struct Sound* snd, void* data);
 
 
 #if defined CC_BUILD_OPENAL
@@ -218,7 +221,7 @@ void Audio_Close(struct AudioContext* ctx) {
 		_alGetError();
 	}
 	ClearFree(ctx->source);
-	AudioContext_Clear(ctx);
+	AudioBase_Clear(ctx);
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
@@ -289,6 +292,12 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
+}
+
+cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
+	void* data   = AudioBase_AdjustSound(ctx, snd, volume);
+	if (data) return AudioBase_PlaySound(ctx, snd, data);
+	return ERR_OUT_OF_MEMORY;
 }
 
 static const char* GetError(cc_result res) {
@@ -402,7 +411,7 @@ void Audio_Close(struct AudioContext* ctx) {
 		Audio_Poll(ctx, &inUse); /* unprepare buffers */
 		Audio_Reset(ctx);
 	}
-	AudioContext_Clear(ctx);
+	AudioBase_Clear(ctx);
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
@@ -471,6 +480,12 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 
 cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
+}
+
+cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
+	void* data   = AudioBase_AdjustSound(ctx, snd, volume);
+	if (data) return AudioBase_PlaySound(ctx, snd, data);
+	return ERR_OUT_OF_MEMORY;
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
@@ -592,7 +607,7 @@ static void Audio_Reset(struct AudioContext* ctx) {
 void Audio_Close(struct AudioContext* ctx) {
 	Audio_Stop(ctx);
 	Audio_Reset(ctx);
-	AudioContext_Clear(ctx);
+	AudioBase_Clear(ctx);
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
@@ -669,6 +684,12 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
 }
 
+cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
+	void* data   = AudioBase_AdjustSound(ctx, snd, volume);
+	if (data) return AudioBase_PlaySound(ctx, snd, data);
+	return ERR_OUT_OF_MEMORY;
+}
+
 static const char* GetError(cc_result res) {
 	switch (res) {
 	case SL_RESULT_PRECONDITIONS_VIOLATED: return "Preconditions violated";
@@ -704,7 +725,7 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 #ifndef AUDIO_HAS_BACKEND
 static void AudioBackend_Free(void) { }
 #else
-static void AudioContext_Clear(struct AudioContext* ctx) {
+static void AudioBase_Clear(struct AudioContext* ctx) {
 	ctx->count      = 0;
 	ctx->channels   = 0;
 	ctx->sampleRate = 0;
@@ -714,31 +735,32 @@ static void AudioContext_Clear(struct AudioContext* ctx) {
 	ctx->_tmpSize = 0;
 }
 
-cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
-	cc_result res;
-	void* data = snd->data;
-	void* tmp;
-	
-	/* copy to temp buffer to apply volume */
-	if (volume < 100) {
-		if (ctx->_tmpSize < snd->size) {
-			/* TODO: check if we can realloc NULL without a problem */
-			if (ctx->_tmpData) {
-				tmp = Mem_TryRealloc(ctx->_tmpData, snd->size, 1);
-			} else {
-				tmp = Mem_TryAlloc(snd->size, 1);
-			}
+static void* AudioBase_AdjustSound(struct AudioContext* ctx, struct Sound* snd, int volume) {
+	void* data;
+	if (volume >= 100) return snd->data;
 
-			if (!tmp) return ERR_OUT_OF_MEMORY;
-			ctx->_tmpData = tmp;
-			ctx->_tmpSize = snd->size;
+	/* copy to temp buffer to apply volume */
+	if (ctx->_tmpSize < snd->size) {
+		/* TODO: check if we can realloc NULL without a problem */
+		if (ctx->_tmpData) {
+			data = Mem_TryRealloc(ctx->_tmpData, snd->size, 1);
+		} else {
+			data = Mem_TryAlloc(snd->size, 1);
 		}
 
-		data = ctx->_tmpData;
-		Mem_Copy(data, snd->data, snd->size);
-		ApplyVolume((cc_int16*)data, snd->size / 2, volume);
+		if (!data) return NULL;
+		ctx->_tmpData = data;
+		ctx->_tmpSize = snd->size;
 	}
 
+	data = ctx->_tmpData;
+	Mem_Copy(data, snd->data, snd->size);
+	ApplyVolume((cc_int16*)data, snd->size / 2, volume);
+	return data;
+}
+
+static cc_result AudioBase_PlaySound(struct AudioContext* ctx, struct Sound* snd, void* data) {
+	cc_result res;
 	if ((res = Audio_SetFormat(ctx, snd->channels, snd->sampleRate))) return res;
 	if ((res = Audio_QueueData(ctx, data, snd->size))) return res;
 	if ((res = Audio_Play(ctx))) return res;
