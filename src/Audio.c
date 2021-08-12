@@ -52,6 +52,7 @@ static int GetVolume(const char* volKey, const char* boolKey) {
 static void AudioWarn(cc_result res, const char* action) {
 	Logger_Warn(res, action, Audio_DescribeError);
 }
+static void AudioContext_Clear(struct AudioContext* ctx);
 
 
 #if defined CC_BUILD_OPENAL
@@ -200,13 +201,24 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count  = buffers;
 }
 
-static void AudioBackend_Reset(struct AudioContext* ctx) {
-	ClearFree(ctx);
-	if (!ctx->source) return;
+static void Audio_Stop(struct AudioContext* ctx) {
+	_alSourceStop(ctx->source);
+}
 
-	_alDeleteSources(1, &ctx->source);
+static void Audio_Reset(struct AudioContext* ctx) {
+	_alDeleteSources(1,          &ctx->source);
 	_alDeleteBuffers(ctx->count, ctx->buffers);
 	ctx->source = 0;
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+	if (ctx->source) {
+		Audio_Stop(ctx);
+		Audio_Reset(ctx);
+		_alGetError();
+	}
+	ClearFree(ctx->source);
+	AudioContext_Clear(ctx);
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
@@ -252,13 +264,6 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) 
 cc_result Audio_Play(struct AudioContext* ctx) {
 	_alSourcePlay(ctx->source);
 	return _alGetError();
-}
-
-static void AudioBackend_Stop(struct AudioContext* ctx) {
-	if (!ctx->source) return;
-
-	_alSourceStop(ctx->source);
-	_alGetError();
 }
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
@@ -377,13 +382,27 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count = buffers;
 }
 
-static cc_result AudioBackend_Reset(struct AudioContext* ctx) {
+static void Audio_Stop(struct AudioContext* ctx) {
+	waveOutReset(ctx->handle);
+}
+
+static cc_result Audio_Reset(struct AudioContext* ctx) {
 	cc_result res;
 	if (!ctx->handle) return 0;
 
 	res = waveOutClose(ctx->handle);
 	ctx->handle = NULL;
 	return res;
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+	int inUse;
+	if (ctx->handle) {
+		Audio_Stop(ctx);
+		Audio_Poll(ctx, &inUse); /* unprepare buffers */
+		Audio_Reset(ctx);
+	}
+	AudioContext_Clear(ctx);
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
@@ -396,7 +415,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	ctx->sampleRate = sampleRate;
 	
 	sampleSize = channels * 2; /* 16 bits per sample / 8 */
-	if ((res = AudioBackend_Reset(ctx))) return res;
+	if ((res = Audio_Reset(ctx))) return res;
 
 	fmt.wFormatTag      = WAVE_FORMAT_PCM;
 	fmt.nChannels       = channels;
@@ -431,10 +450,6 @@ cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 dataSi
 }
 
 cc_result Audio_Play(struct AudioContext* ctx) { return 0; }
-
-static void AudioBackend_Stop(struct AudioContext* ctx) {
-	if (ctx->handle) waveOutReset(ctx->handle);
-}
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	cc_result res = 0;
@@ -557,7 +572,14 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 	ctx->count = buffers;
 }
 
-static void AudioBackend_Reset(struct AudioContext* ctx) {
+static void Audio_Stop(struct AudioContext* ctx) {
+	if (!ctx->bqPlayerPlayer) return;
+
+	(*ctx->bqPlayerQueue)->Clear(ctx->bqPlayerQueue);
+	(*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_STOPPED);
+}
+
+static void Audio_Reset(struct AudioContext* ctx) {
 	SLObjectItf bqPlayerObject = ctx->bqPlayerObject;
 	if (!bqPlayerObject) return;
 
@@ -565,6 +587,12 @@ static void AudioBackend_Reset(struct AudioContext* ctx) {
 	ctx->bqPlayerObject = NULL;
 	ctx->bqPlayerPlayer = NULL;
 	ctx->bqPlayerQueue  = NULL;
+}
+
+void Audio_Close(struct AudioContext* ctx) {
+	Audio_Stop(ctx);
+	Audio_Reset(ctx);
+	AudioContext_Clear(ctx);
 }
 
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
@@ -581,7 +609,7 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	if (ctx->channels == channels && ctx->sampleRate == sampleRate) return 0;
 	ctx->channels   = channels;
 	ctx->sampleRate = sampleRate;
-	AudioBackend_Reset(ctx);
+	Audio_Reset(ctx);
 
 	fmt.formatType     = SL_DATAFORMAT_PCM;
 	fmt.numChannels    = channels;
@@ -624,13 +652,6 @@ static cc_result Audio_Pause(struct AudioContext* ctx) {
 
 cc_result Audio_Play(struct AudioContext* ctx) {
 	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_PLAYING);
-}
-
-static void AudioBackend_Stop(struct AudioContext* ctx) {
-	if (!ctx->bqPlayerPlayer) return;
-
-	(*ctx->bqPlayerQueue)->Clear(ctx->bqPlayerQueue);
-	(*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_STOPPED);
 }
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
@@ -683,11 +704,7 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 #ifndef AUDIO_HAS_BACKEND
 static void AudioBackend_Free(void) { }
 #else
-void Audio_Close(struct AudioContext* ctx) {
-	int inUse;
-	AudioBackend_Stop(ctx);
-	Audio_Poll(ctx, &inUse); /* unqueue buffers */
-
+static void AudioContext_Clear(struct AudioContext* ctx) {
 	ctx->count      = 0;
 	ctx->channels   = 0;
 	ctx->sampleRate = 0;
@@ -695,7 +712,6 @@ void Audio_Close(struct AudioContext* ctx) {
 	Mem_Free(ctx->_tmpData);
 	ctx->_tmpData = NULL;
 	ctx->_tmpSize = 0;
-	AudioBackend_Reset(ctx);
 }
 
 cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
