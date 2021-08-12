@@ -255,7 +255,7 @@ cc_result Audio_Play(struct AudioContext* ctx) {
 }
 
 static void AudioBackend_Stop(struct AudioContext* ctx) {
-	if (ctx->source == -1) return;
+	if (!ctx->source) return;
 
 	_alSourceStop(ctx->source);
 	_alGetError();
