@@ -725,7 +725,7 @@ struct AudioContext { int contextID; };
 extern int  interop_InitAudio(void);
 extern int  interop_AudioCreate(void);
 extern void interop_AudioClose(int contextID);
-extern int  interop_AudioPlay(int contextID, const void* name, int volume);
+extern int  interop_AudioPlay(int contextID, struct Sound* snd, int volume);
 extern int  interop_AudioPoll(int contetID, int* inUse);
 extern int  interop_AudioDescribe(int res, char* buffer, int bufferLen);
 
@@ -764,7 +764,7 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
 cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
 	if (!ctx->contextID) 
 		ctx->contextID = interop_AudioCreate();
-	return interop_AudioPlay(ctx->contextID, snd->data, volume);
+	return interop_AudioPlay(ctx->contextID, snd, volume);
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
@@ -1058,8 +1058,8 @@ static const struct SoundID { int group; const char* name; } sounds_list[] =
 	{ SOUND_STONE,  "step_stone1"  }, { SOUND_STONE,  "step_stone2"  }, { SOUND_STONE,  "step_stone3"  }, { SOUND_STONE,  "step_stone4"  },
 	{ SOUND_WOOD,   "step_wood1"   }, { SOUND_WOOD,   "step_wood2"   }, { SOUND_WOOD,   "step_wood3"   }, { SOUND_WOOD,   "step_wood4"   },
 	{ SOUND_NONE, NULL },
+
 	{ SOUND_CLOTH,  "dig_cloth1"   }, { SOUND_CLOTH,  "dig_cloth2"   }, { SOUND_CLOTH,  "dig_cloth3"   }, { SOUND_CLOTH,  "dig_cloth4"   },
-	
 	{ SOUND_GRASS,  "dig_grass1"   }, { SOUND_GRASS,  "dig_grass2"   }, { SOUND_GRASS,  "dig_grass3"   }, { SOUND_GRASS,  "dig_grass4"   },
 	{ SOUND_GLASS,  "dig_glass1"   }, { SOUND_GLASS,  "dig_glass2"   }, { SOUND_GLASS,  "dig_glass3"   },
 	{ SOUND_GRAVEL, "dig_gravel1"  }, { SOUND_GRAVEL, "dig_gravel2"  }, { SOUND_GRAVEL, "dig_gravel3"  }, { SOUND_GRAVEL, "dig_gravel4"  },
@@ -1068,6 +1068,29 @@ static const struct SoundID { int group; const char* name; } sounds_list[] =
 	{ SOUND_STONE,  "dig_stone1"   }, { SOUND_STONE,  "dig_stone2"   }, { SOUND_STONE,  "dig_stone3"   }, { SOUND_STONE,  "dig_stone4"   },
 	{ SOUND_WOOD,   "dig_wood1"    }, { SOUND_WOOD,   "dig_wood2"    }, { SOUND_WOOD,   "dig_wood3"    }, { SOUND_WOOD,   "dig_wood4"    },
 };
+
+/* TODO this is a terrible solution */
+#include <emscripten/emscripten.h>
+EMSCRIPTEN_KEEPALIVE void Audio_SoundReady(const char* name, int channels, int sampleRate) {
+	struct Soundboard* board = name[0] == 's' ? &stepBoard : &digBoard;
+	struct SoundGroup* group;
+	cc_string str = String_FromReadonly(name);
+	int i, j;
+	/* This awful hack is because otherwise Sounds_Play tries to play the sound with samplerate of 0 */
+
+	for (i = 0; i < SOUND_COUNT; i++) {
+		group = &board->groups[i];
+
+		for (j = 0; j < group->count; j++) {
+			if (!String_CaselessEqualsConst(&str, group->sounds[j].data)) continue;
+
+			 group->sounds[j].channels   = channels;
+			 group->sounds[j].sampleRate = sampleRate;
+			return;
+		}
+	}
+	Platform_Log1("IDK %c", name);
+}
 
 static void InitWebSounds(void) {
 	struct Soundboard* board = &stepBoard;
