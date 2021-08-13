@@ -204,7 +204,17 @@ cc_result Lvl_Load(struct Stream* stream) {
 	if (res == ERR_END_OF_STREAM) return 0;
 
 	if (res) return res;
-	return section == 0xBD ? Lvl_ReadCustomBlocks(&compStream) : 0;
+	/* Unrecognised section type, stop reading */
+	if (section != 0xBD) return 0;
+
+	res = Lvl_ReadCustomBlocks(&compStream);
+	/* At least one map out there has a corrupted 0xBD section */
+	if (res == ERR_END_OF_STREAM) {
+		Chat_AddRaw("&cEnd of stream reading .lvl custom blocks section");
+		Chat_AddRaw("&c  Some blocks may therefore appear incorrectly");
+		res = 0;
+	}
+	return res;
 }
 
 
