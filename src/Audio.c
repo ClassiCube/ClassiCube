@@ -993,6 +993,8 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	snd    = *snd_;
 	volume = Audio_SoundsVolume;
 
+	/* https://minecraft.fandom.com/wiki/Block_of_Gold#Sounds */
+	/* https://minecraft.fandom.com/wiki/Grass#Sounds */
 	if (board == &digBoard) {
 		if (type == SOUND_METAL) snd.sampleRate = (snd.sampleRate * 6) / 5;
 		else snd.sampleRate = (snd.sampleRate * 4) / 5;
@@ -1089,7 +1091,6 @@ EMSCRIPTEN_KEEPALIVE void Audio_SoundReady(const char* name, int channels, int s
 			return;
 		}
 	}
-	Platform_Log1("IDK %c", name);
 }
 
 static void InitWebSounds(void) {
