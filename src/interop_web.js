@@ -705,19 +705,28 @@ mergeInto(LibraryManager.library, {
     source.stop();
     AUDIO.sources[ctxID - 1|0] = null;
   },
+  interop_AudioPoll: function(ctxID, inUse) {
+    var source = AUDIO.sources[ctxID - 1|0];
+    HEAP32[inUse >> 2] = 0;
+    return 0;
+  },
   interop_AudioPlay: function(ctxID, name) {
     var source = AUDIO.sources[ctxID - 1|0];
     var name_  = UTF8ToString(name);
     
-    // have we already downloaded or are downloading this file?
+    // do we need to download this file?
     if (!AUDIO.seen.hasOwnProperty(name_)) {
-      Audio.seen[name_] = true;
+      AUDIO.seen[name_] = true;
       _interop_AudioDownload(name_);
       return 0;
     }
+
+    // still downloading or failed to download this file
+    var buffer = AUDIO.buffers[name_];
+    if (!buffer) return 0;
     
-    source.buffer = AUDIO.buffers[name_];
-    source.connect(audioCtx.destination);
+    source.buffer = buffer;
+    source.connect(AUDIO.context.destination);
     source.start();
     return 0;
   },

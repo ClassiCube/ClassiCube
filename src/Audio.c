@@ -726,19 +726,16 @@ extern int  interop_InitAudio(void);
 extern int  interop_AudioCreate(void);
 extern void interop_AudioClose(int contextID);
 extern int  interop_AudioPlay(int contextID, const char* name);
+extern int  interop_AudioPoll(int contetID, int* inUse);
 extern int  interop_AudioDescribe(int res, char* buffer, int bufferLen);
 
 static cc_bool AudioBackend_Init(void) {
 	cc_result res = interop_InitAudio();
 	if (res) { AudioWarn(res, "initing WebAudio context"); return false; }
-
-	InitFakeSounds();
 	return true;
 }
 
-void Audio_Init(struct AudioContext* ctx, int buffers) {
-}
-
+void Audio_Init(struct AudioContext* ctx, int buffers) { }
 void Audio_Close(struct AudioContext* ctx) {
 	if (ctx->contextID) interop_AudioClose(ctx->contextID);
 	ctx->contextID = 0;
@@ -747,17 +744,16 @@ void Audio_Close(struct AudioContext* ctx) {
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
 	return ERR_NOT_SUPPORTED;
 }
-
 cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) {
 	return ERR_NOT_SUPPORTED;
 }
-
-cc_result Audio_Play(struct AudioContext* ctx) {
-	return ERR_NOT_SUPPORTED;
-}
+cc_result Audio_Play(struct AudioContext* ctx) { return ERR_NOT_SUPPORTED; }
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
-	return ERR_NOT_SUPPORTED;
+	if (ctx->contextID)
+		return interop_AudioPoll(ctx->contextID, inUse);
+
+	*inUse = 0; return 0;
 }
 
 cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
@@ -1053,6 +1049,13 @@ static void Sounds_LoadFile(const cc_string* path, void* obj) {
 /* TODO this is a pretty terrible solution */
 #ifdef CC_BUILD_WEBAUDIO
 static void InitWebSounds(void) {
+	stepBoard.groups[SOUND_GRASS].sounds[0].data = "step_grass1";
+	stepBoard.groups[SOUND_GRASS].sounds[1].data = "step_grass2";
+	stepBoard.groups[SOUND_GRASS].count = 2;
+
+	digBoard.groups[SOUND_GRASS].sounds[0].data = "dig_grass1";
+	digBoard.groups[SOUND_GRASS].sounds[1].data = "dig_grass2";
+	digBoard.groups[SOUND_GRASS].count = 2;
 }
 #endif
 
