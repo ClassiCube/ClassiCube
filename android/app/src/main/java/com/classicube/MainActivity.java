@@ -21,6 +21,7 @@ import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Build;
 import android.os.StrictMode;
 import android.provider.Settings.Secure;
 import android.text.Editable;
@@ -180,6 +181,11 @@ public class MainActivity extends Activity {
 		window.setFormat(PixelFormat.RGBX_8888);
 		window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+			window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+			window.getAttributes().layoutInDisplayCutoutMode =
+			WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+		}
 		// TODO: semaphore for destroyed and surfaceDestroyed
 
 		// avoid FileUriExposed exception when taking screenshots on recent Android versions
