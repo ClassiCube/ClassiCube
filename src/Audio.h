@@ -10,7 +10,7 @@ struct AudioContext;
 
 struct Sound {
 	int channels, sampleRate;
-	cc_uint8* data; cc_uint32 size;
+	void* data; cc_uint32 size;
 };
 
 /* Volume sounds are played at, from 0-100. */

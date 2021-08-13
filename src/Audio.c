@@ -725,7 +725,7 @@ struct AudioContext { int contextID; };
 extern int  interop_InitAudio(void);
 extern int  interop_AudioCreate(void);
 extern void interop_AudioClose(int contextID);
-extern int  interop_AudioPlay(int contextID, const char* name);
+extern int  interop_AudioPlay(int contextID, const void* name, int volume);
 extern int  interop_AudioPoll(int contetID, int* inUse);
 extern int  interop_AudioDescribe(int res, char* buffer, int bufferLen);
 
@@ -764,7 +764,7 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
 cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
 	if (!ctx->contextID) 
 		ctx->contextID = interop_AudioCreate();
-	return interop_AudioPlay(ctx->contextID, snd->data);
+	return interop_AudioPlay(ctx->contextID, snd->data, volume);
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
@@ -888,11 +888,11 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if (bitsPerSample != 16) return WAV_ERR_SAMPLE_BITS;
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
-			snd->data = (cc_uint8*)Mem_TryAlloc(size, 1);
+			snd->data = Mem_TryAlloc(size, 1);
 			snd->size = size;
 
 			if (!snd->data) return ERR_OUT_OF_MEMORY;
-			return Stream_Read(stream, snd->data, size);
+			return Stream_Read(stream, (cc_uint8*)snd->data, size);
 		}
 
 		/* Skip over unhandled data */
@@ -1048,14 +1048,40 @@ static void Sounds_LoadFile(const cc_string* path, void* obj) {
 
 /* TODO this is a pretty terrible solution */
 #ifdef CC_BUILD_WEBAUDIO
-static void InitWebSounds(void) {
-	stepBoard.groups[SOUND_GRASS].sounds[0].data = "step_grass1";
-	stepBoard.groups[SOUND_GRASS].sounds[1].data = "step_grass2";
-	stepBoard.groups[SOUND_GRASS].count = 2;
+static const struct SoundID { int group; const char* name; } sounds_list[] =
+{
+	{ SOUND_CLOTH,  "step_cloth1"  }, { SOUND_CLOTH,  "step_cloth2"  }, { SOUND_CLOTH,  "step_cloth3"  }, { SOUND_CLOTH,  "step_cloth4"  },
+	{ SOUND_GRASS,  "step_grass1"  }, { SOUND_GRASS,  "step_grass2"  }, { SOUND_GRASS,  "step_grass3"  }, { SOUND_GRASS,  "step_grass4"  },
+	{ SOUND_GRAVEL, "step_gravel1" }, { SOUND_GRAVEL, "step_gravel2" }, { SOUND_GRAVEL, "step_gravel3" }, { SOUND_GRAVEL, "step_gravel4" },
+	{ SOUND_SAND,   "step_sand1"   }, { SOUND_SAND,   "step_sand2"   }, { SOUND_SAND,   "step_sand3"   }, { SOUND_SAND,   "step_sand4"   },
+	{ SOUND_SNOW,   "step_snow1"   }, { SOUND_SNOW,   "step_snow2"   }, { SOUND_SNOW,   "step_snow3"   }, { SOUND_SNOW,   "step_snow4"   },
+	{ SOUND_STONE,  "step_stone1"  }, { SOUND_STONE,  "step_stone2"  }, { SOUND_STONE,  "step_stone3"  }, { SOUND_STONE,  "step_stone4"  },
+	{ SOUND_WOOD,   "step_wood1"   }, { SOUND_WOOD,   "step_wood2"   }, { SOUND_WOOD,   "step_wood3"   }, { SOUND_WOOD,   "step_wood4"   },
+	{ SOUND_NONE, NULL },
+	{ SOUND_CLOTH,  "dig_cloth1"   }, { SOUND_CLOTH,  "dig_cloth2"   }, { SOUND_CLOTH,  "dig_cloth3"   }, { SOUND_CLOTH,  "dig_cloth4"   },
+	
+	{ SOUND_GRASS,  "dig_grass1"   }, { SOUND_GRASS,  "dig_grass2"   }, { SOUND_GRASS,  "dig_grass3"   }, { SOUND_GRASS,  "dig_grass4"   },
+	{ SOUND_GLASS,  "dig_glass1"   }, { SOUND_GLASS,  "dig_glass2"   }, { SOUND_GLASS,  "dig_glass3"   },
+	{ SOUND_GRAVEL, "dig_gravel1"  }, { SOUND_GRAVEL, "dig_gravel2"  }, { SOUND_GRAVEL, "dig_gravel3"  }, { SOUND_GRAVEL, "dig_gravel4"  },
+	{ SOUND_SAND,   "dig_sand1"    }, { SOUND_SAND,   "dig_sand2"    }, { SOUND_SAND,   "dig_sand3"    }, { SOUND_SAND,   "dig_sand4"    },
+	{ SOUND_SNOW,   "dig_snow1"    }, { SOUND_SNOW,   "dig_snow2"    }, { SOUND_SNOW,   "dig_snow3"    }, { SOUND_SNOW,   "dig_snow4"    },
+	{ SOUND_STONE,  "dig_stone1"   }, { SOUND_STONE,  "dig_stone2"   }, { SOUND_STONE,  "dig_stone3"   }, { SOUND_STONE,  "dig_stone4"   },
+	{ SOUND_WOOD,   "dig_wood1"    }, { SOUND_WOOD,   "dig_wood2"    }, { SOUND_WOOD,   "dig_wood3"    }, { SOUND_WOOD,   "dig_wood4"    },
+};
 
-	digBoard.groups[SOUND_GRASS].sounds[0].data = "dig_grass1";
-	digBoard.groups[SOUND_GRASS].sounds[1].data = "dig_grass2";
-	digBoard.groups[SOUND_GRASS].count = 2;
+static void InitWebSounds(void) {
+	struct Soundboard* board = &stepBoard;
+	struct SoundGroup* group;
+	int i;
+
+	for (i = 0; i < Array_Elems(sounds_list); i++) {
+		if (sounds_list[i].group == SOUND_NONE) {
+			board = &digBoard;
+		} else {
+			group = &board->groups[sounds_list[i].group];
+			group->sounds[group->count++].data = sounds_list[i].name;
+		}
+	}
 }
 #endif
 

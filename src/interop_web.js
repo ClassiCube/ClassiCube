@@ -696,6 +696,7 @@ mergeInto(LibraryManager.library, {
   interop_AudioCreate: function() {
     var src = {
       source: null,
+      gain: null,
       playing: false,
     };
     AUDIO.sources.push(src);
@@ -712,7 +713,7 @@ mergeInto(LibraryManager.library, {
     HEAP32[inUse >> 2] = src.playing; // only 1 buffer
     return 0;
   },
-  interop_AudioPlay: function(ctxID, name) {
+  interop_AudioPlay: function(ctxID, name, volume) {
     var src   = AUDIO.sources[ctxID - 1|0];
     var name_ = UTF8ToString(name);
     
@@ -728,13 +729,19 @@ mergeInto(LibraryManager.library, {
     if (!buffer) return 0;
     
     try {
+      if (!src.gain) src.gain = AUDIO.context.createGain();
+      
       // AudioBufferSourceNode only allows the buffer property
       //  to be assigned *ONCE* (throws InvalidStateError next time)
       // MDN says that these nodes are very inexpensive to create though
       //  https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
-      if (!src.source) src.source = AUDIO.context.createBufferSource();
+      src.source = AUDIO.context.createBufferSource();
       src.source.buffer = buffer;
-      src.source.connect(AUDIO.context.destination);
+      src.gain.gain.value = volume / 100;
+      
+      // source -> gain -> output
+      src.source.connect(src.gain);
+      src.gain.connect(AUDIO.context.destination);
       src.source.start();
       return 0;
     } catch (err) {
