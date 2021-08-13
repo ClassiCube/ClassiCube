@@ -681,38 +681,40 @@ mergeInto(LibraryManager.library, {
     };
     if (window.AUDIO.context) return 0;
 
-    // TODO error handling everywhere
     try {
       if (window.AudioContext) {
         AUDIO.context = new window.AudioContext();
       } else {
         AUDIO.context = new window.webkitAudioContext();
       }
+      return 0;
     } catch (err) {
       return _interop_AudioLog(err)
     }
-    return 0;
   },
   interop_InitAudio__deps: ['interop_AudioLog'],
   interop_AudioCreate: function() {
-    var source = AUDIO.context.createBufferSource();
-    AUDIO.sources.push(source);
+    var src = {
+      source: null,
+      playing: false,
+    };
+    AUDIO.sources.push(src);
     return AUDIO.sources.length|0; 
     // NOTE: 0 is used by Audio.c for "no source"
   },
   interop_AudioClose: function(ctxID) {
-    var source = AUDIO.sources[ctxID - 1|0];
-    source.stop();
+    var src = AUDIO.sources[ctxID - 1|0];
+    if (src.source) src.source.stop();
     AUDIO.sources[ctxID - 1|0] = null;
   },
   interop_AudioPoll: function(ctxID, inUse) {
-    var source = AUDIO.sources[ctxID - 1|0];
-    HEAP32[inUse >> 2] = 0;
+    var src = AUDIO.sources[ctxID - 1|0];
+    HEAP32[inUse >> 2] = src.playing; // only 1 buffer
     return 0;
   },
   interop_AudioPlay: function(ctxID, name) {
-    var source = AUDIO.sources[ctxID - 1|0];
-    var name_  = UTF8ToString(name);
+    var src   = AUDIO.sources[ctxID - 1|0];
+    var name_ = UTF8ToString(name);
     
     // do we need to download this file?
     if (!AUDIO.seen.hasOwnProperty(name_)) {
@@ -725,10 +727,19 @@ mergeInto(LibraryManager.library, {
     var buffer = AUDIO.buffers[name_];
     if (!buffer) return 0;
     
-    source.buffer = buffer;
-    source.connect(AUDIO.context.destination);
-    source.start();
-    return 0;
+    try {
+      // AudioBufferSourceNode only allows the buffer property
+      //  to be assigned *ONCE* (throws InvalidStateError next time)
+      // MDN says that these nodes are very inexpensive to create though
+      //  https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
+      if (!src.source) src.source = AUDIO.context.createBufferSource();
+      src.source.buffer = buffer;
+      src.source.connect(AUDIO.context.destination);
+      src.source.start();
+      return 0;
+    } catch (err) {
+      return _interop_AudioLog(err)
+    }
   },
   interop_AudioPlay__deps: ['interop_AudioDownload'],
   interop_AudioDownload: function(name) {
