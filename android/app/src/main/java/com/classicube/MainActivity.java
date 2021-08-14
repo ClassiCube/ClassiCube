@@ -21,7 +21,6 @@ import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Build;
 import android.os.StrictMode;
 import android.provider.Settings.Secure;
 import android.text.Editable;
@@ -181,11 +180,7 @@ public class MainActivity extends Activity {
 		window.setFormat(PixelFormat.RGBX_8888);
 		window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-			window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-			window.getAttributes().layoutInDisplayCutoutMode =
-			WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-		}
+		renderOverDisplayCutouts();
 		// TODO: semaphore for destroyed and surfaceDestroyed
 
 		// avoid FileUriExposed exception when taking screenshots on recent Android versions
@@ -695,6 +690,18 @@ public class MainActivity extends Activity {
 		// Only release when no free permits (otherwise showAlert doesn't block when called)
 		if (dialogSem.availablePermits() > 0) return;
 		dialogSem.release();
+	}
+
+	void renderOverDisplayCutouts() {
+		// FLAG_TRANSLUCENT_STATUS - API level 19
+		// layoutInDisplayCutoutMode - API level 28
+		// LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES - API level 28
+		try {
+			Window window = getWindow();
+			window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+			window.getAttributes().layoutInDisplayCutoutMode =
+			WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+		} catch (Exception ex) { }
 	}
 
 	void showAlertAsync(final String title, final String message) {
