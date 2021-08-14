@@ -45,26 +45,26 @@ LDFLAGS=-rdynamic -framework Carbon -framework AGL -framework OpenGL -framework 
 endif
 
 ifeq ($(PLAT),freebsd)
-CFLAGS=-g -pipe -rdynamic -I /usr/local/include -fno-math-errno
-LDFLAGS=-L /usr/local/lib
+CFLAGS=-g -pipe -I /usr/local/include -fno-math-errno
+LDFLAGS=-L /usr/local/lib -rdynamic
 LIBS=-lexecinfo -lGL -lX11 -lXi -lm -lpthread
 endif
 
 ifeq ($(PLAT),openbsd)
-CFLAGS=-g -pipe -rdynamic -I /usr/X11R6/include -I /usr/local/include -fno-math-errno
-LDFLAGS=-L /usr/X11R6/lib -L /usr/local/lib
+CFLAGS=-g -pipe -I /usr/X11R6/include -I /usr/local/include -fno-math-errno
+LDFLAGS=-L /usr/X11R6/lib -L /usr/local/lib -rdynamic
 LIBS=-lexecinfo -lGL -lX11 -lXi -lm -lpthread
 endif
 
 ifeq ($(PLAT),netbsd)
-CFLAGS=-g -pipe -rdynamic -I /usr/X11R7/include -I /usr/pkg/include -fno-math-errno
-LDFLAGS=-L /usr/X11R7/lib -L /usr/pkg/lib
+CFLAGS=-g -pipe -I /usr/X11R7/include -I /usr/pkg/include -fno-math-errno
+LDFLAGS=-L /usr/X11R7/lib -L /usr/pkg/lib -rdynamic
 LIBS=-lexecinfo -lGL -lX11 -lXi -lpthread
 endif
 
 ifeq ($(PLAT),dragonfly)
-CFLAGS=-g -pipe -rdynamic -I /usr/local/include -fno-math-errno
-LDFLAGS=-L /usr/local/lib
+CFLAGS=-g -pipe -I /usr/local/include -fno-math-errno
+LDFLAGS=-L /usr/local/lib -rdynamic
 LIBS=-lexecinfo -lGL -lX11 -lXi -lm -lpthread
 endif
 
