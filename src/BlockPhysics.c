@@ -16,7 +16,7 @@
 
 /* Data for a resizable queue, used for liquid physic tick entries. */
 struct TickQueue {
-	cc_uint32* entries;     /* Buffer holding the items in the tick queue */
+	cc_uint32* entries; /* Buffer holding the items in the tick queue */
 	int capacity; /* Max number of elements in the buffer */
 	int mask;     /* capacity - 1, as capacity is always a power of two */
 	int count;    /* Number of used elements */
@@ -53,6 +53,8 @@ static void TickQueue_Resize(struct TickQueue* queue) {
 	if (capacity < 32) capacity = 32;
 	entries = (cc_uint32*)Mem_Alloc(capacity, 4, "physics tick queue");
 
+	/* Elements must be readjusted to avoid index wrapping issues */
+	/* https://stackoverflow.com/questions/55343683/resizing-of-the-circular-queue-using-dynamic-array */
 	for (i = 0; i < queue->count; i++) {
 		idx = (queue->head + i) & queue->mask;
 		entries[i] = queue->entries[idx];

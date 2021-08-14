@@ -17,6 +17,7 @@ struct _NetEventsList     NetEvents;
 void Event_Register(struct Event_Void* handlers, void* obj, Event_Void_Callback handler) {
 	int i;
 	for (i = 0; i < handlers->Count; i++) {
+		/* Attempting to register the same handler twice is usually caused by a bug */
 		if (handlers->Handlers[i] == handler && handlers->Objs[i] == obj) {
 			Logger_Abort("Attempt to register event handler that was already registered");
 		}

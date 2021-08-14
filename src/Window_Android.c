@@ -251,7 +251,7 @@ cc_bool Window_RemakeSurface(void) {
 	Event_Register_(&WindowEvents.Created, NULL, OnWindowCreated);
 	Platform_LogConst("Entering wait for window exist loop..");
 
-	/* Loop until window gets created async */
+	/* Loop until window gets created by main UI thread */
 	while (WindowInfo.Exists && !winCreated) {
 		Window_ProcessEvents();
 		Thread_Sleep(10);

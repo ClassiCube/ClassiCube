@@ -233,8 +233,8 @@ CC_NOINLINE static cc_string GetCachedTag(const cc_string* url, struct StringsBu
 static cc_string GetCachedLastModified(const cc_string* url) {
 	int i;
 	cc_string entry = GetCachedTag(url, &lastModCache);
-	/* Entry used to be a timestamp of C# ticks since 01/01/0001 */
-	/* Check if this is new format */
+	/* Entry used to be a timestamp of C# DateTime ticks since 01/01/0001 */
+	/* Check whether timestamp entry is old or new format */
 	for (i = 0; i < entry.length; i++) {
 		if (entry.buffer[i] < '0' || entry.buffer[i] > '9') return entry;
 	}
