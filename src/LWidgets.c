@@ -651,42 +651,46 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 }
 
 /* Works out the background colour of the given row */
-static BitmapCol LTable_RowCol(struct LTable* w, struct ServerInfo* row) {
-	BitmapCol gridCol     = BitmapCol_Make( 20,  20, 10, 255);
+static BitmapCol LTable_RowColor(struct LTable* w, int row) {
 	BitmapCol featSelCol  = BitmapCol_Make( 50,  53,  0, 255);
 	BitmapCol featuredCol = BitmapCol_Make(101, 107,  0, 255);
 	BitmapCol selectedCol = BitmapCol_Make( 40,  40, 40, 255);
+	struct ServerInfo* entry;
 	cc_bool selected;
+	entry = row < w->rowsCount ? LTable_Get(row) : NULL;
 
-	if (row) {
-		selected = String_Equals(&row->hash, w->selectedHash);
-		if (row->featured) {
+	if (entry) {
+		selected = String_Equals(&entry->hash, w->selectedHash);
+		if (entry->featured) {
 			return selected ? featSelCol : featuredCol;
 		} else if (selected) {
 			return selectedCol;
 		}
 	}
-	return Launcher_Theme.ClassicBackground ? 0 : gridCol;
+
+	if (!Launcher_Theme.ClassicBackground) {
+		return BitmapCol_Make(20, 20, 10, 255);
+	} else {
+		return (row & 1) == 0 ? Launcher_Theme.BackgroundColor : 0;
+	}
 }
 
 /* Draws background behind each row in the table */
 static void LTable_DrawRowsBackground(struct LTable* w) {
-	struct ServerInfo* entry;
-	BitmapCol col;
 	int y, height, row;
+	BitmapCol color;
 
 	y = w->rowsBegY;
 	for (row = w->topRow; ; row++, y += w->rowHeight) {
-		entry = row < w->rowsCount ? LTable_Get(row) : NULL;
-		col   = LTable_RowCol(w, entry);	
+		color = LTable_RowColor(w, row);
 
 		/* last row may get chopped off */
 		height = min(y + w->rowHeight, w->rowsEndY) - y;
 		/* hit the end of the table */
 		if (height < 0) break;
 
-		if (col) {
-			Drawer2D_Clear(&Launcher_Framebuffer, col,
+		if (color) {
+			Drawer2D_Clear(&Launcher_Framebuffer, color,
 				w->x, y, w->width, height);
 		} else {
 			Launcher_ResetArea(w->x, y, w->width, height);

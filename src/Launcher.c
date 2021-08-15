@@ -365,7 +365,7 @@ const struct LauncherTheme Launcher_ModernTheme = {
 };
 const struct LauncherTheme Launcher_ClassicTheme = {
 	true,
-	BitmapCol_Make( 50,  50,  50, 255), /* background */
+	BitmapCol_Make( 41,  41,  41, 255), /* background */
 	BitmapCol_Make(  0,   0,   0, 255), /* button border */
 	BitmapCol_Make(126, 136, 191, 255), /* active button */
 	BitmapCol_Make(111, 111, 111, 255), /* button foreground */
