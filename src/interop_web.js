@@ -755,7 +755,7 @@ mergeInto(LibraryManager.library, {
   interop_AudioPlay__deps: ['interop_AudioDownload'],
   interop_AudioDownload: function(name, nameAddr) {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'static/' + name + '.wav', true);   
+    xhr.open('GET', '/static/sounds/' + name + '.wav', true);   
     xhr.responseType = 'arraybuffer';
     
     xhr.onload = function() {
