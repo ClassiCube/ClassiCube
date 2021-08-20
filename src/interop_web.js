@@ -660,5 +660,118 @@ mergeInto(LibraryManager.library, {
     var dbg = GLctx.getExtension('WEBGL_debug_renderer_info');
     var str = dbg ? GLctx.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "";
     stringToUTF8(str, buffer, len);
-  }
+  },
+  
+
+//########################################################################################################################
+//---------------------------------------------------------Sockets--------------------------------------------------------
+//########################################################################################################################
+  interop_AudioLog: function(err) {
+    console.log(err);
+    window.AUDIO.errors.push(''+err);
+    return window.AUDIO.errors.length|0;
+  },
+  interop_InitAudio: function() {
+    window.AUDIO = window.AUDIO || {
+      context: null,
+      sources: [],
+      buffers: {},
+      errors: [],
+      seen: {},
+    };
+    if (window.AUDIO.context) return 0;
+
+    try {
+      if (window.AudioContext) {
+        AUDIO.context = new window.AudioContext();
+      } else {
+        AUDIO.context = new window.webkitAudioContext();
+      }
+      return 0;
+    } catch (err) {
+      return _interop_AudioLog(err)
+    }
+  },
+  interop_InitAudio__deps: ['interop_AudioLog'],
+  interop_AudioCreate: function() {
+    var src = {
+      source: null,
+      gain: null,
+      playing: false,
+    };
+    AUDIO.sources.push(src);
+    return AUDIO.sources.length|0; 
+    // NOTE: 0 is used by Audio.c for "no source"
+  },
+  interop_AudioClose: function(ctxID) {
+    var src = AUDIO.sources[ctxID - 1|0];
+    if (src.source) src.source.stop();
+    AUDIO.sources[ctxID - 1|0] = null;
+  },
+  interop_AudioPoll: function(ctxID, inUse) {
+    var src = AUDIO.sources[ctxID - 1|0];
+    HEAP32[inUse >> 2] = src.playing; // only 1 buffer
+    return 0;
+  },
+  interop_AudioPlay: function(ctxID, snd, volume) {
+    var nameAddr = HEAP32[(snd|0 + 8|0) >> 2];
+    var src  = AUDIO.sources[ctxID - 1|0];
+    var name = UTF8ToString(nameAddr);
+    
+    // do we need to download this file?
+    if (!AUDIO.seen.hasOwnProperty(name)) {
+      AUDIO.seen[name] = true;
+      _interop_AudioDownload(name, nameAddr);
+      return 0;
+    }
+
+    // still downloading or failed to download this file
+    var buffer = AUDIO.buffers[name];
+    if (!buffer) return 0;
+    var sampleRate = HEAP32[(snd|0 + 4|0) >> 2];
+    
+    try {
+      if (!src.gain) src.gain = AUDIO.context.createGain();
+      
+      // AudioBufferSourceNode only allows the buffer property
+      //  to be assigned *ONCE* (throws InvalidStateError next time)
+      // MDN says that these nodes are very inexpensive to create though
+      //  https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
+      src.source = AUDIO.context.createBufferSource();
+      src.source.buffer   = buffer;
+      src.gain.gain.value = volume / 100;
+      // game adjusts samplerate to playback audio faster - undo that
+      src.source.playbackRate.value = sampleRate / buffer.sampleRate;
+      
+      // source -> gain -> output
+      src.source.connect(src.gain);
+      src.gain.connect(AUDIO.context.destination);
+      src.source.start();
+      return 0;
+    } catch (err) {
+      return _interop_AudioLog(err)
+    }
+  },
+  interop_AudioPlay__deps: ['interop_AudioDownload'],
+  interop_AudioDownload: function(name, nameAddr) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/static/sounds/' + name + '.wav', true);   
+    xhr.responseType = 'arraybuffer';
+    
+    xhr.onload = function() {
+      var data = xhr.response;
+      AUDIO.context.decodeAudioData(data, function(buffer) {
+          AUDIO.buffers[name] = buffer;
+          // TODO rethink this, this is a terrible solution
+          Module["_Audio_SoundReady"](nameAddr, buffer.channels, buffer.sampleRate);
+        });
+    };
+    xhr.send();
+  },
+  interop_AudioDescribe: function(errCode, buffer, bufferLen) {
+    if (errCode > AUDIO.errors.length) return 0;
+    
+    var str = AUDIO.errors[errCode - 1];
+    return stringToUTF8(str, buffer, bufferLen);
+  },
 });

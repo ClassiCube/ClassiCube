@@ -717,6 +717,63 @@ cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
 	if (err) String_AppendConst(dst, err);
 	return err != NULL;
 }
+#elif defined CC_BUILD_WEBAUDIO
+/*########################################################################################################################*
+*-----------------------------------------------------WebAudio backend----------------------------------------------------*
+*#########################################################################################################################*/
+struct AudioContext { int contextID; };
+extern int  interop_InitAudio(void);
+extern int  interop_AudioCreate(void);
+extern void interop_AudioClose(int contextID);
+extern int  interop_AudioPlay(int contextID, struct Sound* snd, int volume);
+extern int  interop_AudioPoll(int contetID, int* inUse);
+extern int  interop_AudioDescribe(int res, char* buffer, int bufferLen);
+
+static cc_bool AudioBackend_Init(void) {
+	cc_result res = interop_InitAudio();
+	if (res) { AudioWarn(res, "initing WebAudio context"); return false; }
+	return true;
+}
+
+void Audio_Init(struct AudioContext* ctx, int buffers) { }
+void Audio_Close(struct AudioContext* ctx) {
+	if (ctx->contextID) interop_AudioClose(ctx->contextID);
+	ctx->contextID = 0;
+}
+
+cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
+	return ERR_NOT_SUPPORTED;
+}
+cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) {
+	return ERR_NOT_SUPPORTED;
+}
+cc_result Audio_Play(struct AudioContext* ctx) { return ERR_NOT_SUPPORTED; }
+
+cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
+	if (ctx->contextID)
+		return interop_AudioPoll(ctx->contextID, inUse);
+
+	*inUse = 0; return 0;
+}
+
+cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
+	/* Channels/Sample rate is per buffer, not a per source property */
+	return true;
+}
+
+cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
+	if (!ctx->contextID) 
+		ctx->contextID = interop_AudioCreate();
+	return interop_AudioPlay(ctx->contextID, snd, volume);
+}
+
+cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
+	char buffer[NATIVE_STR_LEN];
+	int len = interop_AudioDescribe(res, buffer, NATIVE_STR_LEN);
+
+	String_AppendUtf8(dst, buffer, len);
+	return len > 0;
+}
 #endif
 
 /*########################################################################################################################*
@@ -831,11 +888,11 @@ static cc_result Sound_ReadWaveData(struct Stream* stream, struct Sound* snd) {
 			if (bitsPerSample != 16) return WAV_ERR_SAMPLE_BITS;
 			size -= WAV_FMT_SIZE;
 		} else if (fourCC == WAV_FourCC('d','a','t','a')) {
-			snd->data = (cc_uint8*)Mem_TryAlloc(size, 1);
+			snd->data = Mem_TryAlloc(size, 1);
 			snd->size = size;
 
 			if (!snd->data) return ERR_OUT_OF_MEMORY;
-			return Stream_Read(stream, snd->data, size);
+			return Stream_Read(stream, (cc_uint8*)snd->data, size);
 		}
 
 		/* Skip over unhandled data */
@@ -936,6 +993,8 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 	snd    = *snd_;
 	volume = Audio_SoundsVolume;
 
+	/* https://minecraft.fandom.com/wiki/Block_of_Gold#Sounds */
+	/* https://minecraft.fandom.com/wiki/Grass#Sounds */
 	if (board == &digBoard) {
 		if (type == SOUND_METAL) snd.sampleRate = (snd.sampleRate * 6) / 5;
 		else snd.sampleRate = (snd.sampleRate * 4) / 5;
@@ -989,6 +1048,67 @@ static void Sounds_LoadFile(const cc_string* path, void* obj) {
 	Soundboard_Load(&stepBoard, &step, path);
 }
 
+/* TODO this is a pretty terrible solution */
+#ifdef CC_BUILD_WEBAUDIO
+static const struct SoundID { int group; const char* name; } sounds_list[] =
+{
+	{ SOUND_CLOTH,  "step_cloth1"  }, { SOUND_CLOTH,  "step_cloth2"  }, { SOUND_CLOTH,  "step_cloth3"  }, { SOUND_CLOTH,  "step_cloth4"  },
+	{ SOUND_GRASS,  "step_grass1"  }, { SOUND_GRASS,  "step_grass2"  }, { SOUND_GRASS,  "step_grass3"  }, { SOUND_GRASS,  "step_grass4"  },
+	{ SOUND_GRAVEL, "step_gravel1" }, { SOUND_GRAVEL, "step_gravel2" }, { SOUND_GRAVEL, "step_gravel3" }, { SOUND_GRAVEL, "step_gravel4" },
+	{ SOUND_SAND,   "step_sand1"   }, { SOUND_SAND,   "step_sand2"   }, { SOUND_SAND,   "step_sand3"   }, { SOUND_SAND,   "step_sand4"   },
+	{ SOUND_SNOW,   "step_snow1"   }, { SOUND_SNOW,   "step_snow2"   }, { SOUND_SNOW,   "step_snow3"   }, { SOUND_SNOW,   "step_snow4"   },
+	{ SOUND_STONE,  "step_stone1"  }, { SOUND_STONE,  "step_stone2"  }, { SOUND_STONE,  "step_stone3"  }, { SOUND_STONE,  "step_stone4"  },
+	{ SOUND_WOOD,   "step_wood1"   }, { SOUND_WOOD,   "step_wood2"   }, { SOUND_WOOD,   "step_wood3"   }, { SOUND_WOOD,   "step_wood4"   },
+	{ SOUND_NONE, NULL },
+
+	{ SOUND_CLOTH,  "dig_cloth1"   }, { SOUND_CLOTH,  "dig_cloth2"   }, { SOUND_CLOTH,  "dig_cloth3"   }, { SOUND_CLOTH,  "dig_cloth4"   },
+	{ SOUND_GRASS,  "dig_grass1"   }, { SOUND_GRASS,  "dig_grass2"   }, { SOUND_GRASS,  "dig_grass3"   }, { SOUND_GRASS,  "dig_grass4"   },
+	{ SOUND_GLASS,  "dig_glass1"   }, { SOUND_GLASS,  "dig_glass2"   }, { SOUND_GLASS,  "dig_glass3"   },
+	{ SOUND_GRAVEL, "dig_gravel1"  }, { SOUND_GRAVEL, "dig_gravel2"  }, { SOUND_GRAVEL, "dig_gravel3"  }, { SOUND_GRAVEL, "dig_gravel4"  },
+	{ SOUND_SAND,   "dig_sand1"    }, { SOUND_SAND,   "dig_sand2"    }, { SOUND_SAND,   "dig_sand3"    }, { SOUND_SAND,   "dig_sand4"    },
+	{ SOUND_SNOW,   "dig_snow1"    }, { SOUND_SNOW,   "dig_snow2"    }, { SOUND_SNOW,   "dig_snow3"    }, { SOUND_SNOW,   "dig_snow4"    },
+	{ SOUND_STONE,  "dig_stone1"   }, { SOUND_STONE,  "dig_stone2"   }, { SOUND_STONE,  "dig_stone3"   }, { SOUND_STONE,  "dig_stone4"   },
+	{ SOUND_WOOD,   "dig_wood1"    }, { SOUND_WOOD,   "dig_wood2"    }, { SOUND_WOOD,   "dig_wood3"    }, { SOUND_WOOD,   "dig_wood4"    },
+};
+
+/* TODO this is a terrible solution */
+#include <emscripten/emscripten.h>
+EMSCRIPTEN_KEEPALIVE void Audio_SoundReady(const char* name, int channels, int sampleRate) {
+	struct Soundboard* board = name[0] == 's' ? &stepBoard : &digBoard;
+	struct SoundGroup* group;
+	cc_string str = String_FromReadonly(name);
+	int i, j;
+	/* This awful hack is because otherwise Sounds_Play tries to play the sound with samplerate of 0 */
+
+	for (i = 0; i < SOUND_COUNT; i++) {
+		group = &board->groups[i];
+
+		for (j = 0; j < group->count; j++) {
+			if (!String_CaselessEqualsConst(&str, group->sounds[j].data)) continue;
+
+			 group->sounds[j].channels   = channels;
+			 group->sounds[j].sampleRate = sampleRate;
+			return;
+		}
+	}
+}
+
+static void InitWebSounds(void) {
+	struct Soundboard* board = &stepBoard;
+	struct SoundGroup* group;
+	int i;
+
+	for (i = 0; i < Array_Elems(sounds_list); i++) {
+		if (sounds_list[i].group == SOUND_NONE) {
+			board = &digBoard;
+		} else {
+			group = &board->groups[sounds_list[i].group];
+			group->sounds[group->count++].data = sounds_list[i].name;
+		}
+	}
+}
+#endif
+
 static cc_bool sounds_loaded;
 static void Sounds_Start(void) {
 	int i;
@@ -1004,7 +1124,11 @@ static void Sounds_Start(void) {
 
 	if (sounds_loaded) return;
 	sounds_loaded = true;
+#ifdef CC_BUILD_WEBAUDIO
+	InitWebSounds();
+#else
 	Directory_Enum(&audio_dir, NULL, Sounds_LoadFile);
+#endif
 }
 
 static void Sounds_Stop(void) {
