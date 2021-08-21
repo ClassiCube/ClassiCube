@@ -700,8 +700,12 @@ public class MainActivity extends Activity {
 			Window window = getWindow();
 			window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 			window.getAttributes().layoutInDisplayCutoutMode =
-			WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-		} catch (Exception ex) { }
+				WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+		} catch (NoSuchFieldError ex) {
+			ex.printStackTrace();
+		} catch (NoSuchMethodError ex) {
+			ex.printStackTrace();
+		}
 	}
 
 	void showAlertAsync(final String title, final String message) {
