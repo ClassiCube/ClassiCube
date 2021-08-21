@@ -54,8 +54,8 @@ static void AudioWarn(cc_result res, const char* action) {
 	Logger_Warn(res, action, Audio_DescribeError);
 }
 static void AudioBase_Clear(struct AudioContext* ctx);
-static void* AudioBase_AdjustSound(struct AudioContext* ctx, struct Sound* snd, int volume);
-static cc_result AudioBase_PlaySound(struct AudioContext* ctx, struct Sound* snd, void* data);
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, struct AudioData* data);
+static cc_result AudioBase_PlaySound(struct AudioContext* ctx, struct AudioData* data);
 
 
 #if defined CC_BUILD_OPENAL
@@ -289,14 +289,14 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	*inUse = ctx->count - ctx->free; return 0;
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
 }
 
-cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
-	void* data   = AudioBase_AdjustSound(ctx, snd, volume);
-	if (data) return AudioBase_PlaySound(ctx, snd, data);
+cc_result Audio_PlayData(struct AudioContext* ctx, struct Sound* snd, int volume) {
+	cc_book ok = AudioBase_AdjustSound(ctx, snd, volume);
+	if (ok) return AudioBase_PlaySound(ctx, snd, data);
 	return ERR_OUT_OF_MEMORY;
 }
 
@@ -477,15 +477,21 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 
 	*inUse = count; return res;
 }
+/* achieve higher speed by playing samples at higher sample rate */
+#define Audio_AdjustSampleRate(data) ((data->sampleRate * data->rate) / 100)
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+	int channels   = data->channels;
+	int sampleRate = Audio_AdjustSampleRate(data);
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
 }
 
-cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
-	void* data   = AudioBase_AdjustSound(ctx, snd, volume);
-	if (data) return AudioBase_PlaySound(ctx, snd, data);
-	return ERR_OUT_OF_MEMORY;
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	cc_bool ok = AudioBase_AdjustSound(ctx, data);
+	if (!ok) return ERR_OUT_OF_MEMORY; 
+	
+	data->sampleRate = Audio_AdjustSampleRate(data);
+	return AudioBase_PlaySound(ctx, data);
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
@@ -684,9 +690,9 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
 }
 
-cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
-	void* data   = AudioBase_AdjustSound(ctx, snd, volume);
-	if (data) return AudioBase_PlaySound(ctx, snd, data);
+cc_result Audio_PlayData(struct AudioContext* ctx, struct Sound* snd, int volume) {
+	cc_bool ok = AudioBase_AdjustSound(ctx, snd, volume);
+	if (ok) return AudioBase_PlaySound(ctx, snd, data);
 	return ERR_OUT_OF_MEMORY;
 }
 
@@ -756,12 +762,12 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	*inUse = 0; return 0;
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	/* Channels/Sample rate is per buffer, not a per source property */
 	return true;
 }
 
-cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume) {
+cc_result Audio_PlayData(struct AudioContext* ctx, struct Sound* snd, int volume) {
 	if (!ctx->contextID) 
 		ctx->contextID = interop_AudioCreate();
 	return interop_AudioPlay(ctx->contextID, snd, volume);
@@ -792,34 +798,35 @@ static void AudioBase_Clear(struct AudioContext* ctx) {
 	ctx->_tmpSize = 0;
 }
 
-static void* AudioBase_AdjustSound(struct AudioContext* ctx, struct Sound* snd, int volume) {
-	void* data;
-	if (volume >= 100) return snd->data;
+static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, struct AudioData* data) {
+	void* audio;
+	if (data->volume >= 100) return true;
 
 	/* copy to temp buffer to apply volume */
-	if (ctx->_tmpSize < snd->size) {
+	if (ctx->_tmpSize < data->size) {
 		/* TODO: check if we can realloc NULL without a problem */
 		if (ctx->_tmpData) {
-			data = Mem_TryRealloc(ctx->_tmpData, snd->size, 1);
+			audio = Mem_TryRealloc(ctx->_tmpData, data->size, 1);
 		} else {
-			data = Mem_TryAlloc(snd->size, 1);
+			audio = Mem_TryAlloc(data->size, 1);
 		}
 
-		if (!data) return NULL;
-		ctx->_tmpData = data;
-		ctx->_tmpSize = snd->size;
+		if (!data) return false;
+		ctx->_tmpData = audio;
+		ctx->_tmpSize = data->size;
 	}
 
-	data = ctx->_tmpData;
-	Mem_Copy(data, snd->data, snd->size);
-	ApplyVolume((cc_int16*)data, snd->size / 2, volume);
-	return data;
+	audio = ctx->_tmpData;
+	Mem_Copy(audio, data->data, data->size);
+	ApplyVolume((cc_int16*)audio, data->size / 2, data->volume);
+	data->data = audio;
+	return true;
 }
 
-static cc_result AudioBase_PlaySound(struct AudioContext* ctx, struct Sound* snd, void* data) {
+static cc_result AudioBase_PlaySound(struct AudioContext* ctx, struct AudioData* data) {
 	cc_result res;
-	if ((res = Audio_SetFormat(ctx, snd->channels, snd->sampleRate))) return res;
-	if ((res = Audio_QueueData(ctx, data, snd->size))) return res;
+	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
+	if ((res = Audio_QueueData(ctx, data->data,    data->size)))        return res;
 	if ((res = Audio_Play(ctx))) return res;
 	return 0;
 }
@@ -980,27 +987,31 @@ CC_NOINLINE static void Sounds_Fail(cc_result res) {
 }
 
 static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
-	const struct Sound* snd_;
-	struct Sound snd;
+	struct AudioData data;
+	const struct Sound* snd;
 	struct AudioContext* ctx;
-	int inUse, i, volume;
+	int inUse, i;
 	cc_result res;
 
 	if (type == SOUND_NONE || !Audio_SoundsVolume) return;
-	snd_ = Soundboard_PickRandom(board, type);
-	if (!snd_) return;
+	snd = Soundboard_PickRandom(board, type);
+	if (!snd) return;
 
-	snd    = *snd_;
-	volume = Audio_SoundsVolume;
+	data.data       = snd->data;
+	data.size       = snd->size;
+	data.channels   = snd->channels;
+	data.sampleRate = snd->sampleRate;
+	data.rate       = 100;
+	data.volume     = Audio_SoundsVolume;
 
 	/* https://minecraft.fandom.com/wiki/Block_of_Gold#Sounds */
 	/* https://minecraft.fandom.com/wiki/Grass#Sounds */
 	if (board == &digBoard) {
-		if (type == SOUND_METAL) snd.sampleRate = (snd.sampleRate * 6) / 5;
-		else snd.sampleRate = (snd.sampleRate * 4) / 5;
+		if (type == SOUND_METAL) data.rate = 120;
+		else data.rate = 80;
 	} else {
-		volume /= 2;
-		if (type == SOUND_METAL) snd.sampleRate = (snd.sampleRate * 7) / 5;
+		data.volume /= 2;
+		if (type == SOUND_METAL) data.rate = 140;
 	}
 
 	/* Try to play on a context that doesn't need to be recreated */
@@ -1010,9 +1021,9 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 
 		if (res) { Sounds_Fail(res); return; }
 		if (inUse > 0) continue;
-		if (!Audio_FastPlay(ctx, snd.channels, snd.sampleRate)) continue;
+		if (!Audio_FastPlay(ctx, &data)) continue;
 
-		res = Audio_PlaySound(ctx, &snd, volume);
+		res = Audio_PlayData(ctx, &data);
 		if (res) Sounds_Fail(res);
 		return;
 	}
@@ -1025,7 +1036,7 @@ static void Sounds_Play(cc_uint8 type, struct Soundboard* board) {
 		if (res) { Sounds_Fail(res); return; }
 		if (inUse > 0) continue;
 
-		res = Audio_PlaySound(ctx, &snd, volume);
+		res = Audio_PlayData(ctx, &data);
 		if (res) Sounds_Fail(res);
 		return;
 	}
