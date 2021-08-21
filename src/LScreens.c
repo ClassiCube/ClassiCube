@@ -1411,9 +1411,14 @@ void ServersScreen_SetActive(void) {
 static struct SettingsScreen {
 	LScreen_Layout
 	struct LButton btnUpdates, btnMode, btnColours, btnBack;
-	struct LLabel  lblUpdates, lblMode, lblColours, lblOrientlock;
+	struct LLabel  lblUpdates, lblMode, lblColours;
+#if defined CC_BUILD_ANDROID
+	struct LLabel lblOrientlock;
 	struct LCheckbox cbOrientlock;
 	struct LWidget* _widgets[9];
+#else
+	struct LWidget* _widgets[7];
+#endif
 } SettingsScreen_Instance;
 
 #if defined CC_BUILD_ANDROID
@@ -1457,7 +1462,9 @@ static void SettingsScreen_Show(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
 	s->btnColours.hidden = Options_GetBool(OPT_CLASSIC_MODE, false);
 	s->lblColours.hidden = s->btnColours.hidden;
+#if defined CC_BUILD_ANDROID
 	s->cbOrientlock.value = Options_GetBool(OPT_LANDSCAPE_MODE, false);
+#endif
 }
 
 static void SettingsScreen_Layout(struct LScreen* s_) {
