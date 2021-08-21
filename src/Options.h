@@ -54,6 +54,7 @@
 #define OPT_FONT_NAME "gui-fontname"
 #define OPT_BLACK_TEXT "gui-blacktextshadows"
 
+#define OPT_LANDSCAPE_MODE "landscape-mode"
 #define OPT_CLASSIC_MODE "mode-classic"
 #define OPT_CUSTOM_BLOCKS "nostalgia-customblocks"
 #define OPT_CPE "nostalgia-usecpe"

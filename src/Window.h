@@ -148,6 +148,8 @@ void Window_OpenKeyboard(const struct OpenKeyboardArgs* args);
 void Window_SetKeyboardText(const cc_string* text);
 /* Hides/Removes the previously displayed on-screen keyboard. */
 void Window_CloseKeyboard(void);
+/* Locks/Unlocks the landscape orientation. */
+void Window_LockLandscapeOrientation(cc_bool lock);
 
 /* Begins listening for raw input and starts raising PointerEvents.RawMoved. */
 /* NOTE: Some backends only raise it when Window_UpdateRawMouse is called. */

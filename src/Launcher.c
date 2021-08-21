@@ -280,6 +280,7 @@ void Launcher_Run(void) {
 	Window_Create(640, 400);
 #ifdef CC_BUILD_ANDROID
 	Window_EnterFullscreen();
+	Window_LockLandscapeOrientation(Options_GetBool(OPT_LANDSCAPE_MODE, false));
 #endif
 	Window_SetTitle(&title);
 	Window_Show();
