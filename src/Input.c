@@ -48,7 +48,8 @@ static struct TouchPointer {
 	TimeMS start;
 } touches[INPUT_MAX_POINTERS];
 int Pointers_Count;
-cc_bool Input_TapPlace = true, Input_HoldPlace = false;
+int Input_TapMode  = INPUT_MODE_PLACE;
+int Input_HoldMode = INPUT_MODE_DELETE;
 cc_bool Input_TouchMode;
 
 static void MouseStatePress(int button);
@@ -137,7 +138,12 @@ static void CheckBlockTap(int i) {
 	if (DateTime_CurrentUTC_MS() > touches[i].start + 250) return;
 	if (touches[i].type != TOUCH_TYPE_ALL) return;
 
-	btn = Input_TapPlace ? MOUSE_RIGHT : MOUSE_LEFT;
+	if (Input_TapMode == INPUT_MODE_PLACE) {
+		btn = MOUSE_RIGHT;
+	} else if (Input_TapMode == INPUT_MODE_DELETE) {
+		btn = MOUSE_LEFT;
+	} else { return; }
+
 	pressed = input_buttonsDown[btn];
 	MouseStatePress(btn);
 
@@ -774,8 +780,8 @@ void InputHandler_Tick(void) {
 	
 #ifdef CC_BUILD_TOUCH
 	if (Input_TouchMode) {
-		left   = !Input_HoldPlace && AnyBlockTouches();
-		right  = Input_HoldPlace  && AnyBlockTouches();
+		left   = (Input_HoldMode == INPUT_MODE_DELETE) && AnyBlockTouches();
+		right  = (Input_HoldMode == INPUT_MODE_PLACE)  && AnyBlockTouches();
 		middle = false;
 	}
 #endif

@@ -3873,14 +3873,25 @@ static struct Widget* touchCtrls_widgets[1 + TOUCHCTRLS_BTNS] = {
 };
 #define TOUCHCTRLS_MAX_VERTICES (BUTTONWIDGET_MAX + TOUCHCTRLS_BTNS * BUTTONWIDGET_MAX)
 
+static const char* GetTapDesc(int mode) {
+	if (mode == INPUT_MODE_PLACE)  return "Tap: Place";
+	if (mode == INPUT_MODE_DELETE) return "Tap: Delete";
+	return "Tap: None";
+}
 static void TouchCtrls_UpdateTapText(void* screen) {
 	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
-	ButtonWidget_SetConst(&s->btns[0], Input_TapPlace  ? "Tap: Place"  : "Tap: Delete",  &s->font);
+	ButtonWidget_SetConst(&s->btns[0], GetTapDesc(Input_TapMode),  &s->font);
 	s->dirty = true;
+}
+
+static const char* GetHoldDesc(int mode) {
+	if (mode == INPUT_MODE_PLACE)  return "Hold: Place";
+	if (mode == INPUT_MODE_DELETE) return "Hold: Delete";
+	return "Hold: None";
 }
 static void TouchCtrls_UpdateHoldText(void* screen) {
 	struct TouchCtrlsScreen* s = (struct TouchCtrlsScreen*)screen;
-	ButtonWidget_SetConst(&s->btns[1], Input_HoldPlace ? "Hold: Place" : "Hold: Delete", &s->font);
+	ButtonWidget_SetConst(&s->btns[1], GetHoldDesc(Input_HoldMode), &s->font);
 	s->dirty = true;
 }
 
@@ -3910,11 +3921,11 @@ static void TouchCtrls_More(void* s,     void* w) { TouchMoreScreen_Show(); }
 static void TouchCtrls_Onscreen(void* s, void* w) { TouchOnscreenScreen_Show(); }
 
 static void TouchCtrls_Tap(void* s, void* w) {
-	Input_TapPlace = !Input_TapPlace;
+	Input_TapMode  = (Input_TapMode  + 1) % INPUT_MODE_COUNT;
 	TouchCtrls_UpdateTapText(s);
 }
 static void TouchCtrls_Hold(void* s, void* w) {
-	Input_HoldPlace = !Input_HoldPlace;
+	Input_HoldMode = (Input_HoldMode + 1) % INPUT_MODE_COUNT;
 	TouchCtrls_UpdateHoldText(s);
 }
 

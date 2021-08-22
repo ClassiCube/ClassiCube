@@ -82,8 +82,10 @@ extern cc_bool Input_RawMode;
 
 #ifdef CC_BUILD_TOUCH
 #define INPUT_MAX_POINTERS 32
+enum INPUT_MODE { INPUT_MODE_PLACE, INPUT_MODE_DELETE, INPUT_MODE_NONE, INPUT_MODE_COUNT };
+
 extern int Pointers_Count;
-extern cc_bool Input_TapPlace, Input_HoldPlace;
+extern int Input_TapMode, Input_HoldMode;
 /* Whether touch input is being used. */
 extern cc_bool Input_TouchMode;
 void Input_SetTouchMode(cc_bool enabled);
