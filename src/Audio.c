@@ -56,7 +56,8 @@ static void AudioWarn(cc_result res, const char* action) {
 static void AudioBase_Clear(struct AudioContext* ctx);
 static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, struct AudioData* data);
 static cc_result AudioBase_PlaySound(struct AudioContext* ctx, struct AudioData* data);
-
+/* achieve higher speed by playing samples at higher sample rate */
+#define Audio_AdjustSampleRate(data) ((data->sampleRate * data->rate) / 100)
 
 #if defined CC_BUILD_OPENAL
 /*########################################################################################################################*
@@ -294,10 +295,12 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return true;
 }
 
-cc_result Audio_PlayData(struct AudioContext* ctx, struct Sound* snd, int volume) {
-	cc_book ok = AudioBase_AdjustSound(ctx, snd, volume);
-	if (ok) return AudioBase_PlaySound(ctx, snd, data);
-	return ERR_OUT_OF_MEMORY;
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	cc_bool ok = AudioBase_AdjustSound(ctx, data);
+	if (!ok) return ERR_OUT_OF_MEMORY;
+	
+	data->sampleRate = Audio_AdjustSampleRate(data);
+	return AudioBase_PlaySound(ctx, data);
 }
 
 static const char* GetError(cc_result res) {
@@ -477,8 +480,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 
 	*inUse = count; return res;
 }
-/* achieve higher speed by playing samples at higher sample rate */
-#define Audio_AdjustSampleRate(data) ((data->sampleRate * data->rate) / 100)
+
 
 cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	int channels   = data->channels;
@@ -731,7 +733,7 @@ struct AudioContext { int contextID; };
 extern int  interop_InitAudio(void);
 extern int  interop_AudioCreate(void);
 extern void interop_AudioClose(int contextID);
-extern int  interop_AudioPlay(int contextID, struct Sound* snd, int volume);
+extern int  interop_AudioPlay(int contextID, const void* name, int volume, int rate);
 extern int  interop_AudioPoll(int contetID, int* inUse);
 extern int  interop_AudioDescribe(int res, char* buffer, int bufferLen);
 
@@ -767,10 +769,10 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 	return true;
 }
 
-cc_result Audio_PlayData(struct AudioContext* ctx, struct Sound* snd, int volume) {
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	if (!ctx->contextID) 
 		ctx->contextID = interop_AudioCreate();
-	return interop_AudioPlay(ctx->contextID, snd, volume);
+	return interop_AudioPlay(ctx->contextID, data->data, data->volume, data->rate);
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
@@ -1083,27 +1085,6 @@ static const struct SoundID { int group; const char* name; } sounds_list[] =
 };
 
 /* TODO this is a terrible solution */
-#include <emscripten/emscripten.h>
-EMSCRIPTEN_KEEPALIVE void Audio_SoundReady(const char* name, int channels, int sampleRate) {
-	struct Soundboard* board = name[0] == 's' ? &stepBoard : &digBoard;
-	struct SoundGroup* group;
-	cc_string str = String_FromReadonly(name);
-	int i, j;
-	/* This awful hack is because otherwise Sounds_Play tries to play the sound with samplerate of 0 */
-
-	for (i = 0; i < SOUND_COUNT; i++) {
-		group = &board->groups[i];
-
-		for (j = 0; j < group->count; j++) {
-			if (!String_CaselessEqualsConst(&str, group->sounds[j].data)) continue;
-
-			 group->sounds[j].channels   = channels;
-			 group->sounds[j].sampleRate = sampleRate;
-			return;
-		}
-	}
-}
-
 static void InitWebSounds(void) {
 	struct Soundboard* board = &stepBoard;
 	struct SoundGroup* group;
