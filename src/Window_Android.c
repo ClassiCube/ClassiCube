@@ -410,8 +410,8 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 	JavaGetCurrentEnv(env);
 
 	/* SCREEN_ORIENTATION_SENSOR_LANDSCAPE = 0x00000006 */
-	/* SCREEN_ORIENTATION_USER = 0x00000002 */
-	args[0].i = lock ? 0x00000006 : 0x00000002;
+	/* SCREEN_ORIENTATION_UNSPECIFIED = 0xffffffff */
+	args[0].i = lock ? 0x00000006 : 0xffffffff;
 	JavaCallVoid(env, "setRequestedOrientation", "(I)V", args);
 }
 

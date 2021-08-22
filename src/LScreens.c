@@ -1424,7 +1424,7 @@ static struct SettingsScreen {
 #if defined CC_BUILD_ANDROID
 static void SettingsScreen_LockOrientation(void* w, int idx) {
 	struct LCheckbox* cb = (struct LCheckbox*)w;
-	cb->value ^= true;
+	cb->value = !cb->value;
 	Options_SetBool(OPT_LANDSCAPE_MODE, cb->value);
 	Window_LockLandscapeOrientation(cb->value);
 	Launcher_Redraw();
@@ -1445,7 +1445,7 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	LLabel_Init(s_,  &s->lblColours, "&eChange how the launcher looks");
 
 #if defined CC_BUILD_ANDROID
-	LLabel_Init(s_,    &s->lblOrientlock, "Portrait orientation lock");
+	LLabel_Init(s_,    &s->lblOrientlock, "Force landscape");
 	LCheckbox_Init(s_, &s->cbOrientlock);
 	s->cbOrientlock.OnClick = SettingsScreen_LockOrientation;
 #endif
@@ -1480,7 +1480,7 @@ static void SettingsScreen_Layout(struct LScreen* s_) {
 
 #if defined CC_BUILD_ANDROID
 	LWidget_SetLocation(&s->cbOrientlock,  ANCHOR_CENTRE, ANCHOR_CENTRE, -178, 24);
-	LWidget_SetLocation(&s->lblOrientlock, ANCHOR_CENTRE, ANCHOR_CENTRE,   -58, 24);
+	LWidget_SetLocation(&s->lblOrientlock, ANCHOR_CENTRE, ANCHOR_CENTRE,   -84, 24);
 #endif
 
 	LWidget_SetLocation(&s->btnBack, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 170);
