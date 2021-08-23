@@ -55,7 +55,6 @@ static void AudioWarn(cc_result res, const char* action) {
 }
 static void AudioBase_Clear(struct AudioContext* ctx);
 static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, struct AudioData* data);
-static cc_result AudioBase_PlaySound(struct AudioContext* ctx, struct AudioData* data);
 /* achieve higher speed by playing samples at higher sample rate */
 #define Audio_AdjustSampleRate(data) ((data->sampleRate * data->rate) / 100)
 
@@ -297,10 +296,14 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 
 cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	cc_bool ok = AudioBase_AdjustSound(ctx, data);
-	if (!ok) return ERR_OUT_OF_MEMORY;
-	
+	cc_result res;
+	if (!ok) return ERR_OUT_OF_MEMORY;	
 	data->sampleRate = Audio_AdjustSampleRate(data);
-	return AudioBase_PlaySound(ctx, data);
+
+	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
+	if ((res = Audio_QueueData(ctx, data->data,     data->size)))       return res;
+	if ((res = Audio_Play(ctx))) return res;
+	return 0;
 }
 
 static const char* GetError(cc_result res) {
@@ -490,10 +493,13 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 
 cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
 	cc_bool ok = AudioBase_AdjustSound(ctx, data);
+	cc_result res;
 	if (!ok) return ERR_OUT_OF_MEMORY; 
-	
 	data->sampleRate = Audio_AdjustSampleRate(data);
-	return AudioBase_PlaySound(ctx, data);
+
+	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
+	if ((res = Audio_QueueData(ctx, data->data,    data->size)))        return res;
+	return 0;
 }
 
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst) {
@@ -695,13 +701,17 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 }
 
 cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
-	cc_result res = 0;
 	cc_bool ok = AudioBase_AdjustSound(ctx, data);
+	cc_result res;
 	if (!ok) return ERR_OUT_OF_MEMORY; 
 
+	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
 	/* rate is in milli, so 1000 = normal rate */
 	if ((res = (*ctx->playerRate)->SetRate(ctx->playerRate, data->rate * 10))) return res;
-	return AudioBase_PlaySound(ctx, data);
+
+	if ((res = Audio_QueueData(ctx, data->data, data->size))) return res;
+	if ((res = Audio_Play(ctx))) return res;
+	return 0;
 }
 
 static const char* GetError(cc_result res) {
@@ -829,14 +839,6 @@ static cc_bool AudioBase_AdjustSound(struct AudioContext* ctx, struct AudioData*
 	ApplyVolume((cc_int16*)audio, data->size / 2, data->volume);
 	data->data = audio;
 	return true;
-}
-
-static cc_result AudioBase_PlaySound(struct AudioContext* ctx, struct AudioData* data) {
-	cc_result res;
-	if ((res = Audio_SetFormat(ctx, data->channels, data->sampleRate))) return res;
-	if ((res = Audio_QueueData(ctx, data->data,    data->size)))        return res;
-	if ((res = Audio_Play(ctx))) return res;
-	return 0;
 }
 #endif
 
