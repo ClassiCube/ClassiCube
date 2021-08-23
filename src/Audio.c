@@ -517,31 +517,27 @@ static SLObjectItf slOutputObject;
 
 struct AudioContext {
 	int count, channels, sampleRate;
-	SLObjectItf bqPlayerObject;
-	SLPlayItf   bqPlayerPlayer;
-	SLBufferQueueItf bqPlayerQueue;
+	SLObjectItf playerObject;
+	SLPlayItf   playerPlayer;
+	SLBufferQueueItf playerQueue;
+	SLPlaybackRateItf playerRate;
 	cc_uint32 _tmpSize; void* _tmpData;
 };
 
-static SLresult (SLAPIENTRY *_slCreateEngine)(
-	SLObjectItf             *pEngine,
-	SLuint32                numOptions,
-	const SLEngineOption    *pEngineOptions,
-	SLuint32                numInterfaces,
-	const SLInterfaceID     *pInterfaceIds,
-	const SLboolean         *pInterfaceRequired
-);
+static SLresult (SLAPIENTRY *_slCreateEngine)(SLObjectItf* engine, SLuint32 numOptions, const SLEngineOption* engineOptions,
+							SLuint32 numInterfaces, const SLInterfaceID* interfaceIds, const SLboolean* interfaceRequired);
 static SLInterfaceID* _SL_IID_NULL;
 static SLInterfaceID* _SL_IID_PLAY;
 static SLInterfaceID* _SL_IID_ENGINE;
 static SLInterfaceID* _SL_IID_BUFFERQUEUE;
+static SLInterfaceID* _SL_IID_PLAYBACKRATE;
 static const cc_string slLib = String_FromConst("libOpenSLES.so");
 
 static cc_bool LoadSLFuncs(void) {
-	static const struct DynamicLibSym funcs[5] = {
-		DynamicLib_Sym(slCreateEngine), DynamicLib_Sym(SL_IID_NULL),
-		DynamicLib_Sym(SL_IID_PLAY),    DynamicLib_Sym(SL_IID_ENGINE),
-		DynamicLib_Sym(SL_IID_BUFFERQUEUE)
+	static const struct DynamicLibSym funcs[] = {
+		DynamicLib_Sym(slCreateEngine),     DynamicLib_Sym(SL_IID_NULL),
+		DynamicLib_Sym(SL_IID_PLAY),        DynamicLib_Sym(SL_IID_ENGINE),
+		DynamicLib_Sym(SL_IID_BUFFERQUEUE), DynamicLib_Sym(SL_IID_PLAYBACKRATE)
 	};
 
 	void* lib = DynamicLib_Load2(&slLib);
@@ -559,7 +555,8 @@ static cc_bool AudioBackend_Init(void) {
 	if (!LoadSLFuncs()) { Logger_WarnFunc(&msg); return false; }
 	
 	/* mixer doesn't use any effects */
-	ids[0] = *_SL_IID_NULL; req[0] = SL_BOOLEAN_FALSE;
+	ids[0] = *_SL_IID_NULL; 
+	req[0] = SL_BOOLEAN_FALSE;
 	
 	res = _slCreateEngine(&slEngineObject, 0, NULL, 0, NULL, NULL);
 	if (res) { AudioWarn(res, "creating OpenSL ES engine"); return false; }
@@ -596,20 +593,21 @@ void Audio_Init(struct AudioContext* ctx, int buffers) {
 }
 
 static void Audio_Stop(struct AudioContext* ctx) {
-	if (!ctx->bqPlayerPlayer) return;
+	if (!ctx->playerPlayer) return;
 
-	(*ctx->bqPlayerQueue)->Clear(ctx->bqPlayerQueue);
-	(*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_STOPPED);
+	(*ctx->playerQueue)->Clear(ctx->playerQueue);
+	(*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_STOPPED);
 }
 
 static void Audio_Reset(struct AudioContext* ctx) {
-	SLObjectItf bqPlayerObject = ctx->bqPlayerObject;
-	if (!bqPlayerObject) return;
+	SLObjectItf playerObject = ctx->playerObject;
+	if (!playerObject) return;
 
-	(*bqPlayerObject)->Destroy(bqPlayerObject);
-	ctx->bqPlayerObject = NULL;
-	ctx->bqPlayerPlayer = NULL;
-	ctx->bqPlayerQueue  = NULL;
+	(*playerObject)->Destroy(playerObject);
+	ctx->playerObject = NULL;
+	ctx->playerPlayer = NULL;
+	ctx->playerQueue  = NULL;
+	ctx->playerRate   = NULL;
 }
 
 void Audio_Close(struct AudioContext* ctx) {
@@ -621,10 +619,10 @@ void Audio_Close(struct AudioContext* ctx) {
 cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate) {
 	SLDataLocator_AndroidSimpleBufferQueue input;
 	SLDataLocator_OutputMix output;
-	SLObjectItf bqPlayerObject;
+	SLObjectItf playerObject;
 	SLDataFormat_PCM fmt;
-	SLInterfaceID ids[2];
-	SLboolean req[2];
+	SLInterfaceID ids[3];
+	SLboolean req[3];
 	SLDataSource src;
 	SLDataSink dst;
 	cc_result res;
@@ -652,37 +650,39 @@ cc_result Audio_SetFormat(struct AudioContext* ctx, int channels, int sampleRate
 	dst.pLocator = &output;
 	dst.pFormat  = NULL;
 
-	ids[0] = *_SL_IID_BUFFERQUEUE; req[0] = SL_BOOLEAN_TRUE;
-	ids[1] = *_SL_IID_PLAY;        req[1] = SL_BOOLEAN_TRUE;
+	ids[0] = *_SL_IID_BUFFERQUEUE;  req[0] = SL_BOOLEAN_TRUE;
+	ids[1] = *_SL_IID_PLAY;         req[1] = SL_BOOLEAN_TRUE;
+	ids[2] = *_SL_IID_PLAYBACKRATE; req[2] = SL_BOOLEAN_TRUE;
 
-	res = (*slEngineEngine)->CreateAudioPlayer(slEngineEngine, &bqPlayerObject, &src, &dst, 2, ids, req);
-	ctx->bqPlayerObject = bqPlayerObject;
+	res = (*slEngineEngine)->CreateAudioPlayer(slEngineEngine, &playerObject, &src, &dst, 3, ids, req);
+	ctx->playerObject = playerObject;
 	if (res) return res;
 
-	if ((res = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE)))                                return res;
-	if ((res = (*bqPlayerObject)->GetInterface(bqPlayerObject, *_SL_IID_PLAY,        &ctx->bqPlayerPlayer))) return res;
-	if ((res = (*bqPlayerObject)->GetInterface(bqPlayerObject, *_SL_IID_BUFFERQUEUE, &ctx->bqPlayerQueue)))  return res;
+	if ((res = (*playerObject)->Realize(playerObject, SL_BOOLEAN_FALSE)))                               return res;
+	if ((res = (*playerObject)->GetInterface(playerObject, *_SL_IID_PLAY,         &ctx->playerPlayer))) return res;
+	if ((res = (*playerObject)->GetInterface(playerObject, *_SL_IID_BUFFERQUEUE,  &ctx->playerQueue)))  return res;
+	if ((res = (*playerObject)->GetInterface(playerObject, *_SL_IID_PLAYBACKRATE, &ctx->playerRate)))   return res;
 	return 0;
 }
 
 cc_result Audio_QueueData(struct AudioContext* ctx, void* data, cc_uint32 size) {
-	return (*ctx->bqPlayerQueue)->Enqueue(ctx->bqPlayerQueue, data, size);
+	return (*ctx->playerQueue)->Enqueue(ctx->playerQueue, data, size);
 }
 
 static cc_result Audio_Pause(struct AudioContext* ctx) {
-	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_PAUSED);
+	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PAUSED);
 }
 
 cc_result Audio_Play(struct AudioContext* ctx) {
-	return (*ctx->bqPlayerPlayer)->SetPlayState(ctx->bqPlayerPlayer, SL_PLAYSTATE_PLAYING);
+	return (*ctx->playerPlayer)->SetPlayState(ctx->playerPlayer, SL_PLAYSTATE_PLAYING);
 }
 
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	SLBufferQueueState state = { 0 };
 	cc_result res = 0;
 
-	if (ctx->bqPlayerQueue) {
-		res = (*ctx->bqPlayerQueue)->GetState(ctx->bqPlayerQueue, &state);	
+	if (ctx->playerQueue) {
+		res = (*ctx->playerQueue)->GetState(ctx->playerQueue, &state);	
 	}
 	*inUse  = state.count;
 	return res;
@@ -695,10 +695,12 @@ cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
 }
 
 cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	cc_result res = 0;
 	cc_bool ok = AudioBase_AdjustSound(ctx, data);
 	if (!ok) return ERR_OUT_OF_MEMORY; 
-	
-	data->sampleRate = Audio_AdjustSampleRate(data);
+
+	/* rate is in milli, so 1000 = normal rate */
+	if ((res = (*ctx->playerRate)->SetRate(ctx->playerRate, data->rate * 10))) return res;
 	return AudioBase_PlaySound(ctx, data);
 }
 
