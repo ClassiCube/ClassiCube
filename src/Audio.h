@@ -12,6 +12,13 @@ struct Sound {
 	int channels, sampleRate;
 	void* data; cc_uint32 size;
 };
+struct AudioData {
+	void* data; cc_uint32 size; /* the raw 16 bit integer samples */
+	int channels;
+	int sampleRate; /* frequency / sample rate */
+	int volume; /* volume data played at (100 = normal volume) */
+	int rate;   /* speed/pitch played at (100 = normal speed) */
+};
 
 /* Volume sounds are played at, from 0-100. */
 /* NOTE: Use Audio_SetSounds, don't change this directly. */
@@ -44,11 +51,10 @@ cc_result Audio_Play(struct AudioContext* ctx);
 /* (e.g. if inUse is 0, no audio buffers are being played or queued) */
 cc_result Audio_Poll(struct AudioContext* ctx, int* inUse);
 
-/* Plays the given audio data at the given volume */
-cc_result Audio_PlaySound(struct AudioContext* ctx, struct Sound* snd, int volume);
-/* Whether the given audio context can play audio data in the given format, */
-/*  without recreating the underlying audio device */
-cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate);
+/* Plays the given audio data */
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data);
+/* Whether the given audio data can be played without recreating the underlying audio device */
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data);
 /* Outputs more detailed information about errors with audio. */
 cc_bool Audio_DescribeError(cc_result res, cc_string* dst);
 #endif

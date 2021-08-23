@@ -713,22 +713,20 @@ mergeInto(LibraryManager.library, {
     HEAP32[inUse >> 2] = src.playing; // only 1 buffer
     return 0;
   },
-  interop_AudioPlay: function(ctxID, snd, volume) {
-    var nameAddr = HEAP32[(snd|0 + 8|0) >> 2];
+  interop_AudioPlay: function(ctxID, sndID, volume, rate) {
     var src  = AUDIO.sources[ctxID - 1|0];
-    var name = UTF8ToString(nameAddr);
+    var name = UTF8ToString(sndID);
     
     // do we need to download this file?
     if (!AUDIO.seen.hasOwnProperty(name)) {
       AUDIO.seen[name] = true;
-      _interop_AudioDownload(name, nameAddr);
+      _interop_AudioDownload(name);
       return 0;
     }
 
     // still downloading or failed to download this file
     var buffer = AUDIO.buffers[name];
     if (!buffer) return 0;
-    var sampleRate = HEAP32[(snd|0 + 4|0) >> 2];
     
     try {
       if (!src.gain) src.gain = AUDIO.context.createGain();
@@ -740,8 +738,7 @@ mergeInto(LibraryManager.library, {
       src.source = AUDIO.context.createBufferSource();
       src.source.buffer   = buffer;
       src.gain.gain.value = volume / 100;
-      // game adjusts samplerate to playback audio faster - undo that
-      src.source.playbackRate.value = sampleRate / buffer.sampleRate;
+      src.source.playbackRate.value = rate / 100;
       
       // source -> gain -> output
       src.source.connect(src.gain);
@@ -753,7 +750,7 @@ mergeInto(LibraryManager.library, {
     }
   },
   interop_AudioPlay__deps: ['interop_AudioDownload'],
-  interop_AudioDownload: function(name, nameAddr) {
+  interop_AudioDownload: function(name) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', '/static/sounds/' + name + '.wav', true);   
     xhr.responseType = 'arraybuffer';
@@ -762,8 +759,6 @@ mergeInto(LibraryManager.library, {
       var data = xhr.response;
       AUDIO.context.decodeAudioData(data, function(buffer) {
           AUDIO.buffers[name] = buffer;
-          // TODO rethink this, this is a terrible solution
-          Module["_Audio_SoundReady"](nameAddr, buffer.channels, buffer.sampleRate);
         });
     };
     xhr.send();

@@ -206,7 +206,7 @@ static const cc_uint8 checkbox_indices[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
-static PackedCol checkbox_palette[] = {
+static const PackedCol checkbox_palette[] = {
 	PackedCol_Make(  0,   0,   0,   0), PackedCol_Make(144, 144, 144, 255),
 	PackedCol_Make( 61,  61,  61, 255), PackedCol_Make( 94,  94,  94, 255),
 	PackedCol_Make(197, 196, 197, 255), PackedCol_Make( 57,  57,  57, 255),
