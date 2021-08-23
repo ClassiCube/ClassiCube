@@ -404,6 +404,17 @@ void Window_CloseKeyboard(void) {
 	JavaCallVoid(env, "closeKeyboard", "()V", NULL);
 }
 
+void Window_LockLandscapeOrientation(cc_bool lock) {
+	JNIEnv* env;
+	jvalue args[1];
+	JavaGetCurrentEnv(env);
+
+	/* SCREEN_ORIENTATION_SENSOR_LANDSCAPE = 0x00000006 */
+	/* SCREEN_ORIENTATION_UNSPECIFIED = 0xffffffff */
+	args[0].i = lock ? 0x00000006 : 0xffffffff;
+	JavaCallVoid(env, "setRequestedOrientation", "(I)V", args);
+}
+
 void Window_EnableRawMouse(void)  { DefaultEnableRawMouse(); }
 void Window_UpdateRawMouse(void)  { }
 void Window_DisableRawMouse(void) { DefaultDisableRawMouse(); }
