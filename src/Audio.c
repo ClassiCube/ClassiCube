@@ -695,9 +695,7 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 }
 
 cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
-	int channels   = data->channels;
-	int sampleRate = Audio_AdjustSampleRate(data);
-	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
+	return !ctx->channels || (ctx->channels == data->channels && ctx->sampleRate == data->sampleRate);
 }
 
 cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
