@@ -713,15 +713,14 @@ mergeInto(LibraryManager.library, {
     HEAP32[inUse >> 2] = src.playing; // only 1 buffer
     return 0;
   },
-  interop_AudioPlay: function(ctxID, snd, volume, rate) {
-    var nameAddr = HEAP32[(snd|0) >> 2];
+  interop_AudioPlay: function(ctxID, sndID, volume, rate) {
     var src  = AUDIO.sources[ctxID - 1|0];
-    var name = UTF8ToString(nameAddr);
+    var name = UTF8ToString(sndID);
     
     // do we need to download this file?
     if (!AUDIO.seen.hasOwnProperty(name)) {
       AUDIO.seen[name] = true;
-      _interop_AudioDownload(name, nameAddr);
+      _interop_AudioDownload(name);
       return 0;
     }
 
@@ -751,7 +750,7 @@ mergeInto(LibraryManager.library, {
     }
   },
   interop_AudioPlay__deps: ['interop_AudioDownload'],
-  interop_AudioDownload: function(name, nameAddr) {
+  interop_AudioDownload: function(name) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', '/static/sounds/' + name + '.wav', true);   
     xhr.responseType = 'arraybuffer';

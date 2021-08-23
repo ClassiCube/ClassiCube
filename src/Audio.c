@@ -688,14 +688,18 @@ cc_result Audio_Poll(struct AudioContext* ctx, int* inUse) {
 	return res;
 }
 
-cc_bool Audio_FastPlay(struct AudioContext* ctx, int channels, int sampleRate) {
+cc_bool Audio_FastPlay(struct AudioContext* ctx, struct AudioData* data) {
+	int channels   = data->channels;
+	int sampleRate = Audio_AdjustSampleRate(data);
 	return !ctx->channels || (ctx->channels == channels && ctx->sampleRate == sampleRate);
 }
 
-cc_result Audio_PlayData(struct AudioContext* ctx, struct Sound* snd, int volume) {
-	cc_bool ok = AudioBase_AdjustSound(ctx, snd, volume);
-	if (ok) return AudioBase_PlaySound(ctx, snd, data);
-	return ERR_OUT_OF_MEMORY;
+cc_result Audio_PlayData(struct AudioContext* ctx, struct AudioData* data) {
+	cc_bool ok = AudioBase_AdjustSound(ctx, data);
+	if (!ok) return ERR_OUT_OF_MEMORY; 
+	
+	data->sampleRate = Audio_AdjustSampleRate(data);
+	return AudioBase_PlaySound(ctx, data);
 }
 
 static const char* GetError(cc_result res) {
