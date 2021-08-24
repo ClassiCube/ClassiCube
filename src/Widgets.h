@@ -4,6 +4,7 @@
 #include "BlockID.h"
 #include "Constants.h"
 #include "Entity.h"
+#include "Inventory.h"
 /* Contains all 2D widget implementations.
    Copyright 2014-2021 ClassiCube | Licensed under BSD-3
 */
@@ -71,6 +72,10 @@ struct HotbarWidget {
 	float scrollAcc, scale;
 	cc_bool altHandled;
 	struct Texture ellipsisTex;
+#ifdef CC_BUILD_TOUCH
+	int touchId[HOTBAR_MAX_INDEX];
+	double touchTime[HOTBAR_MAX_INDEX];
+#endif
 };
 /* Resets state of the given hotbar widget to default. */
 CC_NOINLINE void HotbarWidget_Create(struct HotbarWidget* w);
