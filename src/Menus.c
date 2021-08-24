@@ -2633,14 +2633,14 @@ void ClassicOptionsScreen_Show(void) {
 /*########################################################################################################################*
 *----------------------------------------------------EnvSettingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
-static void EnvSettingsScreen_GetCloudsCol(cc_string* v) { PackedCol_ToHex(v, Env.CloudsCol); }
-static void EnvSettingsScreen_SetCloudsCol(const cc_string* v) { Env_SetCloudsCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetCloudsColor(cc_string* v) { PackedCol_ToHex(v, Env.CloudsCol); }
+static void EnvSettingsScreen_SetCloudsColor(const cc_string* v) { Env_SetCloudsCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetSkyCol(cc_string* v) { PackedCol_ToHex(v, Env.SkyCol); }
-static void EnvSettingsScreen_SetSkyCol(const cc_string* v) { Env_SetSkyCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetSkyColor(cc_string* v) { PackedCol_ToHex(v, Env.SkyCol); }
+static void EnvSettingsScreen_SetSkyColor(const cc_string* v) { Env_SetSkyCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetFogCol(cc_string* v) { PackedCol_ToHex(v, Env.FogCol); }
-static void EnvSettingsScreen_SetFogCol(const cc_string* v) { Env_SetFogCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetFogColor(cc_string* v) { PackedCol_ToHex(v, Env.FogCol); }
+static void EnvSettingsScreen_SetFogColor(const cc_string* v) { Env_SetFogCol(Menu_HexCol(v)); }
 
 static void EnvSettingsScreen_GetCloudsSpeed(cc_string* v) { String_AppendFloat(v, Env.CloudsSpeed, 2); }
 static void EnvSettingsScreen_SetCloudsSpeed(const cc_string* v) { Env_SetCloudsSpeed(Menu_Float(v)); }
@@ -2648,11 +2648,11 @@ static void EnvSettingsScreen_SetCloudsSpeed(const cc_string* v) { Env_SetClouds
 static void EnvSettingsScreen_GetCloudsHeight(cc_string* v) { String_AppendInt(v, Env.CloudsHeight); }
 static void EnvSettingsScreen_SetCloudsHeight(const cc_string* v) { Env_SetCloudsHeight(Menu_Int(v)); }
 
-static void EnvSettingsScreen_GetSunCol(cc_string* v) { PackedCol_ToHex(v, Env.SunCol); }
-static void EnvSettingsScreen_SetSunCol(const cc_string* v) { Env_SetSunCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetSunColor(cc_string* v) { PackedCol_ToHex(v, Env.SunCol); }
+static void EnvSettingsScreen_SetSunColor(const cc_string* v) { Env_SetSunCol(Menu_HexCol(v)); }
 
-static void EnvSettingsScreen_GetShadowCol(cc_string* v) { PackedCol_ToHex(v, Env.ShadowCol); }
-static void EnvSettingsScreen_SetShadowCol(const cc_string* v) { Env_SetShadowCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetShadowColor(cc_string* v) { PackedCol_ToHex(v, Env.ShadowCol); }
+static void EnvSettingsScreen_SetShadowColor(const cc_string* v) { Env_SetShadowCol(Menu_HexCol(v)); }
 
 static void EnvSettingsScreen_GetWeather(cc_string* v) { String_AppendConst(v, Weather_Names[Env.Weather]); }
 static void EnvSettingsScreen_SetWeather(const cc_string* v) {
@@ -2668,21 +2668,21 @@ static void EnvSettingsScreen_SetEdgeHeight(const cc_string* v) { Env_SetEdgeHei
 
 static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 	static const struct MenuOptionDesc buttons[10] = {
-		{ -1, -150, "Clouds col",    MenuOptionsScreen_Input,
-			EnvSettingsScreen_GetCloudsCol,    EnvSettingsScreen_SetCloudsCol },
-		{ -1, -100, "Sky col",       MenuOptionsScreen_Input,
-			EnvSettingsScreen_GetSkyCol,       EnvSettingsScreen_SetSkyCol },
-		{ -1,  -50, "Fog col",       MenuOptionsScreen_Input,
-			EnvSettingsScreen_GetFogCol,       EnvSettingsScreen_SetFogCol },
+		{ -1, -150, "Clouds color",  MenuOptionsScreen_Input,
+			EnvSettingsScreen_GetCloudsColor,  EnvSettingsScreen_SetCloudsColor },
+		{ -1, -100, "Sky color",     MenuOptionsScreen_Input,
+			EnvSettingsScreen_GetSkyColor,     EnvSettingsScreen_SetSkyColor },
+		{ -1,  -50, "Fog color",     MenuOptionsScreen_Input,
+			EnvSettingsScreen_GetFogColor,     EnvSettingsScreen_SetFogColor },
 		{ -1,    0, "Clouds speed",  MenuOptionsScreen_Input,
 			EnvSettingsScreen_GetCloudsSpeed,  EnvSettingsScreen_SetCloudsSpeed },
 		{ -1,   50, "Clouds height", MenuOptionsScreen_Input,
 			EnvSettingsScreen_GetCloudsHeight, EnvSettingsScreen_SetCloudsHeight },
 
-		{ 1, -150, "Sunlight col",    MenuOptionsScreen_Input,
-			EnvSettingsScreen_GetSunCol,       EnvSettingsScreen_SetSunCol },
-		{ 1, -100, "Shadow col",      MenuOptionsScreen_Input,
-			EnvSettingsScreen_GetShadowCol,    EnvSettingsScreen_SetShadowCol },
+		{ 1, -150, "Sunlight color",  MenuOptionsScreen_Input,
+			EnvSettingsScreen_GetSunColor,     EnvSettingsScreen_SetSunColor },
+		{ 1, -100, "Shadow color",    MenuOptionsScreen_Input,
+			EnvSettingsScreen_GetShadowColor,  EnvSettingsScreen_SetShadowColor },
 		{ 1,  -50, "Weather",         MenuOptionsScreen_Enum,
 			EnvSettingsScreen_GetWeather,      EnvSettingsScreen_SetWeather },
 		{ 1,    0, "Rain/Snow speed", MenuOptionsScreen_Input,
@@ -2698,14 +2698,14 @@ static void EnvSettingsScreen_InitWidgets(struct MenuOptionsScreen* s) {
 
 void EnvSettingsScreen_Show(void) {
 	static struct MenuInputDesc descs[11];
-	MenuInput_Hex(descs[0],   ENV_DEFAULT_CLOUDS_COL);
-	MenuInput_Hex(descs[1],   ENV_DEFAULT_SKY_COL);
-	MenuInput_Hex(descs[2],   ENV_DEFAULT_FOG_COL);
+	MenuInput_Hex(descs[0],   ENV_DEFAULT_CLOUDS_COLOR);
+	MenuInput_Hex(descs[1],   ENV_DEFAULT_SKY_COLOR);
+	MenuInput_Hex(descs[2],   ENV_DEFAULT_FOG_COLOR);
 	MenuInput_Float(descs[3],      0,  1000, 1);
 	MenuInput_Int(descs[4],   -10000, 10000, World.Height + 2);
 
-	MenuInput_Hex(descs[5],   ENV_DEFAULT_SUN_COL);
-	MenuInput_Hex(descs[6],   ENV_DEFAULT_SHADOW_COL);
+	MenuInput_Hex(descs[5],   ENV_DEFAULT_SUN_COLOR);
+	MenuInput_Hex(descs[6],   ENV_DEFAULT_SHADOW_COLOR);
 	MenuInput_Enum(descs[7],  Weather_Names, Array_Elems(Weather_Names));
 	MenuInput_Float(descs[8],  -100,  100, 1);
 	MenuInput_Int(descs[9],   -2048, 2048, World.Height / 2);

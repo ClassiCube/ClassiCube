@@ -125,12 +125,12 @@ CC_VAR extern struct _EnvData {
 enum Weather_ { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
 extern const char* const Weather_Names[3];
 
-#define ENV_DEFAULT_SKY_COL    PackedCol_Make(0x99, 0xCC, 0xFF, 0xFF)
-#define ENV_DEFAULT_FOG_COL    PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
-#define ENV_DEFAULT_CLOUDS_COL PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
-#define ENV_DEFAULT_SKYBOX_COL PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
-#define ENV_DEFAULT_SUN_COL    PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
-#define ENV_DEFAULT_SHADOW_COL PackedCol_Make(0x9B, 0x9B, 0x9B, 0xFF)
+#define ENV_DEFAULT_SKY_COLOR    PackedCol_Make(0x99, 0xCC, 0xFF, 0xFF)
+#define ENV_DEFAULT_FOG_COLOR    PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_CLOUDS_COLOR PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_SKYBOX_COLOR PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_SUN_COLOR    PackedCol_Make(0xFF, 0xFF, 0xFF, 0xFF)
+#define ENV_DEFAULT_SHADOW_COLOR PackedCol_Make(0x9B, 0x9B, 0x9B, 0xFF)
 
 /* Resets all environment settings to default. */
 /* NOTE: Unlike Env_Set functions, DOES NOT raise EnvVarChanged event. */

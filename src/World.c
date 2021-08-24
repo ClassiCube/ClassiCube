@@ -165,18 +165,18 @@ void Env_Reset(void) {
 	Env.SkyboxHorSpeed = 0.0f;
 	Env.SkyboxVerSpeed = 0.0f;
 
-	Env.ShadowCol = ENV_DEFAULT_SHADOW_COL;
+	Env.ShadowCol = ENV_DEFAULT_SHADOW_COLOR;
 	PackedCol_GetShaded(Env.ShadowCol, &Env.ShadowXSide,
 		&Env.ShadowZSide, &Env.ShadowYMin);
 
-	Env.SunCol = ENV_DEFAULT_SUN_COL;
+	Env.SunCol = ENV_DEFAULT_SUN_COLOR;
 	PackedCol_GetShaded(Env.SunCol, &Env.SunXSide,
 		&Env.SunZSide, &Env.SunYMin);
 
-	Env.SkyCol    = ENV_DEFAULT_SKY_COL;
-	Env.FogCol    = ENV_DEFAULT_FOG_COL;
-	Env.CloudsCol = ENV_DEFAULT_CLOUDS_COL;
-	Env.SkyboxCol = ENV_DEFAULT_SKYBOX_COL;
+	Env.SkyCol    = ENV_DEFAULT_SKY_COLOR;
+	Env.FogCol    = ENV_DEFAULT_FOG_COLOR;
+	Env.CloudsCol = ENV_DEFAULT_CLOUDS_COLOR;
+	Env.SkyboxCol = ENV_DEFAULT_SKYBOX_COLOR;
 	Env.Weather   = WEATHER_SUNNY;
 	Env.ExpFog    = false;
 }

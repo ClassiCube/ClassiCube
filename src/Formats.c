@@ -545,7 +545,7 @@ static void Cw_Callback_2(struct NbtTag* tag) {
 
 static BlockID cw_curID;
 static int cw_colR, cw_colG, cw_colB;
-static PackedCol Cw_ParseCol(PackedCol defValue) {
+static PackedCol Cw_ParseColor(PackedCol defValue) {
 	int r = cw_colR, g = cw_colG, b = cw_colB;
 	if (r > 255 || g > 255 || b > 255) return defValue;
 	return PackedCol_Make(r, g, b, 255);
@@ -580,15 +580,15 @@ static void Cw_Callback_4(struct NbtTag* tag) {
 	/* Callback for compound tag is called after all its children have been processed */
 	if (IsTag(tag->parent, "EnvColors")) {
 		if (IsTag(tag, "Sky")) {
-			Env.SkyCol    = Cw_ParseCol(ENV_DEFAULT_SKY_COL); return;
+			Env.SkyCol    = Cw_ParseColor(ENV_DEFAULT_SKY_COLOR); return;
 		} else if (IsTag(tag, "Cloud")) {
-			Env.CloudsCol = Cw_ParseCol(ENV_DEFAULT_CLOUDS_COL); return;
+			Env.CloudsCol = Cw_ParseColor(ENV_DEFAULT_CLOUDS_COLOR); return;
 		} else if (IsTag(tag, "Fog")) {
-			Env.FogCol    = Cw_ParseCol(ENV_DEFAULT_FOG_COL); return;
+			Env.FogCol    = Cw_ParseColor(ENV_DEFAULT_FOG_COLOR); return;
 		} else if (IsTag(tag, "Sunlight")) {
-			Env_SetSunCol(Cw_ParseCol(ENV_DEFAULT_SUN_COL)); return;
+			Env_SetSunCol(Cw_ParseColor(ENV_DEFAULT_SUN_COLOR)); return;
 		} else if (IsTag(tag, "Ambient")) {
-			Env_SetShadowCol(Cw_ParseCol(ENV_DEFAULT_SHADOW_COL)); return;
+			Env_SetShadowCol(Cw_ParseColor(ENV_DEFAULT_SHADOW_COLOR)); return;
 		}
 	}
 
