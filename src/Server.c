@@ -141,7 +141,7 @@ static void SPConnection_AddPart(const cc_string* text) {
 	String_InitArray(tmp, tmpBuffer);
 
 	/* Prepend colour codes for subsequent lines of multi-line chat */
-	if (!Drawer2D_IsWhiteCol(sp_lastCol)) {
+	if (!Drawer2D_IsWhiteColor(sp_lastCol)) {
 		String_Append(&tmp, '&');
 		String_Append(&tmp, sp_lastCol);
 	}
@@ -153,7 +153,7 @@ static void SPConnection_AddPart(const cc_string* text) {
 	}
 	String_UNSAFE_TrimEnd(&tmp);
 
-	col = Drawer2D_LastCol(&tmp, tmp.length);
+	col = Drawer2D_LastColor(&tmp, tmp.length);
 	if (col) sp_lastCol = col;
 	Chat_Add(&tmp);
 }

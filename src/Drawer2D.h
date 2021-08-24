@@ -1,6 +1,5 @@
 #ifndef CC_DRAWER2D_H
 #define CC_DRAWER2D_H
-#include "PackedCol.h"
 #include "Constants.h"
 #include "Bitmap.h"
 /*  Performs a variety of drawing operations on bitmaps, and converts bitmaps into textures.
@@ -86,16 +85,16 @@ CC_API void Drawer2D_MakeTexture(struct Texture* tex, struct Bitmap* bmp, int wi
 
 /* Returns whether the given colour code is used/valid. */
 /* NOTE: This can change if the server defines custom colour codes. */
-cc_bool Drawer2D_ValidColCodeAt(const cc_string* text, int i);
+cc_bool Drawer2D_ValidColorCodeAt(const cc_string* text, int i);
 /* Whether text is empty or consists purely of valid colour codes. */
 cc_bool Drawer2D_IsEmptyText(const cc_string* text);
 /* Copies all characters from str into src, except for used colour codes */
 /* NOTE: Ampersands not followed by a used colour code are still copied */
-void Drawer2D_WithoutCols(cc_string* str, const cc_string* src);
+void Drawer2D_WithoutColors(cc_string* str, const cc_string* src);
 /* Returns the last valid colour code in the given input, or \0 if not found. */
-char Drawer2D_LastCol(const cc_string* text, int start);
+char Drawer2D_LastColor(const cc_string* text, int start);
 /* Returns whether the colour code is f, F or \0. */
-cc_bool Drawer2D_IsWhiteCol(char c);
+cc_bool Drawer2D_IsWhiteColor(char c);
 
 void Drawer2D_ReducePadding_Tex(struct Texture* tex, int point, int scale);
 void Drawer2D_ReducePadding_Height(int* height, int point, int scale);

@@ -318,7 +318,7 @@ void Drawer2D_MakeTexture(struct Texture* tex, struct Bitmap* bmp, int width, in
 	tex->uv.V2 = (float)height / (float)bmp->height;
 }
 
-cc_bool Drawer2D_ValidColCodeAt(const cc_string* text, int i) {
+cc_bool Drawer2D_ValidColorCodeAt(const cc_string* text, int i) {
 	if (i >= text->length) return false;
 	return BitmapCol_A(Drawer2D_GetColor(text->buffer[i])) != 0;
 }
@@ -329,19 +329,19 @@ cc_bool Drawer2D_IsEmptyText(const cc_string* text) {
 	
 	for (i = 0; i < text->length; i++) {
 		if (text->buffer[i] != '&') return false;
-		if (!Drawer2D_ValidColCodeAt(text, i + 1)) return false;
+		if (!Drawer2D_ValidColorCodeAt(text, i + 1)) return false;
 		i++; /* skip colour code */
 	}
 	return true;
 }
 
-void Drawer2D_WithoutCols(cc_string* str, const cc_string* src) {
+void Drawer2D_WithoutColors(cc_string* str, const cc_string* src) {
 	char c;
 	int i;
 	for (i = 0; i < src->length; i++) {
 		c  = src->buffer[i];
 
-		if (c == '&' && Drawer2D_ValidColCodeAt(src, i + 1)) {
+		if (c == '&' && Drawer2D_ValidColorCodeAt(src, i + 1)) {
 			i++; /* skip colour code */
 		} else {
 			String_Append(str, c);
@@ -349,19 +349,19 @@ void Drawer2D_WithoutCols(cc_string* str, const cc_string* src) {
 	}
 }
 
-char Drawer2D_LastCol(const cc_string* text, int start) {
+char Drawer2D_LastColor(const cc_string* text, int start) {
 	int i;
 	if (start >= text->length) start = text->length - 1;
 	
 	for (i = start; i >= 0; i--) {
 		if (text->buffer[i] != '&') continue;
-		if (Drawer2D_ValidColCodeAt(text, i + 1)) {
+		if (Drawer2D_ValidColorCodeAt(text, i + 1)) {
 			return text->buffer[i + 1];
 		}
 	}
 	return '\0';
 }
-cc_bool Drawer2D_IsWhiteCol(char c) { return c == '\0' || c == 'f' || c == 'F'; }
+cc_bool Drawer2D_IsWhiteColor(char c) { return c == '\0' || c == 'f' || c == 'F'; }
 
 /* Divides R/G/B by 4 */
 #define SHADOW_MASK ((0x3F << BITMAPCOL_R_SHIFT) | (0x3F << BITMAPCOL_G_SHIFT) | (0x3F << BITMAPCOL_B_SHIFT))
@@ -441,7 +441,7 @@ static void DrawBitmappedTextCore(struct Bitmap* bmp, struct DrawTextArgs* args,
 
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
-		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
+		if (c == '&' && Drawer2D_ValidColorCodeAt(&text, i + 1)) {
 			col = Drawer2D_GetColor(text.buffer[i + 1]);
 
 			if (shadow) col = GetShadowColor(col);
@@ -536,7 +536,7 @@ static int MeasureBitmappedWidth(const struct DrawTextArgs* args) {
 	text = args->text;
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
-		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
+		if (c == '&' && Drawer2D_ValidColorCodeAt(&text, i + 1)) {
 			i++; continue; /* skip over the colour code */
 		}
 		width += Drawer2D_Width(point, c) + xPadding;
@@ -613,7 +613,7 @@ void Drawer2D_DrawClippedText(struct Bitmap* bmp, struct DrawTextArgs* args,
 /*########################################################################################################################*
 *---------------------------------------------------Drawer2D component----------------------------------------------------*
 *#########################################################################################################################*/
-static void InitHexEncodedCol(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
+static void InitHexEncodedColor(int i, int hex, cc_uint8 lo, cc_uint8 hi) {
 	Drawer2D.Colors[i] = BitmapCol_Make(
 		lo * ((hex >> 2) & 1) + hi * (hex >> 3),
 		lo * ((hex >> 1) & 1) + hi * (hex >> 3),
@@ -628,11 +628,11 @@ static void OnReset(void) {
 	}
 
 	for (i = 0; i <= 9; i++) {
-		InitHexEncodedCol('0' + i, i, 191, 64);
+		InitHexEncodedColor('0' + i, i, 191, 64);
 	}
 	for (i = 10; i <= 15; i++) {
-		InitHexEncodedCol('a' + (i - 10), i, 191, 64);
-		InitHexEncodedCol('A' + (i - 10), i, 191, 64);
+		InitHexEncodedColor('a' + (i - 10), i, 191, 64);
+		InitHexEncodedColor('A' + (i - 10), i, 191, 64);
 	}
 }
 
@@ -1059,7 +1059,7 @@ static int Font_SysTextWidth(struct DrawTextArgs* args) {
 
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
-		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
+		if (c == '&' && Drawer2D_ValidColorCodeAt(&text, i + 1)) {
 			i++; continue; /* skip over the colour code */
 		}
 
@@ -1167,7 +1167,7 @@ static void Font_SysTextDraw(struct DrawTextArgs* args, struct Bitmap* bmp, int 
 
 	for (i = 0; i < text.length; i++) {
 		char c = text.buffer[i];
-		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
+		if (c == '&' && Drawer2D_ValidColorCodeAt(&text, i + 1)) {
 			col = Drawer2D_GetColor(text.buffer[i + 1]);
 
 			if (shadow) col = GetShadowColor(col);

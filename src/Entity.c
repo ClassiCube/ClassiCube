@@ -257,7 +257,7 @@ static void MakeNameTexture(struct Entity* e) {
 			origWhiteCol = Drawer2D.Colors['f'];
 
 			Drawer2D.Colors['f'] = shadowCol;
-			Drawer2D_WithoutCols(&colorlessName, &name);
+			Drawer2D_WithoutColors(&colorlessName, &name);
 			args.text = colorlessName;
 			Drawer2D_DrawText(&bmp, &args, NAME_OFFSET, NAME_OFFSET);
 

@@ -186,7 +186,7 @@ static void AppendChatLog(const cc_string* text) {
 	/* [HH:mm:ss] text */
 	String_InitArray(str, strBuffer);
 	String_Format3(&str, "[%p2:%p2:%p2] ", &now.hour, &now.minute, &now.second);
-	Drawer2D_WithoutCols(&str, text);
+	Drawer2D_WithoutColors(&str, text);
 
 	res = Stream_WriteLine(&logStream, &str);
 	if (!res) return;

@@ -19,6 +19,7 @@
 #include "Logger.h"
 #include "Options.h"
 #include "LBackend.h"
+#include "PackedCol.h"
 
 /* The area/region of the window that needs to be redrawn and presented to the screen. */
 /* If width is 0, means no area needs to be redrawn. */

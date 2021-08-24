@@ -16,6 +16,7 @@
 #include "LScreens.h"
 #include "Input.h"
 #include "Utils.h"
+#include "PackedCol.h"
 
 static struct Bitmap dirtBmp, stoneBmp;
 #define TILESIZE 48

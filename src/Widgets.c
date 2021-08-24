@@ -959,7 +959,7 @@ static void InputWidget_FormatLine(struct InputWidget* w, int i, cc_string* line
 
 	for (i = 0; i < src.length; i++) {
 		char c = src.buffer[i];
-		if (c == '%' && Drawer2D_ValidColCodeAt(&src, i + 1)) { c = '&'; }
+		if (c == '%' && Drawer2D_ValidColorCodeAt(&src, i + 1)) { c = '&'; }
 		String_Append(line, c);
 	}
 }
@@ -994,7 +994,7 @@ static char InputWidget_GetLastCol(struct InputWidget* w, int x, int y) {
 		line.length = 0;
 		InputWidget_FormatLine(w, y, &line);
 
-		col = Drawer2D_LastCol(&line, x);
+		col = Drawer2D_LastColor(&line, x);
 		if (col) return col;
 		if (y > 0) { x = w->lines[y - 1].length; }
 	}
@@ -1621,7 +1621,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 
 		/* Colour code continues in next line */
 		lastCol = InputWidget_GetLastCol(w, 0, i);
-		if (!Drawer2D_IsWhiteCol(lastCol)) {
+		if (!Drawer2D_IsWhiteColor(lastCol)) {
 			String_Append(&line, '&'); String_Append(&line, lastCol);
 		}
 		/* Convert % to & for colour codes */
