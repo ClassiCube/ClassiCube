@@ -256,6 +256,18 @@ static int HUDscreen_PointerDown(void* screen, int id, int x, int y) {
 	return false;
 }
 
+static void HUDScreen_PointerUp(void *screen, int id, int x, int y) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	if(!Input_TouchMode) return;
+	Elem_OnPointerUp(&s->hotbar, id, x, y);
+}
+
+static int HUDScreen_PointerMove(void *screen, int id, int x, int y) {
+	struct HUDScreen* s = (struct HUDScreen*)screen;
+	if(!Input_TouchMode) return false;
+	return Elem_HandlesPointerMove(&s->hotbar, id, x, y);
+}
+
 static int HUDscreen_MouseScroll(void* screen, float delta) {
 	struct HUDScreen* s = (struct HUDScreen*)screen;
 	/* The default scrolling behaviour (e.g. camera, zoom) needs to be checked */
@@ -307,7 +319,7 @@ static const struct ScreenVTABLE HUDScreen_VTABLE = {
 	HUDScreen_Init,        HUDScreen_Update,    HUDScreen_Free,
 	HUDScreen_Render,      HUDScreen_BuildMesh,
 	HUDScreen_KeyDown,     HUDScreen_InputUp,   Screen_FKeyPress, Screen_FText,
-	HUDscreen_PointerDown, Screen_PointerUp,    Screen_FPointer,  HUDscreen_MouseScroll,
+	HUDscreen_PointerDown, HUDScreen_PointerUp, HUDScreen_PointerMove,  HUDscreen_MouseScroll,
 	HUDScreen_Layout,      HUDScreen_ContextLost, HUDScreen_ContextRecreated
 };
 void HUDScreen_Show(void) {

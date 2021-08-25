@@ -470,6 +470,17 @@ static void HotbarWidget_Render(void* widget, double delta) {
 	w->ellipsisTex.X = HotbarWidget_TileX(w, HOTBAR_MAX_INDEX) - w->ellipsisTex.Width / 2;
 	w->ellipsisTex.Y = w->y + (w->height / 2) - w->ellipsisTex.Height / 2;
 	Texture_Render(&w->ellipsisTex);
+	int i;
+	for (i = 0; i < HOTBAR_MAX_INDEX; i++) {
+		if(w->touchId[i] != -1) {
+			w->touchTime[i] += delta;
+			if(w->touchTime[i] > 1) {
+				w->touchId[i] = -1;
+				w->touchTime[i] = 0;
+				Inventory_Set(i, 0);
+			}
+		}
+	}
 #endif
 }
 
@@ -517,13 +528,50 @@ static int HotbarWidget_PointerDown(void* widget, int id, int x, int y) {
 		if (!Gui_Contains(cellX, cellY, width, height, x, y)) continue;
 
 #ifdef CC_BUILD_TOUCH
-		if (i == HOTBAR_MAX_INDEX && Input_TouchMode) {
-			InventoryScreen_Show(); return TOUCH_TYPE_GUI;
+		if(Input_TouchMode) {
+			if (i == HOTBAR_MAX_INDEX) {
+				InventoryScreen_Show(); return TOUCH_TYPE_GUI;
+			} else {
+				w->touchId[i] = id;
+				w->touchTime[i] = 0;
+			}
 		}
 #endif
 		Inventory_SetSelectedIndex(i);
 		return TOUCH_TYPE_GUI;
 	}
+	return false;
+}
+
+static void HotbarWidget_PointerUp(void* widget, int id, int x, int y) {
+#ifdef CC_BUILD_TOUCH
+	struct HotbarWidget* w = (struct HotbarWidget*)widget;
+	int i;
+
+	for (i = 0; i < HOTBAR_MAX_INDEX; i++) {
+		if (w->touchId[i] == id) {
+			w->touchId[i] = -1;
+			w->touchTime[i] = 0;
+		}
+	}
+#endif
+}
+
+static int HotbarWidget_PointerMove(void* widget, int id, int x, int y) {
+#ifdef CC_BUILD_TOUCH
+	struct HotbarWidget* w = (struct HotbarWidget*)widget;
+	int i;
+
+	for (i = 0; i < HOTBAR_MAX_INDEX; i++) {
+		if (w->touchId[i] == id) {
+			if (!Widget_Contains(w, x, y)) {
+				w->touchId[i] = -1;
+				w->touchTime[i] = 0;
+				return true;
+			}
+		}
+	}
+#endif
 	return false;
 }
 
@@ -553,9 +601,9 @@ static void HotbarWidget_Free(void* widget) {
 }
 
 static const struct WidgetVTABLE HotbarWidget_VTABLE = {
-	HotbarWidget_Render,      HotbarWidget_Free,    HotbarWidget_Reposition,
-	HotbarWidget_KeyDown,     HotbarWidget_InputUp, HotbarWidget_MouseScroll,
-	HotbarWidget_PointerDown, Widget_PointerUp,     Widget_PointerMove
+	HotbarWidget_Render,      HotbarWidget_Free,      HotbarWidget_Reposition,
+	HotbarWidget_KeyDown,     HotbarWidget_InputUp,   HotbarWidget_MouseScroll,
+	HotbarWidget_PointerDown, HotbarWidget_PointerUp, HotbarWidget_PointerMove
 };
 void HotbarWidget_Create(struct HotbarWidget* w) {
 	Widget_Reset(w);
@@ -563,6 +611,12 @@ void HotbarWidget_Create(struct HotbarWidget* w) {
 	w->horAnchor = ANCHOR_CENTRE;
 	w->verAnchor = ANCHOR_MAX;
 	w->scale     = 1;
+#ifdef CC_BUILD_TOUCH
+	int i;
+	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR - 1; i++) {
+		w->touchId[i] = -1;
+	}
+#endif
 }
 
 void HotbarWidget_SetFont(struct HotbarWidget* w, struct FontDesc* font) {
