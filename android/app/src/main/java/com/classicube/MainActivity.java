@@ -180,7 +180,11 @@ public class MainActivity extends Activity {
 		window.setFormat(PixelFormat.RGBX_8888);
 		window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		renderOverDisplayCutouts();
+		// TODO: rendering over display cutouts causes a problem where opening onscreen keyboard
+		//  stops resizing the game view. (e.g. meaning you can't see in-game chat input anymore)
+		//  Apparently intentional (see LayoutParams.SOFT_INPUT_ADJUST_RESIZE documentation)
+		// Need to find a solution that both renders over display cutouts and doesn't mess up onscreen input
+		// renderOverDisplayCutouts();
 		// TODO: semaphore for destroyed and surfaceDestroyed
 
 		// avoid FileUriExposed exception when taking screenshots on recent Android versions

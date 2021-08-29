@@ -9,6 +9,7 @@
 #include "Window.h"
 #include "Utils.h"
 #include "Errors.h"
+#include "PackedCol.h"
 
 /* POSIX can be shared between Linux/BSD/macOS */
 #include <errno.h>
