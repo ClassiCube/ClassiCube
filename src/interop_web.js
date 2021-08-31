@@ -247,7 +247,7 @@ mergeInto(LibraryManager.library, {
       FS.lookupPath('/classicube');
       return;
       // FS.lookupPath throws exception if path doesn't exist
-    } catch { }
+    } catch (e) { }
     
     addRunDependency('load-idb');
     FS.mkdir('/classicube');
