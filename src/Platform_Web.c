@@ -97,6 +97,7 @@ cc_uint64 Stopwatch_Measure(void) {
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
 extern void interop_InitFilesystem(void);
+extern void interop_LoadIndexedDB(void);
 extern int interop_DirectoryCreate(const char* path, int perms);
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
@@ -431,6 +432,7 @@ extern void interop_InitModule(void);
 void Platform_Init(void) {
 	interop_InitModule();
 	interop_InitFilesystem();
+	interop_LoadIndexedDB();
 	interop_InitSockets();
 	
 	/* NOTE: You must pre-load IndexedDB before main() */

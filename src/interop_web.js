@@ -126,69 +126,6 @@ mergeInto(LibraryManager.library, {
     HEAP32[(time|0 + 16)>>2] = date.getMinutes();
     HEAP32[(time|0 + 20)>>2] = date.getSeconds();
   },
-
-
-//########################################################################################################################
-//--------------------------------------------------------Filesystem------------------------------------------------------
-//########################################################################################################################
-  interop_SaveNode: function(path) {
-    var callback = function(err) { 
-      if (!err) return;
-      console.log(err);
-      ccall('Platform_LogError', 'void', ['string'], ['&cError saving ' + path]);
-      ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
-    }; 
-    
-    var stat, node, entry;
-    try {
-      var lookup = FS.lookupPath(path);
-      path = lookup.path;
-      node = lookup.node;
-      stat = node.node_ops.getattr(node);
-    
-      if (FS.isDir(stat.mode)) {
-        entry = { timestamp: stat.mtime, mode: stat.mode };
-      } else {
-        // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
-        // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
-        node.contents = MEMFS.getFileDataAsTypedArray(node);
-        entry = { timestamp: stat.mtime, mode: stat.mode, contents: node.contents };
-      }
-    } catch (err) {
-      return callback(err);
-    }
-    
-    IDBFS.getDB('/classicube', function(err, db) {
-      if (err) return callback(err);
-      var transaction, store;
-      
-      // can still throw errors here
-      try {
-        transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
-        store = transaction.objectStore(IDBFS.DB_STORE_NAME);
-      } catch (err) {
-        return callback(err);
-      }
-      
-      transaction.onerror = function(e) {
-        callback(this.error);
-        e.preventDefault();
-      };
-      
-      var req = store.put(entry, path);
-      req.onsuccess = function()  { callback(null); };
-      req.onerror   = function(e) {
-        callback(this.error);
-        e.preventDefault();
-      };
-    });
-  },
-  interop_InitFilesystem: function(buffer) {
-    if (!window.cc_idbErr) return;
-    var msg = 'Error preloading IndexedDB:' + window.cc_idbErr + '\n\nPreviously saved settings/maps will be lost';
-    ccall('Platform_LogError', 'void', ['string'], [msg]);
-  },
-  interop_InitFilesystem__deps: ['interop_SaveNode'],
   interop_DirectorySetWorking: function (raw) {
     var path = UTF8ToString(raw);
     try {
@@ -296,6 +233,84 @@ mergeInto(LibraryManager.library, {
   },
   interop_FileClose__deps: ['interop_SaveNode'],
   
+  
+//########################################################################################################################
+//--------------------------------------------------------Filesystem------------------------------------------------------
+//########################################################################################################################
+  interop_InitFilesystem: function(buffer) {
+    if (!window.cc_idbErr) return;
+    var msg = 'Error preloading IndexedDB:' + window.cc_idbErr + '\n\nPreviously saved settings/maps will be lost';
+    ccall('Platform_LogError', 'void', ['string'], [msg]);
+  },
+  interop_LoadIndexedDB: function() {
+    try {
+      FS.lookupPath('/classicube');
+      return;
+      // FS.lookupPath throws exception if path doesn't exist
+    } catch { }
+    
+    addRunDependency('load-idb');
+    FS.mkdir('/classicube');
+    FS.mount(IDBFS, {}, '/classicube');
+    FS.syncfs(true, function(err) { 
+      if (err) window.cc_idbErr = err;
+      removeRunDependency('load-idb');
+    });
+  },
+  interop_InitFilesystem__deps: ['interop_SaveNode'],
+  interop_SaveNode: function(path) {
+    var callback = function(err) { 
+      if (!err) return;
+      console.log(err);
+      ccall('Platform_LogError', 'void', ['string'], ['&cError saving ' + path]);
+      ccall('Platform_LogError', 'void', ['string'], ['   &c' + err]);
+    }; 
+    
+    var stat, node, entry;
+    try {
+      var lookup = FS.lookupPath(path);
+      path = lookup.path;
+      node = lookup.node;
+      stat = node.node_ops.getattr(node);
+    
+      if (FS.isDir(stat.mode)) {
+        entry = { timestamp: stat.mtime, mode: stat.mode };
+      } else {
+        // Performance consideration: storing a normal JavaScript array to a IndexedDB is much slower than storing a typed array.
+        // Therefore always convert the file contents to a typed array first before writing the data to IndexedDB.
+        node.contents = MEMFS.getFileDataAsTypedArray(node);
+        entry = { timestamp: stat.mtime, mode: stat.mode, contents: node.contents };
+      }
+    } catch (err) {
+      return callback(err);
+    }
+    
+    IDBFS.getDB('/classicube', function(err, db) {
+      if (err) return callback(err);
+      var transaction, store;
+      
+      // can still throw errors here
+      try {
+        transaction = db.transaction([IDBFS.DB_STORE_NAME], 'readwrite');
+        store = transaction.objectStore(IDBFS.DB_STORE_NAME);
+      } catch (err) {
+        return callback(err);
+      }
+      
+      transaction.onerror = function(e) {
+        callback(this.error);
+        e.preventDefault();
+      };
+      
+      var req = store.put(entry, path);
+      req.onsuccess = function()  { callback(null); };
+      req.onerror   = function(e) {
+        callback(this.error);
+        e.preventDefault();
+      };
+    });
+  },
+
 
 //########################################################################################################################
 //---------------------------------------------------------Sockets--------------------------------------------------------
