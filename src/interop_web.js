@@ -242,22 +242,32 @@ mergeInto(LibraryManager.library, {
     var msg = 'Error preloading IndexedDB:' + window.cc_idbErr + '\n\nPreviously saved settings/maps will be lost';
     ccall('Platform_LogError', 'void', ['string'], [msg]);
   },
-  interop_LoadIndexedDB: function() {
+  interop_InitFilesystem__deps: ['interop_SaveNode'],
+  interop_AsyncLoadIndexedDB: function() {
+    var found;
     try {
       FS.lookupPath('/classicube');
-      return;
+      found = true;
+    } catch (e) {
       // FS.lookupPath throws exception if path doesn't exist
-    } catch (e) { }
+      found = false;
+    }
+
+    if (found) {
+      ccall('Platform_OnReady', 'void');
+      return;
+    }
     
-    addRunDependency('load-idb');
+    Module.setStatus('Preloading filesystem.. (3/3)');
     FS.mkdir('/classicube');
     FS.mount(IDBFS, {}, '/classicube');
+    
     FS.syncfs(true, function(err) { 
       if (err) window.cc_idbErr = err;
-      removeRunDependency('load-idb');
+      Module.setStatus('');
+      ccall('Platform_OnReady', 'void');
     });
   },
-  interop_InitFilesystem__deps: ['interop_SaveNode'],
   interop_SaveNode: function(path) {
     var callback = function(err) { 
       if (!err) return;

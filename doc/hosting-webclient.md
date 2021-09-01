@@ -26,19 +26,8 @@ You are required to have this HTML code somewhere in the page:
 <span id="logmsg"></span>
 
 <script type='text/javascript'>
-  // need to load IndexedDB before running the game
-  function preloadIndexedDB() {
-    addRunDependency('load-idb');
-    FS.mkdir('/classicube');
-    FS.mount(IDBFS, {}, '/classicube');
-    FS.syncfs(true, function(err) {
-        if (err) window.cc_idbErr = err;
-        removeRunDependency('load-idb');
-    })
-  }
-  
   var Module = {
-    preRun: [ preloadIndexedDB ],
+    preRun: [],
     postRun: [],
     arguments: [ {username}, {mppass}, {server ip}, {server port} ],
     print: function(text) {

@@ -70,17 +70,6 @@ if __name__ == "__main__":
   </div>
 </div>
 <script type='text/javascript'>
-  // need to load IndexedDB before running the game
-  function preloadIndexedDB() {
-    addRunDependency('load-idb');
-    FS.mkdir('/classicube');
-    FS.mount(IDBFS, {}, '/classicube');
-    FS.syncfs(true, function(err) {
-        if (err) window.cc_idbErr = err;
-        removeRunDependency('load-idb');
-    })
-  }
-
   function resizeGameCanvas() {
     var cc_canv = $('canvas#canvas');
     var dpi = window.devicePixelRatio;
@@ -104,7 +93,7 @@ if __name__ == "__main__":
   }
 
   var Module = {
-    preRun: [ preloadIndexedDB, resizeGameCanvas ],
+    preRun: [ resizeGameCanvas ],
     postRun: [],
     arguments: {{game_args|safe}},
     print: function(text) {

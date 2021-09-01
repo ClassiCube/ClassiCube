@@ -96,8 +96,6 @@ cc_uint64 Stopwatch_Measure(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------Directory/File------------------------------------------------------*
 *#########################################################################################################################*/
-extern void interop_InitFilesystem(void);
-extern void interop_LoadIndexedDB(void);
 extern int interop_DirectoryCreate(const char* path, int perms);
 cc_result Directory_Create(const cc_string* path) {
 	char str[NATIVE_STR_LEN];
@@ -358,7 +356,10 @@ cc_result Socket_Poll(cc_socket s, int mode, cc_bool* success) {
 *-----------------------------------------------------Process/Module------------------------------------------------------*
 *#########################################################################################################################*/
 cc_result Process_StartGame(const cc_string* args) { return ERR_NOT_SUPPORTED; }
-void Process_Exit(cc_result code) { exit(code); }
+void Process_Exit(cc_result code) {
+	/* game normally calls exit with code = 0 due to async IndexedDB loading */
+	if (code) exit(code); 
+}
 
 extern int interop_OpenTab(const char* url);
 cc_result Process_StartOpen(const cc_string* args) {
@@ -429,18 +430,31 @@ EMSCRIPTEN_KEEPALIVE void Platform_LogError(const char* msg) {
 }
 
 extern void interop_InitModule(void);
+extern void interop_InitFilesystem(void);
 void Platform_Init(void) {
 	interop_InitModule();
 	interop_InitFilesystem();
-	interop_LoadIndexedDB();
 	interop_InitSockets();
-	
-	/* NOTE: You must pre-load IndexedDB before main() */
-	/* (because pre-loading only works asynchronously) */
-	/* If you don't, you'll get errors later trying to sync local to remote */
-	/* See doc/hosting-webclient.md for example preloading IndexedDB code */
 }
 void Platform_Free(void) { }
+
+extern int main_real(int argc, char** argv);
+static int _argc;
+static char** _argv;
+EMSCRIPTEN_KEEPALIVE void Platform_OnReady(void) {
+	main_real(_argc, _argv);
+}
+
+extern void interop_AsyncLoadIndexedDB(void);
+int main(int argc, char** argv) {
+	_argc = argc;
+	_argv = argv;
+
+	/* IndexedDB loads asynchronously, and then calls Platform_OnReady */
+	/*  once it has finished loading to actually start the game */
+	interop_AsyncLoadIndexedDB();
+	return 0;
+}
 
 
 /*########################################################################################################################*

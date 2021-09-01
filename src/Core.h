@@ -242,6 +242,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_WEBAUDIO
 #define CC_BUILD_NOMUSIC
 #define CC_BUILD_MINFILES
+#define CC_NOMAIN
 #endif
 #endif
 
