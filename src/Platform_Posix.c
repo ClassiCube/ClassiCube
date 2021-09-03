@@ -993,6 +993,11 @@ static void Platform_InitStopwatch(void) {
 #if defined CC_BUILD_MACOS
 static void Platform_InitSpecific(void) {
 	ProcessSerialNumber psn = { 0, kCurrentProcess };
+#ifdef __ppc__
+	/* TransformProcessType doesn't work with kCurrentProcess on older macOS */
+	GetCurrentProcess(&psn);
+#endif
+
 	/* NOTE: Call as soon as possible, otherwise can't click on dialog boxes or create windows */
 	/* NOTE: TransformProcessType is macOS 10.3 or later */
 	TransformProcessType(&psn, kProcessTransformToForegroundApplication);
