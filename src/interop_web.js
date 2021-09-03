@@ -264,7 +264,6 @@ mergeInto(LibraryManager.library, {
     
     FS.syncfs(true, function(err) { 
       if (err) window.cc_idbErr = err;
-      Module.setStatus('');
       ccall('Platform_OnReady', 'void');
     });
   },
