@@ -442,7 +442,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 				/* set alpha component of palette */
 				for (i = 0; i < dataSize; i++) {
 					palette[i] &= BITMAPCOL_RGB_MASK; /* set A to 0 */
-					palette[i] |= tmp[i] << PACKEDCOL_A_SHIFT;
+					palette[i] |= tmp[i] << BITMAPCOL_A_SHIFT;
 				}
 			} else if (col == PNG_COL_RGB) {
 				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
