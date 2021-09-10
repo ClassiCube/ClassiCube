@@ -1,6 +1,5 @@
 #include "Bitmap.h"
 #include "Platform.h"
-#include "PackedCol.h"
 #include "ExtMath.h"
 #include "Deflate.h"
 #include "Logger.h"

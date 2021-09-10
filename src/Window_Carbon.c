@@ -663,7 +663,6 @@ void Window_CloseKeyboard(void) { }
 #include <AGL/agl.h>
 
 static AGLContext ctx_handle;
-static cc_bool ctx_firstFullscreen;
 static int ctx_windowWidth, ctx_windowHeight;
 
 static void GLContext_Check(int code, const char* place) {
@@ -732,18 +731,6 @@ static cc_result GLContext_SetFullscreen(void) {
 		code = aglGetError();
 		GLContext_UnsetFullscreen();
 		return code;
-	}
-	/* TODO: Do we really need to call this? */
-	GLContext_MakeCurrent();
-
-	/* This is a weird hack to workaround a bug where the first time a context */
-	/* is made fullscreen, we just end up with a blank screen.  So we undo it as fullscreen */
-	/* and redo it as fullscreen. */
-	/* TODO: We really should'd need to do this. Need to debug on real hardware. */
-	if (!ctx_firstFullscreen) {
-		ctx_firstFullscreen = true;
-		GLContext_UnsetFullscreen();
-		return GLContext_SetFullscreen();
 	}
 
 	win_fullscreen   = true;
