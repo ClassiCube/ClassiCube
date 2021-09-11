@@ -173,7 +173,7 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 	DIR* dirPtr;
 	struct dirent* entry;
 	char* src;
-	int len, res;
+	int len, res, is_dir;
 
 	Platform_EncodeUtf8(str, dirPath);
 	dirPtr = opendir(str);
@@ -196,8 +196,19 @@ cc_result Directory_Enum(const cc_string* dirPath, void* obj, Directory_EnumCall
 		len = String_Length(src);
 		String_AppendUtf8(&path, src, len);
 
+#if defined CC_BUILD_HAIKU || defined CC_BUILD_SOLARIS
+		{
+			char full_path[NATIVE_STR_LEN];
+			struct stat sb;
+			Platform_EncodeUtf8(full_path, &path);
+			is_dir = stat(full_path, &sb) == 0 && S_ISDIR(sb.st_mode);
+		}
+#else
+		is_dir = entry->d_type == DT_DIR;
 		/* TODO: fallback to stat when this fails */
-		if (entry->d_type == DT_DIR) {
+#endif
+
+		if (is_dir) {
 			res = Directory_Enum(&path, obj, callback);
 			if (res) { closedir(dirPtr); return res; }
 		} else {

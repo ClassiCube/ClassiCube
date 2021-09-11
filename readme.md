@@ -122,15 +122,11 @@ Install libexecinfo, curl and openal package if needed.
 
 ```gcc *.c -o ClassiCube -lm -lsocket -lX11 -lXi -lGL```
 
-NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
-
 #### Haiku
 
 Install libsdl2_devel, openal_devel, and libexecinfo_devel package if needed.
 
 ```gcc *.c -o ClassiCube -lm -lexecinfo -lGL -lnetwork -lSDL2```
-
-NOTE: You have to change entry->d_type == DT_DIR to Directory_Exists(&path) (TODO do this automatically)
 
 ## Compiling - other
 

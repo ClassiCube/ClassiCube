@@ -128,11 +128,14 @@ int main(int argc, char** argv) {
 	return res;
 }
 
+#if defined CC_BUILD_IOS
+/* ClassiCube is sort of and sort of not the executable */
+/*  on iOS - UIKit is responsible for kickstarting the game. */
+/* (this is handled interop_ios.m as the code is Objective C) */
+#elif defined CC_BUILD_ANDROID
 /* ClassiCube is just a native library on android, */
 /*  unlike other platforms where it is the executable. */
-/* As such, we have to hook into the java-side activity, */
-/*  which eventually calls runGameAsync to actually run the game. */
-#ifdef CC_BUILD_ANDROID
+/* (activity java class is responsible for kickstarting the game) */
 static void android_main(void) {
 	Platform_LogConst("Main loop started!");
 	/* Android client is always built with CC_NOMAIN, because a user who */
@@ -143,6 +146,7 @@ static void android_main(void) {
 	main_real(0, NULL); 
 }
 
+/* Called eventually by the activity java class to actually start the game */
 static void JNICALL java_runGameAsync(JNIEnv* env, jobject instance) {
 	void* thread;
 	App_Instance = (*env)->NewGlobalRef(env, instance);
@@ -154,13 +158,12 @@ static void JNICALL java_runGameAsync(JNIEnv* env, jobject instance) {
 	thread = Thread_Start(android_main);
 	Thread_Detach(thread);
 }
-
-static const JNINativeMethod methods[1] = {
+static const JNINativeMethod methods[] = {
 	{ "runGameAsync", "()V", java_runGameAsync }
 };
 
 /* This method is automatically called by the Java VM when the */
-/*  android activity calls 'System.loadLibrary("classicube");' */
+/*  activity java class calls 'System.loadLibrary("classicube");' */
 CC_API jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 	jclass klass;
 	JNIEnv* env;
