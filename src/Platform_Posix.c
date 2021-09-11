@@ -49,6 +49,7 @@ const cc_result ReturnCode_DirectoryExists  = EEXIST;
 #endif
 #elif defined CC_BUILD_SOLARIS
 #include <sys/filio.h>
+#include <sys/systeminfo.h>
 #elif defined CC_BUILD_BSD
 #include <sys/sysctl.h>
 #elif defined CC_BUILD_HAIKU

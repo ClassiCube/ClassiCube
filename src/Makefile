@@ -36,6 +36,7 @@ endif
 
 ifeq ($(PLAT),sunos)
 CC=gcc
+CFLAGS=-g -pipe -fno-math-errno
 LIBS=-lm -lsocket -lX11 -lXi -lGL
 endif
 
