@@ -483,7 +483,7 @@ void ShowDialogCore(const char* title, const char* msg) {
 	
 	[alert setMessageText: titleCF];
 	[alert setInformativeText: msgCF];
-	[alert addButtonWithTitle: CFSTR("OK")];
+	[alert addButtonWithTitle: @"OK"];
 	
 	[alert runModal];
 	CFRelease(titleCF);

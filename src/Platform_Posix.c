@@ -508,7 +508,7 @@ int Socket_ValidAddress(const cc_string* address) {
 }
 
 cc_result Socket_Connect(cc_socket* s, const cc_string* address, int port) {
-	int family, addrSize, blocking_raw = -1; /* non-blocking mode */
+	int family, addrSize = 0, blocking_raw = -1; /* non-blocking mode */
 	union SocketAddress addr;
 	cc_result res;
 

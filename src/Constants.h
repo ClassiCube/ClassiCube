@@ -12,9 +12,6 @@
 #define GAME_APP_ALT   "ClassiCube 1.2.7 web mobile"
 #define GAME_APP_NAME  "ClassiCube 1.2.7 web"
 #define GAME_APP_TITLE "ClassiCube"
-#elif defined CC_BUILD_COCOA
-#define GAME_APP_NAME  "ClassiCube 1.2.7 alpha"
-#define GAME_APP_TITLE "ClassiCube 1.2.7 alpha"
 #elif defined CC_BUILD_ANDROID
 #define GAME_APP_NAME  "ClassiCube 1.2.7 android alpha"
 #define GAME_APP_TITLE "ClassiCube 1.2.7 android alpha"
