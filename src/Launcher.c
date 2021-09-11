@@ -112,7 +112,7 @@ cc_bool Launcher_StartGame(const cc_string* user, const cc_string* mppass, const
 	res = Process_StartGame(&args);
 	if (res) { Logger_SysWarn(res, "starting game"); return false; }
 
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 	Launcher_ShouldExit = true;
 #else
 	Launcher_ShouldExit = Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false);
@@ -279,7 +279,7 @@ static void Launcher_Free(void) {
 void Launcher_Run(void) {
 	static const cc_string title = String_FromConst(GAME_APP_TITLE);
 	Window_Create(640, 400);
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 	Window_EnterFullscreen();
 	Window_LockLandscapeOrientation(Options_GetBool(OPT_LANDSCAPE_MODE, false));
 #endif
@@ -329,7 +329,7 @@ void Launcher_Run(void) {
 	Options_SaveIfChanged();
 	Launcher_Free();
 
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 	extern int Program_Run(int argc, char** argv);
 	extern cc_bool Window_RemakeSurface(void);
 

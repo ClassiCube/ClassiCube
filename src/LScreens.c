@@ -1412,7 +1412,7 @@ static struct SettingsScreen {
 	LScreen_Layout
 	struct LButton btnUpdates, btnMode, btnColours, btnBack;
 	struct LLabel  lblUpdates, lblMode, lblColours;
-#if defined CC_BUILD_ANDROID
+#if defined CC_BUILD_MOBILE
 	struct LLabel lblOrientlock;
 	struct LCheckbox cbOrientlock;
 	struct LWidget* _widgets[9];
@@ -1421,7 +1421,7 @@ static struct SettingsScreen {
 #endif
 } SettingsScreen_Instance;
 
-#if defined CC_BUILD_ANDROID
+#if defined CC_BUILD_MOBILE
 static void SettingsScreen_LockOrientation(void* w, int idx) {
 	struct LCheckbox* cb = (struct LCheckbox*)w;
 	cb->value = !cb->value;
@@ -1444,7 +1444,7 @@ static void SettingsScreen_Init(struct LScreen* s_) {
 	LButton_Init(s_, &s->btnColours, 110, 35, "Theme");
 	LLabel_Init(s_,  &s->lblColours, "&eChange how the launcher looks");
 
-#if defined CC_BUILD_ANDROID
+#if defined CC_BUILD_MOBILE
 	LLabel_Init(s_,    &s->lblOrientlock, "Force landscape");
 	LCheckbox_Init(s_, &s->cbOrientlock);
 	s->cbOrientlock.OnClick = SettingsScreen_LockOrientation;
@@ -1462,7 +1462,7 @@ static void SettingsScreen_Show(struct LScreen* s_) {
 	struct SettingsScreen* s = (struct SettingsScreen*)s_;
 	s->btnColours.hidden = Options_GetBool(OPT_CLASSIC_MODE, false);
 	s->lblColours.hidden = s->btnColours.hidden;
-#if defined CC_BUILD_ANDROID
+#if defined CC_BUILD_MOBILE
 	s->cbOrientlock.value = Options_GetBool(OPT_LANDSCAPE_MODE, false);
 #endif
 }
@@ -1478,7 +1478,7 @@ static void SettingsScreen_Layout(struct LScreen* s_) {
 	LWidget_SetLocation(&s->btnColours, ANCHOR_CENTRE,     ANCHOR_CENTRE, -135, -20);
 	LWidget_SetLocation(&s->lblColours, ANCHOR_CENTRE_MIN, ANCHOR_CENTRE,  -70, -20);
 
-#if defined CC_BUILD_ANDROID
+#if defined CC_BUILD_MOBILE
 	LWidget_SetLocation(&s->cbOrientlock,  ANCHOR_CENTRE, ANCHOR_CENTRE, -178, 24);
 	LWidget_SetLocation(&s->lblOrientlock, ANCHOR_CENTRE, ANCHOR_CENTRE,   -84, 24);
 #endif
@@ -1718,7 +1718,7 @@ static void UpdatesScreen_Init(struct LScreen* s_) {
 		LButton_Init(s_, &s->btnRel[1], 130, 35, "OpenGL");
 		LButton_Init(s_, &s->btnDev[1], 130, 35, "OpenGL");
 	}
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 	LLabel_Init(s_, &s->lblInfo, "&eRedownload and reinstall to update");
 #endif
 

@@ -643,8 +643,8 @@ static void OnInit(void) {
 	Commands_Register(&ClearDeniedCommand);
 
 #if defined CC_BUILD_MINFILES 
-#elif defined CC_BUILD_ANDROID
-	/* Better to not log chat by default on android, */
+#elif defined CC_BUILD_MOBILE
+	/* Better to not log chat by default on mobile, */
 	/* since it's not easily visible to end users */
 	Chat_Logging = Options_GetBool(OPT_CHAT_LOGGING, false);
 #else

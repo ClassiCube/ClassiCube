@@ -158,6 +158,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_WINMM
 #elif defined __ANDROID__
 #define CC_BUILD_ANDROID
+#define CC_BUILD_MOBILE
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #define CC_BUILD_GLMODERN
@@ -183,6 +184,7 @@ Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define CC_BUILD_POSIX
 #define CC_BUILD_GL
 #if defined __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__
+#define CC_BUILD_MOBILE
 #define CC_BUILD_GLES
 #define CC_BUILD_GLMODERN
 #define CC_BUILD_IOS

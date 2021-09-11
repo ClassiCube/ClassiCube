@@ -28,7 +28,7 @@ static struct FileResource {
 	{ "classic jar", "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar",  291 },
 	{ "1.6.2 jar",   "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar",     4621 },
 	{ "terrain.png patch", RESOURCE_SERVER "/terrain-patch2.png",  7 },
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 	{ "new textures",      RESOURCE_SERVER "/default.zip",        87 }
 #else
 	{ "gui.png patch",     RESOURCE_SERVER "/gui.png",            21 }
@@ -48,7 +48,7 @@ static struct ResourceTexture {
 	/* other files */
 	{ "snow.png"     }, { "chicken.png"     }, { "gui.png"     },
 	{ "animations.png" }, { "animations.txt" },
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 	{ "touch.png" }
 #endif
 };
@@ -522,7 +522,7 @@ static cc_result ModernPatcher_ExtractFiles(struct Stream* s) {
 	return Zip_Extract(&zip);
 }
 
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 /* Android has both a gui.png and a touch.png */
 /* TODO: Unify both android and desktop platforms to both just extract from default.zip */
 static cc_bool TexPatcher_SelectEntry(const cc_string* path) {
