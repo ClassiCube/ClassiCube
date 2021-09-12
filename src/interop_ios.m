@@ -7,17 +7,29 @@
 #include <UIKit/UIPasteboard.h>
 #include <UIKit/UIKit.h>
 
-@interface ViewController : UIViewController
+@interface CCWindow : UIWindow
 @end
 
-@interface AppDelegate : UIResponder<UIApplicationDelegate>
+@interface CCViewController : UIViewController
+@end
+
+@interface CCAppDelegate : UIResponder<UIApplicationDelegate>
 @property (strong, nonatomic) UIWindow *window;
 @end
 
-static ViewController* controller;
+static CCViewController* controller;
 static UIWindow* winHandle;
 
-@implementation ViewController
+static void DoDrawFramebuffer(CGRect dirty);
+@implementation CCWindow
+
+- (void)drawRect:(CGRect)dirty { DoDrawFramebuffer(dirty); }
+
+- (BOOL)isOpaque { return YES; }
+
+@end
+
+@implementation CCViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -25,7 +37,7 @@ static UIWindow* winHandle;
 }
 @end
 
-@implementation AppDelegate
+@implementation CCAppDelegate
 
 - (void)runMainLoop {
     extern int main_real(int argc, char** argv);
@@ -65,7 +77,7 @@ static UIWindow* winHandle;
 
 int main(int argc, char * argv[]) {
     @autoreleasepool {
-        return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+        return UIApplicationMain(argc, argv, nil, NSStringFromClass([CCAppDelegate class]));
     }
 }
 
@@ -110,11 +122,15 @@ void Window_Init(void) {
 }
 
 void Window_Create(int width, int height) {
-    controller = [ViewController alloc];
-    winHandle  = [[UIWindow alloc] initWithFrame:UIScreen.mainScreen.bounds];
+    CGRect bounds = UIScreen.mainScreen.bounds;
+    controller = [CCViewController alloc];
+    winHandle  = [[CCWindow alloc] initWithFrame:bounds];
+    
     winHandle.rootViewController = controller;
     winHandle.backgroundColor = UIColor.blueColor;
     WindowInfo.Exists = true;
+    WindowInfo.Width  = bounds.size.width;
+    WindowInfo.Height = bounds.size.height;
 }
 void Window_SetSize(int width, int height) { }
 
@@ -147,8 +163,47 @@ void Window_AllocFramebuffer(struct Bitmap* bmp) {
     fb_bmp = *bmp;
 }
 
+static void DoDrawFramebuffer(CGRect dirty) {
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = NULL;
+    CGDataProviderRef provider;
+    CGImageRef image;
+    CGRect rect;
+    
+    // Unfortunately CGImageRef is immutable, so changing the
+    // underlying data doesn't change what shows when drawing.
+    // TODO: Find a better way of doing this in cocoa..
+    if (!fb_bmp.scan0) return;
+    context   = UIGraphicsGetCurrentContext();
+    //CGContextTranslateCTM(context, 0, -WindowInfo.Height);
+    //CGContextScaleCTM(context, 1.0, -1.0); // invert upside down
+    
+    // TODO: Only update changed bit..
+    rect.origin.x = 0; rect.origin.y = 0;
+    rect.size.width  = WindowInfo.Width;
+    rect.size.height = WindowInfo.Height;
+    
+    // TODO: REPLACE THIS AWFUL HACK
+    provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
+                                            Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
+    image = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
+                          kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
+    
+    CGContextDrawImage(context, rect, image);
+    CGContextSynchronize(context);
+    
+    CGImageRelease(image);
+    CGDataProviderRelease(provider);
+    CGColorSpaceRelease(colorSpace);
+}
+
 void Window_DrawFramebuffer(Rect2D r) {
-    [winHandle setNeedsDisplay];
+    CGRect rect;
+    rect.origin.x    = r.X;
+    rect.origin.y    = WindowInfo.Height - r.Y - r.Height;
+    rect.size.width  = r.Width;
+    rect.size.height = r.Height;
+    [winHandle setNeedsDisplayInRect:rect];
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
