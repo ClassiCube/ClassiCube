@@ -14,7 +14,7 @@ static NSView* viewHandle;
 /*########################################################################################################################*
 *---------------------------------------------------Shared with Carbon----------------------------------------------------*
 *#########################################################################################################################*/
-/* NOTE: If code here is changed, don't forget to update corresponding code in Window_Carbon.c */
+// NOTE: If code here is changed, don't forget to update corresponding code in Window_Carbon.c
 static void Window_CommonInit(void) {
 	CGDirectDisplayID display = CGMainDisplayID();
 	CGRect bounds = CGDisplayBounds(display);
@@ -34,12 +34,12 @@ static pascal OSErr HandleQuitMessage(const AppleEvent* ev, AppleEvent* reply, l
 }
 
 static void Window_CommonCreate(void) {
-	/* for quit buttons in dock and menubar */
+	// for quit buttons in dock and menubar
 	AEInstallEventHandler(kCoreEventClass, kAEQuitApplication,
 		NewAEEventHandlerUPP(HandleQuitMessage), 0, false);
 }
 
-/* Sourced from https://www.meandmark.com/keycodes.html */
+// Sourced from https://www.meandmark.com/keycodes.html
 static const cc_uint8 key_map[8 * 16] = {
 	'A', 'S', 'D', 'F', 'H', 'G', 'Z', 'X', 'C', 'V', 0, 'B', 'Q', 'W', 'E', 'R',
 	'Y', 'T', '1', '2', '3', '4', '6', '5', KEY_EQUALS, '9', '7', KEY_MINUS, '8', '0', KEY_RBRACKET, 'O',
@@ -51,16 +51,16 @@ static const cc_uint8 key_map[8 * 16] = {
 	'U', KEY_F15, KEY_INSERT, KEY_HOME, KEY_PAGEUP, KEY_DELETE, KEY_F4, KEY_END, KEY_F2, KEY_PAGEDOWN, KEY_F1, KEY_LEFT, KEY_RIGHT, KEY_DOWN, KEY_UP, 0,
 };
 static int MapNativeKey(UInt32 key) { return key < Array_Elems(key_map) ? key_map[key] : 0; }
-/* TODO: Check these.. */
-/*   case 0x37: return KEY_LWIN; */
-/*   case 0x38: return KEY_LSHIFT; */
-/*   case 0x3A: return KEY_LALT; */
-/*   case 0x3B: return Key_ControlLeft; */
+// TODO: Check these..
+//   case 0x37: return KEY_LWIN;
+//   case 0x38: return KEY_LSHIFT;
+//   case 0x3A: return KEY_LALT;
+//   case 0x3B: return Key_ControlLeft;
 
-/* TODO: Verify these differences from OpenTK */
-/*Backspace = 51,  (0x33, KEY_DELETE according to that link)*/
-/*Return = 52,     (0x34, ??? according to that link)*/
-/*Menu = 110,      (0x6E, ??? according to that link)*/
+// TODO: Verify these differences from OpenTK
+//Backspace = 51,  (0x33, KEY_DELETE according to that link)
+//Return = 52,     (0x34, ??? according to that link)
+//Menu = 110,      (0x6E, ??? according to that link)
 
 void Cursor_SetPosition(int x, int y) {
 	CGPoint point;
@@ -133,7 +133,7 @@ void Window_Init(void) {
 *----------------------------------------------------------Wwindow--------------------------------------------------------*
 *#########################################################################################################################*/
 #ifndef kCGBitmapByteOrder32Host
-/* Undefined in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways */
+// Undefined in < 10.4 SDK. No issue since < 10.4 is only Big Endian PowerPC anyways
 #define kCGBitmapByteOrder32Host 0
 #endif
 
@@ -144,11 +144,11 @@ static void RefreshWindowBounds(void) {
 	win  = [winHandle frame];
 	view = [viewHandle frame];
 
-	/* For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen. */
-	/* To get window's real Y screen position, first need to find Y of top. (win.y + win.height) */
-	/* Then just subtract from screen height to make relative to top instead of bottom of the screen. */
-	/* Of course this is only half the story, since we're really after Y position of the content. */
-	/* To work out top Y of view relative to window, it's just win.height - (view.y + view.height) */
+	// For cocoa, the 0,0 origin is the bottom left corner of windows/views/screen.
+	// To get window's real Y screen position, first need to find Y of top. (win.y + win.height)
+	// Then just subtract from screen height to make relative to top instead of bottom of the screen.
+	// Of course this is only half the story, since we're really after Y position of the content.
+	// To work out top Y of view relative to window, it's just win.height - (view.y + view.height)
 	viewY   = (int)win.size.height - ((int)view.origin.y + (int)view.size.height);
 	windowX = (int)win.origin.x    + (int)view.origin.x;
 	windowY = DisplayInfo.Height   - ((int)win.origin.y  + (int)win.size.height) + viewY;
@@ -160,7 +160,7 @@ static void RefreshWindowBounds(void) {
 @interface CCWindow : NSWindow { }
 @end
 @implementation CCWindow
-/* If this isn't overriden, an annoying beep sound plays anytime a key is pressed */
+// If this isn't overriden, an annoying beep sound plays anytime a key is pressed
 - (void)keyDown:(NSEvent *)event { }
 @end
 
@@ -210,10 +210,10 @@ static void DoDrawFramebuffer(CGRect dirty);
 - (void)drawRect:(CGRect)dirty { DoDrawFramebuffer(dirty); }
 
 - (void)viewDidEndLiveResize {
-	/* When the user users left mouse to drag reisze window, this enters 'live resize' mode */
-	/*   Although the game receives a left mouse down event, it does NOT receive a left mouse up */
-	/*   This causes the game to get stuck with left mouse down after user finishes resizing */
-	/* So work arond that by always releasing left mouse when a live resize is finished */
+	// When the user users left mouse to drag reisze window, this enters 'live resize' mode
+	//   Although the game receives a left mouse down event, it does NOT receive a left mouse up
+	//   This causes the game to get stuck with left mouse down after user finishes resizing
+	// So work arond that by always releasing left mouse when a live resize is finished
 	Input_SetReleased(KEY_LMOUSE);
 }
 @end
@@ -252,7 +252,7 @@ static void ApplyIcon(void) {
 	[img initWithCGImage:image size:size];
 	[appHandle setApplicationIconImage:img];
 
-	/* TODO need to release NSImage here */
+	// TODO need to release NSImage here
 	CGImageRelease(image);
 	CGDataProviderRelease(provider);
 	CGColorSpaceRelease(colSpace);
@@ -266,8 +266,8 @@ void Window_Create(int width, int height) {
 	CCWindowDelegate* del;
 	NSRect rect;
 
-	/* Technically the coordinates for the origin are at bottom left corner */
-	/* But since the window is in centre of the screen, don't need to care here */
+	// Technically the coordinates for the origin are at bottom left corner
+	// But since the window is in centre of the screen, don't need to care here
 	rect.origin.x    = Display_CentreX(width);  
 	rect.origin.y    = Display_CentreY(height);
 	rect.size.width  = width; 
@@ -303,7 +303,7 @@ void Window_Show(void) {
 	RefreshWindowBounds(); // TODO: even necessary?
 }
 
-/* NOTE: Only defined since macOS 10.7 SDK */
+// NOTE: Only defined since macOS 10.7 SDK
 #define _NSFullScreenWindowMask (1 << 14)
 int Window_GetWindowState(void) {
 	int flags;
@@ -326,7 +326,7 @@ cc_result Window_ExitFullscreen(void) {
 }
 
 void Window_SetSize(int width, int height) {
-	/* Can't use setContentSize:, because that resizes from the bottom left corner. */
+	// Can't use setContentSize:, because that resizes from the bottom left corner
 	NSRect rect = [winHandle frame];
 
 	rect.origin.y    += WindowInfo.Height - height;
@@ -353,8 +353,8 @@ static void ProcessKeyChars(id ev) {
 	NSString* chars;
 	int i, len, flags;
 
-	/* Ignore text input while cmd is held down */
-	/* e.g. so Cmd + V to paste doesn't leave behind 'v' */
+	// Ignore text input while cmd is held down
+	// e.g. so Cmd + V to paste doesn't leave behind 'v'
 	flags = [ev modifierFlags];
 	if (flags & 0x000008) return;
 	if (flags & 0x000010) return;
@@ -402,35 +402,35 @@ void Window_ProcessEvents(void) {
 		type = [ev type];
 
 		switch (type) {
-		case  1: /* NSLeftMouseDown  */
-		case  3: /* NSRightMouseDown */
-		case 25: /* NSOtherMouseDown */
+		case  1: // NSLeftMouseDown 
+		case  3: // NSRightMouseDown
+		case 25: // NSOtherMouseDown
 			key = MapNativeMouse([ev buttonNumber]);
 			if (GetMouseCoords(&x, &y) && key) Input_SetPressed(key);
 			break;
 
-		case  2: /* NSLeftMouseUp  */
-		case  4: /* NSRightMouseUp */
-		case 26: /* NSOtherMouseUp */
+		case  2: // NSLeftMouseUp 
+		case  4: // NSRightMouseUp
+		case 26: // NSOtherMouseUp
 			key = MapNativeMouse([ev buttonNumber]);
 			if (key) Input_SetReleased(key);
 			break;
 
-		case 10: /* NSKeyDown */
+		case 10: // NSKeyDown
 			key = TryGetKey(ev);
 			if (key) Input_SetPressed(key);
 			// TODO: Test works properly with other languages
 			ProcessKeyChars(ev);
 			break;
 
-		case 11: /* NSKeyUp */
+		case 11: // NSKeyUp
 			key = TryGetKey(ev);
 			if (key) Input_SetReleased(key);
 			break;
 
-		case 12: /* NSFlagsChanged */
+		case 12: // NSFlagsChanged
 			key = [ev modifierFlags];
-			/* TODO: Figure out how to only get modifiers that changed */
+			// TODO: Figure out how to only get modifiers that changed
 			Input_Set(KEY_LCTRL,    key & 0x000001);
 			Input_Set(KEY_LSHIFT,   key & 0x000002);
 			Input_Set(KEY_RSHIFT,   key & 0x000004);
@@ -442,22 +442,22 @@ void Window_ProcessEvents(void) {
 			Input_Set(KEY_CAPSLOCK, key & 0x010000);
 			break;
 
-		case 22: /* NSScrollWheel */
+		case 22: // NSScrollWheel
 			dy    = [ev deltaY];
-			/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175 */
-			/* delta is in 'line height' units, but I don't know how to map that to actual units. */
-			/* All I know is that scrolling by '1 wheel notch' produces a delta of around 0.1, and that */
-			/* sometimes I'll see it go all the way up to 5-6 with a larger wheel scroll. */
-			/* So mulitplying by 10 doesn't really seem a good idea, instead I just round outwards. */
-			/* TODO: Figure out if there's a better way than this. */
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=220175
+			//  delta is in 'line height' units, but I don't know how to map that to actual units.
+			// All I know is that scrolling by '1 wheel notch' produces a delta of around 0.1, and that
+			//  sometimes I'll see it go all the way up to 5-6 with a larger wheel scroll.
+			// So mulitplying by 10 doesn't really seem a good idea, instead I just round outwards.
+			//  TODO: Figure out if there's a better way than this. */
 			steps = dy > 0.0f ? Math_Ceil(dy) : Math_Floor(dy);
 			Mouse_ScrollWheel(steps);
 			break;
 
-		case  5: /* NSMouseMoved */
-		case  6: /* NSLeftMouseDragged */
-		case  7: /* NSRightMouseDragged */
-		case 27: /* NSOtherMouseDragged */
+		case  5: // NSMouseMoved
+		case  6: // NSLeftMouseDragged
+		case  7: // NSRightMouseDragged
+		case 27: // NSOtherMouseDragged
 			if (GetMouseCoords(&x, &y)) Pointer_SetPosition(0, x, y);
 
 			if (Input_RawMode) {
@@ -504,19 +504,19 @@ static void DoDrawFramebuffer(CGRect dirty) {
 	CGImageRef image;
 	CGRect rect;
 
-	/* Unfortunately CGImageRef is immutable, so changing the */
-	/* underlying data doesn't change what shows when drawing. */
-	/* TODO: Find a better way of doing this in cocoa.. */
+	// Unfortunately CGImageRef is immutable, so changing the
+	//  underlying data doesn't change what shows when drawing.
+	// TODO: Find a better way of doing this in cocoa..
 	if (!fb_bmp.scan0) return;
 	nsContext = [NSGraphicsContext currentContext];
 	context   = [nsContext graphicsPort];
 
-	/* TODO: Only update changed bit.. */
+	// TODO: Only update changed bit..
 	rect.origin.x = 0; rect.origin.y = 0;
 	rect.size.width  = WindowInfo.Width;
 	rect.size.height = WindowInfo.Height;
 
-	/* TODO: REPLACE THIS AWFUL HACK */
+	// TODO: REPLACE THIS AWFUL HACK
 	provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
 		Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
 	image = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,

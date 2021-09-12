@@ -52,7 +52,7 @@ CC_NOINLINE static void WarnMissingArgs(int argsCount, const cc_string* args) {
 	Logger_DialogWarn(&tmp);
 }
 
-#ifdef CC_BUILD_ANDROID
+#ifdef CC_BUILD_MOBILE
 /* Needs to be externally visible as this is called by Launcher_Run */
 int Program_Run(int argc, char** argv) {
 #else
