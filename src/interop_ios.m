@@ -27,10 +27,16 @@ static UIWindow* winHandle;
 
 @implementation AppDelegate
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
+- (void)runMainLoop {
     extern int main_real(int argc, char** argv);
     main_real(1, NULL);
+}
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    // Override point for customization after application launch.
+    // schedule the actual main loop to run in next CFRunLoop iteration
+    //  (as calling main_real here doesn't work properly)
+    [self performSelector:@selector(runMainLoop) withObject:nil afterDelay:0.0];
     return YES;
 }
 
@@ -107,7 +113,7 @@ void Window_Create(int width, int height) {
     controller = [ViewController alloc];
     winHandle  = [[UIWindow alloc] initWithFrame:UIScreen.mainScreen.bounds];
     winHandle.rootViewController = controller;
-    winHandle.backgroundColor = UIColor.greenColor;
+    winHandle.backgroundColor = UIColor.blueColor;
     WindowInfo.Exists = true;
 }
 void Window_SetSize(int width, int height) { }
@@ -118,7 +124,13 @@ void Window_Show(void) {
     [winHandle makeKeyAndVisible];
 }
 
-void Window_ProcessEvents(void) { }
+void Window_ProcessEvents(void) {
+    SInt32 res;
+    // manually tick event queue
+    do {
+        res = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, TRUE);
+    } while (res == kCFRunLoopRunHandledSource);
+}
 void ShowDialogCore(const char* title, const char* msg) { }
 
 void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
