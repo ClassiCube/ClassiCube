@@ -6,6 +6,8 @@
 #include "Errors.h"
 #include <UIKit/UIPasteboard.h>
 #include <UIKit/UIKit.h>
+#include <OpenGLES/ES2/gl.h>
+#include <OpenGLES/ES2/glext.h>
 
 @interface CCWindow : UIWindow
 @end
@@ -227,13 +229,51 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 /*########################################################################################################################*
 *--------------------------------------------------------GLContext--------------------------------------------------------*
 *#########################################################################################################################*/
-void GLContext_Create(void) { }
+static EAGLContext* ctx_handle;
+static GLuint framebuffer;
+static GLuint color_renderbuffer, depth_renderbuffer;
+
+static void CreateFramebuffer(void) {
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    
+    glGenRenderbuffers(1, &color_renderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, WindowInfo.Width, WindowInfo.Height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, color_renderbuffer);
+    
+    glGenRenderbuffers(1, &depth_renderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, depth_renderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24_OES, WindowInfo.Width, WindowInfo.Height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_renderbuffer);
+    
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE)
+        Logger_Abort2(status, "Failed to create renderbuffer");
+}
+
+void GLContext_Create(void) {
+    ctx_handle = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    [EAGLContext setCurrentContext:ctx_handle];
+    
+    // unlike other platforms, have to manually setup render framebuffer
+    CreateFramebuffer();
+}
+                  
 void GLContext_Update(void) { }
 cc_bool GLContext_TryRestore(void) { return false; }
-void GLContext_Free(void) { }
+
+void GLContext_Free(void) {
+    [EAGLContext setCurrentContext:Nil];
+}
 
 void* GLContext_GetAddress(const char* function) { return NULL; }
 
-cc_bool GLContext_SwapBuffers(void) { return false; }
+cc_bool GLContext_SwapBuffers(void) {
+    static GLenum discards[] = { GL_DEPTH_ATTACHMENT };
+    glDiscardFramebufferEXT(GL_FRAMEBUFFER, 1, discards);
+    [ctx_handle presentRenderbuffer:GL_RENDERBUFFER];
+    return true;
+}
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) { }
 void GLContext_GetApiInfo(cc_string* info) { }
