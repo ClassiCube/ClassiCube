@@ -52,12 +52,21 @@ CC_NOINLINE static void WarnMissingArgs(int argsCount, const cc_string* args) {
 	Logger_DialogWarn(&tmp);
 }
 
-#ifdef CC_BUILD_MOBILE
-/* Needs to be externally visible as this is called by Launcher_Run */
-int Program_Run(int argc, char** argv) {
-#else
-static int Program_Run(int argc, char** argv) {
-#endif
+static void SetupProgram(int argc, char** argv) {
+	static char ipBuffer[STRING_SIZE];
+	cc_result res;
+	Logger_Hook();
+	Platform_Init();
+	Window_Init();
+	
+	res = Platform_SetDefaultCurrentDirectory(argc, argv);
+	if (res) Logger_SysWarn(res, "setting current directory");
+	Platform_LogConst("Starting " GAME_APP_NAME " ..");
+	String_InitArray(Server.Address, ipBuffer);
+	Options_Load();
+}
+
+static int RunProgram(int argc, char** argv) {
 	cc_string args[GAME_MAX_CMDARGS];
 	cc_uint16 port;
 
@@ -102,48 +111,23 @@ static int Program_Run(int argc, char** argv) {
 	return 0;
 }
 
-/* NOTE: main_real is used for when compiling with MingW without linking to startup files. */
-/*  Normally, the final code produced for "main" is our "main" combined with crt's main */
-/*  (mingw-w64-crt/crt/gccmain.c) - alas this immediately crashes the game on startup. */
-/* Using main_real instead and setting main_real as the entrypoint fixes the crash. */
-#ifdef CC_NOMAIN
-int main_real(int argc, char** argv) {
-#else 
-int main(int argc, char** argv) {
-#endif
-	static char ipBuffer[STRING_SIZE];
-	cc_result res;
-	Logger_Hook();
-	Platform_Init();
-	Window_Init();
-	
-	res = Platform_SetDefaultCurrentDirectory(argc, argv);
-	if (res) Logger_SysWarn(res, "setting current directory");
-	Platform_LogConst("Starting " GAME_APP_NAME " ..");
-	String_InitArray(Server.Address, ipBuffer);
-	Options_Load();
-
-	res = Program_Run(argc, argv);
-	Process_Exit(res);
-	return res;
-}
-
 #if defined CC_BUILD_IOS
 /* ClassiCube is sort of and sort of not the executable */
 /*  on iOS - UIKit is responsible for kickstarting the game. */
 /* (this is handled interop_ios.m as the code is Objective C) */
+int main_real(int argc, char** argv) {
+	SetupProgram(argc, argv);
+	for (;;) { RunProgram(argc, argv); }
+	return 0;
+}
 #elif defined CC_BUILD_ANDROID
 /* ClassiCube is just a native library on android, */
 /*  unlike other platforms where it is the executable. */
 /* (activity java class is responsible for kickstarting the game) */
 static void android_main(void) {
 	Platform_LogConst("Main loop started!");
-	/* Android client is always built with CC_NOMAIN, because a user who */
-	/*  compiled a custom version of the client ran into an issue where  */
-	/*  the game would wrongly call main in /system/bin/app_process64    */
-	/*  instead of the main located just above here. (see issue #864)    */
-	/* So use main_real instead to avoid the issue altogether */
-	main_real(0, NULL); 
+	SetupProgram(0, NULL);
+	for (;;) { RunProgram(0, NULL); }
 }
 
 /* Called eventually by the activity java class to actually start the game */
@@ -174,5 +158,22 @@ CC_API jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 	App_Class = (*env)->NewGlobalRef(env, klass);
 	JavaRegisterNatives(env, methods);
 	return JNI_VERSION_1_4;
+}
+#else
+/* NOTE: main_real is used for when compiling with MingW without linking to startup files. */
+/*  Normally, the final code produced for "main" is our "main" combined with crt's main */
+/*  (mingw-w64-crt/crt/gccmain.c) - alas this immediately crashes the game on startup. */
+/* Using main_real instead and setting main_real as the entrypoint fixes the crash. */
+#ifdef CC_NOMAIN
+int main_real(int argc, char** argv) {
+#else 
+int main(int argc, char** argv) {
+#endif
+	cc_result res;
+	SetupProgram(argc, argv);
+
+	res = RunProgram(argc, argv);
+	Process_Exit(res);
+	return res;
 }
 #endif

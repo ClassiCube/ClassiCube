@@ -663,12 +663,6 @@ static void Game_RunLoop(void) {
 #endif
 
 void Game_Run(int width, int height, const cc_string* title) {
-#ifdef CC_BUILD_ANDROID
-	/* Reset components */
-	Platform_LogConst("undoing components");
-	Drawer2D_Component.Free();
-	//Http_Component.Free();
-#endif
 	Window_Create(width, height);
 	Window_SetTitle(title);
 	Window_Show();

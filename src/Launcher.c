@@ -329,16 +329,13 @@ void Launcher_Run(void) {
 	Launcher_Free();
 
 #ifdef CC_BUILD_MOBILE
-	extern int Program_Run(int argc, char** argv);
-	extern cc_bool Window_RemakeSurface(void);
-
-	if (Launcher_ShouldExit) {
-		Launcher_ShouldExit = false;
-		Http_Component.Free();
-		Program_Run(0, NULL);
-		Launcher_Run();
-	}
-#endif
+	/* infinite loop on mobile */
+	Launcher_ShouldExit = false;
+	/* Reset components */
+	Platform_LogConst("undoing components");
+	Drawer2D_Component.Free();
+	Http_Component.Free();
+#else
 	if (Launcher_ShouldUpdate) {
 		const char* action;
 		cc_result res = Updater_Start(&action);
@@ -346,6 +343,7 @@ void Launcher_Run(void) {
 	}
 
 	if (WindowInfo.Exists) Window_Close();
+#endif
 }
 
 
