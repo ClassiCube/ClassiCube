@@ -479,7 +479,7 @@ static void ApplyIcon(void) {
 static void ApplyIcon(void) { }
 #endif
 
-void Window_Create(int width, int height) {
+static void DoCreateWindow(int width, int height) {
 	Rect r;
 	OSStatus res;
 	ProcessSerialNumber psn;
@@ -507,6 +507,8 @@ void Window_Create(int width, int height) {
 	winId = GetNativeWindowFromWindowRef(win_handle);
 	ApplyIcon();
 }
+void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
+void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
 void Window_SetTitle(const cc_string* title) {
 	UInt8 str[NATIVE_STR_LEN];

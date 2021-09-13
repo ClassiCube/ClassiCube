@@ -663,7 +663,7 @@ static void Game_RunLoop(void) {
 #endif
 
 void Game_Run(int width, int height, const cc_string* title) {
-	Window_Create(width, height);
+	Window_Create3D(width, height);
 	Window_SetTitle(title);
 	Window_Show();
 

@@ -254,13 +254,15 @@ static void Window_RemakeSurface(void) {
 	Platform_LogConst("OK window created..");
 }
 
-void Window_Create(int width, int height) {
+static void DoCreateWindow(void) {
 	WindowInfo.Exists = true;
 	/* actual window creation is done when processSurfaceCreated is received */
 	Window_RemakeSurface();
 	/* always start as fullscreen */
 	Window_EnterFullscrene();
 }
+void Window_Create2D(int width, int height) { DoCreateWindow(); }
+void Window_Create3D(int width, int height) { DoCreateWindow(); }
 
 void Window_SetTitle(const cc_string* title) {
 	/* TODO: Implement this somehow */

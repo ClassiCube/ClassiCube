@@ -123,7 +123,7 @@ void Window_Init(void) {
     DisplayInfo.ScaleY = 1; // TODO dpi scale
 }
 
-void Window_Create(int width, int height) {
+static void DoCreateWindow(void) {
     CGRect bounds = UIScreen.mainScreen.bounds;
     controller = [CCViewController alloc];
     winHandle  = [[CCWindow alloc] initWithFrame:bounds];
@@ -134,6 +134,8 @@ void Window_Create(int width, int height) {
     WindowInfo.Width  = bounds.size.width;
     WindowInfo.Height = bounds.size.height;
 }
+void Window_Create2D(int width, int height) { DoCreateWindow(); }
+void Window_Create3D(int width, int height) { DoCreateWindow(); }
 void Window_SetSize(int width, int height) { }
 
 void Window_Close(void) { }
