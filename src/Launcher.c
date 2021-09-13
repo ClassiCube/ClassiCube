@@ -280,7 +280,6 @@ void Launcher_Run(void) {
 	static const cc_string title = String_FromConst(GAME_APP_TITLE);
 	Window_Create(640, 400);
 #ifdef CC_BUILD_MOBILE
-	Window_EnterFullscreen();
 	Window_LockLandscapeOrientation(Options_GetBool(OPT_LANDSCAPE_MODE, false));
 #endif
 	Window_SetTitle(&title);
@@ -336,10 +335,7 @@ void Launcher_Run(void) {
 	if (Launcher_ShouldExit) {
 		Launcher_ShouldExit = false;
 		Http_Component.Free();
-
 		Program_Run(0, NULL);
-		Window_ExitFullscreen(); /* TODO remove */
-		Window_RemakeSurface();
 		Launcher_Run();
 	}
 #endif
