@@ -14,27 +14,20 @@
 I may not have defined the appropriate types for your compiler, so you may need to modify ```Core.h```
 
 ### Strings
-Strings are one of the most troublesome aspects of C. In this software, strings consist of:
-- Pointer to 8 bit characters (unsigned code page 437 indices)
-- Number of characters currently used (length)
-- Maximum number of characters / buffer size (capacity)
 
-Although this makes substrings / concatenating very fast, it also means 
-**STRINGS ARE NOT NULL TERMINATED** (and are not in most cases).
-
-Thus, when using or implementing a per-platform API, you must null-terminate and convert characters to native encoding. You should implement the ```Platform_ConvertString``` function and use that.
+A custom string type (`cc_string`) is used rather than `char*` strings in most places (see [strings](doc/strings.md) page for more details)
 
 *Note: Several functions will take raw ```char*``` for performance, but this is not encouraged*
 
 #### String arguments
 String arguments are annotated to indicate storage and readonly requirements. These are:
-- ```const String*``` - String is not modified at all
-- ```String*``` - Characters in string may be modified
-- ```STRING_REF``` - Macro annotation indicating a **reference is kept to characters**
+- ```const cc_string*``` - String is not modified at all
+- ```cc_string*``` - Characters in string may be modified
+- ```STRING_REF``` - Macro annotation indicating a **reference is kept to the characters**
 
 To make it extra clear, functions with ```STRING_REF``` arguments usually also have ```_UNSAFE_``` as part of their name.
 
-For example, consider the function ```String Substring_UNSAFE(STRING_REF const String* str, length)```
+For example, consider the function ```cc_string Substring_UNSAFE(STRING_REF const cc_string* str, length)```
 
 The *input string* is not modified at all. However, the characters of the *returned string* points to the characters of the *input string*, so modifying the characters in the *input string* also modifies the *returned string*.
 
