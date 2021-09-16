@@ -640,10 +640,10 @@ static void LTable_SetSelectedTo(struct LTable* w, int index) {
 
 /* Draws background behind column headers */
 static void LTable_DrawHeaderBackground(struct LTable* w) {
-	BitmapCol gridCol = BitmapCol_Make(20, 20, 10, 255);
+	BitmapCol gridColor = BitmapCol_Make(20, 20, 10, 255);
 
 	if (!Launcher_Theme.ClassicBackground) {
-		Drawer2D_Clear(&Launcher_Framebuffer, gridCol,
+		Drawer2D_Clear(&Launcher_Framebuffer, gridColor,
 						w->x, w->y, w->width, w->hdrHeight);
 	} else {
 		Launcher_ResetArea(w->x, w->y, w->width, w->hdrHeight);
@@ -652,9 +652,9 @@ static void LTable_DrawHeaderBackground(struct LTable* w) {
 
 /* Works out the background colour of the given row */
 static BitmapCol LTable_RowColor(struct LTable* w, int row) {
-	BitmapCol featSelCol  = BitmapCol_Make( 50,  53,  0, 255);
-	BitmapCol featuredCol = BitmapCol_Make(101, 107,  0, 255);
-	BitmapCol selectedCol = BitmapCol_Make( 40,  40, 40, 255);
+	BitmapCol featSelColor  = BitmapCol_Make( 50,  53,  0, 255);
+	BitmapCol featuredColor = BitmapCol_Make(101, 107,  0, 255);
+	BitmapCol selectedColor = BitmapCol_Make( 40,  40, 40, 255);
 	struct ServerInfo* entry;
 	cc_bool selected;
 	entry = row < w->rowsCount ? LTable_Get(row) : NULL;
@@ -662,9 +662,9 @@ static BitmapCol LTable_RowColor(struct LTable* w, int row) {
 	if (entry) {
 		selected = String_Equals(&entry->hash, w->selectedHash);
 		if (entry->featured) {
-			return selected ? featSelCol : featuredCol;
+			return selected ? featSelColor : featuredColor;
 		} else if (selected) {
-			return selectedCol;
+			return selectedColor;
 		}
 	}
 

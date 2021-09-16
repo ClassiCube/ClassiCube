@@ -226,8 +226,8 @@ cc_bool Entity_TouchesAnyWater(struct Entity* e) {
 
 static void MakeNameTexture(struct Entity* e) {
 	cc_string colorlessName; char colorlessBuffer[STRING_SIZE];
-	BitmapCol shadowCol = BitmapCol_Make(80, 80, 80, 255);
-	BitmapCol origWhiteCol;
+	BitmapCol shadowColor = BitmapCol_Make(80, 80, 80, 255);
+	BitmapCol origWhiteColor;
 
 	struct DrawTextArgs args;
 	struct FontDesc font;
@@ -254,14 +254,14 @@ static void MakeNameTexture(struct Entity* e) {
 
 		Bitmap_AllocateClearedPow2(&bmp, width, height);
 		{
-			origWhiteCol = Drawer2D.Colors['f'];
+			origWhiteColor = Drawer2D.Colors['f'];
 
-			Drawer2D.Colors['f'] = shadowCol;
+			Drawer2D.Colors['f'] = shadowColor;
 			Drawer2D_WithoutColors(&colorlessName, &name);
 			args.text = colorlessName;
 			Drawer2D_DrawText(&bmp, &args, NAME_OFFSET, NAME_OFFSET);
 
-			Drawer2D.Colors['f'] = origWhiteCol;
+			Drawer2D.Colors['f'] = origWhiteColor;
 			args.text = name;
 			Drawer2D_DrawText(&bmp, &args, 0, 0);
 		}

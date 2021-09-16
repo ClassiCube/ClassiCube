@@ -1062,8 +1062,8 @@ static void CheckResourcesScreen_Layout(struct LScreen* s_) {
 }
 
 CC_NOINLINE static void CheckResourcesScreen_ResetArea(int x, int y, int width, int height) {
-	BitmapCol boxCol = BitmapCol_Make(120, 85, 151, 255);
-	Gradient_Noise(&Launcher_Framebuffer, boxCol, 4, x, y, width, height);
+	BitmapCol boxColor = BitmapCol_Make(120, 85, 151, 255);
+	Gradient_Noise(&Launcher_Framebuffer, boxColor, 4, x, y, width, height);
 	Launcher_MarkDirty(x, y, width, height);
 }
 

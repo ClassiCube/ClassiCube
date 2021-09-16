@@ -150,20 +150,20 @@ static void LButton_DrawBorder(struct LButton* w) {
 }
 
 static void LButton_DrawHighlight(struct LButton* w) {
-	BitmapCol activeCol = BitmapCol_Make(189, 198, 255, 255);
-	BitmapCol col = Launcher_Theme.ButtonHighlightColor;
+	BitmapCol activeColor = BitmapCol_Make(189, 198, 255, 255);
+	BitmapCol color = Launcher_Theme.ButtonHighlightColor;
 
 	if (Launcher_Theme.ClassicBackground) {
-		if (w->hovered) col = activeCol;
+		if (w->hovered) color = activeColor;
 
-		Drawer2D_Clear(&Launcher_Framebuffer, col,
+		Drawer2D_Clear(&Launcher_Framebuffer, color,
 						w->x + xBorder2,     w->y + yBorder,
 						w->width - xBorder4, yBorder);
-		Drawer2D_Clear(&Launcher_Framebuffer, col, 
+		Drawer2D_Clear(&Launcher_Framebuffer, color,
 						w->x + xBorder,       w->y + yBorder2,
 						xBorder,              w->height - yBorder4);
 	} else if (!w->hovered) {
-		Drawer2D_Clear(&Launcher_Framebuffer, col,
+		Drawer2D_Clear(&Launcher_Framebuffer, color,
 						w->x + xBorder2,      w->y + yBorder,
 						w->width - xBorder4,  yBorder);
 	}
@@ -269,10 +269,10 @@ void LBackend_DrawCheckbox(struct LCheckbox* w) {
 *------------------------------------------------------InputWidget--------------------------------------------------------*
 *#########################################################################################################################*/
 static void LInput_DrawOuterBorder(struct LInput* w) {
-	BitmapCol col = BitmapCol_Make(97, 81, 110, 255);
+	BitmapCol color = BitmapCol_Make(97, 81, 110, 255);
 
 	if (w->selected) {
-		DrawBoxBounds(col, w->x, w->y, w->width, w->height);
+		DrawBoxBounds(color, w->x, w->y, w->width, w->height);
 	} else {
 		Launcher_ResetArea(w->x,                      w->y, 
 						   w->width,                  yBorder);
@@ -286,32 +286,32 @@ static void LInput_DrawOuterBorder(struct LInput* w) {
 }
 
 static void LInput_DrawInnerBorder(struct LInput* w) {
-	BitmapCol col = BitmapCol_Make(165, 142, 168, 255);
+	BitmapCol color = BitmapCol_Make(165, 142, 168, 255);
 
-	Drawer2D_Clear(&Launcher_Framebuffer, col,
+	Drawer2D_Clear(&Launcher_Framebuffer, color,
 		w->x + xBorder,             w->y + yBorder,
 		w->width - xBorder2,        yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, col,
+	Drawer2D_Clear(&Launcher_Framebuffer, color,
 		w->x + xBorder,             w->y + w->height - yBorder2,
 		w->width - xBorder2,        yBorder);
-	Drawer2D_Clear(&Launcher_Framebuffer, col,
+	Drawer2D_Clear(&Launcher_Framebuffer, color,
 		w->x + xBorder,             w->y + yBorder,
 		xBorder,                    w->height - yBorder2);
-	Drawer2D_Clear(&Launcher_Framebuffer, col,
+	Drawer2D_Clear(&Launcher_Framebuffer, color,
 		w->x + w->width - xBorder2, w->y + yBorder,
 		xBorder,                    w->height - yBorder2);
 }
 
 static void LInput_BlendBoxTop(struct LInput* w) {
-	BitmapCol col = BitmapCol_Make(0, 0, 0, 255);
+	BitmapCol color = BitmapCol_Make(0, 0, 0, 255);
 
-	Gradient_Blend(&Launcher_Framebuffer, col, 75,
+	Gradient_Blend(&Launcher_Framebuffer, color, 75,
 		w->x + xBorder,      w->y + yBorder, 
 		w->width - xBorder2, yBorder);
-	Gradient_Blend(&Launcher_Framebuffer, col, 50,
+	Gradient_Blend(&Launcher_Framebuffer, color, 50,
 		w->x + xBorder,      w->y + yBorder2,
 		w->width - xBorder2, yBorder);
-	Gradient_Blend(&Launcher_Framebuffer, col, 25,
+	Gradient_Blend(&Launcher_Framebuffer, color, 25,
 		w->x + xBorder,      w->y + yBorder3, 
 		w->width - xBorder2, yBorder);
 }

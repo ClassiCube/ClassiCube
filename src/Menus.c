@@ -2450,14 +2450,14 @@ static void MenuOptionsScreen_Init(void* screen) {
 static void MenuOptionsScreen_Render(void* screen, double delta) {
 	struct MenuOptionsScreen* s = (struct MenuOptionsScreen*)screen;
 	struct TextGroupWidget* w;
-	PackedCol tableCol = PackedCol_Make(20, 20, 20, 200);
+	PackedCol tableColor = PackedCol_Make(20, 20, 20, 200);
 
 	MenuScreen_Render2(s, delta);
 	if (!s->extHelp.lines) return;
 
 	w = &s->extHelp;
 	Gfx_Draw2DFlat(w->x - EXTHELP_PAD, w->y - EXTHELP_PAD, 
-		w->width + EXTHELP_PAD * 2, w->height + EXTHELP_PAD * 2, tableCol);
+		w->width + EXTHELP_PAD * 2, w->height + EXTHELP_PAD * 2, tableColor);
 
 	Gfx_SetTexturing(true);
 	Elem_Render(&s->extHelp, delta);

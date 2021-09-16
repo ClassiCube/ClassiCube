@@ -105,7 +105,7 @@ void SetWorkingDir(cc_string* title) {
 
 ## API
 
-I'm lazy so I will just link to [String.h](src/String.h)
+I'm lazy so I will just link to [String.h](/src/String.h)
 
 If you'd rather I provided a more detailed reference here, please let me know.
 
@@ -189,13 +189,9 @@ string::insert -> String_InsertAt
 string::erase  -> String_DeleteAt
 
 string::substr -> String_UNSAFE_Substring/String_UNSAFE_SubstringAt
-string.Split     -> String_UNSAFE_Split/String_UNSAFE_SplitBy
-string.TrimStart -> String_UNSAFE_TrimStart
-string.TrimEnd   -> String_UNSAFE_TrimEnd
 
-a.Length             -> str.length
-a == b               -> String_Equals
-string.Equals        -> String_CaslessEquals (StringComparison.OrdinalIgnoreCase)
+string::length  -> str.length
+a == b          -> String_Equals
 string::find    -> String_IndexOf/String_IndexOfConst
 string::rfind   -> String_LastIndexOf
 string::compare -> String_Compare

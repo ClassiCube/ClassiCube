@@ -189,7 +189,7 @@ void Gradient_Noise(struct Bitmap* bmp, BitmapCol col, int variation,
 
 void Gradient_Vertical(struct Bitmap* bmp, BitmapCol a, BitmapCol b,
 					   int x, int y, int width, int height) {
-	BitmapCol* row, col;
+	BitmapCol* row, color;
 	int xx, yy;
 	float t;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
@@ -198,13 +198,13 @@ void Gradient_Vertical(struct Bitmap* bmp, BitmapCol a, BitmapCol b,
 		row = Bitmap_GetRow(bmp, y + yy) + x;
 		t   = (float)yy / (height - 1); /* so last row has colour of b */
 
-		col = BitmapCol_Make(
+		color = BitmapCol_Make(
 			Math_Lerp(BitmapCol_R(a), BitmapCol_R(b), t),
 			Math_Lerp(BitmapCol_G(a), BitmapCol_G(b), t),
 			Math_Lerp(BitmapCol_B(a), BitmapCol_B(b), t),
 			255);
 
-		for (xx = 0; xx < width; xx++) { row[xx] = col; }
+		for (xx = 0; xx < width; xx++) { row[xx] = color; }
 	}
 }
 
@@ -239,7 +239,7 @@ void Gradient_Blend(struct Bitmap* bmp, BitmapCol col, int blend,
 
 void Gradient_Tint(struct Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 				   int x, int y, int width, int height) {
-	BitmapCol* row, col;
+	BitmapCol* row, color;
 	cc_uint8 tint;
 	int xx, yy;
 	if (!Drawer2D_Clamp(bmp, &x, &y, &width, &height)) return;
@@ -250,13 +250,13 @@ void Gradient_Tint(struct Bitmap* bmp, cc_uint8 tintA, cc_uint8 tintB,
 
 		for (xx = 0; xx < width; xx++) {
 			/* TODO: Not shift when multiplying */
-			col = BitmapCol_Make(
+			color = BitmapCol_Make(
 				BitmapCol_R(row[xx]) * tint / 255,
 				BitmapCol_G(row[xx]) * tint / 255,
 				BitmapCol_B(row[xx]) * tint / 255,
 				0);
 
-			row[xx] = col | (row[xx] & BITMAPCOL_A_MASK);
+			row[xx] = color | (row[xx] & BITMAPCOL_A_MASK);
 		}
 	}
 }

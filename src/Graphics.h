@@ -217,13 +217,13 @@ cc_bool Gfx_TryRestoreContext(void);
 void Gfx_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, int vCount);
 
 /* Renders a 2D flat coloured rectangle. */
-void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol col);
+void Gfx_Draw2DFlat(int x, int y, int width, int height, PackedCol color);
 /* Renders a 2D flat vertical gradient rectangle. */
 void Gfx_Draw2DGradient(int x, int y, int width, int height, PackedCol top, PackedCol bottom);
 /* Renders a 2D coloured texture. */
-void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol col);
+void Gfx_Draw2DTexture(const struct Texture* tex, PackedCol color);
 /* Fills out the vertices for rendering a 2D coloured texture. */
-void Gfx_Make2DQuad(const struct Texture* tex, PackedCol col, struct VertexTextured** vertices);
+void Gfx_Make2DQuad(const struct Texture* tex, PackedCol color, struct VertexTextured** vertices);
 
 /* Switches state to be suitable for drawing 2D graphics. */
 /* NOTE: This means turning off fog/depth test, changing matrices, etc.*/

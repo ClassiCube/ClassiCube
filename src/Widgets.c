@@ -120,10 +120,10 @@ static void ButtonWidget_Reposition(void* widget) {
 }
 
 static void ButtonWidget_Render(void* widget, double delta) {
-	PackedCol normCol     = PackedCol_Make(224, 224, 224, 255);
-	PackedCol activeCol   = PackedCol_Make(255, 255, 160, 255);
-	PackedCol disabledCol = PackedCol_Make(160, 160, 160, 255);
-	PackedCol col;
+	PackedCol normColor     = PackedCol_Make(224, 224, 224, 255);
+	PackedCol activeColor   = PackedCol_Make(255, 255, 160, 255);
+	PackedCol disabledColor = PackedCol_Make(160, 160, 160, 255);
+	PackedCol color;
 
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
 	struct Texture back;	
@@ -155,15 +155,15 @@ static void ButtonWidget_Render(void* widget, double delta) {
 	}
 
 	if (!w->tex.ID) return;
-	col = w->disabled ? disabledCol : (w->active ? activeCol : normCol);
-	Texture_RenderShaded(&w->tex, col);
+	color = w->disabled ? disabledColor : (w->active ? activeColor : normColor);
+	Texture_RenderShaded(&w->tex, color);
 }
 
 static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertices) {
-	PackedCol normCol     = PackedCol_Make(224, 224, 224, 255);
-	PackedCol activeCol   = PackedCol_Make(255, 255, 160, 255);
-	PackedCol disabledCol = PackedCol_Make(160, 160, 160, 255);
-	PackedCol col;
+	PackedCol normColor     = PackedCol_Make(224, 224, 224, 255);
+	PackedCol activeColor   = PackedCol_Make(255, 255, 160, 255);
+	PackedCol disabledColor = PackedCol_Make(160, 160, 160, 255);
+	PackedCol color;
 
 	struct ButtonWidget* w = (struct ButtonWidget*)widget;
 	struct Texture back;	
@@ -192,8 +192,8 @@ static void ButtonWidget_BuildMesh(void* widget, struct VertexTextured** vertice
 		Gfx_Make2DQuad(&back, w->col, vertices);
 	}
 
-	col = w->disabled ? disabledCol : (w->active ? activeCol : normCol);
-	Gfx_Make2DQuad(&w->tex, col, vertices);
+	color = w->disabled ? disabledColor : (w->active ? activeColor : normColor);
+	Gfx_Make2DQuad(&w->tex, color, vertices);
 }
 
 static int ButtonWidget_Render2(void* widget, int offset) {
@@ -749,13 +749,13 @@ static void TableWidget_Render(void* widget, double delta) {
 	/* These were sourced by taking a screenshot of vanilla */
 	/* Then using paint to extract the colour components */
 	/* Then using wolfram alpha to solve the glblendfunc equation */
-	PackedCol topBackCol    = PackedCol_Make( 34,  34,  34, 168);
-	PackedCol bottomBackCol = PackedCol_Make( 57,  57, 104, 202);
-	PackedCol topSelCol     = PackedCol_Make(255, 255, 255, 142);
-	PackedCol bottomSelCol  = PackedCol_Make(255, 255, 255, 192);
+	PackedCol topBackColor    = PackedCol_Make( 34,  34,  34, 168);
+	PackedCol bottomBackColor = PackedCol_Make( 57,  57, 104, 202);
+	PackedCol topSelColor     = PackedCol_Make(255, 255, 255, 142);
+	PackedCol bottomSelColor  = PackedCol_Make(255, 255, 255, 192);
 
 	Gfx_Draw2DGradient(Table_X(w), Table_Y(w),
-		Table_Width(w), Table_Height(w), topBackCol, bottomBackCol);
+		Table_Width(w), Table_Height(w), topBackColor, bottomBackColor);
 
 	if (w->rowsVisible < w->rowsTotal) {
 		Elem_Render(&w->scroll, delta);
@@ -770,7 +770,7 @@ static void TableWidget_Render(void* widget, double delta) {
 		off  = cellSizeX * 0.1f;
 		size = (int)(cellSizeX + off * 2);
 		Gfx_Draw2DGradient((int)(x - off), (int)(y - off),
-			size, size, topSelCol, bottomSelCol);
+			size, size, topSelColor, bottomSelColor);
 	}
 	Gfx_SetTexturing(true);
 	Gfx_SetVertexFormat(VERTEX_FORMAT_TEXTURED);
@@ -1540,7 +1540,7 @@ static int TextInputWidget_Render2(void* widget, int offset) {
 static void TextInputWidget_RemakeTexture(void* widget) {
 	cc_string range; char rangeBuffer[STRING_SIZE];
 	struct TextInputWidget* w = (struct TextInputWidget*)widget;
-	PackedCol backCol = PackedCol_Make(30, 30, 30, 200);
+	PackedCol backColor = PackedCol_Make(30, 30, 30, 200);
 	struct MenuInputDesc* desc;
 	struct DrawTextArgs args;
 	struct Texture* tex;
@@ -1567,7 +1567,7 @@ static void TextInputWidget_RemakeTexture(void* widget) {
 		if (lineHeight < height) { y = height / 2 - lineHeight / 2; }
 		w->base.caretOffset = 2 + y;
 
-		Drawer2D_Clear(&bmp, backCol, 0, 0, width, height);
+		Drawer2D_Clear(&bmp, backColor, 0, 0, width, height);
 		Drawer2D_DrawText(&bmp, &args, w->base.padding, y);
 
 		args.text = range;
@@ -1700,7 +1700,7 @@ static void ChatInputWidget_RemakeTexture(void* widget) {
 
 static void ChatInputWidget_Render(void* widget, double delta) {
 	struct InputWidget* w = (struct InputWidget*)widget;
-	PackedCol backCol     = PackedCol_Make(0, 0, 0, 127);
+	PackedCol backColor   = PackedCol_Make(0, 0, 0, 127);
 	int x = w->x, y = w->y;
 	cc_bool caretAtEnd;
 	int i, width;
@@ -1714,7 +1714,7 @@ static void ChatInputWidget_Render(void* widget, double delta) {
 		/* Cover whole window width to match original classic behaviour */
 		if (Gui.ClassicChat) { width = max(width, WindowInfo.Width - x * 4); }
 	
-		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->lineHeight, backCol);
+		Gfx_Draw2DFlat(x, y, width + w->padding * 2, w->lineHeight, backColor);
 		y += w->lineHeight;
 	}
 
@@ -2394,19 +2394,19 @@ static int SpecialInputWidget_MeasureTitles(struct SpecialInputWidget* w) {
 }
 
 static void SpecialInputWidget_DrawTitles(struct SpecialInputWidget* w, struct Bitmap* bmp) {
-	BitmapCol col_selected = BitmapCol_Make(30, 30, 30, 200);
-	BitmapCol col_inactive = BitmapCol_Make( 0,  0,  0, 127);
-	BitmapCol col;
+	BitmapCol color_selected = BitmapCol_Make(30, 30, 30, 200);
+	BitmapCol color_inactive = BitmapCol_Make( 0,  0,  0, 127);
+	BitmapCol color;
 	struct DrawTextArgs args;
 	int i, width, x = 0;
 
 	DrawTextArgs_MakeEmpty(&args, w->font, false);
 	for (i = 0; i < Array_Elems(w->tabs); i++) {
 		args.text = w->tabs[i].title;
-		col   = i == w->selectedIndex ? col_selected : col_inactive;
+		color = i == w->selectedIndex ? color_selected : color_inactive;
 		width = w->tabs[i].titleWidth;
 
-		Drawer2D_Clear(bmp, col, x, 0, width, w->titleHeight);
+		Drawer2D_Clear(bmp, color, x, 0, width, w->titleHeight);
 		Drawer2D_DrawText(bmp, &args, x + SPECIAL_TITLE_SPACING / 2, 0);
 		x += width;
 	}

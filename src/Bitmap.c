@@ -71,9 +71,9 @@ void Bitmap_Scale(struct Bitmap* dst, struct Bitmap* src,
 #define PNG_PALETTE 256
 #define PNG_FourCC(a, b, c, d) (((cc_uint32)a << 24) | ((cc_uint32)b << 16) | ((cc_uint32)c << 8) | (cc_uint32)d)
 
-enum PngCol {
-	PNG_COL_GRAYSCALE = 0, PNG_COL_RGB = 2, PNG_COL_INDEXED = 3,
-	PNG_COL_GRAYSCALE_A = 4, PNG_COL_RGB_A = 6
+enum PngColor {
+	PNG_COLOR_GRAYSCALE = 0, PNG_COLOR_RGB = 2, PNG_COLOR_INDEXED = 3,
+	PNG_COLOR_GRAYSCALE_A = 4, PNG_COLOR_RGB_A = 6
 };
 
 enum PngFilter {
@@ -271,7 +271,7 @@ static void Png_Expand_RGB_A_16(int width, BitmapCol* palette, cc_uint8* src, Bi
 
 static Png_RowExpander Png_GetExpander(cc_uint8 col, cc_uint8 bitsPerSample) {
 	switch (col) {
-	case PNG_COL_GRAYSCALE:
+	case PNG_COLOR_GRAYSCALE:
 		switch (bitsPerSample) {
 		case 1:  return Png_Expand_GRAYSCALE_1;
 		case 2:  return Png_Expand_GRAYSCALE_2;
@@ -281,14 +281,14 @@ static Png_RowExpander Png_GetExpander(cc_uint8 col, cc_uint8 bitsPerSample) {
 		}
 		return NULL;
 
-	case PNG_COL_RGB:
+	case PNG_COLOR_RGB:
 		switch (bitsPerSample) {
 		case 8:  return Png_Expand_RGB_8;
 		case 16: return Png_Expand_RGB_16;
 		}
 		return NULL;
 
-	case PNG_COL_INDEXED:
+	case PNG_COLOR_INDEXED:
 		switch (bitsPerSample) {
 		case 1: return Png_Expand_INDEXED_1;
 		case 2: return Png_Expand_INDEXED_2;
@@ -297,14 +297,14 @@ static Png_RowExpander Png_GetExpander(cc_uint8 col, cc_uint8 bitsPerSample) {
 		}
 		return NULL;
 
-	case PNG_COL_GRAYSCALE_A:
+	case PNG_COLOR_GRAYSCALE_A:
 		switch (bitsPerSample) {
 		case 8:  return Png_Expand_GRAYSCALE_A_8;
 		case 16: return Png_Expand_GRAYSCALE_A_16;
 		}
 		return NULL;
 
-	case PNG_COL_RGB_A:
+	case PNG_COLOR_RGB_A:
 		switch (bitsPerSample) {
 		case 8:  return Png_Expand_RGB_A_8;
 		case 16: return Png_Expand_RGB_A_16;
@@ -426,14 +426,14 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 		} break;
 
 		case PNG_FourCC('t','R','N','S'): {
-			if (col == PNG_COL_GRAYSCALE) {
+			if (col == PNG_COLOR_GRAYSCALE) {
 				if (dataSize != 2) return PNG_ERR_TRANS_COUNT;
 				res = Stream_Read(stream, tmp, dataSize);
 				if (res) return res;
 
 				/* RGB is 16 bits big endian, ignore least significant 8 bits */
 				trnsCol = BitmapCol_Make(tmp[0], tmp[0], tmp[0], 0);
-			} else if (col == PNG_COL_INDEXED) {
+			} else if (col == PNG_COLOR_INDEXED) {
 				if (dataSize > PNG_PALETTE) return PNG_ERR_TRANS_COUNT;
 				res = Stream_Read(stream, tmp, dataSize);
 				if (res) return res;
@@ -443,7 +443,7 @@ cc_result Png_Decode(struct Bitmap* bmp, struct Stream* stream) {
 					palette[i] &= BITMAPCOL_RGB_MASK; /* set A to 0 */
 					palette[i] |= tmp[i] << BITMAPCOL_A_SHIFT;
 				}
-			} else if (col == PNG_COL_RGB) {
+			} else if (col == PNG_COLOR_RGB) {
 				if (dataSize != 6) return PNG_ERR_TRANS_COUNT;
 				res = Stream_Read(stream, tmp, dataSize);
 				if (res) return res;
@@ -653,7 +653,7 @@ cc_result Png_Encode(struct Bitmap* bmp, struct Stream* stream,
 		Stream_SetU32_BE(&tmp[8],  bmp->width);
 		Stream_SetU32_BE(&tmp[12], bmp->height);
 		tmp[16] = 8;           /* bits per sample */
-		tmp[17] = alpha ? PNG_COL_RGB_A : PNG_COL_RGB;
+		tmp[17] = alpha ? PNG_COLOR_RGB_A : PNG_COLOR_RGB;
 		tmp[18] = 0;           /* DEFLATE compression method */
 		tmp[19] = 0;           /* ADAPTIVE filter method */
 		tmp[20] = 0;           /* Not using interlacing */
