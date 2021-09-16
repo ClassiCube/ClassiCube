@@ -174,7 +174,7 @@ static void JNICALL java_onDestroy(JNIEnv* env, jobject o) {
 
 	if (WindowInfo.Exists) Window_Close();
 	/* TODO: signal to java code we're done */
-	JavaCallVoid(env, "processedDestroyed", "()V", NULL);
+	/* JavaCallVoid(env, "processedDestroyed", "()V", NULL); */
 }
 
 static void JNICALL java_onGotFocus(JNIEnv* env, jobject o) {
@@ -259,7 +259,7 @@ static void DoCreateWindow(void) {
 	/* actual window creation is done when processSurfaceCreated is received */
 	Window_RemakeSurface();
 	/* always start as fullscreen */
-	Window_EnterFullscrene();
+	Window_EnterFullscreen();
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(); }
 void Window_Create3D(int width, int height) { DoCreateWindow(); }
