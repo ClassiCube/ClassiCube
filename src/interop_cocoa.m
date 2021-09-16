@@ -262,7 +262,7 @@ static void ApplyIcon(void) { }
 #endif
 
 #define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
-static void DoCreateWindow(void) {
+static void DoCreateWindow(int width, int height) {
 	CCWindowDelegate* del;
 	NSRect rect;
 
