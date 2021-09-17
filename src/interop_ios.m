@@ -1,3 +1,4 @@
+#define GLES_SILENCE_DEPRECATION
 #include "_WindowBase.h"
 #include "Bitmap.h"
 #include "Input.h"
@@ -20,12 +21,51 @@
 @end
 
 static CCViewController* controller;
-static UIWindow* winHandle;
+static UIWindow* win_handle;
+static UIView* view_handle;
 
 static void DoDrawFramebuffer(CGRect dirty);
+
+static void AddTouch(UITouch* t) {
+    CGPoint loc = [t locationInView:view_handle];
+    int x = loc.x, y = loc.y; long ui_id = (long)t;
+    Platform_Log3("POINTER %i - DOWN %i,%i", &ui_id, &x, &y);
+    Input_AddTouch((long)t, loc.x, loc.y);
+}
+
+static void UpdateTouch(UITouch* t) {
+    CGPoint loc = [t locationInView:view_handle];
+    int x = loc.x, y = loc.y; long ui_id = (long)t;
+    Platform_Log3("POINTER %i - MOVE %i,%i", &ui_id, &x, &y);
+    Input_UpdateTouch((long)t, loc.x, loc.y);
+}
+
+static void RemoveTouch(UITouch* t) {
+    CGPoint loc = [t locationInView:view_handle];
+    int x = loc.x, y = loc.y; long ui_id = (long)t;
+    Platform_Log3("POINTER %i - UP %i,%i", &ui_id, &x, &y);
+    Input_RemoveTouch((long)t, loc.x, loc.y);
+}
+
 @implementation CCWindow
 
 //- (void)drawRect:(CGRect)dirty { DoDrawFramebuffer(dirty); }
+
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    for (UITouch* t in touches) AddTouch(t);
+}
+
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    for (UITouch* t in touches) UpdateTouch(t);
+}
+
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    for (UITouch* t in touches) RemoveTouch(t);
+}
+
+- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    for (UITouch* t in touches) RemoveTouch(t);
+}
 
 - (BOOL)isOpaque { return YES; }
 
@@ -52,19 +92,27 @@ static void DoDrawFramebuffer(CGRect dirty);
 - (void)applicationWillResignActive:(UIApplication *)application {
     // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
     // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+    Platform_LogConst("INACTIVE");
+    WindowInfo.Focused = false;
+    Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+    Platform_LogConst("BACKGROUND");
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+    Platform_LogConst("FOREGROUND");
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    Platform_LogConst("ACTIVE");
+    WindowInfo.Focused = true;
+    Event_RaiseVoid(&WindowEvents.FocusChanged);
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
@@ -121,10 +169,10 @@ void Window_Init(void) {
 static CGRect DoCreateWindow(void) {
     CGRect bounds = UIScreen.mainScreen.bounds;
     controller = [CCViewController alloc];
-    winHandle  = [[CCWindow alloc] initWithFrame:bounds];
+    win_handle = [[CCWindow alloc] initWithFrame:bounds];
     
-    winHandle.rootViewController = controller;
-    winHandle.backgroundColor = UIColor.blueColor;
+    win_handle.rootViewController = controller;
+    win_handle.backgroundColor = UIColor.blueColor;
     WindowInfo.Exists = true;
     WindowInfo.Width  = bounds.size.width;
     WindowInfo.Height = bounds.size.height;
@@ -136,7 +184,7 @@ void Window_SetSize(int width, int height) { }
 void Window_Close(void) { }
 
 void Window_Show(void) {
-    [winHandle makeKeyAndVisible];
+    [win_handle makeKeyAndVisible];
 }
 
 void Window_ProcessEvents(void) {
@@ -202,7 +250,7 @@ void Window_DrawFramebuffer(Rect2D r) {
     rect.origin.y    = WindowInfo.Height - r.Y - r.Height;
     rect.size.width  = r.Width;
     rect.size.height = r.Height;
-    [winHandle setNeedsDisplayInRect:rect];
+    [win_handle setNeedsDisplayInRect:rect];
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
@@ -234,10 +282,10 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
 }
 @end
 
-static CCGLView* view_handle;
 void Window_Create3D(int width, int height) {
     CGRect bounds = DoCreateWindow();
     view_handle = [[CCGLView alloc] initWithFrame:bounds];
+    view_handle.multipleTouchEnabled = true;
     controller.view = view_handle;
     
     CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
