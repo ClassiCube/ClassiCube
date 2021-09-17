@@ -277,7 +277,7 @@ void Thread_Sleep(cc_uint32 milliseconds) { usleep(milliseconds * 1000); }
 
 #ifdef CC_BUILD_ANDROID
 /* All threads using JNI must detach BEFORE they exit */
-/* (see https://developer.android.com/training/articles/perf-jni */
+/* (see https://developer.android.com/training/articles/perf-jni#threads */
 static void* ExecThread(void* param) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);

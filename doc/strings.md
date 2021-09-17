@@ -9,7 +9,7 @@ ClassiCube strings (`cc_string`) are a struct with the following fields:
 
 Note: This means **STRINGS MAY NOT BE NULL TERMINATED** (and are not in most cases)
 
-You should also read the **Strings** section in the [style guide](doc/style.md)
+You should also read the **Strings** section in the [style guide](/doc/style.md)
 
 ## Memory management
 Some general guidelines to keep in mind when it comes to `cc_string` strings:
@@ -57,7 +57,7 @@ The `buffer` field **should not** be treated as a C string, because `cc_string` 
 The general way to achieve this is to
 1. Initialise `capacity` with 1 less than actual buffer size (e.g. use `String_InitArray_NT` instead of `String_InitArray`)
 2. Perform various operations on the `cc_string` string
-3. Add null terminator to end (i.e. `buffer[length] = '\0';
+3. Add null terminator to end (i.e. `buffer[length]` = '\0';
 4. Use `buffer` as a C string now
 
 For example:

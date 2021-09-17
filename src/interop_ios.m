@@ -25,18 +25,13 @@ static UIWindow* winHandle;
 static void DoDrawFramebuffer(CGRect dirty);
 @implementation CCWindow
 
-- (void)drawRect:(CGRect)dirty { DoDrawFramebuffer(dirty); }
+//- (void)drawRect:(CGRect)dirty { DoDrawFramebuffer(dirty); }
 
 - (BOOL)isOpaque { return YES; }
 
 @end
 
 @implementation CCViewController
-
-- (void)viewDidLoad {
-    [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
-}
 @end
 
 @implementation CCAppDelegate
@@ -123,7 +118,7 @@ void Window_Init(void) {
     DisplayInfo.ScaleY = 1; // TODO dpi scale
 }
 
-static void DoCreateWindow(void) {
+static CGRect DoCreateWindow(void) {
     CGRect bounds = UIScreen.mainScreen.bounds;
     controller = [CCViewController alloc];
     winHandle  = [[CCWindow alloc] initWithFrame:bounds];
@@ -133,9 +128,9 @@ static void DoCreateWindow(void) {
     WindowInfo.Exists = true;
     WindowInfo.Width  = bounds.size.width;
     WindowInfo.Height = bounds.size.height;
+    return bounds;
 }
 void Window_Create2D(int width, int height) { DoCreateWindow(); }
-void Window_Create3D(int width, int height) { DoCreateWindow(); }
 void Window_SetSize(int width, int height) { }
 
 void Window_Close(void) { }
@@ -228,6 +223,32 @@ void Window_LockLandscapeOrientation(cc_bool lock) {
     // TODO implement
 }
 
+
+@interface CCGLView : UIView
+@end
+
+@implementation CCGLView
+
++ (Class)layerClass {
+    return [CAEAGLLayer class];
+}
+@end
+
+static CCGLView* view_handle;
+void Window_Create3D(int width, int height) {
+    CGRect bounds = DoCreateWindow();
+    view_handle = [[CCGLView alloc] initWithFrame:bounds];
+    controller.view = view_handle;
+    
+    CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
+    layer.opaque = YES;
+    layer.drawableProperties =
+   @{
+        kEAGLDrawablePropertyRetainedBacking : [NSNumber numberWithBool:NO],
+        kEAGLDrawablePropertyColorFormat : kEAGLColorFormatRGBA8
+    };
+}
+
 /*########################################################################################################################*
 *--------------------------------------------------------GLContext--------------------------------------------------------*
 *#########################################################################################################################*/
@@ -236,12 +257,13 @@ static GLuint framebuffer;
 static GLuint color_renderbuffer, depth_renderbuffer;
 
 static void CreateFramebuffer(void) {
+    CAEAGLLayer* layer = (CAEAGLLayer*)view_handle.layer;
     glGenFramebuffers(1, &framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     
     glGenRenderbuffers(1, &color_renderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, WindowInfo.Width, WindowInfo.Height);
+    [ctx_handle renderbufferStorage:GL_RENDERBUFFER fromDrawable:layer];
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, color_renderbuffer);
     
     glGenRenderbuffers(1, &depth_renderbuffer);
@@ -273,7 +295,9 @@ void* GLContext_GetAddress(const char* function) { return NULL; }
 
 cc_bool GLContext_SwapBuffers(void) {
     static GLenum discards[] = { GL_DEPTH_ATTACHMENT };
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glDiscardFramebufferEXT(GL_FRAMEBUFFER, 1, discards);
+    glBindRenderbuffer(GL_RENDERBUFFER, color_renderbuffer);
     [ctx_handle presentRenderbuffer:GL_RENDERBUFFER];
     return true;
 }
