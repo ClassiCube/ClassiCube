@@ -312,6 +312,7 @@ public class MainActivity extends Activity {
 	public void onDestroy() {
 		Log.i("CC_WIN", "APP DESTROYED");
 		super.onDestroy();
+		pushCmd(CMD_APP_DESTROY);
 	}
 	
 	// Called by the game thread to actually process events

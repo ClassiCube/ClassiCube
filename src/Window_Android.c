@@ -10,6 +10,7 @@
 #include <android/native_window_jni.h>
 #include <android/keycodes.h>
 static ANativeWindow* win_handle;
+static cc_bool winCreated;
 
 static void RefreshWindowBounds(void) {
 	WindowInfo.Width  = ANativeWindow_getWidth(win_handle);
@@ -121,6 +122,7 @@ static void JNICALL java_processPointerMove(JNIEnv* env, jobject o, jint id, jin
 static void JNICALL java_processSurfaceCreated(JNIEnv* env, jobject o, jobject surface) {
 	Platform_LogConst("WIN - CREATED");
 	win_handle        = ANativeWindow_fromSurface(env, surface);
+	winCreated        = true;
 	WindowInfo.Handle = win_handle;
 	RefreshWindowBounds();
 	/* TODO: Restore context */
@@ -172,7 +174,7 @@ static void JNICALL java_onDestroy(JNIEnv* env, jobject o) {
 
 	if (WindowInfo.Exists) Window_Close();
 	/* TODO: signal to java code we're done */
-	JavaCallVoid(env, "processedDestroyed", "()V", NULL);
+	/* JavaCallVoid(env, "processedDestroyed", "()V", NULL); */
 }
 
 static void JNICALL java_onGotFocus(JNIEnv* env, jobject o) {
@@ -193,7 +195,7 @@ static void JNICALL java_onLowMemory(JNIEnv* env, jobject o) {
 	/* TODO: Low memory */
 }
 
-static const JNINativeMethod methods[19] = {
+static const JNINativeMethod methods[] = {
 	{ "processKeyDown",   "(I)V", java_processKeyDown },
 	{ "processKeyUp",     "(I)V", java_processKeyUp },
 	{ "processKeyChar",   "(I)V", java_processKeyChar },
@@ -233,14 +235,7 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = JavaCallFloat(env, "getDpiY", "()F", NULL);
 }
 
-void Window_Create(int width, int height) {
-	WindowInfo.Exists = true;
-	/* actual window creation is done when processSurfaceCreated is received */
-}
-
-static cc_bool winCreated;
-static void OnWindowCreated(void* obj) { winCreated = true; }
-cc_bool Window_RemakeSurface(void) {
+static void Window_RemakeSurface(void) {
 	JNIEnv* env;
 	JavaGetCurrentEnv(env);
 	winCreated = false;
@@ -248,19 +243,26 @@ cc_bool Window_RemakeSurface(void) {
 	/* Force window to be destroyed and re-created */
 	/* (see comments in setupForGame for why this has to be done) */
 	JavaCallVoid(env, "setupForGame", "()V", NULL);
-	Event_Register_(&WindowEvents.Created, NULL, OnWindowCreated);
 	Platform_LogConst("Entering wait for window exist loop..");
 
 	/* Loop until window gets created by main UI thread */
-	while (WindowInfo.Exists && !winCreated) {
+	while (!winCreated) {
 		Window_ProcessEvents();
 		Thread_Sleep(10);
 	}
 
 	Platform_LogConst("OK window created..");
-	Event_Unregister_(&WindowEvents.Created, NULL, OnWindowCreated);
-	return winCreated;
 }
+
+static void DoCreateWindow(void) {
+	WindowInfo.Exists = true;
+	/* actual window creation is done when processSurfaceCreated is received */
+	Window_RemakeSurface();
+	/* always start as fullscreen */
+	Window_EnterFullscreen();
+}
+void Window_Create2D(int width, int height) { DoCreateWindow(); }
+void Window_Create3D(int width, int height) { DoCreateWindow(); }
 
 void Window_SetTitle(const cc_string* title) {
 	/* TODO: Implement this somehow */

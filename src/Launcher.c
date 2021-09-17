@@ -278,9 +278,8 @@ static void Launcher_Free(void) {
 
 void Launcher_Run(void) {
 	static const cc_string title = String_FromConst(GAME_APP_TITLE);
-	Window_Create(640, 400);
+	Window_Create2D(640, 400);
 #ifdef CC_BUILD_MOBILE
-	Window_EnterFullscreen();
 	Window_LockLandscapeOrientation(Options_GetBool(OPT_LANDSCAPE_MODE, false));
 #endif
 	Window_SetTitle(&title);
@@ -330,19 +329,13 @@ void Launcher_Run(void) {
 	Launcher_Free();
 
 #ifdef CC_BUILD_MOBILE
-	extern int Program_Run(int argc, char** argv);
-	extern cc_bool Window_RemakeSurface(void);
-
-	if (Launcher_ShouldExit) {
-		Launcher_ShouldExit = false;
-		Http_Component.Free();
-
-		Program_Run(0, NULL);
-		Window_ExitFullscreen(); /* TODO remove */
-		Window_RemakeSurface();
-		Launcher_Run();
-	}
-#endif
+	/* infinite loop on mobile */
+	Launcher_ShouldExit = false;
+	/* Reset components */
+	Platform_LogConst("undoing components");
+	Drawer2D_Component.Free();
+	Http_Component.Free();
+#else
 	if (Launcher_ShouldUpdate) {
 		const char* action;
 		cc_result res = Updater_Start(&action);
@@ -350,6 +343,7 @@ void Launcher_Run(void) {
 	}
 
 	if (WindowInfo.Exists) Window_Close();
+#endif
 }
 
 

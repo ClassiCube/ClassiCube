@@ -278,7 +278,7 @@ static void ApplyIcon(void) {
 static void ApplyIcon(void) { }
 #endif
 
-void Window_Create(int width, int height) {
+static void DoCreateWindow(int width, int height) {
 	XSetWindowAttributes attributes = { 0 };
 	XSizeHints hints = { 0 };
 	Atom protocols[2];
@@ -340,6 +340,8 @@ void Window_Create(int width, int height) {
 	XGetInputFocus(win_display, &focus, &focusRevert);
 	if (focus == win_handle) WindowInfo.Focused = true;
 }
+void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
+void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];

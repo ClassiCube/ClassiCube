@@ -35,18 +35,19 @@ void Window_Init(void) {
 	DisplayInfo.ScaleY = 1;
 }
 
-void Window_Create(int width, int height) {
+static void DoCreateWindow(int width, int height, int flags) {
 	int x = Display_CentreX(width);
 	int y = Display_CentreY(height);
 
-	/* TODO: Don't set this flag for launcher window */
-	win_handle = SDL_CreateWindow(NULL, x, y, width, height, SDL_WINDOW_OPENGL);
+	win_handle = SDL_CreateWindow(NULL, x, y, width, height, flags);
 	if (!win_handle) Window_SDLFail("creating window");
 
 	RefreshWindowBounds();
 	WindowInfo.Exists = true;
 	WindowInfo.Handle = win_handle;
 }
+void Window_Create2D(int width, int height) { DoCreateWindow(width, height, 0); }
+void Window_Create3D(int width, int height) { DoCreateWindow(width, height, SDL_WINDOW_OPENGL); }
 
 void Window_SetTitle(const cc_string* title) {
 	char str[NATIVE_STR_LEN];

@@ -79,8 +79,12 @@ CC_VAR extern struct _WinData {
 
 /* Initialises state for window. Also sets Display_ members. */
 void Window_Init(void);
-/* Creates the window as the given size at centre of the screen. */
-void Window_Create(int width, int height);
+/* Creates a window of the given size at centre of the screen. */
+/* NOTE: The created window is compatible with 2D drawing */
+void Window_Create2D(int width, int height);
+/* Creates a window of the given size at centre of the screen. */
+/* NOTE: The created window is compatible with 3D rendering */
+void Window_Create3D(int width, int height);
 /* Sets the text of the titlebar above the window. */
 CC_API void Window_SetTitle(const cc_string* title);
 

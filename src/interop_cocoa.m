@@ -262,7 +262,7 @@ static void ApplyIcon(void) { }
 #endif
 
 #define WIN_MASK (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
-void Window_Create(int width, int height) {
+static void DoCreateWindow(int width, int height) {
 	CCWindowDelegate* del;
 	NSRect rect;
 
@@ -287,6 +287,8 @@ void Window_Create(int width, int height) {
 	MakeContentView();
 	ApplyIcon();
 }
+void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
+void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
 void Window_SetTitle(const cc_string* title) {
 	char raw[NATIVE_STR_LEN];

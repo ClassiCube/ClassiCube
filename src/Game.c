@@ -662,26 +662,8 @@ static void Game_RunLoop(void) {
 }
 #endif
 
-#ifdef CC_BUILD_ANDROID
-extern cc_bool Window_RemakeSurface(void);
-static cc_bool SwitchToGame() {
-	/* Reset components */
-	Platform_LogConst("undoing components");
-	Drawer2D_Component.Free();
-	//Http_Component.Free();
-	return Window_RemakeSurface();
-}
-#endif
-
 void Game_Run(int width, int height, const cc_string* title) {
-#ifdef CC_BUILD_ANDROID
-	/* Android won't let us change pixel surface to EGL surface */
-	/* So unfortunately have to completely recreate the surface */
-	if (!SwitchToGame()) return;
-	Window_EnterFullscreen();
-#endif
-
-	Window_Create(width, height);
+	Window_Create3D(width, height);
 	Window_SetTitle(title);
 	Window_Show();
 

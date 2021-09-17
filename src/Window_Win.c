@@ -285,7 +285,7 @@ static ATOM DoRegisterClass(void) {
 	return RegisterClassExA((const WNDCLASSEXA*)&wc);
 }
 
-static void DoCreateWindow(ATOM atom, int width, int height) {
+static void CreateWindowHandle(ATOM atom, int width, int height) {
 	cc_result res;
 	RECT r;
 	/* Calculate final window rectangle after window decorations are added (titlebar, borders etc) */
@@ -307,7 +307,7 @@ static void DoCreateWindow(ATOM atom, int width, int height) {
 	Logger_Abort2(res, "Failed to create window");
 }
 
-void Window_Create(int width, int height) {
+static void DoCreateWindow(int width, int height) {
 	ATOM atom;
 	win_instance = GetModuleHandleA(NULL);
 	/* TODO: UngroupFromTaskbar(); */
@@ -315,7 +315,7 @@ void Window_Create(int width, int height) {
 	height = Display_ScaleY(height);
 
 	atom = DoRegisterClass();
-	DoCreateWindow(atom, width, height);
+	CreateWindowHandle(atom, width, height);
 	RefreshWindowBounds();
 
 	win_DC = GetDC(win_handle);
@@ -323,6 +323,8 @@ void Window_Create(int width, int height) {
 	WindowInfo.Exists = true;
 	WindowInfo.Handle = win_handle;
 }
+void Window_Create2D(int width, int height) { DoCreateWindow(width, height); }
+void Window_Create3D(int width, int height) { DoCreateWindow(width, height); }
 
 void Window_SetTitle(const cc_string* title) {
 	WCHAR str[NATIVE_STR_LEN];

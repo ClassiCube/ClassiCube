@@ -1227,8 +1227,13 @@ cc_result Platform_Decrypt(const void* data, int len, cc_string* dst) {
 *#########################################################################################################################*/
 #if defined CC_BUILD_ANDROID
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
-	if (!gameArgs.length) return 0;
-	return String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
+	int count = 0;
+	if (gameArgs.length) {
+		count = String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
+		/* clear arguments so after game is closed, launcher is started */
+		gameArgs.length = 0;
+	}
+	return count;
 }
 
 cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
