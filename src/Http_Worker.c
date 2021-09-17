@@ -631,8 +631,8 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 *-----------------------------------------------------Android backend-----------------------------------------------------*
 *#########################################################################################################################*/
 struct HttpRequest* java_req;
-static JMethodID JAVA_httpInit, JAVA_httpSetHeader, JAVA_httpPerform, JAVA_httpSetData;
-static JMethodID JAVA_httpDescribeError;
+static jmethodID JAVA_httpInit, JAVA_httpSetHeader, JAVA_httpPerform, JAVA_httpSetData;
+static jmethodID JAVA_httpDescribeError;
 
 cc_bool Http_DescribeError(cc_result res, cc_string* dst) {
 	char buffer[NATIVE_STR_LEN];
@@ -741,7 +741,7 @@ static cc_result HttpBackend_Do(struct HttpRequest* req, cc_string* url) {
 
 	req->_capacity   = 0;
 	http_curProgress = HTTP_PROGRESS_FETCHING_DATA;
-	res = JavaInstanceCall_Int(env, JAVA_httpPerform, args);
+	res = JavaInstanceCall_Int(env, JAVA_httpPerform, NULL);
 	http_curProgress = 100;
 	return res;
 }
