@@ -260,8 +260,6 @@ jbyteArray JavaMakeBytes(JNIEnv* env, const void* src, cc_uint32 len);
 /* Calls a method in the activity class that returns nothing. */
 void JavaCallVoid(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that returns a jint. */
-jint JavaCallInt(JNIEnv*   env, const char* name, const char* sig, jvalue* args);
-/* Calls a method in the activity class that returns a jint. */
 jlong JavaCallLong(JNIEnv* env, const char* name, const char* sig, jvalue* args);
 /* Calls a method in the activity class that returns a jint. */
 jfloat JavaCallFloat(JNIEnv*  env, const char* name, const char* sig, jvalue* args);
@@ -275,8 +273,10 @@ void JavaCall_Void_String(const char* name, cc_string* dst);
 void JavaCall_String_String(const char* name, const cc_string* arg, cc_string* dst);
 
 #define JavaInstanceCall_Void(env, method, args) (*env)->CallVoidMethodA(env,  App_Instance, method, args)
+/* Calls an instance method in the activity class that returns a jint */
 #define JavaInstanceCall_Int(env,  method, args) (*env)->CallIntMethodA(env,   App_Instance, method, args)
 #define JavaInstanceCall_Long(env, method, args) (*env)->CallLongMethodA(env,  App_Instance, method, args)
+/* Calls an instance method in the activity class that returns a jfloat */
 #define JavaInstanceCall_Float(env,method, args) (*env)->CallFloatMethodA(env, App_Instance, method, args)
 #define JavaInstanceCall_Obj(env,  method, args) (*env)->CallObjectMethodA(env,App_Instance, method, args)
 #endif

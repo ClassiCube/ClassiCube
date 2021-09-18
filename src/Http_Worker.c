@@ -682,7 +682,7 @@ static void JNICALL java_HttpAppendData(JNIEnv* env, jobject o, jbyteArray arr, 
 	Http_BufferExpanded(req, len);
 }
 
-static const JNINativeMethod methods[2] = {
+static const JNINativeMethod methods[] = {
 	{ "httpParseHeader", "(Ljava/lang/String;)V", java_HttpParseHeader },
 	{ "httpAppendData",  "([BI)V",                java_HttpAppendData }
 };
