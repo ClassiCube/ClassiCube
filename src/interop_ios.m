@@ -204,44 +204,26 @@ int Window_GetWindowState(void) { return WINDOW_STATE_NORMAL; }
 cc_result Window_EnterFullscreen(void) { return ERR_NOT_SUPPORTED; }
 cc_result Window_ExitFullscreen(void) { return ERR_NOT_SUPPORTED; }
 
+void Window_EnableRawMouse(void)  { }
+void Window_UpdateRawMouse(void)  { }
+void Window_DisableRawMouse(void) { }
+
+void Window_LockLandscapeOrientation(cc_bool lock) {
+    // TODO implement
+}
+
+
+/*#########################################################################################################################*
+ *--------------------------------------------------------2D window--------------------------------------------------------*
+ *#########################################################################################################################*/
+static CGContextRef win_ctx;
 static struct Bitmap fb_bmp;
 void Window_AllocFramebuffer(struct Bitmap* bmp) {
     bmp->scan0 = (BitmapCol*)Mem_Alloc(bmp->width * bmp->height, 4, "window pixels");
     fb_bmp = *bmp;
-}
-
-static void DoDrawFramebuffer(CGRect dirty) {
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = NULL;
-    CGDataProviderRef provider;
-    CGImageRef image;
-    CGRect rect;
     
-    // Unfortunately CGImageRef is immutable, so changing the
-    // underlying data doesn't change what shows when drawing.
-    // TODO: Find a better way of doing this in cocoa..
-    if (!fb_bmp.scan0) return;
-    context   = UIGraphicsGetCurrentContext();
-    //CGContextTranslateCTM(context, 0, -WindowInfo.Height);
-    //CGContextScaleCTM(context, 1.0, -1.0); // invert upside down
-    
-    // TODO: Only update changed bit..
-    rect.origin.x = 0; rect.origin.y = 0;
-    rect.size.width  = WindowInfo.Width;
-    rect.size.height = WindowInfo.Height;
-    
-    // TODO: REPLACE THIS AWFUL HACK
-    provider = CGDataProviderCreateWithData(NULL, fb_bmp.scan0,
-                                            Bitmap_DataSize(fb_bmp.width, fb_bmp.height), NULL);
-    image = CGImageCreate(fb_bmp.width, fb_bmp.height, 8, 32, fb_bmp.width * 4, colorSpace,
-                          kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst, provider, NULL, 0, 0);
-    
-    CGContextDrawImage(context, rect, image);
-    CGContextSynchronize(context);
-    
-    CGImageRelease(image);
-    CGDataProviderRelease(provider);
-    CGColorSpaceRelease(colorSpace);
+    win_ctx = CGBitmapContextCreate(bmp->scan0, bmp->width, bmp->height, 8, bmp->width * 4,
+                                    CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrder32Host | kCGImageAlphaNoneSkipFirst);
 }
 
 void Window_DrawFramebuffer(Rect2D r) {
@@ -250,28 +232,20 @@ void Window_DrawFramebuffer(Rect2D r) {
     rect.origin.y    = WindowInfo.Height - r.Y - r.Height;
     rect.size.width  = r.Width;
     rect.size.height = r.Height;
-    [win_handle setNeedsDisplayInRect:rect];
+    win_handle.layer.contents = CFBridgingRelease(CGBitmapContextCreateImage(win_ctx));
+    // TODO always redraws entire launcher which is quite terrible performance wise
+    //[win_handle setNeedsDisplayInRect:rect];
 }
 
 void Window_FreeFramebuffer(struct Bitmap* bmp) {
     Mem_Free(bmp->scan0);
-}
-
-void Window_EnableRawMouse(void)  { }
-void Window_UpdateRawMouse(void)  { }
-void Window_DisableRawMouse(void) { }
-
-
-cc_bool Window_RemakeSurface(void) {
-    // TODO implement
-    return true;
-}
-
-void Window_LockLandscapeOrientation(cc_bool lock) {
-    // TODO implement
+    CGContextRelease(win_ctx);
 }
 
 
+/*#########################################################################################################################*
+ *--------------------------------------------------------3D window--------------------------------------------------------*
+ *#########################################################################################################################*/
 @interface CCGLView : UIView
 @end
 
@@ -296,6 +270,7 @@ void Window_Create3D(int width, int height) {
         kEAGLDrawablePropertyColorFormat : kEAGLColorFormatRGBA8
     };
 }
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------GLContext--------------------------------------------------------*
