@@ -500,10 +500,11 @@ static void Cursor_DoSetVisible(cc_bool visible) {
 	int i;
 	/* ShowCursor actually is a counter (returns > 0 if visible, <= 0 if not) */
 	/* Try multiple times in case cursor count was changed by something else */
+	/*  (there's at least system out there that requires 30 times) */
 	if (visible) {
-		for (i = 0; i < 10 && ShowCursor(true)  <  0; i++) { }
+		for (i = 0; i < 50 && ShowCursor(true)  <  0; i++) { }
 	} else {
-		for (i = 0; i < 10 && ShowCursor(false) >= 0; i++) {}
+		for (i = 0; i < 50 && ShowCursor(false) >= 0; i++) {}
 	}
 }
 
