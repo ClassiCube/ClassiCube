@@ -692,6 +692,8 @@ cc_result Process_StartOpen(const cc_string* args) {
 	Process_RawStart("open", cmd);
 	return 0;
 }
+#elif defined CC_BUILD_IOS
+/* implemented in interop_ios.m */
 #else
 cc_result Process_StartOpen(const cc_string* args) {
 	char str[NATIVE_STR_LEN];

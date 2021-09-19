@@ -194,7 +194,11 @@ void Window_ProcessEvents(void) {
         res = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, TRUE);
     } while (res == kCFRunLoopRunHandledSource);
 }
-void ShowDialogCore(const char* title, const char* msg) { }
+void ShowDialogCore(const char* title, const char* msg) {
+    Platform_LogConst(title);
+    Platform_LogConst(msg);
+    /* TODO implement this */
+}
 
 void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
 void Window_SetKeyboardText(const cc_string* text) { }
@@ -326,3 +330,16 @@ cc_bool GLContext_SwapBuffers(void) {
 }
 void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) { }
 void GLContext_GetApiInfo(cc_string* info) { }
+
+
+cc_result Process_StartOpen(const cc_string* args) {
+    char raw[NATIVE_STR_LEN];
+    NSURL* url;
+    NSString* str;
+    
+    Platform_EncodeUtf8(raw, args);
+    str = [NSString stringWithUTF8String:raw];
+    url = [[NSURL alloc] initWithString:str];
+    [UIApplication.sharedApplication openURL:url];
+    return 0;
+}
