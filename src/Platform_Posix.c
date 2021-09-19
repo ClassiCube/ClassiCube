@@ -618,6 +618,8 @@ cc_result Process_StartGame(const cc_string* args) {
 	String_Copy(&gameArgs, args);
 	return 0; /* TODO: Is there a clean way of handling an error */
 }
+#elif defined CC_BUILD_IOS
+/* implemented in interop_ios.m */
 #else
 static cc_result Process_RawStart(const char* path, char** argv) {
 	pid_t pid = fork();
@@ -1247,6 +1249,8 @@ cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
 	Platform_Log1("EXTERNAL DIR: %s|", &dir);
 	return chdir(dir.buffer) == -1 ? errno : 0;
 }
+#elif defined CC_BUILD_IOS
+/* implemented in interop_ios.m */
 #else
 int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
 	int i, count;

@@ -122,6 +122,7 @@ void Clipboard_SetText(const cc_string* value) {
 
 static NSAutoreleasePool* pool;
 void Window_Init(void) {
+	// https://www.cocoawithlove.com/2009/01/demystifying-nsapplication-by.html
 	pool = [[NSAutoreleasePool alloc] init];
 	appHandle = [NSApplication sharedApplication];
 	[appHandle activateIgnoringOtherApps:YES];

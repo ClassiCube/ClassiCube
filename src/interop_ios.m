@@ -5,6 +5,7 @@
 #include "Platform.h"
 #include "String.h"
 #include "Errors.h"
+#include <mach-o/dyld.h>
 #include <UIKit/UIPasteboard.h>
 #include <UIKit/UIKit.h>
 #include <OpenGLES/ES2/gl.h>
@@ -117,6 +118,7 @@ static void RemoveTouch(UITouch* t) {
 
 - (void)applicationWillTerminate:(UIApplication *)application {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+    // TODO implement somehow, prob need a variable in Program.c
 }
 @end
 
@@ -181,7 +183,10 @@ static CGRect DoCreateWindow(void) {
 void Window_Create2D(int width, int height) { DoCreateWindow(); }
 void Window_SetSize(int width, int height) { }
 
-void Window_Close(void) { }
+void Window_Close(void) {
+    WindowInfo.Exists = false;
+    Event_RaiseVoid(&WindowEvents.Closing);
+}
 
 void Window_Show(void) {
     [win_handle makeKeyAndVisible];
@@ -197,7 +202,21 @@ void Window_ProcessEvents(void) {
 void ShowDialogCore(const char* title, const char* msg) {
     Platform_LogConst(title);
     Platform_LogConst(msg);
-    /* TODO implement this */
+    NSString* _title = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
+    NSString* _msg   = [NSString stringWithCString:msg encoding:NSASCIIStringEncoding];
+    __block int completed = false;
+    
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:_title message:_msg preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction* okBtn     = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* act) { completed = true; }];
+    [alert addAction:okBtn];
+    [controller presentViewController:alert animated:YES completion: Nil];
+    
+    // TODO clicking outside message box crashes launcher
+    // loop until alert is closed TODO avoid sleeping
+    while (!completed) {
+        Window_ProcessEvents();
+        Thread_Sleep(16);
+    }
 }
 
 void Window_OpenKeyboard(const struct OpenKeyboardArgs* args) { }
@@ -332,6 +351,9 @@ void GLContext_SetFpsLimit(cc_bool vsync, float minFrameMs) { }
 void GLContext_GetApiInfo(cc_string* info) { }
 
 
+/*########################################################################################################################*
+ *--------------------------------------------------------Platform--------------------------------------------------------*
+ *#########################################################################################################################*/
 cc_result Process_StartOpen(const cc_string* args) {
     char raw[NATIVE_STR_LEN];
     NSURL* url;
@@ -342,4 +364,45 @@ cc_result Process_StartOpen(const cc_string* args) {
     url = [[NSURL alloc] initWithString:str];
     [UIApplication.sharedApplication openURL:url];
     return 0;
+}
+
+static char gameArgsBuffer[512];
+static cc_string gameArgs = String_FromArray(gameArgsBuffer);
+cc_result Process_StartGame(const cc_string* args) {
+    String_Copy(&gameArgs, args);
+    return 0;
+}
+
+int Platform_GetCommandLineArgs(int argc, STRING_REF char** argv, cc_string* args) {
+    if (!gameArgs.length) return 0;
+    
+    int count = String_UNSAFE_Split(&gameArgs, ' ', args, GAME_MAX_CMDARGS);
+    // clear arguments so after game is closed, launcher is started again
+    gameArgs.length = 0;
+    return count;
+}
+
+cc_result Platform_SetDefaultCurrentDirectory(int argc, char **argv) {
+    // TODO this is the API should actually be using.. eventually
+    /*NSArray* array = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    if ([array count] <= 0) return ERR_NOT_SUPPORTED;
+    
+    NSString* str = [array objectAtIndex:0];
+    const char* name = [str fileSystemRepresentation];
+    return chdir(name) == -1 ? errno : 0;*/
+    
+    char path[NATIVE_STR_LEN] = { 0 };
+    cc_uint32 size = NATIVE_STR_LEN;
+    if (_NSGetExecutablePath(path, &size)) return ERR_INVALID_ARGUMENT;
+    
+    // despite what you'd assume, size is NOT changed to length of path
+    int len = String_CalcLen(path, NATIVE_STR_LEN);
+    
+    // get rid of filename at end of directory
+    for (int i = len - 1; i >= 0; i--, len--) {
+        if (path[i] == '/') break;
+    }
+
+    path[len] = '\0';
+    return chdir(path) == -1 ? errno : 0;
 }
