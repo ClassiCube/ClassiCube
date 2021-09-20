@@ -20,6 +20,7 @@ static DWORD d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ 
 /* Current format and size of vertices */
 static int gfx_stride, gfx_format = -1;
 
+static cc_bool using_d3d9Ex;
 static IDirect3D9* d3d;
 static IDirect3DDevice9* device;
 static DWORD createFlags;
@@ -73,6 +74,7 @@ static void CreateD3D9Instance(void) {
 		res = _Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d);
 		if (res) Logger_Abort2(res, "Direct3D9Create9Ex failed");
 		/* Extended Direct3D9 does not support managed textures */
+		using_d3d9Ex = true;
 	} else {
 		d3d = _Direct3DCreate9(D3D_SDK_VERSION);
 		/* Normal Direct3D9 supports POOL_MANAGED textures */
@@ -326,7 +328,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	}
 	if (Gfx.LostContext) return 0;
 
-	if ((flags & TEXTURE_FLAG_MANAGED) && Gfx.ManagedTextures) {
+	if ((flags & TEXTURE_FLAG_MANAGED) && !using_d3d9Ex) {
 		for (;;) {
 			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
 								0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, NULL);
@@ -336,8 +338,8 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 		D3D9_SetTextureData(tex, bmp, 0);
 		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, bmp->width, false);
 	} else {
-		/* Direct3D9ex doesn't support dynamic textures */
-		if ((flags & TEXTURE_FLAG_DYNAMIC) && !Gfx.ManagedTextures) usage = D3DUSAGE_DYNAMIC;
+		/* Direct3D9Ex doesn't support dynamic textures */
+		if ((flags & TEXTURE_FLAG_DYNAMIC) && using_d3d9Ex) usage = D3DUSAGE_DYNAMIC;
 
 		for (;;) {
 			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
@@ -754,12 +756,23 @@ finished:
 	return res;
 }
 
+static void UpdateSwapchain(const char* reason) {
+	D3DPRESENT_PARAMETERS args = { 0 };
+	if (using_d3d9Ex) {
+		/* Try to use ResetEx first to avoid resetting resources */
+		IDirect3DDevice9Ex* dev = (IDirect3DDevice9Ex*)device;
+		D3D9_FillPresentArgs(&args);
+		if (!IDirect3DDevice9Ex_ResetEx(dev, &args, NULL)) return;
+	}
+	Gfx_LoseContext(reason);
+}
+
 void Gfx_SetFpsLimit(cc_bool vsync, float minFrameMs) {
 	gfx_minFrameMs = minFrameMs;
 	if (gfx_vsync == vsync) return;
 
 	gfx_vsync = vsync;
-	if (device) Gfx_LoseContext(" (toggling VSync)");
+	if (device) UpdateSwapchain(" (toggling VSync)");
 }
 
 void Gfx_BeginFrame(void) { 
@@ -813,6 +826,6 @@ void Gfx_GetApiInfo(cc_string* info) {
 void Gfx_OnWindowResize(void) {
 	if (Game.Width == cachedWidth && Game.Height == cachedHeight) return;
 	/* Only resize when necessary */
-	Gfx_LoseContext(" (resizing window)"); 
+	UpdateSwapchain(" (resizing window)");
 }
 #endif
