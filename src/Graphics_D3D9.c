@@ -70,16 +70,24 @@ static void LoadD3D9Library(void) {
 
 static void CreateD3D9Instance(void) {
 	cc_result res;
+	// still to check: managed texture perf, driver reset
+	//   consider optimised CreateTexture??
 	if (false) {
 		res = _Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d);
-		if (res) Logger_Abort2(res, "Direct3D9Create9Ex failed");
-		/* Extended Direct3D9 does not support managed textures */
-		using_d3d9Ex = true;
-	} else {
-		d3d = _Direct3DCreate9(D3D_SDK_VERSION);
-		/* Normal Direct3D9 supports POOL_MANAGED textures */
-		Gfx.ManagedTextures = true;
+		if (res == D3DERR_NOTAVAILABLE) {
+			/* Direct3D9Ex not supported, fallback to normal Direct3D9 */
+		} else if (res) {
+			Logger_Abort2(res, "Direct3D9Create9Ex failed");
+		} else {
+			using_d3d9Ex = true;
+			/* NOTE: Direct3D9Ex does not support managed textures */
+			return;
+		}
 	}
+
+	d3d = _Direct3DCreate9(D3D_SDK_VERSION);
+	/* Normal Direct3D9 supports POOL_MANAGED textures */
+	Gfx.ManagedTextures = true;
 	if (!d3d) Logger_Abort("Direct3DCreate9 returned NULL");
 }
 
@@ -815,7 +823,12 @@ void Gfx_GetApiInfo(cc_string* info) {
 	IDirect3D9_GetAdapterIdentifier(d3d, D3DADAPTER_DEFAULT, 0, &adapter);
 	curMem = IDirect3DDevice9_GetAvailableTextureMem(device) / (1024.0f * 1024.0f);
 
-	String_Format1(info, "-- Using Direct3D9 (%i bit) --\n", &pointerSize);
+	if (using_d3d9Ex) {
+		String_Format1(info, "-- Using Direct3D9Ex (%i bit) --\n", &pointerSize);
+	} else {
+		String_Format1(info, "-- Using Direct3D9 (%i bit) --\n", &pointerSize);
+	}
+
 	String_Format1(info, "Adapter: %c\n",         adapter.Description);
 	String_Format1(info, "Processing mode: %c\n", D3D9_StrFlags());
 	String_Format2(info, "Video memory: %f2 MB total, %f2 free\n", &totalMem, &curMem);
