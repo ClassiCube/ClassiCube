@@ -56,13 +56,14 @@ extern GfxResourceID Gfx_quadVb, Gfx_texVb;
 #define GFX_MAX_VERTICES 65536
 
 #define TEXTURE_FLAG_MANAGED 0x01 /* Texture should persist across gfx context loss */
+#define TEXTURE_FLAG_DYNAMIC 0x02 /* Texture should allow updating via Gfx_UpdateTexture */
 
 void Gfx_RecreateDynamicVb(GfxResourceID* vb, VertexFormat fmt, int maxVertices);
 void Gfx_RecreateTexture(GfxResourceID* tex, struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);
 void* Gfx_RecreateAndLockVb(GfxResourceID* vb, VertexFormat fmt, int count);
 
 /* Creates a new texture. (and also generates mipmaps if mipmaps) */
-/* Supported flags: TEXTURE_FLAG_MANAGED */
+/* Supported flags: TEXTURE_FLAG_MANAGED, TEXTURE_FLAG_DYNAMIC */
 /* NOTE: Only set mipmaps to true if Gfx_Mipmaps is also true, because whether textures
 use mipmapping may be either a per-texture or global state depending on the backend. */
 CC_API GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps);

@@ -49,19 +49,35 @@ static void D3D9_FreeResource(GfxResourceID* resource) {
 	Platform_Log2("D3D9 resource has %i outstanding references! ID 0x%x", &refCount, &addr);
 }
 
-typedef IDirect3D9* (WINAPI *FP_Direct3DCreate9)(UINT SDKVersion);
-static void CreateD3D9(void) {
+static IDirect3D9* (WINAPI *_Direct3DCreate9)(UINT SDKVersion);
+static HRESULT     (WINAPI *_Direct3DCreate9Ex)(UINT SDKVersion, IDirect3D9** __d3d9);
+
+static void LoadD3D9Library(void) {
+	static const struct DynamicLibSym funcs[] = {
+		DynamicLib_Sym(Direct3DCreate9), 
+		DynamicLib_Sym(Direct3DCreate9Ex)
+	};
 	static const cc_string path = String_FromConst("d3d9.dll");
-	FP_Direct3DCreate9 _direct3DCreate9;
 	void* lib = DynamicLib_Load2(&path);
 
 	if (!lib) {
 		Logger_DynamicLibWarn("loading", &path);
 		Logger_Abort("Failed to load d3d9.dll. You may need to install Direct3D9.");
 	}
+	DynamicLib_GetAll(lib, funcs, Array_Elems(funcs));
+}
 
-	_direct3DCreate9 = DynamicLib_Get2(lib, "Direct3DCreate9");
-	d3d = _direct3DCreate9(D3D_SDK_VERSION);
+static void CreateD3D9Instance(void) {
+	cc_result res;
+	if (false) {
+		res = _Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d);
+		if (res) Logger_Abort2(res, "Direct3D9Create9Ex failed");
+		/* Extended Direct3D9 does not support managed textures */
+	} else {
+		d3d = _Direct3DCreate9(D3D_SDK_VERSION);
+		/* Normal Direct3D9 supports POOL_MANAGED textures */
+		Gfx.ManagedTextures = true;
+	}
 	if (!d3d) Logger_Abort("Direct3DCreate9 returned NULL");
 }
 
@@ -159,13 +175,13 @@ static void TryCreateDevice(void) {
 }
 
 void Gfx_Create(void) {
-	CreateD3D9();
+	LoadD3D9Library();
+	CreateD3D9Instance();
 	FindCompatibleViewFormat();
 	FindCompatibleDepthFormat();
 	depthBits = D3D9_DepthBufferBits();
 
 	customMipmapsLevels = true;
-	Gfx.ManagedTextures = true;
 	Gfx.Created         = true;
 	TryCreateDevice();
 }
@@ -299,7 +315,9 @@ static void D3D9_DoMipmaps(IDirect3DTexture9* texture, int x, int y, struct Bitm
 GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipmaps) {
 	IDirect3DTexture9* tex;
 	IDirect3DTexture9* sys;
+	DWORD usage = 0;
 	cc_result res;
+
 	int mipmapsLevels = CalcMipmapsLevels(bmp->width, bmp->height);
 	int levels = 1 + (mipmaps ? mipmapsLevels : 0);
 
@@ -308,7 +326,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 	}
 	if (Gfx.LostContext) return 0;
 
-	if (flags & TEXTURE_FLAG_MANAGED) {
+	if ((flags & TEXTURE_FLAG_MANAGED) && Gfx.ManagedTextures) {
 		for (;;) {
 			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
 								0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &tex, NULL);
@@ -318,6 +336,9 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 		D3D9_SetTextureData(tex, bmp, 0);
 		if (mipmaps) D3D9_DoMipmaps(tex, 0, 0, bmp, bmp->width, false);
 	} else {
+		/* Direct3D9ex doesn't support dynamic textures */
+		if ((flags & TEXTURE_FLAG_DYNAMIC) && !Gfx.ManagedTextures) usage = D3DUSAGE_DYNAMIC;
+
 		for (;;) {
 			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
 								0, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &sys, NULL);
@@ -329,7 +350,7 @@ GfxResourceID Gfx_CreateTexture(struct Bitmap* bmp, cc_uint8 flags, cc_bool mipm
 
 		for (;;) {
 			res = IDirect3DDevice9_CreateTexture(device, bmp->width, bmp->height, levels,
-								0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, NULL);
+								usage, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &tex, NULL);
 			if (D3D9_CheckResult(res, "D3D9_CreateGPUTexture failed")) break;
 		}
 
@@ -756,7 +777,8 @@ void Gfx_EndFrame(void) {
 	IDirect3DDevice9_EndScene(device);
 	cc_result res = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
 
-	if (res) {
+	/* Direct3D9Ex returns S_PRESENT_OCCLUDED when e.g. window is minimised */
+	if (res && res != S_PRESENT_OCCLUDED) {
 		if (res != D3DERR_DEVICELOST) Logger_Abort2(res, "D3D9_EndFrame");
 		/* TODO: Make sure this actually works on all graphics cards. */
 		Gfx_LoseContext(" (Direct3D9 device lost)");

@@ -55,7 +55,7 @@ static void Atlas_Convert2DTo1D(void) {
 			Bitmap_UNSAFE_CopyBlock(atlasX, atlasY, 0, y * tileSize,
 								&Atlas2D.Bmp, &atlas1D, tileSize);
 		}
-		Gfx_RecreateTexture(&Atlas1D.TexIds[i], &atlas1D, TEXTURE_FLAG_MANAGED, Gfx.Mipmaps);
+		Gfx_RecreateTexture(&Atlas1D.TexIds[i], &atlas1D, TEXTURE_FLAG_MANAGED | TEXTURE_FLAG_DYNAMIC, Gfx.Mipmaps);
 	}
 	Mem_Free(atlas1D.scan0);
 }
